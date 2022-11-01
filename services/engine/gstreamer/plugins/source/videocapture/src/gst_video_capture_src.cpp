@@ -373,7 +373,7 @@ static GstFlowReturn gst_video_capture_src_fill(GstBaseSrc *src, guint64 offset,
     if (gst_buffer_get_size(buf) < capturesrc->min_buffer_size) {
         GST_ELEMENT_ERROR (src, STREAM, FAILED, ("Wrong data length on input streams."),
             ("The minimum data length of video data input is %d, and the current input data length is %d"
-            G_GUINT64_FORMAT ".", capturesrc->min_buffer_size, gst_buffer_get_size(buf)));
+            G_GSIZE_FORMAT ".", capturesrc->min_buffer_size, gst_buffer_get_size(buf)));
         return GST_FLOW_ERROR;
     }
 
