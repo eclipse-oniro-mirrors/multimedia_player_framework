@@ -64,7 +64,9 @@ AudioSinkSvImpl::AudioSinkSvImpl(GstBaseSink *sink)
 AudioSinkSvImpl::~AudioSinkSvImpl()
 {
     if (audioRenderer_ != nullptr) {
+        int32_t id = PlayerXCollie::GetInstance().SetTimerByLog("AudioRenderer::Release");
         (void)audioRenderer_->Release();
+        PlayerXCollie::GetInstance().CancelTimer(id);
         audioRenderer_ = nullptr;
     }
 }
@@ -227,8 +229,11 @@ int32_t AudioSinkSvImpl::Pause()
     MEDIA_LOGD("audioRenderer Pause In");
     CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_AUD_RENDER_FAILED);
     int32_t id = PlayerXCollie::GetInstance().SetTimerByLog("AudioRenderer::Pause");
-    if (audioRenderer_->GetStatus() == OHOS::AudioStandard::RENDERER_RUNNING) {
-        CHECK_AND_RETURN_RET(audioRenderer_->Pause() == true, MSERR_AUD_RENDER_FAILED);
+    auto ret = audioRenderer_->GetStatus();
+    if (ret != OHOS::AudioStandard::RENDERER_RUNNING) {
+        PlayerXCollie::GetInstance().CancelTimer(id);
+        MEDIA_LOGE("Audio GetStatus failed");
+        return MSERR_AUD_RENDER_FAILED;
     }
     PlayerXCollie::GetInstance().CancelTimer(id);
     MEDIA_LOGD("audioRenderer Pause Out");
@@ -241,7 +246,12 @@ int32_t AudioSinkSvImpl::Drain()
     MEDIA_LOGD("Drain");
     CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_AUD_RENDER_FAILED);
     int32_t id = PlayerXCollie::GetInstance().SetTimerByLog("AudioRenderer::Drain");
-    CHECK_AND_RETURN_RET(audioRenderer_->Drain() == true, MSERR_AUD_RENDER_FAILED);
+    auto ret = audioRenderer_->Drain();
+    if (ret != true) {
+        PlayerXCollie::GetInstance().CancelTimer(id);
+        MEDIA_LOGE("Audio Flush failed");
+        return MSERR_AUD_RENDER_FAILED;
+    }
     PlayerXCollie::GetInstance().CancelTimer(id);
     return MSERR_OK;
 }
@@ -253,7 +263,12 @@ int32_t AudioSinkSvImpl::Flush()
     if (audioRenderer_->GetStatus() == OHOS::AudioStandard::RENDERER_RUNNING) {
         MEDIA_LOGD("Flush");
         int32_t id = PlayerXCollie::GetInstance().SetTimerByLog("AudioRenderer::Flush");
-        CHECK_AND_RETURN_RET(audioRenderer_->Flush() == true, MSERR_AUD_RENDER_FAILED);
+        auto ret = audioRenderer_->Flush();
+        if (ret != true) {
+            PlayerXCollie::GetInstance().CancelTimer(id);
+            MEDIA_LOGE("Audio Flush failed");
+            return MSERR_AUD_RENDER_FAILED;
+        }
         PlayerXCollie::GetInstance().CancelTimer(id);
     }
     
@@ -316,7 +331,12 @@ int32_t AudioSinkSvImpl::SetParameters(uint32_t bitsPerSample, uint32_t channels
     MEDIA_LOGD("SetParameters out, channels:%{public}d, sampleRate:%{public}d", params.channelCount, params.sampleRate);
     MEDIA_LOGD("audioRenderer SetParams In");
     int32_t id = PlayerXCollie::GetInstance().SetTimerByLog("AudioRenderer::SetParams");
-    CHECK_AND_RETURN_RET(audioRenderer_->SetParams(params) == AudioStandard::SUCCESS, MSERR_AUD_RENDER_FAILED);
+    auto ret = audioRenderer_->SetParams(params);
+    if (ret != AudioStandard::SUCCESS) {
+        PlayerXCollie::GetInstance().CancelTimer(id);
+        MEDIA_LOGE("Audio SetParams failed");
+        return MSERR_AUD_RENDER_FAILED;
+    }
     PlayerXCollie::GetInstance().CancelTimer(id);
     MEDIA_LOGD("audioRenderer SetParams Out");
     return MSERR_OK;
@@ -329,7 +349,12 @@ int32_t AudioSinkSvImpl::GetParameters(uint32_t &bitsPerSample, uint32_t &channe
     CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_AUD_RENDER_FAILED);
     AudioStandard::AudioRendererParams params;
     int32_t id = PlayerXCollie::GetInstance().SetTimerByLog("AudioRenderer::GetParams");
-    CHECK_AND_RETURN_RET(audioRenderer_->GetParams(params) == AudioStandard::SUCCESS, MSERR_AUD_RENDER_FAILED);
+    auto ret = audioRenderer_->GetParams(params);
+    if (ret != AudioStandard::SUCCESS) {
+        PlayerXCollie::GetInstance().CancelTimer(id);
+        MEDIA_LOGE("Audio GetParams failed");
+        return MSERR_AUD_RENDER_FAILED;
+    }
     PlayerXCollie::GetInstance().CancelTimer(id);
     channels = params.channelCount;
     sampleRate = params.sampleRate;
@@ -342,7 +367,12 @@ int32_t AudioSinkSvImpl::GetMinimumBufferSize(uint32_t &bufferSize)
     CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_AUD_RENDER_FAILED);
     size_t size = 0;
     int32_t id = PlayerXCollie::GetInstance().SetTimerByLog("AudioRenderer::GetBufferSize");
-    CHECK_AND_RETURN_RET(audioRenderer_->GetBufferSize(size) == AudioStandard::SUCCESS, MSERR_AUD_RENDER_FAILED);
+    auto ret = audioRenderer_->GetBufferSize(size);
+    if (ret != AudioStandard::SUCCESS) {
+        PlayerXCollie::GetInstance().CancelTimer(id);
+        MEDIA_LOGE("Audio GetBufferSize failed");
+        return MSERR_AUD_RENDER_FAILED;
+    }
     PlayerXCollie::GetInstance().CancelTimer(id);
     CHECK_AND_RETURN_RET(size > 0, MSERR_AUD_RENDER_FAILED);
     bufferSize = static_cast<uint32_t>(size);
@@ -355,7 +385,12 @@ int32_t AudioSinkSvImpl::GetMinimumFrameCount(uint32_t &frameCount)
     CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_AUD_RENDER_FAILED);
     uint32_t count = 0;
     int32_t id = PlayerXCollie::GetInstance().SetTimerByLog("AudioRenderer::GetFrameCount");
-    CHECK_AND_RETURN_RET(audioRenderer_->GetFrameCount(count) == AudioStandard::SUCCESS, MSERR_AUD_RENDER_FAILED);
+    auto ret = audioRenderer_->GetFrameCount(count);
+    if (ret != AudioStandard::SUCCESS) {
+        PlayerXCollie::GetInstance().CancelTimer(id);
+        MEDIA_LOGE("Audio GetFrameCount failed");
+        return MSERR_AUD_RENDER_FAILED;
+    }
     PlayerXCollie::GetInstance().CancelTimer(id);
     CHECK_AND_RETURN_RET(count > 0, MSERR_AUD_RENDER_FAILED);
     frameCount = count;
@@ -366,7 +401,12 @@ bool AudioSinkSvImpl::Writeable() const
 {
     CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, false);
     int32_t id = PlayerXCollie::GetInstance().SetTimerByLog("AudioRenderer::GetStatus");
-    bool ret = audioRenderer_->GetStatus() == AudioStandard::RENDERER_RUNNING;
+    auto ret = audioRenderer_->GetStatus();
+    if (ret != AudioStandard::RENDERER_RUNNING) {
+        PlayerXCollie::GetInstance().CancelTimer(id);
+        MEDIA_LOGE("Audio GetStatus failed");
+        return MSERR_AUD_RENDER_FAILED;
+    }
     PlayerXCollie::GetInstance().CancelTimer(id);
     return ret;
 }
@@ -418,7 +458,12 @@ int32_t AudioSinkSvImpl::GetLatency(uint64_t &latency) const
     MediaTrace trace("AudioSink::GetLatency");
     CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_AUD_RENDER_FAILED);
     int32_t id = PlayerXCollie::GetInstance().SetTimerByLog("AudioRenderer::GetLatency");
-    CHECK_AND_RETURN_RET(audioRenderer_->GetLatency(latency) == AudioStandard::SUCCESS, MSERR_AUD_RENDER_FAILED);
+    auto ret = audioRenderer_->GetLatency(latency);
+    if (ret != AudioStandard::SUCCESS) {
+        PlayerXCollie::GetInstance().CancelTimer(id);
+        MEDIA_LOGE("Audio GetLatency failed");
+        return MSERR_AUD_RENDER_FAILED;
+    }
     PlayerXCollie::GetInstance().CancelTimer(id);
     return MSERR_OK;
 }
