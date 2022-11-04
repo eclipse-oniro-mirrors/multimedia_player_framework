@@ -228,13 +228,7 @@ int32_t AudioSinkSvImpl::Pause()
     MediaTrace trace("AudioSink::Pause");
     MEDIA_LOGD("audioRenderer Pause In");
     CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_AUD_RENDER_FAILED);
-    {
-        int32_t id = PlayerXCollie::GetInstance().SetTimerByLog("AudioRenderer::GetStatus");
-        auto ret = audioRenderer_->GetStatus();
-        PlayerXCollie::GetInstance().CancelTimer(id);
-        CHECK_AND_RETURN_RET(ret == OHOS::AudioStandard::RENDERER_RUNNING, MSERR_AUD_RENDER_FAILED);
-    }
-    {
+    if (audioRenderer_->GetStatus() == OHOS::AudioStandard::RENDERER_RUNNING) {
         int32_t id = PlayerXCollie::GetInstance().SetTimerByLog("AudioRenderer::Pause");
         auto ret = audioRenderer_->Pause();
         PlayerXCollie::GetInstance().CancelTimer(id);
@@ -383,8 +377,7 @@ bool AudioSinkSvImpl::Writeable() const
     int32_t id = PlayerXCollie::GetInstance().SetTimerByLog("AudioRenderer::GetStatus");
     auto ret = audioRenderer_->GetStatus();
     PlayerXCollie::GetInstance().CancelTimer(id);
-    CHECK_AND_RETURN_RET(ret == AudioStandard::RENDERER_RUNNING, MSERR_AUD_RENDER_FAILED);
-    return ret;
+    return ret == AudioStandard::RENDERER_RUNNING;
 }
 
 void AudioSinkSvImpl::OnError(std::string errMsg)
@@ -402,10 +395,9 @@ int32_t AudioSinkSvImpl::Write(uint8_t *buffer, size_t size)
     CHECK_AND_RETURN_RET(size > 0, MSERR_AUD_RENDER_FAILED);
 
     size_t bytesWritten = 0;
+    int32_t id = PlayerXCollie::GetInstance().SetTimerByLog("AudioRenderer::Write");
     while (bytesWritten < size) {
-        int32_t id = PlayerXCollie::GetInstance().SetTimerByLog("AudioRenderer::Write");
         int32_t bytesSingle = audioRenderer_->Write(buffer + bytesWritten, size - bytesWritten);
-        PlayerXCollie::GetInstance().CancelTimer(id);
         if (bytesSingle <= 0) {
             MEDIA_LOGE("[AudioSinkSvImpl] audioRenderer write failed, drop an audio packet!");
             return MSERR_OK;
@@ -413,6 +405,7 @@ int32_t AudioSinkSvImpl::Write(uint8_t *buffer, size_t size)
         bytesWritten += static_cast<size_t>(bytesSingle);
         CHECK_AND_RETURN_RET(bytesWritten >= static_cast<size_t>(bytesSingle), MSERR_AUD_RENDER_FAILED);
     }
+    PlayerXCollie::GetInstance().CancelTimer(id);
     return MSERR_OK;
 }
 
