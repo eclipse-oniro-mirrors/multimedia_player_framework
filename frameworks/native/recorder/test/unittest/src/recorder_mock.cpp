@@ -365,7 +365,6 @@ void RecorderMock::HDICreateESBuffer()
     }
 }
 
-
 void RecorderMock::HDICreateYUVBuffer()
 {
     // camera hdi loop to requeset buffer
