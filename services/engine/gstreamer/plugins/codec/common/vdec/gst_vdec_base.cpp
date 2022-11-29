@@ -72,6 +72,11 @@ enum {
     PROP_PLAYER_MODE,
 };
 
+enum {
+    SIGNAL_CAPS_FIX_ERROR,
+    SIGNAL_LAST
+};
+
 static guint signals[SIGNAL_LAST] = { 0, };
 
 G_DEFINE_ABSTRACT_TYPE(GstVdecBase, gst_vdec_base, GST_TYPE_VIDEO_DECODER);
