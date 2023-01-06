@@ -83,6 +83,7 @@ public:
     int32_t Stop() override;
     int32_t Reset() override;
     int32_t Release() override;
+    int32_t ReleaseSync() override;
     int32_t SetVolume(float leftVolume, float rightVolume) override;
     int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override;
     int32_t GetCurrentTime(int32_t &currentTime) override;
@@ -106,6 +107,7 @@ public:
 
     // IPlayerEngineObs override
     void OnError(PlayerErrorType errorType, int32_t errorCode) override;
+    void OnErrorMessage(int32_t errorCode, const std::string &errorMsg) override;
     void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody = {}) override;
 
 private:
@@ -160,6 +162,8 @@ private:
     } config_;
     bool disableNextSeekDone_ = false;
     bool errorCbOnce_ = false;
+    bool disableStoppedCb_ = false;
+    bool isStateChangedBySystem_ = false;
     int32_t contentType_ = 0;
     int32_t streamUsage_ = 0;
     int32_t rendererFlag_ = 0;

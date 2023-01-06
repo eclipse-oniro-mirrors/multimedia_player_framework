@@ -720,11 +720,18 @@ int32_t PlayerServerHi::DumpInfo(int32_t fd)
 
 void PlayerServerHi::OnError(PlayerErrorType errorType, int32_t errorCode)
 {
+    (void)errorType;
+    auto errorMsg = MSErrorToExtErrorString(static_cast<MediaServiceErrCode>(errorCode));
+    return OnErrorMessage(errorCode, errorMsg);
+}
+
+void PlayerServerHi::OnErrorMessage(int32_t errorCode, const std::string &errorMsg)
+{
     std::lock_guard<std::mutex> lockCb(mutexCb_);
-    lastErrMsg_ = MSErrorToExtErrorString(static_cast<MediaServiceErrCode>(errorCode));
+    lastErrMsg_ = errorMsg;
     FaultEventWrite(lastErrMsg_, "Player");
     if (playerCb_ != nullptr) {
-        playerCb_->OnError(errorType, errorCode);
+        playerCb_->OnError(errorCode, errorMsg);
     }
 }
 
