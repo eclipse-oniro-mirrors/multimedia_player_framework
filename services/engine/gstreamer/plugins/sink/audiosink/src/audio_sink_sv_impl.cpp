@@ -229,11 +229,10 @@ int32_t AudioSinkSvImpl::Start()
     int32_t id = PlayerXCollie::GetInstance().SetTimerByLog("AudioRenderer::Start");
     int32_t ret = audioRenderer_->Start();
     if (ret != MSERR_OK) {
-        PlayerXCollie::GetInstance().CancelTimer(id);
         MEDIA_LOGE("audio Renderer Start failed!");
-        return ret;
     }
     PlayerXCollie::GetInstance().CancelTimer(id);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, MSERR_AUD_RENDER_FAILED);
     MEDIA_LOGD("audioRenderer Start Out");
     return ret;
 }
@@ -247,7 +246,7 @@ int32_t AudioSinkSvImpl::Stop()
     (void)audioRenderer_->Stop();
     PlayerXCollie::GetInstance().CancelTimer(id);
     MEDIA_LOGD("audioRenderer Stop Out");
-    return ret;
+    return MSERR_OK;
 }
 
 int32_t AudioSinkSvImpl::Pause()
