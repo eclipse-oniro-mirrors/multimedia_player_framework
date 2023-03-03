@@ -227,8 +227,8 @@ int32_t AudioSinkSvImpl::Start()
     MEDIA_LOGD("audioRenderer Start In");
     CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_AUD_RENDER_FAILED);
     int32_t id = PlayerXCollie::GetInstance().SetTimerByLog("AudioRenderer::Start");
-    int32_t ret = audioRenderer_->Start();
-    if (ret != MSERR_OK) {
+    bool ret = audioRenderer_->Start();
+    if (!ret) {
         MEDIA_LOGE("audio Renderer Start failed!");
     }
     PlayerXCollie::GetInstance().CancelTimer(id);
