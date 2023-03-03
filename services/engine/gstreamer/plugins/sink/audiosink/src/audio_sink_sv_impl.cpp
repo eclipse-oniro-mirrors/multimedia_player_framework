@@ -244,12 +244,7 @@ int32_t AudioSinkSvImpl::Stop()
     MEDIA_LOGD("audioRenderer Stop In");
     CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_AUD_RENDER_FAILED);
     int32_t id = PlayerXCollie::GetInstance().SetTimerByLog("AudioRenderer::Stop");
-    int32_t ret = audioRenderer_->Stop();
-    if (ret != MSERR_OK) {
-        PlayerXCollie::GetInstance().CancelTimer(id);
-        MEDIA_LOGE("audio Renderer Pause failed!");
-        return ret;
-    }
+    (void)audioRenderer_->Stop();
     PlayerXCollie::GetInstance().CancelTimer(id);
     MEDIA_LOGD("audioRenderer Stop Out");
     return ret;
@@ -262,7 +257,10 @@ int32_t AudioSinkSvImpl::Pause()
     CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_AUD_RENDER_FAILED);
     if (audioRenderer_->GetStatus() == OHOS::AudioStandard::RENDERER_RUNNING) {
         int32_t id = PlayerXCollie::GetInstance().SetTimerByLog("AudioRenderer::Pause");
-        auto ret = audioRenderer_->Pause();
+        bool ret = audioRenderer_->Pause();
+        if (!ret) {
+            MEDIA_LOGE("audio Renderer Pause failed!");
+        }
         PlayerXCollie::GetInstance().CancelTimer(id);
         CHECK_AND_RETURN_RET(ret == true, MSERR_AUD_RENDER_FAILED);
     }
