@@ -244,7 +244,7 @@ int32_t AudioSinkSvImpl::Stop()
     MEDIA_LOGD("audioRenderer Stop In");
     CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_AUD_RENDER_FAILED);
     int32_t id = PlayerXCollie::GetInstance().SetTimerByLog("AudioRenderer::Stop");
-    int ret = audioRenderer_->Stop();
+    int32_t ret = audioRenderer_->Stop();
     if (ret != MSERR_OK) {
         PlayerXCollie::GetInstance().CancelTimer(id);
         MEDIA_LOGE("audio Renderer Pause failed!");
