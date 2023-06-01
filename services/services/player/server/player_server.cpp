@@ -218,6 +218,52 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
     return MSERR_OK;
 }
 
+int32_t PlayerServer::AddSubSource(const std::string &url)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
+
+    if (lastOpStatus_ != PLAYER_PREPARED && lastOpStatus_ != PLAYER_PAUSED &&
+        lastOpStatus_ != PLAYER_STARTED && lastOpStatus_ != PLAYER_PLAYBACK_COMPLETE) {
+        MEDIA_LOGE("Can not add sub source, currentState is %{public}s", GetStatusDescription(lastOpStatus_).c_str());
+        return MSERR_INVALID_OPERATION;
+    }
+
+    MEDIA_LOGD("PlayerServer AddSubSource in(url)");
+    auto task = std::make_shared<TaskHandler<void>>([this, url]() {
+        (void)playerEngine_->AddSubSource(url);
+        taskMgr_.MarkTaskDone("add subsource done");
+    });
+    (void)taskMgr_.LaunchTask(task, PlayerServerTaskType::STATE_CHANGE, "subsource");
+
+    return MSERR_OK;
+}
+
+int32_t PlayerServer::AddSubSource(int32_t fd, int64_t offset, int64_t size)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
+
+    if (lastOpStatus_ != PLAYER_PREPARED && lastOpStatus_ != PLAYER_PAUSED &&
+        lastOpStatus_ != PLAYER_STARTED && lastOpStatus_ != PLAYER_PLAYBACK_COMPLETE) {
+        MEDIA_LOGE("Can not add sub source, currentState is %{public}s", GetStatusDescription(lastOpStatus_).c_str());
+        return MSERR_INVALID_OPERATION;
+    }
+
+    auto uriHelper = std::make_shared<UriHelper>(fd, offset, size);
+    CHECK_AND_RETURN_RET_LOG(uriHelper->AccessCheck(UriHelper::URI_READ), MSERR_INVALID_VAL, "Failed to read the fd");
+
+    MEDIA_LOGD("PlayerServer AddSubSource in(fd)");
+    auto task = std::make_shared<TaskHandler<void>>([this, uriHelper]() {
+        (void)playerEngine_->AddSubSource(uriHelper->FormattedUri());
+        subUriHelpers_.emplace_back(uriHelper);
+        taskMgr_.MarkTaskDone("add subsource done");
+    });
+    (void)taskMgr_.LaunchTask(task, PlayerServerTaskType::STATE_CHANGE, "subsource");
+
+    return MSERR_OK;
+}
+
 int32_t PlayerServer::Prepare()
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -483,7 +529,10 @@ int32_t PlayerServer::HandleReset()
     playerEngine_ = nullptr;
     dataSrc_ = nullptr;
     config_.looping = false;
-    uriHelper_ = nullptr;
+    {
+        decltype(subUriHelpers_) temp;
+        temp.swap(subUriHelpers_);
+    }
     lastErrMsg_.clear();
     errorCbOnce_ = false;
     disableStoppedCb_ = false;

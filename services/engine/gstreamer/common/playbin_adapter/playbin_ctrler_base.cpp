@@ -176,6 +176,17 @@ int32_t PlayBinCtrlerBase::SetSource(const std::shared_ptr<GstAppsrcEngine> &app
     return MSERR_OK;
 }
 
+int32_t PlayBinCtrlerBase::AddSubSource(const std::string &url)
+{
+    MEDIA_LOGD("enter");
+
+    std::unique_lock<std::mutex> lock(mutex_);
+
+    g_object_set(playbin_, "add-suburi", url.c_str(), nullptr);
+
+    return MSERR_OK;
+}
+
 int32_t PlayBinCtrlerBase::Prepare()
 {
     MEDIA_LOGD("enter");

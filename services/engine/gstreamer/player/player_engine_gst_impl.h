@@ -37,6 +37,7 @@ public:
 
     int32_t SetSource(const std::string &url) override;
     int32_t SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc) override;
+    int32_t AddSubSource(const std::string &url) override;
     int32_t SetObs(const std::weak_ptr<IPlayerEngineObs> &obs) override;
     int32_t SetVideoSurface(sptr<Surface> surface) override;
     int32_t Prepare() override;

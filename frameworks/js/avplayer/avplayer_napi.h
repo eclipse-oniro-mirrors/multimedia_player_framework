@@ -119,6 +119,14 @@ private:
      */
     static napi_value JsSelectBitrate(napi_env env, napi_callback_info info);
     /**
+     * addSubtitleUrl: string
+     */
+    static napi_value JsAddSubtitleUrl(napi_env env, napi_callback_info info);
+    /**
+     * addSubtitleFdSrc: AVFileDescriptor
+     */
+    static napi_value JsAddSubtitleAVFileDescriptor(napi_env env, napi_callback_info info);
+    /**
      * url: string
      */
     static napi_value JsSetUrl(napi_env env, napi_callback_info info);
@@ -244,6 +252,7 @@ private:
     void PauseListenCurrentResource();
     void OnErrorCb(MediaServiceExtErrCodeAPI9 errorCode, const std::string &errorMsg);
     void SetSource(std::string url);
+    void AddSubSource(std::string url);
     void SetSurface(const std::string &surfaceStr);
     void ResetUserParameters();
 
@@ -288,6 +297,8 @@ private:
     std::string url_ = "";
     struct AVFileDescriptor fileDescriptor_;
     struct AVDataSrcDescriptor dataSrcDescriptor_;
+    std::string subUrl_ = "";
+    struct AVFileDescriptor subFileDescriptor_;
     std::string surface_ = "";
     bool loop_ = false;
     int32_t videoScaleType_ = 0;
