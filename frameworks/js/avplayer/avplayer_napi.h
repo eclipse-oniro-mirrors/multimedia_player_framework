@@ -55,6 +55,7 @@ const std::string EVENT_VIDEO_SIZE_CHANGE = "videoSizeChange";
 const std::string EVENT_AUDIO_INTERRUPT = "audioInterrupt";
 const std::string EVENT_AVAILABLE_BITRATES = "availableBitrates";
 const std::string EVENT_TRACKCHANGE = "trackChange";
+const std::string EVENT_TRACK_INFO_UPDATE = "trackInfoUpdate";
 const std::string EVENT_ERROR = "error";
 }
 

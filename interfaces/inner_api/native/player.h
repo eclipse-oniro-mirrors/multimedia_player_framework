@@ -32,6 +32,7 @@ public:
     static constexpr std::string_view PLAYER_VOLUME_LEVEL = "volume_level";
     static constexpr std::string_view PLAYER_TRACK_INDEX = "track_index";
     static constexpr std::string_view PLAYER_TRACK_TYPE = "track_type";
+    static constexpr std::string_view PLAYER_TRACK_INFO = "track_info";
     static constexpr std::string_view PLAYER_WIDTH = "width";
     static constexpr std::string_view PLAYER_HEIGHT = "height";
     static constexpr std::string_view PLAYER_MIME = "codec_mime";
@@ -135,6 +136,10 @@ enum PlayerOnInfoType : int32_t {
     INFO_TYPE_TRACK_DONE,
     /* Return error message to prompt the user. */
     INFO_TYPE_ERROR_MSG,
+    /* return the message when subtitle track num updated.*/
+    INFO_TYPE_TRACK_NUM_UPDATE,
+    /* return the message when subtitle track info updated.*/
+    INFO_TYPE_TRACK_INFO_UPDATE,
 };
 
 enum PlayerStates : int32_t {

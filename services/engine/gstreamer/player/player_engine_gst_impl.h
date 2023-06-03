@@ -94,6 +94,8 @@ private:
     void HandleVideoSizeChanged(const PlayBinMessage &msg);
     void HandleBitRateCollect(const PlayBinMessage &msg);
     void HandleIsLiveStream(const PlayBinMessage &msg);
+    void HandleTrackNumUpdate(const PlayBinMessage &msg);
+    void HandleTrackInfoUpdate(const PlayBinMessage &msg);
     void HandleAudioMessage(const PlayBinMessage &msg);
     void HandleInterruptMessage(const PlayBinMessage &msg);
     void HandleAudioStateMessage(const PlayBinMessage &msg);

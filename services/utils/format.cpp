@@ -78,11 +78,13 @@ Format::Format(const Format &rhs)
     }
 
     CopyFormatDataMap(rhs.formatMap_, formatMap_);
+    formatVecMap_ = rhs.formatMap_;
 }
 
 Format::Format(Format &&rhs) noexcept
 {
     std::swap(formatMap_, rhs.formatMap_);
+    std::swap(formatVecMap_, rhs.formatVecMap_);
 }
 
 Format &Format::operator=(const Format &rhs)
@@ -92,6 +94,7 @@ Format &Format::operator=(const Format &rhs)
     }
 
     CopyFormatDataMap(rhs.formatMap_, this->formatMap_);
+    this->formatVecMap_ = rhs.formatMap_;
     return *this;
 }
 
@@ -102,6 +105,7 @@ Format &Format::operator=(Format &&rhs) noexcept
     }
 
     std::swap(this->formatMap_, rhs.formatMap_);
+    std::swap(this->formatVecMap_, rhs.formatVecMap_);
     return *this;
 }
 
@@ -257,6 +261,24 @@ bool Format::GetBuffer(const std::string_view &key, uint8_t **addr, size_t &size
     return true;
 }
 
+bool Format::PutFormatVector(const std::string_view &key, std::vector<Format> &value)
+{
+    RemoveKey(key);
+    auto ret = formatVecMap_.insert(std::make_pair(key, value));
+    return ret.second;
+}
+
+bool Format::GetFormatVector(const std::string_view &key, std::vector<Format> &value) const
+{
+    auto iter = formatVecMap_.find(key);
+    if (iter == formatVecMap_.end()) {
+        MEDIA_LOGE("Format::GetFormatVector failed. Key: %{public}s", key.data());
+        return false;
+    }
+    value.assign(iter->second.begin(), iter->second.end());
+    return true;
+}
+
 bool Format::ContainKey(const std::string_view &key) const
 {
     auto iter = formatMap_.find(key);
@@ -285,6 +307,11 @@ void Format::RemoveKey(const std::string_view &key)
             free(iter->second.addr);
             iter->second.addr = nullptr;
         }
+        formatMap_.erase(iter);
+    }
+
+    iter = formatVecMap_.find(key);
+    if (iter != formatMap_.end()) {
         formatMap_.erase(iter);
     }
 }

@@ -29,6 +29,7 @@ namespace {
 #ifdef SUPPORT_VIDEO
     constexpr uint32_t VIDEO_MAX_NUMBER = 13; // max video player
 #endif
+    constexpr int32_t MAX_SUBTITLE_TRACK_NUN = 8;
 }
 
 namespace OHOS {
@@ -229,10 +230,15 @@ int32_t PlayerServer::AddSubSource(const std::string &url)
         return MSERR_INVALID_OPERATION;
     }
 
+    if (subtitleTrackNum_ >= MAX_SUBTITLE_TRACK_NUN) {
+        MEDIA_LOGE("Can not add sub source, subtitle track num is %{public}u, exceed the max num", subtitleTrackNum_);
+        return MSERR_INVALID_OPERATION;
+    }
+
     MEDIA_LOGD("PlayerServer AddSubSource in(url)");
     auto task = std::make_shared<TaskHandler<void>>([this, url]() {
+        MediaTrace::TraceBegin("PlayerServer::AddSubSource", FAKE_POINTER(this));
         (void)playerEngine_->AddSubSource(url);
-        taskMgr_.MarkTaskDone("add subsource done");
     });
     (void)taskMgr_.LaunchTask(task, PlayerServerTaskType::STATE_CHANGE, "subsource");
 
@@ -250,14 +256,19 @@ int32_t PlayerServer::AddSubSource(int32_t fd, int64_t offset, int64_t size)
         return MSERR_INVALID_OPERATION;
     }
 
+    if (subtitleTrackNum_ >= MAX_SUBTITLE_TRACK_NUN) {
+        MEDIA_LOGE("Can not add sub source, subtitle track num is %{public}u, exceed the max num", subtitleTrackNum_);
+        return MSERR_INVALID_OPERATION;
+    }
+
     auto uriHelper = std::make_shared<UriHelper>(fd, offset, size);
     CHECK_AND_RETURN_RET_LOG(uriHelper->AccessCheck(UriHelper::URI_READ), MSERR_INVALID_VAL, "Failed to read the fd");
 
     MEDIA_LOGD("PlayerServer AddSubSource in(fd)");
     auto task = std::make_shared<TaskHandler<void>>([this, uriHelper]() {
+        MediaTrace::TraceBegin("PlayerServer::AddSubSource", FAKE_POINTER(this));
         (void)playerEngine_->AddSubSource(uriHelper->FormattedUri());
         subUriHelpers_.emplace_back(uriHelper);
-        taskMgr_.MarkTaskDone("add subsource done");
     });
     (void)taskMgr_.LaunchTask(task, PlayerServerTaskType::STATE_CHANGE, "subsource");
 
@@ -519,6 +530,7 @@ int32_t PlayerServer::OnReset()
     (void)taskMgr_.Reset();
     lastOpStatus_ = PLAYER_IDLE;
     isLiveStream_ = false;
+    subtitleTrackNum_ = 0;
 
     return MSERR_OK;
 }
@@ -1133,9 +1145,11 @@ void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &in
     int32_t ret = HandleMessage(type, extra, infoBody);
     if (type == INFO_TYPE_IS_LIVE_STREAM) {
         isLiveStream_ = true;
+    } else if (type == INFO_TYPE_TRACK_NUM_UPDATE) {
+        subtitleTrackNum_ = static_cast<uint32_t>(extra);
     }
 
-    if (type == INFO_TYPE_DEFAULTTRACK || type == INFO_TYPE_TRACK_DONE) {
+    if (type == INFO_TYPE_DEFAULTTRACK || type == INFO_TYPE_TRACK_DONE || type == INFO_TYPE_TRACK_NUM_UPDATE) {
         return;
     }
 

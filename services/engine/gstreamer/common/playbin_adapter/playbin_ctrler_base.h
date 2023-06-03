@@ -198,6 +198,7 @@ private:
 
     bool isSeeking_ = false;
     bool isRating_ = false;
+    bool isAddingSubtitle_ = false;
     bool isBuffering_ = false;
     bool isNetWorkPlay_ = false;
     bool isUserSetPlay_ = false;
