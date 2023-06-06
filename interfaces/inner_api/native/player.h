@@ -136,9 +136,9 @@ enum PlayerOnInfoType : int32_t {
     INFO_TYPE_TRACK_DONE,
     /* Return error message to prompt the user. */
     INFO_TYPE_ERROR_MSG,
-    /* return the message when subtitle track num updated.*/
+    /* return the message when subtitle track num updated. */
     INFO_TYPE_TRACK_NUM_UPDATE,
-    /* return the message when subtitle track info updated.*/
+    /* return the message when subtitle track info updated. */
     INFO_TYPE_TRACK_INFO_UPDATE,
 };
 

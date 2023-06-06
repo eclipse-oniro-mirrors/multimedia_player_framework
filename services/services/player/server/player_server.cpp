@@ -1147,9 +1147,10 @@ void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &in
         isLiveStream_ = true;
     } else if (type == INFO_TYPE_TRACK_NUM_UPDATE) {
         subtitleTrackNum_ = static_cast<uint32_t>(extra);
+        return;
     }
 
-    if (type == INFO_TYPE_DEFAULTTRACK || type == INFO_TYPE_TRACK_DONE || type == INFO_TYPE_TRACK_NUM_UPDATE) {
+    if (type == INFO_TYPE_DEFAULTTRACK || type == INFO_TYPE_TRACK_DONE) {
         return;
     }
 

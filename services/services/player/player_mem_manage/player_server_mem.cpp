@@ -286,7 +286,7 @@ int32_t PlayerServerMem::AddSubSource(int32_t fd, int64_t offset, int64_t size)
     lastestUserSetTime_ = std::chrono::steady_clock::now();
     auto ret = PlayerServer::AddSubSource(fd, offset, size);
     if (ret == MSERR_OK) {
-        FdSrcInfo fdSrc{fd, offset, size};
+        FdSrcInfo fdSrc {fd, offset, size};
         recoverConfig_.subFdSrc.emplace_back(fdSrc);
     }
     return ret;

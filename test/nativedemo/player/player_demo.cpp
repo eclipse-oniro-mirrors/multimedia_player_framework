@@ -749,7 +749,7 @@ int32_t PlayerDemo::AddSubFdSource(const std::string &path) const
     int64_t length = static_cast<int64_t>(buffer.st_size);
     cout << "fd = " << fd << ", offset = " << offset << ", length = " << length << endl;
 
-    int32_t ret = player_->SetSource(fd, offset, length);
+    int32_t ret = player_->AddSubSource(fd, offset, length);
     (void)close(fd);
     return ret;
 }
