@@ -735,11 +735,12 @@ void PlayerDemo::AddSubSource(const std::string &url) const
 int32_t PlayerDemo::AddSubFdSource(const std::string &path) const
 {
     int32_t fd = open(path.c_str(), O_RDONLY);
+    int32_t offset = 0;
+
     if (fd < 0) {
         cout << "Open file failed" << endl;
         return -1;
     }
-    int32_t offset = 0;
 
     struct stat64 buffer;
     if (fstat64(fd, &buffer) != 0) {
@@ -747,7 +748,8 @@ int32_t PlayerDemo::AddSubFdSource(const std::string &path) const
         return -1;
     }
     int64_t length = static_cast<int64_t>(buffer.st_size);
-    cout << "fd = " << fd << ", offset = " << offset << ", length = " << length << endl;
+
+    cout << "add subtitle fdsource: fd = " << fd << ", offset = " << offset << ", length = " << length << endl;
 
     int32_t ret = player_->AddSubSource(fd, offset, length);
     (void)close(fd);
