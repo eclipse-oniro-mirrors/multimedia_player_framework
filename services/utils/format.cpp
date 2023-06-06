@@ -61,6 +61,11 @@ void CopyFormatDataMap(const Format::FormatDataMap &from, Format::FormatDataMap 
     }
 }
 
+void CopyFormatVectorMap(const Format::FormatVectorMap &from, Format::FormatVectorMap &to)
+{
+    to = from;
+}
+
 Format::~Format()
 {
     for (auto it = formatMap_.begin(); it != formatMap_.end(); ++it) {
@@ -78,7 +83,7 @@ Format::Format(const Format &rhs)
     }
 
     CopyFormatDataMap(rhs.formatMap_, formatMap_);
-    formatVecMap_ = rhs.formatMap_;
+    CopyFormatVectorMap(rhs.formatVecMap_, formatVecMap_);
 }
 
 Format::Format(Format &&rhs) noexcept
@@ -94,7 +99,7 @@ Format &Format::operator=(const Format &rhs)
     }
 
     CopyFormatDataMap(rhs.formatMap_, this->formatMap_);
-    this->formatVecMap_ = rhs.formatMap_;
+    CopyFormatVectorMap(rhs.formatVecMap_, this->formatVecMap_);
     return *this;
 }
 
@@ -310,9 +315,9 @@ void Format::RemoveKey(const std::string_view &key)
         formatMap_.erase(iter);
     }
 
-    iter = formatVecMap_.find(key);
-    if (iter != formatMap_.end()) {
-        formatMap_.erase(iter);
+    auto vecMapIter = formatVecMap_.find(key);
+    if (vecMapIter != formatVecMap_.end()) {
+        formatVecMap_.erase(vecMapIter);
     }
 }
 

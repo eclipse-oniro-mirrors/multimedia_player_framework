@@ -96,7 +96,7 @@ int32_t PlayerServer::BaseState::MessageTrackInfoUpdate()
 {
     (void)server_.taskMgr_.MarkTaskDone("addsubtitle done");
     MediaTrace::TraceEnd("PlayerServer::AddSubSource", FAKE_POINTER(&server_));
-    return MSERR_OK
+    return MSERR_OK;
 }
 
 int32_t PlayerServer::BaseState::MessageSpeedDone()

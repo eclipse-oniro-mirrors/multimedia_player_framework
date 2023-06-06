@@ -373,14 +373,14 @@ public:
             napi_status status = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
             CHECK_AND_RETURN_LOG(status == napi_ok && jsCallback != nullptr,
                 "%{public}s failed to napi_get_reference_value", callbackName.c_str());
-#if 0
+
             napi_value array = nullptr;
             (void)napi_create_array_with_length(ref->env_, trackInfo.size(), &array);
 
             for (uint32_t i = 0; i < trackInfo.size(); i++) {
-                napi_value number = nullptr;
-                (void)napi_create_int32(ref->env_, valueVec.at(i), &number);
-                (void)napi_set_element(ref->env_, array, i, number);
+                napi_value trackDescription = nullptr;
+                trackDescription = CommonNapi::CreateFormatBuffer(ref->env_, trackInfo[i]);
+                (void)napi_set_element(ref->env_, array, i, trackDescription);
             }
 
             napi_value result = nullptr;
@@ -388,7 +388,6 @@ public:
             status = napi_call_function(ref->env_, nullptr, jsCallback, 1, args, &result);
             CHECK_AND_RETURN_LOG(status == napi_ok,
                 "%{public}s failed to napi_call_function", callbackName.c_str());
-#endif
         }
     };
 };
@@ -859,7 +858,7 @@ void AVPlayerCallback::OnTrackInfoUpdate(const int32_t extra, const Format &info
 {
     (void)extra;
     std::vector<Format> trackInfo;
-    (void)infoBody.GetFormatVector(std::string(PlayerKeys::PLAYER_TRACK_INFO), trackInfo)
+    (void)infoBody.GetFormatVector(std::string(PlayerKeys::PLAYER_TRACK_INFO), trackInfo);
     MEDIA_LOGI("OnTrackInfoUpdate callback");
  
     CHECK_AND_RETURN_LOG(refMap_.find(AVPlayerEvent::EVENT_TRACK_INFO_UPDATE) != refMap_.end(),
@@ -870,6 +869,7 @@ void AVPlayerCallback::OnTrackInfoUpdate(const int32_t extra, const Format &info
 
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_TRACK_INFO_UPDATE);
     cb->callbackName = AVPlayerEvent::EVENT_TRACK_INFO_UPDATE;
+    cb->trackInfo = trackInfo;
     NapiCallback::CompleteCallback(env_, cb);
 }
 

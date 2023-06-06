@@ -415,9 +415,13 @@ void PlayerEngineGstImpl::HandleTrackNumUpdate(const PlayBinMessage &msg)
 
 void PlayerEngineGstImpl::HandleTrackInfoUpdate(const PlayBinMessage &msg)
 {
+    std::vector<Format> trackInfo = std::any_cast<std::vector<Format>>(msg.extra);
+    Format format;
+    format.PutFormatVector(std::string(PlayerKeys::PLAYER_TRACK_INFO), trackInfo);
+
     std::shared_ptr<IPlayerEngineObs> notifyObs = obs_.lock();
     if (notifyObs != nullptr) {
-        notifyObs->OnInfo(INFO_TYPE_TRACK_INFO_UPDATE, 0, std::any_cast<Format>(msg.extra));
+        notifyObs->OnInfo(INFO_TYPE_TRACK_INFO_UPDATE, 0, format);
     }
 }
 

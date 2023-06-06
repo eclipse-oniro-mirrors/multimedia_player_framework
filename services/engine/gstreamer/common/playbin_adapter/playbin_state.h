@@ -57,7 +57,7 @@ protected:
     PlayBinCtrlerBase &ctrler_;
 
 private:
-    void HandleAsyncDoneMsg(const InnerMessage &msg);
+    void HandleAsyncDoneMsg();
 };
 
 class PlayBinCtrlerBase::IdleState : public PlayBinCtrlerBase::BaseState {
@@ -125,7 +125,7 @@ protected:
     void StateEnter() override;
 
 private:
-    void ProcessPlayingStateChange(const InnerMessage &msg);
+    void ProcessPlayingStateChange();
 };
 
 class PlayBinCtrlerBase::PausedState : public PlayBinCtrlerBase::BaseState {

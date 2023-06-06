@@ -170,7 +170,7 @@ void PlayBinCtrlerBase::BaseState::HandleResolutionChange(const InnerMessage &ms
     ctrler_.ReportMessage(playBinMsg);
 }
 
-void PlayBinCtrlerBase::BaseState::HandleAsyncDoneMsg(const InnerMessage &msg)
+void PlayBinCtrlerBase::BaseState::HandleAsyncDoneMsg()
 {
     if (ctrler_.isTrackChanging_) {
         ctrler_.isSeeking_ = false;
@@ -229,7 +229,7 @@ void PlayBinCtrlerBase::BaseState::HandleAsyncDone(const InnerMessage &msg)
         MEDIA_LOGI("BaseState::HandleAsyncDone %{public}d, %{public}d",
             static_cast<int32_t>(stateRet), static_cast<int32_t>(state));
         if ((stateRet == GST_STATE_CHANGE_SUCCESS) && (state >= GST_STATE_PAUSED)) {
-            HandleStateMsg(const InnerMessage &msg)
+            HandleAsyncDoneMsg();
         }
     }
 }
@@ -480,7 +480,7 @@ void PlayBinCtrlerBase::PlayingState::HandleAsyncDone(const InnerMessage &msg)
     BaseState::HandleAsyncDone(msg);
 }
 
-void PlayBinCtrlerBase::PlayingState::ProcessPlayingStateChange(const InnerMessage &msg)
+void PlayBinCtrlerBase::PlayingState::ProcessPlayingStateChange()
 {
     if (ctrler_.isTrackChanging_) {
         ctrler_.isSeeking_ = false;
@@ -542,7 +542,7 @@ void PlayBinCtrlerBase::PlayingState::ProcessStateChange(const InnerMessage &msg
         GstStateChangeReturn stateRet = gst_element_get_state(GST_ELEMENT_CAST(ctrler_.playbin_), &state,
             nullptr, static_cast<GstClockTime>(0));
         if ((stateRet == GST_STATE_CHANGE_SUCCESS) && (state == GST_STATE_PLAYING)) {
-            ProcessPlayingStateChange(msg);
+            ProcessPlayingStateChange();
         }
     }
 }
