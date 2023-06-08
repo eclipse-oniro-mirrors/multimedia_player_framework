@@ -54,7 +54,7 @@ static void gst_subtitle_sink_set_property(GObject *object, guint prop_id, const
 static void gst_subtitle_sink_handle_buffer(GstSubtitleSink *subtitle_sink,
     GstBuffer *buffer, gboolean cancel, guint64 delayUs = 0ULL);
 static void gst_subtitle_sink_cancel_not_executed_task(GstSubtitleSink *subtitle_sink);
-static void gst_subtitle_sink_get_gst_buffer_info(GstBuffer *buffer, guint64 &gstPts, guint32 &duration);
+static void gst_subtitle_sink_get_gst_buffer_info(GstBuffer *buffer, guint64 &pts, guint64 &duration);
 static GstStateChangeReturn gst_subtitle_sink_change_state(GstElement *element, GstStateChange transition);
 static gboolean gst_subtitle_sink_send_event(GstElement *element, GstEvent *event);
 static GstFlowReturn gst_subtitle_sink_render(GstAppSink *appsink);
@@ -65,7 +65,8 @@ static gboolean gst_subtitle_sink_stop(GstBaseSink *basesink);
 static gboolean gst_subtitle_sink_event(GstBaseSink *basesink, GstEvent *event);
 static GstClockTime gst_subtitle_sink_update_reach_time(GstBaseSink *basesink, GstClockTime reach_time,
     gboolean *need_drop_this_buffer);
-static gboolean gst_subtitle_sink_need_drop_buffer(GstBaseSink *basesink, GstSegment *segment, guint64 pts, guint64 pts_end);
+static gboolean gst_subtitle_sink_need_drop_buffer(GstBaseSink *basesink,
+    GstSegment *segment, guint64 pts, guint64 pts_end);
 
 #define gst_subtitle_sink_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE(GstSubtitleSink, gst_subtitle_sink,
@@ -164,13 +165,14 @@ static void gst_subtitle_sink_set_audio_sink(GstSubtitleSink *subtitle_sink, gpo
     g_mutex_unlock(&priv->mutex);
 }
 
-static gboolean gst_subtitle_sink_need_drop_buffer(GstBaseSink *basesink, GstSegment *segment, guint64 pts, guint64 pts_end)
+static gboolean gst_subtitle_sink_need_drop_buffer(GstBaseSink *basesink,
+    GstSegment *segment, guint64 pts, guint64 pts_end)
 {
     guint64 start = segment->start;
     if (pts <= start && start <= pts_end) {
         GST_LOG_OBJECT(basesink, "no need drop, segment start is intersects with buffer time range, pts"
         " = %" GST_TIME_FORMAT ", pts end = %" GST_TIME_FORMAT " segment start = %"
-        GST_TIME_FORMAT, pts, pts_end, segment->start);
+        GST_TIME_FORMAT, GST_TIME_ARGS(pts), GST_TIME_ARGS(pts_end), GST_TIME_ARGS(segment->start));
         return FALSE;
     }
     if (G_LIKELY(gst_segment_clip (segment, GST_FORMAT_TIME, pts, pts_end, NULL, NULL))) {
@@ -220,7 +222,7 @@ static void gst_subtitle_sink_set_property(GObject *object, guint prop_id, const
     switch (prop_id) {
         case PROP_AUDIO_SINK: {
             gst_subtitle_sink_set_audio_sink(subtitle_sink, g_value_get_pointer(value));
-            g_object_set(G_OBJECT(priv->audio_sink), "subtitle-sink", subtitle_sink, nullptr);
+            g_object_set(G_OBJECT(subtitle_sink->priv->audio_sink), "subtitle-sink", subtitle_sink, nullptr);
             break;
         }
         case RPOP_SEGMENT_UPDATED: {
@@ -281,7 +283,6 @@ static gboolean gst_subtitle_sink_send_event(GstElement *element, GstEvent *even
     g_return_val_if_fail(element != nullptr && event != nullptr, FALSE);
     GstSubtitleSink *subtitle_sink = GST_SUBTITLE_SINK(element);
     GstFormat seek_format;
-    GstSeekFlags flags;
     GstSeekType start_type, stop_type;
     gint64 start, stop;
 
@@ -289,7 +290,7 @@ static gboolean gst_subtitle_sink_send_event(GstElement *element, GstEvent *even
     switch (GST_EVENT_TYPE(event)) {
         case GST_EVENT_SEEK: {
             gst_event_parse_seek(event, &subtitle_sink->rate, &seek_format,
-                &flags, &start_type, &start, &stop_type, &stop);
+                &subtitle_sink->seek_flags, &start_type, &start, &stop_type, &stop);
             GST_DEBUG_OBJECT(subtitle_sink, "parse seek rate: %f", subtitle_sink->rate);
             break;
         }
@@ -357,11 +358,12 @@ static GstFlowReturn gst_subtitle_sink_new_preroll(GstAppSink *appsink, gpointer
     }
     GstSubtitleSinkPrivate *priv = subtitle_sink->priv;
     g_mutex_lock(&priv->mutex);
-    priv->text_frame_duration = (pts + duration - subtitle->segment.start) / subtitle_sink->rate;
+    duration = std::min(duration, pts + duration - subtitle_sink->segment.start);
+    priv->text_frame_duration = (pts + duration - subtitle_sink->segment.start) / subtitle_sink->rate;
     priv->running_time = 0ULL;
     g_mutex_unlock(&priv->mutex);
-    GST_DEBUG_OBJECT(subtitle_sink, "preroll buffer text duration is %" GST_TIME_FORMAT,
-        GST_TIME_ARGS(priv->text_frame_duration));
+    GST_DEBUG_OBJECT(subtitle_sink, "preroll buffer pts is %" GST_TIME_FORMAT ", duration is %" GST_TIME_FORMAT,
+        GST_TIME_ARGS(pts), GST_TIME_ARGS(priv->text_frame_duration));
 
     subtitle_sink->preroll_buffer = buffer;
     gst_subtitle_sink_handle_buffer(subtitle_sink, buffer, TRUE, 0ULL);
@@ -419,14 +421,15 @@ static GstFlowReturn gst_subtitle_sink_render(GstAppSink *appsink)
     }
 
     g_mutex_lock(&priv->mutex);
-    priv->text_frame_duration = (pts + duration - subtitle_sink->segment.start) / subtitle_sink->rate;
+    duration = std::min(duration, pts + duration - subtitle_sink->segment.start);
+    priv->text_frame_duration = duration / subtitle_sink->rate;
     priv->running_time = gst_util_get_timestamp();
-    GST_DEBUG_OBJECT(subtitle_sink, "text duration is %" GST_TIME_FORMAT,
-        GST_TIME_ARGS(priv->text_frame_duration));
+    GST_DEBUG_OBJECT(subtitle_sink, "buffer pts is %" GST_TIME_FORMAT ", duration is %" GST_TIME_FORMAT,
+        GST_TIME_ARGS(pts), GST_TIME_ARGS(priv->text_frame_duration));
     g_mutex_unlock(&priv->mutex);
 
     gst_subtitle_sink_handle_buffer(subtitle_sink, buffer, TRUE, 0ULL);
-    gst_subtitle_sink_handle_buffer(subtitle_sink, nullptr, FALSE, GST_TIME_AS_USECONDS(duration));
+    gst_subtitle_sink_handle_buffer(subtitle_sink, nullptr, FALSE, GST_TIME_AS_USECONDS(priv->text_frame_duration));
     if (sample != nullptr) {
         gst_sample_unref(sample);
     }
@@ -517,7 +520,7 @@ static gboolean gst_subtitle_sink_event(GstBaseSink *basesink, GstEvent *event)
                     GST_TIME_FORMAT ", old segment start time = %" GST_TIME_FORMAT,
                     GST_TIME_ARGS(audio_base->segment.time), GST_TIME_ARGS(new_segment.start));
                 new_segment.start = audio_base->segment.time;
-                new_segment.rate = audio_base->segment.rate;
+                new_segment.rate = audio_base->segment.applied_rate;
                 gst_segment_copy_into(&new_segment, &subtitle_sink->segment);
             } else {
                 g_mutex_lock(&subtitle_sink->segment_mutex);
@@ -526,12 +529,19 @@ static gboolean gst_subtitle_sink_event(GstBaseSink *basesink, GstEvent *event)
                 g_mutex_unlock(&subtitle_sink->segment_mutex);
                 GST_OBJECT_LOCK(audio_base);
                 gst_segment_copy_into(&audio_base->segment, &subtitle_sink->segment);
+                if ((subtitle_sink->seek_flags & GST_SEEK_FLAG_SNAP_NEAREST) == GST_SEEK_FLAG_SNAP_NEAREST) {
+                    subtitle_sink->segment.start = new_segment.start;
+                    subtitle_sink->segment.time = new_segment.time;
+                }
+                subtitle_sink->segment.stop = new_segment.stop;
+                subtitle_sink->segment.duration = new_segment.duration;
+                std::swap(subtitle_sink->segment.rate, subtitle_sink->segment.applied_rate);
                 GST_OBJECT_UNLOCK(audio_base);
                 GST_DEBUG_OBJECT (basesink, "replace upstream segment with audio segment %" GST_SEGMENT_FORMAT,
                     &audio_base->segment);
             }
             auto new_event = gst_event_new_segment(&subtitle_sink->segment);
-            subtitle_sink->rate = new_segment.rate;
+            subtitle_sink->rate = subtitle_sink->segment.rate;
             if (new_event != nullptr) {
                 gst_event_unref(event);
                 event = new_event;

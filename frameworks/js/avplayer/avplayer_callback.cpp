@@ -657,8 +657,8 @@ void AVPlayerCallback::OnSubtitleUpdateCb(const int32_t extra, const Format &inf
         return;
     }
     NapiCallback::SubtitleProperty *cb = new(std::nothrow) NapiCallback::SubtitleProperty();
-    if (infoBody.ContainKey("text")) {
-        (void)infoBody.GetStringValue("text", cb->text);
+    if (infoBody.ContainKey(PlayerKeys::SUBTITLE_TEXT)) {
+        (void)infoBody.GetStringValue(PlayerKeys::SUBTITLE_TEXT, cb->text);
     }
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_SUBTITLE_UPDATE);
     cb->callbackName = AVPlayerEvent::EVENT_SUBTITLE_UPDATE;

@@ -380,7 +380,6 @@ void PlayerEngineGstImpl::HandleOnError(const PlayBinMessage &msg)
 
 void PlayerEngineGstImpl::HandleSubtitleUpdate(const PlayBinMessage &msg)
 {
-    (void)msg;
     std::shared_ptr<IPlayerEngineObs> notifyObs = obs_.lock();
     if (notifyObs != nullptr) {
         notifyObs->OnInfo(INFO_TYPE_SUBTITLE_UPDATE, 0, std::any_cast<Format>(msg.extra));

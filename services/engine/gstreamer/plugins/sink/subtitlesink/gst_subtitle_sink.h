@@ -58,6 +58,7 @@ struct _GstSubtitleSink {
     GCond segment_cond;
     GMutex segment_mutex;
     GstSegment segment;
+    GstSeekFlags seek_flags;
     /* private */
     GstSubtitleSinkPrivate *priv;
 };
