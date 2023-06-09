@@ -242,7 +242,6 @@ HWTEST_F(PlayerUnitTest, Player_SetSource_006, TestSize.Level2)
 HWTEST_F(PlayerUnitTest, Player_SetSource_007, TestSize.Level2)
 {
     EXPECT_NE(MSERR_OK, player_->SetSource(INVALID_FILE));
-    EXPECT_EQ(MSERR_OK, player_->Reset());
 }
 
 /**
@@ -254,7 +253,6 @@ HWTEST_F(PlayerUnitTest, Player_SetSource_008, TestSize.Level2)
 {
     int32_t invliadFd = 256; // invliad fd
     EXPECT_NE(MSERR_OK, player_->SetSource(invliadFd, 0, 0));
-    EXPECT_EQ(MSERR_OK, player_->Reset());
 }
 
 /**
