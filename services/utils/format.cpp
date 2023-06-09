@@ -326,6 +326,11 @@ const Format::FormatDataMap &Format::GetFormatMap() const
     return formatMap_;
 }
 
+const Format::FormatVectorMap &Format::GetFormatVectorMap() const
+{
+    return formatVecMap_;
+}
+
 std::string Format::Stringify() const
 {
     std::string outString;

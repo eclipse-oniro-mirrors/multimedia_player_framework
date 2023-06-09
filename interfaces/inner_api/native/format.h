@@ -261,6 +261,22 @@ public:
     const FormatDataMap &GetFormatMap() const;
 
     /**
+     * @brief A trick to enable the comparision between the std::string and std::string_view for
+     * std::map, the trick called Transparent Comparator.
+     *
+     */
+    using FormatVectorMap = std::map<std::string, std::vector<Format>, std::less<>>;
+
+    /**
+     * @brief Obtains the metadata vector map.
+     *
+     * @return Returns the map object.
+     * @since 1.0
+     * @version 1.0
+     */
+    const FormatVectorMap &GetFormatVectorMap() const;
+
+    /**
      * @brief Convert the metadata map to string.
      *
      * @return Returns a converted string.
@@ -268,13 +284,6 @@ public:
      * @version 1.0
      */
     std::string Stringify() const;
-
-    /**
-     * @brief A trick to enable the comparision between the std::string and std::string_view for
-     * std::map, the trick called Transparent Comparator.
-     *
-     */
-    using FormatVectorMap = std::map<std::string, std::vector<Format>, std::less<>>;
 
 private:
     FormatDataMap formatMap_;

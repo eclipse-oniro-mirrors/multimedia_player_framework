@@ -168,7 +168,7 @@ int32_t PlayerServiceProxy::AddSubSource(const std::string &url)
     bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
-    data.WriteString(url);
+    (void)data.WriteString(url);
     int32_t error = SendRequest(ADD_SUB_SOURCE, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "AddSubSource failed, error: %{public}d", error);
