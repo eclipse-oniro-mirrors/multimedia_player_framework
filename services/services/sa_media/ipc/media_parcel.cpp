@@ -73,9 +73,7 @@ bool MediaParcel::Marshalling(MessageParcel &parcel, const Format &format)
             }
 
             for (uint32_t index = 0; index < vecSize; index++) {
-                if (!DoMarshalling(parcel, it->second[index])) {
-                    return false;
-                }
+                CHECK_AND_RETURN_RET(DoMarshalling(parcel, it->second[index]), false);
             }
         }
     } else {
