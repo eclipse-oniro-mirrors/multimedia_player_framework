@@ -300,12 +300,12 @@ static gboolean gst_vdec_h264_bypass_frame(GstVdecBase *base, GstVideoCodecFrame
                 // 0x1F is the mask of last 5 bits, 0x06 is SEI flag
                 GST_WARNING_OBJECT(base, "KPI-TRACE-VDEC: recv SEI frame");
                 return false;
-            } else if ((info.data[i + 1] & 0x1F) == 0x06) {
+            } else if ((info.data[i + 1] & 0x1F) == 0x07) {
                 // 0x1F is the mask of last 5 bits, 0x07 is SPS flag
                 GST_WARNING_OBJECT(base, "KPI-TRACE-VDEC: recv SPS frame");
                 return false;
-            } else if ((info.data[i + 1] & 0x1F) == 0x06) {
-                // 0x1F is the mask of last 5 bits, 0x07 is PPS flag
+            } else if ((info.data[i + 1] & 0x1F) == 0x08) {
+                // 0x1F is the mask of last 5 bits, 0x08 is PPS flag
                 GST_WARNING_OBJECT(base, "KPI-TRACE-VDEC: recv PPS frame");
                 return false;
             } else {
