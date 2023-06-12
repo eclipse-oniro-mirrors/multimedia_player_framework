@@ -14,7 +14,6 @@
  */
 
 #include "monitor_server_object.h"
-#include <thread>
 #include "media_log.h"
 #include "media_errors.h"
 #include "monitor_server.h"
