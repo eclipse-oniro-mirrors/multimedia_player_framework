@@ -45,10 +45,7 @@ int32_t MonitorServerObject::IpcAbnormality()
     }
 
     MEDIA_LOGE("IpcAbnormality");
-    if (DoIpcAbnormality() == MSERR_OK) {
-        alarmed_ = true;
-    }
-    return MSERR_OK;
+    return DoIpcAbnormality();
 }
 
 int32_t MonitorServerObject::IpcRecovery(bool fromMonitor)
@@ -59,10 +56,17 @@ int32_t MonitorServerObject::IpcRecovery(bool fromMonitor)
     }
 
     MEDIA_LOGE("IpcRecovery %{public}d ", fromMonitor);
-    if (DoIpcRecovery(fromMonitor) == MSERR_OK) {
-        alarmed_ = false;
-    }
-    return MSERR_OK;
+    return DoIpcRecovery(fromMonitor);
+}
+
+void MonitorServerObject::SetIpcAlarmedFlag()
+{
+    alarmed_ = true;
+}
+
+void MonitorServerObject::UnSetIpcAlarmedFlag()
+{
+    alarmed_ = false;
 }
 } // namespace Media
 } // namespace OHOS
