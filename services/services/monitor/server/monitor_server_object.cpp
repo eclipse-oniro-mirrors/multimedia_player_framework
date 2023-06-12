@@ -14,6 +14,7 @@
  */
 
 #include "monitor_server_object.h"
+#include <thread>
 #include "media_log.h"
 #include "media_errors.h"
 #include "monitor_server.h"
@@ -26,14 +27,12 @@ namespace Media {
 int32_t MonitorServerObject::RegisterMonitor(int32_t pid)
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Pid %{public}d RegisterMonitor", FAKE_POINTER(this), pid);
-    std::lock_guard<std::mutex> lock(monitorMutex_);
     return MonitorServer::GetInstance().RegisterObj(pid, wptr(this));
 }
 
 int32_t MonitorServerObject::CancellationMonitor(int32_t pid)
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Pid %{public}d CancellationMonitor", FAKE_POINTER(this), pid);
-    std::lock_guard<std::mutex> lock(monitorMutex_);
     return MonitorServer::GetInstance().CancellationObj(pid, wptr(this));
 }
 

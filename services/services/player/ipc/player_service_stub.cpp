@@ -403,6 +403,7 @@ int32_t PlayerServiceStub::DoIpcAbnormality()
         if (ret == MSERR_OK) {
             SetIpcAlarmedFlag();
         }
+        MEDIA_LOGI("DoIpcAbnormality End.");
         return ret;
     });
     (void)taskQue_.EnqueueTask(task);
@@ -421,6 +422,7 @@ int32_t PlayerServiceStub::DoIpcRecovery(bool fromMonitor)
             if (ret == MSERR_OK || ret == MSERR_INVALID_OPERATION) {
                 UnSetIpcAlarmedFlag();
             }
+            MEDIA_LOGI("DoIpcRecovery End.");
             return ret;
         });
         (void)taskQue_.EnqueueTask(task);
