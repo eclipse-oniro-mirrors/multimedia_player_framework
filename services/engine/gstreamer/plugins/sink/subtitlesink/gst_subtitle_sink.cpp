@@ -15,9 +15,11 @@
 
 #include <gst/gst.h>
 #include <cinttypes>
+#include "scope_guard.h"
 #include "config.h"
 #include "gst_subtitle_sink.h"
 
+using namespace OHOS;
 using namespace OHOS::Media;
 #define POINTER_MASK 0x00FFFFFF
 #define FAKE_POINTER(addr) (POINTER_MASK & reinterpret_cast<uintptr_t>(addr))
@@ -35,7 +37,6 @@ enum {
 struct _GstSubtitleSinkPrivate {
     GstElement *audio_sink;
     GMutex mutex;
-    gboolean started;
     guint64 running_time;
     guint64 text_frame_duration;
     GstSubtitleSinkCallbacks callbacks;
@@ -123,7 +124,6 @@ static void gst_subtitle_sink_init(GstSubtitleSink *subtitle_sink)
     subtitle_sink->priv = priv;
     g_mutex_init(&priv->mutex);
 
-    priv->started = FALSE;
     priv->callbacks.new_sample = nullptr;
     priv->userdata = nullptr;
     priv->audio_sink = nullptr;
@@ -175,7 +175,7 @@ static gboolean gst_subtitle_sink_need_drop_buffer(GstBaseSink *basesink,
         GST_TIME_FORMAT, GST_TIME_ARGS(pts), GST_TIME_ARGS(pts_end), GST_TIME_ARGS(segment->start));
         return FALSE;
     }
-    return !G_UNLIKELY(gst_segment_clip (segment, GST_FORMAT_TIME, pts, pts_end, NULL, NULL));
+    return G_LIKELY(!gst_segment_clip (segment, GST_FORMAT_TIME, pts, pts_end, NULL, NULL));
 }
 
 static void gst_subtitle_sink_handle_buffer(GstSubtitleSink *subtitle_sink,
@@ -334,7 +334,9 @@ static GstFlowReturn gst_subtitle_sink_new_preroll(GstAppSink *appsink, gpointer
     }
     GstSample *sample = gst_app_sink_pull_preroll(appsink);
     GstBuffer *buffer = gst_buffer_ref(gst_sample_get_buffer(sample));
-    ON_SCOPE_EXIT(0) { gst_sample_unref(sample); };
+    ON_SCOPE_EXIT(0) {
+        gst_sample_unref(sample);
+    };
     g_return_val_if_fail(buffer != nullptr, GST_FLOW_ERROR);
 
     if (subtitle_sink->preroll_buffer == buffer) {
@@ -353,11 +355,11 @@ static GstFlowReturn gst_subtitle_sink_new_preroll(GstAppSink *appsink, gpointer
         return GST_FLOW_OK;
     }
     guint64 pts_end = pts + duration;
-    if (!(pts <= start)) {
-        GST_LOG_OBJECT(basesink, "pts= %" GST_TIME_FORMAT ", pts end = %" GST_TIME_FORMAT " segment start = %"
-        GST_TIME_FORMAT, GST_TIME_ARGS(pts), GST_TIME_ARGS(pts_end), GST_TIME_ARGS(subtitle_sink->segment.start));
-        gst_sample_unref(sample);
-        GST_DEBUG_OBJECT(subtitle_sink, "not yet render time");
+    if (pts > subtitle_sink->segment.start) {
+        GST_DEBUG_OBJECT(subtitle_sink, "pts = %" GST_TIME_FORMAT ", pts end = %"
+            GST_TIME_FORMAT " segment start = %" GST_TIME_FORMAT ", not yet render time",
+            GST_TIME_ARGS(pts), GST_TIME_ARGS(pts_end), GST_TIME_ARGS(subtitle_sink->segment.start));
+        gst_buffer_unref(buffer);
         return GST_FLOW_OK;
     }
     GstSubtitleSinkPrivate *priv = subtitle_sink->priv;
@@ -400,7 +402,9 @@ static GstFlowReturn gst_subtitle_sink_render(GstAppSink *appsink)
 
     GstSample *sample = gst_app_sink_pull_sample(appsink);
     GstBuffer *buffer = gst_buffer_ref(gst_sample_get_buffer(sample));
-    ON_SCOPE_EXIT(0) { gst_sample_unref(sample); };
+    ON_SCOPE_EXIT(0) {
+        gst_sample_unref(sample);
+    };
     g_return_val_if_fail(buffer != nullptr, GST_FLOW_ERROR);
 
     if (subtitle_sink->preroll_buffer == buffer) {
@@ -442,14 +446,6 @@ static GstFlowReturn gst_subtitle_sink_new_sample(GstAppSink *appsink, gpointer 
     GstSubtitleSinkPrivate *priv = subtitle_sink->priv;
     g_return_val_if_fail(priv != nullptr, GST_FLOW_ERROR);
 
-    g_mutex_lock(&priv->mutex);
-    if (!priv->started) {
-        GST_WARNING_OBJECT(subtitle_sink, "we are not started");
-        g_mutex_unlock(&priv->mutex);
-        return GST_FLOW_FLUSHING;
-    }
-    g_mutex_unlock(&priv->mutex);
-
     if (subtitle_sink->is_flushing) {
         GST_DEBUG_OBJECT(subtitle_sink, "we are flushing");
         return GST_FLOW_FLUSHING;
@@ -466,7 +462,6 @@ static gboolean gst_subtitle_sink_start(GstBaseSink *basesink)
     g_mutex_lock (&priv->mutex);
     GST_DEBUG_OBJECT (subtitle_sink, "starting");
     subtitle_sink->is_flushing = FALSE;
-    priv->started = TRUE;
     priv->timer_queue->Start();
     g_mutex_unlock (&priv->mutex);
 
@@ -484,7 +479,6 @@ static gboolean gst_subtitle_sink_stop(GstBaseSink *basesink)
     subtitle_sink->have_first_segment = FALSE;
     subtitle_sink->preroll_buffer = nullptr;
     subtitle_sink->paused = FALSE;
-    priv->started = FALSE;
     priv->timer_queue->Stop();
     g_mutex_unlock (&priv->mutex);
     GST_BASE_SINK_CLASS(parent_class)->stop(basesink);
@@ -535,8 +529,8 @@ static gboolean gst_subtitle_sink_event(GstBaseSink *basesink, GstEvent *event)
                 subtitle_sink->segment.duration = new_segment.duration;
                 std::swap(subtitle_sink->segment.rate, subtitle_sink->segment.applied_rate);
                 GST_OBJECT_UNLOCK(audio_base);
-                GST_DEBUG_OBJECT (basesink, "replace upstream segment with audio segment %" GST_SEGMENT_FORMAT,
-                    &audio_base->segment);
+                GST_DEBUG_OBJECT (basesink, "while prev seek or after seek, replace "
+                    "upstream segment with audio segment %" GST_SEGMENT_FORMAT, &audio_base->segment);
             }
             auto new_event = gst_event_new_segment(&subtitle_sink->segment);
             subtitle_sink->rate = subtitle_sink->segment.rate;
@@ -577,9 +571,7 @@ static void gst_subtitle_sink_dispose(GObject *obj)
     GstSubtitleSinkPrivate *priv = subtitle_sink->priv;
     subtitle_sink->preroll_buffer = nullptr;
     g_mutex_lock (&priv->mutex);
-    if (priv->timer_queue != nullptr) {
-        priv->timer_queue = nullptr;
-    }
+    priv->timer_queue = nullptr;
     priv->audio_sink = nullptr;
     g_mutex_unlock (&priv->mutex);
     G_OBJECT_CLASS(parent_class)->dispose(obj);
@@ -591,11 +583,7 @@ static void gst_subtitle_sink_finalize(GObject *obj)
     GstSubtitleSink *subtitle_sink = GST_SUBTITLE_SINK_CAST(obj);
     GstSubtitleSinkPrivate *priv = subtitle_sink->priv;
     subtitle_sink->preroll_buffer = nullptr;
-    if (priv != nullptr) {
-        if (priv->timer_queue != nullptr) {
-            priv->timer_queue = nullptr;
-        }
-        g_mutex_clear(&priv->mutex);
-    }
+    priv->timer_queue = nullptr;
+    g_mutex_clear(&priv->mutex);
     G_OBJECT_CLASS(parent_class)->finalize(obj);
 }

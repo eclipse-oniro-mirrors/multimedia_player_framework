@@ -247,7 +247,7 @@ void PlayerSinkProvider::OnFirstRenderFrame()
 void PlayerSinkProvider::HandleSubtitleBuffer(GstBuffer *sample, Format &subtitle)
 {
     if (sample == nullptr) {
-        (void)subtitle.PutStringValue("text", "");
+        (void)subtitle.PutStringValue(PlayerKeys::SUBTITLE_TEXT, "");
         return;
     }
     GstMapInfo mapInfo;
@@ -277,12 +277,13 @@ GstFlowReturn PlayerSinkProvider::SubtitleUpdated(GstBuffer *sample, gpointer us
 void PlayerSinkProvider::OnSubtitleUpdated(const Format &subtitle)
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    MEDIA_LOGI("OnSubtitleUpdated in");
+    MEDIA_LOGD("OnSubtitleUpdated enter");
     if (notifier_ != nullptr) {
         PlayBinMessage msg = {PLAYBIN_MSG_SUBTYPE, PLAYBIN_SUB_MSG_SUBTITLE_UPDATED, 0, subtitle};
         notifier_(msg);
         MEDIA_LOGD("Subtitle text updated");
     }
+    MEDIA_LOGD("OnSubtitleUpdated exit");
 }
 
 void PlayerSinkProvider::EosCb(GstMemSink *memSink, gpointer userData)

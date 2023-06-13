@@ -569,12 +569,9 @@ int32_t PlayerEngineGstImpl::PlayBinCtrlerInit()
     subMsgHandler_[PLAYBIN_SUB_MSG_DEFAULE_TRACK] = &PlayerEngineGstImpl::HandleDefaultTrack;
     subMsgHandler_[PLAYBIN_SUB_MSG_TRACK_DONE] = &PlayerEngineGstImpl::HandleTrackDone;
     subMsgHandler_[PLAYBIN_SUB_MSG_ONERROR] = &PlayerEngineGstImpl::HandleOnError;
-<<<<<<< HEAD
-    subMsgHandler_[PLAYBIN_SUB_MSG_SUBTITLE_UPDATED] = &PlayerEngineGstImpl::HandleSubtitleUpdate;
-=======
     subMsgHandler_[PLAYBIN_SUB_MSG_TRACK_NUM_UPDATE] = &PlayerEngineGstImpl::HandleTrackNumUpdate;
     subMsgHandler_[PLAYBIN_SUB_MSG_TRACK_INFO_UPDATE] = &PlayerEngineGstImpl::HandleTrackInfoUpdate;
->>>>>>> 98e76c90582442d13f63a9e950c45275142a29eb
+    subMsgHandler_[PLAYBIN_SUB_MSG_SUBTITLE_UPDATED] = &PlayerEngineGstImpl::HandleSubtitleUpdate;
 
     MEDIA_LOGD("PlayBinCtrlerInit out");
     return MSERR_OK;
