@@ -175,10 +175,7 @@ static gboolean gst_subtitle_sink_need_drop_buffer(GstBaseSink *basesink,
         GST_TIME_FORMAT, GST_TIME_ARGS(pts), GST_TIME_ARGS(pts_end), GST_TIME_ARGS(segment->start));
         return FALSE;
     }
-    if (G_LIKELY(gst_segment_clip (segment, GST_FORMAT_TIME, pts, pts_end, NULL, NULL))) {
-        return FALSE;
-    }
-    return TRUE;
+    return !G_UNLIKELY(gst_segment_clip (segment, GST_FORMAT_TIME, pts, pts_end, NULL, NULL));
 }
 
 static void gst_subtitle_sink_handle_buffer(GstSubtitleSink *subtitle_sink,
@@ -337,29 +334,36 @@ static GstFlowReturn gst_subtitle_sink_new_preroll(GstAppSink *appsink, gpointer
     }
     GstSample *sample = gst_app_sink_pull_preroll(appsink);
     GstBuffer *buffer = gst_buffer_ref(gst_sample_get_buffer(sample));
+    ON_SCOPE_EXIT(0) { gst_sample_unref(sample); };
+    g_return_val_if_fail(buffer != nullptr, GST_FLOW_ERROR);
 
     if (subtitle_sink->preroll_buffer == buffer) {
         gst_buffer_unref(buffer);
-        gst_sample_unref(sample);
         GST_DEBUG_OBJECT(subtitle_sink, "preroll buffer has been rendererd, no need render again");
         return GST_FLOW_OK;
     }
 
     GST_INFO_OBJECT(subtitle_sink, "app render preroll buffer 0x%06" PRIXPTR "", FAKE_POINTER(buffer));
-    g_return_val_if_fail(buffer != nullptr, GST_FLOW_ERROR);
     guint64 pts = 0;
     guint64 duration = 0;
     gst_subtitle_sink_get_gst_buffer_info(buffer, pts, duration);
     if (!GST_CLOCK_TIME_IS_VALID(pts) || !GST_CLOCK_TIME_IS_VALID(duration)) {
         gst_buffer_unref(buffer);
-        gst_sample_unref(sample);
         GST_ERROR_OBJECT(subtitle_sink, "pts or duration invalid");
+        return GST_FLOW_OK;
+    }
+    guint64 pts_end = pts + duration;
+    if (!(pts <= start)) {
+        GST_LOG_OBJECT(basesink, "pts= %" GST_TIME_FORMAT ", pts end = %" GST_TIME_FORMAT " segment start = %"
+        GST_TIME_FORMAT, GST_TIME_ARGS(pts), GST_TIME_ARGS(pts_end), GST_TIME_ARGS(subtitle_sink->segment.start));
+        gst_sample_unref(sample);
+        GST_DEBUG_OBJECT(subtitle_sink, "not yet render time");
         return GST_FLOW_OK;
     }
     GstSubtitleSinkPrivate *priv = subtitle_sink->priv;
     g_mutex_lock(&priv->mutex);
-    duration = std::min(duration, pts + duration - subtitle_sink->segment.start);
-    priv->text_frame_duration = (pts + duration - subtitle_sink->segment.start) / subtitle_sink->rate;
+    duration = std::min(duration, pts_end - subtitle_sink->segment.start);
+    priv->text_frame_duration = (pts_end - subtitle_sink->segment.start) / subtitle_sink->rate;
     priv->running_time = 0ULL;
     g_mutex_unlock(&priv->mutex);
     GST_DEBUG_OBJECT(subtitle_sink, "preroll buffer pts is %" GST_TIME_FORMAT ", duration is %" GST_TIME_FORMAT,
@@ -367,9 +371,6 @@ static GstFlowReturn gst_subtitle_sink_new_preroll(GstAppSink *appsink, gpointer
 
     subtitle_sink->preroll_buffer = buffer;
     gst_subtitle_sink_handle_buffer(subtitle_sink, buffer, TRUE, 0ULL);
-    if (sample != nullptr) {
-        gst_sample_unref(sample);
-    }
     return GST_FLOW_OK;
 }
 
@@ -396,27 +397,27 @@ static GstFlowReturn gst_subtitle_sink_render(GstAppSink *appsink)
 {
     GstSubtitleSink *subtitle_sink = GST_SUBTITLE_SINK_CAST(appsink);
     GstSubtitleSinkPrivate *priv = subtitle_sink->priv;
+
     GstSample *sample = gst_app_sink_pull_sample(appsink);
     GstBuffer *buffer = gst_buffer_ref(gst_sample_get_buffer(sample));
+    ON_SCOPE_EXIT(0) { gst_sample_unref(sample); };
+    g_return_val_if_fail(buffer != nullptr, GST_FLOW_ERROR);
 
     if (subtitle_sink->preroll_buffer == buffer) {
         subtitle_sink->preroll_buffer = nullptr;
         GST_DEBUG_OBJECT(subtitle_sink, "preroll buffer, no need render again");
         gst_buffer_unref(buffer);
-        gst_sample_unref(sample);
         return GST_FLOW_OK;
     }
 
     GST_INFO_OBJECT(subtitle_sink, "app render buffer 0x%06" PRIXPTR "", FAKE_POINTER(buffer));
 
-    g_return_val_if_fail(buffer != nullptr, GST_FLOW_ERROR);
     guint64 pts = 0;
     guint64 duration = 0;
     gst_subtitle_sink_get_gst_buffer_info(buffer, pts, duration);
     if (!GST_CLOCK_TIME_IS_VALID(pts) || !GST_CLOCK_TIME_IS_VALID(duration)) {
         GST_ERROR_OBJECT(subtitle_sink, "pts or duration invalid");
         gst_buffer_unref(buffer);
-        gst_sample_unref(sample);
         return GST_FLOW_ERROR;
     }
 
@@ -430,9 +431,6 @@ static GstFlowReturn gst_subtitle_sink_render(GstAppSink *appsink)
 
     gst_subtitle_sink_handle_buffer(subtitle_sink, buffer, TRUE, 0ULL);
     gst_subtitle_sink_handle_buffer(subtitle_sink, nullptr, FALSE, GST_TIME_AS_USECONDS(priv->text_frame_duration));
-    if (sample != nullptr) {
-        gst_sample_unref(sample);
-    }
     return GST_FLOW_OK;
 }
 
