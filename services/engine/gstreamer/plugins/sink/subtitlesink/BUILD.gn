@@ -42,7 +42,6 @@ config("gst_subtitle_sink_config") {
   ]
 
   include_dirs = [
-    "//commonlibrary/c_utils/base/include",
     "$MEDIA_ROOT_DIR/services/utils/include",
     "$MEDIA_ROOT_DIR/interfaces/inner_api/native",
     "$MEDIA_ROOT_DIR/services/engine/gstreamer/plugins/common",
