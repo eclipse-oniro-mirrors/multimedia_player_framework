@@ -424,7 +424,7 @@ int32_t PlayerServiceProxy::GetAudioTrackInfo(std::vector<Format> &audioTrack)
 
 int32_t PlayerServiceProxy::GetSubtitleTrackInfo(std::vector<Format> &subtitleTrack)
 {
-    MediaTrace trace("binder::GetSubtitleTrackInfo");
+    MediaTrace trace("PlayerServiceProxy::GetSubtitleTrackInfo");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;

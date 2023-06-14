@@ -98,8 +98,9 @@ void PlayerServiceStub::SetPlayerFuncs()
     playerFuncs_[SET_CALLBACK] = { &PlayerServiceStub::SetPlayerCallback, "Player::SetPlayerCallback" };
     playerFuncs_[GET_VIDEO_TRACK_INFO] = { &PlayerServiceStub::GetVideoTrackInfo, "Player::GetVideoTrackInfo" };
     playerFuncs_[GET_AUDIO_TRACK_INFO] = { &PlayerServiceStub::GetAudioTrackInfo, "Player::GetAudioTrackInfo" };
-    playerFuncs_[GET_SUBTITLE_TRACK_INFO] =
-        { &PlayerServiceStub::GetSubtitleTrackInfo, "Player::GetSubtitleTrackInfo" };
+    playerFuncs_[GET_SUBTITLE_TRACK_INFO] = {
+        &PlayerServiceStub::GetSubtitleTrackInfo, "Player::GetSubtitleTrackInfo"
+    };
     playerFuncs_[GET_VIDEO_WIDTH] = { &PlayerServiceStub::GetVideoWidth, "Player::GetVideoWidth" };
     playerFuncs_[GET_VIDEO_HEIGHT] = { &PlayerServiceStub::GetVideoHeight, "Player::GetVideoHeight" };
     playerFuncs_[SELECT_BIT_RATE] = { &PlayerServiceStub::SelectBitRate, "Player::SelectBitRate" };
