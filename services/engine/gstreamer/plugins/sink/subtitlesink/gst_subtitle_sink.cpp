@@ -37,7 +37,7 @@ enum {
 struct _GstSubtitleSinkPrivate {
     GstElement *audio_sink;
     GMutex mutex;
-    guint64 running_time;
+    guint64 time_rendered;
     guint64 text_frame_duration;
     GstSubtitleSinkCallbacks callbacks;
     gpointer userdata;
@@ -49,7 +49,6 @@ static GstStaticPadTemplate g_sinktemplate = GST_STATIC_PAD_TEMPLATE("subtitlesi
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
-static void gst_subtitle_sink_dispose(GObject *obj);
 static void gst_subtitle_sink_finalize(GObject *obj);
 static void gst_subtitle_sink_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void gst_subtitle_sink_handle_buffer(GstSubtitleSink *subtitle_sink,
@@ -88,7 +87,6 @@ static void gst_subtitle_sink_class_init(GstSubtitleSinkClass *kclass)
     gst_element_class_set_static_metadata(element_class,
         "SubtitleSink", "Sink/Subtitle", " Subtitle sink", "OpenHarmony");
 
-    gobject_class->dispose = gst_subtitle_sink_dispose;
     gobject_class->finalize = gst_subtitle_sink_finalize;
     gobject_class->set_property = gst_subtitle_sink_set_property;
     element_class->change_state = gst_subtitle_sink_change_state;
@@ -114,7 +112,7 @@ static void gst_subtitle_sink_init(GstSubtitleSink *subtitle_sink)
     g_return_if_fail(subtitle_sink != nullptr);
 
     subtitle_sink->is_flushing = FALSE;
-    subtitle_sink->paused = FALSE;
+    subtitle_sink->stop_render = FALSE;
     subtitle_sink->have_first_segment = FALSE;
     subtitle_sink->preroll_buffer = nullptr;
     subtitle_sink->rate = 1.0f;
@@ -240,15 +238,15 @@ static GstStateChangeReturn gst_subtitle_sink_change_state(GstElement *element, 
     g_return_val_if_fail(priv != nullptr, GST_STATE_CHANGE_FAILURE);
     switch (transition) {
         case GST_STATE_CHANGE_READY_TO_PAUSED: {
-            subtitle_sink->paused = TRUE;
+            subtitle_sink->stop_render = TRUE;
             break;
         }
         case GST_STATE_CHANGE_PAUSED_TO_PLAYING: {
             g_mutex_lock(&priv->mutex);
-            subtitle_sink->paused = FALSE;
-            gint64 left_duration = priv->text_frame_duration - priv->running_time;
+            subtitle_sink->stop_render = FALSE;
+            gint64 left_duration = priv->text_frame_duration - priv->time_rendered;
             left_duration = left_duration > 0 ? left_duration : 0;
-            priv->running_time = gst_util_get_timestamp();
+            priv->time_rendered = gst_util_get_timestamp();
             GST_DEBUG_OBJECT(subtitle_sink, "text left duration is %" GST_TIME_FORMAT,
                 GST_TIME_ARGS(left_duration));
             g_mutex_unlock(&priv->mutex);
@@ -257,14 +255,14 @@ static GstStateChangeReturn gst_subtitle_sink_change_state(GstElement *element, 
         }
         case GST_STATE_CHANGE_PLAYING_TO_PAUSED: {
             g_mutex_lock(&priv->mutex);
-            subtitle_sink->paused = TRUE;
-            priv->running_time = gst_util_get_timestamp() - priv->running_time;
+            subtitle_sink->stop_render = TRUE;
+            priv->time_rendered = gst_util_get_timestamp() - priv->time_rendered;
             g_mutex_unlock(&priv->mutex);
             gst_subtitle_sink_cancel_not_executed_task(subtitle_sink);
             break;
         }
         case GST_STATE_CHANGE_PAUSED_TO_READY: {
-            subtitle_sink->paused = FALSE;
+            subtitle_sink->stop_render = FALSE;
             gst_subtitle_sink_handle_buffer(subtitle_sink, nullptr, TRUE);
             GST_INFO_OBJECT(subtitle_sink, "subtitle sink stop");
             break;
@@ -311,7 +309,7 @@ static void gst_subtitle_sink_get_gst_buffer_info(GstBuffer *buffer, guint64 &pt
     }
 }
 
-static GstClockTime gst_subtitle_sink_get_current_running_time(GstBaseSink *basesink)
+static GstClockTime gst_subtitle_sink_get_current_time_rendered(GstBaseSink *basesink)
 {
     GstClockTime base_time = gst_element_get_base_time(GST_ELEMENT(basesink)); // get base time
     GstClockTime cur_clock_time = gst_clock_get_time(GST_ELEMENT_CLOCK(basesink)); // get current clock time
@@ -324,7 +322,7 @@ static GstFlowReturn gst_subtitle_sink_new_preroll(GstAppSink *appsink, gpointer
 {
     (void)user_data;
     GstSubtitleSink *subtitle_sink = GST_SUBTITLE_SINK_CAST(appsink);
-    if (subtitle_sink->paused) {
+    if (subtitle_sink->stop_render) {
         GST_WARNING_OBJECT(subtitle_sink, "prepared buffer or playing to paused buffer, do not render");
         return GST_FLOW_OK;
     }
@@ -362,7 +360,7 @@ static GstFlowReturn gst_subtitle_sink_new_preroll(GstAppSink *appsink, gpointer
     g_mutex_lock(&priv->mutex);
     duration = std::min(duration, pts_end - subtitle_sink->segment.start);
     priv->text_frame_duration = (pts_end - subtitle_sink->segment.start) / subtitle_sink->rate;
-    priv->running_time = 0ULL;
+    priv->time_rendered = 0ULL;
     g_mutex_unlock(&priv->mutex);
     GST_DEBUG_OBJECT(subtitle_sink, "preroll buffer pts is %" GST_TIME_FORMAT ", duration is %" GST_TIME_FORMAT,
         GST_TIME_ARGS(pts), GST_TIME_ARGS(priv->text_frame_duration));
@@ -375,17 +373,12 @@ static GstFlowReturn gst_subtitle_sink_new_preroll(GstAppSink *appsink, gpointer
 static GstClockTime gst_subtitle_sink_update_reach_time(GstBaseSink *basesink, GstClockTime reach_time,
     gboolean *need_drop_this_buffer)
 {
-    auto subtitle_sink = GST_SUBTITLE_SINK(basesink);
-    auto priv = subtitle_sink->priv;
-    GstClockTime cur_running_time = gst_subtitle_sink_get_current_running_time(basesink);
-    gint64 subtitle_running_time_diff = cur_running_time - reach_time;
-    gint64 audio_running_time_diff = 0;
-    g_object_get(priv->audio_sink, "last-running-time-diff", &audio_running_time_diff, nullptr);
-    GST_LOG_OBJECT(basesink, "subtitle_running_time_diff = %" GST_TIME_FORMAT
-        ", audio_running_time_diff = %" GST_TIME_FORMAT,
-        GST_TIME_ARGS(abs(subtitle_running_time_diff)), GST_TIME_ARGS(abs(audio_running_time_diff)));
+    GstClockTime cur_time_rendered = gst_subtitle_sink_get_current_time_rendered(basesink);
+    gint64 subtitle_time_rendered_diff = cur_time_rendered - reach_time;
+    GST_LOG_OBJECT(basesink, "subtitle_time_rendered_diff = %"
+        GST_TIME_FORMAT, GST_TIME_ARGS(abs(subtitle_time_rendered_diff)));
 
-    if (subtitle_running_time_diff - audio_running_time_diff > DEFAULT_SUBTITLE_BEHIND_AUDIO_THD) {
+    if (subtitle_time_rendered_diff > DEFAULT_SUBTITLE_BEHIND_AUDIO_THD) {
         *need_drop_this_buffer = TRUE;
     }
     return reach_time;
@@ -424,7 +417,7 @@ static GstFlowReturn gst_subtitle_sink_render(GstAppSink *appsink)
     g_mutex_lock(&priv->mutex);
     duration = std::min(duration, pts + duration - subtitle_sink->segment.start);
     priv->text_frame_duration = duration / subtitle_sink->rate;
-    priv->running_time = gst_util_get_timestamp();
+    priv->time_rendered = gst_util_get_timestamp();
     GST_DEBUG_OBJECT(subtitle_sink, "buffer pts is %" GST_TIME_FORMAT ", duration is %" GST_TIME_FORMAT,
         GST_TIME_ARGS(pts), GST_TIME_ARGS(priv->text_frame_duration));
     g_mutex_unlock(&priv->mutex);
@@ -474,7 +467,7 @@ static gboolean gst_subtitle_sink_stop(GstBaseSink *basesink)
     subtitle_sink->is_flushing = TRUE;
     subtitle_sink->have_first_segment = FALSE;
     subtitle_sink->preroll_buffer = nullptr;
-    subtitle_sink->paused = FALSE;
+    subtitle_sink->stop_render = FALSE;
     priv->timer_queue->Stop();
     g_mutex_unlock (&priv->mutex);
     GST_BASE_SINK_CLASS(parent_class)->stop(basesink);
@@ -545,8 +538,8 @@ static gboolean gst_subtitle_sink_event(GstBaseSink *basesink, GstEvent *event)
             GST_DEBUG_OBJECT(subtitle_sink, "subtitle flush start");
             gst_subtitle_sink_handle_buffer(subtitle_sink, nullptr, TRUE);
             subtitle_sink->is_flushing = TRUE;
-            priv->running_time = 0;
-            subtitle_sink->paused = FALSE;
+            priv->time_rendered = 0;
+            subtitle_sink->stop_render = FALSE;
             break;
         }
         case GST_EVENT_FLUSH_STOP: {
@@ -558,22 +551,6 @@ static gboolean gst_subtitle_sink_event(GstBaseSink *basesink, GstEvent *event)
             break;
     }
     return GST_BASE_SINK_CLASS(parent_class)->event(basesink, event);
-}
-
-static void gst_subtitle_sink_dispose(GObject *obj)
-{
-    g_return_if_fail(obj != nullptr);
-    GstSubtitleSink *subtitle_sink = GST_SUBTITLE_SINK_CAST(obj);
-    GstSubtitleSinkPrivate *priv = subtitle_sink->priv;
-    subtitle_sink->preroll_buffer = nullptr;
-    g_mutex_lock (&priv->mutex);
-    priv->timer_queue = nullptr;
-    if (priv->audio_sink != nullptr) {
-        gst_object_unref(priv->audio_sink);
-        priv->audio_sink = nullptr;
-    }
-    g_mutex_unlock (&priv->mutex);
-    G_OBJECT_CLASS(parent_class)->dispose(obj);
 }
 
 static void gst_subtitle_sink_finalize(GObject *obj)

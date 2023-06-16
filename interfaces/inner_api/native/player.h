@@ -56,7 +56,7 @@ public:
     static constexpr std::string_view AUDIO_INTERRUPT_FORCE = "audio_interrupt_force";
     static constexpr std::string_view AUDIO_INTERRUPT_HINT = "audio_interrupt_hint";
     static constexpr std::string_view AUDIO_EFFECT_MODE = "audio_effect_mode";
-    static constexpr std::string_view SUBTITLE_TEXT = "text";
+    static constexpr std::string_view SUBTITLE_TEXT = "subtitle_text";
 };
 
 enum BufferingInfoType : int32_t {
@@ -129,8 +129,6 @@ enum PlayerOnInfoType : int32_t {
     INFO_TYPE_DURATION_UPDATE,
     /* return the playback is live stream. */
     INFO_TYPE_IS_LIVE_STREAM,
-    /* return the subtitle of playback. */
-    INFO_TYPE_SUBTITLE_UPDATE,
     /* return the message when track changes. */
     INFO_TYPE_TRACKCHANGE,
     /* return the default audio track. */
@@ -143,6 +141,8 @@ enum PlayerOnInfoType : int32_t {
     INFO_TYPE_TRACK_NUM_UPDATE,
     /* return the message when subtitle track info updated. */
     INFO_TYPE_TRACK_INFO_UPDATE,
+    /* return the subtitle of playback. */
+    INFO_TYPE_SUBTITLE_UPDATE,
 };
 
 enum PlayerStates : int32_t {

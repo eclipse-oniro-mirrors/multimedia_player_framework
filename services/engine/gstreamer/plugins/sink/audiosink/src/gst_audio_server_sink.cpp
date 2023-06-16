@@ -229,9 +229,9 @@ static void gst_audio_server_sink_dispose(GObject *object)
     g_return_if_fail(object != nullptr);
     GstAudioServerSink *sink = GST_AUDIO_SERVER_SINK(object);
     g_return_if_fail(sink != nullptr);
-    if (priv->subtitle_sink != nullptr) {
-        gst_object_unref(priv->subtitle_sink);
-        priv->subtitle_sink = nullptr;
+    if (sink->subtitle_sink != nullptr) {
+        gst_object_unref(sink->subtitle_sink);
+        sink->subtitle_sink = nullptr;
     }
     G_OBJECT_CLASS(parent_class)->dispose(object);
 }
@@ -248,6 +248,10 @@ static void gst_audio_server_sink_finalize(GObject *object)
     if (sink->audio_sink != nullptr) {
         (void)sink->audio_sink->Release();
         sink->audio_sink = nullptr;
+    }
+    if (sink->subtitle_sink != nullptr) {
+        gst_object_unref(sink->subtitle_sink);
+        sink->subtitle_sink = nullptr;
     }
 
     gst_audio_server_sink_clear_cache_buffer(sink);
@@ -577,7 +581,6 @@ static gboolean gst_audio_server_sink_stop(GstBaseSink *basesink)
     g_return_val_if_fail(sink->audio_sink->Stop() == MSERR_OK, FALSE);
     g_return_val_if_fail(sink->audio_sink->Release() == MSERR_OK, FALSE);
     sink->audio_sink = nullptr;
-    sink->subtitle_sink = nullptr;
     return TRUE;
 }
 

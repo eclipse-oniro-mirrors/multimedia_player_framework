@@ -197,6 +197,10 @@ GstElement *PlayerSinkProvider::DoCreateVideoSink(const GstCaps *caps, const gpo
 
 PlayBinSinkProvider::SinkPtr PlayerSinkProvider::CreateSubtitleSink()
 {
+    if (subtitleSink_ != nullptr) {
+        gst_object_unref(subtitleSink_);
+        subtitleSink_ = nullptr;
+    }
     subtitleSink_ = DoCreateSubtitleSink(reinterpret_cast<gpointer>(this));
     CHECK_AND_RETURN_RET_LOG(subtitleSink_ != nullptr, nullptr, "CreateSubtitleSink failed..");
     g_object_set(G_OBJECT(subtitleSink_), "audio-sink", audioSink_, nullptr);
@@ -251,13 +255,13 @@ void PlayerSinkProvider::HandleSubtitleBuffer(GstBuffer *sample, Format &subtitl
         return;
     }
     GstMapInfo mapInfo;
-    if (!gst_buffer_map(sample, &mapInfo, GST_MAP_READ)) {
-        MEDIA_LOGE("gst buffer map failed");
-        return;
-    }
+    CHECK_AND_RETURN(gst_buffer_map(sample, &mapInfo, GST_MAP_READ));
     uint32_t gstBufferSize = static_cast<uint32_t>(gst_buffer_get_size(sample));
-    mapInfo.data[gstBufferSize] = static_cast<char>(0);
-    (void)subtitle.PutStringValue(PlayerKeys::SUBTITLE_TEXT, std::string_view(reinterpret_cast<char *>(mapInfo.data)));
+    char *textFrame = new (std::nothrow) char[gstBufferSize + 1];
+    memcpy_s(textFrame, gstBufferSize + 1, mapInfo.data, gstBufferSize);
+    textFrame[gstBufferSize] = static_cast<char>(0);
+    (void)subtitle.PutStringValue(PlayerKeys::SUBTITLE_TEXT, std::string_view(textFrame));
+    delete[] textFrame;
     gst_buffer_unmap(sample, &mapInfo);
 }
 
@@ -276,9 +280,11 @@ void PlayerSinkProvider::OnSubtitleUpdated(const Format &subtitle)
 {
     std::unique_lock<std::mutex> lock(mutex_);
     MEDIA_LOGD("OnSubtitleUpdated enter");
-    if (notifier_ != nullptr) {
+    auto temp_notifier = notifier_;
+    lock.unlock();
+    if (temp_notifier != nullptr) {
         PlayBinMessage msg = {PLAYBIN_MSG_SUBTYPE, PLAYBIN_SUB_MSG_SUBTITLE_UPDATED, 0, subtitle};
-        notifier_(msg);
+        temp_notifier(msg);
         MEDIA_LOGD("Subtitle text updated");
     }
     MEDIA_LOGD("OnSubtitleUpdated exit");
