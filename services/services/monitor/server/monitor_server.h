@@ -62,8 +62,9 @@ private:
     std::map<int32_t, std::list<wptr<MonitorServerObject>>> objListMap_;
     std::multimap<int32_t, TimeInfo> timesMap_;
     std::mutex mutex_;
+    std::mutex thredMutex_;
     std::unique_ptr<std::thread> thread_;
-    std::atomic<bool> threadRunning_ = false;
+    bool threadRunning_ = false;
     std::condition_variable cond_;
 };
 } // namespace Media

@@ -97,20 +97,25 @@ int32_t MonitorServer::Click(int32_t pid)
 int32_t MonitorServer::EnableMonitor(int32_t pid)
 {
     MEDIA_LOGI("EnableMonitor from %{public}d", pid);
-    std::unique_lock<std::mutex> lock(mutex_);
+    {
+        std::unique_lock<std::mutex> lock(mutex_);
+        CHECK_AND_RETURN_RET_LOG(timesMap_.find(pid) == timesMap_.end(), MSERR_OK,
+            "Process %{public}d is already in the monitoring queue!", pid);
 
-    CHECK_AND_RETURN_RET_LOG(timesMap_.find(pid) == timesMap_.end(), MSERR_OK,
-        "Process %{public}d is already in the monitoring queue!", pid);
+        timesMap_.insert(std::pair<int32_t, TimeInfo>(pid, TimeInfo(MONITOR_TIMEMS, true)));
 
-    // Update timeout
-    timesMap_.insert(std::pair<int32_t, TimeInfo>(pid, TimeInfo(MONITOR_TIMEMS, true)));
+        // Wake up thread retiming wait
+        waitingAgain_ = true;
+        cond_.notify_all();
+        if (threadRunning_) {
+            return MSERR_OK;
+        }
+        threadRunning_ = true;
+    }
 
-    // Wake up thread retiming wait
-    waitingAgain_ = true;
-    cond_.notify_all();
-
+    std::lock_guard<std::mutex> threadLock(thredMutex_);
     // The original thread has already exited. Need to recycle resources
-    if (thread_ != nullptr && threadRunning_.load() == false) {
+    if (thread_ != nullptr) {
         if (thread_->joinable()) {
             thread_->join();
         }
@@ -120,7 +125,6 @@ int32_t MonitorServer::EnableMonitor(int32_t pid)
 
     // Start Thread
     if (thread_ == nullptr) {
-        threadRunning_ = true;
         thread_ = std::make_unique<std::thread>(&MonitorServer::MonitorThread, this);
     }
 
@@ -259,9 +263,6 @@ int32_t MonitorServer::GetWaitTime()
 
 void MonitorServer::MonitorThread()
 {
-    ON_SCOPE_EXIT(0) {
-        threadRunning_ = false;
-    };
     uint64_t timeStart;
     int32_t waitTime;
     MEDIA_LOGI("MonitorThread start");
@@ -279,7 +280,8 @@ void MonitorServer::MonitorThread()
             });
 
             if (timesMap_.empty()) {
-                MEDIA_LOGI("MonitorThread Stop.");
+                MEDIA_LOGI("TimesMap empty. MonitorThread Stop.");
+                threadRunning_ = false;
                 break;
             }
 

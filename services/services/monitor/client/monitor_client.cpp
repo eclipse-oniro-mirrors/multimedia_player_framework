@@ -34,12 +34,11 @@ MonitorClient::~MonitorClient()
 {
     MEDIA_LOGI("Instances destroy");
     clientDestroy_ = true;
-    std::unique_lock<std::mutex> lock(mutex_);
+    std::lock_guard<std::mutex> threadLock(thredMutex_);
     if (clickThread_ != nullptr) {
         MEDIA_LOGI("clear monitor client thread");
         if (clickThread_->joinable()) {
             clickCond_.notify_all();
-            lock.unlock();
             clickThread_->join();
         }
         clickThread_.reset();
@@ -68,13 +67,19 @@ bool MonitorClient::IsVaildProxy()
 int32_t MonitorClient::StartClick(MonitorClientObject *obj)
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR " StartClick", FAKE_POINTER(obj));
-    std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(objSet_.count(obj) == 0, MSERR_OK, "It has already been activated");
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        CHECK_AND_RETURN_RET_LOG(objSet_.count(obj) == 0, MSERR_OK, "It has already been activated");
+        objSet_.insert(obj);
+        if (threadRunning_) {
+            return MSERR_OK;
+        }
+        threadRunning_ = true;
+    }
 
-    objSet_.insert(obj);
-
+    std::lock_guard<std::mutex> threadLock(thredMutex_);
     // The original thread has already exited. Need to recycle resources
-    if (clickThread_ != nullptr && threadRunning_.load() == false) {
+    if (clickThread_ != nullptr) {
         if (clickThread_->joinable()) {
             clickThread_->join();
         }
@@ -83,9 +88,8 @@ int32_t MonitorClient::StartClick(MonitorClientObject *obj)
     }
 
     // Start Thread
-    if (clickThread_ == nullptr) {
-        threadRunning_ = true;
-        clickThread_ = std::make_unique<std::thread>(&MonitorClient::ClickThread, this);
+    if (clickThread_ == nullptr && !clientDestroy_) {
+        clickThread_ = std::make_unique<std::thread>(&MonitorClient::ClickThreadCtrl, this);
     }
 
     return MSERR_OK;
@@ -119,9 +123,6 @@ void MonitorClient::ClickThread()
     pthread_setname_np(pthread_self(), "MonitorClick");
     MEDIA_LOGI("ClickThread start");
     static constexpr uint8_t timeInterval = 1; // Heartbeat once per second
-    ON_SCOPE_EXIT(0) {
-        threadRunning_ = false;
-    };
 
     CHECK_AND_RETURN_LOG(IsVaildProxy(), "Proxy is invaild!");
     CHECK_AND_RETURN_LOG(monitorProxy_->EnableMonitor() == MSERR_OK, "failed to EnableMonitor");
@@ -134,23 +135,48 @@ void MonitorClient::ClickThread()
             });
 
             if (objSet_.empty()) {
-                MEDIA_LOGI("objSet empty, clickThread Stop.");
+                MEDIA_LOGI("objSet empty.");
                 break;
             }
 
-            if (clientDestroy_) {
-                MEDIA_LOGI("monitor client destroy, clickThread Stop.");
+            if (!isVaildProxy_ || clientDestroy_) {
+                MEDIA_LOGI("isVaildProxy %{public}d, clientDestroy %{public}d.",
+                    isVaildProxy_, clientDestroy_.load());
                 return;
             }
         }
-
-        CHECK_AND_RETURN_LOG(IsVaildProxy(), "Proxy is invaild!");
-        CHECK_AND_RETURN_LOG(monitorProxy_->Click() == MSERR_OK, "failed to Click");
+        CHECK_AND_CONTINUE(IsVaildProxy());
+        CHECK_AND_CONTINUE(monitorProxy_->Click() == MSERR_OK);
     }
 
     CHECK_AND_RETURN_LOG(IsVaildProxy(), "Proxy is invaild!");
     CHECK_AND_RETURN_LOG(monitorProxy_->DisableMonitor() == MSERR_OK, "failed to DisableMonitor");
     MEDIA_LOGI("ClickThread End");
+}
+
+void MonitorClient::ClickThreadCtrl()
+{
+    while(true) {
+        ClickThread();
+        std::unique_lock<std::mutex> lock(mutex_);
+        if (objSet_.empty() || clientDestroy_) {
+            threadRunning_ = false;
+            MEDIA_LOGI("objSetsize %{public}lu, clientDestroy %{public}d.",
+                objSet_.size(), clientDestroy_.load());
+            return;
+        }
+
+        if (isVaildProxy_ == false) {
+            monitorProxy_ = MediaServiceFactory::GetInstance().GetMonitorProxy();
+            if (monitorProxy_ == nullptr) {
+                MEDIA_LOGI("Invalild Proxy!");
+                threadRunning_ = false;
+                return;
+            }
+            
+            isVaildProxy_ = true;
+        }
+    }
 }
 } // namespace Media
 } // namespace OHOS
