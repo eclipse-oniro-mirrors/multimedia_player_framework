@@ -1381,7 +1381,8 @@ HWTEST_F(PlayerUnitTest, Player_SetInterrupt_001, TestSize.Level0)
  */
 HWTEST_F(PlayerUnitTest, Player_SetDataSource_001, TestSize.Level0)
 {
-    ASSERT_EQ(MSERR_OK, player_->SetDataSrc("/data/test/h264_aac_640x480_30r.ts", 1185152, false));  // 1185152 file size
+    ASSERT_EQ(MSERR_OK, player_->SetDataSrc(
+        "/data/test/h264_aac_640x480_30r.ts", 1185152, false));  // 1185152 file size
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
     EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
