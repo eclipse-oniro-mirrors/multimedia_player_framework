@@ -64,6 +64,7 @@ enum {
 #define gst_audio_server_sink_parent_class parent_class
 G_DEFINE_TYPE(GstAudioServerSink, gst_audio_server_sink, GST_TYPE_BASE_SINK);
 
+static void gst_audio_server_sink_dispose(GObject *object);
 static void gst_audio_server_sink_finalize(GObject *object);
 static void gst_audio_server_sink_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void gst_audio_server_sink_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
@@ -85,6 +86,7 @@ static void gst_audio_server_sink_class_init(GstAudioServerSinkClass *klass)
     GstBaseSinkClass *gstbasesink_class = GST_BASE_SINK_CLASS(klass);
     g_return_if_fail((gobject_class != nullptr) && (gstelement_class != nullptr) && (gstbasesink_class != nullptr));
 
+    gobject_class->dispose = gst_audio_server_sink_dispose;
     gobject_class->finalize = gst_audio_server_sink_finalize;
     gobject_class->set_property = gst_audio_server_sink_set_property;
     gobject_class->get_property = gst_audio_server_sink_get_property;
@@ -222,6 +224,18 @@ static void gst_audio_server_sink_init(GstAudioServerSink *sink)
     sink->last_running_time_diff = 0;
 }
 
+static void gst_audio_server_sink_dispose(GObject *object)
+{
+    g_return_if_fail(object != nullptr);
+    GstAudioServerSink *sink = GST_AUDIO_SERVER_SINK(object);
+    g_return_if_fail(sink != nullptr);
+    if (priv->subtitle_sink != nullptr) {
+        gst_object_unref(priv->subtitle_sink);
+        priv->subtitle_sink = nullptr;
+    }
+    G_OBJECT_CLASS(parent_class)->dispose(object);
+}
+
 static void gst_audio_server_sink_finalize(GObject *object)
 {
     MediaTrace trace("Audio::gst_audio_server_sink_finalize");
@@ -235,7 +249,7 @@ static void gst_audio_server_sink_finalize(GObject *object)
         (void)sink->audio_sink->Release();
         sink->audio_sink = nullptr;
     }
-    sink->subtitle_sink = nullptr;
+
     gst_audio_server_sink_clear_cache_buffer(sink);
 
     G_OBJECT_CLASS(parent_class)->finalize(object);

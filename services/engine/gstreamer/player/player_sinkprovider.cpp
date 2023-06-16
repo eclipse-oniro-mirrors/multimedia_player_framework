@@ -256,10 +256,8 @@ void PlayerSinkProvider::HandleSubtitleBuffer(GstBuffer *sample, Format &subtitl
         return;
     }
     uint32_t gstBufferSize = static_cast<uint32_t>(gst_buffer_get_size(sample));
-    char *textFrame = new (std::nothrow) char[gstBufferSize + 1];
-    textFrame = reinterpret_cast<char *>(mapInfo.data);
-    textFrame[gstBufferSize] = static_cast<char>(0);
-    (void)subtitle.PutStringValue(PlayerKeys::SUBTITLE_TEXT, std::string_view(textFrame));
+    mapInfo.data[gstBufferSize] = static_cast<char>(0);
+    (void)subtitle.PutStringValue(PlayerKeys::SUBTITLE_TEXT, std::string_view(reinterpret_cast<char *>(mapInfo.data)));
     gst_buffer_unmap(sample, &mapInfo);
 }
 

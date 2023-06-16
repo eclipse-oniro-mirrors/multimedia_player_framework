@@ -315,12 +315,8 @@ static GstClockTime gst_subtitle_sink_get_current_running_time(GstBaseSink *base
 {
     GstClockTime base_time = gst_element_get_base_time(GST_ELEMENT(basesink)); // get base time
     GstClockTime cur_clock_time = gst_clock_get_time(GST_ELEMENT_CLOCK(basesink)); // get current clock time
-    if (!GST_CLOCK_TIME_IS_VALID(base_time) || !GST_CLOCK_TIME_IS_VALID(cur_clock_time)) {
-        return GST_CLOCK_TIME_NONE;
-    }
-    if (cur_clock_time < base_time) {
-        return GST_CLOCK_TIME_NONE;
-    }
+    g_return_val_if_fail(!GST_CLOCK_TIME_IS_VALID(base_time) && GST_CLOCK_TIME_IS_VALID(cur_clock_time), GST_CLOCK_TIME_NONE);
+    g_return_val_if_fail(cur_clock_time >= base_time, GST_CLOCK_TIME_NONE);
     return cur_clock_time - base_time;
 }
 
@@ -516,7 +512,7 @@ static gboolean gst_subtitle_sink_event(GstBaseSink *basesink, GstEvent *event)
                 gst_segment_copy_into(&new_segment, &subtitle_sink->segment);
             } else {
                 g_mutex_lock(&subtitle_sink->segment_mutex);
-                gint64 end_time = g_get_monotonic_time() + G_TIME_SPAN_SECOND / 3;
+                gint64 end_time = g_get_monotonic_time() + G_TIME_SPAN_SECOND;
                 g_cond_wait_until(&subtitle_sink->segment_cond, &subtitle_sink->segment_mutex, end_time);
                 g_mutex_unlock(&subtitle_sink->segment_mutex);
                 GST_OBJECT_LOCK(audio_base);
@@ -572,7 +568,10 @@ static void gst_subtitle_sink_dispose(GObject *obj)
     subtitle_sink->preroll_buffer = nullptr;
     g_mutex_lock (&priv->mutex);
     priv->timer_queue = nullptr;
-    priv->audio_sink = nullptr;
+    if (priv->audio_sink != nullptr) {
+        gst_object_unref(priv->audio_sink);
+        priv->audio_sink = nullptr;
+    }
     g_mutex_unlock (&priv->mutex);
     G_OBJECT_CLASS(parent_class)->dispose(obj);
 }
@@ -583,7 +582,13 @@ static void gst_subtitle_sink_finalize(GObject *obj)
     GstSubtitleSink *subtitle_sink = GST_SUBTITLE_SINK_CAST(obj);
     GstSubtitleSinkPrivate *priv = subtitle_sink->priv;
     subtitle_sink->preroll_buffer = nullptr;
-    priv->timer_queue = nullptr;
+    if (priv->audio_sink != nullptr) {
+        gst_object_unref(priv->audio_sink);
+        priv->audio_sink = nullptr;
+    }
+    if (priv->timer_queue != nullptr) {
+        priv->timer_queue = nullptr;
+    }
     g_mutex_clear(&priv->mutex);
     G_OBJECT_CLASS(parent_class)->finalize(obj);
 }
