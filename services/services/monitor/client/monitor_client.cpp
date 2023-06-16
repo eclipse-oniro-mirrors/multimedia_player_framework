@@ -54,10 +54,17 @@ MonitorClient &MonitorClient::GetInstance()
 
 bool MonitorClient::IsVaildProxy()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (monitorProxy_ == nullptr || isVaildProxy_ == false) {
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (!isVaildProxy_) {
+            monitorProxy_ = nullptr;
+        }
+    }
+
+    if (monitorProxy_ == nullptr) {
         monitorProxy_ = MediaServiceFactory::GetInstance().GetMonitorProxy();
         CHECK_AND_RETURN_RET_LOG(monitorProxy_ != nullptr, false, "monitorProxy_ is nullptr!");
+        std::lock_guard<std::mutex> lock(mutex_);
         isVaildProxy_ = true;
     }
 
@@ -134,18 +141,21 @@ void MonitorClient::ClickThread()
                 return objSet_.empty() || !isVaildProxy_ || clientDestroy_;
             });
 
+            if (clientDestroy_) {
+                MEDIA_LOGI("clientDestroy.");
+                return;
+            }
             if (objSet_.empty()) {
                 MEDIA_LOGI("objSet empty.");
                 break;
             }
-
-            if (!isVaildProxy_ || clientDestroy_) {
-                MEDIA_LOGI("isVaildProxy %{public}d, clientDestroy %{public}d.",
-                    isVaildProxy_, clientDestroy_.load());
+            if (!isVaildProxy_) {
+                monitorProxy_ = nullptr;
+                MEDIA_LOGI("Proxy is invaild.");
                 return;
             }
         }
-        CHECK_AND_CONTINUE(IsVaildProxy());
+        CHECK_AND_RETURN_LOG(monitorProxy_ != nullptr, "monitorProxy_ is nullptr!");
         CHECK_AND_CONTINUE(monitorProxy_->Click() == MSERR_OK);
     }
 
@@ -156,25 +166,14 @@ void MonitorClient::ClickThread()
 
 void MonitorClient::ClickThreadCtrl()
 {
-    while(true) {
+    while (true) {
         ClickThread();
         std::unique_lock<std::mutex> lock(mutex_);
         if (objSet_.empty() || clientDestroy_) {
             threadRunning_ = false;
-            MEDIA_LOGI("objSetsize %{public}lu, clientDestroy %{public}d.",
+            MEDIA_LOGI("objSetsize %{public}zu, clientDestroy %{public}d.",
                 objSet_.size(), clientDestroy_.load());
             return;
-        }
-
-        if (isVaildProxy_ == false) {
-            monitorProxy_ = MediaServiceFactory::GetInstance().GetMonitorProxy();
-            if (monitorProxy_ == nullptr) {
-                MEDIA_LOGI("Invalild Proxy!");
-                threadRunning_ = false;
-                return;
-            }
-            
-            isVaildProxy_ = true;
         }
     }
 }
