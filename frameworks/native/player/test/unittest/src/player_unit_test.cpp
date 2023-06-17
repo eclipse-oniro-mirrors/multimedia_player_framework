@@ -1470,6 +1470,25 @@ HWTEST_F(PlayerUnitTest, Player_SetDataSource_004, TestSize.Level0)
 }
 
 /**
+ * @tc.name  : Test SetDataSource API
+ * @tc.number: Player_SetDataSource_005
+ * @tc.desc  : Test Player SetDataSource
+ */
+HWTEST_F(PlayerUnitTest, Player_SetDataSource_005, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetDataSrc(
+        "/data/test/flac_44100Hz_978kbs_stereo.flac", 27373334, false));  // 27373334 file size
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    sleep(PLAYING_TIME);
+    EXPECT_NE(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_NEXT_SYNC));
+    sleep(PLAYING_TIME_10_SEC);
+    EXPECT_EQ(MSERR_OK, player_->Stop());
+    EXPECT_EQ(MSERR_OK, player_->Reset());
+    EXPECT_EQ(MSERR_OK, player_->Release());
+}
+
+/**
  * @tc.name  : Test Player SelectBitRate API
  * @tc.number: Player_SelectBitRate_001
  * @tc.desc  : Test Player SelectBitRate interface
