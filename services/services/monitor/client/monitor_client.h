@@ -49,9 +49,9 @@ private:
     std::atomic<bool> clientDestroy_ = false;
 
     class Destroy {
-        public:
-            Destroy() = default;
-            ~Destroy();
+    public:
+        Destroy() = default;
+        ~Destroy();
     };
     static std::mutex instanceMutex_;
     static std::shared_ptr<MonitorClient> monitorClient_;
