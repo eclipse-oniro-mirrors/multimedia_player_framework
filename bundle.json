@@ -13,16 +13,10 @@
       "name": "player_framework",
       "subsystem": "multimedia",
       "syscap": [
-        "SystemCapability.Multimedia.Media.Core",
         "SystemCapability.Multimedia.Media.AudioPlayer",
         "SystemCapability.Multimedia.Media.VideoPlayer",
         "SystemCapability.Multimedia.Media.AudioRecorder",
         "SystemCapability.Multimedia.Media.VideoRecorder",
-        "SystemCapability.Multimedia.Media.AudioDecoder",
-        "SystemCapability.Multimedia.Media.AudioEncoder",
-        "SystemCapability.Multimedia.Media.VideoDecoder",
-        "SystemCapability.Multimedia.Media.VideoEncoder",
-        "SystemCapability.Multimedia.Media.CodecBase",
         "SystemCapability.Multimedia.Media.AVPlayer",
         "SystemCapability.Multimedia.Media.AVRecorder",
         "SystemCapability.Multimedia.SystemSound.Core"
