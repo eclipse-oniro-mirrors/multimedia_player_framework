@@ -259,12 +259,14 @@ GstProducerSurfacePool *gst_producer_surface_pool_new(void)
     return pool;
 }
 
-gboolean gst_producer_surface_pool_set_callback(GstBufferPool *pool, ProSurfaceNewBuffer callback, gpointer userdata)
+gboolean gst_producer_surface_pool_set_callback(GstBufferPool *pool, ProSurfaceNewBuffer callback, gpointer userdata,
+    ProSurfaceOnDestroy onDestroy)
 {
     g_return_val_if_fail(pool != nullptr, FALSE);
     GstProducerSurfacePool *spool = GST_PRODUCER_SURFACE_POOL(pool);
     spool->newBuffer = callback;
     spool->userdata = userdata;
+    spool->onDestroy = onDestroy;
     return TRUE;
 }
 
@@ -527,8 +529,12 @@ static gboolean gst_producer_surface_pool_stop(GstBufferPool *pool)
     (void)gst_task_join(spool->task);
     gst_object_unref(spool->task);
     spool->task = nullptr;
+    if (spool->onDestroy) {
+       spool->onDestroy(userdata); 
+    }
     spool->newBuffer = nullptr;
     spool->userdata = nullptr;
+    spool->onDestroy = nullptr;
 
     return ret;
 }
