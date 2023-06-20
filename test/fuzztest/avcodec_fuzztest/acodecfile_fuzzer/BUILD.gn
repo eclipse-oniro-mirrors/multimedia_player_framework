@@ -94,7 +94,6 @@ ohos_fuzztest("ACodecFileFuzzTest") {
       "acodecfile_fuzzer.cpp",
     ]
   }
-  deps = [ "../../../../interfaces/inner_api/native:media_client" ]
   external_deps = [
     "graphic_standard:surface",
     "hiviewdfx_hilog_native:libhilog",

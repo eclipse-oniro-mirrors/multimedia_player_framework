@@ -16,18 +16,16 @@ import("//build/config/features.gni")
 import("//build/test.gni")
 import("//foundation/multimedia/player_framework/config.gni")
 module_output_path = "player_framework/avmetadata"
-MEDIA_ROOT_DIR = "//foundation/multimedia/player_framework/"
 
 ##############################fuzztest##########################################
 ohos_fuzztest("AVmetadataStubFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file =
-      "$MEDIA_ROOT_DIR/test/fuzztest/avmetadata_fuzztest/avmetadatastub_fuzzer"
+  fuzz_config_file = "../../../../test/fuzztest/avmetadata_fuzztest/avmetadatastub_fuzzer"
 
   include_dirs = [
-    "$MEDIA_ROOT_DIR/services/services/sa_media/ipc",
-    "$MEDIA_ROOT_DIR/test/fuzztest/avmetadata_fuzztest",
-    "$MEDIA_ROOT_DIR/test/fuzztest/common",
+    "../../../../services/services/sa_media/ipc",
+    "../../../../test/fuzztest/avmetadata_fuzztest",
+    "../../../../test/fuzztest/common",
   ]
   cflags = [
     "-std=c++17",
@@ -54,14 +52,14 @@ ohos_fuzztest("AVmetadataStubFuzzTest") {
   ]
   if (multimedia_player_framework_support_metadata) {
     sources = [
-      "$MEDIA_ROOT_DIR/test/fuzztest/common/stub_common.cpp",
+      "../../../../test/fuzztest/common/stub_common.cpp",
       "avmetadata_service_proxy_fuzzer.cpp",
       "avmetadatastub_fuzzer.cpp",
     ]
   }
   deps = [
-    "$MEDIA_ROOT_DIR/services/services:media_service",
-    "$MEDIA_ROOT_DIR/services/utils:media_format",
+    "../../../../services/services:media_service",
+    "../../../../services/utils:media_format",
   ]
   external_deps = [
     "ipc:ipc_single",
