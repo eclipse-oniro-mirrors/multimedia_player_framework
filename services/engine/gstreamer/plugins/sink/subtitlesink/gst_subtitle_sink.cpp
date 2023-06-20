@@ -23,7 +23,7 @@ using namespace OHOS;
 using namespace OHOS::Media;
 
 namespace {
-    constexpr guint64 POINTER_MASK = 0x00FFFFFF;
+    constexpr guint POINTER_MASK = 0x00FFFFFF;
     constexpr gint64 DEFAULT_SUBTITLE_BEHIND_AUDIO_THD = 90000000; // 90ms
 }
 #define FAKE_POINTER(addr) (POINTER_MASK & reinterpret_cast<uintptr_t>(addr))
