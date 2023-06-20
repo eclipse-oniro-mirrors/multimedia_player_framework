@@ -203,17 +203,12 @@ static void gst_subtitle_sink_cancel_not_executed_task(GstSubtitleSink *subtitle
 
 static void gst_subtitle_sink_segment_updated(GstSubtitleSink *subtitle_sink)
 {
-    g_mutex_lock(&subtitle_sink->segment_mutex);
     subtitle_sink->audio_segment_updated = TRUE;
     if (G_LIKELY(subtitle_sink->have_first_segment && !subtitle_sink->segment_updated)) {
-        auto audio_base = GST_BASE_SINK(subtitle_sink->priv->audio_sink);
-        GST_OBJECT_LOCK(audio_base);
-        gst_segment_copy_into(&audio_base->segment, &subtitle_sink->segment);
-        subtitle_sink->segment_updated = TRUE;
-        GST_OBJECT_UNLOCK(audio_base);
+        g_mutex_lock(&subtitle_sink->segment_mutex);
         g_cond_signal(&subtitle_sink->segment_cond);
+        g_mutex_unlock(&subtitle_sink->segment_mutex);
     }
-    g_mutex_unlock(&subtitle_sink->segment_mutex);
 }
 
 static void gst_subtitle_sink_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
@@ -317,7 +312,7 @@ static void gst_subtitle_sink_get_gst_buffer_info(GstBuffer *buffer, guint64 &pt
     }
 }
 
-static GstClockTime gst_subtitle_sink_get_current_time_rendered(GstBaseSink *basesink)
+static GstClockTime gst_subtitle_sink_get_current_running_time(GstBaseSink *basesink)
 {
     GstClockTime base_time = gst_element_get_base_time(GST_ELEMENT(basesink)); // get base time
     GstClockTime cur_clock_time = gst_clock_get_time(GST_ELEMENT_CLOCK(basesink)); // get current clock time
@@ -382,12 +377,15 @@ static GstFlowReturn gst_subtitle_sink_new_preroll(GstAppSink *appsink, gpointer
 static GstClockTime gst_subtitle_sink_update_reach_time(GstBaseSink *basesink, GstClockTime reach_time,
     gboolean *need_drop_this_buffer)
 {
-    GstClockTime cur_time_rendered = gst_subtitle_sink_get_current_time_rendered(basesink);
-    gint64 subtitle_time_rendered_diff = cur_time_rendered - reach_time;
-    GST_LOG_OBJECT(basesink, "subtitle_time_rendered_diff = %"
-        GST_TIME_FORMAT, GST_TIME_ARGS(abs(subtitle_time_rendered_diff)));
-
-    if (subtitle_time_rendered_diff > DEFAULT_SUBTITLE_BEHIND_AUDIO_THD) {
+    auto priv = GST_SUBTITLE_SINK(basesink)->priv;
+    GstClockTime cur_running_time = gst_subtitle_sink_get_current_running_time(basesink);
+    gint64 subtitle_running_time_diff = cur_running_time - reach_time;
+    gint64 audio_running_time_diff = 0;
+    g_object_get(priv->audio_sink, "last-running-time-diff", &audio_running_time_diff, nullptr);
+    gint64 late_time = subtitle_running_time_diff - audio_running_time_diff;
+    if (late_time > DEFAULT_SUBTITLE_BEHIND_AUDIO_THD) {
+        GST_LOG_OBJECT(basesink, "subtitle is too late, %"
+        GST_TIME_FORMAT " behind", GST_TIME_ARGS(abs(late_time)));
         *need_drop_this_buffer = TRUE;
     }
     return reach_time;
@@ -521,6 +519,9 @@ static gboolean gst_subtitle_sink_event(GstBaseSink *basesink, GstEvent *event)
                     g_cond_wait_until(&subtitle_sink->segment_cond, &subtitle_sink->segment_mutex, end_time);
                     g_mutex_unlock(&subtitle_sink->segment_mutex);
                 }
+                GST_OBJECT_LOCK(audio_base);
+                gst_segment_copy_into(&audio_base->segment, &subtitle_sink->segment);
+                GST_OBJECT_UNLOCK(audio_base);
                 if ((subtitle_sink->seek_flags & GST_SEEK_FLAG_SNAP_NEAREST) == GST_SEEK_FLAG_SNAP_NEAREST) {
                     subtitle_sink->segment.start = new_segment.start;
                     subtitle_sink->segment.time = new_segment.time;
@@ -550,8 +551,9 @@ static gboolean gst_subtitle_sink_event(GstBaseSink *basesink, GstEvent *event)
             GST_DEBUG_OBJECT(subtitle_sink, "subtitle flush start");
             gst_subtitle_sink_handle_buffer(subtitle_sink, nullptr, TRUE);
             subtitle_sink->is_flushing = TRUE;
-            priv->time_rendered = 0;
             subtitle_sink->stop_render = FALSE;
+            subtitle_sink->audio_segment_updated = FALSE;
+            priv->time_rendered = 0;
             break;
         }
         case GST_EVENT_FLUSH_STOP: {
