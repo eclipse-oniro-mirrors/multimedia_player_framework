@@ -117,6 +117,7 @@ static void gst_subtitle_sink_init(GstSubtitleSink *subtitle_sink)
     subtitle_sink->audio_segment_updated = FALSE;
     subtitle_sink->preroll_buffer = nullptr;
     subtitle_sink->rate = 1.0f;
+    subtitle_sink->segment_updated = FALSE;
 
     auto priv = reinterpret_cast<GstSubtitleSinkPrivate *>(gst_subtitle_sink_get_instance_private(subtitle_sink));
     g_return_if_fail(priv != nullptr);
@@ -204,7 +205,12 @@ static void gst_subtitle_sink_segment_updated(GstSubtitleSink *subtitle_sink)
 {
     g_mutex_lock(&subtitle_sink->segment_mutex);
     subtitle_sink->audio_segment_updated = TRUE;
-    if (G_LIKELY(subtitle_sink->have_first_segment)) {
+    if (G_LIKELY(subtitle_sink->have_first_segment && !subtitle_sink->segment_updated)) {
+        auto audio_base = GST_BASE_SINK(subtitle_sink->priv->audio_sink);
+        GST_OBJECT_LOCK(audio_base);
+        gst_segment_copy_into(&audio_base->segment, &subtitle_sink->segment);
+        subtitle_sink->segment_updated = TRUE;
+        GST_OBJECT_UNLOCK(audio_base);
         g_cond_signal(&subtitle_sink->segment_cond);
     }
     g_mutex_unlock(&subtitle_sink->segment_mutex);
@@ -315,7 +321,7 @@ static GstClockTime gst_subtitle_sink_get_current_time_rendered(GstBaseSink *bas
 {
     GstClockTime base_time = gst_element_get_base_time(GST_ELEMENT(basesink)); // get base time
     GstClockTime cur_clock_time = gst_clock_get_time(GST_ELEMENT_CLOCK(basesink)); // get current clock time
-    g_return_val_if_fail(!GST_CLOCK_TIME_IS_VALID(base_time) &&
+    g_return_val_if_fail(GST_CLOCK_TIME_IS_VALID(base_time) &&
         GST_CLOCK_TIME_IS_VALID(cur_clock_time), GST_CLOCK_TIME_NONE);
     g_return_val_if_fail(cur_clock_time >= base_time, GST_CLOCK_TIME_NONE);
     return cur_clock_time - base_time;
@@ -471,6 +477,7 @@ static gboolean gst_subtitle_sink_stop(GstBaseSink *basesink)
     subtitle_sink->have_first_segment = FALSE;
     subtitle_sink->preroll_buffer = nullptr;
     subtitle_sink->stop_render = FALSE;
+    subtitle_sink->segment_updated = FALSE;
     priv->timer_queue->Stop();
     g_mutex_unlock (&priv->mutex);
     GST_BASE_SINK_CLASS(parent_class)->stop(basesink);
@@ -494,6 +501,7 @@ static gboolean gst_subtitle_sink_event(GstBaseSink *basesink, GstEvent *event)
             GstSegment new_segment;
 
             GST_OBJECT_LOCK (basesink);
+            subtitle_sink->segment_updated = FALSE;
             gst_event_copy_segment (event, &new_segment);
             GST_DEBUG_OBJECT (basesink,
                 "received upstream segment %u %" GST_SEGMENT_FORMAT, seqnum, &new_segment);
@@ -513,8 +521,6 @@ static gboolean gst_subtitle_sink_event(GstBaseSink *basesink, GstEvent *event)
                     g_cond_wait_until(&subtitle_sink->segment_cond, &subtitle_sink->segment_mutex, end_time);
                     g_mutex_unlock(&subtitle_sink->segment_mutex);
                 }
-                GST_OBJECT_LOCK(audio_base);
-                gst_segment_copy_into(&audio_base->segment, &subtitle_sink->segment);
                 if ((subtitle_sink->seek_flags & GST_SEEK_FLAG_SNAP_NEAREST) == GST_SEEK_FLAG_SNAP_NEAREST) {
                     subtitle_sink->segment.start = new_segment.start;
                     subtitle_sink->segment.time = new_segment.time;
@@ -522,7 +528,6 @@ static gboolean gst_subtitle_sink_event(GstBaseSink *basesink, GstEvent *event)
                 subtitle_sink->segment.stop = new_segment.stop;
                 subtitle_sink->segment.duration = new_segment.duration;
                 std::swap(subtitle_sink->segment.rate, subtitle_sink->segment.applied_rate);
-                GST_OBJECT_UNLOCK(audio_base);
                 GST_DEBUG_OBJECT (basesink, "while prev seek or after seek, replace "
                     "upstream segment with audio segment %" GST_SEGMENT_FORMAT, &audio_base->segment);
             }
@@ -533,6 +538,7 @@ static gboolean gst_subtitle_sink_event(GstBaseSink *basesink, GstEvent *event)
                 event = new_event;
             }
             subtitle_sink->audio_segment_updated = FALSE;
+            subtitle_sink->segment_updated = TRUE;
             GST_OBJECT_UNLOCK(basesink);
             break;
         }
