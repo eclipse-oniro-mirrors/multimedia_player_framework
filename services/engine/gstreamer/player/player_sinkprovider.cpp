@@ -244,7 +244,7 @@ GstElement *PlayerSinkProvider::DoCreateSubtitleSink(const gpointer userData)
 
     GstSubtitleSinkCallbacks sinkCallbacks = { PlayerSinkProvider::SubtitleUpdated };
     gst_subtitle_sink_set_callback(GST_SUBTITLE_SINK(sink), &sinkCallbacks, userData, nullptr);
-
+    MEDIA_LOGI("CreateSubtitleSink out.");
     return sink;
 }
 

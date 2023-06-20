@@ -181,6 +181,11 @@ int32_t PlayBinCtrlerBase::AddSubSource(const std::string &url)
     MEDIA_LOGD("enter");
 
     std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET(sinkProvider_ != nullptr, MSERR_INVALID_VAL);
+    if (subtitleSink_ == nullptr) {
+        subtitleSink_ = sinkProvider_->CreateSubtitleSink();
+        g_object_set(playbin_, "text-sink", subtitleSink_, nullptr);
+    }
 
     isAddingSubtitle_ = true;
     g_object_set(playbin_, "add-suburi", url.c_str(), nullptr);
