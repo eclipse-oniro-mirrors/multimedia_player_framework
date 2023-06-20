@@ -14,24 +14,21 @@
 import("//build/test.gni")
 import("//foundation/multimedia/player_framework/config.gni")
 
-MEDIA_ROOT_DIR = "//foundation/multimedia/player_framework/"
 module_output_path = "player_framework/avcodec"
 
 avcodec_unittest_native_include_dirs = [
-  "//graphic/graphic_2d/interfaces/innerkits/surface",
-  "//foundation//window/window_manager/interfaces/innerkits/wm",
-  "$MEDIA_ROOT_DIR/interfaces/inner_api/native",
-  "$MEDIA_ROOT_DIR/test/unittest/avcodec_test/native/audiodecoder/",
-  "$MEDIA_ROOT_DIR/test/unittest/avcodec_test/native/audioencoder/",
-  "$MEDIA_ROOT_DIR/test/unittest/avcodec_test/native/avcodec_info/",
-  "$MEDIA_ROOT_DIR/test/unittest/avcodec_test/native/avcodec_list/",
-  "$MEDIA_ROOT_DIR/test/unittest/avcodec_test/native/avformat/",
-  "$MEDIA_ROOT_DIR/test/unittest/avcodec_test/native/avmemory/",
-  "$MEDIA_ROOT_DIR/test/unittest/avcodec_test/native/enum/",
-  "$MEDIA_ROOT_DIR/test/unittest/avcodec_test/native/surface/",
-  "$MEDIA_ROOT_DIR/test/unittest/avcodec_test/native/videodecoder/",
-  "$MEDIA_ROOT_DIR/test/unittest/avcodec_test/native/videoencoder/",
-  "$MEDIA_ROOT_DIR/test/unittest/common/include/",
+  "../../../interfaces/inner_api/native",
+  "../../../test/unittest/avcodec_test/native/audiodecoder/",
+  "../../../test/unittest/avcodec_test/native/audioencoder/",
+  "../../../test/unittest/avcodec_test/native/avcodec_info/",
+  "../../../test/unittest/avcodec_test/native/avcodec_list/",
+  "../../../test/unittest/avcodec_test/native/avformat/",
+  "../../../test/unittest/avcodec_test/native/avmemory/",
+  "../../../test/unittest/avcodec_test/native/enum/",
+  "../../../test/unittest/avcodec_test/native/surface/",
+  "../../../test/unittest/avcodec_test/native/videodecoder/",
+  "../../../test/unittest/avcodec_test/native/videoencoder/",
+  "../../../test/unittest/common/include/",
 ]
 
 avcodec_unittest_cflags = [
@@ -84,15 +81,11 @@ ohos_unittest("vcodec_native_unit_test") {
     ]
   }
 
-  deps = [
-    "//foundation/graphic/graphic_2d:libsurface",
-    "//foundation/graphic/graphic_2d/frameworks/surface:surface",
-    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
-    "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
-    "//foundation/window/window_manager/wm:libwm",
+  external_deps = [
+    "graphic_standard:surface",
+    "player_framework:media_client",
   ]
-
-  resource_config_file = "//foundation/multimedia/player_framework/test/unittest/resources/ohos_test.xml"
+  resource_config_file = "../../../test/unittest/resources/ohos_test.xml"
 }
 
 ##################################################################################################################
@@ -122,15 +115,11 @@ ohos_unittest("acodec_native_unit_test") {
     ]
   }
 
-  deps = [
-    "//foundation/graphic/graphic_2d:libsurface",
-    "//foundation/graphic/graphic_2d/frameworks/surface:surface",
-    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
-    "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
-    "//foundation/window/window_manager/wm:libwm",
+  external_deps = [
+    "graphic_standard:surface",
+    "player_framework:media_client",
   ]
-
-  resource_config_file = "//foundation/multimedia/player_framework/test/unittest/resources/ohos_test.xml"
+  resource_config_file = "../../test/unittest/resources/ohos_test.xml"
 }
 
 ##################################################################################################################
@@ -154,13 +143,11 @@ ohos_unittest("avcodec_list_native_unit_test") {
       "./native/enum/enum_native_mock.cpp",
     ]
   }
-
-  deps = [
-    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
-    "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
+  external_deps = [
+    "graphic_standard:surface",
+    "player_framework:media_client",
   ]
-
-  resource_config_file = "//foundation/multimedia/player_framework/test/unittest/resources/ohos_test.xml"
+  resource_config_file = "../../test/unittest/resources/ohos_test.xml"
 }
 
 ##################################################################################################################
@@ -181,9 +168,9 @@ ohos_unittest("format_native_unit_test") {
     ]
   }
 
-  deps = [
-    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
-    "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
+  external_deps = [
+    "bounds_checking_function:libsec_shared",
+    "graphic_standard:surface",
+    "player_framework:media_client",
   ]
-  external_deps = [ "bounds_checking_function:libsec_shared" ]
 }
