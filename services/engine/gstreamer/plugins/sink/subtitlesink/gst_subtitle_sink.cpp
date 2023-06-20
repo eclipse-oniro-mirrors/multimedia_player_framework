@@ -205,6 +205,11 @@ static void gst_subtitle_sink_segment_updated(GstSubtitleSink *subtitle_sink)
 {
     subtitle_sink->audio_segment_updated = TRUE;
     if (G_LIKELY(subtitle_sink->have_first_segment && !subtitle_sink->segment_updated)) {
+        auto audio_base = GST_BASE_SINK(subtitle_sink->priv->audio_sink);
+        GST_OBJECT_LOCK(audio_base);
+        subtitle_sink->segment_updated = TRUE;
+        gst_segment_copy_into(&audio_base->segment, &subtitle_sink->segment);
+        GST_OBJECT_UNLOCK(audio_base);        
         g_mutex_lock(&subtitle_sink->segment_mutex);
         g_cond_signal(&subtitle_sink->segment_cond);
         g_mutex_unlock(&subtitle_sink->segment_mutex);
@@ -519,9 +524,11 @@ static gboolean gst_subtitle_sink_event(GstBaseSink *basesink, GstEvent *event)
                     g_cond_wait_until(&subtitle_sink->segment_cond, &subtitle_sink->segment_mutex, end_time);
                     g_mutex_unlock(&subtitle_sink->segment_mutex);
                 }
-                GST_OBJECT_LOCK(audio_base);
-                gst_segment_copy_into(&audio_base->segment, &subtitle_sink->segment);
-                GST_OBJECT_UNLOCK(audio_base);
+                if (!subtitle_sink->segment_updated) {
+                    GST_OBJECT_LOCK(audio_base);
+                    gst_segment_copy_into(&audio_base->segment, &subtitle_sink->segment);
+                    GST_OBJECT_UNLOCK(audio_base);
+                }
                 if ((subtitle_sink->seek_flags & GST_SEEK_FLAG_SNAP_NEAREST) == GST_SEEK_FLAG_SNAP_NEAREST) {
                     subtitle_sink->segment.start = new_segment.start;
                     subtitle_sink->segment.time = new_segment.time;
