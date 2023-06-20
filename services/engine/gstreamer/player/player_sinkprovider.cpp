@@ -195,32 +195,6 @@ GstElement *PlayerSinkProvider::DoCreateVideoSink(const GstCaps *caps, const gpo
     return sink;
 }
 
-PlayBinSinkProvider::SinkPtr PlayerSinkProvider::CreateSubtitleSink()
-{
-    if (subtitleSink_ != nullptr) {
-        gst_object_unref(subtitleSink_);
-        subtitleSink_ = nullptr;
-    }
-    subtitleSink_ = DoCreateSubtitleSink(reinterpret_cast<gpointer>(this));
-    CHECK_AND_RETURN_RET_LOG(subtitleSink_ != nullptr, nullptr, "CreateSubtitleSink failed..");
-    g_object_set(G_OBJECT(subtitleSink_), "audio-sink", audioSink_, nullptr);
-    return subtitleSink_;
-}
-
-GstElement *PlayerSinkProvider::DoCreateSubtitleSink(const gpointer userData)
-{
-    MEDIA_LOGI("CreateSubtitleSink in.");
-    CHECK_AND_RETURN_RET_LOG(userData != nullptr, nullptr, "input userData is nullptr..");
-
-    auto sink = GST_ELEMENT_CAST(gst_object_ref_sink(gst_element_factory_make("subtitledisplaysink", nullptr)));
-    CHECK_AND_RETURN_RET_LOG(sink != nullptr, nullptr, "gst_element_factory_make failed..");
-
-    GstSubtitleSinkCallbacks sinkCallbacks = { PlayerSinkProvider::SubtitleUpdated };
-    gst_subtitle_sink_set_callback(GST_SUBTITLE_SINK(sink), &sinkCallbacks, userData, nullptr);
-
-    return sink;
-}
-
 PlayBinSinkProvider::SinkPtr PlayerSinkProvider::GetVideoSink()
 {
     CHECK_AND_RETURN_RET_LOG(videoSink_ != nullptr, nullptr, "videoSink is nullptr");
@@ -246,6 +220,32 @@ void PlayerSinkProvider::OnFirstRenderFrame()
             MEDIA_LOGW("KPI-TRACE: FIRST-VIDEO-FRAME rendered");
         }
     }
+}
+
+PlayBinSinkProvider::SinkPtr PlayerSinkProvider::CreateSubtitleSink()
+{
+    if (subtitleSink_ != nullptr) {
+        gst_object_unref(subtitleSink_);
+        subtitleSink_ = nullptr;
+    }
+    subtitleSink_ = DoCreateSubtitleSink(reinterpret_cast<gpointer>(this));
+    CHECK_AND_RETURN_RET_LOG(subtitleSink_ != nullptr, nullptr, "CreateSubtitleSink failed..");
+    g_object_set(G_OBJECT(subtitleSink_), "audio-sink", audioSink_, nullptr);
+    return subtitleSink_;
+}
+
+GstElement *PlayerSinkProvider::DoCreateSubtitleSink(const gpointer userData)
+{
+    MEDIA_LOGI("CreateSubtitleSink in.");
+    CHECK_AND_RETURN_RET_LOG(userData != nullptr, nullptr, "input userData is nullptr..");
+
+    auto sink = GST_ELEMENT_CAST(gst_object_ref_sink(gst_element_factory_make("subtitledisplaysink", nullptr)));
+    CHECK_AND_RETURN_RET_LOG(sink != nullptr, nullptr, "gst_element_factory_make failed..");
+
+    GstSubtitleSinkCallbacks sinkCallbacks = { PlayerSinkProvider::SubtitleUpdated };
+    gst_subtitle_sink_set_callback(GST_SUBTITLE_SINK(sink), &sinkCallbacks, userData, nullptr);
+
+    return sink;
 }
 
 void PlayerSinkProvider::HandleSubtitleBuffer(GstBuffer *sample, Format &subtitle)
