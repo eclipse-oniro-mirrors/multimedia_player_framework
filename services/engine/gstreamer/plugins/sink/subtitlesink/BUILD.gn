@@ -42,16 +42,16 @@ config("gst_subtitle_sink_config") {
   ]
 
   include_dirs = [
+    "../../common",
+    "../subtitle_sink",
     "$MEDIA_ROOT_DIR/services/utils/include",
     "$MEDIA_ROOT_DIR/interfaces/inner_api/native",
-    "$MEDIA_ROOT_DIR/services/engine/gstreamer/plugins/common",
-    "$MEDIA_ROOT_DIR/services/engine/gstreamer/plugins/sink/subtitle_sink",
     "//third_party/gstreamer/gstreamer",
     "//third_party/gstreamer/gstreamer/libs",
     "//third_party/gstreamer/gstplugins_base",
     "//third_party/gstreamer/gstplugins_base/gst-libs",
-    "//third_party/glib/glib",
     "//third_party/glib",
+    "//third_party/glib/glib",
     "//third_party/glib/gmodule",
   ]
 }
@@ -74,7 +74,7 @@ ohos_shared_library("gst_subtitle_sink") {
   configs = [ ":gst_subtitle_sink_config" ]
 
   deps = [
-    "$MEDIA_ROOT_DIR/services/engine/gstreamer/plugins/common:gst_media_common",
+    "../../common:gst_media_common",
     "//third_party/glib:glib",
     "//third_party/glib:gmodule",
     "//third_party/glib:gobject",

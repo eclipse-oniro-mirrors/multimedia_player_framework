@@ -21,12 +21,12 @@
 
 using namespace OHOS;
 using namespace OHOS::Media;
-#define POINTER_MASK 0x00FFFFFF
-#define FAKE_POINTER(addr) (POINTER_MASK & reinterpret_cast<uintptr_t>(addr))
 
 namespace {
+    constexpr guint64 POINTER_MASK = 0x00FFFFFF;
     constexpr gint64 DEFAULT_SUBTITLE_BEHIND_AUDIO_THD = 90000000; // 90ms
 }
+#define FAKE_POINTER(addr) (POINTER_MASK & reinterpret_cast<uintptr_t>(addr))
 
 enum {
     PROP_0,
@@ -315,7 +315,8 @@ static GstClockTime gst_subtitle_sink_get_current_time_rendered(GstBaseSink *bas
 {
     GstClockTime base_time = gst_element_get_base_time(GST_ELEMENT(basesink)); // get base time
     GstClockTime cur_clock_time = gst_clock_get_time(GST_ELEMENT_CLOCK(basesink)); // get current clock time
-    g_return_val_if_fail(!GST_CLOCK_TIME_IS_VALID(base_time) && GST_CLOCK_TIME_IS_VALID(cur_clock_time), GST_CLOCK_TIME_NONE);
+    g_return_val_if_fail(!GST_CLOCK_TIME_IS_VALID(base_time) &&
+        GST_CLOCK_TIME_IS_VALID(cur_clock_time), GST_CLOCK_TIME_NONE);
     g_return_val_if_fail(cur_clock_time >= base_time, GST_CLOCK_TIME_NONE);
     return cur_clock_time - base_time;
 }
