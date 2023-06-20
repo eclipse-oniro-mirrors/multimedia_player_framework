@@ -503,10 +503,10 @@ static gboolean gst_audio_server_sink_event(GstBaseSink *basesink, GstEvent *eve
             break;
         case GST_EVENT_SEGMENT:
             g_mutex_lock(&sink->render_lock);
-            sink->frame_after_segment = TRUE;
-            g_mutex_unlock(&sink->render_lock);
             ret = GST_BASE_SINK_CLASS(parent_class)->event(basesink, event);
+            sink->frame_after_segment = TRUE;
             g_object_set(G_OBJECT(sink->subtitle_sink), "segment-updated", TRUE, nullptr);
+            g_mutex_unlock(&sink->render_lock);
             return ret;
         case GST_EVENT_FLUSH_START:
             basesink->stream_group_done = FALSE;

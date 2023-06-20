@@ -53,6 +53,7 @@ struct _GstSubtitleSink {
     gboolean is_flushing;
     gboolean stop_render;
     gboolean have_first_segment;
+    gboolean audio_segment_updated;
     GstBuffer *preroll_buffer;
     gdouble rate;
     GCond segment_cond;

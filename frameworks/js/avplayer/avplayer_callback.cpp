@@ -687,7 +687,7 @@ void AVPlayerCallback::OnDurationUpdateCb(const int32_t extra, const Format &inf
 void AVPlayerCallback::OnSubtitleUpdateCb(const int32_t extra, const Format &infoBody)
 {
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
-    if (refMap_.find(AVPlayerEvent::EVENT_SUBTITLE_UPDATE) == refMap_.end()) {
+    if (refMap_.find(AVPlayerEvent::EVENT_SUBTITLE_TEXT_UPDATE) == refMap_.end()) {
         MEDIA_LOGW("can not find subtitle update callback!");
         return;
     }
@@ -695,8 +695,8 @@ void AVPlayerCallback::OnSubtitleUpdateCb(const int32_t extra, const Format &inf
     if (infoBody.ContainKey(PlayerKeys::SUBTITLE_TEXT)) {
         (void)infoBody.GetStringValue(PlayerKeys::SUBTITLE_TEXT, cb->text);
     }
-    cb->callback = refMap_.at(AVPlayerEvent::EVENT_SUBTITLE_UPDATE);
-    cb->callbackName = AVPlayerEvent::EVENT_SUBTITLE_UPDATE;
+    cb->callback = refMap_.at(AVPlayerEvent::EVENT_SUBTITLE_TEXT_UPDATE);
+    cb->callbackName = AVPlayerEvent::EVENT_SUBTITLE_TEXT_UPDATE;
     NapiCallback::CompleteCallback(env_, cb);
 }
 

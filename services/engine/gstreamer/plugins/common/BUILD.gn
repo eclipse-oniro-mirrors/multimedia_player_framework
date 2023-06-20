@@ -88,11 +88,11 @@ ohos_shared_library("gst_media_common") {
   }
 
   deps = [
+    "../../../../utils:media_service_utils",
     "../codec/common:gst_codec_plugins_common",
     "../sink/memsink:gst_mem_sink_base",
     "../sink/subtitlesink:gst_subtitle_sink_base",
     "../source/memsource:gst_mem_src_base",
-    "../../../../utils:media_service_utils",
     "//third_party/glib:glib",
     "//third_party/glib:gmodule",
     "//third_party/glib:gobject",

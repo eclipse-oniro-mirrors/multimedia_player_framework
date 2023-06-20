@@ -114,6 +114,7 @@ static void gst_subtitle_sink_init(GstSubtitleSink *subtitle_sink)
     subtitle_sink->is_flushing = FALSE;
     subtitle_sink->stop_render = FALSE;
     subtitle_sink->have_first_segment = FALSE;
+    subtitle_sink->audio_segment_updated = FALSE;
     subtitle_sink->preroll_buffer = nullptr;
     subtitle_sink->rate = 1.0f;
 
@@ -202,6 +203,7 @@ static void gst_subtitle_sink_cancel_not_executed_task(GstSubtitleSink *subtitle
 static void gst_subtitle_sink_segment_updated(GstSubtitleSink *subtitle_sink)
 {
     g_mutex_lock(&subtitle_sink->segment_mutex);
+    subtitle_sink->audio_segment_updated = TRUE;
     if (G_LIKELY(subtitle_sink->have_first_segment)) {
         g_cond_signal(&subtitle_sink->segment_cond);
     }
@@ -504,10 +506,12 @@ static gboolean gst_subtitle_sink_event(GstBaseSink *basesink, GstEvent *event)
                 new_segment.rate = audio_base->segment.applied_rate;
                 gst_segment_copy_into(&new_segment, &subtitle_sink->segment);
             } else {
-                g_mutex_lock(&subtitle_sink->segment_mutex);
-                gint64 end_time = g_get_monotonic_time() + G_TIME_SPAN_SECOND;
-                g_cond_wait_until(&subtitle_sink->segment_cond, &subtitle_sink->segment_mutex, end_time);
-                g_mutex_unlock(&subtitle_sink->segment_mutex);
+                if (!subtitle_sink->audio_segment_updated) {
+                    g_mutex_lock(&subtitle_sink->segment_mutex);
+                    gint64 end_time = g_get_monotonic_time() + G_TIME_SPAN_SECOND;
+                    g_cond_wait_until(&subtitle_sink->segment_cond, &subtitle_sink->segment_mutex, end_time);
+                    g_mutex_unlock(&subtitle_sink->segment_mutex);
+                }
                 GST_OBJECT_LOCK(audio_base);
                 gst_segment_copy_into(&audio_base->segment, &subtitle_sink->segment);
                 if ((subtitle_sink->seek_flags & GST_SEEK_FLAG_SNAP_NEAREST) == GST_SEEK_FLAG_SNAP_NEAREST) {
@@ -527,6 +531,7 @@ static gboolean gst_subtitle_sink_event(GstBaseSink *basesink, GstEvent *event)
                 gst_event_unref(event);
                 event = new_event;
             }
+            subtitle_sink->audio_segment_updated = FALSE;
             GST_OBJECT_UNLOCK(basesink);
             break;
         }
