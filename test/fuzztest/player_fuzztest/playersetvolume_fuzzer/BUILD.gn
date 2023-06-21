@@ -26,7 +26,7 @@ ohos_fuzztest("PlayerSetVolumeFuzzTest") {
   resource_config_file = "../../../../test/fuzztest/resource/ohos_test.xml"
 
   include_dirs = [
-    "../../../../../../foundation/window/window_manager/interfaces/innerkits/wm",
+    "../../../../../../../foundation/window/window_manager/interfaces/innerkits/wm",
     "../../../../interfaces/inner_api/native",
     "../../../../services/utils/include",
     "../../../../test/fuzztest/common/",
@@ -44,8 +44,8 @@ ohos_fuzztest("PlayerSetVolumeFuzzTest") {
     ]
   }
   deps = [
-    "../../../../../../foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
-    "../../../../../../foundation/window/window_manager/wm:libwm",
+    "../../../../../../../foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
+    "../../../../../../../foundation/window/window_manager/wm:libwm",
   ]
   external_deps = [
     "graphic_standard:surface",
