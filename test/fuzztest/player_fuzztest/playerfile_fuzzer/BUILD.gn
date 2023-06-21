@@ -20,7 +20,8 @@ module_output_path = "player_framework/media_player"
 ##############################fuzztest##########################################
 ohos_fuzztest("PlayerFileFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file = "../../../../test/fuzztest/player_fuzztest/playerfile_fuzzer"
+  fuzz_config_file =
+      "../../../../test/fuzztest/player_fuzztest/playerfile_fuzzer"
   resource_config_file = "../../../../test/fuzztest/resource/ohos_test.xml"
 
   include_dirs = [

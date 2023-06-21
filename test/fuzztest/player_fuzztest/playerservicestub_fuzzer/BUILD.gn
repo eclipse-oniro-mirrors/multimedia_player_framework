@@ -20,7 +20,8 @@ module_output_path = "player_framework/media_player"
 ##############################fuzztest##########################################
 ohos_fuzztest("PlayerServiceStubFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file = "../../../../test/fuzztest/player_fuzztest/playerservicestub_fuzzer"
+  fuzz_config_file =
+      "../../../../test/fuzztest/player_fuzztest/playerservicestub_fuzzer"
 
   include_dirs = [
     "../../../../services/include",
@@ -60,7 +61,7 @@ ohos_fuzztest("PlayerServiceStubFuzzTest") {
     "../../../../services/utils:media_format",
   ]
   external_deps = [
-    "graphic_standard:surface"
+    "graphic_standard:surface",
     "ipc:ipc_single",
     "player_framework:media_client",
     "safwk:system_ability_fwk",

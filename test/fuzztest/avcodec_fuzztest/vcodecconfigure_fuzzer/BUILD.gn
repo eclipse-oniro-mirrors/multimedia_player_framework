@@ -60,7 +60,8 @@ vcodec_fuzztest_cflags = [
 ##############################fuzztest##########################################
 ohos_fuzztest("VCodecConfigureFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file = "../../../..//test/fuzztest/avcodec_fuzztest/vcodecconfigure_fuzzer"
+  fuzz_config_file =
+      "../../../..//test/fuzztest/avcodec_fuzztest/vcodecconfigure_fuzzer"
 
   resource_config_file = "../../../../test/fuzztest/resource/ohos_test.xml"
   include_dirs = vcodec_fuzztest_include_dirs

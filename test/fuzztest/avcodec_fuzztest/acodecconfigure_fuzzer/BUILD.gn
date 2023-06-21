@@ -62,7 +62,8 @@ acodec_fuzztest_cflags = [
 ##############################fuzztest##########################################
 ohos_fuzztest("ACodecConfigureFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file = "../../../../test/fuzztest/avcodec_fuzztest/acodecconfigure_fuzzer"
+  fuzz_config_file =
+      "../../../../test/fuzztest/avcodec_fuzztest/acodecconfigure_fuzzer"
 
   resource_config_file = "../../../../test/fuzztest/resource/ohos_test.xml"
   include_dirs = acodec_fuzztest_include_dirs
@@ -104,5 +105,4 @@ ohos_fuzztest("ACodecConfigureFuzzTest") {
     "player_framework:media_client",
   ]
 }
-
 ###############################################################################
