@@ -22,6 +22,7 @@
 #include "scope_guard.h"
 #include "gst_producer_surface_pool.h"
 #include "media_dfx.h"
+#include "gst_utils.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "HdiVdecOutBufferMgr"};
@@ -170,7 +171,7 @@ void HdiVdecOutBufferMgr::SetOutputPool(GstBufferPool *pool)
     HdiVdecOutBufferMgrWrapper *wrapper = new(std::nothrow) HdiVdecOutBufferMgrWrapper(shared_from_this());
     CHECK_AND_RETURN_LOG(wrapper != nullptr, "can not create this wrapper");
     gst_producer_surface_pool_set_callback(pool, HdiVdecOutBufferMgr::NewBuffer, wrapper,
-        &PlayBinCtrlerWrapper::OnDestory);
+        &HdiVdecOutBufferMgrWrapper::OnDestory);
     isCallBackMode_ = true;
 }
 

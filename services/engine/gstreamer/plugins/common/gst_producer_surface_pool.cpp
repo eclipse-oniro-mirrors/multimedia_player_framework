@@ -531,11 +531,11 @@ static gboolean gst_producer_surface_pool_stop(GstBufferPool *pool)
     gst_object_unref(spool->task);
     spool->task = nullptr;
     if (spool->onDestroy) {
-       spool->onDestroy(userdata); 
+       spool->onDestroy(spool->userdata);
+       spool->onDestroy = nullptr;
     }
     spool->newBuffer = nullptr;
     spool->userdata = nullptr;
-    spool->onDestroy = nullptr;
 
     return ret;
 }
