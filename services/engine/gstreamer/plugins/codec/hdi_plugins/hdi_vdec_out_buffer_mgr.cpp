@@ -125,7 +125,7 @@ GstFlowReturn HdiVdecOutBufferMgr::NewBuffer(GstBuffer *buffer, gpointer userDat
     };
 
     auto thizStrong = HdiVdecOutBufferMgrWrapper::TakeStrongThiz(userData);
-    CHECK_AND_RETURN_RET_LOG(thizStrong != nullptr, GST_FLOW_ERROR, "appData is null");
+    CHECK_AND_RETURN_RET_LOG(thizStrong != nullptr, GST_FLOW_ERROR, "thizStrong is null");
     CANCEL_SCOPE_EXIT_GUARD(0);
     if (thizStrong->OnNewBuffer(buffer) == GST_CODEC_ERROR) {
         MEDIA_LOGE("new buffer done failed");
