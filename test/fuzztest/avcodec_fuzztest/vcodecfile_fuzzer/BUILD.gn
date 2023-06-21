@@ -18,6 +18,7 @@ import("//foundation/multimedia/player_framework/config.gni")
 module_output_path = "player_framework/avcodec"
 
 vcodec_fuzztest_include_dirs = [
+  "../../../../../../foundation/window/window_manager/interfaces/innerkits/wm",
   "../../../../interfaces/inner_api/native",
   "../../../../test/unittest/avcodec_test/",
   "../../../../test/unittest/avcodec_test/native/audiodecoder/",
@@ -89,6 +90,10 @@ ohos_fuzztest("VCodecFileFuzzTest") {
       "vcodecfile_fuzzer.cpp",
     ]
   }
+  deps = [
+    "../../../../../../foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
+    "../../../../../../foundation/window/window_manager/wm:libwm",
+  ]
   external_deps = [
     "graphic_standard:surface",
     "hiviewdfx_hilog_native:libhilog",

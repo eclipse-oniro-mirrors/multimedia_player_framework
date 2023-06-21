@@ -17,6 +17,7 @@ import("//foundation/multimedia/player_framework/config.gni")
 module_output_path = "player_framework/avcodec"
 
 avcodec_unittest_native_include_dirs = [
+  "../../../../../../foundation/window/window_manager/interfaces/innerkits/wm",
   "../../../interfaces/inner_api/native",
   "../../../test/unittest/avcodec_test/native/audiodecoder/",
   "../../../test/unittest/avcodec_test/native/audioencoder/",
@@ -81,11 +82,16 @@ ohos_unittest("vcodec_native_unit_test") {
     ]
   }
 
+  deps = [
+    "../../../../../../foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
+    "../../../../../../foundation/window/window_manager/wm:libwm",
+  ]
+
   external_deps = [
     "graphic_standard:surface",
     "player_framework:media_client",
   ]
-  resource_config_file = "../../../test/unittest/resources/ohos_test.xml"
+  resource_config_file = "../resources/ohos_test.xml"
 }
 
 ##################################################################################################################
@@ -115,11 +121,16 @@ ohos_unittest("acodec_native_unit_test") {
     ]
   }
 
+  deps = [
+    "../../../../../../foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
+    "../../../../../../foundation/window/window_manager/wm:libwm",
+  ]
+
   external_deps = [
     "graphic_standard:surface",
     "player_framework:media_client",
   ]
-  resource_config_file = "../../test/unittest/resources/ohos_test.xml"
+  resource_config_file = "../resources/ohos_test.xml"
 }
 
 ##################################################################################################################
@@ -143,11 +154,17 @@ ohos_unittest("avcodec_list_native_unit_test") {
       "./native/enum/enum_native_mock.cpp",
     ]
   }
+
+  deps = [
+    "../../../../../../foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
+    "../../../../../../foundation/window/window_manager/wm:libwm",
+  ]
+
   external_deps = [
     "graphic_standard:surface",
     "player_framework:media_client",
   ]
-  resource_config_file = "../../test/unittest/resources/ohos_test.xml"
+  resource_config_file = "../resources/ohos_test.xml"
 }
 
 ##################################################################################################################
@@ -167,6 +184,11 @@ ohos_unittest("format_native_unit_test") {
       "./native/avformat/avformat_native_mock.cpp",
     ]
   }
+
+  deps = [
+    "../../../../../../foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
+    "../../../../../../foundation/window/window_manager/wm:libwm",
+  ]
 
   external_deps = [
     "bounds_checking_function:libsec_shared",
