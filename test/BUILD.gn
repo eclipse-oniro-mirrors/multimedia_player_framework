@@ -38,11 +38,3 @@ group("media_fuzz_test") {
     deps += [ "fuzztest:fuzztest" ]
   }
 }
-
-group("media_demo_test") {
-  testonly = true
-  deps = []
-  if (multimedia_player_framework_support_test) {
-    deps += [ "nativedemo:media_demo" ]
-  }
-}

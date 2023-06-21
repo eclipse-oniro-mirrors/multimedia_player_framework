@@ -15,7 +15,6 @@
 
 #include "playerservicestub_fuzzer.h"
 #include <iostream>
-#include "i_media_service.h"
 #include "i_standard_media_listener.h"
 #include "i_standard_media_service.h"
 #include "iservice_registry.h"
