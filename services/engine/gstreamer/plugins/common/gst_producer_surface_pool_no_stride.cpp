@@ -74,7 +74,7 @@ static void gst_producer_surface_pool_get_property(GObject *object, guint prop_i
 static void gst_producer_surface_pool_reset_callback(GstProducerSurfacePool *spool)
 {
     if (spool->onDestroy) {
-       spool->onDestroy(userdata);
+       spool->onDestroy(spool->userdata);
        spool->onDestroy = nullptr;
     }
     spool->newBuffer = nullptr;
