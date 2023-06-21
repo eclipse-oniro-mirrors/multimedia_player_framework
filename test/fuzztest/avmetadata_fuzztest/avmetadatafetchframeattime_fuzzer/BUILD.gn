@@ -59,7 +59,7 @@ ohos_fuzztest("AVmetadataFetchFrameAtTimeFuzzTest") {
     ]
   }
   deps = [
-    "../../../../../../../../foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
+    "../../../../../../../foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
     "../../../../../../../foundation/window/window_manager/wm:libwm",
   ]
   external_deps = [
