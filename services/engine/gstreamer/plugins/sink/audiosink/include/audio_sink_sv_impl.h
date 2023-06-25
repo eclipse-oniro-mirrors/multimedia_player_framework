@@ -71,8 +71,7 @@ public:
     void SetAudioInterruptMode(int32_t interruptMode) override;
     void SetAudioSinkCb(void (*interruptCb)(GstBaseSink *, guint, guint, guint),
                         void (*stateCb)(GstBaseSink *, guint),
-                        void (*errorCb)(GstBaseSink *, const std::string &),
-                        void (*segmentCb)(GstBaseSink *)) override;
+                        void (*errorCb)(GstBaseSink *, const std::string &)) override;
     int32_t SetAudioEffectMode(int32_t effectMode) override;
     int32_t GetAudioEffectMode(int32_t &effectMode) override;
     bool Writeable() const override;
@@ -203,8 +202,7 @@ public:
     }
     void SetAudioSinkCb(void (*interruptCb)(GstBaseSink *, guint, guint, guint),
                         void (*stateCb)(GstBaseSink *, guint),
-                        void (*errorCb)(GstBaseSink *, const std::string &),
-                        void (*segmentCb)(GstBaseSink *)) override
+                        void (*errorCb)(GstBaseSink *, const std::string &)) override
     {
         (void)interruptCb;
         (void)stateCb;

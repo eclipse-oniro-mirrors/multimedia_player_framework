@@ -117,7 +117,6 @@ GstElement *PlayerSinkProvider::DoCreateAudioSink(const GstCaps *caps, const gpo
 
     gboolean enable = static_cast<gboolean>(EnableOptRenderDelay());
     g_object_set(G_OBJECT(sink), "enable-opt-render-delay", enable, nullptr);
-    // g_object_set(G_OBJECT(sink), "segment-updated-callback", &PlayerSinkProvider::AudioSinkSegmentUpdatedCb, nullptr);
 
     GstPad *pad = gst_element_get_static_pad(sink, "sink");
     if (pad == nullptr) {
@@ -315,13 +314,6 @@ GstFlowReturn PlayerSinkProvider::NewSampleCb(GstMemSink *memSink, GstBuffer *sa
 
     FirstRenderFrame(userData);
     return GST_FLOW_OK;
-}
-
-void PlayerSinkProvider::AudioSinkSegmentUpdatedCb()
-{
-    if (subtitleSink_ != nullptr) {
-        (void)g_object_set(G_OBJECT(subtitleSink_), "segment-updated", TRUE, nullptr);
-    }
 }
 
 GstPadProbeReturn PlayerSinkProvider::SinkPadProbeCb(GstPad *pad, GstPadProbeInfo *info, gpointer userData)

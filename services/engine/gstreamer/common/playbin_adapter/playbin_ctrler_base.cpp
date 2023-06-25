@@ -1278,24 +1278,31 @@ void PlayBinCtrlerBase::OnInterruptEventCb(const GstElement *audioSink, const ui
     const uint32_t forceType, const uint32_t hintType, gpointer userData)
 {
     (void)audioSink;
-    if (userData == nullptr) {
-        return;
-    }
     auto thizStrong = PlayBinCtrlerWrapper::TakeStrongThiz(userData);
-    if (thizStrong != nullptr) {
-        uint32_t value = 0;
-        value = (((eventType << INTERRUPT_EVENT_SHIFT) | forceType) << INTERRUPT_EVENT_SHIFT) | hintType;
-        PlayBinMessage msg { PLAYBIN_MSG_AUDIO_SINK, PLAYBIN_MSG_INTERRUPT_EVENT, 0, value };
-        thizStrong->ReportMessage(msg);
-    }
+    CHECK_AND_RETURN(thizStrong != nullptr);
+    uint32_t value = 0;
+    value = (((eventType << INTERRUPT_EVENT_SHIFT) | forceType) << INTERRUPT_EVENT_SHIFT) | hintType;
+    PlayBinMessage msg { PLAYBIN_MSG_AUDIO_SINK, PLAYBIN_MSG_INTERRUPT_EVENT, 0, value };
+    thizStrong->ReportMessage(msg);
+}
+
+void PlayBinCtrlerBase::OnAudioStateEventCb(const GstElement *audioSink, const uint32_t audioState, gpointer userData)
+{
+    (void)audioSink;
+    auto thizStrong = PlayBinCtrlerWrapper::TakeStrongThiz(userData);
+    CHECK_AND_RETURN(thizStrong != nullptr);
+    int32_t value = static_cast<int32_t>(audioState);
+    PlayBinMessage msg { PLAYBIN_MSG_AUDIO_SINK, PLAYBIN_MSG_AUDIO_STATE_EVENT, 0, value };
+    thizStrong->ReportMessage(msg);
 }
 
 void PlayBinCtrlerBase::OnAudioSegmentEventCb(const GstElement *audioSink, gpointer userData)
 {
     (void)audioSink;
-    (void)userData;
-    if (subtitleSink_ != nullptr) {
-        g_object_set(G_OBJECT(subtitleSink_), "segment-updated", TRUE, nullptr);
+    auto thizStrong = PlayBinCtrlerWrapper::TakeStrongThiz(userData);
+    CHECK_AND_RETURN(thizStrong != nullptr);
+    if (thizStrong->subtitleSink_ != nullptr) {
+        g_object_set(G_OBJECT(thizStrong->subtitleSink_), "segment-updated", TRUE, nullptr);
     }
 }
 
@@ -1304,27 +1311,25 @@ void PlayBinCtrlerBase::OnBitRateParseCompleteCb(const GstElement *playbin, uint
 {
     (void)playbin;
     auto thizStrong = PlayBinCtrlerWrapper::TakeStrongThiz(userData);
-    if (thizStrong != nullptr) {
-        MEDIA_LOGD("bitrateNum = %{public}u", bitrateNum);
-        for (uint32_t i = 0; i < bitrateNum; i++) {
-            MEDIA_LOGD("bitrate = %{public}u", bitrateInfo[i]);
-            thizStrong->bitRateVec_.push_back(bitrateInfo[i]);
-        }
-        Format format;
-        (void)format.PutBuffer(std::string(PlayerKeys::PLAYER_BITRATE),
-            static_cast<uint8_t *>(static_cast<void *>(bitrateInfo)), bitrateNum * sizeof(uint32_t));
-        PlayBinMessage msg = { PLAYBIN_MSG_SUBTYPE, PLAYBIN_SUB_MSG_BITRATE_COLLECT, 0, format };
-        thizStrong->ReportMessage(msg);
+    CHECK_AND_RETURN(thizStrong != nullptr);
+    MEDIA_LOGD("bitrateNum = %{public}u", bitrateNum);
+    for (uint32_t i = 0; i < bitrateNum; i++) {
+        MEDIA_LOGD("bitrate = %{public}u", bitrateInfo[i]);
+        thizStrong->bitRateVec_.push_back(bitrateInfo[i]);
     }
+    Format format;
+    (void)format.PutBuffer(std::string(PlayerKeys::PLAYER_BITRATE),
+        static_cast<uint8_t *>(static_cast<void *>(bitrateInfo)), bitrateNum * sizeof(uint32_t));
+    PlayBinMessage msg = { PLAYBIN_MSG_SUBTYPE, PLAYBIN_SUB_MSG_BITRATE_COLLECT, 0, format };
+    thizStrong->ReportMessage(msg);
 }
 
 void PlayBinCtrlerBase::AudioChanged(const GstElement *playbin, gpointer userData)
 {
     (void)playbin;
     auto thizStrong = PlayBinCtrlerWrapper::TakeStrongThiz(userData);
-    if (thizStrong != nullptr) {
-        thizStrong->OnAudioChanged();
-    }
+    CHECK_AND_RETURN(thizStrong != nullptr);
+    thizStrong->OnAudioChanged();
 }
 
 void PlayBinCtrlerBase::OnAudioChanged()

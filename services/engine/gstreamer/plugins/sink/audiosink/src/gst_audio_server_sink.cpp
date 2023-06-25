@@ -58,8 +58,6 @@ enum {
     PROP_ENABLE_OPT_RENDER_DELAY,
     PROP_LAST_RUNNING_TIME_DIFF,
     PROP_AUDIO_EFFECT_MODE,
-    PROP_SUBTITLE_SINK,
-    PROP_SEGMENT_UPDATED,
 };
 
 #define gst_audio_server_sink_parent_class parent_class
@@ -180,14 +178,6 @@ static void gst_audio_server_sink_class_init(GstAudioServerSinkClass *klass)
     g_object_class_install_property(gobject_class, PROP_LAST_RUNNING_TIME_DIFF,
         g_param_spec_int64("last-running-time-diff", "last running time diff", "last running time diff",
             0, G_MAXINT64, 0, (GParamFlags)(G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
-
-    g_object_class_install_property(gobject_class, PROP_SUBTITLE_SINK,
-        g_param_spec_pointer("subtitle-sink", "subtitle sink", "subtitle sink",
-            (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
-
-    g_object_class_install_property(gobject_class, PROP_SEGMENT_UPDATED,
-        g_param_spec_pointer("segment-updated-callback", "segment updated callback", "segment updated callback",
-            (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
 
     gst_element_class_set_static_metadata(gstelement_class,
         "Audio server sink", "Sink/Audio",
@@ -319,13 +309,6 @@ static void gst_audio_server_sink_set_subtitle_sink(GstAudioServerSink *sink, gp
     GST_INFO_OBJECT(subtitle_sink, "get subtitle sink: %s", GST_ELEMENT_NAME(sink->subtitle_sink));
 }
 
-static void gst_audio_server_sink_set_segment_updated_callback(GstAudioServerSink *sink, gpointer callbacks)
-{
-    g_return_if_fail(callbacks != nullptr);
-    sink->callbacks.segment_updated = reinterpret_cast<void (*)()>(callbacks);
-    GST_INFO_OBJECT(sink, "set segment updated callback done");
-}
-
 static void gst_audio_server_sink_set_property(GObject *object, guint prop_id,
     const GValue *value, GParamSpec *pspec)
 {
@@ -373,12 +356,6 @@ static void gst_audio_server_sink_set_property(GObject *object, guint prop_id,
         case PROP_AUDIO_EFFECT_MODE:
             g_return_if_fail(sink->audio_sink != nullptr);
             (void)sink->audio_sink->SetAudioEffectMode(g_value_get_int(value));
-            break;
-        case PROP_SUBTITLE_SINK:
-            gst_audio_server_sink_set_subtitle_sink(sink, g_value_get_pointer(value));
-            break;
-        case PROP_SEGMENT_UPDATED:
-            gst_audio_server_sink_set_segment_updated_callback(sink, g_value_get_pointer(value));
             break;
         default:
             break;
@@ -512,8 +489,7 @@ static gboolean gst_audio_server_sink_handle_segment_event(GstBaseSink *basesink
     g_mutex_lock(&sink->render_lock);
     gboolean ret = GST_BASE_SINK_CLASS(parent_class)->event(basesink, event);
     sink->frame_after_segment = TRUE;
-    sink->callbacks.segment_updated();
-    // g_object_set(G_OBJECT(sink->subtitle_sink), "segment-updated", TRUE, nullptr);
+    gst_audio_server_sink_segment_callback(basesink);
     g_mutex_unlock(&sink->render_lock);
     return ret;
 }
@@ -586,8 +562,7 @@ static gboolean gst_audio_server_sink_start(GstBaseSink *basesink)
     g_return_val_if_fail(sink->audio_sink->Prepare(sink->appuid, sink->apppid, sink->apptokenid) == MSERR_OK, FALSE);
     sink->audio_sink->SetAudioSinkCb(gst_audio_server_sink_interrupt_callback,
                                      gst_audio_server_sink_state_callback,
-                                     gst_audio_server_sink_error_callback,
-                                     gst_audio_server_sink_segment_callback);
+                                     gst_audio_server_sink_error_callback);
     g_return_val_if_fail(sink->audio_sink->GetMaxVolume(sink->max_volume) == MSERR_OK, FALSE);
     g_return_val_if_fail(sink->audio_sink->GetMinVolume(sink->min_volume) == MSERR_OK, FALSE);
 
