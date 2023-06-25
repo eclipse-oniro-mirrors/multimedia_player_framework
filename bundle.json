@@ -59,7 +59,7 @@
         ],
         "third_party": [
           "thirdparty_glib",
-          "thirdparty_gstreamer",
+          "gstreamer",
           "thirdparty_libffi",
           "ffmpeg"
         ]
