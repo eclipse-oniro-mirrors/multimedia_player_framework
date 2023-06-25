@@ -37,6 +37,10 @@ G_BEGIN_DECLS
     (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_AUDIO_SERVER_SINK))
 #define GST_AUDIO_SERVER_SINK_CAST(obj) ((GstAudioServerSink *)(obj))
 
+using GstAudioServerSinkCallbacks = struct {
+    void (*segment_updated)();
+};
+
 struct _GstAudioServerSink {
     GstBaseSink parent;
     /* private */
@@ -62,6 +66,7 @@ struct _GstAudioServerSink {
     gboolean enable_opt_render_delay;
     GstClockTimeDiff last_running_time_diff;
     GstElement *subtitle_sink;
+    GstAudioServerSinkCallbacks *callbacks;
 };
 
 struct _GstAudioServerSinkClass {

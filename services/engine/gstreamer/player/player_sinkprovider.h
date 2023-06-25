@@ -55,6 +55,7 @@ private:
     void OnSubtitleUpdated(const Format &subtitle);
     void HandleSubtitleBuffer(GstBuffer *sample, Format &subtitle);
     static GstPadProbeReturn SinkPadProbeCb(GstPad *pad, GstPadProbeInfo *info, gpointer userData);
+    static void AudioSinkSegmentUpdatedCb();
     static void EosCb(GstMemSink *memSink, gpointer userData);
     static GstFlowReturn NewPrerollCb(GstMemSink *memSink, GstBuffer *sample, gpointer userData);
     static GstFlowReturn NewSampleCb(GstMemSink *memSink, GstBuffer *sample, gpointer userData);

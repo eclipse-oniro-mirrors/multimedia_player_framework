@@ -59,6 +59,7 @@ enum {
     PROP_LAST_RUNNING_TIME_DIFF,
     PROP_AUDIO_EFFECT_MODE,
     PROP_SUBTITLE_SINK,
+    PROP_SEGMENT_UPDATED,
 };
 
 #define gst_audio_server_sink_parent_class parent_class
@@ -179,6 +180,10 @@ static void gst_audio_server_sink_class_init(GstAudioServerSinkClass *klass)
 
     g_object_class_install_property(gobject_class, PROP_SUBTITLE_SINK,
         g_param_spec_pointer("subtitle-sink", "subtitle sink", "subtitle sink",
+            (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
+
+    g_object_class_install_property(gobject_class, PROP_SEGMENT_UPDATED,
+        g_param_spec_pointer("segment-updated-callback", "segment updated callback", "segment updated callback",
             (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
 
     gst_element_class_set_static_metadata(gstelement_class,
@@ -304,6 +309,13 @@ static void gst_audio_server_sink_set_subtitle_sink(GstAudioServerSink *sink, gp
     GST_INFO_OBJECT(subtitle_sink, "get subtitle sink: %s", GST_ELEMENT_NAME(sink->subtitle_sink));
 }
 
+static void gst_audio_server_sink_set_segment_updated_callback(GstAudioServerSink *sink, gpointer callbacks)
+{
+    g_return_if_fail(callbacks != nullptr);
+    sink->callbacks = callbacks;
+    GST_INFO_OBJECT(sink, "set segment updated callback done");
+}
+
 static void gst_audio_server_sink_set_property(GObject *object, guint prop_id,
     const GValue *value, GParamSpec *pspec)
 {
@@ -354,6 +366,9 @@ static void gst_audio_server_sink_set_property(GObject *object, guint prop_id,
             break;
         case PROP_SUBTITLE_SINK:
             gst_audio_server_sink_set_subtitle_sink(sink, g_value_get_pointer(value));
+            break;
+        case PROP_SEGMENT_UPDATED:
+            gst_audio_server_sink_set_segment_updated_callback(sink, g_value_get_pointer(value));
             break;
         default:
             break;
@@ -481,13 +496,24 @@ static gboolean gst_audio_server_sink_set_caps(GstBaseSink *basesink, GstCaps *c
     return TRUE;
 }
 
+static gboolean gst_audio_server_sink_handle_segment_event(GstBaseSink *basesink, GstEvent *event)
+{
+    GstAudioServerSink *sink = GST_AUDIO_SERVER_SINK(basesink);
+    g_mutex_lock(&sink->render_lock);
+    gboolean ret = GST_BASE_SINK_CLASS(parent_class)->event(basesink, event);
+    sink->frame_after_segment = TRUE;
+    sink->callbacks.segment_updated();
+    // g_object_set(G_OBJECT(sink->subtitle_sink), "segment-updated", TRUE, nullptr);
+    g_mutex_unlock(&sink->render_lock);
+    return ret;
+}
+
 static gboolean gst_audio_server_sink_event(GstBaseSink *basesink, GstEvent *event)
 {
     g_return_val_if_fail(basesink != nullptr, FALSE);
     g_return_val_if_fail(event != nullptr, FALSE);
     GstAudioServerSink *sink = GST_AUDIO_SERVER_SINK(basesink);
     g_return_val_if_fail(sink != nullptr, FALSE);
-    gboolean ret = FALSE;
     switch (GST_EVENT_TYPE(event)) {
         case GST_EVENT_EOS:
             if (sink->audio_sink == nullptr) {
@@ -502,12 +528,7 @@ static gboolean gst_audio_server_sink_event(GstBaseSink *basesink, GstEvent *eve
             }
             break;
         case GST_EVENT_SEGMENT:
-            g_mutex_lock(&sink->render_lock);
-            ret = GST_BASE_SINK_CLASS(parent_class)->event(basesink, event);
-            sink->frame_after_segment = TRUE;
-            g_object_set(G_OBJECT(sink->subtitle_sink), "segment-updated", TRUE, nullptr);
-            g_mutex_unlock(&sink->render_lock);
-            return ret;
+            return gst_audio_server_sink_handle_segment_event(basesink, event);
         case GST_EVENT_FLUSH_START:
             basesink->stream_group_done = FALSE;
             gst_audio_server_sink_clear_cache_buffer(sink);
