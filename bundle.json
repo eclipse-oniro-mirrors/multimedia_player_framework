@@ -58,9 +58,9 @@
           "hiview"
         ],
         "third_party": [
-          "thirdparty_glib",
+          "glib",
           "gstreamer",
-          "thirdparty_libffi",
+          "libffi",
           "ffmpeg"
         ]
       },
