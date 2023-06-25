@@ -100,6 +100,9 @@ static void gst_audio_server_sink_class_init(GstAudioServerSinkClass *klass)
         static_cast<GSignalFlags>(G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION), 0, NULL,
         NULL, NULL, G_TYPE_NONE, 1, G_TYPE_UINT); // 1 parameters
 
+    g_signal_new("segment-updated", G_TYPE_FROM_CLASS(klass),
+        static_cast<GSignalFlags>(G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION), 0, NULL,
+        NULL, NULL, G_TYPE_NONE, 0); // no parameters
     g_object_class_install_property(gobject_class, PROP_BITS_PER_SAMPLE,
         g_param_spec_uint("bps", "Bits Per Sample",
             "Audio Format", 0, G_MAXINT32, 0,
@@ -227,6 +230,7 @@ static void gst_audio_server_sink_init(GstAudioServerSink *sink)
     sink->last_render_pts = 0;
     sink->enable_opt_render_delay = FALSE;
     sink->last_running_time_diff = 0;
+    sink->callbacks.segment_updated = nullptr;
 }
 
 static void gst_audio_server_sink_dispose(GObject *object)
@@ -302,6 +306,12 @@ static void gst_audio_server_sink_error_callback(GstBaseSink *basesink, const st
     GST_ELEMENT_ERROR(sink, STREAM, FAILED, (NULL), ("audio render error: %s", errMsg.c_str()));
 }
 
+static void gst_audio_server_sink_segment_callback(GstBaseSink *basesink)
+{
+    GstAudioServerSink *sink = GST_AUDIO_SERVER_SINK(basesink);
+    g_signal_emit_by_name(sink, "segment-updated");
+}
+
 static void gst_audio_server_sink_set_subtitle_sink(GstAudioServerSink *sink, gpointer subtitle_sink)
 {
     g_return_if_fail(subtitle_sink != nullptr);
@@ -312,7 +322,7 @@ static void gst_audio_server_sink_set_subtitle_sink(GstAudioServerSink *sink, gp
 static void gst_audio_server_sink_set_segment_updated_callback(GstAudioServerSink *sink, gpointer callbacks)
 {
     g_return_if_fail(callbacks != nullptr);
-    sink->callbacks = callbacks;
+    sink->callbacks.segment_updated = reinterpret_cast<void (*)()>(callbacks);
     GST_INFO_OBJECT(sink, "set segment updated callback done");
 }
 
@@ -576,7 +586,8 @@ static gboolean gst_audio_server_sink_start(GstBaseSink *basesink)
     g_return_val_if_fail(sink->audio_sink->Prepare(sink->appuid, sink->apppid, sink->apptokenid) == MSERR_OK, FALSE);
     sink->audio_sink->SetAudioSinkCb(gst_audio_server_sink_interrupt_callback,
                                      gst_audio_server_sink_state_callback,
-                                     gst_audio_server_sink_error_callback);
+                                     gst_audio_server_sink_error_callback,
+                                     gst_audio_server_sink_segment_callback);
     g_return_val_if_fail(sink->audio_sink->GetMaxVolume(sink->max_volume) == MSERR_OK, FALSE);
     g_return_val_if_fail(sink->audio_sink->GetMinVolume(sink->min_volume) == MSERR_OK, FALSE);
 

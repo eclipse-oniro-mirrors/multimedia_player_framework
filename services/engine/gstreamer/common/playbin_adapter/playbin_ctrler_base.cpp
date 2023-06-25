@@ -739,6 +739,17 @@ void PlayBinCtrlerBase::SetupAudioStateEventCb()
     AddSignalIds(GST_ELEMENT_CAST(audioSink_), id);
 }
 
+void PlayBinCtrlerBase::SetupAudioSegmentEventCb()
+{
+    PlayBinCtrlerWrapper *wrapper = new(std::nothrow) PlayBinCtrlerWrapper(shared_from_this());
+    CHECK_AND_RETURN_LOG(wrapper != nullptr, "can not create this wrapper");
+
+    gulong id = g_signal_connect_data(audioSink_, "segment-updated",
+        G_CALLBACK(&PlayBinCtrlerBase::OnAudioSegmentEventCb), wrapper,
+        (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory, static_cast<GConnectFlags>(0));
+    AddSignalIds(GST_ELEMENT_CAST(audioSink_), id);
+}
+
 void PlayBinCtrlerBase::SetupCustomElement()
 {
     // There may be a risk of data competition, but the sinkProvider is unlikely to be reconfigured.
@@ -748,6 +759,7 @@ void PlayBinCtrlerBase::SetupCustomElement()
             g_object_set(playbin_, "audio-sink", audioSink_, nullptr);
             SetupInterruptEventCb();
             SetupAudioStateEventCb();
+            SetupAudioSegmentEventCb();
         }
         videoSink_ = sinkProvider_->CreateVideoSink();
         if (videoSink_ != nullptr) {
@@ -1278,17 +1290,12 @@ void PlayBinCtrlerBase::OnInterruptEventCb(const GstElement *audioSink, const ui
     }
 }
 
-void PlayBinCtrlerBase::OnAudioStateEventCb(const GstElement *audioSink, const uint32_t audioState, gpointer userData)
+void PlayBinCtrlerBase::OnAudioSegmentEventCb(const GstElement *audioSink, gpointer userData)
 {
     (void)audioSink;
-    if (userData == nullptr) {
-        return;
-    }
-    auto thizStrong = PlayBinCtrlerWrapper::TakeStrongThiz(userData);
-    if (thizStrong != nullptr) {
-        int32_t value = static_cast<int32_t>(audioState);
-        PlayBinMessage msg { PLAYBIN_MSG_AUDIO_SINK, PLAYBIN_MSG_AUDIO_STATE_EVENT, 0, value };
-        thizStrong->ReportMessage(msg);
+    (void)userData;
+    if (subtitleSink_ != nullptr) {
+        g_object_set(G_OBJECT(subtitleSink_), "segment-updated", TRUE, nullptr);
     }
 }
 
