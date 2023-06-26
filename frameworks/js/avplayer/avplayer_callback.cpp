@@ -242,7 +242,7 @@ public:
             // callback: (textInfo: TextInfoDescriptor)
             napi_value args[1] = {nullptr};
             napi_create_object(ref->env_, &args[0]);
-            CommonNapi::SetPropertyString(ref->env_, args[0], "text", text);
+            (void)CommonNapi::SetPropertyString(ref->env_, args[0], "text", text);
             napi_value result = nullptr;
             status = napi_call_function(ref->env_, nullptr, jsCallback, 1, args, &result);
             CHECK_AND_RETURN_LOG(status == napi_ok,

@@ -209,7 +209,7 @@ static void gst_subtitle_sink_segment_updated(GstSubtitleSink *subtitle_sink)
         GST_OBJECT_LOCK(audio_base);
         subtitle_sink->segment_updated = TRUE;
         gst_segment_copy_into(&audio_base->segment, &subtitle_sink->segment);
-        GST_OBJECT_UNLOCK(audio_base);        
+        GST_OBJECT_UNLOCK(audio_base);
         g_mutex_lock(&subtitle_sink->segment_mutex);
         g_cond_signal(&subtitle_sink->segment_cond);
         g_mutex_unlock(&subtitle_sink->segment_mutex);
