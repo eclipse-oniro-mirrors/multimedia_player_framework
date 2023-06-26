@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
-#include <gst/gst.h>
+#include "gst_subtitle_display_sink.h"
 #include <cinttypes>
+#include <gst/gst.h>
 #include "config.h"
 #include "gst_subtitle_sink.h"
-#include "gst_subtitle_display_sink.h"
 
 using namespace OHOS::Media;
 
