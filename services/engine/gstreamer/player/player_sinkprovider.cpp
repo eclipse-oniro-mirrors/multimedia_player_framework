@@ -230,7 +230,7 @@ PlayBinSinkProvider::SinkPtr PlayerSinkProvider::CreateSubtitleSink()
     }
     subtitleSink_ = DoCreateSubtitleSink(reinterpret_cast<gpointer>(this));
     CHECK_AND_RETURN_RET_LOG(subtitleSink_ != nullptr, nullptr, "CreateSubtitleSink failed..");
-    // g_object_set(G_OBJECT(subtitleSink_), "audio-sink", audioSink_, nullptr);
+    g_object_set(G_OBJECT(subtitleSink_), "audio-sink", audioSink_, nullptr);
     return subtitleSink_;
 }
 
