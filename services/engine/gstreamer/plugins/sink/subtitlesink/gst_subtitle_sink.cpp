@@ -305,16 +305,8 @@ static gboolean gst_subtitle_sink_send_event(GstElement *element, GstEvent *even
 
 static void gst_subtitle_sink_get_gst_buffer_info(GstBuffer *buffer, guint64 &pts, guint64 &duration)
 {
-    if (GST_BUFFER_PTS_IS_VALID(buffer)) {
-        pts = GST_BUFFER_PTS(buffer);
-    } else {
-        pts = -1;
-    }
-    if (GST_BUFFER_DURATION_IS_VALID(buffer)) {
-        duration = GST_BUFFER_DURATION(buffer);
-    } else {
-        duration = -1;
-    }
+    pts = GST_BUFFER_PTS_IS_VALID(buffer) ? GST_BUFFER_PTS(buffer) : GST_CLOCK_TIME_NONE;
+    duration = GST_BUFFER_DURATION_IS_VALID(buffer) ? GST_BUFFER_DURATION(buffer) : GST_CLOCK_TIME_NONE;
 }
 
 static GstClockTime gst_subtitle_sink_get_current_running_time(GstBaseSink *basesink)
