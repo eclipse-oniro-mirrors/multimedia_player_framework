@@ -17,7 +17,6 @@
 #include <cinttypes>
 #include <gst/gst.h>
 #include "scope_guard.h"
-#include "config.h"
 
 using namespace OHOS;
 using namespace OHOS::Media;
