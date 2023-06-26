@@ -223,7 +223,7 @@ HWTEST_F(PlayerUnitTest, Player_SetSource_005, TestSize.Level3)
 
 /**
  * @tc.name  : Test Player SetSource API
- * @tc.number: Player_SetSource_001
+ * @tc.number: Player_SetSource_006
  * @tc.desc  : Test Player SetSource interface
  */
 HWTEST_F(PlayerUnitTest, Player_SetSource_006, TestSize.Level2)
@@ -232,6 +232,27 @@ HWTEST_F(PlayerUnitTest, Player_SetSource_006, TestSize.Level2)
     EXPECT_EQ(MSERR_OK, ret);
     EXPECT_EQ(MSERR_OK, player_->Reset());
     EXPECT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+}
+
+/**
+ * @tc.name  : Test Player SetSource API
+ * @tc.number: Player_SetSource_007
+ * @tc.desc  : Test Player SetSource interface
+ */
+HWTEST_F(PlayerUnitTest, Player_SetSource_007, TestSize.Level2)
+{
+    EXPECT_NE(MSERR_OK, player_->SetSource(INVALID_FILE));
+}
+
+/**
+ * @tc.name  : Test Player SetSource API
+ * @tc.number: Player_SetSource_008
+ * @tc.desc  : Test Player SetSource interface
+ */
+HWTEST_F(PlayerUnitTest, Player_SetSource_008, TestSize.Level2)
+{
+    int32_t invliadFd = 256; // invliad fd
+    EXPECT_NE(MSERR_OK, player_->SetSource(invliadFd, 0, 0));
 }
 
 /**
@@ -1647,7 +1668,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_001, TestSize.Level0)
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
     EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    system("hidumper -s 1909 -a \"-t 1\"");
+    system("hidumper -s 1909 -a \"-t 3\"");
     EXPECT_EQ(MSERR_OK, player_->Prepare());
     EXPECT_EQ(MSERR_OK, player_->Reset());
     EXPECT_EQ(MSERR_OK, player_->Release());
@@ -1665,7 +1686,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_002, TestSize.Level0)
     ASSERT_NE(nullptr, videoSurface);
     EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
     EXPECT_EQ(MSERR_OK, player_->Prepare());
-    system("hidumper -s 1909 -a \"-t 1\"");
+    system("hidumper -s 1909 -a \"-t 3\"");
     EXPECT_EQ(MSERR_OK, player_->Play());
     EXPECT_EQ(MSERR_OK, player_->Reset());
     EXPECT_EQ(MSERR_OK, player_->Release());
@@ -1685,7 +1706,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_003, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->Prepare());
     EXPECT_EQ(MSERR_OK, player_->Play());
     EXPECT_EQ(MSERR_OK, player_->Pause());
-    system("hidumper -s 1909 -a \"-t 1\"");
+    system("hidumper -s 1909 -a \"-t 3\"");
     EXPECT_EQ(MSERR_OK, player_->SetVolume(1, 1));
     EXPECT_EQ(MSERR_OK, player_->Reset());
     EXPECT_EQ(MSERR_OK, player_->Release());
@@ -1705,7 +1726,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_004, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->Prepare());
     EXPECT_EQ(MSERR_OK, player_->Play());
     EXPECT_EQ(MSERR_OK, player_->Pause());
-    system("hidumper -s 1909 -a \"-t 1\"");
+    system("hidumper -s 1909 -a \"-t 3\"");
     int32_t currentTime = 0;
     std::vector<Format> videoTrack;
     std::vector<Format> audioTrack;
@@ -1739,7 +1760,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_005, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->Prepare());
     EXPECT_EQ(MSERR_OK, player_->Play());
     EXPECT_EQ(MSERR_OK, player_->Pause());
-    system("hidumper -s 1909 -a \"-t 1\"");
+    system("hidumper -s 1909 -a \"-t 3\"");
     EXPECT_EQ(MSERR_OK, player_->Reset());
     EXPECT_EQ(MSERR_OK, player_->Release());
 }
@@ -1758,7 +1779,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_006, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->Prepare());
     EXPECT_EQ(MSERR_OK, player_->Play());
     EXPECT_EQ(MSERR_OK, player_->Pause());
-    system("hidumper -s 1909 -a \"-t 1\"");
+    system("hidumper -s 1909 -a \"-t 3\"");
     EXPECT_EQ(MSERR_OK, player_->Release());
 }
 
@@ -1776,7 +1797,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_007, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->Prepare());
     EXPECT_EQ(MSERR_OK, player_->Play());
     EXPECT_EQ(MSERR_OK, player_->Pause());
-    system("hidumper -s 1909 -a \"-t 1\"");
+    system("hidumper -s 1909 -a \"-t 3\"");
     EXPECT_EQ(MSERR_OK, player_->SetPlaybackSpeed(SPEED_FORWARD_2_00_X));
     EXPECT_EQ(MSERR_OK, player_->Reset());
     EXPECT_EQ(MSERR_OK, player_->Release());
@@ -1796,7 +1817,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_008, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->Prepare());
     EXPECT_EQ(MSERR_OK, player_->Play());
     EXPECT_EQ(MSERR_OK, player_->Pause());
-    system("hidumper -s 1909 -a \"-t 1\"");
+    system("hidumper -s 1909 -a \"-t 3\"");
     EXPECT_EQ(MSERR_OK, player_->SetLooping(1));
     EXPECT_EQ(MSERR_OK, player_->Reset());
     EXPECT_EQ(MSERR_OK, player_->Release());
@@ -1816,7 +1837,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_009, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->Prepare());
     EXPECT_EQ(MSERR_OK, player_->Play());
     EXPECT_EQ(MSERR_OK, player_->Pause());
-    system("hidumper -s 1909 -a \"-t 1\"");
+    system("hidumper -s 1909 -a \"-t 3\"");
     EXPECT_NE(MSERR_OK, player_->SelectBitRate(0));
     EXPECT_EQ(MSERR_OK, player_->Reset());
     EXPECT_EQ(MSERR_OK, player_->Release());
@@ -1836,7 +1857,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_010, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->Prepare());
     EXPECT_EQ(MSERR_OK, player_->Play());
     EXPECT_EQ(MSERR_OK, player_->Stop());
-    system("hidumper -s 1909 -a \"-t 1\"");
+    system("hidumper -s 1909 -a \"-t 3\"");
     EXPECT_EQ(MSERR_OK, player_->Reset());
     EXPECT_EQ(MSERR_OK, player_->Release());
 }
@@ -1855,7 +1876,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_011, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->Prepare());
     EXPECT_EQ(MSERR_OK, player_->Play());
     EXPECT_EQ(MSERR_OK, player_->Pause());
-    system("hidumper -s 1909 -a \"-t 0\"");
+    system("hidumper -s 1909 -a \"-t 2\"");
     EXPECT_EQ(MSERR_OK, player_->Reset());
     EXPECT_EQ(MSERR_OK, player_->Release());
 }
@@ -1874,7 +1895,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_012, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->Prepare());
     EXPECT_EQ(MSERR_OK, player_->Play());
     EXPECT_EQ(MSERR_OK, player_->Pause());
-    system("hidumper -s 1909 -a \"-t 2\"");
+    system("hidumper -s 1909 -a \"-t 4\"");
     EXPECT_EQ(MSERR_OK, player_->Reset());
     EXPECT_EQ(MSERR_OK, player_->Release());
 }
@@ -1893,9 +1914,10 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_013, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->Prepare());
     EXPECT_EQ(MSERR_OK, player_->Play());
     EXPECT_EQ(MSERR_OK, player_->Pause());
-    system("hidumper -s 1909 -a -f");
+    system("hidumper -s 1909 -a \"-f 3\"");
     EXPECT_EQ(MSERR_OK, player_->Reset());
     EXPECT_EQ(MSERR_OK, player_->Release());
+    system("killall memmgrservice");
 }
 
 /**
