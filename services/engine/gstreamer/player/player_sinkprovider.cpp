@@ -258,7 +258,7 @@ void PlayerSinkProvider::HandleSubtitleBuffer(GstBuffer *sample, Format &subtitl
     CHECK_AND_RETURN(gst_buffer_map(sample, &mapInfo, GST_MAP_READ));
     uint32_t gstBufferSize = static_cast<uint32_t>(gst_buffer_get_size(sample));
     char *textFrame = new (std::nothrow) char[gstBufferSize + 1];
-    memcpy_s(textFrame, gstBufferSize + 1, mapInfo.data, gstBufferSize);
+    (void)memcpy_s(textFrame, gstBufferSize + 1, mapInfo.data, gstBufferSize);
     textFrame[gstBufferSize] = static_cast<char>(0);
     (void)subtitle.PutStringValue(PlayerKeys::SUBTITLE_TEXT, std::string_view(textFrame));
     delete[] textFrame;
