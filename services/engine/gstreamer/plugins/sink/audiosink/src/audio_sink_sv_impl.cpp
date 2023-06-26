@@ -455,7 +455,6 @@ void AudioSinkSvImpl::SetAudioSinkCb(void (*interruptCb)(GstBaseSink *, guint, g
                                      void (*errorCb)(GstBaseSink *, const std::string &))
 {
     CHECK_AND_RETURN(audioRendererMediaCallback_ != nullptr);
-    (void)segmentCb;
     errorCb_ = errorCb;
     audioRendererMediaCallback_->SaveInterruptCallback(interruptCb);
     audioRendererMediaCallback_->SaveStateCallback(stateCb);

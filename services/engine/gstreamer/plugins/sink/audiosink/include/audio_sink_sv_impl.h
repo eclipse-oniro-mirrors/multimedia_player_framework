@@ -207,7 +207,6 @@ public:
         (void)interruptCb;
         (void)stateCb;
         (void)errorCb;
-        (void)segmentCb;
     }
     bool Writeable() const override
     {
