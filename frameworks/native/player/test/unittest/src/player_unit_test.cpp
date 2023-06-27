@@ -1431,7 +1431,7 @@ HWTEST_F(PlayerUnitTest, Player_SetDataSource_002, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->Prepare());
     EXPECT_EQ(MSERR_OK, player_->Play());
     EXPECT_EQ(MSERR_OK, player_->SetLooping(true));
-    sleep(PLAYING_TIME);
+    sleep(PLAYING_TIME_2_SEC);
     EXPECT_EQ(MSERR_OK, player_->Seek(SEEK_TIME_5_SEC, SEEK_NEXT_SYNC));
     sleep(PLAYING_TIME_10_SEC);
     EXPECT_EQ(MSERR_OK, player_->Stop());
@@ -1479,12 +1479,12 @@ HWTEST_F(PlayerUnitTest, Player_SetDataSource_004, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
     EXPECT_EQ(MSERR_OK, player_->Prepare());
     EXPECT_EQ(MSERR_OK, player_->Play());
-    sleep(PLAYING_TIME);
+    sleep(PLAYING_TIME_2_SEC);
     EXPECT_EQ(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_NEXT_SYNC));
-    sleep(PLAYING_TIME);
+    sleep(PLAYING_TIME_2_SEC);
     EXPECT_EQ(MSERR_OK, player_->Pause());
     EXPECT_EQ(MSERR_OK, player_->Play());
-    sleep(PLAYING_TIME);
+    sleep(PLAYING_TIME_2_SEC);
     EXPECT_EQ(MSERR_OK, player_->Stop());
     EXPECT_EQ(MSERR_OK, player_->Reset());
     EXPECT_EQ(MSERR_OK, player_->Release());
@@ -1501,7 +1501,7 @@ HWTEST_F(PlayerUnitTest, Player_SetDataSource_005, TestSize.Level0)
         "/data/test/flac_44100Hz_978kbs_stereo.flac", 27373334, false));  // 27373334 file size
     EXPECT_EQ(MSERR_OK, player_->Prepare());
     EXPECT_EQ(MSERR_OK, player_->Play());
-    sleep(PLAYING_TIME);
+    sleep(PLAYING_TIME_2_SEC);
     EXPECT_NE(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_NEXT_SYNC));
     sleep(PLAYING_TIME_10_SEC);
     EXPECT_EQ(MSERR_OK, player_->Stop());
@@ -2432,7 +2432,7 @@ HWTEST_F(PlayerUnitTest, Player_AddSubSource_003, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
     EXPECT_EQ(MSERR_OK, player_->Prepare());
     EXPECT_EQ(MSERR_OK, player_->Play());
-    sleep(PLAYING_TIME);
+    sleep(PLAYING_TIME_2_SEC);
     EXPECT_EQ(MSERR_OK, player_->AddSubSource(SUBTITLE_SRT_FIELE, 0, 0));
     EXPECT_EQ(SUBTITLE_2_SEC, player_->GetSubtitleText());
     sleep(PLAYING_TIME_1_SEC);
@@ -2453,7 +2453,7 @@ HWTEST_F(PlayerUnitTest, Player_AddSubSource_004, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->Prepare());
     EXPECT_EQ(MSERR_OK, player_->SetPlaybackSpeed(SPEED_FORWARD_2_00_X));
     EXPECT_EQ(MSERR_OK, player_->Play());
-    sleep(PLAYING_TIME);
+    sleep(PLAYING_TIME_2_SEC);
     EXPECT_EQ(MSERR_OK, player_->AddSubSource(SUBTITLE_SRT_FIELE, 0, 0));
     EXPECT_EQ(SUBTITLE_4_SEC, player_->GetSubtitleText());
     sleep(PLAYING_TIME_1_SEC);
@@ -2473,7 +2473,7 @@ HWTEST_F(PlayerUnitTest, Player_AddSubSource_005, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
     EXPECT_EQ(MSERR_OK, player_->Prepare());
     EXPECT_EQ(MSERR_OK, player_->Play());
-    sleep(PLAYING_TIME);
+    sleep(PLAYING_TIME_2_SEC);
     EXPECT_EQ(MSERR_OK, player_->AddSubSource(SUBTITLE_SRT_FIELE, 0, 0));
     EXPECT_EQ(SUBTITLE_2_SEC, player_->GetSubtitleText());
     EXPECT_NE(MSERR_OK, player_->SetPlaybackSpeed(SPEED_FORWARD_2_00_X));
