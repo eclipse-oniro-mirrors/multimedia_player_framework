@@ -188,8 +188,10 @@ void PlayerCallbackTest::OnInfo(PlayerOnInfoType type, int32_t extra, const Form
             std::cout << "INFO_TYPE_TRACKCHANGE: index " << index << " isSelect " << isSelect << std::endl;
             break;
         case INFO_TYPE_SUBTITLE_UPDATE: {
-            std::unique_lock<std::mutex> lock(subtitleMutex_);
             infoBody.GetStringValue(std::string(PlayerKeys::SUBTITLE_TEXT), text);
+            std::cout << "text = " << text << std::endl;
+            textUpdate_ = true;
+            condVarText_.notify_all();
             break;
         }
         default:
@@ -200,6 +202,12 @@ void PlayerCallbackTest::OnInfo(PlayerOnInfoType type, int32_t extra, const Form
 std::string PlayerCallbackTest::SubtitleTextUpdate()
 {
     std::unique_lock<std::mutex> lock(subtitleMutex_);
+    condVarText_.wait_for(lock, std::chrono::seconds(WAITSECOND), [this]() {
+        std::cout << "wait for text update" <<std::endl;
+        return textUpdate_;
+    });
+    std::cout << "text updated" <<std::endl;
+    textUpdate_ = false;
     return text;
 }
 
