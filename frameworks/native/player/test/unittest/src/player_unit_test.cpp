@@ -1402,7 +1402,8 @@ HWTEST_F(PlayerUnitTest, Player_SetInterrupt_001, TestSize.Level0)
  */
 HWTEST_F(PlayerUnitTest, Player_SetDataSource_001, TestSize.Level0)
 {
-    ASSERT_EQ(MSERR_OK, player_->SetDataSrc("/data/test/H264_AAC.mp4", 1894386, false));  // 1894386 file size
+    ASSERT_EQ(MSERR_OK, player_->SetDataSrc(
+        "/data/test/h264_aac_640x480_30r.ts", 1185152, false));  // 1185152 file size
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
     EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
@@ -1410,7 +1411,7 @@ HWTEST_F(PlayerUnitTest, Player_SetDataSource_001, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->Play());
     sleep(PLAYING_TWO_SEC);
     EXPECT_NE(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_NEXT_SYNC));
-    sleep(PLAYING_TWO_SEC);
+    sleep(PLAYING_TIME_10_SEC);
     EXPECT_EQ(MSERR_OK, player_->Stop());
     EXPECT_EQ(MSERR_OK, player_->Reset());
     EXPECT_EQ(MSERR_OK, player_->Release());
@@ -1429,12 +1430,10 @@ HWTEST_F(PlayerUnitTest, Player_SetDataSource_002, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
     EXPECT_EQ(MSERR_OK, player_->Prepare());
     EXPECT_EQ(MSERR_OK, player_->Play());
-    sleep(PLAYING_TWO_SEC);
-    EXPECT_EQ(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_NEXT_SYNC));
-    sleep(PLAYING_TWO_SEC);
-    EXPECT_EQ(MSERR_OK, player_->Pause());
-    EXPECT_EQ(MSERR_OK, player_->Play());
-    sleep(PLAYING_TWO_SEC);
+    EXPECT_EQ(MSERR_OK, player_->SetLooping(true));
+    sleep(PLAYING_TIME);
+    EXPECT_EQ(MSERR_OK, player_->Seek(SEEK_TIME_5_SEC, SEEK_NEXT_SYNC));
+    sleep(PLAYING_TIME_10_SEC);
     EXPECT_EQ(MSERR_OK, player_->Stop());
     EXPECT_EQ(MSERR_OK, player_->Reset());
     EXPECT_EQ(MSERR_OK, player_->Release());
@@ -1464,6 +1463,50 @@ HWTEST_F(PlayerUnitTest, Player_SetDataSource_003, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->Reset());
     EXPECT_EQ(MSERR_OK, player_->Release());
     system("param set sys.media.datasrc.set.copymode FALSE");
+}
+
+/**
+ * @tc.name  : Test SetDataSource API
+ * @tc.number: Player_SetDataSource_004
+ * @tc.desc  : Test Player SetDataSource
+ */
+HWTEST_F(PlayerUnitTest, Player_SetDataSource_004, TestSize.Level0)
+{
+    system("param set sys.media.datasrc.set.copymode FALSE");
+    ASSERT_EQ(MSERR_OK, player_->SetDataSrc("/data/test/128x96.mp4", 265844, true));  // 265844 file size
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    sleep(PLAYING_TIME);
+    EXPECT_EQ(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_NEXT_SYNC));
+    sleep(PLAYING_TIME);
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    sleep(PLAYING_TIME);
+    EXPECT_EQ(MSERR_OK, player_->Stop());
+    EXPECT_EQ(MSERR_OK, player_->Reset());
+    EXPECT_EQ(MSERR_OK, player_->Release());
+}
+
+/**
+ * @tc.name  : Test SetDataSource API
+ * @tc.number: Player_SetDataSource_005
+ * @tc.desc  : Test Player SetDataSource
+ */
+HWTEST_F(PlayerUnitTest, Player_SetDataSource_005, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetDataSrc(
+        "/data/test/flac_44100Hz_978kbs_stereo.flac", 27373334, false));  // 27373334 file size
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    sleep(PLAYING_TIME);
+    EXPECT_NE(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_NEXT_SYNC));
+    sleep(PLAYING_TIME_10_SEC);
+    EXPECT_EQ(MSERR_OK, player_->Stop());
+    EXPECT_EQ(MSERR_OK, player_->Reset());
+    EXPECT_EQ(MSERR_OK, player_->Release());
 }
 
 /**
@@ -2372,7 +2415,7 @@ HWTEST_F(PlayerUnitTest, Player_AddSubSource_002, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->Play());
     EXPECT_EQ(MSERR_OK, player_->Seek(duration, SEEK_CLOSEST));
     EXPECT_EQ(SUBTITLE_10_SEC, player_->GetSubtitleText());
-    sleep(PLAYING_ONE_SEC);
+    sleep(PLAYING_TIME_1_SEC);
     EXPECT_EQ("", player_->GetSubtitleText());
 }
 
@@ -2389,10 +2432,10 @@ HWTEST_F(PlayerUnitTest, Player_AddSubSource_003, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
     EXPECT_EQ(MSERR_OK, player_->Prepare());
     EXPECT_EQ(MSERR_OK, player_->Play());
-    sleep(PLAYING_TWO_SEC);
+    sleep(PLAYING_TIME);
     EXPECT_EQ(MSERR_OK, player_->AddSubSource(SUBTITLE_SRT_FIELE, 0, 0));
     EXPECT_EQ(SUBTITLE_2_SEC, player_->GetSubtitleText());
-    sleep(PLAYING_ONE_SEC);
+    sleep(PLAYING_TIME_1_SEC);
     EXPECT_EQ(SUBTITLE_3_SEC, player_->GetSubtitleText());
 }
 
@@ -2410,10 +2453,10 @@ HWTEST_F(PlayerUnitTest, Player_AddSubSource_004, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->Prepare());
     EXPECT_EQ(MSERR_OK, player_->SetPlaybackSpeed(SPEED_FORWARD_2_00_X));
     EXPECT_EQ(MSERR_OK, player_->Play());
-    sleep(PLAYING_TWO_SEC);
+    sleep(PLAYING_TIME);
     EXPECT_EQ(MSERR_OK, player_->AddSubSource(SUBTITLE_SRT_FIELE, 0, 0));
     EXPECT_EQ(SUBTITLE_4_SEC, player_->GetSubtitleText());
-    sleep(PLAYING_ONE_SEC);
+    sleep(PLAYING_TIME_1_SEC);
     EXPECT_EQ(SUBTITLE_6_SEC, player_->GetSubtitleText());
 }
 
@@ -2430,11 +2473,11 @@ HWTEST_F(PlayerUnitTest, Player_AddSubSource_005, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
     EXPECT_EQ(MSERR_OK, player_->Prepare());
     EXPECT_EQ(MSERR_OK, player_->Play());
-    sleep(PLAYING_TWO_SEC);
+    sleep(PLAYING_TIME);
     EXPECT_EQ(MSERR_OK, player_->AddSubSource(SUBTITLE_SRT_FIELE, 0, 0));
     EXPECT_EQ(SUBTITLE_2_SEC, player_->GetSubtitleText());
     EXPECT_NE(MSERR_OK, player_->SetPlaybackSpeed(SPEED_FORWARD_2_00_X));
-    sleep(PLAYING_ONE_SEC);
+    sleep(PLAYING_TIME_1_SEC);
     EXPECT_EQ(SUBTITLE_3_SEC, player_->GetSubtitleText());
     EXPECT_EQ(MSERR_OK, player_->Reset());
     ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "H264_AAC.mp4", 0, 0));
