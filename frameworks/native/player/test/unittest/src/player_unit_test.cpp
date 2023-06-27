@@ -72,10 +72,10 @@ void PlayerUnitTest::PlayFunTest(const std::string &protocol)
         EXPECT_EQ(true, player_->IsLooping());
         EXPECT_EQ(MSERR_OK, player_->Seek(duration, SEEK_NEXT_SYNC));
         EXPECT_EQ(MSERR_OK, player_->Play());
-        sleep(PLAYING_TWO_SEC);
+        sleep(PLAYING_TIME_2_SEC);
         if (protocol == PlayerTestParam::HLS_PLAY) {
             EXPECT_EQ(MSERR_OK, player_->SelectBitRate(200000));  // 200000:bitrate
-            sleep(PLAYING_TWO_SEC);
+            sleep(PLAYING_TIME_2_SEC);
         }
         EXPECT_EQ(MSERR_OK, player_->SetLooping(false));
         EXPECT_EQ(false, player_->IsLooping());
@@ -765,7 +765,7 @@ HWTEST_F(PlayerUnitTest, Player_Play_003, TestSize.Level2)
     EXPECT_TRUE(player_->IsPlaying());
     EXPECT_EQ(MSERR_OK, player_->GetDuration(duration));
     EXPECT_EQ(MSERR_OK, player_->Seek(duration, SEEK_CLOSEST));
-    sleep(PLAYING_TWO_SEC);
+    sleep(PLAYING_TIME_2_SEC);
     EXPECT_EQ(MSERR_OK, player_->Play());
 }
 
@@ -833,7 +833,7 @@ HWTEST_F(PlayerUnitTest, Player_Stop_003, TestSize.Level2)
     EXPECT_EQ(MSERR_OK, player_->Prepare());
     EXPECT_EQ(MSERR_OK, player_->GetDuration(duration));
     EXPECT_EQ(MSERR_OK, player_->Seek(duration, SEEK_CLOSEST));
-    sleep(PLAYING_TWO_SEC);
+    sleep(PLAYING_TIME_2_SEC);
     EXPECT_EQ(MSERR_OK, player_->Stop());
     EXPECT_NE(MSERR_OK, player_->Stop());
 }
@@ -1009,7 +1009,7 @@ HWTEST_F(PlayerUnitTest, Player_Seek_004, TestSize.Level2)
     EXPECT_EQ(MSERR_OK, player_->GetDuration(duration));
     EXPECT_EQ(MSERR_OK, player_->Seek(duration, SEEK_CLOSEST));
     EXPECT_EQ(MSERR_OK, player_->Play());
-    sleep(PLAYING_TWO_SEC);
+    sleep(PLAYING_TIME_2_SEC);
     EXPECT_EQ(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_NEXT_SYNC));
     EXPECT_EQ(MSERR_OK, player_->Stop());
     EXPECT_NE(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_NEXT_SYNC));
@@ -1066,7 +1066,7 @@ HWTEST_F(PlayerUnitTest, Player_GetVideoTrackInfo_002, TestSize.Level2)
     EXPECT_EQ(MSERR_OK, player_->GetDuration(duration));
     EXPECT_EQ(MSERR_OK, player_->Seek(duration, SEEK_CLOSEST));
     EXPECT_EQ(MSERR_OK, player_->Play());
-    sleep(PLAYING_TWO_SEC);
+    sleep(PLAYING_TIME_2_SEC);
     EXPECT_EQ(MSERR_OK, player_->GetVideoTrackInfo(videoTrack));
     EXPECT_EQ(MSERR_OK, player_->GetAudioTrackInfo(audioTrack));
     EXPECT_EQ(MSERR_OK, player_->Stop());
@@ -1122,7 +1122,7 @@ HWTEST_F(PlayerUnitTest, Player_GetVideoHeight_002, TestSize.Level2)
     EXPECT_EQ(MSERR_OK, player_->GetDuration(duration));
     EXPECT_EQ(MSERR_OK, player_->Seek(duration, SEEK_CLOSEST));
     EXPECT_EQ(MSERR_OK, player_->Play());
-    sleep(PLAYING_TWO_SEC);
+    sleep(PLAYING_TIME_2_SEC);
     EXPECT_EQ(480, player_->GetVideoHeight());
     EXPECT_EQ(720, player_->GetVideoWidth());
     EXPECT_EQ(MSERR_OK, player_->Stop());
@@ -1173,7 +1173,7 @@ HWTEST_F(PlayerUnitTest, Player_GetDuration_002, TestSize.Level2)
     EXPECT_EQ(MSERR_OK, player_->GetDuration(duration));
     EXPECT_EQ(MSERR_OK, player_->Seek(duration, SEEK_CLOSEST));
     EXPECT_EQ(MSERR_OK, player_->Play());
-    sleep(PLAYING_TWO_SEC);
+    sleep(PLAYING_TIME_2_SEC);
     EXPECT_EQ(MSERR_OK, player_->GetDuration(duration));
     EXPECT_EQ(MSERR_OK, player_->Stop());
     EXPECT_EQ(MSERR_OK, player_->GetDuration(duration));
@@ -1229,7 +1229,7 @@ HWTEST_F(PlayerUnitTest, Player_SetPlaybackSpeed_002, TestSize.Level2)
     EXPECT_EQ(MSERR_OK, player_->GetDuration(duration));
     EXPECT_EQ(MSERR_OK, player_->Seek(duration, SEEK_CLOSEST));
     EXPECT_EQ(MSERR_OK, player_->Play());
-    sleep(PLAYING_TWO_SEC);
+    sleep(PLAYING_TIME_2_SEC);
     EXPECT_EQ(MSERR_OK, player_->SetPlaybackSpeed(SPEED_FORWARD_0_75_X));
     EXPECT_EQ(MSERR_OK, player_->GetPlaybackSpeed(mode));
     EXPECT_EQ(MSERR_OK, player_->Stop());
@@ -1389,9 +1389,9 @@ HWTEST_F(PlayerUnitTest, Player_SetInterrupt_001, TestSize.Level0)
     (void)format.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_TYPE, type);
     EXPECT_EQ(MSERR_OK, player->SetParameter(format));
     EXPECT_EQ(MSERR_OK, player->Play());
-    sleep(PLAYING_TWO_SEC);
+    sleep(PLAYING_TIME_2_SEC);
     EXPECT_EQ(MSERR_OK, player_->Play());
-    sleep(PLAYING_TWO_SEC);
+    sleep(PLAYING_TIME_2_SEC);
     EXPECT_EQ(MSERR_OK, player->ReleaseSync());
 }
 
@@ -1409,7 +1409,7 @@ HWTEST_F(PlayerUnitTest, Player_SetDataSource_001, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
     EXPECT_EQ(MSERR_OK, player_->Prepare());
     EXPECT_EQ(MSERR_OK, player_->Play());
-    sleep(PLAYING_TWO_SEC);
+    sleep(PLAYING_TIME_2_SEC);
     EXPECT_NE(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_NEXT_SYNC));
     sleep(PLAYING_TIME_10_SEC);
     EXPECT_EQ(MSERR_OK, player_->Stop());
@@ -1453,12 +1453,12 @@ HWTEST_F(PlayerUnitTest, Player_SetDataSource_003, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
     EXPECT_EQ(MSERR_OK, player_->Prepare());
     EXPECT_EQ(MSERR_OK, player_->Play());
-    sleep(PLAYING_TWO_SEC);
+    sleep(PLAYING_TIME_2_SEC);
     EXPECT_EQ(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_NEXT_SYNC));
-    sleep(PLAYING_TWO_SEC);
+    sleep(PLAYING_TIME_2_SEC);
     EXPECT_EQ(MSERR_OK, player_->Pause());
     EXPECT_EQ(MSERR_OK, player_->Play());
-    sleep(PLAYING_TWO_SEC);
+    sleep(PLAYING_TIME_2_SEC);
     EXPECT_EQ(MSERR_OK, player_->Stop());
     EXPECT_EQ(MSERR_OK, player_->Reset());
     EXPECT_EQ(MSERR_OK, player_->Release());
