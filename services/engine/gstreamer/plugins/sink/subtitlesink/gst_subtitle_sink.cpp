@@ -224,7 +224,6 @@ static void gst_subtitle_sink_set_property(GObject *object, guint prop_id, const
     switch (prop_id) {
         case PROP_AUDIO_SINK: {
             gst_subtitle_sink_set_audio_sink(subtitle_sink, g_value_get_pointer(value));
-            g_object_set(G_OBJECT(subtitle_sink->priv->audio_sink), "subtitle-sink", subtitle_sink, nullptr);
             break;
         }
         case RPOP_SEGMENT_UPDATED: {
@@ -361,7 +360,7 @@ static GstFlowReturn gst_subtitle_sink_new_preroll(GstAppSink *appsink, gpointer
     GstSubtitleSinkPrivate *priv = subtitle_sink->priv;
     g_mutex_lock(&priv->mutex);
     duration = std::min(duration, pts_end - subtitle_sink->segment.start);
-    priv->text_frame_duration = (pts_end - subtitle_sink->segment.start) / subtitle_sink->rate;
+    priv->text_frame_duration = duration / subtitle_sink->rate;
     priv->time_rendered = 0ULL;
     g_mutex_unlock(&priv->mutex);
     GST_DEBUG_OBJECT(subtitle_sink, "preroll buffer pts is %" GST_TIME_FORMAT ", duration is %" GST_TIME_FORMAT,
