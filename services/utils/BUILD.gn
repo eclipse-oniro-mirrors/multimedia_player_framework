@@ -103,9 +103,9 @@ ohos_shared_library("media_service_utils") {
     "access_token:libaccesstoken_sdk",
     "c_utils:utils",
     "hicollie:libhicollie",
+    "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
-    "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_single",
   ]
