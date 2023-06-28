@@ -202,8 +202,8 @@ void PlayerCallbackTest::OnInfo(PlayerOnInfoType type, int32_t extra, const Form
 std::string PlayerCallbackTest::SubtitleTextUpdate()
 {
     std::unique_lock<std::mutex> lock(subtitleMutex_);
+    std::cout << "wait for text update" <<std::endl;
     condVarText_.wait_for(lock, std::chrono::seconds(WAITSECOND), [this]() {
-        std::cout << "wait for text update" <<std::endl;
         return textUpdate_;
     });
     std::cout << "text updated" <<std::endl;
