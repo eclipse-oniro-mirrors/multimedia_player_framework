@@ -36,6 +36,7 @@ inline constexpr int32_t PLAYING_TIME_10_SEC = 10;
 const std::string MEDIA_ROOT = "file:///data/test/";
 const std::string VIDEO_FILE1 = MEDIA_ROOT + "H264_AAC.mp4";
 const std::string SUBTITLE_SRT_FIELE = MEDIA_ROOT + "utf8.srt";
+const std::string SUBTITLE_0_SEC = "MediaOs: test for subtitle_1";
 const std::string SUBTITLE_1_SEC = "MediaOs: test for subtitle_2";
 const std::string SUBTITLE_2_SEC = "MediaOs: test for subtitle_3";
 const std::string SUBTITLE_3_SEC = "MediaOs: test for subtitle_4";
