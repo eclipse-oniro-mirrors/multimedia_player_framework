@@ -46,10 +46,7 @@ void gst_subtitle_free_frame(GstSubtitleBaseParse *base, GstSubtitleDecodedFrame
         g_free(decoded_frame->data);
         decoded_frame->data = nullptr;
     }
-
-    if (memset_s(decoded_frame, sizeof(GstSubtitleDecodedFrame), 0, sizeof(GstSubtitleDecodedFrame)) != EOK) {
-        GST_ERROR_OBJECT(base, "SubtitleDecodedFrame set 0 failed");
-    }
+    g_return_if_fail(memset_s(decoded_frame, sizeof(GstSubtitleDecodedFrame), 0, sizeof(GstSubtitleDecodedFrame)) != EOK);
 }
 
 static gchar *detect_encoding_and_convert_str(gchar **encoding, const gchar *str, guint len)
@@ -88,15 +85,13 @@ static void caps_detect_handle(const gchar *encoding, GstTypeFind *tf,
 {
     GstCaps *caps = nullptr;
 
-    if (detect_caps_pfn != nullptr) {
-        caps = detect_caps_pfn(converted_str);
-    }
+    g_return_if_fail(detect_caps_pfn != nullptr);
+    caps = detect_caps_pfn(converted_str);
 
-    if (G_LIKELY(caps != nullptr)) {
-        GST_DEBUG("subtitle encoding: %s", encoding);
-        gst_type_find_suggest(tf, GST_TYPE_FIND_MAXIMUM, caps);
-        gst_caps_unref(caps);
-    }
+    g_return_if_fail(caps != nullptr);
+    GST_DEBUG("subtitle encoding: %s", encoding);
+    gst_type_find_suggest(tf, GST_TYPE_FIND_MAXIMUM, caps);
+    gst_caps_unref(caps);
 }
 
 static void probe_type_and_detect_caps(const gchar *str, guint tf_len,
