@@ -127,18 +127,12 @@ void gst_subtitle_typefind(GstTypeFind *tf, const gpointer priv,
     g_return_if_fail((tf != nullptr) && (detect_caps_pfn != nullptr));
 
     /* video or audio, no need to check characterset, the tf will mask sub */
-    if (gst_type_find_is_mask_sub(tf)) {
-        GST_DEBUG("mask subtitle");
-        return;
-    }
+    g_return_if_fail(!gst_type_find_is_mask_sub(tf));
 
     /* extract detected data */
     guint tf_len = (guint)gst_type_find_get_length(tf);
     tf_len = (tf_len >= TYPEFIND_SIZE) ? TYPEFIND_SIZE : tf_len;
-    if (tf_len < TYPEFIND_MIN_SIZE) {
-        GST_ERROR("tf_len < TYPEFIND_MIN_SIZE, ignore");
-        return;
-    }
+    g_return_if_fail(tf_len >= TYPEFIND_MIN_SIZE);
 
     const guint8 *data = gst_type_find_peek(tf, (gint64)0, tf_len);
     g_return_if_fail(data != nullptr);
@@ -227,14 +221,8 @@ GstFlowReturn gst_subtitle_push_buffer(GstSubtitleBaseParse *self,
     g_return_val_if_fail((self != nullptr) && (decoded_frame != nullptr), ret);
 
     GstSubtitleStream *stream = gst_subtitle_get_stream_by_id(self, decoded_frame->stream_index);
-    if (stream == nullptr) {
-        return GST_FLOW_NOT_LINKED;
-    }
-
-    if (!handle_text_subtitle(self, decoded_frame, stream, &ret)) {
-        return GST_FLOW_ERROR;
-    }
-
+    g_return_val_if_fail(stream != nullptr, GST_FLOW_NOT_LINKED);
+    g_return_val_if_fail(handle_text_subtitle(self, decoded_frame, stream, &ret), GST_FLOW_ERROR);
     if (self->from_internal) {
         update_stream_cache_queue_subtitle(self, stream);
         g_mutex_lock(&self->pushmutex);
