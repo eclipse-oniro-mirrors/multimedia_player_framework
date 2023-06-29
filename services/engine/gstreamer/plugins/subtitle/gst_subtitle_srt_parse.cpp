@@ -120,10 +120,7 @@ static gboolean gst_subtitle_srt_parse_decode_frame(GstSubtitleBaseParse *base, 
     g_return_val_if_fail((frame->len != 0) && (frame->len <= MAX_BUFFER_SIZE), FALSE);
 
     decoded_frame->data = static_cast<guint8 *>(g_malloc((gsize)frame->len + 1));
-    if (decoded_frame->data == nullptr) {
-        GST_WARNING_OBJECT(parse, "srt memory allocated failed");
-        return FALSE;
-    }
+    g_return_val_if_fail(decoded_frame->data != nullptr, FALSE);
 
     if (memcpy_s(decoded_frame->data, frame->len + 1, frame->data, frame->len) != EOK) {
         GST_WARNING_OBJECT(parse, "srt memory copy failed");
