@@ -76,7 +76,7 @@ static gboolean src_event_seek_event(const GstSubtitleBaseParseClass *baseclass,
     gdouble rate;
     GstSegment seeksegment;
 
-    g_return_val_if_fail(self->last_seekseq == event->seqnum, FALSE);
+    g_return_val_if_fail(self->last_seekseq != event->seqnum, FALSE);
     self->last_seekseq = event->seqnum;
     if (baseclass->on_seek_pfn != nullptr) {
         baseclass->on_seek_pfn(self, event);
@@ -762,11 +762,6 @@ GstSubtitleStream *gst_subtitle_get_stream(GstSubtitleBaseParse *base_parse, con
 
     caps = baseclass->get_srcpad_caps_pfn(base_parse, info->stream_id);
     g_return_val_if_fail(caps != nullptr, nullptr);
-    if (caps == nullptr) {
-        GST_INFO_OBJECT(base_parse, "get srcpad caps failed");
-        return nullptr;
-    }
-
     if (!gst_pad_set_caps(srcpad, caps)) {
         GST_INFO_OBJECT(base_parse, "gst_pad_set_caps failed");
         gst_caps_unref(caps);
