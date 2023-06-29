@@ -573,9 +573,7 @@ static void gst_subtitle_sink_finalize(GObject *obj)
         gst_object_unref(priv->audio_sink);
         priv->audio_sink = nullptr;
     }
-    if (priv->timer_queue != nullptr) {
-        priv->timer_queue = nullptr;
-    }
+    priv->timer_queue = nullptr;
     g_mutex_clear(&priv->mutex);
     G_OBJECT_CLASS(parent_class)->finalize(obj);
 }
