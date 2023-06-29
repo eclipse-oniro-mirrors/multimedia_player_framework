@@ -374,9 +374,13 @@ static GstFlowReturn gst_subtitle_sink_new_preroll(GstAppSink *appsink, gpointer
 static GstClockTime gst_subtitle_sink_update_reach_time(GstBaseSink *basesink, GstClockTime reach_time,
     gboolean *need_drop_this_buffer)
 {
+    auto priv = GST_SUBTITLE_SINK(basesink)->priv;
     GstClockTime cur_running_time = gst_subtitle_sink_get_current_running_time(basesink);
     gint64 subtitle_running_time_diff = cur_running_time - reach_time;
-    if (subtitle_running_time_diff > DEFAULT_SUBTITLE_BEHIND_AUDIO_THD) {
+    gint64 audio_running_time_diff = 0;
+    g_object_get(priv->audio_sink, "last-running-time-diff", &audio_running_time_diff, nullptr);
+    gint64 late_time = subtitle_running_time_diff - audio_running_time_diff;
+    if (late_time > DEFAULT_SUBTITLE_BEHIND_AUDIO_THD) {
         GST_DEBUG_OBJECT(basesink, "the text frame is too late, %"
         GST_TIME_FORMAT " behind", GST_TIME_ARGS(abs(subtitle_running_time_diff)));
         *need_drop_this_buffer = TRUE;
