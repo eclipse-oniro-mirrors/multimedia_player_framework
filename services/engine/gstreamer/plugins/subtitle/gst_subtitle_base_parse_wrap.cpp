@@ -865,7 +865,7 @@ gboolean gst_subtitle_set_tags(GstSubtitleBaseParse *base_parse)
 
     g_return_val_if_fail(base_parse->stream_num != 0, FALSE);
     for (i = 0; i < base_parse->stream_num; i++) {
-        g_return_val_if_fail(base_parse->streams[i] != nullptr, FALSE);    
+        g_return_val_if_fail(base_parse->streams[i] != nullptr, FALSE);
         GstEvent *event = gst_event_new_tag(gst_tag_list_ref(base_parse->streams[i]->tags));
         if (event == nullptr) {
             GST_ERROR_OBJECT(base_parse, "new event tag for streams[%d] failed", i);

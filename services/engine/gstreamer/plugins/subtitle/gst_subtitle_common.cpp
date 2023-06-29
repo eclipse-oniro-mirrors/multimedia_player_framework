@@ -46,7 +46,8 @@ void gst_subtitle_free_frame(GstSubtitleBaseParse *base, GstSubtitleDecodedFrame
         g_free(decoded_frame->data);
         decoded_frame->data = nullptr;
     }
-    g_return_if_fail(memset_s(decoded_frame, sizeof(GstSubtitleDecodedFrame), 0, sizeof(GstSubtitleDecodedFrame)) == EOK);
+    g_return_if_fail(memset_s(decoded_frame,
+        sizeof(GstSubtitleDecodedFrame), 0, sizeof(GstSubtitleDecodedFrame)) == EOK);
 }
 
 static gchar *detect_encoding_and_convert_str(gchar **encoding, const gchar *str, guint len)
