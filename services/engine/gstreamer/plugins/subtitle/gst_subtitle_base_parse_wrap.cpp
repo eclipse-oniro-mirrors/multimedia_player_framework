@@ -781,13 +781,11 @@ GstSubtitleStream *gst_subtitle_get_stream(GstSubtitleBaseParse *base_parse, con
 
     (void)g_string_free(padname, (gboolean)TRUE);
     padname = nullptr;
-    if (srcpad == nullptr) {
-        return nullptr;
-    }
-
+    g_return_if_fail(srcpad != nullptr, nullptr);
     get_stream_srcpad_set(base_parse, srcpad);
 
     caps = baseclass->get_srcpad_caps_pfn(base_parse, info->stream_id);
+    g_return_if_fail(caps != nullptr, nullptr);
     if (caps == nullptr) {
         GST_INFO_OBJECT(base_parse, "get srcpad caps failed");
         return nullptr;
@@ -846,12 +844,7 @@ gboolean gst_subtitle_set_caps(GstSubtitleBaseParse *base_parse)
     g_return_val_if_fail(base_parse != nullptr, FALSE);
 
     gint i;
-
-    if (base_parse->stream_num == 0) {
-        GST_WARNING_OBJECT(base_parse, "there is no stream need to set caps!");
-        return FALSE;
-    }
-
+    g_return_val_if_fail(base_parse->stream_num != 0, FALSE);
     for (i = 0; i < base_parse->stream_num; i++) {
         if (base_parse->streams[i] == nullptr ||
             !gst_pad_set_caps(base_parse->streams[i]->pad, base_parse->streams[i]->caps)) {
@@ -870,35 +863,27 @@ gboolean gst_subtitle_set_tags(GstSubtitleBaseParse *base_parse)
 
     gint i;
 
-    if (base_parse->stream_num == 0) {
-        GST_WARNING_OBJECT(base_parse, "there is no stream need to set tags!");
-        return FALSE;
-    }
-
+    g_return_val_if_fail(base_parse->stream_num != 0, FALSE);
     for (i = 0; i < base_parse->stream_num; i++) {
-        if (base_parse->streams[i] == nullptr) {
-            GST_ERROR_OBJECT(base_parse, "streams[%d] is nullptr", i);
+        g_return_val_if_fail(base_parse->streams[i] != nullptr, FALSE);    
+        GstEvent *event = gst_event_new_tag(gst_tag_list_ref(base_parse->streams[i]->tags));
+        if (event == nullptr) {
+            GST_ERROR_OBJECT(base_parse, "new event tag for streams[%d] failed", i);
+            gst_tag_list_unref(base_parse->streams[i]->tags);
+            return FALSE;
+        }
+        const gchar *event_name = gst_event_type_get_name(GST_EVENT_TYPE(event));
+        GST_DEBUG_OBJECT(base_parse, "pushing taglist 0x%06" PRIXPTR " on pad %s",
+            FAKE_POINTER(base_parse->streams[i]->tags), GST_PAD_NAME(base_parse->streams[i]->pad));
+        if (!gst_pad_push_event(base_parse->streams[i]->pad, event)) {
+            GST_ERROR_OBJECT(base_parse, "pad %s send event %s failed", GST_PAD_NAME(base_parse->streams[i]->pad),
+                event_name);
+            gst_tag_list_unref(base_parse->streams[i]->tags);
             return FALSE;
         } else {
-            GstEvent *event = gst_event_new_tag(gst_tag_list_ref(base_parse->streams[i]->tags));
-            if (event == nullptr) {
-                GST_ERROR_OBJECT(base_parse, "new event tag for streams[%d] failed", i);
-                gst_tag_list_unref(base_parse->streams[i]->tags);
-                return FALSE;
-            }
-            const gchar *event_name = gst_event_type_get_name(GST_EVENT_TYPE(event));
-            GST_DEBUG_OBJECT(base_parse, "pushing taglist 0x%06" PRIXPTR " on pad %s",
-                FAKE_POINTER(base_parse->streams[i]->tags), GST_PAD_NAME(base_parse->streams[i]->pad));
-            if (!gst_pad_push_event(base_parse->streams[i]->pad, event)) {
-                GST_ERROR_OBJECT(base_parse, "pad %s send event %s failed", GST_PAD_NAME(base_parse->streams[i]->pad),
-                    event_name);
-                gst_tag_list_unref(base_parse->streams[i]->tags);
-                return FALSE;
-            } else {
-                GST_INFO_OBJECT(base_parse, "pad %s send event %s success", GST_PAD_NAME(base_parse->streams[i]->pad),
-                    event_name);
-                gst_tag_list_unref(base_parse->streams[i]->tags);
-            }
+            GST_INFO_OBJECT(base_parse, "pad %s send event %s success", GST_PAD_NAME(base_parse->streams[i]->pad),
+                event_name);
+            gst_tag_list_unref(base_parse->streams[i]->tags);
         }
     }
 
