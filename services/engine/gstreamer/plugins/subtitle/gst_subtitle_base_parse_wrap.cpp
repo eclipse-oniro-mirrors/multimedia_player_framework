@@ -781,11 +781,11 @@ GstSubtitleStream *gst_subtitle_get_stream(GstSubtitleBaseParse *base_parse, con
 
     (void)g_string_free(padname, (gboolean)TRUE);
     padname = nullptr;
-    g_return_if_fail(srcpad != nullptr, nullptr);
+    g_return_val_if_fail(srcpad != nullptr, nullptr);
     get_stream_srcpad_set(base_parse, srcpad);
 
     caps = baseclass->get_srcpad_caps_pfn(base_parse, info->stream_id);
-    g_return_if_fail(caps != nullptr, nullptr);
+    g_return_val_if_fail(caps != nullptr, nullptr);
     if (caps == nullptr) {
         GST_INFO_OBJECT(base_parse, "get srcpad caps failed");
         return nullptr;
