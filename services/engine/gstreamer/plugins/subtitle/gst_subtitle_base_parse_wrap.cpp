@@ -247,7 +247,8 @@ static GstFlowReturn gst_subtitle_base_push_data(GstSubtitleBaseParse *self, Gst
 gboolean handle_text_subtitle(GstSubtitleBaseParse *self, const GstSubtitleDecodedFrame *decoded_frame,
     GstSubtitleStream *stream, GstFlowReturn *ret)
 {
-    g_return_val_if_fail((self != nullptr) && (decoded_frame != nullptr) && (stream != nullptr) && (ret != nullptr), FALSE);
+    g_return_val_if_fail((self != nullptr) && (decoded_frame != nullptr)
+        && (stream != nullptr) && (ret != nullptr), FALSE);
     g_return_val_if_fail(decoded_frame->len <= MAX_BUFFER_SIZE, FALSE);
 
     GstPad *pad = stream->pad;

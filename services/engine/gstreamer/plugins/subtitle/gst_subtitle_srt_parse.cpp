@@ -724,9 +724,10 @@ static void gst_subtitle_srt_parse_type_find(GstTypeFind *tf, gpointer priv)
 gboolean gst_subtitle_srt_parse_register(GstPlugin *plugin)
 {
     GST_INFO_OBJECT(plugin, "srt parse register in");
-    g_return_val_if_fail(gst_type_find_register(plugin, "srt_typefind", GST_RANK_PRIMARY + 1, gst_subtitle_srt_parse_type_find,
-        "srt,txt", SRT_CAPS, nullptr, nullptr), FALSE);
-    g_return_val_if_fail(gst_element_register(plugin, "srt", GST_RANK_PRIMARY + 1, GST_TYPE_SUBTITLE_SRT_PARSE), FALSE);
+    g_return_val_if_fail(gst_type_find_register(plugin, "srt_typefind",
+        GST_RANK_PRIMARY + 1, gst_subtitle_srt_parse_type_find, "srt,txt", SRT_CAPS, nullptr, nullptr), FALSE);
+    g_return_val_if_fail(gst_element_register(plugin, "srt",
+        GST_RANK_PRIMARY + 1, GST_TYPE_SUBTITLE_SRT_PARSE), FALSE);
     GST_INFO_OBJECT(plugin, "srt parse register out");
     return TRUE;
 }
