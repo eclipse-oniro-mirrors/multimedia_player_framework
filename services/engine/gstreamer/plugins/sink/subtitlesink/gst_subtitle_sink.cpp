@@ -155,10 +155,6 @@ static void gst_subtitle_sink_set_audio_sink(GstSubtitleSink *subtitle_sink, gpo
 
     GstSubtitleSinkPrivate *priv = subtitle_sink->priv;
     g_mutex_lock(&priv->mutex);
-    if (priv->audio_sink != nullptr) {
-        GST_INFO_OBJECT(subtitle_sink, "has audio sink: %s, unref it", GST_ELEMENT_NAME(priv->audio_sink));
-        gst_object_unref(priv->audio_sink);
-    }
     priv->audio_sink = GST_ELEMENT_CAST(gst_object_ref(audio_sink));
     GST_INFO_OBJECT(subtitle_sink, "get audio sink: %s", GST_ELEMENT_NAME(priv->audio_sink));
     g_mutex_unlock(&priv->mutex);
