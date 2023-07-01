@@ -2458,7 +2458,6 @@ HWTEST_F(PlayerUnitTest, Player_AddSubSource_004, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->AddSubSource(SUBTITLE_SRT_FIELE, 0, 0));
     EXPECT_EQ(SUBTITLE_4_SEC, player_->GetSubtitleText(false));
     sleep(PLAYING_TIME_2_SEC);
-    // std::string text = player_->GetSubtitleText(false);
     EXPECT_EQ(SUBTITLE_8_SEC, player_->GetSubtitleText(false));
 }
 
