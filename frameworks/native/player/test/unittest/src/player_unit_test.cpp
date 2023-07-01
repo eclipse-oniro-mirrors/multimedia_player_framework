@@ -2403,21 +2403,21 @@ HWTEST_F(PlayerUnitTest, Player_AddSubSource_002, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->AddSubSource(SUBTITLE_SRT_FIELE, 0, 0));
     EXPECT_EQ(MSERR_OK, player_->Play());
     EXPECT_EQ(MSERR_OK, player_->Seek(SEEK_TIME_5_SEC, SEEK_CLOSEST));
-    EXPECT_EQ(SUBTITLE_5_SEC, player_->GetSubtitleText(false));
+    EXPECT_EQ(SUBTITLE_5_SEC, player_->GetSubtitleText(SUBTITLE_5_SEC));
     EXPECT_EQ(MSERR_OK, player_->Pause());
     EXPECT_EQ(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_CLOSEST));
-    EXPECT_EQ(SUBTITLE_2_SEC, player_->GetSubtitleText(false));
+    EXPECT_EQ(SUBTITLE_2_SEC, player_->GetSubtitleText(SUBTITLE_2_SEC));
     EXPECT_EQ(MSERR_OK, player_->Seek(SEEK_TIME_5_SEC, SEEK_NEXT_SYNC));
-    EXPECT_EQ(SUBTITLE_8_SEC, player_->GetSubtitleText(false));
+    EXPECT_EQ(SUBTITLE_8_SEC, player_->GetSubtitleText(SUBTITLE_8_SEC));
     EXPECT_EQ(MSERR_OK, player_->Seek(SEEK_TIME_5_SEC, SEEK_PREVIOUS_SYNC));
-    EXPECT_EQ(SUBTITLE_4_SEC, player_->GetSubtitleText(false));
+    EXPECT_EQ(SUBTITLE_4_SEC, player_->GetSubtitleText(SUBTITLE_4_SEC));
     int duration = 0;
     EXPECT_EQ(MSERR_OK, player_->GetDuration(duration));
     EXPECT_EQ(MSERR_OK, player_->Play());
     EXPECT_EQ(MSERR_OK, player_->Seek(duration, SEEK_CLOSEST));
-    EXPECT_EQ(SUBTITLE_10_SEC, player_->GetSubtitleText(false));
+    EXPECT_EQ(SUBTITLE_10_SEC, player_->GetSubtitleText(SUBTITLE_10_SEC));
     sleep(PLAYING_TIME_1_SEC);
-    EXPECT_EQ("", player_->GetSubtitleText(true));
+    EXPECT_EQ("", player_->GetSubtitleText(""));
 }
 
 /**
@@ -2435,9 +2435,9 @@ HWTEST_F(PlayerUnitTest, Player_AddSubSource_003, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->Play());
     sleep(PLAYING_TIME_2_SEC);
     EXPECT_EQ(MSERR_OK, player_->AddSubSource(SUBTITLE_SRT_FIELE, 0, 0));
-    EXPECT_EQ(SUBTITLE_2_SEC, player_->GetSubtitleText(false));
+    EXPECT_EQ(SUBTITLE_2_SEC, player_->GetSubtitleText(SUBTITLE_2_SEC));
     sleep(PLAYING_TIME_1_SEC);
-    EXPECT_EQ(SUBTITLE_3_SEC, player_->GetSubtitleText(false));
+    EXPECT_EQ(SUBTITLE_3_SEC, player_->GetSubtitleText(SUBTITLE_3_SEC));
 }
 
 /**
@@ -2456,9 +2456,9 @@ HWTEST_F(PlayerUnitTest, Player_AddSubSource_004, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->Play());
     sleep(PLAYING_TIME_2_SEC);
     EXPECT_EQ(MSERR_OK, player_->AddSubSource(SUBTITLE_SRT_FIELE, 0, 0));
-    EXPECT_EQ(SUBTITLE_4_SEC, player_->GetSubtitleText(false));
-    sleep(PLAYING_TIME_2_SEC);
-    EXPECT_EQ(SUBTITLE_8_SEC, player_->GetSubtitleText(false));
+    EXPECT_EQ(SUBTITLE_4_SEC, player_->GetSubtitleText(SUBTITLE_4_SEC));
+    sleep(PLAYING_TIME_1_SEC);
+    EXPECT_EQ(SUBTITLE_6_SEC player_->GetSubtitleText(SUBTITLE_6_SEC));
 }
 
 /**
@@ -2476,11 +2476,10 @@ HWTEST_F(PlayerUnitTest, Player_AddSubSource_005, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->Play());
     sleep(PLAYING_TIME_2_SEC);
     EXPECT_EQ(MSERR_OK, player_->AddSubSource(SUBTITLE_SRT_FIELE, 0, 0));
-    EXPECT_EQ(SUBTITLE_2_SEC, player_->GetSubtitleText(false));
+    EXPECT_EQ(SUBTITLE_2_SEC, player_->GetSubtitleText(SUBTITLE_2_SEC));
     EXPECT_EQ(MSERR_OK, player_->SetPlaybackSpeed(SPEED_FORWARD_2_00_X));
     sleep(PLAYING_TIME_1_SEC);
-    std::string text = player_->GetSubtitleText(false);
-    EXPECT_EQ((SUBTITLE_3_SEC == text || SUBTITLE_4_SEC == text), true);
+    EXPECT_EQ(SUBTITLE_4_SEC, player_->GetSubtitleText(SUBTITLE_4_SEC));
     EXPECT_EQ(MSERR_OK, player_->Reset());
     ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "H264_AAC.mp4", 0, 0));
     EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
@@ -2489,7 +2488,7 @@ HWTEST_F(PlayerUnitTest, Player_AddSubSource_005, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->Play());
     EXPECT_EQ(MSERR_OK, player_->Pause());
     EXPECT_EQ(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_CLOSEST));
-    EXPECT_EQ(SUBTITLE_2_SEC, player_->GetSubtitleText(false));
+    EXPECT_EQ(SUBTITLE_2_SEC, player_->GetSubtitleText(SUBTITLE_2_SEC));
 }
 } // namespace Media
 } // namespace OHOS

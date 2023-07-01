@@ -168,8 +168,8 @@ int32_t PlayerCallbackTest::TrackInfoUpdateSync()
 void PlayerCallbackTest::HandleSubtitleCallback(int32_t extra, const Format &infoBody)
 {
     (void)extra;
-    infoBody.GetStringValue(std::string(PlayerKeys::SUBTITLE_TEXT), text);
-    std::cout << "text = " << text << std::endl;
+    infoBody.GetStringValue(std::string(PlayerKeys::SUBTITLE_TEXT), text_);
+    std::cout << "text = " << text_ << std::endl;
     textUpdate_ = true;
     condVarText_.notify_all();
 }
@@ -232,19 +232,19 @@ void PlayerCallbackTest::OnInfo(PlayerOnInfoType type, int32_t extra, const Form
     }
 }
 
-std::string PlayerCallbackTest::SubtitleTextUpdate(bool isNull)
+std::string PlayerCallbackTest::SubtitleTextUpdate(std::string text)
 {
     std::unique_lock<std::mutex> lock(subtitleMutex_);
     std::cout << "wait for text update" <<std::endl;
     condVarText_.wait_for(lock, std::chrono::seconds(WAITSECOND), [&, this]() {
-        if (text == "" && !isNull) {
+        if (text_ != text) {
             return textUpdate_ = false;
         }
         return textUpdate_;
     });
     std::cout << "text updated" <<std::endl;
     textUpdate_ = false;
-    return text;
+    return text_;
 }
 
 void PlayerCallbackTest::OnError(int32_t errorCode, const std::string &errorMsg)
@@ -679,9 +679,9 @@ int32_t PlayerMock::AddSubSource(const std::string &path, int64_t offset, int64_
     return callback_->TrackInfoUpdateSync();
 }
 
-std::string PlayerMock::GetSubtitleText(bool isNull)
+std::string PlayerMock::GetSubtitleText(std::string text)
 {
-    return callback_->SubtitleTextUpdate(isNull);
+    return callback_->SubtitleTextUpdate(text);
 }
 } // namespace Media
 } // namespace OHOS
