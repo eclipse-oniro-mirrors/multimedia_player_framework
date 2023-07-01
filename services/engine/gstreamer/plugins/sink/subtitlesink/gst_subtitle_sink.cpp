@@ -164,7 +164,7 @@ static gboolean gst_subtitle_sink_need_drop_buffer(GstBaseSink *basesink,
     GstSegment *segment, guint64 pts, guint64 pts_end)
 {
     guint64 start = segment->start;
-    if (pts <= start && start <= pts_end) {
+    if (pts <= start && start < pts_end) {
         GST_LOG_OBJECT(basesink, "no need drop, segment start is intersects with buffer time range, pts"
         " = %" GST_TIME_FORMAT ", pts end = %" GST_TIME_FORMAT " segment start = %"
         GST_TIME_FORMAT, GST_TIME_ARGS(pts), GST_TIME_ARGS(pts_end), GST_TIME_ARGS(segment->start));
