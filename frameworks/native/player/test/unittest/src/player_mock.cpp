@@ -633,7 +633,7 @@ int32_t PlayerMock::AddSubSource(const std::string &url)
     UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr && callback_ != nullptr, -1, "player or callback is nullptr");
     (void)player_->AddSubSource(url);
     std::cout << "wait for track info callback" << std::endl;
-    return callback_->TrackInfoUpdateSync();;
+    return callback_->TrackInfoUpdateSync();
 }
 
 int32_t PlayerMock::AddSubSource(const std::string &path, int64_t offset, int64_t size)
