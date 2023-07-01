@@ -145,6 +145,8 @@ public:
     std::string GetSubtitleText(bool isNull);
 private:
     void SeekPrepare(int32_t &mseconds, PlayerSeekMode &mode);
+    void HandleSubtitleCallback(int32_t extra, const Format &infoBody);
+    void HandleTrackInfoCallback(int32_t extra, const Format &infoBody);
     std::shared_ptr<Player> player_ = nullptr;
     std::shared_ptr<MediaDataSourceTest> dataSrc_ = nullptr;
     std::shared_ptr<PlayerCallbackTest> callback_ = nullptr;

@@ -165,6 +165,23 @@ int32_t PlayerCallbackTest::TrackInfoUpdateSync()
     return MSERR_OK;
 }
 
+void PlayerCallbackTest::HandleSubtitleCallback(int32_t extra, const Format &infoBody)
+{
+    (void)extra;
+    infoBody.GetStringValue(std::string(PlayerKeys::SUBTITLE_TEXT), text);
+    std::cout << "text = " << text << std::endl;
+    textUpdate_ = true;
+    condVarText_.notify_all();
+}
+
+void PlayerCallbackTest::HandleTrackInfoCallback(int32_t extra, const Format &infoBody)
+{
+    (void)extra;
+    std::cout << "track info update" << std::endl;
+    trackInfoUpdate_ = true;
+    condVarTrackInfoUpdate_.notify_all();
+}
+
 void PlayerCallbackTest::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
 {
     int32_t index;
@@ -203,16 +220,12 @@ void PlayerCallbackTest::OnInfo(PlayerOnInfoType type, int32_t extra, const Form
             std::cout << "INFO_TYPE_TRACKCHANGE: index " << index << " isSelect " << isSelect << std::endl;
             break;
         case INFO_TYPE_SUBTITLE_UPDATE: {
-            infoBody.GetStringValue(std::string(PlayerKeys::SUBTITLE_TEXT), text);
-            std::cout << "text = " << text << std::endl;
-            textUpdate_ = true;
-            condVarText_.notify_all();
+            HandleSubtitleCallback(extra, infoBody);
             break;
         }
         case INFO_TYPE_TRACK_INFO_UPDATE: {
-            std::cout << "track info update" << std::endl;
-            trackInfoUpdate_ = true;
-            condVarTrackInfoUpdate_.notify_all();
+            HandleTrackInfoCallback(extra, infoBody);
+            break;
         }
         default:
             break;
