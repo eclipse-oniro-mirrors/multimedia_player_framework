@@ -329,7 +329,6 @@ static GstFlowReturn gst_subtitle_sink_new_preroll(GstAppSink *appsink, gpointer
     (void)user_data;
     GstSubtitleSink *subtitle_sink = GST_SUBTITLE_SINK_CAST(appsink);
     if (subtitle_sink->track_change) {
-        GST_DEBUG_OBJECT(subtitle_sink, "track change, not preroll buffer");
         return GST_FLOW_OK;
     }
     if (subtitle_sink->stop_render) {
@@ -374,7 +373,6 @@ static GstFlowReturn gst_subtitle_sink_new_preroll(GstAppSink *appsink, gpointer
     g_mutex_unlock(&priv->mutex);
     GST_DEBUG_OBJECT(subtitle_sink, "preroll buffer pts is %" GST_TIME_FORMAT ", duration is %" GST_TIME_FORMAT,
         GST_TIME_ARGS(pts), GST_TIME_ARGS(priv->text_frame_duration));
-
     subtitle_sink->preroll_buffer = buffer;
     gst_subtitle_sink_handle_buffer(subtitle_sink, buffer, TRUE, 0ULL);
     return GST_FLOW_OK;
