@@ -24,7 +24,7 @@ using namespace OHOS::Media;
 #define FAKE_POINTER(addr) (POINTER_MASK & reinterpret_cast<uintptr_t>(addr))
 
 namespace {
-    constexpr gint64 DEFAULT_SUBTITLE_BEHIND_AUDIO_THD = 50000000; // 50ms
+    constexpr gint64 DEFAULT_SUBTITLE_BEHIND_AUDIO_THD = 150000000; // 150ms
 }
 
 enum {
