@@ -328,6 +328,10 @@ static GstFlowReturn gst_subtitle_sink_new_preroll(GstAppSink *appsink, gpointer
 {
     (void)user_data;
     GstSubtitleSink *subtitle_sink = GST_SUBTITLE_SINK_CAST(appsink);
+    if (subtitle_sink->track_change) {
+        GST_DEBUG_OBJECT(subtitle_sink, "track change, not preroll buffer");
+        return GST_FLOW_OK;
+    }
     if (subtitle_sink->stop_render) {
         GST_WARNING_OBJECT(subtitle_sink, "prepared buffer or playing to paused buffer, do not render");
         return GST_FLOW_OK;
