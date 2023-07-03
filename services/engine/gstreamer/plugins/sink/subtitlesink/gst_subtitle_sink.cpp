@@ -30,8 +30,8 @@ namespace {
 enum {
     PROP_0,
     PROP_AUDIO_SINK,
-    RPOP_SEGMENT_UPDATED,
-    PROP_TRACK_CHANGE,
+    PROP_SEGMENT_UPDATED,
+    PROP_TRACK_CHANGED,
 };
 
 struct _GstSubtitleSinkPrivate {
@@ -100,11 +100,11 @@ static void gst_subtitle_sink_class_init(GstSubtitleSinkClass *kclass)
     g_object_class_install_property(gobject_class, PROP_AUDIO_SINK,
         g_param_spec_pointer("audio-sink", "audio sink", "audio sink",
             (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
-    g_object_class_install_property(gobject_class, RPOP_SEGMENT_UPDATED,
+    g_object_class_install_property(gobject_class, PROP_SEGMENT_UPDATED,
         g_param_spec_boolean("segment-updated", "audio segment updated", "audio segment updated",
             FALSE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
-    g_object_class_install_property(gobject_class, RPOP_SEGMENT_UPDATED,
-        g_param_spec_boolean("track-change", "track change", "select track change",
+    g_object_class_install_property(gobject_class, PROP_SEGMENT_UPDATED,
+        g_param_spec_boolean("track-changed", "track changed", "select track change",
             FALSE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
 
     GST_DEBUG_CATEGORY_INIT(gst_subtitle_sink_debug_category, "subtitlesink", 0, "subtitlesink class");
@@ -227,11 +227,11 @@ static void gst_subtitle_sink_set_property(GObject *object, guint prop_id, const
             gst_subtitle_sink_set_audio_sink(subtitle_sink, g_value_get_pointer(value));
             break;
         }
-        case RPOP_SEGMENT_UPDATED: {
+        case PROP_SEGMENT_UPDATED: {
             gst_subtitle_sink_segment_updated(subtitle_sink);
             break;
         }
-        case PROP_TRACK_CHANGE: {
+        case PROP_TRACK_CHANGED: {
             G_OBJECT_LOCK(subtitle_sink);
             subtitle_sink->track_change = g_value_get_boolean(value);
             G_OBJECT_UNLOCK(subtitle_sink);
