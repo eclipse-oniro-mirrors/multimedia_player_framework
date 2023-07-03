@@ -269,12 +269,11 @@ void PlayerEngineGstImpl::HandleBufferingTime(const PlayBinMessage &msg)
             if (bufferingTime_ != mqBufferingTime) {
                 bufferingTime_ = mqBufferingTime;
                 std::shared_ptr<IPlayerEngineObs> notifyObs = obs_.lock();
-                if (notifyObs != nullptr) {
-                    Format format;
-                    (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_CACHED_DURATION),
-                        static_cast<int32_t>(mqBufferingTime));
-                    notifyObs->OnInfo(INFO_TYPE_BUFFERING_UPDATE, 0, format);
-                }
+                CHECK_AND_RETURN_RET_LOG(notifyObs != nullptr, MSERR_NO_MEMORY, "notifyObs is nullptr");
+                Format format;
+                (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_CACHED_DURATION),
+                    static_cast<int32_t>(mqBufferingTime));
+                notifyObs->OnInfo(INFO_TYPE_BUFFERING_UPDATE, 0, format);
             }
         }
     }
