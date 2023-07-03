@@ -232,9 +232,9 @@ static void gst_subtitle_sink_set_property(GObject *object, guint prop_id, const
             break;
         }
         case PROP_track_changedD: {
-            G_OBJECT_LOCK(subtitle_sink);
+            GST_OBJECT_LOCK(subtitle_sink);
             subtitle_sink->track_changed = g_value_get_boolean(value);
-            G_OBJECT_UNLOCK(subtitle_sink);
+            GST_OBJECT_UNLOCK(subtitle_sink);
             break;
         }
         default:
