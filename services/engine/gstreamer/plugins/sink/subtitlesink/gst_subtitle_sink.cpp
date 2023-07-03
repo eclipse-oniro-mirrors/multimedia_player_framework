@@ -31,7 +31,7 @@ enum {
     PROP_0,
     PROP_AUDIO_SINK,
     PROP_SEGMENT_UPDATED,
-    PROP_TRACK_CHANGED,
+    PROP_track_changedD,
 };
 
 struct _GstSubtitleSinkPrivate {
@@ -121,7 +121,7 @@ static void gst_subtitle_sink_init(GstSubtitleSink *subtitle_sink)
     subtitle_sink->preroll_buffer = nullptr;
     subtitle_sink->rate = 1.0f;
     subtitle_sink->segment_updated = FALSE;
-    subtitle_sink->track_change = FALSE;
+    subtitle_sink->track_changed = FALSE;
 
     auto priv = reinterpret_cast<GstSubtitleSinkPrivate *>(gst_subtitle_sink_get_instance_private(subtitle_sink));
     g_return_if_fail(priv != nullptr);
@@ -231,9 +231,9 @@ static void gst_subtitle_sink_set_property(GObject *object, guint prop_id, const
             gst_subtitle_sink_segment_updated(subtitle_sink);
             break;
         }
-        case PROP_TRACK_CHANGED: {
+        case PROP_track_changedD: {
             G_OBJECT_LOCK(subtitle_sink);
-            subtitle_sink->track_change = g_value_get_boolean(value);
+            subtitle_sink->track_changed = g_value_get_boolean(value);
             G_OBJECT_UNLOCK(subtitle_sink);
             break;
         }
@@ -330,7 +330,7 @@ static GstFlowReturn gst_subtitle_sink_new_preroll(GstAppSink *appsink, gpointer
 {
     (void)user_data;
     GstSubtitleSink *subtitle_sink = GST_SUBTITLE_SINK_CAST(appsink);
-    if (subtitle_sink->track_change) {
+    if (subtitle_sink->track_changed) {
         return GST_FLOW_OK;
     }
     if (subtitle_sink->stop_render) {
@@ -482,6 +482,7 @@ static gboolean gst_subtitle_sink_stop(GstBaseSink *basesink)
     subtitle_sink->preroll_buffer = nullptr;
     subtitle_sink->stop_render = FALSE;
     subtitle_sink->segment_updated = FALSE;
+    subtitle_sink->track_changed = FALSE;
     priv->timer_queue->Stop();
     g_mutex_unlock (&priv->mutex);
     GST_BASE_SINK_CLASS(parent_class)->stop(basesink);
@@ -516,7 +517,7 @@ static gboolean gst_subtitle_sink_event(GstBaseSink *basesink, GstEvent *event)
                 new_segment.rate = audio_base->segment.applied_rate;
                 gst_segment_copy_into(&new_segment, &subtitle_sink->segment);
             } else {
-                if (!subtitle_sink->audio_segment_updated && !subtitle_sink->track_change) {
+                if (!subtitle_sink->audio_segment_updated && !subtitle_sink->track_changed) {
                     g_mutex_lock(&subtitle_sink->segment_mutex);
                     gint64 end_time = g_get_monotonic_time() + G_TIME_SPAN_SECOND;
                     g_cond_wait_until(&subtitle_sink->segment_cond, &subtitle_sink->segment_mutex, end_time);
@@ -553,7 +554,7 @@ static gboolean gst_subtitle_sink_event(GstBaseSink *basesink, GstEvent *event)
             break;
         }
         case GST_EVENT_FLUSH_START: {
-            if (subtitle_sink->track_change) {
+            if (subtitle_sink->track_changed) {
                 return TRUE;
             }
             GST_DEBUG_OBJECT(subtitle_sink, "subtitle flush start");
@@ -565,7 +566,7 @@ static gboolean gst_subtitle_sink_event(GstBaseSink *basesink, GstEvent *event)
             break;
         }
         case GST_EVENT_FLUSH_STOP: {
-            if (subtitle_sink->track_change) {
+            if (subtitle_sink->track_changed) {
                 return TRUE;
             }
             GST_DEBUG_OBJECT(subtitle_sink, "subtitle flush stop");
