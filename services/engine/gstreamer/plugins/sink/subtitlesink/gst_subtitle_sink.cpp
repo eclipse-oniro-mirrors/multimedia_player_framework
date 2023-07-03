@@ -31,7 +31,7 @@ enum {
     PROP_0,
     PROP_AUDIO_SINK,
     PROP_SEGMENT_UPDATED,
-    PROP_track_changedD,
+    PROP_TRACK_CHANGED,
 };
 
 struct _GstSubtitleSinkPrivate {
@@ -231,7 +231,7 @@ static void gst_subtitle_sink_set_property(GObject *object, guint prop_id, const
             gst_subtitle_sink_segment_updated(subtitle_sink);
             break;
         }
-        case PROP_track_changedD: {
+        case PROP_TRACK_CHANGED: {
             GST_OBJECT_LOCK(subtitle_sink);
             subtitle_sink->track_changed = g_value_get_boolean(value);
             GST_OBJECT_UNLOCK(subtitle_sink);
