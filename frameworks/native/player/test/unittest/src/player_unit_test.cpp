@@ -169,6 +169,7 @@ HWTEST_F(PlayerUnitTest, Player_SetSource_003, TestSize.Level2)
     EXPECT_NE(720, player_->GetVideoWidth());
     EXPECT_NE(MSERR_OK, player_->Stop());
     EXPECT_EQ(MSERR_OK, player_->Reset());
+    system("param set sys.media.player.buffering.enable FALSE");
 }
 
 /**
