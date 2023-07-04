@@ -289,7 +289,7 @@ int32_t PlayBinCtrlerBase::Stop(bool needWait)
         MEDIA_LOGD("Stop End");
     }
 
-    CHECK_AND_RETURN_RET_LOG(GetCurrState() != stoppedState_, MSERR_INVALID_STATE, "Stop failed");
+    CHECK_AND_RETURN_RET_LOG(GetCurrState() == stoppedState_, MSERR_INVALID_STATE, "Stop failed");
     return MSERR_OK;
 }
 
