@@ -36,6 +36,7 @@ HdiInBufferMgr::~HdiInBufferMgr()
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
     EmptyList(preBuffers_);
+    firstFramePrinted = false;
 }
 
 std::shared_ptr<HdiBufferWrap> HdiInBufferMgr::GetHdiEosBuffer()
@@ -67,6 +68,10 @@ int32_t HdiInBufferMgr::PushBuffer(GstBuffer *buffer)
         codecBuffer = GetCodecBuffer(buffer);
     }
     CHECK_AND_RETURN_RET_LOG(codecBuffer != nullptr, GST_CODEC_ERROR, "Push buffer failed");
+    if (!firstFramePrinted) {
+        MEDIA_LOGI("first input buffer pts %{public} " PRId64 "", codecBuffer->hdiBuffer.pts);
+        firstFramePrinted = true;
+    }
     MEDIA_LOGD("id %{public}d, fillLen %{public}d, pts %{public} " PRId64 "",
         codecBuffer->hdiBuffer.bufferId, codecBuffer->hdiBuffer.filledLen, codecBuffer->hdiBuffer.pts);
     {

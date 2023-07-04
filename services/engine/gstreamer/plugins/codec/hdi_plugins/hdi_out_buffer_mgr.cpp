@@ -38,6 +38,7 @@ HdiOutBufferMgr::~HdiOutBufferMgr()
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
     ClearmBuffers();
+    firstFramePrinted = false;
 }
 
 int32_t HdiOutBufferMgr::Start()
@@ -150,6 +151,10 @@ int32_t HdiOutBufferMgr::CodecBufferAvailable(const OmxCodecBuffer *buffer)
             if (bufferWarp.gstBuffer != nullptr) {
                 GST_BUFFER_PTS(bufferWarp.gstBuffer) = buffer->pts;
                 MEDIA_LOGD("get from hdi, pts = %{public}" PRId64 "", buffer->pts);
+            }
+            if (!firstFramePrinted && buffer->pts != 0) {
+                MEDIA_LOGI("first output buffer, pts = %{public}" PRId64 "", buffer->pts);
+                firstFramePrinted = true;
             }
             SetFlagToBuffer(bufferWarp.gstBuffer, buffer->flag);
             mBuffers.push_back(bufferWarp);
