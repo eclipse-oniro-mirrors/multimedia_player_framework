@@ -743,6 +743,26 @@ void PlayBinCtrlerBase::SetupAudioSegmentEventCb()
     AddSignalIds(GST_ELEMENT_CAST(audioSink_), id);
 }
 
+void PlayBinCtrlerBase::OnTrackChangedEventCb(const GstElement *subtitleSink_, gpointer userData)
+{
+    (void)subtitleSink_;
+    auto thizStrong = PlayBinCtrlerWrapper::TakeStrongThiz(userData);
+    CHECK_AND_RETURN(thizStrong != nullptr);
+    gst_element_set_start_time(GST_ELEMENT_CAST(thizStrong->playbin_), thizStrong->lastStartTime_);
+    thizStrong->ReportTrackChange();
+}
+
+void PlayBinCtrlerBase::SetupSubtitleTrackChangeEventCb()
+{
+    PlayBinCtrlerWrapper *wrapper = new(std::nothrow) PlayBinCtrlerWrapper(shared_from_this());
+    CHECK_AND_RETURN_LOG(wrapper != nullptr, "can not create this wrapper");
+
+    gulong id = g_signal_connect_data(subtitleSink_, "segment-updated",
+        G_CALLBACK(&PlayBinCtrlerBase::OnTrackChangedEventCb), wrapper,
+        (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory, static_cast<GConnectFlags>(0));
+    AddSignalIds(GST_ELEMENT_CAST(subtitleSink_), id);
+}
+
 void PlayBinCtrlerBase::SetupCustomElement()
 {
     // There may be a risk of data competition, but the sinkProvider is unlikely to be reconfigured.

@@ -915,7 +915,7 @@ gboolean chain_push_new_segment_event(GstFlowReturn ret, GstSubtitleBaseParse *s
     g_return_val_if_fail(self != nullptr, FALSE);
 
     g_mutex_lock(&self->segmentmutex);
-    if (G_UNLIKELY(self->need_segment)) {
+    if (G_UNLIKELY(self->need_segment && !self->switching)) {
         GST_INFO_OBJECT(self, "begin pushing newsegment event with 0x%06" PRIXPTR, FAKE_POINTER(&self->segment));
 
         GstEvent *event = gst_event_new_segment((GstSegment *)self->event_segment);

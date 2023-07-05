@@ -50,12 +50,11 @@ using GstSubtitleSinkCallbacks = struct {
 
 struct _GstSubtitleSink {
     GstAppSink appsink;
-    gboolean is_flushing;
     gboolean stop_render;
     gboolean have_first_segment;
     gboolean audio_segment_updated;
     gboolean segment_updated;
-    gboolean track_changed;
+    gboolean is_changing_track;
     GstBuffer *preroll_buffer;
     gdouble rate;
     GCond segment_cond;
