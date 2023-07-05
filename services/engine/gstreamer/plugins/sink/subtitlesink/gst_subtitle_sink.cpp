@@ -483,6 +483,21 @@ static gboolean gst_subtitle_sink_stop(GstBaseSink *basesink)
     return TRUE;
 }
 
+static void gst_subtitle_sink_handle_speed(GstBaseSink *basesink)
+{
+    GstSubtitleSink *subtitle_sink = GST_SUBTITLE_SINK_CAST(basesink);
+    std::swap(subtitle_sink->segment.rate, subtitle_sink->segment.applied_rate);
+}
+
+static void gst_subtitle_sink_handle_seek_flags(GstBaseSink *basesink)
+{
+    GstSubtitleSink *subtitle_sink = GST_SUBTITLE_SINK_CAST(basesink);
+    if ((subtitle_sink->seek_flags & GST_SEEK_FLAG_SNAP_NEAREST) == GST_SEEK_FLAG_SNAP_NEAREST) {
+        subtitle_sink->segment.start = new_segment.start;
+        subtitle_sink->segment.time = new_segment.time;
+    }
+}
+
 static void gst_subtitle_sink_handle_audio_segment(GstBaseSink *basesink)
 {
     GstSubtitleSink *subtitle_sink = GST_SUBTITLE_SINK_CAST(basesink);
@@ -498,6 +513,8 @@ static void gst_subtitle_sink_handle_audio_segment(GstBaseSink *basesink)
         gst_segment_copy_into(&audio_base->segment, &subtitle_sink->segment);
         GST_OBJECT_UNLOCK(audio_base);
     }
+    subtitle_sink->segment.stop = new_segment.stop;
+    subtitle_sink->segment.duration = new_segment.duration;
 }
 
 static void gst_subtitle_sink_handle_segment_event(GstBaseSink *basesink, GstEvent *event)
@@ -517,13 +534,8 @@ static void gst_subtitle_sink_handle_segment_event(GstBaseSink *basesink, GstEve
         gst_segment_copy_into(&new_segment, &subtitle_sink->segment);
     } else {
         gst_subtitle_sink_handle_audio_segment(basesink);
-        if ((subtitle_sink->seek_flags & GST_SEEK_FLAG_SNAP_NEAREST) == GST_SEEK_FLAG_SNAP_NEAREST) {
-            subtitle_sink->segment.start = new_segment.start;
-            subtitle_sink->segment.time = new_segment.time;
-        }
-        subtitle_sink->segment.stop = new_segment.stop;
-        subtitle_sink->segment.duration = new_segment.duration;
-        std::swap(subtitle_sink->segment.rate, subtitle_sink->segment.applied_rate);
+        gst_subtitle_sink_handle_seek_flags(basesink);
+        gst_subtitle_sink_handle_speed(basesink);
         GST_DEBUG_OBJECT (basesink, "after updated, segment %" GST_SEGMENT_FORMAT, &subtitle_sink->segment);
     }
     subtitle_sink->audio_segment_updated = FALSE;
