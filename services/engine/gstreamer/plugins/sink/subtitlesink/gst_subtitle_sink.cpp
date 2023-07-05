@@ -564,7 +564,6 @@ static gboolean gst_subtitle_sink_handle_flush_stop_event(GstBaseSink *basesink,
 {
     GstSubtitleSink *subtitle_sink = GST_SUBTITLE_SINK_CAST(basesink);
     g_return_val_if_fail(subtitle_sink != nullptr, FALSE);
-    GstSubtitleSinkPrivate *priv = subtitle_sink->priv;
     GST_DEBUG_OBJECT(subtitle_sink, "subtitle flush stop");
     if (subtitle_sink->is_changing_track) {
         basesink->flushing = FALSE;
