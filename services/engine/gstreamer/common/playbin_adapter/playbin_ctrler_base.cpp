@@ -749,6 +749,7 @@ void PlayBinCtrlerBase::OnTrackChangedEventCb(const GstElement *subtitleSink_, g
     auto thizStrong = PlayBinCtrlerWrapper::TakeStrongThiz(userData);
     CHECK_AND_RETURN(thizStrong != nullptr);
     gst_element_set_start_time(GST_ELEMENT_CAST(thizStrong->playbin_), thizStrong->lastStartTime_);
+    thizStrong->isTrackChanging_ = false;
     thizStrong->ReportTrackChange();
 }
 
