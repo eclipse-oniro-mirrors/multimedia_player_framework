@@ -489,16 +489,16 @@ static void gst_subtitle_sink_handle_speed(GstBaseSink *basesink)
     std::swap(subtitle_sink->segment.rate, subtitle_sink->segment.applied_rate);
 }
 
-static void gst_subtitle_sink_handle_seek_flags(GstBaseSink *basesink)
+static void gst_subtitle_sink_handle_seek_flags(GstBaseSink *basesink, const GstSegment *new_segment)
 {
     GstSubtitleSink *subtitle_sink = GST_SUBTITLE_SINK_CAST(basesink);
     if ((subtitle_sink->seek_flags & GST_SEEK_FLAG_SNAP_NEAREST) == GST_SEEK_FLAG_SNAP_NEAREST) {
-        subtitle_sink->segment.start = new_segment.start;
-        subtitle_sink->segment.time = new_segment.time;
+        subtitle_sink->segment.start = new_segment->start;
+        subtitle_sink->segment.time = new_segment->time;
     }
 }
 
-static void gst_subtitle_sink_handle_audio_segment(GstBaseSink *basesink)
+static void gst_subtitle_sink_handle_audio_segment(GstBaseSink *basesink, const GstSegment *new_segment)
 {
     GstSubtitleSink *subtitle_sink = GST_SUBTITLE_SINK_CAST(basesink);
     auto audio_base = GST_BASE_SINK(subtitle_sink->priv->audio_sink);
@@ -513,11 +513,11 @@ static void gst_subtitle_sink_handle_audio_segment(GstBaseSink *basesink)
         gst_segment_copy_into(&audio_base->segment, &subtitle_sink->segment);
         GST_OBJECT_UNLOCK(audio_base);
     }
-    subtitle_sink->segment.stop = new_segment.stop;
-    subtitle_sink->segment.duration = new_segment.duration;
+    subtitle_sink->segment.stop = new_segment->stop;
+    subtitle_sink->segment.duration = new_segment->duration;
 }
 
-static void gst_subtitle_sink_handle_segment_event(GstBaseSink *basesink, GstEvent *event)
+static GstEvent* gst_subtitle_sink_handle_segment_event(GstBaseSink *basesink, GstEvent *event)
 {
     GstSubtitleSink *subtitle_sink = GST_SUBTITLE_SINK_CAST(basesink);
     GstSubtitleSinkPrivate *priv = subtitle_sink->priv;
@@ -533,8 +533,8 @@ static void gst_subtitle_sink_handle_segment_event(GstBaseSink *basesink, GstEve
         new_segment.rate = audio_base->segment.applied_rate;
         gst_segment_copy_into(&new_segment, &subtitle_sink->segment);
     } else {
-        gst_subtitle_sink_handle_audio_segment(basesink);
-        gst_subtitle_sink_handle_seek_flags(basesink);
+        gst_subtitle_sink_handle_audio_segment(basesink, &new_segment);
+        gst_subtitle_sink_handle_seek_flags(basesink, &new_segment);
         gst_subtitle_sink_handle_speed(basesink);
         GST_DEBUG_OBJECT (basesink, "after updated, segment %" GST_SEGMENT_FORMAT, &subtitle_sink->segment);
     }
@@ -544,8 +544,9 @@ static void gst_subtitle_sink_handle_segment_event(GstBaseSink *basesink, GstEve
     auto new_event = gst_event_new_segment(&subtitle_sink->segment);
     if (new_event != nullptr) {
         gst_event_unref(event);
-        event = new_event;
+        return new_event;
     }
+    return event;
 }
 
 static gboolean gst_subtitle_sink_handle_flush_start_event(GstBaseSink *basesink, GstEvent *event)
@@ -600,7 +601,7 @@ static gboolean gst_subtitle_sink_event(GstBaseSink *basesink, GstEvent *event)
                 break;
             }
             GST_OBJECT_LOCK (basesink);
-            gst_subtitle_sink_handle_segment_event(basesink, event);
+            event = gst_subtitle_sink_handle_segment_event(basesink, event);
             GST_OBJECT_UNLOCK(basesink);
             break;
         }
