@@ -757,7 +757,7 @@ void PlayBinCtrlerBase::SetupSubtitleTrackChangeEventCb()
     PlayBinCtrlerWrapper *wrapper = new(std::nothrow) PlayBinCtrlerWrapper(shared_from_this());
     CHECK_AND_RETURN_LOG(wrapper != nullptr, "can not create this wrapper");
 
-    gulong id = g_signal_connect_data(subtitleSink_, "segment-updated",
+    gulong id = g_signal_connect_data(subtitleSink_, "track-changed-callback",
         G_CALLBACK(&PlayBinCtrlerBase::OnTrackChangedEventCb), wrapper,
         (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory, static_cast<GConnectFlags>(0));
     AddSignalIds(GST_ELEMENT_CAST(subtitleSink_), id);
