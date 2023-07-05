@@ -555,7 +555,7 @@ static gboolean gst_subtitle_sink_handle_flush_start_event(GstBaseSink *basesink
     GST_DEBUG_OBJECT(subtitle_sink, "subtitle flush start");
     if (subtitle_sink->is_changing_track) {
         basesink->flushing = TRUE;
-        GST_BASE_SINK_PREROLL_SIGNAL(basesink);
+        GST_BASE_SINK_PREROLL_BROADCAST(basesink);
         return TRUE;
     }
     gst_subtitle_sink_handle_buffer(subtitle_sink, nullptr, TRUE);
