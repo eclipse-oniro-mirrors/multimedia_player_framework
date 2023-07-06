@@ -523,7 +523,7 @@ static GstEvent* gst_subtitle_sink_handle_segment_event(GstBaseSink *basesink, G
     guint32 seqnum = gst_event_get_seqnum (event);
     GstSegment new_segment;
     gst_event_copy_segment (event, &new_segment);
-    GST_DEBUG_OBJECT (basesink, "received upstream segment %u %" GST_SEGMENT_FORMAT, seqnum, &new_segment);
+    GST_DEBUG_OBJECT (basesink, "received upstream segment %u" seqnum);
     if (!subtitle_sink->have_first_segment) {
         subtitle_sink->have_first_segment = TRUE;
         GST_WARNING_OBJECT(subtitle_sink, "recv first segment event");
@@ -533,7 +533,7 @@ static GstEvent* gst_subtitle_sink_handle_segment_event(GstBaseSink *basesink, G
         gst_subtitle_sink_handle_audio_segment(basesink, &new_segment);
         gst_subtitle_sink_handle_seek_flags(basesink, &new_segment);
         gst_subtitle_sink_handle_speed(basesink);
-        GST_DEBUG_OBJECT (basesink, "after updated, segment %" GST_SEGMENT_FORMAT, &subtitle_sink->segment);
+        GST_DEBUG_OBJECT (basesink, "segment updated");
     }
     subtitle_sink->audio_segment_updated = FALSE;
     subtitle_sink->segment_updated = TRUE;
@@ -551,6 +551,7 @@ static gboolean gst_subtitle_sink_handle_flush_start_event(GstBaseSink *basesink
     if (subtitle_sink->is_changing_track) {
         basesink->flushing = TRUE;
         GST_BASE_SINK_PREROLL_BROADCAST(basesink);
+        gst_event_unref(event);
         return TRUE;
     }
     gst_subtitle_sink_handle_buffer(subtitle_sink, nullptr, TRUE);
@@ -574,6 +575,7 @@ static gboolean gst_subtitle_sink_handle_flush_stop_event(GstBaseSink *basesink,
             GST_DEBUG_OBJECT(subtitle_sink, "track changed");
             g_signal_emit_by_name(basesink, "track-changed-callback");
         }
+        gst_event_unref(event);
         return TRUE;
     }
     return GST_BASE_SINK_CLASS(parent_class)->event(basesink, event);
@@ -597,7 +599,7 @@ static gboolean gst_subtitle_sink_event(GstBaseSink *basesink, GstEvent *event)
             break;
         }
         case GST_EVENT_EOS: {
-            GST_DEBUG_OBJECT(subtitle_sink, "received EOS");
+            
             break;
         }
         case GST_EVENT_FLUSH_START: {

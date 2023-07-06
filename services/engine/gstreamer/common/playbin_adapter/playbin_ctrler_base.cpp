@@ -185,6 +185,7 @@ int32_t PlayBinCtrlerBase::AddSubSource(const std::string &url)
     if (subtitleSink_ == nullptr) {
         subtitleSink_ = sinkProvider_->CreateSubtitleSink();
         g_object_set(playbin_, "text-sink", subtitleSink_, nullptr);
+        SetupSubtitleTrackChangeEventCb();
     }
 
     isAddingSubtitle_ = true;
