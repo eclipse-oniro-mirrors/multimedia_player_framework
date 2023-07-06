@@ -123,8 +123,8 @@ ohos_shared_library("media") {
 
   if (multimedia_player_framework_support_player_js_api9) {
     deps += [
-      "//foundation/multimedia/player_framework/frameworks/js/avplayer:media_avplayer",
       "../../../../../../third_party/bounds_checking_function:libsec_shared",
+      "//foundation/multimedia/player_framework/frameworks/js/avplayer:media_avplayer",
     ]
   }
 
