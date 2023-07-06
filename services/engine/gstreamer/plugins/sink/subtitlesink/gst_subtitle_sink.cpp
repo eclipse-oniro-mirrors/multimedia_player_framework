@@ -599,7 +599,7 @@ static gboolean gst_subtitle_sink_event(GstBaseSink *basesink, GstEvent *event)
             break;
         }
         case GST_EVENT_EOS: {
-            
+            GST_DEBUG_OBJECT(subtitle_sink, "received EOS");
             break;
         }
         case GST_EVENT_FLUSH_START: {
