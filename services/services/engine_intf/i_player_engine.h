@@ -120,6 +120,10 @@ public:
         (void)effectMode;
         return 0;
     }
+    virtual int32_t GetHEBCMode()
+    {
+        return 0;
+    }
 };
 } // namespace Media
 } // namespace OHOS
