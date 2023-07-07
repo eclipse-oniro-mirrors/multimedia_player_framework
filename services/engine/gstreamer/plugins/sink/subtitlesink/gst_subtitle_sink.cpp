@@ -541,7 +541,7 @@ static GstEvent* gst_subtitle_sink_handle_segment_event(GstBaseSink *basesink, G
         GST_DEBUG_OBJECT (basesink, "segment updated");
     }
     if (subtitle_sink->is_changing_track) {
-        subtitle_sink->track_changing_position = new_segment->start;
+        subtitle_sink->track_changing_position = new_segment.start;
     }
     subtitle_sink->audio_segment_updated = FALSE;
     subtitle_sink->segment_updated = TRUE;
