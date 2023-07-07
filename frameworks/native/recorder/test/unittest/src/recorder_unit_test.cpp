@@ -61,6 +61,7 @@ HWTEST_F(RecorderUnitTest, recorder_SetLocation_001, TestSize.Level2)
     g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_video_yuv_mpeg4.mp4").c_str(), O_RDWR);
     ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
 
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
     EXPECT_EQ(MSERR_OK, recorder_->Prepare());
     EXPECT_EQ(MSERR_OK, recorder_->RequesetBuffer(PURE_ERROR, g_videoRecorderConfig));
     recorder_->Start();
