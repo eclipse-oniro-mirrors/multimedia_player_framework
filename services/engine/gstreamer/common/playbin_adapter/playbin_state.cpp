@@ -751,7 +751,7 @@ int32_t PlayBinCtrlerBase::PlaybackCompletedState::SetRate(double rate)
 void PlayBinCtrlerBase::PlaybackCompletedState::ProcessStateChange(const InnerMessage &msg)
 {
     MEDIA_LOGI("PlaybackCompletedState::ProcessStateChange");
-    if (ctrler_.isTrackChanging_) {
+    if (ctrler_.isTrackChanging_ && msg.detail2 == GST_STATE_PLAYING) {
         ctrler_.isTrackChanging_ = false;
         g_object_set(ctrler_.subtitleSink_, "change-track", FALSE, nullptr);
         gst_element_set_start_time(GST_ELEMENT_CAST(ctrler_.playbin_), ctrler_.lastStartTime_);
