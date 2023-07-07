@@ -506,7 +506,7 @@ static void gst_subtitle_sink_handle_audio_segment(GstBaseSink *basesink, const 
     auto audio_base = GST_BASE_SINK(subtitle_sink->priv->audio_sink);
     if (!subtitle_sink->audio_segment_updated) {
         g_mutex_lock(&subtitle_sink->segment_mutex);
-        gint64 end_time = g_get_monotonic_time() + G_TIME_SPAN_SECOND;
+        gint64 end_time = g_get_monotonic_time() + G_TIME_SPAN_SECOND / 2;
         g_cond_wait_until(&subtitle_sink->segment_cond, &subtitle_sink->segment_mutex, end_time);
         g_mutex_unlock(&subtitle_sink->segment_mutex);
     }
