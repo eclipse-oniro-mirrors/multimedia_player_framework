@@ -546,8 +546,12 @@ static GstEvent* gst_subtitle_sink_handle_segment_event(GstBaseSink *basesink, G
     subtitle_sink->audio_segment_updated = FALSE;
     subtitle_sink->segment_updated = TRUE;
     subtitle_sink->rate = subtitle_sink->segment.rate;
-    gst_event_unref(event);
-    return gst_event_new_segment(&subtitle_sink->segment);
+    auto new_event = gst_event_new_segment(&subtitle_sink->segment);
+    if (new_event != nullptr) {
+        gst_event_unref(event);
+        event = new_event;
+    }
+    return event;
 }
 
 static gboolean gst_subtitle_sink_handle_flush_start_event(GstBaseSink *basesink, GstEvent *event)
