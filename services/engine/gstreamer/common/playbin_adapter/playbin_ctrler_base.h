@@ -123,11 +123,9 @@ private:
     static void OnAudioStateEventCb(const GstElement *audioSink, const uint32_t audioState, gpointer userData);
     static void OnIsLiveStream(const GstElement *demux, gboolean isLiveStream, gpointer userData);
     static void AudioChanged(const GstElement *playbin, gpointer userData);
-    static void OnTrackChangedEventCb(const GstElement *subtitle_sink, gpointer userData);
     void SetupInterruptEventCb();
     void SetupAudioStateEventCb();
     void SetupAudioSegmentEventCb();
-    void SetupSubtitleTrackChangeEventCb();
     void OnElementSetup(GstElement &elem);
     void OnElementUnSetup(GstElement &elem);
     void OnSourceSetup(const GstElement *playbin, GstElement *src,

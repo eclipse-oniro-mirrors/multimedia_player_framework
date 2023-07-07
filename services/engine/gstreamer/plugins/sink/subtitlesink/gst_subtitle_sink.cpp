@@ -97,10 +97,6 @@ static void gst_subtitle_sink_class_init(GstSubtitleSinkClass *kclass)
     basesink_class->update_reach_time = gst_subtitle_sink_update_reach_time;
     basesink_class->need_drop_buffer = gst_subtitle_sink_need_drop_buffer;
 
-    g_signal_new("track-changed-callback", G_TYPE_FROM_CLASS(kclass),
-        static_cast<GSignalFlags>(G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION), 0, NULL,
-        NULL, NULL, G_TYPE_NONE, 0); // no parameters
-
     g_object_class_install_property(gobject_class, PROP_AUDIO_SINK,
         g_param_spec_pointer("audio-sink", "audio sink", "audio sink",
             (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
@@ -125,6 +121,7 @@ static void gst_subtitle_sink_init(GstSubtitleSink *subtitle_sink)
     subtitle_sink->rate = 1.0f;
     subtitle_sink->segment_updated = FALSE;
     subtitle_sink->is_changing_track = FALSE;
+    subtitle_sink->track_changing_position = 0;
 
     auto priv = reinterpret_cast<GstSubtitleSinkPrivate *>(gst_subtitle_sink_get_instance_private(subtitle_sink));
     g_return_if_fail(priv != nullptr);
@@ -171,11 +168,15 @@ static void gst_subtitle_sink_set_audio_sink(GstSubtitleSink *subtitle_sink, gpo
 static gboolean gst_subtitle_sink_need_drop_buffer(GstBaseSink *basesink,
     GstSegment *segment, guint64 pts, guint64 pts_end)
 {
-    guint64 start = segment->start;
+    auto temp_segment = *segment;
+    if (subtitle_sink->is_changing_track) {
+        temp_segment.start = subtitle_sink->track_changing_position;
+    }
+    guint64 start = temp_segment.start;
     if (pts <= start && start < pts_end) {
         GST_DEBUG_OBJECT(basesink, "no need drop, segment start is intersects with buffer time range, pts"
         " = %" GST_TIME_FORMAT ", pts end = %" GST_TIME_FORMAT " segment start = %"
-        GST_TIME_FORMAT, GST_TIME_ARGS(pts), GST_TIME_ARGS(pts_end), GST_TIME_ARGS(segment->start));
+        GST_TIME_FORMAT, GST_TIME_ARGS(pts), GST_TIME_ARGS(pts_end), GST_TIME_ARGS(start));
         return FALSE;
     }
     return G_LIKELY(!gst_segment_clip (segment, GST_FORMAT_TIME, pts, pts_end, NULL, NULL));
@@ -358,10 +359,11 @@ static GstFlowReturn gst_subtitle_sink_new_preroll(GstAppSink *appsink, gpointer
         return GST_FLOW_OK;
     }
     guint64 pts_end = pts + duration;
-    if (pts > GST_BASE_SINK(subtitle_sink)->segment.start) {
+    auto position = GST_BASE_SINK(subtitle_sink)->segment.position;
+    if (pts > position) {
         GST_DEBUG_OBJECT(subtitle_sink, "pts = %" GST_TIME_FORMAT ", pts end = %"
             GST_TIME_FORMAT " segment start = %" GST_TIME_FORMAT ", not yet render time",
-            GST_TIME_ARGS(pts), GST_TIME_ARGS(pts_end), GST_TIME_ARGS(subtitle_sink->segment.start));
+            GST_TIME_ARGS(pts), GST_TIME_ARGS(pts_end), GST_TIME_ARGS(position));
         gst_buffer_unref(buffer);
         return GST_FLOW_OK;
     }
@@ -455,7 +457,7 @@ static gboolean gst_subtitle_sink_start(GstBaseSink *basesink)
 
     GST_BASE_SINK_CLASS(parent_class)->start(basesink);
     g_mutex_lock (&priv->mutex);
-    GST_DEBUG_OBJECT (subtitle_sink, "starting");
+    GST_DEBUG_OBJECT (subtitle_sink, "started");
     priv->timer_queue->Start();
     g_mutex_unlock (&priv->mutex);
 
@@ -474,6 +476,7 @@ static gboolean gst_subtitle_sink_stop(GstBaseSink *basesink)
     subtitle_sink->stop_render = FALSE;
     subtitle_sink->segment_updated = FALSE;
     subtitle_sink->is_changing_track = FALSE;
+    subtitle_sink->track_changing_position = 0;
     priv->timer_queue->Stop();
     g_mutex_unlock (&priv->mutex);
     GST_BASE_SINK_CLASS(parent_class)->stop(basesink);
@@ -499,7 +502,7 @@ static void gst_subtitle_sink_handle_audio_segment(GstBaseSink *basesink, const 
 {
     GstSubtitleSink *subtitle_sink = GST_SUBTITLE_SINK_CAST(basesink);
     auto audio_base = GST_BASE_SINK(subtitle_sink->priv->audio_sink);
-    if (!subtitle_sink->audio_segment_updated && !subtitle_sink->is_changing_track) {
+    if (!subtitle_sink->audio_segment_updated) {
         g_mutex_lock(&subtitle_sink->segment_mutex);
         gint64 end_time = g_get_monotonic_time() + G_TIME_SPAN_SECOND;
         g_cond_wait_until(&subtitle_sink->segment_cond, &subtitle_sink->segment_mutex, end_time);
@@ -529,11 +532,14 @@ static GstEvent* gst_subtitle_sink_handle_segment_event(GstBaseSink *basesink, G
         GST_WARNING_OBJECT(subtitle_sink, "recv first segment event");
         new_segment.rate = audio_base->segment.applied_rate;
         gst_segment_copy_into(&new_segment, &subtitle_sink->segment);
-    } else {
+    } else if (!subtitle_sink->is_changing_track) {
         gst_subtitle_sink_handle_audio_segment(basesink, &new_segment);
         gst_subtitle_sink_handle_seek_flags(basesink, &new_segment);
         gst_subtitle_sink_handle_speed(basesink);
         GST_DEBUG_OBJECT (basesink, "segment updated");
+    }
+    if (subtitle_sink->is_changing_track) {
+        subtitle_sink->track_changing_position = new_segment->start;
     }
     subtitle_sink->audio_segment_updated = FALSE;
     subtitle_sink->segment_updated = TRUE;
@@ -548,12 +554,6 @@ static gboolean gst_subtitle_sink_handle_flush_start_event(GstBaseSink *basesink
     g_return_val_if_fail(subtitle_sink != nullptr, FALSE);
     GstSubtitleSinkPrivate *priv = subtitle_sink->priv;
     GST_DEBUG_OBJECT(subtitle_sink, "subtitle flush start");
-    if (subtitle_sink->is_changing_track) {
-        basesink->flushing = TRUE;
-        GST_BASE_SINK_PREROLL_BROADCAST(basesink);
-        gst_event_unref(event);
-        return TRUE;
-    }
     gst_subtitle_sink_handle_buffer(subtitle_sink, nullptr, TRUE);
     subtitle_sink->stop_render = FALSE;
     subtitle_sink->audio_segment_updated = FALSE;
@@ -566,18 +566,6 @@ static gboolean gst_subtitle_sink_handle_flush_stop_event(GstBaseSink *basesink,
     GstSubtitleSink *subtitle_sink = GST_SUBTITLE_SINK_CAST(basesink);
     g_return_val_if_fail(subtitle_sink != nullptr, FALSE);
     GST_DEBUG_OBJECT(subtitle_sink, "subtitle flush stop");
-    if (subtitle_sink->is_changing_track) {
-        basesink->flushing = FALSE;
-        auto structure = gst_event_get_structure(event);
-        const GQuark quark = g_quark_from_static_string("gst-playsink-reset-segment-event-marker");
-        if (gst_structure_id_has_field(structure, quark)) {
-            subtitle_sink->is_changing_track = FALSE;
-            GST_DEBUG_OBJECT(subtitle_sink, "track changed");
-            g_signal_emit_by_name(basesink, "track-changed-callback");
-        }
-        gst_event_unref(event);
-        return TRUE;
-    }
     return GST_BASE_SINK_CLASS(parent_class)->event(basesink, event);
 }
 
