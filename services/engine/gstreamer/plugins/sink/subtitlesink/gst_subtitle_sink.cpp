@@ -528,7 +528,7 @@ static GstEvent* gst_subtitle_sink_handle_segment_event(GstBaseSink *basesink, G
     guint32 seqnum = gst_event_get_seqnum (event);
     GstSegment new_segment;
     gst_event_copy_segment (event, &new_segment);
-    GST_DEBUG_OBJECT (basesink, "received upstream segment %u" seqnum);
+    GST_DEBUG_OBJECT (basesink, "received upstream segment %u", seqnum);
     if (!subtitle_sink->have_first_segment) {
         subtitle_sink->have_first_segment = TRUE;
         GST_WARNING_OBJECT(subtitle_sink, "recv first segment event");
