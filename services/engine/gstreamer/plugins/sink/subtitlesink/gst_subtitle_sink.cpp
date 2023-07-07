@@ -181,7 +181,7 @@ static gboolean gst_subtitle_sink_need_drop_buffer(GstBaseSink *basesink,
         GST_TIME_FORMAT, GST_TIME_ARGS(pts), GST_TIME_ARGS(pts_end), GST_TIME_ARGS(start));
         return FALSE;
     }
-    return G_LIKELY(!gst_segment_clip (temp_segment, GST_FORMAT_TIME, pts, pts_end, NULL, NULL));
+    return G_LIKELY(!gst_segment_clip (&temp_segment, GST_FORMAT_TIME, pts, pts_end, NULL, NULL));
 }
 
 static void gst_subtitle_sink_handle_buffer(GstSubtitleSink *subtitle_sink,
