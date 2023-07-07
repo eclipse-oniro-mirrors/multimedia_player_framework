@@ -168,6 +168,8 @@ static void gst_subtitle_sink_set_audio_sink(GstSubtitleSink *subtitle_sink, gpo
 static gboolean gst_subtitle_sink_need_drop_buffer(GstBaseSink *basesink,
     GstSegment *segment, guint64 pts, guint64 pts_end)
 {
+    auto subtitle_sink = GST_SUBTITLE_SINK(basesink);
+    g_return_val_if_fail(subtitle_sink != nullptr, FALSE);
     auto temp_segment = *segment;
     if (subtitle_sink->is_changing_track) {
         temp_segment.start = subtitle_sink->track_changing_position;
@@ -179,7 +181,7 @@ static gboolean gst_subtitle_sink_need_drop_buffer(GstBaseSink *basesink,
         GST_TIME_FORMAT, GST_TIME_ARGS(pts), GST_TIME_ARGS(pts_end), GST_TIME_ARGS(start));
         return FALSE;
     }
-    return G_LIKELY(!gst_segment_clip (segment, GST_FORMAT_TIME, pts, pts_end, NULL, NULL));
+    return G_LIKELY(!gst_segment_clip (temp_segment, GST_FORMAT_TIME, pts, pts_end, NULL, NULL));
 }
 
 static void gst_subtitle_sink_handle_buffer(GstSubtitleSink *subtitle_sink,
