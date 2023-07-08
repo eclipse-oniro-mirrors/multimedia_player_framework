@@ -57,6 +57,7 @@ struct _GstSubtitleSink {
     gboolean segment_updated;
     gboolean track_changed;
     gboolean enable_display;
+    gboolean need_send_empty_buffer;
     GstBuffer *preroll_buffer;
     gdouble rate;
     GCond segment_cond;

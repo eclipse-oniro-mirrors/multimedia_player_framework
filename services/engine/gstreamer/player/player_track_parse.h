@@ -64,6 +64,7 @@ private:
     void UpdateTrackInfo();
     void StartUpdateTrackInfo();
     int32_t GetInputSelectPadIndex(GstPad *pad);
+    void ParseSubtitlePadCaps(const GstElement *element, GstPad *pad, int32_t index, Format &innerMeta);
 
     inline void AddSignalIds(GstElement *element, gulong signalId)
     {

@@ -1016,9 +1016,8 @@ int32_t PlayBinCtrlerBase::DeselectTrack(int32_t index)
 
         hasSubtitleTrackSelected_ = false;
         g_object_set(subtitleSink_, "enable-display", hasSubtitleTrackSelected_, nullptr);
-        g_object_set(playbin_, "current-text", -1, nullptr);
-        isTrackChanging_ = true;
         trackChangeType_ = MediaType::MEDIA_TYPE_SUBTITLE;
+        ReportTrackChange();
         CANCEL_SCOPE_EXIT_GUARD(0);
     } else {
         OnError(MSERR_INVALID_VAL, "The track type does not support this operation!");

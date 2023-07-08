@@ -126,6 +126,7 @@ static void gst_subtitle_sink_init(GstSubtitleSink *subtitle_sink)
     subtitle_sink->segment_updated = FALSE;
     subtitle_sink->track_changed = FALSE;
     subtitle_sink->enable_display = TRUE;
+    subtitle_sink->need_send_empty_buffer = FALSE;
 
     auto priv = reinterpret_cast<GstSubtitleSinkPrivate *>(gst_subtitle_sink_get_instance_private(subtitle_sink));
     g_return_if_fail(priv != nullptr);
@@ -195,6 +196,14 @@ static void gst_subtitle_sink_handle_buffer(GstSubtitleSink *subtitle_sink,
     GstSubtitleSinkPrivate *priv = subtitle_sink->priv;
     g_return_if_fail(priv != nullptr);
 
+    if (!subtitle_sink->enable_display) {
+        if (subtitle_sink->need_send_empty_buffer) {
+            subtitle_sink->need_send_empty_buffer = FALSE;
+        } else {
+            return;
+        }
+    }
+
     auto handler = std::make_shared<TaskHandler<void>>([=]() {
         if (priv->callbacks.new_sample != nullptr) {
             (void)priv->callbacks.new_sample(buffer, priv->userdata);
@@ -246,10 +255,17 @@ static void gst_subtitle_sink_set_property(GObject *object, guint prop_id, const
             GST_OBJECT_LOCK(subtitle_sink);
             subtitle_sink->track_changed = g_value_get_boolean(value);
             GST_OBJECT_UNLOCK(subtitle_sink);
+            break;
+        }
         case RPOP_ENABLE_DISPLAY: {
-            GST_OBJECT_LOCK(subtitle_sink);
+            GST_BASE_SINK_PREROLL_LOCK(subtitle_sink);
             subtitle_sink->enable_display = g_value_get_boolean(value);
-            GST_OBJECT_UNLOCK(subtitle_sink);
+            if (!subtitle_sink->enable_display) {
+                GST_DEBUG_OBJECT(subtitle_sink, "disable display, send an empty buffer");
+                subtitle_sink->need_send_empty_buffer = true;
+                gst_subtitle_sink_handle_buffer(subtitle_sink, nullptr, TRUE);
+            }
+            GST_BASE_SINK_PREROLL_UNLOCK(subtitle_sink);
             break;
         }
         default:
@@ -505,7 +521,7 @@ static gboolean gst_subtitle_sink_stop(GstBaseSink *basesink)
     subtitle_sink->stop_render = FALSE;
     subtitle_sink->segment_updated = FALSE;
     subtitle_sink->track_changed = FALSE;
-    subtitle_sink->enable_display = TRUE;
+    subtitle_sink->need_send_empty_buffer = FALSE;
     priv->timer_queue->Stop();
     g_mutex_unlock (&priv->mutex);
     GST_BASE_SINK_CLASS(parent_class)->stop(basesink);

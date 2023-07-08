@@ -529,6 +529,17 @@ GstPadProbeReturn PlayerTrackParse::ParseTrackInfo(GstPad *pad, GstPadProbeInfo 
     return GST_PAD_PROBE_OK;
 }
 
+void PlayerTrackParse::ParseSubtitlePadCaps(const GstElement *element, GstPad *pad, int32_t index, Format &innerMeta)
+{
+    GstCaps *caps = gst_pad_query_caps(pad, nullptr);
+    GstMetaParser::ParseStreamCaps(*caps, innerMeta);
+    trackVec_[index].inUse = true;
+    (void)trackVec_[index].trackInfos.emplace(pad, innerMeta);
+    UpdateTrackInfo();
+    MEDIA_LOGI("subtitle parse:0x%{public}06" PRIXPTR " trackcount:0x%{public}d pad:0x%{public}06" PRIXPTR,
+        FAKE_POINTER(element), trackVec_[index].trackcount, FAKE_POINTER(pad));
+}
+
 bool PlayerTrackParse::AddProbeToPad(const GstElement *element, GstPad *pad)
 {
     MEDIA_LOGD("AddProbeToPad element %{public}s, pad %{public}s", ELEM_NAME(element), PAD_NAME(pad));
@@ -569,6 +580,10 @@ bool PlayerTrackParse::AddProbeToPad(const GstElement *element, GstPad *pad)
             innerMeta.PutIntValue(std::string(INNER_META_KEY_TRACK_INNER_INDEX), -1);
             innerMeta.PutIntValue(std::string(INNER_META_KEY_TRACK_INDEX), trackVec_[i].trackcount);
             trackVec_[i].trackcount++;
+            if (metaStr.find("Codec/Parser/Subtitle") != std::string::nops && !HasSameStreamIdInDemux(pad)) {
+                ParseSubtitlePadCaps(element, pad, i, innerMeta);
+                continue;
+            }
             (void)trackVec_[i].trackInfos.emplace(pad, innerMeta);
             MEDIA_LOGI("demux:0x%{public}06" PRIXPTR " trackcount:0x%{public}d pad:0x%{public}06" PRIXPTR,
                 FAKE_POINTER(element), trackVec_[i].trackcount, FAKE_POINTER(pad));
