@@ -35,6 +35,8 @@ GST_DEBUG_CATEGORY_STATIC(gst_vdec_base_debug_category);
 #define DEFAULT_HEIGHT 1080
 #define DEFAULT_SEEK_FRAME_RATE 1000
 #define BLOCKING_ACQUIRE_BUFFER_THRESHOLD 5
+#define DRAIN_TIME_OUT (G_TIME_SPAN_SECOND * 2)
+#define DRAIN_TIME_OUT_BY_FRAMERATE(rate) (static_cast<gint64>(G_TIME_SPAN_SECOND * 30 / rate))
 
 static void gst_vdec_base_class_install_property(GObjectClass *gobject_class);
 static void gst_vdec_base_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
@@ -1618,8 +1620,9 @@ static GstFlowReturn gst_vdec_base_finish(GstVideoDecoder *decoder)
         GST_VIDEO_DECODER_STREAM_LOCK(self);
         return GST_FLOW_ERROR;
     }
-    GST_DEBUG_OBJECT(self, "Waiting until codec is drained");
-    gint64 wait_until = g_get_monotonic_time() + G_TIME_SPAN_SECOND;
+    gint64 wait_time = std::max(DRAIN_TIME_OUT, DRAIN_TIME_OUT_BY_FRAMERATE(self->frame_rate));
+    gint64 wait_until = g_get_monotonic_time() + wait_time;
+    GST_DEBUG_OBJECT(self, "Waiting until codec is drained, wait %" G_GINT64_FORMAT " us", wait_time);
     if (!g_cond_wait_until(&self->drain_cond, &self->drain_lock, wait_until)) {
         GST_ERROR_OBJECT(self, "Drain timed out");
     } else {
