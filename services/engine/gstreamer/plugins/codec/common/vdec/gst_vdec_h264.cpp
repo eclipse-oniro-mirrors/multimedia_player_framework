@@ -302,7 +302,13 @@ static gboolean gst_vdec_h264_bypass_frame(GstVdecBase *base, GstVideoCodecFrame
                 return false;
             } else if ((info.data[i + 1] & 0x1F) == 0x07) {
                 // 0x1F is the mask of last 5 bits, 0x07 is SPS flag
-                GST_WARNING_OBJECT(base, "KPI-TRACE-VDEC: recv SPS frame");
+                GST_WARNING_OBJECT(base, "KPI-TRACE-VDEC: recv SPS header frame");
+                GstVdecH264 *vdec_h264 = GST_VDEC_H264(base);
+                // For special packet sequences: sps frame, pps frame, sps-pps-I frame
+                if (vdec_h264->has_data_after_sps == false) {
+                    GST_WARNING_OBJECT(base, "KPI-TRACE-VDEC: this packet contains SPS header and I frame");
+                    base->idrframe = true;
+                }
                 return false;
             } else if ((info.data[i + 1] & 0x1F) == 0x08) {
                 // 0x1F is the mask of last 5 bits, 0x08 is PPS flag
