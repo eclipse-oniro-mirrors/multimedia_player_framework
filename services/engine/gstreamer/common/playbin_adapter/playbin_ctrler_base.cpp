@@ -1041,7 +1041,7 @@ int32_t PlayBinCtrlerBase::GetCurrentTrack(int32_t trackType, int32_t &index)
         }
     } else if (trackType == MediaType::MEDIA_TYPE_VID) {
         g_object_get(playbin_, "current-video", &innerIndex, nullptr);
-    } else if (trackType == MediaType::MEDIA_TYPE_SUBTITLE) {
+    } else {
         if (hasSubtitleTrackSelected_) {
             g_object_get(playbin_, "current-text", &innerIndex, nullptr);
         } else {
