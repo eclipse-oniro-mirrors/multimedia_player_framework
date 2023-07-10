@@ -32,6 +32,7 @@ enum {
     PROP_AUDIO_SINK,
     PROP_SEGMENT_UPDATED,
     PROP_CHANGE_TRACK,
+    RPOP_ENABLE_DISPLAY,
 };
 
 struct _GstSubtitleSinkPrivate {
@@ -106,6 +107,9 @@ static void gst_subtitle_sink_class_init(GstSubtitleSinkClass *kclass)
     g_object_class_install_property(gobject_class, PROP_CHANGE_TRACK,
         g_param_spec_boolean("change-track", "change track", "select track change",
             FALSE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
+    g_object_class_install_property(gobject_class, RPOP_ENABLE_DISPLAY,
+        g_param_spec_boolean("enable-display", "enable subtitle display", "enable subtitle display",
+            TRUE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
 
     GST_DEBUG_CATEGORY_INIT(gst_subtitle_sink_debug_category, "subtitlesink", 0, "subtitlesink class");
 }
@@ -122,6 +126,8 @@ static void gst_subtitle_sink_init(GstSubtitleSink *subtitle_sink)
     subtitle_sink->segment_updated = FALSE;
     subtitle_sink->is_changing_track = FALSE;
     subtitle_sink->track_changing_position = 0;
+    subtitle_sink->enable_display = TRUE;
+    subtitle_sink->need_send_empty_buffer = FALSE;
 
     auto priv = reinterpret_cast<GstSubtitleSinkPrivate *>(gst_subtitle_sink_get_instance_private(subtitle_sink));
     g_return_if_fail(priv != nullptr);
@@ -170,13 +176,18 @@ static gboolean gst_subtitle_sink_need_drop_buffer(GstBaseSink *basesink,
 {
     auto subtitle_sink = GST_SUBTITLE_SINK(basesink);
     g_return_val_if_fail(subtitle_sink != nullptr, FALSE);
+    if (!subtitle_sink->enable_display) {
+        GST_LOG_OBJECT(subtitle_sink, "subtitle display disabled, drop this buffer");
+        return TRUE;
+    }
+
     auto temp_segment = *segment;
     if (subtitle_sink->is_changing_track) {
         temp_segment.start = subtitle_sink->track_changing_position;
     }
     guint64 start = temp_segment.start;
     if (pts <= start && start < pts_end) {
-        GST_DEBUG_OBJECT(basesink, "no need drop, segment start is intersects with buffer time range, pts"
+        GST_DEBUG_OBJECT(subtitle_sink, "no need drop, segment start is intersects with buffer time range, pts"
         " = %" GST_TIME_FORMAT ", pts end = %" GST_TIME_FORMAT " segment start = %"
         GST_TIME_FORMAT, GST_TIME_ARGS(pts), GST_TIME_ARGS(pts_end), GST_TIME_ARGS(start));
         return FALSE;
@@ -189,6 +200,14 @@ static void gst_subtitle_sink_handle_buffer(GstSubtitleSink *subtitle_sink,
 {
     GstSubtitleSinkPrivate *priv = subtitle_sink->priv;
     g_return_if_fail(priv != nullptr);
+
+    if (!subtitle_sink->enable_display) {
+        if (subtitle_sink->need_send_empty_buffer) {
+            subtitle_sink->need_send_empty_buffer = FALSE;
+        } else {
+            return;
+        }
+    }
 
     auto handler = std::make_shared<TaskHandler<void>>([=]() {
         (void)priv->callbacks.new_sample(buffer, priv->userdata);
@@ -239,6 +258,17 @@ static void gst_subtitle_sink_set_property(GObject *object, guint prop_id, const
             GST_OBJECT_LOCK(subtitle_sink);
             subtitle_sink->is_changing_track = g_value_get_boolean(value);
             GST_OBJECT_UNLOCK(subtitle_sink);
+            break;
+        }
+        case RPOP_ENABLE_DISPLAY: {
+            GST_BASE_SINK_PREROLL_LOCK(subtitle_sink);
+            subtitle_sink->enable_display = g_value_get_boolean(value);
+            if (!subtitle_sink->enable_display) {
+                GST_DEBUG_OBJECT(subtitle_sink, "disable display, send an empty buffer");
+                subtitle_sink->need_send_empty_buffer = true;
+                gst_subtitle_sink_handle_buffer(subtitle_sink, nullptr, TRUE);
+            }
+            GST_BASE_SINK_PREROLL_UNLOCK(subtitle_sink);
             break;
         }
         default:
@@ -385,7 +415,14 @@ static GstFlowReturn gst_subtitle_sink_new_preroll(GstAppSink *appsink, gpointer
 static GstClockTime gst_subtitle_sink_update_reach_time(GstBaseSink *basesink, GstClockTime reach_time,
     gboolean *need_drop_this_buffer)
 {
-    auto priv = GST_SUBTITLE_SINK(basesink)->priv;
+    GstSubtitleSink *subtitle_sink = GST_SUBTITLE_SINK(basesink);
+    if (!subtitle_sink->enable_display) {
+        *need_drop_this_buffer = TRUE;
+        GST_DEBUG_OBJECT(subtitle_sink, "subtitle display disabled, drop this buffer");
+        return reach_time;
+    }
+
+    auto priv = subtitle_sink->priv;
     GstClockTime cur_running_time = gst_subtitle_sink_get_current_running_time(basesink);
     gint64 subtitle_running_time_diff = cur_running_time - reach_time;
     gint64 audio_running_time_diff = 0;
@@ -479,6 +516,7 @@ static gboolean gst_subtitle_sink_stop(GstBaseSink *basesink)
     subtitle_sink->segment_updated = FALSE;
     subtitle_sink->is_changing_track = FALSE;
     subtitle_sink->track_changing_position = 0;
+    subtitle_sink->need_send_empty_buffer = FALSE;
     priv->timer_queue->Stop();
     g_mutex_unlock (&priv->mutex);
     GST_BASE_SINK_CLASS(parent_class)->stop(basesink);
