@@ -16,6 +16,7 @@
 #include "gst_vdec_base.h"
 #include <vector>
 #include <iostream>
+#include <malloc.h>
 #include "securec.h"
 #include "buffer_type_meta.h"
 #include "scope_guard.h"
@@ -234,6 +235,8 @@ static gboolean gst_vdec_base_recover_codec_buffers(GstVdecBase *self)
 {
     g_return_val_if_fail(self != nullptr, FALSE);
     if (self->is_free_codec_buffers) {
+        mallopt(M_SET_THREAD_CACHE, M_THREAD_CACHE_DISABLE);
+        mallopt(M_DELAYED_FREE, M_DELAYED_FREE_DISABLE);
         self->input.allocator = gst_shmem_allocator_new();
         self->inpool = gst_vdec_base_new_in_shmem_pool(self, self->input_state->caps, self->input.buffer_size,
             self->input.buffer_cnt, self->input.buffer_cnt);
@@ -1969,6 +1972,8 @@ static gboolean gst_vdec_base_check_allocate_input(GstVdecBase *self)
     MediaTrace trace("VdecBase::AllocateInputBuffer");
     g_return_val_if_fail(self != nullptr, FALSE);
     if (self->inpool == nullptr) {
+        mallopt(M_SET_THREAD_CACHE, M_THREAD_CACHE_DISABLE);
+        mallopt(M_DELAYED_FREE, M_DELAYED_FREE_DISABLE);
         self->inpool = gst_vdec_base_new_in_shmem_pool(self, self->input_state->caps, self->input.buffer_size,
                 self->input.buffer_cnt, self->input.buffer_cnt);
         gst_buffer_pool_set_active(self->inpool, TRUE);

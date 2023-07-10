@@ -15,6 +15,7 @@
 
 #include "player_unit_test.h"
 #include <unistd.h>
+#include <securec.h>
 #include "media_errors.h"
 #include "audio_effect.h"
 #include "av_common.h"
@@ -1713,14 +1714,14 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_001, TestSize.Level0)
 {
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
-    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", MEDIA_ROOT + "H264_MP3.mp4"};
+    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", HTTP_ROOT + "H264_MP3.mp4"};
     for (int32_t i = 0; i < srcVec.size(); i++) {
         ASSERT_EQ(MSERR_OK, player_->SetSource(srcVec[i]));
         EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
         char str[100]; // 100: str len
-        sprintf(str, "hidumper -s 1909 -a \"-d %d %d %d\"", 0, 0, 4);
+        sprintf_s(str, 100, "hidumper -s 1909 -a \"-d %d %d %d\"", 0, 0, 4);
         system(str);
-        sprintf(str, "hidumper -s 1909 -a \"-d %d %d %d\"", getpid(), 0, 4);
+        sprintf_s(str, 100, "hidumper -s 1909 -a \"-d %d %d %d\"", getpid(), 0, 4);
         system(str);
         system("hidumper -s 1909 -a \"-t 6\"");
         system("hidumper -s 1909 -a \"-t 3\"");
@@ -1738,13 +1739,13 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_002, TestSize.Level0)
 {
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
-    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", MEDIA_ROOT + "H264_MP3.mp4"};
+    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", HTTP_ROOT + "H264_MP3.mp4"};
     for (int32_t i = 0; i < srcVec.size(); i++) {
         ASSERT_EQ(MSERR_OK, player_->SetSource(srcVec[i]));
         EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
         EXPECT_EQ(MSERR_OK, player_->Prepare());
         char str[100]; // 100: str len
-        sprintf(str, "hidumper -s 1909 -a \"-d %d %d %d\"", getpid(), getuid(), 4);
+        sprintf_s(str, 100, "hidumper -s 1909 -a \"-d %d %d %d\"", getpid(), getuid(), 4);
         system(str);
         system("hidumper -s 1909 -a \"-t 3\"");
         EXPECT_EQ(MSERR_OK, player_->Play());
@@ -1761,7 +1762,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_003, TestSize.Level0)
 {
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
-    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", MEDIA_ROOT + "H264_MP3.mp4"};
+    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", HTTP_ROOT + "H264_MP3.mp4"};
     for (int32_t i = 0; i < srcVec.size(); i++) {
         ASSERT_EQ(MSERR_OK, player_->SetSource(srcVec[i]));
         EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
@@ -1769,7 +1770,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_003, TestSize.Level0)
         EXPECT_EQ(MSERR_OK, player_->Play());
         sleep(15);
         char str[100]; // 100: str len
-        sprintf(str, "hidumper -s 1909 -a \"-d %d %d %d\"", getpid(), getuid(), 4);
+        sprintf_s(str, 100, "hidumper -s 1909 -a \"-d %d %d %d\"", getpid(), getuid(), 4);
         system(str);
         system("hidumper -s 1909 -a \"-t 3\"");
         EXPECT_EQ(MSERR_OK, player_->Play());
@@ -1786,7 +1787,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_004, TestSize.Level0)
 {
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
-    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", MEDIA_ROOT + "H264_MP3.mp4"};
+    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", HTTP_ROOT + "H264_MP3.mp4"};
     for (int32_t i = 0; i < srcVec.size(); i++) {
         ASSERT_EQ(MSERR_OK, player_->SetSource(srcVec[i]));
         EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
@@ -1794,7 +1795,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_004, TestSize.Level0)
         EXPECT_EQ(MSERR_OK, player_->Play());
         EXPECT_EQ(MSERR_OK, player_->Pause());
         char str[100]; // 100: str len
-        sprintf(str, "hidumper -s 1909 -a \"-d %d %d %d\"", getpid(), getuid(), 4);
+        sprintf_s(str, 100, "hidumper -s 1909 -a \"-d %d %d %d\"", getpid(), getuid(), 4);
         system(str);
         system("hidumper -s 1909 -a \"-t 3\"");
         int32_t currentTime = 0;
@@ -1830,7 +1831,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_005, TestSize.Level0)
 {
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
-    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", MEDIA_ROOT + "H264_MP3.mp4"};
+    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", HTTP_ROOT + "H264_MP3.mp4"};
     for (int32_t i = 0; i < srcVec.size(); i++) {
         ASSERT_EQ(MSERR_OK, player_->SetSource(srcVec[i]));
         EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
@@ -1838,7 +1839,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_005, TestSize.Level0)
         EXPECT_EQ(MSERR_OK, player_->Play());
         EXPECT_EQ(MSERR_OK, player_->Pause());
         char str[100]; // 100: str len
-        sprintf(str, "hidumper -s 1909 -a \"-d %d %d %d\"", getpid(), getuid(), 4);
+        sprintf_s(str, 100, "hidumper -s 1909 -a \"-d %d %d %d\"", getpid(), getuid(), 4);
         system(str);
         system("hidumper -s 1909 -a \"-t 3\"");
         EXPECT_EQ(MSERR_OK, player_->Reset());
@@ -1854,7 +1855,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_006, TestSize.Level0)
 {
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
-    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", MEDIA_ROOT + "H264_MP3.mp4"};
+    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", HTTP_ROOT + "H264_MP3.mp4"};
     for (int32_t i = 0; i < srcVec.size(); i++) {
         ASSERT_EQ(MSERR_OK, player_->SetSource(srcVec[i]));
         EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
@@ -1862,7 +1863,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_006, TestSize.Level0)
         EXPECT_EQ(MSERR_OK, player_->Play());
         EXPECT_EQ(MSERR_OK, player_->Pause());
         char str[100]; // 100: str len
-        sprintf(str, "hidumper -s 1909 -a \"-d %d %d %d\"", getpid(), getuid(), 4);
+        sprintf_s(str, 100, "hidumper -s 1909 -a \"-d %d %d %d\"", getpid(), getuid(), 4);
         system(str);
         system("hidumper -s 1909 -a \"-t 3\"");
         EXPECT_EQ(MSERR_OK, player_->Release());
@@ -1885,7 +1886,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_007, TestSize.Level0)
 {
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
-    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", MEDIA_ROOT + "H264_MP3.mp4"};
+    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", HTTP_ROOT + "H264_MP3.mp4"};
     std::vector<PlaybackRateMode> speedMode = {SPEED_FORWARD_2_00_X, SPEED_FORWARD_1_25_X};
     for (int32_t i = 0; i < srcVec.size(); i++) {
         ASSERT_EQ(MSERR_OK, player_->SetSource(srcVec[i]));
@@ -1894,7 +1895,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_007, TestSize.Level0)
         EXPECT_EQ(MSERR_OK, player_->Play());
         EXPECT_EQ(MSERR_OK, player_->Pause());
         char str[100]; // 100: str len
-        sprintf(str, "hidumper -s 1909 -a \"-d %d %d %d\"", getpid(), getuid(), 4);
+        sprintf_s(str, 100, "hidumper -s 1909 -a \"-d %d %d %d\"", getpid(), getuid(), 4);
         system(str);
         system("hidumper -s 1909 -a \"-t 3\"");
         EXPECT_EQ(MSERR_OK, player_->SetPlaybackSpeed(speedMode[i]));
@@ -1911,7 +1912,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_008, TestSize.Level0)
 {
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
-    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", MEDIA_ROOT + "H264_MP3.mp4"};
+    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", HTTP_ROOT + "H264_MP3.mp4"};
     for (int32_t i = 0; i < srcVec.size(); i++) {
         ASSERT_EQ(MSERR_OK, player_->SetSource(srcVec[i]));
         EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
@@ -1922,7 +1923,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_008, TestSize.Level0)
         EXPECT_EQ(MSERR_OK, player_->SetLooping(true));
         EXPECT_EQ(MSERR_OK, player_->SetVolume(0.5, 0.5));
         char str[100]; // 100: str len
-        sprintf(str, "hidumper -s 1909 -a \"-d %d %d %d\"", getpid(), getuid(), 4);
+        sprintf_s(str, 100, "hidumper -s 1909 -a \"-d %d %d %d\"", getpid(), getuid(), 4);
         system(str);
         system("hidumper -s 1909 -a \"-t 3\"");
         EXPECT_EQ(MSERR_OK, player_->SetLooping(false));
@@ -1939,7 +1940,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_009, TestSize.Level0)
 {
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
-    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", MEDIA_ROOT + "H264_MP3.mp4"};
+    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", HTTP_ROOT + "H264_MP3.mp4"};
     for (int32_t i = 0; i < srcVec.size(); i++) {
         ASSERT_EQ(MSERR_OK, player_->SetSource(srcVec[i]));
         EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
@@ -1947,7 +1948,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_009, TestSize.Level0)
         EXPECT_EQ(MSERR_OK, player_->Play());
         EXPECT_EQ(MSERR_OK, player_->Pause());
         char str[100]; // 100: str len
-        sprintf(str, "hidumper -s 1909 -a \"-d %d %d %d\"", getpid(), getuid(), 4);
+        sprintf_s(str, 100, "hidumper -s 1909 -a \"-d %d %d %d\"", getpid(), getuid(), 4);
         system(str);
         system("hidumper -s 1909 -a \"-t 3\"");
         EXPECT_NE(MSERR_OK, player_->SelectBitRate(0));
@@ -1964,7 +1965,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_010, TestSize.Level0)
 {
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
-    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", MEDIA_ROOT + "H264_MP3.mp4"};
+    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", HTTP_ROOT + "H264_MP3.mp4"};
     for (int32_t i = 0; i < srcVec.size(); i++) {
         ASSERT_EQ(MSERR_OK, player_->SetSource(srcVec[i]));
         EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
@@ -1972,7 +1973,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_010, TestSize.Level0)
         EXPECT_EQ(MSERR_OK, player_->Play());
         EXPECT_EQ(MSERR_OK, player_->Stop());
         char str[100]; // 100: str len
-        sprintf(str, "hidumper -s 1909 -a \"-d %d %d %d\"", getpid(), getuid(), 4);
+        sprintf_s(str, 100, "hidumper -s 1909 -a \"-d %d %d %d\"", getpid(), getuid(), 4);
         system(str);
         system("hidumper -s 1909 -a \"-t 3\"");
         EXPECT_EQ(MSERR_OK, player_->Reset());
@@ -1988,7 +1989,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_011, TestSize.Level0)
 {
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
-    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", MEDIA_ROOT + "H264_MP3.mp4"};
+    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", HTTP_ROOT + "H264_MP3.mp4"};
     for (int32_t i = 0; i < srcVec.size(); i++) {
         ASSERT_EQ(MSERR_OK, player_->SetSource(srcVec[i]));
         EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
@@ -1996,7 +1997,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_011, TestSize.Level0)
         EXPECT_EQ(MSERR_OK, player_->Play());
         EXPECT_EQ(MSERR_OK, player_->Pause());
         char str[100]; // 100: str len
-        sprintf(str, "hidumper -s 1909 -a \"-d %d %d %d\"", getpid(), getuid(), 4);
+        sprintf_s(str, 100, "hidumper -s 1909 -a \"-d %d %d %d\"", getpid(), getuid(), 4);
         system(str);
         system("hidumper -s 1909 -a \"-t 2\"");
         EXPECT_EQ(MSERR_OK, player_->Reset());
@@ -2012,7 +2013,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_012, TestSize.Level0)
 {
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
-    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", MEDIA_ROOT + "H264_MP3.mp4"};
+    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", HTTP_ROOT + "H264_MP3.mp4"};
     for (int32_t i = 0; i < srcVec.size(); i++) {
         ASSERT_EQ(MSERR_OK, player_->SetSource(srcVec[i]));
         EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
@@ -2020,7 +2021,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_012, TestSize.Level0)
         EXPECT_EQ(MSERR_OK, player_->Play());
         EXPECT_EQ(MSERR_OK, player_->Pause());
         char str[100]; // 100: str len
-        sprintf(str, "hidumper -s 1909 -a \"-d %d %d %d\"", getpid(), getuid(), 4);
+        sprintf_s(str, 100, "hidumper -s 1909 -a \"-d %d %d %d\"", getpid(), getuid(), 4);
         system(str);
         system("hidumper -s 1909 -a \"-t 4\"");
         EXPECT_EQ(MSERR_OK, player_->Reset());
@@ -2036,7 +2037,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_013, TestSize.Level0)
 {
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
-    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", MEDIA_ROOT + "H264_MP3.mp4"};
+    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", HTTP_ROOT + "H264_MP3.mp4"};
     for (int32_t i = 0; i < srcVec.size(); i++) {
         ASSERT_EQ(MSERR_OK, player_->SetSource(srcVec[i]));
         EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
@@ -2044,7 +2045,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_013, TestSize.Level0)
         EXPECT_EQ(MSERR_OK, player_->Play());
         EXPECT_EQ(MSERR_OK, player_->Pause());
         char str[100]; // 100: str len
-        sprintf(str, "hidumper -s 1909 -a \"-d %d %d %d\"", getpid(), getuid(), 4);
+        sprintf_s(str, 100, "hidumper -s 1909 -a \"-d %d %d %d\"", getpid(), getuid(), 4);
         system(str);
         system("hidumper -s 1909 -a \"-f 3\"");
         EXPECT_EQ(MSERR_OK, player_->Reset());
@@ -2062,15 +2063,15 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_014, TestSize.Level0)
 {
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
-    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", MEDIA_ROOT + "H264_AAC.mp4"};
+    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", HTTP_ROOT + "H264_AAC.mp4"};
     for (int32_t i = 0; i < srcVec.size(); i++) {
         ASSERT_EQ(MSERR_OK, player_->SetSource(srcVec[i]));
         EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
         EXPECT_EQ(MSERR_OK, player_->Prepare());
         char str[100]; // 100: str len
-        sprintf(str, "hidumper -s 1909 -a \"-d %d %d %d\"", getpid(), getuid(), 4);
+        sprintf_s(str, 100, "hidumper -s 1909 -a \"-d %d %d %d\"", getpid(), getuid(), 4);
         system(str);
-        sprintf(str, "hidumper -s 1909 -a \"-d %d %d %d\"", getpid(), getuid(), 2);
+        sprintf_s(str, 100, "hidumper -s 1909 -a \"-d %d %d %d\"", getpid(), getuid(), 2);
         system(str);
         sleep(130);
         EXPECT_EQ(MSERR_OK, player_->Play());
@@ -2087,13 +2088,13 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_015, TestSize.Level0)
 {
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
-    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", MEDIA_ROOT + "H264_AAC.mp4"};
+    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", HTTP_ROOT + "H264_AAC.mp4"};
     for (int32_t i = 0; i < srcVec.size(); i++) {
         ASSERT_EQ(MSERR_OK, player_->SetSource(srcVec[i]));
         EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
         EXPECT_EQ(MSERR_OK, player_->Prepare());
         char str[100]; // 100: str len
-        sprintf(str, "hidumper -s 1909 -a \"-d %d %d %d\"", getpid(), getuid(), 4);
+        sprintf_s(str, 100, "hidumper -s 1909 -a \"-d %d %d %d\"", getpid(), getuid(), 4);
         system(str);
         system("hidumper -s 3002 -a \"player\"");
         sleep(70);
