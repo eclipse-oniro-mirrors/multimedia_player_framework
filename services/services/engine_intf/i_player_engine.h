@@ -51,7 +51,10 @@ public:
         return 0;
     }
     virtual int32_t Play() = 0;
-    virtual int32_t Prepare() = 0;
+    virtual int32_t Prepare()
+    {
+        return 0;
+    }
     virtual int32_t PrepareAsync() = 0;
     virtual int32_t Pause() = 0;
     virtual int32_t Stop() = 0;
@@ -118,6 +121,10 @@ public:
     virtual int32_t SetAudioEffectMode(const int32_t effectMode)
     {
         (void)effectMode;
+        return 0;
+    }
+    virtual int32_t GetHEBCMode()
+    {
         return 0;
     }
 };
