@@ -202,7 +202,7 @@ HWTEST_F(RecorderProfilesUnitTest, recorder_profile_GetVideoRecorderProfile_0100
 
 /**
  * @tc.name: recorder_profile_GetVideoRecorderProfile_0200
- * @tc.desc: recorde profile GetVideoRecorderProfile when match the wrong sourceId
+ * @tc.desc: recorde profile GetVideoRecorderProfile when match the wrong sourceId and qualityLevel
  * @tc.type: FUNC
  * @tc.require:
  */
