@@ -888,6 +888,7 @@ int32_t PlayBinCtrlerBase::SelectTrack(int32_t index)
         CHECK_AND_RETURN_RET(innerIndex != currentIndex,
             (OnError(MSERR_OK, "This track has already been selected!"), MSERR_OK));
 
+        lastStartTime_ = gst_element_get_start_time(GST_ELEMENT_CAST(playbin_));
         g_object_set(playbin_, "current-audio", innerIndex, nullptr);
         // The seek operation clears the original audio data and re parses the new track data.
         isTrackChanging_ = true;
