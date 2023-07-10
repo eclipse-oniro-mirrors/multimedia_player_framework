@@ -580,7 +580,7 @@ bool PlayerTrackParse::AddProbeToPad(const GstElement *element, GstPad *pad)
             innerMeta.PutIntValue(std::string(INNER_META_KEY_TRACK_INNER_INDEX), -1);
             innerMeta.PutIntValue(std::string(INNER_META_KEY_TRACK_INDEX), trackVec_[i].trackcount);
             trackVec_[i].trackcount++;
-            if (metaStr.find("Codec/Parser/Subtitle") != std::string::nops && !HasSameStreamIdInDemux(pad)) {
+            if (metaStr.find("Codec/Parser/Subtitle") != std::string::npos && !HasSameStreamIdInDemux(pad)) {
                 ParseSubtitlePadCaps(element, pad, i, innerMeta);
                 continue;
             }

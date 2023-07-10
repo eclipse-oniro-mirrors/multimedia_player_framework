@@ -106,6 +106,7 @@ static void gst_subtitle_sink_class_init(GstSubtitleSinkClass *kclass)
             FALSE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
     g_object_class_install_property(gobject_class, PROP_SEGMENT_UPDATED,
         g_param_spec_boolean("track-changed", "track changed", "select track change",
+            FALSE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
     g_object_class_install_property(gobject_class, RPOP_ENABLE_DISPLAY,
         g_param_spec_boolean("enable-display", "enable subtitle display", "enable subtitle display",
             TRUE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
