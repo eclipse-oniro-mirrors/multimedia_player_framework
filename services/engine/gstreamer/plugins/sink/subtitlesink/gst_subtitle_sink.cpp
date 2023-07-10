@@ -128,6 +128,7 @@ static void gst_subtitle_sink_init(GstSubtitleSink *subtitle_sink)
     subtitle_sink->track_changing_position = 0;
     subtitle_sink->enable_display = TRUE;
     subtitle_sink->need_send_empty_buffer = FALSE;
+    gst_segment_init (&subtitle_sink->segment, GST_FORMAT_UNDEFINED);
 
     auto priv = reinterpret_cast<GstSubtitleSinkPrivate *>(gst_subtitle_sink_get_instance_private(subtitle_sink));
     g_return_if_fail(priv != nullptr);
