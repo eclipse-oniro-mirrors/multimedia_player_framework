@@ -63,7 +63,7 @@ HWTEST_F(RecorderProfilesUnitTest, recorder_profile_IsAudioRecorderConfigSupport
     profile->containerFormatType = ContainerFormatType::CFT_MPEG_4;
     profile->audioCodec = CodecMimeType::AUDIO_AAC;
     profile->audioBitrate = 96000; // 96000 common bitrate
-    profile->audioSampleRate = 48000; // 48000 common sample rate  
+    profile->audioSampleRate = 48000; // 48000 common sample rate
     profile->audioChannels = -1; // the wrong channels
     EXPECT_FALSE(RecorderProfilesFactory::CreateRecorderProfiles().IsAudioRecorderConfigSupported(*profile));
 }
