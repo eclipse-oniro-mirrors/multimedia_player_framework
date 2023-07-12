@@ -14,7 +14,7 @@
 # For now, it supports architechture of ['arm', 'arm64'].
 
 @returnValue
-LOG
+TRAP
 
 @allowList
 getcwd;all
