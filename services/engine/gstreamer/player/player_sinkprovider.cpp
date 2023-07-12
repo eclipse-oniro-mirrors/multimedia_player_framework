@@ -214,7 +214,7 @@ void PlayerSinkProvider::OnFirstRenderFrame()
         notifier_(msg);
         SetFirstRenderFrameFlag(false);
         MEDIA_LOGW("KPI-TRACE: FIRST-VIDEO-FRAME rendered");
-    } 
+    }
 }
 
 PlayBinSinkProvider::SinkPtr PlayerSinkProvider::CreateSubtitleSink()
