@@ -103,7 +103,7 @@ bool PlayerMemManage::Init()
 {
     std::lock_guard<std::recursive_mutex> lock(recMutex_);
     if (isParsed_) {
-        if (appStateListener_ != nullptr && appStateListenerRemoteDied_) {
+        if (appStateListener_ != nullptr && isAppStateListenerRemoteDied_) {
             MEDIA_LOGE("MemMgrClient died, SubscribeAppState again");
             Memory::MemMgrClient::GetInstance().SubscribeAppState(*appStateListener_);
         }
@@ -349,11 +349,11 @@ void PlayerMemManage::RemoteDieAgainRegisterActiveApps()
 void PlayerMemManage::HandleOnConnected()
 {
     std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    MEDIA_LOGI("Enter RemoteDied:%{public}d", appStateListenerRemoteDied_);
-    appStateListenerIsConnected_ = true;
-    if (appStateListenerRemoteDied_) {
+    MEDIA_LOGI("Enter RemoteDied:%{public}d", isAppStateListenerRemoteDied_);
+    isAppStateListenerConnected_ = true;
+    if (isAppStateListenerRemoteDied_) {
         RemoteDieAgainRegisterActiveApps();
-        appStateListenerRemoteDied_ = false;
+        isAppStateListenerRemoteDied_ = false;
     }
 }
 
@@ -361,7 +361,7 @@ void PlayerMemManage::HandleOnDisconnected()
 {
     std::lock_guard<std::recursive_mutex> lock(recMutex_);
     MEDIA_LOGI("Enter");
-    appStateListenerIsConnected_ = false;
+    isAppStateListenerConnected_ = false;
 }
 
 void PlayerMemManage::HandleOnRemoteDied(const wptr<IRemoteObject> &object)
@@ -369,8 +369,8 @@ void PlayerMemManage::HandleOnRemoteDied(const wptr<IRemoteObject> &object)
     (void)object;
     std::lock_guard<std::recursive_mutex> lock(recMutex_);
     MEDIA_LOGI("Enter");
-    appStateListenerRemoteDied_ = true;
-    appStateListenerIsConnected_ = false;
+    isAppStateListenerRemoteDied_ = true;
+    isAppStateListenerConnected_ = false;
 
     for (auto &[findUid, pidPlayersInfo] : playerManage_) {
         for (auto &[findPid, appPlayerInfo] : pidPlayersInfo) {
