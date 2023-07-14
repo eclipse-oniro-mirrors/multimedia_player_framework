@@ -662,7 +662,7 @@ static void fill_buffer_from_adapter(GstSubtitleBaseParse *base_parse, GstSubtit
     if ((input != nullptr) && (buf_ctx->text != nullptr)) {
         buf_ctx->text = g_string_append(buf_ctx->text, input);
         gst_adapter_flush(buf_ctx->adapter, avail);
-        GST_DEBUG_OBJECT(self, "flush adapter size = %" G_GSIZE_FORMAT "", avail);
+        GST_DEBUG_OBJECT(base_parse, "flush adapter size = %" G_GSIZE_FORMAT "", avail);
     }
     g_free(input);
 }
