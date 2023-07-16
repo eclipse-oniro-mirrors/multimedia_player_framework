@@ -30,6 +30,7 @@ constexpr uint32_t DEFAULT_CACHE_BUFFERS = 1;
 PlayerCodecCtrl::PlayerCodecCtrl()
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    DisablePerformanceBySysParam();
 }
 
 PlayerCodecCtrl::~PlayerCodecCtrl()
@@ -61,8 +62,10 @@ void PlayerCodecCtrl::SetupCodecCb(const std::string &metaStr, GstElement *src, 
         codecTypeList_.push_back(true);
 
         g_object_set(G_OBJECT(src), "player-scene", TRUE, nullptr);
-        g_object_set(G_OBJECT(src), "performance-mode", TRUE, nullptr);
-        g_object_set(G_OBJECT(videoSink), "performance-mode", TRUE, nullptr);
+        if (isEnablePerformanceMode_) {
+            g_object_set(G_OBJECT(src), "performance-mode", TRUE, nullptr);
+            g_object_set(G_OBJECT(videoSink), "performance-mode", TRUE, nullptr);
+        }
 
         GstCaps *caps = gst_caps_new_simple("video/x-raw", "format", G_TYPE_STRING, "NV12", nullptr);
         g_object_set(G_OBJECT(videoSink), "caps", caps, nullptr);
@@ -193,6 +196,14 @@ int32_t PlayerCodecCtrl::HandleCodecBuffers(bool enable)
         }
     }
     return MSERR_INVALID_OPERATION;
+}
+void PlayerCodecCtrl::DisablePerformanceBySysParam()
+{
+    std::string cmd;
+    int32_t ret = OHOS::system::GetStringParameter("sys.media.player.performance.enable", cmd, "");
+    if (ret == 0 && !cmd.empty()) {
+        isEnablePerformanceMode_ = cmd == "FALSE" ? false : true;
+    }
 }
 } // Media
 } // OHOS
