@@ -41,6 +41,7 @@ private:
     void HlsSwichSoftAndHardCodec(GstElement *videoSink);
     void SetupCodecBufferNum(const std::string &metaStr, GstElement *src) const;
     static void CapsFixErrorCb(const GstElement *decoder, gpointer userData);
+    void DisablePerformanceBySysParam();
 
     bool isHardwareDec_ = false;
     struct DecoderElement {
@@ -51,6 +52,7 @@ private:
     std::list<bool> codecTypeList_;
     std::mutex mutex_;
     CapsFixErrorNotifier notifier_;
+    bool isEnablePerformanceMode_ = true;
 };
 } // Media
 } // OHOS
