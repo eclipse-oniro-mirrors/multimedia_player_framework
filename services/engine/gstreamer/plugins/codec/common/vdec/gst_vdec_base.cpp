@@ -257,30 +257,6 @@ static gboolean gst_vdec_base_recover_codec_buffers(GstVdecBase *self)
     return TRUE;
 }
 
-static void gst_vdec_base_prob_seek(GstVdecBase *self, const GValue *value)
-{
-    GST_OBJECT_LOCK(self);
-    if (self->decoder != nullptr) {
-        self->seek_frame_rate = g_value_get_boolean(value) ? DEFAULT_SEEK_FRAME_RATE : self->frame_rate;
-        self->decoder->SetParameter(GST_DYNAMIC_FRAME_RATE, GST_ELEMENT(self));
-    }
-    GST_OBJECT_UNLOCK(self);
-}
-
-static void gst_vdec_base_prob_surface_pool(GstVdecBase *self, const GValue *value)
-{
-    gst_vdec_reset_outpool(self);
-    self->outpool = static_cast<GstBufferPool *>(g_value_get_pointer(value));
-    gst_object_ref(self->outpool);
-}
-
-static void gst_vdec_base_prob_sink_caps(GstVdecBase *self, const GValue *value)
-{
-    const GstCaps *caps = gst_value_get_caps(value);
-    gst_vdec_reset_sink_caps(self);
-    self->sink_caps = gst_caps_copy(caps);
-}
-
 static inline void gst_vdec_reset_sink_caps(GstVdecBase *self)
 {
     if (self->sink_caps != nullptr) {
@@ -306,12 +282,35 @@ static inline void gst_vdec_reset_outpool(GstVdecBase *self)
     }
 }
 
+static void gst_vdec_base_prob_seek(GstVdecBase *self, const GValue *value)
+{
+    GST_OBJECT_LOCK(self);
+    if (self->decoder != nullptr) {
+        self->seek_frame_rate = g_value_get_boolean(value) ? DEFAULT_SEEK_FRAME_RATE : self->frame_rate;
+        self->decoder->SetParameter(GST_DYNAMIC_FRAME_RATE, GST_ELEMENT(self));
+    }
+    GST_OBJECT_UNLOCK(self);
+}
+
+static void gst_vdec_base_prob_surface_pool(GstVdecBase *self, const GValue *value)
+{
+    gst_vdec_reset_outpool(self);
+    self->outpool = static_cast<GstBufferPool *>(g_value_get_pointer(value));
+    gst_object_ref(self->outpool);
+}
+
+static void gst_vdec_base_prob_sink_caps(GstVdecBase *self, const GValue *value)
+{
+    const GstCaps *caps = gst_value_get_caps(value);
+    gst_vdec_reset_sink_caps(self);
+    self->sink_caps = gst_caps_copy(caps);
+}
+
 static void gst_vdec_base_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
 {
     (void)pspec;
     g_return_if_fail(object != nullptr && value != nullptr);
     GstVdecBase *self = GST_VDEC_BASE(object);
-    gint ret = GST_CODEC_OK;
     GST_INFO_OBJECT(object, "Prop id %u", prop_id);
 
     switch (prop_id) {

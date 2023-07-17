@@ -17,6 +17,7 @@
 #include "surface.h"
 #include "media_log.h"
 #include "media_errors.h"
+#include "param_wrapper.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerCodecCtrl"};

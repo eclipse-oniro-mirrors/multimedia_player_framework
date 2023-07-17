@@ -17,10 +17,10 @@
 #include "gst_shared_mem_sink.h"
 #include "gst_video_display_sink.h"
 
-static inline gboolean check_and_log(gboolean need_log, const char *log)
+static inline void check_and_log(gboolean need_log, const char *log)
 {
     if (need_log) {
-        GST_WARNING_OBJECT(nullptr, log);
+        GST_WARNING_OBJECT(nullptr, "pulgin %s", log);
     }
 }
 
