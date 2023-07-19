@@ -150,6 +150,13 @@ int32_t HdiVdecOutBufferMgr::FreeBuffers()
     return GST_CODEC_OK;
 }
 
+uint32_t HdiVdecOutBufferMgr::GetWaitDisPlayBufNum()
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    MEDIA_LOGD("mBuffers size %{public}zu", mBuffers.size());
+    return mBuffers.size();
+}
+
 int32_t HdiVdecOutBufferMgr::OnNewBuffer(GstBuffer *buffer)
 {
     MEDIA_LOGD("OnNewBuffer");

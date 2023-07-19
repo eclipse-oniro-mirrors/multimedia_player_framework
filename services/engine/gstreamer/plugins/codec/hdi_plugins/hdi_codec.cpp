@@ -412,10 +412,12 @@ int32_t HdiCodec::PushOutputBuffer(GstBuffer *buffer)
 int32_t HdiCodec::PullOutputBuffer(GstBuffer **buffer)
 {
     CHECK_AND_RETURN_RET_LOG(!isError_, GST_CODEC_ERROR, "codec error");
+    CHECK_AND_RETURN_RET_LOG(outBufferMgr_ != nullptr, GST_CODEC_ERROR, "outBufferMgr_ is nullptr");
     int32_t ret = GST_CODEC_OK;
     {
         unique_lock<mutex> lock(mutex_);
-        if (ret_ != GST_CODEC_OK) {
+        if ((ret_ != GST_CODEC_OK && ret_ != GST_CODEC_FORMAT_CHANGE) ||
+            (ret_ == GST_CODEC_FORMAT_CHANGE && outBufferMgr_->GetWaitDisPlayBufNum() == 0)) {
             MEDIA_LOGD("change ret from ret %{public}d to ret %{public}d", ret, ret_);
             ret = ret_;
             ret_ = GST_CODEC_OK;
@@ -430,7 +432,8 @@ int32_t HdiCodec::PullOutputBuffer(GstBuffer **buffer)
     MEDIA_LOGD("ret %{public}d", ret);
     {
         unique_lock<mutex> lock(mutex_);
-        if (ret_ != GST_CODEC_OK) {
+        if ((ret_ != GST_CODEC_OK && ret_ != GST_CODEC_FORMAT_CHANGE) ||
+            (ret_ == GST_CODEC_FORMAT_CHANGE && outBufferMgr_->GetWaitDisPlayBufNum() == 0)) {
             MEDIA_LOGD("change ret from ret %{public}d to ret %{public}d", ret, ret_);
             ret = ret_;
             ret_ = GST_CODEC_OK;
