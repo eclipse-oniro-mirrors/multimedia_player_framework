@@ -34,7 +34,7 @@ public:
         CapsFixErrorNotifier notifier);
     void DetectCodecUnSetup(GstElement *src, GstElement *videoSink);
     void EnhanceSeekPerformance(bool enable);
-    int32_t GetHEBCMode();
+    int32_t GetHEBCMode() const;
 
 private:
     void SetupCodecCb(const std::string &metaStr, GstElement *src, GstElement *videoSink,
@@ -42,7 +42,7 @@ private:
     void HlsSwichSoftAndHardCodec(GstElement *videoSink);
     void SetupCodecBufferNum(const std::string &metaStr, GstElement *src) const;
     static void CapsFixErrorCb(const GstElement *decoder, gpointer userData);
-    bool IsFirstCodecSetup();
+    bool IsFirstCodecSetup() const;
 
     bool isHardwareDec_ = false;
     bool isHEBCMode_ = false;
