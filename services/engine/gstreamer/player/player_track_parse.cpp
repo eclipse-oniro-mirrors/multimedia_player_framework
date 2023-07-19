@@ -72,15 +72,12 @@ void PlayerTrackParse::OnElementSetup(GstElement &elem)
         DemuxInfo demux(&elem);
         trackVec_.push_back(demux);
         lock.unlock();
-        SetUpDemuxerElementCb(elem, false);
+        SetUpDemuxerElementCb(elem);
     }
 
-    if (metaStr.find("Codec/Parser/Subtitle") != std::string::npos) {
-        // Collect external subtitle trackinfo
-        SetUpDemuxerElementCb(elem, true);
-    } else if (metaStr.find("Codec/Parser") != std::string::npos) {
+    if (metaStr.find("Codec/Parser") != std::string::npos) {
         // HLS stream demux has no width and height data, and requires prase as a supplement
-        SetUpDemuxerElementCb(elem, false);
+        SetUpDemuxerElementCb(elem);
     }
 
     if (elementName.find("inputselector") != std::string::npos) {
@@ -297,7 +294,7 @@ int32_t PlayerTrackParse::GetTrackInfo(int32_t index, int32_t &innerIndex, int32
             return MSERR_OK;
         }
     }
-    
+
     return MSERR_INVALID_VAL;
 }
 
@@ -476,10 +473,8 @@ void PlayerTrackParse::ConvertToPlayerKeys(const Format &innerMeta, Format &outM
 
 GstPadProbeReturn PlayerTrackParse::ProbeCallback(GstPad *pad, GstPadProbeInfo *info, gpointer userData)
 {
-    if (pad == nullptr || info ==  nullptr || userData == nullptr) {
-        MEDIA_LOGE("param is invalid");
-        return GST_PAD_PROBE_OK;
-    }
+    CHECK_AND_RETURN_RET_LOG(pad != nullptr && info != nullptr && userData != nullptr,
+        GST_PAD_PROBE_OK, "param is invalid");
 
     auto playerTrackParse = reinterpret_cast<PlayerTrackParse *>(userData);
     return playerTrackParse->GetTrackParse(pad, info);
@@ -532,17 +527,25 @@ GstPadProbeReturn PlayerTrackParse::ParseTrackInfo(GstPad *pad, GstPadProbeInfo 
     return GST_PAD_PROBE_OK;
 }
 
+void PlayerTrackParse::ParseSubtitlePadCaps(const GstElement *element, GstPad *pad, int32_t index, Format &innerMeta)
+{
+    GstCaps *caps = gst_pad_query_caps(pad, nullptr);
+    GstMetaParser::ParseStreamCaps(*caps, innerMeta);
+    trackVec_[index].inUse = true;
+    (void)trackVec_[index].trackInfos.emplace(pad, innerMeta);
+    UpdateTrackInfo();
+    MEDIA_LOGI("subtitle parse:0x%{public}06" PRIXPTR " trackcount:0x%{public}d pad:0x%{public}06" PRIXPTR,
+        FAKE_POINTER(element), trackVec_[index].trackcount, FAKE_POINTER(pad));
+}
+
 bool PlayerTrackParse::AddProbeToPad(const GstElement *element, GstPad *pad)
 {
     MEDIA_LOGD("AddProbeToPad element %{public}s, pad %{public}s", ELEM_NAME(element), PAD_NAME(pad));
     {
         std::unique_lock<std::mutex> lock(padProbeMutex_);
         gulong probeId = gst_pad_add_probe(pad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM, ProbeCallback, this, nullptr);
-        if (probeId == 0) {
-            MEDIA_LOGE("add probe for %{public}s's pad %{public}s failed",
-                GST_ELEMENT_NAME(GST_PAD_PARENT(pad)), PAD_NAME(pad));
-            return false;
-        }
+        CHECK_AND_RETURN_RET_LOG(probeId != 0, false,
+            "add probe for %{public}s's pad %{public}s failed", GST_ELEMENT_NAME(GST_PAD_PARENT(pad)), PAD_NAME(pad));
         (void)padProbes_.emplace(pad, probeId);
         gst_object_ref(pad);
     }
@@ -553,7 +556,11 @@ bool PlayerTrackParse::AddProbeToPad(const GstElement *element, GstPad *pad)
             GST_ELEMENT_METADATA_KLASS);
         CHECK_AND_RETURN_RET_LOG(metadata != nullptr, true, "gst_element_get_metadata return nullptr");
         std::string metaStr(metadata);
-        if (metaStr.find("Codec/Parser") != std::string::npos) {
+        if (metaStr.find("Codec/Parser/Subtitle") != std::string::npos && !HasSameStreamIdInDemux(pad)) {
+            MEDIA_LOGD("external subtitle parser, handle it as demux");
+            DemuxInfo demux(const_cast<GstElement *>(element));
+            trackVec_.push_back(demux);
+        } else if (metaStr.find("Codec/Parser") != std::string::npos) {
             parsePadSet_.insert(pad);
             MEDIA_LOGI("Parser pad:0x%{public}06" PRIXPTR, FAKE_POINTER(pad));
             return true;
@@ -568,6 +575,10 @@ bool PlayerTrackParse::AddProbeToPad(const GstElement *element, GstPad *pad)
             innerMeta.PutIntValue(std::string(INNER_META_KEY_TRACK_INNER_INDEX), -1);
             innerMeta.PutIntValue(std::string(INNER_META_KEY_TRACK_INDEX), trackVec_[i].trackcount);
             trackVec_[i].trackcount++;
+            if (metaStr.find("Codec/Parser/Subtitle") != std::string::npos && !HasSameStreamIdInDemux(pad)) {
+                ParseSubtitlePadCaps(element, pad, i, innerMeta);
+                continue;
+            }
             (void)trackVec_[i].trackInfos.emplace(pad, innerMeta);
             MEDIA_LOGI("demux:0x%{public}06" PRIXPTR " trackcount:0x%{public}d pad:0x%{public}06" PRIXPTR,
                 FAKE_POINTER(element), trackVec_[i].trackcount, FAKE_POINTER(pad));
@@ -577,30 +588,14 @@ bool PlayerTrackParse::AddProbeToPad(const GstElement *element, GstPad *pad)
     return true;
 }
 
-bool PlayerTrackParse::AddProbeToPadList(GstElement *element, GList &list, bool isSubtitle)
+bool PlayerTrackParse::AddProbeToPadList(GstElement *element, GList &list)
 {
     MEDIA_LOGD("AddProbeToPadList element %{public}s", ELEM_NAME(element));
     for (GList *padNode = g_list_first(&list); padNode != nullptr; padNode = padNode->next) {
-        if (padNode->data == nullptr) {
-            continue;
-        }
+        CHECK_AND_CONTINUE(padNode->data != nullptr);
 
         GstPad *pad = reinterpret_cast<GstPad *>(padNode->data);
-        if (isSubtitle) {
-            if (HasSameStreamIdInDemux(pad)) {
-                MEDIA_LOGD("internal subtitle parser, do not need to probe");
-                return false;
-            } else {
-                MEDIA_LOGD("external subtitle parser, handle it as demux");
-                std::unique_lock<std::mutex> lock(trackInfoMutex_);
-                DemuxInfo demux(element);
-                trackVec_.push_back(demux);
-            }
-        }
-
-        if (!AddProbeToPad(element, pad)) {
-            return false;
-        }
+        CHECK_AND_RETURN_RET(AddProbeToPad(element, pad), false);
     }
 
     return true;
@@ -608,10 +603,7 @@ bool PlayerTrackParse::AddProbeToPadList(GstElement *element, GList &list, bool 
 
 void PlayerTrackParse::OnPadAddedCb(const GstElement *element, GstPad *pad, gpointer userData)
 {
-    if (element == nullptr || pad ==  nullptr || userData == nullptr) {
-        MEDIA_LOGE("param is nullptr");
-        return;
-    }
+    CHECK_AND_RETURN_LOG(element != nullptr && pad != nullptr && userData != nullptr, "param is nullptr");
 
     auto playerTrackParse = reinterpret_cast<PlayerTrackParse *>(userData);
     (void)playerTrackParse->AddProbeToPad(element, pad);
@@ -623,12 +615,10 @@ bool PlayerTrackParse::FindTrackInfo()
     return findTrackInfo_;
 }
 
-void PlayerTrackParse::SetUpDemuxerElementCb(GstElement &elem, bool isSubtitle)
+void PlayerTrackParse::SetUpDemuxerElementCb(GstElement &elem)
 {
     MEDIA_LOGD("SetUpDemuxerElementCb elem %{public}s", ELEM_NAME(&elem));
-    if (!AddProbeToPadList(&elem, *elem.srcpads, isSubtitle)) {
-        return;
-    }
+    CHECK_AND_RETURN(AddProbeToPadList(&elem, *elem.srcpads));
     {
         std::unique_lock<std::mutex> lock(signalIdMutex_);
         gulong signalId = g_signal_connect(&elem, "pad-added", G_CALLBACK(PlayerTrackParse::OnPadAddedCb), this);
