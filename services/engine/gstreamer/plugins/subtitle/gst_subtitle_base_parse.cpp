@@ -122,13 +122,11 @@ static void gst_subtitle_base_parse_class_init(GstSubtitleBaseParseClass *klass)
     element_class->change_state = gst_subtitle_base_parse_change_state;
     object_class->dispose = gst_subtitle_base_parse_dispose;
 
-    GstPadTemplate *src_pad_template = gst_pad_template_new("text_%u", GST_PAD_SRC, GST_PAD_SOMETIMES, GST_CAPS_ANY);
-    if (src_pad_template != nullptr) {
-        gst_element_class_add_pad_template((GstElementClass *)klass, src_pad_template);
-        GST_INFO("added a SOMETIMES src pad template");
-    }
-
     gst_subtitle_base_parse_pfn_init(klass);
+    GstPadTemplate *src_pad_template = gst_pad_template_new("text_%u", GST_PAD_SRC, GST_PAD_SOMETIMES, GST_CAPS_ANY);
+    g_return_if_fail(src_pad_template != nullptr);
+    gst_element_class_add_pad_template((GstElementClass *)klass, src_pad_template);
+    GST_INFO("added a SOMETIMES src pad template");
 }
 
 static void gst_subtitle_base_parse_pfn_init(GstSubtitleBaseParseClass *klass)
@@ -242,14 +240,8 @@ static GstFlowReturn default_handle_buffer(GstSubtitleBaseParse *self)
 
     while (!self->flushing) {
         /* determine whether the subclass overrides read_frame_pfn() and decode_frame_pfn() */
-        if (G_UNLIKELY(baseclass->read_frame_pfn == nullptr)) {
-            GST_ERROR_OBJECT(self, "have not override ReadFrame function");
-            break;
-        }
-        if (G_UNLIKELY(baseclass->decode_frame_pfn == nullptr)) {
-            GST_ERROR_OBJECT(self, "have not override DecodeFrame function");
-            break;
-        }
+        g_return_val_if_fail(baseclass->read_frame_pfn != nullptr, ret);
+        g_return_val_if_fail(baseclass->decode_frame_pfn != nullptr, ret);
 
         frame.data = nullptr;
         frame.len = 0;
@@ -300,32 +292,23 @@ static GstFlowReturn gst_subtitle_base_parse_chain(GstPad *sinkpad, GstObject *p
         return ret;
     }
 
-    if (!get_subtitle_streams(baseclass, buf, self)) {
-        return ret;
-    }
+    g_return_val_if_fail(get_subtitle_streams(baseclass, buf, self), ret);
 
     if (G_UNLIKELY(!self->has_send_stream_start)) {
         gst_subtitle_push_stream_start_event(self);
         self->has_send_stream_start = TRUE;
     }
 
-    if (!chain_set_caps_and_tags(self)) {
-        return GST_FLOW_EOS;
-    }
+    g_return_val_if_fail(chain_set_caps_and_tags(self), GST_FLOW_EOS);
 
     if (G_UNLIKELY(self->flushing)) {
         return ret;
     }
 
-    if (!chain_push_new_segment_event(ret, self)) {
-        return ret;
-    }
+    g_return_val_if_fail(chain_push_new_segment_event(ret, self), ret);
 
-    if (G_UNLIKELY(baseclass->handle_buffer_pfn != nullptr)) {
-        ret = baseclass->handle_buffer_pfn(self);
-    }
-
-    return ret;
+    g_return_val_if_fail(baseclass->handle_buffer_pfn != nullptr, ret);
+    return baseclass->handle_buffer_pfn(self);
 }
 
 static gboolean sink_event_handle_segment_eos(GstEvent *event, GstSubtitleBaseParse *self)
@@ -343,10 +326,8 @@ static gboolean sink_event_handle_segment_eos(GstEvent *event, GstSubtitleBasePa
         (void)gst_subtitle_base_parse_chain(self->sinkpad, (GstObject *)self, buf);
     }
 
-    if (self->sinkpad != nullptr) {
-        ret = gst_pad_event_default(self->sinkpad, (GstObject *)self, event);
-    }
-
+    g_return_val_if_fail(self->sinkpad != nullptr, ret);
+    ret = gst_pad_event_default(self->sinkpad, (GstObject *)self, event);
     return ret;
 }
 
@@ -381,10 +362,7 @@ static gboolean sink_event_handle_segment_event(GstEvent *event, GstSubtitleBase
         }
     }
 
-    if (G_UNLIKELY(need_tags) && !gst_subtitle_set_tags(self)) {
-        GST_ERROR_OBJECT(self, "subtitle set taglist failed");
-    }
-
+    g_return_val_if_fail(G_LIKELY(!need_tags) || gst_subtitle_set_tags(self), TRUE);
     return TRUE;
 }
 
@@ -579,15 +557,13 @@ static gboolean default_handle_sink_event(GstSubtitleBaseParse *self, GstEvent *
             break;
         }
         case GST_EVENT_STREAM_START: {
-            if (self->sinkpad != nullptr) {
-                ret = gst_pad_event_default(self->sinkpad, (GstObject *)self, event);
-            }
+            g_return_val_if_fail(self->sinkpad != nullptr, ret);
+            ret = gst_pad_event_default(self->sinkpad, (GstObject *)self, event);
             break;
         }
         default: {
-            if (self->sinkpad != nullptr) {
-                ret = gst_pad_event_default(self->sinkpad, (GstObject *)self, event);
-            }
+            g_return_val_if_fail(self->sinkpad != nullptr, ret);
+            ret = gst_pad_event_default(self->sinkpad, (GstObject *)self, event);
             break;
         }
     }
@@ -635,9 +611,7 @@ static GstStateChangeReturn gst_subtitle_base_parse_change_state(GstElement *ele
         }
     }
 
-    if (ret == GST_STATE_CHANGE_FAILURE) {
-        return ret;
-    }
+    g_return_val_if_fail(ret != GST_STATE_CHANGE_FAILURE, ret);
 
     switch (transition) {
         case GST_STATE_CHANGE_PAUSED_TO_READY: {
