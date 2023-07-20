@@ -122,11 +122,12 @@ static void gst_subtitle_base_parse_class_init(GstSubtitleBaseParseClass *klass)
     element_class->change_state = gst_subtitle_base_parse_change_state;
     object_class->dispose = gst_subtitle_base_parse_dispose;
 
-    gst_subtitle_base_parse_pfn_init(klass);
     GstPadTemplate *src_pad_template = gst_pad_template_new("text_%u", GST_PAD_SRC, GST_PAD_SOMETIMES, GST_CAPS_ANY);
-    g_return_if_fail(src_pad_template != nullptr);
-    gst_element_class_add_pad_template((GstElementClass *)klass, src_pad_template);
-    GST_INFO("added a SOMETIMES src pad template");
+    if (src_pad_template != nullptr) {
+        gst_element_class_add_pad_template((GstElementClass *)klass, src_pad_template);
+        GST_INFO("added a SOMETIMES src pad template");
+    }
+    gst_subtitle_base_parse_pfn_init(klass);
 }
 
 static void gst_subtitle_base_parse_pfn_init(GstSubtitleBaseParseClass *klass)
@@ -361,8 +362,9 @@ static gboolean sink_event_handle_segment_event(GstEvent *event, GstSubtitleBase
             need_tags = TRUE;
         }
     }
-
-    g_return_val_if_fail(G_LIKELY(!need_tags) || gst_subtitle_set_tags(self), TRUE);
+    if (G_UNLIKELY(need_tags)) {
+        g_return_val_if_fail(gst_subtitle_set_tags(self), TRUE);
+    }
     return TRUE;
 }
 

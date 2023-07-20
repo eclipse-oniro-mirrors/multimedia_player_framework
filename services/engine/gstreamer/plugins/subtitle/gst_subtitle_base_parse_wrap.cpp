@@ -143,7 +143,9 @@ static gboolean gst_subtitle_base_parse_src_event(GstPad *pad, GstObject *parent
 
     GstSubtitleBaseParse *self = static_cast<GstSubtitleBaseParse *>((void *)parent);
     GstSubtitleBaseParseClass *baseclass = GST_SUBTITLE_BASE_PARSE_GET_CLASS(self);
-    ON_SCOPE_EXIT(0) { gst_event_unref(event); };
+    ON_SCOPE_EXIT(0) {
+        gst_event_unref(event);
+    };
     g_return_val_if_fail(baseclass != nullptr, FALSE);
     gboolean ret = FALSE;
 
@@ -346,7 +348,9 @@ static guint64 gst_subtitle_base_get_current_position(GstSubtitleBaseParse *self
         parent_bin = nullptr;
     }
 
-    ON_SCOPE_EXIT(0) { gst_query_unref(query); };
+    ON_SCOPE_EXIT(0) {
+        gst_query_unref(query);
+    };
     g_return_val_if_fail(parent_bin != nullptr, GST_CLOCK_TIME_NONE);
 
     gboolean ret = gst_element_query(static_cast<GstElement *>((void *)parent_bin), query);
@@ -577,7 +581,9 @@ static gboolean gst_subtitle_base_parse_detect_sub_type(GstSubtitleBaseParse *se
     g_return_val_if_fail(G_LIKELY(caps != nullptr), ret);
 
     GstStructure *structure = gst_caps_get_structure(caps, 0);
-    ON_SCOPE_EXIT(0) { gst_caps_unref(caps); };
+    ON_SCOPE_EXIT(0) {
+        gst_caps_unref(caps);
+    };
     g_return_val_if_fail(G_LIKELY(structure != nullptr), TRUE);
 
     if (!gst_structure_get_boolean(structure, "parsed", &internal)) {
@@ -828,13 +834,16 @@ void gst_subtitle_push_stream_start_event(GstSubtitleBaseParse *base_parse)
 
         gchar *stream_name = g_strdup_printf("%s_stream%d", GST_ELEMENT_NAME(base_parse), i);
         GstEvent *event = gst_event_new_stream_start(stream_name);
-        ON_SCOPE_EXIT(0) { g_free(stream_name); };
+        ON_SCOPE_EXIT(0) {
+            g_free(stream_name);
+        };
         g_return_if_fail(event != nullptr);
         const gchar *event_name = gst_event_type_get_name(GST_EVENT_TYPE(event));
         GST_DEBUG_OBJECT(base_parse, "pushing event %s on pad %s",
             event_name, GST_PAD_NAME(base_parse->streams[i]->pad));
 
         g_return_if_fail(gst_pad_push_event(base_parse->streams[i]->pad, event));
+        CANCEL_SCOPE_EXIT_GUARD(0);
     }
 }
 
@@ -863,7 +872,9 @@ gboolean gst_subtitle_set_tags(GstSubtitleBaseParse *base_parse)
     for (i = 0; i < base_parse->stream_num; i++) {
         g_return_val_if_fail(base_parse->streams[i] != nullptr, FALSE);
         GstEvent *event = gst_event_new_tag(gst_tag_list_ref(base_parse->streams[i]->tags));
-        ON_SCOPE_EXIT(0) { gst_tag_list_unref(base_parse->streams[i]->tags); };
+        ON_SCOPE_EXIT(0) {
+            gst_tag_list_unref(base_parse->streams[i]->tags);
+        };
         GST_DEBUG_OBJECT(base_parse, "new event tag for streams[%d] failed", i);
         g_return_val_if_fail(event != nullptr, FALSE);
         const gchar *event_name = gst_event_type_get_name(GST_EVENT_TYPE(event));
@@ -929,7 +940,9 @@ gboolean chain_push_new_segment_event(GstFlowReturn ret, GstSubtitleBaseParse *s
     g_return_val_if_fail(self != nullptr, FALSE);
 
     g_mutex_lock(&self->segmentmutex);
-    ON_SCOPE_EXIT(0) { g_mutex_unlock(&self->segmentmutex); };
+    ON_SCOPE_EXIT(0) {
+        g_mutex_unlock(&self->segmentmutex);
+    };
     gboolean result = TRUE;
     if (G_UNLIKELY(self->need_segment)) {
         GST_INFO_OBJECT(self, "begin pushing newsegment event with 0x%06" PRIXPTR, FAKE_POINTER(&self->segment));
@@ -973,7 +986,9 @@ gboolean decode_one_frame(const GstSubtitleBaseParseClass *baseclass, GstSubtitl
     g_free(frame->data);
     frame->data = nullptr;
 
-    ON_SCOPE_EXIT(0) { gst_subtitle_free_frame(self, decoded_frame); };
+    ON_SCOPE_EXIT(0) {
+        gst_subtitle_free_frame(self, decoded_frame);
+    };
     g_return_val_if_fail(G_LIKELY(got_frame), FALSE);
     g_return_val_if_fail((decoded_frame->pts / GST_SECOND) <= G_MAXLONG, FALSE);
     (void)gettimeofday(&decode_end, nullptr);
@@ -981,6 +996,6 @@ gboolean decode_one_frame(const GstSubtitleBaseParseClass *baseclass, GstSubtitl
     GST_DEBUG_OBJECT(self, "decode subtitle frame use time %" G_GUINT64_FORMAT " us",
         (guint64)(decode_end.tv_sec - decode_start.tv_sec) * SEC_TO_MSEC +
         (guint64)(decode_end.tv_usec - decode_start.tv_usec));
-
+    CANCEL_SCOPE_EXIT_GUARD(0);
     return TRUE;
 }
