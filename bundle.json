@@ -25,7 +25,8 @@
         "SystemCapability.Multimedia.Media.CodecBase",
         "SystemCapability.Multimedia.Media.AVPlayer",
         "SystemCapability.Multimedia.Media.AVRecorder",
-        "SystemCapability.Multimedia.SystemSound.Core"
+        "SystemCapability.Multimedia.SystemSound.Core",
+        "SystemCapability.Multimedia.Media.AVScreenCapture"
       ],
       "features": [],
       "adapted_system_type": [ "standard" ],
@@ -36,6 +37,7 @@
       ],
       "deps": {
         "components": [
+          "av_session",
           "safwk",
           "hilog",
           "window_manager",
@@ -44,20 +46,25 @@
           "hitrace",
           "audio_framework",
           "ipc",
-          "graphic_standard",
+          "graphic_2d",
           "hisysevent",
           "c_utils",
-          "hilog_native",
           "zlib",
           "access_token",
-          "multimedia_image_framework",
+          "image_framework",
           "hiview",
           "eventhandler",
           "init",
+          "input",
           "memmgr_plugin",
           "hicollie",
           "drivers_peripheral_codec",
-          "hdf_core"
+          "hdf_core",
+          "ability_base",
+          "ability_runtime",
+          "bundle_framework",
+          "relational_store",
+          "resource_management"
         ],
         "third_party": [
           "glib",
@@ -73,6 +80,7 @@
           "base_group": [],
           "fwk_group": [
             "//foundation/multimedia/player_framework/interfaces/kits/js:napi_packages",
+            "//foundation/multimedia/player_framework/interfaces/kits/c:capi_packages",
             "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client"
           ],
           "service_group": [
@@ -91,7 +99,8 @@
                 "avcodec_video_decoder.h",
                 "avcodec_video_encoder.h",
                 "player.h",
-                "recorder.h"
+                "recorder.h",
+                "screen_capture.h"
               ],
               "header_base": "//foundation/multimedia/player_framework/interfaces/inner_api/native"
             }

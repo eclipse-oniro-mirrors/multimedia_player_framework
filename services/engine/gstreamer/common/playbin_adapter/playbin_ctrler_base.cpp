@@ -70,9 +70,8 @@ using PlayBinCtrlerWrapper = ThizWrapper<PlayBinCtrlerBase>;
 void PlayBinCtrlerBase::ElementSetup(const GstElement *playbin, GstElement *elem, gpointer userData)
 {
     (void)playbin;
-    if (elem == nullptr || userData == nullptr) {
-        return;
-    }
+    CHECK_AND_RETURN_LOG(elem != nullptr, "elem is nullptr");
+    CHECK_AND_RETURN_LOG(userData != nullptr, "userData is nullptr");
 
     auto thizStrong = PlayBinCtrlerWrapper::TakeStrongThiz(userData);
     if (thizStrong != nullptr) {
@@ -85,9 +84,8 @@ void PlayBinCtrlerBase::ElementUnSetup(const GstElement *playbin, GstElement *su
 {
     (void)playbin;
     (void)subbin;
-    if (child == nullptr || userData == nullptr) {
-        return;
-    }
+    CHECK_AND_RETURN_LOG(child != nullptr, "elem is nullptr");
+    CHECK_AND_RETURN_LOG(userData != nullptr, "userData is nullptr");
 
     auto thizStrong = PlayBinCtrlerWrapper::TakeStrongThiz(userData);
     if (thizStrong != nullptr) {
@@ -97,9 +95,8 @@ void PlayBinCtrlerBase::ElementUnSetup(const GstElement *playbin, GstElement *su
 
 void PlayBinCtrlerBase::SourceSetup(const GstElement *playbin, GstElement *elem, gpointer userData)
 {
-    if (elem == nullptr || userData == nullptr) {
-        return;
-    }
+    CHECK_AND_RETURN_LOG(elem != nullptr, "elem is nullptr");
+    CHECK_AND_RETURN_LOG(userData != nullptr, "userData is nullptr");
 
     auto thizStrong = PlayBinCtrlerWrapper::TakeStrongThiz(userData);
     if (thizStrong != nullptr) {
@@ -157,11 +154,21 @@ bool PlayBinCtrlerBase::IsLiveSource() const
     return false;
 }
 
+bool PlayBinCtrlerBase::EnableBufferingBySysParam() const
+{
+    std::string cmd;
+    int32_t ret = OHOS::system::GetStringParameter("sys.media.player.buffering.enable", cmd, "");
+    if (ret == 0 && !cmd.empty()) {
+        return cmd == "TRUE" ? TRUE : FALSE;
+    }
+    return FALSE;
+}
+
 int32_t PlayBinCtrlerBase::SetSource(const std::string &url)
 {
     std::unique_lock<std::mutex> lock(mutex_);
     uri_ = url;
-    if (url.find("http") == 0 || url.find("https") == 0) {
+    if (url.find("http") == 0 || url.find("https") == 0 || EnableBufferingBySysParam()) {
         isNetWorkPlay_ = true;
     }
 
@@ -193,34 +200,6 @@ int32_t PlayBinCtrlerBase::AddSubSource(const std::string &url)
     return MSERR_OK;
 }
 
-int32_t PlayBinCtrlerBase::Prepare()
-{
-    MEDIA_LOGD("enter");
-
-    std::unique_lock<std::mutex> lock(mutex_);
-
-    int32_t ret = PrepareAsyncInternal();
-    CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
-
-    {
-        MEDIA_LOGD("Prepare Start");
-        preparingCond_.wait(lock);
-        MEDIA_LOGD("Prepare End");
-    }
-
-    if (isErrorHappened_) {
-        MEDIA_LOGE("Prepare failed");
-        GstStateChangeReturn gstRet = gst_element_set_state(GST_ELEMENT_CAST(playbin_), GST_STATE_READY);
-        if (gstRet == GST_STATE_CHANGE_FAILURE) {
-            MEDIA_LOGE("Failed to change playbin's state to %{public}s", gst_element_state_get_name(GST_STATE_READY));
-        }
-        return MSERR_INVALID_STATE;
-    }
-
-    MEDIA_LOGD("exit");
-    return MSERR_OK;
-}
-
 int32_t PlayBinCtrlerBase::PrepareAsync()
 {
     MEDIA_LOGD("enter");
@@ -234,11 +213,7 @@ int32_t PlayBinCtrlerBase::Play()
     MEDIA_LOGD("enter");
 
     std::unique_lock<std::mutex> lock(mutex_);
-
-    if (GetCurrState() == playingState_) {
-        MEDIA_LOGI("already at playing state, skip");
-        return MSERR_OK;
-    }
+    CHECK_AND_RETURN_RET_LOG(GetCurrState() != playingState_, MSERR_OK, "already at playing state");
 
     if (isBuffering_) {
         ChangeState(playingState_);
@@ -257,11 +232,8 @@ int32_t PlayBinCtrlerBase::Pause()
     MEDIA_LOGD("enter");
 
     std::unique_lock<std::mutex> lock(mutex_);
-
-    if (GetCurrState() == pausedState_ || GetCurrState() == preparedState_) {
-        MEDIA_LOGI("already at paused state, skip");
-        return MSERR_OK;
-    }
+    CHECK_AND_RETURN_RET_LOG(GetCurrState() != pausedState_, MSERR_OK, "already at paused state");
+    CHECK_AND_RETURN_RET_LOG(GetCurrState() != preparedState_, MSERR_OK, "already at prepared state");
 
     auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
     int32_t ret = currState->Pause();
@@ -273,12 +245,9 @@ int32_t PlayBinCtrlerBase::Pause()
 int32_t PlayBinCtrlerBase::Seek(int64_t timeUs, int32_t seekOption)
 {
     MEDIA_LOGD("enter");
-
-    if (SEEK_OPTION_TO_GST_SEEK_FLAGS.find(seekOption) == SEEK_OPTION_TO_GST_SEEK_FLAGS.end()) {
-        MEDIA_LOGE("unsupported seek option: %{public}d", seekOption);
-        return MSERR_INVALID_VAL;
-    }
-
+    CHECK_AND_RETURN_RET_LOG(SEEK_OPTION_TO_GST_SEEK_FLAGS.find(seekOption) !=
+        SEEK_OPTION_TO_GST_SEEK_FLAGS.end(), MSERR_INVALID_VAL,
+        "unsupported seek option: %{public}d", seekOption);
     std::unique_lock<std::mutex> lock(mutex_);
     std::unique_lock<std::mutex> cacheLock(cacheCtrlMutex_);
 
@@ -320,25 +289,15 @@ int32_t PlayBinCtrlerBase::Stop(bool needWait)
         MEDIA_LOGD("Stop End");
     }
 
-    if (GetCurrState() != stoppedState_) {
-        MEDIA_LOGE("Stop failed");
-        return MSERR_INVALID_STATE;
-    }
+    CHECK_AND_RETURN_RET_LOG(GetCurrState() == stoppedState_, MSERR_INVALID_STATE, "Stop failed");
     return MSERR_OK;
 }
 
 GstSeekFlags PlayBinCtrlerBase::ChooseSetRateFlags(double rate)
 {
-    GstSeekFlags seekFlags;
-
-    if (rate > 0.0) {
-        seekFlags = static_cast<GstSeekFlags>(GST_SEEK_FLAG_FLUSH |
-            GST_SEEK_FLAG_TRICKMODE | GST_SEEK_FLAG_SNAP_AFTER);
-    } else {
-        seekFlags = static_cast<GstSeekFlags>(GST_SEEK_FLAG_FLUSH |
-            GST_SEEK_FLAG_TRICKMODE | GST_SEEK_FLAG_SNAP_BEFORE);
-    }
-
+    (void)rate;
+    GstSeekFlags seekFlags = static_cast<GstSeekFlags>(GST_SEEK_FLAG_FLUSH |
+        GST_SEEK_FLAG_TRICKMODE | GST_SEEK_FLAG_SNAP_AFTER);
     return seekFlags;
 }
 
@@ -387,13 +346,6 @@ int32_t PlayBinCtrlerBase::SetRate(double rate)
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetRate failed");
 
     return MSERR_OK;
-}
-
-double PlayBinCtrlerBase::GetRate()
-{
-    std::unique_lock<std::mutex> lock(mutex_);
-    MEDIA_LOGI("get rate=%{public}lf", rate_);
-    return rate_;
 }
 
 int32_t PlayBinCtrlerBase::SetLoop(bool loop)
@@ -724,17 +676,6 @@ void PlayBinCtrlerBase::SetupInterruptEventCb()
     AddSignalIds(GST_ELEMENT_CAST(audioSink_), id);
 }
 
-void PlayBinCtrlerBase::SetupAudioStateEventCb()
-{
-    PlayBinCtrlerWrapper *wrapper = new(std::nothrow) PlayBinCtrlerWrapper(shared_from_this());
-    CHECK_AND_RETURN_LOG(wrapper != nullptr, "can not create this wrapper");
-
-    gulong id = g_signal_connect_data(audioSink_, "audio-state-event",
-        G_CALLBACK(&PlayBinCtrlerBase::OnAudioStateEventCb), wrapper,
-        (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory, static_cast<GConnectFlags>(0));
-    AddSignalIds(GST_ELEMENT_CAST(audioSink_), id);
-}
-
 void PlayBinCtrlerBase::SetupAudioSegmentEventCb()
 {
     PlayBinCtrlerWrapper *wrapper = new(std::nothrow) PlayBinCtrlerWrapper(shared_from_this());
@@ -754,7 +695,6 @@ void PlayBinCtrlerBase::SetupCustomElement()
         if (audioSink_ != nullptr) {
             g_object_set(playbin_, "audio-sink", audioSink_, nullptr);
             SetupInterruptEventCb();
-            SetupAudioStateEventCb();
             SetupAudioSegmentEventCb();
         }
         videoSink_ = sinkProvider_->CreateVideoSink();
@@ -951,11 +891,27 @@ int32_t PlayBinCtrlerBase::SelectTrack(int32_t index)
         CHECK_AND_RETURN_RET(innerIndex != currentIndex,
             (OnError(MSERR_OK, "This track has already been selected!"), MSERR_OK));
 
+        lastStartTime_ = gst_element_get_start_time(GST_ELEMENT_CAST(playbin_));
         g_object_set(playbin_, "current-audio", innerIndex, nullptr);
         // The seek operation clears the original audio data and re parses the new track data.
         isTrackChanging_ = true;
         trackChangeType_ = MediaType::MEDIA_TYPE_AUD;
         SeekInternal(seekPos_, IPlayBinCtrler::PlayBinSeekMode::CLOSET_SYNC);
+        CANCEL_SCOPE_EXIT_GUARD(0);
+    } else if (trackType == MediaType::MEDIA_TYPE_SUBTITLE) {
+        int32_t currentIndex = -1;
+        g_object_get(playbin_, "current-text", &currentIndex, nullptr);
+        CHECK_AND_RETURN_RET((!hasSubtitleTrackSelected_ || innerIndex != currentIndex),
+            (OnError(MSERR_OK, "This track has already been selected!"), MSERR_OK));
+
+        g_object_set(subtitleSink_, "change-track", true, nullptr);
+        lastStartTime_ = gst_element_get_start_time(GST_ELEMENT_CAST(playbin_));
+        gst_element_set_start_time(GST_ELEMENT_CAST(playbin_), GST_CLOCK_TIME_NONE);
+        g_object_set(playbin_, "current-text", innerIndex, nullptr);
+        hasSubtitleTrackSelected_ = true;
+        g_object_set(subtitleSink_, "enable-display", hasSubtitleTrackSelected_, nullptr);
+        isTrackChanging_ = true;
+        trackChangeType_ = MediaType::MEDIA_TYPE_SUBTITLE;
         CANCEL_SCOPE_EXIT_GUARD(0);
     } else {
         OnError(MSERR_INVALID_VAL, "The track type does not support this operation!");
@@ -978,7 +934,7 @@ int32_t PlayBinCtrlerBase::DeselectTrack(int32_t index)
     CHECK_AND_RETURN_RET(ret == MSERR_OK, (OnError(ret, "Invalid track index!"), ret));
     CHECK_AND_RETURN_RET(innerIndex >= 0,
         (OnError(MSERR_INVALID_OPERATION, "This track has not been selected yet!"), MSERR_INVALID_OPERATION));
-    
+
     if (trackType == MediaType::MEDIA_TYPE_AUD) {
         ret = MSERR_INVALID_OPERATION;
         CHECK_AND_RETURN_RET(GetCurrState() == preparedState_,
@@ -997,6 +953,18 @@ int32_t PlayBinCtrlerBase::DeselectTrack(int32_t index)
         isTrackChanging_ = true;
         trackChangeType_ = MediaType::MEDIA_TYPE_AUD;
         SeekInternal(seekPos_, IPlayBinCtrler::PlayBinSeekMode::CLOSET_SYNC);
+        CANCEL_SCOPE_EXIT_GUARD(0);
+    } else if (trackType == MediaType::MEDIA_TYPE_SUBTITLE) {
+        ret = MSERR_INVALID_OPERATION;
+        int32_t currentIndex = -1;
+        g_object_get(playbin_, "current-text", &currentIndex, nullptr);
+        CHECK_AND_RETURN_RET((hasSubtitleTrackSelected_ && innerIndex == currentIndex),
+            (OnError(ret, "This track has not been selected yet!"), ret));
+
+        hasSubtitleTrackSelected_ = false;
+        g_object_set(subtitleSink_, "enable-display", hasSubtitleTrackSelected_, nullptr);
+        trackChangeType_ = MediaType::MEDIA_TYPE_SUBTITLE;
+        ReportTrackChange();
         CANCEL_SCOPE_EXIT_GUARD(0);
     } else {
         OnError(MSERR_INVALID_VAL, "The track type does not support this operation!");
@@ -1021,7 +989,11 @@ int32_t PlayBinCtrlerBase::GetCurrentTrack(int32_t trackType, int32_t &index)
     } else if (trackType == MediaType::MEDIA_TYPE_VID) {
         g_object_get(playbin_, "current-video", &innerIndex, nullptr);
     } else {
-        g_object_get(playbin_, "current-text", &innerIndex, nullptr);
+        if (hasSubtitleTrackSelected_) {
+            g_object_get(playbin_, "current-text", &innerIndex, nullptr);
+        } else {
+            innerIndex = -1;
+        }
     }
 
     if (innerIndex >= 0) {
@@ -1290,16 +1262,6 @@ void PlayBinCtrlerBase::OnInterruptEventCb(const GstElement *audioSink, const ui
     thizStrong->ReportMessage(msg);
 }
 
-void PlayBinCtrlerBase::OnAudioStateEventCb(const GstElement *audioSink, const uint32_t audioState, gpointer userData)
-{
-    (void)audioSink;
-    auto thizStrong = PlayBinCtrlerWrapper::TakeStrongThiz(userData);
-    CHECK_AND_RETURN(thizStrong != nullptr);
-    int32_t value = static_cast<int32_t>(audioState);
-    PlayBinMessage msg { PLAYBIN_MSG_AUDIO_SINK, PLAYBIN_MSG_AUDIO_STATE_EVENT, 0, value };
-    thizStrong->ReportMessage(msg);
-}
-
 void PlayBinCtrlerBase::OnAudioSegmentEventCb(const GstElement *audioSink, gpointer userData)
 {
     (void)audioSink;
@@ -1380,11 +1342,40 @@ void PlayBinCtrlerBase::OnAudioChanged()
     ReportMessage(msg);
 }
 
+void PlayBinCtrlerBase::OnSubtitleChanged()
+{
+    CHECK_AND_RETURN(playbin_ != nullptr && trackParse_ != nullptr);
+    if (!trackParse_->FindTrackInfo()) {
+        MEDIA_LOGI("The plugin has been cleared, no need to report it");
+        return;
+    }
+
+    int32_t index;
+    if (!hasSubtitleTrackSelected_) {
+        index = -1;
+        MEDIA_LOGI("SubtitleChanged, current text: -1");
+    } else {
+        int32_t subtitleIndex = -1;
+        g_object_get(playbin_, "current-text", &subtitleIndex, nullptr);
+        MEDIA_LOGI("SubtitleChanged, current text: %{public}d", subtitleIndex);
+        CHECK_AND_RETURN(trackParse_->GetTrackIndex(subtitleIndex, MediaType::MEDIA_TYPE_SUBTITLE, index) == MSERR_OK);
+    }
+
+    Format format;
+    (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_TRACK_INDEX), index);
+    (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_IS_SELECT), true);
+    PlayBinMessage msg = { PlayBinMsgType::PLAYBIN_MSG_SUBTYPE,
+        PlayBinMsgSubType::PLAYBIN_SUB_MSG_SUBTITLE_CHANGED, 0, format };
+    ReportMessage(msg);
+}
+
 void PlayBinCtrlerBase::ReportTrackChange()
 {
     MEDIA_LOGI("Seek event completed, report track change!");
     if (trackChangeType_ == MediaType::MEDIA_TYPE_AUD) {
         OnAudioChanged();
+    } else if (trackChangeType_ == MediaType::MEDIA_TYPE_SUBTITLE) {
+        OnSubtitleChanged();
     }
     OnTrackDone();
 }

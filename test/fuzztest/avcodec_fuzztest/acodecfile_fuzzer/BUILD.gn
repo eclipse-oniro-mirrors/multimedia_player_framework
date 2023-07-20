@@ -101,8 +101,8 @@ ohos_fuzztest("ACodecFileFuzzTest") {
     "../../../../../../../foundation/window/window_manager/wm:libwm",
   ]
   external_deps = [
-    "graphic_standard:surface",
-    "hiviewdfx_hilog_native:libhilog",
+    "graphic_2d:surface",
+    "hilog:libhilog",
     "player_framework:media_client",
   ]
 }

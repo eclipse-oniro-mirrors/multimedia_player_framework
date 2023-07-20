@@ -36,13 +36,6 @@ PlayerCodecCtrl::~PlayerCodecCtrl()
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
     notifier_ = nullptr;
-    for (auto &it : elementMap_) {
-        if (it.second.signalId != 0) {
-            g_signal_handler_disconnect(it.first, it.second.signalId);
-            it.second.signalId = 0;
-        }
-        gst_object_unref(it.first);
-    }
     elementMap_.clear();
 }
 
@@ -92,7 +85,12 @@ void PlayerCodecCtrl::DetectCodecSetup(const std::string &metaStr, GstElement *s
     std::lock_guard<std::mutex> lock(mutex_);
     MEDIA_LOGD("Codec Setup");
     SetupCodecCb(metaStr, src, videoSink, notifier);
-    SetupCodecBufferNum(metaStr, src);
+    if (IsFirstCodecSetup()) {
+        SetupCodecBufferNum(metaStr, videoSink);
+        MEDIA_LOGI("Set isHardwareDec_ %{public}d", isHardwareDec_);
+        g_object_set(videoSink, "is-hardware-decoder", isHardwareDec_, nullptr);
+        isHEBCMode_ = isHardwareDec_;
+    }
 }
 
 void PlayerCodecCtrl::SetupCodecBufferNum(const std::string &metaStr, GstElement *src) const
@@ -152,6 +150,9 @@ void PlayerCodecCtrl::HlsSwichSoftAndHardCodec(GstElement *videoSink)
         g_object_set(G_OBJECT(videoSink), "max-pool-capacity", MAX_SOFT_BUFFERS, nullptr);
         g_object_set(G_OBJECT(videoSink), "cache-buffers-num", DEFAULT_CACHE_BUFFERS, nullptr);
     }
+    MEDIA_LOGI("Set isHardwareDec_ %{public}d", codecTypeList_.front());
+    g_object_set(videoSink, "is-hardware-decoder", codecTypeList_.front(), nullptr);
+    isHEBCMode_ = codecTypeList_.front();
     g_object_set(G_OBJECT(videoSink), "caps", caps, nullptr);
     gst_caps_unref(caps);
 }
@@ -165,6 +166,33 @@ void PlayerCodecCtrl::EnhanceSeekPerformance(bool enable)
             g_object_set(it.first, "seeking", enable, nullptr);
         }
     }
+}
+
+int32_t PlayerCodecCtrl::GetHEBCMode() const
+{
+    return isHEBCMode_;
+}
+
+bool PlayerCodecCtrl::IsFirstCodecSetup() const
+{
+    return codecTypeList_.size() == 1;
+}
+
+int32_t PlayerCodecCtrl::HandleCodecBuffers(bool enable)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    MEDIA_LOGD("HandleCodecBuffers %{public}d", enable);
+    for (auto &it : elementMap_) {
+        if (it.second.isHardware) {
+            if (enable) {
+                g_object_set(it.first, "free_codec_buffers", enable, nullptr);
+            } else {
+                g_object_set(it.first, "recover_codec_buffers", enable, nullptr);
+            }
+            return MSERR_OK;
+        }
+    }
+    return MSERR_INVALID_OPERATION;
 }
 } // Media
 } // OHOS

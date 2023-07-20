@@ -20,7 +20,6 @@ declare_args() {
   multimedia_player_framework_support_codec_js = false
   multimedia_player_framework_support_metadata = true
   multimedia_player_framework_support_gstreamer = true
-  multimedia_player_framework_support_histreamer = true
   multimedia_player_framework_support_video = true
   multimedia_player_framework_support_jsapi = true
   multimedia_player_framework_support_capi = true
@@ -28,6 +27,7 @@ declare_args() {
   multimedia_player_framework_support_xcollie = true
   multimedia_player_framework_support_jsstack = true
   multimedia_player_framework_support_seccomp = false
+  multimedia_player_framework_support_screen_capture = true
   if (defined(build_seccomp) && build_seccomp) {
     multimedia_player_framework_support_seccomp = true
   }
@@ -44,7 +44,7 @@ declare_args() {
   }
   multimedia_player_framework_support_avsession_background = false
   if (defined(global_parts_info) &&
-      defined(global_parts_info.multimedia_multimedia_av_session)) {
+      defined(global_parts_info.multimedia_av_session)) {
     multimedia_player_framework_support_avsession_background = true
   }
 }
@@ -97,10 +97,6 @@ if (multimedia_player_framework_support_video) {
   player_framework_defines += [ "SUPPORT_AUDIO_ONLY" ]
 }
 
-if (multimedia_player_framework_support_histreamer) {
-  player_framework_defines += [ "SUPPORT_HISTREAMER" ]
-}
-
 if (multimedia_player_framework_support_xcollie) {
   player_framework_defines += [ "HICOLLIE_ENABLE" ]
 }
@@ -116,3 +112,13 @@ if (use_memmgr_plugin || use_memmgr) {
 if (multimedia_player_framework_support_monitor) {
   player_framework_defines += [ "USE_MONITOR" ]
 }
+
+if (multimedia_player_framework_support_screen_capture) {
+  player_framework_defines += [ "SUPPORT_SCREEN_CAPTURE" ]
+} else {
+  player_framework_defines += [ "UNSUPPORT_SCREEN_CAPTURE" ]
+}
+
+# Config path
+MEDIA_PLAYER_ROOT_DIR = "//foundation/multimedia/player_framework"
+MEDIA_PLAYER_GRAPHIC = "//foundation/graphic/graphic_2d"
