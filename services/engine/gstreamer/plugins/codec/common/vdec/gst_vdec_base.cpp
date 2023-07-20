@@ -1389,7 +1389,7 @@ static GstFlowReturn gst_vdec_base_format_change(GstVdecBase *self)
 
     g_mutex_lock(&self->format_changed_lock);
     ON_SCOPE_EXIT(0) { g_mutex_unlock(&self->format_changed_lock); };
-    if (self->unsupport_format_changed || !selt->decoder->IsFormatChanged) {
+    if (self->unsupport_format_changed || !self->decoder->IsFormatChanged()) {
         return GST_FLOW_OK;
     }
 
