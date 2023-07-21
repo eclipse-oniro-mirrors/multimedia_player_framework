@@ -688,6 +688,10 @@ static gboolean gst_vdec_base_flush(GstVideoDecoder *decoder)
 {
     GstVdecBase *self = GST_VDEC_BASE(decoder);
     g_return_val_if_fail(self != nullptr, FALSE);
+
+    g_mutex_lock(&self->format_changed_lock);
+    ON_SCOPE_EXIT(0) { g_mutex_unlock(&self->format_changed_lock); };
+
     g_return_val_if_fail(self->decoder != nullptr, FALSE);
     GST_DEBUG_OBJECT(self, "Flush start");
 

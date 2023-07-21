@@ -91,7 +91,9 @@ int32_t HdiOutBufferMgr::PullBuffer(GstBuffer **buffer)
     CHECK_AND_RETURN_RET_LOG(buffer != nullptr, GST_CODEC_ERROR, "buffer is nullptr");
     std::unique_lock<std::mutex> lock(mutex_);
     bufferCond_.wait(lock, [this]() { return !mBuffers.empty() || isFlushed_ || !isStart_ || isFormatChange_; });
-    if (isFlushed_ || (!isStart_ && !isFormatChange_)) {
+    if (isFormatChange_ && !mBuffers.empty()) {
+        MEDIA_LOGD("format change, waiting mBuffers empty");
+    } else if (isFlushed_ || !isStart_) {
         MEDIA_LOGD("isFlush %{public}d isStart %{public}d", isFlushed_, isStart_);
         return GST_CODEC_FLUSH;
     }
