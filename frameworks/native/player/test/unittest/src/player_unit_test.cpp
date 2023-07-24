@@ -2446,22 +2446,22 @@ HWTEST_F(PlayerUnitTest, Player_AddSubSource_004, TestSize.Level0)
  */
 HWTEST_F(PlayerUnitTest, Player_Media_Error, TestSize.Level0)
 {
-    for (MediaServiceErrCode code = MSERR_OK; code <= MSERR_EXTEND_START + 1; code++) {
-        MSErrorToString(code);
-        MSErrorToExtErrorString(code);
-        MSErrorToExtError(code);
-        MSErrorToExtErrorAPI9String(code);
-        MSErrorToExtErrorAPI9(code);
+    for (int32_t code = MSERR_OK; code <= MSERR_EXTEND_START + 1; code++) {
+        MSErrorToString(static_cast<MediaServiceErrCode>(code));
+        MSErrorToExtErrorString(static_cast<MediaServiceErrCode>(code));
+        MSErrorToExtError(static_cast<MediaServiceErrCode>(code));
+        MSErrorToExtErrorAPI9String(static_cast<MediaServiceErrCode>(code), "test1", "test2");
+        MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(code));
     }
 
-    for (MediaServiceExtErrCode code = MSERR_EXT_OK; code <= MSERR_EXT_EXTEND_START + 1; code++) {
-        MSExtErrorToString(code);
+    for (int32_t code = MSERR_EXT_OK; code <= MSERR_EXT_EXTEND_START + 1; code++) {
+        MSExtErrorToString(static_cast<MediaServiceExtErrCode>(code));
     }
 
-    for (MediaServiceExtErrCodeAPI9 code = MSERR_EXT_API9_OK;
+    for (int32_t code = MSERR_EXT_API9_OK;
         code <= MSERR_EXT_API9_UNSUPPORT_FORMAT + 1; code++) {
-        MSExtErrorAPI9ToString(code);
-        MSExtAVErrorToString(code);
+        MSExtErrorAPI9ToString(static_cast<MediaServiceExtErrCodeAPI9>(code), "test1", "test2");
+        MSExtAVErrorToString(static_cast<MediaServiceExtErrCodeAPI9>(code));
     }
 }
 } // namespace Media
