@@ -135,6 +135,8 @@ enum PlayerOnInfoType : int32_t {
     INFO_TYPE_DEFAULTTRACK,
     /* Return to the end of track processing. */
     INFO_TYPE_TRACK_DONE,
+    /* Return to the end of adding subtitle processing. */
+    INFO_TYPE_ADD_SUBTITLE_DONE,
     /* Return error message to prompt the user. */
     INFO_TYPE_ERROR_MSG,
     /* return the message when subtitle track num updated. */
