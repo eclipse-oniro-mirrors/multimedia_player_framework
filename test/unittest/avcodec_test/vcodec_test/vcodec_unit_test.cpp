@@ -80,7 +80,7 @@ void VCodecUnitTest::TearDown(void)
 
     if (videoEnc_ != nullptr && createCodecSuccess_) {
         EXPECT_EQ(MSERR_OK, videoEnc_->Reset());
-        videoEnc_->Release();
+        EXPECT_EQ(MSERR_OK, videoEnc_->Release());
     }
 }
 
