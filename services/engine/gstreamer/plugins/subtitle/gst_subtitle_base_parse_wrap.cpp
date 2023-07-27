@@ -257,6 +257,7 @@ static GstFlowReturn gst_subtitle_base_push_data(GstSubtitleBaseParse *self, Gst
 
     g_return_val_if_fail(buffer != nullptr, ret);
     ON_SCOPE_EXIT(0) {
+        GST_WARNING_OBJECT(self, "Construct GstBuffer failed");
         gst_buffer_unref(buffer);
         buffer = nullptr;
     };
@@ -768,7 +769,6 @@ GstSubtitleStream *gst_subtitle_get_stream(GstSubtitleBaseParse *base_parse, con
     g_return_val_if_fail(padname != nullptr, nullptr);
     ON_SCOPE_EXIT(0) {
         (void)g_string_free(padname, (gboolean)TRUE);
-        gst_caps_unref(caps);
     };
     g_return_val_if_fail(padname->str != nullptr, nullptr);
     GstPadTemplate *src_pad_template = base_parse->srcpadtmpl;
@@ -783,6 +783,9 @@ GstSubtitleStream *gst_subtitle_get_stream(GstSubtitleBaseParse *base_parse, con
 
     caps = baseclass->get_srcpad_caps_pfn(base_parse, info->stream_id);
     g_return_val_if_fail(caps != nullptr, nullptr);
+    ON_SCOPE_EXIT(1) {
+        gst_caps_unref(caps);
+    };
     g_return_val_if_fail(gst_pad_set_caps(srcpad, caps), nullptr);
     return gst_subtitle_get_stream_handle(base_parse, info, srcpad, caps);
 }
@@ -838,12 +841,13 @@ void gst_subtitle_push_stream_start_event(GstSubtitleBaseParse *base_parse)
             g_free(stream_name);
         };
         g_return_if_fail(event != nullptr);
+        CANCEL_SCOPE_EXIT_GUARD(0);
         const gchar *event_name = gst_event_type_get_name(GST_EVENT_TYPE(event));
         GST_DEBUG_OBJECT(base_parse, "pushing event %s on pad %s",
             event_name, GST_PAD_NAME(base_parse->streams[i]->pad));
 
-        g_return_if_fail(gst_pad_push_event(base_parse->streams[i]->pad, event));
-        CANCEL_SCOPE_EXIT_GUARD(0);
+        (void)gst_pad_push_event(base_parse->streams[i]->pad, event);
+        g_free(stream_name);
     }
 }
 
@@ -877,8 +881,8 @@ gboolean gst_subtitle_set_tags(GstSubtitleBaseParse *base_parse)
         ON_SCOPE_EXIT(0) {
             gst_tag_list_unref(base_parse->streams[i]->tags);
         };
-        GST_DEBUG_OBJECT(base_parse, "new event tag for streams[%d] failed", i);
         g_return_val_if_fail(event != nullptr, FALSE);
+        GST_DEBUG_OBJECT(base_parse, "new event tag for streams[%d]", i);
         const gchar *event_name = gst_event_type_get_name(GST_EVENT_TYPE(event));
         GST_DEBUG_OBJECT(base_parse, "pushing taglist 0x%06" PRIXPTR " on pad %s",
             FAKE_POINTER(base_parse->streams[i]->tags), GST_PAD_NAME(base_parse->streams[i]->pad));
