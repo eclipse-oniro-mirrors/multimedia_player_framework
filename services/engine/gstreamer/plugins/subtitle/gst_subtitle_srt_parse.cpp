@@ -331,7 +331,9 @@ static void srt_fix_up_markup(gchar **text)
         cur = next_tag;
     }
 
-    g_return_if_fail(num_open_tags != 0);
+    if (num_open_tags == 0) {
+        return;
+    }
     GString *s = srt_fix_up_markup_add_tag(num_open_tags, open_tags, *text);
     g_return_if_fail(s != nullptr);
     g_free(*text);

@@ -852,7 +852,9 @@ gboolean gst_subtitle_set_caps(GstSubtitleBaseParse *base_parse)
     g_return_val_if_fail(base_parse != nullptr, FALSE);
 
     gint i;
-    g_return_val_if_fail(base_parse->stream_num != 0, FALSE);
+    if (base_parse->stream_num == 0) {
+        return FALSE;
+    }
     for (i = 0; i < base_parse->stream_num; i++) {
         g_return_val_if_fail(base_parse->streams[i] != nullptr &&
             gst_pad_set_caps(base_parse->streams[i]->pad, base_parse->streams[i]->caps), FALSE);

@@ -542,7 +542,7 @@ void PlayBinCtrlerBase::PlayingState::ProcessPlayingStateChange()
 
 void PlayBinCtrlerBase::PlayingState::ProcessStateChange(const InnerMessage &msg)
 {
-    MEDIA_LOGI("PreparingState::ProcessStateChange");
+    MEDIA_LOGI("PlayingState::ProcessStateChange");
     if (msg.detail1 == GST_STATE_PLAYING && msg.detail2 == GST_STATE_PAUSED && ctrler_.isUserSetPause_) {
         ctrler_.ChangeState(ctrler_.pausedState_);
         ctrler_.isUserSetPause_ = false;
