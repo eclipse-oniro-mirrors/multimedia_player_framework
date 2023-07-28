@@ -137,6 +137,9 @@ void PlayBinCtrlerBase::BaseState::HandleStateChange(const InnerMessage &msg)
         if ((msg.detail1 == GST_STATE_PAUSED && msg.detail2 == GST_STATE_PLAYING) && ctrler_.isNetWorkPlay_) {
             ctrler_.HandleCacheCtrl(ctrler_.cachePercent_);
         }
+        if (msg.detail2 == GST_STATE_READY) {
+            ctrler_.isStopping_ = false;
+        }
     }
 }
 
