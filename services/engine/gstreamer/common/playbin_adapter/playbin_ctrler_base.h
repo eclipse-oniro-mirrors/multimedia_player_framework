@@ -201,7 +201,6 @@ private:
     int64_t seekPos_ = 0;
     int64_t lastTime_ = 0;
 
-    bool isStopping_ = false;
     bool isSeeking_ = false;
     bool isRating_ = false;
     bool isAddingSubtitle_ = false;
