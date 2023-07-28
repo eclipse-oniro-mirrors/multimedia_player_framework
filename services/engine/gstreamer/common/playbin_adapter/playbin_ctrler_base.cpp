@@ -291,8 +291,9 @@ int32_t PlayBinCtrlerBase::Stop(bool needWait)
     }
 
     auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
-    std::unique_lock<std::mutex> cacheLock(cacheCtrlMutex_);
-    g_object_set(playbin_, "state-change", GST_PLAYER_STATUS_READY, nullptr);
+    if (videoSink_ == nullptr) {
+        g_object_set(playbin_, "state-change", GST_PLAYER_STATUS_READY, nullptr);
+    }
     (void)currState->Stop();
 
     {
