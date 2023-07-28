@@ -35,6 +35,7 @@ namespace Media {
 enum GstPlayerStatus : int32_t {
     GST_PLAYER_STATUS_IDLE = 0,
     GST_PLAYER_STATUS_BUFFERING,
+    GST_PLAYER_STATUS_READY,
     GST_PLAYER_STATUS_PAUSED,
     GST_PLAYER_STATUS_PLAYING,
 };
@@ -200,6 +201,7 @@ private:
     int64_t seekPos_ = 0;
     int64_t lastTime_ = 0;
 
+    bool isStopping_ = false;
     bool isSeeking_ = false;
     bool isRating_ = false;
     bool isAddingSubtitle_ = false;

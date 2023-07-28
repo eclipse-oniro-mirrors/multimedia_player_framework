@@ -291,6 +291,9 @@ int32_t PlayBinCtrlerBase::Stop(bool needWait)
     }
 
     auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
+    std::unique_lock<std::mutex> cacheLock(cacheCtrlMutex_);
+    isStopping_ = true;
+    g_object_set(playbin_, "state-change", GST_PLAYER_STATUS_READY, nullptr);
     (void)currState->Stop();
 
     {
@@ -1029,6 +1032,10 @@ int32_t PlayBinCtrlerBase::GetCurrentTrack(int32_t trackType, int32_t &index)
 void PlayBinCtrlerBase::HandleCacheCtrl(int32_t percent)
 {
     MEDIA_LOGI("HandleCacheCtrl percent is %{public}d", percent);
+    if (isStopping_) {
+        MEDIA_LOGI("stopping, no need bufferring");
+        return;
+    }
     if (!isBuffering_) {
         HandleCacheCtrlWhenNoBuffering(percent);
     } else {
