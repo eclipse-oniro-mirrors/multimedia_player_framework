@@ -35,6 +35,7 @@ namespace Media {
 enum GstPlayerStatus : int32_t {
     GST_PLAYER_STATUS_IDLE = 0,
     GST_PLAYER_STATUS_BUFFERING,
+    GST_PLAYER_STATUS_READY,
     GST_PLAYER_STATUS_PAUSED,
     GST_PLAYER_STATUS_PLAYING,
 };
@@ -113,7 +114,7 @@ private:
     static void SourceSetup(const GstElement *playbin, GstElement *elem, gpointer userData);
     static void OnBitRateParseCompleteCb(const GstElement *playbin, uint32_t *bitrateInfo,
         uint32_t bitrateNum, gpointer userData);
-    static void OnSelectBitrateDoneCb(const GstElement *playbin, const char *streamId, gpointer userData);
+    static void OnSelectBitrateDoneCb(const GstElement *playbin, uint32_t bandwidth, gpointer userData);
     static GValueArray *AutoPlugSort(const GstElement *uriDecoder, GstPad *pad, GstCaps *caps,
         GValueArray *factories, gpointer userData);
     static void OnInterruptEventCb(const GstElement *audioSink, const uint32_t eventType, const uint32_t forceType,
@@ -128,7 +129,7 @@ private:
     void OnSourceSetup(const GstElement *playbin, GstElement *src,
         const std::shared_ptr<PlayBinCtrlerBase> &playbinCtrl);
     bool OnVideoDecoderSetup(GstElement &elem);
-    void OnAppsrcMessageReceived(const InnerMessage &msg);
+    bool OnAppsrcMessageReceived(const InnerMessage &msg);
     void OnMessageReceived(const InnerMessage &msg);
     void OnSinkMessageReceived(const PlayBinMessage &msg);
     GValueArray *OnAutoPlugSort(GValueArray &factories);
@@ -146,6 +147,7 @@ private:
     void OnSubtitleChanged();
     void ReportTrackChange();
     void OnTrackDone();
+    void OnAddSubDone();
     void OnError(int32_t errorCode, std::string message);
 
     inline void AddSignalIds(GstElement *element, gulong signalId)
@@ -185,6 +187,7 @@ private:
     bool isInitialized_ = false;
 
     bool isErrorHappened_ = false;
+    std::thread audioSeekThread_;
     std::condition_variable preparingCond_;
     std::condition_variable preparedCond_;
     std::condition_variable stoppingCond_;
@@ -202,6 +205,7 @@ private:
     bool isRating_ = false;
     bool isAddingSubtitle_ = false;
     bool isBuffering_ = false;
+    bool isSelectBitRate_ = false;
     bool isNetWorkPlay_ = false;
     bool isUserSetPlay_ = false;
     bool isUserSetPause_ = false;
@@ -216,6 +220,7 @@ private:
     int32_t trackChangeType_ = MediaType::MEDIA_TYPE_AUD;
     int32_t audioIndex_ = -1;
     bool hasSubtitleTrackSelected_ = true;
+    uint32_t subtitleTrackNum_ = 0;
 
     std::atomic<bool> isDuration_ = false;
     std::atomic<bool> enableLooping_ = false;

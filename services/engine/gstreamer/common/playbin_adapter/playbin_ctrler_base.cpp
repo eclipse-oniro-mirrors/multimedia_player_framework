@@ -42,6 +42,7 @@ namespace {
     constexpr double DEFAULT_RATE = 1.0;
     constexpr uint32_t INTERRUPT_EVENT_SHIFT = 8;
     constexpr uint64_t CONNECT_SPEED_DEFAULT = 4 * 8 * 1024 * 1024;  // 4Mbps
+    constexpr uint32_t MAX_SUBTITLE_TRACK_NUN = 8;
 }
 
 namespace OHOS {
@@ -119,6 +120,9 @@ PlayBinCtrlerBase::~PlayBinCtrlerBase()
         sinkProvider_ = nullptr;
         notifier_ = nullptr;
     }
+    if (audioSeekThread_.joinable()) {
+        audioSeekThread_.join();
+    }
 }
 
 int32_t PlayBinCtrlerBase::Init()
@@ -188,7 +192,14 @@ int32_t PlayBinCtrlerBase::AddSubSource(const std::string &url)
     MEDIA_LOGD("enter");
 
     std::unique_lock<std::mutex> lock(mutex_);
+    ON_SCOPE_EXIT(0) {
+        OnAddSubDone();
+    };
+
     CHECK_AND_RETURN_RET(sinkProvider_ != nullptr, MSERR_INVALID_VAL);
+    CHECK_AND_RETURN_RET(subtitleTrackNum_ < MAX_SUBTITLE_TRACK_NUN,
+        (OnError(MSERR_INVALID_OPERATION, "subtitle tracks exceed the max num limit!"), MSERR_INVALID_OPERATION));
+
     if (subtitleSink_ == nullptr) {
         subtitleSink_ = sinkProvider_->CreateSubtitleSink();
         g_object_set(playbin_, "text-sink", subtitleSink_, nullptr);
@@ -196,6 +207,7 @@ int32_t PlayBinCtrlerBase::AddSubSource(const std::string &url)
 
     isAddingSubtitle_ = true;
     g_object_set(playbin_, "add-suburi", url.c_str(), nullptr);
+    CANCEL_SCOPE_EXIT_GUARD(0);
 
     return MSERR_OK;
 }
@@ -279,6 +291,9 @@ int32_t PlayBinCtrlerBase::Stop(bool needWait)
     }
 
     auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
+    if (videoSink_ == nullptr) {
+        g_object_set(playbin_, "state-change", GST_PLAYER_STATUS_READY, nullptr);
+    }
     (void)currState->Stop();
 
     {
@@ -401,15 +416,17 @@ int32_t PlayBinCtrlerBase::SetAudioEffectMode(const int32_t effectMode)
 int32_t PlayBinCtrlerBase::SelectBitRate(uint32_t bitRate)
 {
     std::unique_lock<std::mutex> lock(mutex_);
+    MEDIA_LOGD("enter SelectBitRate, bandwidth: %{public}u", bitRate);
     if (bitRateVec_.empty()) {
         MEDIA_LOGE("BitRate is empty");
         return MSERR_INVALID_OPERATION;
     }
-    if (connectSpeed_ == bitRate) {
+    if (connectSpeed_ == bitRate && !isSelectBitRate_) {
         PlayBinMessage msg = { PLAYBIN_MSG_BITRATEDONE, 0, static_cast<int32_t>(bitRate), {} };
         ReportMessage(msg);
     } else {
-        connectSpeed_ = bitRate;
+        MEDIA_LOGD("set bandwidth to: %{public}u", bitRate);
+        isSelectBitRate_ = true;
         g_object_set(playbin_, "connection-speed", static_cast<uint64_t>(bitRate), nullptr);
     }
     return MSERR_OK;
@@ -450,9 +467,11 @@ int32_t PlayBinCtrlerBase::Reset() noexcept
     isRating_ = false;
     isAddingSubtitle_ = false;
     isBuffering_ = false;
+    isSelectBitRate_ = false;
     cachePercent_ = BUFFER_PERCENT_THRESHOLD;
     isDuration_ = false;
     isUserSetPause_ = false;
+    subtitleTrackNum_ = 0;
 
     MEDIA_LOGD("exit");
     return MSERR_OK;
@@ -514,7 +533,7 @@ void PlayBinCtrlerBase::DoInitializeForHttp()
         PlayBinCtrlerWrapper *wrap = new(std::nothrow) PlayBinCtrlerWrapper(shared_from_this());
         CHECK_AND_RETURN_LOG(wrap != nullptr, "can not create this wrap");
 
-        id = g_signal_connect_data(playbin_, "video-changed",
+        id = g_signal_connect_data(videoSink_, "bandwidth-change",
             G_CALLBACK(&PlayBinCtrlerBase::OnSelectBitrateDoneCb), wrap,
             (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory, static_cast<GConnectFlags>(0));
         AddSignalIds(GST_ELEMENT_CAST(playbin_), id);
@@ -656,8 +675,16 @@ int32_t PlayBinCtrlerBase::SeekInternal(int64_t timeUs, int32_t seekOption)
         GST_SEEK_TYPE_SET, timeNs, GST_SEEK_TYPE_SET, GST_CLOCK_TIME_NONE);
     CHECK_AND_RETURN_RET_LOG(event != nullptr, MSERR_NO_MEMORY, "seek failed");
 
-    gboolean ret = gst_element_send_event(GST_ELEMENT_CAST(playbin_), event);
-    CHECK_AND_RETURN_RET_LOG(ret, MSERR_SEEK_FAILED, "seek failed");
+    if (videoSink_ != nullptr) {
+        gboolean ret = gst_element_send_event(GST_ELEMENT_CAST(playbin_), event);
+        CHECK_AND_RETURN_RET_LOG(ret, MSERR_SEEK_FAILED, "seek failed");
+    } else {
+        audioSeekThread_ = std::thread([](auto playbin_, auto event) {
+            MEDIA_LOGI("audio start async seek");
+            (void)gst_element_send_event(GST_ELEMENT_CAST(playbin_), event);
+        }, playbin_, event);
+        audioSeekThread_.detach();
+    }
 
     return MSERR_OK;
 }
@@ -1038,7 +1065,8 @@ void PlayBinCtrlerBase::HandleCacheCtrlWhenNoBuffering(int32_t percent)
             g_object_set(playbin_, "state-change", GST_PLAYER_STATUS_BUFFERING, nullptr);
         }
 
-        if (GetCurrState() == playingState_ && !isSeeking_ && !isRating_ && !isAddingSubtitle_ && !isUserSetPause_) {
+        if (GetCurrState() == playingState_ && !isSeeking_ && !isRating_ &&
+            !isAddingSubtitle_ && !isUserSetPause_ && !isSelectBitRate_) {
             std::unique_lock<std::mutex> lock(cacheCtrlMutex_);
             MEDIA_LOGI("HandleCacheCtrl percent is %{public}d, begin set to paused", percent);
             GstStateChangeReturn ret = gst_element_set_state(GST_ELEMENT_CAST(playbin_), GST_STATE_PAUSED);
@@ -1382,6 +1410,13 @@ void PlayBinCtrlerBase::OnTrackDone()
     ReportMessage(msg);
 }
 
+void PlayBinCtrlerBase::OnAddSubDone()
+{
+    PlayBinMessage msg = { PlayBinMsgType::PLAYBIN_MSG_SUBTYPE,
+        PlayBinMsgSubType::PLAYBIN_SUB_MSG_ADD_SUBTITLE_DONE, 0, {} };
+    ReportMessage(msg);
+}
+
 void PlayBinCtrlerBase::OnError(int32_t errorCode, std::string message)
 {
     // There is no limit on the number of reports and the state machine is not changed.
@@ -1390,19 +1425,20 @@ void PlayBinCtrlerBase::OnError(int32_t errorCode, std::string message)
     ReportMessage(msg);
 }
 
-void PlayBinCtrlerBase::OnSelectBitrateDoneCb(const GstElement *playbin, const char *streamId, gpointer userData)
+void PlayBinCtrlerBase::OnSelectBitrateDoneCb(const GstElement *playbin, uint32_t bandwidth, gpointer userData)
 {
     (void)playbin;
     auto thizStrong = PlayBinCtrlerWrapper::TakeStrongThiz(userData);
-    MEDIA_LOGD("Get streamId is: %{public}s", streamId);
-    if (thizStrong != nullptr && strcmp(streamId, "") != 0) {
-        int32_t bandwidth = thizStrong->trackParse_->GetHLSStreamBandwidth(streamId);
+    MEDIA_LOGD("OnSelectBitrateDoneCb, Get bandwidth is: %{public}u", bandwidth);
+    if (thizStrong != nullptr && bandwidth != 0) {
+        thizStrong->isSelectBitRate_ = false;
+        thizStrong->connectSpeed_ = bandwidth;
         PlayBinMessage msg = { PLAYBIN_MSG_BITRATEDONE, 0, bandwidth, {} };
         thizStrong->ReportMessage(msg);
     }
 }
 
-void PlayBinCtrlerBase::OnAppsrcMessageReceived(const InnerMessage &msg)
+bool PlayBinCtrlerBase::OnAppsrcMessageReceived(const InnerMessage &msg)
 {
     MEDIA_LOGI("in OnAppsrcMessageReceived");
     if (msg.type == INNER_MSG_ERROR) {
@@ -1412,25 +1448,29 @@ void PlayBinCtrlerBase::OnAppsrcMessageReceived(const InnerMessage &msg)
         ReportMessage(message);
     } else if (msg.type == INNER_MSG_BUFFERING) {
         if (msg.detail1 < static_cast<float>(BUFFER_LOW_PERCENT_DEFAULT) / BUFFER_HIGH_PERCENT_DEFAULT *
-            BUFFER_PERCENT_THRESHOLD && GetCurrState() == playingState_ &&
-            !isSeeking_ && !isRating_ && !isUserSetPause_) {
+            BUFFER_PERCENT_THRESHOLD) {
+            CHECK_AND_RETURN_RET_LOG(GetCurrState() == playingState_ && !isSeeking_ && !isRating_ && !isUserSetPause_,
+                false, "ignore change to pause");
             std::unique_lock<std::mutex> lock(cacheCtrlMutex_);
             MEDIA_LOGI("begin set to pause");
             GstStateChangeReturn ret = gst_element_set_state(GST_ELEMENT_CAST(playbin_), GST_STATE_PAUSED);
             if (ret == GST_STATE_CHANGE_FAILURE) {
                 MEDIA_LOGE("Failed to change playbin's state to GST_STATE_PAUSED");
-                return;
+                return false;
             }
-        } else if (msg.detail1 >= BUFFER_PERCENT_THRESHOLD && GetCurrState() == playingState_ && !isUserSetPause_) {
+        } else if (msg.detail1 >= BUFFER_PERCENT_THRESHOLD) {
+            CHECK_AND_RETURN_RET_LOG(GetCurrState() == playingState_ && !isUserSetPause_,
+                false, "ignore change to playing");
             std::unique_lock<std::mutex> lock(cacheCtrlMutex_);
             MEDIA_LOGI("begin set to play");
             GstStateChangeReturn ret = gst_element_set_state(GST_ELEMENT_CAST(playbin_), GST_STATE_PLAYING);
             if (ret == GST_STATE_CHANGE_FAILURE) {
                 MEDIA_LOGE("Failed to change playbin's state to GST_STATE_PLAYING");
-                return;
+                return false;
             }
         }
     }
+    return true;
 }
 
 void PlayBinCtrlerBase::OnMessageReceived(const InnerMessage &msg)

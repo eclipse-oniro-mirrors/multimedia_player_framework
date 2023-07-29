@@ -161,7 +161,11 @@ static gboolean gst_subtitle_base_parse_src_event(GstPad *pad, GstObject *parent
             gboolean active = FALSE;
 
             const GstStructure *structure = gst_event_get_structure(event);
-            g_return_val_if_fail(structure != nullptr, ret);
+            if (structure == nullptr || gst_structure_get_name(structure) == nullptr) {
+                gst_event_unref(event);
+                break;
+            }
+
             if (strcmp(gst_structure_get_name(structure), "select-stream") == 0) {
                 if (!gst_structure_get_boolean(structure, "activity", &active)) {
                     active = TRUE;

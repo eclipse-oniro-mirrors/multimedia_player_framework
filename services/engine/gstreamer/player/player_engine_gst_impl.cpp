@@ -370,6 +370,16 @@ void PlayerEngineGstImpl::HandleTrackDone(const PlayBinMessage &msg)
     }
 }
 
+void PlayerEngineGstImpl::HandleAddSubDone(const PlayBinMessage &msg)
+{
+    (void)msg;
+    std::shared_ptr<IPlayerEngineObs> notifyObs = obs_.lock();
+    if (notifyObs != nullptr) {
+        Format format;
+        notifyObs->OnInfo(INFO_TYPE_ADD_SUBTITLE_DONE, 0, format);
+    }
+}
+
 void PlayerEngineGstImpl::HandleOnError(const PlayBinMessage &msg)
 {
     Format format;
@@ -529,6 +539,7 @@ int32_t PlayerEngineGstImpl::PlayBinCtrlerInit()
     subMsgHandler_[PLAYBIN_SUB_MSG_SUBTITLE_CHANGED] = &PlayerEngineGstImpl::HandleTrackChanged;
     subMsgHandler_[PLAYBIN_SUB_MSG_DEFAULE_TRACK] = &PlayerEngineGstImpl::HandleDefaultTrack;
     subMsgHandler_[PLAYBIN_SUB_MSG_TRACK_DONE] = &PlayerEngineGstImpl::HandleTrackDone;
+    subMsgHandler_[PLAYBIN_SUB_MSG_ADD_SUBTITLE_DONE] = &PlayerEngineGstImpl::HandleAddSubDone;
     subMsgHandler_[PLAYBIN_SUB_MSG_ONERROR] = &PlayerEngineGstImpl::HandleOnError;
     subMsgHandler_[PLAYBIN_SUB_MSG_TRACK_NUM_UPDATE] = &PlayerEngineGstImpl::HandleTrackNumUpdate;
     subMsgHandler_[PLAYBIN_SUB_MSG_TRACK_INFO_UPDATE] = &PlayerEngineGstImpl::HandleTrackInfoUpdate;
@@ -761,6 +772,7 @@ int32_t PlayerEngineGstImpl::Stop()
     CHECK_AND_RETURN_RET_LOG(playBinCtrler_ != nullptr, MSERR_INVALID_OPERATION, "playBinCtrler_ is nullptr");
 
     MEDIA_LOGD("Stop in");
+    codecCtrl_.StopFormatChange();
     playBinCtrler_->Stop(true);
     return MSERR_OK;
 }
