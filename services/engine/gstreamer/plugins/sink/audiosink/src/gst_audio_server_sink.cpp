@@ -39,8 +39,8 @@ namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "audio_server_sink"};
     constexpr float DEFAULT_VOLUME = 1.0f;
     constexpr uint32_t DEFAULT_BITS_PER_SAMPLE = 16;
-    constexpr uint64_t AUDIO_EFFECT_NONE_RENDER_DELAY = 325000000; // unit ns, empirical value
-    constexpr uint64_t AUDIO_EFFECT_DEFAULT_RENDER_DELAY = 500000000; // unit ns, empirical value
+    constexpr uint64_t AUDIO_EFFECT_NONE_RENDER_DELAY = 210000000; // unit ns, empirical value
+    constexpr uint64_t AUDIO_EFFECT_DEFAULT_RENDER_DELAY = 210000000; // unit ns, empirical value
 }
 
 enum {
