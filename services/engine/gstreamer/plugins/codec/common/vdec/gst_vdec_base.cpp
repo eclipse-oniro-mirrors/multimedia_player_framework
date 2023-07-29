@@ -1267,7 +1267,7 @@ static GstVideoCodecFrame *gst_vdec_base_new_frame(GstVdecBase *self, GstBuffer 
         if (!self->pts_list.empty()) {
             frame->pts = self->pts_list.front();
             GST_DEBUG_OBJECT(self, "Pts %" G_GUINT64_FORMAT, frame->pts);
-            self->pts_list.pop_front();            
+            self->pts_list.pop_front();
         }
     }
     g_mutex_unlock(&self->lock);
