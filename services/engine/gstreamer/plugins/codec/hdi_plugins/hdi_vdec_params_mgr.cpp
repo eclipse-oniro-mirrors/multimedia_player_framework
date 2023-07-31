@@ -215,7 +215,7 @@ int32_t HdiVdecParamsMgr::VideoSurfaceInit(GstElement *element)
     CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "HdiGetParameter failed");
     CHECK_AND_RETURN_RET_LOG(supportBufferTypes.bufferTypes & CODEC_BUFFER_TYPE_HANDLE,
         GST_CODEC_ERROR, "No CODEC_BUFFER_TYPE_HANDLE, support bufferType %{public}d",
-            supportBufferTypes.bufferTypes);
+        supportBufferTypes.bufferTypes);
 
     UseBufferType useBufferTypes;
     InitHdiParam(useBufferTypes, verInfo_);
