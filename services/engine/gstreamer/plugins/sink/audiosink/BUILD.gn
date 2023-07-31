@@ -85,8 +85,9 @@ ohos_shared_library("gst_audio_server_sink") {
     "//third_party/glib:gobject",
     "//third_party/gstreamer/gstreamer:gstbase",
     "//third_party/gstreamer/gstreamer:gstreamer",
-    "//third_party/bounds_checking_function:libsec_shared",
   ]
+
+  deps += [ "//third_party/bounds_checking_function:libsec_shared" ]
 
   external_deps = [
     "audio_framework:audio_client",
