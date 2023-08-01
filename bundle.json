@@ -100,7 +100,7 @@
             }
           },
           {
-            "type": "none",
+            "type": "so",
             "name": "//foundation/multimedia/player_framework/services/utils:media_service_utils",
             "header": {
               "header_files": [
