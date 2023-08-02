@@ -223,7 +223,6 @@ static void gst_subtitle_base_parse_init(GstSubtitleBaseParse *base_parse, gpoin
 
     base_parse->seek_snap_after = FALSE;
     base_parse->switching = FALSE;
-    base_parse->first_segment = TRUE;
     g_mutex_init(&base_parse->buffermutex);
     g_mutex_init((GMutex *)&base_parse->pushmutex);
     g_mutex_init(&base_parse->segmentmutex);
@@ -241,8 +240,14 @@ static GstFlowReturn default_handle_buffer(GstSubtitleBaseParse *self)
 
     while (!self->flushing) {
         /* determine whether the subclass overrides read_frame_pfn() and decode_frame_pfn() */
-        g_return_val_if_fail(baseclass->read_frame_pfn != nullptr, ret);
-        g_return_val_if_fail(baseclass->decode_frame_pfn != nullptr, ret);
+        if (G_UNLIKELY(baseclass->read_frame_pfn == nullptr)) {
+            GST_ERROR_OBJECT(self, "have not override ReadFrame function");
+            break;
+        }
+        if (G_UNLIKELY(baseclass->decode_frame_pfn == nullptr)) {
+            GST_ERROR_OBJECT(self, "have not override DecodeFrame function");
+            break;
+        }
 
         frame.data = nullptr;
         frame.len = 0;
@@ -598,7 +603,6 @@ static GstStateChangeReturn gst_subtitle_base_parse_change_state(GstElement *ele
             self->need_srcpad_caps = TRUE;
             self->first_buffer = TRUE;
             self->recv_eos = FALSE;
-            self->first_segment = TRUE;
             break;
         }
         default: {
@@ -618,7 +622,6 @@ static GstStateChangeReturn gst_subtitle_base_parse_change_state(GstElement *ele
     switch (transition) {
         case GST_STATE_CHANGE_PAUSED_TO_READY: {
             self->need_srcpad_caps = TRUE;
-            self->first_segment = TRUE;
             if (self->from_internal) {
                 gst_subtitle_clear_cache_queue(self);
             }
