@@ -111,8 +111,7 @@ int32_t MediaServerManager::Dump(int32_t fd, const std::vector<std::u16string> &
         OHOS::INVALID_OPERATION, "Failed to write CodecServer information");
 
     dumpString += "------------------AVMetaServer------------------\n";
-    ret = WriteInfo(fd, dumpString, dumperTbl_[StubType::AVMETADATAHELPER],
-        argSets.find(u"codec") != argSets.end());
+    ret = WriteInfo(fd, dumpString, dumperTbl_[StubType::AVMETADATAHELPER], false);
     CHECK_AND_RETURN_RET_LOG(ret == NO_ERROR,
         OHOS::INVALID_OPERATION, "Failed to write AVMetaServer information");
 
