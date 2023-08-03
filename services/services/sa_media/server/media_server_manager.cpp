@@ -590,7 +590,7 @@ void MediaServerManager::DestroyDumperForPid(pid_t pid)
             }
         }
     }
-    (void)Dump(-1, std::vector<std::u16string>())
+    (void)Dump(-1, std::vector<std::u16string>());
 }
 
 void MediaServerManager::AsyncExecutor::Commit(sptr<IRemoteObject> obj)
