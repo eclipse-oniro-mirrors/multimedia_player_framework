@@ -47,9 +47,7 @@ void MediaServer::OnStart()
 {
     MEDIA_LOGD("MediaServer OnStart");
     bool res = Publish(this);
-    if (res) {
-        MEDIA_LOGD("MediaServer OnStart res=%{public}d", res);
-    }
+    MEDIA_LOGD("MediaServer OnStart res=%{public}d", res);
 }
 
 void MediaServer::OnStop()
@@ -62,15 +60,18 @@ sptr<IRemoteObject> MediaServer::GetSubSystemAbility(IStandardMediaService::Medi
 {
     int32_t ret = MediaServiceStub::SetDeathListener(listener);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed set death listener");
-    CHECK_AND_RETURN_RET_LOG(abilityMap_.count(subSystemId) > 0, nullptr, "media client need check subSystemId");
+    CHECK_AND_RETURN_RET_LOG(abilityMap_.count(subSystemId) > 0, nullptr,
+        "media client need check subSystemId = %{public}d", subSystemId);
     return MediaServerManager::GetInstance().CreateStubObject(abilityMap_[subSystemId]);
 }
 
 int32_t MediaServer::Dump(int32_t fd, const std::vector<std::u16string> &args)
 {
-    CHECK_AND_RETURN_RET_LOG(fd > 0, OHOS::INVALID_OPERATION, "Failed to check fd");
-    CHECK_AND_RETURN_RET_LOG(MediaServerManager::GetInstance().Dump(fd, args) == OHOS::NO_ERROR,
-        OHOS::INVALID_OPERATION, "Failed to call MediaServerManager::Dump");
+    CHECK_AND_RETURN_RET_LOG(fd > 0, OHOS::INVALID_OPERATION, "Failed to check fd.");
+
+    auto ret = MediaServerManager::GetInstance().Dump(fd, args);
+    CHECK_AND_RETURN_RET_LOG(ret == NO_ERROR,
+        OHOS::INVALID_OPERATION, "Failed to call MediaServerManager::Dump.");
     return OHOS::NO_ERROR;
 }
 } // namespace Media

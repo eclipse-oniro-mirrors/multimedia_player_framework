@@ -20,11 +20,10 @@
 #include <atomic>
 #include "securec.h"
 #include "ipc_types.h"
-#include "iremote_broker.h"
 #include "iremote_proxy.h"
 #include "iremote_stub.h"
 #include "i_screen_capture_service.h"
-#include "../../engine_intf/i_media_stub_service.h"
+#include "i_media_stub_service.h"
 
 namespace OHOS {
 namespace Media {

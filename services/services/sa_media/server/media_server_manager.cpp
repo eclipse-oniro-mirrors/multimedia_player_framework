@@ -49,7 +49,7 @@ int32_t WriteInfo(int32_t fd, std::string &dumpString, std::vector<Dumper> dumpe
             dumpString.clear();
         }
         i++;
-        CHECK_AND_RETURN_RET(needDetail && iter.entry_(fd) != MSERR_OK, OHOS::INVALID_OPERATION);
+        CHECK_AND_RETURN_RET((!needDetail) || (iter.entry_(fd) == MSERR_OK), OHOS::INVALID_OPERATION);
     }
     if (fd != -1) {
         write(fd, dumpString.c_str(), dumpString.size());
@@ -84,8 +84,7 @@ int32_t MediaServerManager::Dump(int32_t fd, const std::vector<std::u16string> &
     CHECK_AND_RETURN_RET_LOG(PlayerXCollie::GetInstance().Dump(fd) == OHOS::NO_ERROR,
         OHOS::INVALID_OPERATION, "Failed to write xcollie dump information");
 
-    bool ret = argSets.find(u"monitor") != argSets.end();
-    CHECK_AND_RETURN_RET_LOG(MonitorServiceStub::GetInstance()->DumpInfo(fd, ret) == OHOS::NO_ERROR,
+    CHECK_AND_RETURN_RET_LOG(MonitorServiceStub::GetInstance()->DumpInfo(fd) == OHOS::NO_ERROR,
         OHOS::INVALID_OPERATION, "Failed to write monitor dump information");
     return OHOS::NO_ERROR;
 }
@@ -98,19 +97,31 @@ MediaServerManager::MediaServerManager()
 MediaServerManager::~MediaServerManager()
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
+    decltype(stubCollections_) tempCollection;
+    std::swap(stubCollections_, tempCollection);
+    decltype(stubMap_) tempStubMap;
+    std::swap(stubMap_, tempStubMap);
+    tempStubMap.clear();
+    tempCollection.clear();
+    dumpCollections_.clear();
 }
 
 void MediaServerManager::Init()
 {
     auto maxSize = SERVER_MAX_NUMBER;
 #ifdef SUPPORT_PLAYER
+#ifdef PLAYER_USE_MEMORY_MANAGE
+    std::function<sptr<IMediaStubService>()> create = PlayerServiceStubMem::Create;
+#else
+    std::function<sptr<IMediaStubService>()> create = PlayerServiceStub::Create;
+#endif
     stubCollections_[StubType::PLAYER] = StubNode {"Player",
-        PlayerServiceStub::Create, maxSize};
+        create, maxSize};
     dumpCollections_.emplace_back(std::make_pair(StubType::PLAYER, u"player"));
 #endif
 #ifdef SUPPORT_RECORDER
     stubCollections_[StubType::RECORDER] = StubNode {"Recorder", RecorderServiceStub::Create, SERVER_MAX_NUMBER / 8};
-    stubCollections_[StubType::RECORDERPROFILES] = StubNode {"recorder_profiles",
+    stubCollections_[StubType::RECORDERPROFILES] = StubNode {"RecorderProfiles",
         RecorderProfilesServiceStub::Create, SERVER_MAX_NUMBER};
     dumpCollections_.emplace_back(std::make_pair(StubType::RECORDER, u"recorder"));
 #endif
@@ -121,7 +132,7 @@ void MediaServerManager::Init()
     dumpCollections_.emplace_back(std::make_pair(StubType::AVCODEC, u"codec"));
 #endif
 #ifdef SUPPORT_METADATA
-    stubCollections_[StubType::AVMETADATAHELPER] = StubNode {"Avmetadatahelper",
+    stubCollections_[StubType::AVMETADATAHELPER] = StubNode {"AvmetadataHelper",
         AVMetadataHelperServiceStub::Create, SERVER_MAX_NUMBER * 2};
     dumpCollections_.emplace_back(std::make_pair(StubType::AVMETADATAHELPER, u"avmetadatahelper"));
 #endif
@@ -129,6 +140,9 @@ void MediaServerManager::Init()
     stubCollections_[StubType::SCREEN_CAPTURE] = StubNode {"ScreenCapture",
         ScreenCaptureServiceStub::Create, SERVER_MAX_NUMBER};
 #endif
+    stubCollections_[StubType::MONITOR] = StubNode {"Monitor",
+        MonitorServiceStub::GetInstance, SERVER_MAX_NUMBER / 16
+    };
     alreadyInit = true;
 }
 
@@ -145,6 +159,7 @@ sptr<IRemoteObject> MediaServerManager::CreateStubObject(StubType type)
     auto object = stub->AsObject();
     CHECK_AND_RETURN_RET(object != nullptr, nullptr);
     pid_t pid = IPCSkeleton::GetCallingPid();
+    stubMap_[type][object] = pid;
     DumperEntry entry = [media = stub](int32_t fd) -> int32_t {
         return media->DumpInfo(fd);
     };
@@ -156,15 +171,8 @@ sptr<IRemoteObject> MediaServerManager::CreateStubObject(StubType type)
         node.name.c_str(), stubMap_[type].size(), pid);
     std::string traceName = "The number of " + node.name;
     MediaTrace::CounterTrace(traceName, stubMap_[type].size());
-    CHECK_AND_RETURN_RET_LOG(Dump(-1, std::vector<std::u16string>()) == OHOS::NO_ERROR, object, "failed to call InstanceDump");
-    return object;
-}
-
-sptr<IRemoteObject> MediaServerManager::GetMonitorStubObject()
-{
-    sptr<MonitorServiceStub> monitorStub = MonitorServiceStub::GetInstance();
-    CHECK_AND_RETURN_RET_LOG(monitorStub != nullptr, nullptr, "failed to create MonitorServiceStub");
-    sptr<IRemoteObject> object = monitorStub->AsObject();
+    CHECK_AND_RETURN_RET_LOG(Dump(-1, std::vector<std::u16string>()) == OHOS::NO_ERROR,
+        object, "failed to call InstanceDump");
     return object;
 }
 
@@ -173,8 +181,8 @@ void MediaServerManager::DestroyStubObject(StubType type, sptr<IRemoteObject> ob
     std::lock_guard<std::mutex> lock(mutex_);
     pid_t pid = IPCSkeleton::GetCallingPid();
     DestroyDumper(type, object);
-    CHECK_AND_RETURN_LOG(stubCollections_.count(type) > 0, "no this StubType");
-    auto map = stubMap_[type];
+    CHECK_AND_RETURN_LOG(stubCollections_.count(type) > 0, "no this StubType %{public}d", type);
+    auto &map = stubMap_[type];
     for (auto it = map.begin(); it != map.end(); ++it) {
         if (it->first == object) {
             MEDIA_LOGD("destroy %{public}s stub services(%{public}zu) pid(%{public}d).",
@@ -190,8 +198,8 @@ void MediaServerManager::DestroyStubObjectForPid(pid_t pid)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     for (const auto &iter : stubCollections_) {
-        auto node = iter.second;
-        auto map = stubMap_[iter.first];
+        const auto &node = iter.second;
+        auto &map = stubMap_[iter.first];
         MEDIA_LOGD("%{public}s stub services(%{public}zu) pid(%{public}d).", node.name.c_str(), map.size(), pid);
         DestroyDumperForPid(pid);
         for (auto it = map.begin(); it != map.end();) {
@@ -232,7 +240,7 @@ void MediaServerManager::DestroyDumperForPid(pid_t pid)
             }
         }
     }
-    CHECK_AND_RETURN_LOG(Dump(-1, std::vector<std::u16string>()) == OHOS::NO_ERROR, "failed to call InstanceDump");
+    (void)Dump(-1, std::vector<std::u16string>());
 }
 
 void MediaServerManager::AsyncExecutor::Commit(sptr<IRemoteObject> obj)

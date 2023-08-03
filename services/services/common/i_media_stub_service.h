@@ -13,10 +13,11 @@
  * limitations under the License.
  */
 
-#ifndef I_MEDIA_STUB_H
-#define I_MEDIA_STUB_H
-#include "iremote_stub.h"
+#ifndef I_MEDIA_STUB_SERVICE_H
+#define I_MEDIA_STUB_SERVICE_H
+
 #include "iremote_broker.h"
+
 namespace OHOS {
 namespace Media {
 class IMediaStubService : public IRemoteBroker {
@@ -26,6 +27,7 @@ public:
         (void)fd;
         return 0;
     };
+    virtual ~IMediaStubService() = default;
 };
 }
 }

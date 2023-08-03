@@ -80,7 +80,6 @@ public:
 
 private:
     MediaServerManager();
-    sptr<IRemoteObject> GetMonitorStubObject();
     class AsyncExecutor {
     public:
         AsyncExecutor() = default;
