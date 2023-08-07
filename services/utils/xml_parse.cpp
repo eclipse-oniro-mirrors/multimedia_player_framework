@@ -102,7 +102,7 @@ std::vector<int32_t> XmlParser::TransStrAsIntegerArray(const std::vector<std::st
 bool XmlParser::SpiltKeyList(const std::string &str, const std::string &delim,
     std::vector<std::string> &spilt) const
 {
-   CHECK_AND_RETURN_RET_LOG(str != "", false, "str is null");
+    CHECK_AND_RETURN_RET_LOG(str != "", false, "str is null");
     std::string strAddDelim = str;
     if (str.back() != delim.back()) {
         strAddDelim = str + delim;
