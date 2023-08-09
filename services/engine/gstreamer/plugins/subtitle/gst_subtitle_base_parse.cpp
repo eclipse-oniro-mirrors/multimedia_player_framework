@@ -63,18 +63,18 @@ static void free_buffer_context(GstSubtitleBaseParse *base_parse)
     g_return_if_fail(base_parse != nullptr);
     GstSubtitleBufferContext *buf_ctx = &base_parse->buffer_ctx;
 
-    if (G_LIKELY(buf_ctx->adapter != nullptr)) {
+    if (buf_ctx->adapter != nullptr) {
         gst_adapter_clear(buf_ctx->adapter);
         g_object_unref(buf_ctx->adapter);
         buf_ctx->adapter = nullptr;
     }
 
-    if (G_LIKELY(buf_ctx->text != nullptr)) {
+    if (buf_ctx->text != nullptr) {
         (void)g_string_free(buf_ctx->text, (gboolean)TRUE);
         buf_ctx->text = nullptr;
     }
 
-    if (G_LIKELY(buf_ctx->bufferlist != nullptr)) {
+    if (buf_ctx->bufferlist != nullptr) {
         g_list_foreach(buf_ctx->bufferlist, (GFunc)gst_mini_object_unref, nullptr);
         g_list_free(buf_ctx->bufferlist);
         buf_ctx->bufferlist = nullptr;
@@ -127,7 +127,6 @@ static void gst_subtitle_base_parse_class_init(GstSubtitleBaseParseClass *klass)
         gst_element_class_add_pad_template((GstElementClass *)klass, src_pad_template);
         GST_INFO("added a SOMETIMES src pad template");
     }
-
     gst_subtitle_base_parse_pfn_init(klass);
 }
 
@@ -149,7 +148,7 @@ static void init_buffer_context(GstSubtitleBaseParse *base_parse)
     /* initialize the external subtitle buffer */
     GstSubtitleBufferContext *buf_ctx = &base_parse->buffer_ctx;
 
-    if (G_UNLIKELY(memset_s(buf_ctx, sizeof(GstSubtitleBufferContext), 0, sizeof(GstSubtitleBufferContext)) != EOK)) {
+    if (memset_s(buf_ctx, sizeof(GstSubtitleBufferContext), 0, sizeof(GstSubtitleBufferContext)) != EOK) {
         GST_ERROR_OBJECT(base_parse, "memset_s failed");
     }
 
@@ -157,7 +156,7 @@ static void init_buffer_context(GstSubtitleBaseParse *base_parse)
     g_return_if_fail(buf_ctx->adapter != nullptr);
 
     buf_ctx->text = g_string_new(nullptr);
-    if (G_UNLIKELY(buf_ctx->text == nullptr)) {
+    if (buf_ctx->text == nullptr) {
         g_object_unref(buf_ctx->adapter);
         buf_ctx->adapter = nullptr;
         return;
@@ -300,32 +299,21 @@ static GstFlowReturn gst_subtitle_base_parse_chain(GstPad *sinkpad, GstObject *p
         return ret;
     }
 
-    if (!get_subtitle_streams(baseclass, buf, self)) {
-        return ret;
-    }
+    g_return_val_if_fail(get_subtitle_streams(baseclass, buf, self), ret);
 
     if (G_UNLIKELY(!self->has_send_stream_start)) {
         gst_subtitle_push_stream_start_event(self);
         self->has_send_stream_start = TRUE;
     }
 
-    if (!chain_set_caps_and_tags(self)) {
-        return GST_FLOW_EOS;
-    }
+    g_return_val_if_fail(chain_set_caps_and_tags(self), GST_FLOW_EOS);
 
-    if (G_UNLIKELY(self->flushing)) {
-        return ret;
-    }
+    g_return_val_if_fail(!self->flushing, ret);
 
-    if (!chain_push_new_segment_event(ret, self)) {
-        return ret;
-    }
+    g_return_val_if_fail(chain_push_new_segment_event(ret, self), ret);
 
-    if (G_UNLIKELY(baseclass->handle_buffer_pfn != nullptr)) {
-        ret = baseclass->handle_buffer_pfn(self);
-    }
-
-    return ret;
+    g_return_val_if_fail(baseclass->handle_buffer_pfn != nullptr, ret);
+    return baseclass->handle_buffer_pfn(self);
 }
 
 static gboolean sink_event_handle_segment_eos(GstEvent *event, GstSubtitleBaseParse *self)
@@ -343,10 +331,8 @@ static gboolean sink_event_handle_segment_eos(GstEvent *event, GstSubtitleBasePa
         (void)gst_subtitle_base_parse_chain(self->sinkpad, (GstObject *)self, buf);
     }
 
-    if (self->sinkpad != nullptr) {
-        ret = gst_pad_event_default(self->sinkpad, (GstObject *)self, event);
-    }
-
+    g_return_val_if_fail(self->sinkpad != nullptr, ret);
+    ret = gst_pad_event_default(self->sinkpad, (GstObject *)self, event);
     return ret;
 }
 
@@ -374,17 +360,15 @@ static gboolean sink_event_handle_segment_event(GstEvent *event, GstSubtitleBase
     GST_INFO_OBJECT(self, "subtitle base receive segment event with 0x%06" PRIXPTR ", stream_id: %d, "
         "start: %" G_GUINT64_FORMAT ", stop: %" G_GUINT64_FORMAT, FAKE_POINTER(&self->segment),
         self->stream_id, self->segment->start, self->segment->stop);
-    if (G_UNLIKELY(self->need_srcpad_caps)) {
+    if (self->need_srcpad_caps) {
         if (gst_subtitle_set_caps(self)) {
             self->need_srcpad_caps = FALSE;
             need_tags = TRUE;
         }
     }
-
-    if (G_UNLIKELY(need_tags) && !gst_subtitle_set_tags(self)) {
-        GST_ERROR_OBJECT(self, "subtitle set taglist failed");
+    if (need_tags) {
+        g_return_val_if_fail(gst_subtitle_set_tags(self), TRUE);
     }
-
     return TRUE;
 }
 
@@ -395,15 +379,15 @@ static void clear_buffer(GstSubtitleBaseParse *base_parse)
 
     GstSubtitleBufferContext *buf_ctx = &base_parse->buffer_ctx;
 
-    if (G_LIKELY(buf_ctx->adapter != nullptr)) {
+    if (buf_ctx->adapter != nullptr) {
         gst_adapter_clear(buf_ctx->adapter);
     }
 
-    if (G_LIKELY(buf_ctx->text != nullptr)) {
+    if (buf_ctx->text != nullptr) {
         (void)g_string_truncate(buf_ctx->text, 0);
     }
 
-    if (G_LIKELY(buf_ctx->bufferlist != nullptr)) {
+    if (buf_ctx->bufferlist != nullptr) {
         g_list_foreach(buf_ctx->bufferlist, (GFunc)gst_mini_object_unref, nullptr);
         g_list_free(buf_ctx->bufferlist);
         buf_ctx->bufferlist = nullptr;
@@ -429,10 +413,7 @@ static gboolean sink_event_handle_flush_start(GstEvent *event, GstSubtitleBasePa
         event = nullptr;
         GstStructure *change_state =
             gst_structure_new("Changestate_flag", "Changestate_flag", G_TYPE_BOOLEAN, FALSE, nullptr);
-        if (change_state == nullptr) {
-            GST_WARNING_OBJECT(self, "new change_state failed");
-            return ret;
-        }
+        g_return_val_if_fail(change_state != nullptr, ret);
 
         GstEvent *flush_event = gst_event_new_custom(GST_EVENT_FLUSH_START, change_state);
         if (flush_event != nullptr) {
@@ -573,21 +554,18 @@ static gboolean default_handle_sink_event(GstSubtitleBaseParse *self, GstEvent *
         }
         case GST_EVENT_CAPS: {
             sink_event_handle_caps_event(event, self);
-            if (self->sinkpad != nullptr) {
-                ret = gst_pad_event_default(self->sinkpad, (GstObject *)self, event);
-            }
+            g_return_val_if_fail(self->sinkpad != nullptr, ret);
+            ret = gst_pad_event_default(self->sinkpad, (GstObject *)self, event);
             break;
         }
         case GST_EVENT_STREAM_START: {
-            if (self->sinkpad != nullptr) {
-                ret = gst_pad_event_default(self->sinkpad, (GstObject *)self, event);
-            }
+            g_return_val_if_fail(self->sinkpad != nullptr, ret);
+            ret = gst_pad_event_default(self->sinkpad, (GstObject *)self, event);
             break;
         }
         default: {
-            if (self->sinkpad != nullptr) {
-                ret = gst_pad_event_default(self->sinkpad, (GstObject *)self, event);
-            }
+            g_return_val_if_fail(self->sinkpad != nullptr, ret);
+            ret = gst_pad_event_default(self->sinkpad, (GstObject *)self, event);
             break;
         }
     }
@@ -635,14 +613,11 @@ static GstStateChangeReturn gst_subtitle_base_parse_change_state(GstElement *ele
         }
     }
 
-    if (ret == GST_STATE_CHANGE_FAILURE) {
-        return ret;
-    }
+    g_return_val_if_fail(ret != GST_STATE_CHANGE_FAILURE, ret);
 
     switch (transition) {
         case GST_STATE_CHANGE_PAUSED_TO_READY: {
             self->need_srcpad_caps = TRUE;
-            self->first_segment = TRUE;
             if (self->from_internal) {
                 gst_subtitle_clear_cache_queue(self);
             }

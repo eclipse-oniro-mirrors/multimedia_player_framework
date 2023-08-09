@@ -100,10 +100,8 @@ int32_t PlayBinCtrlerBase::BaseState::ChangePlayBinState(GstState targetState, G
     }
 
     ret = gst_element_set_state(GST_ELEMENT_CAST(ctrler_.playbin_), targetState);
-    if (ret == GST_STATE_CHANGE_FAILURE) {
-        MEDIA_LOGE("Failed to change playbin's state to %{public}s", gst_element_state_get_name(targetState));
-        return MSERR_INVALID_OPERATION;
-    }
+    CHECK_AND_RETURN_RET_LOG(ret != GST_STATE_CHANGE_FAILURE, MSERR_INVALID_OPERATION,
+        "Failed to change playbin's state to %{public}s", gst_element_state_get_name(targetState));
 
     return MSERR_OK;
 }
@@ -324,7 +322,7 @@ void PlayBinCtrlerBase::BaseState::HandleTrackInfoUpdate()
 {
     int32_t textTrackNum = 0;
     g_object_get(ctrler_.playbin_, "n-text", &textTrackNum, nullptr);
-    ctrler_.subtitleTrackNum_ = textTrackNum;
+    ctrler_.subtitleTrackNum_ = static_cast<uint32_t>(textTrackNum);
     PlayBinMessage subtitleMsg { PLAYBIN_MSG_SUBTYPE, PLAYBIN_SUB_MSG_TRACK_NUM_UPDATE, textTrackNum, {} };
     ctrler_.ReportMessage(subtitleMsg);
 
@@ -515,8 +513,9 @@ void PlayBinCtrlerBase::PlayingState::ProcessPlayingStateChange()
         ctrler_.isSeeking_ = false;
         ctrler_.isDuration_ = (position == ctrler_.duration_ / USEC_PER_MSEC) ? true : false;
         MEDIA_LOGI("playing after seek done, pos = %{public}" PRIi64 "ms", position);
+        int64_t curPosition = ctrler_.isClosetSeeking_ ? position : ctrler_.QueryPosition();
         PlayBinMessage posUpdateMsg { PLAYBIN_MSG_POSITION_UPDATE, PLAYBIN_SUB_MSG_POSITION_UPDATE_FORCE,
-            static_cast<int32_t>(ctrler_.QueryPosition()),
+            static_cast<int32_t>(curPosition),
             static_cast<int32_t>(ctrler_.duration_ / USEC_PER_MSEC) };
         ctrler_.ReportMessage(posUpdateMsg);
 
@@ -543,7 +542,7 @@ void PlayBinCtrlerBase::PlayingState::ProcessPlayingStateChange()
 
 void PlayBinCtrlerBase::PlayingState::ProcessStateChange(const InnerMessage &msg)
 {
-    MEDIA_LOGI("PreparingState::ProcessStateChange");
+    MEDIA_LOGI("PlayingState::ProcessStateChange");
     if (msg.detail1 == GST_STATE_PLAYING && msg.detail2 == GST_STATE_PAUSED && ctrler_.isUserSetPause_) {
         ctrler_.ChangeState(ctrler_.pausedState_);
         ctrler_.isUserSetPause_ = false;
@@ -557,6 +556,9 @@ void PlayBinCtrlerBase::PlayingState::ProcessStateChange(const InnerMessage &msg
             nullptr, static_cast<GstClockTime>(0));
         if ((stateRet == GST_STATE_CHANGE_SUCCESS) && (state == GST_STATE_PLAYING)) {
             ProcessPlayingStateChange();
+        }
+        if (ctrler_.subtitleSink_ != nullptr) {
+            gst_element_set_state(GST_ELEMENT_CAST(ctrler_.subtitleSink_), GST_STATE_PLAYING);
         }
     }
 }
