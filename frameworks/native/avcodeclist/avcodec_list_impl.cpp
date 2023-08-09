@@ -126,10 +126,6 @@ std::vector<std::shared_ptr<AudioCaps>> AVCodecListImpl::GetAudioDecoderCaps()
 
 std::vector<std::shared_ptr<AudioCaps>> AVCodecListImpl::GetAudioEncoderCaps()
 {
-    if (!audioEncoderCapsArray_.empty()) {
-        MEDIA_LOGD("audioEncoderCapsArray_ has been assigned.");
-        return audioEncoderCapsArray_;
-    }
     CHECK_AND_RETURN_RET_LOG(audioEncoderCapsArray_.empty(), audioEncoderCapsArray_, "AencCaps has been assigned.");
     capabilityArray_ = capabilityArray_.empty() ? GetCodecCapabilityInfos() : capabilityArray_;
     std::vector<CapabilityData> aencCapabilityArray = SelectTargetCapabilityDataArray(AVCODEC_TYPE_AUDIO_ENCODER);
