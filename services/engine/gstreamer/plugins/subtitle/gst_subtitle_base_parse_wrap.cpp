@@ -914,8 +914,8 @@ gboolean decode_one_frame(const GstSubtitleBaseParseClass *baseclass, GstSubtitl
     GstSubtitleFrame *frame, GstSubtitleDecodedFrame *decoded_frame)
 {
     g_return_val_if_fail((baseclass != nullptr) && (baseclass->decode_frame_pfn != nullptr) &&
-        (self != nullptr) && (frame->data != nullptr), FALSE);
-    if ((frame == nullptr) || (decoded_frame == nullptr)) {
+        (self != nullptr) && (frame != nullptr), FALSE);
+    if ((frame->data == nullptr) || (decoded_frame == nullptr)) {
         return FALSE;
     }
 
