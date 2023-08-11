@@ -289,7 +289,6 @@ static gboolean parse_caps_info(GstCaps *caps, GstVideoInfo *info, PixelFormat *
 
     g_return_val_if_fail(FORMAT_MAPPING.count(GST_VIDEO_INFO_FORMAT(info)) != 0, FALSE);
 
-
     *format = FORMAT_MAPPING.at(GST_VIDEO_INFO_FORMAT(info));
     return TRUE;
 }
@@ -549,10 +548,7 @@ static GstFlowReturn gst_producer_surface_pool_alloc_buffer(GstBufferPool *pool,
 
     GstSurfaceMemory *memory = nullptr;
     GstFlowReturn ret = do_alloc_memory_locked(spool, params, &memory);
-    if (memory == nullptr) {
-        GST_WARNING_OBJECT(spool, "allocator mem fail");
-        return ret;
-    }
+    g_return_val_if_fail(memory != nullptr, ret);
 
     *buffer = gst_buffer_new();
     if (*buffer == nullptr) {
