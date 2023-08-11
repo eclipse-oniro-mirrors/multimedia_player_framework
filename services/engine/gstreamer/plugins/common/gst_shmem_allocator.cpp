@@ -177,9 +177,7 @@ static GstShMemMemory *gst_shmem_allocator_mem_share(GstMemory *mem, gssize offs
     if (parent == nullptr) {
         parent = GST_MEMORY_CAST(mem);
     }
-    if (size == -1) {
-        size = static_cast<gssize>(mem->size) - offset;
-    }
+    size = size == -1 ? static_cast<gssize>(mem->size) - offset : size;
 
     GstShMemMemory *sub = reinterpret_cast<GstShMemMemory *>(g_slice_alloc0(sizeof(GstShMemMemory)));
     g_return_val_if_fail(sub != nullptr, nullptr);
