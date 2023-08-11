@@ -24,6 +24,7 @@
 #include "gst/video/gstvideometa.h"
 #include "media_dfx.h"
 #include "securec.h"
+#include "scope_guard.h"
 
 using namespace OHOS;
 namespace {

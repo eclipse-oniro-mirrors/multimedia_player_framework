@@ -17,6 +17,7 @@
 #include "media_log.h"
 #include "media_errors.h"
 #include "securec.h"
+#include "scope_guard.h"
 
 #define gst_shmem_allocator_parent_class parent_class
 G_DEFINE_TYPE(GstShMemAllocator, gst_shmem_allocator, GST_TYPE_ALLOCATOR);
