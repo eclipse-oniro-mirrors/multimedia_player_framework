@@ -182,7 +182,7 @@ static gboolean srt_fix_up_markup_handle_f_tag(const gchar *next_tag)
         GST_WARNING("string_token failed");
     }
     if ((attr_name != nullptr) && (g_ascii_strcasecmp("color", attr_name) == 0)) {
-        if (attr_value != nullptr) {
+        if (attr_value != nullptr && string_token(attr_value + 1, "\"", &attr_value)) {
             int32_t len = static_cast<int32_t>(strlen(attr_value));
             if ((*attr_value != '#') || (len != COLOR_VALUE_LEN)) {
                 ret = FALSE;
@@ -317,6 +317,7 @@ static void srt_fix_up_markup(gchar **text)
         cur = next_tag;
     }
 
+    srt_remove_tags(*text);
     g_return_if_fail(num_open_tags != 0);
 
     GString *s = srt_fix_up_markup_add_tag(num_open_tags, open_tags, *text);
