@@ -82,6 +82,7 @@ ohos_shared_library("gst_media_common") {
     "gst_shmem_pool.cpp",
     "gst_shmemory_wrap_allocator.cpp",
     "gst_surface_allocator.cpp",
+    "gst_producer_surface_pool.cpp",
   ]
 
   deps = [
