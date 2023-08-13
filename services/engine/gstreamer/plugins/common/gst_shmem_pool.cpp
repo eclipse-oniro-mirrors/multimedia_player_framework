@@ -21,6 +21,7 @@
 #include "buffer_type_meta.h"
 #include "avsharedmemorybase.h"
 #include "scope_guard.h"
+using namespace OHOS;
 
 #define GST_BUFFER_POOL_LOCK(pool) (g_mutex_lock(&pool->lock))
 #define GST_BUFFER_POOL_UNLOCK(pool) (g_mutex_unlock(&pool->lock))

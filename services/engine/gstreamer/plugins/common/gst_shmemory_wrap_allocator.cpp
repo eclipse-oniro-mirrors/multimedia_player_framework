@@ -17,6 +17,7 @@
 #include "securec.h"
 #include "media_log.h"
 #include "scope_guard.h"
+using namespace OHOS;
 
 #define gst_shmemory_wrap_allocator_parent_class parent_class
 G_DEFINE_TYPE(GstShMemoryWrapAllocator, gst_shmemory_wrap_allocator, GST_TYPE_ALLOCATOR);
