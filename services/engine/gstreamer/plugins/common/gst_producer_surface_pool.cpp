@@ -100,7 +100,6 @@ static void gst_producer_surface_pool_class_init(GstProducerSurfacePoolClass *kl
     GstBufferPoolClass *poolClass = GST_BUFFER_POOL_CLASS (klass);
     GObjectClass *gobjectClass = G_OBJECT_CLASS(klass);
     gobjectClass->set_property = gst_producer_surface_pool_set_property;
-    gobjectClass->get_property = gst_producer_surface_pool_get_property;
     gobjectClass->finalize = gst_producer_surface_pool_finalize;
 
     g_object_class_install_property(gobjectClass, PROP_DYNAMIC_BUFFER_NUM,
