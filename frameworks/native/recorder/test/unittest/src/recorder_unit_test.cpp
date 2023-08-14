@@ -54,7 +54,7 @@ void RecorderUnitTest::TearDown(void)
  * @tc.type: FUNC
  * @tc.require:
  */
-    HWTEST_F(RecorderUnitTest, recorder_SetLocation_001, TestSize.Level2)
+HWTEST_F(RecorderUnitTest, recorder_SetLocation_001, TestSize.Level2)
 {
     g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
     g_videoRecorderConfig.videoFormat = MPEG4;
@@ -72,7 +72,7 @@ void RecorderUnitTest::TearDown(void)
  * @tc.type: FUNC
  * @tc.require:
  */
-    HWTEST_F(RecorderUnitTest, recorder_Repeat_001, TestSize.Level2)
+HWTEST_F(RecorderUnitTest, recorder_Repeat_001, TestSize.Level2)
 {
     g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
     g_videoRecorderConfig.videoFormat = MPEG4;
@@ -107,7 +107,7 @@ void RecorderUnitTest::TearDown(void)
  * @tc.type: FUNC
  * @tc.require:
  */
-    HWTEST_F(RecorderUnitTest, recorder_SetFileSplitDuration_001, TestSize.Level2)
+HWTEST_F(RecorderUnitTest, recorder_SetFileSplitDuration_001, TestSize.Level2)
 {
     g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
     g_videoRecorderConfig.videoFormat = MPEG4;
@@ -135,7 +135,7 @@ void RecorderUnitTest::TearDown(void)
  * @tc.type: FUNC
  * @tc.require:
  */
-    HWTEST_F(RecorderUnitTest, recorder_SetAudioEncoder_Error_001, TestSize.Level2)
+HWTEST_F(RecorderUnitTest, recorder_SetAudioEncoder_Error_001, TestSize.Level2)
 {
     g_videoRecorderConfig.audioSourceId = 0;
     g_videoRecorderConfig.audioFormat = AUDIO_DEFAULT;
@@ -169,7 +169,7 @@ HWTEST_F(RecorderUnitTest, recorder_GetSurface_Error_001, TestSize.Level2)
  * @tc.type: FUNC
  * @tc.require:
  */
-    HWTEST_F(RecorderUnitTest, recorder_SetVideoSourceRepeat_001, TestSize.Level2)
+HWTEST_F(RecorderUnitTest, recorder_SetVideoSourceRepeat_001, TestSize.Level2)
 {
     g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
     g_videoRecorderConfig.videoFormat = MPEG4;
@@ -188,7 +188,7 @@ HWTEST_F(RecorderUnitTest, recorder_GetSurface_Error_001, TestSize.Level2)
  * @tc.type: FUNC
  * @tc.require:
  */
-    HWTEST_F(RecorderUnitTest, recorder_SetAudioSourceRepeat_001, TestSize.Level2)
+HWTEST_F(RecorderUnitTest, recorder_SetAudioSourceRepeat_001, TestSize.Level2)
 {
     g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
     g_videoRecorderConfig.aSource = AUDIO_SOURCE_DEFAULT;
@@ -236,7 +236,7 @@ HWTEST_F(RecorderUnitTest, recorder_DrainBufferTrue_001, TestSize.Level2)
  * @tc.type: FUNC
  * @tc.require:
  */
-    HWTEST_F(RecorderUnitTest, recorder_SetVideoSourceRGBA_001, TestSize.Level2)
+HWTEST_F(RecorderUnitTest, recorder_SetVideoSourceRGBA_001, TestSize.Level2)
 {
     VideoRecorderConfig videoRecorderConfig;
     videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_RGBA;
