@@ -35,6 +35,7 @@ namespace Media {
 enum GstPlayerStatus : int32_t {
     GST_PLAYER_STATUS_IDLE = 0,
     GST_PLAYER_STATUS_BUFFERING,
+    GST_PLAYER_STATUS_READY,
     GST_PLAYER_STATUS_PAUSED,
     GST_PLAYER_STATUS_PLAYING,
 };
@@ -48,17 +49,16 @@ public:
     virtual ~PlayBinCtrlerBase();
 
     int32_t Init();
+    bool EnableBufferingBySysParam() const;
     int32_t SetSource(const std::string &url)  override;
     int32_t SetSource(const std::shared_ptr<GstAppsrcEngine> &appsrcWrap) override;
     int32_t AddSubSource(const std::string &url) override;
-    int32_t Prepare() override;
     int32_t PrepareAsync() override;
     int32_t Play() override;
     int32_t Pause() override;
     int32_t Seek(int64_t timeUs, int32_t seekOption) override;
     int32_t Stop(bool needWait) override;
     int32_t SetRate(double rate) override;
-    double GetRate() override;
     int64_t QueryPosition() override;
     int32_t SetLoop(bool loop) override;
     void SetVolume(const float &leftVolume, const float &rightVolume) override;
@@ -114,24 +114,22 @@ private:
     static void SourceSetup(const GstElement *playbin, GstElement *elem, gpointer userData);
     static void OnBitRateParseCompleteCb(const GstElement *playbin, uint32_t *bitrateInfo,
         uint32_t bitrateNum, gpointer userData);
-    static void OnSelectBitrateDoneCb(const GstElement *playbin, const char *streamId, gpointer userData);
+    static void OnSelectBitrateDoneCb(const GstElement *playbin, uint32_t bandwidth, gpointer userData);
     static GValueArray *AutoPlugSort(const GstElement *uriDecoder, GstPad *pad, GstCaps *caps,
         GValueArray *factories, gpointer userData);
     static void OnInterruptEventCb(const GstElement *audioSink, const uint32_t eventType, const uint32_t forceType,
         const uint32_t hintType, gpointer userData);
     static void OnAudioSegmentEventCb(const GstElement *audioSink, gpointer userData);
-    static void OnAudioStateEventCb(const GstElement *audioSink, const uint32_t audioState, gpointer userData);
     static void OnIsLiveStream(const GstElement *demux, gboolean isLiveStream, gpointer userData);
     static void AudioChanged(const GstElement *playbin, gpointer userData);
     void SetupInterruptEventCb();
-    void SetupAudioStateEventCb();
     void SetupAudioSegmentEventCb();
     void OnElementSetup(GstElement &elem);
     void OnElementUnSetup(GstElement &elem);
     void OnSourceSetup(const GstElement *playbin, GstElement *src,
         const std::shared_ptr<PlayBinCtrlerBase> &playbinCtrl);
     bool OnVideoDecoderSetup(GstElement &elem);
-    void OnAppsrcMessageReceived(const InnerMessage &msg);
+    bool OnAppsrcMessageReceived(const InnerMessage &msg);
     void OnMessageReceived(const InnerMessage &msg);
     void OnSinkMessageReceived(const PlayBinMessage &msg);
     GValueArray *OnAutoPlugSort(GValueArray &factories);
@@ -146,8 +144,10 @@ private:
     void HandleCacheCtrlWhenBuffering(int32_t percent);
     void OnAdaptiveElementSetup(GstElement &elem);
     void OnAudioChanged();
+    void OnSubtitleChanged();
     void ReportTrackChange();
     void OnTrackDone();
+    void OnAddSubDone();
     void OnError(int32_t errorCode, std::string message);
 
     inline void AddSignalIds(GstElement *element, gulong signalId)
@@ -187,6 +187,7 @@ private:
     bool isInitialized_ = false;
 
     bool isErrorHappened_ = false;
+    std::thread audioSeekThread_;
     std::condition_variable preparingCond_;
     std::condition_variable preparedCond_;
     std::condition_variable stoppingCond_;
@@ -201,9 +202,11 @@ private:
     int64_t lastTime_ = 0;
 
     bool isSeeking_ = false;
+    bool isClosetSeeking_ = false;
     bool isRating_ = false;
     bool isAddingSubtitle_ = false;
     bool isBuffering_ = false;
+    bool isSelectBitRate_ = false;
     bool isNetWorkPlay_ = false;
     bool isUserSetPlay_ = false;
     bool isUserSetPause_ = false;
@@ -212,10 +215,13 @@ private:
     int32_t rendererFlag_ = 0;
     int32_t cachePercent_ = 100; // 100% cache percent
     uint64_t connectSpeed_ = 0;
+    GstClockTime lastStartTime_ = GST_CLOCK_TIME_NONE;
 
     bool isTrackChanging_ = false;
     int32_t trackChangeType_ = MediaType::MEDIA_TYPE_AUD;
     int32_t audioIndex_ = -1;
+    bool hasSubtitleTrackSelected_ = true;
+    uint32_t subtitleTrackNum_ = 0;
 
     std::atomic<bool> isDuration_ = false;
     std::atomic<bool> enableLooping_ = false;

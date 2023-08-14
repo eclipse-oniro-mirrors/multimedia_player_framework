@@ -86,8 +86,10 @@ ohos_shared_library("gst_mem_sink") {
   ]
 
   external_deps = [
-    "graphic_standard:surface",
-    "graphic_standard:sync_fence",
+    "c_utils:utils",
+    "graphic_2d:surface",
+    "graphic_2d:sync_fence",
+    "hilog:libhilog",
     "init:libbegetutil",
   ]
 

@@ -46,6 +46,8 @@ config("media_client_ipc_config") {
     "$MEDIA_ROOT_DIR/services/services/avcodeclist/ipc",
     "$MEDIA_ROOT_DIR/services/services/recorder_profiles/client",
     "$MEDIA_ROOT_DIR/services/services/recorder_profiles/ipc",
+    "$MEDIA_ROOT_DIR/services/services/screen_capture/ipc",
+    "$MEDIA_ROOT_DIR/services/services/screen_capture/client",
   ]
 }
 
@@ -56,6 +58,7 @@ config("media_client_base_config") {
     "$MEDIA_ROOT_DIR/services/utils/include",
     "//utils/system/safwk/native/include",
     "//commonlibrary/c_utils/base/include",
+    "$MEDIA_PLAYER_GRAPHIC/frameworks/surface/include",
   ]
 
   cflags = [
@@ -154,6 +157,14 @@ ohos_shared_library("media_client") {
       "$MEDIA_ROOT_DIR/services/services/avmetadatahelper/ipc/avmetadatahelper_service_proxy.cpp",
     ]
   }
+  if (multimedia_player_framework_support_screen_capture) {
+    sources += [
+      "$MEDIA_ROOT_DIR/frameworks/native/screen_capture/screen_capture_impl.cpp",
+      "$MEDIA_ROOT_DIR/services/services/screen_capture/client/screen_capture_client.cpp",
+      "$MEDIA_ROOT_DIR/services/services/screen_capture/ipc/screen_capture_listener_stub.cpp",
+      "$MEDIA_ROOT_DIR/services/services/screen_capture/ipc/screen_capture_service_proxy.cpp",
+    ]
+  }
 
   configs = [
     ":media_client_base_config",
@@ -168,13 +179,13 @@ ohos_shared_library("media_client") {
     "audio_framework:audio_client",
     "c_utils:utils",
     "hilog:libhilog",
+    "image_framework:image_native",
     "ipc:ipc_single",
-    "multimedia_image_framework:image_native",
     "samgr:samgr_proxy",
   ]
 
   if (multimedia_player_framework_support_video) {
-    external_deps += [ "graphic_standard:surface" ]
+    external_deps += [ "graphic_2d:surface" ]
   }
 
   innerapi_tags = [ "platformsdk" ]

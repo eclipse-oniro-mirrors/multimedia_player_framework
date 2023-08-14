@@ -122,6 +122,8 @@ struct _GstVdecBase {
     gboolean performance_mode;
     gboolean player_scene;
     gboolean resolution_changed;
+    GMutex format_changed_lock;
+    gboolean unsupport_format_changed;
     GstCaps *sink_caps;
     gboolean input_need_ashmem;
     gboolean has_set_format;
@@ -129,6 +131,8 @@ struct _GstVdecBase {
     gboolean metadata_mode;
     gboolean is_support_swap_width_height;
     gboolean codec_data_update;
+    gboolean is_free_codec_buffers;
+    gboolean is_eos_state;
     GstBuffer *codec_data;
 };
 

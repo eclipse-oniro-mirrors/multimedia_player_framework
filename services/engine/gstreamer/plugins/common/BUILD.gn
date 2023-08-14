@@ -76,7 +76,6 @@ ohos_shared_library("gst_media_common") {
     "buffer_type_meta.c",
     "gst_shmem_allocator.cpp",
     "gst_shmem_pool.cpp",
-    "gst_shmem_wrap_allocator.cpp",
     "gst_shmemory_wrap_allocator.cpp",
     "gst_surface_allocator.cpp",
   ]
@@ -100,8 +99,8 @@ ohos_shared_library("gst_media_common") {
   ]
 
   external_deps = [
-    "graphic_standard:surface",
-    "graphic_standard:sync_fence",
+    "graphic_2d:surface",
+    "graphic_2d:sync_fence",
     "hilog:libhilog",
   ]
 

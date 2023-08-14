@@ -53,6 +53,14 @@ void PlayerListenerProxy::OnError(int32_t errorCode, const std::string &errorMsg
 
 void PlayerListenerProxy::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
 {
+    if (type == INFO_TYPE_ERROR_MSG) {
+        int32_t errorCode = -1;
+        std::string errorMsg;
+        infoBody.GetIntValue(std::string(PlayerKeys::PLAYER_ERROR_TYPE), errorCode);
+        infoBody.GetStringValue(std::string(PlayerKeys::PLAYER_ERROR_MSG), errorMsg);
+        return OnError(errorCode, errorMsg);
+    }
+
     MessageParcel data;
     MessageParcel reply;
     MessageOption option(MessageOption::TF_ASYNC);
@@ -80,16 +88,14 @@ PlayerListenerCallback::~PlayerListenerCallback()
 void PlayerListenerCallback::OnError(int32_t errorCode, const std::string &errorMsg)
 {
     MEDIA_LOGE("player callback onError, errorCode: %{public}d, errorMsg: %{public}s", errorCode, errorMsg.c_str());
-    if (listener_ != nullptr) {
-        listener_->OnError(errorCode, errorMsg);
-    }
+    CHECK_AND_RETURN(listener_ != nullptr);
+    listener_->OnError(errorCode, errorMsg);
 }
 
 void PlayerListenerCallback::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
 {
-    if (listener_ != nullptr) {
-        listener_->OnInfo(type, extra, infoBody);
-    }
+    CHECK_AND_RETURN(listener_ != nullptr);
+    listener_->OnInfo(type, extra, infoBody);
 }
 
 int32_t PlayerListenerProxy::SendRequest(uint32_t code, MessageParcel &data,

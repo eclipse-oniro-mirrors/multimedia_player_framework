@@ -19,8 +19,30 @@
 #include <memory>
 #include <functional>
 #include <map>
-#include <list>
+#include <vector>
+#include "i_media_stub_service.h"
 #include "iremote_object.h"
+#ifdef SUPPORT_RECORDER
+#include "recorder_service_stub.h"
+#include "recorder_profiles_service_stub.h"
+#endif
+#ifdef SUPPORT_PLAYER
+#include "player_service_stub.h"
+#ifdef PLAYER_USE_MEMORY_MANAGE
+#include "player_service_stub_mem.h"
+#endif
+#endif
+#ifdef SUPPORT_METADATA
+#include "avmetadatahelper_service_stub.h"
+#endif
+#ifdef SUPPORT_CODEC
+#include "avcodec_service_stub.h"
+#include "avcodeclist_service_stub.h"
+#endif
+#ifdef SUPPORT_SCREEN_CAPTURE
+#include "screen_capture_service_stub.h"
+#endif
+#include "monitor_service_stub.h"
 #include "ipc_skeleton.h"
 #include "nocopyable.h"
 
@@ -47,6 +69,7 @@ public:
         AVCODEC,
         RECORDERPROFILES,
         MONITOR,
+        SCREEN_CAPTURE,
     };
     sptr<IRemoteObject> CreateStubObject(StubType type);
     void DestroyStubObject(StubType type, sptr<IRemoteObject> object);
@@ -57,22 +80,6 @@ public:
 
 private:
     MediaServerManager();
-#ifdef SUPPORT_PLAYER
-    sptr<IRemoteObject> CreatePlayerStubObject();
-#endif
-#ifdef SUPPORT_RECORDER
-    sptr<IRemoteObject> CreateRecorderStubObject();
-    sptr<IRemoteObject> CreateRecorderProfilesStubObject();
-#endif
-#ifdef SUPPORT_METADATA
-    sptr<IRemoteObject> CreateAVMetadataHelperStubObject();
-#endif
-#ifdef SUPPORT_CODEC
-    sptr<IRemoteObject> CreateAVCodecListStubObject();
-    sptr<IRemoteObject> CreateAVCodecStubObject();
-#endif
-    sptr<IRemoteObject> GetMonitorStubObject();
-
     class AsyncExecutor {
     public:
         AsyncExecutor() = default;
@@ -84,13 +91,17 @@ private:
         std::list<sptr<IRemoteObject>> freeList_;
         std::mutex listMutex_;
     };
-    std::map<sptr<IRemoteObject>, pid_t> recorderStubMap_;
-    std::map<sptr<IRemoteObject>, pid_t> playerStubMap_;
-    std::map<sptr<IRemoteObject>, pid_t> avMetadataHelperStubMap_;
-    std::map<sptr<IRemoteObject>, pid_t> avCodecListStubMap_;
-    std::map<sptr<IRemoteObject>, pid_t> avCodecStubMap_;
-    std::map<sptr<IRemoteObject>, pid_t> recorderProfilesStubMap_;
+    struct StubNode {
+        std::string name;
+        std::function<sptr<IMediaStubService>()> create;
+        unsigned int maxSize;
+    };
+    bool alreadyInit = false;
+    void Init();
+    std::map<StubType, StubNode> stubCollections_;
+    std::vector<std::pair<StubType, std::u16string>> dumpCollections_ = {};
     std::map<StubType, std::vector<Dumper>> dumperTbl_;
+    std::map<StubType, std::map<sptr<IRemoteObject>, pid_t>> stubMap_;
     AsyncExecutor executor_;
 
     std::mutex mutex_;

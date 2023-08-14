@@ -48,7 +48,8 @@ ohos_fuzztest("PlayerSeekFuzzTest") {
     "../../../../../../../foundation/window/window_manager/wm:libwm",
   ]
   external_deps = [
-    "graphic_standard:surface",
+    "c_utils:utils",
+    "graphic_2d:surface",
     "hilog:libhilog",
     "player_framework:media_client",
   ]

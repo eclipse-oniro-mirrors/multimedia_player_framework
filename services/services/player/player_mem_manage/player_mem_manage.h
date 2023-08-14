@@ -51,7 +51,6 @@ private:
     struct AppPlayerInfo {
         std::vector<MemManageRecall> memRecallStructVec;
         int32_t appState;
-        bool isReserve;
         std::chrono::steady_clock::time_point appEnterFrontTime;
         std::chrono::steady_clock::time_point appEnterBackTime;
     };
@@ -66,21 +65,18 @@ private:
         const MemManageRecall &memRecallStruct);
     void AwakeFrontGroundAppMedia(AppPlayerInfo &appPlayerInfo);
     void SetAppPlayerInfo(AppPlayerInfo &appPlayerInfo, int32_t state);
-    void SetLastestExitBackGroundApp();
-    static bool BackGroundTimeGreaterSort(AppPlayerInfo *a, AppPlayerInfo *b);
     void RemoteDieAgainRegisterActiveApps();
 
-    bool isParsered_ = false;
+    bool isParsed_ = false;
     std::recursive_mutex recMutex_;
     std::recursive_mutex recTaskMutex_;
     std::shared_ptr<AppStateListener> appStateListener_;
-    bool appStateListenerIsConnected_ = false;
-    bool appStateListenerRomoteDied_ = false;
+    bool isAppStateListenerConnected_ = false;
+    bool isAppStateListenerRemoteDied_ = false;
     using PidPlayersInfo = std::unordered_map<int32_t, AppPlayerInfo>;
     std::unordered_map<int32_t, PidPlayersInfo> playerManage_;
     std::unique_ptr<TaskQueue> probeTaskQueue_;
-    bool isAleardyCreateProbeTask_ = false;
-    bool existTask_ = false;
+    bool isProbeTaskCreated_ = false;
 };
 }
 }
