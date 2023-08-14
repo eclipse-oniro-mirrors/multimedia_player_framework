@@ -78,11 +78,11 @@ ohos_shared_library("gst_media_common") {
 
   sources = [
     "buffer_type_meta.c",
+    "gst_producer_surface_pool.cpp",
     "gst_shmem_allocator.cpp",
     "gst_shmem_pool.cpp",
     "gst_shmemory_wrap_allocator.cpp",
     "gst_surface_allocator.cpp",
-    "gst_producer_surface_pool.cpp",
   ]
 
   deps = [
