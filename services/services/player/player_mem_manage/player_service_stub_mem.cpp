@@ -34,11 +34,12 @@ constexpr int32_t PER_INSTANCE_NEED_MEMORY_PERCENT = 10;
 constexpr int32_t ONE_HUNDRED = 100;
 sptr<PlayerServiceStub> PlayerServiceStubMem::Create()
 {
-    int32_t availableMemory = Memory::MemMgrClient::GetInstance().GetAvailableMemory();
-    int32_t totalMemory = Memory::MemMgrClient::GetInstance().GetTotalMemory();
+    int32_t availableMemory;
+    int32_t totalMemory;
+    int32_t ret = Memory::MemMgrClient::GetInstance().GetAvailableMemory(availableMemory);
+    ret |= Memory::MemMgrClient::GetInstance().GetTotalMemory(totalMemory);
     MEDIA_LOGD("System available memory:%{public}d, total memory:%{public}d", availableMemory, totalMemory);
-    if (availableMemory > 0 && totalMemory > 0 &&
-        availableMemory <= totalMemory / ONE_HUNDRED * PER_INSTANCE_NEED_MEMORY_PERCENT) {
+    if (ret == MSERR_OK && availableMemory <= totalMemory / ONE_HUNDRED * PER_INSTANCE_NEED_MEMORY_PERCENT) {
         MEDIA_LOGE("System available memory:%{public}d is less than total memory:%{public}d",
             availableMemory, totalMemory);
         return nullptr;
@@ -47,7 +48,7 @@ sptr<PlayerServiceStub> PlayerServiceStubMem::Create()
     sptr<PlayerServiceStubMem> playerStubMem = new(std::nothrow) PlayerServiceStubMem();
     CHECK_AND_RETURN_RET_LOG(playerStubMem != nullptr, nullptr, "failed to new PlayerServiceStubMem");
 
-    int32_t ret = playerStubMem->Init();
+    ret = playerStubMem->Init();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed to player stubMem init");
     return playerStubMem;
 }
@@ -94,40 +95,6 @@ int32_t PlayerServiceStubMem::Init()
     return MSERR_OK;
 }
 
-int32_t PlayerServiceStubMem::SetSource(const std::string &url)
-{
-    auto ret = PlayerServiceStub::SetSource(url);
-    if (ret == MSERR_OK) {
-        std::lock_guard<std::recursive_mutex> lock(recMutex_);
-        isControlByMemManage_ = false;
-        if (url.find(".m3u8") != std::string::npos ||
-            url.find("fd://") != std::string::npos) {
-            isControlByMemManage_ = true;
-        }
-    }
-    return ret;
-}
-
-int32_t PlayerServiceStubMem::SetSource(const sptr<IRemoteObject> &object)
-{
-    auto ret = PlayerServiceStub::SetSource(object);
-    if (ret == MSERR_OK) {
-        std::lock_guard<std::recursive_mutex> lock(recMutex_);
-        isControlByMemManage_ = false;
-    }
-    return ret;
-}
-
-int32_t PlayerServiceStubMem::SetSource(int32_t fd, int64_t offset, int64_t size)
-{
-    auto ret = PlayerServiceStub::SetSource(fd, offset, size);
-    if (ret == MSERR_OK) {
-        std::lock_guard<std::recursive_mutex> lock(recMutex_);
-        isControlByMemManage_ = true;
-    }
-    return ret;
-}
-
 int32_t PlayerServiceStubMem::DestroyStub()
 {
     PlayerMemManage::GetInstance().DeregisterPlayerServer(memRecallStruct_);
@@ -142,12 +109,6 @@ int32_t PlayerServiceStubMem::Release()
 
 void PlayerServiceStubMem::ResetFrontGroundForMemManageRecall()
 {
-    {
-        std::lock_guard<std::recursive_mutex> lock(recMutex_);
-        if (!isControlByMemManage_) {
-            return;
-        }
-    }
     auto task = std::make_shared<TaskHandler<void>>([&, this] {
         int32_t id = PlayerXCollie::GetInstance().SetTimer("ResetFrontGroundForMemManageRecall");
         if (playerServer_ != nullptr) {
@@ -161,12 +122,6 @@ void PlayerServiceStubMem::ResetFrontGroundForMemManageRecall()
 
 void PlayerServiceStubMem::ResetBackGroundForMemManageRecall()
 {
-    {
-        std::lock_guard<std::recursive_mutex> lock(recMutex_);
-        if (!isControlByMemManage_) {
-            return;
-        }
-    }
     auto task = std::make_shared<TaskHandler<void>>([&, this] {
         int32_t id = PlayerXCollie::GetInstance().SetTimer("ResetBackGroundForMemManageRecall");
         if (playerServer_ != nullptr) {
@@ -180,12 +135,6 @@ void PlayerServiceStubMem::ResetBackGroundForMemManageRecall()
 
 void PlayerServiceStubMem::ResetMemmgrForMemManageRecall()
 {
-    {
-        std::lock_guard<std::recursive_mutex> lock(recMutex_);
-        if (!isControlByMemManage_) {
-            return;
-        }
-    }
     auto task = std::make_shared<TaskHandler<void>>([&, this] {
         int32_t id = PlayerXCollie::GetInstance().SetTimer("ResetMemmgrForMemManageRecall");
         if (playerServer_ != nullptr) {
@@ -199,12 +148,6 @@ void PlayerServiceStubMem::ResetMemmgrForMemManageRecall()
 
 void PlayerServiceStubMem::RecoverByMemManageRecall()
 {
-    {
-        std::lock_guard<std::recursive_mutex> lock(recMutex_);
-        if (!isControlByMemManage_) {
-            return;
-        }
-    }
     auto task = std::make_shared<TaskHandler<void>>([&, this] {
         int32_t id = PlayerXCollie::GetInstance().SetTimer("RecoverByMemManage");
         if (playerServer_ != nullptr) {

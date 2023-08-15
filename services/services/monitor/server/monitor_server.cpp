@@ -47,9 +47,8 @@ MonitorServer &MonitorServer::GetInstance()
     return instance;
 }
 
-int32_t MonitorServer::Dump(int32_t fd, bool needDetail)
+int32_t MonitorServer::Dump(int32_t fd)
 {
-    (void)needDetail;
     std::unique_lock<std::mutex> lock(mutex_);
     std::string dumpString = "------------------Monitor------------------\n";
     int32_t i = 0;
@@ -124,9 +123,7 @@ int32_t MonitorServer::EnableMonitor(int32_t pid)
     }
 
     // Start Thread
-    if (thread_ == nullptr) {
-        thread_ = std::make_unique<std::thread>(&MonitorServer::MonitorThread, this);
-    }
+    thread_ = std::make_unique<std::thread>(&MonitorServer::MonitorThread, this);
 
     return MSERR_OK;
 }
@@ -222,16 +219,14 @@ int32_t MonitorServer::ObjCtrl(std::list<wptr<MonitorServerObject>> &recoveryLis
 {
     for (auto objIt = recoveryList.begin(); objIt != recoveryList.end(); objIt++) {
         sptr<MonitorServerObject> obj = objIt->promote();
-        if (obj != nullptr) {
-            (void)obj->IpcRecovery(true);
-        }
+        CHECK_AND_CONTINUE(obj != nullptr);
+        (void)obj->IpcRecovery(true);
     }
 
     for (auto objIt = abnormalList.begin(); objIt != abnormalList.end(); objIt++) {
         sptr<MonitorServerObject> obj = objIt->promote();
-        if (obj != nullptr) {
-            (void)obj->IpcAbnormality();
-        }
+        CHECK_AND_CONTINUE(obj != nullptr);
+        (void)obj->IpcAbnormality();
     }
 
     return MSERR_OK;

@@ -39,7 +39,6 @@ public:
     void Stop();
     int32_t GetTrackInfo(int32_t index, int32_t &innerIndex, int32_t &trackType);
     int32_t GetTrackIndex(int32_t innerIndex, int32_t trackType, int32_t &index);
-    int32_t GetHLSStreamBandwidth(const char *streamId);
     PlayerTrackParse();
     ~PlayerTrackParse();
 
@@ -48,10 +47,10 @@ private:
     GstPadProbeReturn ParseTrackInfo(GstPad *pad, GstPadProbeInfo *info, Format &format);
     void ConvertToPlayerKeys(const Format &innerMeta, Format &outMeta) const;
     bool AddProbeToPad(const GstElement *element, GstPad *pad);
-    bool AddProbeToPadList(GstElement *element, GList &list, bool isSubtitle);
+    bool AddProbeToPadList(GstElement *element, GList &list);
     static GstPadProbeReturn ProbeCallback(GstPad *pad, GstPadProbeInfo *info, gpointer userData);
     static void OnPadAddedCb(const GstElement *element, GstPad *pad, gpointer userData);
-    void SetUpDemuxerElementCb(GstElement &elem, bool isSubtitle);
+    void SetUpDemuxerElementCb(GstElement &elem);
     
     void SetUpInputSelectElementCb(GstElement &elem);
     static void OnInputSelectPadAddedCb(const GstElement *element, GstPad *pad, gpointer userData);
@@ -64,6 +63,7 @@ private:
     void UpdateTrackInfo();
     void StartUpdateTrackInfo();
     int32_t GetInputSelectPadIndex(GstPad *pad);
+    void ParseSubtitlePadCaps(const GstElement *element, GstPad *pad, int32_t index, Format &innerMeta);
 
     inline void AddSignalIds(GstElement *element, gulong signalId)
     {

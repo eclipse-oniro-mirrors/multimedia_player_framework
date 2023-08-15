@@ -40,10 +40,8 @@ int PlayerListenerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mess
     MessageOption &option)
 {
     auto remoteDescriptor = data.ReadInterfaceToken();
-    if (PlayerListenerStub::GetDescriptor() != remoteDescriptor) {
-        MEDIA_LOGE("Invalid descriptor");
-        return MSERR_INVALID_OPERATION;
-    }
+    CHECK_AND_RETURN_RET_LOG(PlayerListenerStub::GetDescriptor() == remoteDescriptor,
+        MSERR_INVALID_OPERATION, "Invalid descriptor");
 
     switch (code) {
         case PlayerListenerMsg::ON_ERROR: {
@@ -57,8 +55,9 @@ int PlayerListenerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mess
             int32_t extra = data.ReadInt32();
             Format format;
             (void)MediaParcel::Unmarshalling(data, format);
-            MEDIA_LOGI("0x%{public}06" PRIXPTR " listen stub on info type: %{public}d extra %{public}d",
-                       FAKE_POINTER(this), type, extra);
+            std::string info = format.Stringify();
+            MEDIA_LOGI("0x%{public}06" PRIXPTR " listen on info type: %{public}d extra %{public}d, format %{public}s",
+                       FAKE_POINTER(this), type, extra, info.c_str());
             OnInfo(static_cast<PlayerOnInfoType>(type), extra, format);
             return MSERR_OK;
         }
@@ -78,27 +77,14 @@ int PlayerListenerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mess
 void PlayerListenerStub::OnError(PlayerErrorType errorType, int32_t errorCode)
 {
     std::shared_ptr<PlayerCallback> cb = callback_.lock();
-    if (cb != nullptr) {
-        (void)errorType;
-        auto errorMsg = MSErrorToExtErrorString(static_cast<MediaServiceErrCode>(errorCode));
-        cb->OnError(errorCode, errorMsg);
-    }
+    CHECK_AND_RETURN(cb != nullptr);
+    (void)errorType;
+    auto errorMsg = MSErrorToExtErrorString(static_cast<MediaServiceErrCode>(errorCode));
+    cb->OnError(errorCode, errorMsg);
 }
 
-void PlayerListenerStub::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
+void PlayerListenerStub::OnMonitor(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
 {
-    if (type == INFO_TYPE_ERROR_MSG) {
-        int32_t errtype = -1;
-        std::string msg;
-        infoBody.GetIntValue(std::string(PlayerKeys::PLAYER_ERROR_TYPE), errtype);
-        infoBody.GetStringValue(std::string(PlayerKeys::PLAYER_ERROR_MSG), msg);
-        return OnError(errtype, msg);
-    }
-
-    std::shared_ptr<PlayerCallback> cb = callback_.lock();
-    if (cb != nullptr) {
-        cb->OnInfo(type, extra, infoBody);
-    }
     std::shared_ptr<MonitorClientObject> monitor = monitor_.lock();
     CHECK_AND_RETURN(monitor != nullptr);
     int32_t reason = StateChangeReason::USER;
@@ -113,12 +99,27 @@ void PlayerListenerStub::OnInfo(PlayerOnInfoType type, int32_t extra, const Form
     }
 }
 
+void PlayerListenerStub::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
+{
+    std::shared_ptr<PlayerCallback> cb = callback_.lock();
+    CHECK_AND_RETURN(cb != nullptr);
+
+    if (type == INFO_TYPE_STATE_CHANGE && extra != lastStateExtra_) {
+        cb->OnInfo(type, extra, infoBody);
+        lastStateExtra_ = extra;
+    } else if (type == INFO_TYPE_STATE_CHANGE && extra == lastStateExtra_) {
+        MEDIA_LOGW("Intercept repeated change state oninfo, extra %{public}d", extra);
+    } else {
+        cb->OnInfo(type, extra, infoBody);
+    }
+    OnMonitor(type, extra, infoBody);
+}
+
 void PlayerListenerStub::OnError(int32_t errorCode, const std::string &errorMsg)
 {
     std::shared_ptr<PlayerCallback> cb = callback_.lock();
-    if (cb != nullptr) {
-        cb->OnError(errorCode, errorMsg);
-    }
+    CHECK_AND_RETURN(cb != nullptr);
+    cb->OnError(errorCode, errorMsg);
 }
 
 void PlayerListenerStub::SetPlayerCallback(const std::weak_ptr<PlayerCallback> &callback)

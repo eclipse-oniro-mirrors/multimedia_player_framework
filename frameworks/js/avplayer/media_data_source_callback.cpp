@@ -101,7 +101,7 @@ int32_t MediaDataSourceCallback::ReadAt(const std::shared_ptr<AVSharedMemory> &m
 int32_t MediaDataSourceCallback::UvWork(uv_loop_s *loop, uv_work_t *work)
 {
     MEDIA_LOGD("begin UvWork");
-    return uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
+    return uv_queue_work_with_qos(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
         // Js Thread
         CHECK_AND_RETURN_LOG(work != nullptr && work->data != nullptr, "work is nullptr");
         MediaDataSourceJsCallbackWraper *wrap = reinterpret_cast<MediaDataSourceJsCallbackWraper *>(work->data);
@@ -121,7 +121,7 @@ int32_t MediaDataSourceCallback::UvWork(uv_loop_s *loop, uv_work_t *work)
             napi_value jsCallback = nullptr;
             napi_status nstatus = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
             CHECK_AND_BREAK(nstatus == napi_ok && jsCallback != nullptr);
-            
+
             // noseek mode don't need pos, so noseek mode need 2 parameters and seekable mode need 3 parameters
             int32_t paramNum;
             napi_value args[3] = { nullptr };
@@ -138,7 +138,7 @@ int32_t MediaDataSourceCallback::UvWork(uv_loop_s *loop, uv_work_t *work)
             } else {
                 paramNum = 2;  // 2 parameters
             }
-            
+
             napi_value size;
             MEDIA_LOGD("call JS function");
             nstatus = napi_call_function(ref->env_, nullptr, jsCallback, paramNum, args, &size);
@@ -150,7 +150,7 @@ int32_t MediaDataSourceCallback::UvWork(uv_loop_s *loop, uv_work_t *work)
             event->cond_.notify_all();
         } while (0);
         delete work;
-    });
+    }, uv_qos_user_initiated);
 }
 
 int32_t MediaDataSourceCallback::ReadAt(int64_t pos, uint32_t length, const std::shared_ptr<AVSharedMemory> &mem)
@@ -183,6 +183,7 @@ void MediaDataSourceCallback::SaveCallbackReference(const std::string &name, std
 
 int32_t MediaDataSourceCallback::GetCallback(const std::string &name, napi_value *callback)
 {
+    (void)name;
     if (refMap_.find(READAT_CALLBACK_NAME) == refMap_.end()) {
         return MSERR_INVALID_VAL;
     }

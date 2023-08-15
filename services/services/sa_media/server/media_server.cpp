@@ -47,9 +47,7 @@ void MediaServer::OnStart()
 {
     MEDIA_LOGD("MediaServer OnStart");
     bool res = Publish(this);
-    if (res) {
-        MEDIA_LOGD("MediaServer OnStart res=%{public}d", res);
-    }
+    MEDIA_LOGD("MediaServer OnStart res=%{public}d", res);
 }
 
 void MediaServer::OnStop()
@@ -62,47 +60,18 @@ sptr<IRemoteObject> MediaServer::GetSubSystemAbility(IStandardMediaService::Medi
 {
     int32_t ret = MediaServiceStub::SetDeathListener(listener);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed set death listener");
-
-    switch (subSystemId) {
-        case MediaSystemAbility::MEDIA_RECORDER: {
-            return MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::RECORDER);
-        }
-        case MediaSystemAbility::MEDIA_PLAYER: {
-            return MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::PLAYER);
-        }
-        case MediaSystemAbility::MEDIA_AVMETADATAHELPER: {
-            return MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::AVMETADATAHELPER);
-        }
-        case MediaSystemAbility::MEDIA_CODECLIST: {
-            return MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::AVCODECLIST);
-        }
-        case MediaSystemAbility::MEDIA_AVCODEC: {
-            return MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::AVCODEC);
-        }
-        case MediaSystemAbility::RECORDER_PROFILES: {
-            return MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::RECORDERPROFILES);
-        }
-        case MediaSystemAbility::MEDIA_MONITOR: {
-            return MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::MONITOR);
-        }
-        default: {
-            MEDIA_LOGE("default case, media client need check subSystemId");
-            return nullptr;
-        }
-    }
+    CHECK_AND_RETURN_RET_LOG(abilityMap_.count(subSystemId) > 0, nullptr,
+        "media client need check subSystemId = %{public}d", subSystemId);
+    return MediaServerManager::GetInstance().CreateStubObject(abilityMap_[subSystemId]);
 }
 
 int32_t MediaServer::Dump(int32_t fd, const std::vector<std::u16string> &args)
 {
-    if (fd <= 0) {
-        MEDIA_LOGW("Failed to check fd");
-        return OHOS::INVALID_OPERATION;
-    }
-    if (MediaServerManager::GetInstance().Dump(fd, args) != OHOS::NO_ERROR) {
-        MEDIA_LOGW("Failed to call MediaServerManager::Dump");
-        return OHOS::INVALID_OPERATION;
-    }
+    CHECK_AND_RETURN_RET_LOG(fd > 0, OHOS::INVALID_OPERATION, "Failed to check fd.");
 
+    auto ret = MediaServerManager::GetInstance().Dump(fd, args);
+    CHECK_AND_RETURN_RET_LOG(ret == NO_ERROR,
+        OHOS::INVALID_OPERATION, "Failed to call MediaServerManager::Dump.");
     return OHOS::NO_ERROR;
 }
 } // namespace Media

@@ -34,6 +34,9 @@ public:
         CapsFixErrorNotifier notifier);
     void DetectCodecUnSetup(GstElement *src, GstElement *videoSink);
     void EnhanceSeekPerformance(bool enable);
+    int32_t GetHEBCMode() const;
+    int32_t HandleCodecBuffers(bool enable);
+    void StopFormatChange();
 
 private:
     void SetupCodecCb(const std::string &metaStr, GstElement *src, GstElement *videoSink,
@@ -41,8 +44,11 @@ private:
     void HlsSwichSoftAndHardCodec(GstElement *videoSink);
     void SetupCodecBufferNum(const std::string &metaStr, GstElement *src) const;
     static void CapsFixErrorCb(const GstElement *decoder, gpointer userData);
+    bool IsFirstCodecSetup() const;
+    void DisablePerformanceBySysParam();
 
     bool isHardwareDec_ = false;
+    bool isHEBCMode_ = false;
     struct DecoderElement {
         bool isHardware = false;
         gulong signalId = 0;
@@ -51,6 +57,7 @@ private:
     std::list<bool> codecTypeList_;
     std::mutex mutex_;
     CapsFixErrorNotifier notifier_;
+    bool isEnablePerformanceMode_ = true;
 };
 } // Media
 } // OHOS

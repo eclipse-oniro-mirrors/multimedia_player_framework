@@ -148,6 +148,7 @@ napi_value AVPlayerNapi::Constructor(napi_env env, napi_callback_info info)
 
 void AVPlayerNapi::Destructor(napi_env env, void *nativeObject, void *finalize)
 {
+    (void)env;
     (void)finalize;
     if (nativeObject != nullptr) {
         AVPlayerNapi *jsPlayer = reinterpret_cast<AVPlayerNapi *>(nativeObject);
@@ -189,7 +190,7 @@ napi_value AVPlayerNapi::JsCreateAVPlayer(napi_env env, napi_callback_info info)
     napi_create_string_utf8(env, "JsCreateAVPlayer", NAPI_AUTO_LENGTH, &resource);
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void *data) {},
         MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncContext.get()), &asyncContext->work));
-    NAPI_CALL(env, napi_queue_async_work(env, asyncContext->work));
+    napi_queue_async_work_with_qos(env, asyncContext->work, napi_qos_user_initiated);
     asyncContext.release();
     MEDIA_LOGI("JsCreateAVPlayer Out");
     return result;
@@ -266,7 +267,7 @@ napi_value AVPlayerNapi::JsPrepare(napi_env env, napi_callback_info info)
             MEDIA_LOGI("Wait Prepare Task End");
         },
         MediaAsyncContext::CompleteCallback, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
-    NAPI_CALL(env, napi_queue_async_work(env, promiseCtx->work));
+    napi_queue_async_work_with_qos(env, promiseCtx->work, napi_qos_user_initiated);
     promiseCtx.release();
     MEDIA_LOGI("JsPrepare Out");
     return result;
@@ -344,7 +345,7 @@ napi_value AVPlayerNapi::JsPlay(napi_env env, napi_callback_info info)
             MEDIA_LOGI("Wait JsPlay Task End");
         },
         MediaAsyncContext::CompleteCallback, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
-    NAPI_CALL(env, napi_queue_async_work(env, promiseCtx->work));
+    napi_queue_async_work_with_qos(env, promiseCtx->work, napi_qos_user_initiated);
     promiseCtx.release();
     MEDIA_LOGI("JsPlay Out");
     return result;
@@ -413,7 +414,7 @@ napi_value AVPlayerNapi::JsPause(napi_env env, napi_callback_info info)
             MEDIA_LOGI("Wait JsPause Task End");
         },
         MediaAsyncContext::CompleteCallback, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
-    NAPI_CALL(env, napi_queue_async_work(env, promiseCtx->work));
+    napi_queue_async_work_with_qos(env, promiseCtx->work, napi_qos_user_initiated);
     promiseCtx.release();
     MEDIA_LOGI("JsPause Out");
     return result;
@@ -483,7 +484,7 @@ napi_value AVPlayerNapi::JsStop(napi_env env, napi_callback_info info)
             MEDIA_LOGI("Wait JsStop Task End");
         },
         MediaAsyncContext::CompleteCallback, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
-    NAPI_CALL(env, napi_queue_async_work(env, promiseCtx->work));
+    napi_queue_async_work_with_qos(env, promiseCtx->work, napi_qos_user_initiated);
     promiseCtx.release();
     MEDIA_LOGI("JsStop Out");
     return result;
@@ -564,7 +565,7 @@ napi_value AVPlayerNapi::JsReset(napi_env env, napi_callback_info info)
             }
         },
         MediaAsyncContext::CompleteCallback, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
-    NAPI_CALL(env, napi_queue_async_work(env, promiseCtx->work));
+    napi_queue_async_work_with_qos(env, promiseCtx->work, napi_qos_user_initiated);
     promiseCtx.release();
     MEDIA_LOGI("JsReset Out");
     return result;
@@ -651,7 +652,7 @@ napi_value AVPlayerNapi::JsRelease(napi_env env, napi_callback_info info)
             }
         },
         MediaAsyncContext::CompleteCallback, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
-    NAPI_CALL(env, napi_queue_async_work(env, promiseCtx->work));
+    napi_queue_async_work_with_qos(env, promiseCtx->work, napi_qos_user_initiated);
     promiseCtx.release();
     MEDIA_LOGI("JsRelease Out");
     return result;
@@ -915,8 +916,8 @@ napi_value AVPlayerNapi::JsAddSubtitleUrl(napi_env env, napi_callback_info info)
     }
 
     // get subUrl from js
-    jsPlayer->subUrl_ = CommonNapi::GetStringArgument(env, args[0]);
-    jsPlayer->AddSubSource(jsPlayer->subUrl_);
+    std::string subUrl = CommonNapi::GetStringArgument(env, args[0]);
+    jsPlayer->AddSubSource(subUrl);
 
     MEDIA_LOGI("JsAddSubtitleUrl Out");
     return result;
@@ -945,17 +946,17 @@ napi_value AVPlayerNapi::JsAddSubtitleAVFileDescriptor(napi_env env, napi_callba
         return result;
     }
 
-    if (!CommonNapi::GetFdArgument(env, args[0], jsPlayer->subFileDescriptor_)) {
+    struct AVFileDescriptor playerFd;
+    if (!CommonNapi::GetFdArgument(env, args[0], playerFd)) {
         MEDIA_LOGE("get fileDescriptor argument failed!");
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
             "invalid parameters, please check the input parameters(fileDescriptor)");
         return result;
     }
 
-    auto task = std::make_shared<TaskHandler<void>>([jsPlayer]() {
+    auto task = std::make_shared<TaskHandler<void>>([jsPlayer, playerFd]() {
         MEDIA_LOGI("AddSubtitleAVFileDescriptor Task");
         if (jsPlayer->player_ != nullptr) {
-            auto playerFd = jsPlayer->subFileDescriptor_;
             if (jsPlayer->player_->AddSubSource(playerFd.fd, playerFd.offset, playerFd.length) != MSERR_OK) {
                 jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "failed to AddSubtitleAVFileDescriptor");
             }
@@ -1844,7 +1845,7 @@ napi_value AVPlayerNapi::JsGetTrackDescription(napi_env env, napi_callback_info 
             promiseCtx->JsResult = std::make_unique<MediaJsResultArray>(trackInfo);
         },
         MediaAsyncContext::CompleteCallback, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
-    NAPI_CALL(env, napi_queue_async_work(env, promiseCtx->work));
+    napi_queue_async_work_with_qos(env, promiseCtx->work, napi_qos_user_initiated);
     promiseCtx.release();
     MEDIA_LOGI("GetTrackDescription Out");
     return result;
@@ -1969,7 +1970,7 @@ napi_value AVPlayerNapi::JsGetCurrentTrack(napi_env env, napi_callback_info info
             MEDIA_LOGI("GetCurrentTrack Task end");
         },
         MediaAsyncContext::CompleteCallback, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
-    NAPI_CALL(env, napi_queue_async_work(env, promiseCtx->work));
+    napi_queue_async_work_with_qos(env, promiseCtx->work, napi_qos_user_initiated);
     promiseCtx.release();
     return result;
 }
@@ -2149,10 +2150,6 @@ void AVPlayerNapi::ResetUserParameters()
     url_.clear();
     fileDescriptor_.fd = 0;
     fileDescriptor_.offset = 0;
-    fileDescriptor_.length = -1;
-    subUrl_.clear();
-    subFileDescriptor_.fd = 0;
-    subFileDescriptor_.offset = 0;
     fileDescriptor_.length = -1;
     width_ = 0;
     height_ = 0;

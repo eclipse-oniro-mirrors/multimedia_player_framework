@@ -25,7 +25,8 @@
         "SystemCapability.Multimedia.Media.CodecBase",
         "SystemCapability.Multimedia.Media.AVPlayer",
         "SystemCapability.Multimedia.Media.AVRecorder",
-        "SystemCapability.Multimedia.SystemSound.Core"
+        "SystemCapability.Multimedia.SystemSound.Core",
+        "SystemCapability.Multimedia.Media.AVScreenCapture"
       ],
       "features": [],
       "adapted_system_type": [ "standard" ],
@@ -36,6 +37,7 @@
       ],
       "deps": {
         "components": [
+          "av_session",
           "safwk",
           "hilog",
           "window_manager",
@@ -44,15 +46,16 @@
           "hitrace",
           "audio_framework",
           "ipc",
-          "graphic_standard",
+          "graphic_2d",
           "hisysevent",
           "c_utils",
           "zlib",
           "access_token",
-          "multimedia_image_framework",
+          "image_framework",
           "hiview",
           "eventhandler",
           "init",
+          "input",
           "memmgr_plugin",
           "hicollie",
           "drivers_peripheral_codec",
@@ -77,6 +80,7 @@
           "base_group": [],
           "fwk_group": [
             "//foundation/multimedia/player_framework/interfaces/kits/js:napi_packages",
+            "//foundation/multimedia/player_framework/interfaces/kits/c:capi_packages",
             "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client"
           ],
           "service_group": [
@@ -87,6 +91,26 @@
         "inner_kits": [
           {
             "type": "so",
+            "name": "//foundation/multimedia/player_framework/services/utils:media_format",
+            "header": {
+              "header_files": [
+                "format.h"
+              ],
+              "header_base": "//foundation/multimedia/player_framework/interfaces/inner_api/native"
+            }
+          },
+          {
+            "type": "so",
+            "name": "//foundation/multimedia/player_framework/services/utils:media_service_utils",
+            "header": {
+              "header_files": [
+                "avsharedmemorypool.h"
+              ],
+              "header_base": "//foundation/multimedia/player_framework/services/utils/include"
+            }
+          },
+          {
+            "type": "so",
             "name": "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
             "header": {
               "header_files": [
@@ -95,7 +119,9 @@
                 "avcodec_video_decoder.h",
                 "avcodec_video_encoder.h",
                 "player.h",
-                "recorder.h"
+                "recorder.h",
+                "screen_capture.h",
+                "media_errors.h"
               ],
               "header_base": "//foundation/multimedia/player_framework/interfaces/inner_api/native"
             }

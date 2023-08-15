@@ -28,13 +28,10 @@ namespace OHOS {
 namespace Media {
 constexpr double APP_BACK_GROUND_DESTROY_MEMERY_TIME = 60.0;
 constexpr double APP_FRONT_GROUND_DESTROY_MEMERY_TIME = 120.0;
-constexpr int32_t RESERVE_BACK_GROUND_APP_NUM = 0;
 PlayerMemManage& PlayerMemManage::GetInstance()
 {
     static PlayerMemManage instance;
-    if (!instance.Init()) {
-        MEDIA_LOGE("GetInstance Init Failed");
-    }
+    instance.Init();
     return instance;
 }
 
@@ -46,9 +43,8 @@ PlayerMemManage::PlayerMemManage()
 PlayerMemManage::~PlayerMemManage()
 {
     Memory::MemMgrClient::GetInstance().UnsubscribeAppState(*appStateListener_);
-    if (isAleardyCreateProbeTask_) {
-        isAleardyCreateProbeTask_ = false;
-        existTask_ = true;
+    if (isProbeTaskCreated_) {
+        isProbeTaskCreated_ = false;
         probeTaskQueue_->Stop();
         probeTaskQueue_ = nullptr;
     }
@@ -58,72 +54,35 @@ PlayerMemManage::~PlayerMemManage()
 
 void PlayerMemManage::FindBackGroundPlayerFromVec(AppPlayerInfo &appPlayerInfo)
 {
-    if (appPlayerInfo.appState != static_cast<int32_t>(AppState::APP_STATE_BACK_GROUND) ||
-        appPlayerInfo.isReserve) {
-        return;
-    }
-    std::chrono::duration<double> durationCost = std::chrono::duration_cast<
+    if (appPlayerInfo.appState == static_cast<int32_t>(AppState::APP_STATE_BACK_GROUND)) {
+        std::chrono::duration<double> durationCost = std::chrono::duration_cast<
         std::chrono::duration<double>>(std::chrono::steady_clock::now() - appPlayerInfo.appEnterBackTime);
-    if (durationCost.count() <= APP_BACK_GROUND_DESTROY_MEMERY_TIME) {
-        return;
-    }
-
-    for (auto iter = appPlayerInfo.memRecallStructVec.begin(); iter != appPlayerInfo.memRecallStructVec.end(); iter++) {
-        ((*iter).resetBackGroundRecall)();
+        if (durationCost.count() > APP_BACK_GROUND_DESTROY_MEMERY_TIME) {
+            for (auto iter = appPlayerInfo.memRecallStructVec.begin();
+                iter != appPlayerInfo.memRecallStructVec.end(); iter++) {
+                ((*iter).resetBackGroundRecall)();
+            }
+        }
     }
 }
 
 void PlayerMemManage::FindFrontGroundPlayerFromVec(AppPlayerInfo &appPlayerInfo)
 {
-    if (appPlayerInfo.appState != static_cast<int32_t>(AppState::APP_STATE_FRONT_GROUND)) {
-        return;
-    }
-
-    std::chrono::duration<double> durationCost = std::chrono::duration_cast<
-        std::chrono::duration<double>>(std::chrono::steady_clock::now() - appPlayerInfo.appEnterFrontTime);
-    if (durationCost.count() <= APP_FRONT_GROUND_DESTROY_MEMERY_TIME) {
-        return;
-    }
-
-    for (auto iter = appPlayerInfo.memRecallStructVec.begin(); iter != appPlayerInfo.memRecallStructVec.end(); iter++) {
-        ((*iter).resetFrontGroundRecall)();
-    }
-}
-
-bool PlayerMemManage::BackGroundTimeGreaterSort(AppPlayerInfo *a, AppPlayerInfo *b)
-{
-    return std::chrono::duration_cast<
-        std::chrono::duration<double>>(a->appEnterBackTime - b->appEnterBackTime).count() > 0;
-}
-
-void PlayerMemManage::SetLastestExitBackGroundApp()
-{
-    std::vector<AppPlayerInfo*> allAppVec;
-    for (auto &[uid, pidPlayersInfo] : playerManage_) {
-        for (auto &[pid, appPlayerInfo] : pidPlayersInfo) {
-            if (appPlayerInfo.appState != static_cast<int32_t>(AppState::APP_STATE_BACK_GROUND)) {
-                continue;
+    if (appPlayerInfo.appState == static_cast<int32_t>(AppState::APP_STATE_FRONT_GROUND)) {
+        std::chrono::duration<double> durationCost = std::chrono::duration_cast<
+            std::chrono::duration<double>>(std::chrono::steady_clock::now() - appPlayerInfo.appEnterFrontTime);
+        if (durationCost.count() > APP_FRONT_GROUND_DESTROY_MEMERY_TIME) {
+            for (auto iter = appPlayerInfo.memRecallStructVec.begin();
+                iter != appPlayerInfo.memRecallStructVec.end(); iter++) {
+                ((*iter).resetFrontGroundRecall)();
             }
-            allAppVec.push_back(&appPlayerInfo);
         }
-    }
-    std::sort(allAppVec.begin(), allAppVec.end(), BackGroundTimeGreaterSort);
-
-    int32_t cnt = 0;
-    for (auto iter = allAppVec.begin(); iter != allAppVec.end(); iter++) {
-        if (cnt < RESERVE_BACK_GROUND_APP_NUM) {
-            (*iter)->isReserve = true;
-        } else {
-            (*iter)->isReserve = false;
-        }
-        cnt++;
     }
 }
 
 void PlayerMemManage::FindProbeTaskPlayer()
 {
     std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    SetLastestExitBackGroundApp();
     for (auto &[uid, pidPlayersInfo] : playerManage_) {
         for (auto &[pid, appPlayerInfo] : pidPlayersInfo) {
             FindFrontGroundPlayerFromVec(appPlayerInfo);
@@ -134,7 +93,7 @@ void PlayerMemManage::FindProbeTaskPlayer()
 
 void PlayerMemManage::ProbeTask()
 {
-    while (!existTask_) {
+    while (isProbeTaskCreated_) {
         FindProbeTaskPlayer();
         sleep(1);  // 1 : one second interval check
     }
@@ -143,8 +102,8 @@ void PlayerMemManage::ProbeTask()
 bool PlayerMemManage::Init()
 {
     std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    if (isParsered_) {
-        if (appStateListener_ != nullptr && appStateListenerRomoteDied_) {
+    if (isParsed_) {
+        if (appStateListener_ != nullptr && isAppStateListenerRemoteDied_) {
             MEDIA_LOGE("MemMgrClient died, SubscribeAppState again");
             Memory::MemMgrClient::GetInstance().SubscribeAppState(*appStateListener_);
         }
@@ -157,7 +116,7 @@ bool PlayerMemManage::Init()
     CHECK_AND_RETURN_RET_LOG(appStateListener_ != nullptr, false, "failed to new AppStateListener");
 
     Memory::MemMgrClient::GetInstance().SubscribeAppState(*appStateListener_);
-    isParsered_ = true;
+    isParsed_ = true;
     return true;
 }
 
@@ -178,7 +137,7 @@ int32_t PlayerMemManage::RegisterPlayerServer(int32_t uid, int32_t pid, const Me
         if (pidIter == pidPlayersInfo.end()) {
             MEDIA_LOGI("new app in pid:%{public}d", pid);
             auto ret = pidPlayersInfo.emplace(pid, AppPlayerInfo {std::vector<MemManageRecall>(),
-                static_cast<int32_t>(AppState::APP_STATE_FRONT_GROUND), false,
+                static_cast<int32_t>(AppState::APP_STATE_FRONT_GROUND),
                 std::chrono::steady_clock::now(), std::chrono::steady_clock::now()});
             Memory::MemMgrClient::GetInstance().RegisterActiveApps(pid, uid);
             pidIter = ret.first;
@@ -190,10 +149,9 @@ int32_t PlayerMemManage::RegisterPlayerServer(int32_t uid, int32_t pid, const Me
 
     {
         std::lock_guard<std::recursive_mutex> lock(recTaskMutex_);
-        if (!isAleardyCreateProbeTask_) {
+        if (!isProbeTaskCreated_) {
             MEDIA_LOGI("Start probe task");
-            isAleardyCreateProbeTask_ = true;
-            existTask_ = false;
+            isProbeTaskCreated_ = true;
             probeTaskQueue_ = std::make_unique<TaskQueue>("probeTaskQueue");
             CHECK_AND_RETURN_RET_LOG(probeTaskQueue_->Start() == MSERR_OK, false, "init task failed");
             auto task = std::make_shared<TaskHandler<void>>([this] {
@@ -250,10 +208,9 @@ int32_t PlayerMemManage::DeregisterPlayerServer(const MemManageRecall &memRecall
 
     {
         std::lock_guard<std::recursive_mutex> lock(recTaskMutex_);
-        if (isAleardyCreateProbeTask_ && playerManage_.size() == 0) {
+        if (isProbeTaskCreated_ && playerManage_.size() == 0) {
             MEDIA_LOGI("Stop probe task");
-            isAleardyCreateProbeTask_ = false;
-            existTask_ = true;
+            isProbeTaskCreated_ = false;
             probeTaskQueue_->Stop();
             probeTaskQueue_ = nullptr;
         }
@@ -303,7 +260,6 @@ void PlayerMemManage::HandleOnTrimLevelLow()
             if (appPlayerInfo.appState != static_cast<int32_t>(AppState::APP_STATE_BACK_GROUND)) {
                 continue;
             }
-
             for (auto iter = appPlayerInfo.memRecallStructVec.begin();
                 iter != appPlayerInfo.memRecallStructVec.end(); iter++) {
                 ((*iter).resetMemmgrRecall)();
@@ -369,11 +325,10 @@ int32_t PlayerMemManage::RecordAppState(int32_t uid, int32_t pid, int32_t state)
             continue;
         }
         for (auto &[findPid, appPlayerInfo] : pidPlayersInfo) {
-            if (findPid != pid) {
-                continue;
+            if (findPid == pid) {
+                SetAppPlayerInfo(appPlayerInfo, state);
+                return MSERR_OK;
             }
-            SetAppPlayerInfo(appPlayerInfo, state);
-            return MSERR_OK;
         }
     }
 
@@ -394,11 +349,11 @@ void PlayerMemManage::RemoteDieAgainRegisterActiveApps()
 void PlayerMemManage::HandleOnConnected()
 {
     std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    MEDIA_LOGI("Enter RemoteDied:%{public}d", appStateListenerRomoteDied_);
-    appStateListenerIsConnected_ = true;
-    if (appStateListenerRomoteDied_) {
+    MEDIA_LOGI("Enter RemoteDied:%{public}d", isAppStateListenerRemoteDied_);
+    isAppStateListenerConnected_ = true;
+    if (isAppStateListenerRemoteDied_) {
         RemoteDieAgainRegisterActiveApps();
-        appStateListenerRomoteDied_ = false;
+        isAppStateListenerRemoteDied_ = false;
     }
 }
 
@@ -406,7 +361,7 @@ void PlayerMemManage::HandleOnDisconnected()
 {
     std::lock_guard<std::recursive_mutex> lock(recMutex_);
     MEDIA_LOGI("Enter");
-    appStateListenerIsConnected_ = false;
+    isAppStateListenerConnected_ = false;
 }
 
 void PlayerMemManage::HandleOnRemoteDied(const wptr<IRemoteObject> &object)
@@ -414,8 +369,8 @@ void PlayerMemManage::HandleOnRemoteDied(const wptr<IRemoteObject> &object)
     (void)object;
     std::lock_guard<std::recursive_mutex> lock(recMutex_);
     MEDIA_LOGI("Enter");
-    appStateListenerRomoteDied_ = true;
-    appStateListenerIsConnected_ = false;
+    isAppStateListenerRemoteDied_ = true;
+    isAppStateListenerConnected_ = false;
 
     for (auto &[findUid, pidPlayersInfo] : playerManage_) {
         for (auto &[findPid, appPlayerInfo] : pidPlayersInfo) {

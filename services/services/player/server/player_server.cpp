@@ -972,6 +972,17 @@ bool PlayerServer::IsPrepared()
     return lastOpStatus_ == PLAYER_PREPARED;
 }
 
+bool PlayerServer::IsCompleted()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (lastOpStatus_ == PLAYER_STATE_ERROR) {
+        MEDIA_LOGE("Can not judge IsCompleted, currentState is PLAYER_STATE_ERROR");
+        return false;
+    }
+
+    return lastOpStatus_ == PLAYER_PLAYBACK_COMPLETE;
+}
+
 bool PlayerServer::IsLooping()
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -1154,6 +1165,9 @@ int32_t PlayerServer::DumpInfo(int32_t fd)
     dumpString += "PlayerServer left volume and right volume is: " +
         std::to_string(config_.leftVolume) + ", " + std::to_string(config_.rightVolume) + "\n";
     dumpString += "PlayerServer audio effect mode is: " + std::to_string(config_.effectMode) + "\n";
+    if (playerEngine_ != nullptr) {
+        dumpString += "PlayerServer enable HEBC: " + std::to_string(playerEngine_->GetHEBCMode()) + "\n";
+    }
 
     std::vector<Format> videoTrack;
     (void)GetVideoTrackInfo(videoTrack);
@@ -1203,7 +1217,7 @@ void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &in
         return;
     }
 
-    if (type == INFO_TYPE_DEFAULTTRACK || type == INFO_TYPE_TRACK_DONE) {
+    if (type == INFO_TYPE_DEFAULTTRACK || type == INFO_TYPE_TRACK_DONE || type == INFO_TYPE_ADD_SUBTITLE_DONE) {
         return;
     }
 

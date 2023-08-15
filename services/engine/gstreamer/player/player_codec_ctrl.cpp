@@ -17,6 +17,7 @@
 #include "surface.h"
 #include "media_log.h"
 #include "media_errors.h"
+#include "param_wrapper.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerCodecCtrl"};
@@ -30,6 +31,7 @@ constexpr uint32_t DEFAULT_CACHE_BUFFERS = 1;
 PlayerCodecCtrl::PlayerCodecCtrl()
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    DisablePerformanceBySysParam();
 }
 
 PlayerCodecCtrl::~PlayerCodecCtrl()
@@ -61,8 +63,10 @@ void PlayerCodecCtrl::SetupCodecCb(const std::string &metaStr, GstElement *src, 
         codecTypeList_.push_back(true);
 
         g_object_set(G_OBJECT(src), "player-scene", TRUE, nullptr);
-        g_object_set(G_OBJECT(src), "performance-mode", TRUE, nullptr);
-        g_object_set(G_OBJECT(videoSink), "performance-mode", TRUE, nullptr);
+        if (isEnablePerformanceMode_) {
+            g_object_set(G_OBJECT(src), "performance-mode", TRUE, nullptr);
+            g_object_set(G_OBJECT(videoSink), "performance-mode", TRUE, nullptr);
+        }
 
         GstCaps *caps = gst_caps_new_simple("video/x-raw", "format", G_TYPE_STRING, "NV12", nullptr);
         g_object_set(G_OBJECT(videoSink), "caps", caps, nullptr);
@@ -85,9 +89,12 @@ void PlayerCodecCtrl::DetectCodecSetup(const std::string &metaStr, GstElement *s
     std::lock_guard<std::mutex> lock(mutex_);
     MEDIA_LOGD("Codec Setup");
     SetupCodecCb(metaStr, src, videoSink, notifier);
-    SetupCodecBufferNum(metaStr, src);
-    MEDIA_LOGI("Set isHardwareDec_ %{public}d", isHardwareDec_);
-    g_object_set(videoSink, "is-hardware-decoder", isHardwareDec_, nullptr);
+    if (IsFirstCodecSetup()) {
+        SetupCodecBufferNum(metaStr, videoSink);
+        MEDIA_LOGI("Set isHardwareDec_ %{public}d", isHardwareDec_);
+        g_object_set(videoSink, "is-hardware-decoder", isHardwareDec_, nullptr);
+        isHEBCMode_ = isHardwareDec_;
+    }
 }
 
 void PlayerCodecCtrl::SetupCodecBufferNum(const std::string &metaStr, GstElement *src) const
@@ -147,6 +154,9 @@ void PlayerCodecCtrl::HlsSwichSoftAndHardCodec(GstElement *videoSink)
         g_object_set(G_OBJECT(videoSink), "max-pool-capacity", MAX_SOFT_BUFFERS, nullptr);
         g_object_set(G_OBJECT(videoSink), "cache-buffers-num", DEFAULT_CACHE_BUFFERS, nullptr);
     }
+    MEDIA_LOGI("Set isHardwareDec_ %{public}d", codecTypeList_.front());
+    g_object_set(videoSink, "is-hardware-decoder", codecTypeList_.front(), nullptr);
+    isHEBCMode_ = codecTypeList_.front();
     g_object_set(G_OBJECT(videoSink), "caps", caps, nullptr);
     gst_caps_unref(caps);
 }
@@ -159,6 +169,52 @@ void PlayerCodecCtrl::EnhanceSeekPerformance(bool enable)
         if (it.second.isHardware) {
             g_object_set(it.first, "seeking", enable, nullptr);
         }
+    }
+}
+
+int32_t PlayerCodecCtrl::GetHEBCMode() const
+{
+    return isHEBCMode_;
+}
+
+bool PlayerCodecCtrl::IsFirstCodecSetup() const
+{
+    return codecTypeList_.size() == 1;
+}
+
+int32_t PlayerCodecCtrl::HandleCodecBuffers(bool enable)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    MEDIA_LOGD("HandleCodecBuffers %{public}d", enable);
+    for (auto &it : elementMap_) {
+        if (it.second.isHardware) {
+            if (enable) {
+                g_object_set(it.first, "free_codec_buffers", enable, nullptr);
+            } else {
+                g_object_set(it.first, "recover_codec_buffers", enable, nullptr);
+            }
+            return MSERR_OK;
+        }
+    }
+    return MSERR_INVALID_OPERATION;
+}
+
+void PlayerCodecCtrl::StopFormatChange()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    MEDIA_LOGD("StopFormatChange");
+    for (auto &it : elementMap_) {
+        if (it.second.isHardware) {
+            g_object_set(it.first, "stop-format-change", TRUE, nullptr);
+        }
+    }
+}
+void PlayerCodecCtrl::DisablePerformanceBySysParam()
+{
+    std::string cmd;
+    int32_t ret = OHOS::system::GetStringParameter("sys.media.player.performance.enable", cmd, "");
+    if (ret == 0 && !cmd.empty()) {
+        isEnablePerformanceMode_ = cmd == "FALSE" ? false : true;
     }
 }
 } // Media

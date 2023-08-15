@@ -63,17 +63,13 @@ int32_t HdiVdecParamsMgr::SetParameter(GstCodecParamKey key, GstElement *element
             return SetVideoFormat(element);
         case GST_VIDEO_SURFACE_INIT:
             return VideoSurfaceInit(element);
-        case GST_VENDOR:
-            MEDIA_LOGD("Set vendor property");
-            break;
         case GST_METADATA_MODE:
             return SetMetadataMode();
         case GST_DYNAMIC_FRAME_RATE:
             return SetFrameRate(element);
         default:
-            break;
+            return GST_CODEC_OK;
     }
-    return GST_CODEC_OK;
 }
 
 int32_t HdiVdecParamsMgr::SetFrameRate(GstElement *element)
@@ -209,6 +205,21 @@ int32_t HdiVdecParamsMgr::GetVideoFormat(GstElement *element)
     return GST_CODEC_OK;
 }
 
+int32_t HdiVdecParamsMgr::GetBufferUsage(GstElement *element)
+{
+    MEDIA_LOGD("GetBufferUsage");
+    GetBufferHandleUsageParams usageParams;
+    InitHdiParam(usageParams, verInfo_);
+    usageParams.portIndex = outPortDef_.nPortIndex;
+    auto ret = HdiGetParameter(handle_, OMX_IndexParamGetBufferHandleUsage, usageParams);
+    CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "HdiSetParameter failed");
+
+    GstVdecBase *base = GST_VDEC_BASE(element);
+    base->usage = usageParams.usage;
+    MEDIA_LOGD("Usage %{public}" PRIu64" ", base->usage);
+    return GST_CODEC_OK;
+}
+
 int32_t HdiVdecParamsMgr::VideoSurfaceInit(GstElement *element)
 {
     MEDIA_LOGD("VideoSurfaceInit, inport %{public}d outport %{public}d", inPortDef_.nPortIndex, outPortDef_.nPortIndex);
@@ -217,10 +228,9 @@ int32_t HdiVdecParamsMgr::VideoSurfaceInit(GstElement *element)
     supportBufferTypes.portIndex = outPortDef_.nPortIndex;
     auto ret = HdiGetParameter(handle_, OMX_IndexParamSupportBufferType, supportBufferTypes);
     CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "HdiGetParameter failed");
-    if (!(supportBufferTypes.bufferTypes & CODEC_BUFFER_TYPE_HANDLE)) {
-        MEDIA_LOGD("No CODEC_BUFFER_TYPE_HANDLE, support bufferType %{public}d", supportBufferTypes.bufferTypes);
-        return GST_CODEC_ERROR;
-    }
+    CHECK_AND_RETURN_RET_LOG(supportBufferTypes.bufferTypes & CODEC_BUFFER_TYPE_HANDLE,
+        GST_CODEC_ERROR, "No CODEC_BUFFER_TYPE_HANDLE, support bufferType %{public}d",
+        supportBufferTypes.bufferTypes);
 
     UseBufferType useBufferTypes;
     InitHdiParam(useBufferTypes, verInfo_);
@@ -252,10 +262,11 @@ int32_t HdiVdecParamsMgr::GetParameter(GstCodecParamKey key, GstElement *element
             return GetOutputVideoCommon(element);
         case GST_VIDEO_FORMAT:
             return GetVideoFormat(element);
+        case GST_BUFFER_USAGE:
+            return GetBufferUsage(element);
         default:
-            break;
+            return GST_CODEC_OK;
     }
-    return GST_CODEC_OK;
 }
 }  // namespace Media
 }  // namespace OHOS
