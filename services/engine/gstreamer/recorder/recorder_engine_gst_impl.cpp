@@ -274,12 +274,12 @@ bool RecorderEngineGstImpl::CheckParamType(int32_t sourceId, const RecorderParam
 
     if (iter->second.IsVideo()) {
         CHECK_AND_RETURN_RET_LOG(recParam.IsVideoParam(), false,
-             "The specified sourceId is associated with video, but the param type is irrelevant with video !");
+            "The specified sourceId is associated with video, but the param type is irrelevant with video !");
         return true;
     }
     if (iter->second.IsAudio()) {
         CHECK_AND_RETURN_RET_LOG(recParam.IsAudioParam(), false,
-             "The specified sourceId is associated with audio, but the param type is irrelevant with audio !");
+            "The specified sourceId is associated with audio, but the param type is irrelevant with audio !");
         return true;
     }
 

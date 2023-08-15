@@ -70,9 +70,9 @@ std::shared_ptr<RecorderElement> RecorderPipelineBuilder::CreateElement(
     RecorderElement::CreateParam createParam = { desc, name };
     std::shared_ptr<RecorderElement> element = RecorderElementFactory::GetInstance().CreateElement(name, createParam);
     std::string sourceKind = desc.IsVideo() ? "video" : (desc.IsAudio() ? "audio" : "unknown");
-    CHECK_AND_RETURN_RET_LOG(element != nullptr, nullptr, 
+    CHECK_AND_RETURN_RET_LOG(element != nullptr, nullptr,
         "Unable to create element for %{public}s source type: %{public}d, element name: %{public}s",
-            sourceKind.c_str(), desc.type_, name.c_str());
+        sourceKind.c_str(), desc.type_, name.c_str());
 
     pipelineDesc_->allElems.push_back(element);
     if (isSource) {
