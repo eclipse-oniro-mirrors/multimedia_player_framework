@@ -181,7 +181,8 @@ int32_t RecorderPipeline::GetParameter(int32_t sourceId, RecorderParam &recParam
     CHECK_AND_RETURN_RET(!errorState_.load(), MSERR_INVALID_STATE);
     CHECK_AND_RETURN_RET(desc_ != nullptr, MSERR_INVALID_STATE);
 
-    CHECK_AND_RETURN_RET_LOG(desc_->srcElems.find(sourceId) != desc_->srcElems.end(), MSERR_INVALID_VAL, "invalid sourceId %{public}d", sourceId);
+    CHECK_AND_RETURN_RET_LOG(desc_->srcElems.find(sourceId) != desc_->srcElems.end(), MSERR_INVALID_VAL,
+                             "invalid sourceId %{public}d", sourceId);
     return desc_->srcElems[sourceId]->GetParameter(recParam);
 }
 
@@ -226,7 +227,8 @@ void RecorderPipeline::DrainBuffer(bool isDrainAll)
     auto iter = desc_->allElems.begin();
     for (size_t index = 0; index < desc_->srcElems.size(); index++, iter = std::next(iter)) {
         ret = (*iter)->DrainAll(isDrainAll);
-        CHECK_AND_BREAK_LOG(ret == MSERR_OK, "drain [%{public}d] failed for %{public}s", isDrainAll, (*iter)->GetName().c_str());
+        CHECK_AND_BREAK_LOG(ret == MSERR_OK, "drain [%{public}d] failed for %{public}s",
+                            isDrainAll, (*iter)->GetName().c_str());
     }
 
     if (ret == MSERR_OK) {

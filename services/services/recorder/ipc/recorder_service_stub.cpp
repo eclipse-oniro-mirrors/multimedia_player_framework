@@ -119,11 +119,11 @@ int RecorderServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mes
         permissionResult = Security::AccessToken::PERMISSION_GRANTED;
     }
     CHECK_AND_RETURN_RET_LOG(permissionResult == Security::AccessToken::PERMISSION_GRANTED,
-    MSERR_EXT_API9_PERMISSION_DENIED, "user do not have the right to access MICROPHONE");
+        MSERR_EXT_API9_PERMISSION_DENIED, "user do not have the right to access MICROPHONE");
 
     auto remoteDescriptor = data.ReadInterfaceToken();
     CHECK_AND_RETURN_RET_LOG(RecorderServiceStub::GetDescriptor() == remoteDescriptor,
-    MSERR_INVALID_OPERATION, "Invalid descriptor");
+        MSERR_INVALID_OPERATION, "Invalid descriptor");
 
     auto itFunc = recFuncs_.find(code);
     if (itFunc != recFuncs_.end()) {

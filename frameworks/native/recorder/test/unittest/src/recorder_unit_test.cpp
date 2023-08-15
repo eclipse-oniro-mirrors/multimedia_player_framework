@@ -111,7 +111,8 @@ HWTEST_F(RecorderUnitTest, recorder_SetFileSplitDuration_001, TestSize.Level2)
 {
     g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
     g_videoRecorderConfig.videoFormat = MPEG4;
-    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_video_SetFileSplitDuration_001.mp4").c_str(), O_RDWR);
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT +
+            "recorder_video_SetFileSplitDuration_001.mp4").c_str(), O_RDWR);
     ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
 
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(AUDIO_VIDEO, g_videoRecorderConfig));
@@ -139,10 +140,12 @@ HWTEST_F(RecorderUnitTest, recorder_SetAudioEncoder_Error_001, TestSize.Level2)
 {
     g_videoRecorderConfig.audioSourceId = 0;
     g_videoRecorderConfig.audioFormat = AUDIO_DEFAULT;
-    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_video_SetAudioEncoder_Error_001.mp4").c_str(), O_RDWR);
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT +
+            "recorder_video_SetAudioEncoder_Error_001.mp4").c_str(), O_RDWR);
     ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
 
-    EXPECT_NE(MSERR_OK, recorder_->SetAudioEncoder(g_videoRecorderConfig.audioSourceId, g_videoRecorderConfig.audioFormat));
+    EXPECT_NE(MSERR_OK,
+              recorder_->SetAudioEncoder(g_videoRecorderConfig.audioSourceId, g_videoRecorderConfig.audioFormat));
     close(g_videoRecorderConfig.outputFd);
 }
 
@@ -173,7 +176,8 @@ HWTEST_F(RecorderUnitTest, recorder_SetVideoSourceRepeat_001, TestSize.Level2)
 {
     g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
     g_videoRecorderConfig.videoFormat = MPEG4;
-    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_video_SetVideoSourceRepeat_001.mp4").c_str(), O_RDWR);
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT +
+            "recorder_video_SetVideoSourceRepeat_001.mp4").c_str(), O_RDWR);
     ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
 
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(AUDIO_VIDEO, g_videoRecorderConfig));
@@ -193,7 +197,8 @@ HWTEST_F(RecorderUnitTest, recorder_SetAudioSourceRepeat_001, TestSize.Level2)
     g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
     g_videoRecorderConfig.aSource = AUDIO_SOURCE_DEFAULT;
     g_videoRecorderConfig.videoFormat = MPEG4;
-    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_video_SetAudioSourceRepeat_001.mp4").c_str(), O_RDWR);
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT +
+            "recorder_video_SetAudioSourceRepeat_001.mp4").c_str(), O_RDWR);
     ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
 
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(AUDIO_VIDEO, g_videoRecorderConfig));

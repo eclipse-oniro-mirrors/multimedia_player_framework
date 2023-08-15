@@ -53,7 +53,7 @@ GstPad *RecorderPipelineLinkHelper::GetGstPad(
     }
 
     CHECK_AND_RETURN_RET_LOG(pad != nullptr, nullptr,
-    "Get pad %{public}s from element %{public}s failed !", padName.c_str(), elem->GetName().c_str());
+        "Get pad %{public}s from element %{public}s failed !", padName.c_str(), elem->GetName().c_str());
 
     if (!isStaticPad) {
         if (requestedPads_.count(elem->gstElem_) == 0) {
@@ -95,8 +95,9 @@ int32_t RecorderPipelineLinkHelper::ExecuteOneLink(
 
     GstPadLinkReturn ret = gst_pad_link(srcPad, sinkPad);
     CHECK_AND_RETURN_RET_LOG(ret == GST_PAD_LINK_OK, MSERR_INVALID_OPERATION,
-    "link elem(%{public}s)'s pad %{public}s to elem(%{public}s)'s pad %{public}s failed !", 
-    srcElem->GetName().c_str(), linkDesc.srcPad.c_str(), linkDesc.dstElem->GetName().c_str(), linkDesc.sinkPad.c_str());
+                             "link elem(%{public}s)'s pad %{public}s to elem(%{public}s)'s pad %{public}s failed !",
+                             srcElem->GetName().c_str(), linkDesc.srcPad.c_str(),
+                             linkDesc.dstElem->GetName().c_str(), linkDesc.sinkPad.c_str());
 
     return MSERR_OK;
 }

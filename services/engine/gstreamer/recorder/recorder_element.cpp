@@ -63,11 +63,11 @@ std::shared_ptr<RecorderElement> RecorderElementFactory::CreateElement(
     {
         std::unique_lock<std::mutex> lock(tblMutex_);
         CHECK_AND_RETURN_RET_LOG(creatorTbl_.find(key) != creatorTbl_.end(), nullptr,
-        "key %{public}s not registered !", key.c_str());
+            "key %{public}s not registered !", key.c_str());
 
         elem = creatorTbl_[key](param);
         CHECK_AND_RETURN_RET_LOG(elem != nullptr, nullptr,
-        "create element for key(%{public}s) failed !", key.c_str());
+            "create element for key(%{public}s) failed !", key.c_str());
     }
 
     int32_t ret = elem->Init();
@@ -101,7 +101,8 @@ int32_t RecorderElement::DrainAll(bool isDrain)
             CHECK_AND_RETURN_RET(pad != nullptr && info != nullptr, GST_PAD_PROBE_PASS);
 
             MEDIA_LOGI("During flushing, pad %{public}s's probe is processing the probeInfo", GST_PAD_NAME(pad));
-            CHECK_AND_RETURN_RET((static_cast<unsigned int>(info->type) & GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM) != 0, GST_PAD_PROBE_DROP);
+            CHECK_AND_RETURN_RET((static_cast<unsigned int>(info->type) & GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM) != 0,
+                                 GST_PAD_PROBE_DROP);
 
             return GST_PAD_PROBE_PASS;
         };

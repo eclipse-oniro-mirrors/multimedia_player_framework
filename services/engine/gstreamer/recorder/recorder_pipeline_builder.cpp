@@ -69,9 +69,9 @@ std::shared_ptr<RecorderElement> RecorderPipelineBuilder::CreateElement(
     RecorderElement::CreateParam createParam = { desc, name };
     std::shared_ptr<RecorderElement> element = RecorderElementFactory::GetInstance().CreateElement(name, createParam);
     std::string sourceKind = desc.IsVideo() ? "video" : (desc.IsAudio() ? "audio" : "unknown");
-    CHECK_AND_RETURN_RET_LOG(element != nullptr, nullptr,
-    "Unable to create element for %{public}s source type: %{public}d, element name: %{public}s",
-    sourceKind.c_str(), desc.type_, name.c_str());
+    CHECK_AND_RETURN_RET_LOG(element != nullptr, nullptr, 
+        "Unable to create element for %{public}s source type: %{public}d, element name: %{public}s",
+            sourceKind.c_str(), desc.type_, name.c_str());
 
     pipelineDesc_->allElems.push_back(element);
     if (isSource) {
@@ -183,7 +183,8 @@ int32_t RecorderPipelineBuilder::SetSource(const RecorderSourceDesc &desc)
 
 int32_t RecorderPipelineBuilder::SetOutputFormat(OutputFormatType formatType)
 {
-    CHECK_AND_RETURN_RET_LOG(muxSink_ != nullptr, MSERR_INVALID_OPERATION, "No source set, set the output format invalid !");
+    CHECK_AND_RETURN_RET_LOG(muxSink_ != nullptr, MSERR_INVALID_OPERATION,
+                             "No source set, set the output format invalid !");
 
     int32_t ret = muxSink_->Configure(OutputFormat(formatType));
     CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
@@ -217,7 +218,7 @@ int32_t RecorderPipelineBuilder::CheckConfigure(int32_t sourceId, const Recorder
 int32_t RecorderPipelineBuilder::Configure(int32_t sourceId, const RecorderParam &param)
 {
     CHECK_AND_RETURN_RET_LOG(outputFormatConfiged_, MSERR_INVALID_OPERATION,
-    "Output format not set, configure the pipeline is invalid !");
+        "Output format not set, configure the pipeline is invalid !");
 
     int32_t ret = CheckConfigure(sourceId, param);
     CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
@@ -260,7 +261,7 @@ int32_t RecorderPipelineBuilder::CheckPipeline()
 int32_t RecorderPipelineBuilder::Build(std::shared_ptr<RecorderPipeline> &pipeline)
 {
     CHECK_AND_RETURN_RET_LOG(outputFormatConfiged_, MSERR_INVALID_OPERATION,
-    "Output format not configured, build pipeline failed !");
+        "Output format not configured, build pipeline failed !");
 
     /*
      * Execute a series of policies to filter pipeline graphs or check pipeline parameter configurations.

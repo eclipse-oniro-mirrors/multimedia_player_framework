@@ -55,7 +55,7 @@ int32_t RecorderEngineGstImpl::SetVideoSource(VideoSourceType source, int32_t &s
     sourceId = INVALID_SOURCE_ID;
 
     CHECK_AND_RETURN_RET_LOG(source >= VIDEO_SOURCE_SURFACE_YUV && source < VIDEO_SOURCE_BUTT, MSERR_INVALID_VAL,
-    "Invalid video source type: %{public}d", source);
+        "Invalid video source type: %{public}d", source);
 
     std::unique_lock<std::mutex> lock(mutex_);
 
@@ -83,7 +83,7 @@ int32_t RecorderEngineGstImpl::SetAudioSource(AudioSourceType source, int32_t &s
     sourceId = INVALID_SOURCE_ID;
 
     CHECK_AND_RETURN_RET_LOG(source > AUDIO_SOURCE_INVALID && source <= AUDIO_MIC, MSERR_INVALID_VAL,
-    "Input AudioSourceType : %{public}d is invalid", source);
+        "Input AudioSourceType : %{public}d is invalid", source);
 
     if (source == AudioSourceType::AUDIO_SOURCE_DEFAULT) {
         source = AudioSourceType::AUDIO_MIC;
@@ -113,7 +113,7 @@ int32_t RecorderEngineGstImpl::SetAudioSource(AudioSourceType source, int32_t &s
 int32_t RecorderEngineGstImpl::SetOutputFormat(OutputFormatType format)
 {
     CHECK_AND_RETURN_RET_LOG(format >= FORMAT_DEFAULT && format < FORMAT_BUTT, MSERR_INVALID_VAL,
-    "invalid output format: %{public}d", format);
+        "invalid output format: %{public}d", format);
 
     if (format == FORMAT_DEFAULT) {
         format = FORMAT_MPEG_4;
@@ -122,7 +122,7 @@ int32_t RecorderEngineGstImpl::SetOutputFormat(OutputFormatType format)
     std::unique_lock<std::mutex> lock(mutex_);
 
     CHECK_AND_RETURN_RET_LOG(!allSources_.empty(), MSERR_INVALID_OPERATION,
-    "No source is set before set the output format!");
+        "No source is set before set the output format!");
 
     int32_t ret = builder_->SetOutputFormat(format);
     CHECK_AND_RETURN_RET(ret == MSERR_OK, MSERR_INVALID_OPERATION);
@@ -153,7 +153,7 @@ int32_t RecorderEngineGstImpl::Configure(int32_t sourceId, const RecorderParam &
     std::unique_lock<std::mutex> lock(mutex_);
 
     CHECK_AND_RETURN_RET_LOG((allSources_.find(sourceId) != allSources_.end()) || (sourceId == DUMMY_SOURCE_ID),
-    MSERR_INVALID_OPERATION, "invalid sourceId: 0x%{public}x", sourceId);
+                             MSERR_INVALID_OPERATION, "invalid sourceId: 0x%{public}x", sourceId);
 
     CHECK_AND_RETURN_RET(CheckParamType(sourceId, recParam), MSERR_INVALID_VAL);
 
@@ -164,10 +164,11 @@ sptr<Surface> RecorderEngineGstImpl::GetSurface(int32_t sourceId)
 {
     std::unique_lock<std::mutex> lock(mutex_);
 
-    CHECK_AND_RETURN_RET_LOG(allSources_.find(sourceId) != allSources_.end(), nullptr, "invalid sourceId: 0x%{public}x", sourceId);
+    CHECK_AND_RETURN_RET_LOG(allSources_.find(sourceId) != allSources_.end(), nullptr,
+                             "invalid sourceId: 0x%{public}x", sourceId);
 
     CHECK_AND_RETURN_RET_LOG(allSources_[sourceId].IsVideo(), nullptr,
-    "The sourceId %{public}d is not video source, GetSurface invalid !", sourceId);
+                             "The sourceId %{public}d is not video source, GetSurface invalid !", sourceId);
 
     CHECK_AND_RETURN_RET_LOG(pipeline_ != nullptr, nullptr, "Pipeline is nullptr");
 
@@ -272,12 +273,12 @@ bool RecorderEngineGstImpl::CheckParamType(int32_t sourceId, const RecorderParam
 
     if (iter->second.IsVideo()) {
         CHECK_AND_RETURN_RET_LOG(recParam.IsVideoParam(), false,
-        "The specified sourceId is associated with video, but the param type is irrelevant with video !");
+             "The specified sourceId is associated with video, but the param type is irrelevant with video !");
         return true;
     }
     if (iter->second.IsAudio()) {
         CHECK_AND_RETURN_RET_LOG(recParam.IsAudioParam(), false,
-        "The specified sourceId is associated with audio, but the param type is irrelevant with audio !");
+             "The specified sourceId is associated with audio, but the param type is irrelevant with audio !");
         return true;
     }
 
