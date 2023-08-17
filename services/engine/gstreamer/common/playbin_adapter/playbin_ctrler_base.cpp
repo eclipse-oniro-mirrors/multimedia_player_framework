@@ -483,8 +483,6 @@ void PlayBinCtrlerBase::SetElemSetupListener(ElemSetupListener listener)
     std::unique_lock<std::mutex> lock(mutex_);
     std::unique_lock<std::mutex> lk(listenerMutex_);
     elemSetupListener_ = listener;
-
-    CHECK_AND_RETURN_LOG(trackParse_ != nullptr, "creat track parse failed")
 }
 
 void PlayBinCtrlerBase::SetElemUnSetupListener(ElemSetupListener listener)
