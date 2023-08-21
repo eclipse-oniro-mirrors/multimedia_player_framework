@@ -69,16 +69,15 @@ int32_t MediaServerManager::Dump(int32_t fd, const std::vector<std::u16string> &
         argSets.insert(args[index]);
     }
     for (const auto &it : dumpCollections_) {
-        if (dumperTbl_.count(it.first) == 0) {
-            continue;
-        }
         dumpString += "------------------"+ stubCollections_[it.first].name + "Server------------------\n";
         int32_t ret = OHOS::NO_ERROR;
         bool needDetail = false;
         if (it.first != StubType::AVMETADATAHELPER) {
             needDetail = argSets.find(it.second) != argSets.end();
         }
-        ret = WriteInfo(fd, dumpString, dumperTbl_[it.first], needDetail);
+        if (dumperTbl_.count(it.first) > 0) {
+            ret = WriteInfo(fd, dumpString, dumperTbl_[it.first], needDetail);
+        }
         CHECK_AND_RETURN_RET(ret == OHOS::NO_ERROR, OHOS::INVALID_OPERATION);
     }
     CHECK_AND_RETURN_RET_LOG(ServiceDumpManager::GetInstance().Dump(fd, argSets) == OHOS::NO_ERROR,
