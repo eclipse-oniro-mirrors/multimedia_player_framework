@@ -61,6 +61,7 @@ ohos_fuzztest("PlayerServiceStubFuzzTest") {
     "../../../../services/utils:media_format",
   ]
   external_deps = [
+    "drivers_peripheral_display:hdi_gralloc_client",
     "graphic_2d:surface",
     "ipc:ipc_single",
     "player_framework:media_client",

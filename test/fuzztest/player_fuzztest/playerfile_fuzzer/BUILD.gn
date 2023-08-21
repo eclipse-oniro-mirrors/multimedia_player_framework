@@ -47,6 +47,7 @@ ohos_fuzztest("PlayerFileFuzzTest") {
     "../../../../../../../foundation/window/window_manager/wm:libwm",
   ]
   external_deps = [
+    "drivers_peripheral_display:hdi_gralloc_client",
     "graphic_2d:surface",
     "hilog:libhilog",
     "player_framework:media_client",
