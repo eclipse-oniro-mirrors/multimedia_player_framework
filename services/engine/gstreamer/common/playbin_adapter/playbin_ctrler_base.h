@@ -29,12 +29,17 @@
 #include "task_queue.h"
 #include "player_track_parse.h"
 #include "av_common.h"
+#include "gst_utils.h"
 
 namespace OHOS {
 namespace Media {
+class PlayBinCtrlerBase;
+using PlayBinCtrlerWrapper = ThizWrapper<PlayBinCtrlerBase>;
+
 enum GstPlayerStatus : int32_t {
     GST_PLAYER_STATUS_IDLE = 0,
     GST_PLAYER_STATUS_BUFFERING,
+    GST_PLAYER_STATUS_READY,
     GST_PLAYER_STATUS_PAUSED,
     GST_PLAYER_STATUS_PLAYING,
 };
@@ -148,6 +153,7 @@ private:
     void OnTrackDone();
     void OnAddSubDone();
     void OnError(int32_t errorCode, std::string message);
+    void CheckAndAddSignalIds(gulong id, PlayBinCtrlerWrapper *wrapper, GstElement *elem);
 
     inline void AddSignalIds(GstElement *element, gulong signalId)
     {
@@ -186,6 +192,7 @@ private:
     bool isInitialized_ = false;
 
     bool isErrorHappened_ = false;
+    std::thread audioSeekThread_;
     std::condition_variable preparingCond_;
     std::condition_variable preparedCond_;
     std::condition_variable stoppingCond_;
@@ -200,6 +207,7 @@ private:
     int64_t lastTime_ = 0;
 
     bool isSeeking_ = false;
+    bool isClosetSeeking_ = false;
     bool isRating_ = false;
     bool isAddingSubtitle_ = false;
     bool isBuffering_ = false;

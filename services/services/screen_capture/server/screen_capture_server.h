@@ -33,9 +33,7 @@
 #include "privacy_kit.h"
 #include "ipc_skeleton.h"
 #include "screen_capture.h"
-#include "avcodec_server.h"
 #include "audio_capturer.h"
-#include "avcodec_audio_encoder.h"
 #include "nativetoken_kit.h"
 #include "token_setproc.h"
 #include "audio_info.h"
@@ -69,12 +67,11 @@ enum VideoPermissionState : int32_t {
 
 class ScreenCapBufferConsumerListener : public IBufferConsumerListener {
 public:
-    ScreenCapBufferConsumerListener(sptr<Surface> consumer, std::shared_ptr<ScreenCaptureCallBack> &screenCaptureCb)
+    ScreenCapBufferConsumerListener(sptr<Surface> consumer,
+        const std::shared_ptr<ScreenCaptureCallBack> &screenCaptureCb) : consumer_(consumer),
+        screenCaptureCb_(screenCaptureCb)
     {
-        consumer_  = consumer;
-        screenCaptureCb_ = screenCaptureCb;
     }
-
     ~ScreenCapBufferConsumerListener()
     {
         std::unique_lock<std::mutex> vlock(vmutex_);
@@ -151,6 +148,7 @@ private:
     std::mutex audioInnerMutex_;
     std::mutex cbMutex_;
     std::condition_variable bufferCond_;
+    std::condition_variable bufferInnerCond_;
     /* use Mic AudioCaptureHandler */
     std::shared_ptr<AudioCapturer> audioMicCapturer_ = nullptr;
     std::shared_ptr<AudioCapturerCallbackImpl> cb1_ = nullptr;

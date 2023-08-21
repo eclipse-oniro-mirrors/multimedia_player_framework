@@ -23,7 +23,6 @@
 #include "avmeta_meta_collector.h"
 #include "scope_guard.h"
 #include "uri_helper.h"
-#include "time_perf.h"
 #include "media_dfx.h"
 
 namespace {
@@ -86,7 +85,6 @@ AVMetadataHelperEngineGstImpl::~AVMetadataHelperEngineGstImpl()
 {
     MEDIA_LOGD("enter dtor, instance: 0x%{public}06" PRIXPTR "", FAKE_POINTER(this));
     Reset();
-    CLEAN_PERF_RECORD(this);
 }
 
 int32_t AVMetadataHelperEngineGstImpl::SetSource(const std::string &uri, int32_t usage)
@@ -104,10 +102,6 @@ int32_t AVMetadataHelperEngineGstImpl::SetSource(const std::string &uri, int32_t
     }
 
     MEDIA_LOGI("uri: %{public}s, usage: %{public}d", uri.c_str(), usage);
-
-    if (usage == AVMetadataUsage::AV_META_USAGE_PIXEL_MAP) {
-        ASYNC_PERF_START(this, "FirstFetchFrame");
-    }
 
     int32_t ret = SetSourceInternel(uri, usage);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call SetSourceInternel");
@@ -265,7 +259,7 @@ int32_t AVMetadataHelperEngineGstImpl::PrepareInternel(bool async)
 
     if (!async) {
         metaCollector_->Stop(true);
-        static constexpr int32_t timeout = 5;
+        static constexpr int32_t timeout = 3;
         std::unique_lock<std::mutex> lock(mutex_);
         cond_.wait_for(lock, std::chrono::seconds(timeout), [this]() {
             return (status_ == PLAYBIN_STATE_PREPARED && asyncDone_) || errHappened_;
@@ -280,8 +274,6 @@ int32_t AVMetadataHelperEngineGstImpl::FetchFrameInternel(int64_t timeUsOrIndex,
     const OutputConfiguration &param, std::vector<std::shared_ptr<AVSharedMemory>> &outFrames)
 {
     (void)numFrames;
-
-    AUTO_PERF(this, "FetchFrame");
 
     if (!CheckFrameFetchParam(timeUsOrIndex, option, param)) {
         MEDIA_LOGE("fetch frame's param invalid");
@@ -314,7 +306,6 @@ int32_t AVMetadataHelperEngineGstImpl::FetchFrameInternel(int64_t timeUsOrIndex,
     }
 
     if (firstFetch_) {
-        ASYNC_PERF_STOP(this, "FirstFetchFrame");
         firstFetch_ = false;
     }
 

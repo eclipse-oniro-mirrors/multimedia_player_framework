@@ -52,9 +52,7 @@ static void gst_subtitle_srt_parse_dispose(GObject *object)
 
     GST_INFO_OBJECT(parse, "srt parse dispose in");
     if (parse->buf != nullptr) {
-        if (g_string_free(parse->buf, (gboolean)TRUE) != nullptr) {
-            GST_WARNING_OBJECT(parse, "g_string_free failed");
-        }
+        g_warn_if_fail(g_string_free(parse->buf, (gboolean)TRUE) == nullptr);
         parse->buf = nullptr;
     }
 
@@ -91,9 +89,7 @@ static void gst_subtitle_srt_parse_init(GstSubtitleSrtParse *parse)
 
     parse->state = SUBNUM_STATE;
     if (parse->buf != nullptr) {
-        if (g_string_truncate(parse->buf, 0) == nullptr) {
-            GST_WARNING_OBJECT(parse, "g_string_truncate failed");
-        }
+        g_warn_if_fail(g_string_truncate(parse->buf, 0) != nullptr);
     } else {
         parse->buf = g_string_new(nullptr);
         if (parse->buf == nullptr) {
@@ -186,7 +182,7 @@ static gboolean srt_fix_up_markup_handle_f_tag(const gchar *next_tag)
         GST_WARNING("string_token failed");
     }
     if ((attr_name != nullptr) && (g_ascii_strcasecmp("color", attr_name) == 0)) {
-        if (attr_value != nullptr) {
+        if (attr_value != nullptr && string_token(attr_value + 1, "\"", &attr_value)) {
             int32_t len = static_cast<int32_t>(strlen(attr_value));
             if ((*attr_value != '#') || (len != COLOR_VALUE_LEN)) {
                 ret = FALSE;
@@ -279,9 +275,7 @@ static gboolean srt_fix_up_markup_handle(const gchar *next_tag, guint *num_open_
 static GString *srt_fix_up_markup_add_tag(guint num_open_tags, const gchar *open_tags, const gchar *text)
 {
     GString *s = g_string_new(text);
-    if (s == nullptr) {
-        return nullptr;
-    }
+    g_return_val_if_fail(s != nullptr, nullptr);
     if (s->str == nullptr) {
         (void)g_string_free(s, (gboolean)TRUE);
         return nullptr;
@@ -289,24 +283,14 @@ static GString *srt_fix_up_markup_add_tag(guint num_open_tags, const gchar *open
 
     while ((num_open_tags > 0) && (num_open_tags < SRT_MAX_OPEN_TAGS_NUM)) {
         GST_LOG("adding missing closing tag '%c'", open_tags[num_open_tags - 1]);
-        if (g_string_append_c(s, '<') == nullptr) {
-            GST_WARNING("g_string_append_c < failed");
-        }
-        if (g_string_append_c(s, '/') == nullptr) {
-            GST_WARNING("g_string_append_c / failed");
-        }
+        g_warn_if_fail(g_string_append_c(s, '<') != nullptr);
+        g_warn_if_fail(g_string_append_c(s, '/') != nullptr);
         if ((open_tags[num_open_tags - 1] == 'f') || (open_tags[num_open_tags - 1] == 's')) {
-            if (g_string_append(s, "font") == nullptr) {
-                GST_WARNING("g_string_append font failed");
-            }
+            g_warn_if_fail(g_string_append(s, "font") != nullptr);
         } else {
-            if (g_string_append_c(s, open_tags[num_open_tags - 1]) == nullptr) {
-                GST_WARNING("g_string_append_c failed");
-            }
+            g_warn_if_fail(g_string_append_c(s, open_tags[num_open_tags - 1]) != nullptr);
         }
-        if (g_string_append_c(s, '>') == nullptr) {
-            GST_WARNING("g_string_append_c > failed");
-        }
+        g_warn_if_fail(g_string_append_c(s, '>') != nullptr);
         --num_open_tags;
     }
 
@@ -333,58 +317,13 @@ static void srt_fix_up_markup(gchar **text)
         cur = next_tag;
     }
 
+    srt_remove_tags(*text);
     g_return_if_fail(num_open_tags != 0);
+
     GString *s = srt_fix_up_markup_add_tag(num_open_tags, open_tags, *text);
     g_return_if_fail(s != nullptr);
     g_free(*text);
     *text = g_string_free(s, FALSE);
-}
-
-static gsize read_frame_from_internal(GstSubtitleBaseParse *base, GstSubtitleFrame *frame)
-{
-    GstSubtitleSrtParse *parse = GST_SUBTITLE_SRT_PARSE_CAST(base);
-    gsize num = 0;
-    GstMapInfo info;
-    GstBuffer *buffer = gst_subtitle_read_buffer(base);
-
-    g_return_val_if_fail(buffer != nullptr, num);
-    base->state.start_time = GST_BUFFER_PTS(buffer);
-    base->state.duration = GST_BUFFER_DURATION(buffer);
-    if (!gst_buffer_map(buffer, &info, GST_MAP_READ)) {
-        GST_WARNING_OBJECT(parse, "srt map buffer failed");
-        gst_buffer_unref(buffer);
-        return 0;
-    }
-
-    size_t data_size = ((size_t)info.size < strlen((gchar *)info.data)) ?
-        (size_t)info.size : strlen((gchar *)info.data);
-    gchar *read_str = static_cast<gchar *>(g_malloc((gsize)data_size + 1));
-    if (read_str == nullptr) {
-        GST_WARNING_OBJECT(parse, "srt memory allocated failed");
-        gst_buffer_unmap(buffer, &info);
-        gst_buffer_unref(buffer);
-        return 0;
-    }
-
-    if (memcpy_s(read_str, data_size + 1, info.data, data_size) != EOK) {
-        GST_WARNING_OBJECT(parse, "srt memory copy failed");
-        gst_buffer_unmap(buffer, &info);
-        gst_buffer_unref(buffer);
-        g_free(read_str);
-        return 0;
-    }
-    read_str[data_size] = '\0';
-
-    srt_trailing_newlines(read_str, (gsize)strlen(read_str));
-    srt_fix_up_markup(&read_str);
-
-    frame->data = (guint8 *)read_str;
-    frame->len = strlen(read_str);
-    num = frame->len;
-    gst_buffer_unmap(buffer, &info);
-    gst_buffer_unref(buffer);
-
-    return num;
 }
 
 static void srt_parse_calibrate_time(gchar *srt_str, guint len)
@@ -455,9 +394,7 @@ static gboolean srt_parse_time(const gchar *ts_string, GstClockTime *timestamp)
         p[MSEC_CONTAIN_BITS] = '\0';
     } else {
         while (len < MSEC_CONTAIN_BITS) {
-            if (g_strlcat(&p[len], "0", 2) == 0) { // 2 shows sizeof(&p[len])
-                GST_WARNING("g_strlcat failed");
-            }
+            g_warn_if_fail(g_strlcat(&p[len], "0", 2) != 0); // 2 shows sizeof(&p[len])
             ++len;
         }
     }
@@ -518,29 +455,21 @@ static gchar *parse_subsrt_subtext(GstSubtitleBaseParse *base, const gchar *line
     GST_DEBUG_OBJECT(parse, "parse->buf->len = %" G_GSIZE_FORMAT ", strlen(line) = %u",
         parse->buf->len, (uint32_t)strlen(line));
 
-    if (g_string_append(parse->buf, line) == nullptr) {
-        GST_WARNING_OBJECT(parse, "g_string_append failed");
-    }
+    g_warn_if_fail(g_string_append(parse->buf, line) != nullptr);
 
     if (strlen(line) == 0) {
         if (strlen(parse->buf->str)) {
             ret = g_strdup(parse->buf->str);
-            if (ret == nullptr) {
-                GST_ERROR_OBJECT(parse, "g_strdup failed");
-                return nullptr;
-            }
+            g_return_val_if_fail(ret != nullptr, nullptr);
+            GST_DEBUG_OBJECT(parse, "g_strdup success");
         } else {
             ret = static_cast<gchar *>(g_malloc0(2)); // assign 2 bytes storage
-            if (ret == nullptr) {
-                GST_ERROR_OBJECT(parse, "g_malloc0 failed");
-                return nullptr;
-            }
+            g_return_val_if_fail(ret != nullptr, nullptr);
+            GST_DEBUG_OBJECT(parse, "g_malloc0 success");
             ret[0] = 0;
         }
 
-        if (g_string_truncate(parse->buf, 0) == nullptr) {
-            GST_WARNING_OBJECT(parse, "g_string_truncate failed");
-        }
+        g_warn_if_fail(g_string_truncate(parse->buf, 0) != nullptr);
         parse->state = SUBNUM_STATE;
 
         srt_trailing_newlines(ret, (gsize)strlen(ret));
@@ -590,13 +519,8 @@ static gsize read_frame_from_external(GstSubtitleBaseParse *base, GstSubtitleFra
         g_return_val_if_fail(parse->buf->str != nullptr, 0);
         if (base->recv_eos && (parse->state == SUBTEXT_STATE) && (strlen(parse->buf->str) != 0)) {
             subtitle = g_strdup(parse->buf->str);
-            if (subtitle == nullptr) {
-                GST_ERROR_OBJECT(parse, "g_strdup failed");
-                return 0;
-            }
-            if (g_string_truncate(parse->buf, 0) == nullptr) {
-                GST_WARNING_OBJECT(parse, "g_string_truncate failed");
-            }
+            g_return_val_if_fail(subtitle != nullptr, 0);
+            g_warn_if_fail(g_string_truncate(parse->buf, 0) != nullptr);
             parse->state = SUBNUM_STATE;
 
             srt_trailing_newlines(subtitle, (gsize)strlen(subtitle));
@@ -630,11 +554,9 @@ static gsize gst_subtitle_srt_parse_read_frame(GstSubtitleBaseParse *base, GstSu
 {
     g_return_val_if_fail((base != nullptr) && (frame != nullptr), 0);
 
-    gsize num;
+    gsize num = 0;
 
-    if (base->from_internal) {
-        num = read_frame_from_internal(base, frame);
-    } else {
+    if (!base->from_internal) {
         num = read_frame_from_external(base, frame);
     }
 
@@ -648,9 +570,7 @@ static GstCaps *gst_subtitle_srt_parse_get_src_caps(const GstSubtitleBaseParse *
     (void)stream_id;
 
     caps = gst_caps_new_simple("text/x-raw", "format", G_TYPE_STRING, "pango-markup", nullptr);
-    if ((caps == nullptr) || (base == nullptr)) {
-        return nullptr;
-    }
+    g_return_val_if_fail(caps != nullptr && base != nullptr, nullptr);
 
     if (base->language != nullptr) {
         language = base->language;
@@ -670,9 +590,7 @@ static void gst_subtitle_srt_parse_seek(GstSubtitleBaseParse *base, const GstEve
     base->state.start_time = 0;
 
     if (parse->buf != nullptr) {
-        if (g_string_truncate(parse->buf, 0) == nullptr) {
-            GST_WARNING_OBJECT(parse, "g_string_truncate failed");
-        }
+        g_warn_if_fail(g_string_truncate(parse->buf, 0) != nullptr);
     }
 
     GST_INFO_OBJECT(parse, "srt seek out");

@@ -32,9 +32,8 @@ gchar *gst_subtitle_str_dup(const gchar *str, gboolean ndup, gsize len)
     g_return_val_if_fail(str != nullptr, nullptr);
 
     gsize dup_len = ndup ? len : (gsize)strlen(str);
-    if (dup_len > MAX_BUFFER_SIZE) {
-        return nullptr;
-    }
+    g_return_val_if_fail(dup_len <= MAX_BUFFER_SIZE, nullptr);
+
     return g_strndup(str, dup_len);
 }
 
@@ -151,24 +150,6 @@ void gst_subtitle_typefind(GstTypeFind *tf, const gpointer priv,
     g_free(str);
 }
 
-/*
- * Read a gstbuffer from the internal buffer, internal subtitles are usually diverted from demux,
- * passed to this plugin in the form of gstbuffer and buffered in the form of a gstbuffer linked list.
- */
-GstBuffer *gst_subtitle_read_buffer(GstSubtitleBaseParse *base)
-{
-    g_return_val_if_fail(base != nullptr, nullptr);
-
-    GstBuffer *buffer = nullptr;
-    GList *buflist = base->buffer_ctx.bufferlist;
-    if (buflist != nullptr) {
-        buffer = static_cast<GstBuffer *>(buflist->data);
-        base->buffer_ctx.bufferlist = g_list_delete_link(buflist, buflist);
-    }
-
-    return buffer;
-}
-
 /* read a line of text data from the external buffer */
 gsize gst_subtitle_read_line(GstSubtitleBaseParse *base, gchar **out_line)
 {
@@ -179,34 +160,30 @@ gsize gst_subtitle_read_line(GstSubtitleBaseParse *base, gchar **out_line)
     *out_line = nullptr;
     GstSubtitleBufferContext *buf_ctx = &base->buffer_ctx;
 
-    if (buf_ctx->text != nullptr) {
-        while (TRUE) {
-            if ((buf_ctx->text != nullptr) && (buf_ctx->text->str != nullptr)) {
-                str = buf_ctx->text->str;
-            } else {
-                break;
-            }
-            if (str[0] == '\n') {
-                buf_ctx->text = g_string_erase(buf_ctx->text, 0, 1);
-                continue;
-            }
-            const char *line_end = strchr(str, '\n');
-            if (line_end == nullptr) { // end of line not found, return for more data
-                *out_line = nullptr;
-                break;
-            }
-            gsize line_len = static_cast<gsize>(line_end - str);
-            gchar *line = gst_subtitle_str_dup(str, TRUE, line_len + 1);
-            if (line == nullptr) {
-                break;
-            }
-            buf_ctx->text = g_string_erase(buf_ctx->text, 0, (gssize)(line_len + 1));
-            *out_line = line;
-            consumed = line_len + 1;
+    g_return_val_if_fail(buf_ctx->text != nullptr, consumed);
+    GST_DEBUG_OBJECT(base, "read line from the external buffer");
+
+    while (TRUE) {
+        g_return_val_if_fail((buf_ctx->text != nullptr) && (buf_ctx->text->str != nullptr), consumed);
+        str = buf_ctx->text->str;
+
+        if (str[0] == '\n') {
+            buf_ctx->text = g_string_erase(buf_ctx->text, 0, 1);
+            continue;
+        }
+        const char *line_end = strchr(str, '\n');
+        if (line_end == nullptr) { // end of line not found, return for more data
+            *out_line = nullptr;
             break;
         }
-    } else {
-        GST_ERROR_OBJECT(base, "buffer is nullptr");
+        gsize line_len = static_cast<gsize>(line_end - str);
+        gchar *line = gst_subtitle_str_dup(str, TRUE, line_len + 1);
+        g_return_val_if_fail(line != nullptr, consumed);
+
+        buf_ctx->text = g_string_erase(buf_ctx->text, 0, (gssize)(line_len + 1));
+        *out_line = line;
+        consumed = line_len + 1;
+        break;
     }
 
     return consumed;
@@ -223,14 +200,7 @@ GstFlowReturn gst_subtitle_push_buffer(GstSubtitleBaseParse *self,
     GstSubtitleStream *stream = gst_subtitle_get_stream_by_id(self, decoded_frame->stream_index);
     g_return_val_if_fail(stream != nullptr, GST_FLOW_NOT_LINKED);
     g_return_val_if_fail(handle_text_subtitle(self, decoded_frame, stream, &ret), GST_FLOW_ERROR);
-    if (self->from_internal) {
-        update_stream_cache_queue_subtitle(self, stream);
-        g_mutex_lock(&self->pushmutex);
-        if (ret != GST_FLOW_OK) {
-            ret = GST_FLOW_NOT_LINKED;
-        }
-        g_mutex_unlock(&self->pushmutex);
-    } else {
+    if (!self->from_internal) {
         ret = GST_FLOW_OK;
     }
 
