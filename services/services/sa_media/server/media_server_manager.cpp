@@ -142,14 +142,14 @@ void MediaServerManager::Init()
     stubCollections_[StubType::SCREEN_CAPTURE] = StubNode {"ScreenCapture",
         ScreenCaptureServiceStub::Create, SERVER_MAX_NUMBER};
 #endif
-    stubCollections_[StubType::MONITOR] = StubNode {"Monitor",
-        MonitorServiceStub::GetInstance, SERVER_MAX_NUMBER / 16
-    };
     alreadyInit = true;
 }
 
 sptr<IRemoteObject> MediaServerManager::CreateStubObject(StubType type)
 {
+    if (type == StubType::MONITOR) {
+        return MonitorServiceStub::GetInstance()->AsObject();
+    }
     if (!alreadyInit) {
         Init();
     }
