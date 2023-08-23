@@ -216,11 +216,8 @@ int32_t RecorderEngineGstImpl::Resume()
 int32_t RecorderEngineGstImpl::Stop(bool isDrainAll)
 {
     std::unique_lock<std::mutex> lock(mutex_);
-
     int ret = StopPipeline(isDrainAll);
-
     return ret;
-
 }
 
 int32_t RecorderEngineGstImpl::Reset()
