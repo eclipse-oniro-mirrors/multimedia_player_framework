@@ -676,9 +676,6 @@ int32_t PlayBinCtrlerBase::SeekInternal(int64_t timeUs, int32_t seekOption)
         gboolean ret = gst_element_send_event(GST_ELEMENT_CAST(playbin_), event);
         CHECK_AND_RETURN_RET_LOG(ret, MSERR_SEEK_FAILED, "seek failed");
     } else {
-        if (audioSeekThread_.joinable()) {
-            audioSeekThread_.join();
-        }
         audioSeekThread_ = std::thread([this, event]() {
             pthread_setname_np(pthread_self(), "AudioAsyncSeek");
             MEDIA_LOGI("audio start async seek");
