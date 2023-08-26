@@ -154,6 +154,7 @@ private:
     void OnAddSubDone();
     void OnError(int32_t errorCode, std::string message);
     void CheckAndAddSignalIds(gulong id, PlayBinCtrlerWrapper *wrapper, GstElement *elem);
+    bool SetPlayerState(GstPlayerStatus status);
 
     inline void AddSignalIds(GstElement *element, gulong signalId)
     {
