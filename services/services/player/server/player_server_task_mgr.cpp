@@ -81,7 +81,7 @@ int32_t PlayerServerTaskMgr::LaunchTask(const std::shared_ptr<ITaskHandler> &tas
 
 int32_t PlayerServerTaskMgr::SpeedTask(const std::shared_ptr<ITaskHandler> &task,
     const std::shared_ptr<ITaskHandler> &cancelTask,
-    const std::string &taskName, int32_T speedMode)
+    const std::string &taskName, int32_t speedMode)
 {
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(isInited_, MSERR_INVALID_OPERATION, "not init");
