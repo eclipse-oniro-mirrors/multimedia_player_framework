@@ -454,7 +454,8 @@ void TestRecorder::StopBuffer(const std::string &recorderType)
     }
 }
 
-void TestRecorder::CloseFile() {
+void TestRecorder::CloseFile()
+{
     if ((file != nullptr) && (file->is_open())) {
         file->close();
     }
