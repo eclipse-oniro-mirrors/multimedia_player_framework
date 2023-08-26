@@ -630,6 +630,7 @@ void PlayBinCtrlerBase::StoppingState::StateEnter()
 {
     // maybe need the deferred task to change state from ready to null, refer to gstplayer.
     GstStateChangeReturn ret;
+    ctrler_.isStopping_ = true;
     (void)ChangePlayBinState(GST_STATE_READY, ret);
     if (ret == GST_STATE_CHANGE_SUCCESS) {
         ctrler_.ChangeState(ctrler_.stoppedState_);
@@ -663,6 +664,7 @@ void PlayBinCtrlerBase::StoppingState::ProcessStateChange(const InnerMessage &ms
 void PlayBinCtrlerBase::StoppedState::StateEnter()
 {
     PlayBinMessage playBinMsg = { PLAYBIN_MSG_STATE_CHANGE, 0, PLAYBIN_STATE_STOPPED, {} };
+    ctrler_.isStopping_ = false;
     ctrler_.ReportMessage(playBinMsg);
 
     MEDIA_LOGD("StoppedState::StateEnter finished");
