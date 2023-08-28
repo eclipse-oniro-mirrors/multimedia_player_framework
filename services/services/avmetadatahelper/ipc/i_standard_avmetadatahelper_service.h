@@ -25,7 +25,7 @@
 
 namespace OHOS {
 namespace Media {
-class IStandardAVMetadataHelperService : public IMediaStubService {
+class IStandardAVMetadataHelperService : public IRemoteBroker {
 public:
     virtual ~IStandardAVMetadataHelperService() = default;
     virtual int32_t SetSource(const std::string &uri, int32_t usage) = 0;

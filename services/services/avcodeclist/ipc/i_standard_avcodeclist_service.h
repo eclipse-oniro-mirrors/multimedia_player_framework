@@ -25,7 +25,7 @@
 
 namespace OHOS {
 namespace Media {
-class IStandardAVCodecListService : public IMediaStubService {
+class IStandardAVCodecListService : public IRemoteBroker {
 public:
     virtual ~IStandardAVCodecListService() = default;
     virtual std::string FindVideoDecoder(const Format &format) = 0;

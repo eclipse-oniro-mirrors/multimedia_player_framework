@@ -36,7 +36,7 @@ enum class RecorderProfilesServiceMsg : uint32_t {
     RECORDER_PROFILES_GET_VIDEO_RECORDER_PROFILE,
     RECORDER_PROFILES_DESTROY
 };
-class IStandardRecorderProfilesService : public IMediaStubService {
+class IStandardRecorderProfilesService : public IRemoteBroker {
 public:
     virtual ~IStandardRecorderProfilesService() = default;
     virtual bool IsAudioRecorderConfigSupported(const RecorderProfilesData &profile) = 0;

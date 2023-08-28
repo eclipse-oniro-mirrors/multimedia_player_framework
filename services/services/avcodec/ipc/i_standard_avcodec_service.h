@@ -27,7 +27,7 @@
 
 namespace OHOS {
 namespace Media {
-class IStandardAVCodecService : public IMediaStubService {
+class IStandardAVCodecService : public IRemoteBroker {
 public:
     virtual ~IStandardAVCodecService() = default;
 

@@ -24,7 +24,7 @@
 
 namespace OHOS {
 namespace Media {
-class IStandardPlayerService : public IMediaStubService {
+class IStandardPlayerService : public IRemoteBroker {
 public:
     virtual ~IStandardPlayerService() = default;
     virtual int32_t SetListenerObject(const sptr<IRemoteObject> &object) = 0;
