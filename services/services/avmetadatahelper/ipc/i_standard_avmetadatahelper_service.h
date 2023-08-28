@@ -17,10 +17,10 @@
 #define I_STANDARD_AVMETADATAHELPER_SERVICE_H
 
 #include "ipc_types.h"
+#include "iremote_broker.h"
 #include "iremote_proxy.h"
 #include "iremote_stub.h"
 #include "i_avmetadatahelper_service.h"
-#include "i_media_stub_service.h"
 #include "avsharedmemory.h"
 
 namespace OHOS {

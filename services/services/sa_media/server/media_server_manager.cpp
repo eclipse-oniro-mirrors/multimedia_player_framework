@@ -93,47 +93,33 @@ int32_t MediaServerManager::Dump(int32_t fd, const std::vector<std::u16string> &
     }
 
     dumpString += "------------------PlayerServer------------------\n";
-    if (WriteInfo(fd, dumpString, dumperTbl_[StubType::PLAYER],
-        argSets.find(u"player") != argSets.end()) != OHOS::NO_ERROR) {
-        MEDIA_LOGW("Failed to write PlayerServer information");
-        return OHOS::INVALID_OPERATION;
-    }
+    CHECK_AND_RETURN_RET_LOG(WriteInfo(fd, dumpString, dumperTbl_[StubType::PLAYER],
+        argSets.find(u"player") != argSets.end()) == OHOS::NO_ERROR, OHOS::INVALID_OPERATION,
+        "Failed to write PlayerServer information");
 
     dumpString += "------------------RecorderServer------------------\n";
-    if (WriteInfo(fd, dumpString, dumperTbl_[StubType::RECORDER],
-        argSets.find(u"recorder") != argSets.end()) != OHOS::NO_ERROR) {
-        MEDIA_LOGW("Failed to write RecorderServer information");
-        return OHOS::INVALID_OPERATION;
-    }
+    CHECK_AND_RETURN_RET_LOG(WriteInfo(fd, dumpString, dumperTbl_[StubType::RECORDER],
+        argSets.find(u"recorder") != argSets.end()) == OHOS::NO_ERROR, OHOS::INVALID_OPERATION,
+        "Failed to write RecorderServer information");
 
     dumpString += "------------------CodecServer------------------\n";
-    if (WriteInfo(fd, dumpString, dumperTbl_[StubType::AVCODEC],
-        argSets.find(u"codec") != argSets.end()) != OHOS::NO_ERROR) {
-        MEDIA_LOGW("Failed to write CodecServer information");
-        return OHOS::INVALID_OPERATION;
-    }
+    CHECK_AND_RETURN_RET_LOG(WriteInfo(fd, dumpString, dumperTbl_[StubType::AVCODEC],
+        argSets.find(u"codec") != argSets.end()) == OHOS::NO_ERROR, OHOS::INVALID_OPERATION,
+        "Failed to write CodecServer information");
 
     dumpString += "------------------AVMetaServer------------------\n";
-    if (WriteInfo(fd, dumpString, dumperTbl_[StubType::AVMETADATAHELPER], false) != OHOS::NO_ERROR) {
-        MEDIA_LOGW("Failed to write AVMetaServer information");
-        return OHOS::INVALID_OPERATION;
-    }
+    CHECK_AND_RETURN_RET_LOG(WriteInfo(fd, dumpString, dumperTbl_[StubType::AVMETADATAHELPER],
+        false) == OHOS::NO_ERROR, OHOS::INVALID_OPERATION,
+        "Failed to write AVMetaServer information");
 
-    if (ServiceDumpManager::GetInstance().Dump(fd, argSets) != OHOS::NO_ERROR) {
-        MEDIA_LOGW("Failed to write dfx dump information");
-        return OHOS::INVALID_OPERATION;
-    }
+    CHECK_AND_RETURN_RET_LOG(ServiceDumpManager::GetInstance().Dump(fd, argSets) == OHOS::NO_ERROR,
+        OHOS::INVALID_OPERATION, "Failed to write dfx dump information");
 
-    if (PlayerXCollie::GetInstance().Dump(fd) != OHOS::NO_ERROR) {
-        MEDIA_LOGW("Failed to write xcollie dump information");
-        return OHOS::INVALID_OPERATION;
-    }
+    CHECK_AND_RETURN_RET_LOG(PlayerXCollie::GetInstance().Dump(fd) == OHOS::NO_ERROR,
+        OHOS::INVALID_OPERATION, "Failed to write xcollie dump information");
 
-    if (MonitorServiceStub::GetInstance()->DumpInfo(fd,
-        argSets.find(u"monitor") != argSets.end()) != OHOS::NO_ERROR) {
-        MEDIA_LOGW("Failed to write monitor dump information");
-        return OHOS::INVALID_OPERATION;
-    }
+    CHECK_AND_RETURN_RET_LOG(MonitorServiceStub::GetInstance()->DumpInfo(fd) == OHOS::NO_ERROR,
+        OHOS::INVALID_OPERATION, "Failed to write monitor dump information");
 
     return OHOS::NO_ERROR;
 }

@@ -17,9 +17,9 @@
 #define I_STANDARD_AVCODECLIST_SERVICE_H
 
 #include "ipc_types.h"
+#include "iremote_broker.h"
 #include "iremote_proxy.h"
 #include "iremote_stub.h"
-#include "i_media_stub_service.h"
 #include "avcodec_info.h"
 #include "avsharedmemory.h"
 
