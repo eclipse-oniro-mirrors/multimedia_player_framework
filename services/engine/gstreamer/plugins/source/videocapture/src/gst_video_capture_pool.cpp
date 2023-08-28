@@ -16,7 +16,7 @@
 #include "gst_video_capture_pool.h"
 #include <gst/gst.h>
 #include "buffer_type_meta.h"
-#include "diaplay_type.h"
+#include "display_type.h"
 #include "gst/video/gstvideometa.h"
 #include "surface.h"
 #include "scope_guard.h"
