@@ -114,9 +114,6 @@ PlayBinCtrlerBase::PlayBinCtrlerBase(const PlayBinCreateParam &createParam)
 PlayBinCtrlerBase::~PlayBinCtrlerBase()
 {
     MEDIA_LOGD("enter dtor, instance: 0x%{public}06" PRIXPTR "", FAKE_POINTER(this));
-    if (audioSeekThread_.joinable()) {
-        audioSeekThread_.join();
-    }
     if (Reset() == MSERR_OK) {
         sinkProvider_ = nullptr;
         notifier_ = nullptr;
@@ -288,8 +285,8 @@ int32_t PlayBinCtrlerBase::Stop(bool needWait)
         appsrcWrap_->Stop();
     }
 
-    std::unique_lock<std::mutex> cacheLock(cacheCtrlMutex_);
-    isStopping_ = true;
+    std::unique_lock<std::mutex> stateChangeLock(stateChangePropertyMutex_);
+    stopBuffering_ = true;
     if (videoSink_ == nullptr) {
         g_object_set(playbin_, "state-change", GST_PLAYER_STATUS_READY, nullptr);
     }
@@ -303,7 +300,6 @@ int32_t PlayBinCtrlerBase::Stop(bool needWait)
         }
         MEDIA_LOGD("Stop End");
     }
-
     trackParse_ = nullptr;
     CHECK_AND_RETURN_RET_LOG(GetCurrState() == stoppedState_, MSERR_INVALID_STATE, "Stop failed");
     return MSERR_OK;
@@ -626,6 +622,9 @@ void PlayBinCtrlerBase::ExitInitializedState()
     signalIds_.clear();
 
     MEDIA_LOGD("unref playbin start");
+    if (audioSeekThread_.joinable()) {
+        audioSeekThread_.join();
+    }
     if (playbin_ != nullptr) {
         (void)gst_element_set_state(GST_ELEMENT_CAST(playbin_), GST_STATE_NULL);
         gst_object_unref(playbin_);
@@ -648,6 +647,7 @@ int32_t PlayBinCtrlerBase::PrepareAsyncInternal()
     int32_t ret = EnterInitializedState();
     CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
 
+    stopBuffering_ = false;
     auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
     ret = currState->Prepare();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "PrepareAsyncInternal failed");
@@ -681,7 +681,9 @@ int32_t PlayBinCtrlerBase::SeekInternal(int64_t timeUs, int32_t seekOption)
         audioSeekThread_ = std::thread([this, event]() {
             pthread_setname_np(pthread_self(), "AudioAsyncSeek");
             MEDIA_LOGI("audio start async seek");
-            (void)gst_element_send_event(GST_ELEMENT_CAST(playbin_), event);
+            if (playbin_ != nullptr) {
+                (void)gst_element_send_event(GST_ELEMENT_CAST(playbin_), event);
+            }
         });
         audioSeekThread_.detach();
     }
@@ -1065,12 +1067,16 @@ void PlayBinCtrlerBase::HandleCacheCtrlWhenNoBuffering(int32_t percent)
             MEDIA_LOGD("Stopping, just return");
             return;
         }
+
         if (GetCurrState() == playingState_ && !isSeeking_ && !isRating_ &&
             !isAddingSubtitle_ && !isUserSetPause_ && !isSelectBitRate_) {
+            std::unique_lock<std::mutex> lock(cacheCtrlMutex_);
             MEDIA_LOGI("HandleCacheCtrl percent is %{public}d, begin set to paused", percent);
             GstStateChangeReturn ret = gst_element_set_state(GST_ELEMENT_CAST(playbin_), GST_STATE_PAUSED);
-            CHECK_AND_RETURN_LOG(ret != GST_STATE_CHANGE_FAILURE,
-                "Failed to change playbin's state to GST_STATE_PAUSED");
+            if (ret == GST_STATE_CHANGE_FAILURE) {
+                MEDIA_LOGE("Failed to change playbin's state to GST_STATE_PAUSED");
+                return;
+            }
         }
     }
 }
@@ -1084,18 +1090,25 @@ void PlayBinCtrlerBase::HandleCacheCtrlWhenBuffering(int32_t percent)
     // percent > 100% buffering end
     if (percent >= BUFFER_PERCENT_THRESHOLD) {
         isBuffering_ = false;
-        bool playingStatus = (GetCurrState() == playingState_ && isUserSetPause_ == false);
-        GstPlayerStatus status = playingStatus ? GST_PLAYER_STATUS_PLAYING : GST_PLAYER_STATUS_PAUSED;
-        if (!SetPlayerState(status)) {
-            MEDIA_LOGD("Stopping, just return");
-            return;
-        }
-        if (playingStatus) {
+        if (GetCurrState() == playingState_ && !isUserSetPause_) {
+            if (!SetPlayerState(GST_PLAYER_STATUS_PLAYING)) {
+                MEDIA_LOGD("Stopping, just return");
+                return;
+            }
+            std::unique_lock<std::mutex> lock(cacheCtrlMutex_);
             MEDIA_LOGI("percent is %{public}d, begin set to playing", percent);
             GstStateChangeReturn ret = gst_element_set_state(GST_ELEMENT_CAST(playbin_), GST_STATE_PLAYING);
-            CHECK_AND_RETURN_LOG(ret != GST_STATE_CHANGE_FAILURE,
-                "Failed to change playbin's state to GST_STATE_PLAYING");
+            if (ret == GST_STATE_CHANGE_FAILURE) {
+                MEDIA_LOGE("Failed to change playbin's state to GST_STATE_PLAYING");
+                return;
+            }
+        } else {
+            if (!SetPlayerState(GST_PLAYER_STATUS_PAUSED)) {
+                MEDIA_LOGD("Stopping, just return");
+                return;
+            }
         }
+
         PlayBinMessage msg = { PLAYBIN_MSG_SUBTYPE, PLAYBIN_SUB_MSG_BUFFERING_END, 0, {} };
         ReportMessage(msg);
     }
@@ -1443,6 +1456,7 @@ bool PlayBinCtrlerBase::OnAppsrcMessageReceived(const InnerMessage &msg)
             BUFFER_PERCENT_THRESHOLD) {
             CHECK_AND_RETURN_RET_LOG(GetCurrState() == playingState_ && !isSeeking_ && !isRating_ && !isUserSetPause_,
                 false, "ignore change to pause");
+            std::unique_lock<std::mutex> lock(cacheCtrlMutex_);
             MEDIA_LOGI("begin set to pause");
             GstStateChangeReturn ret = gst_element_set_state(GST_ELEMENT_CAST(playbin_), GST_STATE_PAUSED);
             if (ret == GST_STATE_CHANGE_FAILURE) {
@@ -1452,6 +1466,7 @@ bool PlayBinCtrlerBase::OnAppsrcMessageReceived(const InnerMessage &msg)
         } else if (msg.detail1 >= BUFFER_PERCENT_THRESHOLD) {
             CHECK_AND_RETURN_RET_LOG(GetCurrState() == playingState_ && !isUserSetPause_,
                 false, "ignore change to playing");
+            std::unique_lock<std::mutex> lock(cacheCtrlMutex_);
             MEDIA_LOGI("begin set to play");
             GstStateChangeReturn ret = gst_element_set_state(GST_ELEMENT_CAST(playbin_), GST_STATE_PLAYING);
             if (ret == GST_STATE_CHANGE_FAILURE) {
@@ -1528,11 +1543,12 @@ void PlayBinCtrlerBase::CheckAndAddSignalIds(gulong id, PlayBinCtrlerWrapper *wr
 
 bool PlayBinCtrlerBase::SetPlayerState(GstPlayerStatus status)
 {
-    std::unique_lock<std::mutex> lock(cacheCtrlMutex_);
-    if (isStopping_) {
+    std::unique_lock<std::mutex> stateChangeLock(stateChangePropertyMutex_);
+    if (stopBuffering_) {
         MEDIA_LOGD("Do not set player state when stopping");
         return false;
     }
+    std::unique_lock<std::mutex> lock(cacheCtrlMutex_);
     g_object_set(playbin_, "state-change", status, nullptr);
     return true;
 }

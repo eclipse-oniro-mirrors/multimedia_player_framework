@@ -175,6 +175,7 @@ private:
     }
     std::mutex mutex_;
     std::mutex cacheCtrlMutex_;
+    std::mutex stateChangePropertyMutex_;
     std::mutex listenerMutex_;
     std::mutex appsrcMutex_;
     std::unique_ptr<TaskQueue> msgQueue_;
@@ -207,7 +208,7 @@ private:
     int64_t seekPos_ = 0;
     int64_t lastTime_ = 0;
 
-    bool isStopping_ = false;
+    bool stopBuffering_ = false;
     bool isSeeking_ = false;
     bool isClosetSeeking_ = false;
     bool isRating_ = false;

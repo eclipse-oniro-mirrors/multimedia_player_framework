@@ -663,7 +663,6 @@ void PlayBinCtrlerBase::StoppingState::ProcessStateChange(const InnerMessage &ms
 void PlayBinCtrlerBase::StoppedState::StateEnter()
 {
     PlayBinMessage playBinMsg = { PLAYBIN_MSG_STATE_CHANGE, 0, PLAYBIN_STATE_STOPPED, {} };
-    ctrler_.isStopping_ = false;
     ctrler_.ReportMessage(playBinMsg);
 
     MEDIA_LOGD("StoppedState::StateEnter finished");
