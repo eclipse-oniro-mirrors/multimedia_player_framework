@@ -268,7 +268,7 @@ static GstFlowReturn gst_video_capture_pool_release_buffer(GstConsumerSurfacePoo
 }
 
 static void gst_video_capture_pool_update_video_meta(GstConsumerSurfacePool *surfacepool, GstConsumerSurfaceMemory *mem,
-    GstBuffer *buffer);
+    GstBuffer *buffer)
 {
     g_return_if_fail(surfacepool != nullptr && buffer != nullptr && mem != nullptr && mem->is_eos_frame == FALSE);
     g_return_if_fail(mem->buffer_handle != nullptr && FORMAT_PLANE_MAP.count((PixelFormat)mem->pixel_format) != 0);
