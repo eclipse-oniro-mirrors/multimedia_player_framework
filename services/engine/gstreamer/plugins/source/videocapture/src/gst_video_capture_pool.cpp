@@ -16,7 +16,7 @@
 #include "gst_video_capture_pool.h"
 #include <gst/gst.h>
 #include "buffer_type_meta.h"
-#include "diaplay_type.h"
+#include "display_type.h"
 #include "gst/video/gstvideometa.h"
 #include "surface.h"
 #include "scope_guard.h"
@@ -38,7 +38,7 @@ namespace {
         { PIXEL_FMT_YCBCR_420_SP, 2 },
         { PIXEL_FMT_YCBCR_420_P, 3 },
     };
-    const std::unordered_map<PixelFormat, guint> FORMAT_PLANE_MAP = {
+    const std::unordered_map<PixelFormat, GstVideoFormat> TO_GST_MAP = {
         { PIXEL_FMT_RGBA_8888, GST_VIDEO_FORMAT_RGBA },
         { PIXEL_FMT_YCRCB_420_SP, GST_VIDEO_FORMAT_NV21},
         { PIXEL_FMT_YCBCR_420_SP, GST_VIDEO_FORMAT_NV12 },
@@ -268,13 +268,13 @@ static GstFlowReturn gst_video_capture_pool_release_buffer(GstConsumerSurfacePoo
 }
 
 static void gst_video_capture_pool_update_video_meta(GstConsumerSurfacePool *surfacepool, GstConsumerSurfaceMemory *mem,
-    GstBuffer *buffer);
+    GstBuffer *buffer)
 {
     g_return_if_fail(surfacepool != nullptr && buffer != nullptr && mem != nullptr && mem->is_eos_frame == FALSE);
     g_return_if_fail(mem->buffer_handle != nullptr && FORMAT_PLANE_MAP.count((PixelFormat)mem->pixel_format) != 0);
     g_return_if_fail(mem->buffer_handle->stride > 0 && mem->buffer_handle->stride != (int32_t)mem->width);
 
-    GstVideoBufferPool *pool = GST_VIDEO_CAPTURE_POOL_CAST(surfacepool);
+    GstVideoCapturePool *pool = GST_VIDEO_CAPTURE_POOL_CAST(surfacepool);
     g_return_if_fail(pool != nullptr);
 
     int32_t stride = mem->buffer_handle->stride;
