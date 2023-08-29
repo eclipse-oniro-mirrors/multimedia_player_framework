@@ -274,7 +274,7 @@ static void gst_video_capture_pool_update_video_meta(GstConsumerSurfacePool *sur
     g_return_if_fail(mem->buffer_handle != nullptr && FORMAT_PLANE_MAP.count((PixelFormat)mem->pixel_format) != 0);
     g_return_if_fail(mem->buffer_handle->stride > 0 && mem->buffer_handle->stride != (int32_t)mem->width);
 
-    GstVideoBufferPool *pool = GST_VIDEO_CAPTURE_POOL_CAST(surfacepool);
+    GstVideoCapturePool *pool = GST_VIDEO_CAPTURE_POOL_CAST(surfacepool);
     g_return_if_fail(pool != nullptr);
 
     int32_t stride = mem->buffer_handle->stride;
