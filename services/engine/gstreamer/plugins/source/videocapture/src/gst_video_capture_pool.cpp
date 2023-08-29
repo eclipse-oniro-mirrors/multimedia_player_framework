@@ -38,7 +38,7 @@ namespace {
         { PIXEL_FMT_YCBCR_420_SP, 2 },
         { PIXEL_FMT_YCBCR_420_P, 3 },
     };
-    const std::unordered_map<PixelFormat, guint> TO_GST_MAP = {
+    const std::unordered_map<PixelFormat, GstVideoFormat> TO_GST_MAP = {
         { PIXEL_FMT_RGBA_8888, GST_VIDEO_FORMAT_RGBA },
         { PIXEL_FMT_YCRCB_420_SP, GST_VIDEO_FORMAT_NV21},
         { PIXEL_FMT_YCBCR_420_SP, GST_VIDEO_FORMAT_NV12 },
