@@ -39,7 +39,7 @@ struct _GstVideoCapturePool {
     GMutex pool_lock;
     gboolean cached_data;
     std::shared_ptr<OHOS::Media::VideoPoolManager> poolMgr;
-    guint plans = 0;
+    guint planes = 0;
     gint stride[GST_VIDEO_MAX_PLANES] = {0, 0, 0, 0};
     gsize offset[GST_VIDEO_MAX_PLANES] = {0, 0, 0, 0};
 };
