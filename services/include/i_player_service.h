@@ -97,8 +97,8 @@ public:
      *
      * This function must be called after {@link SetSource}.
      *
-     * @return Returns {@link MSERR_OK} if the playback is prepared; returns an error code defined
-     * in {@link media_errors.h} otherwise.
+     * @return Returns {@link MSERR_OK} if {@link Prepare} is successfully added to the task queue;
+     * returns an error code defined in {@link media_errors.h} otherwise.
      * @since 1.0
      * @version 1.0
      */
