@@ -71,7 +71,7 @@ bool FuzzPlayerStubLocal(uint8_t *data, size_t size)
         msg.WriteBuffer(data, size);
         msg.RewindRead(0);
         MessageParcel reply;
-        MessageParcel option;
+        MessageOption option;
         playerStub->OnRemoteRequest(code, msg, reply, option);
     }
 
