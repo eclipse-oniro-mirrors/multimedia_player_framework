@@ -127,6 +127,7 @@ void UriHelper::FormatMeForUri(const std::string_view &uri) noexcept
 {
     CHECK_AND_RETURN_LOG(formattedUri_.empty(),
         "formattedUri is valid:%{public}s", formattedUri_.c_str());
+    CHECK_AND_RETURN_LOG(!uri.empty(), "uri is empty");
 
     auto [head, body] = SplitUriHeadAndBody(uri);
     CHECK_AND_RETURN(g_validUriTypes.count(head) != 0);
