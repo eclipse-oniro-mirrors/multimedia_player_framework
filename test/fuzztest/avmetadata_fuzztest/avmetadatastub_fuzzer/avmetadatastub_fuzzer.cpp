@@ -14,10 +14,10 @@
  */
 
 #include "avmetadatastub_fuzzer.h"
-+#include "stub_common.h"
-+#include "media_server.h"
-+#include "media_parcel.h"
-+#include "i_standard_avmetadatahelper_service.h"
+#include "stub_common.h"
+#include "media_server.h"
+#include "media_parcel.h"
+#include "i_standard_avmetadatahelper_service.h"
 
 namespace OHOS {
 namespace Media {
