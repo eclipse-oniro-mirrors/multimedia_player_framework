@@ -66,8 +66,6 @@ static const std::unordered_map<int32_t, int32_t> SEEK_OPTION_TO_GST_SEEK_FLAGS 
     }
 };
 
-using PlayBinCtrlerWrapper = ThizWrapper<PlayBinCtrlerBase>;
-
 void PlayBinCtrlerBase::ElementSetup(const GstElement *playbin, GstElement *elem, gpointer userData)
 {
     (void)playbin;
@@ -287,6 +285,11 @@ int32_t PlayBinCtrlerBase::Stop(bool needWait)
         appsrcWrap_->Stop();
     }
 
+    std::unique_lock<std::mutex> stateChangeLock(stateChangePropertyMutex_);
+    stopBuffering_ = true;
+    if (videoSink_ == nullptr) {
+        g_object_set(playbin_, "state-change", GST_PLAYER_STATUS_READY, nullptr);
+    }
     auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
     (void)currState->Stop();
 
@@ -297,7 +300,7 @@ int32_t PlayBinCtrlerBase::Stop(bool needWait)
         }
         MEDIA_LOGD("Stop End");
     }
-
+    trackParse_ = nullptr;
     CHECK_AND_RETURN_RET_LOG(GetCurrState() == stoppedState_, MSERR_INVALID_STATE, "Stop failed");
     return MSERR_OK;
 }
@@ -476,11 +479,6 @@ void PlayBinCtrlerBase::SetElemSetupListener(ElemSetupListener listener)
     std::unique_lock<std::mutex> lock(mutex_);
     std::unique_lock<std::mutex> lk(listenerMutex_);
     elemSetupListener_ = listener;
-    
-    if (trackParse_ == nullptr) {
-        trackParse_ = PlayerTrackParse::Create();
-    }
-    CHECK_AND_RETURN_LOG(trackParse_ != nullptr, "creat track parse failed")
 }
 
 void PlayBinCtrlerBase::SetElemUnSetupListener(ElemSetupListener listener)
@@ -522,7 +520,7 @@ void PlayBinCtrlerBase::DoInitializeForHttp()
         gulong id = g_signal_connect_data(playbin_, "bitrate-parse-complete",
             G_CALLBACK(&PlayBinCtrlerBase::OnBitRateParseCompleteCb), wrapper,
             (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory, static_cast<GConnectFlags>(0));
-        AddSignalIds(GST_ELEMENT_CAST(playbin_), id);
+        CheckAndAddSignalIds(id, wrapper, GST_ELEMENT_CAST(playbin_));
 
         PlayBinCtrlerWrapper *wrap = new(std::nothrow) PlayBinCtrlerWrapper(shared_from_this());
         CHECK_AND_RETURN_LOG(wrap != nullptr, "can not create this wrap");
@@ -530,7 +528,7 @@ void PlayBinCtrlerBase::DoInitializeForHttp()
         id = g_signal_connect_data(videoSink_, "bandwidth-change",
             G_CALLBACK(&PlayBinCtrlerBase::OnSelectBitrateDoneCb), wrap,
             (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory, static_cast<GConnectFlags>(0));
-        AddSignalIds(GST_ELEMENT_CAST(playbin_), id);
+        CheckAndAddSignalIds(id, wrap, videoSink_);
     }
 }
 
@@ -624,6 +622,9 @@ void PlayBinCtrlerBase::ExitInitializedState()
     signalIds_.clear();
 
     MEDIA_LOGD("unref playbin start");
+    if (audioSeekThread_.joinable()) {
+        audioSeekThread_.join();
+    }
     if (playbin_ != nullptr) {
         (void)gst_element_set_state(GST_ELEMENT_CAST(playbin_), GST_STATE_NULL);
         gst_object_unref(playbin_);
@@ -642,10 +643,11 @@ int32_t PlayBinCtrlerBase::PrepareAsyncInternal()
     }
 
     CHECK_AND_RETURN_RET_LOG((!uri_.empty() || appsrcWrap_), MSERR_INVALID_OPERATION, "Set uri firsty!");
-
+    trackParse_ = PlayerTrackParse::Create();
     int32_t ret = EnterInitializedState();
     CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
 
+    stopBuffering_ = false;
     auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
     ret = currState->Prepare();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "PrepareAsyncInternal failed");
@@ -665,12 +667,26 @@ int32_t PlayBinCtrlerBase::SeekInternal(int64_t timeUs, int32_t seekOption)
     int64_t timeNs = timeUs * usecToNanoSec;
     seekPos_ = timeUs;
     isSeeking_ = true;
+    if (videoSink_ == nullptr || seekOption == IPlayBinCtrler::PlayBinSeekMode::CLOSET) {
+        isClosetSeeking_ = true;
+    }
     GstEvent *event = gst_event_new_seek(rate_, GST_FORMAT_TIME, static_cast<GstSeekFlags>(seekFlags),
         GST_SEEK_TYPE_SET, timeNs, GST_SEEK_TYPE_SET, GST_CLOCK_TIME_NONE);
     CHECK_AND_RETURN_RET_LOG(event != nullptr, MSERR_NO_MEMORY, "seek failed");
 
-    gboolean ret = gst_element_send_event(GST_ELEMENT_CAST(playbin_), event);
-    CHECK_AND_RETURN_RET_LOG(ret, MSERR_SEEK_FAILED, "seek failed");
+    if (videoSink_ != nullptr) {
+        gboolean ret = gst_element_send_event(GST_ELEMENT_CAST(playbin_), event);
+        CHECK_AND_RETURN_RET_LOG(ret, MSERR_SEEK_FAILED, "seek failed");
+    } else {
+        audioSeekThread_ = std::thread([this, event]() {
+            pthread_setname_np(pthread_self(), "AudioAsyncSeek");
+            MEDIA_LOGI("audio start async seek");
+            if (playbin_ != nullptr) {
+                (void)gst_element_send_event(GST_ELEMENT_CAST(playbin_), event);
+            }
+        });
+        audioSeekThread_.detach();
+    }
 
     return MSERR_OK;
 }
@@ -683,7 +699,7 @@ void PlayBinCtrlerBase::SetupInterruptEventCb()
     gulong id = g_signal_connect_data(audioSink_, "interrupt-event",
         G_CALLBACK(&PlayBinCtrlerBase::OnInterruptEventCb), wrapper,
         (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory, static_cast<GConnectFlags>(0));
-    AddSignalIds(GST_ELEMENT_CAST(audioSink_), id);
+    CheckAndAddSignalIds(id, wrapper, audioSink_);
 }
 
 void PlayBinCtrlerBase::SetupAudioSegmentEventCb()
@@ -694,7 +710,7 @@ void PlayBinCtrlerBase::SetupAudioSegmentEventCb()
     gulong id = g_signal_connect_data(audioSink_, "segment-updated",
         G_CALLBACK(&PlayBinCtrlerBase::OnAudioSegmentEventCb), wrapper,
         (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory, static_cast<GConnectFlags>(0));
-    AddSignalIds(GST_ELEMENT_CAST(audioSink_), id);
+    CheckAndAddSignalIds(id, wrapper, audioSink_);
 }
 
 void PlayBinCtrlerBase::SetupCustomElement()
@@ -737,7 +753,7 @@ void PlayBinCtrlerBase::SetupSourceSetupSignal()
     gulong id = g_signal_connect_data(playbin_, "source-setup",
         G_CALLBACK(&PlayBinCtrlerBase::SourceSetup), wrapper, (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory,
         static_cast<GConnectFlags>(0));
-    AddSignalIds(GST_ELEMENT_CAST(playbin_), id);
+    CheckAndAddSignalIds(id, wrapper, GST_ELEMENT_CAST(playbin_));
 }
 
 int32_t PlayBinCtrlerBase::SetupSignalMessage()
@@ -750,13 +766,13 @@ int32_t PlayBinCtrlerBase::SetupSignalMessage()
     gulong id = g_signal_connect_data(playbin_, "element-setup",
         G_CALLBACK(&PlayBinCtrlerBase::ElementSetup), wrapper, (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory,
         static_cast<GConnectFlags>(0));
-    AddSignalIds(GST_ELEMENT_CAST(playbin_), id);
+    CheckAndAddSignalIds(id, wrapper, GST_ELEMENT_CAST(playbin_));
 
     PlayBinCtrlerWrapper *wrap = new(std::nothrow) PlayBinCtrlerWrapper(shared_from_this());
     CHECK_AND_RETURN_RET_LOG(wrap != nullptr, MSERR_NO_MEMORY, "can not create this wrapper");
     id = g_signal_connect_data(playbin_, "audio-changed", G_CALLBACK(&PlayBinCtrlerBase::AudioChanged),
         wrap, (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory, static_cast<GConnectFlags>(0));
-    AddSignalIds(GST_ELEMENT_CAST(playbin_), id);
+    CheckAndAddSignalIds(id, wrap, GST_ELEMENT_CAST(playbin_));
 
     GstBus *bus = gst_pipeline_get_bus(playbin_);
     CHECK_AND_RETURN_RET_LOG(bus != nullptr, MSERR_UNKNOWN, "can not get bus");
@@ -787,7 +803,7 @@ int32_t PlayBinCtrlerBase::SetupElementUnSetupSignal()
     gulong id = g_signal_connect_data(playbin_, "deep-element-removed",
         G_CALLBACK(&PlayBinCtrlerBase::ElementUnSetup), wrapper, (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory,
         static_cast<GConnectFlags>(0));
-    AddSignalIds(GST_ELEMENT_CAST(playbin_), id);
+    CheckAndAddSignalIds(id, wrapper, GST_ELEMENT_CAST(playbin_));
 
     return MSERR_OK;
 }
@@ -914,14 +930,15 @@ int32_t PlayBinCtrlerBase::SelectTrack(int32_t index)
         CHECK_AND_RETURN_RET((!hasSubtitleTrackSelected_ || innerIndex != currentIndex),
             (OnError(MSERR_OK, "This track has already been selected!"), MSERR_OK));
 
+        MEDIA_LOGI("start select subtitle track %{public}d", index);
+        isTrackChanging_ = true;
+        trackChangeType_ = MediaType::MEDIA_TYPE_SUBTITLE;
         g_object_set(subtitleSink_, "change-track", true, nullptr);
         lastStartTime_ = gst_element_get_start_time(GST_ELEMENT_CAST(playbin_));
         gst_element_set_start_time(GST_ELEMENT_CAST(playbin_), GST_CLOCK_TIME_NONE);
         g_object_set(playbin_, "current-text", innerIndex, nullptr);
         hasSubtitleTrackSelected_ = true;
         g_object_set(subtitleSink_, "enable-display", hasSubtitleTrackSelected_, nullptr);
-        isTrackChanging_ = true;
-        trackChangeType_ = MediaType::MEDIA_TYPE_SUBTITLE;
         CANCEL_SCOPE_EXIT_GUARD(0);
     } else {
         OnError(MSERR_INVALID_VAL, "The track type does not support this operation!");
@@ -1046,9 +1063,9 @@ void PlayBinCtrlerBase::HandleCacheCtrlWhenNoBuffering(int32_t percent)
         ReportMessage(percentMsg);
 
         isBuffering_ = true;
-        {
-            std::unique_lock<std::mutex> lock(cacheCtrlMutex_);
-            g_object_set(playbin_, "state-change", GST_PLAYER_STATUS_BUFFERING, nullptr);
+        if (!SetPlayerState(GST_PLAYER_STATUS_BUFFERING)) {
+            MEDIA_LOGD("Stopping, just return");
+            return;
         }
 
         if (GetCurrState() == playingState_ && !isSeeking_ && !isRating_ &&
@@ -1074,9 +1091,9 @@ void PlayBinCtrlerBase::HandleCacheCtrlWhenBuffering(int32_t percent)
     if (percent >= BUFFER_PERCENT_THRESHOLD) {
         isBuffering_ = false;
         if (GetCurrState() == playingState_ && !isUserSetPause_) {
-            {
-                std::unique_lock<std::mutex> lock(cacheCtrlMutex_);
-                g_object_set(playbin_, "state-change", GST_PLAYER_STATUS_PLAYING, nullptr);
+            if (!SetPlayerState(GST_PLAYER_STATUS_PLAYING)) {
+                MEDIA_LOGD("Stopping, just return");
+                return;
             }
             std::unique_lock<std::mutex> lock(cacheCtrlMutex_);
             MEDIA_LOGI("percent is %{public}d, begin set to playing", percent);
@@ -1086,8 +1103,10 @@ void PlayBinCtrlerBase::HandleCacheCtrlWhenBuffering(int32_t percent)
                 return;
             }
         } else {
-            std::unique_lock<std::mutex> lock(cacheCtrlMutex_);
-            g_object_set(playbin_, "state-change", GST_PLAYER_STATUS_PAUSED, nullptr);
+            if (!SetPlayerState(GST_PLAYER_STATUS_PAUSED)) {
+                MEDIA_LOGD("Stopping, just return");
+                return;
+            }
         }
 
         PlayBinMessage msg = { PLAYBIN_MSG_SUBTYPE, PLAYBIN_SUB_MSG_BUFFERING_END, 0, {} };
@@ -1200,7 +1219,7 @@ void PlayBinCtrlerBase::OnAdaptiveElementSetup(GstElement &elem)
     CHECK_AND_RETURN_LOG(wrapper != nullptr, "can not create this wrapper");
     gulong id = g_signal_connect_data(&elem, "is-live-scene", G_CALLBACK(&PlayBinCtrlerBase::OnIsLiveStream), wrapper,
         (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory, static_cast<GConnectFlags>(0));
-    AddSignalIds(&elem, id);
+    CheckAndAddSignalIds(id, wrapper, &elem);
 }
 
 void PlayBinCtrlerBase::OnElementSetup(GstElement &elem)
@@ -1223,7 +1242,7 @@ void PlayBinCtrlerBase::OnElementSetup(GstElement &elem)
         gulong id = g_signal_connect_data(&elem, "autoplug-sort",
             G_CALLBACK(&PlayBinCtrlerBase::AutoPlugSort), wrapper,
             (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory, static_cast<GConnectFlags>(0));
-        AddSignalIds(&elem, id);
+        CheckAndAddSignalIds(id, wrapper, &elem);
     }
     
     if (trackParse_ != nullptr) {
@@ -1504,16 +1523,34 @@ void PlayBinCtrlerBase::ReportMessage(const PlayBinMessage &msg)
         auto msgReportHandler = std::make_shared<TaskHandler<void>>([msg, notifier]() {
             LISTENER(notifier(msg), "PlayBinCtrlerBase::ReportMessage", PlayerXCollie::timerTimeout)
         });
-        int32_t ret = msgQueue_->EnqueueTask(msgReportHandler);
-        if (ret != MSERR_OK) {
-            MEDIA_LOGE("async report msg failed, type: %{public}d, subType: %{public}d, code: %{public}d",
-                msg.type, msg.subType, msg.code);
-        };
+        (void)msgQueue_->EnqueueTask(msgReportHandler);
     }
 
     if (msg.type == PlayBinMsgType::PLAYBIN_MSG_EOS) {
         ProcessEndOfStream();
     }
+}
+
+void PlayBinCtrlerBase::CheckAndAddSignalIds(gulong id, PlayBinCtrlerWrapper *wrapper, GstElement *elem)
+{
+    if (id == 0) {
+        delete wrapper;
+        MEDIA_LOGW("add signal failed");
+    } else {
+        AddSignalIds(elem, id);
+    }
+}
+
+bool PlayBinCtrlerBase::SetPlayerState(GstPlayerStatus status)
+{
+    std::unique_lock<std::mutex> stateChangeLock(stateChangePropertyMutex_);
+    if (stopBuffering_) {
+        MEDIA_LOGD("Do not set player state when stopping");
+        return false;
+    }
+    std::unique_lock<std::mutex> lock(cacheCtrlMutex_);
+    g_object_set(playbin_, "state-change", status, nullptr);
+    return true;
 }
 } // namespace Media
 } // namespace OHOS

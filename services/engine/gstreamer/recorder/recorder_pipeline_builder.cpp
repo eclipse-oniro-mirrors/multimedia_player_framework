@@ -30,8 +30,9 @@ namespace Media {
         pipelineDesc_->allLinkDescs[srcElem] = linkDesc;                                                        \
     } while (false)
 
-RecorderPipelineBuilder::RecorderPipelineBuilder(int32_t appUid, int32_t appPid, uint32_t appTokenId)
-    : appUid_(appUid), appPid_(appPid), appTokenId_(appTokenId)
+RecorderPipelineBuilder::RecorderPipelineBuilder(int32_t appUid, int32_t appPid,
+    uint32_t appTokenId, uint64_t appFullTokenId)
+    : appUid_(appUid), appPid_(appPid), appTokenId_(appTokenId), appFullTokenId_(appFullTokenId)
 {
     MEDIA_LOGD("enter, ctor");
 }
@@ -68,12 +69,10 @@ std::shared_ptr<RecorderElement> RecorderPipelineBuilder::CreateElement(
 
     RecorderElement::CreateParam createParam = { desc, name };
     std::shared_ptr<RecorderElement> element = RecorderElementFactory::GetInstance().CreateElement(name, createParam);
-    if (element == nullptr) {
-        std::string sourceKind = desc.IsVideo() ? "video" : (desc.IsAudio() ? "audio" : "unknown");
-        MEDIA_LOGE("Unable to create element for %{public}s source type: %{public}d, element name: %{public}s",
-                   sourceKind.c_str(), desc.type_, name.c_str());
-        return nullptr;
-    }
+    std::string sourceKind = desc.IsVideo() ? "video" : (desc.IsAudio() ? "audio" : "unknown");
+    CHECK_AND_RETURN_RET_LOG(element != nullptr, nullptr,
+        "Unable to create element for %{public}s source type: %{public}d, element name: %{public}s",
+        sourceKind.c_str(), desc.type_, name.c_str());
 
     pipelineDesc_->allElems.push_back(element);
     if (isSource) {
@@ -92,10 +91,7 @@ int32_t RecorderPipelineBuilder::CreateMuxSink()
 
     RecorderSourceDesc desc {}; // default initialization, meaninglessly
     muxSink_ = CreateElement("MuxSinkBin", desc, false);
-    if (muxSink_ == nullptr) {
-        MEDIA_LOGE("Unable to create element for MuxSinkBin !");
-        return MSERR_INVALID_OPERATION;
-    }
+    CHECK_AND_RETURN_RET_LOG(muxSink_ != nullptr, MSERR_INVALID_OPERATION, "Unable to create element for MuxSinkBin !");
     pipelineDesc_->muxerSinkBin = muxSink_;
 
     return MSERR_OK;
@@ -158,7 +154,7 @@ int32_t RecorderPipelineBuilder::SetAudioSource(const RecorderSourceDesc &desc)
     }
 
     CHECK_AND_RETURN_RET(audioSrcElem != nullptr, MSERR_INVALID_VAL);
-    (void)audioSrcElem->Configure(AppInfo {appUid_, appPid_, appTokenId_});
+    (void)audioSrcElem->Configure(AppInfo {appUid_, appPid_, appTokenId_, appFullTokenId_});
 
     std::shared_ptr<RecorderElement> audioConvert = CreateElement("AudioConverter", desc, false);
     CHECK_AND_RETURN_RET(audioConvert != nullptr, MSERR_INVALID_VAL);
@@ -188,10 +184,8 @@ int32_t RecorderPipelineBuilder::SetSource(const RecorderSourceDesc &desc)
 
 int32_t RecorderPipelineBuilder::SetOutputFormat(OutputFormatType formatType)
 {
-    if (muxSink_ == nullptr) {
-        MEDIA_LOGE("No source set, set the output format invalid !");
-        return MSERR_INVALID_OPERATION;
-    }
+    CHECK_AND_RETURN_RET_LOG(muxSink_ != nullptr, MSERR_INVALID_OPERATION,
+                             "No source set, set the output format invalid !");
 
     int32_t ret = muxSink_->Configure(OutputFormat(formatType));
     CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
@@ -224,10 +218,8 @@ int32_t RecorderPipelineBuilder::CheckConfigure(int32_t sourceId, const Recorder
 
 int32_t RecorderPipelineBuilder::Configure(int32_t sourceId, const RecorderParam &param)
 {
-    if (!outputFormatConfiged_) {
-        MEDIA_LOGE("Output format not set, configure the pipeline is invalid !");
-        return MSERR_INVALID_OPERATION;
-    }
+    CHECK_AND_RETURN_RET_LOG(outputFormatConfiged_, MSERR_INVALID_OPERATION,
+        "Output format not set, configure the pipeline is invalid !");
 
     int32_t ret = CheckConfigure(sourceId, param);
     CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
@@ -269,10 +261,8 @@ int32_t RecorderPipelineBuilder::CheckPipeline()
 
 int32_t RecorderPipelineBuilder::Build(std::shared_ptr<RecorderPipeline> &pipeline)
 {
-    if (!outputFormatConfiged_) {
-        MEDIA_LOGE("Output format not configured, build pipeline failed !");
-        return MSERR_INVALID_OPERATION;
-    }
+    CHECK_AND_RETURN_RET_LOG(outputFormatConfiged_, MSERR_INVALID_OPERATION,
+        "Output format not configured, build pipeline failed !");
 
     /*
      * Execute a series of policies to filter pipeline graphs or check pipeline parameter configurations.

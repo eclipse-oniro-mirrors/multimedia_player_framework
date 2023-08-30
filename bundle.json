@@ -26,7 +26,8 @@
         "SystemCapability.Multimedia.Media.AVPlayer",
         "SystemCapability.Multimedia.Media.AVRecorder",
         "SystemCapability.Multimedia.SystemSound.Core",
-        "SystemCapability.Multimedia.Media.AVScreenCapture"
+        "SystemCapability.Multimedia.Media.AVScreenCapture",
+        "SystemCapability.Multimedia.Media.SoundPool"
       ],
       "features": [],
       "adapted_system_type": [ "standard" ],
@@ -59,12 +60,14 @@
           "memmgr_plugin",
           "hicollie",
           "drivers_peripheral_codec",
+          "drivers_peripheral_display",
           "hdf_core",
           "ability_base",
           "ability_runtime",
           "bundle_framework",
           "relational_store",
-          "resource_management"
+          "resource_management",
+          "av_codec"
         ],
         "third_party": [
           "glib",
@@ -91,6 +94,26 @@
         "inner_kits": [
           {
             "type": "so",
+            "name": "//foundation/multimedia/player_framework/services/utils:media_format",
+            "header": {
+              "header_files": [
+                "format.h"
+              ],
+              "header_base": "//foundation/multimedia/player_framework/interfaces/inner_api/native"
+            }
+          },
+          {
+            "type": "so",
+            "name": "//foundation/multimedia/player_framework/services/utils:media_service_utils",
+            "header": {
+              "header_files": [
+                "avsharedmemorypool.h"
+              ],
+              "header_base": "//foundation/multimedia/player_framework/services/utils/include"
+            }
+          },
+          {
+            "type": "so",
             "name": "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
             "header": {
               "header_files": [
@@ -100,7 +123,8 @@
                 "avcodec_video_encoder.h",
                 "player.h",
                 "recorder.h",
-                "screen_capture.h"
+                "screen_capture.h",
+                "media_errors.h"
               ],
               "header_base": "//foundation/multimedia/player_framework/interfaces/inner_api/native"
             }
