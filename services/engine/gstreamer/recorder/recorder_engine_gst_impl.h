@@ -53,6 +53,7 @@ private:
     int32_t BuildPipeline();
     int32_t StopPipeline(bool isDrainAll);
     bool CheckParamType(int32_t sourceId, const RecorderParam &recParam) const;
+    int32_t SetSurface(int32_t sourceId);
 
     std::unique_ptr<RecorderPipelineBuilder> builder_ = nullptr;
     std::shared_ptr<RecorderPipelineCtrler> ctrler_ = nullptr;
@@ -64,6 +65,8 @@ private:
     int32_t appPid_;
     uint32_t appTokenId_;
     uint64_t appFullTokenId_;
+    sptr<IConsumerSurface> consumerSurface_ = nullptr;
+    int32_t videoSourceId_ = -1;
 };
 } // namespace Media
 } // namespace OHOS
