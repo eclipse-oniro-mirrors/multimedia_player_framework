@@ -127,6 +127,12 @@ int32_t SoundParser::GetSoundData(std::deque<std::shared_ptr<AudioBufferEntry>> 
     return soundParserListener_->GetSoundData(soundData);
 }
 
+size_t SoundParser::GetSoundDataTotalSize() const
+{
+    CHECK_AND_RETURN_RET_LOG(soundParserListener_ != nullptr, MSERR_INVALID_VAL, "Invalid sound parser listener");
+    return soundParserListener_->GetSoundDataTotalSize();
+}
+
 bool SoundParser::IsSoundParserCompleted() const
 {
     CHECK_AND_RETURN_RET_LOG(soundParserListener_ != nullptr, MSERR_INVALID_VAL, "Invalid sound parser listener");
@@ -211,6 +217,7 @@ void SoundDecoderCallback::OnOutputBufferAvailable(uint32_t index, AVCodecBuffer
             decodeShouldCompleted_ = true;
             CHECK_AND_RETURN_LOG(listener_ != nullptr, "sound decode listener invalid.");
             listener_->OnSoundDecodeCompleted(availableAudioBuffers_);
+            listener_->SetSoundBufferTotalSize(static_cast<size_t>(currentSoundBufferSize_));
             CHECK_AND_RETURN_LOG(callback_ != nullptr, "sound decode:soundpool callback invalid.");
             callback_->OnLoadCompleted(soundID_);
             return;
