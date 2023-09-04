@@ -82,7 +82,8 @@ bool StrToInt(const std::string_view& str, T& value)
     return true;
 }
 
-std::pair<std::string_view, std::string_view> SplitUriHeadAndBody(const std::string_view &str)
+std::pair<std::string_view, std::string_view>
+__attribute__((no_sanitize("cfi"))) SplitUriHeadAndBody(const std::string_view &str)
 {
     std::string_view::size_type start = str.find_first_not_of(' ');
     std::string_view::size_type end = str.find_last_not_of(' ');
