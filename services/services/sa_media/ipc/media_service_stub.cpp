@@ -130,9 +130,9 @@ int32_t MediaServiceStub::SetDeathListener(const sptr<IRemoteObject> &object)
     }
 
     sptr<MediaDeathRecipient> oldDeathRecipient =
-        deathRecipientMap_.find(pid) != deathRecipientMap_.end() ? deathRecipientMap_.at[pid] : nullptr;
+        deathRecipientMap_.find(pid) != deathRecipientMap_.end() ? deathRecipientMap_[pid] : nullptr;
     sptr<MediaDeathRecipient> oldMediaListener =
-        mediaListenerMap_.find(pid) != mediaListenerMap_.end() ? mediaListenerMap_.at[pid] : nullptr;
+        mediaListenerMap_.find(pid) != mediaListenerMap_.end() ? mediaListenerMap_[pid] : nullptr;
     if (oldDeathRecipient != nullptr) {
         oldDeathRecipient->SetNotifyCb(nullptr);
     }
