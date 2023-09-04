@@ -85,6 +85,6 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t *data, size_t size)
 {
     /* Run your code on data */
     OHOS::Media::FuzzPlayerStub(data, size);
-    OHOS::Meida::FuzzPlayerStubLocal(data, size);
+    OHOS::Media::FuzzPlayerStubLocal(data, size);
     return 0;
 }
