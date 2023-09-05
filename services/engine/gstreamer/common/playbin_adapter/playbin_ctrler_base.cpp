@@ -1322,7 +1322,7 @@ void PlayBinCtrlerBase::OnAudioDiedEventCb(const GstElement *audioSink, gpointer
     PlayBinMessage msg {
         PLAYBIN_MSG_ERROR,
         PlayBinMsgErrorSubType::PLAYBIN_SUB_MSG_ERROR_WITH_MESSAGE,
-        MSERR_EXT_API9_IO,
+        MSERR_AUD_RENDER_FAILED,
         std::string("audio service died!")
     };
     thizStrong->ReportMessage(msg);
