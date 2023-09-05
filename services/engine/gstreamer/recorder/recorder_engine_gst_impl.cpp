@@ -303,14 +303,12 @@ bool RecorderEngineGstImpl::CheckParamType(int32_t sourceId, const RecorderParam
 int32_t RecorderEngineGstImpl::SetSurface(int32_t sourceId)
 {
     if (consumerSurface_ == nullptr) {
-        MEDIA_LOGI("consumerSurface not exist");
+        MEDIA_LOGI("consumerSurface_ not exist");
         consumerSurface_ = IConsumerSurface::Create();
         if (consumerSurface_ == nullptr) {
             MEDIA_LOGE("create consumerSurface failed, return");
-            return MSERR_OK;
+            return MSERR_INVALID_OPERATION;
         }
-    } else {
-        MEDIA_LOGI("consumerSurface exist");
     }
     MEDIA_LOGI("consumerSurface surfaceID: %{public}s", std::to_string(consumerSurface_->GetUniqueId()).c_str());
     SurfaceParam surfaceParam;
@@ -318,6 +316,7 @@ int32_t RecorderEngineGstImpl::SetSurface(int32_t sourceId)
     int32_t ret = builder_->Configure(sourceId, surfaceParam);
     if (ret != MSERR_OK) {
         MEDIA_LOGE("set surface to videoSource failed");
+        return ret;
     }
     MEDIA_LOGI("set surface to videoSource success");
     return ret;

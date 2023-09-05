@@ -248,8 +248,8 @@ int32_t VideoSource::GetParameter(RecorderParam &recParam)
 
 int32_t VideoSource::ConfigureSurface(const RecorderParam &recParam)
 {
-    MEDIA_LOGI("ConfigureSurface: set Input Surface for VideoSource");
     if (recParam.type == RecorderPrivateParamType::SURFACE) {
+        MEDIA_LOGI("Configure Input Surface for VideoSource");
         const SurfaceParam &param = static_cast<const SurfaceParam &>(recParam);
         if (param.surface_ == nullptr) {
             MEDIA_LOGE("Input surface is null");
