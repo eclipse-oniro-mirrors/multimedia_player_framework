@@ -23,7 +23,7 @@
 #include "nocopyable.h"
 #include "i_recorder_engine.h"
 #include "iconsumer_surface.h"
-#include "surface.h
+#include "surface.h"
 #include "recorder_pipeline.h"
 #include "recorder_pipeline_ctrler.h"
 #include "recorder_pipeline_builder.h"
