@@ -1069,7 +1069,7 @@ void PlayBinCtrlerBase::HandleCacheCtrlWhenNoBuffering(int32_t percent)
         }
 
         if (GetCurrState() == playingState_ && !isSeeking_ && !isRating_ &&
-            !isAddingSubtitle_ && !isUserSetPause_ && !isSelectBitRate_) {
+            !isAddingSubtitle_ && !isUserSetPause_) {
             std::unique_lock<std::mutex> lock(cacheCtrlMutex_);
             MEDIA_LOGI("HandleCacheCtrl percent is %{public}d, begin set to paused", percent);
             GstStateChangeReturn ret = gst_element_set_state(GST_ELEMENT_CAST(playbin_), GST_STATE_PAUSED);
