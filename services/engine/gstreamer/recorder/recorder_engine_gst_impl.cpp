@@ -184,7 +184,7 @@ sptr<Surface> RecorderEngineGstImpl::GetSurface(int32_t sourceId)
 int32_t RecorderEngineGstImpl::Prepare()
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    int32_t ret = SetSurface(videoSourceId_);
+    int32_t ret = SetSurface();
     if (ret != MSERR_OK) {
         MEDIA_LOGE("Prepare failed due to SetSurface failed!");
         return ret;
@@ -248,6 +248,7 @@ int32_t RecorderEngineGstImpl::StopPipeline(bool isDrainAll)
         sourceCount_[i] = 0;
     }
     allSources_.clear();
+    videoSourceId_ = -1;
 
     return ret;
 }
@@ -300,8 +301,12 @@ bool RecorderEngineGstImpl::CheckParamType(int32_t sourceId, const RecorderParam
     return false;
 }
 
-int32_t RecorderEngineGstImpl::SetSurface(int32_t sourceId)
+int32_t RecorderEngineGstImpl::SetSurface()
 {
+    if (videoSourceId_ == -1) {
+        MEDIA_LOGI("audio record no surface needed.");
+        return MSERR_OK;
+    }
     if (consumerSurface_ == nullptr) {
         MEDIA_LOGI("consumerSurface_ not exist");
         consumerSurface_ = IConsumerSurface::Create();
@@ -313,7 +318,7 @@ int32_t RecorderEngineGstImpl::SetSurface(int32_t sourceId)
     MEDIA_LOGI("consumerSurface surfaceID: %{public}s", std::to_string(consumerSurface_->GetUniqueId()).c_str());
     SurfaceParam surfaceParam;
     surfaceParam.surface_ = consumerSurface_;
-    int32_t ret = builder_->Configure(sourceId, surfaceParam);
+    int32_t ret = builder_->Configure(videoSourceId_, surfaceParam);
     if (ret != MSERR_OK) {
         MEDIA_LOGE("set surface to videoSource failed");
         return ret;

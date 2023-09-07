@@ -59,11 +59,11 @@ G_DEFINE_TYPE(GstSurfaceSrc, gst_surface_src, GST_TYPE_MEM_SRC);
 static void gst_surface_src_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 static void gst_surface_src_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static GstStateChangeReturn gst_surface_src_change_state(GstElement *element, GstStateChange transition);
+static gboolean gst_surface_src_create_surface(GstSurfaceSrc *surfacesrc);
 static GstBufferPool *gst_surface_src_create_pool(GstMemSrc *memsrc);
 static gboolean gst_surface_src_init_pool(GstSurfaceSrc *surfacesrc);
 static void gst_surface_src_destroy_surface(GstSurfaceSrc *src);
 static void gst_surface_src_destroy_pool(GstSurfaceSrc *src);
-static void gst_surface_src_finalize(GObject *object);
 static gboolean gst_surface_src_decide_allocation(GstBaseSrc *basesrc, GstQuery *query);
 static GstFlowReturn gst_surface_src_fill(GstBaseSrc *src, guint64 offset, guint size, GstBuffer *buf);
 static void gst_surface_src_init_surface(GstSurfaceSrc *src);
@@ -81,7 +81,6 @@ static void gst_surface_src_class_init(GstSurfaceSrcClass *klass)
     GST_DEBUG_CATEGORY_INIT(gst_surface_src_debug_category, "surfacepoolsrc", 0, "surface pool src base class");
     gobject_class->get_property = gst_surface_src_get_property;
     gobject_class->set_property = gst_surface_src_set_property;
-    gobject_class->finalize = gst_surface_src_finalize;
 
     g_object_class_install_property(gobject_class, PROP_SURFACE,
         g_param_spec_pointer("surface", "Surface", "Surface for buffer",
@@ -218,6 +217,7 @@ static GstStateChangeReturn gst_surface_src_change_state(GstElement *element, Gs
     g_return_val_if_fail(surfacesrc != nullptr, GST_STATE_CHANGE_FAILURE);
     switch (transition) {
         case GST_STATE_CHANGE_NULL_TO_READY:
+            g_return_val_if_fail(gst_surface_src_create_surface(surfacesrc) == TRUE, GST_STATE_CHANGE_FAILURE);
             g_return_val_if_fail(gst_surface_src_init_pool(surfacesrc) == TRUE, GST_STATE_CHANGE_FAILURE);
             break;
         case GST_STATE_CHANGE_READY_TO_PAUSED:
@@ -231,6 +231,7 @@ static GstStateChangeReturn gst_surface_src_change_state(GstElement *element, Gs
     switch (transition) {
         case GST_STATE_CHANGE_READY_TO_NULL:
             gst_surface_src_destroy_pool(surfacesrc);
+            gst_surface_src_destroy_surface(surfacesrc);
             if (surfacesrc->dump.enable_dump == TRUE) {
                 if (surfacesrc->dump.dump_file != nullptr) {
                     fclose(surfacesrc->dump.dump_file);
@@ -246,6 +247,29 @@ static GstStateChangeReturn gst_surface_src_change_state(GstElement *element, Gs
     }
 
     return ret;
+}
+
+static gboolean gst_surface_src_create_surface(GstSurfaceSrc *surfacesrc)
+{
+    g_return_val_if_fail(surfacesrc != nullptr, FALSE);
+    if (surfacesrc->consumerSurface == nullptr) {
+        GST_DEBUG_OBJECT(surfacesrc, "consumer surface is empty create surface");
+        sptr<IConsumerSurface> consumerSurface = IConsumerSurface::Create();
+        g_return_val_if_fail(consumerSurface != nullptr, FALSE);
+        sptr<IBufferProducer> producer = consumerSurface->GetProducer();
+        g_return_val_if_fail(producer != nullptr, FALSE);
+        sptr<Surface> producerSurface = Surface::CreateSurfaceAsProducer(producer);
+        g_return_val_if_fail(producerSurface != nullptr, FALSE);
+        surfacesrc->consumerSurface = consumerSurface;
+        surfacesrc->producerSurface = producerSurface;
+    }
+
+    SurfaceError ret = surfacesrc->consumerSurface->SetQueueSize(DEFAULT_SURFACE_QUEUE_SIZE);
+    if (ret != SURFACE_ERROR_OK) {
+        GST_WARNING_OBJECT(surfacesrc, "set queue size fail");
+    }
+    GST_DEBUG_OBJECT(surfacesrc, "create surface");
+    return TRUE;
 }
 
 static gboolean gst_surface_src_send_event(GstElement *element, GstEvent *event)
@@ -485,11 +509,4 @@ static void gst_surface_mem_src_dump_from_sys_param(GstSurfaceSrc *src)
     if (dump_enable == "true") {
         src->dump.enable_dump = TRUE;
     }
-}
-
-static void gst_surface_src_finalize(GObject *object)
-{
-    GstSurfaceSrc *surfacesrc = GST_SURFACE_SRC(object);
-    GST_INFO_OBJECT(surfacesrc, "gst_surface_src_destroy_surface in gst_surface_src_finalize");
-    gst_surface_src_destroy_surface(surfacesrc);
 }

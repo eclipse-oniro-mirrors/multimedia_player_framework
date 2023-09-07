@@ -257,7 +257,6 @@ int32_t VideoSource::ConfigureSurface(const RecorderParam &recParam)
         }
         g_object_set(gstElem_, "surface", static_cast<gpointer>(param.surface_), nullptr);
     }
-    
     return MSERR_OK;
 }
 

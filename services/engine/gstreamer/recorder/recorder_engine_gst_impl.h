@@ -55,7 +55,7 @@ private:
     int32_t BuildPipeline();
     int32_t StopPipeline(bool isDrainAll);
     bool CheckParamType(int32_t sourceId, const RecorderParam &recParam) const;
-    int32_t SetSurface(int32_t sourceId);
+    int32_t SetSurface();
 
     std::unique_ptr<RecorderPipelineBuilder> builder_ = nullptr;
     std::shared_ptr<RecorderPipelineCtrler> ctrler_ = nullptr;
