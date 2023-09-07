@@ -193,9 +193,13 @@ static gboolean gst_vdec_base_free_codec_buffers(GstVdecBase *self)
     if (!self->is_free_codec_buffers) {
         if (!self->is_eos_state) {
             GST_VIDEO_DECODER_STREAM_LOCK(self);
+            ON_SCOPE_EXIT(0) {
+                GST_VIDEO_DECODER_STREAM_UNLOCK(self);
+            };
             ret = self->decoder->Flush(GST_CODEC_ALL);
             g_return_val_if_fail(gst_codec_return_is_ok(self, ret, "Flush", TRUE), FALSE);
             gst_vdec_base_set_flushing(self, TRUE);
+            CANCEL_SCOPE_EXIT_GUARD(0);
             GST_VIDEO_DECODER_STREAM_UNLOCK(self);
             g_return_val_if_fail(gst_pad_push_event(GST_VIDEO_DECODER_SRC_PAD(self),
                 gst_event_new_flush_start()), FALSE);
