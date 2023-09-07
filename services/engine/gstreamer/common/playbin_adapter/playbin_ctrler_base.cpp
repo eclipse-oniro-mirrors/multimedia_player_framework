@@ -1052,6 +1052,10 @@ void PlayBinCtrlerBase::HandleCacheCtrlCb(const InnerMessage &msg)
 
 void PlayBinCtrlerBase::HandleCacheCtrlWhenNoBuffering(int32_t percent)
 {
+    if (isSelectBitRate_) {
+        MEDIA_LOGD("switch bitrate, just return");
+        return;
+    }
     if (percent < static_cast<float>(BUFFER_LOW_PERCENT_DEFAULT) / BUFFER_HIGH_PERCENT_DEFAULT *
         BUFFER_PERCENT_THRESHOLD) {
         // percent<25% buffering start
