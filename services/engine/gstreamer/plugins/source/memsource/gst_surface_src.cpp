@@ -157,6 +157,9 @@ static void gst_surface_src_set_property(GObject *object, guint prop_id, const G
         case PROP_SURFACE:
             {
                 GST_DEBUG_OBJECT(src, "gst_surface_src_set_property: PROP_SURFACE");
+                if (src->consumerSurface != nullptr) {
+                    GST_ERROR_OBJECT(src, "consumerSurface exists before set, set surface fail");
+                }
                 gpointer surface = g_value_get_pointer(value);
                 g_return_if_fail(surface != nullptr);
                 OHOS::sptr<OHOS::IConsumerSurface> consumerSurface = static_cast<OHOS::IConsumerSurface *>(surface);
@@ -262,6 +265,8 @@ static gboolean gst_surface_src_create_surface(GstSurfaceSrc *surfacesrc)
         g_return_val_if_fail(producerSurface != nullptr, FALSE);
         surfacesrc->consumerSurface = consumerSurface;
         surfacesrc->producerSurface = producerSurface;
+    } else {
+        GST_DEBUG_OBJECT(surfacesrc, "consumer surface already set");
     }
 
     SurfaceError ret = surfacesrc->consumerSurface->SetQueueSize(DEFAULT_SURFACE_QUEUE_SIZE);
