@@ -159,6 +159,7 @@ static void gst_surface_src_set_property(GObject *object, guint prop_id, const G
                 GST_DEBUG_OBJECT(src, "gst_surface_src_set_property: PROP_SURFACE");
                 if (src->consumerSurface != nullptr) {
                     GST_ERROR_OBJECT(src, "consumerSurface exists before set, set surface fail");
+                    return;
                 }
                 gpointer surface = g_value_get_pointer(value);
                 g_return_if_fail(surface != nullptr);
