@@ -53,7 +53,6 @@ config("media_engine_gst_recorder_config") {
     "//third_party/glib/glib",
     "//third_party/glib",
     "//third_party/glib/gmodule",
-    "//third_party/openmax/api/1.1.2",
   ]
 }
 
