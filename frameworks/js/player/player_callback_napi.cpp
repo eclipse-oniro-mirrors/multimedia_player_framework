@@ -331,7 +331,7 @@ void PlayerCallbackNapi::OnJsCallBackError(PlayerJsCallback *jsCb) const
     ON_SCOPE_EXIT(0) { delete jsCb; };
 
     uv_loop_s *loop = nullptr;
-    napi_get_uv_event_loop(env, &loop);
+    napi_get_uv_event_loop(env_, &loop);
     CHECK_AND_RETURN_LOG(loop != nullptr, "Fail to napi_get_uv_event_loop");
 
     uv_work_t *work = new(std::nothrow) uv_work_t;
@@ -450,7 +450,7 @@ void PlayerCallbackNapi::OnJsCallBackIntVec(PlayerJsCallback *jsCb) const
     ON_SCOPE_EXIT(0) { delete jsCb; };
 
     uv_loop_s *loop = nullptr;
-    napi_get_uv_event_loop(env, &loop);
+    napi_get_uv_event_loop(env_, &loop);
     CHECK_AND_RETURN_LOG(loop != nullptr, "Fail to napi_get_uv_event_loop");
 
     uv_work_t *work = new(std::nothrow) uv_work_t;
@@ -568,7 +568,7 @@ void PlayerCallbackNapi::OnJsCallBackInterrupt(PlayerJsCallback *jsCb) const
     ON_SCOPE_EXIT(0) { delete jsCb; };
 
     uv_loop_s *loop = nullptr;
-    napi_get_uv_event_loop(env, &loop);
+    napi_get_uv_event_loop(env_, &loop);
     CHECK_AND_RETURN_LOG(loop != nullptr, "Fail to napi_get_uv_event_loop");
 
     uv_work_t *work = new(std::nothrow) uv_work_t;

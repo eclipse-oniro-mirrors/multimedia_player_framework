@@ -83,7 +83,7 @@ static GstClockTime gst_audio_server_sink_update_reach_time(GstBaseSink *basesin
 
 static void gst_audio_server_sink_event_init(GstAudioServerSinkClass *klass)
 {
-    g_return_if_fail(klass != nullptr));
+    g_return_if_fail(klass != nullptr);
     g_signal_new("interrupt-event", G_TYPE_FROM_CLASS(klass),
         static_cast<GSignalFlags>(G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION), 0, NULL,
         NULL, NULL, G_TYPE_NONE, 3, G_TYPE_UINT, G_TYPE_UINT, G_TYPE_UINT); // 3 parameters
@@ -103,7 +103,7 @@ static void gst_audio_server_sink_event_init(GstAudioServerSinkClass *klass)
 
 static void gst_audio_server_sink_property1_init(GObjectClass *gobject_class)
 {
-    g_return_if_fail(gobject_class != nullptr));
+    g_return_if_fail(gobject_class != nullptr);
     g_object_class_install_property(gobject_class, PROP_BITS_PER_SAMPLE,
         g_param_spec_uint("bps", "Bits Per Sample",
             "Audio Format", 0, G_MAXINT32, 0,
@@ -152,7 +152,7 @@ static void gst_audio_server_sink_property1_init(GObjectClass *gobject_class)
 
 static void gst_audio_server_sink_property2_init(GObjectClass *gobject_class)
 {
-    g_return_if_fail(gobject_class != nullptr));
+    g_return_if_fail(gobject_class != nullptr);
     g_object_class_install_property(gobject_class, PROP_AUDIO_RENDERER_DESC,
         g_param_spec_int("audio-renderer-desc", "Audio Renderer Desc",
             "Audio Renderer Desc", 0, G_MAXINT32, 0,
