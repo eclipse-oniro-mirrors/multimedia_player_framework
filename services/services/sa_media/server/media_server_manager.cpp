@@ -478,7 +478,7 @@ void MediaServerManager::DestroyStubObject(StubType type, sptr<IRemoteObject> ob
     DestroyDumper(type, object);
     switch (type) {
         case RECORDER:
-        case RECORDERPROFILES: {
+        case RECORDERPROFILES:
             DestroyAVRecorderStub(type, object, pid);
             break;
         case PLAYER:
