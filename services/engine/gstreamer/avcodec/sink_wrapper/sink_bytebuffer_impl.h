@@ -33,7 +33,7 @@ public:
     int32_t Init() override;
     int32_t Configure(std::shared_ptr<ProcessorConfig> config) override;
     int32_t Flush() override;
-    std::shared_ptr<AVSharedMemory> GetOutputBuffer(uint32_t index) override;
+    std::shared_ptr<AVSharedMemory> GetOutputBuffer(uint32_t idx) override;
     int32_t ReleaseOutputBuffer(uint32_t index, bool render = false) override;
     int32_t SetCallback(const std::weak_ptr<IAVCodecEngineObs> &obs) override;
     bool IsEos() override;

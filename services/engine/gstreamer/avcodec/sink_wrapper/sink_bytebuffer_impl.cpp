@@ -74,19 +74,19 @@ int32_t SinkBytebufferImpl::Flush()
     return MSERR_OK;
 }
 
-std::shared_ptr<AVSharedMemory> SinkBytebufferImpl::GetOutputBuffer(uint32_t index)
+std::shared_ptr<AVSharedMemory> SinkBytebufferImpl::GetOutputBuffer(uint32_t idx)
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET(index < bufferList_.size(), nullptr);
-    CHECK_AND_RETURN_RET(bufferList_[index] != nullptr, nullptr);
-    CHECK_AND_RETURN_RET(bufferList_[index]->owner_ == BufferWrapper::SERVER, nullptr);
+    CHECK_AND_RETURN_RET(idx < bufferList_.size(), nullptr);
+    CHECK_AND_RETURN_RET(bufferList_[idx] != nullptr, nullptr);
+    CHECK_AND_RETURN_RET(bufferList_[idx]->owner_ == BufferWrapper::SERVER, nullptr);
 
-    GstMemory *memory = gst_buffer_peek_memory(bufferList_[index]->gstBuffer_, 0);
-    CHECK_AND_RETURN_RET(memory != nullptr, nullptr);
-    CHECK_AND_RETURN_RET(gst_is_shmem_memory(memory), nullptr);
+    GstMemory *outMemory = gst_buffer_peek_memory(bufferList_[idx]->gstBuffer_, 0);
+    CHECK_AND_RETURN_RET(outMemory != nullptr, nullptr);
+    CHECK_AND_RETURN_RET(gst_is_shmem_memory(outMemory), nullptr);
 
-    GstShMemMemory *shmem = reinterpret_cast<GstShMemMemory *>(memory);
-    bufferList_[index]->owner_ = BufferWrapper::APP;
+    GstShMemMemory *shmem = reinterpret_cast<GstShMemMemory *>(outMemory);
+    bufferList_[idx]->owner_ = BufferWrapper::APP;
     return shmem->mem;
 }
 
