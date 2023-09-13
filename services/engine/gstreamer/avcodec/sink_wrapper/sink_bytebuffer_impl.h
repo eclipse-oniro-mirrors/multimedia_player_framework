@@ -43,7 +43,7 @@ private:
     static GstFlowReturn NewSampleCb(GstMemSink *memSink, GstBuffer *sample, gpointer userData);
 
     int32_t HandleNewSampleCb(GstBuffer *buffer);
-    int32_t FindBufferIndex(uint32_t &index, std::shared_ptr<AVSharedMemory> mem);
+    int32_t FindBufferIndex(uint32_t &index, std::shared_ptr<AVSharedMemory> avSharedmem);
     int32_t AddAdtsHead(std::shared_ptr<AVSharedMemory> mem, uint32_t rawFrameSize);
 
     std::mutex mutex_;
