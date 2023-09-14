@@ -69,27 +69,27 @@ public:
         MediaServiceExtErrCodeAPI9 errorCode = MSERR_EXT_API9_UNSUPPORT_FORMAT;
         void UvWork() override
         {
-            std::shared_ptr<AutoRef> ref = callback.lock();
-            CHECK_AND_RETURN_LOG(ref != nullptr,
+            std::shared_ptr<AutoRef> errorRef = callback.lock();
+            CHECK_AND_RETURN_LOG(errorRef != nullptr,
                 "%{public}s AutoRef is nullptr", callbackName.c_str());
 
             napi_handle_scope scope = nullptr;
-            napi_open_handle_scope(ref->env_, &scope);
+            napi_open_handle_scope(errorRef->env_, &scope);
             CHECK_AND_RETURN_LOG(scope != nullptr,
                 "%{public}s scope is nullptr", callbackName.c_str());
-            ON_SCOPE_EXIT(0) { napi_close_handle_scope(ref->env_, scope); };
+            ON_SCOPE_EXIT(0) { napi_close_handle_scope(errorRef->env_, scope); };
 
             napi_value jsCallback = nullptr;
-            napi_status napiStatus = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
+            napi_status napiStatus = napi_get_reference_value(errorRef->env_, errorRef->cb_, &jsCallback);
             CHECK_AND_RETURN_LOG(napiStatus == napi_ok && jsCallback != nullptr,
                 "%{public}s failed to napi_get_reference_value", callbackName.c_str());
 
             napi_value args[1] = {nullptr};
-            (void)CommonNapi::CreateError(ref->env_, errorCode, errorMsg, args[0]);
+            (void)CommonNapi::CreateError(errorRef->env_, errorCode, errorMsg, args[0]);
 
             // Call back function
             napi_value result = nullptr;
-            napiStatus = napi_call_function(ref->env_, nullptr, jsCallback, 1, args, &result);
+            napiStatus = napi_call_function(errorRef->env_, nullptr, jsCallback, 1, args, &result);
             CHECK_AND_RETURN_LOG(napiStatus == napi_ok,
                 "%{public}s failed to napi_call_function", callbackName.c_str());
         }
