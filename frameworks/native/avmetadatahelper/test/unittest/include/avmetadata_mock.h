@@ -62,7 +62,7 @@ static std::unordered_map<int32_t, std::string> EXPECT_META = {
     {AV_KEY_VIDEO_HEIGHT, "480"},
     {AV_KEY_VIDEO_WIDTH, "720"},
     {AV_KEY_DATE_TIME, "2022"},
-}
+};
 } // namespace AVMetadataTestParam
 
 static const int RGB888_PIXEL_BYTES = 3;

@@ -464,7 +464,7 @@ static GstFlowReturn gst_mem_sink_stream_render(GstBaseSink *basesink, GstBuffer
     MediaTrace trace("MemSink::stream_render");
     GstMemSink *mem_sink = GST_MEM_SINK_CAST(basesink);
     g_return_val_if_fail(mem_sink != nullptr && buffer != nullptr, GST_FLOW_ERROR);
-    GstMemSinkPrivate *priv = mem_sink->priv;
+    GstMemSinkPrivate *mem_priv = mem_sink->priv;
     g_return_val_if_fail(mem_priv != nullptr, GST_FLOW_ERROR);
     GstMemSinkClass *kclass = GST_MEM_SINK_GET_CLASS(mem_sink);
     g_return_val_if_fail(kclass != nullptr, GST_FLOW_ERROR);

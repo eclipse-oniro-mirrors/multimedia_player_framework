@@ -206,9 +206,9 @@ int32_t SinkBytebufferImpl::HandleNewSampleCb(GstBuffer *buffer)
     return MSERR_OK;
 }
 
-int32_t SinkBytebufferImpl::FindBufferIndex(uint32_t &index, std::shared_ptr<AVSharedMemory> avSharedmem)
+int32_t SinkBytebufferImpl::FindBufferIndex(uint32_t &index, std::shared_ptr<AVSharedMemory> avSharedMem)
 {
-    CHECK_AND_RETURN_RET(avSharedmem != nullptr, MSERR_UNKNOWN);
+    CHECK_AND_RETURN_RET(avSharedMem != nullptr, MSERR_UNKNOWN);
 
     index = 0;
     for (auto it = bufferList_.begin(); it != bufferList_.end(); it++) {
@@ -221,7 +221,7 @@ int32_t SinkBytebufferImpl::FindBufferIndex(uint32_t &index, std::shared_ptr<AVS
     if (index == bufferList_.size()) {
         auto avbufWrap = std::make_shared<BufferWrapper>(BufferWrapper::SERVER);
         CHECK_AND_RETURN_RET(avbufWrap != nullptr, MSERR_NO_MEMORY);
-        bufWrap->mem_ = avSharedMem.get();
+        avbufWrap->mem_ = avSharedMem.get();
         bufferList_.push_back(avbufWrap);
     }
 

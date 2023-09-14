@@ -50,10 +50,10 @@ bool CommonNapi::GetPropertyInt32(napi_env env, napi_value configObj, const std:
     bool exist = false;
     napi_status napiStatus = napi_has_named_property(env, configObj, type.c_str(), &exist);
     CHECK_AND_RETURN_RET_LOG(napiStatus == napi_ok && exist, false, "can not find %{public}s property", type.c_str());
-    CHECK_AND_RETURN_RET_LOG(napi_get_named_property(env, configObj, type.c_str(), &item) == napi_ok, false
+    CHECK_AND_RETURN_RET_LOG(napi_get_named_property(env, configObj, type.c_str(), &item) == napi_ok, false,
         "get %{public}s property fail", type.c_str());
-    CHECK_AND_RETURN_RET_LOG(napi_get_value_int32(env, item, &result) == napi_ok, false, 
-        MEDIA_LOGE("get %{public}s property value fail", type.c_str()));
+    CHECK_AND_RETURN_RET_LOG(napi_get_value_int32(env, item, &result) == napi_ok, false,
+        "get %{public}s property value fail", type.c_str());
     return true;
 }
 
@@ -63,11 +63,11 @@ bool CommonNapi::GetPropertyUint32(napi_env env, napi_value configObj, const std
     bool exist = false;
     napi_status status = napi_has_named_property(env, configObj, type.c_str(), &exist);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && exist, false, "can not find %{public}s property", type.c_str());
-    CHECK_AND_RETURN_RET_LOG(napi_get_named_property(env, configObj, type.c_str(), &item) == napi_ok, false
+    CHECK_AND_RETURN_RET_LOG(napi_get_named_property(env, configObj, type.c_str(), &item) == napi_ok, false,
         "get %{public}s property fail", type.c_str());
 
-    CHECK_AND_RETURN_RET_LOG(napi_get_value_uint32(env, item, &result) == napi_ok, false, 
-        MEDIA_LOGE("get %{public}s property value fail", type.c_str()));
+    CHECK_AND_RETURN_RET_LOG(napi_get_value_uint32(env, item, &result) == napi_ok, false,
+        "get %{public}s property value fail", type.c_str());
     return true;
 }
 
