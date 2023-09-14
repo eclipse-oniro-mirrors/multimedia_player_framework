@@ -709,32 +709,32 @@ void AVPlayerCallback::OnBufferingUpdateCb(const int32_t extra, const Format &in
         return;
     }
 
-    int32_t value = 0;
+    int32_t val = 0;
     int32_t bufferingType = -1;
     if (infoBody.ContainKey(std::string(PlayerKeys::PLAYER_BUFFERING_START))) {
         bufferingType = BUFFERING_START;
-        (void)infoBody.GetIntValue(std::string(PlayerKeys::PLAYER_BUFFERING_START), value);
+        (void)infoBody.GetIntValue(std::string(PlayerKeys::PLAYER_BUFFERING_START), val);
     } else if (infoBody.ContainKey(std::string(PlayerKeys::PLAYER_BUFFERING_END))) {
         bufferingType = BUFFERING_END;
-        (void)infoBody.GetIntValue(std::string(PlayerKeys::PLAYER_BUFFERING_END), value);
+        (void)infoBody.GetIntValue(std::string(PlayerKeys::PLAYER_BUFFERING_END), val);
     } else if (infoBody.ContainKey(std::string(PlayerKeys::PLAYER_BUFFERING_PERCENT))) {
         bufferingType = BUFFERING_PERCENT;
-        (void)infoBody.GetIntValue(std::string(PlayerKeys::PLAYER_BUFFERING_PERCENT), value);
+        (void)infoBody.GetIntValue(std::string(PlayerKeys::PLAYER_BUFFERING_PERCENT), val);
     } else if (infoBody.ContainKey(std::string(PlayerKeys::PLAYER_CACHED_DURATION))) {
         bufferingType = CACHED_DURATION;
-        (void)infoBody.GetIntValue(std::string(PlayerKeys::PLAYER_CACHED_DURATION), value);
+        (void)infoBody.GetIntValue(std::string(PlayerKeys::PLAYER_CACHED_DURATION), val);
     } else {
         return;
     }
 
-    MEDIA_LOGI("OnBufferingUpdateCb is called, buffering type: %{public}d value: %{public}d", bufferingType, value);
+    MEDIA_LOGI("OnBufferingUpdateCb is called, buffering type: %{public}d value: %{public}d", bufferingType, val);
     NapiCallback::IntVec *cb = new(std::nothrow) NapiCallback::IntVec();
     CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new IntVec");
 
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_BUFFERING_UPDATE);
     cb->callbackName = AVPlayerEvent::EVENT_BUFFERING_UPDATE;
     cb->valueVec.push_back(bufferingType);
-    cb->valueVec.push_back(value);
+    cb->valueVec.push_back(val);
     NapiCallback::CompleteCallbackInOrder(cb, handler_);
 }
 
