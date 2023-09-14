@@ -533,27 +533,27 @@ GstFlowReturn gst_mem_sink_app_render(GstMemSink *mem_sink, GstBuffer *buffer)
     return ret;
 }
 
-GstFlowReturn gst_mem_sink_app_preroll_render(GstMemSink *mem_sink, GstBuffer *buffer)
+GstFlowReturn gst_mem_sink_app_preroll_render(GstMemSink *memsink, GstBuffer *buffer)
 {
-    g_return_val_if_fail(mem_sink != nullptr, GST_FLOW_ERROR);
-    GstMemSinkPrivate *priv = mem_sink->priv;
+    g_return_val_if_fail(memsink != nullptr, GST_FLOW_ERROR);
+    GstMemSinkPrivate *priv = memsink->priv;
     g_return_val_if_fail(priv != nullptr, GST_FLOW_ERROR);
-    GstMemSinkClass *mem_sink_class = GST_MEM_SINK_GET_CLASS(mem_sink);
-    g_return_val_if_fail(mem_sink_class != nullptr, GST_FLOW_ERROR);
+    GstMemSinkClass *memsink_class = GST_MEM_SINK_GET_CLASS(memsink);
+    g_return_val_if_fail(memsink_class != nullptr, GST_FLOW_ERROR);
 
     g_mutex_lock(&priv->mutex);
     if (!priv->started) {
-        GST_INFO_OBJECT(mem_sink, "we are not started");
+        GST_INFO_OBJECT(memsink, "we are not started");
         g_mutex_unlock(&priv->mutex);
         return GST_FLOW_FLUSHING;
     }
     g_mutex_unlock(&priv->mutex);
 
-    GST_INFO_OBJECT(mem_sink, "app preroll render buffer 0x%06" PRIXPTR "", FAKE_POINTER(buffer));
+    GST_INFO_OBJECT(memsink, "app preroll render buffer 0x%06" PRIXPTR "", FAKE_POINTER(buffer));
 
     GstFlowReturn ret = GST_FLOW_OK;
-    if (mem_sink_class->do_app_render != nullptr) {
-        ret = mem_sink_class->do_app_render(mem_sink, buffer, TRUE);
+    if (memsink_class->do_app_render != nullptr) {
+        ret = memsink_class->do_app_render(memsink, buffer, TRUE);
     }
 
     return ret;
