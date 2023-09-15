@@ -187,7 +187,6 @@ int32_t AVMetadataServiceProxyFuzzer::FetchArtPicture(uint8_t *inputData, size_t
     MessageParcel data;
     MessageParcel reply;
 
-
     bool token = data.WriteInterfaceToken(AVMetadataServiceProxyFuzzer::GetDescriptor());
     if (!token) {
         std::cout << "FetchArtPicture:Failed to write descriptor!" << std::endl;
@@ -204,7 +203,6 @@ int32_t AVMetadataServiceProxyFuzzer::FetchFrameAtTime(uint8_t *inputData, size_
     MessageOption option;
     MessageParcel data;
     MessageParcel reply;
-
 
     bool token = data.WriteInterfaceToken(AVMetadataServiceProxyFuzzer::GetDescriptor());
     if (!token) {

@@ -587,9 +587,9 @@ HWTEST_F(PlayerUnitTest, Player_Prepare_003, TestSize.Level2)
 {
     PlaybackRateMode rateMode;
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
-    sptr<Surface> surface = player_->GetVideoSurface();
-    ASSERT_NE(nullptr, surface);
-    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(surface));
+    sptr<Surface> renderSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, renderSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(renderSurface));
     EXPECT_EQ(MSERR_OK, player_->SetLooping(true));
     bool ret = player_->IsLooping();
     EXPECT_EQ(true, ret);
@@ -1472,9 +1472,9 @@ HWTEST_F(PlayerUnitTest, Player_SetDataSource_003, TestSize.Level0)
 {
     system("param set sys.media.datasrc.set.copymode TRUE");
     ASSERT_EQ(MSERR_OK, player_->SetDataSrc("/data/test/H264_AAC.mp4", 1894386, true));  // 1894386 file size
-    sptr<Surface> surface = player_->GetVideoSurface();
-    ASSERT_NE(nullptr, surface);
-    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(surface));
+    sptr<Surface> renderSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, renderSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(renderSurface));
     EXPECT_EQ(MSERR_OK, player_->Prepare());
     EXPECT_EQ(MSERR_OK, player_->Play());
     sleep(PLAYING_TIME_2_SEC);
@@ -1769,15 +1769,15 @@ HWTEST_F(PlayerUnitTest, Player_Not_Performance_001, TestSize.Level2)
  */
 HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_001, TestSize.Level0)
 {
-    sptr<Surface> surface = player_->GetVideoSurface();
-    ASSERT_NE(nullptr, surface);
+    sptr<Surface> renderSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, renderSurface);
     std::vector<std::string> srcVector = {MEDIA_ROOT + "MPEG4_MP3.mp4", MEDIA_ROOT + "H264_MP3.mp4"};
     for (int32_t i = 0; i < srcVector.size(); i++) {
         if (srcVector[i] == MEDIA_ROOT + "H264_MP3.mp4") {
             system("param set sys.media.player.resource.type NetWork");
         }
         ASSERT_EQ(MSERR_OK, player_->SetSource(srcVector[i]));
-        EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(surface));
+        EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(renderSurface));
         char text[100]; // 100: text len
         sprintf_s(text, 100, "hidumper -s 1909 -a \"-d %d %d %d\"", 0, 0, 4);
         system(text);
