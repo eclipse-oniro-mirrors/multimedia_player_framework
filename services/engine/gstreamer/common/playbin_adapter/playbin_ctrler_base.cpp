@@ -290,7 +290,9 @@ int32_t PlayBinCtrlerBase::Stop(bool needWait)
     if (videoSink_ == nullptr) {
         g_object_set(playbin_, "state-change", GST_PLAYER_STATUS_READY, nullptr);
     }
-    (void)seekFuture_.get();
+    if (seekFuture_.valid()) {
+        (void)seekFuture_.get();
+    }
     auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
     (void)currState->Stop();
 
