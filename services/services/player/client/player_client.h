@@ -37,6 +37,7 @@ public:
     int32_t Stop() override;
     int32_t Prepare() override;
     int32_t PrepareAsync() override;
+    int32_t Prepare() override;
     int32_t Pause() override;
     int32_t SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc) override;
     int32_t SetSource(int32_t fd, int64_t offset, int64_t size) override;

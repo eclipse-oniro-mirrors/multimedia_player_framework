@@ -55,15 +55,14 @@ public:
 #endif
     bool IsPlaying() override;
     bool IsLooping() override;
-    int32_t SetLooping(bool loop) override;
-    int32_t SetParameter(const Format &param) override;
-    int32_t DestroyStub() override;
+    int32_t GetCurrentTrack(int32_t trackType, int32_t &index) override;
     int32_t SetPlayerCallback() override;
     int32_t SelectBitRate(uint32_t bitRate) override;
     int32_t SelectTrack(int32_t index) override;
+    int32_t SetLooping(bool loop) override;
+    int32_t SetParameter(const Format &param) override;
     int32_t DeselectTrack(int32_t index) override;
-    int32_t GetCurrentTrack(int32_t trackType, int32_t &index) override;
-
+    int32_t DestroyStub() override;
 private:
     int32_t SendRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option);
     static inline BrokerDelegator<PlayerServiceProxy> delegator_;
