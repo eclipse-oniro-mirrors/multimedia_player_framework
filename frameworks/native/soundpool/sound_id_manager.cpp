@@ -144,7 +144,9 @@ int32_t SoundIDManager::DoParser()
         if (soundIDs_.empty()) {
             queueDataValid_.wait_for(
                 lock, std::chrono::duration<int32_t, std::milli>(WAIT_TIME_BEFORE_CLOSE_MS));
-            if (soundIDs_.empty()) break; // no new sound, exit this thread.
+            if (soundIDs_.empty()) {
+                break; // no new sound, exit this thread.
+            }
             continue;
         }
         const int32_t soundID = soundIDs_.front();
