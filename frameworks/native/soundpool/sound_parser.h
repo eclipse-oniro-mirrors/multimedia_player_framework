@@ -22,9 +22,11 @@
 #include <mutex>
 #include "ashmem.h"
 #include "avcodec_audio_decoder.h"
+#include "avcodec_errors.h"
 #include "avdemuxer.h"
 #include "avsource.h"
 #include "avsharedmemory.h"
+#include "avcodec_codec_name.h"
 #include "cache_buffer.h"
 #include "isoundpool.h"
 #include "media_description.h"
@@ -54,7 +56,7 @@ public:
     };
 
     SoundDecoderCallback(const int32_t soundID, const std::shared_ptr<MediaAVCodec::AVCodecAudioDecoder> &audioDec,
-        const std::shared_ptr<MediaAVCodec::AVDemuxer> &demuxer);
+        const std::shared_ptr<MediaAVCodec::AVDemuxer> &demuxer, const std::string trackMimeTypeInfo);
     ~SoundDecoderCallback();
     int32_t SetDecodeCallback(const std::shared_ptr<SoundDecodeListener> &listener)
     {
@@ -77,6 +79,7 @@ private:
     std::shared_ptr<MediaAVCodec::AVCodecAudioDecoder> audioDec_;
     std::shared_ptr<MediaAVCodec::AVDemuxer> demuxer_;
     std::shared_ptr<SoundDecodeListener> listener_;
+    std::string trackMimeTypeInfo_;
     bool eosFlag_;
     std::deque<std::shared_ptr<AudioBufferEntry>> availableAudioBuffers_;
     bool decodeShouldCompleted_;
