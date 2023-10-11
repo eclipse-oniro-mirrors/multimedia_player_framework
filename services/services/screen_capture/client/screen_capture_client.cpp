@@ -100,13 +100,15 @@ int32_t ScreenCaptureClient::SetCaptureMode(CaptureMode captureMode)
     return screenCaptureProxy_->SetCaptureMode(captureMode);
 }
 
-int32_t ScreenCaptureClient::SetDataType(DataType dataType){
+int32_t ScreenCaptureClient::SetDataType(DataType dataType)
+{
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
     return screenCaptureProxy_->SetDataType(dataType);
 }
 
-int32_t ScreenCaptureClient::SetRecorderInfo(RecorderInfo recorderInfo){
+int32_t ScreenCaptureClient::SetRecorderInfo(RecorderInfo recorderInfo)
+{
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
     return screenCaptureProxy_->SetRecorderInfo(recorderInfo);
@@ -119,7 +121,8 @@ int32_t ScreenCaptureClient::SetOutputFile(int32_t fd)
     return screenCaptureProxy_->SetOutputFile(fd);
 }
 
-int32_t ScreenCaptureClient::InitAudioEncInfo(AudioEncInfo audioEncInfo){
+int32_t ScreenCaptureClient::InitAudioEncInfo(AudioEncInfo audioEncInfo)
+{
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
     return screenCaptureProxy_->InitAudioEncInfo(audioEncInfo);
@@ -132,7 +135,8 @@ int32_t ScreenCaptureClient::InitAudioCap(AudioCaptureInfo audioInfo)
     return screenCaptureProxy_->InitAudioCap(audioInfo);
 }
 
-int32_t ScreenCaptureClient::InitVideoEncInfo(VideoEncInfo videoEncInfo){
+int32_t ScreenCaptureClient::InitVideoEncInfo(VideoEncInfo videoEncInfo)
+{
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
     return screenCaptureProxy_->InitVideoEncInfo(videoEncInfo);

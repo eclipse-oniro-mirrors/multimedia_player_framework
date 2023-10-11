@@ -100,7 +100,8 @@ int32_t ScreenCaptureServiceProxy::SetCaptureMode(CaptureMode captureMode)
     return reply.ReadInt32();
 }
 
-int32_t ScreenCaptureServiceProxy::SetDataType(DataType dataType){
+int32_t ScreenCaptureServiceProxy::SetDataType(DataType dataType)
+{
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -118,7 +119,8 @@ int32_t ScreenCaptureServiceProxy::SetDataType(DataType dataType){
     return reply.ReadInt32();
 }
 
-int32_t ScreenCaptureServiceProxy::SetRecorderInfo(RecorderInfo recorderInfo){
+int32_t ScreenCaptureServiceProxy::SetRecorderInfo(RecorderInfo recorderInfo)
+{
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;

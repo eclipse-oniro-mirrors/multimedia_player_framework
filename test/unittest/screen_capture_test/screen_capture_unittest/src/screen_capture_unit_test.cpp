@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
-#include "screen_capture_unit_test.h"
-#include "media_errors.h"
 #include <fcntl.h>
 #include <iostream>
 #include <string>
+#include "screen_capture_unit_test.h"
+#include "media_errors.h"
 
 using namespace OHOS;
 using namespace OHOS::Media;
@@ -282,11 +282,12 @@ void ScreenCaptureUnitTest::AudioLoopWithoutRelease(void)
  * @tc.require:
  */
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_01, TestSize.Level2)
-{   
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_01 before"); 
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_01 before");
     AVScreenCaptureConfig config_;
     RecorderInfo recorderInfo;
-    int32_t outputFd = open((SCREEN_CAPTURE_ROOT + "screen_capture_get_screen_capture_01.mp4").c_str(), O_RDWR | O_CREAT, 0777);
+    int32_t outputFd = open((SCREEN_CAPTURE_ROOT + "screen_capture_get_screen_capture_01.mp4").c_str(),
+        O_RDWR | O_CREAT, 0777);
     recorderInfo.url = "fd://" + to_string(outputFd);
     recorderInfo.fileFormat = "mp4";
     SetConfigFile(config_, recorderInfo);
@@ -296,7 +297,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_01, TestSize.Level2)
     sleep(RECORDER_TIME);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_01 after"); 
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_01 after");
 }
 
 /**

@@ -46,8 +46,8 @@ public:
      * @since 1.0
      * @version 1.0
      */
-    virtual int32_t SetCaptureParameter(uint32_t bitrate, uint32_t channels, uint32_t sampleRate, AudioSourceType sourceType,
-        const AppInfo &appInfo) = 0;
+    virtual int32_t SetCaptureParameter(uint32_t bitrate, uint32_t channels, uint32_t sampleRate,
+        AudioSourceType sourceType, const AppInfo &appInfo) = 0;
 
     /**
      * @brief Query whether the recorded encoding bit rate, number of audio channels and sampling rate are supported.

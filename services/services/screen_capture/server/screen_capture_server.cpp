@@ -94,7 +94,7 @@ int32_t ScreenCaptureServer::SetRecorderInfo(RecorderInfo recorderInfo)
 }
 
 int32_t ScreenCaptureServer::SetOutputFile(int32_t outputFd)
-{   
+{
     std::lock_guard<std::mutex> lock(mutex_);
     if (outputFd < 0) {
         MEDIA_LOGI("invalid outputFd");
@@ -227,8 +227,8 @@ int32_t ScreenCaptureServer::CheckAudioParam(AudioCaptureInfo audioInfo)
         return MSERR_INVALID_VAL;
     }
 
-    if(dataType_ == DataType::CAPTURE_FILE){
-        if(audioInfo.audioSource != ALL_PLAYBACK && audioInfo.audioSource != APP_PLAYBACK){
+    if(dataType_ == DataType::CAPTURE_FILE) {
+        if(audioInfo.audioSource != ALL_PLAYBACK && audioInfo.audioSource != APP_PLAYBACK) {
             MEDIA_LOGE("dataType is captureFile and audioSource is invalid");
             return MSERR_INVALID_VAL;
         }
@@ -350,44 +350,8 @@ int32_t ScreenCaptureServer::InitVideoCap(VideoCaptureInfo videoInfo)
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "CheckVideoParam failed");
 
     videoInfo_ = videoInfo;
-    if(dataType_ == DataType::CAPTURE_FILE){
-        if (outputFd_<0) {
-            MEDIA_LOGE("the outputFd is invalid");
-            return MSERR_INVALID_OPERATION;
-        }
-        MEDIA_LOGI("recorder start init");
-        recorder_ = Media::RecorderServer::Create();
-        CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_UNKNOWN, "init Recoder failed");
-        ret = MSERR_OK;
-        ret = recorder_->SetVideoSource(videoInfo.videoSource, videoSourceId_);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetAudioSource failed");
-        ret = recorder_->SetAudioSource(AudioSourceType::AUDIO_INNER, audioSourceId_);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetAudioSource failed");
-        ret = recorder_->SetOutputFormat(fileFormat_);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetOutputFormat failed");
-        ret = recorder_->SetAudioEncoder(audioSourceId_, audioEncInfo_.audioCodecformat);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetAudioEncoder failed");
-        ret = recorder_->SetAudioSampleRate(audioSourceId_, audioInfo_.audioSampleRate);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetAudioSampleRate failed");
-        ret = recorder_->SetAudioChannels(audioSourceId_, audioInfo_.audioChannels);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetAudioChannels failed");
-        ret = recorder_->SetAudioEncodingBitRate(audioSourceId_, audioEncInfo_.audioBitrate);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetAudioEncodingBitRate failed");
-        ret = recorder_->SetVideoEncoder(videoSourceId_, videoEncInfo_.videoCodec);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetVideoEncoder failed");
-        ret = recorder_->SetVideoSize(videoSourceId_, videoInfo_.videoFrameWidth, videoInfo_.videoFrameHeight);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetVideoSize failed");
-        ret = recorder_->SetVideoFrameRate(videoSourceId_, videoEncInfo_.videoFrameRate);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetVideoFrameRate failed");
-        ret = recorder_->SetVideoEncodingBitRate(videoSourceId_, videoEncInfo_.videoBitrate);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetVideoEncodingBitRate failed");
-        ret = recorder_->SetOutputFile(outputFd_);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetOutputFile failed");
-        ret = recorder_->Prepare();
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "recorder Prepare failed");
-        consumer_ = recorder_->GetSurface(videoSourceId_);
-        CHECK_AND_RETURN_RET_LOG(consumer_ != nullptr, MSERR_UNKNOWN, "recorder GetSurface failed");
-        MEDIA_LOGI("recorder prepare success");
+    if(dataType_ == DataType::CAPTURE_FILE) {
+        InitRecorder();
     } else {
         consumer_ = OHOS::Surface::CreateSurfaceAsConsumer();
     }
@@ -396,6 +360,48 @@ int32_t ScreenCaptureServer::InitVideoCap(VideoCaptureInfo videoInfo)
         return MSERR_NO_MEMORY;
     }
     
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureServer::InitRecorder()
+{
+    if (outputFd_<0) {
+        MEDIA_LOGE("the outputFd is invalid");
+        return MSERR_INVALID_OPERATION;
+    }
+    MEDIA_LOGI("recorder start init");
+    recorder_ = Media::RecorderServer::Create();
+    CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_UNKNOWN, "init Recoder failed");
+    int32_t ret = MSERR_OK;
+    ret = recorder_->SetVideoSource(videoInfo_.videoSource, videoSourceId_);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetAudioSource failed");
+    ret = recorder_->SetAudioSource(AudioSourceType::AUDIO_INNER, audioSourceId_);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetAudioSource failed");
+    ret = recorder_->SetOutputFormat(fileFormat_);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetOutputFormat failed");
+    ret = recorder_->SetAudioEncoder(audioSourceId_, audioEncInfo_.audioCodecformat);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetAudioEncoder failed");
+    ret = recorder_->SetAudioSampleRate(audioSourceId_, audioInfo_.audioSampleRate);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetAudioSampleRate failed");
+    ret = recorder_->SetAudioChannels(audioSourceId_, audioInfo_.audioChannels);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetAudioChannels failed");
+    ret = recorder_->SetAudioEncodingBitRate(audioSourceId_, audioEncInfo_.audioBitrate);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetAudioEncodingBitRate failed");
+    ret = recorder_->SetVideoEncoder(videoSourceId_, videoEncInfo_.videoCodec);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetVideoEncoder failed");
+    ret = recorder_->SetVideoSize(videoSourceId_, videoInfo_.videoFrameWidth, videoInfo_.videoFrameHeight);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetVideoSize failed");
+    ret = recorder_->SetVideoFrameRate(videoSourceId_, videoEncInfo_.videoFrameRate);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetVideoFrameRate failed");
+    ret = recorder_->SetVideoEncodingBitRate(videoSourceId_, videoEncInfo_.videoBitrate);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetVideoEncodingBitRate failed");
+    ret = recorder_->SetOutputFile(outputFd_);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetOutputFile failed");
+    ret = recorder_->Prepare();
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "recorder Prepare failed");
+    consumer_ = recorder_->GetSurface(videoSourceId_);
+    CHECK_AND_RETURN_RET_LOG(consumer_ != nullptr, MSERR_UNKNOWN, "recorder GetSurface failed");
+    MEDIA_LOGI("recorder prepare success");
     return MSERR_OK;
 }
 
@@ -467,7 +473,7 @@ int32_t ScreenCaptureServer::StartVideoCapture()
         MEDIA_LOGE("getUsingPermissionFromPrivacy");
     }
     if (captureMode_ == CAPTURE_HOME_SCREEN) {
-        if(dataType_ == DataType::CAPTURE_FILE){
+        if(dataType_ == DataType::CAPTURE_FILE) {
             return StartHomeVideoCaptureFile();
         } else {
             return StartHomeVideoCapture();
@@ -530,7 +536,8 @@ int32_t ScreenCaptureServer::StartHomeVideoCapture()
     return MSERR_OK;
 }
 
-int32_t ScreenCaptureServer::StartHomeVideoCaptureFile(){
+int32_t ScreenCaptureServer::StartHomeVideoCaptureFile()
+{
     if (recorder_ == nullptr) {
         MEDIA_LOGE("recorder_ is not created");
         return MSERR_INVALID_OPERATION;
@@ -829,7 +836,7 @@ int32_t ScreenCaptureServer::StopVideoCapture()
 int32_t ScreenCaptureServer::StopScreenCaptureRecorder()
 {
     int32_t stopRecorderSuccess = MSERR_OK;
-    //GetUsingPermissionFromPrivacy(STOP_VIDEO)
+
     if ((screenId_ < 0) || (consumer_ == nullptr) || !isConsumerStart_) {
         MEDIA_LOGI("video start failed, stop");
         stopRecorderSuccess = MSERR_INVALID_OPERATION;
@@ -837,7 +844,7 @@ int32_t ScreenCaptureServer::StopScreenCaptureRecorder()
     }
     stopRecorderSuccess = recorder_->Stop(false);
     CHECK_AND_RETURN_RET_LOG(stopRecorderSuccess == MSERR_OK, stopRecorderSuccess, "recorder Stop failed");
-    //ScreenManager::GetInstance().DestroyVirtualScreen(screenId_);
+
     if (screenId_ != SCREEN_ID_INVALID) {
         ScreenManager::GetInstance().DestroyVirtualScreen(screenId_);
     }
@@ -854,7 +861,7 @@ int32_t ScreenCaptureServer::StopScreenCapture()
 
     int32_t stopFlagSuccess = MSERR_OK;
 
-    if(dataType_ == DataType::CAPTURE_FILE){
+    if(dataType_ == DataType::CAPTURE_FILE) {
         stopFlagSuccess = StopScreenCaptureRecorder();
     } else {
         stopFlagSuccess = StopAudioCapture();
@@ -918,7 +925,7 @@ void ScreenCaptureServer::ReleaseVideoCapture()
     }
 
     if ((consumer_ != nullptr) && isConsumerStart_) {
-        if(dataType_ != DataType::CAPTURE_FILE){
+        if(dataType_ != DataType::CAPTURE_FILE) {
             consumer_->UnregisterConsumerListener();
         }
         isConsumerStart_ = false;

@@ -140,6 +140,7 @@ private:
     int32_t CheckVideoParam(VideoCaptureInfo videoInfo);
     int32_t CheckAudioParam(AudioCaptureInfo audioInfo);
     std::shared_ptr<AudioCapturer> CreateAudioCapture(AudioCaptureInfo audioInfo);
+    int32_t InitRecorder();
     int32_t StartAudioCapture();
     int32_t StartAudioInnerCapture();
     int32_t StartVideoCapture();

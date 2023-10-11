@@ -108,47 +108,63 @@ int32_t ScreenCaptureImpl::Init(AVScreenCaptureConfig config)
 
     switch (config.dataType) {
         case ORIGINAL_STREAM: {
-            ret = screenCaptureService_->InitAudioCap(config.audioInfo.micCapInfo);
-            CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "initMicAudioCap failed");
-            ret = screenCaptureService_->InitVideoCap(config.videoInfo.videoCapInfo);
-            CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "initVideoCap failed");
-
-            if (NeedStartInnerAudio(config.audioInfo.innerCapInfo.audioSource)) {
-                ret = screenCaptureService_->InitAudioCap(config.audioInfo.innerCapInfo);
-                CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "initInnerAudioCap failed");
-            }
+            ret = InitOriginalStream(config);
+            CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "InitOriginalStream failed");
             break;
         }
         case ENCODED_STREAM:
             MEDIA_LOGI("start cap encoded stream,still not support");
             return MSERR_UNSUPPORT;
         case CAPTURE_FILE: {
-            ret = screenCaptureService_->SetRecorderInfo(config.recorderInfo);
-            CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetRecorderInfo failed");
-            const std::string fdHead = "fd://";
-            CHECK_AND_RETURN_RET_LOG(config.recorderInfo.url.find(fdHead) != std::string::npos, MSERR_INVALID_VAL,
-                "check url failed");
-            int32_t outputFd = -1;
-            std::string inputFd = config.recorderInfo.url.substr(fdHead.size());
-            CHECK_AND_RETURN_RET_LOG(StrToInt(inputFd, outputFd) == true && outputFd >= 0, MSERR_INVALID_VAL,
-                "open file failed");
-            ret = screenCaptureService_->SetOutputFile(outputFd);
-            close(outputFd);
-            CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetOutputFile failed");
-            ret = screenCaptureService_->InitAudioEncInfo(config.audioInfo.audioEncInfo);
-            CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "InitAudioEncInfo failed");
-            ret = screenCaptureService_->InitAudioCap(config.audioInfo.innerCapInfo);
-            CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "InitAudioCap failed");
-            ret = screenCaptureService_->InitVideoEncInfo(config.videoInfo.videoEncInfo);
-            CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "InitVideoEncInfo failed");
-            ret = screenCaptureService_->InitVideoCap(config.videoInfo.videoCapInfo);
-            CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "InitVideoCap failed");
+            ret = InitCaptureFile(config);
+            CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "InitCaptureFile failed");
             break;
         }
         default:
             MEDIA_LOGI("invaild type");
             return MSERR_INVALID_VAL;
     }
+    return ret;
+}
+
+int32_t ScreenCaptureImpl::InitOriginalStream(AVScreenCaptureConfig config)
+{
+    int32_t ret = MSERR_OK;
+    ret = screenCaptureService_->InitAudioCap(config.audioInfo.micCapInfo);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "initMicAudioCap failed");
+    ret = screenCaptureService_->InitVideoCap(config.videoInfo.videoCapInfo);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "initVideoCap failed");
+
+    if (NeedStartInnerAudio(config.audioInfo.innerCapInfo.audioSource)) {
+        ret = screenCaptureService_->InitAudioCap(config.audioInfo.innerCapInfo);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "initInnerAudioCap failed");
+    }
+    return ret;
+}
+
+int32_t ScreenCaptureImpl::InitCaptureFile(AVScreenCaptureConfig config)
+{
+    int32_t ret = MSERR_OK;
+    ret = screenCaptureService_->SetRecorderInfo(config.recorderInfo);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetRecorderInfo failed");
+    const std::string fdHead = "fd://";
+    CHECK_AND_RETURN_RET_LOG(config.recorderInfo.url.find(fdHead) != std::string::npos, MSERR_INVALID_VAL,
+        "check url failed");
+    int32_t outputFd = -1;
+    std::string inputFd = config.recorderInfo.url.substr(fdHead.size());
+    CHECK_AND_RETURN_RET_LOG(StrToInt(inputFd, outputFd) == true && outputFd >= 0, MSERR_INVALID_VAL,
+        "open file failed");
+    ret = screenCaptureService_->SetOutputFile(outputFd);
+    close(outputFd);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetOutputFile failed");
+    ret = screenCaptureService_->InitAudioEncInfo(config.audioInfo.audioEncInfo);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "InitAudioEncInfo failed");
+    ret = screenCaptureService_->InitAudioCap(config.audioInfo.innerCapInfo);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "InitAudioCap failed");
+    ret = screenCaptureService_->InitVideoEncInfo(config.videoInfo.videoEncInfo);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "InitVideoEncInfo failed");
+    ret = screenCaptureService_->InitVideoCap(config.videoInfo.videoCapInfo);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "InitVideoCap failed");
     return ret;
 }
 

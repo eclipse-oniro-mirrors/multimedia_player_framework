@@ -137,7 +137,8 @@ int32_t AudioCaptureAsImpl::SetCaptureParameter(uint32_t bitrate, uint32_t chann
         audioAppInfo.appPid = appInfo.appPid;
         audioAppInfo.appTokenId = appInfo.appTokenId;
         audioAppInfo.appFullTokenId = appInfo.appFullTokenId;
-        if (sourceType == AudioSourceType::AUDIO_SOURCE_TYPE_DEFAULT || sourceType == AudioSourceType::AUDIO_SOURCE_TYPE_MIC) {
+        if (sourceType == AudioSourceType::AUDIO_SOURCE_TYPE_DEFAULT ||
+            sourceType == AudioSourceType::AUDIO_SOURCE_TYPE_MIC) {
             AudioStandard::AudioCapturerParams params;
             CHECK_AND_RETURN_RET_LOG(CheckAndGetCaptureParameter(bitrate, channels, sampleRate, params),
                 MSERR_UNSUPPORT_AUD_PARAMS, "unsupport audio params");
@@ -148,7 +149,7 @@ int32_t AudioCaptureAsImpl::SetCaptureParameter(uint32_t bitrate, uint32_t chann
                 params.audioChannel, params.samplingRate);
                 
             audioCapturer_ = AudioStandard::AudioCapturer::Create(AudioStandard::AudioStreamType::STREAM_MUSIC,
-                                                                audioAppInfo);
+                audioAppInfo);
             CHECK_AND_RETURN_RET_LOG(audioCapturer_ != nullptr, MSERR_NO_MEMORY, "create audio capturer failed");
 
             CHECK_AND_RETURN_RET(audioCapturer_->SetParams(params) == AudioStandard::SUCCESS, MSERR_UNKNOWN);
