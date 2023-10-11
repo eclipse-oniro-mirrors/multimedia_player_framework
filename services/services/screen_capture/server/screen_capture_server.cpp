@@ -63,6 +63,62 @@ int32_t ScreenCaptureServer::SetCaptureMode(CaptureMode captureMode)
     return MSERR_OK;
 }
 
+int32_t ScreenCaptureServer::SetDataType(DataType dataType)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if ((dataType > DataType::CAPTURE_FILE) || (dataType < DataType::ORIGINAL_STREAM)) {
+        MEDIA_LOGI("invalid data type");
+        return MSERR_INVALID_VAL;
+    }
+    if (dataType == DataType::ENCODED_STREAM) {
+        MEDIA_LOGI("the data type:%{public}d still not supported", dataType);
+        return MSERR_UNSUPPORT;
+    }
+    dataType_ = dataType;
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureServer::SetRecorderInfo(RecorderInfo recorderInfo)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    url_ = recorderInfo.url;
+    const std::string MP4 = "mp4";
+    const std::string M4A = "m4a";
+    if (MP4.compare(recorderInfo.fileFormat) == 0 || M4A.compare(recorderInfo.fileFormat) == 0) {
+        fileFormat_ = OutputFormatType::FORMAT_MPEG_4;
+    } else {
+        MEDIA_LOGE("invalid fileFormat type");
+        return MSERR_INVALID_VAL;
+    }
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureServer::SetOutputFile(int32_t outputFd)
+{   
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (outputFd < 0) {
+        MEDIA_LOGI("invalid outputFd");
+        return MSERR_INVALID_VAL;
+    }
+
+    int flags = fcntl(outputFd, F_GETFL);
+    if (flags == -1) {
+        MEDIA_LOGE("Fail to get File Status Flags");
+        return MSERR_INVALID_VAL;
+    }
+    if ((static_cast<unsigned int>(flags) & (O_RDWR | O_WRONLY)) == 0) {
+        MEDIA_LOGE("File descriptor is not in read-write mode or write-only mode");
+        return MSERR_INVALID_VAL;
+    }
+
+    if (outputFd_ > 0) {
+        (void)::close(outputFd_);
+    }
+    outputFd_ = dup(outputFd);
+    MEDIA_LOGI("ScreenCaptureServer SetOutputFile ok");
+    return MSERR_OK;
+}
+
 int32_t ScreenCaptureServer::SetScreenCaptureCallback(const std::shared_ptr<ScreenCaptureCallBack> &callback)
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -70,6 +126,47 @@ int32_t ScreenCaptureServer::SetScreenCaptureCallback(const std::shared_ptr<Scre
         std::lock_guard<std::mutex> cbLock(cbMutex_);
         screenCaptureCb_ = callback;
     }
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureServer::InitAudioEncInfo(AudioEncInfo audioEncInfo)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    MEDIA_LOGD("audioEncInfo audioBitrate:%{public}d", audioEncInfo.audioBitrate);
+    MEDIA_LOGD("audioEncInfo audioCodecformat:%{public}d", audioEncInfo.audioCodecformat);
+    if ((audioEncInfo.audioCodecformat >= AudioCodecFormat::AUDIO_CODEC_FORMAT_BUTT) ||
+        (audioEncInfo.audioCodecformat < AudioCodecFormat::AUDIO_DEFAULT)) {
+        MEDIA_LOGE("invalid AudioCodecFormat type");
+        return MSERR_INVALID_VAL;
+    }
+    if (audioEncInfo.audioBitrate < audioBitrateMin_ || audioEncInfo.audioBitrate > audioBitrateMax_) {
+        MEDIA_LOGE("InitAudioEncInfo Audio encode bitrate is invalid: %{public}d", audioEncInfo.audioBitrate);
+        return MSERR_INVALID_VAL;
+    }
+    audioEncInfo_ = audioEncInfo;
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureServer::InitVideoEncInfo(VideoEncInfo videoEncInfo)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    MEDIA_LOGD("videoEncInfo videoCodec:%{public}d", videoEncInfo.videoCodec);
+    MEDIA_LOGD("videoEncInfo videoBitrate:%{public}d", videoEncInfo.videoBitrate);
+    MEDIA_LOGD("videoEncInfo videoFrameRate:%{public}d", videoEncInfo.videoFrameRate);
+    if ((videoEncInfo.videoCodec >= VideoCodecFormat::VIDEO_CODEC_FORMAT_BUTT) ||
+        (videoEncInfo.videoCodec < VideoCodecFormat::VIDEO_DEFAULT)) {
+        MEDIA_LOGE("invalid VideoCodecFormat type");
+        return MSERR_INVALID_VAL;
+    }
+    if (videoEncInfo.videoBitrate < videoBitrateMin_ || videoEncInfo.videoBitrate > videoBitrateMax_) {
+        MEDIA_LOGE("InitVideoEncInfo video encode bitrate is invalid: %{public}d", videoEncInfo.videoBitrate);
+        return MSERR_INVALID_VAL;
+    }
+    if (videoEncInfo.videoFrameRate < videoFrameRateMin_ || videoEncInfo.videoFrameRate > videoFrameRateMax_) {
+        MEDIA_LOGE("InitVideoEncInfo video frame rate is invalid: %{public}d", videoEncInfo.videoFrameRate);
+        return MSERR_INVALID_VAL;
+    }
+    videoEncInfo_ = videoEncInfo;
     return MSERR_OK;
 }
 
@@ -128,6 +225,13 @@ int32_t ScreenCaptureServer::CheckAudioParam(AudioCaptureInfo audioInfo)
     if ((audioInfo.audioSource <= SOURCE_INVALID) || (audioInfo.audioSource > APP_PLAYBACK)) {
         MEDIA_LOGE("audioSource is invalid");
         return MSERR_INVALID_VAL;
+    }
+
+    if(dataType_ == DataType::CAPTURE_FILE){
+        if(audioInfo.audioSource != ALL_PLAYBACK && audioInfo.audioSource != APP_PLAYBACK){
+            MEDIA_LOGE("dataType is captureFile and audioSource is invalid");
+            return MSERR_INVALID_VAL;
+        }
     }
     return MSERR_OK;
 }
@@ -188,9 +292,13 @@ int32_t ScreenCaptureServer::InitAudioCap(AudioCaptureInfo audioInfo)
         }
         case ALL_PLAYBACK:
         case APP_PLAYBACK: {
-            audioInnerCapturer_ = CreateAudioCapture(audioInfo);
-            audioCurrentInnerType_ = audioInfo.audioSource;
-            CHECK_AND_RETURN_RET_LOG(audioInnerCapturer_ != nullptr, MSERR_UNKNOWN, "initInnerAudioCap failed");
+            if (dataType_ == DataType::CAPTURE_FILE) {
+                audioInfo_ = audioInfo;
+            } else {
+                audioInnerCapturer_ = CreateAudioCapture(audioInfo);
+                audioCurrentInnerType_ = audioInfo.audioSource;
+                CHECK_AND_RETURN_RET_LOG(audioInnerCapturer_ != nullptr, MSERR_UNKNOWN, "initInnerAudioCap failed");
+            }
             break;
         }
         default:
@@ -241,12 +349,53 @@ int32_t ScreenCaptureServer::InitVideoCap(VideoCaptureInfo videoInfo)
     int ret = CheckVideoParam(videoInfo);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "CheckVideoParam failed");
 
-    consumer_ = OHOS::Surface::CreateSurfaceAsConsumer();
+    videoInfo_ = videoInfo;
+    if(dataType_ == DataType::CAPTURE_FILE){
+        if (outputFd_<0) {
+            MEDIA_LOGE("the outputFd is invalid");
+            return MSERR_INVALID_OPERATION;
+        }
+        MEDIA_LOGI("recorder start init");
+        recorder_ = Media::RecorderServer::Create();
+        CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_UNKNOWN, "init Recoder failed");
+        ret = MSERR_OK;
+        ret = recorder_->SetVideoSource(videoInfo.videoSource, videoSourceId_);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetAudioSource failed");
+        ret = recorder_->SetAudioSource(AudioSourceType::AUDIO_INNER, audioSourceId_);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetAudioSource failed");
+        ret = recorder_->SetOutputFormat(fileFormat_);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetOutputFormat failed");
+        ret = recorder_->SetAudioEncoder(audioSourceId_, audioEncInfo_.audioCodecformat);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetAudioEncoder failed");
+        ret = recorder_->SetAudioSampleRate(audioSourceId_, audioInfo_.audioSampleRate);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetAudioSampleRate failed");
+        ret = recorder_->SetAudioChannels(audioSourceId_, audioInfo_.audioChannels);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetAudioChannels failed");
+        ret = recorder_->SetAudioEncodingBitRate(audioSourceId_, audioEncInfo_.audioBitrate);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetAudioEncodingBitRate failed");
+        ret = recorder_->SetVideoEncoder(videoSourceId_, videoEncInfo_.videoCodec);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetVideoEncoder failed");
+        ret = recorder_->SetVideoSize(videoSourceId_, videoInfo_.videoFrameWidth, videoInfo_.videoFrameHeight);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetVideoSize failed");
+        ret = recorder_->SetVideoFrameRate(videoSourceId_, videoEncInfo_.videoFrameRate);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetVideoFrameRate failed");
+        ret = recorder_->SetVideoEncodingBitRate(videoSourceId_, videoEncInfo_.videoBitrate);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetVideoEncodingBitRate failed");
+        ret = recorder_->SetOutputFile(outputFd_);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetOutputFile failed");
+        ret = recorder_->Prepare();
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "recorder Prepare failed");
+        consumer_ = recorder_->GetSurface(videoSourceId_);
+        CHECK_AND_RETURN_RET_LOG(consumer_ != nullptr, MSERR_UNKNOWN, "recorder GetSurface failed");
+        MEDIA_LOGI("recorder prepare success");
+    } else {
+        consumer_ = OHOS::Surface::CreateSurfaceAsConsumer();
+    }
     if (consumer_ == nullptr) {
         MEDIA_LOGE("CreateSurfaceAsConsumer failed");
         return MSERR_NO_MEMORY;
     }
-    videoInfo_ = videoInfo;
+    
     return MSERR_OK;
 }
 
@@ -318,7 +467,11 @@ int32_t ScreenCaptureServer::StartVideoCapture()
         MEDIA_LOGE("getUsingPermissionFromPrivacy");
     }
     if (captureMode_ == CAPTURE_HOME_SCREEN) {
-        return StartHomeVideoCapture();
+        if(dataType_ == DataType::CAPTURE_FILE){
+            return StartHomeVideoCaptureFile();
+        } else {
+            return StartHomeVideoCapture();
+        }
     } else {
         MEDIA_LOGE("The capture Mode Init still not supported,start failed");
         return MSERR_UNSUPPORT;
@@ -373,6 +526,57 @@ int32_t ScreenCaptureServer::StartHomeVideoCapture()
     mirrorIds.push_back(screenId_);
     ScreenId mirrorGroup = static_cast<ScreenId>(1);
     ScreenManager::GetInstance().MakeMirror(screens[0]->GetId(), mirrorIds, mirrorGroup);
+
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureServer::StartHomeVideoCaptureFile(){
+    if (recorder_ == nullptr) {
+        MEDIA_LOGE("recorder_ is not created");
+        return MSERR_INVALID_OPERATION;
+    }
+    if (consumer_ == nullptr) {
+        MEDIA_LOGE("consumer_ is not created");
+        return MSERR_INVALID_OPERATION;
+    }
+    isConsumerStart_ = true;
+    VirtualScreenOption virScrOption = {
+        .name_ = "screen_capture_file",
+        .width_ = videoInfo_.videoFrameWidth,
+        .height_ = videoInfo_.videoFrameHeight,
+        .density_ = 0,
+        .surface_ = consumer_,
+        .flags_ = 0,
+        .isForShot_ = true,
+    };
+    sptr<Rosen::Display> display = Rosen::DisplayManager::GetInstance().GetDefaultDisplaySync();
+    if (display != nullptr) {
+        MEDIA_LOGI("get displayinfo width:%{public}d,height:%{public}d,density:%{public}d", display->GetWidth(),
+                   display->GetHeight(), display->GetDpi());
+        virScrOption.density_ = display->GetDpi();
+    }
+    screenId_ = ScreenManager::GetInstance().CreateVirtualScreen(virScrOption);
+    if (screenId_ < 0) {
+        isConsumerStart_ = false;
+        MEDIA_LOGE("CreateVirtualScreen failed");
+        return MSERR_INVALID_OPERATION;
+    }
+    auto screen = ScreenManager::GetInstance().GetScreenById(screenId_);
+    if (screen == nullptr) {
+        isConsumerStart_ = false;
+        MEDIA_LOGE("GetScreenById failed");
+        return MSERR_INVALID_OPERATION;
+    }
+    std::vector<sptr<Screen>> screens;
+    ScreenManager::GetInstance().GetAllScreens(screens);
+    std::vector<ScreenId> mirrorIds;
+    mirrorIds.push_back(screenId_);
+    ScreenId mirrorGroup = static_cast<ScreenId>(1);
+    ScreenManager::GetInstance().MakeMirror(screens[0]->GetId(), mirrorIds, mirrorGroup);
+
+    int32_t ret = recorder_->Start();
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "recorder Start failed");
+    MEDIA_LOGI("recorder start success");
 
     return MSERR_OK;
 }
@@ -622,15 +826,43 @@ int32_t ScreenCaptureServer::StopVideoCapture()
     return stopVideoSuccess;
 }
 
+int32_t ScreenCaptureServer::StopScreenCaptureRecorder()
+{
+    int32_t stopRecorderSuccess = MSERR_OK;
+    //GetUsingPermissionFromPrivacy(STOP_VIDEO)
+    if ((screenId_ < 0) || (consumer_ == nullptr) || !isConsumerStart_) {
+        MEDIA_LOGI("video start failed, stop");
+        stopRecorderSuccess = MSERR_INVALID_OPERATION;
+        return stopRecorderSuccess;
+    }
+    stopRecorderSuccess = recorder_->Stop(false);
+    CHECK_AND_RETURN_RET_LOG(stopRecorderSuccess == MSERR_OK, stopRecorderSuccess, "recorder Stop failed");
+    //ScreenManager::GetInstance().DestroyVirtualScreen(screenId_);
+    if (screenId_ != SCREEN_ID_INVALID) {
+        ScreenManager::GetInstance().DestroyVirtualScreen(screenId_);
+    }
+    stopRecorderSuccess = recorder_->Release();
+    CHECK_AND_RETURN_RET_LOG(stopRecorderSuccess == MSERR_OK, stopRecorderSuccess, "recorder Release failed");
+
+    return stopRecorderSuccess;
+}
+
 int32_t ScreenCaptureServer::StopScreenCapture()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     MediaTrace trace("ScreenCaptureServer::StopScreenCapture");
 
-    int32_t stopFlagSuccess = StopAudioCapture();
-    CHECK_AND_RETURN_RET_LOG(stopFlagSuccess == MSERR_OK, stopFlagSuccess, "StopAudioCapture failed");
+    int32_t stopFlagSuccess = MSERR_OK;
 
-    stopFlagSuccess = StopVideoCapture();
+    if(dataType_ == DataType::CAPTURE_FILE){
+        stopFlagSuccess = StopScreenCaptureRecorder();
+    } else {
+        stopFlagSuccess = StopAudioCapture();
+        CHECK_AND_RETURN_RET_LOG(stopFlagSuccess == MSERR_OK, stopFlagSuccess, "StopAudioCapture failed");
+
+        stopFlagSuccess = StopVideoCapture();
+    }
+    
     return stopFlagSuccess;
 }
 
@@ -686,13 +918,22 @@ void ScreenCaptureServer::ReleaseVideoCapture()
     }
 
     if ((consumer_ != nullptr) && isConsumerStart_) {
-        consumer_->UnregisterConsumerListener();
+        if(dataType_ != DataType::CAPTURE_FILE){
+            consumer_->UnregisterConsumerListener();
+        }
         isConsumerStart_ = false;
     }
     consumer_ = nullptr;
     if (surfaceCb_ != nullptr) {
         surfaceCb_->Release();
         surfaceCb_ = nullptr;
+    }
+    if (recorder_ != nullptr) {
+        recorder_->Release();
+        recorder_ = nullptr;
+    }
+    if (outputFd_ > 0) {
+        (void)::close(outputFd_);
     }
 }
 

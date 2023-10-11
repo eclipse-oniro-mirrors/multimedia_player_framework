@@ -15,6 +15,9 @@
 
 #include "screen_capture_unit_test.h"
 #include "media_errors.h"
+#include <fcntl.h>
+#include <iostream>
+#include <string>
 
 using namespace OHOS;
 using namespace OHOS::Media;
@@ -135,7 +138,52 @@ int32_t ScreenCaptureUnitTest::SetConfig(AVScreenCaptureConfig &config)
         .captureMode = CAPTURE_HOME_SCREEN,
         .dataType = ORIGINAL_STREAM,
         .audioInfo = audioinfo,
-        .videoInfo = videoinfo,
+        .videoInfo = videoinfo
+    };
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureUnitTest::SetConfigFile(AVScreenCaptureConfig &config, RecorderInfo &recorderInfo)
+{
+    AudioCaptureInfo innerCapInfo = {
+        .audioSampleRate = 16000,
+        .audioChannels = 2,
+        .audioSource = AudioCaptureSourceType::APP_PLAYBACK
+    };
+
+    AudioEncInfo audioEncInfo = {
+        .audioBitrate = 48000,
+        .audioCodecformat = AudioCodecFormat::AAC_LC
+    };
+
+    VideoCaptureInfo videoCapInfo = {
+        .videoFrameWidth = 720,
+        .videoFrameHeight = 1080,
+        .videoSource = VideoSourceType::VIDEO_SOURCE_SURFACE_RGBA
+    };
+
+    VideoEncInfo videoEncInfo = {
+        .videoCodec = VideoCodecFormat::H264,
+        .videoBitrate = 2000000,
+        .videoFrameRate = 30
+    };
+
+    AudioInfo audioInfo = {
+        .innerCapInfo = innerCapInfo,
+        .audioEncInfo = audioEncInfo
+    };
+
+    VideoInfo videoInfo = {
+        .videoCapInfo = videoCapInfo,
+        .videoEncInfo = videoEncInfo
+    };
+
+    config = {
+        .captureMode = CaptureMode::CAPTURE_HOME_SCREEN,
+        .dataType = DataType::CAPTURE_FILE,
+        .audioInfo = audioInfo,
+        .videoInfo = videoInfo,
+        .recorderInfo = recorderInfo
     };
     return MSERR_OK;
 }
@@ -225,6 +273,30 @@ void ScreenCaptureUnitTest::AudioLoopWithoutRelease(void)
         }
         index_--;
     }
+}
+
+/**
+ * @tc.name: screen_capture_save_file_01
+ * @tc.desc: do screencapture
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_01, TestSize.Level2)
+{   
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_01 before"); 
+    AVScreenCaptureConfig config_;
+    RecorderInfo recorderInfo;
+    int32_t outputFd = open((SCREEN_CAPTURE_ROOT + "screen_capture_get_screen_capture_01.mp4").c_str(), O_RDWR | O_CREAT, 0777);
+    recorderInfo.url = "fd://" + to_string(outputFd);
+    recorderInfo.fileFormat = "mp4";
+    SetConfigFile(config_, recorderInfo);
+
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
+    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_01 after"); 
 }
 
 /**
