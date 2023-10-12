@@ -548,13 +548,13 @@ int32_t ScreenCaptureServer::StartHomeVideoCaptureFile()
     }
     isConsumerStart_ = true;
     VirtualScreenOption virScrOption = {
-        .name_ = "screen_capture_file",
-        .width_ = videoInfo_.videoFrameWidth,
-        .height_ = videoInfo_.videoFrameHeight,
-        .density_ = 0,
-        .surface_ = consumer_,
-        .flags_ = 0,
-        .isForShot_ = true,
+        name_: "screen_capture_file",
+        width_: videoInfo_.videoFrameWidth,
+        height_: videoInfo_.videoFrameHeight,
+        density_: 0,
+        surface_: consumer_,
+        flags_: 0,
+        isForShot_: true,
     };
     sptr<Rosen::Display> display = Rosen::DisplayManager::GetInstance().GetDefaultDisplaySync();
     if (display != nullptr) {

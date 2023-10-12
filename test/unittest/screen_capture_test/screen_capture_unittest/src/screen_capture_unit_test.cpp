@@ -146,44 +146,44 @@ int32_t ScreenCaptureUnitTest::SetConfig(AVScreenCaptureConfig &config)
 int32_t ScreenCaptureUnitTest::SetConfigFile(AVScreenCaptureConfig &config, RecorderInfo &recorderInfo)
 {
     AudioCaptureInfo innerCapInfo = {
-        .audioSampleRate = 16000,
-        .audioChannels = 2,
-        .audioSource = AudioCaptureSourceType::APP_PLAYBACK
+        audioSampleRate: 16000,
+        audioChannels: 2,
+        audioSource: AudioCaptureSourceType::APP_PLAYBACK
     };
 
     AudioEncInfo audioEncInfo = {
-        .audioBitrate = 48000,
-        .audioCodecformat = AudioCodecFormat::AAC_LC
+        audioBitrate: 48000,
+        audioCodecformat: AudioCodecFormat::AAC_LC
     };
 
     VideoCaptureInfo videoCapInfo = {
-        .videoFrameWidth = 720,
-        .videoFrameHeight = 1080,
-        .videoSource = VideoSourceType::VIDEO_SOURCE_SURFACE_RGBA
+        videoFrameWidth: 720,
+        videoFrameHeight: 1080,
+        videoSource: VideoSourceType::VIDEO_SOURCE_SURFACE_RGBA
     };
 
     VideoEncInfo videoEncInfo = {
-        .videoCodec = VideoCodecFormat::MPEG4,
-        .videoBitrate = 2000000,
-        .videoFrameRate = 30
+        videoCodec: VideoCodecFormat::MPEG4,
+        videoBitrate: 2000000,
+        videoFrameRate: 30
     };
 
     AudioInfo audioInfo = {
-        .innerCapInfo = innerCapInfo,
-        .audioEncInfo = audioEncInfo
+        innerCapInfo: innerCapInfo,
+        audioEncInfo: audioEncInfo
     };
 
     VideoInfo videoInfo = {
-        .videoCapInfo = videoCapInfo,
-        .videoEncInfo = videoEncInfo
+        videoCapInfo: videoCapInfo,
+        videoEncInfo: videoEncInfo
     };
 
     config = {
-        .captureMode = CaptureMode::CAPTURE_HOME_SCREEN,
-        .dataType = DataType::CAPTURE_FILE,
-        .audioInfo = audioInfo,
-        .videoInfo = videoInfo,
-        .recorderInfo = recorderInfo
+        captureMode: CaptureMode::CAPTURE_HOME_SCREEN,
+        dataType: DataType::CAPTURE_FILE,
+        audioInfo: audioInfo,
+        videoInfo: videoInfo,
+        recorderInfo: recorderInfo
     };
     return MSERR_OK;
 }
