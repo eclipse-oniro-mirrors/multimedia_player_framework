@@ -836,13 +836,12 @@ int32_t ScreenCaptureServer::StopVideoCapture()
 int32_t ScreenCaptureServer::StopScreenCaptureRecorder()
 {
     int32_t stopRecorderSuccess = MSERR_OK;
-
     if ((screenId_ < 0) || (consumer_ == nullptr) || !isConsumerStart_) {
         MEDIA_LOGI("video start failed, stop");
         stopRecorderSuccess = MSERR_INVALID_OPERATION;
         return stopRecorderSuccess;
     }
-    stopRecorderSuccess = recorder_->Stop(false);
+    stopRecorderSuccess = recorder_->Stop(true);
     CHECK_AND_RETURN_RET_LOG(stopRecorderSuccess == MSERR_OK, stopRecorderSuccess, "recorder Stop failed");
 
     if (screenId_ != SCREEN_ID_INVALID) {
@@ -860,7 +859,6 @@ int32_t ScreenCaptureServer::StopScreenCapture()
     MediaTrace trace("ScreenCaptureServer::StopScreenCapture");
 
     int32_t stopFlagSuccess = MSERR_OK;
-
     if (dataType_ == DataType::CAPTURE_FILE) {
         stopFlagSuccess = StopScreenCaptureRecorder();
     } else {
@@ -869,7 +867,6 @@ int32_t ScreenCaptureServer::StopScreenCapture()
 
         stopFlagSuccess = StopVideoCapture();
     }
-    
     return stopFlagSuccess;
 }
 

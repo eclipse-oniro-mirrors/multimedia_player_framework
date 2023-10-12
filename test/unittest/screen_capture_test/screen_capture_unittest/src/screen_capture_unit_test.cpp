@@ -163,7 +163,7 @@ int32_t ScreenCaptureUnitTest::SetConfigFile(AVScreenCaptureConfig &config, Reco
     };
 
     VideoEncInfo videoEncInfo = {
-        .videoCodec = VideoCodecFormat::H264,
+        .videoCodec = VideoCodecFormat::MPEG4,
         .videoBitrate = 2000000,
         .videoFrameRate = 30
     };
