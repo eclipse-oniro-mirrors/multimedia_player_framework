@@ -16,8 +16,8 @@
 #include <fcntl.h>
 #include <iostream>
 #include <string>
-#include "screen_capture_unit_test.h"
 #include "media_errors.h"
+#include "screen_capture_unit_test.h"
 
 using namespace OHOS;
 using namespace OHOS::Media;

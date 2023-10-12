@@ -227,8 +227,8 @@ int32_t ScreenCaptureServer::CheckAudioParam(AudioCaptureInfo audioInfo)
         return MSERR_INVALID_VAL;
     }
 
-    if(dataType_ == DataType::CAPTURE_FILE) {
-        if(audioInfo.audioSource != ALL_PLAYBACK && audioInfo.audioSource != APP_PLAYBACK) {
+    if (dataType_ == DataType::CAPTURE_FILE) {
+        if (audioInfo.audioSource != ALL_PLAYBACK && audioInfo.audioSource != APP_PLAYBACK) {
             MEDIA_LOGE("dataType is captureFile and audioSource is invalid");
             return MSERR_INVALID_VAL;
         }
@@ -350,7 +350,7 @@ int32_t ScreenCaptureServer::InitVideoCap(VideoCaptureInfo videoInfo)
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "CheckVideoParam failed");
 
     videoInfo_ = videoInfo;
-    if(dataType_ == DataType::CAPTURE_FILE) {
+    if (dataType_ == DataType::CAPTURE_FILE) {
         InitRecorder();
     } else {
         consumer_ = OHOS::Surface::CreateSurfaceAsConsumer();
@@ -473,7 +473,7 @@ int32_t ScreenCaptureServer::StartVideoCapture()
         MEDIA_LOGE("getUsingPermissionFromPrivacy");
     }
     if (captureMode_ == CAPTURE_HOME_SCREEN) {
-        if(dataType_ == DataType::CAPTURE_FILE) {
+        if (dataType_ == DataType::CAPTURE_FILE) {
             return StartHomeVideoCaptureFile();
         } else {
             return StartHomeVideoCapture();
@@ -861,7 +861,7 @@ int32_t ScreenCaptureServer::StopScreenCapture()
 
     int32_t stopFlagSuccess = MSERR_OK;
 
-    if(dataType_ == DataType::CAPTURE_FILE) {
+    if (dataType_ == DataType::CAPTURE_FILE) {
         stopFlagSuccess = StopScreenCaptureRecorder();
     } else {
         stopFlagSuccess = StopAudioCapture();
@@ -925,7 +925,7 @@ void ScreenCaptureServer::ReleaseVideoCapture()
     }
 
     if ((consumer_ != nullptr) && isConsumerStart_) {
-        if(dataType_ != DataType::CAPTURE_FILE) {
+        if (dataType_ != DataType::CAPTURE_FILE) {
             consumer_->UnregisterConsumerListener();
         }
         isConsumerStart_ = false;
