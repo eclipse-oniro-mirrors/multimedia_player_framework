@@ -129,6 +129,9 @@ int32_t ScreenCaptureImpl::Init(AVScreenCaptureConfig config)
 
 int32_t ScreenCaptureImpl::InitOriginalStream(AVScreenCaptureConfig config)
 {
+    CHECK_AND_RETURN_RET_LOG(config.audioInfo.micCapInfo.audioSource == AudioCaptureSourceType::SOURCE_DEFAULT ||
+        config.audioInfo.micCapInfo.audioSource == AudioCaptureSourceType::MIC, MSERR_INVALID_VAL,
+        "audioSource source type error");
     int32_t ret = MSERR_OK;
     ret = screenCaptureService_->InitAudioCap(config.audioInfo.micCapInfo);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "initMicAudioCap failed");
@@ -159,8 +162,23 @@ int32_t ScreenCaptureImpl::InitCaptureFile(AVScreenCaptureConfig config)
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetOutputFile failed");
     ret = screenCaptureService_->InitAudioEncInfo(config.audioInfo.audioEncInfo);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "InitAudioEncInfo failed");
-    ret = screenCaptureService_->InitAudioCap(config.audioInfo.innerCapInfo);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "InitAudioCap failed");
+    int32_t retMic = MSERR_OK;
+    int32_t retInner = MSERR_OK;
+    AudioCaptureSourceType type = config.audioInfo.micCapInfo.audioSource;
+    if (type == AudioCaptureSourceType::SOURCE_DEFAULT || type == AudioCaptureSourceType::MIC) {
+        config.audioInfo.micCapInfo.audioSource = AudioCaptureSourceType::MIC;
+        retMic = screenCaptureService_->InitAudioCap(config.audioInfo.micCapInfo);
+    } else {
+        return MSERR_INVALID_VAL;
+    }
+    type = config.audioInfo.innerCapInfo.audioSource;
+    if (type == AudioCaptureSourceType::ALL_PLAYBACK || type == AudioCaptureSourceType::APP_PLAYBACK) {
+        retInner = screenCaptureService_->InitAudioCap(config.audioInfo.innerCapInfo);
+    } else if (type == AudioCaptureSourceType::SOURCE_DEFAULT) {
+    } else {
+        return MSERR_INVALID_VAL;
+    }
+    CHECK_AND_RETURN_RET_LOG(retMic == MSERR_OK || retInner == MSERR_OK, ret, "InitAudioCap failed");
     ret = screenCaptureService_->InitVideoEncInfo(config.videoInfo.videoEncInfo);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "InitVideoEncInfo failed");
     ret = screenCaptureService_->InitVideoCap(config.videoInfo.videoCapInfo);

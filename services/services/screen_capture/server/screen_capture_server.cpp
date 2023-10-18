@@ -83,8 +83,7 @@ int32_t ScreenCaptureServer::SetRecorderInfo(RecorderInfo recorderInfo)
     std::lock_guard<std::mutex> lock(mutex_);
     url_ = recorderInfo.url;
     const std::string MP4 = "mp4";
-    const std::string M4A = "m4a";
-    if (MP4.compare(recorderInfo.fileFormat) == 0 || M4A.compare(recorderInfo.fileFormat) == 0) {
+    if (MP4.compare(recorderInfo.fileFormat) == 0) {
         fileFormat_ = OutputFormatType::FORMAT_MPEG_4;
     } else {
         MEDIA_LOGE("invalid fileFormat type");
@@ -227,12 +226,6 @@ int32_t ScreenCaptureServer::CheckAudioParam(AudioCaptureInfo audioInfo)
         return MSERR_INVALID_VAL;
     }
 
-    if (dataType_ == DataType::CAPTURE_FILE) {
-        if (audioInfo.audioSource != ALL_PLAYBACK && audioInfo.audioSource != APP_PLAYBACK) {
-            MEDIA_LOGE("dataType is captureFile and audioSource is invalid");
-            return MSERR_INVALID_VAL;
-        }
-    }
     return MSERR_OK;
 }
 
@@ -280,30 +273,33 @@ int32_t ScreenCaptureServer::InitAudioCap(AudioCaptureInfo audioInfo)
     ret = CheckAudioParam(audioInfo);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "CheckAudioParam failed");
 
-    switch (audioInfo.audioSource) {
-        case SOURCE_DEFAULT:
-        case MIC: {
-            if (!CheckAudioCaptureMicPermission()) {
-                return MSERR_INVALID_OPERATION;
+    if (dataType_ == DataType::CAPTURE_FILE) {
+        CHECK_AND_RETURN_RET_LOG(audioInfo.audioSource >= AudioCaptureSourceType::SOURCE_DEFAULT &&
+            audioInfo.audioSource <= AudioCaptureSourceType::APP_PLAYBACK, MSERR_UNKNOWN,
+            "audio source type error");
+        audioInfo_ = audioInfo;
+    } else {
+        switch (audioInfo.audioSource) {
+            case SOURCE_DEFAULT:
+            case MIC: {
+                if (!CheckAudioCaptureMicPermission()) {
+                    return MSERR_INVALID_OPERATION;
+                }
+                audioMicCapturer_ = CreateAudioCapture(audioInfo);
+                CHECK_AND_RETURN_RET_LOG(audioMicCapturer_ != nullptr, MSERR_UNKNOWN, "initMicAudioCap failed");
+                break;
             }
-            audioMicCapturer_ = CreateAudioCapture(audioInfo);
-            CHECK_AND_RETURN_RET_LOG(audioMicCapturer_ != nullptr, MSERR_UNKNOWN, "initMicAudioCap failed");
-            break;
-        }
-        case ALL_PLAYBACK:
-        case APP_PLAYBACK: {
-            if (dataType_ == DataType::CAPTURE_FILE) {
-                audioInfo_ = audioInfo;
-            } else {
+            case ALL_PLAYBACK:
+            case APP_PLAYBACK: {
                 audioInnerCapturer_ = CreateAudioCapture(audioInfo);
                 audioCurrentInnerType_ = audioInfo.audioSource;
                 CHECK_AND_RETURN_RET_LOG(audioInnerCapturer_ != nullptr, MSERR_UNKNOWN, "initInnerAudioCap failed");
+                break;
             }
-            break;
+            default:
+                MEDIA_LOGE("the audio source Type is invalid");
+                return MSERR_INVALID_OPERATION;
         }
-        default:
-            MEDIA_LOGE("the audio source Type is invalid");
-            return MSERR_INVALID_OPERATION;
     }
     return MSERR_OK;
 }
@@ -365,17 +361,20 @@ int32_t ScreenCaptureServer::InitVideoCap(VideoCaptureInfo videoInfo)
 
 int32_t ScreenCaptureServer::InitRecorder()
 {
-    if (outputFd_<0) {
-        MEDIA_LOGE("the outputFd is invalid");
-        return MSERR_INVALID_OPERATION;
-    }
+    CHECK_AND_RETURN_RET_LOG(outputFd_>0, MSERR_INVALID_OPERATION, "the outputFd is invalid");
     MEDIA_LOGI("recorder start init");
     recorder_ = Media::RecorderServer::Create();
     CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_UNKNOWN, "init Recoder failed");
     int32_t ret = MSERR_OK;
     ret = recorder_->SetVideoSource(videoInfo_.videoSource, videoSourceId_);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetAudioSource failed");
-    ret = recorder_->SetAudioSource(AudioSourceType::AUDIO_INNER, audioSourceId_);
+    if (audioInfo_.audioSource == AudioCaptureSourceType::SOURCE_DEFAULT ||
+        audioInfo_.audioSource == AudioCaptureSourceType::MIC) {
+        ret = recorder_->SetAudioSource(AudioSourceType::AUDIO_MIC, audioSourceId_);
+    } else if (audioInfo_.audioSource == AudioCaptureSourceType::ALL_PLAYBACK ||
+        audioInfo_.audioSource == AudioCaptureSourceType::APP_PLAYBACK) {
+        ret = recorder_->SetAudioSource(AudioSourceType::AUDIO_INNER, audioSourceId_);
+    }
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetAudioSource failed");
     ret = recorder_->SetOutputFormat(fileFormat_);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetOutputFormat failed");
@@ -496,42 +495,9 @@ int32_t ScreenCaptureServer::StartHomeVideoCapture()
     auto producer = consumer_->GetProducer();
     auto psurface = OHOS::Surface::CreateSurfaceAsProducer(producer);
     CHECK_AND_RETURN_RET_LOG(psurface != nullptr, MSERR_UNKNOWN, "CreateSurfaceAsProducer failed");
-    isConsumerStart_ = true;
-    VirtualScreenOption virScrOption = {
-        .name_ = "screen_capture",
-        .width_ = videoInfo_.videoFrameWidth,
-        .height_ = videoInfo_.videoFrameHeight,
-        .density_ = 0,
-        .surface_ = psurface,
-        .flags_ = 0,
-        .isForShot_ = true,
-    };
-    sptr<Rosen::Display> display = Rosen::DisplayManager::GetInstance().GetDefaultDisplaySync();
-    if (display != nullptr) {
-        MEDIA_LOGI("get displayinfo width:%{public}d,height:%{public}d,density:%{public}d", display->GetWidth(),
-                   display->GetHeight(), display->GetDpi());
-        virScrOption.density_ = display->GetDpi();
-    }
-    screenId_ = ScreenManager::GetInstance().CreateVirtualScreen(virScrOption);
-    if (screenId_ < 0) {
-        consumer_->UnregisterConsumerListener();
-        isConsumerStart_ = false;
-        MEDIA_LOGE("CreateVirtualScreen failed,release ConsumerListener");
-        return MSERR_INVALID_OPERATION;
-    }
-    auto screen = ScreenManager::GetInstance().GetScreenById(screenId_);
-    if (screen == nullptr) {
-        consumer_->UnregisterConsumerListener();
-        isConsumerStart_ = false;
-        MEDIA_LOGE("GetScreenById failed,release ConsumerListener");
-        return MSERR_INVALID_OPERATION;
-    }
-    std::vector<sptr<Screen>> screens;
-    ScreenManager::GetInstance().GetAllScreens(screens);
-    std::vector<ScreenId> mirrorIds;
-    mirrorIds.push_back(screenId_);
-    ScreenId mirrorGroup = static_cast<ScreenId>(1);
-    ScreenManager::GetInstance().MakeMirror(screens[0]->GetId(), mirrorIds, mirrorGroup);
+
+    std::string virtualScreenName = "screen_capture";
+    CreateVirtualScreen(virtualScreenName, psurface);
 
     return MSERR_OK;
 }
@@ -546,13 +512,26 @@ int32_t ScreenCaptureServer::StartHomeVideoCaptureFile()
         MEDIA_LOGE("consumer_ is not created");
         return MSERR_INVALID_OPERATION;
     }
+
+    std::string virtualScreenName = "screen_capture_file";
+    CreateVirtualScreen(virtualScreenName, consumer_);
+
+    int32_t ret = recorder_->Start();
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "recorder Start failed");
+    MEDIA_LOGI("recorder start success");
+
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureServer::CreateVirtualScreen(std::string name, sptr<OHOS::Surface> consumer)
+{
     isConsumerStart_ = true;
     VirtualScreenOption virScrOption = {
-        .name_ = "screen_capture_file",
+        .name_ = name,
         .width_ = videoInfo_.videoFrameWidth,
         .height_ = videoInfo_.videoFrameHeight,
         .density_ = 0,
-        .surface_ = consumer_,
+        .surface_ = consumer,
         .flags_ = 0,
         .isForShot_ = true,
     };
@@ -580,11 +559,6 @@ int32_t ScreenCaptureServer::StartHomeVideoCaptureFile()
     mirrorIds.push_back(screenId_);
     ScreenId mirrorGroup = static_cast<ScreenId>(1);
     ScreenManager::GetInstance().MakeMirror(screens[0]->GetId(), mirrorIds, mirrorGroup);
-
-    int32_t ret = recorder_->Start();
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "recorder Start failed");
-    MEDIA_LOGI("recorder start success");
-
     return MSERR_OK;
 }
 
