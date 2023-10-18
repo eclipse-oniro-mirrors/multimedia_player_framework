@@ -19,6 +19,7 @@
 #include "avsharedmemory_ipc.h"
 
 namespace {
+constexpr int MAX_WINDOWS_LEN = 1000;
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "ScreenCaptureServiceProxy"};
 }
 
