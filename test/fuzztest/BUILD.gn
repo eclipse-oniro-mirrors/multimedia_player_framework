@@ -83,7 +83,7 @@ group("fuzztest") {
     "screen_capture_fuzztest/screencaptureurlfile_fuzzer:ScreenCaptureUrlFileFuzzTest",
     "screen_capture_fuzztest/screencapturendkurlfile_fuzzer:ScreenCaptureNdkUrlFileFuzzTest",
     "screen_capture_fuzztest/screencapturefileformatfile_fuzzer:ScreenCaptureFileFormatFileFuzzTest",
-    "screen_capture_fuzztest/screencapturendkfileformatfile_fuzzer:ScreenCaptureNdkFileFormatFileFuzzTest",
+    "screen_capture_fuzztest/screencapturendkfileformatfile_fuzzer:ScreenCaptureNdkFileFormatFileFuzzTest"
   ]
 }
 ###############################################################################
