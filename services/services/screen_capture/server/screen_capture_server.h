@@ -199,6 +199,8 @@ private:
     const int32_t videoBitrateMax_ = 3000000;
     const int32_t videoFrameRateMin_ = 1;
     const int32_t videoFrameRateMax_ = 30;
+    const std::string MP4 = "mp4";
+    const std::string M4A = "m4a";
 
     static constexpr uint32_t MAX_AUDIO_BUFFER_SIZE = 128;
     static constexpr uint64_t SEC_TO_NANOSECOND = 1000000000;

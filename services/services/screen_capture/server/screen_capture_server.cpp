@@ -82,9 +82,12 @@ int32_t ScreenCaptureServer::SetRecorderInfo(RecorderInfo recorderInfo)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     url_ = recorderInfo.url;
-    const std::string MP4 = "mp4";
+
     if (MP4.compare(recorderInfo.fileFormat) == 0) {
         fileFormat_ = OutputFormatType::FORMAT_MPEG_4;
+    } else if (M4A.compare(recorderInfo.fileFormat) == 0) {
+        MEDIA_LOGI("only recorder audio, still not support");
+        return MSERR_UNSUPPORT;
     } else {
         MEDIA_LOGE("invalid fileFormat type");
         return MSERR_INVALID_VAL;

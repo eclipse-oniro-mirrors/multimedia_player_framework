@@ -70,6 +70,20 @@ group("fuzztest") {
     "screen_capture_fuzztest/screencapturevideoframeheight_fuzzer:ScreenCaptureVideoFrameHeightFuzzTest",
     "screen_capture_fuzztest/screencapturevideoframewidth_fuzzer:ScreenCaptureVideoFrameWidthFuzzTest",
     "screen_capture_fuzztest/screencapturevideosourcetype_fuzzer:ScreenCaptureVideoSourceTypeFuzzTest",
+    "screen_capture_fuzztest/screencaptureaudiobitratefile_fuzzer:ScreenCaptureAudioBitRateFileFuzzTest",
+    "screen_capture_fuzztest/screencapturendkaudiobitratefile_fuzzer:ScreenCaptureNdkAudioBitRateFileFuzzTest",
+    "screen_capture_fuzztest/screencaptureaudiocodecformatfile_fuzzer:ScreenCaptureAudioCodecFormatFileFuzzTest",
+    "screen_capture_fuzztest/screencapturendkaudiocodecformatfile_fuzzer:ScreenCaptureNdkAudioCodecFormatFileFuzzTest",
+    "screen_capture_fuzztest/screencapturevideocodecfile_fuzzer:ScreenCaptureVideoCodecFileFuzzTest",
+    "screen_capture_fuzztest/screencapturendkvideocodecfile_fuzzer:ScreenCaptureNdkVideoCodecFileFuzzTest",
+    "screen_capture_fuzztest/screencapturevideobitratefile_fuzzer:ScreenCaptureVideoBitRateFileFuzzTest",
+    "screen_capture_fuzztest/screencapturendkvideobitratefile_fuzzer:ScreenCaptureNdkVideoBitRateFileFuzzTest",
+    "screen_capture_fuzztest/screencapturevideoframeratefile_fuzzer:ScreenCaptureVideoFrameRateFileFuzzTest",
+    "screen_capture_fuzztest/screencapturendkvideoframeratefile_fuzzer:ScreenCaptureNdkVideoFrameRateFileFuzzTest",
+    "screen_capture_fuzztest/screencaptureurlfile_fuzzer:ScreenCaptureUrlFileFuzzTest",
+    "screen_capture_fuzztest/screencapturendkurlfile_fuzzer:ScreenCaptureNdkUrlFileFuzzTest",
+    "screen_capture_fuzztest/screencapturefileformatfile_fuzzer:ScreenCaptureFileFormatFileFuzzTest",
+    "screen_capture_fuzztest/screencapturendkfileformatfile_fuzzer:ScreenCaptureNdkFileFormatFileFuzzTest",
   ]
 }
 ###############################################################################
