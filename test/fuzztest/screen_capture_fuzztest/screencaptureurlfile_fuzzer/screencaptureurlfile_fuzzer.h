@@ -30,11 +30,11 @@
 namespace OHOS {
 namespace Media {
 class ScreenCaptureUrlFileFuzzer : public TestScreenCapture {
-    public:
-        ScreenCaptureUrlFileFuzzer();
-        ~ScreenCaptureUrlFileFuzzer();
-        bool FuzzScreenCaptureUrlFile(uint8_t *data, size_t size);
-        std::shared_ptr<TestScreenCapture> screenCapture = nullptr;
+public:
+    ScreenCaptureUrlFileFuzzer();
+    ~ScreenCaptureUrlFileFuzzer();
+    bool FuzzScreenCaptureUrlFile(uint8_t *data, size_t size);
+    std::shared_ptr<TestScreenCapture> screenCapture = nullptr;
 };
 } // namespace Media
 bool FuzzTestScreenCaptureUrlFile(uint8_t *data, size_t size);

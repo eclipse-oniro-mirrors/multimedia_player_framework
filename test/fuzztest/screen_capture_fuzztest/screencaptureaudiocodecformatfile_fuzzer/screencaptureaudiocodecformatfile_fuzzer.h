@@ -30,11 +30,11 @@
 namespace OHOS {
 namespace Media {
 class ScreenCaptureAudioCodecFormatFileFuzzer : public TestScreenCapture {
-    public:
-        ScreenCaptureAudioCodecFormatFileFuzzer();
-        ~ScreenCaptureAudioCodecFormatFileFuzzer();
-        bool FuzzScreenCaptureAudioCodecFormatFile(uint8_t *data, size_t size);
-        std::shared_ptr<TestScreenCapture> screenCapture = nullptr;
+public:
+    ScreenCaptureAudioCodecFormatFileFuzzer();
+    ~ScreenCaptureAudioCodecFormatFileFuzzer();
+    bool FuzzScreenCaptureAudioCodecFormatFile(uint8_t *data, size_t size);
+    std::shared_ptr<TestScreenCapture> screenCapture = nullptr;
 };
 } // namespace Media
 bool FuzzTestScreenCaptureAudioCodecFormatFile(uint8_t *data, size_t size);

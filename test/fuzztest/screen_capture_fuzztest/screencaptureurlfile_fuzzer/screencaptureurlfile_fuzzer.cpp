@@ -96,12 +96,14 @@ bool ScreenCaptureUrlFileFuzzer::FuzzScreenCaptureUrlFile(uint8_t *data, size_t 
     SetConfig(config);
     constexpr uint32_t recorderTime = 3;
     constexpr int32_t urlRange = 20;
+    constexpr int32_t urlRangeMin = 0;
+    constexpr int32_t urlRangeMax = 9;
 
     int32_t randomUrl = (*reinterpret_cast<int32_t *>(data)) % (urlRange);
     MEDIA_LOGI("FuzzTest ScreenCaptureUrlFileFuzzer randomUrl: %{public}d ", randomUrl);
 
     RecorderInfo recorderInfo;
-    if (randomUrl >= 0 && randomUrl <= 9) {
+    if (randomUrl >= urlRangeMin && randomUrl <= urlRangeMax) {
         const std::string SCREEN_CAPTURE_ROOT = "/data/test/media/";
         int32_t outputFd = open((SCREEN_CAPTURE_ROOT + "screen_capture_fuzz_url_file_01.mp4").c_str(),
             O_RDWR | O_CREAT, 0777);

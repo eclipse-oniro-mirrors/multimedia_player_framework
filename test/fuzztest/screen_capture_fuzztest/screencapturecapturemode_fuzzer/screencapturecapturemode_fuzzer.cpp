@@ -14,7 +14,7 @@
  */
 
 #include <cmath>
-#include <stdlib.h>
+#include <cstdlib>
 #include <iostream>
 #include "aw_common.h"
 #include "string_ex.h"

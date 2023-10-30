@@ -95,6 +95,7 @@ bool ScreenCaptureDataTypeFuzzer::FuzzScreenCaptureDataType(uint8_t *data, size_
     AVScreenCaptureConfig config;
     SetConfig(config);
     constexpr int32_t dataTypeList = 4;
+    constexpr int32_t dataTypeCaptureFile = 2;
     constexpr uint32_t recorderTime = 3;
     const DataType dataType_[dataTypeList] {
         ORIGINAL_STREAM,
@@ -104,7 +105,7 @@ bool ScreenCaptureDataTypeFuzzer::FuzzScreenCaptureDataType(uint8_t *data, size_
     };
     int32_t datatypesubscript = (static_cast<int32_t>(*data)) % (dataTypeList);
     MEDIA_LOGI("FuzzTest ScreenCaptureDataTypeFuzzer datatypesubscript: %{public}d ", datatypesubscript);
-    if (datatypesubscript == 2) {
+    if (datatypesubscript == dataTypeCaptureFile) {
         config.dataType = dataType_[datatypesubscript];
         RecorderInfo recorderInfo;
         const std::string SCREEN_CAPTURE_ROOT = "/data/test/media/";
