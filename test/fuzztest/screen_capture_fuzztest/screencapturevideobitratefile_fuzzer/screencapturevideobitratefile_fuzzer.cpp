@@ -95,9 +95,8 @@ bool ScreenCaptureVideoBitRateFileFuzzer::FuzzScreenCaptureVideoBitRateFile(uint
     AVScreenCaptureConfig config;
     SetConfig(config);
     constexpr uint32_t recorderTime = 3;
-    constexpr int32_t bitrateRange = 6000000;
 
-    int32_t randomBitrate = (*reinterpret_cast<int32_t *>(data)) % (bitrateRange);
+    int32_t randomBitrate = *reinterpret_cast<int32_t *>(data);
     MEDIA_LOGI("FuzzTest ScreenCaptureVideoBitRateFileFuzzer randomBitrate: %{public}d ", randomBitrate);
     config.videoInfo.videoEncInfo.videoBitrate = randomBitrate;
 

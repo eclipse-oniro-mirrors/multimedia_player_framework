@@ -93,9 +93,8 @@ bool ScreenCaptureAudioBitrateFileNdkFuzzer::FuzzScreenCaptureAudioBitrateFileNd
     OH_AVScreenCaptureConfig config;
     SetConfig(config);
     constexpr uint32_t recorderTime = 3;
-    constexpr int32_t bitrateRange = 800000;
 
-    int32_t randomBitrate = (*reinterpret_cast<int32_t *>(data)) % (bitrateRange);
+    int32_t randomBitrate = *reinterpret_cast<int32_t *>(data);
     MEDIA_LOGI("FuzzTest ScreenCaptureAudioBitrateFileNdkFuzzer randomBitrate: %{public}d ", randomBitrate);
     config.audioInfo.audioEncInfo.audioBitrate = randomBitrate;
 

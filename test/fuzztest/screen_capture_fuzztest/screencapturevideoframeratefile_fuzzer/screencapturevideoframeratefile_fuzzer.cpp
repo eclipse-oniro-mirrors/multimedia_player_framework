@@ -95,9 +95,8 @@ bool ScreenCaptureVideoFrameRateFileFuzzer::FuzzScreenCaptureVideoFrameRateFile(
     AVScreenCaptureConfig config;
     SetConfig(config);
     constexpr uint32_t recorderTime = 3;
-    constexpr int32_t framerateRange = 60;
 
-    int32_t randomFramerate = (*reinterpret_cast<int32_t *>(data)) % (framerateRange);
+    int32_t randomFramerate = *reinterpret_cast<int32_t *>(data);
     MEDIA_LOGI("FuzzTest ScreenCaptureVideoFrameRateFileFuzzer randomFramerate: %{public}d ", randomFramerate);
     config.videoInfo.videoEncInfo.videoFrameRate = randomFramerate;
 
