@@ -59,7 +59,7 @@ public:
 
     bool CheckAndGetCaptureParameter(uint32_t bitrate, uint32_t channels, uint32_t sampleRate,
         AudioStandard::AudioCapturerParams &params);
-    bool CheckAndGetCaptureParameterOptions(uint32_t bitrate, uint32_t channels, uint32_t sampleRate,
+    bool CheckAndGetCaptureOptions(uint32_t bitrate, uint32_t channels, uint32_t sampleRate,
         AudioStandard::AudioCapturerOptions &options);
 
 private:

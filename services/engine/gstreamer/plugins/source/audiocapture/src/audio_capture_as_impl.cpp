@@ -84,7 +84,7 @@ bool AudioCaptureAsImpl::CheckAndGetCaptureParameter(uint32_t bitrate, uint32_t 
     return true;
 }
 
-bool AudioCaptureAsImpl::CheckAndGetCaptureParameterOptions(uint32_t bitrate, uint32_t channels, uint32_t sampleRate,
+bool AudioCaptureAsImpl::CheckAndGetCaptureOptions(uint32_t bitrate, uint32_t channels, uint32_t sampleRate,
     AudioStandard::AudioCapturerOptions &options)
 {
     (void)bitrate;
@@ -155,7 +155,7 @@ int32_t AudioCaptureAsImpl::SetCaptureParameter(uint32_t bitrate, uint32_t chann
             CHECK_AND_RETURN_RET(audioCapturer_->SetParams(params) == AudioStandard::SUCCESS, MSERR_UNKNOWN);
         } else if (sourceType == AudioSourceType::AUDIO_SOURCE_TYPE_INNER) {
             AudioStandard::AudioCapturerOptions options;
-            CHECK_AND_RETURN_RET_LOG(CheckAndGetCaptureParameterOptions(bitrate, channels, sampleRate, options),
+            CHECK_AND_RETURN_RET_LOG(CheckAndGetCaptureOptions(bitrate, channels, sampleRate, options),
                 MSERR_UNSUPPORT_AUD_PARAMS, "unsupport inner audio params");
             options.streamInfo.format = AudioStandard::SAMPLE_S16LE;
             options.streamInfo.encoding = AudioStandard::AudioEncodingType::ENCODING_PCM;
