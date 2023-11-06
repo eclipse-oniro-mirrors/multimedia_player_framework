@@ -435,10 +435,10 @@ bool AudioSinkSvImpl::IsMediaAudioActive()
 {
     bool ret = false;
     LISTENER(
-            ret = AudioStandard::AudioStreamManager::GetInstance()->
-                    IsStreamActive(AudioStandard::AudioVolumeType::Stream_Music),
-            "AudioStreamManager::IsStreamActive",
-            PlayerXCollie::timerTimeout)
+        ret = AudioStandard::AudioStreamManager::GetInstance()->
+            IsStreamActive(AudioStandard::AudioVolumeType::STREAM_MUSIC),
+        "AudioStreamManager::IsStreamActive",
+        PlayerXCollie::timerTimeout)
     return ret;
 }
 
