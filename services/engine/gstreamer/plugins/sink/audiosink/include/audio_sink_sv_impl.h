@@ -229,6 +229,10 @@ public:
     {
         return true;
     }
+    bool IsMediaAudioActive() const override
+    {
+        return false;
+    }
 };
 } // namespace Media
 } // namespace OHOS
