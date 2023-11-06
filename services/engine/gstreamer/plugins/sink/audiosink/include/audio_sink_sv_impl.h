@@ -87,7 +87,7 @@ public:
     int32_t SetAudioEffectMode(int32_t effectMode) override;
     int32_t GetAudioEffectMode(int32_t &effectMode) override;
     bool Writeable() const override;
-    bool IsMediaAudioActive() const override;
+    bool IsMediaAudioActive() override;
 
 private:
     void OnError(std::string errMsg);
@@ -229,7 +229,7 @@ public:
     {
         return true;
     }
-    bool IsMediaAudioActive() const override
+    bool IsMediaAudioActive() override
     {
         return false;
     }
