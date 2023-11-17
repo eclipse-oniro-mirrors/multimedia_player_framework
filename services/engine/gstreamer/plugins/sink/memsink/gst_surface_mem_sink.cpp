@@ -411,7 +411,7 @@ static GstFlowReturn gst_surface_mem_sink_do_app_render(GstMemSink *memsink, Gst
         }
     }
 
-    if ((surface_sink->firstRenderFrame || surface_sink->setRateEvent) && is_preroll) {
+    if (surface_sink->setRateEvent && is_preroll) {
         MediaTrace firstRenderTrace("Surface::firstRenderFrame and isPreroll");
         GST_DEBUG_OBJECT(surface_sink, "first render frame or discard set rate preroll frame");
         surface_sink->setRateEvent = FALSE;
