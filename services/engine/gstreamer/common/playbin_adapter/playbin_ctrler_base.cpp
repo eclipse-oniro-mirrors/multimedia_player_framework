@@ -294,9 +294,9 @@ int32_t PlayBinCtrlerBase::Stop(bool needWait)
         (void)seekFuture_.get();
     }
     auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
-    (void)currState->Stop();
+    int stopRes = currState->Stop();
 
-    {
+    if (stopRes == MSERR_OK) {
         MEDIA_LOGD("Stop Start");
         if (GetCurrState() != stoppedState_) {
             LISTENER(stoppingCond_.wait(lock), "stoppingCond_.wait", PlayerXCollie::timerTimeout)
