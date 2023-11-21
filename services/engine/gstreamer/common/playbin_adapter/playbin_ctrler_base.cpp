@@ -293,9 +293,9 @@ int32_t PlayBinCtrlerBase::Stop(bool needWait)
     if (seekFuture_.valid()) {
         (void)seekFuture_.get();
     }
+
     auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
     int stopRes = currState->Stop();
-
     if (stopRes == MSERR_OK) {
         MEDIA_LOGD("Stop Start");
         if (GetCurrState() != stoppedState_) {
