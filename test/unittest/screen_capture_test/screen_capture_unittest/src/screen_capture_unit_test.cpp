@@ -282,7 +282,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_01, TestSize.Level2)
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_01 before");
     AVScreenCaptureConfig config_;
     RecorderInfo recorderInfo;
-    int32_t outputFd = open((SCREEN_CAPTURE_ROOT + "screen_capture_get_screen_capture_01.mp4").c_str(),
+    int32_t outputFd = open((screenCaptureRoot + "screen_capture_get_screen_capture_01.mp4").c_str(),
         O_RDWR | O_CREAT, 0777);
     recorderInfo.url = "fd://" + to_string(outputFd);
     recorderInfo.fileFormat = "mp4";
@@ -313,7 +313,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_02, TestSize.Level2)
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_02 before");
     AVScreenCaptureConfig config_;
     RecorderInfo recorderInfo;
-    int32_t outputFd = open((SCREEN_CAPTURE_ROOT + "screen_capture_get_screen_capture_02.mp4").c_str(),
+    int32_t outputFd = open((screenCaptureRoot + "screen_capture_get_screen_capture_02.mp4").c_str(),
         O_RDWR | O_CREAT, 0777);
     recorderInfo.url = "fd://" + to_string(outputFd);
     recorderInfo.fileFormat = "mp4";
@@ -344,7 +344,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_03, TestSize.Level2)
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_03 before");
     AVScreenCaptureConfig config_;
     RecorderInfo recorderInfo;
-    int32_t outputFd = open((SCREEN_CAPTURE_ROOT + "screen_capture_get_screen_capture_03.mp4").c_str(),
+    int32_t outputFd = open((screenCaptureRoot + "screen_capture_get_screen_capture_03.mp4").c_str(),
         O_RDWR | O_CREAT, 0777);
     recorderInfo.url = "fd://" + to_string(outputFd);
     recorderInfo.fileFormat = "mp4";
@@ -381,7 +381,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_check_param_01, TestSize.Level2)
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_check_param_01 before");
     AVScreenCaptureConfig config_;
     RecorderInfo recorderInfo;
-    int32_t outputFd = open((SCREEN_CAPTURE_ROOT + "screen_capture_check_param_01.mp4").c_str(),
+    int32_t outputFd = open((screenCaptureRoot + "screen_capture_check_param_01.mp4").c_str(),
         O_RDWR | O_CREAT, 0777);
     recorderInfo.url = "fd://" + to_string(outputFd);
     recorderInfo.fileFormat = "mp4";
@@ -438,7 +438,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_check_param_02, TestSize.Level2)
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_check_param_02 before");
     AVScreenCaptureConfig config_;
     RecorderInfo recorderInfo;
-    int32_t outputFd = open((SCREEN_CAPTURE_ROOT + "screen_capture_check_param_02.mp4").c_str(),
+    int32_t outputFd = open((screenCaptureRoot + "screen_capture_check_param_02.mp4").c_str(),
         O_RDWR | O_CREAT, 0777);
     recorderInfo.url = "fd://" + to_string(outputFd);
     recorderInfo.fileFormat = "mp4";
@@ -476,7 +476,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_check_param_03, TestSize.Level2)
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_check_param_03 before");
     AVScreenCaptureConfig config_;
     RecorderInfo recorderInfo;
-    int32_t outputFd = open((SCREEN_CAPTURE_ROOT + "screen_capture_check_param_03.mp4").c_str(),
+    int32_t outputFd = open((screenCaptureRoot + "screen_capture_check_param_03.mp4").c_str(),
         O_RDWR | O_CREAT, 0777);
     recorderInfo.url = "fd://" + to_string(outputFd);
     recorderInfo.fileFormat = "mp4";
@@ -531,7 +531,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_check_param_04, TestSize.Level2)
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_check_param_04 before");
     AVScreenCaptureConfig config_;
     RecorderInfo recorderInfo;
-    int32_t outputFd = open((SCREEN_CAPTURE_ROOT + "screen_capture_check_param_04.mp4").c_str(),
+    int32_t outputFd = open((screenCaptureRoot + "screen_capture_check_param_04.mp4").c_str(),
         O_RDWR | O_CREAT, 0777);
     recorderInfo.url = "fd://" + to_string(outputFd);
     recorderInfo.fileFormat = "mp4";
@@ -586,7 +586,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_check_param_05, TestSize.Level2)
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_check_param_05 before");
     AVScreenCaptureConfig config_;
     RecorderInfo recorderInfo;
-    int32_t outputFd = open((SCREEN_CAPTURE_ROOT + "screen_capture_check_param_05.mp4").c_str(),
+    int32_t outputFd = open((screenCaptureRoot + "screen_capture_check_param_05.mp4").c_str(),
         O_RDWR | O_CREAT, 0777);
     recorderInfo.url = "fd://" + to_string(outputFd);
     recorderInfo.fileFormat = "mp4";
@@ -622,7 +622,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_check_param_06, TestSize.Level2)
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_check_param_06 before");
     AVScreenCaptureConfig config_;
     RecorderInfo recorderInfo;
-    int32_t outputFd = open((SCREEN_CAPTURE_ROOT + "screen_capture_check_param_06.mp4").c_str(),
+    int32_t outputFd = open((screenCaptureRoot + "screen_capture_check_param_06.mp4").c_str(),
         O_RDWR | O_CREAT, 0777);
     recorderInfo.url = "fd://" + to_string(outputFd);
     recorderInfo.fileFormat = "avi";
