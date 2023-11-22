@@ -110,6 +110,9 @@ void ScreenCaptureUnitTest::SetUp(void)
 
 void ScreenCaptureUnitTest::TearDown(void)
 {
+    if (screenCapture_ != nullptr) {
+        screenCapture_->Release();
+    }
 }
 
 int32_t ScreenCaptureUnitTest::SetConfig(AVScreenCaptureConfig &config)
