@@ -374,7 +374,7 @@ static void gst_surface_src_init_surface(GstSurfaceSrc *src)
     }
     GST_OBJECT_UNLOCK(memsrc);
     if (width <= 0 || height <= 0) {
-        GST_ERROR_OBJECT(src, "width or height is not greater than 0, height: %d, width: %d", width, height);
+        GST_ERROR_OBJECT(src, "width or height is not greater than 0, height: %d, width: %d", height, width);
     }
     SurfaceError ret = surface->SetUserData("video_width", std::to_string(width));
     if (ret != SURFACE_ERROR_OK) {
