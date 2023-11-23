@@ -390,7 +390,7 @@ static void gst_surface_src_init_surface(GstSurfaceSrc *src)
     }
     ret = surface->SetDefaultWidthAndHeight(width, height);
     if (ret != SURFACE_ERROR_OK) {
-        GST_ERROR_OBJECT(src, "Set surface width and height fail");
+        GST_ERROR_OBJECT(src, "Set default width and height fail");
     }
 }
 
