@@ -165,6 +165,20 @@ int32_t AudioCaptureAsImpl::SetCaptureParameter(uint32_t bitrate, uint32_t chann
             
             audioCapturer_ = AudioStandard::AudioCapturer::Create(options, audioAppInfo);
             CHECK_AND_RETURN_RET_LOG(audioCapturer_ != nullptr, MSERR_NO_MEMORY, "create audio capturer inner failed");
+        }else if (sourceType == AudioSourceType::AUDIO_SOURCE_TYPE_VOICE_CALL) {
+            // not sure
+            AudioStandard::AudioCapturerOptions options;
+            CHECK_AND_RETURN_RET_LOG(CheckAndGetCaptureOptions(bitrate, channels, sampleRate, options),
+                MSERR_UNSUPPORT_AUD_PARAMS, "unsupport inner audio params");
+
+            options.streamInfo.format = AudioStandard::SAMPLE_S16LE;
+            options.streamInfo.encoding = AudioStandard::AudioEncodingType::ENCODING_PCM;
+            options.capturerInfo.sourceType = AudioStandard::SourceType::SOURCE_TYPE_VOICE_CALL;
+            MEDIA_LOGD("SetCaptureParameterOptions out, channels:%{public}d, sampleRate:%{public}d",
+                options.streamInfo.channels, options.streamInfo.samplingRate);
+
+            audioCapturer_ = AudioStandard::AudioCapturer::Create(options, audioAppInfo);
+            CHECK_AND_RETURN_RET_LOG(audioCapturer_ != nullptr, MSERR_NO_MEMORY, "create audio capturer voice_call failed");
         } else {
             MEDIA_LOGE("Set sourceType invaild");
             return MSERR_INVALID_OPERATION;
