@@ -168,7 +168,7 @@ int32_t AudioCaptureAsImpl::SetCaptureParameter(uint32_t bitrate, uint32_t chann
         }else if (sourceType == AudioSourceType::AUDIO_SOURCE_TYPE_VOICE_CALL) {
             AudioStandard::AudioCapturerOptions options;
             CHECK_AND_RETURN_RET_LOG(CheckAndGetCaptureOptions(bitrate, channels, sampleRate, options),
-                MSERR_UNSUPPORT_AUD_PARAMS, "unsupport inner audio params");
+                MSERR_UNSUPPORT_AUD_PARAMS, "unsupport voice_call audio params");
 
             options.streamInfo.format = AudioStandard::SAMPLE_S16LE;
             options.streamInfo.encoding = AudioStandard::AudioEncodingType::ENCODING_PCM;
