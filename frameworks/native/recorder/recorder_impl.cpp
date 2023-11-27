@@ -42,6 +42,12 @@ int32_t RecorderImpl::Init()
     return MSERR_OK;
 }
 
+int32_t RecorderImpl::GetAVRecorderConfig(ConfigMap &configMap) // TODO::new
+{
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist..");
+    return recorderService_->GetAVRecorderConfig(configMap);
+}
+
 RecorderImpl::RecorderImpl()
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));

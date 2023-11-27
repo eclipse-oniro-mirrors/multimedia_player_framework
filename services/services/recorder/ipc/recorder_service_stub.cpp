@@ -338,6 +338,12 @@ int32_t RecorderServiceStub::DumpInfo(int32_t fd)
     return std::static_pointer_cast<RecorderServer>(recorderServer_)->DumpInfo(fd);
 }
 
+int32_t RecorderServiceStub::GetAVRecorderConfig(ConfigMap &configMap) // TODO::new
+{
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    return recorderServer_->GetAVRecorderConfig(configMap);
+}
+
 int32_t RecorderServiceStub::DoIpcAbnormality()
 {
     MEDIA_LOGI("Enter DoIpcAbnormality.");
@@ -603,6 +609,32 @@ int32_t RecorderServiceStub::DestroyStub(MessageParcel &data, MessageParcel &rep
     (void)data;
     reply.WriteInt32(DestroyStub());
     needAudioPermissionCheck = false;
+    return MSERR_OK;
+}
+
+int32_t RecorderServiceStub::GetAVRecorderConfig(MessageParcel &data, MessageParcel &reply) //TODO::new
+{
+    ConfigMap configMap;
+    GetAVRecorderConfig(configMap);
+
+    (void)reply.WriteInt32(configMap["audioBitrate"]);
+    (void)reply.WriteInt32(configMap["audioChannels"]);
+    (void)reply.WriteInt32(configMap["audioCodec"]);
+    (void)reply.WriteInt32(configMap["auidoSampleRate"]);
+    (void)reply.WriteInt32(configMap["fileFormat"]);
+    (void)reply.WriteInt32(configMap["videoBitrate"]);
+    (void)reply.WriteInt32(configMap["videoCodec"]);
+    (void)reply.WriteInt32(configMap["videoFrameHeight"]);
+    (void)reply.WriteInt32(configMap["videoFrameWidth"]);
+    (void)reply.WriteInt32(configMap["videoFrameRate"]);
+    (void)reply.WriteInt32(configMap["audioSourceType"]);
+    (void)reply.WriteInt32(configMap["videoSourceType"]);
+    (void)reply.WriteInt32(configMap["url"]);
+    (void)reply.WriteInt32(configMap["rotation"]);
+
+    (void)reply.WriteFloat(configMap["latitude"]);
+    (void)reply.WriteFloat(configMap["longitude"]);
+
     return MSERR_OK;
 }
 } // namespace Media

@@ -58,6 +58,7 @@ public:
     int32_t SetFileSplitDuration(FileSplitType type, int64_t timestamp, uint32_t duration) override;
     int32_t SetParameter(int32_t sourceId, const Format &format) override;
     int32_t Init();
+    int32_t GetAVRecorderConfig(ConfigMap &configMap) override; // TODO::new
 
 private:
     std::shared_ptr<IRecorderService> recorderService_ = nullptr;

@@ -361,5 +361,13 @@ int32_t RecorderClient::SetParameter(int32_t sourceId, const Format &format)
     (void)format;
     return MSERR_INVALID_OPERATION;
 }
+
+int32_t RecorderClient::GetAVRecorderConfig(ConfigMap &configMap) // TODO::new
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(recorderProxy_ != nullptr, MSERR_NO_MEMORY, "recorder service does not exist.");
+
+    return recorderProxy_->GetAVRecorderConfig(configMap);
+}
 } // namespace Media
 } // namespace OHOS

@@ -75,6 +75,7 @@ public:
     int32_t SetFileSplitDuration(FileSplitType type, int64_t timestamp, uint32_t duration) override;
     int32_t SetParameter(int32_t sourceId, const Format &format) override;
     int32_t DumpInfo(int32_t fd);
+    int32_t GetAVRecorderConfig(ConfigMap &configMap) override; // TODO::new   
 
     // IRecorderEngineObs override
     void OnError(ErrorType errorType, int32_t errorCode) override;
@@ -106,6 +107,10 @@ private:
         int32_t maxDuration;
         OutputFormatType format;
         int64_t maxFileSize;
+        float latitude;
+        float longitude;
+        int32_t rotation;
+        int32_t url;
     } config_;
     std::string lastErrMsg_;
 

@@ -383,6 +383,7 @@ int32_t RecorderServer::SetOutputFile(int32_t fd)
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    config_.url = fd; // TODO::new 可能是错的待验证
     OutFd outFileFd(fd);
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->Configure(DUMMY_SOURCE_ID, outFileFd);
@@ -434,6 +435,8 @@ void RecorderServer::SetLocation(float latitude, float longitude)
         return;
     }
     CHECK_AND_RETURN_LOG(recorderEngine_ != nullptr, "engine is nullptr");
+    config_.latitude = latitude; // TODO::new
+    config_.longitude = longitude; // TODO::new
     GeoLocation geoLocation(latitude, longitude);
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->Configure(DUMMY_SOURCE_ID, geoLocation);
@@ -450,6 +453,7 @@ void RecorderServer::SetOrientationHint(int32_t rotation)
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_LOG(status_ == REC_CONFIGURED, "status_ error");
     CHECK_AND_RETURN_LOG(recorderEngine_ != nullptr, "engine is nullptr");
+    config_.rotation = rotation; //TODO::new
     RotationAngle rotationAngle(rotation);
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->Configure(DUMMY_SOURCE_ID, rotationAngle);
@@ -669,6 +673,29 @@ int32_t RecorderServer::DumpInfo(int32_t fd)
     dumpString += "RecorderServer maxFileSize is: " + std::to_string(config_.maxFileSize) + "\n";
     write(fd, dumpString.c_str(), dumpString.size());
 
+    return MSERR_OK;
+}
+
+int32_t RecorderServer::GetAVRecorderConfig(ConfigMap &configMap)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    configMap["audioBitrate"] = config_.audioBitRate;
+    configMap["audioChannels"] = config_.audioChannel;
+    configMap["audioCodec"] = config_.audioCodec;
+    configMap["auidoSampleRate"] = config_.audioSampleRate;
+    configMap["fileFormat"] = config_.format;
+    configMap["videoBitrate"] = config_.bitRate;
+    configMap["videoCodec"] = config_.videoCodec;
+    configMap["videoFrameHeight"] = config_.height;
+    configMap["videoFrameWidth"] = config_.width;
+    configMap["videoFrameRate"] = config_.frameRate;
+    configMap["audioSourceType"] = config_.audioSource;
+    configMap["videoSourceType"] = config_.videoSource;
+    configMap["url"] = config_.url;
+    configMap["rotation"] = config_.rotation;
+
+    configMap["latitude"] = config_.latitude;
+    configMap["longitude"] = config_.longitude;
     return MSERR_OK;
 }
 } // namespace Media

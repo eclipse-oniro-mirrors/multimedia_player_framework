@@ -49,6 +49,7 @@ const std::string RESET = "Reset";
 const std::string RELEASE = "Release";
 const std::string GET_AV_RECORDER_PROFILE = "GetAVRecorderProfile";
 const std::string SET_AV_RECORDER_CONFIG = "SetAVRecorderConfig";
+const std::string GET_AV_RECORDER_CONFIG = "GetAVRecorderConfig"; // TODO::新增AVRecordOpt
 }
 
 constexpr int32_t AVRECORDER_DEFAULT_AUDIO_BIT_RATE = 48000;
@@ -220,6 +221,11 @@ private:
      * setAVRecorderConfig(config: AVRecorderConfig): Promise<void>;
     */
     static napi_value JsSetAVRecorderConfig(napi_env env, napi_callback_info info);
+    /**
+     * getAVRecorderConfig(callback: AsyncCallback<AVRecorderConfig>);
+     * getAVRecorderConfig(): Promise<AVRecorderConfig>;
+    */
+    static napi_value JsGetAVRecorderConfig(napi_env env, napi_callback_info info); // TODO:: new js interface
 
     static AVRecorderNapi* GetJsInstanceAndArgs(napi_env env, napi_callback_info info,
         size_t &argCount, napi_value *args);
@@ -230,6 +236,8 @@ private:
     static std::shared_ptr<TaskHandler<RetInfo>> SetAVRecorderConfigTask(
         std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
     static napi_value ExecuteByPromise(napi_env env, napi_callback_info info, const std::string &opt);
+    static std::shared_ptr<TaskHandler<RetInfo>> GetAVRecorderConfigTask(
+        const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, const std::string &opt); // TODO:: new function
 
     static int32_t GetAudioCodecFormat(const std::string &mime, AudioCodecFormat &codecFormat);
     static int32_t GetVideoCodecFormat(const std::string &mime, VideoCodecFormat &codecFormat);
@@ -252,6 +260,8 @@ private:
     RetInfo Reset();
     RetInfo Release();
     RetInfo GetVideoRecorderProfile();
+
+    int32_t GetAVRecorderConfig(std::shared_ptr<AVRecorderConfig> &config); // TODO:: new funtion
 
     void ErrorCallback(int32_t errCode, const std::string &operate, const std::string &add = "");
     void StateCallback(const std::string &state);
@@ -315,6 +325,18 @@ public:
 
 private:
     std::shared_ptr<AVRecorderProfile> value_ = nullptr;
+};
+class MediaJsAVRecorderConfig : public MediaJsResult { // TODO::new AVRecorderConfig
+public:
+    explicit MediaJsAVRecorderConfig(std::shared_ptr<AVRecorderConfig> value)
+        : value_(value)
+    {
+    }
+    ~MediaJsAVRecorderConfig() = default;
+    napi_status GetJsResult(napi_env env, napi_value &result) override;
+
+private:
+    std::shared_ptr<AVRecorderConfig> value_ = nullptr;
 };
 } // namespace Media
 } // namespace OHOS
