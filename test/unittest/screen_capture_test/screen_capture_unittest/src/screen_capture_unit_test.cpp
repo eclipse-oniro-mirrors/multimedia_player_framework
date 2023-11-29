@@ -184,7 +184,8 @@ int32_t ScreenCaptureUnitTest::SetConfigFile(AVScreenCaptureConfig &config, Reco
     return MSERR_OK;
 }
 
-int32_t ScreenCaptureUnitTest::SetRecorderInfo(std::string filename, RecorderInfo &recorderInfo){
+int32_t ScreenCaptureUnitTest::SetRecorderInfo(std::string filename, RecorderInfo &recorderInfo)
+{
     int32_t outputFd = open((screenCaptureRoot + filename).c_str(), O_RDWR | O_CREAT, 0777);
     recorderInfo.url = "fd://" + to_string(outputFd);
     recorderInfo.fileFormat = "mp4";
@@ -591,13 +592,13 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_check_param_05, TestSize.Level2)
     EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
 
     SetRecorderInfo("screen_capture_check_param_05.mp4", recorderInfo);
-    config_.recorderInfo = recorderInfo;   
+    config_.recorderInfo = recorderInfo;
     config_.dataType = DataType::CAPTURE_FILE;
     config_.captureMode = CaptureMode::CAPTURE_INVAILD;
     EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
 
     SetRecorderInfo("screen_capture_check_param_05.mp4", recorderInfo);
-    config_.recorderInfo = recorderInfo;      
+    config_.recorderInfo = recorderInfo;
     config_.captureMode = CaptureMode::CAPTURE_SPECIFIED_WINDOW;
     EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
 
