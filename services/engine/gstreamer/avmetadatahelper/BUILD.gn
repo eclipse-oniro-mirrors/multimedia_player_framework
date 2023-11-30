@@ -95,8 +95,10 @@ ohos_static_library("media_engine_gst_avmeta") {
     "image_framework:image_native",
   ]
 
+  defines = []
   if (multimedia_player_framework_support_drm) {
     external_deps += [ "drm_framework:drm_framework" ]
+    defines += [ "SUPPORT_DRM" ]
   }
 
   subsystem_name = "multimedia"
