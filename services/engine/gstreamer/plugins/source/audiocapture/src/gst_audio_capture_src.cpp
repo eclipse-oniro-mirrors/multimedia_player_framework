@@ -315,6 +315,24 @@ static gboolean process_caps_info(GstAudioCaptureSrc *src)
     return TRUE;
 }
 
+static int32_t gst_state_change_ready_to_paused(GstAudioCaptureSrc *src)
+{
+    CHECK_AND_BREAK_REP_ERR(src->audio_capture != nullptr, src, "audio_capture is nullptr");
+    AudioCapture::AppInfo appInfo = {};
+    appInfo.appUid = src->appuid;
+    appInfo.appPid = src->apppid;
+    appInfo.appTokenId = src->token_id;
+    appInfo.appFullTokenId = src->full_token_id;
+    int32_t ret = src->audio_capture->SetCaptureParameter(src->bitrate, src->channels, src->sample_rate,
+        src->source_type, appInfo);
+    if (ret != MSERR_OK) {
+        GST_ELEMENT_ERROR (src, CORE, STATE_CHANGE, ("SetCaptureParameter failed"),
+            ("SetCaptureParameter failed"));
+        return ret;
+    }
+    return MSERR_OK;
+}
+
 static GstStateChangeReturn gst_state_change_forward_direction(GstAudioCaptureSrc *src, GstStateChange transition)
 {
     g_return_val_if_fail(src != nullptr, GST_STATE_CHANGE_FAILURE);
@@ -327,17 +345,7 @@ static GstStateChangeReturn gst_state_change_forward_direction(GstAudioCaptureSr
             break;
         }
         case GST_STATE_CHANGE_READY_TO_PAUSED: {
-            CHECK_AND_BREAK_REP_ERR(src->audio_capture != nullptr, src, "audio_capture is nullptr");
-            AudioCapture::AppInfo appInfo = {};
-            appInfo.appUid = src->appuid;
-            appInfo.appPid = src->apppid;
-            appInfo.appTokenId = src->token_id;
-            appInfo.appFullTokenId = src->full_token_id;
-            int32_t ret = src->audio_capture->SetCaptureParameter(src->bitrate, src->channels, src->sample_rate,
-                src->source_type, appInfo);
-            if (ret != MSERR_OK) {
-                GST_ELEMENT_ERROR (src, CORE, STATE_CHANGE, ("SetCaptureParameter failed"),
-                    ("SetCaptureParameter failed"));
+            if (gst_state_change_ready_to_paused(src) != MSERR_OK) {
                 return GST_STATE_CHANGE_FAILURE;
             }
             break;
