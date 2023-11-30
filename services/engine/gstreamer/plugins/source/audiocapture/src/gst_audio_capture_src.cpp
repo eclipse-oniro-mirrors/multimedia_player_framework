@@ -345,10 +345,7 @@ static GstStateChangeReturn gst_state_change_forward_direction(GstAudioCaptureSr
             break;
         }
         case GST_STATE_CHANGE_READY_TO_PAUSED: {
-            if (gst_state_change_ready_to_paused(src) != GST_STATE_CHANGE_SUCCESS) {
-                return GST_STATE_CHANGE_FAILURE;
-            }
-            break;
+            return gst_state_change_ready_to_paused(src);
         }
         case GST_STATE_CHANGE_PAUSED_TO_PLAYING: {
             CHECK_AND_BREAK_REP_ERR(src->audio_capture != nullptr, src, "audio_capture is nullptr");
