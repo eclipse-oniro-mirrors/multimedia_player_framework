@@ -324,8 +324,8 @@ static GstStateChangeReturn gst_state_change_ready_to_paused(GstAudioCaptureSrc 
     appInfo.appPid = src->apppid;
     appInfo.appTokenId = src->token_id;
     appInfo.appFullTokenId = src->full_token_id;
-    if (src->audio_capture->SetCaptureParameter(src->bitrate, src->channels, src->sample_rate,
-         src->source_type, appInfo) != MSERR_OK) {
+    if (src->audio_capture->SetCaptureParameter(src->bitrate, src->channels, src->sample_rate, src->source_type,
+        appInfo) != MSERR_OK) {
         GST_ELEMENT_ERROR (src, CORE, STATE_CHANGE, ("SetCaptureParameter failed"),
             ("SetCaptureParameter failed"));
         return GST_STATE_CHANGE_FAILURE;
