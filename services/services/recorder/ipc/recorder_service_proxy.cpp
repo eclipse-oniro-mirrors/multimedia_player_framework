@@ -553,7 +553,7 @@ int32_t RecorderServiceProxy::DestroyStub()
 
     return reply.ReadInt32();
 }
-int32_t RecorderServiceProxy::GetAVRecorderConfig(ConfigMap &configMap) //TODO::new
+int32_t RecorderServiceProxy::GetAVRecorderConfig(ConfigMap &configMap)
 {
     MessageParcel data;
     MessageParcel reply;

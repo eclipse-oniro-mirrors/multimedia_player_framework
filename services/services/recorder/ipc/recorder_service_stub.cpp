@@ -340,13 +340,13 @@ int32_t RecorderServiceStub::DumpInfo(int32_t fd)
     return std::static_pointer_cast<RecorderServer>(recorderServer_)->DumpInfo(fd);
 }
 
-int32_t RecorderServiceStub::GetAVRecorderConfig(ConfigMap &configMap) // TODO::new
+int32_t RecorderServiceStub::GetAVRecorderConfig(ConfigMap &configMap)
 {
     CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
     return recorderServer_->GetAVRecorderConfig(configMap);
 }
 
-int32_t RecorderServiceStub::GetLocation(Location &location) // TODO::new
+int32_t RecorderServiceStub::GetLocation(Location &location)
 {
     CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
     return recorderServer_->GetLocation(location);
@@ -620,7 +620,7 @@ int32_t RecorderServiceStub::DestroyStub(MessageParcel &data, MessageParcel &rep
     return MSERR_OK;
 }
 
-int32_t RecorderServiceStub::GetAVRecorderConfig(MessageParcel &data, MessageParcel &reply) //TODO::new
+int32_t RecorderServiceStub::GetAVRecorderConfig(MessageParcel &data, MessageParcel &reply)
 {
     ConfigMap configMap;
     GetAVRecorderConfig(configMap);
@@ -652,7 +652,7 @@ int32_t RecorderServiceStub::GetLocation(MessageParcel &data, MessageParcel &rep
     GetLocation(location);
     (void)reply.WriteFloat(location.latitude);
     (void)reply.WriteFloat(location.longitude);
-    return 0;
+    return MSERR_OK;
 }
 } // namespace Media
 } // namespace OHOS

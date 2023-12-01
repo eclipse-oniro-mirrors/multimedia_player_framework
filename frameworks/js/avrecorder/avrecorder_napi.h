@@ -49,7 +49,7 @@ const std::string RESET = "Reset";
 const std::string RELEASE = "Release";
 const std::string GET_AV_RECORDER_PROFILE = "GetAVRecorderProfile";
 const std::string SET_AV_RECORDER_CONFIG = "SetAVRecorderConfig";
-const std::string GET_AV_RECORDER_CONFIG = "GetAVRecorderConfig"; // TODO::新增AVRecordOpt
+const std::string GET_AV_RECORDER_CONFIG = "GetAVRecorderConfig";
 }
 
 constexpr int32_t AVRECORDER_DEFAULT_AUDIO_BIT_RATE = 48000;
@@ -67,7 +67,7 @@ const std::map<std::string, std::vector<std::string>> stateCtrlList = {
         AVRecordergOpt::RELEASE,
         AVRecordergOpt::GET_AV_RECORDER_PROFILE,
         AVRecordergOpt::SET_AV_RECORDER_CONFIG,
-        AVRecordergOpt::GET_AV_RECORDER_CONFIG // TODO:: new AVRecordergOpt 
+        AVRecordergOpt::GET_AV_RECORDER_CONFIG
     }},
     {AVRecorderState::STATE_PREPARED, {
         AVRecordergOpt::GETINPUTSURFACE,
@@ -227,7 +227,7 @@ private:
      * getAVRecorderConfig(callback: AsyncCallback<AVRecorderConfig>);
      * getAVRecorderConfig(): Promise<AVRecorderConfig>;
     */
-    static napi_value JsGetAVRecorderConfig(napi_env env, napi_callback_info info); // TODO:: new js interface
+    static napi_value JsGetAVRecorderConfig(napi_env env, napi_callback_info info);
 
     static AVRecorderNapi* GetJsInstanceAndArgs(napi_env env, napi_callback_info info,
         size_t &argCount, napi_value *args);
@@ -239,7 +239,7 @@ private:
         std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
     static napi_value ExecuteByPromise(napi_env env, napi_callback_info info, const std::string &opt);
     static std::shared_ptr<TaskHandler<RetInfo>> GetAVRecorderConfigTask(
-        const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx); // TODO:: new function
+        const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
 
     static int32_t GetAudioCodecFormat(const std::string &mime, AudioCodecFormat &codecFormat);
     static int32_t GetVideoCodecFormat(const std::string &mime, VideoCodecFormat &codecFormat);
@@ -263,7 +263,7 @@ private:
     RetInfo Release();
     RetInfo GetVideoRecorderProfile();
 
-    int32_t GetAVRecorderConfig(std::shared_ptr<AVRecorderConfig> &config); // TODO:: new funtion
+    int32_t GetAVRecorderConfig(std::shared_ptr<AVRecorderConfig> &config);
 
     void ErrorCallback(int32_t errCode, const std::string &operate, const std::string &add = "");
     void StateCallback(const std::string &state);
@@ -318,7 +318,7 @@ public:
     static int32_t SetAudioCodecFormat(AudioCodecFormat &codecFormat, std::string &mime);
     static int32_t SetVideoCodecFormat(VideoCodecFormat &codecFormat, std::string &mime);
     static int32_t SetFileFormat(OutputFormatType &type, std::string &extension);
-}
+};
 class MediaJsAVRecorderProfile : public MediaJsResult {
 public:
     explicit MediaJsAVRecorderProfile(std::shared_ptr<AVRecorderProfile> value)
@@ -331,7 +331,7 @@ public:
 private:
     std::shared_ptr<AVRecorderProfile> value_ = nullptr;
 };
-class MediaJsAVRecorderConfig : public MediaJsResult { // TODO::new AVRecorderConfig
+class MediaJsAVRecorderConfig : public MediaJsResult {
 public:
     explicit MediaJsAVRecorderConfig(std::shared_ptr<AVRecorderConfig> value)
         : value_(value)

@@ -57,7 +57,7 @@ public:
     virtual int32_t Release() = 0;
     virtual int32_t SetFileSplitDuration(FileSplitType type, int64_t timestamp, uint32_t duration) = 0;
     virtual int32_t DestroyStub() = 0;
-    virtual int32_t GetAVRecorderConfig(ConfigMap &configMap) = 0; //TODO::new function
+    virtual int32_t GetAVRecorderConfig(ConfigMap &configMap) = 0;
     virtual int32_t GetLocation(Location &location) = 0;
     /**
      * IPC code ID
@@ -93,7 +93,7 @@ public:
         RELEASE,
         SET_FILE_SPLIT_DURATION,
         DESTROY,
-        GET_AV_RECORDER_CONFIG, // TODO::new
+        GET_AV_RECORDER_CONFIG,
         GET_LOCATION,
     };
 

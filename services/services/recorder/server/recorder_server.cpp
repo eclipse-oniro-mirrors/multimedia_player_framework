@@ -385,7 +385,7 @@ int32_t RecorderServer::SetOutputFile(int32_t fd)
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
-    config_.url = fd; // TODO::new 可能是错的待验证
+    config_.url = fd;
     OutFd outFileFd(fd);
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->Configure(DUMMY_SOURCE_ID, outFileFd);
@@ -437,8 +437,9 @@ void RecorderServer::SetLocation(float latitude, float longitude)
         return;
     }
     CHECK_AND_RETURN_LOG(recorderEngine_ != nullptr, "engine is nullptr");
-    config_.latitude = latitude; // TODO::new
-    config_.longitude = longitude; // TODO::new
+    config_.latitude = latitude;
+    config_.longitude = longitude;
+    config_.withLocation = true;
     GeoLocation geoLocation(latitude, longitude);
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->Configure(DUMMY_SOURCE_ID, geoLocation);
@@ -455,7 +456,7 @@ void RecorderServer::SetOrientationHint(int32_t rotation)
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_LOG(status_ == REC_CONFIGURED, "status_ error");
     CHECK_AND_RETURN_LOG(recorderEngine_ != nullptr, "engine is nullptr");
-    config_.rotation = rotation; //TODO::new
+    config_.rotation = rotation;
     RotationAngle rotationAngle(rotation);
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->Configure(DUMMY_SOURCE_ID, rotationAngle);

@@ -439,9 +439,9 @@ public:
      */
     virtual int32_t SetParameter(int32_t sourceId, const Format &format) = 0;
 
-    virtual int32_t GetAVRecorderConfig(ConfigMap &configMap) = 0; // TODO::new
+    virtual int32_t GetAVRecorderConfig(ConfigMap &configMap) = 0;
 
-    virtual int32_t GetLocation(Location &location) = 0; //TODO::new
+    virtual int32_t GetLocation(Location &location) = 0;
 };
 } // namespace Media
 } // namespace OHOS
