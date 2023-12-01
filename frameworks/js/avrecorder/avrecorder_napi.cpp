@@ -514,7 +514,7 @@ napi_value AVRecorderNapi::JsGetAVRecorderConfig(napi_env env, napi_callback_inf
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
 
     if (asyncCtx->napi->CheckStateMachine(opt) == MSERR_OK) {
-        asyncCtx->task_ = AVRecorderNapi::GetAVRecorderConfigTask(asyncCtx, opt);
+        asyncCtx->task_ = AVRecorderNapi::GetAVRecorderConfigTask(asyncCtx);
         (void)asyncCtx->napi->taskQue_->EnqueueTask(asyncCtx->task_);
         asyncCtx->opt_ = opt;
     } else {
@@ -723,26 +723,27 @@ napi_value AVRecorderNapi::ExecuteByPromise(napi_env env, napi_callback_info inf
 }
 
 std::shared_ptr<TaskHandler<RetInfo>> AVRecorderNapi::GetAVRecorderConfigTask(
-    const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, const std::string &opt) // TODO::new
+    const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx) // TODO::new
 {
-    return std::make_shared<TaskHandler<RetInfo>>([&](){
-        MEDIA_LOGI("%{public}s Start", opt.c_str());
-        asyncCtx->config_ = std::make_shared<AVRecorderConfig>();
+    return std::make_shared<TaskHandler<RetInfo>>([napi = asyncCtx->napi, &config = asyncCtx->config_](){
+        const std::string &option = AVRecordergOpt::GET_AV_RECORDER_CONFIG;
+        MEDIA_LOGI("%{public}s Start", option.c_str());
+        config = std::make_shared<AVRecorderConfig>();
 
-        CHECK_AND_RETURN_RET(asyncCtx->napi != nullptr && asyncCtx->config_ != nullptr,
-            GetRetInfo(MSERR_INVALID_OPERATION, opt, ""));
+        CHECK_AND_RETURN_RET(napi != nullptr && config != nullptr,
+            GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
 
-        CHECK_AND_RETURN_RET(asyncCtx->napi->CheckStateMachine(opt) == MSERR_OK,
-            GetRetInfo(MSERR_INVALID_OPERATION, opt, ""));
+        CHECK_AND_RETURN_RET(napi->CheckStateMachine(option) == MSERR_OK,
+            GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
         
-        CHECK_AND_RETURN_RET(asyncCtx->napi->CheckRepeatOperation(opt) == MSERR_OK,
+        CHECK_AND_RETURN_RET(napi->CheckRepeatOperation(option) == MSERR_OK,
             RetInfo(MSERR_EXT_API9_OK, ""));
 
-        int32_t ret = asyncCtx->napi->GetAVRecorderConfig(asyncCtx->config_);
+        int32_t ret = napi->GetAVRecorderConfig(config);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, GetRetInfo(MSERR_INVALID_VAL, "GetAVRecorderConfigTask", ""),
             "get AVRecorderConfigTask failed");
 
-        MEDIA_LOGI("%{public}s End", opt.c_str());
+        MEDIA_LOGI("%{public}s End", option.c_str());
         return RetInfo(MSERR_EXT_API9_OK, "");
     });
 }
@@ -831,31 +832,33 @@ RetInfo AVRecorderNapi::Release()
 int32_t AVRecorderNapi::GetAVRecorderConfig(std::shared_ptr<AVRecorderConfig> &config) // TODO::new
 {
     ConfigMap configMap;
-    recorder_->GetAVRecorderConfig(configMap);
-    AVRecorderProfile profile;
+    int32_t ret = recorder_->GetAVRecorderConfig(configMap);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "GetAVRecorderConfig", ""));
     Location location;
+    ret = recorder_->GetLocation(location);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "GetLocation", ""));
 
-    location.latitude = static_cast<float>(configMap["latitude"]);
-    location.longitude = static_cast<float>(configMap["longitude"]);
-
-    profile.audioBitrate = configMap["audioBitrate"];
-    profile.audioChannels = configMap["audioChannels"];
-    profile.audioCodecFormat = static_cast<AudioCodecFormat>(configMap["audioCodec"]);
-    profile.auidoSampleRate = configMap["auidoSampleRate"];
-    profile.fileFormat = static_cast<OutputFormatType>(configMap["fileFormat"]);
-    profile.videoBitrate = configMap["videoBitrate"];
-    profile.videoCodecFormat = static_cast<VideoCodecFormat>(configMap["videoCodec"]);
-    profile.videoFrameHeight = configMap["videoFrameHeight"];
-    profile.videoFrameWidth = configMap["videoFrameWidth"]; 
-    profile.videoFrameRate = configMap["videoFrameRate"]; 
+    config->profile.audioBitrate = configMap["audioBitrate"];
+    config->profile.audioChannels = configMap["audioChannels"];
+    config->profile.audioCodecFormat = static_cast<AudioCodecFormat>(configMap["audioCodec"]);
+    config->profile.auidoSampleRate = configMap["auidoSampleRate"];
+    config->profile.fileFormat = static_cast<OutputFormatType>(configMap["fileFormat"]);
+    config->profile.videoBitrate = configMap["videoBitrate"];
+    config->profile.videoCodecFormat = static_cast<VideoCodecFormat>(configMap["videoCodec"]);
+    config->profile.videoFrameHeight = configMap["videoFrameHeight"];
+    config->profile.videoFrameWidth = configMap["videoFrameWidth"]; 
+    config->profile.videoFrameRate = configMap["videoFrameRate"]; 
     
     config->audioSourceType = static_cast<AudioSourceType>(configMap["audioSourceType"]);
     config->videoSourceType = static_cast<VideoSourceType>(configMap["videoSourceType"]);
-    config->profile = profile;
-    config->url = configMap["url"];
+    const std::string fdHead = "fd://";
+    config->url = fdHead + std::to_string(configMap["url"]);
     config->rotation = configMap["rotation"];
-    config->location = location;
-
+    config->withVideo = configMap["withVideo"];
+    config->withAudio = configMap["withAudio"];
+    config->withLocation = configMap["withLocation"];
+    config->location.latitude = location.latitude;
+    config->location.longitude = location.longitude;
     return MSERR_OK;
 }
 
@@ -881,6 +884,7 @@ int32_t AVRecorderNapi::CheckRepeatOperation(const std::string &opt)
             AVRecordergOpt::RESET,
             AVRecordergOpt::GET_AV_RECORDER_PROFILE,
             AVRecordergOpt::SET_AV_RECORDER_CONFIG,
+            AVRecordergOpt::GET_AV_RECORDER_CONFIG, // TODO::new
         }},
         {AVRecorderState::STATE_PREPARED, {}},
         {AVRecorderState::STATE_STARTED, {
@@ -1332,7 +1336,7 @@ napi_status MediaJsAVRecorderProfile::GetJsResult(napi_env env, napi_value &resu
     CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
 
     std::string audioCodec;
-    setState = SetAudioCodecFormat(value_->audioCodecFormat, audioCodec);
+    setState = MediaJsResultExtensionMethod::SetAudioCodecFormat(value_->audioCodecFormat, audioCodec);
     CHECK_AND_RETURN_RET(setState == MSERR_OK, napi_generic_failure);
     setRet = CommonNapi::SetPropertyString(env, result, "audioCodec", audioCodec);
     CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
@@ -1341,7 +1345,7 @@ napi_status MediaJsAVRecorderProfile::GetJsResult(napi_env env, napi_value &resu
     CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
 
     std::string fileFormat;
-    setState = SetFileFormat(value_->fileFormat, fileFormat);
+    setState = MediaJsResultExtensionMethod::SetFileFormat(value_->fileFormat, fileFormat);
     CHECK_AND_RETURN_RET(setState == MSERR_OK, napi_generic_failure);
     setRet = CommonNapi::SetPropertyString(env, result, "fileFormat", fileFormat);
     CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
@@ -1350,7 +1354,7 @@ napi_status MediaJsAVRecorderProfile::GetJsResult(napi_env env, napi_value &resu
     CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
 
     std::string videoCodec;
-    setState = SetVideoCodecFormat(value_->videoCodecFormat, videoCodec);
+    setState = MediaJsResultExtensionMethod::SetVideoCodecFormat(value_->videoCodecFormat, videoCodec);
     CHECK_AND_RETURN_RET(setState == MSERR_OK, napi_generic_failure);
     setRet = CommonNapi::SetPropertyString(env, result, "videoCodec", videoCodec);
     CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
@@ -1366,7 +1370,7 @@ napi_status MediaJsAVRecorderProfile::GetJsResult(napi_env env, napi_value &resu
     return ret;
 }
 
-int32_t MediaJsAVRecorderProfile::SetAudioCodecFormat(AudioCodecFormat &codecFormat, std::string &mime)
+int32_t MediaJsResultExtensionMethod::SetAudioCodecFormat(AudioCodecFormat &codecFormat, std::string &mime)
 {
     MEDIA_LOGI("audioCodecFormat %{public}d", codecFormat);
     const std::map<AudioCodecFormat, std::string_view> codecFormatToMimeStr = {
@@ -1382,7 +1386,7 @@ int32_t MediaJsAVRecorderProfile::SetAudioCodecFormat(AudioCodecFormat &codecFor
     return MSERR_INVALID_VAL;
 }
 
-int32_t MediaJsAVRecorderProfile::SetVideoCodecFormat(VideoCodecFormat &codecFormat, std::string &mime)
+int32_t MediaJsResultExtensionMethod::SetVideoCodecFormat(VideoCodecFormat &codecFormat, std::string &mime)
 {
     MEDIA_LOGI("VideoCodecFormat %{public}d", codecFormat);
     const std::map<VideoCodecFormat, std::string_view> codecFormatTomimeStr = {
@@ -1399,7 +1403,7 @@ int32_t MediaJsAVRecorderProfile::SetVideoCodecFormat(VideoCodecFormat &codecFor
     return MSERR_INVALID_VAL;
 }
 
-int32_t MediaJsAVRecorderProfile::SetFileFormat(OutputFormatType &type, std::string &extension)
+int32_t MediaJsResultExtensionMethod::SetFileFormat(OutputFormatType &type, std::string &extension)
 {
     MEDIA_LOGI("OutputFormatType %{public}d", type);
     const std::map<OutputFormatType, std::string> outputFormatToextension = {
@@ -1427,44 +1431,73 @@ napi_status MediaJsAVRecorderConfig::GetJsResult(napi_env env, napi_value &resul
 {
     napi_status ret = napi_ok;
     bool setRet = true;
-    //int32_t setState = MSERR_OK;
+    int32_t setState = MSERR_OK;
     CHECK_AND_RETURN_RET(value_ != nullptr, napi_generic_failure);
     CHECK_AND_RETURN_RET((ret = napi_create_object(env, &result)) == napi_ok, ret);
 
-    setRet = CommonNapi::SetPropertyInt32(env, result, "audioBitrate", value_->profile.audioBitrate);
-    CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
-    setRet = CommonNapi::SetPropertyInt32(env, result, "audioChannels",value_->profile.audioChannels);
-    CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
-    setRet = CommonNapi::SetPropertyInt32(env, result, "audioSampleRate", value_->profile.auidoSampleRate);
-    CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
-    setRet = CommonNapi::SetPropertyInt32(env, result, "audioCodecFormat",value_->profile.audioCodecFormat);
-    CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
-    setRet = CommonNapi::SetPropertyInt32(env, result, "fileFormat", value_->profile.fileFormat);
-    CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
-    setRet = CommonNapi::SetPropertyInt32(env, result, "videoBitrate", value_->profile.videoBitrate);
-    CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
-    setRet = CommonNapi::SetPropertyInt32(env, result, "videoFrameWidth", value_->profile.videoFrameWidth);
-    CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
-    setRet = CommonNapi::SetPropertyInt32(env, result, "videoFrameHeight",  value_->profile.videoFrameHeight);
-    CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
-    setRet = CommonNapi::SetPropertyInt32(env, result, "videoFrameRate",  value_->profile.videoFrameRate);
-    CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
-    setRet = CommonNapi::SetPropertyInt32(env, result, "videoCodecFormat",  value_->profile.videoCodecFormat);
-    CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
+    napi_value profile;
+    napi_value location;
+    CHECK_AND_RETURN_RET((ret = napi_create_object(env, &profile)) == napi_ok, ret);
 
-    setRet = CommonNapi::SetPropertyInt32(env, result, "audioSourceType",  value_->audioSourceType);
-    CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
-    setRet = CommonNapi::SetPropertyInt32(env, result, "videoSourceType",  value_->videoSourceType);
-    CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
-    setRet = CommonNapi::SetPropertyInt32(env, result, "profile",  value_->profile);
-    CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
+    if (value_->withAudio) {
+        setRet = CommonNapi::SetPropertyInt32(env, result, "audioSourceType",  value_->audioSourceType);
+        CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
+        setRet = CommonNapi::SetPropertyInt32(env, profile, "audioBitrate", value_->profile.audioBitrate);
+        CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
+        setRet = CommonNapi::SetPropertyInt32(env, profile, "audioChannels",value_->profile.audioChannels);
+        CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
+        setRet = CommonNapi::SetPropertyInt32(env, profile, "audioSampleRate", value_->profile.auidoSampleRate);
+        CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
+
+        std::string audioCodec;
+        setState = MediaJsResultExtensionMethod::SetAudioCodecFormat(value_->profile.audioCodecFormat, audioCodec);
+        CHECK_AND_RETURN_RET(setState == MSERR_OK, napi_generic_failure);
+        setRet = CommonNapi::SetPropertyString(env, profile, "audioCodec", audioCodec);
+        CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);   
+    }
     
-    setRet = CommonNapi::SetPropertyInt32(env, result, "url",  value_->url);
-    CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
-    setRet = CommonNapi::SetPropertyInt32(env, result, "rotation",  value_->rotation);
-    CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
+    if (value_->withAudio || value_->withVideo) {
+        setRet = CommonNapi::SetPropertyString(env, result, "url", value_->url);
+        CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
+
+        std::string fileFormat;
+        setState = MediaJsResultExtensionMethod::SetFileFormat(value_->profile.fileFormat, fileFormat);
+        CHECK_AND_RETURN_RET(setState == MSERR_OK, napi_generic_failure);
+        setRet = CommonNapi::SetPropertyString(env, profile, "fileFormat", fileFormat);
+        CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
+    }
+
+    if (value_->withVideo) {
+        setRet = CommonNapi::SetPropertyInt32(env, result, "videoSourceType",  value_->videoSourceType);
+        CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
+        setRet = CommonNapi::SetPropertyInt32(env, result, "rotation",  value_->rotation);
+        CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
+        setRet = CommonNapi::SetPropertyInt32(env, profile, "videoBitrate", value_->profile.videoBitrate);
+        CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
+        setRet = CommonNapi::SetPropertyInt32(env, profile, "videoFrameWidth", value_->profile.videoFrameWidth);
+        CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
+        setRet = CommonNapi::SetPropertyInt32(env, profile, "videoFrameHeight",  value_->profile.videoFrameHeight);
+        CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
+        setRet = CommonNapi::SetPropertyInt32(env, profile, "videoFrameRate",  value_->profile.videoFrameRate);
+        CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
+        
+        std::string videoCodec;
+        setState = MediaJsResultExtensionMethod::SetVideoCodecFormat(value_->profile.videoCodecFormat, videoCodec);
+        CHECK_AND_RETURN_RET(setState == MSERR_OK, napi_generic_failure);
+        setRet = CommonNapi::SetPropertyString(env, profile, "videoCodec", videoCodec);
+        CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
+    }
     
-    // two float weixie
+    napi_set_named_property(env, result, "profile", profile);
+
+    if (value_->withLocation) {
+        CHECK_AND_RETURN_RET((ret = napi_create_object(env, &location)) == napi_ok, ret);
+        setRet = CommonNapi::SetPropertyDouble(env, location, "latitude",  value_->location.latitude);
+        CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
+        setRet = CommonNapi::SetPropertyDouble(env, location, "longitude",  value_->location.longitude);
+        CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
+        napi_set_named_property(env, result, "location", location)
+    }
     return ret;
 }
 } // namespace Media

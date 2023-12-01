@@ -57,6 +57,7 @@ public:
     int32_t SetFileSplitDuration(FileSplitType type, int64_t timestamp, uint32_t duration) override;
     int32_t DestroyStub() override;
     int32_t GetAVRecorderConfig(ConfigMap &configMap) override; // TODO::new
+    int32_t GetLocation(Location &location) override;
 
 private:
     static inline BrokerDelegator<RecorderServiceProxy> delegator_;

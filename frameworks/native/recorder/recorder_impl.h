@@ -59,6 +59,7 @@ public:
     int32_t SetParameter(int32_t sourceId, const Format &format) override;
     int32_t Init();
     int32_t GetAVRecorderConfig(ConfigMap &configMap) override; // TODO::new
+    int32_t GetLocation(Location &location) override;
 
 private:
     std::shared_ptr<IRecorderService> recorderService_ = nullptr;

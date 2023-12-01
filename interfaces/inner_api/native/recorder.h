@@ -22,12 +22,11 @@
 #include "format.h"
 #include "surface.h"
 #include "av_common.h"
-#include "any.h"
 
 namespace OHOS {
 namespace Media {
 
-using ConfigMap = std::map<std::string, Any>; // TODO::new 测试Any
+using ConfigMap = std::map<std::string, int32_t>; // TODO::new 测试Any
 /**
  * @brief Enumerates video source types.
  *
@@ -665,6 +664,8 @@ public:
     virtual int32_t SetParameter(int32_t sourceId, const Format &format) = 0;
 
     virtual int32_t GetAVRecorderConfig(ConfigMap &configMap) = 0; // TODO::new
+
+    virtual int32_t GetLocation(Location &location) = 0; // TODO::new
 };
 
 class __attribute__((visibility("default"))) RecorderFactory {

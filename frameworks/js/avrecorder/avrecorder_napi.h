@@ -67,6 +67,7 @@ const std::map<std::string, std::vector<std::string>> stateCtrlList = {
         AVRecordergOpt::RELEASE,
         AVRecordergOpt::GET_AV_RECORDER_PROFILE,
         AVRecordergOpt::SET_AV_RECORDER_CONFIG,
+        AVRecordergOpt::GET_AV_RECORDER_CONFIG // TODO:: new AVRecordergOpt 
     }},
     {AVRecorderState::STATE_PREPARED, {
         AVRecordergOpt::GETINPUTSURFACE,
@@ -138,6 +139,7 @@ struct AVRecorderConfig {
     Location location; // Optional
     bool withVideo = false;
     bool withAudio = false;
+    bool withLocation = false;
 };
 
 using RetInfo = std::pair<int32_t, std::string>;
@@ -237,7 +239,7 @@ private:
         std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
     static napi_value ExecuteByPromise(napi_env env, napi_callback_info info, const std::string &opt);
     static std::shared_ptr<TaskHandler<RetInfo>> GetAVRecorderConfigTask(
-        const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, const std::string &opt); // TODO:: new function
+        const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx); // TODO:: new function
 
     static int32_t GetAudioCodecFormat(const std::string &mime, AudioCodecFormat &codecFormat);
     static int32_t GetVideoCodecFormat(const std::string &mime, VideoCodecFormat &codecFormat);
@@ -311,6 +313,12 @@ struct AVRecorderAsyncContext : public MediaAsyncContext {
     std::shared_ptr<AVRecorderProfile> profile_ = nullptr;
 };
 
+class MediaJsResultExtensionMethod {
+public:
+    static int32_t SetAudioCodecFormat(AudioCodecFormat &codecFormat, std::string &mime);
+    static int32_t SetVideoCodecFormat(VideoCodecFormat &codecFormat, std::string &mime);
+    static int32_t SetFileFormat(OutputFormatType &type, std::string &extension);
+}
 class MediaJsAVRecorderProfile : public MediaJsResult {
 public:
     explicit MediaJsAVRecorderProfile(std::shared_ptr<AVRecorderProfile> value)
@@ -319,9 +327,6 @@ public:
     }
     ~MediaJsAVRecorderProfile() = default;
     napi_status GetJsResult(napi_env env, napi_value &result) override;
-    int32_t SetAudioCodecFormat(AudioCodecFormat &codecFormat, std::string &mime);
-    int32_t SetVideoCodecFormat(VideoCodecFormat &codecFormat, std::string &mime);
-    int32_t SetFileFormat(OutputFormatType &type, std::string &extension);
 
 private:
     std::shared_ptr<AVRecorderProfile> value_ = nullptr;

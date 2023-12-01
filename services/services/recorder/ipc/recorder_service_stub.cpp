@@ -86,6 +86,8 @@ int32_t RecorderServiceStub::Init()
     recFuncs_[RELEASE] = &RecorderServiceStub::Release;
     recFuncs_[SET_FILE_SPLIT_DURATION] = &RecorderServiceStub::SetFileSplitDuration;
     recFuncs_[DESTROY] = &RecorderServiceStub::DestroyStub;
+    recFuncs_[GET_AV_RECORDER_CONFIG] = &RecorderServiceStub::GetAVRecorderConfig;
+    recFuncs_[GET_LOCATION] = &RecorderServiceStub::GetLocation;
 
     pid_ = IPCSkeleton::GetCallingPid();
     (void)RegisterMonitor(pid_);
@@ -342,6 +344,12 @@ int32_t RecorderServiceStub::GetAVRecorderConfig(ConfigMap &configMap) // TODO::
 {
     CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
     return recorderServer_->GetAVRecorderConfig(configMap);
+}
+
+int32_t RecorderServiceStub::GetLocation(Location &location) // TODO::new
+{
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    return recorderServer_->GetLocation(location);
 }
 
 int32_t RecorderServiceStub::DoIpcAbnormality()
@@ -631,11 +639,20 @@ int32_t RecorderServiceStub::GetAVRecorderConfig(MessageParcel &data, MessagePar
     (void)reply.WriteInt32(configMap["videoSourceType"]);
     (void)reply.WriteInt32(configMap["url"]);
     (void)reply.WriteInt32(configMap["rotation"]);
-
-    (void)reply.WriteFloat(configMap["latitude"]);
-    (void)reply.WriteFloat(configMap["longitude"]);
+    (void)reply.WriteInt32(configMap["withVideo"]);
+    (void)reply.WriteInt32(configMap["withAudio"]);
+    (void)reply.WriteInt32(configMap["withLocation"]);
 
     return MSERR_OK;
+}
+
+int32_t RecorderServiceStub::GetLocation(MessageParcel &data, MessageParcel &reply)
+{
+    Location location;
+    GetLocation(location);
+    (void)reply.WriteFloat(location.latitude);
+    (void)reply.WriteFloat(location.longitude);
+    return 0;
 }
 } // namespace Media
 } // namespace OHOS

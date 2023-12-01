@@ -562,7 +562,7 @@ int32_t RecorderServiceProxy::GetAVRecorderConfig(ConfigMap &configMap) //TODO::
     bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
-    int error = Remote()->SendRequest(DESTROY, data, reply, option);
+    int error = Remote()->SendRequest(GET_AV_RECORDER_CONFIG, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "GetAVRecorderConfig failed, error: %{public}d", error);
 
@@ -580,10 +580,28 @@ int32_t RecorderServiceProxy::GetAVRecorderConfig(ConfigMap &configMap) //TODO::
     configMap["videoSourceType"] = reply.ReadInt32();
     configMap["url"] = reply.ReadInt32();
     configMap["rotation"] = reply.ReadInt32();
+    configMap["withVideo"] = reply.ReadInt32();
+    configMap["withAudio"] = reply.ReadInt32();
+    configMap["withLocation"] = reply.ReadInt32();
 
-    configMap["latitude"] = reply.ReadFloat();
-    configMap["longitude"] = reply.ReadFloat();
+    return MSERR_OK;
+}
 
+int32_t RecorderServiceProxy::GetLocation(Location &location)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    int error = Remote()->SendRequest(GET_LOCATION, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "GetAVRecorderConfig failed, error: %{public}d", error);
+
+    location.latitude = reply.ReadFloat();
+    location.longitude = reply.ReadFloat();
     return MSERR_OK;
 }
 } // namespace Media
