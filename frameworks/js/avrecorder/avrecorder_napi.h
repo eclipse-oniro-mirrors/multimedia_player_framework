@@ -324,7 +324,7 @@ public:
     explicit MediaJsAVRecorderProfile(std::shared_ptr<AVRecorderProfile> value)
         : value_(value)
     {
-    }
+    } 
     ~MediaJsAVRecorderProfile() = default;
     napi_status GetJsResult(napi_env env, napi_value &result) override;
 
@@ -339,6 +339,9 @@ public:
     }
     ~MediaJsAVRecorderConfig() = default;
     napi_status GetJsResult(napi_env env, napi_value &result) override;
+    napi_status audioToSet(napi_env env, napi_value &profile, napi_value &result);
+    napi_status videoToSet(napi_env env, napi_value &profile, napi_value &result);
+    napi_status locationToSet(napi_env env, napi_value &location, napi_value &result);
 
 private:
     std::shared_ptr<AVRecorderConfig> value_ = nullptr;

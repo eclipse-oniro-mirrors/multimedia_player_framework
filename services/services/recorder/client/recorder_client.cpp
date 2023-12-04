@@ -377,7 +377,7 @@ int32_t RecorderClient::GetLocation(Location &location)
     CHECK_AND_RETURN_RET_LOG(recorderProxy_ != nullptr, MSERR_NO_MEMORY, "recorder service does not exist.");
     
     MEDIA_LOGD("GetLocation");
-    return recorderProxy_->GetLocation(location); 
+    return recorderProxy_->GetLocation(location);
 }
 } // namespace Media
 } // namespace OHOS

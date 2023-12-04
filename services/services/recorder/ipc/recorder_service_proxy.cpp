@@ -574,8 +574,8 @@ int32_t RecorderServiceProxy::GetAVRecorderConfig(ConfigMap &configMap)
     configMap["videoBitrate"] = reply.ReadInt32();
     configMap["videoCodec"] = reply.ReadInt32();
     configMap["videoFrameHeight"] = reply.ReadInt32();
-    configMap["videoFrameWidth"] = reply.ReadInt32(); 
-    configMap["videoFrameRate"] = reply.ReadInt32(); 
+    configMap["videoFrameWidth"] = reply.ReadInt32();
+    configMap["videoFrameRate"] = reply.ReadInt32();
     configMap["audioSourceType"] = reply.ReadInt32();
     configMap["videoSourceType"] = reply.ReadInt32();
     configMap["url"] = reply.ReadInt32();

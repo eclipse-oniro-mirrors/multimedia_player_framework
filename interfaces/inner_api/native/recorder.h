@@ -25,7 +25,6 @@
 
 namespace OHOS {
 namespace Media {
-
 using ConfigMap = std::map<std::string, int32_t>;
 /**
  * @brief Enumerates video source types.

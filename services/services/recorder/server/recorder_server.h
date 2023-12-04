@@ -76,7 +76,7 @@ public:
     int32_t SetParameter(int32_t sourceId, const Format &format) override;
     int32_t DumpInfo(int32_t fd);
     int32_t GetAVRecorderConfig(ConfigMap &configMap) override;
-    int32_t GetLocation(Location &location) override;  
+    int32_t GetLocation(Location &location) override;
 
     // IRecorderEngineObs override
     void OnError(ErrorType errorType, int32_t errorCode) override;
