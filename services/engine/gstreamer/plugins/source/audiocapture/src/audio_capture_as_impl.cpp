@@ -155,9 +155,10 @@ int32_t AudioCaptureAsImpl::SetCaptureParameter(uint32_t bitrate, uint32_t chann
             CHECK_AND_RETURN_RET(audioCapturer_->SetParams(params) == AudioStandard::SUCCESS, MSERR_UNKNOWN);
         } else if (sourceType == AudioSourceType::AUDIO_SOURCE_TYPE_INNER ||
             sourceType == AudioSourceType::AUDIO_SOURCE_TYPE_VOICE_CALL) {
-            int32_t ret = MSERR_OK;
-            CHECK_AND_RETURN_RET_LOG(ret = CreateByOptionAndAppinfo(audioAppInfo) != MSERR_OK, ret,
-                "CreateByOptionAndAppinfo failed");
+            int32_t ret = CreateByOptionAndAppinfo(bitrate, channels, sampleRate, sourceType, audioAppInfo);
+            if (ret != MSERR_OK) {
+                return ret;
+            }
         } else {
             MEDIA_LOGE("Set sourceType invaild");
             return MSERR_INVALID_OPERATION;
@@ -458,7 +459,8 @@ void AudioCaptureAsImpl::EmptyCaptureQueue()
     }
 }
 
-int32_t AudioCaptureAsImpl::CreateByOptionAndAppinfo(AudioStandard::AppInfo audioAppInfo)
+int32_t AudioCaptureAsImpl::CreateByOptionAndAppinfo(uint32_t bitrate, uint32_t channels, uint32_t sampleRate,
+    AudioSourceType sourceType, AudioStandard::AppInfo audioAppInfo)
 {
     AudioStandard::AudioCapturerOptions options;
     if (sourceType == AudioSourceType::AUDIO_SOURCE_TYPE_INNER) {
