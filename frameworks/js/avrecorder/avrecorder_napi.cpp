@@ -531,7 +531,7 @@ napi_value AVRecorderNapi::JsGetAVRecorderConfig(napi_env env, napi_callback_inf
                 asyncCtx->SignError(result.Value().first, result.Value().second);
             }
 
-            if ((result.Value().first == MSERR_EXT_API9_OK) && 
+            if ((result.Value().first == MSERR_EXT_API9_OK) &&
                 (asyncCtx->opt_ == AVRecordergOpt::GET_AV_RECORDER_CONFIG)) {
                 asyncCtx->JsResult = std::make_unique<MediaJsAVRecorderConfig>(asyncCtx->config_);
             }
