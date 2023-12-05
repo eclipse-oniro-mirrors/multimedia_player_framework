@@ -147,7 +147,7 @@ int32_t RecorderPipelineBuilder::SetAudioSource(const RecorderSourceDesc &desc)
 
     std::shared_ptr<RecorderElement> audioSrcElem;
     // currently only the mic is supported.
-    if (desc.type_ == AudioSourceType::AUDIO_MIC || desc.type_ == AudioSourceType::AUDIO_INNER 
+    if (desc.type_ == AudioSourceType::AUDIO_MIC || desc.type_ == AudioSourceType::AUDIO_INNER
                                     || desc.type_ == AudioSourceType::AUDIO_SOURCE_VOICE_CALL) {
         audioSrcElem = CreateElement("AudioSource", desc, true);
     } else {
