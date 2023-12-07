@@ -99,25 +99,25 @@ bool SoundPoolLoadUnloadFuzzer::FuzzSoundPoolUnload(uint8_t *data, size_t size)
 
     const string path = "/data/test/fuzztest_02.mp3";
     int32_t fd = 0;
-    int32_t UrlSoundid = 0;
-    int32_t FdSoundid = 0;
+    int32_t urlSoundid = 0;
+    int32_t fdSoundid = 0;
     fd = open(path.c_str(), O_RDWR);
     if (fd > 0) {
         std::string url = "fd://" + std::to_string(fd);
-        UrlSoundid = TestSoundPool::Load(url);
+        urlSoundid = TestSoundPool::Load(url);
     } else {
         cout << "FuzzSoundPoolUnload Url open" << path.c_str() << " fail" << endl;
     }
     fd = open(path.c_str(), O_RDONLY);
     if (fd > 0) {
         size_t filesize = TestSoundPool::GetFileSize(path);
-        FdSoundid = TestSoundPool::Load(fd, 0, filesize);
+        fdSoundid = TestSoundPool::Load(fd, 0, filesize);
     } else {
         cout << "FuzzSoundPoolUnload Fd open " << path.c_str() << " fail" << endl;
     }
     sleep(waitTime3);
 
-    TestSoundPool::Unload(UrlSoundid);
+    TestSoundPool::Unload(urlSoundid);
     TestSoundPool::Unload(FdSoundid);
     if (size >= sizeof(int32_t)) {
         int32_t soundID = *reinterpret_cast<int32_t *>(data);
