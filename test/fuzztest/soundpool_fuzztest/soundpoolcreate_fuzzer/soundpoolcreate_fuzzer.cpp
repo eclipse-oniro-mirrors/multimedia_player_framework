@@ -37,8 +37,8 @@ SoundPoolCreateFuzzer::~SoundPoolCreateFuzzer()
 {
 }
 
-constexpr int32_t contentTypeList = 10;
-const ContentType contentType_[contentTypeList] {
+constexpr int32_t CONTENT_TYPE_LIST = 10;
+const ContentType contentType_[CONTENT_TYPE_LIST] {
     CONTENT_TYPE_UNKNOWN,
     CONTENT_TYPE_SPEECH,
     CONTENT_TYPE_MUSIC,
@@ -51,8 +51,8 @@ const ContentType contentType_[contentTypeList] {
     CONTENT_TYPE_ULTRASONIC
 };
 
-constexpr int32_t streamUsageList = 21;
-const StreamUsage streamUsage_[streamUsageList] {
+constexpr int32_t STREAM_USAGE_LIST = 21;
+const StreamUsage streamUsage_[STREAM_USAGE_LIST] {
     STREAM_USAGE_UNKNOWN,
     STREAM_USAGE_MEDIA,
     STREAM_USAGE_MUSIC,
@@ -81,10 +81,10 @@ bool SoundPoolCreateFuzzer::FuzzSoundPoolCreate(uint8_t *data, size_t size)
     int32_t maxStreams = *reinterpret_cast<int32_t *>(data);
     AudioStandard::AudioRendererInfo audioRenderInfo;
 
-    int32_t contenttypesubscript = *reinterpret_cast<int32_t *>(data) % (contentTypeList);
+    int32_t contenttypesubscript = *reinterpret_cast<int32_t *>(data) % (CONTENT_TYPE_LIST);
     audioRenderInfo.contentType = contentType_[contenttypesubscript];
 
-    int32_t streamusagesubscript = *reinterpret_cast<int32_t *>(data) % (streamUsageList);
+    int32_t streamusagesubscript = *reinterpret_cast<int32_t *>(data) % (STREAM_USAGE_LIST);
     audioRenderInfo.streamUsage = streamUsage_[streamusagesubscript];
 
     audioRenderInfo.rendererFlags = 0;
@@ -99,10 +99,10 @@ bool SoundPoolCreateFuzzer::FuzzSoundPoolCreateFlags(uint8_t *data, size_t size)
     int maxStreams = 3;
     AudioStandard::AudioRendererInfo audioRenderInfo;
 
-    int32_t contenttypesubscript = *reinterpret_cast<int32_t *>(data) % (contentTypeList);
+    int32_t contenttypesubscript = *reinterpret_cast<int32_t *>(data) % (CONTENT_TYPE_LIST);
     audioRenderInfo.contentType = contentType_[contenttypesubscript];
 
-    int32_t streamusagesubscript = *reinterpret_cast<int32_t *>(data) % (streamUsageList);
+    int32_t streamusagesubscript = *reinterpret_cast<int32_t *>(data) % (STREAM_USAGE_LIST);
     audioRenderInfo.streamUsage = streamUsage_[streamusagesubscript];
 
     audioRenderInfo.rendererFlags = *reinterpret_cast<int32_t *>(data);
