@@ -67,7 +67,7 @@ bool SoundPoolSetRateFuzzer::FuzzSoundPoolSetRate(uint8_t *data, size_t size)
     playParameters.rate = *reinterpret_cast<int32_t *>(data);
     AudioRendererRate rate;
     constexpr int32_t dataTypeList = 3;
-    const AudioRendererRate rateType_[dataTypeList] {RENDER_RATE_NORMAL, RENDER_RATE_DOUBLE, RENDER_RATE_HALF,};
+    const AudioRendererRate rateType_[dataTypeList] {RENDER_RATE_NORMAL, RENDER_RATE_DOUBLE, RENDER_RATE_HALF, };
     int32_t datatypesubscript = *reinterpret_cast<int32_t *>(data) % (dataTypeList);
     rate = rateType_[datatypesubscript];
     if (soundID > 0) {
