@@ -29,6 +29,7 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "RecorderSe
 
 namespace OHOS {
 namespace Media {
+const int32_t ROOT_UID = 0;
 sptr<RecorderServiceStub> RecorderServiceStub::Create()
 {
     sptr<RecorderServiceStub> recorderStub = new(std::nothrow) RecorderServiceStub();
