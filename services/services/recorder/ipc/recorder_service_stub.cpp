@@ -669,14 +669,15 @@ int32_t RecorderServiceStub::CheckPermission() {
         case AUDIO_SOURCE_VOICE_CALL:
             return Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
                 "ohos.permission.RECORD_VOICE_CALL");
-        case AUDIO_SOURCE_DEFAULT:
         case AUDIO_MIC:
-        case AUDIO_INNER:
             return Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
                 "ohos.permission.MICROPHONE");
-        default:
-            MEDIA_LOGE("Invalid audio source. Permission denied");
+        case AUDIO_SOURCE_DEFAULT:
+        case AUDIO_INNER:
+            MEDIA_LOGE("not supported audio source. Permission denied");
             return Security::AccessToken::PERMISSION_DENIED;
+        default:
+            return Security::AccessToken::PERMISSION_GRANTED;
     }
 }
 } // namespace Media
