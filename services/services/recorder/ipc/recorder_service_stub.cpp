@@ -113,14 +113,14 @@ int RecorderServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mes
     
     if (code == SET_AUDIO_SOURCE) {
         int32_t type = data.ReadInt32();
-        audioSourceType = static_cast<AudioSourceType>(type);
+        audioSourceType_ = static_cast<AudioSourceType>(type);
     }
     if (AUDIO_REQUEST.count(code) != 0) {
-        permissionResult = CheckMicPermission();
+        permissionResult = CheckPermission();
         needAudioPermissionCheck = true;
     } else if (COMMON_REQUEST.count(code) != 0) {
         if (needAudioPermissionCheck) {
-            permissionResult = CheckMicPermission();
+            permissionResult = CheckPermission();
         } else {
             // none audio request no need to check permission in recorder server
             permissionResult = Security::AccessToken::PERMISSION_GRANTED;
@@ -449,7 +449,7 @@ int32_t RecorderServiceStub::GetSurface(MessageParcel &data, MessageParcel &repl
 int32_t RecorderServiceStub::SetAudioSource(MessageParcel &data, MessageParcel &reply)
 {
     int32_t sourceId = 0;
-    int32_t ret = SetAudioSource(audioSourceType, sourceId);
+    int32_t ret = SetAudioSource(audioSourceType_, sourceId);
     reply.WriteInt32(sourceId);
     reply.WriteInt32(ret);
     return MSERR_OK;
@@ -657,18 +657,27 @@ int32_t RecorderServiceStub::GetLocation(MessageParcel &data, MessageParcel &rep
     return MSERR_OK;
 }
 
-int32_t RecorderServiceStub::CheckMicPermission() {
+int32_t RecorderServiceStub::CheckPermission() {
     auto callerUid = IPCSkeleton::GetCallingUid();
     if (callerUid == ROOT_UID) {
         MEDIA_LOGI("Root user. Permission Granted");
         return Security::AccessToken::PERMISSION_GRANTED;
     }
     Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
-    if (audioSourceType == AUDIO_SOURCE_VOICE_CALL) {
-        return Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
-            "ohos.permission.RECORD_VOICE_CALL");
+
+    switch (audioSourceType_) {
+        case AUDIO_SOURCE_VOICE_CALL:
+            return Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
+                "ohos.permission.RECORD_VOICE_CALL");
+        case AUDIO_SOURCE_DEFAULT:
+        case AUDIO_MIC:
+        case AUDIO_INNER:
+            return Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
+                "ohos.permission.MICROPHONE");
+        default:
+            MEDIA_LOGE("Invalid audio source. Permission denied");
+            return Security::AccessToken::PERMISSION_DENIED;
     }
-    return Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller, "ohos.permission.MICROPHONE");
 }
 } // namespace Media
 } // namespace OHOS
