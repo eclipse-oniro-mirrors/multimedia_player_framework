@@ -111,7 +111,7 @@ int RecorderServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mes
     auto remoteDescriptor = data.ReadInterfaceToken();
     CHECK_AND_RETURN_RET_LOG(RecorderServiceStub::GetDescriptor() == remoteDescriptor,
         MSERR_INVALID_OPERATION, "Invalid descriptor");
-    
+
     if (code == SET_AUDIO_SOURCE) {
         int32_t type = data.ReadInt32();
         audioSourceType_ = static_cast<AudioSourceType>(type);
@@ -658,7 +658,8 @@ int32_t RecorderServiceStub::GetLocation(MessageParcel &data, MessageParcel &rep
     return MSERR_OK;
 }
 
-int32_t RecorderServiceStub::CheckPermission() {
+int32_t RecorderServiceStub::CheckPermission()
+{
     auto callerUid = IPCSkeleton::GetCallingUid();
     if (callerUid == ROOT_UID) {
         MEDIA_LOGI("Root user. Permission Granted");
