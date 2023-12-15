@@ -55,6 +55,7 @@
           "input",
           "memmgr_plugin",
           "hicollie",
+          "histreamer",
           "drivers_peripheral_codec",
           "drivers_peripheral_display",
           "hdf_core",
