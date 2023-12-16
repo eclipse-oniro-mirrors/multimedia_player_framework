@@ -61,10 +61,10 @@ ohos_static_library("media_engine_histreamer_factory") {
 
   configs = [
     ":media_engine_histreamer_factory_config",
-    "$MEDIA_PLAYER_ROOT_DIRa_service_log_dfx_public_config",
+    "$MEDIA_PLAYER_ROOT_DIR/services/dfx:media_service_log_dfx_public_config",
   ]
 
-  deps = [ "../../../dfx:media_service_log_dfx" ]
+  deps = [ "$MEDIA_PLAYER_ROOT_DIR/services/dfx:media_service_log_dfx" ]
 
   external_deps = [
     "audio_framework:audio_client",
