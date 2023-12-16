@@ -53,7 +53,7 @@ namespace Media {
     };
 
     HiRecorderImpl::HiRecorderImpl(int32_t appUid, int32_t appPid, uint32_t appTokenId, uint64_t appFullTokenId)
-            : appUid_(appUid), appPid_(appPid), appTokenId_(appTokenId), appFullTokenId_(appFullTokenId)
+        : appUid_(appUid), appPid_(appPid), appTokenId_(appTokenId), appFullTokenId_(appFullTokenId)
     {
         pipeline_ = std::make_shared<Pipeline::Pipeline>();
     }
@@ -287,7 +287,7 @@ namespace Media {
                 OnStateChanged(StateId::ERROR);
                 auto ptr = obs_.lock();
                 if (ptr != nullptr) {
-                    // ptr->OnError(IRecorderEngineObs::ErrorType::ERROR_INTERNAL, event.param);
+                    MEDIA_LOG_I("OnEvent EVENT_ERROR obs is nullptr.");
                 }
                 break;
             }
@@ -380,7 +380,6 @@ namespace Media {
                 break;
             }
         }
-
     }
 
     void HiRecorderImpl::ConfigureVideo(const RecorderParam &recParam)

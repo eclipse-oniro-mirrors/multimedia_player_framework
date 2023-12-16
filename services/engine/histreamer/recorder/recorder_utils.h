@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef RECORDER_UTILS_H
-#define RECORDER_UTILS_H
+#ifndef OHOS_MEDIA_RECORDER_UTILS_H
+#define OHOS_MEDIA_RECORDER_UTILS_H
 
 #include <cstdint>
 
@@ -53,6 +53,6 @@ struct SourceIdGenerator {
                 ((static_cast<uint32_t>(sourceId) & SOURCE_MASK) == VIDEO_MASK));
     }
 };
-#endif  // RECORDER_UTILS_H
 } // Media
 } // OHOS
+#endif // OHOS_MEDIA_RECORDER_UTILS_H

@@ -19,8 +19,6 @@
 
 namespace OHOS {
 namespace Media {
-#define AVMETA_KEY_TO_X_MAP_ITEM(key, innerKey) { key, innerKey }
-
 static const std::unordered_map<int32_t, std::string> AVMETA_KEY_TO_X_MAP = {
     { AV_KEY_ALBUM, Tag::MEDIA_ALBUM },
     { AV_KEY_ALBUM_ARTIST, Tag::MEDIA_ALBUM_ARTIST },

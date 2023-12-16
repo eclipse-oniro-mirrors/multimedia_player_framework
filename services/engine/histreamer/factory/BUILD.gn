@@ -57,7 +57,7 @@ ohos_static_library("media_engine_histreamer_factory") {
     cfi_cross_dso = true
     debug = false
   }
-  sources = [ "engine_factory.cpp" ]
+  sources = [ "hst_engine_factory.cpp" ]
 
   configs = [
     ":media_engine_histreamer_factory_config",

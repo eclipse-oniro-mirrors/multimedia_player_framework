@@ -126,6 +126,6 @@ private:
     Mutex stateMutex_{};
     ConditionVariable cond_{};
 };
-} //namespace MEDIA
-} //namespace OHOS
+} // namespace MEDIA
+} // namespace OHOS
 #endif // HI_RECORDER_IMPL_H
