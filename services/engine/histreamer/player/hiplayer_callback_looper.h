@@ -55,7 +55,7 @@ private:
     void DoReportInfo(const Any& info);
     void DoReportError(const Any& error);
 
-    struct Event{
+    struct Event {
         Event(int32_t inWhat, int64_t inWhenMs, Any inAny): what(inWhat), whenMs(inWhenMs),
             detail(std::move(inAny)) {}
         int32_t what {0};

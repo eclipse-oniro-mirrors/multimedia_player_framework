@@ -19,8 +19,6 @@
 #include <utility>
 #include "common/log.h"
 #include "osal/task/autolock.h"
-//#include "foundation/utils/steady_clock.h"
-//#include "media_errors.h"
 
 namespace OHOS {
 namespace Media {
@@ -29,6 +27,10 @@ constexpr int32_t WHAT_NONE = 0;
 constexpr int32_t WHAT_MEDIA_PROGRESS = 1;
 constexpr int32_t WHAT_INFO = 2;
 constexpr int32_t WHAT_ERROR = 3;
+
+constexpr int32_t TUPLE_POS_0 = 0;
+constexpr int32_t TUPLE_POS_1 = 1;
+constexpr int32_t TUPLE_POS_2 = 2;
 }
 HiPlayerCallbackLooper::HiPlayerCallbackLooper() : task_("callbackThread", OHOS::Media::TaskPriority::NORMAL)
 {
@@ -75,12 +77,10 @@ void HiPlayerCallbackLooper::StartReportMediaProgress(int64_t updateIntervalMs)
         return;
     }
     reportMediaProgress_ = true;
-    //eventQueue_.Enqueue(std::make_shared<Event>(WHAT_MEDIA_PROGRESS, SteadyClock::GetCurrentTimeMs(), Plugin::Any()));
 }
 
 void HiPlayerCallbackLooper::ManualReportMediaProgressOnce()
 {
-    //eventQueue_.Enqueue(std::make_shared<Event>(WHAT_MEDIA_PROGRESS, SteadyClock::GetCurrentTimeMs(), Plugin::Any()));
 }
 
 void HiPlayerCallbackLooper::StopReportMediaProgress()
@@ -101,16 +101,10 @@ void HiPlayerCallbackLooper::DoReportMediaProgress()
             MEDIA_LOG_W("get player engine current time error");
         }
     }
-    /*if (reportMediaProgress_) {
-        eventQueue_.Enqueue(std::make_shared<Event>(WHAT_MEDIA_PROGRESS,
-            SteadyClock::GetCurrentTimeMs() + reportProgressIntervalMs_, Plugin::Any()));
-    }*/
 }
 
 void HiPlayerCallbackLooper::OnError(PlayerErrorType errorType, int32_t errorCode)
 {
-    /*eventQueue_.Enqueue(std::make_shared<HiPlayerCallbackLooper::Event>(WHAT_ERROR, SteadyClock::GetCurrentTimeMs(),
-        std::make_pair(errorType, errorCode)));*/
 }
 
 void HiPlayerCallbackLooper::DoReportError(const Any &error)
@@ -119,7 +113,7 @@ void HiPlayerCallbackLooper::DoReportError(const Any &error)
     if (obs != nullptr) {
         auto ptr = AnyCast<std::pair<PlayerErrorType, int32_t>>(&error);
         MEDIA_LOG_E("Report error, error type: " PUBLIC_LOG_D32 " error value: " PUBLIC_LOG_D32,
-                    static_cast<int32_t>(ptr->first), static_cast<int32_t>(ptr->second));
+            static_cast<int32_t>(ptr->first), static_cast<int32_t>(ptr->second));
         obs->OnError(ptr->first, ptr->second);
     }
 }
@@ -136,8 +130,8 @@ void HiPlayerCallbackLooper::DoReportInfo(const Any& info)
     if (obs != nullptr) {
         auto ptr = AnyCast<std::tuple<PlayerOnInfoType, int32_t, Format>>(&info);
         MEDIA_LOG_I("Report info, info type: " PUBLIC_LOG_D32 " info value: " PUBLIC_LOG_D32,
-                    static_cast<int32_t>(std::get<0>(*ptr)), static_cast<int32_t>(std::get<1>(*ptr)));
-        obs->OnInfo(std::get<0>(*ptr), std::get<1>(*ptr), std::get<2>(*ptr)); // indexes
+            static_cast<int32_t>(std::get<TUPLE_POS_0>(*ptr)), static_cast<int32_t>(std::get<TUPLE_POS_1>(*ptr)));
+        obs->OnInfo(std::get<TUPLE_POS_0>(*ptr), std::get<TUPLE_POS_1>(*ptr), std::get<TUPLE_POS_2>(*ptr));
     }
 }
 

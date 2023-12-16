@@ -123,9 +123,8 @@ private:
     int64_t maxDuration_;
     int64_t maxSize_;
 
-    Mutex stateMutex_ {};
-    ConditionVariable cond_ {};
-
+    Mutex stateMutex_{};
+    ConditionVariable cond_{};
 };
 } //namespace MEDIA
 } //namespace OHOS

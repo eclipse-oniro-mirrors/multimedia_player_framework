@@ -19,23 +19,24 @@
 #include <memory>
 #include <unordered_map>
 
-#include "hiplayer_callback_looper.h"
-#include <i_player_engine.h>
+#include "audio_sink_filter.h"
+#include "codec_filter.h"
 #include "common/status.h"
+#include "demuxer_filter.h"
+#include "filter/filter.h"
+#include "filter/filter_factory.h"
+#include "hiplayer_callback_looper.h"
+#include "i_player_engine.h"
 #include "media_sync_manager.h"
 #include "pipeline/pipeline.h"
-#include "filter/filter_factory.h"
-#include "demuxer_filter.h"
-#include "codec_filter.h"
-#include "audio_sink_filter.h"
 #ifdef VIDEO_SUPPORT
 #include "video_sink_filter.h"
 #endif
-#include "filter/filter.h"
 
 namespace OHOS {
 namespace Media {
 using namespace Pipeline;
+
 enum class PlayerStateId {
     IDLE = 0,
     INIT = 1,
@@ -47,8 +48,8 @@ enum class PlayerStateId {
     EOS = 7,
     ERROR = 8,
 };
-class HiPlayerImpl : public IPlayerEngine, public std::enable_shared_from_this<HiPlayerImpl> {
 
+class HiPlayerImpl : public IPlayerEngine, public std::enable_shared_from_this<HiPlayerImpl> {
 public:
     HiPlayerImpl(int32_t appUid, int32_t appPid, uint32_t appTokenId, uint64_t appFullTokenId);
     ~HiPlayerImpl() override;
@@ -99,19 +100,19 @@ private:
     Status LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
     Status LinkVideoSinkFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
 #endif
-    int32_t appUid_ {0};
-    int32_t appPid_ {0};
+    int32_t appUid_{0};
+    int32_t appPid_{0};
     int32_t appTokenId_{0};
     int64_t appFullTokenId_{0};
-    OHOS::Media::Mutex stateMutex_ {};
-    OHOS::Media::ConditionVariable cond_ {};
-    int64_t duration_ {-1};
+    OHOS::Media::Mutex stateMutex_{};
+    OHOS::Media::ConditionVariable cond_{};
+    int64_t duration_{-1};
     std::atomic<bool> singleLoop_ {false};
 
     std::shared_ptr<EventReceiver> playerEventReceiver_;
     std::shared_ptr<FilterCallback> playerFilterCallback_;
-    std::weak_ptr<Meta> sourceMeta_ {};
-    std::vector<std::weak_ptr<Meta>> streamMeta_ {};
+    std::weak_ptr<Meta> sourceMeta_{};
+    std::vector<std::weak_ptr<Meta>> streamMeta_{};
     std::shared_ptr<OHOS::Media::Pipeline::Pipeline> pipeline_;
     std::shared_ptr<DemuxerFilter> demuxer_;
     std::shared_ptr<CodecFilter> audioDecoder_;
@@ -122,12 +123,12 @@ private:
 #endif
     std::shared_ptr<MediaSyncManager> syncManager_;
     std::atomic<PlayerStateId> curState_;
-    HiPlayerCallbackLooper callbackLooper_ {};
+    HiPlayerCallbackLooper callbackLooper_{};
     sptr<Surface> surface_ {nullptr};
     std::string url_;
-    int32_t videoWidth_ {0};
-    int32_t videoHeight_ {0};
+    int32_t videoWidth_{0};
+    int32_t videoHeight_{0};
 };
-}  // namespace Media
-}  // namespace OHOS
+} // namespace Media
+} // namespace OHOS
 #endif // HI_PLAYER_IMPL_H

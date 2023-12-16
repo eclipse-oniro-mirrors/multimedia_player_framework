@@ -99,8 +99,8 @@ ohos_static_library("media_engine_gst_player") {
     "drivers_peripheral_display:hdi_gralloc_client",
     "graphic_2d:surface",
     "hilog:libhilog",
-    "init:libbegetutil",
     "histreamer:media_foundation",
+    "init:libbegetutil",
   ]
 
   if (multimedia_player_framework_support_drm) {

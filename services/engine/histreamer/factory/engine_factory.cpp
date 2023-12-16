@@ -13,9 +13,6 @@
  * limitations under the License.
  */
 
-#ifndef HISTREAMER_HST_ENGINE_FACTORY_H
-#define HISTREAMER_HST_ENGINE_FACTORY_H
-
 #include "i_engine_factory.h"
 #include "media_errors.h"
 #include "common/log.h"
@@ -51,14 +48,6 @@ int32_t HstEngineFactory::Score(Scene scene, const std::string& uri)
 {
     MEDIA_LOG_E("Score in");
     (void)uri;
-    // if (scene == Scene::SCENE_PLAYBACK || scene == Scene::SCENE_RECORDER) {
-    //     char useHistreamer[10] = {0}; // 10 for system parameter usage
-    //     auto res = GetParameter("debug.media_service.histreamer", "0", useHistreamer, sizeof(useHistreamer));
-    //     if (res == 1 && useHistreamer[0] == '1') {
-    //         MEDIA_LOG_I("enable histreamer");
-    //         return MAX_SCORE;
-    //     }
-    // }
     return MAX_SCORE;
 }
 
@@ -123,14 +112,8 @@ extern "C" {
 #endif
 __attribute__((visibility("default"))) OHOS::Media::IEngineFactory *CreateEngineFactory()
 {
-    // int32_t ret = OHOS::Media::GstLoader::Instance().SetUp();
-    // if (ret != OHOS::Media::MSERR_OK) {
-    //     MEDIA_LOGE("Gst Engine setup failed, ret = %{public}d", ret);
-    //     return nullptr;
-    // }
     return new (std::nothrow) OHOS::Media::HstEngineFactory();
 }
 #ifdef __cplusplus
 }
 #endif
-#endif // HISTREAMER_HST_ENGINE_FACTORY_H

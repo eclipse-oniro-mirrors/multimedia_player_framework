@@ -16,13 +16,14 @@
 #define HST_LOG_TAG "HiPlayerImpl"
 
 #include "hiplayer_impl.h"
-#include <audio_info.h>
-#include <av_common.h>
-#include <media_errors.h>
+
+#include "audio_info.h"
+#include "av_common.h"
 #include "common/log.h"
-#include "osal/utils/dump_buffer.h"
-#include "filter/filter_factory.h"
 #include "common/media_source.h"
+#include "filter/filter_factory.h"
+#include "media_errors.h"
+#include "osal/utils/dump_buffer.h"
 
 namespace {
 const float MAX_MEDIA_VOLUME = 1.0f; // standard interface volume is between 0 to 1.
@@ -50,13 +51,16 @@ const std::pair<Status, int> g_statusPair[] = {
     {Status::ERROR_NO_MEMORY, MSERR_EXT_NO_MEMORY},
     {Status::ERROR_INVALID_STATE, MSERR_INVALID_STATE},
 };
+
 class PlayerEventReceiver : public EventReceiver {
 public:
-    PlayerEventReceiver(HiPlayerImpl* hiPlayerImpl) {
+    explicit PlayerEventReceiver(HiPlayerImpl* hiPlayerImpl)
+    {
         hiPlayerImpl_ = hiPlayerImpl;
     }
 
-    void OnEvent(const Event &event) {
+    void OnEvent(const Event &event)
+    {
         hiPlayerImpl_->OnEvent(event);
     }
 
@@ -66,11 +70,13 @@ private:
 
 class PlayerFilterCallback : public FilterCallback {
 public:
-    PlayerFilterCallback(HiPlayerImpl* hiPlayerImpl) {
+    explicit PlayerFilterCallback(HiPlayerImpl* hiPlayerImpl)
+    {
         hiPlayerImpl_ = hiPlayerImpl;
     }
 
-    void OnCallback(const std::shared_ptr<Filter>& filter, FilterCallBackCommand cmd, StreamType outType) {
+    void OnCallback(const std::shared_ptr<Filter>& filter, FilterCallBackCommand cmd, StreamType outType)
+    {
         hiPlayerImpl_->OnCallback(filter, cmd, outType);
     }
 
@@ -78,16 +84,12 @@ private:
     HiPlayerImpl* hiPlayerImpl_;
 };
 
-HiPlayerImpl::HiPlayerImpl(int32_t appUid, int32_t appPid, uint32_t appTokenId, uint64_t appFullTokenId)
-        : appUid_(appUid),
-          appPid_(appPid),
-          appTokenId_(appTokenId),
-          appFullTokenId_(appFullTokenId)
+HiPlayerImpl::HiPlayerImpl(int32_t appUid, int32_t appPid, uint32_t appTokenId, uint64_t appFullTokenId) :
+    appUid_(appUid), appPid_(appPid), appTokenId_(appTokenId), appFullTokenId_(appFullTokenId)
 {
-    MEDIA_LOG_I("hiPlayerImpl ctor appUid " PUBLIC_LOG_D32 " appPid " PUBLIC_LOG_D32 " appTokenId " PUBLIC_LOG_D32 " appFullTokenId " PUBLIC_LOG_D64,
-        appUid_, appPid_, appTokenId_, appFullTokenId_);
+    MEDIA_LOG_I("hiPlayerImpl ctor appUid " PUBLIC_LOG_D32 " appPid " PUBLIC_LOG_D32 " appTokenId " PUBLIC_LOG_D32
+        " appFullTokenId " PUBLIC_LOG_D64, appUid_, appPid_, appTokenId_, appFullTokenId_);
     pipeline_ = std::make_shared<OHOS::Media::Pipeline::Pipeline>();
-    // syncManager_ = std::make_shared<MediaSyncManager>();
 }
 
 HiPlayerImpl::~HiPlayerImpl()
@@ -98,17 +100,14 @@ HiPlayerImpl::~HiPlayerImpl()
 #ifdef VIDEO_SUPPORT
     videoSink_.reset();
 #endif
-    //syncManager_.reset();
 }
 
 Status HiPlayerImpl::Init()
 {
     MEDIA_LOG_I("Init entered.");
-    std::shared_ptr<EventReceiver> playerEventReceiver = std::make_shared<PlayerEventReceiver>(
-            this);
+    std::shared_ptr<EventReceiver> playerEventReceiver = std::make_shared<PlayerEventReceiver>(this);
     playerEventReceiver_ = playerEventReceiver;
-    std::shared_ptr<FilterCallback> playerFilterCallback = std::make_shared<PlayerFilterCallback>(
-            this);
+    std::shared_ptr<FilterCallback> playerFilterCallback = std::make_shared<PlayerFilterCallback>(this);
     playerFilterCallback_ = playerFilterCallback;
     MEDIA_LOG_I("pipeline init start");
     pipeline_->Init(playerEventReceiver, playerFilterCallback);
@@ -188,7 +187,6 @@ int32_t HiPlayerImpl::Play()
     MEDIA_LOG_I("Play entered.");
     auto ret {Status::OK};
     if (curState_ == PlayerStateId::READY) {
-        //syncManager_->Resume();
         ret = pipeline_->Start();
     }
     if (ret == Status::OK) {
@@ -201,7 +199,6 @@ int32_t HiPlayerImpl::Pause()
 {
     MEDIA_LOG_I("Pause entered.");
     auto ret = pipeline_->Pause();
-    // syncManager_->Pause();
     OnStateChanged(PlayerStateId::PAUSE);
     return TransStatus(ret);
 }
@@ -217,7 +214,6 @@ int32_t HiPlayerImpl::Stop()
     if (pipeline_ != nullptr) {
         pipeline_->Stop();
     }
-    // syncManager_->Reset();
     OnStateChanged(PlayerStateId::STOPPED);
     return TransStatus(ret);
 }
@@ -234,7 +230,7 @@ int32_t HiPlayerImpl::Reset()
 int32_t HiPlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
 {
     MEDIA_LOG_I("Seek entered. mSeconds : " PUBLIC_LOG_D32 ", seekMode : " PUBLIC_LOG_D32,
-                mSeconds, static_cast<int32_t>(mode));
+        mSeconds, static_cast<int32_t>(mode));
     int64_t hstTime = 0;
     int32_t durationMs;
     GetDuration(durationMs);
@@ -266,9 +262,6 @@ int32_t HiPlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
         MEDIA_LOG_I("Do seek ...");
         int64_t realSeekTime = seekPos;
         rtv = demuxer_->SeekTo(seekPos, seekMode, realSeekTime);
-        /* if (rtv == Status::OK) {
-            syncManager_->Seek(realSeekTime);
-        } */
     }
     if (rtv != Status::OK) {
         MEDIA_LOG_E("Seek done, seek error.");
@@ -355,7 +348,6 @@ int32_t HiPlayerImpl::SetObs(const std::weak_ptr<IPlayerEngineObs>& obs)
 
 int32_t HiPlayerImpl::GetCurrentTime(int32_t& currentPositionMs)
 {
-    //currentPositionMs = syncManager_->GetMediaTimeNow();
     return TransStatus(Status::OK);
 }
 
@@ -556,7 +548,7 @@ int32_t HiPlayerImpl::SetVideoScaleType(OHOS::Media::VideoScaleType videoScaleTy
     MEDIA_LOG_I("SetVideoScaleType entered.");
 #ifdef VIDEO_SUPPORT
     auto ret = videoSink_->SetParameter(static_cast<int32_t>(Tag::VIDEO_SCALE_TYPE),
-                                        static_cast<Plugin::VideoScaleType>(static_cast<uint32_t>(videoScaleType)));
+        static_cast<Plugin::VideoScaleType>(static_cast<uint32_t>(videoScaleType)));
     return TransStatus(ret);
 #else
     return TransStatus(Status::OK);
@@ -593,7 +585,8 @@ int HiPlayerImpl::TransStatus(Status status)
     return MSERR_UNKNOWN;
 }
 
-void HiPlayerImpl::OnEvent(const Event &event) {
+void HiPlayerImpl::OnEvent(const Event &event)
+{
     switch (event.type) {
         case EventType::EVENT_ERROR: {
             OnStateChanged(PlayerStateId::ERROR);
@@ -614,7 +607,7 @@ void HiPlayerImpl::OnEvent(const Event &event) {
 Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
 {
     demuxer_ = FilterFactory::Instance().CreateFilter<DemuxerFilter>("builtin.player.demuxer",
-                                                                             FilterType::FILTERTYPE_DEMUXER);
+        FilterType::FILTERTYPE_DEMUXER);
     demuxer_->Init(playerEventReceiver_, playerFilterCallback_);
     auto ret = demuxer_->SetDataSource(source);
     pipeline_->AddHeadFilters({demuxer_});
@@ -623,7 +616,6 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
 
 Status HiPlayerImpl::Resume()
 {
-    // syncManager_->Resume();
     auto ret = pipeline_->Resume();
     return ret;
 }
@@ -633,8 +625,7 @@ void HiPlayerImpl::OnStateChanged(PlayerStateId state)
     curState_ = state;
 }
 
-void HiPlayerImpl::OnCallback(std::shared_ptr<Filter> filter, const FilterCallBackCommand cmd,
-                              StreamType outType)
+void HiPlayerImpl::OnCallback(std::shared_ptr<Filter> filter, const FilterCallBackCommand cmd, StreamType outType)
 {
     MEDIA_LOG_I("HiPlayerImpl::OnCallback filter, ");
     if (cmd == FilterCallBackCommand::NEXT_FILTER_NEEDED) {
@@ -659,28 +650,30 @@ void HiPlayerImpl::OnCallback(std::shared_ptr<Filter> filter, const FilterCallBa
     }
 }
 
-Status HiPlayerImpl::LinkAudioDecoderFilter(const std::shared_ptr<Filter>& preFilter, StreamType type) {
+Status HiPlayerImpl::LinkAudioDecoderFilter(const std::shared_ptr<Filter>& preFilter, StreamType type)
+{
     MEDIA_LOG_I("HiPlayerImpl::LinkAudioDecoderFilter");
     if (audioDecoder_ == nullptr) {
         audioDecoder_ = FilterFactory::Instance().CreateFilter<CodecFilter>("player.audiodecoder",
             FilterType::FILTERTYPE_ADEC);
-        audioDecoder_->Init(playerEventReceiver_, playerFilterCallback_);                                                                            
+        audioDecoder_->Init(playerEventReceiver_, playerFilterCallback_);
     }
     return pipeline_->LinkFilters(preFilter, {audioDecoder_}, type);
 }
 
-Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilter, StreamType type) {
+Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilter, StreamType type)
+{
     MEDIA_LOG_I("HiPlayerImpl::LinkAudioSinkFilter");
     if (audioSink_ == nullptr) {
         audioSink_ = FilterFactory::Instance().CreateFilter<AudioSinkFilter>("player.audiosink",
             FilterType::FILTERTYPE_ASINK);
         audioSink_->Init(playerEventReceiver_, playerFilterCallback_);
     }
-    // audioSink_->SetSyncCenter(syncManager_);
     return pipeline_->LinkFilters(preFilter, {audioSink_}, type);
 }
 #ifdef VIDEO_SUPPORT
-Status HiPlayerImpl::LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFilter, StreamType type) {
+Status HiPlayerImpl::LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFilter, StreamType type)
+{
     MEDIA_LOG_I("HiPlayerImpl::LinkVideoDecoderFilter");
     if (videoDecoder_ == nullptr) {
         videoDecoder_ = FilterFactory::Instance().CreateFilter<CodecFilter>("player.videodecoder",
@@ -690,14 +683,14 @@ Status HiPlayerImpl::LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFi
     return pipeline_->LinkFilters(preFilter, {videoDecoder_}, type);
 }
 
-Status HiPlayerImpl::LinkVideoSinkFilter(const std::shared_ptr<Filter>& preFilter, StreamType type) {
+Status HiPlayerImpl::LinkVideoSinkFilter(const std::shared_ptr<Filter>& preFilter, StreamType type)
+{
     MEDIA_LOG_I("HiPlayerImpl::LinkVideoSinkFilter");
     if (videoSink_ == nullptr) {
         videoSink_ = FilterFactory::Instance().CreateFilter<VideoSinkFilter>("player.videosink",
             FilterType::FILTERTYPE_VSINK);
         videoSink_->Init(playerEventReceiver_, playerFilterCallback_);
     }
-    // videoSink_->SetSyncCenter(syncManager_);
     return pipeline_->LinkFilters(preFilter, {videoSink_}, type);
 }
 #endif

@@ -29,20 +29,20 @@ config("media_engine_histreamer_factory_config") {
   cflags_cc = cflags
 
   include_dirs = [
-    "//commonlibrary/c_utils/base/include",
-    "//foundation/multimedia/player_framework/services/include",
-    "//foundation/multimedia/player_framework/services/services/engine_intf",
-    "//foundation/multimedia/player_framework/services/engine/histreamer/player",
-    "//foundation/multimedia/player_framework/services/engine/histreamer/recorder",
-    "//foundation/multimedia/player_framework/services/engine/histreamer/avmetadatahelper",
-    "//foundation/multimedia/player_framework/services/utils/include",
-    "//foundation/multimedia/player_framework/interfaces/inner_api/native",
-    "//foundation/multimedia/histreamer/interface/inner_api",
-    "//foundation/multimedia/av_codec/interfaces/inner_api/native",
-    "//foundation/multimedia/av_codec/interfaces",
-    "//foundation/multimedia/histreamer/src",
-    "//foundation/multimedia/av_codec/services/media_engine/modules/source/audio_capture",
-    "//foundation/multimedia/av_codec/services/media_engine/modules/",
+    "$MEDIA_PLAYER_C_UTILS/base/include",
+    "$MEDIA_PLAYER_ROOT_DIR/services/include",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/engine_intf",
+    "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/player",
+    "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/recorder",
+    "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/avmetadatahelper",
+    "$MEDIA_PLAYER_ROOT_DIR/services/utils/include",
+    "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",
+    "$MEDIA_PLAYER_HISTREAMER/interface/inner_api",
+    "$MEDIA_PLAYER_AVCODEC/interfaces/inner_api/native",
+    "$MEDIA_PLAYER_AVCODEC/interfaces",
+    "$MEDIA_PLAYER_HISTREAMER/src",
+    "$MEDIA_PLAYER_AVCODEC/services/media_engine/modules/source/audio_capture",
+    "$MEDIA_PLAYER_AVCODEC/services/media_engine/modules/",
   ]
   defines = [
     "HST_ANY_WITH_NO_RTTI",
@@ -61,7 +61,7 @@ ohos_static_library("media_engine_histreamer_factory") {
 
   configs = [
     ":media_engine_histreamer_factory_config",
-    "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx_public_config",
+    "$MEDIA_PLAYER_ROOT_DIRa_service_log_dfx_public_config",
   ]
 
   deps = [ "../../../dfx:media_service_log_dfx" ]
