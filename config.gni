@@ -141,6 +141,7 @@ if (multimedia_player_framework_support_drm) {
 MEDIA_PLAYER_ROOT_DIR = "//foundation/multimedia/player_framework"
 MEDIA_PLAYER_AVCODEC = "//foundation/multimedia/av_codec"
 MEDIA_PLAYER_GRAPHIC = "//foundation/graphic/graphic_2d"
+MEDIA_PLAYER_SURFACE = "//foundation/graphic/graphic_surface"
 
 # Fuzz test output path
 MODULE_OUTPUT_PATH = "player_framework/player_framework"
