@@ -916,8 +916,6 @@ void PlayerServer::HandleEos()
         disableNextSeekDone_ = true;
         int32_t ret = taskMgr_.SeekTask(seekTask, cancelTask, "eos seek", SEEK_PREVIOUS_SYNC, 0);
         CHECK_AND_RETURN_LOG(ret == MSERR_OK, "Seek failed");
-    } else {
-        Pause();
     }
 }
 
@@ -1264,6 +1262,8 @@ void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &in
         } else {
             playerCb_->OnInfo(type, extra, infoBody);
         }
+    } else {
+        MEDIA_LOGI("playerCb_ != nullptr %{public}d, ret %{public}d", playerCb_ != nullptr, ret);
     }
 }
 

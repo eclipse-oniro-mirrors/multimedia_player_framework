@@ -100,7 +100,7 @@ ohos_shared_library("gst_media_common") {
   external_deps = [
     "drivers_peripheral_display:hdi_gralloc_client",
     "graphic_surface:surface",
-    "graphic_2d:sync_fence",
+    "graphic_surface:sync_fence",
     "hilog:libhilog",
   ]
 

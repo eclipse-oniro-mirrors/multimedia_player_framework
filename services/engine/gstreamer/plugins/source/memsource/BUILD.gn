@@ -95,7 +95,7 @@ ohos_shared_library("gst_mem_src") {
     "c_utils:utils",
     "drivers_peripheral_display:hdi_gralloc_client",
     "graphic_surface:surface",
-    "graphic_2d:sync_fence",
+    "graphic_surface:sync_fence",
     "hilog:libhilog",
     "init:libbegetutil",
   ]
