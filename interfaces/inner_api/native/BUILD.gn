@@ -183,7 +183,7 @@ ohos_shared_library("media_client") {
     "ipc:ipc_single",
     "samgr:samgr_proxy",
   ]
-  public_external_deps = [ "histreamer:media_foundation" ]
+  public_deps = [ "$MEDIA_PLAYER_HISTREAMER/src:media_foundation" ]
 
   if (multimedia_player_framework_support_video) {
     external_deps += [ "graphic_2d:surface" ]
