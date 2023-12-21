@@ -848,7 +848,9 @@ int32_t ScreenCaptureServer::StopScreenCapture()
         int32_t retVideo = StopVideoCapture();
         stopFlagSuccess = retAudio == MSERR_OK && retVideo == MSERR_OK ? MSERR_OK : MSERR_STOP_FAILED;
     }
-    BehaviorEventWriteForScreencapture("stop", "AVScreencapture", appinfo_.appUid, appinfo_.appPid);
+    if (stopFlagSuccess == MSERR_OK) {
+        BehaviorEventWriteForScreencapture("stop", "AVScreencapture", appinfo_.appUid, appinfo_.appPid);
+    }
     MEDIA_LOGI("ScreenCaptureServer stop result :%{public}d", stopFlagSuccess);
     return stopFlagSuccess;
 }
