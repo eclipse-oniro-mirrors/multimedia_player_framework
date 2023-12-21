@@ -114,7 +114,7 @@ std::shared_ptr<AVSharedMemory> AVMetaDataCollector::GetArtPicture(const std::ve
             continue;
         }
         coverAddr = mapIt->second;
-        if (coverAddr.size() == 0 || coverAddr.size() > ART_PICTURE_MAX_SIZE) {
+        if (coverAddr.size() == 0 || coverAddr.size() > artPictureMaxSize) {
             MEDIA_LOG_E("InvalidArtPictureSize %d", coverAddr.size());
             return nullptr;
         }
