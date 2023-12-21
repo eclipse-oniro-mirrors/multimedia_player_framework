@@ -24,10 +24,12 @@
 #include "osal/task/condition_variable.h"
 #include "filter/filter.h"
 #include "audio_capture_filter.h"
-#include "encoder_filter.h"
+#include "audio_encoder_filter.h"
 #include "muxer_filter.h"
 #include "osal/task/task.h"
 #include "pipeline/pipeline.h"
+#include "surface_encoder_filter.h"
+#include "video_capture_filter.h"
 
 namespace OHOS {
 namespace Media {
@@ -105,8 +107,9 @@ private:
 
     std::shared_ptr<Pipeline::Pipeline> pipeline_;
     std::shared_ptr<Pipeline::AudioCaptureFilter> audioCaptureFilter_;
-    std::shared_ptr<Pipeline::EncoderFilter> audioEncoderFilter_;
-    std::shared_ptr<Pipeline::EncoderFilter> videoEncoderFilter_;
+    std::shared_ptr<Pipeline::AudioEncoderFilter> audioEncoderFilter_;
+    std::shared_ptr<Pipeline::SurfaceEncoderFilter> videoEncoderFilter_;
+    std::shared_ptr<Pipeline::VideoCaptureFilter> videoCaptureFilter_;
     std::shared_ptr<Pipeline::MuxerFilter> muxerFilter_;
 
     std::shared_ptr<Pipeline::EventReceiver> recorderEventReceiver_;
@@ -122,10 +125,16 @@ private:
     int32_t fd_;
     int64_t maxDuration_;
     int64_t maxSize_;
+    int32_t rotation_;
+    float latitude_;
+    float longitude_;
 
-    Mutex stateMutex_{};
-    ConditionVariable cond_{};
+    bool videoSourceIsYuv_ = false;
+
+    Mutex stateMutex_ {};
+    ConditionVariable cond_ {};
+
 };
-} // namespace MEDIA
-} // namespace OHOS
+} //namespace MEDIA
+} //namespace OHOS
 #endif // HI_RECORDER_IMPL_H

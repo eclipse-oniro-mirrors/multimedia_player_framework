@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_MEDIA_RECORDER_UTILS_H
-#define OHOS_MEDIA_RECORDER_UTILS_H
+#ifndef RECORDER_UTILS_H
+#define RECORDER_UTILS_H
 
 #include <cstdint>
 
@@ -31,28 +31,24 @@ struct SourceIdGenerator {
     static const uint32_t AUDIO_MASK = 0x200;
     static const uint32_t INDEX_MASK = 0xFF;
 
-    static int32_t GenerateAudioSourceId(uint32_t index)
-    {
+    static int32_t GenerateAudioSourceId(uint32_t index) {
         return static_cast<int32_t>(AUDIO_MASK + (INDEX_MASK & index));
     }
 
-    static int32_t GenerateVideoSourceId(uint32_t index)
-    {
+    static int32_t GenerateVideoSourceId(uint32_t index) {
         return static_cast<int32_t>(VIDEO_MASK + (INDEX_MASK & index));
     }
 
-    static int32_t IsAudio(int32_t sourceId)
-    {
+    static int32_t IsAudio(int32_t sourceId) {
         return ((sourceId > 0) &&
                 ((static_cast<uint32_t>(sourceId) & SOURCE_MASK) == AUDIO_MASK));
     }
 
-    static int32_t IsVideo(int32_t sourceId)
-    {
+    static int32_t IsVideo(int32_t sourceId) {
         return ((sourceId > 0) &&
                 ((static_cast<uint32_t>(sourceId) & SOURCE_MASK) == VIDEO_MASK));
     }
 };
+#endif  // RECORDER_UTILS_H
 } // Media
 } // OHOS
-#endif // OHOS_MEDIA_RECORDER_UTILS_H

@@ -12,22 +12,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #include "hirecorder_impl.h"
-
 #include "meta/audio_types.h"
 
 namespace OHOS {
 namespace Media {
     class RecorderEventReceiver : public Pipeline::EventReceiver {
     public:
-        explicit (HiRecorderImpl *hiRecorderImpl)
-        {
+        RecorderEventReceiver(HiRecorderImpl *hiRecorderImpl) {
             hiRecorderImpl_ = hiRecorderImpl;
         }
 
-        void OnEvent(const Event &event)
-        {
+        void OnEvent(const Event &event) {
             hiRecorderImpl_->OnEvent(event);
         }
 
@@ -37,14 +33,11 @@ namespace Media {
 
     class RecorderFilterCallback : public Pipeline::FilterCallback {
     public:
-        explicit RecorderFilterCallback(HiRecorderImpl *hiRecorderImpl)
-        {
+        RecorderFilterCallback(HiRecorderImpl *hiRecorderImpl) {
             hiRecorderImpl_ = hiRecorderImpl;
         }
 
-        void OnCallback(const std::shared_ptr<Pipeline::Filter>& filter, Pipeline::FilterCallBackCommand cmd,
-            Pipeline::StreamType outType)
-        {
+        void OnCallback(const std::shared_ptr<Pipeline::Filter>& filter, Pipeline::FilterCallBackCommand cmd, Pipeline::StreamType outType) {
             hiRecorderImpl_->OnCallback(filter, cmd, outType);
         }
 
@@ -53,15 +46,14 @@ namespace Media {
     };
 
     HiRecorderImpl::HiRecorderImpl(int32_t appUid, int32_t appPid, uint32_t appTokenId, uint64_t appFullTokenId)
-        : appUid_(appUid), appPid_(appPid), appTokenId_(appTokenId), appFullTokenId_(appFullTokenId)
-    {
+            : appUid_(appUid), appPid_(appPid), appTokenId_(appTokenId), appFullTokenId_(appFullTokenId) {
         pipeline_ = std::make_shared<Pipeline::Pipeline>();
     }
 
-    HiRecorderImpl::~HiRecorderImpl() {}
+    HiRecorderImpl::~HiRecorderImpl() {
+    }
 
-    int32_t HiRecorderImpl::Init()
-    {
+    int32_t HiRecorderImpl::Init() {
         MEDIA_LOG_I("Init enter.");
         recorderEventReceiver_ = std::make_shared<RecorderEventReceiver>(this);
         recorderCallback_ = std::make_shared<RecorderFilterCallback>(this);
@@ -69,22 +61,34 @@ namespace Media {
         return (int32_t)Status::OK;
     }
 
-    int32_t HiRecorderImpl::SetVideoSource(VideoSourceType source, int32_t &sourceId)
-    {
-        MEDIA_LOG_I("SetVideoSource enter.");
+    int32_t HiRecorderImpl::SetVideoSource(VideoSourceType source, int32_t &sourceId) {
         sourceId = INVALID_SOURCE_ID;
         FALSE_RETURN_V(source != VideoSourceType::VIDEO_SOURCE_BUTT,
                        (int32_t)Status::ERROR_INVALID_PARAMETER);
+        MEDIA_LOG_I("SetVideoSource enter1.");
         FALSE_RETURN_V(videoCount_ < static_cast<int32_t>(VIDEO_SOURCE_MAX_COUNT),
                        (int32_t)Status::ERROR_INVALID_OPERATION);
+        MEDIA_LOG_I("SetVideoSource enter2.");
         auto tempSourceId = SourceIdGenerator::GenerateVideoSourceId(videoCount_);
-
-        videoEncoderFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::EncoderFilter>
-            ("videoEncoderFilter", Pipeline::FilterType::FILTERTYPE_VENC);
-        
-        Status ret = pipeline_->AddHeadFilters({videoEncoderFilter_});
+        Status ret;
+        if (source == VideoSourceType::VIDEO_SOURCE_SURFACE_YUV) {
+            videoSourceIsYuv_ = true;
+            videoEncoderFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::SurfaceEncoderFilter>
+                ("videoEncoderFilter", Pipeline::FilterType::FILTERTYPE_VENC);
+            ret = pipeline_->AddHeadFilters({videoEncoderFilter_});
+            MEDIA_LOG_I("SetVideoSource VIDEO_SOURCE_SURFACE_YUV.");
+        } else if (source == VideoSourceType::VIDEO_SOURCE_SURFACE_ES) {
+            videoSourceIsYuv_ = false;
+            videoCaptureFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::VideoCaptureFilter>
+                ("videoEncoderFilter", Pipeline::FilterType::FILTERTYPE_VCAPTURE);
+            ret = pipeline_->AddHeadFilters({videoCaptureFilter_});
+            MEDIA_LOG_I("SetVideoSource VIDEO_SOURCE_SURFACE_ES.");
+        } else {
+            ret = Status::OK;
+        }
         FALSE_RETURN_V_MSG_E(ret == Status::OK, (int32_t)ret, "AddFilters videoEncoder to pipeline fail");
         if (ret == Status::OK) {
+            MEDIA_LOG_I("SetVideoSource success.");
             videoCount_++;
             videoSourceId_ = tempSourceId;
             sourceId = videoSourceId_;
@@ -93,8 +97,7 @@ namespace Media {
         return (int32_t)ret;
     }
 
-    int32_t HiRecorderImpl::SetAudioSource(AudioSourceType source, int32_t &sourceId)
-    {
+    int32_t HiRecorderImpl::SetAudioSource(AudioSourceType source, int32_t &sourceId) {
         MEDIA_LOG_I("SetAudioSource enter.");
         sourceId = INVALID_SOURCE_ID;
         FALSE_RETURN_V(source != AudioSourceType::AUDIO_SOURCE_INVALID,
@@ -104,13 +107,14 @@ namespace Media {
         auto tempSourceId = SourceIdGenerator::GenerateAudioSourceId(audioCount_);
 
         audioCaptureFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::AudioCaptureFilter>
-            ("audioCaptureFilter", Pipeline::FilterType::FILTERTYPE_SOURCE);
+            ("audioCaptureFilter", Pipeline::FilterType::FILTERTYPE_ACAPTURE);
         if (audioCaptureFilter_ == nullptr) {
             MEDIA_LOG_E("HiRecorderImpl::audioCaptureFilter_ == nullptr");
         }
         Status ret = pipeline_->AddHeadFilters({audioCaptureFilter_});
         FALSE_RETURN_V_MSG_E(ret == Status::OK, (int32_t)ret, "AddFilters audioCapture to pipeline fail");
         if (ret == Status::OK) {
+            MEDIA_LOG_I("SetAudioSource success.");
             audioCount_++;
             audioSourceId_ = tempSourceId;
             sourceId = static_cast<int32_t>(audioSourceId_);
@@ -119,23 +123,20 @@ namespace Media {
         return (int32_t)ret;
     }
 
-    int32_t HiRecorderImpl::SetOutputFormat(OutputFormatType format)
-    {
+    int32_t HiRecorderImpl::SetOutputFormat(OutputFormatType format) {
         MEDIA_LOG_I("SetOutputFormat enter. " PUBLIC_LOG_D32, static_cast<int32_t>(format));
         outputFormatType_ = format;
         OnStateChanged(StateId::RECORDING_SETTING);
         return (int32_t)Status::OK;
     }
 
-    int32_t HiRecorderImpl::SetObs(const std::weak_ptr<IRecorderEngineObs> &obs)
-    {
+    int32_t HiRecorderImpl::SetObs(const std::weak_ptr<IRecorderEngineObs> &obs) {
         MEDIA_LOG_I("SetObs enter.");
         obs_ = obs;
         return (int32_t)Status::OK;
     }
 
-    int32_t HiRecorderImpl::Configure(int32_t sourceId, const RecorderParam &recParam)
-    {
+    int32_t HiRecorderImpl::Configure(int32_t sourceId, const RecorderParam &recParam) {
         MEDIA_LOG_I("Configure enter.");
         FALSE_RETURN_V(outputFormatType_ != OutputFormatType::FORMAT_BUTT,
                        (int32_t)Status::ERROR_INVALID_OPERATION);
@@ -167,14 +168,16 @@ namespace Media {
         return (int32_t)Status::OK;
     }
 
-    sptr<Surface> HiRecorderImpl::GetSurface(int32_t sourceId)
-    {
+    sptr<Surface> HiRecorderImpl::GetSurface(int32_t sourceId) {
         MEDIA_LOG_I("GetSurface enter.");
-        return videoEncoderFilter_->GetInputSurface();
+        if (videoSourceIsYuv_) {
+            return videoEncoderFilter_->GetInputSurface();
+        } else {
+            return videoCaptureFilter_->GetInputSurface();
+        }
     }
 
-    int32_t HiRecorderImpl::Prepare()
-    {
+    int32_t HiRecorderImpl::Prepare() {
         MEDIA_LOG_I("Prepare enter.");
         if (audioCaptureFilter_) {
             audioCaptureFilter_->Init(recorderEventReceiver_, recorderCallback_);
@@ -182,12 +185,18 @@ namespace Media {
             audioEncFormat_->Set<Tag::APP_UID>(appUid_);
             audioEncFormat_->Set<Tag::APP_PID>(appPid_);
             audioEncFormat_->Set<Tag::APP_FULL_TOKEN_ID>(appFullTokenId_);
+            audioEncFormat_->Set<Tag::AUDIO_SAMPLE_FORMAT>(Plugin::AudioSampleFormat::SAMPLE_S16LE);
             audioCaptureFilter_->SetParameter(audioEncFormat_);
         }
         if (videoEncoderFilter_) {
             videoEncoderFilter_->SetCodecFormat(videoEncFormat_);
             videoEncoderFilter_->Init(recorderEventReceiver_, recorderCallback_);
             videoEncoderFilter_->Configure(videoEncFormat_);
+        }
+        if (videoCaptureFilter_) {
+            videoCaptureFilter_->SetCodecFormat(videoEncFormat_);
+            videoCaptureFilter_->Init(recorderEventReceiver_, recorderCallback_);
+            videoCaptureFilter_->Configure(videoEncFormat_);
         }
         Status ret = pipeline_->Prepare();
         if (ret != Status::OK) {
@@ -196,8 +205,7 @@ namespace Media {
         return (int32_t)ret;
     }
 
-    int32_t HiRecorderImpl::Start()
-    {
+    int32_t HiRecorderImpl::Start() {
         MEDIA_LOG_I("Start enter.");
         Status ret = Status::OK;
         if (curState_ == StateId::PAUSE) {
@@ -211,8 +219,7 @@ namespace Media {
         return (int32_t)ret;
     }
 
-    int32_t HiRecorderImpl::Pause()
-    {
+    int32_t HiRecorderImpl::Pause() {
         MEDIA_LOG_I("Pause enter.");
         Status ret = Status::OK;
         if (curState_ != StateId::READY) {
@@ -224,8 +231,7 @@ namespace Media {
         return (int32_t)ret;
     }
 
-    int32_t HiRecorderImpl::Resume()
-    {
+    int32_t HiRecorderImpl::Resume() {
         MEDIA_LOG_I("Resume enter.");
         Status ret = Status::OK;
         ret = pipeline_->Resume();
@@ -235,8 +241,7 @@ namespace Media {
         return (int32_t)ret;
     }
 
-    int32_t HiRecorderImpl::Stop(bool isDrainAll)
-    {
+    int32_t HiRecorderImpl::Stop(bool isDrainAll) {
         MEDIA_LOG_I("Stop enter.");
         Status ret = Status::OK;
         if (curState_ == StateId::INIT || curState_ == StateId::READY) {
@@ -256,8 +261,7 @@ namespace Media {
         return (int32_t)ret;
     }
 
-    int32_t HiRecorderImpl::Reset()
-    {
+    int32_t HiRecorderImpl::Reset() {
         MEDIA_LOG_I("Reset enter.");
         Status ret = Status::OK;
         if (curState_ == StateId::RECORDING) {
@@ -274,20 +278,19 @@ namespace Media {
         return (int32_t)ret;
     }
 
-    int32_t HiRecorderImpl::SetParameter(int32_t sourceId, const RecorderParam &recParam)
-    {
+    int32_t HiRecorderImpl::SetParameter(int32_t sourceId, const RecorderParam &recParam) {
         MEDIA_LOG_I("SetParameter enter.");
         return Configure(sourceId, recParam);
     }
 
-    void HiRecorderImpl::OnEvent(const Event &event)
-    {
+    void HiRecorderImpl::OnEvent(const Event &event) {
         switch (event.type) {
             case EventType::EVENT_ERROR: {
+                MEDIA_LOG_I("EVENT_ERROR.");
                 OnStateChanged(StateId::ERROR);
                 auto ptr = obs_.lock();
                 if (ptr != nullptr) {
-                    MEDIA_LOG_I("OnEvent EVENT_ERROR obs is nullptr.");
+                    ptr->OnError(IRecorderEngineObs::ErrorType::ERROR_INTERNAL, -1);
                 }
                 break;
             }
@@ -304,13 +307,12 @@ namespace Media {
     }
 
     void HiRecorderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, const Pipeline::FilterCallBackCommand cmd,
-        Pipeline::StreamType outType)
-    {
+                                    Pipeline::StreamType outType) {
         MEDIA_LOG_I("OnCallback enter.");
         if (cmd == Pipeline::FilterCallBackCommand::NEXT_FILTER_NEEDED) {
             switch (outType) {
                 case Pipeline::StreamType::STREAMTYPE_RAW_AUDIO:
-                    audioEncoderFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::EncoderFilter>
+                    audioEncoderFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::AudioEncoderFilter>
                         ("audioEncoderFilter", Pipeline::FilterType::FILTERTYPE_AENC);
                     audioEncoderFilter_->SetCodecFormat(audioEncFormat_);
                     audioEncoderFilter_->Init(recorderEventReceiver_, recorderCallback_);
@@ -345,8 +347,7 @@ namespace Media {
         }
     }
 
-    void HiRecorderImpl::ConfigureAudio(const RecorderParam &recParam)
-    {
+    void HiRecorderImpl::ConfigureAudio(const RecorderParam &recParam) {
         MEDIA_LOG_I("ConfigureAudio enter.");
         switch (recParam.type) {
             case RecorderPublicParamType::AUD_SAMPLERATE: {
@@ -380,10 +381,10 @@ namespace Media {
                 break;
             }
         }
+
     }
 
-    void HiRecorderImpl::ConfigureVideo(const RecorderParam &recParam)
-    {
+    void HiRecorderImpl::ConfigureVideo(const RecorderParam &recParam) {
         MEDIA_LOG_I("ConfigureVideo enter.");
         switch (recParam.type) {
             case RecorderPublicParamType::VID_RECTANGLE: {
@@ -429,8 +430,7 @@ namespace Media {
         }
     }
 
-    void HiRecorderImpl::ConfigureMuxer(const RecorderParam &recParam)
-    {
+    void HiRecorderImpl::ConfigureMuxer(const RecorderParam &recParam) {
         MEDIA_LOG_I("ConfigureMuxer enter");
         switch (recParam.type) {
             case RecorderPublicParamType::OUT_FD: {
@@ -449,15 +449,23 @@ namespace Media {
                 maxSize_ = maxFileSize.size;
                 break;
             }
-            case RecorderPublicParamType::VID_ORIENTATION_HINT:
-            case RecorderPublicParamType::GEO_LOCATION:
+            case RecorderPublicParamType::VID_ORIENTATION_HINT: {
+                RotationAngle rotationAngle = static_cast<const RotationAngle&>(recParam);
+                rotation_ = rotationAngle.rotation;
+                break;
+            }
+            case RecorderPublicParamType::GEO_LOCATION: {
+                GeoLocation geoLocation = static_cast<const GeoLocation&>(recParam);
+                latitude_ = geoLocation.latitude;
+                longitude_ = geoLocation.longitude;
+                break;
+            }
             default:
                 break;
         }
     }
 
-    bool HiRecorderImpl::CheckParamType(int32_t sourceId, const RecorderParam &recParam)
-    {
+    bool HiRecorderImpl::CheckParamType(int32_t sourceId, const RecorderParam &recParam) {
         FALSE_RETURN_V((SourceIdGenerator::IsAudio(sourceId) && recParam.IsAudioParam() &&
                         static_cast<int32_t>(audioSourceId_) == sourceId) ||
                        (SourceIdGenerator::IsVideo(sourceId) && recParam.IsVideoParam() &&
@@ -470,5 +478,5 @@ namespace Media {
     {
         curState_ = state;
     }
-} // namespace MEDIA
-} // namespace OHOS
+} //namespace MEDIA
+} //namespace OHOS
