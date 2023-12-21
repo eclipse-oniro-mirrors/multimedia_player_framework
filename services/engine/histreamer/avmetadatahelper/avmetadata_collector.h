@@ -70,8 +70,11 @@ public:
     AVMetaDataCollector();
     ~AVMetaDataCollector();
 
+    int ART_PICTURE_MAX_SIZE = 1024 * 1024;
+
     std::unordered_map<int32_t, std::string> GetMetadata(const std::shared_ptr<Meta> &globalInfo,
         const std::vector<std::shared_ptr<Meta>> &trackInfos);
+    std::shared_ptr<AVSharedMemory> GetArtPicture(const std::vector<std::shared_ptr<Meta>> &trackInfos);
 
     void ConvertToAVMeta(const std::shared_ptr<Meta> &innerMeta, Metadata &avmeta) const;
 };
