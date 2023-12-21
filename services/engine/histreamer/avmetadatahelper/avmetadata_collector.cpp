@@ -107,12 +107,14 @@ std::shared_ptr<AVSharedMemory> AVMetaDataCollector::GetArtPicture(const std::ve
             MEDIA_LOG_W("meta is invalid, index: %zu", index);
             continue;
         }
+
         std::vector<uint8_t> coverAddr;
-        if (!meta->GetData(Tag::MEDIA_COVER, coverAddr)) {
+        auto mapIt = meta.Find(Tag::MEDIA_COVER);
+        if (mapIt == meta.end()) {
             continue;
         }
-
-        if (coverAddr.size() > ART_PICTURE_MAX_SIZE) {
+        coverAddr = mapIt->second;
+        if (coverAddr.size() > ART_PICTURE_MAX_SIZE || coverAddr.size() == 0) {
             MEDIA_LOG_E("InvalidArtPictureSize %d", coverAddr.size());
             return nullptr;
         }
