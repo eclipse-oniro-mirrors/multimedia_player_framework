@@ -76,7 +76,8 @@ public:
         const std::vector<std::shared_ptr<Meta>> &trackInfos);
     std::shared_ptr<AVSharedMemory> GetArtPicture(const std::vector<std::shared_ptr<Meta>> &trackInfos);
 
-    void ConvertToAVMeta(const std::shared_ptr<Meta> &innerMeta, Metadata &avmeta) const;
+private:
+    void ConvertToAVMeta(const Meta &innerMeta, Metadata &avmeta) const;
 };
 } // namespace Media
 } // namespace OHOS
