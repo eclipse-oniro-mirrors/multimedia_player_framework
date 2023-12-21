@@ -70,7 +70,7 @@ public:
     AVMetaDataCollector();
     ~AVMetaDataCollector();
 
-    int ART_PICTURE_MAX_SIZE = 1024 * 1024;
+    const int ART_PICTURE_MAX_SIZE = 1024 * 1024;
 
     std::unordered_map<int32_t, std::string> GetMetadata(const std::shared_ptr<Meta> &globalInfo,
         const std::vector<std::shared_ptr<Meta>> &trackInfos);

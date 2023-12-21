@@ -114,7 +114,7 @@ std::shared_ptr<AVSharedMemory> AVMetaDataCollector::GetArtPicture(const std::ve
             continue;
         }
         coverAddr = mapIt->second;
-        if (coverAddr.size() > ART_PICTURE_MAX_SIZE || coverAddr.size() == 0) {
+        if (coverAddr.size() == 0 || coverAddr.size() > ART_PICTURE_MAX_SIZE) {
             MEDIA_LOG_E("InvalidArtPictureSize %d", coverAddr.size());
             return nullptr;
         }
@@ -131,7 +131,7 @@ std::shared_ptr<AVSharedMemory> AVMetaDataCollector::GetArtPicture(const std::ve
         MEDIA_LOG_I("GetArtPicture Out");
         return artPicMem;
     }
-    MEDIA_LOG_E("GetArtPicture failed : cant find art pictures from meta");
+    MEDIA_LOG_E("GetArtPicture Failed");
     return nullptr;
 }
 
