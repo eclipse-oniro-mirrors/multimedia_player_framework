@@ -169,12 +169,53 @@ namespace Media {
     }
 
     sptr<Surface> HiRecorderImpl::GetSurface(int32_t sourceId) {
-        MEDIA_LOG_I("GetSurface enter.");
-        if (videoSourceIsYuv_) {
-            return videoEncoderFilter_->GetInputSurface();
-        } else {
-            return videoCaptureFilter_->GetInputSurface();
+        MEDIA_LOGI("GetSurface enter.");
+        if (producerSurface_) {
+            int32_t queueSize = consumerSurface_->GetQueueSize();
+            for (int i = 0; i < queueSize; i++) {
+                sptr<SurfaceBuffer> buffer;
+                sptr<SyncFence> fence;
+                int64_t timestamp;
+                OHOS::Rect damage;
+                GSError ret = consumerSurface_->AcquireBuffer(buffer, fence, timestamp, damage);
+                if (ret == GSERROR_OK) {
+                    MEDIA_LOGI("AcquireBuffer 0x%{public}x succ", ENCODE_USAGE);
+                } else {
+                    MEDIA_LOGI("AcquireBuffer 0x%{public}x failed", ENCODE_USAGE);
+                }
+                consumerSurface_->ReleaseBuffer(buffer, -1);
+            }
+            videoEncoderFilter_->SetInputSurface(consumerSurface_);
+            return producerSurface_;
         }
+
+        sptr<Surface> consumerSurface = Surface::CreateSurfaceAsConsumer("EncoderSurface");
+        if (consumerSurface == nullptr) {
+            MEDIA_LOGI("Create the surface consummer fail");
+            return nullptr;
+        }
+        GSError err = consumerSurface->SetDefaultUsage(ENCODE_USAGE);
+        if (err == GSERROR_OK) {
+            MEDIA_LOGI("set consumer usage 0x%{public}x succ", ENCODE_USAGE);
+        } else {
+            MEDIA_LOGI("set consumer usage 0x%{public}x failed", ENCODE_USAGE);
+        }
+
+        sptr<IBufferProducer> producer = consumerSurface->GetProducer();
+        if (producer == nullptr) {
+            MEDIA_LOGI("Get the surface producer fail");
+            return nullptr;
+        }
+
+        sptr<Surface> producerSurface = Surface::CreateSurfaceAsProducer(producer);
+        if (producerSurface == nullptr) {
+            MEDIA_LOGI("CreateSurfaceAsProducer fail");
+            return nullptr;
+        }
+        producerSurface_ = producerSurface;
+        consumerSurface_ = consumerSurface;
+        videoEncoderFilter_->SetInputSurface(consumerSurface);
+        return producerSurface;
     }
 
     int32_t HiRecorderImpl::Prepare() {
