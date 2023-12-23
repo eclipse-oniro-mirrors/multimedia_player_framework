@@ -1053,9 +1053,8 @@ int32_t AVRecorderNapi::GetProfile(std::unique_ptr<AVRecorderAsyncContext> &asyn
     return MSERR_OK;
 }
 
-void AVRecorderNapi::MediaProfileLog(bool isVideo, std::shared_ptr<AVRecorderProfile> &profile)
+void AVRecorderNapi::MediaProfileLog(bool isVideo, AVRecorderProfile &profile)
 {
-    CHECK_AND_RETURN_RET(profile != nullptr, MSERR_INVALID_VAL, "invalid recorder profile");
     if (isVideo) {
         MEDIA_LOGI("videoBitrate %{public}d, videoCodecFormat %{public}d, videoFrameWidth %{public}d,"
             " videoFrameHeight %{public}d, videoFrameRate %{public}d, isHdr  %{public}d",
