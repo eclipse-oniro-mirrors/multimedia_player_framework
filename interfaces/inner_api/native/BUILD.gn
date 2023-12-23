@@ -174,7 +174,9 @@ ohos_shared_library("media_client") {
 
   deps = [ "../../../services/utils:media_format" ]
 
-  public_configs = [ ":media_public_config" ]
+  public_configs = [
+    ":media_public_config"
+  ]
 
   external_deps = [
     "audio_framework:audio_client",

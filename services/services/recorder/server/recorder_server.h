@@ -21,6 +21,7 @@
 #include "nocopyable.h"
 #include "task_queue.h"
 #include "watchdog.h"
+#include "audio_info.h"
 
 namespace OHOS {
 namespace Media {
@@ -81,6 +82,7 @@ public:
     // IRecorderEngineObs override
     void OnError(ErrorType errorType, int32_t errorCode) override;
     void OnInfo(InfoType type, int32_t extra) override;
+    void OnAudioCaptureChange(const AudioRecorderChangeInfo &audioRecorderChangeInfo) override;//TODO::override
 
 private:
     int32_t Init();

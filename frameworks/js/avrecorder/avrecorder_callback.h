@@ -34,11 +34,13 @@ public:
     void ClearCallbackReference();
     void SendErrorCallback(int32_t errCode, const std::string &msg);
     void SendStateCallback(const std::string &state, const StateChangeReason &reason);
+    void SendAudioCaptureChangeCallback(const AudioRecorderChangeInfo &AudioRecorderChangeInfo);// TODO::new send
     std::string GetState();
 
 protected:
     void OnError(RecorderErrorType errorType, int32_t errCode) override;
     void OnInfo(int32_t type, int32_t extra) override;
+    void OnAudioCaptureChangeCallback(const AudioRecorderChangeInfo &audioRecorderChangeInfo) override;// TODO::new
 
 private:
     struct AVRecordJsCallback {
@@ -48,13 +50,30 @@ private:
         int32_t errorCode = MSERR_EXT_UNKNOWN;
         int32_t reason = 1;
         std::string state = "unknown";
+        std::shared_ptr<AudioRecorderChangeInfo> audioRecorderChangeInfo;
     };
     void OnJsErrorCallBack(AVRecordJsCallback *jsCb) const;
     void OnJsStateCallBack(AVRecordJsCallback *jsCb) const;
+    void OnJsAudioCaptureChangeCallback(AVRecordJsCallback *JsCb) const;// TODO::new
     napi_env env_ = nullptr;
     std::mutex mutex_;
     std::string currentState_ = AVRecorderState::STATE_IDLE;
     std::map<std::string, std::weak_ptr<AutoRef>> refMap_;
+};
+
+class AudioCaptureChangeInfoJsCallback {
+public:
+    explicit AudioCaptureChangeInfoJsCallback(std::shared_ptr<AudioRecorderChangeInfo> value)
+        : value_(value)
+    {
+    }
+    ~AudioCaptureChangeInfoJsCallback() = default;
+    napi_status GetJsResult(napi_env env, napi_value &result);
+    napi_status SetAudioCapturerInfo(napi_env env, napi_value &captureInfo, napi_value &result);//TODO::new
+    napi_status SetDeviceInfo(napi_env env, napi_value &inputDeviceInfo, napi_value &result);//TODO::new
+
+private:
+    std::shared_ptr<AudioRecorderChangeInfo> value_ = nullptr;
 };
 } // namespace Media
 } // namespace OHOS

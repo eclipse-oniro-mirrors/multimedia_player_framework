@@ -130,6 +130,14 @@ void RecorderServer::OnInfo(InfoType type, int32_t extra)
     }
 }
 
+void RecorderServer::OnAudioCaptureChange(const AudioRecorderChangeInfo &audioRecorderChangeInfo)//TODO::new
+{
+    std::lock_guard<std::mutex> lock(cbMutex_);
+    if (recorderCb_ != nullptr) {
+        recorderCb_->OnAudioCaptureChangeCallback(audioRecorderChangeInfo);
+    }
+}
+
 int32_t RecorderServer::SetVideoSource(VideoSourceType source, int32_t &sourceId)
 {
     std::lock_guard<std::mutex> lock(mutex_);
