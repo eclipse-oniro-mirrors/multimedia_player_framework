@@ -47,55 +47,32 @@ enum class StateId {
 class HiRecorderImpl : public IRecorderEngine {
 public:
     HiRecorderImpl(int32_t appUid, int32_t appPid, uint32_t appTokenId, uint64_t appFullTokenId);
-
     ~HiRecorderImpl();
-
     int32_t Init();
-
     int32_t SetVideoSource(VideoSourceType source, int32_t &sourceId);
-
     int32_t SetAudioSource(AudioSourceType source, int32_t &sourceId);
-
     int32_t SetOutputFormat(OutputFormatType format);
-
     int32_t SetObs(const std::weak_ptr<IRecorderEngineObs> &obs);
-
     int32_t Configure(int32_t sourceId, const RecorderParam &recParam);
-
     sptr<Surface> GetSurface(int32_t sourceId);
-
     int32_t Prepare();
-
     int32_t Start();
-
     int32_t Pause();
-
     int32_t Resume();
-
     int32_t Stop(bool isDrainAll);
-
     int32_t Reset();
-
     int32_t SetParameter(int32_t sourceId, const RecorderParam &recParam);
-
     void OnEvent(const Event &event);
-
     void OnCallback(std::shared_ptr<Pipeline::Filter> filter, const Pipeline::FilterCallBackCommand cmd,
-                    Pipeline::StreamType outType);
+        Pipeline::StreamType outType);
 
 private:
     void ConfigureAudioCapture();
-
     void ConfigureAudio(const RecorderParam &recParam);
-
     void ConfigureVideo(const RecorderParam &recParam);
-
     void ConfigureMuxer(const RecorderParam &recParam);
-
     bool CheckParamType(int32_t sourceId, const RecorderParam &recParam);
-
     void OnStateChanged(StateId state);
-
     std::atomic<uint32_t> audioCount_{0};
     std::atomic<uint32_t> videoCount_{0};
     std::atomic<uint32_t> audioSourceId_{0};
@@ -139,9 +116,7 @@ private:
 
     static constexpr uint32_t ENCODE_USAGE = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_CPU_WRITE |
         BUFFER_USAGE_MEM_DMA | BUFFER_USAGE_VIDEO_ENCODER;
-
-
 };
-} //namespace MEDIA
-} //namespace OHOS
+} // namespace MEDIA
+} // namespace OHOS
 #endif // HI_RECORDER_IMPL_H
