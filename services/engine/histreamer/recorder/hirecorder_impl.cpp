@@ -414,7 +414,7 @@ namespace Media {
                 break;
             }
             case RecorderPublicParamType::VID_IS_HDR: {
-                VidHdr vidIsHdr =  = static_cast<const VidEnc&>(recParam);
+                VidIsHdr vidIsHdr =  = static_cast<const VidIsHdr&>(recParam);
                 if (vidIsHdr.isHdr) {
                     videoEncFormat_->Set<Tag::VIDEO_H265_PROFILE>(Plugin::HEVCProfile::HEVC_PROFILE_MAIN_10);
                 }
