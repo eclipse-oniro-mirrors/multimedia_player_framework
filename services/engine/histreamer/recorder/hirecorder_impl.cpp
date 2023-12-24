@@ -20,7 +20,7 @@ namespace OHOS {
 namespace Media {
 class RecorderEventReceiver : public Pipeline::EventReceiver {
 public:
-    RecorderEventReceiver(HiRecorderImpl *hiRecorderImpl)
+    explicit RecorderEventReceiver(HiRecorderImpl *hiRecorderImpl)
     {
         hiRecorderImpl_ = hiRecorderImpl;
     }
@@ -36,7 +36,7 @@ private:
 
 class RecorderFilterCallback : public Pipeline::FilterCallback {
 public:
-    RecorderFilterCallback(HiRecorderImpl *hiRecorderImpl) 
+    explicit RecorderFilterCallback(HiRecorderImpl *hiRecorderImpl)
     {
         hiRecorderImpl_ = hiRecorderImpl;
     }
@@ -74,9 +74,9 @@ int32_t HiRecorderImpl::SetVideoSource(VideoSourceType source, int32_t &sourceId
 {
     sourceId = INVALID_SOURCE_ID;
     FALSE_RETURN_V(source != VideoSourceType::VIDEO_SOURCE_BUTT,
-                    (int32_t)Status::ERROR_INVALID_PARAMETER);
+        (int32_t)Status::ERROR_INVALID_PARAMETER);
     FALSE_RETURN_V(videoCount_ < static_cast<int32_t>(VIDEO_SOURCE_MAX_COUNT),
-                    (int32_t)Status::ERROR_INVALID_OPERATION);
+        (int32_t)Status::ERROR_INVALID_OPERATION);
     auto tempSourceId = SourceIdGenerator::GenerateVideoSourceId(videoCount_);
     Status ret;
     if (source == VideoSourceType::VIDEO_SOURCE_SURFACE_YUV) {
@@ -110,9 +110,9 @@ int32_t HiRecorderImpl::SetAudioSource(AudioSourceType source, int32_t &sourceId
     MEDIA_LOG_I("SetAudioSource enter.");
     sourceId = INVALID_SOURCE_ID;
     FALSE_RETURN_V(source != AudioSourceType::AUDIO_SOURCE_INVALID,
-                    (int32_t)Status::ERROR_INVALID_PARAMETER);
+        (int32_t)Status::ERROR_INVALID_PARAMETER);
     FALSE_RETURN_V(audioCount_ < static_cast<int32_t>(AUDIO_SOURCE_MAX_COUNT),
-                    (int32_t)Status::ERROR_INVALID_OPERATION);
+        (int32_t)Status::ERROR_INVALID_OPERATION);
     auto tempSourceId = SourceIdGenerator::GenerateAudioSourceId(audioCount_);
 
     audioCaptureFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::AudioCaptureFilter>
@@ -151,7 +151,7 @@ int32_t HiRecorderImpl::Configure(int32_t sourceId, const RecorderParam &recPara
 {
     MEDIA_LOG_I("Configure enter.");
     FALSE_RETURN_V(outputFormatType_ != OutputFormatType::FORMAT_BUTT,
-                    (int32_t)Status::ERROR_INVALID_OPERATION);
+        (int32_t)Status::ERROR_INVALID_OPERATION);
     FALSE_RETURN_V(CheckParamType(sourceId, recParam), (int32_t)Status::ERROR_INVALID_PARAMETER);
     switch (recParam.type) {
         case RecorderPublicParamType::AUD_SAMPLERATE:
@@ -180,7 +180,8 @@ int32_t HiRecorderImpl::Configure(int32_t sourceId, const RecorderParam &recPara
     return (int32_t)Status::OK;
 }
 
-sptr<Surface> HiRecorderImpl::GetSurface(int32_t sourceId) {
+sptr<Surface> HiRecorderImpl::GetSurface(int32_t sourceId)
+{
     MEDIA_LOG_I("GetSurface enter.");
     if (producerSurface_) {
         int32_t queueSize = consumerSurface_->GetQueueSize();
@@ -200,7 +201,6 @@ sptr<Surface> HiRecorderImpl::GetSurface(int32_t sourceId) {
         videoEncoderFilter_->SetInputSurface(consumerSurface_);
         return producerSurface_;
     }
-
     sptr<Surface> consumerSurface = Surface::CreateSurfaceAsConsumer("EncoderSurface");
     if (consumerSurface == nullptr) {
         MEDIA_LOG_I("Create the surface consummer fail");
@@ -212,13 +212,11 @@ sptr<Surface> HiRecorderImpl::GetSurface(int32_t sourceId) {
     } else {
         MEDIA_LOG_I("set consumer usage 0x%{public}x failed", ENCODE_USAGE);
     }
-
     sptr<IBufferProducer> producer = consumerSurface->GetProducer();
     if (producer == nullptr) {
         MEDIA_LOG_I("Get the surface producer fail");
         return nullptr;
     }
-
     sptr<Surface> producerSurface = Surface::CreateSurfaceAsProducer(producer);
     if (producerSurface == nullptr) {
         MEDIA_LOG_I("CreateSurfaceAsProducer fail");
@@ -226,7 +224,12 @@ sptr<Surface> HiRecorderImpl::GetSurface(int32_t sourceId) {
     }
     producerSurface_ = producerSurface;
     consumerSurface_ = consumerSurface;
-    videoEncoderFilter_->SetInputSurface(consumerSurface);
+    if (videoEncoderFilter_) {
+        videoEncoderFilter_->SetInputSurface(consumerSurface);
+    }
+    if (videoCaptureFilter_) {
+        videoCaptureFilter_->SetInputSurface(consumerSurface);
+    }
     return producerSurface;
 }
 
@@ -315,6 +318,16 @@ int32_t HiRecorderImpl::Stop(bool isDrainAll)
     videoCount_ = 0;
     audioSourceId_ = 0;
     videoSourceId_ = 0;
+    muxerFilter_ = nullptr;
+    if (audioCaptureFilter_) {
+        pipeline_->RemoveHeadFilter(audioCaptureFilter_);
+    }
+    if (videoEncoderFilter_) {
+        pipeline_->RemoveHeadFilter(videoEncoderFilter_);
+    }
+    if (videoCaptureFilter_) {
+        pipeline_->RemoveHeadFilter(videoCaptureFilter_);
+    }
     FALSE_RETURN_V_MSG_E(curState_ == StateId::INIT, ERR_UNKNOWN_REASON, "stop fail");
     return (int32_t)ret;
 }
@@ -323,7 +336,7 @@ int32_t HiRecorderImpl::Reset()
 {
     MEDIA_LOG_I("Reset enter.");
     Status ret = Status::OK;
-    if (curState_ == StateId::RECORDING){
+    if (curState_ == StateId::RECORDING) {
         Stop(false);
     }
     ret = pipeline_->Stop();
@@ -544,5 +557,5 @@ void HiRecorderImpl::OnStateChanged(StateId state)
 {
     curState_ = state;
 }
-} //namespace MEDIA
-} //namespace OHOS
+} // namespace MEDIA
+} // namespace OHOS
