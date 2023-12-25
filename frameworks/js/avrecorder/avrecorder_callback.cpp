@@ -39,7 +39,7 @@ void AVRecorderCallback::SaveCallbackReference(const std::string &name, std::wea
     std::lock_guard<std::mutex> lock(mutex_);
     refMap_[name] = ref;
     if (name == AVRecorderEvent::EVENT_AUDIO_CAPTURE_CHANGE) {
-        IsAudioCaptureChange_ = true;
+        isAudioCaptureChange_ = true;
     }
     MEDIA_LOGI("Set callback type: %{public}s", name.c_str());
 }
@@ -52,7 +52,7 @@ void AVRecorderCallback::CancelCallbackReference(const std::string &name)
         refMap_.erase(iter);
     }
     if (name == AVRecorderEvent::EVENT_AUDIO_CAPTURE_CHANGE) {
-        IsAudioCaptureChange_ = false;
+        isAudioCaptureChange_ = false;
     }
     MEDIA_LOGI("Cancel callback type: %{public}s", name.c_str());
 }
@@ -61,7 +61,7 @@ void AVRecorderCallback::ClearCallbackReference()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     refMap_.clear();
-    IsAudioCaptureChange_ = false;
+    isAudioCaptureChange_ = false;
     MEDIA_LOGI("ClearCallback!");
 }
 

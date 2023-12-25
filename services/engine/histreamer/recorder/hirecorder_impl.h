@@ -65,6 +65,7 @@ public:
     void OnEvent(const Event &event);
     void OnCallback(std::shared_ptr<Pipeline::Filter> filter, const Pipeline::FilterCallBackCommand cmd,
         Pipeline::StreamType outType);
+    void OnAudioCaptureChange(const AudioStandard::AudioCapturerChangeInfo &capturerChangeInfo);
 
 private:
     void ConfigureAudioCapture();
@@ -73,6 +74,7 @@ private:
     void ConfigureMuxer(const RecorderParam &recParam);
     bool CheckParamType(int32_t sourceId, const RecorderParam &recParam);
     void OnStateChanged(StateId state);
+    AudioRecorderChangeInfo ConvertCapturerChangeInfo(const AudioStandard::AudioCapturerChangeInfo &capturerChangeInfo);
     std::atomic<uint32_t> audioCount_{0};
     std::atomic<uint32_t> videoCount_{0};
     std::atomic<uint32_t> audioSourceId_{0};

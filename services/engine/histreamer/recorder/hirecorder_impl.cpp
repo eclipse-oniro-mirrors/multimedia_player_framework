@@ -60,7 +60,7 @@ public:
 
     void OnStateChange(const AudioStandard::AudioCapturerChangeInfo &capturerChangeInfo)
     {
-        hiRecorderImpl_->obs_->OnAudioCaptureChange(ConvertCapturerChangeInfo(capturerChangeInfo));
+       hiRecorderImpl_->OnAudioCaptureChange(capturerChangeInfo);
     }
 
 private:
@@ -261,7 +261,8 @@ int32_t HiRecorderImpl::Prepare()
         audioEncFormat_->Set<Tag::AUDIO_SAMPLE_FORMAT>(Plugins::AudioSampleFormat::SAMPLE_S16LE);
         audioCaptureFilter_->SetParameter(audioEncFormat_);
         CapturerInfoChangeCallback_ = std::make_shared<CapturerInfoChangeCallback>(this);
-        if (obs_->IsAudioCaptureChange_) {
+        auto ptr = obs_.lock();
+        if (ptr->isAudioCaptureChange_) {
             audioCaptureFilter_->SetAudioCaptureChangeCallback(CapturerInfoChangeCallback_);
         }
     }
@@ -442,6 +443,13 @@ void HiRecorderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, const 
     }
 }
 
+void HiRecorderImpl::OnAudioCaptureChange(const AudioStandard::AudioCapturerChangeInfo &capturerChangeInfo)
+{
+    MEDIA_LOG_I("OnAudioCaptureChange enter.");
+    auto ptr = obs_.lock();
+    ptr->OnAudioCaptureChange(ConvertCapturerChangeInfo(capturerChangeInfo));
+}
+
 void HiRecorderImpl::ConfigureAudio(const RecorderParam &recParam)
 {
     MEDIA_LOG_I("ConfigureAudio enter.");
@@ -576,6 +584,48 @@ bool HiRecorderImpl::CheckParamType(int32_t sourceId, const RecorderParam &recPa
 void HiRecorderImpl::OnStateChanged(StateId state)
 {
     curState_ = state;
+}
+
+/**
+ * CapturerChangeInfo to AudioRecorderChangeInfo
+*/
+AudioRecorderChangeInfo HiRecorderImpl::ConvertCapturerChangeInfo(
+    const AudioStandard::AudioCapturerChangeInfo &capturerChangeInfo)
+{
+    AudioRecorderChangeInfo audioRecorderChangeInfo;
+    audioRecorderChangeInfo.createrUID = capturerChangeInfo.createrUID;
+    audioRecorderChangeInfo.clientUID = capturerChangeInfo.clientUID;
+    audioRecorderChangeInfo.clientPid = capturerChangeInfo.clientPid;
+    audioRecorderChangeInfo.sessionId = capturerChangeInfo.sessionId;
+    audioRecorderChangeInfo.capturerState = capturerChangeInfo.capturerState;
+
+    audioRecorderChangeInfo.capturerInfo.sourceType = capturerChangeInfo.capturerInfo.sourceType;
+    audioRecorderChangeInfo.capturerInfo.capturerFlags = capturerChangeInfo.capturerInfo.capturerFlags;
+
+    audioRecorderChangeInfo.inputDeviceInfo.deviceName = capturerChangeInfo.inputDeviceInfo.deviceName;
+    audioRecorderChangeInfo.inputDeviceInfo.deviceId = capturerChangeInfo.inputDeviceInfo.deviceId;
+    audioRecorderChangeInfo.inputDeviceInfo.channelMasks = capturerChangeInfo.inputDeviceInfo.channelMasks;
+    audioRecorderChangeInfo.inputDeviceInfo.deviceRole = capturerChangeInfo.inputDeviceInfo.deviceRole;
+    audioRecorderChangeInfo.inputDeviceInfo.deviceType = capturerChangeInfo.inputDeviceInfo.deviceType;
+    audioRecorderChangeInfo.inputDeviceInfo.displayName = capturerChangeInfo.inputDeviceInfo.displayName;
+    audioRecorderChangeInfo.inputDeviceInfo.interruptGroupId =
+        capturerChangeInfo.inputDeviceInfo.interruptGroupId;
+    audioRecorderChangeInfo.inputDeviceInfo.isLowLatencyDevice =
+        capturerChangeInfo.inputDeviceInfo.isLowLatencyDevice;
+    audioRecorderChangeInfo.inputDeviceInfo.macAddress = capturerChangeInfo.inputDeviceInfo.macAddress;
+    audioRecorderChangeInfo.inputDeviceInfo.channelIndexMasks =
+        capturerChangeInfo.inputDeviceInfo.channelIndexMasks;
+    for (auto item : capturerChangeInfo.inputDeviceInfo.audioStreamInfo.channels) {
+        audioRecorderChangeInfo.inputDeviceInfo.audioStreamInfo.channels.insert(static_cast<int32_t>(item));
+    }
+    for (auto item : capturerChangeInfo.inputDeviceInfo.audioStreamInfo.samplingRate) {
+        audioRecorderChangeInfo.inputDeviceInfo.audioStreamInfo.samplingRate.insert(static_cast<int32_t>(item));
+    }
+    audioRecorderChangeInfo.inputDeviceInfo.audioStreamInfo.encoding =
+        capturerChangeInfo.inputDeviceInfo.audioStreamInfo.encoding;
+    audioRecorderChangeInfo.inputDeviceInfo.audioStreamInfo.format =
+        capturerChangeInfo.inputDeviceInfo.audioStreamInfo.format;
+    return audioRecorderChangeInfo;
 }
 } // namespace MEDIA
 } // namespace OHOS

@@ -64,7 +64,7 @@ public:
     };
 
     // Record whether to register AudioCaptureChangeInfoCallback
-    bool IsAudioCaptureChange_ = false;
+    bool isAudioCaptureChange_ = false;
 
     virtual ~IRecorderEngineObs() = default;
     virtual void OnError(ErrorType errorType, int32_t errorCode) = 0;
