@@ -117,6 +117,7 @@ private:
 
     std::atomic<StateId> curState_;
 
+    std::shared_ptr<AudioCapturerInfoChangeCallback> CapturerInfoChangeCallback_;
     std::weak_ptr<IRecorderEngineObs> obs_{};
     OutputFormatType outputFormatType_{OutputFormatType::FORMAT_BUTT};
     int32_t fd_;

@@ -14,7 +14,6 @@
  */
 
 #include "hirecorder_impl.h"
-
 #include "meta/audio_types.h"
 
 namespace OHOS {
@@ -52,6 +51,52 @@ namespace Media {
         HiRecorderImpl *hiRecorderImpl_;
     };
 
+    class CapturerInfoChangeCallback :public AudioCapturerInfoChangeCallback {//TODO::new
+    public:
+        CapturerInfoChangeCallback(HiRecorderImpl *hiRecorderImpl) {
+            hiRecorderImpl_ = hiRecorderImpl;
+        }
+
+        void OnStateChange(const AudioCapturerChangeInfo &capturerChangeInfo){
+            AudioRecorderChangeInfo audioRecorderChangeInfo;
+            audioRecorderChangeInfo.createrUID = capturerChangeInfo.createrUID;
+            audioRecorderChangeInfo.clientUID = capturerChangeInfo.clientUID;
+            audioRecorderChangeInfo.clientPid = capturerChangeInfo.clientPid;
+            audioRecorderChangeInfo.sessionId = capturerChangeInfo.sessionId;
+            audioRecorderChangeInfo.capturerState = capturerChangeInfo.capturerState;
+
+            audioRecorderChangeInfo.capturerInfo.sourceType = capturerChangeInfo.capturerInfo.sourceType;
+            audioRecorderChangeInfo.capturerInfo.capturerFlags = capturerChangeInfo.capturerInfo.capturerFlags;
+
+            audioRecorderChangeInfo.inputDeviceInfo.deviceName = capturerChangeInfo.inputDeviceInfo.deviceName;
+            audioRecorderChangeInfo.inputDeviceInfo.deviceId = capturerChangeInfo.inputDeviceInfo.deviceId;
+            audioRecorderChangeInfo.inputDeviceInfo.channelMasks = capturerChangeInfo.inputDeviceInfo.channelMasks;
+            audioRecorderChangeInfo.inputDeviceInfo.deviceRole = capturerChangeInfo.inputDeviceInfo.deviceRole;
+            audioRecorderChangeInfo.inputDeviceInfo.deviceType = capturerChangeInfo.inputDeviceInfo.deviceType;
+            audioRecorderChangeInfo.inputDeviceInfo.displayName = capturerChangeInfo.inputDeviceInfo.displayName;
+            audioRecorderChangeInfo.inputDeviceInfo.interruptGroupId =
+                capturerChangeInfo.inputDeviceInfo.interruptGroupId;
+            audioRecorderChangeInfo.inputDeviceInfo.isLowLatencyDevice =
+                capturerChangeInfo.inputDeviceInfo.isLowLatencyDevice;
+            audioRecorderChangeInfo.inputDeviceInfo.macAddress = capturerChangeInfo.inputDeviceInfo.macAddress;
+            audioRecorderChangeInfo.inputDeviceInfo.channelIndexMasks =
+                capturerChangeInfo.inputDeviceInfo.channelIndexMasks;
+            audioRecorderChangeInfo.inputDeviceInfo.audioStreamInfo.channels =
+                capturerChangeInfo.inputDeviceInfo.audioStreamInfo.channels;
+            audioRecorderChangeInfo.inputDeviceInfo.audioStreamInfo.encoding =
+                capturerChangeInfo.inputDeviceInfo.audioStreamInfo.encoding;
+            audioRecorderChangeInfo.inputDeviceInfo.audioStreamInfo.format =
+                capturerChangeInfo.inputDeviceInfo.audioStreamInfo.format;
+            audioRecorderChangeInfo.inputDeviceInfo.audioStreamInfo.samplingRate =
+                capturerChangeInfo.inputDeviceInfo.audioStreamInfo.samplingRate;
+
+            hiRecorderImpl_->obs_->OnAudioCaptureChange(audioRecorderChangeInfo);
+        }
+
+    private:
+        HiRecorderImpl *hiRecorderImpl_;
+    };
+
     HiRecorderImpl::HiRecorderImpl(int32_t appUid, int32_t appPid, uint32_t appTokenId, uint64_t appFullTokenId)
         : appUid_(appUid), appPid_(appPid), appTokenId_(appTokenId), appFullTokenId_(appFullTokenId)
     {
@@ -65,6 +110,7 @@ namespace Media {
         MEDIA_LOG_I("Init enter.");
         recorderEventReceiver_ = std::make_shared<RecorderEventReceiver>(this);
         recorderCallback_ = std::make_shared<RecorderFilterCallback>(this);
+        CapturerInfoChangeCallback_ = std::make_shared<CapturerInfoChangeCallback>(this);//TODO::new
         pipeline_->Init(recorderEventReceiver_, recorderCallback_);
         return (int32_t)Status::OK;
     }
@@ -178,6 +224,9 @@ namespace Media {
         MEDIA_LOG_I("Prepare enter.");
         if (audioCaptureFilter_) {
             audioCaptureFilter_->Init(recorderEventReceiver_, recorderCallback_);
+            if (obs->IsAudioCaptureChange_) {//TODO::new
+                audioCaptureFilter_.SetAudioCaptureChangeCallback(CapturerInfoChangeCallback_);
+            }
             audioEncFormat_->Set<Tag::APP_TOKEN_ID>(appTokenId_);
             audioEncFormat_->Set<Tag::APP_UID>(appUid_);
             audioEncFormat_->Set<Tag::APP_PID>(appPid_);

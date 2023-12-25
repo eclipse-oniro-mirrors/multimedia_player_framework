@@ -357,6 +357,10 @@ public:
     DeviceInfo inputDeviceInfo;
     bool muted;
 
+    AudioRecorderChangeInfo(const AudioRecorderChangeInfo &audioRecorderChangeInfo)
+    {
+        *this = audioRecorderChangeInfo;
+    }
     AudioRecorderChangeInfo() = default;
     ~AudioRecorderChangeInfo() = default;
     bool Marshalling(Parcel &parcel) const
@@ -412,7 +416,6 @@ public:
      * @version 1.0
      */
     virtual void OnInfo(int32_t type, int32_t extra) = 0;
-
     /**
      * @brief Called when the recording configuration changes. This callback is used to report all information
      * after recording configuration changes

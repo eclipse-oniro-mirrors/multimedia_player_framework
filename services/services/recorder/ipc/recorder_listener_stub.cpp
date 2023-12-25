@@ -86,7 +86,7 @@ void RecorderListenerStub::OnInfo(int32_t type, int32_t extra)
     }
 }
 
-void RecorderListenerStub::OnAudioCaptureChange(const AudioRecorderChangeInfo &audioRecorderChangeInfo)
+void RecorderListenerStub::OnAudioCaptureChange(AudioRecorderChangeInfo &audioRecorderChangeInfo)
 {
     if (callback_ != nullptr) {
         callback_->OnAudioCaptureChangeCallback(audioRecorderChangeInfo);

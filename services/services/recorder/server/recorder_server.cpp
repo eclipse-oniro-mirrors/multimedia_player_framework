@@ -130,7 +130,7 @@ void RecorderServer::OnInfo(InfoType type, int32_t extra)
     }
 }
 
-void RecorderServer::OnAudioCaptureChange(const AudioRecorderChangeInfo &audioRecorderChangeInfo)//TODO::new
+void RecorderServer::OnAudioCaptureChange(AudioRecorderChangeInfo &audioRecorderChangeInfo)//TODO::new
 {
     std::lock_guard<std::mutex> lock(cbMutex_);
     if (recorderCb_ != nullptr) {

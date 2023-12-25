@@ -17,7 +17,6 @@
 #define RECORDER_LISTENER_STUB_H
 
 #include "i_standard_recorder_listener.h"
-#include "recorder.h"
 #include "monitor_client_object.h"
 
 namespace OHOS {
@@ -29,7 +28,7 @@ public:
     int OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
     void OnError(int32_t errorType, int32_t errorCode) override;
     void OnInfo(int32_t type, int32_t extra) override;
-    void OnAudioCaptureChange(const AudioRecorderChangeInfo &audioRecorderChangeInfo) override;//TODO::new
+    void OnAudioCaptureChange(AudioRecorderChangeInfo &audioRecorderChangeInfo) override;//TODO::new
     void SetRecorderCallback(const std::shared_ptr<RecorderCallback> &callback);
     void SetMonitor(const std::weak_ptr<MonitorClientObject> &monitor);
 
