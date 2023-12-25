@@ -21,8 +21,6 @@
 #include "nocopyable.h"
 #include "task_queue.h"
 #include "watchdog.h"
-#include "audio_capturer.h"
-#include "audio_info.h"
 
 namespace OHOS {
 namespace Media {

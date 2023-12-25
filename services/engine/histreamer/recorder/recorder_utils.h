@@ -59,7 +59,9 @@ static inline int32_t IsVideo(int32_t sourceId)
 /**
  * CapturerChangeInfo to AudioRecorderChangeInfo
 */
-static AudioRecorderChangeInfo ConvertCapturerChangeInfo(const AudioCapturerChangeInfo &capturerChangeInfo) {
+static AudioRecorderChangeInfo ConvertCapturerChangeInfo(
+    const AudioStandard::AudioCapturerChangeInfo &capturerChangeInfo)
+{
     AudioRecorderChangeInfo audioRecorderChangeInfo;
     audioRecorderChangeInfo.createrUID = capturerChangeInfo.createrUID;
     audioRecorderChangeInfo.clientUID = capturerChangeInfo.clientUID;
@@ -83,14 +85,16 @@ static AudioRecorderChangeInfo ConvertCapturerChangeInfo(const AudioCapturerChan
     audioRecorderChangeInfo.inputDeviceInfo.macAddress = capturerChangeInfo.inputDeviceInfo.macAddress;
     audioRecorderChangeInfo.inputDeviceInfo.channelIndexMasks =
         capturerChangeInfo.inputDeviceInfo.channelIndexMasks;
-    audioRecorderChangeInfo.inputDeviceInfo.audioStreamInfo.channels =
-        capturerChangeInfo.inputDeviceInfo.audioStreamInfo.channels;
+    for (auto item : capturerChangeInfo.inputDeviceInfo.audioStreamInfo.channels) {
+        audioRecorderChangeInfo.inputDeviceInfo.audioStreamInfo.channels.insert(static_cast<int32_t>(item));
+    }
+    for (auto item : capturerChangeInfo.inputDeviceInfo.audioStreamInfo.samplingRate) {
+        audioRecorderChangeInfo.inputDeviceInfo.audioStreamInfo.samplingRate.insert(static_cast<int32_t>(item));
+    }
     audioRecorderChangeInfo.inputDeviceInfo.audioStreamInfo.encoding =
         capturerChangeInfo.inputDeviceInfo.audioStreamInfo.encoding;
     audioRecorderChangeInfo.inputDeviceInfo.audioStreamInfo.format =
         capturerChangeInfo.inputDeviceInfo.audioStreamInfo.format;
-    audioRecorderChangeInfo.inputDeviceInfo.audioStreamInfo.samplingRate =
-        capturerChangeInfo.inputDeviceInfo.audioStreamInfo.samplingRate;
     return audioRecorderChangeInfo;
 }
 } // Media

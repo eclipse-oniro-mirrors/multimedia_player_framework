@@ -375,7 +375,6 @@ napi_status AudioCaptureChangeInfoJsCallback::SetAudioCapturerInfo(napi_env env,
 napi_status AudioCaptureChangeInfoJsCallback::SetDeviceInfo(napi_env env,
     napi_value &inputDeviceInfo, napi_value &result)
 {
-    // isLowLatencyDevice = parcel.ReadBool();
     bool setRet = true;
     setRet = CommonNapi::SetPropertyInt32(env, inputDeviceInfo, "deviceRole",
         static_cast<int32_t>(value_.inputDeviceInfo.deviceRole));
@@ -417,8 +416,10 @@ napi_status AudioCaptureChangeInfoJsCallback::SetDeviceInfo(napi_env env,
 
     setRet = CommonNapi::SetPropertyString(env, inputDeviceInfo, "displayName", value_.inputDeviceInfo.displayName);
     CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
-
     setRet = CommonNapi::SetPropertyString(env, inputDeviceInfo, "networkId", value_.inputDeviceInfo.networkId);
+    CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
+    setRet = CommonNapi::SetPropertyBool(env, inputDeviceInfo, "isLowLatencyDevice",
+        value_.inputDeviceInfo.isLowLatencyDevice);
     CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
 
     napi_set_named_property(env, result, "inputDeviceInfo", inputDeviceInfo);
