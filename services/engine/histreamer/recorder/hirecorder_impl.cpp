@@ -47,23 +47,25 @@ public:
         hiRecorderImpl_->OnCallback(filter, cmd, outType);
     }
 
-    private:
-        HiRecorderImpl *hiRecorderImpl_;
-    };
+private:
+    HiRecorderImpl *hiRecorderImpl_;
+};
 
-    class CapturerInfoChangeCallback :public AudioStandard::AudioCapturerInfoChangeCallback {
-    public:
-        CapturerInfoChangeCallback(HiRecorderImpl *hiRecorderImpl) {
-            hiRecorderImpl_ = hiRecorderImpl;
-        }
+class CapturerInfoChangeCallback :public AudioStandard::AudioCapturerInfoChangeCallback {
+public:
+    CapturerInfoChangeCallback(HiRecorderImpl *hiRecorderImpl)
+    {
+        hiRecorderImpl_ = hiRecorderImpl;
+    }
 
-        void OnStateChange(const AudioStandard::AudioCapturerChangeInfo &capturerChangeInfo){
-            hiRecorderImpl_->obs_->OnAudioCaptureChange(ConvertCapturerChangeInfo(capturerChangeInfo));
-        }
+    void OnStateChange(const AudioStandard::AudioCapturerChangeInfo &capturerChangeInfo)
+    {
+        hiRecorderImpl_->obs_->OnAudioCaptureChange(ConvertCapturerChangeInfo(capturerChangeInfo));
+    }
 
-    private:
-        HiRecorderImpl *hiRecorderImpl_;
-    };
+private:
+    HiRecorderImpl *hiRecorderImpl_;
+};
 
 HiRecorderImpl::HiRecorderImpl(int32_t appUid, int32_t appPid, uint32_t appTokenId, uint64_t appFullTokenId)
     : appUid_(appUid), appPid_(appPid), appTokenId_(appTokenId), appFullTokenId_(appFullTokenId)

@@ -17,6 +17,7 @@
 #define RECORDER_LISTENER_STUB_H
 
 #include "i_standard_recorder_listener.h"
+#include "recorder.h"
 #include "monitor_client_object.h"
 
 namespace OHOS {
