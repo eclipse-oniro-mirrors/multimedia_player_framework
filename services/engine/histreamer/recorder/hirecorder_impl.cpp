@@ -77,14 +77,14 @@ HiRecorderImpl::~HiRecorderImpl()
 {
 }
 
-    int32_t HiRecorderImpl::Init()
-    {
-        MEDIA_LOG_I("Init enter.");
-        recorderEventReceiver_ = std::make_shared<RecorderEventReceiver>(this);
-        recorderCallback_ = std::make_shared<RecorderFilterCallback>(this);
-        pipeline_->Init(recorderEventReceiver_, recorderCallback_);
-        return (int32_t)Status::OK;
-    }
+int32_t HiRecorderImpl::Init()
+{
+    MEDIA_LOG_I("Init enter.");
+    recorderEventReceiver_ = std::make_shared<RecorderEventReceiver>(this);
+    recorderCallback_ = std::make_shared<RecorderFilterCallback>(this);
+    pipeline_->Init(recorderEventReceiver_, recorderCallback_);
+    return (int32_t)Status::OK;
+}
 
 int32_t HiRecorderImpl::SetVideoSource(VideoSourceType source, int32_t &sourceId)
 {
