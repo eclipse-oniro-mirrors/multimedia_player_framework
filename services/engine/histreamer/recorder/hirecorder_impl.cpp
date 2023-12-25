@@ -490,9 +490,9 @@ void HiRecorderImpl::ConfigureVideo(const RecorderParam &recParam)
             break;
         }
         case RecorderPublicParamType::VID_IS_HDR: {
-            VidIsHdr vidIsHdr =  = static_cast<const VidIsHdr&>(recParam);
+            VidIsHdr vidIsHdr = static_cast<const VidIsHdr&>(recParam);
             if (vidIsHdr.isHdr) {
-                videoEncFormat_->Set<Tag::VIDEO_H265_PROFILE>(Plugin::HEVCProfile::HEVC_PROFILE_MAIN_10);
+                videoEncFormat_->Set<Tag::VIDEO_H265_PROFILE>(Plugins::HEVCProfile::HEVC_PROFILE_MAIN_10);
             }
             break;
         }
@@ -506,16 +506,16 @@ void HiRecorderImpl::ConfigureVideoEncoderFormat(const RecorderParam &recParam)
     VidEnc vidEnc = static_cast<const VidEnc&>(recParam);
     switch (vidEnc.encFmt) {
         case OHOS::Media::VideoCodecFormat::H264:
-            videoEncFormat_->Set<Tag::MIME_TYPE>(Plugin::MimeType::VIDEO_AVC);
-            videoEncFormat_->Set<Tag::VIDEO_H264_PROFILE>(Plugin::VideoH264Profile::BASELINE);
+            videoEncFormat_->Set<Tag::MIME_TYPE>(Plugins::MimeType::VIDEO_AVC);
+            videoEncFormat_->Set<Tag::VIDEO_H264_PROFILE>(Plugins::VideoH264Profile::BASELINE);
             videoEncFormat_->Set<Tag::VIDEO_H264_LEVEL>(32); // 32: LEVEL 3.2
             break;
         case OHOS::Media::VideoCodecFormat::MPEG4:
-            videoEncFormat_->Set<Tag::MIME_TYPE>(Plugin::MimeType::VIDEO_MPEG4);
+            videoEncFormat_->Set<Tag::MIME_TYPE>(Plugins::MimeType::VIDEO_MPEG4);
             break;
         case OHOS::Media::VideoCodecFormat::H265:
             MEDIA_LOG_I("ConfigureVideo H265 enter");
-            videoEncFormat_->Set<Tag::MIME_TYPE>(Plugin::MimeType::VIDEO_HEVC);
+            videoEncFormat_->Set<Tag::MIME_TYPE>(Plugins::MimeType::VIDEO_HEVC);
             break;
         default:
             break;
