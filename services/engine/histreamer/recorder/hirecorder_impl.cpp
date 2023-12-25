@@ -51,16 +51,16 @@ private:
     HiRecorderImpl *hiRecorderImpl_;
 };
 
-class CapturerInfoChangeCallback :public AudioStandard::AudioCapturerInfoChangeCallback {
+class CapturerInfoChangeCallback : public AudioStandard::AudioCapturerInfoChangeCallback {
 public:
-    CapturerInfoChangeCallback(HiRecorderImpl *hiRecorderImpl)
+    explicit CapturerInfoChangeCallback(HiRecorderImpl *hiRecorderImpl)
     {
         hiRecorderImpl_ = hiRecorderImpl;
     }
 
     void OnStateChange(const AudioStandard::AudioCapturerChangeInfo &capturerChangeInfo)
     {
-       hiRecorderImpl_->OnAudioCaptureChange(capturerChangeInfo);
+        hiRecorderImpl_->OnAudioCaptureChange(capturerChangeInfo);
     }
 
 private:

@@ -54,7 +54,7 @@ private:
     };
     void OnJsErrorCallBack(AVRecordJsCallback *jsCb) const;
     void OnJsStateCallBack(AVRecordJsCallback *jsCb) const;
-    void OnJsAudioCaptureChangeCallback(AVRecordJsCallback *JsCb) const;
+    void OnJsAudioCaptureChangeCallback(AVRecordJsCallback *jsCb) const;
     napi_env env_ = nullptr;
     std::mutex mutex_;
     std::string currentState_ = AVRecorderState::STATE_IDLE;

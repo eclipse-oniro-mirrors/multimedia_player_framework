@@ -145,7 +145,8 @@ void AVRecorderCallback::OnInfo(int32_t type, int32_t extra)
     MEDIA_LOGI("OnInfo() is called, type: %{public}d, extra: %{public}d", type, extra);
 }
 
-void AVRecorderCallback::OnAudioCaptureChange(const AudioRecorderChangeInfo &audioRecorderChangeInfo) {
+void AVRecorderCallback::OnAudioCaptureChange(const AudioRecorderChangeInfo &audioRecorderChangeInfo)
+{
     MEDIA_LOGI("OnAudioCaptureChange() is called");
     SendAudioCaptureChangeCallback(audioRecorderChangeInfo);
 }
@@ -347,7 +348,7 @@ napi_status AudioCaptureChangeInfoJsCallback::GetJsResult(napi_env env, napi_val
     CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
     setRet = CommonNapi::SetPropertyInt32(env, result, "clientPid", value_.clientPid);
     CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
-    setRet = CommonNapi::SetPropertyInt32(env, result, "capturerState",value_.capturerState);
+    setRet = CommonNapi::SetPropertyInt32(env, result, "capturerState", value_.capturerState);
     CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
 
     napi_value captureInfo;
