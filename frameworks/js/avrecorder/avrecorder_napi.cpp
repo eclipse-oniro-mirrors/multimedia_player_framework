@@ -1037,11 +1037,13 @@ int32_t AVRecorderNapi::GetProfile(std::unique_ptr<AVRecorderAsyncContext> &asyn
             (asyncCtx->AVRecorderSignError(ret, "GetvideoFrameHeight", "videoFrameHeight"), ret));
         CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, item, "videoFrameRate", profile.videoFrameRate),
             (asyncCtx->AVRecorderSignError(ret, "GetvideoFrameRate", "videoFrameRate"), ret));
-        CHECK_AND_RETURN_RET(CommonNapi::GetPropertyBool(env, item, "isHdr", profile.isHdr),
-            (asyncCtx->AVRecorderSignError(ret, "GetIsHdr", "isHdr"), ret));
-        CHECK_AND_RETURN_RET(!(profile.isHdr && (profile.videoCodecFormat != VideoCodecFormat::H265)),
-            (asyncCtx->AVRecorderSignError(MSERR_UNSUPPORT_VID_PARAMS, "isHdr needs to match video/hevc", ""),
-            MSERR_UNSUPPORT_VID_PARAMS));
+        if (CommonNapi::GetPropertyBool(env, item, "isHdr", profile.isHdr)) {
+            CHECK_AND_RETURN_RET(!(profile.isHdr && (profile.videoCodecFormat != VideoCodecFormat::H265)),
+                (asyncCtx->AVRecorderSignError(MSERR_UNSUPPORT_VID_PARAMS, "isHdr needs to match video/hevc", ""),
+                MSERR_UNSUPPORT_VID_PARAMS));
+        } else {
+            profile.isHdr = false;
+        }
         MediaProfileLog(true, profile);
     }
 
