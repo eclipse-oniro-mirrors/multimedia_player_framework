@@ -396,6 +396,7 @@ class RecorderCallback {
 public:
     virtual ~RecorderCallback() = default;
 
+    bool IsAudioCaptureChange_ = false;
     /**
      * @brief Called when an error occurs during recording. This callback is used to report recording errors.
      *
@@ -424,7 +425,7 @@ public:
      * @since 1.0
      * @version 1.0
      */
-    virtual void OnAudioCaptureChangeCallback(const AudioRecorderChangeInfo &audioRecorderChangeInfo) = 0;//TODO::new
+    virtual void OnAudioCaptureChange(const AudioRecorderChangeInfo &audioRecorderChangeInfo) = 0;
 };
 
 /**

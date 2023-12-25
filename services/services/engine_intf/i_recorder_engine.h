@@ -64,12 +64,12 @@ public:
     };
 
     // Record whether to register AudioCaptureChangeInfoCallback
-    bool IsAudioCaptureChange_ = false;//TODO::new
+    bool IsAudioCaptureChange_ = false;
 
     virtual ~IRecorderEngineObs() = default;
     virtual void OnError(ErrorType errorType, int32_t errorCode) = 0;
     virtual void OnInfo(InfoType type, int32_t extra) = 0;
-    virtual void OnAudioCaptureChange(AudioRecorderChangeInfo &audioRecorderChangeInfo) = 0;//TODO::new for engine
+    virtual void OnAudioCaptureChange(const AudioRecorderChangeInfo &audioRecorderChangeInfo) = 0;
 };
 
 /**

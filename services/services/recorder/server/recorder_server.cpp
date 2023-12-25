@@ -130,11 +130,11 @@ void RecorderServer::OnInfo(InfoType type, int32_t extra)
     }
 }
 
-void RecorderServer::OnAudioCaptureChange(AudioRecorderChangeInfo &audioRecorderChangeInfo)//TODO::new
+void RecorderServer::OnAudioCaptureChange(const AudioRecorderChangeInfo &audioRecorderChangeInfo)
 {
     std::lock_guard<std::mutex> lock(cbMutex_);
     if (recorderCb_ != nullptr) {
-        recorderCb_->OnAudioCaptureChangeCallback(audioRecorderChangeInfo);
+        recorderCb_->OnAudioCaptureChange(audioRecorderChangeInfo);
     }
 }
 
@@ -488,6 +488,7 @@ int32_t RecorderServer::SetRecorderCallback(const std::shared_ptr<RecorderCallba
 
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     std::shared_ptr<IRecorderEngineObs> obs = shared_from_this();
+    obs->IsAudioCaptureChange_ = recorderCb_->IsAudioCaptureChange_;
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->SetObs(obs);
     });

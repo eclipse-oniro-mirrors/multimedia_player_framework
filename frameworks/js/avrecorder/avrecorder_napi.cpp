@@ -567,7 +567,7 @@ napi_value AVRecorderNapi::JsSetEventCallback(napi_env env, napi_callback_info i
 
     std::string callbackName = CommonNapi::GetStringArgument(env, args[0]);
     if (callbackName != AVRecorderEvent::EVENT_ERROR && callbackName != AVRecorderEvent::EVENT_STATE_CHANGE
-        && callbackName != AVRecorderEvent::EVENT_AUDIO_CAPTURE_CHANGE) {//TODO::add Judging
+        && callbackName != AVRecorderEvent::EVENT_AUDIO_CAPTURE_CHANGE) {
         recorderNapi->ErrorCallback(MSERR_INVALID_VAL, "SetEventCallback");
         return result;
     }
@@ -603,7 +603,7 @@ napi_value AVRecorderNapi::JsCancelEventCallback(napi_env env, napi_callback_inf
 
     std::string callbackName = CommonNapi::GetStringArgument(env, args[0]);
     if (callbackName != AVRecorderEvent::EVENT_ERROR && callbackName != AVRecorderEvent::EVENT_STATE_CHANGE
-        && callbackName != AVRecorderEvent::EVENT_AUDIO_CAPTURE_CHANGE) {//TODO::add Judging    
+        && callbackName != AVRecorderEvent::EVENT_AUDIO_CAPTURE_CHANGE) {
         recorderNapi->ErrorCallback(MSERR_INVALID_VAL, "CancelEventCallback");
         return result;
     }

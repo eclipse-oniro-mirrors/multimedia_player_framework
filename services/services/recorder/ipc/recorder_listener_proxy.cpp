@@ -64,7 +64,7 @@ void RecorderListenerProxy::OnInfo(int32_t type, int32_t extra)
     CHECK_AND_RETURN_LOG(error == MSERR_OK, "on info failed, error: %{public}d", error);
 }
 
-void RecorderListenerProxy::OnAudioCaptureChange(AudioRecorderChangeInfo &audioRecorderChangeInfo)//TODO::new
+void RecorderListenerProxy::OnAudioCaptureChange(const AudioRecorderChangeInfo &audioRecorderChangeInfo)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -103,7 +103,7 @@ void RecorderListenerCallback::OnInfo(int32_t type, int32_t extra)
     }
 }
 
-void RecorderListenerCallback::OnAudioCaptureChange(AudioRecorderChangeInfo &audioRecorderChangeInfo)//TODO::new
+void RecorderListenerCallback::OnAudioCaptureChange(const AudioRecorderChangeInfo &audioRecorderChangeInfo)
 {
     if (listener_ != nullptr) {
         listener_->OnAudioCaptureChange(audioRecorderChangeInfo);

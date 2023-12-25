@@ -17,6 +17,8 @@
 #define OHOS_MEDIA_RECORDER_UTILS_H
 
 #include <cstdint>
+#include "audio_capturer.h"
+#include "audio_info.h"
 
 namespace OHOS {
 namespace Media {
@@ -26,33 +28,71 @@ constexpr uint8_t AUDIO_SOURCE_MAX_COUNT = 1;
 constexpr int32_t INVALID_SOURCE_ID = -1;
 
 struct SourceIdGenerator {
-    static const uint32_t SOURCE_MASK = 0xF00;
-    static const uint32_t VIDEO_MASK = 0x100;
-    static const uint32_t AUDIO_MASK = 0x200;
-    static const uint32_t INDEX_MASK = 0xFF;
+static inline const uint32_t SOURCE_MASK = 0xF00;
+static inline const uint32_t VIDEO_MASK = 0x100;
+static inline const uint32_t AUDIO_MASK = 0x200;
+static inline const uint32_t INDEX_MASK = 0xFF;
 
-    static int32_t GenerateAudioSourceId(uint32_t index)
-    {
-        return static_cast<int32_t>(AUDIO_MASK + (INDEX_MASK & index));
-    }
+static inline int32_t GenerateAudioSourceId(uint32_t index)
+{
+    return static_cast<int32_t>(AUDIO_MASK + (INDEX_MASK & index));
+}
 
-    static int32_t GenerateVideoSourceId(uint32_t index)
-    {
-        return static_cast<int32_t>(VIDEO_MASK + (INDEX_MASK & index));
-    }
+static inline int32_t GenerateVideoSourceId(uint32_t index)
+{
+    return static_cast<int32_t>(VIDEO_MASK + (INDEX_MASK & index));
+}
 
-    static int32_t IsAudio(int32_t sourceId)
-    {
-        return ((sourceId > 0) &&
-                ((static_cast<uint32_t>(sourceId) & SOURCE_MASK) == AUDIO_MASK));
-    }
+static inline int32_t IsAudio(int32_t sourceId)
+{
+    return ((sourceId > 0) &&
+            ((static_cast<uint32_t>(sourceId) & SOURCE_MASK) == AUDIO_MASK));
+}
 
-    static int32_t IsVideo(int32_t sourceId)
-    {
-        return ((sourceId > 0) &&
-                ((static_cast<uint32_t>(sourceId) & SOURCE_MASK) == VIDEO_MASK));
-    }
+static inline int32_t IsVideo(int32_t sourceId)
+{
+    return ((sourceId > 0) &&
+            ((static_cast<uint32_t>(sourceId) & SOURCE_MASK) == VIDEO_MASK));
+}
 };
+
+/**
+ * CapturerChangeInfo to AudioRecorderChangeInfo
+*/
+static AudioRecorderChangeInfo ConvertCapturerChangeInfo(const AudioCapturerChangeInfo &capturerChangeInfo) {
+    AudioRecorderChangeInfo audioRecorderChangeInfo;
+    audioRecorderChangeInfo.createrUID = capturerChangeInfo.createrUID;
+    audioRecorderChangeInfo.clientUID = capturerChangeInfo.clientUID;
+    audioRecorderChangeInfo.clientPid = capturerChangeInfo.clientPid;
+    audioRecorderChangeInfo.sessionId = capturerChangeInfo.sessionId;
+    audioRecorderChangeInfo.capturerState = capturerChangeInfo.capturerState;
+
+    audioRecorderChangeInfo.capturerInfo.sourceType = capturerChangeInfo.capturerInfo.sourceType;
+    audioRecorderChangeInfo.capturerInfo.capturerFlags = capturerChangeInfo.capturerInfo.capturerFlags;
+
+    audioRecorderChangeInfo.inputDeviceInfo.deviceName = capturerChangeInfo.inputDeviceInfo.deviceName;
+    audioRecorderChangeInfo.inputDeviceInfo.deviceId = capturerChangeInfo.inputDeviceInfo.deviceId;
+    audioRecorderChangeInfo.inputDeviceInfo.channelMasks = capturerChangeInfo.inputDeviceInfo.channelMasks;
+    audioRecorderChangeInfo.inputDeviceInfo.deviceRole = capturerChangeInfo.inputDeviceInfo.deviceRole;
+    audioRecorderChangeInfo.inputDeviceInfo.deviceType = capturerChangeInfo.inputDeviceInfo.deviceType;
+    audioRecorderChangeInfo.inputDeviceInfo.displayName = capturerChangeInfo.inputDeviceInfo.displayName;
+    audioRecorderChangeInfo.inputDeviceInfo.interruptGroupId =
+        capturerChangeInfo.inputDeviceInfo.interruptGroupId;
+    audioRecorderChangeInfo.inputDeviceInfo.isLowLatencyDevice =
+        capturerChangeInfo.inputDeviceInfo.isLowLatencyDevice;
+    audioRecorderChangeInfo.inputDeviceInfo.macAddress = capturerChangeInfo.inputDeviceInfo.macAddress;
+    audioRecorderChangeInfo.inputDeviceInfo.channelIndexMasks =
+        capturerChangeInfo.inputDeviceInfo.channelIndexMasks;
+    audioRecorderChangeInfo.inputDeviceInfo.audioStreamInfo.channels =
+        capturerChangeInfo.inputDeviceInfo.audioStreamInfo.channels;
+    audioRecorderChangeInfo.inputDeviceInfo.audioStreamInfo.encoding =
+        capturerChangeInfo.inputDeviceInfo.audioStreamInfo.encoding;
+    audioRecorderChangeInfo.inputDeviceInfo.audioStreamInfo.format =
+        capturerChangeInfo.inputDeviceInfo.audioStreamInfo.format;
+    audioRecorderChangeInfo.inputDeviceInfo.audioStreamInfo.samplingRate =
+        capturerChangeInfo.inputDeviceInfo.audioStreamInfo.samplingRate;
+    return audioRecorderChangeInfo;
+}
 } // Media
 } // OHOS
 #endif // OHOS_MEDIA_RECORDER_UTILS_H

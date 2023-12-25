@@ -55,7 +55,7 @@ int RecorderListenerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Me
             OnInfo(type, extra);
             return MSERR_OK;
         }
-        case RecorderListenerMsg::ON_AUDIO_CAPTURE_CHANGE: {//TODO::new
+        case RecorderListenerMsg::ON_AUDIO_CAPTURE_CHANGE: {
             AudioRecorderChangeInfo audioRecorderChangeInfo;
             audioRecorderChangeInfo.Unmarshalling(data);
             OnAudioCaptureChange(audioRecorderChangeInfo);
@@ -86,10 +86,10 @@ void RecorderListenerStub::OnInfo(int32_t type, int32_t extra)
     }
 }
 
-void RecorderListenerStub::OnAudioCaptureChange(AudioRecorderChangeInfo &audioRecorderChangeInfo)
+void RecorderListenerStub::OnAudioCaptureChange(const AudioRecorderChangeInfo &audioRecorderChangeInfo)
 {
     if (callback_ != nullptr) {
-        callback_->OnAudioCaptureChangeCallback(audioRecorderChangeInfo);
+        callback_->OnAudioCaptureChange(audioRecorderChangeInfo);
     }
 }
 
