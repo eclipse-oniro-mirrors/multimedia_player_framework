@@ -427,7 +427,7 @@ public:
      * @since 1.0
      * @version 1.0
      */
-    virtual void OnAudioCaptureChange(const AudioRecorderChangeInfo &audioRecorderChangeInfo) = 0;
+    virtual void OnAudioCaptureChange(const AudioRecorderChangeInfo &audioRecorderChangeInfo);
 };
 
 /**
