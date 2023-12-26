@@ -429,7 +429,7 @@ public:
      */
     virtual void OnAudioCaptureChange(const AudioRecorderChangeInfo &audioRecorderChangeInfo)
     {
-        (void)AudioaudioRecorderChangeInfo;
+        (void)audioRecorderChangeInfo;
     }
 };
 
