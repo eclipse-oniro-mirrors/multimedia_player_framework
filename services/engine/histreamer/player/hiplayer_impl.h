@@ -22,7 +22,6 @@
 
 #include "audio_decoder_filter.h"
 #include "audio_sink_filter.h"
-#include "codec_filter.h"
 #include "common/status.h"
 #include "demuxer_filter.h"
 #include "filter/filter.h"
@@ -32,10 +31,9 @@
 #include "i_player_engine.h"
 #include "media_sync_manager.h"
 #include "pipeline/pipeline.h"
-#ifdef VIDEO_SUPPORT
+#ifdef SUPPORT_VIDEO
 #include "decoder_surface_filter.h"
 #endif
-
 
 namespace OHOS {
 namespace Media {
@@ -93,8 +91,9 @@ private:
     void NotifySeekDone(int32_t status);
     Status LinkAudioDecoderFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
     Status LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
-#ifdef VIDEO_SUPPORT
+#ifdef SUPPORT_VIDEO
     Status LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
+    bool IsVideoMime(const std::string& mime);
 #endif
     int32_t appUid_{0};
     int32_t appPid_{0};
@@ -115,7 +114,7 @@ private:
     std::shared_ptr<DemuxerFilter> demuxer_;
     std::shared_ptr<AudioDecoderFilter> audioDecoder_;
     std::shared_ptr<AudioSinkFilter> audioSink_;
-#ifdef VIDEO_SUPPORT
+#ifdef SUPPORT_VIDEO
     std::shared_ptr<DecoderSurfaceFilter> videoDecoder_;
 #endif
     std::atomic<PlayerStateId> curState_;

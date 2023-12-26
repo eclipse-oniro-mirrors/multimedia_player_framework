@@ -194,7 +194,7 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
 
     int32_t ret = taskMgr_.Init();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "task mgr init failed");
-    MEDIA_LOGD("current url is : %{public}s", url.c_str());
+    MEDIA_LOGI("current url is : %{public}s", url.c_str());
     auto engineFactory = EngineFactoryRepo::Instance().GetEngineFactory(IEngineFactory::Scene::SCENE_PLAYBACK, url);
     CHECK_AND_RETURN_RET_LOG(engineFactory != nullptr, MSERR_CREATE_PLAYER_ENGINE_FAILED,
         "failed to get engine factory");
@@ -210,6 +210,7 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetSource Failed!");
 
     std::shared_ptr<IPlayerEngineObs> obs = shared_from_this();
+    playerEngine_->GetVideoWidth();
     ret = playerEngine_->SetObs(obs);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetObs Failed!");
 

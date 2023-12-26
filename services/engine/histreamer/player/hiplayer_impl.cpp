@@ -14,11 +14,11 @@
  */
 
 #define HST_LOG_TAG "HiPlayerImpl"
+#define SUPPORT_VIDEO
 
 #include "hiplayer_impl.h"
 
 #include "audio_info.h"
-#include "av_common.h"
 #include "common/log.h"
 #include "common/media_source.h"
 #include "filter/filter_factory.h"
@@ -74,6 +74,7 @@ HiPlayerImpl::HiPlayerImpl(int32_t appUid, int32_t appPid, uint32_t appTokenId, 
     MEDIA_LOG_I("hiPlayerImpl ctor appUid " PUBLIC_LOG_D32 " appPid " PUBLIC_LOG_D32 " appTokenId " PUBLIC_LOG_D32
         " appFullTokenId " PUBLIC_LOG_D64, appUid_, appPid_, appTokenId_, appFullTokenId_);
     pipeline_ = std::make_shared<OHOS::Media::Pipeline::Pipeline>();
+    callbackLooper_.SetPlayEngine(this);
 }
 
 HiPlayerImpl::~HiPlayerImpl()
@@ -81,8 +82,8 @@ HiPlayerImpl::~HiPlayerImpl()
     MEDIA_LOG_I("dtor called.");
     pipeline_->Stop();
     audioSink_.reset();
-#ifdef VIDEO_SUPPORT
-    videoSink_.reset();
+#ifdef SUPPORT_VIDEO
+    videoDecoder_.reset();
 #endif
 }
 
@@ -130,11 +131,12 @@ int32_t HiPlayerImpl::SetSource(const std::shared_ptr<IMediaDataSource>& dataSrc
     return TransStatus(ret);
 }
 
-int32_t HiPlayerImpl::PrepareAsync()
+int32_t HiPlayerImpl::Prepare()
 {
-    MEDIA_LOG_I("PrepareAsync start");
+    MEDIA_LOG_I("Prepare start");
     Status ret = pipeline_->Prepare();
     if (ret != Status::OK) {
+        MEDIA_LOG_I("Prepare pipeline prepare ret " PUBLIC_LOG_D32, ret);
         return TransStatus(ret);
     }
     AutoLock lock(stateMutex_);
@@ -146,15 +148,16 @@ int32_t HiPlayerImpl::PrepareAsync()
         Format format;
         callbackLooper_.OnInfo(INFO_TYPE_STATE_CHANGE, PlayerStates::PLAYER_PREPARED, format);
     } else {
+        MEDIA_LOG_I("Prepare not ready");
         ret = Status::ERROR_UNKNOWN;
     }
-    MEDIA_LOG_I("PrepareAsync End");
+    MEDIA_LOG_I("Prepare End");
     return TransStatus(ret);
 }
 
-int HiPlayerImpl::Prepare()
+int HiPlayerImpl::PrepareAsync()
 {
-    MEDIA_LOG_I("Prepare Start");
+    MEDIA_LOG_I("PrepareAsync Start");
     if (!(pipelineStates_ == PlayerStates::PLAYER_INITIALIZED || pipelineStates_ == PlayerStates::PLAYER_STOPPED)) {
         return MSERR_INVALID_OPERATION;
     }
@@ -162,12 +165,12 @@ int HiPlayerImpl::Prepare()
         SetSource(url_);
     }
     NotifyBufferingUpdate(PlayerKeys::PLAYER_BUFFERING_START, 0);
-    MEDIA_LOG_I("Prepare entered, current pipeline state: " PUBLIC_LOG_S,
+    MEDIA_LOG_I("PrepareAsync entered, current pipeline state: " PUBLIC_LOG_S,
         StringnessPlayerState(pipelineStates_).c_str());
     OnStateChanged(PlayerStateId::PREPARING);
     auto ret = pipeline_->Prepare();
     if (ret != Status::OK) {
-        MEDIA_LOG_E("Prepare failed with error " PUBLIC_LOG_D32, ret);
+        MEDIA_LOG_E("PrepareAsync failed with error " PUBLIC_LOG_D32, ret);
         return TransStatus(ret);
     }
     NotifyBufferingUpdate(PlayerKeys::PLAYER_BUFFERING_END, 0);
@@ -175,7 +178,8 @@ int HiPlayerImpl::Prepare()
     GetDuration(durationMs);
     NotifyDurationUpdate(PlayerKeys::PLAYER_CACHED_DURATION, 0);
     OnStateChanged(PlayerStateId::READY);
-    MEDIA_LOG_I("Prepare End, resource duration " PUBLIC_LOG_D32, durationMs);
+    MEDIA_LOG_I("PrepareAsync End, resource duration " PUBLIC_LOG_D32, durationMs);
+    Play();
     return TransStatus(ret);
 }
 
@@ -301,13 +305,15 @@ int32_t HiPlayerImpl::SetVolume(float leftVolume, float rightVolume)
 int32_t HiPlayerImpl::SetVideoSurface(sptr<Surface> surface)
 {
     MEDIA_LOG_D("SetVideoSurface entered.");
-#ifdef VIDEO_SUPPORT
+#ifdef SUPPORT_VIDEO
     FALSE_RETURN_V_MSG_E(surface != nullptr, (int32_t)(Status::ERROR_INVALID_PARAMETER),
                          "Set video surface failed, surface == nullptr");
-    return TransStatus(videoSink_->SetVideoSurface(surface));
-#else
-    return TransStatus(Status::OK);
+    if (videoDecoder_ != nullptr) {
+        return TransStatus(videoDecoder_->SetVideoSurface(surface));
+    }
+    surface_ = surface;
 #endif
+    return TransStatus(Status::OK);
 }
 
 int32_t HiPlayerImpl::SetLooping(bool loop)
@@ -320,7 +326,7 @@ int32_t HiPlayerImpl::SetLooping(bool loop)
 int32_t HiPlayerImpl::SetParameter(const Format& params)
 {
     MEDIA_LOG_I("SetParameter entered.");
-#ifdef VIDEO_SUPPORT
+#ifdef SUPPORT_VIDEO
     if (params.ContainKey(PlayerKeys::VIDEO_SCALE_TYPE)) {
         int32_t videoScaleType = 0;
         params.GetIntValue(PlayerKeys::VIDEO_SCALE_TYPE, videoScaleType);
@@ -422,10 +428,15 @@ int32_t HiPlayerImpl::GetPlaybackSpeed(PlaybackRateMode& mode)
     return SPEED_FORWARD_1_00_X;
 }
 
+bool HiPlayerImpl::IsVideoMime(const std::string& mime)
+{
+    return mime.find("video/") == 0;
+}
+
 int32_t HiPlayerImpl::GetVideoTrackInfo(std::vector<Format>& videoTrack)
 {
     MEDIA_LOG_I("GetVideoTrackInfo entered.");
-#ifdef VIDEO_SUPPORT
+#ifdef SUPPORT_VIDEO
     std::string mime;
     std::vector<std::shared_ptr<Meta>> metaInfo = demuxer_->GetStreamMetaInfo();
     for (const auto& trackInfo : metaInfo) {
@@ -436,9 +447,9 @@ int32_t HiPlayerImpl::GetVideoTrackInfo(std::vector<Format>& videoTrack)
         if (IsVideoMime(mime)) {
             Format videoTrackInfo {};
             videoTrackInfo.PutStringValue("codec_mime", mime);
-            videoTrackInfo.PutIntValue("track_type", MediaType::MEDIA_TYPE_VID);
+            videoTrackInfo.PutIntValue("track_type", static_cast<int32_t>(MediaType::VIDEO));
             uint32_t trackIndex;
-            trackInfo->GetData(Tag::TRACK_ID, trackIndex);
+            trackInfo->GetData(Tag::REGULAR_TRACK_ID, trackIndex);
             videoTrackInfo.PutIntValue("track_index", static_cast<int32_t>(trackIndex));
             int64_t bitRate;
             trackInfo->GetData(Tag::MEDIA_BITRATE, bitRate);
@@ -473,7 +484,7 @@ int32_t HiPlayerImpl::GetAudioTrackInfo(std::vector<Format>& audioTrack)
         if (mime.find("audio/") == 0) {
             Format audioTrackInfo {};
             audioTrackInfo.PutStringValue("codec_mime", mime);
-            audioTrackInfo.PutIntValue("track_type", OHOS::Media::MediaType::MEDIA_TYPE_AUD);
+            audioTrackInfo.PutIntValue("track_type", static_cast<int32_t>(MediaType::AUDIO));
             audioTrackInfo.PutIntValue("track_index", static_cast<int32_t>(trackIndex));
             int64_t bitRate;
             trackInfo->GetData(Tag::MEDIA_BITRATE, bitRate);
@@ -492,10 +503,10 @@ int32_t HiPlayerImpl::GetAudioTrackInfo(std::vector<Format>& audioTrack)
 
 int32_t HiPlayerImpl::GetVideoWidth()
 {
-#ifdef VIDEO_SUPPORT
+#ifdef SUPPORT_VIDEO
     std::vector<std::shared_ptr<Meta>> metaInfo = demuxer_->GetStreamMetaInfo();
     for (const auto& trackInfo : metaInfo) {
-        if !(trackInfo->GetData(Tag::MIME, mime)) {
+        if (!trackInfo->GetData(Tag::MIME, mime)) {
             MEDIA_LOG_W("Get MIME fail");
         }
         if (IsVideoMime(mime)) {
@@ -511,7 +522,7 @@ int32_t HiPlayerImpl::GetVideoWidth()
 
 int32_t HiPlayerImpl::GetVideoHeight()
 {
-#ifdef VIDEO_SUPPORT
+#ifdef SUPPORT_VIDEO
     std::vector<std::shared_ptr<Meta>> metaInfo = demuxer_->GetStreamMetaInfo();
     for (const auto& trackInfo : metaInfo) {
         if !(trackInfo->GetData(Tag::MIME, mime)) {
@@ -703,7 +714,7 @@ void HiPlayerImpl::OnCallback(std::shared_ptr<Filter> filter, const FilterCallBa
             case StreamType::STREAMTYPE_ENCODED_AUDIO:
                 LinkAudioDecoderFilter(filter, outType);
                 break;
-#ifdef VIDEO_SUPPORT
+#ifdef SUPPORT_VIDEO
             case StreamType::STREAMTYPE_RAW_VIDEO:
                 break;
             case StreamType::STREAMTYPE_ENCODED_VIDEO:
@@ -739,7 +750,7 @@ Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilte
     }
     return pipeline_->LinkFilters(preFilter, {audioSink_}, type);
 }
-#ifdef VIDEO_SUPPORT
+#ifdef SUPPORT_VIDEO
 Status HiPlayerImpl::LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFilter, StreamType type)
 {
     MEDIA_LOG_I("HiPlayerImpl::LinkVideoDecoderFilter");
@@ -748,6 +759,9 @@ Status HiPlayerImpl::LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFi
             FilterType::FILTERTYPE_VDEC);
         FALSE_RETURN_V(videoDecoder_ != nullptr, Status::ERROR_NULL_POINTER);
         videoDecoder_->Init(playerEventReceiver_, playerFilterCallback_);
+        if (surface_ != nullptr) {
+            videoDecoder_->SetVideoSurface(surface_);
+        }
     }
     return pipeline_->LinkFilters(preFilter, {videoDecoder_}, type);
 }

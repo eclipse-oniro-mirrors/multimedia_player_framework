@@ -40,6 +40,7 @@ config("media_engine_histreamer_player_config") {
     "$MEDIA_PLAYER_HISTREAMER/src",
     "$MEDIA_PLAYER_AVCODEC/services/media_engine/modules/sink",
     "$MEDIA_PLAYER_AVCODEC/services/media_engine/modules",
+    "$MEDIA_PLAYER_GRAPHIC/interfaces/inner_api/",
   ]
 }
 
