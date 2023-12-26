@@ -60,6 +60,7 @@ public:
     int32_t SetVideoSurface(sptr<Surface> surface) override;
     int32_t SetLooping(bool loop) override;
     int32_t SetParameter(const Format& params) override;
+    int32_t SetObsForHst(const std::shared_ptr<IPlayerEngineObs>& obs) override;
     int32_t SetObs(const std::weak_ptr<IPlayerEngineObs>& obs) override;
     int32_t GetCurrentTime(int32_t& currentPositionMs) override;
     int32_t GetDuration(int32_t& durationMs) override;
@@ -117,6 +118,7 @@ private:
 #ifdef SUPPORT_VIDEO
     std::shared_ptr<DecoderSurfaceFilter> videoDecoder_;
 #endif
+    std::shared_ptr<MediaSyncManager> syncManager_;
     std::atomic<PlayerStateId> curState_;
     HiPlayerCallbackLooper callbackLooper_{};
     sptr<Surface> surface_ {nullptr};

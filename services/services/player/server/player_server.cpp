@@ -23,6 +23,7 @@
 #include "media_dfx.h"
 #include "ipc_skeleton.h"
 #include "av_common.h"
+#include "parameter.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerServer"};
@@ -211,7 +212,17 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
 
     std::shared_ptr<IPlayerEngineObs> obs = shared_from_this();
     playerEngine_->GetVideoWidth();
-    ret = playerEngine_->SetObs(obs);
+
+    char useHistreamer[10] = {0}; // 10 for system parameter usage
+    auto res = GetParameter("debug.media_service.histreamer", "0", useHistreamer, sizeof(useHistreamer));
+    if (res == 1 && useHistreamer[0] == '1') {
+        MEDIA_LOGI("InitPlayEngine hst");
+        ret = playerEngine_->SetObsForHst(obs);
+    } else {
+        MEDIA_LOGI("InitPlayEngine gst");
+        ret = playerEngine_->SetObs(obs);
+    }
+
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetObs Failed!");
 
     lastOpStatus_ = PLAYER_INITIALIZED;

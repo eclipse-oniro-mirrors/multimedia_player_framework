@@ -74,6 +74,7 @@ HiPlayerImpl::HiPlayerImpl(int32_t appUid, int32_t appPid, uint32_t appTokenId, 
     MEDIA_LOG_I("hiPlayerImpl ctor appUid " PUBLIC_LOG_D32 " appPid " PUBLIC_LOG_D32 " appTokenId " PUBLIC_LOG_D32
         " appFullTokenId " PUBLIC_LOG_D64, appUid_, appPid_, appTokenId_, appFullTokenId_);
     pipeline_ = std::make_shared<OHOS::Media::Pipeline::Pipeline>();
+    syncManager_ = std::make_shared<MediaSyncManager>();
     callbackLooper_.SetPlayEngine(this);
 }
 
@@ -84,6 +85,7 @@ HiPlayerImpl::~HiPlayerImpl()
     audioSink_.reset();
 #ifdef SUPPORT_VIDEO
     videoDecoder_.reset();
+    syncManager_.reset();
 #endif
 }
 
@@ -193,6 +195,7 @@ int32_t HiPlayerImpl::Play()
     } else if (pipelineStates_ == PlayerStates::PLAYER_PAUSED) {
         ret = TransStatus(Resume());
     } else {
+        syncManager_->Resume();
         ret = TransStatus(pipeline_->Start());
         if (ret != MSERR_OK) {
             UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
@@ -208,6 +211,7 @@ int32_t HiPlayerImpl::Pause()
 {
     MEDIA_LOG_I("Pause entered.");
     auto ret = pipeline_->Pause();
+    syncManager_->Pause();
     if (ret != Status::OK) {
         UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
     }
@@ -239,6 +243,7 @@ int32_t HiPlayerImpl::Reset()
     }
     singleLoop_ = false;
     auto ret = Stop();
+    syncManager_->Reset();
     OnStateChanged(PlayerStateId::STOPPED);
     return ret;
 }
@@ -269,6 +274,9 @@ int32_t HiPlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
         MEDIA_LOG_I("Do seek ...");
         int64_t realSeekTime = seekPos;
         rtv = demuxer_->SeekTo(seekPos, seekMode, realSeekTime);
+        if (rtv == Status::OK) {
+            syncManager_->Seek(realSeekTime);
+        }        
         if (pipelineStates_ == PLAYER_STARTED) {
             pipeline_->Start();
         }
@@ -350,15 +358,22 @@ int32_t HiPlayerImpl::SetParameter(const Format& params)
     return TransStatus(Status::OK);
 }
 
-int32_t HiPlayerImpl::SetObs(const std::weak_ptr<IPlayerEngineObs>& obs)
+int32_t HiPlayerImpl::SetObsForHst(const std::shared_ptr<IPlayerEngineObs>& obs)
 {
     MEDIA_LOG_I("SetObs entered.");
     callbackLooper_.StartWithPlayerEngineObs(obs);
     return TransStatus(Status::OK);
 }
 
+int32_t HiPlayerImpl::SetObs(const std::weak_ptr<IPlayerEngineObs>& obs)
+{
+    return 0;
+}
+
 int32_t HiPlayerImpl::GetCurrentTime(int32_t& currentPositionMs)
 {
+    FALSE_RETURN_V(syncManager_ != nullptr, TransStatus(Status::ERROR_NULL_POINTER));
+    currentPositionMs = Plugins::HstTime2Us(syncManager_->GetMediaTimeNow());
     return TransStatus(Status::OK);
 }
 
@@ -506,7 +521,8 @@ int32_t HiPlayerImpl::GetVideoWidth()
 #ifdef SUPPORT_VIDEO
     std::vector<std::shared_ptr<Meta>> metaInfo = demuxer_->GetStreamMetaInfo();
     for (const auto& trackInfo : metaInfo) {
-        if (!trackInfo->GetData(Tag::MIME, mime)) {
+        std::string mime;
+        if (!trackInfo->GetData(Tag::MIME_TYPE, mime)) {
             MEDIA_LOG_W("Get MIME fail");
         }
         if (IsVideoMime(mime)) {
@@ -525,7 +541,8 @@ int32_t HiPlayerImpl::GetVideoHeight()
 #ifdef SUPPORT_VIDEO
     std::vector<std::shared_ptr<Meta>> metaInfo = demuxer_->GetStreamMetaInfo();
     for (const auto& trackInfo : metaInfo) {
-        if !(trackInfo->GetData(Tag::MIME, mime)) {
+        std::string mime;
+        if (!trackInfo->GetData(Tag::MIME_TYPE, mime)) {
             MEDIA_LOG_W("Get MIME fail");
         }
         if (IsVideoMime(mime)) {
@@ -603,6 +620,7 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
 
 Status HiPlayerImpl::Resume()
 {
+    syncManager_->Resume();
     auto ret = pipeline_->Resume();
     if (ret != Status::OK) {
         UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
@@ -763,6 +781,7 @@ Status HiPlayerImpl::LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFi
             videoDecoder_->SetVideoSurface(surface_);
         }
     }
+    videoDecoder_->SetSyncCenter(syncManager_);
     return pipeline_->LinkFilters(preFilter, {videoDecoder_}, type);
 }
 #endif
