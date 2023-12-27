@@ -200,6 +200,8 @@ ohos_shared_library("media_service") {
     "ipc:ipc_single",
     "napi:ace_napi",
     "safwk:system_ability_fwk",
+    "qos_manager:concurrent_task_client",
+    "qos_manager:qos",
   ]
 
   if (multimedia_player_framework_support_video) {

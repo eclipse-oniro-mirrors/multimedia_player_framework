@@ -81,6 +81,7 @@ ohos_shared_library("native_avscreen_capture") {
     "graphic_2d:surface",
     "hilog:libhilog",
     "window_manager:libdm",
+    "qos_manager:qos",
   ]
   output_extension = "so"
   subsystem_name = "multimedia"

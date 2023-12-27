@@ -15,6 +15,7 @@
 
 #include "player_server.h"
 #include <map>
+#include <unistd.h>
 #include <unordered_set>
 #include "media_log.h"
 #include "media_errors.h"
@@ -23,6 +24,10 @@
 #include "media_dfx.h"
 #include "ipc_skeleton.h"
 #include "av_common.h"
+#include "concurrent_task_client.h"
+#include "qos.h"
+
+using namespace OHOS::QOS;
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerServer"};
@@ -191,6 +196,12 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
         MEDIA_LOGE("current state is: %{public}s, not support SetSource", GetStatusDescription(lastOpStatus_).c_str());
         return MSERR_INVALID_OPERATION;
     }
+
+    std::unordered_map<std::string, std::string> payload;
+    pid_t pid = getpid();
+    payload["pid"] = std::to_string(pid);
+    MEDIA_LOGI("PlayerServer qos auth, pid = %{public}d", pid);
+    OHOS::ConcurrentTask::ConcurrentTaskClient::GetInstance().RequestAuth(payload);
 
     int32_t ret = taskMgr_.Init();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "task mgr init failed");

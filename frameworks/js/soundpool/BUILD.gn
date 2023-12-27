@@ -79,6 +79,7 @@ ohos_shared_library("media_soundpool") {
     "hilog:libhilog",
     "napi:ace_napi",
     "resource_management:global_resmgr",
+    "qos_manager:qos",
   ]
 
   defines = []

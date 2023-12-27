@@ -105,6 +105,7 @@ ohos_static_library("media_engine_gst_common") {
     "histreamer:media_foundation",
     "init:libbegetutil",
     "ipc:ipc_single",
+    "qos_manager:qos",
   ]
 
   defines = []
@@ -153,6 +154,7 @@ config("media_gst_dfx_config") {
     "//third_party/gstreamer/gstplugins_base/gst-libs",
     "//third_party/gstreamer/gstplugins_bad/gst-libs",
     "//foundation/multimedia/player_framework/services/engine/gstreamer/common/utils",
+    "//foundation/resourceschedule/qos_manager/interfaces/inner_api",
     "//foundation/multimedia/player_framework/services/utils/include",
     "//foundation/multimedia/player_framework/interfaces/inner_api/native",
   ]

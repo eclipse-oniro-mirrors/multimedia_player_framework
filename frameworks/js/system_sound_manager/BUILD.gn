@@ -59,6 +59,7 @@ ohos_shared_library("systemsoundmanager") {
     "ipc:ipc_single",
     "napi:ace_napi",
     "resource_management:global_resmgr",
+    "qos_manager:qos",
   ]
   relative_install_dir = "module/multimedia"
   part_name = "player_framework"

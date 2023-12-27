@@ -64,6 +64,7 @@ ohos_shared_library("system_sound_client") {
     "hilog:libhilog",
     "relational_store:native_dataability",
     "relational_store:native_rdb",
+    "qos_manager:qos",
   ]
 
   if (multimedia_player_framework_support_vibrator) {
