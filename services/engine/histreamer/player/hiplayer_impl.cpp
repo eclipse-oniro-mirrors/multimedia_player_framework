@@ -181,7 +181,6 @@ int HiPlayerImpl::PrepareAsync()
     NotifyDurationUpdate(PlayerKeys::PLAYER_CACHED_DURATION, 0);
     OnStateChanged(PlayerStateId::READY);
     MEDIA_LOG_I("PrepareAsync End, resource duration " PUBLIC_LOG_D32, durationMs);
-    Play();
     return TransStatus(ret);
 }
 
@@ -276,7 +275,7 @@ int32_t HiPlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
         rtv = demuxer_->SeekTo(seekPos, seekMode, realSeekTime);
         if (rtv == Status::OK) {
             syncManager_->Seek(realSeekTime);
-        }        
+        }
         if (pipelineStates_ == PLAYER_STARTED) {
             pipeline_->Start();
         }
@@ -765,6 +764,7 @@ Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilte
             FilterType::FILTERTYPE_ASINK);
         FALSE_RETURN_V(audioSink_ != nullptr, Status::ERROR_NULL_POINTER);
         audioSink_->Init(playerEventReceiver_, playerFilterCallback_);
+        audioSink_->SetSyncCenter(syncManager_);
     }
     return pipeline_->LinkFilters(preFilter, {audioSink_}, type);
 }
@@ -777,11 +777,11 @@ Status HiPlayerImpl::LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFi
             FilterType::FILTERTYPE_VDEC);
         FALSE_RETURN_V(videoDecoder_ != nullptr, Status::ERROR_NULL_POINTER);
         videoDecoder_->Init(playerEventReceiver_, playerFilterCallback_);
+        videoDecoder_->SetSyncCenter(syncManager_);
         if (surface_ != nullptr) {
             videoDecoder_->SetVideoSurface(surface_);
         }
     }
-    videoDecoder_->SetSyncCenter(syncManager_);
     return pipeline_->LinkFilters(preFilter, {videoDecoder_}, type);
 }
 #endif

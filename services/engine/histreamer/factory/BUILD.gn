@@ -65,7 +65,7 @@ ohos_static_library("media_engine_histreamer_factory") {
     "$MEDIA_PLAYER_ROOT_DIR/services/dfx:media_service_log_dfx_public_config",
   ]
 
- deps = [
+  deps = [
     "$MEDIA_PLAYER_ROOT_DIR/services/dfx:media_service_log_dfx",
     "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/player:media_engine_histreamer_player",
   ]
