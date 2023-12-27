@@ -19,7 +19,6 @@ MEDIA_ROOT_DIR = "//foundation/multimedia/player_framework"
 config("media_public_config") {
   include_dirs = [
     "$MEDIA_ROOT_DIR/interfaces/inner_api/native",
-    "//foundation/resourceschedule/qos_manager/interfaces/inner_api",
     "$MEDIA_ROOT_DIR/services/utils/include",
   ]
 
