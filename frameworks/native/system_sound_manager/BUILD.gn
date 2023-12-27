@@ -43,7 +43,6 @@ ohos_shared_library("system_sound_client") {
     "./system_tone_player",
     "./../../../interfaces/inner_api/native/soundpool/include",
     "./../../../interfaces/inner_api/native/system_sound_manager/include",
-    "//foundation/resourceschedule/qos_manager/interfaces/inner_api",
     "./../../../services/utils/include",
   ]
 

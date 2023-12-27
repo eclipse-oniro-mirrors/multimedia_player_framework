@@ -26,7 +26,6 @@ ohos_shared_library("media_avplayer") {
     "//foundation/multimedia/player_framework/interfaces/inner_api",
     "//foundation/multimedia/player_framework/frameworks/js/avplayer",
     "//foundation/multimedia/player_framework/frameworks/js/common",
-    "//foundation/resourceschedule/qos_manager/interfaces/inner_api",
     "//foundation/multimedia/player_framework/services/utils/include",
     "//third_party/libuv/include",
   ]

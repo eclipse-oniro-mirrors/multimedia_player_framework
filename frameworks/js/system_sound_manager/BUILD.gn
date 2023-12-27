@@ -30,7 +30,6 @@ ohos_shared_library("systemsoundmanager") {
     "./../../native/system_sound_manager",
     "./../../../interfaces/inner_api/native",
     "./../../../interfaces/inner_api/native/system_sound_manager/include",
-    "//foundation/resourceschedule/qos_manager/interfaces/inner_api",
     "./../../../services/utils/include",
     "//third_party/libuv/include",
   ]

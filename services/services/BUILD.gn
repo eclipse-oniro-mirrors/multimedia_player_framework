@@ -78,7 +78,6 @@ config("media_service_config") {
     "//commonlibrary/c_utils/base/include",
     "//foundation/multimedia/player_framework/services/engine/common/avcodeclist",
     "//foundation/multimedia/player_framework/services/engine/common/recorder_profiles",
-    "//foundation/resourceschedule/qos_manager/interfaces/inner_api",
     "//third_party/glib/glibmemdfx",
   ]
 
