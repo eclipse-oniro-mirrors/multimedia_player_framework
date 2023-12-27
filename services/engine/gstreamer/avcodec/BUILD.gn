@@ -50,6 +50,7 @@ config("media_engine_gst_avcodec_config") {
     "//foundation/multimedia/player_framework/services/engine/gstreamer/plugins/sink/memsink",
     "//foundation/multimedia/player_framework/services/engine/gstreamer/plugins/source/memsource",
     "//foundation/multimedia/player_framework/services/engine/gstreamer/plugins/common",
+    "//foundation/resourceschedule/qos_manager/interfaces/inner_api",
     "//foundation/multimedia/player_framework/services/utils/include",
     "//foundation/multimedia/player_framework/interfaces/inner_api/native",
     "//foundation/multimedia/player_framework/services/services/engine_intf",

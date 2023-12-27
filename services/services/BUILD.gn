@@ -78,6 +78,7 @@ config("media_service_config") {
     "//commonlibrary/c_utils/base/include",
     "//foundation/multimedia/player_framework/services/engine/common/avcodeclist",
     "//foundation/multimedia/player_framework/services/engine/common/recorder_profiles",
+    "//foundation/resourceschedule/qos_manager/interfaces/inner_api",
     "//third_party/glib/glibmemdfx",
   ]
 
@@ -200,6 +201,8 @@ ohos_shared_library("media_service") {
     "ipc:ipc_single",
     "napi:ace_napi",
     "safwk:system_ability_fwk",
+    "qos_manager:concurrent_task_client",
+    "qos_manager:qos",
   ]
 
   if (multimedia_player_framework_support_video) {

@@ -34,6 +34,7 @@ ohos_shared_library("soundpool_client") {
     "${multimedia_audio_framework_path}/interfaces/inner_api/native/audiomanager/include",
     "${multimedia_media_library_path}/interfaces/inner_api/media_library_helper/include",
     "${multimedia_media_library_path}/frameworks/utils/include",
+    "//foundation/resourceschedule/qos_manager/interfaces/inner_api",
     "${av_codec_root_path}/services/utils/include",
   ]
 
