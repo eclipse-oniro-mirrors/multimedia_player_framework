@@ -85,8 +85,8 @@ HiPlayerImpl::~HiPlayerImpl()
     audioSink_.reset();
 #ifdef SUPPORT_VIDEO
     videoDecoder_.reset();
-    syncManager_.reset();
 #endif
+    syncManager_.reset();
 }
 
 Status HiPlayerImpl::Init()
@@ -558,10 +558,11 @@ int32_t HiPlayerImpl::GetVideoHeight()
 int32_t HiPlayerImpl::SetVideoScaleType(OHOS::Media::VideoScaleType videoScaleType)
 {
     MEDIA_LOG_I("SetVideoScaleType entered.");
-#ifdef VIDEO_SUPPORT
-    auto ret = videoSink_->SetParameter(static_cast<int32_t>(Tag::VIDEO_SCALE_TYPE),
-        static_cast<Plugins::VideoScaleType>(static_cast<uint32_t>(videoScaleType)));
-    return TransStatus(ret);
+#ifdef SUPPORT_VIDEO
+    auto meta = std::make_shared<Meta>();
+    meta->Set<Tag::VIDEO_SCALE_TYPE>(static_cast<int32_t>(videoScaleType));
+    videoDecoder_->SetParameter(meta);
+    return TransStatus(Status::OK);
 #else
     return TransStatus(Status::OK);
 #endif
