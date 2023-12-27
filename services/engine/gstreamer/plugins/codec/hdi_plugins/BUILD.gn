@@ -44,6 +44,7 @@ config("gst_codec_plugin_hdi_config") {
     "//foundation/multimedia/player_framework/services/engine/gstreamer/plugins/codec/common/video",
     "//foundation/multimedia/player_framework/services/engine/gstreamer/plugins/codec/common",
     "//base/hiviewdfx/interfaces/innerkits/libhilog/include",
+    "//foundation/resourceschedule/qos_manager/interfaces/inner_api",
     "//foundation/multimedia/player_framework/services/utils/include",
     "//foundation/multimedia/player_framework/interfaces/innerkits/native/media/include",
     "//foundation/multimedia/player_framework/interfaces/inner_api/native",

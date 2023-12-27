@@ -42,6 +42,7 @@ config("media_engine_gst_recorder_config") {
   include_dirs = [
     "element_wrapper",
     "//foundation/multimedia/player_framework/services/engine/gstreamer/recorder",
+    "//foundation/resourceschedule/qos_manager/interfaces/inner_api",
     "//foundation/multimedia/player_framework/services/utils/include",
     "//foundation/multimedia/player_framework/interfaces/inner_api/native",
     "//foundation/multimedia/player_framework/services/services/engine_intf",

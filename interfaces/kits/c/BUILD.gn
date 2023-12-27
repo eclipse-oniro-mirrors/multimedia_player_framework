@@ -29,6 +29,7 @@ config("media_capi_config") {
     "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",
     "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c",
     "$MEDIA_PLAYER_ROOT_DIR/frameworks/native/capi/common",
+    "//foundation/resourceschedule/qos_manager/interfaces/inner_api",
     "$MEDIA_PLAYER_ROOT_DIR/services/utils/include",
     "$MEDIA_PLAYER_AVCODEC/interfaces/kits/c",
     "$MEDIA_PLAYER_GRAPHIC/frameworks/surface/include",

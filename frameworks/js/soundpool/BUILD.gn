@@ -27,6 +27,7 @@ ohos_shared_library("media_soundpool") {
     "${multimedia_player_framework_path}/frameworks/js/soundpool/include",
     "${multimedia_player_framework_path}/frameworks/js/common",
     "${multimedia_player_framework_path}/interfaces/inner_api/native",
+    "//foundation/resourceschedule/qos_manager/interfaces/inner_api",
     "${multimedia_player_framework_path}/services/utils/include",
     "${multimedia_player_framework_path}/interfaces/inner_api/native/soundpool/include",
   ]

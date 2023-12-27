@@ -45,6 +45,7 @@ config("media_engine_gst_player_config") {
   include_dirs = [
     "../plugins/sink/memsink",
     "../plugins/sink/subtitlesink",
+    "//foundation/resourceschedule/qos_manager/interfaces/inner_api",
     "//foundation/multimedia/player_framework/services/utils/include",
     "//foundation/multimedia/player_framework/interfaces/inner_api/native",
     "//foundation/multimedia/player_framework/services/services/engine_intf",

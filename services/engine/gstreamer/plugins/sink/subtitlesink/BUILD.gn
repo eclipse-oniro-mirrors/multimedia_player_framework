@@ -44,6 +44,7 @@ config("gst_subtitle_sink_config") {
   include_dirs = [
     "../../common",
     "../subtitle_sink",
+    "//foundation/resourceschedule/qos_manager/interfaces/inner_api",    
     "$MEDIA_ROOT_DIR/services/utils/include",
     "$MEDIA_ROOT_DIR/interfaces/inner_api/native",
     "//third_party/gstreamer/gstreamer",
