@@ -342,7 +342,7 @@ napi_status AudioCaptureChangeInfoJsCallback::GetJsResult(napi_env env, napi_val
     CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
     setRet = CommonNapi::SetPropertyInt32(env, result, "capturerState", value_.capturerState);
     CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
-    setRet = CommonNapi::SetPropertyBool(env, result, "muted",value_.muted);
+    setRet = CommonNapi::SetPropertyBool(env, result, "muted", value_.muted);
     CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
 
     napi_value captureInfo;
