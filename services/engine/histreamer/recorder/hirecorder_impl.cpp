@@ -465,14 +465,13 @@ int32_t HiRecorderImpl::GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &ch
 
 int32_t HiRecorderImpl::GetAvailableEncoder(std::vector<EncoderCapabilityData> &encoderInfo)
 {
-    if (!codecCapabilityFilter_) {
-        codecCapabilityFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::CodecCapabilityFilter>
-            ("codecCapabilityFilter", Pipeline::FilterType::FILTERTYPE_CODEC);
+    if (!codecCapabilityAdapter_) {
+        codecCapabilityAdapter_ = std::make_shared<Pipeline::CodecCapabilityAdapter>();
     }
-    codecCapabilityFilter_->Init(recorderEventReceiver_, recorderCallback_);
+    codecCapabilityAdapter_->Init();
 
     std::vector<MediaAVCodec::CapabilityData*> encoderCapData;
-    Status ret = codecCapabilityFilter_->GetAvailableEncoder(encoderCapData);
+    Status ret = codecCapabilityAdapter_->GetAvailableEncoder(encoderCapData);
     
     encoderInfo = ConvertEncoderInfo(encoderCapData);
     return (int32_t)ret;

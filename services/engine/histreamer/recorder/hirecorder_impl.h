@@ -30,7 +30,7 @@
 #include "pipeline/pipeline.h"
 #include "surface_encoder_filter.h"
 #include "video_capture_filter.h"
-#include "codec_capability_filter.h"
+#include "codec_capability_adapter.h"
 
 namespace OHOS {
 namespace Media {
@@ -102,7 +102,7 @@ private:
     std::shared_ptr<Pipeline::SurfaceEncoderFilter> videoEncoderFilter_;
     std::shared_ptr<Pipeline::VideoCaptureFilter> videoCaptureFilter_;
     std::shared_ptr<Pipeline::MuxerFilter> muxerFilter_;
-    std::shared_ptr<Pipeline::CodecCapabilityFilter> codecCapabilityFilter_;
+	std::shared_ptr<Pipeline::CodecCapabilityAdapter> codecCapabilityAdapter_;
 
     std::shared_ptr<Pipeline::EventReceiver> recorderEventReceiver_;
     std::shared_ptr<Pipeline::FilterCallback> recorderCallback_;
