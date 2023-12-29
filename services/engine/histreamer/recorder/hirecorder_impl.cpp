@@ -474,7 +474,7 @@ int32_t HiRecorderImpl::GetAvailableEncoder(std::vector<EncoderCapabilityData> &
     std::vector<MediaAVCodec::CapabilityData*> encoderCapData;
     Status ret = codecCapabilityFilter_->GetAvailableEncoder(encoderCapData);
     
-	encoderInfo = ConvertEncoderInfo(encoderCapData);
+    encoderInfo = ConvertEncoderInfo(encoderCapData);
     return (int32_t)ret;
 }
 

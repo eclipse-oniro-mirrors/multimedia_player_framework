@@ -113,7 +113,7 @@ private:
     int32_t DestroyStub(MessageParcel &data, MessageParcel &reply);
     int32_t GetAVRecorderConfig(MessageParcel &data, MessageParcel &reply);
     int32_t GetLocation(MessageParcel &data, MessageParcel &reply);
-	int32_t GetCurrentCapturerChangeInfo(MessageParcel &data, MessageParcel &reply);
+    int32_t GetCurrentCapturerChangeInfo(MessageParcel &data, MessageParcel &reply);
     int32_t GetAvailableEncoder(MessageParcel &data, MessageParcel &reply);
     int32_t GetMaxAmplitude(MessageParcel &data, MessageParcel &reply);
     int32_t CheckPermission();

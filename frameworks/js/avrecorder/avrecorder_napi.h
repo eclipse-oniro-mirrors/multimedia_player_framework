@@ -404,8 +404,10 @@ public:
     }
     ~MediaJsEncoderInfo() = default;
     napi_status GetJsResult(napi_env env, napi_value &result) override;
-    napi_status GetAudioEncoderInfo(napi_env env, EncoderCapabilityData encoderCapData, napi_value &result, uint32_t position);
-    napi_status GetVideoEncoderInfo(napi_env env, EncoderCapabilityData encoderCapData, napi_value &result, uint32_t position);
+    napi_status GetAudioEncoderInfo(
+        napi_env env, EncoderCapabilityData encoderCapData, napi_value &result, uint32_t position);
+    napi_status GetVideoEncoderInfo(
+        napi_env env, EncoderCapabilityData encoderCapData, napi_value &result, uint32_t position);
 private:
     std::vector<EncoderCapabilityData> encoderInfo_;
 };

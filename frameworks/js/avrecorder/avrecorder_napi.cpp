@@ -934,7 +934,7 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderNapi::GetCurrentCapturerChangeIn
 }
 
 std::shared_ptr<TaskHandler<RetInfo>> AVRecorderNapi::GetMaxAmplitudeTask(
-        const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx)
+    const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx)
 {
     return std::make_shared<TaskHandler<RetInfo>>([napi = asyncCtx->napi, &maxAmplitude = asyncCtx->maxAmplitude_]() {
         const std::string &option = AVRecordergOpt::GET_MAX_AMPLITUDE;
@@ -959,13 +959,13 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderNapi::GetMaxAmplitudeTask(
 }
 
 std::shared_ptr<TaskHandler<RetInfo>> AVRecorderNapi::GetEncoderInfoTask(
-        const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx)
+    const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx)
 {
     return std::make_shared<TaskHandler<RetInfo>>([napi = asyncCtx->napi, &encoderInfo = asyncCtx->encoderInfo_]() {
         const std::string &option = AVRecordergOpt::GET_ENCODER_INFO;
         MEDIA_LOGI("%{public}s Start", option.c_str());
 
-        CHECK_AND_RETURN_RET(napi != nullptr ,
+        CHECK_AND_RETURN_RET(napi != nullptr,
             GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
 
         CHECK_AND_RETURN_RET(napi->CheckStateMachine(option) == MSERR_OK,

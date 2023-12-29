@@ -90,7 +90,7 @@ int32_t RecorderServiceStub::Init()
     recFuncs_[GET_AV_RECORDER_CONFIG] = &RecorderServiceStub::GetAVRecorderConfig;
     recFuncs_[GET_LOCATION] = &RecorderServiceStub::GetLocation;
     recFuncs_[SET_VIDEO_IS_HDR] = &RecorderServiceStub::SetVideoIsHdr;
-	recFuncs_[GET_AUDIO_CAPTURER_CHANGE_INFO] = &RecorderServiceStub::GetCurrentCapturerChangeInfo;
+    recFuncs_[GET_AUDIO_CAPTURER_CHANGE_INFO] = &RecorderServiceStub::GetCurrentCapturerChangeInfo;
     recFuncs_[GET_AVAILABLE_ENCODER] = &RecorderServiceStub::GetAvailableEncoder;
     recFuncs_[GET_MAX_AMPLITUDE] = &RecorderServiceStub::GetMaxAmplitude;
 
