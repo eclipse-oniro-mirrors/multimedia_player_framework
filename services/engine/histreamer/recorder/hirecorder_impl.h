@@ -102,7 +102,7 @@ private:
     std::shared_ptr<Pipeline::SurfaceEncoderFilter> videoEncoderFilter_;
     std::shared_ptr<Pipeline::VideoCaptureFilter> videoCaptureFilter_;
     std::shared_ptr<Pipeline::MuxerFilter> muxerFilter_;
-	std::shared_ptr<Pipeline::CodecCapabilityAdapter> codecCapabilityAdapter_;
+    std::shared_ptr<Pipeline::CodecCapabilityAdapter> codecCapabilityAdapter_;
 
     std::shared_ptr<Pipeline::EventReceiver> recorderEventReceiver_;
     std::shared_ptr<Pipeline::FilterCallback> recorderCallback_;
