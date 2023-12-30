@@ -568,9 +568,6 @@ int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string name, sptr<OH
             virScrOption.missionIds_ = missionIds_;
         }
     }
-    for (uint64_t id : virScrOption.missionIds_) {
-        MEDIA_LOGI("ScreenCaptureServer::CreateVirtualScreen id : %{public}s", std::to_string(id).c_str());
-    }
     screenId_ = ScreenManager::GetInstance().CreateVirtualScreen(virScrOption);
     if (screenId_ < 0) {
         isConsumerStart_ = false;
@@ -601,6 +598,7 @@ int32_t ScreenCaptureServer::GetMissionIds(std::vector<uint64_t> &missionIds)
     for (int32_t i = 0; i < size; i++) {
         int32_t taskId = taskIDListTemp.front();
         taskIDListTemp.pop_front();
+        MEDIA_LOGI("ScreenCaptureServer::GetMissionIds taskId : %{public}s", std::to_string(taskId).c_str());
         uint64_t uintNum = static_cast<uint64_t>(taskId);
         missionIds.push_back(uintNum);
     }

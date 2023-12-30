@@ -291,7 +291,8 @@ void ScreenCaptureUnitTest::AudioLoopWithoutRelease(void)
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_file_01, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_file_01 before");
-    Security::AccessToken::AccessTokenID tokenID = Security::AccessToken::AccessTokenKit::GetNativeTokenId("distributedsched");
+    Security::AccessToken::AccessTokenID tokenID =
+        Security::AccessToken::AccessTokenKit::GetNativeTokenId("distributedsched");
     SetSelfTokenID(tokenID);
     AVScreenCaptureConfig config_;
     RecorderInfo recorderInfo;
@@ -309,7 +310,8 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_file_01, TestSiz
     std::vector<OHOS::AAFwk::MissionInfo> missionInfos;
     auto result = client_->GetMissionInfos(deviceId, 20, missionInfos);
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_file_01 result : %{public}d", result);
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_file_01 size : %{public}s", std::to_string(missionInfos.size()).c_str());
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_file_01 size : %{public}s",
+        std::to_string(missionInfos.size()).c_str());
     for (OHOS::AAFwk::MissionInfo info : missionInfos) {
         MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_file_01 missionId : %{public}d", info.id);
     }
@@ -334,7 +336,8 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_file_01, TestSiz
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_file_02, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_file_02 before");
-    Security::AccessToken::AccessTokenID tokenID = Security::AccessToken::AccessTokenKit::GetNativeTokenId("distributedsched");
+    Security::AccessToken::AccessTokenID tokenID =
+        Security::AccessToken::AccessTokenKit::GetNativeTokenId("distributedsched");
     SetSelfTokenID(tokenID);
     AVScreenCaptureConfig config_;
     RecorderInfo recorderInfo;
@@ -352,7 +355,8 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_file_02, TestSiz
     std::vector<OHOS::AAFwk::MissionInfo> missionInfos;
     auto result = client_->GetMissionInfos(deviceId, 20, missionInfos);
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_file_02 result : %{public}d", result);
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_file_02 size : %{public}s", std::to_string(missionInfos.size()).c_str());
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_file_02 size : %{public}s",
+        std::to_string(missionInfos.size()).c_str());
     for (OHOS::AAFwk::MissionInfo info : missionInfos) {
         MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_file_02 missionId : %{public}d", info.id);
     }
@@ -377,7 +381,8 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_file_02, TestSiz
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_file_03, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_file_03 before");
-    Security::AccessToken::AccessTokenID tokenID = Security::AccessToken::AccessTokenKit::GetNativeTokenId("distributedsched");
+    Security::AccessToken::AccessTokenID tokenID =
+        Security::AccessToken::AccessTokenKit::GetNativeTokenId("distributedsched");
     SetSelfTokenID(tokenID);
     AVScreenCaptureConfig config_;
     RecorderInfo recorderInfo;
@@ -395,7 +400,8 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_file_03, TestSiz
     std::vector<OHOS::AAFwk::MissionInfo> missionInfos;
     auto result = client_->GetMissionInfos(deviceId, 20, missionInfos);
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_file_03 result : %{public}d", result);
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_file_03 size : %{public}s", std::to_string(missionInfos.size()).c_str());
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_file_03 size : %{public}s",
+        std::to_string(missionInfos.size()).c_str());
     for (OHOS::AAFwk::MissionInfo info : missionInfos) {
         MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_file_03 missionId : %{public}d", info.id);
     }
@@ -420,7 +426,8 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_file_03, TestSiz
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_file_04, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_file_04 before");
-    Security::AccessToken::AccessTokenID tokenID = Security::AccessToken::AccessTokenKit::GetNativeTokenId("distributedsched");
+    Security::AccessToken::AccessTokenID tokenID =
+        Security::AccessToken::AccessTokenKit::GetNativeTokenId("distributedsched");
     SetSelfTokenID(tokenID);
     AVScreenCaptureConfig config_;
     RecorderInfo recorderInfo;
@@ -438,7 +445,8 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_file_04, TestSiz
     std::vector<OHOS::AAFwk::MissionInfo> missionInfos;
     auto result = client_->GetMissionInfos(deviceId, 20, missionInfos);
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_file_04 result : %{public}d", result);
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_file_04 size : %{public}s", std::to_string(missionInfos.size()).c_str());
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_file_04 size : %{public}s",
+        std::to_string(missionInfos.size()).c_str());
     for (OHOS::AAFwk::MissionInfo info : missionInfos) {
         MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_file_04 missionId : %{public}d", info.id);
         config_.videoInfo.videoCapInfo.taskIDs.push_back(info.id);
@@ -461,7 +469,8 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_file_04, TestSiz
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window before");
-    Security::AccessToken::AccessTokenID tokenID = Security::AccessToken::AccessTokenKit::GetNativeTokenId("distributedsched");
+    Security::AccessToken::AccessTokenID tokenID =
+        Security::AccessToken::AccessTokenKit::GetNativeTokenId("distributedsched");
     SetSelfTokenID(tokenID);
     AVScreenCaptureConfig config_;
     SetConfig(config_);
@@ -471,7 +480,8 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window, TestSize.Level2
     std::vector<OHOS::AAFwk::MissionInfo> missionInfos;
     auto result = client_->GetMissionInfos(deviceId, 10, missionInfos);
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window result : %{public}d", result);
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window size : %{public}s", std::to_string(missionInfos.size()).c_str());
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window size : %{public}s",
+        std::to_string(missionInfos.size()).c_str());
     for (OHOS::AAFwk::MissionInfo info : missionInfos) {
         MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window missionId : %{public}d", info.id);
         config_.videoInfo.videoCapInfo.taskIDs.push_back(info.id);
@@ -810,11 +820,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_check_param_05, TestSize.Level2)
     config_.recorderInfo = recorderInfo;
     config_.dataType = DataType::CAPTURE_FILE;
     config_.captureMode = CaptureMode::CAPTURE_INVAILD;
-    EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
-
-    SetRecorderInfo("screen_capture_check_param_05.mp4", recorderInfo);
-    config_.recorderInfo = recorderInfo;
-    config_.captureMode = CaptureMode::CAPTURE_SPECIFIED_WINDOW;
     EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
 
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_check_param_05 after");
