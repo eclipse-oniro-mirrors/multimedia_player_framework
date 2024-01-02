@@ -198,7 +198,7 @@ int32_t AudioCaptureAsImpl::GetSegmentInfo(uint64_t &start)
     auto now = std::chrono::steady_lock::now();
     auto duration = now.time_since_epoch();
     auto nanoseconds = std::chrono::duration_cast<std::chrono::nanoseconds>(duration);
-    start = static_cast<uint64_t>(nanoseconds.scount());
+    start = static_cast<uint64_t>(nanoseconds.count());
     MEDIA_LOGD("timestamp from audioCapturer: %{public}" PRIu64 "", start);
     MEDIA_LOGD("audioCapturer timestamp has increased: %{public}" PRIu64 "", start - lastInputTime_);
     lastInputTime_ = start;
