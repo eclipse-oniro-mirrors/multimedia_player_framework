@@ -195,7 +195,7 @@ int32_t AudioCaptureAsImpl::GetCaptureParameter(uint32_t &bitrate, uint32_t &cha
 int32_t AudioCaptureAsImpl::GetSegmentInfo(uint64_t &start)
 {
     CHECK_AND_RETURN_RET(audioCapturer_ != nullptr, MSERR_INVALID_OPERATION);
-    auto now = std::chrono::steady_lock::now();
+    auto now = std::chrono::steady_clock::now();
     auto duration = now.time_since_epoch();
     auto nanoseconds = std::chrono::duration_cast<std::chrono::nanoseconds>(duration);
     start = static_cast<uint64_t>(nanoseconds.count());
