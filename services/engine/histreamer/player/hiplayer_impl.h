@@ -128,7 +128,7 @@ private:
     std::shared_ptr<Meta> audioRenderInfo_{nullptr};
     std::shared_ptr<Meta> audioInterruptMode_{nullptr};
 
-    bool isPlaying_{false};
+    bool isStreaming_{false};
 };
 } // namespace Media
 } // namespace OHOS

@@ -191,7 +191,7 @@ int32_t HiPlayerImpl::Play()
     int32_t ret = MSERR_INVALID_VAL;
     callbackLooper_.StartReportMediaProgress(100); // 100 ms
     if (pipelineStates_ == PlayerStates::PLAYER_PLAYBACK_COMPLETE) {
-        isPlaying_ = true;
+        isStreaming_ = true;
         ret = Seek(0, PlayerSeekMode::SEEK_PREVIOUS_SYNC);
     } else if (pipelineStates_ == PlayerStates::PLAYER_PAUSED) {
         ret = TransStatus(Resume());
@@ -284,9 +284,11 @@ int32_t HiPlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
         if (pipelineStates_ == PlayerStates::PLAYER_STARTED) {
             pipeline_->Resume();
         }
-        if (pipelineStates_ == PlayerStates::PLAYER_PLAYBACK_COMPLETE && isPlaying_) {
+        if (pipelineStates_ == PlayerStates::PLAYER_PLAYBACK_COMPLETE && isStreaming_) {
             pipeline_->Resume();
-        } else if (pipelineStates_ == PlayerStates::PLAYER_PLAYBACK_COMPLETE && !isPlaying_) {
+        } else if (pipelineStates_ == PlayerStates::PLAYER_PLAYBACK_COMPLETE && !isStreaming_) {
+            callbackLooper_.StopReportMediaProgress();
+            callbackLooper_.ManualReportMediaProgressOnce();
             OnStateChanged(PlayerStateId::PAUSE);
         }
     }
@@ -643,7 +645,7 @@ Status HiPlayerImpl::Resume()
 void HiPlayerImpl::HandleCompleteEvent(const Event& event)
 {
     MEDIA_LOG_I("OnComplete looping: " PUBLIC_LOG_D32 ".", singleLoop_.load());
-    isPlaying_ = false;
+    isStreaming_ = false;
     Format format;
     OnStateChanged(PlayerStateId::EOS);
     callbackLooper_.StopReportMediaProgress();
