@@ -591,14 +591,14 @@ void HiRecorderImpl::ConfigureVideoEncoderFormat(const RecorderParam &recParam)
 bool HiRecorderImpl::CheckAudioSourceType(AudioSourceType sourceType)
 {
     switch (sourceType) {
-    case AUDIO_SOURCE_DEFAULT:
-    case AUDIO_MIC:
-    case AUDIO_SOURCE_VOICE_CALL:
-        return true;
-    case AUDIO_INNER:
-    case AUDIO_SOURCE_INVALID:
-    default:
-        break;
+        case AUDIO_SOURCE_DEFAULT:
+        case AUDIO_MIC:
+        case AUDIO_SOURCE_VOICE_CALL:
+            return true;
+        case AUDIO_INNER:
+        case AUDIO_SOURCE_INVALID:
+        default:
+            break;
     }
     return false;
 }
