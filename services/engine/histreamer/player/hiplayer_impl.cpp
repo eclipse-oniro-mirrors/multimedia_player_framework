@@ -216,14 +216,13 @@ void HiPlayerImpl::DoInitializeForHttp()
     std::vector<uint32_t> vBitRates;
     MEDIA_LOG_I("DoInitializeForHttp");
     auto ret = demuxer_->GetBitRates(vBitRates);
-
     if (ret == Status::OK && vBitRates.size() > 0) {
         int mSize = vBitRates.size();
-        const int size_ = mSize;
+        const int size = mSize;
         uint32_t* bitrates = vBitRates.data();
         Format bitRateFormat;
         (void)bitRateFormat.PutBuffer(std::string(PlayerKeys::PLAYER_BITRATE),
-            static_cast<uint8_t *>(static_cast<void *>(bitrates)), size_ * sizeof(uint32_t));
+            static_cast<uint8_t *>(static_cast<void *>(bitrates)), size * sizeof(uint32_t));
         callbackLooper_.OnInfo(INFO_TYPE_BITRATE_COLLECT, 0, bitRateFormat);
         MEDIA_LOG_I("OnInfo INFO_TYPE_BITRATE_COLLEC");
     } else {
