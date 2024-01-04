@@ -129,8 +129,7 @@ int32_t HiRecorderImpl::SetAudioSource(AudioSourceType source, int32_t &sourceId
 {
     MEDIA_LOG_I("SetAudioSource enter.");
     sourceId = INVALID_SOURCE_ID;
-    FALSE_RETURN_V(source > AudioSourceType::AUDIO_SOURCE_INVALID && source < AudioSourceType::AUDIO_INNER ||
-        source == AudioSourceType::AUDIO_SOURCE_VOICE_CALL, (int32_t)Status::ERROR_INVALID_PARAMETER);
+    FALSE_RETURN_V(CheckAudioSourceType(source), (int32_t)Status::ERROR_INVALID_PARAMETER);
     FALSE_RETURN_V(audioCount_ < static_cast<int32_t>(AUDIO_SOURCE_MAX_COUNT),
         (int32_t)Status::ERROR_INVALID_OPERATION);
     auto tempSourceId = SourceIdGenerator::GenerateAudioSourceId(audioCount_);
@@ -587,6 +586,21 @@ void HiRecorderImpl::ConfigureVideoEncoderFormat(const RecorderParam &recParam)
         default:
             break;
     }
+}
+
+bool HiRecorderImpl::CheckAudioSourceType(AudioSourceType sourceType)
+{
+    switch (sourceType) {
+    case AUDIO_SOURCE_DEFAULT:
+    case AUDIO_MIC:
+    case AUDIO_SOURCE_VOICE_CALL:
+        return true;
+    case AUDIO_INNER:
+    case AUDIO_SOURCE_INVALID:
+    default:
+        break;
+    }
+    return false;
 }
 
 void HiRecorderImpl::ConfigureMuxer(const RecorderParam &recParam)
