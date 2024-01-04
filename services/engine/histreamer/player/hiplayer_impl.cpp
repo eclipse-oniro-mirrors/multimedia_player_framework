@@ -28,6 +28,7 @@
 
 namespace {
 const float MAX_MEDIA_VOLUME = 1.0f; // standard interface volume is between 0 to 1.
+const int32_t FRAME_RATE_UNIT_MULTIPLE = 100; // the unit of frame rate is frames per 100s
 }
 
 namespace OHOS {
@@ -484,7 +485,7 @@ int32_t HiPlayerImpl::GetVideoTrackInfo(std::vector<Format>& videoTrack)
             videoTrackInfo.PutIntValue("bitrate", static_cast<int32_t>(bitRate));
             double frameRate;
             trackInfo->GetData(Tag::VIDEO_FRAME_RATE, frameRate);
-            videoTrackInfo.PutIntValue("frame_rate", static_cast<int32_t>(frameRate * 100));
+            videoTrackInfo.PutIntValue("frame_rate", static_cast<int32_t>(frameRate * FRAME_RATE_UNIT_MULTIPLE));
             int32_t height;
             trackInfo->GetData(Tag::VIDEO_HEIGHT, height);
             videoTrackInfo.PutIntValue("height", static_cast<int32_t>(height));
