@@ -434,6 +434,7 @@ int32_t HiPlayerImpl::SetPlaybackSpeed(PlaybackRateMode mode)
         return MSERR_UNKNOWN;
     }
     playbackRateMode_ = mode;
+    Format format;
     callbackLooper_.OnInfo(INFO_TYPE_SPEEDDONE, mode, format);
     MEDIA_LOG_I("SetPlaybackSpeed entered end.");
     return MSERR_OK;
