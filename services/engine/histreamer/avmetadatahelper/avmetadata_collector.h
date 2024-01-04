@@ -79,9 +79,11 @@ private:
     const int maxDateTimeSize = 20;
     const int standardDateStrSize = 10;
     const int standardTimeStrSize = 8;
+    const int secondDividMs = 1000;
 
     void ConvertToAVMeta(const std::shared_ptr<Meta> &innerMeta, Metadata &avmeta) const;
     std::string ConvertTimestampToDatetime(const std::string &timestamp) const;
+    void SetEmptyStringIfNoData(Metadata &avmeta, int32_t avKey) const;
 };
 } // namespace Media
 } // namespace OHOS

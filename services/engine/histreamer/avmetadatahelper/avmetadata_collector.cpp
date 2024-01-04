@@ -143,9 +143,8 @@ void AVMetaDataCollector::ConvertToAVMeta(const std::shared_ptr<Meta> &innerMeta
             std::string strVal;
             if (innerMeta->GetData(innerKey, strVal) && !strVal.empty()) {
                 avmeta.SetMeta(avKey, ConvertTimestampToDatetime(strVal));
-            } else if (!avmeta.HasMeta(avKey)){
-                avmeta.SetMeta(avKey, "");
             }
+            SetEmptyStringIfNoData(avmeta, avKey);
         }
 
         Any type = OHOS::Media::GetDefaultAnyValue(innerKey);
@@ -153,40 +152,42 @@ void AVMetaDataCollector::ConvertToAVMeta(const std::shared_ptr<Meta> &innerMeta
             int32_t intVal;
             if (innerMeta->GetData(innerKey, intVal)) {
                 avmeta.SetMeta(avKey, std::to_string(intVal));
-            } else if (!avmeta.HasMeta(avKey)) {
-                avmeta.SetMeta(avKey, "");
             }
+            SetEmptyStringIfNoData(avmeta, avKey);
         } else if (Any::IsSameTypeWith<std::string>(type)) {
             std::string strVal;
             if (innerMeta->GetData(innerKey, strVal)) {
                 avmeta.SetMeta(avKey, strVal);
-            } else if (!avmeta.HasMeta(avKey)) {
-                avmeta.SetMeta(avKey, "");
             }
+            SetEmptyStringIfNoData(avmeta, avKey);
         } else if (Any::IsSameTypeWith<Plugins::VideoRotation>(type)) {
             Plugins::VideoRotation rotation;
             if (innerMeta->GetData(innerKey, rotation)) {
                 avmeta.SetMeta(avKey, std::to_string(rotation));
-            } else if (!avmeta.HasMeta(avKey)) {
-                avmeta.SetMeta(avKey, "");
             }
+            SetEmptyStringIfNoData(avmeta, avKey);
         } else if (Any::IsSameTypeWith<int64_t>(type)) {
             int64_t duration;
             if (innerMeta->GetData(innerKey, duration)) {
-                avmeta.SetMeta(avKey, std::to_string(duration / 1000));
-            } else if (!avmeta.HasMeta(avKey)) {
-                avmeta.SetMeta(avKey, "");
+                avmeta.SetMeta(avKey, std::to_string(duration / secondDividMs));
             }
+            SetEmptyStringIfNoData(avmeta, avKey);
         } else if (Any::IsSameTypeWith<bool>(type)) {
             bool isTrue;
             if (innerMeta->GetData(innerKey, isTrue)) {
                 avmeta.SetMeta(avKey, isTrue ? "yes" : "");
-            } else if (!avmeta.HasMeta(avKey)) {
-                avmeta.SetMeta(avKey, "");
             }
+            SetEmptyStringIfNoData(avmeta, avKey);
         } else {
             MEDIA_LOG_E("not found type matched with innerKey: %{public}s", innerKey.c_str());
         }
+    }
+}
+
+void AVMetaDataCollector::SetEmptyStringIfNoData(Metadata &avmeta, int32_t avKey) const
+{
+    if (!avmeta.HasMeta(avKey)) {
+        avmeta.SetMeta(avKey, "");
     }
 }
 
