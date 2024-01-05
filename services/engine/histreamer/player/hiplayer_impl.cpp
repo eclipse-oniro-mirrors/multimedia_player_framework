@@ -698,7 +698,8 @@ Status HiPlayerImpl::Resume()
     return ret;
 }
 
-void HiPlayerImpl::HandleIsLiveStreamEvent(bool isLiveStream){
+void HiPlayerImpl::HandleIsLiveStreamEvent(bool isLiveStream)
+{
     Format format;
     callbackLooper_.OnInfo(INFO_TYPE_IS_LIVE_STREAM, isLiveStream, format);
 }
