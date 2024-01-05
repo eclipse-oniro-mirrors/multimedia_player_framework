@@ -18,7 +18,7 @@
 #include <map>
 #include <string>
 #include "errors.h"
-#include "media_code.h"
+#include "media_core.h"
 
 namespace OHOS {
 namespace Media {

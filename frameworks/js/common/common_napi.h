@@ -23,7 +23,7 @@
 #include "av_common.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
-#include "media_code.h"
+#include "media_core.h"
 
 namespace OHOS {
 namespace Media {

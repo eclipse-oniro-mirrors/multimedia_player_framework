@@ -18,7 +18,7 @@
 #include <vector>
 #include <string>
 #include "meta/format.h"
-#include "media_code.h"
+#include "media_core.h"
 
 namespace OHOS {
 namespace Media {

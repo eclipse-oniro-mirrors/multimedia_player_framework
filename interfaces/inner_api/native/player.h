@@ -17,7 +17,7 @@
 #define PLAYER_H
 
 #include <cstdint>
-#include "media_code.h"
+#include "media_core.h"
 #ifndef SUPPORT_AUDIO_ONLY
 #include "surface.h"
 #endif
