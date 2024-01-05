@@ -184,12 +184,6 @@ void AVMetaDataCollector::ConvertToAVMeta(const std::shared_ptr<Meta> &innerMeta
     }
 }
 
-template<typename T>
-void AVMetaDataCollector::FotmatValueToString(T tempValue, )
-{
-    if ()
-}
-
 void AVMetaDataCollector::SetEmptyStringIfNoData(Metadata &avmeta, int32_t avKey) const
 {
     if (!avmeta.HasMeta(avKey)) {
