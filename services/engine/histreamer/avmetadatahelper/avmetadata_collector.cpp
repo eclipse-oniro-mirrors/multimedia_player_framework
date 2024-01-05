@@ -150,7 +150,7 @@ void AVMetaDataCollector::ConvertToAVMeta(const std::shared_ptr<Meta> &innerMeta
         Any type = OHOS::Media::GetDefaultAnyValue(innerKey);
         if (Any::IsSameTypeWith<int32_t>(type)) {
             int32_t intVal;
-            if (innerMeta->GetData(innerKey, intVal)) {
+            if (innerMeta->GetData(innerKey, intVal) && intVal != 0) {
                 avmeta.SetMeta(avKey, std::to_string(intVal));
             }
             SetEmptyStringIfNoData(avmeta, avKey);
@@ -182,6 +182,12 @@ void AVMetaDataCollector::ConvertToAVMeta(const std::shared_ptr<Meta> &innerMeta
             MEDIA_LOG_E("not found type matched with innerKey: %{public}s", innerKey.c_str());
         }
     }
+}
+
+template<typename T>
+void AVMetaDataCollector::FotmatValueToString(T tempValue, )
+{
+    if ()
 }
 
 void AVMetaDataCollector::SetEmptyStringIfNoData(Metadata &avmeta, int32_t avKey) const
