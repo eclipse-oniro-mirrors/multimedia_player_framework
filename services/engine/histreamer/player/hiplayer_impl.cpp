@@ -544,7 +544,7 @@ int32_t HiPlayerImpl::GetVideoTrackInfo(std::vector<Format>& videoTrack)
         if (IsVideoMime(mime)) {
             Format videoTrackInfo {};
             videoTrackInfo.PutStringValue("codec_mime", mime);
-            videoTrackInfo.PutIntValue("track_type", static_cast<int32_t>(MediaType::VIDEO));
+            videoTrackInfo.PutIntValue("track_type", static_cast<int32_t>(OHOS::Media::Plugins::MediaType::VIDEO));
             int32_t trackIndex;
             trackInfo->GetData(Tag::REGULAR_TRACK_ID, trackIndex);
             videoTrackInfo.PutIntValue("track_index", static_cast<int32_t>(trackIndex));
@@ -581,7 +581,7 @@ int32_t HiPlayerImpl::GetAudioTrackInfo(std::vector<Format>& audioTrack)
         if (mime.find("audio/") == 0) {
             Format audioTrackInfo {};
             audioTrackInfo.PutStringValue("codec_mime", mime);
-            audioTrackInfo.PutIntValue("track_type", static_cast<int32_t>(MediaType::AUDIO));
+            audioTrackInfo.PutIntValue("track_type", static_cast<int32_t>(OHOS::Media::Plugins::MediaType::AUDIO));
             audioTrackInfo.PutIntValue("track_index", static_cast<int32_t>(trackIndex));
             int64_t bitRate;
             trackInfo->GetData(Tag::MEDIA_BITRATE, bitRate);
@@ -680,6 +680,10 @@ int32_t HiPlayerImpl::SetAudioInterruptMode(const int32_t interruptMode)
 void HiPlayerImpl::OnEvent(const Event &event)
 {
     switch (event.type) {
+        case EventType::EVENT_IS_LIVE_STREAM: {
+            HandleIsLiveStreamEvent(AnyCast<bool>(event.param));
+            break;
+        }
         case EventType::EVENT_ERROR: {
             OnStateChanged(PlayerStateId::ERROR);
             break;
@@ -702,6 +706,11 @@ void HiPlayerImpl::OnEvent(const Event &event)
         }
         case EventType::EVENT_DRM_INFO_UPDATED: {
             HandleDrmInfoUpdatedEvent(event);
+            break;
+        }
+        case EventType::EVENT_VIDEO_RENDERING_START: {
+            Format format;
+            callbackLooper_.OnInfo(INFO_TYPE_MESSAGE, PlayerMessageType::PLAYER_INFO_VIDEO_RENDERING_START, format);
             break;
         }
         default:
@@ -727,6 +736,12 @@ Status HiPlayerImpl::Resume()
         UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
     }
     return ret;
+}
+
+void HiPlayerImpl::HandleIsLiveStreamEvent(bool isLiveStream)
+{
+    Format format;
+    callbackLooper_.OnInfo(INFO_TYPE_IS_LIVE_STREAM, isLiveStream, format);
 }
 
 void HiPlayerImpl::HandleCompleteEvent(const Event& event)

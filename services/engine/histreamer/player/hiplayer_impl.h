@@ -95,6 +95,7 @@ private:
     Status Resume();
     void HandleCompleteEvent(const Event& event);
     void HandleDrmInfoUpdatedEvent(const Event& event);
+    void HandleIsLiveStreamEvent(bool isLiveStream);
     void UpdateStateNoLock(PlayerStates newState, bool notifyUpward = true);
     double ChangeModeToSpeed(const PlaybackRateMode& mode) const;
     void NotifyBufferingUpdate(const std::string_view& type, int32_t param);
