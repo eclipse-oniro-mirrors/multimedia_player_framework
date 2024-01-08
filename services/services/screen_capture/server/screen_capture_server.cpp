@@ -541,7 +541,7 @@ int32_t ScreenCaptureServer::StartHomeVideoCaptureFile()
 int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string name, sptr<OHOS::Surface> consumer)
 {
     isConsumerStart_ = true;
-    VirtualScreenOption virScrOption = InitVirtualScreenOption(name);
+    VirtualScreenOption virScrOption = InitVirtualScreenOption(name, consumer);
     sptr<Rosen::Display> display = Rosen::DisplayManager::GetInstance().GetDefaultDisplaySync();
     if (display != nullptr) {
         MEDIA_LOGI("get displayinfo width:%{public}d,height:%{public}d,density:%{public}d", display->GetWidth(),
@@ -589,7 +589,7 @@ int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string name, sptr<OH
     return MSERR_OK;
 }
 
-VirtualScreenOption ScreenCaptureServer::InitVirtualScreenOption(const std::string name)
+VirtualScreenOption ScreenCaptureServer::InitVirtualScreenOption(const std::string name, sptr<OHOS::Surface> consumer)
 {
     VirtualScreenOption virScrOption = {
         .name_ = name,
