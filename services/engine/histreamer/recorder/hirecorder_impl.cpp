@@ -426,9 +426,7 @@ void HiRecorderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, const 
                 audioEncoderFilter_->Init(recorderEventReceiver_, recorderCallback_);
                 audioEncoderFilter_->Configure(audioEncFormat_);
                 status = pipeline_->LinkFilters(filter, {audioEncoderFilter_}, outType);
-                if (status != Status::OK) {
-                    OnEvent({"LinkFilters", EventType::EVENT_ERROR, status});
-                }
+                if (status != Status::OK) {OnEvent({"LinkFilters", EventType::EVENT_ERROR, status});}
                 break;
             case Pipeline::StreamType::STREAMTYPE_ENCODED_AUDIO:
                 if (muxerFilter_ == nullptr) {
@@ -441,9 +439,7 @@ void HiRecorderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, const 
                     fd_ = -1;
                 }
                 status = pipeline_->LinkFilters(filter, {muxerFilter_}, outType);
-                if (status != Status::OK) {
-                    OnEvent({"LinkFilters", EventType::EVENT_ERROR, status});
-                }
+                if (status != Status::OK) {OnEvent({"LinkFilters", EventType::EVENT_ERROR, status});}
                 break;
             case Pipeline::StreamType::STREAMTYPE_ENCODED_VIDEO:
                 if (muxerFilter_ == nullptr) {
@@ -456,9 +452,7 @@ void HiRecorderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, const 
                     fd_ = -1;
                 }
                 status = pipeline_->LinkFilters(filter, {muxerFilter_}, outType);
-                if (status != Status::OK) {
-                    OnEvent({"LinkFilters", EventType::EVENT_ERROR, status});
-                }
+                if (status != Status::OK) {OnEvent({"LinkFilters", EventType::EVENT_ERROR, status});}
                 break;
             default:
                 break;
