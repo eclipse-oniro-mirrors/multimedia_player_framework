@@ -327,7 +327,6 @@ int32_t HiPlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
                 audioDecoder_->Flush();
                 audioDecoder_->Start();
             }
-
         } else if (pipelineStates_ == PlayerStates::PLAYER_PLAYBACK_COMPLETE) {
             pipeline_->Pause();
         }
