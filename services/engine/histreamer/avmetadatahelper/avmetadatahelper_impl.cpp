@@ -304,7 +304,7 @@ int32_t AVMetadataHelperImpl::SetSource(const std::shared_ptr<IMediaDataSource> 
     MEDIA_LOGI("SetSource dataSrc");
     mediaDemuxer_ = std::make_shared<MediaDemuxer>();
     Status ret = SetSourceInternel(dataSrc);
-    FALSE_RETURN_V_MSG_E(ret == Status::OK, MSERR_INVALID_VAL, "Failed to call SetSourceInternel");
+    CHECK_AND_RETURN_RET_LOG(ret == Status::OK, MSERR_INVALID_VAL, "Failed to call SetSourceInternel");
 
     MEDIA_LOGI("set source success");
     return MSERR_OK;
@@ -439,9 +439,8 @@ Status AVMetadataHelperImpl::SetSourceInternel(const std::string &uri, int32_t u
 
 Status AVMetadataHelperImpl::SetSourceInternel(const std::shared_ptr<IMediaDataSource> &dataSrc)
 {
-    Status ret;
-    ret = mediaDemuxer_->SetDataSource(std::make_shared<MediaSource>(dataSrc));
-    FALSE_RETURN_V_MSG_E(ret == Status::OK, ret, "Failed to call SetDataSource");
+    Status ret = mediaDemuxer_->SetDataSource(std::make_shared<MediaSource>(dataSrc));
+    CHECK_AND_RETURN_RET_LOG(ret == Status::OK, ret, "Failed to call SetDataSource");
     return Status::OK;
 }
 

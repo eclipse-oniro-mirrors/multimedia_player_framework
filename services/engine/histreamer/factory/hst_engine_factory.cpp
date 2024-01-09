@@ -88,7 +88,7 @@ std::unique_ptr<IPlayerEngine> HstEngineFactory::CreatePlayerEngine(int32_t uid,
 std::unique_ptr<IAVMetadataHelperEngine> HstEngineFactory::CreateAVMetadataHelperEngine()
 {
     MEDIA_LOG_I("CreateAVMetadataHelperEngine enter.");
-    auto helper = std::unique_ptr<AVMetadataHelperImpl>(new (std::nothrow) AVMetadataHelperImpl());
+    auto helper = std::make_unique<AVMetadataHelperImpl>();
     if (helper) {
         return helper;
     }
