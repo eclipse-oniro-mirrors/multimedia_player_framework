@@ -416,7 +416,6 @@ void HiRecorderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, const 
     Pipeline::StreamType outType)
 {
     MEDIA_LOG_I("OnCallback enter.");
-    auto status = Status::OK;
     if (cmd == Pipeline::FilterCallBackCommand::NEXT_FILTER_NEEDED) {
         switch (outType) {
             case Pipeline::StreamType::STREAMTYPE_RAW_AUDIO:
@@ -425,8 +424,7 @@ void HiRecorderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, const 
                 audioEncoderFilter_->SetCodecFormat(audioEncFormat_);
                 audioEncoderFilter_->Init(recorderEventReceiver_, recorderCallback_);
                 audioEncoderFilter_->Configure(audioEncFormat_);
-                status = pipeline_->LinkFilters(filter, {audioEncoderFilter_}, outType);
-                if (status != Status::OK) {OnEvent({"LinkFilters", EventType::EVENT_ERROR, status});}
+                pipeline_->LinkFilters(filter, {audioEncoderFilter_}, outType);
                 break;
             case Pipeline::StreamType::STREAMTYPE_ENCODED_AUDIO:
                 if (muxerFilter_ == nullptr) {
@@ -438,8 +436,7 @@ void HiRecorderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, const 
                     close(fd_);
                     fd_ = -1;
                 }
-                status = pipeline_->LinkFilters(filter, {muxerFilter_}, outType);
-                if (status != Status::OK) {OnEvent({"LinkFilters", EventType::EVENT_ERROR, status});}
+                pipeline_->LinkFilters(filter, {muxerFilter_}, outType);
                 break;
             case Pipeline::StreamType::STREAMTYPE_ENCODED_VIDEO:
                 if (muxerFilter_ == nullptr) {
@@ -451,8 +448,7 @@ void HiRecorderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, const 
                     close(fd_);
                     fd_ = -1;
                 }
-                status = pipeline_->LinkFilters(filter, {muxerFilter_}, outType);
-                if (status != Status::OK) {OnEvent({"LinkFilters", EventType::EVENT_ERROR, status});}
+                pipeline_->LinkFilters(filter, {muxerFilter_}, outType);
                 break;
             default:
                 break;
