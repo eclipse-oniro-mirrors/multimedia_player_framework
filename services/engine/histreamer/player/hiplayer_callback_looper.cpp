@@ -115,7 +115,6 @@ void HiPlayerCallbackLooper::DoReportCompletedTime()
     }
 }
 
-
 void HiPlayerCallbackLooper::DoReportMediaProgress()
 {
     OHOS::Media::AutoLock lock(loopMutex_);
