@@ -679,7 +679,7 @@ void HiPlayerImpl::OnEvent(const Event &event)
         }
         case EventType::EVENT_ERROR: {
             OnStateChanged(PlayerStateId::ERROR);
-            HandleErrorEvent(event.param);
+            HandleErrorEvent(AnyCast<int32_t>(event.param));
             break;
         }
         case EventType::EVENT_READY: {
