@@ -85,6 +85,22 @@ void HiPlayerCallbackLooper::StartReportMediaProgress(int64_t updateIntervalMs)
 
 void HiPlayerCallbackLooper::ManualReportMediaProgressOnce()
 {
+    eventQueue_.Enqueue(std::make_shared<Event>(WHAT_MEDIA_PROGRESS, SteadyClock::GetCurrentTimeMs(), Any()));
+}
+
+void HiPlayerCallbackLooper::StopReportMediaProgress()
+{
+    reportMediaProgress_ = false;
+}
+
+void HiPlayerCallbackLooper::DropMediaProgress()
+{
+    isDropMediaProgress_ = true;
+    eventQueue_.RemoveMediaProgressEvent();
+}
+
+void HiPlayerCallbackLooper::DoReportCompletedTime()
+{
     OHOS::Media::AutoLock lock(loopMutex_);
     auto obs = obs_.lock();
     if (obs) {
@@ -99,16 +115,6 @@ void HiPlayerCallbackLooper::ManualReportMediaProgressOnce()
     }
 }
 
-void HiPlayerCallbackLooper::StopReportMediaProgress()
-{
-    reportMediaProgress_ = false;
-}
-
-void HiPlayerCallbackLooper::DropMediaProgress()
-{
-    isDropMediaProgress_ = true;
-    eventQueue_.RemoveMediaProgressEvent();
-}
 
 void HiPlayerCallbackLooper::DoReportMediaProgress()
 {
