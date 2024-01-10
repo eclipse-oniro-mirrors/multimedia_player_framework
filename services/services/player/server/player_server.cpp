@@ -1273,7 +1273,6 @@ void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &in
         return;
     }
 
-
     if (playerCb_ != nullptr && ret == MSERR_OK) {
         if (isBackgroundChanged_ && type == INFO_TYPE_STATE_CHANGE && extra == backgroundState_) {
             MEDIA_LOGI("Background change state to %{public}d, Status reporting %{public}d", extra, isBackgroundCb_);
