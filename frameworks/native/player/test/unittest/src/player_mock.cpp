@@ -166,6 +166,19 @@ int32_t PlayerCallbackTest::TrackInfoUpdateSync()
     return MSERR_OK;
 }
 
+void PlayerCallbackTest::HandleTrackChangeCallback(int32_t extra, const Format &infoBody)
+{
+    (void)extra;
+    trackChange_ = true;
+    trackDoneFlag_ = true;
+    int32_t index;
+    int32_t isSelect;
+    infoBody.GetIntValue(std::string(PlayerKeys::PLAYER_TRACK_INDEX), index);
+    infoBody.GetIntValue(std::string(PlayerKeys::PLAYER_IS_SELECT), isSelect);
+    std::cout << "INFO_TYPE_TRACKCHANGE: index " << index << " isSelect " << isSelect << std::endl;
+    condVarTrackDone_.notify_all();
+}
+
 void PlayerCallbackTest::HandleSubtitleCallback(int32_t extra, const Format &infoBody)
 {
     (void)extra;
@@ -185,8 +198,6 @@ void PlayerCallbackTest::HandleTrackInfoCallback(int32_t extra, const Format &in
 
 void PlayerCallbackTest::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
 {
-    int32_t index;
-    int32_t isSelect;
     switch (type) {
         case INFO_TYPE_SEEKDONE:
             SetSeekDoneFlag(true);
@@ -214,12 +225,7 @@ void PlayerCallbackTest::OnInfo(PlayerOnInfoType type, int32_t extra, const Form
             std::cout << "INFO_TYPE_RESOLUTION_CHANGE: " << extra << std::endl;
             break;
         case INFO_TYPE_TRACKCHANGE:
-            trackChange_ = true;
-            trackDoneFlag_ = true;
-            infoBody.GetIntValue(std::string(PlayerKeys::PLAYER_TRACK_INDEX), index);
-            infoBody.GetIntValue(std::string(PlayerKeys::PLAYER_IS_SELECT), isSelect);
-            std::cout << "INFO_TYPE_TRACKCHANGE: index " << index << " isSelect " << isSelect << std::endl;
-            condVarTrackDone_.notify_all();
+            HandleTrackChangeCallback(extra, infoBody);
             break;
         case INFO_TYPE_SUBTITLE_UPDATE: {
             HandleSubtitleCallback(extra, infoBody);
