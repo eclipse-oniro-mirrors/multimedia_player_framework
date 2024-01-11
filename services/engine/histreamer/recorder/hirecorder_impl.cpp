@@ -357,9 +357,7 @@ int32_t HiRecorderImpl::Stop(bool isDrainAll)
 int32_t HiRecorderImpl::Reset()
 {
     MEDIA_LOG_I("Reset enter.");
-    Status ret = Status::OK;
-    ret = Stop(false);
-    return (int32_t)ret;
+    return Stop(false);
 }
 
 int32_t HiRecorderImpl::SetParameter(int32_t sourceId, const RecorderParam &recParam)
