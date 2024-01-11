@@ -79,10 +79,6 @@ std::unordered_map<int32_t, std::string> AVMetaDataCollector::GetMetadata(const 
             return metadata.tbl_;
         }
 
-        for (auto it = meta->begin(); it != meta->end(); ++it) {
-            MEDIA_LOGI("winddraw key %{public}s", it->first.c_str());
-        }
-
         std::string mime;
         meta->Get<Tag::MIME_TYPE>(mime);
         if (mime.substr(0, 5).compare("image") == 0) {
@@ -211,7 +207,6 @@ void AVMetaDataCollector::FormatMimeType(Metadata &avmeta, const std::shared_ptr
 {
     Plugins::FileType fileType;
     globalInfo->GetData(Tag::MEDIA_FILE_TYPE, fileType);
-    MEDIA_LOGI("winddraw MEDIA_FILE_TYPE %{public}d", fileType);
     CHECK_AND_RETURN_LOG(fileType != Plugins::FileType::UNKNOW, "unknown file type");
     if (fileTypeMap.find(fileType) == fileTypeMap.end()) {
         return;
