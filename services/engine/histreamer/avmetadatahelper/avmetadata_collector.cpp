@@ -81,7 +81,8 @@ std::unordered_map<int32_t, std::string> AVMetaDataCollector::GetMetadata(const 
 
         std::string mime;
         meta->Get<Tag::MIME_TYPE>(mime);
-        if (mime.substr(0, 5).compare("image") == 0) {
+        int32_t imageTypeLength = 5;
+        if (mime.substr(0, imageTypeLength).compare("image") == 0) {
             MEDIA_LOGI("skip image track");
             ++imageTrackCount;
             continue;
@@ -193,7 +194,8 @@ void AVMetaDataCollector::ConvertToAVMeta(const std::shared_ptr<Meta> &innerMeta
     }
 }
 
-void AVMetaDataCollector::FormatAVMeta(Metadata &avmeta, int32_t imageTrackCount, const std::shared_ptr<Meta> &globalInfo)
+void AVMetaDataCollector::FormatAVMeta(Metadata &avmeta, int32_t imageTrackCount,
+    const std::shared_ptr<Meta> &globalInfo)
 {
     std::string str = avmeta.GetMeta(AV_KEY_NUM_TRACKS);
     if (!str.empty()) {
