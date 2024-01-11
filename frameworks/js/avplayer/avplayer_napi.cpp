@@ -37,7 +37,6 @@ using namespace OHOS::AudioStandard;
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVPlayerNapi"};
-    constexpr uint32_t PREPARE_TASK_TIMEOUT = 18;
 }
 
 namespace OHOS {
