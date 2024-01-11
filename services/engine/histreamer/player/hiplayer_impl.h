@@ -96,6 +96,7 @@ private:
     void HandleCompleteEvent(const Event& event);
     void HandleDrmInfoUpdatedEvent(const Event& event);
     void HandleIsLiveStreamEvent(bool isLiveStream);
+    void HandleErrorEvent(int32_t errorCode);
     void UpdateStateNoLock(PlayerStates newState, bool notifyUpward = true);
     double ChangeModeToSpeed(const PlaybackRateMode& mode) const;
     void NotifyBufferingUpdate(const std::string_view& type, int32_t param);
@@ -113,6 +114,7 @@ private:
     Status LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
     bool IsVideoMime(const std::string& mime);
 #endif
+    Status SeekInner(int64_t seekPos, PlayerSeekMode mode);
     bool isNetWorkPlay_ = false;
     int32_t appUid_{0};
     int32_t appPid_{0};
@@ -157,6 +159,9 @@ private:
     bool stopWaitingDrmConfig_ = false;
     sptr<DrmStandard::IMediaKeySessionService> keySessionServiceProxy_{nullptr};
     int32_t svpMode_ = HiplayerSvpMode::SVP_CLEAR;
+
+    int32_t rotation90 = 90;
+    int32_t rotation270 = 270;
 };
 } // namespace Media
 } // namespace OHOS
