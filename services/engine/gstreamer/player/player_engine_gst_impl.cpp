@@ -473,6 +473,10 @@ void PlayerEngineGstImpl::HandleAudioMessage(const PlayBinMessage &msg)
 {
     if (msg.subType == PLAYBIN_MSG_INTERRUPT_EVENT) {
         HandleInterruptMessage(msg);
+    } else if (msg.subType == PLAYBIN_MSG_FIRST_FRAME_EVENT) {
+        HandleAudioFirstFrameMessage(msg);
+    } else if (msg.subType == PLAYBIN_MSG_DEVICE_CHANGE_EVENT) {
+        HandleDeviceChangeMessage(msg);
     }
 }
 
@@ -490,6 +494,37 @@ void PlayerEngineGstImpl::HandleInterruptMessage(const PlayBinMessage &msg)
         (void)format.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_FORCE, forceType);
         (void)format.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_HINT, hintType);
         notifyObs->OnInfo(INFO_TYPE_INTERRUPT_EVENT, 0, format);
+    }
+}
+
+void PlayerEngineGstImpl::HandleAudioFirstFrameMessage(const PlayBinMessage &msg)
+{
+    MEDIA_LOGI("Audio first frame event in");
+    uint64_t value = std::any_cast<uint64_t>(msg.extra);
+    std::shared_ptr<IPlayerEngineObs> notifyObs = obs_.lock();
+    if (notifyObs != nullptr) {
+        Format format;
+        (void)format.PutLongValue(PlayerKeys::AUDIO_FIRST_FRAME, value);
+        notifyObs->OnInfo(INFO_TYPE_AUDIO_FIRST_FRAME, 0, format);
+    }
+}
+
+void PlayerEngineGstImpl::HandleDeviceChangeMessage(const PlayBinMessage &msg)
+{
+    MEDIA_LOGI("Audio deviceChange event in");
+    std::pair<void*, const int32_t> value = std::any_cast<std::pair<void*, const int32_t>>(msg.extra);
+    std::unique_ptr<AudioStandard::DeviceInfo> deviceInfo(static_cast<AudioStandard::DeviceInfo*> (value.first));
+    const int32_t reason = value.second;
+    std::shared_ptr<IPlayerEngineObs> notifyObs = obs_.lock();
+    if (notifyObs != nullptr) {
+        Format format;
+        Parcel parcel;
+        deviceInfo->Marshalling(parcel);
+        auto parcelSize = parcel.GetReadableBytes();
+        (void)format.PutBuffer(PlayerKeys::AUDIO_DEVICE_CHANGE,
+            parcel.ReadBuffer(parcelSize), parcelSize);
+        format.PutIntValue(PlayerKeys::AUDIO_DEVICE_CHANGE_REASON, reason);
+        notifyObs->OnInfo(INFO_TYPE_AUDIO_DEVICE_CHANGE, reason, format);
     }
 }
 
@@ -789,7 +824,7 @@ int32_t PlayerEngineGstImpl::SetParameter(const Format &param)
     if (param.ContainKey(PlayerKeys::VIDEO_SCALE_TYPE)) {
         int32_t videoScaleType = 0;
         param.GetIntValue(PlayerKeys::VIDEO_SCALE_TYPE, videoScaleType);
-        return SetVideoScaleType(VideoScaleType(videoScaleType));
+        return SetVideoScaleType(Plugins::VideoScaleType(videoScaleType));
     }
     if (param.ContainKey(PlayerKeys::CONTENT_TYPE) && param.ContainKey(PlayerKeys::STREAM_USAGE)) {
         param.GetIntValue(PlayerKeys::CONTENT_TYPE, contentType_);
@@ -875,7 +910,7 @@ int32_t PlayerEngineGstImpl::SelectBitRate(uint32_t bitRate)
     return MSERR_INVALID_OPERATION;
 }
 
-int32_t PlayerEngineGstImpl::SetVideoScaleType(VideoScaleType videoScaleType)
+int32_t PlayerEngineGstImpl::SetVideoScaleType(Plugins::VideoScaleType videoScaleType)
 {
     std::unique_lock<std::mutex> lock(mutex_, std::try_to_lock);
     if (sinkProvider_ != nullptr) {

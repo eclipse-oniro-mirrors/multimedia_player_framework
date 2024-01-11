@@ -92,6 +92,15 @@ static void gst_audio_server_sink_event_init(GstAudioServerSinkClass *klass)
         static_cast<GSignalFlags>(G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION), 0, NULL,
         NULL, NULL, G_TYPE_NONE, 1, G_TYPE_UINT); // 1 parameters
 
+    g_signal_new("audio-first-frame-event", G_TYPE_FROM_CLASS(klass),
+        static_cast<GSignalFlags>(G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION), 0, NULL,
+        NULL, NULL, G_TYPE_NONE, 1, G_TYPE_UINT64); // 1 parameters
+    
+    g_signal_new("device-change-event", G_TYPE_FROM_CLASS(klass),
+        static_cast<GSignalFlags>(G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION), 0, NULL,
+        NULL, NULL, G_TYPE_NONE, 2, G_TYPE_POINTER,
+        G_TYPE_INT); // 2 parameters
+
     g_signal_new("segment-updated", G_TYPE_FROM_CLASS(klass),
         static_cast<GSignalFlags>(G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION), 0, NULL,
         NULL, NULL, G_TYPE_NONE, 0); // no parameters
@@ -298,6 +307,20 @@ static void gst_audio_server_sink_state_callback(GstBaseSink *basesink, guint st
 {
     GstAudioServerSink *sink = GST_AUDIO_SERVER_SINK(basesink);
     g_signal_emit_by_name(sink, "audio-state-event", state);
+}
+
+static void gst_audio_server_sink_first_frame_callback(GstBaseSink *basesink, gulong latency)
+{
+    GstAudioServerSink *sink = GST_AUDIO_SERVER_SINK(basesink);
+    g_signal_emit_by_name(sink, "audio-first-frame-event", latency);
+}
+
+static void gst_audio_server_sink_device_change_callback(GstBaseSink *basesink,
+    gpointer deviceInfo,
+    gint reason)
+{
+    GstAudioServerSink *sink = GST_AUDIO_SERVER_SINK(basesink);
+    g_signal_emit_by_name(sink, "device-change-event", deviceInfo, reason);
 }
 
 static void gst_audio_server_sink_error_callback(GstBaseSink *basesink, const std::string &errMsg)
@@ -554,6 +577,7 @@ static gboolean gst_audio_server_sink_event(GstBaseSink *basesink, GstEvent *eve
             if (sink->audio_sink->Drain() != MSERR_OK) {
                 GST_ERROR_OBJECT(basesink, "fail to call Drain when handling EOS event");
             }
+            (void)sink->audio_sink->PauseTransitent();
             break;
         case GST_EVENT_SEGMENT:
             return gst_audio_server_sink_handle_segment_event(basesink, event);
@@ -563,7 +587,7 @@ static gboolean gst_audio_server_sink_event(GstBaseSink *basesink, GstEvent *eve
             if (sink->audio_sink == nullptr) {
                 break;
             }
-            (void)sink->audio_sink->Pause();
+            (void)sink->audio_sink->PauseTransitent();
             (void)sink->audio_sink->Flush();
             GST_DEBUG_OBJECT(basesink, "received FLUSH_START");
             break;
@@ -602,6 +626,8 @@ static gboolean gst_audio_server_sink_start(GstBaseSink *basesink)
     g_return_val_if_fail(sink->audio_sink->Prepare(sink->appuid, sink->apppid, sink->apptokenid) == MSERR_OK, FALSE);
     sink->audio_sink->SetAudioSinkCb(gst_audio_server_sink_interrupt_callback,
                                      gst_audio_server_sink_state_callback,
+                                     gst_audio_server_sink_first_frame_callback,
+                                     gst_audio_server_sink_device_change_callback,
                                      gst_audio_server_sink_error_callback,
                                      gst_audio_server_sink_service_died_callback);
     g_return_val_if_fail(sink->audio_sink->GetMaxVolume(sink->max_volume) == MSERR_OK, FALSE);

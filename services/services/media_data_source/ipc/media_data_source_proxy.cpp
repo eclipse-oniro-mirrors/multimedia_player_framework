@@ -19,6 +19,8 @@
 #include "media_dfx.h"
 #include "avdatasrcmemory.h"
 #include "avsharedmemory_ipc.h"
+#include "meta/any.h"
+#include "parameter.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MediaDataSourceProxy"};
@@ -81,17 +83,18 @@ int32_t MediaDataCallback::ReadAt(const std::shared_ptr<AVSharedMemory> &mem, ui
 
 int32_t MediaDataCallback::ReadAt(int64_t pos, uint32_t length, const std::shared_ptr<AVSharedMemory> &mem)
 {
-    (void)pos;
-    (void)length;
-    (void)mem;
-    return MSERR_OK;
+    MEDIA_LOGD("ReadAt in");
+    CHECK_AND_RETURN_RET_LOG(callbackProxy_ != nullptr, SOURCE_ERROR_IO, "callbackProxy_ is nullptr");
+    CHECK_AND_RETURN_RET_LOG(mem != nullptr, MSERR_NO_MEMORY, "memory is nullptr");
+    return callbackProxy_->ReadAt(mem, length, pos);
 }
 
 int32_t MediaDataCallback::ReadAt(uint32_t length, const std::shared_ptr<AVSharedMemory> &mem)
 {
-    (void)length;
-    (void)mem;
-    return MSERR_OK;
+    MEDIA_LOGD("ReadAt in");
+    CHECK_AND_RETURN_RET_LOG(callbackProxy_ != nullptr, SOURCE_ERROR_IO, "callbackProxy_ is nullptr");
+    CHECK_AND_RETURN_RET_LOG(mem != nullptr, MSERR_NO_MEMORY, "memory is nullptr");
+    return callbackProxy_->ReadAt(mem, length, 0);
 }
 
 int32_t MediaDataCallback::GetSize(int64_t &size)
@@ -128,7 +131,12 @@ int32_t MediaDataSourceProxy::ReadAt(const std::shared_ptr<AVSharedMemory> &mem,
     }
     CHECK_AND_RETURN_RET_LOG(BufferCache_ != nullptr, MSERR_NO_MEMORY, "Failed to create BufferCache_!");
 
-    uint32_t offset = std::static_pointer_cast<AVDataSrcMemory>(mem)->GetOffset();
+    uint32_t offset = 0;
+    char useHistreamer[10] = {0}; // 10 for system parameter usage
+    auto res = GetParameter("debug.media_service.histreamer", "0", useHistreamer, sizeof(useHistreamer));
+    if (res != 1 || useHistreamer[0] != '1') {
+        offset = std::static_pointer_cast<AVDataSrcMemory>(mem)->GetOffset();
+    }
     MEDIA_LOGD("offset is %{public}u", offset);
     BufferCache_->WriteToParcel(mem, data);
     data.WriteUint32(offset);

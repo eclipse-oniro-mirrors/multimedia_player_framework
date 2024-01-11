@@ -37,6 +37,7 @@ public:
     virtual int32_t Start() = 0;
     virtual int32_t Stop() = 0;
     virtual int32_t Pause() = 0;
+    virtual int32_t PauseTransitent() = 0;
     virtual int32_t Drain() = 0;
     virtual int32_t Flush() = 0;
     virtual int32_t Release() = 0;
@@ -52,6 +53,9 @@ public:
     virtual bool Writeable() const;
     virtual void SetAudioSinkCb(void (*interruptCb)(GstBaseSink *, guint, guint, guint),
                                 void (*stateCb)(GstBaseSink *, guint),
+                                void (*firstFrameCb)(GstBaseSink *, gulong),
+                                void (*deviceCb)(GstBaseSink *, gpointer deviceInfo,
+                                gint32 reason),
                                 void (*errorCb)(GstBaseSink *, const std::string &),
                                 void (*audioDiedCb)(GstBaseSink *)) = 0;
     virtual int32_t SetAudioEffectMode(int32_t effectMode) = 0;

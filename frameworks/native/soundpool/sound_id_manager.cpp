@@ -28,31 +28,18 @@ namespace Media {
 SoundIDManager::SoundIDManager() : isParsingThreadPoolStarted_(false), quitQueue_(false)
 {
     MEDIA_INFO_LOG("Construction SoundIDManager");
-#ifdef SOUNDPOOL_SUPPORT_LOW_LATENCY
-    char hardwareName[10] = {0};
-    GetParameter("ohos.boot.hardware", "rk3568", hardwareName, sizeof(hardwareName));
-    if (strcmp(hardwareName, "baltimore") != 0) {
-        MEDIA_INFO_LOG("Device unsupport low-latency, force set to normal play.");
-        maxLoadNumAtSameTime_ = MAX_STREAM_NUM_FOR_NORMAL;
-    } else {
-        MEDIA_INFO_LOG("Device support low-latency, set renderer by user.");
-        maxLoadNumAtSameTime_ = MAX_STREAM_NUM_FOR_LOW_LATENCY;
-    }
-#else
-    // Force all play to normal.
-    maxLoadNumAtSameTime_ = MAX_STREAM_NUM_FOR_NORMAL;
-    MEDIA_INFO_LOG("SoundPool unsupport low-latency.");
-#endif
     InitThreadPool();
 }
 
 SoundIDManager::~SoundIDManager()
 {
     MEDIA_INFO_LOG("Destruction SoundIDManager");
-    std::lock_guard lock(soundManagerLock_);
-    quitQueue_ = true;
-    queueSpaceValid_.notify_all(); // notify all load waiters
-    queueDataValid_.notify_all();  // notify all worker threads
+    {
+        std::lock_guard lock(soundManagerLock_);
+        quitQueue_ = true;
+        queueSpaceValid_.notify_all(); // notify all load waiters
+        queueDataValid_.notify_all();  // notify all worker threads
+    }
 
     if (callback_ != nullptr) {
         callback_.reset();
@@ -90,8 +77,8 @@ int32_t SoundIDManager::Load(std::string url)
     int32_t soundID;
     {
         std::lock_guard lock(soundManagerLock_);
-        if (soundParsers_.size() >= maxLoadNumAtSameTime_) {
-            MEDIA_INFO_LOG("SoundPool maxLoadNumAtSameTime_:%{public}zu.", maxLoadNumAtSameTime_);
+        if (soundParsers_.size() >= MAX_LOAD_NUM) {
+            MEDIA_INFO_LOG("SoundPool MAX_LOAD_NUM:%{public}zu.", MAX_LOAD_NUM);
             return invalidSoundIDFlag;
         }
         const std::string fdHead = "fd://";
@@ -119,8 +106,12 @@ int32_t SoundIDManager::Load(int32_t fd, int64_t offset, int64_t length)
 {
     int32_t soundID;
     {
-        MEDIA_INFO_LOG("SoundIDManager startLoad");
         std::lock_guard lock(soundManagerLock_);
+        MEDIA_INFO_LOG("SoundIDManager startLoad");
+        if (soundParsers_.size() >= MAX_LOAD_NUM) {
+            MEDIA_INFO_LOG("SoundPool MAX_LOAD_NUM:%{public}zu.", MAX_LOAD_NUM);
+            return invalidSoundIDFlag;
+        }
         do {
             nextSoundID_ = nextSoundID_ == INT32_MAX ? 1 : nextSoundID_ + 1;
         } while (FindSoundParser(nextSoundID_) != nullptr);
@@ -198,7 +189,6 @@ std::shared_ptr<SoundParser> SoundIDManager::FindSoundParser(int32_t soundID) co
 
 int32_t SoundIDManager::Unload(int32_t soundID)
 {
-    std::lock_guard lock(soundManagerLock_);
     MEDIA_INFO_LOG("SoundIDManager soundID:%{public}d", soundID);
     CHECK_AND_RETURN_RET_LOG(!soundParsers_.empty(), MSERR_NO_MEMORY, "No sound in the soundParsers_");
     auto it = soundParsers_.find(soundID);

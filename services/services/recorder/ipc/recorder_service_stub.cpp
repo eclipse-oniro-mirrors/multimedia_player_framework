@@ -29,6 +29,7 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "RecorderSe
 
 namespace OHOS {
 namespace Media {
+const int32_t ROOT_UID = 0;
 sptr<RecorderServiceStub> RecorderServiceStub::Create()
 {
     sptr<RecorderServiceStub> recorderStub = new(std::nothrow) RecorderServiceStub();
@@ -88,6 +89,10 @@ int32_t RecorderServiceStub::Init()
     recFuncs_[DESTROY] = &RecorderServiceStub::DestroyStub;
     recFuncs_[GET_AV_RECORDER_CONFIG] = &RecorderServiceStub::GetAVRecorderConfig;
     recFuncs_[GET_LOCATION] = &RecorderServiceStub::GetLocation;
+    recFuncs_[SET_VIDEO_IS_HDR] = &RecorderServiceStub::SetVideoIsHdr;
+    recFuncs_[GET_AUDIO_CAPTURER_CHANGE_INFO] = &RecorderServiceStub::GetCurrentCapturerChangeInfo;
+    recFuncs_[GET_AVAILABLE_ENCODER] = &RecorderServiceStub::GetAvailableEncoder;
+    recFuncs_[GET_MAX_AMPLITUDE] = &RecorderServiceStub::GetMaxAmplitude;
 
     pid_ = IPCSkeleton::GetCallingPid();
     (void)RegisterMonitor(pid_);
@@ -106,12 +111,21 @@ int RecorderServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mes
 {
     MEDIA_LOGI("Stub: OnRemoteRequest of code: %{public}d is received", code);
     int32_t permissionResult;
+
+    auto remoteDescriptor = data.ReadInterfaceToken();
+    CHECK_AND_RETURN_RET_LOG(RecorderServiceStub::GetDescriptor() == remoteDescriptor,
+        MSERR_INVALID_OPERATION, "Invalid descriptor");
+
+    if (code == SET_AUDIO_SOURCE) {
+        int32_t type = data.ReadInt32();
+        audioSourceType_ = static_cast<AudioSourceType>(type);
+    }
     if (AUDIO_REQUEST.count(code) != 0) {
-        permissionResult = MediaPermission::CheckMicPermission();
+        permissionResult = CheckPermission();
         needAudioPermissionCheck = true;
     } else if (COMMON_REQUEST.count(code) != 0) {
         if (needAudioPermissionCheck) {
-            permissionResult = MediaPermission::CheckMicPermission();
+            permissionResult = CheckPermission();
         } else {
             // none audio request no need to check permission in recorder server
             permissionResult = Security::AccessToken::PERMISSION_GRANTED;
@@ -121,11 +135,7 @@ int RecorderServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mes
         permissionResult = Security::AccessToken::PERMISSION_GRANTED;
     }
     CHECK_AND_RETURN_RET_LOG(permissionResult == Security::AccessToken::PERMISSION_GRANTED,
-        MSERR_EXT_API9_PERMISSION_DENIED, "user do not have the right to access MICROPHONE");
-
-    auto remoteDescriptor = data.ReadInterfaceToken();
-    CHECK_AND_RETURN_RET_LOG(RecorderServiceStub::GetDescriptor() == remoteDescriptor,
-        MSERR_INVALID_OPERATION, "Invalid descriptor");
+        MSERR_EXT_API9_PERMISSION_DENIED, "user do not have the correct permission");
 
     auto itFunc = recFuncs_.find(code);
     if (itFunc != recFuncs_.end()) {
@@ -197,6 +207,12 @@ int32_t RecorderServiceStub::SetCaptureRate(int32_t sourceId, double fps)
 {
     CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
     return recorderServer_->SetCaptureRate(sourceId, fps);
+}
+
+int32_t RecorderServiceStub::SetVideoIsHdr(int32_t sourceId, bool isHdr)
+{
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    return recorderServer_->SetVideoIsHdr(sourceId, isHdr);
 }
 
 sptr<OHOS::Surface> RecorderServiceStub::GetSurface(int32_t sourceId)
@@ -351,6 +367,24 @@ int32_t RecorderServiceStub::GetLocation(Location &location)
     return recorderServer_->GetLocation(location);
 }
 
+int32_t RecorderServiceStub::GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &changeInfo)
+{
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    return recorderServer_->GetCurrentCapturerChangeInfo(changeInfo);
+}
+
+int32_t RecorderServiceStub::GetAvailableEncoder(std::vector<EncoderCapabilityData> &encoderInfo)
+{
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    return recorderServer_->GetAvailableEncoder(encoderInfo);
+}
+
+int32_t RecorderServiceStub::GetMaxAmplitude()
+{
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    return recorderServer_->GetMaxAmplitude();
+}
+
 int32_t RecorderServiceStub::DoIpcAbnormality()
 {
     MEDIA_LOGI("Enter DoIpcAbnormality.");
@@ -422,6 +456,14 @@ int32_t RecorderServiceStub::SetVideoEncodingBitRate(MessageParcel &data, Messag
     return MSERR_OK;
 }
 
+int32_t RecorderServiceStub::SetVideoIsHdr(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t sourceId = data.ReadInt32();
+    bool isHdr = data.ReadBool();
+    reply.WriteInt32(SetVideoIsHdr(sourceId, isHdr));
+    return MSERR_OK;
+}
+
 int32_t RecorderServiceStub::SetCaptureRate(MessageParcel &data, MessageParcel &reply)
 {
     int32_t sourceId = data.ReadInt32();
@@ -443,10 +485,8 @@ int32_t RecorderServiceStub::GetSurface(MessageParcel &data, MessageParcel &repl
 
 int32_t RecorderServiceStub::SetAudioSource(MessageParcel &data, MessageParcel &reply)
 {
-    int32_t type = data.ReadInt32();
     int32_t sourceId = 0;
-    AudioSourceType sourceType = static_cast<AudioSourceType>(type);
-    int32_t ret = SetAudioSource(sourceType, sourceId);
+    int32_t ret = SetAudioSource(audioSourceType_, sourceId);
     reply.WriteInt32(sourceId);
     reply.WriteInt32(ret);
     return MSERR_OK;
@@ -627,7 +667,7 @@ int32_t RecorderServiceStub::GetAVRecorderConfig(MessageParcel &data, MessagePar
     (void)reply.WriteInt32(configMap["audioBitrate"]);
     (void)reply.WriteInt32(configMap["audioChannels"]);
     (void)reply.WriteInt32(configMap["audioCodec"]);
-    (void)reply.WriteInt32(configMap["auidoSampleRate"]);
+    (void)reply.WriteInt32(configMap["audioSampleRate"]);
     (void)reply.WriteInt32(configMap["fileFormat"]);
     (void)reply.WriteInt32(configMap["videoBitrate"]);
     (void)reply.WriteInt32(configMap["videoCodec"]);
@@ -651,6 +691,63 @@ int32_t RecorderServiceStub::GetLocation(MessageParcel &data, MessageParcel &rep
     GetLocation(location);
     (void)reply.WriteFloat(location.latitude);
     (void)reply.WriteFloat(location.longitude);
+    return MSERR_OK;
+}
+
+int32_t RecorderServiceStub::CheckPermission()
+{
+    auto callerUid = IPCSkeleton::GetCallingUid();
+    if (callerUid == ROOT_UID) {
+        MEDIA_LOGI("Root user. Permission Granted");
+        return Security::AccessToken::PERMISSION_GRANTED;
+    }
+    Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
+
+    switch (audioSourceType_) {
+        case AUDIO_SOURCE_VOICE_CALL:
+            return Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
+                "ohos.permission.RECORD_VOICE_CALL");
+        case AUDIO_MIC:
+            return Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
+                "ohos.permission.MICROPHONE");
+        case AUDIO_SOURCE_DEFAULT:
+        case AUDIO_INNER:
+            MEDIA_LOGE("not supported audio source. Permission denied");
+            return Security::AccessToken::PERMISSION_DENIED;
+        default:
+            return Security::AccessToken::PERMISSION_GRANTED;
+    }
+}
+
+int32_t RecorderServiceStub::GetCurrentCapturerChangeInfo(MessageParcel &data, MessageParcel &reply)
+{
+    AudioRecorderChangeInfo changeInfo;
+    int32_t ret = GetCurrentCapturerChangeInfo(changeInfo);
+    changeInfo.Marshalling(reply);
+
+    reply.WriteInt32(ret);
+    return MSERR_OK;
+}
+
+int32_t RecorderServiceStub::GetAvailableEncoder(MessageParcel &data, MessageParcel &reply)
+{
+    (void)data;
+    std::vector<EncoderCapabilityData> encoderInfo;
+    int32_t ret = GetAvailableEncoder(encoderInfo);
+    reply.WriteInt32(static_cast<int32_t>(encoderInfo.size()));
+    for (auto iter = encoderInfo.begin(); iter != encoderInfo.end(); iter++) {
+        iter->Marshalling(reply);
+    }
+    reply.WriteInt32(ret);
+
+    return MSERR_OK;
+}
+
+int32_t RecorderServiceStub::GetMaxAmplitude(MessageParcel &data, MessageParcel &reply)
+{
+    (void)data;
+    reply.WriteInt32(GetMaxAmplitude());
+
     return MSERR_OK;
 }
 } // namespace Media

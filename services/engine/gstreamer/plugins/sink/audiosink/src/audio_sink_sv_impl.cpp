@@ -52,6 +52,16 @@ void AudioRendererMediaCallback::SaveStateCallback(StateCbFunc stateCb)
     stateCb_ = stateCb;
 }
 
+void AudioRendererMediaCallback::SaveFirstFrameCallback(FirstFrameCbFunc firstFrameCb)
+{
+    firstFrameCb_ = firstFrameCb;
+}
+
+void AudioRendererMediaCallback::SaveDeviceChangeCallback(DeviceChangeFunc deviceCb)
+{
+    deviceCb_ = deviceCb;
+}
+
 AudioServiceDiedCallback::AudioServiceDiedCallback(GstBaseSink *audioSink) : audioSink_(audioSink)
 {
     MEDIA_LOGD("AudioServiceDiedCallback create");
@@ -91,6 +101,31 @@ void AudioRendererMediaCallback::OnStateChange(const AudioStandard::RendererStat
         });
         (void)taskQue_.EnqueueTask(task);
     }
+}
+
+void AudioRendererMediaCallback::OnOutputDeviceChange(const AudioStandard::DeviceInfo &deviceInfo,
+    const AudioStandard::AudioStreamDeviceChangeReason reason)
+{
+    MEDIA_LOGD("OnOutputDeviceChange reason is %{public}d", static_cast<int32_t>(reason));
+    auto task = std::make_shared<TaskHandler<void>>([this, deviceInfo, reason] {
+        if (deviceCb_ != nullptr) {
+            gpointer gstDeviceInfo;
+            gstDeviceInfo = new AudioStandard::DeviceInfo(deviceInfo);
+            // kwtest
+            deviceCb_(audioSink_, gstDeviceInfo, static_cast<const gint32>(reason));
+        }
+    });
+    (void)taskQue_.EnqueueTask(task);
+}
+
+void AudioRendererMediaCallback::OnFirstFrameWriting(uint64_t latency)
+{
+    auto task = std::make_shared<TaskHandler<void>>([this, latency] {
+        if (firstFrameCb_ != nullptr) {
+            firstFrameCb_(audioSink_, static_cast<gulong>(latency));
+        }
+    });
+    (void)taskQue_.EnqueueTask(task);
 }
 
 AudioSinkSvImpl::AudioSinkSvImpl(GstBaseSink *sink)
@@ -244,7 +279,7 @@ int32_t AudioSinkSvImpl::Prepare(int32_t appUid, int32_t appPid, uint32_t appTok
     rendererOptions_.streamInfo.format = AudioStandard::SAMPLE_S16LE;
     rendererOptions_.streamInfo.channels = AudioStandard::MONO;
     LISTENER(audioRenderer_ = AudioStandard::AudioRenderer::Create(rendererOptions_, appInfo),
-        "AudioRenderer::Create", PlayerXCollie::timerTimeout)
+        "AudioRenderer::Create", false, 15) // 15 timeout for create
     CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_AUD_RENDER_FAILED);
     SetMuteVolumeBySysParam();
     OHOS::AudioStandard::AudioEffectMode effectMode = DisableAudioEffectBySysParam() ?
@@ -295,6 +330,25 @@ int32_t AudioSinkSvImpl::Pause()
             PlayerXCollie::timerTimeout)
     }
     MEDIA_LOGI("audioRenderer Pause Out");
+    return MSERR_OK;
+}
+
+int32_t AudioSinkSvImpl::PauseTransitent()
+{
+    MediaTrace trace("AudioSink::PauseTransitent");
+    MEDIA_LOGI("audioRenderer PauseTransitent In");
+    CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_AUD_RENDER_FAILED);
+    if (audioRenderer_->GetStatus() == OHOS::AudioStandard::RENDERER_RUNNING) {
+        LISTENER(
+            bool ret = audioRenderer_->PauseTransitent();
+            if (ret == false) {
+                MEDIA_LOGE("audio Renderer PauseTransitent failed!");
+            }
+            CHECK_AND_RETURN_RET(ret == true, MSERR_AUD_RENDER_FAILED),
+            "AudioRenderer::PauseTransitent",
+            PlayerXCollie::timerTimeout)
+    }
+    MEDIA_LOGI("audioRenderer PauseTransitent Out");
     return MSERR_OK;
 }
 
@@ -497,6 +551,9 @@ int32_t AudioSinkSvImpl::GetLatency(uint64_t &latency) const
 
 void AudioSinkSvImpl::SetAudioSinkCb(void (*interruptCb)(GstBaseSink *, guint, guint, guint),
                                      void (*stateCb)(GstBaseSink *, guint),
+                                     void (*firstFrameCb)(GstBaseSink *, gulong),
+                                     void (*deviceCb)(GstBaseSink *, gpointer deviceInfo,
+                                        gint32 reason),
                                      void (*errorCb)(GstBaseSink *, const std::string &),
                                      void (*audioDiedCb)(GstBaseSink *))
 {
@@ -504,9 +561,13 @@ void AudioSinkSvImpl::SetAudioSinkCb(void (*interruptCb)(GstBaseSink *, guint, g
     errorCb_ = errorCb;
     audioRendererMediaCallback_->SaveInterruptCallback(interruptCb);
     audioRendererMediaCallback_->SaveStateCallback(stateCb);
+    audioRendererMediaCallback_->SaveFirstFrameCallback(firstFrameCb);
+    audioRendererMediaCallback_->SaveDeviceChangeCallback(deviceCb);
     XcollieTimer xCollie("AudioRenderer::SetRendererCallback", PlayerXCollie::timerTimeout);
     CHECK_AND_RETURN(audioRenderer_ != nullptr);
     audioRenderer_->SetRendererCallback(audioRendererMediaCallback_);
+    audioRenderer_->SetRendererFirstFrameWritingCallback(audioRendererMediaCallback_);
+    audioRenderer_->RegisterOutputDeviceChangeWithInfoCallback(audioRendererMediaCallback_);
     audioServiceDiedCallback_->SaveAudioPolicyServiceDiedCb(audioDiedCb);
     audioRenderer_->RegisterAudioPolicyServerDiedCb(getpid(), audioServiceDiedCallback_);
 }

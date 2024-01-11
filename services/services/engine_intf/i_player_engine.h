@@ -21,10 +21,10 @@
 #include <string>
 #include <refbase.h>
 #include "player.h"
+#include "meta/video_types.h"
 #include "nocopyable.h"
-#ifdef SUPPORT_DRM
+
 #include "foundation/multimedia/drm_framework/services/drm_service/ipc/i_keysession_service.h"
-#endif
 
 namespace OHOS {
 class Surface;
@@ -48,6 +48,7 @@ public:
 
     virtual int32_t SetSource(const std::string &url) = 0;
     virtual int32_t SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc) = 0;
+    virtual int32_t SetObs(const std::weak_ptr<IPlayerEngineObs> &obs) = 0;
     virtual int32_t AddSubSource(const std::string &url)
     {
         (void)url;
@@ -78,19 +79,23 @@ public:
     virtual int32_t SetPlaybackSpeed(PlaybackRateMode mode) = 0;
     virtual int32_t GetPlaybackSpeed(PlaybackRateMode &mode) = 0;
     virtual int32_t SetVideoSurface(sptr<Surface> surface) = 0;
-#ifdef SUPPORT_DRM
+
     virtual int32_t SetDecryptConfig(const sptr<OHOS::DrmStandard::IMediaKeySessionService> &keySessionProxy,
-        bool svp)  = 0;
-#endif
+        bool svp)
+    {
+        (void)keySessionProxy;
+        (void)svp;
+        return 0;
+    }
+
     virtual int32_t SetLooping(bool loop) = 0;
     virtual int32_t SetParameter(const Format &param) = 0;
-    virtual int32_t SetObs(const std::weak_ptr<IPlayerEngineObs> &obs) = 0;
     virtual int32_t SelectBitRate(uint32_t bitRate)
     {
         (void)bitRate;
         return 0;
     }
-    virtual int32_t SetVideoScaleType(VideoScaleType videoScaleType)
+    virtual int32_t SetVideoScaleType(Plugins::VideoScaleType videoScaleType)
     {
         (void)videoScaleType;
         return 0;

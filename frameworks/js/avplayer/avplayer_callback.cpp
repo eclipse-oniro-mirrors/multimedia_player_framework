@@ -14,6 +14,8 @@
  */
 
 #include <map>
+#include <iostream>
+#include <sstream>
 #include <uv.h>
 #include "avplayer_napi.h"
 #include "media_errors.h"
@@ -438,6 +440,44 @@ public:
         }
     };
 
+    struct DeviceChangeNapi : public Base {
+        AudioStandard::DeviceInfo deviceInfo;
+        int32_t reason;
+        void UvWork() override
+        {
+            std::shared_ptr<AutoRef> deviceChangeRef = callback.lock();
+            CHECK_AND_RETURN_LOG(deviceChangeRef != nullptr, "%{public}s AutoRef is nullptr", callbackName.c_str());
+
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(deviceChangeRef->env_, &scope);
+            CHECK_AND_RETURN_LOG(scope != nullptr, "%{public}s scope is nullptr", callbackName.c_str());
+            ON_SCOPE_EXIT(0) { napi_close_handle_scope(deviceChangeRef->env_, scope); };
+
+            napi_value jsCallback = nullptr;
+            napi_status status = napi_get_reference_value(deviceChangeRef->env_, deviceChangeRef->cb_, &jsCallback);
+            CHECK_AND_RETURN_LOG(status == napi_ok && jsCallback != nullptr,
+                "%{public}s failed to napi_get_reference_value", callbackName.c_str());
+
+            constexpr size_t argCount = 1;
+            napi_value args[argCount] = {};
+            napi_create_object(deviceChangeRef->env_, &args[0]);
+            napi_value deviceObj = nullptr;
+            status = CommonNapi::SetValueDeviceInfo(deviceChangeRef->env_, deviceInfo, deviceObj);
+            CHECK_AND_RETURN_LOG(status == napi_ok && deviceObj != nullptr,
+                " fail to convert to jsobj");
+            napi_set_named_property(deviceChangeRef->env_, args[0], "devices", deviceObj);
+
+            bool res = CommonNapi::SetPropertyInt32(deviceChangeRef->env_, args[0], "changeReason",
+                static_cast<const int32_t> (reason));
+            CHECK_AND_RETURN_LOG(res && deviceObj != nullptr,
+                " fail to convert to jsobj");
+
+            napi_value result = nullptr;
+            status = napi_call_function(deviceChangeRef->env_, nullptr, jsCallback, argCount, args, &result);
+            CHECK_AND_RETURN_LOG(status == napi_ok, "%{public}s fail to napi_call_function", callbackName.c_str());
+        }
+    };
+
     struct TrackInfoUpdate : public Base {
         std::vector<Format> trackInfo;
         void UvWork() override
@@ -501,6 +541,39 @@ AVPlayerCallback::AVPlayerCallback(napi_env env, AVPlayerNotify *listener)
     onInfoFuncs_[INFO_TYPE_TRACK_INFO_UPDATE] = &AVPlayerCallback::OnTrackInfoUpdate;
     onInfoFuncs_[INFO_TYPE_DRM_INFO_UPDATED] = &AVPlayerCallback::OnDrmInfoUpdatedCb;
     onInfoFuncs_[INFO_TYPE_SET_DECRYPT_CONFIG_DONE] = &AVPlayerCallback::OnSetDecryptConfigDoneCb;
+    onInfoFuncs_[INFO_TYPE_AUDIO_DEVICE_CHANGE] = &AVPlayerCallback::OnAudioDeviceChangeCb;
+}
+
+void AVPlayerCallback::OnAudioDeviceChangeCb(const int32_t extra, const Format &infoBody)
+{
+    (void)extra;
+    CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
+    if (refMap_.find(AVPlayerEvent::EVENT_AUDIO_DEVICE_CHANGE) == refMap_.end()) {
+        MEDIA_LOGW("can not find audio AudioDeviceChange callback!");
+        return;
+    }
+
+    NapiCallback::DeviceChangeNapi *cb = new(std::nothrow) NapiCallback::DeviceChangeNapi();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new DeviceChangeNapi");
+
+    cb->callback = refMap_.at(AVPlayerEvent::EVENT_AUDIO_DEVICE_CHANGE);
+    cb->callbackName = AVPlayerEvent::EVENT_AUDIO_DEVICE_CHANGE;
+
+    uint8_t *parcelBuffer = nullptr;
+    size_t parcelSize;
+    infoBody.GetBuffer(PlayerKeys::AUDIO_DEVICE_CHANGE, &parcelBuffer, parcelSize);
+    Parcel parcel;
+    parcel.WriteBuffer(parcelBuffer, parcelSize);
+    AudioStandard::DeviceInfo deviceInfo;
+    deviceInfo.Unmarshalling(parcel);
+
+    int32_t reason;
+    infoBody.GetIntValue(PlayerKeys::AUDIO_DEVICE_CHANGE_REASON, reason);
+
+    cb->deviceInfo = deviceInfo;
+    cb->reason = reason;
+
+    NapiCallback::CompleteCallback(env_, cb);
 }
 
 AVPlayerCallback::~AVPlayerCallback()
@@ -545,7 +618,7 @@ void AVPlayerCallback::OnErrorCb(MediaServiceExtErrCodeAPI9 errorCode, const std
 void AVPlayerCallback::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    MEDIA_LOGI("OnInfo is called, PlayerOnInfoType: %{public}d", type);
+    MEDIA_LOGD("OnInfo is called, PlayerOnInfoType: %{public}d", type);
     if (onInfoFuncs_.count(type) > 0) {
         (this->*onInfoFuncs_[type])(extra, infoBody);
     } else {
@@ -918,19 +991,41 @@ void AVPlayerCallback::OnDrmInfoUpdatedCb(const int32_t extra, const Format &inf
 {
     (void)extra;
     MEDIA_LOGI("AVPlayerCallback OnDrmInfoUpdatedCb is called");
-
     if (refMap_.find(AVPlayerEvent::EVENT_DRM_INFO_UPDATE) == refMap_.end()) {
         MEDIA_LOGW("can not find drm info updated callback!");
         return;
     }
-    if (!infoBody.ContainKey(std::string(PlayerKeys::PLAYER_DRM_INFO))) {
-        MEDIA_LOGW("there's no drminfo-update key");
+    if (!infoBody.ContainKey(std::string(PlayerKeys::PLAYER_DRM_INFO_ADDR))) {
+        MEDIA_LOGW("there's no drminfo-update drm_info_addr key");
+        return;
+    }
+    if (!infoBody.ContainKey(std::string(PlayerKeys::PLAYER_DRM_INFO_COUNT))) {
+        MEDIA_LOGW("there's no drminfo-update drm_info_count key");
         return;
     }
 
+    uint8_t *drmInfoAddr = nullptr;
+    size_t size  = 0;
+    int32_t infoCount = 0;
+    infoBody.GetBuffer(std::string(PlayerKeys::PLAYER_DRM_INFO_ADDR), &drmInfoAddr, size);
+    CHECK_AND_RETURN_LOG(drmInfoAddr != nullptr && size > 0, "get drminfo buffer failed");
+    infoBody.GetIntValue(std::string(PlayerKeys::PLAYER_DRM_INFO_COUNT), infoCount);
+    CHECK_AND_RETURN_LOG(infoCount > 0, "get drminfo count is illegal");
+
     std::map<std::string, std::vector<uint8_t>> drmInfoMap;
-    infoBody.GetInfoMap(std::string(PlayerKeys::PLAYER_DRM_INFO), drmInfoMap);
-    CHECK_AND_RETURN_LOG(!drmInfoMap.empty(), "drminfoMap is empty");
+    DrmInfoItem *drmInfos = reinterpret_cast<DrmInfoItem*>(drmInfoAddr);
+    CHECK_AND_RETURN_LOG(drmInfos != nullptr, "cast drmInfos nullptr");
+    for (int32_t i = 0; i < infoCount; i++) {
+        DrmInfoItem temp = drmInfos[i];
+        std::stringstream ssConverter;
+        std::string uuid;
+        for (uint32_t index = 0; index < DrmConstant::DRM_MAX_M3U8_DRM_UUID_LEN; index++) {
+            ssConverter << std::hex << static_cast<int32_t>(temp.uuid[index]);
+            uuid = ssConverter.str();
+        }
+        std::vector<uint8_t> pssh(temp.pssh, temp.pssh + temp.psshLen);
+        drmInfoMap.insert({ uuid, pssh });
+    }
 
     NapiCallback::ObjectArray *cb = new(std::nothrow) NapiCallback::ObjectArray();
     CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new ObjectArray");

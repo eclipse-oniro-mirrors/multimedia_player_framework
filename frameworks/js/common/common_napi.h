@@ -19,10 +19,13 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
-#include "format.h"
+#include "meta/format.h"
 #include "av_common.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
+#include "media_core.h"
+#include "audio_info.h"
+#include "audio_system_manager.h"
 
 namespace OHOS {
 namespace Media {
@@ -46,6 +49,7 @@ public:
     static napi_deferred CreatePromise(napi_env env, napi_ref ref, napi_value &result);
     static bool SetPropertyInt32(napi_env env, napi_value &obj, const std::string &key, int32_t value);
     static bool SetPropertyDouble(napi_env env, napi_value &obj, const std::string &key, double value);
+    static bool SetPropertyBool(napi_env env, napi_value &obj, const std::string &key, bool value);
     static bool SetPropertyString(napi_env env, napi_value &obj, const std::string &key, const std::string &value);
     static napi_value CreateFormatBuffer(napi_env env, Format &format);
     static bool CreateFormatBufferByRef(napi_env env, Format &format, napi_value &result);
@@ -56,6 +60,16 @@ public:
     static bool AddNumberPropInt64(napi_env env, napi_value obj, const std::string &key, int64_t value);
     static bool AddArrayInt(napi_env env, napi_value &array, const std::vector<int32_t> &vec);
     static bool AddStringProperty(napi_env env, napi_value obj, const std::string &key, const std::string &value);
+    static bool GetPropertyBool(napi_env env, napi_value configObj, const std::string &type, bool &result);
+
+    static void ConvertDeviceInfoToAudioDeviceDescriptor(
+        sptr<AudioStandard::AudioDeviceDescriptor> audioDeviceDescriptor, const AudioStandard::DeviceInfo &deviceInfo);
+    static napi_status SetValueDeviceInfo(const napi_env &env, const AudioStandard::DeviceInfo &deviceInfo,
+        napi_value &result);
+    static napi_status SetDeviceDescriptor(const napi_env &env, const AudioStandard::AudioDeviceDescriptor &deviceInfo,
+        napi_value &result);
+    static napi_status SetDeviceDescriptors(const napi_env &env,
+        const std::vector<sptr<AudioStandard::AudioDeviceDescriptor>> &deviceDescriptors, napi_value &result);
 };
 
 class MediaJsResult {
@@ -275,12 +289,6 @@ struct AutoRef {
     }
     napi_env env_;
     napi_ref cb_;
-};
-
-struct AVFileDescriptor {
-    int32_t fd = 0;
-    int64_t offset = 0;
-    int64_t length = -1;
 };
 
 struct AVDataSrcDescriptor {
