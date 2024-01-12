@@ -419,8 +419,7 @@ static GstFlowReturn gst_surface_mem_sink_do_app_render(GstMemSink *memsink, Gst
         GST_OBJECT_UNLOCK(surface_sink);
         return GST_FLOW_OK;
     }
-
-
+    
     (void)gst_surface_do_render_buffer(memsink, buffer, is_preroll);
 
     GST_OBJECT_UNLOCK(surface_sink);
