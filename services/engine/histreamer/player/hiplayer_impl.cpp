@@ -351,10 +351,10 @@ Status HiPlayerImpl::SeekInner(int64_t seekPos, PlayerSeekMode mode)
         syncManager_->Seek(Plugins::HstTime2Us(realSeekTime));
     }
     if (audioDecoder_) {
-        audioDecoder_->SeekTo(seekPos);
+        audioDecoder_->SeekTo(Plugins::HstTime2Us(realSeekTime));
     }
     if (videoDecoder_) {
-        videoDecoder_->SeekTo(seekPos);
+        videoDecoder_->SeekTo(Plugins::HstTime2Us(realSeekTime));
     }
     if (pipelineStates_ == PlayerStates::PLAYER_STARTED) {
         pipeline_->Resume();
@@ -499,7 +499,7 @@ int32_t HiPlayerImpl::SetObs(const std::weak_ptr<IPlayerEngineObs>& obs)
 
 int32_t HiPlayerImpl::GetCurrentTime(int32_t& currentPositionMs)
 {
-    if (isSeek_) {
+    if (isSeek_.load()) {
         return TransStatus(Status::ERROR_UNKNOWN);
     }
     FALSE_RETURN_V(syncManager_ != nullptr, TransStatus(Status::ERROR_NULL_POINTER));
