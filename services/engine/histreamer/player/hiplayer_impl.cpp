@@ -366,6 +366,8 @@ Status HiPlayerImpl::SeekInner(int64_t seekPos, PlayerSeekMode mode)
     }
     if (videoDecoder_) {
         videoDecoder_->SeekTo(Plugins::HstTime2Us(realSeekTime), std::move(videoSeekSuccess));
+    } else {
+        videoSeekSuccess.set_value(true);
     }
     if (pipelineStates_ == PlayerStates::PLAYER_STARTED) {
         pipeline_->Resume();
