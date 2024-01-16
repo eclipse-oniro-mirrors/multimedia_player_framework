@@ -101,8 +101,10 @@ int32_t HiRecorderImpl::SetVideoSource(VideoSourceType source, int32_t &sourceId
     if (source == VideoSourceType::VIDEO_SOURCE_SURFACE_YUV ||
         source == VideoSourceType::VIDEO_SOURCE_SURFACE_RGBA) {
         videoSourceIsYuv_ = true;
-        videoEncoderFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::SurfaceEncoderFilter>
-            ("videoEncoderFilter", Pipeline::FilterType::FILTERTYPE_VENC);
+        if (!videoEncoderFilter_) {
+            videoEncoderFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::SurfaceEncoderFilter>
+                ("videoEncoderFilter", Pipeline::FilterType::FILTERTYPE_VENC);
+        }
         ret = pipeline_->AddHeadFilters({videoEncoderFilter_});
         MEDIA_LOG_I("SetVideoSource VIDEO_SOURCE_SURFACE_YUV.");
     } else if (source == VideoSourceType::VIDEO_SOURCE_SURFACE_ES) {
@@ -205,47 +207,15 @@ sptr<Surface> HiRecorderImpl::GetSurface(int32_t sourceId)
 {
     MEDIA_LOG_I("GetSurface enter.");
     if (producerSurface_) {
-        int32_t queueSize = consumerSurface_->GetQueueSize();
-        for (int i = 0; i < queueSize; i++) {
-            sptr<SurfaceBuffer> buffer;
-            sptr<SyncFence> fence;
-            int64_t timestamp;
-            OHOS::Rect damage;
-            GSError ret = consumerSurface_->AcquireBuffer(buffer, fence, timestamp, damage);
-            if (ret == GSERROR_OK) {
-                MEDIA_LOG_I("AcquireBuffer 0x%{public}x succ", ENCODE_USAGE);
-            } else {
-                MEDIA_LOG_I("AcquireBuffer 0x%{public}x failed", ENCODE_USAGE);
-            }
-            consumerSurface_->ReleaseBuffer(buffer, -1);
-        }
-        videoEncoderFilter_->SetInputSurface(consumerSurface_);
         return producerSurface_;
     }
-    sptr<Surface> consumerSurface = Surface::CreateSurfaceAsConsumer("EncoderSurface");
-    if (consumerSurface == nullptr) {
-        MEDIA_LOG_I("Create the surface consummer fail");
-        return nullptr;
+    if (videoEncoderFilter_) {
+        producerSurface_ = videoEncoderFilter_->GetInputSurface();
     }
-    GSError err = consumerSurface->SetDefaultUsage(ENCODE_USAGE);
-    if (err == GSERROR_OK) {
-        MEDIA_LOG_I("set consumer usage 0x%{public}x succ", ENCODE_USAGE);
-    } else {
-        MEDIA_LOG_I("set consumer usage 0x%{public}x failed", ENCODE_USAGE);
+    if (videoCaptureFilter_) {
+        producerSurface_ = videoCaptureFilter_->GetInputSurface();
     }
-    sptr<IBufferProducer> producer = consumerSurface->GetProducer();
-    if (producer == nullptr) {
-        MEDIA_LOG_I("Get the surface producer fail");
-        return nullptr;
-    }
-    sptr<Surface> producerSurface = Surface::CreateSurfaceAsProducer(producer);
-    if (producerSurface == nullptr) {
-        MEDIA_LOG_I("CreateSurfaceAsProducer fail");
-        return nullptr;
-    }
-    producerSurface_ = producerSurface;
-    consumerSurface_ = consumerSurface;
-    return producerSurface;
+    return producerSurface_;
 }
 
 int32_t HiRecorderImpl::Prepare()
@@ -286,12 +256,6 @@ int32_t HiRecorderImpl::Start()
     if (curState_ == StateId::PAUSE) {
         ret = pipeline_->Resume();
     } else {
-        if (videoEncoderFilter_ && consumerSurface_) {
-            videoEncoderFilter_->SetInputSurface(consumerSurface_);
-        }
-        if (videoCaptureFilter_ && consumerSurface_) {
-            videoCaptureFilter_->SetInputSurface(consumerSurface_);
-        }
         ret = pipeline_->Start();
     }
     if (ret == Status::OK) {
@@ -328,9 +292,6 @@ int32_t HiRecorderImpl::Stop(bool isDrainAll)
 {
     MEDIA_LOG_I("Stop enter.");
     Status ret = Status::OK;
-    if (curState_ == StateId::INIT || curState_ == StateId::READY) {
-        return (int32_t)Status::ERROR_INVALID_OPERATION;
-    }
     outputFormatType_ = OutputFormatType::FORMAT_BUTT;
     if (audioCaptureFilter_) {
         ret = audioCaptureFilter_->SendEos();
@@ -360,19 +321,7 @@ int32_t HiRecorderImpl::Stop(bool isDrainAll)
 int32_t HiRecorderImpl::Reset()
 {
     MEDIA_LOG_I("Reset enter.");
-    Status ret = Status::OK;
-    if (curState_ == StateId::RECORDING) {
-        Stop(false);
-    }
-    ret = pipeline_->Stop();
-    if (ret == Status::OK) {
-        OnStateChanged(StateId::INIT);
-    }
-    audioCount_ = 0;
-    videoCount_ = 0;
-    audioSourceId_ = 0;
-    videoSourceId_ = 0;
-    return (int32_t)ret;
+    return Stop(false);
 }
 
 int32_t HiRecorderImpl::SetParameter(int32_t sourceId, const RecorderParam &recParam)
@@ -460,7 +409,9 @@ void HiRecorderImpl::OnAudioCaptureChange(const AudioStandard::AudioCapturerChan
 {
     MEDIA_LOG_I("OnAudioCaptureChange enter.");
     auto ptr = obs_.lock();
-    ptr->OnAudioCaptureChange(ConvertCapturerChangeInfo(capturerChangeInfo));
+    if (ptr != nullptr) {
+        ptr->OnAudioCaptureChange(ConvertCapturerChangeInfo(capturerChangeInfo));
+    }
 }
 
 int32_t HiRecorderImpl::GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &changeInfo)
@@ -514,6 +465,9 @@ void HiRecorderImpl::ConfigureAudio(const RecorderParam &recParam)
         }
         case RecorderPublicParamType::AUD_BITRATE: {
             AudBitRate audBitRate = static_cast<const AudBitRate&>(recParam);
+            if (audBitRate.bitRate <= 0) {
+                OnEvent({"audioBitRate", EventType::EVENT_ERROR, Status::ERROR_AUDIO_INTERRUPT});
+            }
             audioEncFormat_->Set<Tag::MEDIA_BITRATE>(audBitRate.bitRate);
             break;
         }
@@ -524,6 +478,7 @@ void HiRecorderImpl::ConfigureAudio(const RecorderParam &recParam)
                 case OHOS::Media::AudioCodecFormat::AAC_LC:
                     audioEncFormat_->Set<Tag::MIME_TYPE>(Plugins::MimeType::AUDIO_AAC);
                     audioEncFormat_->Set<Tag::AUDIO_AAC_PROFILE>(Plugins::AudioAacProfile::LC);
+                    break;
                 default:
                     break;
             }
@@ -552,6 +507,9 @@ void HiRecorderImpl::ConfigureVideo(const RecorderParam &recParam)
         }
         case RecorderPublicParamType::VID_BITRATE: {
             VidBitRate vidBitRate = static_cast<const VidBitRate&>(recParam);
+            if (vidBitRate.bitRate <= 0) {
+                OnEvent({"vidioBitRate", EventType::EVENT_ERROR, Status::ERROR_AUDIO_INTERRUPT});
+            }
             videoEncFormat_->Set<Tag::MEDIA_BITRATE>(vidBitRate.bitRate);
             break;
         }
@@ -604,8 +562,8 @@ bool HiRecorderImpl::CheckAudioSourceType(AudioSourceType sourceType)
         case AUDIO_SOURCE_DEFAULT:
         case AUDIO_MIC:
         case AUDIO_SOURCE_VOICE_CALL:
-            return true;
         case AUDIO_INNER:
+            return true;
         case AUDIO_SOURCE_INVALID:
         default:
             break;
