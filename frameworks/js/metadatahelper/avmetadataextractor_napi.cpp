@@ -577,7 +577,6 @@ void AVMetadataExtractorNapi::SetSource(std::string url)
             if (helper_ != nullptr) {
                 if (helper_->SetSource(url, AVMetadataUsage::AV_META_USAGE_META_ONLY) != MSERR_OK) {
                     OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "failed to SetSourceNetWork");
-                    return;
                 }
                 stopWait_ = false;
                 LISTENER(stateChangeCond_.wait(lock, [this]() { return stopWait_.load(); }),
@@ -602,7 +601,6 @@ void AVMetadataExtractorNapi::SetSource(std::string url)
             if (helper_ != nullptr) {
                 if (helper_->SetSource(fd, 0, -1, AVMetadataUsage::AV_META_USAGE_META_ONLY) != MSERR_OK) {
                     OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "failed to SetSourceFd");
-                    return;
                 }
                 stopWait_ = false;
                 LISTENER(stateChangeCond_.wait(lock, [this]() { return stopWait_.load(); }), "SetSourceFd", false)
@@ -679,7 +677,6 @@ void AVMetadataExtractorNapi::SetAVFileDescriptorTask(std::shared_ptr<AVMetadata
             if (helper_->SetSource(fileDescriptor_.fd, fileDescriptor_.offset, fileDescriptor_.length,
                 AVMetadataUsage::AV_META_USAGE_META_ONLY) != MSERR_OK) {
                 OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "Helper SetSource FileDescriptor failed");
-                return;
             }
             stopWait_ = false;
             LISTENER(stateChangeCond_.wait(lock, [this]() { return stopWait_.load(); }),
@@ -762,7 +759,6 @@ void AVMetadataExtractorNapi::SetDataSrcTask(std::shared_ptr<AVMetadataHelper>& 
             MEDIA_LOGI("SetDataSrc Task SetSource");
             if (helper_->SetSource(dataSrcCb_) != MSERR_OK) {
                 OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "Meta helper SetSource DataSrc failed");
-                return;
             }
 
             stopWait_ = false;
