@@ -240,7 +240,8 @@ void AVMetaDataCollector::FormatDateTime(Metadata &avmeta, const std::shared_ptr
     avmeta.SetMeta(AV_KEY_DATE_TIME_FORMAT, formattedDateTime);
 }
 
-std::string AVMetaDataCollector::FormatDateTimeByTimeZone(const std::string &iso8601Str) {
+std::string AVMetaDataCollector::FormatDateTimeByTimeZone(const std::string &iso8601Str)
+{
     std::regex pattern(R"((\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(.\d{1,6})?((\+|-\d{4})?)Z?)");
     std::smatch match;
     if (!std::regex_match(iso8601Str, match, pattern)) {
@@ -269,7 +270,8 @@ std::string AVMetaDataCollector::FormatDateTimeByTimeZone(const std::string &iso
     }
 
     // convert time to localtime
-    long timezone = localtime(&tt)->tm_gmtoff;
+    std::tm timeWithOffset = *localtime(&tt);
+    long timezone = timeWithOffset.tm_gmtoff;
     auto localTime = std::chrono::system_clock::from_time_t(std::mktime(&tm))
         + std::chrono::seconds(timezone - diffTime);
     std::time_t localTimeT = std::chrono::system_clock::to_time_t(localTime);
