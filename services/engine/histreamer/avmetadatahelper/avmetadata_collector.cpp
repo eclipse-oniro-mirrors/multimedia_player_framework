@@ -270,8 +270,11 @@ std::string AVMetaDataCollector::FormatDateTimeByTimeZone(const std::string &iso
     }
 
     // convert time to localtime
+    long timezone = 0;
     std::tm timeWithOffset = *localtime(&tt);
-    long timezone = timeWithOffset.tm_gmtoff;
+    if (timeWithOffset.tm_gmtoff != 0) {
+        timezone = timeWithOffset.tm_gmtoff;
+    }
     auto localTime = std::chrono::system_clock::from_time_t(std::mktime(&tm))
         + std::chrono::seconds(timezone - diffTime);
     std::time_t localTimeT = std::chrono::system_clock::to_time_t(localTime);
