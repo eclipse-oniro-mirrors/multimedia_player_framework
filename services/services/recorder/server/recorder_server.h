@@ -21,6 +21,7 @@
 #include "nocopyable.h"
 #include "task_queue.h"
 #include "watchdog.h"
+#include "shutdown/sync_shutdown_callback_stub.h"
 
 namespace OHOS {
 namespace Media {
@@ -28,6 +29,17 @@ enum class RecorderWatchDogStatus : int32_t {
     WATCHDOG_WATCHING = 0,
     WATCHDOG_PAUSE,
 };
+class SaveDocumentSyncCallback : public PowerMgr::SyncShutdownCallbackStub {
+public:
+    SaveDocumentSyncCallback() {};
+    virtual ~SaveDocumentSyncCallback() {};
+    void OnSyncShutdown() override;
+    void SetRecorderObs(std::shared_ptr<IRecorderEngineObs> recorderObs);
+    std::mutex mtx;
+
+private:
+    std::shared_ptr<IRecorderEngineObs> recorderObs_ = nullptr;
+}
 class RecorderServer : public IRecorderService, public IRecorderEngineObs, public NoCopyable {
 public:
     static std::shared_ptr<IRecorderService> Create();
@@ -125,6 +137,7 @@ private:
     std::string lastErrMsg_;
 
     std::atomic<bool> watchdogPause_ = false;
+    sptr<SaveDocumentSyncCallback> syncCallback_ = nullptr;
 };
 } // namespace Media
 } // namespace OHOS

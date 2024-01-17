@@ -22,6 +22,8 @@
 #include "accesstoken_kit.h"
 #include "ipc_skeleton.h"
 #include "media_dfx.h"
+#include "shutdown/shutdown_client.h"
+#include "shutdown/shutdown_priority.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "RecorderServer"};
@@ -101,6 +103,11 @@ int32_t RecorderServer::Init()
 
     status_ = REC_INITIALIZED;
     BehaviorEventWrite(GetStatusDescription(status_), "Recorder");
+
+    syncCallback_ = new SaveDocumentSyncCallback();
+    if (syncCallback_) {
+        syncCallback_->mtx.lock();
+    }
     return MSERR_OK;
 }
 
@@ -546,6 +553,11 @@ int32_t RecorderServer::Start()
         MEDIA_LOGE("Can not repeat Start");
         return MSERR_INVALID_OPERATION;
     }
+    auto& shutdownClient = PowerMgr::ShutdownClient::GetInstance();
+    syncCallback_ = new SaveDocumentSyncCallback();
+    syncCallback_->SetRecorderObs(shared_from_this());
+    shutdownClient.RegisterShutdownCallback(static_cast<sptr<PowerMgr::ISyncShutdownCallback>>(syncCallback_),
+        PowerMgr::ShutdownPriority::HIGH);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_PREPARED, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
@@ -654,6 +666,9 @@ int32_t RecorderServer::Release()
         });
         (void)taskQue_.EnqueueTask(task);
         (void)task->GetResult();
+        if (syncCallback_) {
+            syncCallback_->mtx.unlock();
+        }
     }
     return MSERR_OK;
 }
@@ -776,6 +791,22 @@ int32_t RecorderServer::GetMaxAmplitude()
 
     auto result = task->GetResult();
     return result.Value();
+}
+
+void SaveDocumentSyncCallback::OnSyncShutdown()
+{
+    if (!recorderObs_) {
+        MEDIA_LOGE("recorderObs_ is nullptr");
+        return;
+    }
+    recorderObs_->OnError(IRecorderEngineObs::ErrorType::ERROR_INTERNAL, MSERR_AUD_INTERRUPT);
+    recorderObs_ = nullptr;
+    mtx.lock();
+    mtx.unlock();
+}
+
+void SaveDocumentSyncCallback::SetRecorderObs(std::shared_ptr<IRecorderEngineObs> recorderObs) {
+    recorderObs_ = recorderObs;
 }
 } // namespace Media
 } // namespace OHOS
