@@ -34,11 +34,13 @@ public:
     SaveDocumentSyncCallback() {};
     virtual ~SaveDocumentSyncCallback() {};
     void OnSyncShutdown() override;
-    void SetRecorderObs(std::shared_ptr<IRecorderEngineObs> recorderObs);
-    std::mutex mtx;
+    void SetRecorderObs(std::weak_ptr<IRecorderEngineObs> recorderObs);
+    bool isRecorderServerReleased = false;
 
 private:
-    std::shared_ptr<IRecorderEngineObs> recorderObs_ = nullptr;
+    std::weak_ptr<IRecorderEngineObs> recorderObs_;
+    const int32_t intervalTime = 50000; // 50 ms
+    const int32_t retryTimes = 40;
 }
 class RecorderServer : public IRecorderService, public IRecorderEngineObs, public NoCopyable {
 public:
