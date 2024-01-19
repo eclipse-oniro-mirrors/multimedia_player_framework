@@ -71,6 +71,7 @@ RecorderServer::~RecorderServer()
         std::lock_guard<std::mutex> lock(mutex_);
         auto task = std::make_shared<TaskHandler<void>>([&, this] {
             recorderEngine_ = nullptr;
+            syncCallback_ = nullptr;
         });
         (void)taskQue_.EnqueueTask(task);
         (void)task->GetResult();
@@ -552,7 +553,7 @@ int32_t RecorderServer::Start()
     }
     if (syncCallback_) {
         auto& shutdownClient = PowerMgr::ShutdownClient::GetInstance();
-        syncCallback_->SetRecorderObs(weak_from_this());
+        syncCallback_->SetRecorderServer(this);
         syncCallback_->isRecorderServerReleased = false;
         shutdownClient.RegisterShutdownCallback(static_cast<sptr<PowerMgr::ISyncShutdownCallback>>(syncCallback_),
             PowerMgr::ShutdownPriority::HIGH);
@@ -794,23 +795,21 @@ int32_t RecorderServer::GetMaxAmplitude()
 
 void SaveDocumentSyncCallback::OnSyncShutdown()
 {
-    std::shared_ptr<IRecorderEngineObs> sp = recorderObs_.lock();
-    if (!sp) {
-        MEDIA_LOGE("sp is nullptr");
+    if (!recorderServer_) {
         return;
     }
-    sp->OnError(IRecorderEngineObs::ErrorType::ERROR_INTERNAL, MSERR_AUD_INTERRUPT);
-    recorderObs_.reset();
+    recorderServer_->release();
     for (int32_t i = 0; i < retryTimes; ++i) { // retry 40 times, 2000 ms
         if (isRecorderServerReleased) {
             return;
         }
         usleep(intervalTime); // wait 50 ms
     }
+    recorderServer_ = nullptr;
 }
 
-void SaveDocumentSyncCallback::SetRecorderObs(std::weak_ptr<IRecorderEngineObs> recorderObs) {
-    recorderObs_ = recorderObs;
+void SaveDocumentSyncCallback::SetRecorderServer(IRecorderService* recorderServer) {
+    recorderServer_ = recorderServer;
 }
 } // namespace Media
 } // namespace OHOS

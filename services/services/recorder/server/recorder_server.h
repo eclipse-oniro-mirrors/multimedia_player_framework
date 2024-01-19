@@ -34,14 +34,14 @@ public:
     SaveDocumentSyncCallback() {};
     virtual ~SaveDocumentSyncCallback() {};
     void OnSyncShutdown() override;
-    void SetRecorderObs(std::weak_ptr<IRecorderEngineObs> recorderObs);
+    void SetRecorderServer(IRecorderService* recorderServer);
     bool isRecorderServerReleased = false;
 
 private:
-    std::weak_ptr<IRecorderEngineObs> recorderObs_;
+    IRecorderService* recorderServer_ = nullptr;
     const int32_t intervalTime = 50000; // 50 ms
     const int32_t retryTimes = 40;
-}
+};
 class RecorderServer : public IRecorderService, public IRecorderEngineObs, public NoCopyable {
 public:
     static std::shared_ptr<IRecorderService> Create();
