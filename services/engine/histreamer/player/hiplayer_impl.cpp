@@ -451,11 +451,11 @@ int32_t HiPlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
     }
     mSeconds = mSeconds < 0 ? 0 : mSeconds;
     int64_t seekPos = mSeconds;
+    NotifySeekDone(seekPos);
     auto rtv = seekPos >= 0 ? Status::OK : Status::ERROR_INVALID_PARAMETER;
     if (rtv == Status::OK) {
         rtv = SeekInner(seekPos, mode);
     }
-    NotifySeekDone(seekPos);
     if (rtv != Status::OK) {
         MEDIA_LOG_E("Seek done, seek error.");
     }
