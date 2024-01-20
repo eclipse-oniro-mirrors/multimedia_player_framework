@@ -508,7 +508,7 @@ void HiRecorderImpl::ConfigureVideo(const RecorderParam &recParam)
         case RecorderPublicParamType::VID_BITRATE: {
             VidBitRate vidBitRate = static_cast<const VidBitRate&>(recParam);
             if (vidBitRate.bitRate <= 0) {
-                OnEvent({"vidioBitRate", EventType::EVENT_ERROR, Status::ERROR_AUDIO_INTERRUPT});
+                OnEvent({"videoBitRate", EventType::EVENT_ERROR, Status::ERROR_AUDIO_INTERRUPT});
             }
             videoEncFormat_->Set<Tag::MEDIA_BITRATE>(vidBitRate.bitRate);
             break;
