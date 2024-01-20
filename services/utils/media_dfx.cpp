@@ -19,6 +19,8 @@
 #include "media_log.h"
 #include "media_errors.h"
 #include "hitrace_meter.h"
+#include "ipc_skeleton.h"
+#include "media_utils.h"
 
 namespace {
     constexpr uint32_t MAX_STRING_SIZE = 256;
@@ -64,6 +66,23 @@ void MediaEvent::EventWriteWithAppInfo(std::string eventName, OHOS::HiviewDFX::H
         "STATUS", status);
 }
 
+void MediaEvent::EventWriteBundleName(std::string eventName, OHOS::HiviewDFX::HiSysEvent::EventType type,
+    std::string module, std::string status, int32_t appUid)
+{
+    int32_t pid = getpid();
+    uint32_t uid = getuid();
+    int32_t appPid = IPCSkeleton::GetCallingPid();
+    HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::MULTI_MEDIA, eventName, type,
+                    "PID", pid,
+                    "UID", uid,
+                    "MODULE", module,
+                    "BUNDLE", msg_,
+                    "APP_PID", appPid,
+                    "APP_UID", appUid,
+                    "STATUS", status);
+}
+
+
 void BehaviorEventWrite(std::string status, std::string moudle)
 {
     MediaEvent event;
@@ -78,6 +97,17 @@ void BehaviorEventWriteForScreencapture(std::string status, std::string moudle, 
     if (event.CreateMsg("%s, current state is: %s", "state change", status.c_str())) {
         event.EventWriteWithAppInfo("PLAYER_STATE", OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
             moudle, status, appUid, appPid);
+    }
+}
+
+void BehaviorEventWriteBundleName(std::string status, std::string module)
+{
+    MediaEvent event;
+    int32_t appUid = IPCSkeleton::GetCallingUid();
+    std::string bundleName = GetClientBundleName(appUid);
+    if (event.CreateMsg("%s", bundleName.c_str())) {
+        event.EventWriteWithAppInfo("MEDIA_INVOKE_BUNDLE", OHOS::HiviewDFX::HiSysEvent::EventType::STATISTIC,
+            module, status, appUid);
     }
 }
 
