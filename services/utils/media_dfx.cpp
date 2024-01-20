@@ -76,10 +76,11 @@ void MediaEvent::EventWriteBundleName(std::string eventName, OHOS::HiviewDFX::Hi
                     "PID", pid,
                     "UID", uid,
                     "MODULE", module,
-                    "BUNDLE", msg_,
+                    "MSG", msg_,
                     "APP_PID", appPid,
                     "APP_UID", appUid,
-                    "STATUS", status);
+                    "STATUS", status,
+                    "BUNDLE", msg_);
 }
 
 
@@ -106,7 +107,7 @@ void BehaviorEventWriteBundleName(std::string status, std::string module)
     int32_t appUid = IPCSkeleton::GetCallingUid();
     std::string bundleName = GetClientBundleName(appUid);
     if (event.CreateMsg("%s", bundleName.c_str())) {
-        event.EventWriteBundleName("MEDIA_INVOKE_BUNDLE", OHOS::HiviewDFX::HiSysEvent::EventType::STATISTIC,
+        event.EventWriteBundleName("PLAYER_STATISTICS", OHOS::HiviewDFX::HiSysEvent::EventType::STATISTIC,
             module, status, appUid);
     }
 }
