@@ -33,7 +33,7 @@ public:
     void EventWriteWithAppInfo(std::string eventName, OHOS::HiviewDFX::HiSysEvent::EventType type,
         std::string module, std::string status, int32_t appUid, int32_t appPid);
     void EventWriteBundleName(std::string eventName, OHOS::HiviewDFX::HiSysEvent::EventType type,
-        std::string module, std::string status, int32_t appUid)
+        std::string module, std::string status, int32_t appUid);
 private:
     std::string msg_;
 };
