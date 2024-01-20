@@ -100,7 +100,7 @@ void BehaviorEventWriteForScreenCapture(std::string status, std::string module, 
     }
 }
 
-void BehaviorEventWriteBundleName(std::string status, std::string module)
+void StatisticEventWriteBundleName(std::string status, std::string module)
 {
     MediaEvent event;
     int32_t appUid = IPCSkeleton::GetCallingUid();

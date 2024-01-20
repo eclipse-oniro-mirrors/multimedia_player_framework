@@ -34,7 +34,7 @@ sptr<AVMetadataHelperServiceStub> AVMetadataHelperServiceStub::Create()
 
     int32_t ret = avMetadataHelperStub->Init();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed to avmetadatahlper stub init");
-    BehaviorEventWriteBundleName("create", "AVMetadataHelperServiceStub");
+    StatisticEventWriteBundleName("create", "AVMetadataHelperServiceStub");
     return avMetadataHelperStub;
 }
 

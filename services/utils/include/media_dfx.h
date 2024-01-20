@@ -41,7 +41,7 @@ private:
 __attribute__((visibility("default"))) void BehaviorEventWrite(std::string status, std::string module);
 __attribute__((visibility("default"))) void BehaviorEventWriteForScreenCapture(std::string status,
     std::string module, int32_t appUid, int32_t appPid);
-__attribute__((visibility("default"))) void BehaviorEventWriteBundleName(std::string status,
+__attribute__((visibility("default"))) void StatisticEventWriteBundleName(std::string status,
     std::string module);
 __attribute__((visibility("default"))) void FaultEventWrite(std::string msg, std::string module);
 
