@@ -552,7 +552,7 @@ int32_t RecorderServer::Start()
         return MSERR_INVALID_OPERATION;
     }
     if (syncCallback_) {
-        auto& shutdownClient = PowerMgr::ShutdownClient::GetInstance();
+        auto &shutdownClient = PowerMgr::ShutdownClient::GetInstance();
         syncCallback_->SetRecorderServer(this);
         syncCallback_->isRecorderServerReleased = false;
         shutdownClient.RegisterShutdownCallback(static_cast<sptr<PowerMgr::ISyncShutdownCallback>>(syncCallback_),
@@ -808,7 +808,7 @@ void SaveDocumentSyncCallback::OnSyncShutdown()
     recorderServer_ = nullptr;
 }
 
-void SaveDocumentSyncCallback::SetRecorderServer(IRecorderService* recorderServer) {
+void SaveDocumentSyncCallback::SetRecorderServer(IRecorderService *recorderServer) {
     recorderServer_ = recorderServer;
 }
 } // namespace Media

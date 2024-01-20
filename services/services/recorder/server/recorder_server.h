@@ -34,11 +34,11 @@ public:
     SaveDocumentSyncCallback() {};
     virtual ~SaveDocumentSyncCallback() {};
     void OnSyncShutdown() override;
-    void SetRecorderServer(IRecorderService* recorderServer);
+    void SetRecorderServer(IRecorderService *recorderServer);
     bool isRecorderServerReleased = false;
 
 private:
-    IRecorderService* recorderServer_ = nullptr;
+    IRecorderService *recorderServer_ = nullptr;
     const int32_t intervalTime = 50000; // 50 ms
     const int32_t retryTimes = 40;
 };
