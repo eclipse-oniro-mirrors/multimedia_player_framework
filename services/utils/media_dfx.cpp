@@ -106,7 +106,7 @@ void BehaviorEventWriteBundleName(std::string status, std::string module)
     int32_t appUid = IPCSkeleton::GetCallingUid();
     std::string bundleName = GetClientBundleName(appUid);
     if (event.CreateMsg("%s", bundleName.c_str())) {
-        event.EventWriteWithAppInfo("MEDIA_INVOKE_BUNDLE", OHOS::HiviewDFX::HiSysEvent::EventType::STATISTIC,
+        event.EventWriteBundleName("MEDIA_INVOKE_BUNDLE", OHOS::HiviewDFX::HiSysEvent::EventType::STATISTIC,
             module, status, appUid);
     }
 }
