@@ -83,20 +83,20 @@ void MediaEvent::EventWriteBundleName(std::string eventName, OHOS::HiviewDFX::Hi
 }
 
 
-void BehaviorEventWrite(std::string status, std::string moudle)
+void BehaviorEventWrite(std::string status, std::string module)
 {
     MediaEvent event;
     if (event.CreateMsg("%s, current state is: %s", "state change", status.c_str())) {
-        event.EventWrite("PLAYER_STATE", OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR, moudle);
+        event.EventWrite("PLAYER_STATE", OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR, module);
     }
 }
 
-void BehaviorEventWriteForScreencapture(std::string status, std::string moudle, int32_t appUid, int32_t appPid)
+void BehaviorEventWriteForScreenCapture(std::string status, std::string module, int32_t appUid, int32_t appPid)
 {
     MediaEvent event;
     if (event.CreateMsg("%s, current state is: %s", "state change", status.c_str())) {
         event.EventWriteWithAppInfo("PLAYER_STATE", OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
-            moudle, status, appUid, appPid);
+            module, status, appUid, appPid);
     }
 }
 
@@ -112,11 +112,11 @@ void BehaviorEventWriteBundleName(std::string status, std::string module)
     }
 }
 
-void FaultEventWrite(std::string msg, std::string moudle)
+void FaultEventWrite(std::string msg, std::string module)
 {
     MediaEvent event;
     if (event.CreateMsg("%s", msg.c_str())) {
-        event.EventWrite("PLAYER_ERR", OHOS::HiviewDFX::HiSysEvent::EventType::FAULT, moudle);
+        event.EventWrite("PLAYER_ERR", OHOS::HiviewDFX::HiSysEvent::EventType::FAULT, module);
     }
 }
 
