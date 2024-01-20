@@ -798,7 +798,7 @@ void SaveDocumentSyncCallback::OnSyncShutdown()
     if (!recorderServer_) {
         return;
     }
-    recorderServer_->release();
+    recorderServer_->Release();
     for (int32_t i = 0; i < retryTimes; ++i) { // retry 40 times, 2000 ms
         if (isRecorderServerReleased) {
             return;
