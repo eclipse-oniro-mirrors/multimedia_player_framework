@@ -33,12 +33,3 @@ PLAYER_STATISTICS:
   UID: {type: INT32, desc: The uid of the PLAYER_STATISTICS event}
   MODULE: {type: STRING, desc: module name}
   MSG: {type: STRING, desc: message}
-
-MEDIA_INVOKE_BUNDLE:
-  __BASE: {type: STATISTIC, level: MINOR, desc: bundle invoke statistic}
-  PID: {type: INT32, desc: The pid of the MEDIA_INVOKE_BUNDLE event}
-  UID: {type: INT32, desc: The uid of the MEDIA_INVOKE_BUNDLE event}
-  MODULE: {type: STRING, desc: module name}
-  BUNDLE: {type: STRING, desc: invoke bundle name}
-  APP_PID: {type: INT32, desc: The app pid of the MEDIA_INVOKE_BUNDLE event}
-  APP_UID: {type: INT32, desc: The app uid of the MEDIA_INVOKE_BUNDLE event}
