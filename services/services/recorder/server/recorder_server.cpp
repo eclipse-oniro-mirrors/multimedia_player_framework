@@ -808,7 +808,8 @@ void SaveDocumentSyncCallback::OnSyncShutdown()
     recorderServer_ = nullptr;
 }
 
-void SaveDocumentSyncCallback::SetRecorderServer(IRecorderService *recorderServer) {
+void SaveDocumentSyncCallback::SetRecorderServer(IRecorderService *recorderServer)
+{
     recorderServer_ = recorderServer;
 }
 } // namespace Media
