@@ -367,9 +367,6 @@ Status HiPlayerImpl::SeekInner(int64_t seekPos, PlayerSeekMode mode)
         mode = PlayerSeekMode::SEEK_PREVIOUS_SYNC;
     }
     int64_t realSeekTime = seekPos;
-    if (videoDecoder_) {
-        videoDecoder_->SetSeekTime(Plugins::HstTime2Us(realSeekTime));
-    }
     auto seekMode = Transform2SeekMode(mode);
     if (pipelineStates_ == PlayerStates::PLAYER_STARTED) {
         if (audioSink_ != nullptr) {
