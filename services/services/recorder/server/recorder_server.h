@@ -22,6 +22,7 @@
 #include "task_queue.h"
 #include "watchdog.h"
 #include "shutdown/sync_shutdown_callback_stub.h"
+#include "shutdown/shutdown_client.h"
 
 namespace OHOS {
 namespace Media {
@@ -36,6 +37,7 @@ public:
     void OnSyncShutdown() override;
     void SetRecorderServer(IRecorderService *recorderServer);
     bool isRecorderServerReleased = false;
+    bool isShutdown = false;
 
 private:
     IRecorderService *recorderServer_ = nullptr;
@@ -140,6 +142,7 @@ private:
 
     std::atomic<bool> watchdogPause_ = false;
     sptr<SaveDocumentSyncCallback> syncCallback_ = nullptr;
+    PowerMgr::ShutdownClient &shutdownClient_ = PowerMgr::ShutdownClient::GetInstance();
 };
 } // namespace Media
 } // namespace OHOS

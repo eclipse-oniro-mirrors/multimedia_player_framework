@@ -21,8 +21,7 @@
         "SystemCapability.Multimedia.Media.AudioPlayer",
         "SystemCapability.Multimedia.Media.AVScreenCapture",
         "SystemCapability.Multimedia.Media.SoundPool",
-        "SystemCapability.Multimedia.SystemSound.Core",
-        "SystemCapability.Multimedia.AudioHaptic.Core"
+        "SystemCapability.Multimedia.SystemSound.Core"
       ],
       "features": [],
       "adapted_system_type": [ "standard" ],

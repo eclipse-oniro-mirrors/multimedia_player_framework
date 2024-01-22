@@ -22,7 +22,6 @@
 #include "accesstoken_kit.h"
 #include "ipc_skeleton.h"
 #include "media_dfx.h"
-#include "shutdown/shutdown_client.h"
 #include "shutdown/shutdown_priority.h"
 
 namespace {
@@ -552,10 +551,9 @@ int32_t RecorderServer::Start()
         return MSERR_INVALID_OPERATION;
     }
     if (syncCallback_) {
-        auto &shutdownClient = PowerMgr::ShutdownClient::GetInstance();
         syncCallback_->SetRecorderServer(this);
         syncCallback_->isRecorderServerReleased = false;
-        shutdownClient.RegisterShutdownCallback(static_cast<sptr<PowerMgr::ISyncShutdownCallback>>(syncCallback_),
+        shutdownClient_.RegisterShutdownCallback(static_cast<sptr<PowerMgr::ISyncShutdownCallback>>(syncCallback_),
             PowerMgr::ShutdownPriority::HIGH);
     }
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_PREPARED, MSERR_INVALID_OPERATION);
@@ -668,6 +666,10 @@ int32_t RecorderServer::Release()
         (void)task->GetResult();
         if (syncCallback_) {
             syncCallback_->isRecorderServerReleased = true;
+            if (!syncCallback_->isShutdown) {
+                shutdownClient_.UnRegisterShutdownCallback(static_cast<sptr<PowerMgr::ISyncShutdownCallback>>
+                    (syncCallback_));
+            }
         }
     }
     return MSERR_OK;
@@ -795,6 +797,7 @@ int32_t RecorderServer::GetMaxAmplitude()
 
 void SaveDocumentSyncCallback::OnSyncShutdown()
 {
+    isShutdown = true;
     if (!recorderServer_) {
         return;
     }
