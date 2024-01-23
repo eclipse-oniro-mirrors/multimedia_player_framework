@@ -451,8 +451,10 @@ Status HiPlayerImpl::Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeek
     isSeek_ = false;
     if (rtv != Status::OK) {
         MEDIA_LOG_E("Seek done, seek error.");
+        // change player state to PLAYER_STATE_ERROR when seek error.
         UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
-    }  else if (notifySeekDone) {
+    }  else if (notifySeekDone && pipelineStates_ == PlayerStates::PLAYER_STARTED) {
+        // only notify seekDone for external call in PLAYER_STARTED state.
         NotifySeekDone(seekPos);
     }
     return rtv;
