@@ -72,7 +72,6 @@ void RingtonePlayerImpl::InitPlayer(std::string &audioUri)
     (void)audioHapticManager_->SetAudioLatencyMode(sourceId_, AUDIO_LATENCY_MODE_NORMAL);
     (void)audioHapticManager_->SetStreamUsage(sourceId_, AudioStandard::StreamUsage::STREAM_USAGE_RINGTONE);
 
-    // std::lock_guard<std::mutex> lock(playerMutex_);
     AudioHapticPlayerOptions options = {false, false};
     player_ = audioHapticManager_->CreatePlayer(sourceId_, options);
     CHECK_AND_RETURN_LOG(player_ != nullptr, "Failed to create ringtone player instance");
@@ -82,7 +81,9 @@ void RingtonePlayerImpl::InitPlayer(std::string &audioUri)
         callback_ = std::make_shared<RingtonePlayerCallback>(*this);
     }
     CHECK_AND_RETURN_LOG(callback_ != nullptr, "Failed to create callback object");
-    player_->SetAudioHapticPlayerCallback(callback_);
+    (void)player_->SetAudioHapticPlayerCallback(callback_);
+    (void)player_->SetVolume(volume_);
+    (void)player_->SetLoop(loop_);
 
     ringtoneState_ = STATE_NEW;
 }
@@ -126,7 +127,8 @@ int32_t RingtonePlayerImpl::Stop()
 {
     MEDIA_LOGI("RingtonePlayerImpl::Stop");
     std::lock_guard<std::mutex> lock(playerMutex_);
-    CHECK_AND_RETURN_RET_LOG(ringtoneState_ != STATE_STOPPED, MSERR_INVALID_OPERATION, "ringtone player has been stopped");
+    CHECK_AND_RETURN_RET_LOG(ringtoneState_ != STATE_STOPPED, MSERR_INVALID_OPERATION,
+        "ringtone player has been stopped");
     CHECK_AND_RETURN_RET_LOG(player_ != nullptr && ringtoneState_ != STATE_INVALID, MSERR_INVALID_VAL, "no player_");
 
     (void)player_->Stop();
@@ -139,7 +141,8 @@ int32_t RingtonePlayerImpl::Release()
 {
     MEDIA_LOGI("RingtonePlayerImpl::Release");
     std::lock_guard<std::mutex> lock(playerMutex_);
-    CHECK_AND_RETURN_RET_LOG(ringtoneState_ != STATE_RELEASED, MSERR_INVALID_OPERATION, "ringtone player has been released");
+    CHECK_AND_RETURN_RET_LOG(ringtoneState_ != STATE_RELEASED, MSERR_INVALID_OPERATION,
+        "ringtone player has been released");
     CHECK_AND_RETURN_RET_LOG(player_ != nullptr && ringtoneState_ != STATE_INVALID, MSERR_INVALID_VAL, "no player_");
 
     (void)player_->Release();

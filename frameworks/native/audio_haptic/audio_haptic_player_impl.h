@@ -97,7 +97,7 @@ private:
     // var for callback
     std::shared_ptr<PlayerCallback> avPlayerCallback_ = nullptr;
     std::shared_ptr<ISoundPoolCallback> soundPoolCallback_ = nullptr;
-    std::shared_ptr<AudioHapticPlayerCallback> audioHapticPlayerCallback_ = nullptr;
+    std::weak_ptr<AudioHapticPlayerCallback> audioHapticPlayerCallback_;
     std::mutex audioHapticPlayerLock_;
     std::shared_ptr<AudioHapticFirstFrameCb> firstFrameCb_ = nullptr;
     uint64_t audioLatency_ = 0;
