@@ -429,7 +429,7 @@ Status HiPlayerImpl::Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeek
                 mSeconds, static_cast<int32_t>(mode));
     int32_t durationMs = 0;
     GetDuration(durationMs);
-    FALSE_RETURN_V_MSG_E(durationMs > 0, (int32_t) Status::ERROR_INVALID_PARAMETER,
+    FALSE_RETURN_V_MSG_E(durationMs > 0, Status::ERROR_INVALID_PARAMETER,
         "Seek, invalid operation, source is unseekable or invalid");
     MEDIA_LOG_D("Seek durationMs : " PUBLIC_LOG_D32, durationMs);
     isSeek_ = true;
