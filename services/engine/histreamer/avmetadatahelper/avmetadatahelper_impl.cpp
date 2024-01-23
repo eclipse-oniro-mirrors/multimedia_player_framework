@@ -235,6 +235,12 @@ std::unique_ptr<PixelMap> AVMetadataHelperImpl::GetYuvDataAlignStride(const sptr
     int32_t outputHeight;
     outputFormat_.GetIntValue(MediaDescriptionKey::MD_KEY_WIDTH, outputWidth);
     outputFormat_.GetIntValue(MediaDescriptionKey::MD_KEY_HEIGHT, outputHeight);
+#if !(defined(__x86_64_))
+    MEDIA_LOGI("not 64bit os");
+    if (outputHeight == 0) {
+        outputHeight = height % 32 == 0 ? height : (height / 32 + 1) * 32;
+    }
+#endif
     MEDIA_LOGI("GetYuvDataAlignStride stride:%{public}d, outputWidth:%{public}d, outputHeight:%{public}d",
         stride, outputWidth, outputHeight);
 
