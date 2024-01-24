@@ -32,7 +32,7 @@ enum AudioHapticPlayerType {
 class AudioHapticPlayerNativeCallback;
 class AudioHapticFirstFrameCb;
 
-class AudioHapticPlayerImpl : public AudioHapticPlayer {
+class AudioHapticPlayerImpl : public AudioHapticPlayer, public std::enable_shared_from_this<AudioHapticPlayerImpl> {
 public:
     AudioHapticPlayerImpl();
     ~AudioHapticPlayerImpl();
@@ -126,7 +126,7 @@ private:
 
 class AudioHapticPlayerNativeCallback : public ISoundPoolCallback, public PlayerCallback {
 public:
-    explicit AudioHapticPlayerNativeCallback(AudioHapticPlayerImpl &audioHapticPlayerImpl);
+    explicit AudioHapticPlayerNativeCallback(std::shared_ptr<AudioHapticPlayerImpl> audioHapticPlayerImpl);
     virtual ~AudioHapticPlayerNativeCallback() = default;
 
     // ISoundPoolCallback
@@ -139,7 +139,7 @@ public:
     void OnInfo(Media::PlayerOnInfoType type, int32_t extra, const Media::Format &infoBody) override;
 
 private:
-    AudioHapticPlayerImpl &audioHapticPlayerImpl_;
+    std::weak_ptr<AudioHapticPlayerImpl> audioHapticPlayerImpl_;
 
     void HandleStateChangeEvent(int32_t extra, const Format &infoBody);
     void HandleAudioInterruptEvent(int32_t extra, const Format &infoBody);
@@ -150,12 +150,12 @@ private:
 
 class AudioHapticFirstFrameCb : public ISoundPoolFrameWriteCallback {
 public:
-    explicit AudioHapticFirstFrameCb(AudioHapticPlayerImpl &audioHapticPlayerImpl);
+    explicit AudioHapticFirstFrameCb(std::shared_ptr<AudioHapticPlayerImpl> audioHapticPlayerImpl);
     virtual ~AudioHapticFirstFrameCb() = default;
 
     void OnFirstAudioFrameWritingCallback(uint64_t &latency) override;
 private:
-    AudioHapticPlayerImpl &audioHapticPlayerImpl_;
+    std::weak_ptr<AudioHapticPlayerImpl> audioHapticPlayerImpl_;
 };
 
 

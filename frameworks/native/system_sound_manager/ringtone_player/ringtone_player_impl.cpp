@@ -73,6 +73,9 @@ void RingtonePlayerImpl::InitPlayer(std::string &audioUri)
     (void)audioHapticManager_->SetStreamUsage(sourceId_, AudioStandard::StreamUsage::STREAM_USAGE_RINGTONE);
 
     AudioHapticPlayerOptions options = {false, false};
+    if (systemSoundMgr_.GetRingerMode() == AudioStandard::AudioRingerMode::RINGER_MODE_SILENT) {
+        options.muteHaptics = true;
+    }
     player_ = audioHapticManager_->CreatePlayer(sourceId_, options);
     CHECK_AND_RETURN_LOG(player_ != nullptr, "Failed to create ringtone player instance");
     configuredUri_ = audioUri;

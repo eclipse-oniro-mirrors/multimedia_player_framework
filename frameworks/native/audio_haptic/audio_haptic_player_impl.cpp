@@ -162,11 +162,11 @@ int32_t AudioHapticPlayerImpl::LoadSoundPoolPlayer()
     CHECK_AND_RETURN_RET_LOG(soundPoolPlayer_ != nullptr, MSERR_INVALID_VAL,
         "Failed to create sound pool player instance");
 
-    soundPoolCallback_ = std::make_shared<AudioHapticPlayerNativeCallback>(*this);
+    soundPoolCallback_ = std::make_shared<AudioHapticPlayerNativeCallback>(shared_from_this());
     CHECK_AND_RETURN_RET_LOG(soundPoolCallback_ != nullptr, MSERR_INVALID_VAL, "Failed to create callback object");
     soundPoolPlayer_->SetSoundPoolCallback(soundPoolCallback_);
 
-    firstFrameCb_ = std::make_shared<AudioHapticFirstFrameCb>(*this);
+    firstFrameCb_ = std::make_shared<AudioHapticFirstFrameCb>(shared_from_this());
     CHECK_AND_RETURN_RET_LOG(firstFrameCb_ != nullptr, MSERR_INVALID_VAL, "Failed to create callback object");
     soundPoolPlayer_->SetSoundPoolFrameWriteCallback(firstFrameCb_);
 
@@ -430,7 +430,7 @@ int32_t AudioHapticPlayerImpl::LoadAVPlayer()
     avPlayer_ = PlayerFactory::CreatePlayer();
     CHECK_AND_RETURN_RET_LOG(avPlayer_ != nullptr, MSERR_INVALID_VAL, "Failed to create AvPlayer instance");
 
-    avPlayerCallback_ = std::make_shared<AudioHapticPlayerNativeCallback>(*this);
+    avPlayerCallback_ = std::make_shared<AudioHapticPlayerNativeCallback>(shared_from_this());
     CHECK_AND_RETURN_RET_LOG(avPlayerCallback_ != nullptr, MSERR_INVALID_VAL, "Failed to create callback object");
 
     avPlayer_->SetPlayerCallback(avPlayerCallback_);
@@ -620,20 +620,31 @@ void AudioHapticPlayerImpl::NotifyStartVibrate(uint64_t latency)
 }
 
 // Callback class symbols
-AudioHapticPlayerNativeCallback::AudioHapticPlayerNativeCallback(AudioHapticPlayerImpl &audioHapticPlayerImpl)
+AudioHapticPlayerNativeCallback::AudioHapticPlayerNativeCallback(
+    std::shared_ptr<AudioHapticPlayerImpl> audioHapticPlayerImpl)
     : audioHapticPlayerImpl_(audioHapticPlayerImpl) {}
 
 // SoundPool callback
 void AudioHapticPlayerNativeCallback::OnLoadCompleted(int32_t soundId)
 {
     MEDIA_LOGI("OnLoadCompleted reported from sound pool.");
-    audioHapticPlayerImpl_.NotifySoundPoolSourceLoadCompleted();
+    std::shared_ptr<AudioHapticPlayerImpl> player = audioHapticPlayerImpl_.lock();
+    if (player == nullptr) {
+        MEDIA_LOGE("The audio haptic player has been released.");
+        return;
+    }
+    player->NotifySoundPoolSourceLoadCompleted();
 }
 
 void AudioHapticPlayerNativeCallback::OnPlayFinished()
 {
     MEDIA_LOGI("OnPlayFinished reported from sound pool.");
-    audioHapticPlayerImpl_.NotifyEndOfStreamEvent();
+    std::shared_ptr<AudioHapticPlayerImpl> player = audioHapticPlayerImpl_.lock();
+    if (player == nullptr) {
+        MEDIA_LOGE("The audio haptic player has been released.");
+        return;
+    }
+    player->NotifyEndOfStreamEvent();
 }
 
 void AudioHapticPlayerNativeCallback::OnError(int32_t errorCode)
@@ -692,9 +703,14 @@ void AudioHapticPlayerNativeCallback::HandleStateChangeEvent(int32_t extra, cons
         default:
             break;
     }
-    audioHapticPlayerImpl_.SetAVPlayerState(playerState_);
+    std::shared_ptr<AudioHapticPlayerImpl> player = audioHapticPlayerImpl_.lock();
+    if (player == nullptr) {
+        MEDIA_LOGE("The audio haptic player has been released.");
+        return;
+    }
+    player->SetAVPlayerState(playerState_);
     if (avPlayerState == PLAYER_PLAYBACK_COMPLETE) {
-        audioHapticPlayerImpl_.NotifyEndOfStreamEvent();
+        player->NotifyEndOfStreamEvent();
     }
 }
 
@@ -711,7 +727,13 @@ void AudioHapticPlayerNativeCallback::HandleAudioInterruptEvent(int32_t extra, c
     interruptEvent.eventType = static_cast<AudioStandard::InterruptType>(eventTypeValue);
     interruptEvent.forceType = static_cast<AudioStandard::InterruptForceType>(forceTypeValue);
     interruptEvent.hintType = static_cast<AudioStandard::InterruptHint>(hintTypeValue);
-    audioHapticPlayerImpl_.NotifyInterruptEvent(interruptEvent);
+
+    std::shared_ptr<AudioHapticPlayerImpl> player = audioHapticPlayerImpl_.lock();
+    if (player == nullptr) {
+        MEDIA_LOGE("The audio haptic player has been released.");
+        return;
+    }
+    player->NotifyInterruptEvent(interruptEvent);
 }
 
 void AudioHapticPlayerNativeCallback::HandleAudioFirstFrameEvent(int32_t extra, const Format &infoBody)
@@ -720,16 +742,26 @@ void AudioHapticPlayerNativeCallback::HandleAudioFirstFrameEvent(int32_t extra, 
     (void)infoBody.GetLongValue(PlayerKeys::AUDIO_FIRST_FRAME, value);
     uint64_t latency = static_cast<uint64_t>(value);
     MEDIA_LOGI("HandleAudioFirstFrameEvent from AVPlayer. Latency %{public}" PRIu64 "", latency);
-    audioHapticPlayerImpl_.NotifyStartVibrate(latency);
+    std::shared_ptr<AudioHapticPlayerImpl> player = audioHapticPlayerImpl_.lock();
+    if (player == nullptr) {
+        MEDIA_LOGE("The audio haptic player has been released.");
+        return;
+    }
+    player->NotifyStartVibrate(latency);
 }
 
-AudioHapticFirstFrameCb::AudioHapticFirstFrameCb(AudioHapticPlayerImpl &audioHapticPlayerImpl)
+AudioHapticFirstFrameCb::AudioHapticFirstFrameCb(std::shared_ptr<AudioHapticPlayerImpl> audioHapticPlayerImpl)
     : audioHapticPlayerImpl_(audioHapticPlayerImpl) {}
 
 void AudioHapticFirstFrameCb::OnFirstAudioFrameWritingCallback(uint64_t &latency)
 {
     MEDIA_LOGI("OnFirstAudioFrameWritingCallback from Soundpool. Latency %{public}" PRIu64 "", latency);
-    audioHapticPlayerImpl_.NotifyStartVibrate(latency);
+    std::shared_ptr<AudioHapticPlayerImpl> player = audioHapticPlayerImpl_.lock();
+    if (player == nullptr) {
+        MEDIA_LOGE("The audio haptic player has been released.");
+        return;
+    }
+    player->NotifyStartVibrate(latency);
 }
 } // namesapce AudioStandard
 } // namespace OHOS
