@@ -207,7 +207,8 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
     int32_t ret = taskMgr_.Init();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "task mgr init failed");
     MEDIA_LOGI("current url is : %{public}s", url.c_str());
-    auto engineFactory = EngineFactoryRepo::Instance().GetEngineFactory(IEngineFactory::Scene::SCENE_PLAYBACK, url);
+    auto engineFactory = EngineFactoryRepo::Instance().GetEngineFactory(
+        IEngineFactory::Scene::SCENE_PLAYBACK, appUid_, url);
     CHECK_AND_RETURN_RET_LOG(engineFactory != nullptr, MSERR_CREATE_PLAYER_ENGINE_FAILED,
         "failed to get engine factory");
     playerEngine_ = engineFactory->CreatePlayerEngine(appUid_, appPid_, appTokenId_);
@@ -974,11 +975,11 @@ int32_t PlayerServer::SetVideoSurface(sptr<Surface> surface)
 }
 #endif
 
-#ifdef SUPPORT_DRM
 int32_t PlayerServer::SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionService> &keySessionProxy,
     bool svp)
 {
     MEDIA_LOGI("PlayerServer SetDecryptConfig");
+#ifdef SUPPORT_DRM
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(keySessionProxy != nullptr, MSERR_INVALID_VAL, "keySessionProxy is nullptr");
 
@@ -986,11 +987,14 @@ int32_t PlayerServer::SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionS
     int32_t res = playerEngine_->SetDecryptConfig(keySessionProxy, svp);
     CHECK_AND_RETURN_RET_LOG(res == MSERR_OK,
         static_cast<int32_t>(MSERR_INVALID_OPERATION), "Engine SetDecryptConfig Failed!");
-
     MEDIA_LOGI("PlayerServer SetDecryptConfig out");
     return MSERR_OK;
-}
+#else
+    (void)keySessionProxy;
+    (void)svp;
+    return 0;
 #endif
+}
 
 bool PlayerServer::IsPlaying()
 {

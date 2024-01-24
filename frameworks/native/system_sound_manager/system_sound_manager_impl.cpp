@@ -67,7 +67,7 @@ SystemSoundManagerImpl::SystemSoundManagerImpl()
 SystemSoundManagerImpl::~SystemSoundManagerImpl()
 {
     if (audioGroupManager_ != nullptr) {
-        (void)audioGroupManager_->UnsetRingerModeCallback(getpid());
+        (void)audioGroupManager_->UnsetRingerModeCallback(getpid(), ringerModeCallback_);
         ringerModeCallback_ = nullptr;
         audioGroupManager_ = nullptr;
     }
@@ -147,6 +147,26 @@ void SystemSoundManagerImpl::InitDefaultRingtoneUriMap(const std::string &ringto
         defaultRingtoneUriMap_[RINGTONE_TYPE_SIM_CARD_1] = "";
         MEDIA_LOGW("InitDefaultRingtoneUriMap: failed to load uri of preset_ringtone_sim2");
     }
+}
+
+std::string SystemSoundManagerImpl::GetDefaultRingtoneUri(RingtoneType ringtoneType)
+{
+    std::lock_guard<std::mutex> lock(uriMutex_);
+    if (defaultRingtoneUriMap_.count(ringtoneType) == 0) {
+        MEDIA_LOGE("Failed to GetDefaultRingtoneUri: invalid ringtone type %{public}d", ringtoneType);
+        return "";
+    }
+    return defaultRingtoneUriMap_[ringtoneType];
+}
+
+std::string SystemSoundManagerImpl::GetDefaultSystemToneUri(SystemToneType systemToneType)
+{
+    std::lock_guard<std::mutex> lock(uriMutex_);
+    if (defaultSystemToneUriMap_.count(systemToneType) == 0) {
+        MEDIA_LOGE("Failed to GetDefaultRingtoneUri: invalid system tone type %{public}d", systemToneType);
+        return "";
+    }
+    return defaultSystemToneUriMap_[systemToneType];
 }
 
 void SystemSoundManagerImpl::InitDefaultSystemToneUriMap(const std::string &systemToneJsonPath)
