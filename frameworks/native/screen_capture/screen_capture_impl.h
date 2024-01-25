@@ -46,7 +46,7 @@ private:
     int32_t InitOriginalStream(AVScreenCaptureConfig config);
     int32_t InitCaptureFile(AVScreenCaptureConfig config);
     std::shared_ptr<IScreenCaptureService> screenCaptureService_ = nullptr;
-    AVScreenCaptureConfig config_;
+    DataType dataType_;
 };
 } // namespace Media
 } // namespace OHOS

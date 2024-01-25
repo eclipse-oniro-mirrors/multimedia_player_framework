@@ -63,8 +63,8 @@ int32_t ScreenCaptureNativeMock::SetScreenCaptureCallback(const std::shared_ptr<
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
     if (callback != nullptr) {
-        cb = std::make_shared<ScreenCaptureNativeCallbackMock>(callback, screenCapture_);
-        return screenCapture_->SetScreenCaptureCallback(cb);
+        cb_ = std::make_shared<ScreenCaptureNativeCallbackMock>(callback, screenCapture_);
+        return screenCapture_->SetScreenCaptureCallback(cb_);
     }
     return MSERR_INVALID_OPERATION;
 }
@@ -102,9 +102,9 @@ int32_t ScreenCaptureNativeMock::StopScreenRecording()
 int32_t ScreenCaptureNativeMock::Release()
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
-    if (cb != nullptr) {
-        cb->OnRelease();
-        cb = nullptr;
+    if (cb_ != nullptr) {
+        cb_->OnRelease();
+        cb_ = nullptr;
     }
     return screenCapture_->Release();
 }

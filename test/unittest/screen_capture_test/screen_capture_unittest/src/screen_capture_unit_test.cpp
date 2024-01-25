@@ -609,18 +609,18 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_03, TestSize.Level2)
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_04, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_04 before");
-    AVScreenCaptureConfig config_;
+    AVScreenCaptureConfig config;
     RecorderInfo recorderInfo;
     SetRecorderInfo("screen_capture_get_screen_capture_04.mp4", recorderInfo);
-    SetConfigFile(config_, recorderInfo);
+    SetConfigFile(config, recorderInfo);
     AudioCaptureInfo innerCapInfo = {
         .audioSampleRate = 16000,
         .audioChannels = 2,
         .audioSource = AudioCaptureSourceType::APP_PLAYBACK
     };
-    config_.audioInfo.innerCapInfo = innerCapInfo;
+    config.audioInfo.innerCapInfo = innerCapInfo;
 
-    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config));
     EXPECT_NE(MSERR_OK, screenCapture_->StartScreenCapture());
     sleep(RECORDER_TIME);
     EXPECT_NE(MSERR_OK, screenCapture_->StopScreenCapture());
@@ -637,9 +637,9 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_04, TestSize.Level2)
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_05, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_05 before");
-    AVScreenCaptureConfig config_;
-    SetConfig(config_);
-    config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
+    AVScreenCaptureConfig config;
+    SetConfig(config);
+    config.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
     OpenFile("screen_capture_get_screen_capture_05");
 
     aFlag = 1;
@@ -649,7 +649,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_05, TestSize.Level2)
     bool isMicrophone = true;
     screenCapture_->SetMicrophoneEnabled(isMicrophone);
     EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_));
-    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config));
     EXPECT_NE(MSERR_OK, screenCapture_->StartScreenRecording());
     sleep(RECORDER_TIME);
     EXPECT_NE(MSERR_OK, screenCapture_->StopScreenRecording());

@@ -39,7 +39,7 @@ public:
 
 private:
     std::shared_ptr<ScreenCapture> screenCapture_ = nullptr;
-    std::shared_ptr<ScreenCaptureNativeCallbackMock> cb;
+    std::shared_ptr<ScreenCaptureNativeCallbackMock> cb_;
     AVScreenCaptureConfig config_;
 };
 
