@@ -196,7 +196,7 @@ int32_t ScreenCaptureImpl::StartScreenCapture()
     if (dataType_ == ORIGINAL_STREAM) {
         return screenCaptureService_->StartScreenCapture();
     } else {
-        MEDIA_LOGE("ScreenCaptureImpl::StartScreenCapture error , config_.dataType : %{public}d", config_.dataType);
+        MEDIA_LOGE("ScreenCaptureImpl::StartScreenCapture error , dataType_ : %{public}d", dataType_);
         return MSERR_INVALID_VAL;
     }
 }
@@ -209,7 +209,7 @@ int32_t ScreenCaptureImpl::StopScreenCapture()
     if (dataType_ == ORIGINAL_STREAM) {
         return screenCaptureService_->StopScreenCapture();
     } else {
-        MEDIA_LOGE("ScreenCaptureImpl::StopScreenCapture error , config_.dataType : %{public}d", config_.dataType);
+        MEDIA_LOGE("ScreenCaptureImpl::StopScreenCapture error , dataType_ : %{public}d", dataType_);
         return MSERR_INVALID_VAL;
     }
 }
@@ -222,7 +222,7 @@ int32_t ScreenCaptureImpl::StartScreenRecording()
     if (dataType_ == CAPTURE_FILE) {
         return screenCaptureService_->StartScreenCapture();
     } else {
-        MEDIA_LOGE("ScreenCaptureImpl::StartScreenRecording error , config_.dataType : %{public}d", config_.dataType);
+        MEDIA_LOGE("ScreenCaptureImpl::StartScreenRecording error , dataType_ : %{public}d", dataType_);
         return MSERR_INVALID_VAL;
     }
 }
@@ -235,7 +235,7 @@ int32_t ScreenCaptureImpl::StopScreenRecording()
     if (dataType_ == CAPTURE_FILE) {
         return screenCaptureService_->StopScreenCapture();
     } else {
-        MEDIA_LOGE("ScreenCaptureImpl::StopScreenRecording error , config_.dataType : %{public}d", config_.dataType);
+        MEDIA_LOGE("ScreenCaptureImpl::StopScreenRecording error , dataType_ : %{public}d", dataType_);
         return MSERR_INVALID_VAL;
     }
 }
