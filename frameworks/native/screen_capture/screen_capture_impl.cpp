@@ -99,6 +99,7 @@ int32_t ScreenCaptureImpl::Init(AVScreenCaptureConfig config)
     CHECK_AND_RETURN_RET_LOG(screenCaptureService_ != nullptr, MSERR_NO_MEMORY,
         "screen capture service does not exist..");
 
+    config_ = config;
     int32_t ret = MSERR_OK;
     ret = screenCaptureService_->SetCaptureMode(config.captureMode);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetCaptureMode failed");
@@ -192,7 +193,12 @@ int32_t ScreenCaptureImpl::StartScreenCapture()
     MEDIA_LOGD("ScreenCaptureImpl:0x%{public}06" PRIXPTR " StartScreenCapture in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(screenCaptureService_ != nullptr, MSERR_NO_MEMORY,
         "screen capture service does not exist..");
-    return screenCaptureService_->StartScreenCapture();
+    if (config_.dataType == ORIGINAL_STREAM) {
+        return screenCaptureService_->StartScreenCapture();
+    } else {
+        MEDIA_LOGE("ScreenCaptureImpl::StartScreenCapture error , config_.dataType : %{public}d", config_.dataType);
+        return MSERR_INVALID_VAL;
+    }
 }
 
 int32_t ScreenCaptureImpl::StopScreenCapture()
@@ -200,7 +206,38 @@ int32_t ScreenCaptureImpl::StopScreenCapture()
     MEDIA_LOGD("ScreenCaptureImpl:0x%{public}06" PRIXPTR " StopScreenCapture in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(screenCaptureService_ != nullptr, MSERR_NO_MEMORY,
         "screen capture service does not exist..");
-    return screenCaptureService_->StopScreenCapture();
+    if (config_.dataType == ORIGINAL_STREAM) {
+        return screenCaptureService_->StopScreenCapture();
+    } else {
+        MEDIA_LOGE("ScreenCaptureImpl::StopScreenCapture error , config_.dataType : %{public}d", config_.dataType);
+        return MSERR_INVALID_VAL;
+    }
+}
+
+int32_t ScreenCaptureImpl::StartScreenRecording()
+{
+    MEDIA_LOGD("ScreenCaptureImpl:0x%{public}06" PRIXPTR " StartScreenCapture in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(screenCaptureService_ != nullptr, MSERR_NO_MEMORY,
+        "screen capture service does not exist..");
+    if (config_.dataType == CAPTURE_FILE) {
+        return screenCaptureService_->StartScreenCapture();
+    } else {
+        MEDIA_LOGE("ScreenCaptureImpl::StartScreenRecording error , config_.dataType : %{public}d", config_.dataType);
+        return MSERR_INVALID_VAL;
+    }
+}
+
+int32_t ScreenCaptureImpl::StopScreenRecording()
+{
+    MEDIA_LOGD("ScreenCaptureImpl:0x%{public}06" PRIXPTR " StopScreenCapture in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(screenCaptureService_ != nullptr, MSERR_NO_MEMORY,
+        "screen capture service does not exist..");
+    if (config_.dataType == CAPTURE_FILE) {
+        return screenCaptureService_->StopScreenCapture();
+    } else {
+        MEDIA_LOGE("ScreenCaptureImpl::StopScreenRecording error , config_.dataType : %{public}d", config_.dataType);
+        return MSERR_INVALID_VAL;
+    }
 }
 
 int32_t ScreenCaptureImpl::AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audiobuffer, AudioCaptureSourceType type)
