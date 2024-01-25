@@ -271,7 +271,7 @@ int32_t RecorderPipeline::DoElemAction(const ElemAction &action, bool needAllSuc
     for (auto &elem : desc_->allElems) {
         int32_t ret = action(*elem);
         if (ret == MSERR_OK) {
-            MEDIA_LOGD("DoElemAction check failed!");
+            MEDIA_LOGD("DoElemAction check OK!");
             continue;
         }
         allSucc = false;
