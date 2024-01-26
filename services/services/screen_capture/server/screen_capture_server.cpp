@@ -538,7 +538,7 @@ int32_t ScreenCaptureServer::StartHomeVideoCaptureFile()
     return MSERR_OK;
 }
 
-int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string name, sptr<OHOS::Surface> consumer)
+int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string &name, sptr<OHOS::Surface> consumer)
 {
     isConsumerStart_ = true;
     VirtualScreenOption virScrOption = InitVirtualScreenOption(name, consumer);
@@ -589,7 +589,7 @@ int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string name, sptr<OH
     return MSERR_OK;
 }
 
-VirtualScreenOption ScreenCaptureServer::InitVirtualScreenOption(const std::string name, sptr<OHOS::Surface> consumer)
+VirtualScreenOption ScreenCaptureServer::InitVirtualScreenOption(const std::string &name, sptr<OHOS::Surface> consumer)
 {
     VirtualScreenOption virScrOption = {
         .name_ = name,
