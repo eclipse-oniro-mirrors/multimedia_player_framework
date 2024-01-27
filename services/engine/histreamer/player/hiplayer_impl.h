@@ -117,11 +117,14 @@ private:
     bool EnableBufferingBySysParam() const;
     bool IsFileUrl(const std::string &url) const;
     int32_t GetRealPath(const std::string &url, std::string &realUrlPath) const;
+    void SetDefaultAudioRenderInfo();
 #ifdef SUPPORT_VIDEO
     Status LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
     bool IsVideoMime(const std::string& mime);
 #endif
+    Status PrepareForSeek();
     Status SeekInner(int64_t seekPos, PlayerSeekMode mode);
+    Status Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeekDone);
     bool isNetWorkPlay_ = false;
     int32_t appUid_{0};
     int32_t appPid_{0};
@@ -167,6 +170,7 @@ private:
     bool stopWaitingDrmConfig_ = false;
     sptr<DrmStandard::IMediaKeySessionService> keySessionServiceProxy_{nullptr};
     int32_t svpMode_ = HiplayerSvpMode::SVP_CLEAR;
+    std::vector<std::pair<std::string, bool>> completeState_;
 
     int32_t rotation90 = 90;
     int32_t rotation270 = 270;

@@ -134,9 +134,9 @@ void AVMetadataHelperImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter,
 
 void AVMetadataHelperImpl::OnError(MediaAVCodec::AVCodecErrorType errorType, int32_t errorCode)
 {
-    MEDIA_LOGI("OnError errorType:%{public}d, errorCode:%{public}d",
+    MEDIA_LOGE("OnError errorType:%{public}d, errorCode:%{public}d",
         static_cast<int32_t>(errorType), errorCode);
-    Destroy();
+    stopProcessing_ = true;
 }
 
 void AVMetadataHelperImpl::OnOutputFormatChanged(const MediaAVCodec::Format &format)
@@ -235,6 +235,12 @@ std::unique_ptr<PixelMap> AVMetadataHelperImpl::GetYuvDataAlignStride(const sptr
     int32_t outputHeight;
     outputFormat_.GetIntValue(MediaDescriptionKey::MD_KEY_WIDTH, outputWidth);
     outputFormat_.GetIntValue(MediaDescriptionKey::MD_KEY_HEIGHT, outputHeight);
+#if !(defined(__x86_64__) || defined(__aarch64__))
+    MEDIA_LOGI("32Bit OS GetYuvDataAlignStride");
+    if (outputHeight == 0) {
+        outputHeight = height;
+    }
+#endif
     MEDIA_LOGI("GetYuvDataAlignStride stride:%{public}d, outputWidth:%{public}d, outputHeight:%{public}d",
         stride, outputWidth, outputHeight);
 

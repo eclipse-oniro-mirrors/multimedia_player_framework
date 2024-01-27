@@ -345,11 +345,7 @@ int32_t PlayerServerMem::Stop()
     CHECK_AND_RETURN_RET_LOG(RecoverMemByUser() == MSERR_OK, MSERR_INVALID_OPERATION, "Stop:RecoverMemByUser fail");
 
     recoverCond_.wait_for(lock, std::chrono::seconds(WAIT_RECOVER_TIME_SEC), [this] {
-        if (isLocalResource_) {
-            return !isRecoverMemByUser_;
-        } else {
-            return !isSeekToCurrentTime_;
-        }
+        return isLocalResource_ ? (!isRecoverMemByUser_) : (!isSeekToCurrentTime_);
     });
     lastestUserSetTime_ = std::chrono::steady_clock::now();
     return PlayerServer::Stop();
@@ -361,7 +357,7 @@ int32_t PlayerServerMem::Reset()
     CHECK_AND_RETURN_RET_LOG(RecoverMemByUser() == MSERR_OK, MSERR_INVALID_OPERATION, "Reset:RecoverMemByUser fail");
 
     recoverCond_.wait_for(lock, std::chrono::seconds(WAIT_RECOVER_TIME_SEC), [this] {
-        return (isLocalResource_ == true) ? (!isRecoverMemByUser_) : (!isSeekToCurrentTime_);
+        return isLocalResource_ ? (!isRecoverMemByUser_) : (!isSeekToCurrentTime_);
     });
     lastestUserSetTime_ = std::chrono::steady_clock::now();
     return PlayerServer::Reset();
@@ -373,11 +369,7 @@ int32_t PlayerServerMem::Release()
     CHECK_AND_RETURN_RET_LOG(RecoverMemByUser() == MSERR_OK, MSERR_INVALID_OPERATION, "Release:RecoverMemByUser fail");
 
     recoverCond_.wait_for(lock, std::chrono::seconds(WAIT_RECOVER_TIME_SEC), [this] {
-        if (isLocalResource_ == false) {
-            return !isSeekToCurrentTime_;
-        } else {
-            return !isRecoverMemByUser_;
-        }
+        return isLocalResource_ ? (!isRecoverMemByUser_) : (!isSeekToCurrentTime_);
     });
     lastestUserSetTime_ = std::chrono::steady_clock::now();
     return PlayerServer::Release();
@@ -659,8 +651,8 @@ int32_t PlayerServerMem::HandleCodecBuffers(bool enable)
 
     if (lastOpStatus_ != PLAYER_PREPARED && lastOpStatus_ != PLAYER_PAUSED &&
         lastOpStatus_ != PLAYER_PLAYBACK_COMPLETE) {
-        MEDIA_LOGE("Can not HandleCodecBuffers, currentState is %{public}s",
-            GetStatusDescription(lastOpStatus_).c_str());
+        MEDIA_LOGE("0x%{public}06" PRIXPTR " Instance Can not HandleCodecBuffers, currentState is %{public}s",
+            FAKE_POINTER(this), GetStatusDescription(lastOpStatus_).c_str());
         return MSERR_INVALID_OPERATION;
     }
     return playerEngine_->HandleCodecBuffers(enable);
@@ -700,7 +692,7 @@ int32_t PlayerServerMem::SeekToCurrentTime(int32_t mSeconds, PlayerSeekMode mode
     isSeekToCurrentTime_ = true;
     int32_t ret = taskMgr_.SeekTask(seekTask, cancelTask, "seek", mode, mSeconds);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Seek failed");
-
+    recoverCond_.notify_all();
     return MSERR_OK;
 }
 
@@ -778,11 +770,12 @@ int32_t PlayerServerMem::NetworkResourceRelease()
 {
     if (!isReleaseMemByManage_) {
         MediaTrace trace("PlayerServerMem::ReleaseMemByManage");
-        MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances NetworkResourceRelease enter", FAKE_POINTER(this));
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " Instance NetworkResourceRelease enter", FAKE_POINTER(this));
         int32_t ret = HandleCodecBuffers(true);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "FreeCodecBuffers Fail");
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "0x%{public}06" PRIXPTR " Instance FreeCodecBuffers Fail",
+            FAKE_POINTER(this));
         isReleaseMemByManage_ = true;
-        MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances NetworkResourceRelease exit", FAKE_POINTER(this));
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " Instance NetworkResourceRelease success", FAKE_POINTER(this));
     }
     return MSERR_OK;
 }

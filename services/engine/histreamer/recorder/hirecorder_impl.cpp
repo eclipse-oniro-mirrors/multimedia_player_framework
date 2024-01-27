@@ -235,12 +235,14 @@ int32_t HiRecorderImpl::Prepare()
     if (videoEncoderFilter_) {
         videoEncoderFilter_->SetCodecFormat(videoEncFormat_);
         videoEncoderFilter_->Init(recorderEventReceiver_, recorderCallback_);
-        videoEncoderFilter_->Configure(videoEncFormat_);
+        FALSE_RETURN_V_MSG_E(videoEncoderFilter_->Configure(videoEncFormat_) == Status::OK,
+            ERR_UNKNOWN_REASON, "videoEncoderFilter Configure fail");
     }
     if (videoCaptureFilter_) {
         videoCaptureFilter_->SetCodecFormat(videoEncFormat_);
         videoCaptureFilter_->Init(recorderEventReceiver_, recorderCallback_);
-        videoCaptureFilter_->Configure(videoEncFormat_);
+        FALSE_RETURN_V_MSG_E(videoCaptureFilter_->Configure(videoEncFormat_) == Status::OK,
+            ERR_UNKNOWN_REASON, "videoCaptureFilter Configure fail");
     }
     Status ret = pipeline_->Prepare();
     if (ret != Status::OK) {
@@ -466,7 +468,7 @@ void HiRecorderImpl::ConfigureAudio(const RecorderParam &recParam)
         case RecorderPublicParamType::AUD_BITRATE: {
             AudBitRate audBitRate = static_cast<const AudBitRate&>(recParam);
             if (audBitRate.bitRate <= 0) {
-                OnEvent({"audioBitRate", EventType::EVENT_ERROR, Status::ERROR_AUDIO_INTERRUPT});
+                OnEvent({"audioBitRate", EventType::EVENT_ERROR, Status::ERROR_INVALID_PARAMETER});
             }
             audioEncFormat_->Set<Tag::MEDIA_BITRATE>(audBitRate.bitRate);
             break;
@@ -508,7 +510,7 @@ void HiRecorderImpl::ConfigureVideo(const RecorderParam &recParam)
         case RecorderPublicParamType::VID_BITRATE: {
             VidBitRate vidBitRate = static_cast<const VidBitRate&>(recParam);
             if (vidBitRate.bitRate <= 0) {
-                OnEvent({"vidioBitRate", EventType::EVENT_ERROR, Status::ERROR_AUDIO_INTERRUPT});
+                OnEvent({"videoBitRate", EventType::EVENT_ERROR, Status::ERROR_INVALID_PARAMETER});
             }
             videoEncFormat_->Set<Tag::MEDIA_BITRATE>(vidBitRate.bitRate);
             break;
