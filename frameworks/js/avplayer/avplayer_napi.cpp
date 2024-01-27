@@ -79,7 +79,8 @@ napi_value AVPlayerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getCurrentTrack", JsGetCurrentTrack),
         DECLARE_NAPI_FUNCTION("addSubtitleUrl", JsAddSubtitleUrl),
         DECLARE_NAPI_FUNCTION("addSubtitleFdSrc", JsAddSubtitleAVFileDescriptor),
-        DECLARE_NAPI_FUNCTION("setDecryptConfig", JsSetDecryptConfig),
+        DECLARE_NAPI_FUNCTION("setDecryptionConfig", JsSetDecryptConfig),
+        DECLARE_NAPI_FUNCTION("getMediaKeySystemInfos", JsGetMediaKeySystemInfos),
 
         DECLARE_NAPI_GETTER_SETTER("url", JsGetUrl, JsSetUrl),
         DECLARE_NAPI_GETTER_SETTER("fdSrc", JsGetAVFileDescriptor, JsSetAVFileDescriptor),
@@ -130,7 +131,7 @@ napi_value AVPlayerNapi::Constructor(napi_env env, napi_callback_info info)
     jsPlayer->player_ = PlayerFactory::CreatePlayer();
     CHECK_AND_RETURN_RET_LOG(jsPlayer->player_ != nullptr, result, "failed to CreatePlayer");
 
-    jsPlayer->taskQue_ = std::make_unique<TaskQueue>("AVPlayerNapi");
+    jsPlayer->taskQue_ = std::make_unique<TaskQueue>("OS_AVPlayerNapi");
     (void)jsPlayer->taskQue_->Start();
 
     jsPlayer->playerCb_ = std::make_shared<AVPlayerCallback>(env, jsPlayer);
@@ -1128,6 +1129,45 @@ napi_value AVPlayerNapi::JsSetDecryptConfig(napi_env env, napi_callback_info inf
 }
 #endif
 
+napi_value AVPlayerNapi::JsGetMediaKeySystemInfos(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVPlayerNapi::JsGetMediaKeySystemInfos");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    MEDIA_LOGI("JsGetMediaKeySystemInfos In");
+
+    AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstance(env, info);
+    CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstance");
+    CHECK_AND_RETURN_RET_LOG(!jsPlayer->localDrmInfos_.empty(), result, "localDrmInfo is empty");
+
+    uint32_t index = 0;
+    napi_value napiMap;
+    napi_status status = napi_create_array_with_length(env, jsPlayer->localDrmInfos_.size(), &napiMap);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "create napi array failed");
+
+    for (auto item : jsPlayer->localDrmInfos_) {
+        napi_value jsObject;
+        napi_value jsUuid;
+        napi_value jsPssh;
+        napi_create_object(env, &jsObject);
+        napi_create_string_utf8(env, item.first.c_str(), NAPI_AUTO_LENGTH, &jsUuid);
+        napi_set_named_property(env, jsObject, "uuid", jsUuid);
+
+        status = napi_create_array_with_length(env, item.second.size(), &jsPssh);
+        CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "create napi array failed");
+        for (uint32_t i = 0; i < item.second.size(); i++) {
+            napi_value number = nullptr;
+            (void)napi_create_uint32(env, item.second[i], &number);
+            (void)napi_set_element(env, jsPssh, i, number);
+        }
+        napi_set_named_property(env, jsObject, "pssh", jsPssh);
+        napi_set_element(env, napiMap, index, jsObject);
+        index++;
+    }
+
+    return napiMap;
+}
+
 napi_value AVPlayerNapi::JsGetUrl(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("AVPlayerNapi::get url");
@@ -2099,7 +2139,7 @@ napi_value AVPlayerNapi::JsSetOnCallback(napi_env env, napi_callback_info info)
     MediaTrace trace("AVPlayerNapi::on");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
-    MEDIA_LOGI("JsSetOnCallback In");
+    MEDIA_LOGD("JsSetOnCallback In");
 
     constexpr size_t requireArgc = 2;
     napi_value args[2] = { nullptr }; // args[0]:type, args[1]:callback
@@ -2131,7 +2171,7 @@ napi_value AVPlayerNapi::JsSetOnCallback(napi_env env, napi_callback_info info)
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, ref);
     jsPlayer->SaveCallbackReference(callbackName, autoRef);
 
-    MEDIA_LOGI("JsSetOnCallback Out");
+    MEDIA_LOGI("JsSetOnCallback callbackName: %{public}s success", callbackName.c_str());
     return result;
 }
 
@@ -2223,6 +2263,29 @@ void AVPlayerNapi::NotifyVideoSize(int32_t width, int32_t height)
 void AVPlayerNapi::NotifyIsLiveStream()
 {
     isLiveStream_ = true;
+}
+
+void AVPlayerNapi::NotifyDrmInfoUpdated(const std::multimap<std::string, std::vector<uint8_t>> &infos)
+{
+    MEDIA_LOGD("NotifyDrmInfoUpdated");
+    std::unique_lock<std::shared_mutex> lock(drmMutex_);
+    for (auto &newItem : infos) {
+        auto pos = localDrmInfos_.equal_range(newItem.first);
+        if (pos.first == pos.second && pos.first == localDrmInfos_.end()) {
+            localDrmInfos_.insert(newItem);
+            continue;
+        }
+        bool isSame = false;
+        for (; pos.first != pos.second; ++pos.first) {
+            if (newItem.second == pos.first->second) {
+                isSame = true;
+                break;
+            }
+        }
+        if (!isSame) {
+            localDrmInfos_.insert(newItem);
+        }
+    }
 }
 
 void AVPlayerNapi::ResetUserParameters()

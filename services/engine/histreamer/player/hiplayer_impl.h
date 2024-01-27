@@ -68,6 +68,8 @@ public:
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
     int32_t GetPlaybackSpeed(PlaybackRateMode& mode) override;
     int32_t SelectBitRate(uint32_t bitRate) override;
+    int32_t GetAudioEffectMode(int32_t &effectMode) override;
+    int32_t SetAudioEffectMode(int32_t effectMode) override;
 
     int32_t GetVideoTrackInfo(std::vector<Format>& videoTrack) override;
     int32_t GetAudioTrackInfo(std::vector<Format>& audioTrack) override;
@@ -77,6 +79,7 @@ public:
     int32_t SetAudioRendererInfo(const int32_t contentType, const int32_t streamUsage,
                                  const int32_t rendererFlag) override;
     int32_t SetAudioInterruptMode(const int32_t interruptMode) override;
+    int32_t SeekToCurrentTime(int32_t mSeconds, PlayerSeekMode mode) override;
 
     // internal interfaces
     void OnEvent(const Event &event);
@@ -104,6 +107,7 @@ private:
     void NotifySeekDone(int32_t seekPos);
     void NotifyAudioInterrupt(const Event& event);
     void NotifyAudioDeviceChange(const Event& event);
+    void NotifyAudioServiceDied();
     void NotifyAudioFirstFrame(const Event& event);
     void NotifyResolutionChange();
     void NotifyPositionUpdate();
@@ -111,11 +115,15 @@ private:
     Status LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
     void DoInitializeForHttp();
     bool EnableBufferingBySysParam() const;
+    bool IsFileUrl(const std::string &url) const;
+    int32_t GetRealPath(const std::string &url, std::string &realUrlPath) const;
+    void SetDefaultAudioRenderInfo();
 #ifdef SUPPORT_VIDEO
     Status LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
     bool IsVideoMime(const std::string& mime);
 #endif
     Status SeekInner(int64_t seekPos, PlayerSeekMode mode);
+    Status Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeekDone);
     bool isNetWorkPlay_ = false;
     int32_t appUid_{0};
     int32_t appPid_{0};
@@ -161,6 +169,7 @@ private:
     bool stopWaitingDrmConfig_ = false;
     sptr<DrmStandard::IMediaKeySessionService> keySessionServiceProxy_{nullptr};
     int32_t svpMode_ = HiplayerSvpMode::SVP_CLEAR;
+    std::vector<std::pair<std::string, bool>> completeState_;
 
     int32_t rotation90 = 90;
     int32_t rotation270 = 270;

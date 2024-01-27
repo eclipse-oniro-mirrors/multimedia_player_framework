@@ -44,6 +44,7 @@ sptr<PlayerServiceStub> PlayerServiceStub::Create()
 
     int32_t ret = playerStub->Init();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed to player stub init");
+    StatisticEventWriteBundleName("create", "PlayerServiceStub");
     return playerStub;
 }
 
@@ -59,8 +60,8 @@ PlayerServiceStub::~PlayerServiceStub()
     (void)CancellationMonitor(appPid_);
     if (playerServer_ != nullptr) {
         auto task = std::make_shared<TaskHandler<void>>([&, this] {
-            LISTENER((void)playerServer_->Release(); playerServer_ = nullptr,
-                "PlayerServiceStub::~PlayerServiceStub", false)
+            (void)playerServer_->Release();
+            playerServer_ = nullptr;
         });
         (void)taskQue_.EnqueueTask(task);
         (void)task->GetResult();
@@ -110,9 +111,7 @@ void PlayerServiceStub::SetPlayerFuncs()
     playerFuncs_[SELECT_TRACK] = { &PlayerServiceStub::SelectTrack, "Player::SelectTrack" };
     playerFuncs_[DESELECT_TRACK] = { &PlayerServiceStub::DeselectTrack, "Player::DeselectTrack" };
     playerFuncs_[GET_CURRENT_TRACK] = { &PlayerServiceStub::GetCurrentTrack, "Player::GetCurrentTrack" };
-#ifdef SUPPORT_DRM
     playerFuncs_[SET_DECRYPT_CONFIG] = { &PlayerServiceStub::SetDecryptConfig, "Player::SetDecryptConfig" };
-#endif
 
     (void)RegisterMonitor(appPid_);
 }
@@ -160,7 +159,7 @@ int PlayerServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Messa
             auto task = std::make_shared<TaskHandler<int>>([&, this] {
                 (void)IpcRecovery(false);
                 int32_t ret = -1;
-                LISTENER(ret = (this->*memberFunc)(data, reply), funcName, false)
+                ret = (this->*memberFunc)(data, reply);
                 return ret;
             });
             (void)taskQue_.EnqueueTask(task);
@@ -378,16 +377,20 @@ int32_t PlayerServiceStub::SetVideoSurface(sptr<Surface> surface)
 }
 #endif
 
-#ifdef SUPPORT_DRM
 int32_t PlayerServiceStub::SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionService> &keySessionProxy,
     bool svp)
 {
+#ifdef SUPPORT_DRM
     MediaTrace trace("binder::SetDecryptConfig");
     MEDIA_LOGI("PlayerServiceStub SetDecryptConfig");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
     return playerServer_->SetDecryptConfig(keySessionProxy, svp);
-}
+#else
+    (void)keySessionProxy;
+    (void)svp;
+    return 0;
 #endif
+}
 
 bool PlayerServiceStub::IsPlaying()
 {
@@ -732,10 +735,10 @@ int32_t PlayerServiceStub::SetVideoSurface(MessageParcel &data, MessageParcel &r
 }
 #endif
 
-#ifdef SUPPORT_DRM
 int32_t PlayerServiceStub::SetDecryptConfig(MessageParcel &data, MessageParcel &reply)
 {
     MEDIA_LOGI("PlayerServiceStub SetDecryptConfig");
+#ifdef SUPPORT_DRM
     sptr<IRemoteObject> object = data.ReadRemoteObject();
     CHECK_AND_RETURN_RET_LOG(object != nullptr, MSERR_NO_MEMORY, "KeySessionServiceProxy object is nullptr");
     bool svp = data.ReadBool();
@@ -749,8 +752,12 @@ int32_t PlayerServiceStub::SetDecryptConfig(MessageParcel &data, MessageParcel &
     }
     MEDIA_LOGE("PlayerServiceStub keySessionServiceProxy is nullptr!");
     return MSERR_INVALID_VAL;
-}
+#else
+    (void)data;
+    (void)reply;
+    return 0;
 #endif
+}
 
 int32_t PlayerServiceStub::IsPlaying(MessageParcel &data, MessageParcel &reply)
 {

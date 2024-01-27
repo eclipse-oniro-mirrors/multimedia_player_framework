@@ -254,7 +254,7 @@ public:
     };
 
     struct ObjectArray : public Base {
-        std::map<std::string, std::vector<uint8_t>> infoMap;
+        std::multimap<std::string, std::vector<uint8_t>> infoMap;
         void UvWork() override
         {
             std::shared_ptr<AutoRef> mapRef = callback.lock();
@@ -772,7 +772,7 @@ void AVPlayerCallback::OnPositionUpdateCb(const int32_t extra, const Format &inf
     }
 
     if (refMap_.find(AVPlayerEvent::EVENT_TIME_UPDATE) == refMap_.end()) {
-        MEDIA_LOGW("can not find timeupdate callback!");
+        MEDIA_LOGD("can not find timeupdate callback!");
         return;
     }
 
@@ -831,7 +831,7 @@ void AVPlayerCallback::OnBufferingUpdateCb(const int32_t extra, const Format &in
     (void)extra;
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
     if (refMap_.find(AVPlayerEvent::EVENT_BUFFERING_UPDATE) == refMap_.end()) {
-        MEDIA_LOGW("can not find buffering update callback!");
+        MEDIA_LOGD("can not find buffering update callback!");
         return;
     }
 
@@ -1012,7 +1012,7 @@ void AVPlayerCallback::OnDrmInfoUpdatedCb(const int32_t extra, const Format &inf
     infoBody.GetIntValue(std::string(PlayerKeys::PLAYER_DRM_INFO_COUNT), infoCount);
     CHECK_AND_RETURN_LOG(infoCount > 0, "get drminfo count is illegal");
 
-    std::map<std::string, std::vector<uint8_t>> drmInfoMap;
+    std::multimap<std::string, std::vector<uint8_t>> drmInfoMap;
     DrmInfoItem *drmInfos = reinterpret_cast<DrmInfoItem*>(drmInfoAddr);
     CHECK_AND_RETURN_LOG(drmInfos != nullptr, "cast drmInfos nullptr");
     for (int32_t i = 0; i < infoCount; i++) {
@@ -1027,6 +1027,9 @@ void AVPlayerCallback::OnDrmInfoUpdatedCb(const int32_t extra, const Format &inf
         drmInfoMap.insert({ uuid, pssh });
     }
 
+    if (listener_ != nullptr) {
+        listener_->NotifyDrmInfoUpdated(drmInfoMap);
+    }
     NapiCallback::ObjectArray *cb = new(std::nothrow) NapiCallback::ObjectArray();
     CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new ObjectArray");
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_DRM_INFO_UPDATE);
