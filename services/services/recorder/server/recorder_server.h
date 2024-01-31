@@ -41,7 +41,7 @@ public:
     bool isShutdown = false;
 
 private:
-    const int32_t intervalTime = 500000; // 50 ms
+    const int32_t intervalTime = 500000; // 500 ms
 };
 #endif
 class RecorderServer : public IRecorderService, public IRecorderEngineObs, public NoCopyable {
