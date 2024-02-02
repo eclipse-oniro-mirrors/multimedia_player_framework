@@ -377,6 +377,7 @@ int32_t AudioCaptureAsImpl::ResumeAudioCapture()
 
     CHECK_AND_RETURN_RET(audioCapturer_ != nullptr, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET(audioCapturer_->Start(), MSERR_UNKNOWN);
+    CHECK_AND_RETURN_RET_LOG(audioCacheCtrl_ != nullptr, MSERR_UNKNOWN, "audioCacheCtrl_ is nullptr!");
 
     curState_.store(RECORDER_RESUME);
     audioCacheCtrl_->pauseCond_.notify_all();
@@ -390,6 +391,7 @@ int32_t AudioCaptureAsImpl::WakeUpAudioThreads()
     MEDIA_LOGD("wake up threads when paused state");
 
     CHECK_AND_RETURN_RET(audioCapturer_ != nullptr, MSERR_INVALID_OPERATION);
+    CHECK_AND_RETURN_RET_LOG(audioCacheCtrl_ != nullptr, MSERR_UNKNOWN, "audioCacheCtrl_ is nullptr!");
 
     curState_.store(RECORDER_STOP);
     audioCacheCtrl_->pauseCond_.notify_all();
