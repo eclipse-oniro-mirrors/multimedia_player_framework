@@ -325,7 +325,7 @@ napi_value AVRecorderNapi::JsSetOrientationHint(napi_env env, napi_callback_info
 std::shared_ptr<TaskHandler<RetInfo>> AVRecorderNapi::GetPrepareTask(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx)
 {
     return std::make_shared<TaskHandler<RetInfo>>([napi = asyncCtx->napi, config = asyncCtx->config_]() {
-        const std::string &option = AVRecordergOpt::SET_ORIENTATION_HINT;
+        const std::string &option = AVRecordergOpt::PREPARE;
         MEDIA_LOGI("%{public}s Start", option.c_str());
         CHECK_AND_RETURN_RET(napi != nullptr && napi->recorder_ != nullptr && config != nullptr,
             GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
@@ -342,7 +342,7 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderNapi::GetPrepareTask(std::unique
 std::shared_ptr<TaskHandler<RetInfo>> AVRecorderNapi::GetSetOrientationHintTask(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx)
 {
     return std::make_shared<TaskHandler<RetInfo>>([napi = asyncCtx->napi, config = asyncCtx->config_]() {
-        const std::string &option = AVRecordergOpt::S;
+        const std::string &option = AVRecordergOpt::SET_ORIENTATION_HINT;
         MEDIA_LOGI("%{public}s Start", option.c_str());
         CHECK_AND_RETURN_RET(napi != nullptr && napi->recorder_ != nullptr && config != nullptr,
             GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
