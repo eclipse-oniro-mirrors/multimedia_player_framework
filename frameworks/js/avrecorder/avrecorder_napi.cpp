@@ -332,24 +332,6 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderNapi::GetPrepareTask(std::unique
 
         CHECK_AND_RETURN_RET(napi->CheckStateMachine(option) == MSERR_OK,
             GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
-        
-        napi->recorder_->SetOrientationHint(config->rotation);
-        MEDIA_LOGI("%{public}s End", option.c_str());
-        return RetInfo(MSERR_EXT_API9_OK, "");
-    });
-}
-
-std::shared_ptr<TaskHandler<RetInfo>> AVRecorderNapi::GetSetOrientationHintTask(
-    std::unique_ptr<AVRecorderAsyncContext> &asyncCtx)
-{
-    return std::make_shared<TaskHandler<RetInfo>>([napi = asyncCtx->napi, config = asyncCtx->config_]() {
-        const std::string &option = AVRecordergOpt::SET_ORIENTATION_HINT;
-        MEDIA_LOGI("%{public}s Start", option.c_str());
-        CHECK_AND_RETURN_RET(napi != nullptr && napi->recorder_ != nullptr && config != nullptr,
-            GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
-
-        CHECK_AND_RETURN_RET(napi->CheckStateMachine(option) == MSERR_OK,
-            GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
 
         RetInfo retinfo = napi->Configure(config);
         CHECK_AND_RETURN_RET(retinfo.first == MSERR_OK, ((void)napi->recorder_->Reset(), retinfo));
@@ -361,6 +343,24 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderNapi::GetSetOrientationHintTask(
         napi->StateCallback(AVRecorderState::STATE_PREPARED);
         napi->getVideoInputSurface_ = false;
         napi->withVideo_ = config->withVideo;
+        MEDIA_LOGI("%{public}s End", option.c_str());
+        return RetInfo(MSERR_EXT_API9_OK, "");
+    });
+}
+
+std::shared_ptr<TaskHandler<RetInfo>> AVRecorderNapi::GetSetOrientationHintTask(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx)
+{
+    return std::make_shared<TaskHandler<RetInfo>>([napi = asyncCtx->napi, config = asyncCtx->config_]() {
+        const std::string &option = AVRecordergOpt::PREPARE;
+        MEDIA_LOGI("%{public}s Start", option.c_str());
+        CHECK_AND_RETURN_RET(napi != nullptr && napi->recorder_ != nullptr && config != nullptr,
+            GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
+
+        CHECK_AND_RETURN_RET(napi->CheckStateMachine(option) == MSERR_OK,
+            GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
+        
+        napi->recorder_->SetOrientationHint(config->rotation);
+        
         MEDIA_LOGI("%{public}s End", option.c_str());
         return RetInfo(MSERR_EXT_API9_OK, "");
     });
