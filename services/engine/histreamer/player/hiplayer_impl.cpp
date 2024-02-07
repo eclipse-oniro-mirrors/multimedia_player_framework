@@ -299,6 +299,14 @@ int32_t HiPlayerImpl::Play()
 int32_t HiPlayerImpl::Pause()
 {
     MEDIA_LOG_I("Pause entered.");
+    auto res = PauseInner();
+    OnStateChanged(PlayerStateId::PAUSE);
+    return res;
+}
+
+int32_t HiPlayerImpl::PauseInner()
+{
+    MEDIA_LOG_I("PauseInner entered.");
     if (audioSink_ != nullptr) {
         audioSink_->SetVolumeWithRamp(MIN_MEDIA_VOLUME, FADE_OUT_LATENCY);
     }
@@ -312,7 +320,6 @@ int32_t HiPlayerImpl::Pause()
     }
     callbackLooper_.StopReportMediaProgress();
     callbackLooper_.ManualReportMediaProgressOnce();
-    OnStateChanged(PlayerStateId::PAUSE);
     return TransStatus(ret);
 }
 
@@ -985,6 +992,7 @@ void HiPlayerImpl::HandleCompleteEvent(const Event& event)
         callbackLooper_.StopReportMediaProgress();
     }
     callbackLooper_.DoReportCompletedTime();
+    PauseInner();
     callbackLooper_.OnInfo(INFO_TYPE_EOS, static_cast<int32_t>(singleLoop_.load()), format);
     for (std::pair<std::string, bool>& item: completeState_) {
         item.second = false;
