@@ -1114,11 +1114,11 @@ void HiPlayerImpl::NotifySeekDone(int32_t seekPos)
     if (curState_ == PlayerStateId::PLAYING) {
         std::unique_lock<std::mutex> lock(seekMutex_);
         bool notTimeout = syncManager_->seekCond_.wait_for(
-                lock,
-                std::chrono::milliseconds(PLAYING_SEEK_WAIT_TIME),
-                [this]() {
-                    return !syncManager_->InSeeking();
-                });
+            lock,
+            std::chrono::milliseconds(PLAYING_SEEK_WAIT_TIME),
+            [this]() {
+                return !syncManager_->InSeeking();
+            });
         if (notTimeout) {
             NotifyPositionUpdate();
         } else {
