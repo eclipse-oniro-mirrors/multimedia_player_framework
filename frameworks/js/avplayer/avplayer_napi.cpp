@@ -572,7 +572,7 @@ napi_value AVPlayerNapi::JsReset(napi_env env, napi_callback_info info)
 void AVPlayerNapi::WaitTaskQueStop()
 {
     MEDIA_LOGI("WaitTaskQueStop In");
-    std::unique_lock<std::mutex> lock(taskMutex_);
+    std::unique_lock<std::mutex> lock(mutex_);
     stopTaskQueCond_.wait(lock, [this]() { return taskQueStoped_; });
     MEDIA_LOGI("WaitTaskQueStop Out");
 }
