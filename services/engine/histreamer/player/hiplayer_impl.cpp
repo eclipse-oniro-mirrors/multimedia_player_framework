@@ -85,7 +85,12 @@ HiPlayerImpl::HiPlayerImpl(int32_t appUid, int32_t appPid, uint32_t appTokenId, 
 
 HiPlayerImpl::~HiPlayerImpl()
 {
-    MEDIA_LOG_I("dtor called.");
+    MEDIA_LOG_I("~HiPlayerImpl dtor called.");
+    ReleaseInner();
+}
+
+void HiPlayerImpl::ReleaseInner()
+{
     pipeline_->Stop();
     audioSink_.reset();
 #ifdef SUPPORT_VIDEO
@@ -158,6 +163,7 @@ bool HiPlayerImpl::IsFileUrl(const std::string &url) const
 int32_t HiPlayerImpl::SetSource(const std::string& uri)
 {
     MEDIA_LOG_I("SetSource entered source uri: " PUBLIC_LOG_S, uri.c_str());
+    ResetIfSourceExisted();
     url_ = uri;
     if (IsFileUrl(uri)) {
         std::string realUriPath;
@@ -178,12 +184,30 @@ int32_t HiPlayerImpl::SetSource(const std::string& uri)
 int32_t HiPlayerImpl::SetSource(const std::shared_ptr<IMediaDataSource>& dataSrc)
 {
     MEDIA_LOG_I("SetSource entered source stream");
+    ResetIfSourceExisted();
     if (dataSrc == nullptr) {
         MEDIA_LOG_E("SetSource error: dataSrc is null");
     }
     dataSrc_ = dataSrc;
     pipelineStates_ = PlayerStates::PLAYER_INITIALIZED;
     return TransStatus(Status::OK);
+}
+
+void HiPlayerImpl::ResetIfSourceExisted()
+{
+    FALSE_RETURN_MSG(demuxer_ != nullptr, "Source not exist, no need reset.");
+    MEDIA_LOG_I("Source is existed, reset the relatived objects.");
+    ReleaseInner();
+    if (pipeline_ != nullptr) {
+        pipeline_.reset();
+    }
+    if (audioDecoder_ != nullptr) {
+        audioDecoder_.reset();
+    }
+
+    pipeline_ = std::make_shared<OHOS::Media::Pipeline::Pipeline>();
+    syncManager_ = std::make_shared<MediaSyncManager>();
+    MEDIA_LOG_I("Reset the relatived objects end.");
 }
 
 int32_t HiPlayerImpl::Prepare()
@@ -303,14 +327,6 @@ int32_t HiPlayerImpl::Play()
 int32_t HiPlayerImpl::Pause()
 {
     MEDIA_LOG_I("Pause entered.");
-    auto res = PauseInner();
-    OnStateChanged(PlayerStateId::PAUSE);
-    return res;
-}
-
-int32_t HiPlayerImpl::PauseInner()
-{
-    MEDIA_LOG_I("PauseInner entered.");
     if (audioSink_ != nullptr) {
         audioSink_->SetVolumeWithRamp(MIN_MEDIA_VOLUME, FADE_OUT_LATENCY);
     }
@@ -324,6 +340,7 @@ int32_t HiPlayerImpl::PauseInner()
     }
     callbackLooper_.StopReportMediaProgress();
     callbackLooper_.ManualReportMediaProgressOnce();
+    OnStateChanged(PlayerStateId::PAUSE);
     return TransStatus(ret);
 }
 
@@ -395,6 +412,10 @@ Status HiPlayerImpl::Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeek
         "Seek, invalid operation, source is unseekable or invalid");
     isSeek_ = true;
     int64_t seekPos = std::max(static_cast<int64_t>(0), std::min(mSeconds, static_cast<int64_t>(durationMs)));
+    if (notifySeekDone) {
+        // only notify seekDone for external call.
+        NotifySeekDone(seekPos);
+    }
     auto rtv = seekPos >= 0 ? Status::OK : Status::ERROR_INVALID_PARAMETER;
     if (rtv == Status::OK) {
         switch (pipelineStates_) {
@@ -421,23 +442,15 @@ Status HiPlayerImpl::Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeek
         }
     }
     isSeek_ = false;
-    NotifySeek(rtv, notifySeekDone, seekPos);
-    if (audioSink_ != nullptr) {
-        audioSink_->SetIsTransitent(false);
-    }
-    return rtv;
-}
-
-void HiPlayerImpl::NotifySeek(Status rtv, bool flag, int64_t seekPos)
-{
     if (rtv != Status::OK) {
         MEDIA_LOG_E("Seek done, seek error.");
         // change player state to PLAYER_STATE_ERROR when seek error.
         UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
-    }  else if (flag) {
-        // only notify seekDone for external call.
-        NotifySeekDone(seekPos);
     }
+    if (audioSink_ != nullptr) {
+        audioSink_->SetIsTransitent(false);
+    }
+    return rtv;
 }
 
 int32_t HiPlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
@@ -636,14 +649,9 @@ int32_t HiPlayerImpl::GetCurrentTime(int32_t& currentPositionMs)
 
 int32_t HiPlayerImpl::GetDuration(int32_t& durationMs)
 {
-    auto tmpMeta = demuxer_->GetGlobalMetaInfo();
-    if (tmpMeta == nullptr) {
-        MEDIA_LOG_E("GetDuration failed, Meta is null.");
-    }
-    sourceMeta_ = tmpMeta;
     int64_t duration = 0;
     bool found = false;
-    if (tmpMeta->GetData(Tag::MEDIA_DURATION, duration)) {
+    if (demuxer_->GetDuration(duration)) {
         found = true;
     } else {
         MEDIA_LOG_W("Get media duration failed.");
@@ -1019,7 +1027,6 @@ void HiPlayerImpl::HandleCompleteEvent(const Event& event)
         callbackLooper_.StopReportMediaProgress();
     }
     callbackLooper_.DoReportCompletedTime();
-    PauseInner();
     callbackLooper_.OnInfo(INFO_TYPE_EOS, static_cast<int32_t>(singleLoop_.load()), format);
     for (std::pair<std::string, bool>& item: completeState_) {
         item.second = false;

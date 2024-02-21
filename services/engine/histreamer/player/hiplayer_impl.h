@@ -130,7 +130,8 @@ private:
     Status doPausedSeek(int64_t seekPos, PlayerSeekMode mode);
     Status doCompletedSeek(int64_t seekPos, PlayerSeekMode mode);
     Status doSeek(int64_t seekPos, PlayerSeekMode mode);
-    void NotifySeek(Status rtv, bool flag, int64_t seekPos);
+    void ResetIfSourceExisted();
+    void ReleaseInner();
     int32_t PauseInner();
 
     bool isNetWorkPlay_ = false;
@@ -147,7 +148,6 @@ private:
 
     std::shared_ptr<EventReceiver> playerEventReceiver_;
     std::shared_ptr<FilterCallback> playerFilterCallback_;
-    std::weak_ptr<Meta> sourceMeta_{};
     std::vector<std::weak_ptr<Meta>> streamMeta_{};
     std::atomic<PlayerStates> pipelineStates_ {PlayerStates::PLAYER_IDLE}; // only update in UpdateStateNoLock()
     std::queue<PlayerStates> pendingStates_ {};
