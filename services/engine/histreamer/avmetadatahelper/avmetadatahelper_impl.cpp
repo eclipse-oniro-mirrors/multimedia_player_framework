@@ -442,7 +442,6 @@ std::shared_ptr<AVSharedMemory> AVMetadataHelperImpl::FetchFrameAtTime(
             MEDIA_LOGI("0x%{public}06" PRIXPTR " Fetch frame OK width:%{public}d, height:%{public}d",
                 FAKE_POINTER(this), outputConfig_.dstWidth, outputConfig_.dstHeight);
             videoDecoder_->Flush();
-            mediaDemuxer_->Flush();
         } else {
             hasFetchedFrame_ = true;
             MEDIA_LOGI("Fetch frame timeout srcUri_:%{private}s, width:%{public}d, height:%{public}d",
