@@ -584,7 +584,7 @@ void AVPlayerNapi::StopTaskQue()
         std::unique_lock<std::mutex> lock(taskMutex_);
         avplayerExit_ = true;
     }
-    stateChangeCond_.notify_all();    
+    stateChangeCond_.notify_all();
     taskQue_->Stop();
     std::unique_lock<std::mutex> lock(mutex_);
     taskQueStoped_ = true;
