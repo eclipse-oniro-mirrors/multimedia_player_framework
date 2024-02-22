@@ -428,16 +428,14 @@ declare namespace media {
    * you must use createAVImageGenerator() to create an AVImageGenerator instance.
    * @typedef AVImageGenerator
    * @syscap SystemCapability.Multimedia.Media.AVImageGenerator
-   * @systemapi
-   * @since 11
+   * @since 12
    */
   interface AVImageGenerator {
     /**
      * Media file descriptor.
      * @type { ?AVFileDescriptor }
      * @syscap SystemCapability.Multimedia.Media.AVImageGenerator
-     * @systemapi
-     * @since 11
+     * @since 12
      */
     fdSrc ?: AVFileDescriptor;
 
@@ -453,8 +451,7 @@ declare namespace media {
      * @throws { BusinessError } 5400102 - Operation not allowed. Returned by callback.
      * @throws { BusinessError } 5400106 - Unsupported format. Returned by callback.
      * @syscap SystemCapability.Multimedia.Media.AVImageGenerator
-     * @systemapi
-     * @since 11
+     * @since 12
      */
     fetchFrameByTime(timeUs: number, options: AVImageQueryOptions, param: PixelMapParams,
       callback: AsyncCallback<image.PixelMap>): void;
@@ -472,8 +469,7 @@ declare namespace media {
      * @throws { BusinessError } 5400102 - Operation not allowed. Returned by promise.
      * @throws { BusinessError } 5400106 - Unsupported format. Returned by promise.
      * @syscap SystemCapability.Multimedia.Media.AVImageGenerator
-     * @systemapi
-     * @since 11
+     * @since 12
      */
     fetchFrameByTime(timeUs: number, options: AVImageQueryOptions, param: PixelMapParams): Promise<image.PixelMap>;
 
@@ -482,8 +478,7 @@ declare namespace media {
      * @param { AsyncCallback<void> } callback - A callback instance used to return when release completed.
      * @throws { BusinessError } 5400102 - Operation not allowed. Returned by callback.
      * @syscap SystemCapability.Multimedia.Media.AVImageGenerator
-     * @systemapi
-     * @since 11
+     * @since 12
      */
     release(callback: AsyncCallback<void>): void;
 
@@ -492,8 +487,7 @@ declare namespace media {
      * @returns { Promise<void> } A Promise instance used to return when release completed.
      * @throws { BusinessError } 5400102 - Operation not allowed. Returned by promise.
      * @syscap SystemCapability.Multimedia.Media.AVImageGenerator
-     * @systemapi
-     * @since 11
+     * @since 12
      */
     release(): Promise<void>;
   }
