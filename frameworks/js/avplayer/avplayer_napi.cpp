@@ -700,7 +700,6 @@ napi_value AVPlayerNapi::JsSeek(napi_env env, napi_callback_info info)
             return result;
         }
     }
-
     if (!jsPlayer->IsControllable()) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
             "current state is not prepared/playing/paused/completed, unsupport seek operation");
