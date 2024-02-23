@@ -712,7 +712,6 @@ napi_value AVPlayerNapi::JsSeek(napi_env env, napi_callback_info info)
         }
     });
     jsplayer->playerCb->seekNum_++;
-    MEDIA_LOGI("seekNum: %{public}d, seektime: %{public}d", jsplayer->playerCb->seekNum_.load(), time);
     (void)jsPlayer->taskQue_->EnqueueTask(task);
     return result;
 }
