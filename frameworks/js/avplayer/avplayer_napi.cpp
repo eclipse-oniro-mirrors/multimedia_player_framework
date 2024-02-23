@@ -665,7 +665,6 @@ napi_value AVPlayerNapi::JsSeek(napi_env env, napi_callback_info info)
     MediaTrace trace("AVPlayerNapi::seek");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
-
     napi_value args[2] = { nullptr }; // args[0]:timeMs, args[1]:SeekMode
     size_t argCount = 2; // args[0]:timeMs, args[1]:SeekMode
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
@@ -707,7 +706,6 @@ napi_value AVPlayerNapi::JsSeek(napi_env env, napi_callback_info info)
             "current state is not prepared/playing/paused/completed, unsupport seek operation");
         return result;
     }
-
     auto task = std::make_shared<TaskHandler<void>>([jsPlayer, time, mode]() {
         MEDIA_LOGD("Seek Task");
         if (jsPlayer->player_ != nullptr) {
