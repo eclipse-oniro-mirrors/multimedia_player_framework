@@ -519,7 +519,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::ResetTask()
         MEDIA_LOGI("Reset Task Out");
         return TaskRet(MSERR_EXT_API9_OK, "Success");
     });
-    playerCb_->seekNum_ = 0;
+    playerCb->seekNum_ = 0;
     (void)taskQue_->EnqueueTask(task, true); // CancelNotExecutedTask
     return task;
 }
@@ -615,7 +615,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::ReleaseTask()
         });
 
         isReleased_.store(true);
-        playerCb_->seekNum_ = 0;
+        playerCb->seekNum_ = 0;
         (void)taskQue_->EnqueueTask(task, true); // CancelNotExecutedTask
     }
     return task;
@@ -711,7 +711,7 @@ napi_value AVPlayerNapi::JsSeek(napi_env env, napi_callback_info info)
             (void)jsPlayer->player_->Seek(time, static_cast<PlayerSeekMode>(mode));
         }
     });
-    jsplayer->playerCb->seekNum_++;
+    jsPlayer->playerCb_->seekNum_++;
     (void)jsPlayer->taskQue_->EnqueueTask(task);
     return result;
 }
