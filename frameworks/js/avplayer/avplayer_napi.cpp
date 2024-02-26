@@ -519,7 +519,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::ResetTask()
         MEDIA_LOGI("Reset Task Out");
         return TaskRet(MSERR_EXT_API9_OK, "Success");
     });
-    playerCb->seekNum_ = 0;
+    playerCb_->seekNum_ = 0;
     (void)taskQue_->EnqueueTask(task, true); // CancelNotExecutedTask
     return task;
 }
@@ -615,7 +615,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::ReleaseTask()
         });
 
         isReleased_.store(true);
-        playerCb->seekNum_ = 0;
+        playerCb_->seekNum_ = 0;
         (void)taskQue_->EnqueueTask(task, true); // CancelNotExecutedTask
     }
     return task;
