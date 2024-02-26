@@ -198,7 +198,6 @@ bool TaskQueue::IsTaskExecuting()
 {
     std::unique_lock<std::mutex> lock(mutex_);
     return isTaskExecuting_;
-
 }
 } // namespace Media
 } // namespace OHOS
