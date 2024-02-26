@@ -618,7 +618,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::ReleaseTask()
         playerCb_->seekNum_ = 0;
         (void)taskQue_->EnqueueTask(task, true); // CancelNotExecutedTask
         if (taskQue_->IsTaskExecuting()) {
-            MEDIA_LOGW("0x%{public}06" PRIXPTR " Cancel Executing Task,ReleaseTask Report Error, FAKE_POINTER(this));
+            MEDIA_LOGW("0x%{public}06" PRIXPTR " Cancel Executing Task,ReleaseTask Report Error", FAKE_POINTER(this));
             NotifyState(PlayerStates::PLAYER_STATE_ERROR);
         }
     }
