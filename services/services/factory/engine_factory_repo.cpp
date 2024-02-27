@@ -146,7 +146,9 @@ int32_t EngineFactoryRepo::LoadHistreamerEngine(const int32_t& appUid)
 std::shared_ptr<IEngineFactory> EngineFactoryRepo::GetEngineFactory(
     IEngineFactory::Scene scene, const int32_t& appUid, const std::string &uri)
 {
-    (void)LoadGstreamerEngine();
+    if (appUid != 1003) { // 1003 is bootanimation uid
+        (void)LoadGstreamerEngine();
+    }
     (void)LoadHistreamerEngine(appUid);
 
     if (factorys_.empty()) {
