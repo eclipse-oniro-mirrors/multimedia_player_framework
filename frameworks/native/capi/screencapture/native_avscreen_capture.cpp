@@ -360,7 +360,7 @@ OH_AVErrCode OH_AVScreenCapture_SetScreenCanvasRotation(struct OH_AVScreenCaptur
                              AV_ERR_INVALID_VAL, "screenCapture_ is null");
 
     int32_t ret = screenCaptureObj->screenCapture_->SetScreenCanvasRotation(isCanvasRotation);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AVCS_ERR_INVALID_OPERATION, "SetScreenCanvasRotation failed!");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_UNSUPPORT, "SetScreenCanvasRotation failed!");
 
     return AV_ERR_OK;
 }
