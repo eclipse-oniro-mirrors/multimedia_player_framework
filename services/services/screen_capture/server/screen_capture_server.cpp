@@ -809,6 +809,15 @@ int32_t ScreenCaptureServer::SetMicrophoneEnabled(bool isMicrophone)
     return MSERR_OK;
 }
 
+int32_t ScreenCaptureServer::SetScreenCanvasRotation(bool isCanvasRotation)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    MEDIA_LOGI("ScreenCaptureServer::SetScreenCanvasRotation start");
+    MEDIA_LOGI("SetScreenCanvasRotation:%{public}d", isCanvasRotation);
+    ScreenManager::GetInstance().SetVirtualMirrorScreenCanvasRotation(screenId_, isCanvasRotation);
+    return MSERR_OK;
+}
+
 int32_t ScreenCaptureServer::StopAudioCapture()
 {
     isRunning_.store(false);
