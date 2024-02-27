@@ -18,6 +18,7 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include "native_averrors.h"
 #include "native_avscreen_capture_errors.h"
 #include "native_avscreen_capture_base.h"
 
