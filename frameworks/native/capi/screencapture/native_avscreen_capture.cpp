@@ -364,5 +364,5 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetScreenCanvasRotation(struct OH
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT,
                              "SetScreenCanvasRotation failed!");
 
-    return AV_ERR_OK;
+    return AV_SCREEN_CAPTURE_ERR_OK;
 }
