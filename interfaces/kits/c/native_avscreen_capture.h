@@ -18,7 +18,6 @@
 
 #include <stdint.h>
 #include <stdio.h>
-#include "native_averrors.h"
 #include "native_avscreen_capture_errors.h"
 #include "native_avscreen_capture_base.h"
 
@@ -189,13 +188,14 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetMicrophoneEnabled(struct OH_AV
  * @brief Controls the Rotation of the Screen, which is no rotate by default
  * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
  * @param capture Pointer to an OH_AVScreenCapture instance
- * @param isCanvasRotation Rotate The screen or not
- * @return Returns AV_ERR_OK if the execution is successful,
- * otherwise returns a specific error code, refer to {@link OH_AVErrCode}
+ * @param canvasRotation Rotate The screen or not
+ * @return Returns AV_SCREEN_CAPTURE_ERR_OK if the execution is successful,
+ * otherwise returns a specific error code, refer to {@link OH_AVSCREEN_CAPTURE_ErrCode}
  * @since 10
  * @version 1.0
  */
-OH_AVErrCode OH_AVScreenCapture_SetScreenCanvasRotation(struct OH_AVScreenCapture *capture, bool isCanvasRotation);
+OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetScreenCanvasRotation(struct OH_AVScreenCapture *capture,
+    bool canvasRotation);
 #ifdef __cplusplus
 }
 #endif

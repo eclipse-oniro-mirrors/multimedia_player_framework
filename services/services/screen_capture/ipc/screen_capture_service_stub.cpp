@@ -201,11 +201,11 @@ int32_t ScreenCaptureServiceStub::SetMicrophoneEnabled(bool isMicrophone)
     return screenCaptureServer_->SetMicrophoneEnabled(isMicrophone);
 }
 
-int32_t ScreenCaptureServiceStub::SetScreenCanvasRotation(bool isCanvasRotation)
+int32_t ScreenCaptureServiceStub::SetScreenCanvasRotation(bool canvasRotation)
 {
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, false,
                              "screen capture server is nullptr");
-    return screenCaptureServer_->SetScreenCanvasRotation(isCanvasRotation);
+    return screenCaptureServer_->SetScreenCanvasRotation(canvasRotation);
 }
 
 int32_t ScreenCaptureServiceStub::AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audioBuffer,
@@ -254,8 +254,8 @@ int32_t ScreenCaptureServiceStub::SetScreenCanvasRotation(MessageParcel &data, M
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
                              "screen capture server is nullptr");
     (void)data;
-    bool isCanvasRotation = data.ReadBool();
-    int32_t ret = SetScreenCanvasRotation(isCanvasRotation);
+    bool canvasRotation = data.ReadBool();
+    int32_t ret = SetScreenCanvasRotation(canvasRotation);
     reply.WriteInt32(ret);
     return MSERR_OK;
 }

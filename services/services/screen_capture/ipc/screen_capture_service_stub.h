@@ -45,7 +45,7 @@ public:
     int32_t ReleaseAudioBuffer(AudioCaptureSourceType type) override;
     int32_t ReleaseVideoBuffer() override;
     int32_t SetMicrophoneEnabled(bool isMicrophone) override;
-    int32_t SetScreenCanvasRotation(bool isCanvasRotation) override;
+    int32_t SetScreenCanvasRotation(bool canvasRotation) override;
     int32_t SetListenerObject(const sptr<IRemoteObject> &object) override;
     int OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
 
