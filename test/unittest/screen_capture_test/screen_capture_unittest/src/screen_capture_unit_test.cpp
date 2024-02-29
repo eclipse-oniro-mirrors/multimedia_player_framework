@@ -545,7 +545,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_01, TestSize.Lev
     bool isMicrophone = true;
     screenCapture_->SetMicrophoneEnabled(isMicrophone);
     bool canvasRotation = true;
-    screenCapture_->SetScreenCanvasRotation(canvasRotation);
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCanvasRotation(canvasRotation));
     EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_));
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
@@ -704,6 +704,38 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_05, TestSize.Level2)
 }
 
 /**
+ * @tc.name: screen_capture_save_file_06
+ * @tc.desc: open microphone
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_06, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_06 before");
+    AVScreenCaptureConfig config;
+    SetConfig(config);
+    config.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
+    OpenFile("screen_capture_get_screen_capture_06");
+
+    aFlag = 1;
+    vFlag = 1;
+    screenCaptureCb_ = std::make_shared<ScreenCaptureUnitTestCallback>(screenCapture_, aFile, vFile, aFlag, vFlag);
+    ASSERT_NE(nullptr, screenCaptureCb_);
+    bool isMicrophone = true;
+    screenCapture_->SetMicrophoneEnabled(isMicrophone);
+    bool canvasRotation = true;
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCanvasRotation(canvasRotation));
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config));
+    EXPECT_NE(MSERR_OK, screenCapture_->StartScreenRecording());
+    sleep(RECORDER_TIME);
+    EXPECT_NE(MSERR_OK, screenCapture_->StopScreenRecording());
+    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+    CloseFile();
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_05 after");
+}
+
+/**
  * @tc.name: screen_capture_specified_screen_file_01
  * @tc.desc: do screencapture with specified screen
  * @tc.type: FUNC
@@ -777,7 +809,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_screen_file_02, TestSiz
     sleep(RECORDER_TIME);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenRecording());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_screen_file_03 after");
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_screen_file_02 after");
 }
 
 /**
@@ -1730,6 +1762,34 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_buffertest_0005, TestSize.Level2)
     screenCaptureCb_ = std::make_shared<ScreenCaptureUnitTestCallback>(screenCapture_, aFile, vFile, aFlag, vFlag);
     ASSERT_NE(nullptr, screenCaptureCb_);
     screenCapture_->SetMicrophoneEnabled(isMicrophone);
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
+    sleep(10);
+    EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
+    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+}
+
+/**
+ * @tc.name: screen_capture_buffertest_0006
+ * @tc.desc: screen capture buffer test
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_buffertest_0006, TestSize.Level2)
+{
+    AVScreenCaptureConfig config_;
+    SetConfig(config_);
+    config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
+
+    aFlag = 0;
+    vFlag = 0;
+    bool isMicrophone = true;
+    bool canvasRotation = true;
+    screenCaptureCb_ = std::make_shared<ScreenCaptureUnitTestCallback>(screenCapture_, aFile, vFile, aFlag, vFlag);
+    ASSERT_NE(nullptr, screenCaptureCb_);
+    screenCapture_->SetMicrophoneEnabled(isMicrophone);
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCanvasRotation(canvasRotation));
     EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_));
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
