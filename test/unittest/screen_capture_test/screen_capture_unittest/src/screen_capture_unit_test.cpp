@@ -511,7 +511,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window, TestSize.Level2
 }
 
 /**
- * @tc.name: screen_capture_specified_window
+ * @tc.name: screen_capture_specified_window_01
  * @tc.desc: open microphone
  * @tc.type: FUNC
  * @tc.require:
