@@ -131,6 +131,7 @@ private:
     Status doCompletedSeek(int64_t seekPos, PlayerSeekMode mode);
     Status doSeek(int64_t seekPos, PlayerSeekMode mode);
     void NotifySeek(Status rtv, bool flag, int64_t seekPos);
+    int32_t InitDuration();
 
     bool isNetWorkPlay_ = false;
     int32_t appUid_{0};
@@ -139,7 +140,6 @@ private:
     int64_t appFullTokenId_{0};
     OHOS::Media::Mutex stateMutex_{};
     OHOS::Media::ConditionVariable cond_{};
-    int64_t duration_{-1};
     std::atomic<bool> singleLoop_ {false};
     std::atomic<bool> isSeek_ {false};
     std::atomic<PlaybackRateMode> playbackRateMode_ {PlaybackRateMode::SPEED_FORWARD_1_00_X};
@@ -161,6 +161,7 @@ private:
     HiPlayerCallbackLooper callbackLooper_{};
     sptr<Surface> surface_ {nullptr};
     std::string url_;
+    std::atomic<int32_t> durationMs_{-1};
     std::shared_ptr<IMediaDataSource> dataSrc_{nullptr};
     int32_t videoWidth_{0};
     int32_t videoHeight_{0};
