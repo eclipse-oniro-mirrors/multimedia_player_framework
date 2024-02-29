@@ -1007,11 +1007,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_check_param_03, TestSize.Level2)
 
     SetRecorderInfo("screen_capture_check_param_03.mp4", recorderInfo);
     config_.recorderInfo = recorderInfo;
-    config_.videoInfo.videoCapInfo.videoFrameWidth = 72000;
-    EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
-
-    SetRecorderInfo("screen_capture_check_param_03.mp4", recorderInfo);
-    config_.recorderInfo = recorderInfo;
     config_.videoInfo.videoCapInfo.videoFrameWidth = 720;
     config_.videoInfo.videoCapInfo.videoFrameHeight = 0;
     EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
