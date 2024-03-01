@@ -42,6 +42,7 @@
 #include "screen_manager.h"
 #include "i_recorder_service.h"
 #include "recorder_server.h"
+#include "../../observer/incall_observer.h"
 
 namespace OHOS {
 namespace Media {
@@ -106,6 +107,23 @@ class AudioCapturerCallbackImpl : public AudioCapturerCallback {
 public:
     void OnInterrupt(const InterruptEvent &interruptEvent) override;
     void OnStateChange(const CapturerState state) override;
+};
+
+class ScreenCaptureObserverCallBackImpl : public ScreenCaptureObserverCallBack {
+    ScreenCaptureObserverCallBackImpl(std::weak_ptr<ScreenCaptureServer> screenCaptureServer);
+    ~ScreenCaptureObserverCallBackImpl();
+public:
+
+    void StopAndReleaseScreenCapture()
+    {
+        if (screenCaptureServer_) {
+            screenCaptureServer_->StopScreenCapture();
+            screenCaptureServer_->Release();
+        }
+    }
+
+private:
+    std::weak_ptr<ScreenCaptureServer> screenCaptureServer_;
 };
 
 class ScreenCaptureServer : public IScreenCaptureService, public NoCopyable {

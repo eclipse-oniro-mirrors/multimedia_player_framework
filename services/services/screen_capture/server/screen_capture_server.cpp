@@ -440,6 +440,19 @@ int32_t ScreenCaptureServer::StartScreenCapture()
     std::lock_guard<std::mutex> lock(mutex_);
     MediaTrace trace("ScreenCaptureServer::StartScreenCapture");
     MEDIA_LOGI("ScreenCaptureServer::StartScreenCapture start");
+    if (InCallObserver::GetInstance().IsInCall()) {
+        MEDIA_LOGI("ScreenCaptureServer Start InCall Abort");
+        //TODO Oninfo 回调 返回MSERR_OK
+        return MSERR_UNSUPPORT;
+    } else {
+        MEDIA_LOGI("ScreenCaptureServer Start RegisterScreenCaptureCallBack");
+        std::weak_ptr<ScreenCaptureServer> screenCaptureServer = weak_from_this();
+        auto spt = std::make_shared<ScreenCaptureObserverCallBackImpl>(screenCaptureServer);
+        std::weak_ptr<ScreenCaptureObserverCallBackImpl> callback(spt);
+        //callback 包 weakptr 使用时lock
+        InCallObserver::GetInstance().RegisterScreenCaptureCallBack(callback);
+    }
+
     isAudioStart_ = true;
     if (audioMicCapturer_ != nullptr) {
         if (!audioMicCapturer_->Start()) {
@@ -895,6 +908,13 @@ int32_t ScreenCaptureServer::StopScreenCapture()
     std::lock_guard<std::mutex> lock(mutex_);
     MediaTrace trace("ScreenCaptureServer::StopScreenCapture");
     MEDIA_LOGI("ScreenCaptureServer::StopScreenCapture start");
+
+    std::weak_ptr<ScreenCaptureServer> screenCaptureServer = weak_from_this();
+    auto spt = std::make_shared<ScreenCaptureObserverCallBackImpl>(screenCaptureServer);
+    std::weak_ptr<ScreenCaptureObserverCallBackImpl> callback(spt);
+    InCallObserver::GetInstance().UnRegisterScreenCaptureCallBack(callback);
+    MEDIA_LOGI("ScreenCaptureServer Stop UnRegisterScreenCaptureCallBack");
+
     int32_t stopFlagSuccess = MSERR_OK;
     if (dataType_ == DataType::CAPTURE_FILE) {
         stopFlagSuccess = StopScreenCaptureRecorder();

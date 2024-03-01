@@ -160,6 +160,15 @@ public:
     virtual void OnVideoBufferAvailable(bool isReady) = 0;
 };
 
+class ScreenCaptureObserverCallBack {
+
+    virtual ScreenCaptureObserverCallBack(std::weak_ptr<ScreenCaptureServer> screenCaptureServer);
+    virtual ~ScreenCaptureObserverCallBack() = default;
+public:
+
+    virtual void StopAndReleaseScreenCapture();
+};
+
 class ScreenCapture {
 public:
     virtual ~ScreenCapture() = default;
