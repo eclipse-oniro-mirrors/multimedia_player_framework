@@ -110,7 +110,7 @@ public:
 };
 
 class ScreenCaptureObserverCallBackImpl : public ScreenCaptureObserverCallBack {
-    ScreenCaptureObserverCallBackImpl(std::weak_ptr<ScreenCaptureServer> screenCaptureServer);
+    explicit ScreenCaptureObserverCallBackImpl(std::weak_ptr<ScreenCaptureServer> screenCaptureServer);
     ~ScreenCaptureObserverCallBackImpl();
 public:
 

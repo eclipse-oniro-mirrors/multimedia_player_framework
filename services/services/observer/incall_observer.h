@@ -13,6 +13,9 @@
  * limitations under the License.
  */
 
+#ifndef IN_CALL_OBSERVER_H
+#define IN_CALL_OBSERVER_H
+
 #include <mutex>
 #include <vector>
 #include <unordered_map>
@@ -45,8 +48,7 @@ private:
     std::mutex mutex_;
     bool Init();
     bool isTelephonyStateListenerDied_ = true;
-
 };
 }
 }
-#endif // PLAYER_MEM_MANAGE_H
+#endif // IN_CALL_OBSERVER_H

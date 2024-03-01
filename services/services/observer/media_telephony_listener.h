@@ -13,6 +13,9 @@
  * limitations under the License.
  */
 
+#ifndef MEDIA_TELEPHONY_LISTENER_H
+#define MEDIA_TELEPHONY_LISTENER_H
+
 #include "telephony_observer.h"
 
 namespace OHOS {
@@ -45,3 +48,4 @@ public:
 };
 }
 }
+#endif // MEDIA_TELEPHONY_LISTENER_H

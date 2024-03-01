@@ -177,7 +177,7 @@ ohos_shared_library("media_service") {
 
   sources += [
     "observer/incall_observer.cpp",
-    "screen_capture/media_telephony_listener.cpp",
+    "observer/media_telephony_listener.cpp",
   ]
 
   configs = [

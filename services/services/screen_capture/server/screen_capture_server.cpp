@@ -442,7 +442,7 @@ int32_t ScreenCaptureServer::StartScreenCapture()
     MEDIA_LOGI("ScreenCaptureServer::StartScreenCapture start");
     if (InCallObserver::GetInstance().IsInCall()) {
         MEDIA_LOGI("ScreenCaptureServer Start InCall Abort");
-        //TODO Oninfo 回调 返回MSERR_OK
+        //Oninfo 回调 返回MSERR_OK
         return MSERR_UNSUPPORT;
     } else {
         MEDIA_LOGI("ScreenCaptureServer Start RegisterScreenCaptureCallBack");
