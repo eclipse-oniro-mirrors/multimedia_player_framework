@@ -446,11 +446,11 @@ int32_t ScreenCaptureServer::StartScreenCapture()
         return MSERR_UNSUPPORT;
     } else {
         MEDIA_LOGI("ScreenCaptureServer Start RegisterScreenCaptureCallBack");
-        std::weak_ptr<ScreenCaptureServer> wpScreenCaptureServer(shared_from_this());
-        auto spt = std::make_shared<ScreenCaptureObserverCallBackImpl>(wpScreenCaptureServer);
-        std::weak_ptr<ScreenCaptureObserverCallBackImpl> callback(spt);
-        //callback 包 weakptr 使用时lock
-        InCallObserver::GetInstance().RegisterScreenCaptureCallBack(callback);
+//        std::weak_ptr<ScreenCaptureServer> wpScreenCaptureServer(shared_from_this());
+//        auto spt = std::make_shared<ScreenCaptureObserverCallBackImpl>(wpScreenCaptureServer);
+//        std::weak_ptr<ScreenCaptureObserverCallBackImpl> callback(spt);
+//        //callback 包 weakptr 使用时lock
+//        InCallObserver::GetInstance().RegisterScreenCaptureCallBack(callback);
     }
 
     isAudioStart_ = true;

@@ -19,6 +19,10 @@
 #include "media_log.h"
 #include "media_errors.h"
 #include "hisysevent.h"
+#include "telephony_observer_client.h"
+#include "call_manager_client.h"
+#include "core_service_client.h"
+#include "iservice_registry.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "InCallObserver"};
@@ -46,14 +50,7 @@ InCallObserver::~InCallObserver()
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
-bool InCallObserver::HasSimCard(int32_t slotId)
-{
-    bool hasSimCard = false;
-    DelayedRefSingleton<CoreServiceClient>::GetInstance().HasSimCard(slotId, hasSimCard);
-    return hasSimCard;
-}
-
-bool IsInCall()
+bool InCallObserver::IsInCall()
 {
     return inCall_;
 }
@@ -76,7 +73,6 @@ void InCallObserver::OnCallStateUpdated(bool inCall)
     inCall_ = inCall;
     if (screenCaptureObserverCallBack_.expired()) {
         screenCaptureObserverCallBack_.lock()->StopAndReleaseScreenCapture();
-        screenCaptureObserverCallBack_ = null;
     }
 }
 
@@ -94,9 +90,8 @@ bool InCallObserver::Init()
 
 void InCallObserver::RegisterObserver()
 {
-    std::lock_guard<std::recursive_mutex> lock(recMutex_);
     MEDIA_LOGI("Register InCall Listener");
-    for (int slotId = 0; slotId < SIM_SLOT_COUNT; slotId++) {
+    for (int slotId = 0; slotId < OHOS::Telephony::SIM_SLOT_COUNT; slotId++) {
         MEDIA_LOGI("Register Listener slotId:%{public}d", slotId);
         auto telephonyObserver_ = std::make_unique<MediaTelephonyListener>().release();
         auto res = TelephonyObserverClient::GetInstance().AddStateObserver(telephonyObserver_, slotId,
@@ -109,9 +104,8 @@ void InCallObserver::RegisterObserver()
 
 void InCallObserver::UnRegisterObserver()
 {
-    std::lock_guard<std::recursive_mutex> lock(recMutex_);
     MEDIA_LOGI("UnRegister InCall Listener");
-    for (int slotId = 0; slotId < SIM_SLOT_COUNT; slotId++) {
+    for (int slotId = 0; slotId < OHOS::Telephony::SIM_SLOT_COUNT; slotId++) {
         MEDIA_LOGI("UnRegister Listener slotId:%{public}d", slotId);
         TelephonyObserverClient::GetInstance().RemoveStateObserver(slotId,
             TelephonyObserverBroker::OBSERVER_MASK_CALL_STATE);

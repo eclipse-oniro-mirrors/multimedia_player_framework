@@ -36,7 +36,7 @@ public:
     void UnRegisterObserver();
     void OnCallStateUpdated(bool inCall);
     bool IsInCall();
-    std::vector<MediaTelephonyListener> mediaTelephonyListeners_;
+    std::vector<MediaTelephonyListener *> mediaTelephonyListeners_;
     void RegisterScreenCaptureCallBack(std::weak_ptr<ScreenCaptureObserverCallBack> screenCaptureObserverCallBack);
     void UnRegisterScreenCaptureCallBack(std::weak_ptr<ScreenCaptureObserverCallBack> screenCaptureObserverCallBack);
 
