@@ -96,7 +96,7 @@ void InCallObserver::RegisterObserver()
 {
     std::lock_guard<std::recursive_mutex> lock(recMutex_);
     MEDIA_LOGI("Register InCall Listener");
-    for (int slotId = 0; i < SIM_SLOT_COUNT; slotId++) {
+    for (int slotId = 0; slotId < SIM_SLOT_COUNT; slotId++) {
         MEDIA_LOGI("Register Listener slotId:%{public}d", slotId);
         auto telephonyObserver_ = std::make_unique<MediaTelephonyListener>().release();
         auto res = TelephonyObserverClient::GetInstance().AddStateObserver(telephonyObserver_, slotId,
@@ -111,7 +111,7 @@ void InCallObserver::UnRegisterObserver()
 {
     std::lock_guard<std::recursive_mutex> lock(recMutex_);
     MEDIA_LOGI("UnRegister InCall Listener");
-    for (int slotId = 0; i < SIM_SLOT_COUNT; slotId++) {
+    for (int slotId = 0; slotId < SIM_SLOT_COUNT; slotId++) {
         MEDIA_LOGI("UnRegister Listener slotId:%{public}d", slotId);
         TelephonyObserverClient::GetInstance().RemoveStateObserver(slotId,
             TelephonyObserverBroker::OBSERVER_MASK_CALL_STATE);
