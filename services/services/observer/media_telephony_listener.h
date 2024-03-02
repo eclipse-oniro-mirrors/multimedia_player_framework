@@ -23,7 +23,7 @@ namespace Media {
 
 class MediaTelephonyListener : public Telephony::TelephonyObserver {
 public:
-    MediaTelephonyListener() = default;
+    MediaTelephonyListener();
     ~MediaTelephonyListener() override;
 
     void OnCallStateUpdated(int32_t slotId, int32_t callState, const std::u16string &phoneNumber) override;
