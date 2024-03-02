@@ -1026,6 +1026,15 @@ void AudioCapturerCallbackImpl::OnStateChange(const CapturerState state)
     }
 }
 
+void ScreenCaptureObserverCallBackImpl::StopAndReleaseScreenCapture()
+{
+    MEDIA_LOGI("ScreenCaptureObserverCallBackImpl: StopAndReleaseScreenCapture");
+    if (screenCaptureServer_.expired()) {
+        screenCaptureServer_.lock()->StopScreenCapture();
+        screenCaptureServer_.lock()->Release();
+    }
+}
+
 void ScreenCapBufferConsumerListener::OnBufferAvailable()
 {
     int32_t flushFence = 0;

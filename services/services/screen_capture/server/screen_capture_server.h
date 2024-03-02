@@ -109,6 +109,18 @@ public:
     void OnStateChange(const CapturerState state) override;
 };
 
+class ScreenCaptureServer;
+class ScreenCaptureObserverCallBackImpl : public ScreenCaptureObserverCallBack {
+public:
+    explicit ScreenCaptureObserverCallBackImpl(std::weak_ptr<ScreenCaptureServer> screenCaptureServer);
+    ~ScreenCaptureObserverCallBackImpl();
+
+    void StopAndReleaseScreenCapture() override;
+
+private:
+    std::weak_ptr<ScreenCaptureServer> screenCaptureServer_;
+};
+
 class ScreenCaptureServer : public std::enable_shared_from_this<ScreenCaptureServer>,
         public IScreenCaptureService, public NoCopyable {
 public:
@@ -211,23 +223,6 @@ private:
 
     static constexpr uint32_t MAX_AUDIO_BUFFER_SIZE = 128;
     static constexpr uint64_t SEC_TO_NANOSECOND = 1000000000;
-};
-
-class ScreenCaptureObserverCallBackImpl : public ScreenCaptureObserverCallBack {
-public:
-    explicit ScreenCaptureObserverCallBackImpl(std::weak_ptr<ScreenCaptureServer> screenCaptureServer);
-    ~ScreenCaptureObserverCallBackImpl();
-
-    void StopAndReleaseScreenCapture()
-    {
-        if (screenCaptureServer_.expired()) {
-            screenCaptureServer_.lock()->StopScreenCapture();
-            screenCaptureServer_.lock()->Release();
-        }
-    }
-
-private:
-    std::weak_ptr<ScreenCaptureServer> screenCaptureServer_;
 };
 } // namespace Media
 } // namespace OHOS
