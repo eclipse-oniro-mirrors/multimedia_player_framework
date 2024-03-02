@@ -16,13 +16,12 @@
 #include "incall_observer.h"
 #include <unistd.h>
 #include <functional>
+#include "call_manager_client.h"
 #include "media_log.h"
 #include "media_errors.h"
 #include "hisysevent.h"
 #include "telephony_observer_client.h"
-#include "call_manager_client.h"
-#include "core_service_client.h"
-#include "iservice_registry.h"
+#include "telephony_types.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "InCallObserver"};
