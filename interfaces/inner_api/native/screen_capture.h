@@ -162,7 +162,6 @@ public:
 
 class ScreenCaptureObserverCallBack {
 public:
-    ScreenCaptureObserverCallBack(std::weak_ptr<ScreenCaptureServer> screenCaptureServer);
     ~ScreenCaptureObserverCallBack() = default;
     virtual void StopAndReleaseScreenCapture();
 };

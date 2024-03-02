@@ -197,6 +197,8 @@ ohos_shared_library("media_service") {
     "access_token:libaccesstoken_sdk",
     "audio_framework:audio_client",
     "c_utils:utils",
+    "call_manager:tel_call_manager_api",
+    "core_service:tel_core_service_api",
     "hdf_core:libhdi",
     "hicollie:libhicollie",
     "hilog:libhilog",

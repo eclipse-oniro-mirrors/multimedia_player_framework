@@ -20,6 +20,11 @@
 #include "core_service_client.h"
 #include "call_manager_base.h"
 
+namespace {
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MediaTelephonyListener"};
+}
+
+using namespace OHOS::Telephony;
 namespace OHOS {
 namespace Media {
 MediaTelephonyListener::MediaTelephonyListener()
@@ -46,23 +51,27 @@ void MediaTelephonyListener::OnCallStateUpdated(int32_t slotId, int32_t callStat
     }
 }
 
-void MediaTelephonyListener::OnSignalInfoUpdated(int32_t slotId, const std::vector<sptr<SignalInformation>> &vec)
+void MediaTelephonyListener::OnSignalInfoUpdated(int32_t slotId,
+    const std::vector<sptr<OHOS::Telephony::SignalInformation>> &vec)
 {
-    MEDIA_LOGI("OnSignalInfoUpdated slotId = %{public}d, signalInfoList.size = %{public}zu", slotId,
+    MEDIA_LOGI("OnSignalInfoUpdated slotId = %{public}d, signalInfoList.size = %{public}zu", slotId, vec.size);
 }
 
-void MediaTelephonyListener::OnNetworkStateUpdated(int32_t slotId, const sptr<NetworkState> &networkState)
+void MediaTelephonyListener::OnNetworkStateUpdated(int32_t slotId,
+    const sptr<OHOS::Telephony::NetworkState> &networkState)
 {
     MEDIA_LOGI("OnNetworkStateUpdated slotId = %{public}d, networkState = %{public}d", slotId,
                networkState == nullptr);
 }
 
-void MediaTelephonyListener::OnCellInfoUpdated(int32_t slotId, const std::vector<sptr<CellInformation>> &vec)
+void MediaTelephonyListener::OnCellInfoUpdated(int32_t slotId,
+    const std::vector<sptr<OHOS::Telephony::CellInformation>> &vec)
 {
     MEDIA_LOGI("OnCellInfoUpdated slotId = %{public}d, cell info size =  %{public}zu", slotId, vec.size());
 }
 
-void MediaTelephonyListener::OnSimStateUpdated(int32_t slotId, CardType type, SimState state, LockReason reason)
+void MediaTelephonyListener::OnSimStateUpdated(int32_t slotId, OHOS::Telephony::CardType type,
+    OHOS::Telephony::SimState state, OHOS::Telephony::LockReason reason)
 {
     MEDIA_LOGI("OnSimStateUpdated slotId = %{public}d, simState =  %{public}d", slotId, state);
 }

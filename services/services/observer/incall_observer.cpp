@@ -42,13 +42,7 @@ InCallObserver::InCallObserver()
 
 InCallObserver::~InCallObserver()
 {
-    Memory::MemMgrClient::GetInstance().UnsubscribeAppState(*appStateListener_);
-    if (isProbeTaskCreated_) {
-        isProbeTaskCreated_ = false;
-        probeTaskQueue_->Stop();
-        probeTaskQueue_ = nullptr;
-    }
-    playerManage_.clear();
+    UnRegisterObserver();
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
@@ -64,12 +58,12 @@ bool IsInCall()
     return inCall_;
 }
 
-void InCallObserver::RegisterScreenCaptureCallBack(std::weak_ptr<ScreenCaptureObserverCallBack> &callback)
+void InCallObserver::RegisterScreenCaptureCallBack(std::weak_ptr<ScreenCaptureObserverCallBack> callback)
 {
     screenCaptureObserverCallBack_ = callback;
 }
 
-void InCallObserver::UnRegisterScreenCaptureCallBack(std::weak_ptr<ScreenCaptureObserverCallBack> &callback)
+void InCallObserver::UnRegisterScreenCaptureCallBack(std::weak_ptr<ScreenCaptureObserverCallBack> callback)
 {
     if (screenCaptureObserverCallBack_ == callback) {
         screenCaptureObserverCallBack_ = null;
@@ -80,8 +74,8 @@ void InCallObserver::OnCallStateUpdated(bool inCall)
 {
     std::unique_lock<std::mutex> lock(mutex_);
     inCall_ = inCall;
-    if (screenCaptureServer_) {
-        screenCaptureObserverCallBack_->StopAndReleaseScreenCapture();
+    if (screenCaptureObserverCallBack_.expired()) {
+        screenCaptureObserverCallBack_.lock()->StopAndReleaseScreenCapture();
         screenCaptureObserverCallBack_ = null;
     }
 }
@@ -91,14 +85,14 @@ bool InCallObserver::Init()
     MEDIA_LOGI("Create InCallObserver");
     if (isTelephonyStateListenerDied_) {
         MEDIA_LOGI("InCallObserver died or first start, Register inCall observer");
-        RegisterInCallListener();
+        RegisterObserver();
         isTelephonyStateListenerDied_ = false;
         return true;
     }
     return true;
 }
 
-void InCallObserver::RegisterInCallListener()
+void InCallObserver::RegisterObserver()
 {
     std::lock_guard<std::recursive_mutex> lock(recMutex_);
     MEDIA_LOGI("Register InCall Listener");

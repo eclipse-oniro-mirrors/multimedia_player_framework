@@ -21,7 +21,7 @@
 #include <unordered_map>
 #include <chrono>
 #include "task_queue.h"
-#include "call_state_listener.h"
+#include "media_telephony_listener.h"
 #include "screen_capture.h"
 
 namespace OHOS {
@@ -37,8 +37,8 @@ public:
     void OnCallStateUpdated(bool inCall);
     bool IsInCall();
     std::vector<MediaTelephonyListener> mediaTelephonyListeners_;
-    void RegisterScreenCaptureCallBack(std::weak_ptr<ScreenCaptureObserverCallBack> &screenCaptureObserverCallBack);
-    void UnRegisterScreenCaptureCallBack(std::weak_ptr<ScreenCaptureObserverCallBack> &screenCaptureObserverCallBack);
+    void RegisterScreenCaptureCallBack(std::weak_ptr<ScreenCaptureObserverCallBack> screenCaptureObserverCallBack);
+    void UnRegisterScreenCaptureCallBack(std::weak_ptr<ScreenCaptureObserverCallBack> screenCaptureObserverCallBack);
 
 private:
 

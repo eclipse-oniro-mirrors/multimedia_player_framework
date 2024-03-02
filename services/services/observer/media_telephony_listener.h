@@ -24,17 +24,19 @@ namespace Media {
 class MediaTelephonyListener : public Telephony::TelephonyObserver {
 public:
     MediaTelephonyListener() = default;
-    ~MediaTelephonyListener() = default;
+    ~MediaTelephonyListener() override;
 
     void OnCallStateUpdated(int32_t slotId, int32_t callState, const std::u16string &phoneNumber) override;
 
-    void OnSignalInfoUpdated(int32_t slotId, const std::vector<sptr<SignalInformation>> &vec) override;
+    void OnSignalInfoUpdated(int32_t slotId,
+                             const std::vector<sptr<OHOS::Telephony::SignalInformation>> &vec) override;
 
-    void OnNetworkStateUpdated(int32_t slotId, const sptr<NetworkState> &networkState) override;
+    void OnNetworkStateUpdated(int32_t slotId, const sptr<OHOS::Telephony::NetworkState> &networkState) override;
 
-    void OnCellInfoUpdated(int32_t slotId, const std::vector<sptr<CellInformation>> &vec) override;
+    void OnCellInfoUpdated(int32_t slotId, const std::vector<sptr<OHOS::Telephony::CellInformation>> &vec) override;
 
-    void OnSimStateUpdated(int32_t slotId, CardType type, SimState state, LockReason reason) override;
+    void OnSimStateUpdated(int32_t slotId, OHOS::Telephony::CardType type, OHOS::Telephony::SimState state,
+                           OHOS::Telephony::LockReason reason) override;
 
     void OnCellularDataConnectStateUpdated(int32_t slotId, int32_t dataState, int32_t networkType) override;
 
