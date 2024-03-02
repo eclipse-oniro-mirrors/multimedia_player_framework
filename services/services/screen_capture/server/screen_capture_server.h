@@ -109,7 +109,8 @@ public:
     void OnStateChange(const CapturerState state) override;
 };
 
-class ScreenCaptureServer : public IScreenCaptureService, public NoCopyable {
+class ScreenCaptureServer : public std::enable_shared_from_this<ScreenCaptureServer>,
+        public IScreenCaptureService, public NoCopyable {
 public:
     static std::shared_ptr<IScreenCaptureService> Create();
     ScreenCaptureServer();

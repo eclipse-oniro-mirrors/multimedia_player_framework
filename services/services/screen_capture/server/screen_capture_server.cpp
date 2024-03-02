@@ -446,8 +446,7 @@ int32_t ScreenCaptureServer::StartScreenCapture()
         return MSERR_UNSUPPORT;
     } else {
         MEDIA_LOGI("ScreenCaptureServer Start RegisterScreenCaptureCallBack");
-        std::shared_ptr<ScreenCaptureServer> screenCaptureServer = shared_from_this();
-        std::weak_ptr<ScreenCaptureServer> wpScreenCaptureServer(screenCaptureServer);
+        std::weak_ptr<ScreenCaptureServer> wpScreenCaptureServer(shared_from_this());
         auto spt = std::make_shared<ScreenCaptureObserverCallBackImpl>(wpScreenCaptureServer);
         std::weak_ptr<ScreenCaptureObserverCallBackImpl> callback(spt);
         //callback 包 weakptr 使用时lock
@@ -909,13 +908,6 @@ int32_t ScreenCaptureServer::StopScreenCapture()
     std::lock_guard<std::mutex> lock(mutex_);
     MediaTrace trace("ScreenCaptureServer::StopScreenCapture");
     MEDIA_LOGI("ScreenCaptureServer::StopScreenCapture start");
-
-//    std::shared_ptr<ScreenCaptureServer> screenCaptureServer = shared_from_this();
-//    std::weak_ptr<ScreenCaptureServer> wpScreenCaptureServer(screenCaptureServer);
-//    auto spt = std::make_shared<ScreenCaptureObserverCallBackImpl>(wpScreenCaptureServer);
-//    std::weak_ptr<ScreenCaptureObserverCallBackImpl> callback(spt);
-//    InCallObserver::GetInstance().UnRegisterScreenCaptureCallBack(callback);
-//    MEDIA_LOGI("ScreenCaptureServer Stop UnRegisterScreenCaptureCallBack");
 
     int32_t stopFlagSuccess = MSERR_OK;
     if (dataType_ == DataType::CAPTURE_FILE) {
