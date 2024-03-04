@@ -609,10 +609,10 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_01_Rotation, TestSize.L
     bool canvasRotation = true;
     EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCanvasRotation(canvasRotation));
     sleep(RECORDER_TIME);
-    bool canvasRotation = false;
+    canvasRotation = false;
     EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCanvasRotation(canvasRotation));
     sleep(RECORDER_TIME);
-    bool canvasRotation = true;
+    canvasRotation = true;
     EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCanvasRotation(canvasRotation));
     sleep(RECORDER_TIME);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenRecording());
