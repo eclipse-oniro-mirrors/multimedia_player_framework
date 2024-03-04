@@ -446,6 +446,7 @@ int32_t ScreenCaptureServer::StartScreenCapture()
         return MSERR_UNSUPPORT;
     } else {
         MEDIA_LOGI("ScreenCaptureServer Start RegisterScreenCaptureCallBack");
+        InCallObserver::GetInstance().RegisterObserver();
         std::weak_ptr<ScreenCaptureServer> wpScreenCaptureServer(shared_from_this());
         auto spt = std::make_shared<ScreenCaptureObserverCallBackImpl>(wpScreenCaptureServer);
         std::weak_ptr<ScreenCaptureObserverCallBackImpl> callback(spt);
