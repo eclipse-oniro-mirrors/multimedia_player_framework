@@ -56,7 +56,7 @@ void MediaTelephonyListener::OnCallStateUpdated(int32_t slotId, int32_t callStat
 void MediaTelephonyListener::OnSignalInfoUpdated(int32_t slotId,
     const std::vector<sptr<OHOS::Telephony::SignalInformation>> &vec)
 {
-    MEDIA_LOGI("OnSignalInfoUpdated slotId = %{public}d, signalInfoList.size = %{public}zu", slotId, vec.size);
+    MEDIA_LOGI("OnSignalInfoUpdated slotId = %{public}d, signalInfoList.size = %{public}zu", slotId, vec.size());
 }
 
 void MediaTelephonyListener::OnNetworkStateUpdated(int32_t slotId,
