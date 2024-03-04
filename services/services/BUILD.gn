@@ -190,6 +190,7 @@ ohos_shared_library("media_service") {
     "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx",
     "//foundation/multimedia/player_framework/services/utils:media_service_utils",
     "//third_party/libxml2:xml2",
+    "$MEDIA_TELEPHONY/state_registry/frameworks/native/observer:state_registry:tel_state_registry_api",
   ]
 
   external_deps = [
