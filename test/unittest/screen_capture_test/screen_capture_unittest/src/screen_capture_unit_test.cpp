@@ -584,7 +584,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_01, TestSize.Level2)
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_01 after");
 }
 
-
 /**
  * @tc.name: screen_capture_save_file_01_Rotation
  * @tc.desc: do screencapture

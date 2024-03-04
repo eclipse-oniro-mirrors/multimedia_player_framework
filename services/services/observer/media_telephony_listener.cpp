@@ -41,12 +41,14 @@ void MediaTelephonyListener::OnCallStateUpdated(int32_t slotId, int32_t callStat
 {
     bool inCall = false;
     MEDIA_LOGI("OnCallStateUpdated slotId = %{public}d, callState = %{public}d", slotId, callState);
-    if (callState == TelCallState::CALL_STATUS_ACTIVE || callState == TelCallState::CALL_STATUS_DIALING ||
-        callState == TelCallState::CALL_STATUS_INCOMING || callState == TelCallState::CALL_STATUS_HOLDING ||
-        callState == TelCallState::CALL_STATUS_WAITING) {
+    if (callState == (int32_t)TelCallState::CALL_STATUS_ACTIVE ||
+        callState == (int32_t)TelCallState::CALL_STATUS_DIALING ||
+        callState == (int32_t)TelCallState::CALL_STATUS_INCOMING ||
+        callState == (int32_t)TelCallState::CALL_STATUS_HOLDING ||
+        callState == (int32_t)TelCallState::CALL_STATUS_WAITING) {
         inCall = true;
         InCallObserver::GetInstance().OnCallStateUpdated(inCall);
-    } else if (callState == TelCallState::CALL_STATUS_DISCONNECTED) {
+    } else if (callState == (int32_t)TelCallState::CALL_STATUS_DISCONNECTED) {
         InCallObserver::GetInstance().OnCallStateUpdated(inCall);
     }
 }
