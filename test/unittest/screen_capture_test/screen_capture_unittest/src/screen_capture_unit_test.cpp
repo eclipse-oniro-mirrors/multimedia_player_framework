@@ -555,6 +555,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_01, TestSize.Lev
     CloseFile();
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window after");
 }
+
 /**
  * @tc.name: screen_capture_save_file_01
  * @tc.desc: do screencapture
@@ -581,6 +582,37 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_01, TestSize.Level2)
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenRecording());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_01 after");
+}
+
+
+/**
+ * @tc.name: screen_capture_save_file_01_Rotation
+ * @tc.desc: do screencapture
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_01_Rotation, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_01_Rotation before");
+    AVScreenCaptureConfig config_;
+    RecorderInfo recorderInfo;
+    SetRecorderInfo("screen_capture_get_screen_capture_01Rot.mp4", recorderInfo);
+    SetConfigFile(config_, recorderInfo);
+    AudioCaptureInfo innerCapInfo = {
+            .audioSampleRate = 16000,
+            .audioChannels = 2,
+            .audioSource = AudioCaptureSourceType::APP_PLAYBACK
+    };
+    config_.audioInfo.innerCapInfo = innerCapInfo;
+
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenRecording());
+    bool canvasRotation = true;
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCanvasRotation(canvasRotation));
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenRecording());
+    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_01_Rotation after");
 }
 
 /**
@@ -732,7 +764,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_06, TestSize.Level2)
     EXPECT_NE(MSERR_OK, screenCapture_->StopScreenRecording());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     CloseFile();
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_05 after");
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_06 after");
 }
 
 /**

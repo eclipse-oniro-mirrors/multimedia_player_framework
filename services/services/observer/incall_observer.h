@@ -27,6 +27,12 @@
 namespace OHOS {
 namespace Media {
 
+class ScreenCaptureObserverCallBack {
+public:
+    virtual ~ScreenCaptureObserverCallBack() = default;
+    virtual void StopAndReleaseScreenCapture();
+};
+
 class InCallObserver {
 public:
     virtual ~InCallObserver();

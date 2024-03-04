@@ -446,11 +446,11 @@ int32_t ScreenCaptureServer::StartScreenCapture()
         return MSERR_UNSUPPORT;
     } else {
         MEDIA_LOGI("ScreenCaptureServer Start RegisterScreenCaptureCallBack");
-//        std::weak_ptr<ScreenCaptureServer> wpScreenCaptureServer(shared_from_this());
-//        auto spt = std::make_shared<ScreenCaptureObserverCallBackImpl>(wpScreenCaptureServer);
-//        std::weak_ptr<ScreenCaptureObserverCallBackImpl> callback(spt);
-//        //callback 包 weakptr 使用时lock
-//        InCallObserver::GetInstance().RegisterScreenCaptureCallBack(callback);
+        std::weak_ptr<ScreenCaptureServer> wpScreenCaptureServer(shared_from_this());
+        auto spt = std::make_shared<ScreenCaptureObserverCallBackImpl>(wpScreenCaptureServer);
+        std::weak_ptr<ScreenCaptureObserverCallBackImpl> callback(spt);
+        //callback 包 weakptr 使用时lock
+        InCallObserver::GetInstance().RegisterScreenCaptureCallBack(callback);
     }
 
     isAudioStart_ = true;
@@ -828,6 +828,7 @@ int32_t ScreenCaptureServer::SetScreenCanvasRotation(bool canvasRotation)
     MEDIA_LOGI("ScreenCaptureServer::SetScreenCanvasRotation start");
     MEDIA_LOGI("SetScreenCanvasRotation:%{public}d", canvasRotation);
     ScreenManager::GetInstance().SetVirtualMirrorScreenCanvasRotation(screenId_, canvasRotation);
+    MEDIA_LOGI("ScreenCaptureServer::SetScreenCanvasRotation after");
     return MSERR_OK;
 }
 
@@ -1026,12 +1027,21 @@ void AudioCapturerCallbackImpl::OnStateChange(const CapturerState state)
     }
 }
 
+ScreenCaptureObserverCallBackImpl::ScreenCaptureObserverCallBackImpl(
+    std::weak_ptr<ScreenCaptureServer> screenCaptureServer)
+{
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    screenCaptureServer_ = screenCaptureServer;
+}
+
 void ScreenCaptureObserverCallBackImpl::StopAndReleaseScreenCapture()
 {
     MEDIA_LOGI("ScreenCaptureObserverCallBackImpl: StopAndReleaseScreenCapture");
-    if (screenCaptureServer_.expired()) {
-        screenCaptureServer_.lock()->StopScreenCapture();
-        screenCaptureServer_.lock()->Release();
+    if (!screenCaptureServer_.expired()) {
+        if (screenCaptureServer_.lock()) {
+            screenCaptureServer_.lock()->StopScreenCapture();
+            screenCaptureServer_.lock()->Release();
+        }
     }
 }
 

@@ -160,12 +160,6 @@ public:
     virtual void OnVideoBufferAvailable(bool isReady) = 0;
 };
 
-class ScreenCaptureObserverCallBack {
-public:
-    ~ScreenCaptureObserverCallBack() = default;
-    virtual void StopAndReleaseScreenCapture();
-};
-
 class ScreenCapture {
 public:
     virtual ~ScreenCapture() = default;
