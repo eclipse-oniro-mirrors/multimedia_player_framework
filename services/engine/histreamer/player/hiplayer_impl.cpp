@@ -700,8 +700,8 @@ int32_t HiPlayerImpl::InitVideoWidthAndHeight()
         MEDIA_LOG_I("rotation %{public}d", rotation);
         videoWidth_ = !needSwapWH ? width : height;
         videoHeight_ = !needSwapWH ? height : width;
-        MEDIA_LOG_I("InitVideoWidthAndHeight, width = %{public}d, height = %{public}d", width, height);
-        callbackLooper_.OnInfo(INFO_TYPE_RESOLUTION_CHANGE, 0, format);
+        MEDIA_LOG_I("InitVideoWidthAndHeight, width = %{public}d, height = %{public}d",
+            videoWidth_.load(), videoHeight_.load());
         break;
     }
 #endif
@@ -1229,8 +1229,10 @@ void HiPlayerImpl::NotifyResolutionChange()
 {
 #ifdef SUPPORT_VIDEO
     Format format;
-    (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_WIDTH), videoWidth_.load());
-    (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_HEIGHT), videoHeight_.load());
+    int32_t width = videoWidth_.load();
+    int32_t height = videoHeight_.load();
+    (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_WIDTH), width);
+    (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_HEIGHT), height);
     MEDIA_LOG_I("video size changed, width = %{public}d, height = %{public}d", width, height);
     callbackLooper_.OnInfo(INFO_TYPE_RESOLUTION_CHANGE, 0, format);
 #endif
