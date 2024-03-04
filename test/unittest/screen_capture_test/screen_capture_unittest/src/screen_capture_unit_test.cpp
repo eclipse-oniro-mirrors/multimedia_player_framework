@@ -595,7 +595,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_01_Rotation, TestSize.L
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_01_Rotation before");
     AVScreenCaptureConfig config_;
     RecorderInfo recorderInfo;
-    SetRecorderInfo("screen_capture_get_screen_capture_01Rot.mp4", recorderInfo);
+    SetRecorderInfo("screen_capture_get_screen_capture_01Rotation.mp4", recorderInfo);
     SetConfigFile(config_, recorderInfo);
     AudioCaptureInfo innerCapInfo = {
             .audioSampleRate = 16000,
@@ -606,6 +606,12 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_01_Rotation, TestSize.L
 
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenRecording());
+    bool canvasRotation = true;
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCanvasRotation(canvasRotation));
+    sleep(RECORDER_TIME);
+    bool canvasRotation = false;
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCanvasRotation(canvasRotation));
+    sleep(RECORDER_TIME);
     bool canvasRotation = true;
     EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCanvasRotation(canvasRotation));
     sleep(RECORDER_TIME);
