@@ -76,7 +76,6 @@ config("media_service_config") {
     "//foundation/multimedia/player_framework/services/utils/include",
     "//foundation/multimedia/player_framework/interfaces/inner_api/native",
     "//foundation/multimedia/player_framework/services/services/common",
-    "//base/telephony/state_registry/frameworks/native/observer/include",
     "//commonlibrary/c_utils/base/include",
     "//foundation/multimedia/player_framework/services/engine/common/avcodeclist",
     "//foundation/multimedia/player_framework/services/engine/common/recorder_profiles",
@@ -184,6 +183,7 @@ ohos_shared_library("media_service") {
   configs = [
     ":media_service_config",
     "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx_public_config",
+    "//base/telephony/state_registry/frameworks/native/observer/include",
   ]
 
   deps = [

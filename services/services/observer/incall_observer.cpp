@@ -16,7 +16,6 @@
 #include "incall_observer.h"
 #include <unistd.h>
 #include <functional>
-#include "call_manager_client.h"
 #include "media_log.h"
 #include "media_errors.h"
 #include "hisysevent.h"
@@ -27,12 +26,14 @@ namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "InCallObserver"};
 }
 
+using namespace OHOS;
 using namespace OHOS::Telephony;
 namespace OHOS {
 namespace Media {
 
 InCallObserver& InCallObserver::GetInstance()
 {
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " InCallObserver Instances create", FAKE_POINTER(this));
     static InCallObserver instance;
     instance.Init();
     return instance;
@@ -62,7 +63,7 @@ void InCallObserver::RegisterScreenCaptureCallBack(std::weak_ptr<ScreenCaptureOb
 void InCallObserver::UnRegisterScreenCaptureCallBack(std::weak_ptr<ScreenCaptureObserverCallBack> callback)
 {
     if (screenCaptureObserverCallBack_ == callback) {
-        screenCaptureObserverCallBack_ = null;
+        screenCaptureObserverCallBack_.reset();
     }
 }
 
@@ -70,8 +71,10 @@ void InCallObserver::OnCallStateUpdated(bool inCall)
 {
     std::unique_lock<std::mutex> lock(mutex_);
     inCall_ = inCall;
-    if (screenCaptureObserverCallBack_.expired()) {
-        screenCaptureObserverCallBack_.lock()->StopAndReleaseScreenCapture();
+    if (!screenCaptureObserverCallBack_.expired()) {
+        if (screenCaptureObserverCallBack_.lock() != nullptr) {
+            screenCaptureObserverCallBack_.lock()->StopAndReleaseScreenCapture();
+        }
     }
 }
 
@@ -80,9 +83,11 @@ bool InCallObserver::Init()
     MEDIA_LOGI("Create InCallObserver");
     if (isTelephonyStateListenerDied_) {
         MEDIA_LOGI("InCallObserver died or first start, Register inCall observer");
+        UnRegisterObserver();
         RegisterObserver();
-        isTelephonyStateListenerDied_ = false;
         return true;
+    } else {
+        MEDIA_LOGI("InCallObserver exist : %{public}d", isTelephonyStateListenerDied_);
     }
     return true;
 }
@@ -90,6 +95,7 @@ bool InCallObserver::Init()
 void InCallObserver::RegisterObserver()
 {
     MEDIA_LOGI("Register InCall Listener");
+    std::unique_lock<std::mutex> lock(mutex_);
     for (int slotId = 0; slotId < OHOS::Telephony::SIM_SLOT_COUNT; slotId++) {
         MEDIA_LOGI("Register Listener slotId:%{public}d", slotId);
         auto telephonyObserver_ = std::make_unique<MediaTelephonyListener>().release();
@@ -98,12 +104,12 @@ void InCallObserver::RegisterObserver()
         MEDIA_LOGI("InCallObserver init telephony observer ret:%{public}d", res);
         mediaTelephonyListeners_.push_back(telephonyObserver_);
     }
-    isTelephonyStateListenerDied_ = false;
 }
 
 void InCallObserver::UnRegisterObserver()
 {
     MEDIA_LOGI("UnRegister InCall Listener");
+    std::unique_lock<std::mutex> lock(mutex_);
     for (int slotId = 0; slotId < OHOS::Telephony::SIM_SLOT_COUNT; slotId++) {
         MEDIA_LOGI("UnRegister Listener slotId:%{public}d", slotId);
         TelephonyObserverClient::GetInstance().RemoveStateObserver(slotId,
