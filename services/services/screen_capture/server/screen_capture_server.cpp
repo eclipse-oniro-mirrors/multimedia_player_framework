@@ -19,6 +19,7 @@
 #include "uri_helper.h"
 #include "media_dfx.h"
 
+using OHOS::Rosen::DMError;
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "ScreenCaptureServer"};
 }
@@ -827,8 +828,9 @@ int32_t ScreenCaptureServer::SetScreenCanvasRotation(bool canvasRotation)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     MEDIA_LOGI("ScreenCaptureServer::SetScreenCanvasRotation start");
-    MEDIA_LOGI("SetScreenCanvasRotation:%{public}d", canvasRotation);
-    ScreenManager::GetInstance().SetVirtualMirrorScreenCanvasRotation(screenId_, canvasRotation);
+    MEDIA_LOGI("SetScreenCanvasRotation canvasRotation:%{public}d", canvasRotation);
+    MEDIA_LOGI("SetScreenCanvasRotation screenId_:%{public}lu", screenId_);
+    auto ret = ScreenManager::GetInstance().SetVirtualMirrorScreenCanvasRotation(screenId_, canvasRotation);
     MEDIA_LOGI("ScreenCaptureServer::SetScreenCanvasRotation after");
     return MSERR_OK;
 }

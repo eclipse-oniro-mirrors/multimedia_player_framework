@@ -50,7 +50,7 @@ private:
     std::vector<MediaTelephonyListener *> mediaTelephonyListeners_;
     std::weak_ptr<ScreenCaptureObserverCallBack> screenCaptureObserverCallBack_;
     InCallObserver();
-    bool inCall_;
+    bool inCall_{false};
     std::mutex mutex_;
     bool Init();
     bool isTelephonyStateListenerDied_ = true;

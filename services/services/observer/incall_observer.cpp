@@ -71,7 +71,7 @@ void InCallObserver::OnCallStateUpdated(bool inCall)
     std::unique_lock<std::mutex> lock(mutex_);
     inCall_ = inCall;
     if (!screenCaptureObserverCallBack_.expired()) {
-        if (screenCaptureObserverCallBack_.lock() != nullptr) {
+        if (screenCaptureObserverCallBack_.lock()) {
             screenCaptureObserverCallBack_.lock()->StopAndReleaseScreenCapture();
         }
     }
