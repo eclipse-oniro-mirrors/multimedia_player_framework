@@ -33,7 +33,6 @@ namespace Media {
 
 InCallObserver& InCallObserver::GetInstance()
 {
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " GetInstance", FAKE_POINTER(this));
     static InCallObserver instance;
     instance.Init();
     return instance;
@@ -62,7 +61,7 @@ void InCallObserver::RegisterScreenCaptureCallBack(std::weak_ptr<ScreenCaptureOb
 
 void InCallObserver::UnRegisterScreenCaptureCallBack(std::weak_ptr<ScreenCaptureObserverCallBack> callback)
 {
-    if (screenCaptureObserverCallBack_ == callback) {
+    if (!screenCaptureObserverCallBack_.expired()) {
         screenCaptureObserverCallBack_.reset();
     }
 }

@@ -191,7 +191,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetMicrophoneEnabled(struct OH_AV
  * @param canvasRotation Rotate The screen or not
  * @return Returns AV_SCREEN_CAPTURE_ERR_OK if the execution is successful,
  * otherwise returns a specific error code, refer to {@link OH_AVSCREEN_CAPTURE_ErrCode}
- * @since 10
+ * @since 12
  * @version 1.0
  */
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetScreenCanvasRotation(struct OH_AVScreenCapture *capture,
