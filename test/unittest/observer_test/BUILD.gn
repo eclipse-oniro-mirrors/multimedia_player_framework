@@ -54,5 +54,4 @@ ohos_unittest("incallobserver_unit_test") {
     "state_registry:tel_state_registry_api",
   ]
 
-  resource_config_file = "../resources/ohos_test.xml"
 }
