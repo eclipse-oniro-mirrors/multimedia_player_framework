@@ -450,9 +450,8 @@ int32_t ScreenCaptureServer::StartScreenCapture()
         InCallObserver::GetInstance().RegisterObserver();
         std::weak_ptr<ScreenCaptureServer> wpScreenCaptureServer(shared_from_this());
         auto spt = std::make_shared<ScreenCaptureObserverCallBackImpl>(wpScreenCaptureServer);
-        std::weak_ptr<ScreenCaptureObserverCallBackImpl> callback(spt);
         //callback 包 weakptr 使用时lock
-        InCallObserver::GetInstance().RegisterScreenCaptureCallBack(callback);
+        InCallObserver::GetInstance().RegisterScreenCaptureCallBack(spt);
     }
 
     isAudioStart_ = true;

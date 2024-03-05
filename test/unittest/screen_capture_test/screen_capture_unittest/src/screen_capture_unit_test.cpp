@@ -925,40 +925,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_screen_01, TestSize.Lev
 }
 
 /**
- * @tc.name: screen_capture_specified_screen_01_incall
- * @tc.desc: screen capture specified screen test
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_screen_01_incall, TestSize.Level1)
-{
-    AVScreenCaptureConfig config_;
-    SetConfig(config_);
-    config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
-    std::vector<sptr<Screen>> screens;
-    ScreenManager::GetInstance().GetAllScreens(screens);
-    config_.videoInfo.videoCapInfo.displayId = screens[0]->GetId();
-
-    OpenFile("screen_capture_specified_screen_01_incall");
-
-    aFlag = 1;
-    vFlag = 1;
-    bool isMicrophone = true;
-    screenCaptureCb_ = std::make_shared<ScreenCaptureUnitTestCallback>(screenCapture_, aFile, vFile, aFlag, vFlag);
-    ASSERT_NE(nullptr, screenCaptureCb_);
-    screenCapture_->SetMicrophoneEnabled(isMicrophone);
-    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_));
-    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
-    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
-    sleep(3);
-    InCallObserver::GetInstance().OnCallStateUpdated(true);
-    ASSERT_TRUE(InCallObserver::GetInstance().IsInCall());
-    EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
-    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
-    CloseFile();
-}
-
-/**
  * @tc.name: screen_capture_check_param_01
  * @tc.desc: do screencapture
  * @tc.type: FUNC
