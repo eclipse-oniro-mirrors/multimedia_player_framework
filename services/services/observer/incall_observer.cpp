@@ -56,7 +56,9 @@ bool InCallObserver::IsInCall()
 
 void InCallObserver::RegisterScreenCaptureCallBack(std::weak_ptr<ScreenCaptureObserverCallBack> callback)
 {
-    screenCaptureObserverCallBack_ = callback;
+    if (callback.lock()) {
+        screenCaptureObserverCallBack_ = callback;
+    }
 }
 
 void InCallObserver::UnRegisterScreenCaptureCallBack(std::weak_ptr<ScreenCaptureObserverCallBack> callback)
@@ -70,10 +72,9 @@ void InCallObserver::OnCallStateUpdated(bool inCall)
 {
     std::unique_lock<std::mutex> lock(mutex_);
     inCall_ = inCall;
-    if (!screenCaptureObserverCallBack_.expired()) {
-        if (screenCaptureObserverCallBack_.lock()) {
-            screenCaptureObserverCallBack_.lock()->StopAndReleaseScreenCapture();
-        }
+    if (screenCaptureObserverCallBack_.lock()) {
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " Stop and Release ScreenCapture", FAKE_POINTER(this));
+        screenCaptureObserverCallBack_.lock()->StopAndReleaseScreenCapture();
     }
 }
 
