@@ -829,7 +829,7 @@ int32_t ScreenCaptureServer::SetScreenCanvasRotation(bool canvasRotation)
     std::lock_guard<std::mutex> lock(mutex_);
     MEDIA_LOGI("ScreenCaptureServer::SetScreenCanvasRotation start");
     MEDIA_LOGI("SetScreenCanvasRotation canvasRotation:%{public}d", canvasRotation);
-    MEDIA_LOGI("SetScreenCanvasRotation screenId_:%{public}lu", screenId_);
+    MEDIA_LOGI("SetScreenCanvasRotation screenId_:" PUBLIC_LOG_D64, screenId_);
     auto ret = ScreenManager::GetInstance().SetVirtualMirrorScreenCanvasRotation(screenId_, canvasRotation);
     MEDIA_LOGI("ScreenCaptureServer::SetScreenCanvasRotation after");
     return MSERR_OK;
