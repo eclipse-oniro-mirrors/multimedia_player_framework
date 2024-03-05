@@ -830,6 +830,9 @@ int32_t ScreenCaptureServer::SetScreenCanvasRotation(bool canvasRotation)
     MEDIA_LOGI("ScreenCaptureServer::SetScreenCanvasRotation start");
     MEDIA_LOGI("SetScreenCanvasRotation canvasRotation:%{public}d", canvasRotation);
     auto ret = ScreenManager::GetInstance().SetVirtualMirrorScreenCanvasRotation(screenId_, canvasRotation);
+    if (ret != DMError::DM_OK) {
+        MEDIA_LOGI("SetVirtualMirrorScreenCanvasRotation failed, ret: %{public}d", ret);
+    }
     MEDIA_LOGI("ScreenCaptureServer::SetScreenCanvasRotation after");
     return MSERR_OK;
 }

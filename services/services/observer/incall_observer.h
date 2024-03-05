@@ -34,7 +34,6 @@ public:
 
 class InCallObserver {
 public:
-    virtual ~InCallObserver();
 
     static InCallObserver& GetInstance();
     void RegisterObserver();
@@ -49,6 +48,7 @@ private:
     std::vector<MediaTelephonyListener *> mediaTelephonyListeners_;
     std::weak_ptr<ScreenCaptureObserverCallBack> screenCaptureObserverCallBack_;
     InCallObserver();
+    ~InCallObserver();
     bool inCall_{false};
     std::mutex mutex_;
     bool Init();
