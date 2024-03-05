@@ -20,11 +20,9 @@ ohos_unittest("incallobserver_unit_test") {
   module_out_path = module_output_path
   include_dirs = [
     "./",
-    "observer",
-    "./observer_unittest",
-    "./native/include",
     "$MEDIA_PLAYER_ROOT_DIR/test/unittest/common/include",
     "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/observer",
   ]
 
   cflags = [
