@@ -24,6 +24,7 @@
 #include <cstdio>
 #include "gtest/gtest.h"
 #include "screen_capture.h"
+#include "incall_observer.h"
 #include "unittest_log.h"
 #include "media_errors.h"
 #include "display_manager.h"
