@@ -26,10 +26,10 @@
 namespace OHOS {
 namespace Media {
 
-class ScreenCaptureObserverCallBack {
+class InCallObserverCallBack {
 public:
-    virtual ~ScreenCaptureObserverCallBack() = default;
-    virtual void StopAndReleaseScreenCapture();
+    virtual ~InCallObserverCallBack() = default;
+    virtual void StopAndReleaseCallBack();
 };
 
 class InCallObserver {
@@ -40,13 +40,13 @@ public:
     void UnRegisterObserver();
     void OnCallStateUpdated(bool inCall);
     bool IsInCall();
-    void RegisterScreenCaptureCallBack(std::weak_ptr<ScreenCaptureObserverCallBack> screenCaptureObserverCallBack);
-    void UnRegisterScreenCaptureCallBack(std::weak_ptr<ScreenCaptureObserverCallBack> screenCaptureObserverCallBack);
+    void RegisterInCallObserverCallBack(std::weak_ptr<InCallObserverCallBack> inCallObserverCallBack);
+    void UnRegisterInCallObserverCallBack(std::weak_ptr<InCallObserverCallBack> inCallObserverCallBack);
 
 private:
 
     std::vector<MediaTelephonyListener *> mediaTelephonyListeners_;
-    std::weak_ptr<ScreenCaptureObserverCallBack> screenCaptureObserverCallBack_;
+    std::weak_ptr<InCallObserverCallBack> inCallObserverCallBack_;
     InCallObserver();
     ~InCallObserver();
     bool inCall_{false};

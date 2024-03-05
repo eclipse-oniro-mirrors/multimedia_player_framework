@@ -54,20 +54,20 @@ bool InCallObserver::IsInCall()
     return inCall_;
 }
 
-void InCallObserver::RegisterScreenCaptureCallBack(std::weak_ptr<ScreenCaptureObserverCallBack> callback)
+void InCallObserver::RegisterInCallObserverCallBack(std::weak_ptr<InCallObserverCallBack> callback)
 {
     std::unique_lock<std::mutex> lock(mutex_);
     if (callback.lock()) {
-        screenCaptureObserverCallBack_ = callback;
+        inCallObserverCallBack_ = callback;
     } else {
-        MEDIA_LOGI("0x%{public}06" PRIXPTR "ScreenCapture CallBack is null", FAKE_POINTER(this));
+        MEDIA_LOGI("0x%{public}06" PRIXPTR "InCallObserver CallBack is null", FAKE_POINTER(this));
     }
 }
 
-void InCallObserver::UnRegisterScreenCaptureCallBack(std::weak_ptr<ScreenCaptureObserverCallBack> callback)
+void InCallObserver::UnRegisterInCallObserverCallBack(std::weak_ptr<InCallObserverCallBack> callback)
 {
-    if (!screenCaptureObserverCallBack_.expired()) {
-        screenCaptureObserverCallBack_.reset();
+    if (!inCallObserverCallBack_.expired()) {
+        inCallObserverCallBack_.reset();
     }
 }
 
@@ -75,11 +75,11 @@ void InCallObserver::OnCallStateUpdated(bool inCall)
 {
     std::unique_lock<std::mutex> lock(mutex_);
     inCall_ = inCall;
-    if (screenCaptureObserverCallBack_.lock()) {
-        MEDIA_LOGI("0x%{public}06" PRIXPTR " Stop and Release ScreenCapture", FAKE_POINTER(this));
-        screenCaptureObserverCallBack_.lock()->StopAndReleaseScreenCapture();
+    if (inCallObserverCallBack_.lock()) {
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " Stop and Release CallBack", FAKE_POINTER(this));
+        inCallObserverCallBack_.lock()->StopAndReleaseCallBack();
     } else {
-        MEDIA_LOGI("0x%{public}06" PRIXPTR "ScreenCapture CallBack is null", FAKE_POINTER(this));
+        MEDIA_LOGI("0x%{public}06" PRIXPTR "InCallObserver CallBack is null", FAKE_POINTER(this));
     }
 }
 
