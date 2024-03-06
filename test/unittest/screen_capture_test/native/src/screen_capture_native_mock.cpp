@@ -75,6 +75,12 @@ int32_t ScreenCaptureNativeMock::StartScreenCapture()
     return screenCapture_->StartScreenCapture();
 }
 
+int32_t ScreenCaptureNativeMock::StartScreenCaptureWithSurface(sptr<Surface> surface)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
+    return screenCapture_->StartScreenCaptureWithSurface(surface);
+}
+
 int32_t ScreenCaptureNativeMock::Init(AVScreenCaptureConfig config)
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
