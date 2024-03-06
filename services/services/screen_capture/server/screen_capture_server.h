@@ -110,10 +110,10 @@ public:
 };
 
 class ScreenCaptureServer;
-class ScreenCaptureObserverCallBackImpl : public InCallObserverCallBack {
+class ScreenCaptureObserverCallBack : public InCallObserverCallBack {
 public:
-    explicit ScreenCaptureObserverCallBackImpl(std::weak_ptr<ScreenCaptureServer> screenCaptureServer);
-    ~ScreenCaptureObserverCallBackImpl() = default;
+    explicit ScreenCaptureObserverCallBack(std::weak_ptr<ScreenCaptureServer> screenCaptureServer);
+    ~ScreenCaptureObserverCallBack() = default;
     bool StopAndReleaseCallBack() override;
 
 private:
@@ -169,7 +169,7 @@ private:
     void ReleaseAudioCapture();
     void ReleaseVideoCapture();
 
-    std::shared_ptr<ScreenCaptureObserverCallBackImpl> screenCaptureObserverCallBackImpl_ = nullptr;
+    std::shared_ptr<ScreenCaptureObserverCallBack> screenCaptureObserverCb_ = nullptr;
     std::shared_ptr<ScreenCaptureCallBack> screenCaptureCb_ = nullptr;
     std::mutex mutex_;
     std::mutex audioMutex_;

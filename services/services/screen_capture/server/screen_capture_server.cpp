@@ -44,7 +44,7 @@ ScreenCaptureServer::~ScreenCaptureServer()
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 
     std::lock_guard<std::mutex> lock(mutex_);
-
+    screenCaptureObserverCb_ = nullptr;
     ReleaseAudioCapture();
     ReleaseVideoCapture();
 }
@@ -449,9 +449,9 @@ int32_t ScreenCaptureServer::StartScreenCapture()
         MEDIA_LOGI("ScreenCaptureServer Start RegisterScreenCaptureCallBack");
         InCallObserver::GetInstance().RegisterObserver();
         std::weak_ptr<ScreenCaptureServer> wpScreenCaptureServer(shared_from_this());
-        screenCaptureObserverCallBackImpl_ = std::make_shared<ScreenCaptureObserverCallBackImpl>(wpScreenCaptureServer);
+        screenCaptureObserverCb_ = std::make_shared<ScreenCaptureObserverCallBack>(wpScreenCaptureServer);
         //callback 包 weakptr 使用时lock
-        InCallObserver::GetInstance().RegisterInCallObserverCallBack(screenCaptureObserverCallBackImpl_);
+        InCallObserver::GetInstance().RegisterInCallObserverCallBack(screenCaptureObserverCb_);
     }
 
     isAudioStart_ = true;
@@ -1007,6 +1007,7 @@ void ScreenCaptureServer::Release()
     MEDIA_LOGI("ScreenCaptureServer::Release start");
 
     screenCaptureCb_ = nullptr;
+    screenCaptureObserverCb_ = nullptr;
     ReleaseAudioCapture();
     ReleaseVideoCapture();
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances Release", FAKE_POINTER(this));
@@ -1031,16 +1032,16 @@ void AudioCapturerCallbackImpl::OnStateChange(const CapturerState state)
     }
 }
 
-ScreenCaptureObserverCallBackImpl::ScreenCaptureObserverCallBackImpl(
+ScreenCaptureObserverCallBack::ScreenCaptureObserverCallBack(
     std::weak_ptr<ScreenCaptureServer> screenCaptureServer)
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
     screenCaptureServer_ = screenCaptureServer;
 }
 
-bool ScreenCaptureObserverCallBackImpl::StopAndReleaseCallBack()
+bool ScreenCaptureObserverCallBack::StopAndReleaseCallBack()
 {
-    MEDIA_LOGI("ScreenCaptureObserverCallBackImpl: StopAndReleaseCallBack");
+    MEDIA_LOGI("ScreenCaptureObserverCallBack: StopAndReleaseCallBack");
     if (!screenCaptureServer_.expired()) {
         if (screenCaptureServer_.lock()) {
             screenCaptureServer_.lock()->StopScreenCapture();
