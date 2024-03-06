@@ -169,6 +169,7 @@ private:
     void ReleaseAudioCapture();
     void ReleaseVideoCapture();
 
+    std::shared_ptr<ScreenCaptureObserverCallBackImpl> screenCaptureObserverCallBackImpl_ = nullptr;
     std::shared_ptr<ScreenCaptureCallBack> screenCaptureCb_ = nullptr;
     std::mutex mutex_;
     std::mutex audioMutex_;

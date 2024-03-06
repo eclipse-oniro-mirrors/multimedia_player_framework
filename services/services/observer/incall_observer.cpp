@@ -116,7 +116,7 @@ bool InCallObserver::RegisterObserver()
             mediaTelephonyListeners_.push_back(telephonyObserver_);
         }
     }
-    return false;
+    return ret;
 }
 
 void InCallObserver::UnRegisterObserver()

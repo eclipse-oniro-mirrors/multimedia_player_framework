@@ -449,9 +449,9 @@ int32_t ScreenCaptureServer::StartScreenCapture()
         MEDIA_LOGI("ScreenCaptureServer Start RegisterScreenCaptureCallBack");
         InCallObserver::GetInstance().RegisterObserver();
         std::weak_ptr<ScreenCaptureServer> wpScreenCaptureServer(shared_from_this());
-        auto spt = std::make_shared<ScreenCaptureObserverCallBackImpl>(wpScreenCaptureServer);
+        screenCaptureObserverCallBackImpl_ = std::make_shared<ScreenCaptureObserverCallBackImpl>(wpScreenCaptureServer);
         //callback 包 weakptr 使用时lock
-        InCallObserver::GetInstance().RegisterInCallObserverCallBack(spt);
+        InCallObserver::GetInstance().RegisterInCallObserverCallBack(screenCaptureObserverCallBackImpl_);
     }
 
     isAudioStart_ = true;
@@ -1009,7 +1009,7 @@ void ScreenCaptureServer::Release()
     screenCaptureCb_ = nullptr;
     ReleaseAudioCapture();
     ReleaseVideoCapture();
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances Release", FAKE_POINTER(this));
 }
 
 void AudioCapturerCallbackImpl::OnInterrupt(const InterruptEvent &interruptEvent)
