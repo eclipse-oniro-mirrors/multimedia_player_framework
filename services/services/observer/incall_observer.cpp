@@ -111,7 +111,7 @@ bool InCallObserver::RegisterObserver()
         auto res = TelephonyObserverClient::GetInstance().AddStateObserver(telephonyObserver_, slotId,
             TelephonyObserverBroker::OBSERVER_MASK_CALL_STATE, true);
         MEDIA_LOGI("InCallObserver Register  Listener observer ret:%{public}d", res);
-        if (res == OHOS::Telephony::TELEPHONEY_SUCCEESS) {
+        if (res == OHOS::Telephony::TELEPHONY_SUCCEESS) {
             ret = true;
             mediaTelephonyListeners_.push_back(telephonyObserver_);
         }

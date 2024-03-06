@@ -30,8 +30,8 @@ namespace InCallObserverFuncUT {
 
 class InCallObserverTestCallBack : public InCallObserverCallBack {
 public:
-    InCallObserverTestCallBack(){}
-    ~InCallObserverTestCallBack() = default;
+    InCallObserverTestCallBack() {}
+    ~InCallObserverTestCallBack() {}
     bool StopAndReleaseCallBack()
     {
         return true;
@@ -75,7 +75,6 @@ HWTEST_F(InCallObserverInnerUnitTest, RegisterObserver_01, TestSize.Level1)
 {
     ASSERT_TRUE(InCallObserver::GetInstance().RegisterObserver());
     InCallObserver::GetInstance().UnRegisterObserver();
-
 }
 
 /**
