@@ -123,6 +123,7 @@ public:
     int32_t InitVideoEncInfo(VideoEncInfo videoEncInfo) override;
     int32_t InitVideoCap(VideoCaptureInfo videoInfo) override;
     int32_t StartScreenCapture() override;
+    int32_t StartScreenCaptureWithSurface(sptr<Surface> surface) override;
     int32_t StopScreenCapture() override;
     int32_t SetScreenCaptureCallback(const std::shared_ptr<ScreenCaptureCallBack> &callback) override;
     int32_t AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audioBuffer, AudioCaptureSourceType type) override;
@@ -144,7 +145,9 @@ private:
     int32_t StartAudioCapture();
     int32_t StartAudioInnerCapture();
     int32_t StartVideoCapture();
+    int32_t StartVideoCaptureWithSurface(sptr<Surface> surface);
     int32_t StartHomeVideoCapture();
+    int32_t StartHomeVideoCaptureWithSurface(sptr<Surface> surface);
     int32_t StartHomeVideoCaptureFile();
     int32_t CreateVirtualScreen(const std::string &name, sptr<OHOS::Surface> consumer);
     VirtualScreenOption InitVirtualScreenOption(const std::string &name, sptr<OHOS::Surface> consumer);

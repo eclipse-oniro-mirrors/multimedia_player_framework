@@ -48,6 +48,7 @@ public:
     virtual int32_t SetScreenCaptureCallback(const std::shared_ptr<ScreenCaptureCallBackMock>& callback) = 0;
     virtual int32_t Init(AVScreenCaptureConfig config) = 0;
     virtual int32_t StartScreenCapture() = 0;
+    virtual int32_t StartScreenCaptureWithSurface(sptr<OHOS::Surface> surface) = 0;
     virtual int32_t StopScreenCapture() = 0;
     virtual int32_t StartScreenRecording() = 0;
     virtual int32_t StopScreenRecording() = 0;

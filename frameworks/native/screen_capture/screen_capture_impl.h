@@ -31,6 +31,7 @@ public:
     int32_t Init(AVScreenCaptureConfig config) override;
     int32_t SetMicrophoneEnabled(bool isMicrophone) override;
     int32_t StartScreenCapture() override;
+    int32_t StartScreenCaptureWithSurface(sptr<Surface> surface) override;
     int32_t StopScreenCapture() override;
     int32_t StartScreenRecording() override;
     int32_t StopScreenRecording() override;

@@ -41,6 +41,7 @@ public:
     virtual int32_t InitVideoEncInfo(VideoEncInfo videoEncInfo) = 0;
     virtual int32_t InitVideoCap(VideoCaptureInfo videoInfo) = 0;
     virtual int32_t StartScreenCapture() = 0;
+    virtual int32_t StartScreenCaptureWithSurface(sptr<Surface> surface) = 0;
     virtual int32_t StopScreenCapture() = 0;
     virtual int32_t SetMicrophoneEnabled(bool isMicrophone) = 0;
     virtual int32_t SetListenerObject(const sptr<IRemoteObject> &object) = 0;
@@ -71,6 +72,7 @@ public:
         RELEASE_VIDEO_BUF,
         SET_MIC_ENABLE,
         START_SCREEN_CAPTURE,
+        START_SCREEN_CAPTURE_WITH_SURFACE,
         STOP_SCREEN_CAPTURE,
     };
 

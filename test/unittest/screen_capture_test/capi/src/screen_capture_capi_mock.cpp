@@ -150,6 +150,12 @@ int32_t ScreenCaptureCapiMock::StartScreenCapture()
     return OH_AVScreenCapture_StartScreenCapture(screenCapture_);
 }
 
+int32_t ScreenCaptureCapiMock::StartScreenCaptureWithSurface()
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
+    return OH_AVScreenCapture_StartScreenCaptureWithSurface(screenCapture_, window_);
+}
+
 int32_t ScreenCaptureCapiMock::Init(AVScreenCaptureConfig config)
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
