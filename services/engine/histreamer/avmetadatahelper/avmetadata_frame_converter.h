@@ -16,6 +16,8 @@
 #ifndef AVMETADATA_FRAME_CONVERTER_H
 #define AVMETADATA_FRAME_CONVERTER_H
 
+#include "pixel_map.h"
+
 namespace OHOS {
 namespace Media {
 class AVMetadataFrameConverter {
