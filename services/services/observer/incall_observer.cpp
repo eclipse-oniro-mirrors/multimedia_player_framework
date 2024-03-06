@@ -21,6 +21,7 @@
 #include "hisysevent.h"
 #include "telephony_observer_client.h"
 #include "telephony_types.h"
+#include "telephony_errors.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "InCallObserver"};
@@ -54,14 +55,16 @@ bool InCallObserver::IsInCall()
     return inCall_;
 }
 
-void InCallObserver::RegisterInCallObserverCallBack(std::weak_ptr<InCallObserverCallBack> callback)
+bool InCallObserver::RegisterInCallObserverCallBack(std::weak_ptr<InCallObserverCallBack> callback)
 {
     std::unique_lock<std::mutex> lock(mutex_);
     if (callback.lock()) {
         inCallObserverCallBack_ = callback;
+        return true;
     } else {
         MEDIA_LOGI("0x%{public}06" PRIXPTR "InCallObserver CallBack is null", FAKE_POINTER(this));
     }
+    return false;
 }
 
 void InCallObserver::UnRegisterInCallObserverCallBack(std::weak_ptr<InCallObserverCallBack> callback)
@@ -97,18 +100,23 @@ bool InCallObserver::Init()
     return true;
 }
 
-void InCallObserver::RegisterObserver()
+bool InCallObserver::RegisterObserver()
 {
     MEDIA_LOGI("InCallObserver Register InCall Listener");
     std::unique_lock<std::mutex> lock(mutex_);
+    bool ret = false;
     for (int slotId = 0; slotId < SIM_SLOT_COUNT; slotId++) {
         MEDIA_LOGI("InCallObserver Register Listener slotId:%{public}d", slotId);
         auto telephonyObserver_ = std::make_unique<MediaTelephonyListener>().release();
         auto res = TelephonyObserverClient::GetInstance().AddStateObserver(telephonyObserver_, slotId,
             TelephonyObserverBroker::OBSERVER_MASK_CALL_STATE, true);
         MEDIA_LOGI("InCallObserver Register  Listener observer ret:%{public}d", res);
-        mediaTelephonyListeners_.push_back(telephonyObserver_);
+        if (res == OHOS::Telephony::TELEPHONEY_SUCCEESS) {
+            ret = true;
+            mediaTelephonyListeners_.push_back(telephonyObserver_);
+        }
     }
+    return fasle;
 }
 
 void InCallObserver::UnRegisterObserver()

@@ -114,7 +114,7 @@ class ScreenCaptureObserverCallBackImpl : public InCallObserverCallBack {
 public:
     explicit ScreenCaptureObserverCallBackImpl(std::weak_ptr<ScreenCaptureServer> screenCaptureServer);
     ~ScreenCaptureObserverCallBackImpl() = default;
-    void StopAndReleaseCallBack() override;
+    bool StopAndReleaseCallBack() override;
 
 private:
     std::weak_ptr<ScreenCaptureServer> screenCaptureServer_;

@@ -1038,7 +1038,7 @@ ScreenCaptureObserverCallBackImpl::ScreenCaptureObserverCallBackImpl(
     screenCaptureServer_ = screenCaptureServer;
 }
 
-void ScreenCaptureObserverCallBackImpl::StopAndReleaseCallBack()
+bool ScreenCaptureObserverCallBackImpl::StopAndReleaseCallBack()
 {
     MEDIA_LOGI("ScreenCaptureObserverCallBackImpl: StopAndReleaseCallBack");
     if (!screenCaptureServer_.expired()) {
@@ -1047,6 +1047,7 @@ void ScreenCaptureObserverCallBackImpl::StopAndReleaseCallBack()
             screenCaptureServer_.lock()->Release();
         }
     }
+    return true;
 }
 
 void ScreenCapBufferConsumerListener::OnBufferAvailable()

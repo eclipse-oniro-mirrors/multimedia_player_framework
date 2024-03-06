@@ -29,18 +29,18 @@ namespace Media {
 class InCallObserverCallBack {
 public:
     virtual ~InCallObserverCallBack() = default;
-    virtual void StopAndReleaseCallBack();
+    virtual bool StopAndReleaseCallBack();
 };
 
 class InCallObserver {
 public:
 
     static InCallObserver& GetInstance();
-    void RegisterObserver();
+    bool RegisterObserver();
     void UnRegisterObserver();
     void OnCallStateUpdated(bool inCall);
     bool IsInCall();
-    void RegisterInCallObserverCallBack(std::weak_ptr<InCallObserverCallBack> inCallObserverCallBack);
+    bool RegisterInCallObserverCallBack(std::weak_ptr<InCallObserverCallBack> inCallObserverCallBack);
     void UnRegisterInCallObserverCallBack(std::weak_ptr<InCallObserverCallBack> inCallObserverCallBack);
 
 private:

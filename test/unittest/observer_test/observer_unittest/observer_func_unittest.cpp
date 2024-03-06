@@ -27,6 +27,14 @@ using namespace OHOS::Media;
 namespace OHOS {
 namespace Media {
 namespace InCallObserverFuncUT {
+
+class InCallObserverTestCallBack : public InCallObserverCallBack {
+public:
+    InCallObserverTestCallBack(){}
+    ~InCallObserverTestCallBack() = default;
+    bool StopAndReleaseCallBack(){}
+};
+
 class InCallObserverInnerUnitTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -36,7 +44,6 @@ public:
     void SetUp(void);
 
     void TearDown(void);
-
 };
 
 void InCallObserverInnerUnitTest::SetUpTestCase(void) {}
@@ -63,7 +70,9 @@ void InCallObserverInnerUnitTest::TearDown(void)
  */
 HWTEST_F(InCallObserverInnerUnitTest, RegisterObserver_01, TestSize.Level1)
 {
-    InCallObserver::GetInstance().RegisterObserver();
+    ASSERT_TRUE(InCallObserver::GetInstance().RegisterObserver());
+    InCallObserver::GetInstance().UnRegisterObserver();
+
 }
 
 /**
@@ -71,11 +80,24 @@ HWTEST_F(InCallObserverInnerUnitTest, RegisterObserver_01, TestSize.Level1)
  * @tc.desc: OnCallStateUpdated_01
  * @tc.type: FUNC
  */
-    HWTEST_F(InCallObserverInnerUnitTest, OnCallStateUpdated_01, TestSize.Level1)
+HWTEST_F(InCallObserverInnerUnitTest, OnCallStateUpdated_01, TestSize.Level1)
 {
     ASSERT_FALSE(InCallObserver::GetInstance().IsInCall());
     InCallObserver::GetInstance().OnCallStateUpdated(true);
     ASSERT_TRUE(InCallObserver::GetInstance().IsInCall());
+}
+
+/**
+ * @tc.name: RegisterInCallObserverCallBack_01
+ * @tc.desc: RegisterInCallObserverCallBack_01
+ * @tc.type: FUNC
+ */
+HWTEST_F(InCallObserverInnerUnitTest, RegisterInCallObserverCallBack_01, TestSize.Level1)
+{
+    InCallObserverCallBack inCallObserverCallBack = std::make_shared<InCallObserverTestCallBack>();
+    ASSERT_TRUE(InCallObserver::GetInstance().RegisterInCallObserverCallBack(inCallObserverCallBack));
+    InCallObserver::GetInstance().UnRegisterInCallObserverCallBack(inCallObserverCallBack);
+    ASSERT_TRUE(inCallObserverCallBack->StopAndReleaseCallBack);
 }
 } // namespace MetaFuncUT
 } // namespace Media
