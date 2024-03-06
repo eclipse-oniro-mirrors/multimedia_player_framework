@@ -27,7 +27,7 @@ public:
     int32_t SetScreenCaptureCallback(const std::shared_ptr<ScreenCaptureCallBackMock>& cb) override;
     int32_t Init(AVScreenCaptureConfig config) override;
     int32_t StartScreenCapture() override;
-    int32_t StartScreenCaptureWithSurface() override;
+    int32_t StartScreenCaptureWithSurface(OHNativeWindow* window) override;
     int32_t StopScreenCapture() override;
     int32_t StartScreenRecording() override;
     int32_t StopScreenRecording() override;
