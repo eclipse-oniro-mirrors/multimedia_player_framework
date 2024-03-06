@@ -59,7 +59,7 @@ std::unique_ptr<PixelMap> AVMetadataFrameConverter::RGBxToRGB565(const std::uniq
             uint16_t b = *(++srcPixel) >> NUM_3;
 
             *dstPixel = static_cast<uint16_t>(r << NUM_11 | g << NUM_5 | b);
-            srcPixel += 2;
+            srcPixel += NUM_2;
             dstPixel++;
         }
     }
