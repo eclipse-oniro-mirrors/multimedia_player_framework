@@ -50,8 +50,7 @@ ohos_unittest("incallobserver_unit_test") {
     "graphic_surface:surface",
     "hilog:libhilog",
     "player_framework:media_client",
-    "window_manager:libdm",
     "state_registry:tel_state_registry_api",
+    "window_manager:libdm",
   ]
-
 }
