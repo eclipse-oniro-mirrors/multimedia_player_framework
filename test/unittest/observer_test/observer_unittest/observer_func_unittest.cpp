@@ -136,6 +136,6 @@ HWTEST_F(InCallObserverInnerUnitTest, InCallCallBackReturn_02, TestSize.Level1)
     ASSERT_TRUE(InCallObserver::GetInstance().IsInCall());
     InCallObserver::GetInstance().UnRegisterObserver();
 }
-} // namespace MetaFuncUT
+} // namespace InCallObserverFuncUT
 } // namespace Media
 } // namespace OHOS
