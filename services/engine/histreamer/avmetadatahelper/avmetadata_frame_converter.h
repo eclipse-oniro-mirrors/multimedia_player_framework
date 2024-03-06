@@ -13,6 +13,9 @@
  * limitations under the License.
  */
 
+#ifndef AVMETADATA_FRAME_CONVERTER_H
+#define AVMETADATA_FRAME_CONVERTER_H
+
 namespace OHOS {
 namespace Media {
 class AVMetadataFrameConverter {
@@ -25,3 +28,4 @@ public:
 };
 } // namespace Media
 } // namespace OHOS
+#endif // AVMETADATA_FRAME_CONVERTER_H
