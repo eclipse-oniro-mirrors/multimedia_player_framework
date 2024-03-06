@@ -64,7 +64,7 @@ std::unique_ptr<PixelMap> AVMetadataFrameConverter::RGBxToRGB565(const std::uniq
         }
     }
     return dstPixelMap;
-} 
+}
 
 std::unique_ptr<PixelMap> AVMetadataFrameConverter::RGBxToRGB888(const std::unique_ptr<PixelMap> &srcPixelMap)
 {
