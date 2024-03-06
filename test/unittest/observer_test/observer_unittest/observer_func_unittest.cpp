@@ -32,7 +32,10 @@ class InCallObserverTestCallBack : public InCallObserverCallBack {
 public:
     InCallObserverTestCallBack(){}
     ~InCallObserverTestCallBack() = default;
-    bool StopAndReleaseCallBack(){}
+    bool StopAndReleaseCallBack()
+    {
+        return true;
+    }
 };
 
 class InCallObserverInnerUnitTest : public testing::Test {
@@ -97,7 +100,7 @@ HWTEST_F(InCallObserverInnerUnitTest, RegisterInCallObserverCallBack_01, TestSiz
     InCallObserverCallBack inCallObserverCallBack = std::make_shared<InCallObserverTestCallBack>();
     ASSERT_TRUE(InCallObserver::GetInstance().RegisterInCallObserverCallBack(inCallObserverCallBack));
     InCallObserver::GetInstance().UnRegisterInCallObserverCallBack(inCallObserverCallBack);
-    ASSERT_TRUE(inCallObserverCallBack->StopAndReleaseCallBack);
+    ASSERT_TRUE(inCallObserverCallBack->StopAndReleaseCallBack());
 }
 } // namespace MetaFuncUT
 } // namespace Media
