@@ -28,6 +28,7 @@ ohos_fuzztest("ScreenCaptureFileFormatFileFuzzTest") {
     "$MEDIA_ROOT_DIR/services/utils/include",
     "$MEDIA_ROOT_DIR/test/fuzztest/common/",
     "$MEDIA_PLAYER_GRAPHIC/utils/sync_fence/export",
+    "$MEDIA_PLAYER_GRAPHIC_SURFACE/surface/include",
   ]
   cflags = [
     "-std=c++17",
