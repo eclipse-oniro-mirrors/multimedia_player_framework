@@ -97,7 +97,7 @@ HWTEST_F(InCallObserverInnerUnitTest, OnCallStateUpdated_01, TestSize.Level1)
  */
 HWTEST_F(InCallObserverInnerUnitTest, RegisterInCallObserverCallBack_01, TestSize.Level1)
 {
-    InCallObserverCallBack inCallObserverCallBack = std::make_shared<InCallObserverTestCallBack>();
+    auto inCallObserverCallBack = std::make_shared<InCallObserverTestCallBack>();
     ASSERT_TRUE(InCallObserver::GetInstance().RegisterInCallObserverCallBack(inCallObserverCallBack));
     InCallObserver::GetInstance().UnRegisterInCallObserverCallBack(inCallObserverCallBack);
     ASSERT_TRUE(inCallObserverCallBack->StopAndReleaseCallBack());
