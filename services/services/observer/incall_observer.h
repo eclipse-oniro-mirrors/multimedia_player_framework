@@ -38,7 +38,7 @@ public:
     static InCallObserver& GetInstance();
     bool RegisterObserver();
     void UnRegisterObserver();
-    void OnCallStateUpdated(bool inCall);
+    bool OnCallStateUpdated(bool inCall);
     bool IsInCall();
     bool RegisterInCallObserverCallBack(std::weak_ptr<InCallObserverCallBack> inCallObserverCallBack);
     void UnRegisterInCallObserverCallBack(std::weak_ptr<InCallObserverCallBack> inCallObserverCallBack);

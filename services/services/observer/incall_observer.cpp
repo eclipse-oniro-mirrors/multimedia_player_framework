@@ -74,16 +74,17 @@ void InCallObserver::UnRegisterInCallObserverCallBack(std::weak_ptr<InCallObserv
     }
 }
 
-void InCallObserver::OnCallStateUpdated(bool inCall)
+bool InCallObserver::OnCallStateUpdated(bool inCall)
 {
     std::unique_lock<std::mutex> lock(mutex_);
     inCall_ = inCall;
     if (inCallObserverCallBack_.lock()) {
         MEDIA_LOGI("0x%{public}06" PRIXPTR " Stop and Release CallBack", FAKE_POINTER(this));
-        inCallObserverCallBack_.lock()->StopAndReleaseCallBack();
+        return inCallObserverCallBack_.lock()->StopAndReleaseCallBack();
     } else {
         MEDIA_LOGI("0x%{public}06" PRIXPTR "InCallObserver CallBack is null", FAKE_POINTER(this));
     }
+    return false;
 }
 
 bool InCallObserver::Init()
