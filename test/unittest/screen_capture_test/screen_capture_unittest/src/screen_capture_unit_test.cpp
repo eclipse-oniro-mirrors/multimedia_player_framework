@@ -322,7 +322,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_with_surface_01, TestSize.Level2)
     ASSERT_TRUE(outputFd >= 0);
     EXPECT_EQ(MSERR_OK, recorder->SetOutputFile(outputFd));
     EXPECT_EQ(MSERR_OK, recorder->Prepare());
-    sptr<OHOS::Surface> consumer = recorder->GetSurface(videoSourceId); 
+    sptr<OHOS::Surface> consumer = recorder->GetSurface(videoSourceId);
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCaptureWithSurface(consumer));
     EXPECT_EQ(MSERR_OK, recorder->Start());
