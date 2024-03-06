@@ -20,11 +20,13 @@
 #include <stdio.h>
 #include "native_avscreen_capture_errors.h"
 #include "native_avscreen_capture_base.h"
-#include "native_window.h"
+#include "external_window.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+typedef struct NativeWindow OHNativeWindow;
 
 /**
  * @brief Create a screen capture
