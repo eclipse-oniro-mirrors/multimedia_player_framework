@@ -65,7 +65,8 @@ void SetConfig(OH_AVScreenCaptureConfig &config)
     };
 }
 
-bool ScreenCaptureSetScreenCanvasRotationNdkFuzzer::FuzzScreenCaptureSetScreenCanvasRotationNdk(uint8_t *data, size_t size)
+bool ScreenCaptureSetScreenCanvasRotationNdkFuzzer::FuzzScreenCaptureSetScreenCanvasRotationNdk(
+    uint8_t *data, size_t size)
 {
     if (data == nullptr || size < sizeof(bool)) {
         return false;
