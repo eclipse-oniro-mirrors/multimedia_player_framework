@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Huawei Device Co., Ltd.
+ * Copyright (C) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -32,7 +32,7 @@ class InCallObserverTestCallBack : public InCallObserverCallBack {
 public:
     InCallObserverTestCallBack() {}
     ~InCallObserverTestCallBack() {}
-    bool StopAndReleaseCallBack()
+    bool StopAndRelease()
     {
         return true;
     }
@@ -101,7 +101,7 @@ HWTEST_F(InCallObserverInnerUnitTest, RegisterInCallObserverCallBack_01, TestSiz
     auto inCallObserverCallBack = std::make_shared<InCallObserverTestCallBack>();
     ASSERT_TRUE(InCallObserver::GetInstance().RegisterInCallObserverCallBack(inCallObserverCallBack));
     InCallObserver::GetInstance().UnRegisterInCallObserverCallBack(inCallObserverCallBack);
-    ASSERT_TRUE(inCallObserverCallBack->StopAndReleaseCallBack());
+    ASSERT_TRUE(inCallObserverCallBack->StopAndRelease());
 }
 
 /**

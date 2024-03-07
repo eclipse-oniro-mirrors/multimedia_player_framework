@@ -443,14 +443,13 @@ int32_t ScreenCaptureServer::StartScreenCapture()
     MEDIA_LOGI("ScreenCaptureServer::StartScreenCapture start");
     if (InCallObserver::GetInstance().IsInCall()) {
         MEDIA_LOGI("ScreenCaptureServer Start InCall Abort");
-        //Oninfo 回调 返回MSERR_OK
+        // 待增加 Oninfo回调
         return MSERR_UNSUPPORT;
     } else {
         MEDIA_LOGI("ScreenCaptureServer Start RegisterScreenCaptureCallBack");
         InCallObserver::GetInstance().RegisterObserver();
         std::weak_ptr<ScreenCaptureServer> wpScreenCaptureServer(shared_from_this());
         screenCaptureObserverCb_ = std::make_shared<ScreenCaptureObserverCallBack>(wpScreenCaptureServer);
-        //callback 包 weakptr 使用时lock
         InCallObserver::GetInstance().RegisterInCallObserverCallBack(screenCaptureObserverCb_);
     }
 
@@ -826,13 +825,13 @@ int32_t ScreenCaptureServer::SetMicrophoneEnabled(bool isMicrophone)
 int32_t ScreenCaptureServer::SetScreenCanvasRotation(bool canvasRotation)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    MEDIA_LOGI("ScreenCaptureServer::SetScreenCanvasRotation start");
-    MEDIA_LOGI("SetScreenCanvasRotation canvasRotation:%{public}d", canvasRotation);
+    MEDIA_LOGI("ScreenCaptureServer::SetScreenCanvasRotation, canvasRotation:%{public}d", canvasRotation);
     auto ret = ScreenManager::GetInstance().SetVirtualMirrorScreenCanvasRotation(screenId_, canvasRotation);
     if (ret != DMError::DM_OK) {
         MEDIA_LOGI("SetVirtualMirrorScreenCanvasRotation failed, ret: %{public}d", ret);
     }
-    MEDIA_LOGI("ScreenCaptureServer::SetScreenCanvasRotation after");
+    CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK, ret,
+                             "SetVirtualMirrorScreenCanvasRotation failed, ret: %{public}d", ret);
     return MSERR_OK;
 }
 
@@ -1039,9 +1038,9 @@ ScreenCaptureObserverCallBack::ScreenCaptureObserverCallBack(
     screenCaptureServer_ = screenCaptureServer;
 }
 
-bool ScreenCaptureObserverCallBack::StopAndReleaseCallBack()
+bool ScreenCaptureObserverCallBack::StopAndRelease()
 {
-    MEDIA_LOGI("ScreenCaptureObserverCallBack: StopAndReleaseCallBack");
+    MEDIA_LOGI("ScreenCaptureObserverCallBack: StopAndRelease");
     if (!screenCaptureServer_.expired()) {
         if (screenCaptureServer_.lock()) {
             screenCaptureServer_.lock()->StopScreenCapture();

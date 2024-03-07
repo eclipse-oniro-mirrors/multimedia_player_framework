@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Huawei Technologies Co., Ltd. 2023-2023. All rights reserved.
+ * Copyright (c) Huawei Technologies Co., Ltd. 2024-2024. All rights reserved.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -80,7 +80,7 @@ bool InCallObserver::OnCallStateUpdated(bool inCall)
     inCall_ = inCall;
     if (inCallObserverCallBack_.lock()) {
         MEDIA_LOGI("0x%{public}06" PRIXPTR " Stop and Release CallBack", FAKE_POINTER(this));
-        return inCallObserverCallBack_.lock()->StopAndReleaseCallBack();
+        return inCallObserverCallBack_.lock()->StopAndRelease();
     } else {
         MEDIA_LOGI("0x%{public}06" PRIXPTR "InCallObserver CallBack is null", FAKE_POINTER(this));
     }

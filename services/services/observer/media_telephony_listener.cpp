@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Huawei Technologies Co., Ltd. 2023-2023. All rights reserved.
+ * Copyright (c) Huawei Technologies Co., Ltd. 2024-2024. All rights reserved.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -41,6 +41,7 @@ void MediaTelephonyListener::OnCallStateUpdated(int32_t slotId, int32_t callStat
 {
     bool inCall = false;
     MEDIA_LOGI("OnCallStateUpdated slotId = %{public}d, callState = %{public}d", slotId, callState);
+    // skip no sim card CALL_STATUS_UNKNOWN
     if (callState == (int32_t)TelCallState::CALL_STATUS_ACTIVE ||
         callState == (int32_t)TelCallState::CALL_STATUS_DIALING ||
         callState == (int32_t)TelCallState::CALL_STATUS_INCOMING ||
