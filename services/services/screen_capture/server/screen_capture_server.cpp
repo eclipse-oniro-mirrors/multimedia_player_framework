@@ -830,7 +830,7 @@ int32_t ScreenCaptureServer::SetScreenCanvasRotation(bool canvasRotation)
     if (ret != DMError::DM_OK) {
         MEDIA_LOGI("SetVirtualMirrorScreenCanvasRotation failed, ret: %{public}d", ret);
     }
-    CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK, ret,
+    CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK, MSERR_UNSUPPORT,
                              "SetVirtualMirrorScreenCanvasRotation failed, ret: %{public}d", ret);
     return MSERR_OK;
 }
