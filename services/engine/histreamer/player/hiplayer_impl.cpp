@@ -929,6 +929,7 @@ void HiPlayerImpl::OnEvent(const Event &event)
             break;
         }
         case EventType::EVENT_AUDIO_INTERRUPT: {
+            Pause();
             NotifyAudioInterrupt(event);
             break;
         }
