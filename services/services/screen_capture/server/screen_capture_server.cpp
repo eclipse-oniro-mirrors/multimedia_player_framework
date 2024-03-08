@@ -508,6 +508,11 @@ int32_t ScreenCaptureServer::StartScreenCaptureWithSurface(sptr<Surface> surface
             readInnerAudioLoop_ = std::make_unique<std::thread>(&ScreenCaptureServer::StartAudioInnerCapture, this);
         }
     }
+
+    if (surface == nullptr) {
+        MEDIA_LOGE("surface is nullptr");
+        return MSERR_INVALID_OPERATION;
+    }
     int32_t ret = StartVideoCaptureWithSurface(surface);
     if (ret == MSERR_OK) {
         BehaviorEventWriteForScreenCapture("start", "AVScreenCapture", appinfo_.appUid, appinfo_.appPid);
@@ -542,7 +547,8 @@ int32_t ScreenCaptureServer::StartVideoCaptureWithSurface(sptr<Surface> surface)
     if (captureMode_ == CAPTURE_HOME_SCREEN || captureMode_ == CAPTURE_SPECIFIED_SCREEN ||
         captureMode_ == CAPTURE_SPECIFIED_WINDOW) {
         if (dataType_ == DataType::CAPTURE_FILE) {
-            return StartHomeVideoCaptureFile();
+            MEDIA_LOGE("CAPTURE_FILE Mode not suit StartVideoCaptureWithSurface");
+            return MSERR_UNSUPPORT;
         } else {
             return StartHomeVideoCaptureWithSurface(surface);
         }

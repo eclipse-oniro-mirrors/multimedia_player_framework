@@ -71,7 +71,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StartScreenCapture(struct OH_AVSc
  * @param window Pointer to an OHNativeWindow instance
  * @return Returns AVSCREEN_CAPTURE_ERR_OK if the execution is successful,
  * otherwise returns a specific error code, refer to {@link OH_AVSCREEN_CAPTURE_ErrCode}
- * @since 10
+ * @since 12
  * @version 1.0
  */
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StartScreenCaptureWithSurface(struct OH_AVScreenCapture *capture,

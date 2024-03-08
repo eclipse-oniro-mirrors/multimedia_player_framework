@@ -153,7 +153,7 @@ int32_t ScreenCaptureCapiMock::StartScreenCapture()
 int32_t ScreenCaptureCapiMock::StartScreenCaptureWithSurface(const std::any& value)
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
-    OHNativeWindow* window = std::any_cast<OHNativeWindow*>(value); 
+    OHNativeWindow* window = std::any_cast<OHNativeWindow*>(value);
     return OH_AVScreenCapture_StartScreenCaptureWithSurface(screenCapture_, window);
 }
 
