@@ -982,7 +982,7 @@ int32_t PlayerServer::SetVideoSurface(sptr<Surface> surface)
         MEDIA_LOGI("switch surface first in %{public}s state", GetStatusDescription(lastOpStatus_).c_str());
         if (surface_ == nullptr) {
             MEDIA_LOGE("old surface is required before switching surface");
-            return MSERR_INVALID_OPERATION; 
+            return MSERR_INVALID_OPERATION;
         }
     } else {
         MEDIA_LOGE("current state: %{public}s, can not SetVideoSurface", GetStatusDescription(lastOpStatus_).c_str());
