@@ -468,6 +468,7 @@ int32_t ScreenCaptureServer::StartScreenCapture()
             readInnerAudioLoop_ = std::make_unique<std::thread>(&ScreenCaptureServer::StartAudioInnerCapture, this);
         }
     }
+    isSurfaceMode_ = false;
     int32_t ret = StartVideoCapture();
     if (ret == MSERR_OK) {
         BehaviorEventWriteForScreenCapture("start", "AVScreenCapture", appinfo_.appUid, appinfo_.appPid);
@@ -513,7 +514,9 @@ int32_t ScreenCaptureServer::StartScreenCaptureWithSurface(sptr<Surface> surface
         MEDIA_LOGE("surface is nullptr");
         return MSERR_INVALID_OPERATION;
     }
-    int32_t ret = StartVideoCaptureWithSurface(surface);
+    surface_ = surface;
+    isSurfaceMode_ = true;
+    int32_t ret = StartVideoCapture();
     if (ret == MSERR_OK) {
         BehaviorEventWriteForScreenCapture("start", "AVScreenCapture", appinfo_.appUid, appinfo_.appPid);
     }
@@ -539,26 +542,6 @@ int32_t ScreenCaptureServer::StartVideoCapture()
     return MSERR_OK;
 }
 
-int32_t ScreenCaptureServer::StartVideoCaptureWithSurface(sptr<Surface> surface)
-{
-    if (!GetUsingPermissionFromPrivacy(START_VIDEO)) {
-        MEDIA_LOGE("getUsingPermissionFromPrivacy");
-    }
-    if (captureMode_ == CAPTURE_HOME_SCREEN || captureMode_ == CAPTURE_SPECIFIED_SCREEN ||
-        captureMode_ == CAPTURE_SPECIFIED_WINDOW) {
-        if (dataType_ == DataType::CAPTURE_FILE) {
-            MEDIA_LOGE("CAPTURE_FILE Mode not suit StartVideoCaptureWithSurface");
-            return MSERR_UNSUPPORT;
-        } else {
-            return StartHomeVideoCaptureWithSurface(surface);
-        }
-    } else {
-        MEDIA_LOGE("The capture Mode Init still not supported,start failed");
-        return MSERR_UNSUPPORT;
-    }
-    return MSERR_OK;
-}
-
 int32_t ScreenCaptureServer::StartHomeVideoCapture()
 {
     if (consumer_ == nullptr) {
@@ -572,17 +555,13 @@ int32_t ScreenCaptureServer::StartHomeVideoCapture()
     CHECK_AND_RETURN_RET_LOG(psurface != nullptr, MSERR_UNKNOWN, "CreateSurfaceAsProducer failed");
 
     std::string virtualScreenName = "screen_capture";
-    int32_t ret = CreateVirtualScreen(virtualScreenName, psurface);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "create virtual screen failed");
-
-    return MSERR_OK;
-}
-
-int32_t ScreenCaptureServer::StartHomeVideoCaptureWithSurface(sptr<Surface> surface)
-{
-    std::string virtualScreenName = "screen_capture";
-    int32_t ret = CreateVirtualScreen(virtualScreenName, surface);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "create virtual screen failed");
+    if (isSurfaceMode_ == false) {
+        int32_t ret = CreateVirtualScreen(virtualScreenName, psurface);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "create virtual screen failed");
+    } else {
+        int32_t ret = CreateVirtualScreen(virtualScreenName, surface_);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "create virtual screen with surface failed");
+    }
 
     return MSERR_OK;
 }
