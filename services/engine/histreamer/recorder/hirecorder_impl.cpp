@@ -110,6 +110,10 @@ int32_t HiRecorderImpl::SetVideoSource(VideoSourceType source, int32_t &sourceId
         }
         videoEncoderFilter_->SetLogTag(avRecorderTag_);
         ret = pipeline_->AddHeadFilters({videoEncoderFilter_});
+        if (source == VideoSourceType::VIDEO_SOURCE_SURFACE_RGBA) {
+            videoEncFormat_->Set<Tag::VIDEO_PIXEL_FORMAT>(Plugins::VideoPixelFormat::RGBA);
+            videoEncFormat_->Set<Tag::VIDEO_ENCODE_BITRATE_MODE>(Plugins::VideoEncodeBitrateMode::CBR);
+        }
         MEDIA_LOG_I(PUBLIC_LOG_S "SetVideoSource VIDEO_SOURCE_SURFACE_YUV.", avRecorderTag_.c_str());
     } else if (source == VideoSourceType::VIDEO_SOURCE_SURFACE_ES) {
         videoSourceIsYuv_ = false;
@@ -540,7 +544,6 @@ void HiRecorderImpl::ConfigureVideo(const RecorderParam &recParam)
             break;
         }
         case RecorderPublicParamType::VID_ENC_FMT: {
-            videoEncFormat_ = std::make_shared<Meta>();
             ConfigureVideoEncoderFormat(recParam);
             break;
         }
