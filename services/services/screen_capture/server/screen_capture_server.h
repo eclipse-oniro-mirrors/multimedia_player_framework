@@ -42,7 +42,6 @@
 #include "screen_manager.h"
 #include "i_recorder_service.h"
 #include "recorder_server.h"
-#include "incall_observer.h"
 
 namespace OHOS {
 namespace Media {
@@ -109,19 +108,7 @@ public:
     void OnStateChange(const CapturerState state) override;
 };
 
-class ScreenCaptureServer;
-class ScreenCaptureObserverCallBack : public InCallObserverCallBack {
-public:
-    explicit ScreenCaptureObserverCallBack(std::weak_ptr<ScreenCaptureServer> screenCaptureServer);
-    ~ScreenCaptureObserverCallBack() = default;
-    bool StopAndRelease() override;
-
-private:
-    std::weak_ptr<ScreenCaptureServer> screenCaptureServer_;
-};
-
-class ScreenCaptureServer : public std::enable_shared_from_this<ScreenCaptureServer>,
-        public IScreenCaptureService, public NoCopyable {
+class ScreenCaptureServer : public IScreenCaptureService, public NoCopyable {
 public:
     static std::shared_ptr<IScreenCaptureService> Create();
     ScreenCaptureServer();
@@ -169,7 +156,6 @@ private:
     void ReleaseAudioCapture();
     void ReleaseVideoCapture();
 
-    std::shared_ptr<ScreenCaptureObserverCallBack> screenCaptureObserverCb_ = nullptr;
     std::shared_ptr<ScreenCaptureCallBack> screenCaptureCb_ = nullptr;
     std::mutex mutex_;
     std::mutex audioMutex_;

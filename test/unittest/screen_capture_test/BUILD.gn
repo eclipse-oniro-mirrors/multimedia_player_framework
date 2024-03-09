@@ -24,7 +24,6 @@ ohos_unittest("screen_capture_native_unit_test") {
     "./native/include",
     "$MEDIA_PLAYER_ROOT_DIR/test/unittest/common/include",
     "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",
-    "$MEDIA_PLAYER_ROOT_DIR/services/services/observer",
   ]
 
   cflags = [
@@ -51,12 +50,9 @@ ohos_unittest("screen_capture_native_unit_test") {
     "access_token:libnativetoken",
     "access_token:libtoken_setproc",
     "c_utils:utils",
-    "call_manager:tel_call_manager_api",
-    "core_service:tel_core_service_api",
     "graphic_surface:surface",
     "hilog:libhilog",
     "player_framework:media_client",
-    "state_registry:tel_state_registry_api",
     "window_manager:libdm",
   ]
 
@@ -75,7 +71,6 @@ ohos_unittest("screen_capture_capi_unit_test") {
     "$MEDIA_PLAYER_ROOT_DIR/test/unittest/common/include",
     "$MEDIA_PLAYER_ROOT_DIR/frameworks/native/capi/common",
     "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",
-    "$MEDIA_PLAYER_ROOT_DIR/services/services/observer",
   ]
 
   cflags = [
@@ -104,12 +99,9 @@ ohos_unittest("screen_capture_capi_unit_test") {
     "access_token:libnativetoken",
     "access_token:libtoken_setproc",
     "c_utils:utils",
-    "call_manager:tel_call_manager_api",
-    "core_service:tel_core_service_api",
     "graphic_surface:surface",
     "hilog:libhilog",
     "player_framework:media_client",
-    "state_registry:tel_state_registry_api",
     "window_manager:libdm",
   ]
 

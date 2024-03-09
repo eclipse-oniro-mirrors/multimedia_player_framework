@@ -44,7 +44,6 @@ ScreenCaptureServer::~ScreenCaptureServer()
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 
     std::lock_guard<std::mutex> lock(mutex_);
-    screenCaptureObserverCb_ = nullptr;
     ReleaseAudioCapture();
     ReleaseVideoCapture();
 }
@@ -441,18 +440,6 @@ int32_t ScreenCaptureServer::StartScreenCapture()
     std::lock_guard<std::mutex> lock(mutex_);
     MediaTrace trace("ScreenCaptureServer::StartScreenCapture");
     MEDIA_LOGI("ScreenCaptureServer::StartScreenCapture start");
-    if (InCallObserver::GetInstance().IsInCall()) {
-        MEDIA_LOGI("ScreenCaptureServer Start InCall Abort");
-        // 待增加 Oninfo回调
-        return MSERR_UNSUPPORT;
-    } else {
-        MEDIA_LOGI("ScreenCaptureServer Start RegisterScreenCaptureCallBack");
-        InCallObserver::GetInstance().RegisterObserver();
-        std::weak_ptr<ScreenCaptureServer> wpScreenCaptureServer(shared_from_this());
-        screenCaptureObserverCb_ = std::make_shared<ScreenCaptureObserverCallBack>(wpScreenCaptureServer);
-        InCallObserver::GetInstance().RegisterInCallObserverCallBack(screenCaptureObserverCb_);
-    }
-
     isAudioStart_ = true;
     if (audioMicCapturer_ != nullptr) {
         if (!audioMicCapturer_->Start()) {
@@ -909,7 +896,6 @@ int32_t ScreenCaptureServer::StopScreenCapture()
     std::lock_guard<std::mutex> lock(mutex_);
     MediaTrace trace("ScreenCaptureServer::StopScreenCapture");
     MEDIA_LOGI("ScreenCaptureServer::StopScreenCapture start");
-
     int32_t stopFlagSuccess = MSERR_OK;
     if (dataType_ == DataType::CAPTURE_FILE) {
         stopFlagSuccess = StopScreenCaptureRecorder();
@@ -1003,7 +989,6 @@ void ScreenCaptureServer::Release()
     MEDIA_LOGI("ScreenCaptureServer::Release start");
 
     screenCaptureCb_ = nullptr;
-    screenCaptureObserverCb_ = nullptr;
     ReleaseAudioCapture();
     ReleaseVideoCapture();
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances Release", FAKE_POINTER(this));
@@ -1026,25 +1011,6 @@ void AudioCapturerCallbackImpl::OnStateChange(const CapturerState state)
             MEDIA_LOGD("AudioCapturerCallbackImpl: OnStateChange NOT A VALID state");
             break;
     }
-}
-
-ScreenCaptureObserverCallBack::ScreenCaptureObserverCallBack(
-    std::weak_ptr<ScreenCaptureServer> screenCaptureServer)
-{
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
-    screenCaptureServer_ = screenCaptureServer;
-}
-
-bool ScreenCaptureObserverCallBack::StopAndRelease()
-{
-    MEDIA_LOGI("ScreenCaptureObserverCallBack: StopAndRelease");
-    if (!screenCaptureServer_.expired()) {
-        if (screenCaptureServer_.lock()) {
-            screenCaptureServer_.lock()->StopScreenCapture();
-            screenCaptureServer_.lock()->Release();
-        }
-    }
-    return true;
 }
 
 void ScreenCapBufferConsumerListener::OnBufferAvailable()
