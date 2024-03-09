@@ -1810,12 +1810,12 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_buffertest_0005, TestSize.Level2)
 }
 
 /**
- * @tc.name: screen_capture_buffertest_0006
+ * @tc.name: screen_capture_buffertest_Rotation
  * @tc.desc: screen capture buffer test
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(ScreenCaptureUnitTest, screen_capture_buffertest_0006, TestSize.Level2)
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_buffertest_Rotation, TestSize.Level2)
 {
     AVScreenCaptureConfig config_;
     SetConfig(config_);
