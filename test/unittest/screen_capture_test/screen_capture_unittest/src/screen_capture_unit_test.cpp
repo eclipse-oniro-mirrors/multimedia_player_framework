@@ -511,14 +511,14 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window, TestSize.Level2
 }
 
 /**
- * @tc.name: screen_capture_specified_window_01
+ * @tc.name: screen_capture_specified_window_Rotation
  * @tc.desc: open microphone
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_01, TestSize.Level2)
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_Rotation, TestSize.Level2)
 {
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window01 before");
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_Rotation before");
     Security::AccessToken::AccessTokenID tokenID =
         Security::AccessToken::AccessTokenKit::GetNativeTokenId("distributedsched");
     SetSelfTokenID(tokenID);
@@ -529,11 +529,11 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_01, TestSize.Lev
     std::string deviceId = "";
     std::vector<OHOS::AAFwk::MissionInfo> missionInfos;
     auto result = client_->GetMissionInfos(deviceId, 10, missionInfos);
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window result : %{public}d", result);
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window size : %{public}s",
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_Rotation result : %{public}d", result);
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_Rotation size : %{public}s",
         std::to_string(missionInfos.size()).c_str());
     for (OHOS::AAFwk::MissionInfo info : missionInfos) {
-        MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window missionId : %{public}d", info.id);
+        MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_Rotation missionId : %{public}d", info.id);
         config_.videoInfo.videoCapInfo.taskIDs.push_back(info.id);
     }
     OpenFile("screen_capture_specified_window_data");
@@ -553,7 +553,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_01, TestSize.Lev
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     CloseFile();
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window after");
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_Rotation after");
 }
 
 /**
@@ -603,7 +603,9 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_01_Rotation, TestSize.L
             .audioSource = AudioCaptureSourceType::APP_PLAYBACK
     };
     config_.audioInfo.innerCapInfo = innerCapInfo;
-
+    config_.videoInfo.videoCapInfo.videoFrameWidth = 2720;
+    config_.videoInfo.videoCapInfo.videoFrameHeight = 1260;
+    config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenRecording());
     bool canvasRotation = true;
@@ -741,18 +743,18 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_05, TestSize.Level2)
 }
 
 /**
- * @tc.name: screen_capture_save_file_06
+ * @tc.name: screen_capture_save_file_Rotation
  * @tc.desc: open microphone
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_06, TestSize.Level2)
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_Rotation, TestSize.Level2)
 {
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_06 before");
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_Rotation before");
     AVScreenCaptureConfig config;
     SetConfig(config);
     config.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
-    OpenFile("screen_capture_get_screen_capture_06");
+    OpenFile("screen_capture_save_file_Rotation");
 
     aFlag = 1;
     vFlag = 1;
@@ -769,7 +771,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_06, TestSize.Level2)
     EXPECT_NE(MSERR_OK, screenCapture_->StopScreenRecording());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     CloseFile();
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_06 after");
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_Rotation after");
 }
 
 /**
@@ -1047,6 +1049,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_check_param_03, TestSize.Level2)
     config_.videoInfo.videoCapInfo.videoFrameWidth = 720;
     config_.videoInfo.videoCapInfo.videoFrameHeight = 0;
     EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
+
 
     SetRecorderInfo("screen_capture_check_param_03.mp4", recorderInfo);
     config_.recorderInfo = recorderInfo;
