@@ -38,6 +38,16 @@ public:
     }
 };
 
+class InCallObserverTestFalseCallBack : public InCallObserverCallBack {
+public:
+    InCallObserverTestFalseCallBack() {}
+    ~InCallObserverTestFalseCallBack() {}
+    bool StopAndRelease()
+    {
+        return true;
+    }
+};
+
 class InCallObserverInnerUnitTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -137,7 +147,32 @@ HWTEST_F(InCallObserverInnerUnitTest, InCallCallBackReturn_02, TestSize.Level1)
     ASSERT_FALSE(InCallObserver::GetInstance().IsInCall());
     sleep(3); // 3 second
     ASSERT_TRUE(InCallObserver::GetInstance().OnCallStateUpdated(true));
+    ASSERT_TRUE(InCallObserver::GetInstance().IsInCall());
+    InCallObserver::GetInstance().UnRegisterInCallObserverCallBack(inCallObserverCallBack);
+    ASSERT_TRUE(InCallObserver::GetInstance().OnCallStateUpdated(true));
+    ASSERT_TRUE(InCallObserver::GetInstance().IsInCall());
+    InCallObserver::GetInstance().UnRegisterObserver();
+}
+
+/**
+ * @tc.name: InCallCallBackReturn_03
+ * @tc.desc: InCallCallBackReturn_03
+ * @tc.type: FUNC
+ */
+HWTEST_F(InCallObserverInnerUnitTest, InCallCallBackReturn_03, TestSize.Level1)
+{
+    InCallObserver::GetInstance().UnRegisterObserver();
+    ASSERT_TRUE(InCallObserver::GetInstance().RegisterObserver());
+    auto inCallObserverTestFalseCallBack = std::make_shared<InCallObserverTestFalseCallBack>();
+    ASSERT_TRUE(InCallObserver::GetInstance().RegisterInCallObserverCallBack(inCallObserverTestFalseCallBack));
+    ASSERT_TRUE(InCallObserver::GetInstance().OnCallStateUpdated(false));
     ASSERT_FALSE(InCallObserver::GetInstance().IsInCall());
+    sleep(3); // 3 second
+    ASSERT_FALSE(InCallObserver::GetInstance().OnCallStateUpdated(true));
+    ASSERT_TRUE(InCallObserver::GetInstance().IsInCall());
+    InCallObserver::GetInstance().UnRegisterInCallObserverCallBack(inCallObserverTestFalseCallBack);
+    ASSERT_TRUE(InCallObserver::GetInstance().OnCallStateUpdated(true));
+    ASSERT_TRUE(InCallObserver::GetInstance().IsInCall());
     InCallObserver::GetInstance().UnRegisterObserver();
 }
 } // namespace InCallObserverFuncUT
