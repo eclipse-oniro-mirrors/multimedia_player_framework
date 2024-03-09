@@ -41,7 +41,7 @@ public:
     bool OnCallStateUpdated(bool inCall);
     bool IsInCall();
     bool RegisterInCallObserverCallBack(std::weak_ptr<InCallObserverCallBack> inCallObserverCallBack);
-    void UnRegisterInCallObserverCallBack(std::weak_ptr<InCallObserverCallBack> inCallObserverCallBack);
+    void UnRegisterInCallObserverCallBack();
 
 private:
 

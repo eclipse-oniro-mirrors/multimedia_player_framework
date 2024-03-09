@@ -110,7 +110,7 @@ HWTEST_F(InCallObserverInnerUnitTest, RegisterInCallObserverCallBack_01, TestSiz
 {
     auto inCallObserverCallBack = std::make_shared<InCallObserverTestCallBack>();
     ASSERT_TRUE(InCallObserver::GetInstance().RegisterInCallObserverCallBack(inCallObserverCallBack));
-    InCallObserver::GetInstance().UnRegisterInCallObserverCallBack(inCallObserverCallBack);
+    InCallObserver::GetInstance().UnRegisterInCallObserverCallBack();
     ASSERT_TRUE(inCallObserverCallBack->StopAndRelease());
 }
 
@@ -148,7 +148,7 @@ HWTEST_F(InCallObserverInnerUnitTest, InCallCallBackReturn_02, TestSize.Level1)
     sleep(3); // 3 second
     ASSERT_TRUE(InCallObserver::GetInstance().OnCallStateUpdated(true));
     ASSERT_TRUE(InCallObserver::GetInstance().IsInCall());
-    InCallObserver::GetInstance().UnRegisterInCallObserverCallBack(inCallObserverCallBack);
+    InCallObserver::GetInstance().UnRegisterInCallObserverCallBack();
     ASSERT_TRUE(InCallObserver::GetInstance().OnCallStateUpdated(true));
     ASSERT_TRUE(InCallObserver::GetInstance().IsInCall());
     InCallObserver::GetInstance().UnRegisterObserver();
@@ -170,7 +170,7 @@ HWTEST_F(InCallObserverInnerUnitTest, InCallCallBackReturn_03, TestSize.Level1)
     sleep(3); // 3 second
     ASSERT_FALSE(InCallObserver::GetInstance().OnCallStateUpdated(true));
     ASSERT_TRUE(InCallObserver::GetInstance().IsInCall());
-    InCallObserver::GetInstance().UnRegisterInCallObserverCallBack(inCallObserverTestFalseCallBack);
+    InCallObserver::GetInstance().UnRegisterInCallObserverCallBack();
     ASSERT_TRUE(InCallObserver::GetInstance().OnCallStateUpdated(true));
     ASSERT_TRUE(InCallObserver::GetInstance().IsInCall());
     InCallObserver::GetInstance().UnRegisterObserver();
