@@ -131,9 +131,13 @@ HWTEST_F(InCallObserverInnerUnitTest, InCallCallBackReturn_02, TestSize.Level1)
     ASSERT_TRUE(InCallObserver::GetInstance().RegisterObserver());
     auto inCallObserverCallBack = std::make_shared<InCallObserverTestCallBack>();
     ASSERT_TRUE(InCallObserver::GetInstance().RegisterInCallObserverCallBack(inCallObserverCallBack));
-    InCallObserver::GetInstance().UnRegisterInCallObserverCallBack(inCallObserverCallBack);
-    ASSERT_FALSE(InCallObserver::GetInstance().OnCallStateUpdated(true));
+    ASSERT_TRUE(InCallObserver::GetInstance().OnCallStateUpdated(true));
     ASSERT_TRUE(InCallObserver::GetInstance().IsInCall());
+    ASSERT_TRUE(InCallObserver::GetInstance().OnCallStateUpdated(false));
+    ASSERT_FALSE(InCallObserver::GetInstance().IsInCall());
+    sleep(3); // 3 second
+    ASSERT_TRUE(InCallObserver::GetInstance().OnCallStateUpdated(true));
+    ASSERT_FALSE(InCallObserver::GetInstance().IsInCall());
     InCallObserver::GetInstance().UnRegisterObserver();
 }
 } // namespace InCallObserverFuncUT
