@@ -699,9 +699,9 @@ void AVMetadataExtractorNapi::SetAVFileDescriptorTask(
 
         if (helper_ != nullptr) {
             if (helper_->SetSource(fileDescriptor_.fd,
-                    fileDescriptor_.offset,
-                    fileDescriptor_.length,
-                    AVMetadataUsage::AV_META_USAGE_META_ONLY) != MSERR_OK) {
+                fileDescriptor_.offset,
+                fileDescriptor_.length,
+                AVMetadataUsage::AV_META_USAGE_META_ONLY) != MSERR_OK) {
                 OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "Helper SetSource FileDescriptor failed");
             }
             stopWait_ = false;
