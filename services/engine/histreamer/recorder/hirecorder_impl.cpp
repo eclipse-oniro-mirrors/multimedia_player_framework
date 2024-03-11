@@ -548,6 +548,7 @@ void HiRecorderImpl::ConfigureVideo(const RecorderParam &recParam)
             break;
         }
         case RecorderPublicParamType::VID_ENC_FMT: {
+            videoEncFormat_ = std::make_shared<Meta>();
             ConfigureVideoEncoderFormat(recParam);
             break;
         }
