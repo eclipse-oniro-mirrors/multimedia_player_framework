@@ -112,6 +112,8 @@ int32_t HiRecorderImpl::SetVideoSource(VideoSourceType source, int32_t &sourceId
         ret = pipeline_->AddHeadFilters({videoEncoderFilter_});
         if (source == VideoSourceType::VIDEO_SOURCE_SURFACE_RGBA) {
             videoSourceIsRGBA_ = true;
+        } else {
+            videoSourceIsRGBA_ = false;
         }
         MEDIA_LOG_I(PUBLIC_LOG_S "SetVideoSource VIDEO_SOURCE_SURFACE_YUV.", avRecorderTag_.c_str());
     } else if (source == VideoSourceType::VIDEO_SOURCE_SURFACE_ES) {
