@@ -26,8 +26,6 @@
 extern "C" {
 #endif
 
-typedef struct NativeWindow OHNativeWindow;
-
 /**
  * @brief Create a screen capture
  * @syscap SystemCapability.Multimedia.Media.AVScreenCapture

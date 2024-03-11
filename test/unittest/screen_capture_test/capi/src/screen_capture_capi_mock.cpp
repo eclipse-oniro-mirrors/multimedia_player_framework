@@ -23,6 +23,8 @@ using namespace OHOS::Media::ScreenCaptureTestParam;
 std::mutex ScreenCaptureCapiMock::mutex_;
 std::map<OH_AVScreenCapture *, std::shared_ptr<ScreenCaptureCallBackMock>> ScreenCaptureCapiMock::mockCbMap_;
 
+typedef struct NativeWindow OHNativeWindow;
+
 void ScreenCaptureCapiMock::OnError(OH_AVScreenCapture *screenCapture, int32_t errorCode)
 {
     std::shared_ptr<ScreenCaptureCallBackMock> mockCb = GetCallback(screenCapture);

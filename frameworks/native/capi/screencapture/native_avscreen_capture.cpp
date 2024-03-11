@@ -26,6 +26,8 @@ constexpr int MAX_WINDOWS_LEN = 1000;
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "NativeScreenCapture"};
 }
 
+typedef struct NativeWindow OHNativeWindow;
+
 using namespace OHOS::Media;
 class NativeScreenCaptureCallback;
 
