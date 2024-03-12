@@ -74,7 +74,7 @@ int32_t AVMetadataHelperImpl::SetSource(const std::shared_ptr<IMediaDataSource> 
 Status AVMetadataHelperImpl::SetSourceInternel(const std::string &uri)
 {
     Reset();
-    mediaDemuxer_ = std::shared_ptr<MediaDemuxer>(new (std::nothrow) MediaDemuxer());
+    mediaDemuxer_ = std::make_shared<MediaDemuxer>();
     CHECK_AND_RETURN_RET_LOG(
         mediaDemuxer_ != nullptr, Status::ERROR_INVALID_DATA, "SetSourceInternel demuxer is nullptr");
     Status ret = mediaDemuxer_->SetDataSource(std::make_shared<MediaSource>(uri));
