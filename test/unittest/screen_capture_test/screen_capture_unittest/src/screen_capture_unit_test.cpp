@@ -643,10 +643,11 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_Rotation, TestSi
     bool isMicrophone = true;
     screenCapture_->SetMicrophoneEnabled(isMicrophone);
     bool canvasRotation = true;
-    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCanvasRotation(canvasRotation));
+    EXPECT_NE(MSERR_OK, screenCapture_->SetScreenCanvasRotation(canvasRotation));
     EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_));
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCanvasRotation(canvasRotation));
     sleep(RECORDER_TIME);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
@@ -823,10 +824,11 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_Rotation, TestSize.Leve
     bool isMicrophone = true;
     screenCapture_->SetMicrophoneEnabled(isMicrophone);
     bool canvasRotation = true;
-    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCanvasRotation(canvasRotation));
+    EXPECT_NE(MSERR_OK, screenCapture_->SetScreenCanvasRotation(canvasRotation));
     EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_));
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config));
     EXPECT_NE(MSERR_OK, screenCapture_->StartScreenRecording());
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCanvasRotation(canvasRotation));
     sleep(RECORDER_TIME);
     EXPECT_NE(MSERR_OK, screenCapture_->StopScreenRecording());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
