@@ -30,7 +30,7 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN, "AVMetaDat
 
 namespace OHOS {
 namespace Media {
-static constexpr int ART_PICTURE_MAX_SIZE = 1024 * 1024;
+static constexpr int PICTURE_MAX_SIZE = 1024 * 1024;
 static constexpr int SECOND_DEVIDE_MS = 1000;
 
 static const std::unordered_map<Plugins::FileType, std::string> fileTypeMap = {
@@ -171,7 +171,7 @@ std::shared_ptr<AVSharedMemory> AVMetaDataCollector::GetArtPicture()
         if (Any::IsSameTypeWith<std::vector<uint8_t>>(mapIt->second)) {
             coverAddr = AnyCast<std::vector<uint8_t>>(mapIt->second);
         }
-        if (coverAddr.size() == 0 || static_cast<int>(coverAddr.size()) > ART_PICTURE_MAX_SIZE) {
+        if (coverAddr.size() == 0 || static_cast<int>(coverAddr.size()) > PICTURE_MAX_SIZE) {
             MEDIA_LOGE("InvalidArtPictureSize %d", coverAddr.size());
             return nullptr;
         }
