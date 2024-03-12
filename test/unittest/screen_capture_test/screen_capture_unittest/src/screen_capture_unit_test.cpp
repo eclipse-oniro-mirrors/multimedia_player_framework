@@ -857,7 +857,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_Rotation_01, TestSize.L
     config_.videoInfo.videoCapInfo.videoFrameHeight = 1260;
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
     bool canvasRotation = true;
-    EXPECT_NQ(MSERR_OK, screenCapture_->SetScreenCanvasRotation(canvasRotation));
+    EXPECT_NE(MSERR_OK, screenCapture_->SetScreenCanvasRotation(canvasRotation));
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenRecording());
     sleep(RECORDER_TIME);
@@ -896,7 +896,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_Rotation_02, TestSize.L
     config_.videoInfo.videoCapInfo.videoFrameHeight = 1260;
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
     bool canvasRotation = true;
-    EXPECT_NQ(MSERR_OK, screenCapture_->SetScreenCanvasRotation(canvasRotation));
+    EXPECT_NE(MSERR_OK, screenCapture_->SetScreenCanvasRotation(canvasRotation));
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenRecording());
     EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCanvasRotation(canvasRotation));
@@ -929,7 +929,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_Rotation_03, TestSize.L
     config_.videoInfo.videoCapInfo.videoFrameHeight = 1260;
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
     bool canvasRotation = false;
-    EXPECT_NQ(MSERR_OK, screenCapture_->SetScreenCanvasRotation(canvasRotation));
+    EXPECT_NE(MSERR_OK, screenCapture_->SetScreenCanvasRotation(canvasRotation));
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenRecording());
     EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCanvasRotation(canvasRotation));
