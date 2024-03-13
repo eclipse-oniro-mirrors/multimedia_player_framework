@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
- #include "avscreen_capture_napi.h"
- #include "avscreen_capture_callback.h"
- #include "common_napi.h"
- #include "media_dfx.h"
- #include "media_log.h"
+#include "avscreen_capture_napi.h"
+#include "avscreen_capture_callback.h"
+#include "common_napi.h"
+#include "media_dfx.h"
+#include "media_log.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVScreenCaptureNapi"};

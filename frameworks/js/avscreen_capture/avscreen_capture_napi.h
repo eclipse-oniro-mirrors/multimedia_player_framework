@@ -50,7 +50,7 @@ const std::string EVENT_ERROR = "error";
 
 enum AVScreenCaptureRecorderPreset: int32_t {
     SCREEN_RECORD_PRESET_H264_AAC_MP4 = 0,
-    SCREEN_RECORD_PRESET_H265_AAC_MP4 =1
+    SCREEN_RECORD_PRESET_H265_AAC_MP4 = 1
 };
 
 struct AVScreenCaptureAsyncContext;
