@@ -695,5 +695,23 @@ std::string PlayerMock::GetSubtitleText(std::string text)
 {
     return callback_->SubtitleTextUpdate(text);
 }
+
+sptr<Surface> PlayerMock::GetVideoSurfaceNext()
+{
+    sptr<Rosen::WindowOption> option = new Rosen::WindowOption();
+    option->SetWindowRect({ 0, 0, nextSurfaceWidth_, nextSurfaceHeight_ });
+    option->SetWindowType(Rosen::WindowType::WINDOW_TYPE_APP_LAUNCHING);
+    option->SetWindowMode(Rosen::WindowMode::WINDOW_MODE_FLOATING);
+    previewWindow_ = Rosen::Window::Create("xcomponent_window", option);
+    if (previewWindow_ == nullptr || previewWindow_->GetSurfaceNode() == nullptr) {
+        return nullptr;
+    }
+
+    previewWindow_->Show();
+    auto surfaceNode = previewWindow_->GetSurfaceNode();
+    surfaceNode->SetFrameGravity(Rosen::Gravity::RESIZE);
+    Rosen::RSTransaction::FlushImplicitTransaction();
+    return surfaceNode->GetSurface();
+}
 } // namespace Media
 } // namespace OHOS
