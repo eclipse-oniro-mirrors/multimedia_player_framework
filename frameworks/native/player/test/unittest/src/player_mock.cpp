@@ -702,13 +702,13 @@ sptr<Surface> PlayerMock::GetVideoSurfaceNext()
     option->SetWindowRect({ 0, 0, nextSurfaceWidth_, nextSurfaceHeight_ });
     option->SetWindowType(Rosen::WindowType::WINDOW_TYPE_APP_LAUNCHING);
     option->SetWindowMode(Rosen::WindowMode::WINDOW_MODE_FLOATING);
-    previewWindow_ = Rosen::Window::Create("xcomponent_window", option);
-    if (previewWindow_ == nullptr || previewWindow_->GetSurfaceNode() == nullptr) {
+    previewWindowNext_ = Rosen::Window::Create("xcomponent_window_next", option);
+    if (previewWindowNext_ == nullptr || previewWindowNext_->GetSurfaceNode() == nullptr) {
         return nullptr;
     }
 
-    previewWindow_->Show();
-    auto surfaceNode = previewWindow_->GetSurfaceNode();
+    previewWindowNext_->Show();
+    auto surfaceNode = previewWindowNext_->GetSurfaceNode();
     surfaceNode->SetFrameGravity(Rosen::Gravity::RESIZE);
     Rosen::RSTransaction::FlushImplicitTransaction();
     return surfaceNode->GetSurface();

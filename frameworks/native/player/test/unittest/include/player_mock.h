@@ -159,6 +159,7 @@ private:
     int32_t height_ = 1080;
     int32_t width_ = 1920;
     std::mutex mutex_;
+    sptr<Rosen::Window> previewWindowNext_ = nullptr;
     int32_t nextSurfaceHeight_ = 100;
     int32_t nextSurfaceWidth_ = 100;
 };
