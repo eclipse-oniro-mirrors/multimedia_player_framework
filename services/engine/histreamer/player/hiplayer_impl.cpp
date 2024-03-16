@@ -1120,12 +1120,15 @@ void HiPlayerImpl::HandleCompleteEvent(const Event& event)
         MEDIA_LOG_I("OnComplete durationMs - curPosMs: " PUBLIC_LOG_D32, durationMs_.load() - curPosMs);
         OHOS::Media::SleepInJob(durationMs_.load() - curPosMs);
     }
-    if (!singleLoop_.load()) {
-        OnStateChanged(PlayerStateId::EOS);
+    pipeline_->Pause();
+    bool toCompleted =  !singleLoop_.load();
+    if (toCompleted) {
         callbackLooper_.StopReportMediaProgress();
     }
-    pipeline_->Pause();
     callbackLooper_.DoReportCompletedTime();
+    if (toCompleted) {
+        OnStateChanged(PlayerStateId::EOS);
+    }
     callbackLooper_.OnInfo(INFO_TYPE_EOS, static_cast<int32_t>(singleLoop_.load()), format);
     for (std::pair<std::string, bool>& item: completeState_) {
         item.second = false;
