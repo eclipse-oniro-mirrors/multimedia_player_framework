@@ -51,6 +51,9 @@ static const std::string ICON_PATH_STOP = "/etc/screencapture/stop.png";
 static const std::string BUNDLE_NAME = "com.ohos.systemui";
 static const std::string ABILITY_NAME = "com.ohos.systemui.dialog";
 static const std::string BACK_GROUND_COLOR = "#E84026";
+static const int32_t SVG_HEIGHT = 80;
+static const int32_t SVG_WIDTH = 80;
+static const int32_t MICROPHONE_OFF = 0;
 
 static const int32_t MAX_SESSION_ID = 256;
 static const auto NOTIFICATION_SUBSCRIBER = NotificationSubscriber();
@@ -959,8 +962,8 @@ std::shared_ptr<PixelMap> ScreenCaptureServer::GetPixelMapSvg(std::string path)
     std::unique_ptr<ImageSource> imageSource =
         ImageSource::CreateImageSource(path, opts, errorCode);
     DecodeOptions decodeOpts;
-    decodeOpts.desiredSize.width = 80;
-    decodeOpts.desiredSize.height = 80;
+    decodeOpts.desiredSize.width = SVG_WIDTH;
+    decodeOpts.desiredSize.height = SVG_HEIGHT;
     std::unique_ptr<PixelMap> pixelMap = imageSource->CreatePixelMap(decodeOpts, errorCode);
     std::shared_ptr<PixelMap> pixelMapSpr = std::move(pixelMap);
     return pixelMapSpr;
@@ -1014,7 +1017,7 @@ void ScreenCaptureServer::UpdateLiveViewContent()
 
     auto basicButton = NotificationLocalLiveViewButton();
     basicButton.addSingleButtonName(BUTTON_NAME_MIC);
-    if (micCount_.load() % 2 == 0) {
+    if (micCount_.load() % 2 == MICROPHONE_OFF) {
         std::shared_ptr<PixelMap> pixelMapSpr = GetPixelMapSvg(ICON_PATH_MIC_OFF);
         basicButton.addSingleButtonIcon(pixelMapSpr);
     } else {
