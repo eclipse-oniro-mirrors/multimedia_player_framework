@@ -54,6 +54,7 @@ static const std::string BACK_GROUND_COLOR = "#E84026";
 static const int32_t SVG_HEIGHT = 80;
 static const int32_t SVG_WIDTH = 80;
 static const int32_t MICROPHONE_OFF = 0;
+static const int32_t MICROPHONE_STATE_COUNT = 2;
 
 static const int32_t MAX_SESSION_ID = 256;
 static const auto NOTIFICATION_SUBSCRIBER = NotificationSubscriber();
@@ -1017,7 +1018,7 @@ void ScreenCaptureServer::UpdateLiveViewContent()
 
     auto basicButton = NotificationLocalLiveViewButton();
     basicButton.addSingleButtonName(BUTTON_NAME_MIC);
-    if (micCount_.load() % 2 == MICROPHONE_OFF) {
+    if (micCount_.load() % MICROPHONE_STATE_COUNT == MICROPHONE_OFF) {
         std::shared_ptr<PixelMap> pixelMapSpr = GetPixelMapSvg(ICON_PATH_MIC_OFF);
         basicButton.addSingleButtonIcon(pixelMapSpr);
     } else {
