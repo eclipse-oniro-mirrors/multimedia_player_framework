@@ -43,7 +43,7 @@ namespace OHOS {
     do {                                                                                      \
         (void)OHOS::Media::DfxLogDump::GetInstance().SaveLog(level, LABEL,                    \
             "{%s():%d} " fmt, __FUNCTION__, __LINE__, ##args);                                \
-    } while (0);
+    } while (0)
 #define MEDIA_LOGD(fmt, ...)                                                                  \
     DUMP_LOG("LOGD", fmt, ##__VA_ARGS__)                                                    \
     MEDIA_LOG(HILOG_DEBUG, fmt, ##__VA_ARGS__)
@@ -89,7 +89,7 @@ namespace OHOS {
             MEDIA_LOGE(fmt, ##__VA_ARGS__);            \
             return ret;                                \
         }                                              \
-    } while (0);
+    } while (0)
 
 #define CHECK_AND_RETURN_LOG(cond, fmt, ...)           \
     do {                                               \
@@ -97,7 +97,7 @@ namespace OHOS {
             MEDIA_LOGE(fmt, ##__VA_ARGS__);            \
             return;                                    \
         }                                              \
-    } while (0);
+    } while (0)
 
 #define CHECK_AND_BREAK_LOG(cond, fmt, ...)            \
     if (1) {                                           \
