@@ -579,7 +579,7 @@ void AVPlayerCallback::OnAudioDeviceChangeCb(const int32_t extra, const Format &
     (void)extra;
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
     if (refMap_.find(AVPlayerEvent::EVENT_AUDIO_DEVICE_CHANGE) == refMap_.end()) {
-        MEDIA_LOGW("0x%{public}06" PRIXPTR " can not find audio AudioDeviceChange callback!", FAKE_POINTER(this));
+        MEDIA_LOGD("0x%{public}06" PRIXPTR " can not find audio AudioDeviceChange callback!", FAKE_POINTER(this));
         return;
     }
 
@@ -631,7 +631,7 @@ void AVPlayerCallback::OnErrorCb(MediaServiceExtErrCodeAPI9 errorCode, const std
     MEDIA_LOGE("OnErrorCb:errorCode %{public}d, errorMsg %{public}s", errorCode, message.c_str());
     std::lock_guard<std::mutex> lock(mutex_);
     if (refMap_.find(AVPlayerEvent::EVENT_ERROR) == refMap_.end()) {
-        MEDIA_LOGW("can not find error callback!");
+        MEDIA_LOGW("0x%{public}06" PRIXPTR " can not find error callback!", FAKE_POINTER(this));
         return;
     }
 
@@ -652,7 +652,7 @@ void AVPlayerCallback::OnInfo(PlayerOnInfoType type, int32_t extra, const Format
     if (onInfoFuncs_.count(type) > 0) {
         (this->*onInfoFuncs_[type])(extra, infoBody);
     } else {
-        MEDIA_LOGI("0x%{public}06" PRIXPTR " OnInfo: no member func supporting, %{public}d",
+        MEDIA_LOGD("0x%{public}06" PRIXPTR " OnInfo: no member func supporting, %{public}d",
             FAKE_POINTER(this), type);
     }
 }
@@ -718,6 +718,7 @@ void AVPlayerCallback::OnVolumeChangeCb(const int32_t extra, const Format &infoB
     float volumeLevel = 0.0;
     (void)infoBody.GetFloatValue(PlayerKeys::PLAYER_VOLUME_LEVEL, volumeLevel);
 
+    isSetVolume_ = false;
     MEDIA_LOGD("OnVolumeChangeCb in volume=%{public}f", volumeLevel);
     if (refMap_.find(AVPlayerEvent::EVENT_VOLUME_CHANGE) == refMap_.end()) {
         MEDIA_LOGD("can not find vol change callback!");
@@ -834,7 +835,7 @@ void AVPlayerCallback::OnDurationUpdateCb(const int32_t extra, const Format &inf
     }
 
     if (refMap_.find(AVPlayerEvent::EVENT_DURATION_UPDATE) == refMap_.end()) {
-        MEDIA_LOGW("0x%{public}06" PRIXPTR " can not find duration update callback!", FAKE_POINTER(this));
+        MEDIA_LOGD("0x%{public}06" PRIXPTR " can not find duration update callback!", FAKE_POINTER(this));
         return;
     }
 
