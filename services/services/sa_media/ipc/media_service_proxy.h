@@ -19,11 +19,6 @@
 #include "i_standard_media_service.h"
 #include "nocopyable.h"
 
-#ifdef SUPPORT_POWER_MANAGER
-#include "power_mgr_client.h"
-#include "running_lock.h"
-#endif
-
 namespace OHOS {
 namespace Media {
 class MediaServiceProxy : public IRemoteProxy<IStandardMediaService>, public NoCopyable {
@@ -36,10 +31,6 @@ public:
 
 private:
     static inline BrokerDelegator<MediaServiceProxy> delegator_;
-    int32_t GetPowerMgrLock();
-#ifdef SUPPORT_POWER_MANAGER
-    std::shared_ptr<PowerMgr::RunningLock> offloadKeepRunningLock_;
-#endif
 };
 } // namespace Media
 } // namespace OHOS
