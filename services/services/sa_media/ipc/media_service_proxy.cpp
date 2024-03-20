@@ -28,35 +28,12 @@ MediaServiceProxy::MediaServiceProxy(const sptr<IRemoteObject> &impl)
     : IRemoteProxy<IStandardMediaService>(impl)
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
-    auto ret = GetPowerMgrLock();
-    if (ret != MSERR_OK) {
-        MEDIA_LOGE("power mgr lock failed");
-    }
-}
-
-int32_t MediaServiceProxy::GetPowerMgrLock()
-{
-#ifdef SUPPORT_POWER_MANAGER
-    if (offloadKeepRunningLock_ == nullptr) {
-        offloadKeepRunningLock_ = PowerMgr::PowerMgrClient::GetInstance().CreateRunningLock(
-            "MediaServiceBackgroundWork", PowerMgr::RunningLockType::RUNNINGLOCK_BACKGROUND);
-    }
-    CHECK_AND_RETURN_RET_LOG(offloadKeepRunningLock_ != nullptr, MSERR_INVALID_OPERATION,
-        "OffloadKeepRunningLock is null, get lock can not work well!");
-    offloadKeepRunningLock_->Lock(RUNNINGLOCK_LOCK_TIMEOUTMS_LASTING);  // -1 for lasting.
-#endif
     return MSERR_OK;
 }
 
 MediaServiceProxy::~MediaServiceProxy()
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
-#ifdef SUPPORT_POWER_MANAGER
-    if (offloadKeepRunningLock_ == nullptr) {
-        return;
-    }
-    offloadKeepRunningLock_->UnLock();
-#endif
 }
 
 sptr<IRemoteObject> MediaServiceProxy::GetSubSystemAbility(IStandardMediaService::MediaSystemAbility subSystemId,
