@@ -935,10 +935,6 @@ std::shared_ptr<NotificationLocalLiveViewContent> ScreenCaptureServer::GetLocalL
     localLiveViewContent->addFlag(NotificationLocalLiveViewContent::LiveViewContentInner::TIME);
 
     auto basicButton = NotificationLocalLiveViewButton();
-    basicButton.addSingleButtonName(BUTTON_NAME_MIC);
-    std::shared_ptr<PixelMap> pixelMapSpr = GetPixelMapSvg(ICON_PATH_MIC);
-    basicButton.addSingleButtonIcon(pixelMapSpr);
-
     basicButton.addSingleButtonName(BUTTON_NAME_STOP);
     std::shared_ptr<PixelMap> pixelMapStopSpr = GetPixelMap(ICON_PATH_STOP);
     basicButton.addSingleButtonIcon(pixelMapStopSpr);
