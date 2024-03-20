@@ -39,7 +39,7 @@ int32_t MediaServiceProxy::GetPowerMgrLock()
 #ifdef SUPPORT_POWER_MANAGER
     if (offloadKeepRunningLock_ == nullptr) {
         offloadKeepRunningLock_ = PowerMgr::PowerMgrClient::GetInstance().CreateRunningLock(
-            "AudioOffloadBackgroudPlay", PowerMgr::RunningLockType::RUNNINGLOCK_BACKGROUND_AUDIO);
+            "MediaServiceBackgroundWork", PowerMgr::RunningLockType::RUNNINGLOCK_BACKGROUND);
     }
     CHECK_AND_RETURN_RET_LOG(offloadKeepRunningLock_ != nullptr, MSERR_INVALID_OPERATION,
         "OffloadKeepRunningLock is null, get lock can not work well!");
