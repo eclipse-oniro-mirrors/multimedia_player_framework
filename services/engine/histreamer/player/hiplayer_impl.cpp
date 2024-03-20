@@ -333,10 +333,10 @@ int32_t HiPlayerImpl::Play()
 int32_t HiPlayerImpl::Pause()
 {
     MediaTrace trace("HiPlayerImpl::Pause");
+    MEDIA_LOG_I("Pause entered.");
     if (pipelineStates_ == PlayerStates::PLAYER_PLAYBACK_COMPLETE) {
         return TransStatus(Status::OK);
     }
-    MEDIA_LOG_I("Pause entered.");
     if (audioSink_ != nullptr) {
         audioSink_->SetVolumeWithRamp(MIN_MEDIA_VOLUME, FADE_OUT_LATENCY);
     }
