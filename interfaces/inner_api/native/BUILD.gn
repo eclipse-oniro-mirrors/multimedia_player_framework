@@ -188,6 +188,11 @@ ohos_shared_library("media_client") {
     "qos_manager:qos",
     "samgr:samgr_proxy",
   ]
+
+  if (multimedia_player_framework_support_power_manager) {
+    external_deps += [ "power_manager:powermgr_client" ]
+  }
+
   public_deps = [ "$MEDIA_PLAYER_HISTREAMER/src:media_foundation" ]
 
   if (multimedia_player_framework_support_video) {
