@@ -28,7 +28,6 @@ MediaServiceProxy::MediaServiceProxy(const sptr<IRemoteObject> &impl)
     : IRemoteProxy<IStandardMediaService>(impl)
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
-    return MSERR_OK;
 }
 
 MediaServiceProxy::~MediaServiceProxy()
