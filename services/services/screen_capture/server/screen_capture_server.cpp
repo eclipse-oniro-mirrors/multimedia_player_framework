@@ -1384,7 +1384,7 @@ int32_t ScreenCaptureServer::StopScreenCaptureRecorder()
     MediaTrace trace("ScreenCaptureServer::StopScreenCaptureRecorder");
     int32_t ret = MSERR_OK;
     if (recorder_ != nullptr) {
-        ret = recorder_->Stop(true);
+        ret = recorder_->Stop(false);
         if (ret != MSERR_OK) {
             MEDIA_LOGE("StopScreenCaptureRecorder recorder stop failed, ret:%{public}d", ret);
         }
