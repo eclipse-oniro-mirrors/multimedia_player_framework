@@ -1202,7 +1202,7 @@ void HiPlayerImpl::HandleResolutionChangeEvent(const Event& event)
     // update new video size
     std::pair<int32_t, int32_t> videoSize = AnyCast<std::pair<int32_t, int32_t>>(event.param);
     int32_t width = videoSize.first;
-    int32_t height = videoSize.sencond;
+    int32_t height = videoSize.second;
     videoWidth_ = !needSwapWH_.load() ? width : height;
     videoHeight_ = !needSwapWH_.load() ? height : width;
     MEDIA_LOG_I("HandleResolutionChangeEvent, width = %{public}d, height = %{public}d",
