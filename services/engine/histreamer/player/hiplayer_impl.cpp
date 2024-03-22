@@ -1088,9 +1088,9 @@ void HiPlayerImpl::HandleIsLiveStreamEvent(bool isLiveStream)
 
 void HiPlayerImpl::HandleErrorEvent(int32_t errorCode)
 {
-    if (static_cast<MediaServiceExtErrCodeAPI9>(errorCode) == MSERR_EXT_API9_IO)  {
+    if (static_cast<MediaServiceExtErrCodeAPI9>(errorCode) == MSERR_EXT_API9_IO) {
         Status ret = Status::OK;
-        if (bundleName_ == (BUNDLE_NAME_FIRST +  BUNDLE_NAME_SECOND)) {
+        if (bundleName_ == (BUNDLE_NAME_FIRST + BUNDLE_NAME_SECOND)) {
             syncManager_->Pause();
             ret = pipeline_->Pause();
         } else {
