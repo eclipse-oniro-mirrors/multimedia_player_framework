@@ -41,6 +41,7 @@ const int32_t PLAYING_SEEK_WAIT_TIME = 200; // wait up to 200 ms for new frame a
 namespace OHOS {
 namespace Media {
 using namespace Pipeline;
+using namespace OHOS::Media::Plugins;
 const std::string BUNDLE_NAME_FIRST = "com.hua";
 const std::string BUNDLE_NAME_SECOND = "wei.hmos.photos";
 class PlayerEventReceiver : public EventReceiver {
@@ -1063,7 +1064,7 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
     if (!header_.empty()) {
         MEDIA_LOG_I("DoSetSource ua: " PUBLIC_LOG_S " ref: " PUBLIC_LOG_S, header_["ua"].c_str(),
             header_["ref"].c_str());
-        OHOS::Media::Plugins::PlayStrategy * playStrategy = new OHOS::Media::Plugins::PlayStrategy;
+        PlayStrategy* playStrategy = new PlayStrategy;
         playStrategy->width = preferedWidth_;
         playStrategy->height = preferedHeight_;
         playStrategy->duration = bufferDuration_;
