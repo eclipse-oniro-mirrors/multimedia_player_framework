@@ -235,7 +235,13 @@ int32_t HiPlayerImpl::PrepareAsync()
     if (dataSrc_ != nullptr) {
         ret = DoSetSource(std::make_shared<MediaSource>(dataSrc_));
     } else {
-        ret = DoSetSource(std::make_shared<MediaSource>(url_));
+        if (!header.empty()) {
+            MEDIA_LOG_I("yzh DoSetSource 2");
+            ret = DoSetSource(std::make_shared<MediaSource>(url_, header));
+        } else {
+            MEDIA_LOG_I("yzh DoSetSource 3");
+            ret = DoSetSource(std::make_shared<MediaSource>(url_));
+        }
     }
     if (ret != Status::OK) {
         MEDIA_LOG_E("PrepareAsync error: DoSetSource error");
@@ -1054,6 +1060,17 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
     demuxer_ = FilterFactory::Instance().CreateFilter<DemuxerFilter>("builtin.player.demuxer",
         FilterType::FILTERTYPE_DEMUXER);
     demuxer_->Init(playerEventReceiver_, playerFilterCallback_);
+    if (!header_.empty()) {
+        MEDIA_LOG_I("DoSetSource ua: " PUBLIC_LOG_S " ref: " PUBLIC_LOG_S, header_["ua"].c_str(),
+            header_["ref"].c_str());
+        OHOS::Media::Plugins::PlayStrategy * playStrategy = new OHOS::Media::Plugins::PlayStrategy;
+        playStrategy->width = preferedWidth_;
+        playStrategy->height = preferedHeight_;
+        playStrategy->duration = bufferDuration_;
+        playStrategy->preferHDR = preferHDR_;
+        source->SetPlayStrategy(playStrategy);
+        MEDIA_LOG_I("DoSetSource set Strategy Done!");
+    }
     auto ret = demuxer_->SetDataSource(source);
     SetBundleName(bundleName_);
     pipeline_->AddHeadFilters({demuxer_});
