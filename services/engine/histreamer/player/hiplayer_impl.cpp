@@ -237,10 +237,10 @@ int32_t HiPlayerImpl::PrepareAsync()
         ret = DoSetSource(std::make_shared<MediaSource>(dataSrc_));
     } else {
         if (!header_.empty()) {
-            MEDIA_LOG_I("yzh DoSetSource 2");
+            MEDIA_LOG_I("DoSetSource header");
             ret = DoSetSource(std::make_shared<MediaSource>(url_, header_));
         } else {
-            MEDIA_LOG_I("yzh DoSetSource 3");
+            MEDIA_LOG_I("DoSetSource url");
             ret = DoSetSource(std::make_shared<MediaSource>(url_));
         }
     }
