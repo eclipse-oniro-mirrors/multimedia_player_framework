@@ -206,6 +206,7 @@ private:
     std::mutex mutex_;
     std::mutex cbMutex_;
     std::shared_ptr<ScreenCaptureCallBack> screenCaptureCb_ = nullptr;
+    bool canvasRotation_ = true;
     bool isMicrophoneOn_ = true;
     bool isPrivacyAuthorityEnabled_ = false;
 
