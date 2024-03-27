@@ -182,6 +182,7 @@ private:
     int32_t CheckAllParams();
     int32_t CheckCaptureStreamParams();
     int32_t CheckCaptureFileParams();
+    int32_t SetCanvasRotationInner();
     void InitAppInfo();
     void CloseFd();
  
