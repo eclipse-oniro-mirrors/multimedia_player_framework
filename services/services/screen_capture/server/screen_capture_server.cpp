@@ -654,9 +654,6 @@ int32_t ScreenCaptureServer::OnReceiveUserPrivacyAuthority(bool isAllowed)
     }
     int32_t ret = OnStartScreenCapture();
     PostStartScreenCapture(ret == MSERR_OK);
-    if (canvasRotation_) {
-        SetCanvasRotationInner();
-    }
     return ret;
 }
 
@@ -1215,7 +1212,9 @@ int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string &name, sptr<O
         DestroyVirtualScreen();
         return MSERR_UNKNOWN;
     }
-
+    if (canvasRotation_) {
+        SetCanvasRotationInner();
+    }
     int32_t ret = MakeVirtualScreenMirror();
     if (ret != MSERR_OK) {
         MEDIA_LOGE("MakeVirtualScreenMirror failed");
