@@ -794,6 +794,7 @@ void ScreenCaptureServer::PostStartScreenCapture(bool isSuccess)
     }
 }
 
+#ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
 int32_t ScreenCaptureServer::TryStartNotification()
 {
     int32_t tryTimes;
@@ -805,6 +806,7 @@ int32_t ScreenCaptureServer::TryStartNotification()
     }
     return tryTimes;
 }
+#endif
 
 int32_t ScreenCaptureServer::InitAudioCap(AudioCaptureInfo audioInfo)
 {

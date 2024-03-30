@@ -199,7 +199,9 @@ private:
     bool UpdatePrivacyUsingPermissionState(VideoPermissionState state);
     int32_t RequestUserPrivacyAuthority();
     int32_t StartPrivacyWindow();
+#ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
     int32_t TryStartNotification();
+#endif
     int32_t StartNotification();
     std::shared_ptr<NotificationLocalLiveViewContent> GetLocalLiveViewContent();
     void UpdateLiveViewContent();
