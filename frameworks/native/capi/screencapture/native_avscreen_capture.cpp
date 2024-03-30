@@ -629,6 +629,7 @@ OH_NativeBuffer* OH_AVScreenCapture_AcquireVideoBuffer(struct OH_AVScreenCapture
     OH_NativeBuffer* nativebuffer = sufacebuffer->SurfaceBufferToNativeBuffer();
     OH_NativeBuffer_Reference(nativebuffer);
     referencedBuffer_.push(nativebuffer);
+    MEDIA_LOGD("return and reference the nativebuffer");
     return nativebuffer;
 }
 
@@ -645,10 +646,11 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ReleaseVideoBuffer(struct OH_AVSc
         return AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT;
     }
 
-    while (!referencedBuffer_.empty()) {
+    if (!referencedBuffer_.empty()) {
         OH_NativeBuffer* nativebuffer = referencedBuffer_.front();
         OH_NativeBuffer_Unreference(nativebuffer);
         referencedBuffer_.pop();
+        MEDIA_LOGD("unreference the front nativebuffer");
     }
 
     int32_t ret = screenCaptureObj->screenCapture_->ReleaseVideoBuffer();
