@@ -70,7 +70,9 @@ static const int32_t SVG_WIDTH = 80;
 static const int32_t MDPI = 160;
 static const int32_t MICROPHONE_OFF = 0;
 static const int32_t MICROPHONE_STATE_COUNT = 2;
-static const int32_t NOTIFICATION_MAX_TRY_NUM = 3;
+#ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
+    static const int32_t NOTIFICATION_MAX_TRY_NUM = 3;
+#endif
 
 static const int32_t MAX_SESSION_ID = 256;
 static const int32_t MAX_SESSION_PER_UID = 8;
@@ -762,18 +764,12 @@ void ScreenCaptureServer::PostStartScreenCapture(bool isSuccess)
         MEDIA_LOGI("PostStartScreenCapture handle success");
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
         if (isPrivacyAuthorityEnabled_) {
-            int32_t tryTimes;
-            for (tryTimes = 1; tryTimes <= NOTIFICATION_MAX_TRY_NUM; tryTimes++) {
-                int32_t ret = StartNotification();
-                if (ret == MSERR_OK) {
-                    break;
-                }
-            }
+            int32_t tryTimes = TryStartNotification();
             if (tryTimes > NOTIFICATION_MAX_TRY_NUM) {
                 captureState_ = AVScreenCaptureState::STARTED;
                 StopScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID);
                 screenCaptureCb_->OnError(ScreenCaptureErrorType::SCREEN_CAPTURE_ERROR_INTERNAL,
-                AVScreenCaptureErrorCode::SCREEN_CAPTURE_ERR_UNKNOWN);
+                    AVScreenCaptureErrorCode::SCREEN_CAPTURE_ERR_UNKNOWN);
                 return;
             }
         }
@@ -796,6 +792,18 @@ void ScreenCaptureServer::PostStartScreenCapture(bool isSuccess)
         isSurfaceMode_ = false;
         captureState_ = AVScreenCaptureState::STOPPED;
     }
+}
+
+int32_t ScreenCaptureServer::TryStartNotification()
+{
+    int32_t tryTimes;
+    for (tryTimes = 1; tryTimes <= NOTIFICATION_MAX_TRY_NUM; tryTimes++) {
+        int32_t ret = StartNotification();
+        if (ret == MSERR_OK) {
+            break;
+        }
+    }
+    return tryTimes;
 }
 
 int32_t ScreenCaptureServer::InitAudioCap(AudioCaptureInfo audioInfo)
