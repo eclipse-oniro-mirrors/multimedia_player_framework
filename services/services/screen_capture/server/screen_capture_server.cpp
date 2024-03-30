@@ -70,6 +70,7 @@ static const int32_t SVG_WIDTH = 80;
 static const int32_t MDPI = 160;
 static const int32_t MICROPHONE_OFF = 0;
 static const int32_t MICROPHONE_STATE_COUNT = 2;
+static const int32_t NOTIFICATION_MAX_TRY_NUM = 3;
 
 static const int32_t MAX_SESSION_ID = 256;
 static const int32_t MAX_SESSION_PER_UID = 8;
@@ -761,7 +762,20 @@ void ScreenCaptureServer::PostStartScreenCapture(bool isSuccess)
         MEDIA_LOGI("PostStartScreenCapture handle success");
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
         if (isPrivacyAuthorityEnabled_) {
-            StartNotification();
+            int32_t tryTimes;
+            for (tryTimes = 1; tryTimes <= NOTIFICATION_MAX_TRY_NUM; tryTimes++) {
+                int32_t ret = StartNotification();
+                if (ret == MSERR_OK) {
+                    break;
+                }
+            }
+            if (tryTimes > NOTIFICATION_MAX_TRY_NUM) {
+                captureState_ = AVScreenCaptureState::STARTED;
+                StopScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID);
+                screenCaptureCb_->OnError(ScreenCaptureErrorType::SCREEN_CAPTURE_ERROR_INTERNAL,
+                AVScreenCaptureErrorCode::SCREEN_CAPTURE_ERR_UNKNOWN);
+                return;
+            }
         }
 #endif
         if (!UpdatePrivacyUsingPermissionState(START_VIDEO)) {
@@ -976,7 +990,7 @@ int32_t ScreenCaptureServer::StartNotification()
 
     result = NotificationHelper::PublishNotification(request);
     MEDIA_LOGI("Screencapture service PublishNotification uid %{public}d, result %{public}d", uid, result);
-    return MSERR_OK;
+    return result;
 }
 
 std::shared_ptr<NotificationLocalLiveViewContent> ScreenCaptureServer::GetLocalLiveViewContent()
@@ -1514,8 +1528,15 @@ int32_t ScreenCaptureServer::StopScreenCaptureInner(AVScreenCaptureStateCode sta
         MEDIA_LOGW("StopScreenCaptureInner unsupport and ignore");
         return MSERR_OK;
     }
-
     CHECK_AND_RETURN_RET_LOG(captureState_ == AVScreenCaptureState::STARTED, ret, "state:%{public}d", captureState_);
+    captureState_ = AVScreenCaptureState::STOPPED;
+    PostStopScreenCapture(stateCode);
+
+    return ret;
+}
+
+void ScreenCaptureServer::PostStopScreenCapture(AVScreenCaptureStateCode stateCode)
+{
     if (screenCaptureCb_ != nullptr) {
         if (stateCode != AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID) {
             screenCaptureCb_->OnStateChange(stateCode);
@@ -1524,7 +1545,7 @@ int32_t ScreenCaptureServer::StopScreenCaptureInner(AVScreenCaptureStateCode sta
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
     if (isPrivacyAuthorityEnabled_) {
         // Remove real time notification
-        ret = NotificationHelper::CancelNotification(notificationId_);
+        int32_t ret = NotificationHelper::CancelNotification(notificationId_);
         MEDIA_LOGI("StopScreenCaptureInner CancelNotification id:%{public}d, ret:%{public}d ", notificationId_, ret);
         micCount_.store(0);
     }
@@ -1541,7 +1562,6 @@ int32_t ScreenCaptureServer::StopScreenCaptureInner(AVScreenCaptureStateCode sta
     if (sessionId_ == activeSessionId.load()) {
         activeSessionId.store(SESSION_ID_INVALID);
     }
-    return ret;
 }
 
 int32_t ScreenCaptureServer::StopScreenCapture()
