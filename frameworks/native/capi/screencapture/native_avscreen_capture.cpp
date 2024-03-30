@@ -36,6 +36,7 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "NativeScre
 typedef struct NativeWindow OHNativeWindow;
 
 using namespace OHOS::Media;
+static std::queue<OH_NativeBuffer*> referencedBuffer_; 
 class NativeScreenCaptureCallback;
 
 struct ScreenCaptureObject : public OH_AVScreenCapture {
