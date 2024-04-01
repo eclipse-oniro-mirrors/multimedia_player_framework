@@ -628,10 +628,8 @@ OH_NativeBuffer* OH_AVScreenCapture_AcquireVideoBuffer(struct OH_AVScreenCapture
 
     OH_NativeBuffer* nativebuffer = sufacebuffer->SurfaceBufferToNativeBuffer();
     OH_NativeBuffer_Reference(nativebuffer);
-    if (nativebuffer != referencedBuffer_.front()) {
-        referencedBuffer_.push(nativebuffer);
-        MEDIA_LOGD("return and reference the nativebuffer");
-    }
+    referencedBuffer_.push(nativebuffer);
+    MEDIA_LOGD("return and reference the nativebuffer");
 
     return nativebuffer;
 }
