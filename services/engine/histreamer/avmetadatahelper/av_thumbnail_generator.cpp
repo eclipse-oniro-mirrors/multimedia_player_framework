@@ -25,7 +25,7 @@
 #include "media_description.h"
 #include "meta/meta.h"
 #include "meta/meta_key.h"
-#include "common/plugin_time.h"
+#include "plugin/plugin_time.h"
 #include "sync_fence.h"
 #include "uri_helper.h"
 
