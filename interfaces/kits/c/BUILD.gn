@@ -18,9 +18,8 @@ group("capi_packages") {
   deps = []
   if (multimedia_player_framework_support_capi) {
     deps += [
-      "$INTERFACE_SDK_C_DIR/multimedia/player_framework/avscreen_capture:libnative_avscreen_capture",
-      "$INTERFACE_SDK_C_DIR/multimedia/player_framework/avscreen_capture:native_avscreen_capture_header",
       "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c:avplayer",
+      "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c:native_avscreen_capture",
     ]
   }
 }
@@ -33,8 +32,6 @@ config("media_capi_config") {
     "$MEDIA_PLAYER_ROOT_DIR/services/utils/include",
     "$MEDIA_PLAYER_AVCODEC/interfaces/kits/c",
     "$MEDIA_PLAYER_GRAPHIC/../graphic_surface/surface/include",
-    "$INTERFACE_SDK_C_DIR/multimedia/player_framework",
-    "$INTERFACE_SDK_C_DIR/graphic/graphic_2d",
   ]
 
   cflags = [
