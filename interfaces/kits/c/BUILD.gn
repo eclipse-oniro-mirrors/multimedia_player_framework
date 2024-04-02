@@ -19,7 +19,8 @@ group("capi_packages") {
   if (multimedia_player_framework_support_capi) {
     deps += [
       "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c:avplayer",
-      "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c:native_avscreen_capture",
+      "$INTERFACE_SDK_C_DIR/multimedia/player_framework/avscreen_capture:native_avscreen_capture_header",
+      "$INTERFACE_SDK_C_DIR/multimedia/player_framework/avscreen_capture:libnative_avscreen_capture",
     ]
   }
 }
@@ -32,6 +33,8 @@ config("media_capi_config") {
     "$MEDIA_PLAYER_ROOT_DIR/services/utils/include",
     "$MEDIA_PLAYER_AVCODEC/interfaces/kits/c",
     "$MEDIA_PLAYER_GRAPHIC/../graphic_surface/surface/include",
+    "$INTERFACE_SDK_C_DIR/multimedia/player_framework",
+    "$INTERFACE_SDK_C_DIR/graphic/graphic_2d",
   ]
 
   cflags = [
@@ -55,7 +58,7 @@ config("media_capi_config") {
 }
 
 config("media_capi_public_config") {
-  include_dirs = [ "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c" ]
+  include_dirs = [ "$INTERFACE_SDK_C_DIR/multimedia/player_framework" ]
 }
 
 ohos_shared_library("native_avscreen_capture") {
