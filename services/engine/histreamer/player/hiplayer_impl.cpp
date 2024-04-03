@@ -1108,8 +1108,8 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
     source->SetPlayStrategy(playStrategy);
 
     auto ret = demuxer_->SetDataSource(source);
-    if (!MetaUtils::CheckFileType(demuxer_->GetGlobalMetaInfo())) {
-        MEDIA_LOG_W("0x%{public}06" PRIXPTR "SetSource unsupport", FAKE_POINTER(this));
+    if (ret == Status::OK && !MetaUtils::CheckFileType(demuxer_->GetGlobalMetaInfo())) {
+        MEDIA_LOG_W("0x%{public}06 " PRIXPTR "SetSource unsupport", FAKE_POINTER(this));
         return Status::ERROR_INVALID_DATA;
     }
     SetBundleName(bundleName_);
