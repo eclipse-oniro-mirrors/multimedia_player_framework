@@ -624,6 +624,7 @@ int32_t RecorderServiceStub::Resume(MessageParcel &data, MessageParcel &reply)
 int32_t RecorderServiceStub::Stop(MessageParcel &data, MessageParcel &reply)
 {
     bool block = data.ReadBool();
+    audioSourceType_ = AUDIO_SOURCE_INVALID;
     reply.WriteInt32(Stop(block));
     return MSERR_OK;
 }
@@ -633,6 +634,7 @@ int32_t RecorderServiceStub::Reset(MessageParcel &data, MessageParcel &reply)
     (void)data;
     reply.WriteInt32(Reset());
     needAudioPermissionCheck = false;
+    audioSourceType_ = AUDIO_SOURCE_INVALID;
     return MSERR_OK;
 }
 
