@@ -1405,7 +1405,7 @@ void HiPlayerImpl::NotifyAudioDeviceChange(const Event& event)
 void HiPlayerImpl::NotifyAudioServiceDied()
 {
     Format format;
-    callbackLooper_.OnInfo(INFO_TYPE_STATE_CHANGE, PLAYER_STATE_ERROR, format);
+    callbackLooper_.OnInfo(INFO_TYPE_ERROR_MSG, MSERR_EXT_API9_IO, format);
 }
 
 void HiPlayerImpl::NotifyAudioFirstFrame(const Event& event)
