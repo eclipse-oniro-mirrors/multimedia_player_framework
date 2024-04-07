@@ -156,6 +156,8 @@ public:
     int32_t GetStubFile();
     void GetFileFd();
     uint64_t GetPts();
+    int32_t GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &changeInfo);
+
 private:
     std::shared_ptr<Recorder> recorder_ = nullptr;
     OHOS::sptr<OHOS::Surface> producerSurface_ = nullptr;
@@ -176,6 +178,7 @@ public:
 
     void OnError(RecorderErrorType errorType, int32_t errorCode) override;
     void OnInfo(int32_t type, int32_t extra) override;
+    void OnAudioCaptureChange(const AudioRecorderChangeInfo &audioRecorderChangeInfo) override;
     int32_t GetErrorCode();
 private:
     int32_t errorCode_ = 0;

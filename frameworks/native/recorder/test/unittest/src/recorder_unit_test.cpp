@@ -48,6 +48,36 @@ void RecorderUnitTest::TearDown(void)
     }
 }
 
+
+/**
+ * @tc.name: recorder_GetCurrentCapturerChangeInfo_001
+ * @tc.desc: recorder_GetCurrentCapturerChangeInfo_001
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderUnitTest, recorder_GetCurrentCapturerChangeInfo_001, TestSize.Level0)
+{
+    g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
+    g_videoRecorderConfig.videoFormat = MPEG4;
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT +
+    "recorder_GetCurrentCapturerChangeInfo_001.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
+    EXPECT_EQ(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_OK, recorder_->RequesetBuffer(PURE_VIDEO, g_videoRecorderConfig));
+    AudioRecorderChangeInfo changeInfo;
+    EXPECT_EQ(MSERR_OK, recorder->GetCurrentCapturerChangeInfo(changeInfo));
+    ASSERT_TRUE(changeInfo.capturerInfo.sourceType == g_videoRecorderConfig.aSource);
+    EXPECT_EQ(MSERR_OK, recorder_->Start());
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, recorder_->Stop(false));
+    recorder_->StopBuffer(PURE_VIDEO);
+    EXPECT_EQ(MSERR_OK, recorder_->Reset());
+    EXPECT_EQ(MSERR_OK, recorder_->Release());
+    close(g_videoRecorderConfig.outputFd);
+}
+
 /**
  * @tc.name: recorder_SetLocation_001
  * @tc.desc: record video with setLocation
