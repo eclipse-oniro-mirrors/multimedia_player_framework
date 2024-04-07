@@ -67,7 +67,7 @@ HWTEST_F(RecorderUnitTest, recorder_GetCurrentCapturerChangeInfo_001, TestSize.L
     EXPECT_EQ(MSERR_OK, recorder_->Prepare());
     EXPECT_EQ(MSERR_OK, recorder_->RequesetBuffer(PURE_VIDEO, g_videoRecorderConfig));
     AudioRecorderChangeInfo changeInfo;
-    EXPECT_EQ(MSERR_OK, recorder->GetCurrentCapturerChangeInfo(changeInfo));
+    EXPECT_EQ(MSERR_OK, recorder_->GetCurrentCapturerChangeInfo(changeInfo));
     ASSERT_TRUE(changeInfo.capturerInfo.sourceType == g_videoRecorderConfig.aSource);
     EXPECT_EQ(MSERR_OK, recorder_->Start());
     sleep(RECORDER_TIME);

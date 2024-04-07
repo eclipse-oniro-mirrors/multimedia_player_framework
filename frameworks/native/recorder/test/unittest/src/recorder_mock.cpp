@@ -356,7 +356,7 @@ uint64_t RecorderMock::GetPts()
 
 int32_t OHOS::Media::RecorderMock::GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &changeInfo)
 {
-    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, nullptr, "recorder_ == nullptr");
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
     return recorder_->GetCurrentCapturerChangeInfo(changeInfo);
 }
 
