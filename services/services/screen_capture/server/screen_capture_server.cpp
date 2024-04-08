@@ -1647,12 +1647,10 @@ ScreenCaptureObserverCallBack::ScreenCaptureObserverCallBack(
 bool ScreenCaptureObserverCallBack::StopAndRelease()
 {
     MEDIA_LOGI("ScreenCaptureObserverCallBack: StopAndRelease");
-    if (!screenCaptureServer_.expired()) {
-        auto scrServer= screenCaptureServer_.lock();
-        if (scrServer) {
-            scrServer->StopScreenCapture();
-            scrServer->Release();
-        }
+    auto scrServer = screenCaptureServer_.lock();
+    if (scrServer) {
+        scrServer->StopScreenCapture();
+        scrServer->Release();
     }
     return true;
 }
