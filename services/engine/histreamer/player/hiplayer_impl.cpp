@@ -96,7 +96,6 @@ HiPlayerImpl::~HiPlayerImpl()
 
 void HiPlayerImpl::ReleaseInner()
 {
-    pipeline_->Stop();
     audioSink_.reset();
 #ifdef SUPPORT_VIDEO
     if (videoDecoder_) {
@@ -391,13 +390,7 @@ int32_t HiPlayerImpl::Stop()
     MediaTrace trace("HiPlayerImpl::Stop");
     MEDIA_LOG_I("Stop entered.");
     callbackLooper_.StopReportMediaProgress();
-    if (audioSink_ != nullptr) {
-        audioSink_->SetVolumeWithRamp(MIN_MEDIA_VOLUME, FADE_OUT_LATENCY);
-    }
     // close demuxer first to avoid concurrent problem
-    if (demuxer_ != nullptr) {
-        demuxer_->Stop();
-    }
     auto ret = Status::ERROR_UNKNOWN;
     if (pipeline_ != nullptr) {
         ret = pipeline_->Stop();
