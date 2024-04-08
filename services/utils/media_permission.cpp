@@ -39,7 +39,7 @@ int32_t MediaPermission::CheckMicPermission()
     return Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller, "ohos.permission.MICROPHONE");
 }
 
-int32_t CheckNetWorkPermission(int32_t appUid, int32_t appPid, uint32_t appTokenId)
+int32_t MediaPermission::CheckNetWorkPermission(int32_t appUid, int32_t appPid, uint32_t appTokenId)
 {
     if (appUid == ROOT_UID) {
         MEDIA_LOGI("Root user. Permission Granted");
