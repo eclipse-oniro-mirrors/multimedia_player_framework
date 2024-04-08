@@ -44,7 +44,7 @@ public:
     ~InCallObserverTestFalseCallBack() {}
     bool StopAndRelease()
     {
-        return true;
+        return false;
     }
 };
 
