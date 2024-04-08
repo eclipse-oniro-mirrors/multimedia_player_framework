@@ -148,9 +148,9 @@ int32_t PlayerServer::SetSource(const std::string &url)
     if (url.find("http") != std::string::npos) {
         int32_t permissionResult = MediaPermission::CheckNetWorkPermission(appUid_, appPid_, appTokenId_);
         if (permissionResult != Security::AccessToken::PERMISSION_GRANTED) {
-           MEDIA_LOGE("user do not have the right to access INTERNET");
-           OnErrorMessage(MSERR_USER_NO_PERMISSION, "user do not have the right to access INTERNET");
-           return MSERR_INVALID_OPERATION;
+            MEDIA_LOGE("user do not have the right to access INTERNET");
+            OnErrorMessage(MSERR_USER_NO_PERMISSION, "user do not have the right to access INTERNET");
+            return MSERR_INVALID_OPERATION;
         }
     }
     config_.url = url;
