@@ -1294,10 +1294,10 @@ void PlayerServer::OnErrorMessage(int32_t errorCode, const std::string &errorMsg
             (void)currState->Pause();
             if (playerCb_ != nullptr && !errorCbOnce_) {
                 playerCb_->OnError(errorCode, errorMsg);
-                errorCbOnce = true;
+                errorCbOnce_ = true;
             }
         });
-        taskMgr_.LaunchTask(pauseTask, PlayherServerTaskType::STATE_CHANGE, "pause");
+        taskMgr_.LaunchTask(pauseTask, PlayerServerTaskType::STATE_CHANGE, "pause");
         MEDIA_LOGI("0x%{public}06" PRIXPTR " PlayerServer OnPause in", FAKE_POINTER(this));
         return;
     }
