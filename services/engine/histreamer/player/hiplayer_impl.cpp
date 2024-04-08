@@ -96,13 +96,6 @@ HiPlayerImpl::~HiPlayerImpl()
 
 void HiPlayerImpl::ReleaseInner()
 {
-    audioSink_.reset();
-#ifdef SUPPORT_VIDEO
-    if (videoDecoder_) {
-        videoDecoder_.reset();
-    }
-#endif
-    syncManager_.reset();
     if (demuxer_) {
         pipeline_->RemoveHeadFilter(demuxer_);
     }
