@@ -93,10 +93,10 @@ namespace RecorderTestParam {
         double captureFps = 30;
         int32_t outputFd = 0;
         AudioCodecFormat audioFormat = AAC_LC;
-        AudioSourceType aSource = AUDIO_MIC;
+        AudioSourceType aSource = AUDIO_SOURCE_DEFAULT;
         OutputFormatType outPutFormat = FORMAT_MPEG_4;
         VideoSourceType vSource = VIDEO_SOURCE_SURFACE_ES;
-        VideoCodecFormat videoFormat = MPEG4;
+        VideoCodecFormat videoFormat = H264;
     };
     struct AudioRecorderConfig {
         int32_t outputFd = 0;
