@@ -1307,6 +1307,7 @@ void PlayerServer::OnErrorMessage(int32_t errorCode, const std::string &errorMsg
         MEDIA_LOGI("0x%{public}06" PRIXPTR " PlayerServer OnPause in", FAKE_POINTER(this));
         return;
     }
+    OnErrorCb(errorCode, errorMsg);
 }
 
 void PlayerServer::OnErrorCb(int32_t errorCode, const std::string &errorMsg)
