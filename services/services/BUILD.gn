@@ -70,6 +70,7 @@ config("media_service_config") {
     "recorder_profiles/server",
     "screen_capture/server",
     "screen_capture/ipc",
+    "observer",
     "//foundation/multimedia/player_framework/services/include",
     "//foundation/multimedia/player_framework/services/services/factory",
     "//foundation/multimedia/player_framework/services/services/engine_intf",
@@ -200,6 +201,8 @@ ohos_shared_library("media_service") {
     "audio_framework:audio_client",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
+    "call_manager:tel_call_manager_api",
+    "core_service:tel_core_service_api",
     "hdf_core:libhdi",
     "hicollie:libhicollie",
     "hilog:libhilog",
@@ -213,6 +216,7 @@ ohos_shared_library("media_service") {
     "qos_manager:concurrent_task_client",
     "qos_manager:qos",
     "safwk:system_ability_fwk",
+    "state_registry:tel_state_registry_api",
   ]
 
   if (multimedia_player_framework_support_video) {
