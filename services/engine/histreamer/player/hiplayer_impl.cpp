@@ -330,7 +330,7 @@ int32_t HiPlayerImpl::Play()
     MediaTrace trace("HiPlayerImpl::Play");
     MEDIA_LOG_I("Play entered.");
     int32_t ret = MSERR_INVALID_VAL;
-    inCompleted_ = false;
+    isInCompleted_ = false;
     callbackLooper_.StartReportMediaProgress(100); // 100 ms
     if (pipelineStates_ == PlayerStates::PLAYER_PLAYBACK_COMPLETE || pipelineStates_ == PlayerStates::PLAYER_STOPPED) {
         isStreaming_ = true;
@@ -426,7 +426,7 @@ int32_t HiPlayerImpl::Stop()
         stopWaitingDrmConfig_ = true;
         drmConfigCond_.notify_all();
     }
-    inCompleted_ = false;
+    isInCompleted_ = false;
     OnStateChanged(PlayerStateId::STOPPED);
     return TransStatus(ret);
 }
@@ -709,7 +709,7 @@ int32_t HiPlayerImpl::SetObs(const std::weak_ptr<IPlayerEngineObs>& obs)
 
 int32_t HiPlayerImpl::GetCurrentTime(int32_t& currentPositionMs)
 {
-    if (curState_ == PlayerStateId::EOS && inCompleted_) {
+    if (curState_ == PlayerStateId::EOS && isInCompleted_) {
         currentPositionMs = durationMs_.load();
         return TransStatus(Status::OK);
     }
@@ -1198,7 +1198,7 @@ void HiPlayerImpl::HandleCompleteEvent(const Event& event)
     if (!singleLoop_.load()) {
         OnStateChanged(PlayerStateId::EOS);
         syncManager_->ResetTimeAnchorNoLock();
-        inCompleted_ = true;
+        isInCompleted_ = true;
     }
     callbackLooper_.OnInfo(INFO_TYPE_EOS, static_cast<int32_t>(singleLoop_.load()), format);
     for (std::pair<std::string, bool>& item: completeState_) {
