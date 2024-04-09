@@ -91,11 +91,21 @@ HiPlayerImpl::HiPlayerImpl(int32_t appUid, int32_t appPid, uint32_t appTokenId, 
 HiPlayerImpl::~HiPlayerImpl()
 {
     MEDIA_LOG_I("~HiPlayerImpl dtor called.");
-    ReleaseInner();
+    if (demuxer_) {
+        pipeline_->RemoveHeadFilter(demuxer_);
+    }
 }
 
 void HiPlayerImpl::ReleaseInner()
 {
+    pipeline_->Stop();
+    audioSink_.reset();
+#ifdef SUPPORT_VIDEO
+    if (videoDecoder_) {
+        videoDecoder_.reset();
+    }
+#endif
+    syncManager_.reset();
     if (demuxer_) {
         pipeline_->RemoveHeadFilter(demuxer_);
     }
