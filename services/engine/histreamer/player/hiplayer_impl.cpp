@@ -282,7 +282,9 @@ int32_t HiPlayerImpl::PrepareAsync()
     NotifyResolutionChange();
     NotifyPositionUpdate();
     DoInitializeForHttp();
-    OnStateChanged(PlayerStateId::READY);
+    if (!demuxer_->IsExistVideoTrace()) {
+        OnStateChanged(PlayerStateId::READY);
+    }
     MEDIA_LOG_I("PrepareAsync End, resource duration " PUBLIC_LOG_D32, durationMs_.load());
     return TransStatus(ret);
 }
