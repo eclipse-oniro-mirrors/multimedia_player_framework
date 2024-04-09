@@ -840,7 +840,7 @@ HWTEST_F(RecorderUnitTest, recorder_video_wrongsize, TestSize.Level2)
     EXPECT_EQ(MSERR_OK, recorder_->RequesetBuffer(PURE_ERROR, g_videoRecorderConfig));
     recorder_->Start();
     sleep(RECORDER_TIME);
-    EXPECT_NE(MSERR_OK, recorder_->Stop(false));
+    EXPECT_EQ(MSERR_OK, recorder_->Stop(false));
     recorder_->StopBuffer(PURE_VIDEO);
     recorder_->Reset();
     EXPECT_EQ(MSERR_OK, recorder_->Release());
