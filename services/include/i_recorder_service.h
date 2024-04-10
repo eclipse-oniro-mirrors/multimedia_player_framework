@@ -461,6 +461,15 @@ public:
     virtual int32_t GetAvailableEncoder(std::vector<EncoderCapabilityData> &encoderInfo) = 0;
 
     virtual int32_t GetMaxAmplitude() = 0;
+
+    /**
+     * @brief Custom parameter
+     *
+     * @param userMeta The user Custom Parameters
+     * @return Returns {@link SUCCESS} if the setting is successful; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+    */
+    virtual int32_t SetUserCustomInfo(int32_t sourceId, Meta userCustomInfo) = 0; //TODO:: need change name
 };
 } // namespace Media
 } // namespace OHOS

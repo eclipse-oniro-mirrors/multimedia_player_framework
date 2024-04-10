@@ -176,14 +176,18 @@ napi_value AVMetadataExtractorNapi::JsCreateAVMetadataExtractor(napi_env env, na
 std::shared_ptr<TaskHandler<TaskRet>> AVMetadataExtractorNapi::ResolveMetadataTask(
     std::unique_ptr<AVMetadataExtractorAsyncContext> &promiseCtx)
 {
-    auto task = std::make_shared<TaskHandler<TaskRet>>([this, &metadata = promiseCtx->metadata_]() {
+    auto task = std::make_shared<TaskHandler<TaskRet>>([this, &metadata = promiseCtx->metadata_,
+            &customInfo = promiseCtx->customInfo_]() {
         MEDIA_LOGI("ResolveMetadata Task In");
         std::unique_lock<std::mutex> lock(taskMutex_);
         auto state = GetCurrentState();
         if (state == AVMetadataHelperState::STATE_PREPARED || state == AVMetadataHelperState::STATE_CALL_DONE) {
-            std::unordered_map<int32_t, std::string> res = helper_->ResolveMetadata();
+            // std::unordered_map<int32_t, std::string> res = helper_->ResolveMetadata();
+            std::shared_ptr<Meta> res = helper_->ResolveMetadata();
+            std::shared_ptr<Meta> userData = helper_->GetCustomInfo(userData);
             MEDIA_LOGD("ResolveMetadata Task end resolve: %{public}zu", res.size());
             metadata = std::make_shared<std::unordered_map<int32_t, std::string>>(res);
+            customInfo = std::make_shared<Meta>(userData);
 
             stopWait_ = false;
             LISTENER(stateChangeCond_.wait(lock, [this]() { return stopWait_.load(); }), "ResolveMetadataTask", false)
@@ -257,6 +261,8 @@ void AVMetadataExtractorNapi::ResolveMetadataComplete(napi_env env, napi_status 
     CHECK_AND_RETURN_LOG(promiseCtx != nullptr, "promiseCtx is nullptr!");
 
     napi_value result = nullptr;
+    napi_value location = nullptr;
+    napi_value customInfo = nullptr;
     napi_create_object(env, &result);
 
     if (status == napi_ok && promiseCtx->errCode == napi_ok) {
@@ -283,6 +289,30 @@ void AVMetadataExtractorNapi::ResolveMetadataComplete(napi_env env, napi_status 
                 MEDIA_LOGW("failed to set property: %{public}d", iter->first);
                 continue;
             }
+        }
+        for (auto iter = promiseCtx->metadata_->begin(); iter != promiseCtx->metadata_->end(); ++iter) {
+            MEDIA_LOGI("Resolve metadata completed, key: %{public}d",
+                iter->first, iter->second.c_str());
+            
+            napi_value keyNapi
+        }
+        for (auto iter = promiseCtx->customInfo_->begin(); iter != promiseCtx->customInfo_->end(); ++iter) {
+            MEDIA_LOGI("Resolve customInfo_ completed, key: %{public}s", iter->first);
+
+            napi_value keyNapi = nullptr;
+            napi_value valueNapi = nullptr;
+            napi_status st = napi_create_string_utf8(env, iter->first, NAPI_AUTO_LENGTH, &keyNapi);
+            if (st != napi_ok) {
+                MEDIA_LOGW("failed to set property: %{public}d", iter->first);
+                continue;
+            }
+            AnyValueType valueType = promiseCtx->customInfo_->GetValueType(keyNapi);
+            if (valueType == AnyValueType::STRING) {
+                st = napi_create_string_utf8(env, iter->second, NAPI_AUTO_LENGTH, &valueNapi);
+            } else {
+                MEDIA_LOGE("not supported value type");
+            }
+            napi_set_property(env, customInfo, keyNapi, valueNapi);
         }
         promiseCtx->status = ERR_OK;
     } else {

@@ -203,6 +203,7 @@ int32_t HiRecorderImpl::Configure(int32_t sourceId, const RecorderParam &recPara
         case RecorderPublicParamType::VID_FRAMERATE:
         case RecorderPublicParamType::VID_ENC_FMT:
         case RecorderPublicParamType::VID_IS_HDR:
+        case RecorderPublicParamType::VID_CUSTOM_INFO:
             ConfigureVideo(recParam);
             break;
         case RecorderPublicParamType::OUT_PATH:
@@ -410,6 +411,7 @@ Status HiRecorderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, cons
                     muxerFilter_->Init(recorderEventReceiver_, recorderCallback_);
                     muxerFilter_->SetOutputParameter(appUid_, appPid_, fd_, outputFormatType_);
                     muxerFilter_->SetParameter(muxerFormat_);
+                    muxerFilter_->SetUserMeta(userMeta_);
                     close(fd_);
                     fd_ = -1;
                 }
@@ -466,7 +468,7 @@ int32_t HiRecorderImpl::GetAvailableEncoder(std::vector<EncoderCapabilityData> &
 
     std::vector<MediaAVCodec::CapabilityData*> encoderCapData;
     Status ret = codecCapabilityAdapter_->GetAvailableEncoder(encoderCapData);
-    
+
     encoderInfo = ConvertEncoderInfo(encoderCapData);
     return (int32_t)ret;
 }
@@ -560,6 +562,16 @@ void HiRecorderImpl::ConfigureVideo(const RecorderParam &recParam)
             if (vidIsHdr.isHdr) {
                 videoEncFormat_->Set<Tag::VIDEO_H265_PROFILE>(Plugins::HEVCProfile::HEVC_PROFILE_MAIN_10);
             }
+            break;
+        }
+        case RecorderPublicParamType::VID_CUSTOM_INFO: {
+            CustomInfo customInfo = static_cast<const CustomInfo&>(recParam);
+            userMeta_ = std::make_shared<Meta>(customInfo.userCustomInfo);
+            break;
+        }
+        case RecorderPublicParamType::VID_GENRE_INFO: {
+            GenreInfo genreInfo = static_cast<const GenreInfo&>(recParam);
+            videoEncFormat_->SetData("Genre", genreInfo.genre)
             break;
         }
         default:

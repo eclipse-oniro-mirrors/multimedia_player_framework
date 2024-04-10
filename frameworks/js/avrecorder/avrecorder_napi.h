@@ -159,6 +159,7 @@ struct AVRecorderConfig {
     std::string url;
     int32_t rotation = 0; // Optional
     Location location; // Optional
+    AVMetadata metadata; // Optional
     bool withVideo = false;
     bool withAudio = false;
     bool withLocation = false;
@@ -333,6 +334,7 @@ private:
     int32_t GetProfile(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
     int32_t GetConfig(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
     int32_t GetRotation(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
+    int32_t GetAVMetaData(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);// TODO::new
     int32_t GetSourceIdAndQuality(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env,
         napi_value sourceIdArgs, napi_value qualityArgs, const std::string &opt);
     RetInfo SetProfile(std::shared_ptr<AVRecorderConfig> config);
@@ -364,6 +366,7 @@ struct AVRecorderAsyncContext : public MediaAsyncContext {
 
     AVRecorderNapi *napi = nullptr;
     std::shared_ptr<AVRecorderConfig> config_ = nullptr;
+    std::shared_ptr<Meta> configMeta_ = nullptr; // TODO::same as AVRecorderConfig
     std::string opt_ = "";
     std::shared_ptr<TaskHandler<RetInfo>> task_ = nullptr;
     std::shared_ptr<AVRecorderProfile> profile_ = nullptr;

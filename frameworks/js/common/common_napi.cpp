@@ -143,6 +143,50 @@ std::string CommonNapi::GetPropertyString(napi_env env, napi_value configObj, co
     return GetStringArgument(env, item);
 }
 
+napi_status CommonNapi::GetPropertyRecord(napi_env env, napi_value in, const Meta &meta)
+{
+    napi_valuetype valueType = napi_undefined;
+    napi_status status = napi_typeof(env, in, &valueType);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, status, "get valueType failed");
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && valueType == napi_object, napi_invalid_arg, "invalid arguments");
+
+    napi_value dataList = nullptr;
+    int32_t count = 0;
+    status = napi_get_property_names(env, in, &dataList);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, status, "get property names failed");
+    status = napi_get_array_length(env, dataList, &count);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, status, "get length failed");
+
+    napi_value jsKey = nullptr;
+    napi_value jsValue = nullptr;
+    for (int32_t i = 0; i < count; i++) {
+        status = napi_get_element(env, dataList, i, &jsKey);
+        CHECK_AND_RETURN_RET_LOG(status == napi_ok, status, "get element Key failed");
+
+        std::string strKey = GetStringArgument(env, jsKey);
+        status = napi_get_named_property(env, in, strKey.c_str(), &value);
+        CHECK_AND_RETURN_RET_LOG(status == napi_ok, status, "get property value failed");
+        status = napi_typeof(env, jsValue, &valueType);
+        CHECK_AND_RETURN_RET_LOG(status == napi_ok, status, "get valueType failed");
+
+        if (valueType == napi_number) {
+            double dValue = 0;
+            status = napi_get_value_double(env, jsValue, &dValue);
+            CHECK_AND_RETURN_RET_LOG(status == napi_ok, status, "get value failed");
+            meta.SetData(strKey, dValue);
+        } else if (valueType == napi_string) {
+            std::string sValue = 0;
+            status = napi_get_value_double(env, jsValue, &sValue);
+            CHECK_AND_RETURN_RET_LOG(status == napi_ok, status, "get value failed");
+            meta.SetData(strKey, sValue);
+        } else {
+            CHECK_AND_RETURN_RET_LOG(status == napi_ok && valueType == napi_object,
+                napi_invalid_arg, "invalid arguments");
+        }
+    }
+    return napi_ok;
+}
+
 bool CommonNapi::GetFdArgument(napi_env env, napi_value value, AVFileDescriptor &rawFd)
 {
     CHECK_AND_RETURN_RET(GetPropertyInt32(env, value, "fd", rawFd.fd) == true, false);

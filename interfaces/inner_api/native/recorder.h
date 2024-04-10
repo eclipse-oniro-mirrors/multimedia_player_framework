@@ -368,6 +368,14 @@ public:
         muted = parcel.ReadBool();
     }
 };
+
+// same as AVMetadata
+struct AVMetadata {
+    std::string genre;
+    Location location;
+    Meta customInfo;
+}
+
 /**
  * @brief Provides listeners for recording errors and information events.
  *
@@ -723,6 +731,20 @@ public:
      * @version 1.0
      */
     virtual int32_t SetRecorderCallback(const std::shared_ptr<RecorderCallback> &callback) = 0;
+
+    /**
+     * @brief Custom parameter
+     *
+     * @param userMeta The user Custom Parameters
+     * @return Returns {@link SUCCESS} if the setting is successful; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+    */
+    virtual int32_t SetUserCustomInfo(int32_t sourceId, Meta &userCustomInfo) = 0; //TODO:: need change name
+
+    /**
+     * @brief Genre
+    */
+   virtual int32_t SetGenre(int32_t sourceId, std::string &genre) = 0;
 
     /**
      * @brief Prepares for recording.
