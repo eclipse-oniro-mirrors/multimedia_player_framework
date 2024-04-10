@@ -1205,7 +1205,7 @@ void HiPlayerImpl::HandleCompleteEvent(const Event& event)
 
 void HiPlayerImpl::HandleVideoFirstFrameEvent(int32_t errorCode)
 {
-    if (static_cast<MediaServiceErrCode>(errorCode) == MSERR_VIDEO_RENDERING_START) {
+    if (static_cast<Status>(errorCode) == Status::PREPARE_BEFORE_START_END) {
         pipeline_->Pause();
         OnStateChanged(PlayerStateId::READY);
         MEDIA_LOG_I("prepare start and pause success.");
