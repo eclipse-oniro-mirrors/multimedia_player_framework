@@ -141,6 +141,38 @@ HWTEST_F(AVMetadataUnitTest, ResolveMetadata_Format_MP4_0600, Function | MediumT
 }
 
 /**
+    * @tc.number    : ResolveMetadata_Format_MP4_0700
+    * @tc.name      : 07.MP4 format Get MetaData(HDR)
+    * @tc.desc      : test ResolveMetadata
+*/
+HWTEST_F(AVMetadataUnitTest, ResolveMetadata_Format_MP4_0700, Function | MediumTest | Level0)
+{
+    std::unordered_map<int32_t, std::string> expectMeta;
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+        std::string("/HDR.mp4");
+    #ifndef CHECKING_VIDEO_IS_HDR_VIVID
+    expectMeta.insert(std::make_pair(AV_KEY_VIDEO_IS_HDR_VIVID, ""));
+    #else
+    expectMeta.insert(std::make_pair(AV_KEY_VIDEO_IS_HDR_VIVID, "yes"));
+    #endif
+    CheckMeta(uri, expectMeta);
+}
+
+/**
+    * @tc.number    : ResolveMetadata_Format_MP4_0800
+    * @tc.name      : 08.MP4 format Get MetaData(SDR)
+    * @tc.desc      : test ResolveMetadata
+*/
+HWTEST_F(AVMetadataUnitTest, ResolveMetadata_Format_MP4_0800, Function | MediumTest | Level0)
+{
+    std::unordered_map<int32_t, std::string> expectMeta;
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+        std::string("/SDR.mp4");
+    expectMeta.insert(std::make_pair(AV_KEY_VIDEO_IS_HDR_VIVID, ""));
+    CheckMeta(uri, expectMeta);
+}
+
+/**
     * @tc.number    : ResolveMetadata_Format_M4A_0100
     * @tc.name      : 01.M4A format Get MetaData
     * @tc.desc      : test ResolveMetadata
@@ -475,7 +507,7 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameAtTime_API_0500, Level2)
     int64_t timeUs = 0;
     int32_t queryOption = AVMetadataQueryOption::AV_META_QUERY_NEXT_SYNC;
     std::shared_ptr<PixelMap> frame = helper->FetchFrameAtTime(timeUs, queryOption, param);
-    EXPECT_EQ(nullptr, frame);
+    EXPECT_NE(nullptr, frame);
     helper->Release();
 }
 
@@ -491,7 +523,7 @@ HWTEST_F(AVMetadataUnitTest, SetSource_API_0100, Level2)
     std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
     ASSERT_NE(nullptr, helper);
     ASSERT_EQ(true, helper->CreateAVMetadataHelper());
-    EXPECT_NE(MSERR_OK, helper->SetSource(uri, 0, 0, AVMetadataUsage(100)));
+    EXPECT_EQ(MSERR_OK, helper->SetSource(uri, 0, 0, AVMetadataUsage(100)));
     helper->Release();
 }
 

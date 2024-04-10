@@ -22,6 +22,7 @@
 #include "uri_helper.h"
 #include "player_server_task_mgr.h"
 #include "audio_effect.h"
+#include "account_subscriber.h"
 
 namespace OHOS {
 namespace Media {
@@ -67,7 +68,8 @@ class PlayerServer
     : public IPlayerService,
       public IPlayerEngineObs,
       public NoCopyable,
-      public PlayerServerStateMachine {
+      public PlayerServerStateMachine,
+      public CommonEventReceiver {
 public:
     static std::shared_ptr<IPlayerService> Create();
     PlayerServer();
@@ -96,6 +98,7 @@ public:
     int32_t AddSubSource(const std::string &url) override;
     int32_t AddSubSource(int32_t fd, int64_t offset, int64_t size) override;
     int32_t GetPlaybackSpeed(PlaybackRateMode &mode) override;
+    int32_t SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, AVPlayStrategy strategy) override;
 #ifdef SUPPORT_VIDEO
     int32_t SetVideoSurface(sptr<Surface> surface) override;
 #endif
@@ -118,6 +121,8 @@ public:
     void OnErrorMessage(int32_t errorCode, const std::string &errorMsg) override;
     void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody = {}) override;
 
+    void OnCommonEventReceived(const std::string &event) override;
+
 protected:
     class BaseState;
     class IdleState;
@@ -139,6 +144,7 @@ protected:
 
     std::shared_ptr<PlayerCallback> playerCb_ = nullptr;
     std::unique_ptr<IPlayerEngine> playerEngine_ = nullptr;
+    std::shared_ptr<AccountSubscriber> accountSubscriber_ = nullptr;
     bool errorCbOnce_ = false;
     bool disableStoppedCb_ = false;
     std::string lastErrMsg_;
@@ -163,6 +169,8 @@ protected:
         PlaybackRateMode speedMode = SPEED_FORWARD_1_00_X;
         std::string url;
         int32_t effectMode = OHOS::AudioStandard::AudioEffectMode::EFFECT_DEFAULT;
+        std::map<std::string, std::string> header;
+        AVPlayStrategy strategy_;
     } config_;
 
 private:
@@ -184,6 +192,7 @@ private:
 
     void HandleEos();
     void FormatToString(std::string &dumpString, std::vector<Format> &videoTrack);
+    void OnErrorCb(int32_t errorCode, const std::string &errorMsg);
 
 #ifdef SUPPORT_VIDEO
     sptr<Surface> surface_ = nullptr;

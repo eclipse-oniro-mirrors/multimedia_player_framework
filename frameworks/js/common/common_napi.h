@@ -16,6 +16,7 @@
 #ifndef COMMON_NAPI_H
 #define COMMON_NAPI_H
 
+#include <map>
 #include <string>
 #include <vector>
 #include <unordered_map>
@@ -30,6 +31,9 @@
 namespace OHOS {
 namespace Media {
 struct AVFileDescriptor;
+struct AVPlayStrategyTmp;
+struct AVDataSrcDescriptor;
+class AVMediaSourceTmp;
 
 class CommonNapi {
 public:
@@ -44,7 +48,9 @@ public:
     static std::string GetPropertyString(napi_env env, napi_value configObj, const std::string &type);
     // support Record<string, string|number>
     static napi_status GetPropertyRecord(napi_env env, napi_value in, const Meta &meta);
+    static bool GetPropertyMap(napi_env env, napi_value value, std::map<std::string, std::string>& map);
     static bool GetFdArgument(napi_env env, napi_value value, AVFileDescriptor &rawFd);
+    static bool GetPlayStrategy(napi_env env, napi_value value, AVPlayStrategyTmp &playStrategy);
     static napi_status FillErrorArgs(napi_env env, int32_t errCode, const napi_value &args);
     static napi_status CreateError(napi_env env, int32_t errCode, const std::string &errMsg, napi_value &errVal);
     static napi_ref CreateReference(napi_env env, napi_value arg);
@@ -296,6 +302,24 @@ struct AutoRef {
 struct AVDataSrcDescriptor {
     int64_t fileSize = 0;
     napi_value callback = nullptr;
+};
+
+class AVMediaSourceTmp {
+public:
+    AVMediaSourceTmp() = default;
+    ~AVMediaSourceTmp()
+    {
+        header.clear();
+    }
+    std::map<std::string, std::string> header;
+    std::string url {0};
+};
+
+struct AVPlayStrategyTmp {
+    uint32_t preferredWidth;
+    uint32_t preferredHeight;
+    uint32_t preferredBufferDuration;
+    bool preferredHdr;
 };
 
 template<typename T>

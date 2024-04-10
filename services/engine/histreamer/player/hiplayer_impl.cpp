@@ -27,6 +27,7 @@
 #include "common/plugin_time.h"
 #include "media_dfx.h"
 #include "media_utils.h"
+#include "meta_utils.h"
 #include "meta/media_types.h"
 
 namespace {
@@ -41,6 +42,7 @@ const int32_t PLAYING_SEEK_WAIT_TIME = 200; // wait up to 200 ms for new frame a
 namespace OHOS {
 namespace Media {
 using namespace Pipeline;
+using namespace OHOS::Media::Plugins;
 const std::string BUNDLE_NAME_FIRST = "com.hua";
 const std::string BUNDLE_NAME_SECOND = "wei.hmos.photos";
 class PlayerEventReceiver : public EventReceiver {
@@ -89,7 +91,9 @@ HiPlayerImpl::HiPlayerImpl(int32_t appUid, int32_t appPid, uint32_t appTokenId, 
 HiPlayerImpl::~HiPlayerImpl()
 {
     MEDIA_LOG_I("~HiPlayerImpl dtor called.");
-    ReleaseInner();
+    if (demuxer_) {
+        pipeline_->RemoveHeadFilter(demuxer_);
+    }
 }
 
 void HiPlayerImpl::ReleaseInner()
@@ -186,6 +190,21 @@ int32_t HiPlayerImpl::SetSource(const std::string& uri)
     return TransStatus(Status::OK);
 }
 
+int32_t HiPlayerImpl::SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, AVPlayStrategy strategy)
+{
+    MEDIA_LOG_I("SetMediaSource entered media source stream");
+    if (mediaSource == nullptr) {
+        return MSERR_INVALID_VAL;
+    }
+    header_ = mediaSource->header;
+    url_ = mediaSource->url;
+    preferedWidth_ = strategy.preferredWidth;
+    preferedHeight_ = strategy.preferredHeight;
+    bufferDuration_ = strategy.preferredBufferDuration;
+    preferHDR_ = strategy.preferredHdr;
+    return MSERR_OK;
+}
+
 int32_t HiPlayerImpl::SetSource(const std::shared_ptr<IMediaDataSource>& dataSrc)
 {
     MediaTrace trace("HiPlayerImpl::SetSource dataSrc");
@@ -235,7 +254,13 @@ int32_t HiPlayerImpl::PrepareAsync()
     if (dataSrc_ != nullptr) {
         ret = DoSetSource(std::make_shared<MediaSource>(dataSrc_));
     } else {
-        ret = DoSetSource(std::make_shared<MediaSource>(url_));
+        if (!header_.empty()) {
+            MEDIA_LOG_I("DoSetSource header");
+            ret = DoSetSource(std::make_shared<MediaSource>(url_, header_));
+        } else {
+            MEDIA_LOG_I("DoSetSource url");
+            ret = DoSetSource(std::make_shared<MediaSource>(url_));
+        }
     }
     if (ret != Status::OK) {
         MEDIA_LOG_E("PrepareAsync error: DoSetSource error");
@@ -259,7 +284,9 @@ int32_t HiPlayerImpl::PrepareAsync()
     NotifyResolutionChange();
     NotifyPositionUpdate();
     DoInitializeForHttp();
-    OnStateChanged(PlayerStateId::READY);
+    if (!demuxer_->IsExistVideoTrace()) {
+        OnStateChanged(PlayerStateId::READY);
+    }
     MEDIA_LOG_I("PrepareAsync End, resource duration " PUBLIC_LOG_D32, durationMs_.load());
     return TransStatus(ret);
 }
@@ -307,6 +334,7 @@ int32_t HiPlayerImpl::Play()
     MediaTrace trace("HiPlayerImpl::Play");
     MEDIA_LOG_I("Play entered.");
     int32_t ret = MSERR_INVALID_VAL;
+    isInCompleted_ = false;
     callbackLooper_.StartReportMediaProgress(100); // 100 ms
     if (pipelineStates_ == PlayerStates::PLAYER_PLAYBACK_COMPLETE || pipelineStates_ == PlayerStates::PLAYER_STOPPED) {
         isStreaming_ = true;
@@ -334,6 +362,7 @@ int32_t HiPlayerImpl::Pause()
 {
     MediaTrace trace("HiPlayerImpl::Pause");
     MEDIA_LOG_I("Pause entered.");
+    isReadyComplete_ = false;
     if (pipelineStates_ == PlayerStates::PLAYER_PLAYBACK_COMPLETE) {
         MEDIA_LOG_E("completed not allow pause");
         return TransStatus(Status::OK);
@@ -358,6 +387,7 @@ int32_t HiPlayerImpl::Pause()
     callbackLooper_.StopReportMediaProgress();
     callbackLooper_.ManualReportMediaProgressOnce();
     OnStateChanged(PlayerStateId::PAUSE);
+    isReadyComplete_ = true;
     return TransStatus(ret);
 }
 
@@ -366,13 +396,7 @@ int32_t HiPlayerImpl::Stop()
     MediaTrace trace("HiPlayerImpl::Stop");
     MEDIA_LOG_I("Stop entered.");
     callbackLooper_.StopReportMediaProgress();
-    if (audioSink_ != nullptr) {
-        audioSink_->SetVolumeWithRamp(MIN_MEDIA_VOLUME, FADE_OUT_LATENCY);
-    }
     // close demuxer first to avoid concurrent problem
-    if (demuxer_ != nullptr) {
-        demuxer_->Stop();
-    }
     auto ret = Status::ERROR_UNKNOWN;
     if (pipeline_ != nullptr) {
         ret = pipeline_->Stop();
@@ -400,7 +424,7 @@ int32_t HiPlayerImpl::Stop()
         stopWaitingDrmConfig_ = true;
         drmConfigCond_.notify_all();
     }
-
+    isInCompleted_ = false;
     OnStateChanged(PlayerStateId::STOPPED);
     return TransStatus(ret);
 }
@@ -436,6 +460,7 @@ Status HiPlayerImpl::Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeek
     FALSE_RETURN_V_MSG_E(durationMs_.load() > 0, Status::ERROR_INVALID_PARAMETER,
         "Seek, invalid operation, source is unseekable or invalid");
     isSeek_ = true;
+    isReadyComplete_ = false;
     int64_t seekPos = std::max(static_cast<int64_t>(0), std::min(mSeconds, static_cast<int64_t>(durationMs_.load())));
     auto rtv = seekPos >= 0 ? Status::OK : Status::ERROR_INVALID_PARAMETER;
     if (rtv == Status::OK) {
@@ -467,6 +492,7 @@ Status HiPlayerImpl::Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeek
         audioSink_->SetIsTransitent(false);
     }
     isSeek_ = false;
+    isReadyComplete_ = true;
     return rtv;
 }
 
@@ -524,7 +550,9 @@ Status HiPlayerImpl::doCompletedSeek(int64_t seekPos, PlayerSeekMode mode)
     pipeline_ -> Flush();
     auto rtv = doSeek(seekPos, mode);
     if (isStreaming_) {
+        MEDIA_LOG_D("doCompletedSeek isStreaming_ is true");
         pipeline_->Resume();
+        syncManager_->Resume();
     } else {
         callbackLooper_.StopReportMediaProgress();
         callbackLooper_.ManualReportMediaProgressOnce();
@@ -536,9 +564,26 @@ Status HiPlayerImpl::doCompletedSeek(int64_t seekPos, PlayerSeekMode mode)
 Status HiPlayerImpl::doSeek(int64_t seekPos, PlayerSeekMode mode)
 {
     MEDIA_LOG_I("doSeek.");
+    int64_t seekTimeUs = 0;
+    if (!Plugins::Us2HstTime(seekPos, seekTimeUs)) { // ms to us
+        MEDIA_LOG_E("Invalid seekPos: %{public}" PRId64, seekPos);
+        return Status::ERROR_INVALID_PARAMETER;
+    }
     if (mode == PlayerSeekMode::SEEK_CLOSEST) {
-        MEDIA_LOG_I("doSeek change state SEEK_PREVIOUS_SYNC.");
-        mode = PlayerSeekMode::SEEK_PREVIOUS_SYNC;
+        MEDIA_LOG_I("doSeek SEEK_CLOSEST.");
+        if (videoDecoder_ != nullptr) {
+            videoDecoder_->SetSeekTime(seekTimeUs);
+        }
+        seekAgent_ = std::make_shared<SeekAgent>(demuxer_);
+        auto res = seekAgent_->Seek(seekPos);
+        MEDIA_LOG_I("seekAgent_ Seek end");
+        if (res != Status::OK) {
+            MEDIA_LOG_E("Seek closest failed.");
+        } else {
+            syncManager_->Seek(seekTimeUs);
+        }
+        seekAgent_.reset();
+        return res;
     }
     int64_t realSeekTime = seekPos;
     auto seekMode = Transform2SeekMode(mode);
@@ -549,7 +594,7 @@ Status HiPlayerImpl::doSeek(int64_t seekPos, PlayerSeekMode mode)
         rtv = demuxer_->SeekTo(seekPos, seekMode, realSeekTime);
     }
     if (rtv == Status::OK) {
-        syncManager_->Seek(Plugins::HstTime2Us(realSeekTime));
+        syncManager_->Seek(seekTimeUs);
     }
     return rtv;
 }
@@ -572,6 +617,7 @@ int32_t HiPlayerImpl::SetVolume(float leftVolume, float rightVolume)
     volume /= MAX_MEDIA_VOLUME;  // normalize to 0~1
     FALSE_RETURN_V_MSG_E(audioSink_ != nullptr, (int32_t)TransStatus(Status::ERROR_INVALID_OPERATION),
         "Set volume failed, audio sink is nullptr");
+    MEDIA_LOG_I("Sink SetVolume");
     Status ret = audioSink_->SetVolume(volume);
     if (ret != Status::OK) {
         MEDIA_LOG_E("SetVolume failed with error " PUBLIC_LOG_D32, static_cast<int>(ret));
@@ -661,7 +707,7 @@ int32_t HiPlayerImpl::SetObs(const std::weak_ptr<IPlayerEngineObs>& obs)
 
 int32_t HiPlayerImpl::GetCurrentTime(int32_t& currentPositionMs)
 {
-    if (curState_ == PlayerStateId::EOS) {
+    if (curState_ == PlayerStateId::EOS && isInCompleted_) {
         currentPositionMs = durationMs_.load();
         return TransStatus(Status::OK);
     }
@@ -669,7 +715,7 @@ int32_t HiPlayerImpl::GetCurrentTime(int32_t& currentPositionMs)
         return TransStatus(Status::ERROR_UNKNOWN);
     }
     FALSE_RETURN_V(syncManager_ != nullptr, TransStatus(Status::ERROR_NULL_POINTER));
-    currentPositionMs = Plugins::HstTime2Us(syncManager_->GetMediaTimeNow());
+    currentPositionMs = Plugins::HstTime2Us32(syncManager_->GetMediaTimeNow());
     if (currentPositionMs < 0) {
         currentPositionMs = 0;
     }
@@ -735,11 +781,11 @@ int32_t HiPlayerImpl::InitVideoWidthAndHeight()
             continue;
         }
         int32_t rotation = 0;
-        bool needSwapWH = videoTrack.GetIntValue(Tag::VIDEO_ROTATION, rotation)
+        needSwapWH_ = videoTrack.GetIntValue(Tag::VIDEO_ROTATION, rotation)
             && (rotation == rotation90 || rotation == rotation270);
         MEDIA_LOG_I("rotation %{public}d", rotation);
-        videoWidth_ = !needSwapWH ? width : height;
-        videoHeight_ = !needSwapWH ? height : width;
+        videoWidth_ = !needSwapWH_.load() ? width : height;
+        videoHeight_ = !needSwapWH_.load() ? height : width;
         MEDIA_LOG_I("InitVideoWidthAndHeight, width = %{public}d, height = %{public}d",
             videoWidth_.load(), videoHeight_.load());
         break;
@@ -778,11 +824,7 @@ int32_t HiPlayerImpl::GetAudioEffectMode(int32_t &effectMode)
 
 int32_t HiPlayerImpl::SetPlaybackSpeed(PlaybackRateMode mode)
 {
-    MEDIA_LOG_I("SetPlaybackSpeed entered.");
-    if (mode == playbackRateMode_.load()) {
-        MEDIA_LOG_I("SetPlaybackSpeed new mode same as the old.");
-        return MSERR_OK;
-    }
+    MEDIA_LOG_I("SetPlaybackSpeed entered, mode=%{public}d", mode);
     Status res = Status::OK;
     float speed = TransformPlayRate2Float(mode);
     if (audioSink_ != nullptr) {
@@ -884,6 +926,9 @@ int32_t HiPlayerImpl::GetAudioTrackInfo(std::vector<Format>& audioTrack)
             int32_t audioSampleRate;
             trackInfo->GetData(Tag::AUDIO_SAMPLE_RATE, audioSampleRate);
             audioTrackInfo.PutIntValue("sample_rate", static_cast<int32_t>(audioSampleRate));
+            int32_t sampleDepth;
+            trackInfo->GetData(Tag::AUDIO_BITS_PER_CODED_SAMPLE, sampleDepth);
+            audioTrackInfo.PutIntValue("sample_depth", static_cast<int32_t>(sampleDepth));
             audioTrack.emplace_back(std::move(audioTrackInfo));
         }
     }
@@ -984,9 +1029,12 @@ void HiPlayerImpl::OnEvent(const Event &event)
         }
         case EventType::EVENT_VIDEO_RENDERING_START: {
             MEDIA_LOG_I("video first frame reneder received");
-            Format format;
-            callbackLooper_.OnInfo(INFO_TYPE_MESSAGE, PlayerMessageType::PLAYER_INFO_VIDEO_RENDERING_START, format);
-            HandleInitialPlayingStateChange(event.type);
+            HandleVideoFirstFrameEvent(AnyCast<int32_t>(event.param));
+            break;
+        }
+        case EventType::EVENT_RESOLUTION_CHANGE: {
+            MEDIA_LOG_I("resolution change event received");
+            HandleResolutionChangeEvent(event);
             break;
         }
         default:
@@ -1049,7 +1097,19 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
     demuxer_ = FilterFactory::Instance().CreateFilter<DemuxerFilter>("builtin.player.demuxer",
         FilterType::FILTERTYPE_DEMUXER);
     demuxer_->Init(playerEventReceiver_, playerFilterCallback_);
+
+    PlayStrategy* playStrategy = new PlayStrategy;
+    playStrategy->width = preferedWidth_;
+    playStrategy->height = preferedHeight_;
+    playStrategy->duration = bufferDuration_;
+    playStrategy->preferHDR = preferHDR_;
+    source->SetPlayStrategy(playStrategy);
+
     auto ret = demuxer_->SetDataSource(source);
+    if (ret == Status::OK && !MetaUtils::CheckFileType(demuxer_->GetGlobalMetaInfo())) {
+        MEDIA_LOG_W("0x%{public}06 " PRIXPTR "SetSource unsupport", FAKE_POINTER(this));
+        ret = Status::ERROR_INVALID_DATA;
+    }
     SetBundleName(bundleName_);
     pipeline_->AddHeadFilters({demuxer_});
     return ret;
@@ -1083,8 +1143,7 @@ void HiPlayerImpl::HandleIsLiveStreamEvent(bool isLiveStream)
 
 void HiPlayerImpl::HandleErrorEvent(int32_t errorCode)
 {
-    Format format;
-    callbackLooper_.OnInfo(INFO_TYPE_ERROR_MSG, errorCode, format);
+    callbackLooper_.OnError(PLAYER_ERROR, errorCode);
 }
 
 void HiPlayerImpl::NotifyBufferingStart(int32_t param)
@@ -1124,6 +1183,9 @@ void HiPlayerImpl::HandleCompleteEvent(const Event& event)
         MEDIA_LOG_I("OnComplete durationMs - curPosMs: " PUBLIC_LOG_D32, durationMs_.load() - curPosMs);
         OHOS::Media::SleepInJob(durationMs_.load() - curPosMs);
     }
+    if (!isReadyComplete_.load()) {
+        return;
+    }
     if (!singleLoop_.load()) {
         callbackLooper_.StopReportMediaProgress();
     }
@@ -1131,11 +1193,26 @@ void HiPlayerImpl::HandleCompleteEvent(const Event& event)
     callbackLooper_.DoReportCompletedTime();
     if (!singleLoop_.load()) {
         OnStateChanged(PlayerStateId::EOS);
+        syncManager_->ResetTimeAnchorNoLock();
+        isInCompleted_ = true;
     }
     callbackLooper_.OnInfo(INFO_TYPE_EOS, static_cast<int32_t>(singleLoop_.load()), format);
     for (std::pair<std::string, bool>& item: completeState_) {
         item.second = false;
     }
+}
+
+void HiPlayerImpl::HandleVideoFirstFrameEvent(int32_t errorCode)
+{
+    if (static_cast<Status>(errorCode) == Status::PREPARE_BEFORE_START_END) {
+        pipeline_->Pause();
+        OnStateChanged(PlayerStateId::READY);
+        MEDIA_LOG_I("prepare start and pause success.");
+        return;
+    }
+    Format format;
+    callbackLooper_.OnInfo(INFO_TYPE_MESSAGE, PlayerMessageType::PLAYER_INFO_VIDEO_RENDERING_START, format);
+    HandleInitialPlayingStateChange(EventType::EVENT_VIDEO_RENDERING_START);
 }
 
 void HiPlayerImpl::HandleDrmInfoUpdatedEvent(const Event& event)
@@ -1189,6 +1266,22 @@ void HiPlayerImpl::HandleDrmInfoUpdatedEvent(const Event& event)
     lock.unlock();
 
     delete []drmInfoArray;
+}
+
+void HiPlayerImpl::HandleResolutionChangeEvent(const Event& event)
+{
+#ifdef SUPPORT_VIDEO
+    // update new video size
+    std::pair<int32_t, int32_t> videoSize = AnyCast<std::pair<int32_t, int32_t>>(event.param);
+    int32_t width = videoSize.first;
+    int32_t height = videoSize.second;
+    videoWidth_ = !needSwapWH_.load() ? width : height;
+    videoHeight_ = !needSwapWH_.load() ? height : width;
+    MEDIA_LOG_I("HandleResolutionChangeEvent, width = %{public}d, height = %{public}d",
+        videoWidth_.load(), videoHeight_.load());
+    // notify size change
+    NotifyResolutionChange();
+#endif
 }
 
 void HiPlayerImpl::UpdateStateNoLock(PlayerStates newState, bool notifyUpward)
@@ -1267,6 +1360,7 @@ void HiPlayerImpl::NotifySeekDone(int32_t seekPos)
                 return !syncManager_->InSeeking();
             });
     }
+    MEDIA_LOG_D("NotifySeekDone seekPos: %{public}d", seekPos);
     callbackLooper_.OnInfo(INFO_TYPE_POSITION_UPDATE, seekPos, format);
     callbackLooper_.OnInfo(INFO_TYPE_SEEKDONE, seekPos, format);
 }
@@ -1321,7 +1415,7 @@ void HiPlayerImpl::NotifyAudioDeviceChange(const Event& event)
 void HiPlayerImpl::NotifyAudioServiceDied()
 {
     Format format;
-    callbackLooper_.OnInfo(INFO_TYPE_STATE_CHANGE, PLAYER_STATE_ERROR, format);
+    callbackLooper_.OnInfo(INFO_TYPE_ERROR_MSG, MSERR_EXT_API9_IO, format);
 }
 
 void HiPlayerImpl::NotifyAudioFirstFrame(const Event& event)
@@ -1350,11 +1444,12 @@ void HiPlayerImpl::NotifyPositionUpdate()
 {
     int32_t currentPosMs = 0;
     GetCurrentTime(currentPosMs);
+    MEDIA_LOG_D("NotifyPositionUpdate currentPosMs: %{public}d", currentPosMs);
     Format format;
     callbackLooper_.OnInfo(INFO_TYPE_POSITION_UPDATE, currentPosMs, format);
 }
 
-void HiPlayerImpl::OnStateChanged(PlayerStateId state)
+void __attribute__((no_sanitize("cfi"))) HiPlayerImpl::OnStateChanged(PlayerStateId state)
 {
     curState_ = state;
     MEDIA_LOG_I("OnStateChanged from " PUBLIC_LOG_D32 " to " PUBLIC_LOG_D32, pipelineStates_.load(),

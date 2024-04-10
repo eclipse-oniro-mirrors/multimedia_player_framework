@@ -222,6 +222,8 @@ private:
      * setDecryptionConfig(mediaKeySession: drm.MediaKeySession, secureVideoPath: boolean): void;
      */
     static napi_value JsSetDecryptConfig(napi_env env, napi_callback_info info);
+
+    static napi_value JsSetMediaSource(napi_env env, napi_callback_info info);
     /**
      * getMediaKeySystemInfos(): Array<MediaKeySystemInfo>;
      */
@@ -289,6 +291,8 @@ private:
     bool IsLiveSource() const;
     void EnqueueNetworkTask(const std::string url);
     void EnqueueFdTask(const int32_t fd);
+
+    PlayerSeekMode TransferSeekMode(int32_t mode);
 
     void NotifyDuration(int32_t duration) override;
     void NotifyPosition(int32_t position) override;

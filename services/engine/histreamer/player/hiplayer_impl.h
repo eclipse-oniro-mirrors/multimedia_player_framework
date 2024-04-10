@@ -31,6 +31,7 @@
 #include "i_player_engine.h"
 #include "media_sync_manager.h"
 #include "pipeline/pipeline.h"
+#include "seek_agent.h"
 #ifdef SUPPORT_VIDEO
 #include "decoder_surface_filter.h"
 #endif
@@ -66,6 +67,7 @@ public:
     int32_t GetCurrentTime(int32_t& currentPositionMs) override;
     int32_t GetDuration(int32_t& durationMs) override;
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
+    int32_t SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, AVPlayStrategy strategy) override;
     int32_t GetPlaybackSpeed(PlaybackRateMode& mode) override;
     int32_t SelectBitRate(uint32_t bitRate) override;
     int32_t GetAudioEffectMode(int32_t &effectMode) override;
@@ -102,6 +104,8 @@ private:
     void HandleDrmInfoUpdatedEvent(const Event& event);
     void HandleIsLiveStreamEvent(bool isLiveStream);
     void HandleErrorEvent(int32_t errorCode);
+    void HandleVideoFirstFrameEvent(int32_t errorCode);
+    void HandleResolutionChangeEvent(const Event& event);
     void NotifyBufferingStart(int32_t param);
     void NotifyBufferingEnd(int32_t param);
     void UpdateStateNoLock(PlayerStates newState, bool notifyUpward = true);
@@ -149,6 +153,7 @@ private:
     OHOS::Media::ConditionVariable cond_{};
     std::atomic<bool> singleLoop_ {false};
     std::atomic<bool> isSeek_ {false};
+    std::atomic<bool> isReadyComplete_ {true};
     std::atomic<PlaybackRateMode> playbackRateMode_ {PlaybackRateMode::SPEED_FORWARD_1_00_X};
 
     std::shared_ptr<EventReceiver> playerEventReceiver_;
@@ -172,6 +177,7 @@ private:
     std::shared_ptr<IMediaDataSource> dataSrc_{nullptr};
     std::atomic<int32_t> videoWidth_{0};
     std::atomic<int32_t> videoHeight_{0};
+    std::atomic<bool> needSwapWH_{false};
 
     std::shared_ptr<Meta> audioRenderInfo_{nullptr};
     std::shared_ptr<Meta> audioInterruptMode_{nullptr};
@@ -191,9 +197,16 @@ private:
     std::vector<std::pair<std::string, bool>> completeState_;
     std::mutex seekMutex_;
     std::string bundleName_ {};
+    std::shared_ptr<SeekAgent> seekAgent_;
 
     int32_t rotation90 = 90;
     int32_t rotation270 = 270;
+    std::map<std::string, std::string> header_;
+    uint32_t preferedWidth_ = 0;
+    uint32_t preferedHeight_ = 0;
+    uint32_t bufferDuration_ = 0;
+    bool preferHDR_ = false;
+    bool isInCompleted_ {false};
 };
 } // namespace Media
 } // namespace OHOS

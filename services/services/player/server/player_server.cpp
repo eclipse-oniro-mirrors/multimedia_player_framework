@@ -23,6 +23,8 @@
 #include "player_server_state.h"
 #include "media_dfx.h"
 #include "ipc_skeleton.h"
+#include "media_permission.h"
+#include "accesstoken_kit.h"
 #include "av_common.h"
 #include "parameter.h"
 #include "concurrent_task_client.h"
@@ -32,9 +34,6 @@ using namespace OHOS::QOS;
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerServer"};
-#ifdef SUPPORT_VIDEO
-    constexpr uint32_t VIDEO_MAX_NUMBER = 13; // max video player
-#endif
     constexpr int32_t MAX_SUBTITLE_TRACK_NUN = 8;
 }
 
@@ -78,8 +77,6 @@ int32_t VideoPlayerManager::RegisterVideoPlayer(PlayerServer *player)
     if (videoPlayerList.find(player) != videoPlayerList.end()) {
         return MSERR_OK;
     }
-    CHECK_AND_RETURN_RET_LOG(videoPlayerList.size() < VIDEO_MAX_NUMBER, MSERR_DATA_SOURCE_OBTAIN_MEM_ERROR,
-        "failed to start VideoPlayer");
     videoPlayerList.insert(player);
     return MSERR_OK;
 }
@@ -112,6 +109,9 @@ PlayerServer::~PlayerServer()
 #ifdef SUPPORT_VIDEO
     VideoPlayerManager::GetInstance().UnRegisterVideoPlayer(this);
 #endif
+    if (accountSubscriber_) {
+        accountSubscriber_->UnregisterCommonEventReceiver(this);
+    }
 }
 
 int32_t PlayerServer::Init()
@@ -132,6 +132,9 @@ int32_t PlayerServer::Init()
     MEDIA_LOGD("Get app uid: %{public}d, app pid: %{public}d, app tokenId: %{public}u", appUid_, appPid_, appTokenId_);
 
     PlayerServerStateMachine::Init(idleState_);
+
+    accountSubscriber_ = AccountSubscriber::GetInstance();
+    accountSubscriber_->RegisterCommonEventReceiver(this);
     return MSERR_OK;
 }
 
@@ -142,6 +145,14 @@ int32_t PlayerServer::SetSource(const std::string &url)
     CHECK_AND_RETURN_RET_LOG(!url.empty(), MSERR_INVALID_VAL, "url is empty");
 
     MEDIA_LOGW("0x%{public}06" PRIXPTR " KPI-TRACE: PlayerServer SetSource in(url)", FAKE_POINTER(this));
+    if (url.find("http") != std::string::npos) {
+        int32_t permissionResult = MediaPermission::CheckNetWorkPermission(appUid_, appPid_, appTokenId_);
+        if (permissionResult != Security::AccessToken::PERMISSION_GRANTED) {
+            MEDIA_LOGE("user do not have the right to access INTERNET");
+            OnErrorMessage(MSERR_USER_NO_PERMISSION, "user do not have the right to access INTERNET");
+            return MSERR_INVALID_OPERATION;
+        }
+    }
     config_.url = url;
     int32_t ret = InitPlayEngine(url);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetSource Failed!");
@@ -639,6 +650,7 @@ int32_t PlayerServer::SetVolume(float leftVolume, float rightVolume)
 
     Format format;
     (void)format.PutFloatValue(PlayerKeys::PLAYER_VOLUME_LEVEL, leftVolume);
+    MEDIA_LOGI("SetVolume callback");
     OnInfoNoChangeStatus(INFO_TYPE_VOLUME_CHANGE, 0, format);
     return MSERR_OK;
 }
@@ -710,6 +722,7 @@ int32_t PlayerServer::Seek(int32_t mSeconds, PlayerSeekMode mode)
     int32_t ret = taskMgr_.SeekTask(seekTask, cancelTask, "seek", mode, mSeconds);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Seek failed");
 
+    MEDIA_LOGI("Queue seekTask end, position %{public}d, seek mode is %{public}d", mSeconds, mode);
     return MSERR_OK;
 }
 
@@ -909,6 +922,20 @@ int32_t PlayerServer::HandleSetPlaybackSpeed(PlaybackRateMode mode)
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine SetPlaybackSpeed Failed!");
     }
     config_.speedMode = mode;
+    return MSERR_OK;
+}
+
+int32_t PlayerServer::SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, AVPlayStrategy strategy)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    MediaTrace trace("PlayerServer::SetMediaSource");
+    CHECK_AND_RETURN_RET_LOG(mediaSource != nullptr, MSERR_INVALID_VAL, "mediaSource is nullptr");
+    InitPlayEngine(mediaSource->url);
+    int ret = playerEngine_->SetMediaSource(mediaSource, strategy);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetMediaSource Failed!");
+    config_.url = mediaSource->url;
+    config_.header = mediaSource->header;
+    config_.strategy_ = strategy;
     return MSERR_OK;
 }
 
@@ -1263,6 +1290,28 @@ void PlayerServer::OnError(PlayerErrorType errorType, int32_t errorCode)
 
 void PlayerServer::OnErrorMessage(int32_t errorCode, const std::string &errorMsg)
 {
+    if (static_cast<MediaServiceExtErrCodeAPI9>(errorCode) == MSERR_EXT_API9_IO) {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (playerEngine_ != nullptr) {
+            return;
+        }
+        MEDIA_LOGD("0x%{public}06" PRIXPTR " PlayerServer OnErrorMsg in", FAKE_POINTER(this));
+
+        auto pauseTask = std::make_shared<TaskHandler<void>>([this, errorCode, errorMsg]() {
+            MediaTrace::TraceBegin("PlayerServer::Pause", FAKE_POINTER(this));
+            auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
+            (void)currState->Pause();
+            OnErrorCb(errorCode, errorMsg);
+        });
+        taskMgr_.LaunchTask(pauseTask, PlayerServerTaskType::STATE_CHANGE, "pause");
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " PlayerServer OnErrorMsg out", FAKE_POINTER(this));
+        return;
+    }
+    OnErrorCb(errorCode, errorMsg);
+}
+
+void PlayerServer::OnErrorCb(int32_t errorCode, const std::string &errorMsg)
+{
     std::lock_guard<std::mutex> lockCb(mutexCb_);
     lastErrMsg_ = errorMsg;
     FaultEventWrite(lastErrMsg_, "Player");
@@ -1379,6 +1428,15 @@ std::shared_ptr<PlayerServerState> PlayerServerStateMachine::GetCurrState()
 {
     std::unique_lock<std::recursive_mutex> lock(recMutex_);
     return currState_;
+}
+
+void PlayerServer::OnCommonEventReceived(const std::string &event)
+{
+    MEDIA_LOGI("instance: 0x%{public}06" PRIXPTR " receive event %{public}s",
+            FAKE_POINTER(this), event.c_str());
+    if (event == EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED) {
+        this->Pause();
+    }
 }
 } // namespace Media
 } // namespace OHOS

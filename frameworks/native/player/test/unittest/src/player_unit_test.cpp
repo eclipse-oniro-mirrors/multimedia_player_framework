@@ -109,6 +109,91 @@ void PlayerUnitTest::GetSetParaFunTest()
 }
 
 /**
+ * @tc.name  : Test Player SetMediaSource API
+ * @tc.number: Player_SetMediaSource_001
+ * @tc.desc  : Test Player SetMediaSource interface
+ */
+HWTEST_F(PlayerUnitTest, Player_SetMediaSource_001, TestSize.Level0)
+{
+    std::map<std::string, std::string> header = {
+        {"key1", "value1"},
+        {"key2", "value2"},
+    };
+    struct AVPlayStrategy strategy = {1080, 920, 10000, false};
+    std::shared_ptr<AVMediaSource> mediaSource = std::make_shared<AVMediaSource>(VIDEO_FILE1, header);
+    int32_t ret = player_->SetMediaSource(mediaSource, strategy);
+    EXPECT_EQ(MSERR_OK, ret);
+}
+
+/**
+ * @tc.name  : Test Player SetMediaSource API
+ * @tc.number: Player_SetMediaSource_002
+ * @tc.desc  : Test Player SetMediaSource interface
+ */
+HWTEST_F(PlayerUnitTest, Player_SetMediaSource_002, TestSize.Level0)
+{
+    struct AVPlayStrategy strategy = {1080, 920, 10000, false};
+    int32_t ret = player_->SetMediaSource(nullptr, strategy);
+    EXPECT_NE(MSERR_OK, ret);
+}
+
+/**
+ * @tc.name  : Test Player SetMediaSource API
+ * @tc.number: Player_SetMediaSource_003
+ * @tc.desc  : Test Player SetMediaSource interface
+ */
+HWTEST_F(PlayerUnitTest, Player_SetMediaSource_003, TestSize.Level0)
+{
+    std::map<std::string, std::string> header = {
+        {"key1", "value1"},
+        {"key2", "value2"},
+    };
+    struct AVPlayStrategy strategy = {1080, 920, 10000, false};
+    std::shared_ptr<AVMediaSource> mediaSource = std::make_shared<AVMediaSource>(MEDIA_ROOT + "error.mp4", header);
+    int32_t ret = player_->SetMediaSource(mediaSource, strategy);
+    EXPECT_EQ(MSERR_OK, ret);
+    EXPECT_NE(MSERR_OK, player_->PrepareAsync());
+}
+
+/**
+ * @tc.name  : Test Player SetMediaSource API
+ * @tc.number: Player_SetMediaSource_004
+ * @tc.desc  : Test Player SetMediaSource interface
+ */
+HWTEST_F(PlayerUnitTest, Player_SetMediaSource_004, TestSize.Level0)
+{
+    std::map<std::string, std::string> header = {
+        {"key1", "value1"},
+        {"key2", "value2"},
+    };
+    struct AVPlayStrategy strategy = {1080, 920, 10000, false};
+    std::shared_ptr<AVMediaSource> mediaSource = std::make_shared<AVMediaSource>(MEDIA_ROOT + "error.mp4", header);
+    int32_t ret = player_->SetMediaSource(mediaSource, strategy);
+    EXPECT_EQ(MSERR_OK, ret);
+    EXPECT_NE(MSERR_OK, player_->PrepareAsync());
+    EXPECT_NE(MSERR_OK, player_->Prepare());
+}
+
+/**
+ * @tc.name  : Test Player SetMediaSource API
+ * @tc.number: Player_SetMediaSource_005
+ * @tc.desc  : Test Player SetMediaSource interface
+ */
+HWTEST_F(PlayerUnitTest, Player_SetMediaSource_005, TestSize.Level0)
+{
+    std::map<std::string, std::string> header = {
+        {"key1", "value1"},
+        {"key2", "value2"},
+    };
+    struct AVPlayStrategy strategy = {1080, 920, 10000, false};
+    std::shared_ptr<AVMediaSource> mediaSource = std::make_shared<AVMediaSource>(MEDIA_ROOT + "error.mp4", header);
+    int32_t ret = player_->SetMediaSource(mediaSource, strategy);
+    EXPECT_EQ(MSERR_OK, ret);
+    EXPECT_NE(MSERR_OK, player_->Play());
+    EXPECT_EQ(false, player_->IsPlaying());
+}
+
+/**
  * @tc.name  : Test Player SetSource API
  * @tc.number: Player_SetSource_001
  * @tc.desc  : Test Player SetSource interface
@@ -1049,6 +1134,26 @@ HWTEST_F(PlayerUnitTest, Player_GetVideoTrackInfo_002, TestSize.Level2)
 }
 
 /**
+ * @tc.name  : Test GetAudioTrackInfo API
+ * @tc.number: Player_GetAudioTrackInfo_001
+ * @tc.desc  : Test Player GetAudioTrackInfo
+ */
+HWTEST_F(PlayerUnitTest, Player_GetAudioTrackInfo_001, TestSize.Level2)
+{
+    std::vector<Format> audioTrack;
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    sleep(PLAYING_TIME_2_SEC);
+    EXPECT_EQ(MSERR_OK, player_->GetAudioTrackInfo(audioTrack));
+    EXPECT_EQ(1, audioTrack.size());
+    Format audioTrackFormat = audioTrack.front();
+    int32_t sampleDepth;
+    audioTrackFormat.GetIntValue("sample_depth", sampleDepth);
+    EXPECT_EQ(16, sampleDepth);
+}
+
+/**
  * @tc.name  : Test GetVideoHeight API
  * @tc.number: Player_GetVideoHeight_001
  * @tc.desc  : Test Player GetVideoHeight
@@ -1418,31 +1523,6 @@ HWTEST_F(PlayerUnitTest, Player_SetDataSource_003, TestSize.Level0)
     ret = player_->Release();
     EXPECT_EQ(MSERR_OK, ret);
     system("param set sys.media.datasrc.set.copymode FALSE");
-}
-
-/**
- * @tc.name  : Test SetDataSource API
- * @tc.number: Player_SetDataSource_004
- * @tc.desc  : Test Player SetDataSource
- */
-HWTEST_F(PlayerUnitTest, Player_SetDataSource_004, TestSize.Level0)
-{
-    system("param set sys.media.datasrc.set.copymode FALSE");
-    ASSERT_EQ(MSERR_OK, player_->SetDataSrc("/data/test/128x96.mp4", 265844, true));  // 265844 file size
-    sptr<Surface> videoSurface = player_->GetVideoSurface();
-    ASSERT_NE(nullptr, videoSurface);
-    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    EXPECT_EQ(MSERR_OK, player_->Prepare());
-    EXPECT_EQ(MSERR_OK, player_->Play());
-    sleep(PLAYING_TIME_2_SEC);
-    EXPECT_EQ(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_NEXT_SYNC));
-    sleep(PLAYING_TIME_2_SEC);
-    EXPECT_EQ(MSERR_OK, player_->Pause());
-    EXPECT_EQ(MSERR_OK, player_->Play());
-    sleep(PLAYING_TIME_2_SEC);
-    EXPECT_EQ(MSERR_OK, player_->Stop());
-    EXPECT_EQ(MSERR_OK, player_->Reset());
-    EXPECT_EQ(MSERR_OK, player_->Release());
 }
 
 /**
@@ -1947,7 +2027,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_009, TestSize.Level0)
         sprintf_s(str, 100, "hidumper -s 1909 -a \"-d %d %d %d\"", getpid(), getuid(), 4);
         system(str);
         system("hidumper -s 1909 -a \"-t 3\"");
-        EXPECT_NE(MSERR_OK, player_->SelectBitRate(0));
+        EXPECT_EQ(MSERR_OK, player_->SelectBitRate(0));
         EXPECT_EQ(MSERR_OK, player_->Reset());
         system("param set sys.media.player.resource.type Local");
     }
@@ -2380,6 +2460,44 @@ HWTEST_F(PlayerUnitTest, Player_ChangeSurface_009, TestSize.Level0)
     sptr<Surface> nextVideoSurface = player_->GetVideoSurfaceNext();
     ASSERT_NE(nullptr, nextVideoSurface);
     EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(nextVideoSurface));
+}
+
+/**
+ * @tc.name  : Test SetPlaybackSpeed API
+ * @tc.number: Player_SetPlaybackSpeed_003
+ * @tc.desc  : Test Player SetPlaybackSpeed SPEED_FORWARD_0_50_X
+ */
+HWTEST_F(PlayerUnitTest, Player_SetPlaybackSpeed_003, TestSize.Level0)
+{
+    PlaybackRateMode mode;
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->SetPlaybackSpeed(SPEED_FORWARD_0_50_X));
+    EXPECT_EQ(MSERR_OK, player_->GetPlaybackSpeed(mode));
+    EXPECT_EQ(SPEED_FORWARD_0_50_X, mode);
+}
+
+/**
+ * @tc.name  : Test SetPlaybackSpeed API
+ * @tc.number: Player_SetPlaybackSpeed_004
+ * @tc.desc  : Test Player SetPlaybackSpeed SPEED_FORWARD_1_50_X
+ */
+HWTEST_F(PlayerUnitTest, Player_SetPlaybackSpeed_004, TestSize.Level0)
+{
+    PlaybackRateMode mode;
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->SetPlaybackSpeed(SPEED_FORWARD_1_50_X));
+    EXPECT_EQ(MSERR_OK, player_->GetPlaybackSpeed(mode));
+    EXPECT_EQ(SPEED_FORWARD_1_50_X, mode);
 }
 } // namespace Media
 } // namespace OHOS

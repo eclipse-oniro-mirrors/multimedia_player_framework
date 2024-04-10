@@ -30,6 +30,7 @@ config("media_engine_histreamer_avmetadatahelper_config") {
 
   include_dirs = [
     "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/avmetadatahelper",
+    "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/utils",
     "$MEDIA_PLAYER_ROOT_DIR/services/include",
     "$MEDIA_PLAYER_ROOT_DIR/services/utils/include",
     "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",
@@ -43,7 +44,11 @@ config("media_engine_histreamer_avmetadatahelper_config") {
 }
 
 ohos_static_library("media_engine_histreamer_avmetadatahelper") {
+  stack_protector_ret = true
   sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
     cfi = true
     cfi_cross_dso = true
     debug = false

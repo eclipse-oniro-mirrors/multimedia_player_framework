@@ -93,6 +93,7 @@ int32_t RecorderServiceStub::Init()
     recFuncs_[GET_AV_RECORDER_CONFIG] = &RecorderServiceStub::GetAVRecorderConfig;
     recFuncs_[GET_LOCATION] = &RecorderServiceStub::GetLocation;
     recFuncs_[SET_VIDEO_IS_HDR] = &RecorderServiceStub::SetVideoIsHdr;
+    recFuncs_[SET_VIDEO_ENABLE_TEMPORAL_SCALE] = &RecorderServiceStub::SetVideoEnableTemporalScale;
     recFuncs_[GET_AUDIO_CAPTURER_CHANGE_INFO] = &RecorderServiceStub::GetCurrentCapturerChangeInfo;
     recFuncs_[GET_AVAILABLE_ENCODER] = &RecorderServiceStub::GetAvailableEncoder;
     recFuncs_[GET_MAX_AMPLITUDE] = &RecorderServiceStub::GetMaxAmplitude;
@@ -119,10 +120,16 @@ int RecorderServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mes
     CHECK_AND_RETURN_RET_LOG(RecorderServiceStub::GetDescriptor() == remoteDescriptor,
         MSERR_INVALID_OPERATION, "Invalid descriptor");
 
-    if (code == SET_AUDIO_SOURCE) {
-        int32_t type = data.ReadInt32();
-        audioSourceType_ = static_cast<AudioSourceType>(type);
+    {
+        if (code == SET_AUDIO_SOURCE) {
+            std::lock_guard<std::mutex> lock(stmutex_);
+            int32_t type = data.ReadInt32();
+            CHECK_AND_RETURN_RET_LOG(audioSourceType_ == AUDIO_SOURCE_INVALID,
+                MSERR_EXT_API9_OPERATE_NOT_PERMIT, "unsupport parameter or repeated operation");
+            audioSourceType_ = static_cast<AudioSourceType>(type);
+        }
     }
+
     if (AUDIO_REQUEST.count(code) != 0) {
         permissionResult = CheckPermission();
         needAudioPermissionCheck = true;
@@ -216,6 +223,12 @@ int32_t RecorderServiceStub::SetVideoIsHdr(int32_t sourceId, bool isHdr)
 {
     CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
     return recorderServer_->SetVideoIsHdr(sourceId, isHdr);
+}
+
+int32_t RecorderServiceStub::SetVideoEnableTemporalScale(int32_t sourceId, bool enableTemporalScale)
+{
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    return recorderServer_->SetVideoEnableTemporalScale(sourceId, enableTemporalScale);
 }
 
 sptr<OHOS::Surface> RecorderServiceStub::GetSurface(int32_t sourceId)
@@ -474,6 +487,14 @@ int32_t RecorderServiceStub::SetVideoIsHdr(MessageParcel &data, MessageParcel &r
     return MSERR_OK;
 }
 
+int32_t RecorderServiceStub::SetVideoEnableTemporalScale(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t sourceId = data.ReadInt32();
+    bool enableTemporalScale = data.ReadBool();
+    reply.WriteInt32(SetVideoEnableTemporalScale(sourceId, enableTemporalScale));
+    return MSERR_OK;
+}
+
 int32_t RecorderServiceStub::SetCaptureRate(MessageParcel &data, MessageParcel &reply)
 {
     int32_t sourceId = data.ReadInt32();
@@ -651,6 +672,7 @@ int32_t RecorderServiceStub::Stop(MessageParcel &data, MessageParcel &reply)
 {
     bool block = data.ReadBool();
     reply.WriteInt32(Stop(block));
+    audioSourceType_ = AUDIO_SOURCE_INVALID;
     return MSERR_OK;
 }
 
@@ -659,6 +681,7 @@ int32_t RecorderServiceStub::Reset(MessageParcel &data, MessageParcel &reply)
     (void)data;
     reply.WriteInt32(Reset());
     needAudioPermissionCheck = false;
+    audioSourceType_ = AUDIO_SOURCE_INVALID;
     return MSERR_OK;
 }
 
@@ -667,6 +690,7 @@ int32_t RecorderServiceStub::Release(MessageParcel &data, MessageParcel &reply)
     (void)data;
     reply.WriteInt32(Release());
     needAudioPermissionCheck = false;
+    audioSourceType_ = AUDIO_SOURCE_INVALID;
     return MSERR_OK;
 }
 
@@ -685,6 +709,7 @@ int32_t RecorderServiceStub::DestroyStub(MessageParcel &data, MessageParcel &rep
     (void)data;
     reply.WriteInt32(DestroyStub());
     needAudioPermissionCheck = false;
+    audioSourceType_ = AUDIO_SOURCE_INVALID;
     return MSERR_OK;
 }
 

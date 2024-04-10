@@ -39,54 +39,16 @@ const std::pair<Status, int> g_statusPair[] = {
     {Status::ERROR_NO_MEMORY, MSERR_EXT_NO_MEMORY},
     {Status::ERROR_INVALID_STATE, MSERR_INVALID_STATE},
 };
-const std::array<std::pair<PlaybackRateMode, float>, 5> PLAY_RATE_REFS = {
+const std::array<std::pair<PlaybackRateMode, float>, 7> PLAY_RATE_REFS = {
     std::make_pair(PlaybackRateMode::SPEED_FORWARD_0_75_X, 0.75),
     std::make_pair(PlaybackRateMode::SPEED_FORWARD_1_00_X, 1.0),
     std::make_pair(PlaybackRateMode::SPEED_FORWARD_1_25_X, 1.25),
     std::make_pair(PlaybackRateMode::SPEED_FORWARD_1_75_X, 1.75),
     std::make_pair(PlaybackRateMode::SPEED_FORWARD_2_00_X, 2.00),
-};
-
-const std::unordered_set<std::string> HST_ENABLE_BUNDLE_LIST = {
-    "com.huawei.hmsapp.music",
-    "com.huawei.hmsapp.himovie",
-    "com.huawei.hmos.photos",
-    "com.ohos.medialibrary.medialibrarydata",
-    "com.huawei.ohos.screenrecorder",
-    "com.huawei.hmos.soundrecorder",
-    "com.huawei.hmos.camera",
-    "com.huawei.hmos.meetimeservice",
-    "com.huawei.hmos.filemanager",
-    "com.huawei.hmos.hipreview",
-    "com.huawei.hmos.callrecorder",
-    "com.sina.news.hm.next",
-    "com.babybus.babybusoh",
-    "com.example.sampledemo",
+    std::make_pair(PlaybackRateMode::SPEED_FORWARD_0_50_X, 0.50),
+    std::make_pair(PlaybackRateMode::SPEED_FORWARD_1_50_X, 1.50),
 };
 }  // namespace
-
-bool __attribute__((visibility("default"))) IsEnableHiStreamer(const std::string& clientBundleName, const int32_t& uid)
-{
-    char useHistreamer[10] = {0}; // 10 for system parameter usage
-    auto res = GetParameter("debug.media_service.histreamer", "1", useHistreamer, sizeof(useHistreamer));
-    bool enableHiStreamerBySwitch = (res == 1 && useHistreamer[0] == '1');
-    bool enableHiStreamerByBundleList = (HST_ENABLE_BUNDLE_LIST.count(clientBundleName) > 0);
-
-    char useGstreamerForBundle[10] = {0}; // 10 for system parameter usage
-    auto result = GetParameter("debug.media_service.gstreamer_bundle", "0", useGstreamerForBundle,
-        sizeof(useGstreamerForBundle));
-    bool enableGstreamerForBundle = (result == 1 && useGstreamerForBundle[0] == '1');
-
-    MEDIA_LOG_I("IsEnableHiStreamer enableHiStreamerBySwitch = %{public}d, enableHiStreamerByBundleList = %{public}d, "
-	    "enableGstreamerForBundle = %{public}d", enableHiStreamerBySwitch,
-        enableHiStreamerByBundleList, enableGstreamerForBundle);
-#ifdef EMULATOR_ENABLED
-    // emulator use gst
-    return false;
-#else
-    return (!enableGstreamerForBundle && enableHiStreamerByBundleList) || enableHiStreamerBySwitch;
-#endif
-}
 
 std::string __attribute__((visibility("default"))) GetClientBundleName(int32_t uid)
 {

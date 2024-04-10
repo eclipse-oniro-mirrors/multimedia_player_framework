@@ -134,7 +134,7 @@ private:
 class ScreenCaptureServer : public IScreenCaptureService, public NoCopyable {
 public:
     static std::shared_ptr<IScreenCaptureService> Create();
-    static int32_t ReportAVScreenCaptureUserChoice(int32_t sessionId, std::string choice);
+    static int32_t ReportAVScreenCaptureUserChoice(int32_t sessionId, const std::string &choice);
     ScreenCaptureServer();
     ~ScreenCaptureServer();
 
@@ -176,14 +176,17 @@ private:
     int32_t StartVideoCapture();
     int32_t StartHomeVideoCapture();
     int32_t StopScreenCaptureInner(AVScreenCaptureStateCode stateCode);
+    void PostStopScreenCapture(AVScreenCaptureStateCode stateCode);
     int32_t StopAudioCapture();
     int32_t StopVideoCapture();
     int32_t StopScreenCaptureRecorder();
     int32_t CheckAllParams();
     int32_t CheckCaptureStreamParams();
     int32_t CheckCaptureFileParams();
+    int32_t SetCanvasRotationInner();
     void InitAppInfo();
     void CloseFd();
+    void ReleaseInner();
  
     VirtualScreenOption InitVirtualScreenOption(const std::string &name, sptr<OHOS::Surface> consumer);
     int32_t GetMissionIds(std::vector<uint64_t> &missionIds);
@@ -192,19 +195,24 @@ private:
     void DestroyVirtualScreen();
 
     bool CheckScreenCapturePermission();
+    bool IsUserPrivacyAuthorityNeeded();
     bool UpdatePrivacyUsingPermissionState(VideoPermissionState state);
     int32_t RequestUserPrivacyAuthority();
     int32_t StartPrivacyWindow();
+#ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
+    int32_t TryStartNotification();
+#endif
     int32_t StartNotification();
     std::shared_ptr<NotificationLocalLiveViewContent> GetLocalLiveViewContent();
     void UpdateLiveViewContent();
     std::shared_ptr<PixelMap> GetPixelMap(std::string path);
-    std::shared_ptr<PixelMap> GetPixelMapSvg(std::string path);
+    std::shared_ptr<PixelMap> GetPixelMapSvg(std::string path, int32_t width, int32_t height);
 
 private:
     std::mutex mutex_;
     std::mutex cbMutex_;
     std::shared_ptr<ScreenCaptureCallBack> screenCaptureCb_ = nullptr;
+    bool canvasRotation_ = false;
     bool isMicrophoneOn_ = true;
     bool isPrivacyAuthorityEnabled_ = false;
 
@@ -213,6 +221,9 @@ private:
     std::string callingLabel_;
     std::string liveViewText_;
     std::atomic<int32_t> micCount_{0};
+    int32_t density_;
+    int32_t capsuleVpSize_ = 18;
+    int32_t capsulePxSize_;
 
     /* used for both CAPTURE STREAM and CAPTURE FILE */
     OHOS::AudioStandard::AppInfo appInfo_;

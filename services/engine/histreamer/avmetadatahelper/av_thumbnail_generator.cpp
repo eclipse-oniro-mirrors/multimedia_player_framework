@@ -25,6 +25,7 @@
 #include "media_description.h"
 #include "meta/meta.h"
 #include "meta/meta_key.h"
+#include "plugin/plugin_time.h"
 #include "sync_fence.h"
 #include "uri_helper.h"
 
@@ -135,6 +136,13 @@ std::shared_ptr<Meta> AVThumbnailGenerator::GetVideoTrackInfo()
             trackIndex_ = index;
             MEDIA_LOGI("0x%{public}06" PRIXPTR " GetTrackInfo success trackIndex_:%{public}d, trackMime_:%{public}s",
                 FAKE_POINTER(this), trackIndex_, trackMime_.c_str());
+            Plugins::VideoRotation rotation;
+            if (trackInfos[index]->Get<Tag::VIDEO_ROTATION>(rotation)) {
+                rotation_ = rotation;
+                MEDIA_LOGD("rotation %{public}d", static_cast<int32_t>(rotation_));
+            } else {
+                MEDIA_LOGD("no rotation");
+            }
             return trackInfos[trackIndex_];
         }
     }
@@ -196,7 +204,7 @@ std::shared_ptr<AVSharedMemory> AVThumbnailGenerator::FetchFrameAtTime(
 
     mediaDemuxer_->SelectTrack(trackIndex_);
     int64_t realSeekTime = timeUs;
-    mediaDemuxer_->SeekTo(timeUs, static_cast<Plugins::SeekMode>(option), realSeekTime);
+    mediaDemuxer_->SeekTo(Plugins::Us2Ms(timeUs), static_cast<Plugins::SeekMode>(option), realSeekTime);
     MEDIA_LOGI(
         "0x%{public}06" PRIXPTR " FetchFrameAtTime realSeekTime:%{public}" PRId64 "", FAKE_POINTER(this), realSeekTime);
     CHECK_AND_RETURN_RET_LOG(InitDecoder() == Status::OK, nullptr, "FetchFrameAtTime InitDecoder failed.");
@@ -242,6 +250,7 @@ bool AVThumbnailGenerator::ConvertToAVSharedMemory(const sptr<SurfaceBuffer> &su
         outputConfig_.dstHeight > 0 ? outputConfig_.dstHeight : height };
     decodeOpts.desiredPixelFormat = outputConfig_.colorFormat;
     std::unique_ptr<PixelMap> pixelMap = imageSource->CreatePixelMapEx(0, decodeOpts, errorCode);
+    pixelMap->rotate(static_cast<int32_t>(rotation_));
     CHECK_AND_RETURN_RET_LOG(errorCode == 0, false, "CreatePixelMapEx failed:%{public}d", errorCode);
 
     auto fetchedFrameAtTime =

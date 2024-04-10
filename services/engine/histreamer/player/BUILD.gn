@@ -31,6 +31,7 @@ config("media_engine_histreamer_player_config") {
 
   include_dirs = [
     "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/player",
+    "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/utils",
     "$MEDIA_PLAYER_ROOT_DIR/services/utils/include",
     "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/engine_intf",
@@ -49,7 +50,11 @@ config("media_engine_histreamer_player_config") {
 }
 
 ohos_static_library("media_engine_histreamer_player") {
+  stack_protector_ret = true
   sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
     cfi = true
     cfi_cross_dso = true
     debug = false
@@ -57,6 +62,7 @@ ohos_static_library("media_engine_histreamer_player") {
   sources = [
     "hiplayer_callback_looper.cpp",
     "hiplayer_impl.cpp",
+    "seek_agent.cpp",
   ]
 
   configs = [
