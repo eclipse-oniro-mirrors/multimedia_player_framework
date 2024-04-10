@@ -25,6 +25,12 @@ ohos_unittest("incallobserver_unit_test") {
     "$MEDIA_PLAYER_ROOT_DIR/services/services/observer",
   ]
 
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
   cflags = [
     "-Wall",
     "-Werror",

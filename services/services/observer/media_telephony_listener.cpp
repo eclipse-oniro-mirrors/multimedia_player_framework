@@ -39,7 +39,6 @@ MediaTelephonyListener::~MediaTelephonyListener()
 
 void MediaTelephonyListener::OnCallStateUpdated(int32_t slotId, int32_t callState, const std::u16string &phoneNumber)
 {
-    bool inCall = false;
     MEDIA_LOGI("OnCallStateUpdated slotId = %{public}d, callState = %{public}d", slotId, callState);
     // skip no sim card CALL_STATUS_UNKNOWN
     if (callState == (int32_t)TelCallState::CALL_STATUS_ACTIVE ||
@@ -47,10 +46,9 @@ void MediaTelephonyListener::OnCallStateUpdated(int32_t slotId, int32_t callStat
         callState == (int32_t)TelCallState::CALL_STATUS_INCOMING ||
         callState == (int32_t)TelCallState::CALL_STATUS_HOLDING ||
         callState == (int32_t)TelCallState::CALL_STATUS_WAITING) {
-        inCall = true;
-        InCallObserver::GetInstance().OnCallStateUpdated(inCall);
+        InCallObserver::GetInstance().OnCallStateUpdated(true);
     } else if (callState == (int32_t)TelCallState::CALL_STATUS_DISCONNECTED) {
-        InCallObserver::GetInstance().OnCallStateUpdated(inCall);
+        InCallObserver::GetInstance().OnCallStateUpdated(false);
     }
 }
 
