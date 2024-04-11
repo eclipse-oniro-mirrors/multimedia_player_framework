@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <algorithm>
 #include "parameter.h"
 #include "soundpool.h"
 #include "media_log.h"
@@ -282,6 +283,35 @@ std::shared_ptr<CacheBuffer> StreamIDManager::FindCacheBuffer(const int32_t stre
         return cacheBuffers_.at(streamID);
     }
     return nullptr;
+}
+
+int32_t StreamIDManager::ReorderStream(int32_t streamID, int32_t priority)
+{
+    for (size_t i = 0; i < playingStreamIDs_.size(); i++) {
+        int32_t playingStreamID = playingStreamIDs_[i];
+        if (playingStreamID == streamID) {
+            playingStreamIDs_.erase(playingStreamIDs_.begin() + i);
+            QueueAndSortPlayingStreamID(streamID);
+        }
+    }
+    for (size_t i = 0; i < playingStreamIDs_.size(); i++) {
+        int32_t playingStreamID = playingStreamIDs_[i];
+        MEDIA_INFO_LOG("StreamIDManager::ReorderStream  playingStreamID:%{public}d", playingStreamID);
+    }
+    
+    for (size_t i = 0; i < willPlayStreamInfos_.size(); i++) {
+        StreamIDAndPlayParamsInfo willPlayInfo = willPlayStreamInfos_[i];
+        if (willPlayInfo.streamID == streamID) {
+            willPlayStreamInfos_.erase(willPlayStreamInfos_.begin() + i);
+            willPlayInfo.playParameters.priority = priority;
+            QueueAndSortWillPlayStreamID(willPlayInfo);
+        }
+    }
+    for (size_t i = 0; i < willPlayStreamInfos_.size(); i++) {
+        StreamIDAndPlayParamsInfo willPlayInfo = willPlayStreamInfos_[i];
+        MEDIA_INFO_LOG("StreamIDManager::ReorderStream  willPlayStreamID:%{public}d", willPlayInfo.streamID);
+    }
+    return MSERR_OK;
 }
 
 int32_t StreamIDManager::GetFreshStreamID(const int32_t soundID, PlayParams playParameters)
