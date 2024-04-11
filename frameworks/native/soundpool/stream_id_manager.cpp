@@ -165,7 +165,14 @@ int32_t StreamIDManager::SetPlay(const int32_t soundID, const int32_t streamID, 
             QueueAndSortWillPlayStreamID(freshStreamIDAndPlayParamsInfo);
         }
     }
-
+    for (size_t i = 0; i < playingStreamIDs_.size(); i++) {
+        int32_t playingStreamID = playingStreamIDs_[i];
+        MEDIA_INFO_LOG("StreamIDManager::SetPlay  playingStreamID:%{public}d", playingStreamID);
+    }
+    for (size_t i = 0; i < willPlayStreamInfos_.size(); i++) {
+        StreamIDAndPlayParamsInfo willPlayInfo = willPlayStreamInfos_[i];
+        MEDIA_INFO_LOG("StreamIDManager::SetPlay  willPlayStreamID:%{public}d", willPlayInfo.streamID);
+    }
     return MSERR_OK;
 }
 
@@ -206,6 +213,7 @@ void StreamIDManager::QueueAndSortPlayingStreamID(int32_t streamID)
             if (i == playingStreamIDs_.size() - 1 &&
                 freshCacheBuffer->GetPriority() < playingCacheBuffer->GetPriority()) {
                 playingStreamIDs_.push_back(streamID);
+                break;
             }
         }
         if (shouldReCombinePlayingQueue) {
@@ -244,6 +252,7 @@ void StreamIDManager::QueueAndSortWillPlayStreamID(StreamIDAndPlayParamsInfo fre
             if (i == willPlayStreamInfos_.size() - 1 &&
                 freshCacheBuffer->GetPriority() < willPlayCacheBuffer->GetPriority()) {
                 willPlayStreamInfos_.push_back(freshStreamIDAndPlayParamsInfo);
+                break;
             }
         }
         if (shouldReCombineWillPlayQueue) {
@@ -287,25 +296,35 @@ std::shared_ptr<CacheBuffer> StreamIDManager::FindCacheBuffer(const int32_t stre
 
 int32_t StreamIDManager::ReorderStream(int32_t streamID, int32_t priority)
 {
+    bool playingFlag = false;
     for (size_t i = 0; i < playingStreamIDs_.size(); i++) {
         int32_t playingStreamID = playingStreamIDs_[i];
         if (playingStreamID == streamID) {
             playingStreamIDs_.erase(playingStreamIDs_.begin() + i);
-            QueueAndSortPlayingStreamID(streamID);
+            i--;
+            playingFlag = true;
         }
+    }
+    if (playingFlag) {
+        QueueAndSortPlayingStreamID(streamID);
     }
     for (size_t i = 0; i < playingStreamIDs_.size(); i++) {
         int32_t playingStreamID = playingStreamIDs_[i];
         MEDIA_INFO_LOG("StreamIDManager::ReorderStream  playingStreamID:%{public}d", playingStreamID);
     }
     
+    bool willPlayFlag = false;
     for (size_t i = 0; i < willPlayStreamInfos_.size(); i++) {
         StreamIDAndPlayParamsInfo willPlayInfo = willPlayStreamInfos_[i];
         if (willPlayInfo.streamID == streamID) {
             willPlayStreamInfos_.erase(willPlayStreamInfos_.begin() + i);
-            willPlayInfo.playParameters.priority = priority;
-            QueueAndSortWillPlayStreamID(willPlayInfo);
+            i--;
+            willPlayFlag = true;
         }
+    }
+    if (willPlayFlag) {
+        willPlayInfo.playParameters.priority = priority;
+        QueueAndSortWillPlayStreamID(willPlayInfo);
     }
     for (size_t i = 0; i < willPlayStreamInfos_.size(); i++) {
         StreamIDAndPlayParamsInfo willPlayInfo = willPlayStreamInfos_[i];
