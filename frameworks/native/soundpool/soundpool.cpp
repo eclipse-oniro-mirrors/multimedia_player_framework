@@ -73,7 +73,7 @@ bool SoundPool::CheckInitParam(int maxStreams, AudioStandard::AudioRendererInfo 
 
 int32_t SoundPool::Load(const std::string url)
 {
-    MEDIA_INFO_LOG("SoundPool::Load url::%{public}s", url);
+    MEDIA_INFO_LOG("SoundPool::Load url::%{public}s", url.c_str());
     CHECK_AND_RETURN_RET_LOG(!url.empty(), -1, "Failed to obtain SoundPool for load");
     std::lock_guard lock(soundPoolLock_);
     return soundIDManager_->Load(url);
