@@ -314,17 +314,19 @@ int32_t StreamIDManager::ReorderStream(int32_t streamID, int32_t priority)
     }
     
     bool willPlayFlag = false;
+    StreamIDAndPlayParamsInfo willPlayFound;
     for (size_t i = 0; i < willPlayStreamInfos_.size(); i++) {
         StreamIDAndPlayParamsInfo willPlayInfo = willPlayStreamInfos_[i];
         if (willPlayInfo.streamID == streamID) {
+            willPlayFound = willPlayInfo;
             willPlayStreamInfos_.erase(willPlayStreamInfos_.begin() + i);
             i--;
             willPlayFlag = true;
         }
     }
     if (willPlayFlag) {
-        willPlayInfo.playParameters.priority = priority;
-        QueueAndSortWillPlayStreamID(willPlayInfo);
+        willPlayFound.playParameters.priority = priority;
+        QueueAndSortWillPlayStreamID(willPlayFound);
     }
     for (size_t i = 0; i < willPlayStreamInfos_.size(); i++) {
         StreamIDAndPlayParamsInfo willPlayInfo = willPlayStreamInfos_[i];
