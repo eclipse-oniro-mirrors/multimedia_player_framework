@@ -149,6 +149,13 @@ std::unordered_map<int32_t, std::string> AVMetadataHelperServiceStub::ResolveMet
     return avMetadateHelperServer_->ResolveMetadata();
 }
 
+std::shared_ptr<Meta> AVMetadataHelperServiceStub::GetAVMetadata()
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(avMetadateHelperServer_ != nullptr, nullptr, "avmetadatahelper server is nullptr");
+    return avMetadateHelperServer_->GetAVMetadata();
+}
+
 std::shared_ptr<AVSharedMemory> AVMetadataHelperServiceStub::FetchArtPicture()
 {
     std::unique_lock<std::mutex> lock(mutex_);
@@ -240,6 +247,30 @@ int32_t AVMetadataHelperServiceStub::ResolveMetadataMap(MessageParcel &data, Mes
 
     reply.WriteInt32Vector(key);
     reply.WriteStringVector(dataStr);
+    return MSERR_OK;
+}
+
+int32_t AVMetadataHelperServiceStub::GetAVMetadata(MessageParcel &data, MessageParcel &reply)
+{
+    (void)data;
+    bool ret = true;
+    auto metadata = GetAVMetadata();
+    if (metadata == nullptr) {
+        MEDIA_LOGE("metadata is null");
+        metadata = std::make_shared<Meta>();
+    }
+
+    auto iter = metadata->Find("customInfo");
+    metadata->Remove("customInfo");
+    ret &= reply.WriteString("AVMetadata");
+    ret &= metadata->ToParcel(reply);
+    if (iter != metadata->end()) {
+        ret &= reply.WriteString("customInfo");
+        ret &= iter->second->ToParcel(reply);
+    }
+    if (!ret) {
+        MEDIA_LOGE("GetAVMetadata ToParcel error");
+    }
     return MSERR_OK;
 }
 

@@ -115,12 +115,28 @@ std::unordered_map<int32_t, std::string> AVMetadataHelperImpl::ResolveMetadata()
     return metadataCollector_->ExtractMetadata();
 }
 
+std::shared_ptr<Meta> AVMetadataHelperImpl::GetCustomInfo()
+{
+    MEDIA_LOGE("enter GetCustomInfo");
+    auto res = InitMetadataCollector();
+    CHECK_AND_RETURN_RET(res == Status::OK, nullptr);
+    return metadataCollector_->GetCustomInfo();
+}
+
 std::shared_ptr<AVSharedMemory> AVMetadataHelperImpl::FetchArtPicture()
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR " enter FetchArtPicture", FAKE_POINTER(this));
     auto res = InitMetadataCollector();
     CHECK_AND_RETURN_RET(res == Status::OK, nullptr);
     return metadataCollector_->GetArtPicture();
+}
+
+std::shared_ptr<Meta> AVMetadataHelperImpl::GetAVMetadata()
+{
+    MEDIA_LOGE("enter GetAVMetadata");
+    auto res = InitMetadataCollector();
+    CHECK_AND_RETURN_RET(res == Status::OK, nullptr);
+    return metadataCollector_->GetAVMetadata();
 }
 
 std::shared_ptr<AVSharedMemory> AVMetadataHelperImpl::FetchFrameAtTime(

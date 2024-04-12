@@ -20,6 +20,7 @@
 #include <map>
 #include <string>
 #include <unordered_map>
+#include <vector>
 #include "buffer/avsharedmemory.h"
 #include "meta/format.h"
 #include "media_data_source.h"
@@ -85,6 +86,46 @@ static const std::map<int32_t, const char*> g_MetadataCodeMap = {
     {37,    "videoWidth"},
     {38,    "videoOrientation"},
     {39,    "hdrType"},
+};
+
+/**
+ * support metadata parameters
+ * location {latitude, longitude}
+ * no customInfo included
+*/
+static const std::vector<std::string> g_Metadata = {
+    "album",
+    "albumArtist",
+    "artist",
+    "author",
+    "dateTime",
+    "dateTimeFormat",
+    "composer",
+    "duration",
+    "genre",
+    "hasAudio",
+    "hasVideo",
+    "mimeType",
+    "trackCount",
+    "sampleRate",
+    "title",
+    "videoHeight",
+    "videoWidth",
+    "videoOrientation",
+    "hdrType",
+    "latitude",
+    "longitude"
+}
+
+/**
+ * @brief the struct of geolocation
+ *
+ * @param latitude float: latitude in degrees. Its value must be in the range [-90, 90].
+ * @param longitude float: longitude in degrees. Its value must be in the range [-180, 180].
+ */
+struct Location {
+    int32_t latitude = 0;
+    int32_t longitude = 0;
 };
 
 enum HdrType : int32_t {
@@ -207,6 +248,22 @@ enum AVMetadataCode : int32_t {
      * is HDR or not.
      */
     AV_KEY_VIDEO_IS_HDR_VIVID = 39,
+
+    /**
+     * The metadata key to retrieve the information about the location longitude
+    */
+    AV_KEY_LOCATION_LONGITUDE = 40,
+
+    /**
+     * The metadata key to retrieve the information about the location latitude
+    */
+    AV_KEY_LOCATION_LATITUDE = 41,
+
+    /**
+     * Custom parameter key-value map
+    */
+    AV_KEY_CUSTOMINFO = 42,
+
 };
 
 /**
@@ -363,6 +420,14 @@ public:
      * frame cannot be fetched.
      */
     virtual std::shared_ptr<PixelMap> FetchFrameAtTime(int64_t timeUs, int32_t option, const PixelMapParams &param) = 0;
+
+
+    /**
+     * all meta data.
+     * This method must be called after the SetSource.
+     * @return Returns the meta data values on success; nullptr on failure.
+     */
+    virtual std::shared_ptr<Meta> GetAVMetadata() = 0;
 
     /**
      * Release the internel resource. After this method called, the avmetadatahelper instance

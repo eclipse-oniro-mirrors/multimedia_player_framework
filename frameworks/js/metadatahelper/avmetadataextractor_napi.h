@@ -121,7 +121,7 @@ struct AVMetadataExtractorAsyncContext : public MediaAsyncContext {
     AVMetadataExtractorNapi *napi = nullptr;
     std::string opt_ = "";
     std::shared_ptr<TaskHandler<TaskRet>> task_ = nullptr;
-    // std::shared_ptr<std::unordered_map<int32_t, std::string>> metadata_ = nullptr;
+    std::shared_ptr<std::unordered_map<int32_t, std::string>> metadata_ = nullptr;
     std::shared_ptr<Meta> metadata_ = nullptr;
     std::shared_ptr<Meta> customInfo_ = nullptr;
     std::shared_ptr<PixelMap> artPicture_ = nullptr;

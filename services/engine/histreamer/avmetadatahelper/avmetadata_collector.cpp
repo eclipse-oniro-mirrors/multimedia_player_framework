@@ -67,6 +67,9 @@ static const std::unordered_map<int32_t, std::string> AVMETA_KEY_TO_X_MAP = {
     { AV_KEY_VIDEO_WIDTH, Tag::VIDEO_WIDTH },
     { AV_KEY_VIDEO_ORIENTATION, Tag::VIDEO_ROTATION },
     { AV_KEY_VIDEO_IS_HDR_VIVID, Tag::VIDEO_IS_HDR_VIVID },
+    { AV_KEY_LOCATION_LONGITUDE, Tag::MEDIA_LONGITUDE},
+    { AV_KEY_LOCATION_LATITUDE, Tag::MEDIA_LATITUDE},
+    { AV_KEY_CUSTOMINFO, "customInfo"}
 };
 
 AVMetaDataCollector::AVMetaDataCollector(std::shared_ptr<MediaDemuxer> &mediaDemuxer) : mediaDemuxer_(mediaDemuxer)
@@ -90,17 +93,39 @@ std::unordered_map<int32_t, std::string> AVMetaDataCollector::ExtractMetadata()
     return collectedMeta_;
 }
 
+std::shared_ptr<Meta> AVMetaDataCollector::GetAVMetadata()
+{
+    if (collectedMetaData_ != nullptr) {
+        return collectedMetaData_;
+    }
+    collectedAVMetaData_ = std::make_shared<Meta>();
+    ExtractMetadata();
+    CHECK_AND_RETURN_RET_LOG(collectedMeta_.size() != 0, nullptr, "globalInfo or trackInfos are invalid.");
+    for (const auto &iter : collectedMeta_) {
+        if (iter->first == AV_KEY_LOCATION_LATITUDE || iter->first == AV_KEY_LOCATION_LONGITUDE) {
+            continue;
+        }
+        collectedAVMetaData_->SetData(AVMETA_KEY_TO_X_MAP[iter->first], iter->second);
+    }
+
+    customInfo_ = mediaDemuxer_->GetUserMeta();
+    if (customInfo_ != nullptr) {
+        collectedAVMetaData_->SetData(AVMETA_KEY_TO_X_MAP[AV_KEY_CUSTOMINFO], customInfo_);
+    }
+    return collectedAVMetaData_;
+}
+
 std::string AVMetaDataCollector::ExtractMetadata(int32_t key)
 {
-    auto metadata = ExtractMetadata();
-    CHECK_AND_RETURN_RET_LOG(metadata.size() != 0, "", "Failed to call ExtractMetadata");
+    auto metadata = GetAVMetadata();
+    CHECK_AND_RETURN_RET_LOG(collectedMeta_.size() != 0, "", "Failed to call ExtractMetadata");
 
-    auto it = metadata.find(key);
-    if (it == metadata.end() || it->second.empty()) {
+    auto it = collectedMeta_.find(key);
+    if (it == collectedMeta_.end() || it->second.empty()) {
         MEDIA_LOGE("The specified metadata %{public}d cannot be obtained from the specified stream.", key);
         return "";
     }
-    return metadata[key];
+    return collectedMeta_[key];
 }
 
 std::unordered_map<int32_t, std::string> AVMetaDataCollector::GetMetadata(
@@ -146,6 +171,15 @@ std::unordered_map<int32_t, std::string> AVMetaDataCollector::GetMetadata(
         it++;
     }
     return metadata.tbl_;
+}
+
+std::shared_ptr<Meta> AVMetaDataCollector::GetCustomInfo()
+{
+    if (customInfo_ != nullptr) {
+        return customInfo_;
+    }
+    customInfo_ = mediaDemuxer_->GetUserMeta();
+    return customInfo_;
 }
 
 std::shared_ptr<AVSharedMemory> AVMetaDataCollector::GetArtPicture()
@@ -228,6 +262,13 @@ void AVMetaDataCollector::ConvertToAVMeta(const std::shared_ptr<Meta> &innerMeta
             if (innerMeta->GetData(innerKey, isTrue)) {
                 avmeta.SetMeta(avKey, isTrue ? "yes" : "");
             }
+        } else if (Any::IsSameTypeWith<float>(type)) {
+            float value;
+            if (innerMeta->GetData(innerKey, value) && collectedAVMetaData_ != nullptr) {
+                // avmeta.SetMeta(avKey, std::to_string(value));
+                collectedAVMetaData_->SetData(innerKey, value);
+            }
+
         } else {
             MEDIA_LOGE("not found type matched with innerKey: %{public}s", innerKey.c_str());
             break;
