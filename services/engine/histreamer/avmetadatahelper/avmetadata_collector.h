@@ -71,7 +71,7 @@ public:
     std::unordered_map<int32_t, std::string> ExtractMetadata();
     // std::shared_ptr<Meta> GetCustomInfo();
     // std::vector<float> GetLocation();
-    std::shared_ptr<Meta> GetAVMetadata(); // Do not include CustomInfo
+    std::shared_ptr<Meta> GetAVMetadata();
     std::string ExtractMetadata(int32_t key);
     std::shared_ptr<AVSharedMemory> GetArtPicture();
     void Reset();
@@ -80,7 +80,6 @@ public:
 private:
     std::shared_ptr<MediaDemuxer> mediaDemuxer_;
     std::unordered_map<int32_t, std::string> collectedMeta_ = {};
-    Location location_;
     std::shared_ptr<AVSharedMemory> collectedArtPicture_;
     std::shared_ptr<Meta> customInfo_;
     std::shared_ptr<Meta> collectedAVMetaData_;

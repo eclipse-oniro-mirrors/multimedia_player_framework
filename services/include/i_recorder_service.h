@@ -480,7 +480,16 @@ public:
      * @return Returns {@link SUCCESS} if the setting is successful; returns an error code defined
      * in {@link media_errors.h} otherwise.
     */
-    virtual int32_t SetUserCustomInfo(int32_t sourceId, Meta userCustomInfo) = 0; //TODO:: need change name
+    virtual int32_t SetUserCustomInfo(int32_t sourceId, Meta &userCustomInfo) = 0; //TODO:: need change name
+
+    /**
+     * @brief genre
+     *
+     * @param genre genre
+     * @return Returns {@link SUCCESS} if the setting is successful; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+    */
+    virtual int32_t SetGenre(int32_t sourceId, std::string &genre) = 0;
 };
 } // namespace Media
 } // namespace OHOS

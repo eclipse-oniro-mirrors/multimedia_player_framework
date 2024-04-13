@@ -555,6 +555,7 @@ void HiRecorderImpl::ConfigureVideo(const RecorderParam &recParam)
         }
         case RecorderPublicParamType::VID_ENC_FMT: {
             videoEncFormat_ = std::make_shared<Meta>();
+            userMeta_ = std::make_shared<Meta>();
             ConfigureVideoEncoderFormat(recParam);
             break;
         }
@@ -572,7 +573,7 @@ void HiRecorderImpl::ConfigureVideo(const RecorderParam &recParam)
         }
         case RecorderPublicParamType::VID_GENRE_INFO: {
             GenreInfo genreInfo = static_cast<const GenreInfo&>(recParam);
-            videoEncFormat_->SetData("Genre", genreInfo.genre)
+            videoEncFormat_->SetData("Genre", genreInfo.genre);
             break;
         }
         case RecorderPublicParamType::VID_ENABLE_TEMPORAL_SCALE: {

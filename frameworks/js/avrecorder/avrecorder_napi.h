@@ -371,7 +371,6 @@ struct AVRecorderAsyncContext : public MediaAsyncContext {
 
     AVRecorderNapi *napi = nullptr;
     std::shared_ptr<AVRecorderConfig> config_ = nullptr;
-    std::shared_ptr<Meta> configMeta_ = nullptr; // TODO::same as AVRecorderConfig
     std::string opt_ = "";
     std::shared_ptr<TaskHandler<RetInfo>> task_ = nullptr;
     std::shared_ptr<AVRecorderProfile> profile_ = nullptr;

@@ -22,6 +22,7 @@
 #include <set>
 #include <parcel.h>
 #include "meta/format.h"
+#include "meta/meta.h"
 #include "surface.h"
 #include "av_common.h"
 #include "codec_capability.h"
@@ -374,7 +375,7 @@ struct AVMetadata {
     std::string genre;
     Location location;
     Meta customInfo;
-}
+};
 
 /**
  * @brief Provides listeners for recording errors and information events.
@@ -755,7 +756,7 @@ public:
     /**
      * @brief Genre
     */
-   virtual int32_t SetGenre(int32_t sourceId, std::string &genre) = 0;
+    virtual int32_t SetGenre(int32_t sourceId, std::string &genre) = 0;
 
     /**
      * @brief Prepares for recording.

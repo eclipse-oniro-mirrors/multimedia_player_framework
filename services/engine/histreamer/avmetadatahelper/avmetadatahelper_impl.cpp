@@ -115,13 +115,13 @@ std::unordered_map<int32_t, std::string> AVMetadataHelperImpl::ResolveMetadata()
     return metadataCollector_->ExtractMetadata();
 }
 
-std::shared_ptr<Meta> AVMetadataHelperImpl::GetCustomInfo()
-{
-    MEDIA_LOGE("enter GetCustomInfo");
-    auto res = InitMetadataCollector();
-    CHECK_AND_RETURN_RET(res == Status::OK, nullptr);
-    return metadataCollector_->GetCustomInfo();
-}
+// std::shared_ptr<Meta> AVMetadataHelperImpl::GetCustomInfo()
+// {
+//     MEDIA_LOGE("enter GetCustomInfo");
+//     auto res = InitMetadataCollector();
+//     CHECK_AND_RETURN_RET(res == Status::OK, nullptr);
+//     return metadataCollector_->GetCustomInfo();
+// }
 
 std::shared_ptr<AVSharedMemory> AVMetadataHelperImpl::FetchArtPicture()
 {

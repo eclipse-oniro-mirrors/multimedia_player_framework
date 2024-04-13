@@ -69,7 +69,7 @@ static const std::unordered_map<int32_t, std::string> AVMETA_KEY_TO_X_MAP = {
     { AV_KEY_VIDEO_IS_HDR_VIVID, Tag::VIDEO_IS_HDR_VIVID },
     { AV_KEY_LOCATION_LONGITUDE, Tag::MEDIA_LONGITUDE},
     { AV_KEY_LOCATION_LATITUDE, Tag::MEDIA_LATITUDE},
-    { AV_KEY_CUSTOMINFO, "customInfo"}
+    { AV_KEY_CUSTOMINFO, "customInfo"},
 };
 
 AVMetaDataCollector::AVMetaDataCollector(std::shared_ptr<MediaDemuxer> &mediaDemuxer) : mediaDemuxer_(mediaDemuxer)
@@ -95,22 +95,27 @@ std::unordered_map<int32_t, std::string> AVMetaDataCollector::ExtractMetadata()
 
 std::shared_ptr<Meta> AVMetaDataCollector::GetAVMetadata()
 {
-    if (collectedMetaData_ != nullptr) {
-        return collectedMetaData_;
+    if (collectedAVMetaData_ != nullptr) {
+        return collectedAVMetaData_;
     }
     collectedAVMetaData_ = std::make_shared<Meta>();
     ExtractMetadata();
     CHECK_AND_RETURN_RET_LOG(collectedMeta_.size() != 0, nullptr, "globalInfo or trackInfos are invalid.");
-    for (const auto &iter : collectedMeta_) {
-        if (iter->first == AV_KEY_LOCATION_LATITUDE || iter->first == AV_KEY_LOCATION_LONGITUDE) {
+    for (const auto &[avKey, value] : collectedMeta_) {
+        if (avKey == AV_KEY_LOCATION_LATITUDE || avKey == AV_KEY_LOCATION_LONGITUDE) {
             continue;
         }
-        collectedAVMetaData_->SetData(AVMETA_KEY_TO_X_MAP[iter->first], iter->second);
+        auto iter = AVMETA_KEY_TO_X_MAP.find(avKey);
+        if (iter != AVMETA_KEY_TO_X_MAP.end()) {
+            collectedAVMetaData_->SetData(iter->second, value);
+        }
     }
 
     customInfo_ = mediaDemuxer_->GetUserMeta();
     if (customInfo_ != nullptr) {
-        collectedAVMetaData_->SetData(AVMETA_KEY_TO_X_MAP[AV_KEY_CUSTOMINFO], customInfo_);
+        if (AVMETA_KEY_TO_X_MAP.find(AV_KEY_CUSTOMINFO) != AVMETA_KEY_TO_X_MAP.end()) {
+            collectedAVMetaData_->SetData(AVMETA_KEY_TO_X_MAP.find(AV_KEY_CUSTOMINFO)->second, customInfo_);
+        }
     }
     return collectedAVMetaData_;
 }
@@ -173,15 +178,6 @@ std::unordered_map<int32_t, std::string> AVMetaDataCollector::GetMetadata(
     return metadata.tbl_;
 }
 
-std::shared_ptr<Meta> AVMetaDataCollector::GetCustomInfo()
-{
-    if (customInfo_ != nullptr) {
-        return customInfo_;
-    }
-    customInfo_ = mediaDemuxer_->GetUserMeta();
-    return customInfo_;
-}
-
 std::shared_ptr<AVSharedMemory> AVMetaDataCollector::GetArtPicture()
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR " GetArtPicture In", FAKE_POINTER(this));
@@ -235,7 +231,9 @@ void AVMetaDataCollector::ConvertToAVMeta(const std::shared_ptr<Meta> &innerMeta
                 avmeta.SetMeta(avKey, TimeFormatUtils::ConvertTimestampToDatetime(strVal));
             }
         }
-
+        if (innerKey.compare("customInfo") == 0) {
+            continue;
+        }
         Any type = OHOS::Media::GetDefaultAnyValue(innerKey);
         if (Any::IsSameTypeWith<int32_t>(type)) {
             int32_t intVal;

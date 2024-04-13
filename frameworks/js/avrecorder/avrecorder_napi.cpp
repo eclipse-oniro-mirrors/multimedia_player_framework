@@ -1451,13 +1451,13 @@ int32_t AVRecorderNapi::GetConfig(std::unique_ptr<AVRecorderAsyncContext> &async
     (void)CommonNapi::GetPropertyDouble(env, geoLocation, "longitude", tempLongitude);
     config->location.latitude = static_cast<float>(tempLatitude);
     config->location.longitude = static_cast<float>(tempLongitude);
-    config->location.metadata.location.latitude = static_cast<float>(tempLatitude);
-    config->location.metadata.location.longitude = static_cast<float>(tempLatitude);
+    config->metadata.location.latitude = static_cast<float>(tempLatitude);
+    config->metadata.location.longitude = static_cast<float>(tempLatitude);
 
     napi_value metadata = nullptr;
     napi_get_named_property(env, args, "metadata", &metadata);
     // TODO new getavmeta
-    ret = AVRecorderNapi::GetAVMetaData(env, metadata, "metadata", config->metadata);
+    ret = AVRecorderNapi::GetAVMetaData(asyncCtx, env, metadata);
     CHECK_AND_RETURN_RET(ret == MSERR_OK,
         (asyncCtx->AVRecorderSignError(ret, "GetAVMetaData", "metadata"), ret));
     return MSERR_OK;
@@ -1501,7 +1501,7 @@ int32_t AVRecorderNapi::GetRotation(std::unique_ptr<AVRecorderAsyncContext> &asy
 int32_t AVRecorderNapi::GetAVMetaData(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env,
     napi_value metadata) //TODO::new getAVMetaData, errorcode need consider
 {
-    AVMetadata &metadata = asyncCtx->config_->metadata;
+    AVMetadata &avMetadata = asyncCtx->config_->metadata;
 
     napi_value geoLocation = nullptr;
     napi_get_named_property(env, metadata, "location", &geoLocation);
@@ -1509,17 +1509,17 @@ int32_t AVRecorderNapi::GetAVMetaData(std::unique_ptr<AVRecorderAsyncContext> &a
     double tempLongitude = 0;
     (void)CommonNapi::GetPropertyDouble(env, geoLocation, "latitude", tempLatitude);
     (void)CommonNapi::GetPropertyDouble(env, geoLocation, "longitude", tempLongitude);
-    config->location.latitude = static_cast<float>(tempLatitude);
-    config->location.longitude = static_cast<float>(tempLongitude);
-    metadata.location.latitude = static_cast<float>(tempLatitude);
-    metadata.location.longitude = static_cast<float>(tempLatitude);
+    asyncCtx->config_->location.latitude = static_cast<float>(tempLatitude);
+    asyncCtx->config_->location.longitude = static_cast<float>(tempLongitude);
+    avMetadata.location.latitude = static_cast<float>(tempLatitude);
+    avMetadata.location.longitude = static_cast<float>(tempLatitude);
 
-    metadata->genre = CommonNapi::GetPropertyString(env, metadata, "genre");
+    avMetadata.genre = CommonNapi::GetPropertyString(env, metadata, "genre");
 
     // get customInfo
     napi_value customInfo = nullptr;
-    napi_get_named_property(env, metadata, "customInfo", &metadata->customInfo);
-    CommonNapi::GetPropertyRecord(env, customInfo, metadata);
+    napi_get_named_property(env, metadata, "customInfo", &customInfo);
+    CommonNapi::GetPropertyRecord(env, customInfo, avMetadata.customInfo);
     return MSERR_OK;
 }
 
@@ -1596,11 +1596,11 @@ RetInfo AVRecorderNapi::Configure(std::shared_ptr<AVRecorderConfig> config)
 
     if (config->withVideo) {
         recorder_->SetOrientationHint(config->rotation);
-        if (config->metadata.genre) {
+        if (!config->metadata.genre.empty()) {
             ret = recorder_->SetGenre(videoSourceID_, config->metadata.genre);
             CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetGenre", "Genre"));
         }
-        if (config->metadata.customInfo) {
+        if (!config->metadata.customInfo.Empty()) {
             ret = recorder_->SetUserCustomInfo(videoSourceID_, config->metadata.customInfo);
             CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetUserCustomInfo", "customInfo"));
         }

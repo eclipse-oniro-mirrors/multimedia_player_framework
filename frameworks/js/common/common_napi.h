@@ -21,6 +21,7 @@
 #include <vector>
 #include <unordered_map>
 #include "meta/format.h"
+#include "meta/meta.h"
 #include "av_common.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
@@ -47,7 +48,7 @@ public:
     static bool GetPropertyDouble(napi_env env, napi_value configObj, const std::string &type, double &result);
     static std::string GetPropertyString(napi_env env, napi_value configObj, const std::string &type);
     // support Record<string, string|number>
-    static napi_status GetPropertyRecord(napi_env env, napi_value in, const Meta &meta);
+    static napi_status GetPropertyRecord(napi_env env, napi_value in, Meta &meta);
     static bool GetPropertyMap(napi_env env, napi_value value, std::map<std::string, std::string>& map);
     static bool GetFdArgument(napi_env env, napi_value value, AVFileDescriptor &rawFd);
     static bool GetPlayStrategy(napi_env env, napi_value value, AVPlayStrategyTmp &playStrategy);

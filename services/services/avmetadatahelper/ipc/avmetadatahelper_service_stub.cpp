@@ -66,6 +66,7 @@ int32_t AVMetadataHelperServiceStub::Init()
     avMetadataHelperFuncs_[DESTROY] = &AVMetadataHelperServiceStub::DestroyStub;
     avMetadataHelperFuncs_[SET_CALLBACK] = &AVMetadataHelperServiceStub::SetHelperCallback;
     avMetadataHelperFuncs_[SET_LISTENER_OBJ] = &AVMetadataHelperServiceStub::SetListenerObject;
+    avMetadataHelperFuncs_[GET_AVMETADATA] = &AVMetadataHelperServiceStub::GetAVMetadata;
     return MSERR_OK;
 }
 
@@ -254,6 +255,7 @@ int32_t AVMetadataHelperServiceStub::GetAVMetadata(MessageParcel &data, MessageP
 {
     (void)data;
     bool ret = true;
+    std::shared_ptr<Meta> customInfo = std::make_shared<Meta>();
     auto metadata = GetAVMetadata();
     if (metadata == nullptr) {
         MEDIA_LOGE("metadata is null");
@@ -265,8 +267,9 @@ int32_t AVMetadataHelperServiceStub::GetAVMetadata(MessageParcel &data, MessageP
     ret &= reply.WriteString("AVMetadata");
     ret &= metadata->ToParcel(reply);
     if (iter != metadata->end()) {
+        ret &= metadata->GetData("customInfo", customInfo);
         ret &= reply.WriteString("customInfo");
-        ret &= iter->second->ToParcel(reply);
+        ret &= customInfo->ToParcel(reply);
     }
     if (!ret) {
         MEDIA_LOGE("GetAVMetadata ToParcel error");

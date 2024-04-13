@@ -58,7 +58,7 @@ public:
      * This method must be called after the SetSource.
      *@return Returns metadata on success; nullptr on failure
     */
-    std::shared_ptr<Meta> GetAVMetadata() = 0;
+    virtual std::shared_ptr<Meta> GetAVMetadata() = 0;
 
     /**
      * Fetch the album art picture associated with the data source. If there are

@@ -176,15 +176,19 @@ napi_value AVMetadataExtractorNapi::JsCreateAVMetadataExtractor(napi_env env, na
 std::shared_ptr<TaskHandler<TaskRet>> AVMetadataExtractorNapi::ResolveMetadataTask(
     std::unique_ptr<AVMetadataExtractorAsyncContext> &promiseCtx)
 {
-    auto task = std::make_shared<TaskHandler<TaskRet>>([this, &metadata = promiseCtx->metadata_,
-            &customInfo = promiseCtx->customInfo_]() {
+    auto task = std::make_shared<TaskHandler<TaskRet>>([this, &metadata = promiseCtx->metadata_]() {
         MEDIA_LOGI("ResolveMetadata Task In");
         std::unique_lock<std::mutex> lock(taskMutex_);
         auto state = GetCurrentState();
         if (state == AVMetadataHelperState::STATE_PREPARED || state == AVMetadataHelperState::STATE_CALL_DONE) {
             std::shared_ptr<Meta> res = helper_->GetAVMetadata();
-            MEDIA_LOGD("GetAVMetadata Task end");
-            metadata = std::make_shared<Meta>(res);
+            if (res == nullptr) {
+                MEDIA_LOGE("ResolveMetadata Task AVMetadata is nullptr");
+                return TaskRet(MSERR_EXT_API9_UNSUPPORT_FORMAT,
+                    "failed to ResolveMetadata Task, AVMetadata is nullptr!");
+            }
+            MEDIA_LOGD("ResolveMetadata Task end");
+            metadata = res;
 
             stopWait_ = false;
             LISTENER(stateChangeCond_.wait(lock, [this]() { return stopWait_.load(); }), "ResolveMetadataTask", false)
@@ -257,36 +261,50 @@ void AVMetadataExtractorNapi::ResolveMetadataComplete(napi_env env, napi_status 
     auto promiseCtx = static_cast<AVMetadataExtractorAsyncContext*>(data);
     CHECK_AND_RETURN_LOG(promiseCtx != nullptr, "promiseCtx is nullptr!");
 
+    bool ret = true;
     napi_value result = nullptr;
     napi_value location = nullptr;
     napi_value customInfo = nullptr;
     napi_create_object(env, &result);
     napi_create_object(env, &location);
     napi_create_object(env, &customInfo);
+    std::shared_ptr<Meta> metadata = promiseCtx->metadata_;
     if (status == napi_ok && promiseCtx->errCode == napi_ok) {
-        for (const auto &[key, value] : promiseCtx->metadata_) {
-            if (metadata->Find(iter->first) == metadata->end()) {
-                MEDIA_LOGW("failed to get key: %{public}s", key);
+        for (const auto &key : g_Metadata) {
+            if (metadata->Find(key) == metadata->end()) {
+                MEDIA_LOGE("failed to find key: %{public}s", key);
                 continue;
             }
             if (key == "latitude" || key == "longitude") {
-                double value;
-                metadata->GetData(key, value);
-                CommonNapi::SetPropertyDouble(env, location, key, metadata->GetData(key));
+                float dValue;
+                ret = metadata->GetData(key, dValue);
+                CHECK_AND_CONTINUE_LOG(ret, "GetData failed, key %{public}s", key.c_str());
+                ret = CommonNapi::SetPropertyDouble(env, location, key, dValue);
+                CHECK_AND_CONTINUE_LOG(ret, "SetPropertyDouble failed, key %{public}s", key.c_str());
                 continue;
             }
             if (key == "customInfo") {
-                for (const auto &iter : value) {
+                std::shared_ptr<Meta> customData = std::make_shared<Meta>();
+                ret = metadata->GetData(key, customData);
+                CHECK_AND_CONTINUE_LOG(ret, "GetData failed, key %{public}s", key.c_str());
+                for (auto iter = customData->begin(); iter != customData->end(); ++iter) {
                     AnyValueType type = value->GetValueType(iter->first);
                     if (type == AnyValueType::STRING) {
-                        CommonNapi::SetPropertyString(env, customInfo, iter->first, iter->second);
+                        std::string sValue;
+                        ret = customData->GetData(iter->first, sValue);
+                        CHECK_AND_CONTINUE_LOG(ret, "GetData failed, key %{public}s", key.c_str());
+                        ret = CommonNapi::SetPropertyString(env, customInfo, iter->first, sValue);
+                        CHECK_AND_CONTINUE_LOG(ret, "SetPropertyString failed, key %{public}s", key.c_str());
                     } else {
                         MEDIA_LOGE("not supported value type");
                     }
                 }
+                continue;
             }
-            bool ret = metadata->GetData(key);
-            CommonNapi::SetPropertyString(env, result, key, metadata->GetData(key));
+            std::string value;
+            ret = metadata->GetData(key, value);
+            ret = CommonNapi::SetPropertyString(env, result, key, value);
+            CHECK_AND_CONTINUE_LOG(ret, "SetPropertyString failed, key: %{public}s", key.c_str());
         }
         napi_set_named_property(env, result, "location", location);
         napi_set_named_property(env, result, "customInfo", customInfo);

@@ -81,6 +81,7 @@ int32_t RecorderServiceStub::Init()
     recFuncs_[SET_LOCATION] = &RecorderServiceStub::SetLocation;
     recFuncs_[SET_ORIENTATION_HINT] = &RecorderServiceStub::SetOrientationHint;
     recFuncs_[SET_USER_CUSTOM_INFO] = &RecorderServiceStub::SetUserCustomInfo;//TODO::new
+    recFuncs_[SET_GENRE] = &RecorderServiceStub::SetGenre;
     recFuncs_[PREPARE] = &RecorderServiceStub::Prepare;
     recFuncs_[START] = &RecorderServiceStub::Start;
     recFuncs_[PAUSE] = &RecorderServiceStub::Pause;
@@ -273,7 +274,7 @@ int32_t RecorderServiceStub::SetDataSource(DataSourceType dataType, int32_t &sou
     return recorderServer_->SetDataSource(dataType, sourceId);
 }
 
-int32_t RecorderServiceStub::SetUserCustomInfo(int32_t sourceId, Meta userCustomInfo)
+int32_t RecorderServiceStub::SetUserCustomInfo(int32_t sourceId, Meta &userCustomInfo)
 {
     CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
     return recorderServer_->SetUserCustomInfo(sourceId, userCustomInfo);

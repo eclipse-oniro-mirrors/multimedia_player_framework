@@ -188,9 +188,9 @@ struct CustomInfo : public RecorderParam {
 };
 
 struct GenreInfo : public RecorderParam {
-    explicit CustomInfo(std::string genreInfo) : RecorderParam(RecorderPublicParamType::VID_GENRE_INFO),
-        Genre(genreInfo) {}
-    std::string Genre;
+    explicit GenreInfo(std::string genreInfo) : RecorderParam(RecorderPublicParamType::VID_GENRE_INFO),
+        genre(genreInfo) {}
+    std::string genre;
 };
 } // namespace Media
 } // namespace OHOS

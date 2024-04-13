@@ -218,7 +218,7 @@ int32_t RecorderClient::SetDataSource(DataSourceType dataType, int32_t &sourceId
     return recorderProxy_->SetDataSource(dataType, sourceId);
 }
 
-int32_t RecorderClient::SetUserCustomInfo(int32_t sourceId, Meta userCustomInfo)
+int32_t RecorderClient::SetUserCustomInfo(int32_t sourceId, Meta &userCustomInfo)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(recorderProxy_ != nullptr, MSERR_NO_MEMORY, "recorder service does not exist.");

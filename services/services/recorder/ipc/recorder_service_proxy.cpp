@@ -328,7 +328,7 @@ int32_t RecorderServiceProxy::SetDataSource(DataSourceType dataType, int32_t &so
     return reply.ReadInt32();
 }
 
-int32_t RecorderServiceProxy::SetUserCustomInfo(int32_t sourceId, Meta userCustomInfo)
+int32_t RecorderServiceProxy::SetUserCustomInfo(int32_t sourceId, Meta &userCustomInfo)
 {
     MessageParcel data;
     MessageParcel reply;

@@ -18,7 +18,7 @@
 
 #include "avmetadatahelper.h"
 #include "buffer/avsharedmemory.h"
-#include "meta.h"
+#include "meta/meta.h"
 
 namespace OHOS {
 namespace Media {
@@ -132,7 +132,7 @@ public:
     virtual std::unordered_map<int32_t, std::string> ResolveMetadata() = 0;
 
     /**
-     * all meta data.
+     * get all avmetadata.
      * This method must be called after the SetSource.
      * @return Returns the meta data values on success; nullptr on failure.
      */

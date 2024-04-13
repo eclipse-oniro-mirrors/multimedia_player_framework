@@ -396,7 +396,7 @@ int32_t RecorderServer::SetDataSource(DataSourceType dataType, int32_t &sourceId
     return MSERR_INVALID_OPERATION;
 }
 
-int32_t RecorderServer::SetUserCustomInfo(int32_t sourceId, Meta userCustomInfo)
+int32_t RecorderServer::SetUserCustomInfo(int32_t sourceId, Meta &userCustomInfo)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);

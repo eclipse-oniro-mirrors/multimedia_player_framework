@@ -23,6 +23,7 @@
 #include <vector>
 #include "buffer/avsharedmemory.h"
 #include "meta/format.h"
+#include "meta/meta.h"
 #include "media_data_source.h"
 #include "nocopyable.h"
 #include "pixel_map.h"
@@ -90,8 +91,6 @@ static const std::map<int32_t, const char*> g_MetadataCodeMap = {
 
 /**
  * support metadata parameters
- * location {latitude, longitude}
- * no customInfo included
 */
 static const std::vector<std::string> g_Metadata = {
     "album",
@@ -114,18 +113,8 @@ static const std::vector<std::string> g_Metadata = {
     "videoOrientation",
     "hdrType",
     "latitude",
-    "longitude"
-}
-
-/**
- * @brief the struct of geolocation
- *
- * @param latitude float: latitude in degrees. Its value must be in the range [-90, 90].
- * @param longitude float: longitude in degrees. Its value must be in the range [-180, 180].
- */
-struct Location {
-    int32_t latitude = 0;
-    int32_t longitude = 0;
+    "longitude",
+    "customInfo",
 };
 
 enum HdrType : int32_t {

@@ -158,6 +158,7 @@ std::shared_ptr<Meta> AVMetadataHelperServiceProxy::GetAVMetadata()
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, metadata,
         "GetAVMetadata failed, error: %{public}d", error);
 
+    bool ret = true;
     std::string key = reply.ReadString();
     if (key.compare("AVMetadata") == 0) {
         ret &= metadata->FromParcel(reply);
