@@ -1285,14 +1285,9 @@ void PlayerServer::OnError(PlayerErrorType errorType, int32_t errorCode)
 void PlayerServer::OnErrorMessage(int32_t errorCode, const std::string &errorMsg)
 {
     if (static_cast<MediaServiceExtErrCodeAPI9>(errorCode) == MSERR_EXT_API9_IO) {
-        std::lock_guard<std::mutex> lock(mutex_);
-        if (playerEngine_ != nullptr) {
-            return;
-        }
-        MEDIA_LOGD("0x%{public}06" PRIXPTR " PlayerServer OnErrorMsg in", FAKE_POINTER(this));
-
+        MEDIA_LOGD("0x%{public}06" PRIXPTR " PlayerServer IO Error in", FAKE_POINTER(this));
         auto pauseTask = std::make_shared<TaskHandler<void>>([this, errorCode, errorMsg]() {
-            MediaTrace::TraceBegin("PlayerServer::Pause", FAKE_POINTER(this));
+            MediaTrace::TraceBegin("PlayerServer::PauseIoError", FAKE_POINTER(this));
             auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
             (void)currState->Pause();
             OnErrorCb(errorCode, errorMsg);
