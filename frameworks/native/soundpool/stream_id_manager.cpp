@@ -167,11 +167,11 @@ int32_t StreamIDManager::SetPlay(const int32_t soundID, const int32_t streamID, 
     }
     for (size_t i = 0; i < playingStreamIDs_.size(); i++) {
         int32_t playingStreamID = playingStreamIDs_[i];
-        MEDIA_INFO_LOG("StreamIDManager::SetPlay  playingStreamID:%{public}d", playingStreamID);
+        MEDIA_DEBUG_LOG("StreamIDManager::SetPlay  playingStreamID:%{public}d", playingStreamID);
     }
     for (size_t i = 0; i < willPlayStreamInfos_.size(); i++) {
         StreamIDAndPlayParamsInfo willPlayInfo = willPlayStreamInfos_[i];
-        MEDIA_INFO_LOG("StreamIDManager::SetPlay  willPlayStreamID:%{public}d", willPlayInfo.streamID);
+        MEDIA_DEBUG_LOG("StreamIDManager::SetPlay  willPlayStreamID:%{public}d", willPlayInfo.streamID);
     }
     return MSERR_OK;
 }
@@ -310,7 +310,7 @@ int32_t StreamIDManager::ReorderStream(int32_t streamID, int32_t priority)
     }
     for (size_t i = 0; i < playingStreamIDs_.size(); i++) {
         int32_t playingStreamID = playingStreamIDs_[i];
-        MEDIA_INFO_LOG("StreamIDManager::ReorderStream  playingStreamID:%{public}d", playingStreamID);
+        MEDIA_DEBUG_LOG("StreamIDManager::ReorderStream  playingStreamID:%{public}d", playingStreamID);
     }
     
     bool willPlayFlag = false;
@@ -330,7 +330,7 @@ int32_t StreamIDManager::ReorderStream(int32_t streamID, int32_t priority)
     }
     for (size_t i = 0; i < willPlayStreamInfos_.size(); i++) {
         StreamIDAndPlayParamsInfo willPlayInfo = willPlayStreamInfos_[i];
-        MEDIA_INFO_LOG("StreamIDManager::ReorderStream  willPlayStreamID:%{public}d", willPlayInfo.streamID);
+        MEDIA_DEBUG_LOG("StreamIDManager::ReorderStream  willPlayStreamID:%{public}d", willPlayInfo.streamID);
     }
     return MSERR_OK;
 }
