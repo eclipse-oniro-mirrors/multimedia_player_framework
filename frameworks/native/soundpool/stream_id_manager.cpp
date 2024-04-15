@@ -296,37 +296,34 @@ std::shared_ptr<CacheBuffer> StreamIDManager::FindCacheBuffer(const int32_t stre
 
 int32_t StreamIDManager::ReorderStream(int32_t streamID, int32_t priority)
 {
-    bool playingFlag = false;
-    for (size_t i = 0; i < playingStreamIDs_.size(); i++) {
-        int32_t playingStreamID = playingStreamIDs_[i];
-        if (playingStreamID == streamID) {
-            playingStreamIDs_.erase(playingStreamIDs_.begin() + i);
-            i--;
-            playingFlag = true;
+    int32_t playingSize = playingStreamIDs_.size();
+    for (int32_t i = 0; i < playingSize - 1; ++i) {
+        for (int32_t j = 0; j < playingSize - 1 - i; ++j) {
+            std::shared_ptr<CacheBuffer> left = FindCacheBuffer(playingStreamIDs_[j]);
+            std::shared_ptr<CacheBuffer> right = FindCacheBuffer(playingStreamIDs_[j + 1]);
+            if (left->GetPriority() < right->GetPriority()) {
+                int32_t streamIdTemp = playingStreamIDs_[j];
+                playingStreamIDs_[j] = playingStreamIDs_[j + 1];
+                playingStreamIDs_[j + 1] = streamIdTemp;
+            }
         }
-    }
-    if (playingFlag) {
-        QueueAndSortPlayingStreamID(streamID);
     }
     for (size_t i = 0; i < playingStreamIDs_.size(); i++) {
         int32_t playingStreamID = playingStreamIDs_[i];
         MEDIA_DEBUG_LOG("StreamIDManager::ReorderStream  playingStreamID:%{public}d", playingStreamID);
     }
     
-    bool willPlayFlag = false;
-    StreamIDAndPlayParamsInfo willPlayFound;
-    for (size_t i = 0; i < willPlayStreamInfos_.size(); i++) {
-        StreamIDAndPlayParamsInfo willPlayInfo = willPlayStreamInfos_[i];
-        if (willPlayInfo.streamID == streamID) {
-            willPlayFound = willPlayInfo;
-            willPlayStreamInfos_.erase(willPlayStreamInfos_.begin() + i);
-            i--;
-            willPlayFlag = true;
+    int32_t willPlaySize = willPlayStreamInfos_.size();
+    for (int32_t i = 0; i < willPlaySize - 1; ++i) {
+        for (int32_t j = 0; j < willPlaySize - 1 - i; ++j) {
+            std::shared_ptr<CacheBuffer> left = FindCacheBuffer(willPlayStreamInfos_[j].streamID);
+            std::shared_ptr<CacheBuffer> right = FindCacheBuffer(willPlayStreamInfos_[j + 1].streamID);
+            if (left->GetPriority() < right->GetPriority()) {
+                StreamIDAndPlayParamsInfo willPlayInfoTemp = willPlayStreamInfos_[j];
+                willPlayStreamInfos_[j] = willPlayStreamInfos_[j + 1];
+                willPlayStreamInfos_[j + 1] = willPlayInfoTemp;
+            }
         }
-    }
-    if (willPlayFlag) {
-        willPlayFound.playParameters.priority = priority;
-        QueueAndSortWillPlayStreamID(willPlayFound);
     }
     for (size_t i = 0; i < willPlayStreamInfos_.size(); i++) {
         StreamIDAndPlayParamsInfo willPlayInfo = willPlayStreamInfos_[i];
