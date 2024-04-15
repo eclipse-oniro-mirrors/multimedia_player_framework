@@ -29,7 +29,7 @@ std::mutex MonitorClient::instanceMutex_;
 std::shared_ptr<MonitorClient> MonitorClient::monitorClient_ = std::make_shared<MonitorClient>();
 MonitorClient::Destroy MonitorClient::destroy_;
 
-constexpr uint8_t timeInterval_ = 1; // Heartbeat once per second
+constexpr uint8_t TIME_INTERVAL = 1; // Heartbeat once per second
 
 MonitorClient::MonitorClient()
 {
@@ -142,7 +142,7 @@ void MonitorClient::ClickThread()
     while (true) {
         {
             std::unique_lock<std::mutex> lock(mutex_);
-            clickCond_.wait_for(lock, std::chrono::seconds(timeInterval_), [this] {
+            clickCond_.wait_for(lock, std::chrono::seconds(TIME_INTERVAL), [this] {
                 return objSet_.empty() || !isVaildProxy_ || clientDestroy_;
             });
 
@@ -171,7 +171,7 @@ void MonitorClient::ClickThreadCtrl()
 {
     while (true) {
         ClickThread();
-        std::this_thread::sleep_for(std::chrono::seconds(timeInterval_));
+        std::this_thread::sleep_for(std::chrono::seconds(TIME_INTERVAL));
         std::unique_lock<std::mutex> lock(mutex_);
         if (objSet_.empty() || clientDestroy_) {
             threadRunning_ = false;
