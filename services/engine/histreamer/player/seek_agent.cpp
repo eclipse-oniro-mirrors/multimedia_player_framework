@@ -210,7 +210,7 @@ Status SeekAgent::OnVideoBufferFilled(std::shared_ptr<AVBuffer>& buffer,
     bool canDrop = false;
     buffer->meta_->GetData(Media::Tag::VIDEO_BUFFER_CAN_DROP, canDrop);
 
-    MEDIA_LOG_I("ReturnBuffer, pts: %{public}" PRID64 ", push buffer: %{public}i", buffer->pts_, !canDrop);
+    MEDIA_LOG_I("ReturnBuffer, pts: %{public}" PRId64 ", push buffer: %{public}i", buffer->pts_, !canDrop);
     producer->ReturnBuffer(buffer, !canDrop);
     return Status::OK;
 }
