@@ -272,9 +272,10 @@ void AVMetadataExtractorNapi::ResolveMetadataComplete(napi_env env, napi_status 
     if (status == napi_ok && promiseCtx->errCode == napi_ok) {
         for (const auto &key : g_Metadata) {
             if (metadata->Find(key) == metadata->end()) {
-                MEDIA_LOGE("failed to find key: %{public}s", key);
+                MEDIA_LOGE("failed to find key: %{public}s", key.c_str());
                 continue;
             }
+            MEDIA_LOGE("success to find key: %{public}s", key.c_str());
             if (key == "latitude" || key == "longitude") {
                 float dValue;
                 ret = metadata->GetData(key, dValue);
@@ -288,7 +289,7 @@ void AVMetadataExtractorNapi::ResolveMetadataComplete(napi_env env, napi_status 
                 ret = metadata->GetData(key, customData);
                 CHECK_AND_CONTINUE_LOG(ret, "GetData failed, key %{public}s", key.c_str());
                 for (auto iter = customData->begin(); iter != customData->end(); ++iter) {
-                    AnyValueType type = value->GetValueType(iter->first);
+                    AnyValueType type = customData->GetValueType(iter->first);
                     if (type == AnyValueType::STRING) {
                         std::string sValue;
                         ret = customData->GetData(iter->first, sValue);

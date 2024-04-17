@@ -169,6 +169,7 @@ napi_status CommonNapi::GetPropertyRecord(napi_env env, napi_value in, Meta &met
         status = napi_typeof(env, jsValue, &valueType);
         CHECK_AND_RETURN_RET_LOG(status == napi_ok, status, "get valueType failed");
 
+        CHECK_AND_RETURN_RET_LOG(valueType == napi_number, napi_invalid_arg, "not supported type");
         if (valueType == napi_number) {
             double dValue = 0;
             status = napi_get_value_double(env, jsValue, &dValue);

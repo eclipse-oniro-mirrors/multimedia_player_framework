@@ -401,7 +401,8 @@ int32_t RecorderServer::SetUserCustomInfo(int32_t sourceId, Meta &userCustomInfo
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
-    // TODO:: need add parameter
+
+    config_.customInfo = userCustomInfo;
     CustomInfo userCustom(userCustomInfo);
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->Configure(sourceId, userCustom);
@@ -418,7 +419,8 @@ int32_t RecorderServer::SetGenre(int32_t sourceId, std::string &genre)
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
-    // TODO:: need add parameter
+
+    config_.genre = genre;
     GenreInfo genreInfo(genre);
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->Configure(sourceId, genreInfo);

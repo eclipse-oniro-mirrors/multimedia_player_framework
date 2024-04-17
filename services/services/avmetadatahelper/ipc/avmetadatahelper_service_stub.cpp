@@ -263,14 +263,14 @@ int32_t AVMetadataHelperServiceStub::GetAVMetadata(MessageParcel &data, MessageP
     }
 
     auto iter = metadata->Find("customInfo");
-    metadata->Remove("customInfo");
-    ret &= reply.WriteString("AVMetadata");
-    ret &= metadata->ToParcel(reply);
     if (iter != metadata->end()) {
         ret &= metadata->GetData("customInfo", customInfo);
         ret &= reply.WriteString("customInfo");
         ret &= customInfo->ToParcel(reply);
     }
+    metadata->Remove("customInfo");
+    ret &= reply.WriteString("AVMetadata");
+    ret &= metadata->ToParcel(reply);
     if (!ret) {
         MEDIA_LOGE("GetAVMetadata ToParcel error");
     }

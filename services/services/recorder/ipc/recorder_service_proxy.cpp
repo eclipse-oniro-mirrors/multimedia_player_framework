@@ -338,7 +338,10 @@ int32_t RecorderServiceProxy::SetUserCustomInfo(int32_t sourceId, Meta &userCust
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
     data.WriteInt32(sourceId);
-    userCustomInfo.ToParcel(data);
+    bool ret = userCustomInfo.ToParcel(data);
+    if (!ret) {
+        MEDIA_LOGE("userCustomInfo ToParcel failed");
+    }
     int error = Remote()->SendRequest(SET_USER_CUSTOM_INFO, data, reply, option);//TODO:check error
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetUserCustomInfo failed, error: %{public}d", error);

@@ -370,10 +370,23 @@ public:
     }
 };
 
-// same as AVMetadata
+struct userLocation {
+    float latitude = 0.0f;
+    float longitude = 0.0f;
+};
+
+/**
+ * @brief same as AVMetadata
+ *
+ * @param videoOrientation {0, 90, 180, 270} default 0 default orientation is 0, same as AVRecorderConfig.rotation
+ * @param genre the metadata to retrieve the content type or genre of the data
+ * @param location geo location information from user
+ * @param customInfo Custom parameter key-value map from user
+*/
 struct AVMetadata {
+    std::string videoOrientation;
     std::string genre;
-    Location location;
+    userLocation location;
     Meta customInfo;
 };
 

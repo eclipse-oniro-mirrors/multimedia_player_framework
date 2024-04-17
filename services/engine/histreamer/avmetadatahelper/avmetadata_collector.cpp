@@ -112,7 +112,9 @@ std::shared_ptr<Meta> AVMetaDataCollector::GetAVMetadata()
     }
 
     customInfo_ = mediaDemuxer_->GetUserMeta();
-    if (customInfo_ != nullptr) {
+    if (customInfo_ == nullptr) {
+        MEDIA_LOG_W("No valid user data");
+    } else {
         if (AVMETA_KEY_TO_X_MAP.find(AV_KEY_CUSTOMINFO) != AVMETA_KEY_TO_X_MAP.end()) {
             collectedAVMetaData_->SetData(AVMETA_KEY_TO_X_MAP.find(AV_KEY_CUSTOMINFO)->second, customInfo_);
         }

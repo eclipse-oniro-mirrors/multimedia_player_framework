@@ -47,7 +47,7 @@ public:
     static bool GetPropertyInt64(napi_env env, napi_value configObj, const std::string &type, int64_t &result);
     static bool GetPropertyDouble(napi_env env, napi_value configObj, const std::string &type, double &result);
     static std::string GetPropertyString(napi_env env, napi_value configObj, const std::string &type);
-    // support Record<string, string|number>
+    // support Record<string, string>
     static napi_status GetPropertyRecord(napi_env env, napi_value in, Meta &meta);
     static bool GetPropertyMap(napi_env env, napi_value value, std::map<std::string, std::string>& map);
     static bool GetFdArgument(napi_env env, napi_value value, AVFileDescriptor &rawFd);

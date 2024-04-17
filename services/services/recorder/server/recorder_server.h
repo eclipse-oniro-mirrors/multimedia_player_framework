@@ -138,6 +138,8 @@ private:
         float longitude;
         int32_t rotation;
         int32_t url;
+        Meta customInfo;
+        std::string genre;
         bool withVideo = false;
         bool withAudio = false;
         bool withLocation = false;

@@ -203,7 +203,6 @@ int32_t HiRecorderImpl::Configure(int32_t sourceId, const RecorderParam &recPara
         case RecorderPublicParamType::VID_FRAMERATE:
         case RecorderPublicParamType::VID_ENC_FMT:
         case RecorderPublicParamType::VID_IS_HDR:
-        case RecorderPublicParamType::VID_CUSTOM_INFO:
         case RecorderPublicParamType::VID_ENABLE_TEMPORAL_SCALE:
             ConfigureVideo(recParam);
             break;
@@ -211,6 +210,8 @@ int32_t HiRecorderImpl::Configure(int32_t sourceId, const RecorderParam &recPara
         case RecorderPublicParamType::OUT_FD:
         case RecorderPublicParamType::VID_ORIENTATION_HINT:
         case RecorderPublicParamType::GEO_LOCATION:
+        case RecorderPublicParamType::VID_GENRE_INFO:
+        case RecorderPublicParamType::VID_CUSTOM_INFO:
             ConfigureMuxer(recParam);
             break;
         default:
@@ -426,6 +427,7 @@ Status HiRecorderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, cons
                     muxerFilter_->Init(recorderEventReceiver_, recorderCallback_);
                     muxerFilter_->SetOutputParameter(appUid_, appPid_, fd_, outputFormatType_);
                     muxerFilter_->SetParameter(muxerFormat_);
+                    muxerFilter_->SetUserMeta(userMeta_);
                     close(fd_);
                     fd_ = -1;
                 }
@@ -566,16 +568,6 @@ void HiRecorderImpl::ConfigureVideo(const RecorderParam &recParam)
             }
             break;
         }
-        case RecorderPublicParamType::VID_CUSTOM_INFO: {
-            CustomInfo customInfo = static_cast<const CustomInfo&>(recParam);
-            userMeta_ = std::make_shared<Meta>(customInfo.userCustomInfo);
-            break;
-        }
-        case RecorderPublicParamType::VID_GENRE_INFO: {
-            GenreInfo genreInfo = static_cast<const GenreInfo&>(recParam);
-            videoEncFormat_->SetData("Genre", genreInfo.genre);
-            break;
-        }
         case RecorderPublicParamType::VID_ENABLE_TEMPORAL_SCALE: {
             ConfigureVideoEnableTemporalScale(recParam);
             break;
@@ -672,6 +664,16 @@ void HiRecorderImpl::ConfigureMuxer(const RecorderParam &recParam)
             GeoLocation geoLocation = static_cast<const GeoLocation&>(recParam);
             muxerFormat_->Set<Tag::MEDIA_LATITUDE>(geoLocation.latitude);
             muxerFormat_->Set<Tag::MEDIA_LONGITUDE>(geoLocation.longitude);
+            break;
+        }
+        case RecorderPublicParamType::VID_CUSTOM_INFO: {
+            CustomInfo customInfo = static_cast<const CustomInfo&>(recParam);
+            userMeta_ = std::make_shared<Meta>(customInfo.userCustomInfo);
+            break;
+        }
+        case RecorderPublicParamType::VID_GENRE_INFO: {
+            GenreInfo genreInfo = static_cast<const GenreInfo&>(recParam);
+            muxerFormat_->SetData("genre", genreInfo.genre);
             break;
         }
         default:

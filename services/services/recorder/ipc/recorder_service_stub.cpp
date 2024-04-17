@@ -627,7 +627,10 @@ int32_t RecorderServiceStub::SetUserCustomInfo(MessageParcel &data, MessageParce
     (void)reply;
     Meta userCustomInfo;
     int32_t sourceId = data.ReadInt32();
-    userCustomInfo.FromParcel(data);
+    bool ret = userCustomInfo.FromParcel(data);
+    if (!ret) {
+        MEDIA_LOGE("userCustomInfo FromParcel failed");
+    }
     reply.WriteInt32(SetUserCustomInfo(sourceId, userCustomInfo));
     return MSERR_OK;
 }
