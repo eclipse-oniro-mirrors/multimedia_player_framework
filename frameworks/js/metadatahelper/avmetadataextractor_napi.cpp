@@ -277,11 +277,8 @@ void AVMetadataExtractorNapi::ResolveMetadataComplete(napi_env env, napi_status 
             }
             MEDIA_LOGE("success to find key: %{public}s", key.c_str());
             if (key == "latitude" || key == "longitude") {
-                float dValue;
-                ret = metadata->GetData(key, dValue);
-                CHECK_AND_CONTINUE_LOG(ret, "GetData failed, key %{public}s", key.c_str());
-                ret = CommonNapi::SetPropertyDouble(env, location, key, dValue);
-                CHECK_AND_CONTINUE_LOG(ret, "SetPropertyDouble failed, key %{public}s", key.c_str());
+                CHECK_AND_CONTINUE_LOG(CommonNapi::SetPropertyByValueType(env, location, metadata, key),
+                            "SetProperty failed, key: %{public}s", key.c_str());
                 continue;
             }
             if (key == "customInfo") {
@@ -290,22 +287,14 @@ void AVMetadataExtractorNapi::ResolveMetadataComplete(napi_env env, napi_status 
                 CHECK_AND_CONTINUE_LOG(ret, "GetData failed, key %{public}s", key.c_str());
                 for (auto iter = customData->begin(); iter != customData->end(); ++iter) {
                     AnyValueType type = customData->GetValueType(iter->first);
-                    if (type == AnyValueType::STRING) {
-                        std::string sValue;
-                        ret = customData->GetData(iter->first, sValue);
-                        CHECK_AND_CONTINUE_LOG(ret, "GetData failed, key %{public}s", key.c_str());
-                        ret = CommonNapi::SetPropertyString(env, customInfo, iter->first, sValue);
-                        CHECK_AND_CONTINUE_LOG(ret, "SetPropertyString failed, key %{public}s", key.c_str());
-                    } else {
-                        MEDIA_LOGE("not supported value type");
-                    }
+                    if (type != AnyValueType::STRING) continue;
+                    CHECK_AND_CONTINUE_LOG(CommonNapi::SetPropertyByValueType(env, customInfo, customData, iter->first),
+                            "SetProperty failed, key: %{public}s", key.c_str());
                 }
                 continue;
             }
-            std::string value;
-            ret = metadata->GetData(key, value);
-            ret = CommonNapi::SetPropertyString(env, result, key, value);
-            CHECK_AND_CONTINUE_LOG(ret, "SetPropertyString failed, key: %{public}s", key.c_str());
+            CHECK_AND_CONTINUE_LOG(CommonNapi::SetPropertyByValueType(env, result, metadata, key),
+                "SetProperty failed, key: %{public}s", key.c_str());
         }
         napi_set_named_property(env, result, "location", location);
         napi_set_named_property(env, result, "customInfo", customInfo);

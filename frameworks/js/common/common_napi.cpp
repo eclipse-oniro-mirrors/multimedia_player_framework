@@ -358,6 +358,37 @@ napi_deferred CommonNapi::CreatePromise(napi_env env, napi_ref ref, napi_value &
     return deferred;
 }
 
+bool CommonNapi::SetPropertyByValueType(napi_env env, napi_value &obj, std::shared_ptr<Meta> &meta, std::string key)
+{
+    CHECK_AND_RETURN_RET(obj != nullptr, false);
+    CHECK_AND_RETURN_RET(meta->Find(key) != meta->end(), false);
+
+    bool ret = true;
+    AnyValueType type = meta->GetValueType(key);
+    if (type == AnyValueType::STRING) {
+        std::string sValue;
+        ret = meta->GetData(key, sValue);
+        CHECK_AND_RETURN_RET_LOG(ret, ret, "GetData failed, key %{public}s", key.c_str());
+        ret = CommonNapi::SetPropertyString(env, obj, key, sValue);
+        CHECK_AND_RETURN_RET_LOG(ret, ret, "SetPropertyString failed, key %{public}s", key.c_str());
+    } else if (type == AnyValueType::INT32_T) {
+        int32_t value;
+        ret = meta->GetData(key, &value);
+        CHECK_AND_RETURN_RET_LOG(ret, ret, "GetData failed, key %{public}s", key.c_str());
+        ret = CommonNapi::SetPropertyInt32(env, obj, key, value);
+        CHECK_AND_RETURN_RET_LOG(ret, ret, "SetPropertyString failed, key %{public}s", key.c_str());
+    } else if (type == AnyValueType::FLOAT) {
+        float dValue;
+        ret = meta->GetData(key, dValue);
+        CHECK_AND_RETURN_RET_LOG(ret, ret, "GetData failed, key %{public}s", key.c_str());
+        ret = CommonNapi::SetPropertyDouble(env, obj, key, dValue);
+        CHECK_AND_RETURN_RET_LOG(ret, ret, "SetPropertyString failed, key %{public}s", key.c_str());
+    } else {
+        MEDIA_LOGE("not supported value type");
+    }
+    return true;
+}
+
 bool CommonNapi::AddRangeProperty(napi_env env, napi_value obj, const std::string &name, int32_t min, int32_t max)
 {
     CHECK_AND_RETURN_RET(obj != nullptr, false);

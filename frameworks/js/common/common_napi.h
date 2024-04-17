@@ -56,6 +56,7 @@ public:
     static napi_status CreateError(napi_env env, int32_t errCode, const std::string &errMsg, napi_value &errVal);
     static napi_ref CreateReference(napi_env env, napi_value arg);
     static napi_deferred CreatePromise(napi_env env, napi_ref ref, napi_value &result);
+    static bool SetPropertyByValueType(napi_env env, napi_value &obj, std::shared_ptr<Meta> &meta, std::string key);
     static bool SetPropertyInt32(napi_env env, napi_value &obj, const std::string &key, int32_t value);
     static bool SetPropertyDouble(napi_env env, napi_value &obj, const std::string &key, double value);
     static bool SetPropertyBool(napi_env env, napi_value &obj, const std::string &key, bool value);
