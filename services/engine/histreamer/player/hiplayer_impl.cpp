@@ -98,7 +98,6 @@ HiPlayerImpl::HiPlayerImpl(int32_t appUid, int32_t appPid, uint32_t appTokenId, 
     traceId = HiTraceChain::Begin("hiPlayerImpl", HITRACE_FLAG_DEFAULT);
     std::shared_ptr<Meta> meta = std::make_shared<Meta>();
     meta->SetData(Tag::PLAYER_NAME, "video_hw_decoder#player");
-    meta->SetData(Tag::AVCODEC_NAME, "video_hw_decoder#avcodec");
     MediaChainManager::AddInfo(meta);
 }
 
