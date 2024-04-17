@@ -106,9 +106,13 @@ std::shared_ptr<Meta> AVMetaDataCollector::GetAVMetadata()
             continue;
         }
         if (avKey == AV_KEY_VIDEO_IS_HDR_VIVID) {
-            int32_t hdr = value == "yes" ? static_cast<int32_t>(HdrType::AV_HDR_TYPE_VIVID)
-                :static_cast<int32_t>(HdrType::AV_HDR_TYPE_NONE);
-            collectedAVMetaData_->SetData(iter->second, hdr);
+            int32_t hdr;
+            if (value == "yes") {
+                hdr = static_cast<int32_t>(HdrType::AV_HDR_TYPE_VIVID);
+            } else {
+                hdr = static_cast<int32_t>(HdrType::AV_HDR_TYPE_NONE);
+            }
+            collectedAVMetaData_->SetData("hdrType", hdr);
             continue;
         }
         auto iter = AVMETA_KEY_TO_X_MAP.find(avKey);
