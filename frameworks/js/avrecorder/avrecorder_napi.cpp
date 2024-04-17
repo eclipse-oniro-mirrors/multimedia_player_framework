@@ -1519,7 +1519,7 @@ int32_t AVRecorderNapi::GetAVMetaData(std::unique_ptr<AVRecorderAsyncContext> &a
 
     avMetadata.genre = CommonNapi::GetPropertyString(env, metadata, "genre");
     std::string strRotation = CommonNapi::GetPropertyString(env, metadata, "videoOrientation");
-    if (strRotation == "0" || rotation == "90" || rotation == "180" || rotation == "270") {
+    if (strRotation == "0" || strRotation == "90" || strRotation == "180" || strRotation == "270") {
         asyncCtx->config_->rotation = std::stoi(strRotation);
     } else if (strRotation != "") {
         asyncCtx->AVRecorderSignError(MSERR_INVALID_VAL, "not support rotation", "videoOrientation");
