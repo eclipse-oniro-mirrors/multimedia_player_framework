@@ -16,7 +16,6 @@
 #include "meta/audio_types.h"
 #include "sync_fence.h"
 #include <sys/syscall.h>
-#include "media_dfx.h"
 
 namespace OHOS {
 namespace Media {
