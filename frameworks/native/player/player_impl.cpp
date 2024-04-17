@@ -17,7 +17,6 @@
 #include "i_media_service.h"
 #include "media_log.h"
 #include "media_errors.h"
-#include "hitrace/tracechain.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerImpl"};
@@ -26,7 +25,6 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerImpl
 namespace OHOS {
 namespace Media {
 using namespace OHOS::HiviewDFX;
-
 std::shared_ptr<Player> PlayerFactory::CreatePlayer()
 {
     MEDIA_LOGD("PlayerImpl: CreatePlayer in");
@@ -42,7 +40,7 @@ std::shared_ptr<Player> PlayerFactory::CreatePlayer()
 int32_t PlayerImpl::Init()
 {
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Init in", FAKE_POINTER(this));
-    HiviewDFX::HiTraceChain::SetId(traceId_);
+    HiTraceChain::SetId(traceId_);
     playerService_ = MediaServiceFactory::GetInstance().CreatePlayerService();
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_UNKNOWN, "failed to create player service");
     return MSERR_OK;
@@ -51,6 +49,7 @@ int32_t PlayerImpl::Init()
 PlayerImpl::PlayerImpl()
 {
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    traceId_ = HiTraceChain::Begin("player", HITRACE_FLAG_DEFAULT);
     ResetSeekVariables();
     traceId_ = HiviewDFX::HiTraceChain::Begin("PlayerImpl", HITRACE_FLAG_DEFAULT);
 }
@@ -62,7 +61,7 @@ PlayerImpl::~PlayerImpl()
         playerService_ = nullptr;
     }
     ResetSeekVariables();
-    HiviewDFX::HiTraceChain::End(traceId_);
+    HiTraceChain::End(traceId_);
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 

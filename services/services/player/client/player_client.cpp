@@ -217,7 +217,7 @@ int32_t PlayerClient::SetVolume(float leftVolume, float rightVolume)
 
 int32_t PlayerClient::Seek(int32_t mSeconds, PlayerSeekMode mode)
 {
-     MEDIA_LOGD("PlayerClient:0x%{public}06" PRIXPTR " Seek in", FAKE_POINTER(this));
+    MEDIA_LOGD("PlayerClient:0x%{public}06" PRIXPTR " Seek in", FAKE_POINTER(this));
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     return playerProxy_->Seek(mSeconds, mode);

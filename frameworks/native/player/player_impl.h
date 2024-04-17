@@ -22,9 +22,9 @@
 #include "i_player_service.h"
 #include "hitrace/tracechain.h"
 
-
 namespace OHOS {
 namespace Media {
+using namespace OHOS::HiviewDFX;
 class PlayerImpl : public Player, public NoCopyable, public std::enable_shared_from_this<PlayerImpl> {
 public:
     PlayerImpl();
@@ -85,7 +85,7 @@ private:
 
     std::shared_ptr<IPlayerService> playerService_ = nullptr;
     sptr<Surface> surface_ = nullptr;
-    HiviewDFX::HiTraceId traceId_;
+    HiTraceId traceId_;
 };
 
 class PlayerImplCallback : public PlayerCallback {

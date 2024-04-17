@@ -84,7 +84,6 @@ private:
     HiPlayerImpl* hiPlayerImpl_;
 };
 
-HiviewDFX::HiTraceId traceId;
 HiPlayerImpl::HiPlayerImpl(int32_t appUid, int32_t appPid, uint32_t appTokenId, uint64_t appFullTokenId)
     : appUid_(appUid), appPid_(appPid), appTokenId_(appTokenId), appFullTokenId_(appFullTokenId)
 {
@@ -95,10 +94,6 @@ HiPlayerImpl::HiPlayerImpl(int32_t appUid, int32_t appPid, uint32_t appTokenId, 
     syncManager_ = std::make_shared<MediaSyncManager>();
     callbackLooper_.SetPlayEngine(this, playerId_);
     bundleName_ = GetClientBundleName(appUid);
-    traceId = HiTraceChain::Begin("hiPlayerImpl", HITRACE_FLAG_DEFAULT);
-    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
-    meta->SetData(Tag::PLAYER_NAME, "video_hw_decoder#player");
-    MediaChainManager::AddInfo(meta);
 }
 
 HiPlayerImpl::~HiPlayerImpl()
@@ -108,7 +103,6 @@ HiPlayerImpl::~HiPlayerImpl()
         pipeline_->RemoveHeadFilter(demuxer_);
     }
     PipeLineThreadPool::GetInstance().DestroyThread(playerId_);
-    HiTraceChain::End(traceId);
 }
 
 void HiPlayerImpl::ReleaseInner()
@@ -276,7 +270,6 @@ int32_t HiPlayerImpl::PrepareAsync()
         return TransStatus(Status::ERROR_UNSUPPORTED_FORMAT);
     }
     if (dataSrc_ != nullptr) {
-        MEDIA_LOG_I("DoSetSource dataSrc_");
         ret = DoSetSource(std::make_shared<MediaSource>(dataSrc_));
     } else {
         if (!header_.empty()) {
@@ -353,7 +346,7 @@ int32_t HiPlayerImpl::SelectBitRate(uint32_t bitRate)
 void HiPlayerImpl::DoInitializeForHttp()
 {
     if (!isNetWorkPlay_) {
-        MEDIA_LOG_I("DoInitializeForHttp failed, is not network play");
+        MEDIA_LOG_I("DoInitializeForHttp failed, not network play");
         return;
     }
     std::vector<uint32_t> vBitRates;
@@ -926,7 +919,6 @@ int32_t HiPlayerImpl::GetPlaybackSpeed(PlaybackRateMode& mode)
 
 bool HiPlayerImpl::IsVideoMime(const std::string& mime)
 {
-    MEDIA_LOG_I("video mime type is : %{public}s", mime.c_str());
     return mime.find("video/") == 0;
 }
 
@@ -1184,7 +1176,6 @@ void HiPlayerImpl::OnEvent(const Event &event)
             break;
     }
     OnEventSub(event);
-    MEDIA_LOG_I("OnEvent out.");
 }
 
 void HiPlayerImpl::OnEventSub(const Event &event)
@@ -1449,7 +1440,7 @@ void HiPlayerImpl::NotifyBufferingUpdate(const std::string_view& type, int32_t p
 {
     Format format;
     format.PutIntValue(std::string(type), param);
-    MEDIA_LOG_I("NotifyBufferingUpdate param " PUBLIC_LOG_D32, param);
+    MEDIA_LOG_D("NotifyBufferingUpdate param " PUBLIC_LOG_D32, param);
     callbackLooper_.OnInfo(INFO_TYPE_BUFFERING_UPDATE, durationMs_.load(), format);
 }
 

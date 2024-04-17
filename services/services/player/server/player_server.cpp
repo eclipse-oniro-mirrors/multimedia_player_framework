@@ -105,6 +105,12 @@ PlayerServer::PlayerServer()
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
     instanceId_ = HiviewDFX::HiTraceChain::GetId().GetChainId();
+    MEDIA_LOGI("0x%{public}06" PRIXPTR "Dump Info: lastOpStatus: %{public}s, lastErrMsg: %{public}s, "
+        "url: %{public}s, speedMode: %{public}s, looping: %{public}s, leftVolume: %{public}f, "
+        "rightVolume: %{public}f, effectMode: %{public}d, playerEngine: %{public}d", FAKE_POINTER(this),
+        lastOpStatus_?"true":"false", lastErrMsg_.c_str(), config_.url.c_str(),
+        std::to_string(config_.speedMode).c_str(), config_.looping?"true":"false", config_.leftVolume,
+        config_.rightVolume, config_.effectMode, playerEngine_->GetHEBCMode());
 }
 
 PlayerServer::~PlayerServer()
@@ -398,7 +404,7 @@ int32_t PlayerServer::OnPrepare(bool sync)
 
 int32_t PlayerServer::HandlePrepare()
 {
-    MEDIA_LOGD("KPI-TRACE: PlayerServer HandlePrepare in");
+    MEDIA_LOGI("KPI-TRACE: PlayerServer HandlePrepare in");
     int32_t ret = playerEngine_->PrepareAsync();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Server Prepare Failed!");
 
@@ -529,7 +535,7 @@ int32_t PlayerServer::OnPause()
 
 int32_t PlayerServer::HandlePause()
 {
-    MEDIA_LOGD("KPI-TRACE: PlayerServer HandlePause in");
+    MEDIA_LOGI("KPI-TRACE: PlayerServer HandlePause in");
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_INVALID_OPERATION, "playerEngine_ is nullptr");
     int32_t ret = playerEngine_->Pause();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine Pause Failed!");
@@ -719,7 +725,7 @@ int32_t PlayerServer::Seek(int32_t mSeconds, PlayerSeekMode mode)
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
 
-    MEDIA_LOGD("KPI-TRACE: PlayerServer Seek in");
+    MEDIA_LOGI("KPI-TRACE: PlayerServer Seek in");
     if (lastOpStatus_ != PLAYER_PREPARED && lastOpStatus_ != PLAYER_PAUSED &&
         lastOpStatus_ != PLAYER_STARTED && lastOpStatus_ != PLAYER_PLAYBACK_COMPLETE) {
         MEDIA_LOGE("Can not Seek, currentState is %{public}s", GetStatusDescription(lastOpStatus_).c_str());
@@ -762,7 +768,7 @@ int32_t PlayerServer::Seek(int32_t mSeconds, PlayerSeekMode mode)
 
 int32_t PlayerServer::HandleSeek(int32_t mSeconds, PlayerSeekMode mode)
 {
-    MEDIA_LOGD("KPI-TRACE: PlayerServer HandleSeek in");
+    MEDIA_LOGI("KPI-TRACE: PlayerServer HandleSeek in");
     int32_t ret = playerEngine_->Seek(mSeconds, mode);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine Seek Failed!");
 
