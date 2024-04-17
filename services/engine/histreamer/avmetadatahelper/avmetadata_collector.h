@@ -69,8 +69,6 @@ public:
     ~AVMetaDataCollector();
 
     std::unordered_map<int32_t, std::string> ExtractMetadata();
-    // std::shared_ptr<Meta> GetCustomInfo();
-    // std::vector<float> GetLocation();
     std::shared_ptr<Meta> GetAVMetadata();
     std::string ExtractMetadata(int32_t key);
     std::shared_ptr<AVSharedMemory> GetArtPicture();

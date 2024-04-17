@@ -105,6 +105,12 @@ std::shared_ptr<Meta> AVMetaDataCollector::GetAVMetadata()
         if (avKey == AV_KEY_LOCATION_LATITUDE || avKey == AV_KEY_LOCATION_LONGITUDE) {
             continue;
         }
+        if (avKey == AV_KEY_VIDEO_IS_HDR_VIVID) {
+            int32_t hdr = value == "yes" ? static_cast<int32_t>(HdrType::AV_HDR_TYPE_VIVID)
+                :static_cast<int32_t>(HdrType::AV_HDR_TYPE_NONE);
+            collectedAVMetaData_->SetData(iter->second, hdr);
+            continue;
+        }
         auto iter = AVMETA_KEY_TO_X_MAP.find(avKey);
         if (iter != AVMETA_KEY_TO_X_MAP.end()) {
             collectedAVMetaData_->SetData(iter->second, value);
@@ -265,7 +271,6 @@ void AVMetaDataCollector::ConvertToAVMeta(const std::shared_ptr<Meta> &innerMeta
         } else if (Any::IsSameTypeWith<float>(type)) {
             float value;
             if (innerMeta->GetData(innerKey, value) && collectedAVMetaData_ != nullptr) {
-                // avmeta.SetMeta(avKey, std::to_string(value));
                 collectedAVMetaData_->SetData(innerKey, value);
             }
 
