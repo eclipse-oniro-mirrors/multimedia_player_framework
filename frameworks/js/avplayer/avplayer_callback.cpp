@@ -422,19 +422,6 @@ public:
         CANCEL_SCOPE_EXIT_GUARD(0);
     }
 
-    static void CompleteCallbackInOrder(NapiCallback::Base *jsCb, std::shared_ptr<AppExecFwk::EventHandler> handler)
-    {
-        ON_SCOPE_EXIT(0) {
-            delete jsCb;
-        };
-        CHECK_AND_RETURN_LOG(handler != nullptr, "handler is nullptr");
-
-        bool ret = handler->PostTask(std::bind(&Base::JsCallback, jsCb),
-            AppExecFwk::EventQueue::Priority::IMMEDIATE);
-        CHECK_AND_RETURN_LOG(ret, "Failed to execute PostTask");
-        CANCEL_SCOPE_EXIT_GUARD(0);
-    }
-
     struct TrackChange : public Base {
         int32_t number = 0;
         bool isSelect = false;
