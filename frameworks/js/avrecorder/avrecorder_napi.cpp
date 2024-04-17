@@ -1452,7 +1452,7 @@ int32_t AVRecorderNapi::GetConfig(std::unique_ptr<AVRecorderAsyncContext> &async
     config->location.latitude = static_cast<float>(tempLatitude);
     config->location.longitude = static_cast<float>(tempLongitude);
     config->metadata.location.latitude = static_cast<float>(tempLatitude);
-    config->metadata.location.longitude = static_cast<float>(tempLatitude);
+    config->metadata.location.longitude = static_cast<float>(tempLongitude);
 
     napi_value metadata = nullptr;
     napi_get_named_property(env, args, "metadata", &metadata);
@@ -1513,14 +1513,16 @@ int32_t AVRecorderNapi::GetAVMetaData(std::unique_ptr<AVRecorderAsyncContext> &a
         asyncCtx->config_->location.latitude = static_cast<float>(tempLatitude);
         asyncCtx->config_->location.longitude = static_cast<float>(tempLongitude);
         avMetadata.location.latitude = static_cast<float>(tempLatitude);
-        avMetadata.location.longitude = static_cast<float>(tempLatitude);
+        avMetadata.location.longitude = static_cast<float>(tempLongitude);
     }
 
 
     avMetadata.genre = CommonNapi::GetPropertyString(env, metadata, "genre");
+    MEDIA_LOGI("genre: %{public}s", avMetadata.genre.c_str());
     std::string strRotation = CommonNapi::GetPropertyString(env, metadata, "videoOrientation");
     if (strRotation == "0" || strRotation == "90" || strRotation == "180" || strRotation == "270") {
         asyncCtx->config_->rotation = std::stoi(strRotation);
+        MEDIA_LOGI("rotation: %{public}d", asyncCtx->config_->rotation);
     } else if (strRotation != "") {
         asyncCtx->AVRecorderSignError(MSERR_INVALID_VAL, "not support rotation", "videoOrientation");
         return MSERR_INVALID_VAL;
@@ -1529,8 +1531,7 @@ int32_t AVRecorderNapi::GetAVMetaData(std::unique_ptr<AVRecorderAsyncContext> &a
     napi_value customInfo = nullptr;
     napi_get_named_property(env, metadata, "customInfo", &customInfo);
 
-    CHECK_AND_RETURN_RET(CommonNapi::GetPropertyRecord(env, customInfo, avMetadata.customInfo) == napi_ok,
-        (asyncCtx->AVRecorderSignError(MSERR_INVALID_VAL, "getcustomInfo", "customInfo"), MSERR_INVALID_VAL));
+    (void)CommonNapi::GetPropertyRecord(env, customInfo, avMetadata.customInfo);
     return MSERR_OK;
 }
 
