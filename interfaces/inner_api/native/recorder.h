@@ -764,7 +764,7 @@ public:
      * @return Returns {@link SUCCESS} if the setting is successful; returns an error code defined
      * in {@link media_errors.h} otherwise.
     */
-    virtual int32_t SetUserCustomInfo(int32_t sourceId, Meta &userCustomInfo) = 0; //TODO:: need change name
+    virtual int32_t SetUserCustomInfo(int32_t sourceId, Meta &userCustomInfo) = 0;
 
     /**
      * @brief Genre

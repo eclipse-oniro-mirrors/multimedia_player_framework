@@ -80,7 +80,7 @@ int32_t RecorderServiceStub::Init()
     recFuncs_[SET_MAX_FILE_SIZE] = &RecorderServiceStub::SetMaxFileSize;
     recFuncs_[SET_LOCATION] = &RecorderServiceStub::SetLocation;
     recFuncs_[SET_ORIENTATION_HINT] = &RecorderServiceStub::SetOrientationHint;
-    recFuncs_[SET_USER_CUSTOM_INFO] = &RecorderServiceStub::SetUserCustomInfo;//TODO::new
+    recFuncs_[SET_USER_CUSTOM_INFO] = &RecorderServiceStub::SetUserCustomInfo;
     recFuncs_[SET_GENRE] = &RecorderServiceStub::SetGenre;
     recFuncs_[PREPARE] = &RecorderServiceStub::Prepare;
     recFuncs_[START] = &RecorderServiceStub::Start;

@@ -342,7 +342,7 @@ int32_t RecorderServiceProxy::SetUserCustomInfo(int32_t sourceId, Meta &userCust
     if (!ret) {
         MEDIA_LOGE("userCustomInfo ToParcel failed");
     }
-    int error = Remote()->SendRequest(SET_USER_CUSTOM_INFO, data, reply, option);//TODO:check error
+    int error = Remote()->SendRequest(SET_USER_CUSTOM_INFO, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetUserCustomInfo failed, error: %{public}d", error);
 
@@ -361,7 +361,7 @@ int32_t RecorderServiceProxy::SetGenre(int32_t sourceId, std::string &genre)
 
     data.WriteInt32(sourceId);
     data.WriteString(genre);
-    int error = Remote()->SendRequest(SET_GENRE, data, reply, option);//TODO:check error
+    int error = Remote()->SendRequest(SET_GENRE, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetGenre failed, error: %{public}d", error);
 
