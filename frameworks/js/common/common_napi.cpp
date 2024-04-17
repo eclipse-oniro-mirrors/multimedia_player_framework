@@ -373,7 +373,7 @@ bool CommonNapi::SetPropertyByValueType(napi_env env, napi_value &obj, std::shar
         CHECK_AND_RETURN_RET_LOG(ret, ret, "SetPropertyString failed, key %{public}s", key.c_str());
     } else if (type == AnyValueType::INT32_T) {
         int32_t value;
-        ret = meta->GetData(key, &value);
+        ret = meta->GetData(key, value);
         CHECK_AND_RETURN_RET_LOG(ret, ret, "GetData failed, key %{public}s", key.c_str());
         ret = CommonNapi::SetPropertyInt32(env, obj, key, value);
         CHECK_AND_RETURN_RET_LOG(ret, ret, "SetPropertyString failed, key %{public}s", key.c_str());
