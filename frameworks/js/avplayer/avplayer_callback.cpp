@@ -547,11 +547,6 @@ AVPlayerCallback::AVPlayerCallback(napi_env env, AVPlayerNotify *listener)
     : env_(env), listener_(listener)
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
-    auto runner = AppExecFwk::EventRunner::GetMainEventRunner();
-    if (runner != nullptr) {
-        handler_ = std::make_shared<AppExecFwk::EventHandler>(runner);
-    }
-
     onInfoFuncs_[INFO_TYPE_STATE_CHANGE] = &AVPlayerCallback::OnStateChangeCb;
     onInfoFuncs_[INFO_TYPE_VOLUME_CHANGE] = &AVPlayerCallback::OnVolumeChangeCb;
     onInfoFuncs_[INFO_TYPE_SEEKDONE] = &AVPlayerCallback::OnSeekDoneCb;
@@ -895,11 +890,7 @@ void AVPlayerCallback::OnBufferingUpdateCb(const int32_t extra, const Format &in
     cb->callbackName = AVPlayerEvent::EVENT_BUFFERING_UPDATE;
     cb->valueVec.push_back(bufferingType);
     cb->valueVec.push_back(val);
-#ifdef ANDROID_PLATFORM
     NapiCallback::CompleteCallback(env_, cb);
-#else
-    NapiCallback::CompleteCallbackInOrder(cb, handler_);
-#endif
 }
 
 void AVPlayerCallback::OnMessageCb(const int32_t extra, const Format &infoBody)
