@@ -115,8 +115,8 @@ std::shared_ptr<Meta> AVMetaDataCollector::GetAVMetadata()
             collectedAVMetaData_->SetData("hdrType", hdr);
             continue;
         }
-        auto iter = AVMETA_KEY_TO_X_MAP.find(avKey);
-        if (iter != AVMETA_KEY_TO_X_MAP.end()) {
+        auto iter = g_MetadataCodeMap.find(avKey);
+        if (iter != g_MetadataCodeMap.end()) {
             collectedAVMetaData_->SetData(iter->second, value);
         }
     }
