@@ -1443,12 +1443,12 @@ int32_t AVRecorderNapi::GetConfig(std::unique_ptr<AVRecorderAsyncContext> &async
         config->rotation == VIDEO_ROTATION_180 || config->rotation == VIDEO_ROTATION_270),
         (asyncCtx->AVRecorderSignError(MSERR_INVALID_VAL, "getrotation", "rotation"), MSERR_INVALID_VAL));
 
-    if (CheckhasNamedProperty(env, args, "location")) {
-        CHECK_AND_RETURN_LOG(GetLocation(asyncCtx, env, args),
+    if (CommonNapi::CheckhasNamedProperty(env, args, "location")) {
+        CHECK_AND_RETURN_RET(GetLocation(asyncCtx, env, args),
             (asyncCtx->AVRecorderSignError(MSERR_INVALID_VAL, "GetLocation", "Location"), MSERR_INVALID_VAL));
     }
 
-    if (CheckhasNamedProperty(env, args, "metadata")) {
+    if (CommonNapi::CheckhasNamedProperty(env, args, "metadata")) {
         ret = AVRecorderNapi::GetAVMetaData(asyncCtx, env, args);
         CHECK_AND_RETURN_RET(ret == MSERR_OK,
             (asyncCtx->AVRecorderSignError(ret, "GetAVMetaData", "metadata"), ret));
@@ -1500,13 +1500,17 @@ int32_t AVRecorderNapi::GetAVMetaData(std::unique_ptr<AVRecorderAsyncContext> &a
     }
     napi_valuetype valueType = napi_undefined;
     if (napi_typeof(env, metadata, &valueType) != napi_ok || valueType != napi_object) {
+        if (valueType == napi_undefined) {
+            return MSERR_OK;
+        }
         asyncCtx->AVRecorderSignError(MSERR_INVALID_VAL, "GetAVMetaData", "metadata");
         return MSERR_INVALID_VAL;
     }
+
     AVMetadata &avMetadata = asyncCtx->config_->metadata;
 
     if (CommonNapi::CheckhasNamedProperty(env, metadata, "location")) {
-        CHECK_AND_RETURN_LOG(GetLocation(asyncCtx, env, args),
+        CHECK_AND_RETURN_RET(GetLocation(asyncCtx, env, args),
             (asyncCtx->AVRecorderSignError(MSERR_INVALID_VAL, "GetLocation", "Location"), MSERR_INVALID_VAL));
     }
     if (CommonNapi::CheckhasNamedProperty(env, metadata, "genre")) {
@@ -1522,8 +1526,9 @@ int32_t AVRecorderNapi::GetAVMetaData(std::unique_ptr<AVRecorderAsyncContext> &a
     }
     // get customInfo
     if (CommonNapi::CheckhasNamedProperty(env, metadata, "customInfo")) {
-        CHECK_AND_RETURN_RET(CommonNapi::GetPropertyRecord(env, metadata, avMetadata.customInfo) == napi_ok,
-            (asyncCtx->AVRecorderSignError(ret, "GetCustomInfo", "customInfo"), ret));
+        CHECK_AND_RETURN_RET(
+            CommonNapi::GetPropertyRecord(env, metadata, avMetadata.customInfo, "customInfo") == napi_ok,
+            (asyncCtx->AVRecorderSignError(MSERR_INVALID_VAL, "GetCustomInfo", "customInfo"), MSERR_INVALID_VAL));
     }
     return MSERR_OK;
 }
@@ -1531,7 +1536,11 @@ int32_t AVRecorderNapi::GetAVMetaData(std::unique_ptr<AVRecorderAsyncContext> &a
 bool AVRecorderNapi::GetLocation(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args)
 {
     napi_value geoLocation = nullptr;
+    napi_valuetype valueType = napi_undefined;
     CHECK_AND_RETURN_RET(napi_get_named_property(env, args, "location", &geoLocation) == napi_ok, false);
+    napi_status status = napi_typeof(env, geoLocation, &valueType);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, status, "get valueType failed");
+    CHECK_AND_RETURN_RET_LOG(status != napi_undefined, true, "location undefined");
     userLocation &location = asyncCtx->config_->metadata.location;
 
     double tempLatitude = 0;
