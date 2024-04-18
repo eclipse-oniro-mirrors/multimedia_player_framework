@@ -123,7 +123,7 @@ std::shared_ptr<Meta> AVMetaDataCollector::GetAVMetadata()
 
     customInfo_ = mediaDemuxer_->GetUserMeta();
     if (customInfo_ == nullptr) {
-        MEDIA_LOG_W("No valid user data");
+        MEDIA_LOGW("No valid user data");
     } else {
         if (AVMETA_KEY_TO_X_MAP.find(AV_KEY_CUSTOMINFO) != AVMETA_KEY_TO_X_MAP.end()) {
             collectedAVMetaData_->SetData(AVMETA_KEY_TO_X_MAP.find(AV_KEY_CUSTOMINFO)->second, customInfo_);
@@ -246,7 +246,9 @@ void AVMetaDataCollector::ConvertToAVMeta(const std::shared_ptr<Meta> &innerMeta
         if (innerKey.compare("customInfo") == 0) {
             continue;
         }
-        SetStringByValueType(avmeta, avKey, innerKey);
+        if (!SetStringByValueType(innerMeta, avmeta, avKey, innerKey)) {
+            break;
+        }
         SetEmptyStringIfNoData(avmeta, avKey);
     }
 }
@@ -303,7 +305,8 @@ void AVMetaDataCollector::SetEmptyStringIfNoData(Metadata &avmeta, int32_t avKey
     }
 }
 
-void AVMetaDataCollector::SetStringByValueType(Metadata &avmeta, int32_t avKey, std::string innerKey)
+void AVMetaDataCollector::SetStringByValueType(const std::shared_ptr<Meta> &innerMeta,
+    Metadata &avmeta, int32_t avKey, std::string innerKey) const
 {
     Any type = OHOS::Media::GetDefaultAnyValue(innerKey);
     if (Any::IsSameTypeWith<int32_t>(type)) {

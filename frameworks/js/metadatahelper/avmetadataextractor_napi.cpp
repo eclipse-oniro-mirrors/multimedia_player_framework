@@ -284,7 +284,7 @@ void AVMetadataExtractorNapi::ResolveMetadataComplete(napi_env env, napi_status 
         MEDIA_LOGE("success to find key: %{public}s", key.c_str());
         if (key == "latitude" || key == "longitude") {
             CHECK_AND_CONTINUE_LOG(CommonNapi::SetPropertyByValueType(env, location, metadata, key),
-                        "SetProperty failed, key: %{public}s", key.c_str());
+                "SetProperty failed, key: %{public}s", key.c_str());
             continue;
         }
         if (key == "customInfo") {

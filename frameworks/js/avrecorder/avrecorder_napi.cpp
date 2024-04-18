@@ -1446,7 +1446,8 @@ int32_t AVRecorderNapi::GetConfig(std::unique_ptr<AVRecorderAsyncContext> &async
     napi_value geoLocation = nullptr;
     napi_get_named_property(env, args, "location", &geoLocation);
     if (geoLocation != nullptr) {
-        CHECK_AND_RETURN_LOG(GetLocation(asyncCtx, env, geoLocation), "GetLocation", "GetLocation");
+        CHECK_AND_RETURN_RET(GetLocation(asyncCtx, env, geoLocation),
+            (asyncCtx->AVRecorderSignError(MSERR_INVALID_VAL, "GetLocation", "Location"), MSERR_INVALID_VAL));
     }
 
     napi_value metadata = nullptr;
@@ -1507,7 +1508,8 @@ int32_t AVRecorderNapi::GetAVMetaData(std::unique_ptr<AVRecorderAsyncContext> &a
     napi_value geoLocation = nullptr;
     napi_get_named_property(env, metadata, "location", &geoLocation);
     if (geoLocation != nullptr) {
-        CHECK_AND_RETURN_LOG(GetLocation(asyncCtx, env, geoLocation), "GetLocation", "Location");
+        CHECK_AND_RETURN_RET(GetLocation(asyncCtx, env, geoLocation),
+            (asyncCtx->AVRecorderSignError(MSERR_INVALID_VAL, "GetLocation", "Location"), MSERR_INVALID_VAL));
     }
 
     avMetadata.genre = CommonNapi::GetPropertyString(env, metadata, "genre");
@@ -1524,20 +1526,20 @@ int32_t AVRecorderNapi::GetAVMetaData(std::unique_ptr<AVRecorderAsyncContext> &a
     napi_get_named_property(env, metadata, "customInfo", &customInfo);
     if (customInfo != nullptr) {
         CHECK_AND_RETURN_RET(CommonNapi::GetPropertyRecord(env, customInfo, avMetadata.customInfo) == napi_ok,
-            (asyncCtx->AVRecorderSignError(ret, "GetCustomInfo", "customInfo"), ret));
+            (asyncCtx->AVRecorderSignError(MSERR_INVALID_VAL, "GetCustomInfo", "customInfo"), MSERR_INVALID_VAL));
     }
     return MSERR_OK;
 }
 
-int32_t AVRecorderNapi::GetLocation(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx,
+bool AVRecorderNapi::GetLocation(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx,
     napi_env env, napi_value geoLocation)
 {
-    AVRecorderProfile &location = asyncCtx->config_->metadata.location;
-    bool ret = true;
+    userLocation &location = asyncCtx->config_->metadata.location;
+
     double tempLatitude = 0;
     double tempLongitude = 0;
-    CHECK_AND_RETURN_RET(CommonNapi::GetPropertyDouble(env, args, "latitude", tempLatitude), false);
-    CHECK_AND_RETURN_RET(CommonNapi::GetPropertyDouble(env, args, "longitude", tempLongitude), false);
+    CHECK_AND_RETURN_RET(CommonNapi::GetPropertyDouble(env, geoLocation, "latitude", tempLatitude), false);
+    CHECK_AND_RETURN_RET(CommonNapi::GetPropertyDouble(env, geoLocation, "longitude", tempLongitude), false);
     location.latitude = static_cast<float>(tempLatitude);
     location.longitude = static_cast<float>(tempLongitude);
     asyncCtx->config_->withLocation = true;
@@ -2067,7 +2069,5 @@ napi_status MediaJsEncoderInfo::GetVideoEncoderInfo(
     CHECK_AND_RETURN_RET(status == napi_ok, napi_generic_failure);
     return napi_ok;
 }
-
-
 } // namespace Media
 } // namespace OHOS

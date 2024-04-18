@@ -409,7 +409,6 @@ public:
      */
     virtual std::shared_ptr<PixelMap> FetchFrameAtTime(int64_t timeUs, int32_t option, const PixelMapParams &param) = 0;
 
-
     /**
      * all meta data.
      * This method must be called after the SetSource.
