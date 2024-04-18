@@ -92,35 +92,35 @@ void PlayerUnitTest::NoRunPlayFunTest(const std::string &protocol)
 {
     int32_t duration = 0;
     if (player_ != nullptr) {
-        EXPECT_NQ(MSERR_OK, player_->GetDuration(duration));
-        EXPECT_NQ(MSERR_OK, player_->Play());
+        EXPECT_NE(MSERR_OK, player_->GetDuration(duration));
+        EXPECT_NE(MSERR_OK, player_->Play());
         EXPECT_FALSE(player_->IsPlaying());
-        EXPECT_NQ(MSERR_OK, player_->GetDuration(duration));
-        EXPECT_NQ(MSERR_OK, player_->Pause());
+        EXPECT_NE(MSERR_OK, player_->GetDuration(duration));
+        EXPECT_NE(MSERR_OK, player_->Pause());
         int32_t time;
-        EXPECT_NQ(MSERR_OK, player_->GetCurrentTime(time));
+        EXPECT_NE(MSERR_OK, player_->GetCurrentTime(time));
         std::vector<Format> videoTrack;
         std::vector<Format> audioTrack;
-        EXPECT_NQ(MSERR_OK, player_->GetVideoTrackInfo(videoTrack));
-        EXPECT_NQ(MSERR_OK, player_->GetAudioTrackInfo(audioTrack));
+        EXPECT_NE(MSERR_OK, player_->GetVideoTrackInfo(videoTrack));
+        EXPECT_NE(MSERR_OK, player_->GetAudioTrackInfo(audioTrack));
         PlaybackRateMode mode;
         player_->SetPlaybackSpeed(SPEED_FORWARD_2_00_X);
         player_->GetPlaybackSpeed(mode);
-        EXPECT_NQ(MSERR_OK, player_->SetLooping(true));
-        EXPECT_NQ(true, player_->IsLooping());
-        EXPECT_NQ(MSERR_OK, player_->Seek(duration, SEEK_NEXT_SYNC));
-        EXPECT_NQ(MSERR_OK, player_->Play());
+        EXPECT_NE(MSERR_OK, player_->SetLooping(true));
+        EXPECT_NE(true, player_->IsLooping());
+        EXPECT_NE(MSERR_OK, player_->Seek(duration, SEEK_NEXT_SYNC));
+        EXPECT_NE(MSERR_OK, player_->Play());
         sleep(PLAYING_TIME_2_SEC);
         if (protocol == PlayerTestParam::HLS_PLAY) {
-            EXPECT_NQ(MSERR_OK, player_->SelectBitRate(200000));  // 200000:bitrate
+            EXPECT_NE(MSERR_OK, player_->SelectBitRate(200000));  // 200000:bitrate
             sleep(PLAYING_TIME_2_SEC);
         }
-        EXPECT_NQ(MSERR_OK, player_->SetLooping(false));
+        EXPECT_NE(MSERR_OK, player_->SetLooping(false));
         EXPECT_EQ(false, player_->IsLooping());
-        EXPECT_NQ(MSERR_OK, player_->SetVolume(1, 1));
-        EXPECT_NQ(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_NEXT_SYNC));
-        EXPECT_NQ(MSERR_OK, player_->Stop());
-        EXPECT_NQ(MSERR_OK, player_->Reset());
+        EXPECT_NE(MSERR_OK, player_->SetVolume(1, 1));
+        EXPECT_NE(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_NEXT_SYNC));
+        EXPECT_NE(MSERR_OK, player_->Stop());
+        EXPECT_NE(MSERR_OK, player_->Reset());
     }
 }
 
