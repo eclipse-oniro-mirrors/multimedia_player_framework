@@ -90,7 +90,7 @@ private:
     void FormatDateTime(Metadata &avmeta, const std::shared_ptr<Meta> &globalInfo);
     void SetEmptyStringIfNoData(Metadata &avmeta, int32_t avKey) const;
     bool SetStringByValueType(const std::shared_ptr<Meta> &innerMeta,
-        Metadata &avmeta, int32_t avKey, std::string innerKey); const;
+        Metadata &avmeta, int32_t avKey, std::string innerKey) const;
 };
 }  // namespace Media
 }  // namespace OHOS
