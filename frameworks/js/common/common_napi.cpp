@@ -166,7 +166,7 @@ napi_status CommonNapi::GetPropertyRecord(napi_env env, napi_value configObj, Me
     }
     status = napi_typeof(env, in, &valueType);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, status, "get valueType failed");
-    CHECK_AND_RETURN_RET_LOG(status != napi_undefined, napi_ok, "PropertyRecord undefined");
+    CHECK_AND_RETURN_RET_LOG(valueType != napi_undefined, napi_ok, "PropertyRecord undefined");
     CHECK_AND_RETURN_RET_LOG(valueType == napi_object, napi_invalid_arg, "invalid arguments");
 
     napi_value dataList = nullptr;
