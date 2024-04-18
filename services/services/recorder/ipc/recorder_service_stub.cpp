@@ -718,11 +718,6 @@ int32_t RecorderServiceStub::GetLocation(MessageParcel &data, MessageParcel &rep
 
 int32_t RecorderServiceStub::CheckPermission()
 {
-    auto callerUid = IPCSkeleton::GetCallingUid();
-    if (callerUid == ROOT_UID) {
-        MEDIA_LOGI("Root user. Permission Granted");
-        return Security::AccessToken::PERMISSION_GRANTED;
-    }
     Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
 
     switch (audioSourceType_) {
