@@ -305,7 +305,7 @@ void AVMetaDataCollector::SetEmptyStringIfNoData(Metadata &avmeta, int32_t avKey
     }
 }
 
-void AVMetaDataCollector::SetStringByValueType(const std::shared_ptr<Meta> &innerMeta,
+bool AVMetaDataCollector::SetStringByValueType(const std::shared_ptr<Meta> &innerMeta,
     Metadata &avmeta, int32_t avKey, std::string innerKey) const
 {
     Any type = OHOS::Media::GetDefaultAnyValue(innerKey);
