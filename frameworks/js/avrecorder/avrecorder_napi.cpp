@@ -1443,17 +1443,13 @@ int32_t AVRecorderNapi::GetConfig(std::unique_ptr<AVRecorderAsyncContext> &async
         config->rotation == VIDEO_ROTATION_180 || config->rotation == VIDEO_ROTATION_270),
         (asyncCtx->AVRecorderSignError(MSERR_INVALID_VAL, "getrotation", "rotation"), MSERR_INVALID_VAL));
 
-    napi_value geoLocation = nullptr;
-    napi_get_named_property(env, args, "location", &geoLocation);
-    if (geoLocation != nullptr) {
-        CHECK_AND_RETURN_RET(GetLocation(asyncCtx, env, geoLocation),
+    if (CheckhasNamedProperty(env, args, "location")) {
+        CHECK_AND_RETURN_LOG(GetLocation(asyncCtx, env, args),
             (asyncCtx->AVRecorderSignError(MSERR_INVALID_VAL, "GetLocation", "Location"), MSERR_INVALID_VAL));
     }
 
-    napi_value metadata = nullptr;
-    napi_get_named_property(env, args, "metadata", &metadata);
-    if (metadata != nullptr) {
-        ret = AVRecorderNapi::GetAVMetaData(asyncCtx, env, metadata);
+    if (CheckhasNamedProperty(env, args, "metadata")) {
+        ret = AVRecorderNapi::GetAVMetaData(asyncCtx, env, args);
         CHECK_AND_RETURN_RET(ret == MSERR_OK,
             (asyncCtx->AVRecorderSignError(ret, "GetAVMetaData", "metadata"), ret));
     }
@@ -1496,8 +1492,12 @@ int32_t AVRecorderNapi::GetRotation(std::unique_ptr<AVRecorderAsyncContext> &asy
 }
 
 int32_t AVRecorderNapi::GetAVMetaData(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env,
-    napi_value metadata)
+    napi_value args)
 {
+    napi_value metadata = nullptr;
+    if (napi_get_named_property(env, args, "metadata", &metadata) != napi_ok) {
+        return MSERR_INVALID_VAL;
+    }
     napi_valuetype valueType = napi_undefined;
     if (napi_typeof(env, metadata, &valueType) != napi_ok || valueType != napi_object) {
         asyncCtx->AVRecorderSignError(MSERR_INVALID_VAL, "GetAVMetaData", "metadata");
@@ -1505,14 +1505,13 @@ int32_t AVRecorderNapi::GetAVMetaData(std::unique_ptr<AVRecorderAsyncContext> &a
     }
     AVMetadata &avMetadata = asyncCtx->config_->metadata;
 
-    napi_value geoLocation = nullptr;
-    napi_get_named_property(env, metadata, "location", &geoLocation);
-    if (geoLocation != nullptr) {
-        CHECK_AND_RETURN_RET(GetLocation(asyncCtx, env, geoLocation),
+    if (CommonNapi::CheckhasNamedProperty(env, metadata, "location")) {
+        CHECK_AND_RETURN_LOG(GetLocation(asyncCtx, env, args),
             (asyncCtx->AVRecorderSignError(MSERR_INVALID_VAL, "GetLocation", "Location"), MSERR_INVALID_VAL));
     }
-
-    avMetadata.genre = CommonNapi::GetPropertyString(env, metadata, "genre");
+    if (CommonNapi::CheckhasNamedProperty(env, metadata, "genre")) {
+        avMetadata.genre = CommonNapi::GetPropertyString(env, metadata, "genre");
+    }
     std::string strRotation = CommonNapi::GetPropertyString(env, metadata, "videoOrientation");
     if (strRotation == "0" || strRotation == "90" || strRotation == "180" || strRotation == "270") {
         asyncCtx->config_->rotation = std::stoi(strRotation);
@@ -1522,18 +1521,17 @@ int32_t AVRecorderNapi::GetAVMetaData(std::unique_ptr<AVRecorderAsyncContext> &a
         return MSERR_INVALID_VAL;
     }
     // get customInfo
-    napi_value customInfo = nullptr;
-    napi_get_named_property(env, metadata, "customInfo", &customInfo);
-    if (customInfo != nullptr) {
-        CHECK_AND_RETURN_RET(CommonNapi::GetPropertyRecord(env, customInfo, avMetadata.customInfo) == napi_ok,
-            (asyncCtx->AVRecorderSignError(MSERR_INVALID_VAL, "GetCustomInfo", "customInfo"), MSERR_INVALID_VAL));
+    if (CommonNapi::CheckhasNamedProperty(env, metadata, "customInfo")) {
+        CHECK_AND_RETURN_RET(CommonNapi::GetPropertyRecord(env, metadata, avMetadata.customInfo) == napi_ok,
+            (asyncCtx->AVRecorderSignError(ret, "GetCustomInfo", "customInfo"), ret));
     }
     return MSERR_OK;
 }
 
-bool AVRecorderNapi::GetLocation(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx,
-    napi_env env, napi_value geoLocation)
+bool AVRecorderNapi::GetLocation(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args)
 {
+    napi_value geoLocation = nullptr;
+    CHECK_AND_RETURN_RET(napi_get_named_property(env, args, "location", &geoLocation) == napi_ok, false);
     userLocation &location = asyncCtx->config_->metadata.location;
 
     double tempLatitude = 0;

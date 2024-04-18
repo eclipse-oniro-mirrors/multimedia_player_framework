@@ -53,6 +53,13 @@ bool CommonNapi::CheckValueType(napi_env env, napi_value arg, napi_valuetype typ
     return false;
 }
 
+bool CommonNapi::CheckhasNamedProperty(napi_env env, napi_value arg, std::string type)
+{
+    bool exist = false;
+    napi_status napiStatus = napi_has_named_property(env, arg, type.c_str(), &exist);
+    return exist && (napiStatus == napi_ok);
+}
+
 bool CommonNapi::GetPropertyInt32(napi_env env, napi_value configObj, const std::string &type, int32_t &result)
 {
     napi_value item = nullptr;
@@ -143,10 +150,21 @@ std::string CommonNapi::GetPropertyString(napi_env env, napi_value configObj, co
     return GetStringArgument(env, item);
 }
 
-napi_status CommonNapi::GetPropertyRecord(napi_env env, napi_value in, Meta &meta)
+napi_status CommonNapi::GetPropertyRecord(napi_env env, napi_value configObj, Meta &meta, std::string type)
 {
+    bool exist = false;
+    napi_value in = nullptr;
     napi_valuetype valueType = napi_undefined;
-    napi_status status = napi_typeof(env, in, &valueType);
+    napi_status status = napi_has_named_property(env, configObj, type.c_str(), &exist);
+    if (status != napi_ok || !exist) {
+        MEDIA_LOGE("can not find %{public}s property", type.c_str());
+        return napi_invalid_arg;
+    }
+    if(napi_get_named_property(env, configObj, type.c_str(), &in) != napi_ok) {
+        MEDIA_LOGE("get %{public}s property fail", type.c_str());
+        return napi_invalid_arg;
+    }
+    status = napi_typeof(env, in, &valueType);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, status, "get valueType failed");
     CHECK_AND_RETURN_RET_LOG(valueType == napi_object, napi_invalid_arg, "invalid arguments");
 

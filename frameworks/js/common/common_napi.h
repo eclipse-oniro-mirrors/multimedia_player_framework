@@ -42,13 +42,14 @@ public:
     ~CommonNapi() = delete;
     static std::string GetStringArgument(napi_env env, napi_value value);
     static bool CheckValueType(napi_env env, napi_value arg, napi_valuetype type);
+    static bool CheckhasNamedProperty(napi_env env, napi_value arg, std::string type);
     static bool GetPropertyInt32(napi_env env, napi_value configObj, const std::string &type, int32_t &result);
     static bool GetPropertyUint32(napi_env env, napi_value configObj, const std::string &type, uint32_t &result);
     static bool GetPropertyInt64(napi_env env, napi_value configObj, const std::string &type, int64_t &result);
     static bool GetPropertyDouble(napi_env env, napi_value configObj, const std::string &type, double &result);
     static std::string GetPropertyString(napi_env env, napi_value configObj, const std::string &type);
     // support Record<string, string>
-    static napi_status GetPropertyRecord(napi_env env, napi_value in, Meta &meta);
+    static napi_status GetPropertyRecord(napi_env env, napi_value in, Meta &meta, std::string type);
     static bool GetPropertyMap(napi_env env, napi_value value, std::map<std::string, std::string>& map);
     static bool GetFdArgument(napi_env env, napi_value value, AVFileDescriptor &rawFd);
     static bool GetPlayStrategy(napi_env env, napi_value value, AVPlayStrategyTmp &playStrategy);
