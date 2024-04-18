@@ -341,8 +341,9 @@ bool AVMetaDataCollector::SetStringByValueType(const std::shared_ptr<Meta> &inne
         }
     } else {
         MEDIA_LOGE("not found type matched with innerKey: %{public}s", innerKey.c_str());
-        break;
+        return false;
     }
+    return true;
 }
 
 void AVMetaDataCollector::Reset()
