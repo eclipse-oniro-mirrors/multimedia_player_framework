@@ -89,6 +89,7 @@ private:
     void FormatMimeType(Metadata &avmeta, const std::shared_ptr<Meta> &globalInfo);
     void FormatDateTime(Metadata &avmeta, const std::shared_ptr<Meta> &globalInfo);
     void SetEmptyStringIfNoData(Metadata &avmeta, int32_t avKey) const;
+    void SetStringByValueType(Metadata &avmeta, int32_t avKey, std::string innerKey);
 };
 }  // namespace Media
 }  // namespace OHOS

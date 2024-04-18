@@ -148,7 +148,7 @@ napi_status CommonNapi::GetPropertyRecord(napi_env env, napi_value in, Meta &met
     napi_valuetype valueType = napi_undefined;
     napi_status status = napi_typeof(env, in, &valueType);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, status, "get valueType failed");
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok && valueType == napi_object, napi_invalid_arg, "invalid arguments");
+    CHECK_AND_RETURN_RET_LOG(valueType == napi_object, napi_invalid_arg, "invalid arguments");
 
     napi_value dataList = nullptr;
     uint32_t count = 0;
@@ -162,27 +162,21 @@ napi_status CommonNapi::GetPropertyRecord(napi_env env, napi_value in, Meta &met
     for (uint32_t i = 0; i < count; i++) {
         status = napi_get_element(env, dataList, i, &jsKey);
         CHECK_AND_RETURN_RET_LOG(status == napi_ok, status, "get element Key failed");
-
+        status = napi_typeof(env, jsKey, &valueType);
+        CHECK_AND_RETURN_RET_LOG(status == napi_ok, status, "get valueType failed");
+        CHECK_AND_RETURN_RET_LOG(valueType == napi_string, napi_invalid_arg, "key not supported type");
         std::string strKey = GetStringArgument(env, jsKey);
+        CHECK_AND_RETURN_RET_LOG(strKey != "", napi_invalid_arg, "key not supported");
+
         status = napi_get_named_property(env, in, strKey.c_str(), &jsValue);
         CHECK_AND_RETURN_RET_LOG(status == napi_ok, status, "get property value failed");
         status = napi_typeof(env, jsValue, &valueType);
         CHECK_AND_RETURN_RET_LOG(status == napi_ok, status, "get valueType failed");
 
-        CHECK_AND_RETURN_RET_LOG(valueType == napi_number, napi_invalid_arg, "not supported type");
-        if (valueType == napi_number) {
-            double dValue = 0;
-            status = napi_get_value_double(env, jsValue, &dValue);
-            CHECK_AND_RETURN_RET_LOG(status == napi_ok, status, "get value failed");
-            meta.SetData(strKey, dValue);
-        } else if (valueType == napi_string) {
-            std::string sValue = GetStringArgument(env, jsKey);
-            CHECK_AND_RETURN_RET_LOG(!sValue.empty(), napi_invalid_arg, "get value failed");
-            meta.SetData(strKey, sValue);
-        } else {
-            CHECK_AND_RETURN_RET_LOG(status == napi_ok && valueType == napi_object,
-                napi_invalid_arg, "invalid arguments");
-        }
+        CHECK_AND_RETURN_RET_LOG(valueType == napi_string, napi_invalid_arg, "value not supported type");
+        std::string sValue = GetStringArgument(env, jsValue);
+        CHECK_AND_RETURN_RET_LOG(!sValue.empty(), napi_invalid_arg, "get value failed");
+        meta.SetData(strKey, sValue);
     }
     return napi_ok;
 }
@@ -360,7 +354,7 @@ napi_deferred CommonNapi::CreatePromise(napi_env env, napi_ref ref, napi_value &
 
 bool CommonNapi::SetPropertyByValueType(napi_env env, napi_value &obj, std::shared_ptr<Meta> &meta, std::string key)
 {
-    CHECK_AND_RETURN_RET(obj != nullptr, false);
+    CHECK_AND_RETURN_RET(obj != nullptr && meta != nullptr, false);
     CHECK_AND_RETURN_RET(meta->Find(key) != meta->end(), false);
 
     bool ret = true;

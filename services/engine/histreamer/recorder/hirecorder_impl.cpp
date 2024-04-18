@@ -623,6 +623,20 @@ bool HiRecorderImpl::CheckAudioSourceType(AudioSourceType sourceType)
     return false;
 }
 
+void HiRecorderImpl::ConfigureRotation(const RecorderParam &recParam)
+{
+    RotationAngle rotationAngle = static_cast<const RotationAngle&>(recParam);
+    if (rotationAngle.rotation == Plugins::VideoRotation::VIDEO_ROTATION_0) {
+        muxerFormat_->Set<Tag::VIDEO_ROTATION>(Plugins::VideoRotation::VIDEO_ROTATION_0);
+    } else if (rotationAngle.rotation == Plugins::VideoRotation::VIDEO_ROTATION_90) {
+        muxerFormat_->Set<Tag::VIDEO_ROTATION>(Plugins::VideoRotation::VIDEO_ROTATION_90);
+    } else if (rotationAngle.rotation == Plugins::VideoRotation::VIDEO_ROTATION_180) {
+        muxerFormat_->Set<Tag::VIDEO_ROTATION>(Plugins::VideoRotation::VIDEO_ROTATION_180);
+    } else if (rotationAngle.rotation == Plugins::VideoRotation::VIDEO_ROTATION_270) {
+        muxerFormat_->Set<Tag::VIDEO_ROTATION>(Plugins::VideoRotation::VIDEO_ROTATION_270);
+    }
+}
+
 void HiRecorderImpl::ConfigureMuxer(const RecorderParam &recParam)
 {
     MEDIA_LOG_I(PUBLIC_LOG_S "ConfigureMuxer enter", avRecorderTag_.c_str());
@@ -645,16 +659,7 @@ void HiRecorderImpl::ConfigureMuxer(const RecorderParam &recParam)
             break;
         }
         case RecorderPublicParamType::VID_ORIENTATION_HINT: {
-            RotationAngle rotationAngle = static_cast<const RotationAngle&>(recParam);
-            if (rotationAngle.rotation == Plugins::VideoRotation::VIDEO_ROTATION_0) {
-                muxerFormat_->Set<Tag::VIDEO_ROTATION>(Plugins::VideoRotation::VIDEO_ROTATION_0);
-            } else if (rotationAngle.rotation == Plugins::VideoRotation::VIDEO_ROTATION_90) {
-                muxerFormat_->Set<Tag::VIDEO_ROTATION>(Plugins::VideoRotation::VIDEO_ROTATION_90);
-            } else if (rotationAngle.rotation == Plugins::VideoRotation::VIDEO_ROTATION_180) {
-                muxerFormat_->Set<Tag::VIDEO_ROTATION>(Plugins::VideoRotation::VIDEO_ROTATION_180);
-            } else if (rotationAngle.rotation == Plugins::VideoRotation::VIDEO_ROTATION_270) {
-                muxerFormat_->Set<Tag::VIDEO_ROTATION>(Plugins::VideoRotation::VIDEO_ROTATION_270);
-            }
+            ConfigureRotation(recParam);
             if (muxerFilter_) {
                 muxerFilter_->SetParameter(muxerFormat_);
             }

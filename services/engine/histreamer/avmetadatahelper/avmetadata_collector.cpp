@@ -246,42 +246,7 @@ void AVMetaDataCollector::ConvertToAVMeta(const std::shared_ptr<Meta> &innerMeta
         if (innerKey.compare("customInfo") == 0) {
             continue;
         }
-        Any type = OHOS::Media::GetDefaultAnyValue(innerKey);
-        if (Any::IsSameTypeWith<int32_t>(type)) {
-            int32_t intVal;
-            if (innerMeta->GetData(innerKey, intVal) && intVal != 0) {
-                avmeta.SetMeta(avKey, std::to_string(intVal));
-            }
-        } else if (Any::IsSameTypeWith<std::string>(type)) {
-            std::string strVal;
-            if (innerMeta->GetData(innerKey, strVal)) {
-                avmeta.SetMeta(avKey, strVal);
-            }
-        } else if (Any::IsSameTypeWith<Plugins::VideoRotation>(type)) {
-            Plugins::VideoRotation rotation;
-            if (innerMeta->GetData(innerKey, rotation)) {
-                avmeta.SetMeta(avKey, std::to_string(rotation));
-            }
-        } else if (Any::IsSameTypeWith<int64_t>(type)) {
-            int64_t duration;
-            if (innerMeta->GetData(innerKey, duration)) {
-                avmeta.SetMeta(avKey, std::to_string(duration / SECOND_DEVIDE_MS));
-            }
-        } else if (Any::IsSameTypeWith<bool>(type)) {
-            bool isTrue;
-            if (innerMeta->GetData(innerKey, isTrue)) {
-                avmeta.SetMeta(avKey, isTrue ? "yes" : "");
-            }
-        } else if (Any::IsSameTypeWith<float>(type)) {
-            float value;
-            if (innerMeta->GetData(innerKey, value) && collectedAVMetaData_ != nullptr) {
-                collectedAVMetaData_->SetData(innerKey, value);
-            }
-
-        } else {
-            MEDIA_LOGE("not found type matched with innerKey: %{public}s", innerKey.c_str());
-            break;
-        }
+        SetStringByValueType(avmeta, avKey, innerKey);
         SetEmptyStringIfNoData(avmeta, avKey);
     }
 }
@@ -335,6 +300,45 @@ void AVMetaDataCollector::SetEmptyStringIfNoData(Metadata &avmeta, int32_t avKey
 {
     if (!avmeta.HasMeta(avKey)) {
         avmeta.SetMeta(avKey, "");
+    }
+}
+
+void AVMetaDataCollector::SetStringByValueType(Metadata &avmeta, int32_t avKey, std::string innerKey)
+{
+    Any type = OHOS::Media::GetDefaultAnyValue(innerKey);
+    if (Any::IsSameTypeWith<int32_t>(type)) {
+        int32_t intVal;
+        if (innerMeta->GetData(innerKey, intVal) && intVal != 0) {
+            avmeta.SetMeta(avKey, std::to_string(intVal));
+        }
+    } else if (Any::IsSameTypeWith<std::string>(type)) {
+        std::string strVal;
+        if (innerMeta->GetData(innerKey, strVal)) {
+            avmeta.SetMeta(avKey, strVal);
+        }
+    } else if (Any::IsSameTypeWith<Plugins::VideoRotation>(type)) {
+        Plugins::VideoRotation rotation;
+        if (innerMeta->GetData(innerKey, rotation)) {
+            avmeta.SetMeta(avKey, std::to_string(rotation));
+        }
+    } else if (Any::IsSameTypeWith<int64_t>(type)) {
+        int64_t duration;
+        if (innerMeta->GetData(innerKey, duration)) {
+            avmeta.SetMeta(avKey, std::to_string(duration / SECOND_DEVIDE_MS));
+        }
+    } else if (Any::IsSameTypeWith<bool>(type)) {
+        bool isTrue;
+        if (innerMeta->GetData(innerKey, isTrue)) {
+            avmeta.SetMeta(avKey, isTrue ? "yes" : "");
+        }
+    } else if (Any::IsSameTypeWith<float>(type)) {
+        float value;
+        if (innerMeta->GetData(innerKey, value) && collectedAVMetaData_ != nullptr) {
+            collectedAVMetaData_->SetData(innerKey, value);
+        }
+    } else {
+        MEDIA_LOGE("not found type matched with innerKey: %{public}s", innerKey.c_str());
+        break;
     }
 }
 

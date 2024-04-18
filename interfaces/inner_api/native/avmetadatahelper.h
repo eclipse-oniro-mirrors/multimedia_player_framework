@@ -252,7 +252,6 @@ enum AVMetadataCode : int32_t {
      * Custom parameter key-value map
     */
     AV_KEY_CUSTOMINFO = 42,
-
 };
 
 /**

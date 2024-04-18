@@ -269,41 +269,42 @@ void AVMetadataExtractorNapi::ResolveMetadataComplete(napi_env env, napi_status 
     napi_create_object(env, &location);
     napi_create_object(env, &customInfo);
     std::shared_ptr<Meta> metadata = promiseCtx->metadata_;
-    if (status == napi_ok && promiseCtx->errCode == napi_ok) {
-        for (const auto &key : g_Metadata) {
-            if (metadata->Find(key) == metadata->end()) {
-                MEDIA_LOGE("failed to find key: %{public}s", key.c_str());
-                continue;
-            }
-            MEDIA_LOGE("success to find key: %{public}s", key.c_str());
-            if (key == "latitude" || key == "longitude") {
-                CHECK_AND_CONTINUE_LOG(CommonNapi::SetPropertyByValueType(env, location, metadata, key),
-                            "SetProperty failed, key: %{public}s", key.c_str());
-                continue;
-            }
-            if (key == "customInfo") {
-                std::shared_ptr<Meta> customData = std::make_shared<Meta>();
-                ret = metadata->GetData(key, customData);
-                CHECK_AND_CONTINUE_LOG(ret, "GetData failed, key %{public}s", key.c_str());
-                for (auto iter = customData->begin(); iter != customData->end(); ++iter) {
-                    AnyValueType type = customData->GetValueType(iter->first);
-                    if (type != AnyValueType::STRING) continue;
-                    CHECK_AND_CONTINUE_LOG(CommonNapi::SetPropertyByValueType(env, customInfo, customData, iter->first),
-                            "SetProperty failed, key: %{public}s", key.c_str());
-                }
-                continue;
-            }
-            CHECK_AND_CONTINUE_LOG(CommonNapi::SetPropertyByValueType(env, result, metadata, key),
-                "SetProperty failed, key: %{public}s", key.c_str());
-        }
-        napi_set_named_property(env, result, "location", location);
-        napi_set_named_property(env, result, "customInfo", customInfo);
-        promiseCtx->status = ERR_OK;
-    } else {
+    if (status != napi_ok || promiseCtx->errCode != napi_ok) {
         promiseCtx->status = promiseCtx->errCode == napi_ok ? MSERR_INVALID_VAL : promiseCtx->errCode;
         MEDIA_LOGI("Resolve meta data failed");
         napi_get_undefined(env, &result);
+        CommonCallbackRoutine(env, promiseCtx, result);
+        return;
     }
+    for (const auto &key : g_Metadata) {
+        if (metadata->Find(key) == metadata->end()) {
+            MEDIA_LOGE("failed to find key: %{public}s", key.c_str());
+            continue;
+        }
+        MEDIA_LOGE("success to find key: %{public}s", key.c_str());
+        if (key == "latitude" || key == "longitude") {
+            CHECK_AND_CONTINUE_LOG(CommonNapi::SetPropertyByValueType(env, location, metadata, key),
+                        "SetProperty failed, key: %{public}s", key.c_str());
+            continue;
+        }
+        if (key == "customInfo") {
+            std::shared_ptr<Meta> customData = std::make_shared<Meta>();
+            ret = metadata->GetData(key, customData);
+            CHECK_AND_CONTINUE_LOG(ret, "GetData failed, key %{public}s", key.c_str());
+            for (auto iter = customData->begin(); iter != customData->end(); ++iter) {
+                AnyValueType type = customData->GetValueType(iter->first);
+                CHECK_AND_CONTINUE_LOG(type == AnyValueType::STRING, "key not string");
+                CHECK_AND_CONTINUE_LOG(CommonNapi::SetPropertyByValueType(env, customInfo, customData, iter->first),
+                    "SetProperty failed, key: %{public}s", key.c_str());
+            }
+            continue;
+        }
+        CHECK_AND_CONTINUE_LOG(CommonNapi::SetPropertyByValueType(env, result, metadata, key),
+            "SetProperty failed, key: %{public}s", key.c_str());
+    }
+    napi_set_named_property(env, result, "location", location);
+    napi_set_named_property(env, result, "customInfo", customInfo);
+    promiseCtx->status = ERR_OK;
 
     CommonCallbackRoutine(env, promiseCtx, result);
 }
