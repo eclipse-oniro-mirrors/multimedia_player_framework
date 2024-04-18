@@ -2574,11 +2574,11 @@ HWTEST_F(PlayerUnitTest, Player_SetPlaybackSpeed_004, TestSize.Level0)
 }
 
 /**
- * @tc.name  : Test Player API
- * @tc.number: Player_SetSurface_005
+ * @tc.name  : Test SetSurface API
+ * @tc.number: Player_SetSurface_001
  * @tc.desc  : Test Player SetSurface->SetSurface
  */
-HWTEST_F(PlayerUnitTest, Player_SetPlaybackSpeed_005, TestSize.Level0)
+HWTEST_F(PlayerUnitTest, Player_SetSurface_001, TestSize.Level0)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
