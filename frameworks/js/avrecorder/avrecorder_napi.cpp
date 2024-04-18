@@ -1540,7 +1540,7 @@ bool AVRecorderNapi::GetLocation(std::unique_ptr<AVRecorderAsyncContext> &asyncC
     CHECK_AND_RETURN_RET(napi_get_named_property(env, args, "location", &geoLocation) == napi_ok, false);
     napi_status status = napi_typeof(env, geoLocation, &valueType);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, status, "get valueType failed");
-    CHECK_AND_RETURN_RET_LOG(status != napi_undefined, true, "location undefined");
+    CHECK_AND_RETURN_RET_LOG(valueType != napi_undefined, true, "location undefined");
     userLocation &location = asyncCtx->config_->metadata.location;
 
     double tempLatitude = 0;
