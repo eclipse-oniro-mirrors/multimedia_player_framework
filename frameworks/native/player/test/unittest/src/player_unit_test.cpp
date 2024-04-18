@@ -397,7 +397,7 @@ HWTEST_F(PlayerUnitTest, Player_SetSource_009, TestSize.Level2)
     int32_t ret = player_->PrepareAsync();
     ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "AVC_Baseline@L1.2_81.0Kbps_320x240.mp4"));
     if (ret == MSERR_OK) {
-        RunPlayFunTest(LOCAL_PLAY);
+        PlayFunTest(LOCAL_PLAY);
     }
 }
 
