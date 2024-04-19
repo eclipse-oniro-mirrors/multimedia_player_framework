@@ -764,7 +764,7 @@ void ScreenCaptureServer::ResSchedReportData(int64_t value, std::unordered_map<s
 {
     payload["uid"] = std::to_string(appInfo_.appUid);
     payload["pid"] = std::to_string(appInfo_.appPid);
-    uint32_t type = ResourceSchedule::ResType::RES_TYPE_SCREEN_CAPTURE;
+    uint32_t type = ResourceSchedule::ResType::RES_TYPE_REPORT_SCREEN_CAPTURE;
     ResourceSchedule::ResSchedClient::GetInstance().ReportData(type, value, payload);
 }
 
