@@ -15,7 +15,11 @@
 
 #include "recorder_unit_test.h"
 #include <fcntl.h>
+#include <nativetoken_kit.h>
+#include <token_setproc.h>
+#include <accesstoken_kit.h>
 #include "media_errors.h"
+#include "media_log.h"
 
 using namespace OHOS;
 using namespace OHOS::Media;
