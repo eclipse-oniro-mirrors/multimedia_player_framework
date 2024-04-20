@@ -402,6 +402,16 @@ HWTEST_F(PlayerUnitTest, Player_SetSource_009, TestSize.Level2)
 }
 
 /**
+ * @tc.name  : Test Player SetSource API
+ * @tc.number: Player_SetSource_010
+ * @tc.desc  : Test Player SetSource interface
+ */
+HWTEST_F(PlayerUnitTest, Player_SetSource_010, TestSize.Level2)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1, 0, 0));
+}
+
+/**
  * @tc.name  : Test Player Local
  * @tc.number: Player_Local_001
  * @tc.desc  : Test Player Local source
@@ -2279,6 +2289,59 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_015, TestSize.Level0)
     }
 }
 
+/**
+ * @tc.name  : Test Player Mem Recycle
+ * @tc.number: Player_Mem_Recycle_016
+ * @tc.desc  : Test Player Mem Recycle
+ */
+HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_016, TestSize.Level0)
+{
+    int32_t duration = 0;
+    std::vector<Format> videoTrack;
+    std::vector<Format> audioTrack;
+    PlaybackRateMode mode;
+    int32_t index = 0;
+    EXPECT_EQ(MSERR_OK, player_->SetVolume(0.9, 0.9));
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1, 0, 0));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->SetLooping(true));
+    EXPECT_EQ(true, player_->IsLooping());
+    EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
+    char str[100]; // 100: str len
+    sprintf_s(str, 100, "hidumper -s 1909 -a \"-d %d %d %d\"", getpid(), getuid(), 4);
+    system(str);
+    system("hidumper -s 1909 -a \"-t 4\"");
+    EXPECT_EQ(720, player_->GetVideoWidth());
+    EXPECT_EQ(480, player_->GetVideoHeight());
+    EXPECT_EQ(MSERR_OK, player_->GetVideoTrackInfo(videoTrack));
+    EXPECT_EQ(MSERR_OK, player_->GetAudioTrackInfo(audioTrack));
+    EXPECT_EQ(MSERR_OK, player_->GetDuration(duration));
+    EXPECT_EQ(MSERR_OK, player_->GetPlaybackSpeed(mode));
+    EXPECT_EQ(SPEED_FORWARD_1_00_X, mode);
+    EXPECT_EQ(MSERR_OK, player_->SetPlaybackSpeed(SPEED_FORWARD_0_50_X));
+    EXPECT_EQ(MSERR_OK, player_->GetPlaybackSpeed(mode));
+    EXPECT_EQ(SPEED_FORWARD_0_50_X, mode);
+    EXPECT_EQ(MSERR_OK, player_->SetPlaybackSpeed(SPEED_FORWARD_2_00_X));
+    EXPECT_EQ(MSERR_OK, player_->GetPlaybackSpeed(mode));
+    EXPECT_EQ(SPEED_FORWARD_2_00_X, mode);
+
+    EXPECT_EQ(false, player_->IsPlaying());
+    EXPECT_EQ(true, player_->IsLooping());
+
+    EXPECT_EQ(true, player_->GetCurrentTrack(MediaType::MEDIA_TYPE_AUD), index);
+    EXPECT_EQ(true, player_->GetCurrentTrack(MediaType::MEDIA_TYPE_VID), index);
+    EXPECT_EQ(true, player_->GetCurrentTrack(MediaType::MEDIA_TYPE_SUBTITLE), index);
+    EXPECT_NE(true, player_->GetCurrentTrack(100, index));
+
+    EXPECT_EQ(true, player_->GetDuration(duration));
+    EXPECT_EQ(true, player_->Seek(duration, PlayerSeekMode::SEEK_PREVIOUS_SYNC));
+    EXPECT_EQ(true, player_->SelectTrack(0, false));
+    EXPECT_EQ(true, player_->DeSelectTrack(0, false));
+    EXPECT_EQ(true, player_->Reset());
+    EXPECT_EQ(true, player_->Release());
+}
 /**
  * @tc.name  : Test SetEffect API
  * @tc.number: Player_SetEffect_001
