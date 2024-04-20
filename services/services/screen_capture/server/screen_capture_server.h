@@ -154,7 +154,7 @@ public:
     int32_t GetSize(int64_t &size) override;
 
 private:
-    void MixAudio(char** src_data, char* mix_data, int channels, int buffer_size);
+    void MixAudio(char** srcData, char* mixData, int channels, int bufferSize);
 
     AudioCaptureSourceType type_;
     ScreenCaptureServer* screenCaptureServer_;
