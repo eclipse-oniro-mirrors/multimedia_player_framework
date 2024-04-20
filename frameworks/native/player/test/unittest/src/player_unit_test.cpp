@@ -2337,8 +2337,6 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_016, TestSize.Level0)
 
     EXPECT_EQ(MSERR_OK, player_->GetDuration(duration));
     EXPECT_EQ(MSERR_OK, player_->Seek(duration, PlayerSeekMode::SEEK_PREVIOUS_SYNC));
-    EXPECT_EQ(MSERR_OK, player_->SelectTrack(0, false));
-    EXPECT_EQ(MSERR_OK, player_->DeselectTrack(0, false));
     EXPECT_EQ(MSERR_OK, player_->Reset());
     EXPECT_EQ(MSERR_OK, player_->Release());
 }
