@@ -62,7 +62,6 @@ ohos_unittest("screen_capture_native_unit_test") {
     "graphic_surface:surface",
     "hilog:libhilog",
     "player_framework:media_client",
-    "resource_schedule_service:ressched_client",
     "window_manager:libdm",
   ]
 
@@ -122,7 +121,6 @@ ohos_unittest("screen_capture_capi_unit_test") {
     "hilog:libhilog",
     "media_foundation:media_foundation",
     "player_framework:media_client",
-    "resource_schedule_service:ressched_client",
     "window_manager:libdm",
   ]
 
