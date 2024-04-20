@@ -2330,17 +2330,17 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_016, TestSize.Level0)
     EXPECT_EQ(false, player_->IsPlaying());
     EXPECT_EQ(true, player_->IsLooping());
 
-    EXPECT_EQ(true, player_->GetCurrentTrack(MediaType::MEDIA_TYPE_AUD), index);
-    EXPECT_EQ(true, player_->GetCurrentTrack(MediaType::MEDIA_TYPE_VID), index);
-    EXPECT_EQ(true, player_->GetCurrentTrack(MediaType::MEDIA_TYPE_SUBTITLE), index);
-    EXPECT_NE(true, player_->GetCurrentTrack(100, index));
+    EXPECT_EQ(MSERR_OK, player_->GetCurrentTrack(MediaType::MEDIA_TYPE_AUD), index);
+    EXPECT_EQ(MSERR_OK, player_->GetCurrentTrack(MediaType::MEDIA_TYPE_VID), index);
+    EXPECT_EQ(MSERR_OK, player_->GetCurrentTrack(MediaType::MEDIA_TYPE_SUBTITLE), index);
+    EXPECT_NE(MSERR_OK, player_->GetCurrentTrack(100, index));
 
-    EXPECT_EQ(true, player_->GetDuration(duration));
-    EXPECT_EQ(true, player_->Seek(duration, PlayerSeekMode::SEEK_PREVIOUS_SYNC));
-    EXPECT_EQ(true, player_->SelectTrack(0, false));
-    EXPECT_EQ(true, player_->DeSelectTrack(0, false));
-    EXPECT_EQ(true, player_->Reset());
-    EXPECT_EQ(true, player_->Release());
+    EXPECT_EQ(MSERR_OK, player_->GetDuration(duration));
+    EXPECT_EQ(MSERR_OK, player_->Seek(duration, PlayerSeekMode::SEEK_PREVIOUS_SYNC));
+    EXPECT_EQ(MSERR_OK, player_->SelectTrack(0, false));
+    EXPECT_EQ(MSERR_OK, player_->DeselectTrack(0, false));
+    EXPECT_EQ(MSERR_OK, player_->Reset());
+    EXPECT_EQ(MSERR_OK, player_->Release());
 }
 /**
  * @tc.name  : Test SetEffect API
