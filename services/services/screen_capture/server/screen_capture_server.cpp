@@ -1949,13 +1949,14 @@ int32_t AudioDataSource::GetSize(int64_t &size)
 {
     size_t bufferLen;
     int32_t ret = screenCaptureServer_->GetInnerAudioCaptureBufferSize(bufferLen);
-    MEDIA_LOGI("AudioDataSource::GetSize : %{public}zu", bufferLen);
+    MEDIA_LOGD("AudioDataSource::GetSize : %{public}zu", bufferLen);
     size = static_cast<int64_t>(bufferLen);
     return ret;
 }
  
 void AudioDataSource::MixAudio(char** srcData, char* mixData, int channels, int bufferSize)
 {
+    MEDIA_LOGD("AudioDataSource MixAudio");
     int const MAX = 32767;
     int const MIN = -32768;
     double const splitNum = 32;
