@@ -918,19 +918,6 @@ int32_t ScreenCaptureServer::InitRecorder()
 
     int32_t ret;
     AudioCaptureInfo audioInfo;
-    MEDIA_LOGI("InitRecorder innerCapInfo sampleRate:%{public}d, channels:%{public}d,
-        source:%{public}d, state:%{public}d",
-        captureConfig_.audioInfo.innerCapInfo.audioSampleRate,
-        captureConfig_.audioInfo.innerCapInfo.audioChannels,
-        captureConfig_.audioInfo.innerCapInfo.audioSource,
-        captureConfig_.audioInfo.innerCapInfo.state);
-
-    MEDIA_LOGI("InitRecorder micCapInfo sampleRate:%{public}d, channels:%{public}d,
-        source:%{public}d, state:%{public}d",
-        captureConfig_.audioInfo.micCapInfo.audioSampleRate,
-        captureConfig_.audioInfo.micCapInfo.audioChannels,
-        captureConfig_.audioInfo.micCapInfo.audioSource,
-        captureConfig_.audioInfo.micCapInfo.state);
 
     if (captureConfig_.audioInfo.innerCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_VALID &&
         captureConfig_.audioInfo.micCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_VALID &&
