@@ -342,8 +342,8 @@ HWTEST_F(AVMetadataUnitTest, FetchArtPicture_Format_MP3_0100, Function | MediumT
 
 /**
     * @tc.number    : FetchArtPicture_Format_MP3_0200
-    * @tc.name      : Get SURFACE FROM H264_AAC.mp4
-    * @tc.desc      : Get SURFACE FROM H264_AAC.mp4
+    * @tc.name      : Get ArtPicture FROM H264_AAC.mp4
+    * @tc.desc      : Get ArtPicture FROM H264_AAC.mp4
 */
 HWTEST_F(AVMetadataUnitTest, FetchArtPicture_Format_MP3_0200, Function | MediumTest | Level0)
 {
