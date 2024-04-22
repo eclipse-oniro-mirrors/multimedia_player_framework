@@ -191,11 +191,12 @@ napi_status CommonNapi::GetPropertyRecord(napi_env env, napi_value configObj, Me
 
     napi_value dataList = nullptr;
     uint32_t count = 0;
-    int32_t maxCount = 500;
+    uint32_t maxCount = 500;
     status = napi_get_property_names(env, in, &dataList);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, status, "get property names failed");
     status = napi_get_array_length(env, dataList, &count);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok && count <= maxCount, napi_invalid_arg, "get length failed or more than 500");
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && count <= maxCount,
+        napi_invalid_arg, "get length failed or more than 500");
 
     napi_value jsKey = nullptr;
     napi_value jsValue = nullptr;

@@ -100,7 +100,6 @@ namespace RecorderTestParam {
         float latitude = 30.0;
         float longitude = 60.0;
         std::string genre = "hauwei";
-        Meta customInfo = {"model" : "modelAL"; "version" : "12"};
     };
     struct AudioRecorderConfig {
         int32_t outputFd = 0;

@@ -1515,8 +1515,8 @@ int32_t AVRecorderNapi::GetAVMetaData(std::unique_ptr<AVRecorderAsyncContext> &a
     }
     if (CommonNapi::CheckhasNamedProperty(env, metadata, "genre")) {
         napi_value item = nullptr;
-        CHECK_AND_RETURN_LOG(napi_get_named_property(env, args, "genre", &item) == napi_ok,
-            get genre property fail, MSERR_INVALID_VAL);
+        CHECK_AND_RETURN_RET_LOG(napi_get_named_property(env, args, "genre", &item) == napi_ok,
+            MSERR_INVALID_VAL, "get genre property fail");
         avMetadata.genre = CommonNapi::GetCustomString(env, item);
         CHECK_AND_RETURN_RET(avMetadata.genre != "",
             (asyncCtx->AVRecorderSignError(MSERR_INVALID_VAL, "getgenre", "genre"), MSERR_INVALID_VAL));
