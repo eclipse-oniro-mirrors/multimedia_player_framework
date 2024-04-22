@@ -2330,9 +2330,9 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_016, TestSize.Level0)
     EXPECT_EQ(false, player_->IsPlaying());
     EXPECT_EQ(true, player_->IsLooping());
 
-    EXPECT_EQ(MSERR_OK, player_->GetCurrentTrack(MediaType::MEDIA_TYPE_AUD), index);
-    EXPECT_EQ(MSERR_OK, player_->GetCurrentTrack(MediaType::MEDIA_TYPE_VID), index);
-    EXPECT_EQ(MSERR_OK, player_->GetCurrentTrack(MediaType::MEDIA_TYPE_SUBTITLE), index);
+    EXPECT_EQ(MSERR_OK, player_->GetCurrentTrack(MediaType::MEDIA_TYPE_AUD, index));
+    EXPECT_EQ(MSERR_OK, player_->GetCurrentTrack(MediaType::MEDIA_TYPE_VID, index));
+    EXPECT_EQ(MSERR_OK, player_->GetCurrentTrack(MediaType::MEDIA_TYPE_SUBTITLE, index));
     EXPECT_NE(MSERR_OK, player_->GetCurrentTrack(100, index));
 
     EXPECT_EQ(MSERR_OK, player_->GetDuration(duration));
