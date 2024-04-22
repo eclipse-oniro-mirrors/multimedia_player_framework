@@ -48,8 +48,9 @@ std::string CommonNapi::GetCustomString(napi_env env, napi_value value)
 {
     std::string strValue = "";
     size_t bufLength = 0;
+    size_t custom_str_maxLength = 1001;
     napi_status status = napi_get_value_string_utf8(env, value, nullptr, 0, &bufLength);
-    if (status == napi_ok && bufLength > 0 && bufLength < CUSTOM_STR_MAX) {
+    if (status == napi_ok && bufLength > 0 && bufLength < custom_str_maxLength) {
         char *buffer = static_cast<char *>(malloc((bufLength + 1) * sizeof(char)));
         CHECK_AND_RETURN_RET_LOG(buffer != nullptr, strValue, "no memory");
         status = napi_get_value_string_utf8(env, value, buffer, bufLength + 1, &bufLength);
@@ -190,10 +191,11 @@ napi_status CommonNapi::GetPropertyRecord(napi_env env, napi_value configObj, Me
 
     napi_value dataList = nullptr;
     uint32_t count = 0;
+    int32_t maxCount = 500;
     status = napi_get_property_names(env, in, &dataList);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, status, "get property names failed");
     status = napi_get_array_length(env, dataList, &count);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok && count <= 500, napi_invalid_arg, "get length failed or more than 500");
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && count <= maxCount, napi_invalid_arg, "get length failed or more than 500");
 
     napi_value jsKey = nullptr;
     napi_value jsValue = nullptr;
