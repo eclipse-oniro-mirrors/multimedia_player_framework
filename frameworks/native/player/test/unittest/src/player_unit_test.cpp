@@ -2432,10 +2432,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_016, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->Reset());
     EXPECT_EQ(MSERR_OK, player_->Release());
 }
-<<<<<<< Updated upstream
-=======
 
->>>>>>> Stashed changes
 /**
  * @tc.name  : Test SetEffect API
  * @tc.number: Player_SetEffect_001
