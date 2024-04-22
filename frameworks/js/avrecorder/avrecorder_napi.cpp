@@ -1514,7 +1514,12 @@ int32_t AVRecorderNapi::GetAVMetaData(std::unique_ptr<AVRecorderAsyncContext> &a
             (asyncCtx->AVRecorderSignError(MSERR_INVALID_VAL, "GetLocation", "Location"), MSERR_INVALID_VAL));
     }
     if (CommonNapi::CheckhasNamedProperty(env, metadata, "genre")) {
-        avMetadata.genre = CommonNapi::GetPropertyString(env, metadata, "genre");
+        napi_value item = nullptr;
+        CHECK_AND_RETURN_LOG(napi_get_named_property(env, args, "genre", &item) == napi_ok,
+            get genre property fail, MSERR_INVALID_VAL);
+        avMetadata.genre = CommonNapi::GetCustomString(env, item);
+        CHECK_AND_RETURN_RET(avMetadata.genre != "",
+            (asyncCtx->AVRecorderSignError(MSERR_INVALID_VAL, "getgenre", "genre"), MSERR_INVALID_VAL));
     }
     std::string strRotation = CommonNapi::GetPropertyString(env, metadata, "videoOrientation");
     if (strRotation == "0" || strRotation == "90" || strRotation == "180" || strRotation == "270") {
