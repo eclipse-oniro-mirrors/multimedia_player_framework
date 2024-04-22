@@ -1520,7 +1520,7 @@ HWTEST_F(PlayerUnitTest, Player_SetVolume_002, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->Play());
     EXPECT_NE(MSERR_OK, player_->SetVolume(1.1, 0.1));
     EXPECT_NE(MSERR_OK, player_->SetVolume(0.1, 1.1));
-    EXPECT_NE(MSERR_OK, player_->SetVolume(0.1, 1.1));
+    EXPECT_NE(MSERR_OK, player_->SetVolume(1.1, 1.1));
     EXPECT_NE(MSERR_OK, player_->SetVolume(-0.1, 0.1));
     EXPECT_NE(MSERR_OK, player_->SetVolume(0.1, -0.1));
     EXPECT_NE(MSERR_OK, player_->SetVolume(-0.1, -0.1));
