@@ -57,8 +57,8 @@ public:
         DESTROY,
         SET_CALLBACK,
         SET_LISTENER_OBJ,
-        MAX_IPC_ID,
         GET_AVMETADATA,
+        MAX_IPC_ID,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardAVMetadataHelperService");
