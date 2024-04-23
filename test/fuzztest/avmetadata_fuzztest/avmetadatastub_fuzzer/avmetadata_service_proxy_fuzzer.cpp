@@ -28,7 +28,7 @@ AVMetadataServiceProxyFuzzer::AVMetadataServiceProxyFuzzer(const sptr<IRemoteObj
     avmetaFuncs_[SET_FD_SOURCE] = &AVMetadataServiceProxyFuzzer::SetFdSource;
     avmetaFuncs_[RESOLVE_METADATA] = &AVMetadataServiceProxyFuzzer::ResolveMetadata;
     avmetaFuncs_[RESOLVE_METADATA_MAP] = &AVMetadataServiceProxyFuzzer::ResolveMetadataMap;
-    avmetaFuncs_[GET_AVMETADATA] = &AVMetadataHelperServiceStub::GetAVMetadata;
+    avmetaFuncs_[GET_AVMETADATA] = &AVMetadataServiceProxyFuzzer::GetAVMetadata;
     avmetaFuncs_[FETCH_ART_PICTURE] = &AVMetadataServiceProxyFuzzer::FetchArtPicture;
     avmetaFuncs_[FETCH_FRAME_AT_TIME] = &AVMetadataServiceProxyFuzzer::FetchFrameAtTime;
     avmetaFuncs_[RELEASE] = &AVMetadataServiceProxyFuzzer::Release;
