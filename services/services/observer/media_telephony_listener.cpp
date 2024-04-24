@@ -60,7 +60,7 @@ void MediaTelephonyListener::OnCallStateUpdated(int32_t slotId, int32_t callStat
     } else if (callState == static_cast<int32_t>(TelCallState::CALL_STATUS_DISCONNECTED)) {
         // CALL_STATUS_DISCONNECTING 重复状态不需要
         MEDIA_LOGD("OnCallStateUpdated IN Report stop call");
-        if (InCallObserver::GetInstance().HasOtherCall(slotId, callState, phoneNumber)) {
+        if (!InCallObserver::GetInstance().HasOtherCall(slotId, callState, phoneNumber)) {
             InCallObserver::GetInstance().OnCallStateUpdated(false);
         }
     }
