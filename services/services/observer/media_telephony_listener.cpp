@@ -41,7 +41,7 @@ MediaTelephonyListener::~MediaTelephonyListener()
 
 void MediaTelephonyListener::OnCallStateUpdated(int32_t slotId, int32_t callState, const std::u16string &phoneNumber)
 {
-    std::wstring_convert<std::codecvt_utf8_utf16<char16_t >, char16_t> convert;
+    std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> convert;
     MEDIA_LOGI("OnCallStateUpdated slotId = %{public}d, callState = %{public}d, phoneNumber = %{public}s",
                    slotId, callState, convert.to_bytes(phoneNumber).c_str());
     // skip no sim card CALL_STATUS_UNKNOWN
