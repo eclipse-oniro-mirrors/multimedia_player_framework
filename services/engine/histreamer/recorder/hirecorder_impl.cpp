@@ -95,7 +95,7 @@ int32_t HiRecorderImpl::Init()
 int32_t HiRecorderImpl::SetVideoSource(VideoSourceType source, int32_t &sourceId)
 {
     MEDIA_LOG_I(PUBLIC_LOG_S "SetVideoSource enter.", avRecorderTag_.c_str());
-    sourceId = INVALID_SOURCE_ID
+    sourceId = INVALID_SOURCE_ID;
     FALSE_RETURN_V(source != VideoSourceType::VIDEO_SOURCE_BUTT,
         (int32_t)Status::ERROR_INVALID_PARAMETER);
     FALSE_RETURN_V(videoCount_ < static_cast<int32_t>(VIDEO_SOURCE_MAX_COUNT),

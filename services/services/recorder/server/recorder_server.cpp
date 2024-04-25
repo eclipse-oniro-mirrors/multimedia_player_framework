@@ -191,7 +191,6 @@ int32_t RecorderServer::SetVideoSize(int32_t sourceId, int32_t width, int32_t he
     MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " SetVideoSize in, sourceId(%{public}d), width(%{public}d), height(%{public}d)",
         FAKE_POINTER(this), sourceId, width, height);
     std::lock_guard<std::mutex> lock(mutex_);
-    std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     config_.width = width;
