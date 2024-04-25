@@ -79,8 +79,8 @@ int32_t RecorderImpl::SetVideoSource(VideoSourceType source, int32_t &sourceId)
 
 int32_t RecorderImpl::SetVideoEncoder(int32_t sourceId, VideoCodecFormat encoder)
 {
-    MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetVideoEncoder in, sourceId is %{public}d, encoder is %{public}d",
-        FAKE_POINTER(this), sourceId, encoder);
+    MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetVideoEncoder in, sourceId is %{public}d, "
+        "encoder is %{public}d", FAKE_POINTER(this), sourceId, encoder);
     CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist..");
     return recorderService_->SetVideoEncoder(sourceId, encoder);
 }
@@ -95,16 +95,16 @@ int32_t RecorderImpl::SetVideoSize(int32_t sourceId, int32_t width, int32_t heig
 
 int32_t RecorderImpl::SetVideoFrameRate(int32_t sourceId, int32_t frameRate)
 {
-    MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetVideoFrameRate in, sourceId is %{public}d, frameRate is %{public}d",
-        FAKE_POINTER(this), sourceId, frameRate);
+    MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetVideoFrameRate in, sourceId is %{public}d, "
+        "frameRate is %{public}d", FAKE_POINTER(this), sourceId, frameRate);
     CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist..");
     return recorderService_->SetVideoFrameRate(sourceId, frameRate);
 }
 
 int32_t RecorderImpl::RecorderImpl::SetVideoEncodingBitRate(int32_t sourceId, int32_t rate)
 {
-    MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetVideoEncodingBitRate in, sourceId is %{public}d, rate is %{public}d",
-        FAKE_POINTER(this), sourceId, rate);
+    MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetVideoEncodingBitRate in, sourceId is %{public}d, "
+        "rate is %{public}d", FAKE_POINTER(this), sourceId, rate);
     CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist..");
     return recorderService_->SetVideoEncodingBitRate(sourceId, rate);
 }
@@ -135,7 +135,8 @@ int32_t RecorderImpl::SetCaptureRate(int32_t sourceId, double fps)
 
 sptr<OHOS::Surface> RecorderImpl::GetSurface(int32_t sourceId)
 {
-    MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " GetSurface in, sourceId is %{public}d",FAKE_POINTER(this), sourceId);
+    MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " GetSurface in, sourceId is %{public}d", 
+        FAKE_POINTER(this), sourceId);
     CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, nullptr, "recorder service does not exist..");
     surface_ = recorderService_->GetSurface(sourceId);
     return surface_;
@@ -151,16 +152,16 @@ int32_t RecorderImpl::SetAudioSource(AudioSourceType source, int32_t &sourceId)
 
 int32_t RecorderImpl::SetAudioEncoder(int32_t sourceId, AudioCodecFormat encoder)
 {
-    MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetAudioEncoder in, sourceId is %{public}d, encoder is %{public}d",
-        FAKE_POINTER(this), sourceId, encoder);
+    MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetAudioEncoder in, sourceId is %{public}d, "
+        "encoder is %{public}d", FAKE_POINTER(this), sourceId, encoder);
     CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist..");
     return recorderService_->SetAudioEncoder(sourceId, encoder);
 }
 
 int32_t RecorderImpl::SetAudioSampleRate(int32_t sourceId, int32_t rate)
 {
-    MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetAudioSampleRate in, sourceId is %{public}d, rate is %{public}d",
-        FAKE_POINTER(this), sourceId, rate);
+    MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetAudioSampleRate in, sourceId is %{public}d, "
+        "rate is %{public}d", FAKE_POINTER(this), sourceId, rate);
     CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist..");
     return recorderService_->SetAudioSampleRate(sourceId, rate);
 }
@@ -175,8 +176,8 @@ int32_t RecorderImpl::SetAudioChannels(int32_t sourceId, int32_t num)
 
 int32_t RecorderImpl::SetAudioEncodingBitRate(int32_t sourceId, int32_t bitRate)
 {
-    MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetAudioEncodingBitRate in, sourceId is %{public}d, bitRate is %{public}d",
-        FAKE_POINTER(this), sourceId, bitRate);
+    MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetAudioEncodingBitRate in, sourceId is %{public}d, "
+        "bitRate is %{public}d", FAKE_POINTER(this), sourceId, bitRate);
     CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist..");
     return recorderService_->SetAudioEncodingBitRate(sourceId, bitRate);
 }
@@ -229,8 +230,8 @@ int32_t RecorderImpl::SetMaxFileSize(int64_t size)
 
 void RecorderImpl::SetLocation(float latitude, float longitude)
 {
-    MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetAudioEncodingBitRate in, latitude is %{public}f, longitude is %{public}f",
-        FAKE_POINTER(this), latitude, longitude);
+    MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetAudioEncodingBitRate in, latitude is %{public}f, "
+        "longitude is %{public}f", FAKE_POINTER(this), latitude, longitude);
     CHECK_AND_RETURN_LOG(recorderService_ != nullptr, "recorder service does not exist..");
     recorderService_->SetLocation(latitude, longitude);
     return;
