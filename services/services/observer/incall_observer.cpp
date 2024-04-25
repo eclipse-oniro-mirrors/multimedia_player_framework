@@ -60,6 +60,7 @@ bool InCallObserver::HasOtherCall(int32_t slotId, int32_t callState, const std::
     (void)slotId;
     (void)callState;
     (void)phoneNumber;
+    std::unique_lock<std::mutex> lock(mutex_);
     allInCallNum_.store(allInCallNum_.load() - 1);
     MEDIA_LOGI("0x%{public}06" PRIXPTR " HasOtherCall In allInCallNum = %{public}d",
                    FAKE_POINTER(this), allInCallNum_.load());
@@ -109,10 +110,10 @@ bool InCallObserver::OnCallStateUpdated(bool inCall)
 
 bool InCallObserver::OnCallCountUpdated(int32_t slotId, int32_t callState, const std::u16string &phoneNumber)
 {
-    std::unique_lock<std::mutex> lock(mutex_);
     (void)slotId;
     (void)callState;
     (void)phoneNumber;
+    std::unique_lock<std::mutex> lock(mutex_);
     allInCallNum_.store(allInCallNum_.load() + 1);
     MEDIA_LOGI("0x%{public}06" PRIXPTR " OnCallCountUpdated In allInCallNum = %{public}d",
             FAKE_POINTER(this), allInCallNum_.load());
