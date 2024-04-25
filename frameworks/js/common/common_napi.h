@@ -35,7 +35,14 @@ struct AVFileDescriptor;
 struct AVPlayStrategyTmp;
 struct AVDataSrcDescriptor;
 class AVMediaSourceTmp;
-
+/**
+ * customInfo max count
+*/
+constexpr uint32_t MAX_COUNT = 500;
+/**
+ * NOTE: use on AVRecorderConfig.metadata.customInfo
+*/
+constexpr uint32_t CUSTOM_MAX_LENGTH = 1001;
 class CommonNapi {
 public:
     CommonNapi() = delete;

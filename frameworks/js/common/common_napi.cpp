@@ -25,10 +25,6 @@ namespace {
 
 namespace OHOS {
 namespace Media {
-/**
- * customInfo count
-*/
-constexpr uint32_t maxCount = 500;
 std::string CommonNapi::GetStringArgument(napi_env env, napi_value value, size_t maxLength)
 {
     std::string strValue = "";
@@ -178,7 +174,7 @@ napi_status CommonNapi::GetPropertyRecord(napi_env env, napi_value configObj, Me
     status = napi_get_property_names(env, in, &dataList);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, status, "get property names failed");
     status = napi_get_array_length(env, dataList, &count);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok && count <= maxCount,
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && count <= MAX_COUNT,
         napi_invalid_arg, "get length failed or more than 500");
 
     napi_value jsKey = nullptr;
@@ -200,7 +196,7 @@ napi_status CommonNapi::GetPropertyRecord(napi_env env, napi_value configObj, Me
         CHECK_AND_RETURN_RET_LOG(valueType == napi_string, napi_invalid_arg, "value not supported type");
         std::string strValue = GetStringArgument(env, jsValue, CUSTOM_MAX_LENGTH);
         CHECK_AND_RETURN_RET_LOG(!strValue.empty(), napi_invalid_arg, "get value failed");
-        meta.SetData(strKey, sValue);
+        meta.SetData(strKey, strValue);
     }
     return napi_ok;
 }
