@@ -27,7 +27,6 @@ namespace OHOS {
 namespace Media {
 std::shared_ptr<Recorder> RecorderFactory::CreateRecorder()
 {
-    MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " CreateRecorder in", FAKE_POINTER(this));
     std::shared_ptr<RecorderImpl> impl = std::make_shared<RecorderImpl>();
     CHECK_AND_RETURN_RET_LOG(impl != nullptr, nullptr, "failed to new RecorderImpl");
 
@@ -46,15 +45,12 @@ int32_t RecorderImpl::Init()
 
 int32_t RecorderImpl::GetAVRecorderConfig(ConfigMap &configMap)
 {
-    MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " GetAVRecorderConfig in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist..");
     return recorderService_->GetAVRecorderConfig(configMap);
 }
 
 int32_t RecorderImpl::GetLocation(Location &location)
 {
-    MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " GetLocation in, location.latitude is %{public}d, location.longitude is %{public}d",
-        FAKE_POINTER(this), location.latitude, location.longitude);
     CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist..");
     return recorderService_->GetLocation(location);
 }
@@ -123,7 +119,7 @@ int32_t RecorderImpl::RecorderImpl::SetVideoIsHdr(int32_t sourceId, bool isHdr)
 
 int32_t RecorderImpl::RecorderImpl::SetVideoEnableTemporalScale(int32_t sourceId, bool enableTemporalScale)
 {
-    MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetVideoEnableTemporalScale in, sourceId is %{public}d, enableTemporalScale is %{public}lf",
+    MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetVideoEnableTemporalScale in, sourceId is %{public}d, enableTemporalScale is %{public}d",
         FAKE_POINTER(this), sourceId, enableTemporalScale);
     CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist..");
     return recorderService_->SetVideoEnableTemporalScale(sourceId, enableTemporalScale);
@@ -187,8 +183,6 @@ int32_t RecorderImpl::SetAudioEncodingBitRate(int32_t sourceId, int32_t bitRate)
 
 int32_t RecorderImpl::SetDataSource(DataSourceType dataType, int32_t &sourceId)
 {
-    MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetAudioEncodingBitRate in, dataType is %{public}d, sourceId is %{public}d",
-        FAKE_POINTER(this), dataType, sourceId);
     CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist..");
     return recorderService_->SetDataSource(dataType, sourceId);
 }
@@ -315,35 +309,30 @@ int32_t RecorderImpl::Release()
 
 int32_t RecorderImpl::SetFileSplitDuration(FileSplitType type, int64_t timestamp, uint32_t duration)
 {
-    MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetFileSplitDuration in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist..");
     return recorderService_->SetFileSplitDuration(type, timestamp, duration);
 }
 
 int32_t RecorderImpl::SetParameter(int32_t sourceId, const Format &format)
 {
-    MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetParameter in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist..");
     return recorderService_->SetParameter(sourceId, format);
 }
 
 int32_t RecorderImpl::GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &changeInfo)
 {
-    MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " GetCurrentCapturerChangeInfo in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist..");
     return recorderService_->GetCurrentCapturerChangeInfo(changeInfo);
 }
 
 int32_t RecorderImpl::GetAvailableEncoder(std::vector<EncoderCapabilityData> &encoderInfo)
 {
-    MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " GetAvailableEncoder in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist..");
     return recorderService_->GetAvailableEncoder(encoderInfo);
 }
 
 int32_t RecorderImpl::GetMaxAmplitude()
 {
-    MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " GetMaxAmplitude in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist..");
     return recorderService_->GetMaxAmplitude();
 }
