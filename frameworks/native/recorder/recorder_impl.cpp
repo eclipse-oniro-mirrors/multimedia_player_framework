@@ -87,8 +87,8 @@ int32_t RecorderImpl::SetVideoEncoder(int32_t sourceId, VideoCodecFormat encoder
 
 int32_t RecorderImpl::SetVideoSize(int32_t sourceId, int32_t width, int32_t height)
 {
-    MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetVideoSize in, sourceId is %{public}d, width is %{public}d, height is %{public}d",
-        FAKE_POINTER(this), sourceId, width, height);
+    MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetVideoSize in, sourceId is %{public}d, width is %{public}d, "
+        "height is %{public}d", FAKE_POINTER(this), sourceId, width, height);
     CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist..");
     return recorderService_->SetVideoSize(sourceId, width, height);
 }
@@ -119,23 +119,23 @@ int32_t RecorderImpl::RecorderImpl::SetVideoIsHdr(int32_t sourceId, bool isHdr)
 
 int32_t RecorderImpl::RecorderImpl::SetVideoEnableTemporalScale(int32_t sourceId, bool enableTemporalScale)
 {
-    MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetVideoEnableTemporalScale in, sourceId is %{public}d, enableTemporalScale is %{public}d",
-        FAKE_POINTER(this), sourceId, enableTemporalScale);
+    MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetVideoEnableTemporalScale in, sourceId is %{public}d, "
+        "enableTemporalScale is %{public}d", FAKE_POINTER(this), sourceId, enableTemporalScale);
     CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist..");
     return recorderService_->SetVideoEnableTemporalScale(sourceId, enableTemporalScale);
 }
 
 int32_t RecorderImpl::SetCaptureRate(int32_t sourceId, double fps)
 {
-    MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetCaptureRate in, sourceId is %{public}d, fps is %{public}lf",
-        FAKE_POINTER(this), sourceId, fps);
+    MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetCaptureRate in, sourceId is %{public}d, "
+        "fps is %{public}lf", FAKE_POINTER(this), sourceId, fps);
     CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist..");
     return recorderService_->SetCaptureRate(sourceId, fps);
 }
 
 sptr<OHOS::Surface> RecorderImpl::GetSurface(int32_t sourceId)
 {
-    MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " GetSurface in, sourceId is %{public}d", 
+    MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " GetSurface in, sourceId is %{public}d",
         FAKE_POINTER(this), sourceId);
     CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, nullptr, "recorder service does not exist..");
     surface_ = recorderService_->GetSurface(sourceId);
