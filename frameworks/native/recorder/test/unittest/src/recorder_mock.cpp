@@ -222,13 +222,13 @@ void RecorderMock::SetOrientationHint(int32_t rotation)
 
 int32_t OHOS::Media::RecorderMock::SetGenre(std::string &genre)
 {
-    UNITTEST_CHECK_AND_RETURN_LOG(recorder_ != nullptr, "recorder_ == nullptr");
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
     return recorder_->SetGenre(genre);
 }
 
 int32_t OHOS::Media::RecorderMock::SetUserCustomInfo(Meta &userCustomInfo)
 {
-    UNITTEST_CHECK_AND_RETURN_LOG(recorder_ != nullptr, "recorder_ == nullptr");
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
     return recorder_->SetUserCustomInfo(userCustomInfo);
 }
 

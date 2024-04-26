@@ -1451,9 +1451,8 @@ int32_t AVRecorderNapi::GetConfig(std::unique_ptr<AVRecorderAsyncContext> &async
     }
 
     if (CommonNapi::CheckhasNamedProperty(env, args, "metadata")) {
-        ret = AVRecorderNapi::GetAVMetaData(asyncCtx, env, args);
-        CHECK_AND_RETURN_RET(ret == MSERR_OK,
-            (asyncCtx->AVRecorderSignError(ret, "GetAVMetaData", "metadata"), ret));
+        CHECK_AND_RETURN_RET_LOG(AVRecorderNapi::GetAVMetaData(asyncCtx, env, args) == MSERR_OK,
+            MSERR_INVALID_VAL, "failed to GetAVMetaData");
     }
     return MSERR_OK;
 }
@@ -1498,21 +1497,20 @@ int32_t AVRecorderNapi::GetAVMetaData(std::unique_ptr<AVRecorderAsyncContext> &a
 {
     napi_value metadata = nullptr;
     if (napi_get_named_property(env, args, "metadata", &metadata) != napi_ok) {
-        return MSERR_INVALID_VAL;
+        return (asyncCtx->AVRecorderSignError(MSERR_INVALID_VAL, "GetAVMetaData", "metadata"), MSERR_INVALID_VAL);
     }
     napi_valuetype valueType = napi_undefined;
     if (napi_typeof(env, metadata, &valueType) != napi_ok || valueType != napi_object) {
         if (valueType == napi_undefined) {
             return MSERR_OK;
         }
-        asyncCtx->AVRecorderSignError(MSERR_INVALID_VAL, "GetAVMetaData", "metadata");
-        return MSERR_INVALID_VAL;
+        return (asyncCtx->AVRecorderSignError(MSERR_INVALID_VAL, "GetAVMetaData", "metadata"), MSERR_INVALID_VAL);
     }
 
     AVMetadata &avMetadata = asyncCtx->config_->metadata;
 
     if (CommonNapi::CheckhasNamedProperty(env, metadata, "location")) {
-        CHECK_AND_RETURN_RET(GetLocation(asyncCtx, env, args),
+        CHECK_AND_RETURN_RET(GetLocation(asyncCtx, env, metadata),
             (asyncCtx->AVRecorderSignError(MSERR_INVALID_VAL, "GetLocation", "Location"), MSERR_INVALID_VAL));
     }
     if (CommonNapi::CheckhasNamedProperty(env, metadata, "genre")) {

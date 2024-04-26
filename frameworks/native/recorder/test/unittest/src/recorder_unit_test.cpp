@@ -1306,7 +1306,7 @@ HWTEST_F(RecorderUnitTest, recorder_video_SetCustomInfo_001, TestSize.Level0)
 
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(AUDIO_VIDEO, videoRecorderConfig));
     Meta customInfo;
-    customInfo.SetData("key","value");
+    customInfo.SetData("key", "value");
     recorder_->SetUserCustomInfo(customInfo);
     EXPECT_EQ(MSERR_OK, recorder_->Prepare());
     EXPECT_EQ(MSERR_OK, recorder_->RequesetBuffer(AUDIO_VIDEO, videoRecorderConfig));
@@ -1324,11 +1324,11 @@ HWTEST_F(RecorderUnitTest, recorder_video_SetCustomInfo_001, TestSize.Level0)
 
 /**
  * @tc.name: recorder_video_SetCustomInfo_002
- * @tc.desc: record audio SetGenre
+ * @tc.desc: record audio SetCustomInfo
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(RecorderUnitTest, recorder_video_SetGenre_002, TestSize.Level0)
+HWTEST_F(RecorderUnitTest, recorder_video_SetCustomInfo_002, TestSize.Level0)
 {
     VideoRecorderConfig videoRecorderConfig;
     videoRecorderConfig.outPutFormat = FORMAT_M4A;
