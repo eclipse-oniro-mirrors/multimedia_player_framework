@@ -137,8 +137,8 @@ std::shared_ptr<AudioCapturer> AudioCapturerWrapper::CreateAudioCapturer(const O
     CHECK_AND_RETURN_RET_LOG(audioCapturer != nullptr, nullptr, "AudioCapturer::Create failed");
 
     if (contentFilter_.filteredAudioContents.find(
-            AVScreenCaptureFilterableAudioContent::SCREEN_CAPTURE_CURRENT_APP_AUDIO) !=
-            contentFilter_.filteredAudioContents.end()) {
+        AVScreenCaptureFilterableAudioContent::SCREEN_CAPTURE_CURRENT_APP_AUDIO) !=
+        contentFilter_.filteredAudioContents.end()) {
         CaptureFilterOptions filterOptions;
         filterOptions.pids.push_back(appInfo.appPid);
         filterOptions.pidFilterMode = OHOS::AudioStandard::FilterMode::EXCLUDE;
