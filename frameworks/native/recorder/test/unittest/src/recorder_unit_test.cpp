@@ -1337,7 +1337,7 @@ HWTEST_F(RecorderUnitTest, recorder_video_SetCustomInfo_002, TestSize.Level0)
 
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_AUDIO, videoRecorderConfig));
     Meta customInfo;
-    customInfo.SetData("key","value");
+    customInfo.SetData("key", "value");
     recorder_->SetUserCustomInfo(customInfo);
     EXPECT_EQ(MSERR_OK, recorder_->Prepare());
     EXPECT_EQ(MSERR_OK, recorder_->Start());
