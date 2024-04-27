@@ -69,6 +69,5 @@ ohos_fuzztest("RecorderSetAudioEncodingBitRateFuzzTest") {
     "graphic_surface:surface",
     "hilog:libhilog",
     "player_framework:media_client",
-
   ]
 }
