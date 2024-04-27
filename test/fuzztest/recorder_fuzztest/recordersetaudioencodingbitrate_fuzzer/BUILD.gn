@@ -65,9 +65,10 @@ ohos_fuzztest("RecorderSetAudioEncodingBitRateFuzzTest") {
   ]
   external_deps = [
     "c_utils:utils",
+    "graphic_2d:sync_fence",
     "graphic_surface:surface",
     "hilog:libhilog",
     "player_framework:media_client",
-    "graphic_2d:sync_fence",
+
   ]
 }
