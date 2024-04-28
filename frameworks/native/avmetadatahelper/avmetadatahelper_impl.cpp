@@ -125,6 +125,7 @@ static std::shared_ptr<PixelMap> CreatePixelMap(const std::shared_ptr<AVSharedMe
     MEDIA_LOGD("width: %{public}d, stride : %{public}d, height: %{public}d, size: %{public}d, format: %{public}d",
         frame->width_, frame->stride_, frame->height_, frame->size_, color);
 
+    rotation = frame->rotation_;
     InitializationOptions opts;
     opts.size.width = frame->width_;
     opts.size.height = frame->height_;
