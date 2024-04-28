@@ -220,6 +220,18 @@ void RecorderMock::SetOrientationHint(int32_t rotation)
     return recorder_->SetOrientationHint(rotation);
 }
 
+int32_t OHOS::Media::RecorderMock::SetGenre(std::string &genre)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
+    return recorder_->SetGenre(genre);
+}
+
+int32_t OHOS::Media::RecorderMock::SetUserCustomInfo(Meta &userCustomInfo)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
+    return recorder_->SetUserCustomInfo(userCustomInfo);
+}
+
 int32_t RecorderMock::SetRecorderCallback(const std::shared_ptr<RecorderCallback> &callback)
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
@@ -547,6 +559,9 @@ int32_t RecorderMock::SetFormat(const std::string &recorderType, VideoRecorderCo
         UNITTEST_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetVideoSource failed ");
         ret = recorder_->SetOutputFormat(recorderConfig.outPutFormat);
         UNITTEST_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetOutputFormat failed ");
+        ret = recorder_->SetVideoEnableTemporalScale(recorderConfig.videoSourceId, recorderConfig.enableTemporalScale);
+        UNITTEST_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION,
+            "SetVideoEnableTemporalScale failed ");
         ret = CameraServicesForVideo(recorderConfig);
         UNITTEST_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "CameraServices failed ");
     } else if (recorderType == PURE_AUDIO) {
@@ -563,6 +578,9 @@ int32_t RecorderMock::SetFormat(const std::string &recorderType, VideoRecorderCo
         UNITTEST_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetAudioSource failed ");
         ret = recorder_->SetOutputFormat(recorderConfig.outPutFormat);
         UNITTEST_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetOutputFormat failed ");
+        ret = recorder_->SetVideoEnableTemporalScale(recorderConfig.videoSourceId, recorderConfig.enableTemporalScale);
+        UNITTEST_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION,
+            "SetVideoEnableTemporalScale failed ");
         ret = CameraServicesForVideo(recorderConfig);
         UNITTEST_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "CameraServicesForVideo failed ");
         ret = CameraServicesForAudio(recorderConfig);

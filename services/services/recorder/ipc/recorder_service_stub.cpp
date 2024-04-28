@@ -30,7 +30,6 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "RecorderSe
 
 namespace OHOS {
 namespace Media {
-const int32_t ROOT_UID = 0;
 sptr<RecorderServiceStub> RecorderServiceStub::Create()
 {
     sptr<RecorderServiceStub> recorderStub = new(std::nothrow) RecorderServiceStub();
@@ -80,6 +79,8 @@ int32_t RecorderServiceStub::Init()
     recFuncs_[SET_MAX_FILE_SIZE] = &RecorderServiceStub::SetMaxFileSize;
     recFuncs_[SET_LOCATION] = &RecorderServiceStub::SetLocation;
     recFuncs_[SET_ORIENTATION_HINT] = &RecorderServiceStub::SetOrientationHint;
+    recFuncs_[SET_USER_CUSTOM_INFO] = &RecorderServiceStub::SetUserCustomInfo;
+    recFuncs_[SET_GENRE] = &RecorderServiceStub::SetGenre;
     recFuncs_[PREPARE] = &RecorderServiceStub::Prepare;
     recFuncs_[START] = &RecorderServiceStub::Start;
     recFuncs_[PAUSE] = &RecorderServiceStub::Pause;
@@ -270,6 +271,18 @@ int32_t RecorderServiceStub::SetDataSource(DataSourceType dataType, int32_t &sou
 {
     CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
     return recorderServer_->SetDataSource(dataType, sourceId);
+}
+
+int32_t RecorderServiceStub::SetUserCustomInfo(Meta &userCustomInfo)
+{
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    return recorderServer_->SetUserCustomInfo(userCustomInfo);
+}
+
+int32_t RecorderServiceStub::SetGenre(std::string &genre)
+{
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    return recorderServer_->SetGenre(genre);
 }
 
 int32_t RecorderServiceStub::SetMaxDuration(int32_t duration)
@@ -608,6 +621,26 @@ int32_t RecorderServiceStub::SetOrientationHint(MessageParcel &data, MessageParc
     return SetOrientationHint(rotation);
 }
 
+int32_t RecorderServiceStub::SetUserCustomInfo(MessageParcel &data, MessageParcel &reply)
+{
+    (void)reply;
+    Meta userCustomInfo;
+    bool ret = userCustomInfo.FromParcel(data);
+    if (!ret) {
+        MEDIA_LOGE("userCustomInfo FromParcel failed");
+    }
+    reply.WriteInt32(SetUserCustomInfo(userCustomInfo));
+    return MSERR_OK;
+}
+
+int32_t RecorderServiceStub::SetGenre(MessageParcel &data, MessageParcel &reply)
+{
+    (void)reply;
+    std::string genre = data.ReadString();
+    reply.WriteInt32(SetGenre(genre));
+    return MSERR_OK;
+}
+
 int32_t RecorderServiceStub::Prepare(MessageParcel &data, MessageParcel &reply)
 {
     (void)data;
@@ -718,11 +751,6 @@ int32_t RecorderServiceStub::GetLocation(MessageParcel &data, MessageParcel &rep
 
 int32_t RecorderServiceStub::CheckPermission()
 {
-    auto callerUid = IPCSkeleton::GetCallingUid();
-    if (callerUid == ROOT_UID) {
-        MEDIA_LOGI("Root user. Permission Granted");
-        return Security::AccessToken::PERMISSION_GRANTED;
-    }
     Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
 
     switch (audioSourceType_) {

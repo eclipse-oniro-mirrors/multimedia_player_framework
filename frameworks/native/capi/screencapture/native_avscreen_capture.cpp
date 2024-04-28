@@ -384,14 +384,14 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ContentFilter_AddAudioContent(
     
     CHECK_AND_RETURN_RET_LOG(
         content >= OH_AVScreenCaptureFilterableAudioContent::OH_SCREEN_CAPTURE_NOTIFICATION_AUDIO ||
-        content <= OH_AVScreenCaptureFilterableAudioContent::OH_SCREEN_CAPTURE_NOTIFICATION_AUDIO,
+        content <= OH_AVScreenCaptureFilterableAudioContent::OH_SCREEN_CAPTURE_CURRENT_APP_AUDIO,
         AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input content invalid!");
     contentFilterObj->screenCaptureContentFilter.filteredAudioContents.insert(
         static_cast<AVScreenCaptureFilterableAudioContent>(content));
     return AV_SCREEN_CAPTURE_ERR_OK;
 }
 
-OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ContentFilter_ExcludeContent(struct OH_AVScreenCapture *capture,
+OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ExcludeContent(struct OH_AVScreenCapture *capture,
     struct OH_AVScreenCapture_ContentFilter *filter)
 {
     CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr!");

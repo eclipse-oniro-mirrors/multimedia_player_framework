@@ -21,6 +21,7 @@
 #include "media_description.h"
 #include "meta_utils.h"
 #include "uri_helper.h"
+#include "osal/task/pipeline_threadpool.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN, "AVMetadataHelperImpl" };
@@ -37,6 +38,7 @@ void AVMetadataHelperImpl::OnError(MediaAVCodec::AVCodecErrorType errorType, int
 AVMetadataHelperImpl::AVMetadataHelperImpl()
 {
     MEDIA_LOGD("Constructor, instance: 0x%{public}06" PRIXPTR "", FAKE_POINTER(this));
+    groupId_ = std::string("AVMeta_") + std::to_string(OHOS::Media::Pipeline::Pipeline::GetNextPipelineId());
 }
 
 AVMetadataHelperImpl::~AVMetadataHelperImpl()
@@ -80,7 +82,7 @@ Status AVMetadataHelperImpl::SetSourceInternel(const std::string &uri)
 {
     Reset();
     mediaDemuxer_ = std::make_shared<MediaDemuxer>();
-    mediaDemuxer_->SetPlayerId("AVMetadataHelper");
+    mediaDemuxer_->SetPlayerId(groupId_);
     CHECK_AND_RETURN_RET_LOG(
         mediaDemuxer_ != nullptr, Status::ERROR_INVALID_DATA, "SetSourceInternel demuxer is nullptr");
     Status ret = mediaDemuxer_->SetDataSource(std::make_shared<MediaSource>(uri));
@@ -93,7 +95,7 @@ Status AVMetadataHelperImpl::SetSourceInternel(const std::shared_ptr<IMediaDataS
 {
     Reset();
     mediaDemuxer_ = std::make_shared<MediaDemuxer>();
-    mediaDemuxer_->SetPlayerId("AVMetadataHelper");
+    mediaDemuxer_->SetPlayerId(groupId_);
     CHECK_AND_RETURN_RET_LOG(
         mediaDemuxer_ != nullptr, Status::ERROR_INVALID_DATA, "SetSourceInternel demuxer is nullptr");
     Status ret = mediaDemuxer_->SetDataSource(std::make_shared<MediaSource>(dataSrc));
@@ -123,6 +125,14 @@ std::shared_ptr<AVSharedMemory> AVMetadataHelperImpl::FetchArtPicture()
     auto res = InitMetadataCollector();
     CHECK_AND_RETURN_RET(res == Status::OK, nullptr);
     return metadataCollector_->GetArtPicture();
+}
+
+std::shared_ptr<Meta> AVMetadataHelperImpl::GetAVMetadata()
+{
+    MEDIA_LOGE("enter GetAVMetadata");
+    auto res = InitMetadataCollector();
+    CHECK_AND_RETURN_RET(res == Status::OK, nullptr);
+    return metadataCollector_->GetAVMetadata();
 }
 
 std::shared_ptr<AVSharedMemory> AVMetadataHelperImpl::FetchFrameAtTime(
@@ -161,6 +171,7 @@ void AVMetadataHelperImpl::Destroy()
 
     metadataCollector_ = nullptr;
     thumbnailGenerator_ = nullptr;
+    PipeLineThreadPool::GetInstance().DestroyThread(groupId_);
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Finish Destroy.", FAKE_POINTER(this));
 }
 

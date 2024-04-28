@@ -15,7 +15,11 @@
 
 #include "recorder_unit_test.h"
 #include <fcntl.h>
+#include <nativetoken_kit.h>
+#include <token_setproc.h>
+#include <accesstoken_kit.h>
 #include "media_errors.h"
+#include "media_log.h"
 
 using namespace OHOS;
 using namespace OHOS::Media;
@@ -27,7 +31,41 @@ namespace Media {
 // config for video to request buffer from surface
 static VideoRecorderConfig g_videoRecorderConfig;
 
-void RecorderUnitTest::SetUpTestCase(void) {}
+void RecorderUnitTest::SetUpTestCase(void)
+{
+    vector<string> permission;
+    permission.push_back("ohos.permission.MICROPHONE");
+    uint64_t tokenId = 0;
+
+    auto perms = std::make_unique<const char* []>(permission.size());
+    for (size_t i = 0; i < permission.size(); i++) {
+        perms[i] = permission[i].c_str();
+    }
+    NativeTokenInfoParams infoInstance = {
+        .dcapsNum = 0,
+        .permsNum = static_cast<int32_t>(permission.size()),
+        .aclsNum = 0,
+        .dcaps = nullptr,
+        .perms = perms.get(),
+        .acls = nullptr,
+        .processName = "recorder_unittest",
+        .aplStr = "system_basic",
+    };
+    tokenId = GetAccessTokenId(&infoInstance);
+    if (tokenId == 0) {
+        MEDIA_LOGE("Get Access Token Id Failed");
+        return;
+    }
+    int ret = SetSelfTokenID(tokenId);
+    if (ret != 0) {
+        MEDIA_LOGE("Set Acess Token Id failed");
+        return;
+    }
+    ret = Security::AccessToken::AccessTokenKit::ReloadNativeTokenInfo();
+    if (ret < 0) {
+        MEDIA_LOGE("Reload Native Token Info Failed");
+    }
+}
 
 void RecorderUnitTest::TearDownTestCase(void) {}
 
@@ -583,6 +621,27 @@ HWTEST_F(RecorderUnitTest, recorder_configure_013, TestSize.Level2)
     EXPECT_EQ(MSERR_OK, recorder_->Reset());
     EXPECT_EQ(MSERR_OK, recorder_->Release());
     close(g_videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_configure_014
+ * @tc.desc: record with enableTemporalScale true
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderUnitTest, recorder_configure_014, TestSize.Level2)
+{
+    VideoRecorderConfig videoRecorderConfig;
+    videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
+    videoRecorderConfig.videoFormat = H264;
+    videoRecorderConfig.enableTemporalScale = true;
+    videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_configure.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
+
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(AUDIO_VIDEO, videoRecorderConfig));
+    EXPECT_EQ(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_OK, recorder_->Release());
+    close(videoRecorderConfig.outputFd);
 }
 
 /**
@@ -1171,6 +1230,124 @@ HWTEST_F(RecorderUnitTest, recorder_SetDataSource_001, TestSize.Level0)
     ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
     EXPECT_EQ(MSERR_INVALID_OPERATION,
         recorder_->SetDataSource(DataSourceType::METADATA, g_videoRecorderConfig.videoSourceId));
+}
+
+/**
+ * @tc.name: recorder_video_SetGenre_001
+ * @tc.desc: record video, SetGenre
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderUnitTest, recorder_video_SetGenre_001, TestSize.Level0)
+{
+    VideoRecorderConfig videoRecorderConfig;
+    videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
+    videoRecorderConfig.videoFormat = H264;
+    videoRecorderConfig.outPutFormat = FORMAT_DEFAULT;
+    videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_video_SetGenre_001.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(AUDIO_VIDEO, videoRecorderConfig));
+    recorder_->SetGenre(videoRecorderConfig.genre);
+    EXPECT_EQ(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_OK, recorder_->RequesetBuffer(AUDIO_VIDEO, videoRecorderConfig));
+
+    EXPECT_EQ(MSERR_OK, recorder_->Start());
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, recorder_->Pause());
+    EXPECT_EQ(MSERR_OK, recorder_->Resume());
+    EXPECT_EQ(MSERR_OK, recorder_->Stop(false));
+    recorder_->StopBuffer(PURE_VIDEO);
+    EXPECT_EQ(MSERR_OK, recorder_->Reset());
+    EXPECT_EQ(MSERR_OK, recorder_->Release());
+    close(videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_video_SetGenre_002
+ * @tc.desc: record audio SetGenre
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderUnitTest, recorder_video_SetGenre_002, TestSize.Level0)
+{
+    VideoRecorderConfig videoRecorderConfig;
+    videoRecorderConfig.outPutFormat = FORMAT_M4A;
+    videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_video_SetGenre_002.m4a").c_str(), O_RDWR);
+    ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
+
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_AUDIO, videoRecorderConfig));
+    recorder_->SetGenre(videoRecorderConfig.genre);
+    EXPECT_EQ(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_OK, recorder_->Start());
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, recorder_->Pause());
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, recorder_->Resume());
+    EXPECT_EQ(MSERR_OK, recorder_->Stop(false));
+    EXPECT_EQ(MSERR_OK, recorder_->Release());
+    close(videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_video_SetCustomInfo_001
+ * @tc.desc: record video, SetCustomInfo
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderUnitTest, recorder_video_SetCustomInfo_001, TestSize.Level0)
+{
+    VideoRecorderConfig videoRecorderConfig;
+    videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
+    videoRecorderConfig.videoFormat = H264;
+    videoRecorderConfig.outPutFormat = FORMAT_DEFAULT;
+    videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_video_SetCustomInfo_001.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(AUDIO_VIDEO, videoRecorderConfig));
+    Meta customInfo;
+    customInfo.SetData("key", "value");
+    recorder_->SetUserCustomInfo(customInfo);
+    EXPECT_EQ(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_OK, recorder_->RequesetBuffer(AUDIO_VIDEO, videoRecorderConfig));
+
+    EXPECT_EQ(MSERR_OK, recorder_->Start());
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, recorder_->Pause());
+    EXPECT_EQ(MSERR_OK, recorder_->Resume());
+    EXPECT_EQ(MSERR_OK, recorder_->Stop(false));
+    recorder_->StopBuffer(PURE_VIDEO);
+    EXPECT_EQ(MSERR_OK, recorder_->Reset());
+    EXPECT_EQ(MSERR_OK, recorder_->Release());
+    close(videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_video_SetCustomInfo_002
+ * @tc.desc: record audio SetCustomInfo
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderUnitTest, recorder_video_SetCustomInfo_002, TestSize.Level0)
+{
+    VideoRecorderConfig videoRecorderConfig;
+    videoRecorderConfig.outPutFormat = FORMAT_M4A;
+    videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_video_SetCustomInfo_002.m4a").c_str(), O_RDWR);
+    ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
+
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_AUDIO, videoRecorderConfig));
+    Meta customInfo;
+    customInfo.SetData("key", "value");
+    recorder_->SetUserCustomInfo(customInfo);
+    EXPECT_EQ(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_OK, recorder_->Start());
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, recorder_->Pause());
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, recorder_->Resume());
+    EXPECT_EQ(MSERR_OK, recorder_->Stop(false));
+    EXPECT_EQ(MSERR_OK, recorder_->Release());
+    close(videoRecorderConfig.outputFd);
 }
 } // namespace Media
 } // namespace OHOS

@@ -159,6 +159,18 @@ int32_t RecorderImpl::SetDataSource(DataSourceType dataType, int32_t &sourceId)
     return recorderService_->SetDataSource(dataType, sourceId);
 }
 
+int32_t RecorderImpl::SetUserCustomInfo(Meta &userCustomInfo)
+{
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist..");
+    return recorderService_->SetUserCustomInfo(userCustomInfo);
+}
+
+int32_t RecorderImpl::SetGenre(std::string &genre)
+{
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist..");
+    return recorderService_->SetGenre(genre);
+}
+
 int32_t RecorderImpl::SetMaxDuration(int32_t duration)
 {
     CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist..");
