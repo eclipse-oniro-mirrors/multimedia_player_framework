@@ -227,7 +227,7 @@ std::shared_ptr<AVSharedMemory> AVMetadataHelperServiceProxy::FetchFrameAtTime(i
 {
     MessageParcel data;
     MessageParcel reply;
-    MessageOption opt;
+    MessageOption opt(MessageOption::TF_ASYNC);
 
     bool token = data.WriteInterfaceToken(AVMetadataHelperServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, nullptr, "Failed to write descriptor!");

@@ -14,7 +14,12 @@
  */
 
 #include "avmetadatahelper_impl.h"
+
+#include <sys/stat.h>
+#include <unistd.h>
+
 #include "securec.h"
+#include "image_source.h"
 #include "i_media_service.h"
 #include "media_log.h"
 #include "media_errors.h"
@@ -107,7 +112,8 @@ static PixelMapMemHolder *CreatePixelMapData(const std::shared_ptr<AVSharedMemor
     return holder;
 }
 
-static std::shared_ptr<PixelMap> CreatePixelMap(const std::shared_ptr<AVSharedMemory> &mem, PixelFormat color)
+static std::shared_ptr<PixelMap> CreatePixelMap(const std::shared_ptr<AVSharedMemory> &mem, PixelFormat color,
+                                                int32_t &rotation)
 {
     CHECK_AND_RETURN_RET_LOG(mem != nullptr, nullptr, "Fetch frame failed");
     CHECK_AND_RETURN_RET_LOG(mem->GetBase() != nullptr, nullptr, "Addr is nullptr");
@@ -251,7 +257,16 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameAtTime(
     config.dstWidth = param.dstWidth;
 
     auto mem = avMetadataHelperService_->FetchFrameAtTime(timeUs, option, config);
-    return CreatePixelMap(mem, param.colorFormat);
+    auto pixelMap = CreatePixelMap(mem, param.colorFormat, rotation_);
+ 
+    const InitializationOptions opts = { .size = { .width = pixelMap->GetWidth(), .height = pixelMap->GetHeight() },
+                                         .srcPixelFormat = PixelFormat::NV12 };
+    pixelMap =
+        PixelMap::Create(reinterpret_cast<const uint32_t *>(pixelMap->GetPixels()), pixelMap->GetByteCount(), opts);
+    if (rotation_ > 0) {
+        pixelMap->rotate(rotation_);
+    }
+    return pixelMap;
 }
 
 void AVMetadataHelperImpl::Release()
