@@ -113,7 +113,7 @@ static PixelMapMemHolder *CreatePixelMapData(const std::shared_ptr<AVSharedMemor
 }
 
 static std::shared_ptr<PixelMap> CreatePixelMap(const std::shared_ptr<AVSharedMemory> &mem, PixelFormat color,
-                                                int32_t &rotation)
+    int32_t &rotation)
 {
     CHECK_AND_RETURN_RET_LOG(mem != nullptr, nullptr, "Fetch frame failed");
     CHECK_AND_RETURN_RET_LOG(mem->GetBase() != nullptr, nullptr, "Addr is nullptr");
