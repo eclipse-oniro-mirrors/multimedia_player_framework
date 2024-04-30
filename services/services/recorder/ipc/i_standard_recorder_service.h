@@ -37,7 +37,7 @@ public:
     {
         (void)sourceId;
         (void)fps;
-        return 0;
+        return MSERR_UNSUPPORT;
     };
     virtual sptr<OHOS::Surface> GetSurface(int32_t sourceId) = 0;
     virtual int32_t SetAudioSource(AudioSourceType source, int32_t &sourceId) = 0;
@@ -54,12 +54,12 @@ public:
     virtual int32_t SetNextOutputFile(int32_t fd)
     {
         (void)fd;
-        return 0;
+        return MSERR_UNSUPPORT;
     };
     virtual int32_t SetMaxFileSize(int64_t size)
     {
         (void)size;
-        return 0;
+        return MSERR_UNSUPPORT;
     };
     virtual int32_t SetLocation(float latitude, float longitude) = 0;
     virtual int32_t SetOrientationHint(int32_t rotation) = 0;
@@ -75,7 +75,7 @@ public:
         (void)type;
         (void)timestamp;
         (void)duration;
-        return 0;
+        return MSERR_UNSUPPORT;
     };
     virtual int32_t DestroyStub() = 0;
     virtual int32_t GetAVRecorderConfig(ConfigMap &configMap) = 0;
