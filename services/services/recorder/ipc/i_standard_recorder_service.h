@@ -33,7 +33,8 @@ public:
     virtual int32_t SetVideoSize(int32_t sourceId, int32_t width, int32_t height) = 0;
     virtual int32_t SetVideoFrameRate(int32_t sourceId, int32_t frameRate) = 0;
     virtual int32_t SetVideoEncodingBitRate(int32_t sourceId, int32_t rate) = 0;
-    virtual int32_t SetCaptureRate(int32_t sourceId, double fps) {
+    virtual int32_t SetCaptureRate(int32_t sourceId, double fps)
+    {
         (void)sourceId;
         (void)fps;
         return 0;
@@ -50,11 +51,13 @@ public:
     virtual int32_t SetMaxDuration(int32_t duration) = 0;
     virtual int32_t SetOutputFormat(OutputFormatType format) = 0;
     virtual int32_t SetOutputFile(int32_t fd) = 0;
-    virtual int32_t SetNextOutputFile(int32_t fd) {
+    virtual int32_t SetNextOutputFile(int32_t fd)
+    {
         (void)fd;
         return 0;
     };
-    virtual int32_t SetMaxFileSize(int64_t size) {
+    virtual int32_t SetMaxFileSize(int64_t size)
+    {
         (void)size;
         return 0;
     };
@@ -67,7 +70,8 @@ public:
     virtual int32_t Stop(bool block) = 0;
     virtual int32_t Reset() = 0;
     virtual int32_t Release() = 0;
-    virtual int32_t SetFileSplitDuration(FileSplitType type, int64_t timestamp, uint32_t duration) {
+    virtual int32_t SetFileSplitDuration(FileSplitType type, int64_t timestamp, uint32_t duration)
+    {
         (void)type;
         (void)timestamp;
         (void)duration;
