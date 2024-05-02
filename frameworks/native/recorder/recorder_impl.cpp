@@ -57,7 +57,7 @@ int32_t RecorderImpl::GetLocation(Location &location)
 
 RecorderImpl::RecorderImpl()
 {
-    MEDIA_LOGD("RecorderImpl:0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
 
 RecorderImpl::~RecorderImpl()
@@ -66,7 +66,7 @@ RecorderImpl::~RecorderImpl()
         (void)MediaServiceFactory::GetInstance().DestroyRecorderService(recorderService_);
         recorderService_ = nullptr;
     }
-    MEDIA_LOGD("RecorderImpl:0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
+    MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
 int32_t RecorderImpl::SetVideoSource(VideoSourceType source, int32_t &sourceId)

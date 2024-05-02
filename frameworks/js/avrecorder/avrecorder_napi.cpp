@@ -59,8 +59,7 @@ AVRecorderNapi::~AVRecorderNapi()
 
 napi_value AVRecorderNapi::Init(napi_env env, napi_value exports)
 {
-    const std::string &opt = AVRecordergOpt::PREPARE;
-    MEDIA_LOGI("Js %{public}s Start", opt.c_str());
+    MEDIA_LOGI("JS Init Start");
     napi_property_descriptor staticProperty[] = {
         DECLARE_NAPI_STATIC_FUNCTION("createAVRecorder", JsCreateAVRecorder),
     };
@@ -102,15 +101,14 @@ napi_value AVRecorderNapi::Init(napi_env env, napi_value exports)
     status = napi_define_properties(env, exports, sizeof(staticProperty) / sizeof(staticProperty[0]), staticProperty);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to define static function");
 
-    MEDIA_LOGI("Js %{public}s End", opt.c_str());
+    MEDIA_LOGI("Js Init End");
     return exports;
 }
 
 napi_value AVRecorderNapi::Constructor(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("AVRecorder::Constructor");
-    const std::string &opt = AVRecordergOpt::PREPARE;
-    MEDIA_LOGI("Js %{public}s Start", opt.c_str());
+    MEDIA_LOGI("Js Constructor Start");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
@@ -141,15 +139,14 @@ napi_value AVRecorderNapi::Constructor(napi_env env, napi_callback_info info)
         return result;
     }
 
-    MEDIA_LOGI("Js %{public}s End", opt.c_str());
+    MEDIA_LOGI("Js Constructor End");
     return jsThis;
 }
 
 void AVRecorderNapi::Destructor(napi_env env, void *nativeObject, void *finalize)
 {
     MediaTrace trace("AVRecorder::Destructor");
-    const std::string &opt = AVRecordergOpt::PREPARE;
-    MEDIA_LOGI("Js %{public}s Start", opt.c_str());
+    MEDIA_LOGI("Js Destructor Start");
     (void)finalize;
     if (nativeObject != nullptr) {
         AVRecorderNapi *napi = reinterpret_cast<AVRecorderNapi *>(nativeObject);
@@ -167,14 +164,13 @@ void AVRecorderNapi::Destructor(napi_env env, void *nativeObject, void *finalize
 
         delete napi;
     }
-    MEDIA_LOGI("Js %{public}s End", opt.c_str());
+    MEDIA_LOGI("Js Destructor End");
 }
 
 napi_value AVRecorderNapi::JsCreateAVRecorder(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("AVRecorder::JsCreateAVRecorder");
-    const std::string &opt = AVRecordergOpt::PREPARE;
-    MEDIA_LOGI("Js %{public}s Start", opt.c_str());
+    MEDIA_LOGI("Js CreateAVRecorder Start");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
@@ -200,7 +196,7 @@ napi_value AVRecorderNapi::JsCreateAVRecorder(napi_env env, napi_callback_info i
     NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
     asyncCtx.release();
 
-    MEDIA_LOGI("Js %{public}s End", opt.c_str());
+    MEDIA_LOGI("Js CreateAVRecorder End");
     return result;
 }
 
