@@ -151,6 +151,8 @@ void RecorderServer::OnAudioCaptureChange(const AudioRecorderChangeInfo &audioRe
 int32_t RecorderServer::SetVideoSource(VideoSourceType source, int32_t &sourceId)
 {
     MediaTrace trace("RecorderServer::SetVideoSource");
+    MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " SetVideoSource in, source(%{public}d), sourceId(%{public}d)",
+        FAKE_POINTER(this), source, sourceId);
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_INITIALIZED, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
@@ -168,6 +170,8 @@ int32_t RecorderServer::SetVideoSource(VideoSourceType source, int32_t &sourceId
 
 int32_t RecorderServer::SetVideoEncoder(int32_t sourceId, VideoCodecFormat encoder)
 {
+    MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " SetVideoSource in, sourceId(%{public}d), encoder(%{public}d)",
+        FAKE_POINTER(this), sourceId, encoder);
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
@@ -185,6 +189,8 @@ int32_t RecorderServer::SetVideoEncoder(int32_t sourceId, VideoCodecFormat encod
 
 int32_t RecorderServer::SetVideoSize(int32_t sourceId, int32_t width, int32_t height)
 {
+    MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " SetVideoSize in, sourceId(%{public}d), width(%{public}d), "
+        "height(%{public}d)", FAKE_POINTER(this), sourceId, width, height);
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
@@ -203,6 +209,8 @@ int32_t RecorderServer::SetVideoSize(int32_t sourceId, int32_t width, int32_t he
 
 int32_t RecorderServer::SetVideoFrameRate(int32_t sourceId, int32_t frameRate)
 {
+    MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " SetVideoFrameRate in, sourceId(%{public}d), "
+        "frameRate(%{public}d)", FAKE_POINTER(this), sourceId, frameRate);
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
@@ -220,6 +228,8 @@ int32_t RecorderServer::SetVideoFrameRate(int32_t sourceId, int32_t frameRate)
 
 int32_t RecorderServer::SetVideoEncodingBitRate(int32_t sourceId, int32_t rate)
 {
+    MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " SetVideoEncodingBitRate in, sourceId(%{public}d), "
+        "rate(%{public}d)", FAKE_POINTER(this), sourceId, rate);
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
@@ -237,6 +247,8 @@ int32_t RecorderServer::SetVideoEncodingBitRate(int32_t sourceId, int32_t rate)
 
 int32_t RecorderServer::SetVideoIsHdr(int32_t sourceId, bool isHdr)
 {
+    MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " SetVideoIsHdr in, sourceId(%{public}d), isHdr(%{public}d)",
+        FAKE_POINTER(this), sourceId, isHdr);
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
@@ -254,6 +266,8 @@ int32_t RecorderServer::SetVideoIsHdr(int32_t sourceId, bool isHdr)
 
 int32_t RecorderServer::SetVideoEnableTemporalScale(int32_t sourceId, bool enableTemporalScale)
 {
+    MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " SetVideoEnableTemporalScale in, sourceId(%{public}d), "
+        "enableTemporalScale(%{public}d)", FAKE_POINTER(this), sourceId, enableTemporalScale);
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
@@ -271,6 +285,7 @@ int32_t RecorderServer::SetVideoEnableTemporalScale(int32_t sourceId, bool enabl
 
 int32_t RecorderServer::SetCaptureRate(int32_t sourceId, double fps)
 {
+    MEDIA_LOGI("SetCaptureRate sourceId(%{public}d), fps(%{public}lf)", sourceId, fps);
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
@@ -288,6 +303,8 @@ int32_t RecorderServer::SetCaptureRate(int32_t sourceId, double fps)
 
 sptr<OHOS::Surface> RecorderServer::GetSurface(int32_t sourceId)
 {
+    MEDIA_LOGI("ecorderServer:0x%{public}06" PRIXPTR " GetSurface in, sourceId(%{public}d)",
+        FAKE_POINTER(this), sourceId);
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_PREPARED && status_ != REC_RECORDING && status_ != REC_PAUSED,
         nullptr);
@@ -305,6 +322,8 @@ sptr<OHOS::Surface> RecorderServer::GetSurface(int32_t sourceId)
 int32_t RecorderServer::SetAudioSource(AudioSourceType source, int32_t &sourceId)
 {
     MediaTrace trace("RecorderServer::SetAudioSource");
+    MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " SetAudioSource in, source(%{public}d), sourceId(%{public}d)",
+        FAKE_POINTER(this), source, sourceId);
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_INITIALIZED, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
@@ -339,6 +358,8 @@ int32_t RecorderServer::SetAudioDataSource(const std::shared_ptr<IAudioDataSourc
 
 int32_t RecorderServer::SetAudioEncoder(int32_t sourceId, AudioCodecFormat encoder)
 {
+    MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " SetAudioEncoder in, sourceId(%{public}d), encoder(%{public}d)",
+        FAKE_POINTER(this), sourceId, encoder);
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
@@ -357,6 +378,8 @@ int32_t RecorderServer::SetAudioEncoder(int32_t sourceId, AudioCodecFormat encod
 
 int32_t RecorderServer::SetAudioSampleRate(int32_t sourceId, int32_t rate)
 {
+    MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " SetAudioSampleRate in, sourceId(%{public}d), rate(%{public}d)",
+        FAKE_POINTER(this), sourceId, rate);
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
@@ -375,6 +398,8 @@ int32_t RecorderServer::SetAudioSampleRate(int32_t sourceId, int32_t rate)
 
 int32_t RecorderServer::SetAudioChannels(int32_t sourceId, int32_t num)
 {
+    MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " SetAudioChannels in, sourceId(%{public}d), num(%{public}d)",
+        FAKE_POINTER(this), sourceId, num);
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
@@ -392,6 +417,8 @@ int32_t RecorderServer::SetAudioChannels(int32_t sourceId, int32_t num)
 
 int32_t RecorderServer::SetAudioEncodingBitRate(int32_t sourceId, int32_t bitRate)
 {
+    MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " SetAudioEncodingBitRate in, sourceId(%{public}d), "
+        "bitRate(%{public}d)", FAKE_POINTER(this), sourceId, bitRate);
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
@@ -411,6 +438,8 @@ int32_t RecorderServer::SetDataSource(DataSourceType dataType, int32_t &sourceId
 {
     (void)dataType;
     (void)sourceId;
+    MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " SetDataSource in, dataType(%{public}d), sourceId(%{public}d)",
+        FAKE_POINTER(this), dataType, sourceId);
     return MSERR_INVALID_OPERATION;
 }
 
@@ -452,6 +481,8 @@ int32_t RecorderServer::SetGenre(std::string &genre)
 
 int32_t RecorderServer::SetMaxDuration(int32_t duration)
 {
+    MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " SetMaxDuration in, duration(%{public}d)",
+        FAKE_POINTER(this), duration);
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
@@ -469,6 +500,8 @@ int32_t RecorderServer::SetMaxDuration(int32_t duration)
 
 int32_t RecorderServer::SetOutputFormat(OutputFormatType format)
 {
+    MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " SetOutputFormat in, format(%{public}d)",
+        FAKE_POINTER(this), format);
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_INITIALIZED, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
@@ -488,6 +521,7 @@ int32_t RecorderServer::SetOutputFormat(OutputFormatType format)
 
 int32_t RecorderServer::SetOutputFile(int32_t fd)
 {
+    MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " SetOutputFile in", FAKE_POINTER(this));
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
@@ -505,6 +539,7 @@ int32_t RecorderServer::SetOutputFile(int32_t fd)
 
 int32_t RecorderServer::SetNextOutputFile(int32_t fd)
 {
+    MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " SetNextOutputFile in", FAKE_POINTER(this));
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
@@ -521,6 +556,8 @@ int32_t RecorderServer::SetNextOutputFile(int32_t fd)
 
 int32_t RecorderServer::SetMaxFileSize(int64_t size)
 {
+    MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " SetMaxFileSize in, size: %{public}" PRIi64 "",
+        FAKE_POINTER(this), size);
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
@@ -538,6 +575,7 @@ int32_t RecorderServer::SetMaxFileSize(int64_t size)
 
 void RecorderServer::SetLocation(float latitude, float longitude)
 {
+    MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " SetLocation in", FAKE_POINTER(this));
     std::lock_guard<std::mutex> lock(mutex_);
     if (status_ != REC_CONFIGURED) {
         return;
@@ -559,6 +597,8 @@ void RecorderServer::SetLocation(float latitude, float longitude)
 
 void RecorderServer::SetOrientationHint(int32_t rotation)
 {
+    MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " SetOrientationHint in, rotation: %{public}d",
+        FAKE_POINTER(this), rotation);
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_LOG(recorderEngine_ != nullptr, "engine is nullptr");
     config_.rotation = rotation;
@@ -575,6 +615,7 @@ void RecorderServer::SetOrientationHint(int32_t rotation)
 
 int32_t RecorderServer::SetRecorderCallback(const std::shared_ptr<RecorderCallback> &callback)
 {
+    MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " SetRecorderCallback in", FAKE_POINTER(this));
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_INITIALIZED && status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
 
@@ -599,6 +640,7 @@ int32_t RecorderServer::Prepare()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     MediaTrace trace("RecorderServer::Prepare");
+    MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " Prepare in", FAKE_POINTER(this));
     if (status_ == REC_PREPARED) {
         MEDIA_LOGE("Can not repeat Prepare");
         return MSERR_INVALID_OPERATION;
@@ -622,6 +664,7 @@ int32_t RecorderServer::Start()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     MediaTrace trace("RecorderServer::Start");
+    MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " Start in", FAKE_POINTER(this));
     if (status_ == REC_RECORDING) {
         MEDIA_LOGE("Can not repeat Start");
         return MSERR_INVALID_OPERATION;
@@ -650,6 +693,7 @@ int32_t RecorderServer::Start()
 int32_t RecorderServer::Pause()
 {
     MediaTrace trace("RecorderServer::Pause");
+    MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " Pause in", FAKE_POINTER(this));
     std::lock_guard<std::mutex> lock(mutex_);
     if (status_ == REC_PAUSED) {
         MEDIA_LOGE("Can not repeat Pause");
@@ -673,6 +717,7 @@ int32_t RecorderServer::Pause()
 int32_t RecorderServer::Resume()
 {
     MediaTrace trace("RecorderServer::Resume");
+    MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " Resume in", FAKE_POINTER(this));
     std::lock_guard<std::mutex> lock(mutex_);
     if (status_ == REC_RECORDING) {
         MEDIA_LOGE("Can not repeat Resume");
@@ -697,6 +742,7 @@ int32_t RecorderServer::Stop(bool block)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     MediaTrace trace("RecorderServer::Stop");
+    MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " Stop in", FAKE_POINTER(this));
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_RECORDING && status_ != REC_PAUSED, MSERR_INVALID_OPERATION);
 
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
@@ -717,6 +763,7 @@ int32_t RecorderServer::Reset()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     MediaTrace trace("RecorderServer::Reset");
+    MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " Reset in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->Reset();
@@ -734,6 +781,7 @@ int32_t RecorderServer::Reset()
 int32_t RecorderServer::Release()
 {
     MediaTrace trace("RecorderServer::Release");
+    MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " Release in", FAKE_POINTER(this));
     {
         std::lock_guard<std::mutex> lock(mutex_);
         auto task = std::make_shared<TaskHandler<void>>([&, this] {
