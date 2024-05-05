@@ -206,16 +206,14 @@ int32_t RecorderImpl::SetOutputFormat(OutputFormatType format)
 
 int32_t RecorderImpl::SetOutputFile(int32_t fd)
 {
-    MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetOutputFile in, fd is %{public}d",
-        FAKE_POINTER(this), fd);
+    MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetOutputFile in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist..");
     return recorderService_->SetOutputFile(fd);
 }
 
 int32_t RecorderImpl::SetNextOutputFile(int32_t fd)
 {
-    MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetNextOutputFile in, fd is %{public}d",
-        FAKE_POINTER(this), fd);
+    MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetNextOutputFile in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist..");
     return recorderService_->SetNextOutputFile(fd);
 }
@@ -230,8 +228,7 @@ int32_t RecorderImpl::SetMaxFileSize(int64_t size)
 
 void RecorderImpl::SetLocation(float latitude, float longitude)
 {
-    MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetAudioEncodingBitRate in, latitude is %{public}f, "
-        "longitude is %{public}f", FAKE_POINTER(this), latitude, longitude);
+    MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetLocation in", FAKE_POINTER(this));
     CHECK_AND_RETURN_LOG(recorderService_ != nullptr, "recorder service does not exist..");
     recorderService_->SetLocation(latitude, longitude);
     return;

@@ -467,8 +467,7 @@ int32_t RecorderServer::SetOutputFormat(OutputFormatType format)
 
 int32_t RecorderServer::SetOutputFile(int32_t fd)
 {
-    MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " SetOutputFile in, fd(%{public}d)",
-        FAKE_POINTER(this), fd);
+    MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " SetOutputFile in", FAKE_POINTER(this));
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
@@ -486,6 +485,7 @@ int32_t RecorderServer::SetOutputFile(int32_t fd)
 
 int32_t RecorderServer::SetNextOutputFile(int32_t fd)
 {
+    MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " SetNextOutputFile in", FAKE_POINTER(this));
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
@@ -502,6 +502,8 @@ int32_t RecorderServer::SetNextOutputFile(int32_t fd)
 
 int32_t RecorderServer::SetMaxFileSize(int64_t size)
 {
+    MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " SetMaxFileSize in, size: %{public}" PRIi64 "",
+        FAKE_POINTER(this), size);
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
@@ -519,8 +521,7 @@ int32_t RecorderServer::SetMaxFileSize(int64_t size)
 
 void RecorderServer::SetLocation(float latitude, float longitude)
 {
-    MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " SetLocation in, latitude(%{public}f), longitude(%{public}f)",
-        FAKE_POINTER(this), latitude, longitude);
+    MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " SetLocation in", FAKE_POINTER(this));
     std::lock_guard<std::mutex> lock(mutex_);
     if (status_ != REC_CONFIGURED) {
         return;
