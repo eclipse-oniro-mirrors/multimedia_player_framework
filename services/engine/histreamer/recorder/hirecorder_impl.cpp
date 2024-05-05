@@ -148,7 +148,6 @@ int32_t HiRecorderImpl::SetVideoSource(VideoSourceType source, int32_t &sourceId
 int32_t HiRecorderImpl::SetAudioSource(AudioSourceType source, int32_t &sourceId)
 {
     MediaTrace trace("HiRecorderImpl::SetAudioSource");
-    MEDIA_LOG_I(PUBLIC_LOG_S "SetAudioSource enter.", avRecorderTag_.c_str());
     MEDIA_LOG_I(PUBLIC_LOG_S "SetAudioSource enter, sourceType:" PUBLIC_LOG_D32, avRecorderTag_.c_str(),
         static_cast<int32_t>(source));
     sourceId = INVALID_SOURCE_ID;
