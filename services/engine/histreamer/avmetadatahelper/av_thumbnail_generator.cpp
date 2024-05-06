@@ -226,10 +226,10 @@ std::shared_ptr<AVSharedMemory> AVThumbnailGenerator::FetchFrameAtTime(
     return fetchedFrameAtTime_;
 }
 
-Status AVThumbnailGenerator::SeekToTime(int64_t timeMs, int32_t option, int64_t realSeekTime)
+Status AVThumbnailGenerator::SeekToTime(int64_t timeMs, Plugins::SeekMode option, int64_t realSeekTime)
 {
-    auto res = mediaDemuxer_->SeekTo(timeMs, static_cast<Plugins::SeekMode>(option), realSeekTime);
-    if (res != Status::OK && option != static_cast<int32_t>(Plugins::SeekMode::SEEK_CLOSEST_SYNC)) {
+    auto res = mediaDemuxer_->SeekTo(timeMs, option, realSeekTime);
+    if (res != Status::OK && option != Plugins::SeekMode::SEEK_CLOSEST_SYNC) {
         res = mediaDemuxer_->SeekTo(timeMs, Plugins::SeekMode::SEEK_CLOSEST_SYNC, realSeekTime);
     }
     return res;
