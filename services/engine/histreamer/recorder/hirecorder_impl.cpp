@@ -75,7 +75,6 @@ HiRecorderImpl::HiRecorderImpl(int32_t appUid, int32_t appPid, uint32_t appToken
     : appUid_(appUid), appPid_(appPid), appTokenId_(appTokenId), appFullTokenId_(appFullTokenId)
 {
     pipeline_ = std::make_shared<Pipeline::Pipeline>();
-    int tid = static_cast<pid_t>(::syscall(SYS_gettid));
 }
 
 HiRecorderImpl::~HiRecorderImpl()
