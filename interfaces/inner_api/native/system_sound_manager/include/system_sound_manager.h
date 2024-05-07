@@ -22,6 +22,7 @@
 
 #include "ringtone_player.h"
 #include "system_tone_player.h"
+#include "tone_attrs.h"
 
 namespace OHOS {
 namespace Media {
