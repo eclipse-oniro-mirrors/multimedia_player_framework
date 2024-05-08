@@ -40,10 +40,9 @@ config("media_engine_common_avcodeclist_config") {
   ]
 
   include_dirs = [
-    "//foundation/multimedia/player_framework/services/engine/common/avcodeclist",
-    "//foundation/multimedia/player_framework/services/utils/include",
-    "//foundation/multimedia/player_framework/interfaces/inner_api/native",
-    "//foundation/multimedia/player_framework/services/services/engine_intf",
+    "../../services/engine_intf",
+    "../../utils/include",
+    "../../../interfaces/inner_api/native",
   ]
 }
 
@@ -65,11 +64,11 @@ ohos_static_library("media_engine_common_avcodeclist") {
 
   configs = [
     ":media_engine_common_avcodeclist_config",
-    "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx_public_config",
+    "../../dfx:media_service_log_dfx_public_config",
   ]
 
   deps = [
-    "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx",
+    "../../dfx:media_service_log_dfx",
   ]
 
   external_deps = [
