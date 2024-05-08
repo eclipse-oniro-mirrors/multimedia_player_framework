@@ -755,7 +755,7 @@ void HiPlayerImpl::SetBundleName(std::string bundleName)
 {
     if (!bundleName.empty()) {
         MEDIA_LOG_I("SetBundleName bundleName: " PUBLIC_LOG_S, bundleName.c_str());
-        demuxer_->SetBundleName(bundleName, appPid_, appUid_);
+        demuxer_->SetBundleName(bundleName);
     } else {
         MEDIA_LOG_I("SetBundleName failed.");
     }
