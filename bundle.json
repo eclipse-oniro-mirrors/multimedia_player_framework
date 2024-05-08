@@ -81,11 +81,11 @@
           "resource_schedule_service",
           "ffmpeg",
           "bounds_checking_function",
-          "libxml2",
           "libuv"
         ],
         "third_party": [
-          "bounds_checking_function"
+          "bounds_checking_function",
+          "libxml2"
         ]
       },
       "build": {
