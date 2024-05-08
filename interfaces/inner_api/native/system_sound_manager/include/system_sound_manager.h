@@ -22,6 +22,7 @@
 
 #include "ringtone_player.h"
 #include "system_tone_player.h"
+#include "tone_attrs.h"
 
 namespace OHOS {
 namespace Media {
@@ -108,8 +109,7 @@ public:
      */
     virtual std::string GetSystemToneUri(const std::shared_ptr<AbilityRuntime::Context> &context,
         SystemToneType systemToneType)= 0;
-    
-    
+
     /**
      * @brief Returns the default ringtone attributes.
      *
@@ -182,7 +182,8 @@ public:
      * @return Returns the default alarmTone attrs.
      * @since 12
      */
-    virtual std::shared_ptr<ToneAttrs>  GetDefaultAlarmToneAttrs(const std::shared_ptr<AbilityRuntime::Context> &context) = 0;
+    virtual std::shared_ptr<ToneAttrs> GetDefaultAlarmToneAttrs(
+        const std::shared_ptr<AbilityRuntime::Context> &context) = 0;
 
     /**
      * @brief Returns the list of alarmTone attributes.

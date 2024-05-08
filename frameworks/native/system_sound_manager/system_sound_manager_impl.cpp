@@ -538,7 +538,7 @@ int32_t SystemSoundManagerImpl::Close(const int32_t &fd)
 
 std::string SystemSoundManagerImpl::AddCustomizedToneByExternalUri(
     const std::shared_ptr<AbilityRuntime::Context> &context, const std::shared_ptr<ToneAttrs> &toneAttrs,
-        const std::string &externalUri)
+    const std::string &externalUri)
 {
     std::lock_guard<std::mutex> lock(uriMutex_);
     MEDIA_LOGI("xmj AddCustomizedToneByExternalUri externalUri is [%{public}s]", externalUri.c_str());
@@ -560,7 +560,7 @@ std::string SystemSoundManagerImpl::AddCustomizedToneByFd(const std::shared_ptr<
 
 std::string SystemSoundManagerImpl::AddCustomizedToneByFdAndOffset(
     const std::shared_ptr<AbilityRuntime::Context> &context, const std::shared_ptr<ToneAttrs> &toneAttrs,
-        const int32_t &fd, const int32_t &offset, const int32_t &length)
+    const int32_t &fd, const int32_t &offset, const int32_t &length)
 {
     std::lock_guard<std::mutex> lock(uriMutex_);
     MEDIA_LOGI("xmj AddCustomizedToneByFdAndOffset fd is [%{public}d]", fd);

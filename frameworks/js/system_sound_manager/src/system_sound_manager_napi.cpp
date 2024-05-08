@@ -1008,7 +1008,7 @@ napi_value SystemSoundManagerNapi::GetRingtoneAttrList(napi_env env, napi_callba
     napi_get_undefined(env, &result);
     CHECK_AND_RETURN_RET_LOG((status == napi_ok && thisVar != nullptr), result,
         "GetRingtoneAttrList: Failed to retrieve details about the callback");
-    NAPI_ASSERT(env, (argc == ARGS_TWO ), "GetRingtoneAttrList: requires 2 parameters maximum");
+    NAPI_ASSERT(env, (argc == ARGS_TWO), "GetRingtoneAttrList: requires 2 parameters maximum");
     std::unique_ptr<SystemSoundManagerAsyncContext> asyncContext = std::make_unique<SystemSoundManagerAsyncContext>();
     status = napi_unwrap(env, thisVar, reinterpret_cast<void**>(&asyncContext->objectInfo));
     if (status == napi_ok && asyncContext->objectInfo != nullptr) {
@@ -1545,7 +1545,6 @@ napi_value SystemSoundManagerNapi::AddCustomizedTone(napi_env env, napi_callback
                 asyncContext->abilityContext_ = GetAbilityContext(env, argv[i]);
             } else if (i == PARAM1 && valueType == napi_object) {
                 napi_unwrap(env, argv[i], reinterpret_cast<void**>(&asyncContext->toneAttrs));
-
             } else if (i == PARAM2 && valueType == napi_string) {
                 napi_get_value_string_utf8(env, argv[i], buffer, SIZE, &res);
                 asyncContext->externalUri = std::string(buffer);
@@ -1697,7 +1696,7 @@ void SystemSoundManagerNapi::RemoveCustomizedToneAsyncCallbackComp(napi_env env,
         napi_get_undefined(env, &result[PARAM0]);
     } else {
         napi_value message = nullptr;
-        napi_create_string_utf8(env, "RemoveCustomizedToneAsyncCallbackComp Error: Operation is not supported or failed",
+        napi_create_string_utf8(env, "Error: Operation is not supported or failed",
             NAPI_AUTO_LENGTH, &message);
         napi_create_error(env, nullptr, message, &result[PARAM0]);
     }
