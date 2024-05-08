@@ -78,6 +78,7 @@ config("media_service_config") {
     "//foundation/multimedia/player_framework/services/services/common",
     "//foundation/multimedia/player_framework/services/engine/common/avcodeclist",
     "//foundation/multimedia/player_framework/services/engine/common/recorder_profiles",
+    "//foundation/multimedia/player_framework/services/engine/common/recorder_profiles",
   ]
 
   if (multimedia_player_framework_support_avsession_background) {
