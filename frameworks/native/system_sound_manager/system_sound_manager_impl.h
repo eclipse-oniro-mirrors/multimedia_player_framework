@@ -61,13 +61,15 @@ public:
         SystemToneType systemToneType) override;
     std::shared_ptr<ToneAttrs> GetDefaultSystemToneAttrs(const std::shared_ptr<AbilityRuntime::Context> &context,
         SystemToneType systemToneType) override;
-    std::vector<std::shared_ptr<ToneAttrs>> GetSystemToneAttrList(const std::shared_ptr<AbilityRuntime::Context> &context,
-        SystemToneType systemToneType) override;
+    std::vector<std::shared_ptr<ToneAttrs>> GetSystemToneAttrList(
+        const std::shared_ptr<AbilityRuntime::Context> &context, SystemToneType systemToneType) override;
 
     int32_t SetAlarmToneUri(const std::shared_ptr<AbilityRuntime::Context> &context, const std::string &uri) override;
     std::string GetAlarmToneUri(const std::shared_ptr<AbilityRuntime::Context> &context) override;
-    std::shared_ptr<ToneAttrs> GetDefaultAlarmToneAttrs(const std::shared_ptr<AbilityRuntime::Context> &context) override;
-    std::vector<std::shared_ptr<ToneAttrs>> GetAlarmToneAttrList(const std::shared_ptr<AbilityRuntime::Context> &context) override;
+    std::shared_ptr<ToneAttrs> GetDefaultAlarmToneAttrs(
+        const std::shared_ptr<AbilityRuntime::Context> &context) override;
+    std::vector<std::shared_ptr<ToneAttrs>> GetAlarmToneAttrList(
+        const std::shared_ptr<AbilityRuntime::Context> &context) override;
 
     int32_t OpenAlarmTone(const std::shared_ptr<AbilityRuntime::Context> &context, const std::string &uri) override;
     int32_t Close(const int32_t &fd) override;
@@ -76,8 +78,10 @@ public:
     std::string AddCustomizedToneByFd(const std::shared_ptr<AbilityRuntime::Context> &context,
         const std::shared_ptr<ToneAttrs> &toneAttrs, const int32_t &fd) override;
     std::string AddCustomizedToneByFdAndOffset(const std::shared_ptr<AbilityRuntime::Context> &context,
-        const std::shared_ptr<ToneAttrs> &toneAttrs, const int32_t &fd, const int32_t &offset, const int32_t &length) override;
-    int32_t RemoveCustomizedTone(const std::shared_ptr<AbilityRuntime::Context> &context, const std::string &uri) override;
+        const std::shared_ptr<ToneAttrs> &toneAttrs, const int32_t &fd, const int32_t &offset,
+            const int32_t &length) override;
+    int32_t RemoveCustomizedTone(const std::shared_ptr<AbilityRuntime::Context> &context,
+        const std::string &uri) override;
 
 private:
     void InitDefaultUriMap();

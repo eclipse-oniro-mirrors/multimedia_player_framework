@@ -374,11 +374,10 @@ std::string SystemSoundManagerImpl::GetSystemToneUri(const std::shared_ptr<Abili
     return systemToneUri;
 }
 
-std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultRingtoneAttrs(const shared_ptr<Context> &context, RingtoneType ringtoneType)
+std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultRingtoneAttrs(
+    const shared_ptr<Context> &context, RingtoneType ringtoneType)
 {
     std::lock_guard<std::mutex> lock(uriMutex_);
-
-    MEDIA_LOGE("xmj GetDefaultRingtoneAttrs ");
 
     string title_ = "title_ringtoneattrs0";
     string displayName_ = "displayName_ringtoneattrs0";
@@ -391,8 +390,8 @@ std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultRingtoneAttrs(const
     return ringtoneAttrs_;
 }
 
-std::vector<std::shared_ptr<ToneAttrs>> SystemSoundManagerImpl::GetRingtoneAttrList(const std::shared_ptr<AbilityRuntime::Context> &context,
-    RingtoneType ringtoneType)
+std::vector<std::shared_ptr<ToneAttrs>> SystemSoundManagerImpl::GetRingtoneAttrList(
+    const std::shared_ptr<AbilityRuntime::Context> &context, RingtoneType ringtoneType)
 {
     std::lock_guard<std::mutex> lock(uriMutex_);
 
@@ -415,8 +414,8 @@ std::vector<std::shared_ptr<ToneAttrs>> SystemSoundManagerImpl::GetRingtoneAttrL
     return ringtoneAttrsArray_;
 }
 
-std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultSystemToneAttrs(const std::shared_ptr<AbilityRuntime::Context> &context,
-    SystemToneType systemToneType)
+std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultSystemToneAttrs(
+    const std::shared_ptr<AbilityRuntime::Context> &context, SystemToneType systemToneType)
 {
     std::lock_guard<std::mutex> lock(uriMutex_);
 
@@ -431,8 +430,8 @@ std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultSystemToneAttrs(con
     return systemtoneAttrs_;
 }
 
-std::vector<std::shared_ptr<ToneAttrs>> SystemSoundManagerImpl::GetSystemToneAttrList(const std::shared_ptr<AbilityRuntime::Context> &context,
-    SystemToneType systemToneType)
+std::vector<std::shared_ptr<ToneAttrs>> SystemSoundManagerImpl::GetSystemToneAttrList(
+    const std::shared_ptr<AbilityRuntime::Context> &context, SystemToneType systemToneType)
 {
     std::lock_guard<std::mutex> lock(uriMutex_);
 
@@ -455,7 +454,8 @@ std::vector<std::shared_ptr<ToneAttrs>> SystemSoundManagerImpl::GetSystemToneAtt
     return systemtoneAttrsArray_;
 }
 
-int32_t SystemSoundManagerImpl::SetAlarmToneUri(const std::shared_ptr<AbilityRuntime::Context> &context, const std::string &uri)
+int32_t SystemSoundManagerImpl::SetAlarmToneUri(const std::shared_ptr<AbilityRuntime::Context> &context,
+    const std::string &uri)
 {
     std::lock_guard<std::mutex> lock(uriMutex_);
 
@@ -475,7 +475,8 @@ std::string SystemSoundManagerImpl::GetAlarmToneUri(const std::shared_ptr<Abilit
     return alarmToneUri_;
 }
 
-std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultAlarmToneAttrs(const std::shared_ptr<AbilityRuntime::Context> &context)
+std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultAlarmToneAttrs(
+    const std::shared_ptr<AbilityRuntime::Context> &context)
 {
     std::lock_guard<std::mutex> lock(uriMutex_);
 
@@ -490,7 +491,8 @@ std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultAlarmToneAttrs(cons
     return alarmtoneAttrs_;
 }
 
-std::vector<std::shared_ptr<ToneAttrs>> SystemSoundManagerImpl::GetAlarmToneAttrList(const std::shared_ptr<AbilityRuntime::Context> &context)
+std::vector<std::shared_ptr<ToneAttrs>> SystemSoundManagerImpl::GetAlarmToneAttrList
+    (const std::shared_ptr<AbilityRuntime::Context> &context)
 {
     std::lock_guard<std::mutex> lock(uriMutex_);
 
@@ -513,7 +515,8 @@ std::vector<std::shared_ptr<ToneAttrs>> SystemSoundManagerImpl::GetAlarmToneAttr
     return alarmtoneAttrsArray_;
 }
 
-int32_t SystemSoundManagerImpl::OpenAlarmTone(const std::shared_ptr<AbilityRuntime::Context> &context, const std::string &uri)
+int32_t SystemSoundManagerImpl::OpenAlarmTone(const std::shared_ptr<AbilityRuntime::Context> &context,
+    const std::string &uri)
 {
     MEDIA_LOGI("OpenAlarmTone ");
     int32_t fd = 240429;
@@ -533,11 +536,15 @@ int32_t SystemSoundManagerImpl::Close(const int32_t &fd)
     }
 }
 
-std::string SystemSoundManagerImpl::AddCustomizedToneByExternalUri(const std::shared_ptr<AbilityRuntime::Context> &context,
-    const std::shared_ptr<ToneAttrs> &toneAttrs, const std::string &externalUri)
+std::string SystemSoundManagerImpl::AddCustomizedToneByExternalUri(
+    const std::shared_ptr<AbilityRuntime::Context> &context, const std::shared_ptr<ToneAttrs> &toneAttrs,
+        const std::string &externalUri)
 {
     std::lock_guard<std::mutex> lock(uriMutex_);
     MEDIA_LOGI("xmj AddCustomizedToneByExternalUri externalUri is [%{public}s]", externalUri.c_str());
+
+    std::string srcDir = "/storage/media/100/local/data/com.ohos.ringtonelibrary.ringtonelibrarydata0";
+    std::string srcDir = "/storage/media/100/local/data/com.ohos.ringtonelibrary.ringtonelibrarydata1";
 
     return externalUri.c_str();
 }
@@ -551,8 +558,9 @@ std::string SystemSoundManagerImpl::AddCustomizedToneByFd(const std::shared_ptr<
     return "AddCustomizedToneByFd";
 }
 
-std::string SystemSoundManagerImpl::AddCustomizedToneByFdAndOffset(const std::shared_ptr<AbilityRuntime::Context> &context,
-    const std::shared_ptr<ToneAttrs> &toneAttrs, const int32_t &fd, const int32_t &offset, const int32_t &length)
+std::string SystemSoundManagerImpl::AddCustomizedToneByFdAndOffset(
+    const std::shared_ptr<AbilityRuntime::Context> &context, const std::shared_ptr<ToneAttrs> &toneAttrs,
+        const int32_t &fd, const int32_t &offset, const int32_t &length)
 {
     std::lock_guard<std::mutex> lock(uriMutex_);
     MEDIA_LOGI("xmj AddCustomizedToneByFdAndOffset fd is [%{public}d]", fd);
@@ -562,7 +570,8 @@ std::string SystemSoundManagerImpl::AddCustomizedToneByFdAndOffset(const std::sh
     return "AddCustomizedToneByFdAndOffset";
 }
 
-int32_t SystemSoundManagerImpl::RemoveCustomizedTone(const std::shared_ptr<AbilityRuntime::Context> &context, const std::string &uri)
+int32_t SystemSoundManagerImpl::RemoveCustomizedTone(
+    const std::shared_ptr<AbilityRuntime::Context> &context, const std::string &uri)
 {
     MEDIA_LOGI("xmj RemoveCustomizedTone uri is [%{public}s]", uri.c_str());
 

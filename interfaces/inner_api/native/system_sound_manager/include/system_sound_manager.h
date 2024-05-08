@@ -22,7 +22,6 @@
 
 #include "ringtone_player.h"
 #include "system_tone_player.h"
-#include "tone_attrs.h"
 
 namespace OHOS {
 namespace Media {
@@ -130,8 +129,8 @@ public:
      * @return Returns the list of ringtone attrs.
      * @since 12
      */
-    virtual std::vector<std::shared_ptr<ToneAttrs>> GetRingtoneAttrList(const std::shared_ptr<AbilityRuntime::Context> &context,
-        RingtoneType ringtoneType) = 0;
+    virtual std::vector<std::shared_ptr<ToneAttrs>> GetRingtoneAttrList(
+        const std::shared_ptr<AbilityRuntime::Context> &context, RingtoneType ringtoneType) = 0;
 
     /**
      * @brief Returns the default systemtone attributes.
@@ -141,8 +140,8 @@ public:
      * @return Returns the default systemtone attrs.
      * @since 12
      */
-    virtual std::shared_ptr<ToneAttrs>  GetDefaultSystemToneAttrs(const std::shared_ptr<AbilityRuntime::Context> &context,
-        SystemToneType systemtoneType) = 0;
+    virtual std::shared_ptr<ToneAttrs>  GetDefaultSystemToneAttrs(
+        const std::shared_ptr<AbilityRuntime::Context> &context, SystemToneType systemtoneType) = 0;
 
     /**
      * @brief Returns the list of systemtone attributes.
@@ -152,8 +151,8 @@ public:
      * @return Returns the list of systemtone attrs.
      * @since 12
      */
-    virtual std::vector<std::shared_ptr<ToneAttrs>> GetSystemToneAttrList(const std::shared_ptr<AbilityRuntime::Context> &context,
-        SystemToneType systemToneType) = 0;
+    virtual std::vector<std::shared_ptr<ToneAttrs>> GetSystemToneAttrList(
+        const std::shared_ptr<AbilityRuntime::Context> &context, SystemToneType systemToneType) = 0;
 
     /**
      * @brief  Sets uri of the current alarm tone.
@@ -164,7 +163,8 @@ public:
      * returns an error code defined in {@link media_errors.h} otherwise.
      * @since 12
      */
-    virtual int32_t SetAlarmToneUri(const std::shared_ptr<AbilityRuntime::Context> &context, const std::string &uri) = 0;
+    virtual int32_t SetAlarmToneUri(const std::shared_ptr<AbilityRuntime::Context> &context,
+        const std::string &uri) = 0;
 
     /**
      * @brief Gets uri of the current alarm tone.
@@ -191,7 +191,8 @@ public:
      * @return Returns the list of alarmTone attrs.
      * @since 12
      */
-    virtual std::vector<std::shared_ptr<ToneAttrs>> GetAlarmToneAttrList(const std::shared_ptr<AbilityRuntime::Context> &context) = 0;
+    virtual std::vector<std::shared_ptr<ToneAttrs>> GetAlarmToneAttrList(
+        const std::shared_ptr<AbilityRuntime::Context> &context) = 0;
 
     /**
      * @brief Open the alarm tone file.
@@ -248,8 +249,9 @@ public:
      * @return Returns the tone uri after adding into ringtone library.
      * @since 12
      */
-    virtual std::string AddCustomizedToneByFdAndOffset(const std::shared_ptr<AbilityRuntime::Context> &context,
-        const std::shared_ptr<ToneAttrs> &toneAttrs, const int32_t &fd, const int32_t &offset, const int32_t &length) = 0;
+    virtual std::string AddCustomizedToneByFdAndOffset(
+        const std::shared_ptr<AbilityRuntime::Context> &context, const std::shared_ptr<ToneAttrs> &toneAttrs,
+            const int32_t &fd, const int32_t &offset, const int32_t &length) = 0;
 
     /**
      * @brief Remove customized tone in ringtone library.
@@ -260,7 +262,8 @@ public:
      * returns an error code defined in {@link media_errors.h} otherwise.
      * @since 12
      */
-    virtual int32_t RemoveCustomizedTone(const std::shared_ptr<AbilityRuntime::Context> &context, const std::string &uri) = 0;
+    virtual int32_t RemoveCustomizedTone(const std::shared_ptr<AbilityRuntime::Context> &context,
+        const std::string &uri) = 0;
 };
 
 class __attribute__((visibility("default"))) SystemSoundManagerFactory {

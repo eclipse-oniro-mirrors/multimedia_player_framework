@@ -21,7 +21,7 @@
 #include "napi/native_node_api.h"
 #include "tone_attrs.h"
 
-namespace OHOS{
+namespace OHOS {
 namespace Media {
     static const std::string TONE_ATTRS_NAPI_CLASS_NAME = "ToneAttrs";
 
@@ -52,7 +52,6 @@ private:
     std::shared_ptr<ToneAttrs> toneAttrs_;
     static napi_ref sConstructor_;
     static std::shared_ptr<ToneAttrs> sToneAttrs_;
-
 };
 } // namespace Media
 } // namespace OHOS

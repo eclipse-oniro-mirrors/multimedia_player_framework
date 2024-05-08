@@ -51,7 +51,7 @@ ohos_shared_library("systemsoundmanager") {
     "./src/system_tone_player/system_tone_options_napi.cpp",
     "./src/system_tone_player/system_tone_player_napi.cpp",
     "./src/tone_attrs/tone_attrs_napi.cpp",
-     "//foundation/multimedia/player_framework/frameworks/js/common/common_napi.cpp",
+     "./../common/common_napi.cpp",
   ]
 
   deps = [ "./../../native/system_sound_manager:system_sound_client" ]
