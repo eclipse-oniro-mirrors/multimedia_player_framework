@@ -145,7 +145,7 @@ napi_value ToneAttrsNapi::GetTitle(napi_env env, napi_callback_info info)
     size_t argc = 0;
     CHECK_AND_RETURN_RET_LOG(VerifySelfSystemPermission(),
         ThrowErrorAndReturn(env, NAPI_ERROR_PERMISSION_DENIED_INFO, NAPI_ERR_PERMISSION_DENIED),
-            "No system permission");
+        "No system permission");
 
     napi_status status = napi_get_cb_info(env, info, &argc, nullptr, &jsThis, nullptr);
 
@@ -166,7 +166,7 @@ napi_value ToneAttrsNapi::SetTitle(napi_env env, napi_callback_info info)
     napi_value argv[1] = {};
     CHECK_AND_RETURN_RET_LOG(VerifySelfSystemPermission(),
         ThrowErrorAndReturn(env, NAPI_ERROR_PERMISSION_DENIED_INFO, NAPI_ERR_PERMISSION_DENIED),
-            "No system permission");
+        "No system permission");
 
     napi_status status = napi_get_cb_info(env, info, &argc, argv, &jsThis, nullptr);
 
@@ -193,7 +193,7 @@ napi_value ToneAttrsNapi::GetFileName(napi_env env, napi_callback_info info)
     size_t argc = 0;
     CHECK_AND_RETURN_RET_LOG(VerifySelfSystemPermission(),
         ThrowErrorAndReturn(env, NAPI_ERROR_PERMISSION_DENIED_INFO, NAPI_ERR_PERMISSION_DENIED),
-            "No system permission");
+        "No system permission");
 
     napi_status status = napi_get_cb_info(env, info, &argc, nullptr, &jsThis, nullptr);
     CHECK_AND_RETURN_RET_LOG((status == napi_ok) && (jsThis != nullptr), nullptr, "jsThis is nullptr");
@@ -213,7 +213,7 @@ napi_value ToneAttrsNapi::SetFileName(napi_env env, napi_callback_info info)
     napi_value argv[1] = {};
     CHECK_AND_RETURN_RET_LOG(VerifySelfSystemPermission(),
         ThrowErrorAndReturn(env, NAPI_ERROR_PERMISSION_DENIED_INFO, NAPI_ERR_PERMISSION_DENIED),
-            "No system permission");
+        "No system permission");
 
     napi_status status = napi_get_cb_info(env, info, &argc, argv, &jsThis, nullptr);
 
@@ -240,7 +240,7 @@ napi_value ToneAttrsNapi::GetUri(napi_env env, napi_callback_info info)
     size_t argc = 0;
     CHECK_AND_RETURN_RET_LOG(VerifySelfSystemPermission(),
         ThrowErrorAndReturn(env, NAPI_ERROR_PERMISSION_DENIED_INFO, NAPI_ERR_PERMISSION_DENIED),
-            "No system permission");
+        "No system permission");
 
     napi_status status = napi_get_cb_info(env, info, &argc, nullptr, &jsThis, nullptr);
     CHECK_AND_RETURN_RET_LOG((status == napi_ok) && (jsThis != nullptr), nullptr, "jsThis is nullptr");
@@ -259,7 +259,7 @@ napi_value ToneAttrsNapi::GetCustomizedType(napi_env env, napi_callback_info inf
     size_t argc = 0;
     CHECK_AND_RETURN_RET_LOG(VerifySelfSystemPermission(),
         ThrowErrorAndReturn(env, NAPI_ERROR_PERMISSION_DENIED_INFO, NAPI_ERR_PERMISSION_DENIED),
-            "No system permission");
+        "No system permission");
 
     napi_status status = napi_get_cb_info(env, info, &argc, nullptr, &jsThis, nullptr);
     CHECK_AND_RETURN_RET_LOG((status == napi_ok) && (jsThis != nullptr), nullptr, "jsThis is nullptr");
@@ -278,7 +278,7 @@ napi_value ToneAttrsNapi::SetCategory(napi_env env, napi_callback_info info)
     napi_value argv[1] = {};
     CHECK_AND_RETURN_RET_LOG(VerifySelfSystemPermission(),
         ThrowErrorAndReturn(env, NAPI_ERROR_PERMISSION_DENIED_INFO, NAPI_ERR_PERMISSION_DENIED),
-            "No system permission");
+        "No system permission");
 
     napi_status status = napi_get_cb_info(env, info, &argc, argv, &jsThis, nullptr);
 
@@ -306,7 +306,7 @@ napi_value ToneAttrsNapi::GetCategory(napi_env env, napi_callback_info info)
     size_t argc = 0;
     CHECK_AND_RETURN_RET_LOG(VerifySelfSystemPermission(),
         ThrowErrorAndReturn(env, NAPI_ERROR_PERMISSION_DENIED_INFO, NAPI_ERR_PERMISSION_DENIED),
-            "No system permission");
+        "No system permission");
 
     napi_status status = napi_get_cb_info(env, info, &argc, nullptr, &jsThis, nullptr);
     CHECK_AND_RETURN_RET_LOG((status == napi_ok) && (jsThis != nullptr), nullptr, "jsThis is nullptr");

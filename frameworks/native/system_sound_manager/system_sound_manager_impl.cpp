@@ -381,11 +381,10 @@ std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultRingtoneAttrs(
 
     string title_ = "title_ringtoneattrs0";
     string displayName_ = "displayName_ringtoneattrs0";
-    string path_ = "/storage/media/local/data/com.ohos.ringtonelibrary.ringtonelibrarydata/test_insert_ringtone_library/ringtoneattrs0.ogg";
+    string path_ = "/storage/media/ringtoneattrs0.ogg";
 
-    ringtoneAttrs_ = make_shared<ToneAttrs>(title_, displayName_, path_, PRE_INSTALLED, 1);
-
-    MEDIA_LOGE("xmj GetDefaultRingtoneAttrs ringtoneAttrs_.get()->GetTitle is [%{public}s]", ringtoneAttrs_.get()->GetTitle().c_str());
+    ringtoneAttrs_ = make_shared<ToneAttrs>(title_, displayName_, path_,
+        PRE_INSTALLED, TONE_CATEGORY_RINGTONE);
 
     return ringtoneAttrs_;
 }
@@ -400,15 +399,17 @@ std::vector<std::shared_ptr<ToneAttrs>> SystemSoundManagerImpl::GetRingtoneAttrL
 
     std::string title_0 = "title_ringtoneattrs0";
     std::string displayName_0 = "displayName_ringtoneattrs0";
-    std::string path_0 = "/storage/media/local/data/com.ohos.ringtonelibrary.ringtonelibrarydata/test_insert_ringtone_library/ringtoneattrs0.ogg";
-    ringtoneAttrs_ = std::make_shared<ToneAttrs>(title_0, displayName_0, path_0, PRE_INSTALLED, 1);
+    std::string path_0 = "/storage/media/ringtoneattrs0.ogg";
+    ringtoneAttrs_ = std::make_shared<ToneAttrs>(title_0, displayName_0, path_0,
+        PRE_INSTALLED, TONE_CATEGORY_RINGTONE);
 
     ringtoneAttrsArray_.push_back(ringtoneAttrs_);
 
     std::string title_1 = "title_ringtoneattrs1";
     std::string displayName_1 = "displayName_ringtoneattrs1";
-    std::string path_1 = "/storage/media/local/data/com.ohos.ringtonelibrary.ringtonelibrarydata/test_insert_ringtone_library/ringtoneattrs1.ogg";
-    ringtoneAttrs_ = std::make_shared<ToneAttrs>(title_1, displayName_1, path_1, CUSTOMISED, 1);
+    std::string path_1 = "/storage/media/ringtoneattrs1.ogg";
+    ringtoneAttrs_ = std::make_shared<ToneAttrs>(title_1, displayName_1, path_1,
+        CUSTOMISED, TONE_CATEGORY_RINGTONE);
     ringtoneAttrsArray_.push_back(ringtoneAttrs_);
 
     return ringtoneAttrsArray_;
@@ -423,9 +424,10 @@ std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultSystemToneAttrs(
 
     std::string title_ = "title_systemtoneattrs0";
     std::string displayName_ = "displayName_systemtoneattrs0";
-    std::string path_ = "/storage/media/local/data/com.ohos.ringtonelibrary.ringtonelibrarydata/test_insert_ringtone_library/systemtoneattrs0.ogg";
+    std::string path_ = "/storage/media/systemtoneattrs0.ogg";
 
-    systemtoneAttrs_ = std::make_shared<ToneAttrs>(title_, displayName_, path_, PRE_INSTALLED, 2);
+    systemtoneAttrs_ = std::make_shared<ToneAttrs>(title_, displayName_, path_,
+        PRE_INSTALLED, TONE_CATEGORY_TEXT_MESSAGE);
 
     return systemtoneAttrs_;
 }
@@ -440,15 +442,17 @@ std::vector<std::shared_ptr<ToneAttrs>> SystemSoundManagerImpl::GetSystemToneAtt
 
     std::string title_0 = "title_systemtoneattrs0";
     std::string displayName_0 = "displayName_systemtoneattrs0";
-    std::string path_0 = "/storage/media/local/data/com.ohos.ringtonelibrary.ringtonelibrarydata/test_insert_ringtone_library/systemtoneattrs0.ogg";
-    systemtoneAttrs_ = std::make_shared<ToneAttrs>(title_0, displayName_0, path_0, PRE_INSTALLED, 2);
+    std::string path_0 = "/storage/media/systemtoneattrs0.ogg";
+    systemtoneAttrs_ = std::make_shared<ToneAttrs>(title_0, displayName_0, path_0,
+        PRE_INSTALLED, TONE_CATEGORY_TEXT_MESSAGE);
 
     systemtoneAttrsArray_.push_back(systemtoneAttrs_);
 
     std::string title_1 = "title_systemtoneattrs1";
     std::string displayName_1 = "displayName_systemtoneattrs1";
-    std::string path_1 = "/storage/media/local/data/com.ohos.ringtonelibrary.ringtonelibrarydata/test_insert_ringtone_library/systemtoneattrs1.ogg";
-    systemtoneAttrs_ = std::make_shared<ToneAttrs>(title_1, displayName_1, path_1, CUSTOMISED, 2);
+    std::string path_1 = "/storage/media/systemtoneattrs1.ogg";
+    systemtoneAttrs_ = std::make_shared<ToneAttrs>(title_1, displayName_1, path_1,
+        CUSTOMISED, TONE_CATEGORY_TEXT_MESSAGE);
     systemtoneAttrsArray_.push_back(systemtoneAttrs_);
 
     return systemtoneAttrsArray_;
@@ -484,9 +488,10 @@ std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultAlarmToneAttrs(
 
     std::string title_ = "title_alarmtoneattrs0";
     std::string displayName_ = "displayName_alarmtoneattrs0";
-    std::string path_ = "/storage/media/local/data/com.ohos.ringtonelibrary.ringtonelibrarydata/test_insert_ringtone_library/alarmtoneattrs0.ogg";
+    std::string path_ = "/storage/media/alarmtoneattrs0.ogg";
 
-    alarmtoneAttrs_ = std::make_shared<ToneAttrs>(title_, displayName_, path_, PRE_INSTALLED, 8);
+    alarmtoneAttrs_ = std::make_shared<ToneAttrs>(title_, displayName_, path_,
+        PRE_INSTALLED, TONE_CATEGORY_ALARM);
 
     return alarmtoneAttrs_;
 }
@@ -501,14 +506,15 @@ std::vector<std::shared_ptr<ToneAttrs>> SystemSoundManagerImpl::GetAlarmToneAttr
 
     std::string title_0 = "title_alarmtoneattrs0";
     std::string displayName_0 = "displayName_alarmtoneattrs0";
-    std::string path_0 = "/storage/media/local/data/com.ohos.ringtonelibrary.ringtonelibrarydata/test_insert_ringtone_library/alarmtoneattrs0.ogg";
-    alarmtoneAttrs_ = std::make_shared<ToneAttrs>(title_0, displayName_0, path_0, PRE_INSTALLED, 8);
+    std::string path_0 = "/storage/media/alarmtoneattrs0.ogg";
+    alarmtoneAttrs_ = std::make_shared<ToneAttrs>(title_0, displayName_0, path_0,
+        PRE_INSTALLED, TONE_CATEGORY_ALARM);
 
     alarmtoneAttrsArray_.push_back(alarmtoneAttrs_);
 
     std::string title_1 = "title_alarmtoneattrs1";
     std::string displayName_1 = "displayName_alarmtoneattrs1";
-    std::string path_1 = "/storage/media/local/data/com.ohos.ringtonelibrary.ringtonelibrarydata/test_insert_ringtone_library/alarmtoneattrs1.ogg";
+    std::string path_1 = "/storage/media/alarmtoneattrs1.ogg";
     alarmtoneAttrs_ = std::make_shared<ToneAttrs>(title_1, displayName_1, path_1, CUSTOMISED, 8);
     alarmtoneAttrsArray_.push_back(alarmtoneAttrs_);
 
@@ -526,8 +532,9 @@ int32_t SystemSoundManagerImpl::OpenAlarmTone(const std::shared_ptr<AbilityRunti
 int32_t SystemSoundManagerImpl::Close(const int32_t &fd)
 {
     MEDIA_LOGI("Close ");
+    int32_t fdn = 240429;
     MEDIA_LOGE("xmj SystemSoundManagerImpl::Close");
-    if (fd == 240429) {
+    if (fd == fdn) {
         MEDIA_LOGE("xmj SystemSoundManagerImpl::Close 111");
         return MSERR_OK;
     } else {
@@ -542,9 +549,6 @@ std::string SystemSoundManagerImpl::AddCustomizedToneByExternalUri(
 {
     std::lock_guard<std::mutex> lock(uriMutex_);
     MEDIA_LOGI("xmj AddCustomizedToneByExternalUri externalUri is [%{public}s]", externalUri.c_str());
-
-    std::string srcDir = "/storage/media/100/local/data/com.ohos.ringtonelibrary.ringtonelibrarydata0";
-    std::string srcDir = "/storage/media/100/local/data/com.ohos.ringtonelibrary.ringtonelibrarydata1";
 
     return externalUri.c_str();
 }
