@@ -67,9 +67,7 @@ ohos_static_library("media_engine_common_avcodeclist") {
     "../../../dfx:media_service_log_dfx_public_config",
   ]
 
-  deps = [
-    "../../../dfx:media_service_log_dfx",
-  ]
+  deps = [ "../../../dfx:media_service_log_dfx" ]
 
   external_deps = [
     "audio_framework:audio_client",
