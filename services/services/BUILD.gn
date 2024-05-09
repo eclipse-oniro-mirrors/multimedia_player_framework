@@ -70,7 +70,7 @@ config("media_service_config") {
     "screen_capture/server",
     "screen_capture/ipc",
     "observer",
-    "../engine/common/avcodeclist",    
+    "../engine/common/avcodeclist",
     "//foundation/multimedia/player_framework/services/include",
     "//foundation/multimedia/player_framework/services/services/factory",
     "//foundation/multimedia/player_framework/services/services/engine_intf",
