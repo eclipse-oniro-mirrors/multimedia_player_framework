@@ -70,14 +70,13 @@ config("media_service_config") {
     "screen_capture/server",
     "screen_capture/ipc",
     "observer",
+    "../engine/common/avcodeclist",    
     "//foundation/multimedia/player_framework/services/include",
     "//foundation/multimedia/player_framework/services/services/factory",
     "//foundation/multimedia/player_framework/services/services/engine_intf",
     "//foundation/multimedia/player_framework/services/utils/include",
     "//foundation/multimedia/player_framework/interfaces/inner_api/native",
     "//foundation/multimedia/player_framework/services/services/common",
-    "//foundation/multimedia/player_framework/services/engine/common/avcodeclist",
-    "//foundation/multimedia/player_framework/services/engine/common/recorder_profiles",
     "//foundation/multimedia/player_framework/services/engine/common/recorder_profiles",
   ]
 
