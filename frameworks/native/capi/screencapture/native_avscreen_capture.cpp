@@ -854,7 +854,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ContentFilter_AddWindowContent(
     struct ScreenCaptureContentFilterObject *contentFilterObj =
             reinterpret_cast<ScreenCaptureContentFilterObject *>(filter);
 
-    CHECK_AND_RETURN_RET_LOG(windowIDs == nullptr || windowCount <= 0,
+    CHECK_AND_RETURN_RET_LOG(windowIDs != nullptr || windowCount > 0,
                              AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input window invalid!");
     contentFilterObj->screenCaptureContentFilter.windowIDs = windowIDs;
     contentFilterObj->screenCaptureContentFilter.windowCount = windowCount;
