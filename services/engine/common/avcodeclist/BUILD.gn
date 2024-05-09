@@ -40,9 +40,9 @@ config("media_engine_common_avcodeclist_config") {
   ]
 
   include_dirs = [
-    "../../services/engine_intf",
-    "../../utils/include",
-    "../../../interfaces/inner_api/native",
+    "../../../services/engine_intf",
+    "../../../utils/include",
+    "../../../../interfaces/inner_api/native",
   ]
 }
 
@@ -64,11 +64,11 @@ ohos_static_library("media_engine_common_avcodeclist") {
 
   configs = [
     ":media_engine_common_avcodeclist_config",
-    "../../dfx:media_service_log_dfx_public_config",
+    "../../../dfx:media_service_log_dfx_public_config",
   ]
 
   deps = [
-    "../../dfx:media_service_log_dfx",
+    "../../../dfx:media_service_log_dfx",
   ]
 
   external_deps = [
