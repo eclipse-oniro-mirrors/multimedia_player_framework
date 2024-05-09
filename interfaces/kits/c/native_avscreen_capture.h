@@ -322,7 +322,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ExcludeContent(struct OH_AVScreen
  * @version 1.0
  */
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ContentFilter_AddWindowContent(
-        struct OH_AVScreenCapture_ContentFilter *filter, int32_t *windowIDs, int32_t windowCount);
+    struct OH_AVScreenCapture_ContentFilter *filter, int32_t *windowIDs, int32_t windowCount);
 #ifdef __cplusplus
 }
 #endif
