@@ -1468,7 +1468,9 @@ int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string &name, sptr<O
     }
     screenId_ = ScreenManager::GetInstance().CreateVirtualScreen(virScrOption);
     CHECK_AND_RETURN_RET_LOG(screenId_ >= 0, MSERR_UNKNOWN, "CreateVirtualScreen failed, invalid screenid");
-
+    if (contentFilter_.windowCount != 0) {
+        MEDIA_LOGI("CreateVirtualScreen contentFilter_ Count:%{public}d", contentFilter_.windowCount);
+    }
     auto screen = ScreenManager::GetInstance().GetScreenById(screenId_);
     if (screen == nullptr) {
         MEDIA_LOGE("GetScreenById failed");

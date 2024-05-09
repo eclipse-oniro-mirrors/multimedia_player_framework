@@ -846,3 +846,17 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetCanvasRotation(struct OH_AVScr
 
     return AV_SCREEN_CAPTURE_ERR_OK;
 }
+
+OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ContentFilter_AddWindowContent(
+        struct OH_AVScreenCapture_ContentFilter *filter, int32_t *windowIDs, int32_t windowCount)
+{
+    CHECK_AND_RETURN_RET_LOG(filter != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input filter is nullptr!");
+    struct ScreenCaptureContentFilterObject *contentFilterObj =
+            reinterpret_cast<ScreenCaptureContentFilterObject *>(filter);
+
+    CHECK_AND_RETURN_RET_LOG(windowIDs == nullptr || windowCount <= 0,
+                             AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input window invalid!");
+    contentFilterObj->screenCaptureContentFilter.windowIDs = windowIDs;
+    contentFilterObj->screenCaptureContentFilter.windowCount = windowCount;
+    return AV_SCREEN_CAPTURE_ERR_OK;
+}
