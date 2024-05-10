@@ -162,8 +162,8 @@ private:
         if (errCode == AV_SCREEN_CAPTURE_ERR_OK) {
             callback_(capture, reinterpret_cast<OH_AVBuffer *>(ohAvBuffer.GetRefPtr()), bufferType, timestamp,
                 userData_);
+            free(ohAvBuffer->buffer_->memory_->GetAddr());
         }
-        free(ohAvBuffer->buffer_->memory_->GetAddr());
         errCode = ReleaseAudioBuffer(screenCaptureObj->screenCapture_, audioSourceType);
         return errCode;
     }
@@ -853,8 +853,8 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ContentFilter_AddWindowContent(
     CHECK_AND_RETURN_RET_LOG(filter != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input filter is nullptr!");
     struct ScreenCaptureContentFilterObject *contentFilterObj =
             reinterpret_cast<ScreenCaptureContentFilterObject *>(filter);
-
-    CHECK_AND_RETURN_RET_LOG(windowIDs != nullptr && windowCount > 0,
+    constexpr int MAX_WINDOWS_COUNT = 1000;
+    CHECK_AND_RETURN_RET_LOG(windowIDs != nullptr && windowCount > 0 && windowCount < MAX_WINDOWS_COUNT,
                              AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input window invalid!");
     std::vector<int32_t> vec;
     for (int32_t i = 0; i < windowCount; i++) {
