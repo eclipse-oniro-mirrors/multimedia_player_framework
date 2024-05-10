@@ -515,7 +515,8 @@ std::vector<std::shared_ptr<ToneAttrs>> SystemSoundManagerImpl::GetAlarmToneAttr
     std::string title_1 = "title_alarmtoneattrs1";
     std::string displayName_1 = "displayName_alarmtoneattrs1";
     std::string path_1 = "/storage/media/alarmtoneattrs1.ogg";
-    alarmtoneAttrs_ = std::make_shared<ToneAttrs>(title_1, displayName_1, path_1, CUSTOMISED, 8);
+    alarmtoneAttrs_ = std::make_shared<ToneAttrs>(title_1, displayName_1, path_1,
+        CUSTOMISED, TONE_CATEGORY_ALARM);
     alarmtoneAttrsArray_.push_back(alarmtoneAttrs_);
 
     return alarmtoneAttrsArray_;
