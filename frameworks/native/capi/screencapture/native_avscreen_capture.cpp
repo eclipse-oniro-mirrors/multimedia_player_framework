@@ -853,8 +853,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ContentFilter_AddWindowContent(
     CHECK_AND_RETURN_RET_LOG(filter != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input filter is nullptr!");
     struct ScreenCaptureContentFilterObject *contentFilterObj =
             reinterpret_cast<ScreenCaptureContentFilterObject *>(filter);
-    constexpr int MAX_WINDOWS_COUNT = 1000;
-    CHECK_AND_RETURN_RET_LOG(windowIDs != nullptr && windowCount > 0 && windowCount < MAX_WINDOWS_COUNT,
+    CHECK_AND_RETURN_RET_LOG(windowIDs != nullptr && windowCount > 0 && windowCount < MAX_WINDOWS_LEN,
                              AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input window invalid!");
     std::vector<int32_t> vec;
     for (int32_t i = 0; i < windowCount; i++) {
