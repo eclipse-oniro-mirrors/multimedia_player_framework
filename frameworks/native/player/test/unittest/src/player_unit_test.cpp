@@ -863,6 +863,20 @@ HWTEST_F(PlayerUnitTest, Player_PrepareAsync_005, TestSize.Level2)
 }
 
 /**
+ * @tc.name  : Test Player PrepareAsync API
+ * @tc.number: Player_PrepareAsync_006
+ * @tc.desc  : Test Player Play->PrepareAsync
+ */
+HWTEST_F(PlayerUnitTest, Player_PrepareAsync_006, TestSize.Level2)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "H264_AAC_DRM.ts"));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_NE(MSERR_OK, player_->PrepareAsync());
+}
+
+/**
  * @tc.name  : Test Player SetVideoSurface API
  * @tc.number: Player_SetVideoSurface_001
  * @tc.desc  : Test Player SetVideoSurface interface
