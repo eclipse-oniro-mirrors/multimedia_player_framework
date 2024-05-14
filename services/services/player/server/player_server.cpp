@@ -202,7 +202,7 @@ int32_t PlayerServer::SetSource(int32_t fd, int64_t offset, int64_t size)
     int32_t ret;
     if (uriHelper_ != nullptr) {
         std::string uri = uriHelper_->FormattedUri();
-        MEDIA_LOGI("UriHelper already existed, uri: %{public}s", uri.c_str());
+        MEDIA_LOGI("UriHelper already existed, uri: %{private}s", uri.c_str());
         ret = InitPlayEngine(uri);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetSource Failed!");
     } else {
@@ -230,7 +230,7 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
 
     int32_t ret = taskMgr_.Init();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "task mgr init failed");
-    MEDIA_LOGI("current url is : %{public}s", url.c_str());
+    MEDIA_LOGI("current url is : %{private}s", url.c_str());
     auto engineFactory = EngineFactoryRepo::Instance().GetEngineFactory(
         IEngineFactory::Scene::SCENE_PLAYBACK, appUid_, url);
     CHECK_AND_RETURN_RET_LOG(engineFactory != nullptr, MSERR_CREATE_PLAYER_ENGINE_FAILED,
