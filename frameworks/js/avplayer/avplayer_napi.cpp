@@ -721,16 +721,7 @@ napi_value AVPlayerNapi::JsSeek(napi_env env, napi_callback_info info)
             "current state is not prepared/playing/paused/completed, unsupport seek operation");
         return result;
     }
-    auto task = std::make_shared<TaskHandler<void>>([jsPlayer, time, mode]() {
-        MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSeek Task In", FAKE_POINTER(this));
-        if (jsPlayer->player_ != nullptr) {
-            (void)jsPlayer->player_->Seek(time, jsPlayer->TransferSeekMode(mode));
-        }
-        MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSeek Task Out", FAKE_POINTER(this));
-    });
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSeek EnqueueTask In", FAKE_POINTER(jsPlayer));
-    (void)jsPlayer->taskQue_->EnqueueTask(task);
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSeek Out", FAKE_POINTER(jsPlayer));
+    SeekEnqueueTask(jsPlayer, time, mode);
     return result;
 }
 
@@ -793,11 +784,11 @@ napi_value AVPlayerNapi::JsSetSpeed(napi_env env, napi_callback_info info)
     }
 
     auto task = std::make_shared<TaskHandler<void>>([jsPlayer, mode]() {
-        MEDIA_LOGI("0x%{public}06" PRIXPTR " Speed Task In", FAKE_POINTER(this));
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " Speed Task In", FAKE_POINTER(jsPlayer));
         if (jsPlayer->player_ != nullptr) {
             (void)jsPlayer->player_->SetPlaybackSpeed(static_cast<PlaybackRateMode>(mode));
         }
-        MEDIA_LOGI("0x%{public}06" PRIXPTR " Speed Task Out", FAKE_POINTER(this));
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " Speed Task Out", FAKE_POINTER(jsPlayer));
     });
     MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSetSpeed EnqueueTask In", FAKE_POINTER(jsPlayer));
     (void)jsPlayer->taskQue_->EnqueueTask(task);
@@ -886,11 +877,11 @@ napi_value AVPlayerNapi::JsSelectBitrate(napi_env env, napi_callback_info info)
     }
 
     auto task = std::make_shared<TaskHandler<void>>([jsPlayer, bitrate]() {
-        MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSelectBitrate Task In", FAKE_POINTER(this));
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSelectBitrate Task In", FAKE_POINTER(jsPlayer));
         if (jsPlayer->player_ != nullptr) {
             (void)jsPlayer->player_->SelectBitRate(static_cast<uint32_t>(bitrate));
         }
-        MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSelectBitrate Task Out", FAKE_POINTER(this));
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSelectBitrate Task Out", FAKE_POINTER(jsPlayer));
     });
     MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSelectBitrate EnqueueTask In", FAKE_POINTER(jsPlayer));
     (void)jsPlayer->taskQue_->EnqueueTask(task);
@@ -1839,6 +1830,20 @@ bool AVPlayerNapi::JsHandleParameter(napi_env env, napi_value args, AVPlayerNapi
         rendererFlags,
     };
     return true;
+}
+
+void AVPlayerNapi::SeekEnqueueTask(AVPlayerNapi *jsPlayer, int32_t time, int32_t mode)
+{
+    auto task = std::make_shared<TaskHandler<void>>([jsPlayer, time, mode]() {
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSeek Task In", FAKE_POINTER(jsPlayer));
+        if (jsPlayer->player_ != nullptr) {
+            (void)jsPlayer->player_->Seek(time, jsPlayer->TransferSeekMode(mode));
+        }
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSeek Task Out", FAKE_POINTER(jsPlayer));
+    });
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSeek EnqueueTask In", FAKE_POINTER(jsPlayer));
+    (void)jsPlayer->taskQue_->EnqueueTask(task);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSeek Out", FAKE_POINTER(jsPlayer));
 }
 
 napi_value AVPlayerNapi::JsSetAudioRendererInfo(napi_env env, napi_callback_info info)
