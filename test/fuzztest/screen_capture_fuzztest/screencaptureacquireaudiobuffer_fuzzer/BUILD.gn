@@ -66,6 +66,7 @@ ohos_fuzztest("ScreenCaptureAcquireAudioBufferFuzzTest") {
     "access_token:libaccesstoken_sdk",
     "access_token:libnativetoken",
     "access_token:libtoken_setproc",
+    "graphic_2d:sync_fence", 
     "av_codec:av_codec_client",
     "graphic_surface:surface",
     "hilog:libhilog",
