@@ -283,6 +283,24 @@ OH_AVErrCode OH_AVPlayer_SetPlaybackSpeed(OH_AVPlayer *player, AVPlaybackSpeed s
 OH_AVErrCode OH_AVPlayer_GetPlaybackSpeed(OH_AVPlayer *player, AVPlaybackSpeed *speed);
 
 /**
+ *
+ *
+ *
+ *
+ *
+ */
+OH_AVErrCode OH_AVPlayer_SetAudioRendererInfo(OH_AVPlayer *player, OH_AudioStream_Usage streamUsage);
+
+/**
+ *
+ *
+ *
+ *
+ *
+ */
+OH_AVErrCode OH_AVPlayer_SetAudioInterruptMode(OH_AVPlayer *player, OH_AudioInterrupt_Mode interruptMode);
+
+/**
  * @brief set the bit rate use for hls player
  *
  * the playback bitrate expressed in bits per second, expressed in bits per second,
