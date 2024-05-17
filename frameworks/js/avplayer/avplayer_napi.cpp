@@ -167,8 +167,10 @@ void AVPlayerNapi::Destructor(napi_env env, void *nativeObject, void *finalize)
             task->GetResult(); // sync release
             MEDIA_LOGI("0x%{public}06" PRIXPTR " Destructor Wait Release Task End", FAKE_POINTER(jsPlayer));
         }
-        jsPlayer->WaitTaskQueStop();
-        delete jsPlayer;
+        std::thread([jsPlayer]() -> void {
+            jsPlayer->WaitTaskQueStop();
+            delete jsPlayer;
+        }).detach();
     }
     MEDIA_LOGI("Destructor success");
 }
