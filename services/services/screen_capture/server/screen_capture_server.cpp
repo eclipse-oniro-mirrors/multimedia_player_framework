@@ -75,6 +75,7 @@ static const std::string ICON_PATH_STOP = "/etc/screencapture/stop.png";
 static const std::string BUNDLE_NAME = "com.ohos.systemui";
 static const std::string ABILITY_NAME = "com.ohos.systemui.dialog";
 static const std::string BACK_GROUND_COLOR = "#E84026";
+static const std::string SCREEN_RECORDER_BUNDLE_NAME = "com.ohos.screenrecorder";
 static const int32_t SVG_HEIGHT = 80;
 static const int32_t SVG_WIDTH = 80;
 static const int32_t MDPI = 160;
