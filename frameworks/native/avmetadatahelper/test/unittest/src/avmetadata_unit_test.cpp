@@ -366,7 +366,7 @@ HWTEST_F(AVMetadataUnitTest, FetchArtPicture_Format_MP3_0200, Function | MediumT
 HWTEST_F(AVMetadataUnitTest, FetchFrameAtTime_Resolution_0100, TestSize.Level0)
 {
     std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
-        std::string("out_170_170.mp4");
+        std::string("H264_AAC.mp4");
     GetThumbnail(uri);
 }
 
