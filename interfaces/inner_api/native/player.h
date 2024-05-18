@@ -223,6 +223,12 @@ enum PlaybackRateMode : int32_t {
     SPEED_FORWARD_0_50_X,
     /* Video playback at 1.5x normal speed */
     SPEED_FORWARD_1_50_X,
+    /* Video playback at 0.5x normal speed */
+    SPEED_FORWARD_3_00_X,
+    /* Video playback at 1.5x normal speed */
+    SPEED_FORWARD_0_25_X,
+    /* Video playback at 0.5x normal speed */
+    SPEED_FORWARD_0_125_X,
 };
 
 class PlayerCallback {
