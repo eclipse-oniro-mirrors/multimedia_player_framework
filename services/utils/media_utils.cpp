@@ -47,9 +47,9 @@ const std::array<std::pair<PlaybackRateMode, float>, 10> PLAY_RATE_REFS = {
     std::make_pair(PlaybackRateMode::SPEED_FORWARD_2_00_X, 2.00),
     std::make_pair(PlaybackRateMode::SPEED_FORWARD_0_50_X, 0.50),
     std::make_pair(PlaybackRateMode::SPEED_FORWARD_1_50_X, 1.50),
-    std::make_pair(PlaybackRateMode::SPEED_FORWARD_3_00_X, 1.50),
-    std::make_pair(PlaybackRateMode::SPEED_FORWARD_0_25_X, 1.50),
-    std::make_pair(PlaybackRateMode::SPEED_FORWARD_0_125_X, 1.50),
+    std::make_pair(PlaybackRateMode::SPEED_FORWARD_3_00_X, 3.00),
+    std::make_pair(PlaybackRateMode::SPEED_FORWARD_0_25_X, 0.25),
+    std::make_pair(PlaybackRateMode::SPEED_FORWARD_0_125_X, 0.125),
 };
 }  // namespace
 
