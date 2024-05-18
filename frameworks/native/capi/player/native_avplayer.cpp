@@ -406,7 +406,7 @@ OH_AVErrCode OH_AVPlayer_SetAudioRendererInfo(OH_AVPlayer *player, OH_AudioStrea
     CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, AV_ERR_INVALID_VAL, "player_ is null");
     if (streamUsage < OH_AudioStream_Usage::AUDIOSTREAM_USAGE_UNKNOWN || 
         streamUsage > OH_AudioStream_Usage::AUDIOSTREAM_USAGE_NAVIGATION) {
-            return AV_ERR_INVALID_VAL;
+        return AV_ERR_INVALID_VAL;
     }
     Format format;
     (void)format.PutIntValue(PlayerKeys::STREAM_USAGE, streamUsage);
@@ -424,7 +424,7 @@ OH_AVErrCode OH_AVPlayer_SetAudioInterruptMode(OH_AVPlayer *player, OH_AudioInte
     CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, AV_ERR_INVALID_VAL, "player_ is null");
     if (interruptMode < OH_AudioInterrupt_Mode::AUDIOSTREAM_INTERRUPT_MODE_SHARE || 
         interruptMode > OH_AudioInterrupt_Mode::AUDIOSTREAM_INTERRUPT_MODE_INDEPENDENT) {
-            return AV_ERR_INVALID_VAL;
+        return AV_ERR_INVALID_VAL;
     }
     Format format;
     (void)format.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_MODE, interruptMode);
