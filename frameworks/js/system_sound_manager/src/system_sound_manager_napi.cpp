@@ -1634,7 +1634,7 @@ napi_value SystemSoundManagerNapi::AddCustomizedTone(napi_env env, napi_callback
 void SystemSoundManagerNapi::AsyncAddCustomizedTone(napi_env env, void *data)
 {
     SystemSoundManagerAsyncContext *context = static_cast<SystemSoundManagerAsyncContext *>(data);
-    if (context->toneAttrsNapi == 0) {
+    if (context->toneAttrsNapi == 0 || context->objectInfo->sysSoundMgrClient_ == nullptr) {
         context->status = ERROR;
     } else if (!context->externalUri.empty()) {
         context->uri = context->objectInfo->sysSoundMgrClient_->AddCustomizedToneByExternalUri(
