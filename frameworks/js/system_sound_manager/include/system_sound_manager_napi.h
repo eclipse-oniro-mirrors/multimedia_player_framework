@@ -80,7 +80,6 @@ private:
     static void AsyncGetDefaultRingtoneAttrs(napi_env env, void *data);
     static napi_value GetRingtoneAttrList(napi_env env, napi_callback_info info);
     static void AsyncGetRingtoneAttrList(napi_env env, void *data);
-
     static napi_value GetRingtonePlayer(napi_env env, napi_callback_info info);
     static void AsyncGetRingtonePlayer(napi_env env, void *data);
 
@@ -123,6 +122,7 @@ private:
     static napi_value RemoveCustomizedTone(napi_env env, napi_callback_info info);
     static void AsyncRemoveCustomizedTone(napi_env env, void *data);
     static void RemoveCustomizedToneAsyncCallbackComp(napi_env env, napi_status status, void* data);
+    static napi_value ThrowErrorAndReturn(napi_env env, const std::string& napiMessage, int32_t napiCode);
 
     static thread_local napi_ref sConstructor_;
     static thread_local napi_ref ringtoneType_;
@@ -147,6 +147,7 @@ struct SystemSoundManagerAsyncContext {
     int32_t ringtoneType;
     std::shared_ptr<SystemTonePlayer> systemTonePlayer;
     int32_t systemToneType;
+    std::shared_ptr<ToneAttrsNapi> toneAttrsNapi;
     std::shared_ptr<ToneAttrs> toneAttrs;
     std::vector<std::shared_ptr<ToneAttrs>> toneAttrsArray;
     std::string externalUri;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -28,6 +28,7 @@ enum ToneCustomizedType {
     PRE_INSTALLED = 0,
     CUSTOMISED = 1,
 };
+constexpr int32_t TONE_CATEGORY_INVALID = -1;
 constexpr int32_t TONE_CATEGORY_RINGTONE = 1;
 constexpr int32_t TONE_CATEGORY_TEXT_MESSAGE = 2;
 constexpr int32_t TONE_CATEGORY_NOTIFICATION = 4;
@@ -70,6 +71,11 @@ public:
         return uri_;
     }
 
+    void SetUri(const std::string uri)
+    {
+        uri_ = uri;
+    }
+
     ToneCustomizedType GetCustomizedType() const
     {
         return custType_;
@@ -86,10 +92,10 @@ public:
     }
 
 private:
-    std::string title_ = "";
-    std::string fileName_ = "";
-    std::string uri_ = "";
-    ToneCustomizedType custType_ = PRE_INSTALLED;
+    std::string title_ = "title_test";
+    std::string fileName_ = "fileName_test";
+    std::string uri_ = "uri_test";
+    ToneCustomizedType custType_ = CUSTOMISED;
     int32_t category_ = 0;
 };
 } // namespace Media

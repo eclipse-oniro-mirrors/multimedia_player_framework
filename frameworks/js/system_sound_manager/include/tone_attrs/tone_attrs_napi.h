@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+* Copyright (c) 2022-2024 Huawei Device Co., Ltd.
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
@@ -32,6 +32,7 @@ public:
     ~ToneAttrsNapi();
     static napi_value Init(napi_env env, napi_value exports);
     static napi_status NewInstance(napi_env env, std::shared_ptr<ToneAttrs>& nativeToneAttrs, napi_value& out);
+    std::shared_ptr<ToneAttrs> GetToneAttrs();
 
 private:
     static void Destructor(napi_env env, void *nativeObject, void *finalize_hint);
