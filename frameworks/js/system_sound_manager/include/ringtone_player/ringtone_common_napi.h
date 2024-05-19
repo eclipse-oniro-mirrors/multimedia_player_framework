@@ -35,7 +35,6 @@ namespace OHOS {
 namespace Media {
 const int32_t  NAPI_ERR_NO_PERMISSION = 201;
 const int32_t  NAPI_ERR_PERMISSION_DENIED = 202;
-const int32_t NAPI_ERR_PERMISSION_DENIED = 202;
 const int32_t  NAPI_ERR_INPUT_INVALID = 401;
 const int32_t  NAPI_ERR_URI_ERROR = 20700001;
 const int32_t  NAPI_ERR_OPERATE_NOT_ALLOWED = 5400102;
