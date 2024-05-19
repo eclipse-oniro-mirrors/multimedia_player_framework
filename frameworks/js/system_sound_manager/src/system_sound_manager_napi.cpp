@@ -968,8 +968,10 @@ napi_value SystemSoundManagerNapi::GetDefaultRingtoneAttrs(napi_env env, napi_ca
 void SystemSoundManagerNapi::AsyncGetDefaultRingtoneAttrs(napi_env env, void *data)
 {
     SystemSoundManagerAsyncContext *context = static_cast<SystemSoundManagerAsyncContext *>(data);
-    context->toneAttrs = context->objectInfo->sysSoundMgrClient_->GetDefaultRingtoneAttrs(
-        context->abilityContext_, static_cast<RingtoneType>(context->ringtoneType));
+    if (context->objectInfo->sysSoundMgrClient_ != nullptr) {
+        context->toneAttrs = context->objectInfo->sysSoundMgrClient_->GetDefaultRingtoneAttrs(
+            context->abilityContext_, static_cast<RingtoneType>(context->ringtoneType));
+    }
 }
 
 void SystemSoundManagerNapi::GetDefaultAttrsAsyncCallbackComp(napi_env env, napi_status status, void* data)
@@ -1250,9 +1252,11 @@ void SystemSoundManagerNapi::AsyncSetAlarmToneUri(napi_env env, void *data)
     if (context->uri.empty()) {
         context->status = ERROR;
     } else {
-        context->status = context->objectInfo->sysSoundMgrClient_->SetAlarmToneUri(
-            context->abilityContext_, context->uri);
-        context->status = SUCCESS;
+        if (context->objectInfo->sysSoundMgrClient_ != nullptr) {
+            context->status = context->objectInfo->sysSoundMgrClient_->SetAlarmToneUri(
+                context->abilityContext_, context->uri);
+            context->status = SUCCESS;
+        }
     }
 }
 
@@ -1736,9 +1740,11 @@ void SystemSoundManagerNapi::AsyncRemoveCustomizedTone(napi_env env, void *data)
     if (context->uri.empty()) {
         context->status = ERROR;
     } else {
-        context->status = context->objectInfo->sysSoundMgrClient_->RemoveCustomizedTone(
-            context->abilityContext_, context->uri);
-        context->status = SUCCESS;
+        if (context->objectInfo->sysSoundMgrClient_ != nullptr) {
+            context->status = context->objectInfo->sysSoundMgrClient_->RemoveCustomizedTone(
+                context->abilityContext_, context->uri);
+            context->status = SUCCESS;
+        }
     }
 }
 
