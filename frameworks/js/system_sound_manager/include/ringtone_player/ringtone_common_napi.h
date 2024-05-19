@@ -46,7 +46,6 @@ const int32_t  NAPI_ERR_SYSTEM = 6800301;
 
 const std::string NAPI_ERR_NO_PERMISSION_INFO = "Permission denied";
 const std::string NAPI_ERR_PERMISSION_DENIED_INFO = "Caller is not a system application";
-const std::string NAPI_ERROR_PERMISSION_DENIED_INFO = "not system app";
 const std::string NAPI_ERR_INPUT_INVALID_INFO = "input parameter type or number mismatch";
 const std::string NAPI_ERR_URI_ERROR_INFO = "Tone type mismatch";
 const std::string NAPI_ERR_OPERATE_NOT_ALLOWED_INFO = "Operation is not allowed";

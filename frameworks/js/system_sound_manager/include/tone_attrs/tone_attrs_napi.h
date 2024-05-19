@@ -56,4 +56,4 @@ private:
 };
 } // namespace Media
 } // namespace OHOS
-#endif // SYSTEM_TONE_NAPI_H
+#endif // TONE_ATTRS_NAPI_H
