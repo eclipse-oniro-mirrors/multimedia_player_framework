@@ -30,7 +30,6 @@ config("media_capi_config") {
     "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c",
     "$MEDIA_PLAYER_ROOT_DIR/frameworks/native/capi/common",
     "$MEDIA_PLAYER_ROOT_DIR/services/utils/include",
-    "//interface/sdk_c/multimedia/audio_framework/common",
   ]
 
   cflags = [
@@ -116,6 +115,7 @@ ohos_shared_library("avplayer") {
   deps = [ "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native:media_client" ]
 
   external_deps = [
+    "audio_framework:audio_capturer",
     "av_codec:av_codec_client",
     "c_utils:utils",
     "graphic_surface:surface",

@@ -43,6 +43,7 @@
 #include "native_averrors.h"
 #include "avplayer_base.h"
 #include "native_audiostream_base.h"
+#include "avplayer.h"
 
 
 #ifdef __cplusplus
