@@ -433,6 +433,22 @@ OH_AVErrCode OH_AVPlayer_SetAudioInterruptMode(OH_AVPlayer *player, OH_AudioInte
     return AV_ERR_OK;
 }
 
+OH_AVErrCode OH_AVPlayer_SetAudioEffectMode(OH_AVPlayer *player, OH_AudioStream_AudioEffectMode effectMode)
+{
+    CHECK_AND_RETURN_RET_LOG(player != nullptr, AV_ERR_INVALID_VAL, "input player is nullptr!");
+    struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
+    CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, AV_ERR_INVALID_VAL, "player_ is null");
+    if (effectMode < OH_AudioStream_AudioEffectMode::EFFECT_NONE || 
+        effectMode > OH_AudioStream_AudioEffectMode::EFFECT_DEFAULT) {
+        return AV_ERR_INVALID_VAL;
+    }
+    Format format;
+    (void)format.PutIntValue(PlayerKeys::AUDIO_EFFECT_MODE, effectMode);
+    int32_t ret = playerObj->player_->SetParameter(format);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "player SetAudioEffectMode failed");
+    return AV_ERR_OK;
+}
+
 OH_AVErrCode OH_AVPlayer_SelectBitRate(OH_AVPlayer *player, uint32_t bitRate)
 {
     CHECK_AND_RETURN_RET_LOG(player != nullptr, AV_ERR_INVALID_VAL, "input player is nullptr!");
