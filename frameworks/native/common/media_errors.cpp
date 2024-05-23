@@ -191,7 +191,7 @@ const std::map<MediaServiceExtErrCodeAPI9, std::string> MSEXTERRCODE_API9_INFOS 
     {MSERR_EXT_API9_IO, "IO Error: "},
     {MSERR_EXT_API9_TIMEOUT, "Network Timeout: "},
     {MSERR_EXT_API9_SERVICE_DIED, "Service Died: "},
-    {MSERR_EXT_API9_UNSUPPORT_FORMAT, "Unsupport Format: "},
+    {MSERR_EXT_API9_UNSUPPORT_FORMAT, "Unsupported Format: "},
     {MSERR_EXT_API9_AUDIO_INTERRUPTED, "Audio Interruped: "},
 };
 
@@ -260,7 +260,7 @@ std::string ErrorMessageServiceDied(const std::string& param1, const std::string
 std::string ErrorMessageUnsupportFormat(const std::string& param1, const std::string& param2)
 {
     (void)param2;
-    std::string message = "The format " + param1 + " is not support.";
+    std::string message = "The format " + param1 + " is not supported.";
     return message;
 }
 
