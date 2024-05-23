@@ -260,7 +260,7 @@ std::string ErrorMessageServiceDied(const std::string& param1, const std::string
 std::string ErrorMessageUnsupportFormat(const std::string& param1, const std::string& param2)
 {
     (void)param2;
-    std::string message = "The format " + param1 + " is not supported.";
+    std::string message = "The format " + param1 + " is not support.";
     return message;
 }
 
