@@ -41,6 +41,8 @@ public:
     sptr<OHOS::SurfaceBuffer> AcquireVideoBuffer(int32_t &fence, int64_t &timestamp, OHOS::Rect &damage) override;
     int32_t ReleaseAudioBuffer(OHOS::Media::AudioCaptureSourceType type) override;
     int32_t ReleaseVideoBuffer() override;
+    int32_t ExcludeWindowContent(int32_t *windowIDs, int32_t windowCount) override;
+    int32_t ExcludeAudioContent(AVScreenCaptureFilterableAudioContent audioType) override;
     bool IsErrorCallBackEnabled() override
     {
         return isErrorCallBackEnabled_;
