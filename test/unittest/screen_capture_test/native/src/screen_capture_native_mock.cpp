@@ -179,5 +179,29 @@ int32_t ScreenCaptureNativeMock::ReleaseVideoBuffer()
     UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
     return screenCapture_->ReleaseVideoBuffer();
 }
+
+int32_t ScreenCaptureNativeMock::ExcludeWindowContent(int32_t *windowIDs, int32_t windowCount)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
+    ScreenCaptureContentFilter filter;
+    std::vector<int32_t> vec;
+    for (int32_t i = 0; i < windowCount; i++) {
+        vec.push_back(static_cast<int32_t>(*(windowIDs + i)));
+    }
+    filter.windowIDsVec = vec;
+    return screenCapture_->ExcludeContent(filter);
+}
+
+int32_t ScreenCaptureNativeMock::ExcludeAudioContent(int32_t &audioType, int32_t audioCount)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
+    CHECK_AND_RETURN_RET_LOG(
+        audioType >= OH_AVScreenCaptureFilterableAudioContent::OH_SCREEN_CAPTURE_NOTIFICATION_AUDIO ||
+        audioType <= OH_AVScreenCaptureFilterableAudioContent::OH_SCREEN_CAPTURE_CURRENT_APP_AUDIO,
+        AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input audioType invalid!");
+    ScreenCaptureContentFilter filter;
+    filter.filteredAudioContents.insert(static_cast<AVScreenCaptureFilterableAudioContent>(audioType));
+    return screenCapture_->ExcludeContent(filter);
+}
 } // namespace Media
 } // namespace OHOS
