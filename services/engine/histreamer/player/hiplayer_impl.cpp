@@ -481,9 +481,6 @@ int32_t HiPlayerImpl::Pause()
         MEDIA_LOGE("completed not allow pause");
         return TransStatus(Status::OK);
     }
-    if (audioSink_ != nullptr) {
-        audioSink_->SetVolumeWithRamp(MIN_MEDIA_VOLUME, FADE_OUT_LATENCY);
-    }
     Status ret = Status::OK;
     syncManager_->Pause();
     ret = pipeline_->Pause();
@@ -745,10 +742,6 @@ Status HiPlayerImpl::doPreparedSeek(int64_t seekPos, PlayerSeekMode mode)
 Status HiPlayerImpl::doStartedSeek(int64_t seekPos, PlayerSeekMode mode)
 {
     MEDIA_LOGI("doStartedSeek");
-    // audio fade in and out
-    if (audioSink_ != nullptr) {
-        audioSink_->SetVolumeWithRamp(MIN_MEDIA_VOLUME, FADE_OUT_LATENCY);
-    }
     pipeline_ -> Pause();
     pipeline_ -> Flush();
     auto rtv = doSeek(seekPos, mode);
