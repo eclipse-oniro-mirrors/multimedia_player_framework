@@ -248,7 +248,6 @@ void PlayerServer::PreparedState::HandleStateChange(int32_t newState)
         server_.lastOpStatue_ = PLAYER_STATE_ERROR;
         server_.ChangeState(server_.initializedState_);
         (void)server_.taskMgr_.MarkTaskDone("prepared->error done");
-        
     }
 }
 
