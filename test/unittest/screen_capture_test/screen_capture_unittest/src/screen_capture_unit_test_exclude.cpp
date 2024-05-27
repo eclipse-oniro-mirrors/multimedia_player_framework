@@ -328,8 +328,8 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_save_file_05, Tes
     SetRecorderInfo("screen_capture_exclude_content_save_file_05.mp4", recorderInfo);
     SetConfigFile(config_, recorderInfo);
     AudioCaptureInfo micCapInfo = {
-        .audioSampleRate = 16000,
-        .audioChannels = 2,
+        .audioSampleRate = 0,
+        .audioChannels = 0,
         .audioSource = AudioCaptureSourceType::SOURCE_DEFAULT
     };
     config_.audioInfo.micCapInfo = micCapInfo;
@@ -364,8 +364,8 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_save_file_06, Tes
     SetRecorderInfo("screen_capture_exclude_content_save_file_06.mp4", recorderInfo);
     SetConfigFile(config_, recorderInfo);
     AudioCaptureInfo micCapInfo = {
-        .audioSampleRate = 16000,
-        .audioChannels = 2,
+        .audioSampleRate = 0,
+        .audioChannels = 0,
         .audioSource = AudioCaptureSourceType::SOURCE_DEFAULT
     };
     config_.audioInfo.micCapInfo = micCapInfo;
@@ -546,7 +546,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_after_start_01, T
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
     vector<int> windowIds = {1, 3, 5};
-    EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeWindowContent(&windowIds[0], static_cast<int32_t>(windowIds.size())));
+    EXPECT_NE(MSERR_OK, screenCapture_->ExcludeWindowContent(&windowIds[0], static_cast<int32_t>(windowIds.size())));
     sleep(10);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
@@ -574,7 +574,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_after_start_02, T
     EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_));
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
-    EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeAudioContent(SCREEN_CAPTURE_NOTIFICATION_AUDIO));
+    EXPECT_NE(MSERR_OK, screenCapture_->ExcludeAudioContent(SCREEN_CAPTURE_NOTIFICATION_AUDIO));
     sleep(10);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
@@ -603,9 +603,9 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_after_start_03, T
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
     vector<int> windowIds = {1, 3, 5};
-    EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeWindowContent(&windowIds[0], static_cast<int32_t>(windowIds.size())));
-    EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeAudioContent(SCREEN_CAPTURE_NOTIFICATION_AUDIO));
-    EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeAudioContent(SCREEN_CAPTURE_CURRENT_APP_AUDIO));
+    EXPECT_NE(MSERR_OK, screenCapture_->ExcludeWindowContent(&windowIds[0], static_cast<int32_t>(windowIds.size())));
+    EXPECT_NE(MSERR_OK, screenCapture_->ExcludeAudioContent(SCREEN_CAPTURE_NOTIFICATION_AUDIO));
+    EXPECT_NE(MSERR_OK, screenCapture_->ExcludeAudioContent(SCREEN_CAPTURE_CURRENT_APP_AUDIO));
     sleep(10);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
