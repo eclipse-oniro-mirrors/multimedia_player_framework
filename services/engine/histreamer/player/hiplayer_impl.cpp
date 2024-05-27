@@ -1381,6 +1381,10 @@ void HiPlayerImpl::OnEvent(const Event &event)
             HandleResolutionChangeEvent(event);
             break;
         }
+        case EventType::EVENT_SOURCE_BITRATE_START: {
+            HandleBitrateStartEvent(event);
+            break;
+        }
         default:
             break;
     }
@@ -1627,6 +1631,15 @@ void HiPlayerImpl::HandleResolutionChangeEvent(const Event& event)
         videoWidth_.load(), videoHeight_.load());
     // notify size change
     NotifyResolutionChange();
+#endif
+}
+
+void HiPlayerImpl::HandleBitrateStartEvent(const Event& event)
+{
+#ifdef SUPPORT_VIDEO
+    uint32_t bitrate = AnyCast<uint32_t>(event.param);
+    MEDIA_LOG_I("HandleBitrateStartEvent in, bitrate is " PUBLIC_LOG_U32, bitrate);
+    videoDecoder_->SetBitrateStart();
 #endif
 }
 
