@@ -115,7 +115,6 @@ ohos_shared_library("avplayer") {
   deps = [ "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native:media_client" ]
 
   external_deps = [
-    "audio_framework:audio_capturer",
     "av_codec:av_codec_client",
     "c_utils:utils",
     "graphic_surface:surface",
@@ -125,7 +124,7 @@ ohos_shared_library("avplayer") {
   ]
 
   public_external_deps = ["audio_framework:audio_capturer"]
-  
+
   if (multimedia_player_framework_support_drm) {
     public_external_deps = [
       "drm_framework:drm_framework",
