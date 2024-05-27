@@ -2591,7 +2591,7 @@ HWTEST_F(PlayerUnitTest, Player_Media_Error, TestSize.Level0)
         MSErrorToExtError(static_cast<MediaServiceErrCode>(errCode));
         MSErrorToExtErrorAPI9String(static_cast<MediaServiceErrCode>(errCode), "test1", "test2");
         MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errCode));
-    } 
+    }
     for (int32_t code = MSERR_SERVICE_DIED; code <= MSERR_EXTEND_START + 1; code++) {
         MSErrorToString(static_cast<MediaServiceErrCode>(code));
         MSErrorToExtErrorString(static_cast<MediaServiceErrCode>(code));
