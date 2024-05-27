@@ -245,7 +245,7 @@ void PlayerServer::PreparedState::HandleStateChange(int32_t newState)
         (void)server_.taskMgr_.MarkTaskDone("prepared->stopped done");
     } else if (newState == PLAYER_STATE_ERROR) {
         MediaTrace::TraceEnd("PlayerServer::Error", FAKE_POINTER(&server_));
-        server_.lastOpStatue_ = PLAYER_STATE_ERROR;
+        server_.lastOpStatus_ = PLAYER_STATE_ERROR;
         server_.ChangeState(server_.initializedState_);
         (void)server_.taskMgr_.MarkTaskDone("prepared->error done");
     }
