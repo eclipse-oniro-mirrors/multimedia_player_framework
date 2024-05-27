@@ -124,7 +124,7 @@ ohos_shared_library("avplayer") {
     "window_manager:libdm",
   ]
   if (multimedia_player_framework_support_drm) {
-    public_external_deps += [
+    public_external_deps = [
       "drm_framework:drm_framework",
       "drm_framework:native_drm",
     ]
