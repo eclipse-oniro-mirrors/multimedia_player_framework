@@ -77,6 +77,7 @@ private:
     bool isErrorCallBackEnabled_ = false;
     bool isDataCallBackEnabled_ = false;
     bool isStateChangeCallBackEnabled_ = false;
+    struct OH_AVScreenCapture_ContentFilter *contentFilter_ = nullptr;
 };
 } // namespace Media
 } // namespace OHOS

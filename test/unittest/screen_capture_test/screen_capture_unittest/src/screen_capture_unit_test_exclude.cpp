@@ -40,6 +40,7 @@ namespace Media {
  */
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_01, TestSize.Level2)
 {
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_01 before");
     SetConfig(config_);
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
 
@@ -57,6 +58,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_01, TestSize.Leve
     sleep(10);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_01 before");
 }
 
 /**
@@ -67,6 +69,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_01, TestSize.Leve
  */
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_02, TestSize.Level2)
 {
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_02 before");
     SetConfig(config_);
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
 
@@ -83,6 +86,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_02, TestSize.Leve
     sleep(10);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_02 before");
 }
 
 /**
@@ -93,6 +97,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_02, TestSize.Leve
  */
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_03, TestSize.Level2)
 {
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_03 before");
     SetConfig(config_);
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
 
@@ -109,6 +114,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_03, TestSize.Leve
     sleep(10);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_03 before");
 }
 
 /**
@@ -119,6 +125,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_03, TestSize.Leve
  */
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_04, TestSize.Level2)
 {
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_04 before");
     SetConfig(config_);
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
 
@@ -137,6 +144,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_04, TestSize.Leve
     sleep(10);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_04 before");
 }
 
 /**
@@ -147,6 +155,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_04, TestSize.Leve
  */
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_05, TestSize.Level2)
 {
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_05 before");
     SetConfig(config_);
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
 
@@ -164,6 +173,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_05, TestSize.Leve
     sleep(10);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_05 before");
 }
 
 /**
