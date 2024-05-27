@@ -331,8 +331,8 @@ int32_t ScreenCaptureCapiMock::ExcludeWindowContent(int32_t *windowIDs, int32_t 
         UNITTEST_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "release content failed");
     }
     contentFilter_ = OH_AVScreenCapture_CreateContentFilter();
-    OH_AVScreenCapture_ContentFilter_AddWindowContent(contentFilter, windowIDs, windowCount);
-    return OH_AVScreenCapture_ExcludeContent(screenCapture_, contentFilter);
+    OH_AVScreenCapture_ContentFilter_AddWindowContent(contentFilter_, windowIDs, windowCount);
+    return OH_AVScreenCapture_ExcludeContent(screenCapture_, contentFilter_);
 }
 
 int32_t ScreenCaptureCapiMock::ExcludeAudioContent(AVScreenCaptureFilterableAudioContent audioType)
@@ -344,7 +344,7 @@ int32_t ScreenCaptureCapiMock::ExcludeAudioContent(AVScreenCaptureFilterableAudi
         UNITTEST_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "release content failed");
     }
     contentFilter_ = OH_AVScreenCapture_CreateContentFilter();
-    OH_AVScreenCapture_ContentFilter_AddAudioContent(contentFilter,
+    OH_AVScreenCapture_ContentFilter_AddAudioContent(contentFilter_,
         static_cast<OH_AVScreenCaptureFilterableAudioContent>(audioType));
-    return OH_AVScreenCapture_ExcludeContent(screenCapture_, contentFilter);
+    return OH_AVScreenCapture_ExcludeContent(screenCapture_, contentFilter_);
 }
