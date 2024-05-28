@@ -43,8 +43,8 @@ ohos_unittest("screen_capture_native_unit_test") {
       "native/screen_capture_mock_factory.cpp",
       "native/src/screen_capture_native_mock.cpp",
       "screen_capture_unittest/src/screen_capture_unit_test.cpp",
-      "screen_capture_unittest/src/screen_capture_unit_test_state.cpp",
       "screen_capture_unittest/src/screen_capture_unit_test_exclude.cpp",
+      "screen_capture_unittest/src/screen_capture_unit_test_state.cpp",
     ]
   }
 
@@ -104,8 +104,8 @@ ohos_unittest("screen_capture_capi_unit_test") {
       "capi/screen_capture_mock_factory.cpp",
       "capi/src/screen_capture_capi_mock.cpp",
       "screen_capture_unittest/src/screen_capture_unit_test.cpp",
-      "screen_capture_unittest/src/screen_capture_unit_test_state.cpp",
       "screen_capture_unittest/src/screen_capture_unit_test_exclude.cpp",
+      "screen_capture_unittest/src/screen_capture_unit_test_state.cpp",
     ]
   }
 
