@@ -1069,20 +1069,20 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_video_size_0004, 
 }
 
 /**
- * @tc.name: screen_capture_exclude_content_video_size_0001
+ * @tc.name: screen_capture_exclude_content_video_size_0005
  * @tc.desc: screen capture with 160x160
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_video_size_0001, TestSize.Level2)
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_video_size_0005, TestSize.Level2)
 {
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_video_size_0001 before");
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_video_size_0005 before");
     SetConfig(config_);
     config_.videoInfo.videoCapInfo.videoFrameWidth = 160;
     config_.videoInfo.videoCapInfo.videoFrameHeight = 160;
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
 
-    std::string name = SCREEN_CAPTURE_ROOT_DIR + "screen_capture_exclude_content_video_size_0001.yuv";
+    std::string name = SCREEN_CAPTURE_ROOT_DIR + "screen_capture_exclude_content_video_size_0005.yuv";
     vFile = fopen(name.c_str(), "w+");
     if (vFile == nullptr) {
         cout << "vFile video open failed, " << strerror(errno) << endl;
@@ -1107,7 +1107,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_video_size_0001, 
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     CloseFile();
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_video_size_0001 after");
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_video_size_0005 after");
 }
 
 /**
