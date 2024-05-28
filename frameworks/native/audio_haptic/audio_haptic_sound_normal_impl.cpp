@@ -72,6 +72,19 @@ int32_t AudioHapticSoundNormalImpl::PrepareSound()
     return MSERR_OK;
 }
 
+char AudioHapticSoundNormalImpl::*GetCompliantPath(const std::string &originalUri)
+{
+    char *realpathRes = NULL;
+    realpathRes = realpath(originalUri.c_str(),NULL);
+    if (realpathRes == NULL) {
+        return "";
+    }
+    if (!verify_file(realpathRes)) {
+        return "";
+    }
+    return realpathRes;
+}
+
 int32_t AudioHapticSoundNormalImpl::ResetAVPlayer()
 {
     // Reset the player and reload it.
@@ -82,7 +95,8 @@ int32_t AudioHapticSoundNormalImpl::ResetAVPlayer()
         (void)close(fileDes_);
         fileDes_ = -1;
     }
-    fileDes_ = open(audioUri_.c_str(), O_RDONLY);
+    char *realpathRes = GetCompliantPath(systemToneUri);
+    fileDes_ = open(realpathRes, O_RDONLY);
     if (fileDes_ == -1) {
         MEDIA_LOGE("Prepare: Failed to open the audio uri for avplayer.");
         return MSERR_OPEN_FILE_FAILED;

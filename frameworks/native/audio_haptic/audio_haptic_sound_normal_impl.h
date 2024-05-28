@@ -44,6 +44,7 @@ public:
     void NotifyFirstFrameEvent(uint64_t latency);
     void NotifyInterruptEvent(AudioStandard::InterruptEvent &interruptEvent);
     void NotifyEndOfStreamEvent();
+    char *GetCompliantPath(const std::string &originalUri)
 
 private:
     int32_t LoadAVPlayer();
@@ -88,7 +89,7 @@ private:
     void HandleAudioFirstFrameEvent(int32_t extra, const Format &infoBody);
 
     std::weak_ptr<AudioHapticSoundNormalImpl> soundNormalImpl_;
-    AudioHapticPlayerState playerState_;
+    AudioHapticPlayerState playerState_ =AudioHapticPlayerState::STATE_NEW;
 };
 } // namespace Media
 } // namespace OHOS
