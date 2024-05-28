@@ -82,7 +82,7 @@ int32_t AudioHapticSoundNormalImpl::ResetAVPlayer()
         (void)close(fileDes_);
         fileDes_ = -1;
     }
-    fileDes_ = open(systemToneUri.c_str(), O_RDONLY);
+    fileDes_ = open(audioUri_.c_str(), O_RDONLY);
     if (fileDes_ == -1) {
         MEDIA_LOGE("Prepare: Failed to open the audio uri for avplayer.");
         return MSERR_OPEN_FILE_FAILED;
