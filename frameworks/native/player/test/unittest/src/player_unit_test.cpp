@@ -2583,8 +2583,8 @@ HWTEST_F(PlayerUnitTest, Player_SetEffect_002, TestSize.Level0)
  */
 HWTEST_F(PlayerUnitTest, Player_Media_Error, TestSize.Level0)
 {
-    std::arrat<MediaServiceErrCode, 5> errCodes = {MSERR_OK, MSERR_NO_MEMORY, MSERR_INVALID_OPERATION,
-        MSERR_INVALID_VAL, MSERR_UNKNOW};
+    std::array<MediaServiceErrCode, 5> errCodes = {MSERR_OK, MSERR_NO_MEMORY, MSERR_INVALID_OPERATION,
+        MSERR_INVALID_VAL, MSERR_UNKNOWN};
     for (const auto& errCode : errCodes) {
         MSErrorToString(static_cast<MediaServiceErrCode>(errCode));
         MSErrorToExtErrorString(static_cast<MediaServiceErrCode>(errCode));
@@ -2604,8 +2604,8 @@ HWTEST_F(PlayerUnitTest, Player_Media_Error, TestSize.Level0)
         MSExtErrorToString(static_cast<MediaServiceExtErrCode>(code));
     }
 
-    std::arrat<MediaServiceExtErrCodeAPI9, 5> errCodes = {MSERR_EXT_API9_OK, MSERR_EXT_API9_NO_PERMISSION,
-        MSERR_EXT_API9_premission_DENIED, MSERR_EXT_API9_INVALID_PARAMETER, MSERR_EXT_API9_UNSUPPORT_CAPABILITY};
+    std::array<MediaServiceExtErrCodeAPI9, 5> errCodesAPI9 = {MSERR_EXT_API9_OK, MSERR_EXT_API9_NO_PERMISSION,
+        MSERR_EXT_API9_PERMISSION_DENIED, MSERR_EXT_API9_INVALID_PARAMETER, MSERR_EXT_API9_UNSUPPORT_CAPABILITY};
     for (const auto& errCodeApi9 : errCodesAPI9) {
         MSExtErrorAPI9ToString(static_cast<MediaServiceExtErrCodeAPI9>(errCodeApi9), "test1", "test2");
         MSExtAVErrorToString(static_cast<MediaServiceExtErrCodeAPI9>(errCodeApi9));
