@@ -259,6 +259,146 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_007, TestSize.Lev
 }
 
 /**
+ * @tc.name: screen_capture_exclude_content_008
+ * @tc.desc: screen capture exclude window and audio content test
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_008, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_008 before");
+    SetConfig(config_);
+    config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
+
+    aFlag = 0;
+    vFlag = 0;
+    bool isMicrophone = true;
+    screenCaptureCb_ = std::make_shared<ScreenCaptureUnitTestCallback>(screenCapture_, aFile, vFile, aFlag, vFlag);
+    ASSERT_NE(nullptr, screenCaptureCb_);
+    screenCapture_->SetMicrophoneEnabled(isMicrophone);
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+    vector<int> windowIds = {1, 3, 5};
+    EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeWindowContent(&windowIds[0], static_cast<int32_t>(windowIds.size())));
+    EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeAudioContent(SCREEN_CAPTURE_NOTIFICATION_AUDIO));
+    EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeAudioContent(SCREEN_CAPTURE_CURRENT_APP_AUDIO));
+    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
+    sleep(10);
+    EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
+    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_008 before");
+}
+
+/**
+ * @tc.name: screen_capture_exclude_content_009
+ * @tc.desc: screen capture exclude audio content
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_009, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_009 before");
+    SetConfig(config_);
+    AudioCaptureInfo micCapInfo = {
+        .audioSampleRate = 0,
+        .audioChannels = 0,
+        .audioSource = AudioCaptureSourceType::SOURCE_DEFAULT
+    };
+    config_.audioInfo.micCapInfo = micCapInfo;
+    AudioCaptureInfo innerCapInfo = {
+        .audioSampleRate = 0,
+        .audioChannels = 0,
+        .audioSource = AudioCaptureSourceType::ALL_PLAYBACK
+    };
+    config_.audioInfo.innerCapInfo = innerCapInfo;
+    config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
+
+    aFlag = 0;
+    vFlag = 0;
+    bool isMicrophone = true;
+    screenCaptureCb_ = std::make_shared<ScreenCaptureUnitTestCallback>(screenCapture_, aFile, vFile, aFlag, vFlag);
+    ASSERT_NE(nullptr, screenCaptureCb_);
+    screenCapture_->SetMicrophoneEnabled(isMicrophone);
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+    vector<int> windowIds = {1, 3, 5};
+    EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeWindowContent(&windowIds[0], static_cast<int32_t>(windowIds.size())));
+    EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeAudioContent(SCREEN_CAPTURE_CURRENT_APP_AUDIO));
+    EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeAudioContent(SCREEN_CAPTURE_NOTIFICATION_AUDIO));
+    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
+    sleep(10);
+    EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
+    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_009 before");
+}
+
+/**
+ * @tc.name: screen_capture_exclude_content_010
+ * @tc.desc: screen capture exclude window content test
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_010, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_010 before");
+    SetConfig(config_);
+    config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
+
+    aFlag = 0;
+    vFlag = 0;
+    bool isMicrophone = true;
+    screenCaptureCb_ = std::make_shared<ScreenCaptureUnitTestCallback>(screenCapture_, aFile, vFile, aFlag, vFlag);
+    ASSERT_NE(nullptr, screenCaptureCb_);
+    screenCapture_->SetMicrophoneEnabled(isMicrophone);
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+    vector<int> windowIds1 = {1, 3, 5};
+    EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeWindowContent(&windowIds1[0], static_cast<int32_t>(windowIds1.size())));
+    vector<int> windowIds2 = {2, 4, 6};
+    EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeWindowContent(&windowIds2[0], static_cast<int32_t>(windowIds2.size())));
+    EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeAudioContent(SCREEN_CAPTURE_NOTIFICATION_AUDIO));
+    EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeAudioContent(SCREEN_CAPTURE_CURRENT_APP_AUDIO));
+    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
+    sleep(10);
+    EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
+    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_010 before");
+}
+
+/**
+ * @tc.name: screen_capture_exclude_content_011
+ * @tc.desc: screen capture exclude window content test
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_011, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_011 before");
+    SetConfig(config_);
+    config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
+
+    aFlag = 0;
+    vFlag = 0;
+    bool isMicrophone = true;
+    screenCaptureCb_ = std::make_shared<ScreenCaptureUnitTestCallback>(screenCapture_, aFile, vFile, aFlag, vFlag);
+    ASSERT_NE(nullptr, screenCaptureCb_);
+    screenCapture_->SetMicrophoneEnabled(isMicrophone);
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+    vector<int> windowIds1 = {1, 3, 5};
+    EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeWindowContent(&windowIds1[0], static_cast<int32_t>(windowIds1.size())));
+    vector<int> windowIds2 = {1, 4, 6};
+    EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeWindowContent(&windowIds2[0], static_cast<int32_t>(windowIds2.size())));
+    EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeAudioContent(SCREEN_CAPTURE_NOTIFICATION_AUDIO));
+    EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeAudioContent(SCREEN_CAPTURE_NOTIFICATION_AUDIO));
+    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
+    sleep(10);
+    EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
+    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_011 before");
+}
+
+/**
  * @tc.name: screen_capture_exclude_content_save_file_01
  * @tc.desc: screen capture exclude window content test with save file
  * @tc.type: FUNC
@@ -390,6 +530,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_save_file_04, Tes
     vector<int> windowIds = {1, 3, 5};
     EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeWindowContent(&windowIds[0], static_cast<int32_t>(windowIds.size())));
     EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeAudioContent(SCREEN_CAPTURE_NOTIFICATION_AUDIO));
+    EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeAudioContent(SCREEN_CAPTURE_CURRENT_APP_AUDIO));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenRecording());
     sleep(RECORDER_TIME);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenRecording());
@@ -435,6 +576,45 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_save_file_05, Tes
 }
 
 /**
+ * @tc.name: screen_capture_exclude_content_save_file_06
+ * @tc.desc: screen capture exclude window content test with save file
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_save_file_06, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_save_file_06 before");
+    RecorderInfo recorderInfo;
+    SetRecorderInfo("screen_capture_exclude_content_save_file_06.mp4", recorderInfo);
+    SetConfigFile(config_, recorderInfo);
+    AudioCaptureInfo micCapInfo = {
+        .audioSampleRate = 16000,
+        .audioChannels = 2,
+        .audioSource = AudioCaptureSourceType::SOURCE_DEFAULT
+    };
+    config_.audioInfo.micCapInfo = micCapInfo;
+    AudioCaptureInfo innerCapInfo = {
+        .audioSampleRate = 16000,
+        .audioChannels = 2,
+        .audioSource = AudioCaptureSourceType::ALL_PLAYBACK
+    };
+    config_.audioInfo.innerCapInfo = innerCapInfo;
+
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+    vector<int> windowIds1 = {1, 3, 5};
+    EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeWindowContent(&windowIds1[0], static_cast<int32_t>(windowIds1.size())));
+    vector<int> windowIds2 = {2, 4, 6};
+    EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeWindowContent(&windowIds2[0], static_cast<int32_t>(windowIds2.size())));
+    EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeAudioContent(SCREEN_CAPTURE_NOTIFICATION_AUDIO));
+    EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeAudioContent(SCREEN_CAPTURE_CURRENT_APP_AUDIO));
+    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenRecording());
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenRecording());
+    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_save_file_06 after");
+}
+
+/**
  * @tc.name: screen_capture_exclude_content_with_surface_01
  * @tc.desc: do screencapture
  * @tc.type: FUNC
@@ -468,6 +648,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_with_surface_01, 
     vector<int> windowIds = {1, 3, 5};
     EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeWindowContent(&windowIds[0], static_cast<int32_t>(windowIds.size())));
     EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeAudioContent(SCREEN_CAPTURE_CURRENT_APP_AUDIO));
+    EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeAudioContent(SCREEN_CAPTURE_NOTIFICATION_AUDIO));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCaptureWithSurface(consumer));
     EXPECT_EQ(MSERR_OK, recorder->Start());
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_with_surface_01 recorder Start");
@@ -521,6 +702,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_with_surface_02, 
     vector<int> windowIds = {1, 3, 5};
     EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeWindowContent(&windowIds[0], static_cast<int32_t>(windowIds.size())));
     EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeAudioContent(SCREEN_CAPTURE_CURRENT_APP_AUDIO));
+    EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeAudioContent(SCREEN_CAPTURE_NOTIFICATION_AUDIO));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCaptureWithSurface(consumer));
     EXPECT_EQ(MSERR_OK, recorder->Start());
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_with_surface_02 recorder Start");
@@ -535,14 +717,64 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_with_surface_02, 
 }
 
 /**
- * @tc.name: screen_capture_exclude_content_after_start_01
+ * @tc.name: screen_capture_exclude_content_with_surface_03
+ * @tc.desc: do screencapture exclude windows 2 times
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_with_surface_03, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_with_surface_03 before");
+    SetConfig(config_);
+    config_.videoInfo.videoCapInfo.videoFrameWidth = 720;
+    config_.videoInfo.videoCapInfo.videoFrameHeight = 1280;
+    config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
+    bool isMicrophone = true;
+    screenCapture_->SetMicrophoneEnabled(isMicrophone);
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_with_surface_03 CreateRecorder");
+    std::shared_ptr<Recorder> recorder = nullptr;
+    recorder = RecorderFactory::CreateRecorder();
+    int32_t videoSourceId = 0;
+    EXPECT_EQ(MSERR_OK, recorder->SetVideoSource(VIDEO_SOURCE_SURFACE_RGBA, videoSourceId));
+    EXPECT_EQ(MSERR_OK, recorder->SetOutputFormat(OutputFormatType::FORMAT_MPEG_4));
+    EXPECT_EQ(MSERR_OK, recorder->SetVideoEncoder(videoSourceId, VideoCodecFormat::H264));
+    EXPECT_EQ(MSERR_OK, recorder->SetVideoSize(videoSourceId, 720, 1280));
+    EXPECT_EQ(MSERR_OK, recorder->SetVideoFrameRate(videoSourceId, 30));
+    EXPECT_EQ(MSERR_OK, recorder->SetVideoEncodingBitRate(videoSourceId, 2000000));
+    OpenFileFd("screen_capture_exclude_content_with_surface_03.mp4");
+    ASSERT_TRUE(outputFd_ >= 0);
+    EXPECT_EQ(MSERR_OK, recorder->SetOutputFile(outputFd_));
+    EXPECT_EQ(MSERR_OK, recorder->Prepare());
+    sptr<OHOS::Surface> consumer = recorder->GetSurface(videoSourceId);
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+    vector<int> windowIds1 = {1, 3, 5};
+    EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeWindowContent(&windowIds1[0], static_cast<int32_t>(windowIds1.size())));
+    vector<int> windowIds2 = {2, 4, 6};
+    EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeWindowContent(&windowIds2[0], static_cast<int32_t>(windowIds2.size())));
+    EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeAudioContent(SCREEN_CAPTURE_CURRENT_APP_AUDIO));
+    EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeAudioContent(SCREEN_CAPTURE_NOTIFICATION_AUDIO));
+    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCaptureWithSurface(consumer));
+    EXPECT_EQ(MSERR_OK, recorder->Start());
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_with_surface_03 recorder Start");
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, recorder->Stop(true));
+    EXPECT_EQ(MSERR_OK, recorder->Reset());
+    EXPECT_EQ(MSERR_OK, recorder->Release());
+    EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
+    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+    CloseFile();
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_with_surface_03 after");
+}
+
+/**
+ * @tc.name: screen_capture_exclude_content_after_start_001
  * @tc.desc: screen capture exclude window content test
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_after_start_01, TestSize.Level2)
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_after_start_001, TestSize.Level2)
 {
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_after_start_01 before");
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_after_start_001 before");
     SetConfig(config_);
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
 
@@ -560,18 +792,18 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_after_start_01, T
     sleep(10);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_after_start_01 after");
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_after_start_001 after");
 }
 
 /**
- * @tc.name: screen_capture_exclude_content_after_start_02
+ * @tc.name: screen_capture_exclude_content_after_start_002
  * @tc.desc: screen capture exclude audio content test
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_after_start_02, TestSize.Level2)
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_after_start_002, TestSize.Level2)
 {
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_after_start_02 before");
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_after_start_002 before");
     SetConfig(config_);
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
 
@@ -588,18 +820,46 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_after_start_02, T
     sleep(10);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_after_start_02 after");
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_after_start_002 after");
 }
 
 /**
- * @tc.name: screen_capture_exclude_content_after_start_03
+ * @tc.name: screen_capture_exclude_content_after_start_003
+ * @tc.desc: screen capture exclude audio content test
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_after_start_003, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_after_start_003 before");
+    SetConfig(config_);
+    config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
+
+    aFlag = 0;
+    vFlag = 0;
+    bool isMicrophone = true;
+    screenCaptureCb_ = std::make_shared<ScreenCaptureUnitTestCallback>(screenCapture_, aFile, vFile, aFlag, vFlag);
+    ASSERT_NE(nullptr, screenCaptureCb_);
+    screenCapture_->SetMicrophoneEnabled(isMicrophone);
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
+    EXPECT_NE(MSERR_OK, screenCapture_->ExcludeAudioContent(SCREEN_CAPTURE_CURRENT_APP_AUDIO));
+    sleep(10);
+    EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
+    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_after_start_003 after");
+}
+
+/**
+ * @tc.name: screen_capture_exclude_content_after_start_004
  * @tc.desc: screen capture exclude window content test
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_after_start_03, TestSize.Level2)
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_after_start_004, TestSize.Level2)
 {
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_after_start_03 before");
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_after_start_004 before");
     SetConfig(config_);
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
 
@@ -619,7 +879,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_after_start_03, T
     sleep(10);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_after_start_03 after");
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_after_start_004 after");
 }
 
 /**
@@ -662,7 +922,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_video_size_0001, 
 
 /**
  * @tc.name: screen_capture_exclude_content_video_size_0002
- * @tc.desc: screen capture with 160x160
+ * @tc.desc: screen capture with 640x480
  * @tc.type: FUNC
  * @tc.require:
  */
@@ -773,6 +1033,48 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_video_size_0004, 
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     CloseFile();
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_video_size_0004 after");
+}
+
+/**
+ * @tc.name: screen_capture_exclude_content_video_size_0001
+ * @tc.desc: screen capture with 160x160
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_video_size_0001, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_video_size_0001 before");
+    SetConfig(config_);
+    config_.videoInfo.videoCapInfo.videoFrameWidth = 160;
+    config_.videoInfo.videoCapInfo.videoFrameHeight = 160;
+    config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
+
+    std::string name = SCREEN_CAPTURE_ROOT_DIR + "screen_capture_exclude_content_video_size_0001.yuv";
+    vFile = fopen(name.c_str(), "w+");
+    if (vFile == nullptr) {
+        cout << "vFile video open failed, " << strerror(errno) << endl;
+    }
+
+    aFlag = 1;
+    vFlag = 1;
+    screenCaptureCb_ = std::make_shared<ScreenCaptureUnitTestCallback>(screenCapture_, aFile, vFile, aFlag, vFlag);
+    ASSERT_NE(nullptr, screenCaptureCb_);
+    bool isMicrophone = true;
+    screenCapture_->SetMicrophoneEnabled(isMicrophone);
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+    vector<int> windowIds1 = {1, 3, 5};
+    EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeWindowContent(&windowIds1[0], static_cast<int32_t>(windowIds1.size())));
+    vector<int> windowIds2 = {2, 4, 6};
+    EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeWindowContent(&windowIds2[0], static_cast<int32_t>(windowIds2.size())));
+    EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeAudioContent(SCREEN_CAPTURE_NOTIFICATION_AUDIO));
+    EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeAudioContent(SCREEN_CAPTURE_CURRENT_APP_AUDIO));
+    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
+    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+    CloseFile();
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_video_size_0001 after");
 }
 
 /**
@@ -922,6 +1224,47 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_from_display_004,
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_from_display_004 after");
+}
+
+/**
+ * @tc.name: screen_capture_exclude_content_from_display_005
+ * @tc.desc: screen capture exclude content from display
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_from_display_005, TestSize.Level0)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_from_display_005 before");
+    SetConfig(config_);
+    config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
+    sptr<Display> display = DisplayManager::GetInstance().GetDefaultDisplaySync();
+    ASSERT_NE(display, nullptr);
+    cout << "get displayinfo: " << endl;
+    cout << "width: " << display->GetWidth() << "; height: " << display->GetHeight() << "; density: " <<
+        display->GetDpi() << "; refreshRate: " << display->GetRefreshRate() << endl;
+
+    config_.videoInfo.videoCapInfo.videoFrameWidth = display->GetWidth();
+    config_.videoInfo.videoCapInfo.videoFrameHeight = display->GetHeight();
+
+    aFlag = 1;
+    vFlag = 1;
+    screenCaptureCb_ = std::make_shared<ScreenCaptureUnitTestCallback>(screenCapture_, aFile, vFile, aFlag, vFlag);
+    ASSERT_NE(nullptr, screenCaptureCb_);
+    bool isMicrophone = true;
+    screenCapture_->SetMicrophoneEnabled(isMicrophone);
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+    vector<int> windowIds1 = {1, 3, 5};
+    EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeWindowContent(&windowIds1[0], static_cast<int32_t>(windowIds1.size())));
+    vector<int> windowIds2 = {2, 4, 6};
+    EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeWindowContent(&windowIds2[0], static_cast<int32_t>(windowIds2.size())));
+    EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeAudioContent(SCREEN_CAPTURE_NOTIFICATION_AUDIO));
+    EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeAudioContent(SCREEN_CAPTURE_CURRENT_APP_AUDIO));
+    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
+    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_from_display_005 after");
 }
 
 /**
@@ -1103,6 +1446,55 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_buffertest_004, T
     }
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_buffertest_004 after");
+}
+
+/**
+ * @tc.name: screen_capture_exclude_content_buffertest_005
+ * @tc.desc: screen capture buffer test
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_buffertest_005, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_buffertest_005 before");
+    SetConfig(config_);
+    config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
+
+    bool isMicrophone = true;
+    screenCapture_->SetMicrophoneEnabled(isMicrophone);
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+    vector<int> windowIds1 = {1, 3, 5};
+    EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeWindowContent(&windowIds1[0], static_cast<int32_t>(windowIds1.size())));
+    vector<int> windowIds2 = {2, 4, 6};
+    EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeWindowContent(&windowIds2[0], static_cast<int32_t>(windowIds2.size())));
+    EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeAudioContent(SCREEN_CAPTURE_NOTIFICATION_AUDIO));
+    EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeAudioContent(SCREEN_CAPTURE_CURRENT_APP_AUDIO));
+    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
+    int index = 200;
+    int index_video_frame = 0;
+    audioLoop_ = std::make_unique<std::thread>(&ScreenCaptureUnitTest::AudioLoopWithoutRelease, this);
+    while (index) {
+        int32_t fence = 0;
+        int64_t timestamp = 0;
+        OHOS::Rect damage;
+        sptr<OHOS::SurfaceBuffer> surfacebuffer = screenCapture_->AcquireVideoBuffer(fence, timestamp, damage);
+        if (surfacebuffer != nullptr) {
+            int32_t length = surfacebuffer->GetSize();
+            cout << "index video:" << index_video_frame++ << "; AcquireVideoBuffer, videoBufferLen:" <<
+                surfacebuffer->GetSize() << ", timestamp:" << timestamp << ", size:"<< length << endl;
+        } else {
+            cout << "AcquireVideoBuffer failed" << endl;
+        }
+        index--;
+    }
+    EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
+    if (audioLoop_ != nullptr && audioLoop_->joinable()) {
+        audioLoop_->join();
+        audioLoop_.reset();
+        audioLoop_ = nullptr;
+    }
+    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_buffertest_005 after");
 }
 
 /**
@@ -1445,7 +1837,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_with_surface_cb_0
     ASSERT_NE(nullptr, screenCaptureCb_);
 
     std::string name = "screen_capture_exclude_content_with_surface_cb_006";
-    // track enalbed: inner: false, mic: false, video: true(surface mode)
+    // track enalbed: inner: false, mic: false, video: false
     OpenFile(name, false, false, false);
     // check track aquire & release: inner: 1, mic: 1, video: 1
     screenCaptureCb_->InitCaptureTrackInfo(innerAudioFile_, 1, SCREEN_CAPTURE_BUFFERTYPE_AUDIO_INNER);
@@ -1467,6 +1859,69 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_with_surface_cb_0
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     CloseFile();
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_with_surface_cb_006 after");
+}
+
+/**
+ * @tc.name: screen_capture_exclude_content_with_surface_cb_007
+ * @tc.desc: surface mode, capture screen, inner audio and mic audio, exclude app and notice audio and sone windows
+ * @tc.type: FUNC
+ * @tc.require: play something audio resource to get inner audio
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_with_surface_cb_007, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_with_surface_cb_007 before");
+    SetConfig(config_);
+    config_.audioInfo.innerCapInfo.audioSampleRate = 16000;
+    config_.audioInfo.innerCapInfo.audioChannels = 2;
+    config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
+    bool isMicrophone = true;
+    screenCapture_->SetMicrophoneEnabled(isMicrophone);
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_with_surface_cb_007 CreateRecorder");
+    std::shared_ptr<Recorder> recorder = nullptr;
+    recorder = RecorderFactory::CreateRecorder();
+    int32_t videoSourceId = 0;
+    EXPECT_EQ(MSERR_OK, recorder->SetVideoSource(VIDEO_SOURCE_SURFACE_RGBA, videoSourceId));
+    EXPECT_EQ(MSERR_OK, recorder->SetOutputFormat(OutputFormatType::FORMAT_MPEG_4));
+    EXPECT_EQ(MSERR_OK, recorder->SetVideoEncoder(videoSourceId, VideoCodecFormat::H264));
+    EXPECT_EQ(MSERR_OK, recorder->SetVideoSize(videoSourceId, 720, 1080));
+    EXPECT_EQ(MSERR_OK, recorder->SetVideoFrameRate(videoSourceId, 30));
+    EXPECT_EQ(MSERR_OK, recorder->SetVideoEncodingBitRate(videoSourceId, 2000000));
+    OpenFileFd("screen_capture_exclude_content_with_surface_cb_007.mp4");
+    ASSERT_TRUE(outputFd_ >= 0);
+    EXPECT_EQ(MSERR_OK, recorder->SetOutputFile(outputFd_));
+    EXPECT_EQ(MSERR_OK, recorder->Prepare());
+    sptr<OHOS::Surface> consumer = recorder->GetSurface(videoSourceId);
+
+    screenCaptureCb_ = std::make_shared<ScreenCaptureUnitTestCallback>(screenCapture_);
+    ASSERT_NE(nullptr, screenCaptureCb_);
+
+    std::string name = "screen_capture_exclude_content_with_surface_cb_007";
+    // track enalbed: inner: true, mic: true, video: true(surface mode)
+    OpenFile(name, true, true, false);
+    // check track aquire & release: inner: 1, mic: 1, video: 1
+    screenCaptureCb_->InitCaptureTrackInfo(innerAudioFile_, 1, SCREEN_CAPTURE_BUFFERTYPE_AUDIO_INNER);
+    screenCaptureCb_->InitCaptureTrackInfo(micAudioFile_, 1, SCREEN_CAPTURE_BUFFERTYPE_AUDIO_MIC);
+    screenCaptureCb_->InitCaptureTrackInfo(videoFile_, 1, SCREEN_CAPTURE_BUFFERTYPE_VIDEO);
+    // callback enabled: errorCallback: true, dataCallback: true, stateChangeCallback: true
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_, true, true, true));
+
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+    vector<int> windowIds = {1, 3, 5};
+    EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeWindowContent(&windowIds[0], static_cast<int32_t>(windowIds.size())));
+    EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeAudioContent(SCREEN_CAPTURE_NOTIFICATION_AUDIO));
+    EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeAudioContent(SCREEN_CAPTURE_CURRENT_APP_AUDIO));
+    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCaptureWithSurface(consumer));
+    EXPECT_EQ(MSERR_OK, recorder->Start());
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_with_surface_cb_007 recorder Start");
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STARTED, screenCaptureCb_->GetScreenCaptureState());
+    EXPECT_EQ(MSERR_OK, recorder->Stop(true));
+    EXPECT_EQ(MSERR_OK, recorder->Reset());
+    EXPECT_EQ(MSERR_OK, recorder->Release());
+    EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
+    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+    CloseFile();
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_with_surface_cb_007 after");
 }
 } // namespace Media
 } // namespace OHOS
