@@ -84,19 +84,6 @@ void AudioHapticVibratorImpl::SetIsSupportEffectId(bool isSupport)
 #endif
 }
 
-char AudioHapticVibratorImpl::*GetCompliantPath(const std::string &originalUri)
-{
-    char *realpathRes = NULL;
-    realpathRes = realpath(originalUri.c_str(),NULL);
-    if (realpathRes == NULL) {
-        return "";
-    }
-    if (!verify_file(realpathRes)) {
-        return "";
-    }
-    return realpathRes;
-}
-
 int32_t AudioHapticVibratorImpl::PreLoad(const HapticSource &hapticSource,
     const AudioStandard::StreamUsage &streamUsage)
 {
@@ -124,8 +111,7 @@ int32_t AudioHapticVibratorImpl::PreLoad(const HapticSource &hapticSource,
             return MSERR_UNSUPPORT_FILE;
         }
     }
-    char *realpathRes = GetCompliantPath(hapticSource.effectId);
-    int32_t fd = open(realpathRes, O_RDONLY);
+    int32_t fd = open(hapticSource.effectId.c_str(), O_RDONLY);
     if (fd == -1) {
         // open file failed, return.
         return MSERR_OPEN_FILE_FAILED;
