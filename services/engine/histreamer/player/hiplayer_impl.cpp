@@ -36,8 +36,6 @@
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN, "HiPlayer" };
 const float MAX_MEDIA_VOLUME = 1.0f; // standard interface volume is between 0 to 1.
-const float MIN_MEDIA_VOLUME = 0.0f; // standard interface volume is between 0 to 1.
-const int32_t FADE_OUT_LATENCY = 40; // fade out latency ms
 const int32_t AUDIO_SINK_MAX_LATENCY = 400; // audio sink write latency ms
 const int32_t FRAME_RATE_UNIT_MULTIPLE = 100; // the unit of frame rate is frames per 100s
 const int32_t PLAYING_SEEK_WAIT_TIME = 200; // wait up to 200 ms for new frame after seek in playing.
