@@ -263,18 +263,10 @@ std::string SystemSoundManagerImpl::GetFullPath(const std::string &originalUri)
 std::string SystemSoundManagerImpl::GetJsonValue(const std::string &jsonPath)
 {
     std::string jsonValue = "";
-    char *realpathRes = NULL;
-    realpathRes = realpath(jsonPath.c_str(),NULL);
-    if (realpathRes == NULL) {
-        return "";
-    }
-    if (!verify_file(realpathRes)) {
-        return "";
-    }
-    ifstream file(realpathRes);
+    ifstream file(jsonPath.c_str());
     if (!file.is_open()) {
         MEDIA_LOGI("file not open! try open first ! ");
-        file.open(realpathRes, ios::app);
+        file.open(jsonPath.c_str(), ios::app);
         if (!file.is_open()) {
             MEDIA_LOGE("open file again fail !");
             return "";
