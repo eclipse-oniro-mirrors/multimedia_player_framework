@@ -1381,10 +1381,6 @@ void HiPlayerImpl::OnEvent(const Event &event)
             HandleResolutionChangeEvent(event);
             break;
         }
-        case EventType::EVENT_SOURCE_BITRATE_START: {
-            HandleBitrateStartEvent(event);
-            break;
-        }
         default:
             break;
     }
@@ -1411,6 +1407,10 @@ void HiPlayerImpl::OnEventSub(const Event &event)
         case EventType::BUFFERING_START : {
             MEDIA_LOGI("BUFFERING_START PAUSE");
             NotifyBufferingStart(AnyCast<int32_t>(event.param));
+            break;
+        }
+        case EventType::EVENT_SOURCE_BITRATE_START: {
+            HandleBitrateStartEvent(event);
             break;
         }
         default:
