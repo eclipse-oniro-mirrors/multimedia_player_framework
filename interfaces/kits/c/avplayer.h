@@ -290,33 +290,33 @@ OH_AVErrCode OH_AVPlayer_GetPlaybackSpeed(OH_AVPlayer *player, AVPlaybackSpeed *
  *     {@link AV_ERR_OK} if the execution is successful.
  *     {@link AV_ERR_INVALID_VAL} if input player is nullptr or streamUsage value is invalid.
  * @since 12
- * @version 1.0 
+ * @version 1.0
  */
 OH_AVErrCode OH_AVPlayer_SetAudioRendererInfo(OH_AVPlayer *player, OH_AudioStream_Usage streamUsage);
 
 /**
  * @brief Set the interruption mode of the player's audio stream
  * @param player Pointer to an OH_AVPlayer instance
- * @param interruptMode The value {@link OH_AudioInterrupt_Mode} used for the interruption mode of 
+ * @param interruptMode The value {@link OH_AudioInterrupt_Mode} used for the interruption mode of
  *                      the player audio stream.
  * @return Function result code.
  *     {@link AV_ERR_OK} if the execution is successful.
  *     {@link AV_ERR_INVALID_VAL} if input player is nullptr or interruptMode value is invalid.
  * @since 12
- * @version 1.0 
+ * @version 1.0
  */
 OH_AVErrCode OH_AVPlayer_SetAudioInterruptMode(OH_AVPlayer *player, OH_AudioInterrupt_Mode interruptMode);
 
 /**
  * @brief Set the effect mode of the player's audio stream
  * @param player Pointer to an OH_AVPlayer instance
- * @param effectMode The value {@link OH_AudioStream_AudioEffectMode} used for the effect mode of 
+ * @param effectMode The value {@link OH_AudioStream_AudioEffectMode} used for the effect mode of
  *                   the player audio stream.
  * @return Function result code.
  *     {@link AV_ERR_OK} if the execution is successful.
  *     {@link AV_ERR_INVALID_VAL} if input player is nullptr or effectMode value is invalid.
  * @since 12
- * @version 1.0 
+ * @version 1.0
  */
 OH_AVErrCode OH_AVPlayer_SetAudioEffectMode(OH_AVPlayer *player, OH_AudioStream_AudioEffectMode effectMode);
 
