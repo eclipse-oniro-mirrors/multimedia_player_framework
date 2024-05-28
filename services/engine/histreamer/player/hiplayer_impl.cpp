@@ -132,7 +132,7 @@ Status HiPlayerImpl::Init()
     playerFilterCallback_ = playerFilterCallback;
     MEDIA_LOGD("pipeline init");
     pipeline_->Init(playerEventReceiver, playerFilterCallback, playerId_);
-    MEDIA_LOGD("Init out");
+    MEDIA_LOGD("pipeline Init out");
     for (std::pair<std::string, bool>& item: completeState_) {
         item.second = false;
     }
@@ -238,8 +238,26 @@ int32_t HiPlayerImpl::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
     preferedHeight_ = strategy.preferredHeight;
     bufferDuration_ = strategy.preferredBufferDuration;
     preferHDR_ = strategy.preferredHdr;
-    playStatisticalInfo_.errCode = MSERR_OK;
-    return MSERR_OK;
+    mimeType_ = mediaSource->GetMimeType();
+    if (mimeType_ != AVMimeTypes::APPLICATION_M3U8 && IsFileUrl(url_)) {
+        std::string realUriPath;
+        int32_t result = GetRealPath(url_, realUriPath);
+        if (result != MSERR_OK) {
+            MEDIA_LOGE("SetSource error: GetRealPath error");
+            playStatisticalInfo_.errCode = result;
+            playStatisticalInfo_.errMsg = "SetSource error: GetRealPath error";
+            return result;
+        }
+        url_ = "file://" + realUriPath;
+    }
+    if (url_.find("http") == 0 || url_.find("https") == 0) {
+        isNetWorkPlay_ = true;
+    }
+
+    pipelineStates_ = PlayerStates::PLAYER_INITIALIZED;
+    int ret = TransStatus(Status::OK);
+    playStatisticalInfo_.errCode = ret;
+    return ret;
 }
 
 int32_t HiPlayerImpl::SetSource(const std::shared_ptr<IMediaDataSource>& dataSrc)
@@ -289,7 +307,7 @@ int32_t HiPlayerImpl::SetRenderFirstFrame(bool display)
 int32_t HiPlayerImpl::PrepareAsync()
 {
     MediaTrace trace("HiPlayerImpl::PrepareAsync");
-    MEDIA_LOGD("PrepareAsync");
+    MEDIA_LOGD("HiPlayerImpl PrepareAsync");
     if (!(pipelineStates_ == PlayerStates::PLAYER_INITIALIZED || pipelineStates_ == PlayerStates::PLAYER_STOPPED)) {
         playStatisticalInfo_.errCode = MSERR_INVALID_OPERATION;
         playStatisticalInfo_.errMsg = "PrepareAsync pipelineStates not initialized or stopped";
@@ -1001,8 +1019,11 @@ int32_t HiPlayerImpl::InitVideoWidthAndHeight()
     return TransStatus(Status::OK);
 }
 
-void HiPlayerImpl::InitAudioDefaultTrackIndex()
+Status HiPlayerImpl::InitAudioDefaultTrackIndex()
 {
+    if (!demuxer_) {
+        return Status::ERROR_UNKNOWN;
+    }
     std::vector<std::shared_ptr<Meta>> metaInfo = demuxer_->GetStreamMetaInfo();
     std::string mime;
     for (size_t trackIndex = 0; trackIndex < metaInfo.size(); trackIndex++) {
@@ -1017,6 +1038,7 @@ void HiPlayerImpl::InitAudioDefaultTrackIndex()
         }
     }
     currentAudioTrackId_ = defaultAudioTrackId_;
+    return Status::OK;
 }
 
 int32_t HiPlayerImpl::SetAudioEffectMode(int32_t effectMode)
@@ -1096,7 +1118,9 @@ int32_t HiPlayerImpl::GetCurrentTrack(int32_t trackType, int32_t &index)
         MSERR_INVALID_VAL, "Invalid trackType %{public}d", trackType);
     if (trackType == OHOS::Media::MediaType::MEDIA_TYPE_AUD) {
         if (currentAudioTrackId_ < 0) {
-            InitAudioDefaultTrackIndex();
+            if (Status::OK != InitAudioDefaultTrackIndex()) {
+                return MSERR_UNKNOWN;
+            }
         }
         index = currentAudioTrackId_;
     } else {
@@ -1112,7 +1136,9 @@ int32_t HiPlayerImpl::SelectTrack(int32_t trackId)
     std::vector<std::shared_ptr<Meta>> metaInfo = demuxer_->GetStreamMetaInfo();
     std::string mime;
     if (currentAudioTrackId_ < 0) {
-        InitAudioDefaultTrackIndex();
+        if (Status::OK != InitAudioDefaultTrackIndex()) {
+            MEDIA_LOGW("Init audio default track index fail");
+        }
     }
     FALSE_RETURN_V_MSG_W(trackId != currentAudioTrackId_ && trackId >= 0 && trackId < metaInfo.size(),
         MSERR_INVALID_VAL, "DeselectTrack trackId invalid");
@@ -1152,7 +1178,9 @@ int32_t HiPlayerImpl::DeselectTrack(int32_t trackId)
 {
     MEDIA_LOGI("DeselectTrack trackId is " PUBLIC_LOG_D32, trackId);
     if (currentAudioTrackId_ < 0) {
-        InitAudioDefaultTrackIndex();
+        if (Status::OK != InitAudioDefaultTrackIndex()) {
+            MEDIA_LOGW("Init audio default track index fail");
+        }
     }
     FALSE_RETURN_V_MSG_W(trackId == currentAudioTrackId_ && currentAudioTrackId_ >= 0,
         MSERR_INVALID_VAL, "DeselectTrack trackId invalid");
@@ -1426,6 +1454,12 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
     playStrategy->preferHDR = preferHDR_;
     source->SetPlayStrategy(playStrategy);
 
+    if (!mimeType_.empty()) {
+        source->SetMimeType(mimeType_);
+    }
+    if (surface_ == nullptr) {
+        demuxer_->DisableMediaTrack(OHOS::Media::Plugins::MediaType::VIDEO);
+    }
     auto ret = demuxer_->SetDataSource(source);
     if (demuxer_ != nullptr) {
         demuxer_->SetCallerInfo(instanceId_, bundleName_);

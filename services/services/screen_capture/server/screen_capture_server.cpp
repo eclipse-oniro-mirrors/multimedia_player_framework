@@ -905,10 +905,6 @@ int32_t ScreenCaptureServer::StartScreenCaptureFile()
 
     MEDIA_LOGI("StartScreenCaptureFile RecorderServer S");
 
-    ret = StartAudioCapture();
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartAudioCapture failed, ret:%{public}d, dataType:%{public}d",
-        ret, captureConfig_.dataType);
-
     int32_t retInner = StartInnerAudioCapture();
     CHECK_AND_RETURN_RET_LOG(retInner == MSERR_OK, retInner, "StartInnerAudioCapture failed, ret:%{public}d,"
         "dataType:%{public}d", retInner, captureConfig_.dataType);
@@ -1809,6 +1805,8 @@ int32_t ScreenCaptureServer::AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfa
         if (desFile && addr != nullptr) {
             (void)fwrite(addr, 1, bufferSize, desFile);
             (void)fclose(desFile);
+        } else if (desFile) {
+            (void)fclose(desFile);
         }
     }
     if (surfaceBuffer != nullptr) {
@@ -2211,7 +2209,7 @@ int32_t AudioDataSource::ReadAt(std::shared_ptr<AVBuffer> buffer, uint32_t lengt
         if (type_ == AVScreenCaptureMixMode::MIX_MODE) {
             if (!screenCaptureServer_->GetMicWorkingState()) {
                 MEDIA_LOGD("AVScreenCaptureMixMode MIX_MODE MIC OFF");
-                bufferMem->Write((uint8_t*)innerAudioBuffer->buffer, innerAudioBuffer->length, 0);
+                bufferMem->Write(reinterpret_cast<uint8_t*>(innerAudioBuffer->buffer), innerAudioBuffer->length, 0);
                 return screenCaptureServer_->ReleaseAudioBufferMix(type_);
             }
             MEDIA_LOGD("AVScreenCaptureMixMode MIX_MODE MIC ON");
