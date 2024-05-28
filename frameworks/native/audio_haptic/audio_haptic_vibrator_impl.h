@@ -33,7 +33,6 @@ public:
     explicit AudioHapticVibratorImpl(AudioHapticPlayer &audioHapticPlayer);
     ~AudioHapticVibratorImpl();
 
-    char *GetCompliantPath(const std::string &originalUri);
     int32_t PreLoad(const HapticSource &hapticSource, const AudioStandard::StreamUsage &streamUsage) override;
     int32_t SetHapticIntensity(float intensity) override;
     int32_t Release() override;
