@@ -324,7 +324,7 @@ int32_t AudioHapticPlayerImpl::StartVibrate()
         isAudioPlayFirstFrame_ = false; // reset for next time.
 
         int32_t hapticDelay = audioHapticVibrator_->GetDelayTime();
-        int32_t delay = (static_cast<int64_t>(this->audioLatency_) - hapticDelay) > 0 ? 
+        int32_t delay = (static_cast<int64_t>(this->audioLatency_) - hapticDelay) > 0 ?
             static_cast<int64_t>(this->audioLatency_) - hapticDelay : 0;
         waitResult = condStartVibrate_.wait_for(lockWait, std::chrono::milliseconds(delay),
             [this]() { return isVibrationStopped_; });
