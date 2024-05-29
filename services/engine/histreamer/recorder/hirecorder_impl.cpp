@@ -14,6 +14,7 @@
  */
 #include "hirecorder_impl.h"
 #include "meta/audio_types.h"
+#include "osal/task/pipeline_threadpool.h"
 #include "sync_fence.h"
 #include <sys/syscall.h>
 #include "media_dfx.h"
@@ -81,12 +82,13 @@ HiRecorderImpl::HiRecorderImpl(int32_t appUid, int32_t appPid, uint32_t appToken
 HiRecorderImpl::~HiRecorderImpl()
 {
     Stop(false);
+    PipeLineThreadPool::GetInstance().DestroyThread(recorderId_);
 }
 
 int32_t HiRecorderImpl::Init()
 {
     MediaTrace trace("HiRecorderImpl::Init");
-    MEDIA_LOG_I("Init enter.");
+    MEDIA_LOG_I("HiRecorderImpl Init enter.");
     recorderEventReceiver_ = std::make_shared<RecorderEventReceiver>(this);
     recorderCallback_ = std::make_shared<RecorderFilterCallback>(this);
     recorderId_ = std::string("HiRecorder_") + std::to_string(OHOS::Media::Pipeline::Pipeline::GetNextPipelineId());
@@ -155,9 +157,6 @@ int32_t HiRecorderImpl::SetAudioSource(AudioSourceType source, int32_t &sourceId
 
     audioCaptureFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::AudioCaptureFilter>
         ("audioCaptureFilter", Pipeline::FilterType::AUDIO_CAPTURE);
-    if (audioCaptureFilter_ == nullptr) {
-        MEDIA_LOG_E("HiRecorderImpl::audioCaptureFilter_ == nullptr");
-    }
     audioCaptureFilter_->SetCallingInfo(appUid_, appPid_, bundleName_, instanceId_);
     audioCaptureFilter_->SetAudioSource(source);
     Status ret = pipeline_->AddHeadFilters({audioCaptureFilter_});
@@ -174,14 +173,11 @@ int32_t HiRecorderImpl::SetAudioSource(AudioSourceType source, int32_t &sourceId
 
 int32_t HiRecorderImpl::SetAudioDataSource(const std::shared_ptr<IAudioDataSource>& audioSource, int32_t& sourceId)
 {
-    MEDIA_LOG_I("SetAudioDataSource enter.");
+    MEDIA_LOG_I("HiRecorderImpl SetAudioDataSource enter.");
     sourceId = INVALID_SOURCE_ID;
     auto tempSourceId = SourceIdGenerator::GenerateAudioSourceId(audioCount_);
     audioDataSourceFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::AudioDataSourceFilter>
         ("audioDataSourceFilter", Pipeline::FilterType::AUDIO_DATA_SOURCE);
-    if (audioDataSourceFilter_ == nullptr) {
-        MEDIA_LOG_E("HiRecorderImpl::audioDataSourceFilter_ == nullptr");
-    }
     audioDataSourceFilter_->SetAudioDataSource(audioSource);
     Status ret = pipeline_->AddHeadFilters({audioDataSourceFilter_});
     FALSE_RETURN_V_MSG_E(ret == Status::OK, (int32_t)ret, "AddFilters audioDataSource to pipeline fail");
@@ -197,7 +193,7 @@ int32_t HiRecorderImpl::SetAudioDataSource(const std::shared_ptr<IAudioDataSourc
 
 int32_t HiRecorderImpl::SetOutputFormat(OutputFormatType format)
 {
-    MEDIA_LOG_I("SetOutputFormat enter. " PUBLIC_LOG_D32, static_cast<int32_t>(format));
+    MEDIA_LOG_I("HiRecorderImpl SetOutputFormat enter. " PUBLIC_LOG_D32, static_cast<int32_t>(format));
     outputFormatType_ = format;
     OnStateChanged(StateId::RECORDING_SETTING);
     return (int32_t)Status::OK;
@@ -212,7 +208,7 @@ int32_t HiRecorderImpl::SetObs(const std::weak_ptr<IRecorderEngineObs> &obs)
 
 int32_t HiRecorderImpl::Configure(int32_t sourceId, const RecorderParam &recParam)
 {
-    MEDIA_LOG_I("Configure enter.");
+    MEDIA_LOG_I("HiRecorderImpl Configure enter.");
     FALSE_RETURN_V(outputFormatType_ != OutputFormatType::FORMAT_BUTT,
         (int32_t)Status::ERROR_INVALID_OPERATION);
     FALSE_RETURN_V(CheckParamType(sourceId, recParam), (int32_t)Status::ERROR_INVALID_PARAMETER);
@@ -249,7 +245,7 @@ int32_t HiRecorderImpl::Configure(int32_t sourceId, const RecorderParam &recPara
 
 sptr<Surface> HiRecorderImpl::GetSurface(int32_t sourceId)
 {
-    MEDIA_LOG_I("GetSurface enter.");
+    MEDIA_LOG_I("HiRecorderImpl GetSurface enter.");
     if (videoEncoderFilter_) {
         producerSurface_ = videoEncoderFilter_->GetInputSurface();
     }
@@ -289,8 +285,8 @@ int32_t HiRecorderImpl::Prepare()
     if (videoEncoderFilter_) {
         if (videoSourceIsRGBA_) {
             videoEncFormat_->Set<Tag::VIDEO_PIXEL_FORMAT>(Plugins::VideoPixelFormat::RGBA);
-            videoEncFormat_->Set<Tag::VIDEO_ENCODE_BITRATE_MODE>(Plugins::VideoEncodeBitrateMode::CBR);
         }
+        videoEncFormat_->Set<Tag::VIDEO_ENCODE_BITRATE_MODE>(Plugins::VideoEncodeBitrateMode::VBR);
         videoEncoderFilter_->SetCodecFormat(videoEncFormat_);
         videoEncoderFilter_->Init(recorderEventReceiver_, recorderCallback_);
         FALSE_RETURN_V_MSG_E(videoEncoderFilter_->Configure(videoEncFormat_) == Status::OK,
@@ -478,7 +474,7 @@ Status HiRecorderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, cons
 
 void HiRecorderImpl::OnAudioCaptureChange(const AudioStandard::AudioCapturerChangeInfo &capturerChangeInfo)
 {
-    MEDIA_LOG_I("OnAudioCaptureChange enter.");
+    MEDIA_LOG_I("HiRecorderImpl OnAudioCaptureChange enter.");
     auto ptr = obs_.lock();
     if (ptr != nullptr) {
         ptr->OnAudioCaptureChange(ConvertCapturerChangeInfo(capturerChangeInfo));
@@ -673,7 +669,7 @@ void HiRecorderImpl::ConfigureRotation(const RecorderParam &recParam)
 
 void HiRecorderImpl::ConfigureMuxer(const RecorderParam &recParam)
 {
-    MEDIA_LOG_I("ConfigureMuxer enter");
+    MEDIA_LOG_I("HiRecorderImpl ConfigureMuxer enter");
     switch (recParam.type) {
         case RecorderPublicParamType::OUT_FD: {
             OutFd outFd = static_cast<const OutFd&>(recParam);

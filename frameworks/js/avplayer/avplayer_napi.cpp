@@ -161,14 +161,16 @@ void AVPlayerNapi::Destructor(napi_env env, void *nativeObject, void *finalize)
     if (nativeObject != nullptr) {
         AVPlayerNapi *jsPlayer = reinterpret_cast<AVPlayerNapi *>(nativeObject);
         jsPlayer->ClearCallbackReference();
-        auto task = jsPlayer->ReleaseTask();
-        if (task != nullptr) {
-            MEDIA_LOGI("0x%{public}06" PRIXPTR " Destructor Wait Release Task Start", FAKE_POINTER(jsPlayer));
-            task->GetResult(); // sync release
-            MEDIA_LOGI("0x%{public}06" PRIXPTR " Destructor Wait Release Task End", FAKE_POINTER(jsPlayer));
-        }
-        jsPlayer->WaitTaskQueStop();
-        delete jsPlayer;
+        std::thread([jsPlayer]() -> void {
+            auto task = jsPlayer->ReleaseTask();
+            if (task != nullptr) {
+                MEDIA_LOGI("0x%{public}06" PRIXPTR " Destructor wait >>", FAKE_POINTER(jsPlayer));
+                task->GetResult(); // sync release
+                MEDIA_LOGI("0x%{public}06" PRIXPTR " Destructor wait <<", FAKE_POINTER(jsPlayer));
+            }
+            jsPlayer->WaitTaskQueStop();
+            delete jsPlayer;
+        }).detach();
     }
     MEDIA_LOGI("Destructor success");
 }
@@ -771,7 +773,7 @@ napi_value AVPlayerNapi::JsSetSpeed(napi_env env, napi_callback_info info)
 
     int32_t mode = SPEED_FORWARD_1_00_X;
     napi_status status = napi_get_value_int32(env, args[0], &mode);
-    if (status != napi_ok || mode < SPEED_FORWARD_0_75_X || mode > SPEED_FORWARD_1_50_X) {
+    if (status != napi_ok || mode < SPEED_FORWARD_0_75_X || mode > SPEED_FORWARD_0_125_X) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
             "invalid parameters, please check the speed mode");
         return result;
@@ -1318,13 +1320,13 @@ napi_value AVPlayerNapi::JsSetMediaSource(napi_env env, napi_callback_info info)
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please check");
         return result;
     }
-    std::shared_ptr<AVMediaSourceTmp> mediaSourceTmp = MediaSourceNapi::GetMediaSource(env, args[0]);
-    if (mediaSourceTmp == nullptr) {
+    std::shared_ptr<AVMediaSourceTmp> srcTmp = MediaSourceNapi::GetMediaSource(env, args[0]);
+    if (srcTmp == nullptr) {
         MEDIA_LOGE("get GetMediaSource argument failed!");
         return result;
     }
-    std::shared_ptr<AVMediaSource> mediaSource = std::make_shared<AVMediaSource>(mediaSourceTmp->url,
-         mediaSourceTmp->header);
+    std::shared_ptr<AVMediaSource> mediaSource = std::make_shared<AVMediaSource>(srcTmp->url, srcTmp->header);
+    mediaSource->SetMimeType(srcTmp->GetMimeType());
 
     struct AVPlayStrategyTmp strategyTmp;
     struct AVPlayStrategy strategy;

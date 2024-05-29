@@ -42,32 +42,34 @@ namespace OHOS {
 namespace Media {
 using namespace Pipeline;
 struct PlayStatisticalInfo {
-    int32_t errCode;
-    std::string errMsg;
-    int32_t playDuration;
-    int32_t sourceType;
-    std::string sourceUrl;
-    int32_t avgDownloadRate;
-    std::string containerMime;
-    std::string videoMime;
-    std::string videoResolution;
-    float videoFrameRate;
-    int8_t videoBitdepth;
-    int32_t videoBitrate;
-    int8_t hdrType;
-    std::string audioMime;
-    int32_t audioSampleRate;
-    int32_t audioChannelCount;
-    int32_t audioBitrate;
-    bool isDrmProtected;
-    int32_t startLatency;
-    int32_t avgDownloadSpeed;
-    int32_t maxSeekLatency;
-    int32_t maxAccurateSeekLatency;
-    int32_t lagTimes;
-    int32_t maxLagDuration;
-    int32_t avgLagDuration;
-    int32_t maxSurfaceSwapLatency;
+    int32_t errCode {0};
+    std::string errMsg {};
+    int32_t playDuration {0};
+    int32_t sourceType {0};
+    std::string sourceUrl {};
+    int32_t avgDownloadRate {0};
+    std::string containerMime {};
+    std::string videoMime {};
+    std::string videoResolution {};
+    float videoFrameRate {0.0};
+    int8_t videoBitdepth {0};
+    int32_t videoBitrate {0};
+    int8_t hdrType {0};
+    std::string audioMime {};
+    int32_t audioSampleRate {0};
+    int32_t audioChannelCount {0};
+    int32_t audioBitrate {0};
+    bool isDrmProtected {false};
+    int32_t startLatency {0};
+    int32_t avgDownloadSpeed {0};
+    int32_t maxSeekLatency {0};
+    int32_t maxAccurateSeekLatency {0};
+    int32_t lagTimes {0};
+    int32_t maxLagDuration {0};
+    int32_t avgLagDuration {0};
+    int32_t maxSurfaceSwapLatency {0};
+    uint64_t totalDownLoadBits {0};
+    bool isTimeOut {false};
 };
 
 enum VideoHdrType : int32_t {
@@ -155,6 +157,7 @@ private:
     void HandleIsLiveStreamEvent(bool isLiveStream);
     void HandleErrorEvent(int32_t errorCode);
     void HandleResolutionChangeEvent(const Event& event);
+    void HandleBitrateStartEvent(const Event& event);
     void NotifyBufferingStart(int32_t param);
     void NotifyBufferingEnd(int32_t param);
     void UpdateStateNoLock(PlayerStates newState, bool notifyUpward = true);
@@ -197,7 +200,7 @@ private:
     int32_t InitDuration();
     int32_t InitVideoWidthAndHeight();
     void SetBundleName(std::string bundleName);
-    void InitAudioDefaultTrackIndex();
+    Status InitAudioDefaultTrackIndex();
     bool BreakIfInterruptted();
     bool IsSeekInSitu(int64_t mSeconds);
 
@@ -275,6 +278,7 @@ private:
     uint64_t instanceId_ = 0;
     int64_t maxSurfaceSwapLatency_ = 0;
     int64_t playTotalDuration_ = 0;
+    std::string mimeType_;
 };
 } // namespace Media
 } // namespace OHOS
