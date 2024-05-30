@@ -1538,7 +1538,7 @@ int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string &name, sptr<O
     screenId_ = ScreenManager::GetInstance().CreateVirtualScreen(virScrOption);
     CHECK_AND_RETURN_RET_LOG(screenId_ >= 0, MSERR_UNKNOWN, "CreateVirtualScreen failed, invalid screenId");
     for (size_t i = 0; i < contentFilter_.windowIDsVec.size(); i++) {
-        MEDIA_LOGI("After CreateVirtualScreen windowIDsVec value :%{public}ld", contentFilter_.windowIDsVec[i]);
+        MEDIA_LOGI("After CreateVirtualScreen windowIDsVec value :%{public}" PRIu64, contentFilter_.windowIDsVec[i]);
     }
     Rosen::DisplayManager::GetInstance().SetVirtualScreenBlackList(screenId_, contentFilter_.windowIDsVec);
     auto screen = ScreenManager::GetInstance().GetScreenById(screenId_);
