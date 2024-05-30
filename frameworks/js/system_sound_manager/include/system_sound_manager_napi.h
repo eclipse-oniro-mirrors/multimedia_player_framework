@@ -123,6 +123,7 @@ private:
     static void AsyncRemoveCustomizedTone(napi_env env, void *data);
     static void RemoveCustomizedToneAsyncCallbackComp(napi_env env, napi_status status, void* data);
     static napi_value ThrowErrorAndReturn(napi_env env, const std::string& napiMessage, int32_t napiCode);
+    static napi_value AsyncThrowErrorAndReturn(napi_env env, const std::string& napiMessage, int32_t napiCode);
 
     static thread_local napi_ref sConstructor_;
     static thread_local napi_ref ringtoneType_;
@@ -154,6 +155,9 @@ struct SystemSoundManagerAsyncContext {
     int32_t fd;
     int32_t offset;
     int32_t length;
+    int32_t result;
+    int32_t errCode;
+    std::string errMessage;
 };
 } // namespace Media
 } // namespace OHOS
