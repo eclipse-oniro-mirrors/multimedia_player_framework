@@ -92,7 +92,7 @@ void HiPlayerCallbackLooper::ManualReportMediaProgressOnce()
 void HiPlayerCallbackLooper::StopReportMediaProgress()
 {
     OHOS::Media::AutoLock lock(loopMutex_);
-    MEDIA_LOG_I("StopReportMediaProgress");
+    MEDIA_LOG_I("HiPlayerCallbackLooper StopReportMediaProgress");
     reportMediaProgress_ = false;
 }
 

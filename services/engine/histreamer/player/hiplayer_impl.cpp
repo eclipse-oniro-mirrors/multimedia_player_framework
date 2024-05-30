@@ -36,8 +36,6 @@
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN, "HiPlayer" };
 const float MAX_MEDIA_VOLUME = 1.0f; // standard interface volume is between 0 to 1.
-const float MIN_MEDIA_VOLUME = 0.0f; // standard interface volume is between 0 to 1.
-const int32_t FADE_OUT_LATENCY = 40; // fade out latency ms
 const int32_t AUDIO_SINK_MAX_LATENCY = 400; // audio sink write latency ms
 const int32_t FRAME_RATE_UNIT_MULTIPLE = 100; // the unit of frame rate is frames per 100s
 const int32_t PLAYING_SEEK_WAIT_TIME = 200; // wait up to 200 ms for new frame after seek in playing.
@@ -199,7 +197,7 @@ void HiPlayerImpl::SetInstancdId(uint64_t instanceId)
 int32_t HiPlayerImpl::SetSource(const std::string& uri)
 {
     MediaTrace trace("HiPlayerImpl::SetSource uri");
-    MEDIA_LOGD("SetSource uri");
+    MEDIA_LOGD("HiPlayerImpl SetSource uri");
     CreateMediaInfo(CallType::AVPLAYER, appUid_, instanceId_);
     playStatisticalInfo_.sourceUrl = "private";
     playStatisticalInfo_.sourceType = static_cast<int32_t>(SourceType::SOURCE_TYPE_URI);
@@ -401,6 +399,7 @@ void HiPlayerImpl::SetInterruptState(bool isInterruptNeeded)
 
 int32_t HiPlayerImpl::SelectBitRate(uint32_t bitRate)
 {
+    MEDIA_LOGD("HiPlayerImpl:: Select BitRate %{public}d", bitRate);
     if (demuxer_ == nullptr) {
         MEDIA_LOGE("SelectBitRate failed, demuxer_ is null");
         return MSERR_INVALID_OPERATION;
@@ -480,9 +479,6 @@ int32_t HiPlayerImpl::Pause()
     if (pipelineStates_ == PlayerStates::PLAYER_PLAYBACK_COMPLETE) {
         MEDIA_LOGE("completed not allow pause");
         return TransStatus(Status::OK);
-    }
-    if (audioSink_ != nullptr) {
-        audioSink_->SetVolumeWithRamp(MIN_MEDIA_VOLUME, FADE_OUT_LATENCY);
     }
     Status ret = Status::OK;
     syncManager_->Pause();
@@ -745,10 +741,6 @@ Status HiPlayerImpl::doPreparedSeek(int64_t seekPos, PlayerSeekMode mode)
 Status HiPlayerImpl::doStartedSeek(int64_t seekPos, PlayerSeekMode mode)
 {
     MEDIA_LOGI("doStartedSeek");
-    // audio fade in and out
-    if (audioSink_ != nullptr) {
-        audioSink_->SetVolumeWithRamp(MIN_MEDIA_VOLUME, FADE_OUT_LATENCY);
-    }
     pipeline_ -> Pause();
     pipeline_ -> Flush();
     auto rtv = doSeek(seekPos, mode);
@@ -1410,6 +1402,10 @@ void HiPlayerImpl::OnEventSub(const Event &event)
             NotifyBufferingStart(AnyCast<int32_t>(event.param));
             break;
         }
+        case EventType::EVENT_SOURCE_BITRATE_START: {
+            HandleBitrateStartEvent(event);
+            break;
+        }
         default:
             break;
     }
@@ -1630,6 +1626,15 @@ void HiPlayerImpl::HandleResolutionChangeEvent(const Event& event)
         videoWidth_.load(), videoHeight_.load());
     // notify size change
     NotifyResolutionChange();
+#endif
+}
+
+void HiPlayerImpl::HandleBitrateStartEvent(const Event& event)
+{
+#ifdef SUPPORT_VIDEO
+    uint32_t bitrate = AnyCast<uint32_t>(event.param);
+    MEDIA_LOG_I("HandleBitrateStartEvent in, bitrate is " PUBLIC_LOG_U32, bitrate);
+    videoDecoder_->SetBitrateStart();
 #endif
 }
 

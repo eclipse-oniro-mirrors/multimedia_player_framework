@@ -1755,6 +1755,9 @@ int32_t ScreenCaptureServer::ReleaseAudioBufferMix(AVScreenCaptureMixMode type)
             return MSERR_UNKNOWN;
         }
     }
+    if (type == AVScreenCaptureMixMode::MIX_MODE && innerAudioCapture_ != nullptr) {
+        return innerAudioCapture_->ReleaseAudioBuffer();
+    }
     if (type == AVScreenCaptureMixMode::MIC_MODE && micAudioCapture_ != nullptr) {
         return micAudioCapture_->ReleaseAudioBuffer();
     }
@@ -1837,7 +1840,7 @@ int32_t ScreenCaptureServer::ExcludeContent(ScreenCaptureContentFilter &contentF
 {
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(captureState_ == AVScreenCaptureState::CREATED, MSERR_INVALID_OPERATION,
-        "ExcludeContent failed, capture is not STARTED, state:%{public}d", captureState_);
+        "ExcludeContent failed, capture is not CREATED, state:%{public}d", captureState_);
 
     MEDIA_LOGI("ScreenCaptureServer::ExcludeContent start");
     contentFilter_ = contentFilter;
@@ -1846,7 +1849,7 @@ int32_t ScreenCaptureServer::ExcludeContent(ScreenCaptureContentFilter &contentF
     // For STREAM, should call AudioCapturer interface to make effect when start
     // For CAPTURE FILE, should call Recorder interface to make effect when start
     FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_, SCREEN_CAPTURE_ERR_UNSUPPORT,
-        "ExcludeContent failed, capture is not STARTED");
+        "ExcludeContent failed, capture is not CREATED");
     return MSERR_OK;
 }
 
@@ -2220,6 +2223,7 @@ int32_t AudioDataSource::ReadAt(std::shared_ptr<AVBuffer> buffer, uint32_t lengt
             int channels = 2;
             MixAudio(srcData, mixData, channels, innerAudioBuffer->length);
             bufferMem->Write(reinterpret_cast<uint8_t*>(mixData), innerAudioBuffer->length, 0);
+            delete[] mixData;
             return screenCaptureServer_->ReleaseAudioBufferMix(type_);
         } else if (type_ == AVScreenCaptureMixMode::INNER_MODE) {
             bufferMem->Write(reinterpret_cast<uint8_t*>(innerAudioBuffer->buffer), innerAudioBuffer->length, 0);
