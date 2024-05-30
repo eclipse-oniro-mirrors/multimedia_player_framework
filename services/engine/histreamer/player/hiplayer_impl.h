@@ -32,6 +32,7 @@
 #include "media_sync_manager.h"
 #include "pipeline/pipeline.h"
 #include "seek_agent.h"
+#include "subtitle_sink_filter.h"
 #include "meta/meta.h"
 #include <chrono>
 #ifdef SUPPORT_VIDEO
@@ -173,6 +174,8 @@ private:
     void NotifyPositionUpdate();
     Status LinkAudioDecoderFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
     Status LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
+    Status LinkSubtitleSinkFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
+    void NotifySubtitleUpdate(const Event& event);
     void DoInitializeForHttp();
     bool EnableBufferingBySysParam() const;
     bool IsFileUrl(const std::string &url) const;
@@ -227,6 +230,7 @@ private:
     std::shared_ptr<DemuxerFilter> demuxer_;
     std::shared_ptr<AudioDecoderFilter> audioDecoder_;
     std::shared_ptr<AudioSinkFilter> audioSink_;
+    std::shared_ptr<SubtitleSinkFilter> subtitleSink_;
 #ifdef SUPPORT_VIDEO
     std::shared_ptr<DecoderSurfaceFilter> videoDecoder_;
 #endif

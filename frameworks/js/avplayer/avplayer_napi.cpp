@@ -975,24 +975,24 @@ napi_value AVPlayerNapi::JsAddSubtitleAVFileDescriptor(napi_env env, napi_callba
     napi_status status = napi_get_value_int32(env, args[0], &fd_s);
     if (status != napi_ok) {
         MEDIA_LOGE("JsAddSubtitleAVFileDescriptor status != napi_ok");
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please check
-            JsAddSubtitleAVFileDescriptor");
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, 
+            "invalid parameters, please check JsAddSubtitleAVFileDescriptor");
         return result;
     }
-    int64_t  offset = -1;
+    int64_t offset = -1;
     napi_status status_offset = napi_get_value_int64(env, args[1], &offset);
     if (status_offset != napi_ok) {
         MEDIA_LOGE("JsAddSubtitleAVFileDescriptor status_offset != napi_ok");
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please check
-            JsAddSubtitleAVFileDescriptor");
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
+            "invalid parameters, please check JsAddSubtitleAVFileDescriptor");
         return result;
     }
-    int64_t  length = -1;
+    int64_t length = -1;
     napi_status status_length = napi_get_value_int64(env, args[2], &length);
     if (status_length != napi_ok) {
         MEDIA_LOGE("JsAddSubtitleAVFileDescriptor status_length != napi_ok");
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please check
-            JsAddSubtitleAVFileDescriptor");
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
+            "invalid parameters, please check JsAddSubtitleAVFileDescriptor");
         return result;
     }
     auto task = std::make_shared<TaskHandler<void>>([jsPlayer, fd_s, offset, length]() {
