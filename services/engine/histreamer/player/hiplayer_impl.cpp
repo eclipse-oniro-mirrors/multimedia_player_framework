@@ -1406,11 +1406,6 @@ void HiPlayerImpl::OnEvent(const Event &event)
             HandleResolutionChangeEvent(event);
             break;
         }
-        case EventType::EVENT_SUBTITLE_TEXT_UPDATE: {
-            MEDIA_LOGE("EVENTCALLBACK EVENT_SUBTITLE_TEXT_UPDATE");
-            NotifySubtitleUpdate(event);
-            break;
-        }
         default:
             break;
     }
