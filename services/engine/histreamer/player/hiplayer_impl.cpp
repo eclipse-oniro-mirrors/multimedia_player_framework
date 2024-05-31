@@ -1504,9 +1504,6 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
     if (ret != Status::OK) {
         return ret;
     }
-    if (hasExtSub_) {
-        demuxer_->SetSubtitleSource(std::make_shared<MediaSource>(subUrl_));
-    }
 
     std::unique_lock<std::mutex> lock(drmMutex_);
     isDrmProtected_ = demuxer_->IsDrmProtected();
@@ -1995,7 +1992,6 @@ Status HiPlayerImpl::LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFi
 Status HiPlayerImpl::LinkSubtitleSinkFilter(const std::shared_ptr<Filter>& preFilter, StreamType type)
 {
     MediaTrace trace("HiPlayerImpl::LinkSubtitleSinkFilter");
-    MEDIA_LOG_I("snj->HiPlayerImpl::LinkSubtitleSinkFilter");
     if (subtitleSink_ == nullptr) {
         subtitleSink_ = FilterFactory::Instance().CreateFilter<SubtitleSinkFilter>("player.subtitlesink",
             FilterType::FILTERTYPE_SSINK);

@@ -997,7 +997,6 @@ napi_value AVPlayerNapi::JsAddSubtitleAVFileDescriptor(napi_env env, napi_callba
     }
     auto task = std::make_shared<TaskHandler<void>>([jsPlayer, fd_s, offset, length]() {
         if (jsPlayer->player_ != nullptr) {
-            MEDIA_LOGE("AddSubtitleAVFileDescriptor jsPlayer->player_ != nullptr");
             if (jsPlayer->player_->AddSubSource(fd_s, offset, length) != MSERR_OK) {
                 jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "failed to AddSubtitleAVFileDescriptor");
             }
