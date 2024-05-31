@@ -1840,8 +1840,8 @@ int32_t ScreenCaptureServer::ReleaseVideoBuffer()
 int32_t ScreenCaptureServer::ExcludeContent(ScreenCaptureContentFilter &contentFilter)
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(captureState_ >= AVScreenCaptureState::CREATED, MSERR_INVALID_OPERATION,
-        "ExcludeContent failed, capture is not CREATED, state:%{public}d", captureState_);
+    CHECK_AND_RETURN_RET_LOG(captureState_ != AVScreenCaptureState::STOPPED, MSERR_INVALID_OPERATION,
+        "ExcludeContent failed, capture is STOPPED");
 
     MEDIA_LOGI("ScreenCaptureServer::ExcludeContent start");
     contentFilter_ = contentFilter;
