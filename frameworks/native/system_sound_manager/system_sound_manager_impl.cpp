@@ -519,11 +519,11 @@ std::vector<std::shared_ptr<ToneAttrs>> SystemSoundManagerImpl::GetRingtoneAttrL
     DataShare::DatashareBusinessError businessError;
     DataShare::DataSharePredicates queryPredicates;
     ringtoneAttrsArray_.clear();
-    queryPredicates.EqualTo(RINGTONE_COLUMN_RING_TONE_TYPE, to_string(ringtoneTypeMap_[ringtoneType]));
+    queryPredicates.EqualTo(RINGTONE_COLUMN_TONE_TYPE, to_string(TONE_TYPE_RINGTONE));
     auto resultSet = g_dataShareHelper->Query(RINGTONEURI, queryPredicates, COLUMNS, &businessError);
     auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
     unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
-    while (ringtoneAsset != nullptr) {
+    while (ringtoneAsset != nullptr && ringtoneAsset->GetSourceType() == SOURCE_TYPE_PRESET) {
         ringtoneAttrs_ = std::make_shared<ToneAttrs>(ringtoneAsset->GetTitle(),
             ringtoneAsset->GetDisplayName(), ringtoneAsset->GetPath(),
             sourceTypeMap_[ringtoneAsset->GetSourceType()], TONE_CATEGORY_RINGTONE);
@@ -557,6 +557,8 @@ std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultSystemToneAttrs(
         RINGTONE_COLUMN_NOTIFICATION_TONE_TYPE : RINGTONE_COLUMN_SHOT_TONE_TYPE;
     int32_t category = systemToneType == SYSTEM_TONE_TYPE_NOTIFICATION ?
         TONE_CATEGORY_NOTIFICATION : TONE_CATEGORY_TEXT_MESSAGE;
+    int32_t valueOfRingToneType = systemToneType == SYSTEM_TONE_TYPE_NOTIFICATION ?
+        NOTIFICATION_TONE_TYPE : SHOT_TONE_TYPE_SIM_CARD_BOTH;
     DataShare::DatashareBusinessError businessError;
     DataShare::DataSharePredicates queryPredicates;
     queryPredicates.EqualTo(ringToneType, to_string(systemTypeMap_[systemToneType]));
@@ -573,23 +575,21 @@ std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultSystemToneAttrs(
     } else {
         MEDIA_LOGE("GetDefaultSystemToneAttrs: no single default systemtone in the ringtone library!");
     }
-    if (systemToneType != SYSTEM_TONE_TYPE_NOTIFICATION) {
-        DataShare::DataSharePredicates queryPredicatesBothCard;
-        queryPredicatesBothCard.EqualTo(ringToneType, to_string(SHOT_TONE_TYPE_SIM_CARD_BOTH));
-        resultSet = g_dataShareHelper->Query(RINGTONEURI, queryPredicatesBothCard, COLUMNS, &businessError);
-        results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
-        unique_ptr<RingtoneAsset> ringtoneAssetBothCard = results->GetFirstObject();
-        while ((ringtoneAssetBothCard != nullptr) &&
-            (SOURCE_TYPE_PRESET != ringtoneAssetBothCard->GetSourceType())) {
-            ringtoneAssetBothCard = results->GetNextObject();
-        }
-        if (ringtoneAssetBothCard != nullptr) {
-            systemtoneAttrs_ = std::make_shared<ToneAttrs>(ringtoneAssetBothCard->GetTitle(),
-                ringtoneAssetBothCard->GetDisplayName(), ringtoneAssetBothCard->GetPath(),
-                sourceTypeMap_[ringtoneAssetBothCard->GetSourceType()], category);
-        } else {
-            MEDIA_LOGE("GetDefaultSystemToneAttrs: no both card default systemtone in the ringtone library!");
-        }
+    DataShare::DataSharePredicates queryPredicatesBothCard;
+    queryPredicatesBothCard.EqualTo(ringToneType, to_string(valueOfRingToneType));
+    resultSet = g_dataShareHelper->Query(RINGTONEURI, queryPredicatesBothCard, COLUMNS, &businessError);
+    results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
+    unique_ptr<RingtoneAsset> ringtoneAssetBothCard = results->GetFirstObject();
+    while ((ringtoneAssetBothCard != nullptr) &&
+        (SOURCE_TYPE_PRESET != ringtoneAssetBothCard->GetSourceType())) {
+        ringtoneAssetBothCard = results->GetNextObject();
+    }
+    if (ringtoneAssetBothCard != nullptr) {
+        systemtoneAttrs_ = std::make_shared<ToneAttrs>(ringtoneAssetBothCard->GetTitle(),
+            ringtoneAssetBothCard->GetDisplayName(), ringtoneAssetBothCard->GetPath(),
+            sourceTypeMap_[ringtoneAssetBothCard->GetSourceType()], category);
+    } else {
+        MEDIA_LOGE("GetDefaultSystemToneAttrs: no both card default systemtone in the ringtone library!");
     }
     return systemtoneAttrs_;
 }
@@ -602,33 +602,33 @@ std::vector<std::shared_ptr<ToneAttrs>> SystemSoundManagerImpl::GetSystemToneAtt
         RINGTONE_COLUMN_NOTIFICATION_TONE_TYPE : RINGTONE_COLUMN_SHOT_TONE_TYPE;
     int32_t category = systemToneType == SYSTEM_TONE_TYPE_NOTIFICATION ?
         TONE_CATEGORY_NOTIFICATION : TONE_CATEGORY_TEXT_MESSAGE;
+    int32_t valueOfRingToneType = systemToneType == SYSTEM_TONE_TYPE_NOTIFICATION ?
+        NOTIFICATION_TONE_TYPE : SHOT_TONE_TYPE_SIM_CARD_BOTH;
     DataShare::DatashareBusinessError businessError;
     DataShare::DataSharePredicates queryPredicates;
     systemtoneAttrsArray_.clear();
-    queryPredicates.EqualTo(ringToneType, to_string(systemTypeMap_[systemToneType]));
+    queryPredicates.EqualTo(RINGTONE_COLUMN_TONE_TYPE, to_string(TONE_TYPE_NOTIFICATION));
     auto resultSet = g_dataShareHelper->Query(RINGTONEURI, queryPredicates, COLUMNS, &businessError);
     auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
     unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
-    while (ringtoneAsset != nullptr) {
+    while (ringtoneAsset != nullptr && ringtoneAsset->GetSourceType() == SOURCE_TYPE_PRESET) {
         systemtoneAttrs_ = std::make_shared<ToneAttrs>(ringtoneAsset->GetTitle(),
             ringtoneAsset->GetDisplayName(), ringtoneAsset->GetPath(),
             sourceTypeMap_[ringtoneAsset->GetSourceType()], category);
         systemtoneAttrsArray_.push_back(systemtoneAttrs_);
         ringtoneAsset = results->GetNextObject();
     }
-    if (systemToneType != SYSTEM_TONE_TYPE_NOTIFICATION) {
-        DataShare::DataSharePredicates queryPredicatesBothCard;
-        queryPredicatesBothCard.EqualTo(ringToneType, to_string(SHOT_TONE_TYPE_SIM_CARD_BOTH));
-        resultSet = g_dataShareHelper->Query(RINGTONEURI, queryPredicatesBothCard, COLUMNS, &businessError);
-        results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
-        unique_ptr<RingtoneAsset> ringtoneAssetBothCard = results->GetFirstObject();
-        while (ringtoneAssetBothCard != nullptr) {
-            systemtoneAttrs_ = std::make_shared<ToneAttrs>(ringtoneAssetBothCard->GetTitle(),
-                ringtoneAssetBothCard->GetDisplayName(), ringtoneAssetBothCard->GetPath(),
-                sourceTypeMap_[ringtoneAssetBothCard->GetSourceType()], category);
-            systemtoneAttrsArray_.push_back(systemtoneAttrs_);
-            ringtoneAssetBothCard = results->GetNextObject();
-        }
+    DataShare::DataSharePredicates queryPredicatesBothCard;
+    queryPredicatesBothCard.EqualTo(ringToneType, to_string(valueOfRingToneType));
+    resultSet = g_dataShareHelper->Query(RINGTONEURI, queryPredicatesBothCard, COLUMNS, &businessError);
+    results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
+    unique_ptr<RingtoneAsset> ringtoneAssetBothCard = results->GetFirstObject();
+    while (ringtoneAssetBothCard != nullptr) {
+        systemtoneAttrs_ = std::make_shared<ToneAttrs>(ringtoneAssetBothCard->GetTitle(),
+            ringtoneAssetBothCard->GetDisplayName(), ringtoneAssetBothCard->GetPath(),
+            sourceTypeMap_[ringtoneAssetBothCard->GetSourceType()], category);
+        systemtoneAttrsArray_.push_back(systemtoneAttrs_);
+        ringtoneAssetBothCard = results->GetNextObject();
     }
     if (systemtoneAttrsArray_.empty()) {
         MEDIA_LOGE("GetSystemToneAttrList: no systemtone in the ringtone library!");

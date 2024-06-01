@@ -1255,8 +1255,8 @@ napi_value SystemSoundManagerNapi::SetAlarmToneUri(napi_env env, napi_callback_i
         }
         CHECK_AND_RETURN_RET_LOG(asyncContext->abilityContext_ != nullptr,
             ThrowErrorAndReturn(env, NAPI_ERR_INPUT_INVALID_INFO, NAPI_ERR_INPUT_INVALID), "invalid arguments");
-        CHECK_AND_RETURN_RET_LOG(!asyncContext->uri.empty(), ThrowErrorAndReturn(env, NAPI_ERR_IO_ERROR_INFO,
-            NAPI_ERR_IO_ERROR), "invalid arguments");
+        CHECK_AND_RETURN_RET_LOG(!asyncContext->uri.empty(), ThrowErrorAndReturn(env, NAPI_ERR_INPUT_INVALID_INFO,
+            NAPI_ERR_INPUT_INVALID), "invalid arguments");
         napi_create_promise(env, &asyncContext->deferred, &result);
         napi_create_string_utf8(env, "SetAlarmToneUri", NAPI_AUTO_LENGTH, &resource);
         status = napi_create_async_work(env, nullptr, resource, AsyncSetAlarmToneUri,
@@ -1478,8 +1478,8 @@ napi_value SystemSoundManagerNapi::OpenAlarmTone(napi_env env, napi_callback_inf
         }
         CHECK_AND_RETURN_RET_LOG(asyncContext->abilityContext_ != nullptr,
             ThrowErrorAndReturn(env, NAPI_ERR_INPUT_INVALID_INFO, NAPI_ERR_INPUT_INVALID), "invalid arguments");
-        CHECK_AND_RETURN_RET_LOG(!asyncContext->uri.empty(), ThrowErrorAndReturn(env, NAPI_ERR_IO_ERROR_INFO,
-            NAPI_ERR_IO_ERROR), "invalid arguments");
+        CHECK_AND_RETURN_RET_LOG(!asyncContext->uri.empty(), ThrowErrorAndReturn(env, NAPI_ERR_INPUT_INVALID_INFO,
+            NAPI_ERR_INPUT_INVALID), "invalid arguments");
         napi_create_promise(env, &asyncContext->deferred, &result);
         napi_create_string_utf8(env, "OpenAlarmTone", NAPI_AUTO_LENGTH, &resource);
         status = napi_create_async_work(env, nullptr, resource, AsyncOpenAlarmTone,
@@ -1560,8 +1560,8 @@ napi_value SystemSoundManagerNapi::Close(napi_env env, napi_callback_info info)
         if (valueType == napi_number) {
             napi_get_value_int32(env, argv[0], &asyncContext->fd);
         }
-        CHECK_AND_RETURN_RET_LOG(asyncContext->fd > 0, ThrowErrorAndReturn(env, NAPI_ERR_IO_ERROR_INFO,
-            NAPI_ERR_IO_ERROR), "invalid arguments");
+        CHECK_AND_RETURN_RET_LOG(asyncContext->fd > 0, ThrowErrorAndReturn(env, NAPI_ERR_INPUT_INVALID_INFO,
+            NAPI_ERR_INPUT_INVALID), "invalid arguments");
         napi_create_promise(env, &asyncContext->deferred, &result);
         napi_create_string_utf8(env, "Close", NAPI_AUTO_LENGTH, &resource);
         status = napi_create_async_work(env, nullptr, resource, AsyncClose,
@@ -1592,6 +1592,7 @@ void SystemSoundManagerNapi::CloseAsyncCallbackComp(napi_env env, napi_status st
 {
     auto context = static_cast<SystemSoundManagerAsyncContext *>(data);
     napi_value result[2] = {};
+    napi_get_undefined(env, &result[PARAM1]);
     if (!context->status) {
         napi_get_undefined(env, &result[PARAM0]);
     } else {
@@ -1757,8 +1758,8 @@ napi_value SystemSoundManagerNapi::RemoveCustomizedTone(napi_env env, napi_callb
         }
         CHECK_AND_RETURN_RET_LOG(asyncContext->abilityContext_ != nullptr,
             ThrowErrorAndReturn(env, NAPI_ERR_INPUT_INVALID_INFO, NAPI_ERR_INPUT_INVALID), "invalid arguments");
-        CHECK_AND_RETURN_RET_LOG(!asyncContext->uri.empty(), ThrowErrorAndReturn(env, to_string(NAPI_ERR_IO_ERROR),
-            NAPI_ERR_IO_ERROR), "invalid arguments");
+        CHECK_AND_RETURN_RET_LOG(!asyncContext->uri.empty(), ThrowErrorAndReturn(env, NAPI_ERR_INPUT_INVALID_INFO,
+            NAPI_ERR_INPUT_INVALID), "invalid arguments");
         napi_create_promise(env, &asyncContext->deferred, &result);
         napi_create_string_utf8(env, "RemoveCustomizedTone", NAPI_AUTO_LENGTH, &resource);
         status = napi_create_async_work(env, nullptr, resource, AsyncRemoveCustomizedTone,
@@ -1797,6 +1798,7 @@ void SystemSoundManagerNapi::RemoveCustomizedToneAsyncCallbackComp(napi_env env,
 {
     auto context = static_cast<SystemSoundManagerAsyncContext *>(data);
     napi_value result[2] = {};
+    napi_get_undefined(env, &result[PARAM1]);
     if (!context->status) {
         napi_get_undefined(env, &result[PARAM0]);
     } else {
