@@ -815,6 +815,7 @@ std::string SystemSoundManagerImpl::AddCustomizedToneByFd(const std::shared_ptr<
 void SystemSoundManagerImpl::GetCustomizedTone(const std::shared_ptr<ToneAttrs> &toneAttrs)
 {
     displayName_ = toneAttrs->GetFileName();
+    mimeType_ = "";
     for (const auto& type : RINGTONETYPE) {
         size_t found = displayName_.find("." + type);
         if (found != std::string::npos) {
