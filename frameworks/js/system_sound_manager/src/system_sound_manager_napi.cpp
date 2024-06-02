@@ -913,8 +913,8 @@ napi_value SystemSoundManagerNapi::CreateCustomizedToneAttrs(napi_env env, napi_
         "No system permission");
     napi_status status;
     napi_value result = nullptr;
-    std::shared_ptr<ToneAttrs> nativeToneAttrs = make_shared<ToneAttrs>("test",
-        "test", "test", CUSTOMISED, TONE_CATEGORY_INVALID);
+    std::shared_ptr<ToneAttrs> nativeToneAttrs = make_shared<ToneAttrs>("default",
+        "default", "default", CUSTOMISED, TONE_CATEGORY_INVALID);
     status = ToneAttrsNapi::NewInstance(env, nativeToneAttrs, result);
     if (status == napi_ok) {
         return result;
