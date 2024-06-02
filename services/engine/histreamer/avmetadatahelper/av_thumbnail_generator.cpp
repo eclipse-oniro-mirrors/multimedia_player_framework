@@ -296,7 +296,7 @@ bool AVThumbnailGenerator::ConvertToAVSharedMemory(std::shared_ptr<AVBuffer> &av
     CHECK_AND_RETURN_RET_LOG(ret == static_cast<int32_t>(Status::OK), false,
                              "Create AVSharedmemory failed, ret:%{public}d", ret);
     OutputFrame *frame = reinterpret_cast<OutputFrame *>(fetchedFrameAtTime->GetBase());
-    frame->width_ = height;
+    frame->width_ = width;
     frame->height_ = height;
     frame->stride_ = width;
     frame->bytesPerPixel_ = RATE_UV;
