@@ -977,7 +977,7 @@ void SystemSoundManagerNapi::AsyncGetDefaultRingtoneAttrs(napi_env env, void *da
         context->toneAttrs = context->objectInfo->sysSoundMgrClient_->GetDefaultRingtoneAttrs(
             context->abilityContext_, static_cast<RingtoneType>(context->ringtoneType));
     }
-    if (context->toneAttrsArray.empty()) {
+    if (context->toneAttrs == nullptr) {
         context->status = ERROR;
         context->errCode = NAPI_ERR_IO_ERROR;
         context->errMessage = NAPI_ERR_IO_ERROR_INFO;
@@ -1154,7 +1154,7 @@ void SystemSoundManagerNapi::AsyncGetDefaultSystemToneAttrs(napi_env env, void *
         context->toneAttrs= context->objectInfo->sysSoundMgrClient_->GetDefaultSystemToneAttrs(
             context->abilityContext_, static_cast<SystemToneType>(context->systemToneType));
     }
-    if (context->toneAttrsArray.empty()) {
+    if (context->toneAttrs == nullptr) {
         context->status = ERROR;
         context->errCode = NAPI_ERR_IO_ERROR;
         context->errMessage = NAPI_ERR_IO_ERROR_INFO;
@@ -1387,7 +1387,7 @@ void SystemSoundManagerNapi::AsyncGetDefaultAlarmToneAttrs(napi_env env, void *d
         context->toneAttrs= context->objectInfo->sysSoundMgrClient_->GetDefaultAlarmToneAttrs(
             context->abilityContext_);
     }
-    if (context->toneAttrsArray.empty()) {
+    if (context->toneAttrs == nullptr) {
         context->status = ERROR;
         context->errCode = NAPI_ERR_IO_ERROR;
         context->errMessage = NAPI_ERR_IO_ERROR_INFO;
@@ -1647,7 +1647,7 @@ napi_value SystemSoundManagerNapi::AddCustomizedTone(napi_env env, napi_callback
                 napi_get_value_int32(env, argv[i], &asyncContext->length);
             }
         }
-        CHECK_AND_RETURN_RET_LOG(asyncContext->abilityContext_ != nullptr,
+        CHECK_AND_RETURN_RET_LOG(asyncContext->abilityContext_ != nullptr && asyncContext->toneAttrsNapi != nullptr,
             ThrowErrorAndReturn(env, NAPI_ERR_INPUT_INVALID_INFO, NAPI_ERR_INPUT_INVALID), "invalid arguments");
         napi_create_promise(env, &asyncContext->deferred, &result);
         napi_create_string_utf8(env, "AddCustomizedTone", NAPI_AUTO_LENGTH, &thisVar);
@@ -1667,7 +1667,7 @@ void SystemSoundManagerNapi::AsyncAddCustomizedTone(napi_env env, void *data)
 {
     std::string result = "TYPEERROR";
     SystemSoundManagerAsyncContext *context = static_cast<SystemSoundManagerAsyncContext *>(data);
-    if (context->toneAttrsNapi == nullptr || context->objectInfo->sysSoundMgrClient_ == nullptr) {
+    if (context->objectInfo->sysSoundMgrClient_ == nullptr) {
         context->status = ERROR;
         context->errCode = NAPI_ERR_IO_ERROR;
         context->errMessage = NAPI_ERR_IO_ERROR_INFO;
