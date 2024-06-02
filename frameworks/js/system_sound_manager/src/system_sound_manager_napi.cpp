@@ -1676,15 +1676,18 @@ void SystemSoundManagerNapi::AsyncAddCustomizedTone(napi_env env, void *data)
             context->abilityContext_, context->toneAttrsNapi->GetToneAttrs(), context->externalUri);
         context->status = SUCCESS;
     } else if (context->fd > 0) {
-        if (context->offset > 0) {
+        if (context->offset > 0 && context->length > 0) {
             context->uri = context->objectInfo->sysSoundMgrClient_->AddCustomizedToneByFdAndOffset(
                 context->abilityContext_, context->toneAttrsNapi->GetToneAttrs(),
                 context->fd, context->offset, context->length);
-        } else {
+            context->status = SUCCESS;
+        } else if (context->offset == 0 && context->length == 0) {
             context->uri = context->objectInfo->sysSoundMgrClient_->AddCustomizedToneByFd(
                 context->abilityContext_, context->toneAttrsNapi->GetToneAttrs(), context->fd);
+            context->status = SUCCESS;
+        } else {
+            context->status = ERROR;
         }
-        context->status = SUCCESS;
     } else {
         context->status = ERROR;
     }

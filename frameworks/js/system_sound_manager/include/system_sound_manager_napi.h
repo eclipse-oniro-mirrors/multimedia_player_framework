@@ -153,8 +153,8 @@ struct SystemSoundManagerAsyncContext {
     std::vector<std::shared_ptr<ToneAttrs>> toneAttrsArray;
     std::string externalUri;
     int32_t fd;
-    int32_t offset;
-    int32_t length;
+    int32_t offset = 0;
+    int32_t length = 0;
     int32_t result;
     int32_t errCode;
     std::string errMessage;
