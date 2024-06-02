@@ -77,8 +77,8 @@ private:
         const sptr<SurfaceBuffer> &surfaceBuffer, uint8_t *dstNV12, int32_t strideWidth, int32_t strideHeight);
     std::unique_ptr<PixelMap> GetYuvDataAlignStride(const sptr<SurfaceBuffer> &surfaceBuffer);
     Status SeekToTime(int64_t timeMs, Plugins::SeekMode option, int64_t realSeekTime);
-    int32_t width_;
-    int32_t height_;
+    int32_t width_ = 0;
+    int32_t height_ = 0;
 };
 }  // namespace Media
 }  // namespace OHOS
