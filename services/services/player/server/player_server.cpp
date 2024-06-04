@@ -310,7 +310,6 @@ int32_t PlayerServer::AddSubSource(const std::string &url)
     MEDIA_LOGD("PlayerServer AddSubSource in(url).");
     MediaTrace::TraceBegin("PlayerServer::AddSubSource", FAKE_POINTER(this));
     (void)playerEngine_->AddSubSource(url);
-    (void)taskMgr_.LaunchTask(task, PlayerServerTaskType::STATE_CHANGE, "subsource");
 
     return MSERR_OK;
 }
