@@ -302,12 +302,6 @@ int32_t PlayerServer::AddSubSource(const std::string &url)
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr!");
 
-    if (lastOpStatus_ != PLAYER_PAUSED && lastOpStatus_ != PLAYER_PREPARED &&
-        lastOpStatus_ != PLAYER_PLAYBACK_COMPLETE && lastOpStatus_ != PLAYER_STARTED) {
-        MEDIA_LOGE("Can not add sub source, currentState is %{public}s", GetStatusDescription(lastOpStatus_).c_str());
-        return MSERR_INVALID_OPERATION;
-    }
-
     if (subtitleTrackNum_ >= MAX_SUBTITLE_TRACK_NUN) {
         MEDIA_LOGE("Can not add sub source, subtitle track num is %{public}u, exceed the max num.", subtitleTrackNum_);
         return MSERR_INVALID_OPERATION;

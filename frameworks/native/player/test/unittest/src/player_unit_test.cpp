@@ -452,6 +452,17 @@ HWTEST_F(PlayerUnitTest, Player_SetSource_012, TestSize.Level2)
 }
 
 /**
+ * @tc.name  : Test Player SetSource API
+ * @tc.number: Player_SetSource_012
+ * @tc.desc  : Test Player SetSource interface
+ */
+HWTEST_F(PlayerUnitTest, Player_SetSource_012, TestSize.Level2)
+{
+    int32_t ret = player_->AddSubSource(VIDEO_FILE1, 0, 0);
+    ASSERT_EQ(MSERR_OK, ret);
+}
+
+/**
  * @tc.name  : Test Player Local
  * @tc.number: Player_Local_001
  * @tc.desc  : Test Player Local source
