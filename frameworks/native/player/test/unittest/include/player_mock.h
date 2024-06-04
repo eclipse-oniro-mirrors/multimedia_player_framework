@@ -54,7 +54,6 @@ const std::string HTTP_PLAY = "HTTP";
 const std::string LOCAL_PLAY = "LOCAL";
 const std::string HLS_PLAY = "HLS";
 const std::string INVALID_FILE = MEDIA_ROOT + "invalid.mp4";
-const std::string LOCAL_SUBTITLE_SRT = MEDIA_ROOT + "subtitle.srt";
 } // namespace PlayerTestParam
 
 class PlayerSignal {
