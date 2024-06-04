@@ -761,6 +761,9 @@ Status HiPlayerImpl::doPreparedSeek(int64_t seekPos, PlayerSeekMode mode)
     MEDIA_LOGI("doPreparedSeek.");
     pipeline_ -> Flush();
     auto rtv = doSeek(seekPos, mode);
+    if (rtv == Status::OK) {
+        rtv = pipeline_->PrepareFrame(true);
+    }
     return rtv;
 }
 
