@@ -1034,10 +1034,7 @@ void AVPlayerNapi::EnqueueNetworkTask(const std::string url)
             return;
         }
         if (player_ != nullptr) {
-            if (player_->SetSource(url) != MSERR_OK) {
-                OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "failed to SetSourceNetWork");
-                return;
-            }
+            CHECK_AND_RETURN_LOG(player_->SetSource(url) == MSERR_OK, "failed to SetSourceNetWork");
             stopWait_ = false;
             stateChangeCond_.wait(lock, [this]() { return stopWait_.load() || avplayerExit_; });
             MEDIA_LOGI("0x%{public}06" PRIXPTR " Set source network out", FAKE_POINTER(this));
@@ -1056,10 +1053,7 @@ void AVPlayerNapi::EnqueueFdTask(const int32_t fd)
             return;
         }
         if (player_ != nullptr) {
-            if (player_->SetSource(fd, 0, -1) != MSERR_OK) {
-                OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "failed to SetSourceFd");
-                return;
-            }
+            CHECK_AND_RETURN_LOG(player_->SetSource(fd, 0, -1) == MSERR_OK, "failed to SetSourceFd");
             stopWait_ = false;
             stateChangeCond_.wait(lock, [this]() { return stopWait_.load() || avplayerExit_; });
             MEDIA_LOGI("Set source fd out");
@@ -2457,6 +2451,10 @@ void AVPlayerNapi::PauseListenCurrentResource()
     }
 }
 
+/**
+ * DO NOT hold taskMutex_ before call this function
+ * AVPlayerCallback::OnErrorCb() hold AVPlayerCallback::mutex_ and wait taskMutex_, may cause dead lock
+*/
 void AVPlayerNapi::OnErrorCb(MediaServiceExtErrCodeAPI9 errorCode, const std::string &errorMsg)
 {
     std::lock_guard<std::mutex> lock(mutex_);
