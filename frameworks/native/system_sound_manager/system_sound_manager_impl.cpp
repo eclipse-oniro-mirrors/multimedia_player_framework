@@ -751,7 +751,7 @@ int32_t SystemSoundManagerImpl::OpenAlarmTone(const std::shared_ptr<AbilityRunti
     if (ringtoneAsset != nullptr) {
         string uriStr = RINGTONE_PATH_URI + RINGTONE_SLASH_CHAR + to_string(ringtoneAsset->GetId());
         Uri ofUri(uriStr);
-        int32_t fd = g_dataShareHelper->OpenFile(ofUri, "rw");
+        int32_t fd = g_dataShareHelper->OpenFile(ofUri, "r");
         return fd > 0 ? fd : ERROR;
     }
     MEDIA_LOGE("OpenAlarmTone: tone of uri is not alarm!");
