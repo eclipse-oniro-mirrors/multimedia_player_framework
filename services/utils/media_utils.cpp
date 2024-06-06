@@ -55,7 +55,7 @@ const std::array<std::pair<PlaybackRateMode, float>, 9> PLAY_RATE_REFS = {
 std::string __attribute__((visibility("default"))) GetClientBundleName(int32_t uid)
 {
     if (uid == 1003) { //1003 is bootanimation uid
-        return "bootanimation"
+        return "bootanimation";
     }
     std::string bundleName = "";
     auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
