@@ -1034,7 +1034,9 @@ void AVPlayerNapi::EnqueueNetworkTask(const std::string url)
             return;
         }
         if (player_ != nullptr) {
-            QueueOnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "failed to SetSourceNetWork");
+            if (player_->SetSource(url) != MSERR_OK) {
+                QueueOnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "failed to SetSourceNetWork");
+            }
             stopWait_ = false;
             stateChangeCond_.wait(lock, [this]() { return stopWait_.load() || avplayerExit_; });
             MEDIA_LOGI("0x%{public}06" PRIXPTR " Set source network out", FAKE_POINTER(this));
@@ -1053,7 +1055,9 @@ void AVPlayerNapi::EnqueueFdTask(const int32_t fd)
             return;
         }
         if (player_ != nullptr) {
-            QueueOnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "failed to SetSourceFd");
+            if (player_->SetSource(fd, 0, -1) != MSERR_OK) {
+                QueueOnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "failed to SetSourceFd");
+            }
             stopWait_ = false;
             stateChangeCond_.wait(lock, [this]() { return stopWait_.load() || avplayerExit_; });
             MEDIA_LOGI("Set source fd out");
