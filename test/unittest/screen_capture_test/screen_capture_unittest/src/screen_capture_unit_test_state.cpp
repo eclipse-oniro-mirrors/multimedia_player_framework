@@ -378,7 +378,7 @@ void ScreenCaptureUnitTest::SetHapPermission()
     tokenIdEx = AccessTokenKit::AllocHapToken(info, policy);
     int ret = SetSelfTokenID(tokenIdEx.tokenIDEx);
     if (ret != 0) {
-        MEDIA_ERR_LOG("Set hap token failed, err: %{public}d", ret);
+        MEDIA_LOGE("Set hap token failed, err: %{public}d", ret);
     }
 }
 
