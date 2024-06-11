@@ -1109,6 +1109,9 @@ int32_t ScreenCaptureServer::InitRecorder()
         MEDIA_LOGI("InitRecorder prepare to SetAudioDataSource");
         audioInfo = captureConfig_.audioInfo.innerCapInfo;
         audioSource_ = std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIX_MODE, this);
+        captureCallback_ = std::make_shared<ScreenCapturerAudioStateChangeCallback>();
+        audioSource_->appPid = appInfo_.appPid;
+        captureCallback_->audioSource_ = audioSource_;
         ret = recorder_->SetAudioDataSource(audioSource_, audioSourceId_);
         MEDIA_LOGI("InitRecorder recorder SetAudioDataSource ret:%{public}d", ret);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetAudioDataSource failed");
@@ -2200,6 +2203,52 @@ int32_t ScreenCapBufferConsumerListener::Release()
     return ReleaseBuffer();
 }
 
+void ScreenCapturerAudioStateChangeCallback::OnCapturerStateChange(
+        const std::vector<std::unique_ptr<AudioCapturerChangeInfo>> &audioCapturerChangeInfos)
+{
+    MEDIA_LOGI("==== ScreenCapturerAudioStateChangeCallback");
+    int32_t index = 1;
+    for (const std::unique_ptr<AudioCapturerChangeInfo> &changeInfo: audioCapturerChangeInfos) {
+        MEDIA_LOGI("==== render stream index: === %{public}d", index);
+        if (!changeInfo) {
+            MEDIA_LOGI("==== changeInfo is nullptr, continue next.");
+            continue;
+        }
+        MEDIA_LOGI("==== capture stream creater uid: %{public}d", changeInfo->createrUID);
+        MEDIA_LOGI("==== capture stream client uid: %{public}d", changeInfo->clientUID);
+        MEDIA_LOGI("==== capture stream client pid: %{public}d", changeInfo->clientPid);
+        MEDIA_LOGI("==== capture stream sessionId: %{public}d", changeInfo->sessionId);
+        MEDIA_LOGI("==== capture stream deviceInfo deviceId: %{public}d", changeInfo->inputDeviceInfo.deviceId);
+        MEDIA_LOGI("==== capture stream deviceInfo devicename: %{public}s", changeInfo->inputDeviceInfo.deviceName.c_str());
+        MEDIA_LOGI("==== capture stream deviceInfo deviceType: %{public}d",
+                   static_cast<int32_t>(changeInfo->inputDeviceInfo.deviceType));
+        MEDIA_LOGI("==== capture stream deviceInfo networkId: %{public}s", changeInfo->inputDeviceInfo.networkId.c_str());
+        MEDIA_LOGI("==== capture stream renderInfo streamUsage: %{public}d", changeInfo->capturerInfo.sourceType);
+        MEDIA_LOGI("==== capture stream renderInfo captureFlag: %{public}d", changeInfo->capturerInfo.capturerFlags);
+        MEDIA_LOGI("==== capture stream renderInfo capturerState: %{public}d", static_cast<int32_t>(changeInfo->capturerState));
+        if (audioSource_->appPid == changeInfo->clientPid) {
+            MEDIA_LOGI("==== 1capture stream client pid find: %{public}d", changeInfo->clientPid);
+            MEDIA_LOGI("==== 1capture stream deviceInfo deviceType find: %{public}d",
+                       static_cast<int32_t>(changeInfo->inputDeviceInfo.deviceType));
+            MEDIA_LOGI("==== 1capture stream renderInfo capturerState find: %{public}d",
+                       static_cast<int32_t>(changeInfo->capturerState));
+            if (CapturerState::CAPTURER_RUNNING ==changeInfo->capturerState && changeInfo->inputDeviceInfo.deviceType==DeviceType::DEVICE_TYPE_USB_HEADSET) {
+                MEDIA_LOGI("==== 1change to usb mic.");
+                audioSource_->extSpeaker_ = false;
+            }
+        }
+        index++;
+    }
+}
+
+int32_t AudioDataSource::RegisterAudioCapturerEventListener(const int32_t clientPid,
+                                                            const std::shared_ptr<AudioCapturerStateChangeCallback> &callback)
+{
+    MEDIA_LOGI("===== RegisterAudioCapturerEventListener");
+    CHECK_AND_RETURN_RET_LOG(callback != nullptr, MSERR_INVALID_VAL, "audio callback is null");
+    return AudioStreamManager::GetInstance()->RegisterAudioCapturerEventListener(clientPid, callback);
+}
+
 int32_t AudioDataSource::ReadAt(std::shared_ptr<AVBuffer> buffer, uint32_t length)
 {
     MEDIA_LOGD("AudioDataSource ReadAt start");
@@ -2221,6 +2270,10 @@ int32_t AudioDataSource::ReadAt(std::shared_ptr<AVBuffer> buffer, uint32_t lengt
             if (!screenCaptureServer_->GetMicWorkingState()) {
                 MEDIA_LOGD("AVScreenCaptureMixMode MIX_MODE MIC OFF");
                 bufferMem->Write(reinterpret_cast<uint8_t*>(innerAudioBuffer->buffer), innerAudioBuffer->length, 0);
+                return screenCaptureServer_->ReleaseAudioBufferMix(type_);
+            }
+            if (extSpeaker_ && screenCaptureServer_->GetMicWorkingState()) {
+                bufferMem->Write(reinterpret_cast<uint8_t*>(micAudioBuffer->buffer), innerAudioBuffer->length, 0);
                 return screenCaptureServer_->ReleaseAudioBufferMix(type_);
             }
             MEDIA_LOGD("AVScreenCaptureMixMode MIX_MODE MIC ON");

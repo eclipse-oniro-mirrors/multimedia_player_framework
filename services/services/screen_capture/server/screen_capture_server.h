@@ -52,6 +52,7 @@
 #include "incall_observer.h"
 #include "media_data_source.h"
 #include "meta/meta.h"
+#include "audio_stream_manager.h"
 
 namespace OHOS {
 namespace Media {
@@ -194,7 +195,10 @@ public:
 
     int32_t ReadAt(std::shared_ptr<AVBuffer> buffer, uint32_t length) override;
     int32_t GetSize(int64_t &size) override;
-
+    int32_t RegisterAudioCapturerEventListener(const int32_t clientPid,
+        const std::shared_ptr<AudioCapturerStateChangeCallback> &callback);
+    int32_t appPid { 0 };
+    bool extSpeaker_ = true;
 private:
     void MixAudio(char** srcData, char* mixData, int channels, int bufferSize);
 
@@ -202,6 +206,11 @@ private:
     ScreenCaptureServer* screenCaptureServer_;
 };
 
+class ScreenCapturerAudioStateChangeCallback : public AudioCapturerStateChangeCallback {
+public:
+    void OnCapturerStateChange(const std::vector<std::unique_ptr<AudioCapturerChangeInfo>> &audioCapturerChangeInfos);
+    std::shared_ptr<AudioDataSource> audioSource_ = nullptr;
+};
 class ScreenCaptureServer : public std::enable_shared_from_this<ScreenCaptureServer>,
         public IScreenCaptureService, public NoCopyable {
 public:
@@ -349,6 +358,7 @@ private:
 
     /* used for DFX events */
     uint64_t instanceId_ = 0;
+    std::shared_ptr<ScreenCapturerAudioStateChangeCallback> captureCallback_;
 private:
     static int32_t CheckAudioCapParam(const AudioCaptureInfo &audioCapInfo);
     static int32_t CheckVideoCapParam(const VideoCaptureInfo &videoCapInfo);
