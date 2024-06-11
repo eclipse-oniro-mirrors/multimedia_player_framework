@@ -21,9 +21,15 @@
 #include "securec.h"
 #include "image_source.h"
 #include "i_media_service.h"
+#include "media_dfx.h"
 #include "media_log.h"
 #include "media_errors.h"
 #include "scope_guard.h"
+
+#include <fstream>
+#include <iostream>
+#include <ctime>
+#include <time.h>
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVMetadatahelperImpl"};
