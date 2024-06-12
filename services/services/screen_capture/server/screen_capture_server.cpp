@@ -2268,7 +2268,7 @@ int32_t AudioDataSource::RegisterAudioRendererEventListener(const int32_t client
             }
         }
     }
-    if (headsetMap.size() == 0) {
+    if (headsetMap.empty()) {
         extSpeaker_ = true;
         MEDIA_LOGI("HEADSET Change to Speaker.");
     } else {
