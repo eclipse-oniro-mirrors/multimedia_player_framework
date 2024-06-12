@@ -272,7 +272,7 @@ private:
     void PostStopScreenCapture(AVScreenCaptureStateCode stateCode);
     int32_t StopAudioCapture();
     int32_t StopVideoCapture();
-    int32_t StopScreenRendererecorder();
+    int32_t StopScreenCapturerecorder();
     int32_t CheckAllParams();
     int32_t CheckCaptureStreamParams();
     int32_t CheckCaptureFileParams();

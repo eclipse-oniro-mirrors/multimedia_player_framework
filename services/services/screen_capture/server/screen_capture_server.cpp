@@ -2203,7 +2203,7 @@ int32_t ScreenCapBufferConsumerListener::Release()
 }
 
 void ScreenRendererAudioStateChangeCallback::OnRendererStateChange(
-        const std::vector<std::unique_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos)
+    const std::vector<std::unique_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos)
 {
     MEDIA_LOGD("ScreenRendererAudioStateChangeCallback IN");
     for (const std::unique_ptr<AudioRendererChangeInfo> &changeInfo: audioRendererChangeInfos) {
@@ -2218,11 +2218,11 @@ void ScreenRendererAudioStateChangeCallback::OnRendererStateChange(
              changeInfo->outputDeviceInfo.deviceType == DEVICE_TYPE_BLUETOOTH_A2DP ||
              changeInfo->outputDeviceInfo.deviceType == DEVICE_TYPE_USB_HEADSET ||
              changeInfo->outputDeviceInfo.deviceType == DEVICE_TYPE_USB_ARM_HEADSET)) {
-            MEDIA_LOGI("capture stream client pid : %{public}d, State Running, deviceType : %{public}d",
-                       changeInfo->clientPid, static_cast<int32_t>(changeInfo->outputDeviceInfo.deviceType));
+            MEDIA_LOGI("add headset map client pid : %{public}d, State Running, deviceType : %{public}d",
+                changeInfo->clientPid, static_cast<int32_t>(changeInfo->outputDeviceInfo.deviceType));
             audioSource_->headsetMap.insert({changeInfo->clientPid, 1}); // 1 HEADSET
         } else {
-            MEDIA_LOGI("remove capture stream client pid find: %{public}d", changeInfo->clientPid);
+            MEDIA_LOGI("remove headset map client pid : %{public}d", changeInfo->clientPid);
             auto it = audioSource_->headsetMap.find(changeInfo->clientPid);
             if (it != audioSource_->headsetMap.end()) {
                 audioSource_->headsetMap.erase(it);
@@ -2239,7 +2239,7 @@ void ScreenRendererAudioStateChangeCallback::OnRendererStateChange(
 }
 
 int32_t AudioDataSource::RegisterAudioRendererEventListener(const int32_t clientPid,
-                                                            const std::shared_ptr<AudioRendererStateChangeCallback> &callback)
+    const std::shared_ptr<AudioRendererStateChangeCallback> &callback)
 {
     CHECK_AND_RETURN_RET_LOG(callback != nullptr, MSERR_INVALID_VAL, "audio callback is null");
     int32_t ret = AudioStreamManager::GetInstance()->RegisterAudioRendererEventListener(clientPid, callback);
@@ -2256,11 +2256,11 @@ int32_t AudioDataSource::RegisterAudioRendererEventListener(const int32_t client
              changeInfo->outputDeviceInfo.deviceType == DEVICE_TYPE_BLUETOOTH_A2DP ||
              changeInfo->outputDeviceInfo.deviceType == DEVICE_TYPE_USB_HEADSET ||
              changeInfo->outputDeviceInfo.deviceType == DEVICE_TYPE_USB_ARM_HEADSET)) {
-            MEDIA_LOGI("capture stream client pid : %{public}d, State Running, deviceType : %{public}d",
-                       changeInfo->clientPid, static_cast<int32_t>(changeInfo->outputDeviceInfo.deviceType));
+            MEDIA_LOGI("add headset map client pid : %{public}d, State Running, deviceType : %{public}d",
+                changeInfo->clientPid, static_cast<int32_t>(changeInfo->outputDeviceInfo.deviceType));
             headsetMap.insert({changeInfo->clientPid, 1}); // 1 HEADSET
         } else {
-            MEDIA_LOGI("remove capture stream client pid find: %{public}d", changeInfo->clientPid);
+            MEDIA_LOGI("remove headset map client pid : %{public}d", changeInfo->clientPid);
             auto it = headsetMap.find(changeInfo->clientPid);
             if (it != headsetMap.end()) {
                 headsetMap.erase(it);
