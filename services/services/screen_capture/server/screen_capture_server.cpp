@@ -1110,6 +1110,7 @@ int32_t ScreenCaptureServer::InitRecorder()
         captureCallback_ = std::make_shared<ScreenRendererAudioStateChangeCallback>();
         audioSource_->appPid = appInfo_.appPid;
         captureCallback_->audioSource_ = audioSource_;
+        audioSource_->RegisterAudioRendererEventListener(appInfo_.appPid, captureCallback_);
         ret = recorder_->SetAudioDataSource(audioSource_, audioSourceId_);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetAudioDataSource failed");
     } else if (captureConfig_.audioInfo.innerCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_VALID) {
@@ -2229,7 +2230,7 @@ void ScreenRendererAudioStateChangeCallback::OnRendererStateChange(
             }
         }
     }
-    if (audioSource_->headsetMap.size() == 0) {
+    if (audioSource_->headsetMap.empty()) {
         audioSource_->extSpeaker_ = true;
         MEDIA_LOGI("HEADSET Change to Speaker.");
     } else {
