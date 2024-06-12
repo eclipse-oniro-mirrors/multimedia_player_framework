@@ -198,12 +198,14 @@ public:
     int32_t RegisterAudioRendererEventListener(const int32_t clientPid,
         const std::shared_ptr<AudioRendererStateChangeCallback> &callback);
     int32_t UnregisterAudioRendererEventListener(const int32_t clientPid);
-    int32_t appPid { 0 };
-    bool extSpeaker_ = true;
-    std::set<int32_t> extSpeakerSet;
     void SpeakerStateUpdate(
         const std::vector<std::unique_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos);
+    void SetAppPid(int32_t appid);
+    int32_t GetAppPid();
 private:
+    int32_t appPid_ { 0 };
+    bool extSpeaker_ = true;
+    std::set<int32_t> extSpeakerSet;
     void MixAudio(char** srcData, char* mixData, int channels, int bufferSize);
 
     AVScreenCaptureMixMode type_;
@@ -213,8 +215,11 @@ private:
 class ScreenRendererAudioStateChangeCallback : public AudioRendererStateChangeCallback {
 public:
     void OnRendererStateChange(const std::vector<std::unique_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos);
+    void SetAudioSource(std::shared_ptr<AudioDataSource> audioSource);
+private:
     std::shared_ptr<AudioDataSource> audioSource_ = nullptr;
 };
+
 class ScreenCaptureServer : public std::enable_shared_from_this<ScreenCaptureServer>,
         public IScreenCaptureService, public NoCopyable {
 public:

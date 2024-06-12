@@ -1108,8 +1108,8 @@ int32_t ScreenCaptureServer::InitRecorder()
         audioInfo = captureConfig_.audioInfo.innerCapInfo;
         audioSource_ = std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIX_MODE, this);
         captureCallback_ = std::make_shared<ScreenRendererAudioStateChangeCallback>();
-        audioSource_->appPid = appInfo_.appPid;
-        captureCallback_->audioSource_ = audioSource_;
+        audioSource_->SetAppPid(appInfo_.appPid);
+        captureCallback_->SetAudioSource(audioSource_);
         audioSource_->RegisterAudioRendererEventListener(appInfo_.appPid, captureCallback_);
         ret = recorder_->SetAudioDataSource(audioSource_, audioSourceId_);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetAudioDataSource failed");
@@ -1975,7 +1975,7 @@ int32_t ScreenCaptureServer::StopScreenCaptureRecorder()
         StopAudioCapture();
     }
     if (audioSource_) {
-        audioSource_->UnregisterAudioRendererEventListener(audioSource_->appPid);
+        audioSource_->UnregisterAudioRendererEventListener(audioSource_->GetAppPid());
     }
     captureCallback_ = nullptr;
     isConsumerStart_ = false;
@@ -2202,6 +2202,12 @@ int32_t ScreenCapBufferConsumerListener::Release()
     MEDIA_LOGI("Release");
     return ReleaseBuffer();
 }
+
+void ScreenRendererAudioStateChangeCallback::SetAudioSource(std::shared_ptr<AudioDataSource> audioSource)
+{
+    audioSource_ = audioSource;
+}
+
 void ScreenRendererAudioStateChangeCallback::OnRendererStateChange(
     const std::vector<std::unique_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos)
 {
@@ -2241,6 +2247,16 @@ void AudioDataSource::SpeakerStateUpdate(
         extSpeaker_ = true;
         MEDIA_LOGI("HEADSET Change to Speaker.");
     }
+}
+
+void AudioDataSource::SetAppPid(int32_t appid)
+{
+    appPid_ = appid;
+}
+
+int32_t AudioDataSource::GetAppPid()
+{
+    return appPid_ ;
 }
 
 int32_t AudioDataSource::RegisterAudioRendererEventListener(const int32_t clientPid,
