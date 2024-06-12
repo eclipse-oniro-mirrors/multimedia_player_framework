@@ -1973,7 +1973,10 @@ int32_t ScreenCaptureServer::StopScreenCaptureRecorder()
         recorder_ = nullptr;
         StopAudioCapture();
     }
-
+    if (audioSource_) {
+        audioSource_->UnregisterAudioCapturerEventListener(audioSource_->appPid);
+    }
+    captureCallback_ = nullptr;
     isConsumerStart_ = false;
     CloseFd();
     return ret;
@@ -2235,6 +2238,12 @@ int32_t AudioDataSource::RegisterAudioCapturerEventListener(const int32_t client
     MEDIA_LOGI("RegisterAudioCapturerEventListener IN");
     CHECK_AND_RETURN_RET_LOG(callback != nullptr, MSERR_INVALID_VAL, "audio callback is null");
     return AudioStreamManager::GetInstance()->RegisterAudioCapturerEventListener(clientPid, callback);
+}
+
+int32_t AudioDataSource::UnregisterAudioCapturerEventListener(const int32_t clientPid)
+{
+    MEDIA_LOGI("client id: %{public}d", clientPid);
+    return AudioStreamManager::GetInstance()->UnregisterAudioCapturerEventListener(clientPid);
 }
 
 int32_t AudioDataSource::ReadAt(std::shared_ptr<AVBuffer> buffer, uint32_t length)

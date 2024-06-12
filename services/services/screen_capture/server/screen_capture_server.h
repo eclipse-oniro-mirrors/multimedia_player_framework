@@ -197,6 +197,7 @@ public:
     int32_t GetSize(int64_t &size) override;
     int32_t RegisterAudioCapturerEventListener(const int32_t clientPid,
         const std::shared_ptr<AudioCapturerStateChangeCallback> &callback);
+    int32_t UnregisterAudioCapturerEventListener(const int32_t clientPid);
     int32_t appPid { 0 };
     bool extSpeaker_ = true;
 private:
