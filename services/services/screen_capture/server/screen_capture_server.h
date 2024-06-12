@@ -200,7 +200,9 @@ public:
     int32_t UnregisterAudioRendererEventListener(const int32_t clientPid);
     int32_t appPid { 0 };
     bool extSpeaker_ = true;
-    std::set<int32_t> headsetSet;
+    std::set<int32_t> extSpeakerSet;
+    void SpeakerStateUpdate(
+        const std::vector<std::unique_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos);
 private:
     void MixAudio(char** srcData, char* mixData, int channels, int bufferSize);
 

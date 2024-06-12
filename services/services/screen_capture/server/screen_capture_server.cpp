@@ -2202,40 +2202,44 @@ int32_t ScreenCapBufferConsumerListener::Release()
     MEDIA_LOGI("Release");
     return ReleaseBuffer();
 }
-
 void ScreenRendererAudioStateChangeCallback::OnRendererStateChange(
     const std::vector<std::unique_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos)
 {
     MEDIA_LOGD("ScreenRendererAudioStateChangeCallback IN");
+    audioSource_->SpeakerStateUpdate(audioRendererChangeInfos);
+}
+
+void AudioDataSource::SpeakerStateUpdate(
+    const std::vector<std::unique_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos)
+{
     for (const std::unique_ptr<AudioRendererChangeInfo> &changeInfo: audioRendererChangeInfos) {
         if (!changeInfo) {
-            MEDIA_LOGI("changeInfo is nullptr, continue next.");
             continue;
         }
         if (RendererState::RENDERER_RUNNING ==changeInfo->rendererState &&
-            (changeInfo->outputDeviceInfo.deviceType == DEVICE_TYPE_WIRED_HEADSET ||
-             changeInfo->outputDeviceInfo.deviceType == DEVICE_TYPE_WIRED_HEADPHONES ||
-             changeInfo->outputDeviceInfo.deviceType == DEVICE_TYPE_BLUETOOTH_SCO ||
-             changeInfo->outputDeviceInfo.deviceType == DEVICE_TYPE_BLUETOOTH_A2DP ||
-             changeInfo->outputDeviceInfo.deviceType == DEVICE_TYPE_USB_HEADSET ||
-             changeInfo->outputDeviceInfo.deviceType == DEVICE_TYPE_USB_ARM_HEADSET)) {
+            !(changeInfo->outputDeviceInfo.deviceType == DEVICE_TYPE_WIRED_HEADSET ||
+            changeInfo->outputDeviceInfo.deviceType == DEVICE_TYPE_WIRED_HEADPHONES ||
+            changeInfo->outputDeviceInfo.deviceType == DEVICE_TYPE_BLUETOOTH_SCO ||
+            changeInfo->outputDeviceInfo.deviceType == DEVICE_TYPE_BLUETOOTH_A2DP ||
+            changeInfo->outputDeviceInfo.deviceType == DEVICE_TYPE_USB_HEADSET ||
+            changeInfo->outputDeviceInfo.deviceType == DEVICE_TYPE_USB_ARM_HEADSET)) {
             MEDIA_LOGI("add headset map client pid : %{public}d, State Running, deviceType : %{public}d",
                 changeInfo->clientPid, static_cast<int32_t>(changeInfo->outputDeviceInfo.deviceType));
-            audioSource_->headsetSet.insert(changeInfo->clientPid);
+            extSpeakerSet.insert(changeInfo->clientPid);
         } else {
             MEDIA_LOGI("remove headset map client pid : %{public}d", changeInfo->clientPid);
-            auto it = audioSource_->headsetSet.find(changeInfo->clientPid);
-            if (it != audioSource_->headsetSet.end()) {
-                audioSource_->headsetSet.erase(it);
+            auto it = extSpeakerSet.find(changeInfo->clientPid);
+            if (it != extSpeakerSet.end()) {
+                extSpeakerSet.erase(it);
             }
         }
     }
-    if (audioSource_->headsetSet.empty()) {
-        audioSource_->extSpeaker_ = true;
-        MEDIA_LOGI("HEADSET Change to Speaker.");
-    } else {
-        audioSource_->extSpeaker_ = false;
+    if (extSpeakerSet.empty()) {
+        extSpeaker_ = false;
         MEDIA_LOGI("Speaker Change to HEADSET.");
+    } else {
+        extSpeaker_ = true;
+        MEDIA_LOGI("HEADSET Change to Speaker.");
     }
 }
 
@@ -2246,35 +2250,7 @@ int32_t AudioDataSource::RegisterAudioRendererEventListener(const int32_t client
     int32_t ret = AudioStreamManager::GetInstance()->RegisterAudioRendererEventListener(clientPid, callback);
     std::vector<std::unique_ptr<AudioRendererChangeInfo>> audioRendererChangeInfos;
     AudioStreamManager::GetInstance()->GetCurrentRendererChangeInfos(audioRendererChangeInfos);
-    for (const std::unique_ptr<AudioRendererChangeInfo> &changeInfo: audioRendererChangeInfos) {
-        if (!changeInfo) {
-            continue;
-        }
-        if (RendererState::RENDERER_RUNNING ==changeInfo->rendererState &&
-            (changeInfo->outputDeviceInfo.deviceType == DEVICE_TYPE_WIRED_HEADSET ||
-             changeInfo->outputDeviceInfo.deviceType == DEVICE_TYPE_WIRED_HEADPHONES ||
-             changeInfo->outputDeviceInfo.deviceType == DEVICE_TYPE_BLUETOOTH_SCO ||
-             changeInfo->outputDeviceInfo.deviceType == DEVICE_TYPE_BLUETOOTH_A2DP ||
-             changeInfo->outputDeviceInfo.deviceType == DEVICE_TYPE_USB_HEADSET ||
-             changeInfo->outputDeviceInfo.deviceType == DEVICE_TYPE_USB_ARM_HEADSET)) {
-            MEDIA_LOGI("add headset map client pid : %{public}d, State Running, deviceType : %{public}d",
-                changeInfo->clientPid, static_cast<int32_t>(changeInfo->outputDeviceInfo.deviceType));
-            headsetSet.insert(changeInfo->clientPid);
-        } else {
-            MEDIA_LOGI("remove headset map client pid : %{public}d", changeInfo->clientPid);
-            auto it = headsetSet.find(changeInfo->clientPid);
-            if (it != headsetSet.end()) {
-                headsetSet.erase(it);
-            }
-        }
-    }
-    if (headsetSet.empty()) {
-        extSpeaker_ = true;
-        MEDIA_LOGI("HEADSET Change to Speaker.");
-    } else {
-        extSpeaker_ = false;
-        MEDIA_LOGI("Speaker Change to HEADSET.");
-    }
+    SpeakerStateUpdate(audioRendererChangeInfos);
     return ret;
 }
 
