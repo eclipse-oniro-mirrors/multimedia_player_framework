@@ -1107,7 +1107,7 @@ int32_t ScreenCaptureServer::InitRecorder()
         MEDIA_LOGI("InitRecorder prepare to SetAudioDataSource");
         audioInfo = captureConfig_.audioInfo.innerCapInfo;
         audioSource_ = std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIX_MODE, this);
-        captureCallback_ = std::make_shared<ScreenCapturerAudioStateChangeCallback>();
+        captureCallback_ = std::make_shared<ScreenRendererAudioStateChangeCallback>();
         audioSource_->appPid = appInfo_.appPid;
         captureCallback_->audioSource_ = audioSource_;
         ret = recorder_->SetAudioDataSource(audioSource_, audioSourceId_);
@@ -1974,7 +1974,7 @@ int32_t ScreenCaptureServer::StopScreenCaptureRecorder()
         StopAudioCapture();
     }
     if (audioSource_) {
-        audioSource_->UnregisterAudioCapturerEventListener(audioSource_->appPid);
+        audioSource_->UnregisterAudioRendererEventListener(audioSource_->appPid);
     }
     captureCallback_ = nullptr;
     isConsumerStart_ = false;
@@ -2202,48 +2202,85 @@ int32_t ScreenCapBufferConsumerListener::Release()
     return ReleaseBuffer();
 }
 
-void ScreenCapturerAudioStateChangeCallback::OnCapturerStateChange(
-    const std::vector<std::unique_ptr<AudioCapturerChangeInfo>> &audioCapturerChangeInfos)
+void ScreenRendererAudioStateChangeCallback::OnRendererStateChange(
+        const std::vector<std::unique_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos)
 {
-    MEDIA_LOGI("ScreenCapturerAudioStateChangeCallback IN");
-    int32_t index = 1;
-    for (const std::unique_ptr<AudioCapturerChangeInfo> &changeInfo: audioCapturerChangeInfos) {
+    MEDIA_LOGD("ScreenRendererAudioStateChangeCallback IN");
+    for (const std::unique_ptr<AudioRendererChangeInfo> &changeInfo: audioRendererChangeInfos) {
         if (!changeInfo) {
             MEDIA_LOGI("changeInfo is nullptr, continue next.");
             continue;
         }
-        if (audioSource_->appPid == changeInfo->clientPid) {
-            MEDIA_LOGI("client pid find: %{public}d", changeInfo->clientPid);
-            MEDIA_LOGI("deviceInfo deviceType find: %{public}d",
-                       static_cast<int32_t>(changeInfo->inputDeviceInfo.deviceType));
-            MEDIA_LOGI("capturerState find: %{public}d", static_cast<int32_t>(changeInfo->capturerState));
-            if (CapturerState::CAPTURER_RUNNING ==changeInfo->capturerState &&
-                (changeInfo->inputDeviceInfo.deviceType == DEVICE_TYPE_WIRED_HEADSET ||
-                 changeInfo->inputDeviceInfo.deviceType == DEVICE_TYPE_WIRED_HEADPHONES ||
-                 changeInfo->inputDeviceInfo.deviceType == DEVICE_TYPE_BLUETOOTH_SCO ||
-                 changeInfo->inputDeviceInfo.deviceType == DEVICE_TYPE_BLUETOOTH_A2DP ||
-                 changeInfo->inputDeviceInfo.deviceType == DEVICE_TYPE_USB_HEADSET ||
-                 changeInfo->inputDeviceInfo.deviceType == DEVICE_TYPE_USB_ARM_HEADSET)) {
-                MEDIA_LOGI("Speaker Change to HEADSET.");
-                audioSource_->extSpeaker_ = false;
+        if (RendererState::RENDERER_RUNNING ==changeInfo->rendererState &&
+            (changeInfo->outputDeviceInfo.deviceType == DEVICE_TYPE_WIRED_HEADSET ||
+             changeInfo->outputDeviceInfo.deviceType == DEVICE_TYPE_WIRED_HEADPHONES ||
+             changeInfo->outputDeviceInfo.deviceType == DEVICE_TYPE_BLUETOOTH_SCO ||
+             changeInfo->outputDeviceInfo.deviceType == DEVICE_TYPE_BLUETOOTH_A2DP ||
+             changeInfo->outputDeviceInfo.deviceType == DEVICE_TYPE_USB_HEADSET ||
+             changeInfo->outputDeviceInfo.deviceType == DEVICE_TYPE_USB_ARM_HEADSET)) {
+            MEDIA_LOGI("capture stream client pid : %{public}d, State Running, deviceType : %{public}d",
+                       changeInfo->clientPid, static_cast<int32_t>(changeInfo->outputDeviceInfo.deviceType));
+            audioSource_->headsetMap.insert({changeInfo->clientPid, 1}); // 1 HEADSET
+        } else {
+            MEDIA_LOGI("remove capture stream client pid find: %{public}d", changeInfo->clientPid);
+            auto it = audioSource_->headsetMap.find(changeInfo->clientPid);
+            if (it != audioSource_->headsetMap.end()) {
+                audioSource_->headsetMap.erase(it);
             }
         }
-        index++;
+    }
+    if (audioSource_->headsetMap.size() == 0) {
+        audioSource_->extSpeaker_ = true;
+        MEDIA_LOGI("HEADSET Change to Speaker.");
+    } else {
+        audioSource_->extSpeaker_ = false;
+        MEDIA_LOGI("Speaker Change to HEADSET.");
     }
 }
 
-int32_t AudioDataSource::RegisterAudioCapturerEventListener(const int32_t clientPid,
-    const std::shared_ptr<AudioCapturerStateChangeCallback> &callback)
+int32_t AudioDataSource::RegisterAudioRendererEventListener(const int32_t clientPid,
+                                                            const std::shared_ptr<AudioRendererStateChangeCallback> &callback)
 {
-    MEDIA_LOGI("RegisterAudioCapturerEventListener IN");
     CHECK_AND_RETURN_RET_LOG(callback != nullptr, MSERR_INVALID_VAL, "audio callback is null");
-    return AudioStreamManager::GetInstance()->RegisterAudioCapturerEventListener(clientPid, callback);
+    int32_t ret = AudioStreamManager::GetInstance()->RegisterAudioRendererEventListener(clientPid, callback);
+    std::vector<std::unique_ptr<AudioRendererChangeInfo>> audioRendererChangeInfos;
+    AudioStreamManager::GetInstance()->GetCurrentRendererChangeInfos(audioRendererChangeInfos);
+    for (const std::unique_ptr<AudioRendererChangeInfo> &changeInfo: audioRendererChangeInfos) {
+        if (!changeInfo) {
+            continue;
+        }
+        if (RendererState::RENDERER_RUNNING ==changeInfo->rendererState &&
+            (changeInfo->outputDeviceInfo.deviceType == DEVICE_TYPE_WIRED_HEADSET ||
+             changeInfo->outputDeviceInfo.deviceType == DEVICE_TYPE_WIRED_HEADPHONES ||
+             changeInfo->outputDeviceInfo.deviceType == DEVICE_TYPE_BLUETOOTH_SCO ||
+             changeInfo->outputDeviceInfo.deviceType == DEVICE_TYPE_BLUETOOTH_A2DP ||
+             changeInfo->outputDeviceInfo.deviceType == DEVICE_TYPE_USB_HEADSET ||
+             changeInfo->outputDeviceInfo.deviceType == DEVICE_TYPE_USB_ARM_HEADSET)) {
+            MEDIA_LOGI("capture stream client pid : %{public}d, State Running, deviceType : %{public}d",
+                       changeInfo->clientPid, static_cast<int32_t>(changeInfo->outputDeviceInfo.deviceType));
+            headsetMap.insert({changeInfo->clientPid, 1}); // 1 HEADSET
+        } else {
+            MEDIA_LOGI("remove capture stream client pid find: %{public}d", changeInfo->clientPid);
+            auto it = headsetMap.find(changeInfo->clientPid);
+            if (it != headsetMap.end()) {
+                headsetMap.erase(it);
+            }
+        }
+    }
+    if (headsetMap.size() == 0) {
+        extSpeaker_ = true;
+        MEDIA_LOGI("HEADSET Change to Speaker.");
+    } else {
+        extSpeaker_ = false;
+        MEDIA_LOGI("Speaker Change to HEADSET.");
+    }
+    return ret;
 }
 
-int32_t AudioDataSource::UnregisterAudioCapturerEventListener(const int32_t clientPid)
+int32_t AudioDataSource::UnregisterAudioRendererEventListener(const int32_t clientPid)
 {
     MEDIA_LOGI("client id: %{public}d", clientPid);
-    return AudioStreamManager::GetInstance()->UnregisterAudioCapturerEventListener(clientPid);
+    return AudioStreamManager::GetInstance()->UnregisterAudioRendererEventListener(clientPid);
 }
 
 int32_t AudioDataSource::ReadAt(std::shared_ptr<AVBuffer> buffer, uint32_t length)

@@ -195,11 +195,12 @@ public:
 
     int32_t ReadAt(std::shared_ptr<AVBuffer> buffer, uint32_t length) override;
     int32_t GetSize(int64_t &size) override;
-    int32_t RegisterAudioCapturerEventListener(const int32_t clientPid,
-        const std::shared_ptr<AudioCapturerStateChangeCallback> &callback);
-    int32_t UnregisterAudioCapturerEventListener(const int32_t clientPid);
+    int32_t RegisterAudioRendererEventListener(const int32_t clientPid,
+        const std::shared_ptr<AudioRendererStateChangeCallback> &callback);
+    int32_t UnregisterAudioRendererEventListener(const int32_t clientPid);
     int32_t appPid { 0 };
     bool extSpeaker_ = true;
+    std::map<int32_t, int32_t> headsetMap;
 private:
     void MixAudio(char** srcData, char* mixData, int channels, int bufferSize);
 
@@ -207,9 +208,9 @@ private:
     ScreenCaptureServer* screenCaptureServer_;
 };
 
-class ScreenCapturerAudioStateChangeCallback : public AudioCapturerStateChangeCallback {
+class ScreenRendererAudioStateChangeCallback : public AudioRendererStateChangeCallback {
 public:
-    void OnCapturerStateChange(const std::vector<std::unique_ptr<AudioCapturerChangeInfo>> &audioCapturerChangeInfos);
+    void OnRendererStateChange(const std::vector<std::unique_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos);
     std::shared_ptr<AudioDataSource> audioSource_ = nullptr;
 };
 class ScreenCaptureServer : public std::enable_shared_from_this<ScreenCaptureServer>,
@@ -271,7 +272,7 @@ private:
     void PostStopScreenCapture(AVScreenCaptureStateCode stateCode);
     int32_t StopAudioCapture();
     int32_t StopVideoCapture();
-    int32_t StopScreenCaptureRecorder();
+    int32_t StopScreenRendererecorder();
     int32_t CheckAllParams();
     int32_t CheckCaptureStreamParams();
     int32_t CheckCaptureFileParams();
@@ -359,7 +360,7 @@ private:
 
     /* used for DFX events */
     uint64_t instanceId_ = 0;
-    std::shared_ptr<ScreenCapturerAudioStateChangeCallback> captureCallback_;
+    std::shared_ptr<ScreenRendererAudioStateChangeCallback> captureCallback_;
 private:
     static int32_t CheckAudioCapParam(const AudioCaptureInfo &audioCapInfo);
     static int32_t CheckVideoCapParam(const VideoCaptureInfo &videoCapInfo);
