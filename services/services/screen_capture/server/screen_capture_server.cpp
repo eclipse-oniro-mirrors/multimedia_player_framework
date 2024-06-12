@@ -1100,10 +1100,8 @@ int32_t ScreenCaptureServer::InitRecorder()
     ON_SCOPE_EXIT(0) {
         recorder_->Release();
     };
-
     int32_t ret;
     AudioCaptureInfo audioInfo;
-
     if (captureConfig_.audioInfo.innerCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_VALID &&
         captureConfig_.audioInfo.micCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_VALID) {
         MEDIA_LOGI("InitRecorder prepare to SetAudioDataSource");
@@ -1113,7 +1111,6 @@ int32_t ScreenCaptureServer::InitRecorder()
         audioSource_->appPid = appInfo_.appPid;
         captureCallback_->audioSource_ = audioSource_;
         ret = recorder_->SetAudioDataSource(audioSource_, audioSourceId_);
-        MEDIA_LOGI("InitRecorder recorder SetAudioDataSource ret:%{public}d", ret);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetAudioDataSource failed");
     } else if (captureConfig_.audioInfo.innerCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_VALID) {
         audioInfo = captureConfig_.audioInfo.innerCapInfo;
@@ -1131,10 +1128,9 @@ int32_t ScreenCaptureServer::InitRecorder()
         MEDIA_LOGE("InitRecorder not VALIDATION_VALID");
         return MSERR_UNKNOWN;
     }
-
+    MEDIA_LOGI("InitRecorder recorder SetAudioDataSource ret:%{public}d", ret);
     ret = recorder_->SetVideoSource(captureConfig_.videoInfo.videoCapInfo.videoSource, videoSourceId_);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetVideoSource failed");
-
     ret = InitRecorderInfo(recorder_, audioInfo);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "InitRecorderInfo failed");
 
@@ -2204,7 +2200,7 @@ int32_t ScreenCapBufferConsumerListener::Release()
 }
 
 void ScreenCapturerAudioStateChangeCallback::OnCapturerStateChange(
-        const std::vector<std::unique_ptr<AudioCapturerChangeInfo>> &audioCapturerChangeInfos)
+    const std::vector<std::unique_ptr<AudioCapturerChangeInfo>> &audioCapturerChangeInfos)
 {
     MEDIA_LOGI("ScreenCapturerAudioStateChangeCallback IN");
     int32_t index = 1;
@@ -2234,7 +2230,7 @@ void ScreenCapturerAudioStateChangeCallback::OnCapturerStateChange(
 }
 
 int32_t AudioDataSource::RegisterAudioCapturerEventListener(const int32_t clientPid,
-                                                            const std::shared_ptr<AudioCapturerStateChangeCallback> &callback)
+    const std::shared_ptr<AudioCapturerStateChangeCallback> &callback)
 {
     MEDIA_LOGI("RegisterAudioCapturerEventListener IN");
     CHECK_AND_RETURN_RET_LOG(callback != nullptr, MSERR_INVALID_VAL, "audio callback is null");
