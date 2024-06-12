@@ -900,9 +900,14 @@ std::string SystemSoundManagerImpl::AddCustomizedToneByFdAndOffset(
     std::lock_guard<std::mutex> lock(uriMutex_);
     int32_t srcFd = fd;
     off_t lseekResult = lseek(srcFd, offset, SEEK_SET);
+    if (srcFd < 0 || lseekResult == -1) {
+        MEDIA_LOGE("fd is error");
+        result.clear();
+        return result;
+    }
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
-    if (dataShareHelper == nullptr || srcFd < 0 || lseekResult == -1) {
-        MEDIA_LOGE("dataShareHelper is nullptr or fd is error");
+    if (dataShareHelper == nullptr) {
+        MEDIA_LOGE("dataShareHelper is nullptr");
         result.clear();
         return result;
     }
