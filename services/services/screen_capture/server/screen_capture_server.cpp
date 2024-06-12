@@ -2221,16 +2221,16 @@ void ScreenRendererAudioStateChangeCallback::OnRendererStateChange(
              changeInfo->outputDeviceInfo.deviceType == DEVICE_TYPE_USB_ARM_HEADSET)) {
             MEDIA_LOGI("add headset map client pid : %{public}d, State Running, deviceType : %{public}d",
                 changeInfo->clientPid, static_cast<int32_t>(changeInfo->outputDeviceInfo.deviceType));
-            audioSource_->headsetMap.insert({changeInfo->clientPid, 1}); // 1 HEADSET
+            audioSource_->headsetSet.insert(changeInfo->clientPid);
         } else {
             MEDIA_LOGI("remove headset map client pid : %{public}d", changeInfo->clientPid);
-            auto it = audioSource_->headsetMap.find(changeInfo->clientPid);
-            if (it != audioSource_->headsetMap.end()) {
-                audioSource_->headsetMap.erase(it);
+            auto it = audioSource_->headsetSet.find(changeInfo->clientPid);
+            if (it != audioSource_->headsetSet.end()) {
+                audioSource_->headsetSet.erase(it);
             }
         }
     }
-    if (audioSource_->headsetMap.empty()) {
+    if (audioSource_->headsetSet.empty()) {
         audioSource_->extSpeaker_ = true;
         MEDIA_LOGI("HEADSET Change to Speaker.");
     } else {
@@ -2259,16 +2259,16 @@ int32_t AudioDataSource::RegisterAudioRendererEventListener(const int32_t client
              changeInfo->outputDeviceInfo.deviceType == DEVICE_TYPE_USB_ARM_HEADSET)) {
             MEDIA_LOGI("add headset map client pid : %{public}d, State Running, deviceType : %{public}d",
                 changeInfo->clientPid, static_cast<int32_t>(changeInfo->outputDeviceInfo.deviceType));
-            headsetMap.insert({changeInfo->clientPid, 1}); // 1 HEADSET
+            headsetSet.insert(changeInfo->clientPid);
         } else {
             MEDIA_LOGI("remove headset map client pid : %{public}d", changeInfo->clientPid);
-            auto it = headsetMap.find(changeInfo->clientPid);
-            if (it != headsetMap.end()) {
-                headsetMap.erase(it);
+            auto it = headsetSet.find(changeInfo->clientPid);
+            if (it != headsetSet.end()) {
+                headsetSet.erase(it);
             }
         }
     }
-    if (headsetMap.empty()) {
+    if (headsetSet.empty()) {
         extSpeaker_ = true;
         MEDIA_LOGI("HEADSET Change to Speaker.");
     } else {
