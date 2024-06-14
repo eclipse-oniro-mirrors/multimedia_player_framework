@@ -36,8 +36,10 @@ sptr<PlayerServiceStub> PlayerServiceStubMem::Create()
 {
     int32_t availableMemory;
     int32_t totalMemory;
-    int32_t ret = Memory::MemMgrClient::GetInstance().GetAvailableMemory(availableMemory);
-    ret |= Memory::MemMgrClient::GetInstance().GetTotalMemory(totalMemory);
+    int32_t ret;
+    int32_t ret1 = Memory::MemMgrClient::GetInstance().GetAvailableMemory(availableMemory);
+    int32_t ret2 = Memory::MemMgrClient::GetInstance().GetTotalMemory(totalMemory);
+    ret = ret1 | ret2;
     MEDIA_LOGD("System available memory:%{public}d, total memory:%{public}d", availableMemory, totalMemory);
     if (ret == MSERR_OK && availableMemory <= totalMemory / ONE_HUNDRED * PER_INSTANCE_NEED_MEMORY_PERCENT &&
         availableMemory <= INSTANCE_NEED_MEMORY_LOW) {

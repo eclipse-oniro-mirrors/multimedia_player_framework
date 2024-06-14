@@ -272,6 +272,12 @@ std::string SystemSoundManagerImpl::GetFullPath(const std::string &originalUri)
 std::string SystemSoundManagerImpl::GetJsonValue(const std::string &jsonPath)
 {
     std::string jsonValue = "";
+    char *realpathRes = nullptr;
+    realpathRes = realpath(jsonPath.c_str(), nullptr);
+    if (realpathRes == nullptr) {
+        MEDIA_LOGE("realpath is null!");
+        return "";
+    }
     ifstream file(jsonPath.c_str());
     if (!file.is_open()) {
         MEDIA_LOGI("file not open! try open first ! ");
