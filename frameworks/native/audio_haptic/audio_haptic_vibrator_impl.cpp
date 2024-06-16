@@ -84,7 +84,7 @@ void AudioHapticVibratorImpl::SetIsSupportEffectId(bool isSupport)
 #endif
 }
 
-int32_t CheckHapticUriIsValid(const HapticSource hapticSource,
+int32_t AudioHapticVibratorImpl::CheckHapticUriIsValid(const HapticSource hapticSource,
     int32_t &effectResult, bool &isSupported, int32_t &fd)
 {
 #ifdef SUPPORT_VIBRATOR
