@@ -126,7 +126,7 @@ int32_t AudioHapticVibratorImpl::PreLoad(const HapticSource &hapticSource,
         } else {
             MEDIA_LOGE("The effectId is not supported!");
             return MSERR_UNSUPPORT_FILE;
-        }    
+        }
     }
     if (ret == 0 && fd == -1) {
         return MSERR_OPEN_FILE_FAILED;
