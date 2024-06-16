@@ -78,7 +78,7 @@ void SystemTonePlayerImpl::InitPlayer()
     configuredUri_ = "";
 }
 
-int32_t SetRealUri(std::string systemToneUri, int32_t &fileDes, std::string &uri)
+int32_t SystemTonePlayerImpl::SetRealUri(std::string systemToneUri, int32_t &fileDes, std::string &uri)
 {
     int32_t ret = 0;
     fileDes = -1;
@@ -126,7 +126,7 @@ int32_t SystemTonePlayerImpl::Prepare()
     std::string uri = systemToneUri;
     int32_t ret = SetRealUri(systemToneUri, flDes, uri);
     if (ret == 0) {
-        fileDes_ == flDes;
+        fileDes_ = flDes;
     } else {
         return ret;
     }
