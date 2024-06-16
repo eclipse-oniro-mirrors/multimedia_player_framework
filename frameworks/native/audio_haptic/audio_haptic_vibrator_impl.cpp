@@ -111,13 +111,13 @@ int32_t AudioHapticVibratorImpl::PreLoad(const HapticSource &hapticSource,
             return MSERR_UNSUPPORT_FILE;
         }
     }
-    char *realpathRes = nullptr;
-    realpathRes = realpath(hapticSource.hapticUri.c_str(), nullptr);
-    if (realpathRes == nullptr) {
-        MEDIA_LOGE("realpath is null!");
+    char realpathRes[PATH_MAX + 1] = {0x00};
+    if (strlen(hapticSource.hapticUri.c_str()) > PATH_MAX ||
+        realpath(hapticSource.hapticUri.c_str(), realpathRes) == nullptr) {
+        MEDIA_LOGE("Invalid path, realpathRes is null");
         return MSERR_OPEN_FILE_FAILED;
     }
-    int32_t fd = open(hapticSource.hapticUri.c_str(), O_RDONLY);
+    int32_t fd = open(realpathRes, O_RDONLY);
     if (fd == -1) {
         // open file failed, return.
         return MSERR_OPEN_FILE_FAILED;
