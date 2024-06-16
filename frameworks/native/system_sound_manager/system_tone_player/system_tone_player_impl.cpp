@@ -103,7 +103,7 @@ int32_t SystemTonePlayerImpl::Prepare()
     if (systemToneUri.find(FDHEAD) == std::string::npos) {
         char *realpathRes = nullptr;
         realpathRes = realpath(systemToneUri.c_str(), nullptr);
-        if (realpathRes ==nullptr) {
+        if (realpathRes == nullptr) {
             return MSERR_OPEN_FILE_FAILED;
         }
         fileDes_ = open(systemToneUri.c_str(), O_RDONLY);
