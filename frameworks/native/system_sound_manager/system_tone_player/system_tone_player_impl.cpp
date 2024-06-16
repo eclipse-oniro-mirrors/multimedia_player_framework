@@ -78,6 +78,29 @@ void SystemTonePlayerImpl::InitPlayer()
     configuredUri_ = "";
 }
 
+int32_t SetRealUri(std::string systemToneUri, int32_t &fileDes, std::string &uri)
+{
+    int32_t ret = 0;
+    fileDes = -1;
+    uri = systemToneUri;
+    if (systemToneUri.find(FDHEAD) == std::string::npos) {
+        char realpathRes[PATH_MAX + 1] = {0x00};
+        if (realpath(systemToneUri.c_str(), realpathRes) != nullptr) {
+            fileDes = open(realpathRes, O_RDONLY);
+        }
+        if (fileDes == -1) {
+            ret = ApplyDefaultSystemToneUri(systemToneUri);
+            if (ret == MSERR_OK) {
+                systemSoundMgr_.SetSystemToneUri(context_, systemToneUri, systemToneType_);
+            } else {
+                return ret;
+            }
+        }
+        uri = "fd://" + to_string(fileDes);
+    }
+    return ret;
+}
+
 int32_t SystemTonePlayerImpl::Prepare()
 {
     MEDIA_LOGI("Enter Prepare()");
@@ -99,21 +122,13 @@ int32_t SystemTonePlayerImpl::Prepare()
         (void)close(fileDes_);
         fileDes_ = -1;
     }
+    int32_t flDes = -1;
     std::string uri = systemToneUri;
-    if (systemToneUri.find(FDHEAD) == std::string::npos) {
-        char realpathRes[PATH_MAX + 1] = {0x00};
-        if (realpath(systemToneUri.c_str(), realpathRes) != nullptr) {
-            fileDes_ = open(realpathRes, O_RDONLY);
-        }
-        if (fileDes_ == -1) {
-            int32_t ret = ApplyDefaultSystemToneUri(systemToneUri);
-            if (ret == MSERR_OK) {
-                systemSoundMgr_.SetSystemToneUri(context_, systemToneUri, systemToneType_);
-            } else {
-                return ret;
-            }
-        }
-        uri = "fd://" + to_string(fileDes_);
+    int32_t ret = SetRealUri(systemToneUri, flDes, uri);
+    if (ret == 0) {
+        fileDes_ == flDes;
+    } else {
+        return ret;
     }
 
     int32_t soundID = player_->Load(uri);
