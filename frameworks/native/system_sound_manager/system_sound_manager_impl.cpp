@@ -272,7 +272,7 @@ std::string SystemSoundManagerImpl::GetFullPath(const std::string &originalUri)
 std::string SystemSoundManagerImpl::GetJsonValue(const std::string &jsonPath)
 {
     std::string jsonValue = "";
-    char realpathRes[PATH_MAX + 1] = {0x00};
+    char realpathRes[PATH_MAX] = {0};
     if (strlen(jsonPath.c_str()) > PATH_MAX || realpath(jsonPath.c_str(), realpathRes) == nullptr) {
         MEDIA_LOGE("Invalid path, realpathRes is null");
         return "";
