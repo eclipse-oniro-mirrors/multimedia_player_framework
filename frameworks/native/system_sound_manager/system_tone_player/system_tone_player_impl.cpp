@@ -84,7 +84,7 @@ int32_t SetRealUri(std::string systemToneUri, int32_t &fileDes, std::string &uri
     fileDes = -1;
     uri = systemToneUri;
     if (systemToneUri.find(FDHEAD) == std::string::npos) {
-        char realpathRes[PATH_MAX + 1] = {0x00};
+        char realpathRes[PATH_MAX] = {0};
         if (realpath(systemToneUri.c_str(), realpathRes) != nullptr) {
             fileDes = open(realpathRes, O_RDONLY);
         }
