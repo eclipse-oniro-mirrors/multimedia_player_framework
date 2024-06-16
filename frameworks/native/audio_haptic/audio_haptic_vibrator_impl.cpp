@@ -85,13 +85,14 @@ void AudioHapticVibratorImpl::SetIsSupportEffectId(bool isSupport)
 }
 
 int32_t CheckHapticUriIsValid(const HapticSource hapticSource,
-    int32_t &effectResult, bool &isSupported, int32_t &fd) {
+    int32_t &effectResult, bool &isSupported, int32_t &fd)
+{
 #ifdef SUPPORT_VIBRATOR
     if (hapticSource.hapticUri == "") {
         effectResult = Sensors::IsSupportEffect(hapticSource.effectId.c_str(), &isSupported);
         return -1;
     }
-    char realpathRes[PATH_MAX + 1] = {0x00};
+    char realpathRes[PATH_MAX] = {0};
     if (strlen(hapticSource.hapticUri.c_str()) > PATH_MAX ||
         realpath(hapticSource.hapticUri.c_str(), realpathRes) == nullptr) {
         return 0;
