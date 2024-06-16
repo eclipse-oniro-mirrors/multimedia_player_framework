@@ -123,8 +123,7 @@ int32_t AudioHapticVibratorImpl::PreLoad(const HapticSource &hapticSource,
             SetIsSupportEffectId(true);
             MEDIA_LOGI("The effectId is supported. Vibrator has been prepared.");
             return MSERR_OK;
-        }
-        else {
+        } else {
             MEDIA_LOGE("The effectId is not supported!");
             return MSERR_UNSUPPORT_FILE;
         }    
