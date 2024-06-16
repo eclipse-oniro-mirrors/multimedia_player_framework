@@ -41,6 +41,7 @@ public:
     int32_t Stop(const int32_t &streamID) override;
     int32_t Release() override;
     int32_t NotifyLoadCompleted();
+    int32_t SetRealUri(std::string systemToneUri, int32_t &fileDes, std::string &uri);
 
 private:
     void InitPlayer();
