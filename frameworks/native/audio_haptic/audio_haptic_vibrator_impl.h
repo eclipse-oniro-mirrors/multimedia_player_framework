@@ -20,7 +20,6 @@
 
 #include <cstdint>
 #include <string>
-#include <limits.h>
 
 #ifdef SUPPORT_VIBRATOR
 #include "vibrator_agent.h"
