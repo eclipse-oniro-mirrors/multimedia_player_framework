@@ -175,7 +175,7 @@ protected:
         std::string url;
         int32_t effectMode = OHOS::AudioStandard::AudioEffectMode::EFFECT_DEFAULT;
         std::map<std::string, std::string> header;
-        AVPlayStrategy strategy_ = nullptr;
+        AVPlayStrategy strategy_;
     } config_;
 
 private:
