@@ -101,12 +101,12 @@ int32_t SystemTonePlayerImpl::Prepare()
     }
     std::string uri = systemToneUri;
     if (systemToneUri.find(FDHEAD) == std::string::npos) {
-        char *realpathRes = nullptr;
-        realpathRes = realpath(systemToneUri.c_str(), nullptr);
-        if (realpathRes == nullptr) {
+        char realpathRes[PATH_MAX + 1] = {0x00};
+        if (strlen(systemToneUri.c_str()) > PATH_MAX ||
+            realpath(systemToneUri.c_str(), realpathRes) == nullptr) {
             return MSERR_OPEN_FILE_FAILED;
         }
-        fileDes_ = open(systemToneUri.c_str(), O_RDONLY);
+        fileDes_ = open(realpathRes, O_RDONLY);
         if (fileDes_ == -1) {
             int32_t ret = ApplyDefaultSystemToneUri(systemToneUri);
             if (ret == MSERR_OK) {
