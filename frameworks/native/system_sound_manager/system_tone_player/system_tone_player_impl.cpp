@@ -17,7 +17,6 @@
 
 #include <fcntl.h>
 #include <thread>
-#include <limits.h>
 
 #include "audio_info.h"
 
