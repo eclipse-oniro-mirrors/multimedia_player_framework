@@ -102,8 +102,9 @@ int32_t SystemTonePlayerImpl::Prepare()
     std::string uri = systemToneUri;
     if (systemToneUri.find(FDHEAD) == std::string::npos) {
         char realpathRes[PATH_MAX + 1] = {0x00};
-        realpath(systemToneUri.c_str(), realpathRes);
-        fileDes_ = open(realpathRes, O_RDONLY);
+        if (realpath(systemToneUri.c_str(), realpathRes) != nullptr) {
+            fileDes_ = open(realpathRes, O_RDONLY);
+        }
         if (fileDes_ == -1) {
             int32_t ret = ApplyDefaultSystemToneUri(systemToneUri);
             if (ret == MSERR_OK) {
