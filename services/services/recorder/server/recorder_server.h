@@ -135,10 +135,10 @@ private:
     std::mutex cbMutex_;
     TaskQueue taskQue_;
     struct ConfigInfo {
-        VideoSourceType videoSource = 0;
-        AudioSourceType audioSource = 0;
-        VideoCodecFormat videoCodec = 0;
-        AudioCodecFormat audioCodec = 0;
+        VideoSourceType videoSource = VIDEO_SOURCE_BUTT;
+        AudioSourceType audioSource = AUDIO_SOURCE_INVALID;
+        VideoCodecFormat videoCodec = VIDEO_CODEC_FORMAT_BUTT;
+        AudioCodecFormat audioCodec = AUDIO_CODEC_FORMAT_BUTT;
         int32_t width = 0;
         int32_t height = 0;
         int32_t frameRate = 0;
@@ -150,7 +150,7 @@ private:
         int32_t audioChannel = 0;
         int32_t audioBitRate = 0;
         int32_t maxDuration = 0;
-        OutputFormatType format = 0;
+        OutputFormatType format = FORMAT_BUTT;
         int64_t maxFileSize = 0;
         float latitude = 0.0;
         float longitude = 0.0;
