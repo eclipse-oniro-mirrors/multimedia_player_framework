@@ -419,7 +419,7 @@ int32_t HiPlayerImpl::SelectBitRate(uint32_t bitRate)
 {
     MEDIA_LOGD("HiPlayerImpl:: Select BitRate %{public}d", bitRate);
     FALSE_RETURN_V_MSG_E(demuxer_ != nullptr,
-        MSERR_INVALID_OPERATIONe, "SelectBitRate failed, demuxer_ is null");
+        MSERR_INVALID_OPERATION, "SelectBitRate failed, demuxer_ is null");
     Status ret = demuxer_->SelectBitRate(bitRate);
     if (ret == Status::OK) {
         Format bitRateFormat;
