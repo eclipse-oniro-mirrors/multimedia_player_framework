@@ -41,8 +41,6 @@ public:
     int32_t StopVibrate() override;
     int32_t GetDelayTime() override;
     void SetIsSupportEffectId(bool isSupport);
-    int32_t CheckHapticUriIsValid(const HapticSource hapticSource,
-        int32_t &effectResult, bool &isSupported, int32_t &fd);
 
 private:
     int32_t StartVibrateForSoundPool();
