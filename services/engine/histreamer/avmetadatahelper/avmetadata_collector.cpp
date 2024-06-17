@@ -171,7 +171,7 @@ std::unordered_map<int32_t, std::string> AVMetaDataCollector::GetMetadata(
         }
 
         Plugins::MediaType mediaType;
-        FALSE_RETURN_V_MSG_E(meta->GetData(Tag::MEDIA_TYPE, mediaType), metadata.tbl_,
+        FALSE_RETURN_V_MSG_E(meta->GetData(Tag::MEDIA_TYPE, mediaType) != nullptr, metadata.tbl_,
             "mediaType not found, index: %zu", index);
         ConvertToAVMeta(meta, metadata);
     }
