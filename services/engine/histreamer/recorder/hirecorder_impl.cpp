@@ -483,7 +483,7 @@ void HiRecorderImpl::OnAudioCaptureChange(const AudioStandard::AudioCapturerChan
 int32_t HiRecorderImpl::GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &changeInfo)
 {
     FALSE_RETURN_V_MSG_E(audioCaptureFilter_ != nullptr,
-        (int32_t)Status::ERROR_INVALID_OPERATION, 
+        (int32_t)Status::ERROR_INVALID_OPERATION,
         "audioCaptureFilter_ is nullptr, cannot get audio capturer change info");
     
     AudioStandard::AudioCapturerChangeInfo audioChangeInfo;
