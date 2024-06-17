@@ -84,24 +84,6 @@ void AudioHapticVibratorImpl::SetIsSupportEffectId(bool isSupport)
 #endif
 }
 
-int32_t AudioHapticVibratorImpl::CheckHapticUriIsValid(const HapticSource hapticSource,
-    int32_t &effectResult, bool &isSupported, int32_t &fd)
-{
-#ifdef SUPPORT_VIBRATOR
-    if (hapticSource.hapticUri == "") {
-        effectResult = Sensors::IsSupportEffect(hapticSource.effectId.c_str(), &isSupported);
-        return -1;
-    }
-    char realpathRes[PATH_MAX] = {0};
-    if (strlen(hapticSource.hapticUri.c_str()) > PATH_MAX ||
-        realpath(hapticSource.hapticUri.c_str(), realpathRes) == nullptr) {
-        return 0;
-    }
-    fd = open(realpathRes, O_RDONLY);
-#endif
-    return 0;
-}
-
 int32_t AudioHapticVibratorImpl::PreLoad(const HapticSource &hapticSource,
     const AudioStandard::StreamUsage &streamUsage)
 {
@@ -117,11 +99,9 @@ int32_t AudioHapticVibratorImpl::PreLoad(const HapticSource &hapticSource,
         vibratorUsage_ = VibratorUsage::USAGE_MEDIA;
     }
     hapticSource_ = hapticSource;
-    bool isSupported = false;
-    int32_t effectResult = -1;
-    int32_t fd = -1;
-    int32_t ret = CheckHapticUriIsValid(hapticSource, effectResult, isSupported, fd);
-    if (ret == -1) {
+    if (hapticSource.hapticUri == "") {
+        bool isSupported = false;
+        int32_t effectResult = Sensors::IsSupportEffect(hapticSource.effectId.c_str(), &isSupported);
         if (effectResult == 0 && isSupported) {
             SetIsSupportEffectId(true);
             MEDIA_LOGI("The effectId is supported. Vibrator has been prepared.");
@@ -131,11 +111,14 @@ int32_t AudioHapticVibratorImpl::PreLoad(const HapticSource &hapticSource,
             return MSERR_UNSUPPORT_FILE;
         }
     }
-    if (ret == 0 && fd == -1) {
+    int32_t fd = open(hapticSource.hapticUri.c_str(), O_RDONLY);
+    if (fd == -1) {
+        // open file failed, return.
         return MSERR_OPEN_FILE_FAILED;
     }
     vibratorFD_ = std::make_shared<VibratorFileDescription>();
     vibratorPkg_ = std::make_shared<VibratorPackage>();
+
     struct stat64 statbuf = { 0 };
     if (fstat64(fd, &statbuf) == 0) {
         vibratorFD_->fd = fd;
@@ -144,6 +127,7 @@ int32_t AudioHapticVibratorImpl::PreLoad(const HapticSource &hapticSource,
     } else {
         return MSERR_OPEN_FILE_FAILED;
     }
+
     int32_t result = Sensors::PreProcess(*vibratorFD_, *vibratorPkg_);
     if (result != 0) {
         MEDIA_LOGE("PreProcess: %{public}d", result);
