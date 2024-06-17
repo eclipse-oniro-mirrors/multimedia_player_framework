@@ -171,7 +171,8 @@ std::unordered_map<int32_t, std::string> AVMetaDataCollector::GetMetadata(
         }
 
         Plugins::MediaType mediaType;
-        FALSE_RETURN_V_MSG_E(meta->GetData(Tag::MEDIA_TYPE, mediaType), metadata.tbl_, "mediaType not found, index: %zu", index);
+        FALSE_RETURN_V_MSG_E(meta->GetData(Tag::MEDIA_TYPE, mediaType), metadata.tbl_,
+            "mediaType not found, index: %zu", index);
         ConvertToAVMeta(meta, metadata);
     }
     FormatAVMeta(metadata, imageTrackCount, globalInfo);
@@ -208,7 +209,8 @@ std::shared_ptr<AVSharedMemory> AVMetaDataCollector::GetArtPicture()
         if (Any::IsSameTypeWith<std::vector<uint8_t>>(mapIt->second)) {
             coverAddr = AnyCast<std::vector<uint8_t>>(mapIt->second);
         }
-        FALSE_RETURN_V_MSG_E(!(coverAddr.size() == 0 || static_cast<int>(coverAddr.size()) > PICTURE_MAX_SIZE), nullptr, "InvalidArtPictureSize %d", coverAddr.size());
+        FALSE_RETURN_V_MSG_E(!(coverAddr.size() == 0 || static_cast<int>(coverAddr.size()) > PICTURE_MAX_SIZE),
+            nullptr, "InvalidArtPictureSize %d", coverAddr.size());
         uint8_t *addr = coverAddr.data();
         size_t size = coverAddr.size();
         auto artPicMem =
