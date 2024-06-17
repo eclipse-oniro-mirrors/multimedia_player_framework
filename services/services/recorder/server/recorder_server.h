@@ -155,7 +155,7 @@ private:
         float latitude = 0.0;
         float longitude = 0.0;
         int32_t rotation = 0;
-        int32_t url = 0;
+        int32_t url = -1;
         Meta customInfo;
         std::string genre;
         bool withVideo = false;
@@ -166,7 +166,7 @@ private:
 
     std::atomic<bool> watchdogPause_ = false;
     struct StatisticalEventInfo {
-        int32_t errCode = 0;
+        int32_t errCode = -1;
         std::string errMsg;
         int32_t recordDuration = -1;
         std::string containerMime;
