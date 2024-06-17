@@ -986,7 +986,7 @@ int32_t HiPlayerImpl::GetDuration(int32_t& durationMs)
 
 int32_t HiPlayerImpl::InitDuration()
 {
-    FALSE_RETURN_V_MSG_E(demuxer_ != nullptr,,
+    FALSE_RETURN_V_MSG_E(demuxer_ != nullptr,
         TransStatus(Status::ERROR_WRONG_STATE), "Get media duration failed, demuxer is not ready");
     int64_t duration = 0;
     bool found = false;
