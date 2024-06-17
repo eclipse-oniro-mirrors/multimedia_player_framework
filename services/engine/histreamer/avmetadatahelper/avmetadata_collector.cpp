@@ -158,7 +158,7 @@ std::unordered_map<int32_t, std::string> AVMetaDataCollector::GetMetadata(
     size_t trackCount = trackInfos.size();
     for (size_t index = 0; index < trackCount; index++) {
         std::shared_ptr<Meta> meta = trackInfos[index];
-        FALSE_RETURN_V_MSG_E(meta != nullptr, metadata.tbl_, "meta is invalid, index: %zu", index);
+        CHECK_AND_RETURN_RET_LOG(meta != nullptr, metadata.tbl_, "meta is invalid, index: %zu", index);
 
         // skip the image track
         std::string mime;
@@ -171,7 +171,7 @@ std::unordered_map<int32_t, std::string> AVMetaDataCollector::GetMetadata(
         }
 
         Plugins::MediaType mediaType;
-        FALSE_RETURN_V_MSG_E(meta->GetData(Tag::MEDIA_TYPE, mediaType) != nullptr, metadata.tbl_,
+        CHECK_AND_RETURN_RET_LOG(meta->GetData(Tag::MEDIA_TYPE, mediaType) != nullptr, metadata.tbl_,
             "mediaType not found, index: %zu", index);
         ConvertToAVMeta(meta, metadata);
     }
@@ -209,7 +209,7 @@ std::shared_ptr<AVSharedMemory> AVMetaDataCollector::GetArtPicture()
         if (Any::IsSameTypeWith<std::vector<uint8_t>>(mapIt->second)) {
             coverAddr = AnyCast<std::vector<uint8_t>>(mapIt->second);
         }
-        FALSE_RETURN_V_MSG_E(!(coverAddr.size() == 0 || static_cast<int>(coverAddr.size()) > PICTURE_MAX_SIZE),
+        CHECK_AND_RETURN_RET_LOG(!(coverAddr.size() == 0 || static_cast<int>(coverAddr.size()) > PICTURE_MAX_SIZE),
             nullptr, "InvalidArtPictureSize %d", coverAddr.size());
         uint8_t *addr = coverAddr.data();
         size_t size = coverAddr.size();
