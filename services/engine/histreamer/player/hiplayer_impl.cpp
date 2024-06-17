@@ -418,7 +418,8 @@ void HiPlayerImpl::SetInterruptState(bool isInterruptNeeded)
 int32_t HiPlayerImpl::SelectBitRate(uint32_t bitRate)
 {
     MEDIA_LOGD("HiPlayerImpl:: Select BitRate %{public}d", bitRate);
-    CHECK_AND_RETURN_RET_LOG(demuxer_ != nullptr, MSERR_INVALID_OPERATIONe, "SelectBitRate failed, demuxer_ is null");
+    FALSE_RETURN_V_MSG_E(demuxer_ != nullptr,
+        MSERR_INVALID_OPERATIONe, "SelectBitRate failed, demuxer_ is null");
     Status ret = demuxer_->SelectBitRate(bitRate);
     if (ret == Status::OK) {
         Format bitRateFormat;
@@ -490,7 +491,8 @@ int32_t HiPlayerImpl::Pause()
 {
     MediaTrace trace("HiPlayerImpl::Pause");
     MEDIA_LOGI("Pause in");
-    CHECK_AND_RETURN_RET_LOG(pipelineStates_ != PlayerStates::PLAYER_PLAYBACK_COMPLETE, TransStatus(Status::OK), "completed not allow pause");
+    FALSE_RETURN_V_MSG_E(pipelineStates_ != PlayerStates::PLAYER_PLAYBACK_COMPLETE,
+        TransStatus(Status::OK), "completed not allow pause");
     Status ret = Status::OK;
     syncManager_->Pause();
     ret = pipeline_->Pause();
@@ -808,7 +810,8 @@ Status HiPlayerImpl::doSeek(int64_t seekPos, PlayerSeekMode mode)
 {
     MEDIA_LOGD("doSeek");
     int64_t seekTimeUs = 0;
-    CHECK_AND_RETURN_RET_LOG(Plugins::Us2HstTime(seekPos, seekTimeUs), Status::ERROR_INVALID_PARAMETER, "Invalid seekPos: %{public}" PRId64, seekPos);
+    FALSE_RETURN_V_MSG_E(Plugins::Us2HstTime(seekPos, seekTimeUs),
+        Status::ERROR_INVALID_PARAMETER, "Invalid seekPos: %{public}" PRId64, seekPos);
     if (mode == PlayerSeekMode::SEEK_CLOSEST) {
         MEDIA_LOGI("doSeek SEEK_CLOSEST");
         if (videoDecoder_ != nullptr) {
@@ -850,7 +853,8 @@ Status HiPlayerImpl::doSeek(int64_t seekPos, PlayerSeekMode mode)
 int32_t HiPlayerImpl::SetVolume(float leftVolume, float rightVolume)
 {
     MEDIA_LOGI("SetVolume in");
-    CHECK_AND_RETURN_RET_LOG(leftVolume >= 0 || leftVolume < MAX_MEDIA_VOLUME || rightVolume >= 0 || rightVolume < MAX_MEDIA_VOLUME, (int32_t)Status::ERROR_INVALID_PARAMETER, "volume not valid, should be in range [0,100]");
+    FALSE_RETURN_V_MSG_E(leftVolume >= 0 || leftVolume < MAX_MEDIA_VOLUME || rightVolume >= 0 || rightVolume < MAX_MEDIA_VOLUME,
+        (int32_t)Status::ERROR_INVALID_PARAMETER, "volume not valid, should be in range [0,100]");
     float volume = 0.0f;
     if (leftVolume < 1e-6 && rightVolume >= 1e-6) {  // 1e-6
         volume = rightVolume;
@@ -982,7 +986,8 @@ int32_t HiPlayerImpl::GetDuration(int32_t& durationMs)
 
 int32_t HiPlayerImpl::InitDuration()
 {
-    CHECK_AND_RETURN_RET_LOG(demuxer_ != nullptr, TransStatus(Status::ERROR_WRONG_STATE), "Get media duration failed, demuxer is not ready");
+    FALSE_RETURN_V_MSG_E(demuxer_ != nullptr,,
+        TransStatus(Status::ERROR_WRONG_STATE), "Get media duration failed, demuxer is not ready");
     int64_t duration = 0;
     bool found = false;
     if (demuxer_->GetDuration(duration)) {
@@ -1082,7 +1087,8 @@ int32_t HiPlayerImpl::GetAudioEffectMode(int32_t &effectMode)
     if (audioSink_ != nullptr) {
         res = audioSink_->GetAudioEffectMode(effectMode);
     }
-    CHECK_AND_RETURN_RET_LOG(res == Status::OK, MSERR_UNKNOWN, "audioSink get AudioEffectMode error");
+    FALSE_RETURN_V_MSG_E(res == Status::OK,
+        MSERR_UNKNOWN, "audioSink get AudioEffectMode error");
     return MSERR_OK;
 }
 
