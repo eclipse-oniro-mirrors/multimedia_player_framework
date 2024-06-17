@@ -260,7 +260,7 @@ int32_t HiRecorderImpl::Prepare()
     MediaTrace trace("HiRecorderImpl::Prepare");
     MEDIA_LOG_I("Prepare enter.");
     FALSE_RETURN_V_MSG_E(lseek(fd_, 0, SEEK_CUR) != -1,
-            (int32_t)Status::ERROR_UNKNOWN, "The fd is invalid.");
+        (int32_t)Status::ERROR_UNKNOWN, "The fd is invalid.");
 
     if (audioCaptureFilter_) {
         audioEncFormat_->Set<Tag::APP_TOKEN_ID>(appTokenId_);
@@ -483,7 +483,8 @@ void HiRecorderImpl::OnAudioCaptureChange(const AudioStandard::AudioCapturerChan
 int32_t HiRecorderImpl::GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &changeInfo)
 {
     FALSE_RETURN_V_MSG_E(audioCaptureFilter_ != nullptr,
-            (int32_t)Status::ERROR_INVALID_OPERATION, "audioCaptureFilter_ is nullptr, cannot get audio capturer change info");
+        (int32_t)Status::ERROR_INVALID_OPERATION, 
+        "audioCaptureFilter_ is nullptr, cannot get audio capturer change info");
     
     AudioStandard::AudioCapturerChangeInfo audioChangeInfo;
     Status ret = audioCaptureFilter_->GetCurrentCapturerChangeInfo(audioChangeInfo);
@@ -507,8 +508,8 @@ int32_t HiRecorderImpl::GetAvailableEncoder(std::vector<EncoderCapabilityData> &
 
 int32_t HiRecorderImpl::GetMaxAmplitude()
 {
-    FALSE_RETURN_V_MSG_E(audioCaptureFilter_,
-            (int32_t)Status::ERROR_INVALID_OPERATION, "audioCaptureFilter_ is null, cannot get audio max amplitude");
+    FALSE_RETURN_V_MSG_E(audioCaptureFilter_ != nullptr,
+        (int32_t)Status::ERROR_INVALID_OPERATION, "audioCaptureFilter_ is null, cannot get audio max amplitude");
 
     return audioCaptureFilter_->GetMaxAmplitude();
 }
