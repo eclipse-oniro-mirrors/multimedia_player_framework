@@ -201,14 +201,16 @@ void AVMetadataHelperImpl::SetScene(Scene scene)
 
 void AVMetadataHelperImpl::ReportSceneCode(Scene scene)
 {
-    CHECK_AND_RETURN_NO_LOG(scene != Scene::AV_META_SCENE_NORMAL);
+    CHECK_AND_RETURN_NO_LOG(scene == Scene::AV_META_SCENE_CLONE || scene == Scene::AV_META_SCENE_BATCH_HANDLE);
     auto sceneCode = SCENE_CODE_MAP[scene];
-    auto &lastTsp = SCENE_TIMESTAMP_MAP[scene];
+    auto lastTsp = SCENE_TIMESTAMP_MAP[scene];
     auto now =
         std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
     auto duration = now - std::chrono::milliseconds(lastTsp);
-    CHECK_AND_RETURN_NO_LOG(duration >= std::chrono::milliseconds(SCENE_CODE_EFFECTIVE_DURATION_MS));
-    lastTsp = now.count();
+    if (duration < std::chrono::milliseconds(SCENE_CODE_EFFECTIVE_DURATION_MS)) {
+        return;
+    }
+    SCENE_TIMESTAMP_MAP[scene] = now.count();
     MEDIA_LOGI("Report scene code %{public}ld", sceneCode);
     int32_t ret = HiSysEventWrite(
         PERFORMANCE_STATS, "CPU_SCENE_ENTRY", OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR, "PACKAGE_NAME",
