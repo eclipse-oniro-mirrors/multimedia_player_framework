@@ -853,8 +853,8 @@ Status HiPlayerImpl::doSeek(int64_t seekPos, PlayerSeekMode mode)
 int32_t HiPlayerImpl::SetVolume(float leftVolume, float rightVolume)
 {
     MEDIA_LOGI("SetVolume in");
-    FALSE_RETURN_V_MSG_E(leftVolume >= 0 || leftVolume < MAX_MEDIA_VOLUME || rightVolume >= 0
-        || rightVolume < MAX_MEDIA_VOLUME,
+    FALSE_RETURN_V_MSG_E(!(leftVolume >= 0 || leftVolume < MAX_MEDIA_VOLUME || rightVolume >= 0
+        || rightVolume < MAX_MEDIA_VOLUME),
         (int32_t)Status::ERROR_INVALID_PARAMETER, "volume not valid, should be in range [0,100]");
     float volume = 0.0f;
     if (leftVolume < 1e-6 && rightVolume >= 1e-6) {  // 1e-6
