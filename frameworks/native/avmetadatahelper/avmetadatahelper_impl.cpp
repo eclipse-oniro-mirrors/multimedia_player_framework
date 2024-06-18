@@ -201,7 +201,9 @@ void AVMetadataHelperImpl::SetScene(Scene scene)
 
 void AVMetadataHelperImpl::ReportSceneCode(Scene scene)
 {
-    CHECK_AND_RETURN_NO_LOG(scene == Scene::AV_META_SCENE_CLONE || scene == Scene::AV_META_SCENE_BATCH_HANDLE);
+    if (scene != Scene::AV_META_SCENE_CLONE && scene != Scene::AV_META_SCENE_BATCH_HANDLE) {
+        return;
+    }
     auto sceneCode = SCENE_CODE_MAP[scene];
     auto lastTsp = SCENE_TIMESTAMP_MAP[scene];
     auto now =
@@ -214,7 +216,7 @@ void AVMetadataHelperImpl::ReportSceneCode(Scene scene)
     MEDIA_LOGI("Report scene code %{public}ld", sceneCode);
     int32_t ret = HiSysEventWrite(
         PERFORMANCE_STATS, "CPU_SCENE_ENTRY", OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR, "PACKAGE_NAME",
-        "media_service", "SCENE_ID", std::to_string(sceneCode).c_str(), "HAPPEN_TIME", lastTsp);
+        "media_service", "SCENE_ID", std::to_string(sceneCode).c_str(), "HAPPEN_TIME", now.count());
     if (ret != MSERR_OK) {
         MEDIA_LOGW("report error");
     }
