@@ -360,7 +360,6 @@ public:
      */
     virtual int32_t SetSource(const std::string &uri, int32_t usage = AVMetadataUsage::AV_META_USAGE_PIXEL_MAP) = 0;
 
-
     /**
      * Set the media source uri to resolve. Calling this method before the reset
      * of the methods in this class. This method maybe time consuming.
