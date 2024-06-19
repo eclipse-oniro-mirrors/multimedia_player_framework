@@ -20,6 +20,7 @@
 
 namespace OHOS {
 namespace Media {
+constexpr int32_t REPORT_PROGRESS_INTERVAL = 100;
 class TransCoderEventReceiver : public Pipeline::EventReceiver {
 public:
     explicit TransCoderEventReceiver(HiTransCoderImpl *hiTransCoderImpl)
@@ -206,7 +207,6 @@ int32_t HiTransCoderImpl::Configure(const TransCoderParam &transCoderParam)
         }
         case TransCoderPublicParamType::VIDEO_RECTANGLE: {
             VideoRectangle videoRectangle = static_cast<const VideoRectangle&>(transCoderParam);
-            MEDIA_LOG_I("HiTransCoderImpl::Configure width: %{public}d, height: %{public}d", videoRectangle.width, videoRectangle.height);
             videoEncFormat_->Set<Tag::VIDEO_WIDTH>(videoRectangle.width);
             videoEncFormat_->Set<Tag::VIDEO_HEIGHT>(videoRectangle.height);
             break;
@@ -247,7 +247,7 @@ int32_t HiTransCoderImpl::Start()
 {
     MEDIA_LOG_I("HiTransCoderImpl::Start()");
     Status ret = pipeline_->Start();
-    callbackLooper_->StartReportMediaProgress(100);
+    callbackLooper_->StartReportMediaProgress(REPORT_PROGRESS_INTERVAL);
     return (int32_t)ret;
 }
 
@@ -282,7 +282,8 @@ void HiTransCoderImpl::OnEvent(const Event &event)
         }
         case EventType::EVENT_COMPLETE: {
             MEDIA_LOG_I("HiTransCoderImpl EVENT_COMPLETE");
-            cancelTask_ = std::make_shared<Task>("CancelTransCoder", "", TaskType::SINGLETON, TaskPriority::NORMAL, false);
+            cancelTask_ = std::make_shared<Task>("CancelTransCoder", "",
+                TaskType::SINGLETON, TaskPriority::NORMAL, false);
             cancelTask_->SubmitJobOnce([this]() {
                 Cancel();
                 auto ptr = obs_.lock();

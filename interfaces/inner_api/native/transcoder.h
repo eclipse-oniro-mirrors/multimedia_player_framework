@@ -70,8 +70,8 @@ public:
     virtual void OnError(TransCoderErrorType errorType, int32_t errorCode) = 0;
 
     /**
-     * @brief Called when an information event occurs during transcodering. This callback is used to report transcodering
-     * information.
+     * @brief Called when an information event occurs during transcodering. This callback is used to report
+     * transcodering information.
      *
      * @param type Indicates the information type. For details, see {@link TransCoderInfoType}.
      * @param extra Indicates other information, for example, the start time position of a transcodering file.
@@ -260,8 +260,8 @@ public:
      *
      * @param block Indicates the stop mode. The value <b>true</b> indicates that the processing stops after all caches
      * are processed, and <b>false</b> indicates that the processing stops immediately and all caches are discarded.
-     * After the transcodering stopped, all sources and parameters must be set again to restore transcodering. The function is
-     * like to {@link Reset}, except that the block parameter is allowed to be specified.
+     * After the transcodering stopped, all sources and parameters must be set again to restore transcodering.
+     * The function is like to {@link Reset}, except that the block parameter is allowed to be specified.
      * @return Returns {@link MSERR_OK} if the transcodering is stopped; returns an error code otherwise.
      * @since 1.0
      * @version 1.0

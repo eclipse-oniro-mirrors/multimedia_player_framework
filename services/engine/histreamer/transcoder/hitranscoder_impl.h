@@ -67,7 +67,6 @@ private:
     Status LinkMuxerFilter(const std::shared_ptr<Pipeline::Filter>& preFilter, Pipeline::StreamType type);
     void CancelTransCoder();
 
-
     int32_t appUid_{0};
     int32_t appPid_{0};
     int32_t appTokenId_{0};

@@ -118,7 +118,7 @@ void HiTransCoderCallbackLooper::DoReportMediaProgress()
         Format format;
         int32_t currentPositionMs;
         int32_t durationMs;
-        if (transCoderEngine_->GetCurrentTime(currentPositionMs) == 0 && 
+        if (transCoderEngine_->GetCurrentTime(currentPositionMs) == 0 &&
             transCoderEngine_->GetDuration(durationMs) == 0) {
             int32_t progress = currentPositionMs * 100 / durationMs;
             MEDIA_LOG_D("EVENT_AUDIO_PROGRESS position updated: " PUBLIC_LOG_D32, progress);
@@ -148,7 +148,6 @@ void HiTransCoderCallbackLooper::DoReportError(const Any &error)
         auto ptr = AnyCast<std::pair<TransCoderErrorType, int32_t>>(&error);
         MEDIA_LOG_E("Report error, error type: " PUBLIC_LOG_D32 " error value: " PUBLIC_LOG_D32,
             static_cast<int32_t>(ptr->first), static_cast<int32_t>(ptr->second));
-        // obs->OnError(ptr->first, ptr->second);
     }
 }
 
@@ -193,8 +192,8 @@ void HiTransCoderCallbackLooper::Enqueue(const std::shared_ptr<HiTransCoderCallb
     }
     int64_t delayUs = (event->whenMs - SteadyClock::GetCurrentTimeMs()) * 1000;
     task_->SubmitJob([this, event]() {
-        LoopOnce(event);
-    }, delayUs);
+            LoopOnce(event);
+        }, delayUs);
 }
 }  // namespace Media
 }  // namespace OHOS
