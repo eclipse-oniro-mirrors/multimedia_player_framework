@@ -270,7 +270,7 @@ int32_t TransCoderServiceStub::SetVideoEncodingBitRate(MessageParcel &data, Mess
 }
 
 int32_t TransCoderServiceStub::SetAudioEncoder(MessageParcel &data, MessageParcel &reply)
-{;
+{
     int32_t format = data.ReadInt32();
     AudioCodecFormat encoderFormat = static_cast<AudioCodecFormat>(format);
     reply.WriteInt32(SetAudioEncoder(encoderFormat));
