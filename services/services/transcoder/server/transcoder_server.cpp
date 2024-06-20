@@ -39,13 +39,6 @@ namespace OHOS {
 namespace Media {
 const std::string START_TAG = "TransCoderCreate->Start";
 const std::string STOP_TAG = "TransCoderStop->Destroy";
-#define CHECK_STATUS_FAILED_AND_LOGE_RET(statusFailed, ret) \
-    do { \
-        if (statusFailed) { \
-            MEDIA_LOGE("invalid status, current status is %{public}s", GetStatusDescription(status_).c_str()); \
-            return ret; \
-        }; \
-    } while (false)
 
 std::shared_ptr<ITransCoderService> TransCoderServer::Create()
 {
@@ -134,7 +127,8 @@ void TransCoderServer::OnInfo(TransCoderOnInfoType type, int32_t extra)
 int32_t TransCoderServer::SetVideoEncoder(VideoCodecFormat encoder)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
+    CHECK_AND_RETURN_RET_LOG(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION,
+        "invalid status, current status is %{public}s", GetStatusDescription(status_).c_str());
     CHECK_AND_RETURN_RET_LOG(transCoderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     config_.videoCodec = encoder;
     VideoEnc vidEnc(encoder);
@@ -151,7 +145,8 @@ int32_t TransCoderServer::SetVideoEncoder(VideoCodecFormat encoder)
 int32_t TransCoderServer::SetVideoSize(int32_t width, int32_t height)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
+    CHECK_AND_RETURN_RET_LOG(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION,
+        "invalid status, current status is %{public}s", GetStatusDescription(status_).c_str());
     CHECK_AND_RETURN_RET_LOG(transCoderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     config_.width = width;
     config_.height = height;
@@ -169,7 +164,8 @@ int32_t TransCoderServer::SetVideoSize(int32_t width, int32_t height)
 int32_t TransCoderServer::SetVideoEncodingBitRate(int32_t rate)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
+    CHECK_AND_RETURN_RET_LOG(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION,
+        "invalid status, current status is %{public}s", GetStatusDescription(status_).c_str());
     CHECK_AND_RETURN_RET_LOG(transCoderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     config_.videoBitRate = rate;
     VideoBitRate vidBitRate(rate);
@@ -186,7 +182,8 @@ int32_t TransCoderServer::SetVideoEncodingBitRate(int32_t rate)
 int32_t TransCoderServer::SetAudioEncoder(AudioCodecFormat encoder)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
+    CHECK_AND_RETURN_RET_LOG(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION,
+        "invalid status, current status is %{public}s", GetStatusDescription(status_).c_str());
     CHECK_AND_RETURN_RET_LOG(transCoderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     config_.audioCodec = encoder;
     AudioEnc audEnc(encoder);
@@ -204,7 +201,8 @@ int32_t TransCoderServer::SetAudioEncoder(AudioCodecFormat encoder)
 int32_t TransCoderServer::SetAudioEncodingBitRate(int32_t bitRate)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
+    CHECK_AND_RETURN_RET_LOG(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION,
+        "invalid status, current status is %{public}s", GetStatusDescription(status_).c_str());
     CHECK_AND_RETURN_RET_LOG(transCoderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     config_.audioBitRate = bitRate;
     AudioBitRate audBitRate(bitRate);
@@ -221,7 +219,8 @@ int32_t TransCoderServer::SetAudioEncodingBitRate(int32_t bitRate)
 int32_t TransCoderServer::SetOutputFormat(OutputFormatType format)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_INITIALIZED, MSERR_INVALID_OPERATION);
+    CHECK_AND_RETURN_RET_LOG(status_ != REC_INITIALIZED, MSERR_INVALID_OPERATION,
+        "invalid status, current status is %{public}s", GetStatusDescription(status_).c_str());
     CHECK_AND_RETURN_RET_LOG(transCoderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     config_.format = format;
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
@@ -240,7 +239,8 @@ int32_t TransCoderServer::SetOutputFormat(OutputFormatType format)
 int32_t TransCoderServer::SetInputFile(std::string url)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_INITIALIZED, MSERR_INVALID_OPERATION);
+    CHECK_AND_RETURN_RET_LOG(status_ != REC_INITIALIZED, MSERR_INVALID_OPERATION,
+        "invalid status, current status is %{public}s", GetStatusDescription(status_).c_str());
     CHECK_AND_RETURN_RET_LOG(transCoderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     config_.srcUrl = url;
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
@@ -256,7 +256,8 @@ int32_t TransCoderServer::SetInputFile(std::string url)
 int32_t TransCoderServer::SetInputFile(int32_t fd, int64_t offset, int64_t size)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_INITIALIZED, MSERR_INVALID_OPERATION);
+    CHECK_AND_RETURN_RET_LOG(status_ != REC_INITIALIZED, MSERR_INVALID_OPERATION,
+        "invalid status, current status is %{public}s", GetStatusDescription(status_).c_str());
     CHECK_AND_RETURN_RET_LOG(transCoderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     config_.srcFd = fd;
     config_.srcFdOffset = offset;
@@ -277,7 +278,8 @@ int32_t TransCoderServer::SetInputFile(int32_t fd, int64_t offset, int64_t size)
 int32_t TransCoderServer::SetOutputFile(int32_t fd)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_INITIALIZED, MSERR_INVALID_OPERATION);
+    CHECK_AND_RETURN_RET_LOG(status_ != REC_INITIALIZED, MSERR_INVALID_OPERATION,
+        "invalid status, current status is %{public}s", GetStatusDescription(status_).c_str());
     CHECK_AND_RETURN_RET_LOG(transCoderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     config_.dstUrl = fd;
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
@@ -293,8 +295,8 @@ int32_t TransCoderServer::SetOutputFile(int32_t fd)
 int32_t TransCoderServer::SetTransCoderCallback(const std::shared_ptr<TransCoderCallback> &callback)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_INITIALIZED && status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
-
+    CHECK_AND_RETURN_RET_LOG(status_ != REC_INITIALIZED && status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION,
+        "invalid status, current status is %{public}s", GetStatusDescription(status_).c_str());
     {
         std::lock_guard<std::mutex> cbLock(cbMutex_);
         transCoderCb_ = callback;
@@ -320,7 +322,8 @@ int32_t TransCoderServer::Prepare()
         MEDIA_LOGE("Can not repeat Prepare");
         return MSERR_INVALID_OPERATION;
     }
-    CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
+    CHECK_AND_RETURN_RET_LOG(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION,
+        "invalid status, current status is %{public}s", GetStatusDescription(status_).c_str());
     CHECK_AND_RETURN_RET_LOG(transCoderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return transCoderEngine_->Prepare();
@@ -343,7 +346,8 @@ int32_t TransCoderServer::Start()
         MEDIA_LOGE("Can not repeat Start");
         return MSERR_INVALID_OPERATION;
     }
-    CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_PREPARED, MSERR_INVALID_OPERATION);
+    CHECK_AND_RETURN_RET_LOG(status_ != REC_PREPARED, MSERR_INVALID_OPERATION,
+        "invalid status, current status is %{public}s", GetStatusDescription(status_).c_str());
     CHECK_AND_RETURN_RET_LOG(transCoderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return transCoderEngine_->Start();
@@ -366,7 +370,8 @@ int32_t TransCoderServer::Pause()
         MEDIA_LOGE("Can not repeat Pause");
         return MSERR_INVALID_OPERATION;
     }
-    CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_TRANSCODERING, MSERR_INVALID_OPERATION);
+    CHECK_AND_RETURN_RET_LOG(status_ != REC_TRANSCODERING, MSERR_INVALID_OPERATION,
+        "invalid status, current status is %{public}s", GetStatusDescription(status_).c_str());
     CHECK_AND_RETURN_RET_LOG(transCoderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return transCoderEngine_->Pause();
@@ -389,7 +394,8 @@ int32_t TransCoderServer::Resume()
         MEDIA_LOGE("Can not repeat Resume");
         return MSERR_INVALID_OPERATION;
     }
-    CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_TRANSCODERING && status_ != REC_PAUSED, MSERR_INVALID_OPERATION);
+    CHECK_AND_RETURN_RET_LOG(status_ != REC_TRANSCODERING && status_ != REC_PAUSED, MSERR_INVALID_OPERATION,
+        "invalid status, current status is %{public}s", GetStatusDescription(status_).c_str());
     CHECK_AND_RETURN_RET_LOG(transCoderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return transCoderEngine_->Resume();
