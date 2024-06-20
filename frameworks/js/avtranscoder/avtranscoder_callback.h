@@ -21,6 +21,8 @@
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
 #include "common_napi.h"
+#include <uv.h>
+#include "scope_guard.h"
 
 namespace OHOS {
 namespace Media {
@@ -54,6 +56,9 @@ private:
     void OnJsErrorCallBack(AVTransCoderJsCallback *jsCb) const;
     void OnJsStateCallBack(AVTransCoderJsCallback *jsCb) const;
     void OnJsProgressUpdateCallback(AVTransCoderJsCallback *jsCb) const;
+    int32_t QueueErrorWork(uv_loop_s *loop, uv_work_t *work) const;
+    int32_t QueueStateWork(uv_loop_s *loop, uv_work_t *work) const;
+    int32_t QueueProgressUpdateWork(uv_loop_s *loop, uv_work_t *work) const;
     napi_env env_ = nullptr;
     std::mutex mutex_;
     std::string currentState_ = AVTransCoderState::STATE_IDLE;

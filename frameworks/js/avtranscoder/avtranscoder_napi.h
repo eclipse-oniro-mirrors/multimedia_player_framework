@@ -26,7 +26,6 @@
 
 namespace OHOS {
 namespace Media {
-/* type AVTransCoderState = 'idle' | 'prepared' | 'started' | 'paused' | 'cancelled' | 'completed' | 'released' | 'error'; */
 namespace AVTransCoderState {
 const std::string STATE_IDLE = "idle";
 const std::string STATE_PREPARED = "prepared";

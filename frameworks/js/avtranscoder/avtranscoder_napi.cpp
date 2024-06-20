@@ -258,7 +258,8 @@ napi_value AVTransCoderNapi::JsPrepare(napi_env env, napi_callback_info info)
     return result;
 }
 
-std::shared_ptr<TaskHandler<RetInfo>> AVTransCoderNapi::GetPrepareTask(std::unique_ptr<AVTransCoderAsyncContext> &asyncCtx)
+std::shared_ptr<TaskHandler<RetInfo>> AVTransCoderNapi::GetPrepareTask(
+    std::unique_ptr<AVTransCoderAsyncContext> &asyncCtx)
 {
     return std::make_shared<TaskHandler<RetInfo>>([napi = asyncCtx->napi, config = asyncCtx->config_]() {
         const std::string &option = AVTransCoderOpt::PREPARE;
@@ -774,7 +775,8 @@ int32_t AVTransCoderNapi::CheckRepeatOperation(const std::string &opt)
     std::string curState = napiCb->GetState();
     std::vector<std::string> repeatOpt = stateCtrl.at(curState);
     if (find(repeatOpt.begin(), repeatOpt.end(), opt) != repeatOpt.end()) {
-        MEDIA_LOGI("Current state is %{public}s. Please do not call %{public}s again!", curState.c_str(), opt.c_str());
+        MEDIA_LOGI("Current state is %{public}s. Please do not call %{public}s again!",
+            curState.c_str(), opt.c_str());
         return MSERR_INVALID_OPERATION;
     }
 
@@ -791,8 +793,7 @@ RetInfo AVTransCoderNapi::Configure(std::shared_ptr<AVTransCoderConfig> config)
         return RetInfo(MSERR_EXT_API9_OK, "");
     }
 
-    int32_t ret;
-    ret = transCoder_->SetOutputFormat(config->fileFormat);
+    int32_t ret = transCoder_->SetOutputFormat(config->fileFormat);
         CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "SetOutputFormat", "fileFormat"));
 
     ret = transCoder_->SetAudioEncoder(config->audioCodecFormat);
@@ -872,7 +873,8 @@ int32_t AVTransCoderNapi::GetAudioCodecFormat(const std::string &mime, AudioCode
     return MSERR_INVALID_VAL;
 }
 
-int32_t AVTransCoderNapi::GetAudioConfig(std::unique_ptr<AVTransCoderAsyncContext> &asyncCtx, napi_env env, napi_value args)
+int32_t AVTransCoderNapi::GetAudioConfig(std::unique_ptr<AVTransCoderAsyncContext> &asyncCtx,
+    napi_env env, napi_value args)
 {
     std::shared_ptr<AVTransCoderConfig> config = asyncCtx->config_;
     int32_t ret = MSERR_OK;
@@ -904,7 +906,8 @@ int32_t AVTransCoderNapi::GetVideoCodecFormat(const std::string &mime, VideoCode
     return MSERR_INVALID_VAL;
 }
 
-int32_t AVTransCoderNapi::GetVideoConfig(std::unique_ptr<AVTransCoderAsyncContext> &asyncCtx, napi_env env, napi_value args)
+int32_t AVTransCoderNapi::GetVideoConfig(std::unique_ptr<AVTransCoderAsyncContext> &asyncCtx,
+    napi_env env, napi_value args)
 {
     std::shared_ptr<AVTransCoderConfig> config = asyncCtx->config_;
     int32_t ret = MSERR_OK;
@@ -942,7 +945,8 @@ int32_t AVTransCoderNapi::GetOutputFormat(const std::string &extension, OutputFo
     return MSERR_INVALID_VAL;
 }
 
-int32_t AVTransCoderNapi::GetConfig(std::unique_ptr<AVTransCoderAsyncContext> &asyncCtx, napi_env env, napi_value args)
+int32_t AVTransCoderNapi::GetConfig(std::unique_ptr<AVTransCoderAsyncContext> &asyncCtx,
+    napi_env env, napi_value args)
 {
     napi_valuetype valueType = napi_undefined;
     napi_value item = nullptr;
@@ -953,7 +957,8 @@ int32_t AVTransCoderNapi::GetConfig(std::unique_ptr<AVTransCoderAsyncContext> &a
 
     asyncCtx->config_ = std::make_shared<AVTransCoderConfig>();
     CHECK_AND_RETURN_RET(asyncCtx->config_,
-        (asyncCtx->AVTransCoderSignError(MSERR_NO_MEMORY, "AVTransCoderConfig", "AVTransCoderConfig"), MSERR_NO_MEMORY));
+        (asyncCtx->AVTransCoderSignError(MSERR_NO_MEMORY, "AVTransCoderConfig", "AVTransCoderConfig"),
+            MSERR_NO_MEMORY));
 
     std::shared_ptr<AVTransCoderConfig> config = asyncCtx->config_;
 

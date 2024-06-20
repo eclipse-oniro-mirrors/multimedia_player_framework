@@ -155,6 +155,15 @@ void AVTransCoderCallback::OnJsStateCallBack(AVTransCoderJsCallback *jsCb) const
     };
 
     work->data = reinterpret_cast<void *>(jsCb);
+    int ret = QueueStateWork(loop, work);
+    CHECK_AND_RETURN_LOG(ret == 0, "fail to uv_queue_work_with_qos task");
+
+    CANCEL_SCOPE_EXIT_GUARD(0);
+    CANCEL_SCOPE_EXIT_GUARD(1);
+}
+
+int32_t AVTransCoderCallback::QueueStateWork(uv_loop_s *loop, uv_work_t *work) const
+{
     int ret = uv_queue_work_with_qos(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
         // Js Thread
         CHECK_AND_RETURN_LOG(work != nullptr, "work is nullptr");
@@ -169,7 +178,9 @@ void AVTransCoderCallback::OnJsStateCallBack(AVTransCoderJsCallback *jsCb) const
             napi_handle_scope scope = nullptr;
             napi_open_handle_scope(ref->env_, &scope);
             CHECK_AND_BREAK_LOG(scope != nullptr, "%{public}s scope is nullptr", request.c_str());
-            ON_SCOPE_EXIT(0) { napi_close_handle_scope(ref->env_, scope); };
+            ON_SCOPE_EXIT(0) {
+                napi_close_handle_scope(ref->env_, scope);
+            };
 
             napi_value jsCallback = nullptr;
             napi_status nstatus = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
@@ -193,10 +204,7 @@ void AVTransCoderCallback::OnJsStateCallBack(AVTransCoderJsCallback *jsCb) const
         delete event;
         delete work;
     }, uv_qos_user_initiated);
-    CHECK_AND_RETURN_LOG(ret == 0, "fail to uv_queue_work_with_qos task");
-
-    CANCEL_SCOPE_EXIT_GUARD(0);
-    CANCEL_SCOPE_EXIT_GUARD(1);
+    return ret;
 }
 
 void AVTransCoderCallback::OnJsProgressUpdateCallback(AVTransCoderJsCallback *jsCb) const
@@ -216,6 +224,15 @@ void AVTransCoderCallback::OnJsProgressUpdateCallback(AVTransCoderJsCallback *js
     };
 
     work->data = reinterpret_cast<void *>(jsCb);
+    int ret = QueueProgressUpdateWork(loop, work);
+    CHECK_AND_RETURN_LOG(ret == 0, "fail to uv_queue_work_with_qos task");
+
+    CANCEL_SCOPE_EXIT_GUARD(0);
+    CANCEL_SCOPE_EXIT_GUARD(1);
+}
+
+int32_t AVTransCoderCallback::QueueProgressUpdateWork(uv_loop_s *loop, uv_work_t *work) const
+{
     int ret = uv_queue_work_with_qos(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
         // Js Thread
         CHECK_AND_RETURN_LOG(work != nullptr, "work is nullptr");
@@ -234,7 +251,9 @@ void AVTransCoderCallback::OnJsProgressUpdateCallback(AVTransCoderJsCallback *js
             napi_handle_scope scope = nullptr;
             napi_open_handle_scope(ref->env_, &scope);
             CHECK_AND_BREAK_LOG(scope != nullptr, "%{public}s scope is nullptr", request.c_str());
-            ON_SCOPE_EXIT(0) { napi_close_handle_scope(ref->env_, scope); };
+            ON_SCOPE_EXIT(0) {
+                napi_close_handle_scope(ref->env_, scope);
+            };
 
             napi_value jsCallback = nullptr;
             napi_status nstatus = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
@@ -254,10 +273,7 @@ void AVTransCoderCallback::OnJsProgressUpdateCallback(AVTransCoderJsCallback *js
         delete event;
         delete work;
     }, uv_qos_user_initiated);
-    CHECK_AND_RETURN_LOG(ret == 0, "fail to uv_queue_work_with_qos task");
-
-    CANCEL_SCOPE_EXIT_GUARD(0);
-    CANCEL_SCOPE_EXIT_GUARD(1);
+    return ret;
 }
 
 std::string AVTransCoderCallback::GetState()
@@ -284,6 +300,15 @@ void AVTransCoderCallback::OnJsErrorCallBack(AVTransCoderJsCallback *jsCb) const
 
     work->data = reinterpret_cast<void *>(jsCb);
     // async callback, jsWork and jsWork->data should be heap object.
+    int ret = QueueErrorWork(loop, work); 
+    CHECK_AND_RETURN_LOG(ret == 0, "fail to uv_queue_work_with_qos task");
+
+    CANCEL_SCOPE_EXIT_GUARD(0);
+    CANCEL_SCOPE_EXIT_GUARD(1);
+}
+
+int32_t AVTransCoderCallback::QueueErrorWork(uv_loop_s *loop, uv_work_t *work) const
+{
     int ret = uv_queue_work_with_qos(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
         // Js Thread
         CHECK_AND_RETURN_LOG(work != nullptr, "work is nullptr");
@@ -304,7 +329,9 @@ void AVTransCoderCallback::OnJsErrorCallBack(AVTransCoderJsCallback *jsCb) const
             napi_handle_scope scope = nullptr;
             napi_open_handle_scope(ref->env_, &scope);
             CHECK_AND_BREAK_LOG(scope != nullptr, "%{public}s scope is nullptr", request.c_str());
-            ON_SCOPE_EXIT(0) { napi_close_handle_scope(ref->env_, scope); };
+            ON_SCOPE_EXIT(0) {
+                napi_close_handle_scope(ref->env_, scope);
+            };
 
             napi_value jsCallback = nullptr;
             napi_status nstatus = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
@@ -330,10 +357,7 @@ void AVTransCoderCallback::OnJsErrorCallBack(AVTransCoderJsCallback *jsCb) const
         delete event;
         delete work;
     }, uv_qos_user_initiated);
-    CHECK_AND_RETURN_LOG(ret == 0, "fail to uv_queue_work_with_qos task");
-
-    CANCEL_SCOPE_EXIT_GUARD(0);
-    CANCEL_SCOPE_EXIT_GUARD(1);
+    return ret;
 }
 } // namespace Media
 } // namespace OHOS
