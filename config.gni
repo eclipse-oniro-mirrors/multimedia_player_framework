@@ -205,7 +205,7 @@ declare_args() {
   player_framework_support_screen_capture_controller = false
   player_framework_support_jssoundpool = true
   player_framework_support_mediasource = true
-  player_framework_check_video_is_hdr_vivid = player_framework_support_player
+  player_framework_check_video_is_hdr_vivid = false
   
   if (defined(build_seccomp) && build_seccomp) {
     player_framework_support_seccomp = true
@@ -280,7 +280,7 @@ if (player_framework_support_transcoder) {
   player_framework_defines += [ "UNSUPPORT_TRANSCODER" ]
 }
 
-if (multimedia_player_framework_support_metadata) {
+if (player_framework_support_metadata) {
   player_framework_defines += [ "SUPPORT_METADATA" ]
 } else {
   player_framework_defines += [ "UNSUPPORT_METADATA" ]
