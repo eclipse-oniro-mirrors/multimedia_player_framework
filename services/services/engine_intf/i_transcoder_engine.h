@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -47,7 +47,19 @@ public:
 class ITransCoderEngine {
 public:
     virtual ~ITransCoderEngine() = default;
+
+    /**
+     * Sets the input file. The function must be called before Prepare. 
+     * After this interface called, the engine will not accept any source setting interface call.
+     * Return MSERR_OK indicates success, or others indicate failed.
+     */
     virtual int32_t SetInputFile(const std::string &url) = 0;
+
+    /**
+     * Sets the output file. The function must be called before Prepare. 
+     * After this interface called, the engine will not accept any destination setting interface call.
+     * Return MSERR_OK indicates success, or others indicate failed.
+     */
     virtual int32_t SetOutputFile(const int32_t fd) = 0;
 
     /**
@@ -91,8 +103,8 @@ public:
     virtual int32_t Pause() = 0;
 
     /**
-     * Resume transCodering. This function must be called during transCodering. After called, the paused transCodering will
-     * be resumed.
+     * Resume transCodering. This function must be called during transCodering. After called, the paused
+     * transCodering willbe resumed.
      * Return MSERR_OK indicates success, or others indicate failed.
      */
     virtual int32_t Resume() = 0;
@@ -102,7 +114,17 @@ public:
      * Return MSERR_OK indicates success, or others indicate failed.
      */
     virtual int32_t Cancel() = 0;
+
+    /**
+     * Get current transcodering time.
+     * Return MSERR_OK indicates success, or others indicate failed.
+     */
     virtual int32_t GetCurrentTime(int32_t &currentTime) = 0;
+
+    /**
+     * Get the input file duration.
+     * Return MSERR_OK indicates success, or others indicate failed.
+     */
     virtual int32_t GetDuration(int32_t &duration) = 0;
 };
 } // namespace Media

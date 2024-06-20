@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -27,7 +27,7 @@ public:
     virtual ~ITransCoderService() = default;
 
     /**
-     * @brief Sets a video encoder for recording.
+     * @brief Sets the encoder of the video to transcoder.
      *
      * If this function is not called, the output file does not contain the video track.
      * This function must be called after {@link SetVideoSource} but before {@link Prepare}.
@@ -41,7 +41,7 @@ public:
     virtual int32_t SetVideoEncoder(VideoCodecFormat encoder) = 0;
 
     /**
-     * @brief Sets the width and height of the video to record.
+     * @brief Sets the encoding video size of the video to transcoder.
      *
      * This function must be called after {@link SetVideoSource} but before {@link Prepare}.
      *
@@ -55,7 +55,7 @@ public:
     virtual int32_t SetVideoSize(int32_t width, int32_t height) = 0;
 
     /**
-     * @brief Sets the encoding bit rate of the video to record.
+     * @brief Sets the encoding bit rate of the video to transcoder.
      *
      * This function must be called after {@link SetVideoSource} but before {@link Prepare}.
      *
@@ -68,7 +68,7 @@ public:
     virtual int32_t SetVideoEncodingBitRate(int32_t rate) = 0;
 
     /**
-     * @brief Sets an audio encoder for recording.
+     * @brief Sets the encoder of the audio to transcoder.
      *
      * If this function is not called, the output file does not contain the audio track.
      * This function must be called after {@link SetAudioSource} but before {@link Prepare}.
@@ -82,7 +82,7 @@ public:
     virtual int32_t SetAudioEncoder(AudioCodecFormat encoder) = 0;
 
     /**
-     * @brief Sets the encoding bit rate of the audio to record.
+     * @brief Sets the encoding bit rate of the audio to transcoder.
      *
      * This function must be called after {@link SetAudioSource} but before {@link Prepare}.
      *
@@ -108,7 +108,7 @@ public:
     virtual int32_t SetOutputFormat(OutputFormatType format) = 0;
 
     /**
-     * @brief Sets the file descriptor (FD) of the output file.
+     * @brief Sets the file url of the input file.
      *
      * This function must be called before {@link Prepare}.
      *
@@ -120,6 +120,17 @@ public:
      */
     virtual int32_t SetInputFile(std::string url) = 0;
 
+    /**
+     * @brief Sets the file descriptor (FD) of the input file.
+     *
+     * This function must be called before {@link Prepare}.
+     *
+     * @param fd Indicates the FD of the file.
+     * @return Returns {@link SUCCESS} if the setting is successful; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
     virtual int32_t SetInputFile(int32_t fd, int64_t offset, int64_t size) = 0;
 
     /**
@@ -136,11 +147,11 @@ public:
     virtual int32_t SetOutputFile(int32_t fd) = 0;
 
     /**
-     * @brief Registers a recording listener.
+     * @brief Registers a transcodering listener.
      *
      * This function must be called before {@link Prepare}.
      *
-     * @param callback Indicates the recording listener to register. For details, see {@link RecorderCallback}.
+     * @param callback Indicates the transcodering listener to register. For details, see {@link TransCoderCallback}.
      * @return Returns {@link SUCCESS} if the listener is registered; returns an error code defined
      * in {@link media_errors.h} otherwise.
      * @since 1.0
@@ -149,7 +160,7 @@ public:
     virtual int32_t SetTransCoderCallback(const std::shared_ptr<TransCoderCallback> &callback) = 0;
 
     /**
-     * @brief Prepares for recording.
+     * @brief Prepares for transcodering.
      *
      * This function must be called before {@link Start}.
      *
@@ -161,11 +172,11 @@ public:
     virtual int32_t Prepare() = 0;
 
     /**
-     * @brief Starts recording.
+     * @brief Starts transcodering.
      *
      * This function must be called after {@link Prepare}.
      *
-     * @return Returns {@link SUCCESS} if the recording is started; returns an error code defined
+     * @return Returns {@link SUCCESS} if the transcodering is started; returns an error code defined
      * in {@link media_errors.h} otherwise.
      * @since 1.0
      * @version 1.0
@@ -173,11 +184,11 @@ public:
     virtual int32_t Start() = 0;
 
     /**
-     * @brief Pauses recording.
+     * @brief Pauses transcodering.
      *
-     * After {@link Start} is called, you can call this function to pause recording.
+     * After {@link Start} is called, you can call this function to pause transcodering.
      *
-     * @return Returns {@link SUCCESS} if the recording is paused; returns an error code defined
+     * @return Returns {@link SUCCESS} if the transcodering is paused; returns an error code defined
      * in {@link media_errors.h} otherwise.
      * @since 1.0
      * @version 1.0
@@ -185,11 +196,11 @@ public:
     virtual int32_t Pause() = 0;
 
     /**
-    * @brief Resumes recording.
+    * @brief Resumes transcodering.
     *
-    * You can call this function to resume recording after {@link Pause} is called.
+    * You can call this function to resume transcodering after {@link Pause} is called.
      *
-     * @return Returns {@link SUCCESS} if the recording is resumed; returns an error code defined
+     * @return Returns {@link SUCCESS} if the transcodering is resumed; returns an error code defined
      * in {@link media_errors.h} otherwise.
      * @since 1.0
      * @version 1.0
@@ -197,12 +208,11 @@ public:
     virtual int32_t Resume() = 0;
 
     /**
-     * @brief Resets the recording.
+     * @brief Cancels the transcodering.
      *
-     * After the function is called, add a recording source by calling {@link SetVideoSource} or {@link SetAudioSource},
-     * set related parameters, and call {@link Start} to start recording again after {@link Prepare} is called.
+     * After the function is called, add a transcodering is cancelled.
      *
-     * @return Returns {@link SUCCESS} if the recording is reset; returns an error code defined
+     * @return Returns {@link SUCCESS} if the transcodering is cancel; returns an error code defined
      * in {@link media_errors.h} otherwise.
      * @since 1.0
      * @version 1.0
@@ -210,9 +220,9 @@ public:
     virtual int32_t Cancel() = 0;
 
     /**
-     * @brief Releases recording resources.
+     * @brief Releases transcodering resources.
      *
-     * @return Returns {@link SUCCESS} if recording resources are released; returns an error code defined
+     * @return Returns {@link SUCCESS} if transcodering resources are released; returns an error code defined
      * in {@link media_errors.h} otherwise.
      * @since 1.0
      * @version 1.0
@@ -221,4 +231,4 @@ public:
 };
 } // namespace Media
 } // namespace OHOS
-#endif // I_RECORDER_SERVICE_H
+#endif // I_TRANSCODER_SERVICE_H
