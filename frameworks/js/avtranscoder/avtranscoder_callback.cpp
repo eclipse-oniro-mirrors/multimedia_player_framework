@@ -300,7 +300,7 @@ void AVTransCoderCallback::OnJsErrorCallBack(AVTransCoderJsCallback *jsCb) const
 
     work->data = reinterpret_cast<void *>(jsCb);
     // async callback, jsWork and jsWork->data should be heap object.
-    int ret = QueueErrorWork(loop, work); 
+    int ret = QueueErrorWork(loop, work);
     CHECK_AND_RETURN_LOG(ret == 0, "fail to uv_queue_work_with_qos task");
 
     CANCEL_SCOPE_EXIT_GUARD(0);
