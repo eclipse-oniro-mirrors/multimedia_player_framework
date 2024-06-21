@@ -180,7 +180,7 @@ ohos_shared_library("media_service") {
     ]
   }
 
-  if (multimedia_player_framework_support_transcoder) {
+  if (player_framework_support_transcoder) {
     sources += [
       "transcoder/ipc/transcoder_listener_proxy.cpp",
       "transcoder/ipc/transcoder_service_stub.cpp",

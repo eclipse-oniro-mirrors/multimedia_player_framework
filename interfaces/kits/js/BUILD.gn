@@ -121,7 +121,7 @@ ohos_shared_library("media") {
     ]
   }
 
-  if (multimedia_player_framework_support_transcoder) {
+  if (player_framework_support_transcoder) {
     sources += [
       "//foundation/multimedia/player_framework/frameworks/js/avtranscoder/avtranscoder_callback.cpp",
       "//foundation/multimedia/player_framework/frameworks/js/avtranscoder/avtranscoder_napi.cpp",
