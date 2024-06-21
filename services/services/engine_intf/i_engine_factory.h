@@ -84,8 +84,8 @@ public:
 #endif
 
 #ifdef SUPPORT_TRANSCODER
-    virtual std::unique_ptr<ITransCoderEngine> CreateTransCoderEngine(int32_t appUid, int32_t appPid, uint32_t appTokenId,
-        uint64_t appFullTokenId)
+    virtual std::unique_ptr<ITransCoderEngine> CreateTransCoderEngine(int32_t appUid, int32_t appPid,
+        uint32_t appTokenId, uint64_t appFullTokenId)
     {
         (void)appUid;
         (void)appPid;

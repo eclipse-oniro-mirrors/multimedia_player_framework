@@ -49,7 +49,7 @@ public:
     virtual ~ITransCoderEngine() = default;
 
     /**
-     * Sets the input file. The function must be called before Prepare. 
+     * Sets the input file. The function must be called before Prepare.
      * After this interface called, the engine will not accept any source setting interface call.
      * Return MSERR_OK indicates success, or others indicate failed.
      */

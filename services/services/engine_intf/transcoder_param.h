@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -60,7 +60,8 @@ struct VideoEnc : public TransCoderParam {
 };
 
 struct VideoRectangle : public TransCoderParam {
-    VideoRectangle(int32_t w, int32_t h) : TransCoderParam(TransCoderPublicParamType::VIDEO_RECTANGLE), width(w), height(h) {}
+    VideoRectangle(int32_t w, int32_t h) : TransCoderParam(TransCoderPublicParamType::VIDEO_RECTANGLE),
+        width(w), height(h) {}
     int32_t width;
     int32_t height;
 };
@@ -81,8 +82,8 @@ struct AudioBitRate : public TransCoderParam {
 };
 
 struct InputFilePath : public TransCoderParam {
-    explicit InputFilePath(const std::string &filePath)
-        : TransCoderParam(TransCoderPublicParamType::INPUT_PATH), path(filePath) {}
+    explicit InputFilePath(const std::string &filePath) : TransCoderParam(TransCoderPublicParamType::INPUT_PATH),
+        path(filePath) {}
     std::string path;
 };
 
