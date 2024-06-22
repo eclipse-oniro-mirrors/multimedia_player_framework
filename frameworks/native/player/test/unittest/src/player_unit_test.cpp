@@ -2735,6 +2735,234 @@ HWTEST_F(PlayerUnitTest, Player_Media_Error, TestSize.Level0)
 }
 
 /**
+ * @tc.name  : Test ChangeSurface
+ * @tc.number: Player_ChangeSurface_001
+ * @tc.desc  : Test video player change surface in idle state
+ */
+HWTEST_F(PlayerUnitTest, Player_ChangeSurface_001, TestSize.Level0)
+{
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_NE(MSERR_OK, player_->SetVideoSurface(videoSurface));
+}
+
+/**
+ * @tc.name  : Test ChangeSurface
+ * @tc.number: Player_ChangeSurface_002
+ * @tc.desc  : Test video player change surface in released state
+ */
+HWTEST_F(PlayerUnitTest, Player_ChangeSurface_002, TestSize.Level0)
+{
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    player_->Release();
+    EXPECT_NE(MSERR_OK, player_->SetVideoSurface(videoSurface));
+}
+
+/**
+ * @tc.name  : Test ChangeSurface
+ * @tc.number: Player_ChangeSurface_003
+ * @tc.desc  : Test video player change surface in error state
+ */
+HWTEST_F(PlayerUnitTest, Player_ChangeSurface_003, TestSize.Level0)
+{
+    int32_t ret = player_->SetSource(MEDIA_ROOT + "error.mp4");
+    EXPECT_EQ(MSERR_OK, ret);
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_NE(MSERR_OK, player_->PrepareAsync());
+    sleep(PLAYING_TIME_2_SEC);
+    sptr<Surface> nextVideoSurface = player_->GetVideoSurfaceNext();
+    ASSERT_NE(nullptr, nextVideoSurface);
+    EXPECT_NE(MSERR_OK, player_->SetVideoSurface(nextVideoSurface));
+}
+
+/**
+ * @tc.name  : Test ChangeSurface
+ * @tc.number: Player_ChangeSurface_004
+ * @tc.desc  : Test video player change surface in initialized state
+ */
+HWTEST_F(PlayerUnitTest, Player_ChangeSurface_004, TestSize.Level0)
+{
+    int32_t ret = player_->SetSource(VIDEO_FILE1);
+    EXPECT_EQ(MSERR_OK, ret);
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    sptr<Surface> nextVideoSurface = player_->GetVideoSurfaceNext();
+    ASSERT_NE(nullptr, nextVideoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(nextVideoSurface));
+}
+
+/**
+ * @tc.name  : Test ChangeSurface
+ * @tc.number: Player_ChangeSurface_005
+ * @tc.desc  : Test video player change surface in prepared state
+ */
+HWTEST_F(PlayerUnitTest, Player_ChangeSurface_005, TestSize.Level0)
+{
+    int32_t ret = player_->SetSource(VIDEO_FILE1);
+    EXPECT_EQ(MSERR_OK, ret);
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
+    sleep(PLAYING_TIME_2_SEC);
+    sptr<Surface> nextVideoSurface = player_->GetVideoSurfaceNext();
+    ASSERT_NE(nullptr, nextVideoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(nextVideoSurface));
+}
+
+/**
+ * @tc.name  : Test ChangeSurface
+ * @tc.number: Player_ChangeSurface_006
+ * @tc.desc  : Test video player change surface in playing state
+ */
+HWTEST_F(PlayerUnitTest, Player_ChangeSurface_006, TestSize.Level0)
+{
+    int32_t ret = player_->SetSource(VIDEO_FILE1);
+    EXPECT_EQ(MSERR_OK, ret);
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
+    sleep(PLAYING_TIME_2_SEC);
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    sleep(PLAYING_TIME_2_SEC);
+    sptr<Surface> nextVideoSurface = player_->GetVideoSurfaceNext();
+    ASSERT_NE(nullptr, nextVideoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(nextVideoSurface));
+}
+
+/**
+ * @tc.name  : Test ChangeSurface
+ * @tc.number: Player_ChangeSurface_007
+ * @tc.desc  : Test video player change surface in paused state
+ */
+HWTEST_F(PlayerUnitTest, Player_ChangeSurface_007, TestSize.Level0)
+{
+    int32_t ret = player_->SetSource(VIDEO_FILE1);
+    EXPECT_EQ(MSERR_OK, ret);
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
+    sleep(PLAYING_TIME_2_SEC);
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    sleep(PLAYING_TIME_2_SEC);
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+    sleep(PLAYING_TIME_2_SEC);
+    sptr<Surface> nextVideoSurface = player_->GetVideoSurfaceNext();
+    ASSERT_NE(nullptr, nextVideoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(nextVideoSurface));
+}
+
+/**
+ * @tc.name  : Test ChangeSurface
+ * @tc.number: Player_ChangeSurface_008
+ * @tc.desc  : Test video player change surface in stopped state
+ */
+HWTEST_F(PlayerUnitTest, Player_ChangeSurface_008, TestSize.Level0)
+{
+    int32_t ret = player_->SetSource(VIDEO_FILE1);
+    EXPECT_EQ(MSERR_OK, ret);
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
+    sleep(PLAYING_TIME_2_SEC);
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    sleep(PLAYING_TIME_2_SEC);
+    EXPECT_EQ(MSERR_OK, player_->Stop());
+    sleep(PLAYING_TIME_2_SEC);
+    sptr<Surface> nextVideoSurface = player_->GetVideoSurfaceNext();
+    ASSERT_NE(nullptr, nextVideoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(nextVideoSurface));
+}
+
+/**
+ * @tc.name  : Test ChangeSurface
+ * @tc.number: Player_ChangeSurface_009
+ * @tc.desc  : Test video player change surface in completed state
+ */
+HWTEST_F(PlayerUnitTest, Player_ChangeSurface_009, TestSize.Level0)
+{
+    int32_t ret = player_->SetSource(VIDEO_FILE1);
+    EXPECT_EQ(MSERR_OK, ret);
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
+    sleep(PLAYING_TIME_2_SEC);
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    int32_t duration = 0;
+    EXPECT_EQ(MSERR_OK, player_->Seek(duration, SEEK_CLOSEST));
+    sleep(PLAYING_TIME_10_SEC);
+    sptr<Surface> nextVideoSurface = player_->GetVideoSurfaceNext();
+    ASSERT_NE(nullptr, nextVideoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(nextVideoSurface));
+}
+
+/**
+ * @tc.name  : Test SetPlaybackSpeed API
+ * @tc.number: Player_SetPlaybackSpeed_003
+ * @tc.desc  : Test Player SetPlaybackSpeed SPEED_FORWARD_0_50_X
+ */
+HWTEST_F(PlayerUnitTest, Player_SetPlaybackSpeed_003, TestSize.Level0)
+{
+    PlaybackRateMode mode;
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->SetPlaybackSpeed(SPEED_FORWARD_0_50_X));
+    EXPECT_EQ(MSERR_OK, player_->GetPlaybackSpeed(mode));
+    EXPECT_EQ(SPEED_FORWARD_0_50_X, mode);
+}
+
+/**
+ * @tc.name  : Test SetPlaybackSpeed API
+ * @tc.number: Player_SetPlaybackSpeed_004
+ * @tc.desc  : Test Player SetPlaybackSpeed SPEED_FORWARD_1_50_X
+ */
+HWTEST_F(PlayerUnitTest, Player_SetPlaybackSpeed_004, TestSize.Level0)
+{
+    PlaybackRateMode mode;
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->SetPlaybackSpeed(SPEED_FORWARD_1_50_X));
+    EXPECT_EQ(MSERR_OK, player_->GetPlaybackSpeed(mode));
+    EXPECT_EQ(SPEED_FORWARD_1_50_X, mode);
+}
+
+/**
+ * @tc.name  : Test SetPlaybackSpeed API
+ * @tc.number: Player_SetPlaybackSpeed_005
+ * @tc.desc  : Test Player SetPlaybackSpeed SPEED_FORWARD_1_50_X
+ */
+HWTEST_F(PlayerUnitTest, Player_SetPlaybackSpeed_005, TestSize.Level0)
+{
+    PlaybackRateMode mode;
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    int32_t speed = -1;
+    EXPECT_EQ(MSERR_OK, player_->SetPlaybackSpeed(static_cast<OHOS::Media::PlaybackRateMode>(speed)));
+    EXPECT_EQ(MSERR_OK, player_->GetPlaybackSpeed(mode));
+    EXPECT_EQ(-1, mode);
+}
+
+/**
  * @tc.name  : Test SetSurface API
  * @tc.number: Player_SetSurface_001
  * @tc.desc  : Test Player SetSurface->SetSurface
