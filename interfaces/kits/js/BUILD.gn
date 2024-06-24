@@ -55,7 +55,7 @@ ohos_shared_library("media") {
     "//foundation/multimedia/player_framework/interfaces/kits/js",
     "//foundation/multimedia/player_framework/frameworks/js/avplayer",
     "//foundation/multimedia/player_framework/frameworks/js/avrecorder",
-    "//foundation/multimedia/player_framework/frameworks/js/avtranscoder",
+    "${multimedia_player_framework_path}/frameworks/js/avtranscoder",
     "//foundation/multimedia/player_framework/frameworks/js/player",
     "//foundation/multimedia/player_framework/frameworks/js/recorder",
     "//foundation/multimedia/player_framework/frameworks/js/media",
@@ -123,8 +123,8 @@ ohos_shared_library("media") {
 
   if (player_framework_support_transcoder) {
     sources += [
-      "//foundation/multimedia/player_framework/frameworks/js/avtranscoder/avtranscoder_callback.cpp",
-      "//foundation/multimedia/player_framework/frameworks/js/avtranscoder/avtranscoder_napi.cpp",
+      "${multimedia_player_framework_path}/frameworks/js/avtranscoder/avtranscoder_callback.cpp",
+      "${multimedia_player_framework_path}/frameworks/js/avtranscoder/avtranscoder_napi.cpp",
     ]
   }
 
