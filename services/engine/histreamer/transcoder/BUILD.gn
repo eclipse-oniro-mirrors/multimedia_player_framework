@@ -79,4 +79,3 @@ ohos_static_library("media_engine_histreamer_transcoder") {
   subsystem_name = "multimedia"
   part_name = "player_framework"
 }
-
