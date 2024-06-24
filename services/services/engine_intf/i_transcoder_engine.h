@@ -56,7 +56,7 @@ public:
     virtual int32_t SetInputFile(const std::string &url) = 0;
 
     /**
-     * Sets the output file. The function must be called before Prepare. 
+     * Sets the output file. The function must be called before Prepare.
      * After this interface called, the engine will not accept any destination setting interface call.
      * Return MSERR_OK indicates success, or others indicate failed.
      */

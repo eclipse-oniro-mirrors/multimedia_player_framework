@@ -93,8 +93,8 @@ struct InputUrl : public TransCoderParam {
 };
 
 struct InputFd : public TransCoderParam {
-    explicit InputFd(int32_t inputFd, int64_t inputOffset, int64_t inputSize) :
-        TransCoderParam(TransCoderPublicParamType::INPUT_FD), fd(inputFd), offset(inputOffset), size(inputSize) {}
+    explicit InputFd(int32_t inputFd, int64_t inputOffset, int64_t inputSize)
+        : TransCoderParam(TransCoderPublicParamType::INPUT_FD), fd(inputFd), offset(inputOffset), size(inputSize) {}
     int32_t fd;
     int64_t offset;
     int64_t size;

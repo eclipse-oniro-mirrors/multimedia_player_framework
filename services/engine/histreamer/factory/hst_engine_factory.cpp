@@ -83,8 +83,7 @@ std::unique_ptr<ITransCoderEngine> HstEngineFactory::CreateTransCoderEngine(
     int32_t appUid, int32_t appPid, uint32_t appTokenId, uint64_t appFullTokenId)
 {
     MEDIA_LOG_E("CreateTransCoderEngine enter.");
-    auto transCoder = std::unique_ptr<HiTransCoderImpl>(new (std::nothrow) HiTransCoderImpl(
-        appUid, appPid, appTokenId, appFullTokenId));
+    auto transCoder = std::make_unique<HiTransCoderImpl>(appUid, appPid, appTokenId, appFullTokenId);
     if (transCoder && transCoder->Init() == 0) {
         return transCoder;
     }
