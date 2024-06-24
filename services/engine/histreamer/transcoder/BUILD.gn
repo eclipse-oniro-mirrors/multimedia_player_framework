@@ -48,8 +48,8 @@ ohos_static_library("media_engine_histreamer_transcoder") {
     debug = false
   }
   sources = [
+    "hitranscoder_callback_looper.cpp",
     "hitranscoder_impl.cpp",
-    "hitranscoder_callback_looper.cpp"
   ]
 
   configs = [
