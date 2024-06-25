@@ -40,21 +40,21 @@ thread_local napi_ref AVTransCoderNapi::constructor_ = nullptr;
 const std::string CLASS_NAME = "AVTransCoder";
 const std::map<std::string, std::vector<std::string>> STATE_CTRL = {
     {AVTransCoderState::STATE_IDLE, {
-    	AVTransCoderOpt::SET_AV_TRANSCODER_CONFIG,
+        AVTransCoderOpt::SET_AV_TRANSCODER_CONFIG,
     }},
     {AVTransCoderState::STATE_PREPARED, {}},
     {AVTransCoderState::STATE_STARTED, {
-    	AVTransCoderOpt::START,
-    	AVTransCoderOpt::RESUME
+        AVTransCoderOpt::START,
+        AVTransCoderOpt::RESUME
     }},
     {AVTransCoderState::STATE_PAUSED, {
-    	AVTransCoderOpt::PAUSE
+        AVTransCoderOpt::PAUSE
     }},
     {AVTransCoderState::STATE_CANCELLED, {
-    	AVTransCoderOpt::CANCEL
+        AVTransCoderOpt::CANCEL
     }},
     {AVTransCoderState::STATE_RELEASED, {
-    	AVTransCoderOpt::RELEASE
+        AVTransCoderOpt::RELEASE
     }},
     {AVTransCoderState::STATE_COMPLETED, {}},
     {AVTransCoderState::STATE_ERROR, {}},
