@@ -120,12 +120,11 @@ int32_t AVMetadataHelperServer::SetSource(const std::shared_ptr<IMediaDataSource
     return ret;
 }
 
-int32_t AVMetadataHelperServer::InitEngine(const std::string &uri)
+void AVMetadataHelperServer::InitEngine(const std::string &uri)
 {
     auto engineFactory = EngineFactoryRepo::Instance().GetEngineFactory(
         IEngineFactory::Scene::SCENE_AVMETADATA, appUid_, uri);
-    CHECK_AND_RETURN_RET_LOG(engineFactory != nullptr, (int32_t)MSERR_CREATE_AVMETADATAHELPER_ENGINE_FAILED,
-        "Failed to get engine factory");
+    CHECK_AND_RETURN_LOG(engineFactory != nullptr, "Failed to get engine factory");
     avMetadataHelperEngine_ = engineFactory->CreateAVMetadataHelperEngine();
 }
 
