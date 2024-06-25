@@ -39,25 +39,25 @@ using namespace MediaAVCodec;
 thread_local napi_ref AVTransCoderNapi::constructor_ = nullptr;
 const std::string CLASS_NAME = "AVTransCoder";
 const std::map<std::string, std::vector<std::string>> STATE_CTRL = {
-	{AVTransCoderState::STATE_IDLE, {
-		AVTransCoderOpt::SET_AV_TRANSCODER_CONFIG,
-	}},
-	{AVTransCoderState::STATE_PREPARED, {}},
-	{AVTransCoderState::STATE_STARTED, {
-		AVTransCoderOpt::START,
-		AVTransCoderOpt::RESUME
-	}},
-	{AVTransCoderState::STATE_PAUSED, {
-		AVTransCoderOpt::PAUSE
-	}},
-	{AVTransCoderState::STATE_CANCELLED, {
-		AVTransCoderOpt::CANCEL
-	}},
-	{AVTransCoderState::STATE_RELEASED, {
-		AVTransCoderOpt::RELEASE
-	}},
-	{AVTransCoderState::STATE_COMPLETED, {}},
-	{AVTransCoderState::STATE_ERROR, {}},
+    {AVTransCoderState::STATE_IDLE, {
+    	AVTransCoderOpt::SET_AV_TRANSCODER_CONFIG,
+    }},
+    {AVTransCoderState::STATE_PREPARED, {}},
+    {AVTransCoderState::STATE_STARTED, {
+    	AVTransCoderOpt::START,
+    	AVTransCoderOpt::RESUME
+    }},
+    {AVTransCoderState::STATE_PAUSED, {
+    	AVTransCoderOpt::PAUSE
+    }},
+    {AVTransCoderState::STATE_CANCELLED, {
+    	AVTransCoderOpt::CANCEL
+    }},
+    {AVTransCoderState::STATE_RELEASED, {
+    	AVTransCoderOpt::RELEASE
+    }},
+    {AVTransCoderState::STATE_COMPLETED, {}},
+    {AVTransCoderState::STATE_ERROR, {}},
 };
 std::map<std::string, AVTransCoderNapi::AvTransCoderTaskqFunc> AVTransCoderNapi::taskQFuncs_ = {
     {AVTransCoderOpt::START, &AVTransCoderNapi::Start},
