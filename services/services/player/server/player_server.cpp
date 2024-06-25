@@ -566,6 +566,7 @@ int32_t PlayerServer::Stop()
     if (lastOpStatus_ == PLAYER_PREPARED || lastOpStatus_ == PLAYER_STARTED ||
         lastOpStatus_ == PLAYER_PLAYBACK_COMPLETE || lastOpStatus_ == PLAYER_PAUSED) {
         MediaTrace::TraceBegin("PlayerServer::Stop", FAKE_POINTER(this));
+        disableStoppedCb_ = false;
         return OnStop(false);
     }
     MEDIA_LOGE("Can not Stop, currentState is %{public}s", GetStatusDescription(lastOpStatus_).c_str());
@@ -577,7 +578,6 @@ int32_t PlayerServer::OnStop(bool sync)
     MEDIA_LOGD("PlayerServer OnStop in");
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
     isInterruptNeeded_ = true;
-    disableStoppedCb_ = false;
     playerEngine_->SetInterruptState(true);
     taskMgr_.ClearAllTask();
 
