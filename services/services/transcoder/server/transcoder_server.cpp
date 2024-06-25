@@ -394,7 +394,7 @@ int32_t TransCoderServer::Resume()
         MEDIA_LOGE("Can not repeat Resume");
         return MSERR_INVALID_OPERATION;
     }
-    CHECK_AND_RETURN_RET_LOG(status_ == REC_TRANSCODERING && status_ != REC_PAUSED, MSERR_INVALID_OPERATION,
+    CHECK_AND_RETURN_RET_LOG(status_ == REC_TRANSCODERING || status_ == REC_PAUSED, MSERR_INVALID_OPERATION,
         "invalid status, current status is %{public}s", GetStatusDescription(status_).c_str());
     CHECK_AND_RETURN_RET_LOG(transCoderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
