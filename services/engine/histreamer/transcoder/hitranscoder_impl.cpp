@@ -240,7 +240,8 @@ int32_t HiTransCoderImpl::Prepare()
 {
     MEDIA_LOG_I("HiTransCoderImpl::Prepare()");
     Status ret = pipeline_->Prepare();
-    videoDecoderFilter_->SetOutputSurface(videoEncoderFilter_->GetInputSurface());
+    videoDecoderFilter_->SetOutputSurface(videoResizeFilter_->GetInputSurface());
+    videoResizeFilter_->SetOutputSurface(videoEncoderFilter_->GetInputSurface());
     return static_cast<int32_t>(ret);
 }
 
@@ -369,6 +370,22 @@ Status HiTransCoderImpl::LinkVideoEncoderFilter(const std::shared_ptr<Pipeline::
     return Status::OK;
 }
 
+Status HiTransCoderImpl::LinkVideoResizeFilter(const std::shared_ptr<Pipeline::Filter>& preFilter,
+    Pipeline::StreamType type)
+{
+    MEDIA_LOG_I("HiTransCoderImpl::LinkVideoResizeFilter()");
+    videoResizeFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::VideoResizeFilter>
+        ("videoResizeFilter", Pipeline::FilterType::FILTERTYPE_VIDRESIZE);
+    FALSE_RETURN_V_MSG_E(videoResizeFilter_ != nullptr, Status::ERROR_NULL_POINTER,
+        "videoResizeFilter_ is nullptr");
+    videoResizeFilter_->Init(transCoderEventReceiver_, transCoderFilterCallback_);
+    FALSE_RETURN_V_MSG_E(videoResizeFilter_->Configure(videoEncFormat_) == Status::OK,
+        Status::ERROR_UNKNOWN, "videoResizeFilter Configure fail");
+    FALSE_RETURN_V_MSG_E(pipeline_->LinkFilters(preFilter, {videoResizeFilter_}, type) == Status::OK,
+        Status::ERROR_UNKNOWN, "Add videoEncoderFilter to pipeline fail");
+    return Status::OK;
+}
+
 Status HiTransCoderImpl::LinkMuxerFilter(const std::shared_ptr<Pipeline::Filter>& preFilter,
     Pipeline::StreamType type)
 {
@@ -410,8 +427,13 @@ void HiTransCoderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, cons
                 }
                 break;
             case Pipeline::StreamType::STREAMTYPE_RAW_VIDEO:
-                MEDIA_LOG_I("HiTransCoderImpl::LinkVideoEncoderFilter()");
-                LinkVideoEncoderFilter(filter, outType);
+                if (videoResizeFilter_) {
+                    MEDIA_LOG_I("HiTransCoderImpl::LinkVideoEncoderFilter()");
+                    LinkVideoEncoderFilter(filter, outType);
+                } else {
+                    MEDIA_LOG_I("HiTransCoderImpl::LinkVideoResizeFilter()");
+                    LinkVideoResizeFilter(filter, outType);
+                }
                 break;
             case Pipeline::StreamType::STREAMTYPE_ENCODED_VIDEO:
                 if (videoDecoderFilter_) {
