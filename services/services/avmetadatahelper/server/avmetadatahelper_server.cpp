@@ -71,14 +71,9 @@ int32_t AVMetadataHelperServer::SetSource(const std::string &uri, int32_t usage)
         MEDIA_LOGE("Failed to read the file");
         return MSERR_INVALID_VAL;
     }
-    auto metaEngineFactory = EngineFactoryRepo::Instance().GetEngineFactory(
-        IEngineFactory::Scene::SCENE_AVMETADATA, appUid_, uriHelper_->FormattedUri());
-    CHECK_AND_RETURN_RET_LOG(metaEngineFactory != nullptr, (int32_t)MSERR_CREATE_AVMETADATAHELPER_ENGINE_FAILED,
-        "Failed to get engine factory.");
-    avMetadataHelperEngine_ = metaEngineFactory->CreateAVMetadataHelperEngine();
-    CHECK_AND_RETURN_RET_LOG(avMetadataHelperEngine_ != nullptr,
-        (int32_t)MSERR_CREATE_AVMETADATAHELPER_ENGINE_FAILED, "Failed to create avmetadatahelper engine.");
-    int32_t ret = avMetadataHelperEngine_->SetSource(uriHelper_->FormattedUri(), usage);
+    int32_t ret = InitEngine(uriHelper_->FormattedUri());
+
+    ret = ret == MSERR_OK ? avMetadataHelperEngine_->SetSource(uriHelper_->FormattedUri(), usage) : ret;
     ChangeState(ret == MSERR_OK ? HelperStates::HELPER_PREPARED : HelperStates::HELPER_STATE_ERROR);
     return ret;
 }
@@ -94,11 +89,9 @@ int32_t AVMetadataHelperServer::SetSource(int32_t fd, int64_t offset, int64_t si
     CHECK_AND_RETURN_RET_LOG(!uriHelper_->FormattedUri().empty(),
         MSERR_INVALID_VAL, "Failed to construct formatted uri");
     CHECK_AND_RETURN_RET_LOG(uriHelper_->AccessCheck(UriHelper::URI_READ), MSERR_INVALID_VAL, "Failed to read the fd");
-    InitEngine(uriHelper_->FormattedUri());
-    CHECK_AND_RETURN_RET_LOG(avMetadataHelperEngine_ != nullptr,
-        (int32_t)MSERR_CREATE_AVMETADATAHELPER_ENGINE_FAILED, "Failed to create avmetadatahelper engine");
+    int32_t ret = InitEngine(uriHelper_->FormattedUri());
 
-    int32_t ret = avMetadataHelperEngine_->SetSource(uriHelper_->FormattedUri(), usage);
+    ret = ret == MSERR_OK ? avMetadataHelperEngine_->SetSource(uriHelper_->FormattedUri(), usage) : ret;
     ChangeState(ret == MSERR_OK ? HelperStates::HELPER_PREPARED : HelperStates::HELPER_STATE_ERROR);
     return ret;
 }
@@ -110,22 +103,23 @@ int32_t AVMetadataHelperServer::SetSource(const std::shared_ptr<IMediaDataSource
     MEDIA_LOGD("AVMetadataHelperServer SetSource");
     CHECK_AND_RETURN_RET_LOG(dataSrc != nullptr, MSERR_INVALID_VAL, "data source is nullptr");
     dataSrc_ = dataSrc;
-    InitEngine("media data source");
-    CHECK_AND_RETURN_RET_LOG(avMetadataHelperEngine_ != nullptr,
-        (int32_t)MSERR_CREATE_AVMETADATAHELPER_ENGINE_FAILED, "Failed to create avmetadatahelper engine");
+    int32_t ret = InitEngine("media data source");
 
-    int32_t ret = avMetadataHelperEngine_->SetSource(dataSrc_);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetSource failed!");
-    ChangeState(HelperStates::HELPER_PREPARED);
+    ret = ret == MSERR_OK ? avMetadataHelperEngine_->SetSource(dataSrc_) : ret;
+    ChangeState(ret == MSERR_OK ? HelperStates::HELPER_PREPARED : HelperStates::HELPER_STATE_ERROR);
     return ret;
 }
 
-void AVMetadataHelperServer::InitEngine(const std::string &uri)
+int32_t AVMetadataHelperServer::InitEngine(const std::string &uri)
 {
     auto engineFactory = EngineFactoryRepo::Instance().GetEngineFactory(
         IEngineFactory::Scene::SCENE_AVMETADATA, appUid_, uri);
-    CHECK_AND_RETURN_LOG(engineFactory != nullptr, "Failed to get engine factory");
+    CHECK_AND_RETURN_RET_LOG(engineFactory != nullptr,
+        (int32_t)MSERR_CREATE_AVMETADATAHELPER_ENGINE_FAILED,  "Failed to get engine factory");
     avMetadataHelperEngine_ = engineFactory->CreateAVMetadataHelperEngine();
+    CHECK_AND_RETURN_RET_LOG(avMetadataHelperEngine_ != nullptr,
+        (int32_t)MSERR_CREATE_AVMETADATAHELPER_ENGINE_FAILED, "Failed to create avmetadatahelper engine");
+    return MSERR_OK;
 }
 
 std::string AVMetadataHelperServer::ResolveMetadata(int32_t key)
@@ -179,9 +173,9 @@ std::shared_ptr<AVSharedMemory> AVMetadataHelperServer::FetchFrameAtTime(int64_t
 {
     std::lock_guard<std::mutex> lock(mutex_);
     MediaTrace trace("AVMetadataHelperServer::FetchFrameAtTime");
+    CHECK_AND_RETURN_RET_LOG(currState_ == HELPER_PREPARED)
     CHECK_AND_RETURN_RET_LOG(avMetadataHelperEngine_ != nullptr, nullptr, "avMetadataHelperEngine_ is nullptr");
     auto result = avMetadataHelperEngine_->FetchFrameAtTime(timeUs, option, param);
-    ChangeState(HelperStates::HELPER_CALL_DONE);
     return result;
 }
 
