@@ -136,6 +136,8 @@ int32_t HiTransCoderImpl::SetInputFile(const std::string &url)
         trackInfos[index]->GetData(Tag::MIME_TYPE, trackMime);
         if (trackMime.find("video/") == 0) {
             MEDIA_LOG_I("SetInputFile contain video");
+            trackInfos[index]->GetData(Tag::VIDEO_WIDTH, inputVideoWidth_);
+            trackInfos[index]->GetData(Tag::VIDEO_HEIGHT, inputVideoHeight_);
         } else if (trackMime.find("audio/") == 0) {
             int32_t channels;
             trackInfos[index]->GetData(Tag::AUDIO_CHANNEL_COUNT, channels);
@@ -239,9 +241,19 @@ int32_t HiTransCoderImpl::Configure(const TransCoderParam &transCoderParam)
 int32_t HiTransCoderImpl::Prepare()
 {
     MEDIA_LOG_I("HiTransCoderImpl::Prepare()");
+    int32_t width = 0;
+    int32_t height = 0;
+    videoEncFormat_->GetData(Tag::VIDEO_WIDTH, width);
+    videoEncFormat_->GetData(Tag::VIDEO_HEIGHT, height);
+    isNeedVideoResizeFilter_ = width != inputVideoWidth_ || height != inputVideoHeight_;
     Status ret = pipeline_->Prepare();
-    videoDecoderFilter_->SetOutputSurface(videoResizeFilter_->GetInputSurface());
-    videoResizeFilter_->SetOutputSurface(videoEncoderFilter_->GetInputSurface());
+    if (isNeedVideoResizeFilter_) {
+        videoDecoderFilter_->SetOutputSurface(videoResizeFilter_->GetInputSurface());
+        videoResizeFilter_->SetOutputSurface(videoEncoderFilter_->GetInputSurface());
+    }
+    else {
+        videoDecoderFilter_->SetOutputSurface(videoEncoderFilter_->GetInputSurface());
+    }
     return static_cast<int32_t>(ret);
 }
 
@@ -427,7 +439,7 @@ void HiTransCoderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, cons
                 }
                 break;
             case Pipeline::StreamType::STREAMTYPE_RAW_VIDEO:
-                if (videoResizeFilter_) {
+                if (!isNeedVideoResizeFilter_ || videoResizeFilter_) {
                     MEDIA_LOG_I("HiTransCoderImpl::LinkVideoEncoderFilter()");
                     LinkVideoEncoderFilter(filter, outType);
                 } else {
