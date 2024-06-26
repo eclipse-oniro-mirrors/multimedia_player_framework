@@ -66,7 +66,7 @@ int32_t AVMetadataHelperServiceStub::Init()
             [this](MessageParcel &data, MessageParcel &reply) { return ResolveMetadata(data, reply); } },
         { RESOLVE_METADATA_MAP,
             [this](MessageParcel &data, MessageParcel &reply) { return ResolveMetadataMap(data, reply); } },
-        { FETCH_ART_PICTURE,
+        { FETCH_ALBUM_COVER,
             [this](MessageParcel &data, MessageParcel &reply) { return FetchArtPicture(data, reply); } },
         { FETCH_FRAME_AT_TIME,
             [this](MessageParcel &data, MessageParcel &reply) { return FetchFrameAtTime(data, reply); } },
