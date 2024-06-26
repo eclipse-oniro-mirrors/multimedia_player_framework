@@ -119,10 +119,10 @@ void PlayerServiceStub::FillPlayerFuncPart1()
         [this](MessageParcel &data, MessageParcel &reply) { return GetPlaybackSpeed(data, reply); } };
     playerFuncs_[SET_MEDIA_SOURCE] = { "Player::SetMediaSource",
         [this](MessageParcel &data, MessageParcel &reply) { return SetMediaSource(data, reply); } };
- #ifdef SUPPORT_VIDEO
+#ifdef SUPPORT_VIDEO
     playerFuncs_[SET_VIDEO_SURFACE] = { "Player::SetVideoSurface",
         [this](MessageParcel &data, MessageParcel &reply) { return SetVideoSurface(data, reply); } };
- #endif
+#endif
     playerFuncs_[IS_PLAYING] = { "Player::IsPlaying",
         [this](MessageParcel &data, MessageParcel &reply) { return IsPlaying(data, reply); } };
     playerFuncs_[IS_LOOPING] = { "Player::IsLooping",
