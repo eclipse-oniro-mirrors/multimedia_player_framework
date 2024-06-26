@@ -587,7 +587,7 @@ AVPlayerCallback::AVPlayerCallback(napi_env env, AVPlayerNotify *listener)
         { INFO_TYPE_BUFFERING_UPDATE,
             [this](const int32_t extra, const Format &infoBody) { OnBufferingUpdateCb(extra, infoBody); } },
         { INFO_TYPE_MESSAGE,
-            [this](const int32_t extra, const Format &infoBody) { OnMessageCb(extra, infoBody);} }, 
+            [this](const int32_t extra, const Format &infoBody) { OnMessageCb(extra, infoBody);} },
         { INFO_TYPE_RESOLUTION_CHANGE,
             [this](const int32_t extra, const Format &infoBody) { OnVideoSizeChangedCb(extra, infoBody); } },
         { INFO_TYPE_INTERRUPT_EVENT,
