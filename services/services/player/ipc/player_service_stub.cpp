@@ -159,7 +159,7 @@ void PlayerServiceStub::FillPlayerFuncPart2()
         [this](MessageParcel &data, MessageParcel &reply) { return GetCurrentTrack(data, reply); } };
     playerFuncs_[SET_DECRYPT_CONFIG] = { "Player::SetDecryptConfig",
         [this](MessageParcel &data, MessageParcel &reply) { return SetDecryptConfig(data, reply); } };
- }
+}
 
 int32_t PlayerServiceStub::Init()
 {
