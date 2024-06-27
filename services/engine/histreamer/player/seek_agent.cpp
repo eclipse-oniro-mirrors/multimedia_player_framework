@@ -85,11 +85,10 @@ Status SeekAgent::Seek(int64_t seekPos)
     MEDIA_LOG_I("ResumeForSeek end");
     {
         AutoLock lock(targetArrivedLock_);
+        isAudioTargetArrived_ = false;
+        isVideoTargetArrived_ = false;
         demuxer_->ResumeForSeek();
-        targetArrivedCond_.WaitFor(lock, WAIT_MAX_MS, [this] {
-            return (isAudioTargetArrived_ || seekTargetPos_ > audioTrackDuration_)
-                && (isVideoTargetArrived_|| seekTargetPos_ > videoTrackDuration_);
-        });
+        targetArrivedCond_.WaitFor(lock, WAIT_MAX_MS, [this] {return isAudioTargetArrived_ && isVideoTargetArrived_;});
         MEDIA_LOG_I("Wait end");
     }
     MEDIA_LOG_I("PauseForSeek start");
@@ -104,28 +103,44 @@ Status SeekAgent::SetBufferFilledListener()
     producerMap_ = demuxer_->GetBufferQueueProducerMap();
     FALSE_RETURN_V_MSG_E(!producerMap_.empty(), Status::ERROR_INVALID_PARAMETER, "producerMap is empty.");
 
-    IdentifyTrackInfo();
+    auto trackInfo = demuxer_->GetStreamMetaInfo();
+    uint32_t videoTrackId = -1;
+    std::vector<uint32_t> audioTrackIds;
+    for (uint32_t index = 0; index < trackInfo.size(); index++) {
+        auto trackMeta = trackInfo[index];
+        std::string mimeType;
+        if (trackMeta->Get<Tag::MIME_TYPE>(mimeType) && mimeType.find("video") == 0) {
+            MEDIA_LOG_I("Find video trackId: " PUBLIC_LOG_U32 ", mimeType: " PUBLIC_LOG_S, index, mimeType.c_str());
+            videoTrackId = index;
+            continue;
+        }
+        if (trackMeta->Get<Tag::MIME_TYPE>(mimeType) && mimeType.find("audio") == 0) {
+            MEDIA_LOG_I("Find audio trackId: " PUBLIC_LOG_U32 ", mimeType: " PUBLIC_LOG_S, index, mimeType.c_str());
+            audioTrackIds.push_back(index);
+        }
+    }
+
     auto it = producerMap_.begin();
     while (it != producerMap_.end()) {
         if (it->second == nullptr) {
             it++;
             continue;
         }
-        if (it->first == audioTrackId_) {
+        if (std::find(audioTrackIds.begin(), audioTrackIds.end(), it->first) != audioTrackIds.end()) {
             sptr<IBrokerListener> audioListener
                 = new AudioBufferFilledListener(shared_from_this(), it->second, it->first);
             MEDIA_LOG_I("Add Listener audio id : %{public}d", it->first);
             it->second->SetBufferFilledListener(audioListener);
             listenerMap_.insert({it->first, audioListener});
-            isAudioTargetArrived_ = false;
             it++;
-        } else if (it->first == videoTrackId_) {
+            continue;
+        }
+        if (it->first == videoTrackId) {
             sptr<IBrokerListener> videoListener
                 = new VideoBufferFilledListener(shared_from_this(), it->second, it->first);
             MEDIA_LOG_I("Add Listener video id : %{public}d", it->first);
             it->second->SetBufferFilledListener(videoListener);
             listenerMap_.insert({it->first, videoListener});
-            isVideoTargetArrived_ = false;
         }
         it++;
     }
@@ -197,30 +212,6 @@ Status SeekAgent::OnVideoBufferFilled(std::shared_ptr<AVBuffer>& buffer,
     MEDIA_LOG_D("ReturnBuffer, pts: %{public}" PRId64 ", isPushBuffer: %{public}i", buffer->pts_, !canDrop);
     producer->ReturnBuffer(buffer, !canDrop);
     return Status::OK;
-}
-
-void SeekAgent::IdentifyTrackInfo()
-{
-    auto trackInfo = demuxer_->GetStreamMetaInfo();
-    for (uint32_t index = 0; index < trackInfo.size(); index++) {
-        if (producerMap_.find(index) == producerMap_.end()) {
-            continue;
-        }
-        auto trackMeta = trackInfo[index];
-        std::string mimeType;
-        trackMeta->Get<Tag::MIME_TYPE>(mimeType);
-        if (mimeType.find("video") == 0) {
-            videoTrackId_ = index;
-            trackMeta->Get<Tag::MEDIA_DURATION>(videoTrackDuration_);
-            MEDIA_LOG_I("Find video trackId: " PUBLIC_LOG_U32 ", mimeType: " PUBLIC_LOG_S " video duration: "
-                PUBLIC_LOG_D64, index, mimeType.c_str(), videoTrackDuration_);
-        } else if (mimeType.find("audio") == 0) {
-            audioTrackId_ = index;
-            trackMeta->Get<Tag::MEDIA_DURATION>(audioTrackDuration_);
-            MEDIA_LOG_I("Find audio trackId: " PUBLIC_LOG_U32 ", mimeType: " PUBLIC_LOG_S " audio duration: "
-                PUBLIC_LOG_D64, index, mimeType.c_str(), audioTrackDuration_);
-        }
-    }
 }
 }  // namespace Media
 }  // namespace OHOS

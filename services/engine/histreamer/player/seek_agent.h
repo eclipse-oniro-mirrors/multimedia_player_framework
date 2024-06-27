@@ -43,26 +43,20 @@ public:
 private:
     Status SetBufferFilledListener();
     Status RemoveBufferFilledListener();
-    void IdentifyTrackInfo();
 
     std::shared_ptr<Pipeline::DemuxerFilter> demuxer_;
     Mutex targetArrivedLock_;
     ConditionVariable targetArrivedCond_;
-    bool isAudioTargetArrived_ {true};
-    bool isVideoTargetArrived_ {true};
+    bool isAudioTargetArrived_{false};
+    bool isVideoTargetArrived_{false};
 
-    int64_t seekTargetPos_ {-1};
-    std::atomic<bool> isSeeking_ {false};
+    int64_t seekTargetPos_{-1};
+    std::atomic<bool> isSeeking_{false};
     std::map<uint32_t, sptr<AVBufferQueueProducer>> producerMap_;
     std::map<uint32_t, sptr<IBrokerListener>> listenerMap_;
 
     static constexpr uint32_t WAIT_MAX_MS = 2000;
     static constexpr uint32_t MS_TO_US = 1000;
-
-    uint32_t videoTrackId_ {-1};
-    uint32_t audioTrackId_ {-1};
-    int64_t videoTrackDuration_ {INT64_MAX};
-    int64_t audioTrackDuration_ {INT64_MAX};
 };
 
 class AudioBufferFilledListener : public IRemoteStub<IBrokerListener> {
