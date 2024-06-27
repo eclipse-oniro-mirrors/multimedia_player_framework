@@ -241,18 +241,8 @@ int32_t HiTransCoderImpl::Configure(const TransCoderParam &transCoderParam)
 int32_t HiTransCoderImpl::Prepare()
 {
     MEDIA_LOG_I("HiTransCoderImpl::Prepare()");
-    int32_t width = 0;
-    int32_t height = 0;
-    videoEncFormat_->GetData(Tag::VIDEO_WIDTH, width);
-    videoEncFormat_->GetData(Tag::VIDEO_HEIGHT, height);
-    isNeedVideoResizeFilter_ = width != inputVideoWidth_ || height != inputVideoHeight_;
     Status ret = pipeline_->Prepare();
-    if (isNeedVideoResizeFilter_) {
-        videoDecoderFilter_->SetOutputSurface(videoResizeFilter_->GetInputSurface());
-        videoResizeFilter_->SetOutputSurface(videoEncoderFilter_->GetInputSurface());
-    } else {
-        videoDecoderFilter_->SetOutputSurface(videoEncoderFilter_->GetInputSurface());
-    }
+    videoDecoderFilter_->SetOutputSurface(videoEncoderFilter_->GetInputSurface());
     return static_cast<int32_t>(ret);
 }
 
