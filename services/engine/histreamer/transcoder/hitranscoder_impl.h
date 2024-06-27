@@ -78,7 +78,6 @@ private:
     std::shared_ptr<Pipeline::SurfaceDecoderFilter> videoDecoderFilter_;
     std::shared_ptr<Pipeline::AudioEncoderFilter> audioEncoderFilter_;
     std::shared_ptr<Pipeline::SurfaceEncoderFilter> videoEncoderFilter_;
-    std::shared_ptr<Pipeline::VideoResizeFilter> videoResizeFilter_;
     std::shared_ptr<Pipeline::MuxerFilter> muxerFilter_;
 
     std::shared_ptr<Pipeline::EventReceiver> transCoderEventReceiver_;
