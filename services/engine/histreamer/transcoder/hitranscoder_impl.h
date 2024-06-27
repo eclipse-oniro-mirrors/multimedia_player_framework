@@ -30,7 +30,6 @@
 #include "surface_decoder_filter.h"
 #include "audio_encoder_filter.h"
 #include "surface_encoder_filter.h"
-#include "video_resize_filter.h"
 #include "muxer_filter.h"
 #include "hitranscoder_callback_looper.h"
 
@@ -65,7 +64,6 @@ private:
     Status LinkAudioEncoderFilter(const std::shared_ptr<Pipeline::Filter>& preFilter, Pipeline::StreamType type);
     Status LinkVideoDecoderFilter(const std::shared_ptr<Pipeline::Filter>& preFilter, Pipeline::StreamType type);
     Status LinkVideoEncoderFilter(const std::shared_ptr<Pipeline::Filter>& preFilter, Pipeline::StreamType type);
-    Status LinkVideoResizeFilter(const std::shared_ptr<Pipeline::Filter>& preFilter, Pipeline::StreamType type);
     Status LinkMuxerFilter(const std::shared_ptr<Pipeline::Filter>& preFilter, Pipeline::StreamType type);
     void CancelTransCoder();
 
