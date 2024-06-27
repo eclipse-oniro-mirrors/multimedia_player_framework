@@ -49,7 +49,7 @@ namespace OHOS {
 
 #ifdef PLAYER_FRAMEWORK_AUDIO
 #undef LOG_DOMAIN
-#define LOG_DOMAIN 0xD002B2G
+#define LOG_DOMAIN 0xD002B20
 #endif
 
 
