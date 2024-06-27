@@ -125,7 +125,6 @@ std::string SystemTonePlayerImpl::ChangeUri(const std::string &uri)
 
 int32_t SystemTonePlayerImpl::Prepare()
 {
-    MEDIA_LOGI("Enter Prepare()");
     std::lock_guard<std::mutex> lock(systemTonePlayerMutex_);
     CHECK_AND_RETURN_RET_LOG(player_ != nullptr, MSERR_INVALID_STATE, "System tone player instance is null");
 
