@@ -829,7 +829,7 @@ Status HiPlayerImpl::doSeek(int64_t seekPos, PlayerSeekMode mode)
         return res;
     }
     if (videoDecoder_ != nullptr) {
-        videoDecoder_->ResetSeekInfo(seekTimeUs);
+        videoDecoder_->ResetSeekInfo();
     }
     int64_t realSeekTime = seekPos;
     auto seekMode = Transform2SeekMode(mode);
