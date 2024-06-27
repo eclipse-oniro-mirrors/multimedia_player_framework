@@ -243,7 +243,7 @@ ohos_shared_library("media_service") {
       "ability_runtime:runtime",
       "access_token:libnativetoken_shared",
       "access_token:libprivacy_sdk",
-      "access_token:libtoken_setproc_shared",
+      "access_token:libtokensetproc_shared",
       "audio_framework:audio_capturer",
       "audio_framework:audio_client",
       "distributed_notification_service:ans_innerkits",
