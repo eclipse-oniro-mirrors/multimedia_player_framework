@@ -412,8 +412,8 @@ void HiTransCoderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, cons
                 }
                 break;
             case Pipeline::StreamType::STREAMTYPE_RAW_VIDEO:
-                MEDIA_LOG_I("HiTransCoderImpl::LinkVideoResizeFilter()");
-                LinkVideoResizeFilter(filter, outType);            
+                MEDIA_LOG_I("HiTransCoderImpl::LinkVideoEncoderFilter()");
+                LinkVideoEncoderFilter(filter, outType);          
                 break;
             case Pipeline::StreamType::STREAMTYPE_ENCODED_VIDEO:
                 if (videoDecoderFilter_) {
