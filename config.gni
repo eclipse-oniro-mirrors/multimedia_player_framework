@@ -205,7 +205,7 @@ declare_args() {
   player_framework_support_screen_capture_controller = false
   player_framework_support_jssoundpool = true
   player_framework_support_mediasource = true
-  player_framework_check_video_is_hdr_vivid = true
+  player_framework_check_video_is_hdr_vivid = false
   if (defined(build_seccomp) && build_seccomp) {
     player_framework_support_seccomp = true
   }
@@ -357,5 +357,5 @@ MEDIA_PLAYER_GRAPHIC = "//foundation/graphic/graphic_2d"
 MEDIA_PLAYER_GRAPHIC_SURFACE = "//foundation/graphic/graphic_surface"
 MEDIA_DRM_ROOT_DIR = "//foundation/multimedia/drm_framework"
 
-# Fuzz test output path
+# Fuzz test output path 
 MODULE_OUTPUT_PATH = "player_framework/player_framework"
