@@ -337,8 +337,10 @@ int32_t SystemSoundManagerImpl::UpdateRingtoneUri(std::shared_ptr<DataShare::Dat
 {
     DataSharePredicates updateOldPredicates;
     DataShareValuesBucket updateOldValuesBucket;
-    updateOldPredicates.SetWhereClause(RINGTONE_COLUMN_RING_TONE_TYPE + " = ? AND " + RINGTONE_COLUMN_RING_TONE_SOURCE_TYPE + " = ? ");
-    updateOldPredicates.SetWhereArgs({to_string(ringtoneTypeMap_[ringtoneType]), to_string(SOURCE_TYPE_CUSTOMISED)});
+    updateOldPredicates.SetWhereClause(RINGTONE_COLUMN_RING_TONE_TYPE + " = ? AND " +
+        RINGTONE_COLUMN_RING_TONE_SOURCE_TYPE + " = ? ");
+    updateOldPredicates.SetWhereArgs({to_string(ringtoneTypeMap_[ringtoneType]),
+        to_string(SOURCE_TYPE_CUSTOMISED)});
     updateOldValuesBucket.Put(RINGTONE_COLUMN_RING_TONE_TYPE, RING_TONE_TYPE_NOT);
     updateOldValuesBucket.Put(RINGTONE_COLUMN_RING_TONE_SOURCE_TYPE, SOURCE_TYPE_INVALID);
     dataShareHelper->Update(RINGTONEURI, updateOldPredicates, updateOldValuesBucket);
@@ -497,7 +499,8 @@ int32_t SystemSoundManagerImpl::UpdateSystemToneUri(std::shared_ptr<DataShare::D
     DataSharePredicates updateOldPredicates;
     DataShareValuesBucket updateOldValuesBucket;
     updateOldPredicates.SetWhereClause(toneType + " = ? AND " + toneSourceType + " = ? ");
-    updateOldPredicates.SetWhereArgs({to_string(systemTypeMap_[systemToneType]), to_string(SOURCE_TYPE_CUSTOMISED)});
+    updateOldPredicates.SetWhereArgs({to_string(systemTypeMap_[systemToneType]),
+        to_string(SOURCE_TYPE_CUSTOMISED)});
     updateOldValuesBucket.Put(toneType, 0);
     updateOldValuesBucket.Put(toneSourceType, SOURCE_TYPE_INVALID);
     dataShareHelper->Update(RINGTONEURI, updateOldPredicates, updateOldValuesBucket);
