@@ -149,7 +149,7 @@ void PlayerServiceStub::FillPlayerFuncPart2()
         [this](MessageParcel &data, MessageParcel &reply) { return GetAudioTrackInfo(data, reply); } };
     playerFuncs_[GET_SUBTITLE_TRACK_INFO] = { "Player::GetSubtitleTrackInfo",
         [this](MessageParcel &data, MessageParcel &reply) { return GetSubtitleTrackInfo(data, reply); } };
-    playerFuncs_[GET_VIDEO_WIDTH] = { "Player::GetVideoHeight",
+    playerFuncs_[GET_VIDEO_WIDTH] = { "Player::GetVideoWidth",
         [this](MessageParcel &data, MessageParcel &reply) { return GetVideoWidth(data, reply); } };
     playerFuncs_[GET_VIDEO_HEIGHT] = { "Player::GetVideoHeight",
         [this](MessageParcel &data, MessageParcel &reply) { return GetVideoHeight(data, reply); } };
