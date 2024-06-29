@@ -205,7 +205,6 @@ public:
 private:
     int32_t appPid_ { 0 };
     bool extSpeaker_ = true;
-    std::set<int32_t> extSpeakerSet;
     void MixAudio(char** srcData, char* mixData, int channels, int bufferSize);
 
     AVScreenCaptureMixMode type_;
