@@ -117,17 +117,21 @@ void VideoCallbackNapi::OnInfo(PlayerOnInfoType type, int32_t extra, const Forma
 
 void VideoCallbackNapi::OnError(int32_t errorCode, const std::string &errorMsg)
 {
+    MediaServiceExtErrCode extErrCode = MSErrorToExtError(static) 
     ClearAsyncWork(true, "The request was aborted because en error occurred, please check event(error)");
     return PlayerCallbackNapi::OnError(errorCode, errorMsg);
 }
 
 void VideoCallbackNapi::OnSeekDoneCb(int32_t position)
 {
-    if (contextMap_.find(AsyncWorkType::ASYNC_WORK_SEEK) == contextMap_.end() ||
-        contextMap_.at(AsyncWorkType::ASYNC_WORK_SEEK).empty())  {
-        MEDIA_LOGE("OnSeekDoneCb is called, But context is empty");
-        return;
+    MediaServiceExtErrCode extErrCode = MSErrorToExtError(static_cast<MediaServiceErrCode>(errorCode));
+    if (extErrCode == MSERR_EXT_UNKNOWN) {
+        extErrCode = MSERR_EXT_OPERATE_NOT_PERMIT;
     }
+    ClearAsyncWorkWithErrorCode(extErrCode, true,
+        "The request was aborted because en error occurred, please check event(error)");
+        return PlayerCallbackNapi::OnError(errorCode, errorMsg);
+}
 
     VideoPlayerAsyncContext *context = contextMap_.at(AsyncWorkType::ASYNC_WORK_SEEK).front();
     CHECK_AND_RETURN_LOG(context != nullptr, "context is nullptr");
