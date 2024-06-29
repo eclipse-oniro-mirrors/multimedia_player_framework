@@ -2260,11 +2260,11 @@ void AudioDataSource::SpeakerStateUpdate(
         speakerOn = false;
     }
     if (speakerOn && !extSpeaker_) {
+        extSpeaker_ = speakerOn;
         MEDIA_LOGI("HEADSET Change to Speaker.");
-        extSpeaker_ = speakerOn;
     } else if (!speakerOn && extSpeaker_) {
-        MEDIA_LOGI("Speaker Change to HEADSET.");
         extSpeaker_ = speakerOn;
+        MEDIA_LOGI("Speaker Change to HEADSET.");
     }
 }
 
