@@ -2259,12 +2259,13 @@ void AudioDataSource::SpeakerStateUpdate(
     if (headSetCount == changeInfoSize) {
         speakerOn = false;
     }
-    if (speakerOn) {
+    if (speakerOn && !extSpeaker_) {
         MEDIA_LOGI("HEADSET Change to Speaker.");
-    } else {
+        extSpeaker_ = speakerOn;
+    } else if (!speakerOn && extSpeaker_){
         MEDIA_LOGI("Speaker Change to HEADSET.");
+        extSpeaker_ = speakerOn;
     }
-    extSpeaker_ = speakerOn;
 }
 
 void AudioDataSource::SetAppPid(int32_t appid)
