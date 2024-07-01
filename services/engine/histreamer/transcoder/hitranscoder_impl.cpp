@@ -252,8 +252,7 @@ int32_t HiTransCoderImpl::Prepare()
         if (isNeedVideoResizeFilter_ && (videoResizeFilter_ != nullptr)) {
             videoDecoderFilter_->SetOutputSurface(videoResizeFilter_->GetInputSurface());
             videoResizeFilter_->SetOutputSurface(videoEncoderFilter_->GetInputSurface());
-        }
-        else {
+        } else {
             videoDecoderFilter_->SetOutputSurface(videoEncoderFilter_->GetInputSurface());
         }
     }
