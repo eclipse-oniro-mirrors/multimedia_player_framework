@@ -723,7 +723,7 @@ HWTEST_F(RecorderUnitTest, recorder_configure_017, TestSize.Level2)
 
 /**
  * @tc.name: recorder_configure_018
- * @tc.desc: record mp3 with audiobitrate 64000
+ * @tc.desc: record mp3 with samplerate 64000
  * @tc.type: FUNC
  * @tc.require:
  */
@@ -732,7 +732,7 @@ HWTEST_F(RecorderUnitTest, recorder_configure_018, TestSize.Level2)
     VideoRecorderConfig videoRecorderConfig;
     videoRecorderConfig.audioFormat = AUDIO_MPEG;
     videoRecorderConfig.outPutFormat = FORMAT_MP3;
-    videoRecorderConfig.audioEncodingBitRate = 64000;
+    videoRecorderConfig.sampleRate = 64000;
     videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_configure_018.mp3").c_str(), O_RDWR);
     ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
 
