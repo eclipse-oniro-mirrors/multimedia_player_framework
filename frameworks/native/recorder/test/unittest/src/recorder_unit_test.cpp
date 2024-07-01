@@ -674,12 +674,12 @@ HWTEST_F(RecorderUnitTest, recorder_configure_015, TestSize.Level2)
     audioRecorderConfig.audioFormat = AUDIO_MPEG;
     audioRecorderConfig.outPutFormat = FORMAT_MP3;
     audioRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_configure_015.mp3").c_str(), O_RDWR);
-    ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
+    ASSERT_TRUE(audioRecorderConfig.outputFd >= 0);
 
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_AUDIO, audioRecorderConfig));
     EXPECT_EQ(MSERR_OK, recorder_->Prepare());
     EXPECT_EQ(MSERR_OK, recorder_->Release());
-    close(videoRecorderConfig.outputFd);
+    close(audioRecorderConfig.outputFd);
 }
 
 /**
@@ -694,11 +694,11 @@ HWTEST_F(RecorderUnitTest, recorder_configure_016, TestSize.Level2)
     audioRecorderConfig.audioFormat = AUDIO_MPEG;
     audioRecorderConfig.outPutFormat = FORMAT_MPEG_4;
     audioRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_configure_016.mp3").c_str(), O_RDWR);
-    ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
+    ASSERT_TRUE(audioRecorderConfig.outputFd >= 0);
 
     EXPECT_NE(MSERR_OK, recorder_->SetFormat(PURE_AUDIO, audioRecorderConfig));
     EXPECT_EQ(MSERR_OK, recorder_->Release());
-    close(videoRecorderConfig.outputFd);
+    close(audioRecorderConfig.outputFd);
 }
 
 /**
@@ -713,12 +713,12 @@ HWTEST_F(RecorderUnitTest, recorder_configure_017, TestSize.Level2)
     audioRecorderConfig.audioFormat = AUDIO_MPEG;
     audioRecorderConfig.outPutFormat = FORMAT_M4A;
     audioRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_configure_017.mp3").c_str(), O_RDWR);
-    ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
+    ASSERT_TRUE(audioRecorderConfig.outputFd >= 0);
 
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_AUDIO, audioRecorderConfig));
     EXPECT_NE(MSERR_OK, recorder_->Prepare());
     EXPECT_EQ(MSERR_OK, recorder_->Release());
-    close(videoRecorderConfig.outputFd);
+    close(audioRecorderConfig.outputFd);
 }
 
 /**
@@ -734,12 +734,12 @@ HWTEST_F(RecorderUnitTest, recorder_configure_018, TestSize.Level2)
     audioRecorderConfig.outPutFormat = FORMAT_MP3;
     audioRecorderConfig.audioEncodingBitRate = 64000;
     audioRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_configure_018.mp3").c_str(), O_RDWR);
-    ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
+    ASSERT_TRUE(audioRecorderConfig.outputFd >= 0);
 
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_AUDIO, audioRecorderConfig));
     EXPECT_NE(MSERR_OK, recorder_->Prepare());
     EXPECT_EQ(MSERR_OK, recorder_->Release());
-    close(videoRecorderConfig.outputFd);
+    close(audioRecorderConfig.outputFd);
 }
 
 /**
@@ -755,7 +755,7 @@ HWTEST_F(RecorderUnitTest, recorder_mp3_001, TestSize.Level2)
     audioRecorderConfig.outPutFormat = FORMAT_MP3;
     audioRecorderConfig.audioEncodingBitRate = 64000;
     audioRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_mp3_001.mp3").c_str(), O_RDWR);
-    ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
+    ASSERT_TRUE(audioRecorderConfig.outputFd >= 0);
 
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_AUDIO, audioRecorderConfig));
     EXPECT_EQ(MSERR_OK, recorder_->Prepare());
@@ -766,7 +766,7 @@ HWTEST_F(RecorderUnitTest, recorder_mp3_001, TestSize.Level2)
     EXPECT_EQ(MSERR_OK, recorder_->Resume());
     EXPECT_EQ(MSERR_OK, recorder_->Stop(false));
     EXPECT_EQ(MSERR_OK, recorder_->Release());
-    close(videoRecorderConfig.outputFd);
+    close(audioRecorderConfig.outputFd);
 }
 
 /**
