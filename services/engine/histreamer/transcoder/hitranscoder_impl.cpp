@@ -251,12 +251,12 @@ int32_t HiTransCoderImpl::Prepare()
     if ((videoEncoderFilter_ != nullptr) && (videoDecoderFilter_ != nullptr)) {
         if (isNeedVideoResizeFilter_ && (videoResizeFilter_ != nullptr)) {
             sptr<Surface> resizeFilterSurface = videoResizeFilter_->GetInputSurface();
-            FALSE_RETURN_V_MSG_E(resizeFilterSurface != nullptr, Status::ERROR_NULL_POINTER,
-                "resizeFilterSurface is nullptr");
+            FALSE_RETURN_V_MSG_E(resizeFilterSurface != nullptr,
+                static_cast<int32_t>(Status::ERROR_NULL_POINTER), "resizeFilterSurface is nullptr");
             videoDecoderFilter_->SetOutputSurface(resizeFilterSurface);
             sptr<Surface> encoderFilterSurface = videoEncoderFilter_->GetInputSurface();
-            FALSE_RETURN_V_MSG_E(encoderFilterSurface != nullptr, Status::ERROR_NULL_POINTER,
-                "encoderFilterSurface is nullptr");
+            FALSE_RETURN_V_MSG_E(encoderFilterSurface != nullptr,
+                static_cast<int32_t>(Status::ERROR_NULL_POINTER), "encoderFilterSurface is nullptr");
             videoResizeFilter_->SetOutputSurface(encoderFilterSurface);
         } else {
             sptr<Surface> encoderFilterSurface = videoEncoderFilter_->GetInputSurface();
