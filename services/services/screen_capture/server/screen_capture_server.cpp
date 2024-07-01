@@ -2269,7 +2269,7 @@ bool AudioDataSource::HasSpeakerStream(
         }
         changeInfoIndex++;
     }
-    if (headSetCount == changeInfoIndex) {
+    if (headSetCount == changeInfoIndex) { // only if all streams in headset
         hasSpeakerStream = false;
     }
     return hasSpeakerStream;
