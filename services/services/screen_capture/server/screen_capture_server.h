@@ -201,7 +201,7 @@ public:
     void SpeakerStateUpdate(
         const std::vector<std::unique_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos);
     bool HasSpeakerStream(
-        const std::vector<std::unique_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos)
+        const std::vector<std::unique_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos);
     void SetAppPid(int32_t appid);
     int32_t GetAppPid();
 private:
