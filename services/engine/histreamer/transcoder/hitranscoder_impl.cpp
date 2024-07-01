@@ -250,10 +250,19 @@ int32_t HiTransCoderImpl::Prepare()
     Status ret = pipeline_->Prepare();
     if ((videoEncoderFilter_ != nullptr) && (videoDecoderFilter_ != nullptr)) {
         if (isNeedVideoResizeFilter_ && (videoResizeFilter_ != nullptr)) {
-            videoDecoderFilter_->SetOutputSurface(videoResizeFilter_->GetInputSurface());
-            videoResizeFilter_->SetOutputSurface(videoEncoderFilter_->GetInputSurface());
+            sptr<Surface> resizeFilterSurface = videoResizeFilter_->GetInputSurface();
+            FALSE_RETURN_V_MSG_E(resizeFilterSurface != nullptr, Status::ERROR_NULL_POINTER,
+                "resizeFilterSurface is nullptr");
+            videoDecoderFilter_->SetOutputSurface(resizeFilterSurface);
+            sptr<Surface> encoderFilterSurface = videoEncoderFilter_->GetInputSurface();
+            FALSE_RETURN_V_MSG_E(encoderFilterSurface != nullptr, Status::ERROR_NULL_POINTER,
+                "encoderFilterSurface is nullptr");
+            videoResizeFilter_->SetOutputSurface(encoderFilterSurface);
         } else {
-            videoDecoderFilter_->SetOutputSurface(videoEncoderFilter_->GetInputSurface());
+            sptr<Surface> encoderFilterSurface = videoEncoderFilter_->GetInputSurface();
+            FALSE_RETURN_V_MSG_E(encoderFilterSurface != nullptr, Status::ERROR_NULL_POINTER,
+                "encoderFilterSurface is nullptr");
+            videoDecoderFilter_->SetOutputSurface(encoderFilterSurface);
         }
     }
     return static_cast<int32_t>(ret);
