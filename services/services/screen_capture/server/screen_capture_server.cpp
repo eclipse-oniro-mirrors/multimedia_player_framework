@@ -2236,15 +2236,28 @@ void AudioDataSource::SpeakerStateUpdate(
     if (changeInfoSize == 0) {
         return;
     }
-    uint32_t index = 0;
+    bool speakerAlive = HasSpeakerStream(allAudioRendererChangeInfos);
+    if (speakerAlive && !speakerAliveStatus_) {
+        speakerAliveStatus_ = speakerAlive;
+        MEDIA_LOGI("HEADSET Change to Speaker.");
+    } else if (!speakerAlive && speakerAliveStatus_) {
+        speakerAliveStatus_ = speakerAlive;
+        MEDIA_LOGI("Speaker Change to HEADSET.");
+    }
+}
+
+bool AudioDataSource::HasSpeakerStream(
+    const std::vector<std::unique_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos)
+{
+    uint32_t changeInfoIndex = 0;
     uint32_t headSetCount = 0;
-    bool speakerOn = true;
-    for (const std::unique_ptr<AudioRendererChangeInfo> &changeInfo: allAudioRendererChangeInfos) {
+    bool hasSpeakerStream = true;
+    for (const std::unique_ptr<AudioRendererChangeInfo> &changeInfo: audioRendererChangeInfos) {
         if (!changeInfo) {
             continue;
         }
         MEDIA_LOGI("ChangeInfo Id: %{public}d, Client pid : %{public}d, State : %{public}d, DeviceType : %{public}d",
-            index, changeInfo->clientPid, static_cast<int32_t>(changeInfo->rendererState),
+            changeInfoIndex, changeInfo->clientPid, static_cast<int32_t>(changeInfo->rendererState),
             static_cast<int32_t>(changeInfo->outputDeviceInfo.deviceType));
         if (changeInfo->outputDeviceInfo.deviceType == DEVICE_TYPE_WIRED_HEADSET ||
             changeInfo->outputDeviceInfo.deviceType == DEVICE_TYPE_WIRED_HEADPHONES ||
@@ -2254,18 +2267,12 @@ void AudioDataSource::SpeakerStateUpdate(
             changeInfo->outputDeviceInfo.deviceType == DEVICE_TYPE_USB_ARM_HEADSET) {
             headSetCount++;
         }
-        index++;
+        changeInfoIndex++;
     }
-    if (headSetCount == changeInfoSize) {
-        speakerOn = false;
+    if (headSetCount == changeInfoIndex) {
+        hasSpeakerStream = false;
     }
-    if (speakerOn && !extSpeaker_) {
-        extSpeaker_ = speakerOn;
-        MEDIA_LOGI("HEADSET Change to Speaker.");
-    } else if (!speakerOn && extSpeaker_) {
-        extSpeaker_ = speakerOn;
-        MEDIA_LOGI("Speaker Change to HEADSET.");
-    }
+    return hasSpeakerStream;
 }
 
 void AudioDataSource::SetAppPid(int32_t appid)
@@ -2317,7 +2324,7 @@ int32_t AudioDataSource::ReadAt(std::shared_ptr<AVBuffer> buffer, uint32_t lengt
                 bufferMem->Write(reinterpret_cast<uint8_t*>(innerAudioBuffer->buffer), innerAudioBuffer->length, 0);
                 return screenCaptureServer_->ReleaseAudioBufferMix(type_);
             }
-            if (extSpeaker_ && screenCaptureServer_->GetMicWorkingState()) {
+            if (speakerAliveStatus_ && screenCaptureServer_->GetMicWorkingState()) {
                 MEDIA_LOGD("AVScreenCaptureMixMode MIX_MODE SPEAKER AND MIC ON");
                 bufferMem->Write(reinterpret_cast<uint8_t*>(micAudioBuffer->buffer), innerAudioBuffer->length, 0);
                 return screenCaptureServer_->ReleaseAudioBufferMix(type_);

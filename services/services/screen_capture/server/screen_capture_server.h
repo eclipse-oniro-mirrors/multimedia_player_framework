@@ -200,11 +200,13 @@ public:
     int32_t UnregisterAudioRendererEventListener(const int32_t clientPid);
     void SpeakerStateUpdate(
         const std::vector<std::unique_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos);
+    bool HasSpeakerStream(
+        const std::vector<std::unique_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos)
     void SetAppPid(int32_t appid);
     int32_t GetAppPid();
 private:
     int32_t appPid_ { 0 };
-    bool extSpeaker_ = true;
+    bool speakerAliveStatus_ = true;
     void MixAudio(char** srcData, char* mixData, int channels, int bufferSize);
 
     AVScreenCaptureMixMode type_;
