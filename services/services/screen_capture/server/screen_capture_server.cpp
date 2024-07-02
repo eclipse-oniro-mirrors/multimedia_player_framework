@@ -2237,9 +2237,7 @@ void AudioDataSource::SpeakerStateUpdate(
         return;
     }
     bool speakerAlive = HasSpeakerStream(allAudioRendererChangeInfos);
-    if (speakerAlive == speakerAliveStatus_) {
-        return;
-    } else {
+    if (speakerAlive !== speakerAliveStatus_) {
         if (speakerAlive) {
             MEDIA_LOGI("HEADSET Change to Speaker.");
         } else {
