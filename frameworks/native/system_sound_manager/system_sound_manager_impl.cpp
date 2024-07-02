@@ -368,8 +368,8 @@ int32_t SystemSoundManagerImpl::UpdateRingtoneUri(std::shared_ptr<DataShare::Dat
 
     DataSharePredicates updatePredicates;
     DataShareValuesBucket updateValuesBucket;
-    if (((num == 1) && (ringtoneTypeMap_[ringtoneType] == RING_TONE_TYPE_SIM_CARD_2)) ||
-        ((num == 2) && (ringtoneTypeMap_[ringtoneType] == RING_TONE_TYPE_SIM_CARD_1))) {
+    if (((num == RING_TONE_TYPE_SIM_CARD_1) && (ringtoneTypeMap_[ringtoneType] == RING_TONE_TYPE_SIM_CARD_2)) ||
+        ((num == RING_TONE_TYPE_SIM_CARD_2) && (ringtoneTypeMap_[ringtoneType] == RING_TONE_TYPE_SIM_CARD_1))) {
         type = RING_TONE_TYPE_SIM_CARD_BOTH;
     } else {
         type = ringtoneTypeMap_[ringtoneType];
@@ -421,8 +421,8 @@ int32_t SystemSoundManagerImpl::SetRingtoneUri(const shared_ptr<Context> &contex
     return TYPEERROR;
 }
 
- std::string SystemSoundManagerImpl::GetRingtoneUriByType(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
-        const std::string &type)
+std::string SystemSoundManagerImpl::GetRingtoneUriByType(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
+    const std::string &type)
 {
     std::string uri;
     DataShare::DatashareBusinessError businessError;
@@ -624,8 +624,8 @@ int32_t SystemSoundManagerImpl::SetSystemToneUri(const shared_ptr<Context> &cont
     return TYPEERROR;
 }
 
- std::string SystemSoundManagerImpl::GetShotToneUriByType(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
-        const std::string &type)
+std::string SystemSoundManagerImpl::GetShotToneUriByType(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
+    const std::string &type)
 {
     std::string uri;
     DataShare::DatashareBusinessError businessError;
@@ -643,8 +643,8 @@ int32_t SystemSoundManagerImpl::SetSystemToneUri(const shared_ptr<Context> &cont
     return uri;
 }
 
- std::string SystemSoundManagerImpl::GetNotificationToneUriByType(
-        std::shared_ptr<DataShare::DataShareHelper> dataShareHelper)
+std::string SystemSoundManagerImpl::GetNotificationToneUriByType(
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper)
 {
     std::string uri;
     DataShare::DatashareBusinessError businessError;

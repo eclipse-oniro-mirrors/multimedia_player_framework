@@ -118,7 +118,8 @@ private:
     std::string GetNotificationToneUriByType(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper);
     int32_t UpdateShotToneUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper, const int32_t &toneId,
         SystemToneType systemToneType, const int32_t &num);
-    int32_t UpdateNotificatioToneUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper, const int32_t &toneId);
+    int32_t UpdateNotificatioToneUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
+        const int32_t &toneId);
 
     bool isRingtoneTypeValid(RingtoneType ringtongType);
     bool isSystemToneTypeValid(SystemToneType systemToneType);
