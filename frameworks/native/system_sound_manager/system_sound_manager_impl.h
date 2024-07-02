@@ -108,10 +108,17 @@ private:
     std::string GetKeyForDatabase(const std::string &systemSoundType, int32_t type);
     void InitRingerMode(void);
     void GetCustomizedTone(const std::shared_ptr<ToneAttrs> &toneAttrs);
+    void InitMap();
+    std::string GetRingtoneUriByType(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
+        const std::string &type);
     int32_t UpdateRingtoneUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper, const int32_t &toneId,
-        RingtoneType ringtoneType);
-    int32_t UpdateSystemToneUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper, const int32_t &toneId,
-        SystemToneType systemToneType);
+        RingtoneType ringtoneType, const int32_t &num);
+    std::string GetShotToneUriByType(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
+        const std::string &type);
+    std::string GetNotificationToneUriByType(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper);
+    int32_t UpdateShotToneUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper, const int32_t &toneId,
+        SystemToneType systemToneType, const int32_t &num);
+    int32_t UpdateNotificatioToneUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper, const int32_t &toneId);
 
     bool isRingtoneTypeValid(RingtoneType ringtongType);
     bool isSystemToneTypeValid(SystemToneType systemToneType);
