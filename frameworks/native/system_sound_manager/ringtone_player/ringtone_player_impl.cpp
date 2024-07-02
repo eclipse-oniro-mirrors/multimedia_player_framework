@@ -106,12 +106,12 @@ static shared_ptr<DataShare::DataShareHelper> CreateDataShareHelper(int32_t syst
 
 std::string RingtonePlayerImpl::ChangeUri(const std::string &audioUri)
 {
-    const std::string fdHead = "fd://";
+    const std::string FDHEAD = "fd://";
     std::string ringtoneUri = audioUri;
     size_t found = audioUri.find(RINGTONE_CUSTOMIZED_BASE_PATH);
     if (found != std::string::npos) {
-        std::shared_ptr<DataShare::DataShareHelper> dataShareHelper
-            = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
+        std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
+            CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
         CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, audioUri, "Failed to create dataShareHelper.");
         DataShare::DatashareBusinessError businessError;
         DataShare::DataSharePredicates queryPredicates;
@@ -126,7 +126,7 @@ std::string RingtonePlayerImpl::ChangeUri(const std::string &audioUri)
             Uri ofUri(uriStr);
             int32_t fd = dataShareHelper->OpenFile(ofUri, "r");
             if (fd > 0) {
-                ringtoneUri = fdHead + to_string(fd);
+                ringtoneUri = FDHEAD + to_string(fd);
             }
         }
         resultSet == nullptr ? : resultSet->Close();
