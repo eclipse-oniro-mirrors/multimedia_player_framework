@@ -462,6 +462,9 @@ std::string SystemSoundManagerImpl::GetRingtoneUri(const shared_ptr<Context> &co
         }
     }
     dataShareHelper->Release();
+    if (!ringtoneUri.empty()) {
+        MEDIA_LOGI("GetRingtoneUri: ringtoneUri %{public}s", ringtoneUri.c_str());
+    }
     return ringtoneUri;
 }
 
@@ -697,6 +700,9 @@ std::string SystemSoundManagerImpl::GetSystemToneUri(const std::shared_ptr<Abili
         }
     }
     dataShareHelper->Release();
+    if (!systemToneUri.empty()) {
+        MEDIA_LOGI("GetSystemToneUri: systemToneUri %{public}s", systemToneUri.c_str());
+    }
     return systemToneUri;
 }
 
