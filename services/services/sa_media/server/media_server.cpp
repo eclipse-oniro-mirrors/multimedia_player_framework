@@ -21,6 +21,7 @@
 #include "media_server_manager.h"
 #include "mem_mgr_client.h"
 #include "mem_mgr_proxy.h"
+#include "system_ability_definition.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MediaServer"};
@@ -28,7 +29,6 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MediaServe
 
 namespace OHOS {
 namespace Media {
-constexpr int32_t SA_ID = 3002;
 constexpr int32_t SYSTEM_STATUS_START = 1;
 constexpr int32_t SYSTEM_STATUS_STOP = 0;
 constexpr int32_t SYSTEM_PROCESS_TYPE = 1;
@@ -61,7 +61,8 @@ void MediaServer::OnStart()
 void MediaServer::OnStop()
 {
     MEDIA_LOGD("MediaServer OnStop");
-    Memory::MemMgrClient::GetInstance().NotifyProcessStatus(getpid(), SYSTEM_PROCESS_TYPE, SYSTEM_STATUS_STOP, SA_ID);
+    Memory::MemMgrClient::GetInstance().NotifyProcessStatus(getpid(),
+        SYSTEM_PROCESS_TYPE, SYSTEM_STATUS_STOP, OHOS::PLAYER_DISTRIBUTED_SERVICE_ID);
 }
 
 void MediaServer::OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId)
@@ -69,7 +70,7 @@ void MediaServer::OnAddSystemAbility(int32_t systemAbilityId, const std::string 
     MEDIA_LOGD("OnAddSystemAbility systemAbilityId:%{public}d", systemAbilityId);
     if (systemAbilityId == MEMORY_MANAGER_SA_ID) {
         Memory::MemMgrClient::GetInstance().NotifyProcessStatus(getpid(),
-            SYSTEM_PROCESS_TYPE, SYSTEM_STATUS_START, SA_ID);
+            SYSTEM_PROCESS_TYPE, SYSTEM_STATUS_START, OHOS::PLAYER_DISTRIBUTED_SERVICE_ID);
     }
 }
 
