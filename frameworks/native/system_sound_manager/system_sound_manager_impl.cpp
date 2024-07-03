@@ -368,8 +368,10 @@ int32_t SystemSoundManagerImpl::UpdateRingtoneUri(std::shared_ptr<DataShare::Dat
 
     DataSharePredicates updatePredicates;
     DataShareValuesBucket updateValuesBucket;
-    if (((num == RING_TONE_TYPE_SIM_CARD_1) && (ringtoneTypeMap_[ringtoneType] == RING_TONE_TYPE_SIM_CARD_2)) ||
-        ((num == RING_TONE_TYPE_SIM_CARD_2) && (ringtoneTypeMap_[ringtoneType] == RING_TONE_TYPE_SIM_CARD_1))) {
+    if (((num == RING_TONE_TYPE_SIM_CARD_1 || num == RING_TONE_TYPE_SIM_CARD_BOTH) &&
+        (ringtoneTypeMap_[ringtoneType] == RING_TONE_TYPE_SIM_CARD_2)) ||
+        ((num == RING_TONE_TYPE_SIM_CARD_2 || num == RING_TONE_TYPE_SIM_CARD_BOTH) &&
+        (ringtoneTypeMap_[ringtoneType] == RING_TONE_TYPE_SIM_CARD_1))) {
         type = RING_TONE_TYPE_SIM_CARD_BOTH;
     } else {
         type = ringtoneTypeMap_[ringtoneType];
@@ -545,8 +547,10 @@ int32_t SystemSoundManagerImpl::UpdateShotToneUri(std::shared_ptr<DataShare::Dat
 
     DataSharePredicates updatePredicates;
     DataShareValuesBucket updateValuesBucket;
-    if (((num == SHOT_TONE_TYPE_SIM_CARD_1) && (systemTypeMap_[systemToneType] == SHOT_TONE_TYPE_SIM_CARD_2)) ||
-        ((num == SHOT_TONE_TYPE_SIM_CARD_2) && (systemTypeMap_[systemToneType] == SHOT_TONE_TYPE_SIM_CARD_1))) {
+    if (((num == SHOT_TONE_TYPE_SIM_CARD_1 || num == RING_TONE_TYPE_SIM_CARD_BOTH) &&
+        (systemTypeMap_[systemToneType] == SHOT_TONE_TYPE_SIM_CARD_2)) ||
+        ((num == SHOT_TONE_TYPE_SIM_CARD_2 || num == RING_TONE_TYPE_SIM_CARD_BOTH) &&
+        (systemTypeMap_[systemToneType] == SHOT_TONE_TYPE_SIM_CARD_1))) {
         type = SHOT_TONE_TYPE_SIM_CARD_BOTH;
     } else {
         type = shotToneTypeMap_[systemToneType];
