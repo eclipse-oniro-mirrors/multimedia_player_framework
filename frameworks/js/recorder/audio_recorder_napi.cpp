@@ -377,7 +377,7 @@ int32_t AudioRecorderNapi::OnPrepare(const std::string &uriPath, const AudioReco
     ret = recorderImpl_->SetAudioSampleRate(sourceId, properties.audioSampleRate);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Fail to SetAudioSampleRate");
 
-    CHECK_AND_RETURN_RET_LOG(properties.numberOfChannels > 0, MSERR_INVALID_VAL, "encodeBitRate invalid value");
+    CHECK_AND_RETURN_RET_LOG(properties.numberOfChannels > 0, MSERR_INVALID_VAL, "numberOfChannels invalid value");
     ret = recorderImpl_->SetAudioChannels(sourceId, properties.numberOfChannels);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Fail to SetAudioChannels");
 
