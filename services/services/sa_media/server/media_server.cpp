@@ -67,7 +67,7 @@ void MediaServer::OnStop()
 void OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId)
 {
     MEDIA_LOGD("OnAddSystemAbility systemAbilityId:%{public}d", systemAbilityId);
-    if (sysytemAbilityId == MEMORY_MANAGER_SA_ID) {
+    if (systemAbilityId == MEMORY_MANAGER_SA_ID) {
         Memory::MemMgrClient::GetInstance().NotifyProcessStatus(getpid(),
             SYSTEM_PROCESS_TYPE, SYSTEM_STATUS_START, SA_ID);
     }
