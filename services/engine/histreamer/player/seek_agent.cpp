@@ -95,15 +95,9 @@ Status SeekAgent::Seek(int64_t seekPos)
     return st;
 }
 
-Status SeekAgent::SetBufferFilledListener()
+Status SeekAgent::GetAllTrackInfo(uint32_t &videoTrackId, std::vector<uint32_t> &audioTrackIds)
 {
-    FALSE_RETURN_V_MSG_E(demuxer_ != nullptr, Status::ERROR_INVALID_PARAMETER, "Invalid demuxer filter instance.");
-    producerMap_ = demuxer_->GetBufferQueueProducerMap();
-    FALSE_RETURN_V_MSG_E(!producerMap_.empty(), Status::ERROR_INVALID_PARAMETER, "producerMap is empty.");
-
     auto trackInfo = demuxer_->GetStreamMetaInfo();
-    uint32_t videoTrackId = -1;
-    std::vector<uint32_t> audioTrackIds;
     for (uint32_t index = 0; index < trackInfo.size(); index++) {
         auto trackMeta = trackInfo[index];
         std::string mimeType;
@@ -117,6 +111,18 @@ Status SeekAgent::SetBufferFilledListener()
             audioTrackIds.push_back(index);
         }
     }
+    return Status::OK;
+}
+
+Status SeekAgent::SetBufferFilledListener()
+{
+    FALSE_RETURN_V_MSG_E(demuxer_ != nullptr, Status::ERROR_INVALID_PARAMETER, "Invalid demuxer filter instance.");
+    producerMap_ = demuxer_->GetBufferQueueProducerMap();
+    FALSE_RETURN_V_MSG_E(!producerMap_.empty(), Status::ERROR_INVALID_PARAMETER, "producerMap is empty.");
+
+    uint32_t videoTrackId = -1;
+    std::vector<uint32_t> audioTrackIds;
+    GetAllTrackInfo(videoTrackId, audioTrackIds);
 
     auto it = producerMap_.begin();
     while (it != producerMap_.end()) {
