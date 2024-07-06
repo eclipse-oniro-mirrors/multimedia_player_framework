@@ -104,7 +104,7 @@ int32_t HiRecorderImpl::Init()
 int32_t HiRecorderImpl::SetVideoSource(VideoSourceType source, int32_t &sourceId)
 {
     MediaTrace trace("HiRecorderImpl::SetVideoSource");
-    MEDIA_LOGI("SetVideoSource enter, sourceType:" PUBLIC_LOG_D32, static_cast<int32_t>(source));
+    MEDIA_LOGI("SetVideoSource enter, sourceType:%{public}d", static_cast<int32_t>(source));
     sourceId = INVALID_SOURCE_ID;
     CHECK_AND_RETURN_RET(source != VideoSourceType::VIDEO_SOURCE_BUTT,
         (int32_t)Status::ERROR_INVALID_PARAMETER);
@@ -153,7 +153,7 @@ int32_t HiRecorderImpl::SetVideoSource(VideoSourceType source, int32_t &sourceId
 int32_t HiRecorderImpl::SetAudioSource(AudioSourceType source, int32_t &sourceId)
 {
     MediaTrace trace("HiRecorderImpl::SetAudioSource");
-    MEDIA_LOGI("SetAudioSource enter, sourceType:" PUBLIC_LOG_D32, static_cast<int32_t>(source));
+    MEDIA_LOGI("SetAudioSource enter, sourceType:%{public}d", static_cast<int32_t>(source));
     sourceId = INVALID_SOURCE_ID;
     CHECK_AND_RETURN_RET(CheckAudioSourceType(source), (int32_t)Status::ERROR_INVALID_PARAMETER);
     CHECK_AND_RETURN_RET(audioCount_ < static_cast<int32_t>(AUDIO_SOURCE_MAX_COUNT),
