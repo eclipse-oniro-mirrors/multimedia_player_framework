@@ -655,16 +655,16 @@ int32_t HiPlayerImpl::Reset()
 
 int32_t HiPlayerImpl::SeekToCurrentTime(int32_t mSeconds, PlayerSeekMode mode)
 {
-    MEDIA_LOGI("SeekToCurrentTime in. mSeconds : %{public}d" ", seekMode : %{public}d",
-                mSeconds, static_cast<int32_t>(mode));
+    MEDIA_LOGI("SeekToCurrentTime. mSeconds : %{public}d, seekMode : %{public}d",
+        mSeconds, static_cast<int32_t>(mode));
     return Seek(mSeconds, mode);
 }
 
 Status HiPlayerImpl::Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeekDone)
 {
     MediaTrace trace("HiPlayerImpl::Seek");
-    MEDIA_LOGI("Seek entered. mSeconds : %{public}lld" ", seekMode : %{public}d",
-                mSeconds, static_cast<int32_t>(mode));
+    MEDIA_LOGI("Seek entered. mSeconds : %{public}lld, seekMode : %{public}d", 
+        mSeconds, static_cast<int32_t>(mode));
     if (IsSeekInSitu(mSeconds)) {
         MEDIA_LOGI("Return and already at curPosMs: %{public}lld", mSeconds);
         NotifySeek(Status::OK, notifySeekDone, mSeconds);
@@ -880,8 +880,8 @@ int32_t HiPlayerImpl::SetVideoSurface(sptr<Surface> surface)
     MEDIA_LOGD("SetVideoSurface in");
 #ifdef SUPPORT_VIDEO
     int64_t startSetSurfaceTime = GetCurrentMillisecond();
-    CHECK_AND_RETURN_RET_LOG(surface != nullptr, (int32_t)(Status::ERROR_INVALID_PARAMETER),
-                         "Set video surface failed, surface == nullptr");
+    CHECK_AND_RETURN_RET_LOG(surface != nullptr,
+        (int32_t)(Status::ERROR_INVALID_PARAMETER), "Set video surface failed, surface == nullptr");
     surface_ = surface;
     if (videoDecoder_ != nullptr &&
         pipelineStates_ != PlayerStates::PLAYER_STOPPED &&
@@ -1737,7 +1737,7 @@ void HiPlayerImpl::UpdateStateNoLock(PlayerStates newState, bool notifyUpward)
                 callbackLooper_.OnInfo(INFO_TYPE_STATE_CHANGE, pendingState, format);
             }
             MEDIA_LOGI("sending newest state change: %{public}s",
-                    StringnessPlayerState(pipelineStates_.load()).c_str());
+                StringnessPlayerState(pipelineStates_.load()).c_str());
             callbackLooper_.OnInfo(INFO_TYPE_STATE_CHANGE, pipelineStates_, format);
         } else {
             pendingStates_.push(newState);
@@ -1873,8 +1873,7 @@ void __attribute__((no_sanitize("cfi"))) HiPlayerImpl::OnStateChanged(PlayerStat
         }
         curState_ = state;
     }
-    MEDIA_LOGD("OnStateChanged %{public}d" " > %{public}d", pipelineStates_.load(),
-            TransStateId2PlayerState(state));
+    MEDIA_LOGD("OnStateChanged %{public}d" " > %{public}d", pipelineStates_.load(), TransStateId2PlayerState(state));
     UpdateStateNoLock(TransStateId2PlayerState(state));
     {
         AutoLock lock(stateMutex_);
