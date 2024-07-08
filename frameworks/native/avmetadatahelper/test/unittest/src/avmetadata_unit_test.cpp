@@ -618,7 +618,7 @@ HWTEST_F(AVMetadataUnitTest, SetSource_API_0600, Level2)
 */
 HWTEST_F(AVMetadataUnitTest, GetTimeByFrameIndex_API_0100, Level2)
 {
-   std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
         std::string("H264_AAC.mp4");
     std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
     ASSERT_NE(nullptr, helper);
