@@ -60,9 +60,9 @@ public:
         SET_CALLBACK,
         SET_LISTENER_OBJ,
         GET_AVMETADATA,
-        MAX_IPC_ID,
         GET_TIME_BY_FRAME_INDEX,
         GET_FRAME_INDEX_BY_TIME,
+        MAX_IPC_ID,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardAVMetadataHelperService");
