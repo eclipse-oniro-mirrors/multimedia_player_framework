@@ -71,12 +71,13 @@ int32_t SoundParser::DoParser()
     if (result != MSERR_OK && callback_ != nullptr) {
         MEDIA_LOGI("DoDemuxer failed, call callback");
         callback_->OnError(MSERR_UNSUPPORT_FILE);
+        return MSERR_INVALID_VAL;
     }
-    CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, MSERR_INVALID_VAL, "DoDemuxer failed, return");
     result = DoDecode(trackFormat_);
     if (result != MSERR_OK && callback_ != nullptr) {
         MEDIA_LOGI("DoDecode failed, call callback");
         callback_->OnError(MSERR_UNSUPPORT_FILE);
+        return MSERR_INVALID_VAL;
     }
     return MSERR_OK;
 }
