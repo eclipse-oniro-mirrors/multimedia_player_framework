@@ -16,7 +16,7 @@
 #include "i_engine_factory.h"
 #include "media_errors.h"
 #include "media_utils.h"
-#include "media_log.h"
+#include "common/log.h"
 #include "avmetadatahelper_impl.h"
 #ifdef SUPPORT_RECORDER
 #include "hirecorder_impl.h"
@@ -28,9 +28,7 @@
 #include "hiplayer_impl.h"
 #endif
 
-namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN, "EngineFactory" };
-}
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_PLAYER, "HstEngineFactory" };
 
 namespace OHOS {
 namespace Media {
@@ -58,7 +56,7 @@ public:
 
 int32_t HstEngineFactory::Score(Scene scene, const int32_t& appUid, const std::string& uri)
 {
-    MEDIA_LOGE("Score in");
+    MEDIA_LOG_E("Score in");
     (void)scene;
     (void)uri;
 
@@ -71,13 +69,13 @@ int32_t HstEngineFactory::Score(Scene scene, const int32_t& appUid, const std::s
 std::unique_ptr<IRecorderEngine> HstEngineFactory::CreateRecorderEngine(
     int32_t appUid, int32_t appPid, uint32_t appTokenId, uint64_t appFullTokenId)
 {
-    MEDIA_LOGE("CreateRecorderEngine enter.");
+    MEDIA_LOG_E("CreateRecorderEngine enter.");
     auto recorder = std::unique_ptr<HiRecorderImpl>(new (std::nothrow) HiRecorderImpl(
         appUid, appPid, appTokenId, appFullTokenId));
     if (recorder && recorder->Init() == 0) {
         return recorder;
     }
-    MEDIA_LOGE("create recorder failed or recorder init failed");
+    MEDIA_LOG_E("create recorder failed or recorder init failed");
     return nullptr;
 }
 #endif
@@ -99,13 +97,13 @@ std::unique_ptr<ITransCoderEngine> HstEngineFactory::CreateTransCoderEngine(
 #ifdef SUPPORT_PLAYER
 std::unique_ptr<IPlayerEngine> HstEngineFactory::CreatePlayerEngine(int32_t uid, int32_t pid, uint32_t tokenId)
 {
-    MEDIA_LOGI("Hst CreatePlayerEngine enter.");
+    MEDIA_LOG_I("Hst CreatePlayerEngine enter.");
     auto player = std::unique_ptr<HiPlayerImpl>(new (std::nothrow) HiPlayerImpl(
         uid, pid, tokenId, 0));
     if (player) {
         return player;
     }
-    MEDIA_LOGE("create player failed");
+    MEDIA_LOG_E("create player failed");
     return nullptr;
 }
 #endif
@@ -113,10 +111,10 @@ std::unique_ptr<IPlayerEngine> HstEngineFactory::CreatePlayerEngine(int32_t uid,
 #ifdef SUPPORT_METADATA
 std::unique_ptr<IAVMetadataHelperEngine> HstEngineFactory::CreateAVMetadataHelperEngine()
 {
-    MEDIA_LOGI("CreateAVMetadataHelperEngine enter.");
+    MEDIA_LOG_I("CreateAVMetadataHelperEngine enter.");
     auto helper = std::make_unique<AVMetadataHelperImpl>();
     if (helper == nullptr) {
-        MEDIA_LOGE("create AVMetadataHelperImpl failed");
+        MEDIA_LOG_E("create AVMetadataHelperImpl failed");
         return nullptr;
     }
     return helper;
