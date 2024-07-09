@@ -89,7 +89,7 @@ private:
 HiPlayerImpl::HiPlayerImpl(int32_t appUid, int32_t appPid, uint32_t appTokenId, uint64_t appFullTokenId)
     : appUid_(appUid), appPid_(appPid), appTokenId_(appTokenId), appFullTokenId_(appFullTokenId)
 {
-    MEDIA_LOGD("hiPlayerImpl ctor appUid %{public}d" " appPid %{public}d" " appTokenId %{public}d"
+    MEDIA_LOGD("hiPlayerImpl ctor appUid %{public}d appPid %{public}d appTokenId %{public}d"
         " appFullTokenId %{public}lld", appUid_, appPid_, appTokenId_, appFullTokenId_);
     playerId_ = std::string("HiPlayer_") + std::to_string(OHOS::Media::Pipeline::Pipeline::GetNextPipelineId());
     pipeline_ = std::make_shared<OHOS::Media::Pipeline::Pipeline>();
@@ -1170,11 +1170,11 @@ int32_t HiPlayerImpl::SelectTrack(int32_t trackId)
     CHECK_AND_RETURN_RET_LOG(trackId != currentAudioTrackId_ && trackId >= 0 && trackId < metaInfo.size(),
         MSERR_INVALID_VAL, "DeselectTrack trackId invalid");
     if (!(metaInfo[trackId]->GetData(Tag::MIME_TYPE, mime))) {
-        MEDIA_LOGE("SelectTrack trackId %{public}d" "get mime error", trackId);
+        MEDIA_LOGE("SelectTrack trackId %{public}dget mime error", trackId);
         return MSERR_INVALID_VAL;
     }
     if (mime.find("audio/") != 0) {
-        MEDIA_LOGE("SelectTrack trackId %{public}d" " not support", trackId);
+        MEDIA_LOGE("SelectTrack trackId %{public}d not support", trackId);
         return MSERR_INVALID_VAL;
     }
     if (Status::OK != demuxer_->SelectTrack(trackId)) {
@@ -1352,7 +1352,7 @@ int32_t HiPlayerImpl::SetFrameRateForSeekPerformance(double frameRate)
 int32_t HiPlayerImpl::SetAudioRendererInfo(const int32_t contentType, const int32_t streamUsage,
                                            const int32_t rendererFlag)
 {
-    MEDIA_LOGI("SetAudioRendererInfo in, coutentType: %{public}d" ", streamUsage: %{public}d"
+    MEDIA_LOGI("SetAudioRendererInfo in, coutentType: %{public}d, streamUsage: %{public}d"
         ", rendererFlag: %{public}d", contentType, streamUsage, rendererFlag);
     Plugins::AudioRenderInfo audioRenderInfo {contentType, streamUsage, rendererFlag};
     if (audioRenderInfo_ == nullptr) {
@@ -1609,7 +1609,7 @@ void HiPlayerImpl::HandleCompleteEvent(const Event& event)
             return;
         }
     }
-    MEDIA_LOGI("OnComplete looping: %{public}d" ".", singleLoop_.load());
+    MEDIA_LOGI("OnComplete looping: %{public}d.", singleLoop_.load());
     isStreaming_ = false;
     Format format;
     int32_t curPosMs = 0;
@@ -1873,7 +1873,7 @@ void __attribute__((no_sanitize("cfi"))) HiPlayerImpl::OnStateChanged(PlayerStat
         }
         curState_ = state;
     }
-    MEDIA_LOGD("OnStateChanged %{public}d" " > %{public}d", pipelineStates_.load(), TransStateId2PlayerState(state));
+    MEDIA_LOGD("OnStateChanged %{public}d > %{public}d", pipelineStates_.load(), TransStateId2PlayerState(state));
     UpdateStateNoLock(TransStateId2PlayerState(state));
     {
         AutoLock lock(stateMutex_);
