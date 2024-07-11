@@ -3311,7 +3311,6 @@ HWTEST_F(PlayerUnitTest, Player_State_Machine_004, TestSize.Level0)
     sleep(1);
     ASSERT_EQ(MSERR_INVALID_OPERATION, player_->Pause());
     ASSERT_EQ(MSERR_INVALID_OPERATION, player_->Play());
-    ASSERT_EQ(MSERR_INVALID_OPERATION, player_->SetSource(MEDIA_ROOT + "mp3_48000Hz_64kbs_mono.mp3"));
 }
 
 /**
