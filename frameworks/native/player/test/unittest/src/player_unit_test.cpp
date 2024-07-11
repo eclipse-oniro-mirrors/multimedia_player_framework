@@ -3213,5 +3213,31 @@ HWTEST_F(PlayerUnitTest, Player_SetParameter_003, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->GetAudioTrackInfo(audioTrack));
 }
 
+/**
+ * @tc.name  : Test Player state machine
+ * @tc.number: Player_State_Machine_Stopped_001
+ * @tc.desc  : Test Player state machine, invalid operation on stopped
+ */
+HWTEST_F(PlayerUnitTest, Player_SetParameter_002, TestSize.Level0)
+{
+    ASSRET(PlayerStates::PLAYER_IDLE, player_->GetState());
+    ASSRET(MSERR_OK, player_->SetSource(MEDIA_ROOT + "mp3_48000Hz_64kbs_mono.mp3"));
+    ASSRET(PlayerStates::PLAYER_INITIALIZED, player_->GetState());
+    ASSRET(MSERR_OK, player_->PrepareAsync());
+    sleep(1);
+    ASSRET(PlayerStates::PLAYER_PREPARED, player_->GetState());
+    int32_t duration = 0;
+    ASSRET(MSERR_OK, player_->GetDuration(duration));
+    ASSRET(MSERR_OK, player_->Play());
+    sleep(1);
+    ASSRET(true, player_->IsPlaying());
+    ASSRET(PlayerStates::PLAYER_STARTED, player_->GetState());
+    ASSRET(MSERR_OK, player_->Stop());
+    sleep(1);
+    ASSRET(PlayerStates::PLAYER_STOPPED, player_->GetState());
+    ASSRET(MSERR_INVALID_OPERATION, player_->Pause());
+    ASSRET(MSERR_INVALID_OPERATION, player_->Play());
+    ASSRET(MSERR_INVALID_OPERATION, player_->SetSource(MEDIA_ROOT + "mp3_48000Hz_64kbs_mono.mp3"));
+}
 } // namespace Media
 } // namespace OHOS
