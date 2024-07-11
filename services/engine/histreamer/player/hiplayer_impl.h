@@ -188,7 +188,6 @@ private:
     void DoSetMediaSource(Status& ret);
     void UpdatePlayerStateAndNotify();
     void UpdateMaxSeekLatency(PlayerSeekMode mode, int64_t seekStartTime);
-
 #ifdef SUPPORT_VIDEO
     Status LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
     bool IsVideoMime(const std::string& mime);
