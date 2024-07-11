@@ -682,9 +682,6 @@ Status HiPlayerImpl::Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeek
     if (rtv == Status::OK) {
         rtv = SelectSeekType(seekPos, mode);
     }
-    if (audioSink_ != nullptr) {
-        audioSink_->WaitSeekCompleted();
-    }
     NotifySeek(rtv, notifySeekDone, seekPos);
     if (audioSink_ != nullptr) {
         audioSink_->SetIsTransitent(false, false);
@@ -1784,13 +1781,8 @@ void HiPlayerImpl::NotifySeekDone(int32_t seekPos)
                 return !syncManager_->InSeeking();
             });
     }
-    {
-        std::unique_lock<std::mutex> lock(seekMutex_);
-        MEDIA_LOG_D("NotifySeekDone waitfor");
-        audioSink_->GetSeekCondition().wait_for(lock, std::chrono::milliseconds(1000), [this]() { //1000ms
-            return audioSink_->GetSeekCompleted();
-        });
-        MEDIA_LOG_D("NotifySeekDone waitfor end");
+    if (audioSink_ != nullptr) {
+        audioSink_->WaitSeekCompleted();
     }
     MEDIA_LOG_D("NotifySeekDone seekPos: %{public}d", seekPos);
     callbackLooper_.OnInfo(INFO_TYPE_POSITION_UPDATE, seekPos, format);
