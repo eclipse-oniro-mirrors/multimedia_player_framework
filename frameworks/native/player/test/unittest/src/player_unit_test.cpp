@@ -3214,30 +3214,30 @@ HWTEST_F(PlayerUnitTest, Player_SetParameter_003, TestSize.Level0)
 }
 
 /**
- * @tc.name  : Test Player state machine
- * @tc.number: Player_State_Machine_Stopped_001
+ * @tc.name  : Test Player state machine, invalid operation on stopped
+ * @tc.number: Player_State_Machine_001
  * @tc.desc  : Test Player state machine, invalid operation on stopped
  */
-HWTEST_F(PlayerUnitTest, Player_SetParameter_002, TestSize.Level0)
+HWTEST_F(PlayerUnitTest, Player_State_Machine_001, TestSize.Level0)
 {
-    ASSRET(PlayerStates::PLAYER_IDLE, player_->GetState());
-    ASSRET(MSERR_OK, player_->SetSource(MEDIA_ROOT + "mp3_48000Hz_64kbs_mono.mp3"));
-    ASSRET(PlayerStates::PLAYER_INITIALIZED, player_->GetState());
-    ASSRET(MSERR_OK, player_->PrepareAsync());
+    ASSERT_EQ(PlayerStates::PLAYER_IDLE, player_->GetState());
+    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "mp3_48000Hz_64kbs_mono.mp3"));
+    ASSERT_EQ(PlayerStates::PLAYER_INITIALIZED, player_->GetState());
+    ASSERT_EQ(MSERR_OK, player_->PrepareAsync());
     sleep(1);
-    ASSRET(PlayerStates::PLAYER_PREPARED, player_->GetState());
+    ASSERT_EQ(PlayerStates::PLAYER_PREPARED, player_->GetState());
     int32_t duration = 0;
-    ASSRET(MSERR_OK, player_->GetDuration(duration));
-    ASSRET(MSERR_OK, player_->Play());
+    ASSERT_EQ(MSERR_OK, player_->GetDuration(duration));
+    ASSERT_EQ(MSERR_OK, player_->Play());
     sleep(1);
-    ASSRET(true, player_->IsPlaying());
-    ASSRET(PlayerStates::PLAYER_STARTED, player_->GetState());
-    ASSRET(MSERR_OK, player_->Stop());
+    ASSERT_EQ(true, player_->IsPlaying());
+    ASSERT_EQ(PlayerStates::PLAYER_STARTED, player_->GetState());
+    ASSERT_EQ(MSERR_OK, player_->Stop());
     sleep(1);
-    ASSRET(PlayerStates::PLAYER_STOPPED, player_->GetState());
-    ASSRET(MSERR_INVALID_OPERATION, player_->Pause());
-    ASSRET(MSERR_INVALID_OPERATION, player_->Play());
-    ASSRET(MSERR_INVALID_OPERATION, player_->SetSource(MEDIA_ROOT + "mp3_48000Hz_64kbs_mono.mp3"));
+    ASSERT_EQ(PlayerStates::PLAYER_STOPPED, player_->GetState());
+    ASSERT_EQ(MSERR_INVALID_OPERATION, player_->Pause());
+    ASSERT_EQ(MSERR_INVALID_OPERATION, player_->Play());
+    ASSERT_EQ(MSERR_INVALID_OPERATION, player_->SetSource(MEDIA_ROOT + "mp3_48000Hz_64kbs_mono.mp3"));
 }
 } // namespace Media
 } // namespace OHOS
