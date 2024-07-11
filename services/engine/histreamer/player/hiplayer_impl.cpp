@@ -672,7 +672,7 @@ Status HiPlayerImpl::Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeek
     }
     int64_t seekStartTime = GetCurrentMillisecond();
     if (audioSink_ != nullptr) {
-        audioSink_->SetIsTransitent(true);
+        audioSink_->SetIsTransitent(true, false);
     }
     FALSE_RETURN_V_MSG_E(durationMs_.load() > 0, Status::ERROR_INVALID_PARAMETER,
         "Seek, invalid operation, source is unseekable or invalid");
@@ -703,9 +703,12 @@ Status HiPlayerImpl::Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeek
                 break;
         }
     }
+    if (audioSink_ != nullptr) {
+        audioSink_->WaitSeekCompleted();
+    }
     NotifySeek(rtv, notifySeekDone, seekPos);
     if (audioSink_ != nullptr) {
-        audioSink_->SetIsTransitent(false);
+        audioSink_->SetIsTransitent(false, false);
     }
     isSeek_ = false;
     UpdateMaxSeekLatency(mode, seekStartTime);
@@ -1774,6 +1777,14 @@ void HiPlayerImpl::NotifySeekDone(int32_t seekPos)
                 return !syncManager_->InSeeking();
             });
     }
+    {
+        std::unique_lock<std::mutex> lock(seekMutex_);
+        MEDIA_LOG_D("NotifySeekDone waitfor");
+        audioSink_->GetSeekCondition().wait_for(lock, std::chrono::milliseconds(1000), [this]() {
+            return audioSink_->GetSeekCompleted();
+        });
+        MEDIA_LOG_D("NotifySeekDone waitfor end");
+    }
     MEDIA_LOG_D("NotifySeekDone seekPos: %{public}d", seekPos);
     callbackLooper_.OnInfo(INFO_TYPE_POSITION_UPDATE, seekPos, format);
     callbackLooper_.OnInfo(INFO_TYPE_SEEKDONE, seekPos, format);
@@ -1965,6 +1976,7 @@ Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilte
         FilterType::FILTERTYPE_ASINK);
     FALSE_RETURN_V(audioSink_ != nullptr, Status::ERROR_NULL_POINTER);
     audioSink_->Init(playerEventReceiver_, playerFilterCallback_);
+    audioSink_->SetPlayerId(playerId_);
     std::shared_ptr<Meta> globalMeta = std::make_shared<Meta>();
     if (demuxer_ != nullptr) {
         globalMeta = demuxer_->GetGlobalMetaInfo();
