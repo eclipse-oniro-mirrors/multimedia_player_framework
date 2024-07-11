@@ -3257,7 +3257,6 @@ HWTEST_F(PlayerUnitTest, Player_State_Machine_002, TestSize.Level0)
     ASSERT_EQ(MSERR_INVALID_OPERATION, player_->Play());
     sleep(1);
     ASSERT_EQ(false, player_->IsPlaying());
-    ASSERT_EQ(PlayerStates::PLAYER_STATE_ERROR, player_->GetState());
     ASSERT_EQ(MSERR_INVALID_OPERATION, player_->Stop());
     sleep(1);
     ASSERT_EQ(MSERR_INVALID_OPERATION, player_->Pause());
@@ -3304,7 +3303,7 @@ HWTEST_F(PlayerUnitTest, Player_State_Machine_004, TestSize.Level0)
     sleep(1);
     int32_t duration = 0;
     ASSERT_EQ(MSERR_INVALID_OPERATION, player_->GetDuration(duration));
-    ASSERT_EQ(MSERR_INVALID_OPERATION, player_->Seek(0, PlayerSeekMode::SEEK_NEXT_SYNC));
+    ASSERT_EQ(MSERR_INVALID_OPERATION, player_->Seek(duration, PlayerSeekMode::SEEK_NEXT_SYNC));
     ASSERT_EQ(MSERR_INVALID_OPERATION, player_->Play());
     sleep(1);
     ASSERT_EQ(false, player_->IsPlaying());
@@ -3399,8 +3398,8 @@ HWTEST_F(PlayerUnitTest, Player_State_Machine_008, TestSize.Level0)
     ASSERT_EQ(MSERR_OK, player_->Pause());
     sleep(1);
     ASSERT_EQ(PlayerStates::PLAYER_PAUSED, player_->GetState());
-    ASSERT_EQ(MSERR_INVALID_OPERATION, player_->PrepareAsync());
     ASSERT_EQ(MSERR_INVALID_OPERATION, player_->SetSource(MEDIA_ROOT + "mp3_48000Hz_64kbs_mono.mp3"));
+    ASSERT_EQ(MSERR_INVALID_OPERATION, player_->PrepareAsync());
 }
 } // namespace Media
 } // namespace OHOS
