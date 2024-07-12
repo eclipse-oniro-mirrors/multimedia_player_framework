@@ -17,6 +17,7 @@
 #include <sys/syscall.h>
 #include "directory_ex.h"
 #include "osal/task/jobutils.h"
+#include "media_utils.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_ONLY_PRERELEASE, LOG_DOMAIN_SYSTEM_PLAYER, "HiTransCoder" };
@@ -126,6 +127,11 @@ int32_t HiTransCoderImpl::SetInputFile(const std::string &url)
         Pipeline::FilterType::FILTERTYPE_DEMUXER);
     demuxerFilter_->Init(transCoderEventReceiver_, transCoderFilterCallback_);
     Status ret = demuxerFilter_->SetDataSource(mediaSource);
+    if (ret != Status::OK) {
+        MEDIA_LOG_E("SetInputFile error: demuxerFilter_->SetDataSource error");
+        OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_UNSUPPORT_SOURCE});
+        return static_cast<int32_t>(ret);
+    }
     int64_t duration = 0;
     if (demuxerFilter_->GetDuration(duration)) {
         durationMs_ = Plugins::HstTime2Us(duration);
@@ -134,13 +140,26 @@ int32_t HiTransCoderImpl::SetInputFile(const std::string &url)
     }
     std::vector<std::shared_ptr<Meta>> trackInfos = demuxerFilter_->GetStreamMetaInfo();
     size_t trackCount = trackInfos.size();
+    MEDIA_LOG_I("trackCount: %{public}d", trackCount);
+    if (trackCount == 0) {
+        MEDIA_LOG_E("No track found in the source");
+        OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_DEMUXER_FAILED});
+        return static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER);
+    }
     for (size_t index = 0; index < trackCount; index++) {
         std::string trackMime;
+        bool retG = false;
         trackInfos[index]->GetData(Tag::MIME_TYPE, trackMime);
         if (trackMime.find("video/") == 0) {
             MEDIA_LOG_I("SetInputFile contain video");
-            trackInfos[index]->GetData(Tag::VIDEO_WIDTH, inputVideoWidth_);
-            trackInfos[index]->GetData(Tag::VIDEO_HEIGHT, inputVideoHeight_);
+            retG = trackInfos[index]->GetData(Tag::VIDEO_WIDTH, inputVideoWidth_);
+            if (!retG) {
+                MEDIA_LOG_W("Get video width failed");
+            }
+            retG = trackInfos[index]->GetData(Tag::VIDEO_HEIGHT, inputVideoHeight_);
+            if (!retG) {
+                MEDIA_LOG_W("Get video width failed");
+            }
         } else if (trackMime.find("audio/") == 0) {
             MEDIA_LOG_I("SetInputFile contain audio");
             int32_t channels;
@@ -244,10 +263,21 @@ int32_t HiTransCoderImpl::Prepare()
     MEDIA_LOG_I("HiTransCoderImpl::Prepare()");
     int32_t width = 0;
     int32_t height = 0;
-    videoEncFormat_->GetData(Tag::VIDEO_WIDTH, width);
-    videoEncFormat_->GetData(Tag::VIDEO_HEIGHT, height);
+    bool retGW = videoEncFormat_->GetData(Tag::VIDEO_WIDTH, width);
+    bool retGH = videoEncFormat_->GetData(Tag::VIDEO_HEIGHT, height);
+    if (!retGW || !retGH) {
+        MEDIA_LOG_E("Get outputVideo width&height failed");
+        OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_INVALID_VAL});
+        return static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER);
+    }
     isNeedVideoResizeFilter_ = width != inputVideoWidth_ || height != inputVideoHeight_;
     Status ret = pipeline_->Prepare();
+    if (ret != Status::OK) {
+        MEDIA_LOG_E("Prepare failed with error " PUBLIC_LOG_D32, ret);
+        auto errCode = TransStatus(ret);
+        OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, errCode});
+        return static_cast<int32_t>(errCode);
+    }
     if ((videoEncoderFilter_ != nullptr) && (videoDecoderFilter_ != nullptr)) {
         if (isNeedVideoResizeFilter_ && (videoResizeFilter_ != nullptr)) {
             sptr<Surface> resizeFilterSurface = videoResizeFilter_->GetInputSurface();
@@ -271,7 +301,12 @@ int32_t HiTransCoderImpl::Prepare()
 int32_t HiTransCoderImpl::Start()
 {
     MEDIA_LOG_I("HiTransCoderImpl::Start()");
-    Status ret = pipeline_->Start();
+    int32_t ret = TransStatus(pipeline_->Start());
+    if (ret != MSERR_OK) {
+        MEDIA_LOG_E("Start pipeline failed");
+        OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, ret});
+        return ret;
+    }
     callbackLooper_->StartReportMediaProgress(REPORT_PROGRESS_INTERVAL);
     return static_cast<int32_t>(ret);
 }
@@ -281,6 +316,10 @@ int32_t HiTransCoderImpl::Pause()
     MEDIA_LOG_I("HiTransCoderImpl::Pause()");
     callbackLooper_->StopReportMediaProgress();
     Status ret = pipeline_->Pause();
+    if (ret != Status::OK) {
+        MEDIA_LOG_E("Start pipeline failed");
+        OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, ret});
+    }
     return static_cast<int32_t>(ret);
 }
 
@@ -288,16 +327,26 @@ int32_t HiTransCoderImpl::Resume()
 {
     MEDIA_LOG_I("HiTransCoderImpl::Resume()");
     Status ret = pipeline_->Resume();
+    if (ret != Status::OK) {
+        MEDIA_LOG_E("Resume pipeline failed");
+        OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, ret});
+        return static_cast<int32_t>(ret);
+    }
     callbackLooper_->StartReportMediaProgress(REPORT_PROGRESS_INTERVAL);
     return static_cast<int32_t>(ret);
 }
 
 int32_t HiTransCoderImpl::Cancel()
 {
-    MEDIA_LOG_I("HiTransCoderImpl::Cancel()");
+    MEDIA_LOG_I("HiTransCoderImpl::Cancel enter");
     callbackLooper_->StopReportMediaProgress();
     Status ret = pipeline_->Stop();
     callbackLooper_->Stop();
+    if (ret != Status::OK) {
+        MEDIA_LOG_E("Resume pipeline failed");
+        OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, ret});
+    }
+    MEDIA_LOG_I("HiTransCoderImpl::Cancel done");
     return static_cast<int32_t>(ret);
 }
 
@@ -305,6 +354,7 @@ void HiTransCoderImpl::OnEvent(const Event &event)
 {
     switch (event.type) {
         case EventType::EVENT_ERROR: {
+            HandleErrorEvent(AnyCast<int32_t>(event.param));
             break;
         }
         case EventType::EVENT_COMPLETE: {
@@ -323,6 +373,11 @@ void HiTransCoderImpl::OnEvent(const Event &event)
         default:
             break;
     }
+}
+
+void HiTransCoderImpl::HandleErrorEvent(int32_t errorCode)
+{
+    callbackLooper_->OnError(TRANSCODER_ERROR_INTERNAL, errorCode);
 }
 
 Status HiTransCoderImpl::LinkAudioDecoderFilter(const std::shared_ptr<Pipeline::Filter>& preFilter,
