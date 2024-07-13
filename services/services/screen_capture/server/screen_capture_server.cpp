@@ -835,6 +835,7 @@ int32_t ScreenCaptureServer::StartMicAudioCapture()
         MEDIA_LOGI("microphone is not on, skip micCapture start");
         return MSERR_OK;
     }
+    std::lock_guard<std::mutex> audioLock(audioMutex_);
     std::shared_ptr<AudioCapturerWrapper> micCapture;
     if (captureConfig_.audioInfo.micCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_VALID) {
         MediaTrace trace("ScreenCaptureServer::StartMicAudioCaptureInner");
@@ -2300,7 +2301,7 @@ void AudioDataSource::SpeakerStateUpdate(
     bool speakerAlive = HasSpeakerStream(allAudioRendererChangeInfos);
     if (speakerAlive != speakerAliveStatus_) {
         speakerAliveStatus_ = speakerAlive;
-        screenCaptureServer_->SetSpeakerAliveStatus(speakerAlive)
+        screenCaptureServer_->SetSpeakerAliveStatus(speakerAlive);
         if (speakerAlive) {
             MEDIA_LOGI("HEADSET Change to Speaker.");
         } else {

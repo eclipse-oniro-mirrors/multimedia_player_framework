@@ -270,6 +270,7 @@ public:
     int32_t ReleaseAudioBufferMix(AVScreenCaptureMixMode type);
     int32_t GetInnerAudioCaptureBufferSize(size_t &size);
     int32_t GetMicAudioCaptureBufferSize(size_t &size);
+    int32_t SetSpeakerAliveStatus(bool speakerAliveStatus);
 
 private:
     int32_t StartScreenCaptureInner(bool isPrivacyAuthorityEnabled);
@@ -325,6 +326,7 @@ private:
 private:
     std::mutex mutex_;
     std::mutex cbMutex_;
+    std::mutex audioMutex_;
     std::shared_ptr<ScreenCaptureObserverCallBack> screenCaptureObserverCb_ = nullptr;
     std::shared_ptr<ScreenCaptureCallBack> screenCaptureCb_ = nullptr;
     bool canvasRotation_ = false;
