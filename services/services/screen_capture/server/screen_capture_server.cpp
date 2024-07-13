@@ -1700,12 +1700,8 @@ int32_t ScreenCaptureServer::AcquireAudioBufferMix(std::shared_ptr<AudioBuffer> 
     if (captureState_ != AVScreenCaptureState::STARTED) {
         return MSERR_INVALID_OPERATION;
     }
-    if (type == AVScreenCaptureMixMode::MIX_MODE && micAudioCapture_ != nullptr &&
-        innerAudioCapture_ != nullptr) {
-        if (isInnerAudioCaptureWorking_ && innerAudioCapture_->AcquireAudioBuffer(innerAudioBuffer) != MSERR_OK) {
-            MEDIA_LOGE("innerAudioCapture AcquireAudioBuffer failed");
-        }
-        if (isMicAudioCaptureWorking_ && micAudioCapture_->AcquireAudioBuffer(micAudioBuffer) != MSERR_OK) {
+    if (type == AVScreenCaptureMixMode::MIX_MODE && micAudioCapture_ != nullptr && isMicAudioCaptureWorking_) {
+        if (micAudioCapture_->AcquireAudioBuffer(micAudioBuffer) != MSERR_OK) {
             MEDIA_LOGE("micAudioCapture AcquireAudioBuffer failed");
         }
     }
@@ -1716,7 +1712,7 @@ int32_t ScreenCaptureServer::AcquireAudioBufferMix(std::shared_ptr<AudioBuffer> 
     }
     if (type == AVScreenCaptureMixMode::MIC_MODE && micAudioCapture_ != nullptr && isMicAudioCaptureWorking_) {
         if (micAudioCapture_->AcquireAudioBuffer(micAudioBuffer) != MSERR_OK) {
-            MEDIA_LOGE("innerAudioCapture AcquireAudioBuffer failed");
+            MEDIA_LOGE("micAudioCapture AcquireAudioBuffer failed");
         }
     }
     if (type == AVScreenCaptureMixMode::INNER_MODE && innerAudioCapture_ != nullptr && isInnerAudioCaptureWorking_) {
