@@ -1703,10 +1703,14 @@ int32_t ScreenCaptureServer::AcquireAudioBufferMix(std::shared_ptr<AudioBuffer> 
     if (type == AVScreenCaptureMixMode::MIX_MODE && micAudioCapture_ != nullptr &&
         innerAudioCapture_ != nullptr) {
         if (isInnerAudioCaptureWorking_) {
-            return innerAudioCapture_->AcquireAudioBuffer(innerAudioBuffer);
+            if (innerAudioCapture_->AcquireAudioBuffer(innerAudioBuffer) != MSERR_OK) {
+                MEDIA_LOGE("innerAudioCapture AcquireAudioBuffer failed");
+            }
         }
         if (isMicAudioCaptureWorking_) {
-            return micAudioCapture_->AcquireAudioBuffer(micAudioBuffer);
+            if (micAudioCapture_->AcquireAudioBuffer(micAudioBuffer) != MSERR_OK) {
+                MEDIA_LOGE("micAudioCapture AcquireAudioBuffer failed");
+            }
         }
         return MSERR_OK;
     }
