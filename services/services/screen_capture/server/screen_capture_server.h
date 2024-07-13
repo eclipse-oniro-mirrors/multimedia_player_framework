@@ -330,6 +330,7 @@ private:
     bool canvasRotation_ = false;
     bool isMicrophoneOn_ = true;
     bool isPrivacyAuthorityEnabled_ = false;
+    bool speakerAliveStatus_ = true;
 
     int32_t sessionId_ = 0;
     int32_t notificationId_ = 0;
@@ -363,7 +364,9 @@ private:
     sptr<OHOS::Surface> surface_ = nullptr;
     bool isSurfaceMode_ = false;
     std::shared_ptr<AudioCapturerWrapper> innerAudioCapture_;
+    bool isInnerAudioCaptureWorking_ = false;
     std::shared_ptr<AudioCapturerWrapper> micAudioCapture_;
+    bool isMicAudioCaptureWorking_ = false;
 
     /* used for CAPTURE FILE */
     std::shared_ptr<IRecorderService> recorder_ = nullptr;
@@ -400,6 +403,7 @@ private:
     static constexpr int32_t VIDEO_FRAME_WIDTH_MAX = 10240;
     static constexpr int32_t VIDEO_FRAME_HEIGHT_MAX = 4320;
     static constexpr int32_t SESSION_ID_INVALID = -1;
+    static constexpr int32_t AUDIO_CHANGE_TIME = 100000; // 100 ms
 };
 } // namespace Media
 } // namespace OHOS
