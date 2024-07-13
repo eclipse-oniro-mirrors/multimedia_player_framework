@@ -120,7 +120,7 @@ public:
 
     /**
      * @brief Specify the start and end time to play
-     * This function must be called after {@link Prepare}.
+     * This function must be called after {@link SetSource}.
      * This function is called to set start and end time
      *
      * @return Returns {@link MSERR_OK} if the single display is set; returns an error code defined
