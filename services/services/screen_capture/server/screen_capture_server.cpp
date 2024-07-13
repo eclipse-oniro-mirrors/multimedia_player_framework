@@ -1702,38 +1702,30 @@ int32_t ScreenCaptureServer::AcquireAudioBufferMix(std::shared_ptr<AudioBuffer> 
     }
     if (type == AVScreenCaptureMixMode::MIX_MODE && micAudioCapture_ != nullptr &&
         innerAudioCapture_ != nullptr) {
-        if (isInnerAudioCaptureWorking_) {
-            if (innerAudioCapture_->AcquireAudioBuffer(innerAudioBuffer) != MSERR_OK) {
-                MEDIA_LOGE("innerAudioCapture AcquireAudioBuffer failed");
-            }
+        if (isInnerAudioCaptureWorking_ && innerAudioCapture_->AcquireAudioBuffer(innerAudioBuffer) != MSERR_OK) {
+            MEDIA_LOGE("innerAudioCapture AcquireAudioBuffer failed");
         }
-        if (isMicAudioCaptureWorking_) {
-            if (micAudioCapture_->AcquireAudioBuffer(micAudioBuffer) != MSERR_OK) {
-                MEDIA_LOGE("micAudioCapture AcquireAudioBuffer failed");
-            }
+        if (isMicAudioCaptureWorking_ && micAudioCapture_->AcquireAudioBuffer(micAudioBuffer) != MSERR_OK) {
+            MEDIA_LOGE("micAudioCapture AcquireAudioBuffer failed");
         }
-        return MSERR_OK;
     }
     if (type == AVScreenCaptureMixMode::MIX_MODE && innerAudioCapture_ != nullptr && isInnerAudioCaptureWorking_) {
         if (innerAudioCapture_->AcquireAudioBuffer(innerAudioBuffer) != MSERR_OK) {
             MEDIA_LOGE("innerAudioCapture AcquireAudioBuffer failed");
         }
-        return MSERR_OK;
     }
     if (type == AVScreenCaptureMixMode::MIC_MODE && micAudioCapture_ != nullptr && isMicAudioCaptureWorking_) {
         if (micAudioCapture_->AcquireAudioBuffer(micAudioBuffer) != MSERR_OK) {
             MEDIA_LOGE("innerAudioCapture AcquireAudioBuffer failed");
         }
-        return MSERR_OK;
     }
     if (type == AVScreenCaptureMixMode::INNER_MODE && innerAudioCapture_ != nullptr && isInnerAudioCaptureWorking_) {
         if (innerAudioCapture_->AcquireAudioBuffer(innerAudioBuffer) != MSERR_OK) {
             MEDIA_LOGE("innerAudioCapture AcquireAudioBuffer failed");
         }
-        return MSERR_OK;
     }
     MEDIA_LOGE("AcquireAudioBufferMix failed, source type not support, type:%{public}d", type);
-    return MSERR_UNKNOWN;
+    return MSERR_OK;
 }
 
 int32_t ScreenCaptureServer::ReleaseAudioBuffer(AudioCaptureSourceType type)
