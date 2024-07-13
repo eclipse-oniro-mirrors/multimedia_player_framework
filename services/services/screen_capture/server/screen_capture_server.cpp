@@ -835,6 +835,7 @@ int32_t ScreenCaptureServer::StartMicAudioCapture()
         MEDIA_LOGI("microphone is not on, skip micCapture start");
         return MSERR_OK;
     }
+    std::lock_guard<std::mutex> audioLock(audioMutex_);
     std::shared_ptr<AudioCapturerWrapper> micCapture;
     if (captureConfig_.audioInfo.micCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_VALID) {
         MediaTrace trace("ScreenCaptureServer::StartMicAudioCaptureInner");
