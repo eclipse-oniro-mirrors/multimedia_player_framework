@@ -148,26 +148,38 @@ int32_t HiTransCoderImpl::SetInputFile(const std::string &url)
     }
     for (size_t index = 0; index < trackCount; index++) {
         std::string trackMime;
-        bool retG = false;
-        trackInfos[index]->GetData(Tag::MIME_TYPE, trackMime);
+        if (!trackInfos[index]->GetData(Tag::MIME_TYPE, trackMime)) {
+            MEDIA_LOG_E("trackInfos index: %{public}d, get trackMime failed", index);
+            OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_UNKNOWN});
+            return static_cast<int32_t>(Status::ERROR_UNKNOWN);
+        }
         if (trackMime.find("video/") == 0) {
             MEDIA_LOG_I("SetInputFile contain video");
-            retG = trackInfos[index]->GetData(Tag::VIDEO_WIDTH, inputVideoWidth_);
-            if (!retG) {
-                MEDIA_LOG_W("Get video width failed");
-            }
-            retG = trackInfos[index]->GetData(Tag::VIDEO_HEIGHT, inputVideoHeight_);
-            if (!retG) {
-                MEDIA_LOG_W("Get video width failed");
+            if (trackInfos[index]->GetData(Tag::VIDEO_WIDTH, inputVideoWidth_) &&
+                trackInfos[index]->GetData(Tag::VIDEO_HEIGHT, inputVideoHeight_)) {
+                MEDIA_LOG_D("inputVideoWidth_: %{public}d, inputVideoHeight_: %{public}d",
+                    inputVideoWidth_, inputVideoHeight_);
+            } else {
+                MEDIA_LOG_W("Get input video width or height failed");
             }
         } else if (trackMime.find("audio/") == 0) {
             MEDIA_LOG_I("SetInputFile contain audio");
             int32_t channels;
-            trackInfos[index]->GetData(Tag::AUDIO_CHANNEL_COUNT, channels);
+            if (trackInfos[index]->GetData(Tag::AUDIO_CHANNEL_COUNT, channels)) {
+                MEDIA_LOG_D("Audio channel count: %{public}d", channels);                
+            }
+            else {
+                MEDIA_LOG_W("Get audio channel count failed");
+            }
             audioEncFormat_->Set<Tag::AUDIO_CHANNEL_COUNT>(channels);
             audioEncFormat_->Set<Tag::AUDIO_SAMPLE_FORMAT>(Plugins::AudioSampleFormat::SAMPLE_S16LE);
             int32_t sampleRate;
-            trackInfos[index]->GetData(Tag::AUDIO_SAMPLE_RATE, sampleRate);
+            if (trackInfos[index]->GetData(Tag::AUDIO_SAMPLE_RATE, sampleRate)) {
+                MEDIA_LOG_D("Audio sampleRate: %{public}d", sampleRate);                
+            }
+            else {
+                MEDIA_LOG_W("Get audio channel count failed");
+            }
             audioEncFormat_->Set<Tag::AUDIO_SAMPLE_RATE>(sampleRate);
         }
     }
@@ -263,12 +275,13 @@ int32_t HiTransCoderImpl::Prepare()
     MEDIA_LOG_I("HiTransCoderImpl::Prepare()");
     int32_t width = 0;
     int32_t height = 0;
-    bool retGW = videoEncFormat_->GetData(Tag::VIDEO_WIDTH, width);
-    bool retGH = videoEncFormat_->GetData(Tag::VIDEO_HEIGHT, height);
-    if (!retGW || !retGH) {
-        MEDIA_LOG_E("Get outputVideo width&height failed");
+    if (videoEncFormat_->GetData(Tag::VIDEO_WIDTH, width) &&
+        videoEncFormat_->GetData(Tag::VIDEO_HEIGHT, height)) {
+        MEDIA_LOG_D("set output video width: %{public}d, height: %{public}d", width, height);
+    } else {
+        MEDIA_LOG_E("Output video width or height not set");
         OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_INVALID_VAL});
-        return static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER);
+        return static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER);        
     }
     isNeedVideoResizeFilter_ = width != inputVideoWidth_ || height != inputVideoHeight_;
     Status ret = pipeline_->Prepare();
@@ -308,7 +321,7 @@ int32_t HiTransCoderImpl::Start()
         return ret;
     }
     callbackLooper_->StartReportMediaProgress(REPORT_PROGRESS_INTERVAL);
-    return static_cast<int32_t>(ret);
+    return ret;
 }
 
 int32_t HiTransCoderImpl::Pause()
@@ -317,8 +330,8 @@ int32_t HiTransCoderImpl::Pause()
     callbackLooper_->StopReportMediaProgress();
     Status ret = pipeline_->Pause();
     if (ret != Status::OK) {
-        MEDIA_LOG_E("Start pipeline failed");
-        OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, ret});
+        MEDIA_LOG_E("Pause pipeline failed");
+        OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_UNKNOWN});
     }
     return static_cast<int32_t>(ret);
 }
@@ -329,7 +342,7 @@ int32_t HiTransCoderImpl::Resume()
     Status ret = pipeline_->Resume();
     if (ret != Status::OK) {
         MEDIA_LOG_E("Resume pipeline failed");
-        OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, ret});
+        OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_UNKNOWN});
         return static_cast<int32_t>(ret);
     }
     callbackLooper_->StartReportMediaProgress(REPORT_PROGRESS_INTERVAL);
@@ -343,8 +356,9 @@ int32_t HiTransCoderImpl::Cancel()
     Status ret = pipeline_->Stop();
     callbackLooper_->Stop();
     if (ret != Status::OK) {
-        MEDIA_LOG_E("Resume pipeline failed");
-        OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, ret});
+        MEDIA_LOG_E("Stop pipeline failed");
+        OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_UNKNOWN});
+        return static_cast<int32_t>(ret);
     }
     MEDIA_LOG_I("HiTransCoderImpl::Cancel done");
     return static_cast<int32_t>(ret);
