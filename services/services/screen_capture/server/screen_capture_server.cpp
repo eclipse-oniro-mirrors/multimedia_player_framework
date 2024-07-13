@@ -1715,13 +1715,22 @@ int32_t ScreenCaptureServer::AcquireAudioBufferMix(std::shared_ptr<AudioBuffer> 
         return MSERR_OK;
     }
     if (type == AVScreenCaptureMixMode::MIX_MODE && innerAudioCapture_ != nullptr && isInnerAudioCaptureWorking_) {
-        return innerAudioCapture_->AcquireAudioBuffer(innerAudioBuffer);
+        if (innerAudioCapture_->AcquireAudioBuffer(innerAudioBuffer) != MSERR_OK) {
+            MEDIA_LOGE("innerAudioCapture AcquireAudioBuffer failed");
+        }
+        return MSERR_OK;
     }
     if (type == AVScreenCaptureMixMode::MIC_MODE && micAudioCapture_ != nullptr && isMicAudioCaptureWorking_) {
-        return micAudioCapture_->AcquireAudioBuffer(micAudioBuffer);
+        if (micAudioCapture_->AcquireAudioBuffer(micAudioBuffer) != MSERR_OK) {
+            MEDIA_LOGE("innerAudioCapture AcquireAudioBuffer failed");
+        }
+        return MSERR_OK;
     }
     if (type == AVScreenCaptureMixMode::INNER_MODE && innerAudioCapture_ != nullptr && isInnerAudioCaptureWorking_) {
-        return innerAudioCapture_->AcquireAudioBuffer(innerAudioBuffer);
+        if (innerAudioCapture_->AcquireAudioBuffer(innerAudioBuffer) != MSERR_OK) {
+            MEDIA_LOGE("innerAudioCapture AcquireAudioBuffer failed");
+        }
+        return MSERR_OK;
     }
     MEDIA_LOGE("AcquireAudioBufferMix failed, source type not support, type:%{public}d", type);
     return MSERR_UNKNOWN;
