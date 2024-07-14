@@ -107,7 +107,7 @@ public:
         size_t size = parcel.ReadUint64();
         // it may change in the future, Restricted by security requirements
         if (size > ENCODER_CAPABILITY_DATA_SIZE_LIMIT) {
-            return ;
+            return;
         }
         for (size_t i = 0; i < size; i++) {
             sampleRate.push_back(parcel.ReadInt32());

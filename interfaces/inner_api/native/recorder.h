@@ -273,13 +273,13 @@ struct DeviceStreamInfo {
         size_t size = parcel.ReadUint64();
         // it may change in the future, Restricted by security requirements
         if (size > DEVICE_INFO_SIZE_LIMIT) {
-            return ;
+            return;
         }
         for (size_t i = 0; i < size; i++) {
             samplingRate.insert(parcel.ReadInt32());
         }
         if (size > DEVICE_INFO_SIZE_LIMIT) {
-            return ;
+            return;
         }
         size = parcel.ReadUint64();
         for (size_t i = 0; i < size; i++) {
