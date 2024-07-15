@@ -138,20 +138,34 @@ int32_t HiTransCoderImpl::SetInputFile(const std::string &url)
     } else {
         MEDIA_LOG_E("Get media duration failed");
     }
+    ret = ConfigureVideoAudioMetaData();
+    if (ret != Status::OK) {
+        return static_cast<int32_t>(ret);
+    }
+    pipeline_->AddHeadFilters({demuxerFilter_});
+    return static_cast<int32_t>(ret);
+}
+
+Status HiTransCoderImpl::ConfigureVideoAudioMetaData()
+{
+    if (demuxerFilter_ == nullptr) {
+        MEDIA_LOG_E("demuxerFilter_ is nullptr");
+        return Status::ERROR_NULL_POINTER;
+    }
     std::vector<std::shared_ptr<Meta>> trackInfos = demuxerFilter_->GetStreamMetaInfo();
     size_t trackCount = trackInfos.size();
     MEDIA_LOG_I("trackCount: %{public}d", trackCount);
     if (trackCount == 0) {
         MEDIA_LOG_E("No track found in the source");
         OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_DEMUXER_FAILED});
-        return static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER);
+        return Status::ERROR_INVALID_PARAMETER;
     }
     for (size_t index = 0; index < trackCount; index++) {
         std::string trackMime;
         if (!trackInfos[index]->GetData(Tag::MIME_TYPE, trackMime)) {
             MEDIA_LOG_E("trackInfos index: %{public}d, get trackMime failed", index);
             OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_UNKNOWN});
-            return static_cast<int32_t>(Status::ERROR_UNKNOWN);
+            return Status::ERROR_UNKNOWN;
         }
         if (trackMime.find("video/") == 0) {
             MEDIA_LOG_I("SetInputFile contain video");
@@ -166,7 +180,7 @@ int32_t HiTransCoderImpl::SetInputFile(const std::string &url)
             MEDIA_LOG_I("SetInputFile contain audio");
             int32_t channels;
             if (trackInfos[index]->GetData(Tag::AUDIO_CHANNEL_COUNT, channels)) {
-                MEDIA_LOG_D("Audio channel count: %{public}d", channels);                
+                MEDIA_LOG_D("Audio channel count: %{public}d", channels);
             }
             else {
                 MEDIA_LOG_W("Get audio channel count failed");
@@ -182,9 +196,8 @@ int32_t HiTransCoderImpl::SetInputFile(const std::string &url)
             }
             audioEncFormat_->Set<Tag::AUDIO_SAMPLE_RATE>(sampleRate);
         }
-    }
-    pipeline_->AddHeadFilters({demuxerFilter_});
-    return static_cast<int32_t>(ret);
+    }    
+    return Status::OK;
 }
 
 int32_t HiTransCoderImpl::SetOutputFile(const int32_t fd)
@@ -281,7 +294,7 @@ int32_t HiTransCoderImpl::Prepare()
     } else {
         MEDIA_LOG_E("Output video width or height not set");
         OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_INVALID_VAL});
-        return static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER);        
+        return static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER);
     }
     isNeedVideoResizeFilter_ = width != inputVideoWidth_ || height != inputVideoHeight_;
     Status ret = pipeline_->Prepare();
