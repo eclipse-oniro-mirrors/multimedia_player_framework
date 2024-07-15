@@ -1104,7 +1104,7 @@ napi_value AVPlayerNapi::JsSetUrl(napi_env env, napi_callback_info info)
 
     // get url from js
     jsPlayer->url_ = CommonNapi::GetStringArgument(env, args[0]);
-    MEDIA_LOGD("JsSetUrl url: %{private}s", jsPlayer->url.c_str());
+    MEDIA_LOGD("JsSetUrl url: %{private}s", jsPlayer->url_.c_str());
     jsPlayer->SetSource(jsPlayer->url_);
 
     MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSetUrl Out", FAKE_POINTER(jsPlayer));
