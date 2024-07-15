@@ -1225,7 +1225,7 @@ napi_value AVPlayerNapi::JsGetUrl(napi_env env, napi_callback_info info)
     napi_value value = nullptr;
     (void)napi_create_string_utf8(env, jsPlayer->url_.c_str(), NAPI_AUTO_LENGTH, &value);
 
-    MEDIA_LOGD("JsGetUrl Out Currelt Url: %{private}s", jsPlayer->url.c_str());
+    MEDIA_LOGD("JsGetUrl Out Currelt Url: %{private}s", jsPlayer->url_.c_str());
     return value;
 }
 
