@@ -405,7 +405,6 @@ private:
     static constexpr int32_t VIDEO_FRAME_WIDTH_MAX = 10240;
     static constexpr int32_t VIDEO_FRAME_HEIGHT_MAX = 4320;
     static constexpr int32_t SESSION_ID_INVALID = -1;
-    static constexpr int32_t AUDIO_CHANGE_TIME = 100000; // 100 ms
 };
 } // namespace Media
 } // namespace OHOS

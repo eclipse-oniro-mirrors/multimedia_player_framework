@@ -90,6 +90,7 @@ static const int32_t MICROPHONE_STATE_COUNT = 2;
 static const int32_t MAX_SESSION_ID = 256;
 static const int32_t MAX_SESSION_PER_UID = 8;
 static const auto NOTIFICATION_SUBSCRIBER = NotificationSubscriber();
+static constexpr int32_t AUDIO_CHANGE_TIME = 100000; // 100 ms
 
 void NotificationSubscriber::OnConnected()
 {
@@ -1871,6 +1872,10 @@ int32_t ScreenCaptureServer::SetMicrophoneEnabled(bool isMicrophone)
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "SetMicrophoneEnabled isMicrophoneOn_:%{public}d, "
         "new isMicrophone:%{public}d", FAKE_POINTER(this), isMicrophoneOn_, isMicrophone);
     int32_t ret = MSERR_UNKNOWN;
+    if (isMicrophoneOn_ == isMicrophone) {
+        MEDIA_LOGI("microphone status no change");
+        return MSERR_OK;
+    }
     isMicrophoneOn_ = isMicrophone;
     if (isMicrophone) {
         statisticalEventInfo_.enableMic = true;
@@ -1921,11 +1926,11 @@ int32_t ScreenCaptureServer::SetSpeakerAliveStatus(bool speakerAliveStatus)
     if (!innerAudioCapture_) {
         return MSERR_OK;
     }
-    if (!isInnerAudioCaptureWorking_ && (!isMicrophoneOn_ || !speakerAliveStatus_)) {
+    if (!speakerAliveStatus_ && !isInnerAudioCaptureWorking_) {
         ret = innerAudioCapture_->Resume();
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "innerAudioCapture Start failed");
         isInnerAudioCaptureWorking_ = true;
-    } else if (isInnerAudioCaptureWorking_ && isMicrophoneOn_ && speakerAliveStatus_) {
+    } else if (speakerAliveStatus_ && isInnerAudioCaptureWorking_ && isMicrophoneOn_) {
         isInnerAudioCaptureWorking_ = false;
         ret = innerAudioCapture_->Pause();
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "innerAudioCapture Pause failed");
