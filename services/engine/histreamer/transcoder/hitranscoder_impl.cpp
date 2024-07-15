@@ -189,9 +189,8 @@ Status HiTransCoderImpl::ConfigureVideoAudioMetaData()
             audioEncFormat_->Set<Tag::AUDIO_SAMPLE_FORMAT>(Plugins::AudioSampleFormat::SAMPLE_S16LE);
             int32_t sampleRate;
             if (trackInfos[index]->GetData(Tag::AUDIO_SAMPLE_RATE, sampleRate)) {
-                MEDIA_LOG_D("Audio sampleRate: %{public}d", sampleRate);                
-            }
-            else {
+                MEDIA_LOG_D("Audio sampleRate: %{public}d", sampleRate);
+            } else {
                 MEDIA_LOG_W("Get audio channel count failed");
             }
             audioEncFormat_->Set<Tag::AUDIO_SAMPLE_RATE>(sampleRate);
