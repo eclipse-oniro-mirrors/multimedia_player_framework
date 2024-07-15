@@ -210,9 +210,6 @@ private:
     int32_t appPid_ { 0 };
     bool speakerAliveStatus_ = true;
 
-    /* used for hilog output */
-    int32_t readAtLogCount_ = 0;
-
     void MixAudio(char** srcData, char* mixData, int channels, int bufferSize);
 
     AVScreenCaptureMixMode type_;
@@ -268,6 +265,8 @@ public:
     int32_t AcquireAudioBufferMix(std::shared_ptr<AudioBuffer> &innerAudioBuffer,
         std::shared_ptr<AudioBuffer> &micAudioBuffer, AVScreenCaptureMixMode type);
     int32_t ReleaseAudioBufferMix(AVScreenCaptureMixMode type);
+    int32_t ReleaseMicAudioBuffer();
+    int32_t ReleaseInnerAudioBuffer();
     int32_t GetInnerAudioCaptureBufferSize(size_t &size);
     int32_t GetMicAudioCaptureBufferSize(size_t &size);
     int32_t SetSpeakerAliveStatus(bool speakerAliveStatus);
@@ -322,6 +321,7 @@ private:
     int64_t GetCurrentMillisecond();
     void SetMetaDataReport();
     void SetErrorInfo(int32_t errCode, const std::string &errMsg, StopReason stopReason, bool userAgree);
+    int32_t OnSpeakerAliveStatusChanged();
 
 private:
     std::mutex mutex_;
