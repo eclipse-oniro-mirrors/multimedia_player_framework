@@ -181,8 +181,7 @@ Status HiTransCoderImpl::ConfigureVideoAudioMetaData()
             int32_t channels;
             if (trackInfos[index]->GetData(Tag::AUDIO_CHANNEL_COUNT, channels)) {
                 MEDIA_LOG_D("Audio channel count: %{public}d", channels);
-            }
-            else {
+            } else {
                 MEDIA_LOG_W("Get audio channel count failed");
             }
             audioEncFormat_->Set<Tag::AUDIO_CHANNEL_COUNT>(channels);
@@ -195,7 +194,7 @@ Status HiTransCoderImpl::ConfigureVideoAudioMetaData()
             }
             audioEncFormat_->Set<Tag::AUDIO_SAMPLE_RATE>(sampleRate);
         }
-    }    
+    }
     return Status::OK;
 }
 
