@@ -81,6 +81,7 @@ napi_value AVPlayerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("setMediaSource", JsSetMediaSource),
         DECLARE_NAPI_FUNCTION("setBitrate", JsSelectBitrate),
         DECLARE_NAPI_FUNCTION("getTrackDescription", JsGetTrackDescription),
+        DECLARE_NAPI_FUNCTION("getCurrentSelections", JsGetCurrentSelections),
         DECLARE_NAPI_FUNCTION("selectTrack", JsSelectTrack),
         DECLARE_NAPI_FUNCTION("deselectTrack", JsDeselectTrack),
         DECLARE_NAPI_FUNCTION("getCurrentTrack", JsGetCurrentTrack),
@@ -750,6 +751,27 @@ PlayerSeekMode AVPlayerNapi::TransferSeekMode(int32_t mode)
             break;
     }
     return seekMode;
+}
+
+PlayerSwitchMode AVPlayerNapi::TransferSwitchMode(int32_t mode)
+{
+    MEDIA_LOGI("Seek Task TransferSeekMode, mode: %{public}d", mode);
+    PlayerSwitchMode switchMode = PlayerSwitchMode::SWITCH_SOOMTH;
+    switch (mode) {
+        case 0:
+            switchMode = PlayerSwitchMode::SWITCH_SOOMTH;
+            break;
+        case 1:
+            switchMode = PlayerSwitchMode::SWITCH_SEGMENT;
+            break;
+        case 2:
+            switchMode = PlayerSwitchMode::SWITCH_CLOSEST;
+            break;
+        default:
+            switchMode = PlayerSwitchMode::SWITCH_SOOMTH;
+            break;
+    }
+    return switchMode;
 }
 
 napi_value AVPlayerNapi::JsSetSpeed(napi_env env, napi_callback_info info)
@@ -2102,6 +2124,65 @@ napi_value AVPlayerNapi::JsGetTrackDescription(napi_env env, napi_callback_info 
     return result;
 }
 
+napi_value AVPlayerNapi::JsGetCurrentSelections(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVPlayerNapi::get current selections");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    MEDIA_LOGI("JsGetCurrentSelections In");
+
+    auto promiseCtx = std::make_unique<AVPlayerContext>(env);
+    napi_value args[1] = { nullptr };
+    size_t argCount = 1;
+    promiseCtx->napi = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
+    promiseCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
+    promiseCtx->deferred = CommonNapi::CreatePromise(env, promiseCtx->callbackRef, result);
+    // async work
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, "JsGetCurrentSelections", NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource,
+        [](napi_env env, void *data) {
+            MEDIA_LOGI("GetCurrentSelections Task");
+            auto promiseCtx = reinterpret_cast<AVPlayerContext *>(data);
+            CHECK_AND_RETURN_LOG(promiseCtx != nullptr, "promiseCtx is nullptr!");
+
+            auto jsPlayer = promiseCtx->napi;
+            if (jsPlayer == nullptr) {
+                return promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "avplayer is deconstructed");
+            }
+
+            std::vector<int32_T> trackIndex;
+            if (jsPlayer->IsControllable()) {
+                int32_t videoIndex = -1;
+                (void)jsPlayer->player_->GetCurrentTrack(MediaType::MEDIA_TYPE_VID, videoIndex);
+                if (videoIndex != -1) {
+                    trackIndex.push_back(videoIndex);
+                }
+
+                int32_t audioIndex = -1;
+                (void)jsPlayer->player_->GetCurrentTrack(MediaType::MEDIA_TYPE_AUD, audioIndex);
+                if (audioIndex != -1) {
+                    trackIndex.push_back(audioIndex);
+                }
+
+                int32_t subtitleIndex = -1;
+                (void)jsPlayer->player_->GetCurrentTrack(MediaType::MEDIA_TYPE_SUBTITLE, subtitleIndex);
+                if (subtitleIndex != -1) {
+                    trackIndex.push_back(subtitleIndex);
+                }
+            } else {
+                return promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                    "current state unsupport get current selections");
+            }
+            promiseCtx->JsResult = std::make_unique<MediaJsResultIntArray>(trackIndex);
+        },
+        MediaAsyncContext::CompleteCallback, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
+    napi_queue_async_work_with_qos(env, promiseCtx->work, napi_qos_user_initiated);
+    promiseCtx.release();
+    MEDIA_LOGI("JsGetCurrentSelections Out");
+    return result;
+}
+
 napi_value AVPlayerNapi::JsSelectTrack(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("AVPlayerNapi::selectTrack");
@@ -2109,8 +2190,8 @@ napi_value AVPlayerNapi::JsSelectTrack(napi_env env, napi_callback_info info)
     napi_value ret = nullptr;
     napi_get_undefined(env, &ret);
 
-    size_t argCount = 1; // 1 prarm, args[0]:index
-    napi_value args[1] = { nullptr };
+    size_t argCount = 2; // 2 prarm, args[0]:index args[1]:SwitchMode
+    napi_value args[ARRAY_ARG_COUNTS_TWO] = { nullptr };
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, ret, "failed to GetJsInstanceWithParameter");
 
@@ -2127,20 +2208,34 @@ napi_value AVPlayerNapi::JsSelectTrack(napi_env env, napi_callback_info info)
         return ret;
     }
 
+    int32_t mode = SWITCH_SOOMTH;
+    if (argCount > 1) {
+        if (napi_typeof(env, args[1], &valueType) != napi_ok || valueType != napi_number) {
+            jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "switch mode is not number");
+            return result;
+        }
+        status = napi_get_value_int32(env, args[1], &mode);
+        if (status != napi_ok || mode < SWITCH_SOOMTH || mode > SWITCH_CLOSEST) {
+            jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please switch seek mode");
+            return result;
+        }
+    }
+
     if (!jsPlayer->IsControllable()) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
             "current state is not prepared/playing/paused/completed, unsupport selectTrack operation");
         return ret;
     }
 
-    auto task = std::make_shared<TaskHandler<void>>([jsPlayer, index]() {
+    auto task = std::make_shared<TaskHandler<void>>([jsPlayer, index, mode]() {
         MEDIA_LOGI("selectTrack Task");
         if (jsPlayer->player_ != nullptr) {
-            (void)jsPlayer->player_->SelectTrack(index);
+            (void)jsPlayer->player_->SelectTrack(index, jsPlayer->TransferSwitchMode(mode));
         }
         MEDIA_LOGI("selectTrack Task end");
     });
     (void)jsPlayer->taskQue_->EnqueueTask(task);
+    MEDIA_LOGI("JsSelectTrack Out");
     return ret;
 }
 
