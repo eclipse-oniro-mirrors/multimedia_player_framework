@@ -116,7 +116,7 @@ void AVTransCoderCallback::SendProgressUpdateCallback(int32_t progress)
 
 void AVTransCoderCallback::OnError(int32_t errCode, const std::string &errorMsg)
 {
-    MEDIA_LOGE("AVTransCoderCallback::OnError: %{public}d, %{public}s", errCode, errorMsg);
+    MEDIA_LOGE("AVTransCoderCallback::OnError: %{public}d, %{public}s", errCode, errorMsg.c_str());
     MediaServiceExtErrCodeAPI9 errorCodeApi9 = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errCode));
     SendErrorCallback(errorCodeApi9, errorMsg);
     SendStateCallback(AVTransCoderState::STATE_ERROR, StateChangeReason::BACKGROUND);
