@@ -81,6 +81,7 @@ private:
     std::mutex bufferMutex_;
     std::condition_variable bufferCond_;
     std::queue<std::shared_ptr<AudioBuffer>> availBuffers_;
+    std::string bundleName_;
 
     /* used for hilog output */
     int32_t captureAudioLogCount_ = 0;

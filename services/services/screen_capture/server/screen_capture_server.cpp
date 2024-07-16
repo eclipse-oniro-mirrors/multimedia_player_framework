@@ -32,6 +32,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include "hitrace/tracechain.h"
+#include "locale_config.h"
 
 using OHOS::Rosen::DMError;
 
@@ -814,7 +815,7 @@ int32_t ScreenCaptureServer::StartInnerAudioCapture()
         int32_t ret = innerCapture->Start(appInfo_);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartInnerAudioCapture failed");
         isInnerAudioCaptureWorking_ = true;
-        if (speakerAliveStatus_ && isMicrophoneOn_) {
+        if (speakerAliveStatus_ && isMicrophoneOn_ && !isInVoIPCall_) {
             ret = innerCapture->Pause();
             CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartAudioCapture innerCapture Pause failed");
             isInnerAudioCaptureWorking_ = false;
@@ -1026,7 +1027,8 @@ int32_t ScreenCaptureServer::InitAudioCap(AudioCaptureInfo audioInfo)
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "InitAudioCap CheckAudioCapInfo failed, audioSource:%{public}d",
         audioInfo.audioSource);
     if (audioInfo.audioSource == AudioCaptureSourceType::SOURCE_DEFAULT ||
-        audioInfo.audioSource == AudioCaptureSourceType::MIC) {
+        audioInfo.audioSource == AudioCaptureSourceType::MIC ||
+        audioInfo.audioSource == AudioCaptureSourceType::VOICE_COMMUNICATION) {
         captureConfig_.audioInfo.micCapInfo = audioInfo;
         statisticalEventInfo_.requireMic = true;
     } else if (audioInfo.audioSource == AudioCaptureSourceType::ALL_PLAYBACK ||
@@ -1103,6 +1105,8 @@ int32_t ScreenCaptureServer::InitRecorder()
         audioSource_ = std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIX_MODE, this);
         captureCallback_ = std::make_shared<ScreenRendererAudioStateChangeCallback>();
         audioSource_->SetAppPid(appInfo_.appPid);
+        audioSource_->SetAppName(appName_);
+        captureCallback_->SetAppName(appName_);
         captureCallback_->SetAudioSource(audioSource_);
         audioSource_->RegisterAudioRendererEventListener(appInfo_.appPid, captureCallback_);
         ret = recorder_->SetAudioDataSource(audioSource_, audioSourceId_);
@@ -1953,6 +1957,23 @@ int32_t ScreenCaptureServer::OnSpeakerAliveStatusChanged()
     return MSERR_OK;
 }
 
+int32_t ScreenCaptureServer::OnVoIPStateChanged(bool isInVoIPCall)
+{
+    int32_t ret = MSERR_UNKNOWN;
+    isInVoIPCall_ = isInVoIPCall;
+    CHECK_AND_RETURN_RET_LOG(innerAudioCapture_, MSERR_UNKNOWN, "innerAudioCapture is nullptr");
+    if (isInVoIPCall && !isInnerAudioCaptureWorking_) {
+        ret = innerAudioCapture_->Resume();
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "innerAudioCapture Resume failed");
+        isInnerAudioCaptureWorking_ = true;
+    }
+    if (!isInVoIPCall && isInnerAudioCaptureWorking_ && isMicrophoneOn_ && speakerAliveStatus_) {
+        isInnerAudioCaptureWorking_ = false;
+        ret = innerAudioCapture_->Pause();
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "innerAudioCapture Pause failed");
+    }
+}
+
 bool ScreenCaptureServer::GetMicWorkingState()
 {
     MEDIA_LOGD("ScreenCaptureServer: 0x%{public}06" PRIXPTR "GetMicWorkingState isMicrophoneOn_:%{public}d",
@@ -1989,6 +2010,18 @@ int32_t ScreenCaptureServer::SetCanvasRotationInner()
     return MSERR_OK;
 }
 
+int32_t ScreenCaptureServer::SetMicAudioSourceType(AudioCaptureSourceType type)
+{
+    if (type != AudioCaptureSourceType::SOURCE_DEFAULT &&
+        type != AudioCaptureSourceType::MIC &&
+        type != AudioCaptureSourceType::VOICE_COMMUNICATION) {
+            MEDIA_LOGE("AudioCaptureSourceType do not support");
+            return MSERR_INVALID_VAL;
+    }
+    captureConfig_.audioInfo.micCapInfo.audioSource = type;
+    return MSERR_OK;
+}
+
 int32_t ScreenCaptureServer::StopAudioCapture()
 {
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "StopAudioCapture start.", FAKE_POINTER(this));
@@ -2004,6 +2037,19 @@ int32_t ScreenCaptureServer::StopAudioCapture()
         innerAudioCapture_->Stop();
         innerAudioCapture_ = nullptr;
         isInnerAudioCaptureWorking_ = false;
+    }
+    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "StopAudioCapture end.", FAKE_POINTER(this));
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureServer::StopMicAudioCapture()
+{
+    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "StopMicAudioCapture start.", FAKE_POINTER(this));
+    if (micAudioCapture_ != nullptr) {
+        MediaTrace trace("ScreenCaptureServer::StopAudioCaptureMic");
+        micAudioCapture_->Stop();
+        micAudioCapture_ = nullptr;
+        isMicAudioCaptureWorking_ = false;
     }
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "StopAudioCapture end.", FAKE_POINTER(this));
     return MSERR_OK;
@@ -2287,11 +2333,20 @@ void ScreenRendererAudioStateChangeCallback::SetAudioSource(std::shared_ptr<Audi
     audioSource_ = audioSource;
 }
 
+void ScreenRendererAudioStateChangeCallback::SetAppName(std::string appName)
+{
+    appName_ = appName;
+}
+
 void ScreenRendererAudioStateChangeCallback::OnRendererStateChange(
     const std::vector<std::unique_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos)
 {
     MEDIA_LOGD("ScreenRendererAudioStateChangeCallback IN");
     audioSource_->SpeakerStateUpdate(audioRendererChangeInfos);
+    std::string region = Global::I18n::LocaleConfig::GetSystemRegion();
+    if (SCREEN_RECORDER_BUNDLE_NAME.compare(appName_) == 0 && region == "CN") {
+        audioSource_->VoIPStateUpdate(audioRendererChangeInfos);
+    }
 }
 
 void AudioDataSource::SpeakerStateUpdate(
@@ -2345,6 +2400,39 @@ bool AudioDataSource::HasSpeakerStream(
     return hasSpeakerStream;
 }
 
+void AudioDataSource::VoIPStateUpdate(
+    const std::vector<std::unique_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos)
+{
+    uint32_t changeInfoIndex = 0;
+    bool isInVoIPCall = false;
+    for (const std::unique_ptr<AudioRendererChangeInfo> &changeInfo: audioRendererChangeInfos) {
+        if (!changeInfo) {
+            continue;
+        }
+        MEDIA_LOGI("ChangeInfo Id: %{public}d, Client pid : %{public}d, State : %{public}d, DeviceType : %{public}d",
+            changeInfoIndex, changeInfo->clientPid, static_cast<int32_t>(changeInfo->rendererState),
+            static_cast<int32_t>(changeInfo->outputDeviceInfo.deviceType));
+        if (changeInfo->rendererState == RenderderState::RENDERER_RUNNING &&
+            changeInfo->rendererInfo.streamUsage == AudioStandard::StreamUsage::STREAM_USAGE_VOICE_COMMUNICATION) {
+            isInVoIPCall = true;
+        }
+        changeInfoIndex++;
+    }
+    if (isInVoIPCall_ == isInVoIPCall) {
+        return;
+    }
+    isInVoIPCall_ = isInVoIPCall;
+    screenCaptureServer_->OnVoIPStateChanged(isInVoIPCall);
+    if (isInVoIPCall) {
+        screenCaptureServer_->SetMicAudioSourceType(AudioCaptureSourceType::VOICE_COMMUNICATION);
+    } else {
+        screenCaptureServer_->SetMicAudioSourceType(AudioCaptureSourceType::MIC);
+    }
+    usleep(AUDIO_CHANGE_TIME);
+    screenCaptureServer_->StopMicAudioCapture();
+    screenCaptureServer_->StartMicAudioCapture();
+}
+
 void AudioDataSource::SetAppPid(int32_t appid)
 {
     appPid_ = appid;
@@ -2355,6 +2443,11 @@ int32_t AudioDataSource::GetAppPid()
     return appPid_ ;
 }
 
+void AudioDataSource::SetAppName(std::string appName)
+{
+    appName_ = appName;
+}
+
 int32_t AudioDataSource::RegisterAudioRendererEventListener(const int32_t clientPid,
     const std::shared_ptr<AudioRendererStateChangeCallback> &callback)
 {
@@ -2362,6 +2455,10 @@ int32_t AudioDataSource::RegisterAudioRendererEventListener(const int32_t client
     int32_t ret = AudioStreamManager::GetInstance()->RegisterAudioRendererEventListener(clientPid, callback);
     std::vector<std::unique_ptr<AudioRendererChangeInfo>> audioRendererChangeInfos;
     SpeakerStateUpdate(audioRendererChangeInfos);
+    std::string region = Global::I18n::LocaleConfig::GetSystemRegion();
+    if (SCREEN_RECORDER_BUNDLE_NAME.compare(appName_) == 0 && region == "CN") {
+        VoIPStateUpdate(audioRendererChangeInfos);
+    }
     return ret;
 }
 

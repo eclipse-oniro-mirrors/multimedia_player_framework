@@ -17,6 +17,9 @@
 
 #include "media_log.h"
 #include "media_errors.h"
+#include "media_utils.h"
+#include "ipc_skeleton.h"
+#include "locale_config.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "ScreenCaptureACW"};
@@ -24,6 +27,9 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTUR
 
 namespace OHOS {
 namespace Media {
+
+static const std::string SCREEN_RECORDER_BUNDLE_NAME = "com.ohos.screenrecorder";
+
 void AudioCapturerCallbackImpl::OnInterrupt(const InterruptEvent &interruptEvent)
 {
     MEDIA_LOGI("AudioCapturerCallbackImpl OnInterrupt hintType:%{public}d, eventType:%{public}d, forceType:%{public}d",
@@ -163,10 +169,16 @@ void AudioCapturerWrapper::SetInnerStreamUsage(std::vector<OHOS::AudioStandard::
     usages.push_back(AudioStandard::StreamUsage::STREAM_USAGE_AUDIOBOOK);
     usages.push_back(AudioStandard::StreamUsage::STREAM_USAGE_NAVIGATION);
     usages.push_back(AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN);
+    std::string region = Global::I18n::LocaleConfig::GetSystemRegion();
+    if (SCREEN_RECORDER_BUNDLE_NAME.compare(bundleName_) == 0 && region == "CN") {
+        usages.push_back(AudioStandard::StreamUsage::STREAM_USAGE_VOICE_COMMUNICATION);
+    }
 }
 
 std::shared_ptr<AudioCapturer> AudioCapturerWrapper::CreateAudioCapturer(const OHOS::AudioStandard::AppInfo &appInfo)
 {
+    bundleName_ = GetClientBundleName(appInfo.appUid);
+    OHOS::AudioStandard::AppInfo newInfo = appInfo;
     AudioCapturerOptions capturerOptions;
     capturerOptions.streamInfo.samplingRate = static_cast<AudioSamplingRate>(audioInfo_.audioSampleRate);
     capturerOptions.streamInfo.channels = static_cast<AudioChannel>(audioInfo_.audioChannels);
@@ -179,6 +191,10 @@ std::shared_ptr<AudioCapturer> AudioCapturerWrapper::CreateAudioCapturer(const O
         audioInfo_.audioSource == AudioCaptureSourceType::APP_PLAYBACK) {
         capturerOptions.capturerInfo.sourceType = SourceType::SOURCE_TYPE_PLAYBACK_CAPTURE;
         SetInnerStreamUsage(capturerOptions.playbackCaptureConfig.filterOptions.usages);
+        newInfo.appTokenId = IPCSkeleton::GetSelfTokenID();
+        newInfo.appFullTokenId = IPCSkeleton::GetSelfTokenID();
+    } else if (audioInfo_.audioSource == AudioCaptureSourceType::VOICE_COMMUNICATION) {
+        capturerOptions.capturerInfo.sourceType = SourceType::SOURCE_TYPE_VOICE_COMMUNICATION;
     }
     if (contentFilter_.filteredAudioContents.find(
         AVScreenCaptureFilterableAudioContent::SCREEN_CAPTURE_NOTIFICATION_AUDIO) ==
@@ -195,7 +211,7 @@ std::shared_ptr<AudioCapturer> AudioCapturerWrapper::CreateAudioCapturer(const O
         MEDIA_LOGI("createAudioCapturer exclude current app audio");
     }
     capturerOptions.capturerInfo.capturerFlags = 0;
-    std::shared_ptr<AudioCapturer> audioCapturer = AudioCapturer::Create(capturerOptions, appInfo);
+    std::shared_ptr<AudioCapturer> audioCapturer = AudioCapturer::Create(capturerOptions, newInfo);
     CHECK_AND_RETURN_RET_LOG(audioCapturer != nullptr, nullptr, "AudioCapturer::Create failed");
     std::shared_ptr<AudioCapturerCallbackImpl> callback = std::make_shared<AudioCapturerCallbackImpl>();
     int ret = audioCapturer->SetCapturerCallback(callback);
