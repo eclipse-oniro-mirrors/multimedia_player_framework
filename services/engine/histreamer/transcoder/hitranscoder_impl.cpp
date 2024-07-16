@@ -220,9 +220,10 @@ int32_t HiTransCoderImpl::SetObs(const std::weak_ptr<ITransCoderEngineObs> &obs)
     return static_cast<int32_t>(Status::OK);
 }
 
-void HiTransCoderImpl::ConfigureVideoEncoderFormat(const TransCoderParam &transCoderParam)
-{
+Status HiTransCoderImpl::ConfigureVideoEncoderFormat(const TransCoderParam &transCoderParam)
+{     
     VideoEnc videoEnc = static_cast<const VideoEnc&>(transCoderParam);
+    MEDIA_LOG_I("HiTransCoderImpl::Configure videoEnc %{public}d", videoEnc.encFmt);
     switch (videoEnc.encFmt) {
         case OHOS::Media::VideoCodecFormat::H264:
             videoEncFormat_->Set<Tag::MIME_TYPE>(Plugins::MimeType::VIDEO_AVC);
@@ -237,30 +238,39 @@ void HiTransCoderImpl::ConfigureVideoEncoderFormat(const TransCoderParam &transC
             break;
         default:
             MEDIA_LOG_I("ConfigureVideo %{public}d not supported", videoEnc.encFmt);
-            break;
+            OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_INVALID_VAL});
+            return Status::ERROR_INVALID_PARAMETER;
     }
+    return Status::OK;
+}
+
+Status HiTransCoderImpl::ConfigureVideoWidthHeight(const TransCoderParam &transCoderParam)
+{
+    VideoRectangle videoRectangle = static_cast<const VideoRectangle&>(transCoderParam);
+    if (videoRectangle.width <= 0 || videoRectangle.height <= 0) {
+        MEDIA_LOG_E("Invalid videoRectangle.width %{public}d, videoRectangle.height %{public}d",
+            videoRectangle.width, videoRectangle.height);
+        OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_INVALID_VAL});
+        return Status::ERROR_INVALID_PARAMETER;
+    }
+    MEDIA_LOG_I("videoRectangle.width %{public}d, videoRectangle.height %{public}d",
+        videoRectangle.width, videoRectangle.height);
+    videoEncFormat_->Set<Tag::VIDEO_WIDTH>(videoRectangle.width);
+    videoEncFormat_->Set<Tag::VIDEO_HEIGHT>(videoRectangle.height);
+    return Status::OK;
 }
 
 int32_t HiTransCoderImpl::Configure(const TransCoderParam &transCoderParam)
 {
     MEDIA_LOG_I("HiTransCoderImpl::Configure()");
+    Status ret = Status::OK;
     switch (transCoderParam.type) {
         case TransCoderPublicParamType::VIDEO_ENC_FMT: {
-            VideoEnc videoEnc = static_cast<const VideoEnc&>(transCoderParam);
-            MEDIA_LOG_I("HiTransCoderImpl::Configure videoEnc %{public}d", videoEnc.encFmt);
-            ConfigureVideoEncoderFormat(transCoderParam);
+            ret = ConfigureVideoEncoderFormat(transCoderParam);
             break;
         }
         case TransCoderPublicParamType::VIDEO_RECTANGLE: {
-            VideoRectangle videoRectangle = static_cast<const VideoRectangle&>(transCoderParam);
-            if (videoRectangle.width <= 0 || videoRectangle.height <= 0) {
-                MEDIA_LOG_E("Invalid videoRectangle.width %{public}d, videoRectangle.height %{public}d",
-                    videoRectangle.width, videoRectangle.height);
-                OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_INVALID_VAL});
-                return static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER);
-            }
-            videoEncFormat_->Set<Tag::VIDEO_WIDTH>(videoRectangle.width);
-            videoEncFormat_->Set<Tag::VIDEO_HEIGHT>(videoRectangle.height);
+            ret = ConfigureVideoWidthHeight(transCoderParam);
             break;
         }
         case TransCoderPublicParamType::VIDEO_BITRATE: {
@@ -294,7 +304,7 @@ int32_t HiTransCoderImpl::Configure(const TransCoderParam &transCoderParam)
         default:
             break;
     }
-    return static_cast<int32_t>(Status::OK);
+    return static_cast<int32_t>(ret);
 }
 
 int32_t HiTransCoderImpl::Prepare()
