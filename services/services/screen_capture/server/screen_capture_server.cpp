@@ -1959,7 +1959,7 @@ int32_t ScreenCaptureServer::OnSpeakerAliveStatusChanged()
 int32_t ScreenCaptureServer::OnVoIPStateChanged(bool isInVoIPCall)
 {
     if (isInVoIPCall_ == isInVoIPCall) {
-        MEDIA_LOGI("microphone status no change");
+        MEDIA_LOGI("VoIP status no change");
         return MSERR_OK;
     }
     int32_t ret = MSERR_UNKNOWN;

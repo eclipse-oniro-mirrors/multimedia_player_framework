@@ -317,9 +317,9 @@ int32_t AudioCapturerWrapper::ReleaseAudioBuffer()
     return MSERR_OK;
 }
 
-int32_t AudioCapturerWrapper::SetIsInVoIPCall(bool isInVoIPCall)
+void AudioCapturerWrapper::SetIsInVoIPCall(bool isInVoIPCall)
 {
-    isInVoIPCall_ = isInVoIPCall
+    isInVoIPCall_ = isInVoIPCall;
 }
 
 void AudioCapturerWrapper::OnStartFailed(ScreenCaptureErrorType errorType, int32_t errorCode)
