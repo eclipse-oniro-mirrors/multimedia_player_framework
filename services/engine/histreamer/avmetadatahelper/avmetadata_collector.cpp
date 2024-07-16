@@ -25,7 +25,7 @@
 #include "time_format_utils.h"
 
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_ONLY_PRERELEASE, LOG_DOMAIN_METADATA, "AVMetaDataCollector" };
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_METADATA, "AVMetaDataCollector" };
 }  // namespace
 
 namespace OHOS {
