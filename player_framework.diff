@@ -1,0 +1,575 @@
+diff --git a/frameworks/js/avplayer/avplayer_napi.cpp b/frameworks/js/avplayer/avplayer_napi.cpp
+index 38cb1f51..ae6a20fe 100644
+--- a/frameworks/js/avplayer/avplayer_napi.cpp
++++ b/frameworks/js/avplayer/avplayer_napi.cpp
+@@ -716,7 +716,8 @@ napi_value AVPlayerNapi::JsSeek(napi_env env, napi_callback_info info)
+             return result;
+         }
+         status = napi_get_value_int32(env, args[1], &mode);
+-        if (status != napi_ok || mode < SEEK_NEXT_SYNC || mode > SEEK_CLOSEST) {
++        MEDIA_LOGI("liyudebug mode is: %{public}d", mode);
++        if (status != napi_ok || mode < SEEK_NEXT_SYNC || mode > SEEK_CONTINOUS) {
+             jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please check seek mode");
+             return result;
+         }
+@@ -744,6 +745,9 @@ PlayerSeekMode AVPlayerNapi::TransferSeekMode(int32_t mode)
+         case 2: // Seek to the closest frame of the given timestamp. 2 refers SeekMode in @ohos.multimedia.media.d.ts
+             seekMode = PlayerSeekMode::SEEK_CLOSEST;
+             break;
++        case 3:
++            seekMode = PlayerSeekMode::SEEK_CONTINOUS;
++            break;
+         default:
+             seekMode = PlayerSeekMode::SEEK_PREVIOUS_SYNC;
+             break;
+diff --git a/frameworks/js/media/media_enum_napi.cpp b/frameworks/js/media/media_enum_napi.cpp
+index 6ab2beb8..e93c1c43 100644
+--- a/frameworks/js/media/media_enum_napi.cpp
++++ b/frameworks/js/media/media_enum_napi.cpp
+@@ -157,6 +157,7 @@ static const std::vector<struct JsEnumInt> g_seekMode = {
+     { "SEEK_PREV_SYNC", PlayerSeekMode::SEEK_PREVIOUS_SYNC },
+     { "SEEK_CLOSEST_SYNC", 3 }, // 3 is consistent with the SeekMode defination in ohos.multimedia.media.d.ts.
+     { "SEEK_CLOSEST", 2 }, // 2 is consistent with the SeekMode defination in ohos.multimedia.media.d.ts.
++    { "SEEK_CONTINOUS", PlayerSeekMode::SEEK_CONTINOUS },
+ };
+ 
+ static const std::vector<struct JsEnumInt> g_AVCodecType = {
+diff --git a/frameworks/native/player/player_impl.cpp b/frameworks/native/player/player_impl.cpp
+index b415baf7..29a76981 100644
+--- a/frameworks/native/player/player_impl.cpp
++++ b/frameworks/native/player/player_impl.cpp
+@@ -193,11 +193,15 @@ int32_t PlayerImpl::SetVolume(float leftVolume, float rightVolume)
+ 
+ int32_t PlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
+ {
+-    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Seek in, seek to %{public}d ms, mode is %{public}d",
++    MEDIA_LOGI("liyudebug PlayerImpl:0x%{public}06" PRIXPTR " Seek in, seek to %{public}d ms, mode is %{public}d",
+         FAKE_POINTER(this), mSeconds, mode);
+     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+ 
+     std::unique_lock<std::recursive_mutex> lock(recMutex_);
++    // SEEK_CONTINOUS is usually called in batches, and will not report seek done event.
++    if (mode == PlayerSeekMode::SEEK_CONTINOUS) {
++        return playerService_->Seek(mSeconds, mode);
++    }
+     mCurrentPosition = mSeconds;
+     mCurrentSeekMode = mode;
+     if ((mSeekPosition != mCurrentPosition || mSeekMode != mCurrentSeekMode) && !isSeeking_) {
+diff --git a/services/engine/histreamer/player/BUILD.gn b/services/engine/histreamer/player/BUILD.gn
+index d291968c..ce65ad3a 100644
+--- a/services/engine/histreamer/player/BUILD.gn
++++ b/services/engine/histreamer/player/BUILD.gn
+@@ -54,6 +54,7 @@ ohos_static_library("media_engine_histreamer_player") {
+     "hiplayer_callback_looper.cpp",
+     "hiplayer_impl.cpp",
+     "seek_agent.cpp",
++    "dragging_player_agent.cpp"
+   ]
+ 
+   configs = [
+diff --git a/services/engine/histreamer/player/hiplayer_impl.cpp b/services/engine/histreamer/player/hiplayer_impl.cpp
+index dda43d32..407426ae 100755
+--- a/services/engine/histreamer/player/hiplayer_impl.cpp
++++ b/services/engine/histreamer/player/hiplayer_impl.cpp
+@@ -360,15 +360,15 @@ int32_t HiPlayerImpl::PrepareAsync()
+         CollectionErrorInfo(errCode, "pipeline PrepareAsync failed");
+         return errCode;
+     }
+-    if (demuxer_ != nullptr && demuxer_->IsRenderNextVideoFrameSupported()
+-        && IsAppEnableRenderFirstFrame(appUid_)) {
+-        ret = pipeline_->PrepareFrame(renderFirstFrame_);
+-        auto code = TransStatus(ret);
+-        if (ret != Status::OK) {
+-            CollectionErrorInfo(code, "PrepareFrame failed.");
+-            return code;
+-        }
+-    }
++    // if (demuxer_ != nullptr && demuxer_->IsRenderNextVideoFrameSupported()
++    //     && IsAppEnableRenderFirstFrame(appUid_)) {
++    //     ret = pipeline_->PrepareFrame(renderFirstFrame_);
++    //     auto code = TransStatus(ret);
++    //     if (ret != Status::OK) {
++    //         CollectionErrorInfo(code, "PrepareFrame failed.");
++    //         return code;
++    //     }
++    // }
+     UpdatePlayerStateAndNotify();
+     MEDIA_LOGI("PrepareAsync End");
+     return TransStatus(ret);
+@@ -788,9 +788,9 @@ Status HiPlayerImpl::doPausedSeek(int64_t seekPos, PlayerSeekMode mode)
+     pipeline_ -> Pause();
+     pipeline_ -> Flush();
+     auto rtv = doSeek(seekPos, mode);
+-    if ((rtv == Status::OK) && demuxer_->IsRenderNextVideoFrameSupported()) {
+-        rtv = pipeline_->PrepareFrame(true);
+-    }
++    // if ((rtv == Status::OK) && demuxer_->IsRenderNextVideoFrameSupported()) {
++    //     rtv = pipeline_->PrepareFrame(true);
++    // }
+     return rtv;
+ }
+ 
+@@ -2058,5 +2058,54 @@ Status HiPlayerImpl::LinkSubtitleSinkFilter(const std::shared_ptr<Filter>& preFi
+     }
+     return pipeline_->LinkFilters(preFilter, {subtitleSink_}, type);
+ }
++
++int32_t HiPlayerImpl::SeekContinous(int32_t mSeconds, int64_t seekContinousBatchNo)
++{
++    std::lock_guard<std::mutex> lock(seekContinousMutex_);
++    FALSE_RETURN_V(demuxer_ && videoDecoder_, TransStatus(Status::OK));
++    FALSE_RETURN_V(!isNetWorkPlay_, TransStatus(Status::OK));
++    FALSE_RETURN_V(seekContinousBatchNo_.load() <= seekContinousBatchNo, TransStatus(Status::OK));
++    if (seekContinousBatchNo_.load() == seekContinousBatchNo) {
++        FALSE_RETURN_V(draggingPlayerAgent_ != nullptr, TransStatus(Status::OK));
++        lastSeekContinousPos_ = mSeconds;
++        draggingPlayerAgent_->UpdateSeekPos(mSeconds);
++        MEDIA_LOGI("liyudebug HiPlayerImpl::SeekContinous in " PUBLIC_LOG_D32, mSeconds);
++        return TransStatus(Status::OK);
++    }
++    seekContinousBatchNo_.store(seekContinousBatchNo);
++    auto res = StartSeekContinous();
++    FALSE_RETURN_V_MSG_E(res == Status::OK && draggingPlayerAgent_ != nullptr, TransStatus(Status::ERROR_UNKNOWN),
++        "StartSeekContinous failed");
++    lastSeekContinousPos_ = mSeconds;
++    draggingPlayerAgent_->UpdateSeekPos(mSeconds);
++    MEDIA_LOGI("liyudebug HiPlayerImpl::SeekContinous start " PUBLIC_LOG_D32, mSeconds);
++    return TransStatus(Status::OK);
++}
++
++Status HiPlayerImpl::StartSeekContinous()
++{
++    FALSE_RETURN_V(!draggingPlayerAgent_, Status::OK);
++    draggingPlayerAgent_ = DraggingPlayerAgent::Create();
++    FALSE_RETURN_V(draggingPlayerAgent_ != nullptr, Status::OK);
++    Status res = draggingPlayerAgent_->Init(demuxer_, videoDecoder_);
++    SetFrameRateForSeekPerformance(2000.0);
++    if (res != Status::OK) {
++        draggingPlayerAgent_ = nullptr;
++    }
++    return res;
++}
++
++int32_t HiPlayerImpl::ExitSeekContinous(bool align, int64_t seekContinousBatchNo)
++{
++    std::lock_guard<std::mutex> lock(seekContinousMutex_);
++    FALSE_RETURN_V(demuxer_ && videoDecoder_, TransStatus(Status::OK));
++    FALSE_RETURN_V(!isNetWorkPlay_, TransStatus(Status::OK));
++    seekContinousBatchNo_.store(seekContinousBatchNo);
++    draggingPlayerAgent_->Release();
++    if (align) {
++        Seek(lastSeekContinousPos_, PlayerSeekMode::SEEK_CLOSEST, false);
++    }
++    return TransStatus(Status::OK);
++}
+ }  // namespace Media
+ }  // namespace OHOS
+diff --git a/services/engine/histreamer/player/hiplayer_impl.h b/services/engine/histreamer/player/hiplayer_impl.h
+index 51374c11..704522d8 100644
+--- a/services/engine/histreamer/player/hiplayer_impl.h
++++ b/services/engine/histreamer/player/hiplayer_impl.h
+@@ -35,6 +35,7 @@
+ #include "subtitle_sink_filter.h"
+ #include "meta/meta.h"
+ #include <chrono>
++#include "dragging_player_agent.h"
+ #ifdef SUPPORT_VIDEO
+ #include "decoder_surface_filter.h"
+ #endif
+@@ -142,6 +143,8 @@ public:
+     void OnStateChanged(PlayerStateId state);
+     Status OnCallback(std::shared_ptr<Filter> filter, const FilterCallBackCommand cmd,
+                     StreamType outType);
++    int32_t SeekContinous(int32_t mSeconds, int64_t seekContinousBatchNo) override;
++    int32_t ExitSeekContinous(bool align, int64_t seekContinousBatchNo) override;
+ 
+ private:
+     enum HiplayerSvpMode : int32_t {
+@@ -210,6 +213,7 @@ private:
+     bool BreakIfInterruptted();
+     bool IsSeekInSitu(int64_t mSeconds);
+     void CollectionErrorInfo(int32_t errCode, const std::string& errMsg);
++    Status StartSeekContinous();
+ 
+     bool isNetWorkPlay_ = false;
+     bool isDump_ = false;
+@@ -295,6 +299,11 @@ private:
+     int64_t maxSurfaceSwapLatency_ = 0;
+     int64_t playTotalDuration_ = 0;
+     bool inEosSeek_ = false;
++
++    std::atomic<int64_t> seekContinousBatchNo_ {-1};
++    std::mutex seekContinousMutex_;
++    std::shared_ptr<DraggingPlayerAgent> draggingPlayerAgent_ {nullptr};
++    int64_t lastSeekContinousPos_ {-1};
+ };
+ } // namespace Media
+ } // namespace OHOS
+diff --git a/services/services/engine_intf/i_player_engine.h b/services/services/engine_intf/i_player_engine.h
+index 6c257e95..7fe121f6 100644
+--- a/services/services/engine_intf/i_player_engine.h
++++ b/services/services/engine_intf/i_player_engine.h
+@@ -173,6 +173,19 @@ public:
+     {
+         (void)instanceId;
+     }
++    virtual int32_t SeekContinous(int32_t mSeconds, int64_t seekContinousBatchNo)
++    {
++        (void)mSeconds;
++        (void)seekContinousBatchNo;
++        return 0;
++    }
++
++    virtual int32_t ExitSeekContinous(bool align, int64_t seekContinousBatchNo)
++    {
++        (void)align;
++        (void)seekContinousBatchNo;
++        return 0;
++    }
+ };
+ } // namespace Media
+ } // namespace OHOS
+diff --git a/services/services/player/server/player_server.cpp b/services/services/player/server/player_server.cpp
+index 328eeeec..d5ae4d68 100755
+--- a/services/services/player/server/player_server.cpp
++++ b/services/services/player/server/player_server.cpp
+@@ -503,6 +503,7 @@ int32_t PlayerServer::OnPlay()
+ 
+ int32_t PlayerServer::HandlePlay()
+ {
++    ExitSeekContinous(true);
+     int32_t ret = playerEngine_->Play();
+     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine Play Failed!");
+ 
+@@ -586,7 +587,7 @@ int32_t PlayerServer::OnStop(bool sync)
+     isInterruptNeeded_ = true;
+     playerEngine_->SetInterruptState(true);
+     taskMgr_.ClearAllTask();
+-
++    ExitSeekContinous(false);
+     auto stopTask = std::make_shared<TaskHandler<void>>([this]() {
+         auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
+         (void)currState->Stop();
+@@ -739,6 +740,7 @@ bool PlayerServer::IsValidSeekMode(PlayerSeekMode mode)
+         case SEEK_NEXT_SYNC:
+         case SEEK_CLOSEST_SYNC:
+         case SEEK_CLOSEST:
++        case SEEK_CONTINOUS:
+             break;
+         default:
+             MEDIA_LOGE("Unknown seek mode %{public}d", mode);
+@@ -750,29 +752,16 @@ bool PlayerServer::IsValidSeekMode(PlayerSeekMode mode)
+ int32_t PlayerServer::Seek(int32_t mSeconds, PlayerSeekMode mode)
+ {
+     std::lock_guard<std::mutex> lock(mutex_);
+-    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
+-
+-    MEDIA_LOGI("KPI-TRACE: PlayerServer Seek in");
+-    if (lastOpStatus_ != PLAYER_PREPARED && lastOpStatus_ != PLAYER_PAUSED &&
+-        lastOpStatus_ != PLAYER_STARTED && lastOpStatus_ != PLAYER_PLAYBACK_COMPLETE) {
+-        MEDIA_LOGE("Can not Seek, currentState is %{public}s", GetStatusDescription(lastOpStatus_).c_str());
+-        return MSERR_INVALID_OPERATION;
+-    }
+-
+-    if (IsValidSeekMode(mode) != true) {
+-        MEDIA_LOGE("Seek failed, inValid mode");
+-        return MSERR_INVALID_VAL;
+-    }
+-
+-    if (isLiveStream_) {
+-        MEDIA_LOGE("Can not Seek, it is live-stream");
+-        OnErrorMessage(MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "Can not Seek, it is live-stream");
+-        return MSERR_INVALID_OPERATION;
+-    }
++    int32_t checkRet = CheckSeek(mSeconds, mode);
++    CHECK_AND_RETURN_RET_LOG(checkRet == MSERR_OK, MSERR_OK, "check seek faild");
+ 
+     MEDIA_LOGD("seek position %{public}d, seek mode is %{public}d", mSeconds, mode);
+     mSeconds = std::max(0, mSeconds);
+ 
++    if (mode == SEEK_CONTINOUS) {
++        return SeekContinous(mSeconds);
++    }
++    ExitSeekContinous(false);
+     auto seekTask = std::make_shared<TaskHandler<void>>([this, mSeconds, mode]() {
+         MediaTrace::TraceBegin("PlayerServer::Seek", FAKE_POINTER(this));
+         MEDIA_LOGI("PlayerServer::Seek start");
+@@ -1560,5 +1549,90 @@ bool PlayerServer::IsBootCompleted()
+ {
+     return isBootCompleted_.load();
+ }
++
++int32_t PlayerServer::CheckSeek(int32_t mSeconds, PlayerSeekMode mode)
++{
++    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
++
++    MEDIA_LOGI("KPI-TRACE: PlayerServer Seek in");
++    if (lastOpStatus_ != PLAYER_PREPARED && lastOpStatus_ != PLAYER_PAUSED &&
++        lastOpStatus_ != PLAYER_STARTED && lastOpStatus_ != PLAYER_PLAYBACK_COMPLETE) {
++        MEDIA_LOGE("Can not Seek, currentState is %{public}s", GetStatusDescription(lastOpStatus_).c_str());
++        return MSERR_INVALID_OPERATION;
++    }
++
++    if (IsValidSeekMode(mode) != true) {
++        MEDIA_LOGE("Seek failed, inValid mode");
++        return MSERR_INVALID_VAL;
++    }
++
++    if (isLiveStream_) {
++        MEDIA_LOGE("Can not Seek, it is live-stream");
++        OnErrorMessage(MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "Can not Seek, it is live-stream");
++        return MSERR_INVALID_OPERATION;
++    }
++    return MSERR_OK;
++}
++
++int32_t PlayerServer::SeekContinous(int32_t mSeconds)
++{
++    if (lastOpStatus_ == PLAYER_STARTED) {
++        OnPause();
++    }
++    {
++        std::lock_guard<std::mutex> lock(seekContinousMutex_);
++        if (!isInSeekContinous_.load()) {
++            RegisterContinousBatchNo();
++            isInSeekContinous_.store(true);
++        }
++    }
++    int64_t seekContinousBatchNo = seekContinousBatchNo_.load();
++
++    auto seekContinousTask = std::make_shared<TaskHandler<void>>([this, mSeconds, seekContinousBatchNo]() {
++        MediaTrace::TraceBegin("PlayerServer::SeekContinous", FAKE_POINTER(this));
++        MEDIA_LOGI("PlayerServer::Seek start");
++        auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
++        (void)currState->SeekContinous(mSeconds, seekContinousBatchNo);
++        MEDIA_LOGI("PlayerServer::SeekContinous end");
++        taskMgr_.MarkTaskDone("seek continous done");
++    });
++
++    int32_t ret = taskMgr_.SeekContinousTask(seekContinousTask, "seek continous");
++    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SeekContinous failed");
++
++    MEDIA_LOGI("Queue seekTask end, position %{public}d", mSeconds);
++    return MSERR_OK;
++}
++
++int32_t PlayerServer::HandleSeekContinous(int32_t mSeconds, int64_t batchNo)
++{
++    MEDIA_LOGI("KPI-TRACE: PlayerServer HandleSeek in, mSeconds: %{public}d, "
++        "instanceId: %{public}" PRIu64 "", mSeconds, instanceId_);
++    int32_t ret = playerEngine_->SeekContinous(mSeconds, batchNo);
++    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine Seek Failed!");
++    MEDIA_LOGI("PlayerServer HandleSeek end");
++    return MSERR_OK;
++}
++
++int32_t PlayerServer::ExitSeekContinous(bool align)
++{
++    {
++        std::lock_guard<std::mutex> lock(seekContinousMutex_);
++        if (!isInSeekContinous_.load()) {
++            return MSERR_OK;
++        }
++        RegisterContinousBatchNo();
++        isInSeekContinous_.store(false);
++    }
++    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
++    return playerEngine_->ExitSeekContinous(align, seekContinousBatchNo_.load());
++}
++
++void PlayerServer::RegisterContinousBatchNo()
++{
++    // auto now = std::chrono::steady_clock::now();
++    // seekContinousBatchNo_.store(std::chrono::duration_cast<std::chrono::microseconds>(now.time_since_epoch()).count());
++    seekContinousBatchNo_++;
++}
+ } // namespace Media
+ } // namespace OHOS
+diff --git a/services/services/player/server/player_server.h b/services/services/player/server/player_server.h
+index ff8b2c67..66302afe 100644
+--- a/services/services/player/server/player_server.h
++++ b/services/services/player/server/player_server.h
+@@ -199,6 +199,12 @@ private:
+     void FormatToString(std::string &dumpString, std::vector<Format> &videoTrack);
+     void OnErrorCb(int32_t errorCode, const std::string &errorMsg);
+ 
++    int32_t CheckSeek(int32_t mSeconds, PlayerSeekMode mode);
++    int32_t SeekContinous(int32_t mSeconds);
++    int32_t HandleSeekContinous(int32_t mSeconds, int64_t batchNo);
++    int32_t ExitSeekContinous(bool align);
++    void RegisterContinousBatchNo();
++
+ #ifdef SUPPORT_VIDEO
+     sptr<Surface> surface_ = nullptr;
+ #endif
+@@ -219,6 +225,9 @@ private:
+     AVPlayStrategy strategy_;
+     uint64_t instanceId_ = 0;
+     std::atomic<bool> isInterruptNeeded_{false};
++    std::atomic<bool> isInSeekContinous_ {false};
++    std::atomic<int64_t> seekContinousBatchNo_ {-1};
++    std::mutex seekContinousMutex_;
+ };
+ } // namespace Media
+ } // namespace OHOS
+diff --git a/services/services/player/server/player_server_state.cpp b/services/services/player/server/player_server_state.cpp
+index c23c937e..761451ce 100644
+--- a/services/services/player/server/player_server_state.cpp
++++ b/services/services/player/server/player_server_state.cpp
+@@ -73,6 +73,15 @@ int32_t PlayerServer::BaseState::SetPlaybackSpeed(PlaybackRateMode mode)
+     return MSERR_INVALID_STATE;
+ }
+ 
++int32_t PlayerServer::BaseState::SeekContinous(int32_t mSeconds, int64_t batchNo)
++{
++    (void)mSeconds;
++    (void)batchNo;
++
++    ReportInvalidOperation();
++    return MSERR_INVALID_STATE;
++}
++
+ int32_t PlayerServer::BaseState::MessageSeekDone(int32_t extra)
+ {
+     int32_t ret = MSERR_OK;
+@@ -233,6 +242,11 @@ int32_t PlayerServer::PreparedState::SetPlaybackSpeed(PlaybackRateMode mode)
+     return server_.HandleSetPlaybackSpeed(mode);
+ }
+ 
++int32_t PlayerServer::PreparedState::SeekContinous(int32_t mSeconds, int64_t batchNo)
++{
++    return server_.HandleSeekContinous(mSeconds, batchNo);
++}
++
+ void PlayerServer::PreparedState::HandleStateChange(int32_t newState)
+ {
+     if (newState == PLAYER_STARTED) {
+@@ -276,6 +290,15 @@ int32_t PlayerServer::PlayingState::SetPlaybackSpeed(PlaybackRateMode mode)
+     return server_.HandleSetPlaybackSpeed(mode);
+ }
+ 
++int32_t PlayerServer::PlayingState::SeekContinous(int32_t mSeconds, int64_t batchNo)
++{
++    MEDIA_LOGE("not supported SeekContinous in PlayingState, please pause in player server");
++    (void)mSeconds;
++    (void)batchNo;
++    ReportInvalidOperation();
++    return MSERR_INVALID_STATE;
++}
++
+ void PlayerServer::PlayingState::HandleStateChange(int32_t newState)
+ {
+     if (newState == PLAYER_PAUSED) {
+@@ -356,6 +379,11 @@ int32_t PlayerServer::PausedState::SetPlaybackSpeed(PlaybackRateMode mode)
+     return server_.HandleSetPlaybackSpeed(mode);
+ }
+ 
++int32_t PlayerServer::PausedState::SeekContinous(int32_t mSeconds, int64_t batchNo)
++{
++    return server_.HandleSeekContinous(mSeconds, batchNo);
++}
++
+ void PlayerServer::PausedState::HandleStateChange(int32_t newState)
+ {
+     if (newState == PLAYER_STARTED) {
+@@ -400,6 +428,11 @@ int32_t PlayerServer::PlaybackCompletedState::Seek(int32_t mSeconds, PlayerSeekM
+     return server_.HandleSeek(mSeconds, mode);
+ }
+ 
++int32_t PlayerServer::PlaybackCompletedState::SeekContinous(int32_t mSeconds, int64_t batchNo)
++{
++    return server_.HandleSeekContinous(mSeconds, batchNo);
++}
++
+ int32_t PlayerServer::PlaybackCompletedState::Stop()
+ {
+     return server_.HandleStop();
+diff --git a/services/services/player/server/player_server_state.h b/services/services/player/server/player_server_state.h
+index 3797c42c..7e5dd2c8 100644
+--- a/services/services/player/server/player_server_state.h
++++ b/services/services/player/server/player_server_state.h
+@@ -31,6 +31,7 @@ public:
+     virtual int32_t Seek(int32_t mSeconds, PlayerSeekMode mode);
+     virtual int32_t SetPlaybackSpeed(PlaybackRateMode mode);
+     virtual int32_t Stop();
++    virtual int32_t SeekContinous(int32_t mSeconds, int64_t batchNo);
+ 
+ protected:
+     int32_t OnMessageReceived(PlayerOnInfoType type, int32_t extra, const Format &infoBody) override;
+@@ -92,6 +93,7 @@ public:
+     int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override;
+     int32_t Stop() override;
+     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
++    int32_t SeekContinous(int32_t mSeconds, int64_t batchNo) override;
+ 
+ protected:
+     void HandleStateChange(int32_t newState) override;
+@@ -107,6 +109,7 @@ public:
+     int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override;
+     int32_t Stop() override;
+     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
++    int32_t SeekContinous(int32_t mSeconds, int64_t batchNo) override;
+ 
+ protected:
+     void HandleStateChange(int32_t newState) override;
+@@ -126,6 +129,7 @@ public:
+     int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override;
+     int32_t Stop() override;
+     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
++    int32_t SeekContinous(int32_t mSeconds, int64_t batchNo) override;
+ 
+ protected:
+     void HandleStateChange(int32_t newState) override;
+@@ -150,6 +154,7 @@ public:
+     int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override;
+     int32_t Stop() override;
+     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
++    int32_t SeekContinous(int32_t mSeconds, int64_t batchNo) override;
+ 
+ protected:
+     void HandleStateChange(int32_t newState) override;
+diff --git a/services/services/player/server/player_server_task_mgr.cpp b/services/services/player/server/player_server_task_mgr.cpp
+index 11884233..1826806b 100644
+--- a/services/services/player/server/player_server_task_mgr.cpp
++++ b/services/services/player/server/player_server_task_mgr.cpp
+@@ -174,6 +174,20 @@ int32_t PlayerServerTaskMgr::SeekTask(const std::shared_ptr<ITaskHandler> &task,
+     return MSERR_OK;
+ }
+ 
++int32_t PlayerServerTaskMgr::SeekContinousTask(const std::shared_ptr<ITaskHandler> &task, const std::string &taskName)
++{
++    std::unique_lock<std::mutex> lock(mutex_);
++    CHECK_AND_RETURN_RET_LOG(isInited_, MSERR_INVALID_OPERATION, "not init");
++    // taskThread_->SetQos(QosLevel::QOS_USER_INTERACTIVE);
++    if (currTwoPhaseTask_ == nullptr) {
++        return EnqueueTask(task, PlayerServerTaskType::SEEKING, taskName);
++    }
++    MEDIA_LOGI("0x%{public}06" PRIXPTR " task[%{public}s] is in processing, the new task[%{public}s]",
++        FAKE_POINTER(this), currTwoPhaseTaskName_.c_str(), taskName.c_str());
++    pendingTwoPhaseTasks_.push_back({ PlayerServerTaskType::SEEKING, task, nullptr, taskName });
++    return MSERR_OK;
++}
++
+ int32_t PlayerServerTaskMgr::MarkTaskDone(const std::string &taskName)
+ {
+     std::unique_lock<std::mutex> lock(mutex_);
+diff --git a/services/services/player/server/player_server_task_mgr.h b/services/services/player/server/player_server_task_mgr.h
+index dabbb165..25852cff 100644
+--- a/services/services/player/server/player_server_task_mgr.h
++++ b/services/services/player/server/player_server_task_mgr.h
+@@ -37,6 +37,7 @@ enum class PlayerServerTaskType : uint8_t {
+     RATE_CHANGE,
+     CANCEL_TASK,
+     BUTT,
++    SEEK_CONTINOUS,
+ };
+ 
+ class PlayerServerTaskMgr {
+@@ -51,6 +52,7 @@ public:
+         const std::string &taskName, int32_t seekMode, int32_t seekTime);
+     int32_t SpeedTask(const std::shared_ptr<ITaskHandler> &task, const std::shared_ptr<ITaskHandler> &cancelTask,
+         const std::string &taskName, int32_t speedMode);
++    int32_t SeekContinousTask(const std::shared_ptr<ITaskHandler> &task, const std::string &taskName);
+     // only take effect when it is called at the task thread.
+     int32_t MarkTaskDone(const std::string &taskName);
+     void ClearAllTask();

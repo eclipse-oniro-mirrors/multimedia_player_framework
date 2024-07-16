@@ -226,6 +226,9 @@ private:
     std::shared_ptr<AVMediaSource> mediaSource_ = nullptr;
     AVPlayStrategy strategy_;
     std::atomic<bool> isInterruptNeeded_{false};
+    std::atomic<bool> isInSeekContinous_ {false};
+    std::atomic<int64_t> seekContinousBatchNo_ {-1};
+    std::mutex seekContinousMutex_;
 };
 } // namespace Media
 } // namespace OHOS
