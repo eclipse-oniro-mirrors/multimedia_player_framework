@@ -282,6 +282,11 @@ int32_t HiTransCoderImpl::Configure(const TransCoderParam &transCoderParam)
         }
         case TransCoderPublicParamType::AUDIO_BITRATE: {
             AudioBitRate audioBitrate = static_cast<const AudioBitRate&>(transCoderParam);
+            if (audioBitrate.bitRate <= 0) {
+                MEDIA_LOG_E("Invalid audioBitrate.bitRate %{public}d", audioBitrate.bitRate);
+                OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_INVALID_VAL});
+                return static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER);
+            }
             MEDIA_LOG_I("HiTransCoderImpl::Configure audioBitrate %{public}d", audioBitrate.bitRate);
             audioEncFormat_->Set<Tag::MEDIA_BITRATE>(audioBitrate.bitRate);
             break;
