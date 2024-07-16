@@ -25,8 +25,10 @@
 #include "xpower_event_js.h"
 #endif
 #include "av_common.h"
+#if !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 #include "ipc_skeleton.h"
 #include "tokenid_kit.h"
+#endif
 
 using namespace OHOS::AudioStandard;
 
@@ -808,8 +810,8 @@ napi_value AVMetadataExtractorNapi::JsSetDataSrc(napi_env env, napi_callback_inf
     napi_status status = napi_create_reference(env, callback, 1, &ref);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && ref != nullptr, result, "failed to create reference!");
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, ref);
-    const std::string callbackName = "readAt";
-    jsMetaHelper->dataSrcCb_->SaveCallbackReference(callbackName, autoRef);
+    jsMetaHelper->dataSrcCb_->SaveCallbackReference(HELPER_READAT_CALLBACK_NAME, autoRef);
+
     jsMetaHelper->SetDataSrcTask(jsMetaHelper->helper_, jsMetaHelper->dataSrcCb_);
 
     MEDIA_LOGI("JsSetDataSrc Out");
@@ -833,8 +835,7 @@ napi_value AVMetadataExtractorNapi::JsGetDataSrc(napi_env env, napi_callback_inf
     (void)napi_create_object(env, &value);
     (void)jsMetaHelper->dataSrcCb_->GetSize(fileSize);
     (void)CommonNapi::AddNumberPropInt64(env, value, "fileSize", fileSize);
-    const std::string callbackName = "readAt";
-    int32_t ret = jsMetaHelper->dataSrcCb_->GetCallback(callbackName, &callback);
+    int32_t ret = jsMetaHelper->dataSrcCb_->GetCallback(HELPER_READAT_CALLBACK_NAME, &callback);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, result, "failed to GetCallback");
     (void)HelperDataSourceCallback::AddNapiValueProp(env, value, "callback", callback);
 
