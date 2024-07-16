@@ -27,6 +27,8 @@ namespace OHOS {
 namespace Media {
 constexpr int32_t REPORT_PROGRESS_INTERVAL = 100;
 constexpr int32_t TRANSCODER_COMPLETE_PROGRESS = 100;
+constexpr int8_t VIDEO_HDR_TYPE_NONE = 0; // This option is used to mark none HDR type.
+constexpr int8_t VIDEO_HDR_TYPE_VIVID = 1; // This option is used to mark HDR Vivid type.
 class TransCoderEventReceiver : public Pipeline::EventReceiver {
 public:
     explicit TransCoderEventReceiver(HiTransCoderImpl *hiTransCoderImpl)
@@ -175,6 +177,13 @@ Status HiTransCoderImpl::ConfigureVideoAudioMetaData()
                     inputVideoWidth_, inputVideoHeight_);
             } else {
                 MEDIA_LOG_W("Get input video width or height failed");
+            }
+            bool isHdr = false;
+            trackInfos[index]->GetData(Tag::VIDEO_IS_HDR_VIVID, isHdr);
+            if (isHdr) {
+                videoEncFormat_->SetData(Tag::VIDEO_IS_HDR_VIVID, VIDEO_HDR_TYPE_VIVID);
+            } else {
+                videoEncFormat_->SetData(Tag::VIDEO_IS_HDR_VIVID, VIDEO_HDR_TYPE_NONE);
             }
         } else if (trackMime.find("audio/") == 0) {
             MEDIA_LOG_I("SetInputFile contain audio");
