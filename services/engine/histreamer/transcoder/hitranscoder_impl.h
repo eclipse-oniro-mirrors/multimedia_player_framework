@@ -70,7 +70,7 @@ private:
     void CancelTransCoder();
     void HandleErrorEvent(int32_t errorCode);
     Status ConfigureVideoAudioMetaData();
-    Status ConfigureVideoEncoderFormat(const TransCoderParam &transCoderParam);
+    Status ConfigureVideoWidthHeight(const TransCoderParam &transCoderParam);
 
     int32_t appUid_{0};
     int32_t appPid_{0};
