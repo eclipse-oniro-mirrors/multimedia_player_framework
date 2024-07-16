@@ -60,7 +60,7 @@ public:
 
 private:
     int32_t GetRealPath(const std::string &url, std::string &realUrlPath) const;
-    void ConfigureVideoEncoderFormat(const TransCoderParam &transCoderParam);
+    Status ConfigureVideoEncoderFormat(const TransCoderParam &transCoderParam);
     Status LinkAudioDecoderFilter(const std::shared_ptr<Pipeline::Filter>& preFilter, Pipeline::StreamType type);
     Status LinkAudioEncoderFilter(const std::shared_ptr<Pipeline::Filter>& preFilter, Pipeline::StreamType type);
     Status LinkVideoDecoderFilter(const std::shared_ptr<Pipeline::Filter>& preFilter, Pipeline::StreamType type);
@@ -70,6 +70,7 @@ private:
     void CancelTransCoder();
     void HandleErrorEvent(int32_t errorCode);
     Status ConfigureVideoAudioMetaData();
+    Status ConfigureVideoEncoderFormat(const TransCoderParam &transCoderParam);
 
     int32_t appUid_{0};
     int32_t appPid_{0};
