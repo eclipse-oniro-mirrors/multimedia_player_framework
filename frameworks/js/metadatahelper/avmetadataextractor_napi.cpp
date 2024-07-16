@@ -25,15 +25,13 @@
 #include "xpower_event_js.h"
 #endif
 #include "av_common.h"
-#if !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 #include "ipc_skeleton.h"
 #include "tokenid_kit.h"
-#endif
 
 using namespace OHOS::AudioStandard;
 
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_METADATA, "AVMetadataExtractorNapi"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_ONLY_PRERELEASE, LOG_DOMAIN_METADATA, "AVMetadataExtractorNapi"};
 }
 
 namespace OHOS {
@@ -440,32 +438,23 @@ void AVMetadataExtractorNapi::CommonCallbackRoutine(napi_env env, AVMetadataExtr
 
     napi_handle_scope scope = nullptr;
     napi_open_handle_scope(env, &scope);
-    if (scope == nullptr) {
-        MEDIA_LOGW("scope is null");
-        return;
-    }
-
-    if (asyncContext == nullptr) {
-        MEDIA_LOGW("asyncContext is null");
-        return;
-    }
-
+    CHECK_AND_RETURN(scope != nullptr && asyncContext != nullptr);
     if (asyncContext->status == ERR_OK) {
         result[1] = valueParam;
-        napi_create_uint32(env, asyncContext->status, &result[0]);
-    } else {
-        napi_create_uint32(env, asyncContext->status, &result[0]);
     }
+    napi_create_uint32(env, asyncContext->status, &result[0]);
 
+    if (asyncContext->errFlag) {
+        (void)CommonNapi::CreateError(env, asyncContext->errCode, asyncContext->errMessage, callback);
+        result[0] = callback;
+    }
     if (asyncContext->deferred) {
-        MEDIA_LOGD("AVMetadataExtractorNapi deferred in");
         if (asyncContext->status == ERR_OK) {
             napi_resolve_deferred(env, asyncContext->deferred, result[1]);
         } else {
             napi_reject_deferred(env, asyncContext->deferred, result[0]);
         }
     } else {
-        MEDIA_LOGD("callback in");
         napi_get_reference_value(env, asyncContext->callbackRef, &callback);
         napi_call_function(env, nullptr, callback, 2, result, &retVal); // 2
         napi_delete_reference(env, asyncContext->callbackRef);
@@ -819,8 +808,8 @@ napi_value AVMetadataExtractorNapi::JsSetDataSrc(napi_env env, napi_callback_inf
     napi_status status = napi_create_reference(env, callback, 1, &ref);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && ref != nullptr, result, "failed to create reference!");
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, ref);
-    jsMetaHelper->dataSrcCb_->SaveCallbackReference(HELPER_READAT_CALLBACK_NAME, autoRef);
-
+    const std::string callbackName = "readAt";
+    jsMetaHelper->dataSrcCb_->SaveCallbackReference(callbackName, autoRef);
     jsMetaHelper->SetDataSrcTask(jsMetaHelper->helper_, jsMetaHelper->dataSrcCb_);
 
     MEDIA_LOGI("JsSetDataSrc Out");
@@ -844,7 +833,8 @@ napi_value AVMetadataExtractorNapi::JsGetDataSrc(napi_env env, napi_callback_inf
     (void)napi_create_object(env, &value);
     (void)jsMetaHelper->dataSrcCb_->GetSize(fileSize);
     (void)CommonNapi::AddNumberPropInt64(env, value, "fileSize", fileSize);
-    int32_t ret = jsMetaHelper->dataSrcCb_->GetCallback(HELPER_READAT_CALLBACK_NAME, &callback);
+    const std::string callbackName = "readAt";
+    int32_t ret = jsMetaHelper->dataSrcCb_->GetCallback(callbackName, &callback);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, result, "failed to GetCallback");
     (void)HelperDataSourceCallback::AddNapiValueProp(env, value, "callback", callback);
 
@@ -985,8 +975,7 @@ napi_value AVMetadataExtractorNapi::JSGetTimeByFrameIndex(napi_env env, napi_cal
     if (CommonNapi::CheckValueType(env, args[0], napi_number)) {
         auto res = napi_get_value_uint32(env, args[0], &promiseCtx->index_);
         if (res != napi_ok || static_cast<int32_t>(promiseCtx->index_) < 0) {
-            extractor->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "frame index is not valid");
-            return result;
+            promiseCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "frame index is not valid");
         }
     }
 
@@ -1020,10 +1009,11 @@ std::shared_ptr<TaskHandler<TaskRet>> AVMetadataExtractorNapi::GetTimeByFrameInd
     std::unique_ptr<AVMetadataExtractorAsyncContext> &promiseCtx)
 {
     auto task = std::make_shared<TaskHandler<TaskRet>>([this, &index = promiseCtx->index_,
-        &timeStamp = promiseCtx->timeStamp_]() {
+        &timeStamp = promiseCtx->timeStamp_, &errCode = promiseCtx->errCode, &errMsg = promiseCtx->errMessage]() {
         std::unique_lock<std::mutex> lock(taskMutex_);
         auto state = GetCurrentState();
         if (state == AVMetadataHelperState::STATE_PREPARED || state == AVMetadataHelperState::STATE_CALL_DONE) {
+            CHECK_AND_RETURN_RET(errCode == napi_ok, TaskRet(errCode, errMsg));
             auto res = helper_->GetTimeByFrameIndex(index, timeStamp);
             CHECK_AND_RETURN_RET(res == MSERR_OK, TaskRet(MSERR_EXT_API9_UNSUPPORT_FORMAT,
                 "failed to GetTimeByFrameIndex"));
@@ -1048,7 +1038,6 @@ void AVMetadataExtractorNapi::GetTimeByFrameIndexComplete(napi_env env, napi_sta
     } else {
         context->status = context->errCode == napi_ok ? MSERR_INVALID_VAL : context->errCode;
         napi_get_undefined(env, &result);
-        MEDIA_LOGI("winddraw error complete");
     }
     CommonCallbackRoutine(env, context, result);
 }
@@ -1071,8 +1060,7 @@ napi_value AVMetadataExtractorNapi::JSGetFrameIndexByTime(napi_env env, napi_cal
     if (CommonNapi::CheckValueType(env, args[0], napi_number)) {
         auto res = napi_get_value_int64(env, args[0], &promiseCtx->timeStamp_);
         if (res != napi_ok) {
-            extractor->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "frame index is not valid");
-            return result;
+            promiseCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "frame index is not valid");
         }
     }
     promiseCtx->napi = extractor;
@@ -1105,10 +1093,11 @@ std::shared_ptr<TaskHandler<TaskRet>> AVMetadataExtractorNapi::GetFrameIndexByTi
     std::unique_ptr<AVMetadataExtractorAsyncContext> &promiseCtx)
 {
     auto task = std::make_shared<TaskHandler<TaskRet>>([this, &index = promiseCtx->index_,
-        &timeStamp = promiseCtx->timeStamp_]() {
+        &timeStamp = promiseCtx->timeStamp_, &errCode = promiseCtx->errCode, &errMsg = promiseCtx->errMessage]() {
         std::unique_lock<std::mutex> lock(taskMutex_);
         auto state = GetCurrentState();
         if (state == AVMetadataHelperState::STATE_PREPARED || state == AVMetadataHelperState::STATE_CALL_DONE) {
+            CHECK_AND_RETURN_RET(errCode == napi_ok, TaskRet(errCode, errMsg));
             auto res = helper_->GetFrameIndexByTime(timeStamp, index);
             CHECK_AND_RETURN_RET(res == MSERR_OK, TaskRet(MSERR_EXT_API9_UNSUPPORT_FORMAT,
                 "failed to getFrameIndexByTime"));
