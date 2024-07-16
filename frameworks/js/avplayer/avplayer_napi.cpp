@@ -716,7 +716,6 @@ napi_value AVPlayerNapi::JsSeek(napi_env env, napi_callback_info info)
             return result;
         }
         status = napi_get_value_int32(env, args[1], &mode);
-        MEDIA_LOGI("liyudebug mode is: %{public}d", mode);
         if (status != napi_ok || mode < SEEK_NEXT_SYNC || mode > SEEK_CONTINOUS) {
             jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please check seek mode");
             return result;

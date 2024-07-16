@@ -196,7 +196,7 @@ int32_t PlayerImpl::SetVolume(float leftVolume, float rightVolume)
 
 int32_t PlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
 {
-    MEDIA_LOGI("liyudebug PlayerImpl:0x%{public}06" PRIXPTR " Seek in, seek to %{public}d ms, mode is %{public}d",
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Seek in, seek to %{public}d ms, mode is %{public}d",
         FAKE_POINTER(this), mSeconds, mode);
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
 
