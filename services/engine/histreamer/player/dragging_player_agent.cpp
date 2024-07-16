@@ -13,6 +13,8 @@
  * limitations under the License.
  */
  
+#define HST_LOG_TAG "DraggingPlayerAgent"
+
 #include <dlfcn.h>
  
 #include "dragging_player_agent.h"
@@ -20,6 +22,7 @@
  
 namespace {
 const std::string REFERENCE_LIB_PATH = "libvideo_dragging_player.z.so";
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "DraggingPlayerAgent"};
 }
  
 namespace OHOS {
@@ -118,7 +121,8 @@ void DraggingPlayerAgent::UpdateSeekPos(int64_t seekMs)
     return draggingPlayer_->UpdateSeekPos(seekMs);
 }
  
-void DraggingPlayerAgent::Release() {
+void DraggingPlayerAgent::Release()
+{
     demuxer_->DeregisterVideoStreamReadyCallback();
     decoder_->DeregisterVideoFrameReadyCallback();
     return draggingPlayer_->Release();

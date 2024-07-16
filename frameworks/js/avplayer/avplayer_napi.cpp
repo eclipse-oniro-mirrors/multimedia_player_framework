@@ -744,7 +744,7 @@ PlayerSeekMode AVPlayerNapi::TransferSeekMode(int32_t mode)
         case 2: // Seek to the closest frame of the given timestamp. 2 refers SeekMode in @ohos.multimedia.media.d.ts
             seekMode = PlayerSeekMode::SEEK_CLOSEST;
             break;
-        case 3:
+        case 3: // Seek continous of the given timestamp. 3 refers SeekMode in @ohos.multimedia.media.d.ts
             seekMode = PlayerSeekMode::SEEK_CONTINOUS;
             break;
         default:

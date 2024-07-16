@@ -2137,7 +2137,7 @@ int32_t HiPlayerImpl::SeekContinous(int32_t mSeconds, int64_t seekContinousBatch
         FALSE_RETURN_V(draggingPlayerAgent_ != nullptr, TransStatus(Status::OK));
         lastSeekContinousPos_ = mSeconds;
         draggingPlayerAgent_->UpdateSeekPos(mSeconds);
-        MEDIA_LOGI("HiPlayerImpl::SeekContinous in " PUBLIC_LOG_D32, mSeconds);
+        MEDIA_LOG_I("HiPlayerImpl::SeekContinous in " PUBLIC_LOG_D32, mSeconds);
         return TransStatus(Status::OK);
     }
     seekContinousBatchNo_.store(seekContinousBatchNo);
@@ -2146,7 +2146,7 @@ int32_t HiPlayerImpl::SeekContinous(int32_t mSeconds, int64_t seekContinousBatch
         "StartSeekContinous failed");
     lastSeekContinousPos_ = mSeconds;
     draggingPlayerAgent_->UpdateSeekPos(mSeconds);
-    MEDIA_LOGI("HiPlayerImpl::SeekContinous start " PUBLIC_LOG_D32, mSeconds);
+    MEDIA_LOG_I("HiPlayerImpl::SeekContinous start " PUBLIC_LOG_D32, mSeconds);
     return TransStatus(Status::OK);
 }
 
@@ -2156,7 +2156,6 @@ Status HiPlayerImpl::StartSeekContinous()
     draggingPlayerAgent_ = DraggingPlayerAgent::Create();
     FALSE_RETURN_V(draggingPlayerAgent_ != nullptr, Status::OK);
     Status res = draggingPlayerAgent_->Init(demuxer_, videoDecoder_);
-    SetFrameRateForSeekPerformance(2000.0);
     if (res != Status::OK) {
         draggingPlayerAgent_ = nullptr;
     }
