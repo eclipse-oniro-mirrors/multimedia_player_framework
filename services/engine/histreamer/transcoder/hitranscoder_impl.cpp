@@ -253,12 +253,23 @@ int32_t HiTransCoderImpl::Configure(const TransCoderParam &transCoderParam)
         }
         case TransCoderPublicParamType::VIDEO_RECTANGLE: {
             VideoRectangle videoRectangle = static_cast<const VideoRectangle&>(transCoderParam);
+            if (videoRectangle.width <= 0 || videoRectangle.height <= 0) {
+                MEDIA_LOG_E("Invalid videoRectangle.width %{public}d, videoRectangle.height %{public}d",
+                    videoRectangle.width, videoRectangle.height);
+                OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_INVALID_VAL});
+                return static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER);
+            }
             videoEncFormat_->Set<Tag::VIDEO_WIDTH>(videoRectangle.width);
             videoEncFormat_->Set<Tag::VIDEO_HEIGHT>(videoRectangle.height);
             break;
         }
         case TransCoderPublicParamType::VIDEO_BITRATE: {
             VideoBitRate videoBitrate = static_cast<const VideoBitRate&>(transCoderParam);
+            if (videoBitrate.bitRate <= 0) {
+                MEDIA_LOG_E("Invalid videoBitrate.bitRate %{public}d", videoBitrate.bitRate);
+                OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_INVALID_VAL});
+                return static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER);
+            }
             MEDIA_LOG_I("HiTransCoderImpl::Configure videoBitRate %{public}d", videoBitrate.bitRate);
             videoEncFormat_->Set<Tag::MEDIA_BITRATE>(videoBitrate.bitRate);
             break;
