@@ -2412,7 +2412,7 @@ void AudioDataSource::VoIPStateUpdate(
         MEDIA_LOGI("ChangeInfo Id: %{public}d, Client pid : %{public}d, State : %{public}d, DeviceType : %{public}d",
             changeInfoIndex, changeInfo->clientPid, static_cast<int32_t>(changeInfo->rendererState),
             static_cast<int32_t>(changeInfo->outputDeviceInfo.deviceType));
-        if (changeInfo->rendererState == RenderderState::RENDERER_RUNNING &&
+        if (changeInfo->rendererState == RendererState::RENDERER_RUNNING &&
             changeInfo->rendererInfo.streamUsage == AudioStandard::StreamUsage::STREAM_USAGE_VOICE_COMMUNICATION) {
             isInVoIPCall = true;
         }

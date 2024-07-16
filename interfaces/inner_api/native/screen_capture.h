@@ -68,7 +68,9 @@ enum AudioCaptureSourceType : int32_t {
     /** all PlayBack **/
     ALL_PLAYBACK = 2,
     /** app PlayBack **/
-    APP_PLAYBACK = 3
+    APP_PLAYBACK = 3,
+    /** voip source **/
+    VOICE_COMMUNICATION = 4
 };
 
 enum DataType {
