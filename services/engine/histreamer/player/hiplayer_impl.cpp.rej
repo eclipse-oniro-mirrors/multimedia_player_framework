@@ -1,0 +1,26 @@
+diff a/services/engine/histreamer/player/hiplayer_impl.cpp b/services/engine/histreamer/player/hiplayer_impl.cpp	(rejected hunks)
+@@ -360,15 +360,15 @@ int32_t HiPlayerImpl::PrepareAsync()
+         CollectionErrorInfo(errCode, "pipeline PrepareAsync failed");
+         return errCode;
+     }
+-    if (demuxer_ != nullptr && demuxer_->IsRenderNextVideoFrameSupported()
+-        && IsAppEnableRenderFirstFrame(appUid_)) {
+-        ret = pipeline_->PrepareFrame(renderFirstFrame_);
+-        auto code = TransStatus(ret);
+-        if (ret != Status::OK) {
+-            CollectionErrorInfo(code, "PrepareFrame failed.");
+-            return code;
+-        }
+-    }
++    // if (demuxer_ != nullptr && demuxer_->IsRenderNextVideoFrameSupported()
++    //     && IsAppEnableRenderFirstFrame(appUid_)) {
++    //     ret = pipeline_->PrepareFrame(renderFirstFrame_);
++    //     auto code = TransStatus(ret);
++    //     if (ret != Status::OK) {
++    //         CollectionErrorInfo(code, "PrepareFrame failed.");
++    //         return code;
++    //     }
++    // }
+     UpdatePlayerStateAndNotify();
+     MEDIA_LOGI("PrepareAsync End");
+     return TransStatus(ret);

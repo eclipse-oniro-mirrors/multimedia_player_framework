@@ -37,6 +37,7 @@ enum class PlayerServerTaskType : uint8_t {
     RATE_CHANGE,
     CANCEL_TASK,
     BUTT,
+    SEEK_CONTINOUS,
 };
 
 class PlayerServerTaskMgr {
@@ -51,6 +52,7 @@ public:
         const std::string &taskName, int32_t seekMode, int32_t seekTime);
     int32_t SpeedTask(const std::shared_ptr<ITaskHandler> &task, const std::shared_ptr<ITaskHandler> &cancelTask,
         const std::string &taskName, int32_t speedMode);
+    int32_t SeekContinousTask(const std::shared_ptr<ITaskHandler> &task, const std::string &taskName);
     // only take effect when it is called at the task thread.
     int32_t MarkTaskDone(const std::string &taskName);
     void ClearAllTask();

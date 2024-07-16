@@ -200,6 +200,12 @@ private:
     void FormatToString(std::string &dumpString, std::vector<Format> &videoTrack);
     void OnErrorCb(int32_t errorCode, const std::string &errorMsg);
 
+    int32_t CheckSeek(int32_t mSeconds, PlayerSeekMode mode);
+    int32_t SeekContinous(int32_t mSeconds);
+    int32_t HandleSeekContinous(int32_t mSeconds, int64_t batchNo);
+    int32_t ExitSeekContinous(bool align);
+    void RegisterContinousBatchNo();
+
 #ifdef SUPPORT_VIDEO
     sptr<Surface> surface_ = nullptr;
 #endif
