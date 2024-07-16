@@ -1648,8 +1648,6 @@ int32_t PlayerServer::ExitSeekContinous(bool align)
 
 void PlayerServer::RegisterContinousBatchNo()
 {
-    // auto now = std::chrono::steady_clock::now();
-    // seekContinousBatchNo_.store(std::chrono::duration_cast<std::chrono::microseconds>(now.time_since_epoch()).count());
     seekContinousBatchNo_++;
 }
 } // namespace Media

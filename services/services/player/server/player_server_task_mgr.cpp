@@ -178,7 +178,6 @@ int32_t PlayerServerTaskMgr::SeekContinousTask(const std::shared_ptr<ITaskHandle
 {
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(isInited_, MSERR_INVALID_OPERATION, "not init");
-    // taskThread_->SetQos(QosLevel::QOS_USER_INTERACTIVE);
     if (currTwoPhaseTask_ == nullptr) {
         return EnqueueTask(task, PlayerServerTaskType::SEEKING, taskName);
     }

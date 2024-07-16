@@ -860,9 +860,9 @@ Status HiPlayerImpl::doPausedSeek(int64_t seekPos, PlayerSeekMode mode)
     pipeline_ -> Pause();
     pipeline_ -> Flush();
     auto rtv = doSeek(seekPos, mode);
-    // if ((rtv == Status::OK) && demuxer_->IsRenderNextVideoFrameSupported()) {
-    //     rtv = pipeline_->PrepareFrame(true);
-    // }
+    if ((rtv == Status::OK) && demuxer_->IsRenderNextVideoFrameSupported()) {
+        rtv = pipeline_->PrepareFrame(true);
+    }
     return rtv;
 }
 
