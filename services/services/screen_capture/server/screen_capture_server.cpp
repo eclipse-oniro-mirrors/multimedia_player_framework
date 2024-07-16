@@ -1027,8 +1027,7 @@ int32_t ScreenCaptureServer::InitAudioCap(AudioCaptureInfo audioInfo)
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "InitAudioCap CheckAudioCapInfo failed, audioSource:%{public}d",
         audioInfo.audioSource);
     if (audioInfo.audioSource == AudioCaptureSourceType::SOURCE_DEFAULT ||
-        audioInfo.audioSource == AudioCaptureSourceType::MIC ||
-        audioInfo.audioSource == AudioCaptureSourceType::VOICE_COMMUNICATION) {
+        audioInfo.audioSource == AudioCaptureSourceType::MIC) {
         captureConfig_.audioInfo.micCapInfo = audioInfo;
         statisticalEventInfo_.requireMic = true;
     } else if (audioInfo.audioSource == AudioCaptureSourceType::ALL_PLAYBACK ||
@@ -1959,8 +1958,17 @@ int32_t ScreenCaptureServer::OnSpeakerAliveStatusChanged()
 
 int32_t ScreenCaptureServer::OnVoIPStateChanged(bool isInVoIPCall)
 {
+    if (isInVoIPCall_ == isInVoIPCall) {
+        MEDIA_LOGI("microphone status no change");
+        return MSERR_OK;
+    }
     int32_t ret = MSERR_UNKNOWN;
     isInVoIPCall_ = isInVoIPCall;
+    if (isInVoIPCall && !micAudioCapture_) {
+        ret = StartMicAudioCapture();
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartMicAudioCapture failed");
+    }
+    micAudioCapture_->SetIsInVoIPCall(isInVoIPCall);
     CHECK_AND_RETURN_RET_LOG(innerAudioCapture_, MSERR_UNKNOWN, "innerAudioCapture is nullptr");
     if (isInVoIPCall && !isInnerAudioCaptureWorking_) {
         ret = innerAudioCapture_->Resume();
@@ -1972,6 +1980,7 @@ int32_t ScreenCaptureServer::OnVoIPStateChanged(bool isInVoIPCall)
         ret = innerAudioCapture_->Pause();
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "innerAudioCapture Pause failed");
     }
+    return MSERR_OK;
 }
 
 bool ScreenCaptureServer::GetMicWorkingState()
@@ -2007,18 +2016,6 @@ int32_t ScreenCaptureServer::SetCanvasRotationInner()
     CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK, MSERR_UNSUPPORT,
                              "SetVirtualMirrorScreenCanvasRotation failed, ret: %{public}d", ret);
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "SetCanvasRotationInner OK.", FAKE_POINTER(this));
-    return MSERR_OK;
-}
-
-int32_t ScreenCaptureServer::SetMicAudioSourceType(AudioCaptureSourceType type)
-{
-    if (type != AudioCaptureSourceType::SOURCE_DEFAULT &&
-        type != AudioCaptureSourceType::MIC &&
-        type != AudioCaptureSourceType::VOICE_COMMUNICATION) {
-            MEDIA_LOGE("AudioCaptureSourceType do not support");
-            return MSERR_INVALID_VAL;
-    }
-    captureConfig_.audioInfo.micCapInfo.audioSource = type;
     return MSERR_OK;
 }
 
@@ -2423,11 +2420,6 @@ void AudioDataSource::VoIPStateUpdate(
     }
     isInVoIPCall_ = isInVoIPCall;
     screenCaptureServer_->OnVoIPStateChanged(isInVoIPCall);
-    if (isInVoIPCall) {
-        screenCaptureServer_->SetMicAudioSourceType(AudioCaptureSourceType::VOICE_COMMUNICATION);
-    } else {
-        screenCaptureServer_->SetMicAudioSourceType(AudioCaptureSourceType::MIC);
-    }
     usleep(AUDIO_CHANGE_TIME);
     screenCaptureServer_->StopMicAudioCapture();
     screenCaptureServer_->StartMicAudioCapture();

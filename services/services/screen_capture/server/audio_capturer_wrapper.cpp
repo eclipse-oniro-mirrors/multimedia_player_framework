@@ -186,15 +186,17 @@ std::shared_ptr<AudioCapturer> AudioCapturerWrapper::CreateAudioCapturer(const O
     capturerOptions.streamInfo.format = AudioSampleFormat::SAMPLE_S16LE;
     if (audioInfo_.audioSource == AudioCaptureSourceType::SOURCE_DEFAULT ||
         audioInfo_.audioSource == AudioCaptureSourceType::MIC) {
-        capturerOptions.capturerInfo.sourceType = SourceType::SOURCE_TYPE_MIC; // Audio Source Type Mic is 0
+        if (isInVoIPCall_) {
+            capturerOptions.capturerInfo.sourceType = SourceType::SOURCE_TYPE_VOICE_COMMUNICATION;
+        } else {
+            capturerOptions.capturerInfo.sourceType = SourceType::SOURCE_TYPE_MIC; // Audio Source Type Mic is 0
+        }
     } else if (audioInfo_.audioSource == AudioCaptureSourceType::ALL_PLAYBACK ||
         audioInfo_.audioSource == AudioCaptureSourceType::APP_PLAYBACK) {
         capturerOptions.capturerInfo.sourceType = SourceType::SOURCE_TYPE_PLAYBACK_CAPTURE;
         SetInnerStreamUsage(capturerOptions.playbackCaptureConfig.filterOptions.usages);
         newInfo.appTokenId = IPCSkeleton::GetSelfTokenID();
         newInfo.appFullTokenId = IPCSkeleton::GetSelfTokenID();
-    } else if (audioInfo_.audioSource == AudioCaptureSourceType::VOICE_COMMUNICATION) {
-        capturerOptions.capturerInfo.sourceType = SourceType::SOURCE_TYPE_VOICE_COMMUNICATION;
     }
     if (contentFilter_.filteredAudioContents.find(
         AVScreenCaptureFilterableAudioContent::SCREEN_CAPTURE_NOTIFICATION_AUDIO) ==
@@ -313,6 +315,11 @@ int32_t AudioCapturerWrapper::ReleaseAudioBuffer()
     availBuffers_.pop();
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Release Buffer E, name:%{public}s", FAKE_POINTER(this), threadName_.c_str());
     return MSERR_OK;
+}
+
+int32_t AudioCapturerWrapper::SetIsInVoIPCall(bool isInVoIPCall)
+{
+    isInVoIPCall_ = isInVoIPCall
 }
 
 void AudioCapturerWrapper::OnStartFailed(ScreenCaptureErrorType errorType, int32_t errorCode)

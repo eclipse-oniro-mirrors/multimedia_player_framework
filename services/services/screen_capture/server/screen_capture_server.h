@@ -277,7 +277,6 @@ public:
     int32_t GetInnerAudioCaptureBufferSize(size_t &size);
     int32_t GetMicAudioCaptureBufferSize(size_t &size);
     int32_t SetSpeakerAliveStatus(bool speakerAliveStatus);
-    int32_t SetMicAudioSourceType(AudioCaptureSourceType type);
     int32_t StartMicAudioCapture();
     int32_t StopMicAudioCapture();
     int32_t OnVoIPStateChanged(bool isInVoIPCall);
