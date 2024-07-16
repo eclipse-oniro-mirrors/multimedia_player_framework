@@ -221,7 +221,7 @@ int32_t HiTransCoderImpl::SetObs(const std::weak_ptr<ITransCoderEngineObs> &obs)
 }
 
 Status HiTransCoderImpl::ConfigureVideoEncoderFormat(const TransCoderParam &transCoderParam)
-{     
+{
     VideoEnc videoEnc = static_cast<const VideoEnc&>(transCoderParam);
     MEDIA_LOG_I("HiTransCoderImpl::Configure videoEnc %{public}d", videoEnc.encFmt);
     switch (videoEnc.encFmt) {
