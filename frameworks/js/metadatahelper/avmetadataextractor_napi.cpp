@@ -31,7 +31,7 @@
 using namespace OHOS::AudioStandard;
 
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_ONLY_PRERELEASE, LOG_DOMAIN_METADATA, "AVMetadataExtractorNapi"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_METADATA, "AVMetadataExtractorNapi"};
 }
 
 namespace OHOS {
