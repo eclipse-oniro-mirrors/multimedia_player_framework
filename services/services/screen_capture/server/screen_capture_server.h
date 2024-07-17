@@ -53,6 +53,7 @@
 #include "media_data_source.h"
 #include "meta/meta.h"
 #include "audio_stream_manager.h"
+#include "screen_capture_monitor_serverh"
 
 namespace OHOS {
 namespace Media {
@@ -231,6 +232,7 @@ class ScreenCaptureServer : public std::enable_shared_from_this<ScreenCaptureSer
 public:
     static std::shared_ptr<IScreenCaptureService> Create();
     static int32_t ReportAVScreenCaptureUserChoice(int32_t sessionId, const std::string &choice);
+    static int32_t GetRunningScreenCaptureInstancePid(int32_t &pid);
     ScreenCaptureServer();
     ~ScreenCaptureServer();
 

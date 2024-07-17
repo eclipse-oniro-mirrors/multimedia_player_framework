@@ -994,6 +994,23 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_cb_06, TestSize.
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_cb_06 after");
 }
 
+void ScreenCaptureMonitorListenerMock::OnError(ScreenCaptureMonitorErrorType errorType, int32_t errorCode)
+{
+    MEDIA_LOGI("OnError %{public}d", errorCode);
+}
+
+void ScreenCaptureMonitorListenerMock::OnScreenCaptureStarted(int32_t pid)
+{
+    MEDIA_LOGI("OnScreenCaptureStarted pid %{public}d name %{public}s", pid, name_.c_str());
+    stateFlag_ = 1;
+}
+
+void ScreenCaptureMonitorListenerMock::OnScreenCaptureFinished(int32_t pid)
+{
+    MEDIA_LOGI("OnScreenCaptureFinished pid %{public}d name %{public}s", pid, name_.c_str());
+    stateFlag_ = 2;
+}
+
 /**
  * @tc.name: screen_capture_specified_window_cb_07
  * @tc.desc: Enable microphone, capture screen only
@@ -1026,23 +1043,31 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_cb_07, TestSize.
     screenCaptureCb_ = std::make_shared<ScreenCaptureUnitTestCallback>(screenCapture_);
     ASSERT_NE(nullptr, screenCaptureCb_);
     std::string name = "screen_capture_specified_window_cb_07";
-    // track enalbed: inner: false, mic: false, video: true
     OpenFile(name, false, false, true);
-    // check track aquire & release: inner: 1, mic: 1, video: 1
     screenCaptureCb_->InitCaptureTrackInfo(innerAudioFile_, 1, SCREEN_CAPTURE_BUFFERTYPE_AUDIO_INNER);
     screenCaptureCb_->InitCaptureTrackInfo(micAudioFile_, 1, SCREEN_CAPTURE_BUFFERTYPE_AUDIO_MIC);
     screenCaptureCb_->InitCaptureTrackInfo(videoFile_, 1, SCREEN_CAPTURE_BUFFERTYPE_VIDEO);
-    // callback enabled: errorCallback: true, dataCallback: true, stateChangeCallback: true
     EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_, true, true, true));
-
+    sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> screenCaptureMonitorListener1 = new ScreenCaptureMonitorListenerMock("scm1");
+    sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> screenCaptureMonitorListener2 = new ScreenCaptureMonitorListenerMock("scm2");
+    EXPECT_EQ(0, static_cast<ScreenCaptureMonitorListenerMock *>(screenCaptureMonitorListener1.GetRefPtr())->stateFlag_);
+    EXPECT_EQ(0, static_cast<ScreenCaptureMonitorListenerMock *>(screenCaptureMonitorListener2.GetRefPtr())->stateFlag_);
+    ScreenCaptureMonitor::GetInstance()->RegisterScreenCaptureMonitorListener(screenCaptureMonitorListener1);
+    ScreenCaptureMonitor::GetInstance()->RegisterScreenCaptureMonitorListener(screenCaptureMonitorListener2);
     screenCapture_->SetMicrophoneEnabled(true); // Enable Mic
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
     sleep(RECORDER_TIME);
+    EXPECT_NE(-1, ScreenCaptureMonitor::GetInstance()->IsScreenCaptureWorking());
     EXPECT_EQ(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STARTED, screenCaptureCb_->GetScreenCaptureState());
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+    ScreenCaptureMonitor::GetInstance()->UnregisterScreenCaptureMonitorListener(screenCaptureMonitorListener1);
+    ScreenCaptureMonitor::GetInstance()->UnregisterScreenCaptureMonitorListener(screenCaptureMonitorListener2);
+    EXPECT_EQ(-1, ScreenCaptureMonitor::GetInstance()->IsScreenCaptureWorking());
     CloseFile();
+    delete screenCaptureMonitorListener1;
+    delete screenCaptureMonitorListener2;
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_cb_07 after");
 }
 
