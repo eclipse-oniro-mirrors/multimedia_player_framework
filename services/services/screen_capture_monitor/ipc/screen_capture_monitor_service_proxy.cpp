@@ -60,7 +60,7 @@ int32_t ScreenCaptureMonitorServiceProxy::IsScreenCaptureWorking()
 
     bool token = data.WriteInterfaceToken(ScreenCaptureMonitorServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
-    int error = Remote()->SendRequest(IS_SCREEN_CAPUTURE_WORKING, data, reply, option);
+    int error = Remote()->SendRequest(IS_SCREEN_CAPTURE_WORKING, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "IsScreenCaptureWorking failed, error: %{public}d", error);
     return reply.ReadInt32();

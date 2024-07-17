@@ -184,7 +184,8 @@ int32_t ScreenCaptureServer::GetRunningScreenCaptureInstancePid(int32_t &pid)
 {
     MEDIA_LOGI("GetRunningScreenCaptureInstancePid in");
     if (activeSessionId_.load() >= 0) {
-        std::shared_ptr<ScreenCaptureServer> currentServer = GetScreenCaptureServerByIdWithLock(activeSessionId_.load());
+        std::shared_ptr<ScreenCaptureServer> currentServer =
+            GetScreenCaptureServerByIdWithLock(activeSessionId_.load());
         if (currentServer != nullptr) {
             MEDIA_LOGI("GetRunningScreenCaptureInstancePid uid(%{public}d) pid(%{public}d)",
                 currentServer->appInfo_.appUid, currentServer->appInfo_.appPid);

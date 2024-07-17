@@ -42,7 +42,7 @@ private:
     int32_t CreateListenerObject();
     sptr<IStandardScreenCaptureMonitorService> screenCaptureMonitorProxy_ = nullptr;
     sptr<ScreenCaptureMonitorListenerStub> listenerStub_ = nullptr;
-    std::shared_ptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> listener_ = nullptr;
+    sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> listener_ = nullptr;
     std::mutex mutex_;
 };
 } // namespace Media

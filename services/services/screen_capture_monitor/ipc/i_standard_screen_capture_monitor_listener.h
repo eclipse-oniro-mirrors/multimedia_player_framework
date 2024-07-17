@@ -32,7 +32,7 @@ public:
     /**
      * IPC code ID
      */
-    enum ScreenCaptureListenerMsg {
+    enum ScreenCaptureMonitorListenerMsg {
         ON_SCREEN_CAPTURE_STARTED = 1,
         ON_SCREEN_CAPTURE_FINISHED = 2,
     };
