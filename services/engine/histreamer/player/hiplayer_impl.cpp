@@ -755,27 +755,27 @@ Status HiPlayerImpl::Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeek
     auto rtv = seekPos >= 0 ? Status::OK : Status::ERROR_INVALID_PARAMETER;
     if (rtv == Status::OK) {
         switch (pipelineStates_) {
-        case PlayerStates::PLAYER_STARTED: {
-            rtv = doStartedSeek(seekPos, mode);
-            break;
+            case PlayerStates::PLAYER_STARTED: {
+                rtv = doStartedSeek(seekPos, mode);
+                break;
+            }
+            case PlayerStates::PLAYER_PAUSED: {
+                rtv = doPausedSeek(seekPos, mode);
+                break;
+            }
+            case PlayerStates::PLAYER_PLAYBACK_COMPLETE: {
+                rtv = doCompletedSeek(seekPos, mode);
+                break;
+            }
+            case PlayerStates::PLAYER_PREPARED: {
+                rtv = doPreparedSeek(seekPos, mode);
+                break;
+            }
+            default:
+                MEDIA_LOG_I("Seek in error pipelineStates: " PUBLIC_LOG_D32, static_cast<int32_t>(pipelineStates_));
+                rtv = Status::ERROR_WRONG_STATE;
+                break;
         }
-        case PlayerStates::PLAYER_PAUSED: {
-            rtv = doPausedSeek(seekPos, mode);
-            break;
-        }
-        case PlayerStates::PLAYER_PLAYBACK_COMPLETE: {
-            rtv = doCompletedSeek(seekPos, mode);
-            break;
-        }
-        case PlayerStates::PLAYER_PREPARED: {
-            rtv = doPreparedSeek(seekPos, mode);
-            break;
-        }
-        default:
-            MEDIA_LOG_I("Seek in error pipelineStates: " PUBLIC_LOG_D32, static_cast<int32_t>(pipelineStates_));
-            rtv = Status::ERROR_WRONG_STATE;
-            break;
-    }
     }
     NotifySeek(rtv, notifySeekDone, seekPos);
     if (audioSink_ != nullptr) {
