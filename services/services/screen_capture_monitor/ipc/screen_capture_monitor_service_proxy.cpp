@@ -26,7 +26,7 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "ScreenCapt
 namespace OHOS {
 namespace Media {
 ScreenCaptureMonitorServiceProxy::ScreenCaptureMonitorServiceProxy(const sptr<IRemoteObject> &impl)
-: IRemoteProxy<IStandardScreenCaptureMonitorService>(impl)
+    : IRemoteProxy<IStandardScreenCaptureMonitorService>(impl)
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }

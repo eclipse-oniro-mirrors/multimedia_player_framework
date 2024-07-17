@@ -16,11 +16,6 @@
 #ifndef SCREEN_CAPTURE_MONITOR_H
 #define SCREEN_CAPTURE_MONITOR_H
 
-#include <cstdint>
-#include <memory>
-#include <list>
-#include <set>
-
 namespace OHOS {
 namespace Media {
 

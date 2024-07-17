@@ -37,8 +37,10 @@ public:
     int32_t IsScreenCaptureWorking() override;
 
     void SetScreenCaptureMonitorCallback(sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> listener);
-    void RegisterScreenCaptureMonitorListener(sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> listener) override;
-    void UnregisterScreenCaptureMonitorListener(sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> listener) override;
+    void RegisterScreenCaptureMonitorListener(
+        sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> listener) override;
+    void UnregisterScreenCaptureMonitorListener(
+        sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> listener) override;
     int32_t CallOnScreenCaptureStarted(int32_t pid);
     int32_t CallOnScreenCaptureFinished(int32_t pid);
 

@@ -24,7 +24,8 @@
 namespace OHOS {
 namespace Media {
 
-class ScreenCaptureMonitorListenerCallback : public ScreenCaptureMonitor::ScreenCaptureMonitorListener, public NoCopyable {
+class ScreenCaptureMonitorListenerCallback : public ScreenCaptureMonitor::ScreenCaptureMonitorListener,
+    public NoCopyable {
 public:
     explicit ScreenCaptureMonitorListenerCallback(const sptr<IStandardScreenCaptureMonitorListener> &listener);
     virtual ~ScreenCaptureMonitorListenerCallback();

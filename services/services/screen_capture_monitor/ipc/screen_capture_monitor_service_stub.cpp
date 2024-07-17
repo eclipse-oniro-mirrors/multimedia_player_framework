@@ -34,8 +34,10 @@ namespace OHOS {
 namespace Media {
 sptr<ScreenCaptureMonitorServiceStub> ScreenCaptureMonitorServiceStub::Create()
 {
-    sptr<ScreenCaptureMonitorServiceStub> screenCaptureMonitorStub = new(std::nothrow) ScreenCaptureMonitorServiceStub();
-    CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorStub != nullptr, nullptr, "failed to new ScreenCaptureMonitorServiceStub");
+    sptr<ScreenCaptureMonitorServiceStub> screenCaptureMonitorStub =
+        new(std::nothrow) ScreenCaptureMonitorServiceStub();
+    CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorStub != nullptr, nullptr,
+        "failed to new ScreenCaptureMonitorServiceStub");
 
     int32_t ret = screenCaptureMonitorStub->Init();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed to screen capture monitor stub init");
@@ -56,9 +58,11 @@ ScreenCaptureMonitorServiceStub::~ScreenCaptureMonitorServiceStub()
 int32_t ScreenCaptureMonitorServiceStub::Init()
 {
     screenCaptureMonitorServer_ = ScreenCaptureMonitorServer::GetInstance();
-    CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorServer_ != nullptr, MSERR_NO_MEMORY, "failed to create ScreenCaptureMonitorServer");
+    CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorServer_ != nullptr, MSERR_NO_MEMORY,
+        "failed to create ScreenCaptureMonitorServer");
     screenCaptureMonitorStubFuncs_[SET_LISTENER_OBJ] = &ScreenCaptureMonitorServiceStub::SetListenerObject;
-    screenCaptureMonitorStubFuncs_[IS_SCREEN_CAPUTURE_WORKING] = &ScreenCaptureMonitorServiceStub::IsScreenCaptureWorking;
+    screenCaptureMonitorStubFuncs_[IS_SCREEN_CAPUTURE_WORKING] =
+        &ScreenCaptureMonitorServiceStub::IsScreenCaptureWorking;
     screenCaptureMonitorStubFuncs_[DESTROY] = &ScreenCaptureMonitorServiceStub::DestroyStub;
     return MSERR_OK;
 }
@@ -98,17 +102,22 @@ int32_t ScreenCaptureMonitorServiceStub::SetListenerObject(const sptr<IRemoteObj
 {
     CHECK_AND_RETURN_RET_LOG(object != nullptr, MSERR_NO_MEMORY, "set listener object is nullptr");
     sptr<IStandardScreenCaptureMonitorListener> listener = iface_cast<IStandardScreenCaptureMonitorListener>(object);
-    CHECK_AND_RETURN_RET_LOG(listener != nullptr, MSERR_NO_MEMORY, "failed to convert IStandardScreenCaptureMonitorListener");
-    sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> callback = new ScreenCaptureMonitorListenerCallback(listener);
-    CHECK_AND_RETURN_RET_LOG(callback != nullptr, MSERR_NO_MEMORY, "failed to new ScreenCaptureMonitorListenerCallback");
-    CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorServer_ != nullptr, MSERR_NO_MEMORY, "screen capture monitor server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(listener != nullptr, MSERR_NO_MEMORY,
+        "failed to convert IStandardScreenCaptureMonitorListener");
+    sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> callback =
+        new ScreenCaptureMonitorListenerCallback(listener);
+    CHECK_AND_RETURN_RET_LOG(callback != nullptr, MSERR_NO_MEMORY,
+        "failed to new ScreenCaptureMonitorListenerCallback");
+    CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorServer_ != nullptr, MSERR_NO_MEMORY,
+        "screen capture monitor server is nullptr");
     (void)screenCaptureMonitorServer_->SetScreenCaptureMonitorCallback(callback);
     return MSERR_OK;
 }
 
 int32_t ScreenCaptureMonitorServiceStub::IsScreenCaptureWorking()
 {
-    CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorServer_ != nullptr, MSERR_NO_MEMORY, "screen capture monitor server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorServer_ != nullptr, MSERR_NO_MEMORY,
+        "screen capture monitor server is nullptr");
     return screenCaptureMonitorServer_->IsScreenCaptureWorking();
 }
 

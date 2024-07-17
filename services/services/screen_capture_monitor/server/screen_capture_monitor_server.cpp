@@ -27,7 +27,7 @@
 #include "screen_capture_server.h"
 
 namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "ScreenCaptureMonitorServer"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "ScreenCaptureMonitorServer"};
 }
 
 namespace OHOS {
@@ -68,7 +68,8 @@ int32_t ScreenCaptureMonitorServer::IsScreenCaptureWorking()
     return pid;
 }
 
-void ScreenCaptureMonitorServer::SetScreenCaptureMonitorCallback(sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> callback)
+void ScreenCaptureMonitorServer::SetScreenCaptureMonitorCallback(
+    sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> callback)
 {
     MediaTrace trace("ScreenCaptureMonitorServer::SetScreenCaptureCallback");
     std::lock_guard<std::mutex> lock(mutex_);
@@ -77,13 +78,15 @@ void ScreenCaptureMonitorServer::SetScreenCaptureMonitorCallback(sptr<ScreenCapt
     MEDIA_LOGI("ScreenCaptureMonitorServer: 0x%{public}06" PRIXPTR "SetScreenCaptureCallback OK.", FAKE_POINTER(this));
 }
 
-void ScreenCaptureMonitorServer::RegisterScreenCaptureMonitorListener(sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> callback)
+void ScreenCaptureMonitorServer::RegisterScreenCaptureMonitorListener(
+    sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> callback)
 {
     MEDIA_LOGI("ScreenCaptureMonitorServer:0x%{public}06" PRIXPTR " RegisterScreenCaptureMonitorListener",
         FAKE_POINTER(this));
 }
 
-void ScreenCaptureMonitorServer::UnregisterScreenCaptureMonitorListener(sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> listener)
+void ScreenCaptureMonitorServer::UnregisterScreenCaptureMonitorListener(
+    sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> listener)
 {
     MEDIA_LOGI("ScreenCaptureMonitorServer:0x%{public}06" PRIXPTR " UnregisterScreenCaptureMonitorListener",
         FAKE_POINTER(this));

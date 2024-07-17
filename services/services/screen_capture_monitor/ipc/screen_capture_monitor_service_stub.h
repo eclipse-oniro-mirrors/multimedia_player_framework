@@ -44,7 +44,8 @@ private:
     int32_t DestroyStub(MessageParcel &data, MessageParcel &reply);
 
     std::shared_ptr<ScreenCaptureMonitorServer> screenCaptureMonitorServer_ = nullptr;
-    using screenCaptureMonitorStubFunc = int32_t(ScreenCaptureMonitorServiceStub::*)(MessageParcel &data, MessageParcel &reply);
+    using screenCaptureMonitorStubFunc =
+        int32_t(ScreenCaptureMonitorServiceStub::*)(MessageParcel &data, MessageParcel &reply);
     std::map<uint32_t, screenCaptureMonitorStubFunc> screenCaptureMonitorStubFuncs_;
     std::mutex mutex_;
     sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> screenCaptureMonitorCallback_ = nullptr;

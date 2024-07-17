@@ -225,17 +225,20 @@ int32_t MediaClient::DestroyAVMetadataHelperService(std::shared_ptr<IAVMetadataH
         IStandardMediaService::MediaSystemAbility::MEDIA_SCREEN_CAPTURE_MONITOR, listenerStub_->AsObject());
     CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "screenCaptureMonitor proxy object is nullptr.");
 
-    sptr<IStandardScreenCaptureMonitorService> screenCaptureMonitorProxy = iface_cast<IStandardScreenCaptureMonitorService>(object);
+    sptr<IStandardScreenCaptureMonitorService> screenCaptureMonitorProxy =
+        iface_cast<IStandardScreenCaptureMonitorService>(object);
     CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorProxy != nullptr, nullptr, "screenCaptureMonitor proxy is nullptr.");
 
-    std::shared_ptr<ScreenCaptureMonitorClient> screenCaptureMonitor = ScreenCaptureClient::Create(screenCaptureMonitorProxy);
+    std::shared_ptr<ScreenCaptureMonitorClient> screenCaptureMonitor =
+        ScreenCaptureClient::Create(screenCaptureMonitorProxy);
     CHECK_AND_RETURN_RET_LOG(screenCaptureMonitor != nullptr, nullptr, "failed to create screenCaptureMonitor client.");
 
     screenCaptureMonitorClientList_.push_back(screenCaptureMonitor);
     return screenCaptureMonitor;
 }
 
-int32_t MediaClient::DestroyScreenCaptureMonitorService(std::shared_ptr<IScreenCaptureMonitorService> screenCaptureMonitor)
+int32_t MediaClient::DestroyScreenCaptureMonitorService(
+    std::shared_ptr<IScreenCaptureMonitorService> screenCaptureMonitor)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(screenCaptureMonitor != nullptr, MSERR_NO_MEMORY,
@@ -410,6 +413,18 @@ void MediaClient::DoMediaServerDied()
         auto screenCaptureClient = std::static_pointer_cast<ScreenCaptureClient>(it);
         if (screenCaptureClient != nullptr) {
             screenCaptureClient->MediaServerDied();
+        }
+    }
+    for (auto &it : screenCaptureMonitorClientList_) {
+        auto screenCaptureMonitorClient = std::static_pointer_cast<ScreenCaptureMonitorClient>(it);
+        if (screenCaptureMonitorClient != nullptr) {
+            screenCaptureMonitorClient->MediaServerDied();
+        }
+    }
+    for (auto &it : screenCaptureControllerClientList_) {
+        auto screenCaptureControllerClient = std::static_pointer_cast<ScreenCaptureControllerClient>(it);
+        if (screenCaptureControllerClient != nullptr) {
+            screenCaptureControllerClient->MediaServerDied();
         }
     }
 #endif

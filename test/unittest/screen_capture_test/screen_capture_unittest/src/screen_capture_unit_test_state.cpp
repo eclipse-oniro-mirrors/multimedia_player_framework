@@ -1002,15 +1002,24 @@ void ScreenCaptureMonitorListenerMock::OnError(ScreenCaptureMonitorErrorType err
 void ScreenCaptureMonitorListenerMock::OnScreenCaptureStarted(int32_t pid)
 {
     MEDIA_LOGI("OnScreenCaptureStarted pid %{public}d name %{public}s", pid, name_.c_str());
-    stateFlag_ = 1;
+    stateFlag_ = 1; // 1 start
 }
 
 void ScreenCaptureMonitorListenerMock::OnScreenCaptureFinished(int32_t pid)
 {
     MEDIA_LOGI("OnScreenCaptureFinished pid %{public}d name %{public}s", pid, name_.c_str());
-    stateFlag_ = 2;
+    stateFlag_ = 2; // 2 finish
 }
 
+void ScreenCaptureUnitTest::BeforeScreenCaptureSWCBCase07(void)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_cb_07 before");
+    SetConfig(config_);
+    config_.audioInfo.micCapInfo.audioSampleRate = 0;
+    config_.audioInfo.micCapInfo.audioChannels = 0;
+    config_.audioInfo.micCapInfo.audioSource = AudioCaptureSourceType::SOURCE_DEFAULT;
+    config_.captureMode = CaptureMode::CAPTURE_SPECIFIED_WINDOW;
+}
 /**
  * @tc.name: screen_capture_specified_window_cb_07
  * @tc.desc: Enable microphone, capture screen only
@@ -1019,12 +1028,7 @@ void ScreenCaptureMonitorListenerMock::OnScreenCaptureFinished(int32_t pid)
  */
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_cb_07, TestSize.Level2)
 {
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_cb_07 before");
-    SetConfig(config_);
-    config_.audioInfo.micCapInfo.audioSampleRate = 0;
-    config_.audioInfo.micCapInfo.audioChannels = 0;
-    config_.audioInfo.micCapInfo.audioSource = AudioCaptureSourceType::SOURCE_DEFAULT;
-    config_.captureMode = CaptureMode::CAPTURE_SPECIFIED_WINDOW;
+    BeforeScreenCaptureSWCBCase07();
     std::shared_ptr<OHOS::AAFwk::AbilityManagerClient> client_ = OHOS::AAFwk::AbilityManagerClient::GetInstance();
     std::string deviceId = "";
     std::vector<OHOS::AAFwk::MissionInfo> missionInfos;
@@ -1039,7 +1043,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_cb_07, TestSize.
     } else {
         MEDIA_LOGE("screen_capture_specified_window_cb_07 GetMissionInfos failed");
     }
-
     screenCaptureCb_ = std::make_shared<ScreenCaptureUnitTestCallback>(screenCapture_);
     ASSERT_NE(nullptr, screenCaptureCb_);
     std::string name = "screen_capture_specified_window_cb_07";
@@ -1048,10 +1051,14 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_cb_07, TestSize.
     screenCaptureCb_->InitCaptureTrackInfo(micAudioFile_, 1, SCREEN_CAPTURE_BUFFERTYPE_AUDIO_MIC);
     screenCaptureCb_->InitCaptureTrackInfo(videoFile_, 1, SCREEN_CAPTURE_BUFFERTYPE_VIDEO);
     EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_, true, true, true));
-    sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> screenCaptureMonitorListener1 = new ScreenCaptureMonitorListenerMock("scm1");
-    sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> screenCaptureMonitorListener2 = new ScreenCaptureMonitorListenerMock("scm2");
-    EXPECT_EQ(0, static_cast<ScreenCaptureMonitorListenerMock *>(screenCaptureMonitorListener1.GetRefPtr())->stateFlag_);
-    EXPECT_EQ(0, static_cast<ScreenCaptureMonitorListenerMock *>(screenCaptureMonitorListener2.GetRefPtr())->stateFlag_);
+    sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> screenCaptureMonitorListener1 =
+        new ScreenCaptureMonitorListenerMock("scm1");
+    sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> screenCaptureMonitorListener2 =
+        new ScreenCaptureMonitorListenerMock("scm2");
+    EXPECT_EQ(0,
+        static_cast<ScreenCaptureMonitorListenerMock *>(screenCaptureMonitorListener1.GetRefPtr())->stateFlag_);
+    EXPECT_EQ(0,
+        static_cast<ScreenCaptureMonitorListenerMock *>(screenCaptureMonitorListener2.GetRefPtr())->stateFlag_);
     ScreenCaptureMonitor::GetInstance()->RegisterScreenCaptureMonitorListener(screenCaptureMonitorListener1);
     ScreenCaptureMonitor::GetInstance()->RegisterScreenCaptureMonitorListener(screenCaptureMonitorListener2);
     screenCapture_->SetMicrophoneEnabled(true); // Enable Mic
