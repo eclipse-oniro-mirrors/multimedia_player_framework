@@ -93,7 +93,8 @@ DraggingPlayerAgent::~DraggingPlayerAgent()
     }
 }
  
-Status DraggingPlayerAgent::Init(const shared_ptr<DemuxerFilter> &demuxer, const shared_ptr<DecoderSurfaceFilter> &decoder)
+Status DraggingPlayerAgent::Init(const shared_ptr<DemuxerFilter> &demuxer,
+    const shared_ptr<DecoderSurfaceFilter> &decoder)
 {
     FALSE_RETURN_V_MSG_E(demuxer != nullptr && decoder != nullptr,
         Status::ERROR_INVALID_PARAMETER, "Invalid demuxer filter instance.");
