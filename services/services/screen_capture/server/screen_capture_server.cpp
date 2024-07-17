@@ -2044,11 +2044,11 @@ int32_t ScreenCaptureServer::StopMicAudioCapture()
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "StopMicAudioCapture start.", FAKE_POINTER(this));
     if (micAudioCapture_ != nullptr) {
         MediaTrace trace("ScreenCaptureServer::StopAudioCaptureMic");
+        isMicAudioCaptureWorking_ = false;
         micAudioCapture_->Stop();
         micAudioCapture_ = nullptr;
-        isMicAudioCaptureWorking_ = false;
     }
-    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "StopAudioCapture end.", FAKE_POINTER(this));
+    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "StopMicAudioCapture end.", FAKE_POINTER(this));
     return MSERR_OK;
 }
 
@@ -2400,6 +2400,7 @@ bool AudioDataSource::HasSpeakerStream(
 void AudioDataSource::VoIPStateUpdate(
     const std::vector<std::unique_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos)
 {
+    std::lock_guard<std::mutex> lock(voipStatusChangeMutex_);
     uint32_t changeInfoIndex = 0;
     bool isInVoIPCall = false;
     for (const std::unique_ptr<AudioRendererChangeInfo> &changeInfo: audioRendererChangeInfos) {

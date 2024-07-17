@@ -214,6 +214,7 @@ private:
     std::string appName_;
     bool speakerAliveStatus_ = true;
     bool isInVoIPCall_ = false;
+    std::mutex voipStatusChangeMutex_;
 
     void MixAudio(char** srcData, char* mixData, int channels, int bufferSize);
 
