@@ -771,7 +771,7 @@ int32_t PlayerServer::Seek(int32_t mSeconds, PlayerSeekMode mode)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     int32_t checkRet = CheckSeek(mSeconds, mode);
-    CHECK_AND_RETURN_RET_LOG(checkRet == MSERR_OK, MSERR_OK, "check seek faild");
+    CHECK_AND_RETURN_RET_LOG(checkRet == MSERR_OK, MSERR_INVALID_OPERATION, "check seek faild");
 
     MEDIA_LOGD("seek position %{public}d, seek mode is %{public}d", mSeconds, mode);
     mSeconds = std::max(0, mSeconds);
