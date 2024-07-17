@@ -84,6 +84,9 @@ shared_ptr<DraggingPlayerAgent> DraggingPlayerAgent::Create()
  
 DraggingPlayerAgent::~DraggingPlayerAgent()
 {
+    if (!isReleased_) {
+        Release();
+    }
     if (draggingPlayer_ != nullptr) {
         destroyFunc_(draggingPlayer_);
         draggingPlayer_ = nullptr;
@@ -138,6 +141,7 @@ void DraggingPlayerAgent::Release()
     if (draggingPlayer_ != nullptr) {
         draggingPlayer_->Release();
     }
+    isReleased_ = true;
 }
  
 void *DraggingPlayerAgent::LoadLibrary(const std::string &path)

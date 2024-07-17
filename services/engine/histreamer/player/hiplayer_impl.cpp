@@ -2168,7 +2168,10 @@ int32_t HiPlayerImpl::ExitSeekContinous(bool align, int64_t seekContinousBatchNo
     FALSE_RETURN_V(demuxer_ && videoDecoder_, TransStatus(Status::OK));
     FALSE_RETURN_V(!isNetWorkPlay_, TransStatus(Status::OK));
     seekContinousBatchNo_.store(seekContinousBatchNo);
-    draggingPlayerAgent_->Release();
+    if (draggingPlayerAgent_ != nullptr) {
+        draggingPlayerAgent_->Release();
+        draggingPlayerAgent_ = nullptr;
+    }
     if (align) {
         Seek(lastSeekContinousPos_, PlayerSeekMode::SEEK_CLOSEST, false);
     }

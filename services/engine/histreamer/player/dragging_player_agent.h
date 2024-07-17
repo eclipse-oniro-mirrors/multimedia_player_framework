@@ -51,6 +51,7 @@ private:
     shared_ptr<VideoFrameReadyCallback> videoFrameReadyCb_ {nullptr};
     shared_ptr<DemuxerFilter> demuxer_ {nullptr};
     shared_ptr<DecoderSurfaceFilter> decoder_ {nullptr};
+    bool isReleased_ {false};
 };
  
 } // namespace Media
