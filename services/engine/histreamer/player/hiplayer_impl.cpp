@@ -1249,7 +1249,7 @@ int32_t HiPlayerImpl::SelectTrack(int32_t trackId, PlayerSwitchMode mode)
         FALSE_RETURN_V_MSG_W(trackId != currentAudioTrackId_, MSERR_INVALID_VAL, "SelectTrack trackId invalid");
         if (currentAudioTrackId_ < 0) {
             if (Status::OK != InitAudioDefaultTrackIndex()) {
-                MEDIA_LOGW("Init audio default track index fail");
+                MEDIA_LOG_W("Init audio default track index fail");
             }
         }
         if (Status::OK != demuxer_->SelectTrack(trackId)) {
@@ -1260,7 +1260,7 @@ int32_t HiPlayerImpl::SelectTrack(int32_t trackId, PlayerSwitchMode mode)
         FALSE_RETURN_V_MSG_W(trackId != currentVideoTrackId_, MSERR_INVALID_VAL, "SelectTrack trackId invalid");
         if (currentVideoTrackId_ < 0) {
             if (Status::OK != InitVideoDefaultTrackIndex()) {
-                MEDIA_LOGW("Init video default track index fail");
+                MEDIA_LOG_W("Init video default track index fail");
             }
         }
         if (Status::OK != demuxer_->SelectTrack(trackId)) {
@@ -1271,7 +1271,7 @@ int32_t HiPlayerImpl::SelectTrack(int32_t trackId, PlayerSwitchMode mode)
         FALSE_RETURN_V_MSG_W(trackId != currentSubtitleTrackId_, MSERR_INVALID_VAL, "SelectTrack trackId invalid");
         if (currentVideoTrackId_ < 0) {
             if (Status::OK != InitSubtitleDefaultTrackIndex()) {
-                MEDIA_LOGW("Init video default track index fail");
+                MEDIA_LOG_W("Init video default track index fail");
             }
         }
         if (Status::OK != demuxer_->SelectTrack(trackId)) {
@@ -1301,21 +1301,21 @@ int32_t HiPlayerImpl::DeselectTrack(int32_t trackId)
     if (IsAudioMime(mime)) {
         if (currentAudioTrackId_ < 0) {
             if (Status::OK != InitAudioDefaultTrackIndex()) {
-                MEDIA_LOGW("Init audio default track index fail");
+                MEDIA_LOG_W("Init audio default track index fail");
             }
         }
         defaultTrackId = currentAudioTrackId_;
     } else if (IsVideoMime(mime)) {
         if (currentVideoTrackId_ < 0) {
             if (Status::OK != InitVideoDefaultTrackIndex()) {
-                MEDIA_LOGW("Init video default track index fail");
+                MEDIA_LOG_W("Init video default track index fail");
             }
         }
         defaultTrackId = currentVideoTrackId_;
     } else if (IsSubtitleMime(mime)) {
         if (currentVideoTrackId_ < 0) {
             if (Status::OK != InitSubtitleDefaultTrackIndex()) {
-                MEDIA_LOGW("Init subtitle default track index fail");
+                MEDIA_LOG_W("Init subtitle default track index fail");
             }
         }
         defaultTrackId = currentSubtitleTrackId_;
@@ -1426,13 +1426,13 @@ int32_t HiPlayerImpl::GetAudioTrackInfo(std::vector<Format>& audioTrack)
 
 int32_t HiPlayerImpl::GetSubtitleTrackInfo(std::vector<Format>& subtitleTrack)
 {
-    MEDIA_LOGI("GetSubtitleTrackInfo in");
+    MEDIA_LOG_I("GetSubtitleTrackInfo in");
     std::string mime;
     std::vector<std::shared_ptr<Meta>> metaInfo = demuxer_->GetStreamMetaInfo();
     for (size_t trackIndex = 0; trackIndex < metaInfo.size(); trackIndex++) {
         auto trackInfo = metaInfo[trackIndex];
         if (!(trackInfo->GetData(Tag::MIME_TYPE, mime))) {
-            MEDIA_LOGW("Get MIME fail");
+            MEDIA_LOG_W("Get MIME fail");
             continue;
         }
         if (IsSubtitleMime(mime)) {
@@ -1575,17 +1575,17 @@ void HiPlayerImpl::OnEvent(const Event &event)
             break;
         }
         case EventType::EVENT_AUDIO_TRACK_CHANGE: {
-            MEDIA_LOGI("handle audio track change event received");
+            MEDIA_LOG_I("handle audio track change event received");
             HandleAudioTrackChangeEvent(event);
             break;
         }
         case EventType::EVENT_VIDEO_TRACK_CHANGE: {
-            MEDIA_LOGI("handle video track change event received");
+            MEDIA_LOG_I("handle video track change event received");
             HandleVideoTrackChangeEvent(event);
             break;
         }
         case EventType::EVENT_SUBTITLE_TRACK_CHANGE: {
-            MEDIA_LOGI("handle subtitle track change event received");
+            MEDIA_LOG_I("handle subtitle track change event received");
             HandleSubtitleTrackChangeEvent(event);
             break;
         }
@@ -2047,7 +2047,7 @@ void HiPlayerImpl::NotifyUpdateTrackInfo()
 
     Format body;
     body.PutFormatVector(std::string(PlayerKeys::PLAYER_TRACK_INFO), trackInfo);
-    MEDIA_LOGI("NotifyUpdateTrackInfo");
+    MEDIA_LOG_I("NotifyUpdateTrackInfo");
 
     callbackLooper_.OnInfo(INFO_TYPE_TRACK_INFO_UPDATE, 0, body);
 }

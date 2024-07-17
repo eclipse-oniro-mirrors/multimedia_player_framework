@@ -2151,7 +2151,7 @@ napi_value AVPlayerNapi::JsGetCurrentSelections(napi_env env, napi_callback_info
                 return promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "avplayer is deconstructed");
             }
 
-            std::vector<int32_T> trackIndex;
+            std::vector<int32_t> trackIndex;
             if (jsPlayer->IsControllable()) {
                 int32_t videoIndex = -1;
                 (void)jsPlayer->player_->GetCurrentTrack(MediaType::MEDIA_TYPE_VID, videoIndex);
@@ -2212,12 +2212,12 @@ napi_value AVPlayerNapi::JsSelectTrack(napi_env env, napi_callback_info info)
     if (argCount > 1) {
         if (napi_typeof(env, args[1], &valueType) != napi_ok || valueType != napi_number) {
             jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "switch mode is not number");
-            return result;
+            return ret;
         }
         status = napi_get_value_int32(env, args[1], &mode);
         if (status != napi_ok || mode < SWITCH_SOOMTH || mode > SWITCH_CLOSEST) {
             jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please switch seek mode");
-            return result;
+            return ret;
         }
     }
 
