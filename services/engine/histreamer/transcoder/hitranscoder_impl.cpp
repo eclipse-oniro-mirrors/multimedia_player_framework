@@ -162,7 +162,12 @@ Status HiTransCoderImpl::ConfigureVideoAudioMetaData()
         OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_DEMUXER_FAILED});
         return Status::ERROR_INVALID_PARAMETER;
     }
-    for (size_t index = 0; index < trackCount; index++) {
+    return ConfigureMetaData(trackInfos);
+}
+
+Status HiTransCoderImpl::ConfigureMetaData(const std::vector<std::shared_ptr<Meta>> &trackInfos)
+{
+    for (size_t index = 0; index < trackInfos.size(); index++) {
         std::string trackMime;
         if (!trackInfos[index]->GetData(Tag::MIME_TYPE, trackMime)) {
             MEDIA_LOG_E("trackInfos index: %{public}d, get trackMime failed", index);
