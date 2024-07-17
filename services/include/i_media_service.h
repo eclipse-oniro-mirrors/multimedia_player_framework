@@ -189,7 +189,8 @@ public:
      * @since 1.0
      * @version 1.0
      */
-    virtual int32_t DestroyScreenCaptureMonitorService(std::shared_ptr<IScreenCaptureMonitorService> screenCaptureMonitor) = 0;
+    virtual int32_t DestroyScreenCaptureMonitorService(
+        std::shared_ptr<IScreenCaptureMonitorService> screenCaptureMonitor) = 0;
 
     /**
      * @brief Create an ScreenCaptureControllerClient service.

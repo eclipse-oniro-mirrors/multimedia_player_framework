@@ -74,7 +74,7 @@ void ScreenCaptureMonitorImpl::RegisterScreenCaptureMonitorListener(
 }
 
 void ScreenCaptureMonitorImpl::UnregisterScreenCaptureMonitorListener(
-        sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> listener)
+    sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> listener)
 {
     MEDIA_LOGD("ScreenCaptureMonitorImpl:0x%{public}06" PRIXPTR " UnregisterMonitorListener in", FAKE_POINTER(this));
     CHECK_AND_RETURN_LOG(listener != nullptr, "input listener is nullptr.");

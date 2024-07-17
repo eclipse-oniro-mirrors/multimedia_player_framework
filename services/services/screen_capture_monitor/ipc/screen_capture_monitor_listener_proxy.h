@@ -37,7 +37,8 @@ private:
     sptr<IStandardScreenCaptureMonitorListener> listener_ = nullptr;
 };
 
-class ScreenCaptureMonitorListenerProxy : public IRemoteProxy<IStandardScreenCaptureMonitorListener>, public NoCopyable {
+class ScreenCaptureMonitorListenerProxy : public IRemoteProxy<IStandardScreenCaptureMonitorListener>,
+    public NoCopyable {
 public:
     explicit ScreenCaptureMonitorListenerProxy(const sptr<IRemoteObject> &impl);
     virtual ~ScreenCaptureMonitorListenerProxy();

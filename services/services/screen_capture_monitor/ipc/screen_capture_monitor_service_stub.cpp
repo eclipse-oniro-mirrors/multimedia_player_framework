@@ -81,7 +81,7 @@ int ScreenCaptureMonitorServiceStub::OnRemoteRequest(uint32_t code, MessageParce
     MEDIA_LOGI("Stub: OnRemoteRequest of code: %{public}d is received", code);
     auto remoteDescriptor = data.ReadInterfaceToken();
     CHECK_AND_RETURN_RET_LOG(ScreenCaptureMonitorServiceStub::GetDescriptor() == remoteDescriptor,
-    MSERR_INVALID_OPERATION, "Invalid descriptor");
+        MSERR_INVALID_OPERATION, "Invalid descriptor");
     auto itFunc = screenCaptureMonitorStubFuncs_.find(code);
     if (itFunc != screenCaptureMonitorStubFuncs_.end()) {
         auto memberFunc = itFunc->second;
