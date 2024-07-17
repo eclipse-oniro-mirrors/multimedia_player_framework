@@ -66,7 +66,7 @@ int32_t AudioCapturerWrapper::Start(const OHOS::AudioStandard::AppInfo &appInfo)
         if (region == "CN") {
             targetSources.push_back(SourceType::SOURCE_TYPE_VOICE_COMMUNICATION);
         }
-        audioCapture->SetAudioSourceConcurrency(targetSources);
+        audioCapturer->SetAudioSourceConcurrency(targetSources);
     }
     CHECK_AND_RETURN_RET_LOG(audioCapturer != nullptr, MSERR_UNKNOWN, "Start failed, create AudioCapturer failed");
     if (!audioCapturer->Start()) {
