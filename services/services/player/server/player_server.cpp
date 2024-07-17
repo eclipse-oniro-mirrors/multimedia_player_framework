@@ -1056,7 +1056,7 @@ void PlayerServer::PreparedHandleEos()
     MEDIA_LOGI("PlayerServer PreparedHandleEos in");
     if (!config_.looping.load()) {
         lastOpStatus_ = PLAYER_PLAYBACK_COMPLETE;
-        ChangetSate(playbackCompletedState_);
+        ChangeState(playbackCompletedState_);
         (void)taskMgr_.MarkTaskDone("play->completed done");
     }
 }
