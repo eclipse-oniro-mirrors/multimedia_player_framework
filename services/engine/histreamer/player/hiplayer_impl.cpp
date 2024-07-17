@@ -1199,7 +1199,10 @@ bool HiPlayerImpl::IsAudioMime(const std::string& mime)
 
 bool HiPlayerImpl::IsSubtitleMime(const std::string& mime)
 {
-    return mime.find("application/") == 0;
+    if (mime == "application/x-subrip" || mime == "text/vtt") {
+        return true;
+    }
+    return false;
 }
 
 int32_t HiPlayerImpl::GetCurrentTrack(int32_t trackType, int32_t &index)
