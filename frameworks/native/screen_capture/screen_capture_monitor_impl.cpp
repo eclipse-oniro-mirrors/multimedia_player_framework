@@ -42,7 +42,7 @@ void ScreenCaptureMonitor::RegisterScreenCaptureMonitorListener(
 }
 
 void ScreenCaptureMonitor::UnregisterScreenCaptureMonitorListener(
-        sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> listener)
+    sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> listener)
 {
     static_cast<ScreenCaptureMonitorImpl *>(ScreenCaptureMonitor::GetInstance())->
         UnregisterScreenCaptureMonitorListener(listener);
@@ -50,7 +50,7 @@ void ScreenCaptureMonitor::UnregisterScreenCaptureMonitorListener(
 
 std::int32_t ScreenCaptureMonitor::IsScreenCaptureWorking()
 {
-    static_cast<ScreenCaptureMonitorImpl *>(ScreenCaptureMonitor::GetInstance())->IsScreenCaptureWorking();
+    return static_cast<ScreenCaptureMonitorImpl *>(ScreenCaptureMonitor::GetInstance())->IsScreenCaptureWorking();
 }
 
 int32_t ScreenCaptureMonitorImpl::Init()
