@@ -204,7 +204,7 @@ private:
     int32_t SeekContinous(int32_t mSeconds);
     int32_t HandleSeekContinous(int32_t mSeconds, int64_t batchNo);
     int32_t ExitSeekContinous(bool align);
-    void RegisterContinousBatchNo();
+    void UpdateContinousBatchNo();
 
 #ifdef SUPPORT_VIDEO
     sptr<Surface> surface_ = nullptr;
@@ -226,9 +226,9 @@ private:
     std::shared_ptr<AVMediaSource> mediaSource_ = nullptr;
     AVPlayStrategy strategy_;
     std::atomic<bool> isInterruptNeeded_{false};
+    std::mutex seekContinousMutex_;
     std::atomic<bool> isInSeekContinous_ {false};
     std::atomic<int64_t> seekContinousBatchNo_ {-1};
-    std::mutex seekContinousMutex_;
 };
 } // namespace Media
 } // namespace OHOS

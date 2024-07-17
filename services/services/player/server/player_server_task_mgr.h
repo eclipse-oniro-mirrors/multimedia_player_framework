@@ -36,8 +36,8 @@ enum class PlayerServerTaskType : uint8_t {
     SEEKING,
     RATE_CHANGE,
     CANCEL_TASK,
-    BUTT,
     SEEK_CONTINOUS,
+    BUTT,
 };
 
 class PlayerServerTaskMgr {

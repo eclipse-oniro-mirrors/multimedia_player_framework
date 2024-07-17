@@ -1600,7 +1600,7 @@ int32_t PlayerServer::SeekContinous(int32_t mSeconds)
     {
         std::lock_guard<std::mutex> lock(seekContinousMutex_);
         if (!isInSeekContinous_.load()) {
-            RegisterContinousBatchNo();
+            UpdateContinousBatchNo();
             isInSeekContinous_.store(true);
         }
     }
@@ -1646,7 +1646,7 @@ int32_t PlayerServer::ExitSeekContinous(bool align)
     return playerEngine_->ExitSeekContinous(align, seekContinousBatchNo_.load());
 }
 
-void PlayerServer::RegisterContinousBatchNo()
+void PlayerServer::UpdateContinousBatchNo()
 {
     seekContinousBatchNo_++;
 }

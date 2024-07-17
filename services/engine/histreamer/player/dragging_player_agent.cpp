@@ -21,7 +21,10 @@
 #include "common/log.h"
  
 namespace {
-const std::string REFERENCE_LIB_PATH = "libvideo_dragging_player.z.so";
+const std::string REFERENCE_LIB_PATH = std::string(DRAGGING_PLAYER_PATH);
+const std::string FILESEPARATOR = "/";
+const std::string REFERENCE_LIB_NAME = "libvideo_dragging_player.z.so";
+const std::string REFENCE_LIB_ABSOLUTE_PATH = REFERENCE_LIB_PATH + FILESEPARATOR + REFERENCE_LIB_NAME;
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "DraggingPlayerAgent"};
 }
  
@@ -108,24 +111,33 @@ Status DraggingPlayerAgent::Init(const shared_ptr<DemuxerFilter> &demuxer, const
  
 bool DraggingPlayerAgent::IsVideoStreamDiscardable(const std::shared_ptr<AVBuffer> avBuffer)
 {
+    FALSE_RETURN_V_MSG_E(draggingPlayer_ != nullptr, false, "Invalid draggingPlayer_ instance.");
     return draggingPlayer_->IsVideoStreamDiscardable(avBuffer);
 }
  
 void DraggingPlayerAgent::ConsumeVideoFrame(const std::shared_ptr<AVBuffer> avBuffer, uint32_t bufferIndex)
 {
-    return draggingPlayer_->ConsumeVideoFrame(avBuffer, bufferIndex);
+    FALSE_RETURN(draggingPlayer_ != nullptr);
+    draggingPlayer_->ConsumeVideoFrame(avBuffer, bufferIndex);
 }
  
 void DraggingPlayerAgent::UpdateSeekPos(int64_t seekMs)
 {
-    return draggingPlayer_->UpdateSeekPos(seekMs);
+    FALSE_RETURN(draggingPlayer_ != nullptr);
+    draggingPlayer_->UpdateSeekPos(seekMs);
 }
  
 void DraggingPlayerAgent::Release()
 {
-    demuxer_->DeregisterVideoStreamReadyCallback();
-    decoder_->DeregisterVideoFrameReadyCallback();
-    return draggingPlayer_->Release();
+    if (demuxer_ != nullptr) {
+        demuxer_->DeregisterVideoStreamReadyCallback();
+    }
+    if (decoder_ != nullptr) {
+        decoder_->DeregisterVideoFrameReadyCallback();
+    }
+    if (draggingPlayer_ != nullptr) {
+        draggingPlayer_->Release();
+    }
 }
  
 void *DraggingPlayerAgent::LoadLibrary(const std::string &path)
@@ -162,7 +174,7 @@ bool DraggingPlayerAgent::LoadSymbol()
 {
     lock_guard<mutex> lock(mtx_);
     if (handler_ == nullptr) {
-        if (!CheckSymbol(LoadLibrary(REFERENCE_LIB_PATH))) {
+        if (!CheckSymbol(LoadLibrary(REFENCE_LIB_ABSOLUTE_PATH))) {
             MEDIA_LOG_E("Load Reference parser so fail");
             return false;
         }
