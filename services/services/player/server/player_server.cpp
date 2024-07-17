@@ -1639,7 +1639,7 @@ int32_t PlayerServer::ExitSeekContinous(bool align)
         if (!isInSeekContinous_.load()) {
             return MSERR_OK;
         }
-        RegisterContinousBatchNo();
+        UpdateContinousBatchNo();
         isInSeekContinous_.store(false);
     }
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
