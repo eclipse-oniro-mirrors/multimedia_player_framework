@@ -58,6 +58,16 @@ int32_t AudioCapturerWrapper::Start(const OHOS::AudioStandard::AppInfo &appInfo)
     }
 
     std::shared_ptr<AudioCapturer> audioCapturer = CreateAudioCapturer(appInfo);
+    if (SCREEN_RECORDER_BUNDLE_NAME.compare(bundleName_) == 0) {
+        std::vector<SourceType> targetSources = {
+            SourceType::SOURCE_TYPE_MIC
+        };
+        std::string region = Global::I18n::LocaleConfig::GetSystemRegion();
+        if (region == "CN") {
+            targetSources.push_back(SourceType::SOURCE_TYPE_VOICE_COMMUNICATION);
+        }
+        audioCapture->SetAudioSourceConcurrency(targetSources);
+    }
     CHECK_AND_RETURN_RET_LOG(audioCapturer != nullptr, MSERR_UNKNOWN, "Start failed, create AudioCapturer failed");
     if (!audioCapturer->Start()) {
         MEDIA_LOGE("Start failed, AudioCapturer Start failed, threadName:%{public}s", threadName_.c_str());

@@ -1968,7 +1968,9 @@ int32_t ScreenCaptureServer::OnVoIPStateChanged(bool isInVoIPCall)
         ret = StartMicAudioCapture();
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartMicAudioCapture failed");
     }
-    micAudioCapture_->SetIsInVoIPCall(isInVoIPCall);
+    if (micAudioCapture_) {
+        micAudioCapture_->SetIsInVoIPCall(isInVoIPCall);
+    }
     CHECK_AND_RETURN_RET_LOG(innerAudioCapture_, MSERR_UNKNOWN, "innerAudioCapture is nullptr");
     if (isInVoIPCall && !isInnerAudioCaptureWorking_) {
         ret = innerAudioCapture_->Resume();
