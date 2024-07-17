@@ -58,7 +58,6 @@ class ScreenCaptureMonitorListenerMock : public ScreenCaptureMonitor::ScreenCapt
 public:
     ScreenCaptureMonitorListenerMock(std::string name):name_(name) {}
     ~ScreenCaptureMonitorListenerMock() = default;
-    void OnError(ScreenCaptureMonitorErrorType errorType, int32_t errorCode) override;
     void OnScreenCaptureStarted(int32_t pid) override;
     void OnScreenCaptureFinished(int32_t pid) override;
     int stateFlag_ = 0;

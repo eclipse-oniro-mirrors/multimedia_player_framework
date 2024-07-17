@@ -994,11 +994,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_cb_06, TestSize.
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_cb_06 after");
 }
 
-void ScreenCaptureMonitorListenerMock::OnError(ScreenCaptureMonitorErrorType errorType, int32_t errorCode)
-{
-    MEDIA_LOGI("OnError %{public}d", errorCode);
-}
-
 void ScreenCaptureMonitorListenerMock::OnScreenCaptureStarted(int32_t pid)
 {
     MEDIA_LOGI("OnScreenCaptureStarted pid %{public}d name %{public}s", pid, name_.c_str());
@@ -1011,7 +1006,7 @@ void ScreenCaptureMonitorListenerMock::OnScreenCaptureFinished(int32_t pid)
     stateFlag_ = 2; // 2 finish
 }
 
-void ScreenCaptureUnitTest::BeforeScreenCaptureSWCBCase07(void)
+void ScreenCaptureUnitTest::BeforeScreenCaptureSpecifiedWindowCbCase07(void)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_cb_07 before");
     SetConfig(config_);
@@ -1028,7 +1023,7 @@ void ScreenCaptureUnitTest::BeforeScreenCaptureSWCBCase07(void)
  */
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_cb_07, TestSize.Level2)
 {
-    BeforeScreenCaptureSWCBCase07();
+    BeforeScreenCaptureSpecifiedWindowCbCase07();
     std::shared_ptr<OHOS::AAFwk::AbilityManagerClient> client_ = OHOS::AAFwk::AbilityManagerClient::GetInstance();
     std::string deviceId = "";
     std::vector<OHOS::AAFwk::MissionInfo> missionInfos;

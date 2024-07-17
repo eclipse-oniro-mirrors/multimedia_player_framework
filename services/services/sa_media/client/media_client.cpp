@@ -216,7 +216,7 @@ int32_t MediaClient::DestroyAVMetadataHelperService(std::shared_ptr<IAVMetadataH
 #endif
 
 #ifdef SUPPORT_SCREEN_CAPTURE
-    std::shared_ptr<IScreenCaptureMonitorService> MediaClient::CreateScreenCaptureMonitorService()
+std::shared_ptr<IScreenCaptureMonitorService> MediaClient::CreateScreenCaptureMonitorService()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(IsAlived(), nullptr, "media service does not exist.");

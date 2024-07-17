@@ -69,9 +69,8 @@ int32_t ScreenCaptureMonitorClient::CreateListenerObject()
         "failed to new ScreenCaptureMonitorListenerStub object");
     CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorProxy_ != nullptr, MSERR_NO_MEMORY,
         "ScreenCaptureMonitor service does not exist.");
-
     sptr<IRemoteObject> object = listenerStub_->AsObject();
-    CHECK_AND_RETURN_RET_LOG(object != nullptr, MSERR_NO_MEMORY, "listener object is nullptr..");
+    CHECK_AND_RETURN_RET_LOG(object != nullptr, MSERR_NO_MEMORY, "listener object is nullptr.");
     MEDIA_LOGD("SetListenerObject");
     return screenCaptureMonitorProxy_->SetListenerObject(object);
 }
