@@ -35,9 +35,9 @@ std::mutex DraggingPlayerAgent::mtx_;
  
 class VideoStreamReadyCallbackImpl : public VideoStreamReadyCallback {
 public:
-    explicit VideoStreamReadyCallbackImpl(std::shared_ptr<DraggingPlayerAgent> draggingPlayerAgent)
+    explicit VideoStreamReadyCallbackImpl(const std::shared_ptr<DraggingPlayerAgent> draggingPlayerAgent)
         : draggingPlayerAgent_(draggingPlayerAgent) {}
-    bool IsVideoStreamDiscardable(std::shared_ptr<AVBuffer> buffer) override
+    bool IsVideoStreamDiscardable(const std::shared_ptr<AVBuffer> buffer) override
     {
         auto draggingPlayerAgent = draggingPlayerAgent_.lock();
         if (draggingPlayerAgent != nullptr && buffer != nullptr) {
@@ -51,9 +51,9 @@ private:
  
 class VideoFrameReadyCallbackImpl : public VideoFrameReadyCallback {
 public:
-    explicit VideoFrameReadyCallbackImpl(std::shared_ptr<DraggingPlayerAgent> draggingPlayerAgent)
+    explicit VideoFrameReadyCallbackImpl(const std::shared_ptr<DraggingPlayerAgent> draggingPlayerAgent)
         : draggingPlayerAgent_(draggingPlayerAgent) {}
-    void ConsumeVideoFrame(std::shared_ptr<AVBuffer> buffer, uint32_t bufferIndex) override
+    void ConsumeVideoFrame(const std::shared_ptr<AVBuffer> buffer, uint32_t bufferIndex) override
     {
         auto draggingPlayerAgent = draggingPlayerAgent_.lock();
         if (draggingPlayerAgent != nullptr || buffer != nullptr) {
@@ -87,7 +87,7 @@ DraggingPlayerAgent::~DraggingPlayerAgent()
     }
 }
  
-Status DraggingPlayerAgent::Init(shared_ptr<DemuxerFilter> &demuxer, shared_ptr<DecoderSurfaceFilter> &decoder)
+Status DraggingPlayerAgent::Init(const shared_ptr<DemuxerFilter> &demuxer, const shared_ptr<DecoderSurfaceFilter> &decoder)
 {
     FALSE_RETURN_V_MSG_E(demuxer != nullptr && decoder != nullptr,
         Status::ERROR_INVALID_PARAMETER, "Invalid demuxer filter instance.");
@@ -106,12 +106,12 @@ Status DraggingPlayerAgent::Init(shared_ptr<DemuxerFilter> &demuxer, shared_ptr<
     return Status::OK;
 }
  
-bool DraggingPlayerAgent::IsVideoStreamDiscardable(std::shared_ptr<AVBuffer> avBuffer)
+bool DraggingPlayerAgent::IsVideoStreamDiscardable(const std::shared_ptr<AVBuffer> avBuffer)
 {
     return draggingPlayer_->IsVideoStreamDiscardable(avBuffer);
 }
  
-void DraggingPlayerAgent::ConsumeVideoFrame(std::shared_ptr<AVBuffer> avBuffer, uint32_t bufferIndex)
+void DraggingPlayerAgent::ConsumeVideoFrame(const std::shared_ptr<AVBuffer> avBuffer, uint32_t bufferIndex)
 {
     return draggingPlayer_->ConsumeVideoFrame(avBuffer, bufferIndex);
 }

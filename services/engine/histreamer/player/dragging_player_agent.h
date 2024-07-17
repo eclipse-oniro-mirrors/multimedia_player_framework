@@ -30,12 +30,11 @@ public:
     DraggingPlayerAgent(const DraggingPlayerAgent &) = delete;
     DraggingPlayerAgent operator=(const DraggingPlayerAgent &) = delete;
     ~DraggingPlayerAgent();
-    // 1. 设置输入输出回调 2. seekTo render 3.pipilne pause + start
-    Status Init(shared_ptr<DemuxerFilter> &demuxer, shared_ptr<DecoderSurfaceFilter> &decoder);
-    void ConsumeVideoFrame(std::shared_ptr<AVBuffer> avBuffer, uint32_t bufferIndex);
-    bool IsVideoStreamDiscardable(std::shared_ptr<AVBuffer> avBuffer);
+    Status Init(const shared_ptr<DemuxerFilter> &demuxer, const shared_ptr<DecoderSurfaceFilter> &decoder);
+    void ConsumeVideoFrame(const std::shared_ptr<AVBuffer> avBuffer, uint32_t bufferIndex);
+    bool IsVideoStreamDiscardable(const std::shared_ptr<AVBuffer> avBuffer);
     void UpdateSeekPos(int64_t seekMs);
-    void Release(); // 先调用release, 再调用reset
+    void Release();
  
 private:
     static bool LoadSymbol();
