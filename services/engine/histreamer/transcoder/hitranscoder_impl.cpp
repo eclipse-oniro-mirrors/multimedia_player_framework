@@ -192,7 +192,7 @@ Status HiTransCoderImpl::ConfigureMetaData(const std::vector<std::shared_ptr<Met
             }
         } else if (trackMime.find("audio/") == 0) {
             MEDIA_LOG_I("SetInputFile contain audio");
-            int32_t channels;
+            int32_t channels = 0;
             if (trackInfos[index]->GetData(Tag::AUDIO_CHANNEL_COUNT, channels)) {
                 MEDIA_LOG_D("Audio channel count: %{public}d", channels);
             } else {
@@ -200,7 +200,7 @@ Status HiTransCoderImpl::ConfigureMetaData(const std::vector<std::shared_ptr<Met
             }
             audioEncFormat_->Set<Tag::AUDIO_CHANNEL_COUNT>(channels);
             audioEncFormat_->Set<Tag::AUDIO_SAMPLE_FORMAT>(Plugins::AudioSampleFormat::SAMPLE_S16LE);
-            int32_t sampleRate;
+            int32_t sampleRate = 0;
             if (trackInfos[index]->GetData(Tag::AUDIO_SAMPLE_RATE, sampleRate)) {
                 MEDIA_LOG_D("Audio sampleRate: %{public}d", sampleRate);
             } else {
