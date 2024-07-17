@@ -605,7 +605,6 @@ int32_t PlayerServer::OnStop(bool sync)
     isInterruptNeeded_ = true;
     playerEngine_->SetInterruptState(true);
     taskMgr_.ClearAllTask();
-    ExitSeekContinous(false);
     auto stopTask = std::make_shared<TaskHandler<void>>([this]() {
         auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
         (void)currState->Stop();
@@ -622,6 +621,7 @@ int32_t PlayerServer::OnStop(bool sync)
 
 int32_t PlayerServer::HandleStop()
 {
+    ExitSeekContinous(false);
     int32_t ret = playerEngine_->Stop();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine Stop Failed!");
 
@@ -771,7 +771,7 @@ int32_t PlayerServer::Seek(int32_t mSeconds, PlayerSeekMode mode)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     int32_t checkRet = CheckSeek(mSeconds, mode);
-    CHECK_AND_RETURN_RET_LOG(checkRet == MSERR_OK, MSERR_INVALID_OPERATION, "check seek faild");
+    CHECK_AND_RETURN_RET_LOG(checkRet == MSERR_OK, checkRet, "check seek faild");
 
     MEDIA_LOGD("seek position %{public}d, seek mode is %{public}d", mSeconds, mode);
     mSeconds = std::max(0, mSeconds);
@@ -779,7 +779,6 @@ int32_t PlayerServer::Seek(int32_t mSeconds, PlayerSeekMode mode)
     if (mode == SEEK_CONTINOUS) {
         return SeekContinous(mSeconds);
     }
-    ExitSeekContinous(false);
     auto seekTask = std::make_shared<TaskHandler<void>>([this, mSeconds, mode]() {
         MediaTrace::TraceBegin("PlayerServer::Seek", FAKE_POINTER(this));
         MEDIA_LOGI("PlayerServer::Seek start");
@@ -806,6 +805,7 @@ int32_t PlayerServer::HandleSeek(int32_t mSeconds, PlayerSeekMode mode)
 {
     MEDIA_LOGI("KPI-TRACE: PlayerServer HandleSeek in, mSeconds: %{public}d, mSeconds: %{public}d, "
         "instanceId: %{public}" PRIu64 "", mSeconds, mode, instanceId_);
+    ExitSeekContinous(false);
     int32_t ret = playerEngine_->Seek(mSeconds, mode);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine Seek Failed!");
     MEDIA_LOGI("PlayerServer HandleSeek end");
