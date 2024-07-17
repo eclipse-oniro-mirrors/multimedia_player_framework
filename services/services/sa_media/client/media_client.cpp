@@ -230,7 +230,7 @@ int32_t MediaClient::DestroyAVMetadataHelperService(std::shared_ptr<IAVMetadataH
     CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorProxy != nullptr, nullptr, "screenCaptureMonitor proxy is nullptr.");
 
     std::shared_ptr<ScreenCaptureMonitorClient> screenCaptureMonitor =
-        ScreenCaptureClient::Create(screenCaptureMonitorProxy);
+        ScreenCaptureMonitorClient::Create(screenCaptureMonitorProxy);
     CHECK_AND_RETURN_RET_LOG(screenCaptureMonitor != nullptr, nullptr, "failed to create screenCaptureMonitor client.");
 
     screenCaptureMonitorClientList_.push_back(screenCaptureMonitor);
@@ -243,7 +243,7 @@ int32_t MediaClient::DestroyScreenCaptureMonitorService(
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(screenCaptureMonitor != nullptr, MSERR_NO_MEMORY,
         "input screenCapture is nullptr.");
-    screenCaptureClientList_.remove(screenCaptureMonitor);
+    screenCaptureMonitorClientList_.remove(screenCaptureMonitor);
     return MSERR_OK;
 }
 
@@ -421,7 +421,7 @@ void MediaClient::DoMediaServerDied()
             screenCaptureMonitorClient->MediaServerDied();
         }
     }
-    for (auto &it : screenCaptureControllerClientList_) {
+    for (auto &it : screenCaptureControllerList_) {
         auto screenCaptureControllerClient = std::static_pointer_cast<ScreenCaptureControllerClient>(it);
         if (screenCaptureControllerClient != nullptr) {
             screenCaptureControllerClient->MediaServerDied();

@@ -30,9 +30,9 @@ public:
     ~ScreenCaptureMonitorClient();
 
     int32_t IsScreenCaptureWorking() override;
-    int32_t RegisterScreenCaptureMonitorListener(
+    void RegisterScreenCaptureMonitorListener(
         sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> listener) override;
-    int32_t UnregisterScreenCaptureMonitorListener(
+    void UnregisterScreenCaptureMonitorListener(
         sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> listener) override;
 
     // ScreenCaptureClient
