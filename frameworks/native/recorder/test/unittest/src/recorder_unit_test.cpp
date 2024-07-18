@@ -783,8 +783,7 @@ HWTEST_F(RecorderUnitTest, recorder_configure_020, TestSize.Level2)
     videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_configure_020.wav").c_str(), O_RDWR);
     ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
 
-    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_AUDIO, videoRecorderConfig));
-    EXPECT_NE(MSERR_OK, recorder_->Prepare());
+    EXPECT_NE(MSERR_OK, recorder_->SetFormat(PURE_AUDIO, videoRecorderConfig));
     EXPECT_EQ(MSERR_OK, recorder_->Release());
     close(videoRecorderConfig.outputFd);
 }
