@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,8 +12,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#define PLAYER_FRAMEWORK_META
 
 #include "avmetadatahelper_impl.h"
 
@@ -29,9 +27,11 @@
 #include "hisysevent.h"
 
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN, "AVMetadatahelperImpl" };
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_METADATA, "AVMetadatahelperImpl" };
 constexpr int32_t SCENE_CODE_EFFECTIVE_DURATION_MS = 20000;
 static constexpr char PERFORMANCE_STATS[] = "PERFORMANCE";
+static std::atomic<uint32_t> concurrentWorkCount_ = 0;
+static constexpr uint8_t HIGH_CONCRENT_WORK_NUM = 4;
 }
 
 namespace OHOS {
@@ -206,6 +206,9 @@ void AVMetadataHelperImpl::ReportSceneCode(Scene scene)
     if (scene != Scene::AV_META_SCENE_CLONE && scene != Scene::AV_META_SCENE_BATCH_HANDLE) {
         return;
     }
+    if (scene == Scene::AV_META_SCENE_BATCH_HANDLE && concurrentWorkCount_ < HIGH_CONCRENT_WORK_NUM) {
+        return;
+    }
     auto sceneCode = SCENE_CODE_MAP[scene];
     auto lastTsp = SCENE_TIMESTAMP_MAP[scene];
     auto now =
@@ -230,7 +233,11 @@ int32_t AVMetadataHelperImpl::SetSource(const std::string &uri, int32_t usage)
         "avmetadatahelper service does not exist..");
     CHECK_AND_RETURN_RET_LOG(!uri.empty(), MSERR_INVALID_VAL, "uri is empty.");
 
-    return avMetadataHelperService_->SetSource(uri, usage);
+    concurrentWorkCount_++;
+    ReportSceneCode(AV_META_SCENE_BATCH_HANDLE);
+    auto res = avMetadataHelperService_->SetSource(uri, usage);
+    concurrentWorkCount_--;
+    return res;
 }
 
 int32_t AVMetadataHelperImpl::SetSource(int32_t fd, int64_t offset, int64_t size, int32_t usage)
@@ -242,14 +249,23 @@ int32_t AVMetadataHelperImpl::SetSource(int32_t fd, int64_t offset, int64_t size
     CHECK_AND_RETURN_RET_LOG(fd > 0 && offset >= 0 && size >= -1, MSERR_INVALID_VAL,
         "invalid param");
 
-    return avMetadataHelperService_->SetSource(fd, offset, size, usage);
+    concurrentWorkCount_++;
+    ReportSceneCode(AV_META_SCENE_BATCH_HANDLE);
+    auto res = avMetadataHelperService_->SetSource(fd, offset, size, usage);
+    concurrentWorkCount_--;
+    return res;
 }
 
 int32_t AVMetadataHelperImpl::SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc)
 {
     MEDIA_LOGD("AVMetadataHelperImpl:0x%{public}06" PRIXPTR " SetSource in(dataSrc)", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(dataSrc != nullptr, MSERR_INVALID_VAL, "failed to create data source");
-    return avMetadataHelperService_->SetSource(dataSrc);
+
+    concurrentWorkCount_++;
+    ReportSceneCode(AV_META_SCENE_BATCH_HANDLE);
+    auto res = avMetadataHelperService_->SetSource(dataSrc);
+    concurrentWorkCount_--;
+    return res;
 }
 
 std::string AVMetadataHelperImpl::ResolveMetadata(int32_t key)
@@ -290,6 +306,9 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameAtTime(
     CHECK_AND_RETURN_RET_LOG(avMetadataHelperService_ != nullptr, nullptr,
         "avmetadatahelper service does not exist.");
 
+    concurrentWorkCount_++;
+    ReportSceneCode(AV_META_SCENE_BATCH_HANDLE);
+
     OutputConfiguration config;
     config.colorFormat = param.colorFormat;
     config.dstHeight = param.dstHeight;
@@ -297,6 +316,8 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameAtTime(
 
     auto mem = avMetadataHelperService_->FetchFrameAtTime(timeUs, option, config);
     auto pixelMap = CreatePixelMap(mem, PixelFormat::NV12, rotation_);
+
+    concurrentWorkCount_--;
 
     CHECK_AND_RETURN_RET_LOG(pixelMap != nullptr, nullptr, "pixelMap does not exist.");
  

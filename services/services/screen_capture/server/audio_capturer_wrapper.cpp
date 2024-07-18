@@ -13,15 +13,13 @@
  * limitations under the License.
  */
 
-#define PLAYER_FRAMEWORK_SCREEN_CAPTURE
-
 #include "audio_capturer_wrapper.h"
 
 #include "media_log.h"
 #include "media_errors.h"
 
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "ScreenCaptureACW"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "ScreenCaptureACW"};
 }
 
 namespace OHOS {
@@ -67,6 +65,48 @@ int32_t AudioCapturerWrapper::Start(const OHOS::AudioStandard::AppInfo &appInfo)
     isRunning_.store(true);
     readAudioLoop_ = std::make_unique<std::thread>([this] { this->CaptureAudio(); });
     audioCapturer_ = audioCapturer;
+    return MSERR_OK;
+}
+
+int32_t AudioCapturerWrapper::Pause()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Pause S, threadName:%{public}s", FAKE_POINTER(this), threadName_.c_str());
+    if (isRunning_.load()) {
+        isRunning_.store(false);
+        if (readAudioLoop_ != nullptr && readAudioLoop_->joinable()) {
+            readAudioLoop_->join();
+            readAudioLoop_.reset();
+            readAudioLoop_ = nullptr;
+        }
+        if (audioCapturer_ != nullptr) {
+            audioCapturer_->Pause();
+        }
+    }
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Pause E, threadName:%{public}s", FAKE_POINTER(this), threadName_.c_str());
+    return MSERR_OK;
+}
+
+int32_t AudioCapturerWrapper::Resume()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (isRunning_.load()) {
+        MEDIA_LOGE("Resume failed, is running, threadName:%{public}s", threadName_.c_str());
+        return MSERR_UNKNOWN;
+    }
+    CHECK_AND_RETURN_RET_LOG(audioCapturer_ != nullptr, MSERR_UNKNOWN, "Resume failed, audioCapturer_ is nullptr");
+
+    if (!audioCapturer_->Start()) {
+        MEDIA_LOGE("Start failed, AudioCapturer Start failed, threadName:%{public}s", threadName_.c_str());
+        audioCapturer_->Release();
+        audioCapturer_ = nullptr;
+        OnStartFailed(ScreenCaptureErrorType::SCREEN_CAPTURE_ERROR_INTERNAL, SCREEN_CAPTURE_ERR_UNKNOWN);
+        return MSERR_UNKNOWN;
+    }
+    MEDIA_LOGI("0x%{public}06" PRIXPTR "Start success, threadName:%{public}s", FAKE_POINTER(this), threadName_.c_str());
+
+    isRunning_.store(true);
+    readAudioLoop_ = std::make_unique<std::thread>([this] { this->CaptureAudio(); });
     return MSERR_OK;
 }
 
@@ -116,13 +156,13 @@ bool AudioCapturerWrapper::GetIsMuted()
 void AudioCapturerWrapper::SetInnerStreamUsage(std::vector<OHOS::AudioStandard::StreamUsage> &usages)
 {
     // If do not call this function, the audio framework use MUSIC/MOVIE/GAME/AUDIOBOOK
-    usages.push_back(OHOS::AudioStandard::StreamUsage::STREAM_USAGE_MUSIC);
-    usages.push_back(OHOS::AudioStandard::StreamUsage::STREAM_USAGE_ALARM);
-    usages.push_back(OHOS::AudioStandard::StreamUsage::STREAM_USAGE_MOVIE);
-    usages.push_back(OHOS::AudioStandard::StreamUsage::STREAM_USAGE_GAME);
-    usages.push_back(OHOS::AudioStandard::StreamUsage::STREAM_USAGE_AUDIOBOOK);
-    usages.push_back(OHOS::AudioStandard::StreamUsage::STREAM_USAGE_NAVIGATION);
-    usages.push_back(OHOS::AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN);
+    usages.push_back(AudioStandard::StreamUsage::STREAM_USAGE_MUSIC);
+    usages.push_back(AudioStandard::StreamUsage::STREAM_USAGE_ALARM);
+    usages.push_back(AudioStandard::StreamUsage::STREAM_USAGE_MOVIE);
+    usages.push_back(AudioStandard::StreamUsage::STREAM_USAGE_GAME);
+    usages.push_back(AudioStandard::StreamUsage::STREAM_USAGE_AUDIOBOOK);
+    usages.push_back(AudioStandard::StreamUsage::STREAM_USAGE_NAVIGATION);
+    usages.push_back(AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN);
 }
 
 std::shared_ptr<AudioCapturer> AudioCapturerWrapper::CreateAudioCapturer(const OHOS::AudioStandard::AppInfo &appInfo)

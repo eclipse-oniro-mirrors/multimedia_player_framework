@@ -64,6 +64,12 @@ public:
         (void)display;
         return 0;
     }
+    virtual int32_t SetPlayRange(int64_t start, int64_t end)
+    {
+        (void)start;
+        (void)end;
+        return 0;
+    }
     virtual int32_t PrepareAsync() = 0;
     virtual int32_t Pause() = 0;
     virtual int32_t Stop() = 0;
@@ -173,6 +179,19 @@ public:
     virtual void SetInstancdId(uint64_t instanceId)
     {
         (void)instanceId;
+    }
+    virtual int32_t SeekContinous(int32_t mSeconds, int64_t seekContinousBatchNo)
+    {
+        (void)mSeconds;
+        (void)seekContinousBatchNo;
+        return 0;
+    }
+
+    virtual int32_t ExitSeekContinous(bool align, int64_t seekContinousBatchNo)
+    {
+        (void)align;
+        (void)seekContinousBatchNo;
+        return 0;
     }
 };
 } // namespace Media
