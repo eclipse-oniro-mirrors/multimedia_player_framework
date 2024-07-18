@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#define PLAYER_FRAMEWORK_SCREEN_CAPTURE
-
 #include "screen_capture_monitor_impl.h"
 #include "media_log.h"
 #include "media_errors.h"

@@ -13,8 +13,6 @@
 * limitations under the License.
 */
 
-#define PLAYER_FRAMEWORK_SCREEN_CAPTURE
-
 #include "screen_capture_monitor_server.h"
 #include "map"
 #include "media_log.h"
@@ -27,7 +25,7 @@
 #include "screen_capture_server.h"
 
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "ScreenCaptureMonitorServer"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "ScreenCaptureMonitorServer"};
 }
 
 namespace OHOS {
