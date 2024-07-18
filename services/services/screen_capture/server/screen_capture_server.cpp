@@ -2400,10 +2400,10 @@ int32_t AudioDataSource::ReadAt(std::shared_ptr<AVBuffer> buffer, uint32_t lengt
     }
     if (type_ == AVScreenCaptureMixMode::MIX_MODE) {
         return MixModeBufferWrite(innerAudioBuffer, micAudioBuffer, bufferMem);
-    } else if (type_ == AVScreenCaptureMixMode::INNER_MODE && innerAudioBuffer) {
+    } else if (type_ == AVScreenCaptureMixMode::INNER_MODE && innerAudioBuffer != nullptr) {
         bufferMem->Write(reinterpret_cast<uint8_t*>(innerAudioBuffer->buffer), innerAudioBuffer->length, 0);
         return screenCaptureServer_->ReleaseAudioBufferMix(type_);
-    } else if (type_ == AVScreenCaptureMixMode::MIC_MODE && micAudioBuffer) {
+    } else if (type_ == AVScreenCaptureMixMode::MIC_MODE && micAudioBuffer != nullptr) {
         bufferMem->Write(reinterpret_cast<uint8_t*>(micAudioBuffer->buffer), micAudioBuffer->length, 0);
         return screenCaptureServer_->ReleaseAudioBufferMix(type_);
     }
