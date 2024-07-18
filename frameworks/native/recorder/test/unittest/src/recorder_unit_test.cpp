@@ -845,7 +845,7 @@ HWTEST_F(RecorderUnitTest, recorder_mp3_001, TestSize.Level2)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(RecorderUnitTest, recorder_mp3_001, TestSize.Level2)
+HWTEST_F(RecorderUnitTest, recorder_G711MU_001, TestSize.Level2)
 {
     VideoRecorderConfig videoRecorderConfig;
     videoRecorderConfig.audioFormat = AUDIO_G711MU;
