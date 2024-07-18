@@ -41,11 +41,10 @@ MediaTelephonyListener::~MediaTelephonyListener()
 
 void MediaTelephonyListener::OnCallStateUpdated(int32_t slotId, int32_t callState, const std::u16string &phoneNumber)
 {
+    MEDIA_LOGI("OnCallStateUpdated slotId = %{public}d, callState = %{public}d", slotId, callState);
     if (slotId < 0) {
-        MEDIA_LOGI("slotId is %{public}", slotId);
         return;
     }
-    MEDIA_LOGI("OnCallStateUpdated slotId = %{public}d, callState = %{public}d", slotId, callState);
     // skip no sim card CALL_STATUS_UNKNOWN
     if (callState == static_cast<int32_t>(TelCallState::CALL_STATUS_ANSWERED) ||
         callState == static_cast<int32_t>(TelCallState::CALL_STATUS_ALERTING) ||
