@@ -17,7 +17,6 @@
 #include "media_log.h"
 #include "media_errors.h"
 #include "i_media_service.h"
-#include "string_ex.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "ScreenCaptureMonitorImpl"};
