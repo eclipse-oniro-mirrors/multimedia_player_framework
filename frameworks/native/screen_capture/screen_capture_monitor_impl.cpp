@@ -53,7 +53,7 @@ std::int32_t ScreenCaptureMonitor::IsScreenCaptureWorking()
 int32_t ScreenCaptureMonitorImpl::Init()
 {
     MEDIA_LOGD("ScreenCaptureMonitorImpl:0x%{public}06" PRIXPTR " Init in", FAKE_POINTER(this));
-    if (screenCaptureMonitorService_) {
+    if (!screenCaptureMonitorService_) {
         screenCaptureMonitorService_ = MediaServiceFactory::GetInstance().CreateScreenCaptureMonitorService();
     }
     CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorService_ != nullptr, MSERR_UNKNOWN,
