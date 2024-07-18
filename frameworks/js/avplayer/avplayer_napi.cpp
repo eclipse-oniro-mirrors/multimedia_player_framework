@@ -1874,6 +1874,20 @@ void AVPlayerNapi::SeekEnqueueTask(AVPlayerNapi *jsPlayer, int32_t time, int32_t
     MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSeek Out", FAKE_POINTER(jsPlayer));
 }
 
+void AVPlayerNapi::SelectTrackEnqueueTask(AVPlayerNapi *jsPlayer, int32_t index, int32_t mode)
+{
+    auto task = std::make_shared<TaskHandler<void>>([jsPlayer, time, mode]() {
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSelectTrack Task In", FAKE_POINTER(jsPlayer));
+        if (jsPlayer->player_ != nullptr) {
+            (void)jsPlayer->player_->SelectTrack(index, jsPlayer->TransferSwitchMode(mode));
+        }
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSelectTrack Task Out", FAKE_POINTER(jsPlayer));
+    });
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSelectTrack EnqueueTask In", FAKE_POINTER(jsPlayer));
+    (void)jsPlayer->taskQue_->EnqueueTask(task);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSelectTrack Out", FAKE_POINTER(jsPlayer));
+}
+
 napi_value AVPlayerNapi::JsSetAudioRendererInfo(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("AVPlayerNapi::set audioRendererInfo");
@@ -2200,14 +2214,12 @@ napi_value AVPlayerNapi::JsSelectTrack(napi_env env, napi_callback_info info)
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "track index is not number");
         return ret;
     }
-
     int32_t index = -1;
     napi_status status = napi_get_value_int32(env, args[0], &index);
     if (status != napi_ok || index < 0) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please check the track index");
         return ret;
     }
-
     int32_t mode = SWITCH_SOOMTH;
     if (argCount > 1) {
         if (napi_typeof(env, args[1], &valueType) != napi_ok || valueType != napi_number) {
@@ -2220,21 +2232,12 @@ napi_value AVPlayerNapi::JsSelectTrack(napi_env env, napi_callback_info info)
             return ret;
         }
     }
-
     if (!jsPlayer->IsControllable()) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
             "current state is not prepared/playing/paused/completed, unsupport selectTrack operation");
         return ret;
     }
-
-    auto task = std::make_shared<TaskHandler<void>>([jsPlayer, index, mode]() {
-        MEDIA_LOGI("selectTrack Task");
-        if (jsPlayer->player_ != nullptr) {
-            (void)jsPlayer->player_->SelectTrack(index, jsPlayer->TransferSwitchMode(mode));
-        }
-        MEDIA_LOGI("selectTrack Task end");
-    });
-    (void)jsPlayer->taskQue_->EnqueueTask(task);
+    SelectTrackEnqueueTask(jsPlayer, index, mode);
     MEDIA_LOGI("JsSelectTrack Out");
     return ret;
 }

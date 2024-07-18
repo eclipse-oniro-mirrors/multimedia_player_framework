@@ -1255,20 +1255,12 @@ int32_t HiPlayerImpl::SelectTrack(int32_t trackId, PlayerSwitchMode mode)
                 MEDIA_LOG_W("Init audio default track index fail");
             }
         }
-        if (Status::OK != demuxer_->SelectTrack(trackId)) {
-            MEDIA_LOG_E("SelectTrack error. trackId is " PUBLIC_LOG_D32, trackId);
-            return MSERR_UNKNOWN;
-        }
     } else if (IsVideoMime(mime)) {
         FALSE_RETURN_V_MSG_W(trackId != currentVideoTrackId_, MSERR_INVALID_VAL, "SelectTrack trackId invalid");
         if (currentVideoTrackId_ < 0) {
             if (Status::OK != InitVideoDefaultTrackIndex()) {
                 MEDIA_LOG_W("Init video default track index fail");
             }
-        }
-        if (Status::OK != demuxer_->SelectTrack(trackId)) {
-            MEDIA_LOG_E("SelectTrack error. trackId is " PUBLIC_LOG_D32, trackId);
-            return MSERR_UNKNOWN;
         }
     } else if (IsSubtitleMime(mime)) {
         FALSE_RETURN_V_MSG_W(trackId != currentSubtitleTrackId_, MSERR_INVALID_VAL, "SelectTrack trackId invalid");
@@ -1277,12 +1269,14 @@ int32_t HiPlayerImpl::SelectTrack(int32_t trackId, PlayerSwitchMode mode)
                 MEDIA_LOG_W("Init video default track index fail");
             }
         }
-        if (Status::OK != demuxer_->SelectTrack(trackId)) {
-            MEDIA_LOG_E("SelectTrack error. trackId is " PUBLIC_LOG_D32, trackId);
-            return MSERR_UNKNOWN;
-        }
-    } else {}
-
+    } else {
+        MEDIA_LOG_E("SelectTrack invalid mimeType. trackId is " PUBLIC_LOG_D32, trackId);
+        return MSERR_UNKNOWN;
+    }
+    if (Status::OK != demuxer_->SelectTrack(trackId)) {
+        MEDIA_LOG_E("SelectTrack error. trackId is " PUBLIC_LOG_D32, trackId);
+        return MSERR_UNKNOWN;
+    }
     int32_t curPosMs = 0;
     GetCurrentTime(curPosMs);
     if (mode == PlayerSwitchMode::SWITCH_SEGMENT) {
@@ -1325,14 +1319,13 @@ int32_t HiPlayerImpl::DeselectTrack(int32_t trackId)
     } else {}
 
     FALSE_RETURN_V_MSG_W(trackId == defaultTrackId && defaultTrackId >= 0,
-            MSERR_INVALID_VAL, "DeselectTrack trackId invalid");
+        MSERR_INVALID_VAL, "DeselectTrack trackId invalid");
     return SelectTrack(defaultTrackId, PlayerSwitchMode::SWITCH_SOOMTH);
 }
 
 int32_t HiPlayerImpl::GetVideoTrackInfo(std::vector<Format>& videoTrack)
 {
     MEDIA_LOG_D("GetVideoTrackInfo in");
-#ifdef SUPPORT_VIDEO
     std::string mime;
     std::vector<std::shared_ptr<Meta>> metaInfo = demuxer_->GetStreamMetaInfo();
     for (size_t trackIndex = 0; trackIndex < metaInfo.size(); trackIndex++) {
@@ -1378,7 +1371,6 @@ int32_t HiPlayerImpl::GetVideoTrackInfo(std::vector<Format>& videoTrack)
             videoTrack.emplace_back(std::move(videoTrackInfo));
         }
     }
-#endif
     return TransStatus(Status::OK);
 }
 
@@ -1442,7 +1434,8 @@ int32_t HiPlayerImpl::GetSubtitleTrackInfo(std::vector<Format>& subtitleTrack)
             playStatisticalInfo_.subtitleMime = mime;
             Format subtitleTrackInfo {};
             subtitleTrackInfo.PutStringValue("codec_mime", mime);
-            subtitleTrackInfo.PutIntValue("track_type", static_cast<int32_t>(OHOS::Media::Plugins::MediaType::SUBTITLE));
+            subtitleTrackInfo.PutIntValue("track_type",
+                static_cast<int32_t>(OHOS::Media::Plugins::MediaType::SUBTITLE));
             subtitleTrackInfo.PutIntValue("track_index", static_cast<int32_t>(trackIndex));
 
             std::string lang;
