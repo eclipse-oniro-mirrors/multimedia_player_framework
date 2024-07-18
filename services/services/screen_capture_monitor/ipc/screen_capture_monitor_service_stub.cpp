@@ -61,7 +61,7 @@ int32_t ScreenCaptureMonitorServiceStub::Init()
     CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorServer_ != nullptr, MSERR_NO_MEMORY,
         "failed to create ScreenCaptureMonitorServer");
     screenCaptureMonitorStubFuncs_[SET_LISTENER_OBJ] = &ScreenCaptureMonitorServiceStub::SetListenerObject;
-    screenCaptureMonitorStubFuncs_[IS_SCREEN_CAPUTURE_WORKING] =
+    screenCaptureMonitorStubFuncs_[IS_SCREEN_CAPTURE_WORKING] =
         &ScreenCaptureMonitorServiceStub::IsScreenCaptureWorking;
     screenCaptureMonitorStubFuncs_[DESTROY] = &ScreenCaptureMonitorServiceStub::DestroyStub;
     return MSERR_OK;
