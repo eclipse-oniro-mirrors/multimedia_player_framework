@@ -60,7 +60,7 @@ void ScreenCaptureMonitorListenerProxy::OnScreenCaptureFinished(int32_t pid)
     CHECK_AND_RETURN_LOG(token, "Failed to write descriptor!");
 
     data.WriteInt32(pid);
-    int error = Remote()->SendRequest(ScreenCaptureMonitorListenerMsg::ON_SCREEN_CAPTURE_FINSHED, data, reply, option);
+    int error = Remote()->SendRequest(ScreenCaptureMonitorListenerMsg::ON_SCREEN_CAPTURE_FINISHED, data, reply, option);
     CHECK_AND_RETURN_LOG(error == MSERR_OK, "on error failed, error: %{public}d", error);
 }
 

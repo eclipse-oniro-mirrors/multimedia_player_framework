@@ -49,7 +49,7 @@ int ScreenCaptureMonitorListenerStub::OnRemoteRequest(uint32_t code, MessageParc
             OnScreenCaptureStarted(pid);
             return MSERR_OK;
         }
-        case ScreenCaptureMonitorListenerMsg::ON_SCREEN_CAPTURE_FINSHED: {
+        case ScreenCaptureMonitorListenerMsg::ON_SCREEN_CAPTURE_FINISHED: {
             int pid = data.ReadInt32();
             OnScreenCaptureFinished(pid);
             return MSERR_OK;
