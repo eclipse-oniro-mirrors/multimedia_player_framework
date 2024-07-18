@@ -59,7 +59,6 @@ int ScreenCaptureMonitorListenerStub::OnRemoteRequest(uint32_t code, MessageParc
     }
 }
 
-
 void ScreenCaptureMonitorListenerStub::OnScreenCaptureStarted(int32_t pid)
 {
     MEDIA_LOGI("ScreenCaptureMonitorListenerStub:0x%{public}06" PRIXPTR " OnScreenCaptureFinished",

@@ -183,18 +183,18 @@ std::shared_ptr<IScreenCaptureService> ScreenCaptureServer::Create()
 int32_t ScreenCaptureServer::GetRunningScreenCaptureInstancePid(int32_t &pid)
 {
     MEDIA_LOGI("GetRunningScreenCaptureInstancePid in");
-    if (activeSessionId_.load() >= 0) {
-        std::shared_ptr<ScreenCaptureServer> currentServer =
-            GetScreenCaptureServerByIdWithLock(activeSessionId_.load());
-        if (currentServer != nullptr) {
-            MEDIA_LOGI("GetRunningScreenCaptureInstancePid uid(%{public}d) pid(%{public}d)",
-                currentServer->appInfo_.appUid, currentServer->appInfo_.appPid);
-            pid = currentServer->appInfo_.appPid;
-        }
-    } else {
+    if (activeSessionId_.load() < 0) {
         return MSERR_UNKNOWN;
     }
-    return MSERR_OK;
+    std::shared_ptr<ScreenCaptureServer> currentServer =
+        GetScreenCaptureServerByIdWithLock(activeSessionId_.load());
+    if (currentServer != nullptr) {
+        MEDIA_LOGI("GetRunningScreenCaptureInstancePid uid(%{public}d) pid(%{public}d)",
+            currentServer->appInfo_.appUid, currentServer->appInfo_.appPid);
+        pid = currentServer->appInfo_.appPid;
+        return MSERR_OK;
+    }
+    return MSERR_UNKNOWN;
 }
 
 int32_t ScreenCaptureServer::ReportAVScreenCaptureUserChoice(int32_t sessionId, const std::string &choice)
