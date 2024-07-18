@@ -232,7 +232,6 @@ std::shared_ptr<IScreenCaptureMonitorService> MediaClient::CreateScreenCaptureMo
     std::shared_ptr<ScreenCaptureMonitorClient> screenCaptureMonitor =
         ScreenCaptureMonitorClient::Create(screenCaptureMonitorProxy);
     CHECK_AND_RETURN_RET_LOG(screenCaptureMonitor != nullptr, nullptr, "failed to create screenCaptureMonitor client.");
-
     screenCaptureMonitorClientList_.push_back(screenCaptureMonitor);
     return screenCaptureMonitor;
 }
