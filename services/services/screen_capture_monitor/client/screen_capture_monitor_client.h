@@ -40,10 +40,14 @@ public:
 
 private:
     int32_t CreateListenerObject();
+    int32_t CloseListenerObject();
     sptr<IStandardScreenCaptureMonitorService> screenCaptureMonitorProxy_ = nullptr;
     sptr<ScreenCaptureMonitorListenerStub> listenerStub_ = nullptr;
     sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> listener_ = nullptr;
     std::mutex mutex_;
+    bool listenerStubIPCExist_ = false;
+    std::set<sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener>> screenCaptureMonitorClientCallbacks_;
+
 };
 } // namespace Media
 } // namespace OHOS

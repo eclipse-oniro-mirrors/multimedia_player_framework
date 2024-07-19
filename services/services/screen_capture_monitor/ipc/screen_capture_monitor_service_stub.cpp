@@ -62,12 +62,13 @@ int32_t ScreenCaptureMonitorServiceStub::Init()
     screenCaptureMonitorStubFuncs_[IS_SCREEN_CAPTURE_WORKING] =
         &ScreenCaptureMonitorServiceStub::IsScreenCaptureWorking;
     screenCaptureMonitorStubFuncs_[DESTROY] = &ScreenCaptureMonitorServiceStub::DestroyStub;
+    screenCaptureMonitorStubFuncs_[CLOSE_LISTENER_OBJ] = &ScreenCaptureMonitorServiceStub::CloseListenerObject;
+
     return MSERR_OK;
 }
 
 int32_t ScreenCaptureMonitorServiceStub::DestroyStub()
 {
-    screenCaptureMonitorServer_ = nullptr;
     screenCaptureMonitorCallback_ = nullptr;
     MediaServerManager::GetInstance().DestroyStubObject(MediaServerManager::SCREEN_CAPTURE_MONITOR, AsObject());
     return MSERR_OK;
@@ -108,7 +109,17 @@ int32_t ScreenCaptureMonitorServiceStub::SetListenerObject(const sptr<IRemoteObj
         "failed to new ScreenCaptureMonitorListenerCallback");
     CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorServer_ != nullptr, MSERR_NO_MEMORY,
         "screen capture monitor server is nullptr");
+    screenCaptureMonitorCallback_ = callback;
     (void)screenCaptureMonitorServer_->SetScreenCaptureMonitorCallback(callback);
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureMonitorServiceStub::CloseListenerObject()
+{
+    CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorCallback_ != nullptr, MSERR_OK,
+        "screenCaptureMonitorCallback_ is nullptr");
+    (void)screenCaptureMonitorServer_->RemoveScreenCaptureMonitorCallback(callback);
+    screenCaptureMonitorCallback_ = nullptr;
     return MSERR_OK;
 }
 
@@ -123,6 +134,13 @@ int32_t ScreenCaptureMonitorServiceStub::SetListenerObject(MessageParcel &data, 
 {
     sptr<IRemoteObject> object = data.ReadRemoteObject();
     reply.WriteInt32(SetListenerObject(object));
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureMonitorServiceStub::CloseListenerObject(MessageParcel &data, MessageParcel &reply)
+{
+    (void)data;
+    reply.WriteInt32(CloseListenerObject());
     return MSERR_OK;
 }
 

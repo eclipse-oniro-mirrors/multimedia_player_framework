@@ -75,7 +75,7 @@ ScreenCaptureMonitorListenerCallback::~ScreenCaptureMonitorListenerCallback()
 
 void ScreenCaptureMonitorListenerCallback::OnScreenCaptureStarted(int32_t pid)
 {
-    MEDIA_LOGI("J OnScreenCaptureStarted1");
+    MEDIA_LOGI("OnScreenCaptureStarted");
     if (listener_ != nullptr) {
         listener_->OnScreenCaptureStarted(pid);
     }
@@ -83,7 +83,7 @@ void ScreenCaptureMonitorListenerCallback::OnScreenCaptureStarted(int32_t pid)
 
 void ScreenCaptureMonitorListenerCallback::OnScreenCaptureFinished(int32_t pid)
 {
-    MEDIA_LOGI("J OnScreenCaptureFinished1");
+    MEDIA_LOGI("OnScreenCaptureFinished");
     if (listener_ != nullptr) {
         listener_->OnScreenCaptureFinished(pid);
     }

@@ -70,7 +70,16 @@ int32_t ScreenCaptureMonitorClient::CreateListenerObject()
     sptr<IRemoteObject> object = listenerStub_->AsObject();
     CHECK_AND_RETURN_RET_LOG(object != nullptr, MSERR_NO_MEMORY, "listener object is nullptr.");
     MEDIA_LOGD("SetListenerObject");
+    listenerStubIPCExist_ = true;
     return screenCaptureMonitorProxy_->SetListenerObject(object);
+}
+
+int32_t ScreenCaptureMonitorClient::CloseListenerObject()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    listenerStubIPCExist_ = false;
+    MEDIA_LOGD("SetListenerObject");
+    return screenCaptureMonitorProxy_->CloseListenerObject();
 }
 
 int32_t ScreenCaptureMonitorClient::IsScreenCaptureWorking()
@@ -84,10 +93,14 @@ int32_t ScreenCaptureMonitorClient::IsScreenCaptureWorking()
 void ScreenCaptureMonitorClient::RegisterScreenCaptureMonitorListener(
     sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> listener)
 {
+    if (!listenerStubIPCExist_) {
+        CreateListenerObject();
+    }
     CHECK_AND_RETURN_LOG(listener != nullptr, "input param listener is nullptr.");
     CHECK_AND_RETURN_LOG(listenerStub_ != nullptr, "listenerStub_ is nullptr.");
     listener_ = listener;
     MEDIA_LOGD("RegisterScreenCaptureMonitorListener");
+    screenCaptureMonitorClientCallbacks_.insert(listener);
     listenerStub_->RegisterScreenCaptureMonitorListener(listener);
 }
 
@@ -99,6 +112,10 @@ void ScreenCaptureMonitorClient::UnregisterScreenCaptureMonitorListener(
     listener_ = listener;
     MEDIA_LOGD("UnregisterScreenCaptureMonitorListener");
     listenerStub_->UnregisterScreenCaptureMonitorListener(listener);
+    screenCaptureMonitorClientCallbacks_.erase(listener);
+    if (listenerStubIPCExist_ && screenCaptureMonitorClientCallbacks_.size() == 0) {
+        CloseListenerObject();
+    }
 }
 } // namespace Media
 } // namespace OHOS

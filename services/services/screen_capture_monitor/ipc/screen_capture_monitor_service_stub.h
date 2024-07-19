@@ -33,6 +33,7 @@ public:
 
     int OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
     int32_t SetListenerObject(const sptr<IRemoteObject> &object) override;
+    int32_t CloseListenerObject() override;
     int32_t IsScreenCaptureWorking() override;
     int32_t DestroyStub() override;
 
@@ -40,6 +41,7 @@ private:
     ScreenCaptureMonitorServiceStub();
     int32_t Init();
     int32_t SetListenerObject(MessageParcel &data, MessageParcel &reply);
+    int32_t CloseListenerObject(MessageParcel &data, MessageParcel &reply);
     int32_t IsScreenCaptureWorking(MessageParcel &data, MessageParcel &reply);
     int32_t DestroyStub(MessageParcel &data, MessageParcel &reply);
 

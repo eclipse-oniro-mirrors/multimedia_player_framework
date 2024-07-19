@@ -27,6 +27,7 @@ class IStandardScreenCaptureMonitorService : public IRemoteBroker {
 public:
     virtual ~IStandardScreenCaptureMonitorService() = default;
     virtual int32_t SetListenerObject(const sptr<IRemoteObject> &object) = 0;
+    virtual int32_t CloseListenerObject() = 0;
     virtual int32_t IsScreenCaptureWorking() = 0;
     virtual int32_t DestroyStub() = 0;
 
@@ -37,6 +38,7 @@ public:
         SET_LISTENER_OBJ = 0,
         IS_SCREEN_CAPTURE_WORKING = 1,
         DESTROY = 2,
+        CLOSE_LISTENER_OBJ = 3,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardScreenCaptureMonitorService");

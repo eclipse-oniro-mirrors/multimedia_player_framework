@@ -50,6 +50,20 @@ int32_t ScreenCaptureMonitorServiceProxy::SetListenerObject(const sptr<IRemoteOb
     return reply.ReadInt32();
 }
 
+int32_t ScreenCaptureMonitorServiceProxy::CloseListenerObject()
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(ScreenCaptureMonitorServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+    int error = Remote()->SendRequest(CLOSE_LISTENER_OBJ, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+                             "CloseListenerObject failed, error: %{public}d", error);
+    return reply.ReadInt32();
+}
+
 int32_t ScreenCaptureMonitorServiceProxy::IsScreenCaptureWorking()
 {
     MessageParcel data;

@@ -23,6 +23,7 @@
 #include "task_queue.h"
 #include "watchdog.h"
 #include "meta/meta.h"
+#include <set>
 
 namespace OHOS {
 namespace Media {
@@ -37,17 +38,20 @@ public:
     int32_t IsScreenCaptureWorking() override;
 
     void SetScreenCaptureMonitorCallback(sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> listener);
+    void RemoveScreenCaptureMonitorCallback(sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> listener);
+
     void RegisterScreenCaptureMonitorListener(
         sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> listener) override;
     void UnregisterScreenCaptureMonitorListener(
         sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> listener) override;
     int32_t CallOnScreenCaptureStarted(int32_t pid);
     int32_t CallOnScreenCaptureFinished(int32_t pid);
-
+    int32_t Release();
 private:
     int32_t Init();
     std::mutex mutex_;
-    sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> screenCaptureMonitorCb_;
+    std::mutex mutexCb_;
+    std::set<sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener>> screenCaptureMonitorCbSet_;
 };
 } // namespace Media
 } // namespace OHOS

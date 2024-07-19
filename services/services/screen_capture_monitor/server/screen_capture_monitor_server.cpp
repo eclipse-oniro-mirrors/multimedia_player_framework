@@ -49,11 +49,20 @@ ScreenCaptureMonitorServer::ScreenCaptureMonitorServer()
 ScreenCaptureMonitorServer::~ScreenCaptureMonitorServer()
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
+    Release();
 }
 
 int32_t ScreenCaptureMonitorServer::Init()
 {
     MediaTrace trace("ScreenCaptureMonitorServer::Init");
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureMonitorServer::Release()
+{
+    MEDIA_LOGI("ScreenCaptureMonitorServer:0x%{public}06" PRIXPTR " Release S", FAKE_POINTER(this));
+    std::lock_guard<std::mutex> lock(mutexCb_);
+    screenCaptureMonitorCbSet_.clear();
     return MSERR_OK;
 }
 
@@ -72,8 +81,19 @@ void ScreenCaptureMonitorServer::SetScreenCaptureMonitorCallback(
     MediaTrace trace("ScreenCaptureMonitorServer::SetScreenCaptureCallback");
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_LOG(callback != nullptr, "SetScreenCaptureCallback failed, callback is nullptr");
-    screenCaptureMonitorCb_ = callback;
+    screenCaptureMonitorCbSet_.insert(callback);
     MEDIA_LOGI("ScreenCaptureMonitorServer: 0x%{public}06" PRIXPTR "SetScreenCaptureCallback OK.", FAKE_POINTER(this));
+}
+
+void ScreenCaptureMonitorServer::RemoveScreenCaptureMonitorCallback(
+        sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> callback)
+{
+    MediaTrace trace("ScreenCaptureMonitorServer::RemoveScreenCaptureMonitorCallback");
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_LOG(callback != nullptr, "RemoveScreenCaptureMonitorCallback failed, callback is nullptr");
+    screenCaptureMonitorCbSet_.erase(callback);
+    MEDIA_LOGI("ScreenCaptureMonitorServer: 0x%{public}06" PRIXPTR "RemoveScreenCaptureMonitorCallback OK.",
+        FAKE_POINTER(this));
 }
 
 void ScreenCaptureMonitorServer::RegisterScreenCaptureMonitorListener(
@@ -92,19 +112,25 @@ void ScreenCaptureMonitorServer::UnregisterScreenCaptureMonitorListener(
 
 int32_t ScreenCaptureMonitorServer::CallOnScreenCaptureStarted(int32_t pid)
 {
-    CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorCb_ != nullptr, MSERR_INVALID_VAL,
-        "CallOnScreenCaptureStarted failed, callback is nullptr");
-    MEDIA_LOGI("ScreenCaptureMonitorServer::CallOnScreenCaptureStarted start");
-    screenCaptureMonitorCb_->OnScreenCaptureStarted(pid);
+    std::lock_guard<std::mutex> lock(mutexCb_);
+    MEDIA_LOGI("ScreenCaptureMonitorServer::CallOnScreenCaptureStarted S");
+    for (const auto& value : screenCaptureMonitorCbSet_) {
+        if (value != nullptr) {
+            value->OnScreenCaptureStarted(pid);
+        }
+    }
     return MSERR_OK;
 }
 
 int32_t ScreenCaptureMonitorServer::CallOnScreenCaptureFinished(int32_t pid)
 {
-    CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorCb_ != nullptr, MSERR_INVALID_VAL,
-        "CallOnScreenCaptureFinished failed, callback is nullptr");
-    MEDIA_LOGI("ScreenCaptureMonitorServer::CallOnScreenCaptureFinished start");
-    screenCaptureMonitorCb_->OnScreenCaptureFinished(pid);
+    std::lock_guard<std::mutex> lock(mutexCb_);
+    MEDIA_LOGI("ScreenCaptureMonitorServer::CallOnScreenCaptureFinished S");
+    for (const auto& value : screenCaptureMonitorCbSet_) {
+        if (value != nullptr) {
+            value->OnScreenCaptureFinished(pid);
+        }
+    }
     return MSERR_OK;
 }
 } // namespace Media
