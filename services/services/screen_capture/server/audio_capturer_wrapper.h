@@ -51,6 +51,7 @@ public:
     int32_t Stop();
     void SetIsMuted(bool isMuted);
     bool GetIsMuted();
+    int32_t UpdateAudioCapturerConfig(ScreenCaptureContentFilter &filter);
     int32_t CaptureAudio();
     int32_t AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audioBuffer);
     int32_t GetBufferSize(size_t &size);
@@ -78,6 +79,7 @@ private:
     std::shared_ptr<OHOS::AudioStandard::AudioCapturer> audioCapturer_ = nullptr;
     std::shared_ptr<OHOS::Media::AudioCapturerCallbackImpl> audioCaptureCallback_ = nullptr;
     ScreenCaptureContentFilter contentFilter_;
+    OHOS::AudioStandard::AppInfo appInfo_;
 
     std::mutex bufferMutex_;
     std::condition_variable bufferCond_;

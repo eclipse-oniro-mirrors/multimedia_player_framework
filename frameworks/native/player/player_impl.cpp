@@ -114,6 +114,13 @@ int32_t PlayerImpl::Play()
     return playerService_->Play();
 }
 
+int32_t PlayerImpl::SetPlayRange(int64_t start, int64_t end)
+{
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetPlayRange in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerService_->SetPlayRange(start, end);
+}
+
 int32_t PlayerImpl::Prepare()
 {
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Prepare in", FAKE_POINTER(this));
@@ -194,6 +201,10 @@ int32_t PlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
 
     std::unique_lock<std::recursive_mutex> lock(recMutex_);
+    // SEEK_CONTINOUS is usually called in batches, and will not report seek done event.
+    if (mode == PlayerSeekMode::SEEK_CONTINOUS) {
+        return playerService_->Seek(mSeconds, mode);
+    }
     mCurrentPosition = mSeconds;
     mCurrentSeekMode = mode;
     if ((mSeekPosition != mCurrentPosition || mSeekMode != mCurrentSeekMode) && !isSeeking_) {

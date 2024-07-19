@@ -35,6 +35,7 @@
 #include "subtitle_sink_filter.h"
 #include "meta/meta.h"
 #include <chrono>
+#include "dragging_player_agent.h"
 #ifdef SUPPORT_VIDEO
 #include "decoder_surface_filter.h"
 #endif
@@ -98,6 +99,7 @@ public:
     int32_t AddSubSource(const std::string &url) override;
     int32_t Prepare() override;
     int32_t SetRenderFirstFrame(bool display) override;
+    int32_t SetPlayRange(int64_t start, int64_t end) override;
     int32_t PrepareAsync() override;
     int32_t Play() override;
     int32_t Pause() override;
@@ -142,6 +144,8 @@ public:
     void OnStateChanged(PlayerStateId state);
     Status OnCallback(std::shared_ptr<Filter> filter, const FilterCallBackCommand cmd,
                     StreamType outType);
+    int32_t SeekContinous(int32_t mSeconds, int64_t seekContinousBatchNo) override;
+    int32_t ExitSeekContinous(bool align, int64_t seekContinousBatchNo) override;
 
 private:
     enum HiplayerSvpMode : int32_t {
@@ -179,6 +183,7 @@ private:
     void DoInitializeForHttp();
     bool EnableBufferingBySysParam() const;
     bool IsFileUrl(const std::string &url) const;
+    bool IsValidPlayRange(int64_t start, int64_t end) const;
     int32_t GetRealPath(const std::string &url, std::string &realUrlPath) const;
     void SetDefaultAudioRenderInfo();
     void AppendPlayerMediaInfo();
@@ -209,7 +214,8 @@ private:
     bool BreakIfInterruptted();
     bool IsSeekInSitu(int64_t mSeconds);
     void CollectionErrorInfo(int32_t errCode, const std::string& errMsg);
-    Status SelectSeekType(int64_t seekPos, PlayerSeekMode mode);
+    Status DoSetPlayRange();
+    Status StartSeekContinous();
 
     bool isNetWorkPlay_ = false;
     bool isDump_ = false;
@@ -290,8 +296,16 @@ private:
     int64_t playTotalDuration_ = 0;
     bool inEosSeek_ = false;
     std::string mimeType_;
+    bool isSetPlayRange_ = false;
+    int64_t playRangeStartTime_ = -1;
+    int64_t playRangeEndTime_ = -1;
     std::atomic<bool> isDoCompletedSeek_{false};
     OHOS::Media::Mutex stateChangeMutex_{};
+
+    std::mutex seekContinousMutex_;
+    std::atomic<int64_t> seekContinousBatchNo_ {-1};
+    std::shared_ptr<DraggingPlayerAgent> draggingPlayerAgent_ {nullptr};
+    int64_t lastSeekContinousPos_ {-1};
 };
 } // namespace Media
 } // namespace OHOS
