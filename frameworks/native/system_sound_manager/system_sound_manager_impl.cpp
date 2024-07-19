@@ -497,17 +497,6 @@ std::shared_ptr<RingtonePlayer> SystemSoundManagerImpl::GetRingtonePlayer(const 
     CHECK_AND_RETURN_RET_LOG(isRingtoneTypeValid(ringtoneType), nullptr, "invalid ringtone type");
     MEDIA_LOGI("GetRingtonePlayer: for ringtoneType %{public}d", ringtoneType);
 
-    // if (ringtonePlayerMap_[ringtoneType] != nullptr &&
-    //     ringtonePlayerMap_[ringtoneType]->GetRingtoneState() == STATE_RELEASED) {
-    //     ringtonePlayerMap_[ringtoneType] = nullptr;
-    // }
-
-    // if (ringtonePlayerMap_[ringtoneType] == nullptr) {
-    //     ringtonePlayerMap_[ringtoneType] = make_shared<RingtonePlayerImpl>(context, *this, ringtoneType);
-    //     CHECK_AND_RETURN_RET_LOG(ringtonePlayerMap_[ringtoneType] != nullptr, nullptr,
-    //         "Failed to create ringtone player object");
-    // }
-
     std::shared_ptr<RingtonePlayer> ringtonePlayer = std::make_shared<RingtonePlayerImpl>(context, *this, ringtoneType);
     CHECK_AND_RETURN_RET_LOG(ringtonePlayer != nullptr, nullptr,
         "Failed to create ringtone player object");
@@ -521,7 +510,6 @@ std::shared_ptr<SystemTonePlayer> SystemSoundManagerImpl::GetSystemTonePlayer(
     CHECK_AND_RETURN_RET_LOG(isSystemToneTypeValid(systemToneType), nullptr, "invalid system tone type");
     MEDIA_LOGI("GetSystemTonePlayer: for systemToneType %{public}d", systemToneType);
 
-    // systemTonePlayerMap_[systemToneType] = make_shared<SystemTonePlayerImpl>(context, *this, systemToneType);
     std::shared_ptr<SystemTonePlayer> systemTonePlayer =
         std::make_shared<SystemTonePlayerImpl>(context, *this, systemToneType);
     CHECK_AND_RETURN_RET_LOG(systemTonePlayer != nullptr, nullptr,

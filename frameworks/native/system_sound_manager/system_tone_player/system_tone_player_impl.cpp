@@ -234,9 +234,9 @@ int32_t SystemTonePlayerImpl::Start(const SystemToneOptions &systemToneOptions)
         "System tone player has been released!");
 
     int32_t result = MSERR_OK;
-    AudioHapticPlayerOptions finalOptions =
-        {systemToneOptions.muteAudio, (systemToneOptions.muteHaptics || muteHaptics_)};
-    result = CreatePlayerWithOptions(finalOptions);
+    bool actualMuteHaptics = systemToneOptions.muteHaptics || muteHaptics_;
+    AudioHapticPlayerOptions actualOptions = {systemToneOptions.muteAudio, actualMuteHaptics};
+    result = CreatePlayerWithOptions(actualOptions);
     CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, -1,
         "Failed to create audio haptic player: %{public}d", result);
 
@@ -351,6 +351,11 @@ void SystemTonePlayerCallback::OnEndOfStream(void)
         return;
     }
     player->NotifyEndofStreamEvent(streamId_);
+}
+
+void SystemTonePlayerCallback::OnError(int32_t errorCode)
+{
+    MEDIA_LOGI("OnError from audio haptic player. errorCode %{public}d", errorCode);
 }
 } // namesapce AudioStandard
 } // namespace OHOS

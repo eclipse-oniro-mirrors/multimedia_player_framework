@@ -70,8 +70,9 @@ public:
     explicit SystemTonePlayerCallback(int32_t streamId, std::shared_ptr<SystemTonePlayerImpl> systemTonePlayerImpl);
     virtual ~SystemTonePlayerCallback() = default;
 
-    void OnInterrupt(const AudioStandard::InterruptEvent &interruptEvent);
-    void OnEndOfStream(void);
+    void OnInterrupt(const AudioStandard::InterruptEvent &interruptEvent) override;
+    void OnEndOfStream(void) override;
+    void OnError(int32_t errorCode) override;
 
 private:
     std::weak_ptr<SystemTonePlayerImpl> systemTonePlayerImpl_;

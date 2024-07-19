@@ -114,11 +114,8 @@ int32_t AudioHapticManagerImpl::UnregisterSource(const int32_t &sourceID)
         MEDIA_LOGE("UnregisterSource failed sourceID: %{public}d", sourceID);
         return MSERR_INVALID_VAL;
     }
-    // if (audioHapticPlayerMap_[sourceID]->audioHapticPlayer_ != nullptr) {
-    //     audioHapticPlayerMap_[sourceID]->audioHapticPlayer_->Release();
-    //     audioHapticPlayerMap_[sourceID]->audioHapticPlayer_ = nullptr;
-    // }
     audioHapticPlayerMap_[sourceID] = nullptr;
+    audioHapticPlayerMap_.erase(sourceID);
     curPlayerCount_ -= 1;
 
     return MSERR_OK;
