@@ -2181,6 +2181,10 @@ void HiPlayerImpl::HandleSubtitleTrackChangeEvent(const Event& event)
         return;
     }
     if (IsSubtitleMime(mime)) {
+        if (Status::OK != subtitleSink_->DoFlush()) {
+            MEDIA_LOG_E("HandleSubtitleTrackChangeEvent DoFlush error");
+            return;
+        }
         if (Status::OK != demuxer_->StartTask(trackId)) {
             MEDIA_LOG_E("HandleSubtitleTrackChangeEvent StartTask error. trackId is " PUBLIC_LOG_D32, trackId);
             return;
