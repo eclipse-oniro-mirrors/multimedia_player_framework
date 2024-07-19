@@ -2160,8 +2160,7 @@ napi_value AVPlayerNapi::JsGetCurrentSelections(napi_env env, napi_callback_info
     // async work
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "JsGetCurrentSelections", NAPI_AUTO_LENGTH, &resource);
-    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource,
-        [](napi_env env, void *data) {
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void *data) {
             MEDIA_LOGI("GetCurrentSelections Task");
             auto promiseCtx = reinterpret_cast<AVPlayerContext *>(data);
             CHECK_AND_RETURN_LOG(promiseCtx != nullptr, "promiseCtx is nullptr!");
