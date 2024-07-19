@@ -1680,7 +1680,8 @@ void HiPlayerImpl::HandleCompleteEvent(const Event& event)
     Format format;
     int32_t curPosMs = 0;
     GetCurrentTime(curPosMs);
-    if (durationMs_.load() > curPosMs && abs(durationMs_.load() - curPosMs) < AUDIO_SINK_MAX_LATENCY) {
+    if ((playRangeEndTime_ == PLAY_RANGE_DEFAULT_VALUE) &&
+        (durationMs_.load() > curPosMs && abs(durationMs_.load() - curPosMs) < AUDIO_SINK_MAX_LATENCY)) {
         MEDIA_LOG_I("OnComplete durationMs - curPosMs: " PUBLIC_LOG_D32, durationMs_.load() - curPosMs);
         OHOS::Media::SleepInJob(durationMs_.load() - curPosMs);
     }
@@ -1690,7 +1691,11 @@ void HiPlayerImpl::HandleCompleteEvent(const Event& event)
         inEosSeek_ = true;
     }
     pipeline_->Pause();
-    callbackLooper_.DoReportCompletedTime();
+    if (playRangeEndTime_ == PLAY_RANGE_DEFAULT_VALUE) {
+        callbackLooper_.DoReportCompletedTime();
+    } else {
+        callbackLooper_.OnInfo(INFO_TYPE_POSITION_UPDATE, playRangeEndTime_, format);
+    }
     if (!singleLoop_.load()) {
         OnStateChanged(PlayerStateId::EOS);
     }
