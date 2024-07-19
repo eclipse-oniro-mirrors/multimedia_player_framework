@@ -234,7 +234,8 @@ int32_t SystemTonePlayerImpl::Start(const SystemToneOptions &systemToneOptions)
         "System tone player has been released!");
 
     int32_t result = MSERR_OK;
-    AudioHapticPlayerOptions finalOptions = {systemToneOptions.muteAudio, (systemToneOptions.muteHaptics||muteHaptics_)};
+    AudioHapticPlayerOptions finalOptions =
+        {systemToneOptions.muteAudio, (systemToneOptions.muteHaptics || muteHaptics_)};
     result = CreatePlayerWithOptions(finalOptions);
     CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, -1,
         "Failed to create audio haptic player: %{public}d", result);
@@ -295,7 +296,7 @@ void SystemTonePlayerImpl::DeletePlayer(const int32_t &streamId)
     if (callbackMap_.count(streamId) > 0) {
         callbackMap_.erase(streamId);
     }
-    MEDIA_LOGI("DeletePlayer. playerMap_.size() %{public}d  callbackMap_.size() %{public}d ",
+    MEDIA_LOGI("DeletePlayer. playerMap_.size() %{public}zu  callbackMap_.size() %{public}zu ",
         playerMap_.size(), callbackMap_.size());
 }
 
