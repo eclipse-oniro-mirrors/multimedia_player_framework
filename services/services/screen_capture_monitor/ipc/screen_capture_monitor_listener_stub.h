@@ -24,7 +24,7 @@ namespace OHOS {
 namespace Media {
 class ScreenCaptureMonitorListenerStub : public IRemoteStub<IStandardScreenCaptureMonitorListener> {
 public:
-ScreenCaptureMonitorListenerStub();
+    ScreenCaptureMonitorListenerStub();
     virtual ~ScreenCaptureMonitorListenerStub();
     int OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
     void OnScreenCaptureStarted(int32_t pid) override;

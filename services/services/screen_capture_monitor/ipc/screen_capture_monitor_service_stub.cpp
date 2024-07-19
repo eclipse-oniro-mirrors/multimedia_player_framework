@@ -118,7 +118,7 @@ int32_t ScreenCaptureMonitorServiceStub::CloseListenerObject()
 {
     CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorCallback_ != nullptr, MSERR_OK,
         "screenCaptureMonitorCallback_ is nullptr");
-    (void)screenCaptureMonitorServer_->RemoveScreenCaptureMonitorCallback(callback);
+    (void)screenCaptureMonitorServer_->RemoveScreenCaptureMonitorCallback(screenCaptureMonitorCallback_);
     screenCaptureMonitorCallback_ = nullptr;
     return MSERR_OK;
 }

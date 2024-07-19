@@ -61,7 +61,7 @@ int32_t ScreenCaptureMonitorServer::Init()
 int32_t ScreenCaptureMonitorServer::Release()
 {
     MEDIA_LOGI("ScreenCaptureMonitorServer:0x%{public}06" PRIXPTR " Release S", FAKE_POINTER(this));
-    std::lock_guard<std::mutex> lock(mutexCb_);
+    std::lock_guard<std::mutex> lockCb(mutexCb_);
     screenCaptureMonitorCbSet_.clear();
     return MSERR_OK;
 }
@@ -112,7 +112,7 @@ void ScreenCaptureMonitorServer::UnregisterScreenCaptureMonitorListener(
 
 int32_t ScreenCaptureMonitorServer::CallOnScreenCaptureStarted(int32_t pid)
 {
-    std::lock_guard<std::mutex> lock(mutexCb_);
+    std::lock_guard<std::mutex> lockCb(mutexCb_);
     MEDIA_LOGI("ScreenCaptureMonitorServer::CallOnScreenCaptureStarted S");
     for (const auto& value : screenCaptureMonitorCbSet_) {
         if (value != nullptr) {
@@ -124,7 +124,7 @@ int32_t ScreenCaptureMonitorServer::CallOnScreenCaptureStarted(int32_t pid)
 
 int32_t ScreenCaptureMonitorServer::CallOnScreenCaptureFinished(int32_t pid)
 {
-    std::lock_guard<std::mutex> lock(mutexCb_);
+    std::lock_guard<std::mutex> lockCb(mutexCb_);
     MEDIA_LOGI("ScreenCaptureMonitorServer::CallOnScreenCaptureFinished S");
     for (const auto& value : screenCaptureMonitorCbSet_) {
         if (value != nullptr) {
