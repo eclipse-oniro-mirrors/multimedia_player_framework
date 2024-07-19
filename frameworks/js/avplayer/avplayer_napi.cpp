@@ -1882,7 +1882,7 @@ void AVPlayerNapi::SeekEnqueueTask(AVPlayerNapi *jsPlayer, int32_t time, int32_t
 
 void AVPlayerNapi::SelectTrackEnqueueTask(AVPlayerNapi *jsPlayer, int32_t index, int32_t mode)
 {
-    auto task = std::make_shared<TaskHandler<void>>([jsPlayer, time, mode]() {
+    auto task = std::make_shared<TaskHandler<void>>([jsPlayer, index, mode]() {
         MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSelectTrack Task In", FAKE_POINTER(jsPlayer));
         if (jsPlayer->player_ != nullptr) {
             (void)jsPlayer->player_->SelectTrack(index, jsPlayer->TransferSwitchMode(mode));
