@@ -2412,10 +2412,9 @@ void AudioDataSource::VoIPStateUpdate(
     const std::vector<std::unique_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos)
 {
     std::lock_guard<std::mutex> lock(voipStatusChangeMutex_);
-    std::vector<std::unique_ptr<AudioRendererChangeInfo>> allAudioRendererChangeInfos(audioRendererChangeInfos);
-    if (allAudioRendererChangeInfos.size() == 0) {
-        AudioStreamManager::GetInstance()->GetCurrentRendererChangeInfos(allAudioRendererChangeInfos);
-    }
+    (void)audioRendererChangeInfos;
+    std::vector<std::unique_ptr<AudioRendererChangeInfo>> allAudioRendererChangeInfos;
+    AudioStreamManager::GetInstance()->GetCurrentRendererChangeInfos(allAudioRendererChangeInfos);
     bool isInVoIPCall = false;
     for (const std::unique_ptr<AudioRendererChangeInfo> &changeInfo: allAudioRendererChangeInfos) {
         if (!changeInfo) {

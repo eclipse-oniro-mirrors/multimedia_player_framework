@@ -278,8 +278,6 @@ public:
     int32_t GetInnerAudioCaptureBufferSize(size_t &size);
     int32_t GetMicAudioCaptureBufferSize(size_t &size);
     int32_t SetSpeakerAliveStatus(bool speakerAliveStatus);
-    int32_t StartMicAudioCapture();
-    int32_t StopMicAudioCapture();
     int32_t OnVoIPStateChanged(bool isInVoIPCall);
 
 private:
@@ -292,6 +290,8 @@ private:
     int32_t StartScreenCaptureStream();
     int32_t StartAudioCapture();
     int32_t StartInnerAudioCapture();
+    int32_t StartMicAudioCapture();
+    int32_t StopMicAudioCapture();
     int32_t StartVideoCapture();
     int32_t StartHomeVideoCapture();
     int32_t StopScreenCaptureInner(AVScreenCaptureStateCode stateCode);
