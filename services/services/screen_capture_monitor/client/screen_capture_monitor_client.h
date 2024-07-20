@@ -34,8 +34,6 @@ public:
         sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> listener) override;
     void UnregisterScreenCaptureMonitorListener(
         sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> listener) override;
-
-    // ScreenCaptureClient
     void MediaServerDied();
 
 private:
@@ -47,7 +45,6 @@ private:
     std::mutex mutex_;
     bool listenerStubIPCExist_ = false;
     std::set<sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener>> screenCaptureMonitorClientCallbacks_;
-
 };
 } // namespace Media
 } // namespace OHOS

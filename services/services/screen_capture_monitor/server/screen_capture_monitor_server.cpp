@@ -86,7 +86,7 @@ void ScreenCaptureMonitorServer::SetScreenCaptureMonitorCallback(
 }
 
 void ScreenCaptureMonitorServer::RemoveScreenCaptureMonitorCallback(
-        sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> callback)
+    sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> callback)
 {
     MediaTrace trace("ScreenCaptureMonitorServer::RemoveScreenCaptureMonitorCallback");
     std::lock_guard<std::mutex> lock(mutex_);
