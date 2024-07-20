@@ -348,6 +348,11 @@ int32_t HiPlayerImpl::SetPlayRange(int64_t start, int64_t end)
     return TransStatus(Status::OK);
 }
 
+int64_t HiPlayerImpl::GetPlayRangeEndTime()
+{
+    return playRangeEndTime_;
+}
+
 int32_t HiPlayerImpl::SetRenderFirstFrame(bool display)
 {
     MEDIA_LOG_I("SetRenderFirstFrame in, display: " PUBLIC_LOG_D32, display);
@@ -1691,11 +1696,7 @@ void HiPlayerImpl::HandleCompleteEvent(const Event& event)
         inEosSeek_ = true;
     }
     pipeline_->Pause();
-    if (playRangeEndTime_ == PLAY_RANGE_DEFAULT_VALUE) {
-        callbackLooper_.DoReportCompletedTime();
-    } else {
-        callbackLooper_.OnInfo(INFO_TYPE_POSITION_UPDATE, playRangeEndTime_, format);
-    }
+    callbackLooper_.DoReportCompletedTime();
     if (!singleLoop_.load()) {
         OnStateChanged(PlayerStateId::EOS);
     }
