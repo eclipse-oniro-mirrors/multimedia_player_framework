@@ -48,6 +48,7 @@ ScreenCaptureMonitorClient::~ScreenCaptureMonitorClient()
             (void)screenCaptureMonitorProxy_->DestroyStub();
             screenCaptureMonitorProxy_ = nullptr;
         }
+        screenCaptureMonitorClientCallbacks_.clear();
     }
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
@@ -78,7 +79,7 @@ int32_t ScreenCaptureMonitorClient::CloseListenerObject()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     listenerStubIPCExist_ = false;
-    MEDIA_LOGD("SetListenerObject");
+    MEDIA_LOGD("CloseListenerObject");
     return screenCaptureMonitorProxy_->CloseListenerObject();
 }
 
@@ -93,6 +94,7 @@ int32_t ScreenCaptureMonitorClient::IsScreenCaptureWorking()
 void ScreenCaptureMonitorClient::RegisterScreenCaptureMonitorListener(
     sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> listener)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     if (!listenerStubIPCExist_) {
         CreateListenerObject();
     }
@@ -107,6 +109,7 @@ void ScreenCaptureMonitorClient::RegisterScreenCaptureMonitorListener(
 void ScreenCaptureMonitorClient::UnregisterScreenCaptureMonitorListener(
     sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> listener)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_LOG(listener != nullptr, "input param listener is nullptr.");
     CHECK_AND_RETURN_LOG(listenerStub_ != nullptr, "listenerStub_ is nullptr.");
     listener_ = listener;

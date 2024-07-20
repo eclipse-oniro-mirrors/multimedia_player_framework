@@ -69,7 +69,7 @@ int32_t ScreenCaptureMonitorServiceStub::Init()
 
 int32_t ScreenCaptureMonitorServiceStub::DestroyStub()
 {
-    screenCaptureMonitorCallback_ = nullptr;
+    CloseListenerObject();
     MediaServerManager::GetInstance().DestroyStubObject(MediaServerManager::SCREEN_CAPTURE_MONITOR, AsObject());
     return MSERR_OK;
 }
