@@ -1979,12 +1979,12 @@ int32_t ScreenCaptureServer::OnVoIPStateChanged(bool isInVoIPCall)
         micAudioCapture_->SetIsInVoIPCall(isInVoIPCall);
     }
     CHECK_AND_RETURN_RET_LOG(innerAudioCapture_, MSERR_UNKNOWN, "innerAudioCapture is nullptr");
-    if (isInVoIPCall && innerAudioCapture_ && !isInnerAudioCaptureWorking_) {
+    if (isInVoIPCall && !isInnerAudioCaptureWorking_) {
         ret = innerAudioCapture_->Resume();
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "innerAudioCapture Resume failed");
         isInnerAudioCaptureWorking_ = true;
     }
-    if (!isInVoIPCall && innerAudioCapture_ && isInnerAudioCaptureWorking_ && isMicrophoneOn_ && speakerAliveStatus_) {
+    if (!isInVoIPCall && isInnerAudioCaptureWorking_ && isMicrophoneOn_ && speakerAliveStatus_) {
         isInnerAudioCaptureWorking_ = false;
         ret = innerAudioCapture_->Pause();
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "innerAudioCapture Pause failed");
