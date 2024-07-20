@@ -83,7 +83,7 @@ private:
     std::condition_variable bufferCond_;
     std::queue<std::shared_ptr<AudioBuffer>> availBuffers_;
     std::string bundleName_;
-    bool isInVoIPCall_ = false;
+    std::atomic<bool> isInVoIPCall_ = false;
 
     /* used for hilog output */
     int32_t captureAudioLogCount_ = 0;

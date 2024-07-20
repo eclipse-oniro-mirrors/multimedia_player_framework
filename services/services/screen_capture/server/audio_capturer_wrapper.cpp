@@ -196,7 +196,7 @@ std::shared_ptr<AudioCapturer> AudioCapturerWrapper::CreateAudioCapturer(const O
     capturerOptions.streamInfo.format = AudioSampleFormat::SAMPLE_S16LE;
     if (audioInfo_.audioSource == AudioCaptureSourceType::SOURCE_DEFAULT ||
         audioInfo_.audioSource == AudioCaptureSourceType::MIC) {
-        if (isInVoIPCall_) {
+        if (isInVoIPCall_.load()) {
             capturerOptions.capturerInfo.sourceType = SourceType::SOURCE_TYPE_VOICE_COMMUNICATION;
         } else {
             capturerOptions.capturerInfo.sourceType = SourceType::SOURCE_TYPE_MIC; // Audio Source Type Mic is 0
@@ -329,7 +329,7 @@ int32_t AudioCapturerWrapper::ReleaseAudioBuffer()
 
 void AudioCapturerWrapper::SetIsInVoIPCall(bool isInVoIPCall)
 {
-    isInVoIPCall_ = isInVoIPCall;
+    isInVoIPCall_.store(isInVoIPCall);
 }
 
 void AudioCapturerWrapper::OnStartFailed(ScreenCaptureErrorType errorType, int32_t errorCode)
