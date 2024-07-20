@@ -851,7 +851,7 @@ int32_t ScreenCaptureServer::StartMicAudioCapture()
     micAudioCapture_ = micCapture;
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "StartMicAudioCapture OK.", FAKE_POINTER(this));
     if (micAudioCapture_) {
-        micAudioCapture_->SetIsInVoIPCall(isInVoIPCall);
+        micAudioCapture_->SetIsInVoIPCall(isInVoIPCall_);
     }
     return MSERR_OK;
 }
@@ -2412,11 +2412,9 @@ void AudioDataSource::VoIPStateUpdate(
     const std::vector<std::unique_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos)
 {
     std::lock_guard<std::mutex> lock(voipStatusChangeMutex_);
-    std::vector<std::unique_ptr<AudioRendererChangeInfo>> allAudioRendererChangeInfos;
-    if (audioRendererChangeInfos.size() == 0) {
+    std::vector<std::unique_ptr<AudioRendererChangeInfo>> allAudioRendererChangeInfos(audioRendererChangeInfos);
+    if (allAudioRendererChangeInfos.size() == 0) {
         AudioStreamManager::GetInstance()->GetCurrentRendererChangeInfos(allAudioRendererChangeInfos);
-    } else {
-        allAudioRendererChangeInfos = audioRendererChangeInfos;
     }
     bool isInVoIPCall = false;
     for (const std::unique_ptr<AudioRendererChangeInfo> &changeInfo: allAudioRendererChangeInfos) {
