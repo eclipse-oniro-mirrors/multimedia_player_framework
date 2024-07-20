@@ -27,7 +27,7 @@ public:
     ScreenCaptureMonitorImpl();
     ~ScreenCaptureMonitorImpl();
 
-    std::int32_t IsScreenCaptureWorking();
+    int32_t IsScreenCaptureWorking();
     void RegisterScreenCaptureMonitorListener(sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> listener);
     void UnregisterScreenCaptureMonitorListener(sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> listener);
     int32_t Init();

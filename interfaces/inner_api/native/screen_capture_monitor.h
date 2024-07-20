@@ -44,7 +44,7 @@ public:
         virtual void OnScreenCaptureFinished(int32_t pid) = 0;
     };
 
-    std::int32_t IsScreenCaptureWorking();
+    int32_t IsScreenCaptureWorking();
     void RegisterScreenCaptureMonitorListener(sptr<ScreenCaptureMonitorListener> listener);
     void UnregisterScreenCaptureMonitorListener(sptr<ScreenCaptureMonitorListener> listener);
     virtual ~ScreenCaptureMonitor() = default;

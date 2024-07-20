@@ -45,7 +45,7 @@ void ScreenCaptureMonitor::UnregisterScreenCaptureMonitorListener(
         UnregisterScreenCaptureMonitorListener(listener);
 }
 
-std::int32_t ScreenCaptureMonitor::IsScreenCaptureWorking()
+int32_t ScreenCaptureMonitor::IsScreenCaptureWorking()
 {
     return static_cast<ScreenCaptureMonitorImpl *>(ScreenCaptureMonitor::GetInstance())->IsScreenCaptureWorking();
 }
