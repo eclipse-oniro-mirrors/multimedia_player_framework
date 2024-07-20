@@ -1538,6 +1538,10 @@ void HiPlayerImpl::OnEventSub(const Event &event)
             NotifySubtitleUpdate(event);
             break;
         }
+        case EventType::EVENT_CACHED_DURATION: {
+            NotifyCachedDuration(AnyCast<int32_t>(event.param));
+            break;
+        }
         default:
             break;
     }
@@ -1657,6 +1661,14 @@ void HiPlayerImpl::NotifyBufferingEnd(int32_t param)
     MEDIA_LOG_I("NotifyBufferingEnd");
     Format format;
     (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_BUFFERING_END), 1);
+    callbackLooper_.OnInfo(INFO_TYPE_BUFFERING_UPDATE, param, format);
+}
+
+void HiPlayerImpl::NotifyCachedDuration(int32_t param)
+{
+    MEDIA_LOG_I("NotifyCachedDuration");
+    Format format;
+    (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_CACHED_DURATION), param);
     callbackLooper_.OnInfo(INFO_TYPE_BUFFERING_UPDATE, param, format);
 }
 
