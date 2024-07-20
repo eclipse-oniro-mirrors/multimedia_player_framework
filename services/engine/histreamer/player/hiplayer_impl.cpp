@@ -198,6 +198,15 @@ bool HiPlayerImpl::IsValidPlayRange(int64_t start, int64_t end) const
     if (!isSetPlayRange_ || (pipelineStates_ == PlayerStates::PLAYER_INITIALIZED)) {
         return true;
     }
+    if ((start == PLAY_RANGE_DEFAULT_VALUE) && (end == PLAY_RANGE_DEFAULT_VALUE)) {
+        return true;
+    }
+    if ((start == PLAY_RANGE_DEFAULT_VALUE) && ((end > 0) && (end <= durationMs_.load()))) {
+        return true;
+    }
+    if ((end == PLAY_RANGE_DEFAULT_VALUE) && ((start >= 0) && (start < durationMs_.load()))) {
+        return true;
+    }
     if (start >= end || start < 0 || end <= 0 || start >= durationMs_.load() || end > durationMs_.load()) {
         return false;
     }
