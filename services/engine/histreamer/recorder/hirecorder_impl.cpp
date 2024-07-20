@@ -288,7 +288,8 @@ int32_t HiRecorderImpl::Prepare()
         videoEncFormat_->Set<Tag::VIDEO_ENCODE_BITRATE_MODE>(Plugins::VideoEncodeBitrateMode::VBR);
         videoEncoderFilter_->SetCodecFormat(videoEncFormat_);
         videoEncoderFilter_->Init(recorderEventReceiver_, recorderCallback_);
-        FALSE_RETURN_V_MSG_E(videoEncoderFilter_->Configure(videoEncFormat_) == Status::OK,
+        videoEncFormat_->Set<Tag::VIDEO_ENABLE_WATERMARK>(isWatermarkSupported_);
+        FALSE_RETURN_V_MSG_E(videoEncoderFilter_->Configure(videoEncFormat_, waterMarkBuffer_) == Status::OK,
             ERR_UNKNOWN_REASON, "videoEncoderFilter Configure fail");
     }
     if (videoCaptureFilter_) {
@@ -826,6 +827,28 @@ void HiRecorderImpl::SetCallingInfo(const std::string &bundleName, uint64_t inst
 {
     bundleName_ = bundleName;
     instanceId_ = instanceId;
+}
+
+int32_t HiRecorderImpl::IsWatermarkSupported(bool &isWatermarkSupported)
+{
+    if (isWatermarkSupported_) {
+        isWatermarkSupported = true;
+        return (int32_t)Status::OK;
+    }
+    if (!codecCapabilityAdapter_) {
+        codecCapabilityAdapter_ = std::make_shared<Pipeline::CodecCapabilityAdapter>();
+    }
+    codecCapabilityAdapter_->Init();
+    Status ret = codecCapabilityAdapter_->IsWatermarkSupported(isWatermarkSupported);
+    return static_cast<int32_t>(ret);
+}
+
+int32_t HiRecorderImpl::SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer)
+{
+    int32_t ret = isWatermarkSupported_ ? (int32_t)Status::OK: IsWatermarkSupported(isWatermarkSupported_);
+    FALSE_RETURN_V_MSG_E(isWatermarkSupported_, Status::ERROR_UNSUPPORTED_FORMAT, "Watermarking not supported");//TODO::801
+    waterMarkBuffer_ = waterMarkBuffer;
+    return ret;
 }
 } // namespace MEDIA
 } // namespace OHOS

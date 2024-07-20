@@ -430,6 +430,19 @@ int32_t RecorderServiceStub::GetMaxAmplitude()
     return recorderServer_->GetMaxAmplitude();
 }
 
+int32_t RecorderServiceStub::IsWatermarkSupported(bool &isWatermarkSupported)
+{
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    return recorderServer_->IsWatermarkSupported(isWatermarkSupported);
+}
+
+int32_t RecorderServiceStub::SetWatermark(std::shared_ptr<SurfaceBuffer> &pixelMap,
+    std::shared_ptr<WatermarkConfig> watermarkConfig)
+{
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    return recorderServer_->SetWatermark(pixelMap, watermarkConfig);
+}
+
 int32_t RecorderServiceStub::DoIpcAbnormality()
 {
     MEDIA_LOGI("Enter DoIpcAbnormality.");
@@ -781,6 +794,24 @@ int32_t RecorderServiceStub::GetMaxAmplitude(MessageParcel &data, MessageParcel 
 {
     (void)data;
     reply.WriteInt32(GetMaxAmplitude());
+
+    return MSERR_OK;
+}
+
+int32_t RecorderServiceStub::IsWatermarkSupported(MessageParcel &data, MessageParcel &reply)
+{
+    (void)data;
+    bool isWatermarkSupported = false;
+    int32_t ret = IsWatermarkSupported(isWatermarkSupported);
+    (void)reply.writeBool(isWatermarkSupported);
+    (void)reply.WriteInt32(ret);
+
+    return MSERR_OK;
+}
+int32_t RecorderServiceStub::SetWatermark(MessageParcel &data, MessageParcel &reply)
+{
+    (void)data;//todo::NEED COVER
+    reply.WriteInt32(SetWatermark());
 
     return MSERR_OK;
 }

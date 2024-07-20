@@ -895,6 +895,26 @@ public:
     virtual int32_t GetAvailableEncoder(std::vector<EncoderCapabilityData> &encoderInfo) = 0;
 
     virtual int32_t GetMaxAmplitude() = 0;
+    /**
+     * @brief Check if the avrecorder has watermark capability.
+     *
+     * @param isWatermarkSupported isWatermarkSupported true or false.
+     * @return Returns {@link MSERR_OK} If the query succeeds; returns an error code otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t IsWatermarkSupported(bool &isWatermarkSupported) = 0;
+    /**
+     * @brief Set watermark pixelmap and config
+     *
+     * @param pixelMap watermark pixelmap
+     * @param watermarkConfig configures of the watermark
+     * @return Returns {@link MSERR_OK} If the SetWatermark succeeds; returns an error code otherwise.
+     * @since 1.0
+     * @version 1.0
+    */
+    virtual int32_t SetWatermark(std::shared_ptr<SurfaceBuffer> &pixelMap,
+        std::shared_ptr<WatermarkConfig> watermarkConfig) = 0;
 };
 
 class __attribute__((visibility("default"))) RecorderFactory {

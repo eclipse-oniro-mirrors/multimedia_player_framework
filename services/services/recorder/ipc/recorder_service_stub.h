@@ -71,7 +71,9 @@ public:
     int32_t GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &changeInfo) override;
     int32_t GetAvailableEncoder(std::vector<EncoderCapabilityData> &encoderInfo) override;
     int32_t GetMaxAmplitude() override;
-
+    int32_t IsWatermarkSupported(bool &isWatermarkSupported) override;
+    int32_t SetWatermark(std::shared_ptr<SurfaceBuffer> &pixelMap,
+        std::shared_ptr<WatermarkConfig> watermarkConfig);
     // MonitorServerObject override
     int32_t DoIpcAbnormality() override;
     int32_t DoIpcRecovery(bool fromMonitor) override;
@@ -114,6 +116,8 @@ private:
     int32_t GetCurrentCapturerChangeInfo(MessageParcel &data, MessageParcel &reply);
     int32_t GetAvailableEncoder(MessageParcel &data, MessageParcel &reply);
     int32_t GetMaxAmplitude(MessageParcel &data, MessageParcel &reply);
+    int32_t IsWatermarkSupported(MessageParcel &data, MessageParcel &reply);
+    int32_t SetWatermark(MessageParcel &data, MessageParcel &reply);
     int32_t CheckPermission();
     void FillRecFuncPart1();
     void FillRecFuncPart2();

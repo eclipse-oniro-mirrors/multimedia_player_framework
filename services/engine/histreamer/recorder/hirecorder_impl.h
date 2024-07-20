@@ -77,6 +77,8 @@ public:
     int32_t GetAvailableEncoder(std::vector<EncoderCapabilityData> &encoderInfo);
     int32_t GetMaxAmplitude();
     void SetCallingInfo(const std::string &bundleName, uint64_t instanceId);
+    int32_t IsWatermarkSupported(bool &isWatermarkSupported);
+    int32_t SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer);
 
 private:
     void ConfigureAudioCapture();
@@ -121,6 +123,8 @@ private:
     std::shared_ptr<Meta> userMeta_ = std::make_shared<Meta>();
     std::atomic<StateId> curState_;
 
+    std::shared_ptr<AVBuffer> waterMarkBuffer_ = nullptr;
+
     std::shared_ptr<AudioStandard::AudioCapturerInfoChangeCallback> CapturerInfoChangeCallback_;
     std::weak_ptr<IRecorderEngineObs> obs_{};
     OutputFormatType outputFormatType_{OutputFormatType::FORMAT_BUTT};
@@ -130,6 +134,7 @@ private:
 
     bool videoSourceIsYuv_ = false;
     bool videoSourceIsRGBA_ = false;
+    bool isWatermarkSupported_ = false;
 
     Mutex stateMutex_ {};
     ConditionVariable cond_ {};

@@ -510,6 +510,18 @@ public:
      * in {@link media_errors.h} otherwise.
     */
     virtual int32_t SetGenre(std::string &genre) = 0;
+
+    /**
+     * @brief Check if the avrecorder has watermark capability.
+     *
+     * @param isWatermarkSupported
+     * @return Returns {@link SUCCESS} if the setting is successful; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+    */
+    virtual IsWatermarkSupported(bool &isWatermarkSupported) = 0;
+
+    virtual int32_t SetWatermark(std::shared_ptr<SurfaceBuffer> &pixelMap,
+        std::shared_ptr<WatermarkConfig> watermarkConfig) = 0;
 };
 } // namespace Media
 } // namespace OHOS
