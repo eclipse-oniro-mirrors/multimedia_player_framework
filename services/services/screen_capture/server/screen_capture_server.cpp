@@ -999,6 +999,7 @@ void ScreenCaptureServer::PostStartScreenCapture(bool isSuccess)
         SetErrorInfo(MSERR_UNKNOWN, "PostStartScreenCapture handle failure",
             StopReason::POST_START_SCREENCAPTURE_HANDLE_FAILURE, IsUserPrivacyAuthorityNeeded());
     }
+    activeSessionId_.store(sessionId_);
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "PostStartScreenCapture end.", FAKE_POINTER(this));
 }
 
@@ -1872,13 +1873,20 @@ int32_t ScreenCaptureServer::ExcludeContent(ScreenCaptureContentFilter &contentF
     if (captureState_ == AVScreenCaptureState::STARTED) {
         Rosen::DisplayManager::GetInstance().SetVirtualScreenBlackList(screenId_, contentFilter_.windowIDsVec);
     }
+    int32_t ret = MSERR_OK;
+    if (innerAudioCapture_ != nullptr) {
+        ret = innerAudioCapture_->UpdateAudioCapturerConfig(contentFilter_);
+    }
 
     // For the moment, not support:
     // For STREAM, should call AudioCapturer interface to make effect when start
     // For CAPTURE FILE, should call Recorder interface to make effect when start
-    FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_, SCREEN_CAPTURE_ERR_UNSUPPORT,
-        "ExcludeContent failed, capture is not CREATED");
-    return MSERR_OK;
+    if (ret != MSERR_OK) {
+        MEDIA_LOGE("ScreenCaptureServer::ExcludeContent UpdateAudioCapturerConfig failed");
+        FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_, SCREEN_CAPTURE_ERR_UNSUPPORT,
+            "ExcludeContent failed, UpdateAudioCapturerConfig failed");
+    }
+    return ret;
 }
 
 int32_t ScreenCaptureServer::SetMicrophoneEnabled(bool isMicrophone)
@@ -2486,11 +2494,11 @@ int32_t AudioDataSource::ReadAt(std::shared_ptr<AVBuffer> buffer, uint32_t lengt
     }
     if (type_ == AVScreenCaptureMixMode::MIX_MODE) {
         return MixModeBufferWrite(innerAudioBuffer, micAudioBuffer, bufferMem);
-    } else if (type_ == AVScreenCaptureMixMode::INNER_MODE) {
+    } else if (type_ == AVScreenCaptureMixMode::INNER_MODE && innerAudioBuffer != nullptr) {
         bufferMem->Write(reinterpret_cast<uint8_t*>(innerAudioBuffer->buffer), innerAudioBuffer->length, 0);
         return screenCaptureServer_->ReleaseAudioBufferMix(type_);
-    } else if (type_ == AVScreenCaptureMixMode::MIC_MODE) {
-        bufferMem->Write(reinterpret_cast<uint8_t*>(micAudioBuffer->buffer), innerAudioBuffer->length, 0);
+    } else if (type_ == AVScreenCaptureMixMode::MIC_MODE && micAudioBuffer != nullptr) {
+        bufferMem->Write(reinterpret_cast<uint8_t*>(micAudioBuffer->buffer), micAudioBuffer->length, 0);
         return screenCaptureServer_->ReleaseAudioBufferMix(type_);
     }
     return MSERR_UNKNOWN;
