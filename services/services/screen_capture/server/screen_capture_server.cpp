@@ -1975,9 +1975,6 @@ int32_t ScreenCaptureServer::OnVoIPStateChanged(bool isInVoIPCall)
     }
     int32_t ret = MSERR_UNKNOWN;
     isInVoIPCall_ = isInVoIPCall;
-    if (micAudioCapture_) {
-        micAudioCapture_->SetIsInVoIPCall(isInVoIPCall);
-    }
     CHECK_AND_RETURN_RET_LOG(innerAudioCapture_, MSERR_UNKNOWN, "innerAudioCapture is nullptr");
     if (isInVoIPCall && !isInnerAudioCaptureWorking_) {
         ret = innerAudioCapture_->Resume();
@@ -2426,6 +2423,7 @@ void AudioDataSource::VoIPStateUpdate(
         if (changeInfo->rendererState == RendererState::RENDERER_RUNNING &&
             changeInfo->rendererInfo.streamUsage == AudioStandard::StreamUsage::STREAM_USAGE_VOICE_COMMUNICATION) {
             isInVoIPCall = true;
+            break;
         }
     }
     if (isInVoIPCall_ == isInVoIPCall) {
@@ -2504,7 +2502,7 @@ int32_t AudioDataSource::ReadAt(std::shared_ptr<AVBuffer> buffer, uint32_t lengt
 int32_t AudioDataSource::MixModeBufferWrite(std::shared_ptr<AudioBuffer> &innerAudioBuffer,
     std::shared_ptr<AudioBuffer> &micAudioBuffer, std::shared_ptr<AVMemory> &bufferMem)
 {
-    if (innerAudioBuffer && micAudioBuffer) {
+    if (innerAudioBuffer && micAudioBuffer && innerAudioBuffer->length == micAudioBuffer->length) {
         char* mixData = new char[innerAudioBuffer->length];
         char* srcData[2] = {nullptr};
         srcData[0] = reinterpret_cast<char*>(innerAudioBuffer->buffer);
