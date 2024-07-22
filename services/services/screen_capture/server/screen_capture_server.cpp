@@ -1919,10 +1919,6 @@ int32_t ScreenCaptureServer::SetMicrophoneEnabled(bool isMicrophone)
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "SetMicrophoneEnabled isMicrophoneOn_:%{public}d, "
         "new isMicrophone:%{public}d", FAKE_POINTER(this), isMicrophoneOn_, isMicrophone);
     int32_t ret = MSERR_UNKNOWN;
-    if (isMicrophoneOn_ == isMicrophone) {
-        MEDIA_LOGI("microphone status no change");
-        return MSERR_OK;
-    }
     isMicrophoneOn_ = isMicrophone;
     if (isMicrophone) {
         statisticalEventInfo_.enableMic = true;
