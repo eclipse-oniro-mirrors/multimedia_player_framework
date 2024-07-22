@@ -77,7 +77,6 @@ int32_t ScreenCaptureMonitorClient::CreateListenerObject()
 
 int32_t ScreenCaptureMonitorClient::CloseListenerObject()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
     listenerStubIPCExist_ = false;
     MEDIA_LOGD("CloseListenerObject");
     return screenCaptureMonitorProxy_->CloseListenerObject();
@@ -117,6 +116,7 @@ void ScreenCaptureMonitorClient::UnregisterScreenCaptureMonitorListener(
     listenerStub_->UnregisterScreenCaptureMonitorListener(listener);
     screenCaptureMonitorClientCallbacks_.erase(listener);
     if (listenerStubIPCExist_ && screenCaptureMonitorClientCallbacks_.size() == 0) {
+        MEDIA_LOGD("No listener left,CloseListenerObject");
         CloseListenerObject();
     }
 }
