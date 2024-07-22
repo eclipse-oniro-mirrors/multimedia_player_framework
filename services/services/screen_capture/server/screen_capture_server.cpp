@@ -2446,12 +2446,12 @@ int32_t AudioDataSource::GetAppPid()
     return appPid_ ;
 }
 
-int32_t AudioDataSource::GetIsInVoIPCall()
+bool AudioDataSource::GetIsInVoIPCall()
 {
     return isInVoIPCall_;
 }
 
-int32_t AudioDataSource::GetSpeakerAliveStatus()
+bool AudioDataSource::GetSpeakerAliveStatus()
 {
     return speakerAliveStatus_;
 }

@@ -207,8 +207,8 @@ public:
     void SetAppPid(int32_t appid);
     void SetAppName(std::string appName);
     int32_t GetAppPid();
-    void GetIsInVoIPCall();
-    void GetSpeakerAliveStatus();
+    bool GetIsInVoIPCall();
+    bool GetSpeakerAliveStatus();
 
 private:
     int32_t MixModeBufferWrite(std::shared_ptr<AudioBuffer> &innerAudioBuffer,
