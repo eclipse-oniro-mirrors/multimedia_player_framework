@@ -137,7 +137,8 @@ int32_t AudioCapturerWrapper::Resume()
         OnStartFailed(ScreenCaptureErrorType::SCREEN_CAPTURE_ERROR_INTERNAL, SCREEN_CAPTURE_ERR_UNKNOWN);
         return MSERR_UNKNOWN;
     }
-    MEDIA_LOGI("0x%{public}06" PRIXPTR "Resume success, threadName:%{public}s", FAKE_POINTER(this), threadName_.c_str());
+    MEDIA_LOGI("0x%{public}06" PRIXPTR "Resume success, threadName:%{public}s", FAKE_POINTER(this),
+        threadName_.c_str());
 
     isRunning_.store(true);
     readAudioLoop_ = std::make_unique<std::thread>([this] { this->CaptureAudio(); });

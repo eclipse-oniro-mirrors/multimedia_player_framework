@@ -1928,8 +1928,7 @@ int32_t ScreenCaptureServer::SetMicrophoneEnabled(bool isMicrophone)
             if (!micAudioCapture_) {
                 ret = StartMicAudioCapture();
                 CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartMicAudioCapture failed");
-            }
-            else if (micAudioCapture_ && micAudioCapture_->GetAudioCapturerState() == CAPTURER_PAUSED) {
+            } else if (micAudioCapture_ && micAudioCapture_->GetAudioCapturerState() == CAPTURER_PAUSED) {
                 ret = micAudioCapture_->Resume();
                 CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "micAudioCapture Resume failed");
             }
@@ -1964,7 +1963,7 @@ int32_t ScreenCaptureServer::OnSpeakerAliveStatusChanged(bool speakerAliveStatus
         ret = innerAudioCapture_->Resume();
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "innerAudioCapture Resume failed");
     } else if (speakerAliveStatus && isMicrophoneOn_ && audioSource_ && !audioSource_->GetIsInVoIPCall() &&
-        innerAudioCapture_->GetAudioCapturerState() == CAPTURER_RECORDING ) {
+        innerAudioCapture_->GetAudioCapturerState() == CAPTURER_RECORDING) {
         ret = innerAudioCapture_->Pause();
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "innerAudioCapture Pause failed");
     }
