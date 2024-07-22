@@ -796,15 +796,21 @@ RetInfo AVTransCoderNapi::Configure(std::shared_ptr<AVTransCoderConfig> config)
     ret = transCoder_->SetAudioEncoder(config->audioCodecFormat);
         CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "SetAudioEncoder", "audioCodecFormat"));
     
+    CHECK_AND_RETURN_RET(config->audioBitrate > 0, GetReturnRet(MSERR_INVALID_VAL,
+        "SetAudioEncoderBitRate", "audioBitrate"));
     ret = transCoder_->SetAudioEncodingBitRate(config->audioBitrate);
         CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "SetAudioEncoderBitRate", "audioBitrate"));
     
     ret = transCoder_->SetVideoEncoder(config->videoCodecFormat);
         CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "SetVideoEncoder", "videoCodecFormat"));
     
+    CHECK_AND_RETURN_RET(config->videoBitrate > 0, GetReturnRet(MSERR_INVALID_VAL,
+        "SetVideoEncoderBitRate", "videoBitrate"));
     ret = transCoder_->SetVideoEncodingBitRate(config->videoBitrate);
         CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "SetVideoEncoderBitRate", "videoBitrate"));
 
+    CHECK_AND_RETURN_RET(config->videoFrameWidth > 0 && config->videoFrameHeight > 0,
+        GetReturnRet(MSERR_INVALID_VAL, "SetVideoSize", "videoSize"));
     ret = transCoder_->SetVideoSize(config->videoFrameWidth, config->videoFrameHeight);
         CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "SetVideoSize", "videoSize"));
 
