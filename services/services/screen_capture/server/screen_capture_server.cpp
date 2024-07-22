@@ -2524,31 +2524,24 @@ int32_t AudioDataSource::MixModeBufferWrite(std::shared_ptr<AudioBuffer> &innerA
         MixAudio(srcData, mixData, channels, innerAudioBuffer->length);
         bufferMem->Write(reinterpret_cast<uint8_t*>(mixData), innerAudioBuffer->length, 0);
         delete[] mixData;
-        int32_t innerRet = screenCaptureServer_->ReleaseInnerAudioBuffer();
-        int32_t micRet = screenCaptureServer_->ReleaseMicAudioBuffer();
-        if (innerRet != MSERR_OK || micRet != MSERR_OK) {
-            return MSERR_UNKNOWN;
-        }
-        return MSERR_OK;
-    }
-    if (innerAudioBuffer && innerAudioBuffer->buffer) {
+    } else if (innerAudioBuffer && innerAudioBuffer->buffer) {
         bufferMem->Write(reinterpret_cast<uint8_t*>(innerAudioBuffer->buffer), innerAudioBuffer->length, 0);
-        int32_t ret = screenCaptureServer_->ReleaseInnerAudioBuffer();
-        if (ret != MSERR_OK) {
-            return MSERR_UNKNOWN;
-        }
-        return MSERR_OK;
-    }
-    if (micAudioBuffer && micAudioBuffer->buffer) {
+    } else if (micAudioBuffer && micAudioBuffer->buffer) {
         bufferMem->Write(reinterpret_cast<uint8_t*>(micAudioBuffer->buffer), micAudioBuffer->length, 0);
-        int32_t ret = screenCaptureServer_->ReleaseMicAudioBuffer();
-        if (ret != MSERR_OK) {
-            return MSERR_UNKNOWN;
-        }
-        return MSERR_OK;
+    } else {
+        MEDIA_LOGE("without buffer write");
     }
-    MEDIA_LOGE("without buffer write");
-    return MSERR_UNKNOWN;
+    if (innerAudioBuffer) {
+        if (screenCaptureServer_->ReleaseInnerAudioBuffer() != MSERR_OK) {
+            MEDIA_LOGE("ReleaseInnerAudioBuffer failed");
+        }
+    }
+    if (micAudioBuffer) {
+        if (screenCaptureServer_->ReleaseMicAudioBuffer() != MSERR_OK) {
+            MEDIA_LOGE("ReleaseInnerAudioBuffer failed");
+        }
+    }
+    return MSERR_OK;
 }
 
 int32_t AudioDataSource::GetSize(int64_t &size)
