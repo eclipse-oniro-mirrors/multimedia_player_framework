@@ -817,6 +817,8 @@ int32_t ScreenCaptureServer::StartStreamInnerAudioCapture()
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartAudioCapture innerCapture failed");
     }
     innerAudioCapture_ = innerCapture;
+    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "StartStreamInnerAudioCapture OK.", FAKE_POINTER(this));
+    return MSERR_OK;
 }
 
 int32_t ScreenCaptureServer::StartStreamMicAudioCapture()
@@ -838,6 +840,8 @@ int32_t ScreenCaptureServer::StartStreamMicAudioCapture()
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartAudioCapture micCapture failed");
     }
     micAudioCapture_ = micCapture;
+    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "StartStreamMicAudioCapture OK.", FAKE_POINTER(this));
+    return MSERR_OK;
 }
 
 int32_t ScreenCaptureServer::StartFileInnerAudioCapture()
