@@ -748,8 +748,7 @@ int32_t HiPlayerImpl::SeekToCurrentTime(int32_t mSeconds, PlayerSeekMode mode)
 Status HiPlayerImpl::Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeekDone)
 {
     MediaTrace trace("HiPlayerImpl::Seek");
-    MEDIA_LOG_I_SHORT("Seek entered. mSeconds : " PUBLIC_LOG_D64 ", seekMode : " PUBLIC_LOG_D32,
-                mSeconds, static_cast<int32_t>(mode));
+    MEDIA_LOG_I_SHORT("Seek ms " PUBLIC_LOG_D64 " mode " PUBLIC_LOG_D32, mSeconds, static_cast<int32_t>(mode));
     if (IsSeekInSitu(mSeconds)) {
         MEDIA_LOG_I_SHORT("Return and already at curPosMs: " PUBLIC_LOG_D64, mSeconds);
         NotifySeek(Status::OK, notifySeekDone, mSeconds);
