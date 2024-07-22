@@ -90,7 +90,7 @@ private:
 HiPlayerImpl::HiPlayerImpl(int32_t appUid, int32_t appPid, uint32_t appTokenId, uint64_t appFullTokenId)
     : appUid_(appUid), appPid_(appPid), appTokenId_(appTokenId), appFullTokenId_(appFullTokenId)
 {
-    MEDIA_LOG_D_SHORT("hiPlayerImpl ctor appUid " PUBLIC_LOG_D32 " appPid " PUBLIC_LOG_D32 " appTokenId " 
+    MEDIA_LOG_D_SHORT("hiPlayerImpl ctor appUid " PUBLIC_LOG_D32 " appPid " PUBLIC_LOG_D32 " appTokenId "
         PUBLIC_LOG_D32 " appFullTokenId " PUBLIC_LOG_D64, appUid_, appPid_, appTokenId_, appFullTokenId_);
     playerId_ = std::string("HiPlayer_") + std::to_string(OHOS::Media::Pipeline::Pipeline::GetNextPipelineId());
     pipeline_ = std::make_shared<OHOS::Media::Pipeline::Pipeline>();
@@ -783,7 +783,8 @@ Status HiPlayerImpl::Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeek
                 break;
             }
             default:
-                MEDIA_LOG_I_SHORT("Seek in error pipelineStates: " PUBLIC_LOG_D32, static_cast<int32_t>(pipelineStates_));
+                MEDIA_LOG_I_SHORT("Seek in error pipelineStates: " PUBLIC_LOG_D32,
+                    static_cast<int32_t>(pipelineStates_));
                 rtv = Status::ERROR_WRONG_STATE;
                 break;
         }
@@ -1822,7 +1823,8 @@ void HiPlayerImpl::UpdateStateNoLock(PlayerStates newState, bool notifyUpward)
             while (!pendingStates_.empty()) {
                 auto pendingState = pendingStates_.front();
                 pendingStates_.pop();
-                MEDIA_LOG_I_SHORT("sending pending state change: " PUBLIC_LOG_S, StringnessPlayerState(pendingState).c_str());
+                MEDIA_LOG_I_SHORT("sending pending state change: " PUBLIC_LOG_S,
+                    StringnessPlayerState(pendingState).c_str());
                 callbackLooper_.OnInfo(INFO_TYPE_STATE_CHANGE, pendingState, format);
             }
             MEDIA_LOG_I_SHORT("sending newest state change: " PUBLIC_LOG_S,
@@ -2036,7 +2038,7 @@ Status HiPlayerImpl::LinkAudioDecoderFilter(const std::shared_ptr<Filter>& preFi
             bool svpFlag = svpMode_ == HiplayerSvpMode::SVP_TRUE ? true : false;
             audioDecoder_->SetDecryptionConfig(keySessionServiceProxy_, svpFlag);
         } else {
-            MEDIA_LOG_E_SHORT("HiPlayerImpl Drmcond wait timeout or has been stopped! Play drm protected audio failed!");
+            MEDIA_LOG_E_SHORT("HiPlayerImpl Drmcond wait timeout or has been stopped!");
             return Status::ERROR_INVALID_OPERATION;
         }
     } else {
@@ -2107,7 +2109,7 @@ Status HiPlayerImpl::LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFi
                 bool svpFlag = svpMode_ == HiplayerSvpMode::SVP_TRUE ? true : false;
                 videoDecoder_->SetDecryptConfig(keySessionServiceProxy_, svpFlag);
             } else {
-                MEDIA_LOG_E_SHORT("HiPlayerImpl Drmcond wait timeout or has been stopped! Play drm protected video failed!");
+                MEDIA_LOG_E_SHORT("HiPlayerImpl Drmcond wait timeout or has been stopped!");
                 return Status::ERROR_INVALID_OPERATION;
             }
         } else {
