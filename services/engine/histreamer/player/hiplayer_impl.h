@@ -140,6 +140,7 @@ public:
     void SetInterruptState(bool isInterruptNeeded) override;
     void OnDumpInfo(int32_t fd) override;
     void SetInstancdId(uint64_t instanceId) override;
+    int64_t GetPlayRangeEndTime() override;
 
     // internal interfaces
     void OnEvent(const Event &event);
@@ -172,6 +173,7 @@ private:
     void HandleSubtitleTrackChangeEvent(const Event& event);
     void NotifyBufferingStart(int32_t param);
     void NotifyBufferingEnd(int32_t param);
+    void NotifyCachedDuration(int32_t param);
     void UpdateStateNoLock(PlayerStates newState, bool notifyUpward = true);
     void NotifyBufferingUpdate(const std::string_view& type, int32_t param);
     void NotifyDurationUpdate(const std::string_view& type, int32_t param);

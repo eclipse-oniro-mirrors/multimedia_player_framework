@@ -51,10 +51,12 @@ public:
     int32_t Stop();
     void SetIsMuted(bool isMuted);
     bool GetIsMuted();
+    int32_t UpdateAudioCapturerConfig(ScreenCaptureContentFilter &filter);
     int32_t CaptureAudio();
     int32_t AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audioBuffer);
     int32_t GetBufferSize(size_t &size);
     int32_t ReleaseAudioBuffer();
+    void SetIsInVoIPCall(bool isInVoIPCall);
 
 protected:
     virtual void OnStartFailed(ScreenCaptureErrorType errorType, int32_t errorCode);
@@ -62,7 +64,7 @@ protected:
 private:
     std::shared_ptr<OHOS::AudioStandard::AudioCapturer> CreateAudioCapturer(
         const OHOS::AudioStandard::AppInfo &appInfo);
-    static void SetInnerStreamUsage(std::vector<OHOS::AudioStandard::StreamUsage> &usages);
+    void SetInnerStreamUsage(std::vector<OHOS::AudioStandard::StreamUsage> &usages);
 
 protected:
     std::shared_ptr<ScreenCaptureCallBack> screenCaptureCb_;
@@ -77,10 +79,13 @@ private:
     std::shared_ptr<OHOS::AudioStandard::AudioCapturer> audioCapturer_ = nullptr;
     std::shared_ptr<OHOS::Media::AudioCapturerCallbackImpl> audioCaptureCallback_ = nullptr;
     ScreenCaptureContentFilter contentFilter_;
+    OHOS::AudioStandard::AppInfo appInfo_;
 
     std::mutex bufferMutex_;
     std::condition_variable bufferCond_;
     std::queue<std::shared_ptr<AudioBuffer>> availBuffers_;
+    std::string bundleName_;
+    std::atomic<bool> isInVoIPCall_ = false;
 
     /* used for hilog output */
     int32_t captureAudioLogCount_ = 0;
