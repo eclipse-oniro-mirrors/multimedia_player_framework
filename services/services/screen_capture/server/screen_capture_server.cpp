@@ -841,6 +841,7 @@ int32_t ScreenCaptureServer::StartMicAudioCapture()
         ScreenCaptureContentFilter contentFilterMic;
         micCapture = std::make_shared<AudioCapturerWrapper>(captureConfig_.audioInfo.micCapInfo, screenCaptureCb_,
             std::string("OS_MicAudioCapture"), contentFilterMic);
+        micAudioCapture_->SetIsInVoIPCall(isInVoIPCall_);
         int32_t ret = micCapture->Start(appInfo_);
         if (ret != MSERR_OK) {
             screenCaptureCb_->OnStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE);
@@ -850,9 +851,6 @@ int32_t ScreenCaptureServer::StartMicAudioCapture()
     }
     micAudioCapture_ = micCapture;
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "StartMicAudioCapture OK.", FAKE_POINTER(this));
-    if (micAudioCapture_) {
-        micAudioCapture_->SetIsInVoIPCall(isInVoIPCall_);
-    }
     return MSERR_OK;
 }
 
@@ -1916,7 +1914,7 @@ int32_t ScreenCaptureServer::SetMicrophoneEnabled(bool isMicrophone)
                 isMicAudioCaptureWorking_ = true;
             }
             usleep(AUDIO_CHANGE_TIME);
-            if (isInnerAudioCaptureWorking_ && innerAudioCapture_ && speakerAliveStatus_) {
+            if (isInnerAudioCaptureWorking_ && innerAudioCapture_ && speakerAliveStatus_ && !isInVoIPCall_) {
                 isInnerAudioCaptureWorking_ = false;
                 ret = innerAudioCapture_->Pause();
                 CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "innerAudioCapture Pause failed");
@@ -1959,7 +1957,7 @@ int32_t ScreenCaptureServer::OnSpeakerAliveStatusChanged()
         ret = innerAudioCapture_->Resume();
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "innerAudioCapture Resume failed");
         isInnerAudioCaptureWorking_ = true;
-    } else if (speakerAliveStatus_ && isInnerAudioCaptureWorking_ && isMicrophoneOn_) {
+    } else if (speakerAliveStatus_ && isInnerAudioCaptureWorking_ && isMicrophoneOn_ && !isInVoIPCall_) {
         isInnerAudioCaptureWorking_ = false;
         ret = innerAudioCapture_->Pause();
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "innerAudioCapture Pause failed");
@@ -1975,6 +1973,11 @@ int32_t ScreenCaptureServer::OnVoIPStateChanged(bool isInVoIPCall)
     }
     int32_t ret = MSERR_UNKNOWN;
     isInVoIPCall_ = isInVoIPCall;
+    if (isInVoIPCall) {
+        StopMicAudioCapture();
+        StartMicAudioCapture();
+        usleep(AUDIO_CHANGE_TIME);
+    }
     CHECK_AND_RETURN_RET_LOG(innerAudioCapture_, MSERR_UNKNOWN, "innerAudioCapture is nullptr");
     if (isInVoIPCall && !isInnerAudioCaptureWorking_) {
         ret = innerAudioCapture_->Resume();
@@ -1986,8 +1989,11 @@ int32_t ScreenCaptureServer::OnVoIPStateChanged(bool isInVoIPCall)
         ret = innerAudioCapture_->Pause();
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "innerAudioCapture Pause failed");
     }
-    StopMicAudioCapture();
-    StartMicAudioCapture();
+    if (!isInVoIPCall) {
+        usleep(AUDIO_CHANGE_TIME);
+        StopMicAudioCapture();
+        StartMicAudioCapture();
+    }
     return MSERR_OK;
 }
 
@@ -2502,7 +2508,8 @@ int32_t AudioDataSource::ReadAt(std::shared_ptr<AVBuffer> buffer, uint32_t lengt
 int32_t AudioDataSource::MixModeBufferWrite(std::shared_ptr<AudioBuffer> &innerAudioBuffer,
     std::shared_ptr<AudioBuffer> &micAudioBuffer, std::shared_ptr<AVMemory> &bufferMem)
 {
-    if (innerAudioBuffer && micAudioBuffer && innerAudioBuffer->length == micAudioBuffer->length) {
+    if (innerAudioBuffer && innerAudioBuffer->buffer && micAudioBuffer && micAudioBuffer->buffer
+        && innerAudioBuffer->length == micAudioBuffer->length) {
         char* mixData = new char[innerAudioBuffer->length];
         char* srcData[2] = {nullptr};
         srcData[0] = reinterpret_cast<char*>(innerAudioBuffer->buffer);
@@ -2518,7 +2525,7 @@ int32_t AudioDataSource::MixModeBufferWrite(std::shared_ptr<AudioBuffer> &innerA
         }
         return MSERR_OK;
     }
-    if (innerAudioBuffer) {
+    if (innerAudioBuffer && innerAudioBuffer->buffer) {
         bufferMem->Write(reinterpret_cast<uint8_t*>(innerAudioBuffer->buffer), innerAudioBuffer->length, 0);
         int32_t ret = screenCaptureServer_->ReleaseInnerAudioBuffer();
         if (ret != MSERR_OK) {
@@ -2526,7 +2533,7 @@ int32_t AudioDataSource::MixModeBufferWrite(std::shared_ptr<AudioBuffer> &innerA
         }
         return MSERR_OK;
     }
-    if (micAudioBuffer) {
+    if (micAudioBuffer && micAudioBuffer->buffer) {
         bufferMem->Write(reinterpret_cast<uint8_t*>(micAudioBuffer->buffer), micAudioBuffer->length, 0);
         int32_t ret = screenCaptureServer_->ReleaseMicAudioBuffer();
         if (ret != MSERR_OK) {

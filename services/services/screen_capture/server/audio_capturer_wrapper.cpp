@@ -100,6 +100,16 @@ int32_t AudioCapturerWrapper::Pause()
             audioCapturer_->Pause();
         }
     }
+
+    std::unique_lock<std::mutex> bufferLock(bufferMutex_);
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Pause pop, threadName:%{public}s", FAKE_POINTER(this), threadName_.c_str());
+    while (!availBuffers_.empty()) {
+        if (availBuffers_.front() != nullptr) {
+            free(availBuffers_.front()->buffer);
+            availBuffers_.front()->buffer = nullptr;
+        }
+        availBuffers_.pop();
+    }
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Pause E, threadName:%{public}s", FAKE_POINTER(this), threadName_.c_str());
     return MSERR_OK;
 }
@@ -114,13 +124,13 @@ int32_t AudioCapturerWrapper::Resume()
     CHECK_AND_RETURN_RET_LOG(audioCapturer_ != nullptr, MSERR_UNKNOWN, "Resume failed, audioCapturer_ is nullptr");
 
     if (!audioCapturer_->Start()) {
-        MEDIA_LOGE("Start failed, AudioCapturer Start failed, threadName:%{public}s", threadName_.c_str());
+        MEDIA_LOGE("AudioCapturer Start failed, threadName:%{public}s", threadName_.c_str());
         audioCapturer_->Release();
         audioCapturer_ = nullptr;
         OnStartFailed(ScreenCaptureErrorType::SCREEN_CAPTURE_ERROR_INTERNAL, SCREEN_CAPTURE_ERR_UNKNOWN);
         return MSERR_UNKNOWN;
     }
-    MEDIA_LOGI("0x%{public}06" PRIXPTR "Start success, threadName:%{public}s", FAKE_POINTER(this), threadName_.c_str());
+    MEDIA_LOGI("0x%{public}06" PRIXPTR "Resume success, threadName:%{public}s", FAKE_POINTER(this), threadName_.c_str());
 
     isRunning_.store(true);
     readAudioLoop_ = std::make_unique<std::thread>([this] { this->CaptureAudio(); });
@@ -313,8 +323,8 @@ int32_t AudioCapturerWrapper::AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &a
     CHECK_AND_RETURN_RET_LOG(isRunning_.load(), MSERR_UNKNOWN, "AcquireAudioBuffer failed, not running");
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Acquire Buffer S, name:%{public}s", FAKE_POINTER(this), threadName_.c_str());
 
-    if (!bufferCond_.wait_for(
-        lock, std::chrono::milliseconds(OPERATION_TIMEOUT_IN_MS), [this] { return !availBuffers_.empty(); })) {
+    if (!bufferCond_.wait_for(lock, std::chrono::milliseconds(OPERATION_TIMEOUT_IN_MS),
+        [this] { return !availBuffers_.empty() || isReleased_.load(); })) {
         MEDIA_LOGE("AcquireAudioBuffer timeout, threadName:%{public}s", threadName_.c_str());
         return MSERR_UNKNOWN;
     }
@@ -363,6 +373,8 @@ void AudioCapturerWrapper::OnStartFailed(ScreenCaptureErrorType errorType, int32
 
 AudioCapturerWrapper::~AudioCapturerWrapper()
 {
+    isReleased_.store(true);
+    bufferCond_.notify_all();
     Stop();
 }
 

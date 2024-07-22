@@ -86,6 +86,7 @@ private:
     std::queue<std::shared_ptr<AudioBuffer>> availBuffers_;
     std::string bundleName_;
     std::atomic<bool> isInVoIPCall_ = false;
+    std::atomic<bool> isReleased_ = false;
 
     /* used for hilog output */
     int32_t captureAudioLogCount_ = 0;
