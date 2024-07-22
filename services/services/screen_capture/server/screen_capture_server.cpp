@@ -858,7 +858,7 @@ int32_t ScreenCaptureServer::StartMicAudioCapture()
         micCapture = std::make_shared<AudioCapturerWrapper>(captureConfig_.audioInfo.micCapInfo, screenCaptureCb_,
             std::string("OS_MicAudioCapture"), contentFilterMic);
         if (audioSource_) {
-            micAudioCapture_->SetIsInVoIPCall(audioSource_->GetIsInVoIPCall());
+            micCapture->SetIsInVoIPCall(audioSource_->GetIsInVoIPCall());
         }
         int32_t ret = micCapture->Start(appInfo_);
         if (ret != MSERR_OK) {
