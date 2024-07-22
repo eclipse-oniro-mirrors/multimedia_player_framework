@@ -832,7 +832,7 @@ int32_t ScreenCaptureServer::StartInnerAudioCapture()
         int32_t ret = innerCapture->Start(appInfo_);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartInnerAudioCapture failed");
         if (isMicrophoneOn_ && audioSource_ && audioSource_->GetSpeakerAliveStatus() &&
-            !audioSource_->GetIsInVoIPCall())) {
+            !audioSource_->GetIsInVoIPCall()) {
             ret = innerCapture->Pause();
             CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartAudioCapture innerCapture Pause failed");
         }
