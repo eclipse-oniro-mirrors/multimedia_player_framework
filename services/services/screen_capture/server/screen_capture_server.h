@@ -292,8 +292,8 @@ private:
     int32_t StartScreenCaptureFile();
     int32_t StartScreenCaptureStream();
     int32_t StartAudioCapture();
-    int32_t StartInnerAudioCapture();
-    int32_t StartMicAudioCapture();
+    int32_t StartFileInnerAudioCapture();
+    int32_t StartFileMicAudioCapture();
     int32_t StopMicAudioCapture();
     int32_t StartVideoCapture();
     int32_t StartHomeVideoCapture();

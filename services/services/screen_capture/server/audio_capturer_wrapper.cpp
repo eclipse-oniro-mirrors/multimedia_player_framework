@@ -86,7 +86,7 @@ int32_t AudioCapturerWrapper::Start(const OHOS::AudioStandard::AppInfo &appInfo)
     isRunning_.store(true);
     readAudioLoop_ = std::make_unique<std::thread>([this] { this->CaptureAudio(); });
     audioCapturer_ = audioCapturer;
-    captureState_ = CAPTURER_RECORDING;
+    captureState_.store(CAPTURER_RECORDING);
     return MSERR_OK;
 }
 
@@ -116,7 +116,7 @@ int32_t AudioCapturerWrapper::Pause()
         }
         availBuffers_.pop();
     }
-    captureState_ = CAPTURER_PAUSED;
+    captureState_.store(CAPTURER_PAUSED);
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Pause E, threadName:%{public}s", FAKE_POINTER(this), threadName_.c_str());
     return MSERR_OK;
 }
@@ -142,7 +142,7 @@ int32_t AudioCapturerWrapper::Resume()
 
     isRunning_.store(true);
     readAudioLoop_ = std::make_unique<std::thread>([this] { this->CaptureAudio(); });
-    captureState_ = CAPTURER_RECORDING;
+    captureState_.store(CAPTURER_RECORDING);
     return MSERR_OK;
 }
 
@@ -174,7 +174,7 @@ int32_t AudioCapturerWrapper::Stop()
         availBuffers_.pop();
     }
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Stop E, threadName:%{public}s", FAKE_POINTER(this), threadName_.c_str());
-    captureState_ = CAPTURER_STOPED;
+    captureState_.store(CAPTURER_STOPED);
     return MSERR_OK;
 }
 
@@ -214,7 +214,7 @@ int32_t AudioCapturerWrapper::UpdateAudioCapturerConfig(ScreenCaptureContentFilt
 
 AudioCapturerWrapperState AudioCapturerWrapper::GetAudioCapturerState()
 {
-    return captureState_;
+    return captureState_.load();
 }
 
 void AudioCapturerWrapper::SetInnerStreamUsage(std::vector<OHOS::AudioStandard::StreamUsage> &usages)

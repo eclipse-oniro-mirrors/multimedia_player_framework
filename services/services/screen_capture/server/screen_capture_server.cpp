@@ -791,10 +791,23 @@ int32_t ScreenCaptureServer::OnReceiveUserPrivacyAuthority(bool isAllowed)
 
 int32_t ScreenCaptureServer::StartAudioCapture()
 {
-    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "StartAudioCapture start, dataType:%{public}d, "
-        "innerCapInfo.state:%{public}d, micCapInfo.state:%{public}d.",
-        FAKE_POINTER(this), captureConfig_.dataType, captureConfig_.audioInfo.innerCapInfo.state,
-        captureConfig_.audioInfo.micCapInfo.state);
+    int32_t ret = StartStreamInnerAudioCapture();
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartStreamInnerAudioCapture failed");
+    ret = StartStreamMicAudioCapture();
+    if (ret != MSERR_OK) {
+        MEDIA_LOGE("StartStreamMicAudioCapture failed");
+        innerAudioCapture_ = nullptr;
+        return ret;
+    }
+    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "StartAudioCapture OK.", FAKE_POINTER(this));
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureServer::StartStreamInnerAudioCapture()
+{
+    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "StartStreamInnerAudioCapture start, dataType:%{public}d,"
+        " innerCapInfo.state:%{public}d.",
+        FAKE_POINTER(this), captureConfig_.dataType, captureConfig_.audioInfo.innerCapInfo.state);
     std::shared_ptr<AudioCapturerWrapper> innerCapture;
     if (captureConfig_.audioInfo.innerCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_VALID) {
         MediaTrace trace("ScreenCaptureServer::StartAudioCaptureInner");
@@ -802,6 +815,18 @@ int32_t ScreenCaptureServer::StartAudioCapture()
             std::string("OS_InnerAudioCapture"), contentFilter_);
         int32_t ret = innerCapture->Start(appInfo_);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartAudioCapture innerCapture failed");
+    }
+    innerAudioCapture_ = innerCapture;
+}
+
+int32_t ScreenCaptureServer::StartStreamMicAudioCapture()
+{
+    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "StartStreamMicAudioCapture start, dataType:%{public}d, "
+        "micCapInfo.state:%{public}d.",
+        FAKE_POINTER(this), captureConfig_.dataType, captureConfig_.audioInfo.micCapInfo.state);
+    if (!isMicrophoneOn_) {
+        MEDIA_LOGI("microphone is not on, skip micCapture start");
+        return MSERR_OK;
     }
     std::shared_ptr<AudioCapturerWrapper> micCapture;
     if (captureConfig_.audioInfo.micCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_VALID) {
@@ -811,26 +836,22 @@ int32_t ScreenCaptureServer::StartAudioCapture()
             std::string("OS_MicAudioCapture"), contentFilterMic);
         int32_t ret = micCapture->Start(appInfo_);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartAudioCapture micCapture failed");
-        micCapture->SetIsMuted(!isMicrophoneOn_);
     }
-    innerAudioCapture_ = innerCapture;
     micAudioCapture_ = micCapture;
-    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "StartAudioCapture OK.", FAKE_POINTER(this));
-    return MSERR_OK;
 }
 
-int32_t ScreenCaptureServer::StartInnerAudioCapture()
+int32_t ScreenCaptureServer::StartFileInnerAudioCapture()
 {
-    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "StartInnerAudioCapture start, dataType:%{public}d, "
+    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "StartFileInnerAudioCapture start, dataType:%{public}d, "
         "innerCapInfo.state:%{public}d.",
         FAKE_POINTER(this), captureConfig_.dataType, captureConfig_.audioInfo.innerCapInfo.state);
     std::shared_ptr<AudioCapturerWrapper> innerCapture;
     if (captureConfig_.audioInfo.innerCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_VALID) {
-        MediaTrace trace("ScreenCaptureServer::StartInnerAudioCaptureInner");
+        MediaTrace trace("ScreenCaptureServer::StartFileInnerAudioCaptureInner");
         innerCapture = std::make_shared<AudioCapturerWrapper>(captureConfig_.audioInfo.innerCapInfo, screenCaptureCb_,
             std::string("OS_InnerAudioCapture"), contentFilter_);
         int32_t ret = innerCapture->Start(appInfo_);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartInnerAudioCapture failed");
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartFileInnerAudioCapture failed");
         if (isMicrophoneOn_ && audioSource_ && audioSource_->GetSpeakerAliveStatus() &&
             !audioSource_->GetIsInVoIPCall()) {
             ret = innerCapture->Pause();
@@ -838,13 +859,13 @@ int32_t ScreenCaptureServer::StartInnerAudioCapture()
         }
     }
     innerAudioCapture_ = innerCapture;
-    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "StartInnerAudioCapture OK.", FAKE_POINTER(this));
+    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "StartFileInnerAudioCapture OK.", FAKE_POINTER(this));
     return MSERR_OK;
 }
 
-int32_t ScreenCaptureServer::StartMicAudioCapture()
+int32_t ScreenCaptureServer::StartFileMicAudioCapture()
 {
-    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "StartMicAudioCapture start, dataType:%{public}d, "
+    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "StartFileMicAudioCapture start, dataType:%{public}d, "
         "micCapInfo.state:%{public}d.",
         FAKE_POINTER(this), captureConfig_.dataType, captureConfig_.audioInfo.micCapInfo.state);
     if (!isMicrophoneOn_) {
@@ -853,7 +874,7 @@ int32_t ScreenCaptureServer::StartMicAudioCapture()
     }
     std::shared_ptr<AudioCapturerWrapper> micCapture;
     if (captureConfig_.audioInfo.micCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_VALID) {
-        MediaTrace trace("ScreenCaptureServer::StartMicAudioCaptureInner");
+        MediaTrace trace("ScreenCaptureServer::StartFileMicAudioCaptureInner");
         ScreenCaptureContentFilter contentFilterMic;
         micCapture = std::make_shared<AudioCapturerWrapper>(captureConfig_.audioInfo.micCapInfo, screenCaptureCb_,
             std::string("OS_MicAudioCapture"), contentFilterMic);
@@ -864,10 +885,10 @@ int32_t ScreenCaptureServer::StartMicAudioCapture()
         if (ret != MSERR_OK) {
             screenCaptureCb_->OnStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE);
         }
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartMicAudioCapture failed");
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartFileMicAudioCapture failed");
     }
     micAudioCapture_ = micCapture;
-    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "StartMicAudioCapture OK.", FAKE_POINTER(this));
+    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "StartFileMicAudioCapture OK.", FAKE_POINTER(this));
     return MSERR_OK;
 }
 
@@ -918,12 +939,12 @@ int32_t ScreenCaptureServer::StartScreenCaptureFile()
 
     MEDIA_LOGI("StartScreenCaptureFile RecorderServer S");
 
-    int32_t retInner = StartInnerAudioCapture();
-    CHECK_AND_RETURN_RET_LOG(retInner == MSERR_OK, retInner, "StartInnerAudioCapture failed, ret:%{public}d,"
+    int32_t retInner = StartFileInnerAudioCapture();
+    CHECK_AND_RETURN_RET_LOG(retInner == MSERR_OK, retInner, "StartFileInnerAudioCapture failed, ret:%{public}d,"
         "dataType:%{public}d", retInner, captureConfig_.dataType);
-    int32_t retMic = StartMicAudioCapture();
+    int32_t retMic = StartFileMicAudioCapture();
     if (retMic != MSERR_OK) {
-        MEDIA_LOGE("StartMicAudioCapture failed");
+        MEDIA_LOGE("StartFileMicAudioCapture failed");
     }
 
     ret = recorder_->Start();
@@ -1926,8 +1947,13 @@ int32_t ScreenCaptureServer::SetMicrophoneEnabled(bool isMicrophone)
     if (captureState_ == AVScreenCaptureState::STARTED) {
         if (isMicrophone) {
             if (!micAudioCapture_) {
-                ret = StartMicAudioCapture();
-                CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartMicAudioCapture failed");
+                if (captureConfig_.dataType == DataType::ORIGINAL_STREAM) {
+                    ret = StartStreamMicAudioCapture();
+                    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartFileMicAudioCapture failed");
+                } else if (captureConfig_.dataType == DataType::CAPTURE_FILE) {
+                    ret = StartFileMicAudioCapture();
+                    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartFileMicAudioCapture failed");
+                }
             } else if (micAudioCapture_ && micAudioCapture_->GetAudioCapturerState() == CAPTURER_PAUSED) {
                 ret = micAudioCapture_->Resume();
                 CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "micAudioCapture Resume failed");
@@ -1975,7 +2001,7 @@ int32_t ScreenCaptureServer::OnVoIPStatusChanged(bool isInVoIPCall)
     int32_t ret = MSERR_UNKNOWN;
     if (!isInVoIPCall) {
         StopMicAudioCapture();
-        StartMicAudioCapture();
+        StartFileMicAudioCapture();
         usleep(AUDIO_CHANGE_TIME);
     }
     CHECK_AND_RETURN_RET_LOG(innerAudioCapture_, MSERR_UNKNOWN, "innerAudioCapture is nullptr");
@@ -1991,7 +2017,7 @@ int32_t ScreenCaptureServer::OnVoIPStatusChanged(bool isInVoIPCall)
     if (isInVoIPCall) {
         usleep(AUDIO_CHANGE_TIME);
         StopMicAudioCapture();
-        StartMicAudioCapture();
+        StartFileMicAudioCapture();
     }
     return MSERR_OK;
 }
