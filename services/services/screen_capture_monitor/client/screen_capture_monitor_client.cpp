@@ -99,7 +99,6 @@ void ScreenCaptureMonitorClient::RegisterScreenCaptureMonitorListener(
     }
     CHECK_AND_RETURN_LOG(listener != nullptr, "input param listener is nullptr.");
     CHECK_AND_RETURN_LOG(listenerStub_ != nullptr, "listenerStub_ is nullptr.");
-    listener_ = listener;
     MEDIA_LOGD("RegisterScreenCaptureMonitorListener");
     screenCaptureMonitorClientCallbacks_.insert(listener);
     listenerStub_->RegisterScreenCaptureMonitorListener(listener);
@@ -111,7 +110,6 @@ void ScreenCaptureMonitorClient::UnregisterScreenCaptureMonitorListener(
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_LOG(listener != nullptr, "input param listener is nullptr.");
     CHECK_AND_RETURN_LOG(listenerStub_ != nullptr, "listenerStub_ is nullptr.");
-    listener_ = listener;
     MEDIA_LOGD("UnregisterScreenCaptureMonitorListener");
     listenerStub_->UnregisterScreenCaptureMonitorListener(listener);
     screenCaptureMonitorClientCallbacks_.erase(listener);

@@ -1068,8 +1068,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_cb_07, TestSize.
     ScreenCaptureMonitor::GetInstance()->UnregisterScreenCaptureMonitorListener(screenCaptureMonitorListener2);
     EXPECT_EQ(-1, ScreenCaptureMonitor::GetInstance()->IsScreenCaptureWorking());
     CloseFile();
-    delete screenCaptureMonitorListener1;
-    delete screenCaptureMonitorListener2;
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_cb_07 after");
 }
 
