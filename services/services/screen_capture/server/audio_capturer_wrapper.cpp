@@ -342,7 +342,7 @@ int32_t AudioCapturerWrapper::AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &a
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Acquire Buffer S, name:%{public}s", FAKE_POINTER(this), threadName_.c_str());
 
     if (!bufferCond_.wait_for(lock, std::chrono::milliseconds(OPERATION_TIMEOUT_IN_MS),
-        [this] { return !availBuffers_.empty(); })) {
+        [this] { return !availBuffers_.empty() || captureState_.load() == CAPTURER_RELEASED; })) {
         MEDIA_LOGE("AcquireAudioBuffer timeout, threadName:%{public}s", threadName_.c_str());
         return MSERR_UNKNOWN;
     }
@@ -392,7 +392,8 @@ void AudioCapturerWrapper::OnStartFailed(ScreenCaptureErrorType errorType, int32
 AudioCapturerWrapper::~AudioCapturerWrapper()
 {
     Stop();
-    captureState_ = CAPTURER_RELEASED;
+    captureState_.store(CAPTURER_RELEASED);
+    bufferCond_.notify_all();
 }
 
 void MicAudioCapturerWrapper::OnStartFailed(ScreenCaptureErrorType errorType, int32_t errorCode)
