@@ -1948,39 +1948,40 @@ int32_t ScreenCaptureServer::SetMicrophoneEnabled(bool isMicrophone)
     if (isMicrophone) {
         statisticalEventInfo_.enableMic = true;
     }
-    if (captureState_ == AVScreenCaptureState::STARTED) {
-        if (isMicrophone) {
-            if (!micAudioCapture_) {
-                if (captureConfig_.dataType == DataType::ORIGINAL_STREAM) {
-                    ret = StartStreamMicAudioCapture();
-                    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartFileMicAudioCapture failed");
-                } else if (captureConfig_.dataType == DataType::CAPTURE_FILE) {
-                    ret = StartFileMicAudioCapture();
-                    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartFileMicAudioCapture failed");
-                }
-            } else if (micAudioCapture_ && micAudioCapture_->GetAudioCapturerState() == CAPTURER_PAUSED) {
-                ret = micAudioCapture_->Resume();
-                CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "micAudioCapture Resume failed");
-            }
-            usleep(AUDIO_CHANGE_TIME);
-            if (innerAudioCapture_ && innerAudioCapture_->GetAudioCapturerState() == CAPTURER_RECORDING &&
-                audioSource_ && audioSource_->GetSpeakerAliveStatus() && !audioSource_->GetIsInVoIPCall()) {
-                ret = innerAudioCapture_->Pause();
-                CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "innerAudioCapture Pause failed");
-            }
-        } else {
-            if (innerAudioCapture_ && innerAudioCapture_->GetAudioCapturerState() == CAPTURER_PAUSED) {
-                ret = innerAudioCapture_->Resume();
-                CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "innerAudioCapture Resume failed");
-            }
-            usleep(AUDIO_CHANGE_TIME);
-            if (micAudioCapture_ && micAudioCapture_->GetAudioCapturerState() == CAPTURER_RECORDING) {
-                ret = micAudioCapture_->Pause();
-                CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "micAudioCapture Pause failed");
-            }
-        }
-        // For CAPTURE FILE, should call Recorder interface to make effect
+    if (captureState_ != AVScreenCaptureState::STARTED) {
+        return MSERR_OK;
     }
+    if (isMicrophone) {
+        if (!micAudioCapture_) {
+            if (captureConfig_.dataType == DataType::ORIGINAL_STREAM) {
+                ret = StartStreamMicAudioCapture();
+                CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartFileMicAudioCapture failed");
+            } else if (captureConfig_.dataType == DataType::CAPTURE_FILE) {
+                ret = StartFileMicAudioCapture();
+                CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartFileMicAudioCapture failed");
+            }
+        } else if (micAudioCapture_ && micAudioCapture_->GetAudioCapturerState() == CAPTURER_PAUSED) {
+            ret = micAudioCapture_->Resume();
+            CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "micAudioCapture Resume failed");
+        }
+        usleep(AUDIO_CHANGE_TIME);
+        if (innerAudioCapture_ && innerAudioCapture_->GetAudioCapturerState() == CAPTURER_RECORDING &&
+            audioSource_ && audioSource_->GetSpeakerAliveStatus() && !audioSource_->GetIsInVoIPCall()) {
+            ret = innerAudioCapture_->Pause();
+            CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "innerAudioCapture Pause failed");
+        }
+    } else {
+        if (innerAudioCapture_ && innerAudioCapture_->GetAudioCapturerState() == CAPTURER_PAUSED) {
+            ret = innerAudioCapture_->Resume();
+            CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "innerAudioCapture Resume failed");
+        }
+        usleep(AUDIO_CHANGE_TIME);
+        if (micAudioCapture_ && micAudioCapture_->GetAudioCapturerState() == CAPTURER_RECORDING) {
+            ret = micAudioCapture_->Pause();
+            CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "micAudioCapture Pause failed");
+        }
+    }
+    // For CAPTURE FILE, should call Recorder interface to make effect
     MEDIA_LOGI("SetMicrophoneEnabled OK.");
     return MSERR_OK;
 }
