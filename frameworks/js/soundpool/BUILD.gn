@@ -81,6 +81,7 @@ ohos_shared_library("media_soundpool") {
     "audio_framework:audio_renderer",
     "av_codec:av_codec_client",
     "bounds_checking_function:libsec_shared",
+    "bundle_framework:appexecfwk_base",
     "c_utils:utils",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
