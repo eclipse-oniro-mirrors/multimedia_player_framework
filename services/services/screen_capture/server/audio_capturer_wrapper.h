@@ -95,7 +95,6 @@ private:
     std::queue<std::shared_ptr<AudioBuffer>> availBuffers_;
     std::string bundleName_;
     std::atomic<bool> isInVoIPCall_ = false;
-    std::atomic<bool> isReleased_ = false;
     AudioCapturerWrapperState captureState_ = CAPTURER_UNKNOWN;
 
     /* used for hilog output */
