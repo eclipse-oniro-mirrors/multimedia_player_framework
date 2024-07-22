@@ -216,7 +216,7 @@ private:
     int32_t appPid_ { 0 };
     std::string appName_;
     bool speakerAliveStatus_ = true;
-    bool isInVoIPCall_ = false;
+    std::atomic<bool> isInVoIPCall_ = false;
     std::mutex voipStatusChangeMutex_;
 
     void MixAudio(char** srcData, char* mixData, int channels, int bufferSize);

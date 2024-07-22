@@ -2002,6 +2002,7 @@ int32_t ScreenCaptureServer::OnSpeakerAliveStatusChanged(bool speakerAliveStatus
 
 int32_t ScreenCaptureServer::OnVoIPStatusChanged(bool isInVoIPCall)
 {
+    MEDIA_LOGI("OnVoIPStatusChanged, isInVoIPCall:%{public}d", isInVoIPCall);
     int32_t ret = MSERR_UNKNOWN;
     if (!isInVoIPCall) {
         StopMicAudioCapture();
@@ -2458,10 +2459,10 @@ void AudioDataSource::VoIPStateUpdate(
             break;
         }
     }
-    if (isInVoIPCall_ == isInVoIPCall) {
+    if (isInVoIPCall_.load() == isInVoIPCall) {
         return;
     }
-    isInVoIPCall_ = isInVoIPCall;
+    isInVoIPCall_.store(isInVoIPCall);
     screenCaptureServer_->OnVoIPStatusChanged(isInVoIPCall);
 }
 
@@ -2477,7 +2478,7 @@ int32_t AudioDataSource::GetAppPid()
 
 bool AudioDataSource::GetIsInVoIPCall()
 {
-    return isInVoIPCall_;
+    return isInVoIPCall_.load();
 }
 
 bool AudioDataSource::GetSpeakerAliveStatus()
