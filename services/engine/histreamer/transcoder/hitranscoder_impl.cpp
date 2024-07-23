@@ -163,7 +163,9 @@ Status HiTransCoderImpl::ConfigureVideoAudioMetaData()
         OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_DEMUXER_FAILED});
         return Status::ERROR_INVALID_PARAMETER;
     }
-    return ConfigureMetaData(trackInfos);
+    (void)ConfigureMetaData(trackInfos);
+    (void)SetTrackMime(trackInfos);
+    return Status::OK;
 }
 
 Status HiTransCoderImpl::ConfigureMetaData(const std::vector<std::shared_ptr<Meta>> &trackInfos)
@@ -194,7 +196,6 @@ Status HiTransCoderImpl::ConfigureMetaData(const std::vector<std::shared_ptr<Met
             } else {
                 videoEncFormat_->SetData(Tag::VIDEO_IS_HDR_VIVID, VIDEO_HDR_TYPE_NONE);
             }
-            videoEncFormat_->Set<Tag::MIME_TYPE>(trackMime);
         } else if (mediaType == Plugins::MediaType::AUDIO) {
             int32_t channels = 0;
             if (trackInfos[index]->GetData(Tag::AUDIO_CHANNEL_COUNT, channels)) {
@@ -211,6 +212,21 @@ Status HiTransCoderImpl::ConfigureMetaData(const std::vector<std::shared_ptr<Met
                 MEDIA_LOG_W("Get audio channel count failed");
             }
             audioEncFormat_->Set<Tag::AUDIO_SAMPLE_RATE>(sampleRate);
+        }
+    }
+    return Status::OK;
+}
+
+Status HiTransCoderImpl::SetTrackMime(const std::vector<std::shared_ptr<Meta>> &trackInfos)
+{
+    for (size_t index = 0; index < trackInfos.size(); index++) {
+        std::string trackMime;
+        if (!trackInfos[index]->GetData(Tag::MIME_TYPE, trackMime)) {
+            continue;
+        }
+        if (trackMime.find("video/") == 0) {
+            videoEncFormat_->Set<Tag::MIME_TYPE>(trackMime);
+        } else if (trackMime.find("audio/" == 0)) {
             audioEncFormat_->Set<Tag::MIME_TYPE>(trackMime);
         }
     }
