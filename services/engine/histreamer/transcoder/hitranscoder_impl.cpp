@@ -170,7 +170,7 @@ Status HiTransCoderImpl::ConfigureMetaData(const std::vector<std::shared_ptr<Met
 {
     for (size_t index = 0; index < trackInfos.size(); index++) {
         std::shared_ptr<Meta> meta = trackInfos[index];
-        FALSE_RETURN_V_MSG_E(meta != nullptr, static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER),
+        FALSE_RETURN_V_MSG_E(meta != nullptr, Status::ERROR_INVALID_PARAMETER,
             "meta is invalid, index: %zu", index);
         Plugins::MediaType mediaType = Plugins::MediaType::UNKNOWN;
         if (!meta->GetData(Tag::MEDIA_TYPE, mediaType)) {
@@ -178,7 +178,6 @@ Status HiTransCoderImpl::ConfigureMetaData(const std::vector<std::shared_ptr<Met
             continue;
         }
         if (mediaType == Plugins::MediaType::VIDEO) {
-            MEDIA_LOG_I("SetInputFile contain video");
             if (trackInfos[index]->GetData(Tag::VIDEO_WIDTH, inputVideoWidth_) &&
                 trackInfos[index]->GetData(Tag::VIDEO_HEIGHT, inputVideoHeight_)) {
                 MEDIA_LOG_D("inputVideoWidth_: %{public}d, inputVideoHeight_: %{public}d",
@@ -197,7 +196,6 @@ Status HiTransCoderImpl::ConfigureMetaData(const std::vector<std::shared_ptr<Met
             }
             videoEncFormat_->Set<Tag::MIME_TYPE>(trackMime);
         } else if (mediaType == Plugins::MediaType::AUDIO) {
-            MEDIA_LOG_I("SetInputFile contain audio");
             int32_t channels = 0;
             if (trackInfos[index]->GetData(Tag::AUDIO_CHANNEL_COUNT, channels)) {
                 MEDIA_LOG_D("Audio channel count: %{public}d", channels);
