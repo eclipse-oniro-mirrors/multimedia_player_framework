@@ -93,9 +93,8 @@ napi_value AVTransCoderNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("on", JsSetEventCallback),
         DECLARE_NAPI_FUNCTION("off", JsCancelEventCallback),
 
-        DECLARE_NAPI_GETTER_SETTER("srcUrl", JsGetSrcUrl, JsSetSrcUrl),
-        DECLARE_NAPI_GETTER_SETTER("srcFd", JsGetSrcFd, JsSetSrcFd),
-        DECLARE_NAPI_GETTER_SETTER("dstFd", JsGetDstFd, JsSetDstFd),
+        DECLARE_NAPI_GETTER_SETTER("fdSrc", JsGetSrcFd, JsSetSrcFd),
+        DECLARE_NAPI_GETTER_SETTER("fdDst", JsGetDstFd, JsSetDstFd),
     };
 
     napi_value constructor = nullptr;
