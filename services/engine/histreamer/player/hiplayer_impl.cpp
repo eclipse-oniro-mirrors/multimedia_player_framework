@@ -1386,10 +1386,10 @@ int32_t HiPlayerImpl::DeselectTrack(int32_t trackId)
     } else if (IsSubtitleMime(mime)) {
         FALSE_RETURN_V_MSG_W(trackId == currentSubtitleTrackId_ && currentSubtitleTrackId_ >= 0, 
             MSERR_INVALID_VAL, "DeselectTrack trackId invalid");
-        if (needUpdateSubtitle_) {
-            needUpdateSubtitle_ = false;
+        if (needUpdateSubtitle_.load()) {
+            needUpdateSubtitle_.store(false);
         } else {
-            needUpdateSubtitle_ = true;
+            needUpdateSubtitle_.store(true);
         }
     } else {}
     return MSERR_OK;
@@ -1947,7 +1947,9 @@ void HiPlayerImpl::HandleBitrateStartEvent(const Event& event)
 void HiPlayerImpl::NotifySubtitleUpdate(const Event& event)
 {
     Format format = AnyCast<Format>(event.param);
-    callbackLooper_.OnInfo(INFO_TYPE_SUBTITLE_UPDATE_INFO, 0, format);
+    if (needUpdateSubtitle_.load()) {
+        callbackLooper_.OnInfo(INFO_TYPE_SUBTITLE_UPDATE_INFO, 0, format);
+    }
 }
 
 void HiPlayerImpl::UpdateStateNoLock(PlayerStates newState, bool notifyUpward)
@@ -2214,6 +2216,7 @@ void HiPlayerImpl::HandleSubtitleTrackChangeEvent(const Event& event)
         subtitleTrackInfo.PutIntValue("track_is_select", 1);
         callbackLooper_.OnInfo(INFO_TYPE_TRACKCHANGE, 0, subtitleTrackInfo);
         currentSubtitleTrackId_ = trackId;
+        needUpdateSubtitle_.store(true);
     }
     return;
 }
