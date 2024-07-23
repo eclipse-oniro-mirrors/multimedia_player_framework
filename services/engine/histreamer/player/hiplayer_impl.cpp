@@ -1375,33 +1375,24 @@ int32_t HiPlayerImpl::DeselectTrack(int32_t trackId)
         MEDIA_LOG_E("DeselectTrack trackId " PUBLIC_LOG_D32 "get mime error", trackId);
         return MSERR_INVALID_VAL;
     }
-    int defaultTrackId = -1;
     if (IsAudioMime(mime)) {
-        if (currentAudioTrackId_ < 0) {
-            if (Status::OK != InitAudioDefaultTrackIndex()) {
-                MEDIA_LOG_W("Init audio default track index fail");
-            }
-        }
-        defaultTrackId = currentAudioTrackId_;
+        FALSE_RETURN_V_MSG_W(trackId == currentAudioTrackId_ && currentAudioTrackId_ >= 0,
+            MSERR_INVALID_VAL, "DeselectTrack trackId invalid");
+        return SelectTrack(currentAudioTrackId_, PlayerSwitchMode::SWITCH_SOOMTH);
     } else if (IsVideoMime(mime)) {
-        if (currentVideoTrackId_ < 0) {
-            if (Status::OK != InitVideoDefaultTrackIndex()) {
-                MEDIA_LOG_W("Init video default track index fail");
-            }
-        }
-        defaultTrackId = currentVideoTrackId_;
+        FALSE_RETURN_V_MSG_W(trackId == currentVideoTrackId_ && currentVideoTrackId_ >= 0,
+            MSERR_INVALID_VAL, "DeselectTrack trackId invalid");
+        return SelectTrack(currentVideoTrackId_, PlayerSwitchMode::SWITCH_SOOMTH);
     } else if (IsSubtitleMime(mime)) {
-        if (currentVideoTrackId_ < 0) {
-            if (Status::OK != InitSubtitleDefaultTrackIndex()) {
-                MEDIA_LOG_W("Init subtitle default track index fail");
-            }
+        FALSE_RETURN_V_MSG_W(trackId == currentSubtitleTrackId_ && currentSubtitleTrackId_ >= 0, 
+            MSERR_INVALID_VAL, "DeselectTrack trackId invalid");
+        if (needUpdateSubtitle_) {
+            needUpdateSubtitle_ = false;
+        } else {
+            needUpdateSubtitle_ = true;
         }
-        defaultTrackId = currentSubtitleTrackId_;
     } else {}
-
-    FALSE_RETURN_V_MSG_W(trackId == defaultTrackId && defaultTrackId >= 0,
-        MSERR_INVALID_VAL, "DeselectTrack trackId invalid");
-    return SelectTrack(defaultTrackId, PlayerSwitchMode::SWITCH_SOOMTH);
+    return MSERR_OK;
 }
 
 int32_t HiPlayerImpl::GetVideoTrackInfo(std::vector<Format>& videoTrack)
