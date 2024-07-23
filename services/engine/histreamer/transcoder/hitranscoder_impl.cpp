@@ -511,10 +511,12 @@ Status HiTransCoderImpl::LinkVideoEncoderFilter(const std::shared_ptr<Pipeline::
         ("videoEncoderFilter", Pipeline::FilterType::FILTERTYPE_VENC);
     FALSE_RETURN_V_MSG_E(videoEncoderFilter_ != nullptr, Status::ERROR_NULL_POINTER,
         "videoEncoderFilter is nullptr");
+    FALSE_RETURN_V_MSG_E(videoEncFormat_ != nullptr, Status::ERROR_NULL_POINTER,
+        "videoEncFormat is nullptr");
+    videoEncFormat_->Set<Tag::VIDEO_ENCODE_BITRATE_MODE>(Plugins::VideoEncodeBitrateMode::VBR);
     FALSE_RETURN_V_MSG_E(videoEncoderFilter_->SetCodecFormat(videoEncFormat_) == Status::OK,
         Status::ERROR_UNKNOWN, "videoEncoderFilter SetCodecFormat fail");
     videoEncoderFilter_->Init(transCoderEventReceiver_, transCoderFilterCallback_);
-    videoEncFormat_->Set<Tag::VIDEO_ENCODE_BITRATE_MODE>(Plugins::VideoEncodeBitrateMode::VBR);
     FALSE_RETURN_V_MSG_E(videoEncoderFilter_->Configure(videoEncFormat_) == Status::OK,
         Status::ERROR_UNKNOWN, "videoEncoderFilter Configure fail");
     FALSE_RETURN_V_MSG_E(videoEncoderFilter_->SetTransCoderMode() == Status::OK,
