@@ -977,7 +977,7 @@ napi_value AVRecorderNapi::JsIsWatermarkSupported(napi_env env, napi_callback_in
 
     asyncCtx->deferred = CommonNapi::CreatePromise(env, nullptr, result);
 
-    if (asyncCtx->napi->CheckStateMachine(opt) == MSERR_OK) { //TODO:: need to add check
+    if (asyncCtx->napi->CheckStateMachine(opt) == MSERR_OK) {
         asyncCtx->task_ = AVRecorderNapi::IsWatermarkSupportedTask(asyncCtx);
         (void)asyncCtx->napi->taskQue_->EnqueueTask(asyncCtx->task_);
         asyncCtx->opt_ = opt;
@@ -1201,7 +1201,8 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderNapi::GetEncoderInfoTask(
     });
 }
 
-std::shared_ptr<TaskHandler<RetInfo>> AVRecorderNapi::IsWatermarkSupportedTask(const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx)
+std::shared_ptr<TaskHandler<RetInfo>> AVRecorderNapi::IsWatermarkSupportedTask(
+    const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx)
 {
     return std::make_shared<TaskHandler<RetInfo>>([napi = asyncCtx->napi,
         &isWatermarkSupported = asyncCtx->isWatermarkSupported_]() {
@@ -1226,10 +1227,11 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderNapi::IsWatermarkSupportedTask(c
     });
 }
 
-std::shared_ptr<TaskHandler<RetInfo>> AVRecorderNapi::SetWatermarkTask(const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx)
+std::shared_ptr<TaskHandler<RetInfo>> AVRecorderNapi::SetWatermarkTask(
+    const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx)
 {
-    return std::make_shared<TaskHandler<RetInfo>>([napi = asyncCtx->napi,
-        &pixelMap = asyncCtx->pixelMap_, &watermarkConfig = asyncCtx->watermarkConfig_]() {
+    return std::make_shared<TaskHandler<RetInfo>>([napi = asyncCtx->napi, &pixelMap = asyncCtx->pixelMap_,
+        &watermarkConfig = asyncCtx->watermarkConfig_]() {
         const std::string &option = AVRecordergOpt::SET_WATERMARK;
         MEDIA_LOGI("%{public}s Start", option.c_str());
 
@@ -1242,10 +1244,13 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderNapi::SetWatermarkTask(const std
         CHECK_AND_RETURN_RET(napi->CheckRepeatOperation(option) == MSERR_OK,
             RetInfo(MSERR_EXT_API9_OK, ""));
         bool isWatermarkSupported = false;
-        napi->IsWatermarkSupported(isWatermarkSupported);
-        CHECK_AND_RETURN_RET_LOG(isWatermarkSupported == true, GetRetInfo(MSERR_INVALID_VAL, "SetWatermarkTask", ""),
-            "capability not supported"); //TODO::callback 801
-        int32_t ret = napi->SetWatermarkTask(pixelMap, watermarkConfig); // TODO::need to convert
+        int32_t ret = napi->IsWatermarkSupported(isWatermarkSupported);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, GetRetInfo(MSERR_INVALID_OPERATION, "SetWatermarkTask", ""),
+            "IsWatermarkSupported fail");
+        CHECK_AND_RETURN_RET_LOG(isWatermarkSupported, GetRetInfo(MSERR_INVALID_VAL, "SetWatermarkTask", ""),
+            "capability not supported");
+
+        ret = napi->SetWatermark(pixelMap, watermarkConfig);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, GetRetInfo(MSERR_INVALID_VAL, "SetWatermarkTask", ""),
             "SetWatermarkTask failed");
 
@@ -1387,6 +1392,81 @@ int32_t AVRecorderNapi::GetEncoderInfo(std::vector<EncoderCapabilityData> &encod
 int32_t AVRecorderNapi::IsWatermarkSupported(bool &isWatermarkSupported)
 {
     return recorder_->IsWatermarkSupported(isWatermarkSupported);
+}
+
+int32_t AVRecorderNapi::SetWatermark(std::shared_ptr<PixelMap> &pixelMap,
+    std::shared_ptr<WatermarkConfig> &watermarkConfig)
+{
+    std::shared_ptr<Meta> avBufferConfig = std::make_shared<Meta>();
+    int32_t ret = ConfigAVBufferMeta(pixelMap, watermarkConfig, avBufferConfig);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_VAL, "ConfigAVBufferMeta is failed");
+    sptr<SurfaceBuffer> surfaceBuffer = SurfaceBuffer::Create();
+    BufferRequestConfig bufferConfig = {
+        .width = pixelMap->GetWidth(),
+        .height = pixelMap->GetHeight(),
+        .strideAlignment = 0x8,
+        .format = static_cast<int>(pixelMap->GetPixelFormat()),
+        .usage = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_CPU_WRITE | BUFFER_USAGE_MEM_DMA,
+        .timeout = 0,
+    };
+    surfaceBuffer->Alloc(bufferConfig);
+    errno_t err {0};
+    err = memcpy_s(surfaceBuffer->GetVirAddr(), pixelMap->GetByteCount(),
+        pixelMap->GetPixels(), pixelMap->GetByteCount());
+    CHECK_AND_RETURN_RET_LOG(err == 0, MSERR_INVALID_VAL, "memcpy_s failed");
+    std::shared_ptr<AVBuffer> waterMarkBuffer = AVBuffer::CreateAVBuffer(surfaceBuffer);
+    CHECK_AND_RETURN_RET_LOG(waterMarkBuffer != nullptr, MSERR_NO_MEMORY, "surfaceBuffer is nullptr");
+    waterMarkBuffer->meta_ = avBufferConfig;
+    return recorder_->SetWatermark(waterMarkBuffer);
+}
+
+int32_t AVRecorderNapi::ConfigAVBufferMeta(std::shared_ptr<PixelMap> &pixelMap,
+    std::shared_ptr<WatermarkConfig> &watermarkConfig, std::shared_ptr<Meta> &meta)
+{
+    int32_t top = watermarkConfig->top;
+    int32_t left = watermarkConfig->left;
+    int32_t watermarkWidth = pixelMap->GetWidth();
+    int32_t watermarkHeight = pixelMap->GetHeight();
+
+    switch (rotation_) {
+        case VIDEO_ROTATION_0:
+            meta->Set<Tag::VIDEO_COORDINATE_X>(left);
+            meta->Set<Tag::VIDEO_COORDINATE_Y>(top);
+            meta->Set<Tag::VIDEO_COORDINATE_W>(watermarkWidth);
+            meta->Set<Tag::VIDEO_COORDINATE_H>(watermarkHeight);
+        case VIDEO_ROTATION_90:
+            CHECK_AND_RETURN_RET_LOG(videoFrameWidth_-top-watermarkWidth >= 0,
+                MSERR_INVALID_VAL, "invalid watermark");
+            meta->Set<Tag::VIDEO_COORDINATE_X>(videoFrameWidth_-top-watermarkWidth);
+            meta->Set<Tag::VIDEO_COORDINATE_Y>(left);
+            meta->Set<Tag::VIDEO_COORDINATE_W>(watermarkHeight);
+            meta->Set<Tag::VIDEO_COORDINATE_H>(watermarkWidth);
+            pixelMap->rotate(VIDEO_ROTATION_90);
+            break;
+        case VIDEO_ROTATION_180:
+            CHECK_AND_RETURN_RET_LOG(videoFrameWidth_-left-watermarkWidth >= 0,
+                MSERR_INVALID_VAL, "invalid watermark");
+            CHECK_AND_RETURN_RET_LOG(videoFrameHeight_-top-watermarkHeight >= 0,
+                MSERR_INVALID_VAL, "invalid watermark");
+            meta->Set<Tag::VIDEO_COORDINATE_X>(videoFrameWidth_-left-watermarkWidth);
+            meta->Set<Tag::VIDEO_COORDINATE_Y>(videoFrameHeight_-top-watermarkHeight);
+            meta->Set<Tag::VIDEO_COORDINATE_W>(watermarkWidth);
+            meta->Set<Tag::VIDEO_COORDINATE_H>(watermarkHeight);
+            pixelMap->rotate(VIDEO_ROTATION_180);
+            break;
+        case VIDEO_ROTATION_270:
+            CHECK_AND_RETURN_RET_LOG(videoFrameHeight_ - left - watermarkWidth >= 0,
+                MSERR_INVALID_VAL, "invalid watermark");
+            meta->Set<Tag::VIDEO_COORDINATE_X>(top);
+            meta->Set<Tag::VIDEO_COORDINATE_Y>(videoFrameHeight_ - left - watermarkWidth);
+            meta->Set<Tag::VIDEO_COORDINATE_W>(watermarkHeight);
+            meta->Set<Tag::VIDEO_COORDINATE_H>(watermarkWidth);
+            pixelMap->rotate(VIDEO_ROTATION_270);
+            break;
+        default:
+            break;
+    }
+    return MSERR_OK;
 }
 
 int32_t AVRecorderNapi::CheckStateMachine(const std::string &opt)
@@ -1559,8 +1639,10 @@ int32_t AVRecorderNapi::GetVideoProfile(std::unique_ptr<AVRecorderAsyncContext> 
         (asyncCtx->AVRecorderSignError(ret, "GetvideoBitrate", "videoBitrate"), ret));
     CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, item, "videoFrameWidth", profile.videoFrameWidth),
         (asyncCtx->AVRecorderSignError(ret, "GetvideoFrameWidth", "videoFrameWidth"), ret));
+    videoFrameWidth_ = profile.videoFrameWidth;
     CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, item, "videoFrameHeight", profile.videoFrameHeight),
         (asyncCtx->AVRecorderSignError(ret, "GetvideoFrameHeight", "videoFrameHeight"), ret));
+    videoFrameHeight_ = profile.videoFrameHeight;
     CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, item, "videoFrameRate", profile.videoFrameRate),
         (asyncCtx->AVRecorderSignError(ret, "GetvideoFrameRate", "videoFrameRate"), ret));
     if (CommonNapi::GetPropertyBool(env, item, "isHdr", profile.isHdr)) {
@@ -1650,7 +1732,7 @@ int32_t AVRecorderNapi::GetConfig(std::unique_ptr<AVRecorderAsyncContext> &async
         config->rotation == VIDEO_ROTATION_180 || config->rotation == VIDEO_ROTATION_270),
         (asyncCtx->AVRecorderSignError(MSERR_PARAMETER_VERIFICATION_FAILED, "getrotation", "rotation",
             "rotation angle must be 0, 90, 180 or 270!"), MSERR_PARAMETER_VERIFICATION_FAILED));
-
+    rotation_ = config->rotation;
     if (CommonNapi::CheckhasNamedProperty(env, args, "location")) {
         CHECK_AND_RETURN_RET(GetLocation(asyncCtx, env, args),
             (asyncCtx->AVRecorderSignError(MSERR_INCORRECT_PARAMETER_TYPE, "GetLocation", "Location",
@@ -1732,6 +1814,7 @@ int32_t AVRecorderNapi::GetAVMetaData(std::unique_ptr<AVRecorderAsyncContext> &a
     std::string strRotation = CommonNapi::GetPropertyString(env, metadata, "videoOrientation");
     if (strRotation == "0" || strRotation == "90" || strRotation == "180" || strRotation == "270") {
         asyncCtx->config_->rotation = std::stoi(strRotation);
+        rotation_ = asyncCtx->config_->rotation;
         MEDIA_LOGI("rotation: %{public}d", asyncCtx->config_->rotation);
     } else if (strRotation != "") {
         asyncCtx->AVRecorderSignError(MSERR_INVALID_VAL, "not support rotation", "videoOrientation");
