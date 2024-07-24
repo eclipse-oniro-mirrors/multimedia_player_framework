@@ -751,8 +751,7 @@ int32_t RecorderServiceProxy::IsWatermarkSupported(bool &isWatermarkSupported)
     return reply.ReadInt32();
 }
 
-int32_t RecorderServiceProxy::SetWatermark(std::shared_ptr<SurfaceBuffer> &pixelMap,
-    std::shared_ptr<WatermarkConfig> watermarkConfig)
+int32_t RecorderServiceProxy::SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -760,6 +759,9 @@ int32_t RecorderServiceProxy::SetWatermark(std::shared_ptr<SurfaceBuffer> &pixel
 
     bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+    
+    CHECK_AND_RETURN_RET_LOG(waterMarkBuffer->WriteToMessageParcel(data),
+        MSERR_INVALID_OPERATION, "Failed to write waterMarkBuffer!");
 
     int error = Remote()->SendRequest(SET_WATERMARK, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,

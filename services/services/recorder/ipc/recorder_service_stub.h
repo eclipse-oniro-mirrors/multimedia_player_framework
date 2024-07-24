@@ -72,8 +72,7 @@ public:
     int32_t GetAvailableEncoder(std::vector<EncoderCapabilityData> &encoderInfo) override;
     int32_t GetMaxAmplitude() override;
     int32_t IsWatermarkSupported(bool &isWatermarkSupported) override;
-    int32_t SetWatermark(std::shared_ptr<SurfaceBuffer> &pixelMap,
-        std::shared_ptr<WatermarkConfig> watermarkConfig);
+    int32_t SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer) override;
     // MonitorServerObject override
     int32_t DoIpcAbnormality() override;
     int32_t DoIpcRecovery(bool fromMonitor) override;
