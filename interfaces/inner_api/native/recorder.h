@@ -23,6 +23,7 @@
 #include <parcel.h>
 #include "meta/format.h"
 #include "meta/meta.h"
+#include "buffer/avbuffer.h"
 #include "surface.h"
 #include "av_common.h"
 #include "codec_capability.h"
@@ -905,16 +906,14 @@ public:
      */
     virtual int32_t IsWatermarkSupported(bool &isWatermarkSupported) = 0;
     /**
-     * @brief Set watermark pixelmap and config
+     * @brief Set watermarkBuffer to avrecorder.
      *
-     * @param pixelMap watermark pixelmap
-     * @param watermarkConfig configures of the watermark
+     * @param waterMarkBuffer watermark image and config
      * @return Returns {@link MSERR_OK} If the SetWatermark succeeds; returns an error code otherwise.
      * @since 1.0
      * @version 1.0
     */
-    virtual int32_t SetWatermark(std::shared_ptr<SurfaceBuffer> &pixelMap,
-        std::shared_ptr<WatermarkConfig> watermarkConfig) = 0;
+    virtual int32_t SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer) = 0;
 };
 
 class __attribute__((visibility("default"))) RecorderFactory {

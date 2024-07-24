@@ -518,10 +518,9 @@ public:
      * @return Returns {@link SUCCESS} if the setting is successful; returns an error code defined
      * in {@link media_errors.h} otherwise.
     */
-    virtual IsWatermarkSupported(bool &isWatermarkSupported) = 0;
+    virtual int32_t IsWatermarkSupported(bool &isWatermarkSupported) = 0;
 
-    virtual int32_t SetWatermark(std::shared_ptr<SurfaceBuffer> &pixelMap,
-        std::shared_ptr<WatermarkConfig> watermarkConfig) = 0;
+    virtual int32_t SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer) = 0;
 };
 } // namespace Media
 } // namespace OHOS

@@ -146,6 +146,7 @@ private:
         BUFFER_USAGE_MEM_DMA | BUFFER_USAGE_VIDEO_ENCODER;
     std::string recorderId_;
     std::string bundleName_;
+    std::string codecMimeType_ = "";
     uint64_t instanceId_ = 0;
 };
 } // namespace MEDIA

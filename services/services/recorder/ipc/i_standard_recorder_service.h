@@ -86,8 +86,7 @@ public:
     virtual int32_t GetAvailableEncoder(std::vector<EncoderCapabilityData> &encoderInfo) = 0;
     virtual int32_t GetMaxAmplitude() = 0;
     virtual int32_t IsWatermarkSupported(bool &IsWatermarkSupported) = 0;
-    virtual int32_t SetWatermark(std::shared_ptr<SurfaceBuffer> &pixelMap,
-        std::shared_ptr<WatermarkConfig> watermarkConfig) = 0;
+    virtual int32_t SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer) = 0;
     /**
      * IPC code ID
      */
