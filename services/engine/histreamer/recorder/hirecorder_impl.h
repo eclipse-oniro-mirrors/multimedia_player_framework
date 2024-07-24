@@ -123,8 +123,6 @@ private:
     std::shared_ptr<Meta> userMeta_ = std::make_shared<Meta>();
     std::atomic<StateId> curState_;
 
-    std::shared_ptr<AVBuffer> waterMarkBuffer_ = nullptr;
-
     std::shared_ptr<AudioStandard::AudioCapturerInfoChangeCallback> CapturerInfoChangeCallback_;
     std::weak_ptr<IRecorderEngineObs> obs_{};
     OutputFormatType outputFormatType_{OutputFormatType::FORMAT_BUTT};
