@@ -1384,7 +1384,7 @@ int32_t HiPlayerImpl::DeselectTrack(int32_t trackId)
             MSERR_INVALID_VAL, "DeselectTrack trackId invalid");
         return SelectTrack(currentVideoTrackId_, PlayerSwitchMode::SWITCH_SOOMTH);
     } else if (IsSubtitleMime(mime)) {
-        FALSE_RETURN_V_MSG_W(trackId == currentSubtitleTrackId_ && currentSubtitleTrackId_ >= 0, 
+        FALSE_RETURN_V_MSG_W(trackId == currentSubtitleTrackId_ && currentSubtitleTrackId_ >= 0,
             MSERR_INVALID_VAL, "DeselectTrack trackId invalid");
         if (needUpdateSubtitle_.load()) {
             needUpdateSubtitle_.store(false);
