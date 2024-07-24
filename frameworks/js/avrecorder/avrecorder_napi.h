@@ -25,6 +25,7 @@
 #include "task_queue.h"
 #include "recorder_profiles.h"
 #include "pixel_map_napi.h"
+#include "buffer/avbuffer.h"
 
 namespace OHOS {
 namespace Media {
@@ -85,7 +86,9 @@ const std::map<std::string, std::vector<std::string>> stateCtrlList = {
         AVRecordergOpt::GET_CURRENT_AUDIO_CAPTURER_INFO,
         AVRecordergOpt::GET_MAX_AMPLITUDE,
         AVRecordergOpt::GET_ENCODER_INFO,
-        AVRecordergOpt::GET_AV_RECORDER_CONFIG
+        AVRecordergOpt::GET_AV_RECORDER_CONFIG,
+        AVRecordergOpt::IS_WATERMARK_SUPPORTED,
+        AVRecordergOpt::SET_WATERMARK
     }},
     {AVRecorderState::STATE_STARTED, {
         AVRecordergOpt::START,
@@ -97,7 +100,8 @@ const std::map<std::string, std::vector<std::string>> stateCtrlList = {
         AVRecordergOpt::GET_CURRENT_AUDIO_CAPTURER_INFO,
         AVRecordergOpt::GET_MAX_AMPLITUDE,
         AVRecordergOpt::GET_ENCODER_INFO,
-        AVRecordergOpt::GET_AV_RECORDER_CONFIG
+        AVRecordergOpt::GET_AV_RECORDER_CONFIG,
+        AVRecordergOpt::IS_WATERMARK_SUPPORTED
     }},
     {AVRecorderState::STATE_PAUSED, {
         AVRecordergOpt::PAUSE,
@@ -108,7 +112,8 @@ const std::map<std::string, std::vector<std::string>> stateCtrlList = {
         AVRecordergOpt::GET_CURRENT_AUDIO_CAPTURER_INFO,
         AVRecordergOpt::GET_MAX_AMPLITUDE,
         AVRecordergOpt::GET_ENCODER_INFO,
-        AVRecordergOpt::GET_AV_RECORDER_CONFIG
+        AVRecordergOpt::GET_AV_RECORDER_CONFIG,
+        AVRecordergOpt::IS_WATERMARK_SUPPORTED
     }},
     {AVRecorderState::STATE_STOPPED, {
         AVRecordergOpt::STOP,
@@ -172,7 +177,7 @@ struct AVRecorderConfig {
 struct WatermarkConfig {
     int32_t top = -1; // offset of the watermark to the top line of pixel
     int32_t left = -1; // offset of the watermark to the left line if pixel
-}
+};
 
 using RetInfo = std::pair<int32_t, std::string>;
 
@@ -342,6 +347,7 @@ private:
     int32_t GetMaxAmplitude(int32_t &maxAmplitude);
     int32_t GetEncoderInfo(std::vector<EncoderCapabilityData> &encoderInfo);
     int32_t IsWatermarkSupported(bool &isWatermarkSupported);
+    int32_t SetWatermark(std::shared_ptr<PixelMap> &pixelMap, std::shared_ptr<WatermarkConfig> &watermarkConfig);
 
     void ErrorCallback(int32_t errCode, const std::string &operate, const std::string &add = "");
     void StateCallback(const std::string &state);
@@ -361,7 +367,7 @@ private:
     int32_t GetConfig(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
     int32_t GetRotation(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
     int32_t GetAVMetaData(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
-    int32_t GetWatermarkParameter(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
+    int32_t GetWatermarkParameter(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value *args);
     int32_t GetWatermark(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
     int32_t GetWatermarkConfig(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
 
@@ -370,6 +376,8 @@ private:
         napi_value sourceIdArgs, napi_value qualityArgs, const std::string &opt);
     RetInfo SetProfile(std::shared_ptr<AVRecorderConfig> config);
     RetInfo Configure(std::shared_ptr<AVRecorderConfig> config);
+    int32_t ConfigAVBufferMeta(std::shared_ptr<PixelMap> &pixelMap, std::shared_ptr<WatermarkConfig> &watermarkConfig,
+        std::shared_ptr<Meta> &meta);
 
     static thread_local napi_ref constructor_;
     napi_env env_ = nullptr;
@@ -386,6 +394,9 @@ private:
     int32_t sourceId_ = -1;
     int32_t qualityLevel_ = -1;
     bool hasConfiged_ = false;
+    int32_t videoFrameWidth_ = -1; // Required for watermarking. Synchronize the modification if any.
+    int32_t videoFrameHeight_ = -1; // Required for watermarking. Synchronize the modification if any.
+    int32_t rotation_ = 0; // Required for watermarking. Synchronize the modification if any.
 };
 
 struct AVRecorderAsyncContext : public MediaAsyncContext {

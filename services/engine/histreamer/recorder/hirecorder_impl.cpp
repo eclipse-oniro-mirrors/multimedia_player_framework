@@ -288,7 +288,9 @@ int32_t HiRecorderImpl::Prepare()
         videoEncFormat_->Set<Tag::VIDEO_ENCODE_BITRATE_MODE>(Plugins::VideoEncodeBitrateMode::VBR);
         videoEncoderFilter_->SetCodecFormat(videoEncFormat_);
         videoEncoderFilter_->Init(recorderEventReceiver_, recorderCallback_);
-        videoEncFormat_->Set<Tag::VIDEO_ENABLE_WATERMARK>(isWatermarkSupported_);
+        FALSE_LOG_MSG(IsWatermarkSupported(codecMimeType_, isWatermarkSupported_) ==
+            static_cast<int32_t>(Status::OK), "IsWatermarkSupported failed.");
+        videoEncFormat_->Set<Tag::VIDEO_ENCODER_ENABLE_WATERMARK>(isWatermarkSupported_);
         FALSE_RETURN_V_MSG_E(videoEncoderFilter_->Configure(videoEncFormat_, waterMarkBuffer_) == Status::OK,
             ERR_UNKNOWN_REASON, "videoEncoderFilter Configure fail");
     }
@@ -365,6 +367,8 @@ int32_t HiRecorderImpl::Stop(bool isDrainAll)
     audioSourceId_ = 0;
     videoSourceId_ = 0;
     muxerFilter_ = nullptr;
+    isWatermarkSupported_ = false;
+    codecMimeType_ = "";
     if (audioCaptureFilter_) {
         pipeline_->RemoveHeadFilter(audioCaptureFilter_);
     }
@@ -628,13 +632,16 @@ void HiRecorderImpl::ConfigureVideoEncoderFormat(const RecorderParam &recParam)
             videoEncFormat_->Set<Tag::MIME_TYPE>(Plugins::MimeType::VIDEO_AVC);
             videoEncFormat_->Set<Tag::VIDEO_H264_PROFILE>(Plugins::VideoH264Profile::BASELINE);
             videoEncFormat_->Set<Tag::VIDEO_H264_LEVEL>(32); // 32: LEVEL 3.2
+            codecMimeType = MediaAVCodec::CodecMimeType::VIDEO_AVC;
             break;
         case OHOS::Media::VideoCodecFormat::MPEG4:
             videoEncFormat_->Set<Tag::MIME_TYPE>(Plugins::MimeType::VIDEO_MPEG4);
+            codecMimeType = MediaAVCodec::CodecMimeType::VIDEO_MPEG4;
             break;
         case OHOS::Media::VideoCodecFormat::H265:
             MEDIA_LOG_I("ConfigureVideo H265 enter");
             videoEncFormat_->Set<Tag::MIME_TYPE>(Plugins::MimeType::VIDEO_HEVC);
+            codecMimeType = MediaAVCodec::CodecMimeType::VIDEO_HEVC;
             break;
         default:
             break;
@@ -829,26 +836,27 @@ void HiRecorderImpl::SetCallingInfo(const std::string &bundleName, uint64_t inst
     instanceId_ = instanceId;
 }
 
-int32_t HiRecorderImpl::IsWatermarkSupported(bool &isWatermarkSupported)
+int32_t HiRecorderImpl::IsWatermarkSupported(std::string &codecMimeType, bool &isWatermarkSupported)
 {
     if (isWatermarkSupported_) {
-        isWatermarkSupported = true;
+        isWatermarkSupported = isWatermarkSupported_;
         return (int32_t)Status::OK;
     }
+    FALSE_RETURN_V_MSG_E(codecMimeType != "", static_cast<int32_t>(Status::ERROR_INVALID_OPERATION),
+        "codecMimeType is nullptr, cannot get isWatermarkSupported");
     if (!codecCapabilityAdapter_) {
         codecCapabilityAdapter_ = std::make_shared<Pipeline::CodecCapabilityAdapter>();
     }
     codecCapabilityAdapter_->Init();
-    Status ret = codecCapabilityAdapter_->IsWatermarkSupported(isWatermarkSupported);
+    Status ret = codecCapabilityAdapter_->IsWatermarkSupported(codecMimeType, isWatermarkSupported);
     return static_cast<int32_t>(ret);
 }
 
 int32_t HiRecorderImpl::SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer)
 {
-    int32_t ret = isWatermarkSupported_ ? (int32_t)Status::OK: IsWatermarkSupported(isWatermarkSupported_);
-    FALSE_RETURN_V_MSG_E(isWatermarkSupported_, Status::ERROR_UNSUPPORTED_FORMAT, "Watermarking not supported");//TODO::801
-    waterMarkBuffer_ = waterMarkBuffer;
-    return ret;
+    FALSE_RETURN_V_MSG_E(videoEncoderFilter_ != nullptr, static_cast<int32_t>(Status::ERROR_NULL_POINTER),
+        "videoEncoderFilter is nullptr, cannot set watermark");
+    return static_cast<int32_t>(videoEncoderFilter_->SetWatermark(waterMarkBuffer));
 }
 } // namespace MEDIA
 } // namespace OHOS
