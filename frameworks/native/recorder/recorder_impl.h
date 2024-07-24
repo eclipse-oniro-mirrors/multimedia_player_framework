@@ -70,8 +70,7 @@ public:
     int32_t GetAvailableEncoder(std::vector<EncoderCapabilityData> &encoderInfo) override;
     int32_t GetMaxAmplitude() override;
     int32_t IsWatermarkSupported(bool &isWatermarkSupported) override;
-    int32_t SetWatermark(std::shared_ptr<SurfaceBuffer> &pixelMap,
-        std::shared_ptr<WatermarkConfig> watermarkConfig) override;
+    int32_t SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer) override;
 private:
     std::shared_ptr<IRecorderService> recorderService_ = nullptr;
     sptr<Surface> surface_ = nullptr;

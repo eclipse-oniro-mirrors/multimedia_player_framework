@@ -358,11 +358,10 @@ int32_t RecorderImpl::IsWatermarkSupported(bool &isWatermarkSupported)
     return recorderService_->IsWatermarkSupported(isWatermarkSupported);
 }
 
-int32_t RecorderImpl::SetWatermark(std::shared_ptr<SurfaceBuffer> &pixelMap,
-    std::shared_ptr<WatermarkConfig> watermarkConfig)
+int32_t RecorderImpl::SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer)
 {
     CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist..");
-    return recorderService_->SetWatermarkTask(pixelMap, watermarkConfig);
+    return recorderService_->SetWatermark(waterMarkBuffer);
 }
 } // namespace Media
 } // namespace OHOS

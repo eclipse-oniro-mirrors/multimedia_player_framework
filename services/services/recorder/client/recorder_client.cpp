@@ -455,14 +455,13 @@ int32_t RecorderClient::IsWatermarkSupported(bool &isWatermarkSupported)
     return recorderProxy_->IsWatermarkSupported(isWatermarkSupported);
 }
 
-int32_t RecorderClient::SetWatermark(std::shared_ptr<SurfaceBuffer> &pixelMap,
-    std::shared_ptr<WatermarkConfig> watermarkConfig)
+int32_t RecorderClient::SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(recorderProxy_ != nullptr, MSERR_NO_MEMORY, "recorder service does not exist.");
 
     MEDIA_LOGD("SetWatermark");
-    return recorderProxy_->SetWatermark(pixelMap, watermarkConfig);
+    return recorderProxy_->SetWatermark(waterMarkBuffer);
 }
 } // namespace Media
 } // namespace OHOS
