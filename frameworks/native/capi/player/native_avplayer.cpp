@@ -490,7 +490,6 @@ OH_AVErrCode OH_AVPlayer_GetState(OH_AVPlayer *player, AVPlayerState *state)
         }
     }
 
-    *state = static_cast<AVPlayerState>(player->state_);
     *state = AV_ERROR;
     return AV_ERR_OK;
 }
