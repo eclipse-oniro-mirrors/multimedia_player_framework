@@ -2170,7 +2170,7 @@ int32_t HiPlayerImpl::SeekContinous(int32_t mSeconds, int64_t seekContinousBatch
 Status HiPlayerImpl::StartSeekContinous()
 {
     FALSE_RETURN_V(!draggingPlayerAgent_, Status::OK);
-    FALSE_RETURN_V(demuxer_ && videoDecoder_, TransStatus(Status::OK));
+    FALSE_RETURN_V(demuxer_ && videoDecoder_, Status::OK);
     draggingPlayerAgent_ = DraggingPlayerAgent::Create();
     FALSE_RETURN_V_MSG_E(draggingPlayerAgent_ != nullptr, Status::ERROR_INVALID_OPERATION, "failed to create agent");
     Status res = draggingPlayerAgent_->Init(demuxer_, videoDecoder_);
