@@ -997,8 +997,8 @@ void ScreenCaptureServer::PostStartScreenCapture(bool isSuccess)
         int64_t value = ResourceSchedule::ResType::ScreenCaptureStatus::START_SCREEN_CAPTURE;
         ResSchedReportData(value, payload);
         captureState_ = AVScreenCaptureState::STARTED;
-        screenCaptureCb_->OnStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STARTED);
         ScreenCaptureMonitorServer::GetInstance()->CallOnScreenCaptureStarted(appInfo_.appPid);
+        screenCaptureCb_->OnStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STARTED);
     } else {
         MEDIA_LOGE("PostStartScreenCapture handle failure");
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
@@ -2127,6 +2127,7 @@ void ScreenCaptureServer::PostStopScreenCapture(AVScreenCaptureStateCode stateCo
     MediaTrace trace("ScreenCaptureServer::PostStopScreenCapture");
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "PostStopScreenCapture start, stateCode:%{public}d.",
         FAKE_POINTER(this), stateCode);
+    ScreenCaptureMonitorServer::GetInstance()->CallOnScreenCaptureFinished(appInfo_.appPid);
     if (screenCaptureCb_ != nullptr) {
         if (stateCode != AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID) {
             screenCaptureCb_->OnStateChange(stateCode);
@@ -2153,7 +2154,6 @@ void ScreenCaptureServer::PostStopScreenCapture(AVScreenCaptureStateCode stateCo
     if (sessionId_ == activeSessionId_.load()) {
         activeSessionId_.store(SESSION_ID_INVALID);
     }
-    ScreenCaptureMonitorServer::GetInstance()->CallOnScreenCaptureFinished(appInfo_.appPid);
 }
 
 int32_t ScreenCaptureServer::StopScreenCapture()
