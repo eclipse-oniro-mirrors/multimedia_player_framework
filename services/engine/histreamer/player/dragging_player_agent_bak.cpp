@@ -100,18 +100,25 @@ Status DraggingPlayerAgent::Init(const shared_ptr<DemuxerFilter> &demuxer,
         Status::ERROR_INVALID_PARAMETER, "Invalid demuxer filter instance.");
     demuxer_ = demuxer;
     decoder_ = decoder;
+    MEDIA_LOG_E("liyudebug DraggingPlayerAgent::Init 1");
     Status ret = draggingPlayer_->Init(demuxer, decoder);
     if (ret != Status::OK) {
         MEDIA_LOG_E("liyudebug DraggingPlayerAgent::Init failed");
         return ret;
     }
     MEDIA_LOG_I("DraggingPlayerAgent::Init register");
+    MEDIA_LOG_E("liyudebug DraggingPlayerAgent::Init 2");
     videoStreamReadyCb_ = std::make_shared<VideoStreamReadyCallbackImpl>(shared_from_this());
+    MEDIA_LOG_E("liyudebug DraggingPlayerAgent::Init 3");
     demuxer->RegisterVideoStreamReadyCallback(videoStreamReadyCb_);
+    MEDIA_LOG_E("liyudebug DraggingPlayerAgent::Init 4");
     videoFrameReadyCb_ = std::make_shared<VideoFrameReadyCallbackImpl>(shared_from_this());
+    MEDIA_LOG_E("liyudebug DraggingPlayerAgent::Init 5");
     decoder->RegisterVideoFrameReadyCallback(videoFrameReadyCb_);
+    MEDIA_LOG_E("liyudebug DraggingPlayerAgent::Init 6");
     // Drive the head node to start the video channel.
     demuxer->ResumeDragging();
+    MEDIA_LOG_E("liyudebug DraggingPlayerAgent::Init 7");
     return Status::OK;
 }
  
@@ -149,6 +156,7 @@ void DraggingPlayerAgent::Release()
  
 void *DraggingPlayerAgent::LoadLibrary(const std::string &path)
 {
+    MEDIA_LOG_E("liyudebug dlopen path is %{public}s", path.c_str());
     auto ptr = ::dlopen(path.c_str(), RTLD_NOW | RTLD_LOCAL);
     if (ptr == nullptr) {
         MEDIA_LOG_E("dlopen failed due to %{public}s", ::dlerror());
@@ -187,6 +195,55 @@ bool DraggingPlayerAgent::LoadSymbol()
         }
     }
     return true;
+}
+
+Status DraggingPlayerAgent::Init2(const shared_ptr<DemuxerFilter> &demuxer,
+    const shared_ptr<DecoderSurfaceFilter> &decoder)
+{
+    FALSE_RETURN_V_MSG_E(demuxer != nullptr && decoder != nullptr,
+        Status::ERROR_INVALID_PARAMETER, "Invalid demuxer filter instance.");
+    demuxer_ = demuxer;
+    decoder_ = decoder;
+    MEDIA_LOG_E("liyudebug DraggingPlayerAgent::Init 1");
+    Status ret = draggingPlayer_->Init(demuxer, decoder);
+    if (ret != Status::OK) {
+        MEDIA_LOG_E("liyudebug DraggingPlayerAgent::Init failed");
+        return ret;
+    }
+    MEDIA_LOG_I("DraggingPlayerAgent::Init register");
+    MEDIA_LOG_E("liyudebug DraggingPlayerAgent::Init 2");
+    videoStreamReadyCb_ = std::make_shared<VideoStreamReadyCallbackImpl>(shared_from_this());
+    MEDIA_LOG_E("liyudebug DraggingPlayerAgent::Init 3");
+    demuxer->RegisterVideoStreamReadyCallback(videoStreamReadyCb_);
+    MEDIA_LOG_E("liyudebug DraggingPlayerAgent::Init 4");
+    videoFrameReadyCb_ = std::make_shared<VideoFrameReadyCallbackImpl>(shared_from_this());
+    MEDIA_LOG_E("liyudebug DraggingPlayerAgent::Init 5");
+    decoder->RegisterVideoFrameReadyCallback(videoFrameReadyCb_);
+    MEDIA_LOG_E("liyudebug DraggingPlayerAgent::Init 6");
+    return Status::OK;
+}
+
+Status DraggingPlayerAgent::Init3(const shared_ptr<DemuxerFilter> &demuxer,
+    const shared_ptr<DecoderSurfaceFilter> &decoder)
+{
+    FALSE_RETURN_V_MSG_E(demuxer != nullptr && decoder != nullptr,
+        Status::ERROR_INVALID_PARAMETER, "Invalid demuxer filter instance.");
+    demuxer_ = demuxer;
+    decoder_ = decoder;
+    MEDIA_LOG_E("liyudebug DraggingPlayerAgent::Init 1");
+    Status ret = draggingPlayer_->Init(demuxer, decoder);
+    if (ret != Status::OK) {
+        MEDIA_LOG_E("liyudebug DraggingPlayerAgent::Init failed");
+        return ret;
+    }
+    MEDIA_LOG_E("liyudebug DraggingPlayerAgent::Init 2");
+    videoStreamReadyCb_ = std::make_shared<VideoStreamReadyCallbackImpl>(shared_from_this());
+    videoFrameReadyCb_ = std::make_shared<VideoFrameReadyCallbackImpl>(shared_from_this());
+    MEDIA_LOG_E("liyudebug DraggingPlayerAgent::Init 3");
+    demuxer->RegisterVideoStreamReadyCallback(videoStreamReadyCb_);
+    decoder->RegisterVideoFrameReadyCallback(videoFrameReadyCb_);
+    MEDIA_LOG_E("liyudebug DraggingPlayerAgent::Init 4");
+    return Status::OK;
 }
 }  // namespace Media
 }  // namespace OHOS
