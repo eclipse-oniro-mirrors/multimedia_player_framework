@@ -1057,10 +1057,10 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_cb_07, TestSize.
     screenCapture_->SetMicrophoneEnabled(true); // Enable Mic
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
-    EXPECT_EQ(1, // 1 start
-        static_cast<ScreenCaptureMonitorListenerMock *>(screenCaptureMonitorListener1.GetRefPtr())->stateFlag_);
     sleep(RECORDER_TIME);
     EXPECT_NE(-1, ScreenCaptureMonitor::GetInstance()->IsScreenCaptureWorking());
+    EXPECT_EQ(1, // 1 start
+        static_cast<ScreenCaptureMonitorListenerMock *>(screenCaptureMonitorListener1.GetRefPtr())->stateFlag_);
     EXPECT_EQ(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STARTED, screenCaptureCb_->GetScreenCaptureState());
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());

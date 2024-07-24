@@ -61,7 +61,7 @@ int ScreenCaptureMonitorListenerStub::OnRemoteRequest(uint32_t code, MessageParc
 
 void ScreenCaptureMonitorListenerStub::OnScreenCaptureStarted(int32_t pid)
 {
-    MEDIA_LOGI("ScreenCaptureMonitorListenerStub:0x%{public}06" PRIXPTR " OnScreenCaptureFinished",
+    MEDIA_LOGI("ScreenCaptureMonitorListenerStub:0x%{public}06" PRIXPTR " OnScreenCaptureStarted",
         FAKE_POINTER(this));
     for (const auto& value : screenCaptureMonitorCallbacks_) {
         if (value != nullptr) {
