@@ -106,8 +106,8 @@ private:
     std::string transCoderId_;
     int32_t inputVideoWidth_ = 0;
     int32_t inputVideoHeight_ = 0;
+    bool isExistVideoTrack_ = false;
     bool isNeedVideoResizeFilter_ = false;
-
     std::atomic<int32_t> durationMs_{-1};
 };
 } // namespace MEDIA
