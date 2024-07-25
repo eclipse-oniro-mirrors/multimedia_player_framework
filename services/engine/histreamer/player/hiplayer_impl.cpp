@@ -1435,10 +1435,10 @@ int32_t HiPlayerImpl::GetVideoTrackInfo(std::vector<Format>& videoTrack)
             trackInfo->GetData(Tag::VIDEO_IS_HDR_VIVID, isHdr);
             if (isHdr) {
                 playStatisticalInfo_.hdrType = static_cast<int8_t>(VideoHdrType::VIDEO_HDR_TYPE_VIVID);
-                videoTrackInfo.PutStringValue("video_type", "hdr");
+                videoTrackInfo.PutIntValue("video_type", 1);
             } else {
                 playStatisticalInfo_.hdrType = static_cast<int8_t>(VideoHdrType::VIDEO_HDR_TYPE_NONE);
-                videoTrackInfo.PutStringValue("video_type", "sdr");
+                videoTrackInfo.PutIntValue("video_type", 0);
             }
             videoTrack.emplace_back(std::move(videoTrackInfo));
         }
@@ -1682,21 +1682,15 @@ void HiPlayerImpl::OnEventSub(const Event &event)
             break;
         }
         case EventType::EVENT_AUDIO_TRACK_CHANGE: {
-            MEDIA_LOG_I("handle audio track change event received");
             HandleAudioTrackChangeEvent(event);
             break;
         }
         case EventType::EVENT_VIDEO_TRACK_CHANGE: {
-            MEDIA_LOG_I("handle video track change event received");
             HandleVideoTrackChangeEvent(event);
             break;
         }
         case EventType::EVENT_SUBTITLE_TRACK_CHANGE: {
-            MEDIA_LOG_I("handle subtitle track change event received");
             HandleSubtitleTrackChangeEvent(event);
-            break;
-        case EventType::EVENT_BUFFER_PROGRESS: {
-            NotifyBufferingUpdate(PlayerKeys::PLAYER_BUFFERING_PERCENT, AnyCast<int32_t>(event.param));
             break;
         }
         default:
@@ -2408,7 +2402,7 @@ int32_t HiPlayerImpl::SeekContinous(int32_t mSeconds, int64_t seekContinousBatch
     }
     seekContinousBatchNo_.store(seekContinousBatchNo);
     auto res = StartSeekContinous();
-    FALSE_RETURN_V_MSG_E(res == Status::OK && draggingPlayerAgent_ != nullptr, TransStatus(res),
+    FALSE_RETURN_V_MSG_E(res == Status::OK && draggingPlayerAgent_ != nullptr, TransStatus(Status::ERROR_UNKNOWN),
         "StartSeekContinous failed");
     lastSeekContinousPos_ = mSeconds;
     draggingPlayerAgent_->UpdateSeekPos(mSeconds);
@@ -2419,18 +2413,12 @@ int32_t HiPlayerImpl::SeekContinous(int32_t mSeconds, int64_t seekContinousBatch
 Status HiPlayerImpl::StartSeekContinous()
 {
     FALSE_RETURN_V(!draggingPlayerAgent_, Status::OK);
-    FALSE_RETURN_V(demuxer_ && videoDecoder_, Status::OK);
     draggingPlayerAgent_ = DraggingPlayerAgent::Create();
-    FALSE_RETURN_V_MSG_E(draggingPlayerAgent_ != nullptr, Status::ERROR_INVALID_OPERATION, "failed to create agent");
+    FALSE_RETURN_V(draggingPlayerAgent_ != nullptr, Status::OK);
     Status res = draggingPlayerAgent_->Init(demuxer_, videoDecoder_);
     if (res != Status::OK) {
         draggingPlayerAgent_ = nullptr;
-        return res;
     }
-    if (pipelineStates_ == PlayerStates::PLAYER_PLAYBACK_COMPLETE) {
-        videoDecoder_->Flush();
-    }
-    SetFrameRateForSeekPerformance(FRAME_RATE_FOR_SEEK_PERFORMANCE);
     return res;
 }
 
@@ -2444,7 +2432,6 @@ int32_t HiPlayerImpl::ExitSeekContinous(bool align, int64_t seekContinousBatchNo
         draggingPlayerAgent_->Release();
         draggingPlayerAgent_ = nullptr;
     }
-    SetFrameRateForSeekPerformance(FRAME_RATE_DEFAULT);
     if (align) {
         Seek(lastSeekContinousPos_, PlayerSeekMode::SEEK_CLOSEST, false);
     }
