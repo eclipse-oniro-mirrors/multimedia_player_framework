@@ -73,6 +73,7 @@ private:
     Status ConfigureMetaData(const std::vector<std::shared_ptr<Meta>> &trackInfos);
     Status SetTrackMime(const std::vector<std::shared_ptr<Meta>> &trackInfos);
     Status ConfigureVideoWidthHeight(const TransCoderParam &transCoderParam);
+    Status ConfigureInputVideoMetaData(const std::vector<std::shared_ptr<Meta>> &trackInfos, const size_t &index);
 
     int32_t appUid_{0};
     int32_t appPid_{0};
