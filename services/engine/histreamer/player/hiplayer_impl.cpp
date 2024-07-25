@@ -1642,21 +1642,6 @@ void HiPlayerImpl::OnEvent(const Event &event)
             HandleResolutionChangeEvent(event);
             break;
         }
-        case EventType::EVENT_AUDIO_TRACK_CHANGE: {
-            MEDIA_LOG_I("handle audio track change event received");
-            HandleAudioTrackChangeEvent(event);
-            break;
-        }
-        case EventType::EVENT_VIDEO_TRACK_CHANGE: {
-            MEDIA_LOG_I("handle video track change event received");
-            HandleVideoTrackChangeEvent(event);
-            break;
-        }
-        case EventType::EVENT_SUBTITLE_TRACK_CHANGE: {
-            MEDIA_LOG_I("handle subtitle track change event received");
-            HandleSubtitleTrackChangeEvent(event);
-            break;
-        }
         default:
             break;
     }
@@ -1694,6 +1679,21 @@ void HiPlayerImpl::OnEventSub(const Event &event)
         }
         case EventType::EVENT_CACHED_DURATION: {
             NotifyCachedDuration(AnyCast<int32_t>(event.param));
+            break;
+        }
+        case EventType::EVENT_AUDIO_TRACK_CHANGE: {
+            MEDIA_LOG_I("handle audio track change event received");
+            HandleAudioTrackChangeEvent(event);
+            break;
+        }
+        case EventType::EVENT_VIDEO_TRACK_CHANGE: {
+            MEDIA_LOG_I("handle video track change event received");
+            HandleVideoTrackChangeEvent(event);
+            break;
+        }
+        case EventType::EVENT_SUBTITLE_TRACK_CHANGE: {
+            MEDIA_LOG_I("handle subtitle track change event received");
+            HandleSubtitleTrackChangeEvent(event);
             break;
         }
         default:
