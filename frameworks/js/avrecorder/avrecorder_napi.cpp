@@ -1830,11 +1830,11 @@ int32_t AVRecorderNapi::GetAVMetaData(std::unique_ptr<AVRecorderAsyncContext> &a
 }
 
 int32_t AVRecorderNapi::GetWatermarkParameter(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx,
-    napi_env env, napi_value args)
+    napi_env env, napi_value *args)
 {
     int32_t ret = GetWatermark(asyncCtx, env, args[0]);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "failed to GetWatermark");
-    ret = GetWatermarkConfig(asyncCtx, env, ars[1]);
+    ret = GetWatermarkConfig(asyncCtx, env, args[1]);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "failed to GetWatermarkConfig");
     return MSERR_OK;
 }
@@ -1842,7 +1842,7 @@ int32_t AVRecorderNapi::GetWatermarkParameter(std::unique_ptr<AVRecorderAsyncCon
 int32_t AVRecorderNapi::GetWatermark(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx,
     napi_env env, napi_value args)
 {
-    CHECK_AND_RETURN_RET(CheckValueType(env, args, napi_object) == napi_ok,
+    CHECK_AND_RETURN_RET(CheckValueType(env, args, napi_object),
         (asyncCtx->AVRecorderSignError(MSERR_INVALID_VAL, "GetPixelMap", "PixelMap"), MSERR_INVALID_VAL));
     asyncCtx->pixelMap_ = Media::PixelMapNapi::GetPixelMap(env, args);
     CHECK_AND_RETURN_RET(asyncCtx->pixelMap_ != nullptr,
@@ -1853,7 +1853,7 @@ int32_t AVRecorderNapi::GetWatermark(std::unique_ptr<AVRecorderAsyncContext> &as
 int32_t AVRecorderNapi::GetWatermarkConfig(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx,
     napi_env env, napi_value args)
 {
-    CHECK_AND_RETURN_RET(CheckValueType(env, args, napi_object) == napi_ok,
+    CHECK_AND_RETURN_RET(CheckValueType(env, args, napi_object),
         (asyncCtx->AVRecorderSignError(MSERR_INVALID_VAL, "GetWatermarkConfig", "WatermarkConfig"), MSERR_INVALID_VAL));
     asyncCtx->watermarkConfig_ = std::make_shared<WatermarkConfig>();
 
@@ -1862,7 +1862,7 @@ int32_t AVRecorderNapi::GetWatermarkConfig(std::unique_ptr<AVRecorderAsyncContex
         (asyncCtx->AVRecorderSignError(MSERR_PARAMETER_VERIFICATION_FAILED, "GetWatermarkConfig", "top",
             "config top cannot be null or less than zero"), MSERR_PARAMETER_VERIFICATION_FAILED));
 
-    bool ret = CommonNapi::GetPropertyInt32(env, args, "left", asyncCtx->watermarkConfig_->left);
+    ret = CommonNapi::GetPropertyInt32(env, args, "left", asyncCtx->watermarkConfig_->left);
     CHECK_AND_RETURN_RET(ret && asyncCtx->watermarkConfig_->left >= 0,
         (asyncCtx->AVRecorderSignError(MSERR_PARAMETER_VERIFICATION_FAILED, "GetWatermarkConfig", "left",
             "config left cannot be null or less than zero"), MSERR_PARAMETER_VERIFICATION_FAILED));
