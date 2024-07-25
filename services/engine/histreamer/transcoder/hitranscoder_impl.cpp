@@ -168,7 +168,8 @@ Status HiTransCoderImpl::ConfigureVideoAudioMetaData()
     return Status::OK;
 }
 
-Status HiTransCoderImpl::ConfigureInputVideoMetaData(const std::vector<std::shared_ptr<Meta>> &trackInfos, const size_t &index)
+Status HiTransCoderImpl::ConfigureInputVideoMetaData(const std::vector<std::shared_ptr<Meta>> &trackInfos,
+    const size_t &index)
 {
     MEDIA_LOG_I("InputVideo contains videoTrack");
     isExistVideoTrack_ = true;
