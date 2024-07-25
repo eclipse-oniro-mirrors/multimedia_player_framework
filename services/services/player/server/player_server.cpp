@@ -560,8 +560,8 @@ int32_t PlayerServer::HandleResumeDemuxer()
     MediaTrace::TraceBegin("PlayerServer::ResumeDemuxer", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_INVALID_OPERATION, "playerEngine_ is nullptr");
     int32_t ret = playerEngine_->ResumeDemuxer();
-    taskMgr_.MarkTaskDone("PauseDemuxer done");
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine PauseDemuxer Failed!");
+    taskMgr_.MarkTaskDone("ResumeDemuxer done");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine ResumeDemuxer Failed!");
     return MSERR_OK;
 }
 
@@ -1483,12 +1483,12 @@ void PlayerServer::OnBufferingUpdate(PlayerOnInfoType type, int32_t extra, const
 void PlayerServer::OnNotifyBufferingStart()
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " PlayerServer DemuerPause in", FAKE_POINTER(this));
-    auto playingTask = std::make_share<TaskHandler<void>([this]() {
-        MediaTrace::TraceBegin("PlayerServer::DemuerPaue", FAKE_POINTER(this));
-        MEDIA_LOGI("DemuerPaue start");
-        auto currState = std::static_point_cast<BaseState>(GetCurrState());
+    auto pauseTask = std::make_shared<TaskHandler<void>>([this]() {
+        MediaTrace::TraceBegin("PlayerServer::DemuerPause", FAKE_POINTER(this));
+        MEDIA_LOGI("DemuerPause start");
+        auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
         (void)currState->PauseDemuxer();
-        MEDIA_LOGI("DemuerPaue end");
+        MEDIA_LOGI("DemuerPause end");
     });
     taskMgr_.LaunchTask(pauseTask, PlayerServerTaskType::LIGHT_TASK, "demuerPause");
     MEDIA_LOGI("0x%{public}06" PRIXPTR " PlayerServer DemuerPause out", FAKE_POINTER(this));
@@ -1498,11 +1498,11 @@ void PlayerServer::OnNotifyBufferingStart()
 void PlayerServer::OnNotifyBufferingEnd()
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " PlayerServer ResumeDemuxer in", FAKE_POINTER(this));
-    auto playingTask = std::make_share<TaskHandler<void>([this]() {
-        MediaTrace::TraceBegin("PlayerServer::DemuerPaue", FAKE_POINTER(this));
+    auto playingTask = std::make_shared<TaskHandler<void>>([this]() {
+        MediaTrace::TraceBegin("PlayerServer::ResumeDemuxer", FAKE_POINTER(this));
         MEDIA_LOGI("ResumeDemuxer start");
-        auto currState = std::static_point_cast<BaseState>(GetCurrState());
-        (void)currState->PauseDemuxer();
+        auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
+        (void)currState->ResumeDemuxer();
         MEDIA_LOGI("PlayBufResumeDemuxerfering end");
     });
     taskMgr_.LaunchTask(playingTask, PlayerServerTaskType::LIGHT_TASK, "ResumeDemuxer");

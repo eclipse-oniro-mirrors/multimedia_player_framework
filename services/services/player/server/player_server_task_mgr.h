@@ -37,7 +37,7 @@ enum class PlayerServerTaskType : uint8_t {
     RATE_CHANGE,
     CANCEL_TASK,
     SEEK_CONTINOUS,
-    LIGHT_TASK;
+    LIGHT_TASK,
     BUTT,
 };
 
