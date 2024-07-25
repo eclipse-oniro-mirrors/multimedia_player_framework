@@ -3548,7 +3548,7 @@ HWTEST_F(PlayerUnitTest, Player_SeekContinuous_005, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->Play());
     sleep(PLAYING_TIME_2_SEC);
     for (int i = 0; i < 30; i++) {
-        EXPECT_EQ(MSERR_OK, player_->SeekContinuous(9000 - i * 100,));
+        EXPECT_EQ(MSERR_OK, player_->SeekContinuous(9000 - i * 100));
         usleep(33000); // 33000 means 33ms
     }
     EXPECT_EQ(MSERR_OK, player_->Play());
@@ -3570,11 +3570,11 @@ HWTEST_F(PlayerUnitTest, Player_SeekContinuous_006, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->Play());
     sleep(PLAYING_TIME_2_SEC);
     for (int i = 0; i < 30; i++) {
-        EXPECT_EQ(MSERR_OK, player_->SeekContinuous(9000 - i * 100,));
+        EXPECT_EQ(MSERR_OK, player_->SeekContinuous(9000 - i * 100));
         usleep(33000); // 33000 means 33ms
     }
     for (int i = 0; i < 30; i++) {
-        EXPECT_EQ(MSERR_OK, player_->SeekContinuous(9000 - i * 100,));
+        EXPECT_EQ(MSERR_OK, player_->SeekContinuous(9000 - i * 100));
         usleep(33000); // 33000 means 33ms
     }
     EXPECT_EQ(MSERR_OK, player_->Play());
