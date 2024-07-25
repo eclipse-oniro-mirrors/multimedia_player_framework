@@ -903,7 +903,6 @@ int32_t AVTransCoderNapi::GetVideoConfig(std::unique_ptr<AVTransCoderAsyncContex
     std::string videoCodec = CommonNapi::GetPropertyString(env, args, "videoCodec");
     (void)AVTransCoderNapi::GetVideoCodecFormat(videoCodec, config->videoCodecFormat);
     (void)CommonNapi::GetPropertyInt32(env, args, "videoBitrate", config->videoBitrate);
-    (void)CommonNapi::GetPropertyInt32(env, args, "videoBitrate", config->videoBitrate);
     (void)CommonNapi::GetPropertyInt32(env, args, "videoFrameWidth", config->videoFrameWidth);
     (void)CommonNapi::GetPropertyInt32(env, args, "videoFrameHeight", config->videoFrameHeight);
     return MSERR_OK;
