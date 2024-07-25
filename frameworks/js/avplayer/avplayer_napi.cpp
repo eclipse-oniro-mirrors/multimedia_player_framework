@@ -758,7 +758,7 @@ PlayerSeekMode AVPlayerNapi::TransferSeekMode(int32_t mode)
 PlayerSwitchMode AVPlayerNapi::TransferSwitchMode(int32_t mode)
 {
     MEDIA_LOGI("Seek Task TransferSeekMode, mode: %{public}d", mode);
-    PlayerSwitchMode switchMode = PlayerSwitchMode::SWITCH_SOOMTH;
+    PlayerSwitchMode switchMode = PlayerSwitchMode::SWITCH_CLOSEST;
     switch (mode) {
         case 0:
             switchMode = PlayerSwitchMode::SWITCH_SOOMTH;
@@ -766,11 +766,7 @@ PlayerSwitchMode AVPlayerNapi::TransferSwitchMode(int32_t mode)
         case 1:
             switchMode = PlayerSwitchMode::SWITCH_SEGMENT;
             break;
-        case 2:
-            switchMode = PlayerSwitchMode::SWITCH_CLOSEST;
-            break;
         default:
-            switchMode = PlayerSwitchMode::SWITCH_SOOMTH;
             break;
     }
     return switchMode;
