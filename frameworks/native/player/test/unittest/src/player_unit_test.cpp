@@ -3458,7 +3458,7 @@ HWTEST_F(PlayerUnitTest, Player_SeekContinuous_001, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
     EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
     for (int i = 0; i < 10; i++) {
-        EXPECT_EQ(MSERR_OK, player_->Seek(i * 100, SEEK_CONTINOUS));
+        EXPECT_EQ(MSERR_OK, player_->SeekContinuous(i * 100));
         usleep(33000); // 33000 means 33ms
     }
     EXPECT_EQ(MSERR_OK, player_->Play());
@@ -3479,7 +3479,7 @@ HWTEST_F(PlayerUnitTest, Player_SeekContinuous_002, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->Play());
     sleep(PLAYING_TIME_2_SEC);
     for (int i = 0; i < 30; i++) {
-        EXPECT_EQ(MSERR_OK, player_->Seek(i * 100, SEEK_CONTINOUS));
+        EXPECT_EQ(MSERR_OK, player_->SeekContinuous(i * 100));
         usleep(33000); // 33000 means 33ms
     }
     EXPECT_EQ(MSERR_OK, player_->Play());
@@ -3502,7 +3502,7 @@ HWTEST_F(PlayerUnitTest, Player_SeekContinuous_003, TestSize.Level0)
     sleep(PLAYING_TIME_2_SEC);
     EXPECT_EQ(MSERR_OK, player_->Pause());
     for (int i = 0; i < 30; i++) {
-        EXPECT_EQ(MSERR_OK, player_->Seek(i * 100, SEEK_CONTINOUS));
+        EXPECT_EQ(MSERR_OK, player_->SeekContinuous(i * 100));
         usleep(33000); // 33000 means 33ms
     }
     EXPECT_EQ(MSERR_OK, player_->Play());
@@ -3526,7 +3526,7 @@ HWTEST_F(PlayerUnitTest, Player_SeekContinuous_004, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->Seek(9, SEEK_PREVIOUS_SYNC));
     sleep(PLAYING_TIME_10_SEC);
     for (int i = 0; i < 30; i++) {
-        EXPECT_EQ(MSERR_OK, player_->Seek(i * 100, SEEK_CONTINOUS));
+        EXPECT_EQ(MSERR_OK, player_->SeekContinuous(i * 100));
         usleep(33000); // 33000 means 33ms
     }
     EXPECT_EQ(MSERR_OK, player_->Play());
@@ -3548,7 +3548,33 @@ HWTEST_F(PlayerUnitTest, Player_SeekContinuous_005, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->Play());
     sleep(PLAYING_TIME_2_SEC);
     for (int i = 0; i < 30; i++) {
-        EXPECT_EQ(MSERR_OK, player_->Seek(9000 - i * 100, SEEK_CONTINOUS));
+        EXPECT_EQ(MSERR_OK, player_->SeekContinuous(9000 - i * 100,));
+        usleep(33000); // 33000 means 33ms
+    }
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->Stop());
+}
+
+/**
+ * @tc.name  : Test SeekContinuous forward and backward
+ * @tc.number: Player_SeekContinuous_006
+ * @tc.desc  : Test Player SeekContinuous
+ */
+HWTEST_F(PlayerUnitTest, Player_SeekContinuous_006, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    sleep(PLAYING_TIME_2_SEC);
+    for (int i = 0; i < 30; i++) {
+        EXPECT_EQ(MSERR_OK, player_->SeekContinuous(9000 - i * 100,));
+        usleep(33000); // 33000 means 33ms
+    }
+    for (int i = 0; i < 30; i++) {
+        EXPECT_EQ(MSERR_OK, player_->SeekContinuous(9000 - i * 100,));
         usleep(33000); // 33000 means 33ms
     }
     EXPECT_EQ(MSERR_OK, player_->Play());
