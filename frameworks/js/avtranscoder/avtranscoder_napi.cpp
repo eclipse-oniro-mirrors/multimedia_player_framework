@@ -80,7 +80,7 @@ AVTransCoderNapi::~AVTransCoderNapi()
 napi_value AVTransCoderNapi::Init(napi_env env, napi_value exports)
 {
     napi_property_descriptor staticProperty[] = {
-        DECLARE_NAPI_STATIC_FUNCTION("createAVTransCoder", JsCreateAVTransCoder),
+        DECLARE_NAPI_STATIC_FUNCTION("createAVTranscoder", JsCreateAVTransCoder),
     };
 
     napi_property_descriptor properties[] = {
