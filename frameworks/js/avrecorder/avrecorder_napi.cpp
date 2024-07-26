@@ -1397,7 +1397,7 @@ int32_t AVRecorderNapi::IsWatermarkSupported(bool &isWatermarkSupported)
 int32_t AVRecorderNapi::SetWatermark(std::shared_ptr<PixelMap> &pixelMap,
     std::shared_ptr<WatermarkConfig> &watermarkConfig)
 {
-    MEDIA_LOGD("pixelMap Width %{public}d, height %{public}d, pixelformat %{public}d, RowStride %{public}",
+    MEDIA_LOGD("pixelMap Width %{public}d, height %{public}d, pixelformat %{public}d, RowStride %{public}d",
         pixelMap->GetWidth(), pixelMap->GetHeight(), pixelMap->GetPixelFormat(), pixelMap->GetRowStride());
     CHECK_AND_RETURN_RET_LOG(pixelMap->GetPixelFormat() == PixelFormat::RGBA_8888, MSERR_INVALID_VAL,
         "Invalid pixel format");
@@ -1436,10 +1436,9 @@ int32_t AVRecorderNapi::ConfigAVBufferMeta(std::shared_ptr<PixelMap> &pixelMap,
     int32_t left = watermarkConfig->left;
     int32_t watermarkWidth = pixelMap->GetWidth();
     int32_t watermarkHeight = pixelMap->GetHeight();
-    meta->Set<Tag::VIDEO_ENCODER_ENABLE_WATERWARK>(true);
+    meta->Set<Tag::VIDEO_ENCODER_ENABLE_WATERMARK>(true);
     switch (rotation_) {
         case VIDEO_ROTATION_0:
-            MEDIA_LOGI("rotation %{public}d", VIDEO_ROTATION_0);
             meta->Set<Tag::VIDEO_COORDINATE_X>(left);
             meta->Set<Tag::VIDEO_COORDINATE_Y>(top);
             meta->Set<Tag::VIDEO_COORDINATE_W>(watermarkWidth);
@@ -1857,7 +1856,7 @@ int32_t AVRecorderNapi::GetWatermarkParameter(std::unique_ptr<AVRecorderAsyncCon
 int32_t AVRecorderNapi::GetWatermark(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx,
     napi_env env, napi_value args)
 {
-    CHECK_AND_RETURN_RET(CheckValueType(env, args, napi_object),
+    CHECK_AND_RETURN_RET(CommonNapi::CheckValueType(env, args, napi_object),
         (asyncCtx->AVRecorderSignError(MSERR_INVALID_VAL, "GetPixelMap", "PixelMap"), MSERR_INVALID_VAL));
     asyncCtx->pixelMap_ = Media::PixelMapNapi::GetPixelMap(env, args);
     CHECK_AND_RETURN_RET(asyncCtx->pixelMap_ != nullptr,
@@ -1868,7 +1867,7 @@ int32_t AVRecorderNapi::GetWatermark(std::unique_ptr<AVRecorderAsyncContext> &as
 int32_t AVRecorderNapi::GetWatermarkConfig(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx,
     napi_env env, napi_value args)
 {
-    CHECK_AND_RETURN_RET(CommonNapi::CheckValueType (env, args, napi_object),
+    CHECK_AND_RETURN_RET(CommonNapi::CheckValueType(env, args, napi_object),
         (asyncCtx->AVRecorderSignError(MSERR_INVALID_VAL, "GetWatermarkConfig", "WatermarkConfig"), MSERR_INVALID_VAL));
     asyncCtx->watermarkConfig_ = std::make_shared<WatermarkConfig>();
 
