@@ -86,6 +86,7 @@ ohos_shared_library("media_soundpool") {
     "c_utils:utils",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
+    "hisysevent:libhisysevent",
     "ipc:ipc_core",
     "napi:ace_napi",
     "qos_manager:qos",
