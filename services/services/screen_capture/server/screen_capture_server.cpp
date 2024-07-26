@@ -1124,7 +1124,11 @@ int32_t ScreenCaptureServer::InitVideoCap(VideoCaptureInfo videoInfo)
 int32_t ScreenCaptureServer::InitRecorderInfo(std::shared_ptr<IRecorderService> &recorder, AudioCaptureInfo audioInfo)
 {
     int32_t ret = MSERR_OK;
-    ret = recorder->SetOutputFormat(fileFormat_);
+    if (captureConfig_.videoInfo.videoCapInfo.state != AVScreenCaptureParamValidationState::VALIDATION_IGNORE) {
+        ret = recorder_->SetVideoSource(captureConfig_.videoInfo.videoCapInfo.videoSource, videoSourceId_);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetVideoSource failed");
+    }
+    ret = recorder->SetOutputFormat(fileFormat_); // Change to REC_CONFIGURED
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetOutputFormat failed");
     ret = recorder->SetAudioEncoder(audioSourceId_, captureConfig_.audioInfo.audioEncInfo.audioCodecformat);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetAudioEncoder failed");
@@ -1190,13 +1194,8 @@ int32_t ScreenCaptureServer::InitRecorder()
         return MSERR_UNKNOWN;
     }
     MEDIA_LOGI("InitRecorder recorder SetAudioDataSource ret:%{public}d", ret);
-    if (captureConfig_.videoInfo.videoCapInfo.state != AVScreenCaptureParamValidationState::VALIDATION_IGNORE) {
-        ret = recorder_->SetVideoSource(captureConfig_.videoInfo.videoCapInfo.videoSource, videoSourceId_);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetVideoSource failed");
-    }
     ret = InitRecorderInfo(recorder_, audioInfo);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "InitRecorderInfo failed");
-
     ret = recorder_->SetOutputFile(outputFd_);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetOutputFile failed");
     ret = recorder_->Prepare();
