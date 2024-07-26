@@ -1406,14 +1406,10 @@ void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &in
         return;
     }
     auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
-    if (currState == stoppedState_ && type == INFO_TYPE_STATE_CHANGE
-        && extra == PlayerStates::PLAYER_PLAYBACK_COMPLETE) {
-        MEDIA_LOGW("completed in stopped state");
-        return;
-    }
-
-    if (currState == stoppedState_ && type == INFO_TYPE_EOS) {
-        MEDIA_LOGW("eos in stopped state");
+    bool isCompletedInfo = type == INFO_TYPE_STATE_CHANGE && extra == PlayerStates::PLAYER_PLAYBACK_COMPLETE;
+    bool isEosInfo = type == INFO_TYPE_EOS;
+    if (currState == stoppedState_ && (isCompletedInfo || isEosInfo)) {
+        MEDIA_LOGW("completed or eos in stopped state");
         return;
     }
 
