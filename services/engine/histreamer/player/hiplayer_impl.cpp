@@ -1394,11 +1394,11 @@ int32_t HiPlayerImpl::DeselectTrack(int32_t trackId)
     if (IsAudioMime(mime)) {
         FALSE_RETURN_V_MSG_W(trackId == currentAudioTrackId_ && currentAudioTrackId_ >= 0,
             MSERR_INVALID_VAL, "DeselectTrack trackId invalid");
-        return SelectTrack(currentAudioTrackId_, PlayerSwitchMode::SWITCH_SMOOTH);
+        return SelectTrack(defaultAudioTrackId_, PlayerSwitchMode::SWITCH_SMOOTH);
     } else if (IsVideoMime(mime)) {
         FALSE_RETURN_V_MSG_W(trackId == currentVideoTrackId_ && currentVideoTrackId_ >= 0,
             MSERR_INVALID_VAL, "DeselectTrack trackId invalid");
-        return SelectTrack(currentVideoTrackId_, PlayerSwitchMode::SWITCH_SMOOTH);
+        return SelectTrack(defaultVideoTrackId_, PlayerSwitchMode::SWITCH_SMOOTH);
     } else if (IsSubtitleMime(mime)) {
         FALSE_RETURN_V_MSG_W(trackId == currentSubtitleTrackId_ && currentSubtitleTrackId_ >= 0,
             MSERR_INVALID_VAL, "DeselectTrack trackId invalid");
