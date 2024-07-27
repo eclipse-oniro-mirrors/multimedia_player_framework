@@ -157,8 +157,7 @@ int32_t HiRecorderImpl::SetVideoSource(VideoSourceType source, int32_t &sourceId
 int32_t HiRecorderImpl::SetMetaSource(MetaSourceType source, int32_t &sourceId)
 {
     MediaTrace trace("HiRecorderImpl::SetMetaSource");
-    MEDIA_LOG_I(PUBLIC_LOG_S "SetMetaSource enter, sourceType:" PUBLIC_LOG_D32, avRecorderTag_.c_str(),
-        static_cast<int32_t>(source));
+    MEDIA_LOG_I("SetMetaSource enter, sourceType:" PUBLIC_LOG_D32, static_cast<int32_t>(source));
     sourceId = INVALID_SOURCE_ID;
     FALSE_RETURN_V(
         source > MetaSourceType::VIDEO_META_SOURCE_INVALID && source < MetaSourceType::VIDEO_META_SOURCE_BUTT,

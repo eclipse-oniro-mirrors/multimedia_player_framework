@@ -1708,7 +1708,6 @@ int32_t AVRecorderNapi::GetSourceType(std::unique_ptr<AVRecorderAsyncContext> &a
     CHECK_AND_RETURN_RET(ret == MSERR_OK,
         (asyncCtx->AVRecorderSignError(ret, "getMetaSourceTypes", "metaSourceTypes"), ret));
     if (getValue) {
-        MEDIA_LOGI("metaSource size %{public}ld!", metaSource.size());
         for (auto item : metaSource) {
             config->metaSourceTypeVec.push_back(static_cast<MetaSourceType>(item));
         }
