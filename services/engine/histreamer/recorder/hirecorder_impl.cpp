@@ -835,7 +835,7 @@ void HiRecorderImpl::SetCallingInfo(const std::string &bundleName, uint64_t inst
 
 int32_t HiRecorderImpl::IsWatermarkSupported(bool &isWatermarkSupported)
 {
-    MEDIA_LOG_D("IsWatermarkSupported enter, codecMimeType:" PUBLIC_LOG_S, codecMimeType_);
+    MEDIA_LOG_D("IsWatermarkSupported enter, codecMimeType:" PUBLIC_LOG_S, codecMimeType_.c_str());
     if (isWatermarkSupported_) {
         isWatermarkSupported = isWatermarkSupported_;
         return (int32_t)Status::OK;
