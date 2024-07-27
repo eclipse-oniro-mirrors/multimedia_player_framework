@@ -207,35 +207,42 @@ bool HiTransCoderImpl::SetValueByType(const std::shared_ptr<Meta> &innerMeta, st
         return false;
     }
     for (const auto &metaKey : AVMETA_KEY) {
+        bool isSetData = false;
         Any type = OHOS::Media::GetDefaultAnyValue(metaKey);
         if (Any::IsSameTypeWith<int32_t>(type)) {
             int32_t intVal;
-            if (!outputMeta->GetData(metaKey, intVal) && innerMeta->GetData(metaKey, intVal)) {
+            isSetData = !outputMeta->GetData(metaKey, intVal) && innerMeta->GetData(metaKey, intVal);
+            if (isSetData) {
                 outputMeta->SetData(metaKey, intVal);
             }
         } else if (Any::IsSameTypeWith<std::string>(type)) {
             std::string strVal;
-            if (!outputMeta->GetData(metaKey, strVal) && innerMeta->GetData(metaKey, strVal)) {
+            isSetData = !outputMeta->GetData(metaKey, strVal) && innerMeta->GetData(metaKey, strVal);
+            if (isSetData) {
                 outputMeta->SetData(metaKey, strVal);
             }
         } else if (Any::IsSameTypeWith<Plugins::VideoRotation>(type)) {
             Plugins::VideoRotation rotation;
-            if (!outputMeta->GetData(metaKey, rotation) && innerMeta->GetData(metaKey, rotation)) {
+            isSetData = !outputMeta->GetData(metaKey, rotation) && innerMeta->GetData(metaKey, rotation);
+            if (isSetData) {
                 outputMeta->SetData(metaKey, rotation);
             }
         } else if (Any::IsSameTypeWith<int64_t>(type)) {
             int64_t duration;
-            if (!outputMeta->GetData(metaKey, duration) && innerMeta->GetData(metaKey, duration)) {
+            isSetData = !outputMeta->GetData(metaKey, duration) && innerMeta->GetData(metaKey, duration);
+            if (isSetData) {
                 outputMeta->SetData(metaKey, duration);
             }
         } else if (Any::IsSameTypeWith<bool>(type)) {
             bool isTrue;
-            if (!outputMeta->GetData(metaKey, isTrue) && innerMeta->GetData(metaKey, isTrue)) {
+            isSetData = !outputMeta->GetData(metaKey, isTrue) && innerMeta->GetData(metaKey, isTrue);
+            if (isSetData) {
                 outputMeta->SetData(metaKey, isTrue);
             }
         } else if (Any::IsSameTypeWith<float>(type)) {
             float value;
-            if (!outputMeta->GetData(metaKey, value) && innerMeta->GetData(metaKey, value)) {
+            isSetData = !outputMeta->GetData(metaKey, value) && innerMeta->GetData(metaKey, value);
+            if (isSetData) {
                 outputMeta->SetData(metaKey, value);
             }
         }
