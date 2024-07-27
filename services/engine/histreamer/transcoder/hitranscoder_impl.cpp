@@ -210,32 +210,32 @@ bool HiTransCoderImpl::SetValueByType(const std::shared_ptr<Meta> &innerMeta, st
         Any type = OHOS::Media::GetDefaultAnyValue(metaKey);
         if (Any::IsSameTypeWith<int32_t>(type)) {
             int32_t intVal;
-            if (innerMeta->GetData(metaKey, intVal) && !outputMeta->GetData(metaKey, intVal)) {
+            if (!outputMeta->GetData(metaKey, intVal) && innerMeta->GetData(metaKey, intVal)) {
                 outputMeta->SetData(metaKey, intVal);
             }
         } else if (Any::IsSameTypeWith<std::string>(type)) {
             std::string strVal;
-            if (innerMeta->GetData(metaKey, strVal) && !outputMeta->GetData(metaKey, strVal)) {
+            if (!outputMeta->GetData(metaKey, strVal) && innerMeta->GetData(metaKey, strVal)) {
                 outputMeta->SetData(metaKey, strVal);
             }
         } else if (Any::IsSameTypeWith<Plugins::VideoRotation>(type)) {
             Plugins::VideoRotation rotation;
-            if (innerMeta->GetData(metaKey, rotation) && !outputMeta->GetData(metaKey, rotation)) {
+            if (!outputMeta->GetData(metaKey, rotation) && innerMeta->GetData(metaKey, rotation)) {
                 outputMeta->SetData(metaKey, rotation);
             }
         } else if (Any::IsSameTypeWith<int64_t>(type)) {
             int64_t duration;
-            if (innerMeta->GetData(metaKey, duration) && !outputMeta->GetData(metaKey, duration)) {
+            if (!outputMeta->GetData(metaKey, duration) && innerMeta->GetData(metaKey, duration)) {
                 outputMeta->SetData(metaKey, duration);
             }
         } else if (Any::IsSameTypeWith<bool>(type)) {
             bool isTrue;
-            if (innerMeta->GetData(metaKey, isTrue) && !outputMeta->GetData(metaKey, isTrue)) {
+            if (!outputMeta->GetData(metaKey, isTrue) && innerMeta->GetData(metaKey, isTrue)) {
                 outputMeta->SetData(metaKey, isTrue);
             }
         } else if (Any::IsSameTypeWith<float>(type)) {
             float value;
-            if (innerMeta->GetData(metaKey, value) && !outputMeta->GetData(metaKey, value)) {
+            if (!outputMeta->GetData(metaKey, value) && innerMeta->GetData(metaKey, value)) {
                 outputMeta->SetData(metaKey, value);
             }
         }
