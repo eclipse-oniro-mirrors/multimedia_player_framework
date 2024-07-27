@@ -165,21 +165,28 @@ static std::shared_ptr<PixelMap> CreatePixelMap(const std::shared_ptr<AVSharedMe
 std::shared_ptr<PixelMap> AVMetadataHelperImpl::CreatePixelMapYuv(const std::shared_ptr<AVBuffer> &frameBuffer,
                                                                   PixelMapInfo &pixelMapInfo)
 {
-    CHECK_AND_RETURN_RET_LOG(frameBuffer != nullptr, nullptr, "no frame buffer");
+    bool isValid = frameBuffer != nullptr && frameBuffer->meta_ != nullptr && frameBuffer->memory_ != nullptr;
+    CHECK_AND_RETURN_RET_LOG(isValid, nullptr, "invalid frame buffer");
 
     auto bufferMeta = frameBuffer->meta_;
-    CHECK_AND_RETURN_RET_LOG(bufferMeta != nullptr, nullptr, "invalid buffer");
 
-    bufferMeta->Get<Tag::VIDEO_IS_HDR_VIVID>(pixelMapInfo.isHdr);
-    pixelMapInfo.isHdr &= frameBuffer->memory_->GetSurfaceBuffer() != nullptr;
+    int32_t width = 0;
+    auto hasProperty = bufferMeta->Get<Tag::VIDEO_WIDTH>(width);
+    CHECK_AND_RETURN_RET_LOG(hasProperty, nullptr, "invalid width");
+
+    int32_t height = 0;
+    hasProperty = bufferMeta->Get<Tag::VIDEO_HEIGHT>(height);
+    CHECK_AND_RETURN_RET_LOG(hasProperty, nullptr, "invalid height");
+
     Plugins::VideoRotation rotation = Plugins::VideoRotation::VIDEO_ROTATION_0;
     bufferMeta->Get<Tag::VIDEO_ROTATION>(rotation);
     pixelMapInfo.rotation = static_cast<int32_t>(rotation);
 
+    bufferMeta->Get<Tag::VIDEO_IS_HDR_VIVID>(pixelMapInfo.isHdr);
+    pixelMapInfo.isHdr &= frameBuffer->memory_->GetSurfaceBuffer() != nullptr;
     if (pixelMapInfo.isHdr) {
         auto surfaceBuffer = frameBuffer->memory_->GetSurfaceBuffer();
         sptr<SurfaceBuffer> mySurfaceBuffer = CopySurfaceBuffer(surfaceBuffer);
-
         InitializationOptions options = { .size = { .width = mySurfaceBuffer->GetWidth(),
                                                     .height = mySurfaceBuffer->GetHeight() },
                                           .srcPixelFormat = PixelFormat::YCBCR_P010,
@@ -195,14 +202,6 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::CreatePixelMapYuv(const std::sha
         pixelMap->IncStrongRef(mySurfaceBuffer);
         return pixelMap;
     }
-
-    int32_t width = 0;
-    auto hasProperty = bufferMeta->Get<Tag::VIDEO_WIDTH>(width);
-    CHECK_AND_RETURN_RET_LOG(hasProperty, nullptr, "invalid width");
-
-    int32_t height = 0;
-    hasProperty = bufferMeta->Get<Tag::VIDEO_HEIGHT>(height);
-    CHECK_AND_RETURN_RET_LOG(hasProperty, nullptr, "invalid height");
 
     InitializationOptions options = { .size = { .width = width, .height = height }, .pixelFormat = PixelFormat::NV12 };
     auto pixelMap = PixelMap::Create(options);
@@ -484,6 +483,7 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameYuv(int64_t timeUs, in
                                    .dstHeight = param.dstHeight,
                                    .dstWidth = param.dstWidth };
     auto frameBuffer = avMetadataHelperService_->FetchFrameYuv(timeUs, option, config);
+    CHECK_AND_RETURN_RET(frameBuffer != nullptr, nullptr);
     concurrentWorkCount_--;
 
     PixelMapInfo pixelMapInfo;
