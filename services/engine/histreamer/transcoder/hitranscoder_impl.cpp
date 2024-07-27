@@ -457,8 +457,8 @@ void HiTransCoderImpl::OnEvent(const Event &event)
             HandleErrorEvent(AnyCast<int32_t>(event.param));
             pauseTask_ = std::make_shared<Task>("PauseTransCoder", "",
                 TaskType::SINGLETON, TaskPriority::NORMAL, false);
-            puaseTask_->SubmitJobOnce([this]() {
-                Puase();
+            pauseTask_->SubmitJobOnce([this]() {
+                Pause();
             });
             break;
         }
