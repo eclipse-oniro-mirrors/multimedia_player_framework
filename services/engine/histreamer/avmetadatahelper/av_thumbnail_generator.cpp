@@ -481,7 +481,8 @@ int32_t AVThumbnailGenerator::GetYuvDataAlignStride(const sptr<SurfaceBuffer> &s
 int32_t AVThumbnailGenerator::CopySurfaceBufferPixels(const sptr<SurfaceBuffer> &surfaceBuffer,
                                                       std::shared_ptr<AVBuffer> &avBuffer)
 {
-    CHECK_AND_RETURN(surfaceBuffer != nullptr && avBuffer != nullptr && avBuffer->memory_ != nullptr);
+    CHECK_AND_RETURN_RET(surfaceBuffer != nullptr && avBuffer != nullptr && avBuffer->memory_ != nullptr,
+                         MSERR_INVALID_VAL);
     int32_t width = surfaceBuffer->GetWidth();
     int32_t height = surfaceBuffer->GetHeight();
     int32_t stride = surfaceBuffer->GetStride();
