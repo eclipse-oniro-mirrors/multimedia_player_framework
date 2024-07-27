@@ -455,6 +455,11 @@ void HiTransCoderImpl::OnEvent(const Event &event)
     switch (event.type) {
         case EventType::EVENT_ERROR: {
             HandleErrorEvent(AnyCast<int32_t>(event.param));
+            pauseTask_ = std::make_shared<Task>("PauseTransCoder", "",
+                TaskType::SINGLETON, TaskPriority::NORMAL, false);
+            puaseTask_->SubmitJobOnce([this]() {
+                Puase();
+            });
             break;
         }
         case EventType::EVENT_COMPLETE: {
