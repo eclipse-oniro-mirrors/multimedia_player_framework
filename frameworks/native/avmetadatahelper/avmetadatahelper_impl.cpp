@@ -281,9 +281,9 @@ bool AVMetadataHelperImpl::SetSbDynamicMetadata(sptr<SurfaceBuffer> &buffer,
 int32_t AVMetadataHelperImpl::CopySurfaceBufferPixels(sptr<SurfaceBuffer> &srcSurfaceBuffer,
                                                       sptr<SurfaceBuffer> &dstSurfaceBuffer)
 {
-    memcpy_s(dstSurfaceBuffer->GetVirAddr(), dstSurfaceBuffer->GetSize(), srcSurfaceBuffer->GetVirAddr(),
-             srcSurfaceBuffer->GetSize());
-    return MSERR_OK;
+    auto res = memcpy_s(dstSurfaceBuffer->GetVirAddr(), dstSurfaceBuffer->GetSize(), srcSurfaceBuffer->GetVirAddr(),
+        srcSurfaceBuffer->GetSize());
+    return res == EOK ? MSERR_OK : MSERR_NO_MEMORY;
 }
 
 std::shared_ptr<AVMetadataHelper> AVMetadataHelperFactory::CreateAVMetadataHelper()
