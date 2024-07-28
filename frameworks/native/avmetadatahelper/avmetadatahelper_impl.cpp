@@ -90,11 +90,6 @@ static void FreeAvBufferData(void *addr, void *context, uint32_t size)
     (void)size;
     CHECK_AND_RETURN_LOG(context != nullptr, "context is nullptr");
     AVBufferHolder *holder = reinterpret_cast<AVBufferHolder *>(context);
-    if (holder->buffer == nullptr) {
-        MEDIA_LOGE("shmem is nullptr");
-    }
-    holder->buffer = nullptr;
- 
     delete holder;
 }
 
