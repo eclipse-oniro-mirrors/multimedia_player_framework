@@ -98,6 +98,16 @@ static void FreeAvBufferData(void *addr, void *context, uint32_t size)
     delete holder;
 }
 
+static void FreeSurfaceBuffer(void *addr, void *context, uint32_t size)
+{
+    (void)addr;
+    (void)size;
+    CHECK_AND_RETURN_LOG(context != nullptr, "context is nullptr");
+    void* nativeBuffer = context;
+    RefBase *ref = reinterpret_cast<RefBase *>(nativeBuffer);
+    ref->DecStrongRef(ref);
+}
+
 static PixelMapMemHolder *CreatePixelMapData(const std::shared_ptr<AVSharedMemory> &mem, const OutputFrame &frame)
 {
     PixelMapMemHolder *holder = new (std::nothrow) PixelMapMemHolder;
@@ -224,7 +234,7 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::CreatePixelMapYuv(const std::sha
             PixelMap::Create(reinterpret_cast<const uint32_t *>(mySurfaceBuffer->GetVirAddr()), colorLength, options);
         pixelMap->InnerSetColorSpace(OHOS::ColorManager::ColorSpace(ColorManager::ColorSpaceName::BT2020_HLG));
         pixelMap->SetPixelsAddr(mySurfaceBuffer->GetVirAddr(), mySurfaceBuffer.GetRefPtr(), mySurfaceBuffer->GetSize(),
-                                AllocatorType::DMA_ALLOC, nullptr);
+                                AllocatorType::DMA_ALLOC, FreeSurfaceBuffer);
         void* nativeBuffer = mySurfaceBuffer.GetRefPtr();
         RefBase *ref = reinterpret_cast<RefBase *>(nativeBuffer);
         ref->IncStrongRef(ref);
@@ -541,8 +551,8 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameYuv(int64_t timeUs, in
     if (pixelMapInfo.rotation > 0) {
         pixelMap->rotate(pixelMapInfo.rotation);
     }
-    if (needScale || pixelMapInfo.rotation > 0) {
-        pixelMap->SetAllocatorType(AllocatorType::HEAP_ALLOC);
+    if ((needScale || pixelMapInfo.rotation > 0) && pixelMapInfo.isHdr) {
+        pixelMap->SetAllocatorType(AllocatorType::CUSTOM_ALLOC);
     }
     return pixelMap;
 }
