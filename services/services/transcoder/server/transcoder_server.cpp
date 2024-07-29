@@ -120,9 +120,8 @@ void TransCoderServer::OnError(TransCoderErrorType errorType, int32_t errorCode)
 void TransCoderServer::OnInfo(TransCoderOnInfoType type, int32_t extra)
 {
     std::lock_guard<std::mutex> lock(cbMutex_);
-    if (transCoderCb_ != nullptr) {
-        transCoderCb_->OnInfo(type, extra);
-    }
+    CHECK_AND_RETURN(transCoderCb_ != nullptr);
+    transCoderCb_->OnInfo(type, extra);
 }
 
 int32_t TransCoderServer::SetVideoEncoder(VideoCodecFormat encoder)

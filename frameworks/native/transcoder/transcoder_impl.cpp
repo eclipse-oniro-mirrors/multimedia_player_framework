@@ -49,10 +49,9 @@ TransCoderImpl::TransCoderImpl()
 
 TransCoderImpl::~TransCoderImpl()
 {
-    if (transCoderService_ != nullptr) {
-        (void)MediaServiceFactory::GetInstance().DestroyTransCoderService(transCoderService_);
-        transCoderService_ = nullptr;
-    }
+    CHECK_AND_RETURN_LOG(transCoderService_ != nullptr, "0x%{public}06" PRIXPTR " Inst destroy", FAKE_POINTER(this));
+    (void)MediaServiceFactory::GetInstance().DestroyTransCoderService(transCoderService_);
+    transCoderService_ = nullptr;
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 

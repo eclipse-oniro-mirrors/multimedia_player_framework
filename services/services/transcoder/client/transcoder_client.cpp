@@ -61,10 +61,8 @@ void TransCoderClient::MediaServerDied()
         std::lock_guard<std::mutex> lock(mutex_);
         transCoderProxy_ = nullptr;
         listenerStub_ = nullptr;
-        if (callback_ != nullptr) {
-            callback_->OnError(MSERR_SERVICE_DIED,
-                "mediaserver is died, please create a new transcodercallback instance again");
-        }
+        CHECK_AND_RETURN(callback_ != nullptr);
+        callback_->OnError(MSERR_SERVICE_DIED, "mediaserver died, pls create a new transcodercallback instance again");
     }
 }
 
