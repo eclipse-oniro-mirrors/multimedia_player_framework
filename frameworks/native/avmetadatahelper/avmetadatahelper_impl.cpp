@@ -236,6 +236,7 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::CreatePixelMapYuv(const std::sha
         return pixelMap;
     }
 
+    AVBufferHolder *holder = CreateAVBufferHolder(frameBuffer);
     InitializationOptions options = { .size = { .width = width, .height = height }, .srcPixelFormat = PixelFormat::NV12,
                                       .pixelFormat = PixelFormat::NV12 };
     uint32_t colorLength = width * height * PIXEL_SIZE_SDR_YUV;
