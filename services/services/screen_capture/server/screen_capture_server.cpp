@@ -1598,12 +1598,10 @@ int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string &name, sptr<O
     }
     if (missionIds_.size() > 0 && captureConfig_.captureMode == CAPTURE_SPECIFIED_WINDOW) {
         virScrOption.missionIds_ = missionIds_;
-    } else {
-        if (captureConfig_.videoInfo.videoCapInfo.taskIDs.size() > 0 &&
+    } else if (captureConfig_.videoInfo.videoCapInfo.taskIDs.size() > 0 &&
             captureConfig_.captureMode == CAPTURE_SPECIFIED_WINDOW) {
             GetMissionIds(missionIds_);
             virScrOption.missionIds_ = missionIds_;
-        }
     }
     screenId_ = ScreenManager::GetInstance().CreateVirtualScreen(virScrOption);
     CHECK_AND_RETURN_RET_LOG(screenId_ >= 0, MSERR_UNKNOWN, "CreateVirtualScreen failed, invalid screenId");
