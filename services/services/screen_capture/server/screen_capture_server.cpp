@@ -1610,7 +1610,6 @@ int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string &name, sptr<O
     for (size_t i = 0; i < contentFilter_.windowIDsVec.size(); i++) {
         MEDIA_LOGI("After CreateVirtualScreen windowIDsVec value :%{public}" PRIu64, contentFilter_.windowIDsVec[i]);
     }
-
     if (SCREEN_RECORDER_BUNDLE_NAME.compare(bundleName_) == 0) {
         SetScreenScaleMode();
     }
@@ -1634,7 +1633,6 @@ int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string &name, sptr<O
             "MakeVirtualScreenMirror failed");
         return MSERR_UNKNOWN;
     }
-
     isConsumerStart_ = true;
     MEDIA_LOGI("CreateVirtualScreen success");
     return MSERR_OK;
