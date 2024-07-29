@@ -1610,6 +1610,10 @@ int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string &name, sptr<O
     for (size_t i = 0; i < contentFilter_.windowIDsVec.size(); i++) {
         MEDIA_LOGI("After CreateVirtualScreen windowIDsVec value :%{public}" PRIu64, contentFilter_.windowIDsVec[i]);
     }
+
+    if (SCREEN_RECORDER_BUNDLE_NAME.compare(bundleName_) == 0) {
+        SetScreenScaleMode();
+    }
     Rosen::DisplayManager::GetInstance().SetVirtualScreenBlackList(screenId_, contentFilter_.windowIDsVec);
     auto screen = ScreenManager::GetInstance().GetScreenById(screenId_);
     if (screen == nullptr) {
@@ -2083,6 +2087,21 @@ int32_t ScreenCaptureServer::SetCanvasRotationInner()
     CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK, MSERR_UNSUPPORT,
                              "SetVirtualMirrorScreenCanvasRotation failed, ret: %{public}d", ret);
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "SetCanvasRotationInner OK.", FAKE_POINTER(this));
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureServer::SetScreenScaleMode()
+{
+    MediaTrace trace("ScreenCaptureServer::SetScreenScaleMode");
+    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "SetScreenScaleMode start.", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(screenId_ != SCREEN_ID_INVALID, MSERR_INVALID_VAL,
+                             "SetScreenScaleMode failed virtual screen not init");
+    auto ret = ScreenManager::GetInstance().SetVirtualMirrorScreenScaleMode(
+        screenId_, OHOS::Rosen::ScreenScaleMode::FILL_MODE);
+    if (ret != DMError::DM_OK) {
+        MEDIA_LOGW("SetScreenScaleMode failed, ret: %{public}d", ret);
+    }
+    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "SetScreenScaleMode OK.", FAKE_POINTER(this));
     return MSERR_OK;
 }
 
