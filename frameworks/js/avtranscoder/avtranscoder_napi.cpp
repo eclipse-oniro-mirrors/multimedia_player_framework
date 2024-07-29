@@ -687,6 +687,7 @@ RetInfo AVTransCoderNapi::SetInputFile(int32_t fd, int64_t offset, int64_t size)
     CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "SetInputFile", ""));
     return RetInfo(MSERR_EXT_API9_OK, "");
 }
+
 RetInfo AVTransCoderNapi::SetOutputFile(int32_t fd)
 {
     int32_t ret = transCoder_->SetOutputFile(fd);
