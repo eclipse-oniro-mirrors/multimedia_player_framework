@@ -2096,7 +2096,7 @@ int32_t ScreenCaptureServer::SetScreenScaleMode()
         screenId_, OHOS::Rosen::ScreenScaleMode::FILL_MODE);
     if (ret != DMError::DM_OK) {
         MEDIA_LOGW("SetScreenScaleMode failed, ret: %{public}d", ret);
-        return ret;
+        return static_cast<int32_t>(ret);
     }
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "SetScreenScaleMode OK.", FAKE_POINTER(this));
     return MSERR_OK;
