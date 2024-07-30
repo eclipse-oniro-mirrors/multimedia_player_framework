@@ -317,7 +317,7 @@ OH_AVErrCode OH_AVPlayer_Release(OH_AVPlayer *player)
     playerObj->isReleased_.store(true);
     if (playerObj->callback_ != nullptr) {
         Format format;
-        playerObj->callback_->OnInfo(INFO_TYPE_STATE_CHANGE, PLAYER_RELEASED, format);        
+        playerObj->callback_->OnInfo(INFO_TYPE_STATE_CHANGE, PLAYER_RELEASED, format);
     }
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "player Release failed");
     return AV_ERR_OK;
@@ -333,7 +333,7 @@ OH_AVErrCode OH_AVPlayer_ReleaseSync(OH_AVPlayer *player)
     playerObj->isReleased_.store(true);
     if (playerObj->callback_ != nullptr) {
         Format format;
-        playerObj->callback_->OnInfo(INFO_TYPE_STATE_CHANGE, PLAYER_RELEASED, format);        
+        playerObj->callback_->OnInfo(INFO_TYPE_STATE_CHANGE, PLAYER_RELEASED, format);
     }
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "player ReleaseSync failed");
     return AV_ERR_OK;
