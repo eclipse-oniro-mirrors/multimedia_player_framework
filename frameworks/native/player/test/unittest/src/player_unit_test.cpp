@@ -3452,7 +3452,6 @@ HWTEST_F(PlayerUnitTest, Player_SetPlayRange_002, TestSize.Level0)
  */
 HWTEST_F(PlayerUnitTest, Player_SetPlayRange_003, TestSize.Level0)
 {
-    int32_t duration = 0;
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
@@ -3467,7 +3466,6 @@ HWTEST_F(PlayerUnitTest, Player_SetPlayRange_003, TestSize.Level0)
  */
 HWTEST_F(PlayerUnitTest, Player_SetPlayRange_004, TestSize.Level0)
 {
-    int32_t duration = 0;
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
@@ -3482,7 +3480,6 @@ HWTEST_F(PlayerUnitTest, Player_SetPlayRange_004, TestSize.Level0)
  */
 HWTEST_F(PlayerUnitTest, Player_SetPlayRange_005, TestSize.Level0)
 {
-    int32_t duration = 0;
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
@@ -3580,7 +3577,6 @@ HWTEST_F(PlayerUnitTest, Player_SetPlayRange_009, TestSize.Level0)
  */
 HWTEST_F(PlayerUnitTest, Player_SetPlayRange_010, TestSize.Level0)
 {
-    int32_t duration = 0;
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
@@ -3596,7 +3592,6 @@ HWTEST_F(PlayerUnitTest, Player_SetPlayRange_010, TestSize.Level0)
  */
 HWTEST_F(PlayerUnitTest, Player_SetPlayRange_011, TestSize.Level0)
 {
-    int32_t duration = 0;
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
