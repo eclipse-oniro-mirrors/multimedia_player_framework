@@ -301,7 +301,7 @@ int32_t TransCoderServer::Prepare()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     MediaTrace trace("TransCoderServer::Prepare");
-    CHECK_AND_RETURN_RET_LOG(status_ != REC_PREPARED, MSERR_INVALID_OPERATION, "Can not repeat Prepare");
+    CHECK_AND_RETURN_RET_LOG(status_ == REC_PREPARED, MSERR_INVALID_OPERATION, "Can not repeat Prepare");
     CHECK_AND_RETURN_RET_LOG(status_ == REC_CONFIGURED, MSERR_INVALID_OPERATION,
         "invalid status, current status is %{public}s", GetStatusDescription(status_).c_str());
     CHECK_AND_RETURN_RET_LOG(transCoderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
@@ -322,7 +322,7 @@ int32_t TransCoderServer::Start()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     MediaTrace trace("TransCoderServer::Start");
-    CHECK_AND_RETURN_RET_LOG(status_ != REC_TRANSCODERING, MSERR_INVALID_OPERATION, "Can not repeat Start");
+    CHECK_AND_RETURN_RET_LOG(status_ == REC_TRANSCODERING, MSERR_INVALID_OPERATION, "Can not repeat Start");
     CHECK_AND_RETURN_RET_LOG(status_ == REC_PREPARED, MSERR_INVALID_OPERATION,
         "invalid status, current status is %{public}s", GetStatusDescription(status_).c_str());
     CHECK_AND_RETURN_RET_LOG(transCoderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
@@ -343,7 +343,7 @@ int32_t TransCoderServer::Pause()
 {
     MediaTrace trace("TransCoderServer::Pause");
     std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(status_ != REC_PAUSED, MSERR_INVALID_OPERATION, "Can not repeat Pause");
+    CHECK_AND_RETURN_RET_LOG(status_ == REC_PAUSED, MSERR_INVALID_OPERATION, "Can not repeat Pause");
     CHECK_AND_RETURN_RET_LOG(status_ == REC_TRANSCODERING, MSERR_INVALID_OPERATION,
         "invalid status, current status is %{public}s", GetStatusDescription(status_).c_str());
     CHECK_AND_RETURN_RET_LOG(transCoderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
@@ -364,7 +364,7 @@ int32_t TransCoderServer::Resume()
 {
     MediaTrace trace("TransCoderServer::Resume");
     std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(status_ != REC_TRANSCODERING, MSERR_INVALID_OPERATION, "Can not repeat Resume");
+    CHECK_AND_RETURN_RET_LOG(status_ == REC_TRANSCODERING, MSERR_INVALID_OPERATION, "Can not repeat Resume");
     CHECK_AND_RETURN_RET_LOG(status_ == REC_TRANSCODERING || status_ == REC_PAUSED, MSERR_INVALID_OPERATION,
         "invalid status, current status is %{public}s", GetStatusDescription(status_).c_str());
     CHECK_AND_RETURN_RET_LOG(transCoderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
