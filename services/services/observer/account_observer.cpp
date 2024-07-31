@@ -19,7 +19,7 @@
 #include "os_account_manager.h"
 
 namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "AccountObserver"};
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "AccountObserver"};
 }
 
 using namespace OHOS;
@@ -104,7 +104,7 @@ bool AccountObserver::RegisterObserver()
         return false;
     }
     ErrCode errCode = AccountSA::OsAccountManager::SubscribeOsAccount(accountListener_);
-    CHECK_AND_RETURN_RET_LOG(errCode == ERR_OK, false, "subscribe failed, error code: %{public}d", errcode);
+    CHECK_AND_RETURN_RET_LOG(errCode == ERR_OK, false, "subscribe failed, error code: %{public}d", errCode);
 
     return true;
 }
