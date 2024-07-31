@@ -49,7 +49,7 @@ bool AccountObserver::RegisterAccountObserverCallBack(std::weak_ptr<AccountObser
     std::unique_lock<std::mutex> lock(mutex_);
     auto callbackPtr = callback.lock();
     if (callbackPtr) {
-        accountObserverCallBack_ = callback;
+        AccountObserverCallBack_ = callback;
         return true;
     } else {
         MEDIA_LOGI("0x%{public}06" PRIXPTR "AccountObserver CallBack is null", FAKE_POINTER(this));
@@ -59,15 +59,15 @@ bool AccountObserver::RegisterAccountObserverCallBack(std::weak_ptr<AccountObser
 
 void AccountObserver::UnRegisterAccountObserverCallBack()
 {
-    if (!accountObserverCallBack_.expired()) {
-        accountObserverCallBack_.reset();
+    if (!AccountObserverCallBack_.expired()) {
+        AccountObserverCallBack_.reset();
     }
 }
 
 bool AccountObserver::OnAccountsSwitch()
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    auto callbackPtr = accountObserverCallBack_.lock();
+    auto callbackPtr = AccountObserverCallBack_.lock();
     if (callbackPtr) {
         MEDIA_LOGI("0x%{public}06" PRIXPTR " Stop and Release CallBack", FAKE_POINTER(this));
         return callbackPtr->StopAndRelease(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_CALL);

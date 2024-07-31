@@ -1301,7 +1301,7 @@ int32_t ScreenCaptureServer::RegisterServerCallbacks()
         InCallObserver::GetInstance().RegisterObserver();
         InCallObserver::GetInstance().RegisterInCallObserverCallBack(screenCaptureObserverCb_);
     }
-    AccountObserver::GetInstance().RegisterAccountObserverCallback(screenCaptureObserverCb_);
+    AccountObserver::GetInstance().RegisterAccountObserverCallBack(screenCaptureObserverCb_);
     return MSERR_OK;
 }
 

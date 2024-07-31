@@ -23,9 +23,9 @@
 
 namespace OHOS {
 namespace Media {
-class AccountObserverCallback {
+class AccountObserverCallBack {
 public:
-    virtual ~AccountObserverCallback() = default;
+    virtual ~AccountObserverCallBack() = default;
     virtual bool StopAndRelease(AVScreenCaptureStateCode state);
 };
 
@@ -38,11 +38,11 @@ public:
     ~AccountObserver();
     bool OnAccountsSwitch();
     bool RegisterAccountObserverCallBack(std::weak_ptr<AccountObserverCallBack> callback);
-    void UnregisterAccountObserverCallBack
+    void UnregisterAccountObserverCallBack();
 private:
     bool Init();
 
-    std::weak_ptr<AccountObserverCallback> accountObserverCallback_;
+    std::weak_ptr<AccountObserverCallBack> AccountObserverCallBack_;
     std::atomic<bool> isAccountListenerDied_ = true;
     std::shared_ptr<AccountListener> accountListener_ = nullptr;
     std::mutex mutex_;
