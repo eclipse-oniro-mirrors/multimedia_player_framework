@@ -88,7 +88,7 @@ bool InCallObserver::OnCallStateUpdated(bool inCall)
         auto callbackPtr = inCallObserverCallBack_.lock();
         if (callbackPtr) {
             MEDIA_LOGI("0x%{public}06" PRIXPTR " Stop and Release CallBack", FAKE_POINTER(this));
-            return callbackPtr->StopAndRelease();
+            return callbackPtr->StopAndRelease(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_CALL);
         } else {
             MEDIA_LOGI("0x%{public}06" PRIXPTR "InCallObserver CallBack is null", FAKE_POINTER(this));
         }

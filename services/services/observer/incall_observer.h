@@ -30,7 +30,7 @@ namespace Media {
 class InCallObserverCallBack {
 public:
     virtual ~InCallObserverCallBack() = default;
-    virtual bool StopAndRelease();
+    virtual bool StopAndRelease(AVScreenCaptureStateCode state);
 };
 
 class InCallObserver {

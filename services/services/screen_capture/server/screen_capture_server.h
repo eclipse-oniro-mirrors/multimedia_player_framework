@@ -50,6 +50,7 @@
 #include "notification_constant.h"
 #include "notification_slot.h"
 #include "incall_observer.h"
+#include "account_observer.h"
 #include "media_data_source.h"
 #include "meta/meta.h"
 #include "audio_stream_manager.h"
@@ -179,11 +180,11 @@ private:
     static constexpr uint32_t OPERATION_TIMEOUT_IN_MS = 1000; // 1000ms
 };
 
-class ScreenCaptureObserverCallBack : public InCallObserverCallBack {
+class ScreenCaptureObserverCallBack : public InCallObserverCallBack, public AccountObserverCallBack {
 public:
     explicit ScreenCaptureObserverCallBack(std::weak_ptr<ScreenCaptureServer> screenCaptureServer);
     ~ScreenCaptureObserverCallBack() = default;
-    bool StopAndRelease() override;
+    bool StopAndRelease(AVScreenCaptureStateCode state) override;
 
 private:
     std::weak_ptr<ScreenCaptureServer> screenCaptureServer_;
@@ -287,6 +288,7 @@ public:
 
 private:
     int32_t StartScreenCaptureInner(bool isPrivacyAuthorityEnabled);
+    int32_t RegisterServerCallbacks();
     int32_t OnStartScreenCapture();
     void PostStartScreenCapture(bool isSuccess);
     int32_t InitRecorderInfo(std::shared_ptr<IRecorderService> &recorder, AudioCaptureInfo audioInfo);
