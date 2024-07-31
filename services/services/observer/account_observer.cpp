@@ -115,7 +115,6 @@ void AccountObserver::UnregisterObserver()
     std::unique_lock<std::mutex> lock(mutex_);
     if (accountListener_) {
         AccountSA::OsAccountManager::UnsubscribeOsAccount(accountListener_);
-        accountListener_ = nullptr;
     }
     isAccountListenerDied_.store(true);
 }
