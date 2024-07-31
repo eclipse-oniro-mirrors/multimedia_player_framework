@@ -3531,7 +3531,7 @@ HWTEST_F(PlayerUnitTest, Player_SetPlayRange_007, TestSize.Level0)
 }
 
 /**
- * @tc.name  : Test SetPlayRange [10000, 10003]
+ * @tc.name  : Test SetPlayRange [duration + 1, duration + 2]
  * @tc.number: Player_SetPlayRange_008
  * @tc.desc  : Test Player SetPlayRange interface
  */
@@ -3547,11 +3547,13 @@ HWTEST_F(PlayerUnitTest, Player_SetPlayRange_008, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->Play());
     EXPECT_TRUE(player_->IsPlaying());
     EXPECT_EQ(MSERR_OK, player_->Pause());
-    ASSERT_NE(MSERR_OK, player_->SetPlayRange(10000, 10003));
+    int32_t start = duration + 1;
+    int32_t end = duration + 2;
+    ASSERT_NE(MSERR_OK, player_->SetPlayRange(start, end));
 }
 
 /**
- * @tc.name  : Test SetPlayRange [100, 10003]
+ * @tc.name  : Test SetPlayRange [100, duration + 1]
  * @tc.number: Player_SetPlayRange_009
  * @tc.desc  : Test Player SetPlayRange interface
  */
@@ -3567,13 +3569,14 @@ HWTEST_F(PlayerUnitTest, Player_SetPlayRange_009, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->Play());
     EXPECT_TRUE(player_->IsPlaying());
     EXPECT_EQ(MSERR_OK, player_->Pause());
-    ASSERT_NE(MSERR_OK, player_->SetPlayRange(100, 10003));
+    int32_t end = duration + 1;
+    ASSERT_NE(MSERR_OK, player_->SetPlayRange(100, end));
 }
 
 /**
- * @tc.name  : Test SetPlayRange [10000, 10003]
+ * @tc.name  : Test SetPlayRange [10035, 10037]
  * @tc.number: Player_SetPlayRange_010
- * @tc.desc  : Test Player SetPlayRange interface
+ * @tc.desc  : Test Player SetPlayRange interface, duration 10034
  */
 HWTEST_F(PlayerUnitTest, Player_SetPlayRange_010, TestSize.Level0)
 {
@@ -3581,14 +3584,14 @@ HWTEST_F(PlayerUnitTest, Player_SetPlayRange_010, TestSize.Level0)
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
     EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    EXPECT_EQ(MSERR_OK, player_->SetPlayRange(10000, 10003));
+    EXPECT_EQ(MSERR_OK, player_->SetPlayRange(10035, 10037));
     ASSERT_NE(MSERR_OK, player_->PrepareAsync());
 }
 
 /**
- * @tc.name  : Test SetPlayRange [100, 10003]
+ * @tc.name  : Test SetPlayRange [100, 10037]
  * @tc.number: Player_SetPlayRange_011
- * @tc.desc  : Test Player SetPlayRange interface
+ * @tc.desc  : Test Player SetPlayRange interface, duration 10034
  */
 HWTEST_F(PlayerUnitTest, Player_SetPlayRange_011, TestSize.Level0)
 {
@@ -3596,7 +3599,7 @@ HWTEST_F(PlayerUnitTest, Player_SetPlayRange_011, TestSize.Level0)
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
     EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    EXPECT_EQ(MSERR_OK, player_->SetPlayRange(100, 10003));
+    EXPECT_EQ(MSERR_OK, player_->SetPlayRange(100, 10037));
     ASSERT_NE(MSERR_OK, player_->PrepareAsync());
 }
 
