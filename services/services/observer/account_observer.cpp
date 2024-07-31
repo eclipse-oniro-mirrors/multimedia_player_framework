@@ -57,7 +57,7 @@ bool AccountObserver::RegisterAccountObserverCallBack(std::weak_ptr<AccountObser
     return false;
 }
 
-void AccountObserver::UnRegisterAccountObserverCallBack()
+void AccountObserver::UnregisterAccountObserverCallBack()
 {
     if (!accountObserverCallBack_.expired()) {
         accountObserverCallBack_.reset();
