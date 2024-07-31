@@ -19,7 +19,7 @@
 #include "os_account_manager.h"
 
 namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AccountObserver"};
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "AccountObserver"};
 }
 
 using namespace OHOS;
@@ -119,5 +119,5 @@ void AccountObserver::UnregisterObserver()
     }
     isAccountListenerDied_.store(true);
 }
-}
-}
+} // namespace Media
+} // namespace OHOS

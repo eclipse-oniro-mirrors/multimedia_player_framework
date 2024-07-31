@@ -36,13 +36,13 @@ public:
     void UnregisterObserver();
     explicit AccountObserver();
     ~AccountObserver();
-    bool OnAccountSwitch();
+    bool OnAccountsSwitch();
     bool RegisterAccountObserverCallBack(std::weak_ptr<AccountObserverCallBack> callback);
     void UnregisterAccountObserverCallBack
 private:
     bool Init();
 
-    std::week_ptr<AccountObserverCallback> accountObserverCallback_;
+    std::weak_ptr<AccountObserverCallback> accountObserverCallback_;
     std::atomic<bool> isAccountListenerDied_ = true;
     std::shared_ptr<AccountListener> accountListener_ = nullptr;
     std::mutex mutex_;
