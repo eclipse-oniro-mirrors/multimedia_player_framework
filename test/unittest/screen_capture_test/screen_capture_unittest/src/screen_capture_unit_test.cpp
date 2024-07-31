@@ -1142,7 +1142,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_check_param_06, TestSize.Level2)
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_check_param_06 before");
     RecorderInfo recorderInfo;
     SetRecorderInfo("screen_capture_check_param_06.mp4", recorderInfo);
-    recorderInfo.fileFormat = "avi";
+    recorderInfo.fileFormat = "avi"; // native default m4a, capi avi
     SetConfigFile(config_, recorderInfo);
     AudioCaptureInfo innerCapInfo = {
         .audioSampleRate = 16000,
@@ -1150,9 +1150,9 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_check_param_06, TestSize.Level2)
         .audioSource = AudioCaptureSourceType::APP_PLAYBACK
     };
     config_.audioInfo.innerCapInfo = innerCapInfo;
-
-    EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
-
+    screenCapture_->Init(config_); // not check
+    recorderInfo.fileFormat = "m4a";
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_check_param_06 after");
 }
 
