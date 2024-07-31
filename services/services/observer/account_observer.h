@@ -31,7 +31,7 @@ public:
 
 class AccountObserver {
 public:
-    static InCallObserver& GetInstance();
+    static AccountObserver& GetInstance();
     bool RegisterObserver();
     void UnregisterObserver();
     explicit AccountObserver();
@@ -39,6 +39,13 @@ public:
     bool OnAccountSwitch();
     bool RegisterAccountObserverCallBack(std::weak_ptr<AccountObserverCallBack> callback);
     void UnregisterAccountObserverCallBack
+private:
+    bool Init();
+
+    std::week_ptr<AccountObserverCallback> accountObserverCallback_;
+    std::atomic<bool> isAccountListenerDied_ = true;
+    std::shared_ptr<AccountListener> accountListener_ = nullptr;
+    std::mutex mutex_;
 };
 } // namespace Media
 } // namespace OHOS

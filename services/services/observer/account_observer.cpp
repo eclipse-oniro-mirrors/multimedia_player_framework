@@ -19,7 +19,7 @@
 #include "os_account_manager.h"
 
 namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "AccountObserver"};
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AccountObserver"};
 }
 
 using namespace OHOS;
@@ -64,7 +64,7 @@ void AccountObserver::UnRegisterAccountObserverCallBack()
     }
 }
 
-bool AccountObserver::OnAccountSwitch()
+bool AccountObserver::OnAccountsSwitch()
 {
     std::unique_lock<std::mutex> lock(mutex_);
     auto callbackPtr = accountObserverCallBack_.lock();
@@ -103,8 +103,8 @@ bool AccountObserver::RegisterObserver()
         MEDIA_LOGE("make AccountListener failed");
         return false;
     }
-    ErrCode errcode = AccountSA::OsAccountManager::SubscribeOsAccount(accountListener_);
-    CHECK_AND_RETURN_RET_LOG(errcode == ERR_OK, false, "subscribe failed, error code: %{public}d", errcode);
+    ErrCode errCode = AccountSA::OsAccountManager::SubscribeOsAccount(accountListener_);
+    CHECK_AND_RETURN_RET_LOG(errCode == ERR_OK, false, "subscribe failed, error code: %{public}d", errcode);
 
     return true;
 }

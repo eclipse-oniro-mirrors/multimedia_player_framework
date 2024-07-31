@@ -24,7 +24,7 @@ namespace OHOS {
 namespace Media {
 class AccountListener : public AccountSA::OsAccountSubscriber {
 public:
-    explicit AccountListener(const AccountSA::OSAccountSubScribeInfo &subscribeInfo);
+    explicit AccountListener(const AccountSA::OsAccountSubscribeInfo &subscribeInfo);
     ~AccountListener() override;
     void OnAccountsChanged(const int &id) override {};
     void OnAccountsSwitch(const int &newId, const int &oldId) override;

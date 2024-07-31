@@ -19,15 +19,15 @@
 #include "media_log.h"
 
 namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "AccountListener"};
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AccountListener"};
 }
 
 
 namespace OHOS {
 namespace Media {
 
-AccountListener::AccountListener(const AccountSA::OSAccountSubScribeInfo &subscribeInfo)
-    : AccountSA::OSAccountSubScriber(subscribeInfo)
+AccountListener::AccountListener(const AccountSA::OsAccountSubscribeInfo &subscribeInfo)
+    : AccountSA::OsAccountSubscriber(subscribeInfo)
 {}
 
 AccountListener::~AccountListener() {}
