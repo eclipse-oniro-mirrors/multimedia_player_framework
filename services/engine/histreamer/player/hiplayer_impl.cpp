@@ -438,7 +438,7 @@ void HiPlayerImpl::DoSetMediaSource(Status& ret)
 
 Status HiPlayerImpl::DoSetPlayRange()
 {
-    if (playRangeStartTime_ >= durationMs_.load() || playRangeEndTime_ > durationMs_.load()) {
+    if (!IsValidPlayRange(playRangeStartTime_, playRangeEndTime_)) {
         MEDIA_LOG_E_SHORT("DoSetPlayRange failed! start: " PUBLIC_LOG_D64 ", end: " PUBLIC_LOG_D64,
                     playRangeStartTime_, playRangeEndTime_);
         UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
