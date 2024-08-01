@@ -47,6 +47,7 @@ public:
     int32_t ReleaseVideoBuffer() override;
     int32_t SetMicrophoneEnabled(bool isMicrophone) override;
     int32_t SetCanvasRotation(bool canvasRotation) override;
+    int32_t ResizeCanvas(int32_t width, int32_t height) override;
     int32_t SetListenerObject(const sptr<IRemoteObject> &object) override;
     int OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
     int32_t ExcludeContent(ScreenCaptureContentFilter &contentFilter) override;
@@ -72,6 +73,7 @@ private:
     int32_t ReleaseVideoBuffer(MessageParcel &data, MessageParcel &reply);
     int32_t SetMicrophoneEnabled(MessageParcel &data, MessageParcel &reply);
     int32_t SetCanvasRotation(MessageParcel &data, MessageParcel &reply);
+    int32_t ResizeCanvas(MessageParcel &data, MessageParcel &reply);
     int32_t ExcludeContent(MessageParcel &data, MessageParcel &reply);
 
     int32_t Release(MessageParcel &data, MessageParcel &reply);

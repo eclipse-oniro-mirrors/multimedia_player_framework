@@ -270,6 +270,12 @@ int32_t ScreenCaptureCapiMock::SetCanvasRotation(bool canvasRotation)
     return OH_AVScreenCapture_SetCanvasRotation(screenCapture_, canvasRotation);
 }
 
+int32_t ScreenCaptureCapiMock::ResizeCanvas(int32_t width, int32_t height)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
+    return OH_AVScreenCapture_ResizeCanvas(screenCapture_, width, height);
+}
+
 int32_t ScreenCaptureCapiMock::AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audioBuffer,
     AudioCaptureSourceType type)
 {

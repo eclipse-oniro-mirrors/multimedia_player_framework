@@ -102,6 +102,16 @@ protected:
     FILE *videoFile_ = nullptr;
     int32_t outputFd_ = -1;
 };
+
+class ScreenCapBufferDemoConsumerListener : public IBufferConsumerListener {
+public:
+    ScreenCapBufferDemoConsumerListener(sptr<Surface> consumer)
+        : consumer_(consumer) {}
+    ~ScreenCapBufferDemoConsumerListener() {}
+    void OnBufferAvailable() override;
+private:
+    sptr<OHOS::Surface> consumer_ = nullptr;
+};
 } // namespace Media
 } // namespace OHOS
 #endif

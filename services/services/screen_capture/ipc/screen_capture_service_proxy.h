@@ -45,6 +45,7 @@ public:
     int32_t ReleaseVideoBuffer() override;
     int32_t SetMicrophoneEnabled(bool isMicrophone) override;
     int32_t SetCanvasRotation(bool canvasRotation) override;
+    int32_t ResizeCanvas(int32_t width, int32_t height) override;
     int32_t SetListenerObject(const sptr<IRemoteObject> &object) override;
     int32_t ExcludeContent(ScreenCaptureContentFilter &contentFilter) override;
 

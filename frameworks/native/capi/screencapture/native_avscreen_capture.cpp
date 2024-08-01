@@ -867,3 +867,19 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ContentFilter_AddWindowContent(
     contentFilterObj->screenCaptureContentFilter.windowIDsVec = vec;
     return AV_SCREEN_CAPTURE_ERR_OK;
 }
+
+OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ResizeCanvas(struct OH_AVScreenCapture *capture,
+    int32_t width, int32_t height)
+{
+    CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr!");
+
+    struct ScreenCaptureObject *screenCaptureObj = reinterpret_cast<ScreenCaptureObject *>(capture);
+    CHECK_AND_RETURN_RET_LOG(screenCaptureObj->screenCapture_ != nullptr,
+                             AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "screenCapture_ is null");
+    
+    int32_t ret = screenCaptureObj->screenCapture_->ResizeCanvas(width, height);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT,
+                             "ResizeCanvas failed!");
+
+    return AV_SCREEN_CAPTURE_ERR_OK;
+}
