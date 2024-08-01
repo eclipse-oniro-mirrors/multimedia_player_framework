@@ -1719,6 +1719,19 @@ void HiPlayerImpl::OnEventSub(const Event &event)
             NotifyCachedDuration(AnyCast<int32_t>(event.param));
             break;
         }
+        case EventType::EVENT_BUFFER_PROGRESS: {
+            NotifyBufferingUpdate(PlayerKeys::PLAYER_BUFFERING_PERCENT, AnyCast<int32_t>(event.param));
+            break;
+        }
+        default:
+            break;
+    }
+    OnEventSubTrackChange(event);
+}
+
+void HiPlayerImpl::OnEventSubTrackChange(const Event &event)
+{
+    switch (event.type) {
         case EventType::EVENT_AUDIO_TRACK_CHANGE: {
             HandleAudioTrackChangeEvent(event);
             break;
@@ -1729,10 +1742,6 @@ void HiPlayerImpl::OnEventSub(const Event &event)
         }
         case EventType::EVENT_SUBTITLE_TRACK_CHANGE: {
             HandleSubtitleTrackChangeEvent(event);
-            break;
-        }
-        case EventType::EVENT_BUFFER_PROGRESS: {
-            NotifyBufferingUpdate(PlayerKeys::PLAYER_BUFFERING_PERCENT, AnyCast<int32_t>(event.param));
             break;
         }
         default:
