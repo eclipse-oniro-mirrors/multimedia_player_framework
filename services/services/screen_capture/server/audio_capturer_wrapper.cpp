@@ -286,6 +286,15 @@ std::shared_ptr<AudioCapturer> AudioCapturerWrapper::CreateAudioCapturer(const O
     return audioCapturer;
 }
 
+void AudioCapturerWrapper::PartiallyPrintLog(int32_t &count, std::string str)
+{
+    if (count % AC_LOG_SKIP_NUM == 0) {
+        count = 0;
+        MEDIA_LOGE("%{public}s", str.c_str());
+    }
+    count++;
+}
+
 int32_t AudioCapturerWrapper::CaptureAudio()
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR " CaptureAudio S, name:%{public}s", FAKE_POINTER(this), threadName_.c_str());
@@ -306,10 +315,7 @@ int32_t AudioCapturerWrapper::CaptureAudio()
         memset_s(audioBuffer->buffer, bufferLen, 0, bufferLen);
         int32_t bufferRead = audioCapturer_->Read(*(audioBuffer->buffer), bufferLen, true);
         if (bufferRead <= 0) {
-            if (++captureAudioLogCount_ % AC_LOG_SKIP_NUM == 0) {
-                captureAudioLogCount_ = 1;
-                MEDIA_LOGE("CaptureAudio read audio buffer failed, continue");
-            }
+            PartiallyPrintLog(captureAudioLogCountArray_[0], "CaptureAudio read audio buffer failed");
             continue;
         }
         audioBuffer->length = bufferRead;
@@ -319,7 +325,10 @@ int32_t AudioCapturerWrapper::CaptureAudio()
         {
             std::unique_lock<std::mutex> lock(bufferMutex_);
             CHECK_AND_RETURN_RET_LOG(isRunning_.load(), MSERR_OK, "CaptureAudio is not running, ignore and stop");
-            CHECK_AND_CONTINUE_LOG(availBuffers_.size() <= MAX_AUDIO_BUFFER_SIZE, "consume slow, drop audio frame");
+            if (availBuffers_.size() > MAX_AUDIO_BUFFER_SIZE) {
+                PartiallyPrintLog(captureAudioLogCountArray_[1], "consume slow, drop audio frame");
+                continue;
+            }
             if (isMuted_) {
                 memset_s(audioBuffer->buffer, bufferLen, 0, bufferLen);
             }
@@ -361,7 +370,10 @@ int32_t AudioCapturerWrapper::GetBufferSize(size_t &size)
     std::unique_lock<std::mutex> lock(bufferMutex_);
     MEDIA_LOGD("0x%{public}06" PRIXPTR " GetBufferSize Buffer S, name:%{public}s",
         FAKE_POINTER(this), threadName_.c_str());
-    CHECK_AND_RETURN_RET_LOG(isRunning_.load(), MSERR_UNKNOWN, "GetBufferSize failed, not running");
+    if (!isRunning_.load()) {
+        MEDIA_LOGD("GetBufferSize failed, not running, name:%{public}s", threadName_.c_str());
+        return MSERR_UNKNOWN;
+    }
     CHECK_AND_RETURN_RET_LOG(audioCapturer_ != nullptr && audioCapturer_->GetBufferSize(size) >= 0,
         MSERR_NO_MEMORY, "CaptureAudio GetBufferSize failed");
     MEDIA_LOGD("0x%{public}06" PRIXPTR " GetBufferSize Buffer E, name:%{public}s",
