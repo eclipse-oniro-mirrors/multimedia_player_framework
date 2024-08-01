@@ -70,6 +70,7 @@ void MediaServer::OnAddSystemAbility(int32_t systemAbilityId, const std::string 
     if (systemAbilityId == MEMORY_MANAGER_SA_ID) {
         Memory::MemMgrClient::GetInstance().NotifyProcessStatus(getpid(),
             SYSTEM_PROCESS_TYPE, SYSTEM_STATUS_START, OHOS::PLAYER_DISTRIBUTED_SERVICE_ID);
+        MediaServerManager::GetInstance().NotifyMemMgrLoaded();
     }
 }
 
