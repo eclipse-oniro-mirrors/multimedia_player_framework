@@ -296,7 +296,7 @@ void AVMetadataExtractorNapi::ResolveMetadataComplete(napi_env env, napi_status 
             CHECK_AND_CONTINUE_LOG(ret, "GetData failed, key %{public}s", key.c_str());
             for (auto iter = customData->begin(); iter != customData->end(); ++iter) {
                 AnyValueType type = customData->GetValueType(iter->first);
-                CHECK_AND_CONTINUE_LOG(type == AnyValueType::STRING, "key not string");
+                CHECK_AND_CONTINUE_LOG(type == AnyValueType::STRING, "key is not string");
                 CHECK_AND_CONTINUE_LOG(CommonNapi::SetPropertyByValueType(env, customInfo, customData, iter->first),
                     "SetProperty failed, key: %{public}s", key.c_str());
             }
