@@ -49,24 +49,31 @@ std::shared_ptr<ITransCoderService> TransCoderServer::Create()
 }
 
 TransCoderServer::TransCoderServer()
-    : taskQue_("TransCoderServer")
+    : taskQue_("TranscoderServer")
 {
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
     taskQue_.Start();
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
 
 TransCoderServer::~TransCoderServer()
 {
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
     {
         std::lock_guard<std::mutex> lock(mutex_);
+        if (transCoderEngine_ != nullptr) {
+            auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+                return transCoderEngine_->Cancel();
+            });
+            (void)taskQue_.EnqueueTask(task);
+            (void)task->GetResult();
+        }
         auto task = std::make_shared<TaskHandler<void>>([&, this] {
             transCoderEngine_ = nullptr;
         });
         (void)taskQue_.EnqueueTask(task);
         (void)task->GetResult();
-        taskQue_.Stop();
     }
+    taskQue_.Stop();
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
 int32_t TransCoderServer::Init()
@@ -403,6 +410,18 @@ int32_t TransCoderServer::Release()
 {
     {
         std::lock_guard<std::mutex> lock(mutex_);
+        if (status_ == REC_CONFIGURED || status_ == REC_PREPARED || status_ == REC_PAUSED ||
+            status_ == REC_TRANSCODERING || status_ == REC_ERROR) {
+            CHECK_AND_RETURN_RET_LOG(transCoderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+            auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+                return transCoderEngine_->Cancel();
+            });
+            int32_t ret = taskQue_.EnqueueTask(task);
+            CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+            auto result = task->GetResult();
+            ret = result.Value();
+            status_ = (ret == MSERR_OK ? REC_INITIALIZED : REC_ERROR);
+        }
         auto task = std::make_shared<TaskHandler<void>>([&, this] {
             transCoderEngine_ = nullptr;
         });
