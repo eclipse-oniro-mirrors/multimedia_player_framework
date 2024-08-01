@@ -198,7 +198,13 @@ sptr<IRemoteObject> MediaServerManager::CreateStubObject(StubType type)
 sptr<IRemoteObject> MediaServerManager::CreatePlayerStubObject()
 {
 #ifdef PLAYER_USE_MEMORY_MANAGE
-    sptr<PlayerServiceStub> playerStub = PlayerServiceStubMem::Create();
+    sptr<PlayerServiceStub> playerStub;
+    if (isMemMgrLoaded_.load()) {
+        playerStub = PlayerServiceStubMem::Create();
+    } else {
+        MEDIA_LOGW("create player stub object when memmgr has not been loaded");
+        playerStub = PlayerServiceStub::Create();
+    }
 #else
     sptr<PlayerServiceStub> playerStub = PlayerServiceStub::Create();
 #endif
@@ -728,6 +734,11 @@ void MediaServerManager::DestroyDumperForPid(pid_t pid)
         }
     }
     (void)Dump(-1, std::vector<std::u16string>());
+}
+
+void MediaServerManager::NotifyMemMgrLoaded()
+{
+    isMemMgrLoaded_.store(true);
 }
 
 void MediaServerManager::AsyncExecutor::Commit(sptr<IRemoteObject> obj)

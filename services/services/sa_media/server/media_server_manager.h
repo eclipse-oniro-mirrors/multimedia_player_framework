@@ -58,6 +58,7 @@ public:
     int32_t Dump(int32_t fd, const std::vector<std::u16string> &args);
     void DestroyDumper(StubType type, sptr<IRemoteObject> object);
     void DestroyDumperForPid(pid_t pid);
+    void NotifyMemMgrLoaded();
 
 private:
     MediaServerManager();
@@ -89,6 +90,8 @@ private:
     void DestroyAVPlayerStubForPid(pid_t pid);
     void DestroyAVRecorderStubForPid(pid_t pid);
     void DestroyAVTranscoderStubForPid(pid_t pid);
+
+    std::atomic<bool> isMemMgrLoaded_ {false};
 
     class AsyncExecutor {
     public:
