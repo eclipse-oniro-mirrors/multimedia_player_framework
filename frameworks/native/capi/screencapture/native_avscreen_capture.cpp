@@ -877,7 +877,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ResizeCanvas(struct OH_AVScreenCa
     CHECK_AND_RETURN_RET_LOG(screenCaptureObj->screenCapture_ != nullptr,
                              AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "screenCapture_ is null");
 
-    CHECK_AND_RETURN_RET_LOG(width > 0 && height > 0, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT, 
+    CHECK_AND_RETURN_RET_LOG(width > 0 && height > 0, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT,
                              "input width or height invalid!");
     
     int32_t ret = screenCaptureObj->screenCapture_->ResizeCanvas(width, height);
