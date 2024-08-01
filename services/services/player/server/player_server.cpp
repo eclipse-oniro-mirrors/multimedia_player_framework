@@ -627,6 +627,10 @@ int32_t PlayerServer::OnReset()
     if (lastOpStatus_ == PLAYER_PREPARED || lastOpStatus_ == PLAYER_STARTED ||
         lastOpStatus_ == PLAYER_PLAYBACK_COMPLETE || lastOpStatus_ == PLAYER_PAUSED) {
         (void)OnStop(true);
+    } else if (lastOpStatus_ == PLAYER_STATE_ERROR && playerEngine_ != nullptr) {
+        isInterruptNeeded_ = true;
+        MEDIA_LOGW("error state interrupt");
+        playerEngine_->SetInterruptState(true);
     }
 
     MEDIA_LOGD("PlayerServer OnReset in");
