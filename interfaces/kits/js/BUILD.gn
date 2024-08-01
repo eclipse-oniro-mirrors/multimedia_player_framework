@@ -197,6 +197,10 @@ ohos_shared_library("media") {
   defines = []
   defines += player_framework_defines
 
+  if (is_arkui_x) {
+    defines += [ "CROSS_PLATFORM" ]
+  }
+
   relative_install_dir = "module/multimedia"
   part_name = "player_framework"
   subsystem_name = "multimedia"
