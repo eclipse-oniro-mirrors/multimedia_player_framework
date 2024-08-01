@@ -1482,6 +1482,7 @@ int32_t AVRecorderNapi::IsWatermarkSupported(bool &isWatermarkSupported)
 int32_t AVRecorderNapi::SetWatermark(std::shared_ptr<PixelMap> &pixelMap,
     std::shared_ptr<WatermarkConfig> &watermarkConfig)
 {
+#ifndef CROSS_PLATFORM
     MEDIA_LOGD("pixelMap Width %{public}d, height %{public}d, pixelformat %{public}d, RowStride %{public}d",
         pixelMap->GetWidth(), pixelMap->GetHeight(), pixelMap->GetPixelFormat(), pixelMap->GetRowStride());
     CHECK_AND_RETURN_RET_LOG(pixelMap->GetPixelFormat() == PixelFormat::RGBA_8888, MSERR_INVALID_VAL,
@@ -1512,6 +1513,8 @@ int32_t AVRecorderNapi::SetWatermark(std::shared_ptr<PixelMap> &pixelMap,
     CHECK_AND_RETURN_RET_LOG(waterMarkBuffer != nullptr, MSERR_NO_MEMORY, "surfaceBuffer is nullptr");
     waterMarkBuffer->meta_ = avBufferConfig;
     return recorder_->SetWatermark(waterMarkBuffer);
+#endif
+    return MSERR_OK;
 }
 
 int32_t AVRecorderNapi::ConfigAVBufferMeta(std::shared_ptr<PixelMap> &pixelMap,
