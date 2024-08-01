@@ -1252,6 +1252,7 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
         return MSERR_UNSUPPORT;
     } else {
         MEDIA_LOGI("ScreenCaptureServer Start RegisterScreenCaptureCallBack");
+        InCallObserver::GetInstance().RegisterObserver();
         std::weak_ptr<ScreenCaptureServer> wpScreenCaptureServer(shared_from_this());
         screenCaptureObserverCb_ = std::make_shared<ScreenCaptureObserverCallBack>(wpScreenCaptureServer);
         InCallObserver::GetInstance().RegisterInCallObserverCallBack(screenCaptureObserverCb_);
