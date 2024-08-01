@@ -2114,7 +2114,7 @@ int32_t ScreenCaptureServer::ResizeCanvas(int32_t width, int32_t height)
     
     auto resizeRet = ScreenManager::GetInstance().ResizeVirtualScreen(screenId_, width, height);
     MEDIA_LOGI("ScreenCaptureServer::ResizeCanvas, ResizeVirtualScreen end, ret: %{public}d ", resizeRet);
-    CHECK_AND_RETURN_RET_LOG(resizeRet == DMError::DM_OK, MSERR_UNSUPPORT,"ResizeVirtualScreen failed");
+    CHECK_AND_RETURN_RET_LOG(resizeRet == DMError::DM_OK, MSERR_UNSUPPORT, "ResizeVirtualScreen failed");
 
     return MSERR_OK;
 }

@@ -688,7 +688,7 @@ void ScreenCapBufferDemoConsumerListener::OnBufferAvailable()
         ",  videoBufferHeight: " << buffer->GetHeight() <<
         ",  timestamp: " << timestamp << endl;
     } else {
-        cout << "buffer empty" << endl; 
+        cout << "buffer empty" << endl;
     }
     consumer_->ReleaseBuffer(buffer, flushFence);
 }
