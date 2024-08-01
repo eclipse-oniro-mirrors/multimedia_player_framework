@@ -146,6 +146,55 @@ int32_t RecorderClient::SetVideoEnableTemporalScale(int32_t sourceId, bool enabl
     return recorderProxy_->SetVideoEnableTemporalScale(sourceId, enableTemporalScale);
 }
 
+int32_t RecorderClient::SetMetaSource(MetaSourceType source, int32_t &sourceId)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(recorderProxy_ != nullptr, MSERR_NO_MEMORY, "recorder service does not exist.");
+
+    MEDIA_LOGD("SetMetaSourceType source(%{public}d), sourceId(%{public}d)",
+        source, sourceId);
+    return recorderProxy_->SetMetaSource(source, sourceId);
+}
+
+int32_t RecorderClient::SetMetaConfigs(int32_t sourceId)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(recorderProxy_ != nullptr, MSERR_NO_MEMORY, "recorder service does not exist.");
+
+    MEDIA_LOGD("SetMetaConfigs sourceId(%{public}d)", sourceId);
+    return recorderProxy_->SetMetaConfigs(sourceId);
+}
+
+int32_t RecorderClient::SetMetaMimeType(int32_t sourceId, const std::string_view &type)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(recorderProxy_ != nullptr, MSERR_NO_MEMORY, "recorder service does not exist.");
+
+    MEDIA_LOGD("SetMetaMimeType sourceId(%{public}d), MetaMimeType(%{public}s)",
+        sourceId, type.data());
+    return recorderProxy_->SetMetaMimeType(sourceId, type);
+}
+
+int32_t RecorderClient::SetMetaTimedKey(int32_t sourceId, const std::string_view &timedKey)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(recorderProxy_ != nullptr, MSERR_NO_MEMORY, "recorder service does not exist.");
+
+    MEDIA_LOGD("SetMetaTimedKey sourceId(%{public}d), MetaTimedKey(%{public}s)",
+        sourceId, timedKey.data());
+    return recorderProxy_->SetMetaTimedKey(sourceId, timedKey);
+}
+
+int32_t RecorderClient::SetMetaSourceTrackMime(int32_t sourceId, const std::string_view &srcTrackMime)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(recorderProxy_ != nullptr, MSERR_NO_MEMORY, "recorder service does not exist.");
+
+    MEDIA_LOGD("SetMetaSourceTrackMime sourceId(%{public}d), srcTrackMime(%{public}s)",
+        sourceId, srcTrackMime.data());
+    return recorderProxy_->SetMetaSourceTrackMime(sourceId, srcTrackMime);
+}
+
 int32_t RecorderClient::SetCaptureRate(int32_t sourceId, double fps)
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -162,6 +211,15 @@ sptr<OHOS::Surface> RecorderClient::GetSurface(int32_t sourceId)
 
     MEDIA_LOGD("GetSurface sourceId(%{public}d)", sourceId);
     return recorderProxy_->GetSurface(sourceId);
+}
+
+sptr<OHOS::Surface> RecorderClient::GetMetaSurface(int32_t sourceId)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(recorderProxy_ != nullptr, nullptr, "recorder service does not exist.");
+
+    MEDIA_LOGD("GetMetaSurface sourceId(%{public}d)", sourceId);
+    return recorderProxy_->GetMetaSurface(sourceId);
 }
 
 int32_t RecorderClient::SetAudioSource(AudioSourceType source, int32_t &sourceId)
@@ -442,6 +500,24 @@ int32_t RecorderClient::GetMaxAmplitude()
 
     MEDIA_LOGD("GetMaxAmplitude");
     return recorderProxy_->GetMaxAmplitude();
+}
+
+int32_t RecorderClient::IsWatermarkSupported(bool &isWatermarkSupported)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(recorderProxy_ != nullptr, MSERR_NO_MEMORY, "recorder service does not exist.");
+
+    MEDIA_LOGD("IsWatermarkSupported");
+    return recorderProxy_->IsWatermarkSupported(isWatermarkSupported);
+}
+
+int32_t RecorderClient::SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(recorderProxy_ != nullptr, MSERR_NO_MEMORY, "recorder service does not exist.");
+
+    MEDIA_LOGD("SetWatermark");
+    return recorderProxy_->SetWatermark(waterMarkBuffer);
 }
 } // namespace Media
 } // namespace OHOS

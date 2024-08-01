@@ -18,7 +18,7 @@
 #include "media_errors.h"
 
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "TransCoderClient"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "TransCoderClient"};
 }
 
 namespace OHOS {
@@ -47,10 +47,10 @@ TransCoderClient::~TransCoderClient()
     {
         std::lock_guard<std::mutex> lock(mutex_);
         (void)DisableMonitor();
-        if (transCoderProxy_ != nullptr) {
-            (void)transCoderProxy_->DestroyStub();
-            transCoderProxy_ = nullptr;
-        }
+        CHECK_AND_RETURN_LOG(transCoderProxy_ != nullptr,
+            "0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
+        (void)transCoderProxy_->DestroyStub();
+        transCoderProxy_ = nullptr;
     }
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
@@ -61,10 +61,8 @@ void TransCoderClient::MediaServerDied()
         std::lock_guard<std::mutex> lock(mutex_);
         transCoderProxy_ = nullptr;
         listenerStub_ = nullptr;
-        if (callback_ != nullptr) {
-            callback_->OnError(MSERR_SERVICE_DIED,
-                "mediaserver is died, please create a new transcodercallback instance again");
-        }
+        CHECK_AND_RETURN(callback_ != nullptr);
+        callback_->OnError(MSERR_SERVICE_DIED, "mediaserver died, pls create a new transcodercallback instance again");
     }
 }
 
@@ -135,15 +133,6 @@ int32_t TransCoderClient::SetOutputFormat(OutputFormatType format)
 
     MEDIA_LOGD("SetOutputFormat format(%{public}d)", format);
     return transCoderProxy_->SetOutputFormat(format);
-}
-
-int32_t TransCoderClient::SetInputFile(std::string url)
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(transCoderProxy_ != nullptr, MSERR_NO_MEMORY, "transcoder service does not exist.");
-
-    MEDIA_LOGD("SetInputFile url(%{public}s)", url.c_str());
-    return transCoderProxy_->SetInputFile(url);
 }
 
 int32_t TransCoderClient::SetInputFile(int32_t fd, int64_t offset, int64_t size)

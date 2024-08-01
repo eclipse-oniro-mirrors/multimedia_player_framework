@@ -24,6 +24,8 @@
 #include "common_napi.h"
 #include "task_queue.h"
 #include "recorder_profiles.h"
+#include "pixel_map_napi.h"
+#include "buffer/avbuffer.h"
 
 namespace OHOS {
 namespace Media {
@@ -42,6 +44,7 @@ namespace AVRecordergOpt {
 const std::string PREPARE = "Prepare";
 const std::string SET_ORIENTATION_HINT = "SetOrientationHint";
 const std::string GETINPUTSURFACE = "GetInputSurface";
+const std::string GETINPUTMETASURFACE = "GetInputMetaSurface";
 const std::string START = "Start";
 const std::string PAUSE = "Pause";
 const std::string RESUME = "Resume";
@@ -54,6 +57,8 @@ const std::string GET_AV_RECORDER_CONFIG = "GetAVRecorderConfig";
 const std::string GET_CURRENT_AUDIO_CAPTURER_INFO = "GetCurrentAudioCapturerInfo";
 const std::string GET_MAX_AMPLITUDE = "GetMaxAmplitude";
 const std::string GET_ENCODER_INFO = "GetEncoderInfo";
+const std::string IS_WATERMARK_SUPPORTED = "IsWatermarkSupported";
+const std::string SET_WATERMARK = "SetWatermark";
 }
 
 constexpr int32_t AVRECORDER_DEFAULT_AUDIO_BIT_RATE = 48000;
@@ -76,13 +81,16 @@ const std::map<std::string, std::vector<std::string>> stateCtrlList = {
     {AVRecorderState::STATE_PREPARED, {
         AVRecordergOpt::SET_ORIENTATION_HINT,
         AVRecordergOpt::GETINPUTSURFACE,
+        AVRecordergOpt::GETINPUTMETASURFACE,
         AVRecordergOpt::START,
         AVRecordergOpt::RESET,
         AVRecordergOpt::RELEASE,
         AVRecordergOpt::GET_CURRENT_AUDIO_CAPTURER_INFO,
         AVRecordergOpt::GET_MAX_AMPLITUDE,
         AVRecordergOpt::GET_ENCODER_INFO,
-        AVRecordergOpt::GET_AV_RECORDER_CONFIG
+        AVRecordergOpt::GET_AV_RECORDER_CONFIG,
+        AVRecordergOpt::IS_WATERMARK_SUPPORTED,
+        AVRecordergOpt::SET_WATERMARK
     }},
     {AVRecorderState::STATE_STARTED, {
         AVRecordergOpt::START,
@@ -94,7 +102,8 @@ const std::map<std::string, std::vector<std::string>> stateCtrlList = {
         AVRecordergOpt::GET_CURRENT_AUDIO_CAPTURER_INFO,
         AVRecordergOpt::GET_MAX_AMPLITUDE,
         AVRecordergOpt::GET_ENCODER_INFO,
-        AVRecordergOpt::GET_AV_RECORDER_CONFIG
+        AVRecordergOpt::GET_AV_RECORDER_CONFIG,
+        AVRecordergOpt::IS_WATERMARK_SUPPORTED
     }},
     {AVRecorderState::STATE_PAUSED, {
         AVRecordergOpt::PAUSE,
@@ -105,7 +114,8 @@ const std::map<std::string, std::vector<std::string>> stateCtrlList = {
         AVRecordergOpt::GET_CURRENT_AUDIO_CAPTURER_INFO,
         AVRecordergOpt::GET_MAX_AMPLITUDE,
         AVRecordergOpt::GET_ENCODER_INFO,
-        AVRecordergOpt::GET_AV_RECORDER_CONFIG
+        AVRecordergOpt::GET_AV_RECORDER_CONFIG,
+        AVRecordergOpt::IS_WATERMARK_SUPPORTED
     }},
     {AVRecorderState::STATE_STOPPED, {
         AVRecordergOpt::STOP,
@@ -156,6 +166,7 @@ struct AVRecorderProfile {
 struct AVRecorderConfig {
     AudioSourceType audioSourceType; // source type;
     VideoSourceType videoSourceType;
+    std::vector<MetaSourceType> metaSourceTypeVec;
     AVRecorderProfile profile;
     std::string url;
     int32_t rotation = 0; // Optional
@@ -164,6 +175,11 @@ struct AVRecorderConfig {
     bool withVideo = false;
     bool withAudio = false;
     bool withLocation = false;
+};
+
+struct WatermarkConfig {
+    int32_t top = -1; // offset of the watermark to the top line of pixel
+    int32_t left = -1; // offset of the watermark to the left line if pixel
 };
 
 using RetInfo = std::pair<int32_t, std::string>;
@@ -193,10 +209,19 @@ private:
      */
     static napi_value JsSetOrientationHint(napi_env env, napi_callback_info info);
     /**
+     * setWatermark(watermark: image.PixelMap, config: WatermarkConfig): promise<void>;
+    */
+    static napi_value JsSetWatermark(napi_env env, napi_callback_info info);
+    /**
      * getInputSurface(callback: AsyncCallback<string>): void
      * getInputSurface(): Promise<string>
      */
     static napi_value JsGetInputSurface(napi_env env, napi_callback_info info);
+    /**
+     * getInputMetaSurface(callback: AsyncCallback<string>): void
+     * getInputMetaSurface(): Promise<string>
+     */
+    static napi_value JsGetInputMetaSurface(napi_env env, napi_callback_info info);
     /**
      * start(callback: AsyncCallback<void>): void;
      * start(): Promise<void>;
@@ -274,11 +299,17 @@ private:
      * getAvailableEncoder(): Promise<Array<EncoderInfo>>;
     */
     static napi_value JsGetAvailableEncoder(napi_env env,  napi_callback_info info);
+    /**
+     * isWatermarkSupported(): promise<boolean>;
+    */
+    static napi_value JsIsWatermarkSupported(napi_env env, napi_callback_info info);
 
     static AVRecorderNapi* GetJsInstanceAndArgs(napi_env env, napi_callback_info info,
         size_t &argCount, napi_value *args);
     static std::shared_ptr<TaskHandler<RetInfo>> GetPrepareTask(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
     static std::shared_ptr<TaskHandler<RetInfo>> GetSetOrientationHintTask(
+        const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
+    static std::shared_ptr<TaskHandler<RetInfo>> GetInputMetaSurface(
         const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
     static std::shared_ptr<TaskHandler<RetInfo>> GetPromiseTask(AVRecorderNapi *avnapi, const std::string &opt);
     static std::shared_ptr<TaskHandler<RetInfo>> GetAVRecorderProfileTask(
@@ -294,12 +325,18 @@ private:
         const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
     static std::shared_ptr<TaskHandler<RetInfo>> GetEncoderInfoTask(
         const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
+    static std::shared_ptr<TaskHandler<RetInfo>> IsWatermarkSupportedTask(
+        const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
+    static std::shared_ptr<TaskHandler<RetInfo>> SetWatermarkTask(
+        const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
     static int32_t GetAudioCodecFormat(const std::string &mime, AudioCodecFormat &codecFormat);
     static int32_t GetVideoCodecFormat(const std::string &mime, VideoCodecFormat &codecFormat);
     static int32_t GetOutputFormat(const std::string &extension, OutputFormatType &type);
 
     static int32_t GetPropertyInt32(napi_env env, napi_value configObj, const std::string &type, int32_t &result,
         bool &getValue);
+    static int32_t GetPropertyInt32Vec(napi_env env, napi_value configObj, const std::string &type,
+    std::vector<int32_t> &result, bool &getValue);
 
     static int32_t GetAVRecorderProfile(std::shared_ptr<AVRecorderProfile> &profile,
         const int32_t sourceId, const int32_t qualityLevel);
@@ -321,6 +358,8 @@ private:
     int32_t GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &changeInfo);
     int32_t GetMaxAmplitude(int32_t &maxAmplitude);
     int32_t GetEncoderInfo(std::vector<EncoderCapabilityData> &encoderInfo);
+    int32_t IsWatermarkSupported(bool &isWatermarkSupported);
+    int32_t SetWatermark(std::shared_ptr<PixelMap> &pixelMap, std::shared_ptr<WatermarkConfig> &watermarkConfig);
 
     void ErrorCallback(int32_t errCode, const std::string &operate, const std::string &add = "");
     void StateCallback(const std::string &state);
@@ -339,12 +378,19 @@ private:
     int32_t GetProfile(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
     int32_t GetConfig(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
     int32_t GetRotation(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
+    int32_t GetMetaType(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
     int32_t GetAVMetaData(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
+    int32_t GetWatermarkParameter(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value *args);
+    int32_t GetWatermark(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
+    int32_t GetWatermarkConfig(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
+
     bool GetLocation(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
     int32_t GetSourceIdAndQuality(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env,
         napi_value sourceIdArgs, napi_value qualityArgs, const std::string &opt);
     RetInfo SetProfile(std::shared_ptr<AVRecorderConfig> config);
     RetInfo Configure(std::shared_ptr<AVRecorderConfig> config);
+    int32_t ConfigAVBufferMeta(std::shared_ptr<PixelMap> &pixelMap, std::shared_ptr<WatermarkConfig> &watermarkConfig,
+        std::shared_ptr<Meta> &meta);
 
     static thread_local napi_ref constructor_;
     napi_env env_ = nullptr;
@@ -353,14 +399,21 @@ private:
     std::map<std::string, std::shared_ptr<AutoRef>> eventCbMap_;
     std::unique_ptr<TaskQueue> taskQue_;
     static std::map<std::string, AvRecorderTaskqFunc> taskQFuncs_;
+    std::map<MetaSourceType, int32_t> metaSourceIDMap_;
     sptr<Surface> surface_ = nullptr;
+    sptr<Surface> metaSurface_ = nullptr;
     int32_t videoSourceID_ = -1;
     int32_t audioSourceID_ = -1;
+    int32_t metaSourceID_ = -1;
     bool withVideo_ = false;
     bool getVideoInputSurface_ = false;
+    bool getMetaInputSurface_ = false;
     int32_t sourceId_ = -1;
     int32_t qualityLevel_ = -1;
     bool hasConfiged_ = false;
+    int32_t videoFrameWidth_ = -1; // Required for watermarking. Synchronize the modification if any.
+    int32_t videoFrameHeight_ = -1; // Required for watermarking. Synchronize the modification if any.
+    int32_t rotation_ = 0; // Required for watermarking. Synchronize the modification if any.
 };
 
 struct AVRecorderAsyncContext : public MediaAsyncContext {
@@ -378,6 +431,10 @@ struct AVRecorderAsyncContext : public MediaAsyncContext {
     AudioRecorderChangeInfo changeInfo_;
     int32_t maxAmplitude_ = 0;
     std::vector<EncoderCapabilityData> encoderInfo_;
+    MetaSourceType metaType_ = MetaSourceType::VIDEO_META_SOURCE_INVALID;
+    std::shared_ptr<PixelMap> pixelMap_ = nullptr;
+    std::shared_ptr<WatermarkConfig> watermarkConfig_ = nullptr;
+    bool isWatermarkSupported_ = false;
 };
 
 class MediaJsResultExtensionMethod {

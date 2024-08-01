@@ -20,7 +20,7 @@
 #include "media_errors.h"
 
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "TransCoderImpl"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "TransCoderImpl"};
 }
 
 namespace OHOS {
@@ -49,10 +49,9 @@ TransCoderImpl::TransCoderImpl()
 
 TransCoderImpl::~TransCoderImpl()
 {
-    if (transCoderService_ != nullptr) {
-        (void)MediaServiceFactory::GetInstance().DestroyTransCoderService(transCoderService_);
-        transCoderService_ = nullptr;
-    }
+    CHECK_AND_RETURN_LOG(transCoderService_ != nullptr, "0x%{public}06" PRIXPTR " Inst destroy", FAKE_POINTER(this));
+    (void)MediaServiceFactory::GetInstance().DestroyTransCoderService(transCoderService_);
+    transCoderService_ = nullptr;
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
@@ -108,14 +107,6 @@ int32_t TransCoderImpl::SetOutputFormat(OutputFormatType format)
     CHECK_AND_RETURN_RET_LOG(transCoderService_ != nullptr, MSERR_INVALID_OPERATION,
         "transcoder service does not exist..");
     return transCoderService_->SetOutputFormat(format);
-}
-
-int32_t TransCoderImpl::SetInputFile(std::string url)
-{
-    MEDIA_LOGI("TransCoderImpl:0x%{public}06" PRIXPTR " SetInputFile in", FAKE_POINTER(this));
-    CHECK_AND_RETURN_RET_LOG(transCoderService_ != nullptr, MSERR_INVALID_OPERATION,
-        "transcoder service does not exist..");
-    return transCoderService_->SetInputFile(url);
 }
 
 int32_t TransCoderImpl::SetInputFile(int32_t fd, int64_t offset, int64_t size)

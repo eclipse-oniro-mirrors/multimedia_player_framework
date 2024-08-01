@@ -24,7 +24,7 @@
 #include "meta/video_types.h"
 #include "nocopyable.h"
 
-#include "foundation/multimedia/drm_framework/services/drm_service/ipc/i_keysession_service.h"
+#include "i_keysession_service.h"
 
 namespace OHOS {
 class Surface;
@@ -126,9 +126,10 @@ public:
         return 0;
     }
     
-    virtual int32_t SelectTrack(int32_t index)
+    virtual int32_t SelectTrack(int32_t index, PlayerSwitchMode mode = PlayerSwitchMode::SWITCH_SMOOTH)
     {
         (void)index;
+        (void)mode;
         return 0;
     }
     virtual int32_t DeselectTrack(int32_t index)
@@ -178,6 +179,14 @@ public:
     virtual void SetInstancdId(uint64_t instanceId)
     {
         (void)instanceId;
+    }
+    virtual int32_t PauseDemuxer()
+    {
+        return 0;
+    }
+    virtual int32_t ResumeDemuxer()
+    {
+        return 0;
     }
     virtual int32_t SeekContinous(int32_t mSeconds, int64_t seekContinousBatchNo)
     {

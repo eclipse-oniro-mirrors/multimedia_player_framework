@@ -38,11 +38,14 @@ public:
     int32_t SetVideoEnableTemporalScale(int32_t sourceId, bool enableTemporalScale) override;
     int32_t SetCaptureRate(int32_t sourceId, double fps) override;
     sptr<OHOS::Surface> GetSurface(int32_t sourceId) override;
+    sptr<OHOS::Surface> GetMetaSurface(int32_t sourceId) override;
     int32_t SetAudioSource(AudioSourceType source, int32_t &sourceId) override;
     int32_t SetAudioEncoder(int32_t sourceId, AudioCodecFormat encoder) override;
     int32_t SetAudioSampleRate(int32_t sourceId, int32_t rate) override;
     int32_t SetAudioChannels(int32_t sourceId, int32_t num) override;
     int32_t SetAudioEncodingBitRate(int32_t sourceId, int32_t bitRate) override;
+    int32_t SetMetaSource(MetaSourceType source, int32_t &sourceId) override;
+    int32_t SetMetaConfigs(int32_t sourceId) override;
     int32_t SetDataSource(DataSourceType dataType, int32_t &sourceId) override;
     int32_t SetUserCustomInfo(Meta &userCustomInfo) override;
     int32_t SetGenre(std::string &genre) override;
@@ -69,10 +72,12 @@ public:
     int32_t GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &changeInfo) override;
     int32_t GetAvailableEncoder(std::vector<EncoderCapabilityData> &encoderInfo) override;
     int32_t GetMaxAmplitude() override;
-
+    int32_t IsWatermarkSupported(bool &isWatermarkSupported) override;
+    int32_t SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer) override;
 private:
     std::shared_ptr<IRecorderService> recorderService_ = nullptr;
     sptr<Surface> surface_ = nullptr;
+    sptr<Surface> metaSurface_ = nullptr;
     HiTraceId traceId_;
 };
 } // namespace Media

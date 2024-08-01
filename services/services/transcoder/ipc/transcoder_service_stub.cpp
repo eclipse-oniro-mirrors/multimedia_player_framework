@@ -25,7 +25,7 @@
 #include "media_dfx.h"
 
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "TransCoderServiceStub"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "TransCoderServiceStub"};
 }
 
 namespace OHOS {
@@ -64,7 +64,6 @@ int32_t TransCoderServiceStub::Init()
     recFuncs_[SET_AUDIO_ENCODER] = &TransCoderServiceStub::SetAudioEncoder;
     recFuncs_[SET_AUDIO_ENCODING_BIT_RATE] = &TransCoderServiceStub::SetAudioEncodingBitRate;
     recFuncs_[SET_OUTPUT_FORMAT] = &TransCoderServiceStub::SetOutputFormat;
-    recFuncs_[SET_INPUT_FILE_URL] = &TransCoderServiceStub::SetInputFileUrl;
     recFuncs_[SET_INPUT_FILE_FD] = &TransCoderServiceStub::SetInputFileFd;
     recFuncs_[SET_OUTPUT_FILE] = &TransCoderServiceStub::SetOutputFile;
     recFuncs_[PREPARE] = &TransCoderServiceStub::Prepare;
@@ -109,9 +108,7 @@ int TransCoderServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, M
             std::lock_guard<std::mutex> lock(mutex_);
             (void)IpcRecovery(false);
             int32_t ret = (this->*memberFunc)(data, reply);
-            if (ret != MSERR_OK) {
-                MEDIA_LOGE("calling memberFunc is failed.");
-            }
+            CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_OK, "calling memberFunc is failed.");
             return MSERR_OK;
         }
     }
@@ -169,12 +166,6 @@ int32_t TransCoderServiceStub::SetOutputFormat(OutputFormatType format)
 {
     CHECK_AND_RETURN_RET_LOG(transCoderServer_ != nullptr, MSERR_NO_MEMORY, "transcoder server is nullptr");
     return transCoderServer_->SetOutputFormat(format);
-}
-
-int32_t TransCoderServiceStub::SetInputFile(std::string url)
-{
-    CHECK_AND_RETURN_RET_LOG(transCoderServer_ != nullptr, MSERR_NO_MEMORY, "transcoder server is nullptr");
-    return transCoderServer_->SetInputFile(url);
 }
 
 int32_t TransCoderServiceStub::SetInputFile(int32_t fd, int64_t offset, int64_t size)
@@ -289,13 +280,6 @@ int32_t TransCoderServiceStub::SetOutputFormat(MessageParcel &data, MessageParce
     int32_t type = data.ReadInt32();
     OutputFormatType formatType = static_cast<OutputFormatType>(type);
     reply.WriteInt32(SetOutputFormat(formatType));
-    return MSERR_OK;
-}
-
-int32_t TransCoderServiceStub::SetInputFileUrl(MessageParcel &data, MessageParcel &reply)
-{
-    std::string url = data.ReadString();
-    reply.WriteInt32(SetInputFile(url));
     return MSERR_OK;
 }
 

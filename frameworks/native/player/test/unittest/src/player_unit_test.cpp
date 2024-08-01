@@ -3444,5 +3444,299 @@ HWTEST_F(PlayerUnitTest, Player_SetPlayRange_002, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->Play());
     EXPECT_EQ(MSERR_OK, player_->Pause());
 }
+
+/**
+ * @tc.name  : Test SetPlayRange [-2, -1]
+ * @tc.number: Player_SetPlayRange_003
+ * @tc.desc  : Test Player SetPlayRange interface
+ */
+HWTEST_F(PlayerUnitTest, Player_SetPlayRange_003, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    ASSERT_NE(MSERR_OK, player_->SetPlayRange(-2, -1));
+}
+
+/**
+ * @tc.name  : Test SetPlayRange [-1, -2]
+ * @tc.number: Player_SetPlayRange_004
+ * @tc.desc  : Test Player SetPlayRange interface
+ */
+HWTEST_F(PlayerUnitTest, Player_SetPlayRange_004, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    ASSERT_NE(MSERR_OK, player_->SetPlayRange(-1, -2));
+}
+
+/**
+ * @tc.name  : Test SetPlayRange [-1, 0]
+ * @tc.number: Player_SetPlayRange_005
+ * @tc.desc  : Test Player SetPlayRange interface
+ */
+HWTEST_F(PlayerUnitTest, Player_SetPlayRange_005, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    ASSERT_NE(MSERR_OK, player_->SetPlayRange(-1, 0));
+}
+
+/**
+ * @tc.name  : Test SetPlayRange [-1, -1]
+ * @tc.number: Player_SetPlayRange_006
+ * @tc.desc  : Test Player SetPlayRange interface
+ */
+HWTEST_F(PlayerUnitTest, Player_SetPlayRange_006, TestSize.Level0)
+{
+    int32_t duration = 0;
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
+    EXPECT_EQ(MSERR_OK, player_->GetDuration(duration));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_TRUE(player_->IsPlaying());
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+    EXPECT_EQ(MSERR_OK, player_->SetPlayRange(-1, 600));
+    EXPECT_EQ(MSERR_OK, player_->SetPlayRange(-1, -1));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+}
+
+/**
+ * @tc.name  : Test SetPlayRange [100, 2]
+ * @tc.number: Player_SetPlayRange_007
+ * @tc.desc  : Test Player SetPlayRange interface
+ */
+HWTEST_F(PlayerUnitTest, Player_SetPlayRange_007, TestSize.Level0)
+{
+    int32_t duration = 0;
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
+    EXPECT_EQ(MSERR_OK, player_->GetDuration(duration));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_TRUE(player_->IsPlaying());
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+    ASSERT_NE(MSERR_OK, player_->SetPlayRange(100, 2));
+}
+
+/**
+ * @tc.name  : Test SetPlayRange [duration + 1, duration + 2]
+ * @tc.number: Player_SetPlayRange_008
+ * @tc.desc  : Test Player SetPlayRange interface
+ */
+HWTEST_F(PlayerUnitTest, Player_SetPlayRange_008, TestSize.Level0)
+{
+    int32_t duration = 0;
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
+    EXPECT_EQ(MSERR_OK, player_->GetDuration(duration));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_TRUE(player_->IsPlaying());
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+    int32_t start = duration + 1;
+    int32_t end = duration + 2;
+    ASSERT_NE(MSERR_OK, player_->SetPlayRange(start, end));
+}
+
+/**
+ * @tc.name  : Test SetPlayRange [100, duration + 1]
+ * @tc.number: Player_SetPlayRange_009
+ * @tc.desc  : Test Player SetPlayRange interface
+ */
+HWTEST_F(PlayerUnitTest, Player_SetPlayRange_009, TestSize.Level0)
+{
+    int32_t duration = 0;
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
+    EXPECT_EQ(MSERR_OK, player_->GetDuration(duration));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_TRUE(player_->IsPlaying());
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+    int32_t end = duration + 1;
+    ASSERT_NE(MSERR_OK, player_->SetPlayRange(100, end));
+}
+
+/**
+ * @tc.name  : Test SetPlayRange [10035, 10037]
+ * @tc.number: Player_SetPlayRange_010
+ * @tc.desc  : Test Player SetPlayRange interface, duration 10034
+ */
+HWTEST_F(PlayerUnitTest, Player_SetPlayRange_010, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->SetPlayRange(10035, 10037));
+    ASSERT_NE(MSERR_OK, player_->PrepareAsync());
+}
+
+/**
+ * @tc.name  : Test SetPlayRange [100, 10037]
+ * @tc.number: Player_SetPlayRange_011
+ * @tc.desc  : Test Player SetPlayRange interface, duration 10034
+ */
+HWTEST_F(PlayerUnitTest, Player_SetPlayRange_011, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->SetPlayRange(100, 10037));
+    ASSERT_NE(MSERR_OK, player_->PrepareAsync());
+}
+
+/**
+ * @tc.name  : Test SeekContinuous in prepared
+ * @tc.number: Player_SeekContinuous_001
+ * @tc.desc  : Test Player SeekContinuous
+ */
+HWTEST_F(PlayerUnitTest, Player_SeekContinuous_001, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
+    for (int i = 0; i < 10; i++) {
+        EXPECT_EQ(MSERR_OK, player_->SeekContinuous(i * 100));
+        usleep(33000); // 33000 means 33ms
+    }
+    EXPECT_EQ(MSERR_OK, player_->Play());
+}
+
+/**
+ * @tc.name  : Test SeekContinuous in playing
+ * @tc.number: Player_SeekContinuous_002
+ * @tc.desc  : Test Player SeekContinuous
+ */
+HWTEST_F(PlayerUnitTest, Player_SeekContinuous_002, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    sleep(PLAYING_TIME_2_SEC);
+    for (int i = 0; i < 30; i++) {
+        EXPECT_EQ(MSERR_OK, player_->SeekContinuous(i * 100));
+        usleep(33000); // 33000 means 33ms
+    }
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->Stop());
+}
+
+/**
+ * @tc.name  : Test SeekContinuous in paused
+ * @tc.number: Player_SeekContinuous_003
+ * @tc.desc  : Test Player SeekContinuous
+ */
+HWTEST_F(PlayerUnitTest, Player_SeekContinuous_003, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    sleep(PLAYING_TIME_2_SEC);
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+    for (int i = 0; i < 30; i++) {
+        EXPECT_EQ(MSERR_OK, player_->SeekContinuous(i * 100));
+        usleep(33000); // 33000 means 33ms
+    }
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->Stop());
+}
+
+/**
+ * @tc.name  : Test SeekContinuous in completed
+ * @tc.number: Player_SeekContinuous_004
+ * @tc.desc  : Test Player SeekContinuous
+ */
+HWTEST_F(PlayerUnitTest, Player_SeekContinuous_004, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    sleep(PLAYING_TIME_2_SEC);
+    EXPECT_EQ(MSERR_OK, player_->Seek(9, SEEK_PREVIOUS_SYNC));
+    sleep(PLAYING_TIME_10_SEC);
+    for (int i = 0; i < 30; i++) {
+        EXPECT_EQ(MSERR_OK, player_->SeekContinuous(i * 100));
+        usleep(33000); // 33000 means 33ms
+    }
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->Stop());
+}
+
+/**
+ * @tc.name  : Test SeekContinuous backward
+ * @tc.number: Player_SeekContinuous_005
+ * @tc.desc  : Test Player SeekContinuous
+ */
+HWTEST_F(PlayerUnitTest, Player_SeekContinuous_005, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    sleep(PLAYING_TIME_2_SEC);
+    for (int i = 0; i < 30; i++) {
+        EXPECT_EQ(MSERR_OK, player_->SeekContinuous(9000 - i * 100));
+        usleep(33000); // 33000 means 33ms
+    }
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->Stop());
+}
+
+/**
+ * @tc.name  : Test SeekContinuous forward and backward
+ * @tc.number: Player_SeekContinuous_006
+ * @tc.desc  : Test Player SeekContinuous
+ */
+HWTEST_F(PlayerUnitTest, Player_SeekContinuous_006, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    sleep(PLAYING_TIME_2_SEC);
+    for (int i = 0; i < 30; i++) {
+        EXPECT_EQ(MSERR_OK, player_->SeekContinuous(9000 - i * 100));
+        usleep(33000); // 33000 means 33ms
+    }
+    for (int i = 0; i < 30; i++) {
+        EXPECT_EQ(MSERR_OK, player_->SeekContinuous(9000 - i * 100));
+        usleep(33000); // 33000 means 33ms
+    }
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->Stop());
+}
 } // namespace Media
 } // namespace OHOS

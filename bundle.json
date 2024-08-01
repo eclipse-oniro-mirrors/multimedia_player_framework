@@ -63,6 +63,7 @@
       "deps": {
         "components": [
           "av_session",
+          "ets_runtime",
           "safwk",
           "hilog",
           "window_manager",
@@ -85,6 +86,7 @@
           "memmgr_override",
           "hicollie",
           "media_foundation",
+          "drivers_interface_display",
           "drivers_peripheral_codec",
           "drivers_peripheral_display",
           "hdf_core",
