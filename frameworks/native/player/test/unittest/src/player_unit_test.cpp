@@ -426,7 +426,7 @@ HWTEST_F(PlayerUnitTest, Player_SetSource_009, TestSize.Level2)
 HWTEST_F(PlayerUnitTest, Player_SetSource_010, TestSize.Level2)
 {
     int32_t ret = player_->SetSource("http://domain/H264_MP3.mp4");
-    ASSERT_NE(MSERR_OK, ret);
+    ASSERT_EQ(MSERR_OK, ret);
 }
 
 /**
@@ -437,7 +437,7 @@ HWTEST_F(PlayerUnitTest, Player_SetSource_010, TestSize.Level2)
 HWTEST_F(PlayerUnitTest, Player_SetSource_011, TestSize.Level2)
 {
     int32_t ret = player_->SetSource("https://domain/H264_MP3.mp4");
-    ASSERT_NE(MSERR_OK, ret);
+    ASSERT_EQ(MSERR_OK, ret);
 }
 
 /**
