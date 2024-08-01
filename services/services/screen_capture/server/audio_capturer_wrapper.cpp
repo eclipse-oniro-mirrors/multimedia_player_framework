@@ -286,13 +286,16 @@ std::shared_ptr<AudioCapturer> AudioCapturerWrapper::CreateAudioCapturer(const O
     return audioCapturer;
 }
 
-void AudioCapturerWrapper::PartiallyPrintLog(int32_t &count, std::string str)
+void AudioCapturerWrapper::PartiallyPrintLog(int32_t lineNumber, std::string str)
 {
-    if (count % AC_LOG_SKIP_NUM == 0) {
-        count = 0;
-        MEDIA_LOGE("%{public}s", str.c_str());
+    if (captureAudioLogCountMap_.count(lineNumber) == 0) {
+        captureAudioLogCountMap_[lineNumber] = 0;
     }
-    count++;
+    if (captureAudioLogCountMap_[lineNumber] % AC_LOG_SKIP_NUM == 0) {
+        MEDIA_LOGE("%{public}s", str.c_str());
+        captureAudioLogCountMap_[lineNumber] = 0;
+    }
+    captureAudioLogCountMap_[lineNumber]++;
 }
 
 int32_t AudioCapturerWrapper::CaptureAudio()
@@ -315,7 +318,7 @@ int32_t AudioCapturerWrapper::CaptureAudio()
         memset_s(audioBuffer->buffer, bufferLen, 0, bufferLen);
         int32_t bufferRead = audioCapturer_->Read(*(audioBuffer->buffer), bufferLen, true);
         if (bufferRead <= 0) {
-            PartiallyPrintLog(captureAudioLogCountArray_[0], "CaptureAudio read audio buffer failed");
+            PartiallyPrintLog(__LINE__, "CaptureAudio read audio buffer failed");
             continue;
         }
         audioBuffer->length = bufferRead;
@@ -326,7 +329,7 @@ int32_t AudioCapturerWrapper::CaptureAudio()
             std::unique_lock<std::mutex> lock(bufferMutex_);
             CHECK_AND_RETURN_RET_LOG(isRunning_.load(), MSERR_OK, "CaptureAudio is not running, ignore and stop");
             if (availBuffers_.size() > MAX_AUDIO_BUFFER_SIZE) {
-                PartiallyPrintLog(captureAudioLogCountArray_[1], "consume slow, drop audio frame");
+                PartiallyPrintLog(__LINE__, "consume slow, drop audio frame");
                 continue;
             }
             if (isMuted_) {
