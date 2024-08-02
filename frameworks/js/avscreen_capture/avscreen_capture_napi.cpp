@@ -572,11 +572,17 @@ int32_t AVScreenCaptureNapi::GetAudioInfo(std::unique_ptr<AVScreenCaptureAsyncCo
     int32_t ret = AVScreenCaptureNapi::GetPropertyInt32(env, args, "audioSampleRate", audioSampleRate);
     CHECK_AND_RETURN_RET(ret == MSERR_OK,
         (asyncCtx->AVScreenCaptureSignError(ret, "getAudioSampleRate", "audioSampleRate"), ret));
+    ret = AVScreenCaptureNapi::CheckAudioSampleRate(audioSampleRate);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK,
+        (asyncCtx->AVScreenCaptureSignError(ret, "getAudioSampleRate", "audioSampleRate"), ret));
     micConfig.audioSampleRate = audioSampleRate;
     innerConfig.audioSampleRate = audioSampleRate;
     MEDIA_LOGI("input audioSampleRate %{public}d", micConfig.audioSampleRate);
 
     ret = AVScreenCaptureNapi::GetPropertyInt32(env, args, "audioChannelCount", audioChannels);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK,
+        (asyncCtx->AVScreenCaptureSignError(ret, "getAudioChannelCount", "audioChannelCount"), ret));
+    ret = AVScreenCaptureNapi::CheckAudioChannelCount(audioChannels);
     CHECK_AND_RETURN_RET(ret == MSERR_OK,
         (asyncCtx->AVScreenCaptureSignError(ret, "getAudioChannelCount", "audioChannelCount"), ret));
     micConfig.audioChannels = audioChannels;
@@ -640,11 +646,29 @@ int32_t AVScreenCaptureNapi::GetRecorderInfo(std::unique_ptr<AVScreenCaptureAsyn
     recorderConfig.fileFormat = AVSCREENCAPTURE_DEFAULT_FILE_FORMAT;
     int32_t fd = -1;
     (void)CommonNapi::GetPropertyInt32(env, args, "fd", fd);
+    CHECK_AND_RETURN_RET(fd > 0, // 0 to 2 for system std log
+        (asyncCtx->AVScreenCaptureSignError(MSERR_INVALID_VAL, "GetRecorderInfo", "url"), MSERR_INVALID_VAL));
     recorderConfig.url = "fd://" + std::to_string(fd);
     CHECK_AND_RETURN_RET(recorderConfig.url != "",
         (asyncCtx->AVScreenCaptureSignError(MSERR_INVALID_VAL, "GetRecorderInfo", "url"), MSERR_INVALID_VAL));
     MEDIA_LOGI("input url %{public}s", recorderConfig.url.c_str());
     return MSERR_OK;
+}
+
+int32_t AVScreenCaptureNapi::CheckAudioSampleRate(const int32_t &audioSampleRate)
+{
+    if (audioSampleRate == 48000 || audioSampleRate == 16000) { // 16000 48000 AudioSampleRate options
+        return MSERR_OK;
+    }
+    return MSERR_INVALID_VAL;
+}
+
+int32_t AVScreenCaptureNapi::CheckAudioChannelCount(const int32_t &audioChannelCount)
+{
+    if (audioChannelCount == 1 || audioChannelCount == 2) { // 1 2 channelCount number options
+        return MSERR_OK;
+    }
+    return MSERR_INVALID_VAL;
 }
 
 int32_t AVScreenCaptureNapi::CheckVideoCodecFormat(const int32_t &preset)

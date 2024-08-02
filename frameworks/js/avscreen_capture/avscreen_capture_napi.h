@@ -118,6 +118,9 @@ private:
     static int32_t GetAudioInfo(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, napi_env env, napi_value args);
     static int32_t GetVideoInfo(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, napi_env env, napi_value args);
     static void AsyncJsReportAVScreenCaptureUserChoice(napi_env env, void *data);
+    static int32_t CheckAudioSampleRate(const int32_t &audioSampleRate);
+    static int32_t CheckAudioChannelCount(const int32_t &audioChannelCount);
+
 
     AVScreenCaptureNapi();
     ~AVScreenCaptureNapi();
