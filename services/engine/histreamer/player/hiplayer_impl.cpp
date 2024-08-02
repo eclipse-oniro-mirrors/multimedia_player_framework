@@ -1371,8 +1371,7 @@ int32_t HiPlayerImpl::SelectTrack(int32_t trackId, PlayerSwitchMode mode)
     MEDIA_LOG_I_SHORT("SelectTrack begin trackId is " PUBLIC_LOG_D32, trackId);
     std::vector<std::shared_ptr<Meta>> metaInfo = demuxer_->GetStreamMetaInfo();
     std::string mime;
-    FALSE_RETURN_V_MSG_W(trackId >= 0 && trackId < static_cast<int32_t>(metaInfo.size()), MSERR_INVALID_VAL,
-        "SelectTrack trackId invalid");
+    FALSE_RETURN_V_MSG_W(trackId >= 0 && trackId < metaInfo.size(), MSERR_INVALID_VAL, "SelectTrack trackId invalid");
     if (!(metaInfo[trackId]->GetData(Tag::MIME_TYPE, mime))) {
         MEDIA_LOG_E_SHORT("SelectTrack trackId " PUBLIC_LOG_D32 "get mime error", trackId);
         return MSERR_INVALID_VAL;
@@ -2187,8 +2186,7 @@ void HiPlayerImpl::HandleAudioTrackChangeEvent(const Event& event)
     int32_t trackId = AnyCast<int32_t>(event.param);
     std::vector<std::shared_ptr<Meta>> metaInfo = demuxer_->GetStreamMetaInfo();
     std::string mime;
-    FALSE_RETURN_MSG(trackId >= 0 && trackId < static_cast<int32_t>(metaInfo.size()),
-        "HandleAudioTrackChangeEvent trackId invalid");
+    FALSE_RETURN_MSG(trackId >= 0 && trackId < metaInfo.size(), "HandleAudioTrackChangeEvent trackId invalid");
     if (!(metaInfo[trackId]->GetData(Tag::MIME_TYPE, mime))) {
         MEDIA_LOG_E("HandleAudioTrackChangeEvent trackId " PUBLIC_LOG_D32 "get mime error", trackId);
         return;
@@ -2276,13 +2274,11 @@ Status HiPlayerImpl::OnCallback(std::shared_ptr<Filter> filter, const FilterCall
 {
     MEDIA_LOG_D_SHORT("HiPlayerImpl::OnCallback filter, outType: %{public}d", outType);
     if (cmd == FilterCallBackCommand::NEXT_FILTER_NEEDED) {
-        Status linkRes = Status::OK;
         switch (outType) {
             case StreamType::STREAMTYPE_SUBTITLE:
                 return LinkSubtitleSinkFilter(filter, outType);
             case StreamType::STREAMTYPE_RAW_AUDIO:
-                linkRes = LinkAudioSinkFilter(filter, outType);
-                return linkRes;
+                return LinkAudioSinkFilter(filter, outType);
             case StreamType::STREAMTYPE_ENCODED_AUDIO:
                 return LinkAudioDecoderFilter(filter, outType);
 #ifdef SUPPORT_VIDEO

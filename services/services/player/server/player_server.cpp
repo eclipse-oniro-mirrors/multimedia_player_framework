@@ -581,7 +581,7 @@ int32_t PlayerServer::Stop()
 
 int32_t PlayerServer::OnStop(bool sync)
 {
-    MEDIA_LOGI("PlayerServer OnStop");
+    MEDIA_LOGI("PlayerServer OnStop in");
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
     isInterruptNeeded_ = true;
     playerEngine_->SetInterruptState(true);
@@ -1709,8 +1709,7 @@ int32_t PlayerServer::SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMut
                              lastOpStatus_ == PLAYER_STARTED || lastOpStatus_ == PLAYER_PLAYBACK_COMPLETE ||
                              lastOpStatus_ == PLAYER_PAUSED,
                          MSERR_INVALID_STATE);
-    CHECK_AND_RETURN_RET_LOG(
-        playerEngine_ != nullptr, static_cast<int32_t>(MSERR_NO_MEMORY), "engine is nullptr");
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     return playerEngine_->SetMediaMuted(mediaType, isMuted);
 }
 } // namespace Media
