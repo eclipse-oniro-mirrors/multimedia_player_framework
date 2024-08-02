@@ -180,14 +180,6 @@ public:
     {
         (void)instanceId;
     }
-    virtual int32_t PauseDemuxer()
-    {
-        return 0;
-    }
-    virtual int32_t ResumeDemuxer()
-    {
-        return 0;
-    }
     virtual int32_t SeekContinous(int32_t mSeconds, int64_t seekContinousBatchNo)
     {
         (void)mSeconds;
