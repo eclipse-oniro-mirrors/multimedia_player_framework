@@ -2643,7 +2643,7 @@ int32_t AudioDataSource::MixModeBufferWrite(std::shared_ptr<AudioBuffer> &innerA
     }
     if (micAudioBuffer) {
         if (screenCaptureServer_->ReleaseMicAudioBuffer() != MSERR_OK) {
-            MEDIA_LOGE("ReleaseInnerAudioBuffer failed");
+            MEDIA_LOGE("ReleaseMicAudioBuffer failed");
         }
     }
     return MSERR_OK;
