@@ -863,5 +863,24 @@ int32_t PlayerServiceProxy::GetCurrentTrack(int32_t trackType, int32_t &index)
     index = reply.ReadInt32();
     return reply.ReadInt32();
 }
+
+int32_t PlayerServiceProxy::SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted)
+{
+
+    MediaTrace trace("PlayerServiceProxy::SetMediaMuted");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    data.WriteInt32(static_cast<int32_t>(mediaType));
+    data.WriteBool(isMuted);
+    int32_t error = SendRequest(SET_MEDIA_MUTED, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "GetCurrentTrack failed, error: %{public}d", error);
+    return reply.ReadInt32();
+}
 } // namespace Media
 } // namespace OHOS

@@ -234,6 +234,10 @@ private:
      * getMediaKeySystemInfos(): Array<MediaKeySystemInfo>;
      */
     static napi_value JsGetMediaKeySystemInfos(napi_env env, napi_callback_info info);
+
+    static napi_value JsSetPlaybackStrategy(napi_env env, napi_callback_info info);
+
+    static napi_value JsSetMediaMuted(napi_env env, napi_callback_info info);
     /**
      * on(type: 'stateChange', callback: (state: AVPlayerState, reason: StateChangeReason) => void): void;
      * off(type: 'stateChange'): void;
@@ -295,6 +299,8 @@ private:
     std::shared_ptr<TaskHandler<TaskRet>> StopTask();
     std::shared_ptr<TaskHandler<TaskRet>> ResetTask();
     std::shared_ptr<TaskHandler<TaskRet>> ReleaseTask();
+    std::shared_ptr<TaskHandler<TaskRet>> SetMediaMutedTask(MediaType type, bool isMuted);
+
     std::string GetCurrentState();
     bool IsControllable();
     bool IsLiveSource() const;

@@ -153,6 +153,7 @@ public:
     int32_t ExitSeekContinous(bool align, int64_t seekContinousBatchNo) override;
     int32_t PauseDemuxer() override;
     int32_t ResumeDemuxer() override;
+    int32_t SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted) override;
 
 private:
     enum HiplayerSvpMode : int32_t {
@@ -328,6 +329,7 @@ private:
     std::shared_ptr<DraggingPlayerAgent> draggingPlayerAgent_ {nullptr};
     int64_t lastSeekContinousPos_ {-1};
     std::atomic<bool> needUpdateSubtitle_ {true};
+    bool isAudioMuted_ = false;
 };
 } // namespace Media
 } // namespace OHOS

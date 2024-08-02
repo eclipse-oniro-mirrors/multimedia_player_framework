@@ -62,6 +62,7 @@ public:
     int32_t GetSubtitleTrackInfo(std::vector<Format> &subtitleTrack) override;
     int32_t GetVideoHeight() override;
     int32_t GetDuration(int32_t &duration) override;
+    int32_t SetMediaMuted(MediaType mediaType, bool isMuted) override;
 #ifdef SUPPORT_VIDEO
     int32_t SetVideoSurface(sptr<Surface> surface) override;
 #endif
@@ -136,6 +137,7 @@ private:
     int32_t GetCurrentTrack(MessageParcel &data, MessageParcel &reply);
     int32_t SetDecryptConfig(MessageParcel &data, MessageParcel &reply);
     int32_t SetMediaSource(MessageParcel &data, MessageParcel &reply);
+    int32_t SetMediaMuted(MessageParcel &data, MessageParcel &reply);
 
     std::map<uint32_t, std::pair<std::string, PlayerStubFunc>> playerFuncs_;
     void FillPlayerFuncPart1();

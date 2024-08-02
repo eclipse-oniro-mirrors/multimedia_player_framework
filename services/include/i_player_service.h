@@ -455,6 +455,17 @@ public:
      * @version 1.0
      */
     virtual int32_t GetSubtitleTrackInfo(std::vector<Format> &subtitleTrack) = 0;
+
+    /**
+     * @brief Obtains the subtitle track info, contains mimeType, type, language.
+     *
+     * @param subtitle track info vec.
+     * @return Returns {@link MSERR_OK} if the track info is get; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t SetMediaMuted(MediaType mediaType, bool isMuted) = 0;
 };
 } // namespace Media
 } // namespace OHOS

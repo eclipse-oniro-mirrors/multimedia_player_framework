@@ -90,6 +90,8 @@ napi_value AVPlayerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("addSubtitleFromFd", JsAddSubtitleAVFileDescriptor),
         DECLARE_NAPI_FUNCTION("setDecryptionConfig", JsSetDecryptConfig),
         DECLARE_NAPI_FUNCTION("getMediaKeySystemInfos", JsGetMediaKeySystemInfos),
+        DECLARE_NAPI_FUNCTION("setPlaybackStrategy", JsSetPlaybackStrategy),
+        DECLARE_NAPI_FUNCTION("setMediaMuted", JsSetMediaMuted),
 
         DECLARE_NAPI_GETTER_SETTER("url", JsGetUrl, JsSetUrl),
         DECLARE_NAPI_GETTER_SETTER("fdSrc", JsGetAVFileDescriptor, JsSetAVFileDescriptor),
@@ -1231,6 +1233,122 @@ napi_value AVPlayerNapi::JsGetMediaKeySystemInfos(napi_env env, napi_callback_in
     }
 
     return napiMap;
+}
+
+napi_value AVPlayerNapi::JsSetPlaybackStrategy(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVPlayerNapi::JsSetPlaybackStrategy");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    MEDIA_LOGI("JsSetPlaybackStrategy");
+
+    auto promiseCtx = std::make_unique<AVPlayerContext>(env);
+    const int32_t maxParam = 2; // config + callbackRef
+    size_t argCount = maxParam;
+    napi_value args[maxParam] = { nullptr };
+    AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstance");
+
+    int32_t mediaType = MediaType::MEDIA_TYPE_AUD;
+    napi_get_value_int32(env, args[0], &mediaType);
+
+    promiseCtx->callbackRef = CommonNapi::CreateReference(env, args[1]);
+    promiseCtx->deferred = CommonNapi::CreatePromise(env, promiseCtx->callbackRef, result);
+    auto state = jsPlayer->GetCurrentState();
+    MEDIA_LOGI("JsSetPlaybackStrategy %{public}s", state.c_str());
+    if (state != AVPlayerState::STATE_INITIALIZED && state != AVPlayerState::STATE_STOPPED) {
+        MEDIA_LOGI("JsSetPlaybackStrategy");
+        promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "current state is not prepared/stopped, unsupport play operation");
+    } else {
+        MEDIA_LOGI("JsSetPlaybackStrategy");
+        promiseCtx->asyncTask = jsPlayer->SetMediaMutedTask(static_cast<MediaType>(mediaType), true);
+    }
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, "JsSetPlaybackStrategy", NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource,
+        [](napi_env env, void *data) {
+            auto promiseCtx = reinterpret_cast<AVPlayerContext *>(data);
+            CHECK_AND_RETURN_LOG(promiseCtx != nullptr, "promiseCtx is nullptr!");
+            promiseCtx->CheckTaskResult();
+        },
+        MediaAsyncContext::CompleteCallback, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
+    napi_queue_async_work_with_qos(env, promiseCtx->work, napi_qos_user_initiated);
+    promiseCtx.release();
+    return result;
+}
+
+napi_value AVPlayerNapi::JsSetMediaMuted(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVPlayerNapi::JsSetPlaybackStrategy");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    MEDIA_LOGI("JsSetMediaMuted");
+    auto promiseCtx = std::make_unique<AVPlayerContext>(env);
+
+    const int32_t maxParam = 3; // config + callbackRef
+    size_t argCount = maxParam;
+    napi_value args[maxParam] = { nullptr };
+    AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstance");
+
+    if (!jsPlayer->IsControllable()) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "current state is not prepared/playing/paused/completed, unsupport set media muted operation");
+        return result;
+    }
+
+    int32_t mediaType = MediaType::MEDIA_TYPE_AUD;
+    napi_get_value_int32(env, args[0], &mediaType);
+    bool isMuted = false;
+    napi_get_value_bool(env, args[1], &isMuted);
+
+    promiseCtx->callbackRef = CommonNapi::CreateReference(env, args[maxParam - 1]);
+    promiseCtx->deferred = CommonNapi::CreatePromise(env, promiseCtx->callbackRef, result);
+
+    auto curState = jsPlayer->GetCurrentState();
+    bool canSetMute = curState == AVPlayerState::STATE_PREPARED || curState == AVPlayerState::STATE_PLAYING ||
+                      curState == AVPlayerState::STATE_PAUSED || curState == AVPlayerState::STATE_STOPPED ||
+                      curState == AVPlayerState::STATE_COMPLETED;
+    if (!canSetMute) {
+        promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "current state is not initialized / stopped, unsupport set playback strategy operation");
+    } else {
+        promiseCtx->asyncTask = jsPlayer->SetMediaMutedTask(static_cast<MediaType>(mediaType), isMuted);
+    }
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, "JsSetMediaMuted", NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource,
+        [](napi_env env, void *data) {
+            auto promiseCtx = reinterpret_cast<AVPlayerContext *>(data);
+            CHECK_AND_RETURN_LOG(promiseCtx != nullptr, "promiseCtx is nullptr!");
+            promiseCtx->CheckTaskResult();
+        },
+        MediaAsyncContext::CompleteCallback, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
+    napi_queue_async_work_with_qos(env, promiseCtx->work, napi_qos_user_initiated);
+    promiseCtx.release();
+    return result;
+}
+
+std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::SetMediaMutedTask(MediaType type, bool isMuted)
+{
+    auto task = std::make_shared<TaskHandler<TaskRet>>([this, type, isMuted]() {
+        std::unique_lock<std::mutex> lock(taskMutex_);
+        auto state = GetCurrentState();
+        if (state == AVPlayerState::STATE_INITIALIZED || IsControllable()) {
+            int32_t ret = player_->SetMediaMuted(type, isMuted);
+            if (ret != MSERR_OK) {
+                auto errCode = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret));
+                return TaskRet(errCode, "failed to set muted");
+            }
+        } else {
+            return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                "current state is not stopped or initialized, unsupport prepare operation");
+        }
+        return TaskRet(MSERR_EXT_API9_OK, "Success");
+    });
+    (void)taskQue_->EnqueueTask(task);
+    return task;
 }
 
 napi_value AVPlayerNapi::JsGetUrl(napi_env env, napi_callback_info info)

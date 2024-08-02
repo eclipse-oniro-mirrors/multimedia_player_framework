@@ -73,6 +73,7 @@ public:
     int32_t SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, AVPlayStrategy strategy) override;
     int32_t Init();
     void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody);
+    int32_t SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted) override;
 private:
     void ResetSeekVariables();
     void HandleSeekDoneInfo(PlayerOnInfoType type, int32_t extra);
