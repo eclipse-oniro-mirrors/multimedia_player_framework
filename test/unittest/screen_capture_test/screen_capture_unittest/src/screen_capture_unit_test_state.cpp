@@ -123,8 +123,10 @@ void ScreenCaptureUnitTestCallback::OnVideoBufferAvailable(bool isReady)
         return;
     }
     int32_t length = surfacebuffer->GetSize();
-    cout << "AcquireVideoBuffer, videoBufferLen:" << surfacebuffer->GetSize() <<
-        ", timestamp:" << timestamp << ", size:"<< length << endl;
+    cout << "AcquireVideoBuffer, videoBufferLen: " << surfacebuffer->GetSize() <<
+        ",  videoBufferWidth:" << surfacebuffer->GetWidth() <<
+        ",  videoBufferHeight:" << surfacebuffer->GetHeight() <<
+        ",  timestamp:" << timestamp << ", size:"<< length << endl;
     DumpVideoBuffer(surfacebuffer, timestamp);
     if (!screenCapture_->IsStateChangeCallBackEnabled()) {
         if (vFlag_ == 1) {
@@ -671,6 +673,24 @@ void ScreenCaptureUnitTest::AudioLoopWithoutRelease(void)
         }
         index_--;
     }
+}
+
+void ScreenCapBufferDemoConsumerListener::OnBufferAvailable()
+{
+    int32_t flushFence = 0;
+    int64_t timestamp = 0;
+    OHOS::Rect damage;
+    OHOS::sptr<OHOS::SurfaceBuffer> buffer = nullptr;
+    consumer_->AcquireBuffer(buffer, flushFence, timestamp, damage);
+    if (buffer != nullptr) {
+        cout << "AcquireBuffer, videoBufferLen: " << buffer->GetSize() <<
+        ",  videoBufferWidth: " << buffer->GetWidth() <<
+        ",  videoBufferHeight: " << buffer->GetHeight() <<
+        ",  timestamp: " << timestamp << endl;
+    } else {
+        cout << "buffer empty" << endl;
+    }
+    consumer_->ReleaseBuffer(buffer, flushFence);
 }
 
 /**

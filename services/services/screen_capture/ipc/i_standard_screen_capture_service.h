@@ -45,6 +45,7 @@ public:
     virtual int32_t StopScreenCapture() = 0;
     virtual int32_t SetMicrophoneEnabled(bool isMicrophone) = 0;
     virtual int32_t SetCanvasRotation(bool canvasRotation) = 0;
+    virtual int32_t ResizeCanvas(int32_t width, int32_t height) = 0;
     virtual int32_t SetListenerObject(const sptr<IRemoteObject> &object) = 0;
     virtual int32_t AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audioBuffer, AudioCaptureSourceType type) = 0;
     virtual int32_t AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfaceBuffer, int32_t &fence,
@@ -78,6 +79,7 @@ public:
         STOP_SCREEN_CAPTURE = 18,
         SET_SCREEN_ROTATION = 19,
         EXCLUDE_CONTENT = 20,
+        RESIZE_CANVAS = 21,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardScreenCaptureService");

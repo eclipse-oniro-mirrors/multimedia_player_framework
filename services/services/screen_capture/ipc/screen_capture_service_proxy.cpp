@@ -477,5 +477,23 @@ int32_t ScreenCaptureServiceProxy::SetCanvasRotation(bool canvasRotation)
                              "SetCanvasRotation failed, error: %{public}d", error);
     return reply.ReadInt32();
 }
+
+int32_t ScreenCaptureServiceProxy::ResizeCanvas(int32_t width, int32_t height)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(ScreenCaptureServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    token = data.WriteInt32(width) && data.WriteInt32(height);
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write width or height!");
+
+    int error = Remote()->SendRequest(RESIZE_CANVAS, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+                             "ResizeCanvas failed, error: %{public}d", error);
+    return reply.ReadInt32();
+}
 } // namespace Media
 } // namespace OHOS

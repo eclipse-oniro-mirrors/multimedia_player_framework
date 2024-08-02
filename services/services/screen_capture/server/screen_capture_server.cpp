@@ -624,7 +624,11 @@ int32_t ScreenCaptureServer::CheckAllParams()
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "CheckAllParams CheckCaptureMode failed, ret:%{public}d", ret);
 
     if (captureConfig_.dataType == DataType::ORIGINAL_STREAM) {
-        dataMode_ = AVScreenCaptureDataMode::BUFFER_MODE;
+        if (isSurfaceMode_) {
+            dataMode_ = AVScreenCaptureDataMode::SUFFACE_MODE;
+        } else {
+            dataMode_ = AVScreenCaptureDataMode::BUFFER_MODE;
+        }
         return CheckCaptureStreamParams();
     }
     if (captureConfig_.dataType == DataType::CAPTURE_FILE) {
@@ -2083,6 +2087,35 @@ int32_t ScreenCaptureServer::SetCanvasRotationInner()
     CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK, MSERR_UNSUPPORT,
                              "SetVirtualMirrorScreenCanvasRotation failed, ret: %{public}d", ret);
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "SetCanvasRotationInner OK.", FAKE_POINTER(this));
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureServer::ResizeCanvas(int32_t width, int32_t height)
+{
+    MediaTrace trace("ScreenCaptureServer::ResizeCanvas");
+    std::lock_guard<std::mutex> lock(mutex_);
+    MEDIA_LOGI("ScreenCaptureServer::ResizeCanvas start, Width:%{public}d, Height:%{public}d", width, height);
+    if (captureState_ != AVScreenCaptureState::STARTED) {
+        MEDIA_LOGE("ResizeCanvas captureState_ invalid, captureState_:%{public}d", captureState_);
+        return MSERR_INVALID_OPERATION;
+    }
+    if ((width <= 0) || (width > VIDEO_FRAME_WIDTH_MAX)) {
+        MEDIA_LOGE("ResizeCanvas Width is invalid, Width:%{public}d, Height:%{public}d", width, height);
+        return MSERR_INVALID_VAL;
+    }
+    if ((height <= 0) || (height > VIDEO_FRAME_HEIGHT_MAX)) {
+        MEDIA_LOGE("ResizeCanvas Height is invalid, Width:%{public}d, Height:%{public}d", width, height);
+        return MSERR_INVALID_VAL;
+    }
+    if (captureConfig_.dataType != DataType::ORIGINAL_STREAM) {
+        MEDIA_LOGE("ResizeCanvas dataType invalid, dataType:%{public}d", captureConfig_.dataType);
+        return MSERR_INVALID_OPERATION;
+    }
+    
+    auto resizeRet = ScreenManager::GetInstance().ResizeVirtualScreen(screenId_, width, height);
+    MEDIA_LOGI("ScreenCaptureServer::ResizeCanvas, ResizeVirtualScreen end, ret: %{public}d ", resizeRet);
+    CHECK_AND_RETURN_RET_LOG(resizeRet == DMError::DM_OK, MSERR_UNSUPPORT, "ResizeVirtualScreen failed");
+
     return MSERR_OK;
 }
 
