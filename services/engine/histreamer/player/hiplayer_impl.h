@@ -145,6 +145,7 @@ public:
     // internal interfaces
     void OnEvent(const Event &event);
     void OnEventSub(const Event &event);
+    void OnEventSubTrackChange(const Event &event);
     void OnStateChanged(PlayerStateId state);
     Status OnCallback(std::shared_ptr<Filter> filter, const FilterCallBackCommand cmd,
                     StreamType outType);
