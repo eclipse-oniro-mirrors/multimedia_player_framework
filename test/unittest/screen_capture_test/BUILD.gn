@@ -14,6 +14,89 @@
 import("//build/test.gni")
 import("//foundation/multimedia/player_framework/config.gni")
 
+config("screen_capture_test_config") {
+  visibility = [ ":*" ]
+
+  cflags = [
+    "-std=c++17",
+    "-fno-rtti",
+    "-fno-exceptions",
+    "-Wall",
+    "-fno-common",
+    "-fstack-protector-strong",
+    "-Wshadow",
+    "-FPIC",
+    "-FS",
+    "-O2",
+    "-D_FORTIFY_SOURCE=2",
+    "-Wformat=2",
+    "-Wfloat-equal",
+    "-Wdate-time",
+    "-Werror",
+    "-Wextra",
+    "-Wimplicit-fallthrough",
+    "-Wsign-compare",
+    "-Dprivate=public",
+    "-Dprotected=public",
+  ]
+
+  if (player_framework_support_avsession_background) {
+    cflags += [ "-Wno-unused-parameter" ]
+  } else {
+    cflags += [ "-Wunused-parameter" ]
+  }
+
+  include_dirs = [
+    "sa_media/ipc",
+    "sa_media/server",
+    "common",
+    "player/ipc",
+    "player/player_mem_manage",
+    "player/server",
+    "player/subscriber",
+    "media_data_source/ipc",
+    "media_data_source/server",
+    "monitor/client",
+    "monitor/ipc",
+    "monitor/server",
+    "recorder/ipc",
+    "recorder/server",
+    "avmetadatahelper/ipc",
+    "avmetadatahelper/server",
+    "avcodec/ipc",
+    "avcodec/server",
+    "avcodeclist/ipc",
+    "avcodeclist/server",
+    "recorder_profiles/ipc",
+    "recorder_profiles/server",
+    "screen_capture/server",
+    "screen_capture/ipc",
+    "screen_capture_monitor/server",
+    "screen_capture_monitor/ipc",
+    "transcoder/server",
+    "transcoder/ipc",
+    "observer",
+    "//foundation/multimedia/player_framework/services/include",
+    "//foundation/multimedia/player_framework/services/services/factory",
+    "//foundation/multimedia/player_framework/services/services/engine_intf",
+    "//foundation/multimedia/player_framework/services/utils/include",
+    "//foundation/multimedia/player_framework/interfaces/inner_api/native",
+    "//foundation/multimedia/player_framework/services/services/common",
+    "//foundation/multimedia/player_framework/services/engine/common/recorder_profiles",
+  ]
+
+  if (player_framework_support_avsession_background) {
+    include_dirs += [ "player/avsession_background" ]
+  }
+
+  defines = []
+  defines += player_framework_defines
+
+  if (target_cpu == "arm") {
+    cflags += [ "-DBINDER_IPC_32BIT" ]
+  }
+}
+
 module_output_path = "player_framework/screen_capture"
 
 ohos_unittest("screen_capture_native_unit_test") {
@@ -110,6 +193,55 @@ ohos_unittest("screen_capture_capi_unit_test") {
   }
 
   deps = [ "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c:native_avscreen_capture" ]
+
+  external_deps = [
+    "ability_base:base",
+    "ability_base:want",
+    "ability_base:zuri",
+    "ability_runtime:ability_context_native",
+    "ability_runtime:ability_manager",
+    "ability_runtime:abilitykit_native",
+    "ability_runtime:app_context",
+    "ability_runtime:app_manager",
+    "ability_runtime:data_ability_helper",
+    "ability_runtime:mission_info",
+    "access_token:libaccesstoken_sdk",
+    "access_token:libnativetoken_shared",
+    "access_token:libtokensetproc_shared",
+    "av_codec:av_codec_client",
+    "c_utils:utils",
+    "graphic_surface:surface",
+    "hilog:libhilog",
+    "media_foundation:media_foundation",
+    "player_framework:media_client",
+    "window_manager:libdm",
+  ]
+
+  resource_config_file = "../resources/ohos_test.xml"
+}
+
+##################################################################################################################
+
+ohos_unittest("screen_capture_server_function_unittest") {
+  module_out_path = module_output_path
+
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  public_deps = [ "$MEDIA_PLAYER_ROOT_DIR/services/services:media_service" ]
+
+  configs = [ ":screen_capture_test_config" ]
+
+  deps = [ "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c:native_avscreen_capture" ]
+
+  if (player_framework_support_screen_capture) {
+    sources = [
+      "screen_capture_server_function_unittest/screen_capture_server_function_unittest_voip.cpp",
+    ]
+  }
 
   external_deps = [
     "ability_base:base",
