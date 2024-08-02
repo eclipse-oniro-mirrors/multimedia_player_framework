@@ -20,6 +20,7 @@
 #include <cstdlib>
 #include <thread>
 #include <string>
+#include <map>
 #include <memory>
 #include <atomic>
 #include <queue>
@@ -74,6 +75,7 @@ private:
     std::shared_ptr<OHOS::AudioStandard::AudioCapturer> CreateAudioCapturer(
         const OHOS::AudioStandard::AppInfo &appInfo);
     void SetInnerStreamUsage(std::vector<OHOS::AudioStandard::StreamUsage> &usages);
+    void PartiallyPrintLog(int32_t lineNumber, std::string str);
 
 protected:
     std::shared_ptr<ScreenCaptureCallBack> screenCaptureCb_;
@@ -98,7 +100,7 @@ private:
     std::atomic<AudioCapturerWrapperState> captureState_ {CAPTURER_UNKNOWN};
 
     /* used for hilog output */
-    int32_t captureAudioLogCount_ = 0;
+    std::map<int32_t, int32_t> captureAudioLogCountMap_;
 
     static constexpr uint32_t MAX_THREAD_NAME_LENGTH = 15;
     static constexpr uint32_t MAX_AUDIO_BUFFER_SIZE = 128;
