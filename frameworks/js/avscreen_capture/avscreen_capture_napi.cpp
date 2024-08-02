@@ -598,7 +598,7 @@ int32_t AVScreenCaptureNapi::GetVideoInfo(std::unique_ptr<AVScreenCaptureAsyncCo
     napi_env env, napi_value args)
 {
     int32_t videoBitrate = AVSCREENCAPTURE_DEFAULT_VIDEO_BIT_RATE;
-    int32_t preset = static_cast<int32_t>(AVScreenCaptureRecorderPreset::SCREEN_RECORD_PRESET_H264_AAC_MP4);
+    int32_t preset = AVScreenCaptureRecorderPreset::SCREEN_RECORD_PRESET_H264_AAC_MP4;
     int32_t frameWidth = AVSCREENCAPTURE_DEFAULT_FRAME_WIDTH;
     int32_t frameHeight = AVSCREENCAPTURE_DEFAULT_FRAME_HEIGHT;
 
