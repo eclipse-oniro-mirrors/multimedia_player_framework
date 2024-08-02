@@ -410,18 +410,15 @@ int32_t TransCoderServer::Release()
 {
     {
         std::lock_guard<std::mutex> lock(mutex_);
-        if (status_ == REC_CONFIGURED || status_ == REC_PREPARED || status_ == REC_PAUSED ||
-            status_ == REC_TRANSCODERING || status_ == REC_ERROR) {
-            CHECK_AND_RETURN_RET_LOG(transCoderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
-            auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
-                return transCoderEngine_->Cancel();
-            });
-            int32_t ret = taskQue_.EnqueueTask(task);
-            CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
-            auto result = task->GetResult();
-            ret = result.Value();
-            status_ = (ret == MSERR_OK ? REC_INITIALIZED : REC_ERROR);
-        }
+        CHECK_AND_RETURN_RET_LOG(transCoderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+        auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+            return transCoderEngine_->Cancel();
+        });
+        int32_t ret = taskQue_.EnqueueTask(task);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+        auto result = task->GetResult();
+        ret = result.Value();
+        status_ = (ret == MSERR_OK ? REC_INITIALIZED : REC_ERROR);
         auto task = std::make_shared<TaskHandler<void>>([&, this] {
             transCoderEngine_ = nullptr;
         });
