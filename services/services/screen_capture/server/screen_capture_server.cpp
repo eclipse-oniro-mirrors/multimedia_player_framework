@@ -2192,7 +2192,6 @@ int32_t ScreenCaptureServer::StopScreenCaptureByEvent(AVScreenCaptureStateCode s
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances StopScreenCaptureByEvent S", FAKE_POINTER(this));
     MediaTrace trace("ScreenCaptureServer::StopScreenCaptureByEvent");
     std::lock_guard<std::mutex> lock(mutex_);
-    screenCaptureObserverCb_ = nullptr;
     return StopScreenCaptureInner(stateCode);
 }
 
@@ -2309,6 +2308,7 @@ void ScreenCaptureServer::ReleaseInner()
         serverMap.erase(sessionId);
     }
     SetMetaDataReport();
+    screenCaptureObserverCb_ = nullptr;
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances ReleaseInner E", FAKE_POINTER(this));
 }
 
