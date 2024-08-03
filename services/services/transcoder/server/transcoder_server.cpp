@@ -411,12 +411,12 @@ int32_t TransCoderServer::Release()
     {
         std::lock_guard<std::mutex> lock(mutex_);
         CHECK_AND_RETURN_RET_LOG(transCoderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
-        auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        auto taskCancel = std::make_shared<TaskHandler<int32_t>>([&, this] {
             return transCoderEngine_->Cancel();
         });
-        int32_t ret = taskQue_.EnqueueTask(task);
+        int32_t ret = taskQue_.EnqueueTask(taskCancel);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
-        auto result = task->GetResult();
+        auto result = taskCancel->GetResult();
         ret = result.Value();
         status_ = (ret == MSERR_OK ? REC_INITIALIZED : REC_ERROR);
         auto task = std::make_shared<TaskHandler<void>>([&, this] {
