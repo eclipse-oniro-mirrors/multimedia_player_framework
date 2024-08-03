@@ -1412,7 +1412,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::SetPlaybackStrategyTask(AVPl
             int32_t ret = player_->SetPlaybackStrategy(playStrategy);
             if (ret != MSERR_OK) {
                 auto errCode = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret));
-                return TaskRet(errCode, "failed to set muted");
+                return TaskRet(errCode, "failed to set playback strategy");
             }
         } else {
             return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,

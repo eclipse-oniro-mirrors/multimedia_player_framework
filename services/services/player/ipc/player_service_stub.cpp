@@ -167,6 +167,8 @@ void PlayerServiceStub::FillPlayerFuncPart2()
         [this](MessageParcel &data, MessageParcel &reply) { return SetDecryptConfig(data, reply); } };
     playerFuncs_[SET_PLAY_RANGE] = { "SetPlayRange",
         [this](MessageParcel &data, MessageParcel &reply) { return SetPlayRange(data, reply); } };
+    playerFuncs_[SET_PLAYBACK_STRATEGY] = { "SetPlaybackStrategy",
+        [this](MessageParcel &data, MessageParcel &reply) { return SetPlaybackStrategy(data, reply); } };
     playerFuncs_[SET_MEDIA_MUTED] = { "SetMediaMuted",
         [this](MessageParcel &data, MessageParcel &reply) { return SetMediaMuted(data, reply); } };
 }
