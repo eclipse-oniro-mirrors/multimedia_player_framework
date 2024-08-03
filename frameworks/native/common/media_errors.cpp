@@ -78,7 +78,7 @@ const std::map<MediaServiceErrCode, std::string> MSERRCODE_INFOS = {
 const std::map<MediaServiceErrCode, MediaServiceExtErrCode> MSERRCODE_TO_EXTERRORCODE = {
     {MSERR_OK,                                  MSERR_EXT_OK},
     {MSERR_NO_MEMORY,                           MSERR_EXT_NO_MEMORY},
-    {MSERR_DEMUXER_BUFFER_NO_MEMORY,            MSERR_EXT_NO_MEMORY},
+    {MSERR_DEMUXER_BUFFER_NO_MEMORY,            MSERR_EXT_DEMUXER_NO_MEMORY},
     {MSERR_INVALID_OPERATION,                   MSERR_EXT_OPERATE_NOT_PERMIT},
     {MSERR_INVALID_VAL,                         MSERR_EXT_INVALID_VAL},
     {MSERR_UNKNOWN,                             MSERR_EXT_UNKNOWN},
@@ -123,6 +123,7 @@ const std::map<MediaServiceErrCode, MediaServiceExtErrCode> MSERRCODE_TO_EXTERRO
 const std::map<MediaServiceExtErrCode, std::string> MSEXTERRCODE_INFOS = {
     {MSERR_EXT_OK, "success"},
     {MSERR_EXT_NO_MEMORY, "no memory"},
+    {MSERR_EXT_DEMUXER_NO_MEMORY, "demuxer no memory"},
     {MSERR_EXT_OPERATE_NOT_PERMIT, "operation not be permitted"},
     {MSERR_EXT_INVALID_VAL, "invalid argument"},
     {MSERR_EXT_IO, "IO error"},
