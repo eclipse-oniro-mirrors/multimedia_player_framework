@@ -2496,6 +2496,8 @@ Status HiPlayerImpl::StartSeekContinous()
     if (pipelineStates_ == PlayerStates::PLAYER_PLAYBACK_COMPLETE) {
         videoDecoder_->Flush();
     }
+    // Drive the head node to start the video channel.
+    demuxer_->ResumeDragging();
     SetFrameRateForSeekPerformance(FRAME_RATE_FOR_SEEK_PERFORMANCE);
     return res;
 }
