@@ -57,7 +57,8 @@ TransCoderServer::TransCoderServer()
 
 TransCoderServer::~TransCoderServer()
 {
-    StopForRelease();
+    std::lock_guard<std::mutex> lock(mutex_);
+    ReleaseInner();
     taskQue_.Stop();
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
@@ -394,28 +395,24 @@ int32_t TransCoderServer::Cancel()
 
 int32_t TransCoderServer::Release()
 {
-    StopForRelease();
+    std::lock_guard<std::mutex> lock(mutex_);
+    ReleaseInner();
     return MSERR_OK;
 }
 
-void TransCoderServer::StopForRelease()
+void TransCoderServer::ReleaseInner()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (transCoderEngine_ != nullptr) {
-        auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
-            int32_t ret = transCoderEngine_->Cancel();
-            transCoderEngine_ = nullptr;
-            return ret;
-        });
-        (void)taskQue_.EnqueueTask(task);
-        auto result = task->GetResult();
-        int32_t ret = result.Value();
-        if (ret != 0) {
-            MEDIA_LOGE("Enqueue CancelTask before Release, transCoderEngine_->Cancel error, ret %{public}d ", ret);
-        } else {
-            MEDIA_LOGD("Enqueue CancelTask before Release, ret %{public}d ", ret);
-        }
+    MEDIA_LOGI("ReleaseInner enter");
+    if (transCoderEngine_ == nullptr) {
+        return;
     }
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        int32_t ret = transCoderEngine_->Cancel();
+        transCoderEngine_ = nullptr;
+        return ret;
+    });
+    (void)taskQue_.EnqueueTask(task);
+    (void)task->GetResult();
 }
 
 int32_t TransCoderServer::DumpInfo(int32_t fd)
