@@ -628,12 +628,16 @@ int32_t AVScreenCaptureNapi::GetVideoInfo(std::unique_ptr<AVScreenCaptureAsyncCo
     ret = AVScreenCaptureNapi::GetPropertyInt32(env, args, "frameWidth", frameWidth);
     CHECK_AND_RETURN_RET(ret == MSERR_OK,
         (asyncCtx->AVScreenCaptureSignError(ret, "getFrameWidth", "frameWidth"), ret));
-    videoConfig.videoFrameWidth = frameWidth;
     ret = AVScreenCaptureNapi::GetPropertyInt32(env, args, "frameHeight", frameHeight);
     CHECK_AND_RETURN_RET(ret == MSERR_OK,
         (asyncCtx->AVScreenCaptureSignError(ret, "getFrameHeight", "frameHeight"), ret));
-    videoConfig.videoFrameHeight = frameHeight;
     MEDIA_LOGI("input frameWidth %{public}d, frameHeight %{public}d",
+        frameWidth, frameHeight);
+    ret = AVScreenCaptureNapi::CheckVideoFrameFormat(frameWidth, frameHeight,
+        videoConfig.videoFrameWidth, videoConfig.videoFrameHeight);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK,
+        (asyncCtx->AVScreenCaptureSignError(ret, "getVideoFrame", "VideoFrame"), ret));
+    MEDIA_LOGI("input formatted frameWidth %{public}d, frameHeight %{public}d",
         videoConfig.videoFrameWidth, videoConfig.videoFrameHeight);
     videoConfig.videoSource = VideoSourceType::VIDEO_SOURCE_SURFACE_RGBA;
     return MSERR_OK;
@@ -669,6 +673,30 @@ int32_t AVScreenCaptureNapi::CheckAudioChannelCount(const int32_t &audioChannelC
         return MSERR_OK;
     }
     return MSERR_INVALID_VAL;
+}
+
+int32_t AVScreenCaptureNapi::CheckVideoFrameFormat(const int32_t &frameWidth, const int32_t &frameHeight,
+    int32_t &videoFrameWidth, int32_t &videoFrameHeight)
+{
+    if (frameWidth == AVSCREENCAPTURE_DEFAULT_FRAME_WIDTH || frameHeight == AVSCREENCAPTURE_DEFAULT_FRAME_HEIGHT ||
+        !(frameWidth == 0 && frameHeight == 0)) { // 0 one of width height is zero, use default display
+        sptr<Rosen::Display> display = Rosen::DisplayManager::GetInstance().GetDefaultDisplaySync();
+        if (display == nullptr) {
+            return MSERR_INVALID_VAL;
+        }
+        MEDIA_LOGI("check video frame get displayInfo width:%{public}d,height:%{public}d,density:%{public}d",
+            display->GetWidth(), display->GetHeight(), display->GetDpi());
+        if (frameWidth == AVSCREENCAPTURE_DEFAULT_FRAME_WIDTH || frameWidth == 0) { // 0 use default display
+            videoFrameWidth = display->GetWidth();
+        }
+        if (frameHeight == AVSCREENCAPTURE_DEFAULT_FRAME_HEIGHT || frameHeight == 0) { // 0 use default display
+            videoFrameHeight = display->GetHeight();
+        }
+    } else {
+        videoFrameWidth = frameWidth;
+        videoFrameWidth = frameHeight;
+    }
+    return MSERR_OK;
 }
 
 int32_t AVScreenCaptureNapi::CheckVideoCodecFormat(const int32_t &preset)

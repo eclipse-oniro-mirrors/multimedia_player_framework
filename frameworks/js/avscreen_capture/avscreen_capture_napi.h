@@ -23,6 +23,7 @@
 #include "napi/native_node_api.h"
 #include "common_napi.h"
 #include "task_queue.h"
+#include "display_manager.h"
 
 namespace OHOS {
 namespace Media {
@@ -39,8 +40,8 @@ constexpr int32_t AVSCREENCAPTURE_DEFAULT_AUDIO_CHANNELS = 2;
 constexpr int32_t AVSCREENCAPTURE_DEFAULT_AUDIO_SAMPLE_RATE = 48000;
 constexpr int32_t AVSCREENCAPTURE_DEFAULT_VIDEO_FRAME_RATE = 60;
 constexpr int32_t AVSCREENCAPTURE_DEFAULT_VIDEO_BIT_RATE = 10000000;
-constexpr int32_t AVSCREENCAPTURE_DEFAULT_FRAME_HEIGHT = 0;
-constexpr int32_t AVSCREENCAPTURE_DEFAULT_FRAME_WIDTH = 0;
+constexpr int32_t AVSCREENCAPTURE_DEFAULT_FRAME_HEIGHT = -1;
+constexpr int32_t AVSCREENCAPTURE_DEFAULT_FRAME_WIDTH = -1;
 const std::string AVSCREENCAPTURE_DEFAULT_FILE_FORMAT = "mp4";
 
 namespace AVScreenCaptureEvent {
@@ -114,6 +115,8 @@ private:
         const std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, const bool enable);
     static int32_t GetPropertyInt32(napi_env env, napi_value configObj, const std::string &type, int32_t &result);
     static int32_t CheckVideoCodecFormat(const int32_t &preset);
+    static int32_t CheckVideoFrameFormat(const int32_t &frameWidth, const int32_t &frameHeight,
+        int32_t &videoFrameWidth, int32_t &videoFrameHeight);
     static VideoCodecFormat GetVideoCodecFormat(const int32_t &preset);
     static int32_t GetAudioInfo(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, napi_env env, napi_value args);
     static int32_t GetVideoInfo(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, napi_env env, napi_value args);
