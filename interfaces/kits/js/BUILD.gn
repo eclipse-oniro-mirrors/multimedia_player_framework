@@ -179,6 +179,7 @@ ohos_shared_library("media") {
     "media_foundation:media_foundation",
     "napi:ace_napi",
     "qos_manager:qos",
+    "window_manager:libdm",
   ]
 
   if (player_framework_support_player_js_api9) {
