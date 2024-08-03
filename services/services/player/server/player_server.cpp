@@ -1422,11 +1422,11 @@ void PlayerServer::OnErrorMessage(int32_t errorCode, const std::string &errorMsg
         return;
     } else if (errorCode == MSERR_DEMUXER_BUFFER_NO_MEMORY) {
         auto pauseTask = std::make_shared<TaskHandler<void>>([this, errorCode, errorMsg]() {
-            MEDIA_LOGI("PauseDemuxer start");
+            MEDIA_LOGI("MSERR_DEMUXER_BUFFER_NO_MEMORY PauseDemuxer start");
             auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
             (void)currState->PauseDemuxer();
             OnErrorCb(errorCode, errorMsg);
-            MEDIA_LOGI("PauseDemuxer end");
+            MEDIA_LOGI("MSERR_DEMUXER_BUFFER_NO_MEMORY PauseDemuxer end");
         });
         taskMgr_.LaunchTask(pauseTask, PlayerServerTaskType::LIGHT_TASK, "PauseDemuxer");
         return;
