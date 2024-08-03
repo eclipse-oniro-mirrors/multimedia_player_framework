@@ -1308,8 +1308,7 @@ napi_value AVPlayerNapi::JsSetMediaMuted(napi_env env, napi_callback_info info)
 
     auto curState = jsPlayer->GetCurrentState();
     bool canSetMute = curState == AVPlayerState::STATE_PREPARED || curState == AVPlayerState::STATE_PLAYING ||
-                      curState == AVPlayerState::STATE_PAUSED || curState == AVPlayerState::STATE_STOPPED ||
-                      curState == AVPlayerState::STATE_COMPLETED;
+                      curState == AVPlayerState::STATE_PAUSED || curState == AVPlayerState::STATE_COMPLETED;
     if (!canSetMute) {
         promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
             "current state is not initialized / stopped, unsupport set playback strategy operation");

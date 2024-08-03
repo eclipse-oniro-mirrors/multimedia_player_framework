@@ -866,7 +866,6 @@ int32_t PlayerServiceProxy::GetCurrentTrack(int32_t trackType, int32_t &index)
 
 int32_t PlayerServiceProxy::SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted)
 {
-
     MediaTrace trace("PlayerServiceProxy::SetMediaMuted");
     MessageParcel data;
     MessageParcel reply;

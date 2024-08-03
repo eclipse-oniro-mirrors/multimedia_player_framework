@@ -979,7 +979,7 @@ int32_t PlayerServiceStub::SetMediaMuted(MessageParcel &data, MessageParcel &rep
 
 int32_t PlayerServiceStub::SetMediaMuted(MediaType mediaType, bool isMuted)
 {
-    MediaTrace trace("binder::SetMediaMuted");
+    MediaTrace trace("PlayerServiceStub::SetMediaMuted");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
     return playerServer_->SetMediaMuted(mediaType, isMuted);
 }
