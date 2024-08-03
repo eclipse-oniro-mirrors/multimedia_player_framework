@@ -121,7 +121,6 @@ private:
     static int32_t CheckAudioSampleRate(const int32_t &audioSampleRate);
     static int32_t CheckAudioChannelCount(const int32_t &audioChannelCount);
 
-
     AVScreenCaptureNapi();
     ~AVScreenCaptureNapi();
 
