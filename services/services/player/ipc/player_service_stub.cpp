@@ -1003,5 +1003,25 @@ int32_t PlayerServiceStub::SetMediaMuted(MediaType mediaType, bool isMuted)
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
     return playerServer_->SetMediaMuted(mediaType, isMuted);
 }
+
+int32_t PlayerServiceStub::SetPlaybackStrategy(MessageParcel &data, MessageParcel &reply)
+{
+    struct AVPlayStrategy avPlaybackStrategy = {
+        .preferredWidth = data.ReadUint32(),
+        .preferredHeight = data.ReadUint32(),
+        .preferredBufferDuration = data.ReadUint32(),
+        .preferredHdr = data.ReadBool(),
+        .mutedMediaType = static_cast<OHOS::Media::MediaType>(data.ReadInt32())
+    };
+    reply.WriteInt32(SetPlaybackStrategy(avPlaybackStrategy));
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
+{
+    MediaTrace trace("PlayerServiceStub::SetPlaybackStrategy");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->SetPlaybackStrategy(playbackStrategy);
+}
 } // namespace Media
 } // namespace OHOS

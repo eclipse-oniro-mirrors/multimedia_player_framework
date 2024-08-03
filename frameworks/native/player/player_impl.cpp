@@ -457,6 +457,13 @@ int32_t PlayerImpl::SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionSer
 #endif
 }
 
+int32_t PlayerImpl::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
+{
+    MEDIA_LOGD("Set playback strategy");
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerService_->SetPlaybackStrategy(playbackStrategy);
+}
+
 PlayerImplCallback::PlayerImplCallback(const std::shared_ptr<PlayerCallback> playerCb,
     std::shared_ptr<PlayerImpl> player)
 {

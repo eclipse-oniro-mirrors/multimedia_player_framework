@@ -883,6 +883,27 @@ int32_t PlayerServiceProxy::GetCurrentTrack(int32_t trackType, int32_t &index)
     return reply.ReadInt32();
 }
 
+int32_t PlayerServiceProxy::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
+{
+    MediaTrace trace("PlayerServiceProxy::SetPlaybackStrategy");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    (void)data.WriteUint32(playbackStrategy.preferredWidth);
+    (void)data.WriteUint32(playbackStrategy.preferredHeight);
+    (void)data.WriteUint32(playbackStrategy.preferredBufferDuration);
+    (void)data.WriteBool(playbackStrategy.preferredHdr);
+    (void)data.WriteInt32(static_cast<int32_t>(playbackStrategy.mutedMediaType));
+    int32_t error = SendRequest(SET_PLAYBACK_STRATEGY, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetPlaybackStrategy failed, error: %{public}d", error);
+    return reply.ReadInt32();
+}
+
 int32_t PlayerServiceProxy::SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted)
 {
     MediaTrace trace("PlayerServiceProxy::SetMediaMuted");
@@ -897,7 +918,7 @@ int32_t PlayerServiceProxy::SetMediaMuted(OHOS::Media::MediaType mediaType, bool
     data.WriteBool(isMuted);
     int32_t error = SendRequest(SET_MEDIA_MUTED, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
-        "GetCurrentTrack failed, error: %{public}d", error);
+        "SetMediaMuted failed, error: %{public}d", error);
     return reply.ReadInt32();
 }
 } // namespace Media

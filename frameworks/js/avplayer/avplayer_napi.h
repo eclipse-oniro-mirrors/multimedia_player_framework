@@ -304,6 +304,7 @@ private:
     std::shared_ptr<TaskHandler<TaskRet>> StopTask();
     std::shared_ptr<TaskHandler<TaskRet>> ResetTask();
     std::shared_ptr<TaskHandler<TaskRet>> ReleaseTask();
+    std::shared_ptr<TaskHandler<TaskRet>> SetPlaybackStrategyTask(AVPlayStrategy playStrategy);
     std::shared_ptr<TaskHandler<TaskRet>> SetMediaMutedTask(MediaType type, bool isMuted);
 
     std::string GetCurrentState();
