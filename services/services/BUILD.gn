@@ -165,8 +165,8 @@ ohos_shared_library("media_service") {
 
   if (player_framework_support_screen_capture) {
     sources += [
-      "observer/account_observer.cpp",
       "observer/account_listener.cpp",
+      "observer/account_observer.cpp",
       "screen_capture/ipc/screen_capture_controller_stub.cpp",
       "screen_capture/ipc/screen_capture_listener_proxy.cpp",
       "screen_capture/ipc/screen_capture_service_stub.cpp",
