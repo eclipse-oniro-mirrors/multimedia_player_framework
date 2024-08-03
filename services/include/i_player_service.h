@@ -455,6 +455,8 @@ public:
      * @version 1.0
      */
     virtual int32_t GetSubtitleTrackInfo(std::vector<Format> &subtitleTrack) = 0;
+
+    virtual int32_t SetMediaMuted(MediaType mediaType, bool isMuted) = 0;
 };
 } // namespace Media
 } // namespace OHOS

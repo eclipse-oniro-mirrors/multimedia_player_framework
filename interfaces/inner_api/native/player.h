@@ -547,6 +547,8 @@ public:
      */
     virtual int32_t SelectBitRate(uint32_t bitRate) = 0;
 
+    virtual int32_t SetMediaMuted(OHOS::Media::MediaType type, bool isMuted) = 0;
+
 #ifdef SUPPORT_AUDIO_ONLY
 #else
     /**

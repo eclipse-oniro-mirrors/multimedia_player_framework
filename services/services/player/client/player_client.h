@@ -72,6 +72,7 @@ public:
     int32_t SelectTrack(int32_t index, PlayerSwitchMode mode) override;
     int32_t DeselectTrack(int32_t index) override;
     int32_t GetCurrentTrack(int32_t trackType, int32_t &index) override;
+    int32_t SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted) override;
     // PlayerClient
     void MediaServerDied();
 

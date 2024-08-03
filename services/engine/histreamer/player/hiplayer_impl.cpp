@@ -485,6 +485,7 @@ bool HiPlayerImpl::BreakIfInterruptted()
 
 void HiPlayerImpl::SetInterruptState(bool isInterruptNeeded)
 {
+    MEDIA_LOG_I("SetInterrupt");
     isInterruptNeeded_ = isInterruptNeeded;
     if (demuxer_ != nullptr) {
         demuxer_->SetInterruptState(isInterruptNeeded);
@@ -2374,7 +2375,11 @@ Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilte
     audioSink_->SetSyncCenter(syncManager_);
     completeState_.emplace_back(std::make_pair("AudioSink", false));
     initialAVStates_.emplace_back(std::make_pair(EventType::EVENT_AUDIO_FIRST_FRAME, false));
-    return pipeline_->LinkFilters(preFilter, {audioSink_}, type);
+    auto res = pipeline_->LinkFilters(preFilter, {audioSink_}, type);
+    if (isAudioMuted_) {
+        audioSink_->SetMuted(true);
+    }
+    return res;
 }
 
 #ifdef SUPPORT_VIDEO
@@ -2493,6 +2498,16 @@ int32_t HiPlayerImpl::ExitSeekContinous(bool align, int64_t seekContinousBatchNo
         Seek(lastSeekContinousPos_, PlayerSeekMode::SEEK_CLOSEST, false);
     }
     return TransStatus(Status::OK);
+}
+
+int32_t HiPlayerImpl::SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted)
+{
+    MEDIA_LOG_I("SetMediaMuted %{public}d", static_cast<int32_t>(mediaType));
+    FALSE_RETURN_V(mediaType == OHOS::Media::MediaType::MEDIA_TYPE_AUD, MSERR_INVALID_VAL);
+    isAudioMuted_ = isMuted;
+    FALSE_RETURN_V(audioSink_ != nullptr, MSERR_OK);
+    auto res = audioSink_->SetMuted(isMuted);
+    return res == Status::OK ? MSERR_OK : MSERR_INVALID_OPERATION;
 }
 }  // namespace Media
 }  // namespace OHOS

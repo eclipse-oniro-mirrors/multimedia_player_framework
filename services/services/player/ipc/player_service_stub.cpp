@@ -165,6 +165,8 @@ void PlayerServiceStub::FillPlayerFuncPart2()
         [this](MessageParcel &data, MessageParcel &reply) { return SetDecryptConfig(data, reply); } };
     playerFuncs_[SET_PLAY_RANGE] = { "SetPlayRange",
         [this](MessageParcel &data, MessageParcel &reply) { return SetPlayRange(data, reply); } };
+    playerFuncs_[SET_MEDIA_MUTED] = { "SetMediaMuted",
+        [this](MessageParcel &data, MessageParcel &reply) { return SetMediaMuted(data, reply); } };
 }
 
 int32_t PlayerServiceStub::Init()
@@ -964,6 +966,22 @@ int32_t PlayerServiceStub::GetCurrentTrack(MessageParcel &data, MessageParcel &r
     reply.WriteInt32(index);
     reply.WriteInt32(ret);
     return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::SetMediaMuted(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t mediaType = data.ReadInt32();
+    bool isMuted = data.ReadBool();
+    int32_t ret = SetMediaMuted(static_cast<MediaType>(mediaType), isMuted);
+    reply.WriteInt32(ret);
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::SetMediaMuted(MediaType mediaType, bool isMuted)
+{
+    MediaTrace trace("PlayerServiceStub::SetMediaMuted");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->SetMediaMuted(mediaType, isMuted);
 }
 } // namespace Media
 } // namespace OHOS

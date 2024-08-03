@@ -205,6 +205,11 @@ public:
     {
         return 0;
     }
+
+    virtual int32_t SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted)
+    {
+        return 0;
+    }
 };
 } // namespace Media
 } // namespace OHOS
