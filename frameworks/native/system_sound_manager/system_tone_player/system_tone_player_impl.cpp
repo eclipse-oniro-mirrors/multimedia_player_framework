@@ -54,7 +54,10 @@ SystemTonePlayerImpl::SystemTonePlayerImpl(const shared_ptr<Context> &context,
 SystemTonePlayerImpl::~SystemTonePlayerImpl()
 {
     DeleteAllPlayer();
-    audioHapticManager_->UnregisterSource(sourceId_);
+    if (audioHapticManager_ != nullptr) {
+        audioHapticManager_->UnregisterSource(sourceId_);
+        audioHapticManager_ = nullptr;
+    }
 }
 
 int32_t SystemTonePlayerImpl::InitPlayer(const std::string &audioUri)
@@ -272,7 +275,14 @@ int32_t SystemTonePlayerImpl::Release()
         return MSERR_OK;
     }
     DeleteAllPlayer();
-    audioHapticManager_->UnregisterSource(sourceId_);
+    if (audioHapticManager_ != nullptr) {
+        audioHapticManager_->UnregisterSource(sourceId_);
+        audioHapticManager_ = nullptr;
+    }
+    sourceId_ = -1;
+    streamId_ = 0;
+    configuredUri_ = "";
+
     systemToneState_ = SystemToneState::STATE_RELEASED;
     return MSERR_OK;
 }
