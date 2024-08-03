@@ -417,7 +417,7 @@ int32_t TransCoderServer::Release()
             (void)taskQue_.EnqueueTask(task);
             auto result = task->GetResult();
             int32_t ret = result.Value();
-            status_ = (ret == MSERR_OK ? REC_INITIALIZED : REC_ERROR);
+            MEDIA_LOGD("Enqueue CancelTask before Release, ret %{public}d ", ret);
         }
         auto task = std::make_shared<TaskHandler<void>>([&, this] {
             transCoderEngine_ = nullptr;
