@@ -101,6 +101,9 @@ HiTransCoderImpl::HiTransCoderImpl(int32_t appUid, int32_t appPid, uint32_t appT
 
 HiTransCoderImpl::~HiTransCoderImpl()
 {
+    if (demuxerFilter_) {
+        pipeline_->RemoveHeadFilter(demuxerFilter_);
+    }
     PipeLineThreadPool::GetInstance().DestroyThread(transCoderId_);
     MEDIA_LOG_I("~HiTransCoderImpl");
 }
@@ -147,6 +150,7 @@ int32_t HiTransCoderImpl::SetInputFile(const std::string &url)
     std::shared_ptr<MediaSource> mediaSource = std::make_shared<MediaSource>(inputFile_);
     demuxerFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::DemuxerFilter>("builtin.player.demuxer",
         Pipeline::FilterType::FILTERTYPE_DEMUXER);
+    pipeline_->AddHeadFilters({demuxerFilter_});
     demuxerFilter_->Init(transCoderEventReceiver_, transCoderFilterCallback_);
     Status ret = demuxerFilter_->SetDataSource(mediaSource);
     if (ret != Status::OK) {
@@ -161,8 +165,6 @@ int32_t HiTransCoderImpl::SetInputFile(const std::string &url)
         MEDIA_LOG_E("Get media duration failed");
     }
     ret = ConfigureVideoAudioMetaData();
-    FALSE_RETURN_V(ret == Status::OK, static_cast<int32_t>(ret));
-    pipeline_->AddHeadFilters({demuxerFilter_});
     return static_cast<int32_t>(ret);
 }
 
