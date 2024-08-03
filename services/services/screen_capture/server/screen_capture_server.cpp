@@ -1298,7 +1298,6 @@ int32_t ScreenCaptureServer::RegisterServerCallbacks()
         return MSERR_UNSUPPORT;
     } else {
         MEDIA_LOGI("ScreenCaptureServer Start RegisterScreenCaptureCallBack");
-        InCallObserver::GetInstance().RegisterObserver();
         InCallObserver::GetInstance().RegisterInCallObserverCallBack(screenCaptureObserverCb_);
     }
     AccountObserver::GetInstance().RegisterAccountObserverCallBack(screenCaptureObserverCb_);
