@@ -71,7 +71,8 @@ const std::map<MediaServiceErrCode, std::string> MSERRCODE_INFOS = {
     {MSERR_DATA_SOURCE_ERROR_UNKNOWN, "media data source error unknow"},
     {MSERR_DATA_SOURCE_IO_ERROR, "media data source IO failed"},
     {MSERR_DRM_VERIFICATION_FAILED, "DRM verification failed"},
-    {MSERR_UNSUPPORT_WATER_MARK, "unsupported water mark"}
+    {MSERR_UNSUPPORT_WATER_MARK, "unsupported water mark"},
+    {MSERR_DEMUXER_BUFFER_NO_MEMORY, "demuxer cache data reached its limit"}
 };
 
 const std::map<MediaServiceErrCode, MediaServiceExtErrCode> MSERRCODE_TO_EXTERRORCODE = {
@@ -113,6 +114,7 @@ const std::map<MediaServiceErrCode, MediaServiceExtErrCode> MSERRCODE_TO_EXTERRO
     {MSERR_PAUSE_FAILED,                        MSERR_EXT_UNKNOWN},
     {MSERR_STOP_FAILED,                         MSERR_EXT_UNKNOWN},
     {MSERR_SEEK_FAILED,                         MSERR_EXT_UNKNOWN},
+    {MSERR_DEMUXER_BUFFER_NO_MEMORY,            MSERR_EXT_UNKNOWN},
     {MSERR_NETWORK_TIMEOUT,                     MSERR_EXT_TIMEOUT},
     {MSERR_NOT_FIND_CONTAINER,                  MSERR_EXT_UNSUPPORT},
     {MSERR_EXTEND_START,                        MSERR_EXT_EXTEND_START},
