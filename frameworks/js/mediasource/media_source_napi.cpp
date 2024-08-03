@@ -128,7 +128,7 @@ napi_value MediaSourceNapi::JsCreateMediaSourceWithUrl(napi_env env, napi_callba
     napi_new_instance(env, constructor, 0, nullptr, &jsMediaSource);
 
     std::shared_ptr<AVMediaSourceTmp> mediaSource = GetMediaSource(env, jsMediaSource);
-    if (mediaSource != nullptr) {
+    if (mediaSource == nullptr) {
         MEDIA_LOGE("JsCreateMediaSourceWithUrl GetMediaSource fail");
         return nullptr;
     }
