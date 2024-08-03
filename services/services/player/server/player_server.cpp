@@ -1421,6 +1421,16 @@ void PlayerServer::OnErrorMessage(int32_t errorCode, const std::string &errorMsg
         taskMgr_.LaunchTask(pauseTask, PlayerServerTaskType::STATE_CHANGE, "pause");
         MEDIA_LOGI("0x%{public}06" PRIXPTR " PlayerServer OnErrorMessage IO Error out", FAKE_POINTER(this));
         return;
+    } else if (errorCode == MSERR_DEMUXER_BUFFER_NO_MEMORY) {
+        auto pauseTask = std::make_shared<TaskHandler<void>>([this, errorCode, errorMsg]() {
+            MEDIA_LOGI("PauseDemuxer start");
+            auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
+            (void)currState->PauseDemuxer();
+            OnErrorCb(errorCode, errorMsg);
+            MEDIA_LOGI("PauseDemuxer end");
+        });
+        taskMgr_.LaunchTask(pauseTask, PlayerServerTaskType::LIGHT_TASK, "PauseDemuxer");
+        return;
     }
     OnErrorCb(errorCode, errorMsg);
 }
