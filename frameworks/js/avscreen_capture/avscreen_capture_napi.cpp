@@ -688,9 +688,13 @@ int32_t AVScreenCaptureNapi::CheckVideoFrameFormat(const int32_t &frameWidth, co
             display->GetWidth(), display->GetHeight(), display->GetDpi());
         if (frameWidth == AVSCREENCAPTURE_DEFAULT_FRAME_WIDTH || frameWidth == 0) { // 0 use default display
             videoFrameWidth = display->GetWidth();
+        } else {
+            videoFrameWidth = frameWidth;
         }
         if (frameHeight == AVSCREENCAPTURE_DEFAULT_FRAME_HEIGHT || frameHeight == 0) { // 0 use default display
             videoFrameHeight = display->GetHeight();
+        } else {
+            videoFrameHeight = frameHeight;
         }
     } else {
         videoFrameWidth = frameWidth;
