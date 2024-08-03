@@ -694,7 +694,7 @@ int32_t AVScreenCaptureNapi::CheckVideoFrameFormat(const int32_t &frameWidth, co
         }
     } else {
         videoFrameWidth = frameWidth;
-        videoFrameWidth = frameHeight;
+        videoFrameHeight = frameHeight;
     }
     return MSERR_OK;
 }
