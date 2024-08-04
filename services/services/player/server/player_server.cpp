@@ -1736,5 +1736,16 @@ int32_t PlayerServer::SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMut
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     return playerEngine_->SetMediaMuted(mediaType, isMuted);
 }
+
+int32_t PlayerServer::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
+{
+    MediaTrace::TraceBegin("PlayerServer::SetPlaybackStrategy", FAKE_POINTER(this));
+    std::lock_guard<std::mutex> lock(mutex_);
+    bool isValidState = lastOpStatus_ == PLAYER_INITIALIZED || lastOpStatus_ == PLAYER_STOPPED;
+    CHECK_AND_RETURN_RET_LOG(isValidState, MSERR_INVALID_STATE,
+        "can not set playback strategy, current state is %{public}d", static_cast<int32_t>(lastOpStatus_.load()));
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    return playerEngine_->SetPlaybackStrategy(playbackStrategy);
+}
 } // namespace Media
 } // namespace OHOS

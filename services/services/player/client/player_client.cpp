@@ -405,6 +405,12 @@ int32_t PlayerClient::SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionS
 #endif
 }
 
+int32_t PlayerClient::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
+{
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_INVALID_VAL, "playerProxy_ not exist");
+    return playerProxy_->SetPlaybackStrategy(playbackStrategy);
+}
+
 int32_t PlayerClient::SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted)
 {
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_INVALID_VAL, "playerProxy_ not exist");

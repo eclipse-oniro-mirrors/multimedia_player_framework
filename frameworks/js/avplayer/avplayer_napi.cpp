@@ -42,6 +42,7 @@ namespace {
     constexpr uint32_t MAX_ARG_COUNTS = 2;
     constexpr size_t ARRAY_ARG_COUNTS_TWO = 2;
     constexpr uint32_t TASK_TIME_LIMIT_MS = 2000; // ms
+    constexpr size_t PARAM_COUNT_SINGLE = 1;
 }
 
 namespace OHOS {
@@ -1286,27 +1287,35 @@ napi_value AVPlayerNapi::JsSetPlaybackStrategy(napi_env env, napi_callback_info 
     napi_get_undefined(env, &result);
     MEDIA_LOGI("JsSetPlaybackStrategy");
 
-    auto promiseCtx = std::make_unique<AVPlayerContext>(env);
-    const int32_t maxParam = 2; // config + callbackRef
-    size_t argCount = maxParam;
-    napi_value args[maxParam] = { nullptr };
-    AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
+    size_t paramCountSingle = PARAM_COUNT_SINGLE;
+    napi_value args[PARAM_COUNT_SINGLE] = { nullptr };
+    AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, paramCountSingle, args);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstance");
 
-    int32_t mediaType = MediaType::MEDIA_TYPE_AUD;
-    napi_get_value_int32(env, args[0], &mediaType);
-
-    promiseCtx->callbackRef = CommonNapi::CreateReference(env, args[1]);
-    promiseCtx->deferred = CommonNapi::CreatePromise(env, promiseCtx->callbackRef, result);
-    auto state = jsPlayer->GetCurrentState();
-    MEDIA_LOGI("JsSetPlaybackStrategy %{public}s", state.c_str());
-    if (state != AVPlayerState::STATE_INITIALIZED && state != AVPlayerState::STATE_STOPPED) {
-        MEDIA_LOGI("JsSetPlaybackStrategy");
+    auto promiseCtx = std::make_unique<AVPlayerContext>(env);
+    promiseCtx->deferred = CommonNapi::CreatePromise(env, nullptr, result);
+    std::string currentState = jsPlayer->GetCurrentState();
+    napi_valuetype valueType = napi_undefined;
+    if (currentState != AVPlayerState::STATE_INITIALIZED && currentState != AVPlayerState::STATE_STOPPED) {
         promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-            "current state is not prepared/stopped, unsupport play operation");
+            "current state is not initialized / stopped, unsupport set playback strategy");
+    } else if (napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object) {
+        promiseCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please check input parameter");
     } else {
-        MEDIA_LOGI("JsSetPlaybackStrategy");
-        promiseCtx->asyncTask = jsPlayer->SetMediaMutedTask(static_cast<MediaType>(mediaType), true);
+        AVPlayStrategyTmp strategyTmp;
+        (void)CommonNapi::GetPlayStrategy(env, args[0], strategyTmp);
+        if (strategyTmp.mutedMediaType != MediaType::MEDIA_TYPE_AUD) {
+            promiseCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "only support mute media type audio now");
+        } else {
+            AVPlayStrategy strategy = {
+                .preferredWidth = strategyTmp.preferredWidth,
+                .preferredHeight = strategyTmp.preferredHeight,
+                .preferredBufferDuration = strategyTmp.preferredBufferDuration,
+                .preferredHdr = strategyTmp.preferredHdr,
+                .mutedMediaType = static_cast<MediaType>(strategyTmp.mutedMediaType)
+            };
+            promiseCtx->asyncTask = jsPlayer->SetPlaybackStrategyTask(strategy);
+        }
     }
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "JsSetPlaybackStrategy", NAPI_AUTO_LENGTH, &resource);
@@ -1387,6 +1396,27 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::SetMediaMutedTask(MediaType 
         } else {
             return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
                 "current state is not stopped or initialized, unsupport prepare operation");
+        }
+        return TaskRet(MSERR_EXT_API9_OK, "Success");
+    });
+    (void)taskQue_->EnqueueTask(task);
+    return task;
+}
+
+std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::SetPlaybackStrategyTask(AVPlayStrategy playStrategy)
+{
+    auto task = std::make_shared<TaskHandler<TaskRet>>([this, playStrategy]() {
+        std::unique_lock<std::mutex> lock(taskMutex_);
+        auto state = GetCurrentState();
+        if (state == AVPlayerState::STATE_INITIALIZED || state == AVPlayerState::STATE_STOPPED) {
+            int32_t ret = player_->SetPlaybackStrategy(playStrategy);
+            if (ret != MSERR_OK) {
+                auto errCode = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret));
+                return TaskRet(errCode, "failed to set playback strategy");
+            }
+        } else {
+            return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                "current state is not initialized or stopped, unsupport set playback strategy operation");
         }
         return TaskRet(MSERR_EXT_API9_OK, "Success");
     });

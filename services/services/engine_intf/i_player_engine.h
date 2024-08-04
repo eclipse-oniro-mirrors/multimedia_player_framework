@@ -211,6 +211,11 @@ public:
     {
         return 0;
     }
+
+    virtual int32_t SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
+    {
+        return 0;
+    }
 };
 } // namespace Media
 } // namespace OHOS

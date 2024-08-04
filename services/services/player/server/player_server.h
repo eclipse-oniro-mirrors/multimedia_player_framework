@@ -103,6 +103,7 @@ public:
     int32_t AddSubSource(int32_t fd, int64_t offset, int64_t size) override;
     int32_t GetPlaybackSpeed(PlaybackRateMode &mode) override;
     int32_t SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, AVPlayStrategy strategy) override;
+    int32_t SetPlaybackStrategy(AVPlayStrategy playbackStrategy) override;
     int32_t SetMediaMuted(MediaType mediaType, bool isMuted) override;
 #ifdef SUPPORT_VIDEO
     int32_t SetVideoSurface(sptr<Surface> surface) override;
