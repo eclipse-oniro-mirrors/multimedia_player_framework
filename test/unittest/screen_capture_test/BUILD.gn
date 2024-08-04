@@ -235,6 +235,10 @@ ohos_unittest("screen_capture_server_function_unit_test") {
 
   configs = [ ":screen_capture_test_config" ]
 
+  include_dirs += [
+    "$MEDIA_PLAYER_ROOT_DIR/test/unittest/screen_capture_test/screen_capture_server_function_unittest"
+  ]
+
   deps = [ "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c:native_avscreen_capture" ]
 
   if (player_framework_support_screen_capture) {
