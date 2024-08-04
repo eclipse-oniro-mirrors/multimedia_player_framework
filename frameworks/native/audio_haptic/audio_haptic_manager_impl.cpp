@@ -101,6 +101,8 @@ int32_t AudioHapticManagerImpl::RegisterSource(const std::string &audioUri, cons
     audioHapticPlayerMap_[sourceId] = std::make_shared<AudioHapticPlayerInfo>(audioUri, sourceUri,
         AUDIO_LATENCY_MODE_NORMAL, AudioStandard::StreamUsage::STREAM_USAGE_MUSIC);
     curPlayerCount_ += 1;
+    MEDIA_LOGI("Finish to RegisterSource. audioUri: %{public}s, hapticUri: %{public}s, sourceId: %{public}d",
+        audioUri.c_str(), hapticUri.c_str(), sourceId);
     return sourceId;
 }
 
@@ -115,7 +117,7 @@ int32_t AudioHapticManagerImpl::UnregisterSource(const int32_t &sourceID)
     audioHapticPlayerMap_[sourceID] = nullptr;
     audioHapticPlayerMap_.erase(sourceID);
     curPlayerCount_ -= 1;
-
+    MEDIA_LOGI("Finish to UnregisterSource. sourceId: %{public}d", sourceID);
     return MSERR_OK;
 }
 
