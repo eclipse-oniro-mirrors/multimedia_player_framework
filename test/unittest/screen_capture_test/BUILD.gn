@@ -49,40 +49,41 @@ config("screen_capture_test_config") {
   include_dirs = [
     "avcodec/ipc",
     "avcodec/server",
-    "//foundation/multimedia/player_framework/services/services/sa_media/ipc",
-    "//foundation/multimedia/player_framework/services/services/sa_media/server",
-    "//foundation/multimedia/player_framework/services/services/common",
-    "//foundation/multimedia/player_framework/services/services/player/ipc",
-    "//foundation/multimedia/player_framework/services/services/player/player_mem_manage",
-    "//foundation/multimedia/player_framework/services/services/player/server",
-    "//foundation/multimedia/player_framework/services/services/player/subscriber",
-    "//foundation/multimedia/player_framework/services/services/media_data_source/ipc",
-    "//foundation/multimedia/player_framework/services/services/media_data_source/server",
-    "//foundation/multimedia/player_framework/services/services/monitor/client",
-    "//foundation/multimedia/player_framework/services/services/monitor/ipc",
-    "//foundation/multimedia/player_framework/services/services/monitor/server",
-    "//foundation/multimedia/player_framework/services/services/recorder/ipc",
-    "//foundation/multimedia/player_framework/services/services/recorder/server",
-    "//foundation/multimedia/player_framework/services/services/avmetadatahelper/ipc",
-    "//foundation/multimedia/player_framework/services/services/avmetadatahelper/server",
-    "//foundation/multimedia/player_framework/services/services/avcodeclist/ipc",
-    "//foundation/multimedia/player_framework/services/services/avcodeclist/server",
-    "//foundation/multimedia/player_framework/services/services/recorder_profiles/ipc",
-    "//foundation/multimedia/player_framework/services/services/recorder_profiles/server",
-    "//foundation/multimedia/player_framework/services/services/screen_capture/server",
-    "//foundation/multimedia/player_framework/services/services/screen_capture/ipc",
-    "//foundation/multimedia/player_framework/services/services/screen_capture_monitor/server",
-    "//foundation/multimedia/player_framework/services/services/screen_capture_monitor/ipc",
-    "//foundation/multimedia/player_framework/services/services/transcoder/server",
-    "//foundation/multimedia/player_framework/services/services/transcoder/ipc",
-    "//foundation/multimedia/player_framework/services/services/observer",
-    "//foundation/multimedia/player_framework/services/include",
-    "//foundation/multimedia/player_framework/services/services/factory",
-    "//foundation/multimedia/player_framework/services/services/engine_intf",
-    "//foundation/multimedia/player_framework/services/utils/include",
-    "//foundation/multimedia/player_framework/interfaces/inner_api/native",
-    "//foundation/multimedia/player_framework/services/services/common",
-    "//foundation/multimedia/player_framework/services/engine/common/recorder_profiles",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/sa_media/ipc",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/sa_media/server",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/common",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/player/ipc",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/player/player_mem_manage",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/player/server",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/player/subscriber",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_data_source/ipc",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_data_source/server",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/monitor/client",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/monitor/ipc",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/monitor/server",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/recorder/ipc",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/recorder/server",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/avmetadatahelper/ipc",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/avmetadatahelper/server",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/avcodeclist/ipc",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/avcodeclist/server",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/recorder_profiles/ipc",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/recorder_profiles/server",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/screen_capture/server",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/screen_capture/ipc",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/screen_capture_monitor/server",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/screen_capture_monitor/ipc",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/transcoder/server",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/transcoder/ipc",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/observer",
+    "$MEDIA_PLAYER_ROOT_DIR/services/include",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/factory",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/engine_intf",
+    "$MEDIA_PLAYER_ROOT_DIR/services/utils/include",
+    "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/common",
+    "$MEDIA_PLAYER_ROOT_DIR/services/engine/common/recorder_profiles",
+    "$MEDIA_PLAYER_ROOT_DIR/test/unittest/screen_capture_test/screen_capture_server_function_unittest"
   ]
 
   if (player_framework_support_avsession_background) {
@@ -234,10 +235,6 @@ ohos_unittest("screen_capture_server_function_unit_test") {
   public_deps = [ "$MEDIA_PLAYER_ROOT_DIR/services/services:media_service" ]
 
   configs = [ ":screen_capture_test_config" ]
-
-  include_dirs += [
-    "$MEDIA_PLAYER_ROOT_DIR/test/unittest/screen_capture_test/screen_capture_server_function_unittest"
-  ]
 
   deps = [ "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c:native_avscreen_capture" ]
 
