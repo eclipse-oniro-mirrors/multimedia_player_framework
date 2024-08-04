@@ -605,7 +605,8 @@ int32_t HiPlayerImpl::PauseDemuxer()
 {
     MediaTrace trace("HiPlayerImpl::PauseDemuxer");
     MEDIA_LOG_I("PauseDemuxer in");
-    FALSE_RETURN_V_MSG_E(pipelineStates_ != PlayerStates::PLAYER_STARTED,
+    FALSE_RETURN_V_MSG_E(pipelineStates_ == PlayerStates::PLAYER_STARTED ||
+        pipelineStates_ == PlayerStates::PLAYER_STATE_ERROR,
         TransStatus(Status::OK), "no playing not allow PauseDemuxer");
     callbackLooper_.StopReportMediaProgress();
     callbackLooper_.ManualReportMediaProgressOnce();
@@ -617,7 +618,8 @@ int32_t HiPlayerImpl::ResumeDemuxer()
 {
     MediaTrace trace("HiPlayerImpl::ResumeDemuxer");
     MEDIA_LOG_I("ResumeDemuxer in");
-    FALSE_RETURN_V_MSG_E(pipelineStates_ != PlayerStates::PLAYER_STARTED,
+    FALSE_RETURN_V_MSG_E(pipelineStates_ == PlayerStates::PLAYER_STARTED ||
+        pipelineStates_ == PlayerStates::PLAYER_STATE_ERROR,
         TransStatus(Status::OK), "no playing not allow ResumeDemuxer");
     callbackLooper_.StartReportMediaProgress();
     callbackLooper_.ManualReportMediaProgressOnce();
