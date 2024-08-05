@@ -473,7 +473,33 @@ void HiPlayerImpl::UpdatePlayerStateAndNotify()
     NotifyResolutionChange();
     NotifyPositionUpdate();
     DoInitializeForHttp();
+    UpdateMediaFirstPts();
     OnStateChanged(PlayerStateId::READY);
+}
+
+void HiPlayerImpl::UpdateMediaFirstPts()
+{
+    FALSE_RETURN(syncManager_ != nullptr);
+    std::string mime;
+    std::vector<std::shared_ptr<Meta>> metaInfo = demuxer_->GetStreamMetaInfo();
+    int64_t startTime = 0;
+    for (const auto& trackInfo : metaInfo) {
+        if (trackInfo == nullptr || !(trackInfo->GetData(Tag::MIME_TYPE, mime))) {
+            MEDIA_LOG_W("TrackInfo is null or get mime fail");
+            continue;
+        }
+        if (!(mime.find("audio/") == 0 || mime.find("video/") == 0)) {
+            MEDIA_LOG_W("Not audio or video track");
+            continue;
+        }
+        if (trackInfo->GetData(Tag::MEDIA_START_TIME, startTime)) {
+            syncManager_->SetMediaStartPts(Plugins::HstTime2Us(startTime));
+        }
+    }
+    startTime = syncManager_->GetMediaStartPts();
+    if (startTime != HST_TIME_NONE) {
+        mediaStartPts_ = startTime;
+    }
 }
 
 bool HiPlayerImpl::BreakIfInterruptted()
@@ -760,7 +786,10 @@ int32_t HiPlayerImpl::Reset()
     }
     singleLoop_ = false;
     auto ret = Stop();
-    syncManager_->Reset();
+    if (syncManager_ != nullptr) {
+        syncManager_->ResetMediaStartPts();
+        syncManager_->Reset();
+    }
     OnStateChanged(PlayerStateId::STOPPED);
     return ret;
 }
@@ -927,7 +956,7 @@ Status HiPlayerImpl::doSeek(int64_t seekPos, PlayerSeekMode mode)
         if (videoDecoder_ != nullptr) {
             videoDecoder_->SetSeekTime(seekTimeUs);
         }
-        seekAgent_ = std::make_shared<SeekAgent>(demuxer_);
+        seekAgent_ = std::make_shared<SeekAgent>(demuxer_, mediaStartPts_);
         SetFrameRateForSeekPerformance(FRAME_RATE_FOR_SEEK_PERFORMANCE);
         auto res = seekAgent_->Seek(seekPos);
         SetFrameRateForSeekPerformance(FRAME_RATE_DEFAULT);

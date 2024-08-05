@@ -59,9 +59,9 @@ void VideoBufferFilledListener::OnBufferFilled(std::shared_ptr<AVBuffer>& buffer
     }
 }
 
-SeekAgent::SeekAgent(std::shared_ptr<Pipeline::DemuxerFilter> demuxer)
+SeekAgent::SeekAgent(std::shared_ptr<Pipeline::DemuxerFilter> demuxer, int64_t startPts)
     : demuxer_(demuxer), isAudioTargetArrived_(true), isVideoTargetArrived_(true),
-    seekTargetPos_(-1), isSeeking_(false)
+    seekTargetPts_(-1), mediaStartPts_(startPts), isSeeking_(false)
 {
     MEDIA_LOG_I("SeekAgent ctor called.");
 }
@@ -75,7 +75,7 @@ Status SeekAgent::Seek(int64_t seekPos)
 {
     MEDIA_LOG_I("Seek start, seekPos: %{public}" PRId64, seekPos);
     FALSE_RETURN_V_MSG_E(demuxer_ != nullptr, Status::ERROR_INVALID_PARAMETER, "Invalid demuxer filter instance.");
-    seekTargetPos_ = seekPos;
+    seekTargetPts_ = seekPos * MS_TO_US + mediaStartPts_;
     int64_t realSeekTime = seekPos;
     auto st = demuxer_->SeekTo(seekPos, Plugins::SeekMode::SEEK_CLOSEST_INNER, realSeekTime);
     FALSE_RETURN_V_MSG_E(st == Status::OK, Status::ERROR_INVALID_OPERATION, "Seekto error.");
@@ -191,7 +191,7 @@ Status SeekAgent::OnAudioBufferFilled(std::shared_ptr<AVBuffer>& buffer,
     sptr<AVBufferQueueProducer> producer, int32_t trackId)
 {
     MEDIA_LOG_D("OnAudioBufferFilled, pts: %{public}" PRId64, buffer->pts_);
-    if (buffer->pts_ >= seekTargetPos_ * MS_TO_US || (buffer->flag_ & (uint32_t)(AVBufferFlag::EOS))) {
+    if (buffer->pts_ >= seekTargetPts_ || (buffer->flag_ & (uint32_t)(AVBufferFlag::EOS))) {
         {
             AutoLock lock(targetArrivedLock_);
             isAudioTargetArrived_ = true;
@@ -212,7 +212,7 @@ Status SeekAgent::OnVideoBufferFilled(std::shared_ptr<AVBuffer>& buffer,
     sptr<AVBufferQueueProducer> producer, int32_t trackId)
 {
     MEDIA_LOG_I("OnVideoBufferFilled, pts: %{public}" PRId64, buffer->pts_);
-    if (buffer->pts_ >= seekTargetPos_ * MS_TO_US || (buffer->flag_ & (uint32_t)(AVBufferFlag::EOS))) {
+    if (buffer->pts_ >= seekTargetPts_ || (buffer->flag_ & (uint32_t)(AVBufferFlag::EOS))) {
         {
             AutoLock lock(targetArrivedLock_);
             isVideoTargetArrived_ = true;
