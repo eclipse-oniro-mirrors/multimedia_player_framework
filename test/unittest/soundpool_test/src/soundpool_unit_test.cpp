@@ -1658,7 +1658,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_034, TestSize.Level2)
 }
 
 
- /**
+/**
  * @tc.name: soundpool_function_035
  * @tc.desc: function test SetPriority
  * @tc.type: FUNC
@@ -1712,7 +1712,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_035, TestSize.Level2)
     MEDIA_LOGI("soundpool_unit_test soundpool_function_035 after");
 }
 
- /**
+/**
  * @tc.name: soundpool_function_036
  * @tc.desc: function test Priority
  * @tc.type: FUNC
@@ -1767,7 +1767,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_036, TestSize.Level2)
     MEDIA_LOGI("soundpool_unit_test soundpool_function_036 after");
 }
 
- /**
+/**
  * @tc.name: soundpool_function_037
  * @tc.desc: function test Priority
  * @tc.type: FUNC
@@ -1820,6 +1820,164 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_037, TestSize.Level2)
     sleep(15);
     cb->ResetHavePlayedSoundNum();
     MEDIA_LOGI("soundpool_unit_test soundpool_function_037 after");
+}
+
+
+/**
+ * @tc.name: soundpool_function_038
+ * @tc.desc: function test MaxStreams 
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(SoundPoolUnitTest, soundpool_function_038, TestSize.Level2)
+{
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_038 before");
+
+    int maxStreams = -1;
+    AudioStandard::AudioRendererInfo audioRenderInfo;
+    audioRenderInfo.contentType = CONTENT_TYPE_MUSIC;
+    audioRenderInfo.streamUsage = STREAM_USAGE_MUSIC;
+    audioRenderInfo.rendererFlags = 0;
+    EXPECT_FALSE(soundPool_->CreateSoundPool(maxStreams, audioRenderInfo));
+    maxStreams = 256;
+    EXPECT_TRUE(soundPool_->CreateSoundPool(maxStreams, audioRenderInfo));
+
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_038 after");
+}
+
+/**
+ * @tc.name: soundpool_function_039
+ * @tc.desc: function test CacheBuffer DoPlay fail 
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(SoundPoolUnitTest, soundpool_function_039, TestSize.Level2)
+{
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_039 before");
+
+    int maxStreams = 3;
+    create(maxStreams);
+    std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
+    soundPool_->SetSoundPoolCallback(cb);
+    loadUrl(g_fileName[1], loadNum_);
+    sleep(5);
+    struct PlayParams playParameters;
+    if (soundIDs_[0] > 0) {
+        streamIDs_[playNum_] = soundPool_->Play(soundIDs_[0], playParameters);
+        EXPECT_GT(streamIDs_[playNum_], 0);
+        sleep(waitTime1);
+        streamIDs_[playNum_] = soundPool_->Play(soundIDs_[0], playParameters);
+        EXPECT_GT(streamIDs_[playNum_], 0);
+        sleep(waitTime1);
+        streamIDs_[playNum_] = soundPool_->Play(soundIDs_[0], playParameters);
+        EXPECT_GT(streamIDs_[playNum_], 0);
+        sleep(waitTime1);
+    }
+    cb->ResetHavePlayedSoundNum();
+
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_039 after");
+}
+
+/**
+ * @tc.name: soundpool_function_040
+ * @tc.desc: function test play Priority 
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(SoundPoolUnitTest, soundpool_function_040, TestSize.Level2)
+{
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_040 before");
+
+    int maxStreams = 4;
+    create(maxStreams);
+    std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
+    soundPool_->SetSoundPoolCallback(cb);
+    loadUrl(g_fileName[2], loadNum_++);
+    loadUrl(g_fileName[1], loadNum_++);
+    loadUrl(g_fileName[4], loadNum_++);
+    loadUrl(g_fileName[5], loadNum_++);
+    sleep(5);
+    struct PlayParams playParameters;
+    streamIDs_[playNum_] = soundPool_->Play(soundIDs_[0], playParameters);
+    EXPECT_GT(streamIDs_[playNum_], 0);
+    int32_t setPriority = soundPool_->SetPriority(streamIDs_[0], 1);
+    EXPECT_EQ(MSERR_OK, setPriority);
+    playNum_++;
+    sleep(waitTime1);
+
+    streamIDs_[playNum_] = soundPool_->Play(soundIDs_[1], playParameters);
+    EXPECT_GT(streamIDs_[playNum_], 0);
+    setPriority = soundPool_->SetPriority(streamIDs_[1], 2);
+    EXPECT_EQ(MSERR_OK, setPriority);
+    playNum_++;
+    sleep(waitTime1);
+
+    streamIDs_[playNum_] = soundPool_->Play(soundIDs_[2], playParameters);
+    EXPECT_GT(streamIDs_[playNum_], 0);
+    setPriority = soundPool_->SetPriority(streamIDs_[2], 3);
+    EXPECT_EQ(MSERR_OK, setPriority);
+    playNum_++;
+    sleep(waitTime1);
+
+    streamIDs_[playNum_] = soundPool_->Play(soundIDs_[3], playParameters);
+    EXPECT_GT(streamIDs_[playNum_], 0);
+    setPriority = soundPool_->SetPriority(streamIDs_[3], 4);
+    EXPECT_EQ(MSERR_OK, setPriority);
+    playNum_++;
+    sleep(10);
+
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_040 after");
+}
+
+/**
+ * @tc.name: soundpool_function_041
+ * @tc.desc: function test willplay Priority 
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(SoundPoolUnitTest, soundpool_function_041, TestSize.Level2)
+{
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_041 before");
+
+    int maxStreams = 1;
+    create(maxStreams);
+    std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
+    soundPool_->SetSoundPoolCallback(cb);
+    loadUrl(g_fileName[2], loadNum_++);
+    loadUrl(g_fileName[1], loadNum_++);
+    loadUrl(g_fileName[4], loadNum_++);
+    loadUrl(g_fileName[5], loadNum_++);
+    sleep(5);
+    struct PlayParams playParameters;
+    streamIDs_[playNum_] = soundPool_->Play(soundIDs_[0], playParameters);
+    EXPECT_GT(streamIDs_[playNum_], 0);
+    int32_t setPriority = soundPool_->SetPriority(streamIDs_[0], 1);
+    EXPECT_EQ(MSERR_OK, setPriority);
+    playNum_++;
+    sleep(waitTime1);
+
+    streamIDs_[playNum_] = soundPool_->Play(soundIDs_[1], playParameters);
+    EXPECT_GT(streamIDs_[playNum_], 0);
+    setPriority = soundPool_->SetPriority(streamIDs_[1], 2);
+    EXPECT_EQ(MSERR_OK, setPriority);
+    playNum_++;
+    sleep(waitTime1);
+
+    streamIDs_[playNum_] = soundPool_->Play(soundIDs_[2], playParameters);
+    EXPECT_GT(streamIDs_[playNum_], 0);
+    setPriority = soundPool_->SetPriority(streamIDs_[2], 3);
+    EXPECT_EQ(MSERR_OK, setPriority);
+    playNum_++;
+    sleep(waitTime1);
+
+    streamIDs_[playNum_] = soundPool_->Play(soundIDs_[3], playParameters);
+    EXPECT_GT(streamIDs_[playNum_], 0);
+    setPriority = soundPool_->SetPriority(streamIDs_[3], 4);
+    EXPECT_EQ(MSERR_OK, setPriority);
+    playNum_++;
+    sleep(30);
+
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_041 after");
 }
 
 } // namespace Media

@@ -195,7 +195,7 @@ void StreamIDManager::QueueAndSortPlayingStreamID(int32_t streamID)
                 playingStreamIDs_.insert(playingStreamIDs_.begin() + i, streamID);
                 break;
             }
-            if (i == playingStreamIDs_.size() - 1 &&
+            if (playingStreamIDs_.size() >= 1 && i == playingStreamIDs_.size() - 1 &&
                 freshCacheBuffer->GetPriority() < playingCacheBuffer->GetPriority()) {
                 playingStreamIDs_.push_back(streamID);
                 break;
@@ -231,7 +231,7 @@ void StreamIDManager::QueueAndSortWillPlayStreamID(StreamIDAndPlayParamsInfo fre
                 willPlayStreamInfos_.insert(willPlayStreamInfos_.begin() + i, freshStreamIDAndPlayParamsInfo);
                 break;
             }
-            if (i == willPlayStreamInfos_.size() - 1 &&
+            if (willPlayStreamInfos_.size() >= 1 && i == willPlayStreamInfos_.size() - 1 &&
                 freshCacheBuffer->GetPriority() < willPlayCacheBuffer->GetPriority()) {
                 willPlayStreamInfos_.push_back(freshStreamIDAndPlayParamsInfo);
                 break;
@@ -288,6 +288,7 @@ std::shared_ptr<CacheBuffer> StreamIDManager::FindCacheBuffer(const int32_t stre
         MEDIA_LOGI("StreamIDManager cacheBuffers_ empty");
         return nullptr;
     }
+    CHECK_AND_RETURN_RET_LOG(streamID >= 0, nullptr, "streamID invalid.");
     if (cacheBuffers_.find(streamID) != cacheBuffers_.end()) {
         return cacheBuffers_.at(streamID);
     }
