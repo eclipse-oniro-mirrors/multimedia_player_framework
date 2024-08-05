@@ -456,7 +456,9 @@ AVScreenCaptureConfig OH_AVScreenCapture_Convert(OH_AVScreenCaptureConfig config
     config_.videoInfo.videoCapInfo.videoSource =
         static_cast<VideoSourceType>(config.videoInfo.videoCapInfo.videoSource);
     config_.videoInfo.videoEncInfo = {
-        .videoCodec = static_cast<VideoCodecFormat>(config.videoInfo.videoEncInfo.videoCodec),
+        .videoCodec = static_cast<VideoCodecFormat>(config.videoInfo.videoEncInfo.videoCodec ==
+            OH_VideoCodecFormat::OH_VIDEO_DEFAULT ?
+            OH_VideoCodecFormat::OH_H264 : config.videoInfo.videoEncInfo.videoCodec),
         .videoBitrate = config.videoInfo.videoEncInfo. videoBitrate,
         .videoFrameRate = config.videoInfo.videoEncInfo.videoFrameRate
     };
