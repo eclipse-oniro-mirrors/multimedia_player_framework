@@ -479,9 +479,6 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameAtTime(
     config.dstHeight = param.dstHeight;
     config.dstWidth = param.dstWidth;
 
-    if (option == static_cast<int32_t>(Plugins::SeekMode::SEEK_CLOSEST)) {
-        option = static_cast<int32_t>(Plugins::SeekMode::SEEK_CLOSEST_INNER);
-    }
     auto mem = avMetadataHelperService_->FetchFrameAtTime(timeUs, option, config);
     auto pixelMap = CreatePixelMap(mem, PixelFormat::NV12, rotation_);
 
