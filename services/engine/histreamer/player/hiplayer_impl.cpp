@@ -169,7 +169,7 @@ void HiPlayerImpl::SetDefaultAudioRenderInfo(const std::vector<std::shared_ptr<M
             hasVideoTrack = true;
             std::string trackMime;
             if (meta->GetData(Tag::MIME_TYPE, trackMime) && trackMime.find("video/") != 0) {
-                hasVideoStream = false;
+                hasVideoTrack = false;
             }
             break;
         }
