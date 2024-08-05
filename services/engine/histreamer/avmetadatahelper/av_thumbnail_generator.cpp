@@ -175,22 +175,44 @@ void AVThumbnailGenerator::OnInputBufferAvailable(uint32_t index, std::shared_pt
 
 void AVThumbnailGenerator::OnOutputBufferAvailable(uint32_t index, std::shared_ptr<AVBuffer> buffer)
 {
-    MEDIA_LOGD("OnOutputBufferAvailable index:%{public}u", index);
+    MEDIA_LOGD("OnOutputBufferAvailable index:%{public}u , pts %{public}ld", index, buffer->pts_);
     CHECK_AND_RETURN_LOG(videoDecoder_ != nullptr, "Video decoder not exist");
     if (buffer == nullptr || buffer->memory_ == nullptr) {
         MEDIA_LOGW("Output buffer is nullptr");
         videoDecoder_->ReleaseOutputBuffer(index, false);
         return;
     }
-    if (!hasFetchedFrame_.load() && !stopProcessing_.load()) {
+    bool isClosest = seekMode_ == Plugins::SeekMode::SEEK_CLOSEST;
+    bool isAvailableFrame = !isClosest || buffer->pts_ >= seekTime_ ||
+        (buffer->flag_ & (uint32_t)(AVBufferFlag::EOS));
+    if (isClosest && !isAvailableFrame) {
+        videoDecoder_->ReleaseOutputBuffer(bufferIndex_, false);
+        bufferIndex_ = index;
+        avBuffer_ = buffer;
+        surfaceBuffer_ = buffer->memory_->GetSurfaceBuffer();
+        return;
+    }
+    if (!hasFetchedFrame_.load() && !stopProcessing_.load() && isAvailableFrame) {
         if (buffer->memory_->GetSize() != 0 && buffer->memory_->GetSurfaceBuffer() == nullptr) {
             MEDIA_LOGI("Soft decoder, use avBuffer");
             isSoftDecoder_ = true;
         }
-        bufferIndex_ = index;
-        avBuffer_ = buffer;
-        surfaceBuffer_ = buffer->memory_->GetSurfaceBuffer();
-        frameBuffer_ = buffer;
+        if (isClosest && avBuffer_ != nullptr) {
+            int64_t preDiff = seekTime_ - avBuffer_->pts_;
+            int64_t nextDiff = buffer->pts_ - seekTime_;
+            if (preDiff > nextDiff) {
+                videoDecoder_->ReleaseOutputBuffer(bufferIndex_, false);
+                bufferIndex_ = index;
+                avBuffer_ = buffer;
+                surfaceBuffer_ = buffer->memory_->GetSurfaceBuffer();
+            } else {
+                videoDecoder_->ReleaseOutputBuffer(index, false);
+            }
+        } else {
+            bufferIndex_ = index;
+            avBuffer_ = buffer;
+            surfaceBuffer_ = buffer->memory_->GetSurfaceBuffer();
+        }
         hasFetchedFrame_ = true;
         cond_.notify_all();
         videoDecoder_->Flush();
@@ -273,27 +295,33 @@ std::shared_ptr<AVBuffer> AVThumbnailGenerator::FetchFrameYuv(int64_t timeUs, in
         if (cond_.wait_for(lock, std::chrono::seconds(3), [this] { return hasFetchedFrame_.load(); })) {
             MEDIA_LOGI("0x%{public}06" PRIXPTR " Fetch frame OK width:%{public}d, height:%{public}d",
                        FAKE_POINTER(this), outputConfig_.dstWidth, outputConfig_.dstHeight);
-            frameBuffer_ = GenerateAlignmentAvBuffer(frameBuffer_);
-            if (frameBuffer_ != nullptr) {
-                frameBuffer_->meta_->Set<Tag::VIDEO_WIDTH>(width_);
-                frameBuffer_->meta_->Set<Tag::VIDEO_HEIGHT>(height_);
-                frameBuffer_->meta_->Set<Tag::VIDEO_ROTATION>(rotation_);
+            avBuffer_ = GenerateAlignmentAvBuffer(avBuffer_);
+            if (avBuffer_ != nullptr) {
+                avBuffer_->meta_->Set<Tag::VIDEO_WIDTH>(width_);
+                avBuffer_->meta_->Set<Tag::VIDEO_HEIGHT>(height_);
+                avBuffer_->meta_->Set<Tag::VIDEO_ROTATION>(rotation_);
             }
             videoDecoder_->ReleaseOutputBuffer(bufferIndex_, false);
         } else {
             hasFetchedFrame_ = true;
+            videoDecoder_->ReleaseOutputBuffer(bufferIndex_, false);
             videoDecoder_->Flush();
             mediaDemuxer_->Flush();
         }
     }
-    return frameBuffer_;
+    return avBuffer_;
 }
 
 Status AVThumbnailGenerator::SeekToTime(int64_t timeMs, Plugins::SeekMode option, int64_t realSeekTime)
 {
+    if (option == Plugins::SeekMode::SEEK_CLOSEST) {
+        option = Plugins::SeekMode::SEEK_PREVIOUS_SYNC;
+        seekMode_ = Plugins::SeekMode::SEEK_CLOSEST;
+    }
     auto res = mediaDemuxer_->SeekTo(timeMs, option, realSeekTime);
     if (res != Status::OK && option != Plugins::SeekMode::SEEK_CLOSEST_SYNC) {
         res = mediaDemuxer_->SeekTo(timeMs, Plugins::SeekMode::SEEK_CLOSEST_SYNC, realSeekTime);
+        seekMode_ = Plugins::SeekMode::SEEK_CLOSEST_SYNC;
     }
     return res;
 }
