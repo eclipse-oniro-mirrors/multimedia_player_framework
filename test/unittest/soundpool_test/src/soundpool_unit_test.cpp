@@ -1825,7 +1825,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_037, TestSize.Level2)
 
 /**
  * @tc.name: soundpool_function_038
- * @tc.desc: function test MaxStreams 
+ * @tc.desc: function test MaxStreams
  * @tc.type: FUNC
  * @tc.require:
  */
@@ -1847,7 +1847,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_038, TestSize.Level2)
 
 /**
  * @tc.name: soundpool_function_039
- * @tc.desc: function test CacheBuffer DoPlay fail 
+ * @tc.desc: function test CacheBuffer DoPlay fail
  * @tc.type: FUNC
  * @tc.require:
  */
@@ -1880,7 +1880,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_039, TestSize.Level2)
 
 /**
  * @tc.name: soundpool_function_040
- * @tc.desc: function test play Priority 
+ * @tc.desc: function test play Priority
  * @tc.type: FUNC
  * @tc.require:
  */
@@ -1931,7 +1931,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_040, TestSize.Level2)
 
 /**
  * @tc.name: soundpool_function_041
- * @tc.desc: function test willplay Priority 
+ * @tc.desc: function test willplay Priority
  * @tc.type: FUNC
  * @tc.require:
  */
