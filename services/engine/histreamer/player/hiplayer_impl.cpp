@@ -167,6 +167,10 @@ void HiPlayerImpl::SetDefaultAudioRenderInfo(const std::vector<std::shared_ptr<M
         }
         if (mediaType == Plugins::MediaType::VIDEO) {
             hasVideoTrack = true;
+            std::string trackMime;
+            if (meta->GetData(Tag::MIME_TYPE, trackMime) && trackMime.find("video/") != 0) {
+                hasVideoStream = false;
+            }
             break;
         }
     }
