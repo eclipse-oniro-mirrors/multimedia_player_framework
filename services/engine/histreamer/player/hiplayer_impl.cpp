@@ -161,17 +161,12 @@ void HiPlayerImpl::SetDefaultAudioRenderInfo(const std::vector<std::shared_ptr<M
         if (meta == nullptr) {
             continue;
         }
-        Plugins::MediaType mediaType = Plugins::MediaType::UNKNOWN;
-        if (!meta->GetData(Tag::MEDIA_TYPE, mediaType)) {
+        std::string trackMime;
+        if (!meta->GetData(Tag::MIME_TYPE, trackMime)) {
             continue;
         }
-        if (mediaType == Plugins::MediaType::VIDEO) {
+        if (trackMime.find("video/") == 0) {
             hasVideoTrack = true;
-            std::string trackMime;
-            if (meta->GetData(Tag::MIME_TYPE, trackMime) && trackMime.find("video/") != 0) {
-                hasVideoTrack = false;
-            }
-            break;
         }
     }
     Plugins::AudioRenderInfo audioRenderInfo;
