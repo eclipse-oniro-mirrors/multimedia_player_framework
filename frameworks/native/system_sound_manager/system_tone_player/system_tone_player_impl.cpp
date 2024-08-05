@@ -37,6 +37,43 @@ const std::string FDHEAD = "fd://";
 const std::string AUDIO_FORMAT_STR = ".ogg";
 const std::string HAPTIC_FORMAT_STR = ".json";
 const int32_t MAX_STREAM_ID = 128;
+const int32_t ERRCODE_OPERATION_NOT_ALLOWED = 5400102;
+const int32_t ERRCODE_INVALID_PARAMS = 20700002;
+const int32_t ERRCODE_UNSUPPORTED_OPERATION = 20700003;
+const std::string GENTLE_HAPTIC_PATH = "/sys_prod/resource/media/haptics/gentle/synchronized/notifications";
+
+static std::string FormateHapticUri(const std::string &audioUri, ToneHapticsFeature feature)
+{
+    std::string hapticUri = audioUri;
+    if (feature == ToneHapticsFeature::GENTLE) {
+        hapticUri.replace(0, hapticUri.rfind("/"), GENTLE_HAPTIC_PATH);
+    }
+    hapticUri.replace(hapticUri.rfind(AUDIO_FORMAT_STR), AUDIO_FORMAT_STR.length(), HAPTIC_FORMAT_STR);
+    return hapticUri;
+}
+
+
+static bool IsFileExisting(const std::string &fileUri)
+{
+    struct stat buffer;
+    return (stat(fileUri.c_str(), &buffer) == 0);
+}
+
+static std::string FindHapticUriByAudioUri(const std::string &audioUri, ToneHapticsFeature feature,
+    bool &isSupported)
+{
+    std::string hapticUri = "";
+    if (audioUri.length() <= AUDIO_FORMAT_STR.length() ||
+        audioUri.rfind(AUDIO_FORMAT_STR) != audioUri.length() - AUDIO_FORMAT_STR.length()) {
+        MEDIA_LOGW("invalid audio uri: %{public}s", audioUri.c_str());
+        isSupported = false;
+        return hapticUri;
+    }
+    // the end of default system tone uri is ".ogg"
+    hapticUri = FormateHapticUri(audioUri, feature);
+    isSupported = !hapticUri.empty() && IsFileExisting(hapticUri);
+    return hapticUri;
+}
 
 SystemTonePlayerImpl::SystemTonePlayerImpl(const shared_ptr<Context> &context,
     SystemSoundManagerImpl &systemSoundMgr, SystemToneType systemToneType)
@@ -55,7 +92,7 @@ SystemTonePlayerImpl::~SystemTonePlayerImpl()
 {
     DeleteAllPlayer();
     if (audioHapticManager_ != nullptr) {
-        audioHapticManager_->UnregisterSource(sourceId_);
+        ReleaseHapticsSourceIds();
         audioHapticManager_ = nullptr;
     }
 }
@@ -64,25 +101,11 @@ int32_t SystemTonePlayerImpl::InitPlayer(const std::string &audioUri)
 {
     MEDIA_LOGI("Enter InitPlayer() with audio uri %{public}s", audioUri.c_str());
 
-    if (sourceId_ != -1) {
-        (void)audioHapticManager_->UnregisterSource(sourceId_);
-        sourceId_ = -1;
-    }
-
+    ReleaseHapticsSourceIds();
     // Determine whether vibration is needed
     muteHaptics_ = GetMuteHapticsValue();
     // Get the haptic file uri according to the audio file uri.
-    std::string hapticUri = GetHapticUriForAudioUri(audioUri);
-    if (hapticUri == "") {
-        MEDIA_LOGW("haptic uri is empty. Play system tone without vibration");
-        muteHaptics_ = true;
-    }
-
-    sourceId_ = audioHapticManager_->RegisterSource(ChangeUri(audioUri), hapticUri);
-    CHECK_AND_RETURN_RET_LOG(sourceId_ != -1, MSERR_OPEN_FILE_FAILED,
-        "Failed to register source for audio haptic manager");
-    (void)audioHapticManager_->SetAudioLatencyMode(sourceId_, AUDIO_LATENCY_MODE_NORMAL);
-    (void)audioHapticManager_->SetStreamUsage(sourceId_, AudioStandard::StreamUsage::STREAM_USAGE_NOTIFICATION);
+    InitHapticsSourceIds(audioUri);
 
     configuredUri_ = audioUri;
     systemToneState_ = SystemToneState::STATE_NEW;
@@ -97,7 +120,9 @@ int32_t SystemTonePlayerImpl::CreatePlayerWithOptions(const AudioHapticPlayerOpt
         DeletePlayer(streamId_);
     }
 
-    playerMap_[streamId_] = audioHapticManager_->CreatePlayer(sourceId_, options);
+    CHECK_AND_RETURN_RET_LOG(sourceIds_.find(hapticsFeature_) != sourceIds_.end(), MSERR_OPEN_FILE_FAILED,
+        "Failed to find suorce id");
+    playerMap_[streamId_] = audioHapticManager_->CreatePlayer(sourceIds_[hapticsFeature_], options);
     CHECK_AND_RETURN_RET_LOG(playerMap_[streamId_] != nullptr, MSERR_OPEN_FILE_FAILED,
         "Failed to create system tone player instance");
 
@@ -121,36 +146,32 @@ bool SystemTonePlayerImpl::GetMuteHapticsValue()
     return muteHaptics;
 }
 
-std::string SystemTonePlayerImpl::GetHapticUriForAudioUri(const std::string &audioUri)
+void SystemTonePlayerImpl::GetHapticUriForAudioUri(const std::string &audioUri,
+    std::map<ToneHapticsFeature, std::string> &hapticsUriMap)
 {
-    std::string hapticUri = "";
-    if (audioUri.length() > AUDIO_FORMAT_STR.length() &&
-        audioUri.rfind(AUDIO_FORMAT_STR) == audioUri.length() - AUDIO_FORMAT_STR.length()) {
-        // the end of audio uri is ".ogg"
-        hapticUri = audioUri;
-        hapticUri.replace(hapticUri.rfind(AUDIO_FORMAT_STR), AUDIO_FORMAT_STR.length(), HAPTIC_FORMAT_STR);
-    }
-
-    if (hapticUri == "" || !IsFileExisting(hapticUri)) {
+    supportedHapticsFeatures_.clear();
+    bool isSupported = false;
+    std::string hapticUri = FindHapticUriByAudioUri(audioUri, ToneHapticsFeature::STANDARD, isSupported);
+    if (!isSupported) {
         MEDIA_LOGW("Failed to find the vibration json file for audioUri. Use the default json file.");
         std::string defaultSystemToneUri = systemSoundMgr_.GetDefaultSystemToneUri(SYSTEM_TONE_TYPE_NOTIFICATION);
-        if (defaultSystemToneUri.length() > AUDIO_FORMAT_STR.length() &&
-            defaultSystemToneUri.rfind(AUDIO_FORMAT_STR) == defaultSystemToneUri.length() - AUDIO_FORMAT_STR.length()) {
-            // the end of default system tone uri is ".ogg"
-            hapticUri = defaultSystemToneUri;
-            hapticUri.replace(hapticUri.rfind(AUDIO_FORMAT_STR), AUDIO_FORMAT_STR.length(), HAPTIC_FORMAT_STR);
-        } else {
-            MEDIA_LOGW("The default system tone uri is invalid!");
+        hapticUri = FindHapticUriByAudioUri(defaultSystemToneUri, ToneHapticsFeature::STANDARD, isSupported);
+        if (!isSupported) {
+            MEDIA_LOGW("Failed to find the default json file.");
+            return;
         }
+        muteHaptics_ = true;
+        MEDIA_LOGW("haptic uri is empty. Play system tone without vibration");
     }
-
-    return hapticUri;
-}
-
-bool SystemTonePlayerImpl::IsFileExisting(const std::string &fileUri)
-{
-    struct stat buffer;
-    return (stat(fileUri.c_str(), &buffer) == 0);
+    supportedHapticsFeatures_.push_back(ToneHapticsFeature::STANDARD);
+    hapticsUriMap[ToneHapticsFeature::STANDARD] = hapticUri;
+    MEDIA_LOGI("GetHapticUriForAudioUri: STANDARD hapticUri %{public}s ", hapticUri.c_str());
+    hapticUri = FindHapticUriByAudioUri(audioUri, ToneHapticsFeature::GENTLE, isSupported);
+    if (isSupported) {
+        supportedHapticsFeatures_.push_back(ToneHapticsFeature::GENTLE);
+        hapticsUriMap[ToneHapticsFeature::GENTLE] = hapticUri;
+        MEDIA_LOGI("GetHapticUriForAudioUri: GENTLE hapticUri %{public}s ", hapticUri.c_str());
+    }
 }
 
 static shared_ptr<DataShare::DataShareHelper> CreateDataShareHelper(int32_t systemAbilityId)
@@ -241,6 +262,7 @@ int32_t SystemTonePlayerImpl::Start(const SystemToneOptions &systemToneOptions)
     CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, -1,
         "Failed to create audio haptic player: %{public}d", result);
 
+    result = playerMap_[streamId_]->SetVolume(volume_);
     result = playerMap_[streamId_]->Start();
     CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, -1,
         "Failed to start audio haptic player: %{public}d", result);
@@ -275,14 +297,15 @@ int32_t SystemTonePlayerImpl::Release()
         return MSERR_OK;
     }
     DeleteAllPlayer();
-    if (audioHapticManager_ != nullptr) {
-        audioHapticManager_->UnregisterSource(sourceId_);
-        audioHapticManager_ = nullptr;
-    }
-    sourceId_ = -1;
     streamId_ = 0;
     configuredUri_ = "";
 
+    if (audioHapticManager_ != nullptr) {
+        ReleaseHapticsSourceIds();
+        audioHapticManager_ = nullptr;
+    }
+    hapticsFeature_ = ToneHapticsFeature::STANDARD;
+    volume_ = SYS_TONE_PLAYER_MAX_VOLUME;
     systemToneState_ = SystemToneState::STATE_RELEASED;
     return MSERR_OK;
 }
@@ -364,6 +387,96 @@ void SystemTonePlayerCallback::OnEndOfStream(void)
 void SystemTonePlayerCallback::OnError(int32_t errorCode)
 {
     MEDIA_LOGI("OnError from audio haptic player. errorCode %{public}d", errorCode);
+}
+
+static bool IsValidVolume(float &scale)
+{
+    static float eps = 1e-5;
+    static float maxVal = 1;
+    static float minVal = 0;
+    if (scale >= minVal || scale <= maxVal) {
+        return true;
+    }
+    if (scale > maxVal && abs(scale - maxVal) < eps) {
+        scale = maxVal;
+        return true;
+    }
+    if (scale < minVal && abs(scale - minVal) < eps) {
+        scale = minVal;
+        return true;
+    }
+    return false;
+}
+
+int32_t SystemTonePlayerImpl::SetAudioVolume(float volume)
+{
+    CHECK_AND_RETURN_RET_LOG(systemToneState_ != SystemToneState::STATE_RELEASED, ERRCODE_OPERATION_NOT_ALLOWED,
+        "System tone player has been released!");
+    CHECK_AND_RETURN_RET_LOG(IsValidVolume(volume), ERRCODE_INVALID_PARAMS,
+        "Invliad volume, the volume must be in the [0, 1] range");
+    volume_ = volume;
+    return MSERR_OK;
+}
+
+int32_t SystemTonePlayerImpl::GetAudioVolume(float &recvValue)
+{
+    recvValue = volume_;
+    return MSERR_OK;
+}
+
+int32_t SystemTonePlayerImpl::GetSupportHapticsFeatures(std::vector<ToneHapticsFeature> &recvFeatures)
+{
+    CHECK_AND_RETURN_RET_LOG(systemToneState_ != SystemToneState::STATE_RELEASED, ERRCODE_UNSUPPORTED_OPERATION,
+        "System tone player has been released!");
+    recvFeatures = supportedHapticsFeatures_;
+    return MSERR_OK;
+}
+
+int32_t SystemTonePlayerImpl::SetHapticsFeature(ToneHapticsFeature feature)
+{
+    CHECK_AND_RETURN_RET_LOG(systemToneState_ != SystemToneState::STATE_RELEASED, ERRCODE_OPERATION_NOT_ALLOWED,
+        "System tone player has been released!");
+    CHECK_AND_RETURN_RET_LOG((feature == ToneHapticsFeature::STANDARD || feature == ToneHapticsFeature::GENTLE) &&
+        std::find(supportedHapticsFeatures_.begin(),
+        supportedHapticsFeatures_.end(), feature) != supportedHapticsFeatures_.end(),
+        ERRCODE_UNSUPPORTED_OPERATION, "Unsupport haptics features %{public}d", feature);
+    hapticsFeature_ = feature;
+    return MSERR_OK;
+}
+
+int32_t SystemTonePlayerImpl::GetHapticsFeature(ToneHapticsFeature &feature)
+{
+    CHECK_AND_RETURN_RET_LOG(systemToneState_ != SystemToneState::STATE_RELEASED, ERRCODE_UNSUPPORTED_OPERATION,
+        "System tone player has been released!");
+    feature = hapticsFeature_;
+    return MSERR_OK;
+}
+
+void SystemTonePlayerImpl::InitHapticsSourceIds(const std::string &audioUri)
+{
+    if (audioHapticManager_ == nullptr) {
+        return;
+    }
+    std::map<ToneHapticsFeature, std::string> uriMap;
+    GetHapticUriForAudioUri(audioUri, uriMap);
+    int32_t sourceId;
+    for (auto it = uriMap.begin(); it != uriMap.end(); ++it) {
+        sourceId = audioHapticManager_->RegisterSource(ChangeUri(audioUri), it->second);
+        CHECK_AND_CONTINUE_LOG(sourceId != -1, "Failed to register source for audio haptic manager");
+        (void)audioHapticManager_->SetAudioLatencyMode(sourceId, AUDIO_LATENCY_MODE_NORMAL);
+        (void)audioHapticManager_->SetStreamUsage(sourceId, AudioStandard::StreamUsage::STREAM_USAGE_NOTIFICATION);
+        sourceIds_[it->first] = sourceId;
+    }
+}
+
+void SystemTonePlayerImpl::ReleaseHapticsSourceIds()
+{
+    for (auto it = sourceIds_.begin(); it != sourceIds_.end(); ++it) {
+        if (it->second != -1) {
+            audioHapticManager_->UnregisterSource(it->second);
+            it->second = -1;
+        }
+    }
 }
 } // namesapce AudioStandard
 } // namespace OHOS

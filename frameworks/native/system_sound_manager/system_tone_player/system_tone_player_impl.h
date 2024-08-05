@@ -36,6 +36,11 @@ public:
     int32_t Start(const SystemToneOptions &systemToneOptions) override;
     int32_t Stop(const int32_t &streamID) override;
     int32_t Release() override;
+    int32_t SetAudioVolume(float volume) override;
+    int32_t GetAudioVolume(float &recvValue) override;
+    int32_t GetSupportHapticsFeatures(std::vector<ToneHapticsFeature> &recvFeatures) override;
+    int32_t SetHapticsFeature(ToneHapticsFeature feature) override;
+    int32_t GetHapticsFeature(ToneHapticsFeature &feature) override;
 
     void NotifyEndofStreamEvent(const int32_t &streamId);
     void NotifyInterruptEvent(const int32_t &streamId, const AudioStandard::InterruptEvent &interruptEvent);
@@ -45,22 +50,26 @@ private:
     int32_t CreatePlayerWithOptions(const AudioHapticPlayerOptions &options);
     void DeletePlayer(const int32_t &streamId);
     void DeleteAllPlayer();
-    std::string GetHapticUriForAudioUri(const std::string &audioUri);
-    bool IsFileExisting(const std::string &fileUri);
+    void GetHapticUriForAudioUri(const std::string &audioUri, std::map<ToneHapticsFeature, std::string> &hapticsUris);
     bool GetMuteHapticsValue();
     std::string ChangeUri(const std::string &uri);
+    void InitHapticsSourceIds(const std::string &audioUri);
+    void ReleaseHapticsSourceIds();
 
     std::shared_ptr<AudioHapticManager> audioHapticManager_ = nullptr;
     std::unordered_map<int32_t, std::shared_ptr<AudioHapticPlayer>> playerMap_;
     std::unordered_map<int32_t, std::shared_ptr<SystemTonePlayerCallback>> callbackMap_;
     bool muteHaptics_ = false;
-    int32_t sourceId_ = -1;
     int32_t streamId_ = 0;
     std::string configuredUri_ = "";
     std::shared_ptr<AbilityRuntime::Context> context_;
     SystemSoundManagerImpl &systemSoundMgr_;
     SystemToneType systemToneType_;
     SystemToneState systemToneState_ = SystemToneState::STATE_INVALID;
+    float volume_ = SYS_TONE_PLAYER_MAX_VOLUME;
+    ToneHapticsFeature hapticsFeature_ = ToneHapticsFeature::STANDARD;
+    std::map<ToneHapticsFeature, int32_t> sourceIds_;
+    std::vector<ToneHapticsFeature> supportedHapticsFeatures_;
 
     std::mutex systemTonePlayerMutex_;
 };
