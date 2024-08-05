@@ -139,7 +139,6 @@ Status HiPlayerImpl::Init()
     for (std::pair<std::string, bool>& item: completeState_) {
         item.second = false;
     }
-    SetDefaultAudioRenderInfo();
     GetDumpFlag();
     return Status::OK;
 }
@@ -153,11 +152,30 @@ void HiPlayerImpl::GetDumpFlag()
     MEDIA_LOG_D_SHORT("get dump flag, dumpRes: %{public}d, isDump_: %{public}d", dumpRes, isDump_);
 }
 
-void HiPlayerImpl::SetDefaultAudioRenderInfo()
+void HiPlayerImpl::SetDefaultAudioRenderInfo(const std::vector<std::shared_ptr<Meta>> &trackInfos)
 {
     MEDIA_LOG_D_SHORT("SetDefaultAudioRenderInfo");
-    Plugins::AudioRenderInfo audioRenderInfo {AudioStandard::CONTENT_TYPE_MUSIC,
-        AudioStandard::STREAM_USAGE_MEDIA, 0};
+    bool hasVideoTrack = false;
+    for (size_t index = 0; index < trackInfos.size(); index++) {
+        std::shared_ptr<Meta> meta = trackInfos[index];
+        if (meta == nullptr) {
+            continue;
+        }
+        Plugins::MediaType mediaType = Plugins::MediaType::UNKNOWN;
+        if (!meta->GetData(Tag::MEDIA_TYPE, mediaType)) {
+            continue;
+        }
+        if (mediaType == Plugins::MediaType::VIDEO) {
+            hasVideoTrack = true;
+            break;
+        }
+    }
+    Plugins::AudioRenderInfo audioRenderInfo;
+    if (hasVideoTrack) {
+        audioRenderInfo = {AudioStandard::CONTENT_TYPE_MOVIE, AudioStandard::STREAM_USAGE_MEDIA, 0};
+    } else {
+        audioRenderInfo = {AudioStandard::CONTENT_TYPE_MUSIC, AudioStandard::STREAM_USAGE_MEDIA, 0};
+    }
     if (audioRenderInfo_ == nullptr) {
         audioRenderInfo_ = std::make_shared<Meta>();
         audioRenderInfo_->SetData(Tag::AUDIO_RENDER_INFO, audioRenderInfo);
@@ -2369,6 +2387,16 @@ Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilte
         FilterType::FILTERTYPE_ASINK);
     FALSE_RETURN_V(audioSink_ != nullptr, Status::ERROR_NULL_POINTER);
     audioSink_->Init(playerEventReceiver_, playerFilterCallback_);
+    if (demuxer_ != nullptr && audioRenderInfo_ == nullptr) {
+        std::vector<std::shared_ptr<Meta>> trackInfos = demuxer_->GetStreamMetaInfo();
+        SetDefaultAudioRenderInfo(trackInfos);
+    }
+    if (audioRenderInfo_ != nullptr) {
+        audioSink_->SetParameter(audioRenderInfo_);
+    }
+    if (audioInterruptMode_ != nullptr) {
+        audioSink_->SetParameter(audioInterruptMode_);
+    }
     std::shared_ptr<Meta> globalMeta = std::make_shared<Meta>();
     if (demuxer_ != nullptr) {
         globalMeta = demuxer_->GetGlobalMetaInfo();
