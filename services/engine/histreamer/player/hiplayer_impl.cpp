@@ -172,9 +172,9 @@ void HiPlayerImpl::SetDefaultAudioRenderInfo(const std::vector<std::shared_ptr<M
     }
     Plugins::AudioRenderInfo audioRenderInfo;
     if (hasVideoTrack) {
-        audioRenderInfo = {AudioStandard::CONTENT_TYPE_MOVIE, AudioStandard::STREAM_USAGE_MEDIA, 0};
+        audioRenderInfo = {AudioStandard::CONTENT_TYPE_MOVIE, AudioStandard::STREAM_USAGE_MOVIE, 0};
     } else {
-        audioRenderInfo = {AudioStandard::CONTENT_TYPE_MUSIC, AudioStandard::STREAM_USAGE_MEDIA, 0};
+        audioRenderInfo = {AudioStandard::CONTENT_TYPE_MUSIC, AudioStandard::STREAM_USAGE_MUSIC, 0};
     }
     if (audioRenderInfo_ == nullptr) {
         audioRenderInfo_ = std::make_shared<Meta>();
