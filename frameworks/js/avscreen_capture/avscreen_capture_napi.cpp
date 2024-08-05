@@ -489,8 +489,7 @@ std::shared_ptr<TaskHandler<RetInfo>> AVScreenCaptureNapi::GetSetMicrophoneEnabl
             GetReturnInfo(MSERR_INVALID_OPERATION, option, ""));
 
         int32_t ret = napi->screenCapture_->SetMicrophoneEnabled(enable);
-        CHECK_AND_RETURN_RET(ret == MSERR_OK, ((void)napi->screenCapture_->Release(),
-            GetReturnInfo(ret, "SetMicrophoneEnable", "")));
+        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnInfo(MSERR_UNKNOWN, option, "")));
 
         MEDIA_LOGI("%{public}s End", option.c_str());
         return RetInfo(MSERR_EXT_API9_OK, "");
