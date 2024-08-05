@@ -3733,7 +3733,7 @@ HWTEST_F(PlayerUnitTest, Player_SetPlaybackSpeed_006, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->Play());
     EXPECT_EQ(MSERR_OK, player_->SetPlaybackSpeed(SPEED_FORWARD_3_00_X));
     EXPECT_EQ(MSERR_OK, player_->GetPlaybackSpeed(mode));
-    EXPECT_EQ(SPEED_FORWARD_1_50_X, mode);
+    EXPECT_EQ(SPEED_FORWARD_3_00_X, mode);
 }
 } // namespace Media
 } // namespace OHOS
