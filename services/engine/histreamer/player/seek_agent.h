@@ -31,7 +31,7 @@ class HiPlayerImpl;
 
 class SeekAgent : public std::enable_shared_from_this<SeekAgent> {
 public:
-    explicit SeekAgent(std::shared_ptr<Pipeline::DemuxerFilter> demuxer);
+    explicit SeekAgent(std::shared_ptr<Pipeline::DemuxerFilter> demuxer, int64_t startPts = 0);
     ~SeekAgent();
 
     Status Seek(int64_t seekPos);
@@ -51,7 +51,8 @@ private:
     bool isAudioTargetArrived_{true};
     bool isVideoTargetArrived_{true};
 
-    int64_t seekTargetPos_{-1};
+    int64_t seekTargetPts_{-1};
+    int64_t mediaStartPts_{0};
     std::atomic<bool> isSeeking_{false};
     std::map<uint32_t, sptr<AVBufferQueueProducer>> producerMap_;
     std::map<uint32_t, sptr<IBrokerListener>> listenerMap_;

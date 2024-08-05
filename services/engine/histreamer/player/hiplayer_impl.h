@@ -205,6 +205,7 @@ private:
     void UpdatePlayStatistics();
     void DoSetMediaSource(Status& ret);
     void UpdatePlayerStateAndNotify();
+    void UpdateMediaFirstPts();
     void UpdateMaxSeekLatency(PlayerSeekMode mode, int64_t seekStartTime);
 #ifdef SUPPORT_VIDEO
     Status LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
@@ -272,6 +273,7 @@ private:
     std::string subUrl_;
     bool hasExtSub_ {false};
     std::atomic<int32_t> durationMs_{-1};
+    int64_t mediaStartPts_{0};
     std::shared_ptr<IMediaDataSource> dataSrc_{nullptr};
     std::atomic<int32_t> videoWidth_{0};
     std::atomic<int32_t> videoHeight_{0};
