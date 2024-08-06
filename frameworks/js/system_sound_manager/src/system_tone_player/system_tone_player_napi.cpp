@@ -51,6 +51,11 @@ napi_value SystemTonePlayerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("start", Start),
         DECLARE_NAPI_FUNCTION("stop", Stop),
         DECLARE_NAPI_FUNCTION("release", Release),
+        DECLARE_NAPI_FUNCTION("setAudioVolumeScale", SetAudioVolumeScale),
+        DECLARE_NAPI_FUNCTION("getAudioVolumeScale", GetAudioVolumeScale),
+        DECLARE_NAPI_FUNCTION("getSupportedHapticsFeatures", GetSupportedHapticsFeatures),
+        DECLARE_NAPI_FUNCTION("setHapticsFeature", SetHapticsFeature),
+        DECLARE_NAPI_FUNCTION("getHapticsFeature", GetHapticsFeature),
     };
 
     status = napi_define_class(env, SYSTEM_TONE_PLAYER_NAPI_CLASS_NAME.c_str(), NAPI_AUTO_LENGTH,
@@ -539,6 +544,223 @@ void SystemTonePlayerNapi::AsyncRelease(napi_env env, void *data)
         return;
     }
     context->status = napiSystemTonePlayer->systemTonePlayer_->Release();
+}
+
+napi_value SystemTonePlayerNapi::SetAudioVolumeScale(napi_env env, napi_callback_info info)
+{
+    napi_status status;
+    napi_value result = nullptr;
+    size_t argc = ARGS_ONE;
+    napi_value argv[ARGS_TWO] = {0};
+    napi_value thisVar = nullptr;
+
+    status = napi_get_cb_info(env, info, &argc, argv, &thisVar, nullptr);
+    napi_get_undefined(env, &result);
+    if (status != napi_ok || thisVar == nullptr) {
+        MEDIA_LOGE("SetAudioVolumeScale: Failed to retrieve details about the callback");
+        return result;
+    }
+
+    NAPI_ASSERT(env, argc >= ARGS_ONE, "SetAudioVolumeScale: requires 1 parameter");
+    std::unique_ptr<SystemTonePlayerAsyncContext> asyncContext = std::make_unique<SystemTonePlayerAsyncContext>();
+    SystemTonePlayerNapi *objectInfo = nullptr;
+    status = napi_unwrap(env, thisVar, reinterpret_cast<void**>(&objectInfo));
+    if (status == napi_ok && objectInfo != nullptr) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, argv[PARAM0], &valueType);
+        NAPI_ASSERT(env, valueType == napi_number, "SetAudioVolumeScale: type mismatch");
+        double value;
+        napi_get_value_double(env, argv[PARAM0], &value);
+        float volume  = static_cast<float>(value);
+        ObjectRefMap objectGuard(objectInfo);
+        auto *napiSystemTonePlayer = objectGuard.GetPtr();
+        int32_t ret = napiSystemTonePlayer->systemTonePlayer_->SetAudioVolume(volume);
+        if (ret != MSERR_OK) {
+            napi_throw_error(env, std::to_string(ret).c_str(),
+                "SetAudioVolumeScale: Operation is not supported or failed");
+        }
+    }
+    return result;
+}
+
+napi_value SystemTonePlayerNapi::GetAudioVolumeScale(napi_env env, napi_callback_info info)
+{
+    napi_value result = nullptr;
+    size_t argc = ARGS_ONE;
+    napi_value argv[ARGS_ONE] = {0};
+    napi_value thisVar = nullptr;
+
+    napi_status status = napi_get_cb_info(env, info, &argc, argv, &thisVar, nullptr);
+    napi_get_undefined(env, &result);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && thisVar != nullptr, result,
+        "GetAudioVolume: napi_get_cb_info failed");
+
+    SystemTonePlayerNapi* objectInfo = nullptr;
+    status = napi_unwrap(env, thisVar, reinterpret_cast<void **>(&objectInfo));
+    if (status == napi_ok && objectInfo != nullptr) {
+        ObjectRefMap objectGuard(objectInfo);
+        auto *napiSystemTonePlayer = objectGuard.GetPtr();
+        float volume;
+        int32_t ret = napiSystemTonePlayer->systemTonePlayer_->GetAudioVolume(volume);
+        if (ret != MSERR_OK) {
+            napi_throw_error(env, std::to_string(ret).c_str(),
+                "SetAudioVolumeScale: Operation is not supported or failed");
+        } else {
+            napi_create_double(env, static_cast<double>(volume), &result);
+        }
+    }
+    return result;
+}
+
+static void GetSupportHapticsFeaturesComplete(napi_env env, napi_status status, void *data)
+{
+    auto context = static_cast<SystemTonePlayerAsyncContext *>(data);
+    napi_value result[2] = {};
+    napi_status curStatus;
+
+    if (!context->status) {
+        napi_get_undefined(env, &result[PARAM0]);
+        napi_create_array_with_length(env, context->toneHapticsFeatures.size(), &result[PARAM1]);
+        napi_value value;
+        for (size_t i = 0; i < context->toneHapticsFeatures.size(); i++) {
+            value = nullptr;
+            curStatus = napi_create_int32(env, static_cast<int32_t>(context->toneHapticsFeatures[i]), &value);
+            if (curStatus != napi_ok || value == nullptr||
+                napi_set_element(env, result[PARAM1], i, value) != napi_ok) {
+                MEDIA_LOGE("GetSupportHapticsFeatures error : Failed to create number or add number to array");
+                napi_value message = nullptr;
+                napi_create_string_utf8(env,
+                    "GetSupportHapticsFeatures Error: Failed to create number or add number to array",
+                    NAPI_AUTO_LENGTH, &message);
+                napi_create_error(env, nullptr, message, &result[PARAM0]);
+                napi_get_undefined(env, &result[PARAM1]);
+                context->status = MSERR_NO_MEMORY;
+                break;
+            }
+        }
+    } else {
+        napi_value message = nullptr;
+        napi_create_string_utf8(env, "GetSupportHapticsFeatures Error: Operation is not supported or failed",
+            NAPI_AUTO_LENGTH, &message);
+        napi_create_error(env, nullptr, message, &result[PARAM0]);
+        napi_get_undefined(env, &result[PARAM1]);
+    }
+
+    if (context->deferred) {
+        if (!context->status) {
+            napi_resolve_deferred(env, context->deferred, result[PARAM1]);
+        } else {
+            napi_reject_deferred(env, context->deferred, result[PARAM0]);
+        }
+    }
+    napi_delete_async_work(env, context->work);
+
+    delete context;
+    context = nullptr;
+}
+
+napi_value SystemTonePlayerNapi::GetSupportedHapticsFeatures(napi_env env, napi_callback_info info)
+{
+    napi_value result = nullptr;
+    napi_value resource = nullptr;
+    size_t argc = ARGS_ONE;
+    napi_value argv[ARGS_ONE] = {0};
+    napi_value thisVar = nullptr;
+
+    napi_status status = napi_get_cb_info(env, info, &argc, argv, &thisVar, nullptr);
+    napi_get_undefined(env, &result);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && thisVar != nullptr, result,
+        "GetSupportHapticsFeatures: napi_get_cb_info failed");
+
+    std::unique_ptr<SystemTonePlayerAsyncContext> asyncContext = std::make_unique<SystemTonePlayerAsyncContext>();
+    status = napi_unwrap(env, thisVar, reinterpret_cast<void **>(&asyncContext->objectInfo));
+    if (status == napi_ok && asyncContext->objectInfo != nullptr) {
+        napi_create_promise(env, &asyncContext->deferred, &result);
+        napi_create_string_utf8(env, "GetSupportHapticsFeatures", NAPI_AUTO_LENGTH, &resource);
+        status = napi_create_async_work(env, nullptr, resource,
+            [](napi_env env, void *data) {
+                SystemTonePlayerAsyncContext *context = static_cast<SystemTonePlayerAsyncContext *>(data);
+                auto obj = reinterpret_cast<SystemTonePlayerNapi*>(context->objectInfo);
+                ObjectRefMap objectGuard(obj);
+                auto *napiSystemTonePlayer = objectGuard.GetPtr();
+                context->status = napiSystemTonePlayer->systemTonePlayer_->GetSupportHapticsFeatures(
+                    context->toneHapticsFeatures);
+            },
+            GetSupportHapticsFeaturesComplete, static_cast<void *>(asyncContext.get()), &asyncContext->work);
+        if (status != napi_ok) {
+            MEDIA_LOGE("GetSupportHapticsFeatures: Failed to get create async work");
+            napi_get_undefined(env, &result);
+        } else {
+            napi_queue_async_work(env, asyncContext->work);
+            asyncContext.release();
+        }
+    }
+    return result;
+}
+
+napi_value SystemTonePlayerNapi::SetHapticsFeature(napi_env env, napi_callback_info info)
+{
+    napi_status status;
+    napi_value result = nullptr;
+    size_t argc = ARGS_ONE;
+    napi_value argv[ARGS_TWO] = {0};
+    napi_value thisVar = nullptr;
+
+    status = napi_get_cb_info(env, info, &argc, argv, &thisVar, nullptr);
+    napi_get_undefined(env, &result);
+    if (status != napi_ok || thisVar == nullptr) {
+        MEDIA_LOGE("SetHapticsFeature: Failed to retrieve details about the callback");
+        return result;
+    }
+
+    NAPI_ASSERT(env, argc >= ARGS_ONE, "SetHapticsFeature: requires 1 parameter");
+    SystemTonePlayerNapi* objectInfo = nullptr;
+    status = napi_unwrap(env, thisVar, reinterpret_cast<void**>(&objectInfo));
+    if (status == napi_ok && objectInfo != nullptr) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, argv[PARAM0], &valueType);
+        NAPI_ASSERT(env, valueType == napi_number, "SetHapticsFeature: type mismatch");
+        ToneHapticsFeature toneHapticsFeature;
+        napi_get_value_int32(env, argv[PARAM0], reinterpret_cast<int32_t*>(&toneHapticsFeature));
+        ObjectRefMap objectGuard(objectInfo);
+        auto *napiSystemTonePlayer = objectGuard.GetPtr();
+        int32_t ret = napiSystemTonePlayer->systemTonePlayer_->SetHapticsFeature(
+            toneHapticsFeature);
+        if (ret != MSERR_OK) {
+            napi_throw_error(env, std::to_string(ret).c_str(),
+                "SetHapticsFeature: Operation is not supported or failed");
+        }
+    }
+    return result;
+}
+
+napi_value SystemTonePlayerNapi::GetHapticsFeature(napi_env env, napi_callback_info info)
+{
+    napi_value result = nullptr;
+    size_t argc = ARGS_ONE;
+    napi_value argv[ARGS_ONE] = {0};
+    napi_value thisVar = nullptr;
+
+    napi_status status = napi_get_cb_info(env, info, &argc, argv, &thisVar, nullptr);
+    napi_get_undefined(env, &result);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && thisVar != nullptr, result,
+        "GetHapticsFeature: napi_get_cb_info failed");
+
+    SystemTonePlayerNapi* objectInfo = nullptr;
+    status = napi_unwrap(env, thisVar, reinterpret_cast<void **>(&objectInfo));
+    if (status == napi_ok && objectInfo != nullptr) {
+        ObjectRefMap objectGuard(objectInfo);
+        auto *napiSystemTonePlayer = objectGuard.GetPtr();
+        ToneHapticsFeature toneHapticsFeature;
+        int32_t ret = napiSystemTonePlayer->systemTonePlayer_->GetHapticsFeature(toneHapticsFeature);
+        if (ret != MSERR_OK) {
+            napi_throw_error(env, std::to_string(ret).c_str(),
+                "GetHapticsFeature: Operation is not supported or failed");
+        } else {
+            napi_create_int32(env, static_cast<int32_t>(toneHapticsFeature), &result);
+        }
+    }
+    return result;
 }
 } // namespace Media
 } // namespace OHOS
