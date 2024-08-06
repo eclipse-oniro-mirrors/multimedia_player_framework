@@ -165,7 +165,7 @@ void HiPlayerImpl::SetDefaultAudioRenderInfo(const std::vector<std::shared_ptr<M
         if (!meta->GetData(Tag::MIME_TYPE, trackMime)) {
             continue;
         }
-        if (trackMime.find("video/") == 0) {
+        if (isSetVideoSurface_ && trackMime.find("video/") == 0) {
             hasVideoTrack = true;
         }
     }
@@ -1013,6 +1013,7 @@ int32_t HiPlayerImpl::SetVideoSurface(sptr<Surface> surface)
     FALSE_RETURN_V_MSG_E(surface != nullptr, (int32_t)(Status::ERROR_INVALID_PARAMETER),
                          "Set video surface failed, surface == nullptr");
     surface_ = surface;
+    isSetVideoSurface_ = true;
     if (videoDecoder_ != nullptr &&
         pipelineStates_ != PlayerStates::PLAYER_STOPPED &&
         pipelineStates_ != PlayerStates::PLAYER_STATE_ERROR) {
