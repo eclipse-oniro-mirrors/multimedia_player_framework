@@ -12,7 +12,7 @@
 # limitations under the License.
 
 import("//build/test.gni")
-import("//foundation/multimedia/player_framework/config.gni")
+import("$MEDIA_PLAYER_ROOT_DIR/config.gni")
 
 config("screen_capture_test_config") {
   visibility = [ ":*" ]
@@ -33,24 +33,16 @@ config("screen_capture_test_config") {
     "-Wfloat-equal",
     "-Wdate-time",
     "-Werror",
-    "-Wextra",
     "-Wimplicit-fallthrough",
     "-Wsign-compare",
     "-Dprivate=public",
     "-Dprotected=public",
   ]
 
-  if (player_framework_support_avsession_background) {
-    cflags += [ "-Wno-unused-parameter" ]
-  } else {
-    cflags += [ "-Wunused-parameter" ]
-  }
-
   include_dirs = [
-    "avcodec/ipc",
-    "avcodec/server",
-    "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",
-    "$MEDIA_PLAYER_ROOT_DIR/services/include",
+    "./",
+    "./screen_capture_unittest/include",
+    "./capi/include",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/sa_media/ipc",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/sa_media/server",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/common",
@@ -67,8 +59,10 @@ config("screen_capture_test_config") {
     "$MEDIA_PLAYER_ROOT_DIR/services/services/recorder/server",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/avmetadatahelper/ipc",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/avmetadatahelper/server",
-    "$MEDIA_PLAYER_ROOT_DIR/services/services/avcodeclist/ipc",
-    "$MEDIA_PLAYER_ROOT_DIR/services/services/avcodeclist/server",
+    "avcodec/ipc",
+    "avcodec/server",
+    "avcodeclist/ipc",
+    "avcodeclist/server",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/recorder_profiles/ipc",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/recorder_profiles/server",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/screen_capture/server",
@@ -78,17 +72,16 @@ config("screen_capture_test_config") {
     "$MEDIA_PLAYER_ROOT_DIR/services/services/transcoder/server",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/transcoder/ipc",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/observer",
+    "$MEDIA_PLAYER_ROOT_DIR/services/include",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/factory",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/engine_intf",
     "$MEDIA_PLAYER_ROOT_DIR/services/utils/include",
+    "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/common",
     "$MEDIA_PLAYER_ROOT_DIR/services/engine/common/recorder_profiles",
-    "$MEDIA_PLAYER_ROOT_DIR/test/unittest/screen_capture_test/screen_capture_server_function_unittest"
+    "$MEDIA_PLAYER_ROOT_DIR/test/unittest/common/include",
+    "$MEDIA_PLAYER_GRAPHIC_SURFACE/interfaces/inner_api/surface",
   ]
-
-  if (player_framework_support_avsession_background) {
-    include_dirs += [ "player/avsession_background" ]
-  }
 
   defines = []
   defines += player_framework_defines
@@ -225,6 +218,8 @@ ohos_unittest("screen_capture_capi_unit_test") {
 
 ohos_unittest("screen_capture_server_function_unit_test") {
   module_out_path = module_output_path
+  stack_protector_ret = true
+  install_enable = true
 
   sanitize = {
     cfi = true
@@ -234,9 +229,17 @@ ohos_unittest("screen_capture_server_function_unit_test") {
 
   public_deps = [ "$MEDIA_PLAYER_ROOT_DIR/services/services:media_service" ]
 
-  configs = [ ":screen_capture_test_config" ]
+  configs = [
+    ":screen_capture_test_config",
+    "$MEDIA_PLAYER_ROOT_DIR/services/dfx:media_service_log_dfx_public_config",
+  ]
 
-  deps = [ "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c:native_avscreen_capture" ]
+  deps = [
+    "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c:native_avscreen_capture",
+    "$MEDIA_PLAYER_ROOT_DIR/services/dfx:media_service_dfx",
+    "$MEDIA_PLAYER_ROOT_DIR/services/dfx:media_service_log_dfx",
+    "$MEDIA_PLAYER_ROOT_DIR/services/utils:media_service_utils",
+  ]
 
   if (player_framework_support_screen_capture) {
     sources = [
@@ -269,7 +272,6 @@ ohos_unittest("screen_capture_server_function_unit_test") {
     "hilog:libhilog",
     "ipc:ipc_single",
     "media_foundation:media_foundation",
-    "os_account:os_account_innerkits",
     "player_framework:media_client",
     "qos_manager:qos",
     "state_registry:tel_state_registry_api",
