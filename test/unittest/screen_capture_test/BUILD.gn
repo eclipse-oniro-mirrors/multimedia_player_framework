@@ -12,7 +12,7 @@
 # limitations under the License.
 
 import("//build/test.gni")
-import("$MEDIA_PLAYER_ROOT_DIR/config.gni")
+import("//foundation/multimedia/player_framework/config.gni")
 
 config("screen_capture_test_config") {
   visibility = [ ":*" ]
@@ -242,9 +242,7 @@ ohos_unittest("screen_capture_server_function_unit_test") {
   ]
 
   if (player_framework_support_screen_capture) {
-    sources = [
-      "screen_capture_server_function_unittest/screen_capture_server_function_unittest_voip.cpp",
-    ]
+    sources = [ "screen_capture_server_function_unittest/screen_capture_server_function_unittest_voip.cpp" ]
   }
 
   external_deps = [
