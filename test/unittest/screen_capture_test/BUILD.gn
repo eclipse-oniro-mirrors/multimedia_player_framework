@@ -271,6 +271,7 @@ ohos_unittest("screen_capture_server_function_unit_test") {
     "ipc:ipc_single",
     "media_foundation:media_foundation",
     "player_framework:media_client",
+    "os_account:os_account_innerkits",
     "qos_manager:qos",
     "state_registry:tel_state_registry_api",
     "window_manager:libdm",
