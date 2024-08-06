@@ -66,7 +66,6 @@ private:
     std::shared_ptr<AVBuffer> avBuffer_;
     sptr<SurfaceBuffer> surfaceBuffer_;
     std::shared_ptr<AVSharedMemoryBase> fetchedFrameAtTime_;
-    std::shared_ptr<AVBuffer> frameBuffer_;
     std::shared_ptr<OHOS::Media::MediaDemuxer> mediaDemuxer_;
     std::shared_ptr<MediaAVCodec::AVCodecVideoDecoder> videoDecoder_;
     bool isSoftDecoder_ = false;
