@@ -214,7 +214,7 @@ HWTEST_F(InCallObserverInnerUnitTest, InCallCallBackReturn_05, TestSize.Level1)
     telephonyObserver->OnSimStateUpdated(slotId, OHOS::Telephony::CardType::UNKNOWN_CARD,
         OHOS::Telephony::SimState::SIM_STATE_UNKNOWN, OHOS::Telephony::LockReason::SIM_NONE);
     telephonyObserver->OnCellularDataConnectStateUpdated(slotId, 0, 0);
-    telephonyObserver->OnCellularDataFlowUpdated(slotId, 0) override;
+    telephonyObserver->OnCellularDataFlowUpdated(slotId, 0);
     telephonyObserver->OnCfuIndicatorUpdated(slotId, false);
     telephonyObserver->OnVoiceMailMsgIndicatorUpdated(slotId, false);
     telephonyObserver->OnIccAccountUpdated();
