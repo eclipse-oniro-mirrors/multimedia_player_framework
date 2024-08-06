@@ -63,6 +63,9 @@ std::string TimeFormatUtils::FormatDateTimeByTimeZone(const std::string &iso8601
     // convert time to localtime
     long timezone = 0;
     std::tm timeWithOffset = *localtime(&tt);
+    if (timeWithOffset == nullptr) {
+        return "";
+    }
     if (timeWithOffset.tm_gmtoff != 0) {
         timezone = timeWithOffset.tm_gmtoff;
     }
@@ -70,6 +73,9 @@ std::string TimeFormatUtils::FormatDateTimeByTimeZone(const std::string &iso8601
         std::chrono::system_clock::from_time_t(std::mktime(&tm)) + std::chrono::seconds(timezone - diffTime);
     std::time_t localTimeT = std::chrono::system_clock::to_time_t(localTime);
     std::tm localTm = *std::localtime(&localTimeT);
+    if (localTm == nullptr) {
+        return "";
+    }
     std::ostringstream oss;
     oss << std::put_time(&localTm, "%Y-%m-%d %H:%M:%S");
     return oss.str();
@@ -123,6 +129,9 @@ std::string TimeFormatUtils::ConvertTimestampToDatetime(const std::string &times
     char date[maxDateTimeSize];
     char time[maxDateTimeSize];
     pTime = localtime(&ts);
+    if (pTime == nullptr) {
+        return "";
+    }
     size_t sizeDateStr = strftime(date, maxDateTimeSize, "%Y-%m-%d", pTime);
     size_t sizeTimeStr = strftime(time, maxDateTimeSize, "%H:%M:%S", pTime);
     if (sizeDateStr != standardDateStrSize || sizeTimeStr != standardTimeStrSize) {
