@@ -199,7 +199,7 @@ private:
     bool IsFileUrl(const std::string &url) const;
     bool IsValidPlayRange(int64_t start, int64_t end) const;
     int32_t GetRealPath(const std::string &url, std::string &realUrlPath) const;
-    void SetDefaultAudioRenderInfo();
+    void SetDefaultAudioRenderInfo(const std::vector<std::shared_ptr<Meta>> &trackInfos);
     void AppendPlayerMediaInfo();
     int64_t GetCurrentMillisecond();
     void UpdatePlayStatistics();
@@ -333,6 +333,7 @@ private:
     std::atomic<int64_t> seekContinousBatchNo_ {-1};
     std::shared_ptr<DraggingPlayerAgent> draggingPlayerAgent_ {nullptr};
     int64_t lastSeekContinousPos_ {-1};
+    bool isSetVideoSurface_ = false;
     std::atomic<bool> needUpdateSubtitle_ {true};
 };
 } // namespace Media
