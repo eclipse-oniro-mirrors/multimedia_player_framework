@@ -12,6 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#ifndef SCREEN_CAPTURE_SERVER_FUNCTION_UNITTEST_H
+#define SCREEN_CAPTURE_SERVER_FUNCTION_UNITTEST_H
 
 #include <fcntl.h>
 #include <iostream>
@@ -48,3 +50,4 @@ protected:
 };
 } // Media
 } // OHOS
+#endif

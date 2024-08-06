@@ -34,6 +34,7 @@ using namespace OHOS::Media;
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "ScreenCaptureServerFunctionTest"};
+constexpr int32_t FLIE_CREATE_FLAGS = 0777;
 }
 namespace OHOS {
 namespace Media {
@@ -214,7 +215,7 @@ void ScreenCaptureServerFunctionTest::OpenFileFd(std::string name)
         outputFd_ = -1;
     }
     MEDIA_LOGI("xuzhangchi 0728 filePath: %{public}s", (SCREEN_CAPTURE_ROOT_DIR + name).c_str());
-    outputFd_ = open((SCREEN_CAPTURE_ROOT_DIR + name).c_str(), O_RDWR | O_CREAT, 0777);
+    outputFd_ = open((SCREEN_CAPTURE_ROOT_DIR + name).c_str(), O_RDWR | O_CREAT, FLIE_CREATE_FLAGS);
     MEDIA_LOGI("xuzhangchi 0728 outputFd_: %{public}d", outputFd_);
 }
 
