@@ -17,7 +17,6 @@ import("//foundation/multimedia/player_framework/config.gni")
 module_output_path = "player_framework/observer"
 
 ohos_unittest("incallobserver_unit_test") {
-  visibility = [ ":*" ]
   module_out_path = module_output_path
 
   include_dirs = [
