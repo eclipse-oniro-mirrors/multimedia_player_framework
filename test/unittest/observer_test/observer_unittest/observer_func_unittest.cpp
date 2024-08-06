@@ -219,6 +219,7 @@ HWTEST_F(InCallObserverInnerUnitTest, InCallCallBackReturn_05, TestSize.Level1)
     telephonyObserver->OnVoiceMailMsgIndicatorUpdated(slotId, false);
     telephonyObserver->OnIccAccountUpdated();
     ASSERT_TRUE(InCallObserver::GetInstance().IsInCall());
+    ASSERT_TRUE(InCallObserver::GetInstance().OnCallStateUpdated(false));
 }
 } // namespace InCallObserverFuncUT
 } // namespace Media
