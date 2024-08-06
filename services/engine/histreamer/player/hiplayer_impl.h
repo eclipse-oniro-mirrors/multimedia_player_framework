@@ -331,6 +331,7 @@ private:
     std::atomic<int64_t> seekContinousBatchNo_ {-1};
     std::shared_ptr<DraggingPlayerAgent> draggingPlayerAgent_ {nullptr};
     int64_t lastSeekContinousPos_ {-1};
+    bool isSetVideoSurface_ = false;
     std::atomic<bool> needUpdateSubtitle_ {true};
 };
 } // namespace Media
