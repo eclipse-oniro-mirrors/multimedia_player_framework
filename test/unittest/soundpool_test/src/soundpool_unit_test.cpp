@@ -1924,7 +1924,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_040, TestSize.Level2)
     setPriority = soundPool_->SetPriority(streamIDs_[3], 4);
     EXPECT_EQ(MSERR_OK, setPriority);
     playNum_++;
-    sleep(10);
+    sleep(waitTime10);
 
     MEDIA_LOGI("soundpool_unit_test soundpool_function_040 after");
 }
@@ -1975,7 +1975,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_041, TestSize.Level2)
     setPriority = soundPool_->SetPriority(streamIDs_[3], 4);
     EXPECT_EQ(MSERR_OK, setPriority);
     playNum_++;
-    sleep(30);
+    sleep(waitTime30);
 
     MEDIA_LOGI("soundpool_unit_test soundpool_function_041 after");
 }
