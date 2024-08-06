@@ -62,20 +62,22 @@ std::string TimeFormatUtils::FormatDateTimeByTimeZone(const std::string &iso8601
 
     // convert time to localtime
     long timezone = 0;
-    std::tm timeWithOffset = *localtime(&tt);
-    if (timeWithOffset == nullptr) {
+    std::tm *timeWithOffsetPtr = localtime(&tt);
+    if (timeWithOffsetPtr == nullptr) {
         return "";
     }
+    std::tm timeWithOffset = *timeWithOffsetPtr;
     if (timeWithOffset.tm_gmtoff != 0) {
         timezone = timeWithOffset.tm_gmtoff;
     }
     auto localTime =
         std::chrono::system_clock::from_time_t(std::mktime(&tm)) + std::chrono::seconds(timezone - diffTime);
     std::time_t localTimeT = std::chrono::system_clock::to_time_t(localTime);
-    std::tm localTm = *std::localtime(&localTimeT);
-    if (localTm == nullptr) {
+    std::tm *localTmPtr = std::localtime(&localTimeT);
+    if (localTmPtr == nullptr) {
         return "";
     }
+    std::tm localTm = *localTmPtr;
     std::ostringstream oss;
     oss << std::put_time(&localTm, "%Y-%m-%d %H:%M:%S");
     return oss.str();

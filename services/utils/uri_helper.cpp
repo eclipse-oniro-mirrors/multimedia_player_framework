@@ -94,9 +94,9 @@ std::pair<std::string_view, std::string_view> SplitUriHeadAndBody(const std::str
     if (end == std::string_view::npos) {
         noSpaceStr = str.substr(start);
     } else {
-        if (end > start) {
+        if (end >= start) {
             noSpaceStr = str.substr(start, end - start + 1);
-        }   
+        }
     }
     std::string_view delimiter = "://";
     std::string_view::size_type pos = noSpaceStr.find(delimiter);
