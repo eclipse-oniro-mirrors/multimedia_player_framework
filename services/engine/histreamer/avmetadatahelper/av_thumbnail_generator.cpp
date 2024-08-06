@@ -185,7 +185,7 @@ void AVThumbnailGenerator::OnOutputBufferAvailable(uint32_t index, std::shared_p
     bool isClosest = seekMode_ == Plugins::SeekMode::SEEK_CLOSEST;
     bool isAvailableFrame = !isClosest || buffer->pts_ >= seekTime_ ||
         (buffer->flag_ & (uint32_t)(AVBufferFlag::EOS));
-    if (isClosest && !isAvailableFrame) {
+    if (!isAvailableFrame) {
         videoDecoder_->ReleaseOutputBuffer(bufferIndex_, false);
         bufferIndex_ = index;
         avBuffer_ = buffer;
