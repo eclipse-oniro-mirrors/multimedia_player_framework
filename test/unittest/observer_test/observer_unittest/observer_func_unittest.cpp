@@ -203,7 +203,7 @@ HWTEST_F(InCallObserverInnerUnitTest, InCallCallBackReturn_05, TestSize.Level1)
     std::u16string phoneNumber = u"";
     telephonyObserver->OnCallStateUpdated(-1, 1, phoneNumber); // -1 invalid slot id
     int32_t slotId = 1; // 1 normal slot id
-    for (int i = -1; i < 9; i++) { // -1 9 foreach all state
+    for (int i = -1; i <= 9; i++) { // -1 9 foreach all state
         telephonyObserver->OnCallStateUpdated(-1, i, phoneNumber);
     }
     const std::vector<sptr<OHOS::Telephony::SignalInformation>> vecSigInfo{};
@@ -218,7 +218,7 @@ HWTEST_F(InCallObserverInnerUnitTest, InCallCallBackReturn_05, TestSize.Level1)
     telephonyObserver->OnCfuIndicatorUpdated(slotId, false);
     telephonyObserver->OnVoiceMailMsgIndicatorUpdated(slotId, false);
     telephonyObserver->OnIccAccountUpdated();
-
+    ASSERT_TRUE(InCallObserver::GetInstance().IsInCall());
 }
 } // namespace InCallObserverFuncUT
 } // namespace Media
