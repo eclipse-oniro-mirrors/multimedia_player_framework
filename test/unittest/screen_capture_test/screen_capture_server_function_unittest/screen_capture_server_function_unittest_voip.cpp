@@ -202,7 +202,6 @@ int32_t ScreenCaptureServerFunctionTest::SetRecorderInfo(std::string name,
     OpenFileFd(name);
     recorderInfo.url = "fd://" + std::to_string(outputFd_);
     recorderInfo.fileFormat = "mp4";
-    MEDIA_LOGI("xuzhangchi 0728 fileName: %{public}s", recorderInfo.url.c_str());
     return MSERR_OK;
 }
 
@@ -214,9 +213,7 @@ void ScreenCaptureServerFunctionTest::OpenFileFd(std::string name)
         (void)::close(outputFd_);
         outputFd_ = -1;
     }
-    MEDIA_LOGI("xuzhangchi 0728 filePath: %{public}s", (SCREEN_CAPTURE_ROOT_DIR + name).c_str());
     outputFd_ = open((SCREEN_CAPTURE_ROOT_DIR + name).c_str(), O_RDWR | O_CREAT, FLIE_CREATE_FLAGS);
-    MEDIA_LOGI("xuzhangchi 0728 outputFd_: %{public}d", outputFd_);
 }
 
 int32_t ScreenCaptureServerFunctionTest::InitScreenCaptureServer()
@@ -268,7 +265,6 @@ int32_t ScreenCaptureServerFunctionTest::StartAudioCapture()
     int32_t ret = screenCaptureServer_->StartFileInnerAudioCapture();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartFileInnerAudioCapture failed, ret:%{public}d,"
         "dataType:%{public}d", ret, screenCaptureServer_->captureConfig_.dataType);
-    MEDIA_LOGI("xuzhangchi 0730 before StartFileMicAudioCapture");
     ret = screenCaptureServer_->StartFileMicAudioCapture();
     if (ret != MSERR_OK) {
         MEDIA_LOGE("StartFileMicAudioCapture failed");
