@@ -384,7 +384,7 @@ int32_t HiPlayerImpl::PrepareAsync()
     if (ret != Status::OK && !isInterruptNeeded_.load()) {
         auto errCode = TransStatus(Status::ERROR_UNSUPPORTED_FORMAT);
         CollectionErrorInfo(errCode, "PrepareAsync error: DoSetSource error");
-        OnEvent({"engine", EventType::EVENT_ERROR, MSERR_UNSUPPORT_CONTAINER_TYPE});
+        OnEvent({"engine", EventType::EVENT_ERROR, MSERR_EXT_API9_UNSUPPORT_FORMAT});
         return errCode;
     }
     FALSE_RETURN_V(!BreakIfInterruptted(), TransStatus(Status::OK));
