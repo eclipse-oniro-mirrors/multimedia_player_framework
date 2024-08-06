@@ -217,6 +217,7 @@ void AVThumbnailGenerator::OnOutputBufferAvailable(uint32_t index, std::shared_p
         cond_.notify_all();
         videoDecoder_->Flush();
         mediaDemuxer_->Flush();
+        MEDIA_LOGI("dstTime %{public}" PRId64 " resTime %{public}" PRId64, seekTime_, buffer->pts);
         return;
     }
     videoDecoder_->ReleaseOutputBuffer(index, false);
