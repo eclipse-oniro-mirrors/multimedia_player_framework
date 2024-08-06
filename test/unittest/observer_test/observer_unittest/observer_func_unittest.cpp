@@ -17,6 +17,7 @@
 #include <string>
 #include "incall_observer.h"
 #include <cstdlib>
+#include "media_telephony_listener.h"
 
 using namespace std;
 using namespace testing::ext;
@@ -170,6 +171,37 @@ HWTEST_F(InCallObserverInnerUnitTest, InCallCallBackReturn_03, TestSize.Level1)
     ASSERT_TRUE(InCallObserver::GetInstance().OnCallStateUpdated(true));
     ASSERT_TRUE(InCallObserver::GetInstance().IsInCall());
     InCallObserver::GetInstance().UnRegisterObserver();
+}
+
+/**
+ * @tc.name: InCallCallBackReturn_04
+ * @tc.desc: InCallCallBackReturn_04
+ * @tc.type: FUNC
+ */
+HWTEST_F(InCallObserverInnerUnitTest, InCallCallBackReturn_04, TestSize.Level1)
+{
+    InCallObserver::GetInstance().UnRegisterObserver();
+    ASSERT_TRUE(InCallObserver::GetInstance().RegisterObserver());
+    std::weak_ptr<InCallObserverCallBack> inCallObserverTestFalseCallBack =
+        std::make_shared<InCallObserverTestFalseCallBack>();
+    inCallObserverTestFalseCallBack.reset();
+    ASSERT_FALSE(InCallObserver::GetInstance().RegisterInCallObserverCallBack(inCallObserverTestFalseCallBack));
+    ASSERT_TRUE(InCallObserver::GetInstance().OnCallStateUpdated(false));
+    ASSERT_TRUE(InCallObserver::GetInstance().OnCallStateUpdated(true));
+    InCallObserver::GetInstance().UnRegisterInCallObserverCallBack();
+    InCallObserver::GetInstance().UnRegisterObserver();
+}
+
+/**
+ * @tc.name: InCallCallBackReturn_05
+ * @tc.desc: InCallCallBackReturn_05
+ * @tc.type: FUNC
+ */
+HWTEST_F(InCallObserverInnerUnitTest, InCallCallBackReturn_05, TestSize.Level1)
+{
+    auto telephonyObserver = std::make_unique<MediaTelephonyListener>().release();
+    std::u16string &phoneNumber = u"";
+    telephonyObserver->OnCallStateUpdated(-1, 1, phoneNumber); // -1 slot id
 }
 } // namespace InCallObserverFuncUT
 } // namespace Media
