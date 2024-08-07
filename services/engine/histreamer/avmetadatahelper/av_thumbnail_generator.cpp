@@ -176,7 +176,7 @@ void AVThumbnailGenerator::OnInputBufferAvailable(uint32_t index, std::shared_pt
 
 void AVThumbnailGenerator::OnOutputBufferAvailable(uint32_t index, std::shared_ptr<AVBuffer> buffer)
 {
-    MEDIA_LOGI("OnOutputBufferAvailable index:%{public}u , pts %{public}ld", index, buffer->pts_);
+    MEDIA_LOGD("OnOutputBufferAvailable index:%{public}u , pts %{public}ld", index, buffer->pts_);
     CHECK_AND_RETURN_LOG(videoDecoder_ != nullptr, "Video decoder not exist");
     bool isValidBuffer = buffer != nullptr && buffer->memory_ != nullptr &&
          (buffer->memory_->GetSize() != 0 || buffer->memory_->GetSurfaceBuffer() != nullptr);
