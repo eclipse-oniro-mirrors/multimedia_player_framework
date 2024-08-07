@@ -18,7 +18,9 @@
 #include "common_napi.h"
 #include "media_dfx.h"
 #include "media_log.h"
-
+#ifndef CROSS_PLATFORM
+#include "display_manager.h"
+#endif
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "AVScreenCaptureNapi"};
 }
@@ -678,6 +680,7 @@ int32_t AVScreenCaptureNapi::CheckAudioChannelCount(const int32_t &audioChannelC
 int32_t AVScreenCaptureNapi::CheckVideoFrameFormat(const int32_t &frameWidth, const int32_t &frameHeight,
     int32_t &videoFrameWidth, int32_t &videoFrameHeight)
 {
+#ifndef CROSS_PLATFORM
     if (frameWidth == AVSCREENCAPTURE_DEFAULT_FRAME_WIDTH || frameHeight == AVSCREENCAPTURE_DEFAULT_FRAME_HEIGHT ||
         !(frameWidth == 0 && frameHeight == 0)) { // 0 one of width height is zero, use default display
         sptr<Rosen::Display> display = Rosen::DisplayManager::GetInstance().GetDefaultDisplaySync();
@@ -700,6 +703,10 @@ int32_t AVScreenCaptureNapi::CheckVideoFrameFormat(const int32_t &frameWidth, co
         videoFrameWidth = frameWidth;
         videoFrameHeight = frameHeight;
     }
+#else
+    videoFrameWidth = frameWidth;
+    videoFrameHeight = frameHeight;
+#endif
     return MSERR_OK;
 }
 
