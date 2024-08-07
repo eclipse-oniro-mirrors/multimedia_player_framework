@@ -605,6 +605,7 @@ int32_t HiPlayerImpl::PauseDemuxer()
 {
     MediaTrace trace("HiPlayerImpl::PauseDemuxer");
     MEDIA_LOG_I("PauseDemuxer in");
+    callbackLooper_.StopReportMediaProgress();
     Status ret = demuxer_->PauseDemuxerReadLoop();
     return TransStatus(ret);
 }
@@ -616,7 +617,6 @@ int32_t HiPlayerImpl::ResumeDemuxer()
     FALSE_RETURN_V_MSG_E(pipelineStates_ != PlayerStates::PLAYER_STATE_ERROR,
         TransStatus(Status::OK), "PLAYER_STATE_ERROR not allow ResumeDemuxer");
     callbackLooper_.StartReportMediaProgress();
-    callbackLooper_.ManualReportMediaProgressOnce();
     Status ret = demuxer_->ResumeDemuxerReadLoop();
     return TransStatus(ret);
 }
