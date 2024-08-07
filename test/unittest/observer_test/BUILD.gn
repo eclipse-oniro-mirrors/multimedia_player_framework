@@ -18,6 +18,7 @@ module_output_path = "player_framework/observer"
 
 ohos_unittest("incallobserver_unit_test") {
   module_out_path = module_output_path
+
   include_dirs = [
     "./",
     "$MEDIA_PLAYER_ROOT_DIR/test/unittest/common/include",
@@ -34,11 +35,19 @@ ohos_unittest("incallobserver_unit_test") {
   cflags = [
     "-Wall",
     "-Werror",
+    "-Dprivate=public",
+    "-Dprotected=public",
   ]
 
   sources = [ "./observer_unittest/observer_func_unittest.cpp" ]
 
   public_deps = [ "$MEDIA_PLAYER_ROOT_DIR/services/services:media_service" ]
+
+  deps = [
+    "$MEDIA_PLAYER_ROOT_DIR/services/dfx:media_service_dfx",
+    "$MEDIA_PLAYER_ROOT_DIR/services/dfx:media_service_log_dfx",
+    "$MEDIA_PLAYER_ROOT_DIR/services/utils:media_service_utils",
+  ]
 
   external_deps = [
     "ability_base:base",
@@ -61,4 +70,11 @@ ohos_unittest("incallobserver_unit_test") {
     "state_registry:tel_state_registry_api",
     "window_manager:libdm",
   ]
+
+  defines = []
+  defines += player_framework_defines
+
+  if (target_cpu == "arm") {
+    cflags += [ "-DBINDER_IPC_32BIT" ]
+  }
 }
