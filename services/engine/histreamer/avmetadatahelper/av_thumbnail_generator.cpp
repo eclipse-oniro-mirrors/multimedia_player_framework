@@ -177,26 +177,26 @@ void AVThumbnailGenerator::OnInputBufferAvailable(uint32_t index, std::shared_pt
  void AVThumbnailGenerator::OnOutputBufferAvailable(uint32_t index, std::shared_ptr<AVBuffer> buffer)
  {
     MEDIA_LOGI("OnOutputBufferAvailable index:%{public}u , pts %{public}ld", index, buffer->pts_);
-     CHECK_AND_RETURN_LOG(videoDecoder_ != nullptr, "Video decoder not exist");
+    CHECK_AND_RETURN_LOG(videoDecoder_ != nullptr, "Video decoder not exist");
     bool isValidBuffer = buffer != nullptr && buffer->memory_ != nullptr &&
          (buffer->memory_->GetSize() != 0 || buffer->memory_->GetSurfaceBuffer() != nullptr);
     bool isValidState = !hasFetchedFrame_.load() && !stopProcessing_.load();
     if (!isValidBuffer || !isValidState) {
         MEDIA_LOGW("isValidBuffer %{public}d isValidState %{public}d", isValidBuffer, isValidState);
-         videoDecoder_->ReleaseOutputBuffer(index, false);
-         return;
+        videoDecoder_->ReleaseOutputBuffer(index, false);
+        return;
      }
     bool isClosest = seekMode_ == Plugins::SeekMode::SEEK_CLOSEST;
     bool isAvailableFrame = !isClosest || buffer->pts_ >= seekTime_ ||
          (buffer->flag_ & (uint32_t)(AVBufferFlag::EOS));
     if (!isAvailableFrame) {
         videoDecoder_->ReleaseOutputBuffer(bufferIndex_, false);
-         bufferIndex_ = index;
-         avBuffer_ = buffer;
+        bufferIndex_ = index;
+        avBuffer_ = buffer;
         return;
     }
     if (isAvailableFrame) {
-         hasFetchedFrame_ = true;
+        hasFetchedFrame_ = true;
         if (isClosest && avBuffer_ != nullptr) {
             int64_t preDiff = seekTime_ - avBuffer_->pts_;
             int64_t nextDiff = buffer->pts_ - seekTime_;
@@ -215,7 +215,7 @@ void AVThumbnailGenerator::OnInputBufferAvailable(uint32_t index, std::shared_pt
         PauseFetchFrame();
         cond_.notify_all();
         return;
-     }
+    }
     videoDecoder_->ReleaseOutputBuffer(index, false);
 }
 
