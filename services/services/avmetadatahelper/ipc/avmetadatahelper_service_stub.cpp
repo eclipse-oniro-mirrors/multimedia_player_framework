@@ -388,7 +388,7 @@ int32_t AVMetadataHelperServiceStub::SetListenerObject(MessageParcel &data, Mess
 int32_t AVMetadataHelperServiceStub::GetTimeByFrameIndex(MessageParcel &data, MessageParcel &reply)
 {
     uint32_t index = data.ReadUint32();
-    int64_t time = 0;
+    uint64_t time = 0;
     auto res = GetTimeByFrameIndex(index, time);
     CHECK_AND_RETURN_RET(res == MSERR_OK, res);
     reply.WriteInt64(time);
@@ -397,7 +397,7 @@ int32_t AVMetadataHelperServiceStub::GetTimeByFrameIndex(MessageParcel &data, Me
 
 int32_t AVMetadataHelperServiceStub::GetFrameIndexByTime(MessageParcel &data, MessageParcel &reply)
 {
-    int64_t time = data.ReadInt64();
+    uint64_t time = data.ReadUint64();
     uint32_t index = 0;
     auto res = GetFrameIndexByTime(time, index);
     CHECK_AND_RETURN_RET(res == MSERR_OK, res);
