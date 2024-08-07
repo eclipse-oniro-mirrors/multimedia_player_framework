@@ -161,7 +161,7 @@ int32_t MediaServiceStub::GetSystemAbility(MessageParcel &data, MessageParcel &r
     MediaSystemAbility id = static_cast<MediaSystemAbility>(mediaSystemAbility);
     sptr<IRemoteObject> listenerObj = data.ReadRemoteObject();
     LISTENER(reply.WriteRemoteObject(GetSubSystemAbility(id, listenerObj)),
-        TASK_NAME + " : " + std::to_string(mediaSystemAbility), false, TIME_OUT_SECOND);
+        TASK_NAME + ":" + std::to_string(mediaSystemAbility), false, TIME_OUT_SECOND);
     return MSERR_OK;
 }
 } // namespace Media
