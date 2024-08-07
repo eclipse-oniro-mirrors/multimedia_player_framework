@@ -21,6 +21,8 @@
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "MediaServiceStub"};
+const std::string TASK_NAME = "OHOS::Media::MediaServiceStub::GetSystemAbility";
+const int32_t TIME_OUT_SECOND = 30; // time out is 30 senconds
 }
 
 namespace OHOS {
@@ -157,7 +159,8 @@ int32_t MediaServiceStub::GetSystemAbility(MessageParcel &data, MessageParcel &r
 {
     MediaSystemAbility id = static_cast<MediaSystemAbility>(data.ReadInt32());
     sptr<IRemoteObject> listenerObj = data.ReadRemoteObject();
-    (void)reply.WriteRemoteObject(GetSubSystemAbility(id, listenerObj));
+    LISTENER(reply.WriteRemoteObject(GetSubSystemAbility(id, listenerObj)),
+        TASK_NAME, false, TIME_OUT_SECOND);
     return MSERR_OK;
 }
 } // namespace Media
