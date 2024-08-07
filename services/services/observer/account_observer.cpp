@@ -21,7 +21,6 @@
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "AccountObserver"};
 }
-
 using namespace OHOS;
 namespace OHOS {
 namespace Media {
@@ -51,9 +50,8 @@ bool AccountObserver::RegisterAccountObserverCallBack(std::weak_ptr<AccountObser
     if (callbackPtr) {
         accountObserverCallBack_ = callback;
         return true;
-    } else {
-        MEDIA_LOGI("0x%{public}06" PRIXPTR "AccountObserver CallBack is null", FAKE_POINTER(this));
     }
+    MEDIA_LOGI("0x%{public}06" PRIXPTR "AccountObserver CallBack is null", FAKE_POINTER(this));
     return false;
 }
 
