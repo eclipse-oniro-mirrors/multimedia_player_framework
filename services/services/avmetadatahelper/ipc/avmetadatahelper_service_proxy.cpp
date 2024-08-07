@@ -332,7 +332,7 @@ int32_t AVMetadataHelperServiceProxy::GetFrameIndexByTime(int64_t time, uint32_t
 
     int32_t error = Remote()->SendRequest(GET_FRAME_INDEX_BY_TIME, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
-        "SetHelperCallback failed, error: %{public}d", error);
+        "GetFrameIndexByTime failed, error: %{public}d", error);
     index = reply.ReadUint32();
     return MSERR_OK;
 }
