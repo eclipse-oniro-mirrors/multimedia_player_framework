@@ -32,10 +32,6 @@ using namespace testing::ext;
 using namespace OHOS::Media::ScreenCaptureTestParam;
 using namespace OHOS::Media;
 
-namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "ScreenCaptureServerFunctionTest"};
-constexpr int32_t FLIE_CREATE_FLAGS = 0777;
-}
 namespace OHOS {
 namespace Media {
 
