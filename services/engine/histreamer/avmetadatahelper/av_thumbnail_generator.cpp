@@ -310,7 +310,7 @@ Status AVThumbnailGenerator::SeekToTime(int64_t timeMs, Plugins::SeekMode option
     return res;
 }
 
-void AVThumbnailGenerator::ConvertToAVSharedMemory()
+void AVThumbnailGenerator::ConvertToAVSharedMemory() {
     auto surfaceBuffer = avBuffer_->memory_->GetSurfaceBuffer();
     if (surfaceBuffer != nullptr) {
         auto ret = GetYuvDataAlignStride(surfaceBuffer);
