@@ -324,9 +324,9 @@ if (player_framework_support_jssoundpool) {
 }
 
 if (player_framework_support_drm) {
-  player_framework_defines += [ "SUPPORT_DRM" ]
+  player_framework_defines += [ "SUPPORT_AVPLAYER_DRM" ]
 } else {
-  player_framework_defines += [ "UNSUPPORT_DRM" ]
+  player_framework_defines += [ "UNSUPPORT_AVPLAYER_DRM" ]
 }
 
 if (player_framework_support_vibrator) {

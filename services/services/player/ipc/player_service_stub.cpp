@@ -18,7 +18,7 @@
 #include "player_listener_proxy.h"
 #include "media_data_source_proxy.h"
 #include "media_server_manager.h"
-#ifdef SUPPORT_DRM
+#ifdef SUPPORT_AVPLAYER_DRM
 #include "key_session_service_proxy.h"
 #endif
 #include "media_log.h"
@@ -469,7 +469,7 @@ int32_t PlayerServiceStub::SetVideoSurface(sptr<Surface> surface)
 int32_t PlayerServiceStub::SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionService> &keySessionProxy,
     bool svp)
 {
-#ifdef SUPPORT_DRM
+#ifdef SUPPORT_AVPLAYER_DRM
     MediaTrace trace("PlayerServiceStub::SetDecryptConfig");
     MEDIA_LOGI("PlayerServiceStub SetDecryptConfig");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
@@ -899,7 +899,7 @@ int32_t PlayerServiceStub::SetVideoSurface(MessageParcel &data, MessageParcel &r
 int32_t PlayerServiceStub::SetDecryptConfig(MessageParcel &data, MessageParcel &reply)
 {
     MEDIA_LOGI("PlayerServiceStub SetDecryptConfig");
-#ifdef SUPPORT_DRM
+#ifdef SUPPORT_AVPLAYER_DRM
     sptr<IRemoteObject> object = data.ReadRemoteObject();
     CHECK_AND_RETURN_RET_LOG(object != nullptr, MSERR_NO_MEMORY, "KeySessionServiceProxy object is nullptr");
     bool svp = data.ReadBool();

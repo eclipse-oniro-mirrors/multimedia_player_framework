@@ -20,7 +20,7 @@
 #include "native_window.h"
 #include "avplayer.h"
 #include <securec.h>
-#ifdef SUPPORT_DRM
+#ifdef SUPPORT_AVPLAYER_DRM
 #include "native_drm_object.h"
 #endif
 namespace {
@@ -93,7 +93,7 @@ public:
     virtual ~DrmSystemInfoCallback() = default;
 
     virtual int32_t SetDrmSystemInfoCallback(Player_MediaKeySystemInfoCallback drmSystemInfoCallback) = 0;
-#ifdef SUPPORT_DRM
+#ifdef SUPPORT_AVPLAYER_DRM
     virtual int32_t GetDrmSystemInfos(const Format &infoBody,
         DRM_MediaKeySystemInfo *mediaKeySystemInfo, struct PlayerObject *playerObj) = 0;
 #endif
@@ -104,7 +104,7 @@ class NativeAVPlayerCallback : public PlayerCallback, public DrmSystemInfoCallba
 public:
     NativeAVPlayerCallback(OH_AVPlayer *player, AVPlayerCallback callback)
         : player_(player), callback_(callback) {}
-#ifdef SUPPORT_DRM
+#ifdef SUPPORT_AVPLAYER_DRM
     int32_t GetDrmSystemInfos(const Format &infoBody,
         DRM_MediaKeySystemInfo *mediaKeySystemInfo, struct PlayerObject *playerObj) override
     {
@@ -168,7 +168,7 @@ public:
             }
         }
         if (type == INFO_TYPE_DRM_INFO_UPDATED && player_ != nullptr) {
-#ifdef SUPPORT_DRM
+#ifdef SUPPORT_AVPLAYER_DRM
             struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player_);
             DRM_MediaKeySystemInfo mediaKeySystemInfo;
             GetDrmSystemInfos(infoBody, &mediaKeySystemInfo, playerObj);
@@ -612,7 +612,7 @@ OH_AVErrCode OH_AVPlayer_GetCurrentTrack(OH_AVPlayer *player, int32_t trackType,
 OH_AVErrCode OH_AVPlayer_SetMediaKeySystemInfoCallback(OH_AVPlayer *player,
     Player_MediaKeySystemInfoCallback callback)
 {
-#ifdef SUPPORT_DRM
+#ifdef SUPPORT_AVPLAYER_DRM
     CHECK_AND_RETURN_RET_LOG(player != nullptr, AV_ERR_INVALID_VAL, "input player is nullptr!");
     struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
     CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, AV_ERR_INVALID_VAL, "player_ is null");
@@ -638,7 +638,7 @@ OH_AVErrCode OH_AVPlayer_SetMediaKeySystemInfoCallback(OH_AVPlayer *player,
 
 OH_AVErrCode OH_AVPlayer_GetMediaKeySystemInfo(OH_AVPlayer *player, DRM_MediaKeySystemInfo *mediaKeySystemInfo)
 {
-#ifdef SUPPORT_DRM
+#ifdef SUPPORT_AVPLAYER_DRM
     CHECK_AND_RETURN_RET_LOG(player != nullptr, AV_ERR_INVALID_VAL, "input player is nullptr!");
     CHECK_AND_RETURN_RET_LOG(mediaKeySystemInfo != nullptr, AV_ERR_INVALID_VAL, "mediaKeySystemInfo is nullptr");
     struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
@@ -665,7 +665,7 @@ OH_AVErrCode OH_AVPlayer_GetMediaKeySystemInfo(OH_AVPlayer *player, DRM_MediaKey
 OH_AVErrCode OH_AVPlayer_SetDecryptionConfig(OH_AVPlayer *player, MediaKeySession *mediaKeySession,
     bool secureVideoPath)
 {
-#ifdef SUPPORT_DRM
+#ifdef SUPPORT_AVPLAYER_DRM
     CHECK_AND_RETURN_RET_LOG(player != nullptr, AV_ERR_INVALID_VAL, "input player is nullptr!");
     CHECK_AND_RETURN_RET_LOG(mediaKeySession != nullptr, AV_ERR_INVALID_VAL, "mediaKeySession is nullptr");
     struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
