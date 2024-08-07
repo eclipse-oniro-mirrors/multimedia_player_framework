@@ -174,8 +174,8 @@ void AVThumbnailGenerator::OnInputBufferAvailable(uint32_t index, std::shared_pt
     videoDecoder_->QueueInputBuffer(index);
 }
 
- void AVThumbnailGenerator::OnOutputBufferAvailable(uint32_t index, std::shared_ptr<AVBuffer> buffer)
- {
+void AVThumbnailGenerator::OnOutputBufferAvailable(uint32_t index, std::shared_ptr<AVBuffer> buffer)
+{
     MEDIA_LOGI("OnOutputBufferAvailable index:%{public}u , pts %{public}ld", index, buffer->pts_);
     CHECK_AND_RETURN_LOG(videoDecoder_ != nullptr, "Video decoder not exist");
     bool isValidBuffer = buffer != nullptr && buffer->memory_ != nullptr &&
@@ -185,7 +185,7 @@ void AVThumbnailGenerator::OnInputBufferAvailable(uint32_t index, std::shared_pt
         MEDIA_LOGW("isValidBuffer %{public}d isValidState %{public}d", isValidBuffer, isValidState);
         videoDecoder_->ReleaseOutputBuffer(index, false);
         return;
-     }
+    }
     bool isClosest = seekMode_ == Plugins::SeekMode::SEEK_CLOSEST;
     bool isAvailableFrame = !isClosest || buffer->pts_ >= seekTime_ ||
          (buffer->flag_ & (uint32_t)(AVBufferFlag::EOS));
