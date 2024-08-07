@@ -741,6 +741,7 @@ void HiRecorderImpl::ConfigureVideoEncoderFormat(const RecorderParam &recParam)
 {
     VidEnc vidEnc = static_cast<const VidEnc&>(recParam);
     switch (vidEnc.encFmt) {
+        case OHOS::Media::VideoCodecFormat::VIDEO_DEFAULT:
         case OHOS::Media::VideoCodecFormat::H264:
             videoEncFormat_->Set<Tag::MIME_TYPE>(Plugins::MimeType::VIDEO_AVC);
             videoEncFormat_->Set<Tag::VIDEO_H264_PROFILE>(Plugins::VideoH264Profile::BASELINE);
