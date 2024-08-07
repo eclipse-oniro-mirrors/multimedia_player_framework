@@ -250,7 +250,7 @@ std::shared_ptr<AVSharedMemory> AVMetaDataCollector::GetArtPicture()
     return nullptr;
 }
 
-int32_t AVMetaDataCollector::GetTimeByFrameIndex(uint32_t index, int64_t &timeUs)
+int32_t AVMetaDataCollector::GetTimeByFrameIndex(uint32_t index, uint64_t &timeUs)
 {
     uint32_t trackId = 0;
     CHECK_AND_RETURN_RET_LOG(GetVideoTrackId(trackId) == Status::OK, MSERR_UNSUPPORT_FILE, "No video track!");
@@ -259,7 +259,7 @@ int32_t AVMetaDataCollector::GetTimeByFrameIndex(uint32_t index, int64_t &timeUs
     return MSERR_OK;
 }
 
-int32_t AVMetaDataCollector::GetFrameIndexByTime(int64_t timeUs, uint32_t &index)
+int32_t AVMetaDataCollector::GetFrameIndexByTime(uint64_t timeUs, uint32_t &index)
 {
     uint32_t trackId = 0;
     CHECK_AND_RETURN_RET_LOG(GetVideoTrackId(trackId) == Status::OK, MSERR_UNSUPPORT_FILE, "No video track!");

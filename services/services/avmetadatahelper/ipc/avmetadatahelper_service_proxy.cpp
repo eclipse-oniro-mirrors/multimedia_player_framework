@@ -301,7 +301,7 @@ int32_t AVMetadataHelperServiceProxy::SetHelperCallback()
     return reply.ReadInt32();
 }
 
-int32_t AVMetadataHelperServiceProxy::GetTimeByFrameIndex(uint32_t index, int64_t &time)
+int32_t AVMetadataHelperServiceProxy::GetTimeByFrameIndex(uint32_t index, uint64_t &time)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -319,7 +319,7 @@ int32_t AVMetadataHelperServiceProxy::GetTimeByFrameIndex(uint32_t index, int64_
     return MSERR_OK;
 }
 
-int32_t AVMetadataHelperServiceProxy::GetFrameIndexByTime(int64_t time, uint32_t &index)
+int32_t AVMetadataHelperServiceProxy::GetFrameIndexByTime(uint64_t time, uint32_t &index)
 {
     MessageParcel data;
     MessageParcel reply;
