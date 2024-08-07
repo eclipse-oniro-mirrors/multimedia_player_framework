@@ -68,22 +68,20 @@ private:
     std::shared_ptr<AVSharedMemoryBase> fetchedFrameAtTime_;
     std::shared_ptr<OHOS::Media::MediaDemuxer> mediaDemuxer_;
     std::shared_ptr<MediaAVCodec::AVCodecVideoDecoder> videoDecoder_;
-    bool isSoftDecoder_ = false;
 
     Status InitDecoder();
     std::shared_ptr<Meta> GetVideoTrackInfo();
-    void ConvertToAVSharedMemory(const sptr<SurfaceBuffer> &surfaceBuffer);
-    void ConvertToAVSharedMemory(std::shared_ptr<AVBuffer> &avBuffer);
+    void ConvertToAVSharedMemory();
     void ConvertP010ToNV12(
         const sptr<SurfaceBuffer> &surfaceBuffer, uint8_t *dstNV12, int32_t strideWidth, int32_t strideHeight);
     int32_t GetYuvDataAlignStride(const sptr<SurfaceBuffer> &surfaceBuffer);
     Status SeekToTime(int64_t timeMs, Plugins::SeekMode option, int64_t realSeekTime);
     int32_t width_ = 0;
     int32_t height_ = 0;
-    Plugins::SeekMode seekMode_ = Plugins::SeekMode::SEEK_CLOSEST_SYNC;
+    Plugins::SeekMode seekMode_ {};
 
-    std::shared_ptr<AVBuffer> GenerateAlignmentAvBuffer(std::shared_ptr<AVBuffer> &avBuffer);
-    std::shared_ptr<AVBuffer> GenerateAvBufferFromFCodec(std::shared_ptr<AVBuffer> &avBuffer);
+    std::shared_ptr<AVBuffer> GenerateAlignmentAvBuffer();
+    std::shared_ptr<AVBuffer> GenerateAvBufferFromFCodec();
     int32_t CopySurfaceBufferPixels(const sptr<SurfaceBuffer> &surfaceBuffer, std::shared_ptr<AVBuffer> &avBuffer);
     void CopySurfaceBufferInfo(sptr<SurfaceBuffer> &source, sptr<SurfaceBuffer> &dst);
     bool GetSbStaticMetadata(const sptr<SurfaceBuffer> &buffer, std::vector<uint8_t> &staticMetadata);
