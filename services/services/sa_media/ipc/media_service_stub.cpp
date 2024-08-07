@@ -157,10 +157,11 @@ int32_t MediaServiceStub::SetDeathListener(const sptr<IRemoteObject> &object)
 
 int32_t MediaServiceStub::GetSystemAbility(MessageParcel &data, MessageParcel &reply)
 {
-    MediaSystemAbility id = static_cast<MediaSystemAbility>(data.ReadInt32());
+    int32_t mediaSystemAbility = data.ReadInt32();
+    MediaSystemAbility id = static_cast<MediaSystemAbility>(mediaSystemAbility);
     sptr<IRemoteObject> listenerObj = data.ReadRemoteObject();
     LISTENER(reply.WriteRemoteObject(GetSubSystemAbility(id, listenerObj)),
-        TASK_NAME, false, TIME_OUT_SECOND);
+        TASK_NAME + " : " + std::to_string(mediaSystemAbility), false, TIME_OUT_SECOND);
     return MSERR_OK;
 }
 } // namespace Media
