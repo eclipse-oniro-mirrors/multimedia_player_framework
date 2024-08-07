@@ -357,6 +357,7 @@ static const std::vector<struct JsEnumInt> g_screenCaptureStateCode = {
     { "SCREENCAPTURE_STATE_MIC_UNMUTED_BY_USER", AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNMUTED_BY_USER },
     { "SCREENCAPTURE_STATE_ENTER_PRIVATE_SCENE", AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_ENTER_PRIVATE_SCENE },
     { "SCREENCAPTURE_STATE_EXIT_PRIVATE_SCENE", AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_EXIT_PRIVATE_SCENE },
+    { "SCREENCAPTURE_STATE_STOPPED_BY_USER_SWITCHED", AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_USER_SWITCHED },
 };
 
 static const std::map<std::string_view, const std::vector<struct JsEnumInt>&> g_intEnumClassMap = {

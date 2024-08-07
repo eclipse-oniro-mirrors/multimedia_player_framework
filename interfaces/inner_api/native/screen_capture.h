@@ -111,6 +111,8 @@ enum AVScreenCaptureStateCode {
     SCREEN_CAPTURE_STATE_ENTER_PRIVATE_SCENE = 8,
     /* Private window disappeared on current captured screen*/
     SCREEN_CAPTURE_STATE_EXIT_PRIVATE_SCENE = 9,
+    /* ScreenCapture stopped by user switched */
+    SCREEN_CAPTURE_STATE_STOPPED_BY_USER_SWITCHED = 10,
 };
 
 enum AVScreenCaptureBufferType {
