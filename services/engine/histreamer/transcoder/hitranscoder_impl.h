@@ -73,8 +73,11 @@ private:
     Status ConfigureMetaData(const std::vector<std::shared_ptr<Meta>> &trackInfos);
     Status SetTrackMime(const std::vector<std::shared_ptr<Meta>> &trackInfos);
     Status ConfigureVideoWidthHeight(const TransCoderParam &transCoderParam);
+    Status ConfigureVideoBitrate();
     Status ConfigureInputVideoMetaData(const std::vector<std::shared_ptr<Meta>> &trackInfos, const size_t &index);
     bool SetValueByType(const std::shared_ptr<Meta> &innerMeta, std::shared_ptr<Meta> &outputMeta);
+    bool ProcessMetaKey(
+        const std::shared_ptr<Meta> &innerMeta, std::shared_ptr<Meta> &outputMeta, const std::string &metaKey);
     void ConfigureMetaDataToTrackFormat(const std::shared_ptr<Meta> &globalInfo,
         const std::vector<std::shared_ptr<Meta>> &trackInfos);
 

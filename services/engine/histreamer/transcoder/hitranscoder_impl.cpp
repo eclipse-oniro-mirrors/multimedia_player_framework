@@ -34,6 +34,14 @@ constexpr int32_t TRANSCODER_COMPLETE_PROGRESS = 100;
 constexpr int8_t VIDEO_HDR_TYPE_NONE = 0; // This option is used to mark none HDR type.
 constexpr int8_t VIDEO_HDR_TYPE_VIVID = 1; // This option is used to mark HDR Vivid type.
 constexpr int32_t MINIMUM_WIDTH_HEIGHT = 240;
+constexpr int32_t AVTRANSCODER_DEFAULT_VIDEO_BIT_RATE = 48000;
+constexpr int32_t HEIGHT_480 = 480;
+constexpr int32_t HEIGHT_720 = 720;
+constexpr int32_t HEIGHT_1080 = 1080;
+constexpr int32_t VIDEO_BITRATE_1M = 1024 * 1024;
+constexpr int32_t VIDEO_BITRATE_2M = 2 * VIDEO_BITRATE_1M;
+constexpr int32_t VIDEO_BITRATE_4M = 4 * VIDEO_BITRATE_1M;
+constexpr int32_t VIDEO_BITRATE_8M = 8 * VIDEO_BITRATE_1M;
 
 static const std::unordered_set<std::string> AVMETA_KEY = {
     { Tag::MEDIA_ALBUM },
@@ -50,6 +58,7 @@ static const std::unordered_set<std::string> AVMETA_KEY = {
     { Tag::MEDIA_TITLE },
     { Tag::VIDEO_HEIGHT },
     { Tag::VIDEO_WIDTH },
+    { Tag::VIDEO_FRAME_RATE },
     { Tag::VIDEO_ROTATION },
     { Tag::VIDEO_IS_HDR_VIVID },
     { Tag::MEDIA_LONGITUDE },
@@ -199,45 +208,59 @@ bool HiTransCoderImpl::SetValueByType(const std::shared_ptr<Meta> &innerMeta, st
     if (innerMeta == nullptr || outputMeta == nullptr) {
         return false;
     }
+    bool result = true;
     for (const auto &metaKey : AVMETA_KEY) {
-        bool isSetData = false;
-        Any type = OHOS::Media::GetDefaultAnyValue(metaKey);
-        if (Any::IsSameTypeWith<int32_t>(type)) {
-            int32_t intVal;
-            isSetData = !outputMeta->GetData(metaKey, intVal) && innerMeta->GetData(metaKey, intVal);
-            if (isSetData) {
-                outputMeta->SetData(metaKey, intVal);
-            }
-        } else if (Any::IsSameTypeWith<std::string>(type)) {
-            std::string strVal;
-            isSetData = !outputMeta->GetData(metaKey, strVal) && innerMeta->GetData(metaKey, strVal);
-            if (isSetData) {
-                outputMeta->SetData(metaKey, strVal);
-            }
-        } else if (Any::IsSameTypeWith<Plugins::VideoRotation>(type)) {
-            Plugins::VideoRotation rotation;
-            isSetData = !outputMeta->GetData(metaKey, rotation) && innerMeta->GetData(metaKey, rotation);
-            if (isSetData) {
-                outputMeta->SetData(metaKey, rotation);
-            }
-        } else if (Any::IsSameTypeWith<int64_t>(type)) {
-            int64_t duration;
-            isSetData = !outputMeta->GetData(metaKey, duration) && innerMeta->GetData(metaKey, duration);
-            if (isSetData) {
-                outputMeta->SetData(metaKey, duration);
-            }
-        } else if (Any::IsSameTypeWith<bool>(type)) {
-            bool isTrue;
-            isSetData = !outputMeta->GetData(metaKey, isTrue) && innerMeta->GetData(metaKey, isTrue);
-            if (isSetData) {
-                outputMeta->SetData(metaKey, isTrue);
-            }
-        } else if (Any::IsSameTypeWith<float>(type)) {
-            float value;
-            isSetData = !outputMeta->GetData(metaKey, value) && innerMeta->GetData(metaKey, value);
-            if (isSetData) {
-                outputMeta->SetData(metaKey, value);
-            }
+        result &= ProcessMetaKey(innerMeta, outputMeta, metaKey);
+    }
+    return result;
+}
+
+bool HiTransCoderImpl::ProcessMetaKey(
+    const std::shared_ptr<Meta> &innerMeta, std::shared_ptr<Meta> &outputMeta, const std::string &metaKey)
+{
+    bool isSetData = false;
+    Any type = OHOS::Media::GetDefaultAnyValue(metaKey);
+    if (Any::IsSameTypeWith<int32_t>(type)) {
+        int32_t intVal;
+        isSetData = !outputMeta->GetData(metaKey, intVal) && innerMeta->GetData(metaKey, intVal);
+        if (isSetData) {
+            outputMeta->SetData(metaKey, intVal);
+        }
+    } else if (Any::IsSameTypeWith<std::string>(type)) {
+        std::string strVal;
+        isSetData = !outputMeta->GetData(metaKey, strVal) && innerMeta->GetData(metaKey, strVal);
+        if (isSetData) {
+            outputMeta->SetData(metaKey, strVal);
+        }
+    } else if (Any::IsSameTypeWith<Plugins::VideoRotation>(type)) {
+        Plugins::VideoRotation rotation;
+        isSetData = !outputMeta->GetData(metaKey, rotation) && innerMeta->GetData(metaKey, rotation);
+        if (isSetData) {
+            outputMeta->SetData(metaKey, rotation);
+        }
+    } else if (Any::IsSameTypeWith<int64_t>(type)) {
+        int64_t duration;
+        isSetData = !outputMeta->GetData(metaKey, duration) && innerMeta->GetData(metaKey, duration);
+        if (isSetData) {
+            outputMeta->SetData(metaKey, duration);
+        }
+    } else if (Any::IsSameTypeWith<bool>(type)) {
+        bool isTrue;
+        isSetData = !outputMeta->GetData(metaKey, isTrue) && innerMeta->GetData(metaKey, isTrue);
+        if (isSetData) {
+            outputMeta->SetData(metaKey, isTrue);
+        }
+    } else if (Any::IsSameTypeWith<float>(type)) {
+        float value;
+        isSetData = !outputMeta->GetData(metaKey, value) && innerMeta->GetData(metaKey, value);
+        if (isSetData) {
+            outputMeta->SetData(metaKey, value);
+        }
+    } else if (Any::IsSameTypeWith<double>(type)) {
+        double value;
+        isSetData = !outputMeta->GetData(metaKey, value) && innerMeta->GetData(metaKey, value);
+        if (isSetData) {
+            outputMeta->SetData(metaKey, value);
         }
     }
     return true;
@@ -398,6 +421,33 @@ Status HiTransCoderImpl::ConfigureVideoWidthHeight(const TransCoderParam &transC
     return Status::OK;
 }
 
+Status HiTransCoderImpl::ConfigureVideoBitrate()
+{
+    int64_t videoBitrate = 0;
+    if (videoEncFormat_->Find(Tag::MEDIA_BITRATE) != videoEncFormat_->end()) {
+        videoEncFormat_->Get<Tag::MEDIA_BITRATE>(videoBitrate);
+    }
+    MEDIA_LOG_D("get videoBitrate: %{public}d", videoBitrate);
+    if (AVTRANSCODER_DEFAULT_VIDEO_BIT_RATE != videoBitrate) {
+        return Status::OK;
+    }
+    int32_t outputHeight = 0;
+    videoEncFormat_->GetData(Tag::VIDEO_HEIGHT, outputHeight);
+    int32_t defaultVideoBitrate = videoBitrate;
+    if (outputHeight > HEIGHT_1080) {
+        defaultVideoBitrate = VIDEO_BITRATE_8M;
+    } else if (outputHeight > HEIGHT_720) {
+        defaultVideoBitrate = VIDEO_BITRATE_4M;
+    } else if (outputHeight > HEIGHT_480) {
+        defaultVideoBitrate = VIDEO_BITRATE_2M;
+    } else {
+        defaultVideoBitrate = VIDEO_BITRATE_1M;
+    }
+    MEDIA_LOG_D("set videoBitrate: %{public}d", defaultVideoBitrate);
+    videoEncFormat_->Set<Tag::MEDIA_BITRATE>(defaultVideoBitrate);
+    return Status::OK;
+}
+
 int32_t HiTransCoderImpl::Configure(const TransCoderParam &transCoderParam)
 {
     MEDIA_LOG_I("HiTransCoderImpl::Configure()");
@@ -465,6 +515,7 @@ int32_t HiTransCoderImpl::Prepare()
             return static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER);
         }
         isNeedVideoResizeFilter_ = width != inputVideoWidth_ || height != inputVideoHeight_;
+        ConfigureVideoBitrate();
     }
     Status ret = pipeline_->Prepare();
     if (ret != Status::OK) {
