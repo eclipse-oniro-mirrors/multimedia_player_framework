@@ -129,14 +129,14 @@ int32_t StreamIDManager::SetPlay(const int32_t soundID, const int32_t streamID, 
 
     CHECK_AND_RETURN_RET_LOG(streamPlayingThreadPool_ != nullptr, MSERR_INVALID_VAL,
         "Failed to obtain stream play threadpool.");
-    MEDIA_LOGI("StreamIDManager cur task num:%{public}zu, maxStreams_:%{public}d",
-        currentTaskNum_, maxStreams_);
     // CacheBuffer must prepare before play.
     std::shared_ptr<CacheBuffer> freshCacheBuffer = FindCacheBuffer(streamID);
     CHECK_AND_RETURN_RET_LOG(freshCacheBuffer != nullptr, -1, "Invalid fresh cache buffer");
     freshCacheBuffer->PreparePlay(streamID, audioRendererInfo_, playParameters);
     int32_t tempMaxStream = maxStreams_;
-    if (currentTaskNum_ < static_cast<size_t>(tempMaxStream)) {
+    MEDIA_LOGI("StreamIDManager cur task num:%{public}zu, maxStreams_:%{public}d",
+        playingStreamIDs_.size(), maxStreams_);
+    if (playingStreamIDs_.size() < static_cast<size_t>(tempMaxStream)) {
         AddPlayTask(streamID, playParameters);
     } else {
         int32_t playingStreamID = playingStreamIDs_.back();
@@ -251,7 +251,6 @@ int32_t StreamIDManager::AddPlayTask(const int32_t streamID, const PlayParams pl
     CHECK_AND_RETURN_RET_LOG(streamPlayTask != nullptr, MSERR_INVALID_VAL, "Failed to obtain stream play Task");
     streamPlayingThreadPool_->AddTask(streamPlayTask);
     std::lock_guard lock(streamIDManagerLock_);
-    currentTaskNum_++;
     QueueAndSortPlayingStreamID(streamID);
     return MSERR_OK;
 }
@@ -268,7 +267,6 @@ int32_t StreamIDManager::DoPlay(const int32_t streamID)
     MEDIA_LOGI("StreamIDManager::DoPlay failed streamID:%{public}d", streamID);
     {
         std::lock_guard lock(streamIDManagerLock_);
-        currentTaskNum_--;
         for (int32_t i = 0; i < static_cast<int32_t>(playingStreamIDs_.size()); i++) {
             int32_t playingStreamID = playingStreamIDs_[i];
             std::shared_ptr<CacheBuffer> playingCacheBuffer = FindCacheBuffer(playingStreamID);
@@ -365,7 +363,6 @@ void StreamIDManager::OnPlayFinished()
 {
     {
         std::lock_guard lock(streamIDManagerLock_);
-        currentTaskNum_--;
         for (int32_t i = 0; i < static_cast<int32_t>(playingStreamIDs_.size()); i++) {
             int32_t playingStreamID = playingStreamIDs_[i];
             std::shared_ptr<CacheBuffer> playingCacheBuffer = FindCacheBuffer(playingStreamID);
