@@ -2363,6 +2363,7 @@ void ScreenCaptureServer::ReleaseInner()
         std::lock_guard<std::mutex> lock(mutexGlobal_);
         serverMap.erase(sessionId);
     }
+    skipPrivacyWindowIDsVec_.clear();
     SetMetaDataReport();
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances ReleaseInner E", FAKE_POINTER(this));
 }
