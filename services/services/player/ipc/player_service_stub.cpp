@@ -852,6 +852,8 @@ int32_t PlayerServiceStub::SetMediaSource(MessageParcel &data, MessageParcel &re
     strategy.preferredHeight = data.ReadUint32();
     strategy.preferredBufferDuration = data.ReadUint32();
     strategy.preferredHdr = data.ReadBool();
+    strategy.preferredAudioLanguage = data.ReadString();
+    strategy.preferredSubtitleLanguage = data.ReadString();
     reply.WriteInt32(SetMediaSource(mediaSource, strategy));
     if (mimeType == AVMimeType::APPLICATION_M3U8) {
         (void)::close(fd);
