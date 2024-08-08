@@ -306,14 +306,18 @@ int32_t ScreenCaptureServerFunctionTest::StartStreamAudioCapture()
     return ret;
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, CaptureStreamParamsIllegal_001, TestSize.Level2)
+// videoCapInfo and innerCapInfo IGNORE
+HWTEST_F(ScreenCaptureServerFunctionTest, CaptureStreamParamsInvalid_001, TestSize.Level2)
 {
     SetConfig();
+    config_.videoInfo.videoCapInfo.videoFrameWidth = 0;
+    config_.videoInfo.videoCapInfo.videoFrameHeight = 0;
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     ASSERT_NE(screenCaptureServer_->CheckAllParams(), MSERR_OK);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, CaptureStreamParamsIllegal_002, TestSize.Level2)
+// audioSampleRate INVALID
+HWTEST_F(ScreenCaptureServerFunctionTest, CaptureStreamParamsInvalid_002, TestSize.Level2)
 {
     SetConfig();
     config_.audioInfo.micCapInfo.audioSampleRate = 12345;
@@ -325,7 +329,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CaptureStreamParamsIllegal_002, TestSi
     ASSERT_NE(InitStreamScreenCaptureServer(), MSERR_OK);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, CaptureStreamParamsIllegal_003, TestSize.Level2)
+// videoCapInfo INVALID
+HWTEST_F(ScreenCaptureServerFunctionTest, CaptureStreamParamsInvalid_003, TestSize.Level2)
 {
     SetConfig();
     config_.audioInfo.micCapInfo.audioSampleRate = 16000;
@@ -339,7 +344,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CaptureStreamParamsIllegal_003, TestSi
     ASSERT_NE(InitStreamScreenCaptureServer(), MSERR_OK);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, CaptureStreamParamsIllegal_004, TestSize.Level2)
+// dataType INVALID
+HWTEST_F(ScreenCaptureServerFunctionTest, CaptureStreamParamsInvalid_004, TestSize.Level2)
 {
     SetConfig();
     config_.audioInfo.micCapInfo.audioSampleRate = 16000;
@@ -353,7 +359,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CaptureStreamParamsIllegal_004, TestSi
     ASSERT_NE(screenCaptureServer_->CheckAllParams(), MSERR_OK);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, CaptureStreamParamsIllegal_005, TestSize.Level2)
+HWTEST_F(ScreenCaptureServerFunctionTest, CaptureStreamParamsInvalid_005, TestSize.Level2)
 {
     SetConfig();
     config_.audioInfo.micCapInfo.audioSampleRate = 16000;
@@ -368,7 +374,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CaptureStreamParamsIllegal_005, TestSi
     ASSERT_NE(screenCaptureServer_->CheckAllParams(), MSERR_OK);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, CaptureStreamParamsIllegal_006, TestSize.Level2)
+HWTEST_F(ScreenCaptureServerFunctionTest, CaptureStreamParamsInvalid_006, TestSize.Level2)
 {
     SetConfig();
     config_.audioInfo.micCapInfo.audioSampleRate = 16000;
@@ -381,19 +387,10 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CaptureStreamParamsIllegal_006, TestSi
     ASSERT_NE(screenCaptureServer_->CheckAllParams(), MSERR_OK);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, CaptureStreamParamsIllegal_007, TestSize.Level2)
-{
-    SetConfig();
-    config_.videoInfo.videoCapInfo.videoFrameWidth = 0;
-    config_.videoInfo.videoCapInfo.videoFrameHeight = 0;
-    screenCaptureServer_->captureConfig_ = config_;
-    ASSERT_NE(screenCaptureServer_->CheckAllParams(), MSERR_OK);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, CaptureFileParamsIllegal_001, TestSize.Level2)
+HWTEST_F(ScreenCaptureServerFunctionTest, CaptureFileParamsInvalid_001, TestSize.Level2)
 {
     RecorderInfo recorderInfo;
-    SetRecorderInfo("capture_file_params_illegal_001.mp4", recorderInfo);
+    SetRecorderInfo("capture_file_params_invalid_001.mp4", recorderInfo);
     SetConfigFile(recorderInfo);
     config_.audioInfo.micCapInfo.audioSampleRate = 16000;
     config_.audioInfo.micCapInfo.audioChannels = 2;
@@ -406,10 +403,10 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CaptureFileParamsIllegal_001, TestSize
     ASSERT_NE(InitFileScreenCaptureServer(), MSERR_OK);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, CaptureFileParamsIllegal_002, TestSize.Level2)
+HWTEST_F(ScreenCaptureServerFunctionTest, CaptureFileParamsInvalid_002, TestSize.Level2)
 {
     RecorderInfo recorderInfo;
-    SetRecorderInfo("capture_file_params_illegal_002.mp4", recorderInfo);
+    SetRecorderInfo("capture_file_params_invalid_002.mp4", recorderInfo);
     SetConfigFile(recorderInfo);
     config_.audioInfo.micCapInfo.audioSampleRate = 16000;
     config_.audioInfo.micCapInfo.audioChannels = 2;
@@ -420,10 +417,10 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CaptureFileParamsIllegal_002, TestSize
     ASSERT_NE(InitFileScreenCaptureServer(), MSERR_OK);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, CaptureFileParamsIllegal_003, TestSize.Level2)
+HWTEST_F(ScreenCaptureServerFunctionTest, CaptureFileParamsInvalid_003, TestSize.Level2)
 {
     RecorderInfo recorderInfo;
-    SetRecorderInfo("capture_file_params_illegal_003.mp4", recorderInfo);
+    SetRecorderInfo("capture_file_params_invalid_003.mp4", recorderInfo);
     SetConfigFile(recorderInfo);
     config_.audioInfo.micCapInfo.audioSampleRate = 16000;
     config_.audioInfo.micCapInfo.audioChannels = 2;
@@ -435,10 +432,11 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CaptureFileParamsIllegal_003, TestSize
     ASSERT_NE(screenCaptureServer_->CheckAllParams(), MSERR_OK);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, CaptureFileParamsIllegal_004, TestSize.Level2)
+// videoCapInfo Ignored, is valid
+HWTEST_F(ScreenCaptureServerFunctionTest, CaptureFileParamsInvalid_004, TestSize.Level2)
 {
     RecorderInfo recorderInfo;
-    SetRecorderInfo("capture_file_params_illegal_004.mp4", recorderInfo);
+    SetRecorderInfo("capture_file_params_invalid_004.mp4", recorderInfo);
     SetConfigFile(recorderInfo);
     config_.audioInfo.micCapInfo.audioSampleRate = 16000;
     config_.audioInfo.micCapInfo.audioChannels = 2;
@@ -452,10 +450,10 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CaptureFileParamsIllegal_004, TestSize
     ASSERT_EQ(screenCaptureServer_->CheckAllParams(), MSERR_OK);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, CaptureFileParamsIllegal_005, TestSize.Level2)
+HWTEST_F(ScreenCaptureServerFunctionTest, CaptureFileParamsInvalid_005, TestSize.Level2)
 {
     RecorderInfo recorderInfo;
-    SetRecorderInfo("capture_file_params_illegal_005.mp4", recorderInfo);
+    SetRecorderInfo("capture_file_params_invalid_005.mp4", recorderInfo);
     SetConfigFile(recorderInfo);
     config_.audioInfo.micCapInfo.audioSampleRate = -1;
     config_.audioInfo.micCapInfo.audioChannels = 2;
@@ -464,13 +462,13 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CaptureFileParamsIllegal_005, TestSize
     config_.audioInfo.innerCapInfo.audioChannels = 2;
     config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
     screenCaptureServer_->captureConfig_ = config_;
-    ASSERT_EQ(screenCaptureServer_->CheckAllParams(), MSERR_OK);
+    ASSERT_NE(screenCaptureServer_->CheckAllParams(), MSERR_OK);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, CaptureFileParamsIllegal_006, TestSize.Level2)
+HWTEST_F(ScreenCaptureServerFunctionTest, CaptureFileParamsInvalid_006, TestSize.Level2)
 {
     RecorderInfo recorderInfo;
-    SetRecorderInfo("capture_file_params_illegal_006.mp4", recorderInfo);
+    SetRecorderInfo("capture_file_params_invalid_006.mp4", recorderInfo);
     SetConfigFile(recorderInfo);
     config_.audioInfo.micCapInfo.audioSampleRate = 16000;
     config_.audioInfo.micCapInfo.audioChannels = 2;
@@ -479,13 +477,14 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CaptureFileParamsIllegal_006, TestSize
     config_.audioInfo.innerCapInfo.audioChannels = 2;
     config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
     screenCaptureServer_->captureConfig_ = config_;
-    ASSERT_EQ(screenCaptureServer_->CheckAllParams(), MSERR_OK);
+    ASSERT_NE(screenCaptureServer_->CheckAllParams(), MSERR_OK);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, CaptureFileParamsIllegal_007, TestSize.Level2)
+// micCapInfo Ignored, is valid
+HWTEST_F(ScreenCaptureServerFunctionTest, CaptureFileParamsInvalid_007, TestSize.Level2)
 {
     RecorderInfo recorderInfo;
-    SetRecorderInfo("capture_file_params_illegal_007.mp4", recorderInfo);
+    SetRecorderInfo("capture_file_params_invalid_007.mp4", recorderInfo);
     SetConfigFile(recorderInfo);
     config_.audioInfo.micCapInfo.audioSampleRate = 0;
     config_.audioInfo.micCapInfo.audioChannels = 0;
@@ -530,7 +529,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioDataSource_001, TestSize.Level2)
     screenCaptureServer_->audioSource_->VoIPStateUpdate(audioRendererChangeInfos);
     screenCaptureServer_->audioSource_->isInVoIPCall_ = true;
     screenCaptureServer_->audioSource_->VoIPStateUpdate(audioRendererChangeInfos);
-    screenCaptureServer_->audioSource_->isInVoIPCall_ = false;
     sleep(RECORDER_TIME);
     ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
 }
