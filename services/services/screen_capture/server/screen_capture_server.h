@@ -323,6 +323,7 @@ private:
     int32_t GetMissionIds(std::vector<uint64_t> &missionIds);
     int32_t MakeVirtualScreenMirror();
     int32_t CreateVirtualScreen(const std::string &name, sptr<OHOS::Surface> consumer);
+    int32_t PrepareVirtualScreenMirror();
     void DestroyVirtualScreen();
 
     bool CheckScreenCapturePermission();

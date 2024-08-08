@@ -1609,6 +1609,12 @@ int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string &name, sptr<O
     }
     screenId_ = ScreenManager::GetInstance().CreateVirtualScreen(virScrOption);
     CHECK_AND_RETURN_RET_LOG(screenId_ >= 0, MSERR_UNKNOWN, "CreateVirtualScreen failed, invalid screenId");
+    MEDIA_LOGI("CreateVirtualScreen success");
+    return PrepareVirtualScreenAction();
+}
+
+int32_t ScreenCaptureServer::PrepareVirtualScreenMirror()
+{
     for (size_t i = 0; i < contentFilter_.windowIDsVec.size(); i++) {
         MEDIA_LOGI("After CreateVirtualScreen windowIDsVec value :%{public}" PRIu64, contentFilter_.windowIDsVec[i]);
     }
@@ -1637,7 +1643,6 @@ int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string &name, sptr<O
         return MSERR_UNKNOWN;
     }
     isConsumerStart_ = true;
-    MEDIA_LOGI("CreateVirtualScreen success");
     return MSERR_OK;
 }
 
@@ -2129,7 +2134,7 @@ int32_t ScreenCaptureServer::SkipPrivacyMode(std::vector<uint64_t> &windowIDsVec
     for (size_t i = 0; i < windowIDsVec.size(); i++) {
         MEDIA_LOGI("SkipPrivacyMode windowIDsVec value :%{public}" PRIu64, windowIDsVec[i]);
     }
-    skipPrivacyWindowIDsVec_.assign(windowIDsVec.begin(),windowIDsVec.end());
+    skipPrivacyWindowIDsVec_.assign(windowIDsVec.begin(), windowIDsVec.end());
     if (captureState_ != AVScreenCaptureState::STARTED) { // Before Start
         return MSERR_OK;
     }
