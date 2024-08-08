@@ -169,18 +169,6 @@ int32_t AudioCapturerWrapper::Stop()
     return MSERR_OK;
 }
 
-void AudioCapturerWrapper::SetIsMuted(bool isMuted)
-{
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " SetIsMuted isMuted:%{public}d", FAKE_POINTER(this), isMuted);
-    isMuted_.store(isMuted);
-}
-
-bool AudioCapturerWrapper::GetIsMuted()
-{
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " GetIsMuted isMuted:%{public}d", FAKE_POINTER(this), isMuted_.load());
-    return isMuted_.load();
-}
-
 int32_t AudioCapturerWrapper::UpdateAudioCapturerConfig(ScreenCaptureContentFilter &filter)
 {
     MEDIA_LOGI("AudioCapturerWrapper::UpdateAudioCapturerConfig start");

@@ -42,7 +42,8 @@ public:
     int32_t InitStreamScreenCaptureServer();
     void SetHapPermission();
     int32_t SetScreenCaptureObserver();
-    int32_t StartAudioCapture();
+    int32_t StartFileAudioCapture();
+    int32_t StartStreamAudioCapture();
 
 protected:
     std::shared_ptr<ScreenCaptureServer> screenCaptureServer_;
