@@ -485,7 +485,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CaptureFileParamsIllegal_006, TestSize
 HWTEST_F(ScreenCaptureServerFunctionTest, CaptureFileParamsIllegal_007, TestSize.Level2)
 {
     RecorderInfo recorderInfo;
-    SetRecorderInfo("capture_file_params_illegal_006.mp4", recorderInfo);
+    SetRecorderInfo("capture_file_params_illegal_007.mp4", recorderInfo);
     SetConfigFile(recorderInfo);
     config_.audioInfo.micCapInfo.audioSampleRate = 0;
     config_.audioInfo.micCapInfo.audioChannels = 0;
