@@ -313,7 +313,6 @@ private:
     int32_t CheckCaptureFileParams();
     int32_t SetCanvasRotationInner();
     int32_t SkipPrivacyModeInner();
-
     int32_t SetScreenScaleMode();
     void InitAppInfo();
     void CloseFd();

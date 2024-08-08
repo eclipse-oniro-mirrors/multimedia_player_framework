@@ -507,7 +507,7 @@ int32_t ScreenCaptureServiceProxy::SkipPrivacyMode(std::vector<uint64_t> &window
     token = data.WriteInt32(static_cast<int32_t>(windowIDsVec.size()));
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write windowIDsVec size!");
     for (size_t i = 0; i < windowIDsVec.size(); i++) {
-        token = data.WriteUInt64(static_cast<uint64_t>(windowIDsVec[i]));
+        token = data.WriteUint64(static_cast<uint64_t>(windowIDsVec[i]));
         CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write windowIDs");
     }
     int error = Remote()->SendRequest(SKIP_PRIVACY, data, reply, option);
