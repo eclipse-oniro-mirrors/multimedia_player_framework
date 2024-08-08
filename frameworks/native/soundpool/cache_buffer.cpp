@@ -268,11 +268,11 @@ void CacheBuffer::OnWriteData(size_t length)
 
         audioRenderer_->Enqueue(bufDesc);
     } else {
-        MEDIA_LOGI("CacheBuffer::OnWriteData , cacheDataFrameNum_: %{public}zu", cacheDataFrameNum_);
-        MEDIA_LOGI("CacheBuffer::OnWriteData , length: %{public}zu", length);
-        MEDIA_LOGI("CacheBuffer::OnWriteData , bufDesc.buffer: %{public}d", bufDesc.buffer != nullptr);
-        MEDIA_LOGI("CacheBuffer::OnWriteData , audioBuffer: %{public}d", audioBuffer != nullptr);
-        MEDIA_LOGI("CacheBuffer::OnWriteData , audioBuffer->buffer: %{public}d", audioBuffer->buffer != nullptr);
+        MEDIA_LOGE("CacheBuffer::OnWriteData , cacheDataFrameNum_: %{public}zu", cacheDataFrameNum_);
+        MEDIA_LOGE("CacheBuffer::OnWriteData , length: %{public}zu", length);
+        MEDIA_LOGE("CacheBuffer::OnWriteData , bufDesc.buffer: %{public}d", bufDesc.buffer != nullptr);
+        MEDIA_LOGE("CacheBuffer::OnWriteData , audioBuffer: %{public}d", audioBuffer != nullptr);
+        MEDIA_LOGE("CacheBuffer::OnWriteData , audioBuffer->buffer: %{public}d", audioBuffer->buffer != nullptr);
     }
     cacheDataFrameNum_++;
 }
