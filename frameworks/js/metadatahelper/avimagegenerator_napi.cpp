@@ -130,14 +130,16 @@ void AVImageGeneratorNapi::Destructor(napi_env env, void *nativeObject, void *fi
     (void)finalize;
     if (nativeObject != nullptr) {
         AVImageGeneratorNapi *generator = reinterpret_cast<AVImageGeneratorNapi *>(nativeObject);
-        auto task = generator->ReleaseTask();
-        if (task != nullptr) {
-            MEDIA_LOGI("Destructor Wait Release Task Start");
-            task->GetResult(); // sync release
-            MEDIA_LOGI("Destructor Wait Release Task End");
-        }
-        generator->WaitTaskQueStop();
-        delete generator;
+        std::thread([generator]() -> void {
+            auto task = generator->ReleaseTask();
+            if (task != nullptr) {
+                MEDIA_LOGI("Destructor Wait Release Task Start");
+                task->GetResult(); // sync release
+                MEDIA_LOGI("Destructor Wait Release Task End");
+            }
+            generator->WaitTaskQueStop();
+            delete generator;
+        }).detach();
     }
     MEDIA_LOGI("Destructor success");
 }
@@ -404,8 +406,9 @@ std::shared_ptr<TaskHandler<TaskRet>> AVImageGeneratorNapi::ReleaseTask()
         return task;
     }
 
-    task = std::make_shared<TaskHandler<TaskRet>>([this]() {
+    task = std::make_shared<TaskHandler<TaskRet>>([this, &isReleased = isReleased_]() {
         MEDIA_LOGI("Release Task In");
+        isReleased.store(true);
         PauseListenCurrentResource(); // Pause event listening for the current resource
         ResetUserParameters();
 
@@ -425,10 +428,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVImageGeneratorNapi::ReleaseTask()
     });
 
     std::unique_lock<std::mutex> lock(taskMutex_);
-    isReleased_.store(true);
-    (void)taskQue_->EnqueueTask(task, true); // CancelNotExecutedTask
-    stopWait_ = true;
-    stateChangeCond_.notify_all();
+    (void)taskQue_->EnqueueTask(task); // CancelNotExecutedTask
     return task;
 }
 
