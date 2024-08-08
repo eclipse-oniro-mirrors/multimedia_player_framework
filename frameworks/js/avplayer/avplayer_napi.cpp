@@ -17,7 +17,7 @@
 #include "avplayer_callback.h"
 #include "media_errors.h"
 #include "common_napi.h"
-#ifdef SUPPORT_DRM
+#ifdef SUPPORT_AVPLAYER_DRM
 #include "key_session_impl.h"
 #endif
 #ifdef SUPPORT_VIDEO
@@ -1136,7 +1136,7 @@ napi_value AVPlayerNapi::JsSetUrl(napi_env env, napi_callback_info info)
     return result;
 }
 
-#ifdef SUPPORT_DRM
+#ifdef SUPPORT_AVPLAYER_DRM
 napi_value AVPlayerNapi::JsSetDecryptConfig(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("AVPlayerNapi::JsSetDecryptConfig");

@@ -1059,7 +1059,7 @@ int32_t HiPlayerImpl::SetDecryptConfig(const sptr<OHOS::DrmStandard::IMediaKeySe
     bool svp)
 {
     MEDIA_LOG_I_SHORT("SetDecryptConfig in");
-#ifdef SUPPORT_DRM
+#ifdef SUPPORT_AVPLAYER_DRM
     FALSE_RETURN_V_MSG_E(keySessionProxy != nullptr, (int32_t)(Status::ERROR_INVALID_PARAMETER),
         "SetDecryptConfig failed, keySessionProxy == nullptr");
     keySessionServiceProxy_ = keySessionProxy;
