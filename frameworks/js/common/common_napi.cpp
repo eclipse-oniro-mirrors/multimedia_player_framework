@@ -262,6 +262,8 @@ bool CommonNapi::GetPlayStrategy(napi_env env, napi_value value, AVPlayStrategyT
     if (!GetPropertyInt32(env, value, "mutedMediaType", playStrategy.mutedMediaType)) {
         playStrategy.mutedMediaType = MediaType::MEDIA_TYPE_MAX_COUNT; // use default value
     }
+    playStrategy.preferredAudioLanguage = GetPropertyString(env, value, "preferredAudioLanguage");
+    playStrategy.preferredSubtitleLanguage = GetPropertyString(env, value, "preferredSubtitleLanguage");
     return true;
 }
 
