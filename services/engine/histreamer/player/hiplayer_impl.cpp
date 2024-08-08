@@ -2530,9 +2530,9 @@ int32_t HiPlayerImpl::SeekContinous(int32_t mSeconds, int64_t seekContinousBatch
     FALSE_RETURN_V(demuxer_ && videoDecoder_, TransStatus(Status::OK));
     FALSE_RETURN_V(!isNetWorkPlay_, TransStatus(Status::OK));
     FALSE_RETURN_V(seekContinousBatchNo_.load() <= seekContinousBatchNo, TransStatus(Status::OK));
+    lastSeekContinousPos_ = mSeconds;
     if (seekContinousBatchNo_.load() == seekContinousBatchNo) {
         FALSE_RETURN_V(draggingPlayerAgent_ != nullptr, TransStatus(Status::OK));
-        lastSeekContinousPos_ = mSeconds;
         draggingPlayerAgent_->UpdateSeekPos(mSeconds);
         MEDIA_LOG_I_SHORT("HiPlayerImpl::SeekContinous in " PUBLIC_LOG_D32, mSeconds);
         return TransStatus(Status::OK);
@@ -2541,7 +2541,6 @@ int32_t HiPlayerImpl::SeekContinous(int32_t mSeconds, int64_t seekContinousBatch
     auto res = StartSeekContinous();
     FALSE_RETURN_V_MSG_E(res == Status::OK && draggingPlayerAgent_ != nullptr, TransStatus(res),
         "StartSeekContinous failed");
-    lastSeekContinousPos_ = mSeconds;
     draggingPlayerAgent_->UpdateSeekPos(mSeconds);
     MEDIA_LOG_I_SHORT("HiPlayerImpl::SeekContinous start " PUBLIC_LOG_D32, mSeconds);
     return TransStatus(Status::OK);
@@ -2553,7 +2552,7 @@ Status HiPlayerImpl::StartSeekContinous()
     FALSE_RETURN_V(demuxer_ && videoDecoder_, Status::OK);
     draggingPlayerAgent_ = DraggingPlayerAgent::Create();
     FALSE_RETURN_V_MSG_E(draggingPlayerAgent_ != nullptr, Status::ERROR_INVALID_OPERATION, "failed to create agent");
-    Status res = draggingPlayerAgent_->Init(demuxer_, videoDecoder_);
+    Status res = draggingPlayerAgent_->Init(demuxer_, videoDecoder_, playerId_);
     if (res != Status::OK) {
         draggingPlayerAgent_ = nullptr;
         return res;
