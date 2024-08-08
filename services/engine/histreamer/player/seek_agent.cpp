@@ -87,15 +87,26 @@ Status SeekAgent::Seek(int64_t seekPos)
     MEDIA_LOG_I("demuxer_ realSeekTime: %{public}" PRId64 "ns", realSeekTime);
     demuxer_->PrepareBeforeStart();
     MEDIA_LOG_I("ResumeForSeek end");
+    bool isClosetSeekDone = true;
     {
         AutoLock lock(targetArrivedLock_);
         demuxer_->ResumeForSeek();
-        targetArrivedCond_.WaitFor(lock, WAIT_MAX_MS, [this] {return isAudioTargetArrived_ && isVideoTargetArrived_;});
+        isClosetSeekDone = targetArrivedCond_.WaitFor(lock, WAIT_MAX_MS,
+            [this] {return (isAudioTargetArrived_ && isVideoTargetArrived_) || isInterrputNeeded_;});
         MEDIA_LOG_I("Wait end");
     }
     MEDIA_LOG_I("PauseForSeek start");
     demuxer_->PauseForSeek();
     st = RemoveBufferFilledListener();
+    // interrupt with error
+    if (isInterrputNeeded_) {
+        return Status::ERROR_INVALID_OPERATION;
+    }
+    if (!isClosetSeekDone) {
+        MEDIA_LOG_I("closet seek time out");
+        auto st = demuxer_->SeekTo(seekPos, Plugins::SeekMode::SEEK_CLOSEST_INNER, realSeekTime);
+        FALSE_RETURN_V_MSG_E(st == Status::OK, Status::ERROR_INVALID_OPERATION, "Seekto error.");
+    }
     return st;
 }
 
@@ -228,6 +239,12 @@ Status SeekAgent::OnVideoBufferFilled(std::shared_ptr<AVBuffer>& buffer,
     MEDIA_LOG_D("ReturnBuffer, pts: %{public}" PRId64 ", isPushBuffer: %{public}i", buffer->pts_, !canDrop);
     producer->ReturnBuffer(buffer, !canDrop);
     return Status::OK;
+}
+
+void SeekAgent::SetInterruptState(bool isNeed)
+{
+    isInterrputNeeded_ = isNeed;
+    targetArrivedCond_.NotifyAll();
 }
 }  // namespace Media
 }  // namespace OHOS

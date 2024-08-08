@@ -39,7 +39,7 @@ public:
         sptr<AVBufferQueueProducer> producer, int32_t trackId);
     Status OnVideoBufferFilled(std::shared_ptr<AVBuffer>& buffer,
         sptr<AVBufferQueueProducer> producer, int32_t trackId);
-
+    void SetInterruptState(bool isNeed);
 private:
     Status SetBufferFilledListener();
     Status RemoveBufferFilledListener();
@@ -57,7 +57,7 @@ private:
     std::map<uint32_t, sptr<AVBufferQueueProducer>> producerMap_;
     std::map<uint32_t, sptr<IBrokerListener>> listenerMap_;
 
-    static constexpr uint32_t WAIT_MAX_MS = 5000;
+    static constexpr uint32_t WAIT_MAX_MS = 10000;
     static constexpr uint32_t MS_TO_US = 1000;
 };
 
@@ -86,6 +86,7 @@ public:
 private:
     std::weak_ptr<SeekAgent> seekAgent_;
     sptr<AVBufferQueueProducer> producer_;
+    bool isInterrputNeeded_{false};
     int32_t trackId_;
 };
 } // namespace Media
