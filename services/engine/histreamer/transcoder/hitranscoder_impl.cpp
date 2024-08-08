@@ -34,7 +34,6 @@ constexpr int32_t TRANSCODER_COMPLETE_PROGRESS = 100;
 constexpr int8_t VIDEO_HDR_TYPE_NONE = 0; // This option is used to mark none HDR type.
 constexpr int8_t VIDEO_HDR_TYPE_VIVID = 1; // This option is used to mark HDR Vivid type.
 constexpr int32_t MINIMUM_WIDTH_HEIGHT = 240;
-constexpr int32_t AVTRANSCODER_DEFAULT_VIDEO_BIT_RATE = 48000;
 constexpr int32_t HEIGHT_480 = 480;
 constexpr int32_t HEIGHT_720 = 720;
 constexpr int32_t HEIGHT_1080 = 1080;
@@ -620,6 +619,7 @@ void HiTransCoderImpl::OnEvent(const Event &event)
                     ptr->OnInfo(TransCoderOnInfoType::INFO_TYPE_TRANSCODER_COMPLETED, 0);
                 }
             });
+            break;
         }
         default:
             break;
