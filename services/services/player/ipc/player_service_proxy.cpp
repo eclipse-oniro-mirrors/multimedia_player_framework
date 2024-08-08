@@ -619,6 +619,8 @@ int32_t PlayerServiceProxy::SetMediaSource(const std::shared_ptr<AVMediaSource> 
     (void)data.WriteUint32(strategy.preferredHeight);
     (void)data.WriteUint32(strategy.preferredBufferDuration);
     (void)data.WriteBool(strategy.preferredHdr);
+    (void)data.WriteString(strategy.preferredAudioLanguage);
+    (void)data.WriteString(strategy.preferredSubtitleLanguage);
     int32_t error = SendRequest(SET_MEDIA_SOURCE, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetMediaSource failed, error: %{public}d", error);
