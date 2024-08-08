@@ -632,8 +632,8 @@ int32_t HiPlayerImpl::Pause()
     FALSE_RETURN_V_MSG_E(pipelineStates_ != PlayerStates::PLAYER_PLAYBACK_COMPLETE,
         TransStatus(Status::OK), "completed not allow pause");
     Status ret = Status::OK;
-    syncManager_->Pause();
     ret = pipeline_->Pause();
+    syncManager_->Pause();
     if (ret != Status::OK) {
         UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
     }
@@ -1888,8 +1888,8 @@ Status HiPlayerImpl::Resume()
     MediaTrace trace("HiPlayerImpl::Resume");
     MEDIA_LOG_I_SHORT("Resume entered.");
     Status ret = Status::OK;
-    ret = pipeline_->Resume();
     syncManager_->Resume();
+    ret = pipeline_->Resume();
     if (audioSink_ != nullptr) {
         audioSink_->Resume();
     }
@@ -2140,8 +2140,8 @@ void HiPlayerImpl::NotifyAudioInterrupt(const Event& event)
         if (hintType == OHOS::AudioStandard::INTERRUPT_HINT_PAUSE
             || hintType == OHOS::AudioStandard::INTERRUPT_HINT_STOP) {
             Status ret = Status::OK;
-            syncManager_->Pause();
             ret = pipeline_->Pause();
+            syncManager_->Pause();
             if (audioSink_ != nullptr) {
                 audioSink_->Pause();
             }
