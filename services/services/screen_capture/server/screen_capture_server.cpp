@@ -2341,7 +2341,7 @@ ScreenCaptureObserverCallBack::ScreenCaptureObserverCallBack(
 
 bool ScreenCaptureObserverCallBack::StopAndRelease()
 {
-    MEDIA_LOGI("ScreenCaptureObserverCallBack: StopAndRelease");
+    MEDIA_LOGI("ScreenCaptureObserverCallBack::StopAndRelease");
     auto scrServer = screenCaptureServer_.lock();
     if (scrServer) {
         scrServer->StopScreenCaptureByEvent(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_CALL);

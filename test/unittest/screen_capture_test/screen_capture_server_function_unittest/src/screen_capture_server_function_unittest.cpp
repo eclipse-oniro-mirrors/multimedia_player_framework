@@ -35,7 +35,8 @@ using namespace OHOS::Media;
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "ScreenCaptureServerFunctionTest"};
 constexpr int32_t FLIE_CREATE_FLAGS = 0777;
-static const auto NOTIFICATION_SUBSCRIBER = NotificationSubscriber();
+static const std::string BUTTON_NAME_MIC = "mic";
+static const std::string BUTTON_NAME_STOP = "stop";
 }
 
 namespace OHOS {
@@ -131,7 +132,7 @@ int32_t ScreenCaptureServerFunctionTest::SetConfig()
         .micCapInfo = miccapinfo,
     };
 
-    VideoInfo videoinfo = {
+    VideoInfo videoInfo = {
         .videoCapInfo = videocapinfo,
         .videoEncInfo = videoEncInfo
     };
@@ -140,7 +141,7 @@ int32_t ScreenCaptureServerFunctionTest::SetConfig()
         .captureMode = CAPTURE_HOME_SCREEN,
         .dataType = ORIGINAL_STREAM,
         .audioInfo = audioinfo,
-        .videoInfo = videoinfo
+        .videoInfo = videoInfo
     };
     return MSERR_OK;
 }
@@ -217,7 +218,7 @@ void ScreenCaptureServerFunctionTest::OpenFileFd(std::string name)
     outputFd_ = open((SCREEN_CAPTURE_ROOT_DIR + name).c_str(), O_RDWR | O_CREAT, FLIE_CREATE_FLAGS);
 }
 
-int32_t ScreenCaptureServerFunctionTest::InitScreenCaptureServer()
+int32_t ScreenCaptureServerFunctionTest::InitFileScreenCaptureServer()
 {
     int32_t ret = screenCaptureServer_->SetCaptureMode(config_.captureMode);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetCaptureMode failed");
@@ -236,21 +237,30 @@ int32_t ScreenCaptureServerFunctionTest::InitScreenCaptureServer()
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetOutputFile failed");
     ret = screenCaptureServer_->InitAudioEncInfo(config_.audioInfo.audioEncInfo);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "InitAudioEncInfo failed");
-
-    bool isMicAudioCapInfoIgnored = config_.audioInfo.micCapInfo.audioChannels == 0 ||
-        config_.audioInfo.micCapInfo.audioSampleRate == 0;
-    if (!isMicAudioCapInfoIgnored) {
-        if ((config_.audioInfo.micCapInfo.audioChannels != config_.audioInfo.innerCapInfo.audioChannels) ||
-            (config_.audioInfo.micCapInfo.audioSampleRate != config_.audioInfo.innerCapInfo.audioSampleRate)) {
-            MEDIA_LOGE("InitCaptureFile error, inner and mic param not consistent");
-            return MSERR_INVALID_VAL;
-        }
-        ret = screenCaptureServer_->InitAudioCap(config_.audioInfo.micCapInfo);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "init micAudioCap failed");
-    }
+    ret = screenCaptureServer_->InitAudioCap(config_.audioInfo.micCapInfo);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "init micAudioCap failed");
     ret = screenCaptureServer_->InitAudioCap(config_.audioInfo.innerCapInfo);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "init innerCapInfo failed, innerCapInfo should be valid");
 
+    ret = screenCaptureServer_->InitVideoEncInfo(config_.videoInfo.videoEncInfo);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "InitVideoEncInfo failed");
+    ret = screenCaptureServer_->InitVideoCap(config_.videoInfo.videoCapInfo);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "InitVideoCap failed");
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureServerFunctionTest::InitStreamScreenCaptureServer()
+{
+    int32_t ret = screenCaptureServer_->SetCaptureMode(config_.captureMode);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetCaptureMode failed");
+    ret = screenCaptureServer_->SetDataType(config_.dataType);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetDataType failed");
+    ret = screenCaptureServer_->InitAudioEncInfo(config_.audioInfo.audioEncInfo);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "InitAudioEncInfo failed");
+    ret = screenCaptureServer_->InitAudioCap(config_.audioInfo.micCapInfo);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "init micAudioCap failed");
+    ret = screenCaptureServer_->InitAudioCap(config_.audioInfo.innerCapInfo);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "init innerCapInfo failed, innerCapInfo should be valid");
     ret = screenCaptureServer_->InitVideoEncInfo(config_.videoInfo.videoEncInfo);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "InitVideoEncInfo failed");
     ret = screenCaptureServer_->InitVideoCap(config_.videoInfo.videoCapInfo);
@@ -276,43 +286,10 @@ int32_t ScreenCaptureServerFunctionTest::StartAudioCapture()
     return ret;
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, NoficationSubscriber_001, TestSize.Level2)
-{
-    NOTIFICATION_SUBSCRIBER.OnConnected();
-    NOTIFICATION_SUBSCRIBER.OnDisconnected();
-    auto basicButton = NotificationLocalLiveViewButton();
-    basicButton.addSingleButtonName(BUTTON_NAME_MIC);
-    NOTIFICATION_SUBSCRIBER.OnResponse(screenCaptureServer_->sessionId_ ,basicButton);
-    NOTIFICATION_SUBSCRIBER.OnDied();
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, NoficationSubscriber_001, TestSize.Level2)
-{
-    NOTIFICATION_SUBSCRIBER.OnConnected();
-    NOTIFICATION_SUBSCRIBER.OnDisconnected();
-    auto basicButton = NotificationLocalLiveViewButton();
-    basicButton.addSingleButtonName(BUTTON_NAME_MIC);
-    NOTIFICATION_SUBSCRIBER.OnResponse(screenCaptureServer_->sessionId_ ,basicButton);
-    NOTIFICATION_SUBSCRIBER.OnResponse(screenCaptureServer_->sessionId_ ,basicButton);
-    NOTIFICATION_SUBSCRIBER.OnDied();
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, NoficationSubscriber_002, TestSize.Level2)
-{
-    std::shared_ptr<IScreenCaptureService> iscsSp = screenCaptureServer_->Create();
-    ASSERT_NE(iscsSp, nullptr);
-    NOTIFICATION_SUBSCRIBER.OnConnected();
-    NOTIFICATION_SUBSCRIBER.OnDisconnected();
-    auto basicButton = NotificationLocalLiveViewButton();
-    basicButton.addSingleButtonName(BUTTON_NAME_STOP);
-    NOTIFICATION_SUBSCRIBER.OnResponse(screenCaptureServer_->sessionId_ ,basicButton);
-    NOTIFICATION_SUBSCRIBER.OnDied();
-}
-
 HWTEST_F(ScreenCaptureServerFunctionTest, CaptureStreamParamsIllegal_001, TestSize.Level2)
 {
     SetConfig();
-    ASSERT_EQ(InitScreenCaptureServer(), MSERR_OK);
+    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     ASSERT_NE(StartAudioCapture(), MSERR_OK);
 }
 
@@ -325,7 +302,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CaptureStreamParamsIllegal_002, TestSi
     config_.audioInfo.innerCapInfo.audioSampleRate = 54321;
     config_.audioInfo.innerCapInfo.audioChannels = 2;
     config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
-    ASSERT_EQ(InitScreenCaptureServer(), MSERR_OK);
+    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     ASSERT_NE(StartAudioCapture(), MSERR_OK);
 }
 
@@ -338,9 +315,9 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CaptureStreamParamsIllegal_003, TestSi
     config_.audioInfo.innerCapInfo.audioSampleRate = 16000;
     config_.audioInfo.innerCapInfo.audioChannels = 2;
     config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
-    config_.videoinfo.videoCapInfo.videoFrameWidth = -1;
-    config_.videoinfo.videoCapInfo.videoFrameHeight = -1;
-    ASSERT_EQ(InitScreenCaptureServer(), MSERR_OK);
+    config_.videoInfo.videoCapInfo.videoFrameWidth = -1;
+    config_.videoInfo.videoCapInfo.videoFrameHeight = -1;
+    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     ASSERT_NE(StartAudioCapture(), MSERR_OK);
 }
 
@@ -353,8 +330,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CaptureStreamParamsIllegal_004, TestSi
     config_.audioInfo.innerCapInfo.audioSampleRate = 16000;
     config_.audioInfo.innerCapInfo.audioChannels = 2;
     config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
-    ASSERT_EQ(InitScreenCaptureServer(), MSERR_OK);
-    screenCaptureServer_->captureConfig_.dataType = DataType::INVALID;
+    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
+    screenCaptureServer_->captureConfig_.dataType = DataType::INVAILD;
     ASSERT_NE(StartAudioCapture(), MSERR_OK);
 }
 
@@ -369,9 +346,9 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CaptureFileParamsIllegal_001, TestSize
     config_.audioInfo.innerCapInfo.audioSampleRate = 16000;
     config_.audioInfo.innerCapInfo.audioChannels = 2;
     config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
-    config_.videoinfo.videoCapInfo.videoFrameWidth = -1;
-    config_.videoinfo.videoCapInfo.videoFrameHeight = -1;
-    ASSERT_EQ(InitScreenCaptureServer(), MSERR_OK);
+    config_.videoInfo.videoCapInfo.videoFrameWidth = -1;
+    config_.videoInfo.videoCapInfo.videoFrameHeight = -1;
+    ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
     ASSERT_NE(StartAudioCapture(), MSERR_OK);
 }
 
@@ -386,7 +363,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CaptureFileParamsIllegal_002, TestSize
     config_.audioInfo.innerCapInfo.audioSampleRate = 1;
     config_.audioInfo.innerCapInfo.audioChannels = 2;
     config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
-    ASSERT_EQ(InitScreenCaptureServer(), MSERR_OK);
+    ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
     ASSERT_NE(StartAudioCapture(), MSERR_OK);
 }
 
@@ -401,7 +378,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CaptureFileParamsIllegal_003, TestSize
     config_.audioInfo.innerCapInfo.audioSampleRate = 48000;
     config_.audioInfo.innerCapInfo.audioChannels = 2;
     config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
-    ASSERT_EQ(InitScreenCaptureServer(), MSERR_OK);
+    ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
     ASSERT_NE(StartAudioCapture(), MSERR_OK);
 }
 
@@ -419,8 +396,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, GetMissionIds_001, TestSize.Level2)
     config_.audioInfo.innerCapInfo.audioSampleRate = 16000;
     config_.audioInfo.innerCapInfo.audioChannels = 2;
     config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
-    ASSERT_EQ(InitScreenCaptureServer(), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->GetMissionIds(), MSERR_OK);
+    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->GetMissionIds(screenCaptureServer_->missionIds_), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, AudioDataSource_001, TestSize.Level2)
@@ -432,11 +409,9 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioDataSource_001, TestSize.Level2)
     config_.audioInfo.innerCapInfo.audioSampleRate = 16000;
     config_.audioInfo.innerCapInfo.audioChannels = 2;
     config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
-    ASSERT_EQ(InitScreenCaptureServer(), MSERR_OK);
+    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     ASSERT_EQ(StartAudioCapture(), MSERR_OK);
     std::vector<std::unique_ptr<AudioRendererChangeInfo>> audioRendererChangeInfos;
-    std::unique_ptr<AudioRendererChangeInfo> changeInfo = AudioRendererChangeInfo();
-    audioRendererChangeInfos.push_back(changeInfo);
     screenCaptureServer_->captureCallback_->OnRendererStateChange(audioRendererChangeInfos);
     screenCaptureServer_->audioSource_->VoIPStateUpdate(audioRendererChangeInfos);
     screenCaptureServer_->audioSource_->isInVoIPCall_ = true;

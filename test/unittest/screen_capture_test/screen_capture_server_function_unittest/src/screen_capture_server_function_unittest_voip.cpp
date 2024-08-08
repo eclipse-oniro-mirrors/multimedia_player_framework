@@ -46,7 +46,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnVoIPStatusChanged_001, TestSize.Leve
     config_.audioInfo.innerCapInfo.audioSampleRate = 16000;
     config_.audioInfo.innerCapInfo.audioChannels = 2;
     config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
-    ASSERT_EQ(InitScreenCaptureServer(), MSERR_OK);
+    ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
     screenCaptureServer_->SetMicrophoneEnabled(true);
     ASSERT_EQ(StartAudioCapture(), MSERR_OK);
     sleep(RECORDER_TIME);
@@ -68,7 +68,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnVoIPStatusChanged_002, TestSize.Leve
     config_.audioInfo.innerCapInfo.audioSampleRate = 16000;
     config_.audioInfo.innerCapInfo.audioChannels = 2;
     config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
-    ASSERT_EQ(InitScreenCaptureServer(), MSERR_OK);
+    ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
     screenCaptureServer_->SetMicrophoneEnabled(false);
     ASSERT_EQ(StartAudioCapture(), MSERR_OK);
     sleep(RECORDER_TIME);
@@ -90,7 +90,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnVoIPStatusChanged_003, TestSize.Leve
     config_.audioInfo.innerCapInfo.audioSampleRate = 16000;
     config_.audioInfo.innerCapInfo.audioChannels = 2;
     config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
-    ASSERT_EQ(InitScreenCaptureServer(), MSERR_OK);
+    ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
     screenCaptureServer_->SetMicrophoneEnabled(false);
     ASSERT_EQ(screenCaptureServer_->GetMicWorkingState(), false);
     ASSERT_EQ(StartAudioCapture(), MSERR_OK);
@@ -117,7 +117,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnVoIPStatusChanged_004, TestSize.Leve
     config_.audioInfo.innerCapInfo.audioSampleRate = 16000;
     config_.audioInfo.innerCapInfo.audioChannels = 2;
     config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
-    ASSERT_EQ(InitScreenCaptureServer(), MSERR_OK);
+    ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
     screenCaptureServer_->SetMicrophoneEnabled(false);
     ASSERT_EQ(StartAudioCapture(), MSERR_OK);
     sleep(RECORDER_TIME / 2);
