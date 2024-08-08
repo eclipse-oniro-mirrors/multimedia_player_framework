@@ -94,7 +94,7 @@ DraggingPlayerAgent::~DraggingPlayerAgent()
 }
  
 Status DraggingPlayerAgent::Init(const shared_ptr<DemuxerFilter> &demuxer,
-    const shared_ptr<DecoderSurfaceFilter> &decoder)
+    const shared_ptr<DecoderSurfaceFilter> &decoder, std::string playerId)
 {
     FALSE_RETURN_V_MSG_E(demuxer != nullptr && decoder != nullptr,
         Status::ERROR_INVALID_PARAMETER, "Invalid demuxer filter instance.");
@@ -110,6 +110,9 @@ Status DraggingPlayerAgent::Init(const shared_ptr<DemuxerFilter> &demuxer,
     demuxer->RegisterVideoStreamReadyCallback(videoStreamReadyCb_);
     videoFrameReadyCb_ = std::make_shared<VideoFrameReadyCallbackImpl>(shared_from_this());
     decoder->RegisterVideoFrameReadyCallback(videoFrameReadyCb_);
+    std::string threadName = "DraggingTask_" + playerId;
+    task_ = std::make_unique<Task>("draggingThread", threadName, TaskType::GLOBAL, TaskPriority::NORMAL, false);
+    task_->Start();
     return Status::OK;
 }
  
@@ -127,12 +130,32 @@ void DraggingPlayerAgent::ConsumeVideoFrame(const std::shared_ptr<AVBuffer> avBu
  
 void DraggingPlayerAgent::UpdateSeekPos(int64_t seekMs)
 {
+    lock_guard<mutex> lock(draggingMutex_);
     FALSE_RETURN(draggingPlayer_ != nullptr);
+    seekCnt_.fetch_add(1);
     draggingPlayer_->UpdateSeekPos(seekMs);
+    if (task_) {
+        int64_t seekCnt = seekCnt_.load();
+        task_->SubmitJob([this, seekCnt]() { StopDragging(seekCnt); }, 33333); // 33333 means 33333us, 33ms
+    }
+}
+
+void DraggingPlayerAgent::StopDragging(int64_t seekCnt)
+{
+    lock_guard<mutex> lock(draggingMutex_);
+    FALSE_RETURN(draggingPlayer_ != nullptr);
+    if (seekCnt_.load() != seekCnt) {
+        return;
+    }
+    draggingPlayer_->StopDragging();
 }
  
 void DraggingPlayerAgent::Release()
 {
+    lock_guard<mutex> lock(draggingMutex_);
+    if (task_) {
+        task_->Stop();
+    }
     if (demuxer_ != nullptr) {
         demuxer_->DeregisterVideoStreamReadyCallback();
     }
