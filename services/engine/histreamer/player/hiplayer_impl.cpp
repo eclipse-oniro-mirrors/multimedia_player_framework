@@ -275,6 +275,8 @@ int32_t HiPlayerImpl::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
     preferedHeight_ = strategy.preferredHeight;
     bufferDuration_ = strategy.preferredBufferDuration;
     preferHDR_ = strategy.preferredHdr;
+    audioLanguage_ = strategy.preferredAudioLanguage;
+    subtitleLanguage_ = strategy.preferredSubtitleLanguage;
     mimeType_ = mediaSource->GetMimeType();
     if (mimeType_ != AVMimeTypes::APPLICATION_M3U8 && IsFileUrl(url_)) {
         std::string realUriPath;
@@ -1849,6 +1851,8 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
     playStrategy->height = preferedHeight_;
     playStrategy->duration = bufferDuration_;
     playStrategy->preferHDR = preferHDR_;
+    playStrategy->audioLanguage = audioLanguage_;
+    playStrategy->subtitleLanguage = subtitleLanguage_;
     source->SetPlayStrategy(playStrategy);
 
     if (!mimeType_.empty()) {

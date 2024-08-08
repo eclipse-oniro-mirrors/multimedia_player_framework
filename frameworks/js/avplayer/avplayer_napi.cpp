@@ -1312,7 +1312,9 @@ napi_value AVPlayerNapi::JsSetPlaybackStrategy(napi_env env, napi_callback_info 
                 .preferredHeight = strategyTmp.preferredHeight,
                 .preferredBufferDuration = strategyTmp.preferredBufferDuration,
                 .preferredHdr = strategyTmp.preferredHdr,
-                .mutedMediaType = static_cast<MediaType>(strategyTmp.mutedMediaType)
+                .mutedMediaType = static_cast<MediaType>(strategyTmp.mutedMediaType),
+                .preferredAudioLanguage = strategyTmp.preferredAudioLanguage,
+                .preferredSubtitleLanguage = strategyTmp.preferredSubtitleLanguage
             };
             promiseCtx->asyncTask = jsPlayer->SetPlaybackStrategyTask(strategy);
         }
@@ -1555,6 +1557,8 @@ napi_value AVPlayerNapi::JsSetMediaSource(napi_env env, napi_callback_info info)
     strategy.preferredHeight = strategyTmp.preferredHeight;
     strategy.preferredWidth = strategyTmp.preferredWidth;
     strategy.preferredHdr = strategyTmp.preferredHdr;
+    strategy.preferredAudioLanguage = strategyTmp.preferredAudioLanguage;
+    strategy.preferredSubtitleLanguage = strategyTmp.preferredSubtitleLanguage;
     auto task = std::make_shared<TaskHandler<void>>([jsPlayer, mediaSource, strategy]() {
         if (jsPlayer->player_ != nullptr) {
             (void)jsPlayer->player_->SetMediaSource(mediaSource, strategy);
