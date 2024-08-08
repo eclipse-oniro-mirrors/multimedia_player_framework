@@ -1540,10 +1540,8 @@ napi_value AVPlayerNapi::JsSetMediaSource(napi_env env, napi_callback_info info)
         return result;
     }
     std::shared_ptr<AVMediaSourceTmp> srcTmp = MediaSourceNapi::GetMediaSource(env, args[0]);
-    if (srcTmp == nullptr) {
-        MEDIA_LOGE("get GetMediaSource argument failed!");
-        return result;
-    }
+    CHECK_AND_RETURN_RET_LOG(srcTmp != nullptr, result, "get GetMediaSource argument failed!");
+
     std::shared_ptr<AVMediaSource> mediaSource = std::make_shared<AVMediaSource>(srcTmp->url, srcTmp->header);
     mediaSource->SetMimeType(srcTmp->GetMimeType());
 
