@@ -20,19 +20,19 @@ ohos_unittest("player_server_mem_test") {
   module_out_path = module_output_path
   include_dirs = [
     "./",
-    "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",
-    "$MEDIA_PLAYER_ROOT_DIR/services/services/player/player_mem_manage",
-    "$MEDIA_PLAYER_ROOT_DIR/services/services/player/server/",
-    "$MEDIA_PLAYER_ROOT_DIR/services/services/engine_intf",
-    "$MEDIA_PLAYER_ROOT_DIR/services/services/player/client",
-    "$MEDIA_PLAYER_ROOT_DIR/services/services/player/ipc",
-    "$MEDIA_PLAYER_ROOT_DIR/services/services/common",
-    "$MEDIA_PLAYER_ROOT_DIR/services/include",
-    "$MEDIA_PLAYER_ROOT_DIR/services/services/player/subscriber",
-    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_data_source/ipc",
     "$MEDIA_PLAYER_ROOT_DIR/frameworks/js/avplayer",
     "$MEDIA_PLAYER_ROOT_DIR/frameworks/js/common",
+    "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",
     "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/player",
+    "$MEDIA_PLAYER_ROOT_DIR/services/include",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/common",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/engine_intf",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_data_source/ipc",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/player/client",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/player/ipc",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/player/player_mem_manage",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/player/server/",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/player/subscriber",
   ]
 
   cflags = [
@@ -81,7 +81,7 @@ ohos_unittest("player_server_mem_test") {
     "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native:media_client",
     "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/player:media_engine_histreamer_player",
     "$MEDIA_PLAYER_ROOT_DIR/services/services:media_service",
-    "$MEDIA_PLAYER_ROOT_DIR/services/utils:media_service_utils"
+    "$MEDIA_PLAYER_ROOT_DIR/services/utils:media_service_utils",
   ]
 
   resource_config_file =
