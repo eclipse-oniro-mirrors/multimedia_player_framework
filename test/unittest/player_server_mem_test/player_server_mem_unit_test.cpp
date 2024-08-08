@@ -304,7 +304,7 @@ HWTEST_F(PlayerServerMemUnitTest, NeedSelectAudioTrack_003, TestSize.Level0)
 HWTEST_F(PlayerServerMemUnitTest, SetSource_001, TestSize.Level0)
 {
     // 1. Set up the test environment
-    std::string url = "http://example.com/video.mp4";
+    std::string url = "file://..";
 
     // 2. Call the function to be tested
     int32_t ret = playerServerMem_->SetSource(url);
