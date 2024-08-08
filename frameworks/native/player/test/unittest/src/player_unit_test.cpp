@@ -3595,7 +3595,7 @@ HWTEST_F(PlayerUnitTest, Player_SeekContinuous_001, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
     for (int i = 0; i < 10; i++) {
         EXPECT_EQ(MSERR_OK, player_->SeekContinuous(i * 100));
-        usleep(33000); // 33000 means 33ms
+        usleep(SEEK_CONTINUOUS_WAIT_US);
     }
     EXPECT_EQ(MSERR_OK, player_->Play());
 }
@@ -3616,7 +3616,7 @@ HWTEST_F(PlayerUnitTest, Player_SeekContinuous_002, TestSize.Level0)
     sleep(PLAYING_TIME_2_SEC);
     for (int i = 0; i < 30; i++) {
         EXPECT_EQ(MSERR_OK, player_->SeekContinuous(i * 100));
-        usleep(33000); // 33000 means 33ms
+        usleep(SEEK_CONTINUOUS_WAIT_US);
     }
     EXPECT_EQ(MSERR_OK, player_->Play());
     EXPECT_EQ(MSERR_OK, player_->Stop());
@@ -3639,7 +3639,7 @@ HWTEST_F(PlayerUnitTest, Player_SeekContinuous_003, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->Pause());
     for (int i = 0; i < 30; i++) {
         EXPECT_EQ(MSERR_OK, player_->SeekContinuous(i * 100));
-        usleep(33000); // 33000 means 33ms
+        usleep(SEEK_CONTINUOUS_WAIT_US);
     }
     EXPECT_EQ(MSERR_OK, player_->Play());
     EXPECT_EQ(MSERR_OK, player_->Stop());
@@ -3663,7 +3663,7 @@ HWTEST_F(PlayerUnitTest, Player_SeekContinuous_004, TestSize.Level0)
     sleep(PLAYING_TIME_10_SEC);
     for (int i = 0; i < 30; i++) {
         EXPECT_EQ(MSERR_OK, player_->SeekContinuous(i * 100));
-        usleep(33000); // 33000 means 33ms
+        usleep(SEEK_CONTINUOUS_WAIT_US);
     }
     EXPECT_EQ(MSERR_OK, player_->Play());
     EXPECT_EQ(MSERR_OK, player_->Stop());
@@ -3685,7 +3685,7 @@ HWTEST_F(PlayerUnitTest, Player_SeekContinuous_005, TestSize.Level0)
     sleep(PLAYING_TIME_2_SEC);
     for (int i = 0; i < 30; i++) {
         EXPECT_EQ(MSERR_OK, player_->SeekContinuous(9000 - i * 100));
-        usleep(33000); // 33000 means 33ms
+        usleep(SEEK_CONTINUOUS_WAIT_US);
     }
     EXPECT_EQ(MSERR_OK, player_->Play());
     EXPECT_EQ(MSERR_OK, player_->Stop());
@@ -3707,11 +3707,11 @@ HWTEST_F(PlayerUnitTest, Player_SeekContinuous_006, TestSize.Level0)
     sleep(PLAYING_TIME_2_SEC);
     for (int i = 0; i < 30; i++) {
         EXPECT_EQ(MSERR_OK, player_->SeekContinuous(9000 - i * 100));
-        usleep(33000); // 33000 means 33ms
+        usleep(SEEK_CONTINUOUS_WAIT_US);
     }
     for (int i = 0; i < 30; i++) {
         EXPECT_EQ(MSERR_OK, player_->SeekContinuous(9000 - i * 100));
-        usleep(33000); // 33000 means 33ms
+        usleep(SEEK_CONTINUOUS_WAIT_US);
     }
     EXPECT_EQ(MSERR_OK, player_->Play());
     EXPECT_EQ(MSERR_OK, player_->Stop());
