@@ -41,6 +41,8 @@ struct AVPlayStrategy {
     uint32_t preferredBufferDuration = 0;
     bool preferredHdr = false;
     OHOS::Media::MediaType mutedMediaType = OHOS::Media::MediaType::MEDIA_TYPE_MAX_COUNT;
+    std::string preferredAudioLanguage = "";
+    std::string preferredSubtitleLanguage = "";
 };
 
 struct DrmInfoItem {
