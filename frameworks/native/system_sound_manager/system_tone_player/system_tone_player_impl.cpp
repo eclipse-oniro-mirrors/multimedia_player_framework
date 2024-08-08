@@ -151,11 +151,12 @@ void SystemTonePlayerImpl::GetHapticUriForAudioUri(const std::string &audioUri,
 {
     supportedHapticsFeatures_.clear();
     bool isSupported = false;
-    std::string hapticUri = FindHapticUriByAudioUri(audioUri, ToneHapticsFeature::STANDARD, isSupported);
+    std::string currAudioUri = audioUri;
+    std::string hapticUri = FindHapticUriByAudioUri(currAudioUri, ToneHapticsFeature::STANDARD, isSupported);
     if (!isSupported) {
         MEDIA_LOGW("Failed to find the vibration json file for audioUri. Use the default json file.");
-        std::string defaultSystemToneUri = systemSoundMgr_.GetDefaultSystemToneUri(SYSTEM_TONE_TYPE_NOTIFICATION);
-        hapticUri = FindHapticUriByAudioUri(defaultSystemToneUri, ToneHapticsFeature::STANDARD, isSupported);
+        currAudioUri = systemSoundMgr_.GetDefaultSystemToneUri(SYSTEM_TONE_TYPE_NOTIFICATION);
+        hapticUri = FindHapticUriByAudioUri(currAudioUri, ToneHapticsFeature::STANDARD, isSupported);
         if (!isSupported) {
             MEDIA_LOGW("Failed to find the default json file.");
             return;
@@ -166,7 +167,7 @@ void SystemTonePlayerImpl::GetHapticUriForAudioUri(const std::string &audioUri,
     supportedHapticsFeatures_.push_back(ToneHapticsFeature::STANDARD);
     hapticsUriMap[ToneHapticsFeature::STANDARD] = hapticUri;
     MEDIA_LOGI("GetHapticUriForAudioUri: STANDARD hapticUri %{public}s ", hapticUri.c_str());
-    hapticUri = FindHapticUriByAudioUri(audioUri, ToneHapticsFeature::GENTLE, isSupported);
+    hapticUri = FindHapticUriByAudioUri(currAudioUri, ToneHapticsFeature::GENTLE, isSupported);
     if (isSupported) {
         supportedHapticsFeatures_.push_back(ToneHapticsFeature::GENTLE);
         hapticsUriMap[ToneHapticsFeature::GENTLE] = hapticUri;
