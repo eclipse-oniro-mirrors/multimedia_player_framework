@@ -886,3 +886,25 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ResizeCanvas(struct OH_AVScreenCa
 
     return AV_SCREEN_CAPTURE_ERR_OK;
 }
+
+OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SkipPrivacyMode(struct OH_AVScreenCapture *capture,
+    int32_t *windowIDs, int32_t windowCount)
+{
+    CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr!");
+    struct ScreenCaptureObject *screenCaptureObj = reinterpret_cast<ScreenCaptureObject *>(capture);
+    CHECK_AND_RETURN_RET_LOG(screenCaptureObj->screenCapture_ != nullptr,
+                             AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "screenCapture_ is null");
+    CHECK_AND_RETURN_RET_LOG(windowIDs != nullptr && windowCount > 0 && windowCount < MAX_WINDOWS_LEN,
+                             AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input window invalid!");
+    std::vector<uint64_t> vec;
+    for (int32_t i = 0; i < windowCount; i++) {
+        if (static_cast<int32_t>(*(windowIDs + i)) >= 0) {
+            vec.push_back(static_cast<uint64_t>(*(windowIDs + i)));
+        }
+    }
+    CHECK_AND_RETURN_RET_LOG(vec.size() > 0, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input window content invalid!");
+    int32_t ret = screenCaptureObj->screenCapture_->SkipPrivacyMode(vec);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT,
+                             "SkipPrivacyMode failed!");
+    return AV_SCREEN_CAPTURE_ERR_OK;
+}
