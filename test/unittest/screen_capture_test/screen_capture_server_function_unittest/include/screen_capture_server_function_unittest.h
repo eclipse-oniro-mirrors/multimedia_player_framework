@@ -38,7 +38,8 @@ public:
     int32_t SetConfigFile(RecorderInfo &recorderInfo);
     int32_t SetRecorderInfo(std::string name, RecorderInfo &recorderInfo);
     void OpenFileFd(std::string name);
-    int32_t InitScreenCaptureServer();
+    int32_t InitFileScreenCaptureServer();
+    int32_t InitStreamScreenCaptureServer();
     void SetHapPermission();
     int32_t SetScreenCaptureObserver();
     int32_t StartAudioCapture();
