@@ -53,6 +53,7 @@ private:
 
     int64_t seekTargetPts_{-1};
     int64_t mediaStartPts_{0};
+    bool isInterrputNeeded_{false};
     std::atomic<bool> isSeeking_{false};
     std::map<uint32_t, sptr<AVBufferQueueProducer>> producerMap_;
     std::map<uint32_t, sptr<IBrokerListener>> listenerMap_;
@@ -86,7 +87,6 @@ public:
 private:
     std::weak_ptr<SeekAgent> seekAgent_;
     sptr<AVBufferQueueProducer> producer_;
-    bool isInterrputNeeded_{false};
     int32_t trackId_;
 };
 } // namespace Media
