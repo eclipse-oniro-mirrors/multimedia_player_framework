@@ -652,7 +652,6 @@ int32_t HiPlayerImpl::PauseDemuxer()
     MediaTrace trace("HiPlayerImpl::PauseDemuxer");
     MEDIA_LOG_I("PauseDemuxer in");
     callbackLooper_.StopReportMediaProgress();
-    callbackLooper_.ManualReportMediaProgressOnce();
     Status ret = demuxer_->PauseDemuxerReadLoop();
     return TransStatus(ret);
 }
@@ -664,7 +663,6 @@ int32_t HiPlayerImpl::ResumeDemuxer()
     FALSE_RETURN_V_MSG_E(pipelineStates_ != PlayerStates::PLAYER_STATE_ERROR,
         TransStatus(Status::OK), "PLAYER_STATE_ERROR not allow ResumeDemuxer");
     callbackLooper_.StartReportMediaProgress();
-    callbackLooper_.ManualReportMediaProgressOnce();
     Status ret = demuxer_->ResumeDemuxerReadLoop();
     return TransStatus(ret);
 }
@@ -1919,6 +1917,8 @@ void HiPlayerImpl::HandleErrorEvent(int32_t errorCode)
 void HiPlayerImpl::NotifyBufferingStart(int32_t param)
 {
     Format format;
+    callbackLooper_.StopReportMediaProgress();
+    callbackLooper_.ManualReportMediaProgressOnce();
     (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_BUFFERING_START), 1);
     callbackLooper_.OnInfo(INFO_TYPE_BUFFERING_UPDATE, param, format);
 }
