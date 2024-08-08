@@ -284,6 +284,7 @@ Status HiTransCoderImpl::ConfigureVideoAudioMetaData()
     ConfigureMetaDataToTrackFormat(globalInfo, trackInfos);
     (void)ConfigureMetaData(trackInfos);
     (void)SetTrackMime(trackInfos);
+    ConfigureVideoBitrate();
     return Status::OK;
 }
 
@@ -428,17 +429,17 @@ Status HiTransCoderImpl::ConfigureVideoBitrate()
         videoEncFormat_->Get<Tag::MEDIA_BITRATE>(videoBitrate);
     }
     MEDIA_LOG_D("get videoBitrate: %{public}d", videoBitrate);
-    if (AVTRANSCODER_DEFAULT_VIDEO_BIT_RATE != videoBitrate) {
-        return Status::OK;
-    }
-    int32_t outputHeight = 0;
-    videoEncFormat_->GetData(Tag::VIDEO_HEIGHT, outputHeight);
+    int32_t width = 0;
+    int32_t height = 0;
+    videoEncFormat_->GetData(Tag::VIDEO_WIDTH, width);
+    videoEncFormat_->GetData(Tag::VIDEO_HEIGHT, height);
+    const int32_t &minNum = std::min(width, height);
     int32_t defaultVideoBitrate = videoBitrate;
-    if (outputHeight > HEIGHT_1080) {
+    if (minNum > HEIGHT_1080) {
         defaultVideoBitrate = VIDEO_BITRATE_8M;
-    } else if (outputHeight > HEIGHT_720) {
+    } else if (minNum > HEIGHT_720) {
         defaultVideoBitrate = VIDEO_BITRATE_4M;
-    } else if (outputHeight > HEIGHT_480) {
+    } else if (minNum > HEIGHT_480) {
         defaultVideoBitrate = VIDEO_BITRATE_2M;
     } else {
         defaultVideoBitrate = VIDEO_BITRATE_1M;
@@ -459,14 +460,13 @@ int32_t HiTransCoderImpl::Configure(const TransCoderParam &transCoderParam)
         }
         case TransCoderPublicParamType::VIDEO_RECTANGLE: {
             ret = ConfigureVideoWidthHeight(transCoderParam);
+            ConfigureVideoBitrate();
             break;
         }
         case TransCoderPublicParamType::VIDEO_BITRATE: {
             VideoBitRate videoBitrate = static_cast<const VideoBitRate&>(transCoderParam);
             if (videoBitrate.bitRate <= 0) {
-                MEDIA_LOG_E("Invalid videoBitrate.bitRate %{public}d", videoBitrate.bitRate);
-                OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_INVALID_VAL});
-                return static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER);
+                return static_cast<int32_t>(Status::OK);
             }
             MEDIA_LOG_I("HiTransCoderImpl::Configure videoBitRate %{public}d", videoBitrate.bitRate);
             videoEncFormat_->Set<Tag::MEDIA_BITRATE>(videoBitrate.bitRate);
@@ -515,7 +515,6 @@ int32_t HiTransCoderImpl::Prepare()
             return static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER);
         }
         isNeedVideoResizeFilter_ = width != inputVideoWidth_ || height != inputVideoHeight_;
-        ConfigureVideoBitrate();
     }
     Status ret = pipeline_->Prepare();
     if (ret != Status::OK) {
