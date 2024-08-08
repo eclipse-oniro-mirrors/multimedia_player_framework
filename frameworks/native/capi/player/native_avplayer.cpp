@@ -27,8 +27,8 @@ namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "NativeAVPlayer"};
     constexpr uint32_t STATE_MAP_LENGTH = 9;
     constexpr uint32_t INFO_TYPE_LENGTH = 19;
-    constexpr uint32_t UNSUPPORT_FORMAT_ERROR_CODE = 331350544;
-    constexpr uint32_t AV_ERR_UNSUPPORT = 9;
+    constexpr int32_t UNSUPPORT_FORMAT_ERROR_CODE = 331350544;
+    constexpr int32_t AVPLAYER_ERR_UNSUPPORT = 9;
 }
 
 using namespace OHOS::Media;
@@ -199,7 +199,7 @@ public:
             return;
         }
         if (errorCode == UNSUPPORT_FORMAT_ERROR_CODE) {
-            errorCode = AV_ERR_UNSUPPORT;
+            errorCode = AVPLAYER_ERR_UNSUPPORT;
         }
         if (player_ != nullptr && callback_.onError != nullptr) {
             callback_.onError(player_, errorCode, errorMsg.c_str());
