@@ -381,7 +381,9 @@ void AudioHapticPlayerImpl::NotifyInterruptEvent(const AudioStandard::InterruptE
 void AudioHapticPlayerImpl::NotifyEndOfStreamEvent()
 {
     MEDIA_LOGI("NotifyEndOfStreamEvent");
+    std::unique_lock<std::mutex> lock(audioHapticPlayerLock_);
     StopVibrate();
+    lock.unlock();
     playerState_ = AudioHapticPlayerState::STATE_STOPPED;
     std::shared_ptr<AudioHapticPlayerCallback> cb = audioHapticPlayerCallback_.lock();
     if (cb != nullptr) {
