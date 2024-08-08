@@ -291,13 +291,13 @@
             <option name="shell" value="touch /data/test/media/screen_capture_voip_002.mp4"/>
             <option name="shell" value="touch /data/test/media/screen_capture_voip_003.mp4"/>
             <option name="shell" value="touch /data/test/media/screen_capture_voip_004.mp4"/>
-            <option name="shell" value="touch /data/test/media/capture_file_params_illegal_001.mp4"/>
-            <option name="shell" value="touch /data/test/media/capture_file_params_illegal_002.mp4"/>
-            <option name="shell" value="touch /data/test/media/capture_file_params_illegal_003.mp4"/>
-            <option name="shell" value="touch /data/test/media/capture_file_params_illegal_004.mp4"/>
-            <option name="shell" value="touch /data/test/media/capture_file_params_illegal_005.mp4"/>
-            <option name="shell" value="touch /data/test/media/capture_file_params_illegal_006.mp4"/>
-            <option name="shell" value="touch /data/test/media/capture_file_params_illegal_007.mp4"/>
+            <option name="shell" value="touch /data/test/media/capture_file_params_invalid_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/capture_file_params_invalid_002.mp4"/>
+            <option name="shell" value="touch /data/test/media/capture_file_params_invalid_003.mp4"/>
+            <option name="shell" value="touch /data/test/media/capture_file_params_invalid_004.mp4"/>
+            <option name="shell" value="touch /data/test/media/capture_file_params_invalid_005.mp4"/>
+            <option name="shell" value="touch /data/test/media/capture_file_params_invalid_006.mp4"/>
+            <option name="shell" value="touch /data/test/media/capture_file_params_invalid_007.mp4"/>
             <option name="shell" value="restorecon /data/test/media"/>
         </preparer>
     </target>
