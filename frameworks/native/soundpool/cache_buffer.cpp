@@ -123,36 +123,33 @@ int32_t CacheBuffer::DoPlay(const int32_t streamID)
     CHECK_AND_RETURN_RET_LOG(streamID == streamID_, MSERR_INVALID_VAL, "Invalid streamID, failed to DoPlay.");
     std::lock_guard lock(cacheBufferLock_);
     CHECK_AND_RETURN_RET_LOG(!reCombineCacheData_.empty(), MSERR_INVALID_VAL, "reCombineCacheData empty.");
-    if (audioRenderer_ != nullptr) {
-        cacheDataFrameNum_ = 0;
-        havePlayedCount_ = 0;
-        if (!audioRenderer_->Start()) {
-            OHOS::AudioStandard::RendererState state = audioRenderer_->GetStatus();
-            if (state == OHOS::AudioStandard::RendererState::RENDERER_RUNNING) {
-                MEDIA_LOGI("CacheBuffer::DoPlay audioRenderer has started");
-                isRunning_.store(true);
-                if (callback_ != nullptr) {
-                    MEDIA_LOGI("CacheBuffer::DoPlay callback_ OnPlayFinished.");
-                    callback_->OnPlayFinished();
-                }
-                return MSERR_OK;
-            } else {
-                MEDIA_LOGE("CacheBuffer::DoPlay audioRenderer start failed");
-                isRunning_.store(false);
-                if (callback_ != nullptr) {
-                    MEDIA_LOGI("CacheBuffer::DoPlay failed, call callback");
-                    callback_->OnError(MSERR_INVALID_VAL);
-                }
-                if (cacheBufferCallback_ != nullptr) cacheBufferCallback_->OnError(MSERR_INVALID_VAL);
-                return MSERR_INVALID_VAL;
+    CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr, MSERR_INVALID_VAL, "Invalid audioRenderer.");
+    cacheDataFrameNum_ = 0;
+    havePlayedCount_ = 0;
+    if (!audioRenderer_->Start()) {
+        OHOS::AudioStandard::RendererState state = audioRenderer_->GetStatus();
+        if (state == OHOS::AudioStandard::RendererState::RENDERER_RUNNING) {
+            MEDIA_LOGI("CacheBuffer::DoPlay audioRenderer has started");
+            isRunning_.store(true);
+            if (callback_ != nullptr) {
+                MEDIA_LOGI("CacheBuffer::DoPlay callback_ OnPlayFinished.");
+                callback_->OnPlayFinished();
             }
+            return MSERR_OK;
+        } else {
+            MEDIA_LOGE("CacheBuffer::DoPlay audioRenderer start failed");
+            isRunning_.store(false);
+            if (callback_ != nullptr) {
+                MEDIA_LOGI("CacheBuffer::DoPlay failed, call callback");
+                callback_->OnError(MSERR_INVALID_VAL);
+            }
+            if (cacheBufferCallback_ != nullptr) cacheBufferCallback_->OnError(MSERR_INVALID_VAL);
+            return MSERR_INVALID_VAL;
         }
-        isRunning_.store(true);
-        MEDIA_LOGI("CacheBuffer::DoPlay success");
-        return MSERR_OK;
     }
-    MEDIA_LOGE("Invalid audioRenderer.");
-    return MSERR_INVALID_VAL;
+    isRunning_.store(true);
+    MEDIA_LOGI("CacheBuffer::DoPlay success");
+    return MSERR_OK;
 }
 
 int32_t CacheBuffer::ReCombineCacheData()
