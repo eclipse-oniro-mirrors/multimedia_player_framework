@@ -167,7 +167,7 @@ int32_t ScreenCaptureNativeMock::SkipPrivacyMode(int32_t *windowIDs, int32_t win
     for (int32_t i = 0; i < windowCount; i++) {
         vec.push_back(static_cast<uint64_t>(*(windowIDs + i)));
     }
-    return screenCapture_->SkipPrivacyMode(vec)
+    return screenCapture_->SkipPrivacyMode(vec);
 }
 
 int32_t ScreenCaptureNativeMock::AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audioBuffer,
