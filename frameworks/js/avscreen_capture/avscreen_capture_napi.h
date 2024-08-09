@@ -23,7 +23,6 @@
 #include "napi/native_node_api.h"
 #include "common_napi.h"
 #include "task_queue.h"
-#include "display_manager.h"
 
 namespace OHOS {
 namespace Media {
