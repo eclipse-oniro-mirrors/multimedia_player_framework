@@ -350,6 +350,7 @@ private:
     std::shared_ptr<AVPlayerCallback> playerCb_ = nullptr;
     std::shared_ptr<MediaDataSourceCallback> dataSrcCb_ = nullptr;
     std::atomic<bool> isReleased_ = false;
+    std::atomic<bool> isInterrupted_ = false;
     std::string url_ = "";
     struct AVFileDescriptor fileDescriptor_;
     struct AVDataSrcDescriptor dataSrcDescriptor_;

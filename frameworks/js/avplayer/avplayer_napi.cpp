@@ -228,7 +228,9 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PrepareTask()
                 return TaskRet(errCode, "failed to prepare");
             }
             stopWait_ = false;
-            stateChangeCond_.wait(lock, [this]() { return stopWait_.load() || avplayerExit_; });
+            stateChangeCond_.wait(lock, [this]() {
+                return stopWait_.load() || isInterrupted_.load() || avplayerExit_;
+            });
 
             if (GetCurrentState() == AVPlayerState::STATE_ERROR) {
                 return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
@@ -523,6 +525,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::ResetTask()
         PauseListenCurrentResource(); // Pause event listening for the current resource
         ResetUserParameters();
         {
+            isInterrupted_.store(false);
             std::unique_lock<std::mutex> lock(taskMutex_);
             if (GetCurrentState() == AVPlayerState::STATE_RELEASED) {
                 return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
@@ -543,6 +546,8 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::ResetTask()
         return TaskRet(MSERR_EXT_API9_OK, "Success");
     });
     (void)taskQue_->EnqueueTask(task, true); // CancelNotExecutedTask
+    isInterrupted_.store(true);
+    stateChangeCond_.notify_all();
     return task;
 }
 
