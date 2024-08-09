@@ -1610,7 +1610,7 @@ int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string &name, sptr<O
     screenId_ = ScreenManager::GetInstance().CreateVirtualScreen(virScrOption);
     CHECK_AND_RETURN_RET_LOG(screenId_ >= 0, MSERR_UNKNOWN, "CreateVirtualScreen failed, invalid screenId");
     MEDIA_LOGI("CreateVirtualScreen success");
-    return PrepareVirtualScreenAction();
+    return PrepareVirtualScreenMirror();
 }
 
 int32_t ScreenCaptureServer::PrepareVirtualScreenMirror()
