@@ -2148,5 +2148,118 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_resize, TestSize.Level2
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_resize after");
 }
 
+/**
+ * @tc.name: screen_capture_save_file_skip_privacy
+ * @tc.desc: do screencapture
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_skip_privacy, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_skip_privacy before");
+    RecorderInfo recorderInfo;
+    SetRecorderInfo("screen_capture_save_file_skip_privacy.mp4", recorderInfo);
+    SetConfigFile(config_, recorderInfo);
+    AudioCaptureInfo innerCapInfo = {
+            .audioSampleRate = 16000,
+            .audioChannels = 2,
+            .audioSource = AudioCaptureSourceType::APP_PLAYBACK
+    };
+    config_.audioInfo.innerCapInfo = innerCapInfo;
+    vector<int> windowIds = {-1, 2, 5};
+    EXPECT_EQ(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIds[0], static_cast<int32_t>(windowIds.size())));
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIds[0], static_cast<int32_t>(windowIds.size())));
+    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenRecording());
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIds[0], static_cast<int32_t>(windowIds.size())));
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenRecording());
+    EXPECT_EQ(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIds[0], static_cast<int32_t>(windowIds.size())));;
+    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_skip_privacy after");
+}
+
+/**
+ * @tc.name: screen_capture_save_file_skip_privacy_01
+ * @tc.desc: screen capture buffer test
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_skip_privacy_01, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_skip_privacy_01 before");
+    SetConfig(config_);
+    config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
+
+    aFlag = 1;
+    vFlag = 1;
+    screenCaptureCb_ = std::make_shared<ScreenCaptureUnitTestCallback>(screenCapture_, aFile, vFile, aFlag, vFlag);
+    ASSERT_NE(nullptr, screenCaptureCb_);
+    vector<int> windowIds = {-1, 2, 5};
+    EXPECT_EQ(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIds[0], static_cast<int32_t>(windowIds.size())));
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIds[0], static_cast<int32_t>(windowIds.size())));
+    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
+    sleep(5);
+    cout << "screenCapture_->SkipPrivacyMode start 1" << endl;
+    EXPECT_EQ(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIds[0], static_cast<int32_t>(windowIds.size())));
+    cout << "screenCapture_->SkipPrivacyMode end 1" << endl;
+    windowIds = {-1, 2, 7};
+    sleep(5);
+    cout << "screenCapture_->SkipPrivacyMode start 2" << endl;
+    EXPECT_EQ(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIds[0], static_cast<int32_t>(windowIds.size())));
+    cout << "screenCapture_->SkipPrivacyMode end 2" << endl;
+    sleep(5);
+    EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
+    EXPECT_EQ(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIds[0], static_cast<int32_t>(windowIds.size())));;
+    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_skip_privacy_01 after");
+}
+
+/**
+ * @tc.name: screen_capture_with_surface_skip_privacy_01
+ * @tc.desc: do screencapture
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_with_surface_skip_privacy_01, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_with_surface_skip_privacy_01 before");
+    SetConfig(config_);
+    config_.videoInfo.videoCapInfo.videoFrameWidth = 720;
+    config_.videoInfo.videoCapInfo.videoFrameHeight = 1280;
+    config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
+    bool isMicrophone = false;
+    screenCapture_->SetMicrophoneEnabled(isMicrophone);
+    vector<int> windowIds = {-1, 2, 5};
+    EXPECT_EQ(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIds[0], static_cast<int32_t>(windowIds.size())));
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIds[0], static_cast<int32_t>(windowIds.size())));
+    sptr<OHOS::Surface> consumer = OHOS::Surface::CreateSurfaceAsConsumer();
+    consumer->SetDefaultUsage(BUFFER_USAGE_CPU_READ | BUFFER_USAGE_MEM_MMZ_CACHE);
+    auto producer = consumer->GetProducer();
+    auto producerSurface = OHOS::Surface::CreateSurfaceAsProducer(producer);
+    sptr<IBufferConsumerListener> surfaceCb = OHOS::sptr<ScreenCapBufferDemoConsumerListener>::MakeSptr(consumer);
+    consumer->RegisterConsumerListener(surfaceCb);
+    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCaptureWithSurface(producerSurface));
+    sleep(5);
+    cout << "screenCapture_->SkipPrivacyMode start 1" << endl;
+    EXPECT_EQ(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIds[0], static_cast<int32_t>(windowIds.size())));
+    cout << "screenCapture_->SkipPrivacyMode end 1" << endl;
+    sleep(5);
+    windowIds = {-1, 2, 6};
+    cout << "screenCapture_->SkipPrivacyMode start 2" << endl;
+    EXPECT_EQ(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIds[0], static_cast<int32_t>(windowIds.size())));
+    cout << "screenCapture_->SkipPrivacyMode end 2" << endl;
+    sleep(5);
+    EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
+    EXPECT_EQ(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIds[0], static_cast<int32_t>(windowIds.size())));
+    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+    CloseFile();
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_with_surface_skip_privacy_01 after");
+}
+
 } // namespace Media
 } // namespace OHOS

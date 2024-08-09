@@ -160,6 +160,16 @@ int32_t ScreenCaptureNativeMock::ResizeCanvas(int32_t width, int32_t height)
     return screenCapture_->ResizeCanvas(width, height);
 }
 
+int32_t ScreenCaptureNativeMock::SkipPrivacyMode(int32_t *windowIDs, int32_t windowCount)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
+    std::vector<uint64_t> vec;
+    for (int32_t i = 0; i < windowCount; i++) {
+        vec.push_back(static_cast<uint64_t>(*(windowIDs + i)));
+    }
+    return screenCapture_->SkipPrivacyMode(vec)
+}
+
 int32_t ScreenCaptureNativeMock::AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audioBuffer,
     AudioCaptureSourceType type)
 {

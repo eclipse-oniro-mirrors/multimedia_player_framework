@@ -276,6 +276,12 @@ int32_t ScreenCaptureCapiMock::ResizeCanvas(int32_t width, int32_t height)
     return OH_AVScreenCapture_ResizeCanvas(screenCapture_, width, height);
 }
 
+int32_t ScreenCaptureCapiMock::SkipPrivacyMode(int32_t *windowIDs, int32_t windowCount)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
+    return OH_AVScreenCapture_SkipPrivacyMode(screenCapture_, *windowIDs, windowCount)
+}
+
 int32_t ScreenCaptureCapiMock::AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audioBuffer,
     AudioCaptureSourceType type)
 {
