@@ -230,7 +230,7 @@ int32_t AVMetadataHelperServiceStub::SetListenerObject(const sptr<IRemoteObject>
     return MSERR_OK;
 }
 
-int32_t AVMetadataHelperServiceStub::GetTimeByFrameIndex(uint32_t index, int64_t &time)
+int32_t AVMetadataHelperServiceStub::GetTimeByFrameIndex(uint32_t index, uint64_t &time)
 {
     MEDIA_LOGI("GetTimeByFrameIndex");
     std::unique_lock<std::mutex> lock(mutex_);
@@ -238,7 +238,7 @@ int32_t AVMetadataHelperServiceStub::GetTimeByFrameIndex(uint32_t index, int64_t
     return avMetadateHelperServer_->GetTimeByFrameIndex(index, time);
 }
 
-int32_t AVMetadataHelperServiceStub::GetFrameIndexByTime(int64_t time, uint32_t &index)
+int32_t AVMetadataHelperServiceStub::GetFrameIndexByTime(uint64_t time, uint32_t &index)
 {
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(avMetadateHelperServer_ != nullptr, 0, "avmetadatahelper server is nullptr");
@@ -388,7 +388,7 @@ int32_t AVMetadataHelperServiceStub::SetListenerObject(MessageParcel &data, Mess
 int32_t AVMetadataHelperServiceStub::GetTimeByFrameIndex(MessageParcel &data, MessageParcel &reply)
 {
     uint32_t index = data.ReadUint32();
-    int64_t time = 0;
+    uint64_t time = 0;
     auto res = GetTimeByFrameIndex(index, time);
     CHECK_AND_RETURN_RET(res == MSERR_OK, res);
     reply.WriteInt64(time);
@@ -397,7 +397,7 @@ int32_t AVMetadataHelperServiceStub::GetTimeByFrameIndex(MessageParcel &data, Me
 
 int32_t AVMetadataHelperServiceStub::GetFrameIndexByTime(MessageParcel &data, MessageParcel &reply)
 {
-    int64_t time = data.ReadInt64();
+    uint64_t time = data.ReadUint64();
     uint32_t index = 0;
     auto res = GetFrameIndexByTime(time, index);
     CHECK_AND_RETURN_RET(res == MSERR_OK, res);

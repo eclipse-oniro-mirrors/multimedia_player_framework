@@ -82,11 +82,11 @@ public:
     {
         return 0;
     }
-    int32_t GetTimeByFrameIndex(uint32_t index, int64_t &time) override
+    int32_t GetTimeByFrameIndex(uint32_t index, uint64_t &time) override
     {
         return 0;
     }
-    int32_t GetFrameIndexByTime(int64_t time, uint32_t &index) override
+    int32_t GetFrameIndexByTime(uint64_t time, uint32_t &index) override
     {
         return 0;
     }
