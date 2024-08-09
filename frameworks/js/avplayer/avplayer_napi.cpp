@@ -229,7 +229,8 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PrepareTask()
             }
             stopWait_ = false;
             stateChangeCond_.wait(lock, [this]() {
-                return stopWait_.load() || isInterrupted_.load() || avplayerExit_; });
+                return stopWait_.load() || isInterrupted_.load() || avplayerExit_;
+            });
 
             if (GetCurrentState() == AVPlayerState::STATE_ERROR) {
                 return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
