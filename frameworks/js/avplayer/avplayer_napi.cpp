@@ -545,7 +545,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::ResetTask()
         return TaskRet(MSERR_EXT_API9_OK, "Success");
     });
     (void)taskQue_->EnqueueTask(task, true); // CancelNotExecutedTask
-    isInterrupted_.store();
+    isInterrupted_.store(true);
     stateChangeCond_.notify_all();
     return task;
 }
