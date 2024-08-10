@@ -1611,6 +1611,12 @@ int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string &name, sptr<O
     }
     screenId_ = ScreenManager::GetInstance().CreateVirtualScreen(virScrOption);
     CHECK_AND_RETURN_RET_LOG(screenId_ >= 0, MSERR_UNKNOWN, "CreateVirtualScreen failed, invalid screenId");
+    MEDIA_LOGI("CreateVirtualScreen success");
+    return PrepareVirtualScreenMirror();
+}
+
+int32_t ScreenCaptureServer::PrepareVirtualScreenMirror()
+{
     for (size_t i = 0; i < contentFilter_.windowIDsVec.size(); i++) {
         MEDIA_LOGI("After CreateVirtualScreen windowIDsVec value :%{public}" PRIu64, contentFilter_.windowIDsVec[i]);
     }
@@ -1629,6 +1635,7 @@ int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string &name, sptr<O
     if (canvasRotation_) {
         SetCanvasRotationInner();
     }
+    SkipPrivacyModeInner();
     int32_t ret = MakeVirtualScreenMirror();
     if (ret != MSERR_OK) {
         MEDIA_LOGE("MakeVirtualScreenMirror failed");
@@ -1638,7 +1645,6 @@ int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string &name, sptr<O
         return MSERR_UNKNOWN;
     }
     isConsumerStart_ = true;
-    MEDIA_LOGI("CreateVirtualScreen success");
     return MSERR_OK;
 }
 
@@ -2121,6 +2127,36 @@ int32_t ScreenCaptureServer::ResizeCanvas(int32_t width, int32_t height)
     return MSERR_OK;
 }
 
+int32_t ScreenCaptureServer::SkipPrivacyMode(std::vector<uint64_t> &windowIDsVec)
+{
+    MediaTrace trace("ScreenCaptureServer::SkipPrivacyMode");
+    std::lock_guard<std::mutex> lock(mutex_);
+    MEDIA_LOGI("ScreenCaptureServer::SkipPrivacyMode, windowIDsVec size:%{public}d",
+        static_cast<int32_t>(windowIDsVec.size()));
+    for (size_t i = 0; i < windowIDsVec.size(); i++) {
+        MEDIA_LOGI("SkipPrivacyMode windowIDsVec value :%{public}" PRIu64, windowIDsVec[i]);
+    }
+    skipPrivacyWindowIDsVec_.assign(windowIDsVec.begin(), windowIDsVec.end());
+    if (captureState_ != AVScreenCaptureState::STARTED) { // Before Start
+        return MSERR_OK;
+    }
+    return SkipPrivacyModeInner();
+}
+
+int32_t ScreenCaptureServer::SkipPrivacyModeInner()
+{
+    MediaTrace trace("ScreenCaptureServer::SkipPrivacyModeInner");
+    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "SkipPrivacyModeInner start.", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(screenId_ != SCREEN_ID_INVALID, MSERR_INVALID_VAL,
+                             "SkipPrivacyMode failed virtual screen not init");
+    auto ret = Rosen::DisplayManager::GetInstance().SetVirtualScreenSecurityExemption(screenId_,
+        appInfo_.appPid, skipPrivacyWindowIDsVec_);
+    CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK, MSERR_UNSUPPORT,
+        "SkipPrivacyModeInner failed, ret: %{public}d", ret);
+    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "SkipPrivacyModeInner OK.", FAKE_POINTER(this));
+    return MSERR_OK;
+}
+
 int32_t ScreenCaptureServer::SetScreenScaleMode()
 {
     MediaTrace trace("ScreenCaptureServer::SetScreenScaleMode");
@@ -2335,6 +2371,7 @@ void ScreenCaptureServer::ReleaseInner()
         std::lock_guard<std::mutex> lock(mutexGlobal_);
         serverMap.erase(sessionId);
     }
+    skipPrivacyWindowIDsVec_.clear();
     SetMetaDataReport();
     screenCaptureObserverCb_ = nullptr;
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances ReleaseInner E", FAKE_POINTER(this));

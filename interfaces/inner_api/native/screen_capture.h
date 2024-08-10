@@ -249,6 +249,7 @@ public:
     virtual int32_t SetMicrophoneEnabled(bool isMicrophone) = 0;
     virtual int32_t SetCanvasRotation(bool canvasRotation) = 0;
     virtual int32_t ResizeCanvas(int32_t width, int32_t height) = 0;
+    virtual int32_t SkipPrivacyMode(std::vector<uint64_t> &windowIDsVec) = 0;
     virtual int32_t StartScreenCapture() = 0;
     virtual int32_t StartScreenCaptureWithSurface(sptr<Surface> surface) = 0;
     virtual int32_t StopScreenCapture() = 0;
