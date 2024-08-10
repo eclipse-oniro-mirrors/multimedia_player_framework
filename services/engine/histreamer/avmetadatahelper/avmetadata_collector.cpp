@@ -109,6 +109,7 @@ Status AVMetaDataCollector::GetVideoTrackId(uint32_t &trackId)
         }
         if (trackMime.find("video/") == 0) {
             videoTrackId_ = index;
+            trackId = index;
             hasVideo_ = true;
             return Status::OK;
         }
