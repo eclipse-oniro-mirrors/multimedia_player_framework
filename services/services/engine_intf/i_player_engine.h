@@ -92,6 +92,7 @@ public:
     virtual int32_t GetPlaybackSpeed(PlaybackRateMode &mode) = 0;
     virtual int32_t SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, AVPlayStrategy strategy) = 0;
     virtual int32_t SetVideoSurface(sptr<Surface> surface) = 0;
+    virtual float GetMaxAmplitude() = 0;
 
     virtual int32_t SetDecryptConfig(const sptr<OHOS::DrmStandard::IMediaKeySessionService> &keySessionProxy,
         bool svp)
