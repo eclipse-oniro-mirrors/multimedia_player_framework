@@ -32,7 +32,7 @@ class InCallObserverTestCallBack : public InCallObserverCallBack {
 public:
     InCallObserverTestCallBack() {}
     ~InCallObserverTestCallBack() {}
-    bool StopAndRelease()
+    bool StopAndRelease(AVScreenCaptureStateCode state)
     {
         return true;
     }
@@ -42,7 +42,7 @@ class InCallObserverTestFalseCallBack : public InCallObserverCallBack {
 public:
     InCallObserverTestFalseCallBack() {}
     ~InCallObserverTestFalseCallBack() {}
-    bool StopAndRelease()
+    bool StopAndRelease(AVScreenCaptureStateCode state)
     {
         return false;
     }
@@ -108,7 +108,8 @@ HWTEST_F(InCallObserverInnerUnitTest, RegisterInCallObserverCallBack_01, TestSiz
     auto inCallObserverCallBack = std::make_shared<InCallObserverTestCallBack>();
     ASSERT_TRUE(InCallObserver::GetInstance().RegisterInCallObserverCallBack(inCallObserverCallBack));
     InCallObserver::GetInstance().UnRegisterInCallObserverCallBack();
-    ASSERT_TRUE(inCallObserverCallBack->StopAndRelease());
+    ASSERT_TRUE(inCallObserverCallBack->StopAndRelease(
+        AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_CALL));
 }
 
 /**

@@ -1243,21 +1243,10 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
         ", isSurfaceMode:%{public}d, dataType:%{public}d", appInfo_.appUid, appInfo_.appPid, isPrivacyAuthorityEnabled,
         isSurfaceMode_, captureConfig_.dataType);
     MediaTrace trace("ScreenCaptureServer::StartScreenCaptureInner");
-    if (InCallObserver::GetInstance().IsInCall()) {
-        MEDIA_LOGI("ScreenCaptureServer Start InCall Abort");
-        screenCaptureCb_->OnStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_CALL);
-        FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_, SCREEN_CAPTURE_ERR_UNSUPPORT,
-            "ScreenCaptureServer Start InCall Abort");
-        return MSERR_UNSUPPORT;
-    } else {
-        MEDIA_LOGI("ScreenCaptureServer Start RegisterScreenCaptureCallBack");
-        InCallObserver::GetInstance().RegisterObserver();
-        std::weak_ptr<ScreenCaptureServer> wpScreenCaptureServer(shared_from_this());
-        screenCaptureObserverCb_ = std::make_shared<ScreenCaptureObserverCallBack>(wpScreenCaptureServer);
-        InCallObserver::GetInstance().RegisterInCallObserverCallBack(screenCaptureObserverCb_);
-    }
+    int32_t ret = RegisterServerCallbacks();
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "RegisterServerCallbacks failed");
 
-    int32_t ret = CheckAllParams();
+    ret = CheckAllParams();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartScreenCaptureInner failed, invalid params");
 
     sptr<Rosen::Display> display = Rosen::DisplayManager::GetInstance().GetDefaultDisplaySync();
@@ -1294,6 +1283,24 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
 
     MEDIA_LOGI("StartScreenCaptureInner E, appUid:%{public}d, appPid:%{public}d", appInfo_.appUid, appInfo_.appPid);
     return ret;
+}
+
+int32_t ScreenCaptureServer::RegisterServerCallbacks()
+{
+    std::weak_ptr<ScreenCaptureServer> wpScreenCaptureServer(shared_from_this());
+    screenCaptureObserverCb_ = std::make_shared<ScreenCaptureObserverCallBack>(wpScreenCaptureServer);
+    if (InCallObserver::GetInstance().IsInCall()) {
+        MEDIA_LOGI("ScreenCaptureServer Start InCall Abort");
+        screenCaptureCb_->OnStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_CALL);
+        FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_, SCREEN_CAPTURE_ERR_UNSUPPORT,
+            "ScreenCaptureServer Start InCall Abort");
+        return MSERR_UNSUPPORT;
+    } else {
+        MEDIA_LOGI("ScreenCaptureServer Start RegisterScreenCaptureCallBack");
+        InCallObserver::GetInstance().RegisterInCallObserverCallBack(screenCaptureObserverCb_);
+    }
+    AccountObserver::GetInstance().RegisterAccountObserverCallBack(screenCaptureObserverCb_);
+    return MSERR_OK;
 }
 
 int32_t ScreenCaptureServer::StartPrivacyWindow()
@@ -2329,6 +2336,7 @@ void ScreenCaptureServer::ReleaseInner()
         serverMap.erase(sessionId);
     }
     SetMetaDataReport();
+    screenCaptureObserverCb_ = nullptr;
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances ReleaseInner E", FAKE_POINTER(this));
 }
 
@@ -2339,12 +2347,12 @@ ScreenCaptureObserverCallBack::ScreenCaptureObserverCallBack(
     screenCaptureServer_ = screenCaptureServer;
 }
 
-bool ScreenCaptureObserverCallBack::StopAndRelease()
+bool ScreenCaptureObserverCallBack::StopAndRelease(AVScreenCaptureStateCode state)
 {
     MEDIA_LOGI("ScreenCaptureObserverCallBack::StopAndRelease");
     auto scrServer = screenCaptureServer_.lock();
     if (scrServer) {
-        scrServer->StopScreenCaptureByEvent(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_CALL);
+        scrServer->StopScreenCaptureByEvent(state);
         scrServer->Release();
     }
     return true;
