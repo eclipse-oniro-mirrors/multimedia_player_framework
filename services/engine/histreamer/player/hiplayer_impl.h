@@ -156,6 +156,7 @@ public:
     int32_t ResumeDemuxer() override;
     int32_t SetPlaybackStrategy(AVPlayStrategy playbackStrategy) override;
     int32_t SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted) override;
+    float GetMaxAmplitude() override;
 
 private:
     enum HiplayerSvpMode : int32_t {

@@ -64,6 +64,7 @@ const std::string EVENT_SET_DECRYPT_CONFIG_DONE = "setDecryptConfigDone";
 const std::string EVENT_AUDIO_DEVICE_CHANGE = "audioOutputDeviceChangeWithInfo";
 const std::string EVENT_SUBTITLE_UPDATE = "subtitleUpdate";
 const std::string EVENT_ERROR = "error";
+const std::string EVENT_AMPLITUDE_UPDATE = "amplitudeUpdate";
 }
 
 using TaskRet = std::pair<int32_t, std::string>;
