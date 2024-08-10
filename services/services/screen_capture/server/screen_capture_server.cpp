@@ -2147,6 +2147,10 @@ int32_t ScreenCaptureServer::SkipPrivacyModeInner()
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "SkipPrivacyModeInner start.", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(screenId_ != SCREEN_ID_INVALID, MSERR_INVALID_VAL,
                              "SkipPrivacyMode failed virtual screen not init");
+    auto ret = Rosen::DisplayManager::GetInstance().SetVirtualScreenSecurityExemption(screenId_,
+        appInfo_.appPid, skipPrivacyWindowIDsVec_);
+    CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK, MSERR_UNSUPPORT,
+        "SkipPrivacyModeInner failed, ret: %{public}d", ret);
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "SkipPrivacyModeInner OK.", FAKE_POINTER(this));
     return MSERR_OK;
 }
