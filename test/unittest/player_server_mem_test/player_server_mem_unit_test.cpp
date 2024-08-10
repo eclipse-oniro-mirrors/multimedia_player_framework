@@ -232,6 +232,22 @@ HWTEST_F(PlayerServerMemUnitTest, SetBehaviorInternal_003, TestSize.Level0)
     sleep(1);
 }
 
+HWTEST_F(PlayerServerMemUnitTest, SetBehaviorInternal_004, TestSize.Level0)
+{
+    playerServerMem_->lastOpStatus_ = PLAYER_IDLE;
+    playerServerMem_->recoverConfig_.speedMode = SPEED_FORWARD_1_25_X;
+    EXPECT_EQ(playerServerMem_->SetBehaviorInternal(), MSERR_INVALID_OPERATION);
+}
+
+HWTEST_F(PlayerServerMemUnitTest, SetBehaviorInternal_005, TestSize.Level0)
+{
+    playerServerMem_->lastOpStatus_ = PLAYER_IDLE;
+    playerServerMem_->recoverConfig_.speedMode = SPEED_FORWARD_1_00_X;
+    playerServerMem_->recoverConfig_.currentTime  = 0;
+    playerServerMem_->defaultAudioIndex_ = 1;
+    EXPECT_EQ(playerServerMem_->SetBehaviorInternal(), MSERR_INVALID_OPERATION);
+}
+
 /**
 * @tc.name    : Test NeedSelectAudioTrack API
 * @tc.number  : NeedSelectAudioTrack_001
@@ -827,6 +843,239 @@ HWTEST_F(PlayerServerMemUnitTest, SetSaveParameter_006, TestSize.Level0)
     EXPECT_EQ(result, MSERR_OK);
     sleep(1);
     sleep(1);
+}
+
+HWTEST_F(PlayerServerMemUnitTest, SetPlaybackSpeedInternal_001, TestSize.Level0)
+{
+    playerServerMem_->lastOpStatus_ = PLAYER_IDLE;
+    playerServerMem_->recoverConfig_.speedMode = SPEED_FORWARD_1_25_X;
+    EXPECT_EQ(playerServerMem_->SetPlaybackSpeedInternal(), MSERR_INVALID_OPERATION);
+}
+
+HWTEST_F(PlayerServerMemUnitTest, SetPlaybackSpeedInternal_002, TestSize.Level0)
+{
+    playerServerMem_->lastOpStatus_ = PLAYER_IDLE;
+    playerServerMem_->recoverConfig_.speedMode = SPEED_FORWARD_1_00_X;
+    playerServerMem_->defaultAudioIndex_ = 1;
+    EXPECT_EQ(playerServerMem_->SetPlaybackSpeedInternal(), MSERR_INVALID_OPERATION);
+}
+
+HWTEST_F(PlayerServerMemUnitTest, SetPlaybackSpeedInternal_003, TestSize.Level0)
+{
+    playerServerMem_->lastOpStatus_ = PLAYER_IDLE;
+    playerServerMem_->recoverConfig_.speedMode = SPEED_FORWARD_1_00_X;
+    playerServerMem_->defaultAudioIndex_ = -1;
+    EXPECT_EQ(playerServerMem_->SetPlaybackSpeedInternal(), MSERR_OK);
+}
+
+HWTEST_F(PlayerServerMemUnitTest, SetPlaybackSpeedInternal_004, TestSize.Level0)
+{
+    playerServerMem_->recoverConfig_.speedMode = SPEED_FORWARD_1_00_X;
+    playerServerMem_->defaultAudioIndex_ = 1;
+    EXPECT_EQ(playerServerMem_->SetPlaybackSpeedInternal(), MSERR_INVALID_OPERATION);
+}
+
+// Scenario1: Test when trackType is MEDIA_TYPE_AUD, isLocalResource_ is true and isReleaseMemByManage_ is true.
+HWTEST_F(PlayerServerMemUnitTest, GetCurrentTrack_001, TestSize.Level0)
+{
+    int32_t trackType = Media::MediaType::MEDIA_TYPE_AUD;
+    int32_t index = -1;
+    playerServerMem_->isLocalResource_ = true;
+    playerServerMem_->isReleaseMemByManage_ = true;
+    playerServerMem_->recoverConfig_.audioIndex = 1;
+    int32_t result = playerServerMem_->GetCurrentTrack(trackType, index);
+    ASSERT_EQ(result, MSERR_OK);
+    ASSERT_EQ(index, 1);
+}
+
+// Scenario2: Test when trackType is MEDIA_TYPE_VID, isLocalResource_ is true and isReleaseMemByManage_ is true.
+HWTEST_F(PlayerServerMemUnitTest, GetCurrentTrack_002, TestSize.Level0)
+{
+    int32_t trackType = Media::MediaType::MEDIA_TYPE_VID;
+    int32_t index = -1;
+    playerServerMem_->isLocalResource_ = true;
+    playerServerMem_->isReleaseMemByManage_ = true;
+    playerServerMem_->recoverConfig_.videoIndex = 2;
+    int32_t result = playerServerMem_->GetCurrentTrack(trackType, index);
+    ASSERT_EQ(result, MSERR_OK);
+    ASSERT_EQ(index, 2);
+}
+
+// Scenario3: Test when trackType is MEDIA_TYPE_SUBTITLE, isLocalResource_ is true and isReleaseMemByManage_ is true.
+HWTEST_F(PlayerServerMemUnitTest, GetCurrentTrack_003, TestSize.Level0)
+{
+    int32_t trackType = Media::MediaType::MEDIA_TYPE_SUBTITLE;
+    int32_t index = -1;
+    playerServerMem_->isLocalResource_ = true;
+    playerServerMem_->isReleaseMemByManage_ = true;
+    playerServerMem_->recoverConfig_.textIndex = 3;
+    int32_t result = playerServerMem_->GetCurrentTrack(trackType, index);
+    ASSERT_EQ(result, MSERR_OK);
+    ASSERT_EQ(index, 3);
+}
+
+// Scenario4: Test when trackType is invalid, isLocalResource_ is true and isReleaseMemByManage_ is true.
+HWTEST_F(PlayerServerMemUnitTest, GetCurrentTrack_004, TestSize.Level0)
+{
+    int32_t trackType = 100;
+    int32_t index = -1;
+    playerServerMem_->isLocalResource_ = true;
+    playerServerMem_->isReleaseMemByManage_ = true;
+    int32_t result = playerServerMem_->GetCurrentTrack(trackType, index);
+    ASSERT_EQ(result, MSERR_INVALID_OPERATION);
+}
+
+// Scenario5: Test when isLocalResource_ is false or isReleaseMemByManage_ is false.
+HWTEST_F(PlayerServerMemUnitTest, GetCurrentTrack_005, TestSize.Level0)
+{
+    int32_t trackType = Media::MediaType::MEDIA_TYPE_AUD;
+    int32_t index = -1;
+    playerServerMem_->isLocalResource_ = false;
+    playerServerMem_->isReleaseMemByManage_ = false;
+    int32_t result = playerServerMem_->GetCurrentTrack(trackType, index);
+    ASSERT_NE(result, MSERR_OK);
+}
+
+HWTEST_F(PlayerServerMemUnitTest, LocalResourceRelease_001, TestSize.Level0)
+{
+    playerServerMem_->isReleaseMemByManage_ = true;
+    EXPECT_EQ(playerServerMem_->LocalResourceRelease(), MSERR_OK);
+}
+
+HWTEST_F(PlayerServerMemUnitTest, RecoverToInitialized_001, TestSize.Level0)
+{
+    playerServerMem_->RecoverToInitialized(INFO_TYPE_STATE_CHANGE, PLAYER_INITIALIZED);
+    playerServerMem_->RecoverToInitialized(INFO_TYPE_STATE_CHANGE, PLAYER_IDLE);
+    playerServerMem_->RecoverToInitialized(INFO_TYPE_EOS, PLAYER_INITIALIZED);
+    EXPECT_EQ(playerServerMem_->isRecoverMemByUser_, false);
+}
+
+HWTEST_F(PlayerServerMemUnitTest, RecoverToPrepared_001, TestSize.Level0)
+{
+    playerServerMem_->defaultAudioIndex_ = 1;
+    playerServerMem_->RecoverToPrepared(INFO_TYPE_TRACKCHANGE, 0);
+    
+    playerServerMem_->recoverConfig_.currentTime = 1;
+    playerServerMem_->RecoverToPrepared(INFO_TYPE_SEEKDONE, 0);
+    
+    playerServerMem_->recoverConfig_.speedMode = SPEED_FORWARD_1_25_X;
+    playerServerMem_->RecoverToPrepared(INFO_TYPE_SPEEDDONE, 0);
+
+    EXPECT_EQ(playerServerMem_->isRecoverMemByUser_, false);
+}
+
+HWTEST_F(PlayerServerMemUnitTest, RecoverToCompleted_001, TestSize.Level0)
+{
+    playerServerMem_->defaultAudioIndex_ = 1;
+    playerServerMem_->RecoverToCompleted(INFO_TYPE_TRACKCHANGE, 0);
+    
+    playerServerMem_->RecoverToCompleted(INFO_TYPE_STATE_CHANGE, PLAYER_PREPARED);
+    
+    playerServerMem_->recoverConfig_.speedMode = SPEED_FORWARD_1_25_X;
+    playerServerMem_->RecoverToCompleted(INFO_TYPE_SPEEDDONE, 0);
+
+    playerServerMem_->RecoverToCompleted(INFO_TYPE_BUFFERING_UPDATE, 0);
+    EXPECT_EQ(playerServerMem_->isRecoverMemByUser_, false);
+}
+
+HWTEST_F(PlayerServerMemUnitTest, ResetFrontGroundForMemManage_001, TestSize.Level0)
+{
+    playerServerMem_->isAudioPlayer_ = false;
+    playerServerMem_->ResetFrontGroundForMemManage();
+    EXPECT_EQ(playerServerMem_->continueReset, 0);
+}
+
+HWTEST_F(PlayerServerMemUnitTest, ResetFrontGroundForMemManage_002, TestSize.Level0)
+{
+    playerServerMem_->ResetFrontGroundForMemManage();
+    EXPECT_EQ(playerServerMem_->continueReset, 0);
+}
+
+HWTEST_F(PlayerServerMemUnitTest, ResetFrontGroundForMemManage_003, TestSize.Level0)
+{
+    playerServerMem_->lastOpStatus_ = PLAYER_PREPARED;
+    playerServerMem_->isAudioPlayer_ = false;
+    playerServerMem_->continueReset = 4;
+    playerServerMem_->ResetFrontGroundForMemManage();
+    EXPECT_EQ(playerServerMem_->continueReset, 5);
+}
+
+HWTEST_F(PlayerServerMemUnitTest, ResetFrontGroundForMemManage_004, TestSize.Level0)
+{
+    playerServerMem_->lastOpStatus_ = PLAYER_PREPARED;
+    playerServerMem_->isAudioPlayer_ = false;
+    playerServerMem_->continueReset = 5;
+    playerServerMem_->ResetFrontGroundForMemManage();
+    EXPECT_EQ(playerServerMem_->continueReset, 0);
+}
+
+HWTEST_F(PlayerServerMemUnitTest, ResetBackGroundForMemManage_001, TestSize.Level0)
+{
+    playerServerMem_->isAudioPlayer_ = true;
+    playerServerMem_->ResetBackGroundForMemManage();
+    EXPECT_EQ(playerServerMem_->continueReset, 0);
+}
+
+HWTEST_F(PlayerServerMemUnitTest, ResetBackGroundForMemManage_002, TestSize.Level0)
+{
+    playerServerMem_->isAudioPlayer_ = false;
+    playerServerMem_->lastOpStatus_ = PLAYER_STARTED;
+    playerServerMem_->ResetBackGroundForMemManage();
+    EXPECT_EQ(playerServerMem_->continueReset, 0);
+}
+
+HWTEST_F(PlayerServerMemUnitTest, ResetBackGroundForMemManage_003, TestSize.Level0)
+{
+    playerServerMem_->lastOpStatus_ = PLAYER_PREPARED;
+    playerServerMem_->isAudioPlayer_ = false;
+    playerServerMem_->continueReset = 4; // 5 CONTINUE_RESET_MAX_NUM
+    playerServerMem_->ResetBackGroundForMemManage();
+    EXPECT_EQ(playerServerMem_->continueReset, 5);
+}
+
+HWTEST_F(PlayerServerMemUnitTest, ResetBackGroundForMemManage_004, TestSize.Level0)
+{
+    playerServerMem_->lastOpStatus_ = PLAYER_PREPARED;
+    playerServerMem_->isAudioPlayer_ = false;
+    playerServerMem_->continueReset = 5; // 5 CONTINUE_RESET_MAX_NUM
+    playerServerMem_->ResetBackGroundForMemManage();
+    EXPECT_EQ(playerServerMem_->continueReset, 0);
+}
+
+// Scenario1: Test when type is INFO_TYPE_DEFAULTTRACK and mediaType is MEDIA_TYPE_AUD.
+HWTEST_F(PlayerServerMemUnitTest, GetDefaultTrack_001, TestSize.Level0)
+{
+    PlayerOnInfoType type = INFO_TYPE_DEFAULTTRACK;
+    int32_t extra = 0;
+    Format infoBody;
+    infoBody.PutIntValue(PlayerKeys::PLAYER_TRACK_TYPE, 0); // 0 MEDIA_TYPE_AUD
+    infoBody.PutIntValue(PlayerKeys::PLAYER_TRACK_INDEX, 1);
+    playerServerMem_->GetDefaultTrack(type, extra, infoBody);
+    EXPECT_EQ(playerServerMem_->defaultAudioIndex_, 1);
+}
+
+// Scenario2: Test when type is not INFO_TYPE_DEFAULTTRACK.
+HWTEST_F(PlayerServerMemUnitTest, GetDefaultTrack_002, TestSize.Level0)
+{
+    PlayerOnInfoType type = INFO_TYPE_EOS;
+    int32_t extra = 0;
+    Format infoBody;
+    infoBody.PutIntValue(PlayerKeys::PLAYER_TRACK_TYPE, 0); // 0 MEDIA_TYPE_AUD
+    infoBody.PutIntValue(PlayerKeys::PLAYER_TRACK_INDEX, 1);
+    playerServerMem_->GetDefaultTrack(type, extra, infoBody);
+    EXPECT_NE(playerServerMem_->defaultAudioIndex_, 1);
+}
+
+// Scenario3: Test when mediaType is not MEDIA_TYPE_AUD.
+HWTEST_F(PlayerServerMemUnitTest, GetDefaultTrack_003, TestSize.Level0)
+{
+    PlayerOnInfoType type = INFO_TYPE_DEFAULTTRACK;
+    int32_t extra = 0;
+    Format infoBody;
+    infoBody.PutIntValue(PlayerKeys::PLAYER_TRACK_TYPE, 1); // 1 MEDIA_TYPE_VID
+    infoBody.PutIntValue(PlayerKeys::PLAYER_TRACK_INDEX, 1);
+    playerServerMem_->GetDefaultTrack(type, extra, infoBody);
+    EXPECT_NE(playerServerMem_->defaultAudioIndex_, 1);
 }
 } // namespace Media
 } // namespace OHOS
