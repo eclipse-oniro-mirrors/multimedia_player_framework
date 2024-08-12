@@ -339,7 +339,8 @@ HWTEST_F(HiplayerImplUnitTest, DoInitializeForHttp_002, TestSize.Level0)
     // 1. Set up the test environment
     hiplayer_->isNetWorkPlay_ = true;
     std::string name = "builtin.player.demuxer";
-    std::shared_ptr<DemuxerFilterMock> demuxerMock = std::make_shared<DemuxerFilterMock>(name, FilterType::FILTERTYPE_DEMUXER);
+    std::shared_ptr<DemuxerFilterMock> demuxerMock =
+        std::make_shared<DemuxerFilterMock>(name, FilterType::FILTERTYPE_DEMUXER);
     hiplayer_->demuxer_ = demuxerMock;
     demuxerMock->pushData_ = true;
 
@@ -361,7 +362,8 @@ HWTEST_F(HiplayerImplUnitTest, DoInitializeForHttp_003, TestSize.Level0)
     // 1. Set up the test environment
     hiplayer_->isNetWorkPlay_ = true;
     std::string name = "builtin.player.demuxer";
-    std::shared_ptr<DemuxerFilterMock> demuxerMock = std::make_shared<DemuxerFilterMock>(name, FilterType::FILTERTYPE_DEMUXER);
+    std::shared_ptr<DemuxerFilterMock> demuxerMock =
+        std::make_shared<DemuxerFilterMock>(name, FilterType::FILTERTYPE_DEMUXER);
     hiplayer_->demuxer_ = demuxerMock;
     demuxerMock->getBitRatesStatus_ = Status::ERROR_UNKNOWN;
 
@@ -383,7 +385,8 @@ HWTEST_F(HiplayerImplUnitTest, DoInitializeForHttp_004, TestSize.Level0)
     // 1. Set up the test environment
     hiplayer_->isNetWorkPlay_ = true;
     std::string name = "builtin.player.demuxer";
-    std::shared_ptr<DemuxerFilterMock> demuxerMock = std::make_shared<DemuxerFilterMock>(name, FilterType::FILTERTYPE_DEMUXER);
+    std::shared_ptr<DemuxerFilterMock> demuxerMock =
+        std::make_shared<DemuxerFilterMock>(name, FilterType::FILTERTYPE_DEMUXER);
     hiplayer_->demuxer_ = demuxerMock;
     demuxerMock->pushData_ = false;
 
