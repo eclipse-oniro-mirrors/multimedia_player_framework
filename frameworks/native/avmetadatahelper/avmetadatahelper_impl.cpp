@@ -223,16 +223,17 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::CreatePixelMapYuv(const std::sha
         InitializationOptions options = { .size = { .width = mySurfaceBuffer->GetWidth(),
                                                     .height = mySurfaceBuffer->GetHeight() },
                                           .srcPixelFormat = PixelFormat::YCBCR_P010,
-                                          .pixelFormat = PixelFormat::YCBCR_P010 };
+                                          .pixelFormat = PixelFormat::YCBCR_P010,
+                                          .useDMA = true };
         uint32_t colorLength = mySurfaceBuffer->GetWidth() * mySurfaceBuffer->GetHeight() * PIXEL_SIZE_HDR_YUV;
         auto pixelMap =
             PixelMap::Create(reinterpret_cast<const uint32_t *>(mySurfaceBuffer->GetVirAddr()), colorLength, options);
-        pixelMap->InnerSetColorSpace(OHOS::ColorManager::ColorSpace(ColorManager::ColorSpaceName::BT2020_HLG));
-        pixelMap->SetPixelsAddr(mySurfaceBuffer->GetVirAddr(), mySurfaceBuffer.GetRefPtr(), mySurfaceBuffer->GetSize(),
-                                AllocatorType::DMA_ALLOC, FreeSurfaceBuffer);
         void* nativeBuffer = mySurfaceBuffer.GetRefPtr();
         RefBase *ref = reinterpret_cast<RefBase *>(nativeBuffer);
         ref->IncStrongRef(ref);
+        pixelMap->InnerSetColorSpace(OHOS::ColorManager::ColorSpace(ColorManager::ColorSpaceName::BT2020_HLG));
+        pixelMap->SetPixelsAddr(mySurfaceBuffer->GetVirAddr(), mySurfaceBuffer.GetRefPtr(), mySurfaceBuffer->GetSize(),
+                                AllocatorType::DMA_ALLOC, FreeSurfaceBuffer);
         return pixelMap;
     }
 
@@ -546,10 +547,10 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameYuv(int64_t timeUs, in
         pixelMap->scale((1.0f * param.dstWidth) / srcWidth, (1.0f * param.dstHeight) / srcHeight);
     }
     if (pixelMapInfo.rotation > 0) {
+        if (!pixelMapInfo.isHdr) {
+            pixelMap->SetAllocatorType(AllocatorType::SHARE_MEM_ALLOC);
+        }
         pixelMap->rotate(pixelMapInfo.rotation);
-    }
-    if ((needScale || pixelMapInfo.rotation > 0) && pixelMapInfo.isHdr) {
-        pixelMap->SetAllocatorType(AllocatorType::CUSTOM_ALLOC);
     }
     return pixelMap;
 }
