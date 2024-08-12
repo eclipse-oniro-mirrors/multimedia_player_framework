@@ -115,6 +115,7 @@ public:
     static constexpr std::string_view PLAYER_DRM_INFO_ADDR = "drm_info_addr";
     static constexpr std::string_view PLAYER_DRM_INFO_COUNT = "drm_info_count";
     static constexpr std::string_view PLAYER_AVAILABLE_BITRATES = "available_bitRates";
+    static constexpr std::string_view AUDIO_MAX_AMPLITUDE = "max_amplitude";
 };
 
 class PlaybackInfoKey {
@@ -211,6 +212,8 @@ enum PlayerOnInfoType : int32_t {
     INFO_TYPE_AUDIO_DEVICE_CHANGE,
     /* return the subtitle info */
     INFO_TYPE_SUBTITLE_UPDATE_INFO,
+    /* return audio uv value */
+    INFO_TYPE_MAX_AMPLITUDE_COLLECT,
 };
 
 enum PlayerStates : int32_t {

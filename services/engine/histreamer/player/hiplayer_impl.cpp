@@ -40,6 +40,7 @@ const int32_t AUDIO_SINK_MAX_LATENCY = 400; // audio sink write latency ms
 const int32_t FRAME_RATE_UNIT_MULTIPLE = 100; // the unit of frame rate is frames per 100s
 const int32_t PLAYING_SEEK_WAIT_TIME = 200; // wait up to 200 ms for new frame after seek in playing.
 const int64_t PLAY_RANGE_DEFAULT_VALUE = -1; // play range default value.
+const int64_t SAMPLE_AMPLITUDE_INTERVAL = 100;
 const double FRAME_RATE_DEFAULT = -1.0;
 const double FRAME_RATE_FOR_SEEK_PERFORMANCE = 2000.0;
 }
@@ -631,17 +632,20 @@ int32_t HiPlayerImpl::Play()
             ret = TransStatus(Seek(0, PlayerSeekMode::SEEK_PREVIOUS_SYNC, false));
         }
         callbackLooper_.StartReportMediaProgress(100); // 100 ms
+        callbackLooper_.startCollectMaxAmplitude(SAMPLE_AMPLITUDE_INTERVAL);
     } else if (pipelineStates_ == PlayerStates::PLAYER_PAUSED) {
         if (playRangeStartTime_ > PLAY_RANGE_DEFAULT_VALUE) {
             ret = TransStatus(Seek(playRangeStartTime_, PlayerSeekMode::SEEK_PREVIOUS_SYNC, false));
         }
         callbackLooper_.StartReportMediaProgress(100); // 100 ms
+        callbackLooper_.startCollectMaxAmplitude(SAMPLE_AMPLITUDE_INTERVAL);
         ret = TransStatus(Resume());
     } else {
         if (playRangeStartTime_ > PLAY_RANGE_DEFAULT_VALUE) {
             ret = TransStatus(Seek(playRangeStartTime_, PlayerSeekMode::SEEK_PREVIOUS_SYNC, false));
         }
         callbackLooper_.StartReportMediaProgress(100); // 100 ms
+        callbackLooper_.startCollectMaxAmplitude(SAMPLE_AMPLITUDE_INTERVAL);
         syncManager_->Resume();
         ret = TransStatus(pipeline_->Start());
         if (ret != MSERR_OK) {
@@ -673,6 +677,7 @@ int32_t HiPlayerImpl::Pause()
         UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
     }
     callbackLooper_.StopReportMediaProgress();
+    callbackLooper_.StopCollectMaxAmplitude();
     callbackLooper_.ManualReportMediaProgressOnce();
     OnStateChanged(PlayerStateId::PAUSE);
     if (startTime_ != -1) {
@@ -687,6 +692,7 @@ int32_t HiPlayerImpl::PauseDemuxer()
     MediaTrace trace("HiPlayerImpl::PauseDemuxer");
     MEDIA_LOG_I("PauseDemuxer in");
     callbackLooper_.StopReportMediaProgress();
+    callbackLooper_.StopCollectMaxAmplitude();
     Status ret = demuxer_->PauseDemuxerReadLoop();
     return TransStatus(ret);
 }
@@ -698,6 +704,7 @@ int32_t HiPlayerImpl::ResumeDemuxer()
     FALSE_RETURN_V_MSG_E(pipelineStates_ != PlayerStates::PLAYER_STATE_ERROR,
         TransStatus(Status::OK), "PLAYER_STATE_ERROR not allow ResumeDemuxer");
     callbackLooper_.StartReportMediaProgress();
+    callbackLooper_.startCollectMaxAmplitude(SAMPLE_AMPLITUDE_INTERVAL);
     Status ret = demuxer_->ResumeDemuxerReadLoop();
     return TransStatus(ret);
 }
@@ -715,6 +722,7 @@ int32_t HiPlayerImpl::Stop()
     MEDIA_LOG_I_SHORT("Stop entered.");
     UpdatePlayStatistics();
     callbackLooper_.StopReportMediaProgress();
+    callbackLooper_.StopCollectMaxAmplitude();
     // close demuxer first to avoid concurrent problem
     auto ret = Status::ERROR_UNKNOWN;
     if (pipeline_ != nullptr) {
@@ -993,6 +1001,7 @@ Status HiPlayerImpl::doCompletedSeek(int64_t seekPos, PlayerSeekMode mode)
     } else {
         isDoCompletedSeek_ = true;
         callbackLooper_.StopReportMediaProgress();
+        callbackLooper_.StopCollectMaxAmplitude();
         callbackLooper_.ManualReportMediaProgressOnce();
         OnStateChanged(PlayerStateId::PAUSE);
     }
@@ -1332,6 +1341,15 @@ int32_t HiPlayerImpl::GetAudioEffectMode(int32_t &effectMode)
     FALSE_RETURN_V_MSG_E(res == Status::OK,
         MSERR_UNKNOWN, "audioSink get AudioEffectMode error");
     return MSERR_OK;
+}
+
+float HiPlayerImpl::GetMaxAmplitude()
+{
+    float maxAmplitude = 0.0f;
+    if (audioSink_ != nullptr) {
+        maxAmplitude = audioSink_->GetMaxAmplitude();
+    }
+    return maxAmplitude;
 }
 
 int32_t HiPlayerImpl::SetPlaybackSpeed(PlaybackRateMode mode)
@@ -2032,6 +2050,7 @@ void HiPlayerImpl::HandleCompleteEvent(const Event& event)
     }
     if (!singleLoop_.load()) {
         callbackLooper_.StopReportMediaProgress();
+        callbackLooper_.StopCollectMaxAmplitude();
     } else {
         inEosSeek_ = true;
     }
@@ -2215,6 +2234,7 @@ void HiPlayerImpl::NotifyAudioInterrupt(const Event& event)
                 UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
             }
             callbackLooper_.StopReportMediaProgress();
+            callbackLooper_.StopCollectMaxAmplitude();
         }
     }
     (void)format.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_TYPE, eventType);
