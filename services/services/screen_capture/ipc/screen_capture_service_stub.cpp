@@ -338,7 +338,7 @@ int32_t ScreenCaptureServiceStub::SkipPrivacyMode(MessageParcel &data, MessagePa
     int32_t windowIdSize = data.ReadInt32();
     CHECK_AND_RETURN_RET_LOG(windowIdSize < MAX_FILTER_CONTENTS_COUNT, MSERR_INVALID_STATE,
                              "windowID size is exceed max range");
-    if (windowIdSize > 0) {
+    if (windowIdSize >= 0) {
         std::vector<uint64_t> vec;
         for (int32_t i = 0; i < windowIdSize; i++) {
             vec.push_back(data.ReadUint64());
