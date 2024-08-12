@@ -1250,6 +1250,7 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartScreenCaptureInner failed, invalid params");
 
     sptr<Rosen::Display> display = Rosen::DisplayManager::GetInstance().GetDefaultDisplaySync();
+    CHECK_AND_RETURN_RET_LOG(display != nullptr, MSERR_UNKNOWN, "GetDefaultDisplaySync failed");
     density_ = display->GetDpi();
 
     bundleName_ = GetClientBundleName(appInfo_.appUid);
@@ -1661,6 +1662,7 @@ int32_t ScreenCaptureServer::MakeVirtualScreenMirror()
     std::vector<ScreenId> mirrorIds;
     mirrorIds.push_back(screenId_);
     sptr<Rosen::Display> defaultDisplay = Rosen::DisplayManager::GetInstance().GetDefaultDisplaySync();
+    CHECK_AND_RETURN_RET_LOG(defaultDisplay != nullptr, MSERR_UNKNOWN, "make mirror GetDefaultDisplaySync failed");
     ScreenId mirrorGroup = defaultDisplay->GetScreenId();
 
     if (captureConfig_.captureMode != CAPTURE_SPECIFIED_SCREEN) {
