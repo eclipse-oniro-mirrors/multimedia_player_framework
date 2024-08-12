@@ -60,13 +60,13 @@ ohos_unittest("hiplayer_impl_unit_test") {
   stack_protector_ret = true
 
   sources = [
-    "hiplayer_impl_unit_test.cpp",
-    "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/player/hiplayer_impl.cpp",
-    "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/player/hiplayer_callback_looper.cpp",
-    "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/player/seek_agent.cpp",
     "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/player/dragging_player_agent.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/player/hiplayer_callback_looper.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/player/hiplayer_impl.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/player/seek_agent.cpp",
     "$MEDIA_PLAYER_ROOT_DIR/services/utils/media_dfx.cpp",
     "$MEDIA_PLAYER_ROOT_DIR/services/utils/media_utils.cpp",
+    "hiplayer_impl_unit_test.cpp",
   ]
 
   configs = [
@@ -83,42 +83,39 @@ ohos_unittest("hiplayer_impl_unit_test") {
     cfi_cross_dso = true
     debug = false
   }
- 
+
   external_deps = [
+    "access_token:libaccesstoken_sdk",
+    "access_token:libprivacy_sdk",
     "audio_framework:audio_client",
     "audio_framework:audio_renderer",
     "av_codec:av_codec_client",
     "av_codec:av_codec_media_engine_filters",
     "av_codec:av_codec_media_engine_modules",
+    "bundle_framework:appexecfwk_base",
+    "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "graphic_surface:surface",
     "graphic_surface:sync_fence",
+    "hicollie:libhicollie",
     "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "hitrace:hitrace_meter",
     "hitrace:libhitracechain",
     "init:libbegetutil",
     "ipc:ipc_single",
-    "media_foundation:media_foundation",
-    "safwk:system_ability_fwk",
-    "access_token:libaccesstoken_sdk",
-    "access_token:libprivacy_sdk",
-    "bundle_framework:appexecfwk_base",
-    "bundle_framework:appexecfwk_core",
-    "hicollie:libhicollie",
-    "hisysevent:libhisysevent",
-    "hitrace:hitrace_meter",
     "libxml2:libxml2",
+    "media_foundation:media_foundation",
     "qos_manager:qos",
+    "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
 
   deps = [
-    "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/player:media_engine_histreamer_player",
     "$MEDIA_PLAYER_ROOT_DIR/services/dfx:media_service_log_dfx",
+    "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/player:media_engine_histreamer_player",
     "$MEDIA_PLAYER_ROOT_DIR/services/utils:media_service_utils",
   ]
-  
- 
-  deps = [
-  ]
 
+  deps = []
 }
