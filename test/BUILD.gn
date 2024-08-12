@@ -33,6 +33,7 @@ group("media_unit_test") {
       "unittest/screen_capture_test:screen_capture_native_unit_test",
       "unittest/screen_capture_test:screen_capture_server_function_unit_test",
       "unittest/soundpool_test:soundpool_unit_test",
+      "unittest/hiplayer_impl_test:hiplayer_impl_unit_test",
     ]
   }
 }
