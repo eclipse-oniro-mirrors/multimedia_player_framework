@@ -31,7 +31,7 @@ void HiplayerImplUnitTest::TearDownTestCase(void)
 
 void HiplayerImplUnitTest::SetUp(void)
 {
-    hiplayer_ = std::make_unique<HiPlayerImpl>(0, 0, 0, 0);;
+    hiplayer_ = std::make_unique<HiPlayerImpl>(0, 0, 0, 0);
 }
 
 void HiplayerImplUnitTest::TearDown(void)
