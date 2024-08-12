@@ -60,6 +60,7 @@ ohos_unittest("hiplayer_impl_unit_test") {
   stack_protector_ret = true
 
   sources = [
+    "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/player/dfx_agent.cpp",
     "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/player/dragging_player_agent.cpp",
     "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/player/hiplayer_callback_looper.cpp",
     "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/player/hiplayer_impl.cpp",
