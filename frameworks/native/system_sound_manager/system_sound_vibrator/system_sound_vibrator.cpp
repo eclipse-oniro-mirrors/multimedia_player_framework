@@ -19,7 +19,7 @@
 #include "vibrator_agent.h"
 #endif
 
-#include "media_log.h"
+#include "system_sound_log.h"
 #include "media_errors.h"
 
 namespace {

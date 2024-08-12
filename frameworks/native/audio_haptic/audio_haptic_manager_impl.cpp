@@ -17,7 +17,7 @@
 
 #include "audio_haptic_player_impl.h"
 
-#include "media_log.h"
+#include "audio_haptic_log.h"
 #include "media_errors.h"
 
 #include "isoundpool.h"

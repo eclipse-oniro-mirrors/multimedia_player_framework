@@ -14,7 +14,7 @@
  */
 
 #include "audio_haptic_player_options_napi.h"
-#include "media_log.h"
+#include "audio_haptic_log.h"
 
 using namespace std;
 
