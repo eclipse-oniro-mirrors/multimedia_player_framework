@@ -32,6 +32,7 @@
 #include "media_sync_manager.h"
 #include "pipeline/pipeline.h"
 #include "seek_agent.h"
+#include "dfx_agent.h"
 #include "subtitle_sink_filter.h"
 #include "meta/meta.h"
 #include <chrono>
@@ -147,6 +148,7 @@ public:
     void OnEvent(const Event &event);
     void OnEventSub(const Event &event);
     void OnEventSubTrackChange(const Event &event);
+    void OnDfxEvent(const Event &event);
     void OnStateChanged(PlayerStateId state);
     Status OnCallback(std::shared_ptr<Filter> filter, const FilterCallBackCommand cmd,
                     StreamType outType);
@@ -337,6 +339,7 @@ private:
     int64_t lastSeekContinousPos_ {-1};
     bool isSetVideoSurface_ = false;
     std::atomic<bool> needUpdateSubtitle_ {true};
+    std::shared_ptr<DfxAgent> dfxAgent_{};
 };
 } // namespace Media
 } // namespace OHOS
