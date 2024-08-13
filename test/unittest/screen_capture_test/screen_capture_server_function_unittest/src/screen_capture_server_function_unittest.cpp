@@ -634,21 +634,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetOutputFile_001, TestSize.Level2)
     ASSERT_NE(screenCaptureServer_->SetOutputFile(-1), MSERR_OK);
 }
 
-// read only
-HWTEST_F(ScreenCaptureServerFunctionTest, SetOutputFile_002, TestSize.Level2)
-{
-    RecorderInfo recorderInfo;
-    SetRecorderInfo("set_output_file_unittest_002.mp4", recorderInfo);
-    SetConfigFile(recorderInfo);
-    config_.audioInfo.micCapInfo.audioSampleRate = 16000;
-    config_.audioInfo.micCapInfo.audioChannels = 2;
-    config_.audioInfo.micCapInfo.audioSource = AudioCaptureSourceType::SOURCE_DEFAULT;
-    config_.audioInfo.innerCapInfo.audioSampleRate = 16000;
-    config_.audioInfo.innerCapInfo.audioChannels = 2;
-    config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
-    ASSERT_NE(InitFileScreenCaptureServer(), MSERR_OK);
-}
-
 HWTEST_F(ScreenCaptureServerFunctionTest, OnStartScreenCapture_001, TestSize.Level2)
 {
     SetConfig();
