@@ -586,28 +586,28 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckVideoEncParam_001, TestSize.Level
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckVideoEncParam_002, TestSize.Level2)
 {
     SetConfig();
-    config_.videoInfo.videoEncInfo.videoBitrate = VIDEO_BITRATE_MIN - 1;
+    config_.videoInfo.videoEncInfo.videoBitrate = screenCaptureServer_->VIDEO_BITRATE_MIN - 1;
     ASSERT_NE(screenCaptureServer_->CheckVideoEncParam(config_.videoInfo.videoEncInfo), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckVideoEncParam_003, TestSize.Level2)
 {
     SetConfig();
-    config_.videoInfo.videoEncInfo.videoBitrate = VIDEO_BITRATE_MAX + 1;
+    config_.videoInfo.videoEncInfo.videoBitrate = screenCaptureServer_->VIDEO_BITRATE_MAX + 1;
     ASSERT_NE(screenCaptureServer_->CheckVideoEncParam(config_.videoInfo.videoEncInfo), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckVideoEncParam_004, TestSize.Level2)
 {
     SetConfig();
-    config_.videoInfo.videoEncInfo.videoFrameRate = VIDEO_FRAME_RATE_MIN - 1;
+    config_.videoInfo.videoEncInfo.videoFrameRate = screenCaptureServer_->VIDEO_FRAME_RATE_MIN - 1;
     ASSERT_NE(screenCaptureServer_->CheckVideoEncParam(config_.videoInfo.videoEncInfo), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckVideoEncParam_005, TestSize.Level2)
 {
     SetConfig();
-    config_.videoInfo.videoEncInfo.videoFrameRate = VIDEO_FRAME_RATE_MAX + 1;
+    config_.videoInfo.videoEncInfo.videoFrameRate = screenCaptureServer_->VIDEO_FRAME_RATE_MAX + 1;
     ASSERT_NE(screenCaptureServer_->CheckVideoEncParam(config_.videoInfo.videoEncInfo), MSERR_OK);
 }
 } // Media
