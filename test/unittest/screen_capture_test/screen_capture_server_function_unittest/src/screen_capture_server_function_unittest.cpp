@@ -533,7 +533,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioDataSource_001, TestSize.Level2)
     ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, AudioDataSource_001, TestSize.Level2)
+HWTEST_F(ScreenCaptureServerFunctionTest, AudioDataSource_002, TestSize.Level2)
 {
     SetConfig();
     config_.audioInfo.micCapInfo.audioSampleRate = 16000;
@@ -646,7 +646,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetOutputFile_002, TestSize.Level2)
     config_.audioInfo.innerCapInfo.audioSampleRate = 16000;
     config_.audioInfo.innerCapInfo.audioChannels = 2;
     config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
-    ASSERT_NE(InitStreamScreenCaptureServer(), MSERR_OK);
+    ASSERT_NE(InitFileScreenCaptureServer(), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, OnStartScreenCapture_001, TestSize.Level2)
@@ -688,6 +688,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, UpdateMicrophoneEnabled_001, TestSize.
     config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->StartNotification(), MSERR_OK);
     screenCaptureServer_->UpdateMicrophoneEnabled();
     sleep(RECORDER_TIME);
     ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
