@@ -81,7 +81,7 @@ void AccountObserverInnerUnitTest::TearDown(void)
 HWTEST_F(AccountObserverInnerUnitTest, RegisterObserver_01, TestSize.Level1)
 {
     ASSERT_TRUE(AccountObserver::GetInstance().RegisterObserver());
-    AccountObserver::GetInstance().UnRegisterObserver();
+    AccountObserver::GetInstance().UnregisterObserver();
 }
 
 /**
@@ -93,7 +93,7 @@ HWTEST_F(AccountObserverInnerUnitTest, RegisterAccountObserverCallBack_01, TestS
 {
     auto accountObserverCallBack = std::make_shared<AccountObserverTestCallBack>();
     ASSERT_TRUE(AccountObserver::GetInstance().RegisterAccountObserverCallBack(accountObserverCallBack));
-    AccountObserver::GetInstance().UnRegisterAccountObserverCallBack();
+    AccountObserver::GetInstance().UnregisterAccountObserverCallBack();
     ASSERT_TRUE(accountObserverCallBack->StopAndRelease(
         AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_USER_SWITCHES));
 }
@@ -105,12 +105,12 @@ HWTEST_F(AccountObserverInnerUnitTest, RegisterAccountObserverCallBack_01, TestS
  */
 HWTEST_F(AccountObserverInnerUnitTest, AccountCallBackReturn_01, TestSize.Level1)
 {
-    AccountObserver::GetInstance().UnRegisterObserver();
+    AccountObserver::GetInstance().UnregisterObserver();
     ASSERT_TRUE(AccountObserver::GetInstance().RegisterObserver());
     auto accountObserverCallBack = std::make_shared<AccountObserverTestCallBack>();
     ASSERT_TRUE(AccountObserver::GetInstance().RegisterAccountObserverCallBack(accountObserverCallBack));
     ASSERT_TRUE(AccountObserver::GetInstance().OnAccountsSwitch());
-    AccountObserver::GetInstance().UnRegisterObserver();
+    AccountObserver::GetInstance().UnregisterObserver();
 }
 } // namespace AccountObserverFuncUT
 } // namespace Media
