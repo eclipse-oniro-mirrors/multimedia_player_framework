@@ -582,40 +582,32 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckScreenCapturePermission_001, Test
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckVideoEncParam_001, TestSize.Level2)
 {
     SetConfig();
-    config_.videoInfo.videoEncInfo.videoCodec = -1;
+    config_.videoInfo.videoEncInfo.videoCodec = VIDEO_CODEC_FORMAT_BUTT;
     ASSERT_NE(screenCaptureServer_->CheckVideoEncParam(config_.videoInfo.videoEncInfo), MSERR_OK);
 }
-
 
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckVideoEncParam_002, TestSize.Level2)
-{
-    SetConfig();
-    config_.videoInfo.videoEncInfo.videoCodec = 0xffff;
-    ASSERT_NE(screenCaptureServer_->CheckVideoEncParam(config_.videoInfo.videoEncInfo), MSERR_OK);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, CheckVideoEncParam_003, TestSize.Level2)
 {
     SetConfig();
     config_.videoInfo.videoEncInfo.videoBitrate = -1;
     ASSERT_NE(screenCaptureServer_->CheckVideoEncParam(config_.videoInfo.videoEncInfo), MSERR_OK);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, CheckVideoEncParam_004, TestSize.Level2)
+HWTEST_F(ScreenCaptureServerFunctionTest, CheckVideoEncParam_003, TestSize.Level2)
 {
     SetConfig();
     config_.videoInfo.videoEncInfo.videoBitrate = 0xffffff;
     ASSERT_NE(screenCaptureServer_->CheckVideoEncParam(config_.videoInfo.videoEncInfo), MSERR_OK);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, CheckVideoEncParam_005, TestSize.Level2)
+HWTEST_F(ScreenCaptureServerFunctionTest, CheckVideoEncParam_004, TestSize.Level2)
 {
     SetConfig();
     config_.videoInfo.videoEncInfo.videoFrameRate = -1;
     ASSERT_NE(screenCaptureServer_->CheckVideoEncParam(config_.videoInfo.videoEncInfo), MSERR_OK);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, CheckVideoEncParam_006, TestSize.Level2)
+HWTEST_F(ScreenCaptureServerFunctionTest, CheckVideoEncParam_005, TestSize.Level2)
 {
     SetConfig();
     config_.videoInfo.videoEncInfo.videoFrameRate = 0xffffff;
