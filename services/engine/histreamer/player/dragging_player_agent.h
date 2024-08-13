@@ -59,6 +59,7 @@ private:
     bool isReleased_ {false};
     atomic<int64_t> seekCnt_ {0};
     mutex draggingMutex_ {};
+    std::string threadName_ {};
 };
  
 } // namespace Media

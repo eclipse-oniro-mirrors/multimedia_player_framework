@@ -17,8 +17,9 @@
 
 #include <dlfcn.h>
  
-#include "dragging_player_agent.h"
 #include "common/log.h"
+#include "dragging_player_agent.h"
+#include "osal/task/pipeline_threadpool.h"
  
 namespace {
 const std::string REFERENCE_LIB_PATH = std::string(DRAGGING_PLAYER_PATH);
@@ -87,6 +88,7 @@ DraggingPlayerAgent::~DraggingPlayerAgent()
     if (!isReleased_) {
         Release();
     }
+    PipeLineThreadPool::GetInstance().DestroyThread(threadName_);
     if (draggingPlayer_ != nullptr) {
         destroyFunc_(draggingPlayer_);
         draggingPlayer_ = nullptr;
@@ -110,8 +112,8 @@ Status DraggingPlayerAgent::Init(const shared_ptr<DemuxerFilter> &demuxer,
     demuxer->RegisterVideoStreamReadyCallback(videoStreamReadyCb_);
     videoFrameReadyCb_ = std::make_shared<VideoFrameReadyCallbackImpl>(shared_from_this());
     decoder->RegisterVideoFrameReadyCallback(videoFrameReadyCb_);
-    std::string threadName = "DraggingTask_" + playerId;
-    task_ = std::make_unique<Task>("draggingThread", threadName, TaskType::GLOBAL, TaskPriority::NORMAL, false);
+    threadName_ = "DraggingTask_" + playerId;
+    task_ = std::make_unique<Task>("draggingThread", threadName_, TaskType::GLOBAL, TaskPriority::NORMAL, false);
     task_->Start();
     return Status::OK;
 }
