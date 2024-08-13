@@ -15,7 +15,7 @@
 
 #include "tone_attrs_napi.h"
 
-#include "media_log.h"
+#include "system_sound_log.h"
 #include "common_napi.h"
 
 #include "tokenid_kit.h"

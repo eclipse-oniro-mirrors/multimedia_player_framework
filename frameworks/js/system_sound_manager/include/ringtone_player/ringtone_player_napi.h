@@ -23,7 +23,7 @@
 #include "napi/native_node_api.h"
 
 #include "media_errors.h"
-#include "media_log.h"
+#include "system_sound_log.h"
 #include "ringtone_common_napi.h"
 #include "ringtone_options_napi.h"
 #include "ringtone_player.h"

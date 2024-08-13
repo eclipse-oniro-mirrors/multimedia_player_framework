@@ -20,7 +20,7 @@
 #include "napi/native_node_api.h"
 
 #include "media_errors.h"
-#include "media_log.h"
+#include "system_sound_log.h"
 #include "system_tone_options_napi.h"
 #include "system_tone_player.h"
 

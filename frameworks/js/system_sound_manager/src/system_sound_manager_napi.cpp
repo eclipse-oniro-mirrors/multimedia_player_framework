@@ -19,7 +19,7 @@
 #include "accesstoken_kit.h"
 #include "audio_renderer_info_napi.h"
 #include "ipc_skeleton.h"
-#include "media_log.h"
+#include "system_sound_log.h"
 #include "tokenid_kit.h"
 
 using namespace std;

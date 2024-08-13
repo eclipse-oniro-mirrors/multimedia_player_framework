@@ -15,7 +15,7 @@
 
 #include "audio_haptic_player_napi.h"
 
-#include "media_log.h"
+#include "audio_haptic_log.h"
 
 namespace {
 /* Constants for array index */

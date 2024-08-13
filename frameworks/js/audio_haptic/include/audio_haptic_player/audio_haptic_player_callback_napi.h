@@ -20,7 +20,7 @@
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
 
-#include "media_log.h"
+#include "audio_haptic_log.h"
 #include "audio_haptic_player.h"
 #include "audio_haptic_common_napi.h"
 

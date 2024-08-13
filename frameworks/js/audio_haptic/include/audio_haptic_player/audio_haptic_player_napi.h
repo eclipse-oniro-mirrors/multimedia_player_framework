@@ -26,7 +26,7 @@
 #include "audio_haptic_player.h"
 #include "audio_haptic_player_callback_napi.h"
 #include "media_errors.h"
-#include "media_log.h"
+#include "audio_haptic_log.h"
 
 namespace OHOS {
 namespace Media {
