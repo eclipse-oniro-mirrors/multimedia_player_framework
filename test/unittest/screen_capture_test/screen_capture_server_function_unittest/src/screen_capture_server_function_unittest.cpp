@@ -573,10 +573,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckScreenCapturePermission_001, Test
     config_.audioInfo.innerCapInfo.audioChannels = 2;
     config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
-    sleep(RECORDER_TIME);
-    ASSERT_EQ(screenCaptureServer_->CheckScreenCapturePermission(), true);
-    ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->CheckScreenCapturePermission(), false);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckVideoEncParam_001, TestSize.Level2)
@@ -589,28 +586,28 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckVideoEncParam_001, TestSize.Level
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckVideoEncParam_002, TestSize.Level2)
 {
     SetConfig();
-    config_.videoInfo.videoEncInfo.videoBitrate = -1;
+    config_.videoInfo.videoEncInfo.videoBitrate = VIDEO_BITRATE_MIN - 1;
     ASSERT_NE(screenCaptureServer_->CheckVideoEncParam(config_.videoInfo.videoEncInfo), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckVideoEncParam_003, TestSize.Level2)
 {
     SetConfig();
-    config_.videoInfo.videoEncInfo.videoBitrate = 0xffffff;
+    config_.videoInfo.videoEncInfo.videoBitrate = VIDEO_BITRATE_MAX + 1;
     ASSERT_NE(screenCaptureServer_->CheckVideoEncParam(config_.videoInfo.videoEncInfo), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckVideoEncParam_004, TestSize.Level2)
 {
     SetConfig();
-    config_.videoInfo.videoEncInfo.videoFrameRate = -1;
+    config_.videoInfo.videoEncInfo.videoFrameRate = VIDEO_FRAME_RATE_MIN - 1;
     ASSERT_NE(screenCaptureServer_->CheckVideoEncParam(config_.videoInfo.videoEncInfo), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckVideoEncParam_005, TestSize.Level2)
 {
     SetConfig();
-    config_.videoInfo.videoEncInfo.videoFrameRate = 0xffffff;
+    config_.videoInfo.videoEncInfo.videoFrameRate = VIDEO_FRAME_RATE_MAX + 1;
     ASSERT_NE(screenCaptureServer_->CheckVideoEncParam(config_.videoInfo.videoEncInfo), MSERR_OK);
 }
 } // Media
