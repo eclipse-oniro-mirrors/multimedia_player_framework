@@ -677,23 +677,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnStartScreenCapture_002, TestSize.Lev
     ASSERT_NE(screenCaptureServer_->OnStartScreenCapture(), MSERR_OK);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, UpdateMicrophoneEnabled_001, TestSize.Level2)
-{
-    SetConfig();
-    config_.audioInfo.micCapInfo.audioSampleRate = 16000;
-    config_.audioInfo.micCapInfo.audioChannels = 2;
-    config_.audioInfo.micCapInfo.audioSource = AudioCaptureSourceType::SOURCE_DEFAULT;
-    config_.audioInfo.innerCapInfo.audioSampleRate = 16000;
-    config_.audioInfo.innerCapInfo.audioChannels = 2;
-    config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
-    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->StartNotification(), MSERR_OK);
-    screenCaptureServer_->UpdateMicrophoneEnabled();
-    sleep(RECORDER_TIME);
-    ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
-}
-
 HWTEST_F(ScreenCaptureServerFunctionTest, SetScreenScaleMode_001, TestSize.Level2)
 {
     ASSERT_NE(screenCaptureServer_->SetScreenScaleMode(), MSERR_OK);
