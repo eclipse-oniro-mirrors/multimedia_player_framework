@@ -129,6 +129,7 @@ ohos_unittest("account_observer_unit_test") {
     "graphic_surface:surface",
     "hilog:libhilog",
     "init:libbegetutil",
+    "os_account:os_account_innerkits",
     "player_framework:media_client",
     "state_registry:tel_state_registry_api",
     "window_manager:libdm",
