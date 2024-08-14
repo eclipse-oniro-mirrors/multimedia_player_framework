@@ -124,8 +124,6 @@ int32_t AudioCapturerWrapper::Resume()
 
     if (!audioCapturer_->Start()) {
         MEDIA_LOGE("AudioCapturer Start failed, threadName:%{public}s", threadName_.c_str());
-        audioCapturer_->Release();
-        audioCapturer_ = nullptr;
         OnStartFailed(ScreenCaptureErrorType::SCREEN_CAPTURE_ERROR_INTERNAL, SCREEN_CAPTURE_ERR_UNKNOWN);
         return MSERR_UNKNOWN;
     }
