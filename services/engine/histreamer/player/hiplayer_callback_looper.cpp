@@ -178,16 +178,16 @@ void HiPlayerCallbackLooper::DoCollectAmplitude()
     if (obs) {
         float maxAmplitude = 0.0f;
         maxAmplitude = playerEngine_->GetMaxAmplitude();
-        vMaxAmplitudeArray.push_back(maxAmplitude);
-        if (vMaxAmplitudeArray.size() == MAX_AMPLITUDE_SIZE) {
-            int mSize = static_cast<int>(vMaxAmplitudeArray.size());
+        vMaxAmplitudeArray_.push_back(maxAmplitude);
+        if (vMaxAmplitudeArray_.size() == MAX_AMPLITUDE_SIZE) {
+            int mSize = static_cast<int>(vMaxAmplitudeArray_.size());
             const int size = mSize;
-            float* maxAmplitudeArray = vMaxAmplitudeArray.data();
+            float* maxAmplitudeArray = vMaxAmplitudeArray_.data();
             Format amplitudeFormat;
             (void)amplitudeFormat.PutBuffer(std::string(PlayerKeys::AUDIO_MAX_AMPLITUDE),
                 static_cast<uint8_t *>(static_cast<void *>(maxAmplitudeArray)), size * sizeof(float));
             obs->OnInfo(INFO_TYPE_MAX_AMPLITUDE_COLLECT, 0, amplitudeFormat);
-            vMaxAmplitudeArray.clear();
+            vMaxAmplitudeArray_.clear();
         }
     }
     if (collectMaxAmplitude_) {
