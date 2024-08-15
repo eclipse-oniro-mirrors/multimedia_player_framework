@@ -159,6 +159,7 @@ public:
     int32_t SetPlaybackStrategy(AVPlayStrategy playbackStrategy) override;
     int32_t SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted) override;
     float GetMaxAmplitude() override;
+    int32_t SetMaxAmplitudeCbStatus(bool status) override;
 
 private:
     enum HiplayerSvpMode : int32_t {
@@ -341,6 +342,7 @@ private:
     bool isSetVideoSurface_ = false;
     std::atomic<bool> needUpdateSubtitle_ {true};
     std::shared_ptr<DfxAgent> dfxAgent_{};
+    bool maxAmplitudeCbStatus_ {false};
 };
 } // namespace Media
 } // namespace OHOS

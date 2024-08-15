@@ -83,7 +83,7 @@ private:
     bool isDropMediaProgress_ {false};
     int64_t reportProgressIntervalMs_ {100}; // default interval is 100 ms
     int64_t collectMaxAmplitudeIntervalMs_ {100}; // default interval is 100 ms
-    std::vector<float> vMaxAmplitudeArray;
+    std::vector<float> vMaxAmplitudeArray_ {};
 };
 }  // namespace Media
 }  // namespace OHOS

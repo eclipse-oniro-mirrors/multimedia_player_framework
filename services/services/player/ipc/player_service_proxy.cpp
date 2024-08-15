@@ -75,6 +75,7 @@ PlayerServiceProxy::PlayerServiceProxy(const sptr<IRemoteObject> &impl)
     playerFuncs_[GET_CURRENT_TRACK] = "Player::GetCurrentTrack";
     playerFuncs_[SET_DECRYPT_CONFIG] = "Player::SetDecryptConfig";
     playerFuncs_[SET_MEDIA_SOURCE] = "Player::SetMediaSource";
+    playerFuncs_[SET_MAX_AMPLITUDE_CB_STATUS] = "Player::SetMaxAmplitudeCbStatus";
 }
 
 PlayerServiceProxy::~PlayerServiceProxy()
@@ -921,6 +922,23 @@ int32_t PlayerServiceProxy::SetMediaMuted(OHOS::Media::MediaType mediaType, bool
     int32_t error = SendRequest(SET_MEDIA_MUTED, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetMediaMuted failed, error: %{public}d", error);
+    return reply.ReadInt32();
+}
+
+int32_t PlayerServiceProxy::SetMaxAmplitudeCbStatus(bool status)
+{
+    MediaTrace trace("PlayerServiceProxy::SetMaxAmplitudeCbStatus");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+ 
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+ 
+    data.WriteInt32(status);
+    int32_t error = SendRequest(SET_MAX_AMPLITUDE_CB_STATUS, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetMaxAmplitudeCbStatus failed, error: %{public}d", error);
     return reply.ReadInt32();
 }
 } // namespace Media

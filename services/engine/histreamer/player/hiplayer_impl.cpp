@@ -2503,6 +2503,7 @@ Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilte
         FilterType::FILTERTYPE_ASINK);
     FALSE_RETURN_V(audioSink_ != nullptr, Status::ERROR_NULL_POINTER);
     audioSink_->Init(playerEventReceiver_, playerFilterCallback_);
+    audioSink_->SetMaxAmplitudeCbStatus(maxAmplitudeCbStatus_);
     if (demuxer_ != nullptr && audioRenderInfo_ == nullptr) {
         std::vector<std::shared_ptr<Meta>> trackInfos = demuxer_->GetStreamMetaInfo();
         SetDefaultAudioRenderInfo(trackInfos);
@@ -2677,6 +2678,15 @@ int32_t HiPlayerImpl::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
     preferedHeight_ = playbackStrategy.preferredHeight;
     bufferDuration_ = playbackStrategy.preferredBufferDuration;
     preferHDR_ = playbackStrategy.preferredHdr;
+    return MSERR_OK;
+}
+
+int32_t HiPlayerImpl::SetMaxAmplitudeCbStatus(bool status)
+{
+    maxAmplitudeCbStatus_ = status;
+    if (audioSink_ != nullptr) {
+        return audioSink_->SetMaxAmplitudeCbStatus(maxAmplitudeCbStatus_);
+    }
     return MSERR_OK;
 }
 }  // namespace Media

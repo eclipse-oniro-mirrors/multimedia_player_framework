@@ -217,6 +217,10 @@ public:
     {
         return 0;
     }
+    virtual int32_t SetMaxAmplitudeCbStatus(bool status)
+    {
+        return 0;
+    }
 };
 } // namespace Media
 } // namespace OHOS

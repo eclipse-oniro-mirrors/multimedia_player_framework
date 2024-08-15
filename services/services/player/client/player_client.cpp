@@ -416,5 +416,12 @@ int32_t PlayerClient::SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMut
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_INVALID_VAL, "playerProxy_ not exist");
     return playerProxy_->SetMediaMuted(mediaType, isMuted);
 }
+
+int32_t PlayerClient::SetMaxAmplitudeCbStatus(bool status)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
+    return playerProxy_->SetMaxAmplitudeCbStatus(status);
+}
 } // namespace Media
 } // namespace OHOS

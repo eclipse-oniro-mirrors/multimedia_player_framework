@@ -77,6 +77,7 @@ public:
     int32_t SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted) override;
     // PlayerClient
     void MediaServerDied();
+    int32_t SetMaxAmplitudeCbStatus(bool status) override;
 
 private:
     int32_t CreateListenerObject();

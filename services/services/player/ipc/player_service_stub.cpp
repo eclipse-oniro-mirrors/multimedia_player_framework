@@ -171,6 +171,8 @@ void PlayerServiceStub::FillPlayerFuncPart2()
         [this](MessageParcel &data, MessageParcel &reply) { return SetPlaybackStrategy(data, reply); } };
     playerFuncs_[SET_MEDIA_MUTED] = { "SetMediaMuted",
         [this](MessageParcel &data, MessageParcel &reply) { return SetMediaMuted(data, reply); } };
+    playerFuncs_[SET_MAX_AMPLITUDE_CB_STATUS] = { "Player::SetMaxAmplitudeCbStatus",
+        [this](MessageParcel &data, MessageParcel &reply) { return SetMaxAmplitudeCbStatus(data, reply); } };
 }
 
 int32_t PlayerServiceStub::Init()
@@ -1026,6 +1028,20 @@ int32_t PlayerServiceStub::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
     MediaTrace trace("PlayerServiceStub::SetPlaybackStrategy");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
     return playerServer_->SetPlaybackStrategy(playbackStrategy);
+}
+
+int32_t PlayerServiceStub::SetMaxAmplitudeCbStatus(bool status)
+{
+    MediaTrace trace("PlayerServiceStub::SetMaxAmplitudeCbStatus");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->SetMaxAmplitudeCbStatus(status);
+}
+ 
+int32_t PlayerServiceStub::SetMaxAmplitudeCbStatus(MessageParcel &data, MessageParcel &reply)
+{
+    bool status = data.ReadInt32();
+    reply.WriteInt32(SetMaxAmplitudeCbStatus(status));
+    return MSERR_OK;
 }
 } // namespace Media
 } // namespace OHOS
