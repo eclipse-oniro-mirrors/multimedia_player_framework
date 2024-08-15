@@ -2637,7 +2637,14 @@ Status HiPlayerImpl::StartSeekContinous()
         draggingPlayerAgent_ = nullptr;
         return res;
     }
-    if (pipelineStates_ == PlayerStates::PLAYER_PLAYBACK_COMPLETE) {
+    bool isVideoEOS = false;
+    for (std::pair<std::string, bool>& item: completeState_) {
+        if (item.first == "VideoSink" && item.second) {
+            isVideoEOS = true;
+            break;
+        }
+    }
+    if (pipelineStates_ == PlayerStates::PLAYER_PLAYBACK_COMPLETE || isVideoEOS) {
         videoDecoder_->Flush();
     }
     // Drive the head node to start the video channel.
