@@ -145,6 +145,7 @@ void DraggingPlayerAgent::UpdateSeekPos(int64_t seekMs)
 void DraggingPlayerAgent::StopDragging(int64_t seekCnt)
 {
     lock_guard<mutex> lock(draggingMutex_);
+    FALSE_RETURN(!isReleased_);
     FALSE_RETURN(draggingPlayer_ != nullptr);
     if (seekCnt_.load() != seekCnt) {
         return;
@@ -154,10 +155,10 @@ void DraggingPlayerAgent::StopDragging(int64_t seekCnt)
  
 void DraggingPlayerAgent::Release()
 {
-    lock_guard<mutex> lock(draggingMutex_);
     if (task_) {
         task_->Stop();
     }
+    lock_guard<mutex> lock(draggingMutex_);
     if (demuxer_ != nullptr) {
         demuxer_->DeregisterVideoStreamReadyCallback();
     }
