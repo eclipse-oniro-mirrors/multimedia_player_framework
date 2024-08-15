@@ -180,6 +180,11 @@ ohos_shared_library("media") {
     "napi:ace_napi",
     "qos_manager:qos",
     "window_manager:libdm",
+    "media_library:media_library",
+    "media_library:media_library_manager",
+    "media_library:medialibrary_nutils",
+    "data_share:datashare_common",
+    "data_share:datashare_consumer",
   ]
 
   if (player_framework_support_player_js_api9) {
