@@ -138,6 +138,7 @@ void DraggingPlayerAgent::UpdateSeekPos(int64_t seekMs)
     draggingPlayer_->UpdateSeekPos(seekMs);
     if (task_) {
         int64_t seekCnt = seekCnt_.load();
+        lock.unlock();
         task_->SubmitJob([this, seekCnt]() { StopDragging(seekCnt); }, 33333); // 33333 means 33333us, 33ms
     }
 }
