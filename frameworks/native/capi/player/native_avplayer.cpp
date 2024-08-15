@@ -673,7 +673,7 @@ void NativeAVPlayerCallback::OnBitRateCollectedCb(const int32_t extra, const For
     CHECK_AND_RETURN_LOG(bitRatesCount > 0, "bitRates size(%{public}zu) is invalid", size);
     MEDIA_LOGI("bitRates count: %{public}zu", bitRatesCount);
     for (size_t i = 0; i < bitRatesCount; i++) {
-        MEDIA_LOGI("bitRates[%{public}zu]: %{public}zu", i, *(static_cast<uint32_t*>(static_cast<void*>(addr)) + i));
+        MEDIA_LOGI("bitRates[%{public}zu]: %{public}u", i, *(static_cast<uint32_t*>(static_cast<void*>(addr)) + i));
     }
 
     OHOS::sptr<OH_AVFormat> avFormat = new (std::nothrow) OH_AVFormat();

@@ -197,6 +197,7 @@ typedef enum AVPlayerOnInfoType {
  * @brief Player Buffering Type
  * @syscap SystemCapability.Multimedia.Media.AVPlayer
  * @since 12
+ * @version 1.0
  */
 typedef enum AVPlayerBufferingType {
     /** Indicates the buffer to start buffering. */
@@ -216,6 +217,7 @@ typedef enum AVPlayerBufferingType {
  * @brief Key to get state, value type is int32_t.
  * @syscap SystemCapability.Multimedia.Media.AVPlayer
  * @since 12
+ * @version 1.0
  */
 extern const char* OH_PLAYER_STATE;
 
@@ -223,6 +225,7 @@ extern const char* OH_PLAYER_STATE;
  * @brief Key to get state change reason, value type is int32_t.
  * @syscap SystemCapability.Multimedia.Media.AVPlayer
  * @since 12
+ * @version 1.0
  */
 extern const char* OH_PLAYER_STATE_CHANGE_REASON;
 
@@ -230,6 +233,7 @@ extern const char* OH_PLAYER_STATE_CHANGE_REASON;
  * @brief Key to get volume, value type is float.
  * @syscap SystemCapability.Multimedia.Media.AVPlayer
  * @since 12
+ * @version 1.0
  */
 extern const char* OH_PLAYER_VOLUME;
 
@@ -237,6 +241,7 @@ extern const char* OH_PLAYER_VOLUME;
  * @brief Key to get bitrate count, value type is uint32_t array.
  * @syscap SystemCapability.Multimedia.Media.AVPlayer
  * @since 12
+ * @version 1.0
  */
 extern const char* OH_PLAYER_BITRATE_ARRAY;
 
@@ -244,6 +249,7 @@ extern const char* OH_PLAYER_BITRATE_ARRAY;
  * @brief Key to get audio interrupt type, value type is int32_t.
  * @syscap SystemCapability.Multimedia.Media.AVPlayer
  * @since 12
+ * @version 1.0
  */
 extern const char* OH_PLAYER_AUDIO_INTERRUPT_TYPE;
 
@@ -251,6 +257,7 @@ extern const char* OH_PLAYER_AUDIO_INTERRUPT_TYPE;
  * @brief Key to get audio interrupt force, value type is int32_t.
  * @syscap SystemCapability.Multimedia.Media.AVPlayer
  * @since 12
+ * @version 1.0
  */
 extern const char* OH_PLAYER_AUDIO_INTERRUPT_FORCE;
 
@@ -258,6 +265,7 @@ extern const char* OH_PLAYER_AUDIO_INTERRUPT_FORCE;
  * @brief Key to get audio interrupt hint, value type is int32_t.
  * @syscap SystemCapability.Multimedia.Media.AVPlayer
  * @since 12
+ * @version 1.0
  */
 extern const char* OH_PLAYER_AUDIO_INTERRUPT_HINT;
 
@@ -265,6 +273,7 @@ extern const char* OH_PLAYER_AUDIO_INTERRUPT_HINT;
  * @brief Key to get audio device change reason, value type is int32_t.
  * @syscap SystemCapability.Multimedia.Media.AVPlayer
  * @since 12
+ * @version 1.0
  */
 extern const char* OH_PLAYER_AUDIO_DEVICE_CHANGE_REASON;
 
@@ -272,6 +281,7 @@ extern const char* OH_PLAYER_AUDIO_DEVICE_CHANGE_REASON;
  * @brief Key to get buffering type, value type is AVPlayerBufferingType.
  * @syscap SystemCapability.Multimedia.Media.AVPlayer
  * @since 12
+ * @version 1.0
  */
 extern const char* OH_PLAYER_BUFFERING_TYPE;
 
@@ -279,6 +289,7 @@ extern const char* OH_PLAYER_BUFFERING_TYPE;
  * @brief Key to get buffering value, value type is int32_t.
  * @syscap SystemCapability.Multimedia.Media.AVPlayer
  * @since 12
+ * @version 1.0
  */
 extern const char* OH_PLAYER_BUFFERING_VALUE;
 
