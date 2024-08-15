@@ -95,6 +95,12 @@ public:
         (void)svp;
         return 0;
     }
+
+    virtual int32_t SetMaxAmplitudeCbStatus(bool status)
+    {
+        (void)status;
+        return 0;
+    }
     /**
      * IPC code ID
      */
@@ -140,6 +146,7 @@ public:
         SET_DECRYPT_CONFIG,
         SET_PLAYBACK_STRATEGY,
         SET_MEDIA_MUTED,
+        SET_MAX_AMPLITUDE_CB_STATUS,
         MAX_IPC_ID,
         GET_PLAYBACK_INFO,
     };
