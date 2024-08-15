@@ -134,6 +134,7 @@ public:
     int32_t GetUserId();
     std::shared_ptr<CommonEventReceiver> GetCommonEventReceiver();
     bool IsBootCompleted();
+    int32_t SetMaxAmplitudeCbStatus(bool status) override;
 
 protected:
     class BaseState;
@@ -239,6 +240,7 @@ private:
     std::atomic<bool> isInSeekContinous_ {false};
     std::atomic<int64_t> seekContinousBatchNo_ {-1};
     bool isAudioMuted_ = false;
+    bool maxAmplitudeCbStatus_ = false;
 };
 } // namespace Media
 } // namespace OHOS
