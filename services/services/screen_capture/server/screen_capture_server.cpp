@@ -811,8 +811,6 @@ int32_t ScreenCaptureServer::StartAudioCapture()
     ret = StartStreamMicAudioCapture();
     if (ret != MSERR_OK) {
         MEDIA_LOGE("StartStreamMicAudioCapture failed");
-        innerAudioCapture_ = nullptr;
-        return ret;
     }
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "StartAudioCapture OK.", FAKE_POINTER(this));
     return MSERR_OK;
@@ -2340,7 +2338,7 @@ int32_t ScreenCaptureServer::StopScreenCapture()
 
     std::lock_guard<std::mutex> lock(mutex_);
     int32_t ret = StopScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID);
-    if (statisticalEventInfo_.startLatency < 0) {
+    if (statisticalEventInfo_.startLatency == -1) {
         statisticalEventInfo_.captureDuration = -1; // latency -1 means invalid
     } else {
         int64_t endTime = GetCurrentMillisecond();

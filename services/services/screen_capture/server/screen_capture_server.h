@@ -379,8 +379,8 @@ private:
     ScreenCaptureContentFilter contentFilter_;
     AVScreenCaptureState captureState_ = AVScreenCaptureState::CREATED;
     std::shared_ptr<NotificationLocalLiveViewContent> localLiveViewContent_;
-    int64_t startTime_ = 0;
     std::string bundleName_;
+    int64_t startTime_ = 0;
 
     /* used for CAPTURE STREAM */
     sptr<IBufferConsumerListener> surfaceCb_ = nullptr;
@@ -397,7 +397,6 @@ private:
     int32_t audioSourceId_ = 0;
     int32_t videoSourceId_ = 0;
     std::shared_ptr<AudioDataSource> audioSource_ = nullptr;
-
     /* used for DFX events */
     uint64_t instanceId_ = 0;
     std::shared_ptr<ScreenRendererAudioStateChangeCallback> captureCallback_;
