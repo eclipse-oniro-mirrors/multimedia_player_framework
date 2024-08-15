@@ -321,6 +321,15 @@ int32_t RecorderClient::SetOutputFile(int32_t fd)
     return recorderProxy_->SetOutputFile(fd);
 }
 
+int32_t RecorderClient::SetFileGenerationMode(FileGenerationMode mode)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(recorderProxy_ != nullptr, MSERR_NO_MEMORY, "recorder service does not exist.");
+ 
+    MEDIA_LOGD("SetFileGenerationMode FileGenerationMode(%{public}d)", static_cast<int32_t>(mode));
+    return recorderProxy_->SetFileGenerationMode(mode);
+}
+
 int32_t RecorderClient::SetNextOutputFile(int32_t fd)
 {
     std::lock_guard<std::mutex> lock(mutex_);

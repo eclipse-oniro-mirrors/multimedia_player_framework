@@ -529,6 +529,23 @@ int32_t RecorderServiceProxy::SetOutputFile(int32_t fd)
     return reply.ReadInt32();
 }
 
+int32_t RecorderServiceProxy::SetFileGenerationMode(FileGenerationMode mode)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+ 
+    bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+ 
+    (void)data.WriteInt32(static_cast<int32_t>(mode));
+    int error = Remote()->SendRequest(SET_FILE_GENERATION_MODE, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetFileGenerationMode failed, error: %{public}d", error);
+ 
+    return reply.ReadInt32();
+}
+
 int32_t RecorderServiceProxy::SetNextOutputFile(int32_t fd)
 {
     MessageParcel data;
