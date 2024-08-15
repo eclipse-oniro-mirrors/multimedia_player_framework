@@ -471,6 +471,14 @@ PlayerImplCallback::PlayerImplCallback(const std::shared_ptr<PlayerCallback> pla
     player_ = player;
 }
 
+int32_t PlayerImpl::SetMaxAmplitudeCbStatus(bool status)
+{
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetMaxAmplitudeCbStatus in, status is %{public}d",
+        FAKE_POINTER(this), status);
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
+    return playerService_->SetMaxAmplitudeCbStatus(status);
+}
+
 void PlayerImplCallback::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
 {
     auto player = player_.lock();

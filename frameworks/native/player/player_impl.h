@@ -76,6 +76,7 @@ public:
     void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody);
     int32_t SetPlaybackStrategy(AVPlayStrategy playbackStrategy) override;
     int32_t SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted) override;
+    int32_t SetMaxAmplitudeCbStatus(bool status) override;
 private:
     void ResetSeekVariables();
     void HandleSeekDoneInfo(PlayerOnInfoType type, int32_t extra);
