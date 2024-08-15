@@ -26,6 +26,7 @@ namespace {
 
 namespace OHOS {
 namespace Media {
+const int32_t CAMERA_SHOT_TYPE = 1; // CameraShotType VIDEO
 AVRecorderCallback::AVRecorderCallback(napi_env env) : env_(env)
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR "Instances create", FAKE_POINTER(this));
@@ -278,8 +279,7 @@ void AVRecorderCallback::OnJsPhotoAssertAvailableCallback(AVRecordJsCallback *js
             const size_t argCount = 1;
             napi_value args[argCount] = { nullptr };
 
-            int32_t cameraShotType = 1;
-            args[0] = Media::MediaLibraryCommNapi::CreatePhotoAssetNapi(ref->env_, event->uri, cameraShotType);
+            args[0] = Media::MediaLibraryCommNapi::CreatePhotoAssetNapi(ref->env_, event->uri, CAMERA_SHOT_TYPE);
             napi_value result = nullptr;
             nstatus = napi_call_function(ref->env_, nullptr, jsCallback, argCount, args, &result);
             CHECK_AND_BREAK_LOG(nstatus == napi_ok, "%{public}s fail to napi call function", request.c_str());
