@@ -163,15 +163,22 @@ int32_t HiRecorderImpl::SetMetaSource(MetaSourceType source, int32_t &sourceId)
         source > MetaSourceType::VIDEO_META_SOURCE_INVALID && source < MetaSourceType::VIDEO_META_SOURCE_BUTT,
         (int32_t)Status::ERROR_INVALID_PARAMETER
     );
+    auto tempSourceId = SourceIdGenerator::GenerateMetaSourceId(static_cast<int32_t>(source));
     Status ret;
-    auto filter = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::MetaDataFilter>
-        ("MetaDataFilter", Pipeline::FilterType::TIMED_METADATA);
-    ret = pipeline_->AddHeadFilters({filter});
-    FALSE_RETURN_V_MSG_E(ret == Status::OK, (int32_t)ret, "AddFilters MetaDataFilter to pipeline fail");
-    if (filter && ret == Status::OK) {
+    if (metaDataFilters_.find(tempSourceId) == metaDataFilters_.end()) {
+        auto filter = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::MetaDataFilter>
+            ("MetaDataFilter", Pipeline::FilterType::TIMED_METADATA);
+        ret = pipeline_->AddHeadFilters({filter});
+        FALSE_RETURN_V_MSG_E(ret == Status::OK, (int32_t)ret, "AddFilters MetaDataFilter to pipeline fail");
+        if (filter && ret == Status::OK) {
+            metaDataFilters_.emplace(std::make_pair(tempSourceId, filter));
+        }
+    } else {
+        ret = pipeline_->AddHeadFilters({metaDataFilters_.at(tempSourceId)});
+    }
+    if (ret == Status::OK) {
         MEDIA_LOG_I("SetMetaSource success.");
-        sourceId = SourceIdGenerator::GenerateMetaSourceId(static_cast<int32_t>(source));
-        metaDataFilters_.emplace(std::make_pair(sourceId, filter));
+        sourceId = tempSourceId;
         OnStateChanged(StateId::RECORDING_SETTING);
     }
     return (int32_t)ret;

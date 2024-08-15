@@ -1346,16 +1346,18 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderNapi::GetInputMetaSurface(
         CHECK_AND_RETURN_RET_LOG(napi->metaSourceIDMap_.find(type) != napi->metaSourceIDMap_.end(),
             GetRetInfo(MSERR_INVALID_OPERATION, "GetInputMetaSurface", "no meta source type"),
             "failed to find meta type");
-        MEDIA_LOGI("The meta source type is %{public}d", static_cast<int32_t>(type));
-        napi->metaSurface_ = napi->recorder_->GetMetaSurface(napi->metaSourceIDMap_.at(type));
-        CHECK_AND_RETURN_RET_LOG(napi->metaSurface_ != nullptr,
-            GetRetInfo(MSERR_INVALID_OPERATION, "GetInputMetaSurface", ""), "failed to GetInputMetaSurface");
-
-        SurfaceError error =
-            SurfaceUtils::GetInstance()->Add(napi->metaSurface_->GetUniqueId(), napi->metaSurface_);
-        CHECK_AND_RETURN_RET_LOG(error == SURFACE_ERROR_OK,
-            GetRetInfo(MSERR_INVALID_OPERATION, "GetInputMetaSurface", "add surface failed"),
-            "failed to AddSurface");
+        if (napi->metaSurface_ == nullptr) {
+            MEDIA_LOGI("The meta source type is %{public}d", static_cast<int32_t>(type));
+            napi->metaSurface_ = napi->recorder_->GetMetaSurface(napi->metaSourceIDMap_.at(type));
+            CHECK_AND_RETURN_RET_LOG(napi->metaSurface_ != nullptr,
+                GetRetInfo(MSERR_INVALID_OPERATION, "GetInputMetaSurface", ""), "failed to GetInputMetaSurface");
+ 
+            SurfaceError error =
+                SurfaceUtils::GetInstance()->Add(napi->metaSurface_->GetUniqueId(), napi->metaSurface_);
+            CHECK_AND_RETURN_RET_LOG(error == SURFACE_ERROR_OK,
+                GetRetInfo(MSERR_INVALID_OPERATION, "GetInputMetaSurface", "add surface failed"),
+                "failed to AddSurface");
+        }
 
         auto surfaceId = std::to_string(napi->metaSurface_->GetUniqueId());
         MEDIA_LOGI("surfaceId:%{public}s", surfaceId.c_str());
