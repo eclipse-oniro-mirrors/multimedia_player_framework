@@ -222,7 +222,7 @@ private:
 
     std::string srcUrl_ = "";
     struct AVFileDescriptor srcFd_;
-    int32_t dstFd_;
+    int32_t dstFd_ = -1;
 };
 
 struct AVTransCoderAsyncContext : public MediaAsyncContext {
