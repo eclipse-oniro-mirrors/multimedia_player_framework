@@ -132,19 +132,21 @@ void DraggingPlayerAgent::ConsumeVideoFrame(const std::shared_ptr<AVBuffer> avBu
  
 void DraggingPlayerAgent::UpdateSeekPos(int64_t seekMs)
 {
-    lock_guard<mutex> lock(draggingMutex_);
+    std::unique_lock<std::mutex> lock(draggingMutex_);
     FALSE_RETURN(draggingPlayer_ != nullptr);
     seekCnt_.fetch_add(1);
     draggingPlayer_->UpdateSeekPos(seekMs);
     if (task_) {
         int64_t seekCnt = seekCnt_.load();
+        lock.unlock();
         task_->SubmitJob([this, seekCnt]() { StopDragging(seekCnt); }, 33333); // 33333 means 33333us, 33ms
     }
 }
 
 void DraggingPlayerAgent::StopDragging(int64_t seekCnt)
 {
-    lock_guard<mutex> lock(draggingMutex_);
+    std::unique_lock<std::mutex> lock(draggingMutex_);
+    FALSE_RETURN(!isReleased_);
     FALSE_RETURN(draggingPlayer_ != nullptr);
     if (seekCnt_.load() != seekCnt) {
         return;
@@ -154,10 +156,10 @@ void DraggingPlayerAgent::StopDragging(int64_t seekCnt)
  
 void DraggingPlayerAgent::Release()
 {
-    lock_guard<mutex> lock(draggingMutex_);
     if (task_) {
         task_->Stop();
     }
+    std::unique_lock<std::mutex> lock(draggingMutex_);
     if (demuxer_ != nullptr) {
         demuxer_->DeregisterVideoStreamReadyCallback();
     }
