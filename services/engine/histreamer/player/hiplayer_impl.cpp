@@ -2503,6 +2503,7 @@ Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilte
         FilterType::FILTERTYPE_ASINK);
     FALSE_RETURN_V(audioSink_ != nullptr, Status::ERROR_NULL_POINTER);
     audioSink_->Init(playerEventReceiver_, playerFilterCallback_);
+    audioSink_->SetMaxAmplitudeCbStatus(maxAmplitudeCbStatus_);
     if (demuxer_ != nullptr && audioRenderInfo_ == nullptr) {
         std::vector<std::shared_ptr<Meta>> trackInfos = demuxer_->GetStreamMetaInfo();
         SetDefaultAudioRenderInfo(trackInfos);
