@@ -149,6 +149,7 @@ ohos_shared_library("media_service") {
       "//foundation/multimedia/player_framework/services/engine/common/recorder_profiles/recorder_profiles_xml_parser.cpp",
       "recorder/ipc/recorder_listener_proxy.cpp",
       "recorder/ipc/recorder_service_stub.cpp",
+      "recorder/server/media_library_adapter.cpp",
       "recorder/server/recorder_server.cpp",
       "recorder_profiles/ipc/recorder_profiles_service_stub.cpp",
       "recorder_profiles/server/recorder_profiles_server.cpp",
@@ -240,13 +241,13 @@ ohos_shared_library("media_service") {
   ]
 
   if (player_framework_support_video) {
-    external_deps += [ 
+    external_deps += [
+      "camera_framework:camera_framework",
+      "data_share:datashare_common",
+      "data_share:datashare_consumer",
       "graphic_surface:surface",
       "media_library:media_library",
       "media_library:media_library_manager",
-      "data_share:datashare_common",
-      "data_share:datashare_consumer",
-      "camera_framework:camera_framework",
     ]
   }
 
