@@ -2679,5 +2679,14 @@ int32_t HiPlayerImpl::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
     preferHDR_ = playbackStrategy.preferredHdr;
     return MSERR_OK;
 }
+
+int32_t HiPlayerImpl::SetMaxAmplitudeCbStatus(bool status)
+{
+    maxAmplitudeCbStatus_ = status;
+    if (audioSink_ != nullptr) {
+        return audioSink_->SetMaxAmplitudeCbStatus(maxAmplitudeCbStatus_);
+    }
+    return MSERR_OK;
+}
 }  // namespace Media
 }  // namespace OHOS
