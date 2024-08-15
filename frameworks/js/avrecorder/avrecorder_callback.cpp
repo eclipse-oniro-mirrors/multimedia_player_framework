@@ -250,7 +250,6 @@ void AVRecorderCallback::OnJsPhotoAssertAvailableCallback(AVRecordJsCallback *js
 
     work->data = reinterpret_cast<void *>(jsCb);
     int ret = uv_queue_work_with_qos(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
-        // Js Thread
         CHECK_AND_RETURN_LOG(work != nullptr, "work is nullptr");
         if (work->data == nullptr) {
             delete work;
@@ -267,7 +266,9 @@ void AVRecorderCallback::OnJsPhotoAssertAvailableCallback(AVRecordJsCallback *js
             napi_handle_scope scope = nullptr;
             napi_open_handle_scope(ref->env_, &scope);
             CHECK_AND_BREAK_LOG(scope != nullptr, "%{public}s scope is nullptr", request.c_str());
-            ON_SCOPE_EXIT(0) { napi_close_handle_scope(ref->env_, scope); };
+            ON_SCOPE_EXIT(0) {
+                napi_close_handle_scope(ref->env_, scope);
+            };
 
             napi_value jsCallback = nullptr;
             napi_status nstatus = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
@@ -275,12 +276,10 @@ void AVRecorderCallback::OnJsPhotoAssertAvailableCallback(AVRecordJsCallback *js
                 request.c_str());
 
             const size_t argCount = 1;
-            const int32_t PARAM0 = 0;
             napi_value args[argCount] = { nullptr };
-            
+
             int32_t cameraShotType = 1;
-            args[PARAM0] =
-                Media::MediaLibraryCommNapi::CreatePhotoAssetNapi(ref->env_, event->uri, cameraShotType);
+            args[0] = Media::MediaLibraryCommNapi::CreatePhotoAssetNapi(ref->env_, event->uri, cameraShotType);
             napi_value result = nullptr;
             nstatus = napi_call_function(ref->env_, nullptr, jsCallback, argCount, args, &result);
             CHECK_AND_BREAK_LOG(nstatus == napi_ok, "%{public}s fail to napi call function", request.c_str());

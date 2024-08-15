@@ -1838,14 +1838,12 @@ int32_t AVRecorderNapi::GetConfig(std::unique_ptr<AVRecorderAsyncContext> &async
         MEDIA_LOGI("FileGenerationMode %{public}d!", mode);
     }
 
-    if (CommonNapi::CheckhasNamedProperty(env, args, "url")) {
-        config->url = CommonNapi::GetPropertyString(env, args, "url");
-        MEDIA_LOGI("url %{public}s!", config->url.c_str());
-        if (config->fileGenerationMode == FileGenerationMode::APP_CREATE) {
-            CHECK_AND_RETURN_RET(config->url != "",
-                (asyncCtx->AVRecorderSignError(MSERR_PARAMETER_VERIFICATION_FAILED, "geturl", "url",
-                    "config->url cannot be null"), MSERR_PARAMETER_VERIFICATION_FAILED));
-        }
+    config->url = CommonNapi::GetPropertyString(env, args, "url");
+    MEDIA_LOGI("url %{public}s!", config->url.c_str());
+    if (config->fileGenerationMode == FileGenerationMode::APP_CREATE) {
+        CHECK_AND_RETURN_RET(config->url != "",
+            (asyncCtx->AVRecorderSignError(MSERR_PARAMETER_VERIFICATION_FAILED, "geturl", "url",
+                "config->url cannot be null"), MSERR_PARAMETER_VERIFICATION_FAILED));
     }
 
     bool getValue = false;
