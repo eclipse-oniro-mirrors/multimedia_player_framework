@@ -1287,7 +1287,7 @@ Status HiPlayerImpl::InitVideoDefaultTrackIndex()
             continue;
         }
         if (IsVideoMime(mime)) {
-            defaultVideoTrackId_ = trackIndex;
+            defaultVideoTrackId_ = static_cast<int32_t>(trackIndex);
             break;
         }
     }
@@ -1309,7 +1309,7 @@ Status HiPlayerImpl::InitSubtitleDefaultTrackIndex()
             continue;
         }
         if (IsSubtitleMime(mime)) {
-            defaultSubtitleTrackId_ = trackIndex;
+            defaultSubtitleTrackId_ = static_cast<int32_t>(trackIndex);
             break;
         }
     }
