@@ -61,6 +61,7 @@ public:
     int32_t SetMaxDuration(int32_t duration) override;
     int32_t SetOutputFormat(OutputFormatType format) override;
     int32_t SetOutputFile(int32_t fd) override;
+    int32_t SetFileGenerationMode(FileGenerationMode mode) override;
     int32_t SetLocation(float latitude, float longitude) override;
     int32_t SetOrientationHint(int32_t rotation) override;
     int32_t Prepare() override;
@@ -110,6 +111,7 @@ private:
     int32_t SetMaxDuration(MessageParcel &data, MessageParcel &reply);
     int32_t SetOutputFormat(MessageParcel &data, MessageParcel &reply);
     int32_t SetOutputFile(MessageParcel &data, MessageParcel &reply);
+    int32_t SetFileGenerationMode(MessageParcel &data, MessageParcel &reply);
     int32_t SetLocation(MessageParcel &data, MessageParcel &reply);
     int32_t SetOrientationHint(MessageParcel &data, MessageParcel &reply);
     int32_t SetUserCustomInfo(MessageParcel &data, MessageParcel &reply);
