@@ -380,6 +380,8 @@ public:
      */
     virtual int32_t SetOutputFile(int32_t fd) = 0;
 
+    virtual int32_t SetFileGenerationMode(FileGenerationMode mode) = 0;
+
     /**
      * @brief Sets the FD of the next output file.
      *

@@ -103,6 +103,7 @@
           "config_policy",
           "power_manager",
           "memmgr",
+          "media_library",
           "common_event_service",
           "call_manager",
           "core_service",
@@ -115,7 +116,7 @@
           "data_share",
           "ringtone_library",
           "os_account",
-          "i18n"
+          "i18n",
         ],
         "third_party": [
           "bounds_checking_function"

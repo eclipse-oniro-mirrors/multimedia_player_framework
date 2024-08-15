@@ -57,6 +57,7 @@ public:
     virtual int32_t SetMaxDuration(int32_t duration) = 0;
     virtual int32_t SetOutputFormat(OutputFormatType format) = 0;
     virtual int32_t SetOutputFile(int32_t fd) = 0;
+    virtual int32_t SetFileGenerationMode(FileGenerationMode mode) = 0;
     virtual int32_t SetNextOutputFile(int32_t fd)
     {
         (void)fd;
@@ -114,7 +115,9 @@ public:
         SET_MAX_DURATION,
         SET_OUTPUT_FORMAT,
         SET_OUTPUT_FILE,
+        SET_FILE_GENERATION_MODE,
         SET_NEXT_OUTPUT_FILE,
+        SET_FILE_GENERATION_MODE,
         SET_MAX_FILE_SIZE,
         SET_LOCATION,
         SET_ORIENTATION_HINT,
