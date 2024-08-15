@@ -325,9 +325,12 @@ private:
     void NotifyDrmInfoUpdated(const std::multimap<std::string, std::vector<uint8_t>> &infos) override;
     void StopTaskQue();
     void WaitTaskQueStop();
+    void MaxAmplitudeCallbackOn(AVPlayerNapi *jsPlayer, std::string callbackName);
+    void MaxAmplitudeCallbackOff(AVPlayerNapi *jsPlayer, std::string callbackName);
 
     std::condition_variable stopTaskQueCond_;
     bool taskQueStoped_ = false;
+    bool calMaxAmplitude_ = false;
 
     struct AVPlayerContext : public MediaAsyncContext {
         explicit AVPlayerContext(napi_env env) : MediaAsyncContext(env) {}
