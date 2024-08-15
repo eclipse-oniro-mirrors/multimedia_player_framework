@@ -81,7 +81,7 @@ private:
     std::shared_ptr<ITransCoderService> transCoderServer_ = nullptr;
     std::map<uint32_t, TransCoderStubFunc> recFuncs_;
     std::mutex mutex_;
-    int32_t pid_;
+    int32_t pid_ = -1;
 };
 } // namespace Media
 } // namespace OHOS
