@@ -925,7 +925,7 @@ int32_t RecorderServer::Stop(bool block)
         int64_t endTime = GetCurrentMillisecond();
         statisticalEventInfo_.recordDuration = static_cast<int32_t>(endTime - startTime_ -
             statisticalEventInfo_.startLatency);
-        if (config_.fileGenerationMode == FileGenerationMode::AUTO_CREATE_CAMERA_SCENE) {
+        if (config_.fileGenerationMode == FileGenerationMode::AUTO_CREATE_CAMERA_SCENE && config_.uri != "") {
             recorderCb_->OnPhotoAssertAvailable(config_.uri);
         }
     }

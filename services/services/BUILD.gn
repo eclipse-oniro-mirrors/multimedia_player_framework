@@ -120,7 +120,6 @@ ohos_shared_library("media_service") {
     "sa_media/ipc/media_service_stub.cpp",
     "sa_media/server/media_server.cpp",
     "sa_media/server/media_server_manager.cpp",
-    "recorder/server/media_library_adapter.cpp",
   ]
   if (player_framework_support_player) {
     sources += [
@@ -236,7 +235,6 @@ ohos_shared_library("media_service") {
     "qos_manager:qos",
     "resource_schedule_service:ressched_client",
     "safwk:system_ability_fwk",
-    "samgr:samgr_proxy",
     "state_registry:tel_state_registry_api",
   ]
 
@@ -248,6 +246,7 @@ ohos_shared_library("media_service") {
       "graphic_surface:surface",
       "media_library:media_library",
       "media_library:media_library_manager",
+      "samgr:samgr_proxy",
     ]
   }
 

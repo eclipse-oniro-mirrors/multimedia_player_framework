@@ -167,7 +167,7 @@ private:
         float longitude = 0.0;
         int32_t rotation = 0;
         int32_t url = -1;
-        std::string uri;
+        std::string uri = "";
         FileGenerationMode fileGenerationMode = APP_CREATE;
         std::string metaSrcTrackMime;
         Meta customInfo;
