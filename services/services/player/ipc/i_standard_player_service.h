@@ -146,9 +146,9 @@ public:
         SET_DECRYPT_CONFIG,
         SET_PLAYBACK_STRATEGY,
         SET_MEDIA_MUTED,
+        GET_PLAYBACK_INFO,
         SET_MAX_AMPLITUDE_CB_STATUS,
         MAX_IPC_ID,
-        GET_PLAYBACK_INFO,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardPlayerService");
