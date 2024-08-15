@@ -548,7 +548,7 @@ void MediaServerManager::DestroyAVScreenCaptureStub(StubType type, sptr<IRemoteO
         }
         case SCREEN_CAPTURE_CONTROLLER: {
             for (auto it = screenCaptureControllerStubMap_.begin();
-                 it != screenCaptureControllerStubMap_.end(); it++) {
+                it != screenCaptureControllerStubMap_.end(); it++) {
                 if (it->first == object) {
                     MEDIA_LOGD("destroy screen capture controller stub services(%{public}zu) pid(%{public}d).",
                         screenCaptureControllerStubMap_.size(), pid);
@@ -587,7 +587,7 @@ void MediaServerManager::DestroyStubObject(StubType type, sptr<IRemoteObject> ob
             break;
         case SCREEN_CAPTURE:
         case SCREEN_CAPTURE_MONITOR:
-        case SCREEN_CAPTURE_CONTROLLER: {
+        case SCREEN_CAPTURE_CONTROLLER:
             DestroyAVScreenCaptureStub(type, object, pid);
             break;
         default: {
