@@ -33,6 +33,12 @@ namespace OHOS {
 namespace Media {
 using ConfigMap = std::map<std::string, int32_t>;
 constexpr size_t DEVICE_INFO_SIZE_LIMIT = 30; // 30 from audioCapture
+
+enum FileGenerationMode : int32_t {
+    APP_CREATE = 0,
+    AUTO_CREATE_CAMERA_SCENE = 1,
+};
+
 /**
  * @brief Enumerates video source types.
  *

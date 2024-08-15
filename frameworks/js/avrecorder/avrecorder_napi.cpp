@@ -931,9 +931,10 @@ napi_value AVRecorderNapi::JsSetEventCallback(napi_env env, napi_callback_info i
 
     std::string callbackName = CommonNapi::GetStringArgument(env, args[0]);
     if (callbackName != AVRecorderEvent::EVENT_ERROR && callbackName != AVRecorderEvent::EVENT_STATE_CHANGE
-        && callbackName != AVRecorderEvent::EVENT_AUDIO_CAPTURE_CHANGE) {
+        && callbackName != AVRecorderEvent::EVENT_AUDIO_CAPTURE_CHANGE
+        && callbackName != AVRecorderEvent::EVENT_PHOTO_ASSET_AVAILABLE) {
         recorderNapi->ErrorCallback(MSERR_PARAMETER_VERIFICATION_FAILED, "SetEventCallback",
-            "type must be error, stateChange or audioCapturerChange.");
+            "type must be error, stateChange or audioCapturerChange or photoAssetAvailable.");
         return result;
     }
 
@@ -1811,12 +1812,9 @@ void AVRecorderNapi::MediaProfileLog(bool isVideo, AVRecorderProfile &profile)
 
 int32_t AVRecorderNapi::GetConfig(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args)
 {
-    napi_valuetype valueType = napi_undefined;
-    if (args == nullptr || napi_typeof(env, args, &valueType) != napi_ok || valueType != napi_object) {
-        asyncCtx->AVRecorderSignError(MSERR_INCORRECT_PARAMETER_TYPE, "GetConfig", "AVRecorderConfig",
-            "config type should be AVRecorderConfig.");
-        return MSERR_INCORRECT_PARAMETER_TYPE;
-    }
+    CHECK_AND_RETURN_RET(CommonNapi::CheckValueType(env, args, napi_object),
+        (asyncCtx->AVRecorderSignError(MSERR_INCORRECT_PARAMETER_TYPE, "GetConfig", "AVRecorderConfig",
+            "config type should be AVRecorderConfig."), MSERR_INCORRECT_PARAMETER_TYPE));
 
     asyncCtx->config_ = std::make_shared<AVRecorderConfig>();
     CHECK_AND_RETURN_RET(asyncCtx->config_,
@@ -1830,11 +1828,25 @@ int32_t AVRecorderNapi::GetConfig(std::unique_ptr<AVRecorderAsyncContext> &async
     ret = GetProfile(asyncCtx, env, args);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "failed to GetProfile");
 
-    config->url = CommonNapi::GetPropertyString(env, args, "url");
-    MEDIA_LOGI("url %{public}s!", config->url.c_str());
-    CHECK_AND_RETURN_RET(config->url != "",
-        (asyncCtx->AVRecorderSignError(MSERR_PARAMETER_VERIFICATION_FAILED, "geturl", "url",
-            "config->url cannot be null"), MSERR_PARAMETER_VERIFICATION_FAILED));
+    if (CommonNapi::CheckhasNamedProperty(env, args, "fileGenerationMode")) {
+        int32_t mode = 0;
+        CHECK_AND_RETURN_RET_LOG(CommonNapi::GetPropertyInt32(env, args, "fileGenerationMode", mode)
+            MSERR_INVALID_VAL, "failed to GetFileGenerationMode");
+        CHECK_AND_RETURN_RET_LOG(mode >= FileGenerationMode::APP_CREATE
+            && mode <= FileGenerationMode::AUTO_CREATE_CAMERA_SCENE, MSERR_INVALID_VAL, "invalide fileGenerationMode");
+        config->fileGenerationMode = static_cast<FileGenerationMode>(mode);
+        MEDIA_LOGI("FileGenerationMode %{public}d!", mode);
+    }
+
+    if (CommonNapi::CheckhasNamedProperty(env, args, "url")) {
+        config->url = CommonNapi::GetPropertyString(env, args, "url");
+        MEDIA_LOGI("url %{public}s!", config->url.c_str());
+        if (config->fileGenerationMode == FileGenerationMode::APP_CREATE) {
+            CHECK_AND_RETURN_RET(config->url != "",
+                (asyncCtx->AVRecorderSignError(MSERR_PARAMETER_VERIFICATION_FAILED, "geturl", "url",
+                    "config->url cannot be null"), MSERR_PARAMETER_VERIFICATION_FAILED));
+        }
+    }
 
     bool getValue = false;
     ret = AVRecorderNapi::GetPropertyInt32(env, args, "rotation", config->rotation, getValue);
@@ -2128,18 +2140,27 @@ RetInfo AVRecorderNapi::Configure(std::shared_ptr<AVRecorderConfig> config)
         ret = recorder_->SetUserCustomInfo(config->metadata.customInfo);
         CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetUserCustomInfo", "customInfo"));
     }
+    return ConfigureUrl(config);
+}
 
-    ret = MSERR_PARAMETER_VERIFICATION_FAILED;
-    const std::string fdHead = "fd://";
-    CHECK_AND_RETURN_RET(config->url.find(fdHead) != std::string::npos, GetRetInfo(ret, "Getfd", "uri"));
-    int32_t fd = -1;
-    std::string inputFd = config->url.substr(fdHead.size());
-    CHECK_AND_RETURN_RET(StrToInt(inputFd, fd) == true && fd >= 0, GetRetInfo(ret, "Getfd", "uri"));
+RetInfo AVRecorderNapi::ConfigureUrl(std::shared_ptr<Config> config)
+{
+    int32_t ret;
+    if (config->fileGenerationMode == FileGenerationMode::AUTO_CREATE_CAMERA_SCENE) {
+        ret = recorder_->SetFileGenerationMode(config->fileGenerationMode);
+        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetFileGenerationMode", "fileGenerationMode"));
+    } else {
+        ret = MSERR_PARAMETER_VERIFICATION_FAILED;
+        const std::string fdHead = "fd://";
+        CHECK_AND_RETURN_RET(config->url.find(fdHead) != std::string::npos, GetRetInfo(ret, "Getfd", "uri"));
+        int32_t fd = -1;
+        std::string inputFd = config->url.substr(fdHead.size());
+        CHECK_AND_RETURN_RET(StrToInt(inputFd, fd) == true && fd >= 0, GetRetInfo(ret, "Getfd", "uri"));
 
-    ret = recorder_->SetOutputFile(fd);
-    CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetOutputFile", "uri"));
+        ret = recorder_->SetOutputFile(fd);
+        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetOutputFile", "uri"));
+    }
     hasConfiged_ = true;
-
     return RetInfo(MSERR_EXT_API9_OK, "");
 }
 
