@@ -140,13 +140,11 @@ int32_t AudioCapturerWrapper::Stop()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Stop S, threadName:%{public}s", FAKE_POINTER(this), threadName_.c_str());
-    if (isRunning_.load()) {
-        isRunning_.store(false);
-        if (readAudioLoop_ != nullptr && readAudioLoop_->joinable()) {
-            readAudioLoop_->join();
-            readAudioLoop_.reset();
-            readAudioLoop_ = nullptr;
-        }
+    isRunning_.store(false);
+    if (readAudioLoop_ != nullptr && readAudioLoop_->joinable()) {
+        readAudioLoop_->join();
+        readAudioLoop_.reset();
+        readAudioLoop_ = nullptr;
     }
     if (audioCapturer_ != nullptr) {
         audioCapturer_->Stop();
