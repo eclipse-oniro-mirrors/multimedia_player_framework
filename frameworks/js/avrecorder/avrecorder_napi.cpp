@@ -1807,14 +1807,14 @@ int32_t AVRecorderNapi::GetModeAndUrl(std::unique_ptr<AVRecorderAsyncContext> &a
             && mode <= FileGenerationMode::AUTO_CREATE_CAMERA_SCENE,
             (asyncCtx->AVRecorderSignError(MSERR_INVALID_VAL, "fileGenerationMode", "fileGenerationMode",
                 "invalide fileGenerationMode"), MSERR_INVALID_VAL));
-        config->fileGenerationMode = static_cast<FileGenerationMode>(mode);
+        asyncCtx->config_->fileGenerationMode = static_cast<FileGenerationMode>(mode);
         MEDIA_LOGI("FileGenerationMode %{public}d!", mode);
     }
 
-    config->url = CommonNapi::GetPropertyString(env, args, "url");
-    MEDIA_LOGI("url %{public}s!", config->url.c_str());
-    if (config->fileGenerationMode == FileGenerationMode::APP_CREATE) {
-        CHECK_AND_RETURN_RET(config->url != "",
+    asyncCtx->config_->url = CommonNapi::GetPropertyString(env, args, "url");
+    MEDIA_LOGI("url %{public}s!", asyncCtx->config_->url.c_str());
+    if (asyncCtx->config_->fileGenerationMode == FileGenerationMode::APP_CREATE) {
+        CHECK_AND_RETURN_RET(asyncCtx->config_->url != "",
             (asyncCtx->AVRecorderSignError(MSERR_PARAMETER_VERIFICATION_FAILED, "geturl", "url",
                 "config->url cannot be null"), MSERR_PARAMETER_VERIFICATION_FAILED));
     }
