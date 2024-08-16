@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <iomanip>
 #include <ctime>
 #include "media_library_adapter.h"
 #include "media_library_manager.h"
