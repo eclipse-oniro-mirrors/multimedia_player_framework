@@ -137,7 +137,7 @@ static const std::vector<struct JsEnumInt> g_audioSourceType = {
     { "AUDIO_SOURCE_TYPE_VOICE_RECOGNITION", AudioSourceType::AUDIO_SOURCE_VOICE_RECOGNITION },
     { "AUDIO_SOURCE_TYPE_VOICE_COMMUNICATION", AudioSourceType::AUDIO_SOURCE_VOICE_COMMUNICATION },
     { "AUDIO_SOURCE_TYPE_VOICE_MESSAGE", AudioSourceType::AUDIO_SOURCE_VOICE_MESSAGE },
-    { "AUDIO_SOURCE_TYPE_VOICE_CAMCORDER", AudioSourceType::AUDIO_SOURCE_VOICE_CAMCORDER },
+    { "AUDIO_SOURCE_TYPE_VOICE_CAMCORDER", AudioSourceType::AUDIO_SOURCE_CAMCORDER },
 };
 
 static const std::vector<struct JsEnumInt> g_videoSourceType = {
