@@ -69,6 +69,7 @@ static const std::string USER_CHOICE_DENY = "false";
 static const std::string BUTTON_NAME_MIC = "mic";
 static const std::string BUTTON_NAME_STOP = "stop";
 static const std::string ICON_PATH_CAPSULE = "/etc/screencapture/capsule.svg";
+static const std::string ICON_PATH_CAPSULE_STOP = "/etc/screencapture/capsule_stop.svg";
 static const std::string ICON_PATH_NOTIFICATION = "/etc/screencapture/notification.png";
 static const std::string ICON_PATH_MIC = "/etc/screencapture/mic.svg";
 static const std::string ICON_PATH_MIC_OFF = "/etc/screencapture/mic_off.svg";
@@ -1367,7 +1368,7 @@ std::shared_ptr<NotificationLocalLiveViewContent> ScreenCaptureServer::GetLocalL
     auto capsule = NotificationCapsule();
     capsule.SetBackgroundColor(BACK_GROUND_COLOR);
     capsulePxSize_ = capsuleVpSize_ * density_ / MDPI;
-    std::shared_ptr<PixelMap> pixelMapCapSpr = GetPixelMapSvg(ICON_PATH_CAPSULE, capsulePxSize_, capsulePxSize_);
+    std::shared_ptr<PixelMap> pixelMapCapSpr = GetPixelMapSvg(ICON_PATH_CAPSULE_STOP, capsulePxSize_, capsulePxSize_);
     capsule.SetIcon(pixelMapCapSpr);
 
     localLiveViewContent->SetCapsule(capsule);
