@@ -130,7 +130,7 @@ enum HdrType : int32_t {
 
 enum Scene : int32_t {
     /**
-     * This option is used to mark clone scene.
+     * This option is used to mark normal scene.
      */
     AV_META_SCENE_NORMAL,
     /**
