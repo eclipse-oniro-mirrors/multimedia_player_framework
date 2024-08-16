@@ -251,6 +251,14 @@ int32_t RecorderImpl::SetOutputFile(int32_t fd)
     return recorderService_->SetOutputFile(fd);
 }
 
+int32_t RecorderImpl::SetFileGenerationMode(FileGenerationMode mode)
+{
+    MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetFileGenerationMode in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist..");
+    return recorderService_->SetFileGenerationMode(mode);
+}
+
+
 int32_t RecorderImpl::SetNextOutputFile(int32_t fd)
 {
     MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetNextOutputFile in", FAKE_POINTER(this));

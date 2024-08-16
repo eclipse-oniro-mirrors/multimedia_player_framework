@@ -61,6 +61,11 @@ int RecorderListenerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Me
             OnAudioCaptureChange(audioRecorderChangeInfo);
             return MSERR_OK;
         }
+        case RecorderListenerMsg::ON_PHOTO_ASSERT_AVAILABLE: {
+            std::string uri = data.ReadString();
+            OnPhotoAssertAvailable(uri);
+            return MSERR_OK;
+        }
         default: {
             MEDIA_LOGE("default case, need check RecorderListenerStub");
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -90,6 +95,13 @@ void RecorderListenerStub::OnAudioCaptureChange(const AudioRecorderChangeInfo &a
 {
     if (callback_ != nullptr) {
         callback_->OnAudioCaptureChange(audioRecorderChangeInfo);
+    }
+}
+
+void RecorderListenerStub::OnPhotoAssertAvailable(const std::string &uri)
+{
+    if (callback_ != nullptr) {
+        callback_->OnPhotoAssertAvailable(uri);
     }
 }
 

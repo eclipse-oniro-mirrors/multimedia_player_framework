@@ -98,6 +98,8 @@ void RecorderServiceStub::FillRecFuncPart1()
         [this](MessageParcel &data, MessageParcel &reply) { return SetOutputFormat(data, reply); };
     recFuncs_[SET_OUTPUT_FILE] =
         [this](MessageParcel &data, MessageParcel &reply) { return SetOutputFile(data, reply); };
+    recFuncs_[SET_FILE_GENERATION_MODE] =
+        [this](MessageParcel &data, MessageParcel &reply) { return SetFileGenerationMode(data, reply); };
     recFuncs_[SET_LOCATION] =
         [this](MessageParcel &data, MessageParcel &reply) { return SetLocation(data, reply); };
     recFuncs_[SET_ORIENTATION_HINT] =
@@ -386,6 +388,12 @@ int32_t RecorderServiceStub::SetOutputFile(int32_t fd)
 {
     CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
     return recorderServer_->SetOutputFile(fd);
+}
+
+int32_t RecorderServiceStub::SetFileGenerationMode(FileGenerationMode mode)
+{
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    return recorderServer_->SetFileGenerationMode(mode);
 }
 
 int32_t RecorderServiceStub::SetLocation(float latitude, float longitude)
@@ -712,6 +720,13 @@ int32_t RecorderServiceStub::SetOutputFile(MessageParcel &data, MessageParcel &r
     int32_t fd = data.ReadFileDescriptor();
     reply.WriteInt32(SetOutputFile(fd));
     (void)::close(fd);
+    return MSERR_OK;
+}
+
+int32_t RecorderServiceStub::SetFileGenerationMode(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t mode = data.ReadInt32();
+    reply.WriteInt32(SetFileGenerationMode(static_cast<FileGenerationMode>(mode)));
     return MSERR_OK;
 }
 

@@ -148,6 +148,7 @@ ohos_shared_library("media_service") {
       "//foundation/multimedia/player_framework/services/engine/common/recorder_profiles/recorder_profiles_xml_parser.cpp",
       "recorder/ipc/recorder_listener_proxy.cpp",
       "recorder/ipc/recorder_service_stub.cpp",
+      "recorder/server/media_library_adapter.cpp",
       "recorder/server/recorder_server.cpp",
       "recorder_profiles/ipc/recorder_profiles_service_stub.cpp",
       "recorder_profiles/server/recorder_profiles_server.cpp",
@@ -237,10 +238,6 @@ ohos_shared_library("media_service") {
     "state_registry:tel_state_registry_api",
   ]
 
-  if (player_framework_support_video) {
-    external_deps += [ "graphic_surface:surface" ]
-  }
-
   if (player_framework_support_screen_capture) {
     external_deps += [
       "ability_base:base",
@@ -269,6 +266,18 @@ ohos_shared_library("media_service") {
       "audio_framework:audio_client",
       "av_session:avsession_client",
       "input:libmmi-client",
+    ]
+  }
+
+  if (player_framework_support_video) {
+    external_deps += [
+      "camera_framework:camera_framework",
+      "data_share:datashare_common",
+      "data_share:datashare_consumer",
+      "graphic_surface:surface",
+      "media_library:media_library",
+      "media_library:media_library_manager",
+      "samgr:samgr_proxy",
     ]
   }
 

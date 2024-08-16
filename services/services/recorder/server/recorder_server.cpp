@@ -24,6 +24,10 @@
 #include "media_dfx.h"
 #include "hitrace/tracechain.h"
 #include "media_utils.h"
+#include "media_library_adapter.h"
+#include "system_ability_definition.h"
+#include "iservice_registry.h"
+#include "hcamera_service_proxy.h"
 #ifdef SUPPORT_POWER_MANAGER
 #include "shutdown/shutdown_priority.h"
 #endif
@@ -670,6 +674,28 @@ int32_t RecorderServer::SetOutputFile(int32_t fd)
     return result.Value();
 }
 
+int32_t RecorderServer::SetFileGenerationMode(FileGenerationMode mode)
+{
+    MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " SetFileGenerationMode in", FAKE_POINTER(this));
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    CHECK_AND_RETURN_RET_LOG(config_.withVideo, MSERR_INVALID_OPERATION, "Audio-only scenarios are not supported");
+    CHECK_AND_RETURN_RET_LOG(MeidaLibraryAdapter::CreateMediaLibrary(config_.url, config_.uri),
+        MSERR_UNKNOWN, "get fd failed");
+    MEDIA_LOGD("video Fd:%{public}d", config_.url);
+    config_.fileGenerationMode = mode;
+    OutFd outFileFd(config_.url);
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        return recorderEngine_->Configure(DUMMY_SOURCE_ID, outFileFd);
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+ 
+    auto result = task->GetResult();
+    return result.Value();
+}
+
 int32_t RecorderServer::SetNextOutputFile(int32_t fd)
 {
     MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " SetNextOutputFile in", FAKE_POINTER(this));
@@ -811,6 +837,8 @@ int32_t RecorderServer::Start()
 #endif
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_PREPARED, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    CHECK_AND_RETURN_RET_LOG(config_.fileGenerationMode == APP_CREATE || CheckCameraOutputState(),
+        MSERR_INVALID_OPERATION, "CheckCameraOutputState failed");
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->Start();
     });
@@ -897,6 +925,9 @@ int32_t RecorderServer::Stop(bool block)
         int64_t endTime = GetCurrentMillisecond();
         statisticalEventInfo_.recordDuration = static_cast<int32_t>(endTime - startTime_ -
             statisticalEventInfo_.startLatency);
+        if (config_.fileGenerationMode == FileGenerationMode::AUTO_CREATE_CAMERA_SCENE && config_.uri != "") {
+            recorderCb_->OnPhotoAssertAvailable(config_.uri);
+        }
     }
     BehaviorEventWrite(GetStatusDescription(status_), "Recorder");
     return ret;
@@ -1167,6 +1198,20 @@ std::string RecorderServer::GetAudioMime(AudioCodecFormat encoder)
             break;
     }
     return audioMime;
+}
+
+bool RecorderServer::CheckCameraOutputState()
+{
+    auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    CHECK_AND_RETURN_RET_LOG(samgr != nullptr, false, "Failed to get System ability manager");
+    auto object = samgr->GetSystemAbility(CAMERA_SERVICE_ID);
+    CHECK_AND_RETURN_RET_LOG(object != nullptr, false, "object is null");
+    sptr<CameraStandard::ICameraService> serviceProxy = iface_cast<CameraStandard::HCameraServiceProxy>(object);
+    CHECK_AND_RETURN_RET_LOG(serviceProxy != nullptr, false, "serviceProxy is null");
+    int32_t status = 0;
+    serviceProxy->GetCameraOutputStatus(IPCSkeleton::GetCallingPid(), status);
+    MEDIA_LOGI("GetCameraOutputStatus %{public}d", status);
+    return (status >> 1) & 1; // 2: video out put start
 }
 
 #ifdef SUPPORT_POWER_MANAGER
