@@ -1830,10 +1830,13 @@ int32_t AVRecorderNapi::GetConfig(std::unique_ptr<AVRecorderAsyncContext> &async
 
     if (CommonNapi::CheckhasNamedProperty(env, args, "fileGenerationMode")) {
         int32_t mode = 0;
-        CHECK_AND_RETURN_RET_LOG(CommonNapi::GetPropertyInt32(env, args, "fileGenerationMode", mode)
-            MSERR_INVALID_VAL, "failed to GetFileGenerationMode");
-        CHECK_AND_RETURN_RET_LOG(mode >= FileGenerationMode::APP_CREATE
-            && mode <= FileGenerationMode::AUTO_CREATE_CAMERA_SCENE, MSERR_INVALID_VAL, "invalide fileGenerationMode");
+        CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, args, "fileGenerationMode", mode),
+            (asyncCtx->AVRecorderSignError(MSERR_INVALID_VAL, "GetFileGenerationMode", "fileGenerationMode",
+                "failed to GetFileGenerationMode"), MSERR_INVALID_VAL));
+        CHECK_AND_RETURN_RET(mode >= FileGenerationMode::APP_CREATE
+            && mode <= FileGenerationMode::AUTO_CREATE_CAMERA_SCENE,
+            (asyncCtx->AVRecorderSignError(MSERR_INVALID_VAL, "fileGenerationMode", "fileGenerationMode",
+                "invalide fileGenerationMode"), MSERR_INVALID_VAL));
         config->fileGenerationMode = static_cast<FileGenerationMode>(mode);
         MEDIA_LOGI("FileGenerationMode %{public}d!", mode);
     }
