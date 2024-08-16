@@ -320,6 +320,8 @@ private:
     void CloseFd();
     void ReleaseInner();
     void GetDumpFlag();
+    int32_t SetMicrophoneOn();
+    int32_t SetMicrophoneOff();
 
     VirtualScreenOption InitVirtualScreenOption(const std::string &name, sptr<OHOS::Surface> consumer);
     int32_t GetMissionIds(std::vector<uint64_t> &missionIds);
