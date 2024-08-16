@@ -381,6 +381,7 @@ private:
     int32_t GetVideoProfile(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value item,
         AVRecorderProfile &profile);
     int32_t GetProfile(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
+    int32_t GetModeAndUrl(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
     int32_t GetConfig(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
     int32_t GetRotation(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
     int32_t GetMetaType(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);

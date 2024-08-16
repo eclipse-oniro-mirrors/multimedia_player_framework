@@ -37,7 +37,7 @@ public:
 
     std::string GetDisplayName()
     {
-        return displayName_;
+        return GetTitle() + '.' + GetExtension();
     }
 
     void SetDisplayName(const std::string &displayName)
