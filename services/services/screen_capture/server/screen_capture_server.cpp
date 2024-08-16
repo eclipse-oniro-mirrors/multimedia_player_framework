@@ -2002,8 +2002,10 @@ int32_t ScreenCaptureServer::SetMicrophoneEnabled(bool isMicrophone)
         } else if (micAudioCapture_ && micAudioCapture_->GetAudioCapturerState() == CAPTURER_PAUSED) {
             ret = micAudioCapture_->Resume();
             if (ret != MSERR_OK) {
-                isMicrophoneOn_ = false;
                 MEDIA_LOGE("micAudioCapture Resume failed");
+                isMicrophoneOn_ = false;
+                screenCaptureCb_->OnStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE);
+                return ret;
             }
         } else if (micAudioCapture_ && micAudioCapture_->GetAudioCapturerState() != CAPTURER_RECORDING) {
             MEDIA_LOGE("AudioCapturerState invalid");
