@@ -258,6 +258,17 @@ ohos_shared_library("media_service") {
     ]
   }
 
+  if (player_framework_support_avsession_background) {
+    sources += [ "player/avsession_background/avsession_background.cpp" ]
+    external_deps += [
+      "ability_base:want",
+      "ability_runtime:wantagent_innerkits",
+      "audio_framework:audio_client",
+      "av_session:avsession_client",
+      "input:libmmi-client",
+    ]
+  }
+
   if (player_framework_support_video) {
     external_deps += [
       "camera_framework:camera_framework",
@@ -267,17 +278,6 @@ ohos_shared_library("media_service") {
       "media_library:media_library",
       "media_library:media_library_manager",
       "samgr:samgr_proxy",
-    ]
-  }
-
-  if (player_framework_support_avsession_background) {
-    sources += [ "player/avsession_background/avsession_background.cpp" ]
-    external_deps += [
-      "ability_base:want",
-      "ability_runtime:wantagent_innerkits",
-      "audio_framework:audio_client",
-      "av_session:avsession_client",
-      "input:libmmi-client",
     ]
   }
 
