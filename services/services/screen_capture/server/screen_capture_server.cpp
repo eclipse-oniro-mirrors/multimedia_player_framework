@@ -811,6 +811,8 @@ int32_t ScreenCaptureServer::StartAudioCapture()
     ret = StartStreamMicAudioCapture();
     if (ret != MSERR_OK) {
         MEDIA_LOGE("StartStreamMicAudioCapture failed");
+        innerAudioCapture_ = nullptr;
+        return ret;
     }
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "StartAudioCapture OK.", FAKE_POINTER(this));
     return MSERR_OK;
