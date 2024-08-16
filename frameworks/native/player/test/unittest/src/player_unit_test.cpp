@@ -3735,5 +3735,69 @@ HWTEST_F(PlayerUnitTest, Player_SetPlaybackSpeed_006, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->GetPlaybackSpeed(mode));
     EXPECT_EQ(SPEED_FORWARD_3_00_X, mode);
 }
+
+/**
+ * @tc.name  : Test SetMaxAmplitudeCbStatus API
+ * @tc.number: Player_SetMaxAmplitudeCbStatus_001
+ * @tc.desc  : Test Player SetMaxAmplitudeCbStatus status on before prepare
+ */
+HWTEST_F(PlayerUnitTest, Player_SetMaxAmplitudeCbStatus_001, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetMaxAmplitudeCbStatus(true));
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+}
+
+/**
+ * @tc.name  : Test SetMaxAmplitudeCbStatus API
+ * @tc.number: Player_SetMaxAmplitudeCbStatus_002
+ * @tc.desc  : Test Player SetMaxAmplitudeCbStatus status on after prepare
+ */
+HWTEST_F(PlayerUnitTest, Player_SetMaxAmplitudeCbStatus_002, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->SetMaxAmplitudeCbStatus(true));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+}
+
+/**
+ * @tc.name  : Test SetMaxAmplitudeCbStatus API
+ * @tc.number: Player_SetMaxAmplitudeCbStatus_003
+ * @tc.desc  : Test Player SetMaxAmplitudeCbStatus status off before prepare
+ */
+HWTEST_F(PlayerUnitTest, Player_SetMaxAmplitudeCbStatus_003, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetMaxAmplitudeCbStatus(false));
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+}
+
+/**
+ * @tc.name  : Test SetMaxAmplitudeCbStatus API
+ * @tc.number: Player_SetMaxAmplitudeCbStatus_004
+ * @tc.desc  : Test Player SetMaxAmplitudeCbStatus status off after prepare
+ */
+HWTEST_F(PlayerUnitTest, Player_SetMaxAmplitudeCbStatus_004, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->SetMaxAmplitudeCbStatus(false));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+}
 } // namespace Media
 } // namespace OHOS
