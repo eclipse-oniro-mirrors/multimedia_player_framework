@@ -22,6 +22,7 @@
 #include "task_queue.h"
 #include "watchdog.h"
 #include "uri_helper.h"
+#include "hitrace/tracechain.h"
 
 namespace OHOS {
 namespace Media {
