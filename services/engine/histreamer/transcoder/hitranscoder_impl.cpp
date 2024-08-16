@@ -18,6 +18,7 @@
 #include "directory_ex.h"
 #include "osal/task/jobutils.h"
 #include "media_utils.h"
+#include "media_dfx.h"
 #include "meta/video_types.h"
 #include "meta/any.h"
 #include "common/log.h"
@@ -125,6 +126,11 @@ int32_t HiTransCoderImpl::Init()
     callbackLooper_ = std::make_shared<HiTransCoderCallbackLooper>();
     callbackLooper_->SetTransCoderEngine(this, transCoderId_);
     return static_cast<int32_t>(Status::OK);
+}
+
+void HiTransCoderImpl::SetInstanceId(uint64_t instanceId)
+{
+    instanceId_ = instanceId;
 }
 
 int32_t HiTransCoderImpl::GetRealPath(const std::string &url, std::string &realUrlPath) const

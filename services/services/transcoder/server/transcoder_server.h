@@ -97,6 +97,8 @@ private:
     std::shared_ptr<UriHelper> uriHelper_;
 
     std::atomic<bool> watchdogPause_ = false;
+
+    uint64_t instanceId_ = 0;
 };
 } // namespace Media
 } // namespace OHOS
