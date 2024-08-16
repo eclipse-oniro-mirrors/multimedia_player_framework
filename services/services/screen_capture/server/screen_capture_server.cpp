@@ -2080,7 +2080,8 @@ int32_t ScreenCaptureServer::OnVoIPStatusChanged(bool isInVoIPCall)
         ret = innerAudioCapture_->Resume();
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "innerAudioCapture Resume failed");
     }
-    if (!isInVoIPCall && innerAudioCapture_->GetAudioCapturerState() == CAPTURER_RECORDING && isMicrophoneOn_ &&
+    if (!isInVoIPCall && innerAudioCapture_->GetAudioCapturerState() == CAPTURER_RECORDING &&
+        micAudioCapture_ && micAudioCapture_->GetAudioCapturerState() == CAPTURER_RECORDING
         audioSource_ && audioSource_->GetSpeakerAliveStatus()) {
         ret = innerAudioCapture_->Pause();
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "innerAudioCapture Pause failed");
