@@ -809,7 +809,9 @@ int32_t ScreenCaptureServer::StartAudioCapture()
     int32_t ret = MSERR_UNKNOWN;
     if (isMicrophoneOn_) {
         ret = StartStreamMicAudioCapture();
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartStreamMicAudioCapture failed");
+        if (ret != MSERR_OK) {
+            MEDIA_LOGE("StartStreamMicAudioCapture failed");
+        }
     }
     ret = StartStreamInnerAudioCapture();
     if (ret != MSERR_OK) {
