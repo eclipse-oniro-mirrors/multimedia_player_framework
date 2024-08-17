@@ -461,7 +461,6 @@ int32_t HiRecorderImpl::Stop(bool isDrainAll)
         }
         pipeline_->RemoveHeadFilter(iter.second);
     }
-    metaDataFilters_.clear();
     if (videoCaptureFilter_) {
         pipeline_->RemoveHeadFilter(videoCaptureFilter_);
     }
