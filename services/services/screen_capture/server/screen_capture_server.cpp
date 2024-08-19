@@ -2371,7 +2371,7 @@ int32_t ScreenCaptureServer::StopScreenCapture()
 
     std::lock_guard<std::mutex> lock(mutex_);
     int32_t ret = StopScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID);
-    if (statisticalEventInfo_.startLatency < 0) {
+    if (statisticalEventInfo_.startLatency == -1) {
         statisticalEventInfo_.captureDuration = -1; // latency -1 means invalid
     } else {
         int64_t endTime = GetCurrentMillisecond();
