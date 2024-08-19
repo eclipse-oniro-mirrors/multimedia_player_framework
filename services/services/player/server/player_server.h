@@ -207,7 +207,7 @@ private:
 
     void HandleEos();
     void PreparedHandleEos();
-    void HandleInterruptEvent();
+    void HandleInterruptEvent(const Format &infoBody);
     void FormatToString(std::string &dumpString, std::vector<Format> &videoTrack);
     void OnErrorCb(int32_t errorCode, const std::string &errorMsg);
 
