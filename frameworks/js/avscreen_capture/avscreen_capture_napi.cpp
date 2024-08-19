@@ -330,6 +330,28 @@ napi_value AVScreenCaptureNapi::JsStopRecording(napi_env env, napi_callback_info
     return ExecuteByPromise(env, info,  AVScreenCapturegOpt::STOP_RECORDING);
 }
 
+napi_status AVScreenCaptureNapi::GetWindowIDsVectorParams(std::vector<uint64_t> &windowIDsVec, napi_env env,
+    napi_value* args)
+{
+    uint32_t array_length;
+    napi_status status = napi_get_array_length(env, args[0], &array_length);
+    if (status != napi_ok) {
+        return status;
+    }
+    for (uint32_t i = 0; i < array_length; i++) {
+        napi_value temp;
+        napi_get_element(env, args[0], i, &temp);
+        int32_t tempValue;
+        napi_get_value_int32(env, temp, &tempValue);
+        if (tempValue >= 0) {
+            windowIDsVec.push_back(static_cast<uint64_t>(tempValue));
+        } else {
+            MEDIA_LOGI("JsSkipPrivacyMode skip %{public}d", tempValue);
+        }
+    }
+    return napi_ok;
+}
+
 napi_value AVScreenCaptureNapi::JsSkipPrivacyMode(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("AVScreenCapture::JsSkipPrivacyMode");
@@ -346,22 +368,9 @@ napi_value AVScreenCaptureNapi::JsSkipPrivacyMode(napi_env env, napi_callback_in
     CHECK_AND_RETURN_RET_LOG(asyncCtx->napi->taskQue_ != nullptr, result, "taskQue is nullptr!");
     std::vector<uint64_t> windowIDsVec;
     napi_get_cb_info(env, info, &argCount, args, nullptr, nullptr);
-    uint32_t array_length;
-    napi_status status = napi_get_array_length(env, args[0], &array_length);
-    if (status != napi_ok) {
-        asyncCtx->AVScreenCaptureSignError(MSERR_EXT_API9_INVALID_PARAMETER, "SkipPrivacyMode",
-            "SkipPrivacyMode get value failed");
-        return result;
-    }
-    for (uint32_t i = 0; i < array_length; i++) {
-        napi_value temp;
-        napi_get_element(env, args[0], i, &temp);
-        int32_t tempValue;
-        napi_get_value_int32(env, temp, &tempValue);
-        if (tempValue >= 0) {
-            windowIDsVec.push_back(static_cast<uint64_t>(tempValue));
-        }
-    }
+    napi_status status = GetWindowIDsVectorParams(windowIDsVec, env, args);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, (asyncCtx->AVScreenCaptureSignError(MSERR_EXT_API9_INVALID_PARAMETER,
+        "SkipPrivacyMode", "SkipPrivacyMode get value failed"), result), "failed to GetWindowIDsVectorParams");
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
     asyncCtx->task_ = AVScreenCaptureNapi::GetSkipPrivacyModeTask(asyncCtx, windowIDsVec);
     (void)asyncCtx->napi->taskQue_->EnqueueTask(asyncCtx->task_);
