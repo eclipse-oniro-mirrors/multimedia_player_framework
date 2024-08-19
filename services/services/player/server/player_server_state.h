@@ -34,6 +34,7 @@ public:
     virtual int32_t SeekContinous(int32_t mSeconds, int64_t batchNo);
     virtual int32_t PauseDemuxer();
     virtual int32_t ResumeDemuxer();
+    virtual int32_t SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode);
 protected:
     int32_t OnMessageReceived(PlayerOnInfoType type, int32_t extra, const Format &infoBody) override;
     virtual void HandleStateChange(int32_t newState)
@@ -70,6 +71,7 @@ public:
     ~InitializedState() = default;
 
     int32_t Prepare() override;
+    int32_t SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode) override;
 };
 
 class PlayerServer::PreparingState : public PlayerServer::BaseState {
@@ -95,6 +97,7 @@ public:
     int32_t Stop() override;
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
     int32_t SeekContinous(int32_t mSeconds, int64_t batchNo) override;
+    int32_t SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode) override;
 
 protected:
     void HandleStateChange(int32_t newState) override;
@@ -134,6 +137,7 @@ public:
     int32_t Stop() override;
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
     int32_t SeekContinous(int32_t mSeconds, int64_t batchNo) override;
+    int32_t SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode) override;
 
 protected:
     void HandleStateChange(int32_t newState) override;
@@ -148,6 +152,7 @@ public:
     int32_t Prepare() override;
     int32_t Stop() override;
     void HandleStateChange(int32_t newState) override;
+    int32_t SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode) override;
 };
 
 class PlayerServer::PlaybackCompletedState : public PlayerServer::BaseState {
@@ -160,6 +165,7 @@ public:
     int32_t Stop() override;
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
     int32_t SeekContinous(int32_t mSeconds, int64_t batchNo) override;
+    int32_t SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode) override;
 
 protected:
     void HandleStateChange(int32_t newState) override;

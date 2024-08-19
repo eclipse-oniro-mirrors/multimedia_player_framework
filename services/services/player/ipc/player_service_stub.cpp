@@ -167,6 +167,8 @@ void PlayerServiceStub::FillPlayerFuncPart2()
         [this](MessageParcel &data, MessageParcel &reply) { return SetDecryptConfig(data, reply); } };
     playerFuncs_[SET_PLAY_RANGE] = { "SetPlayRange",
         [this](MessageParcel &data, MessageParcel &reply) { return SetPlayRange(data, reply); } };
+    playerFuncs_[SET_PLAY_RANGE_WITH_MODE] = { "SetPlayRangeWithMode",
+        [this](MessageParcel &data, MessageParcel &reply) { return SetPlayRangeWithMode(data, reply); } };
     playerFuncs_[SET_PLAYBACK_STRATEGY] = { "SetPlaybackStrategy",
         [this](MessageParcel &data, MessageParcel &reply) { return SetPlaybackStrategy(data, reply); } };
     playerFuncs_[SET_MEDIA_MUTED] = { "SetMediaMuted",
@@ -323,6 +325,13 @@ int32_t PlayerServiceStub::SetPlayRange(int64_t start, int64_t end)
     MediaTrace trace("Stub::SetPlayRange");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
     return playerServer_->SetPlayRange(start, end);
+}
+
+int32_t PlayerServiceStub::SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode)
+{
+    MediaTrace trace("Stub::SetPlayRangeWithMode");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->SetPlayRangeWithMode(start, end, mode);
 }
 
 int32_t PlayerServiceStub::PrepareAsync()
@@ -663,6 +672,15 @@ int32_t PlayerServiceStub::SetPlayRange(MessageParcel &data, MessageParcel &repl
     int64_t start = data.ReadInt64();
     int64_t end = data.ReadInt64();
     reply.WriteInt32(SetPlayRange(start, end));
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::SetPlayRangeWithMode(MessageParcel &data, MessageParcel &reply)
+{
+    int64_t start = data.ReadInt64();
+    int64_t end = data.ReadInt64();
+    int32_t mode = data.ReadInt32();
+    reply.WriteInt32(SetPlayRangeWithMode(start, end, static_cast<PlayerSeekMode>(mode)));
     return MSERR_OK;
 }
 

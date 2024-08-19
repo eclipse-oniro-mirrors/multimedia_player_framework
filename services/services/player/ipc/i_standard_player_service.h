@@ -46,6 +46,13 @@ public:
         (void)end;
         return 0;
     }
+    virtual int32_t SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode)
+    {
+        (void)start;
+        (void)end;
+        (void)mode;
+        return 0;
+    }
     virtual int32_t PrepareAsync() = 0;
     virtual int32_t Pause() = 0;
     virtual int32_t Stop() = 0;
@@ -115,6 +122,7 @@ public:
         PREPARE,
         SET_RENDER_FIRST_FRAME,
         SET_PLAY_RANGE,
+        SET_PLAY_RANGE_WITH_MODE,
         PREPAREASYNC,
         PAUSE,
         STOP,
