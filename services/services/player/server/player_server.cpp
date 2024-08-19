@@ -34,6 +34,7 @@
 #include "qos.h"
 #include "player_server_event_receiver.h"
 #include "common/media_source.h"
+#include "audio_info.h"
 
 using namespace OHOS::QOS;
 
