@@ -245,7 +245,7 @@ private:
     Status DoSetPlayRange();
     void ResetPlayRangeParameter();
     bool IsInValidSeekTime(int32_t seekPos);
-    int64_t GetRePlayStartTime();
+    int64_t GetPlayStartTime();
     Status StartSeekContinous();
     int32_t InnerSelectTrack(std::string mime, int32_t trackId, PlayerSwitchMode mode);
 

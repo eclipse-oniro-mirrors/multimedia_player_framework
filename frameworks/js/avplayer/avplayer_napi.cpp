@@ -789,7 +789,7 @@ napi_value AVPlayerNapi::JsSetPlaybackRange(napi_env env, napi_callback_info inf
     int32_t startTimeMs = PLAY_RANGE_DEFAULT_VALUE;
     int32_t endTimeMs = PLAY_RANGE_DEFAULT_VALUE;
     int32_t mode = SEEK_PREVIOUS_SYNC;
-    if (!jsPlayer->IsSetPlayRangeable()) {
+    if (!jsPlayer->CanSetPlayRange()) {
         promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
             "current state is not initialized/prepared/paused/stopped/completed, unsupport setPlaybackRange operation");
     } else if (argCount < ARRAY_ARG_COUNTS_TWO || napi_typeof(env, args[INDEX_A], &valueType) != napi_ok ||
@@ -2288,7 +2288,7 @@ bool AVPlayerNapi::IsControllable()
     }
 }
 
-bool AVPlayerNapi::IsSetPlayRangeable()
+bool AVPlayerNapi::CanSetPlayRange()
 {
     auto state = GetCurrentState();
     if (state == AVPlayerState::STATE_INITIALIZED || state == AVPlayerState::STATE_PREPARED ||

@@ -252,7 +252,7 @@ bool HiPlayerImpl::IsInValidSeekTime(int32_t seekPos)
     return seekTime < startTimeWithMode_ || seekTime > endTimeWithMode_;
 }
 
-int64_t HiPlayerImpl::GetRePlayStartTime()
+int64_t HiPlayerImpl::GetPlayStartTime()
 {
     if (playRangeStartTime_ > PLAY_RANGE_DEFAULT_VALUE) {
         return playRangeStartTime_;
@@ -452,14 +452,12 @@ int32_t HiPlayerImpl::SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSee
              PUBLIC_LOG_D64 ", end: " PUBLIC_LOG_D64, startTimeWithMode_, endTimeWithMode_);
         return TransStatus(rtv);
     }
-    if (pipeline_ != nullptr) {
+    if (pipeline_ != nullptr && demuxer_ != nullptr) {
         pipeline_->SetPlayRange(startTimeWithMode_, endTimeWithMode_);
-    }
-    int64_t seekTimeMs = 0;
-    if (startTimeWithMode_ != PLAY_RANGE_DEFAULT_VALUE) {
-        seekTimeMs = startTimeWithMode_;
-    }
-    if (demuxer_ != nullptr) {
+        int64_t seekTimeMs = 0;
+        if (startTimeWithMode_ > PLAY_RANGE_DEFAULT_VALUE) {
+            seekTimeMs = startTimeWithMode_;
+        }
         MEDIA_LOG_I_SHORT("seek to start time: " PUBLIC_LOG_D64, seekTimeMs);
         pipeline_->Flush();
         rtv = doSeek(seekTimeMs, playRangeSeekMode_);
@@ -591,7 +589,7 @@ Status HiPlayerImpl::DoSetPlayRange()
     if ((pipeline_ != nullptr) && (rangeEndTime > PLAY_RANGE_DEFAULT_VALUE)) {
         pipeline_->SetPlayRange(rangeStartTime, rangeEndTime);
     }
-    if (rangeStartTime > PLAY_RANGE_DEFAULT_VALUE) {
+    if ((pipeline_ != nullptr) && (rangeStartTime > PLAY_RANGE_DEFAULT_VALUE)) {
         MEDIA_LOG_I_SHORT("seek to start time: " PUBLIC_LOG_D64, rangeStartTime);
         pipeline_ -> Flush();
         ret = doSeek(rangeStartTime, playRangeSeekMode_);
@@ -721,7 +719,7 @@ int32_t HiPlayerImpl::Play()
     if (pipelineStates_ == PlayerStates::PLAYER_PLAYBACK_COMPLETE || pipelineStates_ == PlayerStates::PLAYER_STOPPED) {
         isStreaming_ = true;
         if (GetPlayRangeStartTime() > PLAY_RANGE_DEFAULT_VALUE) {
-            ret = TransStatus(Seek(GetRePlayStartTime(), playRangeSeekMode_, false));
+            ret = TransStatus(Seek(GetPlayStartTime(), playRangeSeekMode_, false));
         } else {
             ret = TransStatus(Seek(0, PlayerSeekMode::SEEK_PREVIOUS_SYNC, false));
         }

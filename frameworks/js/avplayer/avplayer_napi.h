@@ -315,7 +315,7 @@ private:
 
     std::string GetCurrentState();
     bool IsControllable();
-    bool IsSetPlayRangeable();
+    bool CanSetPlayRange();
     bool IsLiveSource() const;
     void EnqueueNetworkTask(const std::string url);
     void EnqueueFdTask(const int32_t fd);
