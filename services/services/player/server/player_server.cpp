@@ -1076,9 +1076,21 @@ void PlayerServer::PreparedHandleEos()
     }
 }
 
-void PlayerServer::HandleInterruptEvent()
+void PlayerServer::HandleInterruptEvent(const Format &infoBody)
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR " HandleInterruptEvent in ", FAKE_POINTER(this));
+    int32_t hintType = -1;
+    int32_t forceType = -1;
+    int32_t eventType = -1;
+    (void)infoBody.GetIntValue(PlayerKeys::AUDIO_INTERRUPT_TYPE, eventType);
+    (void)infoBody.GetIntValue(PlayerKeys::AUDIO_INTERRUPT_FORCE, forceType);
+    (void)infoBody.GetIntValue(PlayerKeys::AUDIO_INTERRUPT_HINT, hintType);
+    if (forceType == OHOS::AudioStandard::INTERRUPT_FORCE) {
+        if(hintType == OHOS::AudioStandard::INTERRUPT_HINT_PAUSE
+            || hintType == OHOS::AudioStandard::INTERRUPT_HINT_STOP) {
+            (void)OnPause();
+        }
+    }
     (void)OnPause();
 }
 
