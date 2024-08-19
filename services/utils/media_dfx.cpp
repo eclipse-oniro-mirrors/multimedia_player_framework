@@ -281,6 +281,9 @@ void MediaEvent::StatisicsHiSysEventWrite(CallType callType, OHOS::HiviewDFX::Hi
         case CallType::SCREEN_CAPTRUER:
             eventName = "SCREEN_CAPTURE_STATISTICS";
             break;
+        case CallType::AVTRANSCODER:
+            eventName = "TRANSCODER_STATISTICS";
+            break;
         default:
             return;
     }

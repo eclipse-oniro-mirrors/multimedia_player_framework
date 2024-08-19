@@ -48,6 +48,11 @@ class ITransCoderEngine {
 public:
     virtual ~ITransCoderEngine() = default;
 
+    virtual void SetInstanceId(uint64_t instanceId)
+    {
+        (void)instanceId;
+    }
+
     /**
      * Sets the input file. The function must be called before Prepare.
      * After this interface called, the engine will not accept any source setting interface call.

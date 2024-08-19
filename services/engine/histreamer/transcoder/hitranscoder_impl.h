@@ -37,10 +37,39 @@
 namespace OHOS {
 namespace Media {
 
+struct TranscoderStatisticalInfo {
+    int32_t errCode {0};
+    std::string errMsg {};
+    int32_t sourceDuration {0};
+    int32_t transcoderDuration {0};
+    std::string srcFormat {};
+    std::string srcAudioMime {};
+    std::string srcVideoMime {};
+    float srcVideoFrameRate {0.0};
+    int32_t srcVideoBitrate {0};
+    int8_t srcHdrType {0};
+    int32_t srcAudioSampleRate {0};
+    int32_t srcAudioChannelCount {0};
+    int32_t srcAudioBitrate {0};
+    std::string dstFormat {};
+    std::string dstAudioMime {};
+    std::string dstVideoMime {};
+    float dstVideoFrameRate {0.0};
+    int32_t dstVideoBitrate {0};
+    int8_t dstHdrType {0};
+    int32_t dstAudioSampleRate {0};
+    int32_t dstAudioChannelCount {0};
+    int32_t dstAudioBitrate {0};
+    int32_t videoDecoderDuration {0};
+    int32_t videoEncoderDuration {0};
+    int32_t videoVpeDuration {0};
+};
+
 class HiTransCoderImpl : public ITransCoderEngine {
 public:
     HiTransCoderImpl(int32_t appUid, int32_t appPid, uint32_t appTokenId, uint64_t appFullTokenId);
     ~HiTransCoderImpl();
+    void SetInstanceId(uint64_t instanceId);
     int32_t Init();
     int32_t SetInputFile(const std::string &url);
     int32_t SetOutputFile(const int32_t fd);
@@ -117,6 +146,8 @@ private:
     bool isExistVideoTrack_ = false;
     bool isNeedVideoResizeFilter_ = false;
     std::atomic<int32_t> durationMs_{-1};
+
+    uint64_t instanceId_ = 0;
 };
 } // namespace MEDIA
 } // namespace OHOS
