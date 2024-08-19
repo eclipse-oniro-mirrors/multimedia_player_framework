@@ -2548,7 +2548,7 @@ void AudioDataSource::SpeakerStateUpdate(
     bool speakerAlive = HasSpeakerStream(allAudioRendererChangeInfos);
     if (speakerAlive != speakerAliveStatus_) {
         speakerAliveStatus_ = speakerAlive;
-        CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_UNKNOWN, "screenCaptureServer_ is nullptr");
+        CHECK_AND_RETURN(screenCaptureServer_ != nullptr);
         screenCaptureServer_->OnSpeakerAliveStatusChanged(speakerAlive);
         if (speakerAlive) {
             MEDIA_LOGI("HEADSET Change to Speaker.");
@@ -2612,7 +2612,7 @@ void AudioDataSource::VoIPStateUpdate(
         return;
     }
     isInVoIPCall_.store(isInVoIPCall);
-    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_UNKNOWN, "screenCaptureServer_ is nullptr");
+    CHECK_AND_RETURN(screenCaptureServer_ != nullptr);
     screenCaptureServer_->OnVoIPStatusChanged(isInVoIPCall);
 }
 
