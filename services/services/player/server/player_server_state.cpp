@@ -182,7 +182,10 @@ int32_t PlayerServer::BaseState::OnMessageReceived(PlayerOnInfoType type, int32_
         case INFO_TYPE_TRACK_INFO_UPDATE:
             ret = MessageTrackInfoUpdate();
             break;
-
+        case INFO_TYPE_INTERRUPT_EVENT:
+            HandleInterruptEvent();
+            break;
+            
         default:
             break;
     }
@@ -351,6 +354,11 @@ void PlayerServer::PlayingState::HandlePlaybackComplete(int32_t extra)
 void PlayerServer::PlayingState::HandleEos()
 {
     server_.HandleEos();
+}
+
+void PlayerServer::PlayingState::HandleInterruptEvent()
+{
+    server_.HandleInterruptEvent();
 }
 
 void PlayerServer::PlayingState::StateEnter()
