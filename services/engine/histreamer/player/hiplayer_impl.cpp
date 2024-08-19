@@ -1934,7 +1934,7 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
     playStrategy->audioLanguage = audioLanguage_;
     playStrategy->subtitleLanguage = subtitleLanguage_;
     source->SetPlayStrategy(playStrategy);
-
+    source->SetAppUid(appUid_);
     if (!mimeType_.empty()) {
         source->SetMimeType(mimeType_);
     }
