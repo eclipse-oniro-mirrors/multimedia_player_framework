@@ -1092,7 +1092,6 @@ void PlayerServer::HandleInterruptEvent(const Format &infoBody)
             (void)OnPause();
         }
     }
-    (void)OnPause();
 }
 
 int32_t PlayerServer::GetPlaybackSpeed(PlaybackRateMode &mode)
