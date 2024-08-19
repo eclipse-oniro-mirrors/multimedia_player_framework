@@ -129,8 +129,7 @@ private:
     static void AsyncJsReportAVScreenCaptureUserChoice(napi_env env, void *data);
     static int32_t CheckAudioSampleRate(const int32_t &audioSampleRate);
     static int32_t CheckAudioChannelCount(const int32_t &audioChannelCount);
-    static napi_status AVScreenCaptureNapi::GetWindowIDsVectorParams(std::vector<uint64_t> &windowIDsVec,
-        napi_env env, napi_value* args);
+    static napi_status GetWindowIDsVectorParams(std::vector<uint64_t> &windowIDsVec, napi_env env, napi_value* args);
 
     AVScreenCaptureNapi();
     ~AVScreenCaptureNapi();
