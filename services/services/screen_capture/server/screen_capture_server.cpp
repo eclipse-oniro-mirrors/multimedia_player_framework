@@ -33,6 +33,7 @@
 #include <sys/stat.h>
 #include "hitrace/tracechain.h"
 #include "locale_config.h"
+#include <sync_fence.h>
 
 using OHOS::Rosen::DMError;
 
@@ -2433,11 +2434,16 @@ void ScreenCapBufferConsumerListener::OnBufferAvailable()
     MediaTrace trace("ScreenCaptureServer::OnBufferAvailable");
     MEDIA_LOGD("ScreenCaptureServer: 0x%{public}06" PRIXPTR "OnBufferAvailable start.", FAKE_POINTER(this));
     CHECK_AND_RETURN(consumer_ != nullptr);
-    int32_t flushFence = 0;
     int64_t timestamp = 0;
     OHOS::Rect damage;
     OHOS::sptr<OHOS::SurfaceBuffer> buffer = nullptr;
-    consumer_->AcquireBuffer(buffer, flushFence, timestamp, damage);
+    sptr<SyncFence> acquireFence = SyncFence::INVALID_FENCE;
+    consumer_->AcquireBuffer(buffer, acquireFence, timestamp, damage);
+    int32_t flushFence = -1;
+    if (acquireFence != nullptr && acquireFence != SyncFence::INVALID_FENCE) {
+        acquireFence->Wait(1000); // 1000 ms
+        flushFence = acquireFence->Get();
+    }
     CHECK_AND_RETURN_LOG(buffer != nullptr, "Acquire SurfaceBuffer failed");
 
     if ((buffer->GetUsage() & BUFFER_USAGE_MEM_MMZ_CACHE) != 0) {
@@ -2499,7 +2505,7 @@ int32_t ScreenCapBufferConsumerListener::ReleaseVideoBuffer()
     CHECK_AND_RETURN_RET_LOG(!availBuffers_.empty(), MSERR_OK, "buffer queue is empty, no video frame to release");
 
     if (consumer_ != nullptr) {
-        consumer_->ReleaseBuffer(availBuffers_.front()->buffer, availBuffers_.front()->flushFence);
+        consumer_->ReleaseBuffer(availBuffers_.front()->buffer, -1); // -1 not wait
     }
     availBuffers_.pop();
     MEDIA_LOGD("ScreenCapBufferConsumerListener: 0x%{public}06" PRIXPTR "ReleaseVideoBuffer end.", FAKE_POINTER(this));

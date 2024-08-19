@@ -253,6 +253,7 @@ ohos_shared_library("media_service") {
       "audio_framework:audio_capturer",
       "audio_framework:audio_client",
       "distributed_notification_service:ans_innerkits",
+      "graphic_surface:sync_fence",
       "relational_store:native_rdb",
       "window_manager:libdm",
     ]
