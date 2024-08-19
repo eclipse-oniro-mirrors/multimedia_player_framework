@@ -1076,6 +1076,12 @@ void PlayerServer::PreparedHandleEos()
     }
 }
 
+void PlayerServer::HandleInterruptEvent()
+{
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " HandleInterruptEvent in ", FAKE_POINTER(this));
+    (void)OnPause();
+}
+
 int32_t PlayerServer::GetPlaybackSpeed(PlaybackRateMode &mode)
 {
     std::lock_guard<std::mutex> lock(mutex_);
