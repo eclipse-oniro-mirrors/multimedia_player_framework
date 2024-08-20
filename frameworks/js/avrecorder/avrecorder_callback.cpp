@@ -18,7 +18,9 @@
 #include "media_errors.h"
 #include "scope_guard.h"
 #include "media_log.h"
+#ifdef SUPPORT_RECORDER_CREATE_FILE
 #include "media_library_comm_napi.h"
+#endif
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_RECORDER, "AVRecorderCallback"};
@@ -26,7 +28,9 @@ namespace {
 
 namespace OHOS {
 namespace Media {
+#ifdef SUPPORT_RECORDER_CREATE_FILE
 const int32_t CAMERA_SHOT_TYPE = 1; // CameraShotType VIDEO
+#endif
 AVRecorderCallback::AVRecorderCallback(napi_env env) : env_(env)
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR "Instances create", FAKE_POINTER(this));
@@ -125,7 +129,9 @@ void AVRecorderCallback::SendPhotoAssertAvailableCallback(const std::string &uri
     cb->autoRef = refMap_.at(AVRecorderEvent::EVENT_PHOTO_ASSET_AVAILABLE);
     cb->callbackName = AVRecorderEvent::EVENT_PHOTO_ASSET_AVAILABLE;
     cb->uri = uri;
+#ifdef SUPPORT_RECORDER_CREATE_FILE
     return OnJsPhotoAssertAvailableCallback(cb);
+#endif
 }
 
 std::string AVRecorderCallback::GetState()
@@ -233,6 +239,7 @@ void AVRecorderCallback::OnJsStateCallBack(AVRecordJsCallback *jsCb) const
     CANCEL_SCOPE_EXIT_GUARD(1);
 }
 
+#ifdef SUPPORT_RECORDER_CREATE_FILE
 void AVRecorderCallback::OnJsPhotoAssertAvailableCallback(AVRecordJsCallback *jsCb) const
 {
     ON_SCOPE_EXIT(0) {
@@ -292,6 +299,7 @@ void AVRecorderCallback::OnJsPhotoAssertAvailableCallback(AVRecordJsCallback *js
     CANCEL_SCOPE_EXIT_GUARD(0);
     CANCEL_SCOPE_EXIT_GUARD(1);
 }
+#endif
 
 void AVRecorderCallback::OnJsAudioCaptureChangeCallback(AVRecordJsCallback *jsCb) const
 {
