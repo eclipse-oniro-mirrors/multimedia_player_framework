@@ -1089,7 +1089,7 @@ void PlayerServer::HandleInterruptEvent(const Format &infoBody)
     if (forceType == OHOS::AudioStandard::INTERRUPT_FORCE) {
         if (hintType == OHOS::AudioStandard::INTERRUPT_HINT_PAUSE ||
             hintType == OHOS::AudioStandard::INTERRUPT_HINT_STOP) {
-            (void)OnPause();
+            (void)BackGroundChangeState(PLAYER_PAUSED, true);
         }
     }
 }
