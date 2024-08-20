@@ -20,6 +20,7 @@
 #include "recorder_callback_napi.h"
 #include "media_log.h"
 #include "media_errors.h"
+#include "media_permission.h"
 #include "directory_ex.h"
 #include "string_ex.h"
 #include "common_napi.h"
