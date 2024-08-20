@@ -2700,20 +2700,19 @@ Status HiPlayerImpl::LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFi
 Status HiPlayerImpl::LinkSubtitleSinkFilter(const std::shared_ptr<Filter>& preFilter, StreamType type)
 {
     MediaTrace trace("HiPlayerImpl::LinkSubtitleSinkFilter");
-    if (subtitleSink_ == nullptr) {
-        subtitleSink_ = FilterFactory::Instance().CreateFilter<SubtitleSinkFilter>("player.subtitlesink",
-            FilterType::FILTERTYPE_SSINK);
-        FALSE_RETURN_V(subtitleSink_ != nullptr, Status::ERROR_NULL_POINTER);
-        subtitleSink_->Init(playerEventReceiver_, playerFilterCallback_);
-        std::shared_ptr<Meta> globalMeta = std::make_shared<Meta>();
-        if (demuxer_ != nullptr) {
-            globalMeta = demuxer_->GetGlobalMetaInfo();
-        }
-        if (globalMeta != nullptr) {
-            subtitleSink_->SetParameter(globalMeta);
-        }
-        subtitleSink_->SetSyncCenter(syncManager_);
+    FALSE_RETURN(subtitleSink_ == nullptr);
+    subtitleSink_ = FilterFactory::Instance().CreateFilter<SubtitleSinkFilter>("player.subtitlesink",
+        FilterType::FILTERTYPE_SSINK);
+    FALSE_RETURN_V(subtitleSink_ != nullptr, Status::ERROR_NULL_POINTER);
+    subtitleSink_->Init(playerEventReceiver_, playerFilterCallback_);
+    std::shared_ptr<Meta> globalMeta = std::make_shared<Meta>();
+    if (demuxer_ != nullptr) {
+        globalMeta = demuxer_->GetGlobalMetaInfo();
     }
+    if (globalMeta != nullptr) {
+        subtitleSink_->SetParameter(globalMeta);
+    }
+    subtitleSink_->SetSyncCenter(syncManager_);
     return pipeline_->LinkFilters(preFilter, {subtitleSink_}, type);
 }
 
