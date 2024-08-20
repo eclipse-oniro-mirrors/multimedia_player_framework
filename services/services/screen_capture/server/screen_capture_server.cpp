@@ -2533,6 +2533,7 @@ void ScreenRendererAudioStateChangeCallback::OnRendererStateChange(
     const std::vector<std::unique_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos)
 {
     MEDIA_LOGD("ScreenRendererAudioStateChangeCallback IN");
+    CHECK_AND_RETURN(audioSource_ != nullptr);
     audioSource_->SpeakerStateUpdate(audioRendererChangeInfos);
     std::string region = Global::I18n::LocaleConfig::GetSystemRegion();
     if (SCREEN_RECORDER_BUNDLE_NAME.compare(appName_) == 0 && region == "CN") {
@@ -2553,6 +2554,7 @@ void AudioDataSource::SpeakerStateUpdate(
     bool speakerAlive = HasSpeakerStream(allAudioRendererChangeInfos);
     if (speakerAlive != speakerAliveStatus_) {
         speakerAliveStatus_ = speakerAlive;
+        CHECK_AND_RETURN(screenCaptureServer_ != nullptr);
         screenCaptureServer_->OnSpeakerAliveStatusChanged(speakerAlive);
         if (speakerAlive) {
             MEDIA_LOGI("HEADSET Change to Speaker.");
@@ -2616,6 +2618,7 @@ void AudioDataSource::VoIPStateUpdate(
         return;
     }
     isInVoIPCall_.store(isInVoIPCall);
+    CHECK_AND_RETURN(screenCaptureServer_ != nullptr);
     screenCaptureServer_->OnVoIPStatusChanged(isInVoIPCall);
 }
 
