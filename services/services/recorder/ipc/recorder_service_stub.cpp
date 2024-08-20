@@ -859,6 +859,10 @@ int32_t RecorderServiceStub::CheckPermission()
                 "ohos.permission.RECORD_VOICE_CALL");
         case AUDIO_MIC:
         case AUDIO_SOURCE_DEFAULT:
+        case AUDIO_SOURCE_VOICE_RECOGNITION:
+        case AUDIO_SOURCE_VOICE_COMMUNICATION:
+        case AUDIO_SOURCE_VOICE_MESSAGE:
+        case AUDIO_SOURCE_CAMCORDER:
             return Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
                 "ohos.permission.MICROPHONE");
         case AUDIO_INNER:

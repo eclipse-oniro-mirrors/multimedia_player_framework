@@ -133,6 +133,10 @@ static const std::vector<struct JsEnumInt> g_videoRecorderQualityLevel = {
 static const std::vector<struct JsEnumInt> g_audioSourceType = {
     { "AUDIO_SOURCE_TYPE_DEFAULT", AudioSourceType::AUDIO_SOURCE_DEFAULT },
     { "AUDIO_SOURCE_TYPE_MIC", AudioSourceType::AUDIO_MIC },
+    { "AUDIO_SOURCE_TYPE_VOICE_RECOGNITION", AudioSourceType::AUDIO_SOURCE_VOICE_RECOGNITION },
+    { "AUDIO_SOURCE_TYPE_VOICE_COMMUNICATION", AudioSourceType::AUDIO_SOURCE_VOICE_COMMUNICATION },
+    { "AUDIO_SOURCE_TYPE_VOICE_MESSAGE", AudioSourceType::AUDIO_SOURCE_VOICE_MESSAGE },
+    { "AUDIO_SOURCE_TYPE_CAMCORDER", AudioSourceType::AUDIO_SOURCE_CAMCORDER },
 };
 
 static const std::vector<struct JsEnumInt> g_videoSourceType = {
