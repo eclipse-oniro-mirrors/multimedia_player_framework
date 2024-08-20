@@ -210,8 +210,8 @@ declare_args() {
   if (defined(build_seccomp) && build_seccomp) {
     player_framework_support_seccomp = true
   }
-  if (defined(global_parts_info)&&
-      defined(global_parts_info.multimedia_camera_framework)&&
+  if (defined(global_parts_info) &&
+      defined(global_parts_info.multimedia_camera_framework) &&
       defined(global_parts_info.multimedia_media_library)) {
     player_framework_support_auto_create_file = true
   }
