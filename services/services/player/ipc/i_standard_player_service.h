@@ -59,6 +59,7 @@ public:
     virtual int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) = 0;
     virtual int32_t GetCurrentTime(int32_t &currentTime) = 0;
     virtual int32_t GetVideoTrackInfo(std::vector<Format> &videoTrack) = 0;
+    virtual int32_t GetPlaybackInfo(Format &playbackInfo) = 0;
     virtual int32_t GetAudioTrackInfo(std::vector<Format> &audioTrack) = 0;
     virtual int32_t GetSubtitleTrackInfo(std::vector<Format> &subtitleTrack) = 0;
     virtual int32_t GetVideoWidth() = 0;
@@ -131,6 +132,7 @@ public:
         GET_CURRENT_TRACK,
         GET_SUBTITLE_TRACK_INFO,
         SET_DECRYPT_CONFIG,
+        GET_PLAYBACK_INFO,
         MAX_IPC_ID,
     };
 
