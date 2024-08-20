@@ -74,6 +74,14 @@ public:
 
 class PlayerKeys {
 public:
+    static constexpr std::string_view PLAYER_MESSAGE_TYPE = "message_type";
+    static constexpr std::string_view PLAYER_IS_LIVE_STREAM = "is_live_stream";
+    static constexpr std::string_view PLAYER_SEEK_POSITION = "seek_done";
+    static constexpr std::string_view PLAYER_PLAYBACK_SPEED = "speed_done";
+    static constexpr std::string_view PLAYER_BITRATE_DONE = "bitrate_done";
+    static constexpr std::string_view PLAYER_CURRENT_POSITION = "current_position";
+    static constexpr std::string_view PLAYER_DURATION = "duration";
+    static constexpr std::string_view PLAYER_STATE_CHANGE = "player_state_change";
     static constexpr std::string_view PLAYER_STATE_CHANGED_REASON = "state_changed_reason";
     static constexpr std::string_view PLAYER_VOLUME_LEVEL = "volume_level";
     static constexpr std::string_view PLAYER_TRACK_INDEX = "track_index";
@@ -87,6 +95,8 @@ public:
     static constexpr std::string_view PLAYER_LANGUGAE = "language_code";
     static constexpr std::string_view PLAYER_SAMPLE_RATE = "sample_rate";
     static constexpr std::string_view PLAYER_CHANNELS = "channel_count";
+    static constexpr std::string_view PLAYER_BUFFERING_TYPE = "buffering_type";
+    static constexpr std::string_view PLAYER_BUFFERING_VALUE = "buffering_value";
     static constexpr std::string_view PLAYER_BUFFERING_START = "buffering_start";
     static constexpr std::string_view PLAYER_BUFFERING_END = "buffering_end";
     static constexpr std::string_view PLAYER_BUFFERING_PERCENT = "buffering_percent";
