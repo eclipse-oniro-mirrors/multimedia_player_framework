@@ -1618,7 +1618,8 @@ int32_t HiPlayerImpl::DeselectTrack(int32_t trackId)
 {
     MEDIA_LOG_I("DeselectTrack trackId is " PUBLIC_LOG_D32, trackId);
     std::vector<std::shared_ptr<Meta>> metaInfo = demuxer_->GetStreamMetaInfo();
-    FALSE_RETURN_V_MSG_W(trackId >= 0 && trackId < metaInfo.size(), MSERR_INVALID_VAL, "DeselectTrack trackId invalid");
+    FALSE_RETURN_V_MSG_W(trackId >= 0 && trackId < static_cast<int32_t>(metaInfo.size()),
+        MSERR_INVALID_VAL, "DeselectTrack trackId invalid");
     std::string mime;
     if (!(metaInfo[trackId]->GetData(Tag::MIME_TYPE, mime))) {
         MEDIA_LOG_E("DeselectTrack trackId " PUBLIC_LOG_D32 "get mime error", trackId);
@@ -2700,20 +2701,19 @@ Status HiPlayerImpl::LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFi
 Status HiPlayerImpl::LinkSubtitleSinkFilter(const std::shared_ptr<Filter>& preFilter, StreamType type)
 {
     MediaTrace trace("HiPlayerImpl::LinkSubtitleSinkFilter");
-    if (subtitleSink_ == nullptr) {
-        subtitleSink_ = FilterFactory::Instance().CreateFilter<SubtitleSinkFilter>("player.subtitlesink",
-            FilterType::FILTERTYPE_SSINK);
-        FALSE_RETURN_V(subtitleSink_ != nullptr, Status::ERROR_NULL_POINTER);
-        subtitleSink_->Init(playerEventReceiver_, playerFilterCallback_);
-        std::shared_ptr<Meta> globalMeta = std::make_shared<Meta>();
-        if (demuxer_ != nullptr) {
-            globalMeta = demuxer_->GetGlobalMetaInfo();
-        }
-        if (globalMeta != nullptr) {
-            subtitleSink_->SetParameter(globalMeta);
-        }
-        subtitleSink_->SetSyncCenter(syncManager_);
+    FALSE_RETURN_V(subtitleSink_ == nullptr, Status::OK);
+    subtitleSink_ = FilterFactory::Instance().CreateFilter<SubtitleSinkFilter>("player.subtitlesink",
+        FilterType::FILTERTYPE_SSINK);
+    FALSE_RETURN_V(subtitleSink_ != nullptr, Status::ERROR_NULL_POINTER);
+    subtitleSink_->Init(playerEventReceiver_, playerFilterCallback_);
+    std::shared_ptr<Meta> globalMeta = std::make_shared<Meta>();
+    if (demuxer_ != nullptr) {
+        globalMeta = demuxer_->GetGlobalMetaInfo();
     }
+    if (globalMeta != nullptr) {
+        subtitleSink_->SetParameter(globalMeta);
+    }
+    subtitleSink_->SetSyncCenter(syncManager_);
     return pipeline_->LinkFilters(preFilter, {subtitleSink_}, type);
 }
 
