@@ -56,6 +56,7 @@ napi_value AVScreenCaptureNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("init", JsInit),
         DECLARE_NAPI_FUNCTION("startRecording", JsStartRecording),
         DECLARE_NAPI_FUNCTION("stopRecording", JsStopRecording),
+        DECLARE_NAPI_FUNCTION("skipPrivacyMode", JsSkipPrivacyMode),
         DECLARE_NAPI_FUNCTION("setMicEnabled", JsSetMicrophoneEnabled),
         DECLARE_NAPI_FUNCTION("release", JsRelease),
         DECLARE_NAPI_FUNCTION("on", JsSetEventCallback),
@@ -329,6 +330,69 @@ napi_value AVScreenCaptureNapi::JsStopRecording(napi_env env, napi_callback_info
     return ExecuteByPromise(env, info,  AVScreenCapturegOpt::STOP_RECORDING);
 }
 
+napi_status AVScreenCaptureNapi::GetWindowIDsVectorParams(std::vector<uint64_t> &windowIDsVec, napi_env env,
+    napi_value* args)
+{
+    uint32_t array_length;
+    napi_status status = napi_get_array_length(env, args[0], &array_length);
+    if (status != napi_ok) {
+        return status;
+    }
+    for (uint32_t i = 0; i < array_length; i++) {
+        napi_value temp;
+        napi_get_element(env, args[0], i, &temp);
+        int32_t tempValue;
+        napi_get_value_int32(env, temp, &tempValue);
+        if (tempValue >= 0) {
+            windowIDsVec.push_back(static_cast<uint64_t>(tempValue));
+        } else {
+            MEDIA_LOGI("JsSkipPrivacyMode skip %{public}d", tempValue);
+        }
+    }
+    return napi_ok;
+}
+
+napi_value AVScreenCaptureNapi::JsSkipPrivacyMode(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVScreenCapture::JsSkipPrivacyMode");
+    const std::string &opt = AVScreenCapturegOpt::SKIP_PRIVACY_MODE;
+    MEDIA_LOGI("Js %{public}s Start", opt.c_str());
+    size_t argCount = 1; // arg[0] vector
+    napi_value args[1] = { nullptr };
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    auto asyncCtx = std::make_unique<AVScreenCaptureAsyncContext>(env);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, result, "failed to get AsyncContext");
+    asyncCtx->napi = AVScreenCaptureNapi::GetJsInstanceAndArgs(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx->napi != nullptr, result, "failed to GetJsInstanceAndArgs");
+    CHECK_AND_RETURN_RET_LOG(asyncCtx->napi->taskQue_ != nullptr, result, "taskQue is nullptr!");
+    std::vector<uint64_t> windowIDsVec;
+    napi_get_cb_info(env, info, &argCount, args, nullptr, nullptr);
+    napi_status status = GetWindowIDsVectorParams(windowIDsVec, env, args);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, (asyncCtx->AVScreenCaptureSignError(MSERR_EXT_API9_INVALID_PARAMETER,
+        "SkipPrivacyMode", "SkipPrivacyMode get value failed"), result), "failed to GetWindowIDsVectorParams");
+    asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
+    asyncCtx->task_ = AVScreenCaptureNapi::GetSkipPrivacyModeTask(asyncCtx, windowIDsVec);
+    (void)asyncCtx->napi->taskQue_->EnqueueTask(asyncCtx->task_);
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, opt.c_str(), NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
+        AVScreenCaptureAsyncContext* asyncCtx = reinterpret_cast<AVScreenCaptureAsyncContext *>(data);
+        CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "asyncCtx is nullptr!");
+        if (asyncCtx->task_) {
+            auto result = asyncCtx->task_->GetResult();
+            if (result.Value().first != MSERR_EXT_API9_OK) {
+                asyncCtx->SignError(result.Value().first, result.Value().second);
+            }
+        }
+        MEDIA_LOGI("The js thread of init finishes execution and returns");
+    }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+    NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
+    asyncCtx.release();
+    MEDIA_LOGI("Js %{public}s End", opt.c_str());
+    return result;
+}
+
 napi_value AVScreenCaptureNapi::JsSetMicrophoneEnabled(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("AVScreenCapture::JsSetMicrophoneEnabled");
@@ -475,6 +539,21 @@ std::shared_ptr<TaskHandler<RetInfo>> AVScreenCaptureNapi::GetInitTask(
         int32_t ret = napi->screenCapture_->Init(config);
         CHECK_AND_RETURN_RET(ret == MSERR_OK, ((void)napi->screenCapture_->Release(), GetReturnInfo(ret, "Init", "")));
 
+        MEDIA_LOGI("%{public}s End", option.c_str());
+        return RetInfo(MSERR_EXT_API9_OK, "");
+    });
+}
+
+std::shared_ptr<TaskHandler<RetInfo>> AVScreenCaptureNapi::GetSkipPrivacyModeTask(
+    const std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, const std::vector<uint64_t> windowIDsVec)
+{
+    return std::make_shared<TaskHandler<RetInfo>>([napi = asyncCtx->napi, windowIDsVec]() {
+        const std::string &option = AVScreenCapturegOpt::SKIP_PRIVACY_MODE;
+        MEDIA_LOGI("%{public}s Start", option.c_str());
+        CHECK_AND_RETURN_RET(napi != nullptr && napi->screenCapture_ != nullptr,
+            GetReturnInfo(MSERR_INVALID_OPERATION, option, ""));
+        int32_t ret = napi->screenCapture_->SkipPrivacyMode(const_cast<std::vector<uint64_t> &>(windowIDsVec));
+        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnInfo(MSERR_UNKNOWN, option, ""));
         MEDIA_LOGI("%{public}s End", option.c_str());
         return RetInfo(MSERR_EXT_API9_OK, "");
     });
