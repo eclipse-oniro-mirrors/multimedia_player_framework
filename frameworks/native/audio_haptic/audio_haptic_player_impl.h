@@ -51,6 +51,7 @@ public:
 private:
     // func for sound
     void ReleaseSound();
+    void HandleEndOfStreamEvent();
     // func for vibration
     int32_t StartVibrate();
     void StopVibrate();
