@@ -328,7 +328,7 @@ int32_t AVMetadataHelperServiceProxy::GetFrameIndexByTime(uint64_t time, uint32_
     bool token = data.WriteInterfaceToken(AVMetadataHelperServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
-    (void)data.WriteUInt64(time);
+    (void)data.WriteUint64(time);
 
     int32_t error = Remote()->SendRequest(GET_FRAME_INDEX_BY_TIME, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,

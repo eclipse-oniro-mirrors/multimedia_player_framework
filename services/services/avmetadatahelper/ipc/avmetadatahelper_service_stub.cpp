@@ -391,7 +391,7 @@ int32_t AVMetadataHelperServiceStub::GetTimeByFrameIndex(MessageParcel &data, Me
     uint64_t time = 0;
     auto res = GetTimeByFrameIndex(index, time);
     CHECK_AND_RETURN_RET(res == MSERR_OK, res);
-    reply.WriteUInt64(time);
+    reply.WriteUint64(time);
     return MSERR_OK;
 }
 
