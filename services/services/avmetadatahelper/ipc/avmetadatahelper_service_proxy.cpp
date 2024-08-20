@@ -315,7 +315,7 @@ int32_t AVMetadataHelperServiceProxy::GetTimeByFrameIndex(uint32_t index, uint64
     int32_t error = Remote()->SendRequest(GET_TIME_BY_FRAME_INDEX, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "GetTimeByFrameIndex failed, error: %{public}d", error);
-    time = reply.ReadUInt64();
+    time = reply.ReadUint64();
     return MSERR_OK;
 }
 
