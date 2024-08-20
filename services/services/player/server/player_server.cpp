@@ -1087,7 +1087,7 @@ void PlayerServer::HandleInterruptEvent(const Format &infoBody)
     (void)infoBody.GetIntValue(PlayerKeys::AUDIO_INTERRUPT_FORCE, forceType);
     (void)infoBody.GetIntValue(PlayerKeys::AUDIO_INTERRUPT_HINT, hintType);
     if (forceType == OHOS::AudioStandard::INTERRUPT_FORCE) {
-        if(hintType == OHOS::AudioStandard::INTERRUPT_HINT_PAUSE ||
+        if (hintType == OHOS::AudioStandard::INTERRUPT_HINT_PAUSE ||
             hintType == OHOS::AudioStandard::INTERRUPT_HINT_STOP) {
             (void)OnPause();
         }
