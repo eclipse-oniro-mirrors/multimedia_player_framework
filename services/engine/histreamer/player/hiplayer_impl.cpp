@@ -2701,7 +2701,7 @@ Status HiPlayerImpl::LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFi
 Status HiPlayerImpl::LinkSubtitleSinkFilter(const std::shared_ptr<Filter>& preFilter, StreamType type)
 {
     MediaTrace trace("HiPlayerImpl::LinkSubtitleSinkFilter");
-    FALSE_RETURN(subtitleSink_ == nullptr);
+    FALSE_RETURN_V(subtitleSink_ == nullptr, Status::OK);
     subtitleSink_ = FilterFactory::Instance().CreateFilter<SubtitleSinkFilter>("player.subtitlesink",
         FilterType::FILTERTYPE_SSINK);
     FALSE_RETURN_V(subtitleSink_ != nullptr, Status::ERROR_NULL_POINTER);
