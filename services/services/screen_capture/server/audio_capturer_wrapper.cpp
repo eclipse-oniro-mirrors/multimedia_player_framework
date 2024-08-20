@@ -123,8 +123,6 @@ int32_t AudioCapturerWrapper::Resume()
 
     if (!audioCapturer_->Start()) {
         MEDIA_LOGE("AudioCapturer Start failed, threadName:%{public}s", threadName_.c_str());
-        audioCapturer_->Release();
-        audioCapturer_ = nullptr;
         OnStartFailed(ScreenCaptureErrorType::SCREEN_CAPTURE_ERROR_INTERNAL, SCREEN_CAPTURE_ERR_UNKNOWN);
         return MSERR_UNKNOWN;
     }
@@ -141,20 +139,17 @@ int32_t AudioCapturerWrapper::Stop()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Stop S, threadName:%{public}s", FAKE_POINTER(this), threadName_.c_str());
-    if (isRunning_.load()) {
-        isRunning_.store(false);
-        if (readAudioLoop_ != nullptr && readAudioLoop_->joinable()) {
-            readAudioLoop_->join();
-            readAudioLoop_.reset();
-            readAudioLoop_ = nullptr;
-        }
-        if (audioCapturer_ != nullptr) {
-            audioCapturer_->Stop();
-            audioCapturer_->Release();
-            audioCapturer_ = nullptr;
-        }
+    isRunning_.store(false);
+    if (readAudioLoop_ != nullptr && readAudioLoop_->joinable()) {
+        readAudioLoop_->join();
+        readAudioLoop_.reset();
+        readAudioLoop_ = nullptr;
     }
-
+    if (audioCapturer_ != nullptr) {
+        audioCapturer_->Stop();
+        audioCapturer_->Release();
+        audioCapturer_ = nullptr;
+    }
     std::unique_lock<std::mutex> bufferLock(bufferMutex_);
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Stop pop, threadName:%{public}s", FAKE_POINTER(this), threadName_.c_str());
     while (!availBuffers_.empty()) {
