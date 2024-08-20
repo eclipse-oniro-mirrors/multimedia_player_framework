@@ -387,7 +387,7 @@ private:
     int32_t GetMetaType(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
     int32_t GetAVMetaData(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
     int32_t GetWatermarkParameter(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env,
-        napi_value *args, size_t argCount);
+        napi_value watermark, napi_value watermarkConfig);
     int32_t GetWatermark(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
     int32_t GetWatermarkConfig(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
 

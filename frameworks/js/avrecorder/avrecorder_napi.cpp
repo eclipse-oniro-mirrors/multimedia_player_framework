@@ -354,7 +354,7 @@ napi_value AVRecorderNapi::JsSetWatermark(napi_env env, napi_callback_info info)
     asyncCtx->deferred = CommonNapi::CreatePromise(env, nullptr, result);
 
     if (asyncCtx->napi->CheckStateMachine(opt) == MSERR_OK) {
-        if (asyncCtx->napi->GetWatermarkParameter(asyncCtx, env, args, argCount) == MSERR_OK) {
+        if (asyncCtx->napi->GetWatermarkParameter(asyncCtx, env, args[0], args[1]) == MSERR_OK) {
             asyncCtx->task_ = AVRecorderNapi::SetWatermarkTask(asyncCtx);
             (void)asyncCtx->napi->taskQue_->EnqueueTask(asyncCtx->task_);
         }
@@ -1991,9 +1991,8 @@ int32_t AVRecorderNapi::GetAVMetaData(std::unique_ptr<AVRecorderAsyncContext> &a
 }
 
 int32_t AVRecorderNapi::GetWatermarkParameter(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx,
-    napi_env env, napi_value *args, size_t argCount)
+    napi_env env, napi_value watermark, napi_value watermarkConfig)
 {
-    (void)argCount;
     int32_t ret = GetWatermark(asyncCtx, env, args[0]);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "failed to GetWatermark");
     ret = GetWatermarkConfig(asyncCtx, env, args[1]);
