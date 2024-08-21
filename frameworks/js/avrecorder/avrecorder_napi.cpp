@@ -1993,9 +1993,9 @@ int32_t AVRecorderNapi::GetAVMetaData(std::unique_ptr<AVRecorderAsyncContext> &a
 int32_t AVRecorderNapi::GetWatermarkParameter(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx,
     napi_env env, napi_value watermark, napi_value watermarkConfig)
 {
-    int32_t ret = GetWatermark(asyncCtx, env, args[0]);
+    int32_t ret = GetWatermark(asyncCtx, env, watermark);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "failed to GetWatermark");
-    ret = GetWatermarkConfig(asyncCtx, env, args[1]);
+    ret = GetWatermarkConfig(asyncCtx, env, watermarkConfig);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "failed to GetWatermarkConfig");
     return MSERR_OK;
 }
