@@ -40,6 +40,7 @@ struct AVPlayStrategy {
     uint32_t preferredHeight = 0;
     uint32_t preferredBufferDuration = 0;
     bool preferredHdr = false;
+    OHOS::Media::MediaType mutedMediaType = OHOS::Media::MediaType::MEDIA_TYPE_MAX_COUNT;
 };
 
 struct DrmInfoItem {
@@ -567,6 +568,25 @@ public:
      * @version 1.0
      */
     virtual int32_t SelectBitRate(uint32_t bitRate) = 0;
+
+    /**
+     * @brief set the playback strategy
+     * the playback strategy includes five fileds:
+     * preferredWidth: Preferred width, which is of the int type, for example, 1080.
+     * preferredHeight: Preferred height, which is of the int type, for example, 1920.
+     * preferredBufferDuration: Preferred buffer duration, in seconds. The value ranges from 1 to 20.
+     * preferredHdr: Whether HDR is preferred. The value true means that HDR is preferred, and false means the opposite.
+     * mutedMediaType: The mediaType to be muted before play, which is of the MediaType type,
+     * for example, MediaType::MEDIA_TYPE_AUD.
+     * @param playbackStrategy the playback strategy.
+     * @return Returns {@link MSERR_OK} if the playback strategy is set successfully; returns an error code defined
+    * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t SetPlaybackStrategy(AVPlayStrategy playbackStrategy) = 0;
+
+    virtual int32_t SetMediaMuted(OHOS::Media::MediaType type, bool isMuted) = 0;
 
 #ifdef SUPPORT_AUDIO_ONLY
 #else

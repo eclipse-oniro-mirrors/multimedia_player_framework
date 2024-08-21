@@ -154,6 +154,8 @@ public:
     int32_t ExitSeekContinous(bool align, int64_t seekContinousBatchNo) override;
     int32_t PauseDemuxer() override;
     int32_t ResumeDemuxer() override;
+    int32_t SetPlaybackStrategy(AVPlayStrategy playbackStrategy) override;
+    int32_t SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted) override;
 
 private:
     enum HiplayerSvpMode : int32_t {
@@ -303,6 +305,7 @@ private:
     uint32_t preferedHeight_ = 0;
     uint32_t bufferDuration_ = 0;
     bool preferHDR_ = false;
+    OHOS::Media::MediaType mutedMediaType_ = OHOS::Media::MediaType::MEDIA_TYPE_MAX_COUNT;
     std::string playerId_;
     int32_t currentAudioTrackId_ = -1;
     int32_t defaultAudioTrackId_ = -1;

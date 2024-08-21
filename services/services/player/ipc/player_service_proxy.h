@@ -54,6 +54,8 @@ public:
     int32_t GetPlaybackInfo(Format& playbackInfo) override;
     int32_t GetSubtitleTrackInfo(std::vector<Format> &subtitleTrack) override;
     int32_t GetDuration(int32_t &duration) override;
+    int32_t SetPlaybackStrategy(AVPlayStrategy playbackStrategy) override;
+    int32_t SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted) override;
 #ifdef SUPPORT_VIDEO
     int32_t SetVideoSurface(sptr<Surface> surface) override;
 #endif

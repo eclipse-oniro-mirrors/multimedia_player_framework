@@ -184,6 +184,10 @@ public:
     {
         return 0;
     }
+    int32_t SetMediaMuted(MediaType mediaType, bool isMuted) override
+    {
+        return 0;
+    }
 
 private:
     int32_t SetListenerObject(uint8_t *inputData, size_t size, bool isFuzz);
