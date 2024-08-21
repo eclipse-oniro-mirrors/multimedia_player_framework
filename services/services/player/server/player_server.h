@@ -226,6 +226,7 @@ private:
     bool isBackgroundCb_ = false;
     bool isBackgroundChanged_ = false;
     PlayerStates backgroundState_ = PLAYER_IDLE;
+    PlayerStates interruptEventState_ = PLAYER_IDLE;
     uint32_t appTokenId_ = 0;
     uint32_t subtitleTrackNum_ = 0;
     int32_t appUid_ = 0;
