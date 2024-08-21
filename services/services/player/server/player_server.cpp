@@ -1469,7 +1469,6 @@ void PlayerServer::OnErrorCb(int32_t errorCode, const std::string &errorMsg)
 void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
 {
     std::lock_guard<std::mutex> lockCb(mutexCb_);
-    // notify info
     int32_t ret = HandleMessage(type, extra, infoBody);
     if (type == INFO_TYPE_IS_LIVE_STREAM) {
         isLiveStream_ = true;
