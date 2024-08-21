@@ -49,5 +49,27 @@ int32_t MediaPermission::CheckNetWorkPermission(int32_t appUid, int32_t appPid, 
     Security::AccessToken::AccessTokenID tokenCaller = appTokenId;
     return Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller, "ohos.permission.INTERNET");
 }
+
+int32_t MediaPermission::CheckNetWorkPermission()
+{
+    auto callerUid = IPCSkeleton::GetCallingUid();
+    if (callerUid == ROOT_UID) {
+        MEDIA_LOGI("Root user. Permission Granted");
+        return Security::AccessToken::PERMISSION_GRANTED;
+    }
+    Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
+    return Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller, "ohos.permission.INTERNET");
+}
+
+int32_t MediaPermission::CheckReadMediaPermission()
+{
+    auto callerUid = IPCSkeleton::GetCallingUid();
+    if (callerUid == ROOT_UID) {
+        MEDIA_LOGI("Root user. Permission Granted");
+        return Security::AccessToken::PERMISSION_GRANTED;
+    }
+    Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
+    return Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller, "ohos.permission.READ_MEDIA");
+}
 }
 }
