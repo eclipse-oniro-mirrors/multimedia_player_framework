@@ -262,6 +262,8 @@ sptr<SurfaceBuffer> AVMetadataHelperImpl::CopySurfaceBuffer(sptr<SurfaceBuffer> 
     GSError allocRes = dstSurfaceBuffer->Alloc(requestConfig);
     CHECK_AND_RETURN_RET_LOG(allocRes == 0, nullptr, "Alloc surfaceBuffer failed, ecode %{public}d", allocRes);
 
+    MEDIA_LOGI("winddraw %{public}d %{public}d", dstSurfaceBuffer->GetSize(), srcSurfaceBuffer->GetSize());
+
     CopySurfaceBufferInfo(srcSurfaceBuffer, dstSurfaceBuffer);
     CopySurfaceBufferPixels(srcSurfaceBuffer, dstSurfaceBuffer);
     return dstSurfaceBuffer;
