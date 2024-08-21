@@ -447,6 +447,8 @@ typedef enum OH_AVScreenCaptureStateCode {
     OH_SCREEN_CAPTURE_STATE_ENTER_PRIVATE_SCENE = 8,
     /* Private window disappeared on current captured screen*/
     OH_SCREEN_CAPTURE_STATE_EXIT_PRIVATE_SCENE = 9,
+    /* ScreenCapture stopped by user switches */
+    OH_SCREEN_CAPTURE_STATE_STOPPED_BY_USER_SWITCHES = 10,
 } OH_AVScreenCaptureStateCode;
 
 /**
