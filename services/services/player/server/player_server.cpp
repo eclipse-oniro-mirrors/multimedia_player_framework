@@ -1089,6 +1089,7 @@ void PlayerServer::HandleInterruptEvent(const Format &infoBody)
     if (forceType == OHOS::AudioStandard::INTERRUPT_FORCE) {
         if (hintType == OHOS::AudioStandard::INTERRUPT_HINT_PAUSE ||
             hintType == OHOS::AudioStandard::INTERRUPT_HINT_STOP) {
+            interruptEventState_ = PLAYER_PAUSED;
             (void)BackGroundChangeState(PLAYER_PAUSED, true);
         }
     }
@@ -1511,6 +1512,7 @@ void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &in
                 isBackgroundCb_ = false;
             }
             isBackgroundChanged_ = false;
+            interruptEventState_ = PLAYER_IDLE;
         } else {
             playerCb_->OnInfo(type, extra, infoBody);
         }
