@@ -1484,11 +1484,9 @@ void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &in
         MEDIA_LOGW("completed or eos in stopped state");
         return;
     }
-
     if (type == INFO_TYPE_DEFAULTTRACK || type == INFO_TYPE_TRACK_DONE || type == INFO_TYPE_ADD_SUBTITLE_DONE) {
         return;
     }
-
     if (playerCb_ != nullptr && type == INFO_TYPE_ERROR_MSG) {
         int32_t errorCode = extra;
         Format newInfo = infoBody;
@@ -1501,10 +1499,9 @@ void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &in
     if (type == INFO_TYPE_BUFFERING_UPDATE) {
         OnBufferingUpdate(type, extra, infoBody);
     }
-
     if (playerCb_ != nullptr && ret == MSERR_OK) {
-        if (isBackgroundChanged_ && type == INFO_TYPE_STATE_CHANGE &&
-            (extra == backgroundState_ || extra == interruptEventState_)) {
+        bool isBackgroudPause = (extra == backgroundState_ || extra == interruptEventState_);
+        if (isBackgroundChanged_ && type == INFO_TYPE_STATE_CHANGE && isBackgroudPause) {
             MEDIA_LOGI("Background change state to %{public}d, Status reporting %{public}d", extra, isBackgroundCb_);
             if (isBackgroundCb_) {
                 Format newInfo = infoBody;
