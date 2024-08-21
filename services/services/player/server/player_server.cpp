@@ -1503,7 +1503,8 @@ void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &in
     }
 
     if (playerCb_ != nullptr && ret == MSERR_OK) {
-        if (isBackgroundChanged_ && type == INFO_TYPE_STATE_CHANGE && extra == backgroundState_) {
+        if (isBackgroundChanged_ && type == INFO_TYPE_STATE_CHANGE &&
+            (extra == backgroundState_ || extra == interruptEventState_)) {
             MEDIA_LOGI("Background change state to %{public}d, Status reporting %{public}d", extra, isBackgroundCb_);
             if (isBackgroundCb_) {
                 Format newInfo = infoBody;
