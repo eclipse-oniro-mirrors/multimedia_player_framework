@@ -1422,7 +1422,6 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::SetPlaybackStrategyTask(AVPl
     return task;
 }
 
->>>>>>> 8881edcfc (修改 setPlaybackStrategy 实现)
 napi_value AVPlayerNapi::JsGetUrl(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("AVPlayerNapi::get url");
