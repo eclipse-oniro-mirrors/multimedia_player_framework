@@ -581,7 +581,6 @@ int32_t PlayerServer::Stop()
 
 int32_t PlayerServer::OnStop(bool sync)
 {
-    MEDIA_LOGD("PlayerServer OnStop in");
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
     isInterruptNeeded_ = true;
     playerEngine_->SetInterruptState(true);
@@ -1715,6 +1714,29 @@ int32_t PlayerServer::ExitSeekContinous(bool align)
 void PlayerServer::UpdateContinousBatchNo()
 {
     seekContinousBatchNo_++;
+}
+
+int32_t PlayerServer::SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted)
+{
+    MediaTrace::TraceBegin("PlayerServer::SetMediaMuted", FAKE_POINTER(this));
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET(lastOpStatus_ == PLAYER_INITIALIZED || lastOpStatus_ == PLAYER_PREPARED ||
+                             lastOpStatus_ == PLAYER_STARTED || lastOpStatus_ == PLAYER_PLAYBACK_COMPLETE ||
+                             lastOpStatus_ == PLAYER_PAUSED || lastOpStatus_ == PLAYER_STOPPED,
+                         MSERR_INVALID_STATE);
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    return playerEngine_->SetMediaMuted(mediaType, isMuted);
+}
+
+int32_t PlayerServer::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
+{
+    MediaTrace::TraceBegin("PlayerServer::SetPlaybackStrategy", FAKE_POINTER(this));
+    std::lock_guard<std::mutex> lock(mutex_);
+    bool isValidState = lastOpStatus_ == PLAYER_INITIALIZED || lastOpStatus_ == PLAYER_STOPPED;
+    CHECK_AND_RETURN_RET_LOG(isValidState, MSERR_INVALID_STATE,
+        "can not set playback strategy, current state is %{public}d", static_cast<int32_t>(lastOpStatus_.load()));
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    return playerEngine_->SetPlaybackStrategy(playbackStrategy);
 }
 } // namespace Media
 } // namespace OHOS
