@@ -2297,7 +2297,7 @@ int32_t ScreenCaptureServer::StopScreenCaptureInner(AVScreenCaptureStateCode sta
     if (screenCaptureCb_ != nullptr) {
         (static_cast<ScreenCaptureListenerCallback *>(screenCaptureCb_.get()))->Stop();
     }
-    if (captureConfig_.dataType == DataType::CAPTURE_FILE && audioSource_ && audioSource_->GetAppPid() > 0) {
+    if (audioSource_ && audioSource_->GetAppPid() > 0) { // DataType::CAPTURE_FILE
         audioSource_->UnregisterAudioRendererEventListener(audioSource_->GetAppPid());
     }
     if (captureState_ == AVScreenCaptureState::CREATED || captureState_ == AVScreenCaptureState::STARTING) {
