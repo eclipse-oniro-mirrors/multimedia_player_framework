@@ -1092,10 +1092,7 @@ void PlayerServer::HandleEos()
                 int64_t startTime = playerEngine_->GetPlayRangeStartTime();
                 int64_t endTime = playerEngine_->GetPlayRangeEndTime();
                 PlayerSeekMode seekMode = static_cast<PlayerSeekMode>(playerEngine_->GetPlayRangeSeekMode());
-                int32_t seekTime = 0;
-                if (startTime != -1 && endTime != -1) {
-                    seekTime = startTime;
-                }
+                int32_t seekTime = (startTime != -1 && endTime != -1) ? startTime : 0;
                 auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
                 (void)currState->Seek(seekTime, seekMode);
             }
