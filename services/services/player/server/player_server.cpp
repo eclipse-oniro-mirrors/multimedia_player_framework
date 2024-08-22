@@ -1470,10 +1470,10 @@ void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &in
 {
     std::lock_guard<std::mutex> lockCb(mutexCb_);
     int32_t ret = HandleMessage(type, extra, infoBody);
-    InnerOnInfo(type, extra, infoBody);
+    InnerOnInfo(type, extra, infoBody, ret);
 }
 
-void PlayerServer::InnerOnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
+void PlayerServer::InnerOnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody, const int32_t ret)
 {
     if (type == INFO_TYPE_IS_LIVE_STREAM) {
         isLiveStream_ = true;
