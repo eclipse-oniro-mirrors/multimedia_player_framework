@@ -47,6 +47,10 @@ protected:
     }
     void ReportInvalidOperation() const;
     virtual void HandleEos() {}
+    virtual void HandleInterruptEvent(const Format &infoBody)
+    {
+        (void)infoBody;
+    }
     int32_t MessageSeekDone(int32_t extra);
     int32_t MessageTrackDone(int32_t extra);
     int32_t MessageTrackInfoUpdate();
@@ -121,6 +125,7 @@ public:
 protected:
     void HandleStateChange(int32_t newState) override;
     void HandlePlaybackComplete(int32_t extra) override;
+    void HandleInterruptEvent(const Format &infoBody) override;
     void HandleEos() override;
     void StateEnter() override;
     void StateExit() override;
