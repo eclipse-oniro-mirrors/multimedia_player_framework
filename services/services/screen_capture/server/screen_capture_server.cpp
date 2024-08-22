@@ -2275,9 +2275,6 @@ int32_t ScreenCaptureServer::StopScreenCaptureRecorder()
         recorder_ = nullptr;
         StopAudioCapture();
     }
-    if (audioSource_ && audioSource_->GetAppPid() > 0) {
-        audioSource_->UnregisterAudioRendererEventListener(audioSource_->GetAppPid());
-    }
     captureCallback_ = nullptr;
     isConsumerStart_ = false;
     CloseFd();
@@ -2299,6 +2296,9 @@ int32_t ScreenCaptureServer::StopScreenCaptureInner(AVScreenCaptureStateCode sta
         FAKE_POINTER(this), stateCode);
     if (screenCaptureCb_ != nullptr) {
         (static_cast<ScreenCaptureListenerCallback *>(screenCaptureCb_.get()))->Stop();
+    }
+    if (captureConfig_.dataType == DataType::CAPTURE_FILE && audioSource_ && audioSource_->GetAppPid() > 0) {
+        audioSource_->UnregisterAudioRendererEventListener(audioSource_->GetAppPid());
     }
     if (captureState_ == AVScreenCaptureState::CREATED || captureState_ == AVScreenCaptureState::STARTING) {
         CloseFd();
