@@ -210,7 +210,7 @@ private:
     void HandleInterruptEvent(const Format &infoBody);
     void FormatToString(std::string &dumpString, std::vector<Format> &videoTrack);
     void OnErrorCb(int32_t errorCode, const std::string &errorMsg);
-    void InnerOnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody);
+    void InnerOnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody, const int32_t ret);
 
     int32_t CheckSeek(int32_t mSeconds, PlayerSeekMode mode);
     int32_t SeekContinous(int32_t mSeconds);
