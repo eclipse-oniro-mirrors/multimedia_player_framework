@@ -795,7 +795,7 @@ int32_t HiPlayerImpl::ResumeDemuxer()
     MEDIA_LOG_I("ResumeDemuxer in");
     FALSE_RETURN_V_MSG_E(pipelineStates_ != PlayerStates::PLAYER_STATE_ERROR,
         TransStatus(Status::OK), "PLAYER_STATE_ERROR not allow ResumeDemuxer");
-    callbackLooper_.StartReportMediaProgress();
+    callbackLooper_.StartReportMediaProgress(100); // 100 ms
     callbackLooper_.startCollectMaxAmplitude(SAMPLE_AMPLITUDE_INTERVAL);
     Status ret = demuxer_->ResumeDemuxerReadLoop();
     return TransStatus(ret);
