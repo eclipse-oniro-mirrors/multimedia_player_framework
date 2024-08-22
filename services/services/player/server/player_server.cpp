@@ -1088,15 +1088,17 @@ void PlayerServer::HandleEos()
         auto seekTask = std::make_shared<TaskHandler<void>>([this]() {
             MediaTrace::TraceBegin("PlayerServer::Seek", FAKE_POINTER(this));
             disableNextSeekDone_ = true;
-            int64_t startTime = playerEngine_->GetPlayRangeStartTime();
-            int64_t endTime = playerEngine_->GetPlayRangeEndTime();
-            PlayerSeekMode seekMode = static_cast<PlayerSeekMode>(playerEngine_->GetPlayRangeSeekMode());
-            int32_t seekTime = 0;
-            if (startTime != -1 && endTime != -1) {
-                seekTime = startTime;
+            if (playerEngine_ != nullptr) {
+                int64_t startTime = playerEngine_->GetPlayRangeStartTime();
+                int64_t endTime = playerEngine_->GetPlayRangeEndTime();
+                PlayerSeekMode seekMode = static_cast<PlayerSeekMode>(playerEngine_->GetPlayRangeSeekMode());
+                int32_t seekTime = 0;
+                if (startTime != -1 && endTime != -1) {
+                    seekTime = startTime;
+                }
+                auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
+                (void)currState->Seek(seekTime, seekMode);
             }
-            auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
-            (void)currState->Seek(seekTime, seekMode);
         });
 
         auto cancelTask = std::make_shared<TaskHandler<void>>([this]() {
