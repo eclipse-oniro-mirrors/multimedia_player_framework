@@ -563,7 +563,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ReportAVScreenCaptureUserChoice_001, T
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     int32_t sessionId = 0;
     std::string choice = "false";
-    screenCaptureServer_->ReportAVScreenCaptureUserChoice(sessionId, choice);
+    ASSERT_NE(screenCaptureServer_->ReportAVScreenCaptureUserChoice(sessionId, choice), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ReportAVScreenCaptureUserChoice_002, TestSize.Level2)
@@ -578,7 +578,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ReportAVScreenCaptureUserChoice_002, T
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     int32_t sessionId = 0;
     std::string choice = "true";
-    screenCaptureServer_->ReportAVScreenCaptureUserChoice(sessionId, choice);
+    ASSERT_NE(screenCaptureServer_->ReportAVScreenCaptureUserChoice(sessionId, choice), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckScreenCapturePermission_001, TestSize.Level2)
