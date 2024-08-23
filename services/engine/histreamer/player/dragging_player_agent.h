@@ -42,7 +42,7 @@ public:
  
 private:
     static bool LoadSymbol();
-    static void *LoadLibrary(const std::string &path);
+    static void *LoadLibrary();
     static bool CheckSymbol(void *handler);
     static mutex mtx_;
     unique_ptr<OHOS::Media::Task> task_;
