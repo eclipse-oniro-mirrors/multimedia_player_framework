@@ -131,7 +131,7 @@ struct AVMetadataExtractorAsyncContext : public MediaAsyncContext {
     std::shared_ptr<Meta> metadata_ = nullptr;
     std::shared_ptr<PixelMap> artPicture_ = nullptr;
     int32_t status;
-    int64_t timeStamp_;
+    uint64_t timeStamp_;
     uint32_t index_;
 };
 } // namespace Media

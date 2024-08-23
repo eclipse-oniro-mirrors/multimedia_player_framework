@@ -1059,10 +1059,12 @@ napi_value AVMetadataExtractorNapi::JSGetFrameIndexByTime(napi_env env, napi_cal
     auto promiseCtx = std::make_unique<AVMetadataExtractorAsyncContext>(env);
 
     if (CommonNapi::CheckValueType(env, args[0], napi_number)) {
-        auto res = napi_get_value_int64(env, args[0], &promiseCtx->timeStamp_);
+        int64_t timeStamp = 0;
+        auto res = napi_get_value_int64(env, args[0], &timeStamp);
         if (res != napi_ok) {
-            promiseCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "frame index is not valid");
+            promiseCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "time stamp is not valid");
         }
+        promiseCtx->timeStamp_ = static_cast<uint64_t>(timeStamp);
     }
     promiseCtx->napi = extractor;
     promiseCtx->task_ = extractor->GetFrameIndexByTimeTask(promiseCtx);
