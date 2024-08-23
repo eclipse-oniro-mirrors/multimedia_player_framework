@@ -532,6 +532,51 @@ void MediaServerManager::DestroyAVRecorderStub(StubType type, sptr<IRemoteObject
     }
 }
 
+void MediaServerManager::DestroyAVScreenCaptureStub(StubType type, sptr<IRemoteObject> object, pid_t pid)
+{
+    switch (type) {
+        case SCREEN_CAPTURE: {
+            for (auto it = screenCaptureStubMap_.begin(); it != screenCaptureStubMap_.end(); it++) {
+                if (it->first == object) {
+                    MEDIA_LOGD("destroy screen capture stub services(%{public}zu) pid(%{public}d).",
+                        screenCaptureStubMap_.size(), pid);
+                    (void)screenCaptureStubMap_.erase(it);
+                    return;
+                }
+            }
+            MEDIA_LOGE("find screen capture object failed, pid(%{public}d).", pid);
+            break;
+        }
+        case SCREEN_CAPTURE_MONITOR: {
+            for (auto it = screenCaptureMonitorStubMap_.begin(); it != screenCaptureMonitorStubMap_.end(); it++) {
+                if (it->first == object) {
+                    MEDIA_LOGD("destroy screen capture monitor stub services(%{public}zu) pid(%{public}d).",
+                        screenCaptureMonitorStubMap_.size(), pid);
+                    (void)screenCaptureMonitorStubMap_.erase(it);
+                    return;
+                }
+            }
+            MEDIA_LOGE("find screen capture monitor object failed, pid(%{public}d).", pid);
+            break;
+        }
+        case SCREEN_CAPTURE_CONTROLLER: {
+            for (auto it = screenCaptureControllerStubMap_.begin();
+                it != screenCaptureControllerStubMap_.end(); it++) {
+                if (it->first == object) {
+                    MEDIA_LOGD("destroy screen capture controller stub services(%{public}zu) pid(%{public}d).",
+                        screenCaptureControllerStubMap_.size(), pid);
+                    (void)screenCaptureControllerStubMap_.erase(it);
+                    return;
+                }
+            }
+            MEDIA_LOGE("find screen capture controller object failed, pid(%{public}d).", pid);
+            break;
+        }
+        default:
+            break;
+    }
+}
+
 void MediaServerManager::DestroyStubObject(StubType type, sptr<IRemoteObject> object)
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -553,43 +598,11 @@ void MediaServerManager::DestroyStubObject(StubType type, sptr<IRemoteObject> ob
         case AVCODECLIST:
             DestroyAVCodecStub(type, object, pid);
             break;
-        case SCREEN_CAPTURE: {
-            for (auto it = screenCaptureStubMap_.begin(); it != screenCaptureStubMap_.end(); it++) {
-                if (it->first == object) {
-                    MEDIA_LOGD("destroy screen capture stub services(%{public}zu) pid(%{public}d).",
-                        screenCaptureStubMap_.size(), pid);
-                    (void)screenCaptureStubMap_.erase(it);
-                    return;
-                }
-            }
-            MEDIA_LOGE("find screen capture object failed, pid(%{public}d).", pid);
+        case SCREEN_CAPTURE:
+        case SCREEN_CAPTURE_MONITOR:
+        case SCREEN_CAPTURE_CONTROLLER:
+            DestroyAVScreenCaptureStub(type, object, pid);
             break;
-        }
-        case SCREEN_CAPTURE_MONITOR: {
-            for (auto it = screenCaptureMonitorStubMap_.begin(); it != screenCaptureMonitorStubMap_.end(); it++) {
-                if (it->first == object) {
-                    MEDIA_LOGD("destroy screen capture monitor stub services(%{public}zu) pid(%{public}d).",
-                               screenCaptureMonitorStubMap_.size(), pid);
-                    (void)screenCaptureMonitorStubMap_.erase(it);
-                    return;
-                }
-            }
-            MEDIA_LOGE("find screen capture monitor object failed, pid(%{public}d).", pid);
-            break;
-        }
-        case SCREEN_CAPTURE_CONTROLLER: {
-            for (auto it = screenCaptureControllerStubMap_.begin();
-                it != screenCaptureControllerStubMap_.end(); it++) {
-                if (it->first == object) {
-                    MEDIA_LOGD("destroy screen capture controller stub services(%{public}zu) pid(%{public}d).",
-                        screenCaptureControllerStubMap_.size(), pid);
-                    (void)screenCaptureControllerStubMap_.erase(it);
-                    return;
-                }
-            }
-            MEDIA_LOGE("find screen capture controller object failed, pid(%{public}d).", pid);
-            break;
-        }
         default: {
             MEDIA_LOGE("default case, media server manager failed, pid(%{public}d).", pid);
             break;
