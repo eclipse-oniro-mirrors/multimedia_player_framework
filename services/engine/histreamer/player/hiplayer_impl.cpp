@@ -41,6 +41,7 @@ const int32_t FRAME_RATE_UNIT_MULTIPLE = 100; // the unit of frame rate is frame
 const int32_t PLAYING_SEEK_WAIT_TIME = 200; // wait up to 200 ms for new frame after seek in playing.
 const int64_t PLAY_RANGE_DEFAULT_VALUE = -1; // play range default value.
 const int64_t SAMPLE_AMPLITUDE_INTERVAL = 100;
+const int64_t REPORT_PROGRESS_INTERVAL = 100; // progress interval is 100ms
 const double FRAME_RATE_DEFAULT = -1.0;
 const double FRAME_RATE_FOR_SEEK_PERFORMANCE = 2000.0;
 }
@@ -723,20 +724,20 @@ int32_t HiPlayerImpl::Play()
         } else {
             ret = TransStatus(Seek(0, PlayerSeekMode::SEEK_PREVIOUS_SYNC, false));
         }
-        callbackLooper_.StartReportMediaProgress(100); // 100 ms
+        callbackLooper_.StartReportMediaProgress(REPORT_PROGRESS_INTERVAL);
         callbackLooper_.startCollectMaxAmplitude(SAMPLE_AMPLITUDE_INTERVAL);
     } else if (pipelineStates_ == PlayerStates::PLAYER_PAUSED) {
         if (playRangeStartTime_ > PLAY_RANGE_DEFAULT_VALUE) {
             ret = TransStatus(Seek(playRangeStartTime_, PlayerSeekMode::SEEK_PREVIOUS_SYNC, false));
         }
-        callbackLooper_.StartReportMediaProgress(100); // 100 ms
+        callbackLooper_.StartReportMediaProgress(REPORT_PROGRESS_INTERVAL);
         callbackLooper_.startCollectMaxAmplitude(SAMPLE_AMPLITUDE_INTERVAL);
         ret = TransStatus(Resume());
     } else {
         if (playRangeStartTime_ > PLAY_RANGE_DEFAULT_VALUE) {
             ret = TransStatus(Seek(playRangeStartTime_, PlayerSeekMode::SEEK_PREVIOUS_SYNC, false));
         }
-        callbackLooper_.StartReportMediaProgress(100); // 100 ms
+        callbackLooper_.StartReportMediaProgress(REPORT_PROGRESS_INTERVAL);
         callbackLooper_.startCollectMaxAmplitude(SAMPLE_AMPLITUDE_INTERVAL);
         syncManager_->Resume();
         ret = TransStatus(pipeline_->Start());
@@ -795,7 +796,7 @@ int32_t HiPlayerImpl::ResumeDemuxer()
     MEDIA_LOG_I("ResumeDemuxer in");
     FALSE_RETURN_V_MSG_E(pipelineStates_ != PlayerStates::PLAYER_STATE_ERROR,
         TransStatus(Status::OK), "PLAYER_STATE_ERROR not allow ResumeDemuxer");
-    callbackLooper_.StartReportMediaProgress(100); // 100 ms
+    callbackLooper_.StartReportMediaProgress(REPORT_PROGRESS_INTERVAL);
     callbackLooper_.startCollectMaxAmplitude(SAMPLE_AMPLITUDE_INTERVAL);
     Status ret = demuxer_->ResumeDemuxerReadLoop();
     return TransStatus(ret);
