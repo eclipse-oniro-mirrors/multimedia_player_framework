@@ -1529,12 +1529,12 @@ void PlayerServer::InnerOnInfo(PlayerOnInfoType type, int32_t extra, const Forma
     auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
     bool isCompletedInfo = type == INFO_TYPE_STATE_CHANGE && extra == PlayerStates::PLAYER_PLAYBACK_COMPLETE;
     bool isEosInfo = type == INFO_TYPE_EOS;
-    CHECK_AND_RETURN_LOG(!(lastOpStatus_ == PLAYER_IDLE && isErrorInfo), "do not report error in idle state");
-    bool isErrorInfo = type == INFO_TYPE_STATE_CHANGE && extra == PlayerStates::PLAYER_STATE_ERROR;
-    if (lastOpStatus_ == PLAYER_IDLE && isErrorInfo) {
-        MEDIA_LOGW("do not report error in idle state");
+    if (currState == stoppedState_ && (isCompletedInfo || isEosInfo)) {
+        MEDIA_LOGW("completed or eos in stopped state");
         return;
     }
+    bool isErrorInfo = type == INFO_TYPE_STATE_CHANGE && extra == PlayerStates::PLAYER_STATE_ERROR;
+    CHECK_AND_RETURN_LOG(!(lastOpStatus_ == PLAYER_IDLE && isErrorInfo), "do not report error in idle state");
     if (type == INFO_TYPE_DEFAULTTRACK || type == INFO_TYPE_TRACK_DONE || type == INFO_TYPE_ADD_SUBTITLE_DONE) {
         return;
     }
