@@ -102,6 +102,7 @@
           "qos_manager",
           "config_policy",
           "power_manager",
+          "media_library",
           "memmgr",
           "common_event_service",
           "call_manager",
