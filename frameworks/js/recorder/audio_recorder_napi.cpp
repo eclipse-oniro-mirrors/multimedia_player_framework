@@ -223,6 +223,15 @@ napi_value AudioRecorderNapi::Prepare(napi_env env, napi_callback_info info)
         return undefinedResult;
     }
 
+    auto asyncCtx = std::make_unique<MediaAsyncContext>(env);
+    if (!SystemPermission()) {
+        asyncCtx->SignError(MSERR_EXT_API9_PERMISSION_DENIED, "CreateVideoRecorder no system app");
+    }
+ 
+    if (!MediaPermission::CheckMicPermission()) {
+        asyncCtx->SignError(MSERR_EXT_API9_NO_PERMISSION, "CreateVideoRecorder no MicPermission");
+    }
+
     AudioRecorderNapi *recorderNapi = nullptr;
     status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&recorderNapi));
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && recorderNapi != nullptr, undefinedResult,
