@@ -193,6 +193,11 @@ napi_value VideoRecorderNapi::Prepare(napi_env env, napi_callback_info info)
 
     auto asyncCtx = std::make_unique<VideoRecorderAsyncContext>(env);
 
+    if (!SystemPermission()) {
+        SignError(asyncCtx.get(),
+            MSERR_EXT_API9_PERMISSION_DENIED, "CreateVideoRecorder", "system");
+    }
+
     size_t argCount = 2;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
     if (status != napi_ok || jsThis == nullptr) {
@@ -256,6 +261,11 @@ napi_value VideoRecorderNapi::GetInputSurface(napi_env env, napi_callback_info i
 
     auto asyncCtx = std::make_unique<VideoRecorderAsyncContext>(env);
 
+    if (!SystemPermission()) {
+        SignError(asyncCtx.get(),
+            MSERR_EXT_API9_PERMISSION_DENIED, "CreateVideoRecorder", "system");
+    }
+
     // get args
     napi_value jsThis = nullptr;
     napi_value args[1] = {nullptr};
@@ -308,6 +318,11 @@ napi_value VideoRecorderNapi::Start(napi_env env, napi_callback_info info)
 
     auto asyncCtx = std::make_unique<VideoRecorderAsyncContext>(env);
 
+    if (!SystemPermission()) {
+        SignError(asyncCtx.get(),
+            MSERR_EXT_API9_PERMISSION_DENIED, "CreateVideoRecorder", "system");
+    }
+
     napi_value jsThis = nullptr;
     napi_value args[1] = { nullptr };
     size_t argCount = 1;
@@ -353,6 +368,11 @@ napi_value VideoRecorderNapi::Pause(napi_env env, napi_callback_info info)
 
     auto asyncCtx = std::make_unique<VideoRecorderAsyncContext>(env);
 
+    if (!SystemPermission()) {
+        SignError(asyncCtx.get(),
+            MSERR_EXT_API9_PERMISSION_DENIED, "CreateVideoRecorder", "system");
+    }
+
     napi_value jsThis = nullptr;
     napi_value args[1] = { nullptr };
     size_t argCount = 1;
@@ -395,6 +415,11 @@ napi_value VideoRecorderNapi::Resume(napi_env env, napi_callback_info info)
     napi_get_undefined(env, &result);
 
     auto asyncCtx = std::make_unique<VideoRecorderAsyncContext>(env);
+
+    if (!SystemPermission()) {
+        SignError(asyncCtx.get(),
+            MSERR_EXT_API9_PERMISSION_DENIED, "CreateVideoRecorder", "system");
+    }
 
     napi_value jsThis = nullptr;
     napi_value args[1] = { nullptr };
@@ -441,6 +466,11 @@ napi_value VideoRecorderNapi::Stop(napi_env env, napi_callback_info info)
 
     auto asyncCtx = std::make_unique<VideoRecorderAsyncContext>(env);
 
+    if (!SystemPermission()) {
+        SignError(asyncCtx.get(),
+            MSERR_EXT_API9_PERMISSION_DENIED, "CreateVideoRecorder", "system");
+    }
+
     napi_value jsThis = nullptr;
     napi_value args[1] = { nullptr };
     size_t argCount = 1;
@@ -483,6 +513,11 @@ napi_value VideoRecorderNapi::Reset(napi_env env, napi_callback_info info)
     napi_get_undefined(env, &result);
 
     auto asyncCtx = std::make_unique<VideoRecorderAsyncContext>(env);
+
+    if (!SystemPermission()) {
+        SignError(asyncCtx.get(),
+            MSERR_EXT_API9_PERMISSION_DENIED, "CreateVideoRecorder", "system");
+    }
 
     napi_value jsThis = nullptr;
     napi_value args[1] = { nullptr };
@@ -534,6 +569,11 @@ napi_value VideoRecorderNapi::Release(napi_env env, napi_callback_info info)
 
     auto asyncCtx = std::make_unique<VideoRecorderAsyncContext>(env);
 
+    if (!SystemPermission()) {
+        SignError(asyncCtx.get(),
+            MSERR_EXT_API9_PERMISSION_DENIED, "CreateVideoRecorder", "system");
+    }
+
     napi_value jsThis = nullptr;
     napi_value args[1] = { nullptr };
     size_t argCount = 1;
@@ -582,6 +622,11 @@ napi_value VideoRecorderNapi::On(napi_env env, napi_callback_info info)
     napi_get_undefined(env, &result);
 
     auto asyncCtx = std::make_unique<VideoRecorderAsyncContext>(env);
+
+    if (!SystemPermission()) {
+        SignError(asyncCtx.get(),
+            MSERR_EXT_API9_PERMISSION_DENIED, "CreateVideoRecorder", "system");
+    }
 
     static constexpr size_t minArgCount = 2;
     size_t argCount = minArgCount;

@@ -122,6 +122,7 @@ Status AVThumbnailGenerator::InitDecoder()
 
 std::shared_ptr<Meta> AVThumbnailGenerator::GetVideoTrackInfo()
 {
+    CHECK_AND_RETURN_RET_LOG(trackInfo_ == nullptr, trackInfo_, "trackInfo_ is already");
     CHECK_AND_RETURN_RET_LOG(mediaDemuxer_ != nullptr, nullptr, "GetTargetTrackInfo demuxer is nullptr");
     std::vector<std::shared_ptr<Meta>> trackInfos = mediaDemuxer_->GetStreamMetaInfo();
     size_t trackCount = trackInfos.size();
@@ -163,8 +164,8 @@ void AVThumbnailGenerator::OnOutputFormatChanged(const MediaAVCodec::Format &for
 void AVThumbnailGenerator::OnInputBufferAvailable(uint32_t index, std::shared_ptr<AVBuffer> buffer)
 {
     MEDIA_LOGD("OnInputBufferAvailable index:%{public}u", index);
-    if (stopProcessing_.load()) {
-        MEDIA_LOGD("Has stopped processing, will not queue input buffer.");
+    if (stopProcessing_.load() || hasFetchedFrame_.load()) {
+        MEDIA_LOGD("stop or has fetched frame, need not queue input buffer");
         return;
     }
     CHECK_AND_RETURN_LOG(mediaDemuxer_ != nullptr, "OnInputBufferAvailable demuxer is nullptr.");
@@ -175,26 +176,44 @@ void AVThumbnailGenerator::OnInputBufferAvailable(uint32_t index, std::shared_pt
 
 void AVThumbnailGenerator::OnOutputBufferAvailable(uint32_t index, std::shared_ptr<AVBuffer> buffer)
 {
-    MEDIA_LOGD("OnOutputBufferAvailable index:%{public}u", index);
+    MEDIA_LOGD("OnOutputBufferAvailable index:%{public}u , pts %{public}ld", index, buffer->pts_);
     CHECK_AND_RETURN_LOG(videoDecoder_ != nullptr, "Video decoder not exist");
-    if (buffer == nullptr || buffer->memory_ == nullptr) {
-        MEDIA_LOGW("Output buffer is nullptr");
+    bool isValidBuffer = buffer != nullptr && buffer->memory_ != nullptr &&
+         (buffer->memory_->GetSize() != 0 || buffer->memory_->GetSurfaceBuffer() != nullptr);
+    bool isValidState = !hasFetchedFrame_.load() && !stopProcessing_.load();
+    if (!isValidBuffer || !isValidState) {
+        MEDIA_LOGW("isValidBuffer %{public}d isValidState %{public}d", isValidBuffer, isValidState);
         videoDecoder_->ReleaseOutputBuffer(index, false);
         return;
     }
-    if (!hasFetchedFrame_.load() && !stopProcessing_.load()) {
-        if (buffer->memory_->GetSize() != 0 && buffer->memory_->GetSurfaceBuffer() == nullptr) {
-            MEDIA_LOGI("Soft decoder, use avBuffer");
-            isSoftDecoder_ = true;
-        }
+    bool isClosest = seekMode_ == Plugins::SeekMode::SEEK_CLOSEST;
+    bool isAvailableFrame = !isClosest || buffer->pts_ >= seekTime_ ||
+         (buffer->flag_ & (uint32_t)(AVBufferFlag::EOS));
+    if (!isAvailableFrame) {
+        videoDecoder_->ReleaseOutputBuffer(bufferIndex_, false);
         bufferIndex_ = index;
         avBuffer_ = buffer;
-        surfaceBuffer_ = buffer->memory_->GetSurfaceBuffer();
-        frameBuffer_ = buffer;
+        return;
+    }
+    if (isAvailableFrame) {
         hasFetchedFrame_ = true;
+        if (isClosest && avBuffer_ != nullptr) {
+            int64_t preDiff = seekTime_ - avBuffer_->pts_;
+            int64_t nextDiff = buffer->pts_ - seekTime_;
+            if (preDiff > nextDiff) {
+                videoDecoder_->ReleaseOutputBuffer(bufferIndex_, false);
+                bufferIndex_ = index;
+                avBuffer_ = buffer;
+            } else {
+                videoDecoder_->ReleaseOutputBuffer(index, false);
+            }
+        } else {
+            bufferIndex_ = index;
+            avBuffer_ = buffer;
+        }
+        MEDIA_LOGI("dstTime %{public}ld resTime %{public}ld", seekTime_, buffer->pts_);
+        PauseFetchFrame();
         cond_.notify_all();
-        videoDecoder_->Flush();
-        mediaDemuxer_->Flush();
         return;
     }
     videoDecoder_->ReleaseOutputBuffer(index, false);
@@ -212,11 +231,9 @@ std::shared_ptr<AVSharedMemory> AVThumbnailGenerator::FetchFrameAtTime(int64_t t
     hasFetchedFrame_ = false;
     outputConfig_ = param;
     seekTime_ = timeUs;
-    if (trackInfo_ == nullptr) {
-        trackInfo_ = GetVideoTrackInfo();
-    }
+    trackInfo_ = GetVideoTrackInfo();
     CHECK_AND_RETURN_RET_LOG(trackInfo_ != nullptr, nullptr, "FetchFrameAtTime trackInfo_ is nullptr.");
-
+    mediaDemuxer_->Resume();
     mediaDemuxer_->SelectTrack(trackIndex_);
     int64_t realSeekTime = timeUs;
     auto res = SeekToTime(Plugins::Us2Ms(timeUs), static_cast<Plugins::SeekMode>(option), realSeekTime);
@@ -229,16 +246,10 @@ std::shared_ptr<AVSharedMemory> AVThumbnailGenerator::FetchFrameAtTime(int64_t t
         if (cond_.wait_for(lock, std::chrono::seconds(3), [this] { return hasFetchedFrame_.load(); })) {
             MEDIA_LOGI("0x%{public}06" PRIXPTR " Fetch frame OK width:%{public}d, height:%{public}d",
                        FAKE_POINTER(this), outputConfig_.dstWidth, outputConfig_.dstHeight);
-            if (!isSoftDecoder_) {
-                ConvertToAVSharedMemory(surfaceBuffer_);
-            } else {
-                ConvertToAVSharedMemory(avBuffer_);
-            }
+            ConvertToAVSharedMemory();
             videoDecoder_->ReleaseOutputBuffer(bufferIndex_, false);
         } else {
-            hasFetchedFrame_ = true;
-            videoDecoder_->Flush();
-            mediaDemuxer_->Flush();
+            PauseFetchFrame();
         }
     }
     return fetchedFrameAtTime_;
@@ -252,15 +263,12 @@ std::shared_ptr<AVBuffer> AVThumbnailGenerator::FetchFrameYuv(int64_t timeUs, in
                FAKE_POINTER(this), timeUs, option, param.dstWidth, param.dstHeight,
                static_cast<int32_t>(param.colorFormat));
     CHECK_AND_RETURN_RET_LOG(mediaDemuxer_ != nullptr, nullptr, "FetchFrameAtTime demuxer is nullptr");
-
+    avBuffer_ = nullptr;
     hasFetchedFrame_ = false;
     outputConfig_ = param;
     seekTime_ = timeUs;
-    if (trackInfo_ == nullptr) {
-        trackInfo_ = GetVideoTrackInfo();
-    }
+    trackInfo_ = GetVideoTrackInfo();
     CHECK_AND_RETURN_RET_LOG(trackInfo_ != nullptr, nullptr, "FetchFrameAtTime trackInfo_ is nullptr.");
-
     mediaDemuxer_->SelectTrack(trackIndex_);
     int64_t realSeekTime = timeUs;
     auto res = SeekToTime(Plugins::Us2Ms(timeUs), static_cast<Plugins::SeekMode>(option), realSeekTime);
@@ -273,47 +281,51 @@ std::shared_ptr<AVBuffer> AVThumbnailGenerator::FetchFrameYuv(int64_t timeUs, in
         if (cond_.wait_for(lock, std::chrono::seconds(3), [this] { return hasFetchedFrame_.load(); })) {
             MEDIA_LOGI("0x%{public}06" PRIXPTR " Fetch frame OK width:%{public}d, height:%{public}d",
                        FAKE_POINTER(this), outputConfig_.dstWidth, outputConfig_.dstHeight);
-            frameBuffer_ = GenerateAlignmentAvBuffer(frameBuffer_);
-            if (frameBuffer_ != nullptr) {
-                frameBuffer_->meta_->Set<Tag::VIDEO_WIDTH>(width_);
-                frameBuffer_->meta_->Set<Tag::VIDEO_HEIGHT>(height_);
-                frameBuffer_->meta_->Set<Tag::VIDEO_ROTATION>(rotation_);
+            avBuffer_ = GenerateAlignmentAvBuffer();
+            if (avBuffer_ != nullptr) {
+                avBuffer_->meta_->Set<Tag::VIDEO_WIDTH>(width_);
+                avBuffer_->meta_->Set<Tag::VIDEO_HEIGHT>(height_);
+                avBuffer_->meta_->Set<Tag::VIDEO_ROTATION>(rotation_);
             }
             videoDecoder_->ReleaseOutputBuffer(bufferIndex_, false);
         } else {
-            hasFetchedFrame_ = true;
-            videoDecoder_->Flush();
-            mediaDemuxer_->Flush();
+            videoDecoder_->ReleaseOutputBuffer(bufferIndex_, false);
+            PauseFetchFrame();
         }
     }
-    return frameBuffer_;
+    return avBuffer_;
 }
 
 Status AVThumbnailGenerator::SeekToTime(int64_t timeMs, Plugins::SeekMode option, int64_t realSeekTime)
 {
+    seekMode_ = option;
+    if (option == Plugins::SeekMode::SEEK_CLOSEST) {
+        option = Plugins::SeekMode::SEEK_PREVIOUS_SYNC;
+    }
     auto res = mediaDemuxer_->SeekTo(timeMs, option, realSeekTime);
     if (res != Status::OK && option != Plugins::SeekMode::SEEK_CLOSEST_SYNC) {
         res = mediaDemuxer_->SeekTo(timeMs, Plugins::SeekMode::SEEK_CLOSEST_SYNC, realSeekTime);
+        seekMode_ = Plugins::SeekMode::SEEK_CLOSEST_SYNC;
     }
     return res;
 }
 
-void AVThumbnailGenerator::ConvertToAVSharedMemory(const sptr<SurfaceBuffer> &surfaceBuffer)
+void AVThumbnailGenerator::ConvertToAVSharedMemory()
 {
-    CHECK_AND_RETURN_LOG(surfaceBuffer != nullptr, "surfaceBuffer is nullptr");
-    auto ret = GetYuvDataAlignStride(surfaceBuffer);
-    CHECK_AND_RETURN_LOG(ret == MSERR_OK, "Copy frame failed");
-    OutputFrame *frame = reinterpret_cast<OutputFrame *>(fetchedFrameAtTime_->GetBase());
-    frame->width_ = surfaceBuffer->GetWidth();
-    frame->height_ = surfaceBuffer->GetHeight();
-    frame->stride_ = frame->width_ * RATE_UV;
-    frame->bytesPerPixel_ = RATE_UV;
-    frame->size_ = frame->width_ * frame->height_ * BYTES_PER_PIXEL_YUV;
-    frame->rotation_ = static_cast<int32_t>(rotation_);
-}
+    auto surfaceBuffer = avBuffer_->memory_->GetSurfaceBuffer();
+    if (surfaceBuffer != nullptr) {
+        auto ret = GetYuvDataAlignStride(surfaceBuffer);
+        CHECK_AND_RETURN_LOG(ret == MSERR_OK, "Copy frame failed");
+        OutputFrame *frame = reinterpret_cast<OutputFrame *>(fetchedFrameAtTime_->GetBase());
+        frame->width_ = surfaceBuffer->GetWidth();
+        frame->height_ = surfaceBuffer->GetHeight();
+        frame->stride_ = frame->width_ * RATE_UV;
+        frame->bytesPerPixel_ = RATE_UV;
+        frame->size_ = frame->width_ * frame->height_ * BYTES_PER_PIXEL_YUV;
+        frame->rotation_ = static_cast<int32_t>(rotation_);
+        return;
+    }
 
-void AVThumbnailGenerator::ConvertToAVSharedMemory(std::shared_ptr<AVBuffer> &avBuffer)
-{
     int32_t width;
     int32_t height;
     outputFormat_.GetIntValue(MediaDescriptionKey::MD_KEY_WIDTH, width);
@@ -323,9 +335,8 @@ void AVThumbnailGenerator::ConvertToAVSharedMemory(std::shared_ptr<AVBuffer> &av
         height = height_;
     }
 
-    fetchedFrameAtTime_ = std::make_shared<AVSharedMemoryBase>(sizeof(OutputFrame) + avBuffer->memory_->GetSize(),
+    fetchedFrameAtTime_ = std::make_shared<AVSharedMemoryBase>(sizeof(OutputFrame) + avBuffer_->memory_->GetSize(),
         AVSharedMemory::Flags::FLAGS_READ_WRITE, "FetchedFrameMemory");
-
     int32_t ret = fetchedFrameAtTime_->Init();
     CHECK_AND_RETURN_LOG(ret == static_cast<int32_t>(Status::OK), "Create AVSharedmemory failed, ret:%{public}d", ret);
     OutputFrame *frame = reinterpret_cast<OutputFrame *>(fetchedFrameAtTime_->GetBase());
@@ -333,9 +344,9 @@ void AVThumbnailGenerator::ConvertToAVSharedMemory(std::shared_ptr<AVBuffer> &av
     frame->height_ = height;
     frame->stride_ = width * RATE_UV;
     frame->bytesPerPixel_ = RATE_UV;
-    frame->size_ = avBuffer->memory_->GetSize();
+    frame->size_ = avBuffer_->memory_->GetSize();
     frame->rotation_ = static_cast<int32_t>(rotation_);
-    fetchedFrameAtTime_->Write(avBuffer->memory_->GetAddr(), frame->size_, sizeof(OutputFrame));
+    fetchedFrameAtTime_->Write(avBuffer_->memory_->GetAddr(), frame->size_, sizeof(OutputFrame));
 }
 
 void AVThumbnailGenerator::ConvertP010ToNV12(const sptr<SurfaceBuffer> &surfaceBuffer, uint8_t *dstNV12,
@@ -376,12 +387,12 @@ void AVThumbnailGenerator::ConvertP010ToNV12(const sptr<SurfaceBuffer> &surfaceB
     }
 }
 
-std::shared_ptr<AVBuffer> AVThumbnailGenerator::GenerateAlignmentAvBuffer(std::shared_ptr<AVBuffer> &avBuffer)
+std::shared_ptr<AVBuffer> AVThumbnailGenerator::GenerateAlignmentAvBuffer()
 {
-    if (isSoftDecoder_) {
-        return GenerateAvBufferFromFCodec(avBuffer);
+    if (avBuffer_->memory_->GetSize() != 0 && avBuffer_->memory_->GetSurfaceBuffer() == nullptr) {
+        return GenerateAvBufferFromFCodec();
     }
-    auto srcSurfaceBuffer = avBuffer->memory_->GetSurfaceBuffer();
+    auto srcSurfaceBuffer = avBuffer_->memory_->GetSurfaceBuffer();
     auto width = srcSurfaceBuffer->GetWidth();
     auto height = srcSurfaceBuffer->GetHeight();
     bool isHdr = srcSurfaceBuffer->GetFormat() ==
@@ -419,15 +430,15 @@ std::shared_ptr<AVBuffer> AVThumbnailGenerator::GenerateAlignmentAvBuffer(std::s
     return targetAvBuffer;
 }
 
-std::shared_ptr<AVBuffer> AVThumbnailGenerator::GenerateAvBufferFromFCodec(std::shared_ptr<AVBuffer> &avBuffer)
+std::shared_ptr<AVBuffer> AVThumbnailGenerator::GenerateAvBufferFromFCodec()
 {
     AVBufferConfig avBufferConfig;
-    avBufferConfig.size = avBuffer->memory_->GetSize();
+    avBufferConfig.size = avBuffer_->memory_->GetSize();
     avBufferConfig.memoryType = MemoryType::SHARED_MEMORY;
     avBufferConfig.memoryFlag = MemoryFlag::MEMORY_READ_WRITE;
     std::shared_ptr<AVBuffer> targetAvBuffer = AVBuffer::CreateAVBuffer(avBufferConfig);
     CHECK_AND_RETURN_RET_LOG(targetAvBuffer != nullptr, nullptr, "Create avBuffer failed");
-    targetAvBuffer->memory_->Write(avBuffer->memory_->GetAddr(), avBuffer->memory_->GetSize(), 0);
+    targetAvBuffer->memory_->Write(avBuffer_->memory_->GetAddr(), avBuffer_->memory_->GetSize(), 0);
     return targetAvBuffer;
 }
 
@@ -600,6 +611,14 @@ void AVThumbnailGenerator::Destroy()
     mediaDemuxer_ = nullptr;
     videoDecoder_ = nullptr;
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Finish Destroy.", FAKE_POINTER(this));
+}
+
+void AVThumbnailGenerator::PauseFetchFrame()
+{
+    hasFetchedFrame_ = true;
+    mediaDemuxer_->Pause();
+    mediaDemuxer_->Flush();
+    videoDecoder_->Flush();
 }
 }  // namespace Media
 }  // namespace OHOS

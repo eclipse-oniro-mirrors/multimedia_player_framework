@@ -40,6 +40,7 @@ struct AVPlayStrategy {
     uint32_t preferredHeight = 0;
     uint32_t preferredBufferDuration = 0;
     bool preferredHdr = false;
+    OHOS::Media::MediaType mutedMediaType = OHOS::Media::MediaType::MEDIA_TYPE_MAX_COUNT;
 };
 
 struct DrmInfoItem {
@@ -74,6 +75,14 @@ public:
 
 class PlayerKeys {
 public:
+    static constexpr std::string_view PLAYER_MESSAGE_TYPE = "message_type";
+    static constexpr std::string_view PLAYER_IS_LIVE_STREAM = "is_live_stream";
+    static constexpr std::string_view PLAYER_SEEK_POSITION = "seek_done";
+    static constexpr std::string_view PLAYER_PLAYBACK_SPEED = "speed_done";
+    static constexpr std::string_view PLAYER_BITRATE_DONE = "bitrate_done";
+    static constexpr std::string_view PLAYER_CURRENT_POSITION = "current_position";
+    static constexpr std::string_view PLAYER_DURATION = "duration";
+    static constexpr std::string_view PLAYER_STATE_CHANGE = "player_state_change";
     static constexpr std::string_view PLAYER_STATE_CHANGED_REASON = "state_changed_reason";
     static constexpr std::string_view PLAYER_VOLUME_LEVEL = "volume_level";
     static constexpr std::string_view PLAYER_TRACK_INDEX = "track_index";
@@ -87,6 +96,8 @@ public:
     static constexpr std::string_view PLAYER_LANGUGAE = "language_code";
     static constexpr std::string_view PLAYER_SAMPLE_RATE = "sample_rate";
     static constexpr std::string_view PLAYER_CHANNELS = "channel_count";
+    static constexpr std::string_view PLAYER_BUFFERING_TYPE = "buffering_type";
+    static constexpr std::string_view PLAYER_BUFFERING_VALUE = "buffering_value";
     static constexpr std::string_view PLAYER_BUFFERING_START = "buffering_start";
     static constexpr std::string_view PLAYER_BUFFERING_END = "buffering_end";
     static constexpr std::string_view PLAYER_BUFFERING_PERCENT = "buffering_percent";
@@ -567,6 +578,25 @@ public:
      * @version 1.0
      */
     virtual int32_t SelectBitRate(uint32_t bitRate) = 0;
+
+    /**
+     * @brief set the playback strategy
+     * the playback strategy includes five fileds:
+     * preferredWidth: Preferred width, which is of the int type, for example, 1080.
+     * preferredHeight: Preferred height, which is of the int type, for example, 1920.
+     * preferredBufferDuration: Preferred buffer duration, in seconds. The value ranges from 1 to 20.
+     * preferredHdr: Whether HDR is preferred. The value true means that HDR is preferred, and false means the opposite.
+     * mutedMediaType: The mediaType to be muted before play, which is of the MediaType type,
+     * for example, MediaType::MEDIA_TYPE_AUD.
+     * @param playbackStrategy the playback strategy.
+     * @return Returns {@link MSERR_OK} if the playback strategy is set successfully; returns an error code defined
+    * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t SetPlaybackStrategy(AVPlayStrategy playbackStrategy) = 0;
+
+    virtual int32_t SetMediaMuted(OHOS::Media::MediaType type, bool isMuted) = 0;
 
 #ifdef SUPPORT_AUDIO_ONLY
 #else

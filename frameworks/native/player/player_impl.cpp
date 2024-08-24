@@ -72,6 +72,12 @@ void PlayerImpl::ResetSeekVariables()
     isSeeking_ = false;
 }
 
+int32_t PlayerImpl::SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted)
+{
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_INVALID_VAL, "playerService_ not exist");
+    return playerService_->SetMediaMuted(mediaType, isMuted);
+}
+
 int32_t PlayerImpl::SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc)
 {
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetSource in(dataSrc)", FAKE_POINTER(this));
@@ -449,6 +455,13 @@ int32_t PlayerImpl::SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionSer
     (void)svp;
     return 0;
 #endif
+}
+
+int32_t PlayerImpl::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
+{
+    MEDIA_LOGD("Set playback strategy");
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerService_->SetPlaybackStrategy(playbackStrategy);
 }
 
 PlayerImplCallback::PlayerImplCallback(const std::shared_ptr<PlayerCallback> playerCb,
