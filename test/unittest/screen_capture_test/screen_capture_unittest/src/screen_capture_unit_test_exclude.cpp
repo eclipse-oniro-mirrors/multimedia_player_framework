@@ -460,7 +460,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_save_file_01, Tes
     vector<int> windowIds = {1, 3, 5};
     EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeWindowContent(&windowIds[0], static_cast<int32_t>(windowIds.size())));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenRecording());
-    sleep(RECORDER_TIME);
+    sleep(10);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenRecording());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_save_file_01 after");
