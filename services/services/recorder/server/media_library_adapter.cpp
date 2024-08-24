@@ -132,7 +132,7 @@ public:
 private:
     void *fileDataAddr_ = nullptr;
     std::string displayName_;
-    PhotoFormat photoFormat_;
+    PhotoFormat photoFormat_ = PhotoFormat::RGBA;
 };
 
 struct tm *GetLocaltime(const time_t* clock, struct tm *result)

@@ -1219,7 +1219,7 @@ bool RecorderServer::CheckCameraOutputState()
     int32_t status = 0;
     serviceProxy->GetCameraOutputStatus(IPCSkeleton::GetCallingPid(), status);
     MEDIA_LOGI("GetCameraOutputStatus %{public}d", status);
-    return (status >> 1) & 1; // 2: video out put start
+    return (static_cast<uint32_t>(status) >> 1) & 1; // 2: video out put start
 #endif
     return true;
 }
