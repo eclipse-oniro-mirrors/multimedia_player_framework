@@ -18,6 +18,7 @@
 #include "player_callback_napi.h"
 #include "media_log.h"
 #include "media_errors.h"
+#include "media_permission.h"
 #include "string_ex.h"
 #ifdef SUPPORT_JSSTACK
 #include "xpower_event_js.h"
@@ -219,6 +220,11 @@ napi_value AudioPlayerNapi::SetSrc(napi_env env, napi_callback_info info)
     if (player->nativePlayer_ == nullptr) {
         player->ErrorCallback(MSERR_EXT_NO_MEMORY, "player is released(null), please create player again");
         return undefinedResult;
+    }
+
+    auto asyncContext = std::make_unique<MediaAsyncContext>(env);
+    if (!(MediaPermission::CheckReadMediaPermission() || MediaPermission::CheckNetWorkPermission())) {
+        asyncContext->SignError(MSERR_EXT_API9_NO_PERMISSION, "CreateAudioRecorder no permission");
     }
 
     napi_valuetype valueType = napi_undefined;
