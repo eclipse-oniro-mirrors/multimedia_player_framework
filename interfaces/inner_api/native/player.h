@@ -766,6 +766,26 @@ public:
         (void)end;
         return 0;
     }
+
+    /**
+     * @brief Set playback start position and end position.
+     * Use the specified seek mode to jump to the playback start position,
+     * currently support SEEK_PREVIOUS_SYNC and SEEK_CLOSEST,
+     * other values are invalid, the default value is SEEK_PREVIOUS_SYNC.
+     * This function must be called after {@link SetSource}.
+     *
+     * @return Returns {@link MSERR_OK} if the single display is set; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode = SEEK_PREVIOUS_SYNC)
+    {
+        (void)start;
+        (void)end;
+        (void)mode;
+        return 0;
+    }
 };
 
 class __attribute__((visibility("default"))) PlayerFactory {
