@@ -2073,7 +2073,9 @@ int32_t ScreenCaptureServer::OnVoIPStatusChanged(bool isInVoIPCall)
     int32_t ret = MSERR_UNKNOWN;
     if (!isInVoIPCall) {
         StopMicAudioCapture();
-        StartFileMicAudioCapture();
+        if (isMicrophoneOn_) {
+            StartFileMicAudioCapture();
+        }
         usleep(AUDIO_CHANGE_TIME);
     }
     CHECK_AND_RETURN_RET_LOG(innerAudioCapture_, MSERR_UNKNOWN, "innerAudioCapture is nullptr");
@@ -2090,7 +2092,9 @@ int32_t ScreenCaptureServer::OnVoIPStatusChanged(bool isInVoIPCall)
     if (isInVoIPCall) {
         usleep(AUDIO_CHANGE_TIME);
         StopMicAudioCapture();
-        StartFileMicAudioCapture();
+        if (isMicrophoneOn_) {
+            StartFileMicAudioCapture();
+        }
     }
     return MSERR_OK;
 }
