@@ -65,7 +65,7 @@ public:
     // ITransCoderEngineObs override
     void OnError(TransCoderErrorType errorType, int32_t errorCode) override;
     void OnInfo(TransCoderOnInfoType type, int32_t extra) override;
-
+    void ReleaseInner();
     int32_t DumpInfo(int32_t fd);
 
 private:
