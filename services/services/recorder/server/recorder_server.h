@@ -95,6 +95,7 @@ public:
     int32_t SetMaxDuration(int32_t duration) override;
     int32_t SetOutputFormat(OutputFormatType format) override;
     int32_t SetOutputFile(int32_t fd) override;
+    int32_t SetFileGenerationMode(FileGenerationMode mode) override;
     int32_t SetNextOutputFile(int32_t fd) override;
     int32_t SetMaxFileSize(int64_t size) override;
     void SetLocation(float latitude, float longitude) override;
@@ -135,6 +136,7 @@ public:
 private:
     int32_t Init();
     const std::string &GetStatusDescription(OHOS::Media::RecorderServer::RecStatus status);
+    bool CheckCameraOutputState();
 
     std::unique_ptr<IRecorderEngine> recorderEngine_ = nullptr;
     std::shared_ptr<RecorderCallback> recorderCb_ = nullptr;
@@ -165,6 +167,8 @@ private:
         float longitude = 0.0;
         int32_t rotation = 0;
         int32_t url = -1;
+        std::string uri = "";
+        FileGenerationMode fileGenerationMode = APP_CREATE;
         std::string metaSrcTrackMime;
         Meta customInfo;
         std::string genre;

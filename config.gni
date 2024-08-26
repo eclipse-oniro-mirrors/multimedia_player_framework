@@ -205,9 +205,15 @@ declare_args() {
   player_framework_support_screen_capture_controller = false
   player_framework_support_jssoundpool = true
   player_framework_support_mediasource = true
+  player_framework_support_auto_create_file = false
   player_framework_check_video_is_hdr_vivid = false
   if (defined(build_seccomp) && build_seccomp) {
     player_framework_support_seccomp = true
+  }
+  if (defined(global_parts_info) &&
+      defined(global_parts_info.multimedia_camera_framework) &&
+      defined(global_parts_info.multimedia_media_library)) {
+    player_framework_support_auto_create_file = true
   }
   player_framework_support_monitor = true
   use_memmgr_plugin = false
@@ -341,6 +347,10 @@ if (player_framework_support_power_manager) {
 
 if (player_framework_support_mediasource) {
   player_framework_defines += [ "SUPPORT_MEDIA_SOURCE" ]
+}
+
+if (player_framework_support_auto_create_file) {
+  player_framework_defines += [ "SUPPORT_RECORDER_CREATE_FILE" ]
 }
 
 if (player_framework_support_json) {

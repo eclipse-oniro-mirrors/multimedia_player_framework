@@ -30,6 +30,7 @@ public:
     void OnError(int32_t errorType, int32_t errorCode) override;
     void OnInfo(int32_t type, int32_t extra) override;
     void OnAudioCaptureChange(const AudioRecorderChangeInfo &audioRecorderChangeInfo) override;
+    void OnPhotoAssertAvailable(const std::string &uri) override;
     void SetRecorderCallback(const std::shared_ptr<RecorderCallback> &callback);
     void SetMonitor(const std::weak_ptr<MonitorClientObject> &monitor);
 

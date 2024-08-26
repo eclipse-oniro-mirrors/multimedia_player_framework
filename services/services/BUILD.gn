@@ -155,6 +155,10 @@ ohos_shared_library("media_service") {
     ]
   }
 
+  if (player_framework_support_auto_create_file) {
+    sources += [ "recorder/server/media_library_adapter.cpp" ]
+  }
+
   if (player_framework_support_metadata) {
     sources += [
       "avmetadatahelper/ipc/avmetadatahelper_service_stub.cpp",
@@ -269,6 +273,17 @@ ohos_shared_library("media_service") {
       "audio_framework:audio_client",
       "av_session:avsession_client",
       "input:libmmi-client",
+    ]
+  }
+
+  if (player_framework_support_auto_create_file) {
+    external_deps += [
+      "camera_framework:camera_framework",
+      "data_share:datashare_common",
+      "data_share:datashare_consumer",
+      "media_library:media_library",
+      "media_library:media_library_manager",
+      "samgr:samgr_proxy",
     ]
   }
 
