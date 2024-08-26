@@ -428,7 +428,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_012, TestSize.Lev
     sleep(RECORDER_TIME);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_012 before");
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_012 after");
 }
 
 /**
