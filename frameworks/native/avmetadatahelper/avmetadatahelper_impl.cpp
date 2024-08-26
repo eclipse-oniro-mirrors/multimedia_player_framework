@@ -224,9 +224,9 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::CreatePixelMapYuv(const std::sha
                                                     .height = mySurfaceBuffer->GetHeight() },
                                           .srcPixelFormat = PixelFormat::YCBCR_P010,
                                           .pixelFormat = PixelFormat::YCBCR_P010 };
-        uint32_t colorLength = mySurfaceBuffer->GetWidth() * mySurfaceBuffer->GetHeight() * PIXEL_SIZE_HDR_YUV;
-        auto pixelMap =
-            PixelMap::Create(reinterpret_cast<const uint32_t *>(mySurfaceBuffer->GetVirAddr()), colorLength, options);
+        int32_t colorLength = mySurfaceBuffer->GetWidth() * mySurfaceBuffer->GetHeight() * PIXEL_SIZE_HDR_YUV;
+        auto pixelMap = PixelMap::Create(reinterpret_cast<const uint32_t *>(mySurfaceBuffer->GetVirAddr()),
+            static_cast<uint32_t>(colorLength), options);
         pixelMap->InnerSetColorSpace(OHOS::ColorManager::ColorSpace(ColorManager::ColorSpaceName::BT2020_HLG));
         pixelMap->SetPixelsAddr(mySurfaceBuffer->GetVirAddr(), mySurfaceBuffer.GetRefPtr(), mySurfaceBuffer->GetSize(),
                                 AllocatorType::DMA_ALLOC, FreeSurfaceBuffer);
@@ -517,9 +517,9 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameYuv(int64_t timeUs, in
 
     concurrentWorkCount_++;
     ReportSceneCode(AV_META_SCENE_BATCH_HANDLE);
-    OutputConfiguration config = { .colorFormat = param.colorFormat,
+    OutputConfiguration config = { .dstWidth = param.dstWidth,
                                    .dstHeight = param.dstHeight,
-                                   .dstWidth = param.dstWidth };
+                                   .colorFormat = param.colorFormat };
     auto frameBuffer = avMetadataHelperService_->FetchFrameYuv(timeUs, option, config);
     CHECK_AND_RETURN_RET(frameBuffer != nullptr, nullptr);
     concurrentWorkCount_--;

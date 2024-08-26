@@ -1275,7 +1275,7 @@ Status HiPlayerImpl::InitAudioDefaultTrackIndex()
             continue;
         }
         if (IsAudioMime(mime)) {
-            defaultAudioTrackId_ = trackIndex;
+            defaultAudioTrackId_ = static_cast<int32_t>(trackIndex);
             break;
         }
     }
@@ -1474,7 +1474,8 @@ int32_t HiPlayerImpl::SelectTrack(int32_t trackId, PlayerSwitchMode mode)
     MEDIA_LOG_I_SHORT("SelectTrack begin trackId is " PUBLIC_LOG_D32, trackId);
     std::vector<std::shared_ptr<Meta>> metaInfo = demuxer_->GetStreamMetaInfo();
     std::string mime;
-    FALSE_RETURN_V_MSG_W(trackId >= 0 && trackId < metaInfo.size(), MSERR_INVALID_VAL, "SelectTrack trackId invalid");
+    FALSE_RETURN_V_MSG_W(trackId >= 0 && trackId < static_cast<int32_t>(metaInfo.size()),
+        MSERR_INVALID_VAL, "SelectTrack trackId invalid");
     if (!(metaInfo[trackId]->GetData(Tag::MIME_TYPE, mime))) {
         MEDIA_LOG_E_SHORT("SelectTrack trackId " PUBLIC_LOG_D32 "get mime error", trackId);
         return MSERR_INVALID_VAL;
