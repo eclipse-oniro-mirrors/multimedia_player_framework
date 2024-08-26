@@ -57,6 +57,10 @@ RingtonePlayerImpl::~RingtonePlayerImpl()
         player_ = nullptr;
         callback_ = nullptr;
     }
+    if (audioHapticManager_ != nullptr) {
+        audioHapticManager_->UnregisterSource(sourceId_);
+        audioHapticManager_ = nullptr;
+    }
 }
 
 bool RingtonePlayerImpl::IsFileExisting(const std::string &fileUri)
@@ -234,10 +238,17 @@ int32_t RingtonePlayerImpl::Release()
     CHECK_AND_RETURN_RET_LOG(player_ != nullptr && ringtoneState_ != STATE_INVALID, MSERR_INVALID_VAL, "no player_");
 
     (void)player_->Release();
-    ringtoneState_ = STATE_RELEASED;
     player_ = nullptr;
     callback_ = nullptr;
 
+    if (audioHapticManager_ != nullptr) {
+        audioHapticManager_->UnregisterSource(sourceId_);
+        audioHapticManager_ = nullptr;
+    }
+    sourceId_ = -1;
+    configuredUri_ = "";
+
+    ringtoneState_ = STATE_RELEASED;
     return MSERR_OK;
 }
 
