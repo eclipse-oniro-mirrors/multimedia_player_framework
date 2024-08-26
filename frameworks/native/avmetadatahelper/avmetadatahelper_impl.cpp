@@ -556,13 +556,13 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameYuv(int64_t timeUs, in
     return pixelMap;
 }
 
-int32_t AVMetadataHelperImpl::GetTimeByFrameIndex(uint32_t index, int64_t &time)
+int32_t AVMetadataHelperImpl::GetTimeByFrameIndex(uint32_t index, uint64_t &time)
 {
     CHECK_AND_RETURN_RET_LOG(avMetadataHelperService_ != nullptr, 0, "avmetadatahelper service does not exist.");
     return avMetadataHelperService_->GetTimeByFrameIndex(index, time);
 }
 
-int32_t AVMetadataHelperImpl::GetFrameIndexByTime(int64_t time, uint32_t &index)
+int32_t AVMetadataHelperImpl::GetFrameIndexByTime(uint64_t time, uint32_t &index)
 {
     CHECK_AND_RETURN_RET_LOG(avMetadataHelperService_ != nullptr, 0, "avmetadatahelper service does not exist.");
     return avMetadataHelperService_->GetFrameIndexByTime(time, index);
