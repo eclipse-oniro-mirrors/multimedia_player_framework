@@ -2074,7 +2074,10 @@ int32_t ScreenCaptureServer::OnVoIPStatusChanged(bool isInVoIPCall)
     if (!isInVoIPCall) {
         StopMicAudioCapture();
         if (isMicrophoneOn_) {
-            StartFileMicAudioCapture();
+            ret = StartFileMicAudioCapture();
+            if (ret != MSERR_OK) {
+                MEDIA_LOGE("StartFileMicAudioCapture failed, ret: %{public}d", ret);
+            }
         }
         usleep(AUDIO_CHANGE_TIME);
     }
@@ -2093,7 +2096,10 @@ int32_t ScreenCaptureServer::OnVoIPStatusChanged(bool isInVoIPCall)
         usleep(AUDIO_CHANGE_TIME);
         StopMicAudioCapture();
         if (isMicrophoneOn_) {
-            StartFileMicAudioCapture();
+            ret = StartFileMicAudioCapture();
+            if (ret != MSERR_OK) {
+                MEDIA_LOGE("StartFileMicAudioCapture failed, ret: %{public}d", ret);
+            }
         }
     }
     return MSERR_OK;
