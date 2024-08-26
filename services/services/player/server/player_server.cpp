@@ -1828,7 +1828,7 @@ bool PlayerServer::CheckState(PlayerOnInfoType type, int32_t extra)
     bool isErrorInfo = type == INFO_TYPE_STATE_CHANGE && extra == PlayerStates::PLAYER_STATE_ERROR;
     CHECK_AND_RETURN_RET_LOG(currState != idleState_ || !isErrorInfo, false, "do not report error in idle state");
 
-    bool isPreparedInfo == type == INFO_TYPE_STATE_CHANGE && extra == PlayerStates::PLAYER_PREPARED;
+    bool isPreparedInfo = type == INFO_TYPE_STATE_CHANGE && extra == PlayerStates::PLAYER_PREPARED;
     CHECK_AND_RETURN_RET_LOG(currState != idleState_ || !isPreparedInfo, false,
         "do not report prepared in idle state");
     return true;
