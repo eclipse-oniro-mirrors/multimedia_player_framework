@@ -2029,6 +2029,10 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
     ResetIfSourceExisted();
     demuxer_ = FilterFactory::Instance().CreateFilter<DemuxerFilter>("builtin.player.demuxer",
         FilterType::FILTERTYPE_DEMUXER);
+    if (demuxer_ == nullptr) {
+        MEDIA_LOG_E_SHORT("demuxer_ is nullptr");
+        return Status::ERROR_NULL_POINTER;
+    }
     pipeline_->AddHeadFilters({demuxer_});
     demuxer_->Init(playerEventReceiver_, playerFilterCallback_);
     if (dfxAgent_ != nullptr) {

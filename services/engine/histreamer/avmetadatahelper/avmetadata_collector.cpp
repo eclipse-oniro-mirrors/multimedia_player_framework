@@ -239,6 +239,10 @@ std::shared_ptr<AVSharedMemory> AVMetaDataCollector::GetArtPicture()
         size_t size = coverAddr.size();
         auto artPicMem =
             AVSharedMemoryBase::CreateFromLocal(static_cast<int32_t>(size), AVSharedMemory::FLAGS_READ_ONLY, "artpic");
+        if (artPicMem == nullptr) {
+            MEDIA_LOGE("artPicMem is nullptr");
+            return nullptr;
+        }
         errno_t rc = memcpy_s(artPicMem->GetBase(), static_cast<size_t>(artPicMem->GetSize()), addr, size);
         if (rc != EOK) {
             MEDIA_LOGE("memcpy_s failed, trackCount no %{public}d", index);
