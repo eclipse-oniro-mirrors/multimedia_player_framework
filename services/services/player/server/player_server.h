@@ -220,7 +220,7 @@ private:
     int32_t ExitSeekContinous(bool align);
     void UpdateContinousBatchNo();
 
-    bool CheckState();
+    bool CheckState(PlayerOnInfoType type, int32_t extra);
 
 #ifdef SUPPORT_VIDEO
     sptr<Surface> surface_ = nullptr;

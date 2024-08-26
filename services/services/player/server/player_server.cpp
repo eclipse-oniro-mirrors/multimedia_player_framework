@@ -1526,7 +1526,7 @@ void PlayerServer::InnerOnInfo(PlayerOnInfoType type, int32_t extra, const Forma
         subtitleTrackNum_ = static_cast<uint32_t>(extra);
         return;
     }
-    CHECK_AND_RETURN_LOG(CheckState(), "OnInfo check state failed");
+    CHECK_AND_RETURN_LOG(CheckState(type, extra), "OnInfo check state failed");
     if (type == INFO_TYPE_DEFAULTTRACK || type == INFO_TYPE_TRACK_DONE || type == INFO_TYPE_ADD_SUBTITLE_DONE) {
         return;
     }
@@ -1817,7 +1817,7 @@ int32_t PlayerServer::SetMaxAmplitudeCbStatus(bool status)
     return MSERR_OK;
 }
 
-bool PlayerServer::CheckState()
+bool PlayerServer::CheckState(PlayerOnInfoType type, int32_t extra)
 {
     auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
     bool isCompletedInfo = type == INFO_TYPE_STATE_CHANGE && extra == PlayerStates::PLAYER_PLAYBACK_COMPLETE;
