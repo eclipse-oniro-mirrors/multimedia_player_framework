@@ -21,7 +21,19 @@
 #include "media_dfx.h"
 #include "ipc_skeleton.h"
 
+#ifdef WIN32
+#include <fcntl.h>
+#else
+#include <sys/types.h>
+#include <unistd.h>
+#endif
+#include <sys/ioctl.h>
+#include <sys/stat.h>
+
 namespace {
+#define HMDFS_IOC_GET_LOCATION _IOR(HMDFS_IOC, 7, __u32)
+static constexpr unsigned int HMDFS_IOC = 0xf2;
+static constexpr uint8_t IOCTL_CLOUD = 2;
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_METADATA, "AVMetadataHelperServer"};
 }
 
@@ -84,6 +96,9 @@ int32_t AVMetadataHelperServer::SetSource(int32_t fd, int64_t offset, int64_t si
     MediaTrace trace("AVMetadataHelperServer::SetSource_fd");
     MEDIA_LOGD("Current is fd source, offset: %{public}" PRIi64 ", size: %{public}" PRIi64 " usage: %{public}u",
                offset, size, usage);
+    int loc = 0; // 1 means local，2 means cloud
+    int ioResult = ioctl(fd, HMDFS_IOC_GET_LOCATION, &loc);
+    CHECK_AND_RETURN_RET_LOG(ioResult == 0 && loc != IOCTL_CLOUD, MSERR_NO_MEMORY, "cloud file invalid");
 
     uriHelper_ = std::make_unique<UriHelper>(fd, offset, size);
     CHECK_AND_RETURN_RET_LOG(!uriHelper_->FormattedUri().empty(),
