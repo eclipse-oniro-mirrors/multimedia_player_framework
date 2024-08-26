@@ -269,6 +269,7 @@ public:
     bool GetMicWorkingState();
     int32_t SetCanvasRotation(bool canvasRotation) override;
     int32_t ResizeCanvas(int32_t width, int32_t height) override;
+    int32_t SkipPrivacyMode(std::vector<uint64_t> &windowIDsVec) override;
     void Release() override;
     int32_t ExcludeContent(ScreenCaptureContentFilter &contentFilter) override;
 
@@ -313,6 +314,7 @@ private:
     int32_t CheckCaptureStreamParams();
     int32_t CheckCaptureFileParams();
     int32_t SetCanvasRotationInner();
+    int32_t SkipPrivacyModeInner();
     int32_t SetScreenScaleMode();
     void InitAppInfo();
     void CloseFd();
@@ -325,6 +327,7 @@ private:
     int32_t GetMissionIds(std::vector<uint64_t> &missionIds);
     int32_t MakeVirtualScreenMirror();
     int32_t CreateVirtualScreen(const std::string &name, sptr<OHOS::Surface> consumer);
+    int32_t PrepareVirtualScreenMirror();
     void DestroyVirtualScreen();
 
     bool CheckScreenCapturePermission();
@@ -400,6 +403,7 @@ private:
     /* used for DFX events */
     uint64_t instanceId_ = 0;
     std::shared_ptr<ScreenRendererAudioStateChangeCallback> captureCallback_;
+    std::vector<uint64_t> skipPrivacyWindowIDsVec_;
 private:
     static int32_t CheckAudioCapParam(const AudioCaptureInfo &audioCapInfo);
     static int32_t CheckVideoCapParam(const VideoCaptureInfo &videoCapInfo);

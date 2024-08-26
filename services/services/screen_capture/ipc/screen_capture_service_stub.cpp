@@ -58,6 +58,7 @@ int32_t ScreenCaptureServiceStub::Init()
     screenCaptureStubFuncs_[SET_MIC_ENABLE] = &ScreenCaptureServiceStub::SetMicrophoneEnabled;
     screenCaptureStubFuncs_[SET_SCREEN_ROTATION] = &ScreenCaptureServiceStub::SetCanvasRotation;
     screenCaptureStubFuncs_[RESIZE_CANVAS] = &ScreenCaptureServiceStub::ResizeCanvas;
+    screenCaptureStubFuncs_[SKIP_PRIVACY] = &ScreenCaptureServiceStub::SkipPrivacyMode;
     screenCaptureStubFuncs_[SET_CAPTURE_MODE] = &ScreenCaptureServiceStub::SetCaptureMode;
     screenCaptureStubFuncs_[SET_DATA_TYPE] = &ScreenCaptureServiceStub::SetDataType;
     screenCaptureStubFuncs_[SET_RECORDER_INFO] = &ScreenCaptureServiceStub::SetRecorderInfo;
@@ -235,6 +236,13 @@ int32_t ScreenCaptureServiceStub::ResizeCanvas(int32_t width, int32_t height)
     return screenCaptureServer_->ResizeCanvas(width, height);
 }
 
+int32_t ScreenCaptureServiceStub::SkipPrivacyMode(std::vector<uint64_t> &windowIDsVec)
+{
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, false,
+                             "screen capture server is nullptr");
+    return screenCaptureServer_->SkipPrivacyMode(windowIDsVec);
+}
+
 int32_t ScreenCaptureServiceStub::AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audioBuffer,
                                                      AudioCaptureSourceType type)
 {
@@ -296,7 +304,6 @@ int32_t ScreenCaptureServiceStub::SetMicrophoneEnabled(MessageParcel &data, Mess
 {
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
         "screen capture server is nullptr");
-    (void)data;
     bool setMicEnable = data.ReadBool();
     int32_t ret = SetMicrophoneEnabled(setMicEnable);
     reply.WriteInt32(ret);
@@ -307,7 +314,6 @@ int32_t ScreenCaptureServiceStub::SetCanvasRotation(MessageParcel &data, Message
 {
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
                              "screen capture server is nullptr");
-    (void)data;
     bool canvasRotation = data.ReadBool();
     int32_t ret = SetCanvasRotation(canvasRotation);
     reply.WriteInt32(ret);
@@ -318,7 +324,6 @@ int32_t ScreenCaptureServiceStub::ResizeCanvas(MessageParcel &data, MessageParce
 {
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
                              "screen capture server is nullptr");
-    (void)data;
     int32_t width = data.ReadInt32();
     int32_t height = data.ReadInt32();
     int32_t ret = ResizeCanvas(width, height);
@@ -326,11 +331,28 @@ int32_t ScreenCaptureServiceStub::ResizeCanvas(MessageParcel &data, MessageParce
     return MSERR_OK;
 }
 
+int32_t ScreenCaptureServiceStub::SkipPrivacyMode(MessageParcel &data, MessageParcel &reply)
+{
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
+                             "screen capture server is nullptr");
+    int32_t windowIdSize = data.ReadInt32();
+    CHECK_AND_RETURN_RET_LOG(windowIdSize < MAX_FILTER_CONTENTS_COUNT, MSERR_INVALID_STATE,
+                             "windowID size is exceed max range");
+    if (windowIdSize > 0) {
+        std::vector<uint64_t> vec;
+        for (int32_t i = 0; i < windowIdSize; i++) {
+            vec.push_back(data.ReadUint64());
+        }
+        int32_t ret = SkipPrivacyMode(vec);
+        reply.WriteInt32(ret);
+    }
+    return MSERR_OK;
+}
+
 int32_t ScreenCaptureServiceStub::SetCaptureMode(MessageParcel &data, MessageParcel &reply)
 {
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
         "screen capture server is nullptr");
-    (void)data;
     CaptureMode mode = static_cast<CaptureMode>(data.ReadInt32());
     int32_t ret = SetCaptureMode(mode);
     reply.WriteInt32(ret);
@@ -341,7 +363,6 @@ int32_t ScreenCaptureServiceStub::SetDataType(MessageParcel &data, MessageParcel
 {
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
         "screen capture server is nullptr");
-    (void)data;
     DataType dataType = static_cast<DataType>(data.ReadInt32());
     int32_t ret = SetDataType(dataType);
     reply.WriteInt32(ret);
@@ -375,7 +396,6 @@ int32_t ScreenCaptureServiceStub::InitAudioEncInfo(MessageParcel &data, MessageP
 {
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
         "screen capture server is nullptr");
-    (void)data;
     AudioEncInfo audioEncInfo;
     audioEncInfo.audioBitrate = data.ReadInt32();
     audioEncInfo.audioCodecformat = static_cast<AudioCodecFormat>(data.ReadInt32());
@@ -388,7 +408,6 @@ int32_t ScreenCaptureServiceStub::InitAudioCap(MessageParcel &data, MessageParce
 {
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
         "screen capture server is nullptr");
-    (void)data;
     AudioCaptureInfo audioInfo;
     audioInfo.audioSampleRate = data.ReadInt32();
     audioInfo.audioChannels = data.ReadInt32();
@@ -402,7 +421,6 @@ int32_t ScreenCaptureServiceStub::InitVideoEncInfo(MessageParcel &data, MessageP
 {
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
         "screen capture server is nullptr");
-    (void)data;
     VideoEncInfo videoEncInfo;
     videoEncInfo.videoCodec = static_cast<VideoCodecFormat>(data.ReadInt32());
     videoEncInfo.videoBitrate = data.ReadInt32();
@@ -416,7 +434,6 @@ int32_t ScreenCaptureServiceStub::InitVideoCap(MessageParcel &data, MessageParce
 {
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
         "screen capture server is nullptr");
-    (void)data;
     VideoCaptureInfo videoInfo;
     videoInfo.displayId = data.ReadUint64();
     int32_t size = data.ReadInt32();
@@ -479,7 +496,6 @@ int32_t ScreenCaptureServiceStub::AcquireAudioBuffer(MessageParcel &data, Messag
 {
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
         "screen capture server is nullptr");
-    (void)data;
     std::shared_ptr<AudioBuffer> audioBuffer;
     AudioCaptureSourceType type = static_cast<AudioCaptureSourceType>(data.ReadInt32());
     int32_t ret = AcquireAudioBuffer(audioBuffer, type);
@@ -524,7 +540,6 @@ int32_t ScreenCaptureServiceStub::ReleaseAudioBuffer(MessageParcel &data, Messag
 {
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
         "screen capture server is nullptr");
-    (void)data;
     AudioCaptureSourceType type = static_cast<AudioCaptureSourceType>(data.ReadInt32());
     int32_t ret = ReleaseAudioBuffer(type);
     reply.WriteInt32(ret);
