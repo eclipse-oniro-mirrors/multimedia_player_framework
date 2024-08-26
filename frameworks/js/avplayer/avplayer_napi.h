@@ -115,6 +115,10 @@ private:
      */
     static napi_value JsSeek(napi_env env, napi_callback_info info);
     /**
+     * setPlayRange(startTimeMs: number, endTimeMs: number, mode?: SeekMode): void
+     */
+    static napi_value JsSetPlaybackRange(napi_env env, napi_callback_info info);
+    /**
      * setSpeed(speed: number): void
      */
     static napi_value JsSetSpeed(napi_env env, napi_callback_info info);
@@ -306,9 +310,11 @@ private:
     std::shared_ptr<TaskHandler<TaskRet>> ReleaseTask();
     std::shared_ptr<TaskHandler<TaskRet>> SetPlaybackStrategyTask(AVPlayStrategy playStrategy);
     std::shared_ptr<TaskHandler<TaskRet>> SetMediaMutedTask(MediaType type, bool isMuted);
+    std::shared_ptr<TaskHandler<TaskRet>> EqueueSetPlayRangeTask(int32_t start, int32_t end, int32_t mode);
 
     std::string GetCurrentState();
     bool IsControllable();
+    bool CanSetPlayRange();
     bool IsLiveSource() const;
     void EnqueueNetworkTask(const std::string url);
     void EnqueueFdTask(const int32_t fd);

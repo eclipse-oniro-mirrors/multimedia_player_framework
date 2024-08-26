@@ -354,6 +354,43 @@ int32_t PlayerServer::SetPlayRange(int64_t start, int64_t end)
     return MSERR_OK;
 }
 
+int32_t PlayerServer::SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (lastOpStatus_ != PLAYER_INITIALIZED
+        && lastOpStatus_ != PLAYER_PREPARED
+        && lastOpStatus_ != PLAYER_PAUSED
+        && lastOpStatus_ != PLAYER_STOPPED
+        && lastOpStatus_ != PLAYER_PLAYBACK_COMPLETE) {
+        MEDIA_LOGE("Can not SetPlayRangeWithMode, currentState is %{public}s",
+            GetStatusDescription(lastOpStatus_).c_str());
+        return MSERR_INVALID_OPERATION;
+    }
+    if (isLiveStream_) {
+        MEDIA_LOGE("Can not SetPlayRangeWithMode, it is live-stream");
+        return MSERR_INVALID_OPERATION;
+    }
+    auto setPlayRangeTask = std::make_shared<TaskHandler<void>>([this, start, end, mode]() {
+        MediaTrace::TraceBegin("PlayerServer::SetPlayRange", FAKE_POINTER(this));
+        auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
+        (void)currState->SetPlayRangeWithMode(start, end, mode);
+    });
+    int ret = taskMgr_.LaunchTask(setPlayRangeTask, PlayerServerTaskType::STATE_CHANGE, "set playRange");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetPlayRangeWithMode failed");
+    return MSERR_OK;
+}
+
+int32_t PlayerServer::HandleSetPlayRange(int64_t start, int64_t end, PlayerSeekMode mode)
+{
+    MEDIA_LOGI("KPI-TRACE: PlayerServer HandleSetPlayRange in");
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_INVALID_OPERATION, "playerEngine_ is nullptr");
+    int32_t ret = playerEngine_->SetPlayRangeWithMode(start, end, mode);
+    taskMgr_.MarkTaskDone("HandleSetPlayRange done");
+    MediaTrace::TraceEnd("PlayerServer::SetPlayRange", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine SetPlayRangeWithMode Failed!");
+    return MSERR_OK;
+}
+
 int32_t PlayerServer::PrepareAsync()
 {
     if (inReleasing_.load()) {
@@ -1050,7 +1087,15 @@ void PlayerServer::HandleEos()
             MediaTrace::TraceBegin("PlayerServer::Seek", FAKE_POINTER(this));
             disableNextSeekDone_ = true;
             auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
-            (void)currState->Seek(0, SEEK_PREVIOUS_SYNC);
+            if (playerEngine_ != nullptr) {
+                int64_t startTime = playerEngine_->GetPlayRangeStartTime();
+                int64_t endTime = playerEngine_->GetPlayRangeEndTime();
+                PlayerSeekMode seekMode = static_cast<PlayerSeekMode>(playerEngine_->GetPlayRangeSeekMode());
+                int32_t seekTime = (startTime != -1 && endTime != -1) ? startTime : 0;
+                (void)currState->Seek(seekTime, seekMode);
+            } else {
+                (void)currState->Seek(0, SEEK_PREVIOUS_SYNC);
+            }
         });
 
         auto cancelTask = std::make_shared<TaskHandler<void>>([this]() {
