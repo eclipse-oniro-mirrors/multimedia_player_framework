@@ -12,10 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+ 
 #ifndef HI_TRANSCODER_IMPL_H
 #define HI_TRANSCODER_IMPL_H
-
+ 
 #include "i_transcoder_engine.h"
 #include "transcoder_param.h"
 #include "common/log.h"
@@ -33,10 +33,10 @@
 #include "muxer_filter.h"
 #include "video_resize_filter.h"
 #include "hitranscoder_callback_looper.h"
-
+ 
 namespace OHOS {
 namespace Media {
-
+ 
 class HiTransCoderImpl : public ITransCoderEngine {
 public:
     HiTransCoderImpl(int32_t appUid, int32_t appPid, uint32_t appTokenId, uint64_t appFullTokenId);
@@ -57,7 +57,7 @@ public:
         Pipeline::StreamType outType);
     int32_t GetCurrentTime(int32_t& currentPositionMs);
     int32_t GetDuration(int32_t& durationMs);
-
+ 
 private:
     int32_t GetRealPath(const std::string &url, std::string &realUrlPath) const;
     Status ConfigureVideoEncoderFormat(const TransCoderParam &transCoderParam);
@@ -73,16 +73,19 @@ private:
     Status ConfigureMetaData(const std::vector<std::shared_ptr<Meta>> &trackInfos);
     Status SetTrackMime(const std::vector<std::shared_ptr<Meta>> &trackInfos);
     Status ConfigureVideoWidthHeight(const TransCoderParam &transCoderParam);
+    Status ConfigureVideoBitrate();
     Status ConfigureInputVideoMetaData(const std::vector<std::shared_ptr<Meta>> &trackInfos, const size_t &index);
     bool SetValueByType(const std::shared_ptr<Meta> &innerMeta, std::shared_ptr<Meta> &outputMeta);
+    bool ProcessMetaKey(
+        const std::shared_ptr<Meta> &innerMeta, std::shared_ptr<Meta> &outputMeta, const std::string &metaKey);
     void ConfigureMetaDataToTrackFormat(const std::shared_ptr<Meta> &globalInfo,
         const std::vector<std::shared_ptr<Meta>> &trackInfos);
-
+ 
     int32_t appUid_{0};
     int32_t appPid_{0};
     int32_t appTokenId_{0};
     int64_t appFullTokenId_{0};
-
+ 
     std::shared_ptr<Pipeline::Pipeline> pipeline_;
     std::shared_ptr<Pipeline::DemuxerFilter> demuxerFilter_;
     std::shared_ptr<Pipeline::AudioDecoderFilter> audioDecoderFilter_;
@@ -91,23 +94,23 @@ private:
     std::shared_ptr<Pipeline::SurfaceEncoderFilter> videoEncoderFilter_;
     std::shared_ptr<Pipeline::VideoResizeFilter> videoResizeFilter_;
     std::shared_ptr<Pipeline::MuxerFilter> muxerFilter_;
-
+ 
     std::shared_ptr<Pipeline::EventReceiver> transCoderEventReceiver_;
     std::shared_ptr<Pipeline::FilterCallback> transCoderFilterCallback_;
-
+ 
     std::shared_ptr<Task> cancelTask_{nullptr};
     std::shared_ptr<Task> pauseTask_{nullptr};
-
+ 
     std::shared_ptr<Meta> audioEncFormat_ = std::make_shared<Meta>();
     std::shared_ptr<Meta> videoEncFormat_ = std::make_shared<Meta>();
     std::shared_ptr<Meta> muxerFormat_ = std::make_shared<Meta>();
-
+ 
     std::weak_ptr<ITransCoderEngineObs> obs_{};
     std::shared_ptr<HiTransCoderCallbackLooper> callbackLooper_;
     OutputFormatType outputFormatType_{OutputFormatType::FORMAT_BUTT};
     int32_t fd_ = -1;
     std::string inputFile_;
-
+ 
     std::string transCoderId_;
     int32_t inputVideoWidth_ = 0;
     int32_t inputVideoHeight_ = 0;
