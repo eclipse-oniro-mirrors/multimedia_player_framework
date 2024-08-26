@@ -120,6 +120,7 @@ HiTransCoderImpl::~HiTransCoderImpl()
 int32_t HiTransCoderImpl::Init()
 {
     MEDIA_LOG_I("HiTransCoderImpl::Init()");
+    MediaTrace trace("HiTransCoderImpl::Init()");
     transCoderEventReceiver_ = std::make_shared<TransCoderEventReceiver>(this);
     transCoderFilterCallback_ = std::make_shared<TransCoderFilterCallback>(this);
     pipeline_->Init(transCoderEventReceiver_, transCoderFilterCallback_, transCoderId_);
@@ -154,6 +155,7 @@ int32_t HiTransCoderImpl::GetRealPath(const std::string &url, std::string &realU
 
 int32_t HiTransCoderImpl::SetInputFile(const std::string &url)
 {
+    MediaTrace trace("HiTransCoderImpl::SetInputFile()");
     inputFile_ = url;
     if (url.find("://") == std::string::npos || url.find("file://") == 0) {
         std::string realUriPath;
@@ -449,6 +451,7 @@ Status HiTransCoderImpl::ConfigureVideoBitrate()
 int32_t HiTransCoderImpl::Configure(const TransCoderParam &transCoderParam)
 {
     MEDIA_LOG_I("HiTransCoderImpl::Configure()");
+    MediaTrace trace("HiTransCoderImpl::Configure()");
     Status ret = Status::OK;
     switch (transCoderParam.type) {
         case TransCoderPublicParamType::VIDEO_ENC_FMT: {
@@ -495,6 +498,7 @@ int32_t HiTransCoderImpl::Configure(const TransCoderParam &transCoderParam)
 int32_t HiTransCoderImpl::Prepare()
 {
     MEDIA_LOG_I("HiTransCoderImpl::Prepare()");
+    MediaTrace trace("HiTransCoderImpl::Prepare()");
     int32_t width = 0;
     int32_t height = 0;
     if (isExistVideoTrack_) {
@@ -543,6 +547,7 @@ int32_t HiTransCoderImpl::Prepare()
 int32_t HiTransCoderImpl::Start()
 {
     MEDIA_LOG_I("HiTransCoderImpl::Start()");
+    MediaTrace trace("HiTransCoderImpl::Start()");
     int32_t ret = TransStatus(pipeline_->Start());
     if (ret != MSERR_OK) {
         MEDIA_LOG_E("Start pipeline failed");
@@ -556,6 +561,7 @@ int32_t HiTransCoderImpl::Start()
 int32_t HiTransCoderImpl::Pause()
 {
     MEDIA_LOG_I("HiTransCoderImpl::Pause()");
+    MediaTrace trace("HiTransCoderImpl::Pause()");
     callbackLooper_->StopReportMediaProgress();
     Status ret = pipeline_->Pause();
     if (ret != Status::OK) {
@@ -568,6 +574,7 @@ int32_t HiTransCoderImpl::Pause()
 int32_t HiTransCoderImpl::Resume()
 {
     MEDIA_LOG_I("HiTransCoderImpl::Resume()");
+    MediaTrace trace("HiTransCoderImpl::Resume()");
     Status ret = pipeline_->Resume();
     if (ret != Status::OK) {
         MEDIA_LOG_E("Resume pipeline failed");
@@ -581,6 +588,7 @@ int32_t HiTransCoderImpl::Resume()
 int32_t HiTransCoderImpl::Cancel()
 {
     MEDIA_LOG_I("HiTransCoderImpl::Cancel enter");
+    MediaTrace trace("HiTransCoderImpl::Cancel()");
     callbackLooper_->StopReportMediaProgress();
     Status ret = pipeline_->Stop();
     callbackLooper_->Stop();
