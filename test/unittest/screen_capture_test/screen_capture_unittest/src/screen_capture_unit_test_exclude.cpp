@@ -58,7 +58,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_001, TestSize.Lev
     sleep(RECORDER_TIME);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_001 before");
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_001 after");
 }
 
 /**
@@ -86,7 +86,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_002, TestSize.Lev
     sleep(RECORDER_TIME);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_002 before");
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_002 after");
 }
 
 /**
@@ -114,7 +114,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_003, TestSize.Lev
     sleep(RECORDER_TIME);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_003 before");
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_003 after");
 }
 
 /**
@@ -144,7 +144,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_004, TestSize.Lev
     sleep(RECORDER_TIME);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_004 before");
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_004 after");
 }
 
 /**
@@ -173,7 +173,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_005, TestSize.Lev
     sleep(RECORDER_TIME);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_005 before");
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_005 after");
 }
 
 /**
@@ -214,7 +214,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_006, TestSize.Lev
     sleep(RECORDER_TIME);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_006 before");
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_006 after");
 }
 
 /**
@@ -255,7 +255,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_007, TestSize.Lev
     sleep(RECORDER_TIME);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_007 before");
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_007 after");
 }
 
 /**
@@ -286,7 +286,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_008, TestSize.Lev
     sleep(RECORDER_TIME);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_008 before");
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_008 after");
 }
 
 /**
@@ -297,7 +297,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_008, TestSize.Lev
  */
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_009, TestSize.Level2)
 {
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_009 before");
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_009 after");
     SetConfig(config_);
     AudioCaptureInfo micCapInfo = {
         .audioSampleRate = 0,
@@ -329,7 +329,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_009, TestSize.Lev
     sleep(RECORDER_TIME);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_009 before");
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_009 after");
 }
 
 /**
@@ -362,7 +362,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_010, TestSize.Lev
     sleep(RECORDER_TIME);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_010 before");
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_010 after");
 }
 
 /**
@@ -395,7 +395,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_011, TestSize.Lev
     sleep(RECORDER_TIME);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_011 before");
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_011 after");
 }
 
 /**
