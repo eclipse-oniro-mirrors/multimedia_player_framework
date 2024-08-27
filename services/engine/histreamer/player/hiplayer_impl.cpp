@@ -2138,7 +2138,7 @@ void HiPlayerImpl::HandleCompleteEvent(const Event& event)
 {
     MEDIA_LOG_D_SHORT("HandleCompleteEvent");
     AutoLock lock(handleCompleteMutex_);
-    if (curState_ == PlayerStates::PLAYER_STOPPED) {
+    if (curState_ == PlayerStateId::STOPPED) {
         MEDIA_LOG_I("The Complete Task don't run, current status is Stopped.");
         return;
     }
