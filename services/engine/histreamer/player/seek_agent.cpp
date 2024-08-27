@@ -246,5 +246,36 @@ void SeekAgent::SetInterruptState(bool isNeed)
     isInterrputNeeded_ = isNeed;
     targetArrivedCond_.NotifyAll();
 }
+bool HiPlayerImpl::needSeekClosest()
+{
+    MEDIA_LOG_D("needSeekClosest begin");
+    std::vector<Format> trackInfo;
+    GetAudioTrackInfo(trackInfo);
+    if (trackInfo.size() == 0) {
+        MEDIA_LOG_D("needSeekClosest end true");
+        return true;
+    }
+    for (size_t i = 0; i < trackInfo.size(); i++) {
+        int32_t trackIndex = -1;
+        trackInfo[i].GetIntValue("track_index", trackIndex);
+        if (trackIndex != currentAudioTrackId_) {
+            continue;
+        }
+        std::string mime = "";
+        trackInfo[i].GetStringValue("codec_mime", mime);
+        if (mime == "audio/x-ape") {
+            MEDIA_LOG_D("needSeekClosest end false");
+            return false;
+        }
+    }
+    MEDIA_LOG_D("needSeekClosest end true");
+    return true;
+}
+    if (mode == PlayerSeekMode::SEEK_CLOSEST) {   // reset mode
+        mode = PlayerSeekMode::SEEK_NEXT_SYNC;
+        if (audioSink_) {
+            audioSink_->SetSeekTime(seekTimeUs);
+        }
+    }
 }  // namespace Media
 }  // namespace OHOS
