@@ -2029,12 +2029,14 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
     ResetIfSourceExisted();
     demuxer_ = FilterFactory::Instance().CreateFilter<DemuxerFilter>("builtin.player.demuxer",
         FilterType::FILTERTYPE_DEMUXER);
+    if (demuxer_ == nullptr) {
+        return Status::ERROR_NULL_POINTER;
+    }
     pipeline_->AddHeadFilters({demuxer_});
     demuxer_->Init(playerEventReceiver_, playerFilterCallback_);
     if (dfxAgent_ != nullptr) {
         dfxAgent_->SetDemuxer(demuxer_);
     }
-
     std::shared_ptr<PlayStrategy> playStrategy = std::make_shared<PlayStrategy>();
     playStrategy->width = preferedWidth_;
     playStrategy->height = preferedHeight_;
@@ -2043,7 +2045,6 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
     playStrategy->audioLanguage = audioLanguage_;
     playStrategy->subtitleLanguage = subtitleLanguage_;
     source->SetPlayStrategy(playStrategy);
-
     if (!mimeType_.empty()) {
         source->SetMimeType(mimeType_);
     }
@@ -2062,12 +2063,10 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
     if (ret != Status::OK) {
         return ret;
     }
-
     std::unique_lock<std::mutex> lock(drmMutex_);
     isDrmProtected_ = demuxer_->IsDrmProtected();
     MEDIA_LOG_I_SHORT("Is the source drm-protected : %{public}d", isDrmProtected_);
     lock.unlock();
-
     if (hasExtSub_) {
         demuxer_->SetSubtitleSource(std::make_shared<MediaSource>(subUrl_));
     }

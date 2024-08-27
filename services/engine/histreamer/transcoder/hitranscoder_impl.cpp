@@ -166,6 +166,10 @@ int32_t HiTransCoderImpl::SetInputFile(const std::string &url)
     std::shared_ptr<MediaSource> mediaSource = std::make_shared<MediaSource>(inputFile_);
     demuxerFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::DemuxerFilter>("builtin.player.demuxer",
         Pipeline::FilterType::FILTERTYPE_DEMUXER);
+    if (demuxerFilter_ == nullptr) {
+        MEDIA_LOG_E("demuxerFilter_ is nullptr");
+        return MSERR_UNKNOWN;
+    }
     pipeline_->AddHeadFilters({demuxerFilter_});
     demuxerFilter_->Init(transCoderEventReceiver_, transCoderFilterCallback_);
     Status ret = demuxerFilter_->SetDataSource(mediaSource);
