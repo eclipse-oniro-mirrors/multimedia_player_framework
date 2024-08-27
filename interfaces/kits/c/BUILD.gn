@@ -121,8 +121,10 @@ ohos_shared_library("avplayer") {
     "c_utils:utils",
     "graphic_surface:surface",
     "hilog:libhilog",
+    "hisysevent:libhisysevent",
     "ipc:ipc_core",
     "media_foundation:media_foundation",
+    "samgr:samgr_proxy",
     "window_manager:libdm",
   ]
   if (player_framework_support_drm) {
