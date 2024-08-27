@@ -11,7 +11,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import("//foundation/multimedia/player_framework/config.gni")
+import(
+    "//build/config/components/init/seccomp/scripts/seccomp_policy_fixer.gni")
 
 ohos_prebuilt_seccomp("media_seccomp_filter") {
   sources = [ "media_service.seccomp.policy" ]
