@@ -248,7 +248,7 @@ private:
     int64_t GetPlayStartTime();
     Status StartSeekContinous();
     int32_t InnerSelectTrack(std::string mime, int32_t trackId, PlayerSwitchMode mode);
-    bool needSeekClosest();
+    bool NeedSeekClosest();
 
     bool isNetWorkPlay_ = false;
     bool isDump_ = false;
