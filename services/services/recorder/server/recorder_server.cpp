@@ -925,6 +925,7 @@ int32_t RecorderServer::Stop(bool block)
 
     auto result = task->GetResult();
     ret = result.Value();
+    MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " Stop out ret: %{public}d", FAKE_POINTER(this), ret);
     status_ = (ret == MSERR_OK ? REC_INITIALIZED : REC_ERROR);
     if (status_ == REC_INITIALIZED) {
         int64_t endTime = GetCurrentMillisecond();

@@ -438,6 +438,9 @@ int32_t HiRecorderImpl::Stop(bool isDrainAll)
     if (audioCaptureFilter_) {
         ret = audioCaptureFilter_->SendEos();
     }
+    if (audioDataSourceFilter_) {
+        ret = audioDataSourceFilter_->SendEos();
+    }
     ret = pipeline_->Stop();
     if (ret == Status::OK) {
         OnStateChanged(StateId::INIT);
