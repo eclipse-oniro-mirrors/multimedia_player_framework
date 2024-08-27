@@ -96,6 +96,9 @@ Status AVThumbnailGenerator::InitDecoder()
     MEDIA_LOGD("Init decoder start.");
     if (videoDecoder_ != nullptr) {
         MEDIA_LOGD("AVThumbnailGenerator InitDecoder already.");
+        Format format;
+        format.PutDoubleValue(MediaDescriptionKey::MD_KEY_FRAME_RATE, VIDEO_FRAME_RATE);
+        videoDecoder_->SetParameter(format);
         videoDecoder_->Start();
         return Status::OK;
     }
@@ -140,13 +143,13 @@ std::shared_ptr<Meta> AVThumbnailGenerator::GetVideoTrackInfo()
                 mediaType == Plugins::MediaType::VIDEO, nullptr,
                 "GetTargetTrackInfo mediaType is not video, index:%{public}d, mediaType:%{public}d", index,
                 static_cast<int32_t>(mediaType));
+            CHECK_AND_RETURN_RET_LOG(trackInfos[index]->Get<Tag::VIDEO_FRAME_RATE>(frameRate_) && frameRate_ > 0,
+                nullptr, "failed to get video frame rate");
             trackIndex_ = index;
             MEDIA_LOGI("0x%{public}06" PRIXPTR " GetTrackInfo success trackIndex_:%{public}d, trackMime_:%{public}s",
                        FAKE_POINTER(this), trackIndex_, trackMime_.c_str());
             if (trackInfos[index]->Get<Tag::VIDEO_ROTATION>(rotation_)) {
-                MEDIA_LOGD("rotation %{public}d", static_cast<int32_t>(rotation_));
-            } else {
-                MEDIA_LOGD("no rotation");
+                MEDIA_LOGI("rotation %{public}d", static_cast<int32_t>(rotation_));
             }
             return trackInfos[trackIndex_];
         }
@@ -623,6 +626,9 @@ void AVThumbnailGenerator::PauseFetchFrame()
     mediaDemuxer_->Pause();
     mediaDemuxer_->Flush();
     videoDecoder_->Flush();
+    Format format;
+    format.PutDoubleValue(MediaDescriptionKey::MD_KEY_FRAME_RATE, frameRate_);
+    videoDecoder_->SetParameter(format);
 }
 }  // namespace Media
 }  // namespace OHOS
