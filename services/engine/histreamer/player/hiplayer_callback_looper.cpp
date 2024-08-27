@@ -233,7 +233,6 @@ void HiPlayerCallbackLooper::DoReportInfo(const Any& info)
             MEDIA_LOG_E_SHORT("DoReportInfo error, ptr is nullptr");
             return;
         }
-        
         MEDIA_LOG_I_SHORT("Report info, info type: " PUBLIC_LOG_D32 " info value: " PUBLIC_LOG_D32,
             static_cast<int32_t>(std::get<TUPLE_POS_0>(*ptr)), static_cast<int32_t>(std::get<TUPLE_POS_1>(*ptr)));
         obs->OnInfo(std::get<TUPLE_POS_0>(*ptr), std::get<TUPLE_POS_1>(*ptr), std::get<TUPLE_POS_2>(*ptr));
