@@ -2134,6 +2134,16 @@ void HiPlayerImpl::NotifyCachedDuration(int32_t param)
     callbackLooper_.OnInfo(INFO_TYPE_BUFFERING_UPDATE, param, format);
 }
 
+void HiPlayerImpl::HandleEosFlagState(const Event& event)
+{
+    for (std::pair<std::string, bool>& item: completeState_) {
+        if (item.first == event.srcFilter) {
+            MEDIA_LOG_I_SHORT("one eos event received " PUBLIC_LOG_S, item.first.c_str());
+            item.second = true;
+        }
+    }
+}
+
 void HiPlayerImpl::HandleCompleteEvent(const Event& event)
 {
     MEDIA_LOG_D_SHORT("HandleCompleteEvent");
@@ -2142,12 +2152,7 @@ void HiPlayerImpl::HandleCompleteEvent(const Event& event)
         MEDIA_LOG_I("The Complete Task don't run, current status is Stopped.");
         return;
     }
-    for (std::pair<std::string, bool>& item: completeState_) {
-        if (item.first == event.srcFilter) {
-            MEDIA_LOG_I_SHORT("one eos event received " PUBLIC_LOG_S, item.first.c_str());
-            item.second = true;
-        }
-    }
+    HandleEosFlagState(event);
     for (auto item : completeState_) {
         if (item.second == false) {
             MEDIA_LOG_I_SHORT("expect receive eos event " PUBLIC_LOG_S, item.first.c_str());
