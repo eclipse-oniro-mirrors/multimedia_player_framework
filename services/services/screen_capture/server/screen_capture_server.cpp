@@ -1243,10 +1243,10 @@ bool ScreenCaptureServer::UpdatePrivacyUsingPermissionState(VideoPermissionState
     return true;
 }
 
-int32_t ScreenCaptureServer::SystemRecorderInterruptLatestRecorder()
+void ScreenCaptureServer::SystemRecorderInterruptLatestRecorder()
 {
     std::lock_guard<std::mutex> lock(mutexGlobal_);
-    std::shared_ptr<ScreenCaptureServer> currentServer;
+    std::shared_ptr<ScreenCaptureServer> latestServer;
     if (activeSessionId_.load() >= 0) {
         latestServer = GetScreenCaptureServerByIdWithLock(activeSessionId_.load());
         if (latestServer != nullptr && sessionId_ != activeSessionId_.load()) {
