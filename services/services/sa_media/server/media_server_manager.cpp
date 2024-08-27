@@ -121,6 +121,12 @@ int32_t MediaServerManager::Dump(int32_t fd, const std::vector<std::u16string> &
         argSets.find(u"screencapture") != argSets.end());
     CHECK_AND_RETURN_RET_LOG(ret == NO_ERROR,
         OHOS::INVALID_OPERATION, "Failed to write ScreenCapture information");
+    
+    dumpString += "------------------TranscoderServer------------------\n";
+    ret = WriteInfo(fd, dumpString, dumperTbl_[StubType::TRANSCODER],
+        argSets.find(u"transcoder") != argSets.end());
+    CHECK_AND_RETURN_RET_LOG(ret == NO_ERROR,
+        OHOS::INVALID_OPERATION, "Failed to write Transcoder information");
 
     ret = ServiceDumpManager::GetInstance().Dump(fd, argSets);
     CHECK_AND_RETURN_RET_LOG(ret == NO_ERROR,
