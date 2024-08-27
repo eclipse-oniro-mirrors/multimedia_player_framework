@@ -353,6 +353,7 @@ private:
     std::atomic<bool> needUpdateSubtitle_ {true};
     std::shared_ptr<DfxAgent> dfxAgent_{};
     bool maxAmplitudeCbStatus_ {false};
+    OHOS::Media::Mutex handleCompleteMutex_;
 };
 } // namespace Media
 } // namespace OHOS
