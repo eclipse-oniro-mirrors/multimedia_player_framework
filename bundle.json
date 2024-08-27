@@ -159,6 +159,16 @@
             }
           },
           {
+            "type": "so",
+            "name": "//foundation/multimedia/player_framework/frameworks/native/video_editor:video_editor",
+            "header": {
+              "header_files": [
+                "video_editor.h"
+              ],
+              "header_base": "//foundation/multimedia/player_framework/interfaces/inner_api/native/video_editor/include"
+            }
+          },
+          {
             "type": "none",
             "name": "//foundation/multimedia/player_framework/interfaces/kits/js:napi_packages",
             "header": {
