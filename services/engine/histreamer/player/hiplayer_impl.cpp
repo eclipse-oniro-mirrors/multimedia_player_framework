@@ -1116,13 +1116,39 @@ Status HiPlayerImpl::doCompletedSeek(int64_t seekPos, PlayerSeekMode mode)
     return rtv;
 }
 
+bool HiPlayerImpl::needSeekClosest()
+{
+    MEDIA_LOG_D("needSeekClosest begin");
+    std::vector<Format> trackInfo;
+    GetAudioTrackInfo(trackInfo);
+    if (trackInfo.size() == 0) {
+        MEDIA_LOG_D("needSeekClosest end true");
+        return true;
+    }
+    for (size_t i = 0; i < trackInfo.size(); i++) {
+        int32_t trackIndex = -1;
+        trackInfo[i].GetIntValue("track_index", trackIndex);
+        if (trackIndex != currentAudioTrackId_) {
+            continue;
+        }
+        std::string mime = "";
+        trackInfo[i].GetStringValue("codec_mime", mime);
+        if (mime == "audio/x-ape") {
+            MEDIA_LOG_D("needSeekClosest end false");
+            return false;
+        }
+    }
+    MEDIA_LOG_D("needSeekClosest end true");
+    return true;
+}
+
 Status HiPlayerImpl::doSeek(int64_t seekPos, PlayerSeekMode mode)
 {
     MEDIA_LOG_D_SHORT("HiPlayerImpl::doSeek");
     int64_t seekTimeUs = 0;
     FALSE_RETURN_V_MSG_E(Plugins::Us2HstTime(seekPos, seekTimeUs),
         Status::ERROR_INVALID_PARAMETER, "Invalid seekPos: %{public}" PRId64, seekPos);
-    if (mode == PlayerSeekMode::SEEK_CLOSEST) {
+    if (mode == PlayerSeekMode::SEEK_CLOSEST && needSeekClosest()) {
         MEDIA_LOG_I_SHORT("doSeek SEEK_CLOSEST");
         if (videoDecoder_ != nullptr) {
             videoDecoder_->SetSeekTime(seekTimeUs);
@@ -1142,6 +1168,12 @@ Status HiPlayerImpl::doSeek(int64_t seekPos, PlayerSeekMode mode)
         }
         seekAgent_.reset();
         return res;
+    }
+    if (mode == PlayerSeekMode::SEEK_CLOSEST) {   // reset mode
+        mode = PlayerSeekMode::SEEK_NEXT_SYNC;
+        if (audioSink_) {
+            audioSink_->SetSeekTime(seekTimeUs);
+        }
     }
     if (videoDecoder_ != nullptr) {
         videoDecoder_->ResetSeekInfo();
