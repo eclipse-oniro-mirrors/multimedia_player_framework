@@ -604,6 +604,8 @@ int32_t RecorderServiceStub::SetMetaSource(MessageParcel &data, MessageParcel &r
 int32_t RecorderServiceStub::SetMetaMimeType(MessageParcel &data, MessageParcel &reply)
 {
     int32_t sourceId = data.ReadInt32();
+    CHECK_AND_RETURN_RET_LOG(data.ReadCString() != nullptr, MSERR_INVALID_OPERATION,
+        "data.ReadCString() is nullptr");
     std::string_view mimetype(data.ReadCString());
     reply.WriteInt32(SetMetaMimeType(sourceId, mimetype));
     return MSERR_OK;
@@ -612,6 +614,8 @@ int32_t RecorderServiceStub::SetMetaMimeType(MessageParcel &data, MessageParcel 
 int32_t RecorderServiceStub::SetMetaTimedKey(MessageParcel &data, MessageParcel &reply)
 {
     int32_t sourceId = data.ReadInt32();
+    CHECK_AND_RETURN_RET_LOG(data.ReadCString() != nullptr, MSERR_INVALID_OPERATION,
+        "data.ReadCString() is nullptr");
     std::string_view timedKey(data.ReadCString());
     reply.WriteInt32(SetMetaTimedKey(sourceId, timedKey));
     return MSERR_OK;
@@ -620,6 +624,8 @@ int32_t RecorderServiceStub::SetMetaTimedKey(MessageParcel &data, MessageParcel 
 int32_t RecorderServiceStub::SetMetaSourceTrackMime(MessageParcel &data, MessageParcel &reply)
 {
     int32_t sourceId = data.ReadInt32();
+    CHECK_AND_RETURN_RET_LOG(data.ReadCString() != nullptr, MSERR_INVALID_OPERATION,
+        "data.ReadCString() is nullptr");
     std::string_view srcTrackMime(data.ReadCString());
     reply.WriteInt32(SetMetaSourceTrackMime(sourceId, srcTrackMime));
     return MSERR_OK;
