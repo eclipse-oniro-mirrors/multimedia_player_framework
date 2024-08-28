@@ -347,6 +347,7 @@ private:
     int64_t GetCurrentMillisecond();
     void SetMetaDataReport();
     void SetErrorInfo(int32_t errCode, const std::string &errMsg, StopReason stopReason, bool userAgree);
+    void SystemRecorderInterruptLatestRecorder();
 
 private:
     std::mutex mutex_;

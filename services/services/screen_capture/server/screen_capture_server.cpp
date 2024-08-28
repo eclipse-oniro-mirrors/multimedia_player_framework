@@ -220,18 +220,17 @@ int32_t ScreenCaptureServer::ReportAVScreenCaptureUserChoice(int32_t sessionId, 
         std::lock_guard<std::mutex> lock(mutexGlobal_);
         if (activeSessionId_.load() >= 0) {
             currentServer = GetScreenCaptureServerByIdWithLock(activeSessionId_.load());
-            if (currentServer != nullptr) {
+            if (currentServer != nullptr && sessionId != activeSessionId_.load()) {
                 MEDIA_LOGW("ReportAVScreenCaptureUserChoice uid(%{public}d) is interrupted by uid(%{public}d)",
                     currentServer->appInfo_.appUid, server->appInfo_.appUid);
                 currentServer->StopScreenCaptureByEvent(
                     AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INTERRUPTED_BY_OTHER);
             }
+            activeSessionId_.store(SESSION_ID_INVALID);
         }
-        activeSessionId_.store(SESSION_ID_INVALID);
         int32_t ret = server->OnReceiveUserPrivacyAuthority(true);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret,
             "ReportAVScreenCaptureUserChoice user choice is true but start failed");
-        activeSessionId_.store(sessionId);
         MEDIA_LOGI("ReportAVScreenCaptureUserChoice user choice is true and start success");
         return MSERR_OK;
     } else if (USER_CHOICE_DENY.compare(choice) == 0) {
@@ -1243,6 +1242,25 @@ bool ScreenCaptureServer::UpdatePrivacyUsingPermissionState(VideoPermissionState
     return true;
 }
 
+void ScreenCaptureServer::SystemRecorderInterruptLatestRecorder()
+{
+    std::lock_guard<std::mutex> lock(mutexGlobal_);
+    std::shared_ptr<ScreenCaptureServer> latestServer;
+    if (activeSessionId_.load() >= 0) {
+        latestServer = GetScreenCaptureServerByIdWithLock(activeSessionId_.load());
+        if (latestServer != nullptr && sessionId_ != activeSessionId_.load()) {
+            MEDIA_LOGW("SystemRecorderInterruptLatestRecorder uid(%{public}d) is interrupted by uid(%{public}d)",
+                latestServer->appInfo_.appUid, this->appInfo_.appUid);
+            latestServer->StopScreenCaptureByEvent(
+                AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INTERRUPTED_BY_OTHER);
+            activeSessionId_.store(SESSION_ID_INVALID);
+        } else {
+            MEDIA_LOGE("Interrupt Failed old uid(%{public}d) sid(%{public}d), new uid(%{public}d) sid(%{public}d) ",
+                latestServer->appInfo_.appUid, activeSessionId_.load(), this->appInfo_.appUid, sessionId_);
+        }
+    }
+}
+
 int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnabled)
 {
     MEDIA_LOGI("StartScreenCaptureInner S, appUid:%{public}d, appPid:%{public}d, isPrivacyAuthorityEnabled:%{public}d"
@@ -1275,14 +1293,16 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
     if (IsUserPrivacyAuthorityNeeded()) {
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
         if (isPrivacyAuthorityEnabled_ && SCREEN_RECORDER_BUNDLE_NAME.compare(bundleName_) != 0) {
-            // Wait for user interactions to ALLOW/DENY capture
             MEDIA_LOGI("Wait for user interactions to ALLOW/DENY capture");
             return MSERR_OK;
+        } else {
+            // system rec Interrupt at here, 3rd rec interrupt at ReportAVScreenCaptureUserChoice
+            SystemRecorderInterruptLatestRecorder();
         }
 #endif
         MEDIA_LOGI("privacy notification window not support, app has CAPTURE_SCREEN permission and go on");
     } else {
-        MEDIA_LOGI("Privacy Authority granted automaticly and go on");
+        MEDIA_LOGI("Privacy Authority granted automatically and go on"); // for root
     }
 
     ret = OnStartScreenCapture();
