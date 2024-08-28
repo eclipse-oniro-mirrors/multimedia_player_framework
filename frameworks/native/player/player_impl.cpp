@@ -17,6 +17,9 @@
 #include "i_media_service.h"
 #include "media_log.h"
 #include "media_errors.h"
+#ifdef SUPPORT_AVPLAYER_DRM
+#include "i_keysession_service.h"
+#endif
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "PlayerImpl"};
