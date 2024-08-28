@@ -1297,7 +1297,7 @@ Status HiPlayerImpl::InitVideoDefaultTrackIndex()
             continue;
         }
         if (IsVideoMime(mime)) {
-            defaultVideoTrackId_ = trackIndex;
+            defaultVideoTrackId_ = static_cast<int32_t>(trackIndex);
             break;
         }
     }
@@ -1319,7 +1319,7 @@ Status HiPlayerImpl::InitSubtitleDefaultTrackIndex()
             continue;
         }
         if (IsSubtitleMime(mime)) {
-            defaultSubtitleTrackId_ = trackIndex;
+            defaultSubtitleTrackId_ = static_cast<int32_t>(trackIndex);
             break;
         }
     }
@@ -1899,6 +1899,10 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
     ResetIfSourceExisted();
     demuxer_ = FilterFactory::Instance().CreateFilter<DemuxerFilter>("builtin.player.demuxer",
         FilterType::FILTERTYPE_DEMUXER);
+    if (demuxer_ == nullptr) {
+        MEDIA_LOG_E_SHORT("demuxer_ is nullptr");
+        return Status::ERROR_NULL_POINTER;
+    }
     pipeline_->AddHeadFilters({demuxer_});
     demuxer_->Init(playerEventReceiver_, playerFilterCallback_);
 

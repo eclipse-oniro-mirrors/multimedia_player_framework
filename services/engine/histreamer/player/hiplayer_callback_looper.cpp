@@ -159,6 +159,10 @@ void HiPlayerCallbackLooper::DoReportError(const Any &error)
     auto obs = obs_.lock();
     if (obs != nullptr) {
         auto ptr = AnyCast<std::pair<PlayerErrorType, int32_t>>(&error);
+        if (ptr == nullptr) {
+            MEDIA_LOG_E_SHORT("DoReportError error, ptr is nullptr");
+            return;
+        }
         MEDIA_LOG_E_SHORT("Report error, error type: " PUBLIC_LOG_D32 " error value: " PUBLIC_LOG_D32,
             static_cast<int32_t>(ptr->first), static_cast<int32_t>(ptr->second));
         obs->OnError(ptr->first, ptr->second);
@@ -176,6 +180,10 @@ void HiPlayerCallbackLooper::DoReportInfo(const Any& info)
     auto obs = obs_.lock();
     if (obs != nullptr) {
         auto ptr = AnyCast<std::tuple<PlayerOnInfoType, int32_t, Format>>(&info);
+        if (ptr == nullptr) {
+            MEDIA_LOG_E_SHORT("DoReportInfo error, ptr is nullptr");
+            return;
+        }
         MEDIA_LOG_I_SHORT("Report info, info type: " PUBLIC_LOG_D32 " info value: " PUBLIC_LOG_D32,
             static_cast<int32_t>(std::get<TUPLE_POS_0>(*ptr)), static_cast<int32_t>(std::get<TUPLE_POS_1>(*ptr)));
         obs->OnInfo(std::get<TUPLE_POS_0>(*ptr), std::get<TUPLE_POS_1>(*ptr), std::get<TUPLE_POS_2>(*ptr));
