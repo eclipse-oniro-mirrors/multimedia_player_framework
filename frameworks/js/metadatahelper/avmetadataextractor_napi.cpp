@@ -194,7 +194,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVMetadataExtractorNapi::ResolveMetadataTa
             metadata = res;
 
             stopWait_ = false;
-            LISTENER(stateChangeCond_.wait(lock, [this]() { return stopWait_.load(); }), "ResolveMetadataTask", false)
+            stateChangeCond_.wait(lock, [this]() { return stopWait_.load(); });
 
             if (GetCurrentState() == AVMetadataHelperState::STATE_ERROR) {
                 return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
@@ -345,7 +345,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVMetadataExtractorNapi::FetchArtPictureTa
             picture = std::move(pixelMap);
 
             stopWait_ = false;
-            LISTENER(stateChangeCond_.wait(lock, [this]() { return stopWait_.load(); }), "FetchArtPictureTask", false)
+            stateChangeCond_.wait(lock, [this]() { return stopWait_.load(); });
 
             if (GetCurrentState() == AVMetadataHelperState::STATE_ERROR) {
                 return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
@@ -473,7 +473,7 @@ void AVMetadataExtractorNapi::WaitTaskQueStop()
 {
     MEDIA_LOGI("WaitTaskQueStop In");
     std::unique_lock<std::mutex> lock(taskMutex_);
-    LISTENER(stopTaskQueCond_.wait(lock, [this]() { return taskQueStoped_; }), "StopTaskQue", false)
+    stopTaskQueCond_.wait(lock, [this]() { return taskQueStoped_; });
     MEDIA_LOGI("WaitTaskQueStop Out");
 }
 
@@ -584,10 +584,9 @@ void AVMetadataExtractorNapi::SetSource(std::string url)
                 return;
             }
             if (helper_ != nullptr) {
-                helper_->SetSource(url);
-                stopWait_ = false;
-                LISTENER(stateChangeCond_.wait(lock, [this]() { return stopWait_.load(); }),
-                    "SetSourceNetWork", false)
+                if (helper_->SetSource(url) != 0) {
+                    state_ = HelperStates::HELPER_STATE_ERROR;
+                }
             }
         });
         (void)taskQue_->EnqueueTask(task);
@@ -606,9 +605,11 @@ void AVMetadataExtractorNapi::SetSource(std::string url)
                 return;
             }
             if (helper_ != nullptr) {
-                helper_->SetSource(fd, 0, -1);
-                stopWait_ = false;
-                LISTENER(stateChangeCond_.wait(lock, [this]() { return stopWait_.load(); }), "SetSourceFd", false)
+                if (helper_->SetSource(fd, 0, -1) != 0) {
+                    state_ = HelperStates::HELPER_STATE_ERROR;
+                }
+            } else {
+                state_ = HelperStates::HELPER_STATE_ERROR;
             }
         });
         (void)taskQue_->EnqueueTask(task);
@@ -679,10 +680,9 @@ void AVMetadataExtractorNapi::SetAVFileDescriptorTask(std::shared_ptr<AVMetadata
         }
 
         if (helper_ != nullptr) {
-            helper_->SetSource(fileDescriptor_.fd, fileDescriptor_.offset, fileDescriptor_.length);
-            stopWait_ = false;
-            LISTENER(stateChangeCond_.wait(lock, [this]() { return stopWait_.load(); }),
-                "SetSource FileDescriptor", false)
+            if (helper_->SetSource(fileDescriptor_.fd, fileDescriptor_.offset, fileDescriptor_.length) != 0) {
+                state_ = HelperStates::HELPER_STATE_ERROR;
+            }
         }
         MEDIA_LOGI("SetSource FileDescriptor end");
     });
@@ -759,10 +759,9 @@ void AVMetadataExtractorNapi::SetDataSrcTask(std::shared_ptr<AVMetadataHelper>& 
 
         if (helper_ != nullptr) {
             MEDIA_LOGI("SetDataSrc Task SetSource");
-            helper_->SetSource(dataSrcCb_);
-
-            stopWait_ = false;
-            LISTENER(stateChangeCond_.wait(lock, [this]() { return stopWait_.load(); }), "Set data source", false)
+            if (helper_->SetSource(dataSrcCb_) != 0) {
+                state_ = HelperStates::HELPER_STATE_ERROR;
+            }
         }
         MEDIA_LOGI("SetDataSrc Task SetSource end");
     });

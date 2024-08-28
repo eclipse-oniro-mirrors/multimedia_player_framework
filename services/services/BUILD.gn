@@ -148,12 +148,15 @@ ohos_shared_library("media_service") {
       "//foundation/multimedia/player_framework/services/engine/common/recorder_profiles/recorder_profiles_xml_parser.cpp",
       "recorder/ipc/recorder_listener_proxy.cpp",
       "recorder/ipc/recorder_service_stub.cpp",
-      "recorder/server/media_library_adapter.cpp",
       "recorder/server/recorder_server.cpp",
       "recorder_profiles/ipc/recorder_profiles_service_stub.cpp",
       "recorder_profiles/server/recorder_profiles_server.cpp",
       "sa_media/ipc/recorder_profiles_parcel.cpp",
     ]
+  }
+
+  if (player_framework_support_auto_create_file) {
+    sources += [ "recorder/server/media_library_adapter.cpp" ]
   }
 
   if (player_framework_support_metadata) {
@@ -216,6 +219,8 @@ ohos_shared_library("media_service") {
     "call_manager:tel_call_manager_api",
     "common_event_service:cesfwk_innerkits",
     "core_service:tel_core_service_api",
+    "drivers_interface_camera:metadata",
+    "graphic_2d:librender_service_base",
     "hdf_core:libhdi",
     "hicollie:libhicollie",
     "hilog:libhilog",
@@ -235,6 +240,7 @@ ohos_shared_library("media_service") {
     "qos_manager:qos",
     "resource_schedule_service:ressched_client",
     "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
     "state_registry:tel_state_registry_api",
   ]
 
@@ -253,9 +259,14 @@ ohos_shared_library("media_service") {
       "audio_framework:audio_capturer",
       "audio_framework:audio_client",
       "distributed_notification_service:ans_innerkits",
+      "graphic_surface:sync_fence",
       "relational_store:native_rdb",
       "window_manager:libdm",
     ]
+  }
+
+  if (player_framework_support_video) {
+    external_deps += [ "graphic_surface:surface" ]
   }
 
   if (player_framework_support_avsession_background) {
@@ -269,12 +280,11 @@ ohos_shared_library("media_service") {
     ]
   }
 
-  if (player_framework_support_video) {
+  if (player_framework_support_auto_create_file) {
     external_deps += [
       "camera_framework:camera_framework",
       "data_share:datashare_common",
       "data_share:datashare_consumer",
-      "graphic_surface:surface",
       "media_library:media_library",
       "media_library:media_library_manager",
       "samgr:samgr_proxy",

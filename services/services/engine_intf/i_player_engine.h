@@ -70,6 +70,13 @@ public:
         (void)end;
         return 0;
     }
+    virtual int32_t SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode)
+    {
+        (void)start;
+        (void)end;
+        (void)mode;
+        return 0;
+    }
     virtual int32_t PrepareAsync() = 0;
     virtual int32_t Pause() = 0;
     virtual int32_t Stop() = 0;
@@ -203,7 +210,18 @@ public:
         (void)seekContinousBatchNo;
         return 0;
     }
+
+    virtual int64_t GetPlayRangeStartTime()
+    {
+        return 0;
+    }
+
     virtual int64_t GetPlayRangeEndTime()
+    {
+        return 0;
+    }
+
+    virtual int32_t GetPlayRangeSeekMode()
     {
         return 0;
     }

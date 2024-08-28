@@ -72,7 +72,18 @@ const std::map<MediaServiceErrCode, std::string> MSERRCODE_INFOS = {
     {MSERR_DATA_SOURCE_IO_ERROR, "media data source IO failed"},
     {MSERR_DRM_VERIFICATION_FAILED, "DRM verification failed"},
     {MSERR_UNSUPPORT_WATER_MARK, "unsupported water mark"},
-    {MSERR_DEMUXER_BUFFER_NO_MEMORY, "demuxer cache data reached its limit"}
+    {MSERR_DEMUXER_BUFFER_NO_MEMORY, "demuxer cache data reached its limit"},
+    {MSERR_IO_CANNOT_FIND_HOST, "IO can not find host"},
+    {MSERR_IO_CONNECTION_TIMEOUT, "IO connection timeout"},
+    {MSERR_IO_NETWORK_ABNORMAL, "IO network abnormal"},
+    {MSERR_IO_NETWORK_UNAVAILABLE, "IO network unavailable"},
+    {MSERR_IO_NO_PERMISSION, "IO no permission"},
+    {MSERR_IO_REQUEST_DENID, "IO request denied"},
+    {MSERR_IO_RESOURE_NOT_FOUND, "IO resource not found"},
+    {MSERR_IO_SSL_CLIENT_CERT_NEEDED, "IO SSL client cert needed"},
+    {MSERR_IO_SSL_CONNECT_FAIL, "IO SSL connect fail"},
+    {MSERR_IO_SSL_SERVER_CERT_UNTRUSTED, "IO SSL server cert untrusted"},
+    {MSERR_IO_UNSUPPORTTED_REQEST, "IO unsupported request"}
 };
 
 const std::map<MediaServiceErrCode, MediaServiceExtErrCode> MSERRCODE_TO_EXTERRORCODE = {
@@ -184,7 +195,18 @@ const std::map<MediaServiceErrCode, MediaServiceExtErrCodeAPI9> MSERRCODE_TO_EXT
     {MSERR_AUD_INTERRUPT,                       MSERR_EXT_API9_AUDIO_INTERRUPTED},
     {MSERR_USER_NO_PERMISSION,                  MSERR_EXT_API9_NO_PERMISSION},
     {MSERR_UNSUPPORT_WATER_MARK,                MSERR_EXT_API9_UNSUPPORT_CAPABILITY},
-    {MSERR_DEMUXER_BUFFER_NO_MEMORY,            MSERR_EXT_API9_IO}
+    {MSERR_DEMUXER_BUFFER_NO_MEMORY,            MSERR_EXT_API9_IO},
+    {MSERR_IO_CANNOT_FIND_HOST,                 MSERR_EXT_API12_IO_CANNOT_FIND_HOST},
+    {MSERR_IO_CONNECTION_TIMEOUT,               MSERR_EXT_API12_IO_CONNECTION_TIMEOUT},
+    {MSERR_IO_NETWORK_ABNORMAL,                 MSERR_EXT_API12_IO_NETWORK_ABNORMAL},
+    {MSERR_IO_NETWORK_UNAVAILABLE,              MSERR_EXT_API12_IO_NETWORK_UNAVAILABLE},
+    {MSERR_IO_NO_PERMISSION,                    MSERR_EXT_API12_IO_NO_PERMISSION},
+    {MSERR_IO_REQUEST_DENID,                    MSERR_EXT_API12_IO_REQUEST_DENID},
+    {MSERR_IO_RESOURE_NOT_FOUND,                MSERR_EXT_API12_IO_RESOURE_NOT_FOUND},
+    {MSERR_IO_SSL_CLIENT_CERT_NEEDED,           MSERR_EXT_API12_IO_SSL_CLIENT_CERT_NEEDED},
+    {MSERR_IO_SSL_CONNECT_FAIL,                 MSERR_EXT_API12_IO_SSL_CONNECT_FAIL},
+    {MSERR_IO_SSL_SERVER_CERT_UNTRUSTED,        MSERR_EXT_API12_IO_SSL_SERVER_CERT_UNTRUSTED},
+    {MSERR_IO_UNSUPPORTTED_REQEST,              MSERR_EXT_API12_IO_UNSUPPORTTED_REQEST}
 };
 
 const std::map<MediaServiceExtErrCodeAPI9, std::string> MSEXTERRCODE_API9_INFOS = {
@@ -200,6 +222,17 @@ const std::map<MediaServiceExtErrCodeAPI9, std::string> MSEXTERRCODE_API9_INFOS 
     {MSERR_EXT_API9_SERVICE_DIED, "Service Died: "},
     {MSERR_EXT_API9_UNSUPPORT_FORMAT, "Unsupported Format: "},
     {MSERR_EXT_API9_AUDIO_INTERRUPTED, "Audio Interruped: "},
+    {MSERR_EXT_API12_IO_CANNOT_FIND_HOST, "IO Cannot Find Host: "},
+    {MSERR_EXT_API12_IO_CONNECTION_TIMEOUT, "IO Connection Timeout: "},
+    {MSERR_EXT_API12_IO_NETWORK_ABNORMAL, "IO Network Abnormal: "},
+    {MSERR_EXT_API12_IO_NETWORK_UNAVAILABLE, "IO Network Unavailable: "},
+    {MSERR_EXT_API12_IO_NO_PERMISSION, "IO No Permission: "},
+    {MSERR_EXT_API12_IO_REQUEST_DENID, "IO Request Denied: "},
+    {MSERR_EXT_API12_IO_RESOURE_NOT_FOUND, "IO Resource Not Found: "},
+    {MSERR_EXT_API12_IO_SSL_CLIENT_CERT_NEEDED, "IO SSL Client Cert Needed: "},
+    {MSERR_EXT_API12_IO_SSL_CONNECT_FAIL, "IO SSL Connect Fail: "},
+    {MSERR_EXT_API12_IO_SSL_SERVER_CERT_UNTRUSTED, "IO SSL Server Cert Untrusted: "},
+    {MSERR_EXT_API12_IO_UNSUPPORTTED_REQEST, "IO Unsupported Request: "},
 };
 
 std::string ErrorMessageOk(const std::string& param1, const std::string& param2)

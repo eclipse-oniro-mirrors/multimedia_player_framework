@@ -103,6 +103,7 @@ public:
     int32_t Prepare() override;
     int32_t SetRenderFirstFrame(bool display) override;
     int32_t SetPlayRange(int64_t start, int64_t end) override;
+    int32_t SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode) override;
     int32_t PrepareAsync() override;
     int32_t Play() override;
     int32_t Pause() override;
@@ -142,7 +143,9 @@ public:
     void SetInterruptState(bool isInterruptNeeded) override;
     void OnDumpInfo(int32_t fd) override;
     void SetInstancdId(uint64_t instanceId) override;
+    int64_t GetPlayRangeStartTime() override;
     int64_t GetPlayRangeEndTime() override;
+    int32_t GetPlayRangeSeekMode() override;
 
     // internal interfaces
     void OnEvent(const Event &event);
@@ -240,8 +243,12 @@ private:
     void NotifyUpdateTrackInfo();
     Status SelectSeekType(int64_t seekPos, PlayerSeekMode mode);
     Status DoSetPlayRange();
+    void ResetPlayRangeParameter();
+    bool IsInValidSeekTime(int32_t seekPos);
+    int64_t GetPlayStartTime();
     Status StartSeekContinous();
     int32_t InnerSelectTrack(std::string mime, int32_t trackId, PlayerSwitchMode mode);
+    void HandleEosFlagState(const Event& event);
 
     bool isNetWorkPlay_ = false;
     bool isDump_ = false;
@@ -332,6 +339,10 @@ private:
     std::string mimeType_;
     int64_t playRangeStartTime_ = -1;
     int64_t playRangeEndTime_ = -1;
+    bool isSetPlayRange_ = false;
+    int64_t startTimeWithMode_ = -1;
+    int64_t endTimeWithMode_ = -1;
+    PlayerSeekMode playRangeSeekMode_ = PlayerSeekMode::SEEK_PREVIOUS_SYNC;
     std::atomic<bool> isDoCompletedSeek_{false};
     OHOS::Media::Mutex stateChangeMutex_{};
 
@@ -343,6 +354,7 @@ private:
     std::atomic<bool> needUpdateSubtitle_ {true};
     std::shared_ptr<DfxAgent> dfxAgent_{};
     bool maxAmplitudeCbStatus_ {false};
+    OHOS::Media::Mutex handleCompleteMutex_{};
 };
 } // namespace Media
 } // namespace OHOS

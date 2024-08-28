@@ -449,7 +449,10 @@ int32_t NativeAVPlayerCallback::SetOnErrorCallback(OH_AVPlayerOnErrorCallback ca
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (callback != nullptr) {
-        errorCallback_ = std::make_shared<NativeAVPlayerOnErrorCallback>(callback, userData);
+        NativeAVPlayerOnErrorCallback *errorCallback =
+            new (std::nothrow) NativeAVPlayerOnErrorCallback(callback, userData);
+        CHECK_AND_RETURN_RET_LOG(errorCallback != nullptr, AV_ERR_NO_MEMORY, "errorCallback is nullptr!");
+        errorCallback_ = std::shared_ptr<NativeAVPlayerOnErrorCallback>(errorCallback);
     } else {
         errorCallback_ = nullptr;
     }
@@ -460,7 +463,10 @@ int32_t NativeAVPlayerCallback::SetOnInfoCallback(OH_AVPlayerOnInfoCallback call
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (callback != nullptr) {
-        infoCallback_ = std::make_shared<NativeAVPlayerOnInfoCallback>(callback, userData);
+        NativeAVPlayerOnInfoCallback *onInfoCallback =
+            new (std::nothrow) NativeAVPlayerOnInfoCallback(callback, userData);
+        CHECK_AND_RETURN_RET_LOG(onInfoCallback != nullptr, AV_ERR_NO_MEMORY, "infoCallback_ is nullptr!");
+        infoCallback_ = std::shared_ptr<NativeAVPlayerOnInfoCallback>(onInfoCallback);
     } else {
         infoCallback_ = nullptr;
     }
@@ -709,12 +715,12 @@ void NativeAVPlayerCallback::OnDurationUpdateCb(const int32_t extra, const Forma
 {
     (void)infoBody;
     CHECK_AND_RETURN_LOG(isSourceLoaded_.load(), "OnDurationUpdateCb current source is unready");
-    int32_t duration = extra;
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " duration update %{public}d", FAKE_POINTER(this), duration);
+    int64_t duration = extra;
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " duration update %{public}" PRId64, FAKE_POINTER(this), duration);
 
     OHOS::sptr<OH_AVFormat> avFormat = new (std::nothrow) OH_AVFormat();
     CHECK_AND_RETURN_LOG(avFormat != nullptr, "OnDurationUpdateCb OH_AVFormat create failed");
-    avFormat->format_.PutIntValue(OH_PLAYER_DURATION, duration);
+    avFormat->format_.PutLongValue(OH_PLAYER_DURATION, duration);
     infoCallback_->OnInfo(player_, AV_INFO_TYPE_DURATION_UPDATE,
         reinterpret_cast<OH_AVFormat *>(avFormat.GetRefPtr()));
 }
@@ -1162,7 +1168,10 @@ OH_AVErrCode OH_AVPlayer_SetPlayerCallback(OH_AVPlayer *player, AVPlayerCallback
     CHECK_AND_RETURN_RET_LOG(callback.onInfo != nullptr, AV_ERR_INVALID_VAL, "onInfo is null");
     CHECK_AND_RETURN_RET_LOG(callback.onError != nullptr, AV_ERR_INVALID_VAL, "onError is null");
     if (playerObj->callback_ == nullptr) {
-        playerObj->callback_ = std::make_shared<NativeAVPlayerCallback>(player, callback);
+        NativeAVPlayerCallback *avplayerCallback =
+            new (std::nothrow) NativeAVPlayerCallback(player, callback);
+        CHECK_AND_RETURN_RET_LOG(avplayerCallback != nullptr, AV_ERR_NO_MEMORY, "avplayerCallback is nullptr!");
+        playerObj->callback_ = std::shared_ptr<NativeAVPlayerCallback>(avplayerCallback);
     } else {
         playerObj->callback_->SetPlayCallback(callback);
     }
@@ -1290,8 +1299,10 @@ static OH_AVErrCode AVPlayerSetPlayerCallback(OH_AVPlayer *player, struct Player
             .onInfo = nullptr,
             .onError = nullptr
         };
-        playerObj->callback_ = std::make_shared<NativeAVPlayerCallback>(player, dummyCallback);
-        CHECK_AND_RETURN_RET_LOG(playerObj->callback_ != nullptr, AV_ERR_NO_MEMORY, "callback_ is nullptr!");
+        NativeAVPlayerCallback *avplayerCallback =
+            new (std::nothrow) NativeAVPlayerCallback(player, dummyCallback);
+        CHECK_AND_RETURN_RET_LOG(avplayerCallback != nullptr, AV_ERR_NO_MEMORY, "avplayerCallback is nullptr!");
+        playerObj->callback_ = std::shared_ptr<NativeAVPlayerCallback>(avplayerCallback);
 
         int32_t ret = playerObj->player_->SetPlayerCallback(playerObj->callback_);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "AVPlayerSetPlayerCallback failed!");
@@ -1304,14 +1315,16 @@ OH_AVErrCode OH_AVPlayer_SetOnErrorCallback(OH_AVPlayer *player, OH_AVPlayerOnEr
 {
     MEDIA_LOGD("OH_AVPlayer_SetOnErrorCallback S");
     CHECK_AND_RETURN_RET_LOG(player != nullptr, AV_ERR_INVALID_VAL, "SetOnError input player is nullptr!");
-    TRUE_LOG(callback == nullptr, MEDIA_LOGI, "SetOnError callback is nullptr, unregister callback.");
+    if (callback == nullptr) {
+        MEDIA_LOGI("SetOnError callback is nullptr, unregister callback.");
+    }
     struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
     CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, AV_ERR_INVALID_VAL, "SetOnError player_ is nullptr");
 
     OH_AVErrCode errCode = AVPlayerSetPlayerCallback(player, playerObj, callback == nullptr);
     CHECK_AND_RETURN_RET_LOG(errCode == AV_ERR_OK, errCode, "AVPlayerSetPlayerCallback AVPlayerOnError error");
 
-    if (playerObj->callback_ == nullptr || !playerObj->callback_->SetOnErrorCallback(callback, userData)) {
+    if (playerObj->callback_ == nullptr || playerObj->callback_->SetOnErrorCallback(callback, userData) != AV_ERR_OK) {
         MEDIA_LOGE("OH_AVPlayer_SetOnErrorCallback error");
         return AV_ERR_NO_MEMORY;
     }
@@ -1323,14 +1336,16 @@ OH_AVErrCode OH_AVPlayer_SetOnInfoCallback(OH_AVPlayer *player, OH_AVPlayerOnInf
 {
     MEDIA_LOGD("OH_AVPlayer_SetOnInfoCallback S");
     CHECK_AND_RETURN_RET_LOG(player != nullptr, AV_ERR_INVALID_VAL, "SetOnInfo input player is nullptr!");
-    TRUE_LOG(callback == nullptr, MEDIA_LOGI, "SetOnInfo callback is nullptr, unregister callback.");
+    if (callback == nullptr) {
+        MEDIA_LOGI("SetOnInfo callback is nullptr, unregister callback.");
+    }
     struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
     CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, AV_ERR_INVALID_VAL, "SetOnInfo player_ is nullptr");
 
     OH_AVErrCode errCode = AVPlayerSetPlayerCallback(player, playerObj, callback == nullptr);
     CHECK_AND_RETURN_RET_LOG(errCode == AV_ERR_OK, errCode, "AVPlayerSetPlayerCallback AVPlayerOnInfoCallback error");
 
-    if (playerObj->callback_ == nullptr || !playerObj->callback_->SetOnInfoCallback(callback, userData)) {
+    if (playerObj->callback_ == nullptr || playerObj->callback_->SetOnInfoCallback(callback, userData) != AV_ERR_OK) {
         MEDIA_LOGE("OH_AVPlayer_SetOnInfoCallback error");
         return AV_ERR_NO_MEMORY;
     }

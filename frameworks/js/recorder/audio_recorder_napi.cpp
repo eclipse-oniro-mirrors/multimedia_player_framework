@@ -20,6 +20,7 @@
 #include "recorder_callback_napi.h"
 #include "media_log.h"
 #include "media_errors.h"
+#include "media_permission.h"
 #include "directory_ex.h"
 #include "string_ex.h"
 #include "common_napi.h"
@@ -221,6 +222,15 @@ napi_value AudioRecorderNapi::Prepare(napi_env env, napi_callback_info info)
     if (status != napi_ok || jsThis == nullptr || argCount < 1) {
         MEDIA_LOGE("Failed to retrieve details about the callback");
         return undefinedResult;
+    }
+
+    auto asyncCtx = std::make_unique<MediaAsyncContext>(env);
+    if (!SystemPermission()) {
+        asyncCtx->SignError(MSERR_EXT_API9_PERMISSION_DENIED, "CreateVideoRecorder no system app");
+    }
+ 
+    if (!MediaPermission::CheckMicPermission()) {
+        asyncCtx->SignError(MSERR_EXT_API9_NO_PERMISSION, "CreateVideoRecorder no MicPermission");
     }
 
     AudioRecorderNapi *recorderNapi = nullptr;

@@ -172,9 +172,9 @@ void DraggingPlayerAgent::Release()
     isReleased_ = true;
 }
  
-void *DraggingPlayerAgent::LoadLibrary(const std::string &path)
+void *DraggingPlayerAgent::LoadLibrary()
 {
-    auto ptr = ::dlopen(path.c_str(), RTLD_NOW | RTLD_LOCAL);
+    auto ptr = ::dlopen(REFENCE_LIB_ABSOLUTE_PATH.c_str(), RTLD_NOW | RTLD_LOCAL);
     if (ptr == nullptr) {
         MEDIA_LOG_E("dlopen failed due to %{public}s", ::dlerror());
     }
@@ -206,7 +206,7 @@ bool DraggingPlayerAgent::LoadSymbol()
 {
     lock_guard<mutex> lock(mtx_);
     if (handler_ == nullptr) {
-        if (!CheckSymbol(LoadLibrary(REFENCE_LIB_ABSOLUTE_PATH))) {
+        if (!CheckSymbol(LoadLibrary())) {
             MEDIA_LOG_E("Load Reference parser so fail");
             return false;
         }

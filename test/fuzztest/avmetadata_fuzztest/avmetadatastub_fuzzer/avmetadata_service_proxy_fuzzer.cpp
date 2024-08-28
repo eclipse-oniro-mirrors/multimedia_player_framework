@@ -21,18 +21,24 @@
 
 namespace OHOS {
 namespace Media {
+namespace {
+    using Fuzzer = AVMetadataServiceProxyFuzzer;
+    using AVMetaStubFunc = std::function<int32_t(Fuzzer*, uint8_t*, size_t, bool)>;
+    std::map<uint32_t, AVMetaStubFunc> avmetaFuncs_ = {
+        {Fuzzer::SET_URI_SOURCE, Fuzzer::SetUriSourceStatic},
+        {Fuzzer::SET_FD_SOURCE, Fuzzer::SetFdSourceStatic},
+        {Fuzzer::RESOLVE_METADATA, Fuzzer::ResolveMetadataStatic},
+        {Fuzzer::RESOLVE_METADATA_MAP, Fuzzer::ResolveMetadataMapStatic},
+        {Fuzzer::GET_AVMETADATA, Fuzzer::GetAVMetadataStatic},
+        {Fuzzer::FETCH_ALBUM_COVER, Fuzzer::FetchArtPictureStatic},
+        {Fuzzer::FETCH_FRAME_AT_TIME, Fuzzer::FetchFrameAtTimeStatic},
+        {Fuzzer::RELEASE, Fuzzer::ReleaseStatic},
+        {Fuzzer::DESTROY, Fuzzer::DestroyStubStatic}
+    };
+}
 AVMetadataServiceProxyFuzzer::AVMetadataServiceProxyFuzzer(const sptr<IRemoteObject> &impl)
     : IRemoteProxy<IStandardAVMetadataHelperService>(impl)
 {
-    avmetaFuncs_[SET_URI_SOURCE] = &AVMetadataServiceProxyFuzzer::SetUriSource;
-    avmetaFuncs_[SET_FD_SOURCE] = &AVMetadataServiceProxyFuzzer::SetFdSource;
-    avmetaFuncs_[RESOLVE_METADATA] = &AVMetadataServiceProxyFuzzer::ResolveMetadata;
-    avmetaFuncs_[RESOLVE_METADATA_MAP] = &AVMetadataServiceProxyFuzzer::ResolveMetadataMap;
-    avmetaFuncs_[GET_AVMETADATA] = &AVMetadataServiceProxyFuzzer::GetAVMetadata;
-    avmetaFuncs_[FETCH_ALBUM_COVER] = &AVMetadataServiceProxyFuzzer::FetchArtPicture;
-    avmetaFuncs_[FETCH_FRAME_AT_TIME] = &AVMetadataServiceProxyFuzzer::FetchFrameAtTime;
-    avmetaFuncs_[RELEASE] = &AVMetadataServiceProxyFuzzer::Release;
-    avmetaFuncs_[DESTROY] = &AVMetadataServiceProxyFuzzer::DestroyStub;
 }
 
 sptr<AVMetadataServiceProxyFuzzer> AVMetadataServiceProxyFuzzer::Create()
@@ -64,18 +70,19 @@ sptr<AVMetadataServiceProxyFuzzer> AVMetadataServiceProxyFuzzer::Create()
     return avmetaProxy;
 }
 
-void AVMetadataServiceProxyFuzzer::SendRequest(int32_t code, uint8_t *inputData, size_t size, bool isFuzz)
+void AVMetadataServiceProxyFuzzer::SendRequest(uint32_t code, uint8_t *inputData, size_t size, bool isFuzz)
 {
     auto itFunc = avmetaFuncs_.find(code);
     if (itFunc != avmetaFuncs_.end()) {
         auto memberFunc = itFunc->second;
         if (memberFunc != nullptr) {
-            (this->*memberFunc)(inputData, size, isFuzz);
+            memberFunc(this, inputData, size, isFuzz);
         }
     }
 }
 
-int32_t AVMetadataServiceProxyFuzzer::SetUriSource(uint8_t *inputData, size_t size, bool isFuzz)
+int32_t AVMetadataServiceProxyFuzzer::SetUriSourceStatic(AVMetadataServiceProxyFuzzer* ptr, uint8_t *inputData,
+    size_t size, bool isFuzz)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -89,10 +96,11 @@ int32_t AVMetadataServiceProxyFuzzer::SetUriSource(uint8_t *inputData, size_t si
     std::string url(reinterpret_cast<const char *>(inputData), size);
     (void)data.WriteString(url);
     (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
-    return SendRequest(SET_URI_SOURCE, data, reply, option);
+    return ptr->SendRequest(SET_URI_SOURCE, data, reply, option);
 }
 
-int32_t AVMetadataServiceProxyFuzzer::SetFdSource(uint8_t *inputData, size_t size, bool isFuzz)
+int32_t AVMetadataServiceProxyFuzzer::SetFdSourceStatic(AVMetadataServiceProxyFuzzer* ptr, uint8_t *inputData,
+    size_t size, bool isFuzz)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -117,7 +125,7 @@ int32_t AVMetadataServiceProxyFuzzer::SetFdSource(uint8_t *inputData, size_t siz
         (void)data.WriteInt64(offset);
         (void)data.WriteInt64(lengthValue);
         (void)data.WriteInt32(usage);
-        return SendRequest(SET_FD_SOURCE, data, reply, option);
+        return ptr->SendRequest(SET_FD_SOURCE, data, reply, option);
     } else {
         const std::string filePath = "/data/test/media/H264_AAC.mp4";
         fdValue = open(filePath.c_str(), O_RDONLY);
@@ -140,13 +148,14 @@ int32_t AVMetadataServiceProxyFuzzer::SetFdSource(uint8_t *inputData, size_t siz
         (void)data.WriteInt64(offset);
         (void)data.WriteInt64(lengthValue);
         (void)data.WriteInt32(usage);
-        int32_t ret = SendRequest(SET_FD_SOURCE, data, reply, option);
+        int32_t ret = ptr->SendRequest(SET_FD_SOURCE, data, reply, option);
         (void)close(fdValue);
         return ret;
     }
 }
 
-int32_t AVMetadataServiceProxyFuzzer::ResolveMetadata(uint8_t *inputData, size_t size, bool isFuzz)
+int32_t AVMetadataServiceProxyFuzzer::ResolveMetadataStatic(AVMetadataServiceProxyFuzzer* ptr, uint8_t *inputData,
+    size_t size, bool isFuzz)
 {
     (void)isFuzz;
     (void)size;
@@ -160,10 +169,11 @@ int32_t AVMetadataServiceProxyFuzzer::ResolveMetadata(uint8_t *inputData, size_t
         return false;
     }
     (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
-    return SendRequest(RESOLVE_METADATA, data, reply, option);
+    return ptr->SendRequest(RESOLVE_METADATA, data, reply, option);
 }
 
-int32_t AVMetadataServiceProxyFuzzer::ResolveMetadataMap(uint8_t *inputData, size_t size, bool isFuzz)
+int32_t AVMetadataServiceProxyFuzzer::ResolveMetadataMapStatic(AVMetadataServiceProxyFuzzer* ptr, uint8_t *inputData,
+    size_t size, bool isFuzz)
 {
     (void)size;
     (void)isFuzz;
@@ -177,10 +187,11 @@ int32_t AVMetadataServiceProxyFuzzer::ResolveMetadataMap(uint8_t *inputData, siz
         return false;
     }
     (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
-    return SendRequest(RESOLVE_METADATA_MAP, data, reply, option);
+    return ptr->SendRequest(RESOLVE_METADATA_MAP, data, reply, option);
 }
 
-int32_t AVMetadataServiceProxyFuzzer::GetAVMetadata(uint8_t *inputData, size_t size, bool isFuzz)
+int32_t AVMetadataServiceProxyFuzzer::GetAVMetadataStatic(AVMetadataServiceProxyFuzzer* ptr, uint8_t *inputData,
+    size_t size, bool isFuzz)
 {
     (void)size;
     (void)isFuzz;
@@ -194,10 +205,11 @@ int32_t AVMetadataServiceProxyFuzzer::GetAVMetadata(uint8_t *inputData, size_t s
         return false;
     }
     (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
-    return SendRequest(RESOLVE_METADATA_MAP, data, reply, option);
+    return ptr->SendRequest(RESOLVE_METADATA_MAP, data, reply, option);
 }
 
-int32_t AVMetadataServiceProxyFuzzer::FetchArtPicture(uint8_t *inputData, size_t size, bool isFuzz)
+int32_t AVMetadataServiceProxyFuzzer::FetchArtPictureStatic(AVMetadataServiceProxyFuzzer* ptr, uint8_t *inputData,
+    size_t size, bool isFuzz)
 {
     (void)size;
     (void)isFuzz;
@@ -211,10 +223,11 @@ int32_t AVMetadataServiceProxyFuzzer::FetchArtPicture(uint8_t *inputData, size_t
         return false;
     }
     (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
-    return SendRequest(FETCH_ALBUM_COVER, data, reply, option);
+    return ptr->SendRequest(FETCH_ALBUM_COVER, data, reply, option);
 }
 
-int32_t AVMetadataServiceProxyFuzzer::FetchFrameAtTime(uint8_t *inputData, size_t size, bool isFuzz)
+int32_t AVMetadataServiceProxyFuzzer::FetchFrameAtTimeStatic(AVMetadataServiceProxyFuzzer* ptr, uint8_t *inputData,
+    size_t size, bool isFuzz)
 {
     (void)isFuzz;
     (void)size;
@@ -232,10 +245,11 @@ int32_t AVMetadataServiceProxyFuzzer::FetchFrameAtTime(uint8_t *inputData, size_
     (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
     (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
     (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
-    return SendRequest(FETCH_FRAME_AT_TIME, data, reply, option);
+    return ptr->SendRequest(FETCH_FRAME_AT_TIME, data, reply, option);
 }
 
-int32_t AVMetadataServiceProxyFuzzer::Release(uint8_t *inputData, size_t size, bool isFuzz)
+int32_t AVMetadataServiceProxyFuzzer::ReleaseStatic(AVMetadataServiceProxyFuzzer* ptr, uint8_t *inputData,
+    size_t size, bool isFuzz)
 {
     (void)size;
     (void)isFuzz;
@@ -249,10 +263,11 @@ int32_t AVMetadataServiceProxyFuzzer::Release(uint8_t *inputData, size_t size, b
         return false;
     }
     (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
-    return SendRequest(RELEASE, data, reply, option);
+    return ptr->SendRequest(RELEASE, data, reply, option);
 }
 
-int32_t AVMetadataServiceProxyFuzzer::DestroyStub(uint8_t *inputData, size_t size, bool isFuzz)
+int32_t AVMetadataServiceProxyFuzzer::DestroyStubStatic(AVMetadataServiceProxyFuzzer* ptr, uint8_t *inputData,
+    size_t size, bool isFuzz)
 {
     (void)size;
     MessageParcel data;
@@ -267,7 +282,7 @@ int32_t AVMetadataServiceProxyFuzzer::DestroyStub(uint8_t *inputData, size_t siz
     if (isFuzz) {
         (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
     }
-    return SendRequest(DESTROY, data, reply, option);
+    return ptr->SendRequest(DESTROY, data, reply, option);
 }
 
 int32_t AVMetadataServiceProxyFuzzer::SendRequest(uint32_t code,

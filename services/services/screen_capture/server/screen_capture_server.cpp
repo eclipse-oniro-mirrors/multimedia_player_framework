@@ -33,6 +33,7 @@
 #include <sys/stat.h>
 #include "hitrace/tracechain.h"
 #include "locale_config.h"
+#include <sync_fence.h>
 
 using OHOS::Rosen::DMError;
 
@@ -68,7 +69,6 @@ static const std::string USER_CHOICE_ALLOW = "true";
 static const std::string USER_CHOICE_DENY = "false";
 static const std::string BUTTON_NAME_MIC = "mic";
 static const std::string BUTTON_NAME_STOP = "stop";
-static const std::string ICON_PATH_CAPSULE = "/etc/screencapture/capsule.svg";
 static const std::string ICON_PATH_CAPSULE_STOP = "/etc/screencapture/capsule_stop.svg";
 static const std::string ICON_PATH_NOTIFICATION = "/etc/screencapture/notification.png";
 static const std::string ICON_PATH_MIC = "/etc/screencapture/mic.svg";
@@ -1442,7 +1442,7 @@ void ScreenCaptureServer::UpdateMicrophoneEnabled()
     request.SetUnremovable(true);
     request.SetInProgress(true);
 
-    std::shared_ptr<PixelMap> pixelMapTotalSpr = GetPixelMap(ICON_PATH_CAPSULE);
+    std::shared_ptr<PixelMap> pixelMapTotalSpr = GetPixelMap(ICON_PATH_CAPSULE_STOP);
     request.SetLittleIcon(pixelMapTotalSpr);
     request.SetBadgeIconStyle(NotificationRequest::BadgeStyle::LITTLE);
 
@@ -1458,7 +1458,7 @@ void ScreenCaptureServer::UpdateLiveViewContent()
 
     auto capsule = NotificationCapsule();
     capsule.SetBackgroundColor(BACK_GROUND_COLOR);
-    std::shared_ptr<PixelMap> pixelMapCapSpr = GetPixelMap(ICON_PATH_CAPSULE);
+    std::shared_ptr<PixelMap> pixelMapCapSpr = GetPixelMap(ICON_PATH_CAPSULE_STOP);
     capsule.SetIcon(pixelMapCapSpr);
 
     localLiveViewContent_->SetCapsule(capsule);
@@ -2073,7 +2073,12 @@ int32_t ScreenCaptureServer::OnVoIPStatusChanged(bool isInVoIPCall)
     int32_t ret = MSERR_UNKNOWN;
     if (!isInVoIPCall) {
         StopMicAudioCapture();
-        StartFileMicAudioCapture();
+        if (isMicrophoneOn_) {
+            ret = StartFileMicAudioCapture();
+            if (ret != MSERR_OK) {
+                MEDIA_LOGE("StartFileMicAudioCapture failed, ret: %{public}d", ret);
+            }
+        }
         usleep(AUDIO_CHANGE_TIME);
     }
     CHECK_AND_RETURN_RET_LOG(innerAudioCapture_, MSERR_UNKNOWN, "innerAudioCapture is nullptr");
@@ -2090,7 +2095,12 @@ int32_t ScreenCaptureServer::OnVoIPStatusChanged(bool isInVoIPCall)
     if (isInVoIPCall) {
         usleep(AUDIO_CHANGE_TIME);
         StopMicAudioCapture();
-        StartFileMicAudioCapture();
+        if (isMicrophoneOn_) {
+            ret = StartFileMicAudioCapture();
+            if (ret != MSERR_OK) {
+                MEDIA_LOGE("StartFileMicAudioCapture failed, ret: %{public}d", ret);
+            }
+        }
     }
     return MSERR_OK;
 }
@@ -2275,9 +2285,6 @@ int32_t ScreenCaptureServer::StopScreenCaptureRecorder()
         recorder_ = nullptr;
         StopAudioCapture();
     }
-    if (audioSource_ && audioSource_->GetAppPid() > 0) {
-        audioSource_->UnregisterAudioRendererEventListener(audioSource_->GetAppPid());
-    }
     captureCallback_ = nullptr;
     isConsumerStart_ = false;
     CloseFd();
@@ -2299,6 +2306,9 @@ int32_t ScreenCaptureServer::StopScreenCaptureInner(AVScreenCaptureStateCode sta
         FAKE_POINTER(this), stateCode);
     if (screenCaptureCb_ != nullptr) {
         (static_cast<ScreenCaptureListenerCallback *>(screenCaptureCb_.get()))->Stop();
+    }
+    if (audioSource_ && audioSource_->GetAppPid() > 0) { // DataType::CAPTURE_FILE
+        audioSource_->UnregisterAudioRendererEventListener(audioSource_->GetAppPid());
     }
     if (captureState_ == AVScreenCaptureState::CREATED || captureState_ == AVScreenCaptureState::STARTING) {
         CloseFd();
@@ -2433,11 +2443,16 @@ void ScreenCapBufferConsumerListener::OnBufferAvailable()
     MediaTrace trace("ScreenCaptureServer::OnBufferAvailable");
     MEDIA_LOGD("ScreenCaptureServer: 0x%{public}06" PRIXPTR "OnBufferAvailable start.", FAKE_POINTER(this));
     CHECK_AND_RETURN(consumer_ != nullptr);
-    int32_t flushFence = 0;
     int64_t timestamp = 0;
     OHOS::Rect damage;
     OHOS::sptr<OHOS::SurfaceBuffer> buffer = nullptr;
-    consumer_->AcquireBuffer(buffer, flushFence, timestamp, damage);
+    sptr<SyncFence> acquireFence = SyncFence::INVALID_FENCE;
+    consumer_->AcquireBuffer(buffer, acquireFence, timestamp, damage);
+    int32_t flushFence = -1;
+    if (acquireFence != nullptr && acquireFence != SyncFence::INVALID_FENCE) {
+        acquireFence->Wait(1000); // 1000 ms
+        flushFence = acquireFence->Get();
+    }
     CHECK_AND_RETURN_LOG(buffer != nullptr, "Acquire SurfaceBuffer failed");
 
     if ((buffer->GetUsage() & BUFFER_USAGE_MEM_MMZ_CACHE) != 0) {
@@ -2499,7 +2514,7 @@ int32_t ScreenCapBufferConsumerListener::ReleaseVideoBuffer()
     CHECK_AND_RETURN_RET_LOG(!availBuffers_.empty(), MSERR_OK, "buffer queue is empty, no video frame to release");
 
     if (consumer_ != nullptr) {
-        consumer_->ReleaseBuffer(availBuffers_.front()->buffer, availBuffers_.front()->flushFence);
+        consumer_->ReleaseBuffer(availBuffers_.front()->buffer, -1); // -1 not wait
     }
     availBuffers_.pop();
     MEDIA_LOGD("ScreenCapBufferConsumerListener: 0x%{public}06" PRIXPTR "ReleaseVideoBuffer end.", FAKE_POINTER(this));
@@ -2527,6 +2542,7 @@ void ScreenRendererAudioStateChangeCallback::OnRendererStateChange(
     const std::vector<std::unique_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos)
 {
     MEDIA_LOGD("ScreenRendererAudioStateChangeCallback IN");
+    CHECK_AND_RETURN(audioSource_ != nullptr);
     audioSource_->SpeakerStateUpdate(audioRendererChangeInfos);
     std::string region = Global::I18n::LocaleConfig::GetSystemRegion();
     if (SCREEN_RECORDER_BUNDLE_NAME.compare(appName_) == 0 && region == "CN") {
@@ -2547,6 +2563,7 @@ void AudioDataSource::SpeakerStateUpdate(
     bool speakerAlive = HasSpeakerStream(allAudioRendererChangeInfos);
     if (speakerAlive != speakerAliveStatus_) {
         speakerAliveStatus_ = speakerAlive;
+        CHECK_AND_RETURN(screenCaptureServer_ != nullptr);
         screenCaptureServer_->OnSpeakerAliveStatusChanged(speakerAlive);
         if (speakerAlive) {
             MEDIA_LOGI("HEADSET Change to Speaker.");
@@ -2610,6 +2627,7 @@ void AudioDataSource::VoIPStateUpdate(
         return;
     }
     isInVoIPCall_.store(isInVoIPCall);
+    CHECK_AND_RETURN(screenCaptureServer_ != nullptr);
     screenCaptureServer_->OnVoIPStatusChanged(isInVoIPCall);
 }
 
