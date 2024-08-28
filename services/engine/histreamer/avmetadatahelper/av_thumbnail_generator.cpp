@@ -389,6 +389,10 @@ void AVThumbnailGenerator::ConvertP010ToNV12(const sptr<SurfaceBuffer> &surfaceB
 
 std::shared_ptr<AVBuffer> AVThumbnailGenerator::GenerateAlignmentAvBuffer()
 {
+    if (avBuffer_ == nullptr) {
+        MEDIA_LOGE("Generate Alignment AvBuffer failed, avBuffer_ is nullptr.");
+        return nullptr;
+    }
     if (avBuffer_->memory_->GetSize() != 0 && avBuffer_->memory_->GetSurfaceBuffer() == nullptr) {
         return GenerateAvBufferFromFCodec();
     }
