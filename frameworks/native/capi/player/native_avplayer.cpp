@@ -715,12 +715,12 @@ void NativeAVPlayerCallback::OnDurationUpdateCb(const int32_t extra, const Forma
 {
     (void)infoBody;
     CHECK_AND_RETURN_LOG(isSourceLoaded_.load(), "OnDurationUpdateCb current source is unready");
-    int32_t duration = extra;
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " duration update %{public}d", FAKE_POINTER(this), duration);
+    int64_t duration = extra;
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " duration update %{public}" PRId64, FAKE_POINTER(this), duration);
 
     OHOS::sptr<OH_AVFormat> avFormat = new (std::nothrow) OH_AVFormat();
     CHECK_AND_RETURN_LOG(avFormat != nullptr, "OnDurationUpdateCb OH_AVFormat create failed");
-    avFormat->format_.PutIntValue(OH_PLAYER_DURATION, duration);
+    avFormat->format_.PutLongValue(OH_PLAYER_DURATION, duration);
     infoCallback_->OnInfo(player_, AV_INFO_TYPE_DURATION_UPDATE,
         reinterpret_cast<OH_AVFormat *>(avFormat.GetRefPtr()));
 }
