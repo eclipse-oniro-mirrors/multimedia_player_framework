@@ -176,7 +176,7 @@ void *DraggingPlayerAgent::LoadLibrary()
 {
     char path[PATH_MAX] = {0x00};
     const char *inputPath = REFENCE_LIB_ABSOLUTE_PATH.c_str();
-    if (strlen(inputPath > PATH_MAX) || realpath(inputPath, path) == nullptr) {
+    if (strlen(inputPath) > PATH_MAX || realpath(inputPath, path) == nullptr) {
         MEDIA_LOG_E("dlopen failed due to Invalid path");
         return nullptr;
     }
