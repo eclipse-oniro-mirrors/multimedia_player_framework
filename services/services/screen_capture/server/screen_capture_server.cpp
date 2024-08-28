@@ -1303,7 +1303,7 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
 #endif
         MEDIA_LOGI("privacy notification window not support, app has CAPTURE_SCREEN permission and go on");
     } else {
-        MEDIA_LOGI("Privacy Authority granted automatically and go on for root");
+        MEDIA_LOGI("Privacy Authority granted automatically and go on"); // for root
     }
 
     ret = OnStartScreenCapture();
