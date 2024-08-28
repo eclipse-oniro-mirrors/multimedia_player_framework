@@ -1127,11 +1127,12 @@ Status HiPlayerImpl::doSeek(int64_t seekPos, PlayerSeekMode mode)
     if (mode == PlayerSeekMode::SEEK_CLOSEST) {
         MEDIA_LOG_I_SHORT("doSeek SEEK_CLOSEST");
         if (videoDecoder_ != nullptr) {
-            videoDecoder_->SetSeekTime(seekTimeUs);
+            videoDecoder_->SetSeekTime(seekTimeUs + mediaStartPts_);
         }
         seekAgent_ = std::make_shared<SeekAgent>(demuxer_, mediaStartPts_);
         SetFrameRateForSeekPerformance(FRAME_RATE_FOR_SEEK_PERFORMANCE);
-        auto res = seekAgent_->Seek(seekPos);
+        bool timeout = false;
+        auto res = seekAgent_->Seek(seekPos, timeout);
         SetFrameRateForSeekPerformance(FRAME_RATE_DEFAULT);
         MEDIA_LOG_I_SHORT("seekAgent_ Seek end");
         if (res != Status::OK) {
