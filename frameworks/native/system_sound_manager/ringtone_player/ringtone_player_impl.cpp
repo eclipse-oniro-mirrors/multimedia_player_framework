@@ -33,6 +33,8 @@ const float HIGH_VOL = 1.0f;
 const float LOW_VOL = 0.0f;
 const std::string AUDIO_FORMAT_STR = ".ogg";
 const std::string HAPTIC_FORMAT_STR = ".json";
+const std::string RINGTONE_PATH = "/media/audio/";
+const std::string STANDARD_HAPTICS_PATH = "/media/haptics/standard/synchronized/";
 
 RingtonePlayerImpl::RingtonePlayerImpl(const shared_ptr<Context> &context,
     SystemSoundManagerImpl &sysSoundMgr, RingtoneType type)
@@ -67,6 +69,36 @@ bool RingtonePlayerImpl::IsFileExisting(const std::string &fileUri)
 {
     struct stat buffer;
     return (stat(fileUri.c_str(), &buffer) == 0);
+}
+
+std::string RingtonePlayerImpl::GetNewHapticUriForAudioUri(const std::string &audioUri,
+    const std::string &ringtonePath, const std::string& hapticsPath)
+{
+    string hapticUri = audioUri;
+    size_t pos = hapticUri.find(ringtonePath);
+    if (pos == string::npos) {
+        return "";
+    }
+    hapticUri.replace(pos, ringtonePath.size(), hapticsPath);
+    if (hapticUri.length() > AUDIO_FORMAT_STR.length() &&
+        hapticUri.rfind(AUDIO_FORMAT_STR) == hapticUri.length() - AUDIO_FORMAT_STR.length()) {
+        hapticUri.replace(hapticUri.rfind(AUDIO_FORMAT_STR), AUDIO_FORMAT_STR.length(), HAPTIC_FORMAT_STR);
+        if (IsFileExisting(hapticUri)) {
+            return hapticUri;
+        }
+    }
+    return "";
+}
+
+std::string RingtonePlayerImpl::GetNewHapticUriForAudioUri(const std::string &audioUri)
+{
+    std::string hapticUri = GetNewHapticUriForAudioUri(audioUri, RINGTONE_PATH, STANDARD_HAPTICS_PATH);
+    if (hapticUri.empty()) {
+        MEDIA_LOGW("Failed to find the vibration json file for audioUri. Use the default json file.");
+        std::string currAudioUri = systemSoundMgr_.GetDefaultRingtoneUri(RINGTONE_TYPE_SIM_CARD_0);
+        return GetNewHapticUriForAudioUri(currAudioUri, RINGTONE_PATH, STANDARD_HAPTICS_PATH);
+    }
+    return hapticUri;
 }
 
 std::string RingtonePlayerImpl::GetHapticUriForAudioUri(const std::string &audioUri)
@@ -149,10 +181,13 @@ void RingtonePlayerImpl::InitPlayer(std::string &audioUri)
 
     AudioHapticPlayerOptions options = {false, false};
     // Get the haptic file uri according to the audio file uri.
-    std::string hapticUri = GetHapticUriForAudioUri(audioUri);
-    if (hapticUri == "") {
-        MEDIA_LOGW("haptic uri is empty. Play ringtone without vibration");
-        options.muteHaptics = true;
+    std::string hapticUri = GetNewHapticUriForAudioUri(audioUri);
+    if (hapticUri.empty()) {
+        hapticUri = GetHapticUriForAudioUri(audioUri);
+        if (hapticUri == "") {
+            MEDIA_LOGW("haptic uri is empty. Play ringtone without vibration");
+            options.muteHaptics = true;
+        }
     }
 
     sourceId_ = audioHapticManager_->RegisterSource(ChangeUri(audioUri), hapticUri);

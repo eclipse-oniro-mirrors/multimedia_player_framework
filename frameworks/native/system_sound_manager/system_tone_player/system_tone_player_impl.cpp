@@ -41,6 +41,9 @@ const int32_t ERRCODE_OPERATION_NOT_ALLOWED = 5400102;
 const int32_t ERRCODE_INVALID_PARAMS = 20700002;
 const int32_t ERRCODE_UNSUPPORTED_OPERATION = 20700003;
 const std::string GENTLE_HAPTIC_PATH = "/sys_prod/resource/media/haptics/gentle/synchronized/notifications";
+const std::string RINGTONE_PATH = "/media/audio/";
+const std::string STANDARD_HAPTICS_PATH = "/media/haptics/standard/synchronized/";
+const std::string GENTLE_HAPTICS_PATH = "/media/haptics/gentle/synchronized/";
 
 static std::string FormateHapticUri(const std::string &audioUri, ToneHapticsFeature feature)
 {
@@ -144,6 +147,52 @@ bool SystemTonePlayerImpl::GetMuteHapticsValue()
         muteHaptics = true;
     }
     return muteHaptics;
+}
+
+std::string SystemTonePlayerImpl::GetNewHapticUriForAudioUri(const std::string &audioUri,
+    const std::string &ringtonePath, const std::string& hapticsPath)
+{
+    string hapticUri = audioUri;
+    size_t pos = hapticUri.find(ringtonePath);
+    if (pos == string::npos) {
+        return "";
+    }
+    hapticUri.replace(pos, ringtonePath.size(), hapticsPath);
+    if (hapticUri.length() > AUDIO_FORMAT_STR.length() &&
+        hapticUri.rfind(AUDIO_FORMAT_STR) == hapticUri.length() - AUDIO_FORMAT_STR.length()) {
+        hapticUri.replace(hapticUri.rfind(AUDIO_FORMAT_STR), AUDIO_FORMAT_STR.length(), HAPTIC_FORMAT_STR);
+        if (IsFileExisting(hapticUri)) {
+            return hapticUri;
+        }
+    }
+    return "";
+}
+
+void SystemTonePlayerImpl::GetNewHapticUriForAudioUri(const std::string &audioUri,
+    std::map<ToneHapticsFeature, std::string> &hapticsUriMap)
+{
+    supportedHapticsFeatures_.clear();
+    std::string currAudioUri = audioUri;
+    std::string hapticUri = GetNewHapticUriForAudioUri(audioUri, RINGTONE_PATH, STANDARD_HAPTICS_PATH);
+    if (hapticUri.empty()) {
+        currAudioUri = systemSoundMgr_.GetDefaultSystemToneUri(SYSTEM_TONE_TYPE_NOTIFICATION);
+        hapticUri = GetNewHapticUriForAudioUri(currAudioUri, RINGTONE_PATH, STANDARD_HAPTICS_PATH);
+        if (hapticUri.empty()) {
+            MEDIA_LOGW("Failed to find the default json file.");
+            return;
+        }
+        muteHaptics_ = true;
+        MEDIA_LOGW("haptic uri is empty. Play system tone without vibration");
+    }
+    supportedHapticsFeatures_.push_back(ToneHapticsFeature::STANDARD);
+    hapticsUriMap[ToneHapticsFeature::STANDARD] = hapticUri;
+    MEDIA_LOGI("GetNewHapticUriForAudioUri: STANDARD hapticUri %{public}s ", hapticUri.c_str());
+    hapticUri = GetNewHapticUriForAudioUri(currAudioUri, RINGTONE_PATH, GENTLE_HAPTICS_PATH);
+    if (!hapticUri.empty()) {
+        supportedHapticsFeatures_.push_back(ToneHapticsFeature::GENTLE);
+        hapticsUriMap[ToneHapticsFeature::GENTLE] = hapticUri;
+        MEDIA_LOGI("GetNewHapticUriForAudioUri: GENTLE hapticUri %{public}s ", hapticUri.c_str());
+    }
 }
 
 void SystemTonePlayerImpl::GetHapticUriForAudioUri(const std::string &audioUri,
@@ -459,7 +508,10 @@ void SystemTonePlayerImpl::InitHapticsSourceIds(const std::string &audioUri)
         return;
     }
     std::map<ToneHapticsFeature, std::string> uriMap;
-    GetHapticUriForAudioUri(audioUri, uriMap);
+    GetNewHapticUriForAudioUri(audioUri, uriMap);
+    if (uriMap.empty()) {
+        GetHapticUriForAudioUri(audioUri, uriMap);
+    }
     int32_t sourceId;
     for (auto it = uriMap.begin(); it != uriMap.end(); ++it) {
         sourceId = audioHapticManager_->RegisterSource(ChangeUri(audioUri), it->second);

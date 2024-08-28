@@ -49,6 +49,9 @@ public:
 
 private:
     void InitPlayer(std::string &audioUri);
+    std::string GetNewHapticUriForAudioUri(const std::string &audioUri, const std::string &ringtonePath,
+        const std::string& hapticsPath);
+    std::string GetNewHapticUriForAudioUri(const std::string &audioUri);
     std::string GetHapticUriForAudioUri(const std::string &audioUri);
     bool IsFileExisting(const std::string &fileUri);
     std::string ChangeUri(const std::string &audioUri);
