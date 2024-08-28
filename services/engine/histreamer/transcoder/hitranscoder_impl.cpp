@@ -194,23 +194,36 @@ void HiTransCoderImpl::ConfigureMetaDataToTrackFormat(const std::shared_ptr<Meta
     FALSE_RETURN_MSG(
         globalInfo != nullptr && trackInfos.size() != 0, "globalInfo or trackInfos are invalid.");
     
+    bool isInitializeVideoEncFormat = false;
+    bool isInitializeAudioEncFormat = false;
+    bool hasVideoTrack = false;    
     (void)SetValueByType(globalInfo, muxerFormat_);
-
     for (size_t index = 0; index < trackInfos.size(); index++) {
         MEDIA_LOG_I("trackInfos index: %{public}zu", index);
         std::shared_ptr<Meta> meta = trackInfos[index];
         FALSE_RETURN_MSG(meta != nullptr, "meta is invalid, index: %zu", index);
-        Plugins::MediaType mediaType = Plugins::MediaType::UNKNOWN;
-        if (!meta->GetData(Tag::MEDIA_TYPE, mediaType)) {
-            MEDIA_LOG_W("mediaType not found, index: %zu", index);
+        std::string trackMime;
+        if (!meta->GetData(Tag::MIME_TYPE, trackMime)) {
+            MEDIA_LOG_W("mimeType not found, index: %zu", index);
             continue;
         }
-        (void)SetValueByType(meta, muxerFormat_);
-        if (mediaType == Plugins::MediaType::VIDEO) {
-            (void)SetValueByType(meta, videoEncFormat_);
-        } else if (mediaType == Plugins::MediaType::AUDIO) {
-            (void)SetValueByType(meta, audioEncFormat_);
+        if (trackMime.find("video/") == 0) {
+            hasVideoTrack = true;
         }
+        
+        if (!isInitializeVideoEncFormat && (trackMime.find("video/") == 0)) {
+            (void)SetValueByType(meta, videoEncFormat_);
+            (void)SetValueByType(meta, muxerFormat_);
+            isInitializeVideoEncFormat = true;
+        } else if (!isInitializeAudioEncFormat && (trackMime.find("audio/") == 0)) {
+            (void)SetValueByType(meta, audioEncFormat_);
+            (void)SetValueByType(meta, muxerFormat_);
+            isInitializeAudioEncFormat = true;
+        }
+    }
+    if (!hasVideoTrack) {
+        MEDIA_LOG_E("No video track found.");
+        OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_UNSUPPORT_VID_SRC_TYPE});
     }
 }
 
@@ -360,9 +373,11 @@ Status HiTransCoderImpl::SetTrackMime(const std::vector<std::shared_ptr<Meta>> &
         if (!trackInfos[index]->GetData(Tag::MIME_TYPE, trackMime)) {
             continue;
         }
-        if (trackMime.find("video/") == 0) {
+        std::string videoMime;
+        std::string audioMime;
+        if (trackMime.find("video/") == 0 && !videoEncFormat_->GetData(Tag::MIME_TYPE, videoMime)) {
             videoEncFormat_->Set<Tag::MIME_TYPE>(trackMime);
-        } else if (trackMime.find("audio/" == 0)) {
+        } else if (trackMime.find("audio/") == 0 && !audioEncFormat_->GetData(Tag::MIME_TYPE, audioMime)) {
             audioEncFormat_->Set<Tag::MIME_TYPE>(trackMime);
         }
     }
