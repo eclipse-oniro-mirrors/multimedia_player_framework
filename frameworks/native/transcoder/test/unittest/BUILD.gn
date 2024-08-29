@@ -37,7 +37,7 @@ ohos_unittest("transcoder_unit_test") {
       "src/transcoder_unit_test.cpp",
     ]
   }
-  
+
   if (target_cpu == "arm64") {
     av_codec_path = "\"/system/lib64\""
   } else {
