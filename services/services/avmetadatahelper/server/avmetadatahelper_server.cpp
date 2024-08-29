@@ -86,7 +86,7 @@ int32_t AVMetadataHelperServer::SetSource(const std::string &uri, int32_t usage)
     int32_t ret = InitEngine(uriHelper_->FormattedUri());
 
     ret = ret == MSERR_OK ? avMetadataHelperEngine_->SetSource(uriHelper_->FormattedUri(), usage) : ret;
-    ChangeState(ret == MSERR_OK ? HelperStates::HELPER_PREPARED : HelperStates::HELPER_STATE_ERROR);
+    currState_ = ret == MSERR_OK ? HELPER_PREPARED : HELPER_STATE_ERROR;
     return ret;
 }
 
@@ -107,7 +107,7 @@ int32_t AVMetadataHelperServer::SetSource(int32_t fd, int64_t offset, int64_t si
     int32_t ret = InitEngine(uriHelper_->FormattedUri());
 
     ret = ret == MSERR_OK ? avMetadataHelperEngine_->SetSource(uriHelper_->FormattedUri(), usage) : ret;
-    ChangeState(ret == MSERR_OK ? HelperStates::HELPER_PREPARED : HelperStates::HELPER_STATE_ERROR);
+    currState_ = ret == MSERR_OK ? HELPER_PREPARED : HELPER_STATE_ERROR;
     return ret;
 }
 
@@ -121,7 +121,7 @@ int32_t AVMetadataHelperServer::SetSource(const std::shared_ptr<IMediaDataSource
     int32_t ret = InitEngine("media data source");
 
     ret = ret == MSERR_OK ? avMetadataHelperEngine_->SetSource(dataSrc_) : ret;
-    ChangeState(ret == MSERR_OK ? HelperStates::HELPER_PREPARED : HelperStates::HELPER_STATE_ERROR);
+    currState_ = ret == MSERR_OK ? HELPER_PREPARED : HELPER_STATE_ERROR;
     return ret;
 }
 
