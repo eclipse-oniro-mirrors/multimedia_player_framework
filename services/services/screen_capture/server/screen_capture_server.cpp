@@ -134,6 +134,33 @@ void NotificationSubscriber::OnDied()
     MEDIA_LOGI("NotificationSubscriber OnDied");
 }
 
+PrivateWindowListenerInScreenCapture::PrivateWindowListenerInScreenCapture(
+        std::weak_ptr<ScreenCaptureServer> screenCaptureServer)
+{
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    screenCaptureServer_ = screenCaptureServer;
+}
+
+void PrivateWindowListenerInScreenCapture::OnPrivateWindow(bool hasPrivate)
+{
+    MEDIA_LOGI("PrivateWindowListenerInScreenCapture hasPrivateWindow: %{public}u", hasPrivate);
+    auto scrServer = screenCaptureServer_.lock();
+    if (scrServer) {
+        MEDIA_LOGI("Callback OnDMPrivateWindowChange hasPrivateWindow: %{public}u", hasPrivate);
+        scrServer->OnDMPrivateWindowChange(hasPrivate);
+    }
+}
+
+void ScreenCaptureServer::OnDMPrivateWindowChange(bool hasPrivate)
+{
+    MEDIA_LOGI("OnDMPrivateWindowChange hasPrivateWindow: %{public}u", hasPrivate);
+    if (screenCaptureCb_ != nullptr) {
+        screenCaptureCb_->OnStateChange(hasPrivate ?
+        AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_ENTER_PRIVATE_SCENE :
+        AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_EXIT_PRIVATE_SCENE);
+    }
+}
+
 std::shared_ptr<IScreenCaptureService> ScreenCaptureServer::Create()
 {
     MEDIA_LOGI("ScreenCaptureServer Create start.");
@@ -1059,8 +1086,12 @@ void ScreenCaptureServer::PostStartScreenCapture(bool isSuccess)
         captureState_ = AVScreenCaptureState::STOPPED;
         SetErrorInfo(MSERR_UNKNOWN, "PostStartScreenCapture handle failure",
             StopReason::POST_START_SCREENCAPTURE_HANDLE_FAILURE, IsUserPrivacyAuthorityNeeded());
+        return;
     }
     activeSessionId_.store(sessionId_);
+    std::weak_ptr<ScreenCaptureServer> screenCaptureServer(shared_from_this());
+    displayListener_ = new PrivateWindowListenerInScreenCapture(screenCaptureServer);
+    DisplayManager::GetInstance.RegisterPrivateWindowListener(displayListener_);
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "PostStartScreenCapture end.", FAKE_POINTER(this));
 }
 
@@ -2016,9 +2047,15 @@ int32_t ScreenCaptureServer::SetMicrophoneEnabled(bool isMicrophone)
     if (isMicrophone) {
         ret = SetMicrophoneOn();
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetMicrophoneOn failed");
+        if (screenCaptureCb_ != nullptr) {
+            screenCaptureCb_->OnStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNMUTED_BY_USER);
+        }
     } else {
         ret = SetMicrophoneOff();
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetMicrophoneOff failed");
+        if (screenCaptureCb_ != nullptr) {
+            screenCaptureCb_->OnStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_MUTED_BY_USER);
+        }
     }
     // For CAPTURE FILE, should call Recorder interface to make effect
     MEDIA_LOGI("SetMicrophoneEnabled OK.");

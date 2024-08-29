@@ -229,6 +229,16 @@ private:
     static constexpr int32_t ADS_LOG_SKIP_NUM = 1000;
 };
 
+class PrivateWindowListenerInScreenCapture : public DisplayManager::IPrivateWindowListener {
+public:
+    explicit PrivateWindowListenerInScreenCapture(std::weak_ptr<ScreenCaptureServer> screenCaptureServer);
+    ~PrivateWindowListenerInScreenCapture() = default;
+    void OnPrivateWindow(bool hasPrivate) override;
+
+private:
+    std::weak_ptr<ScreenCaptureServer> screenCaptureServer_;
+};
+
 class ScreenRendererAudioStateChangeCallback : public AudioRendererStateChangeCallback {
 public:
     void OnRendererStateChange(const std::vector<std::unique_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos);
@@ -287,6 +297,7 @@ public:
     int32_t GetMicAudioCaptureBufferSize(size_t &size);
     int32_t OnVoIPStatusChanged(bool isInVoIPCall);
     int32_t OnSpeakerAliveStatusChanged(bool speakerAliveStatus);
+    void OnDMPrivateWindowChange(bool hasPrivate);
 
 private:
     int32_t StartScreenCaptureInner(bool isPrivacyAuthorityEnabled);
@@ -404,6 +415,7 @@ private:
     uint64_t instanceId_ = 0;
     std::shared_ptr<ScreenRendererAudioStateChangeCallback> captureCallback_;
     std::vector<uint64_t> skipPrivacyWindowIDsVec_;
+    sptr<DisplayManager::IPrivateWindowListener> displayListener_;
 private:
     static int32_t CheckAudioCapParam(const AudioCaptureInfo &audioCapInfo);
     static int32_t CheckVideoCapParam(const VideoCaptureInfo &videoCapInfo);
