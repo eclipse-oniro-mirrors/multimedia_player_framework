@@ -69,9 +69,9 @@ ScreenCaptureClient::~ScreenCaptureClient()
 
 int32_t ScreenCaptureClient::SetScreenCaptureCallback(const std::shared_ptr<ScreenCaptureCallBack> &callback)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(callback != nullptr, MSERR_NO_MEMORY, "input param callback is nullptr.");
     CHECK_AND_RETURN_RET_LOG(listenerStub_ != nullptr, MSERR_NO_MEMORY, "listenerStub_ is nullptr.");
-
     callback_ = callback;
     MEDIA_LOGD("SetScreenCaptureCallback");
     listenerStub_->SetScreenCaptureCallback(callback);
