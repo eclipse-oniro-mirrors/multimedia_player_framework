@@ -50,6 +50,10 @@ private:
     int32_t CreatePlayerWithOptions(const AudioHapticPlayerOptions &options);
     void DeletePlayer(const int32_t &streamId);
     void DeleteAllPlayer();
+    std::string GetNewHapticUriForAudioUri(const std::string &audioUri, const std::string &ringtonePath,
+        const std::string& hapticsPath);
+    void GetNewHapticUriForAudioUri(const std::string &audioUri,
+        std::map<ToneHapticsFeature, std::string> &hapticsUriMap);
     void GetHapticUriForAudioUri(const std::string &audioUri, std::map<ToneHapticsFeature, std::string> &hapticsUris);
     bool GetMuteHapticsValue();
     std::string ChangeUri(const std::string &uri);
