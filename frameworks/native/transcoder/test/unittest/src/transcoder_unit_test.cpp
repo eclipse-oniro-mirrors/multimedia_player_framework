@@ -32,6 +32,8 @@ using namespace OHOS::Media::TranscoderTestParam;
 namespace OHOS {
 namespace Media {
 
+const std::string HEVC_LIB_PATH = std::string(AV_CODEC_PATH) + "/libav_codec_hevc_parser.z.so";
+
 void TransCoderUnitTest::SetUpTestCase(void) {}
 
 void TransCoderUnitTest::TearDownTestCase(void) {}
@@ -70,6 +72,7 @@ HWTEST_F(TransCoderUnitTest, transcoder_PureVideo_001, TestSize.Level2)
     EXPECT_EQ(MSERR_OK, transcoder_->SetTransCoderCallback(cb));
     OutputFormatType format = FORMAT_MPEG_4;
     EXPECT_EQ(MSERR_OK, transcoder_->SetOutputFormat(format));
+
     VideoCodecFormat encoder = H264;
     EXPECT_EQ(MSERR_OK, transcoder_->SetVideoEncoder(encoder));
     EXPECT_EQ(MSERR_OK, transcoder_->SetVideoEncodingBitRate(TRASCODER_VIDEO_ENCODING_BIT_RATE));
