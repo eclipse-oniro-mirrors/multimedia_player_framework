@@ -31,8 +31,10 @@ namespace Media {
 namespace TranscoderTestParam {
     constexpr uint32_t TRASCODER_AUDIO_ENCODING_BIT_RATE = 20000;
     constexpr uint32_t TRASCODER_VIDEO_ENCODING_BIT_RATE = 30000;
-    constexpr uint32_t TRANSCODER_BUFFER_WIDTH = 320;
-    constexpr uint32_t TRANSCODER_BUFFER_HEIGHT = 240;
+    constexpr int32_t TRANSCODER_BUFFER_WIDTH = 320;
+    constexpr int32_t TRANSCODER_BUFFER_HEIGHT = 240;
+    constexpr int32_t TRANSCODER_BUFFER_WIDTH_480p = 640;
+    constexpr int32_t TRANSCODER_BUFFER_HEIGHT_480p = 480;
     constexpr int32_t ERROR_WRONG_STATE = -5;
     constexpr uint64_t TRANSCODER_FILE_OFFSET = 37508084;
     constexpr uint64_t TRANSCODER_FILE_SIZE = 2735029;
