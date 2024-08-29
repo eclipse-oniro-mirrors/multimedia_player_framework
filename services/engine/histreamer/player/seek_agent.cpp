@@ -71,7 +71,7 @@ SeekAgent::~SeekAgent()
     MEDIA_LOG_I("~SeekAgent dtor called.");
 }
 
-Status SeekAgent::Seek(int64_t seekPos)
+Status SeekAgent::Seek(int64_t seekPos, bool &timeout)
 {
     MEDIA_LOG_I("Seek start, seekPos: %{public}" PRId64, seekPos);
     FALSE_RETURN_V_MSG_E(demuxer_ != nullptr, Status::ERROR_INVALID_PARAMETER, "Invalid demuxer filter instance.");
@@ -104,6 +104,8 @@ Status SeekAgent::Seek(int64_t seekPos)
     }
     if (!isClosetSeekDone) {
         MEDIA_LOG_I("closet seek time out");
+        timeout = true;
+        demuxer_->Flush();
         auto st = demuxer_->SeekTo(seekPos, Plugins::SeekMode::SEEK_CLOSEST_INNER, realSeekTime);
         FALSE_RETURN_V_MSG_E(st == Status::OK, Status::ERROR_INVALID_OPERATION, "Seekto error.");
     }
