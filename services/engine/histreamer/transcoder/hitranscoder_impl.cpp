@@ -175,6 +175,7 @@ int32_t HiTransCoderImpl::SetInputFile(const std::string &url)
     Status ret = demuxerFilter_->SetDataSource(mediaSource);
     if (ret != Status::OK) {
         MEDIA_LOG_E("SetInputFile error: demuxerFilter_->SetDataSource error");
+        CollectionErrorInfo(static_cast<int32_t>(ret), "SetInputFile error");
         OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_UNSUPPORT_SOURCE});
         return static_cast<int32_t>(ret);
     }
@@ -185,6 +186,7 @@ int32_t HiTransCoderImpl::SetInputFile(const std::string &url)
         MEDIA_LOG_E("Get media duration failed");
     }
     ret = ConfigureVideoAudioMetaData();
+    CreateMediaInfo(CallType::AVTRANSCODER, appUid_, instanceId_);
     return static_cast<int32_t>(ret);
 }
 
@@ -294,6 +296,8 @@ Status HiTransCoderImpl::ConfigureVideoAudioMetaData()
     MEDIA_LOG_I("trackCount: %{public}d", trackCount);
     if (trackCount == 0) {
         MEDIA_LOG_E("No track found in the source");
+        CollectionErrorInfo(static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER),
+            "ConfigureVideoAudioMetaData error");
         OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_DEMUXER_FAILED});
         return Status::ERROR_INVALID_PARAMETER;
     }
@@ -319,15 +323,33 @@ Status HiTransCoderImpl::ConfigureInputVideoMetaData(const std::vector<std::shar
             inputVideoWidth_, inputVideoHeight_);
         videoEncFormat_->Set<Tag::VIDEO_WIDTH>(inputVideoWidth_);
         videoEncFormat_->Set<Tag::VIDEO_HEIGHT>(inputVideoHeight_);
+        srcVideoFormat_->Set<Tag::VIDEO_WIDTH>(inputVideoWidth_);
+        srcVideoFormat_->Set<Tag::VIDEO_HEIGHT>(inputVideoHeight_);
     } else {
         MEDIA_LOG_W("Get input video width or height failed");
     }
+    std::string videoMime;
+    trackInfos[index]->GetData(Tag::MIME_TYPE, videoMime);
+    srcVideoFormat_->SetData(Tag::MIME_TYPE, videoMime);
+    double VideoFrameRate;
+    trackInfos[index]->GetData(Tag::VIDEO_FRAME_RATE, VideoFrameRate);
+    srcVideoFormat_->SetData(Tag::VIDEO_FRAME_RATE, VideoFrameRate);
+    int64_t videoBitrate;
+    int32_t ret = trackInfos[index]->Get<Tag::MEDIA_BITRATE>(videoBitrate);
+    if (ret == 0) {
+        MEDIA_LOG_W("0000  videoBitrate  %{public}d", videoBitrate);
+    } else {
+        MEDIA_LOG_W("1111  videoBitrate  %{public}d", videoBitrate);
+    }
+    srcVideoFormat_->SetData(Tag::MEDIA_BITRATE, videoBitrate);
     bool isHdr = false;
     trackInfos[index]->GetData(Tag::VIDEO_IS_HDR_VIVID, isHdr);
     if (isHdr) {
         videoEncFormat_->SetData(Tag::VIDEO_IS_HDR_VIVID, VIDEO_HDR_TYPE_VIVID);
+        srcVideoFormat_->SetData(Tag::VIDEO_IS_HDR_VIVID, VIDEO_HDR_TYPE_VIVID);
     } else {
         videoEncFormat_->SetData(Tag::VIDEO_IS_HDR_VIVID, VIDEO_HDR_TYPE_NONE);
+        srcVideoFormat_->SetData(Tag::VIDEO_IS_HDR_VIVID, VIDEO_HDR_TYPE_VIVID);
     }
     return Status::OK;
 }
@@ -354,6 +376,8 @@ Status HiTransCoderImpl::ConfigureMetaData(const std::vector<std::shared_ptr<Met
             }
             audioEncFormat_->Set<Tag::AUDIO_CHANNEL_COUNT>(channels);
             audioEncFormat_->Set<Tag::AUDIO_SAMPLE_FORMAT>(Plugins::AudioSampleFormat::SAMPLE_S16LE);
+            srcAudioFormat_->Set<Tag::AUDIO_CHANNEL_COUNT>(channels);
+            srcAudioFormat_->Set<Tag::AUDIO_SAMPLE_FORMAT>(Plugins::AudioSampleFormat::SAMPLE_S16LE);
             int32_t sampleRate = 0;
             if (trackInfos[index]->GetData(Tag::AUDIO_SAMPLE_RATE, sampleRate)) {
                 MEDIA_LOG_D("Audio sampleRate: %{public}d", sampleRate);
@@ -361,6 +385,11 @@ Status HiTransCoderImpl::ConfigureMetaData(const std::vector<std::shared_ptr<Met
                 MEDIA_LOG_W("Get audio channel count failed");
             }
             audioEncFormat_->Set<Tag::AUDIO_SAMPLE_RATE>(sampleRate);
+            srcAudioFormat_->Set<Tag::AUDIO_SAMPLE_RATE>(sampleRate);
+
+            std::string audioMime;
+            trackInfos[index]->GetData(Tag::MIME_TYPE, audioMime);
+            srcAudioFormat_->SetData(Tag::MIME_TYPE, audioMime);
         }
     }
     return Status::OK;
@@ -526,11 +555,13 @@ int32_t HiTransCoderImpl::Prepare()
             MEDIA_LOG_D("set output video width: %{public}d, height: %{public}d", width, height);
         } else {
             MEDIA_LOG_E("Output video width or height not set");
+            CollectionErrorInfo(static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER), "Prepare error");
             OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_INVALID_VAL});
             return static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER);
         }
         if (width > inputVideoWidth_ || height > inputVideoHeight_ || std::min(width, height) < MINIMUM_WIDTH_HEIGHT) {
             MEDIA_LOG_E("Output video width or height is invalid");
+            CollectionErrorInfo(static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER), "Prepare error");
             OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_INVALID_VAL});
             return static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER);
         }
@@ -540,6 +571,7 @@ int32_t HiTransCoderImpl::Prepare()
     if (ret != Status::OK) {
         MEDIA_LOG_E("Prepare failed with error " PUBLIC_LOG_D32, ret);
         auto errCode = TransStatus(ret);
+        CollectionErrorInfo(errCode, "Prepare error");
         OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, errCode});
         return static_cast<int32_t>(errCode);
     }
@@ -567,9 +599,11 @@ int32_t HiTransCoderImpl::Start()
 {
     MEDIA_LOG_I("HiTransCoderImpl::Start()");
     MediaTrace trace("HiTransCoderImpl::Start()");
+    startTime_ = GetCurrentMillisecond();
     int32_t ret = TransStatus(pipeline_->Start());
     if (ret != MSERR_OK) {
         MEDIA_LOG_E("Start pipeline failed");
+        CollectionErrorInfo(static_cast<int32_t>(ret), "Start error");
         OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, ret});
         return ret;
     }
@@ -585,8 +619,13 @@ int32_t HiTransCoderImpl::Pause()
     Status ret = pipeline_->Pause();
     if (ret != Status::OK) {
         MEDIA_LOG_E("Pause pipeline failed");
+        CollectionErrorInfo(static_cast<int32_t>(ret), "Pause error");
         OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_UNKNOWN});
     }
+    if (startTime_ != -1) {
+        transcoderTotalDuration_ += GetCurrentMillisecond() - startTime_;
+    }
+    startTime_ = -1;
     return static_cast<int32_t>(ret);
 }
 
@@ -597,10 +636,12 @@ int32_t HiTransCoderImpl::Resume()
     Status ret = pipeline_->Resume();
     if (ret != Status::OK) {
         MEDIA_LOG_E("Resume pipeline failed");
+        CollectionErrorInfo(static_cast<int32_t>(ret), "Resume error");
         OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_UNKNOWN});
         return static_cast<int32_t>(ret);
     }
     callbackLooper_->StartReportMediaProgress(REPORT_PROGRESS_INTERVAL);
+    startTime_ = GetCurrentMillisecond();
     return static_cast<int32_t>(ret);
 }
 
@@ -613,11 +654,87 @@ int32_t HiTransCoderImpl::Cancel()
     callbackLooper_->Stop();
     if (ret != Status::OK) {
         MEDIA_LOG_E("Stop pipeline failed");
+        CollectionErrorInfo(static_cast<int32_t>(ret), "Cancel error");
         OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_UNKNOWN});
         return static_cast<int32_t>(ret);
     }
     MEDIA_LOG_I("HiTransCoderImpl::Cancel done");
+    if (startTime_ != -1) {
+        transcoderTotalDuration_ += GetCurrentMillisecond() - startTime_;
+    }
+    startTime_ = -1;
+    AppendTranscoderMediaInfo();
+    ReportMediaInfo(instanceId_);
     return static_cast<int32_t>(ret);
+}
+
+void HiTransCoderImpl::AppendTranscoderMediaInfo()
+{
+    MEDIA_LOG_I("HiTransCoderImplAppendTranscoderMediaInfo");
+    
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    meta->SetData(Tag::AV_TRANSCODER_ERR_CODE, errCode_);
+    meta->SetData(Tag::AV_TRANSCODER_ERR_MSG, errMsg_);
+    meta->SetData(Tag::AV_TRANSCODER_SOURCE_DURATION, durationMs_.load());
+    meta->SetData(Tag::AV_TRANSCODER_TRANSCODER_DURATION, static_cast<int32_t>(transcoderTotalDuration_));
+
+    AppendSrcMediaInfo(meta);
+    AppendDstMediaInfo(meta);
+    AppendMediaInfo(meta, instanceId_);
+}
+
+void HiTransCoderImpl::AppendSrcMediaInfo(std::shared_ptr<Meta> meta)
+{
+    std::string srcAudioMime;
+    srcAudioFormat_->Get<Tag::MIME_TYPE>(srcAudioMime);
+    meta->SetData(Tag::AV_TRANSCODER_SRC_AUDIO_MIME, srcAudioMime);
+    std::string srcVideoMime;
+    srcVideoFormat_->Get<Tag::MIME_TYPE>(srcVideoMime);
+    meta->SetData(Tag::AV_TRANSCODER_SRC_VIDEO_MIME, srcVideoMime);
+
+    int64_t srcVideoBitrate;
+    srcVideoFormat_->Get<Tag::MEDIA_BITRATE>(srcVideoBitrate);
+    meta->SetData(Tag::AV_TRANSCODER_SRC_VIDEO_BITRATE, static_cast<int32_t>(srcVideoBitrate));
+
+    bool isHdrVivid;
+    srcVideoFormat_->Get<Tag::VIDEO_IS_HDR_VIVID>(isHdrVivid);
+    if (isHdrVivid) {
+        meta->SetData(Tag::AV_TRANSCODER_SRC_HDR_TYPE, 1);
+    } else {
+        meta->SetData(Tag::AV_TRANSCODER_SRC_HDR_TYPE, 0);
+    }
+    int32_t srcAudioSampleRate;
+    srcAudioFormat_->Get<Tag::AUDIO_SAMPLE_RATE>(srcAudioSampleRate);
+    meta->SetData(Tag::AV_TRANSCODER_SRC_AUDIO_SAMPLE_RATE, srcAudioSampleRate);
+    int32_t srcAudiohannels;
+    srcAudioFormat_->Get<Tag::AUDIO_CHANNEL_COUNT>(srcAudiohannels);
+    meta->SetData(Tag::AV_TRANSCODER_SRC_AUDIO_CHANNEL_COUNT, srcAudiohannels);
+    int64_t srcAudioBitrate;
+    srcAudioFormat_->Get<Tag::MEDIA_BITRATE>(srcAudioBitrate);
+    meta->SetData(Tag::AV_TRANSCODER_SRC_AUDIO_BITRATE, static_cast<int32_t>(srcAudioBitrate));
+}
+
+void HiTransCoderImpl::AppendDstMediaInfo(std::shared_ptr<Meta> meta)
+{
+    std::string dstAudioMime;
+    audioEncFormat_->Get<Tag::MIME_TYPE>(dstAudioMime);
+    meta->SetData(Tag::AV_TRANSCODER_DST_AUDIO_MIME, dstAudioMime);
+    std::string dstVideoMime;
+    videoEncFormat_->Get<Tag::MIME_TYPE>(dstVideoMime);
+    meta->SetData(Tag::AV_TRANSCODER_DST_VIDEO_MIME, dstVideoMime);
+    int64_t dstVideoBitrate;
+    videoEncFormat_->Get<Tag::MEDIA_BITRATE>(dstVideoBitrate);
+    meta->SetData(Tag::AV_TRANSCODER_DST_VIDEO_BITRATE, static_cast<int32_t>(dstVideoBitrate));
+    meta->SetData(Tag::AV_TRANSCODER_DST_HDR_TYPE, 0);
+    int32_t dstAudioSampleRate;
+    audioEncFormat_->Get<Tag::AUDIO_SAMPLE_RATE>(dstAudioSampleRate);
+    meta->SetData(Tag::AV_TRANSCODER_DST_AUDIO_SAMPLE_RATE, dstAudioSampleRate);
+    int32_t dstAudiohannels;
+    audioEncFormat_->Get<Tag::AUDIO_CHANNEL_COUNT>(dstAudiohannels);
+    meta->SetData(Tag::AV_TRANSCODER_DST_AUDIO_CHANNEL_COUNT, dstAudiohannels);
+    int64_t dstAudioBitrate;
+    audioEncFormat_->Get<Tag::MEDIA_BITRATE>(dstAudioBitrate);
+    meta->SetData(Tag::AV_TRANSCODER_DST_AUDIO_BITRATE,static_cast<int32_t>(dstAudioBitrate));
 }
 
 void HiTransCoderImpl::OnEvent(const Event &event)
@@ -813,6 +930,20 @@ int32_t HiTransCoderImpl::GetDuration(int32_t& durationMs)
 {
     durationMs = durationMs_.load();
     return static_cast<int32_t>(Status::OK);
+}
+
+int64_t HiTransCoderImpl::GetCurrentMillisecond()
+{
+    std::chrono::system_clock::duration duration = std::chrono::system_clock::now().time_since_epoch();
+    int64_t time = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
+    return time;
+}
+
+void HiTransCoderImpl::CollectionErrorInfo(int32_t errCode, const std::string& errMsg)
+{
+    MEDIA_LOG_E_SHORT("Error: " PUBLIC_LOG_S, errMsg.c_str());
+    errCode_ = errCode;
+    errMsg_ = errMsg;
 }
 } // namespace MEDIA
 } // namespace OHOS
