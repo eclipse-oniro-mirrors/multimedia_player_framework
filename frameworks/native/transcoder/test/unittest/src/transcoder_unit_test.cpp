@@ -140,7 +140,7 @@ HWTEST_F(TransCoderUnitTest, transcoder_PureVideo_003, TestSize.Level2)
     OutputFormatType format = FORMAT_MPEG_4;
     EXPECT_EQ(MSERR_OK, transcoder_->SetOutputFormat(format));
     VideoCodecFormat encoder = H264;
-    if (access(HEVC_LIB_PATH.c_str, F_OK) == 0) {
+    if (access(HEVC_LIB_PATH.c_str(), F_OK) == 0) {
         encoder = H265;
     }
     EXPECT_EQ(MSERR_OK, transcoder_->SetVideoEncoder(encoder));
@@ -175,7 +175,7 @@ HWTEST_F(TransCoderUnitTest, transcoder_PureVideo_004, TestSize.Level2)
     OutputFormatType format = FORMAT_MPEG_4;
     EXPECT_EQ(MSERR_OK, transcoder_->SetOutputFormat(format));
     VideoCodecFormat encoder = H264;
-    if (access(HEVC_LIB_PATH.c_str, F_OK) == 0) {
+    if (access(HEVC_LIB_PATH.c_str(), F_OK) == 0) {
         encoder = H265;
     }
     EXPECT_EQ(MSERR_OK, transcoder_->SetVideoEncoder(encoder));
@@ -351,7 +351,7 @@ HWTEST_F(TransCoderUnitTest, transcoder_AudioVideo_003, TestSize.Level2)
     EXPECT_EQ(MSERR_OK, transcoder_->SetAudioEncoder(encoderAudio));
     EXPECT_EQ(MSERR_OK, transcoder_->SetAudioEncodingBitRate(TRASCODER_AUDIO_ENCODING_BIT_RATE));
     VideoCodecFormat encoder = H264;
-    if (access(HEVC_LIB_PATH.c_str, F_OK) == 0) {
+    if (access(HEVC_LIB_PATH.c_str(), F_OK) == 0) {
         encoder = H265;
     }
     EXPECT_EQ(MSERR_OK, transcoder_->SetVideoEncoder(encoder));
@@ -389,7 +389,7 @@ HWTEST_F(TransCoderUnitTest, transcoder_AudioVideo_004, TestSize.Level2)
     EXPECT_EQ(MSERR_OK, transcoder_->SetAudioEncoder(encoderAudio));
     EXPECT_EQ(MSERR_OK, transcoder_->SetAudioEncodingBitRate(TRASCODER_AUDIO_ENCODING_BIT_RATE));
     VideoCodecFormat encoder = H264;
-    if (access(HEVC_LIB_PATH.c_str, F_OK) == 0) {
+    if (access(HEVC_LIB_PATH.c_str(), F_OK) == 0) {
         encoder = H265;
     }
     EXPECT_EQ(MSERR_OK, transcoder_->SetVideoEncoder(encoder));
