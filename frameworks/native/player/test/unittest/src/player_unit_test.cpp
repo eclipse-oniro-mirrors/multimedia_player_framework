@@ -3799,5 +3799,58 @@ HWTEST_F(PlayerUnitTest, Player_SetMaxAmplitudeCbStatus_004, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->SetMaxAmplitudeCbStatus(false));
     EXPECT_EQ(MSERR_OK, player_->Play());
 }
+
+/**
+ * @tc.name  : Test SetPlaybackStrategy
+ * @tc.number: Player_SetPlaybackStrategy_001
+ * @tc.desc  : Test Player SetPlaybackStrategy
+ */
+HWTEST_F(PlayerUnitTest, Player_SetPlaybackStrategy_001, TestSize.Level0)
+{
+    AVPlayStrategy playbackStrategy = {
+        .mutedMediaType = OHOS::Media::MediaType::MEDIA_TYPE_AUD
+    };
+    ASSERT_NE(MSERR_OK, player_->SetPlaybackStrategy(playbackStrategy));
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    ASSERT_EQ(MSERR_OK, player_->SetPlaybackStrategy(playbackStrategy));
+}
+
+/**
+ * @tc.name  : Test SetMediaMuted
+ * @tc.number: Player_SetMediaMuted_001
+ * @tc.desc  : Test Player SetMediaMuted
+ */
+HWTEST_F(PlayerUnitTest, Player_SetMediaMuted_001, TestSize.Level0)
+{
+    ASSERT_NE(MSERR_OK, player_->SetMediaMuted(OHOS::Media::MediaType::MEDIA_TYPE_AUD, true));
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    ASSERT_NE(MSERR_OK, player_->SetMediaMuted(OHOS::Media::MediaType::MEDIA_TYPE_AUD, true));
+    ASSERT_EQ(MSERR_OK, player_->PrepareAsync());
+    ASSERT_EQ(MSERR_OK, player_->SetMediaMuted(OHOS::Media::MediaType::MEDIA_TYPE_AUD, true));
+    ASSERT_EQ(MSERR_OK, player_->Play());
+    ASSERT_EQ(MSERR_OK, player_->SetMediaMuted(OHOS::Media::MediaType::MEDIA_TYPE_AUD, true));
+    ASSERT_EQ(MSERR_OK, player_->Pause());
+    ASSERT_EQ(MSERR_OK, player_->SetMediaMuted(OHOS::Media::MediaType::MEDIA_TYPE_AUD, true));
+    ASSERT_EQ(MSERR_OK, player_->Stop());
+    ASSERT_EQ(MSERR_OK, player_->SetMediaMuted(OHOS::Media::MediaType::MEDIA_TYPE_AUD, true));
+}
+
+/**
+ * @tc.name  : Test SetMediaMuted
+ * @tc.number: Player_SetMediaMuted_002
+ * @tc.desc  : Test Player SetMediaMuted
+ */
+HWTEST_F(PlayerUnitTest, Player_SetMediaMuted_002, TestSize.Level0)
+{
+    ASSERT_NE(MSERR_OK, player_->SetMediaMuted(OHOS::Media::MediaType::MEDIA_TYPE_VID, true));
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    ASSERT_NE(MSERR_OK, player_->SetMediaMuted(OHOS::Media::MediaType::MEDIA_TYPE_VID, true));
+    ASSERT_EQ(MSERR_OK, player_->PrepareAsync());
+    ASSERT_NE(MSERR_OK, player_->SetMediaMuted(OHOS::Media::MediaType::MEDIA_TYPE_VID, true));
+    ASSERT_EQ(MSERR_OK, player_->Play());
+    ASSERT_NE(MSERR_OK, player_->SetMediaMuted(OHOS::Media::MediaType::MEDIA_TYPE_VID, true));
+    ASSERT_EQ(MSERR_OK, player_->Stop());
+    ASSERT_NE(MSERR_OK, player_->SetMediaMuted(OHOS::Media::MediaType::MEDIA_TYPE_VID, true));
+}
 } // namespace Media
 } // namespace OHOS

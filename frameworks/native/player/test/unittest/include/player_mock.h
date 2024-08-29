@@ -161,6 +161,8 @@ public:
     int32_t SetPlayRange(int64_t start, int64_t end);
     int32_t SeekContinuous(int32_t mseconds);
     int32_t SetMaxAmplitudeCbStatus(bool status);
+    int32_t SetPlaybackStrategy(AVPlayStrategy strategy);
+    int32_t SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted);
 private:
     void SeekPrepare(int32_t &mseconds, PlayerSeekMode &mode);
     std::shared_ptr<Player> player_ = nullptr;
