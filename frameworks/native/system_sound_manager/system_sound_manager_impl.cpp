@@ -134,19 +134,19 @@ void SystemSoundManagerImpl::InitRingerMode(void)
     audioGroupManager_->SetRingerModeCallback(getpid(), ringerModeCallback_);
 }
 
-bool SystemSoundManagerImpl::isRingtoneTypeValid(RingtoneType ringtongType)
+bool SystemSoundManagerImpl::IsRingtoneTypeValid(RingtoneType ringtongType)
 {
     switch (ringtongType) {
         case RINGTONE_TYPE_SIM_CARD_0:
         case RINGTONE_TYPE_SIM_CARD_1:
             return true;
         default:
-            MEDIA_LOGE("isRingtoneTypeValid: ringtongType %{public}d is unavailable", ringtongType);
+            MEDIA_LOGE("IsRingtoneTypeValid: ringtongType %{public}d is unavailable", ringtongType);
             return false;
     }
 }
 
-bool SystemSoundManagerImpl::isSystemToneTypeValid(SystemToneType systemToneType)
+bool SystemSoundManagerImpl::IsSystemToneTypeValid(SystemToneType systemToneType)
 {
     switch (systemToneType) {
         case SYSTEM_TONE_TYPE_SIM_CARD_0:
@@ -154,9 +154,18 @@ bool SystemSoundManagerImpl::isSystemToneTypeValid(SystemToneType systemToneType
         case SYSTEM_TONE_TYPE_NOTIFICATION:
             return true;
         default:
-            MEDIA_LOGE("isSystemToneTypeValid: systemToneType %{public}d is unavailable", systemToneType);
+            MEDIA_LOGE("IsSystemToneTypeValid: systemToneType %{public}d is unavailable", systemToneType);
             return false;
     }
+}
+
+bool SystemSoundManagerImpl::IsSystemToneSourceTypePreset(const unique_ptr<RingtoneAsset> &ringtoneAsset,
+    const SystemToneType &systemToneType)
+{
+    CHECK_AND_RETURN_RET_LOG(ringtoneAsset != nullptr, false, "Invalid ringtone asset.");
+    return (systemToneType == SYSTEM_TONE_TYPE_NOTIFICATION ?
+        SOURCE_TYPE_PRESET != ringtoneAsset->GetNotificationtoneSourceType() :
+        SOURCE_TYPE_PRESET != ringtoneAsset->GetShottoneSourceType());
 }
 
 void SystemSoundManagerImpl::InitDefaultUriMap()
@@ -389,7 +398,7 @@ int32_t SystemSoundManagerImpl::SetRingtoneUri(const shared_ptr<Context> &contex
     RingtoneType ringtoneType)
 {
     std::lock_guard<std::mutex> lock(uriMutex_);
-    CHECK_AND_RETURN_RET_LOG(isRingtoneTypeValid(ringtoneType), MSERR_INVALID_VAL, "Invalid ringtone type");
+    CHECK_AND_RETURN_RET_LOG(IsRingtoneTypeValid(ringtoneType), MSERR_INVALID_VAL, "Invalid ringtone type");
 
     MEDIA_LOGI("SetRingtoneUri: ringtoneType %{public}d, uri %{public}s", ringtoneType, uri.c_str());
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
@@ -451,7 +460,7 @@ std::string SystemSoundManagerImpl::GetRingtoneUriByType(std::shared_ptr<DataSha
 
 std::string SystemSoundManagerImpl::GetRingtoneUri(const shared_ptr<Context> &context, RingtoneType ringtoneType)
 {
-    CHECK_AND_RETURN_RET_LOG(isRingtoneTypeValid(ringtoneType), "", "Invalid ringtone type");
+    CHECK_AND_RETURN_RET_LOG(IsRingtoneTypeValid(ringtoneType), "", "Invalid ringtone type");
     std::string ringtoneUri = "";
     MEDIA_LOGI("GetRingtoneUri: ringtoneType %{public}d", ringtoneType);
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
@@ -501,7 +510,7 @@ std::shared_ptr<RingtonePlayer> SystemSoundManagerImpl::GetRingtonePlayer(const 
     RingtoneType ringtoneType)
 {
     std::lock_guard<std::mutex> lock(playerMutex_);
-    CHECK_AND_RETURN_RET_LOG(isRingtoneTypeValid(ringtoneType), nullptr, "invalid ringtone type");
+    CHECK_AND_RETURN_RET_LOG(IsRingtoneTypeValid(ringtoneType), nullptr, "invalid ringtone type");
     MEDIA_LOGI("GetRingtonePlayer: for ringtoneType %{public}d", ringtoneType);
 
     std::shared_ptr<RingtonePlayer> ringtonePlayer = std::make_shared<RingtonePlayerImpl>(context, *this, ringtoneType);
@@ -514,7 +523,7 @@ std::shared_ptr<SystemTonePlayer> SystemSoundManagerImpl::GetSystemTonePlayer(
     const std::shared_ptr<AbilityRuntime::Context> &context, SystemToneType systemToneType)
 {
     std::lock_guard<std::mutex> lock(playerMutex_);
-    CHECK_AND_RETURN_RET_LOG(isSystemToneTypeValid(systemToneType), nullptr, "invalid system tone type");
+    CHECK_AND_RETURN_RET_LOG(IsSystemToneTypeValid(systemToneType), nullptr, "invalid system tone type");
     MEDIA_LOGI("GetSystemTonePlayer: for systemToneType %{public}d", systemToneType);
 
     std::shared_ptr<SystemTonePlayer> systemTonePlayer =
@@ -592,7 +601,7 @@ int32_t SystemSoundManagerImpl::SetSystemToneUri(const shared_ptr<Context> &cont
     SystemToneType systemToneType)
 {
     std::lock_guard<std::mutex> lock(uriMutex_);
-    CHECK_AND_RETURN_RET_LOG(isSystemToneTypeValid(systemToneType), MSERR_INVALID_VAL, "Invalid system tone type");
+    CHECK_AND_RETURN_RET_LOG(IsSystemToneTypeValid(systemToneType), MSERR_INVALID_VAL, "Invalid system tone type");
 
     MEDIA_LOGI("SetSystemToneUri: systemToneType %{public}d, uri %{public}s", systemToneType, uri.c_str());
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
@@ -682,7 +691,7 @@ std::string SystemSoundManagerImpl::GetNotificationToneUriByType(
 std::string SystemSoundManagerImpl::GetSystemToneUri(const std::shared_ptr<AbilityRuntime::Context> &context,
     SystemToneType systemToneType)
 {
-    CHECK_AND_RETURN_RET_LOG(isSystemToneTypeValid(systemToneType), "", "Invalid system tone type");
+    CHECK_AND_RETURN_RET_LOG(IsSystemToneTypeValid(systemToneType), "", "Invalid system tone type");
     std::string systemToneUri = "";
     MEDIA_LOGI("GetSystemToneUri: systemToneType %{public}d", systemToneType);
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
@@ -721,7 +730,7 @@ std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultRingtoneAttrs(
     const shared_ptr<Context> &context, RingtoneType ringtoneType)
 {
     std::lock_guard<std::mutex> lock(uriMutex_);
-    CHECK_AND_RETURN_RET_LOG(isRingtoneTypeValid(ringtoneType),  nullptr, "Invalid ringtone type");
+    CHECK_AND_RETURN_RET_LOG(IsRingtoneTypeValid(ringtoneType),  nullptr, "Invalid ringtone type");
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, nullptr,
         "Create dataShare failed, datashare or ringtone library error.");
@@ -733,7 +742,7 @@ std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultRingtoneAttrs(
     auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
     CHECK_AND_RETURN_RET_LOG(results != nullptr, nullptr, "single sim card failed, ringtone library error.");
     unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
-    while ((ringtoneAsset != nullptr) && (SOURCE_TYPE_PRESET != ringtoneAsset->GetSourceType())) {
+    while ((ringtoneAsset != nullptr) && (SOURCE_TYPE_PRESET != ringtoneAsset->GetRingtoneSourceType())) {
         ringtoneAsset = results->GetNextObject();
     }
     if (ringtoneAsset != nullptr) {
@@ -750,7 +759,7 @@ std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultRingtoneAttrs(
     CHECK_AND_RETURN_RET_LOG(results != nullptr, nullptr, "query both sim card failed, ringtone library error.");
     unique_ptr<RingtoneAsset> ringtoneAssetBothCard = results->GetFirstObject();
     while ((ringtoneAssetBothCard != nullptr) &&
-        (SOURCE_TYPE_PRESET != ringtoneAssetBothCard->GetSourceType())) {
+        (SOURCE_TYPE_PRESET != ringtoneAssetBothCard->GetRingtoneSourceType())) {
         ringtoneAssetBothCard = results->GetNextObject();
     }
     if (ringtoneAssetBothCard != nullptr) {
@@ -800,7 +809,7 @@ std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultSystemToneAttrs(
     const std::shared_ptr<AbilityRuntime::Context> &context, SystemToneType systemToneType)
 {
     std::lock_guard<std::mutex> lock(uriMutex_);
-    CHECK_AND_RETURN_RET_LOG(isSystemToneTypeValid(systemToneType),  nullptr, "Invalid systemtone type");
+    CHECK_AND_RETURN_RET_LOG(IsSystemToneTypeValid(systemToneType),  nullptr, "Invalid systemtone type");
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, nullptr,
         "Create dataShare failed, datashare or ringtone library error.");
@@ -818,7 +827,7 @@ std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultSystemToneAttrs(
     auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
     CHECK_AND_RETURN_RET_LOG(results != nullptr, nullptr, "query single systemtone failed, ringtone library error.");
     unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
-    while ((ringtoneAsset != nullptr) && (SOURCE_TYPE_PRESET != ringtoneAsset->GetSourceType())) {
+    while ((ringtoneAsset != nullptr) && IsSystemToneSourceTypePreset(ringtoneAsset, systemToneType)) {
         ringtoneAsset = results->GetNextObject();
     }
     if (ringtoneAsset != nullptr) {
@@ -834,8 +843,7 @@ std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultSystemToneAttrs(
     results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
     CHECK_AND_RETURN_RET_LOG(results != nullptr, nullptr, "query both systemtone failed, ringtone library error.");
     unique_ptr<RingtoneAsset> ringtoneAssetBothCard = results->GetFirstObject();
-    while ((ringtoneAssetBothCard != nullptr) &&
-        (SOURCE_TYPE_PRESET != ringtoneAssetBothCard->GetSourceType())) {
+    while ((ringtoneAssetBothCard != nullptr) && IsSystemToneSourceTypePreset(ringtoneAssetBothCard, systemToneType)) {
         ringtoneAssetBothCard = results->GetNextObject();
     }
     if (ringtoneAssetBothCard != nullptr) {
@@ -977,7 +985,7 @@ std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultAlarmToneAttrs(
     auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
     CHECK_AND_RETURN_RET_LOG(results != nullptr, nullptr, "query failed, ringtone library error.");
     unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
-    while ((ringtoneAsset != nullptr) && (SOURCE_TYPE_PRESET != ringtoneAsset->GetSourceType())) {
+    while ((ringtoneAsset != nullptr) && (SOURCE_TYPE_PRESET != ringtoneAsset->GetAlarmtoneSourceType())) {
         ringtoneAsset = results->GetNextObject();
     }
     if (ringtoneAsset != nullptr) {

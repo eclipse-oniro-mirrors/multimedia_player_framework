@@ -66,7 +66,7 @@ public:
         SystemToneType systemToneType) override;
     std::shared_ptr<SystemTonePlayer> GetSystemTonePlayer(const std::shared_ptr<AbilityRuntime::Context> &context,
         SystemToneType systemToneType) override;
-    
+
     std::shared_ptr<ToneAttrs> GetDefaultRingtoneAttrs(const std::shared_ptr<AbilityRuntime::Context> &context,
         RingtoneType ringtoneType) override;
     std::vector<std::shared_ptr<ToneAttrs>> GetRingtoneAttrList(const std::shared_ptr<AbilityRuntime::Context> &context,
@@ -121,8 +121,10 @@ private:
     int32_t UpdateNotificatioToneUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
         const int32_t &toneId);
 
-    bool isRingtoneTypeValid(RingtoneType ringtongType);
-    bool isSystemToneTypeValid(SystemToneType systemToneType);
+    bool IsRingtoneTypeValid(RingtoneType ringtongType);
+    bool IsSystemToneTypeValid(SystemToneType systemToneType);
+    bool IsSystemToneSourceTypePreset(const std::unique_ptr<RingtoneAsset> &ringtoneAsset,
+        const SystemToneType &systemToneType);
 
     std::string systemSoundPath_ = "";
     std::mutex uriMutex_;
