@@ -335,12 +335,7 @@ Status HiTransCoderImpl::ConfigureInputVideoMetaData(const std::vector<std::shar
     trackInfos[index]->GetData(Tag::VIDEO_FRAME_RATE, VideoFrameRate);
     srcVideoFormat_->SetData(Tag::VIDEO_FRAME_RATE, VideoFrameRate);
     int64_t videoBitrate;
-    int32_t ret = trackInfos[index]->Get<Tag::MEDIA_BITRATE>(videoBitrate);
-    if (ret == 0) {
-        MEDIA_LOG_W("0000  videoBitrate  %{public}d", videoBitrate);
-    } else {
-        MEDIA_LOG_W("1111  videoBitrate  %{public}d", videoBitrate);
-    }
+    trackInfos[index]->Get<Tag::MEDIA_BITRATE>(videoBitrate);
     srcVideoFormat_->SetData(Tag::MEDIA_BITRATE, videoBitrate);
     bool isHdr = false;
     trackInfos[index]->GetData(Tag::VIDEO_IS_HDR_VIVID, isHdr);
