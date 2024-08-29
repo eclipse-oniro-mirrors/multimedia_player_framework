@@ -135,7 +135,7 @@ void NotificationSubscriber::OnDied()
 }
 
 PrivateWindowListenerInScreenCapture::PrivateWindowListenerInScreenCapture(
-        std::weak_ptr<ScreenCaptureServer> screenCaptureServer)
+    std::weak_ptr<ScreenCaptureServer> screenCaptureServer)
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
     screenCaptureServer_ = screenCaptureServer;
@@ -1091,7 +1091,7 @@ void ScreenCaptureServer::PostStartScreenCapture(bool isSuccess)
     activeSessionId_.store(sessionId_);
     std::weak_ptr<ScreenCaptureServer> screenCaptureServer(shared_from_this());
     displayListener_ = new PrivateWindowListenerInScreenCapture(screenCaptureServer);
-    DisplayManager::GetInstance.RegisterPrivateWindowListener(displayListener_);
+    DisplayManager::GetInstance().RegisterPrivateWindowListener(displayListener_);
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "PostStartScreenCapture end.", FAKE_POINTER(this));
 }
 
@@ -2367,6 +2367,7 @@ int32_t ScreenCaptureServer::StopScreenCaptureInner(AVScreenCaptureStateCode sta
     if (audioSource_ && audioSource_->GetAppPid() > 0) { // DataType::CAPTURE_FILE
         audioSource_->UnregisterAudioRendererEventListener(audioSource_->GetAppPid());
     }
+    DisplayManager::GetInstance().UnregisterPrivateWindowListener(displayListener_);
     if (captureState_ == AVScreenCaptureState::CREATED || captureState_ == AVScreenCaptureState::STARTING) {
         CloseFd();
         captureState_ = AVScreenCaptureState::STOPPED;
