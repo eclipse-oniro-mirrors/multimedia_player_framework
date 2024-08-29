@@ -2034,8 +2034,10 @@ void HiPlayerImpl::DoSetPlayStrategy(const std::shared_ptr<MediaSource> source)
     playStrategy->preferHDR = preferHDR_;
     playStrategy->audioLanguage = audioLanguage_;
     playStrategy->subtitleLanguage = subtitleLanguage_;
-    source->SetPlayStrategy(playStrategy);
-    source->SetAppUid(appUid_);
+    if (source) {
+        source->SetPlayStrategy(playStrategy);
+        source->SetAppUid(appUid_);
+    }
 }
 
 Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
