@@ -31,6 +31,7 @@
 #include "hisysevent.h"
 #include "image_format_convert.h"
 #include "color_space.h"
+#include "util.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_METADATA, "AVMetadatahelperImpl" };
@@ -466,6 +467,22 @@ std::shared_ptr<AVSharedMemory> AVMetadataHelperImpl::FetchArtPicture()
     return avMetadataHelperService_->FetchArtPicture();
 }
 
+static void CalcScaleRate(Size srcParam, PixelMapParams dstParam, float &scaleRateW, float &scaleRateH)
+{
+    bool isWScale = dstParam.dstWidth > 0 && dstParam.dstWidth < srcParam.width;
+    if (isWScale && srcParam.width > 0) {
+        scaleRateW = (1.0f * dstParam.dstWidth) / srcParam.width;
+        // 0 means follow another edge
+        scaleRateH = dstParam.dstHeight == 0 ? scaleRateW : scaleRateH;
+    }
+    bool isHScale = dstParam.dstHeight > 0 && dstParam.dstHeight < srcParam.height;
+    if (isHScale && srcParam.height > 0) {
+        scaleRateH = (1.0f * dstParam.dstHeight) / srcParam.height;
+        // 0 means follow another edge
+        scaleRateW = dstParam.width == 0 ? scaleRateH : scaleRateW;
+    }
+}
+
 std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameAtTime(
     int64_t timeUs, int32_t option, const PixelMapParams &param)
 {
@@ -499,26 +516,14 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameAtTime(
     }
     int32_t srcWidth = pixelMap->GetWidth();
     int32_t srcHeight = pixelMap->GetHeight();
-    float widthScaleRate = 1.0;
-    float heightScaleRate = 1.0;
-    bool isWScale = param.dstWidth > 0 && param.dstWidth < srcWidth;
-    bool isHScale = param.dstHeight > 0 && param.dstHeight < srcHeight;
-    if (isWScale && srcWidth > 0) {
-        widthScaleRate = (1.0f * param.dstWidth) / srcWidth;
-        // 0 means follow another edge
-        heightScaleRate = param.dstHeight == 0 ? widthScaleRate : heightScaleRate;
-    }
-    if (isHScale && srcHeight > 0) {
-        heightScaleRate = (1.0f * param.dstHeight) / srcHeight;
-        // 0 means follow another edge
-        widthScaleRate = param.dstWidth == 0 ? heightScaleRate : widthScaleRate;
-    }
-    if (isWScale || isHScale) {
+    float scaleRateW = 1.0;
+    float scaleRateH = 1.0;
+    CalcScaleRate(param, {.width = srcWidth, .height = srcHeight }, scaleRateW, scaleRateH);
+    if (!IsFloatEqual(scaleRateW, 1.0f) || !IsFloatEqual(scaleRateH, 1.0f)) {
         pixelMap->scale(widthScaleRate, heightScaleRate);
     }
     return pixelMap;
 }
-
 
 std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameYuv(int64_t timeUs, int32_t option,
                                                               const PixelMapParams &param)
@@ -548,21 +553,10 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameYuv(int64_t timeUs, in
                                 .uvStride = srcWidth,
                                 .uvOffset = srcWidth * srcHeight };
     pixelMap->SetImageYUVInfo(yuvDataInfo);
-    float widthScaleRate = 1.0;
-    float heightScaleRate = 1.0;
-    bool isWScale = param.dstWidth > 0 && param.dstWidth < srcWidth;
-    bool isHScale = param.dstHeight > 0 && param.dstHeight < srcHeight;
-    if (isWScale && srcWidth > 0) {
-        widthScaleRate = (1.0f * param.dstWidth) / srcWidth;
-        // 0 means follow another edge
-        heightScaleRate = param.dstHeight == 0 ? widthScaleRate : heightScaleRate;
-    }
-    if (isHScale && srcHeight > 0) {
-        heightScaleRate = (1.0f * param.dstHeight) / srcHeight;
-        // 0 means follow another edge
-        widthScaleRate = param.dstWidth == 0 ? heightScaleRate : widthScaleRate;
-    }
-    if (isWScale || isHScale) {
+    float scaleRateW = 1.0;
+    float scaleRateH = 1.0;
+    CalcScaleRate(param, {.width = srcWidth, .height = srcHeight }, scaleRateW, scaleRateH);
+    if (!IsFloatEqual(scaleRateW, 1.0f) || !IsFloatEqual(scaleRateH, 1.0f)) {
         if (!pixelMapInfo.isHdr) {
             pixelMap->SetAllocatorType(AllocatorType::SHARE_MEM_ALLOC);
         }
