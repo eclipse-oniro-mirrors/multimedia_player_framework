@@ -563,6 +563,9 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameYuv(int64_t timeUs, in
         widthScaleRate = param.dstWidth == 0 ? heightScaleRate : widthScaleRate;
     }
     if (isWScale || isHScale) {
+        if (!pixelMapInfo.isHdr) {
+            pixelMap->SetAllocatorType(AllocatorType::SHARE_MEM_ALLOC);
+        }
         pixelMap->scale(widthScaleRate, heightScaleRate);
     }
     if (pixelMapInfo.rotation > 0) {
