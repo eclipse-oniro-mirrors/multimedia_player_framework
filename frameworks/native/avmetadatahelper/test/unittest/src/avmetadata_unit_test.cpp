@@ -759,27 +759,5 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameYuv_0600, Level2)
     ASSERT_EQ(MSERR_OK, helper->FetchFrameYuv(0, time, param));
     ASSERT_EQ(MSERR_OK, helper->FetchFrameAtTime(0, time, param));
 }
-
-/**
-    * @tc.number    : FetchFrameYuv_0600
-    * @tc.name      : SetSource invalid.mp4
-    * @tc.desc      : SetSource API
-*/
-HWTEST_F(AVMetadataUnitTest, FetchFrameYuv_0600, Level2)
-{
-    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
-        std::string("H264_AAC.mp4");
-    std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
-    ASSERT_NE(nullptr, helper);
-    ASSERT_EQ(true, helper->CreateAVMetadataHelper());
-    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
-    uint64_t time = 0;
-    PixelMapParams param = {
-        .dstWidth = 9999,
-        .dstHeight = 9999
-    };
-    ASSERT_EQ(MSERR_OK, helper->FetchFrameYuv(0, time, param));
-    ASSERT_EQ(MSERR_OK, helper->FetchFrameAtTime(0, time, param));
-}
 } // namespace Media
 } // namespace OHOS
