@@ -654,6 +654,7 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameYuv_0100, Level2)
     ASSERT_NE(nullptr, pixelMap);
     ASSERT_EQ(pixelMap->GetWidth(), 360);
     ASSERT_EQ(pixelMap->GetHeight(), 240);
+}
 
 /**
     * @tc.number    : FetchFrameYuv_0200
