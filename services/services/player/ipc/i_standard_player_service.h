@@ -162,8 +162,8 @@ public:
         SET_MEDIA_MUTED,
         GET_PLAYBACK_INFO,
         SET_MAX_AMPLITUDE_CB_STATUS,
-        MAX_IPC_ID,
         SET_DEVICE_CHANGE_CB_STATUS,
+        MAX_IPC_ID,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardPlayerService");
