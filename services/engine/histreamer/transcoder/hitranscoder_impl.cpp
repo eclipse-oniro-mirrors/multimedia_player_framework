@@ -331,9 +331,6 @@ Status HiTransCoderImpl::ConfigureInputVideoMetaData(const std::vector<std::shar
     std::string videoMime;
     trackInfos[index]->GetData(Tag::MIME_TYPE, videoMime);
     srcVideoFormat_->SetData(Tag::MIME_TYPE, videoMime);
-    double VideoFrameRate;
-    trackInfos[index]->GetData(Tag::VIDEO_FRAME_RATE, VideoFrameRate);
-    srcVideoFormat_->SetData(Tag::VIDEO_FRAME_RATE, VideoFrameRate);
     int64_t videoBitrate;
     trackInfos[index]->Get<Tag::MEDIA_BITRATE>(videoBitrate);
     srcVideoFormat_->SetData(Tag::MEDIA_BITRATE, videoBitrate);
@@ -729,7 +726,7 @@ void HiTransCoderImpl::AppendDstMediaInfo(std::shared_ptr<Meta> meta)
     meta->SetData(Tag::AV_TRANSCODER_DST_AUDIO_CHANNEL_COUNT, dstAudiohannels);
     int64_t dstAudioBitrate;
     audioEncFormat_->Get<Tag::MEDIA_BITRATE>(dstAudioBitrate);
-    meta->SetData(Tag::AV_TRANSCODER_DST_AUDIO_BITRATE,static_cast<int32_t>(dstAudioBitrate));
+    meta->SetData(Tag::AV_TRANSCODER_DST_AUDIO_BITRATE, static_cast<int32_t>(dstAudioBitrate));
 }
 
 void HiTransCoderImpl::OnEvent(const Event &event)
