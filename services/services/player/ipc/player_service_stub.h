@@ -49,6 +49,7 @@ public:
     int32_t AddSubSource(int32_t fd, int64_t offset, int64_t size) override;
     int32_t SetRenderFirstFrame(bool display) override;
     int32_t SetPlayRange(int64_t start, int64_t end) override;
+    int32_t SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode) override;
     int32_t PrepareAsync() override;
     int32_t Stop() override;
     int32_t Reset() override;
@@ -58,10 +59,13 @@ public:
     int32_t GetAudioTrackInfo(std::vector<Format> &audioTrack) override;
     int32_t GetCurrentTime(int32_t &currentTime) override;
     int32_t GetVideoTrackInfo(std::vector<Format> &videoTrack) override;
+    int32_t GetPlaybackInfo(Format &playbackInfo) override;
     int32_t GetPlaybackSpeed(PlaybackRateMode &mode) override;
     int32_t GetSubtitleTrackInfo(std::vector<Format> &subtitleTrack) override;
     int32_t GetVideoHeight() override;
     int32_t GetDuration(int32_t &duration) override;
+    int32_t SetPlaybackStrategy(AVPlayStrategy playbackStrategy) override;
+    int32_t SetMediaMuted(MediaType mediaType, bool isMuted) override;
 #ifdef SUPPORT_VIDEO
     int32_t SetVideoSurface(sptr<Surface> surface) override;
 #endif
@@ -105,6 +109,7 @@ private:
     int32_t Prepare(MessageParcel &data, MessageParcel &reply);
     int32_t SetRenderFirstFrame(MessageParcel &data, MessageParcel &reply);
     int32_t SetPlayRange(MessageParcel &data, MessageParcel &reply);
+    int32_t SetPlayRangeWithMode(MessageParcel &data, MessageParcel &reply);
     int32_t PrepareAsync(MessageParcel &data, MessageParcel &reply);
     int32_t Pause(MessageParcel &data, MessageParcel &reply);
     int32_t Stop(MessageParcel &data, MessageParcel &reply);
@@ -114,6 +119,7 @@ private:
     int32_t Seek(MessageParcel &data, MessageParcel &reply);
     int32_t GetCurrentTime(MessageParcel &data, MessageParcel &reply);
     int32_t GetVideoTrackInfo(MessageParcel &data, MessageParcel &reply);
+    int32_t GetPlaybackInfo(MessageParcel &data, MessageParcel &reply);
     int32_t GetAudioTrackInfo(MessageParcel &data, MessageParcel &reply);
     int32_t GetSubtitleTrackInfo(MessageParcel &data, MessageParcel &reply);
     int32_t GetVideoWidth(MessageParcel &data, MessageParcel &reply);
@@ -136,6 +142,8 @@ private:
     int32_t GetCurrentTrack(MessageParcel &data, MessageParcel &reply);
     int32_t SetDecryptConfig(MessageParcel &data, MessageParcel &reply);
     int32_t SetMediaSource(MessageParcel &data, MessageParcel &reply);
+    int32_t SetPlaybackStrategy(MessageParcel &data, MessageParcel &reply);
+    int32_t SetMediaMuted(MessageParcel &data, MessageParcel &reply);
 
     std::map<uint32_t, std::pair<std::string, PlayerStubFunc>> playerFuncs_;
     void FillPlayerFuncPart1();

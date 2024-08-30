@@ -495,5 +495,25 @@ int32_t ScreenCaptureServiceProxy::ResizeCanvas(int32_t width, int32_t height)
                              "ResizeCanvas failed, error: %{public}d", error);
     return reply.ReadInt32();
 }
+
+int32_t ScreenCaptureServiceProxy::SkipPrivacyMode(std::vector<uint64_t> &windowIDsVec)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(ScreenCaptureServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+    token = data.WriteInt32(static_cast<int32_t>(windowIDsVec.size()));
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write windowIDsVec size!");
+    for (size_t i = 0; i < windowIDsVec.size(); i++) {
+        token = data.WriteUint64(static_cast<uint64_t>(windowIDsVec[i]));
+        CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write windowIDs");
+    }
+    int error = Remote()->SendRequest(SKIP_PRIVACY, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+                             "SkipPrivacyMode failed, error: %{public}d", error);
+    return reply.ReadInt32();
+}
 } // namespace Media
 } // namespace OHOS

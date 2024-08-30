@@ -155,6 +155,10 @@ ohos_shared_library("media_service") {
     ]
   }
 
+  if (player_framework_support_auto_create_file) {
+    sources += [ "recorder/server/media_library_adapter.cpp" ]
+  }
+
   if (player_framework_support_metadata) {
     sources += [
       "avmetadatahelper/ipc/avmetadatahelper_service_stub.cpp",
@@ -165,6 +169,8 @@ ohos_shared_library("media_service") {
 
   if (player_framework_support_screen_capture) {
     sources += [
+      "observer/account_listener.cpp",
+      "observer/account_observer.cpp",
       "screen_capture/ipc/screen_capture_controller_stub.cpp",
       "screen_capture/ipc/screen_capture_listener_proxy.cpp",
       "screen_capture/ipc/screen_capture_service_stub.cpp",
@@ -254,6 +260,7 @@ ohos_shared_library("media_service") {
       "audio_framework:audio_capturer",
       "audio_framework:audio_client",
       "distributed_notification_service:ans_innerkits",
+      "graphic_surface:sync_fence",
       "relational_store:native_rdb",
       "window_manager:libdm",
     ]
@@ -267,6 +274,17 @@ ohos_shared_library("media_service") {
       "audio_framework:audio_client",
       "av_session:avsession_client",
       "input:libmmi-client",
+    ]
+  }
+
+  if (player_framework_support_auto_create_file) {
+    external_deps += [
+      "camera_framework:camera_framework",
+      "data_share:datashare_common",
+      "data_share:datashare_consumer",
+      "media_library:media_library",
+      "media_library:media_library_manager",
+      "samgr:samgr_proxy",
     ]
   }
 

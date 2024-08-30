@@ -80,6 +80,7 @@ public:
     int32_t Prepare() override;
     int32_t SetRenderFirstFrame(bool display) override;
     int32_t SetPlayRange(int64_t start, int64_t end) override;
+    int32_t SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode) override;
     int32_t PrepareAsync() override;
     int32_t Stop() override;
     int32_t Reset() override;
@@ -91,6 +92,7 @@ public:
     int32_t GetVideoWidth() override;
     int32_t GetVideoHeight() override;
     int32_t GetVideoTrackInfo(std::vector<Format> &videoTrack) override;
+    int32_t GetPlaybackInfo(Format &playbackInfo) override;
     int32_t GetAudioTrackInfo(std::vector<Format> &audioTrack) override;
     int32_t GetSubtitleTrackInfo(std::vector<Format> &subtitleTrack) override;
     int32_t GetDuration(int32_t &duration) override;
@@ -102,6 +104,8 @@ public:
     int32_t AddSubSource(int32_t fd, int64_t offset, int64_t size) override;
     int32_t GetPlaybackSpeed(PlaybackRateMode &mode) override;
     int32_t SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, AVPlayStrategy strategy) override;
+    int32_t SetPlaybackStrategy(AVPlayStrategy playbackStrategy) override;
+    int32_t SetMediaMuted(MediaType mediaType, bool isMuted) override;
 #ifdef SUPPORT_VIDEO
     int32_t SetVideoSurface(sptr<Surface> surface) override;
 #endif
@@ -198,6 +202,7 @@ private:
     int32_t HandleStop();
     int32_t HandleReset();
     int32_t HandleSeek(int32_t mSeconds, PlayerSeekMode mode);
+    int32_t HandleSetPlayRange(int64_t start, int64_t end, PlayerSeekMode mode);
     int32_t HandleSetPlaybackSpeed(PlaybackRateMode mode);
     int32_t SetAudioEffectMode(const int32_t effectMode);
 
@@ -235,6 +240,7 @@ private:
     std::mutex seekContinousMutex_;
     std::atomic<bool> isInSeekContinous_ {false};
     std::atomic<int64_t> seekContinousBatchNo_ {-1};
+    bool isAudioMuted_ = false;
 };
 } // namespace Media
 } // namespace OHOS

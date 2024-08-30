@@ -39,6 +39,7 @@ public:
     int32_t Reset() override;
     int32_t SetRenderFirstFrame(bool display) override;
     int32_t SetPlayRange(int64_t start, int64_t end) override;
+    int32_t SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode = SEEK_PREVIOUS_SYNC) override;
     int32_t PrepareAsync() override;
     int32_t AddSubSource(const std::string &url) override;
     int32_t AddSubSource(int32_t fd, int64_t offset, int64_t size) override;
@@ -50,6 +51,7 @@ public:
     int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override;
     int32_t GetAudioTrackInfo(std::vector<Format> &audioTrack) override;
     int32_t GetVideoTrackInfo(std::vector<Format> &videoTrack) override;
+    int32_t GetPlaybackInfo(Format &playbackInfo) override;
     int32_t GetVideoWidth() override;
     int32_t GetSubtitleTrackInfo(std::vector<Format> &subtitleTrack) override;
     int32_t GetVideoHeight() override;
@@ -73,6 +75,8 @@ public:
     int32_t SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, AVPlayStrategy strategy) override;
     int32_t Init();
     void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody);
+    int32_t SetPlaybackStrategy(AVPlayStrategy playbackStrategy) override;
+    int32_t SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted) override;
 private:
     void ResetSeekVariables();
     void HandleSeekDoneInfo(PlayerOnInfoType type, int32_t extra);

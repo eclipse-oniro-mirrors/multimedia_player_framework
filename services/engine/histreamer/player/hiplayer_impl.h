@@ -102,6 +102,7 @@ public:
     int32_t Prepare() override;
     int32_t SetRenderFirstFrame(bool display) override;
     int32_t SetPlayRange(int64_t start, int64_t end) override;
+    int32_t SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode) override;
     int32_t PrepareAsync() override;
     int32_t Play() override;
     int32_t Pause() override;
@@ -128,6 +129,7 @@ public:
     int32_t SelectTrack(int32_t trackId, PlayerSwitchMode mode) override;
     int32_t DeselectTrack(int32_t trackId) override;
     int32_t GetVideoTrackInfo(std::vector<Format>& videoTrack) override;
+    int32_t GetPlaybackInfo(Format& playbackInfo) override;
     int32_t GetAudioTrackInfo(std::vector<Format>& audioTrack) override;
     int32_t GetSubtitleTrackInfo(std::vector<Format>& subtitleTrack) override;
     int32_t GetVideoWidth() override;
@@ -140,7 +142,9 @@ public:
     void SetInterruptState(bool isInterruptNeeded) override;
     void OnDumpInfo(int32_t fd) override;
     void SetInstancdId(uint64_t instanceId) override;
+    int64_t GetPlayRangeStartTime() override;
     int64_t GetPlayRangeEndTime() override;
+    int32_t GetPlayRangeSeekMode() override;
 
     // internal interfaces
     void OnEvent(const Event &event);
@@ -153,6 +157,8 @@ public:
     int32_t ExitSeekContinous(bool align, int64_t seekContinousBatchNo) override;
     int32_t PauseDemuxer() override;
     int32_t ResumeDemuxer() override;
+    int32_t SetPlaybackStrategy(AVPlayStrategy playbackStrategy) override;
+    int32_t SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted) override;
 
 private:
     enum HiplayerSvpMode : int32_t {
@@ -232,6 +238,9 @@ private:
     void NotifyUpdateTrackInfo();
     Status SelectSeekType(int64_t seekPos, PlayerSeekMode mode);
     Status DoSetPlayRange();
+    void ResetPlayRangeParameter();
+    bool IsInValidSeekTime(int32_t seekPos);
+    int64_t GetPlayStartTime();
     Status StartSeekContinous();
     int32_t InnerSelectTrack(std::string mime, int32_t trackId, PlayerSwitchMode mode);
 
@@ -302,6 +311,7 @@ private:
     uint32_t preferedHeight_ = 0;
     uint32_t bufferDuration_ = 0;
     bool preferHDR_ = false;
+    OHOS::Media::MediaType mutedMediaType_ = OHOS::Media::MediaType::MEDIA_TYPE_MAX_COUNT;
     std::string playerId_;
     int32_t currentAudioTrackId_ = -1;
     int32_t defaultAudioTrackId_ = -1;
@@ -320,6 +330,10 @@ private:
     std::string mimeType_;
     int64_t playRangeStartTime_ = -1;
     int64_t playRangeEndTime_ = -1;
+    bool isSetPlayRange_ = false;
+    int64_t startTimeWithMode_ = -1;
+    int64_t endTimeWithMode_ = -1;
+    PlayerSeekMode playRangeSeekMode_ = PlayerSeekMode::SEEK_PREVIOUS_SYNC;
     std::atomic<bool> isDoCompletedSeek_{false};
     OHOS::Media::Mutex stateChangeMutex_{};
 

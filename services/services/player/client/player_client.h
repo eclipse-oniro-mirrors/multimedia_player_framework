@@ -37,6 +37,7 @@ public:
     int32_t Stop() override;
     int32_t SetRenderFirstFrame(bool display) override;
     int32_t SetPlayRange(int64_t start, int64_t end) override;
+    int32_t SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode) override;
     int32_t PrepareAsync() override;
     int32_t Prepare() override;
     int32_t Pause() override;
@@ -57,6 +58,7 @@ public:
     int32_t SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, AVPlayStrategy strategy) override;
     int32_t GetDuration(int32_t &duration) override;
     int32_t GetVideoTrackInfo(std::vector<Format> &videoTrack) override;
+    int32_t GetPlaybackInfo(Format &playbackInfo) override;
     int32_t GetVideoWidth() override;
     int32_t SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionService> &keySessionProxy,
         bool svp) override;
@@ -72,6 +74,8 @@ public:
     int32_t SelectTrack(int32_t index, PlayerSwitchMode mode) override;
     int32_t DeselectTrack(int32_t index) override;
     int32_t GetCurrentTrack(int32_t trackType, int32_t &index) override;
+    int32_t SetPlaybackStrategy(AVPlayStrategy playbackStrategy) override;
+    int32_t SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted) override;
     // PlayerClient
     void MediaServerDied();
 

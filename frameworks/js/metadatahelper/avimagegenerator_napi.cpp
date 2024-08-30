@@ -130,14 +130,16 @@ void AVImageGeneratorNapi::Destructor(napi_env env, void *nativeObject, void *fi
     (void)finalize;
     if (nativeObject != nullptr) {
         AVImageGeneratorNapi *generator = reinterpret_cast<AVImageGeneratorNapi *>(nativeObject);
-        auto task = generator->ReleaseTask();
-        if (task != nullptr) {
-            MEDIA_LOGI("Destructor Wait Release Task Start");
-            task->GetResult(); // sync release
-            MEDIA_LOGI("Destructor Wait Release Task End");
-        }
-        generator->WaitTaskQueStop();
-        delete generator;
+        std::thread([generator]() -> void {
+            auto task = generator->ReleaseTask();
+            if (task != nullptr) {
+                MEDIA_LOGI("Destructor Wait Release Task Start");
+                task->GetResult(); // sync release
+                MEDIA_LOGI("Destructor Wait Release Task End");
+            }
+            generator->WaitTaskQueStop();
+            delete generator;
+        }).detach();
     }
     MEDIA_LOGI("Destructor success");
 }
@@ -177,12 +179,12 @@ std::shared_ptr<TaskHandler<TaskRet>> AVImageGeneratorNapi::FetchFrameAtTimeTask
     std::unique_ptr<AVImageGeneratorAsyncContext> &promiseCtx)
 {
     auto task = std::make_shared<TaskHandler<TaskRet>>(
-        [this, &napi = promiseCtx->napi, &pixelMap = promiseCtx->pixel_]() {
+        [this, &napi = promiseCtx->napi, &pixelMap = promiseCtx->pixel_, timeUs = promiseCtx->napi->timeUs_]() {
         MEDIA_LOGI("FetchFrameAtTime Task In");
         std::unique_lock<std::mutex> lock(taskMutex_);
         auto state = GetCurrentState();
         if (state == AVMetadataHelperState::STATE_PREPARED || state == AVMetadataHelperState::STATE_CALL_DONE) {
-            auto map = helper_->FetchFrameYuv(napi->timeUs_, napi->option_, napi->param_);
+            auto map = helper_->FetchFrameYuv(timeUs, napi->option_, napi->param_);
             if (map == nullptr) {
                 MEDIA_LOGE("FetchFrameAtTime Task pixelMap is nullptr");
                 return TaskRet(MSERR_EXT_API9_UNSUPPORT_FORMAT,
@@ -350,32 +352,23 @@ void AVImageGeneratorNapi::CommonCallbackRoutine(napi_env env, AVImageGeneratorA
 
     napi_handle_scope scope = nullptr;
     napi_open_handle_scope(env, &scope);
-    if (scope == nullptr) {
-        MEDIA_LOGW("scope is null");
-        return;
-    }
-
-    if (asyncContext == nullptr) {
-        MEDIA_LOGW("asyncContext is null");
-        return;
-    }
-
+    CHECK_AND_RETURN(scope != nullptr && asyncContext != nullptr);
     if (asyncContext->status == ERR_OK) {
         result[1] = valueParam;
-        napi_create_uint32(env, asyncContext->status, &result[0]);
-    } else {
-        napi_create_uint32(env, asyncContext->status, &result[0]);
     }
+    napi_create_uint32(env, asyncContext->status, &result[0]);
 
+    if (asyncContext->errFlag) {
+        (void)CommonNapi::CreateError(env, asyncContext->errCode, asyncContext->errMessage, callback);
+        result[0] = callback;
+    }
     if (asyncContext->deferred) {
-        MEDIA_LOGI("deferred in");
         if (asyncContext->status == ERR_OK) {
             napi_resolve_deferred(env, asyncContext->deferred, result[1]);
         } else {
             napi_reject_deferred(env, asyncContext->deferred, result[0]);
         }
     } else {
-        MEDIA_LOGI("callback in");
         napi_get_reference_value(env, asyncContext->callbackRef, &callback);
         napi_call_function(env, nullptr, callback, 2, result, &retVal); // 2 is the second arg.
         napi_delete_reference(env, asyncContext->callbackRef);
@@ -413,8 +406,9 @@ std::shared_ptr<TaskHandler<TaskRet>> AVImageGeneratorNapi::ReleaseTask()
         return task;
     }
 
-    task = std::make_shared<TaskHandler<TaskRet>>([this]() {
+    task = std::make_shared<TaskHandler<TaskRet>>([this, &isReleased = isReleased_]() {
         MEDIA_LOGI("Release Task In");
+        isReleased.store(true);
         PauseListenCurrentResource(); // Pause event listening for the current resource
         ResetUserParameters();
 
@@ -434,10 +428,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVImageGeneratorNapi::ReleaseTask()
     });
 
     std::unique_lock<std::mutex> lock(taskMutex_);
-    isReleased_.store(true);
-    (void)taskQue_->EnqueueTask(task, true); // CancelNotExecutedTask
-    stopWait_ = true;
-    stateChangeCond_.notify_all();
+    (void)taskQue_->EnqueueTask(task); // CancelNotExecutedTask
     return task;
 }
 

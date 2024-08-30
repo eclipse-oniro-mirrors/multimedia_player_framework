@@ -42,8 +42,8 @@ public:
         int32_t option, const OutputConfiguration &param) override;
     std::shared_ptr<AVBuffer> FetchFrameYuv(int64_t timeUs,
         int32_t option, const OutputConfiguration &param) override;
-    int32_t GetTimeByFrameIndex(uint32_t index, int64_t &time) override;
-    int32_t GetFrameIndexByTime(int64_t time, uint32_t &index) override;
+    int32_t GetTimeByFrameIndex(uint32_t index, uint64_t &time) override;
+    int32_t GetFrameIndexByTime(uint64_t time, uint32_t &index) override;
     void Release() override;
 
     // AVMetadataHelperClient

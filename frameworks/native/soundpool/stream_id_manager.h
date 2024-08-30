@@ -101,7 +101,6 @@ private:
     std::map<int32_t, std::shared_ptr<CacheBuffer>> cacheBuffers_;
     int32_t nextStreamID_ = 0;
     int32_t maxStreams_ = MIN_PLAY_STREAMS_NUMBER;
-    size_t currentTaskNum_ = 0;
 
     std::atomic<bool> isStreamPlayingThreadPoolStarted_ = false;
     std::unique_ptr<ThreadPool> streamPlayingThreadPool_;

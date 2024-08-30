@@ -624,7 +624,7 @@ HWTEST_F(AVMetadataUnitTest, GetTimeByFrameIndex_API_0100, Level2)
     ASSERT_NE(nullptr, helper);
     ASSERT_EQ(true, helper->CreateAVMetadataHelper());
     ASSERT_EQ(MSERR_OK, helper->SetSource(uri, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
-    int64_t time = 0;
+    uint64_t time = 0;
     ASSERT_EQ(MSERR_OK, helper->GetTimeByFrameIndex(0, time));
 }
 } // namespace Media

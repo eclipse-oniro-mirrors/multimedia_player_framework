@@ -115,6 +115,10 @@ private:
      */
     static napi_value JsSeek(napi_env env, napi_callback_info info);
     /**
+     * setPlayRange(startTimeMs: number, endTimeMs: number, mode?: SeekMode): void
+     */
+    static napi_value JsSetPlaybackRange(napi_env env, napi_callback_info info);
+    /**
      * setSpeed(speed: number): void
      */
     static napi_value JsSetSpeed(napi_env env, napi_callback_info info);
@@ -234,6 +238,15 @@ private:
      * getMediaKeySystemInfos(): Array<MediaKeySystemInfo>;
      */
     static napi_value JsGetMediaKeySystemInfos(napi_env env, napi_callback_info info);
+
+    /**
+     * getPlaybackInfo(): playbackInfo;
+     */
+    static napi_value JsGetPlaybackInfo(napi_env env, napi_callback_info info);
+
+    static napi_value JsSetPlaybackStrategy(napi_env env, napi_callback_info info);
+
+    static napi_value JsSetMediaMuted(napi_env env, napi_callback_info info);
     /**
      * on(type: 'stateChange', callback: (state: AVPlayerState, reason: StateChangeReason) => void): void;
      * off(type: 'stateChange'): void;
@@ -295,8 +308,13 @@ private:
     std::shared_ptr<TaskHandler<TaskRet>> StopTask();
     std::shared_ptr<TaskHandler<TaskRet>> ResetTask();
     std::shared_ptr<TaskHandler<TaskRet>> ReleaseTask();
+    std::shared_ptr<TaskHandler<TaskRet>> SetPlaybackStrategyTask(AVPlayStrategy playStrategy);
+    std::shared_ptr<TaskHandler<TaskRet>> SetMediaMutedTask(MediaType type, bool isMuted);
+    std::shared_ptr<TaskHandler<TaskRet>> EqueueSetPlayRangeTask(int32_t start, int32_t end, int32_t mode);
+
     std::string GetCurrentState();
     bool IsControllable();
+    bool CanSetPlayRange();
     bool IsLiveSource() const;
     void EnqueueNetworkTask(const std::string url);
     void EnqueueFdTask(const int32_t fd);
@@ -367,6 +385,7 @@ private:
     bool isLiveStream_ = false;
     std::shared_mutex drmMutex_{};
     std::multimap<std::string, std::vector<uint8_t>> localDrmInfos_;
+    Format playbackInfo_;
 };
 } // namespace Media
 } // namespace OHOS

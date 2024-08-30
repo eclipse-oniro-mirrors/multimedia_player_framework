@@ -252,12 +252,12 @@ void AVMetadataMock::FrameToJpeg(std::shared_ptr<PixelMap> frame,
     std::cout << "save to " << filePath << std::endl;
 }
 
-int32_t AVMetadataMock::GetTimeByFrameIndex(uint32_t index, int64_t &time)
+int32_t AVMetadataMock::GetTimeByFrameIndex(uint32_t index, uint64_t &time)
 {
     return avMetadataHelper_->GetTimeByFrameIndex(index, time);
 }
 
-int32_t AVMetadataMock::GetFrameIndexByTime(int64_t time, uint32_t &index)
+int32_t AVMetadataMock::GetFrameIndexByTime(uint64_t time, uint32_t &index)
 {
     return avMetadataHelper_->GetFrameIndexByTime(time, index);
 }

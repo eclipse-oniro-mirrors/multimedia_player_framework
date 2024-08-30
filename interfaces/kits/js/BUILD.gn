@@ -181,6 +181,10 @@ ohos_shared_library("media") {
     "qos_manager:qos",
   ]
 
+  if (player_framework_support_auto_create_file) {
+    external_deps += [ "media_library:medialibrary_nutils" ]
+  }
+
   if (player_framework_support_player_js_api9) {
     deps += [ "../../../../../../foundation/multimedia/player_framework/frameworks/js/avplayer:media_avplayer" ]
     external_deps += [ "bounds_checking_function:libsec_shared" ]
