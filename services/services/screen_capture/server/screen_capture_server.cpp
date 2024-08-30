@@ -1004,9 +1004,6 @@ int32_t ScreenCaptureServer::OnStartScreenCapture()
         ret = StartScreenCaptureStream();
     } else if (captureConfig_.dataType == DataType::CAPTURE_FILE) {
         ret = StartScreenCaptureFile();
-        if (ret != MSERR_OK && audioSource_ && audioSource_->GetAppPid() > 0) {
-            audioSource_->UnregisterAudioRendererEventListener(audioSource_->GetAppPid());
-        }
     }
     if (ret == MSERR_OK) {
         int64_t endTime = GetCurrentMillisecond();
