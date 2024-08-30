@@ -228,12 +228,12 @@ int32_t AVImageGeneratorNapi::GetFetchFrameArgs(std::unique_ptr<AVImageGenerator
         return MSERR_INVALID_VAL;
     }
 
-    int32_t width = -1;
+    int32_t width = 0;
     if (!CommonNapi::GetPropertyInt32(env, params, "width", width)) {
         MEDIA_LOGW("failed to get width");
     }
 
-    int32_t height = -1;
+    int32_t height = 0;
     if (!CommonNapi::GetPropertyInt32(env, params, "height", height)) {
         MEDIA_LOGW("failed to get height");
     }
