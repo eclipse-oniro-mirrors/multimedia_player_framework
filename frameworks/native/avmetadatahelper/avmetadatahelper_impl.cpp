@@ -31,7 +31,7 @@
 #include "hisysevent.h"
 #include "image_format_convert.h"
 #include "color_space.h"
-#include "util.h"
+#include "osal/utils/util.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_METADATA, "AVMetadatahelperImpl" };
@@ -479,7 +479,7 @@ static void CalcScaleRate(Size srcParam, PixelMapParams dstParam, float &scaleRa
     if (isHScale && srcParam.height > 0) {
         scaleRateH = (1.0f * dstParam.dstHeight) / srcParam.height;
         // 0 means follow another edge
-        scaleRateW = dstParam.width == 0 ? scaleRateH : scaleRateW;
+        scaleRateW = dstParam.dstWidth == 0 ? scaleRateH : scaleRateW;
     }
 }
 
@@ -518,8 +518,8 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameAtTime(
     int32_t srcHeight = pixelMap->GetHeight();
     float scaleRateW = 1.0;
     float scaleRateH = 1.0;
-    CalcScaleRate(param, {.width = srcWidth, .height = srcHeight }, scaleRateW, scaleRateH);
-    if (!IsFloatEqual(scaleRateW, 1.0f) || !IsFloatEqual(scaleRateH, 1.0f)) {
+    CalcScaleRate({.width = srcWidth, .height = srcHeight }, param, scaleRateW, scaleRateH);
+    if (!OSAL::IsFloatEqual(scaleRateW, 1.0f) || !OSAL::IsFloatEqual(scaleRateH, 1.0f)) {
         pixelMap->scale(widthScaleRate, heightScaleRate);
     }
     return pixelMap;
@@ -555,12 +555,12 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameYuv(int64_t timeUs, in
     pixelMap->SetImageYUVInfo(yuvDataInfo);
     float scaleRateW = 1.0;
     float scaleRateH = 1.0;
-    CalcScaleRate(param, {.width = srcWidth, .height = srcHeight }, scaleRateW, scaleRateH);
-    if (!IsFloatEqual(scaleRateW, 1.0f) || !IsFloatEqual(scaleRateH, 1.0f)) {
+    CalcScaleRate({.width = srcWidth, .height = srcHeight }, param, scaleRateW, scaleRateH);
+    if (!OSAL::IsFloatEqual(scaleRateW, 1.0f) || !OSAL::IsFloatEqual(scaleRateH, 1.0f)) {
         if (!pixelMapInfo.isHdr) {
             pixelMap->SetAllocatorType(AllocatorType::SHARE_MEM_ALLOC);
         }
-        pixelMap->scale(widthScaleRate, heightScaleRate);
+        pixelMap->scale(scaleRateW, scaleRateH);
     }
     if (pixelMapInfo.rotation > 0) {
         if (!pixelMapInfo.isHdr) {
