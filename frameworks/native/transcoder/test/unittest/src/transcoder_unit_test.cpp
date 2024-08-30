@@ -284,7 +284,7 @@ HWTEST_F(TransCoderUnitTest, transcoder_AudioVideo_001, TestSize.Level2)
     EXPECT_EQ(MSERR_OK, transcoder_->SetVideoEncodingBitRate(TRASCODER_VIDEO_ENCODING_BIT_RATE));
     int32_t videoWidth = -1;
     int32_t videoHeight = -1;
-    if (access(VPE_LIB_PATH_c_str(), F_OK) == 0) {
+    if (access(VPE_LIB_PATH.c_str(), F_OK) == 0) {
         videoWidth = TRANSCODER_BUFFER_WIDTH;
         videoHeight = TRANSCODER_BUFFER_HEIGHT;
     } else {
@@ -328,7 +328,7 @@ HWTEST_F(TransCoderUnitTest, transcoder_AudioVideo_002, TestSize.Level2)
     EXPECT_EQ(MSERR_OK, transcoder_->SetVideoEncodingBitRate(TRASCODER_VIDEO_ENCODING_BIT_RATE));
     int32_t videoWidth = -1;
     int32_t videoHeight = -1;
-    if (access(VPE_LIB_PATH_c_str(), F_OK) == 0) {
+    if (access(VPE_LIB_PATH.c_str(), F_OK) == 0) {
         videoWidth = TRANSCODER_BUFFER_WIDTH;
         videoHeight = TRANSCODER_BUFFER_HEIGHT;
     } else {
@@ -377,7 +377,7 @@ HWTEST_F(TransCoderUnitTest, transcoder_AudioVideo_003, TestSize.Level2)
     EXPECT_EQ(MSERR_OK, transcoder_->SetVideoEncodingBitRate(TRASCODER_VIDEO_ENCODING_BIT_RATE));
     int32_t videoWidth = -1;
     int32_t videoHeight = -1;
-    if (access(VPE_LIB_PATH_c_str(), F_OK) == 0) {
+    if (access(VPE_LIB_PATH.c_str(), F_OK) == 0) {
         videoWidth = TRANSCODER_BUFFER_WIDTH;
         videoHeight = TRANSCODER_BUFFER_HEIGHT;
     } else {
@@ -424,7 +424,7 @@ HWTEST_F(TransCoderUnitTest, transcoder_AudioVideo_004, TestSize.Level2)
     EXPECT_EQ(MSERR_OK, transcoder_->SetVideoEncodingBitRate(TRASCODER_VIDEO_ENCODING_BIT_RATE));
     int32_t videoWidth = -1;
     int32_t videoHeight = -1;
-    if (access(VPE_LIB_PATH_c_str(), F_OK) == 0) {
+    if (access(VPE_LIB_PATH.c_str(), F_OK) == 0) {
         videoWidth = TRANSCODER_BUFFER_WIDTH;
         videoHeight = TRANSCODER_BUFFER_HEIGHT;
     } else {
@@ -647,7 +647,7 @@ HWTEST_F(TransCoderUnitTest, transcoder_AudioVideoAbnormal_case_001, TestSize.Le
     EXPECT_EQ(MSERR_OK, transcoder_->SetVideoEncodingBitRate(TRASCODER_VIDEO_ENCODING_BIT_RATE));
     int32_t videoWidth = -1;
     int32_t videoHeight = -1;
-    if (access(VPE_LIB_PATH_c_str(), F_OK) == 0) {
+    if (access(VPE_LIB_PATH.c_str(), F_OK) == 0) {
         videoWidth = TRANSCODER_BUFFER_WIDTH;
         videoHeight = TRANSCODER_BUFFER_HEIGHT;
     } else {
@@ -689,7 +689,7 @@ HWTEST_F(TransCoderUnitTest, transcoder_AudioVideoAbnormal_case_002, TestSize.Le
     EXPECT_EQ(MSERR_OK, transcoder_->SetVideoEncodingBitRate(TRASCODER_VIDEO_ENCODING_BIT_RATE));
     int32_t videoWidth = -1;
     int32_t videoHeight = -1;
-    if (access(VPE_LIB_PATH_c_str(), F_OK) == 0) {
+    if (access(VPE_LIB_PATH.c_str(), F_OK) == 0) {
         videoWidth = TRANSCODER_BUFFER_WIDTH;
         videoHeight = TRANSCODER_BUFFER_HEIGHT;
     } else {
@@ -731,7 +731,7 @@ HWTEST_F(TransCoderUnitTest, transcoder_AudioVideoAbnormal_case_003, TestSize.Le
     EXPECT_EQ(MSERR_OK, transcoder_->SetVideoEncodingBitRate(TRASCODER_VIDEO_ENCODING_BIT_RATE));
     int32_t videoWidth = -1;
     int32_t videoHeight = -1;
-    if (access(VPE_LIB_PATH_c_str(), F_OK) == 0) {
+    if (access(VPE_LIB_PATH.c_str(), F_OK) == 0) {
         videoWidth = TRANSCODER_BUFFER_WIDTH;
         videoHeight = TRANSCODER_BUFFER_HEIGHT;
     } else {
