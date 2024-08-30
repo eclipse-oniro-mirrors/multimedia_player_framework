@@ -175,6 +175,8 @@ void PlayerServiceStub::FillPlayerFuncPart2()
         [this](MessageParcel &data, MessageParcel &reply) { return SetMediaMuted(data, reply); } };
     playerFuncs_[SET_MAX_AMPLITUDE_CB_STATUS] = { "Player::SetMaxAmplitudeCbStatus",
         [this](MessageParcel &data, MessageParcel &reply) { return SetMaxAmplitudeCbStatus(data, reply); } };
+    playerFuncs_[SET_DEVICE_CHANGE_CB_STATUS] = { "Player::SetDeviceChangeCbStatus",
+        [this](MessageParcel &data, MessageParcel &reply) { return SetDeviceChangeCbStatus(data, reply); } };
 }
 
 int32_t PlayerServiceStub::Init()
@@ -1059,6 +1061,20 @@ int32_t PlayerServiceStub::SetMaxAmplitudeCbStatus(MessageParcel &data, MessageP
 {
     bool status = data.ReadInt32();
     reply.WriteInt32(SetMaxAmplitudeCbStatus(status));
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::SetDeviceChangeCbStatus(bool status)
+{
+    MediaTrace trace("PlayerServiceStub::SetDeviceChangeCbStatus");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->SetDeviceChangeCbStatus(status);
+}
+ 
+int32_t PlayerServiceStub::SetDeviceChangeCbStatus(MessageParcel &data, MessageParcel &reply)
+{
+    bool status = data.ReadInt32();
+    reply.WriteInt32(SetDeviceChangeCbStatus(status));
     return MSERR_OK;
 }
 } // namespace Media

@@ -1140,6 +1140,15 @@ void PlayerServer::HandleInterruptEvent(const Format &infoBody)
     }
 }
 
+void PlayerServer::HandleAudioDeviceChangeEvent(const Format &infoBody)
+{
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " HandleAudioDeviceChangeEvent in ", FAKE_POINTER(this));
+    if (!deviceChangeCallbackflag_) {
+        audioDeviceChangeState_ = PLAYER_PAUSED;
+        (void)BackGroundChangeState(PLAYER_PAUSED, true);
+    }
+}
+
 int32_t PlayerServer::GetPlaybackSpeed(PlaybackRateMode &mode)
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -1543,7 +1552,8 @@ void PlayerServer::InnerOnInfo(PlayerOnInfoType type, int32_t extra, const Forma
         OnBufferingUpdate(type, extra, infoBody);
     }
     if (playerCb_ != nullptr && ret == MSERR_OK) {
-        bool isBackgroudPause = (extra == backgroundState_ || extra == interruptEventState_);
+        bool isBackgroudPause = (extra == backgroundState_ || extra == interruptEventState_ ||
+            extra == audioDeviceChangeState_);
         if (isBackgroundChanged_ && type == INFO_TYPE_STATE_CHANGE && isBackgroudPause) {
             MEDIA_LOGI("Background change state to %{public}d, Status reporting %{public}d", extra, isBackgroundCb_);
             if (isBackgroundCb_) {
@@ -1554,6 +1564,7 @@ void PlayerServer::InnerOnInfo(PlayerOnInfoType type, int32_t extra, const Forma
             }
             isBackgroundChanged_ = false;
             interruptEventState_ = PLAYER_IDLE;
+            audioDeviceChangeState_ = PLAYER_IDLE;
         } else {
             playerCb_->OnInfo(type, extra, infoBody);
         }
@@ -1781,6 +1792,12 @@ int32_t PlayerServer::ExitSeekContinous(bool align)
     }
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
     return playerEngine_->ExitSeekContinous(align, seekContinousBatchNo_.load());
+}
+
+int32_t PlayerServer::SetDeviceChangeCbStatus(bool status)
+{
+    deviceChangeCallbackflag_ = status;
+    return MSERR_OK;
 }
 
 void PlayerServer::UpdateContinousBatchNo()

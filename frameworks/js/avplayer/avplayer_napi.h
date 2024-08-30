@@ -333,10 +333,13 @@ private:
     void WaitTaskQueStop();
     void MaxAmplitudeCallbackOn(AVPlayerNapi *jsPlayer, std::string callbackName);
     void MaxAmplitudeCallbackOff(AVPlayerNapi *jsPlayer, std::string callbackName);
+    void DeviceChangeCallbackOn(AVPlayerNapi *jsPlayer, std::string callbackName);
+    void DeviceChangeCallbackOff(AVPlayerNapi *jsPlayer, std::string callbackName);
 
     std::condition_variable stopTaskQueCond_;
     bool taskQueStoped_ = false;
     bool calMaxAmplitude_ = false;
+    bool deviceChangeCallbackflag_ = false;
 
     struct AVPlayerContext : public MediaAsyncContext {
         explicit AVPlayerContext(napi_env env) : MediaAsyncContext(env) {}

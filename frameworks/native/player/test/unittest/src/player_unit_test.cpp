@@ -3801,6 +3801,70 @@ HWTEST_F(PlayerUnitTest, Player_SetMaxAmplitudeCbStatus_004, TestSize.Level0)
 }
 
 /**
+ * @tc.name  : Test SetDeviceChangeCbStatus API
+ * @tc.number: Player_SetDeviceChangeCbStatus_001
+ * @tc.desc  : Test Player SetDeviceChangeCbStatus status on before prepare
+ */
+HWTEST_F(PlayerUnitTest, Player_SetDeviceChangeCbStatus_001, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetDeviceChangeCbStatus(true));
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+}
+
+/**
+ * @tc.name  : Test SetDeviceChangeCbStatus API
+ * @tc.number: Player_SetDeviceChangeCbStatus_002
+ * @tc.desc  : Test Player SetDeviceChangeCbStatus status on after prepare
+ */
+HWTEST_F(PlayerUnitTest, Player_SetDeviceChangeCbStatus_002, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->SetDeviceChangeCbStatus(true));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+}
+
+/**
+ * @tc.name  : Test SetDeviceChangeCbStatus API
+ * @tc.number: Player_SetDeviceChangeCbStatus_003
+ * @tc.desc  : Test Player SetDeviceChangeCbStatus status off before prepare
+ */
+HWTEST_F(PlayerUnitTest, Player_SetDeviceChangeCbStatus_003, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetDeviceChangeCbStatus(false));
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+}
+
+/**
+ * @tc.name  : Test SetDeviceChangeCbStatus API
+ * @tc.number: Player_SetDeviceChangeCbStatus_004
+ * @tc.desc  : Test Player SetDeviceChangeCbStatus status off after prepare
+ */
+HWTEST_F(PlayerUnitTest, Player_SetDeviceChangeCbStatus_004, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->SetDeviceChangeCbStatus(false));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+}
+
+/**
  * @tc.name  : Test SetPlaybackStrategy
  * @tc.number: Player_SetPlaybackStrategy_001
  * @tc.desc  : Test Player SetPlaybackStrategy
