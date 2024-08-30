@@ -108,6 +108,12 @@ public:
         (void)status;
         return 0;
     }
+
+    virtual int32_t SetDeviceChangeCbStatus(bool status)
+    {
+        (void)status;
+        return 0;
+    }
     /**
      * IPC code ID
      */
@@ -156,6 +162,7 @@ public:
         SET_MEDIA_MUTED,
         GET_PLAYBACK_INFO,
         SET_MAX_AMPLITUDE_CB_STATUS,
+        SET_DEVICE_CHANGE_CB_STATUS,
         MAX_IPC_ID,
     };
 

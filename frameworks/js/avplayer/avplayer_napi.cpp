@@ -2665,6 +2665,29 @@ void AVPlayerNapi::MaxAmplitudeCallbackOn(AVPlayerNapi *jsPlayer, std::string ca
     }
 }
 
+void AVPlayerNapi::DeviceChangeCallbackOn(AVPlayerNapi *jsPlayer, std::string callbackName)
+{
+    if (jsPlayer == nullptr) {
+        deviceChangeCallbackflag_ = false;
+    }
+    if (callbackName == "audioOutputDeviceChangeWithInfo") {
+        deviceChangeCallbackflag_ = true;
+    }
+    if (jsPlayer->player_ != nullptr && deviceChangeCallbackflag_) {
+        (void)jsPlayer->player_->SetDeviceChangeCbStatus(deviceChangeCallbackflag_);
+    }
+}
+
+void AVPlayerNapi::DeviceChangeCallbackOff(AVPlayerNapi *jsPlayer, std::string callbackName)
+{
+    if (jsPlayer != nullptr && deviceChangeCallbackflag_ && callbackName == "audioOutputDeviceChangeWithInfo") {
+        deviceChangeCallbackflag_ = false;
+        if (jsPlayer->player_ != nullptr) {
+            (void)jsPlayer->player_->SetDeviceChangeCbStatus(deviceChangeCallbackflag_);
+        }
+    }
+}
+
 napi_value AVPlayerNapi::JsSetOnCallback(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("AVPlayerNapi::on");
@@ -2702,6 +2725,7 @@ napi_value AVPlayerNapi::JsSetOnCallback(napi_env env, napi_callback_info info)
 
     std::string callbackName = CommonNapi::GetStringArgument(env, args[0]);
     jsPlayer->MaxAmplitudeCallbackOn(jsPlayer, callbackName);
+    jsPlayer->DeviceChangeCallbackOn(jsPlayer, callbackName);
     MEDIA_LOGI("0x%{public}06" PRIXPTR " set callbackName: %{public}s", FAKE_POINTER(jsPlayer), callbackName.c_str());
 
     napi_ref ref = nullptr;
@@ -2755,6 +2779,7 @@ napi_value AVPlayerNapi::JsClearOnCallback(napi_env env, napi_callback_info info
 
     std::string callbackName = CommonNapi::GetStringArgument(env, args[0]);
     jsPlayer->MaxAmplitudeCallbackOn(jsPlayer, callbackName);
+    jsPlayer->DeviceChangeCallbackOff(jsPlayer, callbackName);
     MEDIA_LOGI("0x%{public}06" PRIXPTR " set callbackName: %{public}s", FAKE_POINTER(jsPlayer), callbackName.c_str());
 
     jsPlayer->ClearCallbackReference(callbackName);

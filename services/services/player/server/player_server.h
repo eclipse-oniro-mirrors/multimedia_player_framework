@@ -136,6 +136,7 @@ public:
     std::shared_ptr<CommonEventReceiver> GetCommonEventReceiver();
     bool IsBootCompleted();
     int32_t SetMaxAmplitudeCbStatus(bool status) override;
+    int32_t SetDeviceChangeCbStatus(bool status) override;
 
 protected:
     class BaseState;
@@ -210,6 +211,7 @@ private:
     void HandleEos();
     void PreparedHandleEos();
     void HandleInterruptEvent(const Format &infoBody);
+    void HandleAudioDeviceChangeEvent(const Format &infoBody);
     void FormatToString(std::string &dumpString, std::vector<Format> &videoTrack);
     void OnErrorCb(int32_t errorCode, const std::string &errorMsg);
     void InnerOnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody, const int32_t ret);
@@ -232,6 +234,7 @@ private:
     bool isBackgroundChanged_ = false;
     PlayerStates backgroundState_ = PLAYER_IDLE;
     PlayerStates interruptEventState_ = PLAYER_IDLE;
+    PlayerStates audioDeviceChangeState_ = PLAYER_IDLE;
     uint32_t appTokenId_ = 0;
     uint32_t subtitleTrackNum_ = 0;
     int32_t appUid_ = 0;
@@ -248,6 +251,7 @@ private:
     std::atomic<int64_t> seekContinousBatchNo_ {-1};
     bool isAudioMuted_ = false;
     bool maxAmplitudeCbStatus_ = false;
+    bool deviceChangeCallbackflag_ = false;
 };
 } // namespace Media
 } // namespace OHOS

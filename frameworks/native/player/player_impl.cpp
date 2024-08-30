@@ -467,6 +467,14 @@ int32_t PlayerImpl::SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionSer
 #endif
 }
 
+int32_t PlayerImpl::SetDeviceChangeCbStatus(bool status)
+{
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetDeviceChangeCbStatus in, status is %{public}d",
+        FAKE_POINTER(this), status);
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
+    return playerService_->SetDeviceChangeCbStatus(status);
+}
+
 int32_t PlayerImpl::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
 {
     MEDIA_LOGD("Set playback strategy");

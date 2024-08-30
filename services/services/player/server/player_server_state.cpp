@@ -195,6 +195,10 @@ int32_t PlayerServer::BaseState::OnMessageReceived(PlayerOnInfoType type, int32_
         case INFO_TYPE_INTERRUPT_EVENT:
             HandleInterruptEvent(infoBody);
             break;
+
+        case INFO_TYPE_AUDIO_DEVICE_CHANGE:
+            HandleAudioDeviceChangeEvent(infoBody);
+            break;
             
         default:
             break;
@@ -379,6 +383,11 @@ void PlayerServer::PlayingState::HandleEos()
 void PlayerServer::PlayingState::HandleInterruptEvent(const Format &infoBody)
 {
     server_.HandleInterruptEvent(infoBody);
+}
+
+void PlayerServer::PlayingState::HandleAudioDeviceChangeEvent(const Format &infoBody)
+{
+    server_.HandleAudioDeviceChangeEvent(infoBody);
 }
 
 void PlayerServer::PlayingState::StateEnter()

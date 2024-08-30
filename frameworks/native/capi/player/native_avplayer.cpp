@@ -1341,6 +1341,7 @@ OH_AVErrCode OH_AVPlayer_SetOnInfoCallback(OH_AVPlayer *player, OH_AVPlayerOnInf
     }
     struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
     CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, AV_ERR_INVALID_VAL, "SetOnInfo player_ is nullptr");
+    (void)playerObj->player_->SetDeviceChangeCbStatus(true);
 
     OH_AVErrCode errCode = AVPlayerSetPlayerCallback(player, playerObj, callback == nullptr);
     CHECK_AND_RETURN_RET_LOG(errCode == AV_ERR_OK, errCode, "AVPlayerSetPlayerCallback AVPlayerOnInfoCallback error");
