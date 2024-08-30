@@ -2237,9 +2237,6 @@ int32_t ScreenCaptureServer::StopScreenCaptureRecorder()
         recorder_ = nullptr;
         StopAudioCapture();
     }
-    if (audioSource_ && audioSource_->GetAppPid() > 0) {
-        audioSource_->UnregisterAudioRendererEventListener(audioSource_->GetAppPid());
-    }
     captureCallback_ = nullptr;
     isConsumerStart_ = false;
     CloseFd();
@@ -2261,6 +2258,9 @@ int32_t ScreenCaptureServer::StopScreenCaptureInner(AVScreenCaptureStateCode sta
         FAKE_POINTER(this), stateCode);
     if (screenCaptureCb_ != nullptr) {
         (static_cast<ScreenCaptureListenerCallback *>(screenCaptureCb_.get()))->Stop();
+    }
+    if (audioSource_ && audioSource_->GetAppPid() > 0) { // DataType::CAPTURE_FILE
+        audioSource_->UnregisterAudioRendererEventListener(audioSource_->GetAppPid());
     }
     if (captureState_ == AVScreenCaptureState::CREATED || captureState_ == AVScreenCaptureState::STARTING) {
         CloseFd();
@@ -2487,6 +2487,7 @@ void ScreenRendererAudioStateChangeCallback::OnRendererStateChange(
     const std::vector<std::unique_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos)
 {
     MEDIA_LOGD("ScreenRendererAudioStateChangeCallback IN");
+    CHECK_AND_RETURN(audioSource_ != nullptr);
     audioSource_->SpeakerStateUpdate(audioRendererChangeInfos);
     std::string region = Global::I18n::LocaleConfig::GetSystemRegion();
     if (SCREEN_RECORDER_BUNDLE_NAME.compare(appName_) == 0 && region == "CN") {
@@ -2507,6 +2508,7 @@ void AudioDataSource::SpeakerStateUpdate(
     bool speakerAlive = HasSpeakerStream(allAudioRendererChangeInfos);
     if (speakerAlive != speakerAliveStatus_) {
         speakerAliveStatus_ = speakerAlive;
+        CHECK_AND_RETURN(screenCaptureServer_ != nullptr);
         screenCaptureServer_->OnSpeakerAliveStatusChanged(speakerAlive);
         if (speakerAlive) {
             MEDIA_LOGI("HEADSET Change to Speaker.");
@@ -2570,6 +2572,7 @@ void AudioDataSource::VoIPStateUpdate(
         return;
     }
     isInVoIPCall_.store(isInVoIPCall);
+    CHECK_AND_RETURN(screenCaptureServer_ != nullptr);
     screenCaptureServer_->OnVoIPStatusChanged(isInVoIPCall);
 }
 
