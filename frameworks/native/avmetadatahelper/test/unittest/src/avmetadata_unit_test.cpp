@@ -646,8 +646,8 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameYuv_0100, Level2)
         .dstWidth = 0,
         .dstHeight = 300
     };
-    ASSERT_EQ(MSERR_OK, helper->FetchFrameYuv(0, time, param));
-    ASSERT_EQ(MSERR_OK, helper->FetchFrameAtTime(0, time, param));
+    ASSERT_NE(nullptr, helper->FetchFrameYuv(0, time, param));
+    ASSERT_NE(nullptr, helper->FetchFrameAtTime(0, time, param));
 }
 
 /**
@@ -668,8 +668,8 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameYuv_0200, Level2)
         .dstWidth = 300,
         .dstHeight = 0
     };
-    ASSERT_EQ(MSERR_OK, helper->FetchFrameYuv(0, time, param));
-    ASSERT_EQ(MSERR_OK, helper->FetchFrameAtTime(0, time, param));
+    ASSERT_NE(nullptr, helper->FetchFrameYuv(0, time, param));
+    ASSERT_NE(nullptr, helper->FetchFrameAtTime(0, time, param));
 }
 
 /**
@@ -690,8 +690,8 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameYuv_0300, Level2)
         .dstWidth = 300,
         .dstHeight = 300
     };
-    ASSERT_EQ(MSERR_OK, helper->FetchFrameYuv(0, time, param));
-    ASSERT_EQ(MSERR_OK, helper->FetchFrameAtTime(0, time, param));
+    ASSERT_NE(nullptr, helper->FetchFrameYuv(0, time, param));
+    ASSERT_NE(nullptr, helper->FetchFrameAtTime(0, time, param));
 }
 
 /**
@@ -712,8 +712,8 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameYuv_0400, Level2)
         .dstWidth = 300,
         .dstHeight = -1
     };
-    ASSERT_EQ(MSERR_OK, helper->FetchFrameYuv(0, time, param));
-    ASSERT_EQ(MSERR_OK, helper->FetchFrameAtTime(0, time, param));
+    ASSERT_NE(nullptr, helper->FetchFrameYuv(0, time, param));
+    ASSERT_NE(nullptr, helper->FetchFrameAtTime(0, time, param));
 }
 
 /**
@@ -734,8 +734,8 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameYuv_0500, Level2)
         .dstWidth = -1,
         .dstHeight = 300
     };
-    ASSERT_EQ(MSERR_OK, helper->FetchFrameYuv(0, time, param));
-    ASSERT_EQ(MSERR_OK, helper->FetchFrameAtTime(0, time, param));
+    ASSERT_NE(nullptr, helper->FetchFrameYuv(0, time, param));
+    ASSERT_NE(nullptr, helper->FetchFrameAtTime(0, time, param));
 }
 
 /**
@@ -756,8 +756,8 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameYuv_0600, Level2)
         .dstWidth = 9999,
         .dstHeight = 9999
     };
-    ASSERT_EQ(MSERR_OK, helper->FetchFrameYuv(0, time, param));
-    ASSERT_EQ(MSERR_OK, helper->FetchFrameAtTime(0, time, param));
+    ASSERT_NE(nullptr, helper->FetchFrameYuv(0, time, param));
+    ASSERT_NE(nullptr, helper->FetchFrameAtTime(0, time, param));
 }
 } // namespace Media
 } // namespace OHOS
