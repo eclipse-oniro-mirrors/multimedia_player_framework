@@ -520,7 +520,7 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameAtTime(
     float scaleRateH = 1.0;
     CalcScaleRate({.width = srcWidth, .height = srcHeight }, param, scaleRateW, scaleRateH);
     if (!OSAL::IsFloatEqual(scaleRateW, 1.0f) || !OSAL::IsFloatEqual(scaleRateH, 1.0f)) {
-        pixelMap->scale(widthScaleRate, heightScaleRate);
+        pixelMap->scale(scaleRateW, scaleRateH);
     }
     return pixelMap;
 }
