@@ -650,7 +650,7 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameYuv_0100, Level2)
     ASSERT_NE(nullptr, pixelMap);
     ASSERT_EQ(pixelMap->GetWidth(), 360);
     ASSERT_EQ(pixelMap->GetHeight(), 240);
-    auto pixelMap = helper->FetchFrameAtTime(0, time, param);
+    pixelMap = helper->FetchFrameAtTime(0, time, param);
     ASSERT_NE(nullptr, pixelMap);
     ASSERT_EQ(pixelMap->GetWidth(), 360);
     ASSERT_EQ(pixelMap->GetHeight(), 240);
@@ -678,7 +678,7 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameYuv_0200, Level2)
     ASSERT_NE(nullptr, pixelMap);
     ASSERT_EQ(pixelMap->GetWidth(), 240);
     ASSERT_EQ(pixelMap->GetHeight(), 160);
-    auto pixelMap = helper->FetchFrameAtTime(0, time, param);
+    pixelMap = helper->FetchFrameAtTime(0, time, param);
     ASSERT_NE(nullptr, pixelMap);
     ASSERT_EQ(pixelMap->GetWidth(), 240);
     ASSERT_EQ(pixelMap->GetHeight(), 160);
@@ -706,7 +706,7 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameYuv_0300, Level2)
     ASSERT_NE(nullptr, pixelMap);
     ASSERT_EQ(pixelMap->GetWidth(), 300);
     ASSERT_EQ(pixelMap->GetHeight(), 300);
-    auto pixelMap = helper->FetchFrameAtTime(0, time, param);
+    pixelMap = helper->FetchFrameAtTime(0, time, param);
     ASSERT_NE(nullptr, pixelMap);
     ASSERT_EQ(pixelMap->GetWidth(), 300);
     ASSERT_EQ(pixelMap->GetHeight(), 300);
@@ -734,7 +734,7 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameYuv_0400, Level2)
     ASSERT_NE(nullptr, pixelMap);
     ASSERT_EQ(pixelMap->GetWidth(), 300);
     ASSERT_EQ(pixelMap->GetHeight(), 480);
-    auto pixelMap = helper->FetchFrameAtTime(0, time, param);
+    pixelMap = helper->FetchFrameAtTime(0, time, param);
     ASSERT_NE(nullptr, pixelMap);
     ASSERT_EQ(pixelMap->GetWidth(), 300);
     ASSERT_EQ(pixelMap->GetHeight(), 480);
@@ -762,7 +762,7 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameYuv_0500, Level2)
     ASSERT_NE(nullptr, pixelMap);
     ASSERT_EQ(pixelMap->GetWidth(), 720);
     ASSERT_EQ(pixelMap->GetHeight(), 300);
-    auto pixelMap = helper->FetchFrameAtTime(0, time, param);
+    pixelMap = helper->FetchFrameAtTime(0, time, param);
     ASSERT_NE(nullptr, pixelMap);
     ASSERT_EQ(pixelMap->GetWidth(), 720);
     ASSERT_EQ(pixelMap->GetHeight(), 300);
@@ -790,7 +790,7 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameYuv_0600, Level2)
     ASSERT_NE(nullptr, pixelMap);
     ASSERT_EQ(pixelMap->GetWidth(), 720);
     ASSERT_EQ(pixelMap->GetHeight(), 480);
-    auto pixelMap = helper->FetchFrameAtTime(0, time, param);
+    pixelMap = helper->FetchFrameAtTime(0, time, param);
     ASSERT_NE(nullptr, pixelMap);
     ASSERT_EQ(pixelMap->GetWidth(), 720);
     ASSERT_EQ(pixelMap->GetHeight(), 480);
