@@ -149,6 +149,13 @@ int32_t PlayerClient::SetPlayRange(int64_t start, int64_t end)
     return playerProxy_->SetPlayRange(start, end);
 }
 
+int32_t PlayerClient::SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerProxy_->SetPlayRangeWithMode(start, end, mode);
+}
+
 int32_t PlayerClient::Prepare()
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -243,6 +250,13 @@ int32_t PlayerClient::GetVideoTrackInfo(std::vector<Format> &videoTrack)
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     return playerProxy_->GetVideoTrackInfo(videoTrack);
+}
+
+int32_t PlayerClient::GetPlaybackInfo(Format &playbackInfo)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerProxy_->GetPlaybackInfo(playbackInfo);
 }
 
 int32_t PlayerClient::GetAudioTrackInfo(std::vector<Format> &audioTrack)
@@ -396,6 +410,18 @@ int32_t PlayerClient::SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionS
     (void)svp;
     return 0;
 #endif
+}
+
+int32_t PlayerClient::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
+{
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_INVALID_VAL, "playerProxy_ not exist");
+    return playerProxy_->SetPlaybackStrategy(playbackStrategy);
+}
+
+int32_t PlayerClient::SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted)
+{
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_INVALID_VAL, "playerProxy_ not exist");
+    return playerProxy_->SetMediaMuted(mediaType, isMuted);
 }
 } // namespace Media
 } // namespace OHOS

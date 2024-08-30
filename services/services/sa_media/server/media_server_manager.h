@@ -86,6 +86,7 @@ private:
     void DestroyAVPlayerStub(StubType type, sptr<IRemoteObject> object, pid_t pid);
     void DestroyAVRecorderStub(StubType type, sptr<IRemoteObject> object, pid_t pid);
     void DestroyAVTransCoderStub(StubType type, sptr<IRemoteObject> object, pid_t pid);
+    void DestroyAVScreenCaptureStub(StubType type, sptr<IRemoteObject> object, pid_t pid);
     void DestroyAVCodecStubForPid(pid_t pid);
     void DestroyAVPlayerStubForPid(pid_t pid);
     void DestroyAVRecorderStubForPid(pid_t pid);

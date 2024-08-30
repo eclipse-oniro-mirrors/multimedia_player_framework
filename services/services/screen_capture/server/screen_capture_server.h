@@ -50,6 +50,7 @@
 #include "notification_constant.h"
 #include "notification_slot.h"
 #include "incall_observer.h"
+#include "account_observer.h"
 #include "media_data_source.h"
 #include "meta/meta.h"
 #include "audio_stream_manager.h"
@@ -179,11 +180,11 @@ private:
     static constexpr uint32_t OPERATION_TIMEOUT_IN_MS = 1000; // 1000ms
 };
 
-class ScreenCaptureObserverCallBack : public InCallObserverCallBack {
+class ScreenCaptureObserverCallBack : public InCallObserverCallBack, public AccountObserverCallBack {
 public:
     explicit ScreenCaptureObserverCallBack(std::weak_ptr<ScreenCaptureServer> screenCaptureServer);
     ~ScreenCaptureObserverCallBack() = default;
-    bool StopAndRelease() override;
+    bool StopAndRelease(AVScreenCaptureStateCode state) override;
 
 private:
     std::weak_ptr<ScreenCaptureServer> screenCaptureServer_;
@@ -268,6 +269,7 @@ public:
     bool GetMicWorkingState();
     int32_t SetCanvasRotation(bool canvasRotation) override;
     int32_t ResizeCanvas(int32_t width, int32_t height) override;
+    int32_t SkipPrivacyMode(std::vector<uint64_t> &windowIDsVec) override;
     void Release() override;
     int32_t ExcludeContent(ScreenCaptureContentFilter &contentFilter) override;
 
@@ -288,6 +290,7 @@ public:
 
 private:
     int32_t StartScreenCaptureInner(bool isPrivacyAuthorityEnabled);
+    int32_t RegisterServerCallbacks();
     int32_t OnStartScreenCapture();
     void PostStartScreenCapture(bool isSuccess);
     int32_t InitRecorderInfo(std::shared_ptr<IRecorderService> &recorder, AudioCaptureInfo audioInfo);
@@ -311,6 +314,7 @@ private:
     int32_t CheckCaptureStreamParams();
     int32_t CheckCaptureFileParams();
     int32_t SetCanvasRotationInner();
+    int32_t SkipPrivacyModeInner();
     int32_t SetScreenScaleMode();
     void InitAppInfo();
     void CloseFd();
@@ -323,6 +327,7 @@ private:
     int32_t GetMissionIds(std::vector<uint64_t> &missionIds);
     int32_t MakeVirtualScreenMirror();
     int32_t CreateVirtualScreen(const std::string &name, sptr<OHOS::Surface> consumer);
+    int32_t PrepareVirtualScreenMirror();
     void DestroyVirtualScreen();
 
     bool CheckScreenCapturePermission();
@@ -398,6 +403,7 @@ private:
     /* used for DFX events */
     uint64_t instanceId_ = 0;
     std::shared_ptr<ScreenRendererAudioStateChangeCallback> captureCallback_;
+    std::vector<uint64_t> skipPrivacyWindowIDsVec_;
 private:
     static int32_t CheckAudioCapParam(const AudioCaptureInfo &audioCapInfo);
     static int32_t CheckVideoCapParam(const VideoCaptureInfo &videoCapInfo);

@@ -33,6 +33,12 @@ namespace OHOS {
 namespace Media {
 using ConfigMap = std::map<std::string, int32_t>;
 constexpr size_t DEVICE_INFO_SIZE_LIMIT = 30; // 30 from audioCapture
+ 
+enum FileGenerationMode : int32_t {
+    APP_CREATE = 0,
+    AUTO_CREATE_CAMERA_SCENE = 1,
+};
+
 /**
  * @brief Enumerates video source types.
  *
@@ -79,10 +85,18 @@ enum AudioSourceType : int32_t {
     AUDIO_SOURCE_DEFAULT = 0,
     /** Microphone */
     AUDIO_MIC = 1,
-    /** Inner audio */
-    AUDIO_INNER = 2,
+    /** Voice recognition  */
+    AUDIO_SOURCE_VOICE_RECOGNITION = 2,
     /** Voice call */
     AUDIO_SOURCE_VOICE_CALL = 4,
+    /** Voice communication */
+    AUDIO_SOURCE_VOICE_COMMUNICATION = 7,
+    /** Voice message */
+    AUDIO_SOURCE_VOICE_MESSAGE = 10,
+    /** Camcorder */
+    AUDIO_SOURCE_CAMCORDER = 13,
+    /** Inner audio */
+    AUDIO_INNER = 20,
 };
 
 /**
@@ -464,6 +478,11 @@ public:
     {
         (void)audioRecorderChangeInfo;
     }
+    
+    virtual void OnPhotoAssertAvailable(const std::string &uri)
+    {
+        (void)uri;
+    }
 };
 
 /**
@@ -778,6 +797,18 @@ public:
      */
     virtual int32_t SetOutputFile(int32_t fd) = 0;
 
+    /**
+     * @brief Sets the FileGenerationMode.
+     *
+     * This function must be called after {@link SetOutputFormat} but before {@link Prepare}
+     *
+     * @param FileGenerationMode.
+     * @return Returns {@link MSERR_OK} if the setting is successful; returns an error code otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t SetFileGenerationMode(FileGenerationMode mode) = 0;
+ 
     /**
      * Unsupported App Usage.
      * @brief Sets the FD of the next output file.

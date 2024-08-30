@@ -72,6 +72,12 @@ void PlayerImpl::ResetSeekVariables()
     isSeeking_ = false;
 }
 
+int32_t PlayerImpl::SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted)
+{
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_INVALID_VAL, "playerService_ not exist");
+    return playerService_->SetMediaMuted(mediaType, isMuted);
+}
+
 int32_t PlayerImpl::SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc)
 {
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetSource in(dataSrc)", FAKE_POINTER(this));
@@ -119,6 +125,13 @@ int32_t PlayerImpl::SetPlayRange(int64_t start, int64_t end)
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetPlayRange in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     return playerService_->SetPlayRange(start, end);
+}
+
+int32_t PlayerImpl::SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode)
+{
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetPlayRangeWithMode in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerService_->SetPlayRangeWithMode(start, end, mode);
 }
 
 int32_t PlayerImpl::Prepare()
@@ -288,6 +301,13 @@ int32_t PlayerImpl::GetVideoTrackInfo(std::vector<Format> &videoTrack)
     return playerService_->GetVideoTrackInfo(videoTrack);
 }
 
+int32_t PlayerImpl::GetPlaybackInfo(Format &playbackInfo)
+{
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " GetPlaybackInfo in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerService_->GetPlaybackInfo(playbackInfo);
+}
+
 int32_t PlayerImpl::GetAudioTrackInfo(std::vector<Format> &audioTrack)
 {
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " GetAudioTrackInfo in", FAKE_POINTER(this));
@@ -442,6 +462,13 @@ int32_t PlayerImpl::SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionSer
     (void)svp;
     return 0;
 #endif
+}
+
+int32_t PlayerImpl::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
+{
+    MEDIA_LOGD("Set playback strategy");
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerService_->SetPlaybackStrategy(playbackStrategy);
 }
 
 PlayerImplCallback::PlayerImplCallback(const std::shared_ptr<PlayerCallback> playerCb,

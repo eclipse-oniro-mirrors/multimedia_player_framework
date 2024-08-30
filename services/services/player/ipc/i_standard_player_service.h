@@ -46,6 +46,13 @@ public:
         (void)end;
         return 0;
     }
+    virtual int32_t SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode)
+    {
+        (void)start;
+        (void)end;
+        (void)mode;
+        return 0;
+    }
     virtual int32_t PrepareAsync() = 0;
     virtual int32_t Pause() = 0;
     virtual int32_t Stop() = 0;
@@ -59,6 +66,7 @@ public:
     virtual int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) = 0;
     virtual int32_t GetCurrentTime(int32_t &currentTime) = 0;
     virtual int32_t GetVideoTrackInfo(std::vector<Format> &videoTrack) = 0;
+    virtual int32_t GetPlaybackInfo(Format &playbackInfo) = 0;
     virtual int32_t GetAudioTrackInfo(std::vector<Format> &audioTrack) = 0;
     virtual int32_t GetSubtitleTrackInfo(std::vector<Format> &subtitleTrack) = 0;
     virtual int32_t GetVideoWidth() = 0;
@@ -80,6 +88,12 @@ public:
     virtual int32_t SelectTrack(int32_t index, PlayerSwitchMode mode = PlayerSwitchMode::SWITCH_SMOOTH) = 0;
     virtual int32_t DeselectTrack(int32_t index) = 0;
     virtual int32_t GetCurrentTrack(int32_t trackType, int32_t &index) = 0;
+    virtual int32_t SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
+    {
+        (void)playbackStrategy;
+        return 0;
+    }
+    virtual int32_t SetMediaMuted(MediaType mediaType, bool isMuted) = 0;
 
     virtual int32_t SetDecryptConfig(const sptr<OHOS::DrmStandard::IMediaKeySessionService> &keySessionProxy,
         bool svp)
@@ -102,6 +116,7 @@ public:
         PREPARE,
         SET_RENDER_FIRST_FRAME,
         SET_PLAY_RANGE,
+        SET_PLAY_RANGE_WITH_MODE,
         PREPAREASYNC,
         PAUSE,
         STOP,
@@ -131,6 +146,9 @@ public:
         GET_CURRENT_TRACK,
         GET_SUBTITLE_TRACK_INFO,
         SET_DECRYPT_CONFIG,
+        GET_PLAYBACK_INFO,
+        SET_PLAYBACK_STRATEGY,
+        SET_MEDIA_MUTED,
         MAX_IPC_ID,
     };
 

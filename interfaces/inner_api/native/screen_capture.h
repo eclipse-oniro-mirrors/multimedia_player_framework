@@ -111,6 +111,8 @@ enum AVScreenCaptureStateCode {
     SCREEN_CAPTURE_STATE_ENTER_PRIVATE_SCENE = 8,
     /* Private window disappeared on current captured screen*/
     SCREEN_CAPTURE_STATE_EXIT_PRIVATE_SCENE = 9,
+    /* ScreenCapture stopped by user switches */
+    SCREEN_CAPTURE_STATE_STOPPED_BY_USER_SWITCHES = 10,
 };
 
 enum AVScreenCaptureBufferType {
@@ -247,6 +249,7 @@ public:
     virtual int32_t SetMicrophoneEnabled(bool isMicrophone) = 0;
     virtual int32_t SetCanvasRotation(bool canvasRotation) = 0;
     virtual int32_t ResizeCanvas(int32_t width, int32_t height) = 0;
+    virtual int32_t SkipPrivacyMode(std::vector<uint64_t> &windowIDsVec) = 0;
     virtual int32_t StartScreenCapture() = 0;
     virtual int32_t StartScreenCaptureWithSurface(sptr<Surface> surface) = 0;
     virtual int32_t StopScreenCapture() = 0;

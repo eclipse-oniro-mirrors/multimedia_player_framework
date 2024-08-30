@@ -148,13 +148,13 @@ std::shared_ptr<AVBuffer> AVMetadataHelperClient::FetchFrameYuv(int64_t timeUs, 
     return avMetadataHelperProxy_->FetchFrameYuv(timeUs, option, param);
 }
 
-int32_t AVMetadataHelperClient::GetTimeByFrameIndex(uint32_t index, int64_t &time)
+int32_t AVMetadataHelperClient::GetTimeByFrameIndex(uint32_t index, uint64_t &time)
 {
     CHECK_AND_RETURN_RET_LOG(avMetadataHelperProxy_ != nullptr, 0, "avmetadatahelper service does not exist.");
     return avMetadataHelperProxy_->GetTimeByFrameIndex(index, time);
 }
 
-int32_t AVMetadataHelperClient::GetFrameIndexByTime(int64_t time, uint32_t &index)
+int32_t AVMetadataHelperClient::GetFrameIndexByTime(uint64_t time, uint32_t &index)
 {
     CHECK_AND_RETURN_RET_LOG(avMetadataHelperProxy_ != nullptr, 0, "avmetadatahelper service does not exist.");
     return avMetadataHelperProxy_->GetFrameIndexByTime(time, index);

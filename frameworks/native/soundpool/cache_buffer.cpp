@@ -122,16 +122,24 @@ int32_t CacheBuffer::DoPlay(const int32_t streamID)
 {
     CHECK_AND_RETURN_RET_LOG(streamID == streamID_, MSERR_INVALID_VAL, "Invalid streamID, failed to DoPlay.");
     std::lock_guard lock(cacheBufferLock_);
-    if (audioRenderer_ != nullptr) {
-        cacheDataFrameNum_ = 0;
-        havePlayedCount_ = 0;
-        if (!audioRenderer_->Start()) {
-            OHOS::AudioStandard::RendererState state = audioRenderer_->GetStatus();
-            if (state == OHOS::AudioStandard::RendererState::RENDERER_RUNNING) {
-                MEDIA_LOGI("CacheBuffer::DoPlay audioRenderer has started");
-            } else {
-                MEDIA_LOGE("CacheBuffer::DoPlay audioRenderer start failed");
+    CHECK_AND_RETURN_RET_LOG(!reCombineCacheData_.empty(), MSERR_INVALID_VAL, "reCombineCacheData empty.");
+    CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr, MSERR_INVALID_VAL, "Invalid audioRenderer.");
+    cacheDataFrameNum_ = 0;
+    havePlayedCount_ = 0;
+    isRunning_.store(true);
+    if (!audioRenderer_->Start()) {
+        OHOS::AudioStandard::RendererState state = audioRenderer_->GetStatus();
+        if (state == OHOS::AudioStandard::RendererState::RENDERER_RUNNING) {
+            MEDIA_LOGI("CacheBuffer::DoPlay audioRenderer has started");
+            isRunning_.store(true);
+            if (callback_ != nullptr) {
+                MEDIA_LOGI("CacheBuffer::DoPlay callback_ OnPlayFinished.");
+                callback_->OnPlayFinished();
             }
+            return MSERR_OK;
+        } else {
+            MEDIA_LOGE("CacheBuffer::DoPlay audioRenderer start failed");
+            isRunning_.store(false);
             if (callback_ != nullptr) {
                 MEDIA_LOGI("CacheBuffer::DoPlay failed, call callback");
                 callback_->OnError(MSERR_INVALID_VAL);
@@ -139,12 +147,9 @@ int32_t CacheBuffer::DoPlay(const int32_t streamID)
             if (cacheBufferCallback_ != nullptr) cacheBufferCallback_->OnError(MSERR_INVALID_VAL);
             return MSERR_INVALID_VAL;
         }
-        isRunning_.store(true);
-        MEDIA_LOGI("CacheBuffer::DoPlay success");
-        return MSERR_OK;
     }
-    MEDIA_LOGE("Invalid audioRenderer.");
-    return MSERR_INVALID_VAL;
+    MEDIA_LOGI("CacheBuffer::DoPlay success");
+    return MSERR_OK;
 }
 
 int32_t CacheBuffer::ReCombineCacheData()
@@ -254,13 +259,21 @@ void CacheBuffer::OnWriteData(size_t length)
     audioRenderer_->GetBufferDesc(bufDesc);
     std::shared_ptr<AudioBufferEntry> audioBuffer = reCombineCacheData_[cacheDataFrameNum_];
 
-    int32_t ret = memcpy_s(static_cast<void *>(bufDesc.buffer), length,
-        static_cast<void *>(audioBuffer->buffer), length);
-    CHECK_AND_RETURN_LOG(ret == MSERR_OK, "memcpy failed.");
-    bufDesc.bufLength = length;
-    bufDesc.dataLength = length;
+    if (bufDesc.buffer != nullptr && audioBuffer != nullptr && audioBuffer->buffer != nullptr) {
+        int32_t ret = memcpy_s(static_cast<void *>(bufDesc.buffer), length,
+            static_cast<void *>(audioBuffer->buffer), length);
+        CHECK_AND_RETURN_LOG(ret == MSERR_OK, "memcpy failed.");
+        bufDesc.bufLength = length;
+        bufDesc.dataLength = length;
 
-    audioRenderer_->Enqueue(bufDesc);
+        audioRenderer_->Enqueue(bufDesc);
+    } else {
+        MEDIA_LOGE("CacheBuffer::OnWriteData , cacheDataFrameNum_: %{public}zu", cacheDataFrameNum_);
+        MEDIA_LOGE("CacheBuffer::OnWriteData , length: %{public}zu", length);
+        MEDIA_LOGE("CacheBuffer::OnWriteData , bufDesc.buffer: %{public}d", bufDesc.buffer != nullptr);
+        MEDIA_LOGE("CacheBuffer::OnWriteData , audioBuffer: %{public}d", audioBuffer != nullptr);
+        MEDIA_LOGE("CacheBuffer::OnWriteData , audioBuffer->buffer: %{public}d", audioBuffer->buffer != nullptr);
+    }
     cacheDataFrameNum_++;
 }
 

@@ -70,6 +70,13 @@ public:
         (void)end;
         return 0;
     }
+    virtual int32_t SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode)
+    {
+        (void)start;
+        (void)end;
+        (void)mode;
+        return 0;
+    }
     virtual int32_t PrepareAsync() = 0;
     virtual int32_t Pause() = 0;
     virtual int32_t Stop() = 0;
@@ -78,6 +85,7 @@ public:
     virtual int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) = 0;
     virtual int32_t GetCurrentTime(int32_t &currentTime) = 0;
     virtual int32_t GetVideoTrackInfo(std::vector<Format> &videoTrack) = 0;
+    virtual int32_t GetPlaybackInfo(Format &playbackInfo) = 0;
     virtual int32_t GetAudioTrackInfo(std::vector<Format> &audioTrack) = 0;
     virtual int32_t GetSubtitleTrackInfo(std::vector<Format> &subtitleTrack)
     {
@@ -201,7 +209,28 @@ public:
         (void)seekContinousBatchNo;
         return 0;
     }
+
+    virtual int64_t GetPlayRangeStartTime()
+    {
+        return 0;
+    }
+
     virtual int64_t GetPlayRangeEndTime()
+    {
+        return 0;
+    }
+
+    virtual int32_t GetPlayRangeSeekMode()
+    {
+        return 0;
+    }
+
+    virtual int32_t SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted)
+    {
+        return 0;
+    }
+
+    virtual int32_t SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
     {
         return 0;
     }

@@ -133,6 +133,10 @@ static const std::vector<struct JsEnumInt> g_videoRecorderQualityLevel = {
 static const std::vector<struct JsEnumInt> g_audioSourceType = {
     { "AUDIO_SOURCE_TYPE_DEFAULT", AudioSourceType::AUDIO_SOURCE_DEFAULT },
     { "AUDIO_SOURCE_TYPE_MIC", AudioSourceType::AUDIO_MIC },
+    { "AUDIO_SOURCE_TYPE_VOICE_RECOGNITION", AudioSourceType::AUDIO_SOURCE_VOICE_RECOGNITION },
+    { "AUDIO_SOURCE_TYPE_VOICE_COMMUNICATION", AudioSourceType::AUDIO_SOURCE_VOICE_COMMUNICATION },
+    { "AUDIO_SOURCE_TYPE_VOICE_MESSAGE", AudioSourceType::AUDIO_SOURCE_VOICE_MESSAGE },
+    { "AUDIO_SOURCE_TYPE_CAMCORDER", AudioSourceType::AUDIO_SOURCE_CAMCORDER },
 };
 
 static const std::vector<struct JsEnumInt> g_videoSourceType = {
@@ -290,6 +294,14 @@ static const std::vector<struct JsEnumString> g_avMimeTypes = {
     { "APPLICATION_M3U8", "application/m3u8" },
 };
 
+static const std::vector<struct JsEnumString> g_playbackInfoKey = {
+    { "SERVER_IP_ADDRESS", "server_ip_address" },
+    { "AVG_DOWNLOAD_RATE", "average_download_rate" },
+    { "DOWNLOAD_RATE", "download_rate" },
+    { "IS_DOWNLOADING", "is_downloading" },
+    { "BUFFER_DURATION", "buffer_duration" },
+};
+
 static const std::vector<struct JsEnumString> g_codecMimeType = {
     { "VIDEO_H263", OHOS::Media::Plugins::MimeType::VIDEO_H263 },
     { "VIDEO_AVC", OHOS::Media::Plugins::MimeType::VIDEO_AVC },
@@ -357,6 +369,8 @@ static const std::vector<struct JsEnumInt> g_screenCaptureStateCode = {
     { "SCREENCAPTURE_STATE_MIC_UNMUTED_BY_USER", AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNMUTED_BY_USER },
     { "SCREENCAPTURE_STATE_ENTER_PRIVATE_SCENE", AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_ENTER_PRIVATE_SCENE },
     { "SCREENCAPTURE_STATE_EXIT_PRIVATE_SCENE", AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_EXIT_PRIVATE_SCENE },
+    { "SCREENCAPTURE_STATE_STOPPED_BY_USER_SWITCHES",
+        AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_USER_SWITCHES },
 };
 
 static const std::map<std::string_view, const std::vector<struct JsEnumInt>&> g_intEnumClassMap = {
@@ -398,6 +412,7 @@ static const std::map<std::string_view, const std::vector<struct JsEnumString>&>
     { "ContainerFormatType", g_containerFormatType },
     { "CodecMimeType", g_codecMimeType },
     { "AVMimeTypes", g_avMimeTypes },
+    { "PlaybackInfoKey", g_playbackInfoKey },
 };
 
 napi_value MediaEnumNapi::JsEnumIntInit(napi_env env, napi_value exports)

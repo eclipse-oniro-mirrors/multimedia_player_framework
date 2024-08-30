@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) Huawei Technologies Co., Ltd. 2024. All rights reserved.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,19 +12,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef MEDIA_PERMISSION_H
-#define MEDIA_PERMISSION_H
+
+#ifndef ACCOUNT_LISTENER_H
+#define ACCOUNT_LISTENER_H
+
+#include "event_handler.h"
+#include "os_account_subscribe_info.h"
+#include "os_account_subscriber.h"
 
 namespace OHOS {
 namespace Media {
-class __attribute__((visibility("default"))) MediaPermission {
+class AccountListener : public AccountSA::OsAccountSubscriber {
 public:
-    static int32_t CheckMicPermission();
-    static int32_t CheckNetWorkPermission(int32_t appUid, int32_t appPid, uint32_t appTokenId);
-    static int32_t CheckNetWorkPermission();
-    static int32_t CheckReadMediaPermission();
+    explicit AccountListener(const AccountSA::OsAccountSubscribeInfo &subscribeInfo);
+    ~AccountListener() override;
+    void OnAccountsChanged(const int &id) override {};
+    void OnAccountsSwitch(const int &newId, const int &oldId) override;
 };
 } // namespace Media
 } // namespace OHOS
-
-#endif
+#endif // ACCOUNT_LISTENER_H
