@@ -1906,7 +1906,7 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
     pipeline_->AddHeadFilters({demuxer_});
     demuxer_->Init(playerEventReceiver_, playerFilterCallback_);
 
-    PlayStrategy* playStrategy = new PlayStrategy;
+    std::shared_ptr<PlayStrategy> playStrategy = std::make_shared<PlayStrategy>();
     playStrategy->width = preferedWidth_;
     playStrategy->height = preferedHeight_;
     playStrategy->duration = bufferDuration_;
