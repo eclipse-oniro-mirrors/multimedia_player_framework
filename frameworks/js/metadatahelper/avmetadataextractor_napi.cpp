@@ -586,6 +586,8 @@ void AVMetadataExtractorNapi::SetSource(std::string url)
             if (helper_ != nullptr) {
                 if (helper_->SetSource(url) != 0) {
                     state_ = HelperStates::HELPER_STATE_ERROR;
+                } else {
+                    state_ = HelperStates::HELPER_PREPARED;
                 }
             }
         });
@@ -607,6 +609,8 @@ void AVMetadataExtractorNapi::SetSource(std::string url)
             if (helper_ != nullptr) {
                 if (helper_->SetSource(fd, 0, -1) != 0) {
                     state_ = HelperStates::HELPER_STATE_ERROR;
+                } else {
+                    state_ = HelperStates::HELPER_PREPARED;
                 }
             } else {
                 state_ = HelperStates::HELPER_STATE_ERROR;
@@ -682,6 +686,8 @@ void AVMetadataExtractorNapi::SetAVFileDescriptorTask(std::shared_ptr<AVMetadata
         if (helper_ != nullptr) {
             if (helper_->SetSource(fileDescriptor_.fd, fileDescriptor_.offset, fileDescriptor_.length) != 0) {
                 state_ = HelperStates::HELPER_STATE_ERROR;
+            } else {
+                state_ = HelperStates::HELPER_PREPARED;
             }
         }
         MEDIA_LOGI("SetSource FileDescriptor end");
@@ -761,6 +767,8 @@ void AVMetadataExtractorNapi::SetDataSrcTask(std::shared_ptr<AVMetadataHelper>& 
             MEDIA_LOGI("SetDataSrc Task SetSource");
             if (helper_->SetSource(dataSrcCb_) != 0) {
                 state_ = HelperStates::HELPER_STATE_ERROR;
+            } else {
+                state_ = HelperStates::HELPER_PREPARED;
             }
         }
         MEDIA_LOGI("SetDataSrc Task SetSource end");
