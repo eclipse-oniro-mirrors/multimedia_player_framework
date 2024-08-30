@@ -312,8 +312,7 @@ Status HiTransCoderImpl::ConfigureInputVideoMetaData(const std::vector<std::shar
     const size_t &index)
 {
     MEDIA_LOG_I("InputVideo contains videoTrack");
-    FALSE_RETURN_MSG(
-        trackInfos != nullptr && trackInfos.size() != 0, "trackInfos are invalid.");
+    FALSE_RETURN_MSG(trackInfos.size() > 0, "trackInfos are invalid.");
     isExistVideoTrack_ = true;
     Plugins::VideoRotation rotation = Plugins::VideoRotation::VIDEO_ROTATION_0;
     if (muxerFormat_ && trackInfos[index]->Get<Tag::VIDEO_ROTATION>(rotation)) {
@@ -350,8 +349,7 @@ Status HiTransCoderImpl::ConfigureInputVideoMetaData(const std::vector<std::shar
 
 Status HiTransCoderImpl::ConfigureMetaData(const std::vector<std::shared_ptr<Meta>> &trackInfos)
 {
-    FALSE_RETURN_MSG(
-        trackInfos != nullptr && trackInfos.size() != 0, "trackInfos are invalid.");
+    FALSE_RETURN_MSG(trackInfos.size() > 0, "trackInfos are invalid.");
     for (size_t index = 0; index < trackInfos.size(); index++) {
         std::shared_ptr<Meta> meta = trackInfos[index];
         FALSE_RETURN_V_MSG_E(meta != nullptr, Status::ERROR_INVALID_PARAMETER,
