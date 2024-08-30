@@ -499,11 +499,22 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameAtTime(
     }
     int32_t srcWidth = pixelMap->GetWidth();
     int32_t srcHeight = pixelMap->GetHeight();
-    bool needScale = (param.dstWidth > 0 && param.dstHeight > 0) &&
-                     (param.dstWidth <= srcWidth && param.dstHeight <= srcHeight) &&
-                     (param.dstWidth < srcWidth || param.dstHeight < srcHeight) && srcWidth > 0 && srcHeight > 0;
-    if (needScale) {
-        pixelMap->scale((1.0f * param.dstWidth) / srcWidth, (1.0f * param.dstHeight) / srcHeight);
+    float widthScaleRate = 1.0;
+    float heightScaleRate = 1.0;
+    bool isWScale = param.dstWidth > 0 && param.dstWidth < srcWidth;
+    bool isHScale = param.dstHeight > 0 && param.dstHeight < srcHeight;
+    if (isWScale && srcWidth > 0) {
+        widthScaleRate = (1.0f * param.dstWidth) / srcWidth;
+        // 0 means follow another edge
+        heightScaleRate = param.dstHeight == 0 ? widthScaleRate : heightScaleRate;
+    }
+    if (isHScale && srcHeight > 0) {
+        heightScaleRate = (1.0f * param.dstHeight) / srcHeight;
+        // 0 means follow another edge
+        widthScaleRate = param.dstWidth == 0 ? heightScaleRate : widthScaleRate;
+    }
+    if (isWScale || isHScale) {
+        pixelMap->scale(widthScaleRate, heightScaleRate);
     }
     return pixelMap;
 }
@@ -537,14 +548,22 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameYuv(int64_t timeUs, in
                                 .uvStride = srcWidth,
                                 .uvOffset = srcWidth * srcHeight };
     pixelMap->SetImageYUVInfo(yuvDataInfo);
-    bool needScale = (param.dstWidth > 0 && param.dstHeight > 0) &&
-                     (param.dstWidth <= srcWidth && param.dstHeight <= srcHeight) &&
-                     (param.dstWidth < srcWidth || param.dstHeight < srcHeight) && srcWidth > 0 && srcHeight > 0;
-    if (needScale) {
-        if (!pixelMapInfo.isHdr) {
-            pixelMap->SetAllocatorType(AllocatorType::SHARE_MEM_ALLOC);
-        }
-        pixelMap->scale((1.0f * param.dstWidth) / srcWidth, (1.0f * param.dstHeight) / srcHeight);
+    float widthScaleRate = 1.0;
+    float heightScaleRate = 1.0;
+    bool isWScale = param.dstWidth > 0 && param.dstWidth < srcWidth;
+    bool isHScale = param.dstHeight > 0 && param.dstHeight < srcHeight;
+    if (isWScale && srcWidth > 0) {
+        widthScaleRate = (1.0f * param.dstWidth) / srcWidth;
+        // 0 means follow another edge
+        heightScaleRate = param.dstHeight == 0 ? widthScaleRate : heightScaleRate;
+    }
+    if (isHScale && srcHeight > 0) {
+        heightScaleRate = (1.0f * param.dstHeight) / srcHeight;
+        // 0 means follow another edge
+        widthScaleRate = param.dstWidth == 0 ? heightScaleRate : widthScaleRate;
+    }
+    if (isWScale || isHScale) {
+        pixelMap->scale(widthScaleRate, heightScaleRate);
     }
     if (pixelMapInfo.rotation > 0) {
         if (!pixelMapInfo.isHdr) {
