@@ -68,7 +68,7 @@ void SetConfig(AVScreenCaptureConfig &config)
 
 bool ScreenCaptureResizeCanvasFuzzer::FuzzScreenCaptureResizeCanvas(uint8_t *data, size_t size)
 {
-    if (data == nullptr || size < 2 * sizeof(int32_t)) {
+    if (data == nullptr || size < 2 * sizeof(int32_t)) {  // 2 input params
         return false;
     }
     bool retFlags = TestScreenCapture::CreateScreenCapture();
@@ -99,7 +99,7 @@ bool FuzzTestScreenCaptureResizeCanvas(uint8_t *data, size_t size)
         return true;
     }
 
-    if (size < 2 * sizeof(int32_t)) {
+    if (size < 2 * sizeof(int32_t)) { // 2 input params
         return true;
     }
     ScreenCaptureResizeCanvasFuzzer testScreenCapture;
