@@ -84,10 +84,10 @@ bool ScreenCaptureSkipPrivacyModeFuzzer::FuzzScreenCaptureSkipPrivacyMode(uint8_
     for (uint64_t i = 0; i < *reinterpret_cast<uint64_t *>(data); i++) {
         windowIDsVec.push_back(*reinterpret_cast<uint64_t *>(data + sizeof(uint64_t)));
     }
-    TestScreenCapture::SkipPrivacyMode(windowIDsVec);
     TestScreenCapture::SetScreenCaptureCallback(callbackobj);
     TestScreenCapture::Init(config);
     TestScreenCapture::StartScreenCapture();
+    TestScreenCapture::SkipPrivacyMode(windowIDsVec);
     sleep(recorderTime);
     TestScreenCapture::StopScreenCapture();
     TestScreenCapture::Release();

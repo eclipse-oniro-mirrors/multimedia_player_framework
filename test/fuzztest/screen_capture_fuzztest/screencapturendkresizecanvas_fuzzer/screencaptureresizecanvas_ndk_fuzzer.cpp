@@ -77,8 +77,6 @@ bool ScreenCaptureResizeCanvasNdkFuzzer::FuzzScreenCaptureResizeCanvasNdk(
     SetConfig(config);
     constexpr uint32_t recorderTime = 3;
 
-    OH_AVScreenCapture_ResizeCanvas(screenCapture, *reinterpret_cast<int32_t *>(data),
-        *reinterpret_cast<int32_t *>(data + sizeof(int32_t)));
     OH_AVScreenCaptureCallback callback;
     callback.onError = TestScreenCaptureNdkCallback::OnError;
     callback.onAudioBufferAvailable = TestScreenCaptureNdkCallback::OnAudioBufferAvailable;
@@ -86,6 +84,8 @@ bool ScreenCaptureResizeCanvasNdkFuzzer::FuzzScreenCaptureResizeCanvasNdk(
     OH_AVScreenCapture_SetCallback(screenCapture, callback);
     OH_AVScreenCapture_Init(screenCapture, config);
     OH_AVScreenCapture_StartScreenCapture(screenCapture);
+    OH_AVScreenCapture_ResizeCanvas(screenCapture, *reinterpret_cast<int32_t *>(data),
+        *reinterpret_cast<int32_t *>(data + sizeof(int32_t)));
     sleep(recorderTime);
     OH_AVScreenCapture_StopScreenCapture(screenCapture);
     OH_AVScreenCapture_Release(screenCapture);

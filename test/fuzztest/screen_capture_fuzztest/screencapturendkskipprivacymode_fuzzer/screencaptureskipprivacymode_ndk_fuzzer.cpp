@@ -80,7 +80,6 @@ bool ScreenCaptureSkipPrivacyModeNdkFuzzer::FuzzScreenCaptureSkipPrivacyModeNdk(
     for (int32_t i = 0; i < *reinterpret_cast<int32_t *>(data); i++) {
         windowIDsVec.push_back(*reinterpret_cast<int32_t *>(data + sizeof(uint64_t)));
     }
-    OH_AVScreenCapture_SkipPrivacyMode(screenCapture, &windowIDsVec[0], static_cast<int32_t>(windowIDsVec.size()));
     OH_AVScreenCaptureCallback callback;
     callback.onError = TestScreenCaptureNdkCallback::OnError;
     callback.onAudioBufferAvailable = TestScreenCaptureNdkCallback::OnAudioBufferAvailable;
@@ -88,6 +87,7 @@ bool ScreenCaptureSkipPrivacyModeNdkFuzzer::FuzzScreenCaptureSkipPrivacyModeNdk(
     OH_AVScreenCapture_SetCallback(screenCapture, callback);
     OH_AVScreenCapture_Init(screenCapture, config);
     OH_AVScreenCapture_StartScreenCapture(screenCapture);
+    OH_AVScreenCapture_SkipPrivacyMode(screenCapture, &windowIDsVec[0], static_cast<int32_t>(windowIDsVec.size()));
     sleep(recorderTime);
     OH_AVScreenCapture_StopScreenCapture(screenCapture);
     OH_AVScreenCapture_Release(screenCapture);

@@ -81,11 +81,11 @@ bool ScreenCaptureResizeCanvasFuzzer::FuzzScreenCaptureResizeCanvas(uint8_t *dat
     std::shared_ptr<TestScreenCaptureCallbackTest> callbackobj
         = std::make_shared<TestScreenCaptureCallbackTest>();
 
-    TestScreenCapture::ResizeCanvas(*reinterpret_cast<int32_t *>(data),
-        *reinterpret_cast<int32_t *>(data + sizeof(int32_t)));
     TestScreenCapture::SetScreenCaptureCallback(callbackobj);
     TestScreenCapture::Init(config);
     TestScreenCapture::StartScreenCapture();
+    TestScreenCapture::ResizeCanvas(*reinterpret_cast<int32_t *>(data),
+        *reinterpret_cast<int32_t *>(data + sizeof(int32_t)));
     sleep(recorderTime);
     TestScreenCapture::StopScreenCapture();
     TestScreenCapture::Release();
