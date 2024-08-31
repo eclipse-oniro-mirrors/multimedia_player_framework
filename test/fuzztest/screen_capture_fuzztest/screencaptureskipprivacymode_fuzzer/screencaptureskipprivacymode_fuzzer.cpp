@@ -81,7 +81,7 @@ bool ScreenCaptureSkipPrivacyModeFuzzer::FuzzScreenCaptureSkipPrivacyMode(uint8_
     std::shared_ptr<TestScreenCaptureCallbackTest> callbackobj
         = std::make_shared<TestScreenCaptureCallbackTest>();
     std::vector<uint64_t> windowIDsVec;
-    for (uint64_t i = 0, i < *reinterpret_cast<uint64_t *>(data); i++ ) {
+    for (uint64_t i = 0, i < *reinterpret_cast<uint64_t *>(data); i++) {
         windowIDsVec.push_back(*reinterpret_cast<uint64_t *>(data + sizeof(uint64_t)));
     }
     TestScreenCapture::SkipPrivacyMode(windowIDsVec);
