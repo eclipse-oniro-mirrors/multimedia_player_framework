@@ -2669,6 +2669,7 @@ void AVPlayerNapi::DeviceChangeCallbackOn(AVPlayerNapi *jsPlayer, std::string ca
 {
     if (jsPlayer == nullptr) {
         deviceChangeCallbackflag_ = false;
+        return;
     }
     if (callbackName == "audioOutputDeviceChangeWithInfo") {
         deviceChangeCallbackflag_ = true;
