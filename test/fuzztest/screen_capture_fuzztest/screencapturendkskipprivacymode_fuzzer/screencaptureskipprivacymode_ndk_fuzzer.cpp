@@ -77,7 +77,7 @@ bool ScreenCaptureSkipPrivacyModeNdkFuzzer::FuzzScreenCaptureSkipPrivacyModeNdk(
     SetConfig(config);
     constexpr uint32_t recorderTime = 3;
     std::vector<int32_t> windowIDsVec;
-    for (int32_t i = 0, i < *reinterpret_cast<int32_t *>(data); i++) {
+    for (int32_t i = 0; i < *reinterpret_cast<int32_t *>(data); i++) {
         windowIDsVec.push_back(*reinterpret_cast<int32_t *>(data + sizeof(uint64_t)));
     }
     OH_AVScreenCapture_SkipPrivacyMode(screenCapture, &windowIDsVec[0], static_cast<int32>(windowIDsVec.size()));
