@@ -312,7 +312,9 @@ Status HiTransCoderImpl::ConfigureInputVideoMetaData(const std::vector<std::shar
     const size_t &index)
 {
     MEDIA_LOG_I("InputVideo contains videoTrack");
-    FALSE_RETURN_V_MSG_E(trackInfos.size() > 0, Status::ERROR_INVALID_PARAMETER,
+    FALSE_RETURN_V_MSG_E(trackInfos.size() > 0 && trackInfos.size() >= index, Status::ERROR_INVALID_PARAMETER,
+        "trackInfos are invalid.");
+    FALSE_RETURN_V_MSG_E(trackInfos[index] != nullptr, Status::ERROR_INVALID_PARAMETER,
         "trackInfos are invalid.");
     isExistVideoTrack_ = true;
     Plugins::VideoRotation rotation = Plugins::VideoRotation::VIDEO_ROTATION_0;
@@ -365,7 +367,7 @@ Status HiTransCoderImpl::ConfigureMetaData(const std::vector<std::shared_ptr<Met
             (void)ConfigureInputVideoMetaData(trackInfos, index);
         } else if (mediaType == Plugins::MediaType::AUDIO) {
             int32_t channels = 0;
-            if (trackInfos[index]->GetData(Tag::AUDIO_CHANNEL_COUNT, channels)) {
+            if (meta->GetData(Tag::AUDIO_CHANNEL_COUNT, channels)) {
                 MEDIA_LOG_D("Audio channel count: %{public}d", channels);
             } else {
                 MEDIA_LOG_W("Get audio channel count failed");
@@ -375,7 +377,7 @@ Status HiTransCoderImpl::ConfigureMetaData(const std::vector<std::shared_ptr<Met
             srcAudioFormat_->Set<Tag::AUDIO_CHANNEL_COUNT>(channels);
             srcAudioFormat_->Set<Tag::AUDIO_SAMPLE_FORMAT>(Plugins::AudioSampleFormat::SAMPLE_S16LE);
             int32_t sampleRate = 0;
-            if (trackInfos[index]->GetData(Tag::AUDIO_SAMPLE_RATE, sampleRate)) {
+            if (meta->GetData(Tag::AUDIO_SAMPLE_RATE, sampleRate)) {
                 MEDIA_LOG_D("Audio sampleRate: %{public}d", sampleRate);
             } else {
                 MEDIA_LOG_W("Get audio channel count failed");
@@ -384,7 +386,7 @@ Status HiTransCoderImpl::ConfigureMetaData(const std::vector<std::shared_ptr<Met
             srcAudioFormat_->Set<Tag::AUDIO_SAMPLE_RATE>(sampleRate);
 
             std::string audioMime;
-            trackInfos[index]->GetData(Tag::MIME_TYPE, audioMime);
+            meta->GetData(Tag::MIME_TYPE, audioMime);
             srcAudioFormat_->SetData(Tag::MIME_TYPE, audioMime);
         }
     }
