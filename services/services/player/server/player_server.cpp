@@ -1797,6 +1797,7 @@ int32_t PlayerServer::ExitSeekContinous(bool align)
 int32_t PlayerServer::SetDeviceChangeCbStatus(bool status)
 {
     deviceChangeCallbackflag_ = status;
+    MEDIA_LOGI("Set DeviceChangeFlag success, status = %{public}d", deviceChangeCallbackflag_);
     return MSERR_OK;
 }
 
