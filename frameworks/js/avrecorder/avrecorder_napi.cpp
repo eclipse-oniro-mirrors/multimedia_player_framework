@@ -797,7 +797,7 @@ napi_value AVRecorderNapi::JsGetAudioCapturerMaxAmplitude(napi_env env,  napi_ca
 {
     MediaTrace trace("AVRecorder::JsGetAudioCapturerMaxAmplitude");
     const std::string &opt = AVRecordergOpt::GET_MAX_AMPLITUDE;
-    MEDIA_LOGI("Js %{public}s Start", opt.c_str());
+    MEDIA_LOGD("Js %{public}s Start", opt.c_str());
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
     size_t argCount = 1;
@@ -840,7 +840,7 @@ napi_value AVRecorderNapi::JsGetAudioCapturerMaxAmplitude(napi_env env,  napi_ca
     NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
     asyncCtx.release();
 
-    MEDIA_LOGI("Js %{public}s End", opt.c_str());
+    MEDIA_LOGD("Js %{public}s End", opt.c_str());
     return result;
 }
 
@@ -1003,7 +1003,7 @@ napi_value AVRecorderNapi::JsGetState(napi_env env, napi_callback_info info)
     auto napiCb = std::static_pointer_cast<AVRecorderCallback>(recorderNapi->recorderCb_);
     CHECK_AND_RETURN_RET_LOG(napiCb != nullptr, result, "napiCb is nullptr!");
     std::string curState = napiCb->GetState();
-    MEDIA_LOGI("GetState success, State: %{public}s", curState.c_str());
+    MEDIA_LOGD("GetState success, State: %{public}s", curState.c_str());
 
     napi_value jsResult = nullptr;
     napi_status status = napi_create_string_utf8(env, curState.c_str(), NAPI_AUTO_LENGTH, &jsResult);
@@ -1209,7 +1209,7 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderNapi::GetMaxAmplitudeTask(
 {
     return std::make_shared<TaskHandler<RetInfo>>([napi = asyncCtx->napi, &maxAmplitude = asyncCtx->maxAmplitude_]() {
         const std::string &option = AVRecordergOpt::GET_MAX_AMPLITUDE;
-        MEDIA_LOGI("%{public}s Start", option.c_str());
+        MEDIA_LOGD("%{public}s Start", option.c_str());
 
         CHECK_AND_RETURN_RET(napi != nullptr,
             GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
@@ -1224,7 +1224,7 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderNapi::GetMaxAmplitudeTask(
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, GetRetInfo(MSERR_INVALID_VAL, "GetMaxAmplitudeTask", ""),
             "get GetMaxAmplitudeTask failed");
 
-        MEDIA_LOGI("%{public}s End", option.c_str());
+        MEDIA_LOGD("%{public}s End", option.c_str());
         return RetInfo(MSERR_EXT_API9_OK, "");
     });
 }
