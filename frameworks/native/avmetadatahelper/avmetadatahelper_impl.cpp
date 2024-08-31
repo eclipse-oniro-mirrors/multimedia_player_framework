@@ -520,7 +520,7 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameAtTime(
     float scaleRateH = 1.0;
     CalcScaleRate({.width = srcWidth, .height = srcHeight }, param, scaleRateW, scaleRateH);
     if (!OSAL::IsFloatEqual(scaleRateW, 1.0f) || !OSAL::IsFloatEqual(scaleRateH, 1.0f)) {
-        pixelMap->scale(scaleRateW, scaleRateH);
+        pixelMap->scale(scaleRateW, scaleRateH, AntiAliasingOption::LOW);
     }
     return pixelMap;
 }
@@ -560,7 +560,7 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameYuv(int64_t timeUs, in
         if (!pixelMapInfo.isHdr) {
             pixelMap->SetAllocatorType(AllocatorType::SHARE_MEM_ALLOC);
         }
-        pixelMap->scale(scaleRateW, scaleRateH);
+        pixelMap->scale(scaleRateW, scaleRateH, AntiAliasingOption::LOW);
     }
     if (pixelMapInfo.rotation > 0) {
         if (!pixelMapInfo.isHdr) {
