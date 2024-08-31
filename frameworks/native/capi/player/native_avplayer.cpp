@@ -820,6 +820,7 @@ OH_AVPlayer *OH_AVPlayer_Create(void)
 {
     std::shared_ptr<Player> player = PlayerFactory::CreatePlayer();
     CHECK_AND_RETURN_RET_LOG(player != nullptr, nullptr, "failed to PlayerFactory::CreatePlayer");
+    (void)player->SetDeviceChangeCbStatus(true);
 
     PlayerObject *object = new(std::nothrow) PlayerObject(player);
     CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "failed to new PlayerObject");
@@ -1341,7 +1342,6 @@ OH_AVErrCode OH_AVPlayer_SetOnInfoCallback(OH_AVPlayer *player, OH_AVPlayerOnInf
     }
     struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
     CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, AV_ERR_INVALID_VAL, "SetOnInfo player_ is nullptr");
-    (void)playerObj->player_->SetDeviceChangeCbStatus(true);
 
     OH_AVErrCode errCode = AVPlayerSetPlayerCallback(player, playerObj, callback == nullptr);
     CHECK_AND_RETURN_RET_LOG(errCode == AV_ERR_OK, errCode, "AVPlayerSetPlayerCallback AVPlayerOnInfoCallback error");
