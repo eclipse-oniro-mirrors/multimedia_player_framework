@@ -2656,6 +2656,7 @@ void AVPlayerNapi::MaxAmplitudeCallbackOn(AVPlayerNapi *jsPlayer, std::string ca
 {
     if (jsPlayer == nullptr) {
         calMaxAmplitude_ = false;
+        return;
     }
     if (callbackName == "amplitudeUpdate") {
         calMaxAmplitude_ = true;
@@ -2779,7 +2780,7 @@ napi_value AVPlayerNapi::JsClearOnCallback(napi_env env, napi_callback_info info
     }
 
     std::string callbackName = CommonNapi::GetStringArgument(env, args[0]);
-    jsPlayer->MaxAmplitudeCallbackOn(jsPlayer, callbackName);
+    jsPlayer->MaxAmplitudeCallbackOff(jsPlayer, callbackName);
     jsPlayer->DeviceChangeCallbackOff(jsPlayer, callbackName);
     MEDIA_LOGI("0x%{public}06" PRIXPTR " set callbackName: %{public}s", FAKE_POINTER(jsPlayer), callbackName.c_str());
 
