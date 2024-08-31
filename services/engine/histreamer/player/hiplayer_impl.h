@@ -172,6 +172,7 @@ private:
     };
 
     Status DoSetSource(const std::shared_ptr<MediaSource> source);
+    void DoSetPlayStrategy(const std::shared_ptr<MediaSource> source);
     Status Resume();
     void GetDumpFlag();
     void HandleCompleteEvent(const Event& event);

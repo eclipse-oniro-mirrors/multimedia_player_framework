@@ -2061,6 +2061,21 @@ void HiPlayerImpl::HandleInitialPlayingStateChange(const EventType& eventType)
     OnStateChanged(PlayerStateId::PLAYING);
 }
 
+void HiPlayerImpl::DoSetPlayStrategy(const std::shared_ptr<MediaSource> source)
+{
+    std::shared_ptr<PlayStrategy> playStrategy = std::make_shared<PlayStrategy>();
+    playStrategy->width = preferedWidth_;
+    playStrategy->height = preferedHeight_;
+    playStrategy->duration = bufferDuration_;
+    playStrategy->preferHDR = preferHDR_;
+    playStrategy->audioLanguage = audioLanguage_;
+    playStrategy->subtitleLanguage = subtitleLanguage_;
+    if (source) {
+        source->SetPlayStrategy(playStrategy);
+        source->SetAppUid(appUid_);
+    }
+}
+
 Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
 {
     MediaTrace trace("HiPlayerImpl::DoSetSource");
@@ -2075,14 +2090,7 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
     if (dfxAgent_ != nullptr) {
         dfxAgent_->SetDemuxer(demuxer_);
     }
-    std::shared_ptr<PlayStrategy> playStrategy = std::make_shared<PlayStrategy>();
-    playStrategy->width = preferedWidth_;
-    playStrategy->height = preferedHeight_;
-    playStrategy->duration = bufferDuration_;
-    playStrategy->preferHDR = preferHDR_;
-    playStrategy->audioLanguage = audioLanguage_;
-    playStrategy->subtitleLanguage = subtitleLanguage_;
-    source->SetPlayStrategy(playStrategy);
+    DoSetPlayStrategy(source);
     if (!mimeType_.empty()) {
         source->SetMimeType(mimeType_);
     }
