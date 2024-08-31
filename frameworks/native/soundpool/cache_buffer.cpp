@@ -248,8 +248,8 @@ void CacheBuffer::OnWriteData(size_t length)
     if (cacheDataFrameNum_ == reCombineCacheData_.size()) {
         if (havePlayedCount_ == loop_) {
             MEDIA_LOGI("CacheBuffer stream write finish, cacheDataFrameNum_:%{public}zu,"
-                " havePlayedCount_:%{public}d, loop:%{public}d, try to stop.", cacheDataFrameNum_,
-                havePlayedCount_, loop_);
+                " havePlayedCount_:%{public}d, loop:%{public}d, streamID_:%{public}d, length: %{public}zu",
+                cacheDataFrameNum_, havePlayedCount_, loop_, streamID_, length);
             Stop(streamID_);
             return;
         }
