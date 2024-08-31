@@ -644,10 +644,16 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameYuv_0100, Level2)
     uint64_t time = 0;
     PixelMapParams param = {
         .dstWidth = 0,
-        .dstHeight = 300
+        .dstHeight = 240
     };
-    ASSERT_NE(nullptr, helper->FetchFrameYuv(0, time, param));
-    ASSERT_NE(nullptr, helper->FetchFrameAtTime(0, time, param));
+    auto pixelMap = helper->FetchFrameYuv(0, time, param);
+    ASSERT_NE(nullptr, pixelMap);
+    ASSERT_EQ(pixelMap->GetWidth(), 360);
+    ASSERT_EQ(pixelMap->GetHeight(), 240);
+    pixelMap = helper->FetchFrameAtTime(0, time, param);
+    ASSERT_NE(nullptr, pixelMap);
+    ASSERT_EQ(pixelMap->GetWidth(), 360);
+    ASSERT_EQ(pixelMap->GetHeight(), 240);
 }
 
 /**
@@ -665,11 +671,17 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameYuv_0200, Level2)
     ASSERT_EQ(MSERR_OK, helper->SetSource(uri, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
     uint64_t time = 0;
     PixelMapParams param = {
-        .dstWidth = 300,
+        .dstWidth = 240,
         .dstHeight = 0
     };
-    ASSERT_NE(nullptr, helper->FetchFrameYuv(0, time, param));
-    ASSERT_NE(nullptr, helper->FetchFrameAtTime(0, time, param));
+    auto pixelMap = helper->FetchFrameYuv(0, time, param);
+    ASSERT_NE(nullptr, pixelMap);
+    ASSERT_EQ(pixelMap->GetWidth(), 240);
+    ASSERT_EQ(pixelMap->GetHeight(), 160);
+    pixelMap = helper->FetchFrameAtTime(0, time, param);
+    ASSERT_NE(nullptr, pixelMap);
+    ASSERT_EQ(pixelMap->GetWidth(), 240);
+    ASSERT_EQ(pixelMap->GetHeight(), 160);
 }
 
 /**
@@ -690,8 +702,14 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameYuv_0300, Level2)
         .dstWidth = 300,
         .dstHeight = 300
     };
-    ASSERT_NE(nullptr, helper->FetchFrameYuv(0, time, param));
-    ASSERT_NE(nullptr, helper->FetchFrameAtTime(0, time, param));
+    auto pixelMap = helper->FetchFrameYuv(0, time, param);
+    ASSERT_NE(nullptr, pixelMap);
+    ASSERT_EQ(pixelMap->GetWidth(), 300);
+    ASSERT_EQ(pixelMap->GetHeight(), 300);
+    pixelMap = helper->FetchFrameAtTime(0, time, param);
+    ASSERT_NE(nullptr, pixelMap);
+    ASSERT_EQ(pixelMap->GetWidth(), 300);
+    ASSERT_EQ(pixelMap->GetHeight(), 300);
 }
 
 /**
@@ -712,8 +730,14 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameYuv_0400, Level2)
         .dstWidth = 300,
         .dstHeight = -1
     };
-    ASSERT_NE(nullptr, helper->FetchFrameYuv(0, time, param));
-    ASSERT_NE(nullptr, helper->FetchFrameAtTime(0, time, param));
+    auto pixelMap = helper->FetchFrameYuv(0, time, param);
+    ASSERT_NE(nullptr, pixelMap);
+    ASSERT_EQ(pixelMap->GetWidth(), 300);
+    ASSERT_EQ(pixelMap->GetHeight(), 480);
+    pixelMap = helper->FetchFrameAtTime(0, time, param);
+    ASSERT_NE(nullptr, pixelMap);
+    ASSERT_EQ(pixelMap->GetWidth(), 300);
+    ASSERT_EQ(pixelMap->GetHeight(), 480);
 }
 
 /**
@@ -734,8 +758,14 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameYuv_0500, Level2)
         .dstWidth = -1,
         .dstHeight = 300
     };
-    ASSERT_NE(nullptr, helper->FetchFrameYuv(0, time, param));
-    ASSERT_NE(nullptr, helper->FetchFrameAtTime(0, time, param));
+    auto pixelMap = helper->FetchFrameYuv(0, time, param);
+    ASSERT_NE(nullptr, pixelMap);
+    ASSERT_EQ(pixelMap->GetWidth(), 720);
+    ASSERT_EQ(pixelMap->GetHeight(), 300);
+    pixelMap = helper->FetchFrameAtTime(0, time, param);
+    ASSERT_NE(nullptr, pixelMap);
+    ASSERT_EQ(pixelMap->GetWidth(), 720);
+    ASSERT_EQ(pixelMap->GetHeight(), 300);
 }
 
 /**
@@ -756,8 +786,14 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameYuv_0600, Level2)
         .dstWidth = 9999,
         .dstHeight = 9999
     };
-    ASSERT_NE(nullptr, helper->FetchFrameYuv(0, time, param));
-    ASSERT_NE(nullptr, helper->FetchFrameAtTime(0, time, param));
+    auto pixelMap = helper->FetchFrameYuv(0, time, param);
+    ASSERT_NE(nullptr, pixelMap);
+    ASSERT_EQ(pixelMap->GetWidth(), 720);
+    ASSERT_EQ(pixelMap->GetHeight(), 480);
+    pixelMap = helper->FetchFrameAtTime(0, time, param);
+    ASSERT_NE(nullptr, pixelMap);
+    ASSERT_EQ(pixelMap->GetWidth(), 720);
+    ASSERT_EQ(pixelMap->GetHeight(), 480);
 }
 } // namespace Media
 } // namespace OHOS
