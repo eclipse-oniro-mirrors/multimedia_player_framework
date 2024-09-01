@@ -185,7 +185,7 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_SetAlarmToneUri_001, TestS
     auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
     std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
     std::string srcUri, dstUri;
-    
+
     auto vec = systemSoundManager_->GetAlarmToneAttrList(context_);
     srcUri = vec[0]->GetUri();
 
@@ -224,7 +224,7 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_AddCustomizedToneByExterna
         "default", "default", CUSTOMISED, TONE_CATEGORY_RINGTONE);
     auto vec = systemSoundManager_->GetAlarmToneAttrList(context_);
     std::string uri = vec[0]->GetUri();
-    
+
     std::string res = systemSoundManager_->AddCustomizedToneByExternalUri(context_, toneAttrs_, "test");
     EXPECT_EQ(res.empty(), true);
     toneAttrs_->SetTitle("06171");

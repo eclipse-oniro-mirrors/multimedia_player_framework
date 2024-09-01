@@ -285,6 +285,18 @@ int32_t AudioHapticPlayerImpl::SetLoop(bool loop)
     return result;
 }
 
+HapticsMode AudioHapticPlayerImpl::GetHapticsMode() const
+{
+    return hapticsMode_;
+}
+
+void AudioHapticPlayerImpl::SetHapticsMode(HapticsMode hapticsMode)
+{
+    MEDIA_LOGI("AudioHapticPlayerImpl::SetHapticsMode %{public}d", hapticsMode);
+    std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
+    hapticsMode_ = hapticsMode;
+}
+
 int32_t AudioHapticPlayerImpl::SetAudioHapticPlayerCallback(
     const std::shared_ptr<AudioHapticPlayerCallback> &playerCallback)
 {
