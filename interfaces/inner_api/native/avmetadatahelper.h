@@ -361,14 +361,6 @@ public:
     virtual int32_t SetSource(const std::string &uri, int32_t usage = AVMetadataUsage::AV_META_USAGE_PIXEL_MAP) = 0;
 
     /**
-     * Set the media source uri to resolve. Calling this method before the reset
-     * of the methods in this class. This method maybe time consuming.
-     * @param scene indicates which scene the avmedatahelper's instance will
-     * be used to, see {@link Scene}.
-     */
-    virtual void SetScene(Scene scene) = 0;
-
-    /**
      * @brief Sets the media file descriptor source to resolve. Calling this method
      * before the reset of the methods in this class. This method maybe time consuming.
      * @param fd Indicates the file descriptor of media source.
@@ -470,6 +462,15 @@ public:
      */
     virtual int32_t SetHelperCallback(const std::shared_ptr<HelperCallback> &callback) = 0;
 
+
+    /**
+     * Set the media source uri to resolve. Calling this method before the reset
+     * of the methods in this class. This method maybe time consuming.
+     * @param scene indicates which scene the avmedatahelper's instance will
+     * be used to, see {@link Scene}.
+     */
+    virtual void SetScene(Scene scene) = 0;
+    
     /**
      * Get timestamp according to frame index.
      * @param timeUs : Index of the frame.
