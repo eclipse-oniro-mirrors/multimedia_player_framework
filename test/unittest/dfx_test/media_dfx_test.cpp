@@ -34,8 +34,14 @@ class MediaDfxTest : public testing::Test {
 public:
     static void SetUpTestCase(void) {};
     static void TearDownTestCase(void) {};
-    void SetUp(void) {};
-    void TearDown(void) {};
+    void SetUp(void) {
+        mediaEvent_ = std::make_shared<MediaEvent>();
+    };
+    void TearDown(void) {
+        mediaEvent_ = nullptr;
+    };
+
+    std::shared_ptr<MediaEvent> mediaEvent_ = nullptr;
 };
 
 HWTEST_F(MediaDfxTest, CREATE_MEDIA_INFO, TestSize.Level1)
