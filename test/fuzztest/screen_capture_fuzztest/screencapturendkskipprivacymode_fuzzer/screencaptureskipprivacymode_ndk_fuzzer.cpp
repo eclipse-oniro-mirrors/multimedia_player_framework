@@ -68,7 +68,7 @@ void SetConfig(OH_AVScreenCaptureConfig &config)
 bool ScreenCaptureSkipPrivacyModeNdkFuzzer::FuzzScreenCaptureSkipPrivacyModeNdk(
     uint8_t *data, size_t size)
 {
-    if (data == nullptr || size <sizeof(int32_t)) {
+    if (data == nullptr || size < sizeof(int32_t)) {
         return false;
     }
     screenCapture = OH_AVScreenCapture_Create();

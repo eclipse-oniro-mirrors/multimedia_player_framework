@@ -359,6 +359,8 @@ private:
     void SetMetaDataReport();
     void SetErrorInfo(int32_t errCode, const std::string &errMsg, StopReason stopReason, bool userAgree);
     void SystemRecorderInterruptLatestRecorder();
+    int32_t ReStartMicForVoIPStatusSwitch();
+    void RegisterPrivateWindowListener();
 
 private:
     std::mutex mutex_;
@@ -393,7 +395,6 @@ private:
     ScreenCaptureContentFilter contentFilter_;
     AVScreenCaptureState captureState_ = AVScreenCaptureState::CREATED;
     std::shared_ptr<NotificationLocalLiveViewContent> localLiveViewContent_;
-    std::string bundleName_;
     int64_t startTime_ = 0;
 
     /* used for CAPTURE STREAM */

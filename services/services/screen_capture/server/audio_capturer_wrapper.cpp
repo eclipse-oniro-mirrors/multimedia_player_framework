@@ -279,22 +279,22 @@ int32_t AudioCapturerWrapper::CaptureAudio()
     MEDIA_LOGI("0x%{public}06" PRIXPTR " CaptureAudio S, name:%{public}s", FAKE_POINTER(this), threadName_.c_str());
     std::string name = threadName_.substr(0, std::min(threadName_.size(), static_cast<size_t>(MAX_THREAD_NAME_LENGTH)));
     pthread_setname_np(pthread_self(), name.c_str());
-
     size_t bufferLen;
     CHECK_AND_RETURN_RET_LOG(audioCapturer_ != nullptr && audioCapturer_->GetBufferSize(bufferLen) >= 0,
         MSERR_NO_MEMORY, "CaptureAudio GetBufferSize failed");
-
     Timestamp timestamp;
     std::shared_ptr<AudioBuffer> audioBuffer;
     while (true) {
-        CHECK_AND_RETURN_RET_LOG(isRunning_.load(), MSERR_OK, "CaptureAudio is not running, stop capture");
+        CHECK_AND_RETURN_RET_LOG(isRunning_.load(), MSERR_OK, "CaptureAudio is not running, stop capture %{public}s",
+            name.c_str());
         uint8_t *buffer = static_cast<uint8_t *>(malloc(bufferLen));
-        CHECK_AND_RETURN_RET_LOG(buffer != nullptr, MSERR_OK, "CaptureAudio buffer is no momery, stop capture");
+        CHECK_AND_RETURN_RET_LOG(buffer != nullptr, MSERR_OK, "CaptureAudio buffer is no memory, stop capture"
+            " %{public}s", name.c_str());
         audioBuffer = std::make_shared<AudioBuffer>(buffer, 0, 0, audioInfo_.audioSource);
         memset_s(audioBuffer->buffer, bufferLen, 0, bufferLen);
         int32_t bufferRead = audioCapturer_->Read(*(audioBuffer->buffer), bufferLen, true);
         if (bufferRead <= 0) {
-            PartiallyPrintLog(__LINE__, "CaptureAudio read audio buffer failed");
+            PartiallyPrintLog(__LINE__, "CaptureAudio read audio buffer failed " + name);
             continue;
         }
         audioBuffer->length = bufferRead;
@@ -303,9 +303,10 @@ int32_t AudioCapturerWrapper::CaptureAudio()
         audioBuffer->timestamp = audioTime;
         {
             std::unique_lock<std::mutex> lock(bufferMutex_);
-            CHECK_AND_RETURN_RET_LOG(isRunning_.load(), MSERR_OK, "CaptureAudio is not running, ignore and stop");
+            CHECK_AND_RETURN_RET_LOG(isRunning_.load(), MSERR_OK, "CaptureAudio is not running, ignore and stop"
+                " %{public}s", name.c_str());
             if (availBuffers_.size() > MAX_AUDIO_BUFFER_SIZE) {
-                PartiallyPrintLog(__LINE__, "consume slow, drop audio frame");
+                PartiallyPrintLog(__LINE__, "consume slow, drop audio frame" + name);
                 continue;
             }
             if (isMuted_) {
@@ -314,9 +315,11 @@ int32_t AudioCapturerWrapper::CaptureAudio()
             availBuffers_.push(audioBuffer);
         }
         bufferCond_.notify_all();
-        CHECK_AND_RETURN_RET_LOG(isRunning_.load(), MSERR_OK, "CaptureAudio is not running, ignore and stop");
-        CHECK_AND_RETURN_RET_LOG(screenCaptureCb_ != nullptr, MSERR_OK, "no consumer, will drop audio frame");
-        screenCaptureCb_->OnAudioBufferAvailable(true, audioInfo_.audioSource);
+        CHECK_AND_RETURN_RET_LOG(isRunning_.load(), MSERR_OK, "CaptureAudio is not running, ignore and stop"
+            " %{public}s", name.c_str());
+        CHECK_AND_RETURN_RET_LOG(screenCaptureCb_ != nullptr,
+            (screenCaptureCb_->OnAudioBufferAvailable(true, audioInfo_.audioSource), MSERR_OK),
+            "no consumer, will drop audio frame %{public}s", name.c_str());
     }
     MEDIA_LOGI("0x%{public}06" PRIXPTR " CaptureAudio E, name:%{public}s", FAKE_POINTER(this), threadName_.c_str());
     return MSERR_OK;

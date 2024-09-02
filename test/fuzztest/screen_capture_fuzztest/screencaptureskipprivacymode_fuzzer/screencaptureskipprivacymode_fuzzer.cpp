@@ -68,7 +68,7 @@ void SetConfig(AVScreenCaptureConfig &config)
 
 bool ScreenCaptureSkipPrivacyModeFuzzer::FuzzScreenCaptureSkipPrivacyMode(uint8_t *data, size_t size)
 {
-    if (data == nullptr || size <sizeof(uint64_t)) {
+    if (data == nullptr || size < sizeof(uint64_t)) {
         return false;
     }
     bool retFlags = TestScreenCapture::CreateScreenCapture();
