@@ -771,7 +771,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, RepeatStartAudioCapture_001, TestSize.
     config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
-    ASSERT_NE(screenCaptureServer_->innerAudioCapture_->Start(), MSERR_OK);
+    ASSERT_NE(screenCaptureServer_->innerAudioCapture_->Start(screenCaptureServer_->appInfo_), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, UpdatePrivacyUsingPermissionState_001, TestSize.Level2)
