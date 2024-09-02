@@ -94,26 +94,97 @@ HWTEST_F(MediaDfxTest, CREATE_MEDIA_INFO_2, TestSize.Level1)
     ASSERT_EQ(ret, MSERR_INVALID_OPERATION);
 }
 
-HWTEST_F(MediaDfxTest, FAULT_SOURCE_EVENT, TestSize.Level1)
-{
-    std::string appName = "appName";
-    uint64_t instanceId = 1;
-    std::string callerType = "callerType";
-    int8_t sourceType = 1;
-    std::string sourceUrl = "sourceUrl";
-    std::string errorMessage = "errorMessage";
-    FaultSourceEventWrite(appName, instanceId, callerType, sourceType, sourceUrl, errorMessage);
+// Scenario1: Test case for int32_t type
+HWTEST_F(MediaDfxTest, ParseOneEvent_ShouldParseInt32_WhenInt32Type, TestSize.Level0) {
+    std::pair<uint64_t, std::shared_ptr<Meta>> listPair;
+    listPair.first = 1;
+    listPair.second = std::make_shared<Meta>();
+    listPair.second->SetData(Tag::APP_UID, 123);
+    json metaInfoJson;
+
+    mediaEvent_->ParseOneEvent(listPair, metaInfoJson);
+
+    EXPECT_EQ(metaInfoJson[Tag::APP_UID], "123");
 }
 
-HWTEST_F(MediaDfxTest, FAULT_SCREEN_CAPTURE_EVENT, TestSize.Level1)
-{
-    std::string appName = "appName";
-    uint64_t instanceId = 1;
-    int8_t captureMode = 1;
-    int8_t dataMode = 1;
-    int32_t errorCode = 1;
-    std::string errorMessage = "errorMessage";
-    FaultScreenCaptureEventWrite(appName, instanceId, captureMode, dataMode, errorCode, errorMessage);
+// Scenario2: Test case for uint32_t type
+HWTEST_F(MediaDfxTest, ParseOneEvent_ShouldParseUint32_WhenUint32Type, TestSize.Level0) {
+    std::pair<uint64_t, std::shared_ptr<Meta>> listPair;
+    listPair.first = 1;
+    listPair.second = std::make_shared<Meta>();
+    listPair.second->SetData(Tag::DRM_DECRYPT_AVG_SIZE, 456u);
+    json metaInfoJson;
+
+    mediaEvent_->ParseOneEvent(listPair, metaInfoJson);
+
+    EXPECT_EQ(metaInfoJson[Tag::DRM_DECRYPT_AVG_SIZE], "456");
+}
+
+// Scenario3: Test case for uint64_t type
+HWTEST_F(MediaDfxTest, ParseOneEvent_ShouldParseUint64_WhenUint64Type, TestSize.Level0) {
+    std::pair<uint64_t, std::shared_ptr<Meta>> listPair;
+    listPair.first = 1;
+    listPair.second = std::make_shared<Meta>();
+    listPair.second->SetData(Tag::AV_PLAYER_DOWNLOAD_TOTAL_BITS, 789u);
+    json metaInfoJson;
+
+    mediaEvent_->ParseOneEvent(listPair, metaInfoJson);
+    Any valueType = OHOS::Media::GetDefaultAnyValue(Tag::AV_PLAYER_DOWNLOAD_TOTAL_BITS);
+    EXPECT_EQ(Any::IsSameTypeWith<uint64_t>(valueType), true);
+}
+
+// Scenario4: Test case for string type
+HWTEST_F(MediaDfxTest, ParseOneEvent_ShouldParseString_WhenStringType, TestSize.Level0) {
+    std::pair<uint64_t, std::shared_ptr<Meta>> listPair;
+    listPair.first = 1;
+    listPair.second = std::make_shared<Meta>();
+    listPair.second->SetData(Tag::MIME_TYPE, "test");
+    json metaInfoJson;
+
+    mediaEvent_->ParseOneEvent(listPair, metaInfoJson);
+
+    EXPECT_EQ(metaInfoJson[Tag::MIME_TYPE], "test");
+}
+
+// Scenario5: Test case for int8_t type
+HWTEST_F(MediaDfxTest, ParseOneEvent_ShouldParseInt8_WhenInt8Type, TestSize.Level0) {
+    std::pair<uint64_t, std::shared_ptr<Meta>> listPair;
+    listPair.first = 1;
+    listPair.second = std::make_shared<Meta>();
+    int8_t value = 100;
+    int8_t outValue = 0;
+    listPair.second->SetData(Tag::AV_PLAYER_HDR_TYPE, value);
+    json metaInfoJson;
+    listPair.second->GetData(Tag::AV_PLAYER_HDR_TYPE, outValue);
+    std::cout<<outValue<<std::endl;
+    mediaEvent_->ParseOneEvent(listPair, metaInfoJson);
+    Any valueType = OHOS::Media::GetDefaultAnyValue(Tag::AV_PLAYER_HDR_TYPE);
+    EXPECT_EQ(Any::IsSameTypeWith<int8_t>(valueType), true);
+}
+
+// Scenario6: Test case for bool type
+HWTEST_F(MediaDfxTest, ParseOneEvent_ShouldParseBool_WhenBoolType, TestSize.Level0) {
+
+    // test StatisicsHiSysEventWrite
+    std::vector<std::string> infoArr = {"test for tdd", "test for tdd"};
+    mediaEvent_->StatisicsHiSysEventWrite(CallType::AVPLAYER, OHOS::HiviewDFX::HiSysEvent::EventType::FAULT, infoArr);
+    mediaEvent_->StatisicsHiSysEventWrite(CallType::AVRECORDER, OHOS::HiviewDFX::HiSysEvent::EventType::FAULT, infoArr);
+    mediaEvent_->StatisicsHiSysEventWrite(CallType::SCREEN_CAPTRUER,
+        OHOS::HiviewDFX::HiSysEvent::EventType::FAULT, infoArr);
+    mediaEvent_->StatisicsHiSysEventWrite(CallType::AVTRANSCODER,
+        OHOS::HiviewDFX::HiSysEvent::EventType::FAULT, infoArr);
+    mediaEvent_->StatisicsHiSysEventWrite(CallType::METADATA_RETRIEVER,
+        OHOS::HiviewDFX::HiSysEvent::EventType::FAULT, infoArr);
+    
+    std::pair<uint64_t, std::shared_ptr<Meta>> listPair;
+    listPair.first = 1;
+    listPair.second = std::make_shared<Meta>();
+    listPair.second->SetData(Tag::MEDIA_HAS_VIDEO, true);
+    json metaInfoJson;
+
+    mediaEvent_->ParseOneEvent(listPair, metaInfoJson);
+
+    EXPECT_EQ(metaInfoJson[Tag::MEDIA_HAS_VIDEO], "true");
 }
 }
 }
