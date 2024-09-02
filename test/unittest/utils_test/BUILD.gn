@@ -77,3 +77,4 @@ ohos_unittest("player_framework_utils_test") {
   subsystem_name = "multimedia"
   part_name = "player_framework"
 }
+
