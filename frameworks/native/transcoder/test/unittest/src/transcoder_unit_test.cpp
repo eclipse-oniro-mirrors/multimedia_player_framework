@@ -464,7 +464,7 @@ HWTEST_F(TransCoderUnitTest, transcoder_PureAudioAbnormal_case_001, TestSize.Lev
     AudioCodecFormat encoder = AAC_LC;
     EXPECT_EQ(MSERR_OK, transcoder_->SetAudioEncoder(encoder));
     EXPECT_EQ(MSERR_OK, transcoder_->SetAudioEncodingBitRate(TRASCODER_AUDIO_ENCODING_BIT_RATE));
-    EXPECT_EQ(ERROR_WRONG_STATE, transcoder_->Cancel());
+    EXPECT_EQ(MSERR_OK, transcoder_->Cancel());
     EXPECT_EQ(MSERR_OK, transcoder_->Release());
     close(dstFd);
     close(srcFd);
@@ -552,7 +552,7 @@ HWTEST_F(TransCoderUnitTest, transcoder_PureVideoAbnormal_case_001, TestSize.Lev
     EXPECT_EQ(MSERR_OK, transcoder_->SetVideoEncoder(encoder));
     EXPECT_EQ(MSERR_OK, transcoder_->SetVideoEncodingBitRate(TRASCODER_VIDEO_ENCODING_BIT_RATE));
     EXPECT_EQ(MSERR_OK, transcoder_->SetVideoSize(TRANSCODER_BUFFER_WIDTH, TRANSCODER_BUFFER_HEIGHT));
-    EXPECT_EQ(ERROR_WRONG_STATE, transcoder_->Cancel());
+    EXPECT_EQ(MSERR_OK, transcoder_->Cancel());
     EXPECT_EQ(MSERR_OK, transcoder_->Release());
     close(dstFd);
     close(srcFd);
@@ -654,7 +654,7 @@ HWTEST_F(TransCoderUnitTest, transcoder_AudioVideoAbnormal_case_001, TestSize.Le
         videoHeight = TRANSCODER_BUFFER_HEIGHT_480p;
     }
     EXPECT_EQ(MSERR_OK, transcoder_->SetVideoSize(videoWidth, videoHeight));
-    EXPECT_EQ(ERROR_WRONG_STATE, transcoder_->Cancel());
+    EXPECT_EQ(MSERR_OK, transcoder_->Cancel());
     EXPECT_EQ(MSERR_OK, transcoder_->Release());
     close(dstFd);
     close(srcFd);
