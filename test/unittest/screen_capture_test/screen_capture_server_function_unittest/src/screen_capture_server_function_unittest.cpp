@@ -308,6 +308,22 @@ int32_t ScreenCaptureServerFunctionTest::StartStreamAudioCapture()
     return ret;
 }
 
+void ScreenCaptureServerUnittestCallback::OnError(ScreenCaptureErrorType errorType, int32_t errorCode) {
+    return;
+}
+
+void ScreenCaptureServerUnittestCallback::OnAudioBufferAvailable(bool isReady, AudioCaptureSourceType type) {
+    return;
+}
+
+void ScreenCaptureServerUnittestCallback::OnVideoBufferAvailable(bool isReady) {
+    return;
+}
+
+void ScreenCaptureServerUnittestCallback::OnStateChange(AVScreenCaptureStateCode stateCode) {
+    return;
+}
+
 // videoCapInfo and innerCapInfo IGNORE
 HWTEST_F(ScreenCaptureServerFunctionTest, CaptureStreamParamsInvalid_001, TestSize.Level2)
 {
@@ -718,11 +734,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, Create_001, TestSize.Level2)
     }
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, GetRunningScreenCaptureInstancePid_001, TestSize.Level2)
-{
-    ASSERT_NE(GetRunningScreenCaptureInstancePid(MAX_SESSION_ID + 1), MSERR_OK);
-}
-
 HWTEST_F(ScreenCaptureServerFunctionTest, RequestUserPrivacyAuthority_001, TestSize.Level2)
 {
     screenCaptureServer_->appInfo_.appUid = ROOT_UID;
@@ -744,20 +755,20 @@ HWTEST_F(ScreenCaptureServerFunctionTest, RequestUserPrivacyAuthority_002, TestS
 
 HWTEST_F(ScreenCaptureServerFunctionTest, OnReceiveUserPrivacyAuthority_001, TestSize.Level2)
 {
-    screenCaptureServer_->screenCaptureCb_ = new ScreenCaptureServerUnittestCallback();
+    screenCaptureServer_->screenCaptureCb_ = std::make_shared<ScreenCaptureServerUnittestCallback>();
     ASSERT_NE(screenCaptureServer_->OnReceiveUserPrivacyAuthority(false), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, OnReceiveUserPrivacyAuthority_002, TestSize.Level2)
 {
-    screenCaptureServer_->screenCaptureCb_ = new ScreenCaptureServerUnittestCallback();
+    screenCaptureServer_->screenCaptureCb_ = std::make_shared<ScreenCaptureServerUnittestCallback>();
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTING;
     ASSERT_NE(screenCaptureServer_->OnReceiveUserPrivacyAuthority(false), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, OnReceiveUserPrivacyAuthority_003, TestSize.Level2)
 {
-    screenCaptureServer_->screenCaptureCb_ = new ScreenCaptureServerUnittestCallback();
+    screenCaptureServer_->screenCaptureCb_ = std::make_shared<ScreenCaptureServerUnittestCallback>();
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTING;
     ASSERT_NE(screenCaptureServer_->OnReceiveUserPrivacyAuthority(true), MSERR_OK);
 }

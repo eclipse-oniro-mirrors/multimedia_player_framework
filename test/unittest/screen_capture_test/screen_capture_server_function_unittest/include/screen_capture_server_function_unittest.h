@@ -54,14 +54,10 @@ protected:
 class ScreenCaptureServerUnittestCallback : public ScreenCaptureCallBack {
 public:
     virtual ~ScreenCaptureServerUnittestCallback() = default;
-    virtual void OnError(ScreenCaptureErrorType errorType, int32_t errorCode) = 0;
-    virtual void OnAudioBufferAvailable(bool isReady, AudioCaptureSourceType type) = 0;
-    virtual void OnVideoBufferAvailable(bool isReady) = 0;
-    virtual void OnStateChange(AVScreenCaptureStateCode stateCode)
-    {
-        (void)stateCode;
-        return;
-    }
+    void OnError(ScreenCaptureErrorType errorType, int32_t errorCode) {};
+    void OnAudioBufferAvailable(bool isReady, AudioCaptureSourceType type) {};
+    void OnVideoBufferAvailable(bool isReady) {};
+    void OnStateChange(AVScreenCaptureStateCode stateCode) {};
 };
 } // Media
 } // OHOS
