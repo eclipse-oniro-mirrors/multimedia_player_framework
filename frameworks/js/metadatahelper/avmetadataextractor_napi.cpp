@@ -108,7 +108,6 @@ napi_value AVMetadataExtractorNapi::Constructor(napi_env env, napi_callback_info
 
     extractor->env_ = env;
     extractor->helper_ = AVMetadataHelperFactory::CreateAVMetadataHelper();
-    extractor->helper_->SetIsNapiInstance(true);
     CHECK_AND_RETURN_RET_LOG(extractor->helper_ != nullptr, result, "failed to CreateMetadataHelper");
 
     extractor->taskQue_ = std::make_unique<TaskQueue>("AVMetadataExtractorNapi");
