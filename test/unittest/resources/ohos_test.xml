@@ -304,6 +304,8 @@
             <option name="shell" value="touch /data/test/media/capture_file_params_invalid_006.mp4"/>
             <option name="shell" value="touch /data/test/media/capture_file_params_invalid_007.mp4"/>
             <option name="shell" value="touch /data/test/media/on_start_screen_capture_unittest_002.mp4"/>
+            <option name="shell" value="touch /data/test/media/repeat_start_audio_capture_003.mp4"/>
+            <option name="shell" value="touch /data/test/media/repeat_start_audio_capture_004.mp4"/>
             <option name="shell" value="restorecon /data/test/media"/>
         </preparer>
     </target>
