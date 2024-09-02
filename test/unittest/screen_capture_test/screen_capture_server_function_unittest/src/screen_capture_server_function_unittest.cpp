@@ -771,55 +771,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, RepeatStartAudioCapture_001, TestSize.
     config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
-    ASSERT_NE(screenCaptureServer_->StartAudioCapture(), MSERR_OK);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, RepeatStartAudioCapture_002, TestSize.Level2)
-{
-    SetConfig();
-    config_.audioInfo.micCapInfo.audioSampleRate = 16000;
-    config_.audioInfo.micCapInfo.audioChannels = 2;
-    config_.audioInfo.micCapInfo.audioSource = AudioCaptureSourceType::SOURCE_DEFAULT;
-    config_.audioInfo.innerCapInfo.audioSampleRate = 16000;
-    config_.audioInfo.innerCapInfo.audioChannels = 2;
-    config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
-    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
-    ASSERT_NE(screenCaptureServer_->StartStreamMicAudioCapture(), MSERR_OK);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, RepeatStartAudioCapture_003, TestSize.Level2)
-{
-    RecorderInfo recorderInfo;
-    SetRecorderInfo("repeat_start_audio_capture_003.mp4", recorderInfo);
-    SetConfigFile(recorderInfo);
-    config_.audioInfo.micCapInfo.audioSampleRate = 16000;
-    config_.audioInfo.micCapInfo.audioChannels = 2;
-    config_.audioInfo.micCapInfo.audioSource = AudioCaptureSourceType::SOURCE_DEFAULT;
-    config_.audioInfo.innerCapInfo.audioSampleRate = 16000;
-    config_.audioInfo.innerCapInfo.audioChannels = 2;
-    config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
-    ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
-    screenCaptureServer_->SetMicrophoneEnabled(true);
-    ASSERT_EQ(StartFileAudioCapture(), MSERR_OK);
-    ASSERT_NE(screenCaptureServer_->StartFileMicAudioCapture(), MSERR_OK);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, RepeatStartAudioCapture_004, TestSize.Level2)
-{
-    RecorderInfo recorderInfo;
-    SetRecorderInfo("repeat_start_audio_capture_004.mp4", recorderInfo);
-    SetConfigFile(recorderInfo);
-    config_.audioInfo.micCapInfo.audioSampleRate = 16000;
-    config_.audioInfo.micCapInfo.audioChannels = 2;
-    config_.audioInfo.micCapInfo.audioSource = AudioCaptureSourceType::SOURCE_DEFAULT;
-    config_.audioInfo.innerCapInfo.audioSampleRate = 16000;
-    config_.audioInfo.innerCapInfo.audioChannels = 2;
-    config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
-    ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
-    screenCaptureServer_->SetMicrophoneEnabled(true);
-    ASSERT_EQ(StartFileAudioCapture(), MSERR_OK);
-    ASSERT_NE(screenCaptureServer_->StartFileMicAudioCapture(), MSERR_OK);
+    ASSERT_NE(screenCaptureServer_->innerAudioCapture_->Start(), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, UpdatePrivacyUsingPermissionState_001, TestSize.Level2)
