@@ -118,9 +118,9 @@ ohos_shared_library("media_service") {
     "sa_media/ipc/media_listener_proxy.cpp",
     "sa_media/ipc/media_parcel.cpp",
     "sa_media/ipc/media_service_stub.cpp",
+    "sa_media/server/media_app_frozen_state_observer.cpp",
     "sa_media/server/media_server.cpp",
     "sa_media/server/media_server_manager.cpp",
-    "sa_media/server/media_app_frozen_state_observer.cpp",
   ]
   if (player_framework_support_player) {
     sources += [
@@ -221,6 +221,7 @@ ohos_shared_library("media_service") {
     "common_event_service:cesfwk_innerkits",
     "core_service:tel_core_service_api",
     "drivers_interface_camera:metadata",
+    "efficiency_manager:suspend_manager_client",
     "graphic_2d:librender_service_base",
     "hdf_core:libhdi",
     "hicollie:libhicollie",
@@ -243,7 +244,6 @@ ohos_shared_library("media_service") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "state_registry:tel_state_registry_api",
-    "efficiency_manager:suspend_manager_client",
   ]
 
   if (player_framework_support_screen_capture) {
