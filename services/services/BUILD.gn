@@ -120,6 +120,7 @@ ohos_shared_library("media_service") {
     "sa_media/ipc/media_service_stub.cpp",
     "sa_media/server/media_server.cpp",
     "sa_media/server/media_server_manager.cpp",
+    "sa_media/server/media_app_frozen_state_observer.cpp",
   ]
   if (player_framework_support_player) {
     sources += [
@@ -242,6 +243,7 @@ ohos_shared_library("media_service") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "state_registry:tel_state_registry_api",
+    "efficiency_manager:suspend_manager_client",
   ]
 
   if (player_framework_support_screen_capture) {

@@ -116,6 +116,11 @@ public:
         (void)bitRate;
         return 0;
     }
+    virtual int32_t StopBufferring(bool flag)
+    {
+        (void)flag;
+        return 0;
+    }
     virtual int32_t SetVideoScaleType(Plugins::VideoScaleType videoScaleType)
     {
         (void)videoScaleType;
