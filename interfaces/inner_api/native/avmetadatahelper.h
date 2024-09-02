@@ -462,7 +462,6 @@ public:
      */
     virtual int32_t SetHelperCallback(const std::shared_ptr<HelperCallback> &callback) = 0;
 
-
     /**
      * Set the media source uri to resolve. Calling this method before the reset
      * of the methods in this class. This method maybe time consuming.
@@ -470,7 +469,7 @@ public:
      * be used to, see {@link Scene}.
      */
     virtual void SetScene(Scene scene) = 0;
-    
+
     /**
      * Get timestamp according to frame index.
      * @param timeUs : Index of the frame.
