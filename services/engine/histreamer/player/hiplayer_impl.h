@@ -243,6 +243,7 @@ private:
     int64_t GetPlayStartTime();
     Status StartSeekContinous();
     int32_t InnerSelectTrack(std::string mime, int32_t trackId, PlayerSwitchMode mode);
+    void HandleEosFlagState(const Event& event);
 
     bool isNetWorkPlay_ = false;
     bool isDump_ = false;
@@ -342,6 +343,7 @@ private:
     std::shared_ptr<DraggingPlayerAgent> draggingPlayerAgent_ {nullptr};
     int64_t lastSeekContinousPos_ {-1};
     std::atomic<bool> needUpdateSubtitle_ {true};
+    OHOS::Media::Mutex handleCompleteMutex_{};
 };
 } // namespace Media
 } // namespace OHOS

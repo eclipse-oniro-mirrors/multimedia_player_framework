@@ -725,6 +725,14 @@ int32_t HiPlayerImpl::Stop()
 {
     MediaTrace trace("HiPlayerImpl::Stop");
     MEDIA_LOG_I_SHORT("Stop entered.");
+
+    // triger drm waiting condition
+    if (isDrmProtected_) {
+        std::unique_lock<std::mutex> drmLock(drmMutex_);
+        stopWaitingDrmConfig_ = true;
+        drmConfigCond_.notify_all();
+    }
+    AutoLock lock(handleCompleteMutex_);
     UpdatePlayStatistics();
     callbackLooper_.StopReportMediaProgress();
     // close demuxer first to avoid concurrent problem
@@ -752,12 +760,6 @@ int32_t HiPlayerImpl::Stop()
         item.second = false;
     }
 
-    // triger drm waiting condition
-    if (isDrmProtected_) {
-        std::unique_lock<std::mutex> drmLock(drmMutex_);
-        stopWaitingDrmConfig_ = true;
-        drmConfigCond_.notify_all();
-    }
     ResetPlayRangeParameter();
     AppendPlayerMediaInfo();
     OnStateChanged(PlayerStateId::STOPPED);
@@ -2001,15 +2003,25 @@ void HiPlayerImpl::NotifyCachedDuration(int32_t param)
     callbackLooper_.OnInfo(INFO_TYPE_BUFFERING_UPDATE, param, format);
 }
 
-void HiPlayerImpl::HandleCompleteEvent(const Event& event)
+void HiPlayerImpl::HandleEosFlagState(const Event& event)
 {
-    MEDIA_LOG_D_SHORT("HandleCompleteEvent");
     for (std::pair<std::string, bool>& item: completeState_) {
         if (item.first == event.srcFilter) {
             MEDIA_LOG_I_SHORT("one eos event received " PUBLIC_LOG_S, item.first.c_str());
             item.second = true;
         }
     }
+}
+
+void HiPlayerImpl::HandleCompleteEvent(const Event& event)
+{
+    MEDIA_LOG_D_SHORT("HandleCompleteEvent");
+    AutoLock lock(handleCompleteMutex_);
+    if (curState_ == PlayerStateId::STOPPED) {
+        MEDIA_LOG_I("The Complete Task don't run, current status is Stopped.");
+        return;
+    }
+    HandleEosFlagState(event);
     for (auto item : completeState_) {
         if (item.second == false) {
             MEDIA_LOG_I_SHORT("expect receive eos event " PUBLIC_LOG_S, item.first.c_str());
