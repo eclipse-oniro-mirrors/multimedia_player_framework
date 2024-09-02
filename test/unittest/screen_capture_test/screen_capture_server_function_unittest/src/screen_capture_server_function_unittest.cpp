@@ -37,6 +37,8 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTUR
 constexpr int32_t FLIE_CREATE_FLAGS = 0777;
 static const std::string BUTTON_NAME_MIC = "mic";
 static const std::string BUTTON_NAME_STOP = "stop";
+static const int32_t MAX_SESSION_PER_UID = 8;
+static const std::string SCREEN_RECORDER_BUNDLE_NAME = "com.ohos.screenrecorder";
 }
 
 namespace OHOS {
@@ -106,7 +108,6 @@ void ScreenCaptureServerFunctionTest::TearDown()
 {
     screenCaptureServer_->Release();
     screenCaptureServer_ = nullptr;
-    tempServer_ = nullptr;
 }
 
 int32_t ScreenCaptureServerFunctionTest::SetConfig()
@@ -726,7 +727,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, RequestUserPrivacyAuthority_001, TestS
 {
     screenCaptureServer_->appInfo_.appUid = ROOT_UID;
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
-    isPrivacyAuthorityEnabled_ = true;
+    screenCaptureServer_->isPrivacyAuthorityEnabled_ = true;
 #endif
     ASSERT_EQ(screenCaptureServer_->RequestUserPrivacyAuthority(), MSERR_OK);
 }
@@ -735,7 +736,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, RequestUserPrivacyAuthority_002, TestS
 {
     screenCaptureServer_->appInfo_.appUid = ROOT_UID;
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
-    isPrivacyAuthorityEnabled_ = true;
+    screenCaptureServer_->isPrivacyAuthorityEnabled_ = true;
     screenCaptureServer_->bundleName_ = SCREEN_RECORDER_BUNDLE_NAME;
 #endif
     ASSERT_EQ(screenCaptureServer_->RequestUserPrivacyAuthority(), MSERR_OK);
@@ -743,20 +744,20 @@ HWTEST_F(ScreenCaptureServerFunctionTest, RequestUserPrivacyAuthority_002, TestS
 
 HWTEST_F(ScreenCaptureServerFunctionTest, OnReceiveUserPrivacyAuthority_001, TestSize.Level2)
 {
-    screenCaptureServer_->screenCaptureCb_ = new ScreenCaptureCallBack();
+    screenCaptureServer_->screenCaptureCb_ = new ScreenCaptureServerUnittestCallback();
     ASSERT_NE(screenCaptureServer_->OnReceiveUserPrivacyAuthority(false), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, OnReceiveUserPrivacyAuthority_002, TestSize.Level2)
 {
-    screenCaptureServer_->screenCaptureCb_ = new ScreenCaptureCallBack();
+    screenCaptureServer_->screenCaptureCb_ = new ScreenCaptureServerUnittestCallback();
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTING;
     ASSERT_NE(screenCaptureServer_->OnReceiveUserPrivacyAuthority(false), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, OnReceiveUserPrivacyAuthority_003, TestSize.Level2)
 {
-    screenCaptureServer_->screenCaptureCb_ = new ScreenCaptureCallBack();
+    screenCaptureServer_->screenCaptureCb_ = new ScreenCaptureServerUnittestCallback();
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTING;
     ASSERT_NE(screenCaptureServer_->OnReceiveUserPrivacyAuthority(true), MSERR_OK);
 }

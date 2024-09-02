@@ -50,6 +50,19 @@ protected:
     AVScreenCaptureConfig config_;
     int32_t outputFd_ = -1;
 };
+
+class ScreenCaptureServerUnittestCallback : public ScreenCaptureCallBack {
+public:
+    virtual ~ScreenCaptureServerUnittestCallback() = default;
+    virtual void OnError(ScreenCaptureErrorType errorType, int32_t errorCode) = 0;
+    virtual void OnAudioBufferAvailable(bool isReady, AudioCaptureSourceType type) = 0;
+    virtual void OnVideoBufferAvailable(bool isReady) = 0;
+    virtual void OnStateChange(AVScreenCaptureStateCode stateCode)
+    {
+        (void)stateCode;
+        return;
+    }
+};
 } // Media
 } // OHOS
 #endif
