@@ -19,12 +19,11 @@
 #include <list>
 #include <utility>
 #include "osal/task/task.h"
-#include "osal/task/condition_variable.h"
-#include "osal/task/mutex.h"
-
 #include "i_player_engine.h"
 #include "meta/any.h"
 #include "osal/utils/steady_clock.h"
+#include "osal/task/condition_variable.h"
+#include "osal/task/mutex.h"
 
 namespace OHOS {
 namespace Media {

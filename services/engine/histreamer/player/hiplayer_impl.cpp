@@ -26,12 +26,12 @@
 #include "osal/task/pipeline_threadpool.h"
 #include "osal/task/task.h"
 #include "osal/utils/dump_buffer.h"
-#include "param_wrapper.h"
 #include "plugin/plugin_time.h"
 #include "media_dfx.h"
 #include "media_utils.h"
 #include "meta_utils.h"
 #include "meta/media_types.h"
+#include "param_wrapper.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_HIPLAYER, "HiPlayer" };
@@ -1019,16 +1019,6 @@ Status HiPlayerImpl::Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeek
     return rtv;
 }
 
-void HiPlayerImpl::UpdateMaxSeekLatency(PlayerSeekMode mode, int64_t seekStartTime)
-{
-    int64_t seekDiffTime = GetCurrentMillisecond() - seekStartTime;
-    if (mode == PlayerSeekMode::SEEK_CLOSEST) {
-        maxAccurateSeekLatency_ = (maxAccurateSeekLatency_ > seekDiffTime) ? maxAccurateSeekLatency_ : seekDiffTime;
-    } else {
-        maxSeekLatency_ = (maxSeekLatency_ > seekDiffTime) ? maxSeekLatency_ : seekDiffTime;
-    }
-}
-
 bool HiPlayerImpl::IsSeekInSitu(int64_t mSeconds)
 {
     int32_t curPosMs = 0;
@@ -1038,6 +1028,16 @@ bool HiPlayerImpl::IsSeekInSitu(int64_t mSeconds)
         return mSeconds == currentMs;
     }
     return false;
+}
+
+void HiPlayerImpl::UpdateMaxSeekLatency(PlayerSeekMode mode, int64_t seekStartTime)
+{
+    int64_t seekDiffTime = GetCurrentMillisecond() - seekStartTime;
+    if (mode == PlayerSeekMode::SEEK_CLOSEST) {
+        maxAccurateSeekLatency_ = (maxAccurateSeekLatency_ > seekDiffTime) ? maxAccurateSeekLatency_ : seekDiffTime;
+    } else {
+        maxSeekLatency_ = (maxSeekLatency_ > seekDiffTime) ? maxSeekLatency_ : seekDiffTime;
+    }
 }
 
 void HiPlayerImpl::NotifySeek(Status rtv, bool flag, int64_t seekPos)
@@ -2466,27 +2466,6 @@ void HiPlayerImpl::NotifyPositionUpdate()
     callbackLooper_.OnInfo(INFO_TYPE_POSITION_UPDATE, currentPosMs, format);
 }
 
-void __attribute__((no_sanitize("cfi"))) HiPlayerImpl::OnStateChanged(PlayerStateId state)
-{
-    {
-        AutoLock lockEos(stateChangeMutex_);
-        if (isDoCompletedSeek_.load()) {
-            isDoCompletedSeek_ = false;
-        } else if ((curState_ == PlayerStateId::EOS) && (state == PlayerStateId::PAUSE)) {
-            MEDIA_LOG_E_SHORT("already at completed and not allow pause");
-            return;
-        }
-        curState_ = state;
-    }
-    MEDIA_LOG_D_SHORT("OnStateChanged " PUBLIC_LOG_D32 " > " PUBLIC_LOG_D32, pipelineStates_.load(),
-            TransStateId2PlayerState(state));
-    UpdateStateNoLock(TransStateId2PlayerState(state));
-    {
-        AutoLock lock(stateMutex_);
-        cond_.NotifyOne();
-    }
-}
-
 void HiPlayerImpl::NotifyUpdateTrackInfo()
 {
     std::vector<Format> trackInfo;
@@ -2588,6 +2567,27 @@ void HiPlayerImpl::HandleSubtitleTrackChangeEvent(const Event& event)
         needUpdateSubtitle_.store(true);
     }
     return;
+}
+
+void __attribute__((no_sanitize("cfi"))) HiPlayerImpl::OnStateChanged(PlayerStateId state)
+{
+    {
+        AutoLock lockEos(stateChangeMutex_);
+        if (isDoCompletedSeek_.load()) {
+            isDoCompletedSeek_ = false;
+        } else if ((curState_ == PlayerStateId::EOS) && (state == PlayerStateId::PAUSE)) {
+            MEDIA_LOG_E_SHORT("already at completed and not allow pause");
+            return;
+        }
+        curState_ = state;
+    }
+    MEDIA_LOG_D_SHORT("OnStateChanged " PUBLIC_LOG_D32 " > " PUBLIC_LOG_D32, pipelineStates_.load(),
+            TransStateId2PlayerState(state));
+    UpdateStateNoLock(TransStateId2PlayerState(state));
+    {
+        AutoLock lock(stateMutex_);
+        cond_.NotifyOne();
+    }
 }
 
 Status HiPlayerImpl::OnCallback(std::shared_ptr<Filter> filter, const FilterCallBackCommand cmd, StreamType outType)
