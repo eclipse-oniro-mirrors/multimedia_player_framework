@@ -19,6 +19,7 @@
 #include "media_service_stub.h"
 #include "system_ability.h"
 #include "nocopyable.h"
+#include "media_app_frozen_state_observer.h"
 
 namespace OHOS {
 namespace Media {
@@ -41,6 +42,9 @@ protected:
 
 private:
     void OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId) override;
+    void RegisterMediaAppFrozenStateObserver();
+private:
+    sptr<MediaAppFrozenStateObserver> mediaAppFrozenStateObserver_;
 };
 } // namespace Media
 } // namespace OHOS
