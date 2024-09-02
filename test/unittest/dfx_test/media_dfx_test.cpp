@@ -34,10 +34,12 @@ class MediaDfxTest : public testing::Test {
 public:
     static void SetUpTestCase(void) {};
     static void TearDownTestCase(void) {};
-    void SetUp(void) {
+    void SetUp(void)
+    {
         mediaEvent_ = std::make_shared<MediaEvent>();
     };
-    void TearDown(void) {
+    void TearDown(void)
+    {
         mediaEvent_ = nullptr;
     };
 
