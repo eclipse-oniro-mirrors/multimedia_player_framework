@@ -469,6 +469,13 @@ int32_t PlayerServiceStub::SelectBitRate(uint32_t bitRate)
     return playerServer_->SelectBitRate(bitRate);
 }
 
+int32_t PlayerServiceStub::StopBufferring(bool flag)
+{
+    MediaTrace trace("PlayerServiceStub::StopBufferring");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->StopBufferring(flag);
+}
+
 #ifdef SUPPORT_VIDEO
 int32_t PlayerServiceStub::SetVideoSurface(sptr<Surface> surface)
 {

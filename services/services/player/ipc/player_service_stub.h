@@ -73,6 +73,7 @@ public:
     int32_t SetLooping(bool loop) override;
     int32_t SetParameter(const Format &param) override;
     int32_t SelectBitRate(uint32_t bitRate) override;
+    int32_t StopBufferring(bool flag) override;
     int32_t SelectTrack(int32_t index, PlayerSwitchMode mode) override;
     int32_t DestroyStub() override;
     int32_t SetPlayerCallback() override;
@@ -89,6 +90,13 @@ public:
     int32_t DoIpcRecovery(bool fromMonitor) override;
     int32_t SetMaxAmplitudeCbStatus(bool status) override;
     int32_t SetDeviceChangeCbStatus(bool status) override;
+
+    int32_t HandleActive();
+    int32_t HandleFrozen();
+    int32_t StartReportStatus();
+    int32_t StopReportStatus();
+    int32_t GetUid();
+    bool IsPlayerRunning();
 protected:
     PlayerServiceStub();
     virtual int32_t Init();
