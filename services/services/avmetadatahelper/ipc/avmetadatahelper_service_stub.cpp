@@ -87,6 +87,8 @@ int32_t AVMetadataHelperServiceStub::Init()
             [this](MessageParcel &data, MessageParcel &reply) { return GetTimeByFrameIndex(data, reply); } },
         { GET_FRAME_INDEX_BY_TIME,
             [this](MessageParcel &data, MessageParcel &reply) { return GetFrameIndexByTime(data, reply); } },
+        { SET_IS_NAPI_INSTANCE,
+            [this](MessageParcel &data, MessageParcel &reply) { return SetIsNapiInstance(data, reply); } },
     };
     return MSERR_OK;
 }
@@ -402,6 +404,14 @@ int32_t AVMetadataHelperServiceStub::GetFrameIndexByTime(MessageParcel &data, Me
     auto res = GetFrameIndexByTime(time, index);
     CHECK_AND_RETURN_RET(res == MSERR_OK, res);
     reply.WriteUint32(index);
+    return MSERR_OK;
+}
+
+int32_t AVMetadataHelperServiceStub::SetIsNapiInstance(MessageParcel &data, MessageParcel &reply)
+{
+    bool isNapiInstance = data.ReadBool();
+    CHECK_AND_RETURN_RET_LOG(avMetadateHelperServer_ != nullptr, MSERR_NO_MEMORY, "avmetadatahelper server is nullptr");
+    avMetadateHelperServer_->SetIsNapiInstance(isNapiInstance);
     return MSERR_OK;
 }
 } // namespace Media

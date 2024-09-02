@@ -108,6 +108,7 @@ napi_value AVMetadataExtractorNapi::Constructor(napi_env env, napi_callback_info
 
     extractor->env_ = env;
     extractor->helper_ = AVMetadataHelperFactory::CreateAVMetadataHelper();
+    extractor->helper_->SetIsNapiInstance(true);
     CHECK_AND_RETURN_RET_LOG(extractor->helper_ != nullptr, result, "failed to CreateMetadataHelper");
 
     extractor->taskQue_ = std::make_unique<TaskQueue>("AVMetadataExtractorNapi");
@@ -607,6 +608,7 @@ void AVMetadataExtractorNapi::SetSource(std::string url)
                 return;
             }
             if (helper_ != nullptr) {
+                helper_->SetIsNapiInstance(true);
                 if (helper_->SetSource(fd, 0, -1) != 0) {
                     state_ = HelperStates::HELPER_STATE_ERROR;
                 } else {
@@ -684,6 +686,7 @@ void AVMetadataExtractorNapi::SetAVFileDescriptorTask(std::shared_ptr<AVMetadata
         }
 
         if (helper_ != nullptr) {
+            helper_->SetIsNapiInstance(true);
             if (helper_->SetSource(fileDescriptor_.fd, fileDescriptor_.offset, fileDescriptor_.length) != 0) {
                 state_ = HelperStates::HELPER_STATE_ERROR;
             } else {
