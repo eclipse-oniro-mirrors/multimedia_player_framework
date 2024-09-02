@@ -313,7 +313,6 @@ const std::string &AVMetadataHelperServer::GetStatusDescription(int32_t status)
 
 void AVMetadataHelperServer::SetIsNapiInstance(bool isNapiInstance)
 {
-    MEDIA_LOGI("winddraw SetIsNapiInstance %{public}d", isNapiInstance);
     isNapiInstance_ = isNapiInstance;
 }
 
