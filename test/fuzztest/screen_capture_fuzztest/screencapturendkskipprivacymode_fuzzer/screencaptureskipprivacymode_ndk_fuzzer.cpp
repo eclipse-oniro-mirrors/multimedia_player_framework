@@ -68,7 +68,7 @@ void SetConfig(OH_AVScreenCaptureConfig &config)
 bool ScreenCaptureSkipPrivacyModeNdkFuzzer::FuzzScreenCaptureSkipPrivacyModeNdk(
     uint8_t *data, size_t size)
 {
-    if (data == nullptr) {
+    if (data == nullptr || size <sizeof(int32_t)) {
         return false;
     }
     screenCapture = OH_AVScreenCapture_Create();
@@ -77,9 +77,7 @@ bool ScreenCaptureSkipPrivacyModeNdkFuzzer::FuzzScreenCaptureSkipPrivacyModeNdk(
     SetConfig(config);
     constexpr uint32_t recorderTime = 3;
     std::vector<int32_t> windowIDsVec;
-    for (int32_t i = 0; i < *reinterpret_cast<int32_t *>(data); i++) {
-        windowIDsVec.push_back(*reinterpret_cast<int32_t *>(data + sizeof(uint64_t)));
-    }
+    windowIDsVec.push_back(*reinterpret_cast<int32_t *>(data));
     OH_AVScreenCaptureCallback callback;
     callback.onError = TestScreenCaptureNdkCallback::OnError;
     callback.onAudioBufferAvailable = TestScreenCaptureNdkCallback::OnAudioBufferAvailable;
@@ -100,7 +98,9 @@ bool FuzzTestScreenCaptureSkipPrivacyModeNdk(uint8_t *data, size_t size)
     if (data == nullptr) {
         return true;
     }
-
+    if (size < sizeof(int32_t)) {
+        return true;
+    }
     ScreenCaptureSkipPrivacyModeNdkFuzzer testScreenCapture;
     return testScreenCapture.FuzzScreenCaptureSkipPrivacyModeNdk(data, size);
 }

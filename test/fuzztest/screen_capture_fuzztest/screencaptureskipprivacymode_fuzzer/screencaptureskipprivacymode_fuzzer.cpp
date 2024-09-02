@@ -68,7 +68,7 @@ void SetConfig(AVScreenCaptureConfig &config)
 
 bool ScreenCaptureSkipPrivacyModeFuzzer::FuzzScreenCaptureSkipPrivacyMode(uint8_t *data, size_t size)
 {
-    if (data == nullptr) {
+    if (data == nullptr || size <sizeof(uint64_t)) {
         return false;
     }
     bool retFlags = TestScreenCapture::CreateScreenCapture();
@@ -81,9 +81,7 @@ bool ScreenCaptureSkipPrivacyModeFuzzer::FuzzScreenCaptureSkipPrivacyMode(uint8_
     std::shared_ptr<TestScreenCaptureCallbackTest> callbackobj
         = std::make_shared<TestScreenCaptureCallbackTest>();
     std::vector<uint64_t> windowIDsVec;
-    for (uint64_t i = 0; i < *reinterpret_cast<uint64_t *>(data); i++) {
-        windowIDsVec.push_back(*reinterpret_cast<uint64_t *>(data + sizeof(uint64_t)));
-    }
+    windowIDsVec.push_back(*reinterpret_cast<uint64_t *>(data));
     TestScreenCapture::SetScreenCaptureCallback(callbackobj);
     TestScreenCapture::Init(config);
     TestScreenCapture::StartScreenCapture();
@@ -100,7 +98,9 @@ bool FuzzTestScreenCaptureSkipPrivacyMode(uint8_t *data, size_t size)
     if (data == nullptr) {
         return true;
     }
-
+    if (size < sizeof(uint64_t)) {
+        return true;
+    }
     ScreenCaptureSkipPrivacyModeFuzzer testScreenCapture;
     return testScreenCapture.FuzzScreenCaptureSkipPrivacyMode(data, size);
 }
