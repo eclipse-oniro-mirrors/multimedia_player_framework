@@ -196,6 +196,8 @@ int32_t HiRecorderImpl::SetAudioSource(AudioSourceType source, int32_t &sourceId
 
     audioCaptureFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::AudioCaptureFilter>
         ("audioCaptureFilter", Pipeline::FilterType::AUDIO_CAPTURE);
+    FALSE_RETURN_V_MSG_E(audioCaptureFilter_ != nullptr,
+        (int32_t)Status::ERROR_NULL_POINTER, "audioCaptureFilter_ is null");
     audioCaptureFilter_->SetCallingInfo(appUid_, appPid_, bundleName_, instanceId_);
     audioCaptureFilter_->SetAudioSource(source);
     Status ret = pipeline_->AddHeadFilters({audioCaptureFilter_});
@@ -217,6 +219,8 @@ int32_t HiRecorderImpl::SetAudioDataSource(const std::shared_ptr<IAudioDataSourc
     auto tempSourceId = SourceIdGenerator::GenerateAudioSourceId(audioCount_);
     audioDataSourceFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::AudioDataSourceFilter>
         ("audioDataSourceFilter", Pipeline::FilterType::AUDIO_DATA_SOURCE);
+    FALSE_RETURN_V_MSG_E(audioDataSourceFilter_ != nullptr,
+        (int32_t)Status::ERROR_NULL_POINTER, "audioDataSourceFilter_ is null");
     audioDataSourceFilter_->SetAudioDataSource(audioSource);
     Status ret = pipeline_->AddHeadFilters({audioDataSourceFilter_});
     FALSE_RETURN_V_MSG_E(ret == Status::OK, (int32_t)ret, "AddFilters audioDataSource to pipeline fail");
@@ -524,6 +528,8 @@ Status HiRecorderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, cons
             case Pipeline::StreamType::STREAMTYPE_RAW_AUDIO:
                 audioEncoderFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::AudioEncoderFilter>
                     ("audioEncoderFilter", Pipeline::FilterType::FILTERTYPE_AENC);
+                FALSE_RETURN_V_MSG_E(audioEncoderFilter_ != nullptr,
+                    (int32_t)Status::ERROR_NULL_POINTER, "audioEncoderFilter_ is null");
                 audioEncoderFilter_->SetCallingInfo(appUid_, appPid_, bundleName_, instanceId_);
                 audioEncoderFilter_->SetCodecFormat(audioEncFormat_);
                 audioEncoderFilter_->Init(recorderEventReceiver_, recorderCallback_);
@@ -532,23 +538,12 @@ Status HiRecorderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, cons
                 pipeline_->LinkFilters(filter, {audioEncoderFilter_}, outType);
                 break;
             case Pipeline::StreamType::STREAMTYPE_ENCODED_AUDIO:
-                if (muxerFilter_ == nullptr) {
-                    muxerFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::MuxerFilter>
-                        ("muxerFilter", Pipeline::FilterType::FILTERTYPE_MUXER);
-                    muxerFilter_->SetCallingInfo(appUid_, appPid_, bundleName_, instanceId_);
-                    muxerFilter_->Init(recorderEventReceiver_, recorderCallback_);
-                    muxerFilter_->SetOutputParameter(appUid_, appPid_, fd_, outputFormatType_);
-                    muxerFilter_->SetParameter(muxerFormat_);
-                    muxerFilter_->SetUserMeta(userMeta_);
-                    close(fd_);
-                    fd_ = -1;
-                }
-                pipeline_->LinkFilters(filter, {muxerFilter_}, outType);
-                break;
             case Pipeline::StreamType::STREAMTYPE_ENCODED_VIDEO:
                 if (muxerFilter_ == nullptr) {
                     muxerFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::MuxerFilter>
                         ("muxerFilter", Pipeline::FilterType::FILTERTYPE_MUXER);
+                    FALSE_RETURN_V_MSG_E(muxerFilter_ != nullptr,
+                        (int32_t)Status::ERROR_NULL_POINTER, "muxerFilter_ is null");
                     muxerFilter_->SetCallingInfo(appUid_, appPid_, bundleName_, instanceId_);
                     muxerFilter_->Init(recorderEventReceiver_, recorderCallback_);
                     muxerFilter_->SetOutputParameter(appUid_, appPid_, fd_, outputFormatType_);
