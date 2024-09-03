@@ -39,6 +39,7 @@ static const std::string BUTTON_NAME_MIC = "mic";
 static const std::string BUTTON_NAME_STOP = "stop";
 static const int32_t MAX_SESSION_PER_UID = 8;
 static const std::string SCREEN_RECORDER_BUNDLE_NAME = "com.ohos.screenrecorder";
+static const auto NOTIFICATION_SUBSCRIBER = NotificationSubscriber();
 }
 
 namespace OHOS {
@@ -515,6 +516,21 @@ HWTEST_F(ScreenCaptureServerFunctionTest, GetMissionIds_001, TestSize.Level2)
     ASSERT_EQ(screenCaptureServer_->GetMissionIds(screenCaptureServer_->missionIds_), MSERR_OK);
 }
 
+HWTEST_F(ScreenCaptureServerFunctionTest, GetMissionIds_002, TestSize.Level2)
+{
+    SetConfig();
+    config_.audioInfo.micCapInfo.audioSampleRate = 16000;
+    config_.audioInfo.micCapInfo.audioChannels = 2;
+    config_.audioInfo.micCapInfo.audioSource = AudioCaptureSourceType::SOURCE_DEFAULT;
+    config_.audioInfo.innerCapInfo.audioSampleRate = 16000;
+    config_.audioInfo.innerCapInfo.audioChannels = 2;
+    config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
+    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
+    screenCaptureServer_->captureConfig_.videoInfo.videoCapInfo.taskIDs.push_back(1);
+    screenCaptureServer_->captureConfig_.videoInfo.videoCapInfo.taskIDs.push_back(2);
+    ASSERT_EQ(screenCaptureServer_->GetMissionIds(screenCaptureServer_->missionIds_), MSERR_OK);
+}
+
 HWTEST_F(ScreenCaptureServerFunctionTest, AudioDataSource_001, TestSize.Level2)
 {
     SetConfig();
@@ -732,7 +748,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, RequestUserPrivacyAuthority_002, TestS
     screenCaptureServer_->appInfo_.appUid = ROOT_UID;
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
     screenCaptureServer_->isPrivacyAuthorityEnabled_ = true;
-    screenCaptureServer_->bundleName_ = SCREEN_RECORDER_BUNDLE_NAME;
+    screenCaptureServer_->appName_ = SCREEN_RECORDER_BUNDLE_NAME;
 #endif
     ASSERT_EQ(screenCaptureServer_->RequestUserPrivacyAuthority(), MSERR_OK);
 }
@@ -779,6 +795,23 @@ HWTEST_F(ScreenCaptureServerFunctionTest, UpdatePrivacyUsingPermissionState_001,
     screenCaptureServer_->appInfo_.appUid = ROOT_UID;
     ASSERT_EQ(screenCaptureServer_->UpdatePrivacyUsingPermissionState(START_VIDEO), true);
     ASSERT_EQ(screenCaptureServer_->UpdatePrivacyUsingPermissionState(STOP_VIDEO), true);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, UpdateMicrophoneEnabled_001, TestSize.Level2)
+{
+    NOTIFICATION_SUBSCRIBER->OnConnected();
+    NOTIFICATION_SUBSCRIBER->OnDisconnected();
+    NOTIFICATION_SUBSCRIBER->OnDied();
+    SetConfig();
+    config_.audioInfo.micCapInfo.audioSampleRate = 16000;
+    config_.audioInfo.micCapInfo.audioChannels = 2;
+    config_.audioInfo.micCapInfo.audioSource = AudioCaptureSourceType::SOURCE_DEFAULT;
+    config_.audioInfo.innerCapInfo.audioSampleRate = 16000;
+    config_.audioInfo.innerCapInfo.audioChannels = 2;
+    config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
+    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
+    ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
+    screenCaptureServer_->UpdateMicrophoneEnabled();
 }
 } // Media
 } // OHOS
