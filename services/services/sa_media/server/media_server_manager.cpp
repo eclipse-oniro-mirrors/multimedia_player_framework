@@ -789,15 +789,15 @@ void MediaServerManager::AsyncExecutor::HandleAsyncExecution()
 
 void MediaServerManager::HandlePlayerActive(const std::vector<int32_t> &pidList, const int32_t uid)
 {
-    MEDIA_LOGI("subenhui player stub HandlePlayerActive begin services(%{public}zu) pidlist(%{public}zu) uid(%{public}d).", playerStubMapTmp_.size(), pidList.size(), uid);
-
+    MEDIA_LOGI("player stub HandlePlayerActive begin services(%{public}zu) pidlist(%{public}zu) uid(%{public}d).",
+        playerStubMapTmp_.size(), pidList.size(), uid);
     for (auto itPlayer = playerStubMapTmp_.begin(); itPlayer != playerStubMapTmp_.end();) {
         sptr<PlayerServiceStub> playerStub = itPlayer->first;
         int32_t playerUid = playerStub->GetUid();
         bool isRunning = playerStub->IsPlayerRunning();
-        MEDIA_LOGI("subenhui player stub HandlePlayerActive uid(%{public}d) isRunning(%{public}d).", uid, isRunning);
+        MEDIA_LOGI("player stub HandlePlayerActive uid(%{public}d) isRunning(%{public}d).", uid, isRunning);
         if (playerUid == uid && isRunning) {
-            MEDIA_LOGI("subenhui player stub HandlePlayerActive uid(%{public}d).", uid);
+            MEDIA_LOGI("player stub HandlePlayerActive uid(%{public}d).", uid);
             playerStub->HandleActive();
         }
         itPlayer++;
@@ -807,19 +807,20 @@ void MediaServerManager::HandlePlayerActive(const std::vector<int32_t> &pidList,
 
 void MediaServerManager::HandlePlayerFrozen(const std::vector<int32_t> &pidList, const int32_t uid)
 {
-    MEDIA_LOGI("subenhui player stub HandlePlayerFrozen begin services(%{public}zu) pidlist(%{public}zu) uid(%{public}d).", playerStubMapTmp_.size(), pidList.size(), uid);
+    MEDIA_LOGI("player stub HandlePlayerFrozen begin services(%{public}zu) pidlist(%{public}zu) uid(%{public}d).",
+        playerStubMapTmp_.size(), pidList.size(), uid);
     for (auto itPlayer = playerStubMapTmp_.begin(); itPlayer != playerStubMapTmp_.end();) {
         sptr<PlayerServiceStub> playerStub = itPlayer->first;
         int32_t playerUid = playerStub->GetUid();
         bool isRunning = playerStub->IsPlayerRunning();
-        MEDIA_LOGI("subenhui player stub HandlePlayerFrozen uid(%{public}d) isRunning(%{public}d).", uid, isRunning);
+        MEDIA_LOGI("player stub HandlePlayerFrozen uid(%{public}d) isRunning(%{public}d).", uid, isRunning);
         if (playerUid == uid && isRunning) {
             MEDIA_LOGI("subenhui player stub HandlePlayerFrozen uid(%{public}d).", uid);
             playerStub->HandleFrozen();
         }
         itPlayer++;
     }
-    MEDIA_LOGI("subenhui player stub HandlePlayerFrozen end services(%{public}zu).", playerStubMapTmp_.size());
+    MEDIA_LOGI("player stub HandlePlayerFrozen end services(%{public}zu).", playerStubMapTmp_.size());
 }
 } // namespace Media
 } // namespace OHOS
