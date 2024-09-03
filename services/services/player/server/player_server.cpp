@@ -1888,7 +1888,7 @@ bool PlayerServer::IsPlayerRunning()
         return false;
     }
     MEDIA_LOGI("subenhui IsPlayerRunning, currentState is %{public}d", static_cast<int32_t>(lastOpStatus_.load()));
-    return lastOpStatus_ == PLAYER_PREPARING || lastOpStatus_ == PLAYER_PREPARED 
+    return lastOpStatus_ == PLAYER_PREPARING || lastOpStatus_ == PLAYER_PREPARED
            || lastOpStatus_ == PLAYER_STARTED || lastOpStatus_ == PLAYER_PAUSED;
 }
 } // namespace Media
