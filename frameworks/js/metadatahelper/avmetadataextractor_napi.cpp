@@ -607,7 +607,6 @@ void AVMetadataExtractorNapi::SetSource(std::string url)
                 return;
             }
             if (helper_ != nullptr) {
-                helper_->SetIsNapiInstance(true);
                 if (helper_->SetSource(fd, 0, -1) != 0) {
                     state_ = HelperStates::HELPER_STATE_ERROR;
                 } else {
