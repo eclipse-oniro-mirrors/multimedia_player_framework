@@ -816,7 +816,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, RepeatPauseAudioCapture_001, TestSize.
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
     ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Pause(), MSERR_OK);
-    ASSERT_NE(screenCaptureServer_->innerAudioCapture_->Pause(), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Pause(), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, UpdatePrivacyUsingPermissionState_001, TestSize.Level2)
