@@ -512,7 +512,6 @@ void AVImageGeneratorNapi::SetSource(std::string url)
                 return;
             }
             if (helper_ != nullptr) {
-                helper_->SetIsNapiInstance(true);
                 if (helper_->SetSource(fd, 0, -1, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP) != MSERR_OK) {
                     OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "failed to SetSourceFd");
                     state_ = HelperStates::HELPER_STATE_ERROR;
