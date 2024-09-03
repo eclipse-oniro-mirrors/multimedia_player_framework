@@ -86,11 +86,11 @@ Status SeekAgent::Seek(int64_t seekPos, bool &timeout)
 
     MEDIA_LOG_I("demuxer_ realSeekTime: %{public}" PRId64 "ns", realSeekTime);
     demuxer_->PrepareBeforeStart();
-    MEDIA_LOG_I("ResumeForSeek end");
     bool isClosetSeekDone = true;
     {
         AutoLock lock(targetArrivedLock_);
         demuxer_->ResumeForSeek();
+        MEDIA_LOG_I("ResumeForSeek end");
         isClosetSeekDone = targetArrivedCond_.WaitFor(lock, WAIT_MAX_MS,
             [this] {return (isAudioTargetArrived_ && isVideoTargetArrived_) || isInterrputNeeded_;});
         MEDIA_LOG_I("Wait end");
