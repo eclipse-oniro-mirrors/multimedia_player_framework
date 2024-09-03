@@ -386,15 +386,21 @@ void AudioHapticPlayerImpl::NotifyInterruptEvent(const AudioStandard::InterruptE
 void AudioHapticPlayerImpl::NotifyEndOfStreamEvent()
 {
     MEDIA_LOGI("NotifyEndOfStreamEvent");
-    std::thread ([this] {
-        this->HandleEndOfStreamEvent();
-    }).detach();
+    std::thread (HandleEndOfStreamEventThreadFunc, shared_from_this()).detach();
     std::shared_ptr<AudioHapticPlayerCallback> cb = audioHapticPlayerCallback_.lock();
     if (cb != nullptr) {
         MEDIA_LOGI("NotifyEndOfStreamEvent for napi object or caller");
         cb->OnEndOfStream();
     } else {
         MEDIA_LOGE("NotifyEndOfStreamEvent: audioHapticPlayerCallback_ is nullptr");
+    }
+}
+
+void AudioHapticPlayerImpl::HandleEndOfStreamEventThreadFunc(std::weak_ptr<AudioHapticPlayerImpl> player)
+{
+    std::shared_ptr<AudioHapticPlayerImpl> playerPtr = player.lock();
+    if (playerPtr != nullptr) {
+        playerPtr->HandleEndOfStreamEvent();
     }
 }
 
@@ -451,7 +457,7 @@ void AudioHapticSoundCallbackImpl::OnError(int32_t errorCode)
         MEDIA_LOGE("The audio haptic player has been released.");
         return;
     }
-    player->NotifyEndOfStreamEvent();
+    player->NotifyErrorEvent(errorCode);
 }
 
 void AudioHapticSoundCallbackImpl::OnInterrupt(const AudioStandard::InterruptEvent &interruptEvent)

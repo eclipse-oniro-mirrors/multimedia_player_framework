@@ -51,6 +51,7 @@ public:
 private:
     // func for sound
     void ReleaseSound();
+    static void HandleEndOfStreamEventThreadFunc(std::weak_ptr<AudioHapticPlayerImpl> player);
     void HandleEndOfStreamEvent();
     // func for vibration
     int32_t StartVibrate();
