@@ -34,12 +34,10 @@ class MediaDfxTest : public testing::Test {
 public:
     static void SetUpTestCase(void) {};
     static void TearDownTestCase(void) {};
-    void SetUp(void)
-    {
+    void SetUp(void) {
         mediaEvent_ = std::make_shared<MediaEvent>();
     };
-    void TearDown(void)
-    {
+    void TearDown(void) {
         mediaEvent_ = nullptr;
     };
 
@@ -51,7 +49,7 @@ HWTEST_F(MediaDfxTest, CREATE_MEDIA_INFO, TestSize.Level1)
     uint64_t instanceId = 1;
     int32_t ret = CreateMediaInfo(CallType::AVPLAYER, TEST_UID_ID_1, instanceId);
     ASSERT_EQ(ret, MSERR_OK);
-    
+
     std::shared_ptr<Meta> meta = std::make_shared<Meta>();
     meta->SetData(Tag::SCREEN_CAPTURE_ERR_MSG, "SCREEN_CAPTURE_ERR_MSG");
     meta->SetData(Tag::SCREEN_CAPTURE_ERR_CODE, ERROR_CODE);
@@ -67,7 +65,7 @@ HWTEST_F(MediaDfxTest, CREATE_MEDIA_INFO_1, TestSize.Level1)
     uint64_t instanceId = 1;
     int32_t ret = CreateMediaInfo(CallType::AVPLAYER, TEST_UID_ID_1, instanceId);
     ASSERT_EQ(ret, MSERR_OK);
-    
+
     std::shared_ptr<Meta> meta = std::make_shared<Meta>();
     meta->SetData(Tag::SCREEN_CAPTURE_ERR_MSG, "SCREEN_CAPTURE_ERR_MSG");
     meta->SetData(Tag::SCREEN_CAPTURE_ERR_CODE, ERROR_CODE);
@@ -88,7 +86,7 @@ HWTEST_F(MediaDfxTest, CREATE_MEDIA_INFO_2, TestSize.Level1)
     uint64_t instanceId = 1;
     int32_t ret = CreateMediaInfo(CallType::AVPLAYER, TEST_UID_ID_1, instanceId);
     ASSERT_EQ(ret, MSERR_OK);
-    
+
     std::shared_ptr<Meta> meta = std::make_shared<Meta>();
     meta->SetData(Tag::SCREEN_CAPTURE_ERR_MSG, "SCREEN_CAPTURE_ERR_MSG");
     meta->SetData(Tag::SCREEN_CAPTURE_ERR_CODE, ERROR_CODE);
@@ -101,7 +99,7 @@ HWTEST_F(MediaDfxTest, CREATE_MEDIA_INFO_2, TestSize.Level1)
     ASSERT_NE(ret, MSERR_OK);
     ASSERT_EQ(ret, MSERR_INVALID_OPERATION);
 }
-
+#ifdef SUPPORT_JSON
 // Scenario1: Test case for int32_t type
 HWTEST_F(MediaDfxTest, ParseOneEvent_ShouldParseInt32_WhenInt32Type, TestSize.Level0) {
     std::pair<uint64_t, std::shared_ptr<Meta>> listPair;
@@ -160,11 +158,9 @@ HWTEST_F(MediaDfxTest, ParseOneEvent_ShouldParseInt8_WhenInt8Type, TestSize.Leve
     listPair.first = 1;
     listPair.second = std::make_shared<Meta>();
     int8_t value = 100;
-    int8_t outValue = 0;
     listPair.second->SetData(Tag::AV_PLAYER_HDR_TYPE, value);
     json metaInfoJson;
-    listPair.second->GetData(Tag::AV_PLAYER_HDR_TYPE, outValue);
-    std::cout<<outValue<<std::endl;
+
     mediaEvent_->ParseOneEvent(listPair, metaInfoJson);
     Any valueType = OHOS::Media::GetDefaultAnyValue(Tag::AV_PLAYER_HDR_TYPE);
     EXPECT_EQ(Any::IsSameTypeWith<int8_t>(valueType), true);
@@ -194,5 +190,6 @@ HWTEST_F(MediaDfxTest, ParseOneEvent_ShouldParseBool_WhenBoolType, TestSize.Leve
 
     EXPECT_EQ(metaInfoJson[Tag::MEDIA_HAS_VIDEO], "true");
 }
+#endif
 }
 }
