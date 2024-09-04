@@ -33,7 +33,7 @@ struct AudioBufferEntry {
     ~AudioBufferEntry()
     {
         if (buffer != nullptr) {
-            free(buffer);
+            delete[] buffer;
             buffer = nullptr;
         }
     }
