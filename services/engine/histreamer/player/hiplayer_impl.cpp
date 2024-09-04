@@ -710,6 +710,7 @@ int32_t HiPlayerImpl::Play()
     MediaTrace trace("HiPlayerImpl::Play");
     MEDIA_LOG_I_SHORT("Play entered.");
     startTime_ = GetCurrentMillisecond();
+    playStartTime_ = GetCurrentMillisecond();
     int32_t ret = MSERR_INVALID_VAL;
     if (!IsValidPlayRange(playRangeStartTime_, playRangeEndTime_)) {
         MEDIA_LOG_E_SHORT("SetPlayRange failed! start: " PUBLIC_LOG_D64 ", end: " PUBLIC_LOG_D64,
@@ -1937,7 +1938,6 @@ void HiPlayerImpl::OnEvent(const Event &event)
         case EventType::EVENT_VIDEO_RENDERING_START: {
             MEDIA_LOG_D_SHORT("video first frame reneder received");
             Format format;
-            playStatisticalInfo_.startLatency = static_cast<int32_t>(AnyCast<uint64_t>(event.param));
             callbackLooper_.OnInfo(INFO_TYPE_MESSAGE, PlayerMessageType::PLAYER_INFO_VIDEO_RENDERING_START, format);
             HandleInitialPlayingStateChange(event.type);
             break;
@@ -2059,6 +2059,9 @@ void HiPlayerImpl::HandleInitialPlayingStateChange(const EventType& eventType)
 
     isInitialPlay_ = false;
     OnStateChanged(PlayerStateId::PLAYING);
+
+    int64_t nowTimeMs = GetCurrentMillisecond();
+    playStatisticalInfo_.startLatency = static_cast<int32_t>(nowTimeMs - playStartTime_);
 }
 
 void HiPlayerImpl::DoSetPlayStrategy(const std::shared_ptr<MediaSource> source)
@@ -2438,7 +2441,6 @@ void HiPlayerImpl::NotifyAudioFirstFrame(const Event& event)
 {
     uint64_t latency = AnyCast<uint64_t>(event.param);
     MEDIA_LOG_I_SHORT("Audio first frame event in latency " PUBLIC_LOG_U64, latency);
-    playStatisticalInfo_.startLatency = static_cast<int32_t>(latency);
     Format format;
     (void)format.PutLongValue(PlayerKeys::AUDIO_FIRST_FRAME, latency);
     callbackLooper_.OnInfo(INFO_TYPE_AUDIO_FIRST_FRAME, 0, format);
