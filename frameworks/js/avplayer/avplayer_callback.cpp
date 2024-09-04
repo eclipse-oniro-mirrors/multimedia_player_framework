@@ -694,6 +694,9 @@ AVPlayerCallback::~AVPlayerCallback()
 
 void AVPlayerCallback::OnError(int32_t errorCode, const std::string &errorMsg)
 {
+    appUid_ = getuid();
+    auto apiTargetVersion = GetApiversion(appUid_, false);
+    MEDIA_LOGI("lf get apiVersion: %{public}d", apiTargetVersion);
     MediaServiceExtErrCodeAPI9 errorCodeApi9 = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errorCode));
     if (errorCodeApi9 == MSERR_EXT_API9_NO_PERMISSION ||
         errorCodeApi9 == MSERR_EXT_API9_NO_MEMORY ||
@@ -702,6 +705,9 @@ void AVPlayerCallback::OnError(int32_t errorCode, const std::string &errorMsg)
         errorCodeApi9 == MSERR_EXT_API9_UNSUPPORT_FORMAT) {
         Format infoBody;
         AVPlayerCallback::OnInfo(INFO_TYPE_STATE_CHANGE, PLAYER_STATE_ERROR, infoBody);
+    }
+    if (errorCodeApi9 >= MSERR_EXT_API12_IO_CANNOT_FIND_HOST && apiTargetVersion <= API_VERSION_12) {
+        errorCodeApi9 = MSERR_EXT_API9_IO;
     }
     AVPlayerCallback::OnErrorCb(errorCodeApi9, errorMsg);
 }
@@ -1353,5 +1359,47 @@ void AVPlayerCallback::Release()
     AVPlayerCallback::OnStateChangeCb(PlayerStates::PLAYER_RELEASED, infoBody);
     listener_ = nullptr;
 }
+
+int32_t AVPlayerCallback::GetApiversion(int32_t uid, bool shouldLog)
+{
+    MEDIA_LOGI("AVPlayerCallback::GetApiversion");
+    if (uid == 1003) { // 1003 is bootanimation uid
+        return 0;
+    }
+    std::string bundleName = "";
+    int32_t userId = 0;
+    AppExecFwk::ApplicationInfo appInfo;
+
+    auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (samgr == nullptr) {
+        MEDIA_LOGE("Get ability manager failed");
+        return 0;
+    }
+
+    sptr<IRemoteObject> object = samgr->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    if (object == nullptr) {
+        MEDIA_LOGE("object is NULL.");
+        return 0;
+    }
+
+    sptr<OHOS::AppExecFwk::IBundleMgr> bms = iface_cast<OHOS::AppExecFwk::IBundleMgr>(object);
+    if (bms == nullptr) {
+        MEDIA_LOGE("bundle manager service is NULL.");
+        return 0;
+    }
+
+    auto result = bms->GetNameForUid(uid, bundleName);
+    MEDIA_LOGI("bundle name is %{public}s ", bundleName.c_str());
+    if (result != ERR_OK) {
+        MEDIA_LOGE("Error GetBundleNameForUid fail");
+        return 0;
+    }
+
+    OHOS::AccountSA::OsAccountManager::GetOsAccountLocalIdFromUid(uid, userId);
+    auto flags = static_cast<int32_t>(AppExecFwk::GetApplicationFlag::GET_APPLICATION_INFO_DEFAULT);
+    auto applicationResult = bms->GetApplicationInfo(bundleName, flags, userId, appInfo);
+    auto apiVersion = appInfo.apiTargetVersion;
+    auto apiVersionResult = apiVersion % ROUND_VERSION_NUMBER;
+    return apiVersionResult;
 } // namespace Media
 } // namespace OHOS
