@@ -587,6 +587,7 @@ void AVImageGeneratorNapi::SetAVFileDescriptorTask(std::shared_ptr<AVMetadataHel
         }
 
         if (helper_ != nullptr) {
+            helper_->SetIsNapiInstance(true);
             if (helper_->SetSource(fileDescriptor_.fd, fileDescriptor_.offset, fileDescriptor_.length,
                 AVMetadataUsage::AV_META_USAGE_PIXEL_MAP) != MSERR_OK) {
                 state_ = HelperStates::HELPER_STATE_ERROR;

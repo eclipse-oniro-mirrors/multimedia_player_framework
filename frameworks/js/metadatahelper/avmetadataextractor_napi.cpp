@@ -684,6 +684,7 @@ void AVMetadataExtractorNapi::SetAVFileDescriptorTask(std::shared_ptr<AVMetadata
         }
 
         if (helper_ != nullptr) {
+            helper_->SetIsNapiInstance(true);
             if (helper_->SetSource(fileDescriptor_.fd, fileDescriptor_.offset, fileDescriptor_.length) != 0) {
                 state_ = HelperStates::HELPER_STATE_ERROR;
             } else {

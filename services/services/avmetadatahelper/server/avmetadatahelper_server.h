@@ -46,6 +46,7 @@ public:
     int32_t SetHelperCallback(const std::shared_ptr<HelperCallback> &callback) override;
     int32_t GetTimeByFrameIndex(uint32_t index, uint64_t &time) override;
     int32_t GetFrameIndexByTime(uint64_t time, uint32_t &index) override;
+    void SetIsNapiInstance(bool isNapiInstance) override;
 
 private:
     const std::string &GetStatusDescription(int32_t status);
@@ -62,6 +63,7 @@ private:
     std::shared_ptr<HelperCallback> helperCb_ = nullptr;
     HelperStates currState_ = HelperStates::HELPER_IDLE;
     std::mutex mutexCb_;
+    bool isNapiInstance_ { false };
 };
 } // namespace Media
 } // namespace OHOS

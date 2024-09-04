@@ -98,7 +98,8 @@ int32_t AVMetadataHelperServer::SetSource(int32_t fd, int64_t offset, int64_t si
                offset, size, usage);
     int loc = 0; // 1 means local，2 means cloud
     int ioResult = ioctl(fd, HMDFS_IOC_GET_LOCATION, &loc);
-    CHECK_AND_RETURN_RET_LOG(ioResult != 0 || loc != IOCTL_CLOUD, MSERR_NO_MEMORY, "cloud file invalid");
+    CHECK_AND_RETURN_RET_LOG(
+        ioResult != 0 || loc != IOCTL_CLOUD || !isNapiInstance_, MSERR_NO_MEMORY, "cloud file invalid");
 
     uriHelper_ = std::make_unique<UriHelper>(fd, offset, size);
     CHECK_AND_RETURN_RET_LOG(!uriHelper_->FormattedUri().empty(),
@@ -309,5 +310,11 @@ const std::string &AVMetadataHelperServer::GetStatusDescription(int32_t status)
 
     return STATUS_TO_STATUS_DESCRIPTION_TABLE.find(status)->second;
 }
+
+void AVMetadataHelperServer::SetIsNapiInstance(bool isNapiInstance)
+{
+    isNapiInstance_ = isNapiInstance;
+}
+
 } // namespace Media
 } // namespace OHOS

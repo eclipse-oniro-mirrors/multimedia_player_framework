@@ -41,6 +41,7 @@ public:
     int32_t SetListenerObject(const sptr<IRemoteObject> &object) override;
     int32_t GetTimeByFrameIndex(uint32_t index, uint64_t &time) override;
     int32_t GetFrameIndexByTime(uint64_t time, uint32_t &index) override;
+    void SetIsNapiInstance(bool isNapiInstance) override;
 private:
     static inline BrokerDelegator<AVMetadataHelperServiceProxy> delegator_;
 };
