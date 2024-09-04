@@ -1401,5 +1401,6 @@ int32_t AVPlayerCallback::GetApiversion(int32_t uid, bool shouldLog)
     auto apiVersion = appInfo.apiTargetVersion;
     auto apiVersionResult = apiVersion % ROUND_VERSION_NUMBER;
     return apiVersionResult;
+}
 } // namespace Media
 } // namespace OHOS
