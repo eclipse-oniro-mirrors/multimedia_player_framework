@@ -732,7 +732,7 @@ int32_t HiPlayerImpl::Play()
     }
     if (pipelineStates_ == PlayerStates::PLAYER_PLAYBACK_COMPLETE) {
         isStreaming_ = true;
-        ret = ((GetPlayRangeStartTime() > PLAY_RANGE_DEFAULT_VALUE) ? 
+        ret = ((GetPlayRangeStartTime() > PLAY_RANGE_DEFAULT_VALUE) ?
             TransStatus(Seek(GetPlayStartTime(), playRangeSeekMode_, false)) :
             TransStatus(Seek(0, PlayerSeekMode::SEEK_PREVIOUS_SYNC, false)));
         callbackLooper_.StartReportMediaProgress(REPORT_PROGRESS_INTERVAL);
