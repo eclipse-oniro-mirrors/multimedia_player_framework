@@ -1403,6 +1403,10 @@ int32_t AVPlayerCallback::GetApiversion(int32_t uid, bool shouldLog)
     OHOS::AccountSA::OsAccountManager::GetOsAccountLocalIdFromUid(uid, userId);
     auto flags = static_cast<int32_t>(AppExecFwk::GetApplicationFlag::GET_APPLICATION_INFO_DEFAULT);
     auto applicationResult = bms->GetApplicationInfo(bundleName, flags, userId, appInfo);
+    if (applicationResult != true) {
+        MEDIA_LOGE("Error GetApplicationInfo fail");
+        return 0;
+    }
     auto apiVersion = appInfo.apiTargetVersion;
     auto apiVersionResult = apiVersion % ROUND_VERSION_NUMBER;
     return apiVersionResult;

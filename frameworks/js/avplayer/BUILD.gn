@@ -75,6 +75,8 @@ ohos_shared_library("media_avplayer") {
     "audio_framework:audio_client",
     "av_codec:av_codec_client",
     "bounds_checking_function:libsec_shared",
+    "bundle_framework:appexecfwk_base",
+    "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "ets_runtime:libark_jsruntime",
     "eventhandler:libeventhandler",
@@ -84,11 +86,9 @@ ohos_shared_library("media_avplayer") {
     "ipc:ipc_core",
     "libuv:uv",
     "napi:ace_napi",
+    "os_account:os_account_innerkits",
     "qos_manager:qos",
     "samgr:samgr_proxy",
-    "bundle_framework:appexecfwk_base",
-    "bundle_framework:appexecfwk_core",
-    "os_account:os_account_innerkits",
   ]
 
   if (player_framework_support_video) {
