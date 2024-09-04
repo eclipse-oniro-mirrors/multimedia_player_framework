@@ -21,19 +21,7 @@
 #include "media_dfx.h"
 #include "ipc_skeleton.h"
 
-#ifdef WIN32
-#include <fcntl.h>
-#else
-#include <sys/types.h>
-#include <unistd.h>
-#endif
-#include <sys/ioctl.h>
-#include <sys/stat.h>
-
 namespace {
-#define HMDFS_IOC_GET_LOCATION _IOR(HMDFS_IOC, 7, __u32)
-static constexpr unsigned int HMDFS_IOC = 0xf2;
-static constexpr uint8_t IOCTL_CLOUD = 2;
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_METADATA, "AVMetadataHelperServer"};
 }
 
@@ -55,8 +43,10 @@ std::shared_ptr<IAVMetadataHelperService> AVMetadataHelperServer::Create()
 }
 
 AVMetadataHelperServer::AVMetadataHelperServer()
+    : taskQue_("AVMetadata")
 {
     appUid_ = IPCSkeleton::GetCallingUid();
+    (void)taskQue_.Start();
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
 
@@ -64,8 +54,13 @@ AVMetadataHelperServer::~AVMetadataHelperServer()
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
     std::lock_guard<std::mutex> lock(mutex_);
-    avMetadataHelperEngine_ = nullptr;
+    auto task = std::make_shared<TaskHandler<void>>([&, this] {
+        avMetadataHelperEngine_ = nullptr;
+    });
+    (void)taskQue_.EnqueueTask(task, true);
+    (void)task->GetResult();
     uriHelper_ = nullptr;
+    taskQue_.Stop();
 }
 
 int32_t AVMetadataHelperServer::SetSource(const std::string &uri, int32_t usage)
@@ -83,11 +78,16 @@ int32_t AVMetadataHelperServer::SetSource(const std::string &uri, int32_t usage)
         MEDIA_LOGE("Failed to read the file");
         return MSERR_INVALID_VAL;
     }
-    int32_t ret = InitEngine(uriHelper_->FormattedUri());
-
-    ret = ret == MSERR_OK ? avMetadataHelperEngine_->SetSource(uriHelper_->FormattedUri(), usage) : ret;
-    currState_ = ret == MSERR_OK ? HELPER_PREPARED : HELPER_STATE_ERROR;
-    return ret;
+    auto res = InitEngine(uriHelper_->FormattedUri());
+    CHECK_AND_RETURN_RET(res == MSERR_OK, res);
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        CHECK_AND_RETURN_RET_LOG(avMetadataHelperEngine_ != nullptr,
+            (int32_t)MSERR_CREATE_AVMETADATAHELPER_ENGINE_FAILED, "Failed to create avmetadatahelper engine.");
+        int32_t ret = avMetadataHelperEngine_->SetSource(uriHelper_->FormattedUri(), usage);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "0x%{public}06" PRIXPTR " SetSource failed", FAKE_POINTER(this));
+        return ret;
+    });
+    return taskQue_.EnqueueTask(task);
 }
 
 int32_t AVMetadataHelperServer::SetSource(int32_t fd, int64_t offset, int64_t size, int32_t usage)
@@ -96,20 +96,23 @@ int32_t AVMetadataHelperServer::SetSource(int32_t fd, int64_t offset, int64_t si
     MediaTrace trace("AVMetadataHelperServer::SetSource_fd");
     MEDIA_LOGD("Current is fd source, offset: %{public}" PRIi64 ", size: %{public}" PRIi64 " usage: %{public}u",
                offset, size, usage);
-    int loc = 0; // 1 means local，2 means cloud
-    int ioResult = ioctl(fd, HMDFS_IOC_GET_LOCATION, &loc);
-    CHECK_AND_RETURN_RET_LOG(
-        ioResult != 0 || loc != IOCTL_CLOUD || !isNapiInstance_, MSERR_NO_MEMORY, "cloud file invalid");
-
     uriHelper_ = std::make_unique<UriHelper>(fd, offset, size);
     CHECK_AND_RETURN_RET_LOG(!uriHelper_->FormattedUri().empty(),
         MSERR_INVALID_VAL, "Failed to construct formatted uri");
     CHECK_AND_RETURN_RET_LOG(uriHelper_->AccessCheck(UriHelper::URI_READ), MSERR_INVALID_VAL, "Failed to read the fd");
-    int32_t ret = InitEngine(uriHelper_->FormattedUri());
+    auto res = InitEngine(uriHelper_->FormattedUri());
+    CHECK_AND_RETURN_RET(res == MSERR_OK, res);
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        CHECK_AND_RETURN_RET_LOG(avMetadataHelperEngine_ != nullptr,
+            (int32_t)MSERR_CREATE_AVMETADATAHELPER_ENGINE_FAILED, "Failed to create avmetadatahelper engine");
 
-    ret = ret == MSERR_OK ? avMetadataHelperEngine_->SetSource(uriHelper_->FormattedUri(), usage) : ret;
-    currState_ = ret == MSERR_OK ? HELPER_PREPARED : HELPER_STATE_ERROR;
-    return ret;
+        int32_t ret = avMetadataHelperEngine_->SetSource(uriHelper_->FormattedUri(), usage);
+        currState_ = ret == MSERR_OK ? HELPER_PREPARED : HELPER_STATE_ERROR;
+        CHECK_AND_RETURN_RET_LOG(
+            ret == MSERR_OK, ret, "0x%{public}06" PRIXPTR " SetSource failed!", FAKE_POINTER(this));
+        return ret;
+    });
+    return taskQue_.EnqueueTask(task);
 }
 
 int32_t AVMetadataHelperServer::SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc)
@@ -119,11 +122,24 @@ int32_t AVMetadataHelperServer::SetSource(const std::shared_ptr<IMediaDataSource
     MEDIA_LOGD("AVMetadataHelperServer SetSource");
     CHECK_AND_RETURN_RET_LOG(dataSrc != nullptr, MSERR_INVALID_VAL, "data source is nullptr");
     dataSrc_ = dataSrc;
-    int32_t ret = InitEngine("media data source");
+    auto res = InitEngine("media data source");
+    CHECK_AND_RETURN_RET(res == MSERR_OK, res);
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        CHECK_AND_RETURN_RET_LOG(avMetadataHelperEngine_ != nullptr,
+            (int32_t)MSERR_CREATE_AVMETADATAHELPER_ENGINE_FAILED, "Failed to create avmetadatahelper engine");
+        int32_t ret = avMetadataHelperEngine_->SetSource(dataSrc_);
+        currState_ = ret == MSERR_OK ? HELPER_PREPARED : HELPER_STATE_ERROR;
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetSource failed!");
 
-    ret = ret == MSERR_OK ? avMetadataHelperEngine_->SetSource(dataSrc_) : ret;
-    currState_ = ret == MSERR_OK ? HELPER_PREPARED : HELPER_STATE_ERROR;
-    return ret;
+        int64_t size = 0;
+        (void)dataSrc_->GetSize(size);
+        if (size == -1) {
+            config_.looping = false;
+            isLiveStream_ = true;
+        }
+        return ret;
+    });
+    return taskQue_.EnqueueTask(task);
 }
 
 int32_t AVMetadataHelperServer::InitEngine(const std::string &uri)
@@ -144,19 +160,38 @@ std::string AVMetadataHelperServer::ResolveMetadata(int32_t key)
     MediaTrace trace("AVMetadataHelperServer::ResolveMetadata_key");
     MEDIA_LOGD("Key is %{public}d", key);
     CHECK_AND_RETURN_RET_LOG(avMetadataHelperEngine_ != nullptr, "", "avMetadataHelperEngine_ is nullptr");
-    auto result = avMetadataHelperEngine_->ResolveMetadata(key);
+    auto task = std::make_shared<TaskHandler<std::string>>([&, this] {
+        std::string err = "";
+        CHECK_AND_RETURN_RET(currState_ == HELPER_PREPARED || currState_ == HELPER_CALL_DONE, err);
+        return avMetadataHelperEngine_->ResolveMetadata(key);
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, "", "EnqueueTask failed");
+
+    auto result = task->GetResult();
     ChangeState(HelperStates::HELPER_CALL_DONE);
-    return result;
+    return result.Value();
 }
 
 std::unordered_map<int32_t, std::string> AVMetadataHelperServer::ResolveMetadata()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     MediaTrace trace("AVMetadataHelperServer::ResolveMetadata");
-    CHECK_AND_RETURN_RET_LOG(avMetadataHelperEngine_ != nullptr, {}, "avMetadataHelperEngine_ is nullptr");
-    auto result = avMetadataHelperEngine_->ResolveMetadata();
+    {
+        std::unordered_map<int32_t, std::string> map;
+        CHECK_AND_RETURN_RET_LOG(avMetadataHelperEngine_ != nullptr, map, "avMetadataHelperEngine_ is nullptr");
+    }
+    auto task = std::make_shared<TaskHandler<std::unordered_map<int32_t, std::string>>>([&, this] {
+        std::unordered_map<int32_t, std::string> err;
+        CHECK_AND_RETURN_RET(currState_ == HELPER_PREPARED || currState_ == HELPER_CALL_DONE, err);
+        return avMetadataHelperEngine_->ResolveMetadata();
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, {}, "EnqueueTask failed");
+
+    auto result = task->GetResult();
     ChangeState(HelperStates::HELPER_CALL_DONE);
-    return result;
+    return result.Value();
 }
 
 std::shared_ptr<Meta> AVMetadataHelperServer::GetAVMetadata()
@@ -164,9 +199,17 @@ std::shared_ptr<Meta> AVMetadataHelperServer::GetAVMetadata()
     std::lock_guard<std::mutex> lock(mutex_);
     MediaTrace trace("AVMetadataHelperServer::ResolveMetadata");
     CHECK_AND_RETURN_RET_LOG(avMetadataHelperEngine_ != nullptr, {}, "avMetadataHelperEngine_ is nullptr");
-    auto result = avMetadataHelperEngine_->GetAVMetadata();
+    auto task = std::make_shared<TaskHandler<std::shared_ptr<Meta>>>([&, this] {
+        std::shared_ptr<Meta> err = nullptr;
+        CHECK_AND_RETURN_RET(currState_ == HELPER_PREPARED || currState_ == HELPER_CALL_DONE, err);
+        return avMetadataHelperEngine_->GetAVMetadata();
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, {}, "EnqueueTask failed");
+
+    auto result = task->GetResult();
     ChangeState(HelperStates::HELPER_CALL_DONE);
-    return result;
+    return result.Value();
 }
 
 std::shared_ptr<AVSharedMemory> AVMetadataHelperServer::FetchArtPicture()
@@ -174,14 +217,22 @@ std::shared_ptr<AVSharedMemory> AVMetadataHelperServer::FetchArtPicture()
     std::lock_guard<std::mutex> lock(mutex_);
     MediaTrace trace("AVMetadataHelperServer::FetchArtPicture");
     CHECK_AND_RETURN_RET_LOG(avMetadataHelperEngine_ != nullptr, {}, "avMetadataHelperEngine_ is nullptr");
-    auto result = avMetadataHelperEngine_->FetchArtPicture();
-    if (result == nullptr) {
+    auto task = std::make_shared<TaskHandler<std::shared_ptr<AVSharedMemory>>>([&, this] {
+        std::shared_ptr<AVSharedMemory> err = nullptr;
+        CHECK_AND_RETURN_RET(currState_ == HELPER_PREPARED || currState_ == HELPER_CALL_DONE, err);
+        return avMetadataHelperEngine_->FetchArtPicture();
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "EnqueueTask failed");
+
+    auto result = task->GetResult();
+    if (result.Value() == nullptr) {
         MEDIA_LOGE("FetchArtPicture result is nullptr.");
         NotifyErrorCallback(HelperErrorType::INVALID_RESULT, "FetchArtPicture result is nullptr.");
         return nullptr;
     }
     ChangeState(HelperStates::HELPER_CALL_DONE);
-    return result;
+    return result.Value();
 }
 
 std::shared_ptr<AVSharedMemory> AVMetadataHelperServer::FetchFrameAtTime(int64_t timeUs, int32_t option,
@@ -190,31 +241,50 @@ std::shared_ptr<AVSharedMemory> AVMetadataHelperServer::FetchFrameAtTime(int64_t
     std::lock_guard<std::mutex> lock(mutex_);
     MediaTrace trace("AVMetadataHelperServer::FetchFrameAtTime");
     CHECK_AND_RETURN_RET_LOG(avMetadataHelperEngine_ != nullptr, nullptr, "avMetadataHelperEngine_ is nullptr");
-    auto result = avMetadataHelperEngine_->FetchFrameAtTime(timeUs, option, param);
+    auto task = std::make_shared<TaskHandler<std::shared_ptr<AVSharedMemory>>>([&, this] {
+        std::shared_ptr<AVSharedMemory> err = nullptr;
+        CHECK_AND_RETURN_RET(currState_ == HELPER_PREPARED || currState_ == HELPER_CALL_DONE, err);
+        return avMetadataHelperEngine_->FetchFrameAtTime(timeUs, option, param);
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "EnqueueTask failed");
+
+    auto result = task->GetResult();
     ChangeState(HelperStates::HELPER_CALL_DONE);
-    return result;
+    return result.Value();
 }
 
 std::shared_ptr<AVBuffer> AVMetadataHelperServer::FetchFrameYuv(int64_t timeUs, int32_t option,
     const OutputConfiguration &param)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
     MediaTrace trace("AVMetadataHelperServer::FetchFrameAtTime");
+    std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(avMetadataHelperEngine_ != nullptr, nullptr, "avMetadataHelperEngine_ is nullptr");
-    auto result = avMetadataHelperEngine_->FetchFrameYuv(timeUs, option, param);
-    ChangeState(HelperStates::HELPER_CALL_DONE);
-    return result;
+    auto task = std::make_shared<TaskHandler<std::shared_ptr<AVBuffer>>>([&, this] {
+        return avMetadataHelperEngine_->FetchFrameYuv(timeUs, option, param);
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "EnqueueTask failed");
+    auto result = task->GetResult();
+    return result.Value(); 
 }
 
 void AVMetadataHelperServer::Release()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
     MediaTrace trace("AVMetadataHelperServer::Release");
-    avMetadataHelperEngine_ = nullptr;
+    CHECK_AND_RETURN_LOG(avMetadataHelperEngine_ != nullptr, "avMetadataHelperEngine_ is nullptr");
+    avMetadataHelperEngine_->SetInterruptState(true);
+    auto task = std::make_shared<TaskHandler<void>>([&, this] {
+        avMetadataHelperEngine_ = nullptr;
+    });
+    (void)taskQue_.EnqueueTask(task, true);
+    (void)task->GetResult();
     uriHelper_ = nullptr;
     ChangeState(HelperStates::HELPER_RELEASED);
-    std::lock_guard<std::mutex> lockCb(mutexCb_);
-    helperCb_ = nullptr;
+    {
+        std::lock_guard<std::mutex> lockCb(mutexCb_);
+        helperCb_ = nullptr;
+    }
 }
 
 int32_t AVMetadataHelperServer::SetHelperCallback(const std::shared_ptr<HelperCallback> &callback)
@@ -227,23 +297,44 @@ int32_t AVMetadataHelperServer::SetHelperCallback(const std::shared_ptr<HelperCa
             GetStatusDescription(currState_).c_str());
         return MSERR_INVALID_OPERATION;
     }
-    std::lock_guard<std::mutex> lockCb(mutexCb_);
-    helperCb_ = callback;
+
+    {
+        std::lock_guard<std::mutex> lockCb(mutexCb_);
+        helperCb_ = callback;
+    }
     return MSERR_OK;
 }
 
 int32_t AVMetadataHelperServer::GetTimeByFrameIndex(uint32_t index, uint64_t &time)
 {
-    std::unique_lock<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(avMetadataHelperEngine_ != nullptr, 0, "avmetadatahelper server is nullptr");
-    return avMetadataHelperEngine_->GetTimeByFrameIndex(index, time);
+    MediaTrace trace("AVMetadataHelperServer::GetTimeByFrameIndex");
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(avMetadataHelperEngine_ != nullptr, MSERR_NO_MEMORY, "avMetadataHelperEngine_ is nullptr");
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this, &timeUs = time] {
+        int32_t err = static_cast<int32_t>(MSERR_INVALID_STATE);
+        CHECK_AND_RETURN_RET(currState_ == HELPER_PREPARED || currState_ == HELPER_CALL_DONE, err);
+        return avMetadataHelperEngine_->GetTimeByFrameIndex(index, timeUs);
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_NO_MEMORY, "EnqueueTask failed");
+    auto result = task->GetResult();
+    return result.Value();
 }
 
 int32_t AVMetadataHelperServer::GetFrameIndexByTime(uint64_t time, uint32_t &index)
 {
-    std::unique_lock<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(avMetadataHelperEngine_ != nullptr, 0, "avmetadatahelper server is nullptr");
-    return avMetadataHelperEngine_->GetFrameIndexByTime(time, index);
+    MediaTrace trace("AVMetadataHelperServer::GetFrameIndexByTime");
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(avMetadataHelperEngine_ != nullptr, MSERR_NO_MEMORY, "avMetadataHelperEngine_ is nullptr");
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this, &index = index] {
+        int32_t err = static_cast<int32_t>(MSERR_INVALID_STATE);
+        CHECK_AND_RETURN_RET(currState_ == HELPER_PREPARED || currState_ == HELPER_CALL_DONE, err);
+        return avMetadataHelperEngine_->GetFrameIndexByTime(time, index);
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+    auto result = task->GetResult();
+    return result.Value();
 }
 
 void AVMetadataHelperServer::ChangeState(const HelperStates state)

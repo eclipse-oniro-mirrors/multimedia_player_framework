@@ -25,28 +25,19 @@
 #include "xpower_event_js.h"
 #endif
 #include "av_common.h"
-#if !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 #include "ipc_skeleton.h"
 #include "tokenid_kit.h"
-#endif
 
 using namespace OHOS::AudioStandard;
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_METADATA, "AVMetadataExtractorNapi"};
+static constexpr uint8_t ARG_TWO = 2;
 }
 
 namespace OHOS {
 namespace Media {
-static const std::map<HelperStates, std::string> stateMap = {
-    {HELPER_IDLE, AVMetadataHelperState::STATE_IDLE},
-    {HELPER_PREPARED, AVMetadataHelperState::STATE_PREPARED},
-    {HELPER_RELEASED, AVMetadataHelperState::STATE_RELEASED},
-    {HELPER_CALL_DONE, AVMetadataHelperState::STATE_CALL_DONE},
-};
-
 thread_local napi_ref AVMetadataExtractorNapi::constructor_ = nullptr;
-const std::string CLASS_NAME = "AVMetadataExtractor";
 
 AVMetadataExtractorNapi::AVMetadataExtractorNapi()
 {
@@ -70,20 +61,19 @@ napi_value AVMetadataExtractorNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("release", JsRelease),
         DECLARE_NAPI_FUNCTION("getTimeByFrameIndex", JSGetTimeByFrameIndex),
         DECLARE_NAPI_FUNCTION("getFrameIndexByTime", JSGetFrameIndexByTime),
-        DECLARE_NAPI_GETTER_SETTER("url", JsGetUrl, JsSetUrl),
         DECLARE_NAPI_GETTER_SETTER("fdSrc", JsGetAVFileDescriptor, JsSetAVFileDescriptor),
         DECLARE_NAPI_GETTER_SETTER("dataSrc", JsGetDataSrc, JsSetDataSrc),
     };
 
     napi_value constructor = nullptr;
-    napi_status status = napi_define_class(env, CLASS_NAME.c_str(), NAPI_AUTO_LENGTH, Constructor, nullptr,
+    napi_status status = napi_define_class(env, LABEL.tag, NAPI_AUTO_LENGTH, Constructor, nullptr,
         sizeof(properties) / sizeof(properties[0]), properties, &constructor);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to define AVMetadataHelper class");
 
     status = napi_create_reference(env, constructor, 1, &constructor_);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to create reference of constructor");
 
-    status = napi_set_named_property(env, exports, CLASS_NAME.c_str(), constructor);
+    status = napi_set_named_property(env, exports, LABEL.tag, constructor);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to set constructor");
 
     status = napi_define_properties(env, exports, sizeof(staticProperty) / sizeof(staticProperty[0]), staticProperty);
@@ -103,46 +93,35 @@ napi_value AVMetadataExtractorNapi::Constructor(napi_env env, napi_callback_info
     napi_status status = napi_get_cb_info(env, info, &argCount, nullptr, &jsThis, nullptr);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "failed to napi_get_cb_info");
 
-    AVMetadataExtractorNapi *extractor = new(std::nothrow) AVMetadataExtractorNapi();
-    CHECK_AND_RETURN_RET_LOG(extractor != nullptr, result, "failed to new AVMetadataExtractorNapi");
+    AVMetadataExtractorNapi *napi = new(std::nothrow) AVMetadataExtractorNapi();
+    CHECK_AND_RETURN_RET_LOG(napi != nullptr, result, "failed to new AVMetadataExtractorNapi");
 
-    extractor->env_ = env;
-    extractor->helper_ = AVMetadataHelperFactory::CreateAVMetadataHelper();
-    CHECK_AND_RETURN_RET_LOG(extractor->helper_ != nullptr, result, "failed to CreateMetadataHelper");
+    napi->env_ = env;
+    napi->helper_ = AVMetadataHelperFactory::CreateAVMetadataHelper();
+    CHECK_AND_RETURN_RET_LOG(napi->helper_ != nullptr, result, "failed to CreateMetadataHelper");
 
-    extractor->taskQue_ = std::make_unique<TaskQueue>("AVMetadataExtractorNapi");
-    (void)extractor->taskQue_->Start();
-
-    extractor->extractorCb_ = std::make_shared<AVMetadataHelperCallback>(env, extractor);
-    (void)extractor->helper_->SetHelperCallback(extractor->extractorCb_);
-
-    status = napi_wrap(env, jsThis, reinterpret_cast<void *>(extractor),
-        AVMetadataExtractorNapi::Destructor, nullptr, nullptr);
+    status = napi_wrap(
+        env, jsThis, reinterpret_cast<void *>(napi), AVMetadataExtractorNapi::Destructor, nullptr, nullptr);
     if (status != napi_ok) {
-        delete extractor;
         MEDIA_LOGE("Failed to wrap native instance");
+        delete napi;
         return result;
     }
 
-    MEDIA_LOGI("Constructor success");
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Constructor", FAKE_POINTER(napi));
     return jsThis;
 }
 
 void AVMetadataExtractorNapi::Destructor(napi_env env, void *nativeObject, void *finalize)
 {
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Destructor", FAKE_POINTER(nativeObject));
     (void)finalize;
-    if (nativeObject != nullptr) {
-        AVMetadataExtractorNapi *extractor = reinterpret_cast<AVMetadataExtractorNapi *>(nativeObject);
-        auto task = extractor->ReleaseTask();
-        if (task != nullptr) {
-            MEDIA_LOGI("Destructor Wait Release Task Start");
-            task->GetResult(); // sync release
-            MEDIA_LOGI("Destructor Wait Release Task End");
-        }
-        extractor->WaitTaskQueStop();
-        delete extractor;
+    CHECK_AND_RETURN(nativeObject != nullptr);
+    AVMetadataExtractorNapi *napi = reinterpret_cast<AVMetadataExtractorNapi *>(nativeObject);
+    if (napi != nullptr && napi->helper_ != nullptr) {
+        napi->helper_->Release();
     }
-    MEDIA_LOGI("Destructor success");
+    delete napi;
 }
 
 napi_value AVMetadataExtractorNapi::JsCreateAVMetadataExtractor(napi_env env, napi_callback_info info)
@@ -176,84 +155,41 @@ napi_value AVMetadataExtractorNapi::JsCreateAVMetadataExtractor(napi_env env, na
     return result;
 }
 
-std::shared_ptr<TaskHandler<TaskRet>> AVMetadataExtractorNapi::ResolveMetadataTask(
-    std::unique_ptr<AVMetadataExtractorAsyncContext> &promiseCtx)
-{
-    auto task = std::make_shared<TaskHandler<TaskRet>>([this, &metadata = promiseCtx->metadata_]() {
-        MEDIA_LOGI("ResolveMetadata Task In");
-        std::unique_lock<std::mutex> lock(taskMutex_);
-        auto state = GetCurrentState();
-        if (state == AVMetadataHelperState::STATE_PREPARED || state == AVMetadataHelperState::STATE_CALL_DONE) {
-            std::shared_ptr<Meta> res = helper_->GetAVMetadata();
-            if (res == nullptr) {
-                MEDIA_LOGE("ResolveMetadata Task AVMetadata is nullptr");
-                return TaskRet(MSERR_EXT_API9_UNSUPPORT_FORMAT,
-                    "failed to ResolveMetadata Task, AVMetadata is nullptr!");
-            }
-            MEDIA_LOGD("ResolveMetadata Task end");
-            metadata = res;
-
-            stopWait_ = false;
-            stateChangeCond_.wait(lock, [this]() { return stopWait_.load(); });
-
-            if (GetCurrentState() == AVMetadataHelperState::STATE_ERROR) {
-                return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-                    "failed to resolve metadata, metadata helper enter error status!");
-            }
-        } else {
-            return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-                "current state is not initialized, unsupport resolve metadata operation");
-        }
-
-        MEDIA_LOGI("ResolveMetadata Task Out");
-        return TaskRet(MSERR_EXT_API9_OK, "Success");
-    });
-
-    (void)taskQue_->EnqueueTask(task);
-    return task;
-}
-
 napi_value AVMetadataExtractorNapi::JsResolveMetadata(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("AVMetadataExtractorNapi::resolveMetadata");
+    MEDIA_LOGI("JsResolveMetadata In");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
-    MEDIA_LOGI("JsResolveMetadata In");
 
-    auto promiseCtx = std::make_unique<AVMetadataExtractorAsyncContext>(env);
     napi_value args[1] = { nullptr };
     size_t argCount = 1;
+    AVMetadataExtractorNapi* napi = AVMetadataExtractorNapi::GetJsInstanceWithParameter(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(napi != nullptr, result, "failed to GetJsInstance");
 
-    AVMetadataExtractorNapi* extractor
-        = AVMetadataExtractorNapi::GetJsInstanceWithParameter(env, info, argCount, args);
-    CHECK_AND_RETURN_RET_LOG(extractor != nullptr, result, "failed to GetJsInstance");
-    promiseCtx->napi = extractor;
-    promiseCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
-    promiseCtx->deferred = CommonNapi::CreatePromise(env, promiseCtx->callbackRef, result);
+    auto asyncCtx = std::make_unique<AVMetadataExtractorAsyncContext>(env);
+    asyncCtx->napi = napi;
+    asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
+    asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
 
-    promiseCtx->task_ = extractor->ResolveMetadataTask(promiseCtx);
-
-    // async work
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "JsResolveMetadata", NAPI_AUTO_LENGTH, &resource);
-    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource,
-        [](napi_env env, void *data) {
-            auto promiseCtx = reinterpret_cast<AVMetadataExtractorAsyncContext *>(data);
-            CHECK_AND_RETURN_LOG(promiseCtx != nullptr, "promiseCtx is nullptr!");
-
-            if (promiseCtx->task_) {
-                auto result = promiseCtx->task_->GetResult();
-                MEDIA_LOGD("JsResolveMetadata get result end");
-                if (result.Value().first != MSERR_EXT_API9_OK) {
-                    MEDIA_LOGE("JsResolveMetadata get result SignError");
-                    promiseCtx->SignError(result.Value().first, result.Value().second);
-                }
-            }
-            MEDIA_LOGI("The js thread of resolving meta data finishes execution and returns");
-        },
-        ResolveMetadataComplete, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
-    NAPI_CALL(env, napi_queue_async_work(env, promiseCtx->work));
-    promiseCtx.release();
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void *data) {
+        auto asyncCtx = reinterpret_cast<AVMetadataExtractorAsyncContext *>(data);
+        CHECK_AND_RETURN_LOG(asyncCtx && !asyncCtx->errFlag, "Invalid asyncCtx.");
+        CHECK_AND_RETURN_LOG(asyncCtx->napi != nullptr, "Invalid napi object.");
+        if (asyncCtx->napi->state_ != HelperState::HELPER_STATE_RUNNABLE) {
+            asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Can't fetchMetadata, please set source.");
+            return;
+        }
+        CHECK_AND_RETURN_LOG(asyncCtx->napi->helper_ != nullptr, "Invalid metadata napi.");
+        asyncCtx->metadata_ = asyncCtx->napi->helper_->GetAVMetadata();
+        CHECK_AND_RETURN(asyncCtx->metadata_ == nullptr);
+        MEDIA_LOGE("ResolveMetadata AVMetadata is nullptr");
+        asyncCtx->SignError(MSERR_EXT_API9_UNSUPPORT_FORMAT, "failed to ResolveMetadata, AVMetadata is nullptr!");
+    }, ResolveMetadataComplete, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+    NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
+    asyncCtx.release();
     MEDIA_LOGI("JsResolveMetadata Out");
     return result;
 }
@@ -261,8 +197,8 @@ napi_value AVMetadataExtractorNapi::JsResolveMetadata(napi_env env, napi_callbac
 void AVMetadataExtractorNapi::ResolveMetadataComplete(napi_env env, napi_status status, void *data)
 {
     MEDIA_LOGI("ResolveMetadataComplete In");
-    auto promiseCtx = static_cast<AVMetadataExtractorAsyncContext*>(data);
-    CHECK_AND_RETURN_LOG(promiseCtx != nullptr, "promiseCtx is nullptr!");
+    auto asyncCtx = static_cast<AVMetadataExtractorAsyncContext*>(data);
+    CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "asyncCtx is nullptr!");
 
     bool ret = true;
     napi_value result = nullptr;
@@ -271,12 +207,12 @@ void AVMetadataExtractorNapi::ResolveMetadataComplete(napi_env env, napi_status 
     napi_create_object(env, &result);
     napi_create_object(env, &location);
     napi_create_object(env, &customInfo);
-    std::shared_ptr<Meta> metadata = promiseCtx->metadata_;
-    if (status != napi_ok || promiseCtx->errCode != napi_ok) {
-        promiseCtx->status = promiseCtx->errCode == napi_ok ? MSERR_INVALID_VAL : promiseCtx->errCode;
+    std::shared_ptr<Meta> metadata = asyncCtx->metadata_;
+    if (status != napi_ok || asyncCtx->errCode != napi_ok) {
+        asyncCtx->status = asyncCtx->errCode == napi_ok ? MSERR_INVALID_VAL : asyncCtx->errCode;
         MEDIA_LOGI("Resolve meta data failed");
         napi_get_undefined(env, &result);
-        CommonCallbackRoutine(env, promiseCtx, result);
+        CommonCallbackRoutine(env, asyncCtx, result);
         return;
     }
     for (const auto &key : g_Metadata) {
@@ -307,105 +243,64 @@ void AVMetadataExtractorNapi::ResolveMetadataComplete(napi_env env, napi_status 
     }
     napi_set_named_property(env, result, "location", location);
     napi_set_named_property(env, result, "customInfo", customInfo);
-    promiseCtx->status = ERR_OK;
+    asyncCtx->status = ERR_OK;
 
-    CommonCallbackRoutine(env, promiseCtx, result);
+    CommonCallbackRoutine(env, asyncCtx, result);
 }
 
-std::shared_ptr<TaskHandler<TaskRet>> AVMetadataExtractorNapi::FetchArtPictureTask(
-    std::unique_ptr<AVMetadataExtractorAsyncContext> &promiseCtx)
+static std::unique_ptr<PixelMap> ConvertMemToPixelMap(std::shared_ptr<AVSharedMemory> sharedMemory)
 {
-    auto task = std::make_shared<TaskHandler<TaskRet>>(
-        [this, &napi = promiseCtx->napi, &picture = promiseCtx->artPicture_]() {
-        MEDIA_LOGI("FetchArtPicture Task In");
-        std::unique_lock<std::mutex> lock(taskMutex_);
-        auto state = GetCurrentState();
-        if (state == AVMetadataHelperState::STATE_PREPARED || state == AVMetadataHelperState::STATE_CALL_DONE) {
-            auto mem = helper_->FetchArtPicture();
-            if (mem == nullptr) {
-                return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-                    "FetchArtPicture result is nullptr.");
-            }
-            MEDIA_LOGD("FetchArtPicture Task end size: %{public}d", mem->GetSize());
-            SourceOptions options;
-            uint32_t errCode;
-            std::unique_ptr<ImageSource> imageSource
-                = ImageSource::CreateImageSource(mem->GetBase(), mem->GetSize(), options, errCode);
-            if (imageSource == nullptr) {
-                return TaskRet(MSERR_EXT_API9_INVALID_PARAMETER,
-                    "Create image source failed.");
-            }
-
-            DecodeOptions decodeParam;
-            std::unique_ptr<PixelMap> pixelMap = imageSource->CreatePixelMap(0, decodeParam, errCode);
-            if (pixelMap == nullptr) {
-                return TaskRet(MSERR_EXT_API9_INVALID_PARAMETER,
-                    "Create pixel map failed.");
-            }
-            picture = std::move(pixelMap);
-
-            stopWait_ = false;
-            stateChangeCond_.wait(lock, [this]() { return stopWait_.load(); });
-
-            if (GetCurrentState() == AVMetadataHelperState::STATE_ERROR) {
-                return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-                    "failed to FetchArtPicture, metadata helper enter error status!");
-            }
-        } else {
-            return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-                "current state is not initialized, unsupport FetchArtPicture operation");
-        }
-
-        MEDIA_LOGI("FetchArtPicture Task Out");
-        return TaskRet(MSERR_EXT_API9_OK, "Success");
-    });
-
-    (void)taskQue_->EnqueueTask(task);
-    return task;
+    CHECK_AND_RETURN_RET_LOG(sharedMemory != nullptr, nullptr, "SharedMem is nullptr");
+    MEDIA_LOGI("FetchArtPicture size: %{public}d", sharedMemory->GetSize());
+    SourceOptions sourceOptions;
+    uint32_t errorCode = 0;
+    std::unique_ptr<ImageSource> imageSource =
+        ImageSource::CreateImageSource(sharedMemory->GetBase(), sharedMemory->GetSize(), sourceOptions, errorCode);
+    CHECK_AND_RETURN_RET_LOG(imageSource != nullptr, nullptr, "Failed to create imageSource.");
+    DecodeOptions decodeOptions;
+    std::unique_ptr<PixelMap> pixelMap = imageSource->CreatePixelMap(decodeOptions, errorCode);
+    CHECK_AND_RETURN_RET_LOG(pixelMap != nullptr, nullptr, "Failed to decode imageSource");
+    return pixelMap;
 }
 
 napi_value AVMetadataExtractorNapi::JsFetchArtPicture(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("AVMetadataExtractorNapi::fetchArtPicture");
+    MEDIA_LOGI("JsFetchArtPicture In");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
-    MEDIA_LOGI("JsFetchArtPicture In");
 
-    auto promiseCtx = std::make_unique<AVMetadataExtractorAsyncContext>(env);
     napi_value args[1] = { nullptr };
     size_t argCount = 1;
-
-    AVMetadataExtractorNapi* extractor
+    AVMetadataExtractorNapi* napi
         = AVMetadataExtractorNapi::GetJsInstanceWithParameter(env, info, argCount, args);
-    CHECK_AND_RETURN_RET_LOG(extractor != nullptr, result, "failed to GetJsInstance");
-    promiseCtx->napi = extractor;
-    promiseCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
-    promiseCtx->deferred = CommonNapi::CreatePromise(env, promiseCtx->callbackRef, result);
+    CHECK_AND_RETURN_RET_LOG(napi != nullptr, result, "failed to GetJsInstance");
 
-    promiseCtx->task_ = extractor->FetchArtPictureTask(promiseCtx);
+    auto asyncCtx = std::make_unique<AVMetadataExtractorAsyncContext>(env);
+    asyncCtx->napi = napi;
+    asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
+    asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
 
     // async work
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "JsFetchArtPicture", NAPI_AUTO_LENGTH, &resource);
-    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource,
-        [](napi_env env, void *data) {
-            MEDIA_LOGI("JsFetchArtPicture task start");
-            auto promiseCtx = reinterpret_cast<AVMetadataExtractorAsyncContext *>(data);
-            CHECK_AND_RETURN_LOG(promiseCtx != nullptr, "promiseCtx is nullptr!");
-
-            if (promiseCtx->task_) {
-                auto result = promiseCtx->task_->GetResult();
-                MEDIA_LOGD("JsFetchArtPicture get result end");
-                if (result.Value().first != MSERR_EXT_API9_OK) {
-                    MEDIA_LOGI("JsFetchArtPicture get result SignError");
-                    promiseCtx->SignError(result.Value().first, result.Value().second);
-                }
-            }
-            MEDIA_LOGI("The js thread of resolving meta data finishes execution and returns");
-        },
-        FetchArtPictureComplete, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
-    NAPI_CALL(env, napi_queue_async_work(env, promiseCtx->work));
-    promiseCtx.release();
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void *data) {
+        MEDIA_LOGI("JsFetchArtPicture task start");
+        auto context = reinterpret_cast<AVMetadataExtractorAsyncContext *>(data);
+        CHECK_AND_RETURN_LOG(context && context->napi, "Invalid context.");
+        if (context->napi->state_ != HelperState::HELPER_STATE_RUNNABLE) {
+            context->SignError(
+                MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Can't fetchAlbumCover, please set fdSrc or dataSrc.");
+            return;
+        }
+        auto sharedMemory = context->napi->helper_->FetchArtPicture();
+        context->artPicture_ = ConvertMemToPixelMap(sharedMemory);
+        if (context->artPicture_ == nullptr) {
+            context->SignError(MSERR_EXT_API9_UNSUPPORT_FORMAT, "Failed to fetchAlbumCover");
+        }
+    }, FetchArtPictureComplete, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+    NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
+    asyncCtx.release();
     MEDIA_LOGI("JsFetchArtPicture Out");
     return result;
 }
@@ -458,7 +353,7 @@ void AVMetadataExtractorNapi::CommonCallbackRoutine(napi_env env, AVMetadataExtr
         }
     } else {
         napi_get_reference_value(env, asyncContext->callbackRef, &callback);
-        napi_call_function(env, nullptr, callback, 2, result, &retVal); // 2
+        napi_call_function(env, nullptr, callback, ARG_TWO, result, &retVal); // 2
         napi_delete_reference(env, asyncContext->callbackRef);
     }
 
@@ -469,359 +364,125 @@ void AVMetadataExtractorNapi::CommonCallbackRoutine(napi_env env, AVMetadataExtr
     asyncContext = nullptr;
 }
 
-void AVMetadataExtractorNapi::WaitTaskQueStop()
-{
-    MEDIA_LOGI("WaitTaskQueStop In");
-    std::unique_lock<std::mutex> lock(taskMutex_);
-    stopTaskQueCond_.wait(lock, [this]() { return taskQueStoped_; });
-    MEDIA_LOGI("WaitTaskQueStop Out");
-}
-
-void AVMetadataExtractorNapi::StopTaskQue()
-{
-    MEDIA_LOGI("StopTaskQue In");
-    taskQue_->Stop();
-    taskQueStoped_ = true;
-    stopTaskQueCond_.notify_all();
-    MEDIA_LOGI("StopTaskQue Out");
-}
-
-std::shared_ptr<TaskHandler<TaskRet>> AVMetadataExtractorNapi::ReleaseTask()
-{
-    std::shared_ptr<TaskHandler<TaskRet>> task = nullptr;
-    if (isReleased_.load()) {
-        MEDIA_LOGE("Instance is released.");
-        return task;
-    }
-
-    task = std::make_shared<TaskHandler<TaskRet>>([this]() {
-        MEDIA_LOGI("Release Task In");
-        PauseListenCurrentResource(); // Pause event listening for the current resource
-        ResetUserParameters();
-
-        if (helper_ != nullptr) {
-            (void)helper_->Release();
-            helper_ = nullptr;
-        }
-
-        if (extractorCb_ != nullptr) {
-            extractorCb_->Release();
-        }
-
-        std::thread([this] () -> void { this->StopTaskQue(); }).detach();
-
-        MEDIA_LOGI("Release Task Out");
-        return TaskRet(MSERR_EXT_API9_OK, "Success");
-    });
-
-    std::unique_lock<std::mutex> lock(taskMutex_);
-    isReleased_.store(true);
-    (void)taskQue_->EnqueueTask(task, true); // CancelNotExecutedTask
-    stopWait_ = true;
-    stateChangeCond_.notify_all();
-    return task;
-}
-
 napi_value AVMetadataExtractorNapi::JsRelease(napi_env env, napi_callback_info info)
 {
-    MediaTrace trace("AVMetadataExtractorNapi::release");
+    MediaTrace trace("AVMetadataExtractorNapi::Release");
+    MEDIA_LOGI("JsRelease In");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
-    MEDIA_LOGI("JsRelease In");
 
-    auto promiseCtx = std::make_unique<AVMetadataExtractorAsyncContext>(env);
     napi_value args[1] = { nullptr };
     size_t argCount = 1;
-    AVMetadataExtractorNapi *extractor
-        = AVMetadataExtractorNapi::GetJsInstanceWithParameter(env, info, argCount, args);
-    CHECK_AND_RETURN_RET_LOG(extractor != nullptr, result, "failed to GetJsInstance");
-    promiseCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
-    promiseCtx->deferred = CommonNapi::CreatePromise(env, promiseCtx->callbackRef, result);
+    AVMetadataExtractorNapi *napi = AVMetadataExtractorNapi::GetJsInstanceWithParameter(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(napi != nullptr, result, "failed to GetJsInstance");
 
-    promiseCtx->task_ = extractor->ReleaseTask();
-    if (extractor->dataSrcCb_ != nullptr) {
-        extractor->dataSrcCb_->ClearCallbackReference();
-        extractor->dataSrcCb_ = nullptr;
-    }
+    auto asyncCtx = std::make_unique<AVMetadataExtractorAsyncContext>(env);
+    asyncCtx->napi = napi;
+    asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
+    asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
 
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "JsRelease", NAPI_AUTO_LENGTH, &resource);
-    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource,
-        [](napi_env env, void *data) {
-            auto promiseCtx = reinterpret_cast<AVMetadataExtractorAsyncContext *>(data);
-            CHECK_AND_RETURN_LOG(promiseCtx != nullptr, "promiseCtx is nullptr!");
-            if (promiseCtx->task_ == nullptr) {
-                promiseCtx->SignError(MSERR_INVALID_VAL, "Async release task is invalid.");
-                return;
-            }
-
-            auto result = promiseCtx->task_->GetResult();
-            MEDIA_LOGD("Release task GetResult end.");
-            if (result.HasResult() && result.Value().first != MSERR_EXT_API9_OK) {
-                promiseCtx->SignError(result.Value().first, result.Value().second);
-                return;
-            }
-            MEDIA_LOGI("Release task completed.");
-        },
-        MediaAsyncContext::CompleteCallback, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
-    napi_queue_async_work_with_qos(env, promiseCtx->work, napi_qos_user_initiated);
-    promiseCtx.release();
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void *data) {
+        auto asyncCtx = reinterpret_cast<AVMetadataExtractorAsyncContext *>(data);
+        CHECK_AND_RETURN_LOG(asyncCtx && !asyncCtx->errFlag, "Invalid asyncCtx.");
+        CHECK_AND_RETURN_LOG(asyncCtx->napi != nullptr, "Invalid napi object.");
+        if (asyncCtx->napi->state_ == HelperState::HELPER_STATE_RELEASED) {
+            asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Has released once, can't release again.");
+            return;
+        }
+        CHECK_AND_RETURN_LOG(asyncCtx->napi->helper_, "PromiseCtx has invalid data.");
+        asyncCtx->napi->helper_->Release();
+    }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+    napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated);
+    asyncCtx.release();
     MEDIA_LOGI("JsRelease Out");
     return result;
 }
 
-void AVMetadataExtractorNapi::SetSource(std::string url)
-{
-    MEDIA_LOGI("input url is %{private}s!", url.c_str());
-    bool isFd = (url.find("fd://") != std::string::npos) ? true : false;
-    bool isNetwork = (url.find("http") != std::string::npos) ? true : false;
-    if (isNetwork) {
-        auto task = std::make_shared<TaskHandler<void>>([this, url]() {
-            std::unique_lock<std::mutex> lock(taskMutex_);
-            auto state = GetCurrentState();
-            if (state != AVMetadataHelperState::STATE_IDLE) {
-                OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is not idle, unsupport set url");
-                return;
-            }
-            if (helper_ != nullptr) {
-                if (helper_->SetSource(url) != 0) {
-                    state_ = HelperStates::HELPER_STATE_ERROR;
-                } else {
-                    state_ = HelperStates::HELPER_PREPARED;
-                }
-            }
-        });
-        (void)taskQue_->EnqueueTask(task);
-    } else if (isFd) {
-        std::string inputFd = url.substr(sizeof("fd://") - 1);
-        int32_t fd = -1;
-        if (!StrToInt(inputFd, fd) || fd < 0) {
-            OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "The input parameter is not a fd://+numeric string");
-            return;
-        }
-        auto task = std::make_shared<TaskHandler<void>>([this, fd]() {
-            std::unique_lock<std::mutex> lock(taskMutex_);
-            auto state = GetCurrentState();
-            if (state != AVMetadataHelperState::STATE_IDLE) {
-                OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is not idle, unsupport set source fd");
-                return;
-            }
-            if (helper_ != nullptr) {
-                if (helper_->SetSource(fd, 0, -1) != 0) {
-                    state_ = HelperStates::HELPER_STATE_ERROR;
-                } else {
-                    state_ = HelperStates::HELPER_PREPARED;
-                }
-            } else {
-                state_ = HelperStates::HELPER_STATE_ERROR;
-            }
-        });
-        (void)taskQue_->EnqueueTask(task);
-    } else {
-        OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "The input parameter is not fd:// or network address");
-    }
-}
-
-napi_value AVMetadataExtractorNapi::JsSetUrl(napi_env env, napi_callback_info info)
-{
-    MediaTrace trace("AVMetadataExtractorNapi::set url");
-    napi_value result = nullptr;
-    napi_get_undefined(env, &result);
-    MEDIA_LOGI("JsSetUrl In");
-
-    napi_value args[1] = { nullptr };
-    size_t argCount = 1; // url: string
-    AVMetadataExtractorNapi *extractor
-        = AVMetadataExtractorNapi::GetJsInstanceWithParameter(env, info, argCount, args);
-    CHECK_AND_RETURN_RET_LOG(extractor != nullptr, result, "failed to GetJsInstanceWithParameter");
-
-    if (extractor->GetCurrentState() != AVMetadataHelperState::STATE_IDLE) {
-        extractor->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is not idle, unsupport set url");
-        return result;
-    }
-
-    napi_valuetype valueType = napi_undefined;
-    if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_string) {
-        extractor->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "url is not string");
-        return result;
-    }
-
-    // get url from js
-    extractor->url_ = CommonNapi::GetStringArgument(env, args[0]);
-    extractor->SetSource(extractor->url_);
-
-    MEDIA_LOGI("JsSetUrl Out");
-    return result;
-}
-
-napi_value AVMetadataExtractorNapi::JsGetUrl(napi_env env, napi_callback_info info)
-{
-    MediaTrace trace("AVMetadataExtractorNapi::get url");
-    napi_value result = nullptr;
-    napi_get_undefined(env, &result);
-    MEDIA_LOGI("JsGetUrl In");
-
-    AVMetadataExtractorNapi *extractor = AVMetadataExtractorNapi::GetJsInstance(env, info);
-    CHECK_AND_RETURN_RET_LOG(extractor != nullptr, result, "failed to GetJsInstance");
-
-    napi_value value = nullptr;
-    (void)napi_create_string_utf8(env, extractor->url_.c_str(), NAPI_AUTO_LENGTH, &value);
-
-    MEDIA_LOGI("JsGetUrl Out Current Url: %{public}s", extractor->url_.c_str());
-    return value;
-}
-
-void AVMetadataExtractorNapi::SetAVFileDescriptorTask(std::shared_ptr<AVMetadataHelper>& avHelper,
-    AVFileDescriptor& fileDescriptor)
-{
-    auto task = std::make_shared<TaskHandler<void>>([this, &helper_ = avHelper, &fileDescriptor_ = fileDescriptor]() {
-        MEDIA_LOGI("SetAVFileDescriptor Task");
-        std::unique_lock<std::mutex> lock(taskMutex_);
-        auto state = GetCurrentState();
-        if (state != AVMetadataHelperState::STATE_IDLE) {
-            OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is not idle, unsupport set source fd");
-            return;
-        }
-
-        if (helper_ != nullptr) {
-            helper_->SetIsNapiInstance(true);
-            if (helper_->SetSource(fileDescriptor_.fd, fileDescriptor_.offset, fileDescriptor_.length) != 0) {
-                state_ = HelperStates::HELPER_STATE_ERROR;
-            } else {
-                state_ = HelperStates::HELPER_PREPARED;
-            }
-        }
-        MEDIA_LOGI("SetSource FileDescriptor end");
-    });
-    (void)taskQue_->EnqueueTask(task);
-}
-
 napi_value AVMetadataExtractorNapi::JsSetAVFileDescriptor(napi_env env, napi_callback_info info)
 {
-    MediaTrace trace("AVMetadataExtractorNapi::set fd");
+    MediaTrace trace("AVMetadataExtractorNapi::SetFileDescriptor");
+    MEDIA_LOGI("JsSetAVFileDescriptor In");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
-    MEDIA_LOGI("JsSetAVFileDescriptor In");
 
     napi_value args[1] = { nullptr };
-    size_t argCount = 1; // url: string
-    AVMetadataExtractorNapi *extractor
-        = AVMetadataExtractorNapi::GetJsInstanceWithParameter(env, info, argCount, args);
-    CHECK_AND_RETURN_RET_LOG(extractor != nullptr, result, "failed to GetJsInstanceWithParameter");
-
-    if (extractor->GetCurrentState() != AVMetadataHelperState::STATE_IDLE) {
-        extractor->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is not idle, unsupport set fd");
-        return result;
-    }
-
-    extractor->StartListenCurrentResource(); // Listen to the events of the current resource
+    size_t argCount = 1;
+    AVMetadataExtractorNapi *napi = AVMetadataExtractorNapi::GetJsInstanceWithParameter(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(napi != nullptr, result, "failed to GetJsInstanceWithParameter");
+    CHECK_AND_RETURN_RET_LOG(
+        napi->state_ == HelperState::HELPER_STATE_IDLE, result, "Has set source once, unsupport set again");
     napi_valuetype valueType = napi_undefined;
-    if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object) {
-        extractor->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "SetAVFileDescriptor is not napi_object");
-        return result;
-    }
+    bool notValidParam = argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object ||
+        !CommonNapi::GetFdArgument(env, args[0], napi->fileDescriptor_);
+    CHECK_AND_RETURN_RET_LOG(!notValidParam, result, "Invalid file descriptor, return");
+    CHECK_AND_RETURN_RET_LOG(napi->helper_, result, "Invalid AVMetadataExtractorNapi.");
 
-    if (!CommonNapi::GetFdArgument(env, args[0], extractor->fileDescriptor_)) {
-        MEDIA_LOGE("get fileDescriptor argument failed!");
-        extractor->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
-            "invalid parameters, please check the input parameters(fileDescriptor)");
-        return result;
-    }
-    extractor->SetAVFileDescriptorTask(extractor->helper_, extractor->fileDescriptor_);
-    MEDIA_LOGI("JsSetAVFileDescriptor Out");
+    auto fileDescriptor = napi->fileDescriptor_;
+    auto res = napi->helper_->SetSource(fileDescriptor.fd, fileDescriptor.offset, fileDescriptor.length);
+    napi->state_ = res == MSERR_OK ? HelperState::HELPER_STATE_RUNNABLE : HelperState::HELPER_ERROR;
     return result;
 }
 
 napi_value AVMetadataExtractorNapi::JsGetAVFileDescriptor(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("AVMetadataExtractorNapi::get fd");
+    MEDIA_LOGI("JsGetAVFileDescriptor In");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
-    MEDIA_LOGI("JsGetAVFileDescriptor In");
 
-    AVMetadataExtractorNapi *extractor = AVMetadataExtractorNapi::GetJsInstance(env, info);
-    CHECK_AND_RETURN_RET_LOG(extractor != nullptr, result, "failed to GetJsInstance");
+    AVMetadataExtractorNapi *napi = AVMetadataExtractorNapi::GetJsInstance(env, info);
+    CHECK_AND_RETURN_RET_LOG(napi != nullptr, result, "failed to GetJsInstance");
 
     napi_value value = nullptr;
     (void)napi_create_object(env, &value);
-    (void)CommonNapi::AddNumberPropInt32(env, value, "fd", extractor->fileDescriptor_.fd);
-    (void)CommonNapi::AddNumberPropInt64(env, value, "offset", extractor->fileDescriptor_.offset);
-    (void)CommonNapi::AddNumberPropInt64(env, value, "length", extractor->fileDescriptor_.length);
+    (void)CommonNapi::AddNumberPropInt32(env, value, "fd", napi->fileDescriptor_.fd);
+    (void)CommonNapi::AddNumberPropInt64(env, value, "offset", napi->fileDescriptor_.offset);
+    (void)CommonNapi::AddNumberPropInt64(env, value, "length", napi->fileDescriptor_.length);
 
     MEDIA_LOGI("JsGetAVFileDescriptor Out");
     return value;
 }
 
-void AVMetadataExtractorNapi::SetDataSrcTask(std::shared_ptr<AVMetadataHelper>& avHelper,
-    std::shared_ptr<HelperDataSourceCallback>& dataSrcCb)
-{
-    auto task = std::make_shared<TaskHandler<void>>([this, &helper_ = avHelper, &dataSrcCb_ = dataSrcCb]() {
-        MEDIA_LOGI("SetDataSrc Task");
-        std::unique_lock<std::mutex> lock(taskMutex_);
-        auto state = GetCurrentState();
-        if (state != AVMetadataHelperState::STATE_IDLE) {
-            OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is not idle, unsupport set data source");
-            return;
-        }
-
-        if (helper_ != nullptr) {
-            MEDIA_LOGI("SetDataSrc Task SetSource");
-            if (helper_->SetSource(dataSrcCb_) != 0) {
-                state_ = HelperStates::HELPER_STATE_ERROR;
-            } else {
-                state_ = HelperStates::HELPER_PREPARED;
-            }
-        }
-        MEDIA_LOGI("SetDataSrc Task SetSource end");
-    });
-    (void)taskQue_->EnqueueTask(task);
-}
-
 napi_value AVMetadataExtractorNapi::JsSetDataSrc(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("AVMetadataExtractorNapi::set dataSrc");
+    MEDIA_LOGI("JsSetDataSrc In");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
-    MEDIA_LOGI("JsSetDataSrc In");
 
     napi_value args[1] = { nullptr };
     size_t argCount = 1;
-    AVMetadataExtractorNapi *jsMetaHelper
+    AVMetadataExtractorNapi *napi
         = AVMetadataExtractorNapi::GetJsInstanceWithParameter(env, info, argCount, args);
-    CHECK_AND_RETURN_RET_LOG(jsMetaHelper != nullptr, result, "failed to GetJsInstanceWithParameter");
+    CHECK_AND_RETURN_RET_LOG(napi != nullptr, result, "failed to GetJsInstanceWithParameter");
 
-    if (jsMetaHelper->GetCurrentState() != AVMetadataHelperState::STATE_IDLE) {
-        jsMetaHelper->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is not idle, unsupport set dataSrc");
-        return result;
-    }
-    jsMetaHelper->StartListenCurrentResource(); // Listen to the events of the current resource
+    CHECK_AND_RETURN_RET_LOG(
+        napi->state_ == HelperState::HELPER_STATE_IDLE, result, "Has set source once, unsupport set again");
 
     napi_valuetype valueType = napi_undefined;
-    if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object) {
-        jsMetaHelper->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "args[0] is not napi_object");
-        return result;
-    }
-    (void)CommonNapi::GetPropertyInt64(env, args[0], "fileSize", jsMetaHelper->dataSrcDescriptor_.fileSize);
-    if (jsMetaHelper->dataSrcDescriptor_.fileSize < -1 || jsMetaHelper->dataSrcDescriptor_.fileSize == 0) {
-        jsMetaHelper->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
-            "invalid parameters, please check parameter fileSize");
-        return result;
-    }
-    MEDIA_LOGI("Recvive filesize is %{public}" PRId64 "", jsMetaHelper->dataSrcDescriptor_.fileSize);
-    jsMetaHelper->dataSrcCb_
-        = std::make_shared<HelperDataSourceCallback>(env, jsMetaHelper->dataSrcDescriptor_.fileSize);
+    bool notValidParam = argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object ||
+        !CommonNapi::GetFdArgument(env, args[0], napi->fileDescriptor_);
+    CHECK_AND_RETURN_RET_LOG(!notValidParam, result, "Invalid file descriptor, return");
+    CHECK_AND_RETURN_RET_LOG(napi->helper_, result, "Invalid AVMetadataExtractorNapi.");
+    (void)CommonNapi::GetPropertyInt64(env, args[0], "fileSize", napi->dataSrcDescriptor_.fileSize);
+    CHECK_AND_RETURN_RET(napi->dataSrcDescriptor_.fileSize >= -1 && napi->dataSrcDescriptor_.fileSize != 0, result);
+    MEDIA_LOGI("Recvive filesize is %{public}" PRId64 "", napi->dataSrcDescriptor_.fileSize);
+    napi->dataSrcCb_
+        = std::make_shared<HelperDataSourceCallback>(env, napi->dataSrcDescriptor_.fileSize);
 
     napi_value callback = nullptr;
     napi_ref ref = nullptr;
     napi_get_named_property(env, args[0], "callback", &callback);
-    jsMetaHelper->dataSrcDescriptor_.callback = callback;
+    napi->dataSrcDescriptor_.callback = callback;
     napi_status status = napi_create_reference(env, callback, 1, &ref);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && ref != nullptr, result, "failed to create reference!");
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, ref);
-    jsMetaHelper->dataSrcCb_->SaveCallbackReference(HELPER_READAT_CALLBACK_NAME, autoRef);
-
-    jsMetaHelper->SetDataSrcTask(jsMetaHelper->helper_, jsMetaHelper->dataSrcCb_);
-
+    const std::string callbackName = "readAt";
+    napi->dataSrcCb_->SaveCallbackReference(callbackName, autoRef);
+    auto res = napi->helper_->SetSource(napi->dataSrcCb_);
+    napi->state_ = res == MSERR_OK ? HelperState::HELPER_STATE_RUNNABLE : HelperState::HELPER_ERROR;
     MEDIA_LOGI("JsSetDataSrc Out");
     return result;
 }
@@ -829,113 +490,27 @@ napi_value AVMetadataExtractorNapi::JsSetDataSrc(napi_env env, napi_callback_inf
 napi_value AVMetadataExtractorNapi::JsGetDataSrc(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("AVMetadataExtractorNapi::get dataSrc");
+    MEDIA_LOGI("JsGetDataSrc In");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
-    MEDIA_LOGI("JsGetDataSrc In");
 
-    AVMetadataExtractorNapi *jsMetaHelper = AVMetadataExtractorNapi::GetJsInstance(env, info);
-    CHECK_AND_RETURN_RET_LOG(jsMetaHelper != nullptr, result, "failed to GetJsInstance");
-    CHECK_AND_RETURN_RET_LOG(jsMetaHelper->dataSrcCb_ != nullptr, result, "failed to check dataSrcCb_");
+    AVMetadataExtractorNapi *napi = AVMetadataExtractorNapi::GetJsInstance(env, info);
+    CHECK_AND_RETURN_RET_LOG(napi != nullptr, result, "failed to GetJsInstance");
+    CHECK_AND_RETURN_RET_LOG(napi->dataSrcCb_ != nullptr, result, "failed to check dataSrcCb_");
 
     napi_value value = nullptr;
     int64_t fileSize;
     napi_value callback = nullptr;
     (void)napi_create_object(env, &value);
-    (void)jsMetaHelper->dataSrcCb_->GetSize(fileSize);
+    (void)napi->dataSrcCb_->GetSize(fileSize);
     (void)CommonNapi::AddNumberPropInt64(env, value, "fileSize", fileSize);
-    int32_t ret = jsMetaHelper->dataSrcCb_->GetCallback(HELPER_READAT_CALLBACK_NAME, &callback);
+    const std::string callbackName = "readAt";
+    int32_t ret = napi->dataSrcCb_->GetCallback(callbackName, &callback);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, result, "failed to GetCallback");
     (void)HelperDataSourceCallback::AddNapiValueProp(env, value, "callback", callback);
 
     MEDIA_LOGI("JsGetDataSrc Out");
     return value;
-}
-
-std::string AVMetadataExtractorNapi::GetCurrentState()
-{
-    if (isReleased_.load()) {
-        return AVMetadataHelperState::STATE_RELEASED;
-    } else {
-        std::string curState = AVMetadataHelperState::STATE_ERROR;
-
-        if (stateMap.find(state_) != stateMap.end()) {
-            curState = stateMap.at(state_);
-        }
-        return curState;
-    }
-}
-
-void AVMetadataExtractorNapi::SaveCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref)
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    refMap_[callbackName] = ref;
-    if (extractorCb_ != nullptr) {
-        extractorCb_->SaveCallbackReference(callbackName, ref);
-    }
-}
-
-void AVMetadataExtractorNapi::ClearCallbackReference()
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (extractorCb_ != nullptr) {
-        extractorCb_->ClearCallbackReference();
-    }
-    refMap_.clear();
-}
-
-void AVMetadataExtractorNapi::ClearCallbackReference(const std::string &callbackName)
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (extractorCb_ != nullptr) {
-        extractorCb_->ClearCallbackReference(callbackName);
-    }
-    refMap_.erase(callbackName);
-}
-
-void AVMetadataExtractorNapi::NotifyState(HelperStates state)
-{
-    std::lock_guard<std::mutex> lock(taskMutex_);
-    state_ = state;
-    MEDIA_LOGI("notify completed, current state: %{public}s", GetCurrentState().c_str());
-    stopWait_ = true;
-    stateChangeCond_.notify_all();
-}
-
-void AVMetadataExtractorNapi::ResetUserParameters()
-{
-    url_.clear();
-    fileDescriptor_.fd = 0;
-    fileDescriptor_.offset = 0;
-    fileDescriptor_.length = -1;
-    fileDescriptor_.length = -1;
-}
-
-void AVMetadataExtractorNapi::StartListenCurrentResource()
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (extractorCb_ != nullptr) {
-        extractorCb_->Start();
-    }
-}
-
-void AVMetadataExtractorNapi::PauseListenCurrentResource()
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (extractorCb_ != nullptr) {
-        extractorCb_->Pause();
-    }
-}
-
-/**
- * DO NOT hold taskMutex_ before call this function
- * AVMetadataExtractorNapi::OnErrorCb() hold AVMetadataHelperCallback::mutex_ and wait taskMutex_, may cause dead lock
-*/
-void AVMetadataExtractorNapi::OnErrorCb(MediaServiceExtErrCodeAPI9 errorCode, const std::string &errorMsg)
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (extractorCb_ != nullptr) {
-        extractorCb_->OnErrorCb(errorCode, errorMsg);
-    }
 }
 
 AVMetadataExtractorNapi* AVMetadataExtractorNapi::GetJsInstance(napi_env env, napi_callback_info info)
@@ -945,11 +520,11 @@ AVMetadataExtractorNapi* AVMetadataExtractorNapi::GetJsInstance(napi_env env, na
     napi_status status = napi_get_cb_info(env, info, &argCount, nullptr, &jsThis, nullptr);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsThis != nullptr, nullptr, "failed to napi_get_cb_info");
 
-    AVMetadataExtractorNapi *extractor = nullptr;
-    status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&extractor));
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok && extractor != nullptr, nullptr, "failed to napi_unwrap");
+    AVMetadataExtractorNapi *napi = nullptr;
+    status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&napi));
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && napi != nullptr, nullptr, "failed to napi_unwrap");
 
-    return extractor;
+    return napi;
 }
 
 AVMetadataExtractorNapi* AVMetadataExtractorNapi::GetJsInstanceWithParameter(napi_env env, napi_callback_info info,
@@ -959,81 +534,59 @@ AVMetadataExtractorNapi* AVMetadataExtractorNapi::GetJsInstanceWithParameter(nap
     napi_status status = napi_get_cb_info(env, info, &argc, argv, &jsThis, nullptr);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsThis != nullptr, nullptr, "failed to napi_get_cb_info");
 
-    AVMetadataExtractorNapi *extractor = nullptr;
-    status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&extractor));
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok && extractor != nullptr, nullptr, "failed to napi_unwrap");
+    AVMetadataExtractorNapi *napi = nullptr;
+    status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&napi));
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && napi != nullptr, nullptr, "failed to napi_unwrap");
 
-    return extractor;
+    return napi;
 }
 
 napi_value AVMetadataExtractorNapi::JSGetTimeByFrameIndex(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("AVMetadataExtractorNapi::JSGetTimeByFrameIndex");
+    MEDIA_LOGI("frame to time");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
-    MEDIA_LOGI("frame to time");
 
-    napi_value args[2] = { nullptr };
     size_t argCount = 2;
-    AVMetadataExtractorNapi* extractor
+    napi_value args[ARG_TWO] = { nullptr };
+    AVMetadataExtractorNapi* napi
         = AVMetadataExtractorNapi::GetJsInstanceWithParameter(env, info, argCount, args);
-    CHECK_AND_RETURN_RET_LOG(extractor != nullptr, result, "failed to GetJsInstance");
+    CHECK_AND_RETURN_RET_LOG(napi != nullptr, result, "failed to GetJsInstance");
 
-    auto promiseCtx = std::make_unique<AVMetadataExtractorAsyncContext>(env);
+    auto asyncCtx = std::make_unique<AVMetadataExtractorAsyncContext>(env);
+    asyncCtx->napi = napi;
+    asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[1]);
+    asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
 
     if (CommonNapi::CheckValueType(env, args[0], napi_number)) {
-        auto res = napi_get_value_uint32(env, args[0], &promiseCtx->index_);
-        if (res != napi_ok || static_cast<int32_t>(promiseCtx->index_) < 0) {
-            promiseCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "frame index is not valid");
+        auto res = napi_get_value_uint32(env, args[0], &asyncCtx->index_);
+        if (res != napi_ok || static_cast<int32_t>(asyncCtx->index_) < 0) {
+            asyncCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "frame index is not valid");
         }
     }
-
-    promiseCtx->napi = extractor;
-    promiseCtx->callbackRef = CommonNapi::CreateReference(env, args[1]);
-    promiseCtx->deferred = CommonNapi::CreatePromise(env, promiseCtx->callbackRef, result);
-    promiseCtx->task_ = extractor->GetTimeByFrameIndexTask(promiseCtx);
 
     // async work
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "JSGetTimeByFrameIndex", NAPI_AUTO_LENGTH, &resource);
-    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource,
-        [](napi_env env, void *data) {
-            auto promiseCtx = reinterpret_cast<AVMetadataExtractorAsyncContext *>(data);
-            CHECK_AND_RETURN_LOG(promiseCtx != nullptr, "promiseCtx is nullptr!");
-            if (promiseCtx->task_) {
-                auto result = promiseCtx->task_->GetResult();
-                if (result.Value().first != MSERR_EXT_API9_OK) {
-                    MEDIA_LOGE("JSGetTimeByFrameIndex get result SignError");
-                    promiseCtx->SignError(result.Value().first, result.Value().second);
-                }
-            }
-        },
-        GetTimeByFrameIndexComplete, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
-    NAPI_CALL(env, napi_queue_async_work(env, promiseCtx->work));
-    promiseCtx.release();
-    return result;
-}
-
-std::shared_ptr<TaskHandler<TaskRet>> AVMetadataExtractorNapi::GetTimeByFrameIndexTask(
-    std::unique_ptr<AVMetadataExtractorAsyncContext> &promiseCtx)
-{
-    auto task = std::make_shared<TaskHandler<TaskRet>>([this, &index = promiseCtx->index_,
-        &timeStamp = promiseCtx->timeStamp_, &errCode = promiseCtx->errCode, &errMsg = promiseCtx->errMessage]() {
-        std::unique_lock<std::mutex> lock(taskMutex_);
-        auto state = GetCurrentState();
-        if (state == AVMetadataHelperState::STATE_PREPARED || state == AVMetadataHelperState::STATE_CALL_DONE) {
-            CHECK_AND_RETURN_RET(errCode == napi_ok, TaskRet(errCode, errMsg));
-            auto res = helper_->GetTimeByFrameIndex(index, timeStamp);
-            CHECK_AND_RETURN_RET(res == MSERR_OK, TaskRet(MSERR_EXT_API9_UNSUPPORT_FORMAT,
-                "failed to GetTimeByFrameIndex"));
-        } else {
-            return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-                "current state is not initialized, unsupport get time by frame index operation");
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void *data) {
+        auto asyncCtx = reinterpret_cast<AVMetadataExtractorAsyncContext *>(data);
+        CHECK_AND_RETURN_LOG(asyncCtx && !asyncCtx->errFlag, "Invalid asyncCtx.");
+        CHECK_AND_RETURN_LOG(asyncCtx->napi != nullptr, "Invalid napi object.");
+        if (asyncCtx->napi->state_ != HelperState::HELPER_STATE_RUNNABLE) {
+            asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Has released once, can't release again.");
+            return;
         }
-        return TaskRet(MSERR_EXT_API9_OK, "Success");
-    });
-    (void)taskQue_->EnqueueTask(task);
-    return task;
+        auto helper = asyncCtx->napi->helper_;
+        CHECK_AND_RETURN_LOG(helper, "PromiseCtx has invalid data.");
+        if (helper->GetTimeByFrameIndex(asyncCtx->index_, asyncCtx->timeStamp_) != MSERR_EXT_API9_OK) {
+            MEDIA_LOGE("JSGetTimeByFrameIndex get result SignError");
+            asyncCtx->SignError(MSERR_EXT_API9_UNSUPPORT_FORMAT, "Demuxer getTimeByFrameIndex failed.");
+        }
+    }, GetTimeByFrameIndexComplete, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+    NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
+    asyncCtx.release();
+    return result;
 }
 
 void AVMetadataExtractorNapi::GetTimeByFrameIndexComplete(napi_env env, napi_status status, void *data)
@@ -1054,72 +607,51 @@ void AVMetadataExtractorNapi::GetTimeByFrameIndexComplete(napi_env env, napi_sta
 napi_value AVMetadataExtractorNapi::JSGetFrameIndexByTime(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("AVMetadataExtractorNapi::JSGetFrameIndexByTime");
+    MEDIA_LOGI("time to frame");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
-    MEDIA_LOGI("time to frame");
 
-    napi_value args[2] = { nullptr };
     size_t argCount = 2;
-    AVMetadataExtractorNapi* extractor
+    napi_value args[ARG_TWO] = { nullptr };
+    AVMetadataExtractorNapi* napi
         = AVMetadataExtractorNapi::GetJsInstanceWithParameter(env, info, argCount, args);
-    CHECK_AND_RETURN_RET_LOG(extractor != nullptr, result, "failed to GetJsInstance");
+    CHECK_AND_RETURN_RET_LOG(napi != nullptr, result, "failed to GetJsInstance");
 
-    auto promiseCtx = std::make_unique<AVMetadataExtractorAsyncContext>(env);
+    auto asyncCtx = std::make_unique<AVMetadataExtractorAsyncContext>(env);
+    asyncCtx->napi = napi;
+    asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[1]);
+    asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
 
     if (CommonNapi::CheckValueType(env, args[0], napi_number)) {
         int64_t timeStamp = 0;
         auto res = napi_get_value_int64(env, args[0], &timeStamp);
         if (res != napi_ok) {
-            promiseCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "time stamp is not valid");
+            asyncCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "time stamp is not valid");
         }
-        promiseCtx->timeStamp_ = static_cast<uint64_t>(timeStamp);
+        asyncCtx->timeStamp_ = static_cast<uint64_t>(timeStamp);
     }
-    promiseCtx->napi = extractor;
-    promiseCtx->task_ = extractor->GetFrameIndexByTimeTask(promiseCtx);
-    promiseCtx->callbackRef = CommonNapi::CreateReference(env, args[1]);
-    promiseCtx->deferred = CommonNapi::CreatePromise(env, promiseCtx->callbackRef, result);
 
     // async work
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "JSGetFrameIndexByTime", NAPI_AUTO_LENGTH, &resource);
-    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource,
-        [](napi_env env, void *data) {
-            auto promiseCtx = reinterpret_cast<AVMetadataExtractorAsyncContext *>(data);
-            CHECK_AND_RETURN_LOG(promiseCtx != nullptr, "promiseCtx is nullptr!");
-            if (promiseCtx->task_) {
-                auto result = promiseCtx->task_->GetResult();
-                if (result.Value().first != MSERR_EXT_API9_OK) {
-                    MEDIA_LOGE("JSGetFrameIndexByTime get result SignError");
-                    promiseCtx->SignError(result.Value().first, result.Value().second);
-                }
-            }
-        },
-        GetFrameIndexByTimeComplete, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
-    NAPI_CALL(env, napi_queue_async_work(env, promiseCtx->work));
-    promiseCtx.release();
-    return result;
-}
-
-std::shared_ptr<TaskHandler<TaskRet>> AVMetadataExtractorNapi::GetFrameIndexByTimeTask(
-    std::unique_ptr<AVMetadataExtractorAsyncContext> &promiseCtx)
-{
-    auto task = std::make_shared<TaskHandler<TaskRet>>([this, &index = promiseCtx->index_,
-        &timeStamp = promiseCtx->timeStamp_, &errCode = promiseCtx->errCode, &errMsg = promiseCtx->errMessage]() {
-        std::unique_lock<std::mutex> lock(taskMutex_);
-        auto state = GetCurrentState();
-        if (state == AVMetadataHelperState::STATE_PREPARED || state == AVMetadataHelperState::STATE_CALL_DONE) {
-            CHECK_AND_RETURN_RET(errCode == napi_ok, TaskRet(errCode, errMsg));
-            auto res = helper_->GetFrameIndexByTime(timeStamp, index);
-            CHECK_AND_RETURN_RET(res == MSERR_OK, TaskRet(MSERR_EXT_API9_UNSUPPORT_FORMAT,
-                "failed to getFrameIndexByTime"));
-        } else {
-            return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-                "current state is not initialized, unsupport get time by frame index operation");
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void *data) {
+        auto asyncCtx = reinterpret_cast<AVMetadataExtractorAsyncContext *>(data);
+        CHECK_AND_RETURN_LOG(asyncCtx && !asyncCtx->errFlag, "Invalid asyncCtx.");
+        CHECK_AND_RETURN_LOG(asyncCtx->napi != nullptr, "Invalid napi object.");
+        if (asyncCtx->napi->state_ != HelperState::HELPER_STATE_RUNNABLE) {
+            asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Invalid state, please set source");
+            return;
         }
-        return TaskRet(MSERR_EXT_API9_OK, "Success");
-    });
-    (void)taskQue_->EnqueueTask(task);
-    return task;
+        auto helper = asyncCtx->napi->helper_;
+        CHECK_AND_RETURN_LOG(helper, "PromiseCtx has invalid data.");
+        if (helper->GetFrameIndexByTime(asyncCtx->timeStamp_, asyncCtx->index_) != MSERR_EXT_API9_OK) {
+            MEDIA_LOGE("JSGetFrameIndexByTime get result SignError");
+            asyncCtx->SignError(MSERR_EXT_API9_UNSUPPORT_FORMAT, "Demuxer getFrameIndexByTime failed.");
+        }
+    }, GetFrameIndexByTimeComplete, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+    NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
+    asyncCtx.release();
+    return result;
 }
 
 void AVMetadataExtractorNapi::GetFrameIndexByTimeComplete(napi_env env, napi_status status, void *data)
