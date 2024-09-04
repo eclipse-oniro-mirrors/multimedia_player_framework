@@ -360,7 +360,6 @@ private:
     OHOS::Media::Mutex handleCompleteMutex_{};
     int64_t playStartTime_ = 0; 
 };
-};
 } // namespace Media
 } // namespace OHOS
 #endif // HI_PLAYER_IMPL_H
