@@ -1084,5 +1084,60 @@ int32_t PlayerServiceStub::SetDeviceChangeCbStatus(MessageParcel &data, MessageP
     reply.WriteInt32(SetDeviceChangeCbStatus(status));
     return MSERR_OK;
 }
+
+int32_t PlayerServiceStub::StartReportStatus()
+{
+    MEDIA_LOGI("StartReportStatus begin");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    auto playerServer = std::static_pointer_cast<PlayerServer>(playerServer_);
+    playerServer->StartReportStatus();
+    MEDIA_LOGI("StartReportStatus end!");
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::StopReportStatus()
+{
+    MEDIA_LOGI("StopReportStatus begin");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    auto playerServer = std::static_pointer_cast<PlayerServer>(playerServer_);
+    playerServer->StopReportStatus();
+    MEDIA_LOGI("StopReportStatus end!");
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::HandleActive()
+{
+    MEDIA_LOGI("PlayerServiceStub HandleActive begin!");
+    (void)RegisterMonitor(appPid_);
+    StopBufferring(false);
+    StartReportStatus();
+    MEDIA_LOGI("PlayerServiceStub HandleActive end!");
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::HandleFrozen()
+{
+    MEDIA_LOGI("PlayerServiceStub HandleFrozen begin!");
+    (void)CancellationMonitor(appPid_);
+    StopReportStatus();
+    StopBufferring(true);
+    MEDIA_LOGI("PlayerServiceStub HandleFrozen end!");
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::GetUid()
+{
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    auto playerServer = std::static_pointer_cast<PlayerServer>(playerServer_);
+    return playerServer->GetUid();
+}
+
+bool PlayerServiceStub::IsPlayerRunning()
+{
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    auto playerServer = std::static_pointer_cast<PlayerServer>(playerServer_);
+    return playerServer->IsPlayerRunning();
+}
+
 } // namespace Media
 } // namespace OHOS
