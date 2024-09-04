@@ -162,7 +162,6 @@ int32_t AVMetadataHelperClient::GetFrameIndexByTime(uint64_t time, uint32_t &ind
 
 void AVMetadataHelperClient::Release()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_LOG(avMetadataHelperProxy_ != nullptr, "avmetadatahelper service does not exist.");
     avMetadataHelperProxy_->Release();
     callback_ = nullptr;

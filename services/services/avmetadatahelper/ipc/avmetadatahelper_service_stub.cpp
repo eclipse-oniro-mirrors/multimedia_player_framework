@@ -93,7 +93,6 @@ int32_t AVMetadataHelperServiceStub::Init()
 
 int32_t AVMetadataHelperServiceStub::DestroyStub()
 {
-    std::unique_lock<std::mutex> lock(mutex_);
     helperCallback_ = nullptr;
     avMetadateHelperServer_ = nullptr;
     MediaServerManager::GetInstance().DestroyStubObject(MediaServerManager::AVMETADATAHELPER, AsObject());
@@ -203,7 +202,6 @@ std::shared_ptr<AVBuffer> AVMetadataHelperServiceStub::FetchFrameYuv(int64_t tim
 
 void AVMetadataHelperServiceStub::Release()
 {
-    std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_LOG(avMetadateHelperServer_ != nullptr, "avmetadatahelper server is nullptr");
     return avMetadateHelperServer_->Release();
 }
@@ -349,6 +347,7 @@ int32_t AVMetadataHelperServiceStub::FetchFrameYuv(MessageParcel &data, MessageP
     int64_t timeUs = data.ReadInt64();
     int32_t option = data.ReadInt32();
     OutputConfiguration param = {data.ReadInt32(), data.ReadInt32(), static_cast<PixelFormat>(data.ReadInt32())};
+
     std::shared_ptr<AVBuffer> avBuffer = FetchFrameYuv(timeUs, option, param);
     reply.WriteInt32(avBuffer != nullptr ? MSERR_OK : MSERR_INVALID_VAL);
     CHECK_AND_RETURN_RET(avBuffer != nullptr, MSERR_OK);
