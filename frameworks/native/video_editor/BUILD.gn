@@ -32,6 +32,15 @@ ohos_shared_library("video_editor") {
     "./codec/video/decoder/video_decoder_engine_impl.cpp",
     "./codec/video/encoder/video_encoder_engine.cpp",
     "./codec/video/encoder/video_encoder_engine_impl.cpp",
+    "./composite_engine/impl/composite_engine.cpp",
+    "./composite_engine/impl/video_composite_engine.cpp",
+    "./data_center/asset/asset.cpp",
+    "./data_center/asset/asset_factory.cpp",
+    "./data_center/asset/video_asset.cpp",
+    "./data_center/effect/effect.cpp",
+    "./data_center/effect/effect_factory.cpp",
+    "./data_center/effect/effect_image_effect.cpp",
+    "./data_center/impl/data_center_impl.cpp",
     "./video_editor_impl.cpp",
     "./video_editor_manager.cpp",
   ]
@@ -49,6 +58,15 @@ ohos_shared_library("video_editor") {
     "hilog:libhilog",
   ]
 
+  defines = []
+
+  if (defined(global_parts_info) &&
+      defined(global_parts_info.multimedia_image_effect) &&
+      global_parts_info.multimedia_image_effect) {
+    defines += [ "IMAGE_EFFECT_SUPPORT" ]
+    external_deps += [ "image_effect:image_effect" ]
+  }
+
   cflags = [
     "-Wall",
     "-Werror",
@@ -56,7 +74,6 @@ ohos_shared_library("video_editor") {
 
   public_configs = []
 
-  defines = []
   innerapi_tags = [ "platformsdk" ]
   subsystem_name = "multimedia"
   part_name = "player_framework"

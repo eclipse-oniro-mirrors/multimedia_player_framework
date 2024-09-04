@@ -118,7 +118,8 @@
           "os_account",
           "i18n",
           "camera_framework",
-          "drivers_interface_camera"
+          "drivers_interface_camera",
+          "image_effect"
         ],
         "third_party": [
           "bounds_checking_function"

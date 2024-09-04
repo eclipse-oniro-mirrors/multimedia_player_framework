@@ -13,31 +13,27 @@
  * limitations under the License.
  */
 
-#ifndef OH_VEF_EDITOR_MANAGER_H
-#define OH_VEF_EDITOR_MANAGER_H
+#ifndef OH_VEF_EFFECT_FACTORY_H
+#define OH_VEF_EFFECT_FACTORY_H
 
-#include <shared_mutex>
-#include <unordered_map>
-#include "video_editor_impl.h"
+#include <memory>
+#include "data_center/effect/effect.h"
 
 namespace OHOS {
 namespace Media {
 
-class VideoEditorManager {
+class EffectFactory {
 public:
-    static VideoEditorManager& GetInstance();
-
-    std::shared_ptr<VideoEditor> CreateVideoEditor();
-    void ReleaseVideoEditor(uint64_t id);
-    bool IsFlowControlPass() const;
+    static std::shared_ptr<Effect> CreateEffect(const std::string& description);
 
 private:
-    mutable std::shared_mutex editorMapMutex_;
-    std::unordered_map<uint64_t, std::weak_ptr<VideoEditorImpl>> editorMap_;
-    std::atomic<uint64_t> id_{ 1 };
+    static EffectType ParseEffectType(const std::string& description);
+
+private:
+    static std::atomic<uint64_t> id_;
 };
 
 } // namespace Media
 } // namespace OHOS
 
-#endif // OH_VEF_EDITOR_MANAGER_H
+#endif // OH_VEF_EFFECT_FACTORY_H

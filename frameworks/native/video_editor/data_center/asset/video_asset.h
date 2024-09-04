@@ -12,32 +12,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#ifndef OH_VEF_EDITOR_MANAGER_H
-#define OH_VEF_EDITOR_MANAGER_H
+#ifndef OH_VEF_ASSET_VIDEO_H
+#define OH_VEF_ASSET_VIDEO_H
 
 #include <shared_mutex>
-#include <unordered_map>
-#include "video_editor_impl.h"
+#include "asset.h"
+#include "data_center/effect/effect.h"
 
 namespace OHOS {
 namespace Media {
 
-class VideoEditorManager {
+class VideoAsset : public Asset {
 public:
-    static VideoEditorManager& GetInstance();
+    VideoAsset(int64_t id, int fd);
+    ~VideoAsset() override;
 
-    std::shared_ptr<VideoEditor> CreateVideoEditor();
-    void ReleaseVideoEditor(uint64_t id);
-    bool IsFlowControlPass() const;
+    std::vector<const std::shared_ptr<Effect>> GetEffectList() const;
+    void ApplyEffect(const std::shared_ptr<Effect>& effect);
 
 private:
-    mutable std::shared_mutex editorMapMutex_;
-    std::unordered_map<uint64_t, std::weak_ptr<VideoEditorImpl>> editorMap_;
-    std::atomic<uint64_t> id_{ 1 };
+    mutable std::shared_mutex dataLock_;
+    std::vector<std::shared_ptr<Effect>> effectList_;
 };
 
 } // namespace Media
 } // namespace OHOS
 
-#endif // OH_VEF_EDITOR_MANAGER_H
+#endif // OH_VEF_ASSET_VIDEO_H
