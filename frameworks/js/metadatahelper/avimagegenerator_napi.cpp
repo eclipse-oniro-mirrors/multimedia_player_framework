@@ -288,7 +288,7 @@ void AVImageGeneratorNapi::CommonCallbackRoutine(
         napi_reject_deferred(env, asyncContext->deferred, result[0]);
     } else {
         napi_get_reference_value(env, asyncContext->callbackRef, &callback);
-        napi_call_function(env, nullptr, callback, 2, result, &retVal);
+        napi_call_function(env, nullptr, callback, ARG_TWO, result, &retVal);
         napi_delete_reference(env, asyncContext->callbackRef);
     }
 

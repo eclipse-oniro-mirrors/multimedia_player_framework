@@ -266,7 +266,7 @@ std::shared_ptr<AVBuffer> AVMetadataHelperServer::FetchFrameYuv(int64_t timeUs, 
     int32_t ret = taskQue_.EnqueueTask(task);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "EnqueueTask failed");
     auto result = task->GetResult();
-    return result.Value(); 
+    return result.Value();
 }
 
 void AVMetadataHelperServer::Release()
