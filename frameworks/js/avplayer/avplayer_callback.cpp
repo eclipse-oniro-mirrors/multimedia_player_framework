@@ -24,6 +24,11 @@
 #include "scope_guard.h"
 #include "event_queue.h"
 #include "avplayer_callback.h"
+#include "os_account_manager.h"
+#include "bundle_mgr_interface.h"
+#include "system_ability_definition.h"
+#include "iservice_registry.h"
+#include "ipc_skeleton.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_ONLY_PRERELEASE, LOG_DOMAIN_PLAYER, "AVPlayerCallback" };
