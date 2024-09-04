@@ -230,25 +230,6 @@ PlaybackRateMode __attribute__((visibility("default"))) TransformFloat2PlayRate(
     return ite->first;
 }
 
-double __attribute__((visibility("default"))) TransformPlayRateToSpeed(const PlaybackRateMode& mode)
-{
-    switch (mode) {
-        case SPEED_FORWARD_0_75_X:
-            return SPEED_0_75_X;
-        case SPEED_FORWARD_1_00_X:
-            return SPEED_1_00_X;
-        case SPEED_FORWARD_1_25_X:
-            return SPEED_1_25_X;
-        case SPEED_FORWARD_1_75_X:
-            return SPEED_1_75_X;
-        case SPEED_FORWARD_2_00_X:
-            return SPEED_2_00_X;
-        default:
-            MEDIA_LOG_I("unknown mode: " PUBLIC_LOG_D32, mode);
-    }
-    return SPEED_1_00_X;
-}
-
 bool __attribute__((visibility("default"))) IsEnableOptimizeDecode()
 {
     char useOptimizeDecode[10] = {0}; // 10: system param usage
