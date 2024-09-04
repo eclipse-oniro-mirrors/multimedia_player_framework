@@ -34,6 +34,7 @@
 #include "qos.h"
 #include "player_server_event_receiver.h"
 #include "common/media_source.h"
+#include "audio_info.h"
 
 using namespace OHOS::QOS;
 
@@ -1119,6 +1120,24 @@ void PlayerServer::PreparedHandleEos()
     }
 }
 
+void PlayerServer::HandleInterruptEvent(const Format &infoBody)
+{
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " HandleInterruptEvent in ", FAKE_POINTER(this));
+    int32_t hintType = -1;
+    int32_t forceType = -1;
+    int32_t eventType = -1;
+    (void)infoBody.GetIntValue(PlayerKeys::AUDIO_INTERRUPT_TYPE, eventType);
+    (void)infoBody.GetIntValue(PlayerKeys::AUDIO_INTERRUPT_FORCE, forceType);
+    (void)infoBody.GetIntValue(PlayerKeys::AUDIO_INTERRUPT_HINT, hintType);
+    if (forceType == OHOS::AudioStandard::INTERRUPT_FORCE) {
+        if (hintType == OHOS::AudioStandard::INTERRUPT_HINT_PAUSE ||
+            hintType == OHOS::AudioStandard::INTERRUPT_HINT_STOP) {
+            interruptEventState_ = PLAYER_PAUSED;
+            (void)BackGroundChangeState(PLAYER_PAUSED, true);
+        }
+    }
+}
+
 int32_t PlayerServer::GetPlaybackSpeed(PlaybackRateMode &mode)
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -1486,6 +1505,11 @@ void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &in
     std::lock_guard<std::mutex> lockCb(mutexCb_);
     // notify info
     int32_t ret = HandleMessage(type, extra, infoBody);
+    InnerOnInfo(type, extra, infoBody, ret);
+}
+
+void PlayerServer::InnerOnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody, const int32_t ret)
+{
     if (type == INFO_TYPE_IS_LIVE_STREAM) {
         isLiveStream_ = true;
     } else if (type == INFO_TYPE_TRACK_NUM_UPDATE) {
@@ -1499,11 +1523,9 @@ void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &in
         "completed or eos in stopped state");
     bool isErrorInfo = type == INFO_TYPE_STATE_CHANGE && extra == PlayerStates::PLAYER_STATE_ERROR;
     CHECK_AND_RETURN_LOG(!(lastOpStatus_ == PLAYER_IDLE && isErrorInfo), "do not report error in idle state");
-
     if (type == INFO_TYPE_DEFAULTTRACK || type == INFO_TYPE_TRACK_DONE || type == INFO_TYPE_ADD_SUBTITLE_DONE) {
         return;
     }
-
     if (playerCb_ != nullptr && type == INFO_TYPE_ERROR_MSG) {
         int32_t errorCode = extra;
         Format newInfo = infoBody;
@@ -1516,9 +1538,9 @@ void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &in
     if (type == INFO_TYPE_BUFFERING_UPDATE) {
         OnBufferingUpdate(type, extra, infoBody);
     }
-
     if (playerCb_ != nullptr && ret == MSERR_OK) {
-        if (isBackgroundChanged_ && type == INFO_TYPE_STATE_CHANGE && extra == backgroundState_) {
+        bool isBackgroudPause = (extra == backgroundState_ || extra == interruptEventState_);
+        if (isBackgroundChanged_ && type == INFO_TYPE_STATE_CHANGE && isBackgroudPause) {
             MEDIA_LOGI("Background change state to %{public}d, Status reporting %{public}d", extra, isBackgroundCb_);
             if (isBackgroundCb_) {
                 Format newInfo = infoBody;
@@ -1527,6 +1549,7 @@ void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &in
                 isBackgroundCb_ = false;
             }
             isBackgroundChanged_ = false;
+            interruptEventState_ = PLAYER_IDLE;
         } else {
             playerCb_->OnInfo(type, extra, infoBody);
         }
