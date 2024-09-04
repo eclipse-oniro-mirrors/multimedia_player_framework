@@ -39,7 +39,6 @@ static const std::string BUTTON_NAME_MIC = "mic";
 static const std::string BUTTON_NAME_STOP = "stop";
 static const int32_t MAX_SESSION_PER_UID = 8;
 static const std::string SCREEN_RECORDER_BUNDLE_NAME = "com.ohos.screenrecorder";
-static const auto NOTIFICATION_SUBSCRIBER = NotificationSubscriber();
 }
 
 namespace OHOS {
