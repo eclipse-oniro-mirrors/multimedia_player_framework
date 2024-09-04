@@ -358,6 +358,8 @@ private:
     std::shared_ptr<DfxAgent> dfxAgent_{};
     bool maxAmplitudeCbStatus_ {false};
     OHOS::Media::Mutex handleCompleteMutex_{};
+    int64_t playStartTime_ = 0; 
+};
 };
 } // namespace Media
 } // namespace OHOS
