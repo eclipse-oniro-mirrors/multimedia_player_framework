@@ -732,11 +732,9 @@ int32_t HiPlayerImpl::Play()
     }
     if (pipelineStates_ == PlayerStates::PLAYER_PLAYBACK_COMPLETE) {
         isStreaming_ = true;
-        if (GetPlayRangeStartTime() > PLAY_RANGE_DEFAULT_VALUE) {
-            ret = TransStatus(Seek(GetPlayStartTime(), playRangeSeekMode_, false));
-        } else {
-            ret = TransStatus(Seek(0, PlayerSeekMode::SEEK_PREVIOUS_SYNC, false));
-        }
+        ret = ((GetPlayRangeStartTime() > PLAY_RANGE_DEFAULT_VALUE) ? 
+            TransStatus(Seek(GetPlayStartTime(), playRangeSeekMode_, false)) :
+            TransStatus(Seek(0, PlayerSeekMode::SEEK_PREVIOUS_SYNC, false)));
         callbackLooper_.StartReportMediaProgress(REPORT_PROGRESS_INTERVAL);
         callbackLooper_.startCollectMaxAmplitude(SAMPLE_AMPLITUDE_INTERVAL);
     } else if (pipelineStates_ == PlayerStates::PLAYER_PAUSED) {
