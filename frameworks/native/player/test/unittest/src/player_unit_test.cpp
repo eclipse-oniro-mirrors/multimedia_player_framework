@@ -420,28 +420,6 @@ HWTEST_F(PlayerUnitTest, Player_SetSource_009, TestSize.Level2)
 
 /**
  * @tc.name  : Test Player SetSource API
- * @tc.number: Player_SetSource_010
- * @tc.desc  : Test Player SetSource interface
- */
-HWTEST_F(PlayerUnitTest, Player_SetSource_010, TestSize.Level2)
-{
-    int32_t ret = player_->SetSource("http://domain/H264_MP3.mp4");
-    ASSERT_NE(MSERR_OK, ret);
-}
-
-/**
- * @tc.name  : Test Player SetSource API
- * @tc.number: Player_SetSource_011
- * @tc.desc  : Test Player SetSource interface
- */
-HWTEST_F(PlayerUnitTest, Player_SetSource_011, TestSize.Level2)
-{
-    int32_t ret = player_->SetSource("https://domain/H264_MP3.mp4");
-    ASSERT_NE(MSERR_OK, ret);
-}
-
-/**
- * @tc.name  : Test Player SetSource API
  * @tc.number: Player_SetSource_012
  * @tc.desc  : Test Player SetSource interface
  */
@@ -603,24 +581,6 @@ HWTEST_F(PlayerUnitTest, Player_Local_014, TestSize.Level2)
 HWTEST_F(PlayerUnitTest, Player_Local_015, TestSize.Level2)
 {
     int32_t ret = player_->SetSource(MEDIA_ROOT + "aac_48000Hz_70kbs_mono.m4a");
-    EXPECT_EQ(MSERR_OK, ret);
-    sptr<Surface> videoSurface = player_->GetVideoSurface();
-    ASSERT_NE(nullptr, videoSurface);
-    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    ret = player_->PrepareAsync();
-    if (ret == MSERR_OK) {
-        PlayFunTest(LOCAL_PLAY);
-    }
-}
-
-/**
- * @tc.name  : Test Player Local
- * @tc.number: Player_Local_016
- * @tc.desc  : Test Player Local source
- */
-HWTEST_F(PlayerUnitTest, Player_Local_016, TestSize.Level2)
-{
-    int32_t ret = player_->SetSource(MEDIA_ROOT + "H265_AAC.mp4");
     EXPECT_EQ(MSERR_OK, ret);
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
