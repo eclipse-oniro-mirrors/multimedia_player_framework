@@ -12,13 +12,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#define CHECK_FAULT_APPINFO(ptr)                                 \
-    do {                                                         \
-        if (ptr == nullptr) {                                    \
-            MEDIA_LOGE("Get nullptr, fail to get bundle name."); \
-            return FAULT_API_VERSION;                            \
-            }                                                    \
-    } while (0)                                                  \
 
 #include <map>
 #include <iostream>
@@ -1383,28 +1376,23 @@ int32_t AVPlayerCallback::GetApiversion(int32_t uid)
     AppExecFwk::ApplicationInfo appInfo;
 
     auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    CHECK_FAULT_APPINFO(samgr);
+    CHECK_AND_RETURN_RET_LOG(samgr != nullptr, FAULT_API_VERSION, "Get ability manager failed");
 
     sptr<IRemoteObject> object = samgr->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
-    CHECK_FAULT_APPINFO(object);
+    CHECK_AND_RETURN_RET_LOG(object != nullptr, FAULT_API_VERSION, "object is NULL.");
 
     sptr<OHOS::AppExecFwk::IBundleMgr> bms = iface_cast<OHOS::AppExecFwk::IBundleMgr>(object);
-    CHECK_FAULT_APPINFO(bms);
+    CHECK_AND_RETURN_RET_LOG(bms != nullptr, FAULT_API_VERSION, "bundle manager service is NULL.");
 
     auto result = bms->GetNameForUid(uid, bundleName);
     MEDIA_LOGI("bundle name is %{public}s ", bundleName.c_str());
-    if (result != ERR_OK) {
-        MEDIA_LOGE("Error GetBundleNameForUid fail");
-        return FAULT_API_VERSION;
-    }
+    CHECK_AND_RETURN_RET_LOG(result != ERR_OK, FAULT_API_VERSION, "Error GetBundleNameForUid fail.");
 
     OHOS::AccountSA::OsAccountManager::GetOsAccountLocalIdFromUid(uid, userId);
     auto flags = static_cast<int32_t>(AppExecFwk::GetApplicationFlag::GET_APPLICATION_INFO_DEFAULT);
     auto applicationResult = bms->GetApplicationInfo(bundleName, flags, userId, appInfo);
-    if (applicationResult != true) {
-        MEDIA_LOGE("Error GetApplicationInfo fail");
-        return FAULT_API_VERSION;
-    }
+    CHECK_AND_RETURN_RET_LOG(applicationResult != true, FAULT_API_VERSION, "Error GetApplicationInfo fail.");
+    
     auto apiVersion = appInfo.apiTargetVersion;
     auto apiVersionResult = apiVersion % ROUND_VERSION_NUMBER;
     return apiVersionResult;
