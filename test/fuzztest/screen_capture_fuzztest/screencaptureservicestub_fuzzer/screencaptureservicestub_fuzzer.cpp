@@ -71,7 +71,7 @@ bool ScreenCaptureServiceStubFuzzer::FuzzScreenCaptureOnRemoteRequest(uint8_t *d
         msg.RewindRead(0);
         MessageParcel reply;
         MessageOption option;
-        recorderStub->OnRemoteRequest(code, msg, reply, option);
+        screencaptureStub->OnRemoteRequest(code, msg, reply, option);
     }
 
     return true;
