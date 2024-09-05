@@ -55,6 +55,10 @@ private:
     std::string GetHapticUriForAudioUri(const std::string &audioUri);
     bool IsFileExisting(const std::string &fileUri);
     std::string ChangeUri(const std::string &audioUri);
+    ToneHapticsType ConvertToToneHapticsType(RingtoneType type);
+    HapticsMode ConvertToHapticsMode(ToneHapticsMode toneHapticsMode);
+    std::shared_ptr<ToneHapticsSettings> GetNewHapticSettings();
+    std::string ChangeHapticsUri(const std::string &hapticsUri);
 
     float volume_ = 1.0f;
     bool loop_ = false;
