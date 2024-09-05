@@ -1369,7 +1369,7 @@ int32_t AVPlayerCallback::GetApiversion(int32_t uid, bool shouldLog)
 {
     MEDIA_LOGI("AVPlayerCallback::GetApiversion");
     if (uid == 1003) { // 1003 is bootanimation uid
-        return 0;
+        return FAULT_API_VERSION;
     }
     std::string bundleName = "";
     int32_t userId = 0;
@@ -1378,26 +1378,26 @@ int32_t AVPlayerCallback::GetApiversion(int32_t uid, bool shouldLog)
     auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (samgr == nullptr) {
         MEDIA_LOGE("Get ability manager failed");
-        return 0;
+        return FAULT_API_VERSION;
     }
 
     sptr<IRemoteObject> object = samgr->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
     if (object == nullptr) {
         MEDIA_LOGE("object is NULL.");
-        return 0;
+        return FAULT_API_VERSION;
     }
 
     sptr<OHOS::AppExecFwk::IBundleMgr> bms = iface_cast<OHOS::AppExecFwk::IBundleMgr>(object);
     if (bms == nullptr) {
         MEDIA_LOGE("bundle manager service is NULL.");
-        return 0;
+        return FAULT_API_VERSION;
     }
 
     auto result = bms->GetNameForUid(uid, bundleName);
     MEDIA_LOGI("bundle name is %{public}s ", bundleName.c_str());
     if (result != ERR_OK) {
         MEDIA_LOGE("Error GetBundleNameForUid fail");
-        return 0;
+        return FAULT_API_VERSION;
     }
 
     OHOS::AccountSA::OsAccountManager::GetOsAccountLocalIdFromUid(uid, userId);
@@ -1405,7 +1405,7 @@ int32_t AVPlayerCallback::GetApiversion(int32_t uid, bool shouldLog)
     auto applicationResult = bms->GetApplicationInfo(bundleName, flags, userId, appInfo);
     if (applicationResult != true) {
         MEDIA_LOGE("Error GetApplicationInfo fail");
-        return 0;
+        return FAULT_API_VERSION;
     }
     auto apiVersion = appInfo.apiTargetVersion;
     auto apiVersionResult = apiVersion % ROUND_VERSION_NUMBER;

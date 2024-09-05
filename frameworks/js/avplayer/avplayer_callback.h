@@ -85,6 +85,7 @@ private:
     int32_t appUid_ = 0;
     int32_t ROUND_VERSION_NUMBER = 100;
     int32_t API_VERSION_12 = 12;
+    int32_t FAULT_API_VERSION = -1;
 
     std::mutex mutex_;
     napi_env env_ = nullptr;
