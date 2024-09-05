@@ -1365,12 +1365,9 @@ void AVPlayerCallback::Release()
     listener_ = nullptr;
 }
 
-int32_t AVPlayerCallback::GetApiversion(int32_t uid, bool shouldLog)
+int32_t AVPlayerCallback::GetApiversion(int32_t uid)
 {
     MEDIA_LOGI("AVPlayerCallback::GetApiversion");
-    if (uid == 1003) { // 1003 is bootanimation uid
-        return FAULT_API_VERSION;
-    }
     std::string bundleName = "";
     int32_t userId = 0;
     AppExecFwk::ApplicationInfo appInfo;

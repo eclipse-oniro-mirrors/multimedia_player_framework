@@ -81,7 +81,7 @@ private:
     void OnTrackChangedCb(const int32_t extra, const Format &infoBody);
     void OnTrackInfoUpdate(const int32_t extra, const Format &infoBody);
     bool IsValidState(PlayerStates state, std::string &stateStr);
-    int32_t GetApiversion(int32_t uid, bool shouldLog);
+    int32_t GetApiversion(int32_t uid);
     int32_t appUid_ = 0;
     int32_t ROUND_VERSION_NUMBER = 100;
     int32_t API_VERSION_12 = 12;
