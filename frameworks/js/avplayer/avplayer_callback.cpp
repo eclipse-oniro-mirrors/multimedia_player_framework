@@ -35,6 +35,19 @@ namespace {
     int32_t ROUND_VERSION_NUMBER = 100;
     int32_t API_VERSION_12 = 12;
     int32_t FAULT_API_VERSION = -1;
+    std::set<OHOS::Media::MediaServiceExtErrCodeAPI9> API13_EXT_IO_ERRORS = {
+        MSERR_EXT_API12_IO_CANNOT_FIND_HOST,
+        MSERR_EXT_API12_IO_CONNECTION_TIMEOUT,
+        MSERR_EXT_API12_IO_NETWORK_ABNORMAL,
+        MSERR_EXT_API12_IO_NETWORK_UNAVAILABLE,
+        MSERR_EXT_API12_IO_NO_PERMISSION,
+        MSERR_EXT_API12_IO_REQUEST_DENID,
+        MSERR_EXT_API12_IO_RESOURE_NOT_FOUND,
+        MSERR_EXT_API12_IO_SSL_CLIENT_CERT_NEEDED,
+        MSERR_EXT_API12_IO_SSL_CONNECT_FAIL,
+        MSERR_EXT_API12_IO_SSL_SERVER_CERT_UNTRUSTED,
+        MSERR_EXT_API12_IO_UNSUPPORTTED_REQEST,
+    }
 }
 
 namespace OHOS {
@@ -714,7 +727,7 @@ void AVPlayerCallback::OnError(int32_t errorCode, const std::string &errorMsg)
         Format infoBody;
         AVPlayerCallback::OnInfo(INFO_TYPE_STATE_CHANGE, PLAYER_STATE_ERROR, infoBody);
     }
-    if (errorCodeApi9 >= MSERR_EXT_API12_IO_CANNOT_FIND_HOST && apiTargetVersion <= API_VERSION_12) {
+    if (IsAPI13Error(errorCodeApi9) && apiTargetVersion <= API_VERSION_12) {
         errorCodeApi9 = MSERR_EXT_API9_IO;
     }
     AVPlayerCallback::OnErrorCb(errorCodeApi9, errorMsg);
@@ -1386,13 +1399,13 @@ int32_t AVPlayerCallback::GetApiversion(int32_t uid)
 
     auto result = bms->GetNameForUid(uid, bundleName);
     MEDIA_LOGI("bundle name is %{public}s ", bundleName.c_str());
-    CHECK_AND_RETURN_RET_LOG(result != ERR_OK, FAULT_API_VERSION, "Error GetBundleNameForUid fail.");
+    CHECK_AND_RETURN_RET_LOG(result == ERR_OK, FAULT_API_VERSION, "Error GetBundleNameForUid fail.");
 
     OHOS::AccountSA::OsAccountManager::GetOsAccountLocalIdFromUid(uid, userId);
     auto flags = static_cast<int32_t>(AppExecFwk::GetApplicationFlag::GET_APPLICATION_INFO_DEFAULT);
     auto applicationResult = bms->GetApplicationInfo(bundleName, flags, userId, appInfo);
-    CHECK_AND_RETURN_RET_LOG(applicationResult != true, FAULT_API_VERSION, "Error GetApplicationInfo fail.");
-    
+    CHECK_AND_RETURN_RET_LOG(applicationResult == true, FAULT_API_VERSION, "Error GetApplicationInfo fail.");
+
     auto apiVersion = appInfo.apiTargetVersion;
     auto apiVersionResult = apiVersion % ROUND_VERSION_NUMBER;
     return apiVersionResult;
