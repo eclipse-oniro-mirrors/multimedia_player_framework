@@ -271,7 +271,6 @@ std::string SystemTonePlayerImpl::ChangeUri(const std::string &uri)
 
 std::string SystemTonePlayerImpl::ChangeHapticsUri(const std::string &hapticsUri)
 {
-    const std::string FDHEAD = "fd://";
     std::string newHapticsUri = hapticsUri;
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, newHapticsUri, "Failed to create dataShareHelper.");

@@ -47,7 +47,9 @@ const std::string DEFAULT_SYSTEM_TONE_URI_JSON = "ringtone_sms-notification.json
 const std::string DEFAULT_SYSTEM_TONE_PATH = "notifications/";
 const int STORAGE_MANAGER_MANAGER_ID = 5003;
 const int UNSUPPORTED_ERROR = -5;
+#ifdef SUPPORT_VIBRATOR
 const int OPERATION_ERROR = -4;
+#endif
 const int IO_ERROR = -3;
 const int TYPEERROR = -2;
 const int ERROR = -1;
