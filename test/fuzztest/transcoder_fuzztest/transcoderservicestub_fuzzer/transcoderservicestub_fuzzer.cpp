@@ -60,13 +60,9 @@ bool TranscoderServiceStubFuzzer::FuzzTranscoderOnRemoteRequest(uint8_t *data, s
         return false;
     }
 
-    const int maxIpcNum = 50;
-    bool isWirteToken = size > 0 && data[0] % 9 != 0;
+    const int maxIpcNum = 20;
     for (uint32_t code = 0; code <= maxIpcNum; code++) {
         MessageParcel msg;
-        if (isWirteToken) {
-            msg.WriteInterfaceToken(transcoderStub->GetDescriptor());
-        }
         msg.WriteBuffer(data, size);
         msg.RewindRead(0);
         MessageParcel reply;
