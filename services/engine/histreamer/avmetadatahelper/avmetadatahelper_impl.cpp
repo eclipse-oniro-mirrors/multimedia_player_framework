@@ -83,6 +83,7 @@ Status AVMetadataHelperImpl::SetSourceInternel(const std::string &uri)
     Reset();
     mediaDemuxer_ = std::make_shared<MediaDemuxer>();
     mediaDemuxer_->SetEnableOnlineFdCache(false);
+    mediaDemuxer_->SetInterruptState(isInterruptNeeded_.load());
     mediaDemuxer_->SetPlayerId(groupId_);
     CHECK_AND_RETURN_RET_LOG(
         mediaDemuxer_ != nullptr, Status::ERROR_INVALID_DATA, "SetSourceInternel demuxer is nullptr");
@@ -218,6 +219,14 @@ Status AVMetadataHelperImpl::InitThumbnailGenerator()
     CHECK_AND_RETURN_RET_LOG(
         thumbnailGenerator_ != nullptr, Status::ERROR_INVALID_STATE, "Init thumbnail generator failed.");
     return Status::OK;
+}
+
+void AVMetadataHelperImpl::SetInterruptState(bool isInterruptNeeded)
+{
+    MEDIA_LOGI("Metadata set interrupt state %{public}d", isInterruptNeeded);
+    isInterruptNeeded_ = isInterruptNeeded;
+    CHECK_AND_RETURN(mediaDemuxer_ != nullptr);
+    mediaDemuxer_->SetInterruptState(isInterruptNeeded);
 }
 }  // namespace Media
 }  // namespace OHOS

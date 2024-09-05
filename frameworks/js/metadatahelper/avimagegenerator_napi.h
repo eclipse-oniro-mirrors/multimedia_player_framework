@@ -23,13 +23,12 @@
 #include "audio_info.h"
 #include "audio_effect.h"
 #include "task_queue.h"
-#include "avmetadatahelper_callback.h"
+#include "avmetadatahelper.h"
 
 namespace OHOS {
 namespace Media {
 struct AVImageGeneratorAsyncContext;
-using TaskRet = std::pair<int32_t, std::string>;
-class AVImageGeneratorNapi : public AVMetadataHelperNotify {
+class AVImageGeneratorNapi {
 public:
     __attribute__((visibility("default"))) static napi_value Init(napi_env env, napi_value exports);
 
@@ -60,7 +59,7 @@ private:
     static bool CheckSystemApp(napi_env env);
 
     AVImageGeneratorNapi();
-    ~AVImageGeneratorNapi() override;
+    ~AVImageGeneratorNapi();
     void SaveCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref);
     void ClearCallbackReference();
     void ClearCallbackReference(const std::string &callbackName);
@@ -70,15 +69,11 @@ private:
     void SetSource(std::string url);
     void ResetUserParameters();
 
-    std::shared_ptr<TaskHandler<TaskRet>> FetchFrameAtTimeTask(
-        std::unique_ptr<AVImageGeneratorAsyncContext> &promiseCtx);
-    int32_t GetFetchFrameArgs(std::unique_ptr<AVImageGeneratorAsyncContext> &asyncCtx,
-        napi_env env, napi_value timeUs, napi_value option, napi_value format);
-    std::shared_ptr<TaskHandler<TaskRet>> ReleaseTask();
+    int32_t GetFetchFrameArgs(
+        std::unique_ptr<AVImageGeneratorAsyncContext> &asyncCtx, napi_env env, napi_value param[]);
     void SetAVFileDescriptorTask(std::shared_ptr<AVMetadataHelper>& avHelper, AVFileDescriptor& fileDescriptor);
 
     std::string GetCurrentState();
-    void NotifyState(HelperStates state) override;
 
     void StopTaskQue();
     void WaitTaskQueStop();
@@ -89,7 +84,6 @@ private:
     static thread_local napi_ref constructor_;
     napi_env env_ = nullptr;
     std::shared_ptr<AVMetadataHelper> helper_ = nullptr;
-    std::shared_ptr<AVMetadataHelperCallback> generatorCb_ = nullptr;
     std::atomic<bool> isReleased_ = false;
     std::string url_ = "";
     struct AVFileDescriptor fileDescriptor_;
@@ -97,7 +91,7 @@ private:
     std::mutex mutex_;
     std::mutex taskMutex_;
     std::map<std::string, std::shared_ptr<AutoRef>> refMap_;
-    HelperStates state_ = HELPER_IDLE;
+    std::atomic<HelperState> state_ = HelperState::HELPER_STATE_IDLE;
     std::condition_variable stateChangeCond_;
     std::atomic<bool> stopWait_;
     int64_t timeUs_ = 0;
@@ -111,7 +105,6 @@ struct AVImageGeneratorAsyncContext : public MediaAsyncContext {
 
     AVImageGeneratorNapi *napi = nullptr;
     std::string opt_ = "";
-    std::shared_ptr<TaskHandler<TaskRet>> task_ = nullptr;
     std::shared_ptr<PixelMap> pixel_ = nullptr;
     int32_t status = 0;
 };

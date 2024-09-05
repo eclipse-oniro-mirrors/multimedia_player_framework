@@ -64,6 +64,17 @@ enum HelperStates : int32_t {
     HELPER_RELEASED = 4,
 };
 
+enum HelperState : int32_t {
+    /* error states */
+    HELPER_ERROR = -1,
+    /* idle states */
+    HELPER_STATE_IDLE,
+    /* RUNNABLE states */
+    HELPER_STATE_RUNNABLE,
+    /* released states */
+    HELPER_STATE_RELEASED,
+};
+
 /**
  * The meta data mappings from meta data enum keys to the string key.
  */
