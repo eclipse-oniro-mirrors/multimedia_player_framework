@@ -63,6 +63,7 @@ bool TranscoderServiceStubFuzzer::FuzzTranscoderOnRemoteRequest(uint8_t *data, s
     const int maxIpcNum = 20;
     for (uint32_t code = 0; code <= maxIpcNum; code++) {
         MessageParcel msg;
+        msg.WriteInterfaceToken(transcoderStub->GetDescriptor());
         msg.WriteBuffer(data, size);
         msg.RewindRead(0);
         MessageParcel reply;
