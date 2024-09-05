@@ -35,19 +35,19 @@ namespace {
     int32_t ROUND_VERSION_NUMBER = 100;
     int32_t API_VERSION_12 = 12;
     int32_t FAULT_API_VERSION = -1;
-    std::set<OHOS::Media::MediaServiceExtErrCodeAPI9> API13_EXT_IO_ERRORS = {
-        MSERR_EXT_API12_IO_CANNOT_FIND_HOST,
-        MSERR_EXT_API12_IO_CONNECTION_TIMEOUT,
-        MSERR_EXT_API12_IO_NETWORK_ABNORMAL,
-        MSERR_EXT_API12_IO_NETWORK_UNAVAILABLE,
-        MSERR_EXT_API12_IO_NO_PERMISSION,
-        MSERR_EXT_API12_IO_REQUEST_DENID,
-        MSERR_EXT_API12_IO_RESOURE_NOT_FOUND,
-        MSERR_EXT_API12_IO_SSL_CLIENT_CERT_NEEDED,
-        MSERR_EXT_API12_IO_SSL_CONNECT_FAIL,
-        MSERR_EXT_API12_IO_SSL_SERVER_CERT_UNTRUSTED,
-        MSERR_EXT_API12_IO_UNSUPPORTTED_REQEST,
-    }
+    std::set<int32_t> API13_EXT_IO_ERRORS = {
+        OHOS::Media::MSERR_EXT_API12_IO_CANNOT_FIND_HOST,
+        OHOS::Media::MSERR_EXT_API12_IO_CONNECTION_TIMEOUT,
+        OHOS::Media::MSERR_EXT_API12_IO_NETWORK_ABNORMAL,
+        OHOS::Media::MSERR_EXT_API12_IO_NETWORK_UNAVAILABLE,
+        OHOS::Media::MSERR_EXT_API12_IO_NO_PERMISSION,
+        OHOS::Media::MSERR_EXT_API12_IO_REQUEST_DENID,
+        OHOS::Media::MSERR_EXT_API12_IO_RESOURE_NOT_FOUND,
+        OHOS::Media::MSERR_EXT_API12_IO_SSL_CLIENT_CERT_NEEDED,
+        OHOS::Media::MSERR_EXT_API12_IO_SSL_CONNECT_FAIL,
+        OHOS::Media::MSERR_EXT_API12_IO_SSL_SERVER_CERT_UNTRUSTED,
+        OHOS::Media::MSERR_EXT_API12_IO_UNSUPPORTTED_REQEST,
+    };
 }
 
 namespace OHOS {
@@ -711,6 +711,11 @@ void AVPlayerCallback::OnAudioDeviceChangeCb(const int32_t extra, const Format &
 AVPlayerCallback::~AVPlayerCallback()
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instance destroy", FAKE_POINTER(this));
+}
+
+bool AVPlayerCallback::IsAPI13Error(MediaServiceExtErrCodeAPI9 error)
+{
+    return API13_EXT_IO_ERRORS.find(error) != API13_EXT_IO_ERRORS.end();
 }
 
 void AVPlayerCallback::OnError(int32_t errorCode, const std::string &errorMsg)
