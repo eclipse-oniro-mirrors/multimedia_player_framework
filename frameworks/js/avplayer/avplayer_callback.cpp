@@ -31,7 +31,10 @@
 #include "ipc_skeleton.h"
 
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_ONLY_PRERELEASE, LOG_DOMAIN_PLAYER, "AVPlayerCallback" };
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_ONLY_PRERELEASE, LOG_DOMAIN_PLAYER, "AVPlayerCallback" };
+    int32_t ROUND_VERSION_NUMBER = 100;
+    int32_t API_VERSION_12 = 12;
+    int32_t FAULT_API_VERSION = -1;
 }
 
 namespace OHOS {
