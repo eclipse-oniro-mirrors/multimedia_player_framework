@@ -32,14 +32,15 @@ using namespace OHOS::AudioStandard;
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_METADATA, "AVImageGeneratorNapi" };
-static constexpr uint8_t ARG_ZERO = 0;
-static constexpr uint8_t ARG_ONE = 1;
-static constexpr uint8_t ARG_TWO = 2;
+constexpr uint8_t ARG_ZERO = 0;
+constexpr uint8_t ARG_ONE = 1;
+constexpr uint8_t ARG_TWO = 2;
 }
 
 namespace OHOS {
 namespace Media {
 thread_local napi_ref AVImageGeneratorNapi::constructor_ = nullptr;
+const std::string CLASS_NAME = "AVImageGenerator";
 
 AVImageGeneratorNapi::AVImageGeneratorNapi()
 {
@@ -67,14 +68,14 @@ napi_value AVImageGeneratorNapi::Init(napi_env env, napi_value exports)
     napi_value constructor = nullptr;
     CHECK_AND_RETURN_RET_LOG(sizeof(properties[0]) != 0, nullptr, "Failed to define calss");
 
-    napi_status status = napi_define_class(env, LABEL.tag, NAPI_AUTO_LENGTH, Constructor, nullptr,
+    napi_status status = napi_define_class(env, CLASS_NAME.c_str(), NAPI_AUTO_LENGTH, Constructor, nullptr,
         sizeof(properties) / sizeof(properties[0]), properties, &constructor);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to define AVImageGenerator class");
 
     status = napi_create_reference(env, constructor, 1, &constructor_);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to create reference of constructor");
 
-    status = napi_set_named_property(env, exports, LABEL.tag, constructor);
+    status = napi_set_named_property(env, exports, CLASS_NAME.c_str(), constructor);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to set constructor");
 
     status = napi_define_properties(env, exports, sizeof(staticProperty) / sizeof(staticProperty[0]), staticProperty);
@@ -94,17 +95,17 @@ napi_value AVImageGeneratorNapi::Constructor(napi_env env, napi_callback_info in
     napi_status status = napi_get_cb_info(env, info, &argCount, nullptr, &jsThis, nullptr);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "failed to napi_get_cb_info");
 
-    AVImageGeneratorNapi *napi = new (std::nothrow) AVImageGeneratorNapi();
-    CHECK_AND_RETURN_RET_LOG(napi != nullptr, result, "failed to new AVImageGeneratorNapi");
+    AVImageGeneratorNapi *generator = new(std::nothrow) AVImageGeneratorNapi();
+    CHECK_AND_RETURN_RET_LOG(generator != nullptr, result, "failed to new AVImageGeneratorNapi");
 
-    napi->env_ = env;
-    napi->helper_ = AVMetadataHelperFactory::CreateAVMetadataHelper();
-    CHECK_AND_RETURN_RET_LOG(napi->helper_ != nullptr, result, "failed to CreateMetadataHelper");
+    generator->env_ = env;
+    generator->helper_ = AVMetadataHelperFactory::CreateAVMetadataHelper();
+    CHECK_AND_RETURN_RET_LOG(generator->helper_ != nullptr, result, "failed to CreateMetadataHelper");
 
-    status =
-        napi_wrap(env, jsThis, reinterpret_cast<void *>(napi), AVImageGeneratorNapi::Destructor, nullptr, nullptr);
+    status = napi_wrap(env, jsThis, reinterpret_cast<void *>(generator),
+        AVImageGeneratorNapi::Destructor, nullptr, nullptr);
     if (status != napi_ok) {
-        delete napi;
+        delete generator;
         MEDIA_LOGE("Failed to wrap native instance");
         return result;
     }
@@ -128,17 +129,19 @@ void AVImageGeneratorNapi::Destructor(napi_env env, void *nativeObject, void *fi
 napi_value AVImageGeneratorNapi::JsCreateAVImageGenerator(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("AVImageGeneratorNapi::JsCreateAVImageGenerator");
-    MEDIA_LOGI("JsCreateAVImageGenerator In");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
+    MEDIA_LOGI("JsCreateAVImageGenerator In");
 
+    std::unique_ptr<MediaAsyncContext> asyncContext = std::make_unique<MediaAsyncContext>(env);
+
+    // get args
     napi_value jsThis = nullptr;
     napi_value args[1] = { nullptr };
     size_t argCount = 1;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsThis != nullptr, result, "failed to napi_get_cb_info");
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsThis != nullptr, nullptr, "failed to napi_get_cb_info");
 
-    std::unique_ptr<MediaAsyncContext> asyncContext = std::make_unique<MediaAsyncContext>(env);
     asyncContext->callbackRef = CommonNapi::CreateReference(env, args[0]);
     asyncContext->deferred = CommonNapi::CreatePromise(env, asyncContext->callbackRef, result);
     asyncContext->JsResult = std::make_unique<MediaJsResultInstance>(constructor_);
@@ -146,13 +149,48 @@ napi_value AVImageGeneratorNapi::JsCreateAVImageGenerator(napi_env env, napi_cal
 
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "JsCreateAVImageGenerator", NAPI_AUTO_LENGTH, &resource);
-    NAPI_CALL(env, napi_create_async_work(
-        env, nullptr, resource, [](napi_env env, void *data) {}, MediaAsyncContext::CompleteCallback,
-        static_cast<void *>(asyncContext.get()), &asyncContext->work));
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void *data) {},
+        MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncContext.get()), &asyncContext->work));
     NAPI_CALL(env, napi_queue_async_work(env, asyncContext->work));
     asyncContext.release();
     MEDIA_LOGI("JsCreateAVImageGenerator Out");
     return result;
+}
+
+int32_t AVImageGeneratorNapi::GetFetchFrameArgs(
+    std::unique_ptr<AVImageGeneratorAsyncContext> &asyncCtx, napi_env env, napi_value param[])
+{
+    napi_value timeUs = param[ARG_ZERO];
+    napi_value option = param[ARG_ONE];
+    napi_value params = param[ARG_TWO];
+
+    napi_status ret = napi_get_value_int64(env, timeUs, &asyncCtx->napi->timeUs_);
+    if (ret != napi_ok) {
+        asyncCtx->SignError(MSERR_INVALID_VAL, "failed to get timeUs");
+        return MSERR_INVALID_VAL;
+    }
+    ret = napi_get_value_int32(env, option, &asyncCtx->napi->option_);
+    if (ret != napi_ok) {
+        asyncCtx->SignError(MSERR_INVALID_VAL, "failed to get option");
+        return MSERR_INVALID_VAL;
+    }
+    int32_t width = 0;
+    CommonNapi::GetPropertyInt32(env, params, "width", width);
+    int32_t height = 0;
+    CommonNapi::GetPropertyInt32(env, params, "height", height);
+    int32_t formatVal = 3;
+    CommonNapi::GetPropertyInt32(env, params, "colorFormat", formatVal);
+    PixelFormat colorFormat = static_cast<PixelFormat>(formatVal);
+    if (colorFormat != PixelFormat::RGB_565 && colorFormat != PixelFormat::RGB_888 &&
+        colorFormat != PixelFormat::RGBA_8888) {
+        asyncCtx->SignError(MSERR_INVALID_VAL, "formatVal is invalid");
+        return MSERR_INVALID_VAL;
+    }
+
+    asyncCtx->napi->param_.dstWidth = width;
+    asyncCtx->napi->param_.dstHeight = height;
+    asyncCtx->napi->param_.colorFormat = colorFormat;
+    return MSERR_OK;
 }
 
 napi_value AVImageGeneratorNapi::JsFetchFrameAtTime(napi_env env, napi_callback_info info)
@@ -175,14 +213,12 @@ napi_value AVImageGeneratorNapi::JsFetchFrameAtTime(napi_env env, napi_callback_
     asyncCtx->napi = napi;
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[argCallback]);
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
-
     napi_valuetype valueType = napi_undefined;
     bool notParamValid = argCount < argCallback || napi_typeof(env, args[argPixelParam], &valueType) != napi_ok ||
                         valueType != napi_object || asyncCtx->napi->GetFetchFrameArgs(asyncCtx, env, args) != MSERR_OK;
     if (notParamValid) {
         asyncCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "JsFetchFrameAtTime");
     }
-
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "JsFetchFrameAtTime", NAPI_AUTO_LENGTH, &resource);
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void *data) {
@@ -205,48 +241,13 @@ napi_value AVImageGeneratorNapi::JsFetchFrameAtTime(napi_env env, napi_callback_
     return result;
 }
 
-int32_t AVImageGeneratorNapi::GetFetchFrameArgs(
-    std::unique_ptr<AVImageGeneratorAsyncContext> &asyncCtx, napi_env env, napi_value param[])
-{
-    napi_value timeUs = param[ARG_ZERO];
-    napi_value option = param[ARG_ONE];
-    napi_value params = param[ARG_TWO];
-
-    napi_status ret = napi_get_value_int64(env, timeUs, &asyncCtx->napi->timeUs_);
-    if (ret != napi_ok) {
-        asyncCtx->SignError(MSERR_INVALID_VAL, "failed to get timeUs");
-        return MSERR_INVALID_VAL;
-    }
-    ret = napi_get_value_int32(env, option, &asyncCtx->napi->option_);
-    if (ret != napi_ok) {
-        asyncCtx->SignError(MSERR_INVALID_VAL, "failed to get option");
-        return MSERR_INVALID_VAL;
-    }
-
-    int32_t width = 0;
-    CommonNapi::GetPropertyInt32(env, params, "width", width);
-    int32_t height = 0;
-    CommonNapi::GetPropertyInt32(env, params, "height", height);
-    int32_t formatVal = 3;
-    CommonNapi::GetPropertyInt32(env, params, "colorFormat", formatVal);
-
-    PixelFormat colorFormat = static_cast<PixelFormat>(formatVal);
-    if (colorFormat != PixelFormat::RGB_565 && colorFormat != PixelFormat::RGB_888 &&
-        colorFormat != PixelFormat::RGBA_8888) {
-        asyncCtx->SignError(MSERR_INVALID_VAL, "formatVal is invalid");
-        return MSERR_INVALID_VAL;
-    }
-
-    asyncCtx->napi->param_.dstWidth = width;
-    asyncCtx->napi->param_.dstHeight = height;
-    asyncCtx->napi->param_.colorFormat = colorFormat;
-    return MSERR_OK;
-}
-
 void AVImageGeneratorNapi::CreatePixelMapComplete(napi_env env, napi_status status, void *data)
 {
     napi_value result = nullptr;
-    auto context = static_cast<AVImageGeneratorAsyncContext *>(data);
+
+    MEDIA_LOGI("CreatePixelMapComplete In");
+    auto context = static_cast<AVImageGeneratorAsyncContext*>(data);
+
     if (status == napi_ok && context->errCode == napi_ok) {
         MEDIA_LOGI("set pixel map success");
         context->status = MSERR_OK;
@@ -256,13 +257,14 @@ void AVImageGeneratorNapi::CreatePixelMapComplete(napi_env env, napi_status stat
         MEDIA_LOGW("set pixel map failed");
         napi_get_undefined(env, &result);
     }
+
     CommonCallbackRoutine(env, context, result);
 }
 
-void AVImageGeneratorNapi::CommonCallbackRoutine(
-    napi_env env, AVImageGeneratorAsyncContext *&asyncContext, const napi_value &valueParam)
+void AVImageGeneratorNapi::CommonCallbackRoutine(napi_env env, AVImageGeneratorAsyncContext* &asyncContext,
+    const napi_value &valueParam)
 {
-    napi_value result[2] = { 0 };
+    napi_value result[2] = {0};
     napi_value retVal;
     napi_value callback = nullptr;
 
@@ -281,7 +283,6 @@ void AVImageGeneratorNapi::CommonCallbackRoutine(
         (void)CommonNapi::CreateError(env, asyncContext->errCode, asyncContext->errMessage, callback);
         result[0] = callback;
     }
-
     if (asyncContext->deferred && asyncContext->status == ERR_OK) {
         napi_resolve_deferred(env, asyncContext->deferred, result[1]);
     } else if (asyncContext->deferred) {
@@ -302,34 +303,33 @@ void AVImageGeneratorNapi::CommonCallbackRoutine(
 napi_value AVImageGeneratorNapi::JsRelease(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("AVImageGeneratorNapi::release");
-    MEDIA_LOGI("JsRelease In");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
+    MEDIA_LOGI("JsRelease In");
 
+    auto promiseCtx = std::make_unique<AVImageGeneratorAsyncContext>(env);
     napi_value args[1] = { nullptr };
     size_t argCount = 1;
-    AVImageGeneratorNapi *napi = AVImageGeneratorNapi::GetJsInstanceWithParameter(env, info, argCount, args);
-    CHECK_AND_RETURN_RET_LOG(napi != nullptr, result, "failed to GetJsInstance");
-
-    auto asyncCtx = std::make_unique<AVImageGeneratorAsyncContext>(env);
-    asyncCtx->napi = napi;
-    asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
-    asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
+    AVImageGeneratorNapi *generator = AVImageGeneratorNapi::GetJsInstanceWithParameter(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(generator != nullptr, result, "failed to GetJsInstance");
+    promiseCtx->napi = generator;
+    promiseCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
+    promiseCtx->deferred = CommonNapi::CreatePromise(env, promiseCtx->callbackRef, result);
 
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "JsRelease", NAPI_AUTO_LENGTH, &resource);
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void *data) {
-        auto asyncCtx = reinterpret_cast<AVImageGeneratorAsyncContext *>(data);
-        CHECK_AND_RETURN_LOG(asyncCtx && asyncCtx->napi, "Invalid asyncCtx.");
-        if (asyncCtx->napi->state_ == HelperState::HELPER_STATE_RELEASED) {
-            asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Has released once, can't release again.");
+        auto promiseCtx = reinterpret_cast<AVImageGeneratorAsyncContext *>(data);
+        CHECK_AND_RETURN_LOG(promiseCtx && promiseCtx->napi, "Invalid promiseCtx.");
+        if (promiseCtx->napi->state_ == HelperState::HELPER_STATE_RELEASED) {
+            promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Has released once, can't release again.");
             return;
         }
-        CHECK_AND_RETURN_LOG(asyncCtx->napi->helper_, "asyncCtx has invalid data.");
-        asyncCtx->napi->helper_->Release();
-    }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
-    napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated);
-    asyncCtx.release();
+        CHECK_AND_RETURN_LOG(promiseCtx->napi->helper_, "promiseCtx has invalid data.");
+        promiseCtx->napi->helper_->Release();
+    }, MediaAsyncContext::CompleteCallback, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
+    napi_queue_async_work_with_qos(env, promiseCtx->work, napi_qos_user_initiated);
+    promiseCtx.release();
     MEDIA_LOGI("JsRelease Out");
     return result;
 }
@@ -337,44 +337,45 @@ napi_value AVImageGeneratorNapi::JsRelease(napi_env env, napi_callback_info info
 napi_value AVImageGeneratorNapi::JsSetAVFileDescriptor(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("AVImageGeneratorNapi::set fd");
-    MEDIA_LOGI("JsSetAVFileDescriptor In");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
+    MEDIA_LOGI("JsSetAVFileDescriptor In");
 
     napi_value args[1] = { nullptr };
-    size_t argCount = 1;
-    AVImageGeneratorNapi *napi = AVImageGeneratorNapi::GetJsInstanceWithParameter(env, info, argCount, args);
-    CHECK_AND_RETURN_RET_LOG(napi != nullptr, result, "failed to GetJsInstanceWithParameter");
+    size_t argCount = 1; // url: string
+    AVImageGeneratorNapi *generator = AVImageGeneratorNapi::GetJsInstanceWithParameter(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(generator != nullptr, result, "failed to GetJsInstanceWithParameter");
+
     CHECK_AND_RETURN_RET_LOG(
-        napi->state_ == HelperState::HELPER_STATE_IDLE, result, "Has set source once, unsupport set again");
-    
+        generator->state_ == HelperState::HELPER_STATE_IDLE, result, "Has set source once, unsupport set again");
+
     napi_valuetype valueType = napi_undefined;
     bool notValidParam = argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object ||
-        !CommonNapi::GetFdArgument(env, args[0], napi->fileDescriptor_);
+        !CommonNapi::GetFdArgument(env, args[0], generator->fileDescriptor_);
     CHECK_AND_RETURN_RET_LOG(!notValidParam, result, "Invalid file descriptor, return");
-    CHECK_AND_RETURN_RET_LOG(napi->helper_, result, "Invalid AVImageGeneratorNapi.");
+    CHECK_AND_RETURN_RET_LOG(generator->helper_, result, "Invalid AVImageGeneratorNapi.");
 
-    auto fileDescriptor = napi->fileDescriptor_;
-    auto res = napi->helper_->SetSource(fileDescriptor.fd, fileDescriptor.offset, fileDescriptor.length);
-    napi->state_ = res == MSERR_OK ? HelperState::HELPER_STATE_RUNNABLE : HelperState::HELPER_ERROR;
+    auto fileDescriptor = generator->fileDescriptor_;
+    auto res = generator->helper_->SetSource(fileDescriptor.fd, fileDescriptor.offset, fileDescriptor.length);
+    generator->state_ = res == MSERR_OK ? HelperState::HELPER_STATE_RUNNABLE : HelperState::HELPER_ERROR;
     return result;
 }
 
 napi_value AVImageGeneratorNapi::JsGetAVFileDescriptor(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("AVImageGeneratorNapi::get fd");
-    MEDIA_LOGI("JsGetAVFileDescriptor In");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
+    MEDIA_LOGI("JsGetAVFileDescriptor In");
 
-    AVImageGeneratorNapi *napi = AVImageGeneratorNapi::GetJsInstance(env, info);
-    CHECK_AND_RETURN_RET_LOG(napi != nullptr, result, "failed to GetJsInstance");
+    AVImageGeneratorNapi *generator = AVImageGeneratorNapi::GetJsInstance(env, info);
+    CHECK_AND_RETURN_RET_LOG(generator != nullptr, result, "failed to GetJsInstance");
 
     napi_value value = nullptr;
     (void)napi_create_object(env, &value);
-    (void)CommonNapi::AddNumberPropInt32(env, value, "fd", napi->fileDescriptor_.fd);
-    (void)CommonNapi::AddNumberPropInt64(env, value, "offset", napi->fileDescriptor_.offset);
-    (void)CommonNapi::AddNumberPropInt64(env, value, "length", napi->fileDescriptor_.length);
+    (void)CommonNapi::AddNumberPropInt32(env, value, "fd", generator->fileDescriptor_.fd);
+    (void)CommonNapi::AddNumberPropInt64(env, value, "offset", generator->fileDescriptor_.offset);
+    (void)CommonNapi::AddNumberPropInt64(env, value, "length", generator->fileDescriptor_.length);
 
     MEDIA_LOGI("JsGetAVFileDescriptor Out");
     return value;
@@ -387,25 +388,25 @@ AVImageGeneratorNapi* AVImageGeneratorNapi::GetJsInstance(napi_env env, napi_cal
     napi_status status = napi_get_cb_info(env, info, &argCount, nullptr, &jsThis, nullptr);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsThis != nullptr, nullptr, "failed to napi_get_cb_info");
 
-    AVImageGeneratorNapi *napi = nullptr;
-    status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&napi));
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok && napi != nullptr, nullptr, "failed to napi_unwrap");
+    AVImageGeneratorNapi *generator = nullptr;
+    status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&generator));
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && generator != nullptr, nullptr, "failed to napi_unwrap");
 
-    return napi;
+    return generator;
 }
 
-AVImageGeneratorNapi* AVImageGeneratorNapi::GetJsInstanceWithParameter(
-    napi_env env, napi_callback_info info, size_t &argc, napi_value *argv)
+AVImageGeneratorNapi* AVImageGeneratorNapi::GetJsInstanceWithParameter(napi_env env, napi_callback_info info,
+    size_t &argc, napi_value *argv)
 {
     napi_value jsThis = nullptr;
     napi_status status = napi_get_cb_info(env, info, &argc, argv, &jsThis, nullptr);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsThis != nullptr, nullptr, "failed to napi_get_cb_info");
 
-    AVImageGeneratorNapi *napi = nullptr;
-    status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&napi));
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok && napi != nullptr, nullptr, "failed to napi_unwrap");
+    AVImageGeneratorNapi *generator = nullptr;
+    status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&generator));
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && generator != nullptr, nullptr, "failed to napi_unwrap");
 
-    return napi;
+    return generator;
 }
-}  // namespace Media
-}  // namespace OHOS
+} // namespace Media
+} // namespace OHOS
