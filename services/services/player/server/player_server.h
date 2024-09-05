@@ -252,6 +252,7 @@ private:
     bool isAudioMuted_ = false;
     bool maxAmplitudeCbStatus_ = false;
     bool deviceChangeCallbackflag_ = false;
+    bool isStreamUsagePauseRequired_ = true;
 };
 } // namespace Media
 } // namespace OHOS
