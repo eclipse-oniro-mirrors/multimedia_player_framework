@@ -197,14 +197,13 @@ napi_value AVImageGeneratorNapi::JsFetchFrameAtTime(napi_env env, napi_callback_
 {
     MediaTrace trace("AVImageGeneratorNapi::JsFetchFrameAtTime");
     MEDIA_LOGI("JsFetchFrameAtTime  in");
-    napi_value result = nullptr;
-    napi_get_undefined(env, &result);
-
     const int32_t maxArgs = 4;  // args + callback
     const int32_t argCallback = 3;
     const int32_t argPixelParam = 2;
     size_t argCount = maxArgs;
     napi_value args[maxArgs] = { nullptr };
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
     
     AVImageGeneratorNapi *napi = AVImageGeneratorNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(napi != nullptr, result, "failed to GetJsInstance");
