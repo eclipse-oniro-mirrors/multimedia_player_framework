@@ -77,6 +77,7 @@ group("fuzztest") {
     "screen_capture_fuzztest/screencapturendkvideoframewidth_fuzzer:ScreenCaptureNdkVideoFrameWidthFuzzTest",
     "screen_capture_fuzztest/screencapturendkvideosourcetype_fuzzer:ScreenCaptureNdkVideoSourceTypeFuzzTest",
     "screen_capture_fuzztest/screencaptureresizecanvas_fuzzer:ScreenCaptureResizeCanvasFuzzTest",
+    "screen_capture_fuzztest/screencaptureservicestub_fuzzer:ScreenCaptureServiceStubFuzzTest",
     "screen_capture_fuzztest/screencapturesetcanvasrotation_fuzzer:ScreenCaptureSetCanvasRotationFuzzTest",
     "screen_capture_fuzztest/screencapturesetmicrophoneenabled_fuzzer:ScreenCaptureSetMicrophoneEnabledFuzzTest",
     "screen_capture_fuzztest/screencaptureskipprivacymode_fuzzer:ScreenCaptureSkipPrivacyModeFuzzTest",
