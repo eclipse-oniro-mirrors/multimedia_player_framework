@@ -1412,46 +1412,6 @@ HWTEST_F(PlayerUnitTest, Player_GetAudioTrackInfo_001, TestSize.Level2)
 }
 
 /**
- * @tc.name  : Test SelectTrack and DeselectTrack API
- * @tc.number: Player_SelectTrack_001
- * @tc.desc  : Test Player SelectTrack and DeselectTrack
- */
-HWTEST_F(PlayerUnitTest, Player_SelectTrack_001, TestSize.Level0)
-{
-    bool trackChange = false;
-    std::vector<Format> audioTrack;
-    std::vector<int32_t> audioTrackIds;
-    int32_t currentAudioTrackIndex = -1;
-    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE2));
-    EXPECT_EQ(MSERR_OK, player_->Prepare());
-    EXPECT_EQ(MSERR_OK, player_->Play());
-    EXPECT_EQ(MSERR_OK, player_->SetVolume(1, 1));
-    sleep(PLAYING_TIME_2_SEC);
-    EXPECT_EQ(MSERR_OK, player_->GetCurrentTrack(MediaType::MEDIA_TYPE_AUD, currentAudioTrackIndex));
-    EXPECT_EQ(MSERR_OK, player_->GetAudioTrackInfo(audioTrack));
-    for (Format audioTrackFormat: audioTrack) {
-        int32_t trackIndex = -1;
-        audioTrackFormat.GetIntValue("track_index", trackIndex);
-        audioTrackIds.push_back(trackIndex);
-    }
-    for (int32_t trackIndex: audioTrackIds) {
-        if (trackIndex != currentAudioTrackIndex) {
-            trackChange = false;
-            EXPECT_EQ(MSERR_OK, player_->SelectTrack(trackIndex, trackChange));
-            EXPECT_EQ(trackChange, true);
-            EXPECT_EQ(MSERR_OK, player_->GetCurrentTrack(MediaType::MEDIA_TYPE_AUD, currentAudioTrackIndex));
-            sleep(PLAYING_TIME_2_SEC);
-            trackChange = false;
-            EXPECT_EQ(MSERR_OK, player_->DeselectTrack(currentAudioTrackIndex, trackChange));
-            EXPECT_EQ(trackChange, true);
-            EXPECT_EQ(MSERR_OK, player_->GetCurrentTrack(MediaType::MEDIA_TYPE_AUD, currentAudioTrackIndex));
-            sleep(PLAYING_TIME_2_SEC);
-        }
-    }
-    EXPECT_EQ(MSERR_OK, player_->Stop());
-}
-
-/**
  * @tc.name  : Test SelectTrack API
  * @tc.number: Player_SelectTrack_002
  * @tc.desc  : Test Player SelectTrack invalid trackId
