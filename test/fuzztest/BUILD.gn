@@ -45,6 +45,7 @@ group("fuzztest") {
     "recorder_fuzztest/recordersetvideoframerate_fuzzer:RecorderSetVideoFrameRateFuzzTest",
     "recorder_fuzztest/recordersetvideosize_fuzzer:RecorderSetVideoSizeFuzzTest",
     "recorder_fuzztest/recordersetvideosource_fuzzer:RecorderSetVideoSourceFuzzTest",
+    "screen_capture_fuzztest/screencaptureservicestub_fuzzer:ScreenCaptureServiceStubFuzzTest",
     "screen_capture_fuzztest/screencaptureacquireaudiobuffer_fuzzer:ScreenCaptureAcquireAudioBufferFuzzTest",
     "screen_capture_fuzztest/screencaptureacquirevideobuffer_fuzzer:ScreenCaptureAcquireVideoBufferFuzzTest",
     "screen_capture_fuzztest/screencaptureaudiobitratefile_fuzzer:ScreenCaptureAudioBitRateFileFuzzTest",
