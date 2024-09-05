@@ -12,6 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#define CHECK_FAULT_APPINFO(ptr)
+    do {
+        if (ptr == nullptr) {
+            MEDIA_LOGE("Get nullptr, fail to get bundle name.");
+            return FAULT_API_VERSION;
+            }
+    } while (0)
 
 #include <map>
 #include <iostream>
@@ -1376,22 +1383,13 @@ int32_t AVPlayerCallback::GetApiversion(int32_t uid)
     AppExecFwk::ApplicationInfo appInfo;
 
     auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    if (samgr == nullptr) {
-        MEDIA_LOGE("Get ability manager failed");
-        return FAULT_API_VERSION;
-    }
+    CHECK_FAULT_APPINFO(samgr);
 
     sptr<IRemoteObject> object = samgr->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
-    if (object == nullptr) {
-        MEDIA_LOGE("object is NULL.");
-        return FAULT_API_VERSION;
-    }
+    CHECK_FAULT_APPINFO(object);
 
     sptr<OHOS::AppExecFwk::IBundleMgr> bms = iface_cast<OHOS::AppExecFwk::IBundleMgr>(object);
-    if (bms == nullptr) {
-        MEDIA_LOGE("bundle manager service is NULL.");
-        return FAULT_API_VERSION;
-    }
+    CHECK_FAULT_APPINFO(bms);
 
     auto result = bms->GetNameForUid(uid, bundleName);
     MEDIA_LOGI("bundle name is %{public}s ", bundleName.c_str());
