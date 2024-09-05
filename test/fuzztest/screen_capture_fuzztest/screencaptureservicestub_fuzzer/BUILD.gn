@@ -28,7 +28,7 @@ ohos_fuzztest("ScreenCaptureServiceStubFuzzTest") {
     "$MEDIA_ROOT_DIR/services/utils/include",
     "$MEDIA_ROOT_DIR/test/fuzztest/common/",
     "$MEDIA_PLAYER_GRAPHIC/interfaces/innerkits/surface",
-    "../../../../services/services/recorder/ipc",
+    "../../../../services/services/screen_capture/ipc",
     "../../../../services/services/sa_media/ipc",
     "../../../../services/services/sa_media/server",
     "../../../../services/include",
