@@ -50,8 +50,10 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnVoIPStatusChanged_001, TestSize.Leve
     screenCaptureServer_->SetMicrophoneEnabled(true);
     ASSERT_EQ(StartFileAudioCapture(), MSERR_OK);
     sleep(RECORDER_TIME);
+    screenCaptureServer_->audioSource_->isInVoIPCall_ = true;
     ASSERT_EQ(screenCaptureServer_->OnVoIPStatusChanged(true), MSERR_OK);
     sleep(RECORDER_TIME);
+    screenCaptureServer_->audioSource_->isInVoIPCall_ = false;
     ASSERT_EQ(screenCaptureServer_->OnVoIPStatusChanged(false), MSERR_OK);
     sleep(RECORDER_TIME);
     ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
@@ -72,8 +74,10 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnVoIPStatusChanged_002, TestSize.Leve
     screenCaptureServer_->SetMicrophoneEnabled(false);
     ASSERT_EQ(StartFileAudioCapture(), MSERR_OK);
     sleep(RECORDER_TIME);
+    screenCaptureServer_->audioSource_->isInVoIPCall_ = true;
     ASSERT_EQ(screenCaptureServer_->OnVoIPStatusChanged(true), MSERR_OK);
     sleep(RECORDER_TIME);
+    screenCaptureServer_->audioSource_->isInVoIPCall_ = false;
     ASSERT_EQ(screenCaptureServer_->OnVoIPStatusChanged(false), MSERR_OK);
     sleep(RECORDER_TIME);
     ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
@@ -95,10 +99,12 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnVoIPStatusChanged_003, TestSize.Leve
     ASSERT_EQ(screenCaptureServer_->GetMicWorkingState(), false);
     ASSERT_EQ(StartFileAudioCapture(), MSERR_OK);
     sleep(RECORDER_TIME / 2);
+    screenCaptureServer_->audioSource_->isInVoIPCall_ = true;
     ASSERT_EQ(screenCaptureServer_->OnVoIPStatusChanged(true), MSERR_OK);
     sleep(RECORDER_TIME / 2);
     ASSERT_EQ(screenCaptureServer_->OnSpeakerAliveStatusChanged(true), MSERR_OK);
     sleep(RECORDER_TIME / 2);
+    screenCaptureServer_->audioSource_->isInVoIPCall_ = false;
     ASSERT_EQ(screenCaptureServer_->OnVoIPStatusChanged(false), MSERR_OK);
     sleep(RECORDER_TIME / 2);
     ASSERT_EQ(screenCaptureServer_->OnSpeakerAliveStatusChanged(false), MSERR_OK);
@@ -121,10 +127,12 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnVoIPStatusChanged_004, TestSize.Leve
     screenCaptureServer_->SetMicrophoneEnabled(true);
     ASSERT_EQ(StartFileAudioCapture(), MSERR_OK);
     sleep(RECORDER_TIME / 2);
+    screenCaptureServer_->audioSource_->isInVoIPCall_ = true;
     ASSERT_EQ(screenCaptureServer_->OnVoIPStatusChanged(true), MSERR_OK);
     sleep(RECORDER_TIME / 2);
     ASSERT_EQ(screenCaptureServer_->OnSpeakerAliveStatusChanged(false), MSERR_OK);
     sleep(RECORDER_TIME / 2);
+    screenCaptureServer_->audioSource_->isInVoIPCall_ = false;
     ASSERT_EQ(screenCaptureServer_->OnVoIPStatusChanged(false), MSERR_OK);
     sleep(RECORDER_TIME / 2);
     ASSERT_EQ(screenCaptureServer_->OnSpeakerAliveStatusChanged(true), MSERR_OK);
