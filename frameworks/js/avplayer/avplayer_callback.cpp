@@ -12,13 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#define CHECK_FAULT_APPINFO(ptr)
-    do {
-        if (ptr == nullptr) {
-            MEDIA_LOGE("Get nullptr, fail to get bundle name.");
-            return FAULT_API_VERSION;
-            }
-    } while (0)
+#define CHECK_FAULT_APPINFO(ptr)                                 \
+    do {                                                         \
+        if (ptr == nullptr) {                                    \
+            MEDIA_LOGE("Get nullptr, fail to get bundle name."); \
+            return FAULT_API_VERSION;                            \
+            }                                                    \
+    } while (0)                                                  \
 
 #include <map>
 #include <iostream>
@@ -710,7 +710,7 @@ AVPlayerCallback::~AVPlayerCallback()
 void AVPlayerCallback::OnError(int32_t errorCode, const std::string &errorMsg)
 {
     appUid_ = getuid();
-    auto apiTargetVersion = GetApiversion(appUid_, false);
+    auto apiTargetVersion = GetApiversion(appUid_);
     MEDIA_LOGI("AVPlayer get apiVersion: %{public}d", apiTargetVersion);
     MediaServiceExtErrCodeAPI9 errorCodeApi9 = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errorCode));
     if (errorCodeApi9 == MSERR_EXT_API9_NO_PERMISSION ||
