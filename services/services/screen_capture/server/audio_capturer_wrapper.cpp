@@ -317,9 +317,9 @@ int32_t AudioCapturerWrapper::CaptureAudio()
         bufferCond_.notify_all();
         CHECK_AND_RETURN_RET_LOG(isRunning_.load(), MSERR_OK, "CaptureAudio is not running, ignore and stop"
             " %{public}s", name.c_str());
-        CHECK_AND_RETURN_RET_LOG(screenCaptureCb_ != nullptr,
-            (screenCaptureCb_->OnAudioBufferAvailable(true, audioInfo_.audioSource), MSERR_OK),
+        CHECK_AND_RETURN_RET_LOG(screenCaptureCb_ != nullptr, MSERR_OK,
             "no consumer, will drop audio frame %{public}s", name.c_str());
+        screenCaptureCb_->OnAudioBufferAvailable(true, audioInfo_.audioSource);
     }
     MEDIA_LOGI("0x%{public}06" PRIXPTR " CaptureAudio E, name:%{public}s", FAKE_POINTER(this), threadName_.c_str());
     return MSERR_OK;
