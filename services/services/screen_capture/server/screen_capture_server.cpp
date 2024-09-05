@@ -310,6 +310,7 @@ ScreenCaptureServer::~ScreenCaptureServer()
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
     ReleaseInner();
+    CloseFd();
 }
 
 void ScreenCaptureServer::SetSessionId(int32_t sessionId)
@@ -394,10 +395,9 @@ int32_t ScreenCaptureServer::SetOutputFile(int32_t outputFd)
             "File descriptor is not in read-write mode or write-only mode");
         return MSERR_INVALID_VAL;
     }
-
     CloseFd();
     outputFd_ = dup(outputFd);
-    MEDIA_LOGI("ScreenCaptureServer SetOutputFile ok");
+    MEDIA_LOGI("ScreenCaptureServer SetOutputFile End");
     return MSERR_OK;
 }
 
@@ -2376,7 +2376,6 @@ int32_t ScreenCaptureServer::StopScreenCaptureRecorder()
     }
     captureCallback_ = nullptr;
     isConsumerStart_ = false;
-    CloseFd();
     return ret;
 }
 
@@ -2401,7 +2400,6 @@ int32_t ScreenCaptureServer::StopScreenCaptureInner(AVScreenCaptureStateCode sta
     }
     DisplayManager::GetInstance().UnregisterPrivateWindowListener(displayListener_);
     if (captureState_ == AVScreenCaptureState::CREATED || captureState_ == AVScreenCaptureState::STARTING) {
-        CloseFd();
         captureState_ = AVScreenCaptureState::STOPPED;
         ScreenCaptureMonitorServer::GetInstance()->CallOnScreenCaptureFinished(appInfo_.appPid);
         isSurfaceMode_ = false;

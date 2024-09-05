@@ -664,15 +664,16 @@ int32_t RecorderServer::SetOutputFile(int32_t fd)
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
-    config_.url = fd;
-    OutFd outFileFd(fd);
+    int32_t fdRecorder = dup(fd);
+    config_.url = fdRecorder;
+    OutFd outFileFd(fdRecorder);
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->Configure(DUMMY_SOURCE_ID, outFileFd);
     });
     int32_t ret = taskQue_.EnqueueTask(task);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
-
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, (close(fdRecorder), ret), "EnqueueTask failed");
     auto result = task->GetResult();
+    close(fdRecorder);
     return result.Value();
 }
 
