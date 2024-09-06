@@ -158,6 +158,8 @@ std::shared_ptr<Meta> AVThumbnailGenerator::GetVideoTrackInfo()
 void AVThumbnailGenerator::OnOutputFormatChanged(const MediaAVCodec::Format &format)
 {
     MEDIA_LOGD("OnOutputFormatChanged");
+    outputFormat_.GetIntValue(Tag::VIDEO_PIC_WIDTH, width_);
+    outputFormat_.GetIntValue(Tag::VIDEO_PIC_WIDTH, height_);
     outputFormat_ = format;
 }
 
