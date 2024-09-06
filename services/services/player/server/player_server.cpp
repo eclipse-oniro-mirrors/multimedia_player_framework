@@ -35,7 +35,6 @@
 #include "player_server_event_receiver.h"
 #include "common/media_source.h"
 #include "audio_info.h"
-#include "native_audiostream_base.h"
 
 using namespace OHOS::QOS;
 
@@ -1146,7 +1145,9 @@ void PlayerServer::HandleAudioDeviceChangeEvent(const Format &infoBody)
     MEDIA_LOGI("0x%{public}06" PRIXPTR " HandleAudioDeviceChangeEvent in ", FAKE_POINTER(this));
     int32_t reason = -1;
     (void)infoBody.GetIntValue(PlayerKeys::AUDIO_DEVICE_CHANGE_REASON, reason);
-    if (!deviceChangeCallbackflag_ && reason == REASON_OLD_DEVICE_UNAVAILABLE && isStreamUsagePauseRequired_) {
+    if (!deviceChangeCallbackflag_ &&
+        reason == static_cast<int32_t>(OHOS::AudioStandard::AudioStreamDeviceChangeReason::OLD_DEVICE_UNAVALIABLE) &&
+        isStreamUsagePauseRequired_) {
         audioDeviceChangeState_ = PLAYER_PAUSED;
         (void)BackGroundChangeState(PLAYER_PAUSED, true);
     }
@@ -1325,8 +1326,8 @@ int32_t PlayerServer::SetParameter(const Format &param)
             streamUsage != OHOS::AudioStandard::STREAM_USAGE_MOVIE &&
             streamUsage != OHOS::AudioStandard::STREAM_USAGE_AUDIOBOOK) {
             isStreamUsagePauseRequired_ = false;
-            MEDIA_LOGI("isStreamUsagePauseRequired_ = %{public}d", isStreamUsagePauseRequired_);
         }
+        MEDIA_LOGI("isStreamUsagePauseRequired_ = %{public}d", isStreamUsagePauseRequired_);
     }
 
     if (param.ContainKey(PlayerKeys::AUDIO_EFFECT_MODE)) {
