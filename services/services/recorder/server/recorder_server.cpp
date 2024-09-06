@@ -671,6 +671,7 @@ int32_t RecorderServer::SetOutputFile(int32_t fd)
     });
     int32_t ret = taskQue_.EnqueueTask(task);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+
     auto result = task->GetResult();
     return result.Value();
 }
