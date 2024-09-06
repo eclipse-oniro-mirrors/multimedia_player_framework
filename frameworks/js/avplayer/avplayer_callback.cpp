@@ -713,7 +713,7 @@ AVPlayerCallback::~AVPlayerCallback()
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instance destroy", FAKE_POINTER(this));
 }
 
-bool AVPlayerCallback::IsAPI13Error(MediaServiceExtErrCodeAPI9 error)
+bool AVPlayerCallback::IsAPI13IOError(MediaServiceExtErrCodeAPI9 error)
 {
     return API13_EXT_IO_ERRORS.find(error) != API13_EXT_IO_ERRORS.end();
 }
