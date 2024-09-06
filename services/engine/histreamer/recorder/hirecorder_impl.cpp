@@ -287,6 +287,10 @@ int32_t HiRecorderImpl::Configure(int32_t sourceId, const RecorderParam &recPara
         default:
             break;
     }
+    if (metaDataFormats_.size() != 0 && muxerFilter_) {
+        muxerFormat_->SetData("use_timed_meta_track", 1);
+        muxerFilter_->SetParameter(muxerFormat_);
+    }
     OnStateChanged(StateId::RECORDING_SETTING);
     return (int32_t)Status::OK;
 }
@@ -720,7 +724,6 @@ void HiRecorderImpl::ConfigureMeta(int32_t sourceId, const RecorderParam &recPar
         case RecorderPublicParamType::META_SOURCE_TRACK_MIME: {
             MetaSourceTrackMime sourceTrackMime = static_cast<const MetaSourceTrackMime&>(recParam);
             metaFormat->Set<Tag::TIMED_METADATA_SRC_TRACK_MIME>(sourceTrackMime.sourceMime);
-            muxerFormat_->SetData("use_timed_meta_track", 1);
             break;
         }
         default:
