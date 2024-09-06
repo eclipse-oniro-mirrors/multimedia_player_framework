@@ -395,7 +395,6 @@ int32_t ScreenCaptureServer::SetOutputFile(int32_t outputFd)
             "File descriptor is not in read-write mode or write-only mode");
         return MSERR_INVALID_VAL;
     }
-    CloseFd();
     outputFd_ = dup(outputFd);
     MEDIA_LOGI("ScreenCaptureServer SetOutputFile End");
     return MSERR_OK;
