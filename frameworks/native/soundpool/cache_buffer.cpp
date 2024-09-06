@@ -262,14 +262,15 @@ void CacheBuffer::DealWriteData(size_t length)
             bufDesc.dataLength = length;
             cacheDataFrameIndex_ += length;
         } else {
+            size_t copyLength = fullCacheData_->size - cacheDataFrameIndex_;
             int32_t ret = memset_s(bufDesc.buffer, length, 0, length);
             CHECK_AND_RETURN_LOG(ret == MSERR_OK, "memset failed.");
             ret = memcpy_s(bufDesc.buffer, length, fullCacheData_->buffer + cacheDataFrameIndex_,
-                fullCacheData_->size - cacheDataFrameIndex_);
+                copyLength);
             CHECK_AND_RETURN_LOG(ret == MSERR_OK, "memcpy failed 2.");
             bufDesc.bufLength = length;
-            bufDesc.dataLength = fullCacheData_->size - cacheDataFrameIndex_;
-            cacheDataFrameIndex_ += fullCacheData_->size - cacheDataFrameIndex_;
+            bufDesc.dataLength = copyLength;
+            cacheDataFrameIndex_ += copyLength;
         }
         audioRenderer_->Enqueue(bufDesc);
     } else {
