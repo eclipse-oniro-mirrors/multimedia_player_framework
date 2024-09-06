@@ -683,6 +683,7 @@ int32_t PlayerServer::OnReset()
     lastOpStatus_ = PLAYER_IDLE;
     isLiveStream_ = false;
     subtitleTrackNum_ = 0;
+    isStreamUsagePauseRequired_ = true;
 
     return MSERR_OK;
 }
