@@ -161,6 +161,13 @@ void AVThumbnailGenerator::OnOutputFormatChanged(const MediaAVCodec::Format &for
     outputFormat_.GetIntValue(Tag::VIDEO_PIC_WIDTH, width_);
     outputFormat_.GetIntValue(Tag::VIDEO_PIC_WIDTH, height_);
     outputFormat_ = format;
+    int32_t width = 0;
+    int32_t height = 0;
+    bool hasWidth = format.GetIntValue(Tag::VIDEO_PIC_WIDTH, width);
+    bool hasHeight = format.GetIntValue(Tag::VIDEO_PIC_HEIGHT, height);
+    CHECK_AND_RETURN_LOG(hasWidth && hasHeight, "OutputFormat doesn't have width or height");
+    width_ = width;
+    height_ = height;
 }
 
 void AVThumbnailGenerator::OnInputBufferAvailable(uint32_t index, std::shared_ptr<AVBuffer> buffer)
