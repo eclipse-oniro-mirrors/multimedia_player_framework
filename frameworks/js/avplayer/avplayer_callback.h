@@ -81,6 +81,9 @@ private:
     void OnTrackChangedCb(const int32_t extra, const Format &infoBody);
     void OnTrackInfoUpdate(const int32_t extra, const Format &infoBody);
     bool IsValidState(PlayerStates state, std::string &stateStr);
+    bool IsAPI13IOError(MediaServiceExtErrCodeAPI9 error);
+    int32_t GetApiversion(int32_t uid);
+    int32_t appUid_ = 0;
 
     std::mutex mutex_;
     napi_env env_ = nullptr;
