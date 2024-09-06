@@ -732,7 +732,7 @@ void AVPlayerCallback::OnError(int32_t errorCode, const std::string &errorMsg)
         Format infoBody;
         AVPlayerCallback::OnInfo(INFO_TYPE_STATE_CHANGE, PLAYER_STATE_ERROR, infoBody);
     }
-    if (IsAPI13Error(errorCodeApi9) && apiTargetVersion <= API_VERSION_12) {
+    if (IsAPI13IOError(errorCodeApi9) && apiTargetVersion <= API_VERSION_12) {
         errorCodeApi9 = MSERR_EXT_API9_IO;
     }
     AVPlayerCallback::OnErrorCb(errorCodeApi9, errorMsg);
