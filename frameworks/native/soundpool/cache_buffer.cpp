@@ -257,7 +257,7 @@ void CacheBuffer::DealWriteData(size_t length)
         if (fullCacheData_->size - cacheDataFrameIndex_ >= length) {
             int32_t ret = memcpy_s(bufDesc.buffer, length,
                 fullCacheData_->buffer + cacheDataFrameIndex_, length);
-            CHECK_AND_RETURN_LOG(ret == MSERR_OK, "memcpy failed 1.");
+            CHECK_AND_RETURN_LOG(ret == MSERR_OK, "memcpy failed total length.");
             bufDesc.bufLength = length;
             bufDesc.dataLength = length;
             cacheDataFrameIndex_ += length;
@@ -267,7 +267,7 @@ void CacheBuffer::DealWriteData(size_t length)
             CHECK_AND_RETURN_LOG(ret == MSERR_OK, "memset failed.");
             ret = memcpy_s(bufDesc.buffer, length, fullCacheData_->buffer + cacheDataFrameIndex_,
                 copyLength);
-            CHECK_AND_RETURN_LOG(ret == MSERR_OK, "memcpy failed 2.");
+            CHECK_AND_RETURN_LOG(ret == MSERR_OK, "memcpy failed not enough length.");
             bufDesc.bufLength = length;
             bufDesc.dataLength = copyLength;
             cacheDataFrameIndex_ += copyLength;
