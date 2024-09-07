@@ -452,6 +452,9 @@ int32_t HiRecorderImpl::Stop(bool isDrainAll)
     muxerFilter_ = nullptr;
     isWatermarkSupported_ = false;
     codecMimeType_ = "";
+    if (audioDataSourceFilter_) {
+        pipeline_->RemoveHeadFilter(audioDataSourceFilter_);
+    }
     if (audioCaptureFilter_) {
         pipeline_->RemoveHeadFilter(audioCaptureFilter_);
     }
@@ -545,7 +548,7 @@ Status HiRecorderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, cons
                     muxerFilter_->SetOutputParameter(appUid_, appPid_, fd_, outputFormatType_);
                     muxerFilter_->SetParameter(muxerFormat_);
                     muxerFilter_->SetUserMeta(userMeta_);
-                    MEDIA_LOG_I("HiRecorder CloseFd, fd is %{public}d.", fd_);
+                    MEDIA_LOG_I("HiRecorder CloseFd, fd is %{public}d", fd_);
                     if (fd_ > 0) {
                         (void)::close(fd_);
                         fd_ = -1;

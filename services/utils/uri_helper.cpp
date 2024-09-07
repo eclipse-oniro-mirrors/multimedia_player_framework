@@ -122,7 +122,7 @@ UriHelper::UriHelper(int32_t fd, int64_t offset, int64_t size) : fd_(fd), offset
 
 UriHelper::~UriHelper()
 {
-    if (fd_ > 0) {
+    if (fd_ >= 0) {
         (void)::close(fd_);
         fd_ = -1;
     }

@@ -395,9 +395,9 @@ int32_t ScreenCaptureServer::SetOutputFile(int32_t outputFd)
             "File descriptor is not in read-write mode or write-only mode");
         return MSERR_INVALID_VAL;
     }
-    MEDIA_LOGI("ScreenCaptureServer fd in, fd is %{public}d.", outputFd);
+    MEDIA_LOGI("ScreenCaptureServer fd in, fd is %{public}d", outputFd);
     outputFd_ = dup(outputFd);
-    MEDIA_LOGI("ScreenCaptureServer fd dup, fd is %{public}d.", outputFd_);
+    MEDIA_LOGI("ScreenCaptureServer fd dup, fd is %{public}d", outputFd_);
     MEDIA_LOGI("ScreenCaptureServer SetOutputFile End");
     return MSERR_OK;
 }
@@ -1800,9 +1800,9 @@ void ScreenCaptureServer::DestroyVirtualScreen()
 void ScreenCaptureServer::CloseFd()
 {
     MediaTrace trace("ScreenCaptureServer::CloseFd");
-    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " CloseFd, fd is %{public}d.", FAKE_POINTER(this),
+    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " CloseFd, fd is %{public}d", FAKE_POINTER(this),
         outputFd_);
-    if (outputFd_ > 0) {
+    if (outputFd_ >= 0) {
         (void)::close(outputFd_);
         outputFd_ = -1;
     }
