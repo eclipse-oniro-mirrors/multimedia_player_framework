@@ -549,7 +549,7 @@ Status HiRecorderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, cons
                     muxerFilter_->SetParameter(muxerFormat_);
                     muxerFilter_->SetUserMeta(userMeta_);
                     MEDIA_LOG_I("HiRecorder CloseFd, fd is %{public}d", fd_);
-                    if (fd_ > 0) {
+                    if (fd_ >= 0) {
                         (void)::close(fd_);
                         fd_ = -1;
                     }
