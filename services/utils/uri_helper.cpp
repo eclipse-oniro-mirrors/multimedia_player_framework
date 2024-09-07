@@ -124,6 +124,7 @@ UriHelper::~UriHelper()
 {
     if (fd_ > 0) {
         (void)::close(fd_);
+        fd_ = -1;
     }
 }
 

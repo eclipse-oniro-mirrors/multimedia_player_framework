@@ -1027,8 +1027,11 @@ int32_t RecorderServer::DumpInfo(int32_t fd)
     dumpString += "RecorderServer maxDuration is: " + std::to_string(config_.maxDuration) + "\n";
     dumpString += "RecorderServer format is: " + std::to_string(config_.format) + "\n";
     dumpString += "RecorderServer maxFileSize is: " + std::to_string(config_.maxFileSize) + "\n";
-    write(fd, dumpString.c_str(), dumpString.size());
-
+    if (fd != -1) {
+        write(fd, dumpString.c_str(), dumpString.size());
+    } else {
+        MEDIA_LOGI_NO_RELEASE("%{public}s", dumpString.c_str());
+    }
     return MSERR_OK;
 }
 
