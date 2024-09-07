@@ -518,6 +518,15 @@ void HiRecorderImpl::OnEvent(const Event &event)
     }
 }
 
+void HiRecorderImpl::CloseFd()
+{
+    MEDIA_LOGI("HiRecorderImpl: 0x%{public}06" PRIXPTR " CloseFd, fd is %{public}d", FAKE_POINTER(this), fd_);
+    if (fd_ >= 0) {
+        (void)::close(fd_);
+        fd_ = -1;
+    }
+}
+
 Status HiRecorderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, const Pipeline::FilterCallBackCommand cmd,
     Pipeline::StreamType outType)
 {
@@ -548,11 +557,7 @@ Status HiRecorderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, cons
                     muxerFilter_->SetOutputParameter(appUid_, appPid_, fd_, outputFormatType_);
                     muxerFilter_->SetParameter(muxerFormat_);
                     muxerFilter_->SetUserMeta(userMeta_);
-                    MEDIA_LOG_I("HiRecorder CloseFd, fd is %{public}d", fd_);
-                    if (fd_ >= 0) {
-                        (void)::close(fd_);
-                        fd_ = -1;
-                    }
+                    CloseFd();
                 }
                 pipeline_->LinkFilters(filter, {muxerFilter_}, outType);
                 break;
