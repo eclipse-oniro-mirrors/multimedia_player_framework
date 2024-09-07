@@ -414,7 +414,9 @@ Status HiTransCoderImpl::SetTrackMime(const std::vector<std::shared_ptr<Meta>> &
 int32_t HiTransCoderImpl::SetOutputFile(const int32_t fd)
 {
     MEDIA_LOG_I("HiTransCoderImpl::SetOutputFile()");
+    MEDIA_LOG_I("HiTransCoder SetOutputFile in, fd is %{public}d.", fd);
     fd_ = dup(fd);
+    MEDIA_LOG_I("HiTransCoder SetOutputFile dup, fd is %{public}d.", fd_);
     return static_cast<int32_t>(Status::OK);
 }
 
