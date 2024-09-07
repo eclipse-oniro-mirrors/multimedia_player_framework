@@ -520,7 +520,7 @@ void HiRecorderImpl::OnEvent(const Event &event)
 
 void HiRecorderImpl::CloseFd()
 {
-    MEDIA_LOGI("HiRecorderImpl: 0x%{public}06" PRIXPTR " CloseFd, fd is %{public}d", FAKE_POINTER(this), fd_);
+    MEDIA_LOG_I("HiRecorderImpl: 0x%{public}06" PRIXPTR " CloseFd, fd is %{public}d", FAKE_POINTER(this), fd_);
     if (fd_ >= 0) {
         (void)::close(fd_);
         fd_ = -1;
