@@ -533,9 +533,9 @@ int32_t PlayerServer::BackGroundChangeState(PlayerStates state, bool isBackGroun
     backgroundState_ = state;
     MEDIA_LOGD("PlayerServer::BackGroundChangeState is called");
     isBackgroundCb_ = isBackGroundCb;
-    if (state == PLAYER_PAUSED) {
+    if (state == PLAYER_PAUSED && lastOpStatus_ == PLAYER_STARTED) {
         isBackgroundChanged_ = true;
-        return PlayerServer::Pause();
+        return PlayerServer::OnPause();
     }
     if (state == PLAYER_STARTED) {
         isBackgroundChanged_ = true;
