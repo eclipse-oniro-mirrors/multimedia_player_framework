@@ -105,6 +105,11 @@ ohos_shared_library("media_avplayer") {
 
   defines = []
   defines += player_framework_defines
+
+  if (is_arkui_x) {
+    defines += [ "CROSS_PLATFORM" ]
+  }
+  
   innerapi_tags = [ "platformsdk" ]
   part_name = "player_framework"
   subsystem_name = "multimedia"

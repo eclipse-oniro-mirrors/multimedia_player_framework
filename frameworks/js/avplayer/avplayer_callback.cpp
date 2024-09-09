@@ -25,7 +25,7 @@
 #include "event_queue.h"
 #include "avplayer_callback.h"
 
-#if !defined(IOS_PLATFORM) && !defined(ANDROID_PLATFORM)
+#ifndef CROSS_PLATFORM
 #include "os_account_manager.h"
 #include "bundle_mgr_interface.h"
 #include "system_ability_definition.h"
@@ -723,7 +723,7 @@ bool AVPlayerCallback::IsAPI13IOError(MediaServiceExtErrCodeAPI9 error)
 
 void AVPlayerCallback::OnError(int32_t errorCode, const std::string &errorMsg)
 {
-#if !defined(IOS_PLATFORM) && !defined(ANDROID_PLATFORM)
+#ifndef CROSS_PLATFORM
     appUid_ = getuid();
     auto apiTargetVersion = GetApiversion(appUid_);
     MEDIA_LOGI("AVPlayer get apiVersion: %{public}d", apiTargetVersion);
@@ -737,7 +737,7 @@ void AVPlayerCallback::OnError(int32_t errorCode, const std::string &errorMsg)
         Format infoBody;
         AVPlayerCallback::OnInfo(INFO_TYPE_STATE_CHANGE, PLAYER_STATE_ERROR, infoBody);
     }
-#if !defined(IOS_PLATFORM) && !defined(ANDROID_PLATFORM)
+#ifndef CROSS_PLATFORM
     if (IsAPI13IOError(errorCodeApi9) && apiTargetVersion <= API_VERSION_12) {
         errorCodeApi9 = MSERR_EXT_API9_IO;
     }
@@ -1393,7 +1393,7 @@ void AVPlayerCallback::Release()
     listener_ = nullptr;
 }
 
-#if !defined(IOS_PLATFORM) && !defined(ANDROID_PLATFORM)
+#ifndef CROSS_PLATFORM
 int32_t AVPlayerCallback::GetApiversion(int32_t uid)
 {
     MEDIA_LOGI("AVPlayerCallback::GetApiversion");
