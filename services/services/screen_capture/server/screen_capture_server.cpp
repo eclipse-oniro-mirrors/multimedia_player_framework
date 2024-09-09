@@ -2405,6 +2405,9 @@ int32_t ScreenCaptureServer::StopScreenCaptureInner(AVScreenCaptureStateCode sta
     if (captureState_ == AVScreenCaptureState::CREATED || captureState_ == AVScreenCaptureState::STARTING) {
         captureState_ = AVScreenCaptureState::STOPPED;
         ScreenCaptureMonitorServer::GetInstance()->CallOnScreenCaptureFinished(appInfo_.appPid);
+        if (screenCaptureCb_ != nullptr && stateCode != AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID) {
+            screenCaptureCb_->OnStateChange(stateCode);
+        }
         isSurfaceMode_ = false;
         surface_ = nullptr;
         SetErrorInfo(MSERR_OK, "normal stopped", StopReason::NORMAL_STOPPED, IsUserPrivacyAuthorityNeeded());
@@ -2437,10 +2440,8 @@ void ScreenCaptureServer::PostStopScreenCapture(AVScreenCaptureStateCode stateCo
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " PostStopScreenCapture start, stateCode:%{public}d.",
         FAKE_POINTER(this), stateCode);
     ScreenCaptureMonitorServer::GetInstance()->CallOnScreenCaptureFinished(appInfo_.appPid);
-    if (screenCaptureCb_ != nullptr) {
-        if (stateCode != AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID) {
-            screenCaptureCb_->OnStateChange(stateCode);
-        }
+    if (screenCaptureCb_ != nullptr && stateCode != AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID) {
+        screenCaptureCb_->OnStateChange(stateCode);
     }
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
     if (isPrivacyAuthorityEnabled_ && SCREEN_RECORDER_BUNDLE_NAME.compare(appName_) != 0) {
