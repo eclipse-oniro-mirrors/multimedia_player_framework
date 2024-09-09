@@ -46,7 +46,7 @@ int32_t TransCoderImpl::Init()
 TransCoderImpl::TransCoderImpl()
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
-    traceId_ = HiviewDFX::HiTraceChain::Begin("PlayerImpl", HITRACE_FLAG_DEFAULT);
+    traceId_ = HiviewDFX::HiTraceChain::Begin("TransCoderImpl", HITRACE_FLAG_DEFAULT);
 }
 
 TransCoderImpl::~TransCoderImpl()
