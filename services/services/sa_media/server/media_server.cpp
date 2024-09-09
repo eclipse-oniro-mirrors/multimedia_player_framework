@@ -21,7 +21,11 @@
 #include "media_server_manager.h"
 #include "mem_mgr_client.h"
 #include "mem_mgr_proxy.h"
+
+#ifdef USE_SUSPEND_MANAGER
 #include "suspend_manager_client.h"
+#include "media_app_frozen_state_observer.h"
+#endif
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "MediaServer"};

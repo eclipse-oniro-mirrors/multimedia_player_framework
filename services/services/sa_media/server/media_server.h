@@ -19,10 +19,10 @@
 #include "media_service_stub.h"
 #include "system_ability.h"
 #include "nocopyable.h"
-#include "media_app_frozen_state_observer.h"
 
 namespace OHOS {
 namespace Media {
+class MediaAppFrozenStateObserver;
 class __attribute__((visibility("default"))) MediaServer : public SystemAbility, public MediaServiceStub {
     DECLARE_SYSTEM_ABILITY(MediaServer);
 public:
