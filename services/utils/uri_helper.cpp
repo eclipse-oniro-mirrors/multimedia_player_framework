@@ -115,15 +115,16 @@ UriHelper::UriHelper(const std::string_view &uri)
     FormatMeForUri(uri);
 }
 
-UriHelper::UriHelper(int32_t fd, int64_t offset, int64_t size) : fd_(fd), offset_(offset), size_(size)
+UriHelper::UriHelper(int32_t fd, int64_t offset, int64_t size) : fd_(dup(fd)), offset_(offset), size_(size)
 {
     FormatMeForFd();
 }
 
 UriHelper::~UriHelper()
 {
-    if (fd_ > 0) {
+    if (fd_ >= 0) {
         (void)::close(fd_);
+        fd_ = -1;
     }
 }
 
@@ -165,6 +166,7 @@ void UriHelper::FormatMeForUri(const std::string_view &uri) noexcept
 
 void UriHelper::FormatMeForFd() noexcept
 {
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " UriHelper FormatMeForFd fd is %{public}d", FAKE_POINTER(this), fd_);
     CHECK_AND_RETURN_LOG(formattedUri_.empty(),
         "formattedUri is valid:%{public}s", formattedUri_.c_str());
     type_ = URI_TYPE_FD;
@@ -189,7 +191,6 @@ bool UriHelper::CorrectFdParam()
     if ((size_ <= 0) || (size_ > fdSize - offset_)) {
         size_ = fdSize - offset_;
     }
-    fd_ = ::dup(fd_);
     formattedUri_ = std::string("fd://") + std::to_string(fd_) + "?offset=" +
         std::to_string(offset_) + "&size=" + std::to_string(size_);
     MEDIA_LOGI("CorrectFdParam formattedUri: %{public}s", formattedUri_.c_str());
@@ -244,7 +245,13 @@ bool UriHelper::ParseFdUri(std::string_view uri)
             "Invalid fd url");
         std::string_view sizeStr = uri.substr(delim2 + delim2Len);
         CHECK_AND_RETURN_RET_LOG(StrToInt(sizeStr, size_), false, "Invalid fd url");
-        fd_ = fd;
+        MEDIA_LOGI("UriHelper ParseFdUri try close fd, fd is %{public}d, Set fd: %{public}d", fd_, fd);
+        if (fd_ >= 0) {
+            close(fd_);
+            fd_ = -1;
+        }
+        fd_ = dup(fd);
+        MEDIA_LOGI("UriHelper ParseFdUri dup, fd is %{public}d", fd_);
     } else {
         MEDIA_LOGE("invalid fd uri: %{private}s", uri.data());
         return false;

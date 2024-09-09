@@ -49,6 +49,10 @@ public:
     int32_t SetListenerObject(const sptr<IRemoteObject> &object) override;
     int32_t GetTimeByFrameIndex(uint32_t index, uint64_t &time) override;
     int32_t GetFrameIndexByTime(uint64_t time, uint32_t &index) override;
+    void SetIsNapiInstance(bool setIsNapiInstance) override
+    {
+        (void)setIsNapiInstance;
+    }
 private:
     AVMetadataHelperServiceStub();
     int32_t Init();
@@ -67,6 +71,7 @@ private:
     int32_t SetListenerObject(MessageParcel &data, MessageParcel &reply);
     int32_t GetTimeByFrameIndex(MessageParcel &data, MessageParcel &reply);
     int32_t GetFrameIndexByTime(MessageParcel &data, MessageParcel &reply);
+    int32_t SetIsNapiInstance(MessageParcel &data, MessageParcel &reply);
 
     std::mutex mutex_;
     std::shared_ptr<IAVMetadataHelperService> avMetadateHelperServer_ = nullptr;

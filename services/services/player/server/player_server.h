@@ -261,6 +261,7 @@ private:
     bool maxAmplitudeCbStatus_ = false;
     bool deviceChangeCallbackflag_ = false;
     std::atomic<bool> reportStatusFlag_ {true};
+    bool isStreamUsagePauseRequired_ = true;
 };
 } // namespace Media
 } // namespace OHOS

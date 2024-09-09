@@ -26,12 +26,12 @@
 #include "osal/task/pipeline_threadpool.h"
 #include "osal/task/task.h"
 #include "osal/utils/dump_buffer.h"
-#include "param_wrapper.h"
 #include "plugin/plugin_time.h"
 #include "media_dfx.h"
 #include "media_utils.h"
 #include "meta_utils.h"
 #include "meta/media_types.h"
+#include "param_wrapper.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_HIPLAYER, "HiPlayer" };
@@ -724,6 +724,7 @@ int32_t HiPlayerImpl::Play()
     MediaTrace trace("HiPlayerImpl::Play");
     MEDIA_LOG_I_SHORT("Play entered.");
     startTime_ = GetCurrentMillisecond();
+    playStartTime_ = GetCurrentMillisecond();
     int32_t ret = MSERR_INVALID_VAL;
     if (!IsValidPlayRange(playRangeStartTime_, playRangeEndTime_)) {
         MEDIA_LOG_E_SHORT("SetPlayRange failed! start: " PUBLIC_LOG_D64 ", end: " PUBLIC_LOG_D64,
@@ -733,11 +734,9 @@ int32_t HiPlayerImpl::Play()
     }
     if (pipelineStates_ == PlayerStates::PLAYER_PLAYBACK_COMPLETE || pipelineStates_ == PlayerStates::PLAYER_STOPPED) {
         isStreaming_ = true;
-        if (GetPlayRangeStartTime() > PLAY_RANGE_DEFAULT_VALUE) {
-            ret = TransStatus(Seek(GetPlayStartTime(), playRangeSeekMode_, false));
-        } else {
-            ret = TransStatus(Seek(0, PlayerSeekMode::SEEK_PREVIOUS_SYNC, false));
-        }
+        ret = ((GetPlayRangeStartTime() > PLAY_RANGE_DEFAULT_VALUE) ?
+            TransStatus(Seek(GetPlayStartTime(), playRangeSeekMode_, false)) :
+            TransStatus(Seek(0, PlayerSeekMode::SEEK_PREVIOUS_SYNC, false)));
         callbackLooper_.StartReportMediaProgress(REPORT_PROGRESS_INTERVAL);
         callbackLooper_.startCollectMaxAmplitude(SAMPLE_AMPLITUDE_INTERVAL);
     } else if (pipelineStates_ == PlayerStates::PLAYER_PAUSED) {
@@ -1033,16 +1032,6 @@ Status HiPlayerImpl::Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeek
     return rtv;
 }
 
-void HiPlayerImpl::UpdateMaxSeekLatency(PlayerSeekMode mode, int64_t seekStartTime)
-{
-    int64_t seekDiffTime = GetCurrentMillisecond() - seekStartTime;
-    if (mode == PlayerSeekMode::SEEK_CLOSEST) {
-        maxAccurateSeekLatency_ = (maxAccurateSeekLatency_ > seekDiffTime) ? maxAccurateSeekLatency_ : seekDiffTime;
-    } else {
-        maxSeekLatency_ = (maxSeekLatency_ > seekDiffTime) ? maxSeekLatency_ : seekDiffTime;
-    }
-}
-
 bool HiPlayerImpl::IsSeekInSitu(int64_t mSeconds)
 {
     int32_t curPosMs = 0;
@@ -1052,6 +1041,16 @@ bool HiPlayerImpl::IsSeekInSitu(int64_t mSeconds)
         return mSeconds == currentMs;
     }
     return false;
+}
+
+void HiPlayerImpl::UpdateMaxSeekLatency(PlayerSeekMode mode, int64_t seekStartTime)
+{
+    int64_t seekDiffTime = GetCurrentMillisecond() - seekStartTime;
+    if (mode == PlayerSeekMode::SEEK_CLOSEST) {
+        maxAccurateSeekLatency_ = (maxAccurateSeekLatency_ > seekDiffTime) ? maxAccurateSeekLatency_ : seekDiffTime;
+    } else {
+        maxSeekLatency_ = (maxSeekLatency_ > seekDiffTime) ? maxSeekLatency_ : seekDiffTime;
+    }
 }
 
 void HiPlayerImpl::NotifySeek(Status rtv, bool flag, int64_t seekPos)
@@ -1951,7 +1950,6 @@ void HiPlayerImpl::OnEvent(const Event &event)
         case EventType::EVENT_VIDEO_RENDERING_START: {
             MEDIA_LOG_D_SHORT("video first frame reneder received");
             Format format;
-            playStatisticalInfo_.startLatency = static_cast<int32_t>(AnyCast<uint64_t>(event.param));
             callbackLooper_.OnInfo(INFO_TYPE_MESSAGE, PlayerMessageType::PLAYER_INFO_VIDEO_RENDERING_START, format);
             HandleInitialPlayingStateChange(event.type);
             break;
@@ -2073,6 +2071,9 @@ void HiPlayerImpl::HandleInitialPlayingStateChange(const EventType& eventType)
 
     isInitialPlay_ = false;
     OnStateChanged(PlayerStateId::PLAYING);
+
+    int64_t nowTimeMs = GetCurrentMillisecond();
+    playStatisticalInfo_.startLatency = static_cast<int32_t>(nowTimeMs - playStartTime_);
 }
 
 void HiPlayerImpl::DoSetPlayStrategy(const std::shared_ptr<MediaSource> source)
@@ -2452,7 +2453,6 @@ void HiPlayerImpl::NotifyAudioFirstFrame(const Event& event)
 {
     uint64_t latency = AnyCast<uint64_t>(event.param);
     MEDIA_LOG_I_SHORT("Audio first frame event in latency " PUBLIC_LOG_U64, latency);
-    playStatisticalInfo_.startLatency = static_cast<int32_t>(latency);
     Format format;
     (void)format.PutLongValue(PlayerKeys::AUDIO_FIRST_FRAME, latency);
     callbackLooper_.OnInfo(INFO_TYPE_AUDIO_FIRST_FRAME, 0, format);
@@ -2478,27 +2478,6 @@ void HiPlayerImpl::NotifyPositionUpdate()
     MEDIA_LOG_D_SHORT("NotifyPositionUpdate currentPosMs: %{public}d", currentPosMs);
     Format format;
     callbackLooper_.OnInfo(INFO_TYPE_POSITION_UPDATE, currentPosMs, format);
-}
-
-void __attribute__((no_sanitize("cfi"))) HiPlayerImpl::OnStateChanged(PlayerStateId state)
-{
-    {
-        AutoLock lockEos(stateChangeMutex_);
-        if (isDoCompletedSeek_.load()) {
-            isDoCompletedSeek_ = false;
-        } else if ((curState_ == PlayerStateId::EOS) && (state == PlayerStateId::PAUSE)) {
-            MEDIA_LOG_E_SHORT("already at completed and not allow pause");
-            return;
-        }
-        curState_ = state;
-    }
-    MEDIA_LOG_D_SHORT("OnStateChanged " PUBLIC_LOG_D32 " > " PUBLIC_LOG_D32, pipelineStates_.load(),
-            TransStateId2PlayerState(state));
-    UpdateStateNoLock(TransStateId2PlayerState(state));
-    {
-        AutoLock lock(stateMutex_);
-        cond_.NotifyOne();
-    }
 }
 
 void HiPlayerImpl::NotifyUpdateTrackInfo()
@@ -2602,6 +2581,27 @@ void HiPlayerImpl::HandleSubtitleTrackChangeEvent(const Event& event)
         needUpdateSubtitle_.store(true);
     }
     return;
+}
+
+void __attribute__((no_sanitize("cfi"))) HiPlayerImpl::OnStateChanged(PlayerStateId state)
+{
+    {
+        AutoLock lockEos(stateChangeMutex_);
+        if (isDoCompletedSeek_.load()) {
+            isDoCompletedSeek_ = false;
+        } else if ((curState_ == PlayerStateId::EOS) && (state == PlayerStateId::PAUSE)) {
+            MEDIA_LOG_E_SHORT("already at completed and not allow pause");
+            return;
+        }
+        curState_ = state;
+    }
+    MEDIA_LOG_D_SHORT("OnStateChanged " PUBLIC_LOG_D32 " > " PUBLIC_LOG_D32, pipelineStates_.load(),
+            TransStateId2PlayerState(state));
+    UpdateStateNoLock(TransStateId2PlayerState(state));
+    {
+        AutoLock lock(stateMutex_);
+        cond_.NotifyOne();
+    }
 }
 
 Status HiPlayerImpl::OnCallback(std::shared_ptr<Filter> filter, const FilterCallBackCommand cmd, StreamType outType)

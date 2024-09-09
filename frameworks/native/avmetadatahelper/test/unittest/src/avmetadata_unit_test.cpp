@@ -594,7 +594,11 @@ HWTEST_F(AVMetadataUnitTest, SetSource_API_0500, Level2)
     std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
     ASSERT_NE(nullptr, helper);
     ASSERT_EQ(true, helper->CreateAVMetadataHelper());
-    ASSERT_NE(MSERR_OK, helper->SetSource(uri, 0, 0, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
+    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, 0, 0, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
+    uint64_t time = 0;
+    PixelMapParams param;
+    auto pixelMap = helper->FetchFrameYuv(0, time, param);
+    ASSERT_EQ(pixelMap, nullptr);
 }
 
 /**

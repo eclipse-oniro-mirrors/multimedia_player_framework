@@ -414,7 +414,9 @@ Status HiTransCoderImpl::SetTrackMime(const std::vector<std::shared_ptr<Meta>> &
 int32_t HiTransCoderImpl::SetOutputFile(const int32_t fd)
 {
     MEDIA_LOG_I("HiTransCoderImpl::SetOutputFile()");
+    MEDIA_LOG_I("HiTransCoder SetOutputFile in, fd is %{public}d", fd);
     fd_ = dup(fd);
+    MEDIA_LOG_I("HiTransCoder SetOutputFile dup, fd is %{public}d", fd_);
     return static_cast<int32_t>(Status::OK);
 }
 
@@ -876,8 +878,11 @@ Status HiTransCoderImpl::LinkMuxerFilter(const std::shared_ptr<Pipeline::Filter>
             Status::ERROR_UNKNOWN, "muxerFilter SetOutputParameter fail");
         muxerFilter_->SetParameter(muxerFormat_);
         muxerFilter_->SetTransCoderMode();
-        close(fd_);
-        fd_ = -1;
+        MEDIA_LOG_I("HiTransCoder CloseFd, fd is %{public}d", fd_);
+        if (fd_ >= 0) {
+            (void)::close(fd_);
+            fd_ = -1;
+        }
     }
     FALSE_RETURN_V_MSG_E(pipeline_->LinkFilters(preFilter, {muxerFilter_}, type) == Status::OK,
         Status::ERROR_UNKNOWN, "Add muxerFilter to pipeline fail");

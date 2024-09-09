@@ -33,7 +33,7 @@ struct AudioBufferEntry {
     ~AudioBufferEntry()
     {
         if (buffer != nullptr) {
-            free(buffer);
+            delete[] buffer;
             buffer = nullptr;
         }
     }
@@ -93,10 +93,11 @@ private:
     int32_t ReCombineCacheData();
     int32_t DealPlayParamsBeforePlay(const int32_t streamID, const PlayParams playParams);
     static AudioStandard::AudioRendererRate CheckAndAlignRendererRate(const int32_t rate);
+    void DealWriteData(size_t length);
 
     Format trackFormat_;
     std::deque<std::shared_ptr<AudioBufferEntry>> cacheData_;
-    std::deque<std::shared_ptr<AudioBufferEntry>> reCombineCacheData_;
+    std::shared_ptr<AudioBufferEntry> fullCacheData_;
     size_t cacheDataTotalSize_;
     int32_t soundID_;
     int32_t streamID_;
@@ -113,7 +114,7 @@ private:
     int32_t priority_ = 0;
     int32_t rendererFlags_ = NORMAL_PLAY_RENDERER_FLAGS;
 
-    size_t cacheDataFrameNum_;
+    size_t cacheDataFrameIndex_;
     int32_t havePlayedCount_;
 };
 } // namespace Media

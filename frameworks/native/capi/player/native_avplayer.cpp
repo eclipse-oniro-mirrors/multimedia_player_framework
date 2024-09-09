@@ -27,6 +27,7 @@
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "NativeAVPlayer"};
     constexpr uint32_t ERROR_CODE_MAP_LENGTH = 11;
+    constexpr uint32_t ERROR_CODE_API9_MAP_LENGTH = 11;
     constexpr uint32_t STATE_MAP_LENGTH = 9;
     constexpr uint32_t INFO_TYPE_LENGTH = 19;
     constexpr int32_t UNSUPPORT_FORMAT_ERROR_CODE = 331350544;
@@ -67,6 +68,11 @@ typedef struct PlayerErrorCodeConvert {
     OH_AVErrCode avErrorCode;
 } PlayerErrorCodeConvert;
 
+typedef struct PlayerErrorCodeApi9Convert {
+    MediaServiceExtErrCodeAPI9 errorCodeApi9;
+    OH_AVErrCode avErrorCode;
+} PlayerErrorCodeApi9Convert;
+
 typedef struct StateConvert {
     PlayerStates playerStates;
     AVPlayerState avPlayerState;
@@ -89,6 +95,20 @@ static const PlayerErrorCodeConvert g_errorCodeMap[ERROR_CODE_MAP_LENGTH] = {
     {MSERR_EXT_INVALID_STATE, AV_ERR_INVALID_STATE},
     {MSERR_EXT_UNSUPPORT, AV_ERR_UNSUPPORT},
     {MSERR_EXT_EXTEND_START, AV_ERR_EXTEND_START},
+};
+
+static const PlayerErrorCodeApi9Convert g_errorCodeApi9Map[ERROR_CODE_API9_MAP_LENGTH] = {
+    {MSERR_EXT_API9_NO_PERMISSION, AV_ERR_OPERATE_NOT_PERMIT},
+    {MSERR_EXT_API9_PERMISSION_DENIED, AV_ERR_OPERATE_NOT_PERMIT},
+    {MSERR_EXT_API9_INVALID_PARAMETER, AV_ERR_INVALID_VAL},
+    {MSERR_EXT_API9_UNSUPPORT_CAPABILITY, AV_ERR_OPERATE_NOT_PERMIT},
+    {MSERR_EXT_API9_NO_MEMORY, AV_ERR_NO_MEMORY},
+    {MSERR_EXT_API9_OPERATE_NOT_PERMIT, AV_ERR_OPERATE_NOT_PERMIT},
+    {MSERR_EXT_API9_IO, AV_ERR_IO},
+    {MSERR_EXT_API9_TIMEOUT, AV_ERR_TIMEOUT},
+    {MSERR_EXT_API9_SERVICE_DIED, AV_ERR_SERVICE_DIED},
+    {MSERR_EXT_API9_UNSUPPORT_FORMAT, AV_ERR_UNSUPPORT},
+    {MSERR_EXT_API9_AUDIO_INTERRUPTED, AV_ERR_OPERATE_NOT_PERMIT},
 };
 
 static const StateConvert g_stateMap[STATE_MAP_LENGTH] = {
@@ -130,6 +150,16 @@ static OH_AVErrCode MSErrCodeToAVErrCode(MediaServiceErrCode errorCode)
     for (uint32_t i = 0; i < ERROR_CODE_MAP_LENGTH; i++) {
         if (g_errorCodeMap[i].errorCodeExt == errorCodeExt) {
             return g_errorCodeMap[i].avErrorCode;
+        }
+    }
+    return AV_ERR_UNKNOWN;
+}
+
+static OH_AVErrCode MSErrCodeToAVErrCodeApi9(MediaServiceExtErrCodeAPI9 errorCode)
+{
+    for (uint32_t i = 0; i < ERROR_CODE_API9_MAP_LENGTH; i++) {
+        if (g_errorCodeApi9Map[i].errorCodeApi9 == errorCode) {
+            return g_errorCodeApi9Map[i].avErrorCode;
         }
     }
     return AV_ERR_UNKNOWN;
@@ -373,8 +403,14 @@ void NativeAVPlayerCallback::OnError(int32_t errorCode, const std::string &error
     }
     int32_t avErrorCode;
     if (errorCallback_) { // errorCallback_ precedes over callback_.onInfo
-        avErrorCode = MSErrCodeToAVErrCode(static_cast<MediaServiceErrCode>(errorCode));
-        MediaServiceExtErrCodeAPI9 errorCodeApi9 = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errorCode));
+        MediaServiceExtErrCodeAPI9 errorCodeApi9 = MSERR_EXT_API9_OK;
+        if (errorCode >= MSERR_EXT_API9_NO_PERMISSION && errorCode <= MSERR_EXT_API9_AUDIO_INTERRUPTED) {
+            errorCodeApi9 = static_cast<MediaServiceExtErrCodeAPI9>(errorCode);
+            avErrorCode = MSErrCodeToAVErrCodeApi9(errorCodeApi9);
+        } else {
+            avErrorCode = MSErrCodeToAVErrCode(static_cast<MediaServiceErrCode>(errorCode));
+            errorCodeApi9 = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errorCode));
+        }
         std::string errorMsgExt = MSExtAVErrorToString(errorCodeApi9) + errorMsg;
         errorCallback_->OnError(player_, avErrorCode, errorMsgExt.c_str());
         return;

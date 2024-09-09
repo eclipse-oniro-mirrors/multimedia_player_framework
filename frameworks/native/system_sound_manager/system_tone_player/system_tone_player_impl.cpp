@@ -133,6 +133,7 @@ int32_t SystemTonePlayerImpl::CreatePlayerWithOptions(const AudioHapticPlayerOpt
     CHECK_AND_RETURN_RET_LOG(callbackMap_[streamId_] != nullptr, MSERR_OPEN_FILE_FAILED,
         "Failed to create system tone player callback object");
     (void)playerMap_[streamId_]->SetAudioHapticPlayerCallback(callbackMap_[streamId_]);
+    playerMap_[streamId_]->SetHapticsMode(hapticsMode_);
 
     int32_t result = playerMap_[streamId_]->Prepare();
     CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, result,
@@ -266,6 +267,37 @@ std::string SystemTonePlayerImpl::ChangeUri(const std::string &uri)
     }
     MEDIA_LOGI("SystemTonePlayerImpl::ChangeUri systemtoneUri is %{public}s", systemtoneUri.c_str());
     return systemtoneUri;
+}
+
+std::string SystemTonePlayerImpl::ChangeHapticsUri(const std::string &hapticsUri)
+{
+    std::string newHapticsUri = hapticsUri;
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
+    CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, newHapticsUri, "Failed to create dataShareHelper.");
+
+    DataShare::DatashareBusinessError businessError;
+    DataShare::DataSharePredicates queryPredicates;
+    Uri hapticsPathUri(VIBRATE_PATH_URI);
+    vector<string> columns = {{VIBRATE_COLUMN_VIBRATE_ID}, {VIBRATE_COLUMN_DATA}};
+    queryPredicates.EqualTo(RINGTONE_COLUMN_DATA, hapticsUri);
+    auto resultSet = dataShareHelper->Query(hapticsPathUri, queryPredicates, columns, &businessError);
+    auto results = make_unique<RingtoneFetchResult<VibrateAsset>>(move(resultSet));
+
+    unique_ptr<VibrateAsset> vibrateAssetByUri = results->GetFirstObject();
+    if (vibrateAssetByUri != nullptr) {
+        string uriStr = VIBRATE_PATH_URI + RINGTONE_SLASH_CHAR + to_string(vibrateAssetByUri->GetId());
+        MEDIA_LOGI("ChangeHapticsUri::Open newHapticsUri is %{public}s", uriStr.c_str());
+        Uri ofUri(uriStr);
+        int32_t fd = dataShareHelper->OpenFile(ofUri, "r");
+        if (fd > 0) {
+            newHapticsUri = FDHEAD + to_string(fd);
+        }
+    }
+
+    resultSet == nullptr ? : resultSet->Close();
+    dataShareHelper->Release();
+    MEDIA_LOGI("ChangeHapticsUri::ChangeUri newHapticsUri is %{public}s", newHapticsUri.c_str());
+    return newHapticsUri;
 }
 
 int32_t SystemTonePlayerImpl::Prepare()
@@ -502,18 +534,82 @@ int32_t SystemTonePlayerImpl::GetHapticsFeature(ToneHapticsFeature &feature)
     return MSERR_OK;
 }
 
+ToneHapticsType SystemTonePlayerImpl::ConvertToToneHapticsType(SystemToneType type)
+{
+    switch (type) {
+        case SystemToneType::SYSTEM_TONE_TYPE_SIM_CARD_0:
+            return ToneHapticsType::HAPTICS_SYSTEM_TONE_TYPE_SIM_CARD_0;
+        case SystemToneType::SYSTEM_TONE_TYPE_SIM_CARD_1:
+            return ToneHapticsType::HAPTICS_SYSTEM_TONE_TYPE_SIM_CARD_1;
+        case SystemToneType::SYSTEM_TONE_TYPE_NOTIFICATION:
+            return ToneHapticsType::HAPTICS_SYSTEM_TONE_TYPE_NOTIFICATION;
+        default:
+            return ToneHapticsType::HAPTICS_SYSTEM_TONE_TYPE_NOTIFICATION;
+    }
+}
+
+HapticsMode SystemTonePlayerImpl::ConvertToHapticsMode(ToneHapticsMode toneHapticsMode)
+{
+    switch (toneHapticsMode) {
+        case ToneHapticsMode::NONE:
+            return HapticsMode::HAPTICS_MODE_NONE;
+        case ToneHapticsMode::SYNC:
+            return HapticsMode::HAPTICS_MODE_SYNC;
+        case ToneHapticsMode::NON_SYNC:
+            return HapticsMode::HAPTICS_MODE_NON_SYNC;
+        default:
+            return HapticsMode::HAPTICS_MODE_INVALID;
+    }
+}
+
+void SystemTonePlayerImpl::GetNewHapticSettings(std::map<ToneHapticsFeature, std::string> &hapticsUris)
+{
+    supportedHapticsFeatures_.clear();
+    ToneHapticsSettings settings;
+    int32_t result = systemSoundMgr_.GetToneHapticsSettings(context_, ConvertToToneHapticsType(systemToneType_),
+        settings);
+    if (result != 0) {
+        MEDIA_LOGW("GetNewHapticSettings: get haptic settings fail");
+        return;
+    }
+    hapticsMode_ = ConvertToHapticsMode(settings.mode);
+    supportedHapticsFeatures_.push_back(ToneHapticsFeature::STANDARD);
+    if (settings.hapticsUri.empty()) {
+        hapticsUris[ToneHapticsFeature::STANDARD] = settings.hapticsUri;
+    } else {
+        hapticsUris[ToneHapticsFeature::STANDARD] = ChangeHapticsUri(settings.hapticsUri);
+    }
+    MEDIA_LOGI("GetHapticUriForAudioUri: STANDARD hapticUri %{public}s ",
+        hapticsUris[ToneHapticsFeature::STANDARD].c_str());
+    std::string hapticUri = systemSoundMgr_.GetHapticsUriByStyle(settings.hapticsUri,
+        HapticsStyle::HAPTICS_STYLE_GENTLE);
+    if (!hapticUri.empty()) {
+        supportedHapticsFeatures_.push_back(ToneHapticsFeature::GENTLE);
+        hapticsUris[ToneHapticsFeature::GENTLE] = ChangeHapticsUri(hapticUri);
+        MEDIA_LOGI("GetHapticUriForAudioUri: GENTLE hapticUri %{public}s ",
+            hapticsUris[ToneHapticsFeature::GENTLE].c_str());
+    }
+}
+
 void SystemTonePlayerImpl::InitHapticsSourceIds(const std::string &audioUri)
 {
     if (audioHapticManager_ == nullptr) {
         return;
     }
     std::map<ToneHapticsFeature, std::string> uriMap;
-    GetNewHapticUriForAudioUri(audioUri, uriMap);
+    GetNewHapticSettings(uriMap);
     if (uriMap.empty()) {
-        GetHapticUriForAudioUri(audioUri, uriMap);
+        hapticsMode_ = HapticsMode::HAPTICS_MODE_SYNC;
+        GetNewHapticUriForAudioUri(audioUri, uriMap);
+        if (uriMap.empty()) {
+            GetHapticUriForAudioUri(audioUri, uriMap);
+        }
     }
+
     int32_t sourceId;
     for (auto it = uriMap.begin(); it != uriMap.end(); ++it) {
+        MEDIA_LOGI("InitHapticsSourceIds%{public}d: ToneUri:%{public}s, hapticsUri:%{public}s, mode:%{public}d.",
+            it->first, audioUri.c_str(), it->second.c_str(), hapticsMode_);
         sourceId = audioHapticManager_->RegisterSource(ChangeUri(audioUri), it->second);
         CHECK_AND_CONTINUE_LOG(sourceId != -1, "Failed to register source for audio haptic manager");
         (void)audioHapticManager_->SetAudioLatencyMode(sourceId, AUDIO_LATENCY_MODE_NORMAL);

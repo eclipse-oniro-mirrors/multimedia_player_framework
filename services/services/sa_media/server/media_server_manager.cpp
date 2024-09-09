@@ -159,6 +159,7 @@ MediaServerManager::~MediaServerManager()
     avCodecStubMap_.clear();
     recorderProfilesStubMap_.clear();
     screenCaptureStubMap_.clear();
+    screenCaptureMonitorStubMap_.clear();
     screenCaptureControllerStubMap_.clear();
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
@@ -615,6 +616,44 @@ void MediaServerManager::DestroyStubObject(StubType type, sptr<IRemoteObject> ob
     }
 }
 
+void MediaServerManager::DestroyAVScreenCaptureStubForPid(pid_t pid)
+{
+    MEDIA_LOGD("ScreenCapture stub services(%{public}zu) pid(%{public}d).", screenCaptureStubMap_.size(), pid);
+    for (auto itScreenCapture = screenCaptureStubMap_.begin(); itScreenCapture != screenCaptureStubMap_.end();) {
+        if (itScreenCapture->second == pid) {
+            executor_.Commit(itScreenCapture->first);
+            itScreenCapture = screenCaptureStubMap_.erase(itScreenCapture);
+        } else {
+            itScreenCapture++;
+        }
+    }
+    MEDIA_LOGD("ScreenCapture stub services(%{public}zu).", screenCaptureStubMap_.size());
+    MEDIA_LOGD("ScreenCapture monitor stub services(%{public}zu) pid(%{public}d).",
+        screenCaptureMonitorStubMap_.size(), pid);
+    for (auto itScreenCaptureMonitor = screenCaptureMonitorStubMap_.begin();
+         itScreenCaptureMonitor != screenCaptureMonitorStubMap_.end();) {
+        if (itScreenCaptureMonitor->second == pid) {
+            executor_.Commit(itScreenCaptureMonitor->first);
+            itScreenCaptureMonitor = screenCaptureMonitorStubMap_.erase(itScreenCaptureMonitor);
+        } else {
+            itScreenCaptureMonitor++;
+        }
+    }
+    MEDIA_LOGD("ScreenCapture monitor stub services(%{public}zu).", screenCaptureMonitorStubMap_.size());
+    MEDIA_LOGD("ScreenCapture controller stub services(%{public}zu) pid(%{public}d).",
+        screenCaptureControllerStubMap_.size(), pid);
+    for (auto itScreenCaptureController = screenCaptureControllerStubMap_.begin();
+         itScreenCaptureController != screenCaptureControllerStubMap_.end();) {
+        if (itScreenCaptureController->second == pid) {
+            executor_.Commit(itScreenCaptureController->first);
+            itScreenCaptureController = screenCaptureControllerStubMap_.erase(itScreenCaptureController);
+        } else {
+            itScreenCaptureController++;
+        }
+    }
+    MEDIA_LOGD("ScreenCapture controller stub services(%{public}zu).", screenCaptureControllerStubMap_.size());
+}
+
 void MediaServerManager::DestroyAVTranscoderStubForPid(pid_t pid)
 {
     MEDIA_LOGD("AVTranscoder stub services(%{public}zu) pid(%{public}d).", transCoderStubMap_.size(), pid);
@@ -719,17 +758,7 @@ void MediaServerManager::DestroyStubObjectForPid(pid_t pid)
     DestroyAVPlayerStubForPid(pid);
     DestroyAVCodecStubForPid(pid);
     DestroyAVTranscoderStubForPid(pid);
-
-    MEDIA_LOGD("screencapture stub services(%{public}zu) pid(%{public}d).", screenCaptureStubMap_.size(), pid);
-    for (auto itScreenCapture = screenCaptureStubMap_.begin(); itScreenCapture != screenCaptureStubMap_.end();) {
-        if (itScreenCapture->second == pid) {
-            executor_.Commit(itScreenCapture->first);
-            itScreenCapture = screenCaptureStubMap_.erase(itScreenCapture);
-        } else {
-            itScreenCapture++;
-        }
-    }
-    MEDIA_LOGD("screencapture stub services(%{public}zu).", screenCaptureStubMap_.size());
+    DestroyAVScreenCaptureStubForPid(pid);
     MonitorServiceStub::GetInstance()->OnClientDie(pid);
     executor_.Clear();
 }

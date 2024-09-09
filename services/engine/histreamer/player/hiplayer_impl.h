@@ -229,9 +229,9 @@ private:
     Status doPausedSeek(int64_t seekPos, PlayerSeekMode mode);
     Status doCompletedSeek(int64_t seekPos, PlayerSeekMode mode);
     Status doSeek(int64_t seekPos, PlayerSeekMode mode);
+    void NotifySeek(Status rtv, bool flag, int64_t seekPos);
     void ResetIfSourceExisted();
     void ReleaseInner();
-    void NotifySeek(Status rtv, bool flag, int64_t seekPos);
     int32_t InitDuration();
     int32_t InitVideoWidthAndHeight();
     int32_t SetFrameRateForSeekPerformance(double frameRate);
@@ -299,6 +299,11 @@ private:
 
     bool isStreaming_{false};
 
+    int32_t rotation90 = 90;
+    int32_t rotation270 = 270;
+
+    std::shared_ptr<SeekAgent> seekAgent_;
+
     std::mutex drmMutex_;
     std::condition_variable drmConfigCond_;
     bool isDrmProtected_ = false;
@@ -312,10 +317,7 @@ private:
     std::vector<std::pair<std::string, bool>> completeState_;
     std::mutex seekMutex_;
     std::string bundleName_ {};
-    std::shared_ptr<SeekAgent> seekAgent_;
 
-    int32_t rotation90 = 90;
-    int32_t rotation270 = 270;
     std::map<std::string, std::string> header_;
     uint32_t preferedWidth_ = 0;
     uint32_t preferedHeight_ = 0;
@@ -325,6 +327,7 @@ private:
     std::string audioLanguage_;
     std::string subtitleLanguage_;
     std::string playerId_;
+    std::string mimeType_;
     int32_t currentAudioTrackId_ = -1;
     int32_t defaultAudioTrackId_ = -1;
     int32_t currentVideoTrackId_ = -1;
@@ -339,16 +342,14 @@ private:
     int64_t maxSurfaceSwapLatency_ = 0;
     int64_t playTotalDuration_ = 0;
     bool inEosSeek_ = false;
-    std::string mimeType_;
+    std::atomic<bool> isDoCompletedSeek_{false};
+    OHOS::Media::Mutex stateChangeMutex_{};
     int64_t playRangeStartTime_ = -1;
     int64_t playRangeEndTime_ = -1;
     bool isSetPlayRange_ = false;
     int64_t startTimeWithMode_ = -1;
     int64_t endTimeWithMode_ = -1;
     PlayerSeekMode playRangeSeekMode_ = PlayerSeekMode::SEEK_PREVIOUS_SYNC;
-    std::atomic<bool> isDoCompletedSeek_{false};
-    OHOS::Media::Mutex stateChangeMutex_{};
-
     std::mutex seekContinousMutex_;
     std::atomic<int64_t> seekContinousBatchNo_ {-1};
     std::shared_ptr<DraggingPlayerAgent> draggingPlayerAgent_ {nullptr};
@@ -358,6 +359,7 @@ private:
     std::shared_ptr<DfxAgent> dfxAgent_{};
     bool maxAmplitudeCbStatus_ {false};
     OHOS::Media::Mutex handleCompleteMutex_{};
+    int64_t playStartTime_ = 0;
 };
 } // namespace Media
 } // namespace OHOS

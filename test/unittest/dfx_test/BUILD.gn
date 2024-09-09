@@ -17,6 +17,13 @@ import("//foundation/multimedia/player_framework/config.gni")
 ohos_unittest("player_framework_dfx_test") {
   module_out_path = "player_framework/media_dfx"
 
+  cflags = [
+    "-Wall",
+    "-Werror",
+    "-Dprivate=public",
+    "-Dprotected=public",
+  ]
+
   include_dirs = [ "$MEDIA_PLAYER_ROOT_DIR/services/utils/include" ]
 
   sources = [ "media_dfx_test.cpp" ]

@@ -82,6 +82,9 @@ public:
     int32_t Release();
 
 private:
+    void DealBufferRawFile(MediaAVCodec::AVCodecBufferFlag bufferFlag, MediaAVCodec::AVCodecBufferInfo sampleInfo,
+        uint32_t index, std::shared_ptr<AVSharedMemory> buffer);
+
     const int32_t soundID_;
     std::shared_ptr<MediaAVCodec::AVCodecAudioDecoder> audioDec_;
     std::shared_ptr<MediaAVCodec::AVDemuxer> demuxer_;
@@ -95,6 +98,7 @@ private:
     std::condition_variable bufferCond_;
     std::shared_ptr<ISoundPoolCallback> callback_ = nullptr;
     std::mutex amutex_;
+    std::atomic<bool> isRunning_ = true;
 };
 
 class SoundParser : public std::enable_shared_from_this<SoundParser> {

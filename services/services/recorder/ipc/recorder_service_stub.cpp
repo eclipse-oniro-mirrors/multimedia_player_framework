@@ -938,6 +938,7 @@ int32_t RecorderServiceStub::IsWatermarkSupported(MessageParcel &data, MessagePa
 int32_t RecorderServiceStub::SetWatermark(MessageParcel &data, MessageParcel &reply)
 {
     std::shared_ptr<AVBuffer> buffer = AVBuffer::CreateAVBuffer();
+    CHECK_AND_RETURN_RET_LOG(buffer != nullptr, MSERR_NO_MEMORY, "create AVBuffer failed");
     CHECK_AND_RETURN_RET_LOG(buffer->ReadFromMessageParcel(data), MSERR_INVALID_OPERATION, "read buffer failed");
     CHECK_AND_RETURN_RET_LOG(reply.WriteInt32(SetWatermark(buffer)), MSERR_INVALID_OPERATION, "reply write failed");
     return MSERR_OK;

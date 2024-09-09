@@ -590,5 +590,11 @@ void AVMetadataHelperImpl::Release()
     (void)MediaServiceFactory::GetInstance().DestroyAVMetadataHelperService(avMetadataHelperService_);
     avMetadataHelperService_ = nullptr;
 }
+
+void AVMetadataHelperImpl::SetIsNapiInstance(bool isNapiInstance)
+{
+    CHECK_AND_RETURN_LOG(avMetadataHelperService_ != nullptr, "avmetadatahelper service does not exist.");
+    avMetadataHelperService_->SetIsNapiInstance(isNapiInstance);
+}
 } // namespace Media
 } // namespace OHOS
