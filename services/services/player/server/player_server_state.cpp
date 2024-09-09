@@ -387,7 +387,7 @@ void PlayerServer::PlayingState::HandleInterruptEvent(const Format &infoBody)
 
 void PlayerServer::PlayingState::HandleAudioDeviceChangeEvent(const Format &infoBody)
 {
-    server_.HandleAudioDeviceChangeEvent(infoBody);
+    (void)infoBody;
 }
 
 void PlayerServer::PlayingState::StateEnter()
