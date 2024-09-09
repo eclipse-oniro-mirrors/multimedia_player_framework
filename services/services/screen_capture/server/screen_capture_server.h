@@ -304,6 +304,7 @@ private:
     int32_t RegisterServerCallbacks();
     int32_t OnStartScreenCapture();
     void PostStartScreenCapture(bool isSuccess);
+    void PostStartScreenCaptureSuccessAction();
     int32_t InitRecorderInfo(std::shared_ptr<IRecorderService> &recorder, AudioCaptureInfo audioInfo);
     int32_t InitRecorder();
     int32_t StartScreenCaptureFile();
