@@ -790,6 +790,15 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckVideoEncParam_005, TestSize.Level
 
 HWTEST_F(ScreenCaptureServerFunctionTest, SetOutputFile_001, TestSize.Level2)
 {
+    RecorderInfo recorderInfo;
+    SetRecorderInfo("set_output_file_001.mp4", recorderInfo);
+    SetValidConfigFile(recorderInfo);
+    chmod("/data/test/media/set_output_file_001.mp4", O_RDONLY);
+    ASSERT_NE(InitFileScreenCaptureServer(), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, SetOutputFile_002, TestSize.Level2)
+{
     ASSERT_NE(screenCaptureServer_->SetOutputFile(-1), MSERR_OK);
 }
 
