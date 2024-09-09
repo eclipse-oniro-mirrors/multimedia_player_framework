@@ -1002,7 +1002,6 @@ int32_t ScreenCaptureServer::StartScreenCaptureFile()
         DestroyVirtualScreen();
     };
 
-    MEDIA_LOGI("StartScreenCaptureFile RecorderServer S");
     if (isMicrophoneOn_) {
         int32_t retMic = StartFileMicAudioCapture();
         if (retMic != MSERR_OK) {
@@ -1012,16 +1011,13 @@ int32_t ScreenCaptureServer::StartScreenCaptureFile()
     int32_t retInner = StartFileInnerAudioCapture();
     CHECK_AND_RETURN_RET_LOG(retInner == MSERR_OK, retInner, "StartFileInnerAudioCapture failed, ret:%{public}d,"
         "dataType:%{public}d", retInner, captureConfig_.dataType);
-
+    MEDIA_LOGI("StartScreenCaptureFile RecorderServer S");
     ret = recorder_->Start();
-    MEDIA_LOGI("StartScreenCaptureFile RecorderServer E");
-
     if (ret != MSERR_OK) {
         StopAudioCapture();
         MEDIA_LOGE("StartScreenCaptureFile recorder start failed");
-        return ret;
     }
-
+    MEDIA_LOGI("StartScreenCaptureFile RecorderServer E");
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "recorder failed, ret:%{public}d, dataType:%{public}d",
         ret, captureConfig_.dataType);
     CANCEL_SCOPE_EXIT_GUARD(1);
@@ -2851,7 +2847,6 @@ int32_t AudioDataSource::GetSize(int64_t &size)
         size = static_cast<int64_t>(bufferLen);
         return ret;
     }
-    MEDIA_LOGE("get size failed");
     return ret;
 }
 
