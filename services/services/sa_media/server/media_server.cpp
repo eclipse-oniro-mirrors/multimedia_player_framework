@@ -135,6 +135,7 @@ int32_t MediaServer::Dump(int32_t fd, const std::vector<std::u16string> &args)
 
 void MediaServer::RegisterMediaAppFrozenStateObserver()
 {
+#ifdef USE_SUSPEND_MANAGER
     MEDIA_LOGI("RegisterMediaAppFrozenStateObserver called");
     mediaAppFrozenStateObserver_ = new MediaAppFrozenStateObserver();
     if (mediaAppFrozenStateObserver_ != nullptr) {
@@ -146,6 +147,7 @@ void MediaServer::RegisterMediaAppFrozenStateObserver()
         }
         MEDIA_LOGE("register fail, ret = %{public}d", ret);
     }
+#endif
 }
 } // namespace Media
 } // namespace OHOS
