@@ -308,9 +308,6 @@ int32_t AudioCapturerWrapper::CaptureAudio()
                 PartiallyPrintLog(__LINE__, "consume slow, drop audio frame");
                 continue;
             }
-            if (isMuted_) {
-                memset_s(audioBuffer->buffer, bufferLen, 0, bufferLen);
-            }
             availBuffers_.push(audioBuffer);
         }
         bufferCond_.notify_all();

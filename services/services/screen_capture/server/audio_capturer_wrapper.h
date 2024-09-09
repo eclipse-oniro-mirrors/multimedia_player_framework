@@ -80,7 +80,6 @@ protected:
 
 private:
     std::mutex mutex_;
-    std::atomic<bool> isMuted_ = false;
     std::atomic<bool> isRunning_ = false;
     AudioCaptureInfo audioInfo_;
     std::string threadName_;

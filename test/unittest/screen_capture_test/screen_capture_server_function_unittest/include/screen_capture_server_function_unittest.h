@@ -34,8 +34,10 @@ class ScreenCaptureServerFunctionTest : public testing::Test {
 public:
     virtual void SetUp();
     virtual void TearDown();
-    int32_t SetConfig();
-    int32_t SetConfigFile(RecorderInfo &recorderInfo);
+    int32_t SetInvalidConfig();
+    int32_t SetValidConfig();
+    int32_t SetInvalidConfigFile(RecorderInfo &recorderInfo);
+    int32_t SetValidConfigFile(RecorderInfo &recorderInfo);
     int32_t SetRecorderInfo(std::string name, RecorderInfo &recorderInfo);
     void OpenFileFd(std::string name);
     int32_t InitFileScreenCaptureServer();
