@@ -636,7 +636,7 @@ void HiPlayerImpl::UpdateMediaFirstPts()
             continue;
         }
         if (trackInfo->GetData(Tag::MEDIA_START_TIME, startTime)) {
-            syncManager_->SetMediaStartPts(Plugins::HstTime2Us(startTime));
+            syncManager_->SetMediaStartPts(startTime);
         }
     }
     startTime = syncManager_->GetMediaStartPts();
