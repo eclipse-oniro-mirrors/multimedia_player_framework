@@ -48,6 +48,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperStart_001, TestSiz
         std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
     screenCaptureServer_->innerAudioCapture_->bundleName_ = ScreenRecorderBundleName;
     ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Start(screenCaptureServer_->appInfo_), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Stop(), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperStart_002, TestSize.Level2)
@@ -66,6 +67,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperStart_002, TestSiz
     ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Start(screenCaptureServer_->appInfo_), MSERR_OK);
     ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Pause(), MSERR_OK);
     ASSERT_NE(screenCaptureServer_->innerAudioCapture_->Start(screenCaptureServer_->appInfo_), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Stop(), MSERR_OK);
     screenCaptureServer_->innerAudioCapture_->OnStartFailed(
         ScreenCaptureErrorType::SCREEN_CAPTURE_ERROR_INTERNAL, SCREEN_CAPTURE_ERR_UNKNOWN);
 }
@@ -86,6 +88,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperStart_003, TestSiz
     ASSERT_EQ(screenCaptureServer_->micAudioCapture_->Start(screenCaptureServer_->appInfo_), MSERR_OK);
     ASSERT_EQ(screenCaptureServer_->micAudioCapture_->Pause(), MSERR_OK);
     ASSERT_NE(screenCaptureServer_->micAudioCapture_->Start(screenCaptureServer_->appInfo_), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->micAudioCapture_->Stop(), MSERR_OK);
     screenCaptureServer_->micAudioCapture_->OnStartFailed(
         ScreenCaptureErrorType::SCREEN_CAPTURE_ERROR_INTERNAL, SCREEN_CAPTURE_ERR_UNKNOWN);
 }
