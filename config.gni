@@ -79,7 +79,7 @@ declare_args() {
   }
   player_framework_support_efficiency_manager = false
   if (defined(global_parts_info) &&
-      defined(global_parts_info.efficiency_manager)) {
+      defined(global_parts_info.resourceschedule_efficiency_manager)) {
     player_framework_support_efficiency_manager = true
   }
 }
