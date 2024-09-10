@@ -1741,6 +1741,8 @@ bool SystemSoundManagerImpl::GetVibrateTypeByStyle(int standardVibrateType, Hapt
         return false;
     }
     vibrateType = hapticsStyleEntry->second;
+    MEDIA_LOGI("GetVibrateType: standard %{public}d, style %{public}d, vibrateType %{public}d",
+        hapticsStyle, hapticsStyle, vibrateType);
     return true;
 }
 
@@ -1750,6 +1752,8 @@ std::string SystemSoundManagerImpl::GetHapticsUriByStyle(const std::string &stan
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, {},
         "Create dataShare failed, datashare or ringtone library error.");
+    MEDIA_LOGI("GetHapticsUriByStyle: standardHapticsUri %{public}s, style %{public}d", standardHapticsUri.c_str(),
+        hapticsStyle);
 
     DataShare::DatashareBusinessError businessError;
     DataShare::DataSharePredicates queryPredicatesByUri;
@@ -1759,13 +1763,13 @@ std::string SystemSoundManagerImpl::GetHapticsUriByStyle(const std::string &stan
     auto resultsByUri = make_unique<RingtoneFetchResult<VibrateAsset>>(move(resultSetByUri));
     unique_ptr<VibrateAsset> vibrateAssetByUri = resultsByUri->GetFirstObject();
     if (vibrateAssetByUri == nullptr) {
-        MEDIA_LOGE("GetWeakHapticsByUri: vibration of uri is not in the ringtone library!");
-        return {};
+        MEDIA_LOGE("GetHapticsUriByStyle: vibration of uri is not in the ringtone library!");
+        return "";
     }
     int vibrateType = 0;
-    if (GetVibrateTypeByStyle(vibrateAssetByUri->GetVibrateType(), hapticsStyle, vibrateType)) {
-        MEDIA_LOGE("GetWeakHapticsByUri: vibration of uri is not standard vibrate!");
-        return {};
+    if (!GetVibrateTypeByStyle(vibrateAssetByUri->GetVibrateType(), hapticsStyle, vibrateType)) {
+        MEDIA_LOGE("GetHapticsUriByStyle: vibration of uri is not standard vibrate!");
+        return "";
     }
 
     DataShare::DataSharePredicates queryPredicatesByDisplayName;
@@ -1779,9 +1783,11 @@ std::string SystemSoundManagerImpl::GetHapticsUriByStyle(const std::string &stan
     auto resultsByDisplayName = make_unique<RingtoneFetchResult<VibrateAsset>>(move(resultSetByDisplayName));
     unique_ptr<VibrateAsset> vibrateAssetByDisplayName = resultsByDisplayName->GetFirstObject();
     if (vibrateAssetByDisplayName == nullptr) {
-        MEDIA_LOGE("GetWeakHapticsByUri: weak vibration of uri is not in the ringtone library!");
-        return {};
+        MEDIA_LOGE("GetHapticsUriByStyle: style %{public}d vibration is not in the ringtone library!", hapticsStyle);
+        return "";
     }
+    MEDIA_LOGI("GetHapticsUriByStyle: get style %{public}d vibration %{public}s!", hapticsStyle,
+        vibrateAssetByDisplayName->GetPath().c_str());
     return vibrateAssetByDisplayName->GetPath();
 }
 
