@@ -77,6 +77,11 @@ declare_args() {
       defined(global_parts_info.third_party_json)) {
     player_framework_support_json = true
   }
+  player_framework_support_efficiency_manager = false
+  if (defined(global_parts_info) &&
+      defined(global_parts_info.efficiency_manager)) {
+    player_framework_support_efficiency_manager = true
+  }
 }
 
 player_framework_defines = []
@@ -169,6 +174,10 @@ if (player_framework_support_vibrator) {
 
 if (player_framework_support_power_manager) {
   player_framework_defines += [ "SUPPORT_POWER_MANAGER" ]
+}
+
+if (player_framework_support_efficiency_manager) {
+  defines += [ "USE_EFFICIENCY_MANAGER" ]
 }
 
 if (player_framework_support_mediasource) {
