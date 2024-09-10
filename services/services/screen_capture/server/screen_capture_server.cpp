@@ -966,7 +966,6 @@ int32_t ScreenCaptureServer::StartScreenCaptureFile()
         DestroyVirtualScreen();
     };
 
-    MEDIA_LOGI("StartScreenCaptureFile RecorderServer S");
     if (isMicrophoneOn_) {
         int32_t retMic = StartFileMicAudioCapture();
         if (retMic != MSERR_OK) {
@@ -976,16 +975,13 @@ int32_t ScreenCaptureServer::StartScreenCaptureFile()
     int32_t retInner = StartFileInnerAudioCapture();
     CHECK_AND_RETURN_RET_LOG(retInner == MSERR_OK, retInner, "StartFileInnerAudioCapture failed, ret:%{public}d,"
         "dataType:%{public}d", retInner, captureConfig_.dataType);
-
+    MEDIA_LOGI("StartScreenCaptureFile RecorderServer S");
     ret = recorder_->Start();
-    MEDIA_LOGI("StartScreenCaptureFile RecorderServer E");
-
     if (ret != MSERR_OK) {
         StopAudioCapture();
         MEDIA_LOGE("StartScreenCaptureFile recorder start failed");
-        return ret;
     }
-
+    MEDIA_LOGI("StartScreenCaptureFile RecorderServer E");
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "recorder failed, ret:%{public}d, dataType:%{public}d",
         ret, captureConfig_.dataType);
     CANCEL_SCOPE_EXIT_GUARD(1);
@@ -2307,6 +2303,9 @@ int32_t ScreenCaptureServer::StopScreenCaptureInner(AVScreenCaptureStateCode sta
         CloseFd();
         captureState_ = AVScreenCaptureState::STOPPED;
         ScreenCaptureMonitorServer::GetInstance()->CallOnScreenCaptureFinished(appInfo_.appPid);
+        if (screenCaptureCb_ != nullptr && stateCode != AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID) {
+            screenCaptureCb_->OnStateChange(stateCode);
+        }
         isSurfaceMode_ = false;
         surface_ = nullptr;
         SetErrorInfo(MSERR_OK, "normal stopped", StopReason::NORMAL_STOPPED, IsUserPrivacyAuthorityNeeded());
@@ -2339,10 +2338,8 @@ void ScreenCaptureServer::PostStopScreenCapture(AVScreenCaptureStateCode stateCo
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "PostStopScreenCapture start, stateCode:%{public}d.",
         FAKE_POINTER(this), stateCode);
     ScreenCaptureMonitorServer::GetInstance()->CallOnScreenCaptureFinished(appInfo_.appPid);
-    if (screenCaptureCb_ != nullptr) {
-        if (stateCode != AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID) {
-            screenCaptureCb_->OnStateChange(stateCode);
-        }
+    if (screenCaptureCb_ != nullptr && stateCode != AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID) {
+        screenCaptureCb_->OnStateChange(stateCode);
     }
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
     if (isPrivacyAuthorityEnabled_ && SCREEN_RECORDER_BUNDLE_NAME.compare(bundleName_) != 0) {
@@ -2748,7 +2745,6 @@ int32_t AudioDataSource::GetSize(int64_t &size)
         size = static_cast<int64_t>(bufferLen);
         return ret;
     }
-    MEDIA_LOGE("get size failed");
     return ret;
 }
 
