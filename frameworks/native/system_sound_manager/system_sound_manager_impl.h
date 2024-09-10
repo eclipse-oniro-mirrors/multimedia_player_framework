@@ -162,7 +162,7 @@ private:
 
     bool IsRingtoneTypeValid(RingtoneType ringtongType);
     bool IsSystemToneTypeValid(SystemToneType systemToneType);
-    bool IsSystemToneSourceTypePreset(const std::unique_ptr<RingtoneAsset> &ringtoneAsset,
+    bool IsSystemToneType(const std::unique_ptr<RingtoneAsset> &ringtoneAsset,
         const SystemToneType &systemToneType);
     bool IsToneHapticsTypeValid(ToneHapticsType toneHapticsType);
 
