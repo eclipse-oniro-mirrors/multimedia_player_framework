@@ -112,7 +112,7 @@ void ScreenCaptureServerFunctionTest::TearDown()
 
 int32_t ScreenCaptureServerFunctionTest::SetInvalidConfig()
 {
-    AudioCaptureInfo miccapinfo = {
+    AudioCaptureInfo micCapinfo = {
         .audioSampleRate = 0,
         .audioChannels = 0,
         .audioSource = SOURCE_DEFAULT
@@ -137,7 +137,7 @@ int32_t ScreenCaptureServerFunctionTest::SetInvalidConfig()
     };
 
     AudioInfo audioInfo = {
-        .micCapInfo = miccapinfo,
+        .micCapInfo = micCapinfo,
         .innerCapInfo = innerCapInfo,
     };
 
@@ -157,7 +157,7 @@ int32_t ScreenCaptureServerFunctionTest::SetInvalidConfig()
 
 int32_t ScreenCaptureServerFunctionTest::SetValidConfig()
 {
-    AudioCaptureInfo miccapinfo = {
+    AudioCaptureInfo micCapinfo = {
         .audioSampleRate = 16000,
         .audioChannels = 2,
         .audioSource = AudioCaptureSourceType::SOURCE_DEFAULT
@@ -182,7 +182,7 @@ int32_t ScreenCaptureServerFunctionTest::SetValidConfig()
     };
 
     AudioInfo audioInfo = {
-        .micCapInfo = miccapinfo,
+        .micCapInfo = micCapinfo,
         .innerCapInfo = innerCapInfo,
     };
 
@@ -271,7 +271,7 @@ int32_t ScreenCaptureServerFunctionTest::SetValidConfigFile(RecorderInfo &record
         .videoFrameRate = 30
     };
 
-    AudioCaptureInfo miccapinfo = {
+    AudioCaptureInfo micCapinfo = {
         .audioSampleRate = 16000,
         .audioChannels = 2,
         .audioSource = AudioCaptureSourceType::SOURCE_DEFAULT
