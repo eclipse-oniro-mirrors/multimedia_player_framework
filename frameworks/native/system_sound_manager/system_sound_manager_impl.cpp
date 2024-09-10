@@ -199,13 +199,13 @@ bool SystemSoundManagerImpl::IsSystemToneTypeValid(SystemToneType systemToneType
     }
 }
 
-bool SystemSoundManagerImpl::IsSystemToneSourceTypePreset(const unique_ptr<RingtoneAsset> &ringtoneAsset,
+bool SystemSoundManagerImpl::IsSystemToneType(const unique_ptr<RingtoneAsset> &ringtoneAsset,
     const SystemToneType &systemToneType)
 {
     CHECK_AND_RETURN_RET_LOG(ringtoneAsset != nullptr, false, "Invalid ringtone asset.");
     return (systemToneType == SYSTEM_TONE_TYPE_NOTIFICATION ?
-        SOURCE_TYPE_PRESET != ringtoneAsset->GetNotificationtoneSourceType() :
-        SOURCE_TYPE_PRESET != ringtoneAsset->GetShottoneSourceType());
+        TONE_TYPE_NOTIFICATION != ringtoneAsset->GetToneType() :
+        TONE_TYPE_SHOT != ringtoneAsset->GetToneType());
 }
 
 bool SystemSoundManagerImpl::IsToneHapticsTypeValid(ToneHapticsType toneHapticsType)
@@ -797,7 +797,7 @@ std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultRingtoneAttrs(
     auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
     CHECK_AND_RETURN_RET_LOG(results != nullptr, nullptr, "single sim card failed, ringtone library error.");
     unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
-    while ((ringtoneAsset != nullptr) && (SOURCE_TYPE_PRESET != ringtoneAsset->GetRingtoneSourceType())) {
+    while ((ringtoneAsset != nullptr) && (TONE_TYPE_RINGTONE != ringtoneAsset->GetToneType())) {
         ringtoneAsset = results->GetNextObject();
     }
     if (ringtoneAsset != nullptr) {
@@ -814,7 +814,7 @@ std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultRingtoneAttrs(
     CHECK_AND_RETURN_RET_LOG(results != nullptr, nullptr, "query both sim card failed, ringtone library error.");
     unique_ptr<RingtoneAsset> ringtoneAssetBothCard = results->GetFirstObject();
     while ((ringtoneAssetBothCard != nullptr) &&
-        (SOURCE_TYPE_PRESET != ringtoneAssetBothCard->GetRingtoneSourceType())) {
+        (TONE_TYPE_RINGTONE != ringtoneAssetBothCard->GetToneType())) {
         ringtoneAssetBothCard = results->GetNextObject();
     }
     if (ringtoneAssetBothCard != nullptr) {
@@ -882,7 +882,7 @@ std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultSystemToneAttrs(
     auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
     CHECK_AND_RETURN_RET_LOG(results != nullptr, nullptr, "query single systemtone failed, ringtone library error.");
     unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
-    while ((ringtoneAsset != nullptr) && IsSystemToneSourceTypePreset(ringtoneAsset, systemToneType)) {
+    while ((ringtoneAsset != nullptr) && IsSystemToneType(ringtoneAsset, systemToneType)) {
         ringtoneAsset = results->GetNextObject();
     }
     if (ringtoneAsset != nullptr) {
@@ -898,7 +898,7 @@ std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultSystemToneAttrs(
     results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
     CHECK_AND_RETURN_RET_LOG(results != nullptr, nullptr, "query both systemtone failed, ringtone library error.");
     unique_ptr<RingtoneAsset> ringtoneAssetBothCard = results->GetFirstObject();
-    while ((ringtoneAssetBothCard != nullptr) && IsSystemToneSourceTypePreset(ringtoneAssetBothCard, systemToneType)) {
+    while ((ringtoneAssetBothCard != nullptr) && IsSystemToneType(ringtoneAssetBothCard, systemToneType)) {
         ringtoneAssetBothCard = results->GetNextObject();
     }
     if (ringtoneAssetBothCard != nullptr) {
@@ -1040,7 +1040,7 @@ std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultAlarmToneAttrs(
     auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
     CHECK_AND_RETURN_RET_LOG(results != nullptr, nullptr, "query failed, ringtone library error.");
     unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
-    while ((ringtoneAsset != nullptr) && (SOURCE_TYPE_PRESET != ringtoneAsset->GetAlarmtoneSourceType())) {
+    while ((ringtoneAsset != nullptr) && (TONE_TYPE_ALARM != ringtoneAsset->GetToneType())) {
         ringtoneAsset = results->GetNextObject();
     }
     if (ringtoneAsset != nullptr) {
