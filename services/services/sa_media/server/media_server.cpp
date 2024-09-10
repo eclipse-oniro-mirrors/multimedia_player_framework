@@ -22,11 +22,6 @@
 #include "mem_mgr_client.h"
 #include "mem_mgr_proxy.h"
 
-#ifdef USE_SUSPEND_MANAGER
-#include "suspend_manager_client.h"
-#include "media_app_frozen_state_observer.h"
-#endif
-
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "MediaServer"};
 }
@@ -60,7 +55,6 @@ void MediaServer::OnStart()
     bool res = Publish(this);
     MEDIA_LOGD("MediaServer OnStart res=%{public}d", res);
     AddSystemAbilityListener(MEMORY_MANAGER_SA_ID);
-    RegisterMediaAppFrozenStateObserver();
 }
 
 void MediaServer::OnStop()
@@ -135,23 +129,6 @@ int32_t MediaServer::Dump(int32_t fd, const std::vector<std::u16string> &args)
     CHECK_AND_RETURN_RET_LOG(ret == NO_ERROR,
         OHOS::INVALID_OPERATION, "Failed to call MediaServerManager::Dump.");
     return OHOS::NO_ERROR;
-}
-
-void MediaServer::RegisterMediaAppFrozenStateObserver()
-{
-#ifdef USE_SUSPEND_MANAGER
-    MEDIA_LOGI("RegisterMediaAppFrozenStateObserver called");
-    mediaAppFrozenStateObserver_ = new MediaAppFrozenStateObserver();
-    if (mediaAppFrozenStateObserver_ != nullptr) {
-        int32_t ret = SuspendManager::SuspendManagerClient::GetInstance().
-            RegisterSuspendObserver(mediaAppFrozenStateObserver_);
-        if (ret == ERR_OK) {
-            MEDIA_LOGI("RegisterMediaAppFrozenStateObserver register success");
-            return;
-        }
-        MEDIA_LOGE("register fail, ret = %{public}d", ret);
-    }
-#endif
 }
 } // namespace Media
 } // namespace OHOS

@@ -93,10 +93,6 @@ config("media_service_config") {
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
-
-  if (target_cpu == "arm64") {
-    defines += [ "USE_SUSPEND_MANAGER" ]
-  }
 }
 
 ohos_shared_library("media_service") {
@@ -125,10 +121,6 @@ ohos_shared_library("media_service") {
     "sa_media/server/media_server.cpp",
     "sa_media/server/media_server_manager.cpp",
   ]
-
-  if (target_cpu == "arm64") {
-    sources += [ "sa_media/server/media_app_frozen_state_observer.cpp" ]
-  }
   if (player_framework_support_player) {
     sources += [
       "media_data_source/ipc/media_data_source_proxy.cpp",
@@ -251,10 +243,6 @@ ohos_shared_library("media_service") {
     "samgr:samgr_proxy",
     "state_registry:tel_state_registry_api",
   ]
-
-  if (target_cpu == "arm64") {
-    external_deps += [ "efficiency_manager:suspend_manager_client" ]
-  }
 
   if (player_framework_support_screen_capture) {
     external_deps += [
