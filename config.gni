@@ -177,7 +177,7 @@ if (player_framework_support_power_manager) {
 }
 
 if (player_framework_support_efficiency_manager) {
-  defines += [ "USE_EFFICIENCY_MANAGER" ]
+  player_framework_defines += [ "USE_EFFICIENCY_MANAGER" ]
 }
 
 if (player_framework_support_mediasource) {
