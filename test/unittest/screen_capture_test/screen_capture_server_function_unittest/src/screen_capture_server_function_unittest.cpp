@@ -224,14 +224,14 @@ int32_t ScreenCaptureServerFunctionTest::SetInvalidConfigFile(RecorderInfo &reco
         .audioSource = AudioCaptureSourceType::SOURCE_DEFAULT,
     };
 
-    AudioCaptureInfo micCapInfo = {
+    AudioCaptureInfo micCapinfo = {
         .audioSampleRate = 0,
         .audioChannels = 0,
         .audioSource = AudioCaptureSourceType::SOURCE_DEFAULT,
     };
 
     AudioInfo audioInfo = {
-        .micCapInfo = micCapInfo,
+        .micCapInfo = micCapinfo,
         .innerCapInfo = innerCapInfo,
         .audioEncInfo = audioEncInfo
     };
@@ -283,7 +283,7 @@ int32_t ScreenCaptureServerFunctionTest::SetValidConfigFile(RecorderInfo &record
     };
 
     AudioInfo audioInfo = {
-        .micCapInfo = micCapInfo,
+        .micCapInfo = micCapinfo,
         .innerCapInfo = innerCapInfo,
         .audioEncInfo = audioEncInfo
     };
