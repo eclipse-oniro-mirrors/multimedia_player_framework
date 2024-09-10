@@ -1542,9 +1542,6 @@ void PlayerServer::OnErrorMessage(int32_t errorCode, const std::string &errorMsg
 void PlayerServer::OnErrorCb(int32_t errorCode, const std::string &errorMsg)
 {
     std::lock_guard<std::mutex> lockCb(mutexCb_);
-    if (reportStatusFlag_ == false) {
-        return;
-    }
     lastErrMsg_ = errorMsg;
     FaultEventWrite(lastErrMsg_, "Player");
     if (playerCb_ != nullptr && !errorCbOnce_) {
@@ -1556,6 +1553,9 @@ void PlayerServer::OnErrorCb(int32_t errorCode, const std::string &errorMsg)
 void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
 {
     std::lock_guard<std::mutex> lockCb(mutexCb_);
+    if (reportStatusFlag_ == false) {
+        return;
+    }
     int32_t ret = HandleMessage(type, extra, infoBody);
     InnerOnInfo(type, extra, infoBody, ret);
 }
@@ -1904,7 +1904,7 @@ bool PlayerServer::IsPlayerRunning()
         MEDIA_LOGE("Can not judge IsCompleted, currentState is PLAYER_STATE_ERROR");
         return false;
     }
-    MEDIA_LOGI("subenhui IsPlayerRunning, currentState is %{public}d", static_cast<int32_t>(lastOpStatus_.load()));
+    MEDIA_LOGI("IsPlayerRunning, currentState is %{public}d", static_cast<int32_t>(lastOpStatus_.load()));
     return lastOpStatus_ == PLAYER_PREPARING || lastOpStatus_ == PLAYER_PREPARED
            || lastOpStatus_ == PLAYER_STARTED || lastOpStatus_ == PLAYER_PAUSED;
 }
