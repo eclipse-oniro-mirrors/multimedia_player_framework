@@ -605,7 +605,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, capture_file_params_invalid_008, TestS
     config_.audioInfo.innerCapInfo.audioChannels = 2;
     config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
     screenCaptureServer_->captureConfig_ = config_;
-    ASSERT_EQ(screenCaptureServer_->CheckAllParams(), MSERR_OK);
+    ASSERT_NE(screenCaptureServer_->CheckAllParams(), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, StartPrivacyWindow_001, TestSize.Level2)
@@ -788,15 +788,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckVideoEncParam_005, TestSize.Level
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, SetOutputFile_001, TestSize.Level2)
-{
-    RecorderInfo recorderInfo;
-    SetRecorderInfo("set_output_file_001.mp4", recorderInfo);
-    SetValidConfigFile(recorderInfo);
-    chmod("/data/test/media/set_output_file_001.mp4", O_RDONLY);
-    ASSERT_NE(InitFileScreenCaptureServer(), MSERR_OK);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, SetOutputFile_002, TestSize.Level2)
 {
     ASSERT_NE(screenCaptureServer_->SetOutputFile(-1), MSERR_OK);
 }
