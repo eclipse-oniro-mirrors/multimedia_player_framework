@@ -463,7 +463,7 @@ void MediaServerManager::DestroyAVPlayerStub(StubType type, sptr<IRemoteObject> 
                         playerStubMapTmp_.size(), pid);
                     (void)playerStubMapTmp_.erase(it);
                     MediaTrace::CounterTrace("The number of player", playerStubMapTmp_.size());
-                    break;
+                    return;
                 }
             }
             MEDIA_LOGE("find player object failed, pid(%{public}d).", pid);
