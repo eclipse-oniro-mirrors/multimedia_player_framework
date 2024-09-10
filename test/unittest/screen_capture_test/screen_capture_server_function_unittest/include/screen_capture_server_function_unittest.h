@@ -51,6 +51,8 @@ protected:
     std::shared_ptr<ScreenCaptureServer> screenCaptureServer_;
     AVScreenCaptureConfig config_;
     int32_t outputFd_ = -1;
+private:
+    const std::string ScreenRecorderBundleName = "com.ohos.screenrecorder";
 };
 
 class ScreenCaptureServerUnittestCallback : public ScreenCaptureCallBack {

@@ -38,7 +38,6 @@ constexpr int32_t FLIE_CREATE_FLAGS = 0777;
 static const std::string BUTTON_NAME_MIC = "mic";
 static const std::string BUTTON_NAME_STOP = "stop";
 static const int32_t MAX_SESSION_PER_UID = 8;
-static const std::string SCREEN_RECORDER_BUNDLE_NAME = "com.ohos.screenrecorder";
 }
 
 namespace OHOS {
@@ -868,7 +867,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, RequestUserPrivacyAuthority_002, TestS
     screenCaptureServer_->appInfo_.appUid = ROOT_UID;
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
     screenCaptureServer_->isPrivacyAuthorityEnabled_ = true;
-    screenCaptureServer_->appName_ = SCREEN_RECORDER_BUNDLE_NAME;
+    screenCaptureServer_->appName_ = ScreenRecorderBundleName;
 #endif
     ASSERT_EQ(screenCaptureServer_->RequestUserPrivacyAuthority(), MSERR_OK);
 }
@@ -887,7 +886,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, RequestUserPrivacyAuthority_004, TestS
     screenCaptureServer_->appInfo_.appUid = ROOT_UID + 1;
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
     screenCaptureServer_->isPrivacyAuthorityEnabled_ = true;
-    screenCaptureServer_->appName_ = SCREEN_RECORDER_BUNDLE_NAME;
+    screenCaptureServer_->appName_ = ScreenRecorderBundleName;
 #endif
     ASSERT_EQ(screenCaptureServer_->RequestUserPrivacyAuthority(), MSERR_OK);
 }
