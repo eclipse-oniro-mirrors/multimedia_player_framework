@@ -533,9 +533,9 @@ int32_t PlayerServer::BackGroundChangeState(PlayerStates state, bool isBackGroun
     backgroundState_ = state;
     MEDIA_LOGD("PlayerServer::BackGroundChangeState is called");
     isBackgroundCb_ = isBackGroundCb;
-    if (state == PLAYER_PAUSED && lastOpStatus_ == PLAYER_STARTED) {
+    if (state == PLAYER_PAUSED) {
         isBackgroundChanged_ = true;
-        return PlayerServer::OnPause();
+        return PlayerServer::Pause();
     }
     if (state == PLAYER_STARTED) {
         isBackgroundChanged_ = true;
@@ -1135,8 +1135,7 @@ void PlayerServer::HandleInterruptEvent(const Format &infoBody)
     if (forceType == OHOS::AudioStandard::INTERRUPT_FORCE) {
         if (hintType == OHOS::AudioStandard::INTERRUPT_HINT_PAUSE ||
             hintType == OHOS::AudioStandard::INTERRUPT_HINT_STOP) {
-            interruptEventState_ = PLAYER_PAUSED;
-            (void)BackGroundChangeState(PLAYER_PAUSED, true);
+            interruptEventState_ = PLAYER_IDLE;
         }
     }
 }
