@@ -188,7 +188,7 @@ int32_t AVImageGeneratorNapi::GetFetchFrameArgs(
     PixelFormat colorFormat = PixelFormat::RGBA_8888;
     int32_t formatVal = 3;
     CommonNapi::GetPropertyInt32(env, params, "colorFormat", formatVal);
-    PixelFormat colorFormat = static_cast<PixelFormat>(formatVal);
+    colorFormat = static_cast<PixelFormat>(formatVal);
     if (colorFormat != PixelFormat::RGB_565 && colorFormat != PixelFormat::RGB_888 &&
         colorFormat != PixelFormat::RGBA_8888) {
         asyncCtx->SignError(MSERR_INVALID_VAL, "formatVal is invalid");

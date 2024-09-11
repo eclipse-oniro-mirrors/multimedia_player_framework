@@ -508,7 +508,6 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameAtTime(
     return pixelMap;
 }
 
-
 std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameYuv(int64_t timeUs, int32_t option,
                                                               const PixelMapParams &param)
 {
