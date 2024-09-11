@@ -1019,6 +1019,15 @@ void ScreenCaptureServer::ResSchedReportData(int64_t value, std::unordered_map<s
     uint32_t type = ResourceSchedule::ResType::RES_TYPE_REPORT_SCREEN_CAPTURE;
     ResourceSchedule::ResSchedClient::GetInstance().ReportData(type, value, payload);
 }
+void ScreenCaptureServer::PostStartScreenCaptureSuccessAction()
+{
+    std::unordered_map<std::string, std::string> payload;
+    int64_t value = ResourceSchedule::ResType::ScreenCaptureStatus::START_SCREEN_CAPTURE;
+    ResSchedReportData(value, payload);
+    captureState_ = AVScreenCaptureState::STARTED;
+    ScreenCaptureMonitorServer::GetInstance()->CallOnScreenCaptureStarted(appInfo_.appPid);
+    screenCaptureCb_->OnStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STARTED);
+}
 
 void ScreenCaptureServer::PostStartScreenCapture(bool isSuccess)
 {
@@ -1032,22 +1041,22 @@ void ScreenCaptureServer::PostStartScreenCapture(bool isSuccess)
             int32_t tryTimes = TryStartNotification();
             if (tryTimes > NOTIFICATION_MAX_TRY_NUM) {
                 captureState_ = AVScreenCaptureState::STARTED;
-                StopScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID);
                 screenCaptureCb_->OnError(ScreenCaptureErrorType::SCREEN_CAPTURE_ERROR_INTERNAL,
                     AVScreenCaptureErrorCode::SCREEN_CAPTURE_ERR_UNKNOWN);
+                StopScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID);
                 return;
             }
         }
 #endif
         if (!UpdatePrivacyUsingPermissionState(START_VIDEO)) {
             MEDIA_LOGE("UpdatePrivacyUsingPermissionState START failed, dataType:%{public}d", captureConfig_.dataType);
+            captureState_ = AVScreenCaptureState::STARTED;
+            screenCaptureCb_->OnError(ScreenCaptureErrorType::SCREEN_CAPTURE_ERROR_INTERNAL,
+                AVScreenCaptureErrorCode::SCREEN_CAPTURE_ERR_UNKNOWN);
+            StopScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID);
+            return;
         }
-        std::unordered_map<std::string, std::string> payload;
-        int64_t value = ResourceSchedule::ResType::ScreenCaptureStatus::START_SCREEN_CAPTURE;
-        ResSchedReportData(value, payload);
-        captureState_ = AVScreenCaptureState::STARTED;
-        ScreenCaptureMonitorServer::GetInstance()->CallOnScreenCaptureStarted(appInfo_.appPid);
-        screenCaptureCb_->OnStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STARTED);
+        PostStartScreenCaptureSuccessAction();
     } else {
         MEDIA_LOGE("PostStartScreenCapture handle failure");
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
@@ -1230,15 +1239,18 @@ bool ScreenCaptureServer::UpdatePrivacyUsingPermissionState(VideoPermissionState
         res = PrivacyKit::StartUsingPermission(appInfo_.appTokenId, "ohos.permission.CAPTURE_SCREEN");
         if (res != 0) {
             MEDIA_LOGE("start using perm error");
+            return res;
         }
         res = PrivacyKit::AddPermissionUsedRecord(appInfo_.appTokenId, "ohos.permission.CAPTURE_SCREEN", 1, 0);
         if (res != 0) {
             MEDIA_LOGE("add screen capture record error: %{public}d", res);
+            return res;
         }
     } else if (state == STOP_VIDEO) {
         res = PrivacyKit::StopUsingPermission(appInfo_.appTokenId, "ohos.permission.CAPTURE_SCREEN");
         if (res != 0) {
             MEDIA_LOGE("stop using perm error");
+            return res;
         }
     }
     return true;
