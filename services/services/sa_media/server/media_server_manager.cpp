@@ -831,7 +831,7 @@ void MediaServerManager::HandlePlayerActive(const std::vector<int32_t> &pidList,
         }
         itPlayer++;
     }
-    MEDIA_LOGI("subenhui player stub HandlePlayerActive end services(%{public}zu).", playerStubMapTmp_.size());
+    MEDIA_LOGI("player stub HandlePlayerActive end services(%{public}zu).", playerStubMapTmp_.size());
 }
 
 void MediaServerManager::HandlePlayerFrozen(const std::vector<int32_t> &pidList, const int32_t uid)
@@ -844,7 +844,7 @@ void MediaServerManager::HandlePlayerFrozen(const std::vector<int32_t> &pidList,
         bool isRunning = playerStub->IsPlayerRunning();
         MEDIA_LOGI("player stub HandlePlayerFrozen uid(%{public}d) isRunning(%{public}d).", uid, isRunning);
         if (playerUid == uid && isRunning) {
-            MEDIA_LOGI("subenhui player stub HandlePlayerFrozen uid(%{public}d).", uid);
+            MEDIA_LOGI("player stub HandlePlayerFrozen uid(%{public}d).", uid);
             playerStub->HandleFrozen();
         }
         itPlayer++;
