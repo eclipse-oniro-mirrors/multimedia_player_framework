@@ -682,6 +682,20 @@ int32_t HiPlayerImpl::SelectBitRate(uint32_t bitRate)
     return MSERR_INVALID_OPERATION;
 }
 
+int32_t HiPlayerImpl::StopBufferring(bool flag)
+{
+    MEDIA_LOG_D_SHORT("HiPlayerImpl:: StopBufferring %{public}d", flag);
+    FALSE_RETURN_V_MSG_E(demuxer_ != nullptr,
+        MSERR_INVALID_OPERATION, "StopBufferring failed, demuxer_ is null");
+    Status ret = demuxer_->StopBufferring(flag);
+    if (ret == Status::OK) {
+        MEDIA_LOG_I_SHORT("StopBufferring success");
+        return MSERR_OK;
+    }
+    MEDIA_LOG_I_SHORT("StopBufferring failed");
+    return MSERR_INVALID_OPERATION;
+}
+
 void HiPlayerImpl::DoInitializeForHttp()
 {
     if (!isNetWorkPlay_) {

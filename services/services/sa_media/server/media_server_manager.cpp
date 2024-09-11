@@ -153,6 +153,7 @@ MediaServerManager::~MediaServerManager()
     dumperTbl_.clear();
     recorderStubMap_.clear();
     playerStubMap_.clear();
+    playerStubMapTmp_.clear();
     avMetadataHelperStubMap_.clear();
     avCodecListStubMap_.clear();
     avCodecStubMap_.clear();
@@ -222,6 +223,7 @@ sptr<IRemoteObject> MediaServerManager::CreatePlayerStubObject()
 
     pid_t pid = IPCSkeleton::GetCallingPid();
     playerStubMap_[object] = pid;
+    playerStubMapTmp_[playerStub] = pid;
 
     Dumper dumper;
     dumper.entry_ = [player = playerStub](int32_t fd) -> int32_t {
@@ -451,6 +453,16 @@ void MediaServerManager::DestroyAVPlayerStub(StubType type, sptr<IRemoteObject> 
                         playerStubMap_.size(), pid);
                     (void)playerStubMap_.erase(it);
                     MediaTrace::CounterTrace("The number of player", playerStubMap_.size());
+                    break;
+                }
+            }
+            for (auto it = playerStubMapTmp_.begin(); it != playerStubMapTmp_.end(); it++) {
+                sptr<PlayerServiceStub> playerStub = it->first;
+                if (playerStub->AsObject() == object) {
+                    MEDIA_LOGD("destroy player stub services(%{public}zu) pid(%{public}d).",
+                        playerStubMapTmp_.size(), pid);
+                    (void)playerStubMapTmp_.erase(it);
+                    MediaTrace::CounterTrace("The number of player", playerStubMapTmp_.size());
                     return;
                 }
             }
@@ -692,6 +704,13 @@ void MediaServerManager::DestroyAVPlayerStubForPid(pid_t pid)
             itPlayer++;
         }
     }
+    for (auto itPlayer = playerStubMapTmp_.begin(); itPlayer != playerStubMapTmp_.end();) {
+        if (itPlayer->second == pid) {
+            itPlayer = playerStubMapTmp_.erase(itPlayer);
+        } else {
+            itPlayer++;
+        }
+    }
     MEDIA_LOGD("player stub services(%{public}zu).", playerStubMap_.size());
 
     MEDIA_LOGD("avmetadatahelper stub services(%{public}zu) pid(%{public}d).", avMetadataHelperStubMap_.size(), pid);
@@ -795,6 +814,42 @@ void MediaServerManager::AsyncExecutor::HandleAsyncExecution()
         freeList_.swap(tempList);
     }
     tempList.clear();
+}
+
+void MediaServerManager::HandlePlayerActive(const std::vector<int32_t> &pidList, const int32_t uid)
+{
+    MEDIA_LOGI("player stub HandlePlayerActive begin services(%{public}zu) pidlist(%{public}zu) uid(%{public}d).",
+        playerStubMapTmp_.size(), pidList.size(), uid);
+    for (auto itPlayer = playerStubMapTmp_.begin(); itPlayer != playerStubMapTmp_.end();) {
+        sptr<PlayerServiceStub> playerStub = itPlayer->first;
+        int32_t playerUid = playerStub->GetUid();
+        bool isRunning = playerStub->IsPlayerRunning();
+        MEDIA_LOGI("player stub HandlePlayerActive uid(%{public}d) isRunning(%{public}d).", uid, isRunning);
+        if (playerUid == uid && isRunning) {
+            MEDIA_LOGI("player stub HandlePlayerActive uid(%{public}d).", uid);
+            playerStub->HandleActive();
+        }
+        itPlayer++;
+    }
+    MEDIA_LOGI("player stub HandlePlayerActive end services(%{public}zu).", playerStubMapTmp_.size());
+}
+
+void MediaServerManager::HandlePlayerFrozen(const std::vector<int32_t> &pidList, const int32_t uid)
+{
+    MEDIA_LOGI("player stub HandlePlayerFrozen begin services(%{public}zu) pidlist(%{public}zu) uid(%{public}d).",
+        playerStubMapTmp_.size(), pidList.size(), uid);
+    for (auto itPlayer = playerStubMapTmp_.begin(); itPlayer != playerStubMapTmp_.end();) {
+        sptr<PlayerServiceStub> playerStub = itPlayer->first;
+        int32_t playerUid = playerStub->GetUid();
+        bool isRunning = playerStub->IsPlayerRunning();
+        MEDIA_LOGI("player stub HandlePlayerFrozen uid(%{public}d) isRunning(%{public}d).", uid, isRunning);
+        if (playerUid == uid && isRunning) {
+            MEDIA_LOGI("player stub HandlePlayerFrozen uid(%{public}d).", uid);
+            playerStub->HandleFrozen();
+        }
+        itPlayer++;
+    }
+    MEDIA_LOGI("player stub HandlePlayerFrozen end services(%{public}zu).", playerStubMapTmp_.size());
 }
 } // namespace Media
 } // namespace OHOS

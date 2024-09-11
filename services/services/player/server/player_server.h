@@ -118,6 +118,7 @@ public:
     int32_t SetPlayerCallback(const std::shared_ptr<PlayerCallback> &callback) override;
     virtual int32_t DumpInfo(int32_t fd);
     int32_t SelectBitRate(uint32_t bitRate) override;
+    int32_t StopBufferring(bool flag) override;
     int32_t BackGroundChangeState(PlayerStates state, bool isBackGroundCb);
     int32_t SelectTrack(int32_t index, PlayerSwitchMode mode) override;
     int32_t DeselectTrack(int32_t index) override;
@@ -138,6 +139,13 @@ public:
     int32_t SetMaxAmplitudeCbStatus(bool status) override;
     int32_t SetDeviceChangeCbStatus(bool status) override;
 
+    int32_t StartReportStatus();
+    int32_t StopReportStatus();
+    int32_t GetUid()
+    {
+        return appUid_;
+    }
+    bool IsPlayerRunning();
 protected:
     class BaseState;
     class IdleState;
@@ -252,6 +260,7 @@ private:
     bool isAudioMuted_ = false;
     bool maxAmplitudeCbStatus_ = false;
     bool deviceChangeCallbackflag_ = false;
+    std::atomic<bool> reportStatusFlag_ {true};
     bool isStreamUsagePauseRequired_ = true;
 };
 } // namespace Media

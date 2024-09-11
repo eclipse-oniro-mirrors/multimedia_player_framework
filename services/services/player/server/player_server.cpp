@@ -1177,6 +1177,16 @@ int32_t PlayerServer::SelectBitRate(uint32_t bitRate)
     return MSERR_OK;
 }
 
+int32_t PlayerServer::StopBufferring(bool flag)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    if (playerEngine_ != nullptr) {
+        int ret = playerEngine_->StopBufferring(flag);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine StopBufferring Failed!");
+    }
+    return MSERR_OK;
+}
+
 #ifdef SUPPORT_VIDEO
 int32_t PlayerServer::SetVideoSurface(sptr<Surface> surface)
 {
@@ -1491,6 +1501,9 @@ int32_t PlayerServer::DumpInfo(int32_t fd)
 
 void PlayerServer::OnError(PlayerErrorType errorType, int32_t errorCode)
 {
+    if (reportStatusFlag_ == false) {
+        return;
+    }
     (void)errorType;
     auto errorMsg = MSErrorToExtErrorString(static_cast<MediaServiceErrCode>(errorCode));
     return OnErrorMessage(errorCode, errorMsg);
@@ -1539,6 +1552,9 @@ void PlayerServer::OnErrorCb(int32_t errorCode, const std::string &errorMsg)
 void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
 {
     std::lock_guard<std::mutex> lockCb(mutexCb_);
+    if (reportStatusFlag_ == false) {
+        return;
+    }
     int32_t ret = HandleMessage(type, extra, infoBody);
     InnerOnInfo(type, extra, infoBody, ret);
 }
@@ -1866,6 +1882,30 @@ bool PlayerServer::CheckState(PlayerOnInfoType type, int32_t extra)
     CHECK_AND_RETURN_RET_LOG(currState != idleState_ || !isPreparedInfo, false,
         "do not report prepared in idle state");
     return true;
+}
+
+int32_t PlayerServer::StartReportStatus()
+{
+    reportStatusFlag_.store(true);
+    return MSERR_OK;
+}
+
+int32_t PlayerServer::StopReportStatus()
+{
+    reportStatusFlag_.store(false);
+    return MSERR_OK;
+}
+
+bool PlayerServer::IsPlayerRunning()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (lastOpStatus_ == PLAYER_STATE_ERROR) {
+        MEDIA_LOGE("Can not judge IsCompleted, currentState is PLAYER_STATE_ERROR");
+        return false;
+    }
+    MEDIA_LOGI("IsPlayerRunning, currentState is %{public}d", static_cast<int32_t>(lastOpStatus_.load()));
+    return lastOpStatus_ == PLAYER_PREPARING || lastOpStatus_ == PLAYER_PREPARED
+           || lastOpStatus_ == PLAYER_STARTED || lastOpStatus_ == PLAYER_PAUSED;
 }
 } // namespace Media
 } // namespace OHOS
