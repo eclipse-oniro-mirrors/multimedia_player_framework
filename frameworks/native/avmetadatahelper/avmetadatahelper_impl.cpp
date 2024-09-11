@@ -31,7 +31,6 @@
 #include "hisysevent.h"
 #include "image_format_convert.h"
 #include "color_space.h"
-#include "osal/utils/util.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_METADATA, "AVMetadatahelperImpl" };
@@ -467,22 +466,6 @@ std::shared_ptr<AVSharedMemory> AVMetadataHelperImpl::FetchArtPicture()
     return avMetadataHelperService_->FetchArtPicture();
 }
 
-static void CalcScaleRate(Size srcParam, PixelMapParams dstParam, float &scaleRateW, float &scaleRateH)
-{
-    bool isWScale = dstParam.dstWidth > 0 && dstParam.dstWidth < srcParam.width;
-    if (isWScale && srcParam.width > 0) {
-        scaleRateW = (1.0f * dstParam.dstWidth) / srcParam.width;
-        // 0 means follow another edge
-        scaleRateH = dstParam.dstHeight == 0 ? scaleRateW : scaleRateH;
-    }
-    bool isHScale = dstParam.dstHeight > 0 && dstParam.dstHeight < srcParam.height;
-    if (isHScale && srcParam.height > 0) {
-        scaleRateH = (1.0f * dstParam.dstHeight) / srcParam.height;
-        // 0 means follow another edge
-        scaleRateW = dstParam.dstWidth == 0 ? scaleRateH : scaleRateW;
-    }
-}
-
 std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameAtTime(
     int64_t timeUs, int32_t option, const PixelMapParams &param)
 {
@@ -516,14 +499,15 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameAtTime(
     }
     int32_t srcWidth = pixelMap->GetWidth();
     int32_t srcHeight = pixelMap->GetHeight();
-    float scaleRateW = 1.0;
-    float scaleRateH = 1.0;
-    CalcScaleRate({.width = srcWidth, .height = srcHeight }, param, scaleRateW, scaleRateH);
-    if (!OSAL::IsFloatEqual(scaleRateW, 1.0f) || !OSAL::IsFloatEqual(scaleRateH, 1.0f)) {
-        pixelMap->scale(scaleRateW, scaleRateH, AntiAliasingOption::LOW);
+    bool needScale = (param.dstWidth > 0 && param.dstHeight > 0) &&
+                     (param.dstWidth <= srcWidth && param.dstHeight <= srcHeight) &&
+                     (param.dstWidth < srcWidth || param.dstHeight < srcHeight) && srcWidth > 0 && srcHeight > 0;
+    if (needScale) {
+        pixelMap->scale((1.0f * param.dstWidth) / srcWidth, (1.0f * param.dstHeight) / srcHeight);
     }
     return pixelMap;
 }
+
 
 std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameYuv(int64_t timeUs, int32_t option,
                                                               const PixelMapParams &param)
@@ -553,14 +537,14 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameYuv(int64_t timeUs, in
                                 .uvStride = srcWidth,
                                 .uvOffset = srcWidth * srcHeight };
     pixelMap->SetImageYUVInfo(yuvDataInfo);
-    float scaleRateW = 1.0;
-    float scaleRateH = 1.0;
-    CalcScaleRate({.width = srcWidth, .height = srcHeight }, param, scaleRateW, scaleRateH);
-    if (!OSAL::IsFloatEqual(scaleRateW, 1.0f) || !OSAL::IsFloatEqual(scaleRateH, 1.0f)) {
+    bool needScale = (param.dstWidth > 0 && param.dstHeight > 0) &&
+                     (param.dstWidth <= srcWidth && param.dstHeight <= srcHeight) &&
+                     (param.dstWidth < srcWidth || param.dstHeight < srcHeight) && srcWidth > 0 && srcHeight > 0;
+    if (needScale) {
         if (!pixelMapInfo.isHdr) {
             pixelMap->SetAllocatorType(AllocatorType::SHARE_MEM_ALLOC);
         }
-        pixelMap->scale(scaleRateW, scaleRateH, AntiAliasingOption::LOW);
+        pixelMap->scale((1.0f * param.dstWidth) / srcWidth, (1.0f * param.dstHeight) / srcHeight);
     }
     if (pixelMapInfo.rotation > 0) {
         if (!pixelMapInfo.isHdr) {
