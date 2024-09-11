@@ -119,7 +119,7 @@ private:
     std::map<sptr<IRemoteObject>, pid_t> screenCaptureMonitorStubMap_;
     std::map<sptr<IRemoteObject>, pid_t> screenCaptureControllerStubMap_;
     std::map<StubType, std::vector<Dumper>> dumperTbl_;
-    std::map<sptr<PlayerServiceStub>, pid_t> playerStubMapTmp_;
+    std::map<sptr<PlayerServiceStub>, pid_t> playerStubPtrMap_;
     AsyncExecutor executor_;
 
     std::mutex mutex_;
