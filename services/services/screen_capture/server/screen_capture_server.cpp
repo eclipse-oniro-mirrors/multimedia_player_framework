@@ -303,7 +303,7 @@ int32_t ScreenCaptureServer::ReportAVScreenCaptureUserChoice(int32_t sessionId, 
                 std::lock_guard<std::mutex> lock(mutexGlobal_);
                 currentServer = GetScreenCaptureServerByIdWithLock(activeSessionId_.load());
             }
-            if (currentServer != nullptr && currentServer != server && sessionId != activeSessionId_.load()) {
+            if (currentServer != nullptr && sessionId != activeSessionId_.load()) {
                 MEDIA_LOGW("ReportAVScreenCaptureUserChoice uid(%{public}d) is interrupted by uid(%{public}d)",
                     currentServer->appInfo_.appUid, server->appInfo_.appUid);
                 currentServer->StopScreenCaptureByEvent(
@@ -1473,12 +1473,29 @@ int32_t ScreenCaptureServer::StartPrivacyWindow()
     comStr += "\"}";
 
     AAFwk::Want want;
+    ErrCode ret = ERR_INVALID_VALUE;
+#ifdef PC_STANDARD
+    if (captureConfig_.captureMode == CAPTURE_HOME_SCREEN) {
+        want.SetElementName(BUNDLE_NAME, ABILITY_NAME);
+        auto connection_ = sptr<UIExtensionAbilityConnection>(new (std::nothrow) UIExtensionAbilityConnection(comStr));
+        ret = OHOS::AAFwk::ExtensionManagerClient::GetInstance().ConnectServiceExtensionAbility(want, connection_,
+            nullptr, -1);
+        MEDIA_LOGI("ConnectServiceExtensionAbility end %{public}d, DeviceType : PC", ret);
+    } else if (captureConfig_.captureMode != CAPTURE_INVAILD) {
+        AppExecFwk::ElementName element("", SCREEN_RECORDER_BUNDLE_NAME, SELECT_ABILITY_NAME); // DeviceID
+        want.SetElement(element);
+        want.SetParam("params", comStr);
+        ret = AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want);
+        MEDIA_LOGI("StartAbility end %{public}d, DeviceType : PC", ret);
+    }
+#else
     want.SetElementName(BUNDLE_NAME, ABILITY_NAME);
     auto connection_ = sptr<UIExtensionAbilityConnection>(new (std::nothrow) UIExtensionAbilityConnection(comStr));
-    auto ret = OHOS::AAFwk::ExtensionManagerClient::GetInstance().ConnectServiceExtensionAbility(want, connection_,
+    ret = OHOS::AAFwk::ExtensionManagerClient::GetInstance().ConnectServiceExtensionAbility(want, connection_,
         nullptr, -1);
-    MEDIA_LOGI("ConnectServiceExtensionAbility end %{public}d", ret);
-    return MSERR_OK;
+    MEDIA_LOGI("ConnectServiceExtensionAbility end %{public}d, Device : Phone", ret);
+#endif
+    return ret;
 }
 
 int32_t ScreenCaptureServer::StartNotification()
