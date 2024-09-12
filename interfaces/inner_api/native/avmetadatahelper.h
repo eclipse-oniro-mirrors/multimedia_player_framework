@@ -314,12 +314,12 @@ struct PixelMapParams {
      * Expected pixelmap's width, -1 means to keep consistent with the
      * original dimensions of the given video resource.
      */
-    int32_t dstWidth = 0;
+    int32_t dstWidth = -1;
     /**
      * Expected pixelmap's width, -1 means to keep consistent with the
      * original dimensions of the given video resource.
      */
-    int32_t dstHeight = 0;
+    int32_t dstHeight = -1;
     /**
      * Expected pixelmap's color format, see {@link PixelFormat}. Currently,
      * RGB_565, RGB_888, RGBA_8888 are supported.
