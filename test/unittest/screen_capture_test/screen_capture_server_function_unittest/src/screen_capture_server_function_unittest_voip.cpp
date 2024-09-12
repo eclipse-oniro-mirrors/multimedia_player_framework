@@ -39,13 +39,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnVoIPStatusChanged_001, TestSize.Leve
 {
     RecorderInfo recorderInfo;
     SetRecorderInfo("screen_capture_voip_001.mp4", recorderInfo);
-    SetConfigFile(recorderInfo);
-    config_.audioInfo.micCapInfo.audioSampleRate = 16000;
-    config_.audioInfo.micCapInfo.audioChannels = 2;
-    config_.audioInfo.micCapInfo.audioSource = AudioCaptureSourceType::SOURCE_DEFAULT;
-    config_.audioInfo.innerCapInfo.audioSampleRate = 16000;
-    config_.audioInfo.innerCapInfo.audioChannels = 2;
-    config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
+    SetValidConfigFile(recorderInfo);
     ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
     screenCaptureServer_->SetMicrophoneEnabled(true);
     ASSERT_EQ(StartFileAudioCapture(), MSERR_OK);
@@ -63,13 +57,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnVoIPStatusChanged_002, TestSize.Leve
 {
     RecorderInfo recorderInfo;
     SetRecorderInfo("screen_capture_voip_002.mp4", recorderInfo);
-    SetConfigFile(recorderInfo);
-    config_.audioInfo.micCapInfo.audioSampleRate = 16000;
-    config_.audioInfo.micCapInfo.audioChannels = 2;
-    config_.audioInfo.micCapInfo.audioSource = AudioCaptureSourceType::SOURCE_DEFAULT;
-    config_.audioInfo.innerCapInfo.audioSampleRate = 16000;
-    config_.audioInfo.innerCapInfo.audioChannels = 2;
-    config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
+    SetValidConfigFile(recorderInfo);
     ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
     screenCaptureServer_->SetMicrophoneEnabled(false);
     ASSERT_EQ(StartFileAudioCapture(), MSERR_OK);
@@ -87,13 +75,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnVoIPStatusChanged_003, TestSize.Leve
 {
     RecorderInfo recorderInfo;
     SetRecorderInfo("screen_capture_voip_003.mp4", recorderInfo);
-    SetConfigFile(recorderInfo);
-    config_.audioInfo.micCapInfo.audioSampleRate = 16000;
-    config_.audioInfo.micCapInfo.audioChannels = 2;
-    config_.audioInfo.micCapInfo.audioSource = AudioCaptureSourceType::SOURCE_DEFAULT;
-    config_.audioInfo.innerCapInfo.audioSampleRate = 16000;
-    config_.audioInfo.innerCapInfo.audioChannels = 2;
-    config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
+    SetValidConfigFile(recorderInfo);
     ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
     screenCaptureServer_->SetMicrophoneEnabled(false);
     ASSERT_EQ(screenCaptureServer_->GetMicWorkingState(), false);
@@ -116,13 +98,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnVoIPStatusChanged_004, TestSize.Leve
 {
     RecorderInfo recorderInfo;
     SetRecorderInfo("screen_capture_voip_004.mp4", recorderInfo);
-    SetConfigFile(recorderInfo);
-    config_.audioInfo.micCapInfo.audioSampleRate = 16000;
-    config_.audioInfo.micCapInfo.audioChannels = 2;
-    config_.audioInfo.micCapInfo.audioSource = AudioCaptureSourceType::SOURCE_DEFAULT;
-    config_.audioInfo.innerCapInfo.audioSampleRate = 16000;
-    config_.audioInfo.innerCapInfo.audioChannels = 2;
-    config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
+    SetValidConfigFile(recorderInfo);
     ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
     screenCaptureServer_->SetMicrophoneEnabled(true);
     ASSERT_EQ(StartFileAudioCapture(), MSERR_OK);
