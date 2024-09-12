@@ -45,7 +45,6 @@ namespace OHOS {
 namespace Media {
 using namespace OHOS::HDI::Display::Graphic::Common::V1_0;
 static constexpr uint8_t PIXEL_SIZE_HDR_YUV = 3;
-static constexpr float PIXEL_SIZE_SDR_YUV = 1.5;
 static std::map<Scene, long> SCENE_CODE_MAP = { { Scene::AV_META_SCENE_CLONE, 1 },
                                                 { Scene::AV_META_SCENE_BATCH_HANDLE, 2 } };
 static std::map<Scene, int64_t> SCENE_TIMESTAMP_MAP = { { Scene::AV_META_SCENE_CLONE, 0 },
