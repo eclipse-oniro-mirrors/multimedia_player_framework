@@ -803,7 +803,6 @@ int32_t ScreenCaptureServer::RequestUserPrivacyAuthority()
         return MSERR_OK;
     }
 
-#ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
     if (isPrivacyAuthorityEnabled_) {
         if (SCREEN_RECORDER_BUNDLE_NAME.compare(appName_) != 0) {
             return StartPrivacyWindow();
@@ -812,7 +811,7 @@ int32_t ScreenCaptureServer::RequestUserPrivacyAuthority()
             return MSERR_OK;
         }
     }
-#endif
+
     MEDIA_LOGI("privacy notification window not support, go on to check CAPTURE_SCREEN permission");
     return CheckScreenCapturePermission() ? MSERR_OK : MSERR_INVALID_OPERATION;
 }
@@ -1102,12 +1101,10 @@ void ScreenCaptureServer::PostStartScreenCapture(bool isSuccess)
         PostStartScreenCaptureSuccessAction();
     } else {
         MEDIA_LOGE("PostStartScreenCapture handle failure");
-#ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
         if (isPrivacyAuthorityEnabled_) {
             screenCaptureCb_->OnError(ScreenCaptureErrorType::SCREEN_CAPTURE_ERROR_INTERNAL,
                 AVScreenCaptureErrorCode::SCREEN_CAPTURE_ERR_UNKNOWN);
         }
-#endif
         isPrivacyAuthorityEnabled_ = false;
         isSurfaceMode_ = false;
         captureState_ = AVScreenCaptureState::STOPPED;
@@ -1363,7 +1360,6 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
     }
 
     if (IsUserPrivacyAuthorityNeeded()) {
-#ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
         if (isPrivacyAuthorityEnabled_ && SCREEN_RECORDER_BUNDLE_NAME.compare(appName_) != 0) {
             MEDIA_LOGI("Wait for user interactions to ALLOW/DENY capture");
             return MSERR_OK;
@@ -1371,7 +1367,6 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
             // system rec Interrupt at here, 3rd rec interrupt at ReportAVScreenCaptureUserChoice
             SystemRecorderInterruptLatestRecorder();
         }
-#endif
         MEDIA_LOGI("privacy notification window not support, app has CAPTURE_SCREEN permission and go on");
     } else {
         MEDIA_LOGI("Privacy Authority granted automatically and go on"); // for root
