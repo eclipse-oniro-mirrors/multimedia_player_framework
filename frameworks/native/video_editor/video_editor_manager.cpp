@@ -25,6 +25,8 @@ namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_VIDEOEDITOR, "VideoEditor"};
 }
 
+constexpr uint64_t FLOW_CONTROL_MAX_EDITOR_THRESHOLD = 5;
+
 std::shared_ptr<VideoEditor> VideoEditorFactory::CreateVideoEditor()
 {
     return VideoEditorManager::GetInstance().CreateVideoEditor();
@@ -49,7 +51,7 @@ std::shared_ptr<VideoEditor> VideoEditorManager::CreateVideoEditor()
     }
 
     editorMapMutex_.lock();
-    editorMap_[id] = std::weak_ptr<VideoEditor>(videoEditor);
+    editorMap_[id] = std::weak_ptr<VideoEditorImpl>(videoEditor);
     editorMapMutex_.unlock();
 
     MEDIA_LOGI("create VideoEditor[id = %{public}" PRIu64 "] success.", id);
@@ -63,6 +65,25 @@ void VideoEditorManager::ReleaseVideoEditor(uint64_t id)
     editorMap_.erase(id);
     editorMapMutex_.unlock();
     MEDIA_LOGI("release VideoEditor[id = %{public}" PRIu64 "] finish.", id);
+}
+
+bool VideoEditorManager::IsFlowControlPass() const
+{
+    uint32_t compositingCount = 0;
+    std::shared_lock<std::shared_mutex> lock(editorMapMutex_);
+    for (auto it = editorMap_.begin(); it != editorMap_.end(); ++it) {
+        auto editor = it->second.lock();
+        if (editor == nullptr) {
+            continue;
+        }
+        if (editor->GetState() == VideoEditorState::COMPOSITING) {
+            compositingCount++;
+        }
+        if (compositingCount >= FLOW_CONTROL_MAX_EDITOR_THRESHOLD) {
+            return false;
+        }
+    }
+    return true;
 }
 
 } // namespace Media

@@ -13,31 +13,38 @@
  * limitations under the License.
  */
 
-#ifndef OH_VEF_EDITOR_MANAGER_H
-#define OH_VEF_EDITOR_MANAGER_H
+#ifndef OH_VEF_ASSET_BASE_H
+#define OH_VEF_ASSET_BASE_H
 
-#include <shared_mutex>
-#include <unordered_map>
-#include "video_editor_impl.h"
+#include "data_center/effect/effect.h"
 
 namespace OHOS {
 namespace Media {
 
-class VideoEditorManager {
+enum class AssetType : uint32_t {
+    VIDEO,
+    AUDIO,
+    UNKNOWN
+};
+
+constexpr int INVALID_FILE_FD = -1;
+
+class Asset {
 public:
-    static VideoEditorManager& GetInstance();
+    Asset(int64_t id, AssetType type, int fd);
+    virtual ~Asset() = default;
 
-    std::shared_ptr<VideoEditor> CreateVideoEditor();
-    void ReleaseVideoEditor(uint64_t id);
-    bool IsFlowControlPass() const;
+    uint64_t GetId() const;
+    int GetFd() const;
+    AssetType GetType() const;
 
-private:
-    mutable std::shared_mutex editorMapMutex_;
-    std::unordered_map<uint64_t, std::weak_ptr<VideoEditorImpl>> editorMap_;
-    std::atomic<uint64_t> id_{ 1 };
+protected:
+    uint64_t id_ = 0;
+    AssetType type_ = AssetType::UNKNOWN;
+    int fd_ = INVALID_FILE_FD;
 };
 
 } // namespace Media
 } // namespace OHOS
 
-#endif // OH_VEF_EDITOR_MANAGER_H
+#endif // OH_VEF_ASSET_BASE_H

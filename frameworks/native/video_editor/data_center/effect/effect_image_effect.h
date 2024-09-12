@@ -13,31 +13,32 @@
  * limitations under the License.
  */
 
-#ifndef OH_VEF_EDITOR_MANAGER_H
-#define OH_VEF_EDITOR_MANAGER_H
+#ifndef OH_VEF_EFFECT_IMAGE_EFFECT_H
+#define OH_VEF_EFFECT_IMAGE_EFFECT_H
 
-#include <shared_mutex>
-#include <unordered_map>
-#include "video_editor_impl.h"
-
+#include <memory>
+#include <string>
+#ifdef IMAGE_EFFECT_SUPPORT
+#include "image_effect.h"
+#endif
+#include "data_center/effect/effect.h"
 namespace OHOS {
 namespace Media {
 
-class VideoEditorManager {
+class EffectImageEffect : public Effect {
 public:
-    static VideoEditorManager& GetInstance();
-
-    std::shared_ptr<VideoEditor> CreateVideoEditor();
-    void ReleaseVideoEditor(uint64_t id);
-    bool IsFlowControlPass() const;
-
+    EffectImageEffect(uint64_t id, const std::string& description);
+    ~EffectImageEffect() override = default;
+    VEFError Init() override;
+    std::shared_ptr<EffectRenderInfo> GetRenderInfo() const override;
 private:
-    mutable std::shared_mutex editorMapMutex_;
-    std::unordered_map<uint64_t, std::weak_ptr<VideoEditorImpl>> editorMap_;
-    std::atomic<uint64_t> id_{ 1 };
+    std::string description_;
+#ifdef IMAGE_EFFECT_SUPPORT
+    std::shared_ptr<OH_ImageEffect> imageEffectHandler_ { nullptr };
+#endif
 };
 
 } // namespace Media
 } // namespace OHOS
 
-#endif // OH_VEF_EDITOR_MANAGER_H
+#endif // OH_VEF_EFFECT_IMAGE_EFFECT_H

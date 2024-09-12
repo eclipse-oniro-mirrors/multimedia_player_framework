@@ -13,31 +13,40 @@
  * limitations under the License.
  */
 
-#ifndef OH_VEF_EDITOR_MANAGER_H
-#define OH_VEF_EDITOR_MANAGER_H
+#ifndef OH_VEF_EFFECT_BASE_H
+#define OH_VEF_EFFECT_BASE_H
 
-#include <shared_mutex>
-#include <unordered_map>
-#include "video_editor_impl.h"
+#include <memory>
+#include "video_editor.h"
 
 namespace OHOS {
 namespace Media {
 
-class VideoEditorManager {
+enum class EffectType : uint32_t {
+    IMAGE_EFFECT,
+    UNKNOWN
+};
+
+struct EffectRenderInfo;
+
+class Effect {
 public:
-    static VideoEditorManager& GetInstance();
+    virtual ~Effect() = default;
+    Effect(uint64_t id, EffectType type);
 
-    std::shared_ptr<VideoEditor> CreateVideoEditor();
-    void ReleaseVideoEditor(uint64_t id);
-    bool IsFlowControlPass() const;
+public:
+    uint64_t GetId() const;
+    EffectType GetType() const;
 
-private:
-    mutable std::shared_mutex editorMapMutex_;
-    std::unordered_map<uint64_t, std::weak_ptr<VideoEditorImpl>> editorMap_;
-    std::atomic<uint64_t> id_{ 1 };
+    virtual VEFError Init() = 0;
+
+    virtual std::shared_ptr<EffectRenderInfo> GetRenderInfo() const = 0;
+protected:
+    uint64_t id_{ 0 };
+    EffectType type_{ EffectType::UNKNOWN };
 };
 
 } // namespace Media
 } // namespace OHOS
 
-#endif // OH_VEF_EDITOR_MANAGER_H
+#endif // OH_VEF_EFFECT_BASE_H

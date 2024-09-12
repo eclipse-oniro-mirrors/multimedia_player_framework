@@ -13,31 +13,35 @@
  * limitations under the License.
  */
 
-#ifndef OH_VEF_EDITOR_MANAGER_H
-#define OH_VEF_EDITOR_MANAGER_H
+#ifndef OH_VEF_GRAPHICS_RENDER_INFO_H
+#define OH_VEF_GRAPHICS_RENDER_INFO_H
 
-#include <shared_mutex>
-#include <unordered_map>
-#include "video_editor_impl.h"
+#include <vector>
+#include <memory>
+#ifdef IMAGE_EFFECT_SUPPORT
+#include "image_effect.h"
+#endif
 
 namespace OHOS {
 namespace Media {
 
-class VideoEditorManager {
+struct EffectRenderInfo {
+    uint64_t id = 0;
+    EffectType type = EffectType::UNKNOWN;
+#ifdef IMAGE_EFFECT_SUPPORT
+    std::shared_ptr<OH_ImageEffect> imageEffect;
+#endif
+};
+
+class GraphicsRenderInfo {
 public:
-    static VideoEditorManager& GetInstance();
-
-    std::shared_ptr<VideoEditor> CreateVideoEditor();
-    void ReleaseVideoEditor(uint64_t id);
-    bool IsFlowControlPass() const;
-
-private:
-    mutable std::shared_mutex editorMapMutex_;
-    std::unordered_map<uint64_t, std::weak_ptr<VideoEditorImpl>> editorMap_;
-    std::atomic<uint64_t> id_{ 1 };
+    GraphicsRenderInfo() = default;
+    ~GraphicsRenderInfo() = default;
+public:
+    std::vector<std::shared_ptr<EffectRenderInfo>> effectInfoList_;
 };
 
 } // namespace Media
 } // namespace OHOS
 
-#endif // OH_VEF_EDITOR_MANAGER_H
+#endif // OH_VEF_GRAPHICS_RENDER_INFO_H

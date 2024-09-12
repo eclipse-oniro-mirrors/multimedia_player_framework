@@ -13,31 +13,27 @@
  * limitations under the License.
  */
 
-#ifndef OH_VEF_EDITOR_MANAGER_H
-#define OH_VEF_EDITOR_MANAGER_H
+#ifndef OH_VEF_COMPOSITE_ENGINE_H
+#define OH_VEF_COMPOSITE_ENGINE_H
 
-#include <shared_mutex>
-#include <unordered_map>
-#include "video_editor_impl.h"
+#include <memory>
+#include "video_editor.h"
+#include "data_center/data_center.h"
 
 namespace OHOS {
 namespace Media {
 
-class VideoEditorManager {
+using OnCompositeResultFunc = std::function<void(VEFResult result)>;
+class ICompositeEngine {
 public:
-    static VideoEditorManager& GetInstance();
-
-    std::shared_ptr<VideoEditor> CreateVideoEditor();
-    void ReleaseVideoEditor(uint64_t id);
-    bool IsFlowControlPass() const;
-
-private:
-    mutable std::shared_mutex editorMapMutex_;
-    std::unordered_map<uint64_t, std::weak_ptr<VideoEditorImpl>> editorMap_;
-    std::atomic<uint64_t> id_{ 1 };
+    static std::shared_ptr<ICompositeEngine> CreateCompositeEngine(const std::shared_ptr<IDataCenter>& dc);
+    virtual uint64_t GetId() const = 0;
+    virtual VEFError StartComposite(const std::shared_ptr<CompositionOptions>& options,
+                                    const OnCompositeResultFunc& func) = 0;
+    virtual VEFError StopComposite() = 0;
 };
 
 } // namespace Media
 } // namespace OHOS
 
-#endif // OH_VEF_EDITOR_MANAGER_H
+#endif // OH_VEF_COMPOSITE_ENGINE_H

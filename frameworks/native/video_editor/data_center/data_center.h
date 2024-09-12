@@ -13,31 +13,23 @@
  * limitations under the License.
  */
 
-#ifndef OH_VEF_EDITOR_MANAGER_H
-#define OH_VEF_EDITOR_MANAGER_H
+#ifndef OH_VEF_DATA_CENTER_INTERFACE_H
+#define OH_VEF_DATA_CENTER_INTERFACE_H
 
-#include <shared_mutex>
-#include <unordered_map>
-#include "video_editor_impl.h"
+#include "video_editor.h"
+#include "data_center/asset/asset.h"
 
 namespace OHOS {
 namespace Media {
 
-class VideoEditorManager {
+class IDataCenter {
 public:
-    static VideoEditorManager& GetInstance();
-
-    std::shared_ptr<VideoEditor> CreateVideoEditor();
-    void ReleaseVideoEditor(uint64_t id);
-    bool IsFlowControlPass() const;
-
-private:
-    mutable std::shared_mutex editorMapMutex_;
-    std::unordered_map<uint64_t, std::weak_ptr<VideoEditorImpl>> editorMap_;
-    std::atomic<uint64_t> id_{ 1 };
+    static std::shared_ptr<IDataCenter> Create();
+    virtual std::vector<const std::shared_ptr<Asset>> GetAssetList() const = 0;
+    virtual VEFError AppendVideo(int fileFd, const std::string& effectDescription) = 0;
 };
 
 } // namespace Media
 } // namespace OHOS
 
-#endif // OH_VEF_EDITOR_MANAGER_H
+#endif //OH_VEF_DATA_CENTER_INTERFACE_H

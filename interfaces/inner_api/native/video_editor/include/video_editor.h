@@ -36,20 +36,17 @@ enum class VEFError : int32_t {
     // the current number of concurrent connections exceeds the set threshold (5).
     ERR_FLOW_CONTROL_INTERCEPT,
 
-    // The input file is empty, indicating no data to process.
-    ERR_INPUT_FILE_EMPTY,
-
-    // The permissions of the input file do not match the required permissions(READ) for the operation.
-    ERR_INPUT_FILE_PERMISSION_NOT_MATCH,
-
-    // The output file is not empty, which is not allowed for the operation to proceed.
-    ERR_OUTPUT_FILE_NOT_EMPTY,
-
-    // The permissions of the output file do not match the required permissions(WRITE) for writing.
-    ERR_OUTPUT_FILE_PERMISSION_NOT_MATCH,
-
     // The input video has not been set, which is required for the operation to proceed.
     ERR_NOT_SET_INPUT_VIDEO,
+
+    // The number of input video files exceeds the upper limit(<2).
+    ERR_INPUT_VIDEO_COUNT_LIMITED,
+
+    // The editor is busying(compositing/cancelling...), please try again later.
+    ERR_EDITOR_IS_BUSY,
+
+    // The effect is not supported.
+    ERR_EFFECT_IS_NOT_SUPPORTED,
 
     // An internal error occurred, which is an unexpected failure in the operation.
     ERR_INTERNAL_ERROR
@@ -58,7 +55,8 @@ enum class VEFError : int32_t {
 enum class VEFResult : int32_t {
     SUCCESS,
     FAILED,
-    CANCELED
+    CANCELLED,
+    UNKNOWN
 };
 
 /**
