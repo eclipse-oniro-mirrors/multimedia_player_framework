@@ -322,8 +322,9 @@ int32_t ScreenCaptureServer::ReportAVScreenCaptureUserChoice(int32_t sessionId, 
         return MSERR_OK;
     } else if (USER_CHOICE_DENY.compare(choice) == 0 || USER_CHOICE_DENY.compare(content) == 0) {
         return server->OnReceiveUserPrivacyAuthority(false);
+    } else {
+        MEDIA_LOGW("ReportAVScreenCaptureUserChoice user choice is not support");
     }
-    MEDIA_LOGW("ReportAVScreenCaptureUserChoice user choice is not support");
     return MSERR_UNKNOWN;
 }
 
