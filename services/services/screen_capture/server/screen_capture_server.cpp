@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#include "ability_connection.h"
+#include "ability_manager_client.h"
 #include "screen_capture_server.h"
 #include "ui_extension_ability_connection.h"
 #include "extension_manager_client.h"
@@ -78,6 +80,7 @@ static const std::string BUNDLE_NAME = "com.ohos.systemui";
 static const std::string ABILITY_NAME = "com.ohos.systemui.dialog";
 static const std::string BACK_GROUND_COLOR = "#E84026";
 static const std::string SCREEN_RECORDER_BUNDLE_NAME = "com.ohos.screenrecorder";
+static const std::string SELECT_ABILITY_NAME = "SelectWindowAbility";
 static const int32_t SVG_HEIGHT = 80;
 static const int32_t SVG_WIDTH = 80;
 static const int32_t MDPI = 160;
@@ -229,24 +232,67 @@ int32_t ScreenCaptureServer::GetRunningScreenCaptureInstancePid(int32_t &pid)
     return MSERR_UNKNOWN;
 }
 
-int32_t ScreenCaptureServer::ReportAVScreenCaptureUserChoice(int32_t sessionId, const std::string &choice)
+int32_t ScreenCaptureServer::GetSpecificServer(int32_t sessionId, std::shared_ptr<ScreenCaptureServer> &server)
 {
-    MEDIA_LOGI("ReportAVScreenCaptureUserChoice sessionId: %{public}d, choice: %{public}s", sessionId, choice.c_str());
-
     // To avoid deadlock: first release mutexGlobal_, then be destructed
-    std::shared_ptr<ScreenCaptureServer> server;
     {
         std::lock_guard<std::mutex> lock(mutexGlobal_);
         server = GetScreenCaptureServerByIdWithLock(sessionId);
     }
     if (server == nullptr) {
-        MEDIA_LOGE("ReportAVScreenCaptureUserChoice failed to get instance, sessionId: %{public}d", sessionId);
         return MSERR_UNKNOWN;
     }
+    return MSERR_OK;
+}
 
+void ScreenCaptureServer::GetChoiceFromJson(Json::Value &root,
+    const std::string &content, std::string key, std::string &value)
+{
+    Json::Reader reader;
+    bool parsingSuccessful = reader.parse(content, root);
+    if (!parsingSuccessful || root.type() != Json::objectValue) {
+        MEDIA_LOGE("Error parsing the string");
+        return;
+    }
+    const Json::Value keyJson = root[key];
+    if (!keyJson.isNull()) {
+        value = keyJson.asString();
+    }
+}
+
+void ScreenCaptureServer::PrepareSelectWindow(Json::Value &root, std::shared_ptr<ScreenCaptureServer> &server)
+{
+    if (root.type() != Json::objectValue) {
+        return;
+    }
+    const Json::Value missionIdJson = root["missionid"];
+    if (!missionIdJson.isNull() && missionIdJson.asInt64() >= 0) {
+        uint64_t missionId = missionIdJson.asInt64();
+        MEDIA_LOGI("Report Select MissionId: %{public}" PRIu64, missionId);
+        server->SetMissionId(missionId);
+    }
+    const Json::Value displayIdJson = root["displayid"];
+    if (!displayIdJson.isNull() && displayIdJson.asInt64() >= 0) {
+        uint64_t displayId = displayIdJson.asInt64();
+        MEDIA_LOGI("Report Select DisplayId: %{public}" PRIu64, displayId);
+        server->SetDisplayId(displayId);
+    }
+}
+
+int32_t ScreenCaptureServer::ReportAVScreenCaptureUserChoice(int32_t sessionId, const std::string &content)
+{
+    MEDIA_LOGI("ReportAVScreenCaptureUserChoice sessionId: %{public}d,"
+        "content: %{public}s", sessionId, content.c_str());
     // To avoid deadlock: first release mutexGlobal_, then be destructed
+    std::shared_ptr<ScreenCaptureServer> server;
+    int32_t serverRet = GetSpecificServer(sessionId, server);
+    CHECK_AND_RETURN_RET_LOG(serverRet == MSERR_OK, serverRet,
+        "ReportAVScreenCaptureUserChoice failed to get instance, sessionId: %{public}d", sessionId);
     std::shared_ptr<ScreenCaptureServer> currentServer;
-    if (USER_CHOICE_ALLOW.compare(choice) == 0) {
+    Json::Value root;
+    std::string choice = "false";
+    GetChoiceFromJson(root, content, std::string("choice"), choice);
+    if (USER_CHOICE_ALLOW.compare(choice) == 0 || USER_CHOICE_ALLOW.compare(content) == 0) {
         int currentSessionId = -1;
         {
             std::lock_guard <std::mutex> lock(mutexGlobal_);
@@ -257,7 +303,7 @@ int32_t ScreenCaptureServer::ReportAVScreenCaptureUserChoice(int32_t sessionId, 
                 std::lock_guard<std::mutex> lock(mutexGlobal_);
                 currentServer = GetScreenCaptureServerByIdWithLock(activeSessionId_.load());
             }
-            if (currentServer != nullptr && sessionId != activeSessionId_.load()) {
+            if (currentServer != nullptr && currentServer != server && sessionId != activeSessionId_.load()) {
                 MEDIA_LOGW("ReportAVScreenCaptureUserChoice uid(%{public}d) is interrupted by uid(%{public}d)",
                     currentServer->appInfo_.appUid, server->appInfo_.appUid);
                 currentServer->StopScreenCaptureByEvent(
@@ -268,16 +314,27 @@ int32_t ScreenCaptureServer::ReportAVScreenCaptureUserChoice(int32_t sessionId, 
                 activeSessionId_.store(SESSION_ID_INVALID);
             }
         }
+        PrepareSelectWindow(root, server);
         int32_t ret = server->OnReceiveUserPrivacyAuthority(true);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret,
             "ReportAVScreenCaptureUserChoice user choice is true but start failed");
         MEDIA_LOGI("ReportAVScreenCaptureUserChoice user choice is true and start success");
         return MSERR_OK;
-    } else if (USER_CHOICE_DENY.compare(choice) == 0) {
+    } else if (USER_CHOICE_DENY.compare(choice) == 0 || USER_CHOICE_DENY.compare(content) == 0) {
         return server->OnReceiveUserPrivacyAuthority(false);
     }
     MEDIA_LOGW("ReportAVScreenCaptureUserChoice user choice is not support");
     return MSERR_UNKNOWN;
+}
+
+void ScreenCaptureServer::SetDisplayId(uint64_t displayId)
+{
+    captureConfig_.videoInfo.videoCapInfo.displayId = displayId;
+}
+
+void ScreenCaptureServer::SetMissionId(uint64_t missionId)
+{
+    missionIds_.emplace_back(missionId);
 }
 
 void ScreenCaptureServer::SetMetaDataReport()

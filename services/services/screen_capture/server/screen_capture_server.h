@@ -55,6 +55,7 @@
 #include "meta/meta.h"
 #include "audio_stream_manager.h"
 #include "screen_capture_monitor_server.h"
+#include "json/json.h"
 
 namespace OHOS {
 namespace Media {
@@ -255,6 +256,9 @@ public:
     static std::shared_ptr<IScreenCaptureService> Create();
     static int32_t ReportAVScreenCaptureUserChoice(int32_t sessionId, const std::string &choice);
     static int32_t GetRunningScreenCaptureInstancePid(int32_t &pid);
+    static int32_t GetSpecificServer(int32_t sessionId, std::shared_ptr<ScreenCaptureServer> &server);
+    static void GetChoiceFromJson(Json::Value &root, const std::string &content, std::string key, std::string &value);
+    static void PrepareSelectWindow(Json::Value &root, std::shared_ptr<ScreenCaptureServer> &server);
     ScreenCaptureServer();
     ~ScreenCaptureServer();
 
@@ -298,6 +302,8 @@ public:
     int32_t OnVoIPStatusChanged(bool isInVoIPCall);
     int32_t OnSpeakerAliveStatusChanged(bool speakerAliveStatus);
     void OnDMPrivateWindowChange(bool hasPrivate);
+    void SetMissionId(uint64_t missionId);
+    void SetDisplayId(uint64_t displayId);
 
 private:
     int32_t StartScreenCaptureInner(bool isPrivacyAuthorityEnabled);
