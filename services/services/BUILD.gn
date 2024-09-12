@@ -89,7 +89,7 @@ config("media_service_config") {
 
   defines = []
   defines += player_framework_defines
-  if (config_platform_type == "pc_standard") {
+  if (player_framework_is_pc_device) {
     defines += [ "PC_STANDARD" ]
   }
   if (target_cpu == "arm") {
