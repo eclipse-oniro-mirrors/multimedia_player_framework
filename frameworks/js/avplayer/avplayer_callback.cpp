@@ -24,11 +24,14 @@
 #include "scope_guard.h"
 #include "event_queue.h"
 #include "avplayer_callback.h"
+
+#ifndef CROSS_PLATFORM
 #include "os_account_manager.h"
 #include "bundle_mgr_interface.h"
 #include "system_ability_definition.h"
 #include "iservice_registry.h"
 #include "ipc_skeleton.h"
+#endif
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_ONLY_PRERELEASE, LOG_DOMAIN_PLAYER, "AVPlayerCallback" };
@@ -720,9 +723,11 @@ bool AVPlayerCallback::IsAPI13IOError(MediaServiceExtErrCodeAPI9 error)
 
 void AVPlayerCallback::OnError(int32_t errorCode, const std::string &errorMsg)
 {
+#ifndef CROSS_PLATFORM
     appUid_ = getuid();
     auto apiTargetVersion = GetApiversion(appUid_);
     MEDIA_LOGI("AVPlayer get apiVersion: %{public}d", apiTargetVersion);
+#endif
     MediaServiceExtErrCodeAPI9 errorCodeApi9 = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errorCode));
     if (errorCodeApi9 == MSERR_EXT_API9_NO_PERMISSION ||
         errorCodeApi9 == MSERR_EXT_API9_NO_MEMORY ||
@@ -732,9 +737,11 @@ void AVPlayerCallback::OnError(int32_t errorCode, const std::string &errorMsg)
         Format infoBody;
         AVPlayerCallback::OnInfo(INFO_TYPE_STATE_CHANGE, PLAYER_STATE_ERROR, infoBody);
     }
+#ifndef CROSS_PLATFORM
     if (IsAPI13IOError(errorCodeApi9) && apiTargetVersion <= API_VERSION_12) {
         errorCodeApi9 = MSERR_EXT_API9_IO;
     }
+#endif
     AVPlayerCallback::OnErrorCb(errorCodeApi9, errorMsg);
 }
 
@@ -1386,6 +1393,7 @@ void AVPlayerCallback::Release()
     listener_ = nullptr;
 }
 
+#ifndef CROSS_PLATFORM
 int32_t AVPlayerCallback::GetApiversion(int32_t uid)
 {
     MEDIA_LOGI("AVPlayerCallback::GetApiversion");
@@ -1415,5 +1423,6 @@ int32_t AVPlayerCallback::GetApiversion(int32_t uid)
     auto apiVersionResult = apiVersion % ROUND_VERSION_NUMBER;
     return apiVersionResult;
 }
+#endif
 } // namespace Media
 } // namespace OHOS

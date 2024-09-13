@@ -103,6 +103,10 @@ ohos_shared_library("media_avplayer") {
     external_deps += [ "drm_framework:drm_framework" ]
   }
 
+  if (is_arkui_x) {
+    defines += [ "CROSS_PLATFORM" ]
+  }
+
   defines = []
   defines += player_framework_defines
   innerapi_tags = [ "platformsdk" ]
