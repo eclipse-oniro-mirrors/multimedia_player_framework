@@ -18,15 +18,12 @@
 #include "media_log.h"
 #include "media_errors.h"
 
-
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "ScreenCaptureACW"};
 }
 
 namespace OHOS {
 namespace Media {
-
-
 void AudioCapturerCallbackImpl::OnInterrupt(const InterruptEvent &interruptEvent)
 {
     MEDIA_LOGI("AudioCapturerCallbackImpl OnInterrupt hintType:%{public}d, eventType:%{public}d, forceType:%{public}d",
@@ -57,7 +54,6 @@ int32_t AudioCapturerWrapper::Start(const OHOS::AudioStandard::AppInfo &appInfo)
     appInfo_ = appInfo;
     std::shared_ptr<AudioCapturer> audioCapturer = CreateAudioCapturer(appInfo);
     CHECK_AND_RETURN_RET_LOG(audioCapturer != nullptr, MSERR_UNKNOWN, "Start failed, create AudioCapturer failed");
- 
     if (!audioCapturer->Start()) {
         MEDIA_LOGE("Start failed, AudioCapturer Start failed, threadName:%{public}s", threadName_.c_str());
         audioCapturer->Release();
@@ -93,13 +89,13 @@ int32_t AudioCapturerWrapper::Pause()
     }
 	std::unique_lock<std::mutex> bufferLock(bufferMutex_);
 	MEDIA_LOGD("0x%{public}06" PRIXPTR " Pause pop, threadName:%{public}s", FAKE_POINTER(this), threadName_.c_str());
-	while (!availBuffers_.empty()) {
-	    if (availBuffers_.front() != nullptr) {
-		    free(availBuffers_.front()->buffer);
-			availBuffers_.front()->buffer = nullptr;
-		}
-		availBuffers_.pop();
-	}
+    while (!availBuffers_.empty()) {
+        if (availBuffers_.front() != nullptr) {
+            free(availBuffers_.front()->buffer);
+            availBuffers_.front()->buffer = nullptr;
+        }
+        availBuffers_.pop();
+    }
     captureState_.store(CAPTURER_PAUSED);
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Pause E, threadName:%{public}s", FAKE_POINTER(this), threadName_.c_str());
     return MSERR_OK;
@@ -223,7 +219,6 @@ std::shared_ptr<AudioCapturer> AudioCapturerWrapper::CreateAudioCapturer(const O
     if (audioInfo_.audioSource == AudioCaptureSourceType::SOURCE_DEFAULT ||
         audioInfo_.audioSource == AudioCaptureSourceType::MIC) {
         capturerOptions.capturerInfo.sourceType = SourceType::SOURCE_TYPE_MIC; // Audio Source Type Mic is 0
-
     } else if (audioInfo_.audioSource == AudioCaptureSourceType::ALL_PLAYBACK ||
         audioInfo_.audioSource == AudioCaptureSourceType::APP_PLAYBACK) {
         capturerOptions.capturerInfo.sourceType = SourceType::SOURCE_TYPE_PLAYBACK_CAPTURE;
@@ -285,7 +280,6 @@ int32_t AudioCapturerWrapper::CaptureAudio()
             std::unique_lock<std::mutex> lock(bufferMutex_);
             CHECK_AND_RETURN_RET_LOG(isRunning_.load(), MSERR_OK, "CaptureAudio is not running, ignore and stop");
             CHECK_AND_CONTINUE_LOG(availBuffers_.size() <= MAX_AUDIO_BUFFER_SIZE, "consume slow, drop audio frame");
-
             if (isMuted_) {
                 memset_s(audioBuffer->buffer, bufferLen, 0, bufferLen);
             }
@@ -331,7 +325,6 @@ int32_t AudioCapturerWrapper::GetBufferSize(size_t &size)
         MEDIA_LOGD("GetBufferSize failed, not running");
         return MSERR_UNKNOWN;
     }
-
     CHECK_AND_RETURN_RET_LOG(audioCapturer_ != nullptr && audioCapturer_->GetBufferSize(size) >= 0,
         MSERR_NO_MEMORY, "CaptureAudio GetBufferSize failed");
     MEDIA_LOGD("0x%{public}06" PRIXPTR " GetBufferSize Buffer E, name:%{public}s",

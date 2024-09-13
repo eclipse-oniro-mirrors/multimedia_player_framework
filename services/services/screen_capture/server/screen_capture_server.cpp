@@ -2064,14 +2064,12 @@ int32_t ScreenCaptureServer::OnSpeakerAliveStatusChanged(bool speakerAliveStatus
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "innerAudioCapture Resume failed");
     } else if (speakerAliveStatus && micAudioCapture_ &&
         micAudioCapture_->GetAudioCapturerState() == CAPTURER_RECORDING && audioSource_ &&
-		innerAudioCapture_->GetAudioCapturerState() == CAPTURER_RECORDING) {
+        innerAudioCapture_->GetAudioCapturerState() == CAPTURER_RECORDING) {
         ret = innerAudioCapture_->Pause();
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "innerAudioCapture Pause failed");
     }
     return MSERR_OK;
 }
-
-
 
 bool ScreenCaptureServer::GetMicWorkingState()
 {
@@ -2201,7 +2199,6 @@ int32_t ScreenCaptureServer::StopAudioCapture()
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "StopAudioCapture end.", FAKE_POINTER(this));
     return MSERR_OK;
 }
-
 
 int32_t ScreenCaptureServer::StopVideoCapture()
 {
@@ -2346,6 +2343,7 @@ int32_t ScreenCaptureServer::StopScreenCapture()
         statisticalEventInfo_.captureDuration = static_cast<int32_t>(endTime - startTime_ -
             statisticalEventInfo_.startLatency);
     }
+
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances StopScreenCapture E", FAKE_POINTER(this));
     return ret;
 }
@@ -2490,7 +2488,6 @@ void ScreenRendererAudioStateChangeCallback::SetAudioSource(std::shared_ptr<Audi
 {
     audioSource_ = audioSource;
 }
-
 
 void ScreenRendererAudioStateChangeCallback::OnRendererStateChange(
     const std::vector<std::unique_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos)

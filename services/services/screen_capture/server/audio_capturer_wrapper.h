@@ -20,7 +20,6 @@
 #include <cstdlib>
 #include <thread>
 #include <string>
-#include <map>
 #include <memory>
 #include <atomic>
 #include <queue>
