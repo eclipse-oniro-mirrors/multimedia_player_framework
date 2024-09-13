@@ -204,22 +204,15 @@ public:
         const std::vector<std::unique_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos);
     bool HasSpeakerStream(
         const std::vector<std::unique_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos);
-    void VoIPStateUpdate(
-        const std::vector<std::unique_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos);
     void SetAppPid(int32_t appid);
-    void SetAppName(std::string appName);
     int32_t GetAppPid();
-    bool GetIsInVoIPCall();
     bool GetSpeakerAliveStatus();
 
 private:
     int32_t MixModeBufferWrite(std::shared_ptr<AudioBuffer> &innerAudioBuffer,
         std::shared_ptr<AudioBuffer> &micAudioBuffer, std::shared_ptr<AVMemory> &bufferMem);
     int32_t appPid_ { 0 };
-    std::string appName_;
     bool speakerAliveStatus_ = true;
-    std::atomic<bool> isInVoIPCall_ = false;
-    std::mutex voipStatusChangeMutex_;
 
     void MixAudio(char** srcData, char* mixData, int channels, int bufferSize);
 
@@ -233,10 +226,8 @@ class ScreenRendererAudioStateChangeCallback : public AudioRendererStateChangeCa
 public:
     void OnRendererStateChange(const std::vector<std::unique_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos);
     void SetAudioSource(std::shared_ptr<AudioDataSource> audioSource);
-    void SetAppName(std::string appName);
 private:
     std::shared_ptr<AudioDataSource> audioSource_ = nullptr;
-    std::string appName_;
 };
 
 class ScreenCaptureServer : public std::enable_shared_from_this<ScreenCaptureServer>,
@@ -285,7 +276,6 @@ public:
     int32_t ReleaseInnerAudioBuffer();
     int32_t GetInnerAudioCaptureBufferSize(size_t &size);
     int32_t GetMicAudioCaptureBufferSize(size_t &size);
-    int32_t OnVoIPStatusChanged(bool isInVoIPCall);
     int32_t OnSpeakerAliveStatusChanged(bool speakerAliveStatus);
 
 private:
@@ -303,7 +293,6 @@ private:
     int32_t StartStreamMicAudioCapture();
     int32_t StartFileInnerAudioCapture();
     int32_t StartFileMicAudioCapture();
-    int32_t StopMicAudioCapture();
     int32_t StartVideoCapture();
     int32_t StartHomeVideoCapture();
     int32_t StopScreenCaptureInner(AVScreenCaptureStateCode stateCode);
@@ -382,8 +371,8 @@ private:
     ScreenCaptureContentFilter contentFilter_;
     AVScreenCaptureState captureState_ = AVScreenCaptureState::CREATED;
     std::shared_ptr<NotificationLocalLiveViewContent> localLiveViewContent_;
-    int64_t startTime_ = 0;
     std::string bundleName_;
+    int64_t startTime_ = 0;
 
     /* used for CAPTURE STREAM */
     sptr<IBufferConsumerListener> surfaceCb_ = nullptr;
@@ -400,7 +389,6 @@ private:
     int32_t audioSourceId_ = 0;
     int32_t videoSourceId_ = 0;
     std::shared_ptr<AudioDataSource> audioSource_ = nullptr;
-
     /* used for DFX events */
     uint64_t instanceId_ = 0;
     std::shared_ptr<ScreenRendererAudioStateChangeCallback> captureCallback_;

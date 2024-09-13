@@ -1150,9 +1150,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_check_param_06, TestSize.Level2)
         .audioSource = AudioCaptureSourceType::APP_PLAYBACK
     };
     config_.audioInfo.innerCapInfo = innerCapInfo;
-    screenCapture_->Init(config_); // not check
-    config_.recorderInfo.fileFormat = "m4a";
-    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_check_param_06 after");
 }
 

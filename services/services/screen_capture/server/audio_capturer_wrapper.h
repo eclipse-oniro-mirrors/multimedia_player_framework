@@ -65,7 +65,6 @@ public:
     int32_t AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audioBuffer);
     int32_t GetBufferSize(size_t &size);
     int32_t ReleaseAudioBuffer();
-    void SetIsInVoIPCall(bool isInVoIPCall);
     AudioCapturerWrapperState GetAudioCapturerState();
 
 protected:
@@ -75,7 +74,6 @@ private:
     std::shared_ptr<OHOS::AudioStandard::AudioCapturer> CreateAudioCapturer(
         const OHOS::AudioStandard::AppInfo &appInfo);
     void SetInnerStreamUsage(std::vector<OHOS::AudioStandard::StreamUsage> &usages);
-    void PartiallyPrintLog(int32_t lineNumber, std::string str);
 
 protected:
     std::shared_ptr<ScreenCaptureCallBack> screenCaptureCb_;
@@ -95,12 +93,10 @@ private:
     std::mutex bufferMutex_;
     std::condition_variable bufferCond_;
     std::queue<std::shared_ptr<AudioBuffer>> availBuffers_;
-    std::string bundleName_;
-    std::atomic<bool> isInVoIPCall_ = false;
     std::atomic<AudioCapturerWrapperState> captureState_ {CAPTURER_UNKNOWN};
 
     /* used for hilog output */
-    std::map<int32_t, int32_t> captureAudioLogCountMap_;
+    int32_t captureAudioLogCount_ = 0;
 
     static constexpr uint32_t MAX_THREAD_NAME_LENGTH = 15;
     static constexpr uint32_t MAX_AUDIO_BUFFER_SIZE = 128;
