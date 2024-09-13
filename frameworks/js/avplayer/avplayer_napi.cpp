@@ -217,7 +217,7 @@ napi_value AVPlayerNapi::JsCreateAVPlayer(napi_env env, napi_callback_info info)
         MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncContext.get()), &asyncContext->work));
     napi_queue_async_work_with_qos(env, asyncContext->work, napi_qos_user_initiated);
     asyncContext.release();
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " JsCreateAVPlayer Out", FAKE_POINTER(jsThis));
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " JsCreateAVPlayer Out", FAKE_POINTER(jsThis));
     return result;
 }
 
@@ -1514,7 +1514,7 @@ napi_value AVPlayerNapi::JsGetUrl(napi_env env, napi_callback_info info)
     napi_value value = nullptr;
     (void)napi_create_string_utf8(env, jsPlayer->url_.c_str(), NAPI_AUTO_LENGTH, &value);
 
-    MEDIA_LOGD("JsGetUrl Out Currelt Url: %{private}s", jsPlayer->url_.c_str());
+    MEDIA_LOGD("JsGetUrl Out Current Url: %{private}s", jsPlayer->url_.c_str());
     return value;
 }
 
