@@ -1700,6 +1700,7 @@ int32_t HiPlayerImpl::DeselectTrack(int32_t trackId)
 int32_t HiPlayerImpl::GetVideoTrackInfo(std::vector<Format>& videoTrack)
 {
     MEDIA_LOG_D("GetVideoTrackInfo in");
+    FALSE_RETURN_V(demuxer_ != nullptr, MSERR_INVALID_STATE);
     std::string mime;
     std::vector<std::shared_ptr<Meta>> metaInfo = demuxer_->GetStreamMetaInfo();
     for (size_t trackIndex = 0; trackIndex < metaInfo.size(); trackIndex++) {
