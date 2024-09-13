@@ -24,7 +24,7 @@
 
 namespace OHOS {
 namespace Media {
-using MediaStubFunc = std::function<int32_t(MessageParcel &, MessageParcel &)>;
+using MediaStubFunc = std::function<int32_t (MessageParcel &, MessageParcel &)>;
 class MediaServiceStub : public IRemoteStub<IStandardMediaService>, public NoCopyable {
 public:
     MediaServiceStub();

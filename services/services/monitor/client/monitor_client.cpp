@@ -33,7 +33,7 @@ constexpr uint8_t TIME_INTERVAL = 1; // Heartbeat once per second
 
 MonitorClient::MonitorClient()
 {
-    MEDIA_LOGI("create");
+    MEDIA_LOGI("Instance create");
 }
 
 MonitorClient::~MonitorClient()
@@ -169,7 +169,6 @@ void MonitorClient::ClickThread()
 
 void MonitorClient::ClickThreadCtrl()
 {
-    MEDIA_LOGD("ClickThreadCtrl start");
     while (true) {
         ClickThread();
         std::this_thread::sleep_for(std::chrono::seconds(TIME_INTERVAL));

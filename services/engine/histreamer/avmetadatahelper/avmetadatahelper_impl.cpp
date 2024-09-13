@@ -21,6 +21,7 @@
 #include "media_description.h"
 #include "meta_utils.h"
 #include "uri_helper.h"
+#include "pipeline/pipeline.h"
 #include "osal/task/pipeline_threadpool.h"
 
 namespace {
@@ -38,7 +39,7 @@ void AVMetadataHelperImpl::OnError(MediaAVCodec::AVCodecErrorType errorType, int
 AVMetadataHelperImpl::AVMetadataHelperImpl()
 {
     MEDIA_LOGD("Constructor, instance: 0x%{public}06" PRIXPTR "", FAKE_POINTER(this));
-    groupId_ = std::string("AVMeta_") + std::to_string(OHOS::Media::Pipeline::Pipeline::GetNextPipelineId());
+    groupId_ = std::string("AVMeta_") + std::to_string(Pipeline::Pipeline::GetNextPipelineId());
 }
 
 AVMetadataHelperImpl::~AVMetadataHelperImpl()
