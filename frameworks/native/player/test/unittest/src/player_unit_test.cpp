@@ -2710,6 +2710,7 @@ HWTEST_F(PlayerUnitTest, Player_Media_Error, TestSize.Level0)
         MSExtErrorAPI9ToString(static_cast<MediaServiceExtErrCodeAPI9>(code), "test1", "test2");
         MSExtAVErrorToString(static_cast<MediaServiceExtErrCodeAPI9>(code));
     }
+    EXPECT_EQ(player_->nextSurfaceHeight_, 100);
 }
 
 /**
