@@ -107,7 +107,7 @@ void MediaSourceNapi::Destructor(napi_env env, void *nativeObject, void *finaliz
 
 napi_value MediaSourceNapi::JsCreateMediaSourceWithUrl(napi_env env, napi_callback_info info)
 {
-    MEDIA_LOGD("JsCreateMediaSourceWithUrl In");
+    MEDIA_LOGD("MediaSourceNapi::JsCreateMediaSourceWithUrl In");
     size_t argCount = 2;
     napi_value args[2] = { nullptr };
     napi_value jsMediaSource = nullptr;
@@ -128,6 +128,10 @@ napi_value MediaSourceNapi::JsCreateMediaSourceWithUrl(napi_env env, napi_callba
     napi_new_instance(env, constructor, 0, nullptr, &jsMediaSource);
 
     std::shared_ptr<AVMediaSourceTmp> mediaSource = GetMediaSource(env, jsMediaSource);
+    if (mediaSource == nullptr) {
+        MEDIA_LOGE("JsCreateMediaSourceWithUrl GetMediaSource fail");
+        return nullptr;
+    }
     mediaSource->url = CommonNapi::GetStringArgument(env, args[0]);
     MEDIA_LOGE("JsCreateMediaSourceWithUrl get map");
     (void)CommonNapi::GetPropertyMap(env, args[1], mediaSource->header);

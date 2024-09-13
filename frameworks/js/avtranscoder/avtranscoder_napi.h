@@ -48,7 +48,7 @@ const std::string SET_AV_TRANSCODER_CONFIG = "SetAVTransCoderConfig";
 }
 
 constexpr int32_t AVTRANSCODER_DEFAULT_AUDIO_BIT_RATE = 48000;
-constexpr int32_t AVTRANSCODER_DEFAULT_VIDEO_BIT_RATE = 48000;
+constexpr int32_t AVTRANSCODER_DEFAULT_VIDEO_BIT_RATE = -1;
 constexpr int32_t AVTRANSCODER_DEFAULT_FRAME_HEIGHT = -1;
 constexpr int32_t AVTRANSCODER_DEFAULT_FRAME_WIDTH = -1;
 
@@ -222,7 +222,7 @@ private:
 
     std::string srcUrl_ = "";
     struct AVFileDescriptor srcFd_;
-    int32_t dstFd_;
+    int32_t dstFd_ = -1;
 };
 
 struct AVTransCoderAsyncContext : public MediaAsyncContext {
