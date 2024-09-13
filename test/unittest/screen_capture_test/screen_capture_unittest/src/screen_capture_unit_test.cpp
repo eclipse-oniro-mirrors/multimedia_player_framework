@@ -1151,7 +1151,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_check_param_06, TestSize.Level2)
     };
     config_.audioInfo.innerCapInfo = innerCapInfo;
 
-   EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
 
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_check_param_06 after");
 }
