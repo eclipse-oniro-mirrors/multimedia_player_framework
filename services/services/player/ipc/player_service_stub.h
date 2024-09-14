@@ -25,7 +25,7 @@
 
 namespace OHOS {
 namespace Media {
-using PlayerStubFunc = std::function<int32_t(MessageParcel &, MessageParcel &)>;
+using PlayerStubFunc = std::function<int32_t (MessageParcel &, MessageParcel &)>;
 class PlayerServiceStub
     : public IRemoteStub<IStandardPlayerService>,
       public MonitorServerObject,
@@ -141,6 +141,8 @@ private:
     int32_t DeselectTrack(MessageParcel &data, MessageParcel &reply);
     int32_t GetCurrentTrack(MessageParcel &data, MessageParcel &reply);
     int32_t SetDecryptConfig(MessageParcel &data, MessageParcel &reply);
+
+    std::mutex mutex_;
     int32_t SetMediaSource(MessageParcel &data, MessageParcel &reply);
     int32_t SetPlaybackStrategy(MessageParcel &data, MessageParcel &reply);
     int32_t SetMediaMuted(MessageParcel &data, MessageParcel &reply);

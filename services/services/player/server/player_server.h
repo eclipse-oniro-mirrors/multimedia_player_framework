@@ -236,9 +236,9 @@ private:
     std::atomic<bool> inReleasing_ = false;
     std::atomic<int32_t> userId_ = -1;
     std::atomic<bool> isBootCompleted_ = false;
-    uint64_t instanceId_ = 0;
     std::shared_ptr<AVMediaSource> mediaSource_ = nullptr;
     AVPlayStrategy strategy_;
+    uint64_t instanceId_ = 0;
     std::atomic<bool> isInterruptNeeded_{false};
     std::mutex seekContinousMutex_;
     std::atomic<bool> isInSeekContinous_ {false};

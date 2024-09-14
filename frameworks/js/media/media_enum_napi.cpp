@@ -147,7 +147,7 @@ static const std::vector<struct JsEnumInt> g_videoSourceType = {
 static const std::vector<struct JsEnumInt> g_metaSourceType = {
     { "VIDEO_MAKER_INFO", MetaSourceType::VIDEO_META_MAKER_INFO },
 };
- 
+
 static const std::vector<struct JsEnumInt> g_fileGenerationMode = {
     { "APP_CREATE", FileGenerationMode::APP_CREATE },
     { "AUTO_CREATE_CAMERA_SCENE", FileGenerationMode::AUTO_CREATE_CAMERA_SCENE },

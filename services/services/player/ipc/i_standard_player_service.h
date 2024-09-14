@@ -88,13 +88,13 @@ public:
     virtual int32_t SelectTrack(int32_t index, PlayerSwitchMode mode = PlayerSwitchMode::SWITCH_SMOOTH) = 0;
     virtual int32_t DeselectTrack(int32_t index) = 0;
     virtual int32_t GetCurrentTrack(int32_t trackType, int32_t &index) = 0;
+
     virtual int32_t SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
     {
         (void)playbackStrategy;
         return 0;
     }
     virtual int32_t SetMediaMuted(MediaType mediaType, bool isMuted) = 0;
-
     virtual int32_t SetDecryptConfig(const sptr<OHOS::DrmStandard::IMediaKeySessionService> &keySessionProxy,
         bool svp)
     {
