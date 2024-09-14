@@ -84,9 +84,9 @@ namespace OHOS {
 #endif
 
 #define MEDIA_LOG_PRERELEASE(op, fmt, args...)                                                     \
-    do {                                                                                           \ 
-        op(LOG_ONLY_PRERELEASE, "{%{public}s():%{public}d} " fmt, __FUNCTION__, __LINE__, ##args); \ 
-    } while(0)
+    do {                                                                                           \
+        op(LOG_ONLY_PRERELEASE, "{%{public}s():%{public}d} " fmt, __FUNCTION__, __LINE__, ##args); \
+    } while (0)
 
 #define MEDIA_LOGI_NO_RELEASE(fmt, ...) MEDIA_LOG_PRERELEASE(HILOG_INFO, fmt, ##__VA_ARGS__)
 #define MEDIA_LOGW_NO_RELEASE(fmt, ...) MEDIA_LOG_PRERELEASE(HILOG_WARN, fmt, ##__VA_ARGS__)
