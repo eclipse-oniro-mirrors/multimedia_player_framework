@@ -231,7 +231,7 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::CreatePixelMapYuv(const std::sha
         CHECK_AND_RETURN_RET_LOG(pixelMap != nullptr, nullptr, "Create pixelMap Hdr failed");
     } else {
         InitializationOptions options = { .size = { .width = width, .height = height },
-                                                    .pixelFormat = PixelFormat::NV12 };
+                                          .pixelFormat = PixelFormat::NV12 };
         pixelMap = PixelMap::Create(options);
         CHECK_AND_RETURN_RET_LOG(pixelMap != nullptr, nullptr, "Create pixelMap failed");
         AVBufferHolder *holder = CreateAVBufferHolder(frameBuffer);
