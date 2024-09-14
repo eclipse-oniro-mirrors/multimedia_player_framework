@@ -243,7 +243,7 @@ int32_t ScreenCaptureImpl::InitCaptureFile(AVScreenCaptureConfig config)
 
     bool isInnerAudioCapInfoIgnored = IsAudioCapInfoIgnored(config.audioInfo.innerCapInfo);
     CHECK_AND_RETURN_RET_LOG(!isInnerAudioCapInfoIgnored, MSERR_INVALID_VAL,
-        "init innerCapInfo failed, innerCapInfo ignored is not allowed");
+        "init innerCapInfo failed, innerCapInfo ignored is now allowed");
     bool isMicAudioCapInfoIgnored = IsAudioCapInfoIgnored(config.audioInfo.micCapInfo);
     if (!isMicAudioCapInfoIgnored) {
         if ((config.audioInfo.micCapInfo.audioChannels != config.audioInfo.innerCapInfo.audioChannels) ||
