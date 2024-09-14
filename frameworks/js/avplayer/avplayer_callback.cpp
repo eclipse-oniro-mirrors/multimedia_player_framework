@@ -803,7 +803,8 @@ void AVPlayerCallback::OnSeekDoneCb(const int32_t extra, const Format &infoBody)
     (void)infoBody;
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
     int32_t currentPositon = extra;
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " OnSeekDone is called, currentPositon: %{public}d", FAKE_POINTER(this), currentPositon);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " OnSeekDone is called, currentPositon: %{public}d",
+        FAKE_POINTER(this), currentPositon);
     if (refMap_.find(AVPlayerEvent::EVENT_SEEK_DONE) == refMap_.end()) {
         MEDIA_LOGW("0x%{public}06" PRIXPTR " can not find seekdone callback!", FAKE_POINTER(this));
         return;
