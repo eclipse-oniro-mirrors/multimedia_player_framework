@@ -746,7 +746,8 @@ bool AVPlayerCallback::IsValidState(PlayerStates state, std::string &stateStr)
 void AVPlayerCallback::OnStateChangeCb(const int32_t extra, const Format &infoBody)
 {
     PlayerStates state = static_cast<PlayerStates>(extra);
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instance OnStateChanged is called, current state: %{public}d", FAKE_POINTER(this), state);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instance OnStateChanged is called, current state: %{public}d",
+        FAKE_POINTER(this), state);
 
     if (listener_ != nullptr) {
         listener_->NotifyState(state);
@@ -887,7 +888,8 @@ void AVPlayerCallback::OnDurationUpdateCb(const int32_t extra, const Format &inf
     (void)infoBody;
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
     int32_t duration = extra;
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " OnDurationUpdateCb is called, duration: %{public}d", FAKE_POINTER(this), duration);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " OnDurationUpdateCb is called, duration: %{public}d",
+        FAKE_POINTER(this), duration);
 
     if (listener_ != nullptr) {
         listener_->NotifyDuration(duration);
@@ -997,7 +999,8 @@ void AVPlayerCallback::OnVideoSizeChangedCb(const int32_t extra, const Format &i
     int32_t height = 0;
     (void)infoBody.GetIntValue(PlayerKeys::PLAYER_WIDTH, width);
     (void)infoBody.GetIntValue(PlayerKeys::PLAYER_HEIGHT, height);
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " OnVideoSizeChangedCb is called, width = %{public}d, height = %{public}d", FAKE_POINTER(this), width, height);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " OnVideoSizeChangedCb is called, width = %{public}d, height = %{public}d",
+        FAKE_POINTER(this), width, height);
 
     if (listener_ != nullptr) {
         listener_->NotifyVideoSize(width, height);
