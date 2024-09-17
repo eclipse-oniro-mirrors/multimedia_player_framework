@@ -63,7 +63,8 @@ int32_t AudioCapturerWrapper::Start(const OHOS::AudioStandard::AppInfo &appInfo)
     if (SCREEN_RECORDER_BUNDLE_NAME.compare(bundleName_) == 0) {
         std::vector<SourceType> targetSources = {
             SourceType::SOURCE_TYPE_MIC,
-            SourceType::SOURCE_TYPE_VOICE_RECOGNITION
+            SourceType::SOURCE_TYPE_VOICE_RECOGNITION,
+            SourceType::SOURCE_TYPE_VOICE_MESSAGE
         };
         std::string region = Global::I18n::LocaleConfig::GetSystemRegion();
         if (region == "CN") {
