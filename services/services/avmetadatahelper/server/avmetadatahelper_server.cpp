@@ -80,7 +80,7 @@ int32_t AVMetadataHelperServer::SetSource(const std::string &uri, int32_t usage)
     }
     auto res = InitEngine(uriHelper_->FormattedUri());
     CHECK_AND_RETURN_RET(res == MSERR_OK, res);
-    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this, usage] {
         CHECK_AND_RETURN_RET_LOG(avMetadataHelperEngine_ != nullptr,
             (int32_t)MSERR_CREATE_AVMETADATAHELPER_ENGINE_FAILED, "Failed to create avmetadatahelper engine.");
         int32_t ret = avMetadataHelperEngine_->SetSource(uriHelper_->FormattedUri(), usage);
