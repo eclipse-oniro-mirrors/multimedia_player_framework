@@ -47,13 +47,13 @@ private:
     void DeleteAllPlayer();
     std::string GetHapticUriForAudioUri(const std::string &audioUri);
     bool IsFileExisting(const std::string &fileUri);
-    bool GetMuteHapticsValue();
+    SystemToneOptions GetOptionsFromRingerMode();
+    void UpdateStreamId();
     std::string ChangeUri(const std::string &uri);
 
     std::shared_ptr<AudioHapticManager> audioHapticManager_ = nullptr;
     std::unordered_map<int32_t, std::shared_ptr<AudioHapticPlayer>> playerMap_;
     std::unordered_map<int32_t, std::shared_ptr<SystemTonePlayerCallback>> callbackMap_;
-    bool muteHaptics_ = false;
     int32_t sourceId_ = -1;
     int32_t streamId_ = 0;
     std::string configuredUri_ = "";
@@ -61,6 +61,8 @@ private:
     SystemSoundManagerImpl &systemSoundMgr_;
     SystemToneType systemToneType_;
     SystemToneState systemToneState_ = SystemToneState::STATE_INVALID;
+    std::string hapticUri_ = "";
+    bool isHapticUriEmpty_ = false;
 
     std::mutex systemTonePlayerMutex_;
 };
