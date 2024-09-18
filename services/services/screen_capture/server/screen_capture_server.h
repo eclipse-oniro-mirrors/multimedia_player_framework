@@ -55,6 +55,7 @@
 #include "meta/meta.h"
 #include "audio_stream_manager.h"
 #include "screen_capture_monitor_server.h"
+#include "tokenid_kit.h"
 
 namespace OHOS {
 namespace Media {
@@ -277,6 +278,7 @@ public:
     int32_t GetInnerAudioCaptureBufferSize(size_t &size);
     int32_t GetMicAudioCaptureBufferSize(size_t &size);
     int32_t OnSpeakerAliveStatusChanged(bool speakerAliveStatus);
+    bool IsTelInCallSkipList();
 
 private:
     int32_t StartScreenCaptureInner(bool isPrivacyAuthorityEnabled);
@@ -393,6 +395,7 @@ private:
     uint64_t instanceId_ = 0;
     std::shared_ptr<ScreenRendererAudioStateChangeCallback> captureCallback_;
     std::vector<uint64_t> skipPrivacyWindowIDsVec_;
+    bool isCalledBySystemApp_ = false;
 private:
     static int32_t CheckAudioCapParam(const AudioCaptureInfo &audioCapInfo);
     static int32_t CheckVideoCapParam(const VideoCaptureInfo &videoCapInfo);
