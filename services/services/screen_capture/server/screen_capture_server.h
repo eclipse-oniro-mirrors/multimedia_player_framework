@@ -299,7 +299,6 @@ public:
     int32_t OnVoIPStatusChanged(bool isInVoIPCall);
     int32_t OnSpeakerAliveStatusChanged(bool speakerAliveStatus);
     void OnDMPrivateWindowChange(bool hasPrivate);
-    bool VerifyIsSystemApp();
     bool IsTelInCallSkipList();
 
 private:
