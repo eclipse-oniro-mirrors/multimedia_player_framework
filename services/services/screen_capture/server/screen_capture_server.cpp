@@ -266,13 +266,13 @@ void ScreenCaptureServer::PrepareSelectWindow(Json::Value &root, std::shared_ptr
     if (root.type() != Json::objectValue) {
         return;
     }
-    const Json::Value missionIdJson = root["missionid"];
+    const Json::Value missionIdJson = root["missionId"];
     if (!missionIdJson.isNull() && missionIdJson.asInt64() >= 0) {
         uint64_t missionId = missionIdJson.asInt64();
         MEDIA_LOGI("Report Select MissionId: %{public}" PRIu64, missionId);
         server->SetMissionId(missionId);
     }
-    const Json::Value displayIdJson = root["displayid"];
+    const Json::Value displayIdJson = root["displayId"];
     if (!displayIdJson.isNull() && displayIdJson.asInt64() >= 0) {
         uint64_t displayId = displayIdJson.asInt64();
         MEDIA_LOGI("Report Select DisplayId: %{public}" PRIu64, displayId);
