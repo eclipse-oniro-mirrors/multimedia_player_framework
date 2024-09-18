@@ -239,13 +239,14 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::CreatePixelMapYuv(const std::sha
         uint8_t *pixelAddr = frameBuffer->memory_->GetAddr();
         pixelMap->SetPixelsAddr(pixelAddr, holder, pixelMap->GetByteCount(),
                                 AllocatorType::CUSTOM_ALLOC, FreeAvBufferData);
-        const InitializationOptions opts = { .size = { .width = pixelMap->GetWidth(), .height = pixelMap->GetHeight() },
+        const InitializationOptions opts = { .size = { .width = pixelMap->GetWidth(),
+                                                       .height = pixelMap->GetHeight() },
                                              .srcPixelFormat = PixelFormat::NV12,
                                              .pixelFormat = pixelMapInfo.pixelFormat };
         pixelMap = PixelMap::Create(reinterpret_cast<const uint32_t *>(pixelMap->GetPixels()),
                                     pixelMap->GetByteCount(), opts);
         CHECK_AND_RETURN_RET_LOG(pixelMap != nullptr, nullptr, "Create pixelMap failed");
-    }                                                                                               
+    }               
     SetPixelMapYuvInfo(pixelMap, isPlanesAvailable, planes);
     return pixelMap;
 }
