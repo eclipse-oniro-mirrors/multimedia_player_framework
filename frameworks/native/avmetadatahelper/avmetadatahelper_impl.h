@@ -59,6 +59,9 @@ private:
     sptr<SurfaceBuffer> CopySurfaceBuffer(sptr<SurfaceBuffer> &srcSurfaceBuffer);
     std::shared_ptr<PixelMap> CreatePixelMapYuv(const std::shared_ptr<AVBuffer> &frameBuffer,
                                                 PixelMapInfo &pixelMapInfo);
+    std::shared_ptr<PixelMap> OnCreatePixelMapSdr(const std::shared_ptr<AVBuffer> &frameBuffer,
+                                                  PixelMapInfo &pixelMapInfo,
+                                                  InitializationOptions &options);
     std::shared_ptr<PixelMap> OnCreatePixelMapHdr(sptr<SurfaceBuffer> &mySurfaceBuffer);
     void SetPixelMapYuvInfo(std::shared_ptr<PixelMap> pixelMap, bool isPlanesAvailable,
                             OH_NativeBuffer_Planes *planes);

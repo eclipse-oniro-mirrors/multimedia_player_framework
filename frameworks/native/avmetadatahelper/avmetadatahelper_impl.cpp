@@ -232,23 +232,32 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::CreatePixelMapYuv(const std::sha
     } else {
         InitializationOptions options = { .size = { .width = width, .height = height },
                                           .pixelFormat = PixelFormat::NV12 };
-        pixelMap = PixelMap::Create(options);
-        CHECK_AND_RETURN_RET_LOG(pixelMap != nullptr, nullptr, "Create pixelMap failed");
-        AVBufferHolder *holder = CreateAVBufferHolder(frameBuffer);
-        CHECK_AND_RETURN_RET_LOG(holder != nullptr, nullptr, "Create buffer holder failed");
-        uint8_t *pixelAddr = frameBuffer->memory_->GetAddr();
-        pixelMap->SetPixelsAddr(pixelAddr, holder, pixelMap->GetByteCount(),
-                                AllocatorType::CUSTOM_ALLOC, FreeAvBufferData);
-        const InitializationOptions opts = { .size = { .width = pixelMap->GetWidth(),
-                                                       .height = pixelMap->GetHeight() },
-                                             .srcPixelFormat = PixelFormat::NV12,
-                                             .pixelFormat = pixelMapInfo.pixelFormat };
-        pixelMap = PixelMap::Create(reinterpret_cast<const uint32_t *>(pixelMap->GetPixels()),
-                                    pixelMap->GetByteCount(), opts);
-        CHECK_AND_RETURN_RET_LOG(pixelMap != nullptr, nullptr, "Create pixelMap failed");
-    }               
+        pixelMap = OnCreatePixelMapSdr(frameBuffer, pixelMapInfo, options);
+        CHECK_AND_RETURN_RET_LOG(pixelMap != nullptr, nullptr, "Create pixelMap Sdr failed");
+    }
     SetPixelMapYuvInfo(pixelMap, isPlanesAvailable, planes);
     return pixelMap;
+}
+
+std::shared_ptr<PixelMap> AVMetadataHelperImpl::OnCreatePixelMapSdr(const std::shared_ptr<AVBuffer> &frameBuffer,
+                                                                    PixelMapInfo &pixelMapInfo,
+                                                                    InitializationOptions &options)
+{
+    bool isValid = frameBuffer != nullptr && frameBuffer->memory_ != nullptr;
+    CHECK_AND_RETURN_RET_LOG(isValid, nullptr, "invalid frame buffer");
+    auto pixelMap = PixelMap::Create(options);
+    CHECK_AND_RETURN_RET_LOG(pixelMap != nullptr, nullptr, "Create pixelMap failed");
+    AVBufferHolder *holder = CreateAVBufferHolder(frameBuffer);
+    CHECK_AND_RETURN_RET_LOG(holder != nullptr, nullptr, "Create buffer holder failed");
+    uint8_t *pixelAddr = frameBuffer->memory_->GetAddr();
+    pixelMap->SetPixelsAddr(pixelAddr, holder, pixelMap->GetByteCount(),
+                            AllocatorType::CUSTOM_ALLOC, FreeAvBufferData);
+    const InitializationOptions opts = { .size = { .width = pixelMap->GetWidth(),
+                                                   .height = pixelMap->GetHeight() },
+                                         .srcPixelFormat = PixelFormat::NV12,
+                                         .pixelFormat = pixelMapInfo.pixelFormat };
+    return PixelMap::Create(reinterpret_cast<const uint32_t *>(pixelMap->GetPixels()),
+                            pixelMap->GetByteCount(), opts);
 }
 
 std::shared_ptr<PixelMap> AVMetadataHelperImpl::OnCreatePixelMapHdr(sptr<SurfaceBuffer> &mySurfaceBuffer)
