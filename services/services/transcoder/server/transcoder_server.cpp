@@ -128,6 +128,7 @@ int32_t TransCoderServer::SetVideoEncoder(VideoCodecFormat encoder)
     CHECK_AND_RETURN_RET_LOG(transCoderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     config_.videoCodec = encoder;
     VideoEnc vidEnc(encoder);
+    MEDIA_LOGD("set video encoder encoder:%{public}d", encoder);
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return transCoderEngine_->Configure(vidEnc);
     });

@@ -56,6 +56,7 @@
 #include "audio_stream_manager.h"
 #include "screen_capture_monitor_server.h"
 #include "json/json.h"
+#include "tokenid_kit.h"
 
 namespace OHOS {
 namespace Media {
@@ -304,6 +305,7 @@ public:
     void OnDMPrivateWindowChange(bool hasPrivate);
     void SetMissionId(uint64_t missionId);
     void SetDisplayId(uint64_t displayId);
+    bool IsTelInCallSkipList();
 
 private:
     int32_t StartScreenCaptureInner(bool isPrivacyAuthorityEnabled);
@@ -424,6 +426,7 @@ private:
     std::shared_ptr<ScreenRendererAudioStateChangeCallback> captureCallback_;
     std::vector<uint64_t> skipPrivacyWindowIDsVec_;
     sptr<DisplayManager::IPrivateWindowListener> displayListener_;
+    bool isCalledBySystemApp_ = false;
 private:
     static int32_t CheckAudioCapParam(const AudioCaptureInfo &audioCapInfo);
     static int32_t CheckVideoCapParam(const VideoCaptureInfo &videoCapInfo);

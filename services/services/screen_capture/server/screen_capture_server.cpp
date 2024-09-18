@@ -81,6 +81,7 @@ static const std::string ABILITY_NAME = "com.ohos.systemui.dialog";
 static const std::string BACK_GROUND_COLOR = "#E84026";
 static const std::string SCREEN_RECORDER_BUNDLE_NAME = "com.ohos.screenrecorder";
 static const std::string SELECT_ABILITY_NAME = "SelectWindowAbility";
+static const std::string HIVIEWCARE_BUNDLE_NAME = "com.ohos.hiviewcare";
 static const int32_t SVG_HEIGHT = 80;
 static const int32_t SVG_WIDTH = 80;
 static const int32_t MDPI = 160;
@@ -1442,11 +1443,24 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
     return ret;
 }
 
+bool ScreenCaptureServer::IsTelInCallSkipList()
+{
+    MEDIA_LOGI("ScreenCaptureServer::IsTelInCallSkipList isCalledBySystemApp : %{public}d", isCalledBySystemApp_);
+    if (isCalledBySystemApp_ && OHOS::Media::HIVIEWCARE_BUNDLE_NAME.compare(appName_) == 0) {
+        MEDIA_LOGI("ScreenCaptureServer::IsTelInCallSkipList true");
+        return true;
+    }
+    return false;
+}
+
 int32_t ScreenCaptureServer::RegisterServerCallbacks()
 {
+    uint64_t tokenId = IPCSkeleton::GetCallingFullTokenID();
+    isCalledBySystemApp_ = OHOS::Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(tokenId);
+    MEDIA_LOGI("ScreenCaptureServer::RegisterServerCallbacks isCalledBySystemApp : %{public}d", isCalledBySystemApp_);
     std::weak_ptr<ScreenCaptureServer> wpScreenCaptureServer(shared_from_this());
     screenCaptureObserverCb_ = std::make_shared<ScreenCaptureObserverCallBack>(wpScreenCaptureServer);
-    if (InCallObserver::GetInstance().IsInCall()) {
+    if (InCallObserver::GetInstance().IsInCall() && !IsTelInCallSkipList()) {
         MEDIA_LOGI("ScreenCaptureServer Start InCall Abort");
         screenCaptureCb_->OnStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_CALL);
         FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_, SCREEN_CAPTURE_ERR_UNSUPPORT,
@@ -2610,7 +2624,7 @@ bool ScreenCaptureObserverCallBack::StopAndRelease(AVScreenCaptureStateCode stat
 {
     MEDIA_LOGI("ScreenCaptureObserverCallBack::StopAndRelease");
     auto scrServer = screenCaptureServer_.lock();
-    if (scrServer) {
+    if (scrServer && !scrServer->IsTelInCallSkipList()) {
         scrServer->StopScreenCaptureByEvent(state);
         scrServer->Release();
     }

@@ -174,13 +174,21 @@ int32_t AVImageGeneratorNapi::GetFetchFrameArgs(
         asyncCtx->SignError(MSERR_INVALID_VAL, "failed to get option");
         return MSERR_INVALID_VAL;
     }
-    int32_t width = 0;
-    CommonNapi::GetPropertyInt32(env, params, "width", width);
-    int32_t height = 0;
-    CommonNapi::GetPropertyInt32(env, params, "height", height);
+
+    int32_t width = -1;
+    if (!CommonNapi::GetPropertyInt32(env, params, "width", width)) {
+        MEDIA_LOGW("failed to get width");
+    }
+
+    int32_t height = -1;
+    if (!CommonNapi::GetPropertyInt32(env, params, "height", height)) {
+        MEDIA_LOGW("failed to get height");
+    }
+
+    PixelFormat colorFormat = PixelFormat::RGBA_8888;
     int32_t formatVal = 3;
     CommonNapi::GetPropertyInt32(env, params, "colorFormat", formatVal);
-    PixelFormat colorFormat = static_cast<PixelFormat>(formatVal);
+    colorFormat = static_cast<PixelFormat>(formatVal);
     if (colorFormat != PixelFormat::RGB_565 && colorFormat != PixelFormat::RGB_888 &&
         colorFormat != PixelFormat::RGBA_8888) {
         asyncCtx->SignError(MSERR_INVALID_VAL, "formatVal is invalid");
