@@ -594,9 +594,18 @@ public:
      * @since 1.0
      * @version 1.0
      */
-    virtual int32_t SetPlaybackStrategy(AVPlayStrategy playbackStrategy) = 0;
+    virtual int32_t SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
+    {
+        (void)playbackStrategy;
+        return 0;
+    }
 
-    virtual int32_t SetMediaMuted(OHOS::Media::MediaType type, bool isMuted) = 0;
+    virtual int32_t SetMediaMuted(OHOS::Media::MediaType type, bool isMuted)
+    {
+        (void)type;
+        (void)isMuted;
+        return 0;
+    }
 
 #ifdef SUPPORT_AUDIO_ONLY
 #else
