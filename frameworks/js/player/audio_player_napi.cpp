@@ -237,6 +237,7 @@ napi_value AudioPlayerNapi::SetSrc(napi_env env, napi_callback_info info)
     const std::string httpHead = "http";
     int32_t ret = MSERR_EXT_INVALID_VAL;
 
+    MEDIA_LOGD("input url is %{private}s!", player->uri_.c_str());
     if (player->uri_.find(fdHead) != std::string::npos) {
         int32_t fd = -1;
         std::string inputFd = player->uri_.substr(fdHead.size());
