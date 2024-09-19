@@ -17,6 +17,7 @@
 
 #include "media_log.h"
 #include "media_errors.h"
+#include "media_utils.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "ScreenCaptureACW"};
@@ -24,6 +25,9 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTUR
 
 namespace OHOS {
 namespace Media {
+
+static const std::string SCREEN_RECORDER_BUNDLE_NAME = "com.ohos.screenrecorder";
+
 void AudioCapturerCallbackImpl::OnInterrupt(const InterruptEvent &interruptEvent)
 {
     MEDIA_LOGI("AudioCapturerCallbackImpl OnInterrupt hintType:%{public}d, eventType:%{public}d, forceType:%{public}d",
@@ -54,6 +58,17 @@ int32_t AudioCapturerWrapper::Start(const OHOS::AudioStandard::AppInfo &appInfo)
     appInfo_ = appInfo;
     std::shared_ptr<AudioCapturer> audioCapturer = CreateAudioCapturer(appInfo);
     CHECK_AND_RETURN_RET_LOG(audioCapturer != nullptr, MSERR_UNKNOWN, "Start failed, create AudioCapturer failed");
+    if (SCREEN_RECORDER_BUNDLE_NAME.compare(bundleName_) == 0) {
+        std::vector<SourceType> targetSources = {
+            SourceType::SOURCE_TYPE_MIC,
+            SourceType::SOURCE_TYPE_VOICE_MESSAGE
+        };
+        int32_t ret = audioCapturer->SetAudioSourceConcurrency(targetSources);
+        if (ret != MSERR_OK) {
+            MEDIA_LOGE("SetAudioSourceConcurrency failed, ret:%{public}d, threadName:%{public}s", ret,
+                threadName_.c_str());
+        }
+    }
     if (!audioCapturer->Start()) {
         MEDIA_LOGE("Start failed, AudioCapturer Start failed, threadName:%{public}s", threadName_.c_str());
         audioCapturer->Release();
@@ -212,6 +227,7 @@ void AudioCapturerWrapper::SetInnerStreamUsage(std::vector<OHOS::AudioStandard::
 
 std::shared_ptr<AudioCapturer> AudioCapturerWrapper::CreateAudioCapturer(const OHOS::AudioStandard::AppInfo &appInfo)
 {
+    bundleName_ = GetClientBundleName(appInfo.appUid);
     AudioCapturerOptions capturerOptions;
     capturerOptions.streamInfo.samplingRate = static_cast<AudioSamplingRate>(audioInfo_.audioSampleRate);
     capturerOptions.streamInfo.channels = static_cast<AudioChannel>(audioInfo_.audioChannels);
