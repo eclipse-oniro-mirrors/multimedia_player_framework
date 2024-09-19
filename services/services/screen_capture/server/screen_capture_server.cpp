@@ -1288,18 +1288,18 @@ bool ScreenCaptureServer::UpdatePrivacyUsingPermissionState(VideoPermissionState
         res = PrivacyKit::StartUsingPermission(appInfo_.appTokenId, "ohos.permission.CAPTURE_SCREEN");
         if (res != 0) {
             MEDIA_LOGE("start using perm error");
-            return res;
+            return false;
         }
         res = PrivacyKit::AddPermissionUsedRecord(appInfo_.appTokenId, "ohos.permission.CAPTURE_SCREEN", 1, 0);
         if (res != 0) {
             MEDIA_LOGE("add screen capture record error: %{public}d", res);
-            return res;
+            return false;
         }
     } else if (state == STOP_VIDEO) {
         res = PrivacyKit::StopUsingPermission(appInfo_.appTokenId, "ohos.permission.CAPTURE_SCREEN");
         if (res != 0) {
             MEDIA_LOGE("stop using perm error");
-            return res;
+            return false;
         }
     }
     return true;
