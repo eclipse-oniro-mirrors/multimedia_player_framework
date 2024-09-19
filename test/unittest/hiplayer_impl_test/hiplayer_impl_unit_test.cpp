@@ -589,11 +589,11 @@ HWTEST_F(HiplayerImplUnitTest, GetPlaybackInfo_001, TestSize.Level0)
 
     hiplayer_->OnEvent({"hiplayer", EventType::EVENT_IS_LIVE_STREAM, false});
     hiplayer_->OnEvent({"hiplayer", EventType::EVENT_READY, false});
-    hiplayer_->OnEvent({"hiplayer", EventType::BUFFERING_END , 2});
-    hiplayer_->OnEvent({"hiplayer", EventType::BUFFERING_START , 1});
+    hiplayer_->OnEvent({"hiplayer", EventType::BUFFERING_END, 2});
+    hiplayer_->OnEvent({"hiplayer", EventType::BUFFERING_START, 1});
     hiplayer_->OnEvent({"hiplayer", EventType::EVENT_CACHED_DURATION, 100});
-    hiplayer_->OnEvent({"hiplayer", EventType::EVENT_BUFFER_PROGRESS , 100});
-    hiplayer_->OnEvent({"hiplayer", EventType::EVENT_AUDIO_SERVICE_DIED , 1});
+    hiplayer_->OnEvent({"hiplayer", EventType::EVENT_BUFFER_PROGRESS, 100});
+    hiplayer_->OnEvent({"hiplayer", EventType::EVENT_AUDIO_SERVICE_DIED, 1});
 
     Format playbackInfo;
     EXPECT_EQ(hiplayer_->GetPlaybackInfo(playbackInfo), 0);
