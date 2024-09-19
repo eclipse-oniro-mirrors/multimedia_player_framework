@@ -92,6 +92,7 @@ private:
     std::mutex bufferMutex_;
     std::condition_variable bufferCond_;
     std::queue<std::shared_ptr<AudioBuffer>> availBuffers_;
+    std::string bundleName_;
     std::atomic<AudioCapturerWrapperState> captureState_ {CAPTURER_UNKNOWN};
 
     /* used for hilog output */
