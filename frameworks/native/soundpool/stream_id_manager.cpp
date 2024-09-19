@@ -86,6 +86,7 @@ int32_t StreamIDManager::InitThreadPool()
 
 int32_t StreamIDManager::Play(std::shared_ptr<SoundParser> soundParser, PlayParams playParameters)
 {
+    MediaTrace trace("StreamIDManager::Play");
     CHECK_AND_RETURN_RET_LOG(soundParser != nullptr, -1, "Invalid soundParser.");
     int32_t soundID = soundParser->GetSoundID();
     int32_t streamID = GetFreshStreamID(soundID, playParameters);
@@ -117,12 +118,14 @@ int32_t StreamIDManager::Play(std::shared_ptr<SoundParser> soundParser, PlayPara
             cacheBuffers_.emplace(streamID, cacheBuffer);
         }
     }
+    MEDIA_LOGI("StreamIDManager::SetPlay start soundID:%{public}d, streamID:%{public}d", soundID, streamID);
     SetPlay(soundID, streamID, playParameters);
     return streamID;
 }
 
 int32_t StreamIDManager::SetPlay(const int32_t soundID, const int32_t streamID, const PlayParams playParameters)
 {
+    MediaTrace trace("StreamIDManager::SetPlay");
     if (!isStreamPlayingThreadPoolStarted_.load()) {
         InitThreadPool();
     }
@@ -148,7 +151,7 @@ int32_t StreamIDManager::SetPlay(const int32_t soundID, const int32_t streamID, 
         if (freshCacheBuffer->GetPriority() >= playingCacheBuffer->GetPriority()) {
             MEDIA_LOGI("StreamIDManager stop playing low priority sound:%{public}d", playingStreamID);
             playingCacheBuffer->Stop(playingStreamID);
-            MEDIA_LOGI("StreamIDManager to playing fresh sound:%{public}d.", streamID);
+            MEDIA_LOGI("StreamIDManager to playing fresh streamID:%{public}d.", streamID);
             AddPlayTask(streamID, playParameters);
         } else {
             std::lock_guard lock(streamIDManagerLock_);
@@ -283,7 +286,7 @@ int32_t StreamIDManager::DoPlay(const int32_t streamID)
 std::shared_ptr<CacheBuffer> StreamIDManager::FindCacheBuffer(const int32_t streamID)
 {
     if (cacheBuffers_.empty()) {
-        MEDIA_LOGI("StreamIDManager cacheBuffers_ empty");
+        MEDIA_LOGI("StreamIDManager::FindCacheBuffer cacheBuffers_ empty");
         return nullptr;
     }
     CHECK_AND_RETURN_RET_LOG(streamID >= 0, nullptr, "streamID invalid.");
@@ -342,7 +345,7 @@ int32_t StreamIDManager::GetFreshStreamID(const int32_t soundID, PlayParams play
 {
     int32_t streamID = 0;
     if (cacheBuffers_.empty()) {
-        MEDIA_LOGI("StreamIDManager cacheBuffers_ empty");
+        MEDIA_LOGI("StreamIDManager::GetFreshStreamID cacheBuffers_ empty");
         return streamID;
     }
     for (auto cacheBuffer : cacheBuffers_) {

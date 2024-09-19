@@ -128,7 +128,7 @@ int32_t SoundIDManager::Load(int32_t fd, int64_t offset, int64_t length)
 
 int32_t SoundIDManager::DoLoad(int32_t soundID)
 {
-    MEDIA_LOGI("SoundIDManager soundID:%{public}d", soundID);
+    MEDIA_LOGI("SoundIDManager::DoLoad soundID:%{public}d", soundID);
     if (!isParsingThreadPoolStarted_) {
         InitThreadPool();
     }
@@ -179,7 +179,7 @@ int32_t SoundIDManager::DoParser()
 
 std::shared_ptr<SoundParser> SoundIDManager::FindSoundParser(int32_t soundID) const
 {
-    MEDIA_LOGI("SoundIDManager soundID:%{public}d", soundID);
+    MEDIA_LOGI("SoundIDManager::FindSoundParser soundID:%{public}d", soundID);
     if (soundParsers_.empty()) {
         return nullptr;
     }
@@ -191,7 +191,7 @@ std::shared_ptr<SoundParser> SoundIDManager::FindSoundParser(int32_t soundID) co
 
 int32_t SoundIDManager::Unload(int32_t soundID)
 {
-    MEDIA_LOGI("SoundIDManager soundID:%{public}d", soundID);
+    MEDIA_LOGI("SoundIDManager::Unload soundID:%{public}d", soundID);
     CHECK_AND_RETURN_RET_LOG(!soundParsers_.empty(), MSERR_NO_MEMORY, "No sound in the soundParsers_");
     auto it = soundParsers_.find(soundID);
     if (it != soundParsers_.end()) {
