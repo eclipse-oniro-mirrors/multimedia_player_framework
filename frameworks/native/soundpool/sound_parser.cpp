@@ -58,13 +58,14 @@ SoundParser::SoundParser(int32_t soundID, int32_t fd, int64_t offset, int64_t le
 
 SoundParser::~SoundParser()
 {
-    MEDIA_LOGI("SoundParser Destruction.");
+    MEDIA_LOGI("SoundParser Destruction, soundID:%{public}d", soundID_);
     Release();
 }
 
 int32_t SoundParser::DoParser()
 {
-    MEDIA_LOGI("SoundParser do parser.");
+    MediaTrace trace("SoundParser::DoParser");
+    MEDIA_LOGI("SoundParser::DoParser start, soundID:%{public}d", soundID_);
     std::unique_lock<ffrt::mutex> lock(soundParserLock_);
     isParsing_.store(true);
     int32_t result = MSERR_OK;
@@ -80,11 +81,14 @@ int32_t SoundParser::DoParser()
         callback_->OnError(MSERR_UNSUPPORT_FILE);
         return MSERR_INVALID_VAL;
     }
+    MEDIA_LOGI("SoundParser::DoParser end, soundID:%{public}d", soundID_);
     return MSERR_OK;
 }
 
 int32_t SoundParser::DoDemuxer(MediaAVCodec::Format *trackFormat)
 {
+    MediaTrace trace("SoundParser::DoDemuxer");
+    MEDIA_LOGI("SoundParser::DoDemuxer start, soundID:%{public}d", soundID_);
     MediaAVCodec::Format sourceFormat;
     int32_t sourceTrackCountInfo = 0;
     int64_t sourceDurationInfo = 0;
@@ -108,7 +112,6 @@ int32_t SoundParser::DoDemuxer(MediaAVCodec::Format *trackFormat)
         trackFormat->GetIntValue(MediaDescriptionKey::MD_KEY_TRACK_TYPE, trackType);
         MEDIA_LOGI("SoundParser trackType:%{public}d", trackType);
         if (trackType == MEDIA_TYPE_AUD) {
-            MEDIA_LOGI("SoundParser trackType:%{public}d", trackType);
             demuxer_->SelectTrackByID(sourceTrackIndex);
             std::string trackMimeTypeInfo;
             trackFormat->GetStringValue(MediaAVCodec::MediaDescriptionKey::MD_KEY_CODEC_MIME, trackMimeTypeInfo);
@@ -124,11 +127,14 @@ int32_t SoundParser::DoDemuxer(MediaAVCodec::Format *trackFormat)
             break;
         }
     }
+    MEDIA_LOGI("SoundParser::DoDemuxer end, soundID:%{public}d", soundID_);
     return MSERR_OK;
 }
 
 int32_t SoundParser::DoDecode(MediaAVCodec::Format trackFormat)
 {
+    MediaTrace trace("SoundParser::DoDecode");
+    MEDIA_LOGI("SoundParser::DoDecode start, soundID:%{public}d", soundID_);
     int32_t trackTypeInfo;
     trackFormat.GetIntValue(MediaDescriptionKey::MD_KEY_TRACK_TYPE, trackTypeInfo);
     if (trackTypeInfo == MEDIA_TYPE_AUD) {
@@ -148,8 +154,8 @@ int32_t SoundParser::DoDecode(MediaAVCodec::Format trackFormat)
         audioDecCb_->SetDecodeCallback(soundParserListener_);
         if (callback_ != nullptr) audioDecCb_->SetCallback(callback_);
         ret = audioDec_->Start();
-        MEDIA_LOGI("SoundParser::DoDecode, audioDec_ started");
         CHECK_AND_RETURN_RET_LOG(ret == 0, MSERR_INVALID_VAL, "Failed to Start audioDecorder.");
+        MEDIA_LOGI("SoundParser::DoDecode, audioDec_ started, soundID:%{public}d", soundID_);
     }
     return MSERR_OK;
 }
@@ -180,7 +186,8 @@ int32_t SoundParser::SetCallback(const std::shared_ptr<ISoundPoolCallback> &call
 
 int32_t SoundParser::Release()
 {
-    MEDIA_LOGI("SoundParser Release.");
+    MediaTrace trace("SoundParser::Release");
+    MEDIA_LOGI("SoundParser::Release start, soundID:%{public}d", soundID_);
     std::unique_lock<ffrt::mutex> lock(soundParserLock_);
     isParsing_.store(false);
     int32_t ret = MSERR_OK;
@@ -201,6 +208,7 @@ int32_t SoundParser::Release()
         (void)close(fdSource_);
         fdSource_ = -1;
     }
+    MEDIA_LOGI("SoundParser::Release end, soundID:%{public}d", soundID_);
     return ret;
 }
 
@@ -357,7 +365,7 @@ int32_t SoundDecoderCallback::SetCallback(const std::shared_ptr<ISoundPoolCallba
 int32_t SoundDecoderCallback::Release()
 {
     int32_t ret = MSERR_OK;
-    MEDIA_LOGI("SoundDecoderCallback Release.");
+    MEDIA_LOGI("SoundDecoderCallback::Release");
     std::unique_lock<std::mutex> lock(amutex_);
     isRunning_.store(false);
     if (audioDec_ != nullptr) {
