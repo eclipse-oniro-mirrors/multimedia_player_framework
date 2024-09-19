@@ -92,8 +92,6 @@ public:
     virtual int32_t GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &changeInfo) = 0;
     virtual int32_t GetAvailableEncoder(std::vector<EncoderCapabilityData> &encoderInfo) = 0;
     virtual int32_t GetMaxAmplitude() = 0;
-    virtual int32_t IsWatermarkSupported(bool &isWatermarkSupported) = 0;
-    virtual int32_t SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer) = 0;
     /**
      * IPC code ID
      */
@@ -138,8 +136,6 @@ public:
 		GET_AUDIO_CAPTURER_CHANGE_INFO,
         GET_AVAILABLE_ENCODER,
         GET_MAX_AMPLITUDE,
-        IS_WATERMARK_SUPPORTED,
-        SET_WATERMARK,
         SET_META_CONFIGS,
         SET_META_SOURCE,
         SET_META_MIME_TYPE,

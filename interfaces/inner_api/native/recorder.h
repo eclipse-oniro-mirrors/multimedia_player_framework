@@ -23,7 +23,6 @@
 #include <parcel.h>
 #include "meta/format.h"
 #include "meta/meta.h"
-#include "buffer/avbuffer.h"
 #include "surface.h"
 #include "av_common.h"
 #include "codec_capability.h"
@@ -33,7 +32,7 @@ namespace OHOS {
 namespace Media {
 using ConfigMap = std::map<std::string, int32_t>;
 constexpr size_t DEVICE_INFO_SIZE_LIMIT = 30; // 30 from audioCapture
- 
+
 enum FileGenerationMode : int32_t {
     APP_CREATE = 0,
     AUTO_CREATE_CAMERA_SCENE = 1,
@@ -808,7 +807,7 @@ public:
      * @version 1.0
      */
     virtual int32_t SetFileGenerationMode(FileGenerationMode mode) = 0;
- 
+
     /**
      * Unsupported App Usage.
      * @brief Sets the FD of the next output file.
@@ -992,24 +991,6 @@ public:
     virtual int32_t GetAvailableEncoder(std::vector<EncoderCapabilityData> &encoderInfo) = 0;
 
     virtual int32_t GetMaxAmplitude() = 0;
-    /**
-     * @brief Check if the avrecorder has watermark capability.
-     *
-     * @param isWatermarkSupported isWatermarkSupported true or false.
-     * @return Returns {@link MSERR_OK} If the query succeeds; returns an error code otherwise.
-     * @since 1.0
-     * @version 1.0
-     */
-    virtual int32_t IsWatermarkSupported(bool &isWatermarkSupported) = 0;
-    /**
-     * @brief Set watermarkBuffer to avrecorder.
-     *
-     * @param waterMarkBuffer watermark image and config
-     * @return Returns {@link MSERR_OK} If the SetWatermark succeeds; returns an error code otherwise.
-     * @since 1.0
-     * @version 1.0
-    */
-    virtual int32_t SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer) = 0;
 };
 
 class __attribute__((visibility("default"))) RecorderFactory {

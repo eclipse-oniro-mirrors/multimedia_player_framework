@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -80,8 +80,6 @@ public:
     int32_t GetAvailableEncoder(std::vector<EncoderCapabilityData> &encoderInfo);
     int32_t GetMaxAmplitude();
     void SetCallingInfo(const std::string &bundleName, uint64_t instanceId);
-    int32_t IsWatermarkSupported(bool &isWatermarkSupported);
-    int32_t SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer);
 
 private:
     void ConfigureAudioCapture();
@@ -140,7 +138,6 @@ private:
 
     bool videoSourceIsYuv_ = false;
     bool videoSourceIsRGBA_ = false;
-    bool isWatermarkSupported_ = false;
 
     Mutex stateMutex_ {};
     ConditionVariable cond_ {};
@@ -153,7 +150,6 @@ private:
         BUFFER_USAGE_MEM_DMA | BUFFER_USAGE_VIDEO_ENCODER;
     std::string recorderId_;
     std::string bundleName_;
-    std::string codecMimeType_ = "";
     uint64_t instanceId_ = 0;
 };
 } // namespace MEDIA
