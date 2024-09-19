@@ -2058,6 +2058,7 @@ void HiPlayerImpl::HandleCompleteEvent(const Event& event)
     }
     if (!singleLoop_.load()) {
         callbackLooper_.StopReportMediaProgress();
+        callbackLooper_.StopCollectMaxAmplitude();
     } else {
         inEosSeek_ = true;
     }
@@ -2247,6 +2248,7 @@ void HiPlayerImpl::NotifyAudioInterrupt(const Event& event)
                 UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
             }
             callbackLooper_.StopReportMediaProgress();
+            callbackLooper_.StopCollectMaxAmplitude();
         }
     }
     (void)format.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_TYPE, eventType);
@@ -2515,6 +2517,7 @@ Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilte
         FilterType::FILTERTYPE_ASINK);
     FALSE_RETURN_V(audioSink_ != nullptr, Status::ERROR_NULL_POINTER);
     audioSink_->Init(playerEventReceiver_, playerFilterCallback_);
+    audioSink_->SetMaxAmplitudeCbStatus(maxAmplitudeCbStatus_);
     std::shared_ptr<Meta> globalMeta = std::make_shared<Meta>();
     if (demuxer_ != nullptr) {
         globalMeta = demuxer_->GetGlobalMetaInfo();
@@ -2678,6 +2681,15 @@ int32_t HiPlayerImpl::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
     preferedHeight_ = playbackStrategy.preferredHeight;
     bufferDuration_ = playbackStrategy.preferredBufferDuration;
     preferHDR_ = playbackStrategy.preferredHdr;
+    return MSERR_OK;
+}
+
+int32_t HiPlayerImpl::SetMaxAmplitudeCbStatus(bool status)
+{
+    maxAmplitudeCbStatus_ = status;
+    if (audioSink_ != nullptr) {
+        return audioSink_->SetMaxAmplitudeCbStatus(maxAmplitudeCbStatus_);
+    }
     return MSERR_OK;
 }
 }  // namespace Media
