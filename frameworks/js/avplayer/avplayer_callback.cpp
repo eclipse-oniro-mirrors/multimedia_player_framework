@@ -236,6 +236,44 @@ public:
         }
     };
 
+    struct FloatArray : public Base {
+        std::vector<float>valueVec;
+        void UvWork() override
+        {
+            std::shared_ptr<AutoRef> floatArrayRef = callback.lock();
+            CHECK_AND_RETURN_LOG(floatArrayRef != nullptr,
+                "%{public}s AutoRef is nullptr", callbackName.c_str());
+
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(floatArrayRef->env_, &scope);
+            CHECK_AND_RETURN_LOG(scope != nullptr,
+                "%{public}s scope is nullptr", callbackName.c_str());
+            ON_SCOPE_EXIT(0) {
+                napi_close_handle_scope(floatArrayRef->env_, scope);
+            };
+
+            napi_value jsCallback = nullptr;
+            napi_status status = napi_get_reference_value(floatArrayRef->env_, floatArrayRef->cb_, &jsCallback);
+            CHECK_AND_RETURN_LOG(status == napi_ok && jsCallback != nullptr,
+                "%{public}s failed to napi_get_reference_value", callbackName.c_str());
+
+            napi_value array = nullptr;
+            (void)napi_create_array_with_length(floatArrayRef->env_, valueVec.size(), &array);
+
+            for (uint32_t i = 0; i < valueVec.size(); i++) {
+                napi_value number = nullptr;
+                (void)napi_create_double(floatArrayRef->env_, valueVec.at(i), &number);
+                (void)napi_set_element(floatArrayRef->env_, array, i, number);
+            }
+
+            napi_value result = nullptr;
+            napi_value args[1] = {array};
+            status = napi_call_function(floatArrayRef->env_, nullptr, jsCallback, 1, args, &result);
+            CHECK_AND_RETURN_LOG(status == napi_ok,
+                "%{public}s failed to napi_call_function", callbackName.c_str());
+        }
+    };
+
     struct SubtitleProperty : public Base {
         std::string text;
         void UvWork() override
@@ -612,6 +650,8 @@ AVPlayerCallback::AVPlayerCallback(napi_env env, AVPlayerNotify *listener)
             [this](const int32_t extra, const Format &infoBody) { OnSubtitleInfoCb(extra, infoBody); } },
         { INFO_TYPE_AUDIO_DEVICE_CHANGE,
             [this](const int32_t extra, const Format &infoBody) { OnAudioDeviceChangeCb(extra, infoBody); } },
+        { INFO_TYPE_MAX_AMPLITUDE_COLLECT,
+            [this](const int32_t extra, const Format &infoBody) { OnMaxAmplitudeCollectedCb(extra, infoBody); } },
     };
 }
 
@@ -1081,6 +1121,45 @@ void AVPlayerCallback::OnBitRateCollectedCb(const int32_t extra, const Format &i
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_AVAILABLE_BITRATES);
     cb->callbackName = AVPlayerEvent::EVENT_AVAILABLE_BITRATES;
     cb->valueVec = bitrateVec;
+    NapiCallback::CompleteCallback(env_, cb);
+}
+
+void AVPlayerCallback::OnMaxAmplitudeCollectedCb(const int32_t extra, const Format &infoBody)
+{
+    (void)extra;
+    CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
+    if (refMap_.find(AVPlayerEvent::EVENT_AMPLITUDE_UPDATE) == refMap_.end()) {
+        MEDIA_LOGW("can not find max amplitude collected callback!");
+        return;
+    }
+
+    std::vector<float> MaxAmplitudeVec;
+    if (infoBody.ContainKey(std::string(PlayerKeys::AUDIO_MAX_AMPLITUDE))) {
+        uint8_t *addr = nullptr;
+        size_t size  = 0;
+        infoBody.GetBuffer(std::string(PlayerKeys::AUDIO_MAX_AMPLITUDE), &addr, size);
+        CHECK_AND_RETURN_LOG(addr != nullptr, "max amplitude addr is nullptr");
+
+        MEDIA_LOGD("max amplitude size = %{public}zu", size / sizeof(float));
+        while (size > 0) {
+            if (size < sizeof(float)) {
+                break;
+            }
+
+            float maxAmplitude = *(static_cast<float *>(static_cast<void *>(addr)));
+            MEDIA_LOGD("maxAmplitude = %{public}f", maxAmplitude);
+            addr += sizeof(float);
+            size -= sizeof(float);
+            MaxAmplitudeVec.push_back(static_cast<float>(maxAmplitude));
+        }
+    }
+
+    NapiCallback::FloatArray *cb = new(std::nothrow) NapiCallback::FloatArray();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new IntArray");
+
+    cb->callback = refMap_.at(AVPlayerEvent::EVENT_AMPLITUDE_UPDATE);
+    cb->callbackName = AVPlayerEvent::EVENT_AMPLITUDE_UPDATE;
+    cb->valueVec = MaxAmplitudeVec;
     NapiCallback::CompleteCallback(env_, cb);
 }
 

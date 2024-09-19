@@ -2645,6 +2645,20 @@ void AVPlayerNapi::GetCurrentTrackTask(std::unique_ptr<AVPlayerContext> &promise
     return;
 }
 
+void AVPlayerNapi::MaxAmplitudeCallbackOn(AVPlayerNapi *jsPlayer, std::string callbackName)
+{
+    if (jsPlayer == nullptr) {
+        calMaxAmplitude_ = false;
+        return;
+    }
+    if (callbackName == "amplitudeUpdate") {
+        calMaxAmplitude_ = true;
+    }
+    if (jsPlayer->player_ != nullptr && calMaxAmplitude_) {
+        (void)jsPlayer->player_->SetMaxAmplitudeCbStatus(calMaxAmplitude_);
+    }
+}
+
 napi_value AVPlayerNapi::JsSetOnCallback(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("AVPlayerNapi::on");
@@ -2681,6 +2695,7 @@ napi_value AVPlayerNapi::JsSetOnCallback(napi_env env, napi_callback_info info)
     }
 
     std::string callbackName = CommonNapi::GetStringArgument(env, args[0]);
+    jsPlayer->MaxAmplitudeCallbackOn(jsPlayer, callbackName);
     MEDIA_LOGI("0x%{public}06" PRIXPTR " set callbackName: %{public}s", FAKE_POINTER(jsPlayer), callbackName.c_str());
 
     napi_ref ref = nullptr;
@@ -2693,6 +2708,16 @@ napi_value AVPlayerNapi::JsSetOnCallback(napi_env env, napi_callback_info info)
     MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSetOnCallback callbackName: %{public}s success",
         FAKE_POINTER(jsPlayer), callbackName.c_str());
     return result;
+}
+
+void AVPlayerNapi::MaxAmplitudeCallbackOff(AVPlayerNapi *jsPlayer, std::string callbackName)
+{
+    if (jsPlayer != nullptr && calMaxAmplitude_ && callbackName == "amplitudeUpdate") {
+        calMaxAmplitude_ = false;
+        if (jsPlayer->player_ != nullptr) {
+            (void)jsPlayer->player_->SetMaxAmplitudeCbStatus(calMaxAmplitude_);
+        }
+    }
 }
 
 napi_value AVPlayerNapi::JsClearOnCallback(napi_env env, napi_callback_info info)
@@ -2723,6 +2748,7 @@ napi_value AVPlayerNapi::JsClearOnCallback(napi_env env, napi_callback_info info
     }
 
     std::string callbackName = CommonNapi::GetStringArgument(env, args[0]);
+    jsPlayer->MaxAmplitudeCallbackOff(jsPlayer, callbackName);
     MEDIA_LOGI("0x%{public}06" PRIXPTR " set callbackName: %{public}s", FAKE_POINTER(jsPlayer), callbackName.c_str());
 
     jsPlayer->ClearCallbackReference(callbackName);

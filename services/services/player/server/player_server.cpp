@@ -248,7 +248,8 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
     ret = playerEngine_->SetObs(obs);
 
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetObs Failed!");
-
+    ret = playerEngine_->SetMaxAmplitudeCbStatus(maxAmplitudeCbStatus_);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetMaxAmplitudeCbStatus Failed!");
     lastOpStatus_ = PLAYER_INITIALIZED;
     ChangeState(initializedState_);
 
@@ -1804,6 +1805,12 @@ int32_t PlayerServer::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
         "can not set playback strategy, current state is %{public}d", static_cast<int32_t>(lastOpStatus_.load()));
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     return playerEngine_->SetPlaybackStrategy(playbackStrategy);
+}
+
+int32_t PlayerServer::SetMaxAmplitudeCbStatus(bool status)
+{
+    maxAmplitudeCbStatus_ = status;
+    return MSERR_OK;
 }
 } // namespace Media
 } // namespace OHOS

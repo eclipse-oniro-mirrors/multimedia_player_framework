@@ -471,6 +471,14 @@ int32_t PlayerImpl::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
     return playerService_->SetPlaybackStrategy(playbackStrategy);
 }
 
+int32_t PlayerImpl::SetMaxAmplitudeCbStatus(bool status)
+{
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetMaxAmplitudeCbStatus in, status is %{public}d",
+        FAKE_POINTER(this), status);
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
+    return playerService_->SetMaxAmplitudeCbStatus(status);
+}
+
 PlayerImplCallback::PlayerImplCallback(const std::shared_ptr<PlayerCallback> playerCb,
     std::shared_ptr<PlayerImpl> player)
 {

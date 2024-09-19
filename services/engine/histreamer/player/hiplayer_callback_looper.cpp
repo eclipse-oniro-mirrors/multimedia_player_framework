@@ -32,10 +32,12 @@ constexpr int32_t WHAT_NONE = 0;
 constexpr int32_t WHAT_MEDIA_PROGRESS = 1;
 constexpr int32_t WHAT_INFO = 2;
 constexpr int32_t WHAT_ERROR = 3;
+constexpr int32_t WHAT_COLLECT_AMPLITUDE = 4;
 
 constexpr int32_t TUPLE_POS_0 = 0;
 constexpr int32_t TUPLE_POS_1 = 1;
 constexpr int32_t TUPLE_POS_2 = 2;
+constexpr int32_t MAX_AMPLITUDE_SIZE = 5;
 }
 HiPlayerCallbackLooper::HiPlayerCallbackLooper()
 {
@@ -89,6 +91,18 @@ void HiPlayerCallbackLooper::StartReportMediaProgress(int64_t updateIntervalMs)
             SteadyClock::GetCurrentTimeMs() + reportProgressIntervalMs_, Any()));
 }
 
+void HiPlayerCallbackLooper::startCollectMaxAmplitude(int64_t updateIntervalMs)
+{
+    MEDIA_LOG_I("HiPlayerCallbackLooper startCollectMaxAmplitude");
+    collectMaxAmplitudeIntervalMs_ = updateIntervalMs;
+    if (collectMaxAmplitude_) { // already set
+        return;
+    }
+    collectMaxAmplitude_ = true;
+    Enqueue(std::make_shared<Event>(WHAT_COLLECT_AMPLITUDE,
+            SteadyClock::GetCurrentTimeMs() + collectMaxAmplitudeIntervalMs_, Any()));
+}
+
 void HiPlayerCallbackLooper::ManualReportMediaProgressOnce()
 {
     Enqueue(std::make_shared<Event>(WHAT_MEDIA_PROGRESS, SteadyClock::GetCurrentTimeMs(), Any()));
@@ -99,6 +113,13 @@ void HiPlayerCallbackLooper::StopReportMediaProgress()
     OHOS::Media::AutoLock lock(loopMutex_);
     MEDIA_LOG_I_SHORT("HiPlayerCallbackLooper StopReportMediaProgress");
     reportMediaProgress_ = false;
+}
+
+void HiPlayerCallbackLooper::StopCollectMaxAmplitude()
+{
+    MEDIA_LOG_I("HiPlayerCallbackLooper StopCollectMaxAmplitude");
+    OHOS::Media::AutoLock lock(loopMutex_);
+    collectMaxAmplitude_ = false;
 }
 
 void HiPlayerCallbackLooper::DoReportCompletedTime()
@@ -144,6 +165,34 @@ void HiPlayerCallbackLooper::DoReportMediaProgress()
     if (reportMediaProgress_) {
         Enqueue(std::make_shared<Event>(WHAT_MEDIA_PROGRESS,
             SteadyClock::GetCurrentTimeMs() + reportProgressIntervalMs_, Any()));
+    }
+}
+
+void HiPlayerCallbackLooper::DoCollectAmplitude()
+{
+    OHOS::Media::AutoLock lock(loopMutex_);
+    if (!collectMaxAmplitude_) {
+        return;
+    }
+    auto obs = obs_.lock();
+    if (obs) {
+        float maxAmplitude = 0.0f;
+        maxAmplitude = playerEngine_->GetMaxAmplitude();
+        vMaxAmplitudeArray_.push_back(maxAmplitude);
+        if (vMaxAmplitudeArray_.size() == MAX_AMPLITUDE_SIZE) {
+            int mSize = static_cast<int>(vMaxAmplitudeArray_.size());
+            const int size = mSize;
+            float* maxAmplitudeArray = vMaxAmplitudeArray_.data();
+            Format amplitudeFormat;
+            (void)amplitudeFormat.PutBuffer(std::string(PlayerKeys::AUDIO_MAX_AMPLITUDE),
+                static_cast<uint8_t *>(static_cast<void *>(maxAmplitudeArray)), size * sizeof(float));
+            obs->OnInfo(INFO_TYPE_MAX_AMPLITUDE_COLLECT, 0, amplitudeFormat);
+            vMaxAmplitudeArray_.clear();
+        }
+    }
+    if (collectMaxAmplitude_) {
+        Enqueue(std::make_shared<Event>(WHAT_COLLECT_AMPLITUDE,
+            SteadyClock::GetCurrentTimeMs() + collectMaxAmplitudeIntervalMs_, Any()));
     }
 }
 
@@ -201,6 +250,9 @@ void HiPlayerCallbackLooper::LoopOnce(const std::shared_ptr<HiPlayerCallbackLoop
             break;
         case WHAT_ERROR:
             DoReportError(item->detail);
+            break;
+        case WHAT_COLLECT_AMPLITUDE:
+            DoCollectAmplitude();
             break;
         default:
             break;

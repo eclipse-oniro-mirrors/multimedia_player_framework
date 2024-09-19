@@ -123,6 +123,7 @@ public:
     static constexpr std::string_view PLAYER_DRM_INFO_ADDR = "drm_info_addr";
     static constexpr std::string_view PLAYER_DRM_INFO_COUNT = "drm_info_count";
     static constexpr std::string_view PLAYER_AVAILABLE_BITRATES = "available_bitRates";
+    static constexpr std::string_view AUDIO_MAX_AMPLITUDE = "max_amplitude";
 };
 
 class PlaybackInfoKey {
@@ -219,6 +220,8 @@ enum PlayerOnInfoType : int32_t {
     INFO_TYPE_AUDIO_DEVICE_CHANGE,
     /* return the subtitle info */
     INFO_TYPE_SUBTITLE_UPDATE_INFO,
+    /* return audio uv value */
+    INFO_TYPE_MAX_AMPLITUDE_COLLECT,
 };
 
 enum PlayerStates : int32_t {
@@ -764,6 +767,20 @@ public:
     {
         (void)start;
         (void)end;
+        return 0;
+    }
+
+    /**
+     * @brief set get max amplitude callback status.
+     *
+     * @return Returns {@link MSERR_OK} if the single display is set; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t SetMaxAmplitudeCbStatus(bool status)
+    {
+        (void)status;
         return 0;
     }
 
