@@ -1052,5 +1052,12 @@ int32_t PlayerServiceStub::SetMaxAmplitudeCbStatus(bool status)
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
     return playerServer_->SetMaxAmplitudeCbStatus(status);
 }
+
+int32_t PlayerServiceStub::SetMaxAmplitudeCbStatus(MessageParcel &data, MessageParcel &reply)
+{
+    bool status = data.ReadInt32();
+    reply.WriteInt32(SetMaxAmplitudeCbStatus(status));
+    return MSERR_OK;
+}
 } // namespace Media
 } // namespace OHOS
