@@ -32,7 +32,7 @@ const std::string CLASS_NAME = "SoundPool";
 
 SoundPoolNapi::~SoundPoolNapi()
 {
-    MEDIA_LOGI("%s", __FUNCTION__);
+    MEDIA_LOGI("SoundPoolNapi::~SoundPoolNapi");
 }
 
 napi_value SoundPoolNapi::Init(napi_env env, napi_value exports)
