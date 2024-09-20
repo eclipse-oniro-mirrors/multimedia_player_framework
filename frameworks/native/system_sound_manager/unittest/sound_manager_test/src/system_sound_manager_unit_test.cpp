@@ -298,5 +298,207 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_RemoveCustomizedTone_001, 
     res = systemSoundManager_->RemoveCustomizedTone(context_, uri);
     EXPECT_NE(systemSoundManager_, nullptr);
 }
+
+/**
+ * @tc.name  : Test GetToneHapticsSettings API
+ * @tc.number: Media_SoundManager_GetToneHapticsSettings_001
+ * @tc.desc  : Test GetToneHapticsSettings interface. Returns vibration setting of the ringtone.
+ */
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetToneHapticsSettings_001, TestSize.Level2)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
+    ToneHapticsSettings settings;
+    systemSoundManager_->GetToneHapticsSettings(context_, HAPTICS_RINGTONE_TYPE_SIM_CARD_0, settings);
+    EXPECT_NE(systemSoundManager_, nullptr);
+}
+
+/**
+ * @tc.name  : Test GetToneHapticsSettings API
+ * @tc.number: Media_SoundManager_GetToneHapticsSettings_002
+ * @tc.desc  : Test GetToneHapticsSettings interface. Returns vibration setting of the ringtone.
+ */
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetToneHapticsSettings_002, TestSize.Level2)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
+    ToneHapticsSettings settings;
+    systemSoundManager_->GetToneHapticsSettings(context_, HAPTICS_RINGTONE_TYPE_SIM_CARD_1, settings);
+    EXPECT_NE(systemSoundManager_, nullptr);
+}
+
+/**
+ * @tc.name  : Test GetToneHapticsSettings API
+ * @tc.number: Media_SoundManager_GetToneHapticsSettings_003
+ * @tc.desc  : Test GetToneHapticsSettings interface. Returns vibration setting of the system tone.
+ */
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetToneHapticsSettings_003, TestSize.Level2)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
+    ToneHapticsSettings settings;
+    systemSoundManager_->GetToneHapticsSettings(context_, HAPTICS_SYSTEM_TONE_TYPE_SIM_CARD_0, settings);
+    EXPECT_NE(systemSoundManager_, nullptr);
+}
+
+/**
+ * @tc.name  : Test GetToneHapticsSettings API
+ * @tc.number: Media_SoundManager_GetToneHapticsSettings_004
+ * @tc.desc  : Test GetToneHapticsSettings interface. Returns vibration setting of the system tone.
+ */
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetToneHapticsSettings_004, TestSize.Level2)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
+    ToneHapticsSettings settings;
+    systemSoundManager_->GetToneHapticsSettings(context_, HAPTICS_SYSTEM_TONE_TYPE_SIM_CARD_1, settings);
+    EXPECT_NE(systemSoundManager_, nullptr);
+}
+
+/**
+ * @tc.name  : Test GetToneHapticsSettings API
+ * @tc.number: Media_SoundManager_GetToneHapticsSettings_005
+ * @tc.desc  : Test GetToneHapticsSettings interface. Returns vibration setting of the notification.
+ */
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetToneHapticsSettings_005, TestSize.Level2)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
+
+    ToneHapticsSettings settings;
+    int32_t result = systemSoundManager_->GetToneHapticsSettings(context_, HAPTICS_SYSTEM_TONE_TYPE_NOTIFICATION,
+        settings);
+
+    std::vector<std::shared_ptr<ToneHapticsAttrs>> toneHapticsAttrsArray;
+    result = systemSoundManager_->GetToneHapticsList(context_, false, toneHapticsAttrsArray);
+    if (result == 0 && toneHapticsAttrsArray.size() > 0) {
+        settings.hapticsUri = toneHapticsAttrsArray[0]->GetUri();
+        settings.mode = ToneHapticsMode::NON_SYNC;
+        result = systemSoundManager_->SetToneHapticsSettings(context_, HAPTICS_SYSTEM_TONE_TYPE_NOTIFICATION, settings);
+        EXPECT_EQ(result, 0);
+        result = systemSoundManager_->GetToneHapticsSettings(context_, HAPTICS_SYSTEM_TONE_TYPE_NOTIFICATION, settings);
+        EXPECT_EQ(result, 0);
+
+        auto ringtoneAttrsArray_ = systemSoundManager_->GetSystemToneAttrList(context_, SYSTEM_TONE_TYPE_NOTIFICATION);
+        EXPECT_GT(ringtoneAttrsArray_.size(), 1);
+        std::string oldToneUri = systemSoundManager_->GetSystemToneUri(context_, SYSTEM_TONE_TYPE_NOTIFICATION);
+        EXPECT_EQ(oldToneUri.empty(), false);
+        int32_t index = oldToneUri != ringtoneAttrsArray_[0]->GetUri() ? 0 : 1;
+        std::string newToneUri = ringtoneAttrsArray_[index]->GetUri();
+        result = systemSoundManager_->SetSystemToneUri(context_, newToneUri, SYSTEM_TONE_TYPE_NOTIFICATION);
+        EXPECT_EQ(result, 0);
+        result = systemSoundManager_->GetToneHapticsSettings(context_, HAPTICS_SYSTEM_TONE_TYPE_NOTIFICATION, settings);
+        EXPECT_EQ(result, 0);
+    }
+    EXPECT_NE(systemSoundManager_, nullptr);
+}
+
+/**
+ * @tc.name  : Test SetToneHapticsSettings API
+ * @tc.number: Media_SoundManager_SetToneHapticsSettings_001
+ * @tc.desc  : Test SetToneHapticsSettings interface. Set notification ring vibration.
+ */
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_SetToneHapticsSettings_001, TestSize.Level2)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
+
+    std::vector<std::shared_ptr<ToneHapticsAttrs>> toneHapticsAttrsArray;
+    int32_t result = systemSoundManager_->GetToneHapticsList(context_, false, toneHapticsAttrsArray);
+    if (result == 0 && toneHapticsAttrsArray.size() > 0) {
+        ToneHapticsSettings srcSetting;
+        srcSetting.hapticsUri = toneHapticsAttrsArray[0]->GetUri();
+        srcSetting.mode = ToneHapticsMode::NON_SYNC;
+        result = systemSoundManager_->SetToneHapticsSettings(context_,
+            ToneHapticsType::HAPTICS_SYSTEM_TONE_TYPE_NOTIFICATION, srcSetting);
+        EXPECT_EQ(result, 0);
+
+        ToneHapticsSettings dstSetting;
+        result = systemSoundManager_->GetToneHapticsSettings(context_,
+            ToneHapticsType::HAPTICS_SYSTEM_TONE_TYPE_NOTIFICATION, dstSetting);
+        EXPECT_EQ(result, 0);
+        EXPECT_EQ(srcSetting.hapticsUri, dstSetting.hapticsUri);
+        EXPECT_EQ(srcSetting.mode, dstSetting.mode);
+    }
+    EXPECT_NE(systemSoundManager_, nullptr);
+}
+
+/**
+ * @tc.name  : Test GetToneHapticsList API
+ * @tc.number: Media_SoundManager_GetToneHapticsList_001
+ * @tc.desc  : Test GetToneHapticsList interface. Returns a list of sync tone vibrations.
+ */
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetToneHapticsList_001, TestSize.Level2)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
+
+    std::vector<std::shared_ptr<ToneHapticsAttrs>> toneHapticsAttrsArray;
+    systemSoundManager_->GetToneHapticsList(context_, false, toneHapticsAttrsArray);
+    EXPECT_NE(systemSoundManager_, nullptr);
+}
+
+/**
+ * @tc.name  : Test GetToneHapticsList API
+ * @tc.number: Media_SoundManager_GetToneHapticsList_002
+ * @tc.desc  : Test GetToneHapticsList interface. Returns a list of non sync tone vibrations.
+ */
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetToneHapticsList_002, TestSize.Level2)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
+
+    std::vector<std::shared_ptr<ToneHapticsAttrs>> toneHapticsAttrsArray;
+    systemSoundManager_->GetToneHapticsList(context_, false, toneHapticsAttrsArray);
+    EXPECT_NE(systemSoundManager_, nullptr);
+}
+
+/**
+ * @tc.name  : Test OpenToneHaptics API
+ * @tc.number: Media_SoundManager_OpenToneHaptics_001
+ * @tc.desc  : Test OpenToneHaptics interface. Returns handle of the tone haptics.
+ */
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_OpenToneHaptics_001, TestSize.Level2)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
+    int32_t fd = systemSoundManager_->OpenToneHaptics(context_, "test");
+    EXPECT_LT(fd, 0);
+
+    std::vector<std::shared_ptr<ToneHapticsAttrs>> toneHapticsAttrsArray;
+    int32_t result = systemSoundManager_->GetToneHapticsList(context_, true, toneHapticsAttrsArray);
+    if (result == 0 && toneHapticsAttrsArray.size() > 0) {
+        std::string uri = toneHapticsAttrsArray[0]->GetUri();
+        fd = systemSoundManager_->OpenToneHaptics(context_, uri);
+        EXPECT_GT(fd, 0);
+    }
+    EXPECT_NE(systemSoundManager_, nullptr);
+}
+
+/**
+ * @tc.name  : Test GetHapticsUriByStyle API
+ * @tc.number: Media_SoundManager_GetHapticsUriByStyle_001
+ * @tc.desc  : Test GetHapticsUriByStyle interface. Returns haptics of the specified style.
+ */
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetHapticsUriByStyle_001, TestSize.Level2)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
+        std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    EXPECT_NE(systemSoundManagerImpl_, nullptr);
+
+    std::string hapticsUri = systemSoundManagerImpl_->GetHapticsUriByStyle("test", HapticsStyle::HAPTICS_STYLE_GENTLE);
+    EXPECT_EQ(hapticsUri.empty(), true);
+
+    std::vector<std::shared_ptr<ToneHapticsAttrs>> toneHapticsAttrsArray;
+    int32_t result = systemSoundManagerImpl_->GetToneHapticsList(context_, false, toneHapticsAttrsArray);
+    if (result == 0 && toneHapticsAttrsArray.size() > 0) {
+        hapticsUri = systemSoundManagerImpl_->GetHapticsUriByStyle(toneHapticsAttrsArray[0]->GetUri(),
+            HapticsStyle::HAPTICS_STYLE_GENTLE);
+        EXPECT_EQ(hapticsUri.empty(), false);
+    }
+    EXPECT_NE(systemSoundManager_, nullptr);
+}
 } // namespace Media
 } // namespace OHOS
