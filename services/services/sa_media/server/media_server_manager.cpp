@@ -153,7 +153,10 @@ MediaServerManager::~MediaServerManager()
     dumperTbl_.clear();
     recorderStubMap_.clear();
     playerStubMap_.clear();
-    playerStubPtrMap_.clear();
+    {
+        std::lock_guard<std::mutex> lock(playerPtrMapMutex_);
+        playerStubPtrMap_.clear();
+    }
     avMetadataHelperStubMap_.clear();
     avCodecListStubMap_.clear();
     avCodecStubMap_.clear();
@@ -223,7 +226,10 @@ sptr<IRemoteObject> MediaServerManager::CreatePlayerStubObject()
 
     pid_t pid = IPCSkeleton::GetCallingPid();
     playerStubMap_[object] = pid;
-    playerStubPtrMap_[playerStub] = pid;
+    {
+        std::lock_guard<std::mutex> lock(playerPtrMapMutex_);
+        playerStubPtrMap_[playerStub] = pid;
+    }
 
     Dumper dumper;
     dumper.entry_ = [player = playerStub](int32_t fd) -> int32_t {
@@ -456,6 +462,7 @@ void MediaServerManager::DestroyAVPlayerStub(StubType type, sptr<IRemoteObject> 
                     break;
                 }
             }
+            std::lock_guard<std::mutex> lock(playerPtrMapMutex_);
             for (auto it = playerStubPtrMap_.begin(); it != playerStubPtrMap_.end(); it++) {
                 sptr<PlayerServiceStub> playerStub = it->first;
                 if (playerStub->AsObject() == object) {
@@ -704,11 +711,14 @@ void MediaServerManager::DestroyAVPlayerStubForPid(pid_t pid)
             itPlayer++;
         }
     }
-    for (auto itPlayer = playerStubPtrMap_.begin(); itPlayer != playerStubPtrMap_.end();) {
-        if (itPlayer->second == pid) {
-            itPlayer = playerStubPtrMap_.erase(itPlayer);
-        } else {
-            itPlayer++;
+    {
+        std::lock_guard<std::mutex> lock(playerPtrMapMutex_);
+        for (auto itPlayer = playerStubPtrMap_.begin(); itPlayer != playerStubPtrMap_.end();) {
+            if (itPlayer->second == pid) {
+                itPlayer = playerStubPtrMap_.erase(itPlayer);
+            } else {
+                itPlayer++;
+            }
         }
     }
     MEDIA_LOGD("player stub services(%{public}zu).", playerStubMap_.size());
@@ -818,10 +828,14 @@ void MediaServerManager::AsyncExecutor::HandleAsyncExecution()
 
 void MediaServerManager::HandlePlayerActive(const std::vector<int32_t> &pidList, const int32_t uid)
 {
+    std::lock_guard<std::mutex> lock(playerPtrMapMutex_);
     MEDIA_LOGI("player stub HandlePlayerActive begin services(%{public}zu) pidlist(%{public}zu) uid(%{public}d).",
         playerStubPtrMap_.size(), pidList.size(), uid);
-    for (auto itPlayer = playerStubPtrMap_.begin(); itPlayer != playerStubPtrMap_.end();) {
+    for (auto itPlayer = playerStubPtrMap_.begin(); itPlayer != playerStubPtrMap_.end(); itPlayer++) {
         sptr<PlayerServiceStub> playerStub = itPlayer->first;
+        if (playerStub == nullptr) {
+            continue;
+        }
         int32_t playerUid = playerStub->GetUid();
         bool isRunning = playerStub->IsPlayerRunning();
         MEDIA_LOGI("player stub HandlePlayerActive uid(%{public}d) isRunning(%{public}d).", uid, isRunning);
@@ -829,17 +843,20 @@ void MediaServerManager::HandlePlayerActive(const std::vector<int32_t> &pidList,
             MEDIA_LOGI("player stub HandlePlayerActive uid(%{public}d).", uid);
             playerStub->HandleActive();
         }
-        itPlayer++;
     }
     MEDIA_LOGI("player stub HandlePlayerActive end services(%{public}zu).", playerStubPtrMap_.size());
 }
 
 void MediaServerManager::HandlePlayerFrozen(const std::vector<int32_t> &pidList, const int32_t uid)
 {
+    std::lock_guard<std::mutex> lock(playerPtrMapMutex_);
     MEDIA_LOGI("player stub HandlePlayerFrozen begin services(%{public}zu) pidlist(%{public}zu) uid(%{public}d).",
         playerStubPtrMap_.size(), pidList.size(), uid);
-    for (auto itPlayer = playerStubPtrMap_.begin(); itPlayer != playerStubPtrMap_.end();) {
+    for (auto itPlayer = playerStubPtrMap_.begin(); itPlayer != playerStubPtrMap_.end(); itPlayer++) {
         sptr<PlayerServiceStub> playerStub = itPlayer->first;
+        if (playerStub == nullptr) {
+            continue;
+        }
         int32_t playerUid = playerStub->GetUid();
         bool isRunning = playerStub->IsPlayerRunning();
         MEDIA_LOGI("player stub HandlePlayerFrozen uid(%{public}d) isRunning(%{public}d).", uid, isRunning);
@@ -847,7 +864,6 @@ void MediaServerManager::HandlePlayerFrozen(const std::vector<int32_t> &pidList,
             MEDIA_LOGI("player stub HandlePlayerFrozen uid(%{public}d).", uid);
             playerStub->HandleFrozen();
         }
-        itPlayer++;
     }
     MEDIA_LOGI("player stub HandlePlayerFrozen end services(%{public}zu).", playerStubPtrMap_.size());
 }
