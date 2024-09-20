@@ -1565,11 +1565,9 @@ int32_t HiPlayerImpl::GetVideoTrackInfo(std::vector<Format>& videoTrack)
             trackInfo->GetData(Tag::VIDEO_FRAME_RATE, frameRate);
             playStatisticalInfo_.videoFrameRate = static_cast<float>(frameRate);
             videoTrackInfo.PutDoubleValue("frame_rate", frameRate * FRAME_RATE_UNIT_MULTIPLE);
-            int32_t height;
-            trackInfo->GetData(Tag::VIDEO_HEIGHT, height);
+            int32_t height = GetSarVideoHeight(trackInfo);
             videoTrackInfo.PutIntValue("height", height);
-            int32_t width;
-            trackInfo->GetData(Tag::VIDEO_WIDTH, width);
+            int32_t width = GetSarVideoWidth(trackInfo);
             playStatisticalInfo_.videoResolution = std::to_string(width) + "x" + std::to_string(height);
             videoTrackInfo.PutIntValue("width", width);
             Plugins::VideoRotation rotation;
@@ -1589,6 +1587,30 @@ int32_t HiPlayerImpl::GetVideoTrackInfo(std::vector<Format>& videoTrack)
         }
     }
     return TransStatus(Status::OK);
+}
+
+int32_t HiPlayerImpl::GetSarVideoWidth(std::shared_ptr<Meta> trackInfo)
+{
+    int32_t width;
+    trackInfo->GetData(Tag::VIDEO_WIDTH, width);
+    double videoSar;
+    bool ret = trackInfo->GetData(Tag::VIDEO_SAR, videoSar);
+    if (ret && videoSar < 1) {
+        width = static_cast<int32_t>(width * videoSar);
+    }
+    return width;
+}
+
+int32_t HiPlayerImpl::GetSarVideoHeight(std::shared_ptr<Meta> trackInfo)
+{
+    int32_t height;
+    trackInfo->GetData(Tag::VIDEO_HEIGHT, height);
+    double videoSar;
+    bool ret = trackInfo->GetData(Tag::VIDEO_SAR, videoSar);
+    if (ret && videoSar > 1) {
+        height = static_cast<int32_t>(height / videoSar);
+    }
+    return height;
 }
 
 int32_t HiPlayerImpl::GetPlaybackInfo(Format& playbackInfo)
