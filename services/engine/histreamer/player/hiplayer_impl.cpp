@@ -1591,9 +1591,9 @@ int32_t HiPlayerImpl::GetVideoTrackInfo(std::vector<Format>& videoTrack)
 
 int32_t HiPlayerImpl::GetSarVideoWidth(std::shared_ptr<Meta> trackInfo)
 {
-    int32_t width = 0;
+    int32_t width;
     trackInfo->GetData(Tag::VIDEO_WIDTH, width);
-    double videoSar = 0.0;
+    double videoSar;
     bool ret = trackInfo->GetData(Tag::VIDEO_SAR, videoSar);
     if (ret && videoSar < 1) {
         width = static_cast<int32_t>(width * videoSar);
@@ -1603,9 +1603,9 @@ int32_t HiPlayerImpl::GetSarVideoWidth(std::shared_ptr<Meta> trackInfo)
 
 int32_t HiPlayerImpl::GetSarVideoHeight(std::shared_ptr<Meta> trackInfo)
 {
-    int32_t height = 0;
+    int32_t height;
     trackInfo->GetData(Tag::VIDEO_HEIGHT, height);
-    double videoSar = 0.0;
+    double videoSar;
     bool ret = trackInfo->GetData(Tag::VIDEO_SAR, videoSar);
     if (ret && videoSar > 1) {
         height = static_cast<int32_t>(height / videoSar);
