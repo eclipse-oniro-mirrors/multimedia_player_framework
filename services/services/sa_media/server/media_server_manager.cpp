@@ -115,6 +115,12 @@ int32_t MediaServerManager::Dump(int32_t fd, const std::vector<std::u16string> &
     ret = WriteInfo(fd, dumpString, dumperTbl_[StubType::AVMETADATAHELPER], false);
     CHECK_AND_RETURN_RET_LOG(ret == NO_ERROR,
         OHOS::INVALID_OPERATION, "Failed to write AVMetaServer information");
+    
+    dumpString += "------------------TranscoderServer------------------\n";
+    ret = WriteInfo(fd, dumpString, dumperTbl_[StubType::TRANSCODER],
+        argSets.find(u"transcoder") != argSets.end());
+    CHECK_AND_RETURN_RET_LOG(ret == NO_ERROR,
+        OHOS::INVALID_OPERATION, "Failed to write Transcoder information");
 
     dumpString += "------------------ScreenCaptureServer------------------\n";
     ret = WriteInfo(fd, dumpString, dumperTbl_[StubType::SCREEN_CAPTURE],

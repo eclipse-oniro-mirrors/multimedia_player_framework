@@ -41,6 +41,7 @@ class HiTransCoderImpl : public ITransCoderEngine {
 public:
     HiTransCoderImpl(int32_t appUid, int32_t appPid, uint32_t appTokenId, uint64_t appFullTokenId);
     ~HiTransCoderImpl();
+    void SetInstanceId(uint64_t instanceId);
     int32_t Init();
     int32_t SetInputFile(const std::string &url);
     int32_t SetOutputFile(const int32_t fd);
@@ -59,6 +60,9 @@ public:
     int32_t GetDuration(int32_t& durationMs);
  
 private:
+    void AppendTranscoderMediaInfo();
+    void AppendSrcMediaInfo(std::shared_ptr<Meta> meta);
+    void AppendDstMediaInfo(std::shared_ptr<Meta> meta);
     int32_t GetRealPath(const std::string &url, std::string &realUrlPath) const;
     Status ConfigureVideoEncoderFormat(const TransCoderParam &transCoderParam);
     Status LinkAudioDecoderFilter(const std::shared_ptr<Pipeline::Filter>& preFilter, Pipeline::StreamType type);
@@ -80,6 +84,8 @@ private:
         const std::shared_ptr<Meta> &innerMeta, std::shared_ptr<Meta> &outputMeta, const std::string &metaKey);
     void ConfigureMetaDataToTrackFormat(const std::shared_ptr<Meta> &globalInfo,
         const std::vector<std::shared_ptr<Meta>> &trackInfos);
+    int64_t GetCurrentMillisecond();
+    void CollectionErrorInfo(int32_t errCode, const std::string& errMsg);
  
     int32_t appUid_{0};
     int32_t appPid_{0};
@@ -104,6 +110,8 @@ private:
     std::shared_ptr<Meta> audioEncFormat_ = std::make_shared<Meta>();
     std::shared_ptr<Meta> videoEncFormat_ = std::make_shared<Meta>();
     std::shared_ptr<Meta> muxerFormat_ = std::make_shared<Meta>();
+    std::shared_ptr<Meta> srcVideoFormat_ = std::make_shared<Meta>();
+    std::shared_ptr<Meta> srcAudioFormat_ = std::make_shared<Meta>();
  
     std::weak_ptr<ITransCoderEngineObs> obs_{};
     std::shared_ptr<HiTransCoderCallbackLooper> callbackLooper_;
@@ -117,6 +125,12 @@ private:
     bool isExistVideoTrack_ = false;
     bool isNeedVideoResizeFilter_ = false;
     std::atomic<int32_t> durationMs_{-1};
+
+    uint64_t instanceId_ = 0;
+    int64_t startTime_ = 0;
+    int64_t transcoderTotalDuration_ = 0;
+    int32_t errCode_ = 0;
+    std::string errMsg_ = "success";
 };
 } // namespace MEDIA
 } // namespace OHOS

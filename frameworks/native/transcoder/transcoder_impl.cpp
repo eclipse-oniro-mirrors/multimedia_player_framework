@@ -37,6 +37,7 @@ std::shared_ptr<TransCoder> TransCoderFactory::CreateTransCoder()
 
 int32_t TransCoderImpl::Init()
 {
+    HiviewDFX::HiTraceChain::SetId(traceId_);
     transCoderService_ = MediaServiceFactory::GetInstance().CreateTransCoderService();
     CHECK_AND_RETURN_RET_LOG(transCoderService_ != nullptr, MSERR_NO_MEMORY, "failed to create transcoder service");
     return MSERR_OK;
@@ -45,6 +46,7 @@ int32_t TransCoderImpl::Init()
 TransCoderImpl::TransCoderImpl()
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    traceId_ = HiviewDFX::HiTraceChain::Begin("TransCoderImpl", HITRACE_FLAG_DEFAULT);
 }
 
 TransCoderImpl::~TransCoderImpl()
@@ -52,6 +54,7 @@ TransCoderImpl::~TransCoderImpl()
     CHECK_AND_RETURN_LOG(transCoderService_ != nullptr, "0x%{public}06" PRIXPTR " Inst destroy", FAKE_POINTER(this));
     (void)MediaServiceFactory::GetInstance().DestroyTransCoderService(transCoderService_);
     transCoderService_ = nullptr;
+    HiviewDFX::HiTraceChain::End(traceId_);
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
