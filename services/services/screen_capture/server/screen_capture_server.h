@@ -255,7 +255,7 @@ class ScreenCaptureServer : public std::enable_shared_from_this<ScreenCaptureSer
         public IScreenCaptureService, public NoCopyable {
 public:
     static std::shared_ptr<IScreenCaptureService> Create();
-    static int32_t ReportAVScreenCaptureUserChoice(int32_t sessionId, const std::string &choice);
+    static int32_t ReportAVScreenCaptureUserChoice(int32_t sessionId, const std::string &content);
     static int32_t GetRunningScreenCaptureInstancePid(int32_t &pid);
     static int32_t GetSpecificServer(int32_t sessionId, std::shared_ptr<ScreenCaptureServer> &server);
     static void GetChoiceFromJson(Json::Value &root, const std::string &content, std::string key, std::string &value);
