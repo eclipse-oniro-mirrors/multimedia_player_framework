@@ -29,6 +29,7 @@ declare_args() {
   player_framework_support_screen_capture = true
   player_framework_support_screen_capture_stopbycall = true
   player_framework_support_screen_capture_controller = false
+  player_framework_feature_pc_select_window = false
   player_framework_support_jssoundpool = true
   player_framework_support_mediasource = true
   player_framework_support_auto_create_file = false
