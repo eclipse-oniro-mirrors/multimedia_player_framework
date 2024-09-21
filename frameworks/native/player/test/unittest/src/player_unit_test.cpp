@@ -3660,6 +3660,25 @@ HWTEST_F(PlayerUnitTest, Player_SeekContinuous_006, TestSize.Level0)
 }
 
 /**
+ * @tc.name  : Test SetPlaybackSpeed API
+ * @tc.number: Player_SetPlaybackSpeed_006
+ * @tc.desc  : Test Player SetPlaybackSpeed SPEED_FORWARD_3_00_X
+ */
+HWTEST_F(PlayerUnitTest, Player_SetPlaybackSpeed_006, TestSize.Level0)
+{
+    PlaybackRateMode mode;
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->SetPlaybackSpeed(SPEED_FORWARD_3_00_X));
+    EXPECT_EQ(MSERR_OK, player_->GetPlaybackSpeed(mode));
+    EXPECT_EQ(SPEED_FORWARD_3_00_X, mode);
+}
+
+/**
  * @tc.name  : Test SetMaxAmplitudeCbStatus API
  * @tc.number: Player_SetMaxAmplitudeCbStatus_001
  * @tc.desc  : Test Player SetMaxAmplitudeCbStatus status on before prepare

@@ -108,6 +108,7 @@ static const std::vector<struct JsEnumInt> g_playbackSpeed = {
     { "SPEED_FORWARD_2_00_X", PlaybackRateMode::SPEED_FORWARD_2_00_X },
     { "SPEED_FORWARD_0_50_X", PlaybackRateMode::SPEED_FORWARD_0_50_X },
     { "SPEED_FORWARD_1_50_X", PlaybackRateMode::SPEED_FORWARD_1_50_X },
+    { "SPEED_FORWARD_3_00_X", PlaybackRateMode::SPEED_FORWARD_3_00_X },
     { "SPEED_FORWARD_0_25_X", PlaybackRateMode::SPEED_FORWARD_0_25_X },
     { "SPEED_FORWARD_0_125_X", PlaybackRateMode::SPEED_FORWARD_0_125_X },
 };
