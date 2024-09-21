@@ -72,6 +72,7 @@ public:
     int32_t DestroyStub() override;
     int32_t SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionService> &keySessionProxy,
         bool svp) override;
+    int32_t SetMaxAmplitudeCbStatus(bool status) override;
 private:
     int32_t SendRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option);
     static inline BrokerDelegator<PlayerServiceProxy> delegator_;

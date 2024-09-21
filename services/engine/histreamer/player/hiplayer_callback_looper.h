@@ -52,12 +52,15 @@ public:
     void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody) override;
 
     void DoReportCompletedTime();
+    void startCollectMaxAmplitude(int64_t updateIntervalMs);
+    void StopCollectMaxAmplitude();
 
 private:
 
     void DoReportMediaProgress();
     void DoReportInfo(const Any& info);
     void DoReportError(const Any& error);
+    void DoCollectAmplitude();
 
     struct Event {
         Event(int32_t inWhat, int64_t inWhenMs, Any inAny): what(inWhat), whenMs(inWhenMs),
@@ -76,8 +79,11 @@ private:
     IPlayerEngine* playerEngine_ {};
     std::weak_ptr<IPlayerEngineObs> obs_ {};
     bool reportMediaProgress_ {false};
+    bool collectMaxAmplitude_ {false};
     bool isDropMediaProgress_ {false};
     int64_t reportProgressIntervalMs_ {100}; // default interval is 100 ms
+    int64_t collectMaxAmplitudeIntervalMs_ {100}; // default interval is 100 ms
+    std::vector<float> vMaxAmplitudeArray_ {};
 };
 }  // namespace Media
 }  // namespace OHOS

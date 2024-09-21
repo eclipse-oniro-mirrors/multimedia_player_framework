@@ -159,6 +159,8 @@ public:
     int32_t ResumeDemuxer() override;
     int32_t SetPlaybackStrategy(AVPlayStrategy playbackStrategy) override;
     int32_t SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted) override;
+    float GetMaxAmplitude() override;
+    int32_t SetMaxAmplitudeCbStatus(bool status) override;
 
 private:
     enum HiplayerSvpMode : int32_t {
@@ -343,6 +345,7 @@ private:
     std::shared_ptr<DraggingPlayerAgent> draggingPlayerAgent_ {nullptr};
     int64_t lastSeekContinousPos_ {-1};
     std::atomic<bool> needUpdateSubtitle_ {true};
+    bool maxAmplitudeCbStatus_ {false};
     OHOS::Media::Mutex handleCompleteMutex_{};
 };
 } // namespace Media

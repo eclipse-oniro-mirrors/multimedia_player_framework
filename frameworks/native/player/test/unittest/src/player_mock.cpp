@@ -761,5 +761,11 @@ int32_t PlayerMock::SeekContinuous(int32_t mseconds)
     std::unique_lock<std::mutex> lock(mutex_);
     return player_->Seek(mseconds, PlayerSeekMode::SEEK_CONTINOUS);
 }
+
+int32_t PlayerMock::SetMaxAmplitudeCbStatus(bool status)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
+    return player_->SetMaxAmplitudeCbStatus(status);
+}
 } // namespace Media
 } // namespace OHOS

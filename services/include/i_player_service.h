@@ -514,6 +514,20 @@ public:
         (void)isMuted;
         return 0;
     }
+    /**
+     * @brief Set get max ampliutude callback status.
+     *
+     * @param status callback status.
+     * @return Returns {@link MSERR_OK} if the callback status is set; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t SetMaxAmplitudeCbStatus(bool status)
+    {
+        (void)status;
+        return 0;
+    }
 };
 } // namespace Media
 } // namespace OHOS

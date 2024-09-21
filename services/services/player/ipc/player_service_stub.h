@@ -87,6 +87,7 @@ public:
     // MonitorServerObject override
     int32_t DoIpcAbnormality() override;
     int32_t DoIpcRecovery(bool fromMonitor) override;
+    int32_t SetMaxAmplitudeCbStatus(bool status) override;
 protected:
     PlayerServiceStub();
     virtual int32_t Init();
@@ -144,6 +145,7 @@ private:
     int32_t SetMediaSource(MessageParcel &data, MessageParcel &reply);
     int32_t SetPlaybackStrategy(MessageParcel &data, MessageParcel &reply);
     int32_t SetMediaMuted(MessageParcel &data, MessageParcel &reply);
+    int32_t SetMaxAmplitudeCbStatus(MessageParcel &data, MessageParcel &reply);
 
     std::map<uint32_t, std::pair<std::string, PlayerStubFunc>> playerFuncs_;
     void FillPlayerFuncPart1();
