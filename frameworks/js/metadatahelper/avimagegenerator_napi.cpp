@@ -157,13 +157,9 @@ napi_value AVImageGeneratorNapi::JsCreateAVImageGenerator(napi_env env, napi_cal
     return result;
 }
 
-int32_t AVImageGeneratorNapi::GetFetchFrameArgs(
-    std::unique_ptr<AVImageGeneratorAsyncContext> &asyncCtx, napi_env env, napi_value param[])
+int32_t AVImageGeneratorNapi::GetFetchFrameArgs(std::unique_ptr<AVImageGeneratorAsyncContext> &asyncCtx, napi_env env,
+    napi_value timeUs, napi_value option, napi_value params)
 {
-    napi_value timeUs = param[ARG_ZERO];
-    napi_value option = param[ARG_ONE];
-    napi_value params = param[ARG_TWO];
-
     napi_status ret = napi_get_value_int64(env, timeUs, &asyncCtx->napi->timeUs_);
     if (ret != napi_ok) {
         asyncCtx->SignError(MSERR_INVALID_VAL, "failed to get timeUs");
@@ -222,7 +218,8 @@ napi_value AVImageGeneratorNapi::JsFetchFrameAtTime(napi_env env, napi_callback_
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
     napi_valuetype valueType = napi_undefined;
     bool notParamValid = argCount < argCallback || napi_typeof(env, args[argPixelParam], &valueType) != napi_ok ||
-                        valueType != napi_object || asyncCtx->napi->GetFetchFrameArgs(asyncCtx, env, args) != MSERR_OK;
+        valueType != napi_object ||
+        asyncCtx->napi->GetFetchFrameArgs(asyncCtx, env, args[ARG_ZERO], args[ARG_ONE], args[ARG_TWO]) != MSERR_OK;
     if (notParamValid) {
         asyncCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "JsFetchFrameAtTime");
     }
