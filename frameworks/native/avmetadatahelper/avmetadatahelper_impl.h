@@ -71,6 +71,7 @@ private:
     bool SetSbStaticMetadata(sptr<SurfaceBuffer> &buffer, const std::vector<uint8_t> &staticMetadata);
     bool SetSbDynamicMetadata(sptr<SurfaceBuffer> &buffer, const std::vector<uint8_t> &dynamicMetadata);
     int32_t CopySurfaceBufferPixels(sptr<SurfaceBuffer> &srcSurfaceBuffer, sptr<SurfaceBuffer> &dstSurfaceBuffer);
+    static void ScalePixelMap(std::shared_ptr<PixelMap> &pixelMap, PixelMapInfo &info, const PixelMapParams &param);
 };
 } // namespace Media
 } // namespace OHOS
