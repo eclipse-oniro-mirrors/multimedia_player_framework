@@ -125,7 +125,7 @@ Status AVThumbnailGenerator::InitDecoder()
 
 std::shared_ptr<Meta> AVThumbnailGenerator::GetVideoTrackInfo()
 {
-    CHECK_AND_RETURN_RET_LOG(trackInfo_ == nullptr, trackInfo_, "trackInfo_ is already");
+    CHECK_AND_RETURN_RET(trackInfo_ == nullptr, trackInfo_);
     CHECK_AND_RETURN_RET_LOG(mediaDemuxer_ != nullptr, nullptr, "GetTargetTrackInfo demuxer is nullptr");
     std::vector<std::shared_ptr<Meta>> trackInfos = mediaDemuxer_->GetStreamMetaInfo();
     size_t trackCount = trackInfos.size();
