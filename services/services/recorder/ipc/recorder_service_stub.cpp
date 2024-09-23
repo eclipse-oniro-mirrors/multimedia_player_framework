@@ -202,7 +202,7 @@ int RecorderServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mes
         permissionResult = Security::AccessToken::PERMISSION_GRANTED;
     }
     CHECK_AND_RETURN_RET_LOG(permissionResult == Security::AccessToken::PERMISSION_GRANTED,
-        MSERR_EXT_API9_PERMISSION_DENIED, "user do not have the correct permission");
+        MSERR_EXT_API9_NO_PERMISSION, "user do not have the correct permission");
 
     auto itFunc = recFuncs_.find(code);
     if (itFunc != recFuncs_.end()) {
