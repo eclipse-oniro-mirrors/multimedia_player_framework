@@ -25,7 +25,7 @@
 #include "xpower_event_js.h"
 #endif
 #include "av_common.h"
-#if !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
+#if !defined(CROSS_PLATFORM)
 #include "ipc_skeleton.h"
 #include "tokenid_kit.h"
 #endif
