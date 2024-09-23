@@ -485,5 +485,132 @@ HWTEST_F(HiplayerImplUnitTest, Play_004, TestSize.Level0)
     EXPECT_EQ(hiplayer_->isStreaming_, false);
 }
 
+HWTEST_F(HiplayerImplUnitTest, GetCurrentTrack_001, TestSize.Level0)
+{
+    hiplayer_->demuxer_ = nullptr;
+    hiplayer_->currentAudioTrackId_ = -1;
+    hiplayer_->currentSubtitleTrackId_ = -1;
+    hiplayer_->currentVideoTrackId_ = -1;
+    EXPECT_EQ(hiplayer_->IsSubtitleMime("application/x-subrip"), true);
+    EXPECT_EQ(hiplayer_->IsSubtitleMime("text/vtt"), true);
+
+    int32_t index;
+    EXPECT_EQ(hiplayer_->GetCurrentTrack(OHOS::Media::MediaType::MEDIA_TYPE_AUD, index), MSERR_UNKNOWN);
+    EXPECT_EQ(hiplayer_->GetCurrentTrack(OHOS::Media::MediaType::MEDIA_TYPE_VID, index), MSERR_UNKNOWN);
+    EXPECT_EQ(hiplayer_->GetCurrentTrack(OHOS::Media::MediaType::MEDIA_TYPE_SUBTITLE, index), MSERR_UNKNOWN);
+
+    hiplayer_->currentAudioTrackId_ = 1;
+    hiplayer_->currentSubtitleTrackId_ = 2;
+    hiplayer_->currentVideoTrackId_ = 3;
+    EXPECT_EQ(hiplayer_->GetCurrentTrack(OHOS::Media::MediaType::MEDIA_TYPE_AUD, index), MSERR_OK);
+    EXPECT_EQ(hiplayer_->GetCurrentTrack(OHOS::Media::MediaType::MEDIA_TYPE_VID, index), MSERR_OK);
+    EXPECT_EQ(hiplayer_->GetCurrentTrack(OHOS::Media::MediaType::MEDIA_TYPE_SUBTITLE, index), MSERR_OK);
+}
+
+HWTEST_F(HiplayerImplUnitTest, SelectTrack_001, TestSize.Level0)
+{
+    std::string name = "builtin.player.demuxer";
+    std::shared_ptr<DemuxerFilterMock> demuxerMock =
+        std::make_shared<DemuxerFilterMock>(name, FilterType::FILTERTYPE_DEMUXER);
+
+    std::shared_ptr<Meta> meta1 = std::make_shared<Meta>();
+    meta1->SetData(Tag::MIME_TYPE, "audio/xxx");
+    std::shared_ptr<Meta> meta2 = std::make_shared<Meta>();
+    meta2->SetData(Tag::MIME_TYPE, "video/xxx");
+    std::shared_ptr<Meta> meta3 = std::make_shared<Meta>();
+    meta3->SetData(Tag::MIME_TYPE, "text/vtt");
+    std::shared_ptr<Meta> meta4 = std::make_shared<Meta>();
+
+    demuxerMock->demuxer_->mediaMetaData_.trackMetas.push_back(meta1);
+    demuxerMock->demuxer_->mediaMetaData_.trackMetas.push_back(meta2);
+    demuxerMock->demuxer_->mediaMetaData_.trackMetas.push_back(meta3);
+    demuxerMock->demuxer_->mediaMetaData_.trackMetas.push_back(meta4);
+
+    hiplayer_->demuxer_ = demuxerMock;
+
+    EXPECT_EQ(hiplayer_->SelectTrack(3, SWITCH_SMOOTH), MSERR_INVALID_VAL);
+    hiplayer_->currentAudioTrackId_ = -1;
+    hiplayer_->currentSubtitleTrackId_ = -1;
+    hiplayer_->currentVideoTrackId_ = -1;
+    EXPECT_EQ(hiplayer_->SelectTrack(0, SWITCH_SMOOTH), MSERR_UNKNOWN);
+    EXPECT_EQ(hiplayer_->SelectTrack(1, SWITCH_SMOOTH), MSERR_UNKNOWN);
+    EXPECT_EQ(hiplayer_->SelectTrack(2, SWITCH_SMOOTH), MSERR_UNKNOWN);
+
+    hiplayer_->currentAudioTrackId_ = 101;
+    hiplayer_->currentSubtitleTrackId_ = 102;
+    hiplayer_->currentVideoTrackId_ = 103;
+    EXPECT_EQ(hiplayer_->SelectTrack(0, SWITCH_SMOOTH), MSERR_UNKNOWN);
+    EXPECT_EQ(hiplayer_->SelectTrack(1, SWITCH_SMOOTH), MSERR_UNKNOWN);
+    EXPECT_EQ(hiplayer_->SelectTrack(2, SWITCH_SMOOTH), MSERR_UNKNOWN);
+}
+
+HWTEST_F(HiplayerImplUnitTest, DeselectTrack_001, TestSize.Level0)
+{
+    std::string name = "builtin.player.demuxer";
+    std::shared_ptr<DemuxerFilterMock> demuxerMock =
+        std::make_shared<DemuxerFilterMock>(name, FilterType::FILTERTYPE_DEMUXER);
+
+    std::shared_ptr<Meta> meta1 = std::make_shared<Meta>();
+    meta1->SetData(Tag::MIME_TYPE, "audio/xxx");
+    std::shared_ptr<Meta> meta2 = std::make_shared<Meta>();
+    meta2->SetData(Tag::MIME_TYPE, "video/xxx");
+    std::shared_ptr<Meta> meta3 = std::make_shared<Meta>();
+    meta3->SetData(Tag::MIME_TYPE, "text/vtt");
+    std::shared_ptr<Meta> meta4 = std::make_shared<Meta>();
+
+    demuxerMock->demuxer_->mediaMetaData_.trackMetas.push_back(meta1);
+    demuxerMock->demuxer_->mediaMetaData_.trackMetas.push_back(meta2);
+    demuxerMock->demuxer_->mediaMetaData_.trackMetas.push_back(meta3);
+    demuxerMock->demuxer_->mediaMetaData_.trackMetas.push_back(meta4);
+
+    hiplayer_->demuxer_ = demuxerMock;
+
+    EXPECT_EQ(hiplayer_->DeselectTrack(3), MSERR_INVALID_VAL);
+    hiplayer_->currentAudioTrackId_ = 0;
+    hiplayer_->currentSubtitleTrackId_ = 2;
+    hiplayer_->currentVideoTrackId_ = 1;
+
+    hiplayer_->defaultAudioTrackId_ = 100;
+    hiplayer_->defaultSubtitleTrackId_ = 102;
+    hiplayer_->defaultVideoTrackId_ = 101;
+    EXPECT_EQ(hiplayer_->DeselectTrack(0), MSERR_INVALID_VAL);
+    EXPECT_EQ(hiplayer_->DeselectTrack(1), MSERR_INVALID_VAL);
+    EXPECT_EQ(hiplayer_->DeselectTrack(2), MSERR_OK);
+    EXPECT_EQ(hiplayer_->DeselectTrack(2), MSERR_OK);
+}
+
+HWTEST_F(HiplayerImplUnitTest, GetPlaybackInfo_001, TestSize.Level0)
+{
+    std::string name = "builtin.player.demuxer";
+    std::shared_ptr<DemuxerFilterMock> demuxerMock =
+        std::make_shared<DemuxerFilterMock>(name, FilterType::FILTERTYPE_DEMUXER);
+    hiplayer_->demuxer_ = demuxerMock;
+    hiplayer_->audioSink_ = nullptr;
+
+    hiplayer_->OnEvent({"hiplayer", EventType::EVENT_IS_LIVE_STREAM, false});
+    hiplayer_->OnEvent({"hiplayer", EventType::EVENT_READY, false});
+    hiplayer_->OnEvent({"hiplayer", EventType::BUFFERING_END, 2});
+    hiplayer_->OnEvent({"hiplayer", EventType::BUFFERING_START, 1});
+    hiplayer_->OnEvent({"hiplayer", EventType::EVENT_CACHED_DURATION, 100});
+    hiplayer_->OnEvent({"hiplayer", EventType::EVENT_BUFFER_PROGRESS, 100});
+    hiplayer_->OnEvent({"hiplayer", EventType::EVENT_AUDIO_SERVICE_DIED, 1});
+
+    Format playbackInfo;
+    EXPECT_EQ(hiplayer_->GetPlaybackInfo(playbackInfo), 0);
+    PlaybackRateMode mode;
+    EXPECT_EQ(hiplayer_->GetPlaybackSpeed(mode), MSERR_OK);
+    int32_t effectMode;
+    EXPECT_EQ(hiplayer_->GetAudioEffectMode(effectMode), MSERR_OK);
+}
+
+HWTEST_F(HiplayerImplUnitTest, InitAudioDefaultTrackIndex_001, TestSize.Level0)
+{
+    hiplayer_->demuxer_ = nullptr;
+    EXPECT_EQ(hiplayer_->InitAudioDefaultTrackIndex(), Status::ERROR_UNKNOWN);
+    EXPECT_EQ(hiplayer_->InitVideoDefaultTrackIndex(), Status::ERROR_UNKNOWN);
+    EXPECT_EQ(hiplayer_->InitSubtitleDefaultTrackIndex(), Status::ERROR_UNKNOWN);
+    EXPECT_EQ(hiplayer_->Prepare(), MSERR_OK);
+}
+
 } // namespace Media
 } // namespace OHOS
