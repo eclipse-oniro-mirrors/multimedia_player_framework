@@ -510,8 +510,8 @@ void SystemSoundManagerNapi::AsyncOpenToneHaptics(napi_env env, void *data)
     }
     int32_t result = context->objectInfo->sysSoundMgrClient_->OpenToneHaptics(context->abilityContext_,
         context->hapticsUri);
-    context->status = context->fd < 0;
     context->fd = result;
+    context->status = context->fd <= 0;
     if (result == OPERATION_ERROR) {
         context->errCode = NAPI_ERR_OPERATE_NOT_ALLOWED;
         context->errMessage = NAPI_ERR_OPERATE_NOT_ALLOWED_INFO;
