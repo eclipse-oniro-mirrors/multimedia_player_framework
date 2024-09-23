@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef SCREENCAPTURESKIPPRIVACYMODE_FUZZER
-#define SCREENCAPTURESKIPPRIVACYMODE_FUZZER
+#ifndef SCREENCAPTURESERVERSTARTCASE_FUZZER
+#define SCREENCAPTURESERVERSTARTCASE_FUZZER
 
 #include <fcntl.h>
 #include <securec.h>
@@ -25,18 +25,20 @@
 #include <cstdlib>
 #include "test_screen_capture.h"
 
-#define FUZZ_PROJECT_NAME "screencaptureskipprivacymode_fuzzer"
+#define FUZZ_PROJECT_NAME "screencaptureserverstartcase_fuzzer"
 
 namespace OHOS {
 namespace Media {
-class ScreenCaptureSkipPrivacyModeFuzzer : public TestScreenCapture {
+class ScreenCaptureServerStartCaseFuzzer : public TestScreenCapture {
 public:
-    ScreenCaptureSkipPrivacyModeFuzzer();
-    ~ScreenCaptureSkipPrivacyModeFuzzer();
-    bool FuzzScreenCaptureSkipPrivacyMode(uint8_t *data, size_t size);
+    ScreenCaptureServerStartCaseFuzzer();
+    ~ScreenCaptureServerStartCaseFuzzer();
+    void SetConfig(RecorderInfo &recorderInfo);
+    bool FuzzScreenCaptureServerStartCase(uint8_t *data, size_t size);
     std::shared_ptr<TestScreenCapture> screenCapture = nullptr;
+    AVScreenCaptureConfig config_;
 };
 } // namespace Media
-bool FuzzTestScreenCaptureSkipPrivacyMode(uint8_t *data, size_t size);
+bool FuzzTestScreenCaptureServerStartCase(uint8_t *data, size_t size);
 } // namespace OHOS
 #endif
