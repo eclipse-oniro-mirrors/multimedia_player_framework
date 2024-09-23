@@ -341,6 +341,28 @@ int32_t StreamIDManager::ReorderStream(int32_t streamID, int32_t priority)
     return MSERR_OK;
 }
 
+int32_t StreamIDManager::ClearStreamIDInDeque(int32_t streamID)
+{
+    std::lock_guard lock(streamIDManagerLock_);
+    for (auto it = playingStreamIDs_.begin(); it != playingStreamIDs_.end();) {
+        if (*it == streamID) {
+            MEDIA_LOGI("StreamIDManager::ClearStreamIDInDeque playingDel streamID:%{public}d", streamID);
+            it = playingStreamIDs_.erase(it);
+        } else {
+            ++it;
+        }
+    }
+    for (auto it = willPlayStreamInfos_.begin(); it != willPlayStreamInfos_.end();) {
+        if (it->streamID == streamID) {
+            MEDIA_LOGI("StreamIDManager::ClearStreamIDInDeque willPlayDel streamID:%{public}d", streamID);
+            it = willPlayStreamInfos_.erase(it);
+        } else {
+            ++it;
+        }
+    }
+    return MSERR_OK;
+}
+
 int32_t StreamIDManager::GetFreshStreamID(const int32_t soundID, PlayParams playParameters)
 {
     int32_t streamID = 0;
