@@ -36,15 +36,6 @@ public:
     void SetUp(void);
     // TearDown: Called after each test cases
     void TearDown(void);
-
-    static std::shared_ptr<AudioHapticManager> g_audioHapticManager;
-    static int32_t g_normalSourceId;
-    static int32_t g_lowLatencySourceId;
-    static int32_t g_effectSourceId;
-    static std::shared_ptr<AudioHapticPlayer> g_normalAudioHapticPlayer;
-    static std::shared_ptr<AudioHapticPlayer> g_lowLatencyAudioHapticPlayer;
-    static std::shared_ptr<AudioHapticPlayer> g_effectAudioHapticPlayer;
-    static Security::AccessToken::AccessTokenID g_tokenId;
 };
 } // namespace Media
 } // namespace OHOS
