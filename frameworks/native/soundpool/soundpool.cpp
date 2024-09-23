@@ -193,6 +193,7 @@ int32_t SoundPool::Unload(int32_t soundID)
     CHECK_AND_RETURN_RET_LOG(soundIDManager_ != nullptr, -1, "sound id manager have released.");
     int32_t streamID = streamIdManager_->GetStreamIDBySoundID(soundID);
     if (std::shared_ptr<CacheBuffer> cacheBuffer = streamIdManager_->FindCacheBuffer(streamID)) {
+        cacheBuffer->Stop(streamID);
         cacheBuffer->Release();
         streamIdManager_->ClearStreamIDInDeque(streamID);
     }
