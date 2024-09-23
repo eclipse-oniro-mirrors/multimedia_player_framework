@@ -184,6 +184,9 @@ std::unordered_map<int32_t, std::string> AVMetaDataCollector::GetMetadata(
         std::shared_ptr<Meta> meta = trackInfos[index];
         CHECK_AND_RETURN_RET_LOG(meta != nullptr, metadata.tbl_, "meta is invalid, index: %zu", index);
 
+        Plugins::MediaType mediaType;
+        CHECK_AND_CONTINUE(meta->GetData(Tag::MEDIA_TYPE, mediaType));
+
         // skip the image track
         std::string mime;
         meta->Get<Tag::MIME_TYPE>(mime);
@@ -193,10 +196,6 @@ std::unordered_map<int32_t, std::string> AVMetaDataCollector::GetMetadata(
             ++imageTrackCount;
             continue;
         }
-
-        Plugins::MediaType mediaType;
-        CHECK_AND_RETURN_RET_LOG(meta->GetData(Tag::MEDIA_TYPE, mediaType), metadata.tbl_,
-            "mediaType not found, index: %zu", index);
         ConvertToAVMeta(meta, metadata);
     }
     FormatAVMeta(metadata, imageTrackCount, globalInfo);
