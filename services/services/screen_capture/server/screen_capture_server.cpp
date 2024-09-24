@@ -293,7 +293,7 @@ int32_t ScreenCaptureServer::ReportAVScreenCaptureUserChoice(int32_t sessionId, 
     Json::Value root;
     std::string choice = "false";
     GetChoiceFromJson(root, content, std::string("choice"), choice);
-    if (USER_CHOICE_ALLOW.compare(choice) == 0 || USER_CHOICE_ALLOW.compare(content) == 0) {
+    if (USER_CHOICE_ALLOW.compare(choice) == 0) {
         int currentSessionId = -1;
         {
             std::lock_guard <std::mutex> lock(mutexGlobal_);
@@ -321,7 +321,7 @@ int32_t ScreenCaptureServer::ReportAVScreenCaptureUserChoice(int32_t sessionId, 
             "ReportAVScreenCaptureUserChoice user choice is true but start failed");
         MEDIA_LOGI("ReportAVScreenCaptureUserChoice user choice is true and start success");
         return MSERR_OK;
-    } else if (USER_CHOICE_DENY.compare(choice) == 0 || USER_CHOICE_DENY.compare(content) == 0) {
+    } else if (USER_CHOICE_DENY.compare(choice) == 0) {
         return server->OnReceiveUserPrivacyAuthority(false);
     } else {
         MEDIA_LOGW("ReportAVScreenCaptureUserChoice user choice is not support");
@@ -1495,6 +1495,7 @@ int32_t ScreenCaptureServer::StartPrivacyWindow()
         AppExecFwk::ElementName element("", SCREEN_RECORDER_BUNDLE_NAME, SELECT_ABILITY_NAME); // DeviceID
         want.SetElement(element);
         want.SetParam("params", comStr);
+        want.SetParam("appLabel", callingLabel_);
         ret = AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want);
         MEDIA_LOGI("StartAbility end %{public}d, DeviceType : PC", ret);
     }
