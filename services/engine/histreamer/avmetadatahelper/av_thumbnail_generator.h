@@ -80,6 +80,7 @@ private:
     int32_t height_ = 0;
     double frameRate_ { 0.0 };
     Plugins::SeekMode seekMode_ {};
+    int64_t duration_ = 0;
 
     std::shared_ptr<AVBuffer> GenerateAlignmentAvBuffer();
     std::shared_ptr<AVBuffer> GenerateAvBufferFromFCodec();
@@ -91,6 +92,7 @@ private:
     bool SetSbDynamicMetadata(sptr<SurfaceBuffer> &buffer, const std::vector<uint8_t> &dynamicMetadata);
 
     void PauseFetchFrame();
+    void GetDuration();
 };
 }  // namespace Media
 }  // namespace OHOS
