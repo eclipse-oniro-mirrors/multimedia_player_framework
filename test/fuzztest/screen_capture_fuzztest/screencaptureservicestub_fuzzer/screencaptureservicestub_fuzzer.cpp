@@ -61,10 +61,10 @@ bool ScreenCaptureServiceStubFuzzer::FuzzScreenCaptureOnRemoteRequest(uint8_t *d
     }
 
     const int maxIpcNum = 32;
-    bool isWirteToken = size > 0 && data[0] % 9 != 0;
+    bool isWriteToken = size > 0 && data[0] % 9 != 0;
     for (uint32_t code = 0; code <= maxIpcNum; code++) {
         MessageParcel msg;
-        if (isWirteToken) {
+        if (isWriteToken) {
             msg.WriteInterfaceToken(screencaptureStub->GetDescriptor());
         }
         msg.WriteBuffer(data, size);

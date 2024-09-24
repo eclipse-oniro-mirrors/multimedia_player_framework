@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef SCREENCAPTURESETCANVASROTATION_FUZZER
-#define SCREENCAPTURESETCANVASROTATION_FUZZER
+#ifndef SCREENCAPTURESIZECANVAS_FUZZER
+#define SCREENCAPTURESIZECANVAS_FUZZER
 
 #include <fcntl.h>
 #include <securec.h>
