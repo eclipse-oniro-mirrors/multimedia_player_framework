@@ -53,6 +53,7 @@ TransCoderServer::TransCoderServer()
 {
     taskQue_.Start();
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    instanceId_ = HiviewDFX::HiTraceChain::GetId().GetChainId();
 }
 
 TransCoderServer::~TransCoderServer()
@@ -79,6 +80,7 @@ int32_t TransCoderServer::Init()
         transCoderEngine_ = engineFactory->CreateTransCoderEngine(appUid, appPid, tokenId, fullTokenId);
         CHECK_AND_RETURN_RET_LOG(transCoderEngine_ != nullptr, MSERR_CREATE_REC_ENGINE_FAILED,
             "failed to create transCoder engine");
+        transCoderEngine_->SetInstanceId(instanceId_);
         return MSERR_OK;
     });
     int32_t ret = taskQue_.EnqueueTask(task);

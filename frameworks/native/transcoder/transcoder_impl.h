@@ -19,6 +19,7 @@
 #include "transcoder.h"
 #include "nocopyable.h"
 #include "i_transcoder_service.h"
+#include "hitrace/tracechain.h"
 
 namespace OHOS {
 namespace Media {
@@ -46,6 +47,7 @@ public:
 
 private:
     std::shared_ptr<ITransCoderService> transCoderService_ = nullptr;
+    HiviewDFX::HiTraceId traceId_;
 };
 } // namespace Media
 } // namespace OHOS
