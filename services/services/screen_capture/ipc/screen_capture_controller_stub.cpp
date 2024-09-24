@@ -27,7 +27,7 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTUR
 namespace OHOS {
 namespace Media {
 
-static const std::string SCREEN_RECORDER_BUNDLE_NAME = "com.ohos.screenrecorder";
+static const std::string SCREEN_RECORDER_BUNDLE_NAME = "com.ohos.screenshot";
 
 sptr<ScreenCaptureControllerStub> ScreenCaptureControllerStub::Create()
 {
