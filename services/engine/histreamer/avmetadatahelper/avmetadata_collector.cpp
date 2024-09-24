@@ -193,6 +193,7 @@ std::unordered_map<int32_t, std::string> AVMetaDataCollector::GetMetadata(
             ++imageTrackCount;
             continue;
         }
+
         Plugins::MediaType mediaType;
         CHECK_AND_CONTINUE(meta->GetData(Tag::MEDIA_TYPE, mediaType));
         ConvertToAVMeta(meta, metadata);
