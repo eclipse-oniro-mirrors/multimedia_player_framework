@@ -247,11 +247,12 @@ void CacheBuffer::OnWriteData(size_t length)
             Stop(streamID_);
             return;
         }
-        {
-            std::lock_guard lock(cacheBufferLock_);
-            cacheDataFrameIndex_ = 0;
-            havePlayedCount_++;
+        while (!cacheBufferLock_.try_lock()) {
+            CHECK_AND_RETURN_LOG(isRunning_.load(), "OnWriteData releasing");
         }
+        cacheDataFrameIndex_ = 0;
+        havePlayedCount_++;
+        cacheBufferLock_.unlock();
     }
     DealWriteData(length);
 }
@@ -260,7 +261,9 @@ void CacheBuffer::DealWriteData(size_t length)
 {
     AudioStandard::BufferDesc bufDesc;
     audioRenderer_->GetBufferDesc(bufDesc);
-    std::lock_guard lock(cacheBufferLock_);
+    while (!cacheBufferLock_.try_lock()) {
+        CHECK_AND_RETURN_LOG(isRunning_.load(), "DealWriteData releasing");
+    }
     if (bufDesc.buffer != nullptr && fullCacheData_ != nullptr && fullCacheData_->buffer != nullptr) {
         if (static_cast<size_t>(fullCacheData_->size) - cacheDataFrameIndex_ >= length) {
             int32_t ret = memcpy_s(bufDesc.buffer, length,
@@ -280,6 +283,7 @@ void CacheBuffer::DealWriteData(size_t length)
             bufDesc.dataLength = copyLength;
             cacheDataFrameIndex_ += copyLength;
         }
+        cacheBufferLock_.unlock();
         audioRenderer_->Enqueue(bufDesc);
     } else {
         MEDIA_LOGE("OnWriteData, cacheDataFrameIndex_: %{public}zu, length: %{public}zu,"
@@ -287,6 +291,7 @@ void CacheBuffer::DealWriteData(size_t length)
             " streamID_:%{public}d",
             cacheDataFrameIndex_, length, bufDesc.buffer != nullptr, fullCacheData_ != nullptr,
             fullCacheData_->buffer != nullptr, streamID_);
+        cacheBufferLock_.unlock();
     }
 }
 
