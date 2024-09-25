@@ -866,7 +866,7 @@ int32_t PlayerServer::GetCurrentTime(int32_t &currentTime)
     return MSERR_OK;
 }
 
-int32_t PlayerServer::GetLiveStreamCurrentTime(int32_t &currentTime)
+int32_t PlayerServer::GetPlaybackPosition(int32_t &currentTime)
 {
     // delete lock, cannot be called concurrently with Reset or Release
     currentTime = -1;
@@ -879,7 +879,7 @@ int32_t PlayerServer::GetLiveStreamCurrentTime(int32_t &currentTime)
         return GetCurrentTime(currentTime);
     }
 
-    MEDIA_LOGD("PlayerServer GetLiveStreamCurrentTime in, currentState is %{public}s",
+    MEDIA_LOGD("PlayerServer GetPlaybackPosition in, currentState is %{public}s",
         GetStatusDescription(lastOpStatus_).c_str());
     if (lastOpStatus_ != PLAYER_PREPARED && lastOpStatus_ != PLAYER_STARTED && lastOpStatus_ != PLAYER_PAUSED &&
         lastOpStatus_ != PLAYER_PLAYBACK_COMPLETE) {
@@ -889,7 +889,7 @@ int32_t PlayerServer::GetLiveStreamCurrentTime(int32_t &currentTime)
     }
 
     if (playerEngine_ != nullptr) {
-        int32_t ret = playerEngine_->GetLiveStreamCurrentTime(currentTime);
+        int32_t ret = playerEngine_->GetPlaybackPosition(currentTime);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine GetCurrentTime Failed!");
     }
     return MSERR_OK;
