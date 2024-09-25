@@ -24,7 +24,7 @@
 
 namespace {
 constexpr char VIDEO_PATH[] = "/data/test/H264_AAC.mp4";
-constexpr SET_FD_SOURCE = 3;
+constexpr int32_t SET_FD_SOURCE = 3;
 }
 
 namespace OHOS {
