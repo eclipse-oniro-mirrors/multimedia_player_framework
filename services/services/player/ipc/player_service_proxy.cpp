@@ -52,7 +52,7 @@ PlayerServiceProxy::PlayerServiceProxy(const sptr<IRemoteObject> &impl)
     playerFuncs_[SET_VOLUME] = "Player::SetVolume";
     playerFuncs_[SEEK] = "Player::Seek";
     playerFuncs_[GET_CURRENT_TIME] = "Player::GetCurrentTime";
-    playerFuncs_[GET_LIVES_CURRENT_TIME] = "Player::GetLiveStreamCurrentTime";
+    playerFuncs_[GET_LIVES_CURRENT_TIME] = "Player::GetPlaybackPosition";
     playerFuncs_[GET_DURATION] = "Player::GetDuration";
     playerFuncs_[SET_PLAYERBACK_SPEED] = "Player::SetPlaybackSpeed";
     playerFuncs_[GET_PLAYERBACK_SPEED] = "Player::GetPlaybackSpeed";
@@ -445,9 +445,9 @@ int32_t PlayerServiceProxy::GetCurrentTime(int32_t &currentTime)
     return reply.ReadInt32();
 }
 
-int32_t PlayerServiceProxy::GetLiveStreamCurrentTime(int32_t &currentTime)
+int32_t PlayerServiceProxy::GetPlaybackPosition(int32_t &currentTime)
 {
-    MediaTrace trace("PlayerServiceProxy::GetLiveStreamCurrentTime");
+    MediaTrace trace("PlayerServiceProxy::GetPlaybackPosition");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -457,7 +457,7 @@ int32_t PlayerServiceProxy::GetLiveStreamCurrentTime(int32_t &currentTime)
 
     int32_t error = SendRequest(GET_LIVES_CURRENT_TIME, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
-        "GetLiveStreamCurrentTime failed, error: %{public}d", error);
+        "GetPlaybackPosition failed, error: %{public}d", error);
     currentTime = reply.ReadInt32();
     return reply.ReadInt32();
 }
