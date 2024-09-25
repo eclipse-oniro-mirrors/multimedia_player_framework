@@ -293,14 +293,14 @@ void PlayerImpl::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &info
 int32_t PlayerImpl::GetCurrentTime(int32_t &currentTime)
 {
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " GetCurrentTime in", FAKE_POINTER(this));
-    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     return playerService_->GetCurrentTime(currentTime);
 }
 
 int32_t PlayerImpl::GetLiveStreamCurrentTime(int32_t &currentTime)
 {
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " GetLiveStreamCurrentTime in", FAKE_POINTER(this));
-    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
     return playerService_->GetLiveStreamCurrentTime(currentTime);
 }
 
