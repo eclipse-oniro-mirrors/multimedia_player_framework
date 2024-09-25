@@ -123,10 +123,19 @@ Status AVThumbnailGenerator::InitDecoder()
     return Status::OK;
 }
 
+void AVThumbnailGenerator::GetDuration()
+{
+    auto meta = mediaDemuxer_->GetGlobalMetaInfo();
+    CHECK_AND_RETURN_LOG(meta != nullptr, "Global info is nullptr");
+    (void)meta->Get<Tag::MEDIA_DURATION>(duration_);
+    MEDIA_LOGI("%{public}" PRId64, duration_);
+}
+
 std::shared_ptr<Meta> AVThumbnailGenerator::GetVideoTrackInfo()
 {
     CHECK_AND_RETURN_RET(trackInfo_ == nullptr, trackInfo_);
     CHECK_AND_RETURN_RET_LOG(mediaDemuxer_ != nullptr, nullptr, "GetTargetTrackInfo demuxer is nullptr");
+    GetDuration();
     std::vector<std::shared_ptr<Meta>> trackInfos = mediaDemuxer_->GetStreamMetaInfo();
     size_t trackCount = trackInfos.size();
     CHECK_AND_RETURN_RET_LOG(trackCount > 0, nullptr, "GetTargetTrackInfo trackCount is invalid");
@@ -312,6 +321,7 @@ Status AVThumbnailGenerator::SeekToTime(int64_t timeMs, Plugins::SeekMode option
     if (option == Plugins::SeekMode::SEEK_CLOSEST) {
         option = Plugins::SeekMode::SEEK_PREVIOUS_SYNC;
     }
+    timeMs = duration_ > 0 ? std::min(timeMs, Plugins::Us2Ms(duration_)) : timeMs;
     auto res = mediaDemuxer_->SeekTo(timeMs, option, realSeekTime);
     if (res != Status::OK && option != Plugins::SeekMode::SEEK_CLOSEST_SYNC) {
         res = mediaDemuxer_->SeekTo(timeMs, Plugins::SeekMode::SEEK_CLOSEST_SYNC, realSeekTime);
