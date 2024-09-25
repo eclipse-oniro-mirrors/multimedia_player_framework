@@ -499,7 +499,7 @@ public:
      * @since 1.0
      * @version 1.0
      */
-    virtual int32_t GetLiveStreamCurrentTime(int32_t &currentTime)
+    virtual int32_t GetPlaybackPosition(int32_t &currentTime)
     {
         currentTime = -1;
         return 0;
