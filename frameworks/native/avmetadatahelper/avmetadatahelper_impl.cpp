@@ -541,6 +541,8 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameYuv(int64_t timeUs, in
     auto pixelMap = CreatePixelMapYuv(frameBuffer, pixelMapInfo);
     CHECK_AND_RETURN_RET_LOG(pixelMap != nullptr, nullptr, "convert to pixelMap failed");
 
+    int32_t srcWidth = pixelMap->GetWidth();
+    int32_t srcHeight = pixelMap->GetHeight();
     YUVDataInfo yuvDataInfo = { .yWidth = srcWidth,
                                 .yHeight = srcHeight,
                                 .uvWidth = srcWidth / 2,
