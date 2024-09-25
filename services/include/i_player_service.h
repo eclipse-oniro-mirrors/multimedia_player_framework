@@ -274,7 +274,7 @@ public:
      * @since 1.0
      * @version 1.0
      */
-    virtual int32_t GetLiveStreamCurrentTime(int32_t &currentTime) = 0;
+    virtual int32_t GetPlaybackPosition(int32_t &currentTime) = 0;
 
     /**
      * @brief Obtains the video track info, contains mimeType, bitRate, width, height, frameRata.
