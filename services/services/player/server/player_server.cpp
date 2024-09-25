@@ -871,7 +871,8 @@ int32_t PlayerServer::GetLiveStreamCurrentTime(int32_t &currentTime)
     // delete lock, cannot be called concurrently with Reset or Release
     currentTime = -1;
     if (lastOpStatus_ == PLAYER_IDLE || lastOpStatus_ == PLAYER_STATE_ERROR) {
-        MEDIA_LOGE("Can not GetCurrentTime, currentState is %{public}s", GetStatusDescription(lastOpStatus_).c_str());
+        MEDIA_LOGE("Can not GetCurrentTime, currentState is %{public}s",
+            GetStatusDescription(lastOpStatus_).c_str());
         return MSERR_INVALID_OPERATION;
     }
     if (!isLiveStream_ || dataSrc_ != nullptr) {
