@@ -51,6 +51,7 @@ public:
     int32_t GetVideoWidth() override;
     int32_t SetVolume(float leftVolume, float rightVolume) override;
     int32_t GetCurrentTime(int32_t &currentTime) override;
+    int32_t GetLiveStreamCurrentTime(int32_t &currentTime) override;
     int32_t GetVideoTrackInfo(std::vector<Format> &videoTrack) override;
     int32_t GetPlaybackInfo(Format& playbackInfo) override;
     int32_t GetSubtitleTrackInfo(std::vector<Format> &subtitleTrack) override;
