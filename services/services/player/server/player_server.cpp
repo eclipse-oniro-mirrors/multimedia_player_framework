@@ -889,7 +889,7 @@ int32_t PlayerServer::GetPlaybackPosition(int32_t &currentTime)
     }
 
     if (playerEngine_ != nullptr) {
-        int32_t ret = playerEngine_->GetPlaybackPosition(currentTime);
+        int32_t ret = playerEngine_->GetLiveStreamCurrentTime(currentTime);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine GetCurrentTime Failed!");
     }
     return MSERR_OK;
