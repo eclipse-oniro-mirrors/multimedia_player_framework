@@ -99,7 +99,7 @@ public:
     {
         return 0;
     }
-    int32_t GetLiveStreamCurrentTime(int32_t &currentTime) override
+    int32_t GetPlaybackPosition(int32_t &currentTime) override
     {
         return 0;
     }
