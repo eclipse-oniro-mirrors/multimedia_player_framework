@@ -266,7 +266,7 @@ public:
     virtual int32_t GetCurrentTime(int32_t &currentTime) = 0;
 
     /**
-     * @brief Obtains the playback position for the livestream, accurate to millisecond.
+     * @brief Obtains the playback position compatible with the livestream, accurate to millisecond.
      *
      * @param currentTime Indicates the playback position.
      * @return Returns {@link MSERR_OK} if the current position is get; returns an error code defined
