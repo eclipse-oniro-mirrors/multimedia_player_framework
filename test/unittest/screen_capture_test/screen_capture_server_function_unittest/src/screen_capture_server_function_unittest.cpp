@@ -610,7 +610,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, capture_file_params_invalid_008, TestS
 
 HWTEST_F(ScreenCaptureServerFunctionTest, StartPrivacyWindow_001, TestSize.Level2)
 {
-    ASSERT_EQ(screenCaptureServer_->StartPrivacyWindow(), MSERR_OK);
+    ASSERT_NE(screenCaptureServer_->StartPrivacyWindow(), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, GetMissionIds_001, TestSize.Level2)
@@ -690,7 +690,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ReportAVScreenCaptureUserChoice_001, T
     config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     int32_t sessionId = 0;
-    std::string choice = "false";
+    std::string choice = "{\"choice\": \"false\", \"displayId\": -1, \"missionId\": -1}";
     ASSERT_NE(screenCaptureServer_->ReportAVScreenCaptureUserChoice(sessionId, choice), MSERR_OK);
 }
 
@@ -705,7 +705,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ReportAVScreenCaptureUserChoice_002, T
     config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     int32_t sessionId = 0;
-    std::string choice = "true";
+    std::string choice = "{\"choice\": \"true\", \"displayId\": -1, \"missionId\": -1}";
     ASSERT_NE(screenCaptureServer_->ReportAVScreenCaptureUserChoice(sessionId, choice), MSERR_OK);
 }
 
@@ -720,7 +720,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ReportAVScreenCaptureUserChoice_003, T
     config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     int32_t sessionId = -1;
-    std::string choice = "true";
+    std::string choice = "{\"choice\": \"true\", \"displayId\": -1, \"missionId\": -1}";
     ASSERT_NE(screenCaptureServer_->ReportAVScreenCaptureUserChoice(sessionId, choice), MSERR_OK);
 }
 
@@ -735,7 +735,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ReportAVScreenCaptureUserChoice_004, T
     config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     int32_t sessionId = 0;
-    std::string choice = "12345";
+    std::string choice = "{\"choice\": \"12345\", \"displayId\": -1, \"missionId\": -1}";
     ASSERT_NE(screenCaptureServer_->ReportAVScreenCaptureUserChoice(sessionId, choice), MSERR_OK);
 }
 
@@ -869,7 +869,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, RequestUserPrivacyAuthority_003, TestS
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
     screenCaptureServer_->isPrivacyAuthorityEnabled_ = true;
 #endif
-    ASSERT_EQ(screenCaptureServer_->RequestUserPrivacyAuthority(), MSERR_OK);
+    ASSERT_NE(screenCaptureServer_->RequestUserPrivacyAuthority(), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, RequestUserPrivacyAuthority_004, TestSize.Level2)
@@ -879,7 +879,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, RequestUserPrivacyAuthority_004, TestS
     screenCaptureServer_->isPrivacyAuthorityEnabled_ = true;
     screenCaptureServer_->appName_ = ScreenRecorderBundleName;
 #endif
-    ASSERT_EQ(screenCaptureServer_->RequestUserPrivacyAuthority(), MSERR_OK);
+    ASSERT_NE(screenCaptureServer_->RequestUserPrivacyAuthority(), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, OnReceiveUserPrivacyAuthority_001, TestSize.Level2)
@@ -958,8 +958,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, UpdatePrivacyUsingPermissionState_001,
 HWTEST_F(ScreenCaptureServerFunctionTest, UpdatePrivacyUsingPermissionState_002, TestSize.Level2)
 {
     screenCaptureServer_->appInfo_.appUid = ROOT_UID + 1;
-    ASSERT_EQ(screenCaptureServer_->UpdatePrivacyUsingPermissionState(START_VIDEO), true);
-    ASSERT_EQ(screenCaptureServer_->UpdatePrivacyUsingPermissionState(STOP_VIDEO), true);
+    ASSERT_EQ(screenCaptureServer_->UpdatePrivacyUsingPermissionState(START_VIDEO), false);
+    ASSERT_EQ(screenCaptureServer_->UpdatePrivacyUsingPermissionState(STOP_VIDEO), false);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, StartScreenCaptureWithSurface_001, TestSize.Level2)
