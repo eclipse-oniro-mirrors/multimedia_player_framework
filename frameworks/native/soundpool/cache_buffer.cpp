@@ -240,15 +240,16 @@ void CacheBuffer::OnWriteData(size_t length)
         return;
     }
     if (cacheDataFrameIndex_ >= static_cast<size_t>(fullCacheData_->size)) {
+        while (!cacheBufferLock_.try_lock()) {
+            CHECK_AND_RETURN_LOG(isRunning_.load(), "OnWriteData releasing");
+        }
         if (loop_ >= 0 && havePlayedCount_ >= loop_) {
             MEDIA_LOGI("CacheBuffer stream write finish, cacheDataFrameIndex_:%{public}zu,"
                 " havePlayedCount_:%{public}d, loop:%{public}d, streamID_:%{public}d, length: %{public}zu",
                 cacheDataFrameIndex_, havePlayedCount_, loop_, streamID_, length);
+            cacheBufferLock_.unlock();
             Stop(streamID_);
             return;
-        }
-        while (!cacheBufferLock_.try_lock()) {
-            CHECK_AND_RETURN_LOG(isRunning_.load(), "OnWriteData releasing");
         }
         cacheDataFrameIndex_ = 0;
         havePlayedCount_++;
