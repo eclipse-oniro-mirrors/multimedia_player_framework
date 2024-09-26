@@ -1070,7 +1070,7 @@ Status HiPlayerImpl::doSeek(int64_t seekPos, PlayerSeekMode mode)
 
 int32_t HiPlayerImpl::SetVolume(float leftVolume, float rightVolume)
 {
-    MEDIA_LOG_D_SHORT("SetVolume in");
+    MEDIA_LOG_D("SetVolume in");
     FALSE_RETURN_V_MSG_E(!(leftVolume < 0 || leftVolume > MAX_MEDIA_VOLUME
         || rightVolume < 0 || rightVolume > MAX_MEDIA_VOLUME),
         (int32_t)Status::ERROR_INVALID_PARAMETER, "volume not valid, should be in range [0,100]");
@@ -1780,7 +1780,7 @@ int32_t HiPlayerImpl::SetAudioInterruptMode(const int32_t interruptMode)
 
 void HiPlayerImpl::OnEvent(const Event &event)
 {
-    MEDIA_LOG_I_SHORT("OnEvent %{public}d", event.type);
+    MEDIA_LOG_D("OnEvent %{public}d", event.type);
     switch (event.type) {
         case EventType::EVENT_IS_LIVE_STREAM: {
             HandleIsLiveStreamEvent(AnyCast<bool>(event.param));
@@ -2019,7 +2019,7 @@ void HiPlayerImpl::NotifyBufferingEnd(int32_t param)
 
 void HiPlayerImpl::NotifyCachedDuration(int32_t param)
 {
-    MEDIA_LOG_I("NotifyCachedDuration");
+    MEDIA_LOG_D("NotifyCachedDuration");
     Format format;
     (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_CACHED_DURATION), param);
     callbackLooper_.OnInfo(INFO_TYPE_BUFFERING_UPDATE, param, format);
