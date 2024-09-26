@@ -64,6 +64,8 @@ std::unordered_map<SystemToneType, ShotToneType> shotToneTypeMap_;
 std::unordered_map<ToneHapticsMode, VibratePlayMode> hapticsModeMap_;
 std::unordered_map<ToneHapticsType, std::pair<int32_t, int32_t>> hapticsTypeWhereArgsMap_;
 std::unordered_map<int32_t, std::unordered_map<HapticsStyle, int32_t>> hapticsStyleMap_;
+std::unordered_map<RingtoneType, DefaultSystemToneType> defaultoneTypeMap_;
+std::unordered_map<SystemToneType, int32_t> defaultsystemTypeMap_;
 Uri RINGTONEURI(RINGTONE_PATH_URI);
 Uri VIBRATEURI(VIBRATE_PATH_URI);
 Uri SIMCARDSETTINGURI(SIMCARD_SETTING_PATH_URI);
@@ -136,6 +138,11 @@ void SystemSoundManagerImpl::InitMap(void)
     systemTypeMap_[SYSTEM_TONE_TYPE_NOTIFICATION] = NOTIFICATION_TONE_TYPE;
     shotToneTypeMap_[SYSTEM_TONE_TYPE_SIM_CARD_0] = SHOT_TONE_TYPE_SIM_CARD_1;
     shotToneTypeMap_[SYSTEM_TONE_TYPE_SIM_CARD_1] = SHOT_TONE_TYPE_SIM_CARD_2;
+    defaultoneTypeMap_[RINGTONE_TYPE_SIM_CARD_0] = DEFAULT_RING_TYPE_SIM_CARD_1;
+    defaultoneTypeMap_[RINGTONE_TYPE_SIM_CARD_1] = DEFAULT_RING_TYPE_SIM_CARD_2;
+    defaultsystemTypeMap_[SYSTEM_TONE_TYPE_SIM_CARD_0] = DEFAULT_SHOT_TYPE_SIM_CARD_1;
+    defaultsystemTypeMap_[SYSTEM_TONE_TYPE_SIM_CARD_1] = DEFAULT_SHOT_TYPE_SIM_CARD_2;
+    defaultsystemTypeMap_[SYSTEM_TONE_TYPE_NOTIFICATION] = DEFAULT_NOTIFICATION_TYPE;
     hapticsModeMap_[NONE] = VIBRATE_PLAYMODE_NONE;
     hapticsModeMap_[SYNC] = VIBRATE_PLAYMODE_SYNC;
     hapticsModeMap_[NON_SYNC] = VIBRATE_PLAYMODE_CLASSIC;
@@ -791,8 +798,8 @@ std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultRingtoneAttrs(
         "Create dataShare failed, datashare or ringtone library error.");
     DataShare::DatashareBusinessError businessError;
     DataShare::DataSharePredicates queryPredicates;
+    GetDefaultRingtoneAttrsExt(queryPredicates, ringtoneType);
     ringtoneAttrs_ = nullptr;
-    queryPredicates.EqualTo(RINGTONE_COLUMN_RING_TONE_TYPE, to_string(ringtoneTypeMap_[ringtoneType]));
     auto resultSet = dataShareHelper->Query(RINGTONEURI, queryPredicates, COLUMNS, &businessError);
     auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
     CHECK_AND_RETURN_RET_LOG(results != nullptr, nullptr, "single sim card failed, ringtone library error.");
@@ -827,6 +834,18 @@ std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultRingtoneAttrs(
     resultSet == nullptr ? : resultSet->Close();
     dataShareHelper->Release();
     return ringtoneAttrs_;
+}
+
+void SystemSoundManagerImpl::GetDefaultRingtoneAttrsExt(
+    DataShare::DataSharePredicates queryPredicates, RingtoneType ringtoneType)
+{
+    std::string onClause = PRELOAD_CONFIG_TABLE + "." + PRELOAD_CONFIG_COLUMN_TONE_ID + " = " +
+        RINGTONE_TABLE + "." + RINGTONE_COLUMN_TONE_ID;
+    queryPredicates.InnerJoin(PRELOAD_CONFIG_TABLE)->On({ onClause });
+    queryPredicates.SetWhereClause(PRELOAD_CONFIG_TABLE + "." + PRELOAD_CONFIG_COLUMN_RING_TONE_TYPE + " = ? ");
+    std::string subquery = to_string(defaultoneTypeMap_[ringtoneType]);
+    std::vector<std::string> whereArgs = {subquery};
+    queryPredicates.SetWhereArgs(whereArgs);
 }
 
 std::vector<std::shared_ptr<ToneAttrs>> SystemSoundManagerImpl::GetRingtoneAttrList(
@@ -877,7 +896,7 @@ std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultSystemToneAttrs(
     DataShare::DatashareBusinessError businessError;
     DataShare::DataSharePredicates queryPredicates;
     systemtoneAttrs_ = nullptr;
-    queryPredicates.EqualTo(ringToneType, to_string(systemTypeMap_[systemToneType]));
+    GetDefaultSystemToneAttrsExt(queryPredicates, systemToneType);
     auto resultSet = dataShareHelper->Query(RINGTONEURI, queryPredicates, COLUMNS, &businessError);
     auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
     CHECK_AND_RETURN_RET_LOG(results != nullptr, nullptr, "query single systemtone failed, ringtone library error.");
@@ -909,6 +928,18 @@ std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultSystemToneAttrs(
     resultSet == nullptr ? : resultSet->Close();
     dataShareHelper->Release();
     return systemtoneAttrs_;
+}
+
+void SystemSoundManagerImpl::GetDefaultSystemToneAttrsExt(
+    DataShare::DataSharePredicates queryPredicates, SystemToneType systemToneType)
+{
+    std::string onClause = PRELOAD_CONFIG_TABLE + "." + PRELOAD_CONFIG_COLUMN_TONE_ID + " = " +
+        RINGTONE_TABLE + "." + RINGTONE_COLUMN_TONE_ID;
+    queryPredicates.InnerJoin(PRELOAD_CONFIG_TABLE)->On({ onClause });
+    queryPredicates.SetWhereClause(PRELOAD_CONFIG_TABLE + "." + PRELOAD_CONFIG_COLUMN_RING_TONE_TYPE + " = ? ");
+    std::string subquery = to_string(defaultsystemTypeMap_[systemToneType]);
+    std::vector<std::string> whereArgs = {subquery};
+    queryPredicates.SetWhereArgs(whereArgs);
 }
 
 std::vector<std::shared_ptr<ToneAttrs>> SystemSoundManagerImpl::GetSystemToneAttrList(
