@@ -76,15 +76,15 @@ public:
 
     std::shared_ptr<ToneAttrs> GetDefaultRingtoneAttrs(const std::shared_ptr<AbilityRuntime::Context> &context,
         RingtoneType ringtoneType) override;
-    void SystemSoundManagerImpl::GetDefaultRingtoneAttrsExt(
-        DataShare::DataSharePredicates queryPredicates, RingtoneType ringtoneType);
+    void GetDefaultRingtoneAttrsExt(DataShare::DataSharePredicates queryPredicates,
+        RingtoneType ringtoneType);
     std::vector<std::shared_ptr<ToneAttrs>> GetRingtoneAttrList(const std::shared_ptr<AbilityRuntime::Context> &context,
         RingtoneType ringtoneType) override;
     std::shared_ptr<ToneAttrs> GetDefaultSystemToneAttrs(const std::shared_ptr<AbilityRuntime::Context> &context,
         SystemToneType systemToneType) override;
 
-    void SystemSoundManagerImpl::GetDefaultSystemToneAttrsExt(
-        DataShare::DataSharePredicates queryPredicates, SystemToneType systemToneType);
+    void GetDefaultSystemToneAttrsExt(DataShare::DataSharePredicates queryPredicates,
+        SystemToneType systemToneType);
     std::vector<std::shared_ptr<ToneAttrs>> GetSystemToneAttrList(
         const std::shared_ptr<AbilityRuntime::Context> &context, SystemToneType systemToneType) override;
     std::shared_ptr<ToneAttrs> GetDefaultAlarmToneAttrs(

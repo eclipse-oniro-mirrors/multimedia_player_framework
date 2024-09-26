@@ -840,11 +840,11 @@ void SystemSoundManagerImpl::GetDefaultRingtoneAttrsExt(
     DataShare::DataSharePredicates queryPredicates, RingtoneType ringtoneType)
 {
     std::string onClause = PRELOAD_CONFIG_TABLE + "." + PRELOAD_CONFIG_COLUMN_TONE_ID + " = " +
-    RINGTONE_TABLE + "." + RINGTONE_COLUMN_TONE_ID;
+        RINGTONE_TABLE + "." + RINGTONE_COLUMN_TONE_ID;
     queryPredicates.InnerJoin(PRELOAD_CONFIG_TABLE)->On({ onClause });
     queryPredicates.SetWhereClause(PRELOAD_CONFIG_TABLE + "." + PRELOAD_CONFIG_COLUMN_RING_TONE_TYPE + " = ? ");
     std::string subquery = to_string(defaultoneTypeMap_[ringtoneType]);
-    std::vectorstd::string whereArgs = {subquery};
+    std::vector<std::string> whereArgs = {subquery};
     queryPredicates.SetWhereArgs(whereArgs);
 }
 
@@ -934,11 +934,11 @@ void SystemSoundManagerImpl::GetDefaultSystemToneAttrsExt(
     DataShare::DataSharePredicates queryPredicates, SystemToneType systemToneType)
 {
     std::string onClause = PRELOAD_CONFIG_TABLE + "." + PRELOAD_CONFIG_COLUMN_TONE_ID + " = " +
-    RINGTONE_TABLE + "." + RINGTONE_COLUMN_TONE_ID;
+        RINGTONE_TABLE + "." + RINGTONE_COLUMN_TONE_ID;
     queryPredicates.InnerJoin(PRELOAD_CONFIG_TABLE)->On({ onClause });
     queryPredicates.SetWhereClause(PRELOAD_CONFIG_TABLE + "." + PRELOAD_CONFIG_COLUMN_RING_TONE_TYPE + " = ? ");
     std::string subquery = to_string(defaultsystemTypeMap_[systemToneType]);
-    std::vectorstd::string whereArgs = {subquery};
+    std::vector<std::string> whereArgs = {subquery};
     queryPredicates.SetWhereArgs(whereArgs);
 }
 
