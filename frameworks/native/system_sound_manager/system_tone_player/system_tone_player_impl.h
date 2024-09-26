@@ -55,6 +55,7 @@ private:
     void GetNewHapticUriForAudioUri(const std::string &audioUri,
         std::map<ToneHapticsFeature, std::string> &hapticsUriMap);
     void GetHapticUriForAudioUri(const std::string &audioUri, std::map<ToneHapticsFeature, std::string> &hapticsUris);
+    std::string GetDefaultNonSyncHapticsPath();
     SystemToneOptions GetOptionsFromRingerMode();
     std::string ChangeUri(const std::string &uri);
     void InitHapticsSourceIds(const std::string &audioUri);
@@ -70,6 +71,7 @@ private:
     std::unordered_map<int32_t, std::shared_ptr<SystemTonePlayerCallback>> callbackMap_;
     int32_t streamId_ = 0;
     std::string configuredUri_ = "";
+    std::string defaultNonSyncHapticUri_ = "";
     std::shared_ptr<AbilityRuntime::Context> context_;
     SystemSoundManagerImpl &systemSoundMgr_;
     SystemToneType systemToneType_;
