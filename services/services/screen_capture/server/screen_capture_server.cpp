@@ -2636,38 +2636,51 @@ void ScreenCapBufferConsumerListener::OnBufferAvailable()
     OHOS::Rect damage;
     OHOS::sptr<OHOS::SurfaceBuffer> buffer = nullptr;
     sptr<SyncFence> acquireFence = SyncFence::INVALID_FENCE;
-    consumer_->AcquireBuffer(buffer, acquireFence, timestamp, damage);
+    int32_t acquireBufferRet = consumer_->AcquireBuffer(buffer, acquireFence, timestamp, damage);
+    if (acquireBufferRet != GSERROR_OK) {
+        MEDIA_LOGE("ScreenCapBufferConsumerListener: 0x%{public}06" PRIXPTR " AcquireBuffer Fail Code %{public}d",
+            FAKE_POINTER(this), acquireBufferRet);
+    }
     int32_t flushFence = -1;
     if (acquireFence != nullptr && acquireFence != SyncFence::INVALID_FENCE) {
         acquireFence->Wait(1000); // 1000 ms
         flushFence = acquireFence->Get();
     }
     CHECK_AND_RETURN_LOG(buffer != nullptr, "Acquire SurfaceBuffer failed");
-
     if ((buffer->GetUsage() & BUFFER_USAGE_MEM_MMZ_CACHE) != 0) {
         MEDIA_LOGD("ScreenCaptureServer::OnBufferAvailable cache enable");
         buffer->InvalidateCache();
     }
-
     void *addr = buffer->GetVirAddr();
     if (addr == nullptr) {
-        MEDIA_LOGE("Acquire SurfaceBuffer addr invalid");
-        consumer_->ReleaseBuffer(buffer, flushFence);
+        MEDIA_LOGE("Acquire SurfaceBuffer address invalid");
+        int32_t releaseBufferRet = consumer_->ReleaseBuffer(buffer, -1); // -1 not wait
+        if (releaseBufferRet != GSERROR_OK) {
+            MEDIA_LOGE("ScreenCapBufferConsumerListener: 0x%{public}06" PRIXPTR " ReleaseBuffer Fail Code %{public}d",
+                FAKE_POINTER(this), releaseBufferRet);
+        }
         return;
     }
     MEDIA_LOGD("SurfaceBuffer size:%{public}u", buffer->GetSize());
-
     {
         std::unique_lock<std::mutex> lock(bufferMutex_);
         if (availBuffers_.size() > MAX_BUFFER_SIZE) {
             MEDIA_LOGE("consume slow, drop video frame");
-            consumer_->ReleaseBuffer(buffer, flushFence);
+            int32_t releaseBufferRet = consumer_->ReleaseBuffer(buffer, -1); // -1 not wait
+            if (releaseBufferRet != GSERROR_OK) {
+                MEDIA_LOGE("ScreenCapBufferConsumerListener: 0x%{public}06" PRIXPTR " consume slow ReleaseBuffer "
+                    "Fail Code %{public}d", FAKE_POINTER(this), releaseBufferRet);
+            }
             return;
         }
         availBuffers_.push(std::make_unique<SurfaceBufferEntry>(buffer, flushFence, timestamp, damage));
     }
     bufferCond_.notify_all();
+    ProcessVideoBufferCallBack();
+}
 
+void ScreenCapBufferConsumerListener::ProcessVideoBufferCallBack()
+{
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_LOG(screenCaptureCb_ != nullptr, "no consumer, will drop video frame");
     MEDIA_LOGD("ScreenCaptureServer: 0x%{public}06" PRIXPTR " OnBufferAvailable end.", FAKE_POINTER(this));
@@ -2694,6 +2707,28 @@ int32_t ScreenCapBufferConsumerListener::AcquireVideoBuffer(sptr<OHOS::SurfaceBu
     return MSERR_OK;
 }
 
+ScreenCapBufferConsumerListener::~ScreenCapBufferConsumerListener()
+{
+    std::unique_lock<std::mutex> lock(bufferMutex_);
+    MEDIA_LOGD("ScreenCapBufferConsumerListener: 0x%{public}06" PRIXPTR " Destroy.", FAKE_POINTER(this));
+    ReleaseBuffer();
+}
+
+int32_t ScreenCapBufferConsumerListener::ReleaseBuffer()
+{
+    while (!availBuffers_.empty()) {
+        if (consumer_ != nullptr) {
+            int32_t releaseBufferRet = consumer_->ReleaseBuffer(availBuffers_.front()->buffer, -1);  // -1 not wait
+            if (releaseBufferRet != GSERROR_OK) {
+                MEDIA_LOGE("ScreenCapBufferConsumerListener: 0x%{public}06" PRIXPTR " ReleaseBuffer "
+                    "Fail Code %{public}d", FAKE_POINTER(this), releaseBufferRet);
+            }
+        }
+        availBuffers_.pop();
+    }
+    return MSERR_OK;
+}
+
 int32_t ScreenCapBufferConsumerListener::ReleaseVideoBuffer()
 {
     MediaTrace trace("ScreenCaptureServer::ReleaseVideoBuffer");
@@ -2703,7 +2738,11 @@ int32_t ScreenCapBufferConsumerListener::ReleaseVideoBuffer()
     CHECK_AND_RETURN_RET_LOG(!availBuffers_.empty(), MSERR_OK, "buffer queue is empty, no video frame to release");
 
     if (consumer_ != nullptr) {
-        consumer_->ReleaseBuffer(availBuffers_.front()->buffer, -1); // -1 not wait
+        int32_t releaseBufferRet = consumer_->ReleaseBuffer(availBuffers_.front()->buffer, -1); // -1 not wait
+        if (releaseBufferRet != GSERROR_OK) {
+            MEDIA_LOGE("ScreenCapBufferConsumerListener: 0x%{public}06" PRIXPTR " ReleaseVideoBuffer "
+                "Fail Code %{public}d", FAKE_POINTER(this), releaseBufferRet);
+        }
     }
     availBuffers_.pop();
     MEDIA_LOGD("ScreenCapBufferConsumerListener: 0x%{public}06" PRIXPTR " ReleaseVideoBuffer end.", FAKE_POINTER(this));
@@ -2713,7 +2752,7 @@ int32_t ScreenCapBufferConsumerListener::ReleaseVideoBuffer()
 int32_t ScreenCapBufferConsumerListener::Release()
 {
     std::unique_lock<std::mutex> lock(bufferMutex_);
-    MEDIA_LOGI("Release");
+    MEDIA_LOGI("ScreenCapBufferConsumerListener Release");
     return ReleaseBuffer();
 }
 

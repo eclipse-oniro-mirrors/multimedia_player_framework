@@ -173,7 +173,7 @@ private:
     static OH_AVSCREEN_CAPTURE_ErrCode AcquireVideoBuffer(const std::shared_ptr<ScreenCapture> &screenCapture,
         OHOS::sptr<OH_AVBuffer> &ohAvBuffer, int64_t &timestamp)
     {
-        int32_t fence;
+        int32_t fence = -1;
         OHOS::Rect damage;
         OHOS::sptr<OHOS::SurfaceBuffer> surfaceBuffer =
             screenCapture->AcquireVideoBuffer(fence, timestamp, damage);
