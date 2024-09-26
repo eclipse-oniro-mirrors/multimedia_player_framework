@@ -265,6 +265,7 @@ public:
 
         if (dataCallback_ != nullptr) {
             if (!isReady) {
+                MEDIA_LOGD("OnAudioBufferAvailable not ready");
                 return;
             }
             if (type == AudioCaptureSourceType::SOURCE_DEFAULT || type == AudioCaptureSourceType::MIC) {
@@ -276,12 +277,15 @@ public:
             } else {
                 MEDIA_LOGD("OnAudioBufferAvailable() is called, invalid audio source type:%{public}d", type);
             }
+            MEDIA_LOGD("OnAudioBufferAvailable finished");
             return;
         }
         if (callback_.onAudioBufferAvailable != nullptr) {
             callback_.onAudioBufferAvailable(capture_, isReady, static_cast<OH_AudioCaptureSourceType>(type));
+            MEDIA_LOGD("OnAudioBufferAvailable finished");
             return;
         }
+        MEDIA_LOGD("OnAudioBufferAvailable finished");
     }
 
     void OnVideoBufferAvailable(bool isReady) override
@@ -292,15 +296,18 @@ public:
 
         if (dataCallback_ != nullptr) {
             if (!isReady) {
+                MEDIA_LOGD("OnVideoBufferAvailable not ready");
                 return;
             }
             dataCallback_->OnBufferAvailable(capture_,
                 OH_AVScreenCaptureBufferType::OH_SCREEN_CAPTURE_BUFFERTYPE_VIDEO);
+            MEDIA_LOGD("OnVideoBufferAvailable finished");
             return;
         }
         if (capture_ != nullptr && callback_.onVideoBufferAvailable != nullptr) {
             callback_.onVideoBufferAvailable(capture_, isReady);
         }
+        MEDIA_LOGD("OnVideoBufferAvailable finished");
     }
 
     void StopCallback()
