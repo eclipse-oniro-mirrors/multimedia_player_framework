@@ -165,11 +165,19 @@ int32_t CacheBuffer::ReCombineCacheData()
     MEDIA_LOGI("ReCombine start copyIndex:%{public}d, remainSize:%{public}d", copyIndex, remainBufferSize);
     for (std::shared_ptr<AudioBufferEntry> bufferEntry : cacheData_) {
         if (bufferEntry != nullptr && bufferEntry->size > 0 && bufferEntry->buffer != nullptr) {
-            CHECK_AND_RETURN_RET_LOG(remainBufferSize >= bufferEntry->size, MSERR_INVALID_VAL,
-                "ReCombine remainBufferSize not enough");
+            if (remainBufferSize < bufferEntry->size) {
+                delete[] fullBuffer;
+                MEDIA_LOGE("ReCombine not enough remainBufferSize:%{public}d, bufferEntry->size:%{public}d",
+                    remainBufferSize, bufferEntry->size);
+                return MSERR_INVALID_VAL;
+            }
             int32_t ret = memcpy_s(fullBuffer + copyIndex, remainBufferSize,
                 bufferEntry->buffer, bufferEntry->size);
-            CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_VAL, "ReCombine memcpy failed.");
+            if (ret != MSERR_OK) {
+                delete[] fullBuffer;
+                MEDIA_LOGE("ReCombine memcpy failed");
+                return MSERR_INVALID_VAL;
+            }
             copyIndex += bufferEntry->size;
             remainBufferSize -= bufferEntry->size;
         } else {
