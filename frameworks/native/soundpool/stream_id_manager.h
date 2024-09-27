@@ -43,6 +43,8 @@ public:
 
     int32_t ReorderStream(int32_t streamID, int32_t priority);
 
+    int32_t ClearStreamIDInDeque(int32_t streamID);
+
 private:
     class CacheBufferCallBack : public ISoundPoolCallback {
     public:

@@ -161,15 +161,23 @@ int32_t CacheBuffer::ReCombineCacheData()
     uint8_t *fullBuffer = new(std::nothrow) uint8_t[cacheDataTotalSize_];
     CHECK_AND_RETURN_RET_LOG(fullBuffer != nullptr, MSERR_INVALID_VAL, "Invalid fullBuffer");
     int32_t copyIndex = 0;
-    int32_t remainBufferSize = cacheDataTotalSize_;
+    int32_t remainBufferSize = static_cast<int32_t>(cacheDataTotalSize_);
     MEDIA_LOGI("ReCombine start copyIndex:%{public}d, remainSize:%{public}d", copyIndex, remainBufferSize);
     for (std::shared_ptr<AudioBufferEntry> bufferEntry : cacheData_) {
         if (bufferEntry != nullptr && bufferEntry->size > 0 && bufferEntry->buffer != nullptr) {
-            CHECK_AND_RETURN_RET_LOG(remainBufferSize >= bufferEntry->size, MSERR_INVALID_VAL,
-                "ReCombine remainBufferSize not enough");
+            if (remainBufferSize < bufferEntry->size) {
+                delete[] fullBuffer;
+                MEDIA_LOGE("ReCombine not enough remainBufferSize:%{public}d, bufferEntry->size:%{public}d",
+                    remainBufferSize, bufferEntry->size);
+                return MSERR_INVALID_VAL;
+            }
             int32_t ret = memcpy_s(fullBuffer + copyIndex, remainBufferSize,
                 bufferEntry->buffer, bufferEntry->size);
-            CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_VAL, "ReCombine memcpy failed.");
+            if (ret != MSERR_OK) {
+                delete[] fullBuffer;
+                MEDIA_LOGE("ReCombine memcpy failed");
+                return MSERR_INVALID_VAL;
+            }
             copyIndex += bufferEntry->size;
             remainBufferSize -= bufferEntry->size;
         } else {
@@ -231,7 +239,7 @@ void CacheBuffer::OnWriteData(size_t length)
         MEDIA_LOGE("audioRenderer is stop.");
         return;
     }
-    if (cacheDataFrameIndex_ >= fullCacheData_->size) {
+    if (cacheDataFrameIndex_ >= static_cast<size_t>(fullCacheData_->size)) {
         if (havePlayedCount_ == loop_) {
             MEDIA_LOGI("CacheBuffer stream write finish, cacheDataFrameIndex_:%{public}zu,"
                 " havePlayedCount_:%{public}d, loop:%{public}d, streamID_:%{public}d, length: %{public}zu",
@@ -254,7 +262,7 @@ void CacheBuffer::DealWriteData(size_t length)
     audioRenderer_->GetBufferDesc(bufDesc);
     std::lock_guard lock(cacheBufferLock_);
     if (bufDesc.buffer != nullptr && fullCacheData_ != nullptr && fullCacheData_->buffer != nullptr) {
-        if (fullCacheData_->size - cacheDataFrameIndex_ >= length) {
+        if (static_cast<size_t>(fullCacheData_->size) - cacheDataFrameIndex_ >= length) {
             int32_t ret = memcpy_s(bufDesc.buffer, length,
                 fullCacheData_->buffer + cacheDataFrameIndex_, length);
             CHECK_AND_RETURN_LOG(ret == MSERR_OK, "memcpy failed total length.");
@@ -262,7 +270,7 @@ void CacheBuffer::DealWriteData(size_t length)
             bufDesc.dataLength = length;
             cacheDataFrameIndex_ += length;
         } else {
-            size_t copyLength = fullCacheData_->size - cacheDataFrameIndex_;
+            size_t copyLength = static_cast<size_t>(fullCacheData_->size) - cacheDataFrameIndex_;
             int32_t ret = memset_s(bufDesc.buffer, length, 0, length);
             CHECK_AND_RETURN_LOG(ret == MSERR_OK, "memset failed.");
             ret = memcpy_s(bufDesc.buffer, length, fullCacheData_->buffer + cacheDataFrameIndex_,

@@ -185,9 +185,11 @@ int32_t SoundPool::Unload(int32_t soundID)
     MEDIA_LOGI("SoundPool::Unload soundID::%{public}d", soundID);
     CHECK_AND_RETURN_RET_LOG(streamIdManager_ != nullptr, -1, "sound pool have released.");
     CHECK_AND_RETURN_RET_LOG(soundIDManager_ != nullptr, -1, "sound id manager have released.");
-    if (std::shared_ptr<CacheBuffer> cacheBuffer =
-        streamIdManager_->FindCacheBuffer(streamIdManager_->GetStreamIDBySoundID(soundID))) {
+    int32_t streamID = streamIdManager_->GetStreamIDBySoundID(soundID);
+    if (std::shared_ptr<CacheBuffer> cacheBuffer = streamIdManager_->FindCacheBuffer(streamID)) {
+        cacheBuffer->Stop(streamID);
         cacheBuffer->Release();
+        streamIdManager_->ClearStreamIDInDeque(streamID);
     }
     return soundIDManager_->Unload(soundID);
 }
