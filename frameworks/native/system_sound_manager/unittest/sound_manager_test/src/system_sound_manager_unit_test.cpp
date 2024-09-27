@@ -886,5 +886,217 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_AddCustomizedToneByFdAndOf
     EXPECT_NE(systemSoundManager_, nullptr);
     systemSoundManager_->Close(fd);
 }
+
+/**
+ * @tc.name  : Test AddCustomizedToneByFd API
+ * @tc.number: Media_SoundManager_AddCustomizedToneByFd_001
+ * @tc.desc  : Test AddCustomizedToneByFd interface.
+ */
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_AddCustomizedToneByFd_001, TestSize.Level2)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
+    std::shared_ptr<ToneAttrs> toneAttrs_ = std::make_shared<ToneAttrs>("default",
+        "default", "default", CUSTOMISED, TONE_CATEGORY_INVALID);
+    auto vec = systemSoundManager_->GetAlarmToneAttrList(context_);
+    std::string uri = "";
+    if (vec.size() > 0) {
+        uri = vec[0]->GetUri();
+    }
+    int fd = systemSoundManager_->OpenAlarmTone(context_, uri);
+    toneAttrs_->SetTitle("06172");
+    toneAttrs_->SetFileName("06172");
+    systemSoundManager_->AddCustomizedToneByFd(context_, toneAttrs_, fd);
+    EXPECT_NE(systemSoundManager_, nullptr);
+}
+
+/**
+ * @tc.name  : Test AddCustomizedToneByFd API
+ * @tc.number: Media_SoundManager_AddCustomizedToneByFd_002
+ * @tc.desc  : Test AddCustomizedToneByFd interface.
+ */
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_AddCustomizedToneByFd_002, TestSize.Level2)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
+    std::shared_ptr<ToneAttrs> toneAttrs_ = std::make_shared<ToneAttrs>("default",
+        "default", "default", CUSTOMISED, TONE_CATEGORY_TEXT_MESSAGE);
+    auto vec = systemSoundManager_->GetAlarmToneAttrList(context_);
+    std::string uri = "";
+    if (vec.size() > 0) {
+        uri = vec[0]->GetUri();
+    }
+    int fd = systemSoundManager_->OpenAlarmTone(context_, uri);
+    toneAttrs_->SetTitle("06172");
+    toneAttrs_->SetFileName("06172");
+    systemSoundManager_->AddCustomizedToneByFd(context_, toneAttrs_, fd);
+    EXPECT_NE(systemSoundManager_, nullptr);
+
+    toneAttrs_->SetCategory(TONE_CATEGORY_NOTIFICATION);
+    systemSoundManager_->AddCustomizedToneByFd(context_, toneAttrs_, fd);
+    EXPECT_NE(systemSoundManager_, nullptr);
+
+    toneAttrs_->SetCategory(TONE_CATEGORY_ALARM);
+    systemSoundManager_->AddCustomizedToneByFd(context_, toneAttrs_, fd);
+    EXPECT_NE(systemSoundManager_, nullptr);
+}
+
+/**
+ * @tc.name  : Test GetCustomizedTone API
+ * @tc.number: Media_SoundManager_GetCustomizedTone_001
+ * @tc.desc  : Test GetCustomizedTone interface.
+ */
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetCustomizedTone_001, TestSize.Level2)
+{
+    auto systemSoundManager_ = std::make_shared<SystemSoundManagerImpl>();
+    std::shared_ptr<ToneAttrs> toneAttrs_ = std::make_shared<ToneAttrs>("default",
+        "default", "default", CUSTOMISED, TONE_CATEGORY_INVALID);
+    toneAttrs_->SetTitle("06172");
+    toneAttrs_->SetFileName("06172");
+    systemSoundManager_->GetCustomizedTone(toneAttrs_);
+    EXPECT_NE(systemSoundManager_, nullptr);
+}
+
+/**
+ * @tc.name  : Test ConvertToSystemToneType API
+ * @tc.number: Media_SoundManager_ConvertToSystemToneType_001
+ * @tc.desc  : Test ConvertToSystemToneType interface.
+ */
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_ConvertToSystemToneType_001, TestSize.Level2)
+{
+    auto systemSoundManager_ = std::make_shared<SystemSoundManagerImpl>();
+    SystemToneType systemToneType;
+    int HAPTICS_RINGTONE_TYPE_SIM_CARD_DEFAULT = 4;
+    systemSoundManager_->ConvertToSystemToneType(static_cast<ToneHapticsType>(HAPTICS_RINGTONE_TYPE_SIM_CARD_DEFAULT),
+        systemToneType);
+    EXPECT_NE(systemSoundManager_, nullptr);
+}
+
+/**
+ * @tc.name  : Test IntToToneHapticsMode API
+ * @tc.number: Media_SoundManager_IntToToneHapticsMode_001
+ * @tc.desc  : Test IntToToneHapticsMode interface.
+ */
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_IntToToneHapticsMode_001, TestSize.Level2)
+{
+    auto systemSoundManager_ = std::make_shared<SystemSoundManagerImpl>();
+    int32_t result = systemSoundManager_->IntToToneHapticsMode(ToneHapticsMode::NONE);
+    EXPECT_EQ(result, 0);
+
+    result = systemSoundManager_->IntToToneHapticsMode(ToneHapticsMode::SYNC);
+    EXPECT_EQ(result, 1);
+
+    result = systemSoundManager_->IntToToneHapticsMode(ToneHapticsMode::NON_SYNC);
+    EXPECT_EQ(result, 2);
+
+    int32_t DEFAULT_SYNC = 3;
+    result = systemSoundManager_->IntToToneHapticsMode(static_cast<ToneHapticsMode>(DEFAULT_SYNC));
+    EXPECT_EQ(result, 0);
+}
+
+/**
+ * @tc.name  : Test SetRingerMode API
+ * @tc.number: Media_SoundManager_SetRingerMode_001
+ * @tc.desc  : Test SetRingerMode interface.
+ */
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_SetRingerMode_001, TestSize.Level2)
+{
+    auto systemSoundManager_ = std::make_shared<SystemSoundManagerImpl>();
+    int32_t result = systemSoundManager_->SetRingerMode(AudioStandard::AudioRingerMode::RINGER_MODE_NORMAL);
+    EXPECT_EQ(result, 0);
+}
+
+/**
+* @tc.name  : Test OnRingerModeUpdated API
+* @tc.number: Media_SoundManager_OnRingerModeUpdated_001
+* @tc.desc  : Test OnRingerModeUpdated interface.
+*/
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_OnRingerModeUpdated_001, TestSize.Level2)
+{
+    auto systemSoundManager = std::make_shared<SystemSoundManagerImpl>();
+    SystemSoundManagerImpl systemSoundManager_;
+    RingerModeCallbackImpl ringerMode_(systemSoundManager_);
+    ringerMode_.OnRingerModeUpdated(AudioStandard::AudioRingerMode::RINGER_MODE_SILENT);
+    EXPECT_NE(systemSoundManager, nullptr);
+}
+
+/**
+* @tc.name  : Test GetStandardVibrateType API
+* @tc.number: Media_SoundManager_GetStandardVibrateType_001
+* @tc.desc  : Test GetStandardVibrateType interface.
+*/
+ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetStandardVibrateType_001, TestSize.Level2)
+{
+    auto systemSoundManager_ = std::make_shared<SystemSoundManagerImpl>();
+    systemSoundManager_->GetStandardVibrateType(ToneType::TONE_TYPE_ALARM);
+    EXPECT_NE(systemSoundManager_, nullptr);
+
+    systemSoundManager_->GetStandardVibrateType(ToneType::TONE_TYPE_RINGTONE);
+    EXPECT_NE(systemSoundManager_, nullptr);
+
+    systemSoundManager_->GetStandardVibrateType(ToneType::TONE_TYPE_NOTIFICATION);
+    EXPECT_NE(systemSoundManager_, nullptr);
+    systemSoundManager_->GetStandardVibrateType(ToneType::TONE_TYPE_MAX);
+    EXPECT_NE(systemSoundManager_, nullptr);
+}
+
+/**
+* @tc.name  : Test GetDefaultToneHapticsSettings API
+* @tc.number: Media_SoundManager_GetDefaultToneHapticsSettings_001
+* @tc.desc  : Test GetDefaultToneHapticsSettings interface.
+*/
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetDefaultToneHapticsSettings_001, TestSize.Level2)
+{
+    auto systemSoundManager_ = std::make_shared<SystemSoundManagerImpl>();
+    std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
+    std::string currentToneUri = systemSoundManager_->GetCurrentToneUri(context_,
+        ToneHapticsType::HAPTICS_RINGTONE_TYPE_SIM_CARD_0);
+    ToneHapticsSettings settings_;
+    systemSoundManager_->GetDefaultToneHapticsSettings(context_, currentToneUri,
+        ToneHapticsType::HAPTICS_RINGTONE_TYPE_SIM_CARD_0, settings_);
+    EXPECT_NE(systemSoundManager_, nullptr);
+
+    currentToneUri = systemSoundManager_->GetCurrentToneUri(context_,
+        ToneHapticsType::HAPTICS_RINGTONE_TYPE_SIM_CARD_1);
+    systemSoundManager_->GetDefaultToneHapticsSettings(context_, currentToneUri,
+        ToneHapticsType::HAPTICS_RINGTONE_TYPE_SIM_CARD_1, settings_);
+    EXPECT_NE(systemSoundManager_, nullptr);
+ 
+    currentToneUri = systemSoundManager_->GetCurrentToneUri(context_,
+        ToneHapticsType::HAPTICS_SYSTEM_TONE_TYPE_NOTIFICATION);
+    systemSoundManager_->GetDefaultToneHapticsSettings(context_, currentToneUri,
+        ToneHapticsType::HAPTICS_SYSTEM_TONE_TYPE_NOTIFICATION, settings_);
+    EXPECT_NE(systemSoundManager_, nullptr);
+
+    currentToneUri = systemSoundManager_->GetCurrentToneUri(context_,
+        ToneHapticsType::HAPTICS_SYSTEM_TONE_TYPE_SIM_CARD_0);
+    systemSoundManager_->GetDefaultToneHapticsSettings(context_, currentToneUri,
+        ToneHapticsType::HAPTICS_SYSTEM_TONE_TYPE_SIM_CARD_0, settings_);
+    EXPECT_NE(systemSoundManager_, nullptr);
+
+    currentToneUri = systemSoundManager_->GetCurrentToneUri(context_,
+        ToneHapticsType::HAPTICS_SYSTEM_TONE_TYPE_SIM_CARD_1);
+    systemSoundManager_->GetDefaultToneHapticsSettings(context_, currentToneUri,
+        ToneHapticsType::HAPTICS_SYSTEM_TONE_TYPE_SIM_CARD_1, settings_);
+    EXPECT_NE(systemSoundManager_, nullptr);
+}
+
+/**
+* @tc.name  : Test GetVibrateTypeByStyle API
+* @tc.number: Media_SoundManager_GetVibrateTypeByStyle_001
+* @tc.desc  : Test GetVibrateTypeByStyle interface.
+*/
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetVibrateTypeByStyle_001, TestSize.Level2)
+{
+    auto systemSoundManager_ = std::make_shared<SystemSoundManagerImpl>();
+    std::unique_ptr<VibrateAsset> vibrateAssetByUri = std::make_unique<VibrateAsset>();
+    int vibrateType = 0;
+    systemSoundManager_->GetVibrateTypeByStyle(vibrateAssetByUri->GetVibrateType(), HapticsStyle::HAPTICS_STYLE_GENTLE,
+        vibrateType);
+    EXPECT_NE(systemSoundManager_, nullptr);
+    systemSoundManager_->GetVibrateTypeByStyle(vibrateAssetByUri->GetVibrateType(),
+    HapticsStyle::HAPTICS_STYLE_STANDARD, vibrateType);
+    EXPECT_NE(systemSoundManager_, nullptr);
+}
 } // namespace Media
 } // namespace OHOS
