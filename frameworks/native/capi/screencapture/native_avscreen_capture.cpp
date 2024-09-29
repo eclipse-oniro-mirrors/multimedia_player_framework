@@ -180,7 +180,7 @@ private:
         CHECK_AND_RETURN_RET_LOG(surfaceBuffer != nullptr, AV_SCREEN_CAPTURE_ERR_NO_MEMORY,
             "AcquireVideoBuffer failed surfaceBuffer no memory!");
         std::shared_ptr<AVBuffer> avBuffer = AVBuffer::CreateAVBuffer(surfaceBuffer);
-        CHECK_AND_RETURN_RET_LOG(avBuffer != nullptr, AV_SCREEN_CAPTURE_ERR_NO_MEMORY,
+        CHECK_AND_RETURN_RET_LOG(avBuffer != nullptr && avBuffer->memory_ != nullptr, AV_SCREEN_CAPTURE_ERR_NO_MEMORY,
             "AcquireVideoBuffer failed avBuffer no memory!");
         MEDIA_LOGD("AcquireVideoBuffer Size %{public}d", static_cast<int32_t>(surfaceBuffer->GetSize()));
         avBuffer->memory_->SetSize(static_cast<int32_t>(surfaceBuffer->GetSize()));
