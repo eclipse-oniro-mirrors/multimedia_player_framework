@@ -36,6 +36,8 @@
 #include "hitrace/tracechain.h"
 #include "locale_config.h"
 #include <sync_fence.h>
+#include "parameter.h"
+#include <unordered_map>
 
 using OHOS::Rosen::DMError;
 
@@ -76,12 +78,8 @@ static const std::string ICON_PATH_NOTIFICATION = "/etc/screencapture/notificati
 static const std::string ICON_PATH_MIC = "/etc/screencapture/mic.svg";
 static const std::string ICON_PATH_MIC_OFF = "/etc/screencapture/mic_off.svg";
 static const std::string ICON_PATH_STOP = "/etc/screencapture/stop.png";
-static const std::string BUNDLE_NAME = "com.ohos.systemui";
-static const std::string ABILITY_NAME = "com.ohos.systemui.dialog";
 static const std::string BACK_GROUND_COLOR = "#E84026";
-static const std::string SCREEN_RECORDER_BUNDLE_NAME = "com.ohos.screenrecorder";
 static const std::string SELECT_ABILITY_NAME = "SelectWindowAbility";
-static const std::string HIVIEWCARE_BUNDLE_NAME = "com.ohos.hiviewcare";
 static const int32_t SVG_HEIGHT = 80;
 static const int32_t SVG_WIDTH = 80;
 static const int32_t MDPI = 160;
@@ -863,7 +861,8 @@ int32_t ScreenCaptureServer::RequestUserPrivacyAuthority()
     }
 
     if (isPrivacyAuthorityEnabled_) {
-        if (SCREEN_RECORDER_BUNDLE_NAME.compare(appName_) != 0) {
+        if (GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"]
+                .compare(appName_) != 0) {
             return StartPrivacyWindow();
         } else {
             MEDIA_LOGI("ScreenCaptureServer::RequestUserPrivacyAuthority support screenrecorder");
@@ -1138,7 +1137,9 @@ void ScreenCaptureServer::PostStartScreenCapture(bool isSuccess)
     if (isSuccess) {
         MEDIA_LOGI("PostStartScreenCapture handle success");
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
-        if (isPrivacyAuthorityEnabled_ && SCREEN_RECORDER_BUNDLE_NAME.compare(appName_) != 0) {
+        if (isPrivacyAuthorityEnabled_ &&
+            GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"]
+                .compare(appName_) != 0) {
             int32_t tryTimes = TryStartNotification();
             if (tryTimes > NOTIFICATION_MAX_TRY_NUM) {
                 captureState_ = AVScreenCaptureState::STARTED;
@@ -1419,7 +1420,9 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
     }
 
     if (IsUserPrivacyAuthorityNeeded()) {
-        if (isPrivacyAuthorityEnabled_ && SCREEN_RECORDER_BUNDLE_NAME.compare(appName_) != 0) {
+        if (isPrivacyAuthorityEnabled_ &&
+            GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"]
+                .compare(appName_) != 0) {
             MEDIA_LOGI("Wait for user interactions to ALLOW/DENY capture");
             return MSERR_OK;
         } else {
@@ -1441,7 +1444,9 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
 bool ScreenCaptureServer::IsTelInCallSkipList()
 {
     MEDIA_LOGI("ScreenCaptureServer::IsTelInCallSkipList isCalledBySystemApp : %{public}d", isCalledBySystemApp_);
-    if (isCalledBySystemApp_ && OHOS::Media::HIVIEWCARE_BUNDLE_NAME.compare(appName_) == 0) {
+    if (isCalledBySystemApp_ &&
+        GetScreenCaptureSystemParam()["const.multimedia.screencapture.hiviewcarebundlename"]
+            .compare(appName_) == 0) {
         MEDIA_LOGI("ScreenCaptureServer::IsTelInCallSkipList true");
         return true;
     }
@@ -1486,13 +1491,16 @@ int32_t ScreenCaptureServer::StartPrivacyWindow()
     ErrCode ret = ERR_INVALID_VALUE;
 #ifdef PC_STANDARD
     if (captureConfig_.captureMode == CAPTURE_HOME_SCREEN) {
-        want.SetElementName(BUNDLE_NAME, ABILITY_NAME);
+        want.SetElementName(GetScreenCaptureSystemParam()["const.multimedia.screencapture.dialogconnectionbundlename"],
+            GetScreenCaptureSystemParam()["const.multimedia.screencapture.dialogconnectionabilityname"]);
         auto connection_ = sptr<UIExtensionAbilityConnection>(new (std::nothrow) UIExtensionAbilityConnection(comStr));
         ret = OHOS::AAFwk::ExtensionManagerClient::GetInstance().ConnectServiceExtensionAbility(want, connection_,
             nullptr, -1);
         MEDIA_LOGI("ConnectServiceExtensionAbility end %{public}d, DeviceType : PC", ret);
     } else if (captureConfig_.captureMode != CAPTURE_INVAILD) {
-        AppExecFwk::ElementName element("", SCREEN_RECORDER_BUNDLE_NAME, SELECT_ABILITY_NAME); // DeviceID
+        AppExecFwk::ElementName element("",
+            GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"],
+            SELECT_ABILITY_NAME); // DeviceID
         want.SetElement(element);
         want.SetParam("params", comStr);
         want.SetParam("appLabel", callingLabel_);
@@ -1500,7 +1508,8 @@ int32_t ScreenCaptureServer::StartPrivacyWindow()
         MEDIA_LOGI("StartAbility end %{public}d, DeviceType : PC", ret);
     }
 #else
-    want.SetElementName(BUNDLE_NAME, ABILITY_NAME);
+    want.SetElementName(GetScreenCaptureSystemParam()["const.multimedia.screencapture.dialogconnectionbundlename"],
+                        GetScreenCaptureSystemParam()["const.multimedia.screencapture.dialogconnectionabilityname"]);
     auto connection_ = sptr<UIExtensionAbilityConnection>(new (std::nothrow) UIExtensionAbilityConnection(comStr));
     ret = OHOS::AAFwk::ExtensionManagerClient::GetInstance().ConnectServiceExtensionAbility(want, connection_,
         nullptr, -1);
@@ -1804,7 +1813,8 @@ int32_t ScreenCaptureServer::PrepareVirtualScreenMirror()
     for (size_t i = 0; i < contentFilter_.windowIDsVec.size(); i++) {
         MEDIA_LOGI("After CreateVirtualScreen windowIDsVec value :%{public}" PRIu64, contentFilter_.windowIDsVec[i]);
     }
-    if (SCREEN_RECORDER_BUNDLE_NAME.compare(appName_) == 0) {
+    if (GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"]
+            .compare(appName_) == 0) {
         SetScreenScaleMode();
     }
     Rosen::DisplayManager::GetInstance().SetVirtualScreenBlackList(screenId_, contentFilter_.windowIDsVec);
@@ -2537,7 +2547,9 @@ void ScreenCaptureServer::PostStopScreenCapture(AVScreenCaptureStateCode stateCo
         screenCaptureCb_->OnStateChange(stateCode);
     }
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
-    if (isPrivacyAuthorityEnabled_ && SCREEN_RECORDER_BUNDLE_NAME.compare(appName_) != 0) {
+    if (isPrivacyAuthorityEnabled_ &&
+        GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"]
+            .compare(appName_) != 0) {
         // Remove real time notification
         int32_t ret = NotificationHelper::CancelNotification(notificationId_);
         MEDIA_LOGI("StopScreenCaptureInner CancelNotification id:%{public}d, ret:%{public}d ", notificationId_, ret);
@@ -2773,7 +2785,8 @@ void ScreenRendererAudioStateChangeCallback::OnRendererStateChange(
     CHECK_AND_RETURN(audioSource_ != nullptr);
     audioSource_->SpeakerStateUpdate(audioRendererChangeInfos);
     std::string region = Global::I18n::LocaleConfig::GetSystemRegion();
-    if (SCREEN_RECORDER_BUNDLE_NAME.compare(appName_) == 0 && region == "CN") {
+    if (GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"]
+            .compare(appName_) == 0 && region == "CN") {
         audioSource_->VoIPStateUpdate(audioRendererChangeInfos);
     }
 }
@@ -2892,7 +2905,8 @@ int32_t AudioDataSource::RegisterAudioRendererEventListener(const int32_t client
     std::vector<std::unique_ptr<AudioRendererChangeInfo>> audioRendererChangeInfos;
     SpeakerStateUpdate(audioRendererChangeInfos);
     std::string region = Global::I18n::LocaleConfig::GetSystemRegion();
-    if (SCREEN_RECORDER_BUNDLE_NAME.compare(appName_) == 0 && region == "CN") {
+    if (GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"]
+            .compare(appName_) == 0 && region == "CN") {
         VoIPStateUpdate(audioRendererChangeInfos);
     }
     return ret;

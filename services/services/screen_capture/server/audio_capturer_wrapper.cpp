@@ -28,8 +28,6 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTUR
 namespace OHOS {
 namespace Media {
 
-static const std::string SCREEN_RECORDER_BUNDLE_NAME = "com.ohos.screenrecorder";
-
 void AudioCapturerCallbackImpl::OnInterrupt(const InterruptEvent &interruptEvent)
 {
     MEDIA_LOGI("AudioCapturerCallbackImpl OnInterrupt hintType:%{public}d, eventType:%{public}d, forceType:%{public}d",
@@ -60,7 +58,8 @@ int32_t AudioCapturerWrapper::Start(const OHOS::AudioStandard::AppInfo &appInfo)
     appInfo_ = appInfo;
     std::shared_ptr<AudioCapturer> audioCapturer = CreateAudioCapturer(appInfo);
     CHECK_AND_RETURN_RET_LOG(audioCapturer != nullptr, MSERR_UNKNOWN, "Start failed, create AudioCapturer failed");
-    if (SCREEN_RECORDER_BUNDLE_NAME.compare(bundleName_) == 0) {
+    if (GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"]
+            .compare(bundleName_) == 0) {
         std::vector<SourceType> targetSources = {
             SourceType::SOURCE_TYPE_MIC,
             SourceType::SOURCE_TYPE_VOICE_RECOGNITION,
@@ -210,7 +209,8 @@ void AudioCapturerWrapper::SetInnerStreamUsage(std::vector<OHOS::AudioStandard::
         usages.push_back(OHOS::AudioStandard::StreamUsage::STREAM_USAGE_NOTIFICATION);
     }
     std::string region = Global::I18n::LocaleConfig::GetSystemRegion();
-    if (SCREEN_RECORDER_BUNDLE_NAME.compare(bundleName_) == 0 && region == "CN") {
+    if (GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"]
+            .compare(bundleName_) == 0 && region == "CN") {
         usages.push_back(AudioStandard::StreamUsage::STREAM_USAGE_VOICE_COMMUNICATION);
     }
 }
@@ -236,7 +236,8 @@ std::shared_ptr<AudioCapturer> AudioCapturerWrapper::CreateAudioCapturer(const O
         capturerOptions.capturerInfo.sourceType = SourceType::SOURCE_TYPE_PLAYBACK_CAPTURE;
         SetInnerStreamUsage(capturerOptions.playbackCaptureConfig.filterOptions.usages);
         std::string region = Global::I18n::LocaleConfig::GetSystemRegion();
-        if (SCREEN_RECORDER_BUNDLE_NAME.compare(bundleName_) == 0 && region == "CN") {
+        if (GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"]
+            .compare(bundleName_) == 0 && region == "CN") {
             newInfo.appTokenId = IPCSkeleton::GetSelfTokenID();
             newInfo.appFullTokenId = IPCSkeleton::GetSelfTokenID();
         }
