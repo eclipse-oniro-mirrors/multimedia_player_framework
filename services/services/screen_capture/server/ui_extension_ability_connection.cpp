@@ -16,6 +16,7 @@
 #include "ability_connect_callback_interface.h"
 #include "ability_manager_client.h"
 #include "media_log.h"
+#include "media_utils.h"
 
 constexpr int32_t SIGNAL_NUM = 3;
 
@@ -34,9 +35,11 @@ void UIExtensionAbilityConnection::OnAbilityConnectDone(const AppExecFwk::Elemen
     MessageOption option;
     data.WriteInt32(SIGNAL_NUM);
     data.WriteString16(u"bundleName");
-    data.WriteString16(u"com.ohos.screenshot");
+    data.WriteString16(Str8ToStr16(GetScreenCaptureSystemParam()
+        ["const.multimedia.screencapture.screenrecorderbundlename"]));
     data.WriteString16(u"abilityName");
-    data.WriteString16(u"com.ohos.screenshot.DialogAbility");
+    data.WriteString16(Str8ToStr16(GetScreenCaptureSystemParam()
+        ["const.multimedia.screencapture.screenrecorderabilityname"]));
     data.WriteString16(u"parameters");
     data.WriteString16(Str8ToStr16(commandStr_));
     MEDIA_LOGE("UIExtensionAbilityConnection::OnAbilityConnectDone  start ");

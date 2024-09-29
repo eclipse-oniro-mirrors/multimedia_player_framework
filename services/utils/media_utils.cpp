@@ -15,12 +15,15 @@
 
 #include <cmath>
 #include <media_errors.h>
+#include <sstream>
+#include <unordered_map>
 #include "common/log.h"
 #include "media_utils.h"
 #include "iservice_registry.h"
 #include "bundle_mgr_interface.h"
 #include "system_ability_definition.h"
 #include <unordered_set>
+#include "media_log.h"
 #include "parameter.h"
 
 namespace {
@@ -55,6 +58,9 @@ const std::array<std::pair<PlaybackRateMode, float>, 10> PLAY_RATE_REFS = {
     std::make_pair(PlaybackRateMode::SPEED_FORWARD_0_25_X, 0.25),
     std::make_pair(PlaybackRateMode::SPEED_FORWARD_0_125_X, 0.125),
 };
+
+static int g_readSysParaIdx = 0;
+static std::unordered_map<std::string, std::string> g_readSysParaMap;
 }  // namespace
 
 std::string __attribute__((visibility("default"))) GetClientBundleName(int32_t uid, bool shouldLog)
@@ -240,6 +246,37 @@ bool __attribute__((visibility("default"))) IsEnableOptimizeDecode()
 bool __attribute__((visibility("default"))) IsAppEnableRenderFirstFrame(int32_t uid)
 {
     return uid != 1003; // 1003 is bootanimation uid
+}
+
+bool __attribute__((visibility("default"))) GetPackageName(const char *key, std::string &value)
+{
+    CHECK_AND_RETURN_RET_LOG(key != nullptr, false, "key is nullptr");
+    char paraValue[100] = {0};   // 100 for system parameter
+    auto res = GetParameter(key, "-1", paraValue, sizeof(paraValue));
+
+    CHECK_AND_RETURN_RET_LOG(res > 0, false, "GetSysPara fail, key:%{public}s res:%{public}d", key, res);
+    std::stringstream valueStr;
+    valueStr << paraValue;
+    valueStr >> value;
+    return true;
+}
+
+std::unordered_map<std::string, std::string> __attribute__((visibility("default"))) GetScreenCaptureSystemParam()
+{
+    if (g_readSysParaIdx == 0) {
+        GetPackageName("const.multimedia.screencapture.dialogconnectionbundlename",
+            g_readSysParaMap["const.multimedia.screencapture.dialogconnectionbundlename"]);
+        GetPackageName("const.multimedia.screencapture.dialogconnectionabilityname",
+            g_readSysParaMap["const.multimedia.screencapture.dialogconnectionabilityname"]);
+        GetPackageName("const.multimedia.screencapture.screenrecorderbundlename",
+            g_readSysParaMap["const.multimedia.screencapture.screenrecorderbundlename"]);
+        GetPackageName("const.multimedia.screencapture.screenrecorderabilityname",
+            g_readSysParaMap["const.multimedia.screencapture.screenrecorderabilityname"]);
+        GetPackageName("const.multimedia.screencapture.hiviewcarebundlename",
+            g_readSysParaMap["const.multimedia.screencapture.hiviewcarebundlename"]);
+        g_readSysParaIdx++;
+    }
+    return g_readSysParaMap;
 }
 }  // namespace Media
 }  // namespace OHOS
