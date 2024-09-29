@@ -144,11 +144,7 @@ public:
     ScreenCapBufferConsumerListener(
         sptr<Surface> consumer, const std::shared_ptr<ScreenCaptureCallBack> &screenCaptureCb)
         : consumer_(consumer), screenCaptureCb_(screenCaptureCb) {}
-    ~ScreenCapBufferConsumerListener()
-    {
-        std::unique_lock<std::mutex> lock(bufferMutex_);
-        ReleaseBuffer();
-    }
+    ~ScreenCapBufferConsumerListener();
 
     void OnBufferAvailable() override;
     int32_t AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfaceBuffer, int32_t &fence, int64_t &timestamp,
@@ -157,17 +153,8 @@ public:
     int32_t Release();
 
 private:
-    int32_t ReleaseBuffer()
-    {
-        while (!availBuffers_.empty()) {
-            if (consumer_ != nullptr) {
-                consumer_->ReleaseBuffer(availBuffers_.front()->buffer,
-                    availBuffers_.front()->flushFence);
-            }
-            availBuffers_.pop();
-        }
-        return MSERR_OK;
-    }
+    int32_t ReleaseBuffer();
+    void ProcessVideoBufferCallBack();
 
 private:
     std::mutex mutex_;
