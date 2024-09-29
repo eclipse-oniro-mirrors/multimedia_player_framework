@@ -381,5 +381,17 @@
             <option name="shell" value="restorecon /data/test/"/>
         </preparer>
     </target>
+    <target name="hiplayer_impl_unit_test">
+        <depend resource="test_videofile/H264_AAC.mp4" pushpath="/data/test" findpath="res" presetcmd=""/>
+        <preparer>
+            <option name="push" value="test_videofile/H264_AAC.mp4 -> /data/test" src="res"/>
+            <option name="push" value="error.mp4 -> /data/test" src="res"/>
+            <option name="shell" value="mkdir /data/media"/>
+            <option name="shell" value="mkdir /data/test"/>
+            <option name="shell" value="mkdir /data/test/media"/>
+            <option name="shell" value="restorecon /data/test/media"/>
+            <option name="shell" value="restorecon /data/media/log"/>
+        </preparer>
+    </target>
 </configuration>
 
