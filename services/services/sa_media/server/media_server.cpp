@@ -66,7 +66,6 @@ void MediaServer::OnStart()
     bool res = Publish(this);
     MEDIA_LOGD("MediaServer OnStart res=%{public}d", res);
     AddSystemAbilityListener(MEMORY_MANAGER_SA_ID);
-    RegisterMediaAppFrozenStateObserver();
 }
 
 void MediaServer::OnStop()
