@@ -21,6 +21,13 @@ namespace OHOS {
 namespace Media {
 using namespace std;
 using namespace testing::ext;
+
+namespace {
+    const int64_t PLAY_RANGE_DEFAULT_VALUE = -1; // play range default value.
+    const std::string MEDIA_ROOT = "file:///data/test/";
+    const std::string VIDEO_FILE1 = MEDIA_ROOT + "H264_AAC.mp4";
+}
+
 void HiplayerImplUnitTest::SetUpTestCase(void)
 {
 }
@@ -610,6 +617,221 @@ HWTEST_F(HiplayerImplUnitTest, InitAudioDefaultTrackIndex_001, TestSize.Level0)
     EXPECT_EQ(hiplayer_->InitVideoDefaultTrackIndex(), Status::ERROR_UNKNOWN);
     EXPECT_EQ(hiplayer_->InitSubtitleDefaultTrackIndex(), Status::ERROR_UNKNOWN);
     EXPECT_EQ(hiplayer_->Prepare(), MSERR_OK);
+}
+
+HWTEST_F(HiplayerImplUnitTest, ReleaseHiPlayerImplHasSubtitleSink_001, TestSize.Level0)
+{
+    hiplayer_->subtitleSink_ = std::make_shared<SubtitleSinkFilter>("Test_SubtitleSinkFilter",
+        FilterType::FILTERTYPE_SSINK);
+    hiplayer_->dfxAgent_ = nullptr;
+    uint64_t testInstanceId = 0;
+    hiplayer_->SetInstancdId(testInstanceId);
+    hiplayer_->ReleaseInner();
+    EXPECT_EQ(hiplayer_->subtitleSink_, nullptr);
+}
+
+HWTEST_F(HiplayerImplUnitTest, ReleaseHiPlayerImplHasNoDemuxer_001, TestSize.Level0)
+{
+    hiplayer_->demuxer_ = nullptr;
+    hiplayer_->ReleaseInner();
+    EXPECT_EQ(hiplayer_->demuxer_, nullptr);
+}
+
+HWTEST_F(HiplayerImplUnitTest, InitWithNoSyncManager_001, TestSize.Level0)
+{
+    hiplayer_->syncManager_ = nullptr;
+    EXPECT_EQ(hiplayer_->Init(), Status::OK);
+}
+
+HWTEST_F(HiplayerImplUnitTest, SetDefaultAudioRenderInfoWithNullptrMeta_001, TestSize.Level0)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    std::vector<std::shared_ptr<Meta>> trackInfos{meta};
+
+    hiplayer_->syncManager_ = nullptr;
+    EXPECT_EQ(hiplayer_->Init(), Status::OK);
+}
+
+HWTEST_F(HiplayerImplUnitTest, ValidSeekTime_001, TestSize.Level0)
+{
+    hiplayer_->endTimeWithMode_ = 100;
+    hiplayer_->startTimeWithMode_  = 0;
+    int32_t validSeekTime = 10;
+    EXPECT_EQ(hiplayer_->IsInValidSeekTime(validSeekTime), false);
+}
+
+HWTEST_F(HiplayerImplUnitTest, InValidSeekTime_001, TestSize.Level0)
+{
+    hiplayer_->endTimeWithMode_ = 100;
+    hiplayer_->startTimeWithMode_  = 0;
+    int32_t inValidSeekTime = PLAY_RANGE_DEFAULT_VALUE;
+    EXPECT_EQ(hiplayer_->IsInValidSeekTime(inValidSeekTime), true);
+}
+
+HWTEST_F(HiplayerImplUnitTest, InValidSeekTime_002, TestSize.Level0)
+{
+    hiplayer_->endTimeWithMode_ = 100;
+    hiplayer_->startTimeWithMode_  = PLAY_RANGE_DEFAULT_VALUE;
+    int32_t inValidSeekTime = PLAY_RANGE_DEFAULT_VALUE;
+    EXPECT_EQ(hiplayer_->IsInValidSeekTime(inValidSeekTime), false);
+}
+
+HWTEST_F(HiplayerImplUnitTest, GetPlayStartTime_001, TestSize.Level0)
+{
+    int32_t startTime = 100;
+    hiplayer_->playRangeStartTime_ = startTime;
+    EXPECT_EQ(hiplayer_->GetPlayStartTime(), startTime);
+}
+
+HWTEST_F(HiplayerImplUnitTest, GetPlayStartTimeWithValidTime_001, TestSize.Level0)
+{
+    int32_t defaultStartTime = 0;
+    hiplayer_->playRangeStartTime_ = PLAY_RANGE_DEFAULT_VALUE;
+    EXPECT_EQ(hiplayer_->GetPlayStartTime(), defaultStartTime);
+}
+
+HWTEST_F(HiplayerImplUnitTest, GetPlayStartTimeWithInValidTime_001, TestSize.Level0)
+{
+    hiplayer_->startTimeWithMode_ = 0;
+    hiplayer_->endTimeWithMode_  = 100;
+    hiplayer_->playRangeStartTime_ = PLAY_RANGE_DEFAULT_VALUE;
+    EXPECT_EQ(hiplayer_->GetPlayStartTime(), hiplayer_->startTimeWithMode_);
+}
+
+HWTEST_F(HiplayerImplUnitTest, GetPlayStartTimeWithInValidTime_002, TestSize.Level0)
+{
+    int32_t defaultStartTime = 0;
+    hiplayer_->startTimeWithMode_ = PLAY_RANGE_DEFAULT_VALUE;
+    hiplayer_->endTimeWithMode_  = 100;
+    hiplayer_->playRangeStartTime_ = PLAY_RANGE_DEFAULT_VALUE;
+    EXPECT_EQ(hiplayer_->GetPlayStartTime(), defaultStartTime);
+}
+
+HWTEST_F(HiplayerImplUnitTest, GetPlayStartTimeWithInValidTime_003, TestSize.Level0)
+{
+    int32_t defaultStartTime = 0;
+    hiplayer_->startTimeWithMode_ = defaultStartTime;
+    hiplayer_->endTimeWithMode_  = PLAY_RANGE_DEFAULT_VALUE;
+    hiplayer_->playRangeStartTime_ = PLAY_RANGE_DEFAULT_VALUE;
+    EXPECT_EQ(hiplayer_->GetPlayStartTime(), defaultStartTime);
+}
+
+HWTEST_F(HiplayerImplUnitTest, SetPlayRangeWithMode_001, TestSize.Level0)
+{
+    int64_t start = -1;
+    int64_t end = -1;
+    PlayerSeekMode mode = PlayerSeekMode::SEEK_NEXT_SYNC;
+    EXPECT_EQ(hiplayer_->SetPlayRangeWithMode(start, end, mode), MSERR_INVALID_VAL);
+}
+
+HWTEST_F(HiplayerImplUnitTest, SetPlayRangeWithMode_002, TestSize.Level0)
+{
+    int64_t start = 0;
+    int64_t end = 100;
+    PlayerSeekMode mode = PlayerSeekMode::SEEK_NEXT_SYNC;
+    hiplayer_->pipelineStates_ = PlayerStates::PLAYER_INITIALIZED;
+    EXPECT_EQ(hiplayer_->SetPlayRangeWithMode(start, end, mode), MSERR_OK);
+}
+
+HWTEST_F(HiplayerImplUnitTest, SetPlayRangeWithMode_003, TestSize.Level0)
+{
+    int64_t start = 0;
+    int64_t end = 100;
+    PlayerSeekMode mode = PlayerSeekMode::SEEK_NEXT_SYNC;
+    hiplayer_->pipelineStates_ = PlayerStates::PLAYER_STOPPED;
+    EXPECT_EQ(hiplayer_->SetPlayRangeWithMode(start, end, mode), MSERR_INVALID_VAL);
+}
+
+HWTEST_F(HiplayerImplUnitTest, SetPlayRangeWithMode_004, TestSize.Level0)
+{
+    int64_t start = 0;
+    int64_t end = 100;
+    PlayerSeekMode mode = PlayerSeekMode::SEEK_NEXT_SYNC;
+    hiplayer_->pipelineStates_ = PlayerStates::PLAYER_IDLE;
+    EXPECT_EQ(hiplayer_->SetPlayRangeWithMode(start, end, mode), MSERR_INVALID_VAL);
+}
+
+HWTEST_F(HiplayerImplUnitTest, SetPlayRangeWithMode_005, TestSize.Level0)
+{
+    int64_t start = 0;
+    int64_t end = 100;
+    PlayerSeekMode mode = PlayerSeekMode::SEEK_NEXT_SYNC;
+    std::string url = "";
+    hiplayer_->DoSetSource(std::make_shared<MediaSource>(url));
+    hiplayer_->pipelineStates_ = PlayerStates::PLAYER_IDLE;
+    EXPECT_EQ(hiplayer_->SetPlayRangeWithMode(start, end, mode), MSERR_INVALID_VAL);
+}
+
+HWTEST_F(HiplayerImplUnitTest, PrepareAsync_001, TestSize.Level0)
+{
+    int32_t ret = hiplayer_->SetSource(VIDEO_FILE1);
+    EXPECT_EQ(MSERR_OK, ret);
+    hiplayer_->pipelineStates_ = PlayerStates::PLAYER_INITIALIZED;
+    EXPECT_EQ(MSERR_OK, hiplayer_->PrepareAsync());
+}
+
+HWTEST_F(HiplayerImplUnitTest, PrepareAsync_002, TestSize.Level0)
+{
+    int32_t ret = hiplayer_->SetSource(VIDEO_FILE1);
+    EXPECT_EQ(MSERR_OK, ret);
+    hiplayer_->pipelineStates_ = PlayerStates::PLAYER_STOPPED;
+    EXPECT_EQ(MSERR_OK, hiplayer_->PrepareAsync());
+}
+
+HWTEST_F(HiplayerImplUnitTest, StopBufferring_001, TestSize.Level0)
+{
+    std::string url = VIDEO_FILE1;
+    hiplayer_->DoSetSource(std::make_shared<MediaSource>(url));
+    EXPECT_EQ(MSERR_OK, hiplayer_->StopBufferring(false));
+}
+
+HWTEST_F(HiplayerImplUnitTest, SetAudioEffectMode_001, TestSize.Level0)
+{
+    EXPECT_EQ(MSERR_OK, hiplayer_->SetAudioEffectMode(0));
+}
+
+HWTEST_F(HiplayerImplUnitTest, SetAudioEffectMode_002, TestSize.Level0)
+{
+    hiplayer_->audioSink_ = FilterFactory::Instance().CreateFilter<AudioSinkFilter>("player.audiosink",
+        FilterType::FILTERTYPE_ASINK);
+    EXPECT_EQ(MSERR_UNKNOWN, hiplayer_->SetAudioEffectMode(1));
+}
+
+HWTEST_F(HiplayerImplUnitTest, GetAudioEffectMode_001, TestSize.Level0)
+{
+    hiplayer_->audioSink_ = FilterFactory::Instance().CreateFilter<AudioSinkFilter>("player.audiosink",
+        FilterType::FILTERTYPE_ASINK);
+    int32_t effect = 1;
+    EXPECT_EQ(MSERR_UNKNOWN, hiplayer_->GetAudioEffectMode(effect));
+}
+
+HWTEST_F(HiplayerImplUnitTest, SetPlaybackSpeed_001, TestSize.Level0)
+{
+    hiplayer_->subtitleSink_ = FilterFactory::Instance().CreateFilter<SubtitleSinkFilter>("player.subtitlesink",
+        FilterType::FILTERTYPE_SSINK);
+    hiplayer_->syncManager_ = nullptr;
+    EXPECT_EQ(MSERR_OK, hiplayer_->SetPlaybackSpeed(PlaybackRateMode::SPEED_FORWARD_2_00_X));
+}
+
+HWTEST_F(HiplayerImplUnitTest, GetSarVideoWidth_001, TestSize.Level0)
+{
+    double videoSar = 0;
+    double width = 1;
+    std::shared_ptr<Meta> trackInfo = std::make_shared<Meta>();
+    
+    trackInfo->SetData(Tag::VIDEO_SAR, videoSar);
+    trackInfo->SetData(Tag::VIDEO_WIDTH, width);
+    EXPECT_EQ(0, hiplayer_->GetSarVideoWidth(trackInfo));
+}
+
+HWTEST_F(HiplayerImplUnitTest, GetSarVideoHeight_001, TestSize.Level0)
+{
+    std::shared_ptr<Meta> trackInfo = std::make_shared<Meta>();
+    double videoSar = 2;
+    int32_t height = 2;
+    trackInfo->SetData(Tag::VIDEO_SAR, videoSar);
+    trackInfo->SetData(Tag::VIDEO_HEIGHT, height);
+    EXPECT_EQ(1, hiplayer_->GetSarVideoHeight(trackInfo));
 }
 
 } // namespace Media
