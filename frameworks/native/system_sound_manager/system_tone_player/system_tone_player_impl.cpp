@@ -20,6 +20,7 @@
 #include <thread>
 
 #include "audio_info.h"
+#include "config_policy_utils.h"
 
 #include "media_log.h"
 #include "media_errors.h"
@@ -38,6 +39,7 @@ const std::string FDHEAD = "fd://";
 const std::string AUDIO_FORMAT_STR = ".ogg";
 const std::string HAPTIC_FORMAT_STR = ".json";
 const int32_t MAX_STREAM_ID = 128;
+const std::string NON_SYNC_HAPTICS_PATH = "resource/media/haptics/standard/non-synchronized/";
 
 SystemTonePlayerImpl::SystemTonePlayerImpl(const shared_ptr<Context> &context,
     SystemSoundManagerImpl &systemSoundMgr, SystemToneType systemToneType)
@@ -61,6 +63,20 @@ SystemTonePlayerImpl::~SystemTonePlayerImpl()
     }
 }
 
+std::string SystemTonePlayerImpl::GetDefaultNonSyncHapticsPath()
+{
+    char buf[MAX_PATH_LEN];
+    char *path = GetOneCfgFile(NON_SYNC_HAPTICS_PATH.c_str(), buf, MAX_PATH_LEN);
+    if (path == nullptr || *path == '\0') {
+        MEDIA_LOGE("Failed to get default non-sync haptics path");
+        return "";
+    }
+    std::string filePath = path;
+    MEDIA_LOGI("Default non-sync haptics path [%{public}s]", filePath.c_str());
+    filePath = filePath + "Tick-tock.json";
+    return filePath;
+}
+
 int32_t SystemTonePlayerImpl::InitPlayer(const std::string &audioUri)
 {
     MEDIA_LOGI("Enter InitPlayer() with audio uri %{public}s", audioUri.c_str());
@@ -68,6 +84,13 @@ int32_t SystemTonePlayerImpl::InitPlayer(const std::string &audioUri)
     if (sourceId_ != -1) {
         (void)audioHapticManager_->UnregisterSource(sourceId_);
         sourceId_ = -1;
+    }
+
+    if (audioUri == NO_SYSTEM_SOUND) {
+        defaultNonSyncHapticUri_ = GetDefaultNonSyncHapticsPath();
+        configuredUri_ = NO_SYSTEM_SOUND;
+        systemToneState_ = SystemToneState::STATE_NEW;
+        return MSERR_OK;
     }
 
     // Get the haptic file uri according to the audio file uri.
@@ -247,12 +270,15 @@ int32_t SystemTonePlayerImpl::Start(const SystemToneOptions &systemToneOptions)
     int32_t result = MSERR_OK;
     UpdateStreamId();
     SystemToneOptions ringerModeOptions = GetOptionsFromRingerMode();
-    bool actualMuteAudio = ringerModeOptions.muteAudio || systemToneOptions.muteAudio;
+    bool actualMuteAudio = ringerModeOptions.muteAudio || systemToneOptions.muteAudio ||
+        configuredUri_ == NO_SYSTEM_SOUND;
     bool actualMuteHaptics = ringerModeOptions.muteHaptics || systemToneOptions.muteHaptics || isHapticUriEmpty_;
     if (actualMuteAudio) {
         // the audio of system tone player has been muted. Only start vibrator.
         if (!actualMuteHaptics) {
-            SystemSoundVibrator::StartVibratorForSystemTone(hapticUri_);
+            std::string hapticUri = (configuredUri_ == NO_SYSTEM_SOUND) ?
+                defaultNonSyncHapticUri_ : hapticUri_;
+            SystemSoundVibrator::StartVibratorForSystemTone(hapticUri);
         }
         return streamId_;
     }

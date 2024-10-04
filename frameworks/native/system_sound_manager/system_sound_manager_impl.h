@@ -120,6 +120,8 @@ private:
         SystemToneType systemToneType, const int32_t &num);
     int32_t UpdateNotificatioToneUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
         const int32_t &toneId);
+    int32_t SetNoSystemToneUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
+        SystemToneType systemToneType);
 
     bool isRingtoneTypeValid(RingtoneType ringtongType);
     bool isSystemToneTypeValid(SystemToneType systemToneType);
