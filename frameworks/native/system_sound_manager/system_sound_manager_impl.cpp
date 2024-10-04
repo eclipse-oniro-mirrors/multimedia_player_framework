@@ -589,41 +589,57 @@ int32_t SystemSoundManagerImpl::SetNoSystemToneUri(std::shared_ptr<DataShare::Da
 {
     MEDIA_LOGI("Set no audio uri for system tone type %{public}d", systemToneType);
     int32_t result = 0;
-    if (systemToneType == SYSTEM_TONE_TYPE_NOTIFICATION) {
-        // Removes the flag for the current notification uri.
-        DataSharePredicates updateOldPredicates;
-        DataShareValuesBucket updateOldValuesBucket;
-        updateOldPredicates.SetWhereClause(RINGTONE_COLUMN_NOTIFICATION_TONE_TYPE + " = ? AND " +
-            RINGTONE_COLUMN_NOTIFICATION_TONE_SOURCE_TYPE + " = ? ");
-        updateOldPredicates.SetWhereArgs({to_string(NOTIFICATION_TONE_TYPE), to_string(SOURCE_TYPE_CUSTOMISED)});
-        updateOldValuesBucket.Put(RINGTONE_COLUMN_NOTIFICATION_TONE_TYPE, NOTIFICATION_TONE_TYPE_NOT);
-        updateOldValuesBucket.Put(RINGTONE_COLUMN_NOTIFICATION_TONE_SOURCE_TYPE, SOURCE_TYPE_INVALID);
-        result += dataShareHelper->Update(RINGTONEURI, updateOldPredicates, updateOldValuesBucket);
-    } else if (systemToneType == SYSTEM_TONE_TYPE_SIM_CARD_0 || systemToneType == SYSTEM_TONE_TYPE_SIM_CARD_1) {
-        // Removes the flag for the current SYSTEM_TONE_TYPE_SIM_CARD uri.
-        // SIM_CARD_0 or SIM_CARD_1
-        DataSharePredicates updateOnlyPredicates;
-        DataShareValuesBucket updateOnlyValuesBucket;
-        updateOnlyPredicates.SetWhereClause(RINGTONE_COLUMN_SHOT_TONE_TYPE + " = ? AND " +
-            RINGTONE_COLUMN_SHOT_TONE_SOURCE_TYPE + " = ? ");
-        updateOnlyPredicates.SetWhereArgs({to_string(systemTypeMap_[systemToneType]),
-            to_string(SOURCE_TYPE_CUSTOMISED)});
-        updateOnlyValuesBucket.Put(RINGTONE_COLUMN_SHOT_TONE_TYPE, RING_TONE_TYPE_NOT);
-        updateOnlyValuesBucket.Put(RINGTONE_COLUMN_SHOT_TONE_SOURCE_TYPE, SOURCE_TYPE_INVALID);
-        result += dataShareHelper->Update(RINGTONEURI, updateOnlyPredicates, updateOnlyValuesBucket);
-        // both SIM_CARD_0 and SIM_CARD_1
-        DataSharePredicates updateBothPredicates;
-        DataShareValuesBucket updateBothValuesBucket;
-        ShotToneType type = SHOT_TONE_TYPE_SIM_CARD_1;
-        if (systemTypeMap_[systemToneType] == SHOT_TONE_TYPE_SIM_CARD_1) {
-            type = SHOT_TONE_TYPE_SIM_CARD_2;
+    // Removes the flag for the current system tone uri.
+    result += RemoveSourceTypeForSystemTone(dataShareHelper, systemToneType, SOURCE_TYPE_CUSTOMISED);
+    // Removes the flag for the preset system tone uri.
+    result += RemoveSourceTypeForSystemTone(dataShareHelper, systemToneType, SOURCE_TYPE_PRESET);
+    return result;
+}
+
+int32_t SystemSoundManagerImpl::RemoveSourceTypeForSystemTone(
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper, SystemToneType systemToneType, SourceType sourceType)
+{
+    int32_t result = 0;
+    switch (systemToneType) {
+        case SYSTEM_TONE_TYPE_SIM_CARD_0:
+        case SYSTEM_TONE_TYPE_SIM_CARD_1: {
+            // SIM_CARD_0 or SIM_CARD_1
+            DataSharePredicates updateOnlyPredicates;
+            DataShareValuesBucket updateOnlyValuesBucket;
+            updateOnlyPredicates.SetWhereClause(RINGTONE_COLUMN_SHOT_TONE_TYPE + " = ? AND " +
+                RINGTONE_COLUMN_SHOT_TONE_SOURCE_TYPE + " = ? ");
+            updateOnlyPredicates.SetWhereArgs({to_string(systemTypeMap_[systemToneType]), to_string(sourceType)});
+            updateOnlyValuesBucket.Put(RINGTONE_COLUMN_SHOT_TONE_TYPE, RING_TONE_TYPE_NOT);
+            updateOnlyValuesBucket.Put(RINGTONE_COLUMN_SHOT_TONE_SOURCE_TYPE, SOURCE_TYPE_INVALID);
+            result += dataShareHelper->Update(RINGTONEURI, updateOnlyPredicates, updateOnlyValuesBucket);
+            // both SIM_CARD_0 and SIM_CARD_1
+            DataSharePredicates updateBothPredicates;
+            DataShareValuesBucket updateBothValuesBucket;
+            ShotToneType type = SHOT_TONE_TYPE_SIM_CARD_1;
+            if (systemTypeMap_[systemToneType] == SHOT_TONE_TYPE_SIM_CARD_1) {
+                type = SHOT_TONE_TYPE_SIM_CARD_2;
+            }
+            updateBothPredicates.SetWhereClause(RINGTONE_COLUMN_SHOT_TONE_TYPE + " = ? AND " +
+                RINGTONE_COLUMN_SHOT_TONE_SOURCE_TYPE + " = ? ");
+            updateBothPredicates.SetWhereArgs({to_string(SHOT_TONE_TYPE_SIM_CARD_BOTH), to_string(sourceType)});
+            updateBothValuesBucket.Put(RINGTONE_COLUMN_SHOT_TONE_TYPE, type);
+            result += dataShareHelper->Update(RINGTONEURI, updateBothPredicates, updateBothValuesBucket);
+            break;
         }
-        updateBothPredicates.SetWhereClause(RINGTONE_COLUMN_SHOT_TONE_TYPE + " = ? AND " +
-            RINGTONE_COLUMN_SHOT_TONE_SOURCE_TYPE + " = ? ");
-        updateBothPredicates.SetWhereArgs({to_string(SHOT_TONE_TYPE_SIM_CARD_BOTH),
-            to_string(SOURCE_TYPE_CUSTOMISED)});
-        updateBothValuesBucket.Put(RINGTONE_COLUMN_SHOT_TONE_TYPE, type);
-        result += dataShareHelper->Update(RINGTONEURI, updateBothPredicates, updateBothValuesBucket);
+        case SYSTEM_TONE_TYPE_NOTIFICATION: {
+            DataSharePredicates updateOldPredicates;
+            DataShareValuesBucket updateOldValuesBucket;
+            updateOldPredicates.SetWhereClause(RINGTONE_COLUMN_NOTIFICATION_TONE_TYPE + " = ? AND " +
+                RINGTONE_COLUMN_NOTIFICATION_TONE_SOURCE_TYPE + " = ? ");
+            updateOldPredicates.SetWhereArgs({to_string(NOTIFICATION_TONE_TYPE), to_string(sourceType)});
+            updateOldValuesBucket.Put(RINGTONE_COLUMN_NOTIFICATION_TONE_TYPE, NOTIFICATION_TONE_TYPE_NOT);
+            updateOldValuesBucket.Put(RINGTONE_COLUMN_NOTIFICATION_TONE_SOURCE_TYPE, SOURCE_TYPE_INVALID);
+            result += dataShareHelper->Update(RINGTONEURI, updateOldPredicates, updateOldValuesBucket);
+            break;
+        }
+        default:
+            MEDIA_LOGE("The system tone type [%{public}d] is invalid!", systemToneType);
+            break;
     }
     return result;
 }
@@ -701,6 +717,28 @@ std::string SystemSoundManagerImpl::GetShotToneUriByType(std::shared_ptr<DataSha
     return uri;
 }
 
+std::string SystemSoundManagerImpl::GetPresetShotToneUriByType(
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper, const std::string &type)
+{
+    std::string uri = "";
+    CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, uri,
+        "Invalid dataShare, datashare or ringtone library error.");
+    DataShare::DatashareBusinessError businessError;
+    DataShare::DataSharePredicates queryPredicates;
+    queryPredicates.SetWhereClause(RINGTONE_COLUMN_SHOT_TONE_TYPE + " = ? AND " +
+        RINGTONE_COLUMN_SHOT_TONE_SOURCE_TYPE + " = ? ");
+    queryPredicates.SetWhereArgs({type, to_string(SOURCE_TYPE_PRESET)});
+    auto resultSet = dataShareHelper->Query(RINGTONEURI, queryPredicates, COLUMNS, &businessError);
+    auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
+    CHECK_AND_RETURN_RET_LOG(results != nullptr, uri, "query failed, ringtone library error.");
+    unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
+    if (ringtoneAsset != nullptr) {
+        uri = ringtoneAsset->GetPath();
+    }
+    resultSet == nullptr ? : resultSet->Close();
+    return uri;
+}
+
 std::string SystemSoundManagerImpl::GetNotificationToneUriByType(
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper)
 {
@@ -712,6 +750,28 @@ std::string SystemSoundManagerImpl::GetNotificationToneUriByType(
     queryPredicates.SetWhereArgs({to_string(NOTIFICATION_TONE_TYPE), to_string(SOURCE_TYPE_CUSTOMISED)});
     auto resultSet = dataShareHelper->Query(RINGTONEURI, queryPredicates, COLUMNS, &businessError);
     auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
+    unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
+    if (ringtoneAsset != nullptr) {
+        uri = ringtoneAsset->GetPath();
+    }
+    resultSet == nullptr ? : resultSet->Close();
+    return uri;
+}
+
+std::string SystemSoundManagerImpl::GetPresetNotificationToneUri(
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper)
+{
+    std::string uri = "";
+    CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, uri,
+        "Invalid dataShare, datashare or ringtone library error.");
+    DataShare::DatashareBusinessError businessError;
+    DataShare::DataSharePredicates queryPredicates;
+    queryPredicates.SetWhereClause(RINGTONE_COLUMN_NOTIFICATION_TONE_TYPE + " = ? AND " +
+        RINGTONE_COLUMN_NOTIFICATION_TONE_SOURCE_TYPE + " = ? ");
+    queryPredicates.SetWhereArgs({to_string(NOTIFICATION_TONE_TYPE), to_string(SOURCE_TYPE_PRESET)});
+    auto resultSet = dataShareHelper->Query(RINGTONEURI, queryPredicates, COLUMNS, &businessError);
+    auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
+    CHECK_AND_RETURN_RET_LOG(results != nullptr, uri, "query failed, ringtone library error.");
     unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
     if (ringtoneAsset != nullptr) {
         uri = ringtoneAsset->GetPath();
@@ -735,9 +795,18 @@ std::string SystemSoundManagerImpl::GetSystemToneUri(const std::shared_ptr<Abili
             if (systemToneUri.empty()) {
                 systemToneUri = GetShotToneUriByType(dataShareHelper, to_string(RING_TONE_TYPE_SIM_CARD_BOTH));
             }
+            if (systemToneUri.empty()) {
+                systemToneUri = GetPresetShotToneUriByType(dataShareHelper, to_string(systemTypeMap_[systemToneType]));
+            }
+            if (systemToneUri.empty()) {
+                systemToneUri = GetPresetShotToneUriByType(dataShareHelper, to_string(RING_TONE_TYPE_SIM_CARD_BOTH));
+            }
             break;
         case SYSTEM_TONE_TYPE_NOTIFICATION:
             systemToneUri = GetNotificationToneUriByType(dataShareHelper);
+            if (systemToneUri.empty()) {
+                systemToneUri = GetPresetNotificationToneUri(dataShareHelper);
+            }
             break;
         default:
             break;
