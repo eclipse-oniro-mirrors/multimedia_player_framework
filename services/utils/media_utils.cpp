@@ -258,6 +258,7 @@ bool __attribute__((visibility("default"))) GetPackageName(const char *key, std:
     std::stringstream valueStr;
     valueStr << paraValue;
     valueStr >> value;
+    MEDIA_LOG_I("Config parameter %{public}s : %{public}s", key, value.c_str());
     return true;
 }
 
