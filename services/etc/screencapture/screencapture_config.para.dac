@@ -11,8 +11,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-const.multimedia.screencapture.dialogconnectionbundlename = screencapture:screencapture:660
-const.multimedia.screencapture.dialogconnectionabilityname = screencapture:screencapture:660
-const.multimedia.screencapture.screenrecorderbundlename = screencapture:screencapture:660
-const.multimedia.screencapture.screenrecorderabilityname = screencapture:screencapture:660
-const.multimedia.screencapture.hiviewcarebundlename = screencapture:screencapture:660
+const.multimedia.screencapture.dialogconnectionbundlename = media:media:664
+const.multimedia.screencapture.dialogconnectionabilityname = media:media:664
+const.multimedia.screencapture.screenrecorderbundlename = media:media:664
+const.multimedia.screencapture.screenrecorderabilityname = media:media:664
+const.multimedia.screencapture.hiviewcarebundlename = media:media:664

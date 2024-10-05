@@ -69,15 +69,15 @@ ohos_prebuilt_etc("screen_capture_stop_image") {
   part_name = "player_framework"
 }
 
-ohos_prebuilt_etc("screencapture_config.para") {
-  source = "etc/screencapture/screencapture_config.para"
+ohos_prebuilt_etc("screencapture_config") {
+  source = "screencapture/screencapture_config.para"
   subsystem_name = "multimedia"
   part_name = "player_framework"
   module_install_dir = "etc/param"
 }
 
-ohos_prebuilt_etc("screencapture_config.para.dac") {
-  source = "etc/screencapture/screencapture_config.para.dac"
+ohos_prebuilt_etc("screencapture_config_dac") {
+  source = "screencapture/screencapture_config.para.dac"
   subsystem_name = "multimedia"
   part_name = "player_framework"
   module_install_dir = "etc/param"
