@@ -173,16 +173,17 @@ private:
     static OH_AVSCREEN_CAPTURE_ErrCode AcquireVideoBuffer(const std::shared_ptr<ScreenCapture> &screenCapture,
         OHOS::sptr<OH_AVBuffer> &ohAvBuffer, int64_t &timestamp)
     {
-        int32_t fence;
+        int32_t fence = -1;
         OHOS::Rect damage;
         OHOS::sptr<OHOS::SurfaceBuffer> surfaceBuffer =
             screenCapture->AcquireVideoBuffer(fence, timestamp, damage);
         CHECK_AND_RETURN_RET_LOG(surfaceBuffer != nullptr, AV_SCREEN_CAPTURE_ERR_NO_MEMORY,
             "AcquireVideoBuffer failed surfaceBuffer no memory!");
         std::shared_ptr<AVBuffer> avBuffer = AVBuffer::CreateAVBuffer(surfaceBuffer);
-        CHECK_AND_RETURN_RET_LOG(avBuffer != nullptr, AV_SCREEN_CAPTURE_ERR_NO_MEMORY,
+        CHECK_AND_RETURN_RET_LOG(avBuffer != nullptr && avBuffer->memory_ != nullptr, AV_SCREEN_CAPTURE_ERR_NO_MEMORY,
             "AcquireVideoBuffer failed avBuffer no memory!");
-
+        MEDIA_LOGD("AcquireVideoBuffer Size %{public}d", static_cast<int32_t>(surfaceBuffer->GetSize()));
+        avBuffer->memory_->SetSize(static_cast<int32_t>(surfaceBuffer->GetSize()));
         ohAvBuffer = new(std::nothrow) OH_AVBuffer(avBuffer);
         CHECK_AND_RETURN_RET_LOG(ohAvBuffer != nullptr, AV_SCREEN_CAPTURE_ERR_NO_MEMORY,
             "AcquireVideoBuffer failed ohAvBuffer no memory!");
@@ -264,6 +265,7 @@ public:
 
         if (dataCallback_ != nullptr) {
             if (!isReady) {
+                MEDIA_LOGD("OnAudioBufferAvailable not ready");
                 return;
             }
             if (type == AudioCaptureSourceType::SOURCE_DEFAULT || type == AudioCaptureSourceType::MIC) {
@@ -275,12 +277,15 @@ public:
             } else {
                 MEDIA_LOGD("OnAudioBufferAvailable() is called, invalid audio source type:%{public}d", type);
             }
+            MEDIA_LOGD("OnAudioBufferAvailable finished");
             return;
         }
         if (callback_.onAudioBufferAvailable != nullptr) {
             callback_.onAudioBufferAvailable(capture_, isReady, static_cast<OH_AudioCaptureSourceType>(type));
+            MEDIA_LOGD("OnAudioBufferAvailable finished");
             return;
         }
+        MEDIA_LOGD("OnAudioBufferAvailable finished");
     }
 
     void OnVideoBufferAvailable(bool isReady) override
@@ -291,15 +296,18 @@ public:
 
         if (dataCallback_ != nullptr) {
             if (!isReady) {
+                MEDIA_LOGD("OnVideoBufferAvailable not ready");
                 return;
             }
             dataCallback_->OnBufferAvailable(capture_,
                 OH_AVScreenCaptureBufferType::OH_SCREEN_CAPTURE_BUFFERTYPE_VIDEO);
+            MEDIA_LOGD("OnVideoBufferAvailable finished");
             return;
         }
         if (capture_ != nullptr && callback_.onVideoBufferAvailable != nullptr) {
             callback_.onVideoBufferAvailable(capture_, isReady);
         }
+        MEDIA_LOGD("OnVideoBufferAvailable finished");
     }
 
     void StopCallback()
@@ -456,7 +464,9 @@ AVScreenCaptureConfig OH_AVScreenCapture_Convert(OH_AVScreenCaptureConfig config
     config_.videoInfo.videoCapInfo.videoSource =
         static_cast<VideoSourceType>(config.videoInfo.videoCapInfo.videoSource);
     config_.videoInfo.videoEncInfo = {
-        .videoCodec = static_cast<VideoCodecFormat>(config.videoInfo.videoEncInfo.videoCodec),
+        .videoCodec = static_cast<VideoCodecFormat>(config.videoInfo.videoEncInfo.videoCodec ==
+            OH_VideoCodecFormat::OH_VIDEO_DEFAULT ?
+            OH_VideoCodecFormat::OH_H264 : config.videoInfo.videoEncInfo.videoCodec),
         .videoBitrate = config.videoInfo.videoEncInfo. videoBitrate,
         .videoFrameRate = config.videoInfo.videoEncInfo.videoFrameRate
     };
@@ -894,15 +904,17 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SkipPrivacyMode(struct OH_AVScree
     struct ScreenCaptureObject *screenCaptureObj = reinterpret_cast<ScreenCaptureObject *>(capture);
     CHECK_AND_RETURN_RET_LOG(screenCaptureObj->screenCapture_ != nullptr,
                              AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "screenCapture_ is null");
-    CHECK_AND_RETURN_RET_LOG(windowIDs != nullptr && windowCount > 0 && windowCount < MAX_WINDOWS_LEN,
+    CHECK_AND_RETURN_RET_LOG(windowCount >= 0 && windowCount < MAX_WINDOWS_LEN,
                              AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input window invalid!");
+    CHECK_AND_RETURN_RET_LOG(!(windowIDs == nullptr && windowCount > 0),
+                             AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input window invalid, nullptr but size not 0!");
     std::vector<uint64_t> vec;
     for (int32_t i = 0; i < windowCount; i++) {
         if (static_cast<int32_t>(*(windowIDs + i)) >= 0) {
             vec.push_back(static_cast<uint64_t>(*(windowIDs + i)));
         }
     }
-    CHECK_AND_RETURN_RET_LOG(vec.size() > 0, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input window content invalid!");
+    CHECK_AND_RETURN_RET_LOG(vec.size() >= 0, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input window content invalid!");
     int32_t ret = screenCaptureObj->screenCapture_->SkipPrivacyMode(vec);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT,
                              "SkipPrivacyMode failed!");

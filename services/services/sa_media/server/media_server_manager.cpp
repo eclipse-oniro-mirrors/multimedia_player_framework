@@ -158,6 +158,7 @@ MediaServerManager::~MediaServerManager()
     avCodecStubMap_.clear();
     recorderProfilesStubMap_.clear();
     screenCaptureStubMap_.clear();
+    screenCaptureMonitorStubMap_.clear();
     screenCaptureControllerStubMap_.clear();
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
@@ -341,10 +342,6 @@ sptr<IRemoteObject> MediaServerManager::CreateAVMetadataHelperStubObject()
 #ifdef SUPPORT_SCREEN_CAPTURE
 sptr<IRemoteObject> MediaServerManager::CreateScreenCaptureStubObject()
 {
-    CHECK_AND_RETURN_RET_LOG(screenCaptureStubMap_.size() < SERVER_MAX_NUMBER,
-        nullptr, "The number of screen capture services(%{public}zu) has reached the upper limit."
-            "Please release the applied resources.", screenCaptureStubMap_.size());
-
     sptr<ScreenCaptureServiceStub> screenCaptureStub = ScreenCaptureServiceStub::Create();
     CHECK_AND_RETURN_RET_LOG(screenCaptureStub != nullptr, nullptr,
         "failed to create ScreenCaptureServiceStub");
@@ -367,10 +364,6 @@ sptr<IRemoteObject> MediaServerManager::CreateScreenCaptureStubObject()
 
 sptr<IRemoteObject> MediaServerManager::CreateScreenCaptureMonitorStubObject()
 {
-    CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorStubMap_.size() < SERVER_MAX_NUMBER,
-        nullptr, "The number of screen capture monitor services(%{public}zu) has reached the upper limit."
-            "Please release the applied resources.", screenCaptureMonitorStubMap_.size());
-
     sptr<ScreenCaptureMonitorServiceStub> screenCaptureMonitorStub = ScreenCaptureMonitorServiceStub::Create();
     CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorStub != nullptr, nullptr,
         "failed to create ScreenCaptureMonitorServiceStub");
@@ -393,11 +386,6 @@ sptr<IRemoteObject> MediaServerManager::CreateScreenCaptureMonitorStubObject()
 
 sptr<IRemoteObject> MediaServerManager::CreateScreenCaptureControllerStubObject()
 {
-    MEDIA_LOGI("MediaServerManager::CreateScreenCaptureControllerStubObject() start");
-    CHECK_AND_RETURN_RET_LOG(screenCaptureControllerStubMap_.size() < SERVER_MAX_NUMBER,
-        nullptr, "The number of screen capture controller services(%{public}zu) has reached the upper limit."
-            "Please release the applied resources.", screenCaptureControllerStubMap_.size());
-
     sptr<ScreenCaptureControllerStub> screenCaptureControllerStub = ScreenCaptureControllerStub::Create();
     CHECK_AND_RETURN_RET_LOG(screenCaptureControllerStub != nullptr, nullptr,
         "failed to create ScreenCaptureControllerStub");
@@ -616,6 +604,44 @@ void MediaServerManager::DestroyStubObject(StubType type, sptr<IRemoteObject> ob
     }
 }
 
+void MediaServerManager::DestroyAVScreenCaptureStubForPid(pid_t pid)
+{
+    MEDIA_LOGD("ScreenCapture stub services(%{public}zu) pid(%{public}d).", screenCaptureStubMap_.size(), pid);
+    for (auto itScreenCapture = screenCaptureStubMap_.begin(); itScreenCapture != screenCaptureStubMap_.end();) {
+        if (itScreenCapture->second == pid) {
+            executor_.Commit(itScreenCapture->first);
+            itScreenCapture = screenCaptureStubMap_.erase(itScreenCapture);
+        } else {
+            itScreenCapture++;
+        }
+    }
+    MEDIA_LOGD("ScreenCapture stub services(%{public}zu).", screenCaptureStubMap_.size());
+    MEDIA_LOGD("ScreenCapture monitor stub services(%{public}zu) pid(%{public}d).",
+        screenCaptureMonitorStubMap_.size(), pid);
+    for (auto itScreenCaptureMonitor = screenCaptureMonitorStubMap_.begin();
+         itScreenCaptureMonitor != screenCaptureMonitorStubMap_.end();) {
+        if (itScreenCaptureMonitor->second == pid) {
+            executor_.Commit(itScreenCaptureMonitor->first);
+            itScreenCaptureMonitor = screenCaptureMonitorStubMap_.erase(itScreenCaptureMonitor);
+        } else {
+            itScreenCaptureMonitor++;
+        }
+    }
+    MEDIA_LOGD("ScreenCapture monitor stub services(%{public}zu).", screenCaptureMonitorStubMap_.size());
+    MEDIA_LOGD("ScreenCapture controller stub services(%{public}zu) pid(%{public}d).",
+        screenCaptureControllerStubMap_.size(), pid);
+    for (auto itScreenCaptureController = screenCaptureControllerStubMap_.begin();
+         itScreenCaptureController != screenCaptureControllerStubMap_.end();) {
+        if (itScreenCaptureController->second == pid) {
+            executor_.Commit(itScreenCaptureController->first);
+            itScreenCaptureController = screenCaptureControllerStubMap_.erase(itScreenCaptureController);
+        } else {
+            itScreenCaptureController++;
+        }
+    }
+    MEDIA_LOGD("ScreenCapture controller stub services(%{public}zu).", screenCaptureControllerStubMap_.size());
+}
+
 void MediaServerManager::DestroyAVTranscoderStubForPid(pid_t pid)
 {
     MEDIA_LOGD("AVTranscoder stub services(%{public}zu) pid(%{public}d).", transCoderStubMap_.size(), pid);
@@ -713,17 +739,7 @@ void MediaServerManager::DestroyStubObjectForPid(pid_t pid)
     DestroyAVPlayerStubForPid(pid);
     DestroyAVCodecStubForPid(pid);
     DestroyAVTranscoderStubForPid(pid);
-
-    MEDIA_LOGD("screencapture stub services(%{public}zu) pid(%{public}d).", screenCaptureStubMap_.size(), pid);
-    for (auto itScreenCapture = screenCaptureStubMap_.begin(); itScreenCapture != screenCaptureStubMap_.end();) {
-        if (itScreenCapture->second == pid) {
-            executor_.Commit(itScreenCapture->first);
-            itScreenCapture = screenCaptureStubMap_.erase(itScreenCapture);
-        } else {
-            itScreenCapture++;
-        }
-    }
-    MEDIA_LOGD("screencapture stub services(%{public}zu).", screenCaptureStubMap_.size());
+    DestroyAVScreenCaptureStubForPid(pid);
     MonitorServiceStub::GetInstance()->OnClientDie(pid);
     executor_.Clear();
 }

@@ -18,7 +18,9 @@
 #include "common_napi.h"
 #include "media_dfx.h"
 #include "media_log.h"
-
+#ifndef CROSS_PLATFORM
+#include "display_manager.h"
+#endif
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "AVScreenCaptureNapi"};
 }
@@ -650,11 +652,17 @@ int32_t AVScreenCaptureNapi::GetAudioInfo(std::unique_ptr<AVScreenCaptureAsyncCo
     int32_t ret = AVScreenCaptureNapi::GetPropertyInt32(env, args, "audioSampleRate", audioSampleRate);
     CHECK_AND_RETURN_RET(ret == MSERR_OK,
         (asyncCtx->AVScreenCaptureSignError(ret, "getAudioSampleRate", "audioSampleRate"), ret));
+    ret = AVScreenCaptureNapi::CheckAudioSampleRate(audioSampleRate);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK,
+        (asyncCtx->AVScreenCaptureSignError(ret, "getAudioSampleRate", "audioSampleRate"), ret));
     micConfig.audioSampleRate = audioSampleRate;
     innerConfig.audioSampleRate = audioSampleRate;
     MEDIA_LOGI("input audioSampleRate %{public}d", micConfig.audioSampleRate);
 
     ret = AVScreenCaptureNapi::GetPropertyInt32(env, args, "audioChannelCount", audioChannels);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK,
+        (asyncCtx->AVScreenCaptureSignError(ret, "getAudioChannelCount", "audioChannelCount"), ret));
+    ret = AVScreenCaptureNapi::CheckAudioChannelCount(audioChannels);
     CHECK_AND_RETURN_RET(ret == MSERR_OK,
         (asyncCtx->AVScreenCaptureSignError(ret, "getAudioChannelCount", "audioChannelCount"), ret));
     micConfig.audioChannels = audioChannels;
@@ -700,12 +708,16 @@ int32_t AVScreenCaptureNapi::GetVideoInfo(std::unique_ptr<AVScreenCaptureAsyncCo
     ret = AVScreenCaptureNapi::GetPropertyInt32(env, args, "frameWidth", frameWidth);
     CHECK_AND_RETURN_RET(ret == MSERR_OK,
         (asyncCtx->AVScreenCaptureSignError(ret, "getFrameWidth", "frameWidth"), ret));
-    videoConfig.videoFrameWidth = frameWidth;
     ret = AVScreenCaptureNapi::GetPropertyInt32(env, args, "frameHeight", frameHeight);
     CHECK_AND_RETURN_RET(ret == MSERR_OK,
         (asyncCtx->AVScreenCaptureSignError(ret, "getFrameHeight", "frameHeight"), ret));
-    videoConfig.videoFrameHeight = frameHeight;
     MEDIA_LOGI("input frameWidth %{public}d, frameHeight %{public}d",
+        frameWidth, frameHeight);
+    ret = AVScreenCaptureNapi::CheckVideoFrameFormat(frameWidth, frameHeight,
+        videoConfig.videoFrameWidth, videoConfig.videoFrameHeight);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK,
+        (asyncCtx->AVScreenCaptureSignError(ret, "getVideoFrame", "VideoFrame"), ret));
+    MEDIA_LOGI("input formatted frameWidth %{public}d, frameHeight %{public}d",
         videoConfig.videoFrameWidth, videoConfig.videoFrameHeight);
     videoConfig.videoSource = VideoSourceType::VIDEO_SOURCE_SURFACE_RGBA;
     return MSERR_OK;
@@ -718,10 +730,61 @@ int32_t AVScreenCaptureNapi::GetRecorderInfo(std::unique_ptr<AVScreenCaptureAsyn
     recorderConfig.fileFormat = AVSCREENCAPTURE_DEFAULT_FILE_FORMAT;
     int32_t fd = -1;
     (void)CommonNapi::GetPropertyInt32(env, args, "fd", fd);
+    CHECK_AND_RETURN_RET(fd > 0, // 0 to 2 for system std log
+        (asyncCtx->AVScreenCaptureSignError(MSERR_INVALID_VAL, "GetRecorderInfo", "url"), MSERR_INVALID_VAL));
     recorderConfig.url = "fd://" + std::to_string(fd);
     CHECK_AND_RETURN_RET(recorderConfig.url != "",
         (asyncCtx->AVScreenCaptureSignError(MSERR_INVALID_VAL, "GetRecorderInfo", "url"), MSERR_INVALID_VAL));
     MEDIA_LOGI("input url %{public}s", recorderConfig.url.c_str());
+    return MSERR_OK;
+}
+
+int32_t AVScreenCaptureNapi::CheckAudioSampleRate(const int32_t &audioSampleRate)
+{
+    if (audioSampleRate == 48000 || audioSampleRate == 16000) { // 16000 48000 AudioSampleRate options
+        return MSERR_OK;
+    }
+    return MSERR_INVALID_VAL;
+}
+
+int32_t AVScreenCaptureNapi::CheckAudioChannelCount(const int32_t &audioChannelCount)
+{
+    if (audioChannelCount == 1 || audioChannelCount == 2) { // 1 2 channelCount number options
+        return MSERR_OK;
+    }
+    return MSERR_INVALID_VAL;
+}
+
+int32_t AVScreenCaptureNapi::CheckVideoFrameFormat(const int32_t &frameWidth, const int32_t &frameHeight,
+    int32_t &videoFrameWidth, int32_t &videoFrameHeight)
+{
+#ifndef CROSS_PLATFORM
+    if (frameWidth == AVSCREENCAPTURE_DEFAULT_FRAME_WIDTH || frameHeight == AVSCREENCAPTURE_DEFAULT_FRAME_HEIGHT ||
+        !(frameWidth == 0 && frameHeight == 0)) { // 0 one of width height is zero, use default display
+        sptr<Rosen::Display> display = Rosen::DisplayManager::GetInstance().GetDefaultDisplaySync();
+        if (display == nullptr) {
+            return MSERR_INVALID_VAL;
+        }
+        MEDIA_LOGI("check video frame get displayInfo width:%{public}d,height:%{public}d,density:%{public}d",
+            display->GetWidth(), display->GetHeight(), display->GetDpi());
+        if (frameWidth == AVSCREENCAPTURE_DEFAULT_FRAME_WIDTH || frameWidth == 0) { // 0 use default display
+            videoFrameWidth = display->GetWidth();
+        } else {
+            videoFrameWidth = frameWidth;
+        }
+        if (frameHeight == AVSCREENCAPTURE_DEFAULT_FRAME_HEIGHT || frameHeight == 0) { // 0 use default display
+            videoFrameHeight = display->GetHeight();
+        } else {
+            videoFrameHeight = frameHeight;
+        }
+    } else {
+        videoFrameWidth = frameWidth;
+        videoFrameHeight = frameHeight;
+    }
+#else
+    videoFrameWidth = frameWidth;
+    videoFrameHeight = frameHeight;
+#endif
     return MSERR_OK;
 }
 

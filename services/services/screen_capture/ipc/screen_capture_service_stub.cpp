@@ -338,7 +338,7 @@ int32_t ScreenCaptureServiceStub::SkipPrivacyMode(MessageParcel &data, MessagePa
     int32_t windowIdSize = data.ReadInt32();
     CHECK_AND_RETURN_RET_LOG(windowIdSize < MAX_FILTER_CONTENTS_COUNT, MSERR_INVALID_STATE,
                              "windowID size is exceed max range");
-    if (windowIdSize > 0) {
+    if (windowIdSize >= 0) {
         std::vector<uint64_t> vec;
         for (int32_t i = 0; i < windowIdSize; i++) {
             vec.push_back(data.ReadUint64());
@@ -516,7 +516,7 @@ int32_t ScreenCaptureServiceStub::AcquireVideoBuffer(MessageParcel &data, Messag
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
         "screen capture server is nullptr");
     (void)data;
-    int32_t fence = 0;
+    int32_t fence = -1; // init value start here
     int64_t timestamp = 0;
     OHOS::Rect damage;
     sptr<OHOS::SurfaceBuffer> videoBuffer = nullptr;
@@ -526,7 +526,7 @@ int32_t ScreenCaptureServiceStub::AcquireVideoBuffer(MessageParcel &data, Messag
         if (videoBuffer != nullptr) {
             videoBuffer->WriteToMessageParcel(reply);
         }
-        reply.WriteInt32(fence);
+        reply.WriteInt32(fence); // return to App client
         reply.WriteInt64(timestamp);
         reply.WriteInt32(damage.x);
         reply.WriteInt32(damage.y);

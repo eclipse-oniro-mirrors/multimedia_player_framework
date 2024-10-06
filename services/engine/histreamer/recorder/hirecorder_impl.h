@@ -101,6 +101,7 @@ private:
     std::vector<EncoderCapabilityData> ConvertEncoderInfo(std::vector<MediaAVCodec::CapabilityData*> &capData);
 
     AudioRecorderChangeInfo ConvertCapturerChangeInfo(const AudioStandard::AudioCapturerChangeInfo &capturerChangeInfo);
+    void CloseFd();
     std::atomic<uint32_t> audioCount_{0};
     std::atomic<uint32_t> videoCount_{0};
     std::atomic<uint32_t> audioSourceId_{0};

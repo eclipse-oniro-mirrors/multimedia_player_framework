@@ -27,6 +27,24 @@ enum ScreenCaptureMonitorErrorType : int32_t {
 
 class ScreenCaptureMonitor {
 public:
+#ifdef UNSUPPORT_SCREEN_CAPTURE
+    static ScreenCaptureMonitor *GetInstance()
+    {
+        return nullptr;
+    }
+    class ScreenCaptureMonitorListener : public virtual RefBase {
+    public:
+        virtual void OnScreenCaptureStarted(int32_t pid) = 0;
+        virtual void OnScreenCaptureFinished(int32_t pid) = 0;
+    };
+
+    int32_t IsScreenCaptureWorking()
+    {
+        return -1;
+    }
+    void RegisterScreenCaptureMonitorListener(sptr<ScreenCaptureMonitorListener> listener) {}
+    void UnregisterScreenCaptureMonitorListener(sptr<ScreenCaptureMonitorListener> listener) {}
+#else
     static ScreenCaptureMonitor *GetInstance();
     class ScreenCaptureMonitorListener : public virtual RefBase {
     public:
@@ -50,6 +68,7 @@ public:
     void RegisterScreenCaptureMonitorListener(sptr<ScreenCaptureMonitorListener> listener);
     void UnregisterScreenCaptureMonitorListener(sptr<ScreenCaptureMonitorListener> listener);
     virtual ~ScreenCaptureMonitor() = default;
+#endif
 };
 } // namespace Media
 } // namespace OHOS
