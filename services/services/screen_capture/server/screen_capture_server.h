@@ -55,6 +55,8 @@
 #include "meta/meta.h"
 #include "audio_stream_manager.h"
 #include "screen_capture_monitor_server.h"
+#include "json/json.h"
+#include "tokenid_kit.h"
 
 namespace OHOS {
 namespace Media {
@@ -142,11 +144,7 @@ public:
     ScreenCapBufferConsumerListener(
         sptr<Surface> consumer, const std::shared_ptr<ScreenCaptureCallBack> &screenCaptureCb)
         : consumer_(consumer), screenCaptureCb_(screenCaptureCb) {}
-    ~ScreenCapBufferConsumerListener()
-    {
-        std::unique_lock<std::mutex> lock(bufferMutex_);
-        ReleaseBuffer();
-    }
+    ~ScreenCapBufferConsumerListener();
 
     void OnBufferAvailable() override;
     int32_t AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfaceBuffer, int32_t &fence, int64_t &timestamp,
@@ -155,17 +153,8 @@ public:
     int32_t Release();
 
 private:
-    int32_t ReleaseBuffer()
-    {
-        while (!availBuffers_.empty()) {
-            if (consumer_ != nullptr) {
-                consumer_->ReleaseBuffer(availBuffers_.front()->buffer,
-                    availBuffers_.front()->flushFence);
-            }
-            availBuffers_.pop();
-        }
-        return MSERR_OK;
-    }
+    int32_t ReleaseBuffer();
+    void ProcessVideoBufferCallBack();
 
 private:
     std::mutex mutex_;
@@ -229,6 +218,16 @@ private:
     static constexpr int32_t ADS_LOG_SKIP_NUM = 1000;
 };
 
+class PrivateWindowListenerInScreenCapture : public DisplayManager::IPrivateWindowListener {
+public:
+    explicit PrivateWindowListenerInScreenCapture(std::weak_ptr<ScreenCaptureServer> screenCaptureServer);
+    ~PrivateWindowListenerInScreenCapture() = default;
+    void OnPrivateWindow(bool hasPrivate) override;
+
+private:
+    std::weak_ptr<ScreenCaptureServer> screenCaptureServer_;
+};
+
 class ScreenRendererAudioStateChangeCallback : public AudioRendererStateChangeCallback {
 public:
     void OnRendererStateChange(const std::vector<std::unique_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos);
@@ -243,8 +242,11 @@ class ScreenCaptureServer : public std::enable_shared_from_this<ScreenCaptureSer
         public IScreenCaptureService, public NoCopyable {
 public:
     static std::shared_ptr<IScreenCaptureService> Create();
-    static int32_t ReportAVScreenCaptureUserChoice(int32_t sessionId, const std::string &choice);
+    static int32_t ReportAVScreenCaptureUserChoice(int32_t sessionId, const std::string &content);
     static int32_t GetRunningScreenCaptureInstancePid(int32_t &pid);
+    static int32_t GetSpecificServer(int32_t sessionId, std::shared_ptr<ScreenCaptureServer> &server);
+    static void GetChoiceFromJson(Json::Value &root, const std::string &content, std::string key, std::string &value);
+    static void PrepareSelectWindow(Json::Value &root, std::shared_ptr<ScreenCaptureServer> &server);
     ScreenCaptureServer();
     ~ScreenCaptureServer();
 
@@ -287,6 +289,10 @@ public:
     int32_t GetMicAudioCaptureBufferSize(size_t &size);
     int32_t OnVoIPStatusChanged(bool isInVoIPCall);
     int32_t OnSpeakerAliveStatusChanged(bool speakerAliveStatus);
+    void OnDMPrivateWindowChange(bool hasPrivate);
+    void SetMissionId(uint64_t missionId);
+    void SetDisplayId(uint64_t displayId);
+    bool IsTelInCallSkipList();
 
 private:
     int32_t StartScreenCaptureInner(bool isPrivacyAuthorityEnabled);
@@ -348,6 +354,9 @@ private:
     int64_t GetCurrentMillisecond();
     void SetMetaDataReport();
     void SetErrorInfo(int32_t errCode, const std::string &errMsg, StopReason stopReason, bool userAgree);
+    void SystemRecorderInterruptLatestRecorder();
+    int32_t ReStartMicForVoIPStatusSwitch();
+    void RegisterPrivateWindowListener();
 
 private:
     std::mutex mutex_;
@@ -383,7 +392,6 @@ private:
     AVScreenCaptureState captureState_ = AVScreenCaptureState::CREATED;
     std::shared_ptr<NotificationLocalLiveViewContent> localLiveViewContent_;
     int64_t startTime_ = 0;
-    std::string bundleName_;
 
     /* used for CAPTURE STREAM */
     sptr<IBufferConsumerListener> surfaceCb_ = nullptr;
@@ -400,11 +408,12 @@ private:
     int32_t audioSourceId_ = 0;
     int32_t videoSourceId_ = 0;
     std::shared_ptr<AudioDataSource> audioSource_ = nullptr;
-
     /* used for DFX events */
     uint64_t instanceId_ = 0;
     std::shared_ptr<ScreenRendererAudioStateChangeCallback> captureCallback_;
     std::vector<uint64_t> skipPrivacyWindowIDsVec_;
+    sptr<DisplayManager::IPrivateWindowListener> displayListener_;
+    bool isCalledBySystemApp_ = false;
 private:
     static int32_t CheckAudioCapParam(const AudioCaptureInfo &audioCapInfo);
     static int32_t CheckVideoCapParam(const VideoCaptureInfo &videoCapInfo);

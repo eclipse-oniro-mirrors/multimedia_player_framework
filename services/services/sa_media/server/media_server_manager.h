@@ -91,6 +91,7 @@ private:
     void DestroyAVPlayerStubForPid(pid_t pid);
     void DestroyAVRecorderStubForPid(pid_t pid);
     void DestroyAVTranscoderStubForPid(pid_t pid);
+    void DestroyAVScreenCaptureStubForPid(pid_t pid);
 
     std::atomic<bool> isMemMgrLoaded_ {false};
 

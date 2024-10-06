@@ -17,6 +17,7 @@
 #include <string>
 #include "incall_observer.h"
 #include <cstdlib>
+#include "media_telephony_listener.h"
 
 using namespace std;
 using namespace testing::ext;
@@ -171,6 +172,55 @@ HWTEST_F(InCallObserverInnerUnitTest, InCallCallBackReturn_03, TestSize.Level1)
     ASSERT_TRUE(InCallObserver::GetInstance().OnCallStateUpdated(true));
     ASSERT_TRUE(InCallObserver::GetInstance().IsInCall());
     InCallObserver::GetInstance().UnRegisterObserver();
+}
+
+/**
+ * @tc.name: InCallCallBackReturn_04
+ * @tc.desc: InCallCallBackReturn_04
+ * @tc.type: FUNC
+ */
+HWTEST_F(InCallObserverInnerUnitTest, InCallCallBackReturn_04, TestSize.Level1)
+{
+    InCallObserver::GetInstance().UnRegisterObserver();
+    ASSERT_TRUE(InCallObserver::GetInstance().RegisterObserver());
+    std::weak_ptr<InCallObserverCallBack> inCallObserverTestFalseCallBack =
+        std::make_shared<InCallObserverTestFalseCallBack>();
+    inCallObserverTestFalseCallBack.reset();
+    ASSERT_FALSE(InCallObserver::GetInstance().RegisterInCallObserverCallBack(inCallObserverTestFalseCallBack));
+    ASSERT_TRUE(InCallObserver::GetInstance().OnCallStateUpdated(false));
+    ASSERT_TRUE(InCallObserver::GetInstance().OnCallStateUpdated(true));
+    InCallObserver::GetInstance().UnRegisterInCallObserverCallBack();
+    InCallObserver::GetInstance().UnRegisterObserver();
+}
+
+/**
+ * @tc.name: InCallCallBackReturn_05
+ * @tc.desc: InCallCallBackReturn_05
+ * @tc.type: FUNC
+ */
+HWTEST_F(InCallObserverInnerUnitTest, InCallCallBackReturn_05, TestSize.Level1)
+{
+    auto telephonyObserver = std::make_unique<MediaTelephonyListener>().release();
+    std::u16string phoneNumber = u"";
+    telephonyObserver->OnCallStateUpdated(-1, 1, phoneNumber); // -1 invalid slot id
+    int32_t slotId = 1; // 1 normal slot id
+    for (int i = -1; i <= 9; i++) { // -1 9 foreach all state
+        telephonyObserver->OnCallStateUpdated(-1, i, phoneNumber);
+    }
+    const std::vector<sptr<OHOS::Telephony::SignalInformation>> vecSigInfo{};
+    telephonyObserver->OnSignalInfoUpdated(slotId, vecSigInfo);
+    telephonyObserver->OnNetworkStateUpdated(slotId, nullptr);
+    const std::vector<sptr<OHOS::Telephony::CellInformation>> vecCellInfo{};
+    telephonyObserver->OnCellInfoUpdated(slotId, vecCellInfo);
+    telephonyObserver->OnSimStateUpdated(slotId, OHOS::Telephony::CardType::UNKNOWN_CARD,
+        OHOS::Telephony::SimState::SIM_STATE_UNKNOWN, OHOS::Telephony::LockReason::SIM_NONE);
+    telephonyObserver->OnCellularDataConnectStateUpdated(slotId, 0, 0);
+    telephonyObserver->OnCellularDataFlowUpdated(slotId, 0);
+    telephonyObserver->OnCfuIndicatorUpdated(slotId, false);
+    telephonyObserver->OnVoiceMailMsgIndicatorUpdated(slotId, false);
+    telephonyObserver->OnIccAccountUpdated();
+    ASSERT_TRUE(InCallObserver::GetInstance().IsInCall());
+    ASSERT_TRUE(InCallObserver::GetInstance().OnCallStateUpdated(false));
 }
 } // namespace InCallObserverFuncUT
 } // namespace Media

@@ -27,8 +27,6 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTUR
 namespace OHOS {
 namespace Media {
 
-static const std::string SCREEN_RECORDER_BUNDLE_NAME = "com.ohos.screenrecorder";
-
 sptr<ScreenCaptureControllerStub> ScreenCaptureControllerStub::Create()
 {
     MEDIA_LOGI("ScreenCaptureControllerStub::Create() start");
@@ -112,7 +110,8 @@ int32_t ScreenCaptureControllerStub::ReportAVScreenCaptureUserChoice(int32_t ses
         "screen capture controller server is nullptr");
     int32_t appUid = IPCSkeleton::GetCallingUid();
     std::string appName = GetClientBundleName(appUid);
-    if (SCREEN_RECORDER_BUNDLE_NAME.compare(appName) != 0) {
+    if (GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"]
+            .compare(appName) != 0) {
         MEDIA_LOGE("ScreenCaptureControllerStub called by app name %{public}s", appName.c_str());
         return MSERR_INVALID_OPERATION;
     }

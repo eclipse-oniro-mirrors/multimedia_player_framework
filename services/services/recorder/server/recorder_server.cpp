@@ -660,7 +660,7 @@ int32_t RecorderServer::SetOutputFormat(OutputFormatType format)
 
 int32_t RecorderServer::SetOutputFile(int32_t fd)
 {
-    MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " SetOutputFile in", FAKE_POINTER(this));
+    MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " SetOutputFile in, fd is %{public}d", FAKE_POINTER(this), fd);
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
@@ -925,6 +925,7 @@ int32_t RecorderServer::Stop(bool block)
 
     auto result = task->GetResult();
     ret = result.Value();
+    MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " Stop out ret: %{public}d", FAKE_POINTER(this), ret);
     status_ = (ret == MSERR_OK ? REC_INITIALIZED : REC_ERROR);
     if (status_ == REC_INITIALIZED) {
         int64_t endTime = GetCurrentMillisecond();
@@ -1026,8 +1027,11 @@ int32_t RecorderServer::DumpInfo(int32_t fd)
     dumpString += "RecorderServer maxDuration is: " + std::to_string(config_.maxDuration) + "\n";
     dumpString += "RecorderServer format is: " + std::to_string(config_.format) + "\n";
     dumpString += "RecorderServer maxFileSize is: " + std::to_string(config_.maxFileSize) + "\n";
-    write(fd, dumpString.c_str(), dumpString.size());
-
+    if (fd != -1) {
+        write(fd, dumpString.c_str(), dumpString.size());
+    } else {
+        MEDIA_LOGI_NO_RELEASE("%{public}s", dumpString.c_str());
+    }
     return MSERR_OK;
 }
 

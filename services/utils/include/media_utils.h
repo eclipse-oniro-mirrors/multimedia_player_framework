@@ -44,6 +44,8 @@ namespace Media {
     double __attribute__((visibility("default"))) ChangeModeToSpeed(const PlaybackRateMode& mode);
     bool __attribute__((visibility("default"))) IsEnableOptimizeDecode();
     bool __attribute__((visibility("default"))) IsAppEnableRenderFirstFrame(int32_t uid);
+    bool __attribute__((visibility("default"))) GetPackageName(const char *key, std::string &value);
+    std::unordered_map<std::string, std::string> __attribute__((visibility("default"))) GetScreenCaptureSystemParam();
     constexpr double SPEED_0_75_X = 0.75;
     constexpr double SPEED_1_00_X = 1.00;
     constexpr double SPEED_1_25_X = 1.25;

@@ -58,8 +58,6 @@ public:
     int32_t Pause();
     int32_t Resume();
     int32_t Stop();
-    void SetIsMuted(bool isMuted);
-    bool GetIsMuted();
     int32_t UpdateAudioCapturerConfig(ScreenCaptureContentFilter &filter);
     int32_t CaptureAudio();
     int32_t AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audioBuffer);
@@ -82,7 +80,6 @@ protected:
 
 private:
     std::mutex mutex_;
-    std::atomic<bool> isMuted_ = false;
     std::atomic<bool> isRunning_ = false;
     AudioCaptureInfo audioInfo_;
     std::string threadName_;
