@@ -151,7 +151,7 @@ struct AVRecorderAsyncContext;
 struct AVRecorderProfile {
     int32_t audioBitrate = AVRECORDER_DEFAULT_AUDIO_BIT_RATE;
     int32_t audioChannels = AVRECORDER_DEFAULT_AUDIO_CHANNELS;
-    int32_t auidoSampleRate = AVRECORDER_DEFAULT_AUDIO_SAMPLE_RATE;
+    int32_t audioSampleRate = AVRECORDER_DEFAULT_AUDIO_SAMPLE_RATE;
     AudioCodecFormat audioCodecFormat = AudioCodecFormat::AUDIO_DEFAULT;
 
     int32_t videoBitrate = AVRECORDER_DEFAULT_VIDEO_BIT_RATE;

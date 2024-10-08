@@ -1438,7 +1438,7 @@ int32_t AVRecorderNapi::GetAVRecorderConfig(std::shared_ptr<AVRecorderConfig> &c
     config->profile.audioBitrate = configMap["audioBitrate"];
     config->profile.audioChannels = configMap["audioChannels"];
     config->profile.audioCodecFormat = static_cast<AudioCodecFormat>(configMap["audioCodec"]);
-    config->profile.auidoSampleRate = configMap["audioSampleRate"];
+    config->profile.audioSampleRate = configMap["audioSampleRate"];
     config->profile.fileFormat = static_cast<OutputFormatType>(configMap["fileFormat"]);
     config->profile.videoBitrate = configMap["videoBitrate"];
     config->profile.videoCodecFormat = static_cast<VideoCodecFormat>(configMap["videoCodec"]);
@@ -1736,8 +1736,8 @@ int32_t AVRecorderNapi::GetAudioProfile(std::unique_ptr<AVRecorderAsyncContext> 
         (asyncCtx->AVRecorderSignError(ret, "GetaudioBitrate", "audioBitrate"), ret));
     CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, item, "audioChannels", profile.audioChannels),
         (asyncCtx->AVRecorderSignError(ret, "GetaudioChannels", "audioChannels"), ret));
-    CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, item, "audioSampleRate", profile.auidoSampleRate),
-        (asyncCtx->AVRecorderSignError(ret, "GetauidoSampleRate", "auidoSampleRate"), ret));
+    CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, item, "audioSampleRate", profile.audioSampleRate),
+        (asyncCtx->AVRecorderSignError(ret, "GetaudioSampleRate", "audioSampleRate"), ret));
     MediaProfileLog(false, profile);
     return ret;
 }
@@ -1834,7 +1834,7 @@ void AVRecorderNapi::MediaProfileLog(bool isVideo, AVRecorderProfile &profile)
     }
     MEDIA_LOGI("audioBitrate %{public}d, audioChannels %{public}d, audioCodecFormat %{public}d,"
         " audioSampleRate %{public}d!", profile.audioBitrate, profile.audioChannels,
-        profile.audioCodecFormat, profile.auidoSampleRate);
+        profile.audioCodecFormat, profile.audioSampleRate);
 }
 
 int32_t AVRecorderNapi::GetConfig(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args)
@@ -2062,8 +2062,8 @@ RetInfo AVRecorderNapi::SetProfile(std::shared_ptr<AVRecorderConfig> config)
         ret = recorder_->SetAudioEncoder(audioSourceID_, profile.audioCodecFormat);
         CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetAudioEncoder", "audioCodecFormat"));
 
-        ret = recorder_->SetAudioSampleRate(audioSourceID_, profile.auidoSampleRate);
-        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetAudioSampleRate", "auidoSampleRate"));
+        ret = recorder_->SetAudioSampleRate(audioSourceID_, profile.audioSampleRate);
+        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetAudioSampleRate", "audioSampleRate"));
 
         ret = recorder_->SetAudioChannels(audioSourceID_, profile.audioChannels);
         CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetAudioChannels", "audioChannels"));
@@ -2215,7 +2215,7 @@ int32_t AVRecorderNapi::GetAVRecorderProfile(std::shared_ptr<AVRecorderProfile> 
 
     profile->audioBitrate = videoRecorderProfile->audioBitrate;
     profile->audioChannels = videoRecorderProfile->audioChannels;
-    profile->auidoSampleRate = videoRecorderProfile->audioSampleRate;
+    profile->audioSampleRate = videoRecorderProfile->audioSampleRate;
     profile->videoBitrate = videoRecorderProfile->videoBitrate;
     profile->videoFrameWidth = videoRecorderProfile->videoFrameWidth;
     profile->videoFrameHeight = videoRecorderProfile->videoFrameHeight;
@@ -2373,7 +2373,7 @@ napi_status MediaJsAVRecorderProfile::GetJsResult(napi_env env, napi_value &resu
     setRet = CommonNapi::SetPropertyString(env, result, "audioCodec", audioCodec);
     CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
 
-    setRet = CommonNapi::SetPropertyInt32(env, result, "audioSampleRate", value_->auidoSampleRate);
+    setRet = CommonNapi::SetPropertyInt32(env, result, "audioSampleRate", value_->audioSampleRate);
     CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
 
     std::string fileFormat;
@@ -2505,7 +2505,7 @@ napi_status MediaJsAVRecorderConfig::audioToSet(napi_env env, napi_value &profil
     CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
     setRet = CommonNapi::SetPropertyInt32(env, profile, "audioChannels", value_->profile.audioChannels);
     CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
-    setRet = CommonNapi::SetPropertyInt32(env, profile, "audioSampleRate", value_->profile.auidoSampleRate);
+    setRet = CommonNapi::SetPropertyInt32(env, profile, "audioSampleRate", value_->profile.audioSampleRate);
     CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
 
     std::string audioCodec;
