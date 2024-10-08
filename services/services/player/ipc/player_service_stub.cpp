@@ -1080,7 +1080,7 @@ int32_t PlayerServiceStub::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
 
 int32_t PlayerServiceStub::SetMaxAmplitudeCbStatus(bool status)
 {
-    MediaTrace trace("binder::SetMaxAmplitudeCbStatus");
+    MediaTrace trace("PlayerServiceStub::SetMaxAmplitudeCbStatus");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
     return playerServer_->SetMaxAmplitudeCbStatus(status);
 }
