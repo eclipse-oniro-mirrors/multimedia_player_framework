@@ -85,7 +85,6 @@ public:
     virtual std::shared_ptr<AVSharedMemory> FetchFrameAtTime(
         int64_t timeUs, int32_t option, const OutputConfiguration &param) = 0;
     
-    
     /**
      * Get timestamp according to frame index.
      * @param timeUs : Index of the frame.
