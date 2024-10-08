@@ -1202,7 +1202,7 @@ int32_t PlayerServer::SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionS
     bool svp)
 {
     MEDIA_LOGI("PlayerServer SetDecryptConfig");
-#ifdef SUPPORT_DRM
+#ifdef SUPPORT_AVPLAYER_DRM
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(keySessionProxy != nullptr, MSERR_INVALID_VAL, "keySessionProxy is nullptr");
 

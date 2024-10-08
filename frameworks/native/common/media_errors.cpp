@@ -71,12 +71,14 @@ const std::map<MediaServiceErrCode, std::string> MSERRCODE_INFOS = {
     {MSERR_DATA_SOURCE_ERROR_UNKNOWN, "media data source error unknow"},
     {MSERR_DATA_SOURCE_IO_ERROR, "media data source IO failed"},
     {MSERR_DRM_VERIFICATION_FAILED, "DRM verification failed"},
-    {MSERR_UNSUPPORT_WATER_MARK, "unsupported water mark"}
+    {MSERR_UNSUPPORT_WATER_MARK, "unsupported water mark"},
+    {MSERR_DEMUXER_BUFFER_NO_MEMORY, "demuxer cache data reached its limit"}
 };
 
 const std::map<MediaServiceErrCode, MediaServiceExtErrCode> MSERRCODE_TO_EXTERRORCODE = {
     {MSERR_OK,                                  MSERR_EXT_OK},
     {MSERR_NO_MEMORY,                           MSERR_EXT_NO_MEMORY},
+    {MSERR_DEMUXER_BUFFER_NO_MEMORY,            MSERR_EXT_IO},
     {MSERR_INVALID_OPERATION,                   MSERR_EXT_OPERATE_NOT_PERMIT},
     {MSERR_INVALID_VAL,                         MSERR_EXT_INVALID_VAL},
     {MSERR_UNKNOWN,                             MSERR_EXT_UNKNOWN},
@@ -181,7 +183,8 @@ const std::map<MediaServiceErrCode, MediaServiceExtErrCodeAPI9> MSERRCODE_TO_EXT
     {MSERR_DATA_SOURCE_ERROR_UNKNOWN,           MSERR_EXT_API9_IO},
     {MSERR_AUD_INTERRUPT,                       MSERR_EXT_API9_AUDIO_INTERRUPTED},
     {MSERR_USER_NO_PERMISSION,                  MSERR_EXT_API9_NO_PERMISSION},
-    {MSERR_UNSUPPORT_WATER_MARK,                MSERR_EXT_API9_UNSUPPORT_CAPABILITY}
+    {MSERR_UNSUPPORT_WATER_MARK,                MSERR_EXT_API9_UNSUPPORT_CAPABILITY},
+    {MSERR_DEMUXER_BUFFER_NO_MEMORY,            MSERR_EXT_API9_IO}
 };
 
 const std::map<MediaServiceExtErrCodeAPI9, std::string> MSEXTERRCODE_API9_INFOS = {
@@ -195,7 +198,7 @@ const std::map<MediaServiceExtErrCodeAPI9, std::string> MSEXTERRCODE_API9_INFOS 
     {MSERR_EXT_API9_IO, "IO Error: "},
     {MSERR_EXT_API9_TIMEOUT, "Network Timeout: "},
     {MSERR_EXT_API9_SERVICE_DIED, "Service Died: "},
-    {MSERR_EXT_API9_UNSUPPORT_FORMAT, "Unsupported Format: "},
+    {MSERR_EXT_API9_UNSUPPORT_FORMAT, "Unsupport Format: "},
     {MSERR_EXT_API9_AUDIO_INTERRUPTED, "Audio Interruped: "},
 };
 

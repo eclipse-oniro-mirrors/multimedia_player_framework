@@ -87,6 +87,7 @@ int32_t PlayerImpl::SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc)
 
 int32_t PlayerImpl::SetSource(const std::string &url)
 {
+    MEDIA_LOGD("PlayerImpl:0x%{private}06" PRIXPTR " SetSource in(url): %{private}s", FAKE_POINTER(this), url.c_str());
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     CHECK_AND_RETURN_RET_LOG(!url.empty(), MSERR_INVALID_VAL, "url is empty..");
     return playerService_->SetSource(url);
@@ -101,6 +102,8 @@ int32_t PlayerImpl::SetSource(int32_t fd, int64_t offset, int64_t size)
 
 int32_t PlayerImpl::AddSubSource(const std::string &url)
 {
+    MEDIA_LOGD("PlayerImpl:0x%{private}06" PRIXPTR " AddSubSource in(url): %{private}s",
+        FAKE_POINTER(this), url.c_str());
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     CHECK_AND_RETURN_RET_LOG(!url.empty(), MSERR_INVALID_VAL, "url is empty..");
     return playerService_->AddSubSource(url);
@@ -452,7 +455,7 @@ int32_t PlayerImpl::GetCurrentTrack(int32_t trackType, int32_t &index)
 int32_t PlayerImpl::SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionService> &keySessionProxy, bool svp)
 {
     MEDIA_LOGI("PlayerImpl DRM SetDecryptConfig");
-#ifdef SUPPORT_DRM
+#ifdef SUPPORT_AVPLAYER_DRM
     CHECK_AND_RETURN_RET_LOG(keySessionProxy != nullptr, MSERR_INVALID_VAL, "keysessionproxy is nullptr");
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     MEDIA_LOGD("And it's count is: %{public}d in PlayerImpl", keySessionProxy->GetSptrRefCount());
@@ -462,6 +465,14 @@ int32_t PlayerImpl::SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionSer
     (void)svp;
     return 0;
 #endif
+}
+
+int32_t PlayerImpl::SetDeviceChangeCbStatus(bool status)
+{
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetDeviceChangeCbStatus in, status is %{public}d",
+        FAKE_POINTER(this), status);
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
+    return playerService_->SetDeviceChangeCbStatus(status);
 }
 
 int32_t PlayerImpl::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)

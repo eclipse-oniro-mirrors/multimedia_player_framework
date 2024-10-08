@@ -77,6 +77,7 @@
           "graphic_surface",
           "hisysevent",
           "c_utils",
+          "zlib",
           "access_token",
           "image_framework",
           "hiview",
@@ -84,10 +85,8 @@
           "ffrt",
           "init",
           "input",
-          "memmgr_override",
           "hicollie",
           "media_foundation",
-          "drivers_interface_display",
           "drivers_peripheral_codec",
           "drivers_peripheral_display",
           "hdf_core",
@@ -104,24 +103,22 @@
           "config_policy",
           "power_manager",
           "media_library",
-          "memmgr",
           "common_event_service",
           "call_manager",
           "core_service",
           "state_registry",
           "resource_schedule_service",
           "ffmpeg",
-          "bounds_checking_function",
           "libxml2",
+          "bounds_checking_function",
           "libuv",
+          "os_account",
           "data_share",
           "ringtone_library",
-          "os_account",
+          "drivers_interface_display",
           "i18n"
         ],
-        "third_party": [
-          "bounds_checking_function"
-        ]
+        "third_party": []
       },
       "build": {
         "group_type": {
@@ -153,8 +150,7 @@
               "header_files": [
                 "player.h",
                 "recorder.h",
-                "screen_capture.h",
-                "media_errors.h"
+                "screen_capture.h"
               ],
               "header_base": "//foundation/multimedia/player_framework/interfaces/inner_api/native"
             }

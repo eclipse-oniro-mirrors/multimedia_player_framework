@@ -34,6 +34,7 @@ inline constexpr int32_t DELTA_TIME = 1000;
 inline constexpr int32_t PLAYING_TIME_2_SEC = 2;
 inline constexpr int32_t PLAYING_TIME_1_SEC = 1;
 inline constexpr int32_t PLAYING_TIME_10_SEC = 10;
+inline constexpr int32_t SEEK_CONTINUOUS_WAIT_US = 16666;
 const std::string MEDIA_ROOT = "file:///data/test/";
 const std::string VIDEO_FILE1 = MEDIA_ROOT + "H264_AAC.mp4";
 const std::string VIDEO_FILE2 = MEDIA_ROOT + "H264_AAC_multi_track.mp4";
@@ -104,7 +105,6 @@ public:
     int32_t TrackSync(bool &trackChange);
     int32_t TrackInfoUpdateSync();
     std::string SubtitleTextUpdate(std::string text);
-    PlayerStates GetState();
 private:
     void HandleTrackChangeCallback(int32_t extra, const Format &infoBody);
     void HandleSubtitleCallback(int32_t extra, const Format &infoBody);
@@ -122,7 +122,6 @@ public:
     int32_t SetSource(int32_t fd, int64_t offset, int64_t size);
     int32_t SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, AVPlayStrategy strategy);
     int32_t Prepare();
-    int32_t SetRenderFirstFrame(bool display);
     int32_t PrepareAsync();
     int32_t Play();
     int32_t Pause();
@@ -156,9 +155,11 @@ public:
     int32_t AddSubSource(const std::string &path, int64_t offset, int64_t size);
     std::string GetSubtitleText(std::string text);
     sptr<Surface> GetVideoSurfaceNext();
-    PlayerStates GetState();
     int32_t SetPlayRange(int64_t start, int64_t end);
     int32_t SeekContinuous(int32_t mseconds);
+    int32_t SetPlaybackStrategy(AVPlayStrategy strategy);
+    int32_t SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted);
+    int32_t SetDeviceChangeCbStatus(bool status);
     int32_t SetMaxAmplitudeCbStatus(bool status);
 private:
     void SeekPrepare(int32_t &mseconds, PlayerSeekMode &mode);

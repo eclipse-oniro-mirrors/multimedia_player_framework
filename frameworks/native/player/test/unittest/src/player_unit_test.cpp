@@ -420,6 +420,28 @@ HWTEST_F(PlayerUnitTest, Player_SetSource_009, TestSize.Level2)
 
 /**
  * @tc.name  : Test Player SetSource API
+ * @tc.number: Player_SetSource_010
+ * @tc.desc  : Test Player SetSource interface
+ */
+HWTEST_F(PlayerUnitTest, Player_SetSource_010, TestSize.Level2)
+{
+    int32_t ret = player_->SetSource("http://domain/H264_MP3.mp4");
+    ASSERT_NE(MSERR_OK, ret);
+}
+
+/**
+ * @tc.name  : Test Player SetSource API
+ * @tc.number: Player_SetSource_011
+ * @tc.desc  : Test Player SetSource interface
+ */
+HWTEST_F(PlayerUnitTest, Player_SetSource_011, TestSize.Level2)
+{
+    int32_t ret = player_->SetSource("https://domain/H264_MP3.mp4");
+    ASSERT_NE(MSERR_OK, ret);
+}
+
+/**
+ * @tc.name  : Test Player SetSource API
  * @tc.number: Player_SetSource_012
  * @tc.desc  : Test Player SetSource interface
  */
@@ -437,6 +459,24 @@ HWTEST_F(PlayerUnitTest, Player_SetSource_012, TestSize.Level2)
 HWTEST_F(PlayerUnitTest, Player_Local_001, TestSize.Level2)
 {
     int32_t ret = player_->SetSource(MEDIA_ROOT + "AVC_Baseline@L1.2_81.0Kbps_320x240.mp4");
+    EXPECT_EQ(MSERR_OK, ret);
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    ret = player_->PrepareAsync();
+    if (ret == MSERR_OK) {
+        PlayFunTest(LOCAL_PLAY);
+    }
+}
+
+/**
+ * @tc.name  : Test Player Local
+ * @tc.number: Player_Local_002
+ * @tc.desc  : Test Player Local source
+ */
+HWTEST_F(PlayerUnitTest, Player_Local_002, TestSize.Level2)
+{
+    int32_t ret = player_->SetSource(MEDIA_ROOT + "ChineseColor_H264_AAC_480p_15fps.mp4");
     EXPECT_EQ(MSERR_OK, ret);
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
@@ -593,6 +633,24 @@ HWTEST_F(PlayerUnitTest, Player_Local_015, TestSize.Level2)
 
 /**
  * @tc.name  : Test Player Local
+ * @tc.number: Player_Local_016
+ * @tc.desc  : Test Player Local source
+ */
+HWTEST_F(PlayerUnitTest, Player_Local_016, TestSize.Level2)
+{
+    int32_t ret = player_->SetSource(MEDIA_ROOT + "H265_AAC.mp4");
+    EXPECT_EQ(MSERR_OK, ret);
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    ret = player_->PrepareAsync();
+    if (ret == MSERR_OK) {
+        PlayFunTest(LOCAL_PLAY);
+    }
+}
+
+/**
+ * @tc.name  : Test Player Local
  * @tc.number: Player_Local_017
  * @tc.desc  : Test Player Local source
  */
@@ -721,20 +779,6 @@ HWTEST_F(PlayerUnitTest, Player_Prepare_005, TestSize.Level2)
     EXPECT_EQ(MSERR_OK, player_->Prepare());
     EXPECT_EQ(MSERR_OK, player_->Play());
     EXPECT_NE(MSERR_OK, player_->Prepare());
-}
-
-/**
- * @tc.name  : Test Player SetRenderFirstFrame API
- * @tc.number: Player_SetRenderFirstFrame_001
- * @tc.desc  : Test Player Play->SetRenderFirstFrame
- */
-HWTEST_F(PlayerUnitTest, Player_SetRenderFirstFrame_001, TestSize.Level2)
-{
-    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
-    sptr<Surface> videoSurface = player_->GetVideoSurface();
-    ASSERT_NE(nullptr, videoSurface);
-    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    EXPECT_EQ(MSERR_OK, player_->SetRenderFirstFrame(false));
 }
 
 /**
@@ -1215,123 +1259,6 @@ HWTEST_F(PlayerUnitTest, Player_Seek_004, TestSize.Level2)
 }
 
 /**
- * @tc.name  : Test Player Seek API
- * @tc.number: Player_Seek_005
- * @tc.desc  : Test Player Seek interface
- */
-HWTEST_F(PlayerUnitTest, Player_Seek_005, TestSize.Level0)
-{
-    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
-    EXPECT_NE(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_PREVIOUS_SYNC));
-    sptr<Surface> videoSurface = player_->GetVideoSurface();
-    ASSERT_NE(nullptr, videoSurface);
-    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    EXPECT_NE(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_PREVIOUS_SYNC));
-    EXPECT_EQ(MSERR_OK, player_->Prepare());
-    EXPECT_EQ(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_PREVIOUS_SYNC));
-}
-
-/**
- * @tc.name  : Test Player Seek API
- * @tc.number: Player_Seek_006
- * @tc.desc  : Test Player Seek interface
- */
-HWTEST_F(PlayerUnitTest, Player_Seek_006, TestSize.Level0)
-{
-    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
-    EXPECT_NE(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_CLOSEST));
-    sptr<Surface> videoSurface = player_->GetVideoSurface();
-    ASSERT_NE(nullptr, videoSurface);
-    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    EXPECT_NE(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_CLOSEST));
-    EXPECT_EQ(MSERR_OK, player_->Prepare());
-    EXPECT_EQ(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_CLOSEST));
-}
-
-/**
- * @tc.name  : Test Player Seek API
- * @tc.number: Player_Seek_007
- * @tc.desc  : Test Player Seek interface
- */
-HWTEST_F(PlayerUnitTest, Player_Seek_007, TestSize.Level0)
-{
-    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
-    EXPECT_NE(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_NEXT_SYNC));
-    sptr<Surface> videoSurface = player_->GetVideoSurface();
-    ASSERT_NE(nullptr, videoSurface);
-    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    EXPECT_NE(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_NEXT_SYNC));
-    EXPECT_EQ(MSERR_OK, player_->Prepare());
-    EXPECT_EQ(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_NEXT_SYNC));
-}
-
-/**
- * @tc.name  : Test Player Seek API
- * @tc.number: Player_Seek_008
- * @tc.desc  : Test Player Seek interface
- */
-HWTEST_F(PlayerUnitTest, Player_Seek_008, TestSize.Level0)
-{
-    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
-    sptr<Surface> videoSurface = player_->GetVideoSurface();
-    ASSERT_NE(nullptr, videoSurface);
-    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    EXPECT_EQ(MSERR_OK, player_->Prepare());
-    EXPECT_EQ(MSERR_OK, player_->Play());
-    EXPECT_EQ(MSERR_OK, player_->Seek(0, SEEK_CLOSEST));
-    EXPECT_EQ(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_CLOSEST));
-    int32_t duration = 0;
-    EXPECT_EQ(MSERR_OK, player_->GetDuration(duration));
-    EXPECT_EQ(MSERR_OK, player_->Seek(duration, SEEK_CLOSEST));
-    EXPECT_EQ(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_CLOSEST));
-    EXPECT_EQ(MSERR_OK, player_->Seek(0, SEEK_CLOSEST));
-}
-
-/**
- * @tc.name  : Test Player Seek API
- * @tc.number: Player_Seek_009
- * @tc.desc  : Test Player Seek interface
- */
-HWTEST_F(PlayerUnitTest, Player_Seek_009, TestSize.Level0)
-{
-    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
-    sptr<Surface> videoSurface = player_->GetVideoSurface();
-    ASSERT_NE(nullptr, videoSurface);
-    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    EXPECT_EQ(MSERR_OK, player_->Prepare());
-    EXPECT_EQ(MSERR_OK, player_->Play());
-    EXPECT_EQ(MSERR_OK, player_->Seek(0, SEEK_PREVIOUS_SYNC));
-    EXPECT_EQ(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_PREVIOUS_SYNC));
-    int32_t duration = 0;
-    EXPECT_EQ(MSERR_OK, player_->GetDuration(duration));
-    EXPECT_EQ(MSERR_OK, player_->Seek(duration, SEEK_PREVIOUS_SYNC));
-    EXPECT_EQ(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_PREVIOUS_SYNC));
-    EXPECT_EQ(MSERR_OK, player_->Seek(0, SEEK_PREVIOUS_SYNC));
-}
-
-/**
- * @tc.name  : Test Player Seek API
- * @tc.number: Player_Seek_010
- * @tc.desc  : Test Player Seek interface
- */
-HWTEST_F(PlayerUnitTest, Player_Seek_010, TestSize.Level0)
-{
-    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
-    sptr<Surface> videoSurface = player_->GetVideoSurface();
-    ASSERT_NE(nullptr, videoSurface);
-    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    EXPECT_EQ(MSERR_OK, player_->Prepare());
-    EXPECT_EQ(MSERR_OK, player_->Play());
-    EXPECT_EQ(MSERR_OK, player_->Seek(0, SEEK_NEXT_SYNC));
-    EXPECT_EQ(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_NEXT_SYNC));
-    int32_t duration = 0;
-    EXPECT_EQ(MSERR_OK, player_->GetDuration(duration));
-    EXPECT_EQ(MSERR_OK, player_->Seek(duration, SEEK_NEXT_SYNC));
-    EXPECT_EQ(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_NEXT_SYNC));
-    EXPECT_EQ(MSERR_OK, player_->Seek(0, SEEK_NEXT_SYNC));
-}
-
-/**
  * @tc.name  : Test GetVideoTrackInfo API
  * @tc.number: Player_GetVideoTrackInfo_001
  * @tc.desc  : Test Player GetVideoTrackInfo
@@ -1409,6 +1336,46 @@ HWTEST_F(PlayerUnitTest, Player_GetAudioTrackInfo_001, TestSize.Level2)
     int32_t sampleDepth;
     audioTrackFormat.GetIntValue("sample_depth", sampleDepth);
     EXPECT_EQ(16, sampleDepth);
+}
+
+/**
+ * @tc.name  : Test SelectTrack and DeselectTrack API
+ * @tc.number: Player_SelectTrack_001
+ * @tc.desc  : Test Player SelectTrack and DeselectTrack
+ */
+HWTEST_F(PlayerUnitTest, Player_SelectTrack_001, TestSize.Level0)
+{
+    bool trackChange = false;
+    std::vector<Format> audioTrack;
+    std::vector<int32_t> audioTrackIds;
+    int32_t currentAudioTrackIndex = -1;
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE2));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->SetVolume(1, 1));
+    sleep(PLAYING_TIME_2_SEC);
+    EXPECT_EQ(MSERR_OK, player_->GetCurrentTrack(MediaType::MEDIA_TYPE_AUD, currentAudioTrackIndex));
+    EXPECT_EQ(MSERR_OK, player_->GetAudioTrackInfo(audioTrack));
+    for (Format audioTrackFormat: audioTrack) {
+        int32_t trackIndex = -1;
+        audioTrackFormat.GetIntValue("track_index", trackIndex);
+        audioTrackIds.push_back(trackIndex);
+    }
+    for (int32_t trackIndex: audioTrackIds) {
+        if (trackIndex != currentAudioTrackIndex) {
+            trackChange = false;
+            EXPECT_EQ(MSERR_OK, player_->SelectTrack(trackIndex, trackChange));
+            EXPECT_EQ(trackChange, true);
+            EXPECT_EQ(MSERR_OK, player_->GetCurrentTrack(MediaType::MEDIA_TYPE_AUD, currentAudioTrackIndex));
+            sleep(PLAYING_TIME_2_SEC);
+            trackChange = false;
+            EXPECT_EQ(MSERR_OK, player_->DeselectTrack(currentAudioTrackIndex, trackChange));
+            EXPECT_EQ(trackChange, true);
+            EXPECT_EQ(MSERR_OK, player_->GetCurrentTrack(MediaType::MEDIA_TYPE_AUD, currentAudioTrackIndex));
+            sleep(PLAYING_TIME_2_SEC);
+        }
+    }
+    EXPECT_EQ(MSERR_OK, player_->Stop());
 }
 
 /**
@@ -1757,7 +1724,7 @@ HWTEST_F(PlayerUnitTest, Player_SetRendererInfo_001, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
     int32_t contentType = 1;
     int32_t streamUsage = 1;
-    int32_t rendererFlags = 0;
+    int32_t rendererFlags = 1;
     (void)format.PutIntValue(PlayerKeys::CONTENT_TYPE, contentType);
     (void)format.PutIntValue(PlayerKeys::STREAM_USAGE, streamUsage);
     (void)format.PutIntValue(PlayerKeys::RENDERER_FLAG, rendererFlags);
@@ -1797,6 +1764,28 @@ HWTEST_F(PlayerUnitTest, Player_SetInterrupt_001, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->Play());
     sleep(PLAYING_TIME_2_SEC);
     EXPECT_EQ(MSERR_OK, player->ReleaseSync());
+}
+
+/**
+ * @tc.name  : Test SetDataSource API
+ * @tc.number: Player_SetDataSource_002
+ * @tc.desc  : Test Player SetDataSource
+ */
+HWTEST_F(PlayerUnitTest, Player_SetDataSource_002, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetDataSrc("/data/test/H264_AAC.mp4", 1894386, true));  // 1894386 file size
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->SetLooping(true));
+    sleep(PLAYING_TIME_2_SEC);
+    EXPECT_EQ(MSERR_OK, player_->Seek(SEEK_TIME_5_SEC, SEEK_NEXT_SYNC));
+    sleep(PLAYING_TIME_10_SEC);
+    EXPECT_EQ(MSERR_OK, player_->Stop());
+    EXPECT_EQ(MSERR_OK, player_->Reset());
+    EXPECT_EQ(MSERR_OK, player_->Release());
 }
 
 /**
@@ -1977,8 +1966,8 @@ HWTEST_F(PlayerUnitTest, Player_Dump_GlibPool_001, TestSize.Level0)
  */
 HWTEST_F(PlayerUnitTest, Player_Dump_Log_001, TestSize.Level0)
 {
-    system("mkdir /data/media/log");
-    system("chmod 777 -R /data/media");
+    system("mkdir /data/test/log");
+    system("chmod 777 -R /data/test");
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
@@ -1995,7 +1984,7 @@ HWTEST_F(PlayerUnitTest, Player_Dump_Log_001, TestSize.Level0)
     system("param set sys.media.dump.codec.vdec NULL");
     EXPECT_TRUE(player_->IsPlaying());
     EXPECT_EQ(MSERR_OK, player_->Pause());
-    system("rm -rf /data/media/log");
+    system("rm -rf /data/test/log");
 }
 
 /**
@@ -2550,19 +2539,8 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_016, TestSize.Level0)
 HWTEST_F(PlayerUnitTest, Player_SetEffect_001, TestSize.Level0)
 {
     Format format;
-    const float FLOAT_VALUE = 1.0;
-    const double DOUBLE_VALUE = 2.5;
-    const std::string STRING_VALUE = "player_test";
-    const int32_t INT_VALUE = 1;
     (void)format.PutIntValue(PlayerKeys::AUDIO_EFFECT_MODE, OHOS::AudioStandard::AudioEffectMode::EFFECT_NONE);
-    EXPECT_NE(MSERR_OK, player_->SetParameter(format));
-    (void)format.PutFloatValue(PlayerKeys::AUDIO_EFFECT_MODE, FLOAT_VALUE);
-    EXPECT_NE(MSERR_OK, player_->SetParameter(format));
-    (void)format.PutDoubleValue(PlayerKeys::AUDIO_EFFECT_MODE, DOUBLE_VALUE);
-    EXPECT_NE(MSERR_OK, player_->SetParameter(format));
-    (void)format.PutStringValue(PlayerKeys::AUDIO_EFFECT_MODE, STRING_VALUE);
-    EXPECT_NE(MSERR_OK, player_->SetParameter(format));
-    (void)format.PutIntValue(PlayerKeys::AUDIO_EFFECT_MODE, INT_VALUE);
+
     EXPECT_NE(MSERR_OK, player_->SetParameter(format));
 
     ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "01.mp3"));
@@ -2914,12 +2892,18 @@ HWTEST_F(PlayerUnitTest, Player_AddSubSource_001, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
     EXPECT_NE(MSERR_OK, player_->AddSubSource(SUBTITLE_SRT_FIELE));    // Illegal state machine
     EXPECT_EQ(MSERR_OK, player_->Prepare());
-    EXPECT_EQ(MSERR_OK, player_->Play());
-    EXPECT_NE(SUBTITLE_0_SEC, player_->GetSubtitleText(SUBTITLE_0_SEC));
-    EXPECT_EQ(MSERR_OK, player_->Pause());
+    EXPECT_NE(MSERR_OK, player_->AddSubSource(SUBTITLE_SRT_FIELE, 0, 0));
+    EXPECT_NE(MSERR_OK, player_->Play());
+    EXPECT_NE(SUBTITLE_0_SEC, player_->GetSubtitleText(""));
+    EXPECT_NE(MSERR_OK, player_->AddSubSource(SUBTITLE_SRT_FIELE, 0, 0));
+    EXPECT_NE(MSERR_OK, player_->Pause());
+    EXPECT_NE(MSERR_OK, player_->AddSubSource(SUBTITLE_SRT_FIELE, 0, 0));
     EXPECT_EQ(MSERR_OK, player_->Stop());
+    EXPECT_NE(MSERR_OK, player_->AddSubSource(SUBTITLE_SRT_FIELE, 0, 0));    // Illegal state machine
     EXPECT_EQ(MSERR_OK, player_->Reset());
+    EXPECT_NE(MSERR_OK, player_->AddSubSource(SUBTITLE_SRT_FIELE, 0, 0));    // Illegal state machine
     EXPECT_EQ(MSERR_OK, player_->Release());
+    EXPECT_NE(MSERR_OK, player_->AddSubSource(SUBTITLE_SRT_FIELE, 0, 0));    // Illegal state machine
 }
 
 /**
@@ -2933,22 +2917,96 @@ HWTEST_F(PlayerUnitTest, Player_AddSubSource_002, TestSize.Level0)
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
     EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    EXPECT_NE(MSERR_OK, player_->AddSubSource(SUBTITLE_SRT_FIELE, 0, 0));
     EXPECT_EQ(MSERR_OK, player_->Prepare());
-    EXPECT_EQ(MSERR_OK, player_->Play());
-    EXPECT_EQ(MSERR_OK, player_->Seek(SEEK_TIME_5_SEC, SEEK_CLOSEST));
-    EXPECT_EQ("", player_->GetSubtitleText(""));
-    EXPECT_EQ(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_CLOSEST));
-    EXPECT_EQ("", player_->GetSubtitleText(""));
-    EXPECT_EQ(MSERR_OK, player_->Seek(SEEK_TIME_5_SEC, SEEK_NEXT_SYNC));
-    EXPECT_EQ("", player_->GetSubtitleText(""));
-    EXPECT_EQ(MSERR_OK, player_->Seek(SEEK_TIME_5_SEC, SEEK_PREVIOUS_SYNC));
-    EXPECT_EQ("", player_->GetSubtitleText(""));
+    EXPECT_NE(MSERR_OK, player_->AddSubSource(SUBTITLE_SRT_FIELE, 0, 0));
+    EXPECT_NE(MSERR_OK, player_->Play());
+    EXPECT_NE(MSERR_OK, player_->Seek(SEEK_TIME_5_SEC, SEEK_CLOSEST));
+    EXPECT_NE(SUBTITLE_5_SEC, player_->GetSubtitleText(""));
+    EXPECT_NE(MSERR_OK, player_->Pause());
+    EXPECT_NE(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_CLOSEST));
+    EXPECT_NE(SUBTITLE_2_SEC, player_->GetSubtitleText(""));
+    EXPECT_NE(MSERR_OK, player_->Seek(SEEK_TIME_5_SEC, SEEK_NEXT_SYNC));
+    EXPECT_NE(SUBTITLE_8_SEC, player_->GetSubtitleText(""));
+    EXPECT_NE(MSERR_OK, player_->Seek(SEEK_TIME_5_SEC, SEEK_PREVIOUS_SYNC));
+    EXPECT_NE(SUBTITLE_4_SEC, player_->GetSubtitleText(""));
     int duration = 0;
     EXPECT_EQ(MSERR_OK, player_->GetDuration(duration));
+    EXPECT_NE(MSERR_OK, player_->Play());
+    EXPECT_NE(MSERR_OK, player_->Seek(duration, SEEK_CLOSEST));
+    EXPECT_NE(SUBTITLE_10_SEC, player_->GetSubtitleText(""));
+}
+
+/**
+ * @tc.name  : Test AddSubSource
+ * @tc.number: Player_AddSubSource_003
+ * @tc.desc  : Test Player AddSubSource behavior
+ */
+HWTEST_F(PlayerUnitTest, Player_AddSubSource_003, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "H264_AAC.mp4", 0, 0));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
     EXPECT_EQ(MSERR_OK, player_->Play());
-    EXPECT_EQ(MSERR_OK, player_->Seek(duration, SEEK_CLOSEST));
-    EXPECT_EQ("", player_->GetSubtitleText(""));
+    sleep(PLAYING_TIME_2_SEC);
+    EXPECT_NE(MSERR_OK, player_->AddSubSource(SUBTITLE_SRT_FIELE, 0, 0));
+    EXPECT_NE(SUBTITLE_2_SEC, player_->GetSubtitleText(""));
+    sleep(PLAYING_TIME_1_SEC);
+    EXPECT_NE(SUBTITLE_3_SEC, player_->GetSubtitleText(""));
+}
+
+/**
+ * @tc.name  : Test AddSubSource
+ * @tc.number: Player_AddSubSource_004
+ * @tc.desc  : Test Player AddSubSource behavior
+ */
+HWTEST_F(PlayerUnitTest, Player_AddSubSource_004, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "H264_AAC.mp4", 0, 0));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->SetPlaybackSpeed(SPEED_FORWARD_2_00_X));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    sleep(PLAYING_TIME_2_SEC);
+    EXPECT_NE(MSERR_OK, player_->AddSubSource(SUBTITLE_SRT_FIELE, 0, 0));
+    EXPECT_NE(SUBTITLE_4_SEC, player_->GetSubtitleText(""));
+    sleep(PLAYING_TIME_1_SEC);
+    std::string text = player_->GetSubtitleText("");
+    EXPECT_NE((SUBTITLE_6_SEC == text), true);
+}
+
+/**
+ * @tc.name  : Test AddSubSource
+ * @tc.number: Player_AddSubSource_005
+ * @tc.desc  : Test Player AddSubSource behavior
+ */
+HWTEST_F(PlayerUnitTest, Player_AddSubSource_005, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "H264_AAC.mp4", 0, 0));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    sleep(PLAYING_TIME_2_SEC);
+    EXPECT_NE(MSERR_OK, player_->AddSubSource(SUBTITLE_SRT_FIELE, 0, 0));
+    EXPECT_NE(SUBTITLE_2_SEC, player_->GetSubtitleText(""));
+    EXPECT_EQ(MSERR_OK, player_->SetPlaybackSpeed(SPEED_FORWARD_2_00_X));
+    sleep(PLAYING_TIME_1_SEC);
+    std::string text = player_->GetSubtitleText("");
+    EXPECT_NE((SUBTITLE_3_SEC == text || SUBTITLE_4_SEC == text), true);
+    EXPECT_EQ(MSERR_OK, player_->Reset());
+    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "H264_AAC.mp4", 0, 0));
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_NE(MSERR_OK, player_->AddSubSource(SUBTITLE_SRT_FIELE, 0, 0));
+    EXPECT_NE(MSERR_OK, player_->Play());
+    EXPECT_NE(MSERR_OK, player_->Pause());
+    EXPECT_NE(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_CLOSEST));
+    EXPECT_NE(SUBTITLE_2_SEC, player_->GetSubtitleText(""));
 }
 
 /**
@@ -3131,193 +3189,6 @@ HWTEST_F(PlayerUnitTest, Player_SetParameter_003, TestSize.Level0)
 
     EXPECT_EQ(MSERR_OK, player_->GetVideoTrackInfo(videoTrack));
     EXPECT_EQ(MSERR_OK, player_->GetAudioTrackInfo(audioTrack));
-}
-
-/**
- * @tc.name  : Test Player state machine, invalid operation on stopped
- * @tc.number: Player_State_Machine_001
- * @tc.desc  : Test Player state machine, invalid operation on stopped
- */
-HWTEST_F(PlayerUnitTest, Player_State_Machine_001, TestSize.Level0)
-{
-    ASSERT_EQ(PlayerStates::PLAYER_IDLE, player_->GetState());
-    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "mp3_48000Hz_64kbs_mono.mp3"));
-    ASSERT_EQ(MSERR_OK, player_->PrepareAsync());
-    sleep(1);
-    ASSERT_EQ(PlayerStates::PLAYER_PREPARED, player_->GetState());
-    int32_t duration = 0;
-    ASSERT_EQ(MSERR_OK, player_->GetDuration(duration));
-    ASSERT_EQ(MSERR_OK, player_->Play());
-    sleep(1);
-    ASSERT_EQ(true, player_->IsPlaying());
-    ASSERT_EQ(PlayerStates::PLAYER_STARTED, player_->GetState());
-    ASSERT_EQ(MSERR_OK, player_->Stop());
-    sleep(1);
-    ASSERT_EQ(PlayerStates::PLAYER_STOPPED, player_->GetState());
-    ASSERT_EQ(MSERR_INVALID_OPERATION, player_->Pause());
-    ASSERT_EQ(MSERR_INVALID_OPERATION, player_->Play());
-    ASSERT_EQ(MSERR_INVALID_OPERATION, player_->SetSource(MEDIA_ROOT + "mp3_48000Hz_64kbs_mono.mp3"));
-}
-
-/**
- * @tc.name  : Test Player state machine, invalid operation on error
- * @tc.number: Player_State_Machine_002
- * @tc.desc  : Test Player state machine, invalid operation on error
- */
-HWTEST_F(PlayerUnitTest, Player_State_Machine_002, TestSize.Level0)
-{
-    ASSERT_EQ(PlayerStates::PLAYER_IDLE, player_->GetState());
-    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "1kb.mp3"));
-    ASSERT_NE(MSERR_OK, player_->PrepareAsync());
-    sleep(1);
-    ASSERT_EQ(PlayerStates::PLAYER_STATE_ERROR, player_->GetState());
-    int32_t duration = 0;
-    ASSERT_EQ(MSERR_INVALID_OPERATION, player_->GetDuration(duration));
-    ASSERT_EQ(MSERR_INVALID_OPERATION, player_->Seek(0, PlayerSeekMode::SEEK_NEXT_SYNC));
-    ASSERT_EQ(MSERR_INVALID_OPERATION, player_->Play());
-    sleep(1);
-    ASSERT_EQ(false, player_->IsPlaying());
-    ASSERT_EQ(MSERR_INVALID_OPERATION, player_->Stop());
-    sleep(1);
-    ASSERT_EQ(MSERR_INVALID_OPERATION, player_->Pause());
-    ASSERT_EQ(MSERR_INVALID_OPERATION, player_->Play());
-    ASSERT_EQ(MSERR_INVALID_OPERATION, player_->SetSource(MEDIA_ROOT + "mp3_48000Hz_64kbs_mono.mp3"));
-    ASSERT_EQ(MSERR_OK, player_->Reset());
-    ASSERT_EQ(PlayerStates::PLAYER_IDLE, player_->GetState());
-    ASSERT_EQ(MSERR_INVALID_OPERATION, player_->Reset());
-}
-
-/**
- * @tc.name  : Test Player state machine, invalid operation on idle
- * @tc.number: Player_State_Machine_003
- * @tc.desc  : Test Player state machine, invalid operation on idle
- */
-HWTEST_F(PlayerUnitTest, Player_State_Machine_003, TestSize.Level0)
-{
-    ASSERT_EQ(PlayerStates::PLAYER_IDLE, player_->GetState());
-    ASSERT_EQ(MSERR_INVALID_OPERATION, player_->PrepareAsync());
-    sleep(1);
-    int32_t duration = 0;
-    ASSERT_EQ(MSERR_INVALID_OPERATION, player_->GetDuration(duration));
-    ASSERT_EQ(MSERR_INVALID_OPERATION, player_->Play());
-    sleep(1);
-    ASSERT_EQ(false, player_->IsPlaying());
-    ASSERT_EQ(PlayerStates::PLAYER_IDLE, player_->GetState());
-    ASSERT_EQ(MSERR_NO_MEMORY, player_->Seek(0, PlayerSeekMode::SEEK_NEXT_SYNC));
-    sleep(1);
-    ASSERT_EQ(false, player_->IsPlaying());
-    ASSERT_EQ(MSERR_INVALID_OPERATION, player_->Pause());
-    ASSERT_EQ(MSERR_INVALID_OPERATION, player_->Stop());
-}
-
-/**
- * @tc.name  : Test Player state machine, invalid operation on initialized
- * @tc.number: Player_State_Machine_004
- * @tc.desc  : Test Player state machine, invalid operation on initialized
- */
-HWTEST_F(PlayerUnitTest, Player_State_Machine_004, TestSize.Level0)
-{
-    ASSERT_EQ(PlayerStates::PLAYER_IDLE, player_->GetState());
-    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "mp3_48000Hz_64kbs_mono.mp3"));
-    sleep(1);
-    int32_t duration = 0;
-    ASSERT_EQ(MSERR_INVALID_OPERATION, player_->GetDuration(duration));
-    ASSERT_EQ(MSERR_INVALID_OPERATION, player_->Seek(duration, PlayerSeekMode::SEEK_NEXT_SYNC));
-    ASSERT_EQ(MSERR_INVALID_OPERATION, player_->Play());
-    sleep(1);
-    ASSERT_EQ(false, player_->IsPlaying());
-    ASSERT_EQ(MSERR_INVALID_OPERATION, player_->Stop());
-    sleep(1);
-    ASSERT_EQ(MSERR_INVALID_OPERATION, player_->Pause());
-    ASSERT_EQ(MSERR_INVALID_OPERATION, player_->Play());
-}
-
-/**
- * @tc.name  : Test Player state machine, invalid operation on prepared
- * @tc.number: Player_State_Machine_005
- * @tc.desc  : Test Player state machine, invalid operation on prepared
- */
-HWTEST_F(PlayerUnitTest, Player_State_Machine_005, TestSize.Level0)
-{
-    ASSERT_EQ(PlayerStates::PLAYER_IDLE, player_->GetState());
-    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "mp3_48000Hz_64kbs_mono.mp3"));
-    ASSERT_EQ(MSERR_OK, player_->PrepareAsync());
-    sleep(1);
-    ASSERT_EQ(MSERR_INVALID_OPERATION, player_->SetSource(MEDIA_ROOT + "mp3_48000Hz_64kbs_mono.mp3"));
-    int32_t duration = 0;
-    ASSERT_EQ(MSERR_OK, player_->GetDuration(duration));
-    ASSERT_EQ(MSERR_OK, player_->Seek(duration, PlayerSeekMode::SEEK_NEXT_SYNC));
-    ASSERT_EQ(PlayerStates::PLAYER_PREPARED, player_->GetState());
-    ASSERT_EQ(MSERR_INVALID_OPERATION, player_->Pause());
-    sleep(1);
-    ASSERT_EQ(false, player_->IsPlaying());
-    ASSERT_EQ(MSERR_OK, player_->Stop());
-}
-
-/**
- * @tc.name  : Test Player state machine, invalid operation on playing
- * @tc.number: Player_State_Machine_006
- * @tc.desc  : Test Player state machine, invalid operation on playing
- */
-HWTEST_F(PlayerUnitTest, Player_State_Machine_006, TestSize.Level0)
-{
-    ASSERT_EQ(PlayerStates::PLAYER_IDLE, player_->GetState());
-    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "mp3_48000Hz_64kbs_mono.mp3"));
-    ASSERT_EQ(MSERR_OK, player_->PrepareAsync());
-    ASSERT_EQ(MSERR_OK, player_->SetLooping(true));
-    sleep(1);
-    int32_t duration = 0;
-    ASSERT_EQ(MSERR_OK, player_->GetDuration(duration));
-    ASSERT_EQ(MSERR_OK, player_->Play());
-    ASSERT_EQ(MSERR_INVALID_OPERATION, player_->SetSource(MEDIA_ROOT + "mp3_48000Hz_64kbs_mono.mp3"));
-    ASSERT_EQ(MSERR_OK, player_->Seek(duration, PlayerSeekMode::SEEK_NEXT_SYNC));
-    sleep(1);
-    ASSERT_EQ(true, player_->IsPlaying());
-    ASSERT_EQ(MSERR_OK, player_->Stop());
-}
-
-/**
- * @tc.name  : Test Player state machine, invalid operation on completed
- * @tc.number: Player_State_Machine_007
- * @tc.desc  : Test Player state machine, invalid operation on completed
- */
-HWTEST_F(PlayerUnitTest, Player_State_Machine_007, TestSize.Level0)
-{
-    ASSERT_EQ(PlayerStates::PLAYER_IDLE, player_->GetState());
-    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "mp3_48000Hz_64kbs_mono.mp3"));
-    ASSERT_EQ(MSERR_OK, player_->PrepareAsync());
-    sleep(1);
-    int32_t duration = 0;
-    ASSERT_EQ(MSERR_OK, player_->GetDuration(duration));
-    ASSERT_EQ(MSERR_OK, player_->Seek(duration, PlayerSeekMode::SEEK_NEXT_SYNC));
-    ASSERT_EQ(MSERR_OK, player_->Play());
-    sleep(1);
-    ASSERT_EQ(false, player_->IsPlaying());
-    ASSERT_EQ(PlayerStates::PLAYER_PLAYBACK_COMPLETE, player_->GetState());
-    ASSERT_EQ(MSERR_INVALID_OPERATION, player_->Pause());
-    ASSERT_EQ(MSERR_INVALID_OPERATION, player_->PrepareAsync());
-    ASSERT_EQ(MSERR_INVALID_OPERATION, player_->SetSource(MEDIA_ROOT + "mp3_48000Hz_64kbs_mono.mp3"));
-}
-
-/**
- * @tc.name  : Test Player state machine, invalid operation on paused
- * @tc.number: Player_State_Machine_008
- * @tc.desc  : Test Player state machine, invalid operation on paused
- */
-HWTEST_F(PlayerUnitTest, Player_State_Machine_008, TestSize.Level0)
-{
-    ASSERT_EQ(PlayerStates::PLAYER_IDLE, player_->GetState());
-    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "mp3_48000Hz_64kbs_mono.mp3"));
-    ASSERT_EQ(MSERR_OK, player_->PrepareAsync());
-    sleep(1);
-    int32_t duration = 0;
-    ASSERT_EQ(MSERR_OK, player_->GetDuration(duration));
-    ASSERT_EQ(MSERR_OK, player_->Play());
-    ASSERT_EQ(MSERR_OK, player_->Pause());
-    sleep(1);
-    ASSERT_EQ(PlayerStates::PLAYER_PAUSED, player_->GetState());
-    ASSERT_EQ(MSERR_INVALID_OPERATION, player_->SetSource(MEDIA_ROOT + "mp3_48000Hz_64kbs_mono.mp3"));
-    ASSERT_EQ(MSERR_INVALID_OPERATION, player_->PrepareAsync());
 }
 
 /**
@@ -3537,7 +3408,7 @@ HWTEST_F(PlayerUnitTest, Player_SeekContinuous_001, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
     for (int i = 0; i < 10; i++) {
         EXPECT_EQ(MSERR_OK, player_->SeekContinuous(i * 100));
-        usleep(33000); // 33000 means 33ms
+        usleep(SEEK_CONTINUOUS_WAIT_US);
     }
     EXPECT_EQ(MSERR_OK, player_->Play());
 }
@@ -3558,7 +3429,7 @@ HWTEST_F(PlayerUnitTest, Player_SeekContinuous_002, TestSize.Level0)
     sleep(PLAYING_TIME_2_SEC);
     for (int i = 0; i < 30; i++) {
         EXPECT_EQ(MSERR_OK, player_->SeekContinuous(i * 100));
-        usleep(33000); // 33000 means 33ms
+        usleep(SEEK_CONTINUOUS_WAIT_US);
     }
     EXPECT_EQ(MSERR_OK, player_->Play());
     EXPECT_EQ(MSERR_OK, player_->Stop());
@@ -3581,7 +3452,7 @@ HWTEST_F(PlayerUnitTest, Player_SeekContinuous_003, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->Pause());
     for (int i = 0; i < 30; i++) {
         EXPECT_EQ(MSERR_OK, player_->SeekContinuous(i * 100));
-        usleep(33000); // 33000 means 33ms
+        usleep(SEEK_CONTINUOUS_WAIT_US);
     }
     EXPECT_EQ(MSERR_OK, player_->Play());
     EXPECT_EQ(MSERR_OK, player_->Stop());
@@ -3605,7 +3476,7 @@ HWTEST_F(PlayerUnitTest, Player_SeekContinuous_004, TestSize.Level0)
     sleep(PLAYING_TIME_10_SEC);
     for (int i = 0; i < 30; i++) {
         EXPECT_EQ(MSERR_OK, player_->SeekContinuous(i * 100));
-        usleep(33000); // 33000 means 33ms
+        usleep(SEEK_CONTINUOUS_WAIT_US);
     }
     EXPECT_EQ(MSERR_OK, player_->Play());
     EXPECT_EQ(MSERR_OK, player_->Stop());
@@ -3627,7 +3498,7 @@ HWTEST_F(PlayerUnitTest, Player_SeekContinuous_005, TestSize.Level0)
     sleep(PLAYING_TIME_2_SEC);
     for (int i = 0; i < 30; i++) {
         EXPECT_EQ(MSERR_OK, player_->SeekContinuous(9000 - i * 100));
-        usleep(33000); // 33000 means 33ms
+        usleep(SEEK_CONTINUOUS_WAIT_US);
     }
     EXPECT_EQ(MSERR_OK, player_->Play());
     EXPECT_EQ(MSERR_OK, player_->Stop());
@@ -3649,11 +3520,11 @@ HWTEST_F(PlayerUnitTest, Player_SeekContinuous_006, TestSize.Level0)
     sleep(PLAYING_TIME_2_SEC);
     for (int i = 0; i < 30; i++) {
         EXPECT_EQ(MSERR_OK, player_->SeekContinuous(9000 - i * 100));
-        usleep(33000); // 33000 means 33ms
+        usleep(SEEK_CONTINUOUS_WAIT_US);
     }
     for (int i = 0; i < 30; i++) {
         EXPECT_EQ(MSERR_OK, player_->SeekContinuous(9000 - i * 100));
-        usleep(33000); // 33000 means 33ms
+        usleep(SEEK_CONTINUOUS_WAIT_US);
     }
     EXPECT_EQ(MSERR_OK, player_->Play());
     EXPECT_EQ(MSERR_OK, player_->Stop());
@@ -3676,6 +3547,123 @@ HWTEST_F(PlayerUnitTest, Player_SetPlaybackSpeed_006, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->SetPlaybackSpeed(SPEED_FORWARD_3_00_X));
     EXPECT_EQ(MSERR_OK, player_->GetPlaybackSpeed(mode));
     EXPECT_EQ(SPEED_FORWARD_3_00_X, mode);
+}
+
+/**
+ * @tc.name  : Test SetPlaybackStrategy
+ * @tc.number: Player_SetPlaybackStrategy_001
+ * @tc.desc  : Test Player SetPlaybackStrategy
+ */
+HWTEST_F(PlayerUnitTest, Player_SetPlaybackStrategy_001, TestSize.Level0)
+{
+    AVPlayStrategy playbackStrategy = {
+        .mutedMediaType = OHOS::Media::MediaType::MEDIA_TYPE_AUD
+    };
+    ASSERT_NE(MSERR_OK, player_->SetPlaybackStrategy(playbackStrategy));
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    ASSERT_EQ(MSERR_OK, player_->SetPlaybackStrategy(playbackStrategy));
+}
+
+/**
+ * @tc.name  : Test SetMediaMuted
+ * @tc.number: Player_SetMediaMuted_001
+ * @tc.desc  : Test Player SetMediaMuted
+ */
+HWTEST_F(PlayerUnitTest, Player_SetMediaMuted_001, TestSize.Level0)
+{
+    ASSERT_NE(MSERR_OK, player_->SetMediaMuted(OHOS::Media::MediaType::MEDIA_TYPE_AUD, true));
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    ASSERT_NE(MSERR_OK, player_->SetMediaMuted(OHOS::Media::MediaType::MEDIA_TYPE_AUD, true));
+    ASSERT_EQ(MSERR_OK, player_->PrepareAsync());
+    ASSERT_EQ(MSERR_OK, player_->SetMediaMuted(OHOS::Media::MediaType::MEDIA_TYPE_AUD, true));
+    ASSERT_EQ(MSERR_OK, player_->Play());
+    ASSERT_EQ(MSERR_OK, player_->SetMediaMuted(OHOS::Media::MediaType::MEDIA_TYPE_AUD, true));
+    ASSERT_EQ(MSERR_OK, player_->Pause());
+    ASSERT_EQ(MSERR_OK, player_->SetMediaMuted(OHOS::Media::MediaType::MEDIA_TYPE_AUD, true));
+    ASSERT_EQ(MSERR_OK, player_->Stop());
+    ASSERT_EQ(MSERR_OK, player_->SetMediaMuted(OHOS::Media::MediaType::MEDIA_TYPE_AUD, true));
+}
+
+/**
+ * @tc.name  : Test SetMediaMuted
+ * @tc.number: Player_SetMediaMuted_002
+ * @tc.desc  : Test Player SetMediaMuted
+ */
+HWTEST_F(PlayerUnitTest, Player_SetMediaMuted_002, TestSize.Level0)
+{
+    ASSERT_NE(MSERR_OK, player_->SetMediaMuted(OHOS::Media::MediaType::MEDIA_TYPE_VID, true));
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    ASSERT_NE(MSERR_OK, player_->SetMediaMuted(OHOS::Media::MediaType::MEDIA_TYPE_VID, true));
+    ASSERT_EQ(MSERR_OK, player_->PrepareAsync());
+    ASSERT_NE(MSERR_OK, player_->SetMediaMuted(OHOS::Media::MediaType::MEDIA_TYPE_VID, true));
+    ASSERT_EQ(MSERR_OK, player_->Play());
+    ASSERT_NE(MSERR_OK, player_->SetMediaMuted(OHOS::Media::MediaType::MEDIA_TYPE_VID, true));
+    ASSERT_EQ(MSERR_OK, player_->Stop());
+    ASSERT_NE(MSERR_OK, player_->SetMediaMuted(OHOS::Media::MediaType::MEDIA_TYPE_VID, true));
+}
+
+/**
+ * @tc.name  : Test SetDeviceChangeCbStatus API
+ * @tc.number: Player_SetDeviceChangeCbStatus_001
+ * @tc.desc  : Test Player SetDeviceChangeCbStatus status on before prepare
+ */
+HWTEST_F(PlayerUnitTest, Player_SetDeviceChangeCbStatus_001, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetDeviceChangeCbStatus(true));
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+}
+
+/**
+ * @tc.name  : Test SetDeviceChangeCbStatus API
+ * @tc.number: Player_SetDeviceChangeCbStatus_002
+ * @tc.desc  : Test Player SetDeviceChangeCbStatus status on after prepare
+ */
+HWTEST_F(PlayerUnitTest, Player_SetDeviceChangeCbStatus_002, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->SetDeviceChangeCbStatus(true));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+}
+
+/**
+ * @tc.name  : Test SetDeviceChangeCbStatus API
+ * @tc.number: Player_SetDeviceChangeCbStatus_003
+ * @tc.desc  : Test Player SetDeviceChangeCbStatus status off before prepare
+ */
+HWTEST_F(PlayerUnitTest, Player_SetDeviceChangeCbStatus_003, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetDeviceChangeCbStatus(false));
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+}
+
+/**
+ * @tc.name  : Test SetDeviceChangeCbStatus API
+ * @tc.number: Player_SetDeviceChangeCbStatus_004
+ * @tc.desc  : Test Player SetDeviceChangeCbStatus status off after prepare
+ */
+HWTEST_F(PlayerUnitTest, Player_SetDeviceChangeCbStatus_004, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->SetDeviceChangeCbStatus(false));
+    EXPECT_EQ(MSERR_OK, player_->Play());
 }
 
 /**

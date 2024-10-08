@@ -15,7 +15,7 @@
 
 #include "player_service_proxy.h"
 #include "player_listener_stub.h"
-#ifdef SUPPORT_DRM
+#ifdef SUPPORT_AVPLAYER_DRM
 #include "key_session_service_proxy.h"
 #endif
 #include "media_log.h"
@@ -716,7 +716,7 @@ int32_t PlayerServiceProxy::SetDecryptConfig(const sptr<DrmStandard::IMediaKeySe
 {
     MediaTrace trace("PlayerServiceProxy::SetDecryptConfig");
     MEDIA_LOGI("PlayerServiceProxy SetDecryptConfig");
-#ifdef SUPPORT_DRM
+#ifdef SUPPORT_AVPLAYER_DRM
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;

@@ -400,7 +400,7 @@ int32_t PlayerClient::GetCurrentTrack(int32_t trackType, int32_t &index)
 int32_t PlayerClient::SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionService> &keySessionProxy, bool svp)
 {
     MEDIA_LOGI("PlayerClient SetDecryptConfig");
-#ifdef SUPPORT_DRM
+#ifdef SUPPORT_AVPLAYER_DRM
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     CHECK_AND_RETURN_RET_LOG(keySessionProxy != nullptr, MSERR_NO_MEMORY, "keySessionProxy is nullptr..");

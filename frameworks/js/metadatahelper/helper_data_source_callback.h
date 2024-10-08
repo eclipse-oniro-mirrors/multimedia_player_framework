@@ -18,7 +18,7 @@
 
 #include <mutex>
 #include <uv.h>
-#include "common/media_data_source.h"
+#include "media_data_source.h"
 #include "common_napi.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
@@ -26,8 +26,6 @@
 
 namespace OHOS {
 namespace Media {
-const std::string HELPER_READAT_CALLBACK_NAME = "readAt";
-
 struct HelperDataSourceJsCallback {
     HelperDataSourceJsCallback(const std::string &callbackName, const std::shared_ptr<AVSharedMemory> &mem,
         uint32_t length, int64_t pos)

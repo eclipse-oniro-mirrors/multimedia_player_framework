@@ -29,8 +29,8 @@
 #include "media_errors.h"
 #include "scope_guard.h"
 #include "hisysevent.h"
-#include "image_format_convert.h"
 #include "color_space.h"
+#include "image_type.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_METADATA, "AVMetadatahelperImpl" };
@@ -221,16 +221,18 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::CreatePixelMapYuv(const std::sha
         InitializationOptions options = { .size = { .width = mySurfaceBuffer->GetWidth(),
                                                     .height = mySurfaceBuffer->GetHeight() },
                                           .srcPixelFormat = PixelFormat::YCBCR_P010,
-                                          .pixelFormat = PixelFormat::YCBCR_P010 };
+                                          .pixelFormat = PixelFormat::YCBCR_P010,
+                                          .useDMA = true };
         int32_t colorLength = mySurfaceBuffer->GetWidth() * mySurfaceBuffer->GetHeight() * PIXEL_SIZE_HDR_YUV;
         auto pixelMap = PixelMap::Create(reinterpret_cast<const uint32_t *>(mySurfaceBuffer->GetVirAddr()),
             static_cast<uint32_t>(colorLength), options);
-        pixelMap->InnerSetColorSpace(OHOS::ColorManager::ColorSpace(ColorManager::ColorSpaceName::BT2020_HLG));
-        pixelMap->SetPixelsAddr(mySurfaceBuffer->GetVirAddr(), mySurfaceBuffer.GetRefPtr(), mySurfaceBuffer->GetSize(),
-                                AllocatorType::DMA_ALLOC, FreeSurfaceBuffer);
+        CHECK_AND_RETURN_RET_LOG(pixelMap != nullptr, nullptr, "Create pixel map failed");
         void* nativeBuffer = mySurfaceBuffer.GetRefPtr();
         RefBase *ref = reinterpret_cast<RefBase *>(nativeBuffer);
         ref->IncStrongRef(ref);
+        pixelMap->InnerSetColorSpace(OHOS::ColorManager::ColorSpace(ColorManager::ColorSpaceName::BT2020_HLG));
+        pixelMap->SetPixelsAddr(mySurfaceBuffer->GetVirAddr(), mySurfaceBuffer.GetRefPtr(), mySurfaceBuffer->GetSize(),
+                                AllocatorType::DMA_ALLOC, FreeSurfaceBuffer);
         return pixelMap;
     }
 
@@ -414,6 +416,8 @@ int32_t AVMetadataHelperImpl::SetSource(int32_t fd, int64_t offset, int64_t size
         "avmetadatahelper service does not exist..");
     MEDIA_LOGI("Set file source fd: %{public}d, offset: %{public}" PRIu64 ", size: %{public}" PRIu64,
         fd, offset, size);
+    CHECK_AND_RETURN_RET_LOG(fd > 0 && offset >= 0 && size >= -1, MSERR_INVALID_VAL,
+        "invalid param");
 
     concurrentWorkCount_++;
     ReportSceneCode(AV_META_SCENE_BATCH_HANDLE);
@@ -508,6 +512,17 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameAtTime(
     return pixelMap;
 }
 
+int32_t AVMetadataHelperImpl::GetTimeByFrameIndex(uint32_t index, uint64_t &time)
+{
+    CHECK_AND_RETURN_RET_LOG(avMetadataHelperService_ != nullptr, 0, "avmetadatahelper service does not exist.");
+    return avMetadataHelperService_->GetTimeByFrameIndex(index, time);
+}
+
+int32_t AVMetadataHelperImpl::GetFrameIndexByTime(uint64_t time, uint32_t &index)
+{
+    CHECK_AND_RETURN_RET_LOG(avMetadataHelperService_ != nullptr, 0, "avmetadatahelper service does not exist.");
+    return avMetadataHelperService_->GetFrameIndexByTime(time, index);
+}
 
 std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameYuv(int64_t timeUs, int32_t option,
                                                               const PixelMapParams &param)
@@ -542,29 +557,17 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameYuv(int64_t timeUs, in
                      (param.dstWidth < srcWidth || param.dstHeight < srcHeight) && srcWidth > 0 && srcHeight > 0;
     if (needScale) {
         if (!pixelMapInfo.isHdr) {
-            pixelMap->SetAllocatorType(AllocatorType::SHARE_MEM_ALLOC);
+            pixelMap->setAllocatorType(AllocatorType::SHARE_MEM_ALLOC);
         }
         pixelMap->scale((1.0f * param.dstWidth) / srcWidth, (1.0f * param.dstHeight) / srcHeight);
     }
     if (pixelMapInfo.rotation > 0) {
+        if (!pixelMapInfo.isHdr) {
+            pixelMap->setAllocatorType(AllocatorType::SHARE_MEM_ALLOC);
+        }
         pixelMap->rotate(pixelMapInfo.rotation);
     }
-    if ((needScale || pixelMapInfo.rotation > 0) && pixelMapInfo.isHdr) {
-        pixelMap->SetAllocatorType(AllocatorType::CUSTOM_ALLOC);
-    }
     return pixelMap;
-}
-
-int32_t AVMetadataHelperImpl::GetTimeByFrameIndex(uint32_t index, uint64_t &time)
-{
-    CHECK_AND_RETURN_RET_LOG(avMetadataHelperService_ != nullptr, 0, "avmetadatahelper service does not exist.");
-    return avMetadataHelperService_->GetTimeByFrameIndex(index, time);
-}
-
-int32_t AVMetadataHelperImpl::GetFrameIndexByTime(uint64_t time, uint32_t &index)
-{
-    CHECK_AND_RETURN_RET_LOG(avMetadataHelperService_ != nullptr, 0, "avmetadatahelper service does not exist.");
-    return avMetadataHelperService_->GetFrameIndexByTime(time, index);
 }
 
 void AVMetadataHelperImpl::Release()

@@ -19,12 +19,11 @@
 #include <list>
 #include <utility>
 #include "osal/task/task.h"
-#include "osal/task/condition_variable.h"
-#include "osal/task/mutex.h"
-
 #include "i_player_engine.h"
 #include "meta/any.h"
 #include "osal/utils/steady_clock.h"
+#include "osal/task/condition_variable.h"
+#include "osal/task/mutex.h"
 
 namespace OHOS {
 namespace Media {
@@ -56,7 +55,6 @@ public:
     void StopCollectMaxAmplitude();
 
 private:
-
     void DoReportMediaProgress();
     void DoReportInfo(const Any& info);
     void DoReportError(const Any& error);
@@ -68,6 +66,18 @@ private:
         int32_t what {0};
         int64_t whenMs {INT64_MAX};
         Any detail;
+    };
+    class EventQueue {
+    public:
+        void Enqueue(const std::shared_ptr<Event>& event);
+        std::shared_ptr<Event> Next();
+        void RemoveMediaProgressEvent();
+        void Quit();
+    private:
+        OHOS::Media::Mutex queueMutex_ {};
+        OHOS::Media::ConditionVariable queueHeadUpdatedCond_ {};
+        std::list<std::shared_ptr<Event>> queue_ {};
+        bool quit_ {false};
     };
 
     void LoopOnce(const std::shared_ptr<HiPlayerCallbackLooper::Event>& item);
