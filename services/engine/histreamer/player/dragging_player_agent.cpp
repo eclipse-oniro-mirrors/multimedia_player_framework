@@ -17,7 +17,7 @@
 
 #include <dlfcn.h>
 
-#include "common/log.h" 
+#include "common/log.h"
 #include "dragging_player_agent.h"
  
 namespace {
