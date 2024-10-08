@@ -84,7 +84,7 @@ public:
      */
     virtual std::shared_ptr<AVSharedMemory> FetchFrameAtTime(
         int64_t timeUs, int32_t option, const OutputConfiguration &param) = 0;
-    
+
     /**
      * Get timestamp according to frame index.
      * @param timeUs : Index of the frame.
@@ -115,6 +115,12 @@ public:
      */
     virtual std::shared_ptr<AVBuffer> FetchFrameYuv(
         int64_t timeUs, int32_t option, const OutputConfiguration &param) = 0;
+
+    /**
+     * Set interrupt state to demuxer and source
+     * @param isInterruptNeeded : If should interrupt demuxer and source
+     */
+    virtual void SetInterruptState(bool isInterruptNeeded) {}
 };
 } // namespace Media
 } // namespace OHOS

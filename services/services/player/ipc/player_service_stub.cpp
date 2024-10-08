@@ -18,6 +18,7 @@
 #include "player_listener_proxy.h"
 #include "media_data_source_proxy.h"
 #include "media_server_manager.h"
+
 #ifdef SUPPORT_AVPLAYER_DRM
 #include "key_session_service_proxy.h"
 #endif
@@ -177,8 +178,6 @@ void PlayerServiceStub::FillPlayerFuncPart2()
         [this](MessageParcel &data, MessageParcel &reply) { return SetMaxAmplitudeCbStatus(data, reply); } };
     playerFuncs_[SET_DEVICE_CHANGE_CB_STATUS] = { "Player::SetDeviceChangeCbStatus",
         [this](MessageParcel &data, MessageParcel &reply) { return SetDeviceChangeCbStatus(data, reply); } };
-    playerFuncs_[GET_LIVES_CURRENT_TIME] = { "GetPlaybackPosition",
-        [this](MessageParcel &data, MessageParcel &reply) { return GetPlaybackPosition(data, reply); } };
 }
 
 int32_t PlayerServiceStub::Init()
@@ -396,13 +395,6 @@ int32_t PlayerServiceStub::GetCurrentTime(int32_t &currentTime)
     return playerServer_->GetCurrentTime(currentTime);
 }
 
-int32_t PlayerServiceStub::GetPlaybackPosition(int32_t &currentTime)
-{
-    MediaTrace trace("PlayerServiceStub::GetPlaybackPosition");
-    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
-    return playerServer_->GetPlaybackPosition(currentTime);
-}
-
 int32_t PlayerServiceStub::GetVideoTrackInfo(std::vector<Format> &videoTrack)
 {
     MediaTrace trace("PlayerServiceStub::GetVideoTrackInfo");
@@ -478,13 +470,6 @@ int32_t PlayerServiceStub::SelectBitRate(uint32_t bitRate)
     MediaTrace trace("PlayerServiceStub::SelectBitRate");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
     return playerServer_->SelectBitRate(bitRate);
-}
-
-int32_t PlayerServiceStub::StopBufferring(bool flag)
-{
-    MediaTrace trace("PlayerServiceStub::StopBufferring");
-    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
-    return playerServer_->StopBufferring(flag);
 }
 
 #ifdef SUPPORT_VIDEO
@@ -760,16 +745,6 @@ int32_t PlayerServiceStub::GetCurrentTime(MessageParcel &data, MessageParcel &re
     (void)data;
     int32_t currentTime = -1;
     int32_t ret = GetCurrentTime(currentTime);
-    reply.WriteInt32(currentTime);
-    reply.WriteInt32(ret);
-    return MSERR_OK;
-}
-
-int32_t PlayerServiceStub::GetPlaybackPosition(MessageParcel &data, MessageParcel &reply)
-{
-    (void)data;
-    int32_t currentTime = -1;
-    int32_t ret = GetPlaybackPosition(currentTime);
     reply.WriteInt32(currentTime);
     reply.WriteInt32(ret);
     return MSERR_OK;
@@ -1080,11 +1055,11 @@ int32_t PlayerServiceStub::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
 
 int32_t PlayerServiceStub::SetMaxAmplitudeCbStatus(bool status)
 {
-    MediaTrace trace("PlayerServiceStub::SetMaxAmplitudeCbStatus");
+    MediaTrace trace("binder::SetMaxAmplitudeCbStatus");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
     return playerServer_->SetMaxAmplitudeCbStatus(status);
 }
- 
+
 int32_t PlayerServiceStub::SetMaxAmplitudeCbStatus(MessageParcel &data, MessageParcel &reply)
 {
     bool status = data.ReadInt32();
@@ -1105,60 +1080,5 @@ int32_t PlayerServiceStub::SetDeviceChangeCbStatus(MessageParcel &data, MessageP
     reply.WriteInt32(SetDeviceChangeCbStatus(status));
     return MSERR_OK;
 }
-
-int32_t PlayerServiceStub::StartReportStatus()
-{
-    MEDIA_LOGI("StartReportStatus begin");
-    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
-    auto playerServer = std::static_pointer_cast<PlayerServer>(playerServer_);
-    playerServer->StartReportStatus();
-    MEDIA_LOGI("StartReportStatus end!");
-    return MSERR_OK;
-}
-
-int32_t PlayerServiceStub::StopReportStatus()
-{
-    MEDIA_LOGI("StopReportStatus begin");
-    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
-    auto playerServer = std::static_pointer_cast<PlayerServer>(playerServer_);
-    playerServer->StopReportStatus();
-    MEDIA_LOGI("StopReportStatus end!");
-    return MSERR_OK;
-}
-
-int32_t PlayerServiceStub::HandleActive()
-{
-    MEDIA_LOGI("PlayerServiceStub HandleActive begin!");
-    (void)RegisterMonitor(appPid_);
-    StopBufferring(false);
-    StartReportStatus();
-    MEDIA_LOGI("PlayerServiceStub HandleActive end!");
-    return MSERR_OK;
-}
-
-int32_t PlayerServiceStub::HandleFrozen()
-{
-    MEDIA_LOGI("PlayerServiceStub HandleFrozen begin!");
-    (void)CancellationMonitor(appPid_);
-    StopReportStatus();
-    StopBufferring(true);
-    MEDIA_LOGI("PlayerServiceStub HandleFrozen end!");
-    return MSERR_OK;
-}
-
-int32_t PlayerServiceStub::GetUid()
-{
-    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
-    auto playerServer = std::static_pointer_cast<PlayerServer>(playerServer_);
-    return playerServer->GetUid();
-}
-
-bool PlayerServiceStub::IsPlayerRunning()
-{
-    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
-    auto playerServer = std::static_pointer_cast<PlayerServer>(playerServer_);
-    return playerServer->IsPlayerRunning();
-}
-
 } // namespace Media
 } // namespace OHOS

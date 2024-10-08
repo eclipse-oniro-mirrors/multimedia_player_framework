@@ -70,7 +70,7 @@ private:
     ~VideoPlayerManager() = default;
     std::unordered_set<PlayerServer *> videoPlayerList;
     std::mutex mutex_;
-}
+};
 
 VideoPlayerManager &VideoPlayerManager::GetInstance()
 {
@@ -604,7 +604,7 @@ int32_t PlayerServer::Pause()
 int32_t PlayerServer::OnPause()
 {
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " PlayerServer OnPause in", FAKE_POINTER(this))
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " PlayerServer OnPause in", FAKE_POINTER(this));
 
     auto pauseTask = std::make_shared<TaskHandler<void>>([this]() {
         MediaTrace::TraceBegin("PlayerServer::Pause", FAKE_POINTER(this));
@@ -1717,7 +1717,7 @@ void PlayerServerStateMachine::ChangeState(const std::shared_ptr<PlayerServerSta
             MEDIA_LOGD("exit state %{public}s", currState_->name_.c_str());
             currState_->StateExit();
         }
-        MEDIA_LOGI("instace: 0x%{public}06" PRIXPTR " change state to %{public}s",
+        MEDIA_LOGI("instance: 0x%{public}06" PRIXPTR " change state to %{public}s",
             FAKE_POINTER(this), state->name_.c_str());
         currState_ = state;
     }
@@ -1770,7 +1770,7 @@ int32_t PlayerServer::SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMut
                              lastOpStatus_ == PLAYER_STARTED || lastOpStatus_ == PLAYER_PLAYBACK_COMPLETE ||
                              lastOpStatus_ == PLAYER_PAUSED || lastOpStatus_ == PLAYER_STOPPED,
                          MSERR_INVALID_STATE);
-    CHECK_AND_RETURN_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     return playerEngine_->SetMediaMuted(mediaType, isMuted);
 }
 
@@ -1881,13 +1881,13 @@ bool PlayerServer::CheckState(PlayerOnInfoType type, int32_t extra)
     bool isCompletedInfo = type == INFO_TYPE_STATE_CHANGE && extra == PlayerStates::PLAYER_PLAYBACK_COMPLETE;
     bool isEosInfo = type == INFO_TYPE_EOS;
     CHECK_AND_RETURN_RET_LOG(currState != stoppedState_ || !(isCompletedInfo || isEosInfo), false,
-        "do noe report completed or eos in stopped state");
+        "do not report completed or eos in stopped state");
 
     bool isErrorInfo = type == INFO_TYPE_STATE_CHANGE && extra == PlayerStates::PLAYER_STATE_ERROR;
     CHECK_AND_RETURN_RET_LOG(currState != idleState_ || !isErrorInfo, false, "do not report error in idle state");
 
-    bool IsPreparedInfo = type == INFO_TYPE_STATE_CHANGE && extra == PlayerStates::PLAYER_PREPARED;
-    CHECK_AND_RETURN_RET_LOG(currState != idleState_ || !IsPreparedInfo, false,
+    bool isPreparedInfo = type == INFO_TYPE_STATE_CHANGE && extra == PlayerStates::PLAYER_PREPARED;
+    CHECK_AND_RETURN_RET_LOG(currState != idleState_ || !isPreparedInfo, false,
         "do not report prepared in idle state");
     return true;
 }

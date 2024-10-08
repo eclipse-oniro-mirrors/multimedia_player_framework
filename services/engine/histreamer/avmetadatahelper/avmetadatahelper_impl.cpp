@@ -21,6 +21,7 @@
 #include "media_description.h"
 #include "meta_utils.h"
 #include "uri_helper.h"
+#include "pipeline/pipeline.h"
 #include "osal/task/pipeline_threadpool.h"
 
 namespace {
@@ -38,7 +39,7 @@ void AVMetadataHelperImpl::OnError(MediaAVCodec::AVCodecErrorType errorType, int
 AVMetadataHelperImpl::AVMetadataHelperImpl()
 {
     MEDIA_LOGD("Constructor, instance: 0x%{public}06" PRIXPTR "", FAKE_POINTER(this));
-    groupId_ = std::string("AVMeta_") + std::to_string(OHOS::Media::Pipeline::Pipeline::GetNextPipelineId());
+    groupId_ = std::string("AVMeta_") + std::to_string(Pipeline::Pipeline::GetNextPipelineId());
 }
 
 AVMetadataHelperImpl::~AVMetadataHelperImpl()
@@ -97,7 +98,6 @@ Status AVMetadataHelperImpl::SetSourceInternel(const std::shared_ptr<IMediaDataS
 {
     Reset();
     mediaDemuxer_ = std::make_shared<MediaDemuxer>();
-    mediaDemuxer_->SetEnableOnlineFdCache(false);
     mediaDemuxer_->SetPlayerId(groupId_);
     CHECK_AND_RETURN_RET_LOG(
         mediaDemuxer_ != nullptr, Status::ERROR_INVALID_DATA, "SetSourceInternel demuxer is nullptr");
@@ -147,15 +147,6 @@ std::shared_ptr<AVSharedMemory> AVMetadataHelperImpl::FetchFrameAtTime(
     return thumbnailGenerator_->FetchFrameAtTime(timeUs, option, param);
 }
 
-std::shared_ptr<AVBuffer> AVMetadataHelperImpl::FetchFrameYuv(
-    int64_t timeUs, int32_t option, const OutputConfiguration &param)
-{
-    MEDIA_LOGD("enter FetchFrameAtTime");
-    auto res = InitThumbnailGenerator();
-    CHECK_AND_RETURN_RET(res == Status::OK, nullptr);
-    return thumbnailGenerator_->FetchFrameYuv(timeUs, option, param);
-}
-
 int32_t AVMetadataHelperImpl::GetTimeByFrameIndex(uint32_t index, uint64_t &time)
 {
     auto res = InitMetadataCollector();
@@ -168,6 +159,15 @@ int32_t AVMetadataHelperImpl::GetFrameIndexByTime(uint64_t time, uint32_t &index
     auto res = InitMetadataCollector();
     CHECK_AND_RETURN_RET_LOG(res == Status::OK, MSERR_INVALID_STATE, "Create collector failed");
     return metadataCollector_->GetFrameIndexByTime(time, index);
+}
+
+std::shared_ptr<AVBuffer> AVMetadataHelperImpl::FetchFrameYuv(
+    int64_t timeUs, int32_t option, const OutputConfiguration &param)
+{
+    MEDIA_LOGD("enter FetchFrameAtTime");
+    auto res = InitThumbnailGenerator();
+    CHECK_AND_RETURN_RET(res == Status::OK, nullptr);
+    return thumbnailGenerator_->FetchFrameYuv(timeUs, option, param);
 }
 
 void AVMetadataHelperImpl::Reset()
