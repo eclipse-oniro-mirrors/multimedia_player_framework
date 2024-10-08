@@ -60,6 +60,7 @@ ohos_static_library("media_engine_histreamer_player") {
     debug = false
   }
   sources = [
+    "dfx_agent.cpp",
     "dragging_player_agent.cpp",
     "hiplayer_callback_looper.cpp",
     "hiplayer_impl.cpp",
