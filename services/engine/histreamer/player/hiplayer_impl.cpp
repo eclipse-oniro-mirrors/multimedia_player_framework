@@ -639,6 +639,9 @@ void HiPlayerImpl::SetInterruptState(bool isInterruptNeeded)
     if (demuxer_ != nullptr) {
         demuxer_->SetInterruptState(isInterruptNeeded);
     }
+    if (seekAgent_ != nullptr) {
+        seekAgent_->SetInterruptState(isInterruptNeeded);
+    }
 }
 
 int32_t HiPlayerImpl::SelectBitRate(uint32_t bitRate)
