@@ -34,7 +34,7 @@ namespace {
         {Fuzzer::FETCH_FRAME_AT_TIME, Fuzzer::FetchFrameAtTimeStatic},
         {Fuzzer::RELEASE, Fuzzer::ReleaseStatic},
         {Fuzzer::DESTROY, Fuzzer::DestroyStubStatic}
-    }
+    };
 }
 AVMetadataServiceProxyFuzzer::AVMetadataServiceProxyFuzzer(const sptr<IRemoteObject> &impl)
     : IRemoteProxy<IStandardAVMetadataHelperService>(impl)
