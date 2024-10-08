@@ -515,5 +515,24 @@ int32_t ScreenCaptureServiceProxy::SkipPrivacyMode(std::vector<uint64_t> &window
                              "SkipPrivacyMode failed, error: %{public}d", error);
     return reply.ReadInt32();
 }
+
+int32_t ScreenCaptureServiceProxy::SetMaxVideoFrameRate(int32_t frameRate)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(ScreenCaptureServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    token = data.WriteInt32(frameRate);
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write frameRate!");
+
+    int error = Remote()->SendRequest(SET_MAX_FRAME_RATE, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+                             "SetMaxVideoFrameRate failed, error: %{public}d", error);
+    return reply.ReadInt32();
+}
+
 } // namespace Media
 } // namespace OHOS

@@ -127,6 +127,7 @@ void ScreenCaptureUnitTestCallback::OnVideoBufferAvailable(bool isReady)
         ",  videoBufferWidth:" << surfacebuffer->GetWidth() <<
         ",  videoBufferHeight:" << surfacebuffer->GetHeight() <<
         ",  timestamp:" << timestamp << ", size:"<< length << endl;
+    frameNumber++;
     DumpVideoBuffer(surfacebuffer, timestamp);
     if (!screenCapture_->IsStateChangeCallBackEnabled()) {
         if (vFlag_ == 1) {
@@ -280,6 +281,13 @@ void ScreenCaptureUnitTestCallback::ProcessAudioBuffer(uint8_t *buffer, int32_t 
         return;
     }
     cout << "ProcessAudioBuffer invalid bufferType:" << bufferType << endl;
+}
+
+int32_t ScreenCaptureUnitTestCallback::GetFrameNumber()
+{
+    int32_t tempNum = frameNumber;
+    frameNumber = 0;
+    return tempNum;
 }
 
 void ScreenCaptureUnitTestCallback::InitCaptureTrackInfo(FILE *file, int32_t flag, AVScreenCaptureBufferType bufferType)

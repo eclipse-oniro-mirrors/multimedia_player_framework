@@ -59,6 +59,7 @@ int32_t ScreenCaptureServiceStub::Init()
     screenCaptureStubFuncs_[SET_SCREEN_ROTATION] = &ScreenCaptureServiceStub::SetCanvasRotation;
     screenCaptureStubFuncs_[RESIZE_CANVAS] = &ScreenCaptureServiceStub::ResizeCanvas;
     screenCaptureStubFuncs_[SKIP_PRIVACY] = &ScreenCaptureServiceStub::SkipPrivacyMode;
+    screenCaptureStubFuncs_[SET_MAX_FRAME_RATE] = &ScreenCaptureServiceStub::SetMaxVideoFrameRate;
     screenCaptureStubFuncs_[SET_CAPTURE_MODE] = &ScreenCaptureServiceStub::SetCaptureMode;
     screenCaptureStubFuncs_[SET_DATA_TYPE] = &ScreenCaptureServiceStub::SetDataType;
     screenCaptureStubFuncs_[SET_RECORDER_INFO] = &ScreenCaptureServiceStub::SetRecorderInfo;
@@ -243,6 +244,13 @@ int32_t ScreenCaptureServiceStub::SkipPrivacyMode(std::vector<uint64_t> &windowI
     return screenCaptureServer_->SkipPrivacyMode(windowIDsVec);
 }
 
+int32_t ScreenCaptureServiceStub::SetMaxVideoFrameRate(int32_t frameRate)
+{
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, false,
+                             "screen capture server is nullptr");
+    return screenCaptureServer_->SetMaxVideoFrameRate(frameRate);
+}
+
 int32_t ScreenCaptureServiceStub::AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audioBuffer,
                                                      AudioCaptureSourceType type)
 {
@@ -346,6 +354,16 @@ int32_t ScreenCaptureServiceStub::SkipPrivacyMode(MessageParcel &data, MessagePa
         int32_t ret = SkipPrivacyMode(vec);
         reply.WriteInt32(ret);
     }
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureServiceStub::SetMaxVideoFrameRate(MessageParcel &data, MessageParcel &reply)
+{
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
+                             "screen capture server is nullptr");
+    int32_t frameRate = data.ReadInt32();
+    int32_t ret = SetMaxVideoFrameRate(frameRate);
+    reply.WriteInt32(ret);
     return MSERR_OK;
 }
 

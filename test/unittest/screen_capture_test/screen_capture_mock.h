@@ -37,6 +37,8 @@ namespace OHOS {
 namespace Media {
 namespace ScreenCaptureTestParam {
     constexpr uint32_t RECORDER_TIME = 2;
+    constexpr uint32_t RECORDER_TIME_5 = 5;
+    constexpr double EXCESS_RATE = 1.2;
 } // namespace ScreenCaptureTestParam
 
 class ScreenCaptureCallBackMock : public NoCopyable {
@@ -81,6 +83,7 @@ public:
     virtual int32_t SetCanvasRotation(bool canvasRotation) = 0;
     virtual int32_t SkipPrivacyMode(int32_t *windowIDs, int32_t windowCount) = 0;
     virtual int32_t ResizeCanvas(int32_t width, int32_t height) = 0;
+    virtual int32_t SetMaxVideoFrameRate(int32_t frameRate) = 0;
     virtual int32_t AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audioBuffer, AudioCaptureSourceType type) = 0;
     virtual sptr<OHOS::SurfaceBuffer> AcquireVideoBuffer(int32_t &fence, int64_t &timestamp, OHOS::Rect &damage) = 0;
     virtual int32_t ReleaseAudioBuffer(AudioCaptureSourceType type) = 0;
