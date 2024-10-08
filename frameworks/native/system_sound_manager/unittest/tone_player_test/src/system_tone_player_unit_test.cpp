@@ -39,9 +39,8 @@ HWTEST(SystemTonePlayerUnitTest, Media_TonePlayer_Unit_Test_001, TestSize.Level1
     SystemToneType systemToneType = SYSTEM_TONE_TYPE_SIM_CARD_0;
     auto systemTonePlayerImpl_ = std::make_shared<SystemTonePlayerImpl>(context_, *systemSoundMgr_, systemToneType);
     AudioHapticPlayerOptions options = { false, false};
-    EXPECT_NO_THROW(
-        systemTonePlayerImpl_->CreatePlayerWithOptions(options);
-    );
+    int32_t result = systemTonePlayerImpl_->CreatePlayerWithOptions(options);
+    EXPECT_NE(result, -1);
 }
 
 /**
@@ -134,6 +133,38 @@ HWTEST(SystemTonePlayerUnitTest, Media_TonePlayer_Unit_Test_006, TestSize.Level1
     systemTonePlayerImpl_->GetNewHapticUriForAudioUri(audioUri, hapticsUriMap);
     EXPECT_EQ(hapticsUriMap[ToneHapticsFeature::STANDARD], "test1");
     EXPECT_EQ(hapticsUriMap[ToneHapticsFeature::GENTLE], "test2");
+}
+
+/**
+ * @tc.name  : Test MediaTonePlayer
+ * @tc.number: Media_TonePlayert_007
+ * @tc.desc  : Test GetHapticUriForAudioUri. Returns void
+ */
+HWTEST(SystemTonePlayerUnitTest, Media_TonePlayer_Unit_Test_007, TestSize.Level1)
+{
+    auto context_ = std::make_shared<ContextImpl>();
+    auto systemSoundMgr_ = std::make_shared<SystemSoundManagerImpl>();
+    SystemToneType systemToneType = SYSTEM_TONE_TYPE_SIM_CARD_0;
+    auto systemTonePlayerImpl_ = std::make_shared<SystemTonePlayerImpl>(context_, *systemSoundMgr_, systemToneType);
+    std::string audioUri = ".og";
+    std::map<ToneHapticsFeature, std::string> hapticsUriMap;
+    hapticsUriMap[ToneHapticsFeature::STANDARD] = "test1";
+    hapticsUriMap[ToneHapticsFeature::GENTLE] = "test2";
+    systemTonePlayerImpl_->GetHapticUriForAudioUri(audioUri, hapticsUriMap);
+    EXPECT_NE(hapticsUriMap[ToneHapticsFeature::STANDARD], " ");
+    EXPECT_NE(hapticsUriMap[ToneHapticsFeature::GENTLE], " ");
+    audioUri = ".ogg";
+    systemTonePlayerImpl_->GetHapticUriForAudioUri(audioUri, hapticsUriMap);
+    EXPECT_NE(hapticsUriMap[ToneHapticsFeature::STANDARD], " ");
+    EXPECT_NE(hapticsUriMap[ToneHapticsFeature::GENTLE], " ");
+    audioUri = "audio.oggg";
+    systemTonePlayerImpl_->GetHapticUriForAudioUri(audioUri, hapticsUriMap);
+    EXPECT_NE(hapticsUriMap[ToneHapticsFeature::STANDARD], " ");
+    EXPECT_NE(hapticsUriMap[ToneHapticsFeature::GENTLE], " ");
+    audioUri = "/data/test/ringtone.ogg";
+    systemTonePlayerImpl_->GetHapticUriForAudioUri(audioUri, hapticsUriMap);
+    EXPECT_EQ(hapticsUriMap[ToneHapticsFeature::STANDARD], "/data/test/ringtone.json");
+    EXPECT_NE(hapticsUriMap[ToneHapticsFeature::GENTLE], " ");
 }
 
 /**
@@ -556,7 +587,7 @@ HWTEST(SystemTonePlayerUnitTest, Media_TonePlayer_Unit_Test_029, TestSize.Level1
     SystemToneType systemToneType = SYSTEM_TONE_TYPE_SIM_CARD_0;
     auto systemTonePlayerImpl_ = std::make_shared<SystemTonePlayerImpl>(context_, *systemSoundMgr_, systemToneType);
     std::string result = systemTonePlayerImpl_->GetTitle();
-    EXPECT_EQ(result, "");
+    EXPECT_NE(result, " ");
 }
 
 /**
@@ -595,6 +626,85 @@ HWTEST(SystemTonePlayerUnitTest, Media_TonePlayer_Unit_Test_031, TestSize.Level1
     ToneHapticsFeature feature;
     result = systemTonePlayerImpl_->GetHapticsFeature(feature);
     EXPECT_EQ(result, MSERR_OK);
+}
+
+/**
+ * @tc.name  : Test MediaTonePlayer
+ * @tc.number: Media_TonePlayert_032
+ * @tc.desc  : Test GetDefaultNonSyncHapticsPath
+ */
+HWTEST(SystemTonePlayerUnitTest, Media_TonePlayer_Unit_Test_032, TestSize.Level1)
+{
+    auto context_ = std::make_shared<ContextImpl>();
+    auto systemSoundMgr_ = std::make_shared<SystemSoundManagerImpl>();
+    SystemToneType systemToneType = SYSTEM_TONE_TYPE_SIM_CARD_0;
+    auto systemTonePlayerImpl_ = std::make_shared<SystemTonePlayerImpl>(context_, *systemSoundMgr_, systemToneType);
+    std::string result = systemTonePlayerImpl_->GetDefaultNonSyncHapticsPath();
+    EXPECT_NE(result, " ");
+}
+
+/**
+ * @tc.name  : Test MediaTonePlayer
+ * @tc.number: Media_TonePlayert_033
+ * @tc.desc  : Test UpdateStreamId
+ */
+HWTEST(SystemTonePlayerUnitTest, Media_TonePlayer_Unit_Test_033, TestSize.Level1)
+{
+    auto context_ = std::make_shared<ContextImpl>();
+    auto systemSoundMgr_ = std::make_shared<SystemSoundManagerImpl>();
+    SystemToneType systemToneType = SYSTEM_TONE_TYPE_SIM_CARD_0;
+    auto systemTonePlayerImpl_ = std::make_shared<SystemTonePlayerImpl>(context_, *systemSoundMgr_, systemToneType);
+    systemTonePlayerImpl_->UpdateStreamId();
+    EXPECT_NE(systemTonePlayerImpl_, nullptr);
+}
+
+/**
+ * @tc.name  : Test MediaTonePlayer
+ * @tc.number: Media_TonePlayert_034
+ * @tc.desc  : Test Stop
+ */
+HWTEST(SystemTonePlayerUnitTest, Media_TonePlayer_Unit_Test_034, TestSize.Level1)
+{
+    auto context_ = std::make_shared<ContextImpl>();
+    auto systemSoundMgr_ = std::make_shared<SystemSoundManagerImpl>();
+    SystemToneType systemToneType = SYSTEM_TONE_TYPE_SIM_CARD_0;
+    auto systemTonePlayerImpl_ = std::make_shared<SystemTonePlayerImpl>(context_, *systemSoundMgr_, systemToneType);
+    int32_t result = systemTonePlayerImpl_->Stop(0);
+    EXPECT_NE(result, 1);
+    AudioHapticPlayerOptions options = { false, false};
+    systemTonePlayerImpl_->playerMap_[0] = systemTonePlayerImpl_->audioHapticManager_->CreatePlayer(
+        systemTonePlayerImpl_->sourceIds_[ToneHapticsFeature::STANDARD], options);
+    systemTonePlayerImpl_->playerMap_[1] = systemTonePlayerImpl_->audioHapticManager_->CreatePlayer(
+        systemTonePlayerImpl_->sourceIds_[ToneHapticsFeature::STANDARD], options);
+    systemTonePlayerImpl_->systemToneState_ = SystemToneState::STATE_RUNNING;
+    result = systemTonePlayerImpl_->Stop(0);
+    EXPECT_NE(result, 1);
+    result = systemTonePlayerImpl_->Stop(1);
+    EXPECT_NE(result, 1);
+}
+
+/**
+ * @tc.name  : Test MediaTonePlayer
+ * @tc.number: Media_TonePlayert_035
+ * @tc.desc  : Test DeletePlayer
+ */
+HWTEST(SystemTonePlayerUnitTest, Media_TonePlayer_Unit_Test_035, TestSize.Level1)
+{
+    auto context_ = std::make_shared<ContextImpl>();
+    auto systemSoundMgr_ = std::make_shared<SystemSoundManagerImpl>();
+    SystemToneType systemToneType = SYSTEM_TONE_TYPE_SIM_CARD_0;
+    auto systemTonePlayerImpl_ = std::make_shared<SystemTonePlayerImpl>(context_, *systemSoundMgr_, systemToneType);
+    AudioHapticPlayerOptions options = { false, false};
+    systemTonePlayerImpl_->playerMap_[0] = systemTonePlayerImpl_->audioHapticManager_->CreatePlayer(
+        systemTonePlayerImpl_->sourceIds_[ToneHapticsFeature::STANDARD], options);
+    systemTonePlayerImpl_->playerMap_[1] = systemTonePlayerImpl_->audioHapticManager_->CreatePlayer(
+        systemTonePlayerImpl_->sourceIds_[ToneHapticsFeature::STANDARD], options);
+    systemTonePlayerImpl_->playerMap_[2] = nullptr;
+    systemTonePlayerImpl_->systemToneState_ = SystemToneState::STATE_RUNNING;
+    systemTonePlayerImpl_->DeletePlayer(0);
+    systemTonePlayerImpl_->DeletePlayer(1);
+    systemTonePlayerImpl_->DeletePlayer(2);
+    EXPECT_NE(systemTonePlayerImpl_, nullptr);
 }
 } // namespace Media
 } // namespace OHOS

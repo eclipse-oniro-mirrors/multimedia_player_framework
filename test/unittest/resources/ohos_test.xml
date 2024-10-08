@@ -381,6 +381,20 @@
             <option name="shell" value="restorecon /data/test/"/>
         </preparer>
     </target>
+    <target name="ringtone_player_unit_test">
+        <preparer>
+            <option name="push" value="res_audio_haptic/ringtone.ogg -> /data/test/" src="res"/>
+            <option name="push" value="res_audio_haptic/ringtone.json -> /data/test/" src="res"/>
+            <option name="shell" value="mkdir /data/test/media"/>
+            <option name="shell" value="mkdir /data/test/media/audio"/>
+            <option name="shell" value="mkdir /data/test/media/haptics"/>
+            <option name="shell" value="mkdir /data/test/media/haptics/standard"/>
+            <option name="shell" value="mkdir /data/test/media/haptics/standard/synchronized"/>
+            <option name="push" value="res_audio_haptic/ringtone.ogg -> /data/test/media/audio/" src="res"/>
+            <option name="push" value="res_audio_haptic/ringtone.json -> data/test/media/haptics/standard/synchronized/" src="res"/>
+            <option name="shell" value="restorecon /data/test/"/>
+        </preparer>
+    </target>
     <target name="hiplayer_impl_unit_test">
         <depend resource="test_videofile/H264_AAC.mp4" pushpath="/data/test" findpath="res" presetcmd=""/>
         <preparer>
