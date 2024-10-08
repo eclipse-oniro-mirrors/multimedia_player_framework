@@ -1202,6 +1202,29 @@ void AVPlayerCallback::OnMaxAmplitudeCollectedCb(const int32_t extra, const Form
     NapiCallback::CompleteCallback(env_, cb);
 }
 
+void AVPlayerCallback::SetDrmInfoData(const uint8_t *drmInfoAddr, int32_t infoCount,
+    std::multimap<std::string, std::vector<uint8_t>> &drmInfoMap)
+{
+    DrmInfoItem *drmInfos = reinterpret_cast<DrmInfoItem*>(const_cast<uint8_t *>(drmInfoAddr));
+    CHECK_AND_RETURN_LOG(drmInfos != nullptr, "cast drmInfos nullptr");
+    for (int32_t i = 0; i < infoCount; i++) {
+        DrmInfoItem temp = drmInfos[i];
+        std::stringstream ssConverter;
+        std::string uuid;
+        for (uint32_t index = 0; index < DrmConstant::DRM_MAX_M3U8_DRM_UUID_LEN; index++) {
+            ssConverter << std::hex << static_cast<int32_t>(temp.uuid[index]);
+            uuid = ssConverter.str();
+        }
+        std::vector<uint8_t> pssh(temp.pssh, temp.pssh + temp.psshLen);
+        drmInfoMap.insert({ uuid, pssh });
+    }
+
+    if (listener_ != nullptr) {
+        listener_->NotifyDrmInfoUpdated(drmInfoMap);
+    }
+    return;
+}
+
 void AVPlayerCallback::OnDrmInfoUpdatedCb(const int32_t extra, const Format &infoBody)
 {
     (void)extra;
@@ -1228,23 +1251,7 @@ void AVPlayerCallback::OnDrmInfoUpdatedCb(const int32_t extra, const Format &inf
     CHECK_AND_RETURN_LOG(infoCount > 0, "get drminfo count is illegal");
 
     std::multimap<std::string, std::vector<uint8_t>> drmInfoMap;
-    DrmInfoItem *drmInfos = reinterpret_cast<DrmInfoItem*>(drmInfoAddr);
-    CHECK_AND_RETURN_LOG(drmInfos != nullptr, "cast drmInfos nullptr");
-    for (int32_t i = 0; i < infoCount; i++) {
-        DrmInfoItem temp = drmInfos[i];
-        std::stringstream ssConverter;
-        std::string uuid;
-        for (uint32_t index = 0; index < DrmConstant::DRM_MAX_M3U8_DRM_UUID_LEN; index++) {
-            ssConverter << std::hex << static_cast<int32_t>(temp.uuid[index]);
-            uuid = ssConverter.str();
-        }
-        std::vector<uint8_t> pssh(temp.pssh, temp.pssh + temp.psshLen);
-        drmInfoMap.insert({ uuid, pssh });
-    }
-
-    if (listener_ != nullptr) {
-        listener_->NotifyDrmInfoUpdated(drmInfoMap);
-    }
+    SetDrmInfoData(drmInfoAddr, infoCount, drmInfoMap);
     NapiCallback::ObjectArray *cb = new(std::nothrow) NapiCallback::ObjectArray();
     CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new ObjectArray");
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_DRM_INFO_UPDATE);
