@@ -277,7 +277,7 @@ void CacheBuffer::DealWriteData(size_t length)
                 copyLength);
             CHECK_AND_RETURN_LOG(ret == MSERR_OK, "memcpy failed not enough length.");
             bufDesc.bufLength = length;
-            bufDesc.dataLength = copyLength;
+            bufDesc.dataLength = length;
             cacheDataFrameIndex_ += copyLength;
         }
         audioRenderer_->Enqueue(bufDesc);
