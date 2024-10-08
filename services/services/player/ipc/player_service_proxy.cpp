@@ -76,6 +76,7 @@ PlayerServiceProxy::PlayerServiceProxy(const sptr<IRemoteObject> &impl)
     playerFuncs_[GET_CURRENT_TRACK] = "Player::GetCurrentTrack";
     playerFuncs_[SET_DECRYPT_CONFIG] = "Player::SetDecryptConfig";
     playerFuncs_[SET_MEDIA_SOURCE] = "Player::SetMediaSource";
+    playerFuncs_[SET_DEVICE_CHANGE_CB_STATUS] = "Player::SetDeviceChangeCbStatus";
     playerFuncs_[SET_MAX_AMPLITUDE_CB_STATUS] = "Player::SetMaxAmplitudeCbStatus";
 }
 
@@ -92,6 +93,13 @@ int32_t PlayerServiceProxy::SendRequest(uint32_t code, MessageParcel &data, Mess
         funcName = itFunc->second;
     }
 
+    if (funcName.compare("Player::SetVolume") == 0) {
+        MEDIA_LOGD("0x%{public}06" PRIXPTR " Proxy: SendRequest task: %{public}s is received",
+            FAKE_POINTER(this), funcName.c_str());
+    } else {
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " Proxy: SendRequest task: %{public}s is received",
+            FAKE_POINTER(this), funcName.c_str());
+    }
     int32_t error = -1;
     error = Remote()->SendRequest(code, data, reply, option);
     return error;
@@ -640,6 +648,8 @@ int32_t PlayerServiceProxy::SetMediaSource(const std::shared_ptr<AVMediaSource> 
     (void)data.WriteUint32(strategy.preferredHeight);
     (void)data.WriteUint32(strategy.preferredBufferDuration);
     (void)data.WriteBool(strategy.preferredHdr);
+    (void)data.WriteString(strategy.preferredAudioLanguage);
+    (void)data.WriteString(strategy.preferredSubtitleLanguage);
     int32_t error = SendRequest(SET_MEDIA_SOURCE, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetMediaSource failed, error: %{public}d", error);
@@ -904,6 +914,23 @@ int32_t PlayerServiceProxy::GetCurrentTrack(int32_t trackType, int32_t &index)
     return reply.ReadInt32();
 }
 
+int32_t PlayerServiceProxy::SetDeviceChangeCbStatus(bool status)
+{
+    MediaTrace trace("PlayerServiceProxy::SetDeviceChangeCbStatus");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    data.WriteInt32(status);
+    int32_t error = SendRequest(SET_DEVICE_CHANGE_CB_STATUS, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetDeviceChangeCbStatus failed, error: %{public}d", error);
+    return reply.ReadInt32();
+}
+
 int32_t PlayerServiceProxy::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
 {
     MediaTrace trace("PlayerServiceProxy::SetPlaybackStrategy");
@@ -945,7 +972,7 @@ int32_t PlayerServiceProxy::SetMediaMuted(OHOS::Media::MediaType mediaType, bool
 
 int32_t PlayerServiceProxy::SetMaxAmplitudeCbStatus(bool status)
 {
-    MediaTrace trace("PlayerServiceProxy::SetMaxAmplitudeCbStatus");
+    MediaTrace trace("binder::SetMaxAmplitudeCbStatus");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;

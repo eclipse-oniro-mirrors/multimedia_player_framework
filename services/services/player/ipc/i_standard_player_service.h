@@ -93,7 +93,12 @@ public:
         (void)playbackStrategy;
         return 0;
     }
-    virtual int32_t SetMediaMuted(MediaType mediaType, bool isMuted) = 0;
+    virtual int32_t SetMediaMuted(MediaType mediaType, bool isMuted)
+    {
+        (void)mediaType;
+        (void)isMuted;
+        return 0;
+    }
 
     virtual int32_t SetDecryptConfig(const sptr<OHOS::DrmStandard::IMediaKeySessionService> &keySessionProxy,
         bool svp)
@@ -104,6 +109,12 @@ public:
     }
 
     virtual int32_t SetMaxAmplitudeCbStatus(bool status)
+    {
+        (void)status;
+        return 0;
+    }
+
+    virtual int32_t SetDeviceChangeCbStatus(bool status)
     {
         (void)status;
         return 0;
@@ -152,10 +163,11 @@ public:
         GET_CURRENT_TRACK,
         GET_SUBTITLE_TRACK_INFO,
         SET_DECRYPT_CONFIG,
-        GET_PLAYBACK_INFO,
         SET_PLAYBACK_STRATEGY,
         SET_MEDIA_MUTED,
         SET_MAX_AMPLITUDE_CB_STATUS,
+        GET_PLAYBACK_INFO,
+        SET_DEVICE_CHANGE_CB_STATUS,
         MAX_IPC_ID,
     };
 

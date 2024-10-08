@@ -136,6 +136,7 @@ public:
     std::shared_ptr<CommonEventReceiver> GetCommonEventReceiver();
     bool IsBootCompleted();
     int32_t SetMaxAmplitudeCbStatus(bool status) override;
+    int32_t SetDeviceChangeCbStatus(bool status) override;
 
 protected:
     class BaseState;
@@ -210,6 +211,7 @@ private:
     void HandleEos();
     void PreparedHandleEos();
     void HandleInterruptEvent(const Format &infoBody);
+    void HandleAudioDeviceChangeEvent(const Format &infoBody);
     void FormatToString(std::string &dumpString, std::vector<Format> &videoTrack);
     void OnErrorCb(int32_t errorCode, const std::string &errorMsg);
     void InnerOnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody, const int32_t ret);
@@ -219,6 +221,8 @@ private:
     int32_t HandleSeekContinous(int32_t mSeconds, int64_t batchNo);
     int32_t ExitSeekContinous(bool align);
     void UpdateContinousBatchNo();
+
+    bool CheckState(PlayerOnInfoType type, int32_t extra);
 
 #ifdef SUPPORT_VIDEO
     sptr<Surface> surface_ = nullptr;
@@ -230,6 +234,7 @@ private:
     bool isBackgroundChanged_ = false;
     PlayerStates backgroundState_ = PLAYER_IDLE;
     PlayerStates interruptEventState_ = PLAYER_IDLE;
+    PlayerStates audioDeviceChangeState_ = PLAYER_IDLE;
     uint32_t appTokenId_ = 0;
     uint32_t subtitleTrackNum_ = 0;
     int32_t appUid_ = 0;
@@ -240,11 +245,13 @@ private:
     uint64_t instanceId_ = 0;
     std::shared_ptr<AVMediaSource> mediaSource_ = nullptr;
     AVPlayStrategy strategy_;
+    uint64_t instanceId_ = 0;
     std::atomic<bool> isInterruptNeeded_{false};
+    bool isAudioMuted_ = false;
     std::mutex seekContinousMutex_;
     std::atomic<bool> isInSeekContinous_ {false};
     std::atomic<int64_t> seekContinousBatchNo_ {-1};
-    bool isAudioMuted_ = false;
+    bool deviceChangeCallbackflag_ = false;
     bool maxAmplitudeCbStatus_ = false;
 };
 } // namespace Media
