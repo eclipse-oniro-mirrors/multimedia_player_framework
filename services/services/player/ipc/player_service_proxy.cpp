@@ -972,7 +972,7 @@ int32_t PlayerServiceProxy::SetMediaMuted(OHOS::Media::MediaType mediaType, bool
 
 int32_t PlayerServiceProxy::SetMaxAmplitudeCbStatus(bool status)
 {
-    MediaTrace trace("binder::SetMaxAmplitudeCbStatus");
+    MediaTrace trace("PlayerServiceProxy::SetMaxAmplitudeCbStatus");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
