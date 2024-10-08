@@ -1590,13 +1590,14 @@ int32_t SystemSoundManagerImpl::GetToneHapticsSettings(const std::shared_ptr<Abi
     ToneHapticsType toneHapticsType, ToneHapticsSettings &settings)
 {
 #ifdef SUPPORT_VIBRATOR
+    std::lock_guard<std::mutex> lock(toneHapticsMutex_);
     CHECK_AND_RETURN_RET_LOG(IsToneHapticsTypeValid(toneHapticsType), IO_ERROR, "Invalid tone haptics type");
     MEDIA_LOGI("GetToneHapticsSettings: toneHapticsType %{public}d", toneHapticsType);
-    string currentToneUri = GetCurrentToneUri(context, toneHapticsType);
-    CHECK_AND_RETURN_RET_LOG(!currentToneUri.empty(), IO_ERROR, "GetToneHapticsSettings: get current tone fail!");
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, IO_ERROR,
         "Create dataShare failed, datashare or ringtone library error.");
+    string currentToneUri = GetCurrentToneUri(context, toneHapticsType);
+    CHECK_AND_RETURN_RET_LOG(!currentToneUri.empty(), IO_ERROR, "GetToneHapticsSettings: get current tone fail!");
 
     int32_t result = SUCCESS;
     auto simcardSettingAsset = GetSimcardSettingAssetByToneHapticsType(dataShareHelper, toneHapticsType);
@@ -1638,15 +1639,15 @@ int32_t SystemSoundManagerImpl::SetToneHapticsSettings(const std::shared_ptr<Abi
     ToneHapticsType toneHapticsType, const ToneHapticsSettings &settings)
 {
 #ifdef SUPPORT_VIBRATOR
+    std::lock_guard<std::mutex> lock(toneHapticsMutex_);
     CHECK_AND_RETURN_RET_LOG(IsToneHapticsTypeValid(toneHapticsType), OPERATION_ERROR, "Invalid tone haptics type");
     MEDIA_LOGI("SetToneHapticsSettings: toneHapticsType %{public}d, hapticsUri %{public}s toneHapticsMode %{public}d",
         toneHapticsType, settings.hapticsUri.c_str(), settings.mode);
-    string currentToneUri = GetCurrentToneUri(context, toneHapticsType);
-    CHECK_AND_RETURN_RET_LOG(!currentToneUri.empty(), IO_ERROR, "SetToneHapticsSettings: get current tone fail!");
-    string toneTitle = GetRingtoneTitle(currentToneUri);
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, IO_ERROR,
         "Create dataShare failed, datashare or ringtone library error.");
+    string currentToneUri = GetCurrentToneUri(context, toneHapticsType);
+    CHECK_AND_RETURN_RET_LOG(!currentToneUri.empty(), IO_ERROR, "SetToneHapticsSettings: get current tone fail!");
 
     ToneHapticsSettings updateSettings = settings;
     if (updateSettings.mode == ToneHapticsMode::NON_SYNC) {

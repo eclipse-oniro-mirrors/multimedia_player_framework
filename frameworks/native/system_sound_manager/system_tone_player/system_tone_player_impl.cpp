@@ -116,22 +116,54 @@ std::string SystemTonePlayerImpl::GetDefaultNonSyncHapticsPath()
     return filePath;
 }
 
+bool SystemTonePlayerImpl::IsSameHapticMaps(const std::map<ToneHapticsFeature, std::string> &hapticUriMap)
+{
+    if (hapticUriMap_.size() != hapticUriMap.size()) {
+        return false;
+    }
+    for (auto &[feature, hapticUri] : hapticUriMap) {
+        if (hapticUriMap_.find(feature) == hapticUriMap_.end()) {
+            return false;
+        }
+        if (hapticUriMap_[feature] != hapticUri) {
+            return false;
+        }
+    }
+    return true;
+}
+
 int32_t SystemTonePlayerImpl::InitPlayer(const std::string &audioUri)
 {
     MEDIA_LOGI("Enter InitPlayer() with audio uri %{public}s", audioUri.c_str());
 
     if (audioUri == NO_SYSTEM_SOUND) {
+        if (!configuredUri_.empty() && configuredUri_ == audioUri) {
+            MEDIA_LOGI("The right system tone uri has been registered. Return directly.");
+            systemToneState_ = SystemToneState::STATE_PREPARED;
+            return MSERR_OK;
+        }
         defaultNonSyncHapticUri_ = GetDefaultNonSyncHapticsPath();
         configuredUri_ = NO_SYSTEM_SOUND;
         systemToneState_ = SystemToneState::STATE_NEW;
         return MSERR_OK;
     }
 
-    ReleaseHapticsSourceIds();
-    // Get the haptic file uri according to the audio file uri.
-    InitHapticsSourceIds(audioUri);
+    std::map<ToneHapticsFeature, std::string> hapticUriMap;
+    GetCurrentHapticSettings(audioUri, hapticUriMap);
+
+    if (!configuredUri_.empty() && configuredUri_ == audioUri && IsSameHapticMaps(hapticUriMap)) {
+        MEDIA_LOGI("The right system tone uri has been registered. Return directly.");
+        systemToneState_ = SystemToneState::STATE_PREPARED;
+        return MSERR_OK;
+    }
 
     configuredUri_ = audioUri;
+    hapticUriMap_.swap(hapticUriMap);
+
+    ReleaseHapticsSourceIds();
+    // Get the haptic file uri according to the audio file uri.
+    InitHapticsSourceIds();
+
     systemToneState_ = SystemToneState::STATE_NEW;
     return MSERR_OK;
 }
@@ -339,15 +371,8 @@ int32_t SystemTonePlayerImpl::Prepare()
     CHECK_AND_RETURN_RET_LOG(systemToneState_ != SystemToneState::STATE_RELEASED, MSERR_INVALID_STATE,
         "System tone player has been released!");
 
-    std::string systemToneUri = systemSoundMgr_.GetSystemToneUri(context_, systemToneType_);
-    if (!configuredUri_.empty() && configuredUri_ == systemToneUri) {
-        MEDIA_LOGI("The right system tone uri has been registered. Return directly.");
-        systemToneState_ = SystemToneState::STATE_PREPARED;
-        return MSERR_OK;
-    }
-
-    // reload audio haptic player for system tone.
-    int32_t result = InitPlayer(systemToneUri);
+    std::string audioUri = systemSoundMgr_.GetSystemToneUri(context_, systemToneType_);
+    int32_t result = InitPlayer(audioUri);
     CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, result,
         "Failed to init player for system tone player: %{public}d", result);
     systemToneState_ = SystemToneState::STATE_PREPARED;
@@ -639,26 +664,30 @@ void SystemTonePlayerImpl::GetNewHapticSettings(std::map<ToneHapticsFeature, std
     }
 }
 
-void SystemTonePlayerImpl::InitHapticsSourceIds(const std::string &audioUri)
+void SystemTonePlayerImpl::GetCurrentHapticSettings(const std::string &audioUri,
+    std::map<ToneHapticsFeature, std::string> &hapticUriMap)
+{
+    GetNewHapticSettings(hapticUriMap);
+    if (hapticUriMap.empty()) {
+        hapticsMode_ = HapticsMode::HAPTICS_MODE_SYNC;
+        GetNewHapticUriForAudioUri(audioUri, hapticUriMap);
+        if (hapticUriMap.empty()) {
+            GetHapticUriForAudioUri(audioUri, hapticUriMap);
+        }
+    }
+}
+
+void SystemTonePlayerImpl::InitHapticsSourceIds()
 {
     if (audioHapticManager_ == nullptr) {
         return;
-    }
-    hapticUriMap_.clear();
-    GetNewHapticSettings(hapticUriMap_);
-    if (hapticUriMap_.empty()) {
-        hapticsMode_ = HapticsMode::HAPTICS_MODE_SYNC;
-        GetNewHapticUriForAudioUri(audioUri, hapticUriMap_);
-        if (hapticUriMap_.empty()) {
-            GetHapticUriForAudioUri(audioUri, hapticUriMap_);
-        }
     }
 
     int32_t sourceId;
     for (auto it = hapticUriMap_.begin(); it != hapticUriMap_.end(); ++it) {
         MEDIA_LOGI("InitHapticsSourceIds%{public}d: ToneUri:%{public}s, hapticsUri:%{public}s, mode:%{public}d.",
-            it->first, audioUri.c_str(), it->second.c_str(), hapticsMode_);
-        sourceId = audioHapticManager_->RegisterSource(ChangeUri(audioUri), it->second);
+            it->first, configuredUri_.c_str(), it->second.c_str(), hapticsMode_);
+        sourceId = audioHapticManager_->RegisterSource(ChangeUri(configuredUri_), it->second);
         CHECK_AND_CONTINUE_LOG(sourceId != -1, "Failed to register source for audio haptic manager");
         (void)audioHapticManager_->SetAudioLatencyMode(sourceId, AUDIO_LATENCY_MODE_NORMAL);
         (void)audioHapticManager_->SetStreamUsage(sourceId, AudioStandard::StreamUsage::STREAM_USAGE_NOTIFICATION);

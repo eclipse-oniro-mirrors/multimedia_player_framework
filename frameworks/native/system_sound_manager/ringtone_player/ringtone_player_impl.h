@@ -48,7 +48,7 @@ public:
         const std::shared_ptr<RingtonePlayerInterruptCallback> &interruptCallback) override;
 
 private:
-    void InitPlayer(std::string &audioUri);
+    void InitPlayer(std::string &audioUri, ToneHapticsSettings &settings, AudioHapticPlayerOptions options);
     std::string GetNewHapticUriForAudioUri(const std::string &audioUri, const std::string &ringtonePath,
         const std::string& hapticsPath);
     std::string GetNewHapticUriForAudioUri(const std::string &audioUri);
@@ -57,12 +57,13 @@ private:
     std::string ChangeUri(const std::string &audioUri);
     ToneHapticsType ConvertToToneHapticsType(RingtoneType type);
     HapticsMode ConvertToHapticsMode(ToneHapticsMode toneHapticsMode);
-    std::shared_ptr<ToneHapticsSettings> GetNewHapticSettings();
+    ToneHapticsSettings GetHapticSettings(std::string &audioUri, bool &muteHaptics);
     std::string ChangeHapticsUri(const std::string &hapticsUri);
 
     float volume_ = 1.0f;
     bool loop_ = false;
     std::string configuredUri_ = "";
+    ToneHapticsSettings configuredHaptcisSettings_;
     std::shared_ptr<AudioHapticManager> audioHapticManager_ = nullptr;
     int32_t sourceId_ = -1;
     std::shared_ptr<AudioHapticPlayer> player_ = nullptr;
