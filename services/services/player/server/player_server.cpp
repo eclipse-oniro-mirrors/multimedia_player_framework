@@ -81,7 +81,7 @@ VideoPlayerManager &VideoPlayerManager::GetInstance()
 int32_t VideoPlayerManager::RegisterVideoPlayer(PlayerServer *player)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if(videoPlayerList.find(player) != videoPlayerList.end()) {
+    if (videoPlayerList.find(player) != videoPlayerList.end()) {
         return MSERR_OK;
     }
     videoPlayerList.insert(player);
@@ -91,7 +91,7 @@ int32_t VideoPlayerManager::RegisterVideoPlayer(PlayerServer *player)
 void VideoPlayerManager::UnRegisterVideoPlayer(PlayerServer *player)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if(videoPlayerList.erase(player) == 0) {
+    if (videoPlayerList.erase(player) == 0) {
         MEDIA_LOGI("0x%{public}06" PRIXPTR " Not in videoPlayer list", FAKE_POINTER(player));
     }
 }
@@ -1186,7 +1186,7 @@ void PlayerServer::HandleInterruptEvent(const Format &infoBody)
 void PlayerServer::HandleAudioDeviceChangeEvent(const Format &infoBody)
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR " HandleAudioDeviceChangeEvent in ", FAKE_POINTER(this));
-    if(!deviceChangeCallbackflag_) {
+    if (!deviceChangeCallbackflag_) {
         audioDeviceChangeState_ = PLAYER_PAUSED;
         (void)BackGroundChangeState(PLAYER_PAUSED, true);
     }
@@ -1769,7 +1769,7 @@ int32_t PlayerServer::SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMut
     CHECK_AND_RETURN_RET(lastOpStatus_ == PLAYER_INITIALIZED || lastOpStatus_ == PLAYER_PREPARED ||
                              lastOpStatus_ == PLAYER_STARTED || lastOpStatus_ == PLAYER_PLAYBACK_COMPLETE ||
                              lastOpStatus_ == PLAYER_PAUSED || lastOpStatus_ == PLAYER_STOPPED,
-                        MSERR_INVALID_STATE);
+                         MSERR_INVALID_STATE);
     CHECK_AND_RETURN_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     return playerEngine_->SetMediaMuted(mediaType, isMuted);
 }
