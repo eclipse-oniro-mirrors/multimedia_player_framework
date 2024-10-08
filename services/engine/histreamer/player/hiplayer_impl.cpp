@@ -923,7 +923,6 @@ int32_t HiPlayerImpl::Reset()
     }
     singleLoop_ = false;
     auto ret = Stop();
-    syncManager_->Reset();
     if (syncManager_ != nullptr) {
         syncManager_->ResetMediaStartPts();
         syncManager_->Reset();
