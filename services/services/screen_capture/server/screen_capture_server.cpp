@@ -1372,9 +1372,11 @@ void ScreenCaptureServer::SystemRecorderInterruptLatestRecorder()
     if (currentSessionId >= 0) {
         {
             std::lock_guard<std::mutex> lock(mutexGlobal_);
-            latestServer = GetScreenCaptureServerByIdWithLock(activeSessionId_.load());
+            latestServer = GetScreenCaptureServerByIdWithLock(currentSessionId);
         }
-        if (latestServer != nullptr && sessionId_ != activeSessionId_.load()) {
+        CHECK_AND_RETURN_LOG(latestServer != nullptr, "session Id: %{public}d is interrupted by Id: %{public}d,"
+            "but latestServer is nullptr.", currentSessionId, sessionId_);
+        if (latestServer != nullptr && sessionId_ != currentSessionId) {
             MEDIA_LOGW("SystemRecorderInterruptLatestRecorder uid(%{public}d) is interrupted by uid(%{public}d)",
                 latestServer->appInfo_.appUid, this->appInfo_.appUid);
             latestServer->StopScreenCaptureByEvent(
