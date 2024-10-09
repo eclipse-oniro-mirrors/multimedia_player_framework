@@ -75,6 +75,13 @@ vector<string> COLUMNS = {{RINGTONE_COLUMN_TONE_ID}, {RINGTONE_COLUMN_DATA}, {RI
     {RINGTONE_COLUMN_NOTIFICATION_TONE_SOURCE_TYPE}, {RINGTONE_COLUMN_RING_TONE_TYPE},
     {RINGTONE_COLUMN_RING_TONE_SOURCE_TYPE}, {RINGTONE_COLUMN_ALARM_TONE_TYPE},
     {RINGTONE_COLUMN_ALARM_TONE_SOURCE_TYPE}};
+vector<string> JOIN_COLUMNS = {{RINGTONE_TABLE + "." + RINGTONE_COLUMN_TONE_ID}, {RINGTONE_COLUMN_DATA},
+    {RINGTONE_TABLE + "." + RINGTONE_COLUMN_DISPLAY_NAME}, {RINGTONE_COLUMN_TITLE},
+    {RINGTONE_COLUMN_TONE_TYPE}, {RINGTONE_COLUMN_SOURCE_TYPE}, {RINGTONE_COLUMN_SHOT_TONE_TYPE},
+    {RINGTONE_COLUMN_SHOT_TONE_SOURCE_TYPE}, {RINGTONE_COLUMN_NOTIFICATION_TONE_TYPE},
+    {RINGTONE_COLUMN_NOTIFICATION_TONE_SOURCE_TYPE}, {RINGTONE_TABLE + "." + RINGTONE_COLUMN_RING_TONE_TYPE},
+    {RINGTONE_COLUMN_RING_TONE_SOURCE_TYPE}, {RINGTONE_COLUMN_ALARM_TONE_TYPE},
+    {RINGTONE_COLUMN_ALARM_TONE_SOURCE_TYPE}};
 vector<string> SETTING_TABLE_COLUMNS = {{SIMCARD_SETTING_COLUMN_MODE}, {SIMCARD_SETTING_COLUMN_TONE_FILE},
     {SIMCARD_SETTING_COLUMN_RINGTONE_TYPE}, {SIMCARD_SETTING_COLUMN_VIBRATE_FILE},
     {SIMCARD_SETTING_COLUMN_VIBRATE_MODE}, {SIMCARD_SETTING_COLUMN_RING_MODE}};
@@ -912,9 +919,12 @@ std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultRingtoneAttrs(
         "Create dataShare failed, datashare or ringtone library error.");
     DataShare::DatashareBusinessError businessError;
     DataShare::DataSharePredicates queryPredicates;
-    GetDefaultRingtoneAttrsExt(queryPredicates, ringtoneType);
+    std::vector<std::string> onClause;
+    onClause.push_back("ToneFiles.tone_id = PreloadConfig.tone_id");
+    queryPredicates.InnerJoin("PreloadConfig")->On(onClause)->EqualTo("PreloadConfig.ring_tone_type",
+        defaultoneTypeMap_[ringtoneType]);
     ringtoneAttrs_ = nullptr;
-    auto resultSet = dataShareHelper->Query(RINGTONEURI, queryPredicates, COLUMNS, &businessError);
+    auto resultSet = dataShareHelper->Query(RINGTONEURI, queryPredicates, JOIN_COLUMNS, &businessError);
     auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
     CHECK_AND_RETURN_RET_LOG(results != nullptr, nullptr, "single sim card failed, ringtone library error.");
     unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
@@ -928,38 +938,9 @@ std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultRingtoneAttrs(
     } else {
         MEDIA_LOGE("GetDefaultRingtoneAttrs: no single card default ringtone in the ringtone library!");
     }
-    DataShare::DataSharePredicates queryPredicatesBothCard;
-    queryPredicatesBothCard.EqualTo(RINGTONE_COLUMN_RING_TONE_TYPE, to_string(RING_TONE_TYPE_SIM_CARD_BOTH));
-    resultSet = dataShareHelper->Query(RINGTONEURI, queryPredicatesBothCard, COLUMNS, &businessError);
-    results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
-    CHECK_AND_RETURN_RET_LOG(results != nullptr, nullptr, "query both sim card failed, ringtone library error.");
-    unique_ptr<RingtoneAsset> ringtoneAssetBothCard = results->GetFirstObject();
-    while ((ringtoneAssetBothCard != nullptr) &&
-        (TONE_TYPE_RINGTONE != ringtoneAssetBothCard->GetToneType())) {
-        ringtoneAssetBothCard = results->GetNextObject();
-    }
-    if (ringtoneAssetBothCard != nullptr) {
-        ringtoneAttrs_ = std::make_shared<ToneAttrs>(ringtoneAssetBothCard->GetTitle(),
-            ringtoneAssetBothCard->GetDisplayName(), ringtoneAssetBothCard->GetPath(),
-            sourceTypeMap_[ringtoneAssetBothCard->GetSourceType()], TONE_CATEGORY_RINGTONE);
-    } else {
-        MEDIA_LOGE("GetDefaultRingtoneAttrs: no both card default ringtone in the ringtone library!");
-    }
     resultSet == nullptr ? : resultSet->Close();
     dataShareHelper->Release();
     return ringtoneAttrs_;
-}
-
-void SystemSoundManagerImpl::GetDefaultRingtoneAttrsExt(
-    DataShare::DataSharePredicates queryPredicates, RingtoneType ringtoneType)
-{
-    std::string onClause = PRELOAD_CONFIG_TABLE + "." + PRELOAD_CONFIG_COLUMN_TONE_ID + " = " +
-        RINGTONE_TABLE + "." + RINGTONE_COLUMN_TONE_ID;
-    queryPredicates.InnerJoin(PRELOAD_CONFIG_TABLE)->On({ onClause });
-    queryPredicates.SetWhereClause(PRELOAD_CONFIG_TABLE + "." + PRELOAD_CONFIG_COLUMN_RING_TONE_TYPE + " = ? ");
-    std::string subquery = to_string(defaultoneTypeMap_[ringtoneType]);
-    std::vector<std::string> whereArgs = {subquery};
-    queryPredicates.SetWhereArgs(whereArgs);
 }
 
 std::vector<std::shared_ptr<ToneAttrs>> SystemSoundManagerImpl::GetRingtoneAttrList(
@@ -1045,15 +1026,12 @@ std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultSystemToneAttrs(
 }
 
 void SystemSoundManagerImpl::GetDefaultSystemToneAttrsExt(
-    DataShare::DataSharePredicates queryPredicates, SystemToneType systemToneType)
+    DataShare::DataSharePredicates &queryPredicates, SystemToneType systemToneType)
 {
-    std::string onClause = PRELOAD_CONFIG_TABLE + "." + PRELOAD_CONFIG_COLUMN_TONE_ID + " = " +
-        RINGTONE_TABLE + "." + RINGTONE_COLUMN_TONE_ID;
-    queryPredicates.InnerJoin(PRELOAD_CONFIG_TABLE)->On({ onClause });
-    queryPredicates.SetWhereClause(PRELOAD_CONFIG_TABLE + "." + PRELOAD_CONFIG_COLUMN_RING_TONE_TYPE + " = ? ");
-    std::string subquery = to_string(defaultsystemTypeMap_[systemToneType]);
-    std::vector<std::string> whereArgs = {subquery};
-    queryPredicates.SetWhereArgs(whereArgs);
+    std::vector<std::string> onClause;
+    onClause.push_back("ToneFiles.tone_id = PreloadConfig.tone_id");
+    queryPredicates.InnerJoin("PreloadConfig")->On(onClause)->EqualTo("PreloadConfig.ring_tone_type",
+        defaultsystemTypeMap_[systemToneType]);
 }
 
 std::vector<std::shared_ptr<ToneAttrs>> SystemSoundManagerImpl::GetSystemToneAttrList(
