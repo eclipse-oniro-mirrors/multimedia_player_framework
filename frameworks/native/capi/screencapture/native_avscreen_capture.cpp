@@ -934,7 +934,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetMaxVideoFrameRate(struct OH_AV
     
     int32_t ret = screenCaptureObj->screenCapture_->SetMaxVideoFrameRate(frameRate);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT,
-                             "ResizeCanvas failed!");
+                             "SetMaxVideoFrameRate failed!");
 
     return AV_SCREEN_CAPTURE_ERR_OK;
 }
