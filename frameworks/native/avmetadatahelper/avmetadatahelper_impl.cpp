@@ -38,6 +38,7 @@ constexpr int32_t SCENE_CODE_EFFECTIVE_DURATION_MS = 20000;
 static constexpr char PERFORMANCE_STATS[] = "PERFORMANCE";
 static std::atomic<uint32_t> concurrentWorkCount_ = 0;
 static constexpr uint8_t HIGH_CONCRENT_WORK_NUM = 4;
+constexpr int32_t NUM_180 = 180;
 }
 
 namespace OHOS {
@@ -524,6 +525,20 @@ int32_t AVMetadataHelperImpl::GetFrameIndexByTime(uint64_t time, uint32_t &index
     return avMetadataHelperService_->GetFrameIndexByTime(time, index);
 }
 
+void AVMetadataHelperImpl::ScalePixelMap(
+    std::shared_ptr<PixelMap> &pixelMap, PixelMapInfo &info, const PixelMapParams &param)
+{
+    int32_t srcWidth = pixelMap->GetWidth();
+    int32_t srcHeight = pixelMap->GetHeight();
+    int32_t dstWidth = info.rotation % NUM_180 == 0 ? param.dstWidth : param.dstHeight;
+    int32_t dstHeight = info.rotation % NUM_180 == 0 ? param.dstHeight : param.dstWidth;
+    bool needScale = (dstWidth > 0 && dstHeight > 0) &&
+                     (dstWidth <= srcWidth && dstHeight <= srcHeight) &&
+                     (dstWidth < srcWidth || dstHeight < srcHeight) && srcWidth > 0 && srcHeight > 0;
+    CHECK_AND_RETURN(needScale);
+    pixelMap->scale((1.0f * dstWidth) / srcWidth, (1.0f * dstHeight) / srcHeight);
+}
+
 std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameYuv(int64_t timeUs, int32_t option,
                                                               const PixelMapParams &param)
 {
@@ -552,19 +567,8 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameYuv(int64_t timeUs, in
                                 .uvStride = srcWidth,
                                 .uvOffset = srcWidth * srcHeight };
     pixelMap->SetImageYUVInfo(yuvDataInfo);
-    bool needScale = (param.dstWidth > 0 && param.dstHeight > 0) &&
-                     (param.dstWidth <= srcWidth && param.dstHeight <= srcHeight) &&
-                     (param.dstWidth < srcWidth || param.dstHeight < srcHeight) && srcWidth > 0 && srcHeight > 0;
-    if (needScale) {
-        if (!pixelMapInfo.isHdr) {
-            pixelMap->setAllocatorType(AllocatorType::SHARE_MEM_ALLOC);
-        }
-        pixelMap->scale((1.0f * param.dstWidth) / srcWidth, (1.0f * param.dstHeight) / srcHeight);
-    }
+    ScalePixelMap(pixelMap, pixelMapInfo, param);
     if (pixelMapInfo.rotation > 0) {
-        if (!pixelMapInfo.isHdr) {
-            pixelMap->setAllocatorType(AllocatorType::SHARE_MEM_ALLOC);
-        }
         pixelMap->rotate(pixelMapInfo.rotation);
     }
     return pixelMap;

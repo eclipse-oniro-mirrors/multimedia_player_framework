@@ -3213,7 +3213,7 @@ HWTEST_F(PlayerUnitTest, Player_SetPlayRange_001, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->Play());
     EXPECT_EQ(MSERR_OK, player_->Pause());
 }
-
+ 
 /**
  * @tc.name  : Test SetPlayRange [0, 600]
  * @tc.number: Player_SetPlayRange_002
@@ -3235,7 +3235,7 @@ HWTEST_F(PlayerUnitTest, Player_SetPlayRange_002, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->Play());
     EXPECT_EQ(MSERR_OK, player_->Pause());
 }
-
+ 
 /**
  * @tc.name  : Test SetPlayRange [-2, -1]
  * @tc.number: Player_SetPlayRange_003
@@ -3249,7 +3249,7 @@ HWTEST_F(PlayerUnitTest, Player_SetPlayRange_003, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
     ASSERT_NE(MSERR_OK, player_->SetPlayRange(-2, -1));
 }
-
+ 
 /**
  * @tc.name  : Test SetPlayRange [-1, -2]
  * @tc.number: Player_SetPlayRange_004
@@ -3263,7 +3263,7 @@ HWTEST_F(PlayerUnitTest, Player_SetPlayRange_004, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
     ASSERT_NE(MSERR_OK, player_->SetPlayRange(-1, -2));
 }
-
+ 
 /**
  * @tc.name  : Test SetPlayRange [-1, 0]
  * @tc.number: Player_SetPlayRange_005
@@ -3277,7 +3277,7 @@ HWTEST_F(PlayerUnitTest, Player_SetPlayRange_005, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
     ASSERT_NE(MSERR_OK, player_->SetPlayRange(-1, 0));
 }
-
+ 
 /**
  * @tc.name  : Test SetPlayRange [-1, -1]
  * @tc.number: Player_SetPlayRange_006
@@ -3300,7 +3300,7 @@ HWTEST_F(PlayerUnitTest, Player_SetPlayRange_006, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->Play());
     EXPECT_EQ(MSERR_OK, player_->Pause());
 }
-
+ 
 /**
  * @tc.name  : Test SetPlayRange [100, 2]
  * @tc.number: Player_SetPlayRange_007
@@ -3320,7 +3320,7 @@ HWTEST_F(PlayerUnitTest, Player_SetPlayRange_007, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->Pause());
     ASSERT_NE(MSERR_OK, player_->SetPlayRange(100, 2));
 }
-
+ 
 /**
  * @tc.name  : Test SetPlayRange [duration + 1, duration + 2]
  * @tc.number: Player_SetPlayRange_008
@@ -3342,7 +3342,7 @@ HWTEST_F(PlayerUnitTest, Player_SetPlayRange_008, TestSize.Level0)
     int32_t end = duration + 2;
     ASSERT_NE(MSERR_OK, player_->SetPlayRange(start, end));
 }
-
+ 
 /**
  * @tc.name  : Test SetPlayRange [100, duration + 1]
  * @tc.number: Player_SetPlayRange_009
@@ -3363,7 +3363,7 @@ HWTEST_F(PlayerUnitTest, Player_SetPlayRange_009, TestSize.Level0)
     int32_t end = duration + 1;
     ASSERT_NE(MSERR_OK, player_->SetPlayRange(100, end));
 }
-
+ 
 /**
  * @tc.name  : Test SetPlayRange [10035, 10037]
  * @tc.number: Player_SetPlayRange_010
@@ -3378,7 +3378,7 @@ HWTEST_F(PlayerUnitTest, Player_SetPlayRange_010, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->SetPlayRange(10035, 10037));
     ASSERT_NE(MSERR_OK, player_->PrepareAsync());
 }
-
+ 
 /**
  * @tc.name  : Test SetPlayRange [100, 10037]
  * @tc.number: Player_SetPlayRange_011
@@ -3665,7 +3665,7 @@ HWTEST_F(PlayerUnitTest, Player_SetDeviceChangeCbStatus_004, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->SetDeviceChangeCbStatus(false));
     EXPECT_EQ(MSERR_OK, player_->Play());
 }
-
+ 
 /**
  * @tc.name  : Test SetMaxAmplitudeCbStatus API
  * @tc.number: Player_SetMaxAmplitudeCbStatus_001
@@ -3681,7 +3681,7 @@ HWTEST_F(PlayerUnitTest, Player_SetMaxAmplitudeCbStatus_001, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->Prepare());
     EXPECT_EQ(MSERR_OK, player_->Play());
 }
-
+ 
 /**
  * @tc.name  : Test SetMaxAmplitudeCbStatus API
  * @tc.number: Player_SetMaxAmplitudeCbStatus_002
@@ -3697,7 +3697,7 @@ HWTEST_F(PlayerUnitTest, Player_SetMaxAmplitudeCbStatus_002, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->SetMaxAmplitudeCbStatus(true));
     EXPECT_EQ(MSERR_OK, player_->Play());
 }
-
+ 
 /**
  * @tc.name  : Test SetMaxAmplitudeCbStatus API
  * @tc.number: Player_SetMaxAmplitudeCbStatus_003
@@ -3713,7 +3713,7 @@ HWTEST_F(PlayerUnitTest, Player_SetMaxAmplitudeCbStatus_003, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->Prepare());
     EXPECT_EQ(MSERR_OK, player_->Play());
 }
-
+ 
 /**
  * @tc.name  : Test SetMaxAmplitudeCbStatus API
  * @tc.number: Player_SetMaxAmplitudeCbStatus_004
