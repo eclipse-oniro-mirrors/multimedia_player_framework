@@ -47,6 +47,7 @@ public:
     virtual int32_t SetCanvasRotation(bool canvasRotation) = 0;
     virtual int32_t ResizeCanvas(int32_t width, int32_t height) = 0;
     virtual int32_t SkipPrivacyMode(std::vector<uint64_t> &windowIDsVec) = 0;
+    virtual int32_t SetMaxVideoFrameRate(int32_t frameRate) = 0;
     virtual int32_t SetListenerObject(const sptr<IRemoteObject> &object) = 0;
     virtual int32_t AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audioBuffer, AudioCaptureSourceType type) = 0;
     virtual int32_t AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfaceBuffer, int32_t &fence,
@@ -82,6 +83,7 @@ public:
         EXCLUDE_CONTENT = 20,
         RESIZE_CANVAS = 21,
         SKIP_PRIVACY = 22,
+        SET_MAX_FRAME_RATE = 23,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardScreenCaptureService");
