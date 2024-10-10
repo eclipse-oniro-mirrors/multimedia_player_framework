@@ -100,6 +100,43 @@ bool FuzzAVMetadataStubLocal(uint8_t *data, size_t size)
 
     return true;
 }
+
+bool FuzzAVMetadataStubLocal2(uint8_t *data, size_t size)
+{
+    if (data == nullptr || size < sizeof(int64_t)) {
+        return true;
+    }
+    std::shared_ptr<MediaServer> mediaServer =
+        std::make_shared<MediaServer>(SYSTEM_ABILITY_ID, RUN_ON_CREATE);
+    sptr<IRemoteObject> listener = new(std::nothrow) MediaListenerStubFuzzer();
+    sptr<IRemoteObject> avmetadata = mediaServer->GetSubSystemAbility(
+        IStandardMediaService::MediaSystemAbility::MEDIA_AVMETADATAHELPER, listener);
+    if (avmetadata == nullptr) {
+        return false;
+    }
+ 
+    sptr<IRemoteStub<IStandardAVMetadataHelperService>> avmetadataStub =
+        iface_cast<IRemoteStub<IStandardAVMetadataHelperService>>(avmetadata);
+    if (avmetadataStub == nullptr) {
+        return false;
+    }
+ 
+    SetSourceLocalFd(avmetadataStub);
+    bool isWirteToken = size >0 && data[0] % 9 != 0;
+    for (uint32_t code = 0; code <= AVMetadataServiceProxyFuzzer::MAX_IPC_ID; code++) {
+        MessageParcel msg;
+        if (isWirteToken) {
+            msg.WriteInterfaceToken(avmetadataStub->GetDescriptor());
+        }
+        msg.WriteBuffer(data, size);
+        msg.RewindRead(0);
+        MessageParcel reply;
+        MessageOption option;
+        avmetadataStub->OnRemoteRequest(code, msg, reply, option);
+    }
+ 
+    return true;
+}
 }
 }
 
@@ -109,5 +146,6 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t *data, size_t size)
     /* Run your code on data */
     OHOS::Media::FuzzAVMetadataStub(data, size);
     OHOS::Media::FuzzAVMetadataStubLocal(data, size);
+    OHOS::Media::FuzzAVMetadataStubLocal2(data, size);
     return 0;
 }
