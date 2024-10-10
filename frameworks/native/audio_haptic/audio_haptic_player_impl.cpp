@@ -44,8 +44,9 @@ std::shared_ptr<AudioHapticPlayer> AudioHapticPlayerFactory::CreateAudioHapticPl
 
 std::mutex AudioHapticSound::createAudioHapticSoundMutex_;
 
-std::shared_ptr<AudioHapticSound> AudioHapticSound::CreateAudioHapticSound(const AudioLatencyMode &latencyMode,
-    const std::string &audioUri, const bool &muteAudio, const AudioStandard::StreamUsage &streamUsage)
+std::shared_ptr<AudioHapticSound> AudioHapticSound::CreateAudioHapticSound(
+    const AudioLatencyMode &latencyMode, const std::string &audioUri, const bool &muteAudio,
+    const AudioStandard::StreamUsage &streamUsage, const bool &parallelPlayFlag)
 {
     if (latencyMode != AUDIO_LATENCY_MODE_NORMAL && latencyMode != AUDIO_LATENCY_MODE_FAST) {
         MEDIA_LOGE("Invalid param: the latency mode %{public}d is unsupported.", latencyMode);
@@ -59,7 +60,8 @@ std::shared_ptr<AudioHapticSound> AudioHapticSound::CreateAudioHapticSound(const
             audioHapticSound = std::make_shared<AudioHapticSoundNormalImpl>(audioUri, muteAudio, streamUsage);
             break;
         case AUDIO_LATENCY_MODE_FAST:
-            audioHapticSound = std::make_shared<AudioHapticSoundLowLatencyImpl>(audioUri, muteAudio, streamUsage);
+            audioHapticSound = std::make_shared<AudioHapticSoundLowLatencyImpl>(
+                audioUri, muteAudio, streamUsage, parallelPlayFlag);
             break;
         default:
             MEDIA_LOGE("Invalid param: the latency mode %{public}d is unsupported.", latencyMode);
@@ -88,6 +90,7 @@ void AudioHapticPlayerImpl::SetPlayerParam(const AudioHapticPlayerParam &param)
 {
     muteAudio_ = param.options.muteAudio;
     muteHaptic_ = param.options.muteHaptics;
+    parallelPlayFlag_ = param.options.parallelPlayFlag;
     audioUri_ = param.audioUri;
     hapticSource_ = param.hapticSource;
     latencyMode_ = param.latencyMode;
@@ -97,7 +100,8 @@ void AudioHapticPlayerImpl::SetPlayerParam(const AudioHapticPlayerParam &param)
 void AudioHapticPlayerImpl::LoadPlayer()
 {
     // Load audio player
-    audioHapticSound_ = AudioHapticSound::CreateAudioHapticSound(latencyMode_, audioUri_, muteAudio_, streamUsage_);
+    audioHapticSound_ = AudioHapticSound::CreateAudioHapticSound(
+        latencyMode_, audioUri_, muteAudio_, streamUsage_, parallelPlayFlag_);
     CHECK_AND_RETURN_LOG(audioHapticSound_ != nullptr, "Failed to create audio haptic sound instance");
     soundCallback_ = std::make_shared<AudioHapticSoundCallbackImpl>(shared_from_this());
     (void)audioHapticSound_->SetAudioHapticSoundCallback(soundCallback_);

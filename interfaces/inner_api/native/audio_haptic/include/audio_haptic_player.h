@@ -52,6 +52,7 @@ enum AudioLatencyMode {
 struct AudioHapticPlayerOptions {
     bool muteAudio;
     bool muteHaptics;
+    bool parallelPlayFlag = false;
 };
 
 enum HapticsMode {
