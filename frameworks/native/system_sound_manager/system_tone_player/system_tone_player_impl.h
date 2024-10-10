@@ -47,6 +47,7 @@ private:
     void DeleteAllPlayer();
     std::string GetHapticUriForAudioUri(const std::string &audioUri);
     bool IsFileExisting(const std::string &fileUri);
+    std::string GetDefaultNonSyncHapticsPath();
     SystemToneOptions GetOptionsFromRingerMode();
     void UpdateStreamId();
     std::string ChangeUri(const std::string &uri);
@@ -57,6 +58,7 @@ private:
     int32_t sourceId_ = -1;
     int32_t streamId_ = 0;
     std::string configuredUri_ = "";
+    std::string defaultNonSyncHapticUri_ = "";
     std::shared_ptr<AbilityRuntime::Context> context_;
     SystemSoundManagerImpl &systemSoundMgr_;
     SystemToneType systemToneType_;
