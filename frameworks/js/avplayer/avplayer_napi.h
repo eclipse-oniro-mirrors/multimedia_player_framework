@@ -240,14 +240,15 @@ private:
      */
     static napi_value JsGetMediaKeySystemInfos(napi_env env, napi_callback_info info);
 
+    static napi_value JsSetPlaybackStrategy(napi_env env, napi_callback_info info);
+
+    static napi_value JsSetMediaMuted(napi_env env, napi_callback_info info);
+
     /**
      * getPlaybackInfo(): playbackInfo;
      */
     static napi_value JsGetPlaybackInfo(napi_env env, napi_callback_info info);
 
-    static napi_value JsSetPlaybackStrategy(napi_env env, napi_callback_info info);
-
-    static napi_value JsSetMediaMuted(napi_env env, napi_callback_info info);
     /**
      * on(type: 'stateChange', callback: (state: AVPlayerState, reason: StateChangeReason) => void): void;
      * off(type: 'stateChange'): void;
@@ -333,10 +334,13 @@ private:
     void WaitTaskQueStop();
     void MaxAmplitudeCallbackOn(AVPlayerNapi *jsPlayer, std::string callbackName);
     void MaxAmplitudeCallbackOff(AVPlayerNapi *jsPlayer, std::string callbackName);
+    void DeviceChangeCallbackOn(AVPlayerNapi *jsPlayer, std::string callbackName);
+    void DeviceChangeCallbackOff(AVPlayerNapi *jsPlayer, std::string callbackName);
 
     std::condition_variable stopTaskQueCond_;
     bool taskQueStoped_ = false;
     bool calMaxAmplitude_ = false;
+    bool deviceChangeCallbackflag_ = false;
 
     struct AVPlayerContext : public MediaAsyncContext {
         explicit AVPlayerContext(napi_env env) : MediaAsyncContext(env) {}
@@ -360,6 +364,7 @@ private:
     std::shared_ptr<AVPlayerCallback> playerCb_ = nullptr;
     std::shared_ptr<MediaDataSourceCallback> dataSrcCb_ = nullptr;
     std::atomic<bool> isReleased_ = false;
+    std::atomic<bool> isInterrupted_ = false;
     std::string url_ = "";
     struct AVFileDescriptor fileDescriptor_;
     struct AVDataSrcDescriptor dataSrcDescriptor_;

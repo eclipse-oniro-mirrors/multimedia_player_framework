@@ -131,6 +131,10 @@ ohos_shared_library("avplayer") {
       "drm_framework:native_drm",
     ]
   }
+
+  defines = []
+  defines += player_framework_defines
+
   output_extension = "so"
   subsystem_name = "multimedia"
   part_name = "player_framework"

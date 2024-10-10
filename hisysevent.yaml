@@ -167,3 +167,11 @@ SCREEN_CAPTURE_STATISTICS:
 DRM_STATISTICS:
   __BASE: {type: STATISTIC, level: MINOR, desc: DRM common statistics}
   EVENTS: {type: STRING, arrsize: 100, desc: Group of DRM common events}
+
+PLAYER_LAG:
+  __BASE: {type: FAULT, level: CRITICAL, desc: playback lag event}
+  APP_NAME: {type: STRING, desc: Caller app name}
+  INSTANCE_ID: {type: STRING, desc: Distinct player id}
+  SOURCE_TYPE: {type: UINT8, desc: Enum of source type}
+  LAG_DURATION: {type: INT32, desc: Lag duration}
+  MSG: {type: STRING, desc: Lag info message}

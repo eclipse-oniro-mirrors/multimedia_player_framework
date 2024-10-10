@@ -17,7 +17,7 @@
 #include "avplayer_callback.h"
 #include "media_errors.h"
 #include "common_napi.h"
-#ifdef SUPPORT_DRM
+#ifdef SUPPORT_AVPLAYER_DRM
 #include "key_session_impl.h"
 #endif
 #ifdef SUPPORT_VIDEO
@@ -98,9 +98,9 @@ napi_value AVPlayerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("addSubtitleFromFd", JsAddSubtitleAVFileDescriptor),
         DECLARE_NAPI_FUNCTION("setDecryptionConfig", JsSetDecryptConfig),
         DECLARE_NAPI_FUNCTION("getMediaKeySystemInfos", JsGetMediaKeySystemInfos),
-        DECLARE_NAPI_FUNCTION("getPlaybackInfo", JsGetPlaybackInfo),
         DECLARE_NAPI_FUNCTION("setPlaybackStrategy", JsSetPlaybackStrategy),
         DECLARE_NAPI_FUNCTION("setMediaMuted", JsSetMediaMuted),
+        DECLARE_NAPI_FUNCTION("getPlaybackInfo", JsGetPlaybackInfo),
 
         DECLARE_NAPI_GETTER_SETTER("url", JsGetUrl, JsSetUrl),
         DECLARE_NAPI_GETTER_SETTER("fdSrc", JsGetAVFileDescriptor, JsSetAVFileDescriptor),
@@ -217,7 +217,7 @@ napi_value AVPlayerNapi::JsCreateAVPlayer(napi_env env, napi_callback_info info)
         MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncContext.get()), &asyncContext->work));
     napi_queue_async_work_with_qos(env, asyncContext->work, napi_qos_user_initiated);
     asyncContext.release();
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " JsCreateAVPlayer Out", FAKE_POINTER(jsThis));
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " JsCreateAVPlayer Out", FAKE_POINTER(jsThis));
     return result;
 }
 
@@ -235,7 +235,9 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PrepareTask()
                 return TaskRet(errCode, "failed to prepare");
             }
             stopWait_ = false;
-            stateChangeCond_.wait(lock, [this]() { return stopWait_.load() || avplayerExit_; });
+            stateChangeCond_.wait(lock, [this]() {
+                return stopWait_.load() || isInterrupted_.load() || avplayerExit_;
+            });
 
             if (GetCurrentState() == AVPlayerState::STATE_ERROR) {
                 return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
@@ -530,6 +532,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::ResetTask()
         PauseListenCurrentResource(); // Pause event listening for the current resource
         ResetUserParameters();
         {
+            isInterrupted_.store(false);
             std::unique_lock<std::mutex> lock(taskMutex_);
             if (GetCurrentState() == AVPlayerState::STATE_RELEASED) {
                 return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
@@ -550,6 +553,8 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::ResetTask()
         return TaskRet(MSERR_EXT_API9_OK, "Success");
     });
     (void)taskQue_->EnqueueTask(task, true); // CancelNotExecutedTask
+    isInterrupted_.store(true);
+    stateChangeCond_.notify_all();
     return task;
 }
 
@@ -1215,7 +1220,7 @@ napi_value AVPlayerNapi::JsSetUrl(napi_env env, napi_callback_info info)
     return result;
 }
 
-#ifdef SUPPORT_DRM
+#ifdef SUPPORT_AVPLAYER_DRM
 napi_value AVPlayerNapi::JsSetDecryptConfig(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("AVPlayerNapi::JsSetDecryptConfig");
@@ -1389,7 +1394,9 @@ napi_value AVPlayerNapi::JsSetPlaybackStrategy(napi_env env, napi_callback_info 
                 .preferredHeight = strategyTmp.preferredHeight,
                 .preferredBufferDuration = strategyTmp.preferredBufferDuration,
                 .preferredHdr = strategyTmp.preferredHdr,
-                .mutedMediaType = static_cast<MediaType>(strategyTmp.mutedMediaType)
+                .mutedMediaType = static_cast<MediaType>(strategyTmp.mutedMediaType),
+                .preferredAudioLanguage = strategyTmp.preferredAudioLanguage,
+                .preferredSubtitleLanguage = strategyTmp.preferredSubtitleLanguage
             };
             promiseCtx->asyncTask = jsPlayer->SetPlaybackStrategyTask(strategy);
         }
@@ -1514,7 +1521,7 @@ napi_value AVPlayerNapi::JsGetUrl(napi_env env, napi_callback_info info)
     napi_value value = nullptr;
     (void)napi_create_string_utf8(env, jsPlayer->url_.c_str(), NAPI_AUTO_LENGTH, &value);
 
-    MEDIA_LOGD("JsGetUrl Out Currelt Url: %{private}s", jsPlayer->url_.c_str());
+    MEDIA_LOGD("JsGetUrl Out Current Url: %{private}s", jsPlayer->url_.c_str());
     return value;
 }
 
@@ -1615,10 +1622,8 @@ napi_value AVPlayerNapi::JsSetMediaSource(napi_env env, napi_callback_info info)
         return result;
     }
     std::shared_ptr<AVMediaSourceTmp> srcTmp = MediaSourceNapi::GetMediaSource(env, args[0]);
-    if (srcTmp == nullptr) {
-        MEDIA_LOGE("get GetMediaSource argument failed!");
-        return result;
-    }
+    CHECK_AND_RETURN_RET_LOG(srcTmp != nullptr, result, "get GetMediaSource argument failed!");
+
     std::shared_ptr<AVMediaSource> mediaSource = std::make_shared<AVMediaSource>(srcTmp->url, srcTmp->header);
     mediaSource->SetMimeType(srcTmp->GetMimeType());
 
@@ -1632,6 +1637,8 @@ napi_value AVPlayerNapi::JsSetMediaSource(napi_env env, napi_callback_info info)
     strategy.preferredHeight = strategyTmp.preferredHeight;
     strategy.preferredWidth = strategyTmp.preferredWidth;
     strategy.preferredHdr = strategyTmp.preferredHdr;
+    strategy.preferredAudioLanguage = strategyTmp.preferredAudioLanguage;
+    strategy.preferredSubtitleLanguage = strategyTmp.preferredSubtitleLanguage;
     auto task = std::make_shared<TaskHandler<void>>([jsPlayer, mediaSource, strategy]() {
         if (jsPlayer->player_ != nullptr) {
             (void)jsPlayer->player_->SetMediaSource(mediaSource, strategy);
@@ -2108,8 +2115,6 @@ bool AVPlayerNapi::JsHandleParameter(napi_env env, napi_value args, AVPlayerNapi
         STREAM_USAGE_MOVIE, STREAM_USAGE_GAME,
         STREAM_USAGE_AUDIOBOOK, STREAM_USAGE_NAVIGATION,
         STREAM_USAGE_DTMF, STREAM_USAGE_ENFORCED_TONE,
-        STREAM_USAGE_ULTRASONIC,
-        STREAM_USAGE_VIDEO_COMMUNICATION,
         STREAM_USAGE_ULTRASONIC
     };
     if (std::find(contents.begin(), contents.end(), content) == contents.end() ||
@@ -2424,7 +2429,7 @@ napi_value AVPlayerNapi::JsGetSelectedTracks(napi_env env, napi_callback_info in
     MediaTrace trace("AVPlayerNapi::get selected tracks");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
-    MEDIA_LOGI("JsGetSelectedTracks In");
+    MEDIA_LOGI("JsGetSelectedTracks  In");
 
     auto promiseCtx = std::make_unique<AVPlayerContext>(env);
     napi_value args[1] = { nullptr };
@@ -2434,7 +2439,7 @@ napi_value AVPlayerNapi::JsGetSelectedTracks(napi_env env, napi_callback_info in
     promiseCtx->deferred = CommonNapi::CreatePromise(env, promiseCtx->callbackRef, result);
     // async work
     napi_value resource = nullptr;
-    napi_create_string_utf8(env, "JsGetSelectedTracks", NAPI_AUTO_LENGTH, &resource);
+    napi_create_string_utf8(env, "JsGetSelectedTracks ", NAPI_AUTO_LENGTH, &resource);
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void *data) {
             MEDIA_LOGI("JsGetSelectedTracks Task");
             auto promiseCtx = reinterpret_cast<AVPlayerContext *>(data);
@@ -2645,6 +2650,29 @@ void AVPlayerNapi::GetCurrentTrackTask(std::unique_ptr<AVPlayerContext> &promise
     return;
 }
 
+void AVPlayerNapi::DeviceChangeCallbackOn(AVPlayerNapi *jsPlayer, std::string callbackName)
+{
+    if (jsPlayer == nullptr) {
+        deviceChangeCallbackflag_ = false;
+        return;
+    }
+    if (callbackName == "audioOutputDeviceChangeWithInfo") {
+        deviceChangeCallbackflag_ = true;
+    }
+    if (jsPlayer->player_ != nullptr && deviceChangeCallbackflag_) {
+        (void)jsPlayer->player_->SetDeviceChangeCbStatus(deviceChangeCallbackflag_);
+    }
+}
+
+void AVPlayerNapi::DeviceChangeCallbackOff(AVPlayerNapi *jsPlayer, std::string callbackName)
+{
+    if (jsPlayer != nullptr && deviceChangeCallbackflag_ && callbackName == "audioOutputDeviceChangeWithInfo") {
+        deviceChangeCallbackflag_ = false;
+        if (jsPlayer->player_ != nullptr) {
+            (void)jsPlayer->player_->SetDeviceChangeCbStatus(deviceChangeCallbackflag_);
+        }
+    }
+}
 void AVPlayerNapi::MaxAmplitudeCallbackOn(AVPlayerNapi *jsPlayer, std::string callbackName)
 {
     if (jsPlayer == nullptr) {
@@ -2696,6 +2724,7 @@ napi_value AVPlayerNapi::JsSetOnCallback(napi_env env, napi_callback_info info)
 
     std::string callbackName = CommonNapi::GetStringArgument(env, args[0]);
     jsPlayer->MaxAmplitudeCallbackOn(jsPlayer, callbackName);
+    jsPlayer->DeviceChangeCallbackOn(jsPlayer, callbackName);
     MEDIA_LOGI("0x%{public}06" PRIXPTR " set callbackName: %{public}s", FAKE_POINTER(jsPlayer), callbackName.c_str());
 
     napi_ref ref = nullptr;
@@ -2749,6 +2778,7 @@ napi_value AVPlayerNapi::JsClearOnCallback(napi_env env, napi_callback_info info
 
     std::string callbackName = CommonNapi::GetStringArgument(env, args[0]);
     jsPlayer->MaxAmplitudeCallbackOff(jsPlayer, callbackName);
+    jsPlayer->DeviceChangeCallbackOff(jsPlayer, callbackName);
     MEDIA_LOGI("0x%{public}06" PRIXPTR " set callbackName: %{public}s", FAKE_POINTER(jsPlayer), callbackName.c_str());
 
     jsPlayer->ClearCallbackReference(callbackName);

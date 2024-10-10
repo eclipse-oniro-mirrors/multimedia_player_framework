@@ -32,6 +32,7 @@
 #include "media_sync_manager.h"
 #include "pipeline/pipeline.h"
 #include "seek_agent.h"
+#include "dfx_agent.h"
 #include "subtitle_sink_filter.h"
 #include "meta/meta.h"
 #include <chrono>
@@ -150,6 +151,7 @@ public:
     void OnEvent(const Event &event);
     void OnEventSub(const Event &event);
     void OnEventSubTrackChange(const Event &event);
+    void OnDfxEvent(const Event &event);
     void OnStateChanged(PlayerStateId state);
     Status OnCallback(std::shared_ptr<Filter> filter, const FilterCallBackCommand cmd,
                     StreamType outType);
@@ -210,6 +212,7 @@ private:
     void UpdatePlayStatistics();
     void DoSetMediaSource(Status& ret);
     void UpdatePlayerStateAndNotify();
+    void UpdateMediaFirstPts();
     void UpdateMaxSeekLatency(PlayerSeekMode mode, int64_t seekStartTime);
 #ifdef SUPPORT_VIDEO
     Status LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
@@ -283,6 +286,7 @@ private:
     std::string subUrl_;
     bool hasExtSub_ {false};
     std::atomic<int32_t> durationMs_{-1};
+    int64_t mediaStartPts_{0};
     std::shared_ptr<IMediaDataSource> dataSrc_{nullptr};
     std::atomic<int32_t> videoWidth_{0};
     std::atomic<int32_t> videoHeight_{0};
@@ -347,6 +351,7 @@ private:
     std::shared_ptr<DraggingPlayerAgent> draggingPlayerAgent_ {nullptr};
     int64_t lastSeekContinousPos_ {-1};
     std::atomic<bool> needUpdateSubtitle_ {true};
+    std::shared_ptr<DfxAgent> dfxAgent_{};
     bool maxAmplitudeCbStatus_ {false};
     OHOS::Media::Mutex handleCompleteMutex_{};
 };

@@ -73,7 +73,6 @@ void PlayerClient::MediaServerDied()
         playerProxy_ = nullptr;
         listenerStub_ = nullptr;
     }
-    MEDIA_LOGD("PlayerClient:MediaServerDied");
     if (callback_ != nullptr) {
         callback_->OnError(MSERR_SERVICE_DIED,
             "mediaserver is died, please create a new playback instance again");
@@ -400,7 +399,7 @@ int32_t PlayerClient::GetCurrentTrack(int32_t trackType, int32_t &index)
 int32_t PlayerClient::SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionService> &keySessionProxy, bool svp)
 {
     MEDIA_LOGI("PlayerClient SetDecryptConfig");
-#ifdef SUPPORT_DRM
+#ifdef SUPPORT_AVPLAYER_DRM
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     CHECK_AND_RETURN_RET_LOG(keySessionProxy != nullptr, MSERR_NO_MEMORY, "keySessionProxy is nullptr..");
@@ -410,6 +409,13 @@ int32_t PlayerClient::SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionS
     (void)svp;
     return 0;
 #endif
+}
+
+int32_t PlayerClient::SetDeviceChangeCbStatus(bool status)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
+    return playerProxy_->SetDeviceChangeCbStatus(status);
 }
 
 int32_t PlayerClient::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)

@@ -259,11 +259,6 @@ std::string PlayerCallbackTest::SubtitleTextUpdate(std::string text)
     return text_;
 }
 
-PlayerStates PlayerCallbackTest::GetState()
-{
-    return state_;
-}
-
 void PlayerCallbackTest::OnError(int32_t errorCode, const std::string &errorMsg)
 {
     if (!trackDoneFlag_) {
@@ -420,13 +415,6 @@ int32_t PlayerMock::Prepare()
         return callback_->PrepareSync();
     }
     return ret;
-}
-
-int32_t PlayerMock::SetRenderFirstFrame(bool display)
-{
-    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr && callback_ != nullptr, -1, "player or callback is nullptr");
-    std::unique_lock<std::mutex> lock(mutex_);
-    return player_->SetRenderFirstFrame(display);
 }
 
 int32_t PlayerMock::PrepareAsync()
@@ -743,11 +731,6 @@ sptr<Surface> PlayerMock::GetVideoSurfaceNext()
     return surfaceNode->GetSurface();
 }
 
-PlayerStates PlayerMock::GetState()
-{
-    return callback_->GetState();
-}
-
 int32_t PlayerMock::SetPlayRange(int64_t start, int64_t end)
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
@@ -762,6 +745,26 @@ int32_t PlayerMock::SeekContinuous(int32_t mseconds)
     return player_->Seek(mseconds, PlayerSeekMode::SEEK_CONTINOUS);
 }
 
+int32_t PlayerMock::SetPlaybackStrategy(AVPlayStrategy strategy)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
+    std::unique_lock<std::mutex> lock(mutex_);
+    return player_->SetPlaybackStrategy(strategy);
+}
+
+int32_t PlayerMock::SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
+    std::unique_lock<std::mutex> lock(mutex_);
+    return player_->SetMediaMuted(mediaType, isMuted);
+}
+
+int32_t PlayerMock::SetDeviceChangeCbStatus(bool status)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
+    return player_->SetDeviceChangeCbStatus(status);
+}
+ 
 int32_t PlayerMock::SetMaxAmplitudeCbStatus(bool status)
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");

@@ -21,7 +21,7 @@
 using namespace OHOS::QOS;
 
 namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_ONLY_PRERELEASE, LOG_DOMAIN_PLAYER, "PlayerServerTaskMgr" };
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_PLAYER, "PlayerServerTaskMgr" };
 }
 
 namespace OHOS {

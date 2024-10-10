@@ -25,7 +25,7 @@
 
 namespace OHOS {
 namespace Media {
-using PlayerStubFunc = std::function<int32_t(MessageParcel &, MessageParcel &)>;
+using PlayerStubFunc = std::function<int32_t (MessageParcel &, MessageParcel &)>;
 class PlayerServiceStub
     : public IRemoteStub<IStandardPlayerService>,
       public MonitorServerObject,
@@ -87,6 +87,7 @@ public:
     // MonitorServerObject override
     int32_t DoIpcAbnormality() override;
     int32_t DoIpcRecovery(bool fromMonitor) override;
+    int32_t SetDeviceChangeCbStatus(bool status) override;
     int32_t SetMaxAmplitudeCbStatus(bool status) override;
 protected:
     PlayerServiceStub();
@@ -142,9 +143,12 @@ private:
     int32_t DeselectTrack(MessageParcel &data, MessageParcel &reply);
     int32_t GetCurrentTrack(MessageParcel &data, MessageParcel &reply);
     int32_t SetDecryptConfig(MessageParcel &data, MessageParcel &reply);
+
+    std::mutex mutex_;
     int32_t SetMediaSource(MessageParcel &data, MessageParcel &reply);
     int32_t SetPlaybackStrategy(MessageParcel &data, MessageParcel &reply);
     int32_t SetMediaMuted(MessageParcel &data, MessageParcel &reply);
+    int32_t SetDeviceChangeCbStatus(MessageParcel &data, MessageParcel &reply);
     int32_t SetMaxAmplitudeCbStatus(MessageParcel &data, MessageParcel &reply);
 
     std::map<uint32_t, std::pair<std::string, PlayerStubFunc>> playerFuncs_;

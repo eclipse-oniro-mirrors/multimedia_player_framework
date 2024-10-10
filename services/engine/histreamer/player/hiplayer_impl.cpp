@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -97,6 +97,7 @@ HiPlayerImpl::HiPlayerImpl(int32_t appUid, int32_t appPid, uint32_t appTokenId, 
     syncManager_ = std::make_shared<MediaSyncManager>();
     callbackLooper_.SetPlayEngine(this, playerId_);
     bundleName_ = GetClientBundleName(appUid, false);
+    dfxAgent_ = std::make_shared<DfxAgent>(playerId_, bundleName_);
 }
 
 HiPlayerImpl::~HiPlayerImpl()
@@ -104,6 +105,9 @@ HiPlayerImpl::~HiPlayerImpl()
     MEDIA_LOG_D_SHORT("~HiPlayerImpl dtor called");
     if (demuxer_) {
         pipeline_->RemoveHeadFilter(demuxer_);
+    }
+    if (dfxAgent_ != nullptr) {
+        dfxAgent_.reset();
     }
     PipeLineThreadPool::GetInstance().DestroyThread(playerId_);
 }
@@ -132,6 +136,9 @@ Status HiPlayerImpl::Init()
     MEDIA_LOG_I_SHORT("Init start");
     std::shared_ptr<EventReceiver> playerEventReceiver = std::make_shared<PlayerEventReceiver>(this, playerId_);
     playerEventReceiver_ = playerEventReceiver;
+    if (syncManager_ != nullptr) {
+        syncManager_->SetEventReceiver(playerEventReceiver_);
+    }
     std::shared_ptr<FilterCallback> playerFilterCallback = std::make_shared<PlayerFilterCallback>(this);
     playerFilterCallback_ = playerFilterCallback;
     MEDIA_LOG_D_SHORT("pipeline init");
@@ -241,6 +248,9 @@ int64_t HiPlayerImpl::GetPlayStartTime()
 void HiPlayerImpl::SetInstancdId(uint64_t instanceId)
 {
     instanceId_ = instanceId;
+    if (dfxAgent_ != nullptr) {
+        dfxAgent_->SetInstanceId(std::to_string(instanceId_));
+    }
     MEDIA_LOG_D_SHORT("HiPlayerImpl:: Set InstancdId %{public}d", instanceId);
 }
 
@@ -252,6 +262,7 @@ int32_t HiPlayerImpl::SetSource(const std::string& uri)
     playStatisticalInfo_.sourceUrl = "private";
     playStatisticalInfo_.sourceType = static_cast<int32_t>(SourceType::SOURCE_TYPE_URI);
     url_ = uri;
+    PlayerDfxSourceType sourceType = PlayerDfxSourceType::DFX_SOURCE_TYPE_UNKNOWN;
     if (IsFileUrl(uri)) {
         std::string realUriPath;
         int32_t result = GetRealPath(uri, realUriPath);
@@ -260,9 +271,17 @@ int32_t HiPlayerImpl::SetSource(const std::string& uri)
             return result;
         }
         url_ = "file://" + realUriPath;
+        sourceType = PlayerDfxSourceType::DFX_SOURCE_TYPE_URL_FILE;
     }
     if (url_.find("http") == 0 || url_.find("https") == 0) {
         isNetWorkPlay_ = true;
+        sourceType = PlayerDfxSourceType::DFX_SOURCE_TYPE_URL_NETWORK;
+    }
+    if (url_.find("fd://") == 0) {
+        sourceType = PlayerDfxSourceType::DFX_SOURCE_TYPE_URL_FD;
+    }
+    if (dfxAgent_ != nullptr) {
+        dfxAgent_->SetSourceType(sourceType);
     }
     hasExtSub_ = false;
     pipelineStates_ = PlayerStates::PLAYER_INITIALIZED;
@@ -286,6 +305,7 @@ int32_t HiPlayerImpl::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
     bufferDuration_ = strategy.preferredBufferDuration;
     preferHDR_ = strategy.preferredHdr;
     mimeType_ = mediaSource->GetMimeType();
+    PlayerDfxSourceType sourceType = PlayerDfxSourceType::DFX_SOURCE_TYPE_MEDIASOURCE_LOCAL;
     if (mimeType_ != AVMimeTypes::APPLICATION_M3U8 && IsFileUrl(url_)) {
         std::string realUriPath;
         int32_t result = GetRealPath(url_, realUriPath);
@@ -297,6 +317,10 @@ int32_t HiPlayerImpl::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
     }
     if (url_.find("http") == 0 || url_.find("https") == 0) {
         isNetWorkPlay_ = true;
+        sourceType = PlayerDfxSourceType::DFX_SOURCE_TYPE_MEDIASOURCE_NETWORK;
+    }
+    if (dfxAgent_ != nullptr) {
+        dfxAgent_->SetSourceType(sourceType);
     }
 
     pipelineStates_ = PlayerStates::PLAYER_INITIALIZED;
@@ -311,6 +335,9 @@ int32_t HiPlayerImpl::SetSource(const std::shared_ptr<IMediaDataSource>& dataSrc
     MEDIA_LOG_I_SHORT("SetSource in source stream");
     if (dataSrc == nullptr) {
         MEDIA_LOG_E_SHORT("SetSource error: dataSrc is null");
+    }
+    if (dfxAgent_ != nullptr) {
+        dfxAgent_->SetSourceType(PlayerDfxSourceType::DFX_SOURCE_TYPE_DATASRC);
     }
     playStatisticalInfo_.sourceType = static_cast<int32_t>(SourceType::SOURCE_TYPE_STREAM);
     dataSrc_ = dataSrc;
@@ -353,6 +380,9 @@ void HiPlayerImpl::ResetIfSourceExisted()
 
     pipeline_ = std::make_shared<OHOS::Media::Pipeline::Pipeline>();
     syncManager_ = std::make_shared<MediaSyncManager>();
+    if (syncManager_ != nullptr) {
+        syncManager_->SetEventReceiver(playerEventReceiver_);
+    }
     MEDIA_LOG_I_SHORT("Reset the relatived objects end");
 }
 
@@ -564,7 +594,33 @@ void HiPlayerImpl::UpdatePlayerStateAndNotify()
     NotifyResolutionChange();
     NotifyPositionUpdate();
     DoInitializeForHttp();
+    UpdateMediaFirstPts();
     OnStateChanged(PlayerStateId::READY);
+}
+
+void HiPlayerImpl::UpdateMediaFirstPts()
+{
+    FALSE_RETURN(syncManager_ != nullptr);
+    std::string mime;
+    std::vector<std::shared_ptr<Meta>> metaInfo = demuxer_->GetStreamMetaInfo();
+    int64_t startTime = 0;
+    for (const auto& trackInfo : metaInfo) {
+        if (trackInfo == nullptr || !(trackInfo->GetData(Tag::MIME_TYPE, mime))) {
+            MEDIA_LOG_W("TrackInfo is null or get mime fail");
+            continue;
+        }
+        if (!(mime.find("audio/") == 0 || mime.find("video/") == 0)) {
+            MEDIA_LOG_W("Not audio or video track");
+            continue;
+        }
+        if (trackInfo->GetData(Tag::MEDIA_START_TIME, startTime)) {
+            syncManager_->SetMediaStartPts(Plugins::HstTime2Us(startTime));
+        }
+    }
+    startTime = syncManager_->GetMediaStartPts();
+    if (startTime != HST_TIME_NONE) {
+        mediaStartPts_ = startTime;
+    }
 }
 
 bool HiPlayerImpl::BreakIfInterruptted()
@@ -582,6 +638,9 @@ void HiPlayerImpl::SetInterruptState(bool isInterruptNeeded)
     isInterruptNeeded_ = isInterruptNeeded;
     if (demuxer_ != nullptr) {
         demuxer_->SetInterruptState(isInterruptNeeded);
+    }
+    if (seekAgent_ != nullptr) {
+        seekAgent_->SetInterruptState(isInterruptNeeded);
     }
 }
 
@@ -867,7 +926,14 @@ int32_t HiPlayerImpl::Reset()
     }
     singleLoop_ = false;
     auto ret = Stop();
-    syncManager_->Reset();
+    if (syncManager_ != nullptr) {
+        syncManager_->ResetMediaStartPts();
+        syncManager_->Reset();
+    }
+    if (dfxAgent_ != nullptr) {
+        dfxAgent_->SetSourceType(PlayerDfxSourceType::DFX_SOURCE_TYPE_UNKNOWN);
+        dfxAgent_->ResetAgent();
+    }
     OnStateChanged(PlayerStateId::STOPPED);
     return ret;
 }
@@ -1041,7 +1107,7 @@ Status HiPlayerImpl::doSeek(int64_t seekPos, PlayerSeekMode mode)
         if (videoDecoder_ != nullptr) {
             videoDecoder_->SetSeekTime(seekTimeUs);
         }
-        seekAgent_ = std::make_shared<SeekAgent>(demuxer_);
+        seekAgent_ = std::make_shared<SeekAgent>(demuxer_, mediaStartPts_);
         SetFrameRateForSeekPerformance(FRAME_RATE_FOR_SEEK_PERFORMANCE);
         auto res = seekAgent_->Seek(seekPos);
         SetFrameRateForSeekPerformance(FRAME_RATE_DEFAULT);
@@ -1532,7 +1598,8 @@ int32_t HiPlayerImpl::DeselectTrack(int32_t trackId)
 {
     MEDIA_LOG_I("DeselectTrack trackId is " PUBLIC_LOG_D32, trackId);
     std::vector<std::shared_ptr<Meta>> metaInfo = demuxer_->GetStreamMetaInfo();
-    FALSE_RETURN_V_MSG_W(trackId >= 0 && trackId < metaInfo.size(), MSERR_INVALID_VAL, "DeselectTrack trackId invalid");
+    FALSE_RETURN_V_MSG_W(trackId >= 0 && trackId < static_cast<int32_t>(metaInfo.size()), MSERR_INVALID_VAL,
+        "DeselectTrack trackId invalid");
     std::string mime;
     if (!(metaInfo[trackId]->GetData(Tag::MIME_TYPE, mime))) {
         MEDIA_LOG_E("DeselectTrack trackId " PUBLIC_LOG_D32 "get mime error", trackId);
@@ -1890,6 +1957,7 @@ void HiPlayerImpl::OnEventSub(const Event &event)
             break;
     }
     OnEventSubTrackChange(event);
+    OnDfxEvent(event);
 }
 
 void HiPlayerImpl::OnEventSubTrackChange(const Event &event)
@@ -1905,6 +1973,27 @@ void HiPlayerImpl::OnEventSubTrackChange(const Event &event)
         }
         case EventType::EVENT_SUBTITLE_TRACK_CHANGE: {
             HandleSubtitleTrackChangeEvent(event);
+            break;
+        }
+        default:
+            break;
+    }
+}
+
+void HiPlayerImpl::OnDfxEvent(const Event &event)
+{
+    FALSE_RETURN(dfxAgent_ != nullptr);
+    switch (event.type) {
+        case EventType::EVENT_VIDEO_LAG: {
+            dfxAgent_->OnVideoLagEvent(AnyCast<int64_t>(event.param));
+            break;
+        }
+        case EventType::EVENT_AUDIO_LAG: {
+            dfxAgent_->OnAudioLagEvent(AnyCast<int64_t>(event.param));
+            break;
+        }
+        case EventType::EVENT_STREAM_LAG: {
+            dfxAgent_->OnStreamLagEvent(AnyCast<int64_t>(event.param));
             break;
         }
         default:
@@ -1947,6 +2036,9 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
     }
     pipeline_->AddHeadFilters({demuxer_});
     demuxer_->Init(playerEventReceiver_, playerFilterCallback_);
+    if (dfxAgent_ != nullptr) {
+        dfxAgent_->SetDemuxer(demuxer_);
+    }
 
     std::shared_ptr<PlayStrategy> playStrategy = std::make_shared<PlayStrategy>();
     playStrategy->width = preferedWidth_;

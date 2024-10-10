@@ -748,11 +748,11 @@ RetInfo AVTransCoderNapi::Configure(std::shared_ptr<AVTransCoderConfig> config)
     ret = transCoder_->SetVideoEncoder(config->videoCodecFormat);
         CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "SetVideoEncoder", "videoCodecFormat"));
     
-    ret = transCoder_->SetVideoEncodingBitRate(config->videoBitrate);
-        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "SetVideoEncoderBitRate", "videoBitrate"));
-
     ret = transCoder_->SetVideoSize(config->videoFrameWidth, config->videoFrameHeight);
         CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "SetVideoSize", "videoSize"));
+    
+    ret = transCoder_->SetVideoEncodingBitRate(config->videoBitrate);
+        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "SetVideoEncoderBitRate", "videoBitrate"));
 
     hasConfiged_ = true;
     return RetInfo(MSERR_EXT_API9_OK, "");

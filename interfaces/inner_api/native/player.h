@@ -41,6 +41,8 @@ struct AVPlayStrategy {
     uint32_t preferredBufferDuration = 0;
     bool preferredHdr = false;
     OHOS::Media::MediaType mutedMediaType = OHOS::Media::MediaType::MEDIA_TYPE_MAX_COUNT;
+    std::string preferredAudioLanguage = "";
+    std::string preferredSubtitleLanguage = "";
 };
 
 struct DrmInfoItem {
@@ -91,7 +93,7 @@ public:
     static constexpr std::string_view PLAYER_WIDTH = "width";
     static constexpr std::string_view PLAYER_HEIGHT = "height";
     static constexpr std::string_view PLAYER_MIME = "codec_mime";
-    static constexpr std::string_view PLAYER_BITRATE = "bitrate_vector";
+    static constexpr std::string_view PLAYER_BITRATE = "bitrate";
     static constexpr std::string_view PLAYER_FRAMERATE = "frame_rate";
     static constexpr std::string_view PLAYER_LANGUGAE = "language_code";
     static constexpr std::string_view PLAYER_SAMPLE_RATE = "sample_rate";
@@ -599,9 +601,18 @@ public:
      * @since 1.0
      * @version 1.0
      */
-    virtual int32_t SetPlaybackStrategy(AVPlayStrategy playbackStrategy) = 0;
+    virtual int32_t SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
+    {
+        (void)playbackStrategy;
+        return 0;
+    }
 
-    virtual int32_t SetMediaMuted(OHOS::Media::MediaType type, bool isMuted) = 0;
+    virtual int32_t SetMediaMuted(OHOS::Media::MediaType type, bool isMuted)
+    {
+        (void)type;
+        (void)isMuted;
+        return 0;
+    }
 
 #ifdef SUPPORT_AUDIO_ONLY
 #else
@@ -803,6 +814,20 @@ public:
         (void)start;
         (void)end;
         (void)mode;
+        return 0;
+    }
+    
+    /**
+     * @brief set get device change callback status.
+     *
+     * @return Returns {@link MSERR_OK} if the single display is set; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t SetDeviceChangeCbStatus(bool status)
+    {
+        (void)status;
         return 0;
     }
 };

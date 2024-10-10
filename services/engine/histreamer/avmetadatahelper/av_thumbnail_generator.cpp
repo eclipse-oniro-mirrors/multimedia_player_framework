@@ -96,6 +96,9 @@ Status AVThumbnailGenerator::InitDecoder()
     MEDIA_LOGD("Init decoder start.");
     if (videoDecoder_ != nullptr) {
         MEDIA_LOGD("AVThumbnailGenerator InitDecoder already.");
+        Format format;
+        format.PutDoubleValue(MediaDescriptionKey::MD_KEY_FRAME_RATE, VIDEO_FRAME_RATE);
+        videoDecoder_->SetParameter(format);
         videoDecoder_->Start();
         return Status::OK;
     }
@@ -140,13 +143,13 @@ std::shared_ptr<Meta> AVThumbnailGenerator::GetVideoTrackInfo()
                 mediaType == Plugins::MediaType::VIDEO, nullptr,
                 "GetTargetTrackInfo mediaType is not video, index:%{public}d, mediaType:%{public}d", index,
                 static_cast<int32_t>(mediaType));
+            CHECK_AND_RETURN_RET_LOG(trackInfos[index]->Get<Tag::VIDEO_FRAME_RATE>(frameRate_) && frameRate_ > 0,
+                nullptr, "failed to get video frame rate");
             trackIndex_ = index;
             MEDIA_LOGI("0x%{public}06" PRIXPTR " GetTrackInfo success trackIndex_:%{public}d, trackMime_:%{public}s",
                        FAKE_POINTER(this), trackIndex_, trackMime_.c_str());
             if (trackInfos[index]->Get<Tag::VIDEO_ROTATION>(rotation_)) {
-                MEDIA_LOGD("rotation %{public}d", static_cast<int32_t>(rotation_));
-            } else {
-                MEDIA_LOGD("no rotation");
+                MEDIA_LOGI("rotation %{public}d", static_cast<int32_t>(rotation_));
             }
             return trackInfos[trackIndex_];
         }
@@ -158,8 +161,6 @@ std::shared_ptr<Meta> AVThumbnailGenerator::GetVideoTrackInfo()
 void AVThumbnailGenerator::OnOutputFormatChanged(const MediaAVCodec::Format &format)
 {
     MEDIA_LOGD("OnOutputFormatChanged");
-    outputFormat_.GetIntValue(Tag::VIDEO_PIC_WIDTH, width_);
-    outputFormat_.GetIntValue(Tag::VIDEO_PIC_WIDTH, height_);
     outputFormat_ = format;
     int32_t width = 0;
     int32_t height = 0;
@@ -312,6 +313,8 @@ Status AVThumbnailGenerator::SeekToTime(int64_t timeMs, Plugins::SeekMode option
         option = Plugins::SeekMode::SEEK_PREVIOUS_SYNC;
     }
     auto res = mediaDemuxer_->SeekTo(timeMs, option, realSeekTime);
+    /* SEEK_NEXT_SYNC or SEEK_PREVIOUS_SYNC may cant find I frame and return seek failed
+       if seek failed, use SEEK_CLOSEST_SYNC seek again */
     if (res != Status::OK && option != Plugins::SeekMode::SEEK_CLOSEST_SYNC) {
         res = mediaDemuxer_->SeekTo(timeMs, Plugins::SeekMode::SEEK_CLOSEST_SYNC, realSeekTime);
         seekMode_ = Plugins::SeekMode::SEEK_CLOSEST_SYNC;
@@ -632,6 +635,9 @@ void AVThumbnailGenerator::PauseFetchFrame()
     mediaDemuxer_->Pause();
     mediaDemuxer_->Flush();
     videoDecoder_->Flush();
+    Format format;
+    format.PutDoubleValue(MediaDescriptionKey::MD_KEY_FRAME_RATE, frameRate_);
+    videoDecoder_->SetParameter(format);
 }
 }  // namespace Media
 }  // namespace OHOS

@@ -16,9 +16,9 @@
 #define HST_LOG_TAG "DraggingPlayerAgent"
 
 #include <dlfcn.h>
- 
-#include "dragging_player_agent.h"
+
 #include "common/log.h"
+#include "dragging_player_agent.h"
  
 namespace {
 const std::string REFERENCE_LIB_PATH = std::string(DRAGGING_PLAYER_PATH);

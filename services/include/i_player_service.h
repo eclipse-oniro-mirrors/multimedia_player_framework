@@ -514,6 +514,7 @@ public:
         (void)isMuted;
         return 0;
     }
+
     /**
      * @brief Set get max ampliutude callback status.
      *
@@ -524,6 +525,20 @@ public:
      * @version 1.0
      */
     virtual int32_t SetMaxAmplitudeCbStatus(bool status)
+    {
+        (void)status;
+        return 0;
+    }
+        
+    /**
+     * @brief set get device change callback status.
+     *
+     * @return Returns {@link MSERR_OK} if the single display is set; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t SetDeviceChangeCbStatus(bool status)
     {
         (void)status;
         return 0;
