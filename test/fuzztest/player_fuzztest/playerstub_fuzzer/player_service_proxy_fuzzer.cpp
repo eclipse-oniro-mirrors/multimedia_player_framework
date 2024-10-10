@@ -22,44 +22,50 @@
 
 namespace OHOS {
 namespace Media {
+namespace {
+    using Fuzzer = PlayerServiceProxyFuzzer;
+    using PlayerStubFunc = std::function<int32_t(Fuzzer*, uint8_t*, size_t, bool)>;
+    std::map<uint32_t, PlayerStubFunc> playerFuncs_ {
+        {Fuzzer::SET_LISTENER_OBJ, Fuzzer::SetListenerObjectStatic},
+        {Fuzzer::SET_SOURCE, Fuzzer::SetSourceStatic},
+        {Fuzzer::SET_MEDIA_DATA_SRC_OBJ, Fuzzer::SetMediaDataSourceStatic},
+        {Fuzzer::SET_FD_SOURCE, Fuzzer::SetFdSourceStatic},
+        {Fuzzer::ADD_SUB_SOURCE, Fuzzer::AddSubSourceStatic},
+        {Fuzzer::ADD_SUB_FD_SOURCE, Fuzzer::AddSubFdSourceStatic},
+        {Fuzzer::PLAY, Fuzzer::PlayStatic},
+        {Fuzzer::PREPARE, Fuzzer::PrepareStatic},
+        {Fuzzer::PREPAREASYNC, Fuzzer::PrepareAsyncStatic},
+        {Fuzzer::PAUSE, Fuzzer::PauseStatic},
+        {Fuzzer::STOP, Fuzzer::StopStatic},
+        {Fuzzer::RESET, Fuzzer::ResetStatic},
+        {Fuzzer::RELEASE, Fuzzer::ReleaseStatic},
+        {Fuzzer::SET_VOLUME, Fuzzer::SetVolumeStatic},
+        {Fuzzer::SEEK, Fuzzer::SeekStatic},
+        {Fuzzer::GET_CURRENT_TIME, Fuzzer::GetCurrentTimeStatic},
+        {Fuzzer::GET_DURATION, Fuzzer::GetDurationStatic},
+        {Fuzzer::SET_PLAYERBACK_SPEED, Fuzzer::SetPlaybackSpeedStatic},
+        {Fuzzer::GET_PLAYERBACK_SPEED, Fuzzer::GetPlaybackSpeedStatic},
+        {Fuzzer::SET_VIDEO_SURFACE, Fuzzer::SetVideoSurfaceStatic},
+        {Fuzzer::IS_PLAYING, Fuzzer::IsPlayingStatic},
+        {Fuzzer::IS_LOOPING, Fuzzer::IsLoopingStatic},
+        {Fuzzer::SET_LOOPING, Fuzzer::SetLoopingStatic},
+        {Fuzzer::SET_RENDERER_DESC, Fuzzer::SetParameterStatic},
+        {Fuzzer::DESTROY, Fuzzer::DestroyStubStatic},
+        {Fuzzer::SET_CALLBACK, Fuzzer::SetPlayerCallbackStatic},
+        {Fuzzer::GET_VIDEO_TRACK_INFO, Fuzzer::GetVideoTrackInfoStatic},
+        {Fuzzer::GET_AUDIO_TRACK_INFO, Fuzzer::GetAudioTrackInfoStatic},
+        {Fuzzer::GET_SUBTITLE_TRACK_INFO, Fuzzer::GetSubtitleTrackInfoStatic},
+        {Fuzzer::GET_VIDEO_WIDTH, Fuzzer::GetVideoWidthStatic},
+        {Fuzzer::GET_VIDEO_HEIGHT, Fuzzer::GetVideoHeightStatic},
+        {Fuzzer::SELECT_BIT_RATE, Fuzzer::SelectBitRateStatic},
+        {Fuzzer::SELECT_TRACK, Fuzzer::SelectTrackStatic},
+        {Fuzzer::DESELECT_TRACK, Fuzzer::DeselectTrackStatic},
+        {Fuzzer::GET_CURRENT_TRACK, Fuzzer::GetCurrentTrackStatic},
+    };
+}
 PlayerServiceProxyFuzzer::PlayerServiceProxyFuzzer(const sptr<IRemoteObject> &impl)
     : IRemoteProxy<IStandardPlayerService>(impl)
 {
-    playerFuncs_[SET_LISTENER_OBJ] = &PlayerServiceProxyFuzzer::SetListenerObject;
-    playerFuncs_[SET_SOURCE] = &PlayerServiceProxyFuzzer::SetSource;
-    playerFuncs_[SET_MEDIA_DATA_SRC_OBJ] = &PlayerServiceProxyFuzzer::SetMediaDataSource;
-    playerFuncs_[SET_FD_SOURCE] = &PlayerServiceProxyFuzzer::SetFdSource;
-    playerFuncs_[ADD_SUB_SOURCE] = &PlayerServiceProxyFuzzer::AddSubSource;
-    playerFuncs_[ADD_SUB_FD_SOURCE] = &PlayerServiceProxyFuzzer::AddSubFdSource;
-    playerFuncs_[PLAY] = &PlayerServiceProxyFuzzer::Play;
-    playerFuncs_[PREPARE] = &PlayerServiceProxyFuzzer::Prepare;
-    playerFuncs_[PREPAREASYNC] = &PlayerServiceProxyFuzzer::PrepareAsync;
-    playerFuncs_[PAUSE] = &PlayerServiceProxyFuzzer::Pause;
-    playerFuncs_[STOP] = &PlayerServiceProxyFuzzer::Stop;
-    playerFuncs_[RESET] = &PlayerServiceProxyFuzzer::Reset;
-    playerFuncs_[RELEASE] = &PlayerServiceProxyFuzzer::Release;
-    playerFuncs_[SET_VOLUME] = &PlayerServiceProxyFuzzer::SetVolume;
-    playerFuncs_[SEEK] = &PlayerServiceProxyFuzzer::Seek;
-    playerFuncs_[GET_CURRENT_TIME] = &PlayerServiceProxyFuzzer::GetCurrentTime;
-    playerFuncs_[GET_DURATION] = &PlayerServiceProxyFuzzer::GetDuration;
-    playerFuncs_[SET_PLAYERBACK_SPEED] = &PlayerServiceProxyFuzzer::SetPlaybackSpeed;
-    playerFuncs_[GET_PLAYERBACK_SPEED] = &PlayerServiceProxyFuzzer::GetPlaybackSpeed;
-    playerFuncs_[SET_VIDEO_SURFACE] = &PlayerServiceProxyFuzzer::SetVideoSurface;
-    playerFuncs_[IS_PLAYING] = &PlayerServiceProxyFuzzer::IsPlaying;
-    playerFuncs_[IS_LOOPING] = &PlayerServiceProxyFuzzer::IsLooping;
-    playerFuncs_[SET_LOOPING] = &PlayerServiceProxyFuzzer::SetLooping;
-    playerFuncs_[SET_RENDERER_DESC] = &PlayerServiceProxyFuzzer::SetParameter;
-    playerFuncs_[DESTROY] = &PlayerServiceProxyFuzzer::DestroyStub;
-    playerFuncs_[SET_CALLBACK] = &PlayerServiceProxyFuzzer::SetPlayerCallback;
-    playerFuncs_[GET_VIDEO_TRACK_INFO] = &PlayerServiceProxyFuzzer::GetVideoTrackInfo;
-    playerFuncs_[GET_AUDIO_TRACK_INFO] = &PlayerServiceProxyFuzzer::GetAudioTrackInfo;
-    playerFuncs_[GET_SUBTITLE_TRACK_INFO] = &PlayerServiceProxyFuzzer::GetSubtitleTrackInfo;
-    playerFuncs_[GET_VIDEO_WIDTH] = &PlayerServiceProxyFuzzer::GetVideoWidth;
-    playerFuncs_[GET_VIDEO_HEIGHT] = &PlayerServiceProxyFuzzer::GetVideoHeight;
-    playerFuncs_[SELECT_BIT_RATE] = &PlayerServiceProxyFuzzer::SelectBitRate;
-    playerFuncs_[SELECT_TRACK] = &PlayerServiceProxyFuzzer::SelectTrack;
-    playerFuncs_[DESELECT_TRACK] = &PlayerServiceProxyFuzzer::DeselectTrack;
-    playerFuncs_[GET_CURRENT_TRACK] = &PlayerServiceProxyFuzzer::GetCurrentTrack;
 }
 
 sptr<PlayerServiceProxyFuzzer> PlayerServiceProxyFuzzer::Create()
@@ -91,18 +97,19 @@ sptr<PlayerServiceProxyFuzzer> PlayerServiceProxyFuzzer::Create()
     return playerProxy;
 }
 
-void PlayerServiceProxyFuzzer::SendRequest(int32_t code, uint8_t *inputData, size_t size, bool isFuzz)
+void PlayerServiceProxyFuzzer::SendRequest(uint32_t code, uint8_t *inputData, size_t size, bool isFuzz)
 {
     auto itFunc = playerFuncs_.find(code);
     if (itFunc != playerFuncs_.end()) {
         auto memberFunc = itFunc->second;
         if (memberFunc != nullptr) {
-            (this->*memberFunc)(inputData, size, isFuzz);
+            memberFunc(this, inputData, size, isFuzz);
         }
     }
 }
 
-int32_t PlayerServiceProxyFuzzer::SetListenerObject(uint8_t *inputData, size_t size, bool isFuzz)
+int32_t PlayerServiceProxyFuzzer::SetListenerObjectStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData,
+    size_t size, bool isFuzz)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -114,10 +121,11 @@ int32_t PlayerServiceProxyFuzzer::SetListenerObject(uint8_t *inputData, size_t s
         return false;
     }
     (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
-    return SendRequest(SET_LISTENER_OBJ, data, reply, option);
+    return ptr->SendRequest(SET_LISTENER_OBJ, data, reply, option);
 }
 
-int32_t PlayerServiceProxyFuzzer::SetSource(uint8_t *inputData, size_t size, bool isFuzz)
+int32_t PlayerServiceProxyFuzzer::SetSourceStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size,
+    bool isFuzz)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -130,10 +138,11 @@ int32_t PlayerServiceProxyFuzzer::SetSource(uint8_t *inputData, size_t size, boo
     }
     std::string urlStr(reinterpret_cast<const char *>(inputData), size);
     (void)data.WriteString(urlStr);
-    return SendRequest(SET_SOURCE, data, reply, option);
+    return ptr->SendRequest(SET_SOURCE, data, reply, option);
 }
 
-int32_t PlayerServiceProxyFuzzer::SetMediaDataSource(uint8_t *inputData, size_t size, bool isFuzz)
+int32_t PlayerServiceProxyFuzzer::SetMediaDataSourceStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData,
+    size_t size, bool isFuzz)
 {
     (void)size;
     (void)isFuzz;
@@ -147,10 +156,11 @@ int32_t PlayerServiceProxyFuzzer::SetMediaDataSource(uint8_t *inputData, size_t 
         return false;
     }
     (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
-    return SendRequest(SET_MEDIA_DATA_SRC_OBJ, data, reply, option);
+    return ptr->SendRequest(SET_MEDIA_DATA_SRC_OBJ, data, reply, option);
 }
 
-int32_t PlayerServiceProxyFuzzer::SetFdSource(uint8_t *inputData, size_t size, bool isFuzz)
+int32_t PlayerServiceProxyFuzzer::SetFdSourceStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData,
+    size_t size, bool isFuzz)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -172,7 +182,7 @@ int32_t PlayerServiceProxyFuzzer::SetFdSource(uint8_t *inputData, size_t size, b
         (void)data.WriteFileDescriptor(fdValue);
         (void)data.WriteInt64(offsetValue);
         (void)data.WriteInt64(lengthValue);
-        return SendRequest(SET_FD_SOURCE, data, reply, option);
+        return ptr->SendRequest(SET_FD_SOURCE, data, reply, option);
     } else {
         const std::string path = "/data/test/media/H264_AAC.mp4";
         fdValue = open(path.c_str(), O_RDONLY);
@@ -193,13 +203,14 @@ int32_t PlayerServiceProxyFuzzer::SetFdSource(uint8_t *inputData, size_t size, b
         (void)data.WriteFileDescriptor(fdValue);
         (void)data.WriteInt64(offsetValue);
         (void)data.WriteInt64(lengthValue);
-        int32_t ret = SendRequest(SET_FD_SOURCE, data, reply, option);
+        int32_t ret = ptr->SendRequest(SET_FD_SOURCE, data, reply, option);
         (void)close(fdValue);
         return ret;
     }
 }
 
-int32_t PlayerServiceProxyFuzzer::AddSubSource(uint8_t *inputData, size_t size, bool isFuzz)
+int32_t PlayerServiceProxyFuzzer::AddSubSourceStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData,
+    size_t size, bool isFuzz)
 {
     (void)size;
     (void)isFuzz;
@@ -214,10 +225,11 @@ int32_t PlayerServiceProxyFuzzer::AddSubSource(uint8_t *inputData, size_t size, 
     }
     std::string url(reinterpret_cast<const char *>(inputData), size);
     (void)data.WriteString(url);
-    return SendRequest(ADD_SUB_SOURCE, data, reply, option);
+    return ptr->SendRequest(ADD_SUB_SOURCE, data, reply, option);
 }
 
-int32_t PlayerServiceProxyFuzzer::AddSubFdSource(uint8_t *inputData, size_t size, bool isFuzz)
+int32_t PlayerServiceProxyFuzzer::AddSubFdSourceStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData,
+    size_t size, bool isFuzz)
 {
     (void)size;
     (void)isFuzz;
@@ -237,10 +249,11 @@ int32_t PlayerServiceProxyFuzzer::AddSubFdSource(uint8_t *inputData, size_t size
     (void)data.WriteFileDescriptor(fdValue);
     (void)data.WriteInt64(offsetValue);
     (void)data.WriteInt64(lengthValue);
-    return SendRequest(ADD_SUB_FD_SOURCE, data, reply, option);
+    return ptr->SendRequest(ADD_SUB_FD_SOURCE, data, reply, option);
 }
 
-int32_t PlayerServiceProxyFuzzer::Play(uint8_t *inputData, size_t size, bool isFuzz)
+int32_t PlayerServiceProxyFuzzer::PlayStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size,
+    bool isFuzz)
 {
     (void)size;
     (void)isFuzz;
@@ -254,10 +267,11 @@ int32_t PlayerServiceProxyFuzzer::Play(uint8_t *inputData, size_t size, bool isF
         return false;
     }
     (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
-    return SendRequest(PLAY, data, reply, option);
+    return ptr->SendRequest(PLAY, data, reply, option);
 }
 
-int32_t PlayerServiceProxyFuzzer::Prepare(uint8_t *inputData, size_t size, bool isFuzz)
+int32_t PlayerServiceProxyFuzzer::PrepareStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size,
+    bool isFuzz)
 {
     (void)size;
     (void)isFuzz;
@@ -271,10 +285,11 @@ int32_t PlayerServiceProxyFuzzer::Prepare(uint8_t *inputData, size_t size, bool 
         return false;
     }
     (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
-    return SendRequest(PREPARE, data, reply, option);
+    return ptr->SendRequest(PREPARE, data, reply, option);
 }
 
-int32_t PlayerServiceProxyFuzzer::PrepareAsync(uint8_t *inputData, size_t size, bool isFuzz)
+int32_t PlayerServiceProxyFuzzer::PrepareAsyncStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData,
+    size_t size, bool isFuzz)
 {
     (void)size;
     (void)isFuzz;
@@ -288,10 +303,11 @@ int32_t PlayerServiceProxyFuzzer::PrepareAsync(uint8_t *inputData, size_t size, 
         return false;
     }
     (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
-    return SendRequest(PREPAREASYNC, data, reply, option);
+    return ptr->SendRequest(PREPAREASYNC, data, reply, option);
 }
 
-int32_t PlayerServiceProxyFuzzer::Pause(uint8_t *inputData, size_t size, bool isFuzz)
+int32_t PlayerServiceProxyFuzzer::PauseStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size,
+    bool isFuzz)
 {
     (void)size;
     (void)isFuzz;
@@ -305,10 +321,11 @@ int32_t PlayerServiceProxyFuzzer::Pause(uint8_t *inputData, size_t size, bool is
         return false;
     }
     (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
-    return SendRequest(PAUSE, data, reply, option);
+    return ptr->SendRequest(PAUSE, data, reply, option);
 }
 
-int32_t PlayerServiceProxyFuzzer::Stop(uint8_t *inputData, size_t size, bool isFuzz)
+int32_t PlayerServiceProxyFuzzer::StopStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size,
+    bool isFuzz)
 {
     (void)size;
     (void)isFuzz;
@@ -322,10 +339,11 @@ int32_t PlayerServiceProxyFuzzer::Stop(uint8_t *inputData, size_t size, bool isF
         return false;
     }
     (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
-    return SendRequest(STOP, data, reply, option);
+    return ptr->SendRequest(STOP, data, reply, option);
 }
 
-int32_t PlayerServiceProxyFuzzer::Reset(uint8_t *inputData, size_t size, bool isFuzz)
+int32_t PlayerServiceProxyFuzzer::ResetStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size,
+    bool isFuzz)
 {
     (void)size;
     (void)isFuzz;
@@ -339,10 +357,11 @@ int32_t PlayerServiceProxyFuzzer::Reset(uint8_t *inputData, size_t size, bool is
         return false;
     }
     (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
-    return SendRequest(RESET, data, reply, option);
+    return ptr->SendRequest(RESET, data, reply, option);
 }
 
-int32_t PlayerServiceProxyFuzzer::Release(uint8_t *inputData, size_t size, bool isFuzz)
+int32_t PlayerServiceProxyFuzzer::ReleaseStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size,
+    bool isFuzz)
 {
     (void)size;
     (void)isFuzz;
@@ -356,10 +375,11 @@ int32_t PlayerServiceProxyFuzzer::Release(uint8_t *inputData, size_t size, bool 
         return false;
     }
     (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
-    return SendRequest(RELEASE, data, reply, option);
+    return ptr->SendRequest(RELEASE, data, reply, option);
 }
 
-int32_t PlayerServiceProxyFuzzer::SetVolume(uint8_t *inputData, size_t size, bool isFuzz)
+int32_t PlayerServiceProxyFuzzer::SetVolumeStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size,
+    bool isFuzz)
 {
     (void)size;
     (void)isFuzz;
@@ -375,10 +395,11 @@ int32_t PlayerServiceProxyFuzzer::SetVolume(uint8_t *inputData, size_t size, boo
 
     (void)data.WriteFloat(*reinterpret_cast<int32_t *>(inputData));
     (void)data.WriteFloat(*reinterpret_cast<int32_t *>(inputData));
-    return SendRequest(SET_VOLUME, data, reply, option);
+    return ptr->SendRequest(SET_VOLUME, data, reply, option);
 }
 
-int32_t PlayerServiceProxyFuzzer::Seek(uint8_t *inputData, size_t size, bool isFuzz)
+int32_t PlayerServiceProxyFuzzer::SeekStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size,
+    bool isFuzz)
 {
     (void)size;
     (void)isFuzz;
@@ -394,10 +415,11 @@ int32_t PlayerServiceProxyFuzzer::Seek(uint8_t *inputData, size_t size, bool isF
 
     (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
     (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
-    return SendRequest(SEEK, data, reply, option);
+    return ptr->SendRequest(SEEK, data, reply, option);
 }
 
-int32_t PlayerServiceProxyFuzzer::GetCurrentTime(uint8_t *inputData, size_t size, bool isFuzz)
+int32_t PlayerServiceProxyFuzzer::GetCurrentTimeStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData,
+    size_t size, bool isFuzz)
 {
     (void)size;
     (void)isFuzz;
@@ -412,10 +434,11 @@ int32_t PlayerServiceProxyFuzzer::GetCurrentTime(uint8_t *inputData, size_t size
     }
 
     (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
-    return SendRequest(GET_CURRENT_TIME, data, reply, option);
+    return ptr->SendRequest(GET_CURRENT_TIME, data, reply, option);
 }
 
-int32_t PlayerServiceProxyFuzzer::GetDuration(uint8_t *inputData, size_t size, bool isFuzz)
+int32_t PlayerServiceProxyFuzzer::GetDurationStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData,
+    size_t size, bool isFuzz)
 {
     (void)size;
     (void)isFuzz;
@@ -430,10 +453,11 @@ int32_t PlayerServiceProxyFuzzer::GetDuration(uint8_t *inputData, size_t size, b
     }
 
     (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
-    return SendRequest(GET_DURATION, data, reply, option);
+    return ptr->SendRequest(GET_DURATION, data, reply, option);
 }
 
-int32_t PlayerServiceProxyFuzzer::SetPlaybackSpeed(uint8_t *inputData, size_t size, bool isFuzz)
+int32_t PlayerServiceProxyFuzzer::SetPlaybackSpeedStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData,
+    size_t size, bool isFuzz)
 {
     (void)size;
     (void)isFuzz;
@@ -448,10 +472,11 @@ int32_t PlayerServiceProxyFuzzer::SetPlaybackSpeed(uint8_t *inputData, size_t si
     }
 
     (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
-    return SendRequest(SET_PLAYERBACK_SPEED, data, reply, option);
+    return ptr->SendRequest(SET_PLAYERBACK_SPEED, data, reply, option);
 }
 
-int32_t PlayerServiceProxyFuzzer::GetPlaybackSpeed(uint8_t *inputData, size_t size, bool isFuzz)
+int32_t PlayerServiceProxyFuzzer::GetPlaybackSpeedStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData,
+    size_t size, bool isFuzz)
 {
     (void)size;
     (void)isFuzz;
@@ -466,10 +491,11 @@ int32_t PlayerServiceProxyFuzzer::GetPlaybackSpeed(uint8_t *inputData, size_t si
     }
 
     (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
-    return SendRequest(GET_PLAYERBACK_SPEED, data, reply, option);
+    return ptr->SendRequest(GET_PLAYERBACK_SPEED, data, reply, option);
 }
 
-int32_t PlayerServiceProxyFuzzer::SetVideoSurface(uint8_t *inputData, size_t size, bool isFuzz)
+int32_t PlayerServiceProxyFuzzer::SetVideoSurfaceStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData,
+    size_t size, bool isFuzz)
 {
     (void)size;
     (void)isFuzz;
@@ -484,10 +510,11 @@ int32_t PlayerServiceProxyFuzzer::SetVideoSurface(uint8_t *inputData, size_t siz
     }
 
     (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
-    return SendRequest(SET_VIDEO_SURFACE, data, reply, option);
+    return ptr->SendRequest(SET_VIDEO_SURFACE, data, reply, option);
 }
 
-int32_t PlayerServiceProxyFuzzer::IsPlaying(uint8_t *inputData, size_t size, bool isFuzz)
+int32_t PlayerServiceProxyFuzzer::IsPlayingStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size,
+    bool isFuzz)
 {
     (void)size;
     (void)isFuzz;
@@ -502,10 +529,11 @@ int32_t PlayerServiceProxyFuzzer::IsPlaying(uint8_t *inputData, size_t size, boo
     }
 
     (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
-    return SendRequest(IS_PLAYING, data, reply, option);
+    return ptr->SendRequest(IS_PLAYING, data, reply, option);
 }
 
-int32_t PlayerServiceProxyFuzzer::IsLooping(uint8_t *inputData, size_t size, bool isFuzz)
+int32_t PlayerServiceProxyFuzzer::IsLoopingStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size,
+    bool isFuzz)
 {
     (void)size;
     (void)isFuzz;
@@ -520,10 +548,11 @@ int32_t PlayerServiceProxyFuzzer::IsLooping(uint8_t *inputData, size_t size, boo
     }
 
     (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
-    return SendRequest(IS_LOOPING, data, reply, option);
+    return ptr->SendRequest(IS_LOOPING, data, reply, option);
 }
 
-int32_t PlayerServiceProxyFuzzer::SetLooping(uint8_t *inputData, size_t size, bool isFuzz)
+int32_t PlayerServiceProxyFuzzer::SetLoopingStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size,
+    bool isFuzz)
 {
     (void)size;
     (void)isFuzz;
@@ -537,10 +566,11 @@ int32_t PlayerServiceProxyFuzzer::SetLooping(uint8_t *inputData, size_t size, bo
         return false;
     }
     (void)data.WriteBool(*reinterpret_cast<int32_t *>(inputData) % 2);  // 2 true or false
-    return SendRequest(SET_LOOPING, data, reply, option);
+    return ptr->SendRequest(SET_LOOPING, data, reply, option);
 }
 
-int32_t PlayerServiceProxyFuzzer::SetParameter(uint8_t *inputData, size_t size, bool isFuzz)
+int32_t PlayerServiceProxyFuzzer::SetParameterStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData,
+    size_t size, bool isFuzz)
 {
     (void)isFuzz;
     MessageParcel data;
@@ -554,10 +584,11 @@ int32_t PlayerServiceProxyFuzzer::SetParameter(uint8_t *inputData, size_t size, 
     }
 
     (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
-    return SendRequest(SET_RENDERER_DESC, data, reply, option);
+    return ptr->SendRequest(SET_RENDERER_DESC, data, reply, option);
 }
 
-int32_t PlayerServiceProxyFuzzer::DestroyStub(uint8_t *inputData, size_t size, bool isFuzz)
+int32_t PlayerServiceProxyFuzzer::DestroyStubStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData,
+    size_t size, bool isFuzz)
 {
     (void)size;
     MessageParcel data;
@@ -573,10 +604,11 @@ int32_t PlayerServiceProxyFuzzer::DestroyStub(uint8_t *inputData, size_t size, b
     if (isFuzz) {
         (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
     }
-    return SendRequest(DESTROY, data, reply, option);
+    return ptr->SendRequest(DESTROY, data, reply, option);
 }
 
-int32_t PlayerServiceProxyFuzzer::SetPlayerCallback(uint8_t *inputData, size_t size, bool isFuzz)
+int32_t PlayerServiceProxyFuzzer::SetPlayerCallbackStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData,
+    size_t size, bool isFuzz)
 {
     (void)size;
     (void)isFuzz;
@@ -591,10 +623,11 @@ int32_t PlayerServiceProxyFuzzer::SetPlayerCallback(uint8_t *inputData, size_t s
     }
 
     (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
-    return SendRequest(SET_CALLBACK, data, reply, option);
+    return ptr->SendRequest(SET_CALLBACK, data, reply, option);
 }
 
-int32_t PlayerServiceProxyFuzzer::GetVideoTrackInfo(uint8_t *inputData, size_t size, bool isFuzz)
+int32_t PlayerServiceProxyFuzzer::GetVideoTrackInfoStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData,
+    size_t size, bool isFuzz)
 {
     (void)size;
     (void)isFuzz;
@@ -609,11 +642,12 @@ int32_t PlayerServiceProxyFuzzer::GetVideoTrackInfo(uint8_t *inputData, size_t s
     }
 
     (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
-    return SendRequest(GET_VIDEO_TRACK_INFO, data, reply, option);
+    return ptr->SendRequest(GET_VIDEO_TRACK_INFO, data, reply, option);
 }
 
 
-int32_t PlayerServiceProxyFuzzer::GetPlaybackInfo(uint8_t *inputData, size_t size, bool isFuzz)
+int32_t PlayerServiceProxyFuzzer::GetPlaybackInfoStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData,
+    size_t size, bool isFuzz)
 {
     (void)size;
     (void)isFuzz;
@@ -628,10 +662,11 @@ int32_t PlayerServiceProxyFuzzer::GetPlaybackInfo(uint8_t *inputData, size_t siz
     }
 
     (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
-    return SendRequest(GET_PLAYBACK_INFO, data, reply, option);
+    return ptr->SendRequest(GET_PLAYBACK_INFO, data, reply, option);
 }
 
-int32_t PlayerServiceProxyFuzzer::GetAudioTrackInfo(uint8_t *inputData, size_t size, bool isFuzz)
+int32_t PlayerServiceProxyFuzzer::GetAudioTrackInfoStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData,
+    size_t size, bool isFuzz)
 {
     (void)size;
     (void)isFuzz;
@@ -646,10 +681,11 @@ int32_t PlayerServiceProxyFuzzer::GetAudioTrackInfo(uint8_t *inputData, size_t s
     }
 
     (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
-    return SendRequest(GET_AUDIO_TRACK_INFO, data, reply, option);
+    return ptr->SendRequest(GET_AUDIO_TRACK_INFO, data, reply, option);
 }
 
-int32_t PlayerServiceProxyFuzzer::GetSubtitleTrackInfo(uint8_t *inputData, size_t size, bool isFuzz)
+int32_t PlayerServiceProxyFuzzer::GetSubtitleTrackInfoStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData,
+    size_t size, bool isFuzz)
 {
     (void)size;
     (void)isFuzz;
@@ -664,10 +700,11 @@ int32_t PlayerServiceProxyFuzzer::GetSubtitleTrackInfo(uint8_t *inputData, size_
     }
 
     (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
-    return SendRequest(GET_SUBTITLE_TRACK_INFO, data, reply, option);
+    return ptr->SendRequest(GET_SUBTITLE_TRACK_INFO, data, reply, option);
 }
 
-int32_t PlayerServiceProxyFuzzer::GetVideoWidth(uint8_t *inputData, size_t size, bool isFuzz)
+int32_t PlayerServiceProxyFuzzer::GetVideoWidthStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData,
+    size_t size, bool isFuzz)
 {
     (void)size;
     (void)isFuzz;
@@ -682,10 +719,11 @@ int32_t PlayerServiceProxyFuzzer::GetVideoWidth(uint8_t *inputData, size_t size,
     }
 
     (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
-    return SendRequest(GET_VIDEO_WIDTH, data, reply, option);
+    return ptr->SendRequest(GET_VIDEO_WIDTH, data, reply, option);
 }
 
-int32_t PlayerServiceProxyFuzzer::GetVideoHeight(uint8_t *inputData, size_t size, bool isFuzz)
+int32_t PlayerServiceProxyFuzzer::GetVideoHeightStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData,
+    size_t size, bool isFuzz)
 {
     (void)size;
     (void)isFuzz;
@@ -700,10 +738,11 @@ int32_t PlayerServiceProxyFuzzer::GetVideoHeight(uint8_t *inputData, size_t size
     }
 
     (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
-    return SendRequest(GET_VIDEO_HEIGHT, data, reply, option);
+    return ptr->SendRequest(GET_VIDEO_HEIGHT, data, reply, option);
 }
 
-int32_t PlayerServiceProxyFuzzer::SelectBitRate(uint8_t *inputData, size_t size, bool isFuzz)
+int32_t PlayerServiceProxyFuzzer::SelectBitRateStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData,
+    size_t size, bool isFuzz)
 {
     (void)size;
     (void)isFuzz;
@@ -718,10 +757,11 @@ int32_t PlayerServiceProxyFuzzer::SelectBitRate(uint8_t *inputData, size_t size,
     }
 
     (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
-    return SendRequest(SELECT_BIT_RATE, data, reply, option);
+    return ptr->SendRequest(SELECT_BIT_RATE, data, reply, option);
 }
 
-int32_t PlayerServiceProxyFuzzer::SelectTrack(uint8_t *inputData, size_t size, bool isFuzz)
+int32_t PlayerServiceProxyFuzzer::SelectTrackStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData,
+    size_t size, bool isFuzz)
 {
     (void)size;
     (void)isFuzz;
@@ -736,10 +776,11 @@ int32_t PlayerServiceProxyFuzzer::SelectTrack(uint8_t *inputData, size_t size, b
     }
 
     (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
-    return SendRequest(SELECT_TRACK, data, reply, option);
+    return ptr->SendRequest(SELECT_TRACK, data, reply, option);
 }
 
-int32_t PlayerServiceProxyFuzzer::DeselectTrack(uint8_t *inputData, size_t size, bool isFuzz)
+int32_t PlayerServiceProxyFuzzer::DeselectTrackStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData,
+    size_t size, bool isFuzz)
 {
     (void)size;
     (void)isFuzz;
@@ -754,10 +795,11 @@ int32_t PlayerServiceProxyFuzzer::DeselectTrack(uint8_t *inputData, size_t size,
     }
 
     (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
-    return SendRequest(DESELECT_TRACK, data, reply, option);
+    return ptr->SendRequest(DESELECT_TRACK, data, reply, option);
 }
 
-int32_t PlayerServiceProxyFuzzer::GetCurrentTrack(uint8_t *inputData, size_t size, bool isFuzz)
+int32_t PlayerServiceProxyFuzzer::GetCurrentTrackStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData,
+    size_t size, bool isFuzz)
 {
     (void)size;
     (void)isFuzz;
@@ -772,7 +814,7 @@ int32_t PlayerServiceProxyFuzzer::GetCurrentTrack(uint8_t *inputData, size_t siz
     }
 
     (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
-    return SendRequest(GET_CURRENT_TRACK, data, reply, option);
+    return ptr->SendRequest(GET_CURRENT_TRACK, data, reply, option);
 }
 
 int32_t PlayerServiceProxyFuzzer::SendRequest(uint32_t code,
