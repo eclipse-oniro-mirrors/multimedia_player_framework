@@ -293,7 +293,7 @@ void CacheBuffer::DealWriteData(size_t length)
                 return;
             }
             bufDesc.bufLength = length;
-            bufDesc.dataLength = copyLength;
+            bufDesc.dataLength = length;
             cacheDataFrameIndex_ += copyLength;
         }
         cacheBufferLock_.unlock();
