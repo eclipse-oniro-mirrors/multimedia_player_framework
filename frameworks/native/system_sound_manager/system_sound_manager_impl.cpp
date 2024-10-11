@@ -739,8 +739,9 @@ int32_t SystemSoundManagerImpl::SetSystemToneUri(const shared_ptr<Context> &cont
 
     if (uri == NO_SYSTEM_SOUND) {
         int32_t changedRows = SetNoSystemToneUri(dataShareHelper, systemToneType);
+        MEDIA_LOGI("SetNoSystemToneUri result: changedRows %{public}d", changedRows);
         dataShareHelper->Release();
-        return changedRows > 0 ? SUCCESS : ERROR;
+        return SUCCESS;
     }
 
     DataShare::DatashareBusinessError businessError;
