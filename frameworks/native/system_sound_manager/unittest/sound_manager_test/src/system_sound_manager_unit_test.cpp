@@ -820,7 +820,7 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetSystemToneUri_001, Test
 /**
  * @tc.name  : Test AddCustomizedToneByFdAndOffset API
  * @tc.number: Media_SoundManager_AddCustomizedToneByFdAndOffset_002
- * @tc.desc  : Test AddCustomizedToneByFdAndOffset interface. Returns attributes of the default system tone.
+ * @tc.desc  : Test AddCustomizedToneByFdAndOffset interface.
  */
 HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_AddCustomizedToneByFdAndOffset_002, TestSize.Level2)
 {
@@ -856,7 +856,7 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_AddCustomizedToneByFdAndOf
 /**
  * @tc.name  : Test AddCustomizedToneByFdAndOffset API
  * @tc.number: Media_SoundManager_AddCustomizedToneByFdAndOffset_003
- * @tc.desc  : Test AddCustomizedToneByFdAndOffset interface. Returns attributes of the default system tone.
+ * @tc.desc  : Test AddCustomizedToneByFdAndOffset interface.
  */
 HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_AddCustomizedToneByFdAndOffset_003, TestSize.Level2)
 {
@@ -1096,6 +1096,69 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetVibrateTypeByStyle_001,
     EXPECT_NE(systemSoundManager_, nullptr);
     systemSoundManager_->GetVibrateTypeByStyle(vibrateAssetByUri->GetVibrateType(),
     HapticsStyle::HAPTICS_STYLE_STANDARD, vibrateType);
+    EXPECT_NE(systemSoundManager_, nullptr);
+}
+
+/**
+ * @tc.name  : Test SetSystemToneUri API
+ * @tc.number: Media_SoundManager_SetSystemToneUri_002
+ * @tc.desc  : Test SetSystemToneUri interface.
+ */
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_SetSystemToneUri_002, TestSize.Level2)
+{
+    auto systemSoundManager_ = std::make_shared<SystemSoundManagerImpl>();
+    std::shared_ptr<Context> context_ = std::make_shared<ContextImpl>();
+    std::string uri = NO_SYSTEM_SOUND;
+
+    int32_t result = systemSoundManager_->SetSystemToneUri(context_, uri,
+        SystemToneType::SYSTEM_TONE_TYPE_NOTIFICATION);
+    EXPECT_NE(systemSoundManager_, nullptr);
+
+    result = systemSoundManager_->SetSystemToneUri(context_, uri,
+        SystemToneType::SYSTEM_TONE_TYPE_SIM_CARD_0);
+    EXPECT_NE(systemSoundManager_, nullptr);
+
+    result = systemSoundManager_->SetSystemToneUri(context_, uri,
+        SystemToneType::SYSTEM_TONE_TYPE_SIM_CARD_1);
+    EXPECT_NE(systemSoundManager_, nullptr);
+}
+
+/**
+ * @tc.name  : Test IsSystemToneTypeValid API
+ * @tc.number: Media_SoundManager_IsSystemToneTypeValid_002
+ * @tc.desc  : Test IsSystemToneTypeValid interface.
+ */
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_IsSystemToneTypeValid_002, TestSize.Level2)
+{
+    bool result;
+    auto systemSoundManager_ = std::make_shared<SystemSoundManagerImpl>();
+    result = systemSoundManager_->IsSystemToneTypeValid(SystemToneType::SYSTEM_TONE_TYPE_SIM_CARD_1);
+    EXPECT_EQ(result, true);
+}
+
+/**
+ * @tc.name  : Test GetDefaultRingtoneUri API
+ * @tc.number: Media_SoundManager_GetDefaultRingtoneUri_002
+ * @tc.desc  : Test GetDefaultRingtoneUri interface.
+ */
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetDefaultRingtoneUri_002, TestSize.Level2)
+{
+    int32_t RINGTONE_TYPE_SIM_CARD_DEFAULT = 2;
+    auto systemSoundManager_ = std::make_shared<SystemSoundManagerImpl>();
+    systemSoundManager_->GetDefaultRingtoneUri(static_cast<OHOS::Media::RingtoneType>(RINGTONE_TYPE_SIM_CARD_DEFAULT));
+    EXPECT_NE(systemSoundManager_, nullptr);
+}
+
+/**
+ * @tc.name  : Test GetDefaultSystemToneUri API
+ * @tc.number: Media_SoundManager_GetDefaultSystemToneUri_002
+ * @tc.desc  : Test GetDefaultSystemToneUri interface.
+ */
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetDefaultSystemToneUri_002, TestSize.Level2)
+{
+    int32_t SYSTEM_TONE_TYPE_SIM_CARD_DEFAULT = 2;
+    auto systemSoundManager_ = std::make_shared<SystemSoundManagerImpl>();
+    systemSoundManager_->GetDefaultSystemToneUri(static_cast<SystemToneType>(SYSTEM_TONE_TYPE_SIM_CARD_DEFAULT));
     EXPECT_NE(systemSoundManager_, nullptr);
 }
 } // namespace Media
