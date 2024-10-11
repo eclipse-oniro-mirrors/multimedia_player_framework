@@ -90,11 +90,11 @@ int ScreenCaptureMonitorServiceStub::OnRemoteRequest(uint32_t code, MessageParce
             if (ret != MSERR_OK) {
                 MEDIA_LOGE("calling memberFunc is failed.");
             }
-        return MSERR_OK;
+            return MSERR_OK;
+        }
     }
-}
-MEDIA_LOGW("ScreenCaptureMonitorServiceStub: no member func supporting, applying default process");
-return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
+    MEDIA_LOGW("ScreenCaptureMonitorServiceStub: no member func supporting, applying default process");
+    return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
 }
 
 int32_t ScreenCaptureMonitorServiceStub::SetListenerObject(const sptr<IRemoteObject> &object)

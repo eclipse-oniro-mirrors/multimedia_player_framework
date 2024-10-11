@@ -1506,6 +1506,7 @@ int32_t ScreenCaptureServer::StartPrivacyWindow()
         want.SetElement(element);
         want.SetParam("params", comStr);
         want.SetParam("appLabel", callingLabel_);
+        want.SetParam("sessionId", sessionId_);
         ret = AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want);
         MEDIA_LOGI("StartAbility end %{public}d, DeviceType : PC", ret);
     }
