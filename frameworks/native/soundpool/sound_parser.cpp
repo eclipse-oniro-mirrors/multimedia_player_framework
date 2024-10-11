@@ -241,11 +241,7 @@ void SoundDecoderCallback::OnOutputFormatChanged(const Format &format)
 
 void SoundDecoderCallback::OnInputBufferAvailable(uint32_t index, std::shared_ptr<AVSharedMemory> buffer)
 {
-    while (!amutex_.try_lock()) {
-        if (!isRunning_.load()) {
-            return;
-        }
-    }
+    amutex_.lock();
     MediaAVCodec::AVCodecBufferFlag bufferFlag = MediaAVCodec::AVCodecBufferFlag::AVCODEC_BUFFER_FLAG_NONE;
     MediaAVCodec::AVCodecBufferInfo sampleInfo;
     if (demuxer_ == nullptr || audioDec_ == nullptr) {
@@ -310,11 +306,7 @@ void SoundDecoderCallback::DealBufferRawFile(MediaAVCodec::AVCodecBufferFlag buf
 void SoundDecoderCallback::OnOutputBufferAvailable(uint32_t index, AVCodecBufferInfo info, AVCodecBufferFlag flag,
     std::shared_ptr<AVSharedMemory> buffer)
 {
-    while (!amutex_.try_lock()) {
-        if (!isRunning_.load()) {
-            return;
-        }
-    }
+    amutex_.lock();
     if (demuxer_ == nullptr || audioDec_ == nullptr) {
         MEDIA_LOGE("SoundDecoderCallback Output demuxer_:%{public}d, audioDec_:%{public}d,",
             demuxer_ == nullptr, audioDec_ == nullptr);
@@ -366,12 +358,20 @@ int32_t SoundDecoderCallback::Release()
 {
     int32_t ret = MSERR_OK;
     MEDIA_LOGI("SoundDecoderCallback::Release");
-    std::unique_lock<std::mutex> lock(amutex_);
-    isRunning_.store(false);
-    if (audioDec_ != nullptr) {
-        ret = audioDec_->Release();
-        audioDec_.reset();
+    //here use audioDec, the reason is the same reason in CacheBuffer::Release().please check it
+    //in CacheBuffer::Release()
+    std::shared_ptr<MediaAVCodec::AVCodecAudioDecoder> audioDec;
+    {
+        std::lock_guard lock(amutex_);
+        audioDec = std::move(audioDec_);
+        audioDec_ = nullptr;
     }
+    if (audioDec != nullptr) {
+        ret = audioDec->Release();
+        audioDec.reset();
+        audioDec = nullptr;
+    }
+    std::lock_guard lock(amutex_);
     if (demuxer_ != nullptr) demuxer_.reset();
     if (listener_ != nullptr) listener_.reset();
     if (!availableAudioBuffers_.empty()) availableAudioBuffers_.clear();
