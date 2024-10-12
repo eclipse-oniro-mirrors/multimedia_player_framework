@@ -81,6 +81,8 @@ private:
     void OnTrackChangedCb(const int32_t extra, const Format &infoBody);
     void OnTrackInfoUpdate(const int32_t extra, const Format &infoBody);
     bool IsValidState(PlayerStates state, std::string &stateStr);
+    void SetDrmInfoData(const uint8_t *drmInfoAddr, int32_t infoCount,
+        std::multimap<std::string, std::vector<uint8_t>> &drmInfoMap);
 
     std::mutex mutex_;
     napi_env env_ = nullptr;
