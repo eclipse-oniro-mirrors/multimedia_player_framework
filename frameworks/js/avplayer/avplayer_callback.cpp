@@ -1202,11 +1202,11 @@ void AVPlayerCallback::OnMaxAmplitudeCollectedCb(const int32_t extra, const Form
     NapiCallback::CompleteCallback(env_, cb);
 }
 
-void AVPlayerCallback::SetDrmInfoData(const uint8_t *drmInfoAddr, int32_t infoCount,
+int32_t AVPlayerCallback::SetDrmInfoData(const uint8_t *drmInfoAddr, int32_t infoCount,
     std::multimap<std::string, std::vector<uint8_t>> &drmInfoMap)
 {
     DrmInfoItem *drmInfos = reinterpret_cast<DrmInfoItem*>(const_cast<uint8_t *>(drmInfoAddr));
-    CHECK_AND_RETURN_LOG(drmInfos != nullptr, "cast drmInfos nullptr");
+    CHECK_AND_RETURN_RET_LOG(drmInfos != nullptr, MSERR_INVALID_VAL, "cast drmInfos nullptr");
     for (int32_t i = 0; i < infoCount; i++) {
         DrmInfoItem temp = drmInfos[i];
         std::stringstream ssConverter;
@@ -1222,7 +1222,7 @@ void AVPlayerCallback::SetDrmInfoData(const uint8_t *drmInfoAddr, int32_t infoCo
     if (listener_ != nullptr) {
         listener_->NotifyDrmInfoUpdated(drmInfoMap);
     }
-    return;
+    return MSERR_OK;
 }
 
 void AVPlayerCallback::OnDrmInfoUpdatedCb(const int32_t extra, const Format &infoBody)
@@ -1251,7 +1251,8 @@ void AVPlayerCallback::OnDrmInfoUpdatedCb(const int32_t extra, const Format &inf
     CHECK_AND_RETURN_LOG(infoCount > 0, "get drminfo count is illegal");
 
     std::multimap<std::string, std::vector<uint8_t>> drmInfoMap;
-    SetDrmInfoData(drmInfoAddr, infoCount, drmInfoMap);
+    int32_t ret = SetDrmInfoData(drmInfoAddr, infoCount, drmInfoMap);
+    CHECK_AND_RETURN_LOG(ret == MSERR_OK, "SetDrmInfoData err");
     NapiCallback::ObjectArray *cb = new(std::nothrow) NapiCallback::ObjectArray();
     CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new ObjectArray");
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_DRM_INFO_UPDATE);
