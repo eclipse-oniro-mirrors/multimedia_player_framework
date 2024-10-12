@@ -81,7 +81,7 @@ private:
     void OnTrackChangedCb(const int32_t extra, const Format &infoBody);
     void OnTrackInfoUpdate(const int32_t extra, const Format &infoBody);
     bool IsValidState(PlayerStates state, std::string &stateStr);
-    void SetDrmInfoData(const uint8_t *drmInfoAddr, int32_t infoCount,
+    int32_t SetDrmInfoData(const uint8_t *drmInfoAddr, int32_t infoCount,
         std::multimap<std::string, std::vector<uint8_t>> &drmInfoMap);
     bool IsAPI13IOError(MediaServiceExtErrCodeAPI9 error);
     int32_t GetApiversion(int32_t uid);
