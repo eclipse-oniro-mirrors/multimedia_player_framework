@@ -229,6 +229,7 @@ int32_t AudioHapticVibratorImpl::StartVibrate(const AudioLatencyMode &latencyMod
         return StartVibrateForAVPlayer();
     } else if (latencyMode == AUDIO_LATENCY_MODE_FAST) {
         if (isSupportEffectId_) {
+            std::lock_guard<std::mutex> lock(vibrateMutex_);
             (void)Sensors::SetUsage(vibratorUsage_);
             result = Sensors::PlayPrimitiveEffect(hapticSource_.effectId.c_str(), vibrateIntensity_);
             MEDIA_LOGD("StartVibrate effectId: %{public}s, result: %{public}d", hapticSource_.effectId.c_str(), result);
