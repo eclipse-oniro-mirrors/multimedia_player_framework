@@ -358,6 +358,7 @@ private:
     void SystemRecorderInterruptLatestRecorder();
     int32_t ReStartMicForVoIPStatusSwitch();
     void RegisterPrivateWindowListener();
+    bool NoPreSetSpecifiedScreenParam();
 
 private:
     std::mutex mutex_;
