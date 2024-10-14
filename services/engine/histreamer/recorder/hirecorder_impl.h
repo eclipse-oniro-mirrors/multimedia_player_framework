@@ -153,7 +153,7 @@ private:
     static constexpr uint32_t ENCODE_USAGE = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_CPU_WRITE |
         BUFFER_USAGE_MEM_DMA | BUFFER_USAGE_VIDEO_ENCODER;
     std::string recorderId_;
-    std::string avRecorderTag_ = "[AVRcorder]";
+    std::string avRecorderTag_ = "[AVRecorder]";
     std::string bundleName_;
     std::string codecMimeType_ = "";
     uint64_t instanceId_ = 0;
