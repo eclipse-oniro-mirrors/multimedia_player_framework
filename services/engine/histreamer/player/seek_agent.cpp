@@ -210,6 +210,7 @@ Status SeekAgent::OnAudioBufferFilled(std::shared_ptr<AVBuffer>& buffer,
             isAudioTargetArrived_ = true;
         }
         MEDIA_LOG_I("audio arrive target.");
+        FALSE_RETURN_V_MSG_E(demuxer_ != nullptr, Status::ERROR_NULL_POINTER, "demuxer_ is nullptr.");
         demuxer_->PauseTaskByTrackId(trackId);
         targetArrivedCond_.NotifyAll();
 
@@ -231,6 +232,7 @@ Status SeekAgent::OnVideoBufferFilled(std::shared_ptr<AVBuffer>& buffer,
             isVideoTargetArrived_ = true;
         }
         MEDIA_LOG_I("video arrive target");
+        FALSE_RETURN_V_MSG_E(demuxer_ != nullptr, Status::ERROR_NULL_POINTER, "demuxer_ is nullptr.");
         demuxer_->PauseTaskByTrackId(trackId);
         targetArrivedCond_.NotifyAll();
         producer->ReturnBuffer(buffer, true);
