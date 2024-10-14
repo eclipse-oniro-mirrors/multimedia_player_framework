@@ -240,18 +240,18 @@ void CacheBuffer::OnWriteData(size_t length)
         return;
     }
     if (cacheDataFrameIndex_ >= static_cast<size_t>(fullCacheData_->size)) {
-        if (havePlayedCount_ == loop_) {
+        cacheBufferLock_.lock();
+        if (loop_ >= 0 && havePlayedCount_ >= loop_) {
             MEDIA_LOGI("CacheBuffer stream write finish, cacheDataFrameIndex_:%{public}zu,"
                 " havePlayedCount_:%{public}d, loop:%{public}d, streamID_:%{public}d, length: %{public}zu",
                 cacheDataFrameIndex_, havePlayedCount_, loop_, streamID_, length);
+            cacheBufferLock_.unlock();
             Stop(streamID_);
             return;
         }
-        {
-            std::lock_guard lock(cacheBufferLock_);
-            cacheDataFrameIndex_ = 0;
-            havePlayedCount_++;
-        }
+        cacheDataFrameIndex_ = 0;
+        havePlayedCount_++;
+        cacheBufferLock_.unlock();
     }
     DealWriteData(length);
 }
@@ -300,11 +300,7 @@ void CacheBuffer::OnFirstFrameWriting(uint64_t latency)
 
 int32_t CacheBuffer::Stop(const int32_t streamID)
 {
-    while (!cacheBufferLock_.try_lock()) {
-        if (!isRunning_.load()) {
-            return MSERR_OK;
-        }
-    }
+    std::lock_guard lock(cacheBufferLock_);
     if (streamID == streamID_) {
         if (audioRenderer_ != nullptr && isRunning_.load()) {
             isRunning_.store(false);
@@ -327,10 +323,8 @@ int32_t CacheBuffer::Stop(const int32_t streamID)
                 cacheBufferCallback_->OnPlayFinished();
             }
         }
-        cacheBufferLock_.unlock();
         return MSERR_OK;
     }
-    cacheBufferLock_.unlock();
     return MSERR_INVALID_VAL;
 }
 
@@ -393,14 +387,26 @@ int32_t CacheBuffer::SetParallelPlayFlag(const int32_t streamID, const bool para
 
 int32_t CacheBuffer::Release()
 {
-    std::lock_guard lock(cacheBufferLock_);
-    MEDIA_LOGI("CacheBuffer release, streamID:%{public}d", streamID_);
-    isRunning_.store(false);
-    if (audioRenderer_ != nullptr) {
-        audioRenderer_->Stop();
-        audioRenderer_->Release();
+    // Define a temporary variable.Let audioRenderer_ to audioRenderer can protect audioRenderer_ concurrently
+    // modified.So will not cause null pointers.
+    std::unique_ptr<AudioStandard::AudioRenderer> audioRenderer;
+    {
+        std::lock_guard lock(cacheBufferLock_);
+        audioRenderer = std::move(audioRenderer_);
         audioRenderer_ = nullptr;
+        isRunning_.store(false);
     }
+
+    MEDIA_LOGI("CacheBuffer::Release start, streamID:%{public}d", streamID_);
+    // Use audioRenderer to release and don't lock, so it will not cause dead lock. if here locked, audioRenderer
+    // will wait callback thread stop, and the callback thread can't get the lock, it will cause dead lock
+    if (audioRenderer != nullptr) {
+        audioRenderer->Stop();
+        audioRenderer->Release();
+        audioRenderer = nullptr;
+    }
+
+    std::lock_guard lock(cacheBufferLock_);
     if (!cacheData_.empty()) cacheData_.clear();
     if (fullCacheData_ != nullptr) fullCacheData_.reset();
     if (callback_ != nullptr) callback_.reset();
