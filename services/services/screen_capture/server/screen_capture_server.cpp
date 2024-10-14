@@ -1476,6 +1476,12 @@ int32_t ScreenCaptureServer::RegisterServerCallbacks()
     return MSERR_OK;
 }
 
+bool ScreenCaptureServer::NoPreSetSpecifiedScreenParam()
+{
+    return captureConfig_.videoInfo.videoCapInfo.displayId == static_cast<uint64_t>(-1) && missionIds_.size() == 0 &&
+        captureConfig_.videoInfo.videoCapInfo.taskIDs.size() == 0;
+}
+
 int32_t ScreenCaptureServer::StartPrivacyWindow()
 {
     auto bundleName = GetClientBundleName(appInfo_.appUid);
@@ -1492,14 +1498,7 @@ int32_t ScreenCaptureServer::StartPrivacyWindow()
     AAFwk::Want want;
     ErrCode ret = ERR_INVALID_VALUE;
 #ifdef PC_STANDARD
-    if (captureConfig_.captureMode == CAPTURE_HOME_SCREEN) {
-        want.SetElementName(GetScreenCaptureSystemParam()["const.multimedia.screencapture.dialogconnectionbundlename"],
-            GetScreenCaptureSystemParam()["const.multimedia.screencapture.dialogconnectionabilityname"]);
-        auto connection_ = sptr<UIExtensionAbilityConnection>(new (std::nothrow) UIExtensionAbilityConnection(comStr));
-        ret = OHOS::AAFwk::ExtensionManagerClient::GetInstance().ConnectServiceExtensionAbility(want, connection_,
-            nullptr, -1);
-        MEDIA_LOGI("ConnectServiceExtensionAbility end %{public}d, DeviceType : PC", ret);
-    } else if (captureConfig_.captureMode != CAPTURE_INVAILD) {
+    if (captureConfig_.captureMode == CAPTURE_SPECIFIED_SCREEN && NoPreSetSpecifiedScreenParam()) {
         AppExecFwk::ElementName element("",
             GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"],
             SELECT_ABILITY_NAME); // DeviceID
@@ -1509,6 +1508,13 @@ int32_t ScreenCaptureServer::StartPrivacyWindow()
         want.SetParam("sessionId", sessionId_);
         ret = AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want);
         MEDIA_LOGI("StartAbility end %{public}d, DeviceType : PC", ret);
+    } else {
+        want.SetElementName(GetScreenCaptureSystemParam()["const.multimedia.screencapture.dialogconnectionbundlename"],
+            GetScreenCaptureSystemParam()["const.multimedia.screencapture.dialogconnectionabilityname"]);
+        auto connection_ = sptr<UIExtensionAbilityConnection>(new (std::nothrow) UIExtensionAbilityConnection(comStr));
+        ret = OHOS::AAFwk::ExtensionManagerClient::GetInstance().ConnectServiceExtensionAbility(want, connection_,
+            nullptr, -1);
+        MEDIA_LOGI("ConnectServiceExtensionAbility end %{public}d, DeviceType : PC", ret);
     }
 #else
     want.SetElementName(GetScreenCaptureSystemParam()["const.multimedia.screencapture.dialogconnectionbundlename"],
