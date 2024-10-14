@@ -2533,6 +2533,7 @@ int32_t ScreenCaptureServer::StopScreenCaptureInner(AVScreenCaptureStateCode sta
         audioSource_->UnregisterAudioRendererEventListener(audioSource_->GetAppPid());
     }
     DisplayManager::GetInstance().UnregisterPrivateWindowListener(displayListener_);
+    displayListener_ = nullptr;
     if (captureState_ == AVScreenCaptureState::CREATED || captureState_ == AVScreenCaptureState::STARTING) {
         captureState_ = AVScreenCaptureState::STOPPED;
         ScreenCaptureMonitorServer::GetInstance()->CallOnScreenCaptureFinished(appInfo_.appPid);
