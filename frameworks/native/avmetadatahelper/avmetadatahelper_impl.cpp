@@ -282,6 +282,27 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::OnCreatePixelMapHdr(sptr<Surface
     return pixelMap;
 }
 
+void AVMetadataHelperImpl::SetPixelMapYuvInfo(std::shared_ptr<PixelMap> pixelMap, bool isPlanesAvailable,
+                                              OH_NativeBuffer_Planes *planes)
+{
+    int32_t srcWidth = pixelMap->GetWidth();
+    int32_t srcHeight = pixelMap->GetHeight();
+    YUVDataInfo yuvDataInfo = { .yWidth = srcWidth,
+                                .yHeight = srcHeight,
+                                .uvWidth = srcWidth / 2,
+                                .uvHeight = srcHeight / 2,
+                                .yStride = srcWidth,
+                                .uvStride = srcWidth,
+                                .uvOffset = srcWidth * srcHeight};
+    if (isPlanesAvailable && planes != nullptr) {
+        yuvDataInfo.yStride = planes->planes[PLANE_Y].columnStride / NUM_2;
+        yuvDataInfo.uvStride = planes->planes[PLANE_U].columnStride / NUM_2;
+        yuvDataInfo.yOffset = planes->planes[PLANE_Y].offset / NUM_2;
+        yuvDataInfo.uvOffset = planes->planes[PLANE_U].offset / NUM_2;
+    }
+    pixelMap->SetImageYUVInfo(yuvDataInfo);
+}
+
 sptr<SurfaceBuffer> AVMetadataHelperImpl::CopySurfaceBuffer(sptr<SurfaceBuffer> &srcSurfaceBuffer)
 {
     sptr<SurfaceBuffer> dstSurfaceBuffer = SurfaceBuffer::Create();
@@ -591,14 +612,6 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameYuv(int64_t timeUs, in
 
     int32_t srcWidth = pixelMap->GetWidth();
     int32_t srcHeight = pixelMap->GetHeight();
-    YUVDataInfo yuvDataInfo = { .yWidth = srcWidth,
-                                .yHeight = srcHeight,
-                                .uvWidth = srcWidth / 2,
-                                .uvHeight = srcHeight / 2,
-                                .yStride = srcWidth,
-                                .uvStride = srcWidth,
-                                .uvOffset = srcWidth * srcHeight };
-    pixelMap->SetImageYUVInfo(yuvDataInfo);
     ScalePixelMap(pixelMap, pixelMapInfo, param);
     if (pixelMapInfo.rotation > 0) {
         pixelMap->rotate(pixelMapInfo.rotation);
