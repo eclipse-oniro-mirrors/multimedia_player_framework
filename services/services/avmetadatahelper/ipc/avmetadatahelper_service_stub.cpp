@@ -209,7 +209,6 @@ void AVMetadataHelperServiceStub::Release()
 int32_t AVMetadataHelperServiceStub::SetHelperCallback()
 {
     MEDIA_LOGD("SetHelperCallback");
-    std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(avMetadateHelperServer_ != nullptr, MSERR_NO_MEMORY, "metadata server is nullptr");
     return avMetadateHelperServer_->SetHelperCallback(helperCallback_);
 }
@@ -390,7 +389,7 @@ int32_t AVMetadataHelperServiceStub::GetTimeByFrameIndex(MessageParcel &data, Me
     uint64_t time = 0;
     auto res = GetTimeByFrameIndex(index, time);
     CHECK_AND_RETURN_RET(res == MSERR_OK, res);
-    reply.WriteInt64(time);
+    reply.WriteUint64(time);
     return MSERR_OK;
 }
 

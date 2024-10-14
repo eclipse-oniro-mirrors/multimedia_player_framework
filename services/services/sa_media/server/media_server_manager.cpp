@@ -441,6 +441,26 @@ void MediaServerManager::DestroyAVCodecStub(StubType type, sptr<IRemoteObject> o
     }
 }
 
+void MediaServerManager::DestroyAVTransCoderStub(StubType type, sptr<IRemoteObject> object, pid_t pid)
+{
+    switch (type) {
+        case TRANSCODER: {
+            for (auto it = transCoderStubMap_.begin(); it != transCoderStubMap_.end(); it++) {
+                if (it->first == object) {
+                    MEDIA_LOGD("destroy transCoder stub services(%{public}zu) pid(%{public}d).",
+                        transCoderStubMap_.size(), pid);
+                    (void)transCoderStubMap_.erase(it);
+                    return;
+                }
+            }
+            MEDIA_LOGE("find transCoder object failed, pid(%{public}d).", pid);
+            break;
+        }
+        default:
+            break;
+    }
+}
+
 void MediaServerManager::DestroyAVPlayerStub(StubType type, sptr<IRemoteObject> object, pid_t pid)
 {
     switch (type) {
@@ -467,26 +487,6 @@ void MediaServerManager::DestroyAVPlayerStub(StubType type, sptr<IRemoteObject> 
                 }
             }
             MEDIA_LOGE("find avmetadatahelper object failed, pid(%{public}d).", pid);
-            break;
-        }
-        default:
-            break;
-    }
-}
-
-void MediaServerManager::DestroyAVTransCoderStub(StubType type, sptr<IRemoteObject> object, pid_t pid)
-{
-    switch (type) {
-        case TRANSCODER: {
-            for (auto it = transCoderStubMap_.begin(); it != transCoderStubMap_.end(); it++) {
-                if (it->first == object) {
-                    MEDIA_LOGD("destroy transCoder stub services(%{public}zu) pid(%{public}d).",
-                        transCoderStubMap_.size(), pid);
-                    (void)transCoderStubMap_.erase(it);
-                    return;
-                }
-            }
-            MEDIA_LOGE("find transCoder object failed, pid(%{public}d).", pid);
             break;
         }
         default:

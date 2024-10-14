@@ -80,18 +80,18 @@ private:
     std::mutex cbMutex_;
     TaskQueue taskQue_;
     struct ConfigInfo {
-        VideoCodecFormat videoCodec;
-        AudioCodecFormat audioCodec;
-        int32_t width;
-        int32_t height;
-        int32_t videoBitRate;
-        int32_t audioBitRate;
-        OutputFormatType format;
+        VideoCodecFormat videoCodec = VIDEO_CODEC_FORMAT_BUTT;
+        AudioCodecFormat audioCodec = AUDIO_CODEC_FORMAT_BUTT;
+        int32_t width = -1;
+        int32_t height = -1;
+        int32_t videoBitRate = -1;
+        int32_t audioBitRate = -1;
+        OutputFormatType format = FORMAT_BUTT;
         std::string srcUrl;
-        int32_t srcFd;
-        int64_t srcFdOffset;
-        int64_t srcFdSize;
-        int32_t dstUrl;
+        int32_t srcFd = -1;
+        int64_t srcFdOffset = -1;
+        int64_t srcFdSize = -1;
+        int32_t dstUrl = -1;
     } config_;
     std::string lastErrMsg_;
 

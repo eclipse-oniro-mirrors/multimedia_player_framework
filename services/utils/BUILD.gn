@@ -19,7 +19,7 @@ config("media_service_utils_public_config") {
 }
 
 ohos_shared_library("media_service_utils") {
-  stack_protector_ret = true
+  branch_protector_ret = "pac_ret"
   install_enable = true
 
   sanitize = {

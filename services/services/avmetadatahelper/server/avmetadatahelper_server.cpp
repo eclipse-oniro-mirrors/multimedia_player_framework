@@ -80,7 +80,7 @@ int32_t AVMetadataHelperServer::SetSource(const std::string &uri, int32_t usage)
     }
     auto res = InitEngine(uriHelper_->FormattedUri());
     CHECK_AND_RETURN_RET(res == MSERR_OK, res);
-    auto task = std::make_shared<TaskHandler<int32_t>>([&, this, usage] {
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         CHECK_AND_RETURN_RET_LOG(avMetadataHelperEngine_ != nullptr,
             (int32_t)MSERR_CREATE_AVMETADATAHELPER_ENGINE_FAILED, "Failed to create avmetadatahelper engine.");
         int32_t ret = avMetadataHelperEngine_->SetSource(uriHelper_->FormattedUri(), usage);
@@ -99,11 +99,12 @@ int32_t AVMetadataHelperServer::SetSource(int32_t fd, int64_t offset, int64_t si
                offset, size, usage);
     uriHelper_ = std::make_unique<UriHelper>(fd, offset, size);
     CHECK_AND_RETURN_RET_LOG(!uriHelper_->FormattedUri().empty(),
-        MSERR_INVALID_VAL, "Failed to construct formatted uri");
+                             MSERR_INVALID_VAL,
+                             "Failed to construct formatted uri");
     CHECK_AND_RETURN_RET_LOG(uriHelper_->AccessCheck(UriHelper::URI_READ), MSERR_INVALID_VAL, "Failed to read the fd");
     auto res = InitEngine(uriHelper_->FormattedUri());
     CHECK_AND_RETURN_RET(res == MSERR_OK, res);
-    auto task = std::make_shared<TaskHandler<int32_t>>([&, this, usage] {
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         CHECK_AND_RETURN_RET_LOG(avMetadataHelperEngine_ != nullptr,
             (int32_t)MSERR_CREATE_AVMETADATAHELPER_ENGINE_FAILED, "Failed to create avmetadatahelper engine");
 
@@ -273,8 +274,12 @@ std::shared_ptr<AVBuffer> AVMetadataHelperServer::FetchFrameYuv(int64_t timeUs, 
 void AVMetadataHelperServer::Release()
 {
     MediaTrace trace("AVMetadataHelperServer::Release");
-    CHECK_AND_RETURN_LOG(avMetadataHelperEngine_ != nullptr, "avMetadataHelperEngine_ is nullptr");
-    avMetadataHelperEngine_->SetInterruptState(true);
+    {
+        auto avMetadataHelperEngine = avMetadataHelperEngine_;
+        CHECK_AND_RETURN_LOG(avMetadataHelperEngine != nullptr, "avMetadataHelperEngine_ is nullptr");
+        avMetadataHelperEngine->SetInterruptState(true);
+    }
+
     auto task = std::make_shared<TaskHandler<void>>([&, this] {
         avMetadataHelperEngine_ = nullptr;
     });
