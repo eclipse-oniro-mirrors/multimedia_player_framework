@@ -99,7 +99,8 @@ int32_t AVMetadataHelperServer::SetSource(int32_t fd, int64_t offset, int64_t si
                offset, size, usage);
     uriHelper_ = std::make_unique<UriHelper>(fd, offset, size);
     CHECK_AND_RETURN_RET_LOG(!uriHelper_->FormattedUri().empty(),
-        MSERR_INVALID_VAL, "Failed to construct formatted uri");
+                             MSERR_INVALID_VAL,
+                             "Failed to construct formatted uri");
     CHECK_AND_RETURN_RET_LOG(uriHelper_->AccessCheck(UriHelper::URI_READ), MSERR_INVALID_VAL, "Failed to read the fd");
     auto res = InitEngine(uriHelper_->FormattedUri());
     CHECK_AND_RETURN_RET(res == MSERR_OK, res);
@@ -273,8 +274,12 @@ std::shared_ptr<AVBuffer> AVMetadataHelperServer::FetchFrameYuv(int64_t timeUs, 
 void AVMetadataHelperServer::Release()
 {
     MediaTrace trace("AVMetadataHelperServer::Release");
-    CHECK_AND_RETURN_LOG(avMetadataHelperEngine_ != nullptr, "avMetadataHelperEngine_ is nullptr");
-    avMetadataHelperEngine_->SetInterruptState(true);
+    {
+        auto avMetadataHelperEngine = avMetadataHelperEngine_;
+        CHECK_AND_RETURN_LOG(avMetadataHelperEngine != nullptr, "avMetadataHelperEngine_ is nullptr");
+        avMetadataHelperEngine->SetInterruptState(true);
+    }
+
     auto task = std::make_shared<TaskHandler<void>>([&, this] {
         avMetadataHelperEngine_ = nullptr;
     });
