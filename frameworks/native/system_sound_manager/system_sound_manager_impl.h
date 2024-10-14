@@ -179,6 +179,9 @@ private:
     std::string systemSoundPath_ = "";
     std::mutex uriMutex_;
     std::mutex playerMutex_;
+#ifdef SUPPORT_VIBRATOR
+    std::mutex toneHapticsMutex_;
+#endif
     std::string mimeType_ = "";
     std::string displayName_ = "";
     std::unordered_map<RingtoneType, std::string> defaultRingtoneUriMap_;

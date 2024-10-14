@@ -250,7 +250,7 @@ HWTEST(RingtonePlayerUnitTest, Media_RingtonePlayer_011, TestSize.Level1)
 /**
  * @tc.name  : Test MediaRingtonePlayer
  * @tc.number: Media_RingtonePlayer_012
- * @tc.desc  : Test GetNewHapticSettings. Returns NewHapticcsSettings.
+ * @tc.desc  : Test GetHapticSettings. Returns NewHapticcsSettings.
  */
 HWTEST(RingtonePlayerUnitTest, Media_RingtonePlayer_012, TestSize.Level1)
 {
@@ -258,7 +258,9 @@ HWTEST(RingtonePlayerUnitTest, Media_RingtonePlayer_012, TestSize.Level1)
     auto sysSoundMgr = std::make_shared<SystemSoundManagerImpl>();
     RingtoneType type = RINGTONE_TYPE_SIM_CARD_0;
     auto ringtonePlayerImpl_ = std::make_shared<RingtonePlayerImpl>(context_, *sysSoundMgr, type);
-    std::shared_ptr<ToneHapticsSettings> result = ringtonePlayerImpl_->GetNewHapticSettings();
+    bool muteHaptics;
+    string audioUri = "/data/test/ringtone.ogg";
+    ToneHapticsSettings result = ringtonePlayerImpl_->GetHapticSettings(audioUri, muteHaptics);
     EXPECT_NE(ringtonePlayerImpl_, nullptr);
 }
 
@@ -275,21 +277,23 @@ HWTEST(RingtonePlayerUnitTest, Media_RingtonePlayer_013, TestSize.Level1)
     auto ringtonePlayerImpl_ = std::make_shared<RingtonePlayerImpl>(context_, *sysSoundMgr, type);
     ringtonePlayerImpl_->sourceId_ = -1;
     std::string audioUri = "/data/test/test.ogg";
+    AudioHapticPlayerOptions options = {false, false};
+    ToneHapticsSettings settings = ringtonePlayerImpl_->GetHapticSettings(audioUri, options.muteHaptics);
     sysSoundMgr->SetRingerMode(AudioStandard::AudioRingerMode::RINGER_MODE_SILENT);
-    ringtonePlayerImpl_->InitPlayer(audioUri);
+    ringtonePlayerImpl_->InitPlayer(audioUri, settings, options);
     EXPECT_NE(ringtonePlayerImpl_, nullptr);
 
     ringtonePlayerImpl_->sourceId_ = 1;
     audioUri = "/data/test/ringtone.ogg";
     sysSoundMgr->SetRingerMode(AudioStandard::AudioRingerMode::RINGER_MODE_NORMAL);
-    ringtonePlayerImpl_->InitPlayer(audioUri);
+    ringtonePlayerImpl_->InitPlayer(audioUri, settings, options);
     EXPECT_NE(ringtonePlayerImpl_, nullptr);
 
     ringtonePlayerImpl_->sourceId_ = 1;
     audioUri = "/data/test/media/audio/ringtone.ogg";
     ringtonePlayerImpl_->callback_ = std::make_shared<RingtonePlayerCallback>(*ringtonePlayerImpl_);
     sysSoundMgr->SetRingerMode(AudioStandard::AudioRingerMode::RINGER_MODE_NORMAL);
-    ringtonePlayerImpl_->InitPlayer(audioUri);
+    ringtonePlayerImpl_->InitPlayer(audioUri, settings, options);
     EXPECT_NE(ringtonePlayerImpl_, nullptr);
 }
 

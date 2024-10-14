@@ -400,7 +400,7 @@ HWTEST(SystemTonePlayerUnitTest, Media_TonePlayer_Unit_Test_019, TestSize.Level1
     SystemToneType systemToneType = SYSTEM_TONE_TYPE_SIM_CARD_0;
     auto systemTonePlayerImpl_ = std::make_shared<SystemTonePlayerImpl>(context_, *systemSoundMgr_, systemToneType);
     std::string audioUri = "/storage/media/local/files/test.ogg";
-    systemTonePlayerImpl_->InitHapticsSourceIds(audioUri);
+    systemTonePlayerImpl_->InitHapticsSourceIds();
     EXPECT_EQ(audioUri, "/storage/media/local/files/test.ogg");
 }
 
@@ -434,7 +434,7 @@ HWTEST(SystemTonePlayerUnitTest, Media_TonePlayer_Unit_Test_022, TestSize.Level1
     int32_t result = 0;
     std::string audioUri = "/data/test/ringtone.ogg";
     for (int i = 0; i < 129; i++) {
-        systemTonePlayerImpl_->InitHapticsSourceIds(audioUri);
+        systemTonePlayerImpl_->InitHapticsSourceIds();
         result += systemTonePlayerImpl_->Start();
     }
     EXPECT_NE(result, 0);
@@ -484,7 +484,7 @@ HWTEST(SystemTonePlayerUnitTest, Media_TonePlayer_Unit_Test_024, TestSize.Level1
     std::string audioUri = "/data/test/ringtone.ogg";
     int32_t result = systemTonePlayerImpl_->InitPlayer(audioUri);
     EXPECT_EQ(result, MSERR_OK);
-    systemTonePlayerImpl_->InitHapticsSourceIds(audioUri);
+    systemTonePlayerImpl_->InitHapticsSourceIds();
     int32_t streamId = systemTonePlayerImpl_->Start();
     result = systemTonePlayerImpl_->Stop(streamId);
     EXPECT_EQ(result, MSERR_OK);
@@ -504,7 +504,7 @@ HWTEST(SystemTonePlayerUnitTest, Media_TonePlayer_Unit_Test_025, TestSize.Level1
     SystemToneType systemToneType = SYSTEM_TONE_TYPE_SIM_CARD_0;
     auto systemTonePlayerImpl_ = std::make_shared<SystemTonePlayerImpl>(context_, *systemSoundMgr_, systemToneType);
     std::string audioUri = "/data/test/ringtone.ogg";
-    systemTonePlayerImpl_->InitHapticsSourceIds(audioUri);
+    systemTonePlayerImpl_->InitHapticsSourceIds();
     systemTonePlayerImpl_->ReleaseHapticsSourceIds();
     EXPECT_NE(systemTonePlayerImpl_, nullptr);
 }
@@ -549,7 +549,7 @@ HWTEST(SystemTonePlayerUnitTest, Media_TonePlayer_Unit_Test_027, TestSize.Level1
     SystemToneType systemToneType = SYSTEM_TONE_TYPE_SIM_CARD_1;
     auto systemTonePlayerImpl_ = std::make_shared<SystemTonePlayerImpl>(context_, *systemSoundMgr_, systemToneType);
     std::string audioUri = "/data/test/media/audio/ringtone.ogg";
-    systemTonePlayerImpl_->InitHapticsSourceIds(audioUri);
+    systemTonePlayerImpl_->InitHapticsSourceIds();
     EXPECT_EQ(audioUri, "/data/test/media/audio/ringtone.ogg");
 }
 
@@ -620,7 +620,7 @@ HWTEST(SystemTonePlayerUnitTest, Media_TonePlayer_Unit_Test_031, TestSize.Level1
     std::string audioUri = "/data/test/ringtone.ogg";
     int32_t result = systemTonePlayerImpl_->InitPlayer(audioUri);
     EXPECT_EQ(result, MSERR_OK);
-    systemTonePlayerImpl_->InitHapticsSourceIds(audioUri);
+    systemTonePlayerImpl_->InitHapticsSourceIds();
     result = systemTonePlayerImpl_->SetHapticsFeature(ToneHapticsFeature::STANDARD);
     EXPECT_EQ(result, MSERR_OK);
     ToneHapticsFeature feature;
