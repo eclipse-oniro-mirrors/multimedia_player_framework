@@ -629,7 +629,7 @@ int32_t RecorderServiceStub::SetMetaSourceTrackMime(MessageParcel &data, Message
     const char *mimetypeStr = data.ReadCString();
     CHECK_AND_RETURN_RET_LOG(mimetypeStr != nullptr, MSERR_INVALID_OPERATION,
         "data.ReadCString() is nullptr");
-    std::string_view srcTrackMime(mimetypeStr  );
+    std::string_view srcTrackMime(mimetypeStr);
     reply.WriteInt32(SetMetaSourceTrackMime(sourceId, srcTrackMime));
     return MSERR_OK;
 }
