@@ -536,7 +536,7 @@ int32_t AVThumbnailGenerator::CopySurfaceBufferPixels(const sptr<SurfaceBuffer> 
     }
 
     // copy src Y component to dst
-    int32_t lineByteCount = width * (isHdr ? RATE_UV : 1);
+    int32_t lineByteCount = isHdr ? stride : width;
     for (int32_t y = 0; y < height; y++) {
         auto ret = memcpy_s(dstPtr, lineByteCount, srcPtr, lineByteCount);
         TRUE_LOG(ret != EOK, MEDIA_LOGW, "Memcpy UV component failed.");

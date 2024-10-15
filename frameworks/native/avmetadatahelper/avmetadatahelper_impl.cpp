@@ -39,6 +39,9 @@ static constexpr char PERFORMANCE_STATS[] = "PERFORMANCE";
 static std::atomic<uint32_t> concurrentWorkCount_ = 0;
 static constexpr uint8_t HIGH_CONCRENT_WORK_NUM = 4;
 constexpr int32_t NUM_180 = 180;
+static constexpr int32_t PLANE_Y = 0;
+static constexpr int32_t PLANE_U = 1;
+static constexpr uint8_t NUM_2 = 2;
 }
 
 namespace OHOS {
@@ -215,39 +218,89 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::CreatePixelMapYuv(const std::sha
     bufferMeta->Get<Tag::VIDEO_IS_HDR_VIVID>(pixelMapInfo.isHdr);
     pixelMapInfo.isHdr &= frameBuffer->memory_->GetSurfaceBuffer() != nullptr;
 
+    std::shared_ptr<PixelMap> pixelMap;
+    bool isPlanesAvailable = false;
+    OH_NativeBuffer_Planes *planes = nullptr;
     if (pixelMapInfo.isHdr) {
         auto surfaceBuffer = frameBuffer->memory_->GetSurfaceBuffer();
         sptr<SurfaceBuffer> mySurfaceBuffer = CopySurfaceBuffer(surfaceBuffer);
         CHECK_AND_RETURN_RET_LOG(mySurfaceBuffer != nullptr, nullptr, "Create SurfaceBuffer failed");
-        InitializationOptions options = { .size = { .width = mySurfaceBuffer->GetWidth(),
-                                                    .height = mySurfaceBuffer->GetHeight() },
-                                          .srcPixelFormat = PixelFormat::YCBCR_P010,
-                                          .pixelFormat = PixelFormat::YCBCR_P010,
-                                          .useDMA = true };
-        int32_t colorLength = mySurfaceBuffer->GetWidth() * mySurfaceBuffer->GetHeight() * PIXEL_SIZE_HDR_YUV;
-        auto pixelMap = PixelMap::Create(reinterpret_cast<const uint32_t *>(mySurfaceBuffer->GetVirAddr()),
-            static_cast<uint32_t>(colorLength), options);
-        CHECK_AND_RETURN_RET_LOG(pixelMap != nullptr, nullptr, "Create pixel map failed");
-        void* nativeBuffer = mySurfaceBuffer.GetRefPtr();
-        RefBase *ref = reinterpret_cast<RefBase *>(nativeBuffer);
-        ref->IncStrongRef(ref);
-        pixelMap->InnerSetColorSpace(OHOS::ColorManager::ColorSpace(ColorManager::ColorSpaceName::BT2020_HLG));
-        pixelMap->SetPixelsAddr(mySurfaceBuffer->GetVirAddr(), mySurfaceBuffer.GetRefPtr(), mySurfaceBuffer->GetSize(),
-                                AllocatorType::DMA_ALLOC, FreeSurfaceBuffer);
-        return pixelMap;
+        GSError retVal = mySurfaceBuffer->GetPlanesInfo(reinterpret_cast<void**>(&planes));
+        isPlanesAvailable = (retVal == OHOS::GSERROR_OK) && (planes != nullptr);
+        MEDIA_LOGD("isPlanesAvailable = %{public}d", isPlanesAvailable);
+        pixelMap = OnCreatePixelMapHdr(mySurfaceBuffer);
+        CHECK_AND_RETURN_RET_LOG(pixelMap != nullptr, nullptr, "Create pixelMap Hdr failed");
+    } else {
+        InitializationOptions options = { .size = { .width = width, .height = height },
+                                          .pixelFormat = PixelFormat::NV12 };
+        pixelMap = OnCreatePixelMapSdr(frameBuffer, pixelMapInfo, options);
+        CHECK_AND_RETURN_RET_LOG(pixelMap != nullptr, nullptr, "Create pixelMap Sdr failed");
     }
+    SetPixelMapYuvInfo(pixelMap, isPlanesAvailable, planes);
+    return pixelMap;
+}
 
-    InitializationOptions options = { .size = { .width = width, .height = height }, .pixelFormat = PixelFormat::NV12 };
+std::shared_ptr<PixelMap> AVMetadataHelperImpl::OnCreatePixelMapSdr(const std::shared_ptr<AVBuffer> &frameBuffer,
+                                                                    PixelMapInfo &pixelMapInfo,
+                                                                    InitializationOptions &options)
+{
+    bool isValid = frameBuffer != nullptr && frameBuffer->memory_ != nullptr;
+    CHECK_AND_RETURN_RET_LOG(isValid, nullptr, "invalid frame buffer");
     auto pixelMap = PixelMap::Create(options);
     CHECK_AND_RETURN_RET_LOG(pixelMap != nullptr, nullptr, "Create pixelMap failed");
     AVBufferHolder *holder = CreateAVBufferHolder(frameBuffer);
     CHECK_AND_RETURN_RET_LOG(holder != nullptr, nullptr, "Create buffer holder failed");
     uint8_t *pixelAddr = frameBuffer->memory_->GetAddr();
-    pixelMap->SetPixelsAddr(pixelAddr, holder, pixelMap->GetByteCount(), AllocatorType::CUSTOM_ALLOC, FreeAvBufferData);
-    const InitializationOptions opts = { .size = { .width = pixelMap->GetWidth(), .height = pixelMap->GetHeight() },
+    pixelMap->SetPixelsAddr(pixelAddr, holder, pixelMap->GetByteCount(),
+                            AllocatorType::CUSTOM_ALLOC, FreeAvBufferData);
+    const InitializationOptions opts = { .size = { .width = pixelMap->GetWidth(),
+                                                   .height = pixelMap->GetHeight() },
                                          .srcPixelFormat = PixelFormat::NV12,
                                          .pixelFormat = pixelMapInfo.pixelFormat };
-    return PixelMap::Create(reinterpret_cast<const uint32_t *>(pixelMap->GetPixels()), pixelMap->GetByteCount(), opts);
+    return PixelMap::Create(reinterpret_cast<const uint32_t *>(pixelMap->GetPixels()),
+                            pixelMap->GetByteCount(), opts);
+}
+
+std::shared_ptr<PixelMap> AVMetadataHelperImpl::OnCreatePixelMapHdr(sptr<SurfaceBuffer> &mySurfaceBuffer)
+{
+    CHECK_AND_RETURN_RET_LOG(mySurfaceBuffer != nullptr, nullptr, "mySurfaceBuffer is nullptr");
+    InitializationOptions options = { .size = { .width = mySurfaceBuffer->GetWidth(),
+                                                .height = mySurfaceBuffer->GetHeight() },
+                                      .srcPixelFormat = PixelFormat::YCBCR_P010,
+                                      .pixelFormat = PixelFormat::YCBCR_P010,
+                                      .useDMA = true };
+    int32_t colorLength = mySurfaceBuffer->GetWidth() * mySurfaceBuffer->GetHeight() * PIXEL_SIZE_HDR_YUV;
+    auto pixelMap = PixelMap::Create(reinterpret_cast<const uint32_t *>(mySurfaceBuffer->GetVirAddr()),
+        static_cast<uint32_t>(colorLength), options);
+    CHECK_AND_RETURN_RET_LOG(pixelMap != nullptr, nullptr, "Create pixelMap failed");
+    void* nativeBuffer = mySurfaceBuffer.GetRefPtr();
+    RefBase *ref = reinterpret_cast<RefBase *>(nativeBuffer);
+    ref->IncStrongRef(ref);
+    pixelMap->InnerSetColorSpace(OHOS::ColorManager::ColorSpace(ColorManager::ColorSpaceName::BT2020_HLG));
+    pixelMap->SetPixelsAddr(mySurfaceBuffer->GetVirAddr(), mySurfaceBuffer.GetRefPtr(), mySurfaceBuffer->GetSize(),
+                            AllocatorType::DMA_ALLOC, FreeSurfaceBuffer);
+    return pixelMap;
+}
+
+void AVMetadataHelperImpl::SetPixelMapYuvInfo(std::shared_ptr<PixelMap> pixelMap, bool isPlanesAvailable,
+                                              OH_NativeBuffer_Planes *planes)
+{
+    int32_t srcWidth = pixelMap->GetWidth();
+    int32_t srcHeight = pixelMap->GetHeight();
+    YUVDataInfo yuvDataInfo = { .yWidth = srcWidth,
+                                .yHeight = srcHeight,
+                                .uvWidth = srcWidth / 2,
+                                .uvHeight = srcHeight / 2,
+                                .yStride = srcWidth,
+                                .uvStride = srcWidth,
+                                .uvOffset = srcWidth * srcHeight};
+    if (isPlanesAvailable && planes != nullptr) {
+        yuvDataInfo.yStride = planes->planes[PLANE_Y].columnStride / NUM_2;
+        yuvDataInfo.uvStride = planes->planes[PLANE_U].columnStride / NUM_2;
+        yuvDataInfo.yOffset = planes->planes[PLANE_Y].offset / NUM_2;
+        yuvDataInfo.uvOffset = planes->planes[PLANE_U].offset / NUM_2;
+    }
+    pixelMap->SetImageYUVInfo(yuvDataInfo);
 }
 
 sptr<SurfaceBuffer> AVMetadataHelperImpl::CopySurfaceBuffer(sptr<SurfaceBuffer> &srcSurfaceBuffer)
@@ -557,16 +610,6 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameYuv(int64_t timeUs, in
     auto pixelMap = CreatePixelMapYuv(frameBuffer, pixelMapInfo);
     CHECK_AND_RETURN_RET_LOG(pixelMap != nullptr, nullptr, "convert to pixelMap failed");
 
-    int32_t srcWidth = pixelMap->GetWidth();
-    int32_t srcHeight = pixelMap->GetHeight();
-    YUVDataInfo yuvDataInfo = { .yWidth = srcWidth,
-                                .yHeight = srcHeight,
-                                .uvWidth = srcWidth / 2,
-                                .uvHeight = srcHeight / 2,
-                                .yStride = srcWidth,
-                                .uvStride = srcWidth,
-                                .uvOffset = srcWidth * srcHeight };
-    pixelMap->SetImageYUVInfo(yuvDataInfo);
     ScalePixelMap(pixelMap, pixelMapInfo, param);
     if (pixelMapInfo.rotation > 0) {
         pixelMap->rotate(pixelMapInfo.rotation);
