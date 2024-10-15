@@ -2151,20 +2151,6 @@ void AVPlayerNapi::SeekEnqueueTask(AVPlayerNapi *jsPlayer, int32_t time, int32_t
     MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSeek Out", FAKE_POINTER(jsPlayer));
 }
 
-void AVPlayerNapi::SelectTrackEnqueueTask(AVPlayerNapi *jsPlayer, int32_t index, int32_t mode)
-{
-    auto task = std::make_shared<TaskHandler<void>>([jsPlayer, index, mode]() {
-        MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSelectTrack Task In", FAKE_POINTER(jsPlayer));
-        if (jsPlayer->player_ != nullptr) {
-            (void)jsPlayer->player_->SelectTrack(index, jsPlayer->TransferSwitchMode(mode));
-        }
-        MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSelectTrack Task Out", FAKE_POINTER(jsPlayer));
-    });
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSelectTrack EnqueueTask In", FAKE_POINTER(jsPlayer));
-    (void)jsPlayer->taskQue_->EnqueueTask(task);
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSelectTrack Out", FAKE_POINTER(jsPlayer));
-}
-
 napi_value AVPlayerNapi::JsSetAudioRendererInfo(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("AVPlayerNapi::set audioRendererInfo");
@@ -2488,45 +2474,72 @@ napi_value AVPlayerNapi::JsSelectTrack(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("AVPlayerNapi::selectTrack");
     MEDIA_LOGI("JsSelectTrack In");
-    napi_value ret = nullptr;
-    napi_get_undefined(env, &ret);
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
 
-    size_t argCount = 2; // 2 prarm, args[0]:index args[1]:SwitchMode
-    napi_value args[ARRAY_ARG_COUNTS_TWO] = { nullptr };
-    AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
-    CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, ret, "failed to GetJsInstanceWithParameter");
+    auto promiseCtx = std::make_unique<AVPlayerContext>(env);
+    size_t argCount = 3; // 2 prarm, args[0]:index args[1]:SwitchMode callbackRef
+    napi_value args[ARRAY_ARG_COUNTS_THREE] = { nullptr };
+    promiseCtx->napi = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
+    promiseCtx->callbackRef = CommonNapi::CreateReference(env, args[argCount -1]);
+    promiseCtx->deferred = CommonNapi::CreatePromise(env, promiseCtx->callbackRef, result);
+    CHECK_AND_RETURN_RET_LOG(promiseCtx->napi != nullptr, result, "failed to GetJsInstanceWithParameter");
 
     napi_valuetype valueType = napi_undefined;
     if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "track index is not number");
-        return ret;
+        promiseCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "track index is not number");
     }
-    int32_t index = -1;
-    napi_status status = napi_get_value_int32(env, args[0], &index);
-    if (status != napi_ok || index < 0) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please check the track index");
-        return ret;
+
+    auto jsPlayer = promiseCtx->napi;
+    napi_status status = napi_get_value_int32(env, args[0], &jsPlayer->index_);
+    if (status != napi_ok || jsPlayer->index_ < 0 || jsPlayer->index_ >= jsPlayer->trackInfoVec_.size()) {
+        promiseCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please check the track index");
     }
-    int32_t mode = SWITCH_SMOOTH;
+
     if (argCount > 1) {
         if (napi_typeof(env, args[1], &valueType) != napi_ok || valueType != napi_number) {
-            jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "switch mode is not number");
-            return ret;
+            promiseCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "switch mode is not number");
         }
-        status = napi_get_value_int32(env, args[1], &mode);
-        if (status != napi_ok || mode < SWITCH_SMOOTH || mode > SWITCH_CLOSEST) {
-            jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please switch seek mode");
-            return ret;
+        status = napi_get_value_int32(env, args[1], &jsPlayer->mode_);
+        if (status != napi_ok || jsPlayer->mode_ < SWITCH_SMOOTH || jsPlayer->mode_ > SWITCH_CLOSEST) {
+            promiseCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please switch seek mode");
         }
     }
+
     if (!jsPlayer->IsControllable()) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+        promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
             "current state is not prepared/playing/paused/completed, unsupport selectTrack operation");
-        return ret;
     }
-    SelectTrackEnqueueTask(jsPlayer, index, mode);
+
+    // async work
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, "JsSelectTrack ", NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void *data) {
+        MEDIA_LOGI("JsSelectTrack Task");
+        auto promiseCtx = reinterpret_cast<AVPlayerContext *>(data);
+        CHECK_AND_RETURN_LOG(promiseCtx != nullptr, "promiseCtx is nullptr!");
+
+        auto jsPlayer = promiseCtx->napi;
+        if (jsPlayer == nullptr) {
+            return promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "avplayer is deconstructed");
+        }
+
+        auto task = std::make_shared<TaskHandler<void>>([jsPlayer, index = jsPlayer->index_, mode = jsPlayer->mode_]() {
+            MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSelectTrack Task In", FAKE_POINTER(jsPlayer));
+            if(jsPlayer->player_ != nullptr) {
+                (void)jsPlayer->player_->SelectTrack(index, jsPlayer->TransferSwitchMode(mode));
+            }
+            MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSelectTrack Task Out", FAKE_POINTER(jsPlayer));
+        });
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSelectTrack EnqueueTask In", FAKE_POINTER(jsPlayer));
+        (void)jsPlayer->taskQue_->EnqueueTask(task);
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSelectTrack Out", FAKE_POINTER(jsPlayer));
+    },
+    MediaAsyncContext::CompleteCallback, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
+    napi_queue_async_work_with_qos(env, promiseCtx->work, napi_qos_user_initiated);
+    promiseCtx.release();
     MEDIA_LOGI("JsSelectTrack Out");
-    return ret;
+    return result;
 }
 
 napi_value AVPlayerNapi::JsDeselectTrack(napi_env env, napi_callback_info info)

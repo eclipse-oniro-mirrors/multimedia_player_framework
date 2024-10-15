@@ -394,6 +394,8 @@ private:
     std::shared_mutex drmMutex_{};
     std::multimap<std::string, std::vector<uint8_t>> localDrmInfos_;
     Format playbackInfo_;
+    int32_t index_ = -1;
+    int32_t mode_ = SWITCH_SMOOTH;
 };
 } // namespace Media
 } // namespace OHOS
