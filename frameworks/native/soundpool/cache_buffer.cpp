@@ -45,8 +45,8 @@ bool CacheBuffer::IsAudioRendererValid(const AudioStandard::AudioRendererInfo au
 {
     AudioStandard::AudioStreamType streamType = AudioStandard::AudioSystemManager::GetStreamType(audioRendererInfo.contentType,
         audioRendererInfo.streamUsage);
-    if (streamType == (AudioStandard::AudioStreamType::STREAM_DEFAILT || AudioStandard::AudioStreamType::STREAM_MUSIC ||
-        AudioStandard::AudioStreamType::STREAM_MOVIE || AudioStandard::AudioStreamType::STREAM_SPEECH)){
+    if (streamType == (AudioStandard::AudioStreamType::STREAM_MUSIC || AudioStandard::AudioStreamType::STREAM_MOVIE ||
+        AudioStandard::AudioStreamType::STREAM_SPEECH)){
             return true;
         }
     return false;
