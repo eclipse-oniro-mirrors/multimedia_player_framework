@@ -13,19 +13,11 @@
  * limitations under the License.
  */
 
-#include "avmetadatastub_fuzzer.h"
-
-#include <fcntl.h>
-
+#include "avmetadatastub_local_fuzzer.h"
 #include "stub_common.h"
 #include "media_server.h"
 #include "media_parcel.h"
 #include "i_standard_avmetadatahelper_service.h"
-
-namespace {
-constexpr char VIDEO_PATH[] = "/data/test/H264_AAC.mp4";
-constexpr int32_t SET_FD_SOURCE = 3;
-}
 
 namespace OHOS {
 namespace Media {
@@ -45,21 +37,6 @@ bool FuzzAVMetadataStub(uint8_t *data, size_t size)
     }
     avmetaProxy->SendRequest(AVMetadataServiceProxyFuzzer::DESTROY, data, size, false);
     return true;
-}
-
-void SetSourceLocalFd(sptr<IRemoteStub<IStandardAVMetadataHelperService>> avmetadataStub)
-{
-    int32_t fileDes = open(VIDEO_PATH, O_RDONLY);
-    MessageParcel msg;
-    MessageParcel reply;
-    MessageOption option;
-
-    msg.WriteInterfaceToken(avmetadataStub->GetDescriptor());
-    msg.WriteFileDescriptor(fileDes);
-    msg.WriteInt64(0);
-    msg.WriteInt64(0);
-    msg.WriteInt32(0);
-    avmetadataStub->OnRemoteRequest(AVMetadataServiceProxyFuzzer::SET_FD_SOURCE, msg, reply, option);
 }
 
 const int32_t SYSTEM_ABILITY_ID = 3002;
@@ -84,45 +61,7 @@ bool FuzzAVMetadataStubLocal(uint8_t *data, size_t size)
         return false;
     }
 
-    SetSourceLocalFd(avmetadataStub);
-    bool isWirteToken = size >0 && data[0] % 9 != 0;
-    for (uint32_t code = SET_FD_SOURCE; code <= AVMetadataServiceProxyFuzzer::MAX_IPC_ID; code++) {
-        MessageParcel msg;
-        if (isWirteToken) {
-            msg.WriteInterfaceToken(avmetadataStub->GetDescriptor());
-        }
-        msg.WriteBuffer(data, size);
-        msg.RewindRead(0);
-        MessageParcel reply;
-        MessageOption option;
-        avmetadataStub->OnRemoteRequest(code, msg, reply, option);
-    }
-
-    return true;
-}
-
-bool FuzzAVMetadataStubLocal2(uint8_t *data, size_t size)
-{
-    if (data == nullptr || size < sizeof(int64_t)) {
-        return true;
-    }
-    std::shared_ptr<MediaServer> mediaServer =
-        std::make_shared<MediaServer>(SYSTEM_ABILITY_ID, RUN_ON_CREATE);
-    sptr<IRemoteObject> listener = new(std::nothrow) MediaListenerStubFuzzer();
-    sptr<IRemoteObject> avmetadata = mediaServer->GetSubSystemAbility(
-        IStandardMediaService::MediaSystemAbility::MEDIA_AVMETADATAHELPER, listener);
-    if (avmetadata == nullptr) {
-        return false;
-    }
- 
-    sptr<IRemoteStub<IStandardAVMetadataHelperService>> avmetadataStub =
-        iface_cast<IRemoteStub<IStandardAVMetadataHelperService>>(avmetadata);
-    if (avmetadataStub == nullptr) {
-        return false;
-    }
- 
-    SetSourceLocalFd(avmetadataStub);
-    bool isWirteToken = size >0 && data[0] % 9 != 0;
+    bool isWirteToken = size > 0 && data[0] % 9 != 0;
     for (uint32_t code = 0; code <= AVMetadataServiceProxyFuzzer::MAX_IPC_ID; code++) {
         MessageParcel msg;
         if (isWirteToken) {
@@ -134,7 +73,7 @@ bool FuzzAVMetadataStubLocal2(uint8_t *data, size_t size)
         MessageOption option;
         avmetadataStub->OnRemoteRequest(code, msg, reply, option);
     }
- 
+
     return true;
 }
 }
@@ -146,6 +85,5 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t *data, size_t size)
     /* Run your code on data */
     OHOS::Media::FuzzAVMetadataStub(data, size);
     OHOS::Media::FuzzAVMetadataStubLocal(data, size);
-    OHOS::Media::FuzzAVMetadataStubLocal2(data, size);
     return 0;
 }

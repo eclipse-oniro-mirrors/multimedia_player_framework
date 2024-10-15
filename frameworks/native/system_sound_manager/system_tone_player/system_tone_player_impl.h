@@ -58,12 +58,14 @@ private:
     std::string GetDefaultNonSyncHapticsPath();
     SystemToneOptions GetOptionsFromRingerMode();
     std::string ChangeUri(const std::string &uri);
-    void InitHapticsSourceIds(const std::string &audioUri);
+    void InitHapticsSourceIds();
     void ReleaseHapticsSourceIds();
     ToneHapticsType ConvertToToneHapticsType(SystemToneType type);
     HapticsMode ConvertToHapticsMode(ToneHapticsMode toneHapticsMode);
     void GetNewHapticSettings(std::map<ToneHapticsFeature, std::string> &hapticsUris);
     std::string ChangeHapticsUri(const std::string &hapticsUri);
+    void GetCurrentHapticSettings(const std::string &audioUri, std::map<ToneHapticsFeature, std::string> &hapticUriMap);
+    bool IsSameHapticMaps(const std::map<ToneHapticsFeature, std::string> &hapticUriMap);
     void UpdateStreamId();
 
     std::shared_ptr<AudioHapticManager> audioHapticManager_ = nullptr;

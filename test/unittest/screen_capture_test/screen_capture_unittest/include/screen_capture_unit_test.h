@@ -48,6 +48,7 @@ public:
     }
     void DumpAudioBuffer(std::shared_ptr<AudioBuffer> audioBuffer);
     void DumpVideoBuffer(sptr<OHOS::SurfaceBuffer> surfacebuffer, int64_t timestamp);
+    int32_t GetFrameNumber();
 
 private:
     std::shared_ptr<ScreenCaptureMock> screenCapture_;
@@ -63,6 +64,7 @@ private:
     FILE *vFile_ = nullptr;
     int32_t aFlag_ = 0;
     int32_t vFlag_ = 0;
+    int32_t frameNumber = 0;
 };
 
 class ScreenCaptureUnitTest : public testing::Test {

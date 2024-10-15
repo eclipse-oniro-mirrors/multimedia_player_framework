@@ -75,6 +75,13 @@ vector<string> COLUMNS = {{RINGTONE_COLUMN_TONE_ID}, {RINGTONE_COLUMN_DATA}, {RI
     {RINGTONE_COLUMN_NOTIFICATION_TONE_SOURCE_TYPE}, {RINGTONE_COLUMN_RING_TONE_TYPE},
     {RINGTONE_COLUMN_RING_TONE_SOURCE_TYPE}, {RINGTONE_COLUMN_ALARM_TONE_TYPE},
     {RINGTONE_COLUMN_ALARM_TONE_SOURCE_TYPE}};
+vector<string> JOIN_COLUMNS = {{RINGTONE_TABLE + "." + RINGTONE_COLUMN_TONE_ID}, {RINGTONE_COLUMN_DATA},
+    {RINGTONE_TABLE + "." + RINGTONE_COLUMN_DISPLAY_NAME}, {RINGTONE_COLUMN_TITLE},
+    {RINGTONE_COLUMN_TONE_TYPE}, {RINGTONE_COLUMN_SOURCE_TYPE}, {RINGTONE_COLUMN_SHOT_TONE_TYPE},
+    {RINGTONE_COLUMN_SHOT_TONE_SOURCE_TYPE}, {RINGTONE_COLUMN_NOTIFICATION_TONE_TYPE},
+    {RINGTONE_COLUMN_NOTIFICATION_TONE_SOURCE_TYPE}, {RINGTONE_TABLE + "." + RINGTONE_COLUMN_RING_TONE_TYPE},
+    {RINGTONE_COLUMN_RING_TONE_SOURCE_TYPE}, {RINGTONE_COLUMN_ALARM_TONE_TYPE},
+    {RINGTONE_COLUMN_ALARM_TONE_SOURCE_TYPE}};
 vector<string> SETTING_TABLE_COLUMNS = {{SIMCARD_SETTING_COLUMN_MODE}, {SIMCARD_SETTING_COLUMN_TONE_FILE},
     {SIMCARD_SETTING_COLUMN_RINGTONE_TYPE}, {SIMCARD_SETTING_COLUMN_VIBRATE_FILE},
     {SIMCARD_SETTING_COLUMN_VIBRATE_MODE}, {SIMCARD_SETTING_COLUMN_RING_MODE}};
@@ -732,8 +739,9 @@ int32_t SystemSoundManagerImpl::SetSystemToneUri(const shared_ptr<Context> &cont
 
     if (uri == NO_SYSTEM_SOUND) {
         int32_t changedRows = SetNoSystemToneUri(dataShareHelper, systemToneType);
+        MEDIA_LOGI("SetNoSystemToneUri result: changedRows %{public}d", changedRows);
         dataShareHelper->Release();
-        return changedRows > 0 ? SUCCESS : ERROR;
+        return SUCCESS;
     }
 
     DataShare::DatashareBusinessError businessError;
@@ -912,9 +920,12 @@ std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultRingtoneAttrs(
         "Create dataShare failed, datashare or ringtone library error.");
     DataShare::DatashareBusinessError businessError;
     DataShare::DataSharePredicates queryPredicates;
-    GetDefaultRingtoneAttrsExt(queryPredicates, ringtoneType);
+    std::vector<std::string> onClause;
+    onClause.push_back("ToneFiles.tone_id = PreloadConfig.tone_id");
+    queryPredicates.InnerJoin("PreloadConfig")->On(onClause)->EqualTo("PreloadConfig.ring_tone_type",
+        defaultoneTypeMap_[ringtoneType]);
     ringtoneAttrs_ = nullptr;
-    auto resultSet = dataShareHelper->Query(RINGTONEURI, queryPredicates, COLUMNS, &businessError);
+    auto resultSet = dataShareHelper->Query(RINGTONEURI, queryPredicates, JOIN_COLUMNS, &businessError);
     auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
     CHECK_AND_RETURN_RET_LOG(results != nullptr, nullptr, "single sim card failed, ringtone library error.");
     unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
@@ -928,38 +939,9 @@ std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultRingtoneAttrs(
     } else {
         MEDIA_LOGE("GetDefaultRingtoneAttrs: no single card default ringtone in the ringtone library!");
     }
-    DataShare::DataSharePredicates queryPredicatesBothCard;
-    queryPredicatesBothCard.EqualTo(RINGTONE_COLUMN_RING_TONE_TYPE, to_string(RING_TONE_TYPE_SIM_CARD_BOTH));
-    resultSet = dataShareHelper->Query(RINGTONEURI, queryPredicatesBothCard, COLUMNS, &businessError);
-    results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
-    CHECK_AND_RETURN_RET_LOG(results != nullptr, nullptr, "query both sim card failed, ringtone library error.");
-    unique_ptr<RingtoneAsset> ringtoneAssetBothCard = results->GetFirstObject();
-    while ((ringtoneAssetBothCard != nullptr) &&
-        (TONE_TYPE_RINGTONE != ringtoneAssetBothCard->GetToneType())) {
-        ringtoneAssetBothCard = results->GetNextObject();
-    }
-    if (ringtoneAssetBothCard != nullptr) {
-        ringtoneAttrs_ = std::make_shared<ToneAttrs>(ringtoneAssetBothCard->GetTitle(),
-            ringtoneAssetBothCard->GetDisplayName(), ringtoneAssetBothCard->GetPath(),
-            sourceTypeMap_[ringtoneAssetBothCard->GetSourceType()], TONE_CATEGORY_RINGTONE);
-    } else {
-        MEDIA_LOGE("GetDefaultRingtoneAttrs: no both card default ringtone in the ringtone library!");
-    }
     resultSet == nullptr ? : resultSet->Close();
     dataShareHelper->Release();
     return ringtoneAttrs_;
-}
-
-void SystemSoundManagerImpl::GetDefaultRingtoneAttrsExt(
-    DataShare::DataSharePredicates queryPredicates, RingtoneType ringtoneType)
-{
-    std::string onClause = PRELOAD_CONFIG_TABLE + "." + PRELOAD_CONFIG_COLUMN_TONE_ID + " = " +
-        RINGTONE_TABLE + "." + RINGTONE_COLUMN_TONE_ID;
-    queryPredicates.InnerJoin(PRELOAD_CONFIG_TABLE)->On({ onClause });
-    queryPredicates.SetWhereClause(PRELOAD_CONFIG_TABLE + "." + PRELOAD_CONFIG_COLUMN_RING_TONE_TYPE + " = ? ");
-    std::string subquery = to_string(defaultoneTypeMap_[ringtoneType]);
-    std::vector<std::string> whereArgs = {subquery};
-    queryPredicates.SetWhereArgs(whereArgs);
 }
 
 std::vector<std::shared_ptr<ToneAttrs>> SystemSoundManagerImpl::GetRingtoneAttrList(
@@ -1045,15 +1027,12 @@ std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultSystemToneAttrs(
 }
 
 void SystemSoundManagerImpl::GetDefaultSystemToneAttrsExt(
-    DataShare::DataSharePredicates queryPredicates, SystemToneType systemToneType)
+    DataShare::DataSharePredicates &queryPredicates, SystemToneType systemToneType)
 {
-    std::string onClause = PRELOAD_CONFIG_TABLE + "." + PRELOAD_CONFIG_COLUMN_TONE_ID + " = " +
-        RINGTONE_TABLE + "." + RINGTONE_COLUMN_TONE_ID;
-    queryPredicates.InnerJoin(PRELOAD_CONFIG_TABLE)->On({ onClause });
-    queryPredicates.SetWhereClause(PRELOAD_CONFIG_TABLE + "." + PRELOAD_CONFIG_COLUMN_RING_TONE_TYPE + " = ? ");
-    std::string subquery = to_string(defaultsystemTypeMap_[systemToneType]);
-    std::vector<std::string> whereArgs = {subquery};
-    queryPredicates.SetWhereArgs(whereArgs);
+    std::vector<std::string> onClause;
+    onClause.push_back("ToneFiles.tone_id = PreloadConfig.tone_id");
+    queryPredicates.InnerJoin("PreloadConfig")->On(onClause)->EqualTo("PreloadConfig.ring_tone_type",
+        defaultsystemTypeMap_[systemToneType]);
 }
 
 std::vector<std::shared_ptr<ToneAttrs>> SystemSoundManagerImpl::GetSystemToneAttrList(
@@ -1611,13 +1590,14 @@ int32_t SystemSoundManagerImpl::GetToneHapticsSettings(const std::shared_ptr<Abi
     ToneHapticsType toneHapticsType, ToneHapticsSettings &settings)
 {
 #ifdef SUPPORT_VIBRATOR
+    std::lock_guard<std::mutex> lock(toneHapticsMutex_);
     CHECK_AND_RETURN_RET_LOG(IsToneHapticsTypeValid(toneHapticsType), IO_ERROR, "Invalid tone haptics type");
     MEDIA_LOGI("GetToneHapticsSettings: toneHapticsType %{public}d", toneHapticsType);
-    string currentToneUri = GetCurrentToneUri(context, toneHapticsType);
-    CHECK_AND_RETURN_RET_LOG(!currentToneUri.empty(), IO_ERROR, "GetToneHapticsSettings: get current tone fail!");
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, IO_ERROR,
         "Create dataShare failed, datashare or ringtone library error.");
+    string currentToneUri = GetCurrentToneUri(context, toneHapticsType);
+    CHECK_AND_RETURN_RET_LOG(!currentToneUri.empty(), IO_ERROR, "GetToneHapticsSettings: get current tone fail!");
 
     int32_t result = SUCCESS;
     auto simcardSettingAsset = GetSimcardSettingAssetByToneHapticsType(dataShareHelper, toneHapticsType);
@@ -1659,15 +1639,15 @@ int32_t SystemSoundManagerImpl::SetToneHapticsSettings(const std::shared_ptr<Abi
     ToneHapticsType toneHapticsType, const ToneHapticsSettings &settings)
 {
 #ifdef SUPPORT_VIBRATOR
+    std::lock_guard<std::mutex> lock(toneHapticsMutex_);
     CHECK_AND_RETURN_RET_LOG(IsToneHapticsTypeValid(toneHapticsType), OPERATION_ERROR, "Invalid tone haptics type");
     MEDIA_LOGI("SetToneHapticsSettings: toneHapticsType %{public}d, hapticsUri %{public}s toneHapticsMode %{public}d",
         toneHapticsType, settings.hapticsUri.c_str(), settings.mode);
-    string currentToneUri = GetCurrentToneUri(context, toneHapticsType);
-    CHECK_AND_RETURN_RET_LOG(!currentToneUri.empty(), IO_ERROR, "SetToneHapticsSettings: get current tone fail!");
-    string toneTitle = GetRingtoneTitle(currentToneUri);
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, IO_ERROR,
         "Create dataShare failed, datashare or ringtone library error.");
+    string currentToneUri = GetCurrentToneUri(context, toneHapticsType);
+    CHECK_AND_RETURN_RET_LOG(!currentToneUri.empty(), IO_ERROR, "SetToneHapticsSettings: get current tone fail!");
 
     ToneHapticsSettings updateSettings = settings;
     if (updateSettings.mode == ToneHapticsMode::NON_SYNC) {

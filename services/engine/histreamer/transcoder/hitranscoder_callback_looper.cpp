@@ -148,6 +148,10 @@ void HiTransCoderCallbackLooper::DoReportError(const Any &error)
     auto obs = obs_.lock();
     FALSE_RETURN(obs != nullptr);
     auto ptr = AnyCast<std::pair<TransCoderErrorType, int32_t>>(&error);
+    if (ptr == nullptr) {
+        MEDIA_LOG_E("Error: ptr is nullptr");
+        return;
+    }
     MEDIA_LOG_E("Report error, error type: " PUBLIC_LOG_D32 " error value: " PUBLIC_LOG_D32,
         static_cast<int32_t>(ptr->first), static_cast<int32_t>(ptr->second));
     obs->OnError(ptr->first, ptr->second);

@@ -31,9 +31,10 @@ const int32_t MAX_SOUND_POOL_STREAMS = 1; // ensure that only one stream for sou
 const int32_t LOAD_WAIT_SECONDS = 2;
 
 AudioHapticSoundLowLatencyImpl::AudioHapticSoundLowLatencyImpl(const std::string &audioUri, const bool &muteAudio,
-    const AudioStandard::StreamUsage &streamUsage)
+    const AudioStandard::StreamUsage &streamUsage, const bool &parallelPlayFlag)
     : audioUri_(audioUri),
       muteAudio_(muteAudio),
+      parallelPlayFlag_(parallelPlayFlag),
       streamUsage_(streamUsage)
 {
 }
@@ -140,7 +141,7 @@ int32_t AudioHapticSoundLowLatencyImpl::StartSound()
         .leftVolume = volume_ * (muteAudio_ ? 0 : 1),
         .rightVolume = volume_ * (muteAudio_ ? 0 : 1),
         .priority = 0,
-        .parallelPlayFlag = false,
+        .parallelPlayFlag = parallelPlayFlag_,
     };
     streamID_ = soundPoolPlayer_->Play(soundID_, playParams);
     playerState_ = AudioHapticPlayerState::STATE_RUNNING;

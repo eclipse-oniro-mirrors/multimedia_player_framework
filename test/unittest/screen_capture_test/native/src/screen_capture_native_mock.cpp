@@ -170,6 +170,12 @@ int32_t ScreenCaptureNativeMock::SkipPrivacyMode(int32_t *windowIDs, int32_t win
     return screenCapture_->SkipPrivacyMode(vec);
 }
 
+int32_t ScreenCaptureNativeMock::SetMaxVideoFrameRate(int32_t frameRate)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
+    return screenCapture_->SetMaxVideoFrameRate(frameRate);
+}
+
 int32_t ScreenCaptureNativeMock::AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audioBuffer,
     AudioCaptureSourceType type)
 {

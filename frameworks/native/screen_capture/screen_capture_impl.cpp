@@ -141,6 +141,14 @@ int32_t ScreenCaptureImpl::SkipPrivacyMode(std::vector<uint64_t> &windowIDsVec)
     return screenCaptureService_->SkipPrivacyMode(windowIDsVec);
 }
 
+int32_t ScreenCaptureImpl::SetMaxVideoFrameRate(int32_t frameRate)
+{
+    MEDIA_LOGD("SetMaxVideoFrameRate:0x%{public}06" PRIXPTR " init in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(screenCaptureService_ != nullptr, MSERR_NO_MEMORY,
+                             "screen capture service does not exist..");
+    return screenCaptureService_->SetMaxVideoFrameRate(frameRate);
+}
+
 int32_t ScreenCaptureImpl::Init(AVScreenCaptureConfig config)
 {
     MEDIA_LOGD("InitScreenCapture:0x%{public}06" PRIXPTR " init in", FAKE_POINTER(this));

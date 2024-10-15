@@ -2727,7 +2727,6 @@ napi_value AVPlayerNapi::JsSetOnCallback(napi_env env, napi_callback_info info)
 
     std::string callbackName = CommonNapi::GetStringArgument(env, args[0]);
     jsPlayer->MaxAmplitudeCallbackOn(jsPlayer, callbackName);
-    jsPlayer->DeviceChangeCallbackOn(jsPlayer, callbackName);
     MEDIA_LOGI("0x%{public}06" PRIXPTR " set callbackName: %{public}s", FAKE_POINTER(jsPlayer), callbackName.c_str());
 
     napi_ref ref = nullptr;
@@ -2781,7 +2780,6 @@ napi_value AVPlayerNapi::JsClearOnCallback(napi_env env, napi_callback_info info
 
     std::string callbackName = CommonNapi::GetStringArgument(env, args[0]);
     jsPlayer->MaxAmplitudeCallbackOff(jsPlayer, callbackName);
-    jsPlayer->DeviceChangeCallbackOff(jsPlayer, callbackName);
     MEDIA_LOGI("0x%{public}06" PRIXPTR " set callbackName: %{public}s", FAKE_POINTER(jsPlayer), callbackName.c_str());
 
     jsPlayer->ClearCallbackReference(callbackName);
