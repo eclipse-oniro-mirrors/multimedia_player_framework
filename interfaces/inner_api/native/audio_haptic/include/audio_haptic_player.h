@@ -16,7 +16,7 @@
 #ifndef AUDIO_HAPTIC_PLAYER_H
 #define AUDIO_HAPTIC_PLAYER_H
 
-#include<mutex>
+#include <mutex>
 
 #include "audio_info.h"
 
