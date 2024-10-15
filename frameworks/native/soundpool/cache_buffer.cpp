@@ -77,8 +77,8 @@ std::unique_ptr<AudioStandard::AudioRenderer> CacheBuffer::CreateAudioRenderer(c
     rendererOptions.streamInfo.channels = static_cast<AudioStandard::AudioChannel>(channelCount);
     // contentType streamUsage rendererFlags come from user.
     if (IsAudioRendererValid(audioRendererInfo)) {
-            rendererOptions.strategy.concurrencyMode = AudioStandard::AudioConcurrencyMode::MIX_WITH_OTHERS;
-        }
+        rendererOptions.strategy.concurrencyMode = AudioStandard::AudioConcurrencyMode::MIX_WITH_OTHERS;
+    }
     rendererOptions.rendererInfo.contentType = audioRendererInfo.contentType;
     rendererOptions.rendererInfo.streamUsage = audioRendererInfo.streamUsage;
     rendererOptions.privacyType = AudioStandard::PRIVACY_TYPE_PUBLIC;
