@@ -50,7 +50,7 @@ namespace {
         std::pair<uint64_t, std::shared_ptr<OHOS::Media::Meta>> metaAppIdPair;
         {
             std::lock_guard<std::mutex> lock(collectMut_);
-            MEDIA_LOG_I("CollectReportMediaInfo, instanceId is : %{public}" PRIu64, instanceId);
+            MEDIA_LOG_I("CollectReportMediaInfo, instanceId is %{public}" PRIu64, instanceId);
             auto idMapIt = idMap_.find(instanceId);
             if (idMapIt == idMap_.end()) {
                 MEDIA_LOG_W("Not found instanceId in idMap, instanceId is : %{public}" PRIu64, instanceId);
@@ -224,7 +224,6 @@ void MediaEvent::CommonStatisicsEventWrite(CallType callType, OHOS::HiviewDFX::H
 #endif
     StatisicsHiSysEventWrite(callType, type, infoArr);
 }
-
 
 #ifdef SUPPORT_JSON
 void MediaEvent::ParseOneEvent(const std::pair<uint64_t, std::shared_ptr<OHOS::Media::Meta>> &listPair,

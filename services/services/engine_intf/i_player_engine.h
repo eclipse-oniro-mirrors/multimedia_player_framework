@@ -189,29 +189,8 @@ public:
     {
         (void)instanceId;
     }
-    virtual int32_t PauseDemuxer()
-    {
-        return 0;
-    }
-    virtual int32_t ResumeDemuxer()
-    {
-        return 0;
-    }
-    virtual int32_t SeekContinous(int32_t mSeconds, int64_t seekContinousBatchNo)
-    {
-        (void)mSeconds;
-        (void)seekContinousBatchNo;
-        return 0;
-    }
 
-    virtual int32_t ExitSeekContinous(bool align, int64_t seekContinousBatchNo)
-    {
-        (void)align;
-        (void)seekContinousBatchNo;
-        return 0;
-    }
-
-    virtual int64_t GetPlayRangeStartTime()
+        virtual int64_t GetPlayRangeStartTime()
     {
         return 0;
     }
@@ -226,7 +205,15 @@ public:
         return 0;
     }
 
-    virtual int32_t SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted)
+    virtual int32_t PauseDemuxer()
+    {
+        return 0;
+    }
+    virtual int32_t ResumeDemuxer()
+    {
+        return 0;
+    }
+        virtual int32_t SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted)
     {
         return 0;
     }
@@ -235,7 +222,18 @@ public:
     {
         return 0;
     }
-
+    virtual int32_t SeekContinous(int32_t mSeconds, int64_t seekContinousBatchNo)
+    {
+        (void)mSeconds;
+        (void)seekContinousBatchNo;
+        return 0;
+    }
+    virtual int32_t ExitSeekContinous(bool align, int64_t seekContinousBatchNo)
+    {
+        (void)align;
+        (void)seekContinousBatchNo;
+        return 0;
+    }
     virtual int32_t SetMaxAmplitudeCbStatus(bool status)
     {
         return 0;
