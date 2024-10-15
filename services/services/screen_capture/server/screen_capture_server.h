@@ -272,6 +272,7 @@ public:
     int32_t SetCanvasRotation(bool canvasRotation) override;
     int32_t ResizeCanvas(int32_t width, int32_t height) override;
     int32_t SkipPrivacyMode(std::vector<uint64_t> &windowIDsVec) override;
+    int32_t SetMaxVideoFrameRate(int32_t frameRate) override;
     void Release() override;
     int32_t ExcludeContent(ScreenCaptureContentFilter &contentFilter) override;
 
@@ -357,6 +358,7 @@ private:
     void SystemRecorderInterruptLatestRecorder();
     int32_t ReStartMicForVoIPStatusSwitch();
     void RegisterPrivateWindowListener();
+    bool NoPreSetSpecifiedScreenParam();
 
 private:
     std::mutex mutex_;

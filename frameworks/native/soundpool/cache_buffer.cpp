@@ -240,9 +240,7 @@ void CacheBuffer::OnWriteData(size_t length)
         return;
     }
     if (cacheDataFrameIndex_ >= static_cast<size_t>(fullCacheData_->size)) {
-        while (!cacheBufferLock_.try_lock()) {
-            CHECK_AND_RETURN_LOG(isRunning_.load(), "OnWriteData releasing");
-        }
+        cacheBufferLock_.lock();
         if (loop_ >= 0 && havePlayedCount_ >= loop_) {
             MEDIA_LOGI("CacheBuffer stream write finish, cacheDataFrameIndex_:%{public}zu,"
                 " havePlayedCount_:%{public}d, loop:%{public}d, streamID_:%{public}d, length: %{public}zu",
@@ -262,41 +260,26 @@ void CacheBuffer::DealWriteData(size_t length)
 {
     AudioStandard::BufferDesc bufDesc;
     audioRenderer_->GetBufferDesc(bufDesc);
-    while (!cacheBufferLock_.try_lock()) {
-        CHECK_AND_RETURN_LOG(isRunning_.load(), "DealWriteData releasing");
-    }
+    std::lock_guard lock(cacheBufferLock_);
     if (bufDesc.buffer != nullptr && fullCacheData_ != nullptr && fullCacheData_->buffer != nullptr) {
         if (static_cast<size_t>(fullCacheData_->size) - cacheDataFrameIndex_ >= length) {
             int32_t ret = memcpy_s(bufDesc.buffer, length,
                 fullCacheData_->buffer + cacheDataFrameIndex_, length);
-            if (ret != MSERR_OK) {
-                cacheBufferLock_.unlock();
-                MEDIA_LOGE("memcpy failed total length");
-                return;
-            }
+            CHECK_AND_RETURN_LOG(ret == MSERR_OK, "memcpy failed total length.");
             bufDesc.bufLength = length;
             bufDesc.dataLength = length;
             cacheDataFrameIndex_ += length;
         } else {
             size_t copyLength = static_cast<size_t>(fullCacheData_->size) - cacheDataFrameIndex_;
             int32_t ret = memset_s(bufDesc.buffer, length, 0, length);
-            if (ret != MSERR_OK) {
-                cacheBufferLock_.unlock();
-                MEDIA_LOGE("memset failed");
-                return;
-            }
+            CHECK_AND_RETURN_LOG(ret == MSERR_OK, "memset failed.");
             ret = memcpy_s(bufDesc.buffer, length, fullCacheData_->buffer + cacheDataFrameIndex_,
                 copyLength);
-            if (ret != MSERR_OK) {
-                cacheBufferLock_.unlock();
-                MEDIA_LOGE("memcpy failed not enough length");
-                return;
-            }
+            CHECK_AND_RETURN_LOG(ret == MSERR_OK, "memcpy failed not enough length.");
             bufDesc.bufLength = length;
             bufDesc.dataLength = length;
             cacheDataFrameIndex_ += copyLength;
         }
-        cacheBufferLock_.unlock();
         audioRenderer_->Enqueue(bufDesc);
     } else {
         MEDIA_LOGE("OnWriteData, cacheDataFrameIndex_: %{public}zu, length: %{public}zu,"
@@ -304,7 +287,6 @@ void CacheBuffer::DealWriteData(size_t length)
             " streamID_:%{public}d",
             cacheDataFrameIndex_, length, bufDesc.buffer != nullptr, fullCacheData_ != nullptr,
             fullCacheData_->buffer != nullptr, streamID_);
-        cacheBufferLock_.unlock();
     }
 }
 
@@ -321,11 +303,7 @@ void CacheBuffer::OnFirstFrameWriting(uint64_t latency)
 int32_t CacheBuffer::Stop(const int32_t streamID)
 {
     MediaTrace trace("CacheBuffer::Stop");
-    while (!cacheBufferLock_.try_lock()) {
-        if (!isRunning_.load()) {
-            return MSERR_OK;
-        }
-    }
+    std::lock_guard lock(cacheBufferLock_);
     if (streamID == streamID_) {
         MEDIA_LOGI("CacheBuffer::Stop streamID:%{public}d", streamID_);
         if (audioRenderer_ != nullptr && isRunning_.load()) {
@@ -349,10 +327,8 @@ int32_t CacheBuffer::Stop(const int32_t streamID)
                 cacheBufferCallback_->OnPlayFinished();
             }
         }
-        cacheBufferLock_.unlock();
         return MSERR_OK;
     }
-    cacheBufferLock_.unlock();
     return MSERR_INVALID_VAL;
 }
 
@@ -416,14 +392,26 @@ int32_t CacheBuffer::SetParallelPlayFlag(const int32_t streamID, const bool para
 int32_t CacheBuffer::Release()
 {
     MediaTrace trace("CacheBuffer::Release");
-    std::lock_guard lock(cacheBufferLock_);
-    MEDIA_LOGI("CacheBuffer::Release start, streamID:%{public}d", streamID_);
-    isRunning_.store(false);
-    if (audioRenderer_ != nullptr) {
-        audioRenderer_->Stop();
-        audioRenderer_->Release();
+    // Define a temporary variable.Let audioRenderer_ to audioRenderer can protect audioRenderer_ concurrently
+    // modified.So will not cause null pointers.
+    std::unique_ptr<AudioStandard::AudioRenderer> audioRenderer;
+    {
+        std::lock_guard lock(cacheBufferLock_);
+        audioRenderer = std::move(audioRenderer_);
         audioRenderer_ = nullptr;
+        isRunning_.store(false);
     }
+
+    MEDIA_LOGI("CacheBuffer::Release start, streamID:%{public}d", streamID_);
+    // Use audioRenderer to release and don't lock, so it will not cause dead lock. if here locked, audioRenderer
+    // will wait callback thread stop, and the callback thread can't get the lock, it will cause dead lock
+    if (audioRenderer != nullptr) {
+        audioRenderer->Stop();
+        audioRenderer->Release();
+        audioRenderer = nullptr;
+    }
+
+    std::lock_guard lock(cacheBufferLock_);
     if (!cacheData_.empty()) cacheData_.clear();
     if (fullCacheData_ != nullptr) fullCacheData_.reset();
     if (callback_ != nullptr) callback_.reset();

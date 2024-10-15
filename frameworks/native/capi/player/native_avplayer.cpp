@@ -856,7 +856,6 @@ OH_AVPlayer *OH_AVPlayer_Create(void)
 {
     std::shared_ptr<Player> player = PlayerFactory::CreatePlayer();
     CHECK_AND_RETURN_RET_LOG(player != nullptr, nullptr, "failed to PlayerFactory::CreatePlayer");
-    (void)player->SetDeviceChangeCbStatus(true);
 
     PlayerObject *object = new(std::nothrow) PlayerObject(player);
     CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "failed to new PlayerObject");

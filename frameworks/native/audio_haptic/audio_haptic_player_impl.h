@@ -66,6 +66,7 @@ private:
     AudioStandard::StreamUsage streamUsage_ = AudioStandard::STREAM_USAGE_UNKNOWN;
     bool muteAudio_;
     bool muteHaptic_;
+    bool parallelPlayFlag_ = false;
     std::string audioUri_;
     HapticSource hapticSource_;
     float volume_ = 1.0f;

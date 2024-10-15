@@ -2272,5 +2272,113 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_with_surface_skip_privacy_01, Tes
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_with_surface_skip_privacy_01 after");
 }
 
+/**
+ * @tc.name: screen_capture_buffertest_max_frame_rate_01
+ * @tc.desc: screen capture buffer test
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_buffertest_max_frame_rate_01, TestSize.Level2)
+{
+    SetConfig(config_);
+    config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
+
+    aFlag = 1;
+    vFlag = 1;
+    bool isMicrophone = false;
+
+    screenCaptureCb_ = std::make_shared<ScreenCaptureUnitTestCallback>(screenCapture_, aFile, vFile, aFlag, vFlag);
+    ASSERT_NE(nullptr, screenCaptureCb_);
+    screenCapture_->SetMicrophoneEnabled(isMicrophone);
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
+    sleep(RECORDER_TIME_5);
+    int32_t totalFrameNum = screenCaptureCb_->GetFrameNumber();
+    double averageFrameRate_01 = ((double)totalFrameNum)/RECORDER_TIME_5;
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetMaxVideoFrameRate(5));
+    sleep(RECORDER_TIME_5);
+    totalFrameNum = screenCaptureCb_->GetFrameNumber();
+    double averageFrameRate_02 = ((double)totalFrameNum)/RECORDER_TIME_5;
+    sleep(RECORDER_TIME_5);
+    totalFrameNum = screenCaptureCb_->GetFrameNumber();
+    double averageFrameRate_03 = ((double)totalFrameNum)/RECORDER_TIME_5;
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetMaxVideoFrameRate(15));
+    sleep(RECORDER_TIME_5);
+    totalFrameNum = screenCaptureCb_->GetFrameNumber();
+    double averageFrameRate_04 = ((double)totalFrameNum)/RECORDER_TIME_5;
+    sleep(RECORDER_TIME_5);
+    totalFrameNum = screenCaptureCb_->GetFrameNumber();
+    double averageFrameRate_05 = ((double)totalFrameNum)/RECORDER_TIME_5;
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetMaxVideoFrameRate(90));
+    sleep(RECORDER_TIME_5);
+    totalFrameNum = screenCaptureCb_->GetFrameNumber();
+    double averageFrameRate_06 = ((double)totalFrameNum)/RECORDER_TIME_5;
+    sleep(RECORDER_TIME_5);
+    totalFrameNum = screenCaptureCb_->GetFrameNumber();
+    double averageFrameRate_07 = ((double)totalFrameNum)/RECORDER_TIME_5;
+    EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
+    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+    EXPECT_TRUE(averageFrameRate_02 < (5 * EXCESS_RATE));
+    EXPECT_TRUE(averageFrameRate_03 < (5 * EXCESS_RATE));
+    EXPECT_TRUE(averageFrameRate_04 < (15 * EXCESS_RATE));
+    EXPECT_TRUE(averageFrameRate_05 < (15 * EXCESS_RATE));
+    EXPECT_TRUE(averageFrameRate_06 < (90 * EXCESS_RATE));
+    EXPECT_TRUE(averageFrameRate_07 < (90 * EXCESS_RATE));
+    cout << "SetMaxVideoFrameRate end averageFrameRate_01: " << averageFrameRate_01 << ",set 5,averageFrameRate_02: "
+        << averageFrameRate_02 << " averageFrameRate_03: " << averageFrameRate_03 << ",set 15,averageFrameRate_04: "
+        << averageFrameRate_04 << " averageFrameRate_05: " << averageFrameRate_05 << ",set 90,averageFrameRate_06: "
+        << averageFrameRate_06 << " averageFrameRate_07: " << averageFrameRate_07 << endl;
+}
+
+/**
+ * @tc.name: screen_capture_buffertest_max_frame_rate_02
+ * @tc.desc: screen capture buffer test
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_buffertest_max_frame_rate_02, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_buffertest_max_frame_rate_02 before");
+    SetConfig(config_);
+    config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
+
+    aFlag = 1;
+    vFlag = 1;
+    bool isMicrophone = false;
+
+    screenCaptureCb_ = std::make_shared<ScreenCaptureUnitTestCallback>(screenCapture_, aFile, vFile, aFlag, vFlag);
+    ASSERT_NE(nullptr, screenCaptureCb_);
+    screenCapture_->SetMicrophoneEnabled(isMicrophone);
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
+    sleep(RECORDER_TIME_5);
+    int32_t totalFrameNum = screenCaptureCb_->GetFrameNumber();
+    double averageFrameRate_01 = ((double)totalFrameNum)/RECORDER_TIME_5;
+    EXPECT_NE(MSERR_OK, screenCapture_->SetMaxVideoFrameRate(-10));
+    sleep(RECORDER_TIME_5);
+    totalFrameNum = screenCaptureCb_->GetFrameNumber();
+    double averageFrameRate_02 = ((double)totalFrameNum)/RECORDER_TIME_5;
+    sleep(RECORDER_TIME_5);
+    totalFrameNum = screenCaptureCb_->GetFrameNumber();
+    double averageFrameRate_03 = ((double)totalFrameNum)/RECORDER_TIME_5;
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetMaxVideoFrameRate(1000000000));
+    sleep(RECORDER_TIME_5);
+    totalFrameNum = screenCaptureCb_->GetFrameNumber();
+    double averageFrameRate_04 = ((double)totalFrameNum)/RECORDER_TIME_5;
+    sleep(RECORDER_TIME_5);
+    totalFrameNum = screenCaptureCb_->GetFrameNumber();
+    double averageFrameRate_05 = ((double)totalFrameNum)/RECORDER_TIME_5;
+
+    EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
+    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+    cout << "SetMaxVideoFrameRate end averageFrameRate_01: " << averageFrameRate_01
+        << ",set -10,averageFrameRate_02: " << averageFrameRate_02 << " averageFrameRate_03: "
+        << averageFrameRate_03 << ",set 1000000000,averageFrameRate_04: " << averageFrameRate_04
+        << " averageFrameRate_05: " << averageFrameRate_05 << endl;
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_buffertest_max_frame_rate_02 after");
+}
+
 } // namespace Media
 } // namespace OHOS

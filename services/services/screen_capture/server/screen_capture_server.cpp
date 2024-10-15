@@ -92,7 +92,7 @@ static const int32_t MICROPHONE_STATE_COUNT = 2;
 static const int32_t MAX_SESSION_ID = 256;
 static const int32_t MAX_SESSION_PER_UID = 8;
 static const auto NOTIFICATION_SUBSCRIBER = NotificationSubscriber();
-static constexpr int32_t AUDIO_CHANGE_TIME = 100000; // 100 ms
+static constexpr int32_t AUDIO_CHANGE_TIME = 200000; // 200 ms
 
 void NotificationSubscriber::OnConnected()
 {
@@ -1373,9 +1373,11 @@ void ScreenCaptureServer::SystemRecorderInterruptLatestRecorder()
     if (currentSessionId >= 0) {
         {
             std::lock_guard<std::mutex> lock(mutexGlobal_);
-            latestServer = GetScreenCaptureServerByIdWithLock(activeSessionId_.load());
+            latestServer = GetScreenCaptureServerByIdWithLock(currentSessionId);
         }
-        if (latestServer != nullptr && sessionId_ != activeSessionId_.load()) {
+        CHECK_AND_RETURN_LOG(latestServer != nullptr, "session Id: %{public}d is interrupted by Id: %{public}d,"
+            "but latestServer is nullptr.", currentSessionId, sessionId_);
+        if (latestServer != nullptr && sessionId_ != currentSessionId) {
             MEDIA_LOGW("SystemRecorderInterruptLatestRecorder uid(%{public}d) is interrupted by uid(%{public}d)",
                 latestServer->appInfo_.appUid, this->appInfo_.appUid);
             latestServer->StopScreenCaptureByEvent(
@@ -1475,6 +1477,12 @@ int32_t ScreenCaptureServer::RegisterServerCallbacks()
     return MSERR_OK;
 }
 
+bool ScreenCaptureServer::NoPreSetSpecifiedScreenParam()
+{
+    return captureConfig_.videoInfo.videoCapInfo.displayId == static_cast<uint64_t>(-1) && missionIds_.size() == 0 &&
+        captureConfig_.videoInfo.videoCapInfo.taskIDs.size() == 0;
+}
+
 int32_t ScreenCaptureServer::StartPrivacyWindow()
 {
     auto bundleName = GetClientBundleName(appInfo_.appUid);
@@ -1491,22 +1499,23 @@ int32_t ScreenCaptureServer::StartPrivacyWindow()
     AAFwk::Want want;
     ErrCode ret = ERR_INVALID_VALUE;
 #ifdef PC_STANDARD
-    if (captureConfig_.captureMode == CAPTURE_HOME_SCREEN) {
-        want.SetElementName(GetScreenCaptureSystemParam()["const.multimedia.screencapture.dialogconnectionbundlename"],
-            GetScreenCaptureSystemParam()["const.multimedia.screencapture.dialogconnectionabilityname"]);
-        auto connection_ = sptr<UIExtensionAbilityConnection>(new (std::nothrow) UIExtensionAbilityConnection(comStr));
-        ret = OHOS::AAFwk::ExtensionManagerClient::GetInstance().ConnectServiceExtensionAbility(want, connection_,
-            nullptr, -1);
-        MEDIA_LOGI("ConnectServiceExtensionAbility end %{public}d, DeviceType : PC", ret);
-    } else if (captureConfig_.captureMode != CAPTURE_INVAILD) {
+    if (captureConfig_.captureMode == CAPTURE_SPECIFIED_SCREEN && NoPreSetSpecifiedScreenParam()) {
         AppExecFwk::ElementName element("",
             GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"],
             SELECT_ABILITY_NAME); // DeviceID
         want.SetElement(element);
         want.SetParam("params", comStr);
         want.SetParam("appLabel", callingLabel_);
+        want.SetParam("sessionId", sessionId_);
         ret = AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want);
         MEDIA_LOGI("StartAbility end %{public}d, DeviceType : PC", ret);
+    } else {
+        want.SetElementName(GetScreenCaptureSystemParam()["const.multimedia.screencapture.dialogconnectionbundlename"],
+            GetScreenCaptureSystemParam()["const.multimedia.screencapture.dialogconnectionabilityname"]);
+        auto connection_ = sptr<UIExtensionAbilityConnection>(new (std::nothrow) UIExtensionAbilityConnection(comStr));
+        ret = OHOS::AAFwk::ExtensionManagerClient::GetInstance().ConnectServiceExtensionAbility(want, connection_,
+            nullptr, -1);
+        MEDIA_LOGI("ConnectServiceExtensionAbility end %{public}d, DeviceType : PC", ret);
     }
 #else
     want.SetElementName(GetScreenCaptureSystemParam()["const.multimedia.screencapture.dialogconnectionbundlename"],
@@ -2396,6 +2405,31 @@ int32_t ScreenCaptureServer::SkipPrivacyModeInner()
     return MSERR_OK;
 }
 
+int32_t ScreenCaptureServer::SetMaxVideoFrameRate(int32_t frameRate)
+{
+    MediaTrace trace("ScreenCaptureServer::SetMaxVideoFrameRate");
+    std::lock_guard<std::mutex> lock(mutex_);
+    MEDIA_LOGI("ScreenCaptureServer::SetMaxVideoFrameRate start, frameRate:%{public}d", frameRate);
+    if (captureState_ != AVScreenCaptureState::STARTED) {
+        MEDIA_LOGE("SetMaxVideoFrameRate captureState_ invalid, captureState_:%{public}d", captureState_);
+        return MSERR_INVALID_OPERATION;
+    }
+    if (frameRate <= 0) {
+        MEDIA_LOGE("SetMaxVideoFrameRate frameRate is invalid, frameRate:%{public}d", frameRate);
+        return MSERR_INVALID_VAL;
+    }
+    
+    uint32_t actualRefreshRate = 0;
+    auto res = ScreenManager::GetInstance().SetVirtualScreenMaxRefreshRate(screenId_,
+        static_cast<uint32_t>(frameRate), actualRefreshRate);
+
+    CHECK_AND_RETURN_RET_LOG(res == DMError::DM_OK, MSERR_UNSUPPORT, "SetMaxVideoFrameRate failed");
+
+    MEDIA_LOGI("ScreenCaptureServer::SetMaxVideoFrameRate end, frameRate:%{public}d, actualRefreshRate:%{public}u",
+        frameRate, actualRefreshRate);
+    return MSERR_OK;
+}
+
 int32_t ScreenCaptureServer::SetScreenScaleMode()
 {
     MediaTrace trace("ScreenCaptureServer::SetScreenScaleMode");
@@ -2506,6 +2540,7 @@ int32_t ScreenCaptureServer::StopScreenCaptureInner(AVScreenCaptureStateCode sta
         audioSource_->UnregisterAudioRendererEventListener(audioSource_->GetAppPid());
     }
     DisplayManager::GetInstance().UnregisterPrivateWindowListener(displayListener_);
+    displayListener_ = nullptr;
     if (captureState_ == AVScreenCaptureState::CREATED || captureState_ == AVScreenCaptureState::STARTING) {
         captureState_ = AVScreenCaptureState::STOPPED;
         ScreenCaptureMonitorServer::GetInstance()->CallOnScreenCaptureFinished(appInfo_.appPid);

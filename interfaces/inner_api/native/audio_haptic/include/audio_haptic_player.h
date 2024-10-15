@@ -16,7 +16,7 @@
 #ifndef AUDIO_HAPTIC_PLAYER_H
 #define AUDIO_HAPTIC_PLAYER_H
 
-#include<mutex>
+#include <mutex>
 
 #include "audio_info.h"
 
@@ -52,6 +52,7 @@ enum AudioLatencyMode {
 struct AudioHapticPlayerOptions {
     bool muteAudio;
     bool muteHaptics;
+    bool parallelPlayFlag = false;
 };
 
 enum HapticsMode {

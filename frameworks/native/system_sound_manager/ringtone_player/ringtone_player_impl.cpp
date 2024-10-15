@@ -48,7 +48,9 @@ RingtonePlayerImpl::RingtonePlayerImpl(const shared_ptr<Context> &context,
     CHECK_AND_RETURN_LOG(audioHapticManager_ != nullptr, "Failed to get audio haptic manager");
 
     std::string ringtoneUri = systemSoundMgr_.GetRingtoneUri(context_, type_);
-    InitPlayer(ringtoneUri);
+    AudioHapticPlayerOptions options = {false, false};
+    ToneHapticsSettings settings = GetHapticSettings(ringtoneUri, options.muteHaptics);
+    InitPlayer(ringtoneUri, settings, options);
 }
 
 RingtonePlayerImpl::~RingtonePlayerImpl()
@@ -230,47 +232,41 @@ HapticsMode RingtonePlayerImpl::ConvertToHapticsMode(ToneHapticsMode toneHaptics
     }
 }
 
-std::shared_ptr<ToneHapticsSettings> RingtonePlayerImpl::GetNewHapticSettings()
+ToneHapticsSettings RingtonePlayerImpl::GetHapticSettings(std::string &audioUri, bool &muteHaptics)
 {
     ToneHapticsSettings settings;
     int32_t result = systemSoundMgr_.GetToneHapticsSettings(context_, ConvertToToneHapticsType(type_), settings);
     if (result == 0) {
-        auto tmpSettings = std::make_shared<ToneHapticsSettings>();
-        tmpSettings->mode = settings.mode;
-        if (!settings.hapticsUri.empty()) {
-            tmpSettings->hapticsUri = ChangeHapticsUri(settings.hapticsUri);
-        }
-        return tmpSettings;
+        MEDIA_LOGI("GetHapticSettings: hapticsUri:%{public}s, mode:%{public}d.",
+            settings.hapticsUri.c_str(), settings.mode);
+        return settings;
     }
-    return nullptr;
+    settings.mode = ToneHapticsMode::SYNC;
+    settings.hapticsUri = GetNewHapticUriForAudioUri(audioUri);
+    if (settings.hapticsUri.empty()) {
+        settings.hapticsUri = GetHapticUriForAudioUri(audioUri);
+        if (settings.hapticsUri.empty()) {
+            MEDIA_LOGW("haptic uri is empty. Play ringtone without vibration");
+            muteHaptics = true;
+            settings.mode = ToneHapticsMode::NONE;
+        }
+    }
+    MEDIA_LOGI("GetHapticSettings: hapticsUri:%{public}s, mode:%{public}d.",
+        settings.hapticsUri.c_str(), settings.mode);
+    return settings;
 }
 
-void RingtonePlayerImpl::InitPlayer(std::string &audioUri)
+void RingtonePlayerImpl::InitPlayer(std::string &audioUri, ToneHapticsSettings &settings,
+    AudioHapticPlayerOptions options)
 {
+    MEDIA_LOGI("InitPlayer: ToneUri:%{public}s, hapticsUri:%{public}s, mode:%{public}d.",
+        audioUri.c_str(), settings.hapticsUri.c_str(), settings.mode);
     if (sourceId_ != -1) {
         (void)audioHapticManager_->UnregisterSource(sourceId_);
         sourceId_ = -1;
     }
 
-    AudioHapticPlayerOptions options = {false, false};
-    auto settings = GetNewHapticSettings();
-    if (settings == nullptr) {
-        settings = std::make_shared<ToneHapticsSettings>();
-        settings->mode = ToneHapticsMode::SYNC;
-        settings->hapticsUri = GetNewHapticUriForAudioUri(audioUri);
-        if (settings->hapticsUri.empty()) {
-            settings->hapticsUri = GetHapticUriForAudioUri(audioUri);
-            if (settings->hapticsUri == "") {
-                MEDIA_LOGW("haptic uri is empty. Play ringtone without vibration");
-                options.muteHaptics = true;
-                settings->mode = ToneHapticsMode::NONE;
-            }
-        }
-    }
-    MEDIA_LOGI("InitPlayer: ToneUri:%{public}s, hapticsUri:%{public}s, mode:%{public}d.",
-        audioUri.c_str(), settings->hapticsUri.c_str(), settings->mode);
-
-    sourceId_ = audioHapticManager_->RegisterSource(ChangeUri(audioUri), settings->hapticsUri);
+    sourceId_ = audioHapticManager_->RegisterSource(ChangeUri(audioUri), settings.hapticsUri);
     CHECK_AND_RETURN_LOG(sourceId_ != -1, "Failed to register source for audio haptic manager");
     (void)audioHapticManager_->SetAudioLatencyMode(sourceId_, AUDIO_LATENCY_MODE_NORMAL);
     (void)audioHapticManager_->SetStreamUsage(sourceId_, AudioStandard::StreamUsage::STREAM_USAGE_VOICE_RINGTONE);
@@ -280,10 +276,11 @@ void RingtonePlayerImpl::InitPlayer(std::string &audioUri)
     }
     player_ = audioHapticManager_->CreatePlayer(sourceId_, options);
     CHECK_AND_RETURN_LOG(player_ != nullptr, "Failed to create ringtone player instance");
-    player_->SetHapticsMode(ConvertToHapticsMode(settings->mode));
+    player_->SetHapticsMode(ConvertToHapticsMode(settings.mode));
     int32_t result = player_->Prepare();
     CHECK_AND_RETURN_LOG(result == MSERR_OK, "Failed to load source for audio haptic manager");
     configuredUri_ = audioUri;
+    configuredHaptcisSettings_ = settings;
 
     if (callback_ == nullptr) {
         callback_ = std::make_shared<RingtonePlayerCallback>(*this);
@@ -320,9 +317,12 @@ int32_t RingtonePlayerImpl::Start()
     CHECK_AND_RETURN_RET_LOG(player_ != nullptr && ringtoneState_ != STATE_INVALID, MSERR_INVALID_VAL, "no player_");
 
     std::string ringtoneUri = systemSoundMgr_.GetRingtoneUri(context_, type_);
-    if (ringtoneUri != configuredUri_) {
+    AudioHapticPlayerOptions options = {false, false};
+    ToneHapticsSettings settings = GetHapticSettings(ringtoneUri, options.muteHaptics);
+    if (ringtoneUri != configuredUri_ || settings.hapticsUri != configuredHaptcisSettings_.hapticsUri ||
+        settings.mode != configuredHaptcisSettings_.mode) {
         MEDIA_LOGI("Ringtone uri changed. Reload player");
-        InitPlayer(ringtoneUri);
+        InitPlayer(ringtoneUri, settings, options);
     }
     int32_t ret = player_->Start();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_START_FAILED, "Start failed %{public}d", ret);
