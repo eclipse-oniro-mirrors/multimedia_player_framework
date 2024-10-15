@@ -231,8 +231,8 @@ void AVThumbnailGenerator::OnOutputBufferAvailable(uint32_t index, std::shared_p
             avBuffer_ = buffer;
         }
         MEDIA_LOGI("dstTime %{public}ld resTime %{public}ld", seekTime_, buffer->pts_);
-        PauseFetchFrame();
         cond_.notify_all();
+        PauseFetchFrame();
         return;
     }
     videoDecoder_->ReleaseOutputBuffer(index, false);
@@ -421,36 +421,37 @@ std::shared_ptr<AVBuffer> AVThumbnailGenerator::GenerateAlignmentAvBuffer()
     auto height = srcSurfaceBuffer->GetHeight();
     bool isHdr = srcSurfaceBuffer->GetFormat() ==
                  static_cast<int32_t>(GraphicPixelFormat::GRAPHIC_PIXEL_FMT_YCBCR_P010);
-    if (isHdr) {
-        sptr<SurfaceBuffer> dstSurfaceBuffer = SurfaceBuffer::Create();
-        BufferRequestConfig requestConfig = {
-            .width = width,
-            .height = height,
-            .strideAlignment = 0x2,
-            .format = srcSurfaceBuffer->GetFormat(),  // always yuv
-            .usage = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_CPU_WRITE | BUFFER_USAGE_MEM_DMA | BUFFER_USAGE_MEM_MMZ_CACHE,
-            .timeout = 0,
-        };
-        GSError allocRes = dstSurfaceBuffer->Alloc(requestConfig);
-        CHECK_AND_RETURN_RET_LOG(allocRes == 0, nullptr, "Alloc surfaceBuffer failed, ecode %{public}d", allocRes);
 
-        // create avBuffer from surfaceBuffer
-        std::shared_ptr<AVBuffer> targetAvBuffer = AVBuffer::CreateAVBuffer(dstSurfaceBuffer);
-        bool ret = targetAvBuffer && targetAvBuffer->memory_ && targetAvBuffer->memory_->GetSurfaceBuffer() != nullptr;
-        CHECK_AND_RETURN_RET_LOG(ret, nullptr, "create avBuffer failed");
-        targetAvBuffer->meta_->Set<Tag::VIDEO_IS_HDR_VIVID>(true);
-        CopySurfaceBufferInfo(srcSurfaceBuffer, dstSurfaceBuffer);
-        CopySurfaceBufferPixels(srcSurfaceBuffer, targetAvBuffer);
-        return targetAvBuffer;
+    sptr<SurfaceBuffer> dstSurfaceBuffer = SurfaceBuffer::Create();
+    BufferRequestConfig requestConfig = {
+        .width = width,
+        .height = height,
+        .strideAlignment = 0x2,
+        .format = srcSurfaceBuffer->GetFormat(),  // always yuv
+        .usage = srcSurfaceBuffer->GetUsage(),
+        .timeout = 0,
+    };
+    CHECK_AND_RETURN_RET_LOG(dstSurfaceBuffer != nullptr, nullptr, "Create surfaceBuffer failed");
+    GSError allocRes = dstSurfaceBuffer->Alloc(requestConfig);
+    CHECK_AND_RETURN_RET_LOG(allocRes == 0, nullptr, "Alloc surfaceBuffer failed, ecode %{public}d", allocRes);
+
+    CopySurfaceBufferInfo(srcSurfaceBuffer, dstSurfaceBuffer);
+    int32_t copyRes = memcpy_s(dstSurfaceBuffer->GetVirAddr(), dstSurfaceBuffer->GetSize(),
+                               srcSurfaceBuffer->GetVirAddr(), srcSurfaceBuffer->GetSize());
+    CHECK_AND_RETURN_RET_LOG(copyRes == EOK, nullptr, "copy surface buffer pixels failed, copyRes %{public}d", copyRes);
+    int32_t outputHeight;
+    auto hasSliceHeight = outputFormat_.GetIntValue(Tag::VIDEO_SLICE_HEIGHT, outputHeight);
+    if (!hasSliceHeight || outputHeight < height) {
+        outputHeight = height;
     }
 
-    // not hdr, just copy pixels
-    std::shared_ptr<AVAllocator> allocator = AVAllocatorFactory::CreateSharedAllocator(MemoryFlag::MEMORY_READ_WRITE);
-    CHECK_AND_RETURN_RET_LOG(allocator != nullptr, nullptr, "create avBuffer allocator failed");
-    int32_t bufferSize = width * height * BYTES_PER_PIXEL_YUV;
-    std::shared_ptr<AVBuffer> targetAvBuffer = AVBuffer::CreateAVBuffer(allocator, bufferSize);
-    CHECK_AND_RETURN_RET_LOG(targetAvBuffer, nullptr, "create avBuffer failed");
-    CopySurfaceBufferPixels(srcSurfaceBuffer, targetAvBuffer);
+    // create avBuffer from surfaceBuffer
+    std::shared_ptr<AVBuffer> targetAvBuffer = AVBuffer::CreateAVBuffer(dstSurfaceBuffer);
+    bool ret = targetAvBuffer && targetAvBuffer->memory_ && targetAvBuffer->meta_ &&
+               targetAvBuffer->memory_->GetSurfaceBuffer() != nullptr;
+    CHECK_AND_RETURN_RET_LOG(ret, nullptr, "create avBuffer failed");
+    targetAvBuffer->meta_->Set<Tag::VIDEO_IS_HDR_VIVID>(isHdr);
+    targetAvBuffer->meta_->Set<Tag::VIDEO_SLICE_HEIGHT>(outputHeight);
     return targetAvBuffer;
 }
 
@@ -512,54 +513,6 @@ int32_t AVThumbnailGenerator::GetYuvDataAlignStride(const sptr<SurfaceBuffer> &s
         }
         srcPtr += stride;
         dstPtr += width;
-    }
-    return MSERR_OK;
-}
-
-int32_t AVThumbnailGenerator::CopySurfaceBufferPixels(const sptr<SurfaceBuffer> &surfaceBuffer,
-                                                      std::shared_ptr<AVBuffer> &avBuffer)
-{
-    CHECK_AND_RETURN_RET(surfaceBuffer != nullptr && avBuffer != nullptr && avBuffer->memory_ != nullptr,
-                         MSERR_INVALID_VAL);
-    int32_t width = surfaceBuffer->GetWidth();
-    int32_t height = surfaceBuffer->GetHeight();
-    int32_t stride = surfaceBuffer->GetStride();
-
-    bool isHdr = false;
-    (void)avBuffer->meta_->Get<Tag::VIDEO_IS_HDR_VIVID>(isHdr);
-
-    int32_t outputHeight;
-    auto hasSliceHeight = outputFormat_.GetIntValue(Tag::VIDEO_SLICE_HEIGHT, outputHeight);
-    if (!hasSliceHeight || outputHeight < height) {
-        outputHeight = height;
-    }
-    MEDIA_LOGI("width %{public}d stride %{public}d outputHeight %{public}d", width, stride, outputHeight);
-
-    uint8_t *srcPtr = static_cast<uint8_t *>(surfaceBuffer->GetVirAddr());
-    uint8_t *dstPtr = nullptr;
-    if (avBuffer->memory_->GetSurfaceBuffer() != nullptr) {
-        dstPtr = static_cast<uint8_t *>(avBuffer->memory_->GetSurfaceBuffer()->GetVirAddr());
-    } else {
-        dstPtr = avBuffer->memory_->GetAddr();
-    }
-
-    // copy src Y component to dst
-    int32_t lineByteCount = isHdr ? stride : width;
-    for (int32_t y = 0; y < height; y++) {
-        auto ret = memcpy_s(dstPtr, lineByteCount, srcPtr, lineByteCount);
-        TRUE_LOG(ret != EOK, MEDIA_LOGW, "Memcpy UV component failed.");
-        srcPtr += stride;
-        dstPtr += lineByteCount;
-    }
-
-    srcPtr = static_cast<uint8_t *>(surfaceBuffer->GetVirAddr()) + stride * outputHeight;
-
-    // copy src UV component to dst, height(UV) = height(Y) / 2
-    for (int32_t uv = 0; uv < height / RATE_UV; uv++) {
-        auto ret = memcpy_s(dstPtr, lineByteCount, srcPtr, lineByteCount);
-        TRUE_LOG(ret != EOK, MEDIA_LOGW, "Memcpy UV component failed.");
-        srcPtr += stride;
-        dstPtr += lineByteCount;
     }
     return MSERR_OK;
 }

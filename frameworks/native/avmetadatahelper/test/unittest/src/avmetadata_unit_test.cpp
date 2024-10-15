@@ -631,5 +631,45 @@ HWTEST_F(AVMetadataUnitTest, GetTimeByFrameIndex_API_0100, Level2)
     uint64_t time = 0;
     ASSERT_EQ(MSERR_OK, helper->GetTimeByFrameIndex(0, time));
 }
+
+/**
+    * @tc.number    : FetchFrameYuv_API_0100
+    * @tc.name      : FetchFrameYuv SDR.mp4
+    * @tc.desc      : FetchFrameYuv API
+*/
+HWTEST_F(AVMetadataUnitTest, FetchFrameYuv_API_0100, Level2)
+{
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+        std::string("SDR.mp4");
+    std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
+    ASSERT_NE(nullptr, helper);
+    ASSERT_EQ(true, helper->CreateAVMetadataHelper());
+    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, 0, 0, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
+    int64_t time = 0;
+    PixelMapParams param;
+    auto pixelMap = helper->FetchFrameYuv(time, 0, param);
+    ASSERT_EQ(pixelMap->GetWidth(), 1920);
+    ASSERT_EQ(pixelMap->GetHeight(), 1080);
+}
+
+/**
+    * @tc.number    : FetchFrameYuv_API_0200
+    * @tc.name      : FetchFrameYuv HDR.mp4
+    * @tc.desc      : FetchFrameYuv API
+*/
+HWTEST_F(AVMetadataUnitTest, FetchFrameYuv_API_0200, Level2)
+{
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+        std::string("HDR.mp4");
+    std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
+    ASSERT_NE(nullptr, helper);
+    ASSERT_EQ(true, helper->CreateAVMetadataHelper());
+    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, 0, 0, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
+    int64_t time = 0;
+    PixelMapParams param;
+    auto pixelMap = helper->FetchFrameYuv(time, 0, param);
+    ASSERT_EQ(pixelMap->GetWidth(), 1080);
+    ASSERT_EQ(pixelMap->GetHeight(), 2336);
+}
 } // namespace Media
 } // namespace OHOS

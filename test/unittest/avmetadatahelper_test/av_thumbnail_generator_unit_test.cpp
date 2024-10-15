@@ -112,25 +112,6 @@ HWTEST_F(AVThumbnailGeneratorUnitTest, GenerateAlignmentAvBuffer, TestSize.Level
 }
 
 /**
- * @tc.name: CopySurfaceBufferPixels
- * @tc.desc: CopySurfaceBufferPixels
- * @tc.type: FUNC
- */
-HWTEST_F(AVThumbnailGeneratorUnitTest, CopySurfaceBufferPixels, TestSize.Level1)
-{
-    uint8_t data[100];
-    avthumbnailGenerator->avBuffer_ = AVBuffer::CreateAVBuffer(data, sizeof(data), sizeof(data));
-    auto surfaceBuffer = avthumbnailGenerator->avBuffer_->memory_->GetSurfaceBuffer();
-    avthumbnailGenerator->CopySurfaceBufferPixels(surfaceBuffer, avthumbnailGenerator->avBuffer_);
-    avthumbnailGenerator->avBuffer_->meta_->SetData(Tag::VIDEO_IS_HDR_VIVID, 0);
-    avthumbnailGenerator->height_ = 1;
-    avthumbnailGenerator->CopySurfaceBufferPixels(surfaceBuffer, avthumbnailGenerator->avBuffer_);
-    avthumbnailGenerator->outputFormat_.PutIntValue(Tag::VIDEO_SLICE_HEIGHT, -1);
-    avthumbnailGenerator->CopySurfaceBufferPixels(surfaceBuffer, avthumbnailGenerator->avBuffer_);
-    EXPECT_EQ(avthumbnailGenerator->trackIndex_, 0);
-}
-
-/**
  * @tc.name: Reset
  * @tc.desc: Reset
  * @tc.type: FUNC
