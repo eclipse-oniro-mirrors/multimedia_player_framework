@@ -99,6 +99,8 @@ void ScreenCaptureServerFunctionTest::SetUp()
 {
     SetHapPermission();
     std::shared_ptr<IScreenCaptureService> tempServer_ = ScreenCaptureServer::Create();
+    sptr<IStandardScreenCaptureListener> listener = new(std::nothrow) StandardScreenCaptureServerUnittestCallback();
+    screenCaptureServer_->screenCaptureCb_ = std::make_shared<ScreenCaptureListenerCallback>(listener);
     screenCaptureServer_ = std::static_pointer_cast<ScreenCaptureServer>(tempServer_);
     ASSERT_NE(screenCaptureServer_, nullptr);
 }
