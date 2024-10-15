@@ -753,8 +753,9 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ReportAVScreenCaptureUserChoice_005, T
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     int32_t sessionId = 0;
     ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTING;
     std::string choice = "{\"choice\": \"true\", \"displayId\": -1, \"missionId\": -1}";
-    ASSERT_EQ(screenCaptureServer_->ReportAVScreenCaptureUserChoice(sessionId, choice), MSERR_OK);
+    ASSERT_NE(screenCaptureServer_->ReportAVScreenCaptureUserChoice(sessionId, choice), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ReportAVScreenCaptureUserChoice_006, TestSize.Level2)
@@ -1045,14 +1046,14 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetDisplayId_001, TestSize.Level2)
 {
     uint64_t displayId = 0;
     screenCaptureServer_->SetDisplayId(displayId);
-    ASSERT_NE(screenCaptureServer_->captureConfig_.videoInfo.videoCapInfo.displayId, displayId);
+    ASSERT_EQ(screenCaptureServer_->captureConfig_.videoInfo.videoCapInfo.displayId, displayId);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, SetMissionId_001, TestSize.Level2)
 {
     uint64_t missionId = 0;
     screenCaptureServer_->SetMissionId(missionId);
-    ASSERT_NE(screenCaptureServer_->missionIds_.back(), missionId);
+    ASSERT_EQ(screenCaptureServer_->missionIds_.back(), missionId);
 }
 } // Media
 } // OHOS
