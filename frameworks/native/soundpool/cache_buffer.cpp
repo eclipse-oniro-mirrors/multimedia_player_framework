@@ -43,14 +43,16 @@ CacheBuffer::~CacheBuffer()
 
 bool CacheBuffer::IsAudioRendererValid(const AudioStandard::AudioRendererInfo audioRendererInfo)
 {
-    AudioStandard::AudioStreamType streamType = AudioStandard::AudioSystemManager::GetStreamType(audioRendererInfo.contentType,
-        audioRendererInfo.streamUsage);
-    if (streamType == (AudioStandard::AudioStreamType::STREAM_MUSIC || AudioStandard::AudioStreamType::STREAM_MOVIE ||
-        AudioStandard::AudioStreamType::STREAM_SPEECH)) {
+    AudioStandard::AudioStreamType streamType = AudioStandard::AudioSystemManager::GetStreamType(
+        audioRendererInfo.contentType, audioRendererInfo.streamUsage);
+    if (streamType == AudioStandard::AudioStreamType::STREAM_MUSIC ||
+        streamType == AudioStandard::AudioStreamType::STREAM_MOVIE ||
+        streamType == AudioStandard::AudioStreamType::STREAM_SPEECH) {
             return true;
         }
     return false;
 }
+
 std::unique_ptr<AudioStandard::AudioRenderer> CacheBuffer::CreateAudioRenderer(const int32_t streamID,
     const AudioStandard::AudioRendererInfo audioRendererInfo, const PlayParams playParams)
 {
@@ -75,7 +77,7 @@ std::unique_ptr<AudioStandard::AudioRenderer> CacheBuffer::CreateAudioRenderer(c
     rendererOptions.streamInfo.channels = static_cast<AudioStandard::AudioChannel>(channelCount);
     // contentType streamUsage rendererFlags come from user.
     if (IsAudioRendererValid(audioRendererInfo)) {
-            rendererOptions.strategy.concurrencyMode = AudioConcurrencyMode::MIX_WITH_OTHERS;
+            rendererOptions.strategy.concurrencyMode = AudioStandard::AudioConcurrencyMode::MIX_WITH_OTHERS;
         }
     rendererOptions.rendererInfo.contentType = audioRendererInfo.contentType;
     rendererOptions.rendererInfo.streamUsage = audioRendererInfo.streamUsage;

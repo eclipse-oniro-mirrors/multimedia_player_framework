@@ -24,6 +24,7 @@
 #include "media_description.h"
 #include "cpp/mutex.h"
 #include "media_dfx.h"
+#include "audio_system_manager.h"
 
 namespace OHOS {
 namespace Media {
@@ -95,6 +96,7 @@ private:
     int32_t DealPlayParamsBeforePlay(const int32_t streamID, const PlayParams playParams);
     static AudioStandard::AudioRendererRate CheckAndAlignRendererRate(const int32_t rate);
     void DealWriteData(size_t length);
+    bool IsAudioRendererValid(const AudioStandard::AudioRendererInfo audioRendererInfo);
 
     Format trackFormat_;
     std::deque<std::shared_ptr<AudioBufferEntry>> cacheData_;
