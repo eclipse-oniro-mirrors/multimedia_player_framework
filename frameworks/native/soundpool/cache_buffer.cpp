@@ -64,6 +64,11 @@ std::unique_ptr<AudioStandard::AudioRenderer> CacheBuffer::CreateAudioRenderer(c
     trackFormat_.GetIntValue(MediaAVCodec::MediaDescriptionKey::MD_KEY_CHANNEL_COUNT, channelCount);
     rendererOptions.streamInfo.channels = static_cast<AudioStandard::AudioChannel>(channelCount);
     // contentType streamUsage rendererFlags come from user.
+    if (AudioSystemManager::GetStreamType(audioRendererInfo.contentType, audioRendererInfo.streamUsage)
+        == (AudioStreamType::STREAM_DEFAILT || AudioStreamType::STREAM_MUSIC || AudioStreamType::STREAM_MOVIE ||
+        AudioStreamType::STREAM_SPEECH)) {
+            rendererOptions.strategy.concurrencyMode = AudioConcurrencyMode::MIX_WITH_OTHERS;
+        }
     rendererOptions.rendererInfo.contentType = audioRendererInfo.contentType;
     rendererOptions.rendererInfo.streamUsage = audioRendererInfo.streamUsage;
     rendererOptions.privacyType = AudioStandard::PRIVACY_TYPE_PUBLIC;
