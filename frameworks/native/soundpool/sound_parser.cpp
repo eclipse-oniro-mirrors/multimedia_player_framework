@@ -292,6 +292,7 @@ void SoundDecoderCallback::DealBufferRawFile(MediaAVCodec::AVCodecBufferFlag buf
     uint8_t *buf = new(std::nothrow) uint8_t[size];
     if (buf != nullptr) {
         if (memcpy_s(buf, size, buffer->GetBase(), size) != EOK) {
+            delete[] buf;
             MEDIA_LOGI("audio buffer copy failed:%{public}s", strerror(errno));
         } else {
             availableAudioBuffers_.push_back(std::make_shared<AudioBufferEntry>(buf, size));
@@ -335,6 +336,7 @@ void SoundDecoderCallback::OnOutputBufferAvailable(uint32_t index, AVCodecBuffer
         uint8_t *buf = new(std::nothrow) uint8_t[size];
         if (buf != nullptr) {
             if (memcpy_s(buf, size, buffer->GetBase(), info.size) != EOK) {
+                delete[] buf;
                 MEDIA_LOGI("audio buffer copy failed:%{public}s", strerror(errno));
             } else {
                 availableAudioBuffers_.push_back(std::make_shared<AudioBufferEntry>(buf, size));
