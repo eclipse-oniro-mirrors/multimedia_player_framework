@@ -2470,8 +2470,8 @@ napi_value AVPlayerNapi::JsGetSelectedTracks(napi_env env, napi_callback_info in
     return result;
 }
 
-void AVPlayerNapi::HandleSelectTrack(std::unique_ptr<AVPlayerContext> &promiseCtx, napi_env env, napi_value args[],
-        size_t argCount)
+void AVPlayerNapi::HandleSelectTrack(std::unique_ptr<AVPlayerContext> &promiseCtx, napi_env env,
+    napi_value args[], size_t argCount)
 {
     napi_valuetype valueType = napi_undefined;
     if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
