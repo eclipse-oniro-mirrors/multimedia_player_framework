@@ -75,6 +75,7 @@ ohos_shared_library("system_sound_client") {
     "data_share:datashare_consumer",
     "graphic_surface:surface",
     "hilog:libhilog",
+    "init:libbegetutil",
     "ipc:ipc_core",
     "qos_manager:qos",
     "relational_store:native_dataability",

@@ -120,6 +120,7 @@ private:
     void InitDefaultUriMap();
     void InitDefaultRingtoneUriMap(const std::string &ringtoneJsonPath);
     void InitDefaultSystemToneUriMap(const std::string &systemToneJsonPath);
+    void InitDefaultToneHapticsMap();
     std::string GetFullPath(const std::string &originalUri);
     std::string GetJsonValue(const std::string &jsonPath);
 
@@ -160,6 +161,7 @@ private:
         std::shared_ptr<DataShare::DataShareHelper> dataShareHelper, ToneHapticsType toneHapticsType);
     std::string GetToneSyncedHapticsUri(const std::shared_ptr<AbilityRuntime::Context> &context,
         const std::string &toneUri);
+    std::string GetDefaultNonSyncedHapticsUri(ToneHapticsType toneHapticsType);
     std::string GetFirstNonSyncedHapticsUri(const std::shared_ptr<AbilityRuntime::Context> &context);
     int32_t GetDefaultToneHapticsSettings(const std::shared_ptr<AbilityRuntime::Context> &context,
         const std::string &currentToneUri, ToneHapticsType toneHapticsType, ToneHapticsSettings &settings);
@@ -186,6 +188,7 @@ private:
     std::string displayName_ = "";
     std::unordered_map<RingtoneType, std::string> defaultRingtoneUriMap_;
     std::unordered_map<SystemToneType, std::string> defaultSystemToneUriMap_;
+    std::unordered_map<ToneHapticsType, std::string> defaultToneHapticsUriMap_;
     std::shared_ptr<ToneAttrs> ringtoneAttrs_;
     std::shared_ptr<ToneAttrs> systemtoneAttrs_;
     std::shared_ptr<ToneAttrs> alarmtoneAttrs_;
