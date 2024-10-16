@@ -96,7 +96,7 @@ HiPlayerImpl::HiPlayerImpl(int32_t appUid, int32_t appPid, uint32_t appTokenId, 
     pipeline_ = std::make_shared<OHOS::Media::Pipeline::Pipeline>();
     syncManager_ = std::make_shared<MediaSyncManager>();
     callbackLooper_.SetPlayEngine(this, playerId_);
-    bundleName_ = GetClientBundleName(appUid, false);
+    bundleName_ = GetClientBundleName(appUid);
     dfxAgent_ = std::make_shared<DfxAgent>(playerId_, bundleName_);
 }
 

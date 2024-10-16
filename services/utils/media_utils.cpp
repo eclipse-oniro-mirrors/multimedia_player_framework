@@ -63,7 +63,7 @@ static int g_readSysParaIdx = 0;
 static std::unordered_map<std::string, std::string> g_readSysParaMap;
 }  // namespace
 
-std::string __attribute__((visibility("default"))) GetClientBundleName(int32_t uid, bool shouldLog)
+std::string __attribute__((visibility("default"))) GetClientBundleName(int32_t uid)
 {
     if (uid == 1003) { // 1003 is bootanimation uid
         return "bootanimation";
