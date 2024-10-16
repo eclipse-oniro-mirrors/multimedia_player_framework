@@ -2470,6 +2470,41 @@ napi_value AVPlayerNapi::JsGetSelectedTracks(napi_env env, napi_callback_info in
     return result;
 }
 
+void AVPlayerNapi::HandleSelectTrack(std::unique_ptr<AVPlayerContext> &promiseCtx, napi_env env, napi_value args[],
+        size_t argCount)
+{
+    napi_valuetype valueType = napi_undefined;
+    if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
+        promiseCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "track index is not number");
+        return;
+    }
+
+    auto jsPlayer = promiseCtx->napi;
+    napi_status status = napi_get_value_int32(env, args[0], &jsPlayer->index_);
+    if (status != napi_ok || jsPlayer->index_ < 0 || jsPlayer->index_ >= jsPlayer->trackInfoVec_.size()) {
+        promiseCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please check the track index");
+        return;
+    }
+
+    if (argCount > 1) {
+        if (napi_typeof(env, args[1], &valueType) != napi_ok || valueType != napi_number) {
+            promiseCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "switch mode is not number");
+            return;
+        }
+        status = napi_get_value_int32(env, args[1], &jsPlayer->mode_);
+        if (status != napi_ok || jsPlayer->mode_ < SWITCH_SMOOTH || jsPlayer->mode_ > SWITCH_CLOSEST) {
+            promiseCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please switch seek mode");
+            return;
+        }
+    }
+
+    if (!jsPlayer->IsControllable()) {
+        promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "current state is not prepared/playing/paused/completed, unsupport selectTrack operation");
+        return;
+    }
+}
+
 napi_value AVPlayerNapi::JsSelectTrack(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("AVPlayerNapi::selectTrack");
@@ -2485,31 +2520,7 @@ napi_value AVPlayerNapi::JsSelectTrack(napi_env env, napi_callback_info info)
     promiseCtx->deferred = CommonNapi::CreatePromise(env, promiseCtx->callbackRef, result);
     CHECK_AND_RETURN_RET_LOG(promiseCtx->napi != nullptr, result, "failed to GetJsInstanceWithParameter");
 
-    napi_valuetype valueType = napi_undefined;
-    if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
-        promiseCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "track index is not number");
-    }
-
-    auto jsPlayer = promiseCtx->napi;
-    napi_status status = napi_get_value_int32(env, args[0], &jsPlayer->index_);
-    if (status != napi_ok || jsPlayer->index_ < 0 || jsPlayer->index_ >= jsPlayer->trackInfoVec_.size()) {
-        promiseCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please check the track index");
-    }
-
-    if (argCount > 1) {
-        if (napi_typeof(env, args[1], &valueType) != napi_ok || valueType != napi_number) {
-            promiseCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "switch mode is not number");
-        }
-        status = napi_get_value_int32(env, args[1], &jsPlayer->mode_);
-        if (status != napi_ok || jsPlayer->mode_ < SWITCH_SMOOTH || jsPlayer->mode_ > SWITCH_CLOSEST) {
-            promiseCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please switch seek mode");
-        }
-    }
-
-    if (!jsPlayer->IsControllable()) {
-        promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-            "current state is not prepared/playing/paused/completed, unsupport selectTrack operation");
-    }
+    promiseCtx->napi->HandleSelectTrack(promiseCtx, env, args, argCount);
 
     // async work
     napi_value resource = nullptr;
@@ -2526,7 +2537,7 @@ napi_value AVPlayerNapi::JsSelectTrack(napi_env env, napi_callback_info info)
 
         auto task = std::make_shared<TaskHandler<void>>([jsPlayer, index = jsPlayer->index_, mode = jsPlayer->mode_]() {
             MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSelectTrack Task In", FAKE_POINTER(jsPlayer));
-            if(jsPlayer->player_ != nullptr) {
+            if (jsPlayer->player_ != nullptr) {
                 (void)jsPlayer->player_->SelectTrack(index, jsPlayer->TransferSwitchMode(mode));
             }
             MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSelectTrack Task Out", FAKE_POINTER(jsPlayer));
