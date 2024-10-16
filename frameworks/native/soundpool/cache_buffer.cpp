@@ -41,7 +41,7 @@ CacheBuffer::~CacheBuffer()
     Release();
 }
 
-bool CacheBuffer::IsAudioRendererValid(const AudioStandard::AudioRendererInfo audioRendererInfo)
+bool CacheBuffer::IsAudioRendererCanMix(const AudioStandard::AudioRendererInfo &audioRendererInfo)
 {
     AudioStandard::AudioStreamType streamType = AudioStandard::AudioSystemManager::GetStreamType(
         audioRendererInfo.contentType, audioRendererInfo.streamUsage);
@@ -76,7 +76,7 @@ std::unique_ptr<AudioStandard::AudioRenderer> CacheBuffer::CreateAudioRenderer(c
     trackFormat_.GetIntValue(MediaAVCodec::MediaDescriptionKey::MD_KEY_CHANNEL_COUNT, channelCount);
     rendererOptions.streamInfo.channels = static_cast<AudioStandard::AudioChannel>(channelCount);
     // contentType streamUsage rendererFlags come from user.
-    if (IsAudioRendererValid(audioRendererInfo)) {
+    if (IsAudioRendererCanMix(audioRendererInfo)) {
         rendererOptions.strategy.concurrencyMode = AudioStandard::AudioConcurrencyMode::MIX_WITH_OTHERS;
     }
     rendererOptions.rendererInfo.contentType = audioRendererInfo.contentType;
