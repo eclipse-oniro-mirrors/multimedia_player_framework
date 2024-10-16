@@ -212,11 +212,11 @@ RetInfo GetRetInfo(int32_t errCode, const std::string &operate, const std::strin
     if (errCode == MSERR_UNSUPPORT_VID_PARAMS) {
         return RetInfo(err, "The video parameter is not supported. Please check the type and range.");
     }
-    
+
     if (errCode == MSERR_UNSUPPORT_AUD_PARAMS) {
         return RetInfo(err, "The audio parameter is not supported. Please check the type and range.");
     }
-    
+
     std::string message;
     if (err == MSERR_EXT_API9_INVALID_PARAMETER) {
         message = MSExtErrorAPI9ToString(err, param, "") + add;
@@ -354,7 +354,7 @@ napi_value AVRecorderNapi::JsSetWatermark(napi_env env, napi_callback_info info)
     asyncCtx->deferred = CommonNapi::CreatePromise(env, nullptr, result);
 
     if (asyncCtx->napi->CheckStateMachine(opt) == MSERR_OK) {
-        if (asyncCtx->napi->GetWatermarkParameter(asyncCtx, env, args) == MSERR_OK) {
+        if (asyncCtx->napi->GetWatermarkParameter(asyncCtx, env, args[0], args[1]) == MSERR_OK) {
             asyncCtx->task_ = AVRecorderNapi::SetWatermarkTask(asyncCtx);
             (void)asyncCtx->napi->taskQue_->EnqueueTask(asyncCtx->task_);
         }
@@ -420,9 +420,9 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderNapi::GetSetOrientationHintTask(
 
         CHECK_AND_RETURN_RET(napi->CheckStateMachine(option) == MSERR_OK,
             GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
-        
+
         napi->recorder_->SetOrientationHint(config->rotation);
-        
+
         MEDIA_LOGI("%{public}s End", option.c_str());
         return RetInfo(MSERR_EXT_API9_OK, "");
     });
@@ -797,7 +797,7 @@ napi_value AVRecorderNapi::JsGetAudioCapturerMaxAmplitude(napi_env env,  napi_ca
 {
     MediaTrace trace("AVRecorder::JsGetAudioCapturerMaxAmplitude");
     const std::string &opt = AVRecordergOpt::GET_MAX_AMPLITUDE;
-    MEDIA_LOGI("Js %{public}s Start", opt.c_str());
+    MEDIA_LOGD("Js %{public}s Start", opt.c_str());
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
     size_t argCount = 1;
@@ -840,7 +840,7 @@ napi_value AVRecorderNapi::JsGetAudioCapturerMaxAmplitude(napi_env env,  napi_ca
     NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
     asyncCtx.release();
 
-    MEDIA_LOGI("Js %{public}s End", opt.c_str());
+    MEDIA_LOGD("Js %{public}s End", opt.c_str());
     return result;
 }
 
@@ -901,7 +901,7 @@ napi_value AVRecorderNapi::JsSetEventCallback(napi_env env, napi_callback_info i
     MEDIA_LOGI("JsSetEventCallback Start");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
-    
+
     size_t argCount = 2;
     constexpr size_t requireArgc = 1;
     napi_value args[2] = { nullptr, nullptr };
@@ -1003,7 +1003,7 @@ napi_value AVRecorderNapi::JsGetState(napi_env env, napi_callback_info info)
     auto napiCb = std::static_pointer_cast<AVRecorderCallback>(recorderNapi->recorderCb_);
     CHECK_AND_RETURN_RET_LOG(napiCb != nullptr, result, "napiCb is nullptr!");
     std::string curState = napiCb->GetState();
-    MEDIA_LOGI("GetState success, State: %{public}s", curState.c_str());
+    MEDIA_LOGD("GetState success, State: %{public}s", curState.c_str());
 
     napi_value jsResult = nullptr;
     napi_status status = napi_create_string_utf8(env, curState.c_str(), NAPI_AUTO_LENGTH, &jsResult);
@@ -1087,7 +1087,7 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderNapi::GetPromiseTask(AVRecorderN
 
         CHECK_AND_RETURN_RET(napi->CheckStateMachine(option) == MSERR_OK,
             GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
-        
+
         CHECK_AND_RETURN_RET(napi->CheckRepeatOperation(option) == MSERR_OK,
             RetInfo(MSERR_EXT_API9_OK, ""));
 
@@ -1097,7 +1097,7 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderNapi::GetPromiseTask(AVRecorderN
         auto memberFunc = itFunc->second;
         CHECK_AND_RETURN_RET_LOG(memberFunc != nullptr, ret, "memberFunc is nullptr!");
         ret = (napi->*memberFunc)();
-        
+
         MEDIA_LOGI("%{public}s End", option.c_str());
         return ret;
     });
@@ -1166,7 +1166,7 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderNapi::GetAVRecorderConfigTask(
 
         CHECK_AND_RETURN_RET(napi->CheckStateMachine(option) == MSERR_OK,
             GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
-        
+
         CHECK_AND_RETURN_RET(napi->CheckRepeatOperation(option) == MSERR_OK,
             RetInfo(MSERR_EXT_API9_OK, ""));
 
@@ -1191,7 +1191,7 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderNapi::GetCurrentCapturerChangeIn
 
         CHECK_AND_RETURN_RET(napi->CheckStateMachine(option) == MSERR_OK,
             GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
-        
+
         CHECK_AND_RETURN_RET(napi->CheckRepeatOperation(option) == MSERR_OK,
             RetInfo(MSERR_EXT_API9_OK, ""));
 
@@ -1209,14 +1209,14 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderNapi::GetMaxAmplitudeTask(
 {
     return std::make_shared<TaskHandler<RetInfo>>([napi = asyncCtx->napi, &maxAmplitude = asyncCtx->maxAmplitude_]() {
         const std::string &option = AVRecordergOpt::GET_MAX_AMPLITUDE;
-        MEDIA_LOGI("%{public}s Start", option.c_str());
+        MEDIA_LOGD("%{public}s Start", option.c_str());
 
         CHECK_AND_RETURN_RET(napi != nullptr,
             GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
 
         CHECK_AND_RETURN_RET(napi->CheckStateMachine(option) == MSERR_OK,
             GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
-        
+
         CHECK_AND_RETURN_RET(napi->CheckRepeatOperation(option) == MSERR_OK,
             RetInfo(MSERR_EXT_API9_OK, ""));
 
@@ -1224,7 +1224,7 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderNapi::GetMaxAmplitudeTask(
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, GetRetInfo(MSERR_INVALID_VAL, "GetMaxAmplitudeTask", ""),
             "get GetMaxAmplitudeTask failed");
 
-        MEDIA_LOGI("%{public}s End", option.c_str());
+        MEDIA_LOGD("%{public}s End", option.c_str());
         return RetInfo(MSERR_EXT_API9_OK, "");
     });
 }
@@ -1241,7 +1241,7 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderNapi::GetEncoderInfoTask(
 
         CHECK_AND_RETURN_RET(napi->CheckStateMachine(option) == MSERR_OK,
             GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
-        
+
         CHECK_AND_RETURN_RET(napi->CheckRepeatOperation(option) == MSERR_OK,
             RetInfo(MSERR_EXT_API9_OK, ""));
 
@@ -1267,7 +1267,7 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderNapi::IsWatermarkSupportedTask(
 
         CHECK_AND_RETURN_RET(napi->CheckStateMachine(option) == MSERR_OK,
             GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
-        
+
         CHECK_AND_RETURN_RET(napi->CheckRepeatOperation(option) == MSERR_OK,
             RetInfo(MSERR_EXT_API9_OK, ""));
 
@@ -1347,16 +1347,18 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderNapi::GetInputMetaSurface(
         CHECK_AND_RETURN_RET_LOG(napi->metaSourceIDMap_.find(type) != napi->metaSourceIDMap_.end(),
             GetRetInfo(MSERR_INVALID_OPERATION, "GetInputMetaSurface", "no meta source type"),
             "failed to find meta type");
-        MEDIA_LOGI("The meta source type is %{public}d", static_cast<int32_t>(type));
-        napi->metaSurface_ = napi->recorder_->GetMetaSurface(napi->metaSourceIDMap_.at(type));
-        CHECK_AND_RETURN_RET_LOG(napi->metaSurface_ != nullptr,
-            GetRetInfo(MSERR_INVALID_OPERATION, "GetInputMetaSurface", ""), "failed to GetInputMetaSurface");
+        if (napi->metaSurface_ == nullptr) {
+            MEDIA_LOGI("The meta source type is %{public}d", static_cast<int32_t>(type));
+            napi->metaSurface_ = napi->recorder_->GetMetaSurface(napi->metaSourceIDMap_.at(type));
+            CHECK_AND_RETURN_RET_LOG(napi->metaSurface_ != nullptr,
+                GetRetInfo(MSERR_INVALID_OPERATION, "GetInputMetaSurface", ""), "failed to GetInputMetaSurface");
 
-        SurfaceError error =
-            SurfaceUtils::GetInstance()->Add(napi->metaSurface_->GetUniqueId(), napi->metaSurface_);
-        CHECK_AND_RETURN_RET_LOG(error == SURFACE_ERROR_OK,
-            GetRetInfo(MSERR_INVALID_OPERATION, "GetInputMetaSurface", "add surface failed"),
-            "failed to AddSurface");
+            SurfaceError error =
+                SurfaceUtils::GetInstance()->Add(napi->metaSurface_->GetUniqueId(), napi->metaSurface_);
+            CHECK_AND_RETURN_RET_LOG(error == SURFACE_ERROR_OK,
+                GetRetInfo(MSERR_INVALID_OPERATION, "GetInputMetaSurface", "add surface failed"),
+                "failed to AddSurface");
+        }
 
         auto surfaceId = std::to_string(napi->metaSurface_->GetUniqueId());
         MEDIA_LOGI("surfaceId:%{public}s", surfaceId.c_str());
@@ -1868,8 +1870,7 @@ int32_t AVRecorderNapi::GetConfig(std::unique_ptr<AVRecorderAsyncContext> &async
     rotation_ = config->rotation;
     if (CommonNapi::CheckhasNamedProperty(env, args, "location")) {
         CHECK_AND_RETURN_RET(GetLocation(asyncCtx, env, args),
-            (asyncCtx->AVRecorderSignError(MSERR_INCORRECT_PARAMETER_TYPE, "GetLocation", "Location",
-                "location type should be Location."), MSERR_INCORRECT_PARAMETER_TYPE));
+            (asyncCtx->AVRecorderSignError(MSERR_INVALID_VAL, "GetLocation", "Location"), MSERR_INVALID_VAL));
     }
 
     if (CommonNapi::CheckhasNamedProperty(env, args, "metadata")) {
@@ -1989,11 +1990,11 @@ int32_t AVRecorderNapi::GetAVMetaData(std::unique_ptr<AVRecorderAsyncContext> &a
 }
 
 int32_t AVRecorderNapi::GetWatermarkParameter(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx,
-    napi_env env, napi_value *args)
+    napi_env env, napi_value watermark, napi_value watermarkConfig)
 {
-    int32_t ret = GetWatermark(asyncCtx, env, args[0]);
+    int32_t ret = GetWatermark(asyncCtx, env, watermark);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "failed to GetWatermark");
-    ret = GetWatermarkConfig(asyncCtx, env, args[1]);
+    ret = GetWatermarkConfig(asyncCtx, env, watermarkConfig);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "failed to GetWatermarkConfig");
     return MSERR_OK;
 }

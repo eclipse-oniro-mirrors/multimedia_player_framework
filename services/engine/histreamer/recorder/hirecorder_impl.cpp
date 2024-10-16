@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy  of the License at
@@ -16,7 +16,6 @@
 #include "meta/audio_types.h"
 #include "osal/task/pipeline_threadpool.h"
 #include "sync_fence.h"
-#include <sys/syscall.h>
 #include "media_dfx.h"
 
 namespace {
@@ -86,6 +85,7 @@ HiRecorderImpl::HiRecorderImpl(int32_t appUid, int32_t appPid, uint32_t appToken
     : appUid_(appUid), appPid_(appPid), appTokenId_(appTokenId), appFullTokenId_(appFullTokenId)
 {
     pipeline_ = std::make_shared<Pipeline::Pipeline>();
+    recorderId_ = std::string("Rec_") + std::to_string(OHOS::Media::Pipeline::Pipeline::GetNextPipelineId());
 }
 
 HiRecorderImpl::~HiRecorderImpl()
@@ -97,10 +97,9 @@ HiRecorderImpl::~HiRecorderImpl()
 int32_t HiRecorderImpl::Init()
 {
     MediaTrace trace("HiRecorderImpl::Init");
-    MEDIA_LOG_I("Init enter.");
+    MEDIA_LOG_I("HiRecorderImpl Init enter.");
     recorderEventReceiver_ = std::make_shared<RecorderEventReceiver>(this);
     recorderCallback_ = std::make_shared<RecorderFilterCallback>(this);
-    recorderId_ = std::string("HiRecorder_") + std::to_string(OHOS::Media::Pipeline::Pipeline::GetNextPipelineId());
     pipeline_->Init(recorderEventReceiver_, recorderCallback_, recorderId_);
     return (int32_t)Status::OK;
 }
@@ -108,7 +107,8 @@ int32_t HiRecorderImpl::Init()
 int32_t HiRecorderImpl::SetVideoSource(VideoSourceType source, int32_t &sourceId)
 {
     MediaTrace trace("HiRecorderImpl::SetVideoSource");
-    MEDIA_LOG_I("SetVideoSource enter, sourceType:" PUBLIC_LOG_D32, static_cast<int32_t>(source));
+    MEDIA_LOG_I(PUBLIC_LOG_S "SetVideoSource enter, sourceType:" PUBLIC_LOG_D32, avRecorderTag_.c_str(),
+        static_cast<int32_t>(source));
     sourceId = INVALID_SOURCE_ID;
     FALSE_RETURN_V(source != VideoSourceType::VIDEO_SOURCE_BUTT,
         (int32_t)Status::ERROR_INVALID_PARAMETER);
@@ -163,15 +163,22 @@ int32_t HiRecorderImpl::SetMetaSource(MetaSourceType source, int32_t &sourceId)
         source > MetaSourceType::VIDEO_META_SOURCE_INVALID && source < MetaSourceType::VIDEO_META_SOURCE_BUTT,
         (int32_t)Status::ERROR_INVALID_PARAMETER
     );
+    auto tempSourceId = SourceIdGenerator::GenerateMetaSourceId(static_cast<int32_t>(source));
     Status ret;
-    auto filter = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::MetaDataFilter>
-        ("MetaDataFilter", Pipeline::FilterType::TIMED_METADATA);
-    ret = pipeline_->AddHeadFilters({filter});
-    FALSE_RETURN_V_MSG_E(ret == Status::OK, (int32_t)ret, "AddFilters MetaDataFilter to pipeline fail");
-    if (filter && ret == Status::OK) {
+    if (metaDataFilters_.find(tempSourceId) == metaDataFilters_.end()) {
+        auto filter = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::MetaDataFilter>
+            ("MetaDataFilter", Pipeline::FilterType::TIMED_METADATA);
+        ret = pipeline_->AddHeadFilters({filter});
+        FALSE_RETURN_V_MSG_E(ret == Status::OK, (int32_t)ret, "AddFilters MetaDataFilter to pipeline fail");
+        if (filter && ret ==Status::OK) {
+            metaDataFilters_.emplace(std::make_pair(tempSourceId, filter));
+        }
+    } else {
+        ret = pipeline_->AddHeadFilters({metaDataFilters_.at(tempSourceId)});
+    }
+    if (ret == Status::OK) {
         MEDIA_LOG_I("SetMetaSource success.");
-        sourceId = SourceIdGenerator::GenerateMetaSourceId(static_cast<int32_t>(source));
-        metaDataFilters_.emplace(std::make_pair(sourceId, filter));
+        sourceId = tempSourceId;
         OnStateChanged(StateId::RECORDING_SETTING);
     }
     return (int32_t)ret;
@@ -180,7 +187,8 @@ int32_t HiRecorderImpl::SetMetaSource(MetaSourceType source, int32_t &sourceId)
 int32_t HiRecorderImpl::SetAudioSource(AudioSourceType source, int32_t &sourceId)
 {
     MediaTrace trace("HiRecorderImpl::SetAudioSource");
-    MEDIA_LOG_I("SetAudioSource enter, sourceType:" PUBLIC_LOG_D32, static_cast<int32_t>(source));
+    MEDIA_LOG_I(PUBLIC_LOG_S "SetAudioSource enter, sourceType:" PUBLIC_LOG_D32, avRecorderTag_.c_str(),
+        static_cast<int32_t>(source));
     sourceId = INVALID_SOURCE_ID;
     FALSE_RETURN_V(CheckAudioSourceType(source), (int32_t)Status::ERROR_INVALID_PARAMETER);
     FALSE_RETURN_V(audioCount_ < static_cast<int32_t>(AUDIO_SOURCE_MAX_COUNT),
@@ -207,7 +215,7 @@ int32_t HiRecorderImpl::SetAudioSource(AudioSourceType source, int32_t &sourceId
 
 int32_t HiRecorderImpl::SetAudioDataSource(const std::shared_ptr<IAudioDataSource>& audioSource, int32_t& sourceId)
 {
-    MEDIA_LOG_I("SetAudioDataSource enter.");
+    MEDIA_LOG_I("HiRecorderImpl SetAudioDataSource enter.");
     sourceId = INVALID_SOURCE_ID;
     auto tempSourceId = SourceIdGenerator::GenerateAudioSourceId(audioCount_);
     audioDataSourceFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::AudioDataSourceFilter>
@@ -218,7 +226,7 @@ int32_t HiRecorderImpl::SetAudioDataSource(const std::shared_ptr<IAudioDataSourc
     Status ret = pipeline_->AddHeadFilters({audioDataSourceFilter_});
     FALSE_RETURN_V_MSG_E(ret == Status::OK, (int32_t)ret, "AddFilters audioDataSource to pipeline fail");
     if (ret == Status::OK) {
-        MEDIA_LOG_I("SetAudioSource success.");
+        MEDIA_LOG_I(PUBLIC_LOG_S "SetAudioSource success.", avRecorderTag_.c_str());
         audioCount_++;
         audioSourceId_ = tempSourceId;
         sourceId = static_cast<int32_t>(audioSourceId_);
@@ -290,7 +298,7 @@ int32_t HiRecorderImpl::Configure(int32_t sourceId, const RecorderParam &recPara
 
 sptr<Surface> HiRecorderImpl::GetSurface(int32_t sourceId)
 {
-    MEDIA_LOG_I("GetSurface enter.");
+    MEDIA_LOG_I("HiRecorderImpl GetSurface enter.");
     if (videoEncoderFilter_) {
         producerSurface_ = videoEncoderFilter_->GetInputSurface();
     }
@@ -303,7 +311,7 @@ sptr<Surface> HiRecorderImpl::GetSurface(int32_t sourceId)
 sptr<Surface> HiRecorderImpl::GetMetaSurface(int32_t sourceId)
 {
     MEDIA_LOG_I("HiRecorderImpl GetMetaSurface enter.");
-    
+
     if (SourceIdGenerator::IsMeta(sourceId) &&
         (GetMetaSourceType(sourceId) > VIDEO_META_SOURCE_INVALID &&
         GetMetaSourceType(sourceId) < VIDEO_META_SOURCE_BUTT)) {
@@ -374,9 +382,6 @@ int32_t HiRecorderImpl::Prepare()
             ERR_UNKNOWN_REASON, "videoCaptureFilter Configure fail");
     }
     Status ret = pipeline_->Prepare();
-    if (ret != Status::OK) {
-        return (int32_t)ret;
-    }
     return (int32_t)ret;
 }
 
@@ -464,7 +469,6 @@ int32_t HiRecorderImpl::Stop(bool isDrainAll)
         }
         pipeline_->RemoveHeadFilter(iter.second);
     }
-    metaDataFilters_.clear();
     if (videoCaptureFilter_) {
         pipeline_->RemoveHeadFilter(videoCaptureFilter_);
     }
@@ -568,7 +572,7 @@ Status HiRecorderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, cons
 
 void HiRecorderImpl::OnAudioCaptureChange(const AudioStandard::AudioCapturerChangeInfo &capturerChangeInfo)
 {
-    MEDIA_LOG_I("OnAudioCaptureChange enter.");
+    MEDIA_LOG_I("HiRecorderImpl OnAudioCaptureChange enter.");
     auto ptr = obs_.lock();
     if (ptr != nullptr) {
         ptr->OnAudioCaptureChange(ConvertCapturerChangeInfo(capturerChangeInfo));
@@ -580,7 +584,7 @@ int32_t HiRecorderImpl::GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &ch
     FALSE_RETURN_V_MSG_E(audioCaptureFilter_ != nullptr,
         (int32_t)Status::ERROR_INVALID_OPERATION,
         "audioCaptureFilter_ is nullptr, cannot get audio capturer change info");
-    
+
     AudioStandard::AudioCapturerChangeInfo audioChangeInfo;
     Status ret = audioCaptureFilter_->GetCurrentCapturerChangeInfo(audioChangeInfo);
     changeInfo = ConvertCapturerChangeInfo(audioChangeInfo);
@@ -706,7 +710,7 @@ void HiRecorderImpl::ConfigureVideo(const RecorderParam &recParam)
     }
 }
 
- 
+
 void HiRecorderImpl::ConfigureMeta(int32_t sourceId, const RecorderParam &recParam)
 {
     MEDIA_LOG_I("HiRecorderImpl ConfigureMeta enter");
@@ -744,7 +748,6 @@ void HiRecorderImpl::ConfigureVideoEnableTemporalScale(const RecorderParam &recP
             vidEnableTemporalScale.enableTemporalScale);
     }
 }
-
 
 void HiRecorderImpl::ConfigureVideoEncoderFormat(const RecorderParam &recParam)
 {
