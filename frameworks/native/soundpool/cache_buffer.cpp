@@ -273,9 +273,10 @@ void CacheBuffer::OnWriteData(size_t length)
 
 void CacheBuffer::DealWriteData(size_t length)
 {
+    std::lock_guard lock(cacheBufferLock_);
+    CHECK_AND_RETURN_LOG(audioRenderer_ != nullptr, "DealWriteData audioRenderer_ is nullptr");
     AudioStandard::BufferDesc bufDesc;
     audioRenderer_->GetBufferDesc(bufDesc);
-    std::lock_guard lock(cacheBufferLock_);
     if (bufDesc.buffer != nullptr && fullCacheData_ != nullptr && fullCacheData_->buffer != nullptr) {
         if (static_cast<size_t>(fullCacheData_->size) - cacheDataFrameIndex_ >= length) {
             int32_t ret = memcpy_s(bufDesc.buffer, length,
@@ -307,10 +308,14 @@ void CacheBuffer::DealWriteData(size_t length)
 
 void CacheBuffer::OnFirstFrameWriting(uint64_t latency)
 {
-    size_t bufferSize;
-    audioRenderer_->GetBufferSize(bufferSize);
-    MEDIA_LOGI("CacheBuffer::OnFirstFrameWriting bufferSize:%{public}zu, streamID_:%{public}d",
-        bufferSize, streamID_);
+    {
+        std::lock_guard lock(cacheBufferLock_);
+        CHECK_AND_RETURN_LOG(audioRenderer_ != nullptr, "OnFirstFrameWriting audioRenderer_ is nullptr");
+        size_t bufferSize;
+        audioRenderer_->GetBufferSize(bufferSize);
+        MEDIA_LOGI("CacheBuffer::OnFirstFrameWriting bufferSize:%{public}zu, streamID_:%{public}d",
+            bufferSize, streamID_);
+    }
     CHECK_AND_RETURN_LOG(frameWriteCallback_ != nullptr, "frameWriteCallback is null.");
     frameWriteCallback_->OnFirstAudioFrameWritingCallback(latency);
 }
