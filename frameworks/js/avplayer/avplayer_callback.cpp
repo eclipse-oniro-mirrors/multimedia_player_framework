@@ -751,7 +751,7 @@ void AVPlayerCallback::OnError(int32_t errorCode, const std::string &errorMsg)
         AVPlayerCallback::OnInfo(INFO_TYPE_STATE_CHANGE, PLAYER_STATE_ERROR, infoBody);
     }
 #ifndef CROSS_PLATFORM
-    if (IsAPI13IOError(errorCodeApi9) && apiTargetVersion < API_VERSION_14) {
+    if (IsAPI14IOError(errorCodeApi9) && apiTargetVersion < API_VERSION_14) {
         errorCodeApi9 = MSERR_EXT_API9_IO;
     }
 #endif
