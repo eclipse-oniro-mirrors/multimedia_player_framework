@@ -316,6 +316,10 @@ int32_t RingtonePlayerImpl::Start()
     CHECK_AND_RETURN_RET_LOG(ringtoneState_ != STATE_RUNNING, MSERR_INVALID_OPERATION, "ringtone player is running");
     CHECK_AND_RETURN_RET_LOG(player_ != nullptr && ringtoneState_ != STATE_INVALID, MSERR_INVALID_VAL, "no player_");
 
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
+    if (dataShareHelper == nullptr) {
+        MEDIA_LOGE("Create dataShare failed, datashare or ringtone library error.");
+    }
     std::string ringtoneUri = systemSoundMgr_.GetRingtoneUri(context_, type_);
     AudioHapticPlayerOptions options = {false, false};
     ToneHapticsSettings settings = GetHapticSettings(ringtoneUri, options.muteHaptics);
