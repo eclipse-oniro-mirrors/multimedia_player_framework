@@ -343,9 +343,9 @@ private:
     bool UpdatePrivacyUsingPermissionState(VideoPermissionState state);
     int32_t RequestUserPrivacyAuthority();
     int32_t StartPrivacyWindow();
-    void SetCaptureConfig(CaptureMode captureMode, int32_t missionId = -1);
+    void SetCaptureConfig(CaptureMode captureMode, int32_t missionId = -1); // -1 无效值
 #ifdef PC_STANDARD
-    bool IsCaptureSpecifiedWindowValid();
+    bool CheckCaptureSpecifiedWindowForSelectWindow();
     void SendConfigToUIParams(AAFwk::Want& want);
 #endif
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION

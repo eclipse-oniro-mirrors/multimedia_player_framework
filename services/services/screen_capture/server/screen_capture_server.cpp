@@ -79,7 +79,10 @@ static const std::string ICON_PATH_MIC = "/etc/screencapture/mic.svg";
 static const std::string ICON_PATH_MIC_OFF = "/etc/screencapture/mic_off.svg";
 static const std::string ICON_PATH_STOP = "/etc/screencapture/stop.png";
 static const std::string BACK_GROUND_COLOR = "#E84026";
+#ifdef PC_STANDARD
 static const std::string SELECT_ABILITY_NAME = "SelectWindowAbility";
+static const int32_t SELECT_WINDOW_MISSION_ID_NUM_MAX = 2;
+#endif
 static const int32_t SVG_HEIGHT = 80;
 static const int32_t SVG_WIDTH = 80;
 static const int32_t MDPI = 160;
@@ -262,7 +265,7 @@ void ScreenCaptureServer::GetChoiceFromJson(Json::Value &root,
 void ScreenCaptureServer::SetCaptureConfig(CaptureMode captureMode, int32_t missionId)
 {
     captureConfig_.captureMode = captureMode;
-    if (missionId != -1) {
+    if (missionId != -1) { // -1 无效值
         captureConfig_.videoInfo.videoCapInfo.taskIDs.push_back(missionId);
     } else {
         captureConfig_.videoInfo.videoCapInfo.taskIDs = {};
@@ -279,7 +282,7 @@ void ScreenCaptureServer::PrepareSelectWindow(Json::Value &root, std::shared_ptr
         uint64_t displayId = displayIdJson.asInt64();
         MEDIA_LOGI("Report Select DisplayId: %{public}" PRIu64, displayId);
         server->SetDisplayId(displayId);
-        // 手机模式 missionId displayId均为-1
+        // 手机模式 missionId displayId 均为-1
         server->SetCaptureConfig(CaptureMode::CAPTURE_SPECIFIED_SCREEN, -1);
     }
     const Json::Value missionIdJson = root["missionId"];
@@ -1490,11 +1493,10 @@ int32_t ScreenCaptureServer::RegisterServerCallbacks()
 }
 
 #ifdef PC_STANDARD
-bool ScreenCaptureServer::IsCaptureSpecifiedWindowValid()
+bool ScreenCaptureServer::CheckCaptureSpecifiedWindowForSelectWindow()
 {
-    const int32_t missionIdNumMax = 2;
     if (captureConfig_.captureMode == CAPTURE_SPECIFIED_WINDOW &&
-        captureConfig_.videoInfo.videoCapInfo.taskIDs.size() < missionIdNumMax) {
+        captureConfig_.videoInfo.videoCapInfo.taskIDs.size() < SELECT_WINDOW_MISSION_ID_NUM_MAX) {
             return true;
     }
     return false;
@@ -1507,13 +1509,13 @@ void ScreenCaptureServer::SendConfigToUIParams(AAFwk::Want& want)
         MEDIA_LOGI("CAPTURE_SPECIFIED_SCREEN, displayId: %{public}" PRId64 " missionId is dropped.",
             captureConfig_.videoInfo.videoCapInfo.displayId);
         captureConfig_.videoInfo.videoCapInfo.taskIDs = {};
-        want.SetParam("missionId", -1);
-    } else if (IsCaptureSpecifiedWindowValid() && captureConfig_.videoInfo.videoCapInfo.taskIDs.size() == 1) {
+        want.SetParam("missionId", -1); // -1 无效值
+    } else if (CheckCaptureSpecifiedWindowForSelectWindow() && captureConfig_.videoInfo.videoCapInfo.taskIDs.size() == 1) {
         MEDIA_LOGI("CAPTURE_SPECIFIED_WINDOW, missionId: %{public}d",
             *(captureConfig_.videoInfo.videoCapInfo.taskIDs.begin()));
         want.SetParam("missionId", *(captureConfig_.videoInfo.videoCapInfo.taskIDs.begin()));
-    } else if (IsCaptureSpecifiedWindowValid() && captureConfig_.videoInfo.videoCapInfo.taskIDs.size() == 0) {
-        want.SetParam("missionId", -1);
+    } else if (CheckCaptureSpecifiedWindowForSelectWindow() && captureConfig_.videoInfo.videoCapInfo.taskIDs.size() == 0) {
+        want.SetParam("missionId", -1); // -1 无效值
     }
 }
 #endif
@@ -1534,7 +1536,7 @@ int32_t ScreenCaptureServer::StartPrivacyWindow()
     AAFwk::Want want;
     ErrCode ret = ERR_INVALID_VALUE;
 #ifdef PC_STANDARD
-    if (captureConfig_.captureMode == CAPTURE_SPECIFIED_SCREEN || IsCaptureSpecifiedWindowValid()) {
+    if (captureConfig_.captureMode == CAPTURE_SPECIFIED_SCREEN || CheckCaptureSpecifiedWindowForSelectWindow()) {
         AppExecFwk::ElementName element("",
             GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"],
             SELECT_ABILITY_NAME); // DeviceID
