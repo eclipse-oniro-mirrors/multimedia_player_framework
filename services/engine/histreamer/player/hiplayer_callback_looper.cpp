@@ -209,6 +209,7 @@ void HiPlayerCallbackLooper::ReportRemainedMaxAmplitude()
             (void)amplitudeFormat.PutBuffer(std::string(PlayerKeys::AUDIO_MAX_AMPLITUDE),
                 static_cast<uint8_t *>(static_cast<void *>(maxAmplitudeArray)), size * sizeof(float));
             obs->OnInfo(INFO_TYPE_MAX_AMPLITUDE_COLLECT, 0, amplitudeFormat);
+            vMaxAmplitudeArray_.clear();
         }
     }
 }
