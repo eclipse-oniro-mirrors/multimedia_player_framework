@@ -168,6 +168,10 @@ void HiTransCoderCallbackLooper::DoReportInfo(const Any& info)
     auto obs = obs_.lock();
     FALSE_RETURN(obs != nullptr);
     auto ptr = AnyCast<std::tuple<TransCoderOnInfoType, int32_t>>(&info);
+    if (ptr == nullptr) {
+        MEDIA_LOG_E("Error: ptr is nullptr");
+        return;
+    }
     MEDIA_LOG_I("Report info, info type: " PUBLIC_LOG_D32 " info value: " PUBLIC_LOG_D32,
         static_cast<int32_t>(std::get<TUPLE_POS_0>(*ptr)), static_cast<int32_t>(std::get<TUPLE_POS_1>(*ptr)));
     obs->OnInfo(std::get<TUPLE_POS_0>(*ptr), std::get<TUPLE_POS_1>(*ptr));
