@@ -429,6 +429,29 @@ struct OH_AVScreenCapture *OH_AVScreenCapture_Create(void)
     return object;
 }
 
+void SetVideoCapInfo(OH_AVScreenCaptureConfig config, AVScreenCaptureConfig& config_)
+{
+    config_.videoInfo.videoCapInfo.displayId = config.videoInfo.videoCapInfo.displayId;
+    int32_t *taskIds = config.videoInfo.videoCapInfo.missionIDs;
+    int32_t size = config.videoInfo.videoCapInfo.missionIDsLen;
+    size = size >= MAX_WINDOWS_LEN ? MAX_WINDOWS_LEN : size;
+    config_.videoInfo.videoCapInfo.taskIDs = {};
+    while (size > 0) {
+        if (taskIds == nullptr) {
+            break;
+        }
+        if (*(taskIds) >= 0) {
+            config_.videoInfo.videoCapInfo.taskIDs.push_back(*(taskIds));
+        }
+        taskIds++;
+        size--;
+    }
+    config_.videoInfo.videoCapInfo.videoFrameWidth = config.videoInfo.videoCapInfo.videoFrameWidth;
+    config_.videoInfo.videoCapInfo.videoFrameHeight = config.videoInfo.videoCapInfo.videoFrameHeight;
+    config_.videoInfo.videoCapInfo.videoSource =
+        static_cast<VideoSourceType>(config.videoInfo.videoCapInfo.videoSource);
+}
+
 AVScreenCaptureConfig OH_AVScreenCapture_Convert(OH_AVScreenCaptureConfig config)
 {
     AVScreenCaptureConfig config_;
@@ -447,22 +470,7 @@ AVScreenCaptureConfig OH_AVScreenCapture_Convert(OH_AVScreenCaptureConfig config
     config_.audioInfo.audioEncInfo.audioBitrate = config.audioInfo.audioEncInfo.audioBitrate;
     config_.audioInfo.audioEncInfo.audioCodecformat =
         static_cast<AudioCodecFormat>(config.audioInfo.audioEncInfo.audioCodecformat);
-    config_.videoInfo.videoCapInfo.displayId = config.videoInfo.videoCapInfo.displayId;
-    int32_t *taskIds = config.videoInfo.videoCapInfo.missionIDs;
-    int32_t size = config.videoInfo.videoCapInfo.missionIDsLen;
-    size = size >= MAX_WINDOWS_LEN ? MAX_WINDOWS_LEN : size;
-    while (size > 0) {
-        if (taskIds == nullptr) {
-            break;
-        }
-        config_.videoInfo.videoCapInfo.taskIDs.push_back(*(taskIds));
-        taskIds++;
-        size--;
-    }
-    config_.videoInfo.videoCapInfo.videoFrameWidth = config.videoInfo.videoCapInfo.videoFrameWidth;
-    config_.videoInfo.videoCapInfo.videoFrameHeight = config.videoInfo.videoCapInfo.videoFrameHeight;
-    config_.videoInfo.videoCapInfo.videoSource =
-        static_cast<VideoSourceType>(config.videoInfo.videoCapInfo.videoSource);
+    SetVideoCapInfo(config, config_);
     config_.videoInfo.videoEncInfo = {
         .videoCodec = static_cast<VideoCodecFormat>(config.videoInfo.videoEncInfo.videoCodec ==
             OH_VideoCodecFormat::OH_VIDEO_DEFAULT ?

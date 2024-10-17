@@ -454,11 +454,15 @@ int32_t ScreenCaptureServiceStub::InitVideoCap(MessageParcel &data, MessageParce
         "screen capture server is nullptr");
     VideoCaptureInfo videoInfo;
     videoInfo.displayId = data.ReadUint64();
+    videoInfo.taskIDs = {};
     int32_t size = data.ReadInt32();
     size = size >= MAX_WINDOWS_LEN ? MAX_WINDOWS_LEN : size;
     if (size > 0) {
         for (auto i = 0; i < size; i++) {
-            videoInfo.taskIDs.push_back(data.ReadInt32());
+            int32_t missionId = data.ReadInt32();
+            if (missionId >= 0) {
+                videoInfo.taskIDs.push_back(missionId);
+            }
         }
     }
     videoInfo.videoFrameWidth = data.ReadInt32();
