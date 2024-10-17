@@ -1510,11 +1510,13 @@ void ScreenCaptureServer::SendConfigToUIParams(AAFwk::Want& want)
             captureConfig_.videoInfo.videoCapInfo.displayId);
         captureConfig_.videoInfo.videoCapInfo.taskIDs = {};
         want.SetParam("missionId", -1); // -1 无效值
-    } else if (CheckCaptureSpecifiedWindowForSelectWindow() && captureConfig_.videoInfo.videoCapInfo.taskIDs.size() == 1) {
+    } else if (CheckCaptureSpecifiedWindowForSelectWindow() &&
+        captureConfig_.videoInfo.videoCapInfo.taskIDs.size() == 1) {
         MEDIA_LOGI("CAPTURE_SPECIFIED_WINDOW, missionId: %{public}d",
             *(captureConfig_.videoInfo.videoCapInfo.taskIDs.begin()));
         want.SetParam("missionId", *(captureConfig_.videoInfo.videoCapInfo.taskIDs.begin()));
-    } else if (CheckCaptureSpecifiedWindowForSelectWindow() && captureConfig_.videoInfo.videoCapInfo.taskIDs.size() == 0) {
+    } else if (CheckCaptureSpecifiedWindowForSelectWindow() &&
+        captureConfig_.videoInfo.videoCapInfo.taskIDs.size() == 0) {
         want.SetParam("missionId", -1); // -1 无效值
     }
 }
