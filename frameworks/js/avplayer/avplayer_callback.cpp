@@ -38,7 +38,7 @@ namespace {
     int32_t ROUND_VERSION_NUMBER = 100;
     int32_t API_VERSION_14 = 14;
     int32_t FAULT_API_VERSION = -1;
-    std::set<int32_t> API13_EXT_IO_ERRORS = {
+    std::set<int32_t> API14_EXT_IO_ERRORS = {
         OHOS::Media::MSERR_EXT_API14_IO_CANNOT_FIND_HOST,
         OHOS::Media::MSERR_EXT_API14_IO_CONNECTION_TIMEOUT,
         OHOS::Media::MSERR_EXT_API14_IO_NETWORK_ABNORMAL,
