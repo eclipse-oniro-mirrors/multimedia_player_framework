@@ -440,7 +440,7 @@ void SetVideoCapInfo(OH_AVScreenCaptureConfig config, AVScreenCaptureConfig& con
         if (taskIds == nullptr) {
             break;
         }
-        if (*(taskIds) > 0) {
+        if (*(taskIds) >= 0) {
             config_.videoInfo.videoCapInfo.taskIDs.push_back(*(taskIds));
         }
         taskIds++;

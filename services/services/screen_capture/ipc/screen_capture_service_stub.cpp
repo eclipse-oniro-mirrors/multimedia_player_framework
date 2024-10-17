@@ -460,7 +460,7 @@ int32_t ScreenCaptureServiceStub::InitVideoCap(MessageParcel &data, MessageParce
     if (size > 0) {
         for (auto i = 0; i < size; i++) {
             int32_t missionId = data.ReadInt32();
-            if (missionId > 0) {
+            if (missionId >= 0) {
                 videoInfo.taskIDs.push_back(missionId);
             }
         }
