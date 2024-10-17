@@ -36,20 +36,20 @@
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_ONLY_PRERELEASE, LOG_DOMAIN_PLAYER, "AVPlayerCallback" };
     int32_t ROUND_VERSION_NUMBER = 100;
-    int32_t API_VERSION_12 = 12;
+    int32_t API_VERSION_14 = 14;
     int32_t FAULT_API_VERSION = -1;
     std::set<int32_t> API13_EXT_IO_ERRORS = {
-        OHOS::Media::MSERR_EXT_API12_IO_CANNOT_FIND_HOST,
-        OHOS::Media::MSERR_EXT_API12_IO_CONNECTION_TIMEOUT,
-        OHOS::Media::MSERR_EXT_API12_IO_NETWORK_ABNORMAL,
-        OHOS::Media::MSERR_EXT_API12_IO_NETWORK_UNAVAILABLE,
-        OHOS::Media::MSERR_EXT_API12_IO_NO_PERMISSION,
-        OHOS::Media::MSERR_EXT_API12_IO_REQUEST_DENID,
-        OHOS::Media::MSERR_EXT_API12_IO_RESOURE_NOT_FOUND,
-        OHOS::Media::MSERR_EXT_API12_IO_SSL_CLIENT_CERT_NEEDED,
-        OHOS::Media::MSERR_EXT_API12_IO_SSL_CONNECT_FAIL,
-        OHOS::Media::MSERR_EXT_API12_IO_SSL_SERVER_CERT_UNTRUSTED,
-        OHOS::Media::MSERR_EXT_API12_IO_UNSUPPORTTED_REQEST,
+        OHOS::Media::MSERR_EXT_API14_IO_CANNOT_FIND_HOST,
+        OHOS::Media::MSERR_EXT_API14_IO_CONNECTION_TIMEOUT,
+        OHOS::Media::MSERR_EXT_API14_IO_NETWORK_ABNORMAL,
+        OHOS::Media::MSERR_EXT_API14_IO_NETWORK_UNAVAILABLE,
+        OHOS::Media::MSERR_EXT_API14_IO_NO_PERMISSION,
+        OHOS::Media::MSERR_EXT_API14_IO_REQUEST_DENID,
+        OHOS::Media::MSERR_EXT_API14_IO_RESOURE_NOT_FOUND,
+        OHOS::Media::MSERR_EXT_API14_IO_SSL_CLIENT_CERT_NEEDED,
+        OHOS::Media::MSERR_EXT_API14_IO_SSL_CONNECT_FAIL,
+        OHOS::Media::MSERR_EXT_API14_IO_SSL_SERVER_CERT_UNTRUSTED,
+        OHOS::Media::MSERR_EXT_API14_IO_UNSUPPORTTED_REQEST,
     };
 }
 
@@ -729,9 +729,9 @@ AVPlayerCallback::~AVPlayerCallback()
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instance destroy", FAKE_POINTER(this));
 }
 
-bool AVPlayerCallback::IsAPI13IOError(MediaServiceExtErrCodeAPI9 error)
+bool AVPlayerCallback::IsAPI14IOError(MediaServiceExtErrCodeAPI9 error)
 {
-    return API13_EXT_IO_ERRORS.find(error) != API13_EXT_IO_ERRORS.end();
+    return API14_EXT_IO_ERRORS.find(error) != API14_EXT_IO_ERRORS.end();
 }
 
 void AVPlayerCallback::OnError(int32_t errorCode, const std::string &errorMsg)
@@ -751,7 +751,7 @@ void AVPlayerCallback::OnError(int32_t errorCode, const std::string &errorMsg)
         AVPlayerCallback::OnInfo(INFO_TYPE_STATE_CHANGE, PLAYER_STATE_ERROR, infoBody);
     }
 #ifndef CROSS_PLATFORM
-    if (IsAPI13IOError(errorCodeApi9) && apiTargetVersion <= API_VERSION_12) {
+    if (IsAPI13IOError(errorCodeApi9) && apiTargetVersion < API_VERSION_14) {
         errorCodeApi9 = MSERR_EXT_API9_IO;
     }
 #endif
