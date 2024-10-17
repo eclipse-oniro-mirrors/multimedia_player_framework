@@ -1,0 +1,80 @@
+# Copyright (c) 2024 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/ohos.gni")
+import("//foundation/multimedia/player_framework/config.gni")
+import("./../../../multimedia_player_framework_aafwk.gni")
+
+ohos_shared_library("video_editor") {
+  stack_protector_ret = true
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  install_enable = true
+  sources = [
+    "./codec/video/decoder/video_decoder_engine.cpp",
+    "./codec/video/decoder/video_decoder_engine_impl.cpp",
+    "./codec/video/encoder/video_encoder_engine.cpp",
+    "./codec/video/encoder/video_encoder_engine_impl.cpp",
+    "./composite_engine/impl/composite_engine.cpp",
+    "./composite_engine/impl/video_composite_engine.cpp",
+    "./data_center/asset/asset.cpp",
+    "./data_center/asset/asset_factory.cpp",
+    "./data_center/asset/video_asset.cpp",
+    "./data_center/effect/effect.cpp",
+    "./data_center/effect/effect_factory.cpp",
+    "./data_center/effect/effect_image_effect.cpp",
+    "./data_center/impl/data_center_impl.cpp",
+    "./video_editor_impl.cpp",
+    "./video_editor_manager.cpp",
+  ]
+
+  include_dirs = [
+    "./",
+    "${multimedia_player_framework_path}/interfaces/inner_api/native/video_editor/include",
+    "${multimedia_player_framework_path}/services/utils/include",
+  ]
+
+  deps = []
+
+  external_deps = [
+    "av_codec:av_codec_client",
+    "hilog:libhilog",
+  ]
+
+  defines = []
+
+  if (defined(global_parts_info) &&
+      defined(global_parts_info.multimedia_image_effect) &&
+      global_parts_info.multimedia_image_effect) {
+    defines += [ "IMAGE_EFFECT_SUPPORT" ]
+    external_deps += [ "image_effect:image_effect" ]
+  }
+
+  cflags = [
+    "-Wall",
+    "-Werror",
+  ]
+
+  public_configs = []
+
+  innerapi_tags = [ "platformsdk" ]
+  subsystem_name = "multimedia"
+  part_name = "player_framework"
+}

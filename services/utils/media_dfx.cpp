@@ -27,7 +27,7 @@
 #include <cstdint>
 
 namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_ONLY_PRERELEASE, LOG_DOMAIN_SYSTEM_PLAYER, "HiStreamer" };
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_SYSTEM_PLAYER, "MediaDFX" };
 
     constexpr uint32_t MAX_STRING_SIZE = 256;
     constexpr int64_t HOURS_BETWEEN_REPORTS = 4;
@@ -280,6 +280,9 @@ void MediaEvent::StatisicsHiSysEventWrite(CallType callType, OHOS::HiviewDFX::Hi
             break;
         case CallType::SCREEN_CAPTRUER:
             eventName = "SCREEN_CAPTURE_STATISTICS";
+            break;
+        case CallType::AVTRANSCODER:
+            eventName = "TRANSCODER_STATISTICS";
             break;
         default:
             return;

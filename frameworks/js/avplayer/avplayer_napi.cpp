@@ -41,6 +41,12 @@ namespace {
     constexpr uint32_t MIN_ARG_COUNTS = 1;
     constexpr uint32_t MAX_ARG_COUNTS = 2;
     constexpr size_t ARRAY_ARG_COUNTS_TWO = 2;
+    constexpr size_t ARRAY_ARG_COUNTS_THREE = 3;
+    constexpr int32_t PLAY_RANGE_DEFAULT_VALUE = -1;
+    constexpr int32_t SEEK_MODE_CLOSEST = 2;
+    constexpr int32_t INDEX_A = 0;
+    constexpr int32_t INDEX_B = 1;
+    constexpr int32_t INDEX_C = 2;
     constexpr uint32_t TASK_TIME_LIMIT_MS = 2000; // ms
     constexpr size_t PARAM_COUNT_SINGLE = 1;
 }
@@ -74,6 +80,7 @@ napi_value AVPlayerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("reset", JsReset),
         DECLARE_NAPI_FUNCTION("release", JsRelease),
         DECLARE_NAPI_FUNCTION("seek", JsSeek),
+        DECLARE_NAPI_FUNCTION("setPlaybackRange", JsSetPlaybackRange),
         DECLARE_NAPI_FUNCTION("on", JsSetOnCallback),
         DECLARE_NAPI_FUNCTION("off", JsClearOnCallback),
         DECLARE_NAPI_FUNCTION("setVolume", JsSetVolume),
@@ -762,6 +769,78 @@ PlayerSeekMode AVPlayerNapi::TransferSeekMode(int32_t mode)
             break;
     }
     return seekMode;
+}
+
+napi_value AVPlayerNapi::JsSetPlaybackRange(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVPlayerNapi::setPlaybackRange");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    MEDIA_LOGI("JsSetPlaybackRange In");
+
+    auto promiseCtx = std::make_unique<AVPlayerContext>(env);
+    napi_value args[ARRAY_ARG_COUNTS_THREE] = { nullptr };
+    size_t argCount = ARRAY_ARG_COUNTS_THREE; // args[0]:startTimeMs, args[1]:endTimeMs, args[2]:SeekMode
+    AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstance");
+
+    promiseCtx->deferred = CommonNapi::CreatePromise(env, nullptr, result);
+    napi_valuetype valueType = napi_undefined;
+    int32_t startTimeMs = PLAY_RANGE_DEFAULT_VALUE;
+    int32_t endTimeMs = PLAY_RANGE_DEFAULT_VALUE;
+    int32_t mode = SEEK_PREVIOUS_SYNC;
+    if (!jsPlayer->CanSetPlayRange()) {
+        promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "current state is not initialized/prepared/paused/stopped/completed, unsupport setPlaybackRange operation");
+    } else if (argCount < ARRAY_ARG_COUNTS_TWO || napi_typeof(env, args[INDEX_A], &valueType) != napi_ok ||
+        valueType != napi_number || napi_typeof(env, args[INDEX_B], &valueType) != napi_ok || valueType != napi_number
+        || napi_get_value_int32(env, args[INDEX_A], &startTimeMs) != napi_ok ||
+        napi_get_value_int32(env, args[INDEX_B], &endTimeMs) != napi_ok ||
+        startTimeMs < PLAY_RANGE_DEFAULT_VALUE || endTimeMs < PLAY_RANGE_DEFAULT_VALUE) {
+        promiseCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please check start or end time");
+    } else if (argCount > ARRAY_ARG_COUNTS_TWO && (napi_typeof(env, args[INDEX_C], &valueType) != napi_ok ||
+        valueType != napi_number || napi_get_value_int32(env, args[INDEX_C], &mode) != napi_ok ||
+        mode < SEEK_PREVIOUS_SYNC || mode > SEEK_MODE_CLOSEST)) {
+        promiseCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please check seek mode");
+    } else {
+        promiseCtx->asyncTask = jsPlayer->EqueueSetPlayRangeTask(startTimeMs, endTimeMs, mode);
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSetPlaybackRange EnqueueTask Out", FAKE_POINTER(jsPlayer));
+    }
+
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, "JsSetPlaybackRange", NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource,
+        [](napi_env env, void *data) {
+            MEDIA_LOGI("Wait JsSetPlaybackRange Task Start");
+            auto promiseCtx = reinterpret_cast<AVPlayerContext *>(data);
+            CHECK_AND_RETURN_LOG(promiseCtx != nullptr, "promiseCtx is nullptr!");
+            promiseCtx->CheckTaskResult();
+            MEDIA_LOGI("Wait JsSetPlaybackRange Task End");
+        },
+        MediaAsyncContext::CompleteCallback, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
+    napi_queue_async_work_with_qos(env, promiseCtx->work, napi_qos_user_initiated);
+    promiseCtx.release();
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSetPlaybackRange Out", FAKE_POINTER(jsPlayer));
+    return result;
+}
+
+std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::EqueueSetPlayRangeTask(int32_t start, int32_t end, int32_t mode)
+{
+    auto task = std::make_shared<TaskHandler<TaskRet>>([this, start, end, mode]() {
+        std::unique_lock<std::mutex> lock(taskMutex_);
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSetPlaybackRange Task In", FAKE_POINTER(this));
+        if (player_ != nullptr) {
+            auto ret = player_->SetPlayRangeWithMode(start, end, TransferSeekMode(mode));
+            if (ret != MSERR_OK) {
+                auto errCode = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret));
+                return TaskRet(errCode, "failed to setPlaybackRange");
+            }
+        }
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSetPlaybackRange Task Out", FAKE_POINTER(this));
+        return TaskRet(MSERR_EXT_API9_OK, "Success");
+    });
+    (void)taskQue_->EnqueueTask(task);
+    return task;
 }
 
 PlayerSwitchMode AVPlayerNapi::TransferSwitchMode(int32_t mode)
@@ -2209,6 +2288,17 @@ bool AVPlayerNapi::IsControllable()
     }
 }
 
+bool AVPlayerNapi::CanSetPlayRange()
+{
+    auto state = GetCurrentState();
+    if (state == AVPlayerState::STATE_INITIALIZED || state == AVPlayerState::STATE_PREPARED ||
+        state == AVPlayerState::STATE_PAUSED || state == AVPlayerState::STATE_STOPPED ||
+        state == AVPlayerState::STATE_COMPLETED) {
+        return true;
+    }
+    return false;
+}
+
 std::string AVPlayerNapi::GetCurrentState()
 {
     if (isReleased_.load()) {
@@ -2566,12 +2656,37 @@ void AVPlayerNapi::MaxAmplitudeCallbackOn(AVPlayerNapi *jsPlayer, std::string ca
 {
     if (jsPlayer == nullptr) {
         calMaxAmplitude_ = false;
+        return;
     }
     if (callbackName == "amplitudeUpdate") {
         calMaxAmplitude_ = true;
     }
     if (jsPlayer->player_ != nullptr && calMaxAmplitude_) {
         (void)jsPlayer->player_->SetMaxAmplitudeCbStatus(calMaxAmplitude_);
+    }
+}
+
+void AVPlayerNapi::DeviceChangeCallbackOn(AVPlayerNapi *jsPlayer, std::string callbackName)
+{
+    if (jsPlayer == nullptr) {
+        deviceChangeCallbackflag_ = false;
+        return;
+    }
+    if (callbackName == "audioOutputDeviceChangeWithInfo") {
+        deviceChangeCallbackflag_ = true;
+    }
+    if (jsPlayer->player_ != nullptr && deviceChangeCallbackflag_) {
+        (void)jsPlayer->player_->SetDeviceChangeCbStatus(deviceChangeCallbackflag_);
+    }
+}
+
+void AVPlayerNapi::DeviceChangeCallbackOff(AVPlayerNapi *jsPlayer, std::string callbackName)
+{
+    if (jsPlayer != nullptr && deviceChangeCallbackflag_ && callbackName == "audioOutputDeviceChangeWithInfo") {
+        deviceChangeCallbackflag_ = false;
+        if (jsPlayer->player_ != nullptr) {
+            (void)jsPlayer->player_->SetDeviceChangeCbStatus(deviceChangeCallbackflag_);
+        }
     }
 }
 
@@ -2612,6 +2727,7 @@ napi_value AVPlayerNapi::JsSetOnCallback(napi_env env, napi_callback_info info)
 
     std::string callbackName = CommonNapi::GetStringArgument(env, args[0]);
     jsPlayer->MaxAmplitudeCallbackOn(jsPlayer, callbackName);
+    jsPlayer->DeviceChangeCallbackOn(jsPlayer, callbackName);
     MEDIA_LOGI("0x%{public}06" PRIXPTR " set callbackName: %{public}s", FAKE_POINTER(jsPlayer), callbackName.c_str());
 
     napi_ref ref = nullptr;
@@ -2664,7 +2780,8 @@ napi_value AVPlayerNapi::JsClearOnCallback(napi_env env, napi_callback_info info
     }
 
     std::string callbackName = CommonNapi::GetStringArgument(env, args[0]);
-    jsPlayer->MaxAmplitudeCallbackOn(jsPlayer, callbackName);
+    jsPlayer->MaxAmplitudeCallbackOff(jsPlayer, callbackName);
+    jsPlayer->DeviceChangeCallbackOff(jsPlayer, callbackName);
     MEDIA_LOGI("0x%{public}06" PRIXPTR " set callbackName: %{public}s", FAKE_POINTER(jsPlayer), callbackName.c_str());
 
     jsPlayer->ClearCallbackReference(callbackName);

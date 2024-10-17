@@ -29,21 +29,22 @@ CacheBuffer::CacheBuffer(const Format &trackFormat,
     const std::deque<std::shared_ptr<AudioBufferEntry>> &cacheData,
     const size_t &cacheDataTotalSize, const int32_t &soundID, const int32_t &streamID) : trackFormat_(trackFormat),
     cacheData_(cacheData), cacheDataTotalSize_(cacheDataTotalSize), soundID_(soundID), streamID_(streamID),
-    cacheDataFrameNum_(0), havePlayedCount_(0)
+    cacheDataFrameIndex_(0), havePlayedCount_(0)
 
 {
-    MEDIA_LOGI("Construction CacheBuffer");
+    MEDIA_LOGI("Construction CacheBuffer soundID:%{public}d, streamID:%{public}d", soundID, streamID);
 }
 
 CacheBuffer::~CacheBuffer()
 {
-    MEDIA_LOGI("Destruction CacheBuffer dec");
+    MEDIA_LOGI("Destruction CacheBuffer soundID:%{public}d, streamID:%{public}d", soundID_, streamID_);
     Release();
 }
 
 std::unique_ptr<AudioStandard::AudioRenderer> CacheBuffer::CreateAudioRenderer(const int32_t streamID,
     const AudioStandard::AudioRendererInfo audioRendererInfo, const PlayParams playParams)
 {
+    MediaTrace trace("CacheBuffer::CreateAudioRenderer");
     CHECK_AND_RETURN_RET_LOG(streamID == streamID_, nullptr,
         "Invalid streamID, failed to create normal audioRenderer.");
     int32_t sampleRate;
@@ -92,14 +93,10 @@ std::unique_ptr<AudioStandard::AudioRenderer> CacheBuffer::CreateAudioRenderer(c
         audioRenderer->SetBufferDuration(bufferDuration);
         MEDIA_LOGI("Using buffer size:%{public}zu, duration %{public}zu", targetSize, bufferDuration);
     }
-    ret = audioRenderer->SetRendererWriteCallback(shared_from_this());
-    if (ret != MSERR_OK) {
-        MEDIA_LOGE("audio renderer write callback fail, ret %{public}d.", ret);
-    }
-    ret = audioRenderer->SetRendererFirstFrameWritingCallback(shared_from_this());
-    if (ret != MSERR_OK) {
-        MEDIA_LOGE("audio renderer first frame write callback fail, ret %{public}d.", ret);
-    }
+    int32_t retCallback = audioRenderer->SetRendererWriteCallback(shared_from_this());
+    int32_t retFirstCallback = audioRenderer->SetRendererFirstFrameWritingCallback(shared_from_this());
+    MEDIA_LOGI("CacheBuffer::CreateAudioRenderer retCallback:%{public}d, retFirstCallback:%{public}d",
+        retCallback, retFirstCallback);
     return audioRenderer;
 }
 
@@ -108,10 +105,12 @@ int32_t CacheBuffer::PreparePlay(const int32_t streamID, const AudioStandard::Au
 {
     // create audioRenderer
     if (audioRenderer_ == nullptr) {
+        MEDIA_LOGI("CacheBuffer::PreparePlay CreateAudioRenderer start streamID:%{public}d", streamID);
         audioRenderer_ = CreateAudioRenderer(streamID, audioRendererInfo, playParams);
+        MEDIA_LOGI("CacheBuffer::PreparePlay CreateAudioRenderer end streamID:%{public}d", streamID);
         ReCombineCacheData();
     } else {
-        MEDIA_LOGI("audio render inited.");
+        MEDIA_LOGI("CacheBuffer::PreparePlay audioRenderer inited, streamID:%{public}d", streamID);
     }
     // deal play params
     DealPlayParamsBeforePlay(streamID, playParams);
@@ -120,35 +119,36 @@ int32_t CacheBuffer::PreparePlay(const int32_t streamID, const AudioStandard::Au
 
 int32_t CacheBuffer::DoPlay(const int32_t streamID)
 {
+    MediaTrace trace("CacheBuffer::DoPlay");
     CHECK_AND_RETURN_RET_LOG(streamID == streamID_, MSERR_INVALID_VAL, "Invalid streamID, failed to DoPlay.");
     std::lock_guard lock(cacheBufferLock_);
-    CHECK_AND_RETURN_RET_LOG(!reCombineCacheData_.empty(), MSERR_INVALID_VAL, "reCombineCacheData empty.");
+    CHECK_AND_RETURN_RET_LOG(fullCacheData_ != nullptr, MSERR_INVALID_VAL, "fullCacheData_ is nullptr.");
     CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr, MSERR_INVALID_VAL, "Invalid audioRenderer.");
-    cacheDataFrameNum_ = 0;
+    cacheDataFrameIndex_ = 0;
     havePlayedCount_ = 0;
     isRunning_.store(true);
     if (!audioRenderer_->Start()) {
         OHOS::AudioStandard::RendererState state = audioRenderer_->GetStatus();
         if (state == OHOS::AudioStandard::RendererState::RENDERER_RUNNING) {
-            MEDIA_LOGI("CacheBuffer::DoPlay audioRenderer has started");
+            MEDIA_LOGI("CacheBuffer::DoPlay audioRenderer has started, streamID:%{public}d", streamID);
             isRunning_.store(true);
             if (callback_ != nullptr) {
-                MEDIA_LOGI("CacheBuffer::DoPlay callback_ OnPlayFinished.");
+                MEDIA_LOGI("CacheBuffer::DoPlay callback_ OnPlayFinished, streamID:%{public}d", streamID);
                 callback_->OnPlayFinished();
             }
             return MSERR_OK;
         } else {
-            MEDIA_LOGE("CacheBuffer::DoPlay audioRenderer start failed");
+            MEDIA_LOGE("CacheBuffer::DoPlay audioRenderer start failed, streamID:%{public}d", streamID);
             isRunning_.store(false);
             if (callback_ != nullptr) {
-                MEDIA_LOGI("CacheBuffer::DoPlay failed, call callback");
+                MEDIA_LOGI("CacheBuffer::DoPlay failed, call callback, streamID:%{public}d", streamID);
                 callback_->OnError(MSERR_INVALID_VAL);
             }
             if (cacheBufferCallback_ != nullptr) cacheBufferCallback_->OnError(MSERR_INVALID_VAL);
             return MSERR_INVALID_VAL;
         }
     }
-    MEDIA_LOGI("CacheBuffer::DoPlay success");
+    MEDIA_LOGI("CacheBuffer::DoPlay success, streamID:%{public}d", streamID);
     return MSERR_OK;
 }
 
@@ -157,47 +157,34 @@ int32_t CacheBuffer::ReCombineCacheData()
     std::lock_guard lock(cacheBufferLock_);
     CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr, MSERR_INVALID_VAL, "Invalid audioRenderer.");
     CHECK_AND_RETURN_RET_LOG(!cacheData_.empty(), MSERR_INVALID_VAL, "empty cache data.");
-    size_t bufferSize;
-    audioRenderer_->GetBufferSize(bufferSize);
-    // Prevent data from crossing boundaries, ensure recombine data largest.
-    CHECK_AND_RETURN_RET_LOG(cacheDataTotalSize_ + bufferSize > 1, MSERR_INVALID_VAL, "Invalid bufferSize");
-    unsigned long reCombineCacheDataSize = (cacheDataTotalSize_ + bufferSize - 1) / bufferSize;
-    std::shared_ptr<AudioBufferEntry> preAudioBuffer = cacheData_.front();
-    MEDIA_LOGI("ReCombine preBuffer size:%{public}d, bufferSize:%{public}zu", preAudioBuffer->size, bufferSize);
-    size_t preAudioBufferIndex = 0;
-    for (size_t reCombineCacheDataNum = 0; reCombineCacheDataNum < reCombineCacheDataSize; reCombineCacheDataNum++) {
-        uint8_t *reCombineBuf = new(std::nothrow) uint8_t[bufferSize];
-        if (reCombineBuf == nullptr) {
-            MEDIA_LOGE("Invalid recombine buffer.");
-            continue;
+
+    uint8_t *fullBuffer = new(std::nothrow) uint8_t[cacheDataTotalSize_];
+    CHECK_AND_RETURN_RET_LOG(fullBuffer != nullptr, MSERR_INVALID_VAL, "Invalid fullBuffer");
+    int32_t copyIndex = 0;
+    int32_t remainBufferSize = cacheDataTotalSize_;
+    MEDIA_LOGI("ReCombine start copyIndex:%{public}d, remainSize:%{public}d", copyIndex, remainBufferSize);
+    for (std::shared_ptr<AudioBufferEntry> bufferEntry : cacheData_) {
+        if (bufferEntry != nullptr && bufferEntry->size > 0 && bufferEntry->buffer != nullptr) {
+            CHECK_AND_RETURN_RET_LOG(remainBufferSize >= bufferEntry->size, MSERR_INVALID_VAL,
+                "ReCombine remainBufferSize not enough");
+            int32_t ret = memcpy_s(fullBuffer + copyIndex, remainBufferSize,
+                bufferEntry->buffer, bufferEntry->size);
+            CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_VAL, "ReCombine memcpy failed.");
+            copyIndex += bufferEntry->size;
+            remainBufferSize -= bufferEntry->size;
+        } else {
+            MEDIA_LOGE("ReCombineCacheData, bufferEntry size:%{public}d, buffer:%{public}d",
+                bufferEntry->size, bufferEntry->buffer != nullptr);
         }
-        for (size_t bufferNum = 0; bufferNum < bufferSize; bufferNum++) {
-            if (preAudioBuffer == nullptr) {
-                MEDIA_LOGE("Invalid pre audio buffer.");
-                continue;
-            }
-            if (cacheData_.size() > 1 && (preAudioBufferIndex == static_cast<size_t>(preAudioBuffer->size))) {
-                cacheData_.pop_front();
-                preAudioBuffer = cacheData_.front();
-                preAudioBufferIndex = 0;
-            }
-            if (cacheData_.size() == 1 && (preAudioBufferIndex == static_cast<size_t>(preAudioBuffer->size))) {
-                preAudioBuffer = cacheData_.front();
-                cacheData_.pop_front();
-                preAudioBufferIndex = 0;
-            }
-            if (cacheData_.empty()) {
-                reCombineBuf[bufferNum] = 0;
-            } else {
-                reCombineBuf[bufferNum] = preAudioBuffer->buffer[preAudioBufferIndex];
-            }
-            preAudioBufferIndex++;
-        }
-        reCombineCacheData_.push_back(std::make_shared<AudioBufferEntry>(reCombineBuf, bufferSize));
     }
+    MEDIA_LOGI("ReCombine finish copyIndex:%{public}d, remainSize:%{public}d", copyIndex, remainBufferSize);
+
+    fullCacheData_ = std::make_shared<AudioBufferEntry>(fullBuffer, cacheDataTotalSize_);
+
     if (!cacheData_.empty()) {
         cacheData_.clear();
     }
+
     return MSERR_OK;
 }
 
@@ -236,7 +223,6 @@ AudioStandard::AudioRendererRate CacheBuffer::CheckAndAlignRendererRate(const in
 
 void CacheBuffer::OnWriteData(size_t length)
 {
-    AudioStandard::BufferDesc bufDesc;
     if (audioRenderer_ == nullptr) {
         MEDIA_LOGE("audioRenderer is nullptr.");
         return;
@@ -245,52 +231,77 @@ void CacheBuffer::OnWriteData(size_t length)
         MEDIA_LOGE("audioRenderer is stop.");
         return;
     }
-    if (cacheDataFrameNum_ == reCombineCacheData_.size()) {
+    if (cacheDataFrameIndex_ >= fullCacheData_->size) {
         if (havePlayedCount_ == loop_) {
-            MEDIA_LOGI("CacheBuffer stream write finish, cacheDataFrameNum_:%{public}zu,"
-                " havePlayedCount_:%{public}d, loop:%{public}d, try to stop.", cacheDataFrameNum_,
-                havePlayedCount_, loop_);
+            MEDIA_LOGI("CacheBuffer stream write finish, cacheDataFrameIndex_:%{public}zu,"
+                " havePlayedCount_:%{public}d, loop:%{public}d, streamID_:%{public}d, length: %{public}zu",
+                cacheDataFrameIndex_, havePlayedCount_, loop_, streamID_, length);
             Stop(streamID_);
             return;
         }
-        cacheDataFrameNum_ = 0;
-        havePlayedCount_++;
+        {
+            std::lock_guard lock(cacheBufferLock_);
+            cacheDataFrameIndex_ = 0;
+            havePlayedCount_++;
+        }
     }
+    DealWriteData(length);
+}
+
+void CacheBuffer::DealWriteData(size_t length)
+{
+    AudioStandard::BufferDesc bufDesc;
     audioRenderer_->GetBufferDesc(bufDesc);
-    std::shared_ptr<AudioBufferEntry> audioBuffer = reCombineCacheData_[cacheDataFrameNum_];
-
-    if (bufDesc.buffer != nullptr && audioBuffer != nullptr && audioBuffer->buffer != nullptr) {
-        int32_t ret = memcpy_s(static_cast<void *>(bufDesc.buffer), length,
-            static_cast<void *>(audioBuffer->buffer), length);
-        CHECK_AND_RETURN_LOG(ret == MSERR_OK, "memcpy failed.");
-        bufDesc.bufLength = length;
-        bufDesc.dataLength = length;
-
+    std::lock_guard lock(cacheBufferLock_);
+    if (bufDesc.buffer != nullptr && fullCacheData_ != nullptr && fullCacheData_->buffer != nullptr) {
+        if (fullCacheData_->size - cacheDataFrameIndex_ >= length) {
+            int32_t ret = memcpy_s(bufDesc.buffer, length,
+                fullCacheData_->buffer + cacheDataFrameIndex_, length);
+            CHECK_AND_RETURN_LOG(ret == MSERR_OK, "memcpy failed total length.");
+            bufDesc.bufLength = length;
+            bufDesc.dataLength = length;
+            cacheDataFrameIndex_ += length;
+        } else {
+            size_t copyLength = fullCacheData_->size - cacheDataFrameIndex_;
+            int32_t ret = memset_s(bufDesc.buffer, length, 0, length);
+            CHECK_AND_RETURN_LOG(ret == MSERR_OK, "memset failed.");
+            ret = memcpy_s(bufDesc.buffer, length, fullCacheData_->buffer + cacheDataFrameIndex_,
+                copyLength);
+            CHECK_AND_RETURN_LOG(ret == MSERR_OK, "memcpy failed not enough length.");
+            bufDesc.bufLength = length;
+            bufDesc.dataLength = copyLength;
+            cacheDataFrameIndex_ += copyLength;
+        }
         audioRenderer_->Enqueue(bufDesc);
     } else {
-        MEDIA_LOGE("CacheBuffer::OnWriteData , cacheDataFrameNum_: %{public}zu", cacheDataFrameNum_);
-        MEDIA_LOGE("CacheBuffer::OnWriteData , length: %{public}zu", length);
-        MEDIA_LOGE("CacheBuffer::OnWriteData , bufDesc.buffer: %{public}d", bufDesc.buffer != nullptr);
-        MEDIA_LOGE("CacheBuffer::OnWriteData , audioBuffer: %{public}d", audioBuffer != nullptr);
-        MEDIA_LOGE("CacheBuffer::OnWriteData , audioBuffer->buffer: %{public}d", audioBuffer->buffer != nullptr);
+        MEDIA_LOGE("OnWriteData, cacheDataFrameIndex_: %{public}zu, length: %{public}zu,"
+            " bufDesc.buffer:%{public}d, fullCacheData_:%{public}d, fullCacheData_->buffer:%{public}d,"
+            " streamID_:%{public}d",
+            cacheDataFrameIndex_, length, bufDesc.buffer != nullptr, fullCacheData_ != nullptr,
+            fullCacheData_->buffer != nullptr, streamID_);
     }
-    cacheDataFrameNum_++;
 }
 
 void CacheBuffer::OnFirstFrameWriting(uint64_t latency)
 {
+    size_t bufferSize;
+    audioRenderer_->GetBufferSize(bufferSize);
+    MEDIA_LOGI("CacheBuffer::OnFirstFrameWriting bufferSize:%{public}zu, streamID_:%{public}d",
+        bufferSize, streamID_);
     CHECK_AND_RETURN_LOG(frameWriteCallback_ != nullptr, "frameWriteCallback is null.");
     frameWriteCallback_->OnFirstAudioFrameWritingCallback(latency);
 }
 
 int32_t CacheBuffer::Stop(const int32_t streamID)
 {
+    MediaTrace trace("CacheBuffer::Stop");
     while (!cacheBufferLock_.try_lock()) {
         if (!isRunning_.load()) {
             return MSERR_OK;
         }
     }
     if (streamID == streamID_) {
+        MEDIA_LOGI("CacheBuffer::Stop streamID:%{public}d", streamID_);
         if (audioRenderer_ != nullptr && isRunning_.load()) {
             isRunning_.store(false);
             if (audioRenderer_->IsFastRenderer()) {
@@ -301,7 +312,7 @@ int32_t CacheBuffer::Stop(const int32_t streamID)
                 MEDIA_LOGI("audioRenderer normal stop.");
                 audioRenderer_->Stop();
             }
-            cacheDataFrameNum_ = 0;
+            cacheDataFrameIndex_ = 0;
             havePlayedCount_ = 0;
             if (callback_ != nullptr) {
                 MEDIA_LOGI("cachebuffer callback_ OnPlayFinished.");
@@ -378,8 +389,9 @@ int32_t CacheBuffer::SetParallelPlayFlag(const int32_t streamID, const bool para
 
 int32_t CacheBuffer::Release()
 {
+    MediaTrace trace("CacheBuffer::Release");
     std::lock_guard lock(cacheBufferLock_);
-    MEDIA_LOGI("CacheBuffer release, streamID:%{public}d", streamID_);
+    MEDIA_LOGI("CacheBuffer::Release start, streamID:%{public}d", streamID_);
     isRunning_.store(false);
     if (audioRenderer_ != nullptr) {
         audioRenderer_->Stop();
@@ -387,10 +399,11 @@ int32_t CacheBuffer::Release()
         audioRenderer_ = nullptr;
     }
     if (!cacheData_.empty()) cacheData_.clear();
-    if (!reCombineCacheData_.empty()) reCombineCacheData_.clear();
+    if (fullCacheData_ != nullptr) fullCacheData_.reset();
     if (callback_ != nullptr) callback_.reset();
     if (cacheBufferCallback_ != nullptr) cacheBufferCallback_.reset();
     if (frameWriteCallback_ != nullptr) frameWriteCallback_.reset();
+    MEDIA_LOGI("CacheBuffer::Release end, streamID:%{public}d", streamID_);
     return MSERR_OK;
 }
 

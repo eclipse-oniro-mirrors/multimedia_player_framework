@@ -116,42 +116,39 @@ MUXER_FAILURE:
 DRM_SERVICE_INFO:
   __BASE: {type: BEHAVIOR, level: MINOR, desc: DRM service start or end information}
   MODULE: {type: STRING, desc: Module name}
-  TIME: {type: UINT32, desc: Service start or end time us}
   SERVICE_NAME: {type: STRING, desc: Service name}
-  ACTION: {type: STRING, desc: Start or end}
-  MEMORY: {type: UINT32, desc: Service used memory kb}
+  ACTION: {type: STRING, desc: Current Action}
+  MEMORY: {type: UINT32, desc: Service use memory kb}
 
 DRM_LICENSE_DOWNLOAD_INFO:
   __BASE: {type: BEHAVIOR, level: MINOR, desc: DRM system provision}
   MODULE: {type: STRING, desc: Module name}
-  TIME: {type: UINT32, desc: Service start or end time us}
   APP_NAME: {type: STRING, desc: Caller app name}
   INSTANCE_ID: {type: STRING, desc: Distinct player id}
   DRM_NAME: {type: STRING, desc: DRM schema name}
-  DRM_UUID: {type: STRING, desc: DRM universial unique identifier}
+  DRM_UUID: {type: STRING, desc: DRM Universally Unique Identifier}
   CLIENT_VERSION: {type: STRING, desc: DRM client version}
-  LICENSE_TYPE: {type: STRING, desc: Online of offline}
+  LICENSE_TYPE: {type: STRING, desc: DRM license type}
   GENERATION_DURATION: {type: UINT32, desc: License request generation costs ms}
-  GENERATION_RESULT: {type: STRING, desc: Success or fail}
+  GENERATION_RESULT: {type: STRING, desc: License generation result}
   PROCESS_DURATION: {type: UINT32, desc: License process costs ms}
   PROCESS_RESULT: {type: STRING, desc: License process result}
 
 DRM_CERTIFICATE_DOWNLOAD_INFO:
-  __BASE: {type: BEHAVIOR, level: MINOR, desc: DRM system provision}
+  __BASE: {type: BEHAVIOR, level: CRITICAL, desc: DRM system provision}
   MODULE: {type: STRING, desc: Module name}
-  TIME: {type: UINT32, desc: Service start or end time us}
   APP_NAME: {type: STRING, desc: Caller app name}
   INSTANCE_ID: {type: STRING, desc: Distinct player id}
   DRM_NAME: {type: STRING, desc: DRM schema name}
-  DRM_UUID: {type: STRING, desc: DRM universial unique identifier}
+  DRM_UUID: {type: STRING, desc: DRM Universally Unique Identifier}
   CLIENT_VERSION: {type: STRING, desc: DRM client version}
   GENERATION_DURATION: {type: UINT32, desc: License request generation costs ms}
-  GENERATION_RESULT: {type: STRING, desc: Success or fail}
+  GENERATION_RESULT: {type: STRING, desc: License generation result}
   PROCESS_DURATION: {type: UINT32, desc: License process costs ms}
   PROCESS_RESULT: {type: STRING, desc: License process result}
-  CALL_SERVER_TIME: {type: UINT32, desc: Call time}
+  CALL_SERVER_TIME: {type: UINT32, desc: Call server time}
   SERVER_COST_DURATION: {type: UINT32, desc: Processing time of the server}
-  SERVER_RESULT: {type: STRING, desc: Result}
+  SERVER_RESULT: {type: STRING, desc: Server result}
 PLAYER_COMMON_STATISTICS:
   __BASE: {type: STATISTIC, level: MINOR, desc: Player all info statistics}
   EVENTS: {type: STRING, arrsize: 100, desc: Group of player events}
@@ -165,8 +162,8 @@ SCREEN_CAPTURE_STATISTICS:
   EVENTS: {type: STRING, arrsize: 100, desc: Group of screen capture events}
 
 DRM_STATISTICS:
-  __BASE: {type: STATISTIC, level: MINOR, desc: DRM common statistics}
-  EVENTS: {type: STRING, arrsize: 100, desc: Group of DRM common events}
+  __BASE: {type: STATISTIC, level: MINOR, desc: DRM statistics}
+  EVENTS: {type: STRING, arrsize: 100, desc: Group of DRM events}
 
 PLAYER_LAG:
   __BASE: {type: FAULT, level: CRITICAL, desc: playback lag event}

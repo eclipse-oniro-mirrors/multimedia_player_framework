@@ -96,6 +96,9 @@ Status AVThumbnailGenerator::InitDecoder()
     MEDIA_LOGD("Init decoder start.");
     if (videoDecoder_ != nullptr) {
         MEDIA_LOGD("AVThumbnailGenerator InitDecoder already.");
+        Format format;
+        format.PutDoubleValue(MediaDescriptionKey::MD_KEY_FRAME_RATE, VIDEO_FRAME_RATE);
+        videoDecoder_->SetParameter(format);
         videoDecoder_->Start();
         return Status::OK;
     }
@@ -140,13 +143,13 @@ std::shared_ptr<Meta> AVThumbnailGenerator::GetVideoTrackInfo()
                 mediaType == Plugins::MediaType::VIDEO, nullptr,
                 "GetTargetTrackInfo mediaType is not video, index:%{public}d, mediaType:%{public}d", index,
                 static_cast<int32_t>(mediaType));
+            CHECK_AND_RETURN_RET_LOG(trackInfos[index]->Get<Tag::VIDEO_FRAME_RATE>(frameRate_) && frameRate_ > 0,
+                nullptr, "failed to get video frame rate");
             trackIndex_ = index;
             MEDIA_LOGI("0x%{public}06" PRIXPTR " GetTrackInfo success trackIndex_:%{public}d, trackMime_:%{public}s",
                        FAKE_POINTER(this), trackIndex_, trackMime_.c_str());
             if (trackInfos[index]->Get<Tag::VIDEO_ROTATION>(rotation_)) {
-                MEDIA_LOGD("rotation %{public}d", static_cast<int32_t>(rotation_));
-            } else {
-                MEDIA_LOGD("no rotation");
+                MEDIA_LOGI("rotation %{public}d", static_cast<int32_t>(rotation_));
             }
             return trackInfos[trackIndex_];
         }
@@ -159,6 +162,13 @@ void AVThumbnailGenerator::OnOutputFormatChanged(const MediaAVCodec::Format &for
 {
     MEDIA_LOGD("OnOutputFormatChanged");
     outputFormat_ = format;
+    int32_t width = 0;
+    int32_t height = 0;
+    bool hasWidth = format.GetIntValue(Tag::VIDEO_PIC_WIDTH, width);
+    bool hasHeight = format.GetIntValue(Tag::VIDEO_PIC_HEIGHT, height);
+    CHECK_AND_RETURN_LOG(hasWidth && hasHeight, "OutputFormat doesn't have width or height");
+    width_ = width;
+    height_ = height;
 }
 
 void AVThumbnailGenerator::OnInputBufferAvailable(uint32_t index, std::shared_ptr<AVBuffer> buffer)
@@ -389,6 +399,10 @@ void AVThumbnailGenerator::ConvertP010ToNV12(const sptr<SurfaceBuffer> &surfaceB
 
 std::shared_ptr<AVBuffer> AVThumbnailGenerator::GenerateAlignmentAvBuffer()
 {
+    if (avBuffer_ == nullptr) {
+        MEDIA_LOGE("Generate Alignment AvBuffer failed, avBuffer_ is nullptr.");
+        return nullptr;
+    }
     if (avBuffer_->memory_->GetSize() != 0 && avBuffer_->memory_->GetSurfaceBuffer() == nullptr) {
         return GenerateAvBufferFromFCodec();
     }
@@ -520,7 +534,7 @@ int32_t AVThumbnailGenerator::CopySurfaceBufferPixels(const sptr<SurfaceBuffer> 
     }
 
     // copy src Y component to dst
-    int32_t lineByteCount = width * (isHdr ? RATE_UV : 1);
+    int32_t lineByteCount = isHdr ? stride : width;
     for (int32_t y = 0; y < height; y++) {
         auto ret = memcpy_s(dstPtr, lineByteCount, srcPtr, lineByteCount);
         TRUE_LOG(ret != EOK, MEDIA_LOGW, "Memcpy UV component failed.");
@@ -619,6 +633,9 @@ void AVThumbnailGenerator::PauseFetchFrame()
     mediaDemuxer_->Pause();
     mediaDemuxer_->Flush();
     videoDecoder_->Flush();
+    Format format;
+    format.PutDoubleValue(MediaDescriptionKey::MD_KEY_FRAME_RATE, frameRate_);
+    videoDecoder_->SetParameter(format);
 }
 }  // namespace Media
 }  // namespace OHOS

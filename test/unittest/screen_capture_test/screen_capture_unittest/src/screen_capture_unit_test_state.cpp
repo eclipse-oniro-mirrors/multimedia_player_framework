@@ -419,6 +419,7 @@ void ScreenCaptureUnitTest::TearDown(void)
         screenCapture_->Release();
         screenCapture_ = nullptr;
     }
+    CloseFile();
 }
 
 int32_t ScreenCaptureUnitTest::SetConfig(AVScreenCaptureConfig &config)

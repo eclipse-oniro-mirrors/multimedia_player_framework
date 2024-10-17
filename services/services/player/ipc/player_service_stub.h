@@ -49,6 +49,7 @@ public:
     int32_t AddSubSource(int32_t fd, int64_t offset, int64_t size) override;
     int32_t SetRenderFirstFrame(bool display) override;
     int32_t SetPlayRange(int64_t start, int64_t end) override;
+    int32_t SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode) override;
     int32_t PrepareAsync() override;
     int32_t Stop() override;
     int32_t Reset() override;
@@ -72,6 +73,7 @@ public:
     int32_t SetLooping(bool loop) override;
     int32_t SetParameter(const Format &param) override;
     int32_t SelectBitRate(uint32_t bitRate) override;
+    int32_t StopBufferring(bool flag) override;
     int32_t SelectTrack(int32_t index, PlayerSwitchMode mode) override;
     int32_t DestroyStub() override;
     int32_t SetPlayerCallback() override;
@@ -87,6 +89,14 @@ public:
     int32_t DoIpcAbnormality() override;
     int32_t DoIpcRecovery(bool fromMonitor) override;
     int32_t SetMaxAmplitudeCbStatus(bool status) override;
+    int32_t SetDeviceChangeCbStatus(bool status) override;
+
+    int32_t HandleActive();
+    int32_t HandleFrozen();
+    int32_t StartReportStatus();
+    int32_t StopReportStatus();
+    int32_t GetUid();
+    bool IsPlayerRunning();
 protected:
     PlayerServiceStub();
     virtual int32_t Init();
@@ -109,6 +119,7 @@ private:
     int32_t Prepare(MessageParcel &data, MessageParcel &reply);
     int32_t SetRenderFirstFrame(MessageParcel &data, MessageParcel &reply);
     int32_t SetPlayRange(MessageParcel &data, MessageParcel &reply);
+    int32_t SetPlayRangeWithMode(MessageParcel &data, MessageParcel &reply);
     int32_t PrepareAsync(MessageParcel &data, MessageParcel &reply);
     int32_t Pause(MessageParcel &data, MessageParcel &reply);
     int32_t Stop(MessageParcel &data, MessageParcel &reply);
@@ -144,6 +155,7 @@ private:
     int32_t SetPlaybackStrategy(MessageParcel &data, MessageParcel &reply);
     int32_t SetMediaMuted(MessageParcel &data, MessageParcel &reply);
     int32_t SetMaxAmplitudeCbStatus(MessageParcel &data, MessageParcel &reply);
+    int32_t SetDeviceChangeCbStatus(MessageParcel &data, MessageParcel &reply);
 
     std::map<uint32_t, std::pair<std::string, PlayerStubFunc>> playerFuncs_;
     void FillPlayerFuncPart1();

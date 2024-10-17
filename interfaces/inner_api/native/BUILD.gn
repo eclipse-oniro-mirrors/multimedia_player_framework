@@ -89,7 +89,7 @@ config("media_client_base_config") {
 }
 
 ohos_shared_library("media_client") {
-  stack_protector_ret = true
+  branch_protector_ret = "pac_ret"
   install_enable = true
 
   sanitize = {

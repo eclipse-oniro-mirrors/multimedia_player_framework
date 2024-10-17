@@ -28,6 +28,7 @@ group("media_services_package") {
   if (player_framework_support_screen_capture_controller) {
     deps += [
       "etc:screen_capture_capsule_image",
+      "etc:screen_capture_capsule_stop_image",
       "etc:screen_capture_mic_image",
       "etc:screen_capture_mic_off_image",
       "etc:screen_capture_notification_image",

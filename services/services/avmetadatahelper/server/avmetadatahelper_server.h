@@ -46,6 +46,7 @@ public:
     int32_t SetHelperCallback(const std::shared_ptr<HelperCallback> &callback) override;
     int32_t GetTimeByFrameIndex(uint32_t index, uint64_t &time) override;
     int32_t GetFrameIndexByTime(uint64_t time, uint32_t &index) override;
+    void SetIsNapiInstance(bool isNapiInstance) override;
 
 private:
     const std::string &GetStatusDescription(int32_t status);
@@ -58,10 +59,21 @@ private:
     std::shared_ptr<IAVMetadataHelperEngine> avMetadataHelperEngine_ = nullptr;
     std::mutex mutex_;
     std::unique_ptr<UriHelper> uriHelper_;
+    TaskQueue taskQue_;
     std::shared_ptr<IMediaDataSource> dataSrc_ = nullptr;
+    bool isLiveStream_ = false;
+    struct ConfigInfo {
+        std::atomic<bool> looping = false;
+        float leftVolume = INVALID_VALUE;
+        float rightVolume = INVALID_VALUE;
+        std::string url;
+    } config_;
+    static constexpr float INVALID_VALUE = 2.0f;
+
     std::shared_ptr<HelperCallback> helperCb_ = nullptr;
     HelperStates currState_ = HelperStates::HELPER_IDLE;
     std::mutex mutexCb_;
+    bool isNapiInstance_ { false };
 };
 } // namespace Media
 } // namespace OHOS

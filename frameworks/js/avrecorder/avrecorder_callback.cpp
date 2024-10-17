@@ -18,6 +18,9 @@
 #include "media_errors.h"
 #include "scope_guard.h"
 #include "media_log.h"
+#ifdef SUPPORT_RECORDER_CREATE_FILE
+#include "media_library_comm_napi.h"
+#endif
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_RECORDER, "AVRecorderCallback"};
@@ -25,6 +28,9 @@ namespace {
 
 namespace OHOS {
 namespace Media {
+#ifdef SUPPORT_RECORDER_CREATE_FILE
+const int32_t CAMERA_SHOT_TYPE = 1; // CameraShotType VIDEO
+#endif
 AVRecorderCallback::AVRecorderCallback(napi_env env) : env_(env)
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR "Instances create", FAKE_POINTER(this));
@@ -110,6 +116,24 @@ void AVRecorderCallback::SendAudioCaptureChangeCallback(const AudioRecorderChang
     return OnJsAudioCaptureChangeCallback(cb);
 }
 
+void AVRecorderCallback::SendPhotoAssertAvailableCallback(const std::string &uri)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (refMap_.find(AVRecorderEvent::EVENT_PHOTO_ASSET_AVAILABLE) == refMap_.end()) {
+        MEDIA_LOGW("can not find PhotoAssertAvailable callback");
+        return;
+    }
+
+    AVRecordJsCallback *cb = new(std::nothrow) AVRecordJsCallback();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
+    cb->autoRef = refMap_.at(AVRecorderEvent::EVENT_PHOTO_ASSET_AVAILABLE);
+    cb->callbackName = AVRecorderEvent::EVENT_PHOTO_ASSET_AVAILABLE;
+    cb->uri = uri;
+#ifdef SUPPORT_RECORDER_CREATE_FILE
+    return OnJsPhotoAssertAvailableCallback(cb);
+#endif
+}
+
 std::string AVRecorderCallback::GetState()
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -146,6 +170,12 @@ void AVRecorderCallback::OnAudioCaptureChange(const AudioRecorderChangeInfo &aud
 {
     MEDIA_LOGI("OnAudioCaptureChange() is called");
     SendAudioCaptureChangeCallback(audioRecorderChangeInfo);
+}
+
+void AVRecorderCallback::OnPhotoAssertAvailable(const std::string &uri)
+{
+    MEDIA_LOGI("OnPhotoAssertAvailable() is called");
+    SendPhotoAssertAvailableCallback(uri);
 }
 
 void AVRecorderCallback::OnJsStateCallBack(AVRecordJsCallback *jsCb) const
@@ -208,6 +238,68 @@ void AVRecorderCallback::OnJsStateCallBack(AVRecordJsCallback *jsCb) const
     CANCEL_SCOPE_EXIT_GUARD(0);
     CANCEL_SCOPE_EXIT_GUARD(1);
 }
+
+#ifdef SUPPORT_RECORDER_CREATE_FILE
+void AVRecorderCallback::OnJsPhotoAssertAvailableCallback(AVRecordJsCallback *jsCb) const
+{
+    ON_SCOPE_EXIT(0) {
+        delete jsCb;
+    };
+
+    uv_loop_s *loop = nullptr;
+    napi_get_uv_event_loop(env_, &loop);
+    CHECK_AND_RETURN_LOG(loop != nullptr, "Fail to get uv event loop");
+
+    uv_work_t *work = new(std::nothrow) uv_work_t;
+    CHECK_AND_RETURN_LOG(work != nullptr, "fail to new uv_work_t");
+    ON_SCOPE_EXIT(1) {
+        delete work;
+    };
+
+    work->data = reinterpret_cast<void *>(jsCb);
+    int ret = uv_queue_work_with_qos(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
+        CHECK_AND_RETURN_LOG(work != nullptr, "work is nullptr");
+        if (work->data == nullptr) {
+            delete work;
+            MEDIA_LOGE("workdata is nullptr");
+            return;
+        }
+        AVRecordJsCallback *event = reinterpret_cast<AVRecordJsCallback *>(work->data);
+        std::string request = event->callbackName;
+        do {
+            CHECK_AND_BREAK_LOG(status != UV_ECANCELED, "%{public}s canceled", request.c_str());
+            std::shared_ptr<AutoRef> ref = event->autoRef.lock();
+            CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
+
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(ref->env_, &scope);
+            CHECK_AND_BREAK_LOG(scope != nullptr, "%{public}s scope is nullptr", request.c_str());
+            ON_SCOPE_EXIT(0) {
+                napi_close_handle_scope(ref->env_, scope);
+            };
+
+            napi_value jsCallback = nullptr;
+            napi_status nstatus = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
+            CHECK_AND_BREAK_LOG(nstatus == napi_ok && jsCallback != nullptr, "%{public}s get reference value fail",
+                request.c_str());
+
+            const size_t argCount = 1;
+            napi_value args[argCount] = { nullptr };
+
+            args[0] = Media::MediaLibraryCommNapi::CreatePhotoAssetNapi(ref->env_, event->uri, CAMERA_SHOT_TYPE);
+            napi_value result = nullptr;
+            nstatus = napi_call_function(ref->env_, nullptr, jsCallback, argCount, args, &result);
+            CHECK_AND_BREAK_LOG(nstatus == napi_ok, "%{public}s fail to napi call function", request.c_str());
+        } while (0);
+        delete event;
+        delete work;
+    }, uv_qos_user_initiated);
+    CHECK_AND_RETURN_LOG(ret == 0, "fail to uv_queue_work_with_qos task");
+
+    CANCEL_SCOPE_EXIT_GUARD(0);
+    CANCEL_SCOPE_EXIT_GUARD(1);
+}
+#endif
 
 void AVRecorderCallback::OnJsAudioCaptureChangeCallback(AVRecordJsCallback *jsCb) const
 {

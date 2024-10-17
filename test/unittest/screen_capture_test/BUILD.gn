@@ -244,6 +244,7 @@ ohos_unittest("screen_capture_server_function_unit_test") {
 
   if (player_framework_support_screen_capture) {
     sources = [
+      "screen_capture_server_function_unittest/src/audio_capturer_wrapper_function_unittest.cpp",
       "screen_capture_server_function_unittest/src/screen_capture_server_function_unittest.cpp",
       "screen_capture_server_function_unittest/src/screen_capture_server_function_unittest_voip.cpp",
     ]

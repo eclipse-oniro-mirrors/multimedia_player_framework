@@ -103,6 +103,7 @@ public:
     int32_t Prepare() override;
     int32_t SetRenderFirstFrame(bool display) override;
     int32_t SetPlayRange(int64_t start, int64_t end) override;
+    int32_t SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode) override;
     int32_t PrepareAsync() override;
     int32_t Play() override;
     int32_t Pause() override;
@@ -122,6 +123,7 @@ public:
     int32_t SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, AVPlayStrategy strategy) override;
     int32_t GetPlaybackSpeed(PlaybackRateMode& mode) override;
     int32_t SelectBitRate(uint32_t bitRate) override;
+    int32_t StopBufferring(bool flag) override;
     int32_t GetAudioEffectMode(int32_t &effectMode) override;
     int32_t SetAudioEffectMode(int32_t effectMode) override;
 
@@ -142,7 +144,9 @@ public:
     void SetInterruptState(bool isInterruptNeeded) override;
     void OnDumpInfo(int32_t fd) override;
     void SetInstancdId(uint64_t instanceId) override;
+    int64_t GetPlayRangeStartTime() override;
     int64_t GetPlayRangeEndTime() override;
+    int32_t GetPlayRangeSeekMode() override;
 
     // internal interfaces
     void OnEvent(const Event &event);
@@ -169,6 +173,7 @@ private:
     };
 
     Status DoSetSource(const std::shared_ptr<MediaSource> source);
+    void DoSetPlayStrategy(const std::shared_ptr<MediaSource> source);
     Status Resume();
     void GetDumpFlag();
     void HandleCompleteEvent(const Event& event);
@@ -224,9 +229,9 @@ private:
     Status doPausedSeek(int64_t seekPos, PlayerSeekMode mode);
     Status doCompletedSeek(int64_t seekPos, PlayerSeekMode mode);
     Status doSeek(int64_t seekPos, PlayerSeekMode mode);
+    void NotifySeek(Status rtv, bool flag, int64_t seekPos);
     void ResetIfSourceExisted();
     void ReleaseInner();
-    void NotifySeek(Status rtv, bool flag, int64_t seekPos);
     int32_t InitDuration();
     int32_t InitVideoWidthAndHeight();
     int32_t SetFrameRateForSeekPerformance(double frameRate);
@@ -240,8 +245,15 @@ private:
     void NotifyUpdateTrackInfo();
     Status SelectSeekType(int64_t seekPos, PlayerSeekMode mode);
     Status DoSetPlayRange();
+    void ResetPlayRangeParameter();
+    bool IsInValidSeekTime(int32_t seekPos);
+    int64_t GetPlayStartTime();
     Status StartSeekContinous();
     int32_t InnerSelectTrack(std::string mime, int32_t trackId, PlayerSwitchMode mode);
+    bool NeedSeekClosest();
+    void HandleEosFlagState(const Event& event);
+    int32_t GetSarVideoWidth(std::shared_ptr<Meta> trackInfo);
+    int32_t GetSarVideoHeight(std::shared_ptr<Meta> trackInfo);
 
     bool isNetWorkPlay_ = false;
     bool isDump_ = false;
@@ -289,6 +301,11 @@ private:
 
     bool isStreaming_{false};
 
+    int32_t rotation90 = 90;
+    int32_t rotation270 = 270;
+
+    std::shared_ptr<SeekAgent> seekAgent_;
+
     std::mutex drmMutex_;
     std::condition_variable drmConfigCond_;
     bool isDrmProtected_ = false;
@@ -302,10 +319,7 @@ private:
     std::vector<std::pair<std::string, bool>> completeState_;
     std::mutex seekMutex_;
     std::string bundleName_ {};
-    std::shared_ptr<SeekAgent> seekAgent_;
 
-    int32_t rotation90 = 90;
-    int32_t rotation270 = 270;
     std::map<std::string, std::string> header_;
     uint32_t preferedWidth_ = 0;
     uint32_t preferedHeight_ = 0;
@@ -315,6 +329,7 @@ private:
     std::string audioLanguage_;
     std::string subtitleLanguage_;
     std::string playerId_;
+    std::string mimeType_;
     int32_t currentAudioTrackId_ = -1;
     int32_t defaultAudioTrackId_ = -1;
     int32_t currentVideoTrackId_ = -1;
@@ -329,12 +344,14 @@ private:
     int64_t maxSurfaceSwapLatency_ = 0;
     int64_t playTotalDuration_ = 0;
     bool inEosSeek_ = false;
-    std::string mimeType_;
-    int64_t playRangeStartTime_ = -1;
-    int64_t playRangeEndTime_ = -1;
     std::atomic<bool> isDoCompletedSeek_{false};
     OHOS::Media::Mutex stateChangeMutex_{};
-
+    int64_t playRangeStartTime_ = -1;
+    int64_t playRangeEndTime_ = -1;
+    bool isSetPlayRange_ = false;
+    int64_t startTimeWithMode_ = -1;
+    int64_t endTimeWithMode_ = -1;
+    PlayerSeekMode playRangeSeekMode_ = PlayerSeekMode::SEEK_PREVIOUS_SYNC;
     std::mutex seekContinousMutex_;
     std::atomic<int64_t> seekContinousBatchNo_ {-1};
     std::shared_ptr<DraggingPlayerAgent> draggingPlayerAgent_ {nullptr};
@@ -343,6 +360,8 @@ private:
     std::atomic<bool> needUpdateSubtitle_ {true};
     std::shared_ptr<DfxAgent> dfxAgent_{};
     bool maxAmplitudeCbStatus_ {false};
+    OHOS::Media::Mutex handleCompleteMutex_{};
+    int64_t playStartTime_ = 0;
 };
 } // namespace Media
 } // namespace OHOS

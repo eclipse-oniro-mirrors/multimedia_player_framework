@@ -315,7 +315,7 @@ int32_t AVMetadataHelperServiceProxy::GetTimeByFrameIndex(uint32_t index, uint64
     int32_t error = Remote()->SendRequest(GET_TIME_BY_FRAME_INDEX, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "GetTimeByFrameIndex failed, error: %{public}d", error);
-    time = reply.ReadInt64();
+    time = reply.ReadUint64();
     return MSERR_OK;
 }
 
@@ -328,13 +328,28 @@ int32_t AVMetadataHelperServiceProxy::GetFrameIndexByTime(uint64_t time, uint32_
     bool token = data.WriteInterfaceToken(AVMetadataHelperServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
-    (void)data.WriteInt64(time);
+    (void)data.WriteUint64(time);
 
     int32_t error = Remote()->SendRequest(GET_FRAME_INDEX_BY_TIME, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "GetFrameIndexByTime failed, error: %{public}d", error);
     index = reply.ReadUint32();
     return MSERR_OK;
+}
+
+void AVMetadataHelperServiceProxy::SetIsNapiInstance(bool isNapiInstance)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(AVMetadataHelperServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_LOG(token, "Failed to write descriptor!");
+
+    (void)data.WriteBool(isNapiInstance);
+
+    int32_t error = Remote()->SendRequest(SET_IS_NAPI_INSTANCE, data, reply, option);
+    CHECK_AND_RETURN_LOG(error == MSERR_OK, "SetIsNapiInstance failed, error: %{public}d", error);
 }
 } // namespace Media
 } // namespace OHOS

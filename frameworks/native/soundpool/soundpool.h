@@ -20,6 +20,7 @@
 #include "stream_id_manager.h"
 #include "sound_id_manager.h"
 #include "cpp/mutex.h"
+#include "media_dfx.h"
 
 namespace OHOS {
 namespace Media {

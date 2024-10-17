@@ -767,5 +767,25 @@ int32_t PlayerMock::SetMaxAmplitudeCbStatus(bool status)
     UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
     return player_->SetMaxAmplitudeCbStatus(status);
 }
+
+int32_t PlayerMock::SetPlaybackStrategy(AVPlayStrategy strategy)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
+    std::unique_lock<std::mutex> lock(mutex_);
+    return player_->SetPlaybackStrategy(strategy);
+}
+
+int32_t PlayerMock::SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
+    std::unique_lock<std::mutex> lock(mutex_);
+    return player_->SetMediaMuted(mediaType, isMuted);
+}
+
+int32_t PlayerMock::SetDeviceChangeCbStatus(bool status)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
+    return player_->SetDeviceChangeCbStatus(status);
+}
 } // namespace Media
 } // namespace OHOS

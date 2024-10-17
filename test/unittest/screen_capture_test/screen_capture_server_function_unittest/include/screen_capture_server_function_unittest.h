@@ -34,8 +34,10 @@ class ScreenCaptureServerFunctionTest : public testing::Test {
 public:
     virtual void SetUp();
     virtual void TearDown();
-    int32_t SetConfig();
-    int32_t SetConfigFile(RecorderInfo &recorderInfo);
+    int32_t SetInvalidConfig();
+    int32_t SetValidConfig();
+    int32_t SetInvalidConfigFile(RecorderInfo &recorderInfo);
+    int32_t SetValidConfigFile(RecorderInfo &recorderInfo);
     int32_t SetRecorderInfo(std::string name, RecorderInfo &recorderInfo);
     void OpenFileFd(std::string name);
     int32_t InitFileScreenCaptureServer();
@@ -49,6 +51,17 @@ protected:
     std::shared_ptr<ScreenCaptureServer> screenCaptureServer_;
     AVScreenCaptureConfig config_;
     int32_t outputFd_ = -1;
+private:
+    const std::string ScreenRecorderBundleName = "com.ohos.screenrecorder";
+};
+
+class ScreenCaptureServerUnittestCallback : public ScreenCaptureCallBack {
+public:
+    virtual ~ScreenCaptureServerUnittestCallback() = default;
+    void OnError(ScreenCaptureErrorType errorType, int32_t errorCode) {};
+    void OnAudioBufferAvailable(bool isReady, AudioCaptureSourceType type) {};
+    void OnVideoBufferAvailable(bool isReady) {};
+    void OnStateChange(AVScreenCaptureStateCode stateCode) {};
 };
 } // Media
 } // OHOS

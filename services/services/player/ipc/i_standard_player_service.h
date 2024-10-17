@@ -46,6 +46,13 @@ public:
         (void)end;
         return 0;
     }
+    virtual int32_t SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode)
+    {
+        (void)start;
+        (void)end;
+        (void)mode;
+        return 0;
+    }
     virtual int32_t PrepareAsync() = 0;
     virtual int32_t Pause() = 0;
     virtual int32_t Stop() = 0;
@@ -78,6 +85,11 @@ public:
     virtual int32_t DestroyStub() = 0;
     virtual int32_t SetPlayerCallback() = 0;
     virtual int32_t SelectBitRate(uint32_t bitRate) = 0;
+    virtual int32_t StopBufferring(bool flag)
+    {
+        (void)flag;
+        return 0;
+    }
     virtual int32_t SelectTrack(int32_t index, PlayerSwitchMode mode = PlayerSwitchMode::SWITCH_SMOOTH) = 0;
     virtual int32_t DeselectTrack(int32_t index) = 0;
     virtual int32_t GetCurrentTrack(int32_t trackType, int32_t &index) = 0;
@@ -101,6 +113,12 @@ public:
         (void)status;
         return 0;
     }
+
+    virtual int32_t SetDeviceChangeCbStatus(bool status)
+    {
+        (void)status;
+        return 0;
+    }
     /**
      * IPC code ID
      */
@@ -115,6 +133,7 @@ public:
         PREPARE,
         SET_RENDER_FIRST_FRAME,
         SET_PLAY_RANGE,
+        SET_PLAY_RANGE_WITH_MODE,
         PREPAREASYNC,
         PAUSE,
         STOP,
@@ -148,6 +167,7 @@ public:
         SET_MEDIA_MUTED,
         GET_PLAYBACK_INFO,
         SET_MAX_AMPLITUDE_CB_STATUS,
+        SET_DEVICE_CHANGE_CB_STATUS,
         MAX_IPC_ID,
     };
 

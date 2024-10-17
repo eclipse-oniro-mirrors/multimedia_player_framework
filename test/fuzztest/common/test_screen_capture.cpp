@@ -103,6 +103,22 @@ int32_t TestScreenCapture::SetMicrophoneEnabled(bool isMicrophone)
     return screenCapture->SetMicrophoneEnabled(isMicrophone);
 }
 
+int32_t TestScreenCapture::ResizeCanvas(int32_t width, int32_t height)
+{
+    if (screenCapture == nullptr) {
+        return MSERR_INVALID_OPERATION;
+    }
+    return screenCapture->ResizeCanvas(width, height);
+}
+
+int32_t TestScreenCapture::SkipPrivacyMode(std::vector<uint64_t> &windowIDsVec)
+{
+    if (screenCapture == nullptr) {
+        return MSERR_INVALID_OPERATION;
+    }
+    return screenCapture->SkipPrivacyMode(windowIDsVec);
+}
+
 int32_t TestScreenCapture::SetCanvasRotation(bool canvasRotation)
 {
     if (screenCapture == nullptr) {

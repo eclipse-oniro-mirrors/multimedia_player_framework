@@ -120,6 +120,9 @@
             <option name="shell" value="touch /data/test/media/recorder_video_SetCustomInfo_002.m4a"/>
             <option name="shell" value="touch /data/test/media/recorder_video_GetMetaSurface.mp4"/>
             <option name="shell" value="restorecon /data/test/media"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetAudioSourceType_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetAudioSourceType_002.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetAudioSourceType_003.mp4"/>
         </preparer>
     </target>
     <target name="screen_capture_native_unit_test">
@@ -300,6 +303,7 @@
             <option name="shell" value="touch /data/test/media/capture_file_params_invalid_005.mp4"/>
             <option name="shell" value="touch /data/test/media/capture_file_params_invalid_006.mp4"/>
             <option name="shell" value="touch /data/test/media/capture_file_params_invalid_007.mp4"/>
+            <option name="shell" value="touch /data/test/media/capture_file_params_invalid_008.mp4"/>
             <option name="shell" value="touch /data/test/media/on_start_screen_capture_unittest_002.mp4"/>
             <option name="shell" value="restorecon /data/test/media"/>
         </preparer>

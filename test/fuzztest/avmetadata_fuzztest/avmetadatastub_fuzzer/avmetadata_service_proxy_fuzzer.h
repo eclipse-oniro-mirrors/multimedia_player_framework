@@ -26,7 +26,7 @@ public:
     static sptr<AVMetadataServiceProxyFuzzer> Create();
     explicit AVMetadataServiceProxyFuzzer(const sptr<IRemoteObject> &impl);
     virtual ~AVMetadataServiceProxyFuzzer() {}
-    void SendRequest(int32_t code, uint8_t *inputData, size_t size, bool isFuzz);
+    void SendRequest(uint32_t code, uint8_t *inputData, size_t size, bool isFuzz);
     int32_t SetSource(const std::string &uri, int32_t usage) override
     {
         return 0;
@@ -90,20 +90,26 @@ public:
     {
         return 0;
     }
+    void SetIsNapiInstance(bool isNapiInstance) override
+    {
+        (void)isNapiInstance;
+    }
+    static int32_t SetUriSourceStatic(AVMetadataServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
+    static int32_t SetFdSourceStatic(AVMetadataServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
+    static int32_t ResolveMetadataStatic(AVMetadataServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size,
+        bool isFuzz);
+    static int32_t ResolveMetadataMapStatic(AVMetadataServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size,
+        bool isFuzz);
+    static int32_t GetAVMetadataStatic(AVMetadataServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
+    static int32_t FetchArtPictureStatic(AVMetadataServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size,
+        bool isFuzz);
+    static int32_t FetchFrameAtTimeStatic(AVMetadataServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size,
+        bool isFuzz);
+    static int32_t ReleaseStatic(AVMetadataServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
+    static int32_t DestroyStubStatic(AVMetadataServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
 private:
-    int32_t SetUriSource(uint8_t *inputData, size_t size, bool isFuzz);
-    int32_t SetFdSource(uint8_t *inputData, size_t size, bool isFuzz);
-    int32_t ResolveMetadata(uint8_t *inputData, size_t size, bool isFuzz);
-    int32_t ResolveMetadataMap(uint8_t *inputData, size_t size, bool isFuzz);
-    int32_t GetAVMetadata(uint8_t *inputData, size_t size, bool isFuzz);
-    int32_t FetchArtPicture(uint8_t *inputData, size_t size, bool isFuzz);
-    int32_t FetchFrameAtTime(uint8_t *inputData, size_t size, bool isFuzz);
-    int32_t Release(uint8_t *inputData, size_t size, bool isFuzz);
-    int32_t DestroyStub(uint8_t *inputData, size_t size, bool isFuzz);
     int32_t SendRequest(uint32_t code, MessageParcel &inputData, MessageParcel &reply, MessageOption &option);
     static inline BrokerDelegator<AVMetadataServiceProxyFuzzer> delegator_;
-    using AVMetaStubFunc = int32_t(AVMetadataServiceProxyFuzzer::*)(uint8_t *inputData, size_t size, bool isFuzz);
-    std::map<uint32_t, AVMetaStubFunc> avmetaFuncs_;
 };
 }
 }

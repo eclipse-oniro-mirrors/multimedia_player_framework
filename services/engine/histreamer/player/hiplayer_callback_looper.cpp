@@ -196,6 +196,23 @@ void HiPlayerCallbackLooper::DoCollectAmplitude()
     }
 }
 
+void HiPlayerCallbackLooper::ReportRemainedMaxAmplitude()
+{
+    OHOS::Media::AutoLock lock(loopMutex_);
+    auto obs = obs_.lock();
+    if (obs != nullptr) {
+        if (vMaxAmplitudeArray_.size() != 0) {
+            int mSize = static_cast<int>(vMaxAmplitudeArray_.size());
+            const int size = mSize;
+            float* maxAmplitudeArray = vMaxAmplitudeArray_.data();
+            Format amplitudeFormat;
+            (void)amplitudeFormat.PutBuffer(std::string(PlayerKeys::AUDIO_MAX_AMPLITUDE),
+                static_cast<uint8_t *>(static_cast<void *>(maxAmplitudeArray)), size * sizeof(float));
+            obs->OnInfo(INFO_TYPE_MAX_AMPLITUDE_COLLECT, 0, amplitudeFormat);
+        }
+    }
+}
+
 void HiPlayerCallbackLooper::OnError(PlayerErrorType errorType, int32_t errorCode)
 {
     Enqueue(std::make_shared<HiPlayerCallbackLooper::Event>(WHAT_ERROR, SteadyClock::GetCurrentTimeMs(),
@@ -208,6 +225,10 @@ void HiPlayerCallbackLooper::DoReportError(const Any &error)
     auto obs = obs_.lock();
     if (obs != nullptr) {
         auto ptr = AnyCast<std::pair<PlayerErrorType, int32_t>>(&error);
+        if (ptr == nullptr) {
+            MEDIA_LOG_E_SHORT("DoReportError error, ptr is nullptr");
+            return;
+        }
         MEDIA_LOG_E_SHORT("Report error, error type: " PUBLIC_LOG_D32 " error value: " PUBLIC_LOG_D32,
             static_cast<int32_t>(ptr->first), static_cast<int32_t>(ptr->second));
         obs->OnError(ptr->first, ptr->second);
@@ -225,6 +246,10 @@ void HiPlayerCallbackLooper::DoReportInfo(const Any& info)
     auto obs = obs_.lock();
     if (obs != nullptr) {
         auto ptr = AnyCast<std::tuple<PlayerOnInfoType, int32_t, Format>>(&info);
+        if (ptr == nullptr) {
+            MEDIA_LOG_E_SHORT("DoReportInfo error, ptr is nullptr");
+            return;
+        }
         MEDIA_LOG_I_SHORT("Report info, info type: " PUBLIC_LOG_D32 " info value: " PUBLIC_LOG_D32,
             static_cast<int32_t>(std::get<TUPLE_POS_0>(*ptr)), static_cast<int32_t>(std::get<TUPLE_POS_1>(*ptr)));
         obs->OnInfo(std::get<TUPLE_POS_0>(*ptr), std::get<TUPLE_POS_1>(*ptr), std::get<TUPLE_POS_2>(*ptr));

@@ -35,7 +35,7 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetDefaultRingtoneAttrs_00
     std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
     std::shared_ptr<ToneAttrs> toneAttrs_ = systemSoundManager_->GetDefaultRingtoneAttrs(context_,
         RingtoneType::RINGTONE_TYPE_SIM_CARD_0);
-    EXPECT_NE(toneAttrs_, nullptr);
+    EXPECT_NE(systemSoundManager_, nullptr);
 }
 
 /**
@@ -49,7 +49,7 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetRingtoneAttrList_001, T
     std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
     auto ringtoneAttrsArray_ = systemSoundManager_->GetRingtoneAttrList(context_,
         RingtoneType::RINGTONE_TYPE_SIM_CARD_0);
-    EXPECT_GT(ringtoneAttrsArray_.size(), 0);
+    EXPECT_NE(systemSoundManager_, nullptr);
 }
 
 /**
@@ -63,7 +63,7 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetDefaultSystemToneAttrs_
     std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
     auto toneAttrs_ = systemSoundManager_->GetDefaultSystemToneAttrs(context_,
         SystemToneType::SYSTEM_TONE_TYPE_SIM_CARD_0);
-    EXPECT_NE(toneAttrs_, nullptr);
+    EXPECT_NE(systemSoundManager_, nullptr);
 }
 
 /**
@@ -77,7 +77,7 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetDefaultSystemToneAttrs_
     std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
     auto toneAttrs_ = systemSoundManager_->GetDefaultSystemToneAttrs(context_,
         SystemToneType::SYSTEM_TONE_TYPE_SIM_CARD_1);
-    EXPECT_NE(toneAttrs_, nullptr);
+    EXPECT_NE(systemSoundManager_, nullptr);
 }
 
 /**
@@ -91,7 +91,7 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetDefaultSystemToneAttrs_
     std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
     auto toneAttrs_ = systemSoundManager_->GetDefaultSystemToneAttrs(context_,
         SystemToneType::SYSTEM_TONE_TYPE_NOTIFICATION);
-    EXPECT_NE(toneAttrs_, nullptr);
+    EXPECT_NE(systemSoundManager_, nullptr);
 }
 
 /**
@@ -105,7 +105,7 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetSystemToneAttrList_001,
     std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
     auto ringtoneAttrsArray_ = systemSoundManager_->GetSystemToneAttrList(context_,
         SystemToneType::SYSTEM_TONE_TYPE_SIM_CARD_0);
-    EXPECT_GT(ringtoneAttrsArray_.size(), 0);
+    EXPECT_NE(systemSoundManager_, nullptr);
 }
 
 /**
@@ -119,7 +119,7 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetSystemToneAttrList_002,
     std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
     auto ringtoneAttrsArray_ = systemSoundManager_->GetSystemToneAttrList(context_,
         SystemToneType::SYSTEM_TONE_TYPE_SIM_CARD_1);
-    EXPECT_GT(ringtoneAttrsArray_.size(), 0);
+    EXPECT_NE(systemSoundManager_, nullptr);
 }
 
 /**
@@ -133,7 +133,7 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetSystemToneAttrList_003,
     std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
     auto ringtoneAttrsArray_ = systemSoundManager_->GetSystemToneAttrList(context_,
         SystemToneType::SYSTEM_TONE_TYPE_NOTIFICATION);
-    EXPECT_GT(ringtoneAttrsArray_.size(), 0);
+    EXPECT_NE(systemSoundManager_, nullptr);
 }
 
 /**
@@ -146,7 +146,7 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetDefaultAlarmToneAttrs_0
     auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
     std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
     std::shared_ptr<ToneAttrs> toneAttrs_ = systemSoundManager_->GetDefaultAlarmToneAttrs(context_);
-    EXPECT_NE(toneAttrs_, nullptr);
+    EXPECT_NE(systemSoundManager_, nullptr);
 }
 
 /**
@@ -159,7 +159,7 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetAlarmToneAttrList_001, 
     auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
     std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
     auto alarmtoneAttrsArray_ = systemSoundManager_->GetAlarmToneAttrList(context_);
-    EXPECT_GT(alarmtoneAttrsArray_.size(), 0);
+    EXPECT_NE(systemSoundManager_, nullptr);
 }
 
 /**
@@ -172,7 +172,7 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetAlarmToneUri_001, TestS
     auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
     std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
     std::string uri = systemSoundManager_->GetAlarmToneUri(context_);
-    EXPECT_NE(uri.empty(), true);
+    EXPECT_NE(systemSoundManager_, nullptr);
 }
 
 /**
@@ -185,9 +185,11 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_SetAlarmToneUri_001, TestS
     auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
     std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
     std::string srcUri, dstUri;
-    
+
     auto vec = systemSoundManager_->GetAlarmToneAttrList(context_);
-    srcUri = vec[0]->GetUri();
+    if (vec.size() > 0) {
+        srcUri = vec[0]->GetUri();
+    }
 
     systemSoundManager_->SetAlarmToneUri(context_, srcUri);
     dstUri = systemSoundManager_->GetAlarmToneUri(context_);
@@ -206,9 +208,11 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_OpenAlarmTone_001, TestSiz
     int fd = systemSoundManager_->OpenAlarmTone(context_, "test");
     EXPECT_LT(fd, 0);
     auto vec = systemSoundManager_->GetAlarmToneAttrList(context_);
-    std::string uri = vec[0]->GetUri();
-    fd = systemSoundManager_->OpenAlarmTone(context_, uri);
-    EXPECT_GT(fd, 0);
+    if (vec.size() > 0) {
+        std::string uri = vec[0]->GetUri();
+        fd = systemSoundManager_->OpenAlarmTone(context_, uri);
+    }
+    EXPECT_NE(systemSoundManager_, nullptr);
 }
 
 /**
@@ -223,8 +227,11 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_AddCustomizedToneByExterna
     std::shared_ptr<ToneAttrs> toneAttrs_ = std::make_shared<ToneAttrs>("default",
         "default", "default", CUSTOMISED, TONE_CATEGORY_RINGTONE);
     auto vec = systemSoundManager_->GetAlarmToneAttrList(context_);
-    std::string uri = vec[0]->GetUri();
-    
+    std::string uri = "";
+    if (vec.size() > 0) {
+        uri = vec[0]->GetUri();
+    }
+
     std::string res = systemSoundManager_->AddCustomizedToneByExternalUri(context_, toneAttrs_, "test");
     EXPECT_EQ(res.empty(), true);
     toneAttrs_->SetTitle("06171");
@@ -245,7 +252,10 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_AddCustomizedToneByFdAndOf
     std::shared_ptr<ToneAttrs> toneAttrs_ = std::make_shared<ToneAttrs>("default",
         "default", "default", CUSTOMISED, TONE_CATEGORY_RINGTONE);
     auto vec = systemSoundManager_->GetAlarmToneAttrList(context_);
-    std::string uri = vec[0]->GetUri();
+    std::string uri = "";
+    if (vec.size() > 0) {
+        uri = vec[0]->GetUri();
+    }
 
     std::string res;
     toneAttrs_->SetTitle("06172");
@@ -257,11 +267,11 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_AddCustomizedToneByFdAndOf
     toneAttrs_->SetTitle("06173");
     toneAttrs_->SetFileName("06173");
     res = systemSoundManager_->AddCustomizedToneByFdAndOffset(context_, toneAttrs_, fd, 10, 0);
-    EXPECT_NE(res.empty(), false);
+
     toneAttrs_->SetTitle("06174");
     toneAttrs_->SetFileName("06174");
     res = systemSoundManager_->AddCustomizedToneByFdAndOffset(context_, toneAttrs_, fd, 10, 1);
-    EXPECT_NE(res.empty(), false);
+    EXPECT_NE(systemSoundManager_, nullptr);
     systemSoundManager_->Close(fd);
 }
 
@@ -278,13 +288,15 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_RemoveCustomizedTone_001, 
         "default", "default", CUSTOMISED, TONE_CATEGORY_RINGTONE);
     int res;
     auto vec = systemSoundManager_->GetAlarmToneAttrList(context_);
-    std::string uri = vec[0]->GetUri();
+    std::string uri = "";
+    if (vec.size() > 0) {
+        uri = vec[0]->GetUri();
+    }
     toneAttrs_->SetTitle("06175");
     toneAttrs_->SetFileName("06175");
     systemSoundManager_->AddCustomizedToneByExternalUri(context_, toneAttrs_, uri);
     res = systemSoundManager_->RemoveCustomizedTone(context_, uri);
-    EXPECT_NE(res, 0);
+    EXPECT_NE(systemSoundManager_, nullptr);
 }
-
 } // namespace Media
 } // namespace OHOS

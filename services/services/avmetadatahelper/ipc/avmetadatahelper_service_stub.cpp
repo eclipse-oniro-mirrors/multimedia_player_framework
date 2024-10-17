@@ -87,13 +87,14 @@ int32_t AVMetadataHelperServiceStub::Init()
             [this](MessageParcel &data, MessageParcel &reply) { return GetTimeByFrameIndex(data, reply); } },
         { GET_FRAME_INDEX_BY_TIME,
             [this](MessageParcel &data, MessageParcel &reply) { return GetFrameIndexByTime(data, reply); } },
+        { SET_IS_NAPI_INSTANCE,
+            [this](MessageParcel &data, MessageParcel &reply) { return SetIsNapiInstance(data, reply); } },
     };
     return MSERR_OK;
 }
 
 int32_t AVMetadataHelperServiceStub::DestroyStub()
 {
-    std::unique_lock<std::mutex> lock(mutex_);
     helperCallback_ = nullptr;
     avMetadateHelperServer_ = nullptr;
     MediaServerManager::GetInstance().DestroyStubObject(MediaServerManager::AVMETADATAHELPER, AsObject());
@@ -203,7 +204,6 @@ std::shared_ptr<AVBuffer> AVMetadataHelperServiceStub::FetchFrameYuv(int64_t tim
 
 void AVMetadataHelperServiceStub::Release()
 {
-    std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_LOG(avMetadateHelperServer_ != nullptr, "avmetadatahelper server is nullptr");
     return avMetadateHelperServer_->Release();
 }
@@ -349,6 +349,7 @@ int32_t AVMetadataHelperServiceStub::FetchFrameYuv(MessageParcel &data, MessageP
     int64_t timeUs = data.ReadInt64();
     int32_t option = data.ReadInt32();
     OutputConfiguration param = {data.ReadInt32(), data.ReadInt32(), static_cast<PixelFormat>(data.ReadInt32())};
+
     std::shared_ptr<AVBuffer> avBuffer = FetchFrameYuv(timeUs, option, param);
     reply.WriteInt32(avBuffer != nullptr ? MSERR_OK : MSERR_INVALID_VAL);
     CHECK_AND_RETURN_RET(avBuffer != nullptr, MSERR_OK);
@@ -391,7 +392,7 @@ int32_t AVMetadataHelperServiceStub::GetTimeByFrameIndex(MessageParcel &data, Me
     uint64_t time = 0;
     auto res = GetTimeByFrameIndex(index, time);
     CHECK_AND_RETURN_RET(res == MSERR_OK, res);
-    reply.WriteInt64(time);
+    reply.WriteUint64(time);
     return MSERR_OK;
 }
 
@@ -402,6 +403,14 @@ int32_t AVMetadataHelperServiceStub::GetFrameIndexByTime(MessageParcel &data, Me
     auto res = GetFrameIndexByTime(time, index);
     CHECK_AND_RETURN_RET(res == MSERR_OK, res);
     reply.WriteUint32(index);
+    return MSERR_OK;
+}
+
+int32_t AVMetadataHelperServiceStub::SetIsNapiInstance(MessageParcel &data, MessageParcel &reply)
+{
+    bool isNapiInstance = data.ReadBool();
+    CHECK_AND_RETURN_RET_LOG(avMetadateHelperServer_ != nullptr, MSERR_NO_MEMORY, "avmetadatahelper server is nullptr");
+    avMetadateHelperServer_->SetIsNapiInstance(isNapiInstance);
     return MSERR_OK;
 }
 } // namespace Media

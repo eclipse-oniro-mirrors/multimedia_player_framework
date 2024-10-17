@@ -116,6 +116,10 @@ private:
      */
     static napi_value JsSeek(napi_env env, napi_callback_info info);
     /**
+     * setPlayRange(startTimeMs: number, endTimeMs: number, mode?: SeekMode): void
+     */
+    static napi_value JsSetPlaybackRange(napi_env env, napi_callback_info info);
+    /**
      * setSpeed(speed: number): void
      */
     static napi_value JsSetSpeed(napi_env env, napi_callback_info info);
@@ -307,9 +311,11 @@ private:
     std::shared_ptr<TaskHandler<TaskRet>> ReleaseTask();
     std::shared_ptr<TaskHandler<TaskRet>> SetPlaybackStrategyTask(AVPlayStrategy playStrategy);
     std::shared_ptr<TaskHandler<TaskRet>> SetMediaMutedTask(MediaType type, bool isMuted);
+    std::shared_ptr<TaskHandler<TaskRet>> EqueueSetPlayRangeTask(int32_t start, int32_t end, int32_t mode);
 
     std::string GetCurrentState();
     bool IsControllable();
+    bool CanSetPlayRange();
     bool IsLiveSource() const;
     void EnqueueNetworkTask(const std::string url);
     void EnqueueFdTask(const int32_t fd);
@@ -327,10 +333,13 @@ private:
     void WaitTaskQueStop();
     void MaxAmplitudeCallbackOn(AVPlayerNapi *jsPlayer, std::string callbackName);
     void MaxAmplitudeCallbackOff(AVPlayerNapi *jsPlayer, std::string callbackName);
+    void DeviceChangeCallbackOn(AVPlayerNapi *jsPlayer, std::string callbackName);
+    void DeviceChangeCallbackOff(AVPlayerNapi *jsPlayer, std::string callbackName);
 
     std::condition_variable stopTaskQueCond_;
     bool taskQueStoped_ = false;
     bool calMaxAmplitude_ = false;
+    bool deviceChangeCallbackflag_ = false;
 
     struct AVPlayerContext : public MediaAsyncContext {
         explicit AVPlayerContext(napi_env env) : MediaAsyncContext(env) {}

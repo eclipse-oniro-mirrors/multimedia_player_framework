@@ -28,6 +28,7 @@ namespace Media {
 std::shared_ptr<ISoundPool> SoundPoolFactory::CreateSoundPool(int maxStreams,
     AudioStandard::AudioRendererInfo audioRenderInfo)
 {
+    MEDIA_LOGI("SoundPoolFactory::CreateSoundPool");
     std::shared_ptr<SoundPool> impl;
     if (!SoundPool::CheckInitParam(maxStreams, audioRenderInfo)) {
         return nullptr;
@@ -79,6 +80,7 @@ bool SoundPool::CheckInitParam(int maxStreams, AudioStandard::AudioRendererInfo 
 
 int32_t SoundPool::Load(const std::string url)
 {
+    MediaTrace trace("SoundPool::Load url");
     std::lock_guard lock(soundPoolLock_);
     MEDIA_LOGI("SoundPool::Load url::%{public}s", url.c_str());
     CHECK_AND_RETURN_RET_LOG(!url.empty(), -1, "Failed to obtain SoundPool for load");
@@ -88,6 +90,7 @@ int32_t SoundPool::Load(const std::string url)
 
 int32_t SoundPool::Load(int32_t fd, int64_t offset, int64_t length)
 {
+    MediaTrace trace("SoundPool::Load fd");
     std::lock_guard lock(soundPoolLock_);
     MEDIA_LOGI("SoundPool::Load fd::%{public}d, offset::%{public}s, length::%{public}s", fd,
         std::to_string(offset).c_str(), std::to_string(length).c_str());
@@ -98,6 +101,7 @@ int32_t SoundPool::Load(int32_t fd, int64_t offset, int64_t length)
 
 int32_t SoundPool::Play(int32_t soundID, PlayParams playParameters)
 {
+    MediaTrace trace("SoundPool::Play");
     std::lock_guard lock(soundPoolLock_);
     MEDIA_LOGI("SoundPool::Play soundID::%{public}d ,priority::%{public}d", soundID, playParameters.priority);
     CHECK_AND_RETURN_RET_LOG(streamIdManager_ != nullptr, -1, "sound pool have released.");
@@ -116,6 +120,7 @@ int32_t SoundPool::Play(int32_t soundID, PlayParams playParameters)
 
 int32_t SoundPool::Stop(int32_t streamID)
 {
+    MediaTrace trace("SoundPool::Stop");
     std::lock_guard lock(soundPoolLock_);
     MEDIA_LOGI("SoundPool::Stop streamID::%{public}d", streamID);
     CHECK_AND_RETURN_RET_LOG(streamIdManager_ != nullptr, MSERR_INVALID_VAL, "sound pool have released.");
@@ -181,6 +186,7 @@ int32_t SoundPool::SetVolume(int32_t streamID, float leftVolume, float rightVolu
 
 int32_t SoundPool::Unload(int32_t soundID)
 {
+    MediaTrace trace("SoundPool::Unload");
     std::lock_guard lock(soundPoolLock_);
     MEDIA_LOGI("SoundPool::Unload soundID::%{public}d", soundID);
     CHECK_AND_RETURN_RET_LOG(streamIdManager_ != nullptr, -1, "sound pool have released.");
@@ -194,13 +200,15 @@ int32_t SoundPool::Unload(int32_t soundID)
 
 int32_t SoundPool::Release()
 {
+    MEDIA_LOGI("SoundPool::Release");
     return ReleaseInner();
 }
 
 int32_t SoundPool::ReleaseInner()
 {
+    MediaTrace trace("SoundPool::ReleaseInner");
     std::lock_guard lock(soundPoolLock_);
-    MEDIA_LOGI("Release SoundPool.");
+    MEDIA_LOGI("SoundPool::ReleaseInner");
     if (streamIdManager_ != nullptr) {
         streamIdManager_.reset();
     }
@@ -219,7 +227,7 @@ int32_t SoundPool::ReleaseInner()
 
 int32_t SoundPool::SetSoundPoolCallback(const std::shared_ptr<ISoundPoolCallback> &soundPoolCallback)
 {
-    MEDIA_LOGI("SoundPool::%{public}s", __func__);
+    MEDIA_LOGI("SoundPool::SetSoundPoolCallback");
     if (soundIDManager_ != nullptr) soundIDManager_->SetCallback(soundPoolCallback);
     if (streamIdManager_ != nullptr) streamIdManager_->SetCallback(soundPoolCallback);
     callback_ = soundPoolCallback;
@@ -229,7 +237,7 @@ int32_t SoundPool::SetSoundPoolCallback(const std::shared_ptr<ISoundPoolCallback
 int32_t SoundPool::SetSoundPoolFrameWriteCallback(
     const std::shared_ptr<ISoundPoolFrameWriteCallback> &frameWriteCallback)
 {
-    MEDIA_LOGI("SoundPool::%{public}s", __func__);
+    MEDIA_LOGI("SoundPool::SetSoundPoolFrameWriteCallback");
     if (streamIdManager_ != nullptr) streamIdManager_->SetFrameWriteCallback(frameWriteCallback);
     frameWriteCallback_ = frameWriteCallback;
     return MSERR_OK;

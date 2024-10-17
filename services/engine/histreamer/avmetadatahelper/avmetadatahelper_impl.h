@@ -50,6 +50,7 @@ public:
     std::shared_ptr<AVSharedMemory> FetchArtPicture() override;
     int32_t GetTimeByFrameIndex(uint32_t index, uint64_t &time) override;
     int32_t GetFrameIndexByTime(uint64_t time, uint32_t &index) override;
+    void SetInterruptState(bool isInterruptNeeded) override;
 
 private:
     std::shared_ptr<OHOS::Media::MediaDemuxer> mediaDemuxer_;
@@ -68,6 +69,7 @@ private:
     void Reset();
     void Destroy();
     std::string groupId_;
+    std::atomic<bool> isInterruptNeeded_ = false;
 };
 }  // namespace Media
 }  // namespace OHOS

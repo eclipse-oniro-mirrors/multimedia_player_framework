@@ -27,6 +27,7 @@
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "NativeAVPlayer"};
     constexpr uint32_t ERROR_CODE_MAP_LENGTH = 11;
+    constexpr uint32_t ERROR_CODE_API9_MAP_LENGTH = 11;
     constexpr uint32_t STATE_MAP_LENGTH = 9;
     constexpr uint32_t INFO_TYPE_LENGTH = 19;
     constexpr int32_t UNSUPPORT_FORMAT_ERROR_CODE = 331350544;
@@ -67,6 +68,11 @@ typedef struct PlayerErrorCodeConvert {
     OH_AVErrCode avErrorCode;
 } PlayerErrorCodeConvert;
 
+typedef struct PlayerErrorCodeApi9Convert {
+    MediaServiceExtErrCodeAPI9 errorCodeApi9;
+    OH_AVErrCode avErrorCode;
+} PlayerErrorCodeApi9Convert;
+
 typedef struct StateConvert {
     PlayerStates playerStates;
     AVPlayerState avPlayerState;
@@ -89,6 +95,20 @@ static const PlayerErrorCodeConvert g_errorCodeMap[ERROR_CODE_MAP_LENGTH] = {
     {MSERR_EXT_INVALID_STATE, AV_ERR_INVALID_STATE},
     {MSERR_EXT_UNSUPPORT, AV_ERR_UNSUPPORT},
     {MSERR_EXT_EXTEND_START, AV_ERR_EXTEND_START},
+};
+
+static const PlayerErrorCodeApi9Convert g_errorCodeApi9Map[ERROR_CODE_API9_MAP_LENGTH] = {
+    {MSERR_EXT_API9_NO_PERMISSION, AV_ERR_OPERATE_NOT_PERMIT},
+    {MSERR_EXT_API9_PERMISSION_DENIED, AV_ERR_OPERATE_NOT_PERMIT},
+    {MSERR_EXT_API9_INVALID_PARAMETER, AV_ERR_INVALID_VAL},
+    {MSERR_EXT_API9_UNSUPPORT_CAPABILITY, AV_ERR_OPERATE_NOT_PERMIT},
+    {MSERR_EXT_API9_NO_MEMORY, AV_ERR_NO_MEMORY},
+    {MSERR_EXT_API9_OPERATE_NOT_PERMIT, AV_ERR_OPERATE_NOT_PERMIT},
+    {MSERR_EXT_API9_IO, AV_ERR_IO},
+    {MSERR_EXT_API9_TIMEOUT, AV_ERR_TIMEOUT},
+    {MSERR_EXT_API9_SERVICE_DIED, AV_ERR_SERVICE_DIED},
+    {MSERR_EXT_API9_UNSUPPORT_FORMAT, AV_ERR_UNSUPPORT},
+    {MSERR_EXT_API9_AUDIO_INTERRUPTED, AV_ERR_OPERATE_NOT_PERMIT},
 };
 
 static const StateConvert g_stateMap[STATE_MAP_LENGTH] = {
@@ -130,6 +150,16 @@ static OH_AVErrCode MSErrCodeToAVErrCode(MediaServiceErrCode errorCode)
     for (uint32_t i = 0; i < ERROR_CODE_MAP_LENGTH; i++) {
         if (g_errorCodeMap[i].errorCodeExt == errorCodeExt) {
             return g_errorCodeMap[i].avErrorCode;
+        }
+    }
+    return AV_ERR_UNKNOWN;
+}
+
+static OH_AVErrCode MSErrCodeToAVErrCodeApi9(MediaServiceExtErrCodeAPI9 errorCode)
+{
+    for (uint32_t i = 0; i < ERROR_CODE_API9_MAP_LENGTH; i++) {
+        if (g_errorCodeApi9Map[i].errorCodeApi9 == errorCode) {
+            return g_errorCodeApi9Map[i].avErrorCode;
         }
     }
     return AV_ERR_UNKNOWN;
@@ -373,8 +403,14 @@ void NativeAVPlayerCallback::OnError(int32_t errorCode, const std::string &error
     }
     int32_t avErrorCode;
     if (errorCallback_) { // errorCallback_ precedes over callback_.onInfo
-        avErrorCode = MSErrCodeToAVErrCode(static_cast<MediaServiceErrCode>(errorCode));
-        MediaServiceExtErrCodeAPI9 errorCodeApi9 = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errorCode));
+        MediaServiceExtErrCodeAPI9 errorCodeApi9 = MSERR_EXT_API9_OK;
+        if (errorCode >= MSERR_EXT_API9_NO_PERMISSION && errorCode <= MSERR_EXT_API9_AUDIO_INTERRUPTED) {
+            errorCodeApi9 = static_cast<MediaServiceExtErrCodeAPI9>(errorCode);
+            avErrorCode = MSErrCodeToAVErrCodeApi9(errorCodeApi9);
+        } else {
+            avErrorCode = MSErrCodeToAVErrCode(static_cast<MediaServiceErrCode>(errorCode));
+            errorCodeApi9 = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errorCode));
+        }
         std::string errorMsgExt = MSExtAVErrorToString(errorCodeApi9) + errorMsg;
         errorCallback_->OnError(player_, avErrorCode, errorMsgExt.c_str());
         return;
@@ -449,7 +485,10 @@ int32_t NativeAVPlayerCallback::SetOnErrorCallback(OH_AVPlayerOnErrorCallback ca
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (callback != nullptr) {
-        errorCallback_ = std::make_shared<NativeAVPlayerOnErrorCallback>(callback, userData);
+        NativeAVPlayerOnErrorCallback *errorCallback =
+            new (std::nothrow) NativeAVPlayerOnErrorCallback(callback, userData);
+        CHECK_AND_RETURN_RET_LOG(errorCallback != nullptr, AV_ERR_NO_MEMORY, "errorCallback is nullptr!");
+        errorCallback_ = std::shared_ptr<NativeAVPlayerOnErrorCallback>(errorCallback);
     } else {
         errorCallback_ = nullptr;
     }
@@ -460,7 +499,10 @@ int32_t NativeAVPlayerCallback::SetOnInfoCallback(OH_AVPlayerOnInfoCallback call
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (callback != nullptr) {
-        infoCallback_ = std::make_shared<NativeAVPlayerOnInfoCallback>(callback, userData);
+        NativeAVPlayerOnInfoCallback *onInfoCallback =
+            new (std::nothrow) NativeAVPlayerOnInfoCallback(callback, userData);
+        CHECK_AND_RETURN_RET_LOG(onInfoCallback != nullptr, AV_ERR_NO_MEMORY, "infoCallback_ is nullptr!");
+        infoCallback_ = std::shared_ptr<NativeAVPlayerOnInfoCallback>(onInfoCallback);
     } else {
         infoCallback_ = nullptr;
     }
@@ -673,7 +715,7 @@ void NativeAVPlayerCallback::OnBitRateCollectedCb(const int32_t extra, const For
     CHECK_AND_RETURN_LOG(bitRatesCount > 0, "bitRates size(%{public}zu) is invalid", size);
     MEDIA_LOGI("bitRates count: %{public}zu", bitRatesCount);
     for (size_t i = 0; i < bitRatesCount; i++) {
-        MEDIA_LOGI("bitRates[%{public}zu]: %{public}zu", i, *(static_cast<uint32_t*>(static_cast<void*>(addr)) + i));
+        MEDIA_LOGI("bitRates[%{public}zu]: %{public}u", i, *(static_cast<uint32_t*>(static_cast<void*>(addr)) + i));
     }
 
     OHOS::sptr<OH_AVFormat> avFormat = new (std::nothrow) OH_AVFormat();
@@ -709,12 +751,12 @@ void NativeAVPlayerCallback::OnDurationUpdateCb(const int32_t extra, const Forma
 {
     (void)infoBody;
     CHECK_AND_RETURN_LOG(isSourceLoaded_.load(), "OnDurationUpdateCb current source is unready");
-    int32_t duration = extra;
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " duration update %{public}d", FAKE_POINTER(this), duration);
+    int64_t duration = extra;
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " duration update %{public}" PRId64, FAKE_POINTER(this), duration);
 
     OHOS::sptr<OH_AVFormat> avFormat = new (std::nothrow) OH_AVFormat();
     CHECK_AND_RETURN_LOG(avFormat != nullptr, "OnDurationUpdateCb OH_AVFormat create failed");
-    avFormat->format_.PutIntValue(OH_PLAYER_DURATION, duration);
+    avFormat->format_.PutLongValue(OH_PLAYER_DURATION, duration);
     infoCallback_->OnInfo(player_, AV_INFO_TYPE_DURATION_UPDATE,
         reinterpret_cast<OH_AVFormat *>(avFormat.GetRefPtr()));
 }
@@ -814,6 +856,7 @@ OH_AVPlayer *OH_AVPlayer_Create(void)
 {
     std::shared_ptr<Player> player = PlayerFactory::CreatePlayer();
     CHECK_AND_RETURN_RET_LOG(player != nullptr, nullptr, "failed to PlayerFactory::CreatePlayer");
+    (void)player->SetDeviceChangeCbStatus(true);
 
     PlayerObject *object = new(std::nothrow) PlayerObject(player);
     CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "failed to new PlayerObject");
@@ -1162,7 +1205,10 @@ OH_AVErrCode OH_AVPlayer_SetPlayerCallback(OH_AVPlayer *player, AVPlayerCallback
     CHECK_AND_RETURN_RET_LOG(callback.onInfo != nullptr, AV_ERR_INVALID_VAL, "onInfo is null");
     CHECK_AND_RETURN_RET_LOG(callback.onError != nullptr, AV_ERR_INVALID_VAL, "onError is null");
     if (playerObj->callback_ == nullptr) {
-        playerObj->callback_ = std::make_shared<NativeAVPlayerCallback>(player, callback);
+        NativeAVPlayerCallback *avplayerCallback =
+            new (std::nothrow) NativeAVPlayerCallback(player, callback);
+        CHECK_AND_RETURN_RET_LOG(avplayerCallback != nullptr, AV_ERR_NO_MEMORY, "avplayerCallback is nullptr!");
+        playerObj->callback_ = std::shared_ptr<NativeAVPlayerCallback>(avplayerCallback);
     } else {
         playerObj->callback_->SetPlayCallback(callback);
     }
@@ -1290,8 +1336,10 @@ static OH_AVErrCode AVPlayerSetPlayerCallback(OH_AVPlayer *player, struct Player
             .onInfo = nullptr,
             .onError = nullptr
         };
-        playerObj->callback_ = std::make_shared<NativeAVPlayerCallback>(player, dummyCallback);
-        CHECK_AND_RETURN_RET_LOG(playerObj->callback_ != nullptr, AV_ERR_NO_MEMORY, "callback_ is nullptr!");
+        NativeAVPlayerCallback *avplayerCallback =
+            new (std::nothrow) NativeAVPlayerCallback(player, dummyCallback);
+        CHECK_AND_RETURN_RET_LOG(avplayerCallback != nullptr, AV_ERR_NO_MEMORY, "avplayerCallback is nullptr!");
+        playerObj->callback_ = std::shared_ptr<NativeAVPlayerCallback>(avplayerCallback);
 
         int32_t ret = playerObj->player_->SetPlayerCallback(playerObj->callback_);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "AVPlayerSetPlayerCallback failed!");
@@ -1304,14 +1352,16 @@ OH_AVErrCode OH_AVPlayer_SetOnErrorCallback(OH_AVPlayer *player, OH_AVPlayerOnEr
 {
     MEDIA_LOGD("OH_AVPlayer_SetOnErrorCallback S");
     CHECK_AND_RETURN_RET_LOG(player != nullptr, AV_ERR_INVALID_VAL, "SetOnError input player is nullptr!");
-    TRUE_LOG(callback == nullptr, MEDIA_LOGI, "SetOnError callback is nullptr, unregister callback.");
+    if (callback == nullptr) {
+        MEDIA_LOGI("SetOnError callback is nullptr, unregister callback.");
+    }
     struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
     CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, AV_ERR_INVALID_VAL, "SetOnError player_ is nullptr");
 
     OH_AVErrCode errCode = AVPlayerSetPlayerCallback(player, playerObj, callback == nullptr);
     CHECK_AND_RETURN_RET_LOG(errCode == AV_ERR_OK, errCode, "AVPlayerSetPlayerCallback AVPlayerOnError error");
 
-    if (playerObj->callback_ == nullptr || !playerObj->callback_->SetOnErrorCallback(callback, userData)) {
+    if (playerObj->callback_ == nullptr || playerObj->callback_->SetOnErrorCallback(callback, userData) != AV_ERR_OK) {
         MEDIA_LOGE("OH_AVPlayer_SetOnErrorCallback error");
         return AV_ERR_NO_MEMORY;
     }
@@ -1323,14 +1373,16 @@ OH_AVErrCode OH_AVPlayer_SetOnInfoCallback(OH_AVPlayer *player, OH_AVPlayerOnInf
 {
     MEDIA_LOGD("OH_AVPlayer_SetOnInfoCallback S");
     CHECK_AND_RETURN_RET_LOG(player != nullptr, AV_ERR_INVALID_VAL, "SetOnInfo input player is nullptr!");
-    TRUE_LOG(callback == nullptr, MEDIA_LOGI, "SetOnInfo callback is nullptr, unregister callback.");
+    if (callback == nullptr) {
+        MEDIA_LOGI("SetOnInfo callback is nullptr, unregister callback.");
+    }
     struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
     CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, AV_ERR_INVALID_VAL, "SetOnInfo player_ is nullptr");
 
     OH_AVErrCode errCode = AVPlayerSetPlayerCallback(player, playerObj, callback == nullptr);
     CHECK_AND_RETURN_RET_LOG(errCode == AV_ERR_OK, errCode, "AVPlayerSetPlayerCallback AVPlayerOnInfoCallback error");
 
-    if (playerObj->callback_ == nullptr || !playerObj->callback_->SetOnInfoCallback(callback, userData)) {
+    if (playerObj->callback_ == nullptr || playerObj->callback_->SetOnInfoCallback(callback, userData) != AV_ERR_OK) {
         MEDIA_LOGE("OH_AVPlayer_SetOnInfoCallback error");
         return AV_ERR_NO_MEMORY;
     }

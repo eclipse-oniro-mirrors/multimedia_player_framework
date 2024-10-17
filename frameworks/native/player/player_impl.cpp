@@ -17,6 +17,9 @@
 #include "i_media_service.h"
 #include "media_log.h"
 #include "media_errors.h"
+#ifdef SUPPORT_AVPLAYER_DRM
+#include "i_keysession_service.h"
+#endif
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "PlayerImpl"};
@@ -125,6 +128,13 @@ int32_t PlayerImpl::SetPlayRange(int64_t start, int64_t end)
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetPlayRange in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     return playerService_->SetPlayRange(start, end);
+}
+
+int32_t PlayerImpl::SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode)
+{
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetPlayRangeWithMode in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerService_->SetPlayRangeWithMode(start, end, mode);
 }
 
 int32_t PlayerImpl::Prepare()
@@ -455,6 +465,14 @@ int32_t PlayerImpl::SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionSer
     (void)svp;
     return 0;
 #endif
+}
+
+int32_t PlayerImpl::SetDeviceChangeCbStatus(bool status)
+{
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetDeviceChangeCbStatus in, status is %{public}d",
+        FAKE_POINTER(this), status);
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
+    return playerService_->SetDeviceChangeCbStatus(status);
 }
 
 int32_t PlayerImpl::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)

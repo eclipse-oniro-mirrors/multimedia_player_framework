@@ -55,6 +55,7 @@
 #include "meta/meta.h"
 #include "audio_stream_manager.h"
 #include "screen_capture_monitor_server.h"
+#include "tokenid_kit.h"
 
 namespace OHOS {
 namespace Media {
@@ -229,6 +230,16 @@ private:
     static constexpr int32_t ADS_LOG_SKIP_NUM = 1000;
 };
 
+class PrivateWindowListenerInScreenCapture : public DisplayManager::IPrivateWindowListener {
+public:
+    explicit PrivateWindowListenerInScreenCapture(std::weak_ptr<ScreenCaptureServer> screenCaptureServer);
+    ~PrivateWindowListenerInScreenCapture() = default;
+    void OnPrivateWindow(bool hasPrivate) override;
+
+private:
+    std::weak_ptr<ScreenCaptureServer> screenCaptureServer_;
+};
+
 class ScreenRendererAudioStateChangeCallback : public AudioRendererStateChangeCallback {
 public:
     void OnRendererStateChange(const std::vector<std::unique_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos);
@@ -287,12 +298,15 @@ public:
     int32_t GetMicAudioCaptureBufferSize(size_t &size);
     int32_t OnVoIPStatusChanged(bool isInVoIPCall);
     int32_t OnSpeakerAliveStatusChanged(bool speakerAliveStatus);
+    void OnDMPrivateWindowChange(bool hasPrivate);
+    bool IsTelInCallSkipList();
 
 private:
     int32_t StartScreenCaptureInner(bool isPrivacyAuthorityEnabled);
     int32_t RegisterServerCallbacks();
     int32_t OnStartScreenCapture();
     void PostStartScreenCapture(bool isSuccess);
+    void PostStartScreenCaptureSuccessAction();
     int32_t InitRecorderInfo(std::shared_ptr<IRecorderService> &recorder, AudioCaptureInfo audioInfo);
     int32_t InitRecorder();
     int32_t StartScreenCaptureFile();
@@ -320,6 +334,8 @@ private:
     void CloseFd();
     void ReleaseInner();
     void GetDumpFlag();
+    int32_t SetMicrophoneOn();
+    int32_t SetMicrophoneOff();
 
     VirtualScreenOption InitVirtualScreenOption(const std::string &name, sptr<OHOS::Surface> consumer);
     int32_t GetMissionIds(std::vector<uint64_t> &missionIds);
@@ -345,6 +361,9 @@ private:
     int64_t GetCurrentMillisecond();
     void SetMetaDataReport();
     void SetErrorInfo(int32_t errCode, const std::string &errMsg, StopReason stopReason, bool userAgree);
+    void SystemRecorderInterruptLatestRecorder();
+    int32_t ReStartMicForVoIPStatusSwitch();
+    void RegisterPrivateWindowListener();
 
 private:
     std::mutex mutex_;
@@ -380,7 +399,6 @@ private:
     AVScreenCaptureState captureState_ = AVScreenCaptureState::CREATED;
     std::shared_ptr<NotificationLocalLiveViewContent> localLiveViewContent_;
     int64_t startTime_ = 0;
-    std::string bundleName_;
 
     /* used for CAPTURE STREAM */
     sptr<IBufferConsumerListener> surfaceCb_ = nullptr;
@@ -397,11 +415,12 @@ private:
     int32_t audioSourceId_ = 0;
     int32_t videoSourceId_ = 0;
     std::shared_ptr<AudioDataSource> audioSource_ = nullptr;
-
     /* used for DFX events */
     uint64_t instanceId_ = 0;
     std::shared_ptr<ScreenRendererAudioStateChangeCallback> captureCallback_;
     std::vector<uint64_t> skipPrivacyWindowIDsVec_;
+    sptr<DisplayManager::IPrivateWindowListener> displayListener_;
+    bool isCalledBySystemApp_ = false;
 private:
     static int32_t CheckAudioCapParam(const AudioCaptureInfo &audioCapInfo);
     static int32_t CheckVideoCapParam(const VideoCaptureInfo &videoCapInfo);

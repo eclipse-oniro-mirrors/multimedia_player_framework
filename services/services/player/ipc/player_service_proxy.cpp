@@ -43,6 +43,7 @@ PlayerServiceProxy::PlayerServiceProxy(const sptr<IRemoteObject> &impl)
     playerFuncs_[PREPARE] = "Player::Prepare";
     playerFuncs_[SET_RENDER_FIRST_FRAME] = "Player::SetRenderFirstFrame";
     playerFuncs_[SET_PLAY_RANGE] = "Player::SetPlayRange";
+    playerFuncs_[SET_PLAY_RANGE_WITH_MODE] = "Player::SetPlayRangeWithMode";
     playerFuncs_[PREPAREASYNC] = "Player::PrepareAsync";
     playerFuncs_[PAUSE] = "Player::Pause";
     playerFuncs_[STOP] = "Player::Stop";
@@ -76,6 +77,7 @@ PlayerServiceProxy::PlayerServiceProxy(const sptr<IRemoteObject> &impl)
     playerFuncs_[SET_DECRYPT_CONFIG] = "Player::SetDecryptConfig";
     playerFuncs_[SET_MEDIA_SOURCE] = "Player::SetMediaSource";
     playerFuncs_[SET_MAX_AMPLITUDE_CB_STATUS] = "Player::SetMaxAmplitudeCbStatus";
+    playerFuncs_[SET_DEVICE_CHANGE_CB_STATUS] = "Player::SetDeviceChangeCbStatus";
 }
 
 PlayerServiceProxy::~PlayerServiceProxy()
@@ -271,6 +273,25 @@ int32_t PlayerServiceProxy::SetPlayRange(int64_t start, int64_t end)
     int32_t error = SendRequest(SET_PLAY_RANGE, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetPlayRange failed, error: %{public}d", error);
+    return reply.ReadInt32();
+}
+
+int32_t PlayerServiceProxy::SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode)
+{
+    MediaTrace trace("Proxy::SetPlayRangeWithMode");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    data.WriteInt64(start);
+    data.WriteInt64(end);
+    data.WriteInt32(mode);
+    int32_t error = SendRequest(SET_PLAY_RANGE_WITH_MODE, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetPlayRangeWithMode failed, error: %{public}d", error);
     return reply.ReadInt32();
 }
 
@@ -883,6 +904,23 @@ int32_t PlayerServiceProxy::GetCurrentTrack(int32_t trackType, int32_t &index)
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "GetCurrentTrack failed, error: %{public}d", error);
     index = reply.ReadInt32();
+    return reply.ReadInt32();
+}
+
+int32_t PlayerServiceProxy::SetDeviceChangeCbStatus(bool status)
+{
+    MediaTrace trace("PlayerServiceProxy::SetDeviceChangeCbStatus");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+ 
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+ 
+    data.WriteInt32(status);
+    int32_t error = SendRequest(SET_DEVICE_CHANGE_CB_STATUS, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetDeviceChangeCbStatus failed, error: %{public}d", error);
     return reply.ReadInt32();
 }
 

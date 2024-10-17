@@ -94,6 +94,16 @@ int32_t PlayerServer::BaseState::SeekContinous(int32_t mSeconds, int64_t batchNo
     return MSERR_INVALID_STATE;
 }
 
+int32_t PlayerServer::BaseState::SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode)
+{
+    (void)start;
+    (void)end;
+    (void)mode;
+
+    ReportInvalidOperation();
+    return MSERR_INVALID_STATE;
+}
+
 int32_t PlayerServer::BaseState::MessageSeekDone(int32_t extra)
 {
     int32_t ret = MSERR_OK;
@@ -182,7 +192,14 @@ int32_t PlayerServer::BaseState::OnMessageReceived(PlayerOnInfoType type, int32_
         case INFO_TYPE_TRACK_INFO_UPDATE:
             ret = MessageTrackInfoUpdate();
             break;
+        case INFO_TYPE_INTERRUPT_EVENT:
+            HandleInterruptEvent(infoBody);
+            break;
 
+        case INFO_TYPE_AUDIO_DEVICE_CHANGE:
+            HandleAudioDeviceChangeEvent(infoBody);
+            break;
+            
         default:
             break;
     }
@@ -199,6 +216,11 @@ int32_t PlayerServer::InitializedState::Prepare()
 {
     server_.ChangeState(server_.preparingState_);
     return MSERR_OK;
+}
+
+int32_t PlayerServer::InitializedState::SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode)
+{
+    return server_.HandleSetPlayRange(start, end, mode);
 }
 
 void PlayerServer::PreparingState::StateEnter()
@@ -257,6 +279,11 @@ int32_t PlayerServer::PreparedState::SetPlaybackSpeed(PlaybackRateMode mode)
 int32_t PlayerServer::PreparedState::SeekContinous(int32_t mSeconds, int64_t batchNo)
 {
     return server_.HandleSeekContinous(mSeconds, batchNo);
+}
+
+int32_t PlayerServer::PreparedState::SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode)
+{
+    return server_.HandleSetPlayRange(start, end, mode);
 }
 
 void PlayerServer::PreparedState::HandleStateChange(int32_t newState)
@@ -353,6 +380,16 @@ void PlayerServer::PlayingState::HandleEos()
     server_.HandleEos();
 }
 
+void PlayerServer::PlayingState::HandleInterruptEvent(const Format &infoBody)
+{
+    server_.HandleInterruptEvent(infoBody);
+}
+
+void PlayerServer::PlayingState::HandleAudioDeviceChangeEvent(const Format &infoBody)
+{
+    (void)infoBody;
+}
+
 void PlayerServer::PlayingState::StateEnter()
 {
     int32_t userId = server_.GetUserId();
@@ -411,6 +448,11 @@ int32_t PlayerServer::PausedState::SeekContinous(int32_t mSeconds, int64_t batch
     return server_.HandleSeekContinous(mSeconds, batchNo);
 }
 
+int32_t PlayerServer::PausedState::SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode)
+{
+    return server_.HandleSetPlayRange(start, end, mode);
+}
+
 void PlayerServer::PausedState::HandleStateChange(int32_t newState)
 {
     if (newState == PLAYER_STARTED) {
@@ -450,6 +492,11 @@ void PlayerServer::StoppedState::HandleStateChange(int32_t newState)
     }
 }
 
+int32_t PlayerServer::StoppedState::SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode)
+{
+    return server_.HandleSetPlayRange(start, end, mode);
+}
+
 int32_t PlayerServer::PlaybackCompletedState::Play()
 {
     return server_.HandlePlay();
@@ -463,6 +510,11 @@ int32_t PlayerServer::PlaybackCompletedState::Seek(int32_t mSeconds, PlayerSeekM
 int32_t PlayerServer::PlaybackCompletedState::SeekContinous(int32_t mSeconds, int64_t batchNo)
 {
     return server_.HandleSeekContinous(mSeconds, batchNo);
+}
+
+int32_t PlayerServer::PlaybackCompletedState::SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode)
+{
+    return server_.HandleSetPlayRange(start, end, mode);
 }
 
 int32_t PlayerServer::PlaybackCompletedState::Stop()

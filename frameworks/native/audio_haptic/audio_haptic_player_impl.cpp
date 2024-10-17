@@ -146,6 +146,11 @@ int32_t AudioHapticPlayerImpl::Start()
 
     CHECK_AND_RETURN_RET_LOG(audioHapticVibrator_ != nullptr, MSERR_INVALID_OPERATION,
         "Audio haptic vibrator is nullptr");
+
+    if (vibrateThread_ != nullptr && vibrateThread_->joinable()) {
+        vibrateThread_->join();
+        vibrateThread_.reset();
+    }
     if (vibrateThread_ == nullptr) {
         ResetVibrateState();
         vibrateThread_ = std::make_shared<std::thread>([this] { StartVibrate(); });
@@ -280,6 +285,18 @@ int32_t AudioHapticPlayerImpl::SetLoop(bool loop)
     return result;
 }
 
+HapticsMode AudioHapticPlayerImpl::GetHapticsMode() const
+{
+    return hapticsMode_;
+}
+
+void AudioHapticPlayerImpl::SetHapticsMode(HapticsMode hapticsMode)
+{
+    MEDIA_LOGI("AudioHapticPlayerImpl::SetHapticsMode %{public}d", hapticsMode);
+    std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
+    hapticsMode_ = hapticsMode;
+}
+
 int32_t AudioHapticPlayerImpl::SetAudioHapticPlayerCallback(
     const std::shared_ptr<AudioHapticPlayerCallback> &playerCallback)
 {
@@ -381,10 +398,7 @@ void AudioHapticPlayerImpl::NotifyInterruptEvent(const AudioStandard::InterruptE
 void AudioHapticPlayerImpl::NotifyEndOfStreamEvent()
 {
     MEDIA_LOGI("NotifyEndOfStreamEvent");
-    std::unique_lock<std::mutex> lock(audioHapticPlayerLock_);
-    StopVibrate();
-    lock.unlock();
-    playerState_ = AudioHapticPlayerState::STATE_STOPPED;
+    std::thread (HandleEndOfStreamEventThreadFunc, shared_from_this()).detach();
     std::shared_ptr<AudioHapticPlayerCallback> cb = audioHapticPlayerCallback_.lock();
     if (cb != nullptr) {
         MEDIA_LOGI("NotifyEndOfStreamEvent for napi object or caller");
@@ -392,6 +406,25 @@ void AudioHapticPlayerImpl::NotifyEndOfStreamEvent()
     } else {
         MEDIA_LOGE("NotifyEndOfStreamEvent: audioHapticPlayerCallback_ is nullptr");
     }
+}
+
+void AudioHapticPlayerImpl::HandleEndOfStreamEventThreadFunc(std::weak_ptr<AudioHapticPlayerImpl> player)
+{
+    std::shared_ptr<AudioHapticPlayerImpl> playerPtr = player.lock();
+    if (playerPtr != nullptr) {
+        playerPtr->HandleEndOfStreamEvent();
+    }
+}
+
+void AudioHapticPlayerImpl::HandleEndOfStreamEvent()
+{
+    std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
+    if (playerState_ == AudioHapticPlayerState::STATE_RELEASED) {
+        MEDIA_LOGE("The audio haptic player has been released!");
+        return;
+    }
+    StopVibrate();
+    playerState_ = AudioHapticPlayerState::STATE_STOPPED;
 }
 
 void AudioHapticPlayerImpl::NotifyErrorEvent(int32_t errCode)
@@ -436,7 +469,7 @@ void AudioHapticSoundCallbackImpl::OnError(int32_t errorCode)
         MEDIA_LOGE("The audio haptic player has been released.");
         return;
     }
-    player->NotifyEndOfStreamEvent();
+    player->NotifyErrorEvent(errorCode);
 }
 
 void AudioHapticSoundCallbackImpl::OnInterrupt(const AudioStandard::InterruptEvent &interruptEvent)

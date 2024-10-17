@@ -102,6 +102,7 @@
           "qos_manager",
           "config_policy",
           "power_manager",
+          "media_library",
           "memmgr",
           "common_event_service",
           "call_manager",
@@ -115,7 +116,10 @@
           "data_share",
           "ringtone_library",
           "os_account",
-          "i18n"
+          "i18n",
+          "camera_framework",
+          "drivers_interface_camera",
+          "image_effect"
         ],
         "third_party": [
           "bounds_checking_function"
@@ -155,6 +159,16 @@
                 "media_errors.h"
               ],
               "header_base": "//foundation/multimedia/player_framework/interfaces/inner_api/native"
+            }
+          },
+          {
+            "type": "so",
+            "name": "//foundation/multimedia/player_framework/frameworks/native/video_editor:video_editor",
+            "header": {
+              "header_files": [
+                "video_editor.h"
+              ],
+              "header_base": "//foundation/multimedia/player_framework/interfaces/inner_api/native/video_editor/include"
             }
           },
           {

@@ -68,7 +68,6 @@ ohos_static_library("media_engine_histreamer_avmetadatahelper") {
 
   external_deps = [
     "av_codec:av_codec_client",
-    "av_codec:av_codec_client",
     "av_codec:av_codec_media_engine_filters",
     "av_codec:av_codec_media_engine_modules",
     "c_utils:utils",

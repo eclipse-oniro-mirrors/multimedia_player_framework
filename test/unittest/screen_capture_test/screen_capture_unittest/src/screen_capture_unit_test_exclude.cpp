@@ -43,9 +43,9 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_001, TestSize.Lev
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_001 before");
     SetConfig(config_);
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
-
+    OpenFile("screen_capture_exclude_content_001");
     aFlag = 0;
-    vFlag = 0;
+    vFlag = 1;
     bool isMicrophone = true;
     screenCaptureCb_ = std::make_shared<ScreenCaptureUnitTestCallback>(screenCapture_, aFile, vFile, aFlag, vFlag);
     ASSERT_NE(nullptr, screenCaptureCb_);
@@ -55,10 +55,10 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_001, TestSize.Lev
     vector<int> windowIds = {1, 3, 5};
     EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeWindowContent(&windowIds[0], static_cast<int32_t>(windowIds.size())));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
-    sleep(10);
+    sleep(RECORDER_TIME);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_001 before");
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_001 after");
 }
 
 /**
@@ -72,9 +72,9 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_002, TestSize.Lev
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_002 before");
     SetConfig(config_);
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
-
+    OpenFile("screen_capture_exclude_content_002");
     aFlag = 0;
-    vFlag = 0;
+    vFlag = 1;
     bool isMicrophone = true;
     screenCaptureCb_ = std::make_shared<ScreenCaptureUnitTestCallback>(screenCapture_, aFile, vFile, aFlag, vFlag);
     ASSERT_NE(nullptr, screenCaptureCb_);
@@ -83,10 +83,10 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_002, TestSize.Lev
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeAudioContent(SCREEN_CAPTURE_NOTIFICATION_AUDIO));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
-    sleep(10);
+    sleep(RECORDER_TIME);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_002 before");
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_002 after");
 }
 
 /**
@@ -100,9 +100,9 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_003, TestSize.Lev
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_003 before");
     SetConfig(config_);
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
-
+    OpenFile("screen_capture_exclude_content_003");
     aFlag = 0;
-    vFlag = 0;
+    vFlag = 1;
     bool isMicrophone = true;
     screenCaptureCb_ = std::make_shared<ScreenCaptureUnitTestCallback>(screenCapture_, aFile, vFile, aFlag, vFlag);
     ASSERT_NE(nullptr, screenCaptureCb_);
@@ -111,10 +111,10 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_003, TestSize.Lev
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeAudioContent(SCREEN_CAPTURE_CURRENT_APP_AUDIO));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
-    sleep(10);
+    sleep(RECORDER_TIME);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_003 before");
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_003 after");
 }
 
 /**
@@ -128,9 +128,9 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_004, TestSize.Lev
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_004 before");
     SetConfig(config_);
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
-
+    OpenFile("screen_capture_exclude_content_004");
     aFlag = 0;
-    vFlag = 0;
+    vFlag = 1;
     bool isMicrophone = true;
     screenCaptureCb_ = std::make_shared<ScreenCaptureUnitTestCallback>(screenCapture_, aFile, vFile, aFlag, vFlag);
     ASSERT_NE(nullptr, screenCaptureCb_);
@@ -141,10 +141,10 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_004, TestSize.Lev
     EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeWindowContent(&windowIds[0], static_cast<int32_t>(windowIds.size())));
     EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeAudioContent(SCREEN_CAPTURE_NOTIFICATION_AUDIO));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
-    sleep(10);
+    sleep(RECORDER_TIME);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_004 before");
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_004 after");
 }
 
 /**
@@ -158,9 +158,9 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_005, TestSize.Lev
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_005 before");
     SetConfig(config_);
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
-
+    OpenFile("screen_capture_exclude_content_005");
     aFlag = 0;
-    vFlag = 0;
+    vFlag = 1;
     bool isMicrophone = true;
     screenCaptureCb_ = std::make_shared<ScreenCaptureUnitTestCallback>(screenCapture_, aFile, vFile, aFlag, vFlag);
     ASSERT_NE(nullptr, screenCaptureCb_);
@@ -170,10 +170,10 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_005, TestSize.Lev
     EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeAudioContent(SCREEN_CAPTURE_CURRENT_APP_AUDIO));
     EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeAudioContent(SCREEN_CAPTURE_NOTIFICATION_AUDIO));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
-    sleep(10);
+    sleep(RECORDER_TIME);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_005 before");
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_005 after");
 }
 
 /**
@@ -199,9 +199,9 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_006, TestSize.Lev
     };
     config_.audioInfo.innerCapInfo = innerCapInfo;
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
-
+    OpenFile("screen_capture_exclude_content_006");
     aFlag = 0;
-    vFlag = 0;
+    vFlag = 1;
     bool isMicrophone = true;
     screenCaptureCb_ = std::make_shared<ScreenCaptureUnitTestCallback>(screenCapture_, aFile, vFile, aFlag, vFlag);
     ASSERT_NE(nullptr, screenCaptureCb_);
@@ -211,10 +211,10 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_006, TestSize.Lev
     EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeAudioContent(SCREEN_CAPTURE_CURRENT_APP_AUDIO));
     EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeAudioContent(SCREEN_CAPTURE_NOTIFICATION_AUDIO));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
-    sleep(10);
+    sleep(RECORDER_TIME);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_006 before");
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_006 after");
 }
 
 /**
@@ -240,9 +240,9 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_007, TestSize.Lev
     };
     config_.audioInfo.innerCapInfo = innerCapInfo;
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
-
+    OpenFile("screen_capture_exclude_content_007");
     aFlag = 0;
-    vFlag = 0;
+    vFlag = 1;
     bool isMicrophone = true;
     screenCaptureCb_ = std::make_shared<ScreenCaptureUnitTestCallback>(screenCapture_, aFile, vFile, aFlag, vFlag);
     ASSERT_NE(nullptr, screenCaptureCb_);
@@ -252,10 +252,10 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_007, TestSize.Lev
     EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeAudioContent(SCREEN_CAPTURE_CURRENT_APP_AUDIO));
     EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeAudioContent(SCREEN_CAPTURE_NOTIFICATION_AUDIO));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
-    sleep(10);
+    sleep(RECORDER_TIME);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_007 before");
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_007 after");
 }
 
 /**
@@ -269,9 +269,9 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_008, TestSize.Lev
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_008 before");
     SetConfig(config_);
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
-
+    OpenFile("screen_capture_exclude_content_008");
     aFlag = 0;
-    vFlag = 0;
+    vFlag = 1;
     bool isMicrophone = true;
     screenCaptureCb_ = std::make_shared<ScreenCaptureUnitTestCallback>(screenCapture_, aFile, vFile, aFlag, vFlag);
     ASSERT_NE(nullptr, screenCaptureCb_);
@@ -283,10 +283,10 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_008, TestSize.Lev
     EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeAudioContent(SCREEN_CAPTURE_NOTIFICATION_AUDIO));
     EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeAudioContent(SCREEN_CAPTURE_CURRENT_APP_AUDIO));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
-    sleep(10);
+    sleep(RECORDER_TIME);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_008 before");
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_008 after");
 }
 
 /**
@@ -297,7 +297,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_008, TestSize.Lev
  */
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_009, TestSize.Level2)
 {
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_009 before");
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_009 after");
     SetConfig(config_);
     AudioCaptureInfo micCapInfo = {
         .audioSampleRate = 0,
@@ -312,9 +312,9 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_009, TestSize.Lev
     };
     config_.audioInfo.innerCapInfo = innerCapInfo;
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
-
+    OpenFile("screen_capture_exclude_content_009");
     aFlag = 0;
-    vFlag = 0;
+    vFlag = 1;
     bool isMicrophone = true;
     screenCaptureCb_ = std::make_shared<ScreenCaptureUnitTestCallback>(screenCapture_, aFile, vFile, aFlag, vFlag);
     ASSERT_NE(nullptr, screenCaptureCb_);
@@ -326,10 +326,10 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_009, TestSize.Lev
     EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeAudioContent(SCREEN_CAPTURE_CURRENT_APP_AUDIO));
     EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeAudioContent(SCREEN_CAPTURE_NOTIFICATION_AUDIO));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
-    sleep(10);
+    sleep(RECORDER_TIME);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_009 before");
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_009 after");
 }
 
 /**
@@ -343,9 +343,9 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_010, TestSize.Lev
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_010 before");
     SetConfig(config_);
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
-
+    OpenFile("screen_capture_exclude_content_010");
     aFlag = 0;
-    vFlag = 0;
+    vFlag = 1;
     bool isMicrophone = true;
     screenCaptureCb_ = std::make_shared<ScreenCaptureUnitTestCallback>(screenCapture_, aFile, vFile, aFlag, vFlag);
     ASSERT_NE(nullptr, screenCaptureCb_);
@@ -359,10 +359,10 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_010, TestSize.Lev
     EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeAudioContent(SCREEN_CAPTURE_NOTIFICATION_AUDIO));
     EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeAudioContent(SCREEN_CAPTURE_CURRENT_APP_AUDIO));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
-    sleep(10);
+    sleep(RECORDER_TIME);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_010 before");
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_010 after");
 }
 
 /**
@@ -376,9 +376,9 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_011, TestSize.Lev
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_011 before");
     SetConfig(config_);
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
-
+    OpenFile("screen_capture_exclude_content_011");
     aFlag = 0;
-    vFlag = 0;
+    vFlag = 1;
     bool isMicrophone = true;
     screenCaptureCb_ = std::make_shared<ScreenCaptureUnitTestCallback>(screenCapture_, aFile, vFile, aFlag, vFlag);
     ASSERT_NE(nullptr, screenCaptureCb_);
@@ -392,10 +392,10 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_011, TestSize.Lev
     EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeAudioContent(SCREEN_CAPTURE_NOTIFICATION_AUDIO));
     EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeAudioContent(SCREEN_CAPTURE_NOTIFICATION_AUDIO));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
-    sleep(10);
+    sleep(RECORDER_TIME);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_011 before");
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_011 after");
 }
 
 /**
@@ -409,9 +409,9 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_012, TestSize.Lev
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_012 before");
     SetConfig(config_);
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
-
+    OpenFile("screen_capture_exclude_content_012");
     aFlag = 0;
-    vFlag = 0;
+    vFlag = 1;
     bool isMicrophone = true;
     screenCaptureCb_ = std::make_shared<ScreenCaptureUnitTestCallback>(screenCapture_, aFile, vFile, aFlag, vFlag);
     ASSERT_NE(nullptr, screenCaptureCb_);
@@ -425,10 +425,10 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_012, TestSize.Lev
     EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeAudioContent(SCREEN_CAPTURE_NOTIFICATION_AUDIO));
     EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeAudioContent(SCREEN_CAPTURE_NOTIFICATION_AUDIO));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
-    sleep(10);
+    sleep(RECORDER_TIME);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_012 before");
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_012 after");
 }
 
 /**
@@ -822,7 +822,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_after_start_001, 
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
     vector<int> windowIds = {1, 3, 5};
     EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeWindowContent(&windowIds[0], static_cast<int32_t>(windowIds.size())));
-    sleep(10);
+    sleep(RECORDER_TIME);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_after_start_001 after");
@@ -850,7 +850,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_after_start_002, 
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeAudioContent(SCREEN_CAPTURE_NOTIFICATION_AUDIO));
-    sleep(10);
+    sleep(RECORDER_TIME);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_after_start_002 after");
@@ -878,7 +878,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_after_start_003, 
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeAudioContent(SCREEN_CAPTURE_CURRENT_APP_AUDIO));
-    sleep(10);
+    sleep(RECORDER_TIME);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_after_start_003 after");
@@ -909,7 +909,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_after_start_004, 
     EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeWindowContent(&windowIds[0], static_cast<int32_t>(windowIds.size())));
     EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeAudioContent(SCREEN_CAPTURE_NOTIFICATION_AUDIO));
     EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeAudioContent(SCREEN_CAPTURE_CURRENT_APP_AUDIO));
-    sleep(10);
+    sleep(RECORDER_TIME);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_after_start_004 after");

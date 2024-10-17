@@ -34,6 +34,7 @@ public:
     virtual int32_t SeekContinous(int32_t mSeconds, int64_t batchNo);
     virtual int32_t PauseDemuxer();
     virtual int32_t ResumeDemuxer();
+    virtual int32_t SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode);
 protected:
     int32_t OnMessageReceived(PlayerOnInfoType type, int32_t extra, const Format &infoBody) override;
     virtual void HandleStateChange(int32_t newState)
@@ -46,6 +47,14 @@ protected:
     }
     void ReportInvalidOperation() const;
     virtual void HandleEos() {}
+    virtual void HandleInterruptEvent(const Format &infoBody)
+    {
+        (void)infoBody;
+    }
+    virtual void HandleAudioDeviceChangeEvent(const Format &infoBody)
+    {
+        (void)infoBody;
+    }
     int32_t MessageSeekDone(int32_t extra);
     int32_t MessageTrackDone(int32_t extra);
     int32_t MessageTrackInfoUpdate();
@@ -70,6 +79,7 @@ public:
     ~InitializedState() = default;
 
     int32_t Prepare() override;
+    int32_t SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode) override;
 };
 
 class PlayerServer::PreparingState : public PlayerServer::BaseState {
@@ -95,6 +105,7 @@ public:
     int32_t Stop() override;
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
     int32_t SeekContinous(int32_t mSeconds, int64_t batchNo) override;
+    int32_t SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode) override;
 
 protected:
     void HandleStateChange(int32_t newState) override;
@@ -118,6 +129,8 @@ public:
 protected:
     void HandleStateChange(int32_t newState) override;
     void HandlePlaybackComplete(int32_t extra) override;
+    void HandleInterruptEvent(const Format &infoBody) override;
+    void HandleAudioDeviceChangeEvent(const Format &infoBody) override;
     void HandleEos() override;
     void StateEnter() override;
     void StateExit() override;
@@ -134,6 +147,7 @@ public:
     int32_t Stop() override;
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
     int32_t SeekContinous(int32_t mSeconds, int64_t batchNo) override;
+    int32_t SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode) override;
 
 protected:
     void HandleStateChange(int32_t newState) override;
@@ -148,6 +162,7 @@ public:
     int32_t Prepare() override;
     int32_t Stop() override;
     void HandleStateChange(int32_t newState) override;
+    int32_t SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode) override;
 };
 
 class PlayerServer::PlaybackCompletedState : public PlayerServer::BaseState {
@@ -160,6 +175,7 @@ public:
     int32_t Stop() override;
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
     int32_t SeekContinous(int32_t mSeconds, int64_t batchNo) override;
+    int32_t SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode) override;
 
 protected:
     void HandleStateChange(int32_t newState) override;

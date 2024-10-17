@@ -2172,10 +2172,14 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_skip_privacy, TestSize.
     EXPECT_EQ(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIds[0], static_cast<int32_t>(windowIds.size())));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenRecording());
     sleep(RECORDER_TIME);
+#ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
     EXPECT_EQ(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIds[0], static_cast<int32_t>(windowIds.size())));
+#else
+    EXPECT_NE(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIds[0], static_cast<int32_t>(windowIds.size())));
+#endif
     sleep(RECORDER_TIME);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenRecording());
-    EXPECT_EQ(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIds[0], static_cast<int32_t>(windowIds.size())));;
+    EXPECT_EQ(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIds[0], static_cast<int32_t>(windowIds.size())));
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_skip_privacy after");
 }
@@ -2202,18 +2206,22 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_skip_privacy_01, TestSi
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIds[0], static_cast<int32_t>(windowIds.size())));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
-    sleep(5);
-    cout << "screenCapture_->SkipPrivacyMode start 1" << endl;
+    sleep(RECORDER_TIME);
+#ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
     EXPECT_EQ(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIds[0], static_cast<int32_t>(windowIds.size())));
-    cout << "screenCapture_->SkipPrivacyMode end 1" << endl;
+#else
+    EXPECT_NE(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIds[0], static_cast<int32_t>(windowIds.size())));
+#endif
     windowIds = {-1, 2, 7};
-    sleep(5);
-    cout << "screenCapture_->SkipPrivacyMode start 2" << endl;
+    sleep(RECORDER_TIME);
+#ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
     EXPECT_EQ(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIds[0], static_cast<int32_t>(windowIds.size())));
-    cout << "screenCapture_->SkipPrivacyMode end 2" << endl;
-    sleep(5);
+#else
+    EXPECT_NE(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIds[0], static_cast<int32_t>(windowIds.size())));
+#endif
+    sleep(RECORDER_TIME);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
-    EXPECT_EQ(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIds[0], static_cast<int32_t>(windowIds.size())));;
+    EXPECT_EQ(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIds[0], static_cast<int32_t>(windowIds.size())));
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_skip_privacy_01 after");
 }
@@ -2244,16 +2252,19 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_with_surface_skip_privacy_01, Tes
     sptr<IBufferConsumerListener> surfaceCb = OHOS::sptr<ScreenCapBufferDemoConsumerListener>::MakeSptr(consumer);
     consumer->RegisterConsumerListener(surfaceCb);
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCaptureWithSurface(producerSurface));
-    sleep(5);
-    cout << "screenCapture_->SkipPrivacyMode start 1" << endl;
+    sleep(RECORDER_TIME);
+#ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
     EXPECT_EQ(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIds[0], static_cast<int32_t>(windowIds.size())));
-    cout << "screenCapture_->SkipPrivacyMode end 1" << endl;
-    sleep(5);
+#else
+    EXPECT_NE(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIds[0], static_cast<int32_t>(windowIds.size())));
+#endif
+    sleep(RECORDER_TIME);
     windowIds = {-1, 2, 6};
-    cout << "screenCapture_->SkipPrivacyMode start 2" << endl;
+#ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
     EXPECT_EQ(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIds[0], static_cast<int32_t>(windowIds.size())));
-    cout << "screenCapture_->SkipPrivacyMode end 2" << endl;
-    sleep(5);
+#else
+    EXPECT_NE(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIds[0], static_cast<int32_t>(windowIds.size())));
+#endif
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIds[0], static_cast<int32_t>(windowIds.size())));
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());

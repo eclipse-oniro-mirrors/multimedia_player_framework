@@ -38,13 +38,15 @@ constexpr int32_t SCENE_CODE_EFFECTIVE_DURATION_MS = 20000;
 static constexpr char PERFORMANCE_STATS[] = "PERFORMANCE";
 static std::atomic<uint32_t> concurrentWorkCount_ = 0;
 static constexpr uint8_t HIGH_CONCRENT_WORK_NUM = 4;
+static constexpr int32_t PLANE_Y = 0;
+static constexpr int32_t PLANE_U = 1;
+static constexpr uint8_t NUM_2 = 2;
 }
 
 namespace OHOS {
 namespace Media {
 using namespace OHOS::HDI::Display::Graphic::Common::V1_0;
 static constexpr uint8_t PIXEL_SIZE_HDR_YUV = 3;
-static constexpr float PIXEL_SIZE_SDR_YUV = 1.5;
 static std::map<Scene, long> SCENE_CODE_MAP = { { Scene::AV_META_SCENE_CLONE, 1 },
                                                 { Scene::AV_META_SCENE_BATCH_HANDLE, 2 } };
 static std::map<Scene, int64_t> SCENE_TIMESTAMP_MAP = { { Scene::AV_META_SCENE_CLONE, 0 },
@@ -212,41 +214,92 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::CreatePixelMapYuv(const std::sha
     Plugins::VideoRotation rotation = Plugins::VideoRotation::VIDEO_ROTATION_0;
     bufferMeta->Get<Tag::VIDEO_ROTATION>(rotation);
     pixelMapInfo.rotation = static_cast<int32_t>(rotation);
-
     bufferMeta->Get<Tag::VIDEO_IS_HDR_VIVID>(pixelMapInfo.isHdr);
     pixelMapInfo.isHdr &= frameBuffer->memory_->GetSurfaceBuffer() != nullptr;
 
+    std::shared_ptr<PixelMap> pixelMap;
+    bool isPlanesAvailable = false;
+    OH_NativeBuffer_Planes *planes = nullptr;
     if (pixelMapInfo.isHdr) {
         auto surfaceBuffer = frameBuffer->memory_->GetSurfaceBuffer();
         sptr<SurfaceBuffer> mySurfaceBuffer = CopySurfaceBuffer(surfaceBuffer);
         CHECK_AND_RETURN_RET_LOG(mySurfaceBuffer != nullptr, nullptr, "Create SurfaceBuffer failed");
-        InitializationOptions options = { .size = { .width = mySurfaceBuffer->GetWidth(),
-                                                    .height = mySurfaceBuffer->GetHeight() },
-                                          .srcPixelFormat = PixelFormat::YCBCR_P010,
-                                          .pixelFormat = PixelFormat::YCBCR_P010,
-                                          .useDMA = true };
-        uint32_t colorLength = mySurfaceBuffer->GetWidth() * mySurfaceBuffer->GetHeight() * PIXEL_SIZE_HDR_YUV;
-        auto pixelMap =
-            PixelMap::Create(reinterpret_cast<const uint32_t *>(mySurfaceBuffer->GetVirAddr()), colorLength, options);
-        void* nativeBuffer = mySurfaceBuffer.GetRefPtr();
-        RefBase *ref = reinterpret_cast<RefBase *>(nativeBuffer);
-        ref->IncStrongRef(ref);
-        pixelMap->InnerSetColorSpace(OHOS::ColorManager::ColorSpace(ColorManager::ColorSpaceName::BT2020_HLG));
-        pixelMap->SetPixelsAddr(mySurfaceBuffer->GetVirAddr(), mySurfaceBuffer.GetRefPtr(), mySurfaceBuffer->GetSize(),
-                                AllocatorType::DMA_ALLOC, FreeSurfaceBuffer);
-        return pixelMap;
+        GSError retVal = mySurfaceBuffer->GetPlanesInfo(reinterpret_cast<void**>(&planes));
+        isPlanesAvailable = (retVal == OHOS::GSERROR_OK) && (planes != nullptr);
+        MEDIA_LOGD("isPlanesAvailable = %{public}d", isPlanesAvailable);
+        pixelMap = OnCreatePixelMapHdr(mySurfaceBuffer);
+        CHECK_AND_RETURN_RET_LOG(pixelMap != nullptr, nullptr, "Create pixelMap Hdr failed");
+    } else {
+        InitializationOptions options = { .size = { .width = width, .height = height },
+                                          .pixelFormat = PixelFormat::NV12 };
+        pixelMap = OnCreatePixelMapSdr(frameBuffer, pixelMapInfo, options);
+        CHECK_AND_RETURN_RET_LOG(pixelMap != nullptr, nullptr, "Create pixelMap Sdr failed");
     }
+    SetPixelMapYuvInfo(pixelMap, isPlanesAvailable, planes);
+    return pixelMap;
+}
 
+std::shared_ptr<PixelMap> AVMetadataHelperImpl::OnCreatePixelMapSdr(const std::shared_ptr<AVBuffer> &frameBuffer,
+                                                                    PixelMapInfo &pixelMapInfo,
+                                                                    InitializationOptions &options)
+{
+    bool isValid = frameBuffer != nullptr && frameBuffer->memory_ != nullptr;
+    CHECK_AND_RETURN_RET_LOG(isValid, nullptr, "invalid frame buffer");
+    auto pixelMap = PixelMap::Create(options);
+    CHECK_AND_RETURN_RET_LOG(pixelMap != nullptr, nullptr, "Create pixelMap failed");
     AVBufferHolder *holder = CreateAVBufferHolder(frameBuffer);
-    InitializationOptions options = { .size = { .width = width, .height = height }, .srcPixelFormat = PixelFormat::NV12,
-                                      .pixelFormat = PixelFormat::NV12 };
-    uint32_t colorLength = width * height * PIXEL_SIZE_SDR_YUV;
-    auto pixelMap =
-        PixelMap::Create(reinterpret_cast<const uint32_t *>(frameBuffer->memory_->GetAddr()), colorLength, options);
     CHECK_AND_RETURN_RET_LOG(holder != nullptr, nullptr, "Create buffer holder failed");
     uint8_t *pixelAddr = frameBuffer->memory_->GetAddr();
-    pixelMap->SetPixelsAddr(pixelAddr, holder, pixelMap->GetByteCount(), AllocatorType::CUSTOM_ALLOC, FreeAvBufferData);
+    pixelMap->SetPixelsAddr(pixelAddr, holder, pixelMap->GetByteCount(),
+                            AllocatorType::CUSTOM_ALLOC, FreeAvBufferData);
+    const InitializationOptions opts = { .size = { .width = pixelMap->GetWidth(),
+                                                   .height = pixelMap->GetHeight() },
+                                         .srcPixelFormat = PixelFormat::NV12,
+                                         .pixelFormat = pixelMapInfo.pixelFormat };
+    return PixelMap::Create(reinterpret_cast<const uint32_t *>(pixelMap->GetPixels()),
+                            pixelMap->GetByteCount(), opts);
+}
+
+std::shared_ptr<PixelMap> AVMetadataHelperImpl::OnCreatePixelMapHdr(sptr<SurfaceBuffer> &mySurfaceBuffer)
+{
+    CHECK_AND_RETURN_RET_LOG(mySurfaceBuffer != nullptr, nullptr, "mySurfaceBuffer is nullptr");
+    InitializationOptions options = { .size = { .width = mySurfaceBuffer->GetWidth(),
+                                                .height = mySurfaceBuffer->GetHeight() },
+                                      .srcPixelFormat = PixelFormat::YCBCR_P010,
+                                      .pixelFormat = PixelFormat::YCBCR_P010,
+                                      .useDMA = true };
+    int32_t colorLength = mySurfaceBuffer->GetWidth() * mySurfaceBuffer->GetHeight() * PIXEL_SIZE_HDR_YUV;
+    auto pixelMap = PixelMap::Create(reinterpret_cast<const uint32_t *>(mySurfaceBuffer->GetVirAddr()),
+        static_cast<uint32_t>(colorLength), options);
+    CHECK_AND_RETURN_RET_LOG(pixelMap != nullptr, nullptr, "Create pixelMap failed");
+    void* nativeBuffer = mySurfaceBuffer.GetRefPtr();
+    RefBase *ref = reinterpret_cast<RefBase *>(nativeBuffer);
+    ref->IncStrongRef(ref);
+    pixelMap->InnerSetColorSpace(OHOS::ColorManager::ColorSpace(ColorManager::ColorSpaceName::BT2020_HLG));
+    pixelMap->SetPixelsAddr(mySurfaceBuffer->GetVirAddr(), mySurfaceBuffer.GetRefPtr(), mySurfaceBuffer->GetSize(),
+                            AllocatorType::DMA_ALLOC, FreeSurfaceBuffer);
     return pixelMap;
+}
+ 
+void AVMetadataHelperImpl::SetPixelMapYuvInfo(std::shared_ptr<PixelMap> pixelMap, bool isPlanesAvailable,
+                                              OH_NativeBuffer_Planes *planes)
+{
+    int32_t srcWidth = pixelMap->GetWidth();
+    int32_t srcHeight = pixelMap->GetHeight();
+    YUVDataInfo yuvDataInfo = { .yWidth = srcWidth,
+                                .yHeight = srcHeight,
+                                .uvWidth = srcWidth / 2,
+                                .uvHeight = srcHeight / 2,
+                                .yStride = srcWidth,
+                                .uvStride = srcWidth,
+                                .uvOffset = srcWidth * srcHeight};
+    if (isPlanesAvailable && planes != nullptr) {
+        yuvDataInfo.yStride = planes->planes[PLANE_Y].columnStride / NUM_2;
+        yuvDataInfo.uvStride = planes->planes[PLANE_U].columnStride / NUM_2;
+        yuvDataInfo.yOffset = planes->planes[PLANE_Y].offset / NUM_2;
+        yuvDataInfo.uvOffset = planes->planes[PLANE_U].offset / NUM_2;
+    }
+    pixelMap->SetImageYUVInfo(yuvDataInfo);
 }
 
 sptr<SurfaceBuffer> AVMetadataHelperImpl::CopySurfaceBuffer(sptr<SurfaceBuffer> &srcSurfaceBuffer)
@@ -508,7 +561,6 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameAtTime(
     return pixelMap;
 }
 
-
 std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameYuv(int64_t timeUs, int32_t option,
                                                               const PixelMapParams &param)
 {
@@ -516,27 +568,19 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameYuv(int64_t timeUs, in
 
     concurrentWorkCount_++;
     ReportSceneCode(AV_META_SCENE_BATCH_HANDLE);
-    OutputConfiguration config = { .colorFormat = param.colorFormat,
+    OutputConfiguration config = { .dstWidth = param.dstWidth,
                                    .dstHeight = param.dstHeight,
-                                   .dstWidth = param.dstWidth };
+                                   .colorFormat = param.colorFormat };
     auto frameBuffer = avMetadataHelperService_->FetchFrameYuv(timeUs, option, config);
     CHECK_AND_RETURN_RET(frameBuffer != nullptr, nullptr);
     concurrentWorkCount_--;
 
-    PixelMapInfo pixelMapInfo;
+    PixelMapInfo pixelMapInfo = { .pixelFormat = param.colorFormat };
     auto pixelMap = CreatePixelMapYuv(frameBuffer, pixelMapInfo);
     CHECK_AND_RETURN_RET_LOG(pixelMap != nullptr, nullptr, "convert to pixelMap failed");
 
     int32_t srcWidth = pixelMap->GetWidth();
     int32_t srcHeight = pixelMap->GetHeight();
-    YUVDataInfo yuvDataInfo = { .yWidth = srcWidth,
-                                .yHeight = srcHeight,
-                                .uvWidth = srcWidth / 2,
-                                .uvHeight = srcHeight / 2,
-                                .yStride = srcWidth,
-                                .uvStride = srcWidth,
-                                .uvOffset = srcWidth * srcHeight };
-    pixelMap->SetImageYUVInfo(yuvDataInfo);
     bool needScale = (param.dstWidth > 0 && param.dstHeight > 0) &&
                      (param.dstWidth <= srcWidth && param.dstHeight <= srcHeight) &&
                      (param.dstWidth < srcWidth || param.dstHeight < srcHeight) && srcWidth > 0 && srcHeight > 0;
@@ -573,6 +617,12 @@ void AVMetadataHelperImpl::Release()
     avMetadataHelperService_->Release();
     (void)MediaServiceFactory::GetInstance().DestroyAVMetadataHelperService(avMetadataHelperService_);
     avMetadataHelperService_ = nullptr;
+}
+
+void AVMetadataHelperImpl::SetIsNapiInstance(bool isNapiInstance)
+{
+    CHECK_AND_RETURN_LOG(avMetadataHelperService_ != nullptr, "avmetadatahelper service does not exist.");
+    avMetadataHelperService_->SetIsNapiInstance(isNapiInstance);
 }
 } // namespace Media
 } // namespace OHOS

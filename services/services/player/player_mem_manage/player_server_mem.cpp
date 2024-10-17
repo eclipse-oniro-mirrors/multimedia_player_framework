@@ -589,6 +589,15 @@ int32_t PlayerServerMem::SelectBitRate(uint32_t bitRate)
     return PlayerServer::SelectBitRate(bitRate);
 }
 
+int32_t PlayerServerMem::StopBufferring(bool flag)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(RecoverMemByUser() == MSERR_OK, MSERR_INVALID_OPERATION, "RecoverMemByUser fail");
+
+    lastestUserSetTime_ = std::chrono::steady_clock::now();
+    return PlayerServer::StopBufferring(flag);
+}
+
 int32_t PlayerServerMem::SelectTrack(int32_t index, PlayerSwitchMode mode)
 {
     std::unique_lock<std::mutex> lock(mutex_);

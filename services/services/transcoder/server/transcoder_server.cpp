@@ -53,6 +53,7 @@ TransCoderServer::TransCoderServer()
 {
     taskQue_.Start();
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    instanceId_ = HiviewDFX::HiTraceChain::GetId().GetChainId();
 }
 
 TransCoderServer::~TransCoderServer()
@@ -79,6 +80,7 @@ int32_t TransCoderServer::Init()
         transCoderEngine_ = engineFactory->CreateTransCoderEngine(appUid, appPid, tokenId, fullTokenId);
         CHECK_AND_RETURN_RET_LOG(transCoderEngine_ != nullptr, MSERR_CREATE_REC_ENGINE_FAILED,
             "failed to create transCoder engine");
+        transCoderEngine_->SetInstanceId(instanceId_);
         return MSERR_OK;
     });
     int32_t ret = taskQue_.EnqueueTask(task);
@@ -126,6 +128,7 @@ int32_t TransCoderServer::SetVideoEncoder(VideoCodecFormat encoder)
     CHECK_AND_RETURN_RET_LOG(transCoderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     config_.videoCodec = encoder;
     VideoEnc vidEnc(encoder);
+    MEDIA_LOGD("set video encoder encoder:%{public}d", encoder);
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return transCoderEngine_->Configure(vidEnc);
     });
@@ -359,7 +362,7 @@ int32_t TransCoderServer::Resume()
     MediaTrace trace("TransCoderServer::Resume");
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(status_ != REC_TRANSCODERING, MSERR_INVALID_OPERATION, "Can not repeat Resume");
-    CHECK_AND_RETURN_RET_LOG(status_ == REC_TRANSCODERING || status_ == REC_PAUSED, MSERR_INVALID_OPERATION,
+    CHECK_AND_RETURN_RET_LOG(status_ == REC_PAUSED, MSERR_INVALID_OPERATION,
         "invalid status, current status is %{public}s", GetStatusDescription(status_).c_str());
     CHECK_AND_RETURN_RET_LOG(transCoderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {

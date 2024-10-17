@@ -121,6 +121,12 @@ int32_t MediaServerManager::Dump(int32_t fd, const std::vector<std::u16string> &
         argSets.find(u"screencapture") != argSets.end());
     CHECK_AND_RETURN_RET_LOG(ret == NO_ERROR,
         OHOS::INVALID_OPERATION, "Failed to write ScreenCapture information");
+    
+    dumpString += "------------------TranscoderServer------------------\n";
+    ret = WriteInfo(fd, dumpString, dumperTbl_[StubType::TRANSCODER],
+        argSets.find(u"transcoder") != argSets.end());
+    CHECK_AND_RETURN_RET_LOG(ret == NO_ERROR,
+        OHOS::INVALID_OPERATION, "Failed to write Transcoder information");
 
     ret = ServiceDumpManager::GetInstance().Dump(fd, argSets);
     CHECK_AND_RETURN_RET_LOG(ret == NO_ERROR,
@@ -147,11 +153,16 @@ MediaServerManager::~MediaServerManager()
     dumperTbl_.clear();
     recorderStubMap_.clear();
     playerStubMap_.clear();
+    {
+        std::lock_guard<std::mutex> lock(playerPtrMapMutex_);
+        playerStubPtrMap_.clear();
+    }
     avMetadataHelperStubMap_.clear();
     avCodecListStubMap_.clear();
     avCodecStubMap_.clear();
     recorderProfilesStubMap_.clear();
     screenCaptureStubMap_.clear();
+    screenCaptureMonitorStubMap_.clear();
     screenCaptureControllerStubMap_.clear();
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
@@ -215,6 +226,10 @@ sptr<IRemoteObject> MediaServerManager::CreatePlayerStubObject()
 
     pid_t pid = IPCSkeleton::GetCallingPid();
     playerStubMap_[object] = pid;
+    {
+        std::lock_guard<std::mutex> lock(playerPtrMapMutex_);
+        playerStubPtrMap_[playerStub] = pid;
+    }
 
     Dumper dumper;
     dumper.entry_ = [player = playerStub](int32_t fd) -> int32_t {
@@ -444,6 +459,17 @@ void MediaServerManager::DestroyAVPlayerStub(StubType type, sptr<IRemoteObject> 
                         playerStubMap_.size(), pid);
                     (void)playerStubMap_.erase(it);
                     MediaTrace::CounterTrace("The number of player", playerStubMap_.size());
+                    break;
+                }
+            }
+            std::lock_guard<std::mutex> lock(playerPtrMapMutex_);
+            for (auto it = playerStubPtrMap_.begin(); it != playerStubPtrMap_.end(); it++) {
+                sptr<PlayerServiceStub> playerStub = it->first;
+                if (playerStub->AsObject() == object) {
+                    MEDIA_LOGD("destroy player stub services(%{public}zu) pid(%{public}d).",
+                        playerStubPtrMap_.size(), pid);
+                    (void)playerStubPtrMap_.erase(it);
+                    MediaTrace::CounterTrace("The number of player", playerStubPtrMap_.size());
                     return;
                 }
             }
@@ -519,6 +545,51 @@ void MediaServerManager::DestroyAVRecorderStub(StubType type, sptr<IRemoteObject
     }
 }
 
+void MediaServerManager::DestroyAVScreenCaptureStub(StubType type, sptr<IRemoteObject> object, pid_t pid)
+{
+    switch (type) {
+        case SCREEN_CAPTURE: {
+            for (auto it = screenCaptureStubMap_.begin(); it != screenCaptureStubMap_.end(); it++) {
+                if (it->first == object) {
+                    MEDIA_LOGD("destroy screen capture stub services(%{public}zu) pid(%{public}d).",
+                        screenCaptureStubMap_.size(), pid);
+                    (void)screenCaptureStubMap_.erase(it);
+                    return;
+                }
+            }
+            MEDIA_LOGE("find screen capture object failed, pid(%{public}d).", pid);
+            break;
+        }
+        case SCREEN_CAPTURE_MONITOR: {
+            for (auto it = screenCaptureMonitorStubMap_.begin(); it != screenCaptureMonitorStubMap_.end(); it++) {
+                if (it->first == object) {
+                    MEDIA_LOGD("destroy screen capture monitor stub services(%{public}zu) pid(%{public}d).",
+                        screenCaptureMonitorStubMap_.size(), pid);
+                    (void)screenCaptureMonitorStubMap_.erase(it);
+                    return;
+                }
+            }
+            MEDIA_LOGE("find screen capture monitor object failed, pid(%{public}d).", pid);
+            break;
+        }
+        case SCREEN_CAPTURE_CONTROLLER: {
+            for (auto it = screenCaptureControllerStubMap_.begin();
+                it != screenCaptureControllerStubMap_.end(); it++) {
+                if (it->first == object) {
+                    MEDIA_LOGD("destroy screen capture controller stub services(%{public}zu) pid(%{public}d).",
+                        screenCaptureControllerStubMap_.size(), pid);
+                    (void)screenCaptureControllerStubMap_.erase(it);
+                    return;
+                }
+            }
+            MEDIA_LOGE("find screen capture controller object failed, pid(%{public}d).", pid);
+            break;
+        }
+        default:
+            break;
+    }
+}
+
 void MediaServerManager::DestroyStubObject(StubType type, sptr<IRemoteObject> object)
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -540,48 +611,54 @@ void MediaServerManager::DestroyStubObject(StubType type, sptr<IRemoteObject> ob
         case AVCODECLIST:
             DestroyAVCodecStub(type, object, pid);
             break;
-        case SCREEN_CAPTURE: {
-            for (auto it = screenCaptureStubMap_.begin(); it != screenCaptureStubMap_.end(); it++) {
-                if (it->first == object) {
-                    MEDIA_LOGD("destroy screen capture stub services(%{public}zu) pid(%{public}d).",
-                        screenCaptureStubMap_.size(), pid);
-                    (void)screenCaptureStubMap_.erase(it);
-                    return;
-                }
-            }
-            MEDIA_LOGE("find screen capture object failed, pid(%{public}d).", pid);
+        case SCREEN_CAPTURE:
+        case SCREEN_CAPTURE_MONITOR:
+        case SCREEN_CAPTURE_CONTROLLER:
+            DestroyAVScreenCaptureStub(type, object, pid);
             break;
-        }
-        case SCREEN_CAPTURE_MONITOR: {
-            for (auto it = screenCaptureMonitorStubMap_.begin(); it != screenCaptureMonitorStubMap_.end(); it++) {
-                if (it->first == object) {
-                    MEDIA_LOGD("destroy screen capture monitor stub services(%{public}zu) pid(%{public}d).",
-                               screenCaptureMonitorStubMap_.size(), pid);
-                    (void)screenCaptureMonitorStubMap_.erase(it);
-                    return;
-                }
-            }
-            MEDIA_LOGE("find screen capture monitor object failed, pid(%{public}d).", pid);
-            break;
-        }
-        case SCREEN_CAPTURE_CONTROLLER: {
-            for (auto it = screenCaptureControllerStubMap_.begin();
-                it != screenCaptureControllerStubMap_.end(); it++) {
-                if (it->first == object) {
-                    MEDIA_LOGD("destroy screen capture controller stub services(%{public}zu) pid(%{public}d).",
-                        screenCaptureControllerStubMap_.size(), pid);
-                    (void)screenCaptureControllerStubMap_.erase(it);
-                    return;
-                }
-            }
-            MEDIA_LOGE("find screen capture controller object failed, pid(%{public}d).", pid);
-            break;
-        }
         default: {
             MEDIA_LOGE("default case, media server manager failed, pid(%{public}d).", pid);
             break;
         }
     }
+}
+
+void MediaServerManager::DestroyAVScreenCaptureStubForPid(pid_t pid)
+{
+    MEDIA_LOGD("ScreenCapture stub services(%{public}zu) pid(%{public}d).", screenCaptureStubMap_.size(), pid);
+    for (auto itScreenCapture = screenCaptureStubMap_.begin(); itScreenCapture != screenCaptureStubMap_.end();) {
+        if (itScreenCapture->second == pid) {
+            executor_.Commit(itScreenCapture->first);
+            itScreenCapture = screenCaptureStubMap_.erase(itScreenCapture);
+        } else {
+            itScreenCapture++;
+        }
+    }
+    MEDIA_LOGD("ScreenCapture stub services(%{public}zu).", screenCaptureStubMap_.size());
+    MEDIA_LOGD("ScreenCapture monitor stub services(%{public}zu) pid(%{public}d).",
+        screenCaptureMonitorStubMap_.size(), pid);
+    for (auto itScreenCaptureMonitor = screenCaptureMonitorStubMap_.begin();
+         itScreenCaptureMonitor != screenCaptureMonitorStubMap_.end();) {
+        if (itScreenCaptureMonitor->second == pid) {
+            executor_.Commit(itScreenCaptureMonitor->first);
+            itScreenCaptureMonitor = screenCaptureMonitorStubMap_.erase(itScreenCaptureMonitor);
+        } else {
+            itScreenCaptureMonitor++;
+        }
+    }
+    MEDIA_LOGD("ScreenCapture monitor stub services(%{public}zu).", screenCaptureMonitorStubMap_.size());
+    MEDIA_LOGD("ScreenCapture controller stub services(%{public}zu) pid(%{public}d).",
+        screenCaptureControllerStubMap_.size(), pid);
+    for (auto itScreenCaptureController = screenCaptureControllerStubMap_.begin();
+         itScreenCaptureController != screenCaptureControllerStubMap_.end();) {
+        if (itScreenCaptureController->second == pid) {
+            executor_.Commit(itScreenCaptureController->first);
+            itScreenCaptureController = screenCaptureControllerStubMap_.erase(itScreenCaptureController);
+        } else {
+            itScreenCaptureController++;
+        }
+    }
+    MEDIA_LOGD("ScreenCapture controller stub services(%{public}zu).", screenCaptureControllerStubMap_.size());
 }
 
 void MediaServerManager::DestroyAVTranscoderStubForPid(pid_t pid)
@@ -634,6 +711,16 @@ void MediaServerManager::DestroyAVPlayerStubForPid(pid_t pid)
             itPlayer++;
         }
     }
+    {
+        std::lock_guard<std::mutex> lock(playerPtrMapMutex_);
+        for (auto itPlayer = playerStubPtrMap_.begin(); itPlayer != playerStubPtrMap_.end();) {
+            if (itPlayer->second == pid) {
+                itPlayer = playerStubPtrMap_.erase(itPlayer);
+            } else {
+                itPlayer++;
+            }
+        }
+    }
     MEDIA_LOGD("player stub services(%{public}zu).", playerStubMap_.size());
 
     MEDIA_LOGD("avmetadatahelper stub services(%{public}zu) pid(%{public}d).", avMetadataHelperStubMap_.size(), pid);
@@ -681,17 +768,7 @@ void MediaServerManager::DestroyStubObjectForPid(pid_t pid)
     DestroyAVPlayerStubForPid(pid);
     DestroyAVCodecStubForPid(pid);
     DestroyAVTranscoderStubForPid(pid);
-
-    MEDIA_LOGD("screencapture stub services(%{public}zu) pid(%{public}d).", screenCaptureStubMap_.size(), pid);
-    for (auto itScreenCapture = screenCaptureStubMap_.begin(); itScreenCapture != screenCaptureStubMap_.end();) {
-        if (itScreenCapture->second == pid) {
-            executor_.Commit(itScreenCapture->first);
-            itScreenCapture = screenCaptureStubMap_.erase(itScreenCapture);
-        } else {
-            itScreenCapture++;
-        }
-    }
-    MEDIA_LOGD("screencapture stub services(%{public}zu).", screenCaptureStubMap_.size());
+    DestroyAVScreenCaptureStubForPid(pid);
     MonitorServiceStub::GetInstance()->OnClientDie(pid);
     executor_.Clear();
 }
@@ -747,6 +824,48 @@ void MediaServerManager::AsyncExecutor::HandleAsyncExecution()
         freeList_.swap(tempList);
     }
     tempList.clear();
+}
+
+void MediaServerManager::HandlePlayerActive(const std::vector<int32_t> &pidList, const int32_t uid)
+{
+    std::lock_guard<std::mutex> lock(playerPtrMapMutex_);
+    MEDIA_LOGI("player stub HandlePlayerActive begin services(%{public}zu) pidlist(%{public}zu) uid(%{public}d).",
+        playerStubPtrMap_.size(), pidList.size(), uid);
+    for (auto itPlayer = playerStubPtrMap_.begin(); itPlayer != playerStubPtrMap_.end(); itPlayer++) {
+        sptr<PlayerServiceStub> playerStub = itPlayer->first;
+        if (playerStub == nullptr) {
+            continue;
+        }
+        int32_t playerUid = playerStub->GetUid();
+        bool isRunning = playerStub->IsPlayerRunning();
+        MEDIA_LOGI("player stub HandlePlayerActive uid(%{public}d) isRunning(%{public}d).", uid, isRunning);
+        if (playerUid == uid && isRunning) {
+            MEDIA_LOGI("player stub HandlePlayerActive uid(%{public}d).", uid);
+            playerStub->HandleActive();
+        }
+    }
+    MEDIA_LOGI("player stub HandlePlayerActive end services(%{public}zu).", playerStubPtrMap_.size());
+}
+
+void MediaServerManager::HandlePlayerFrozen(const std::vector<int32_t> &pidList, const int32_t uid)
+{
+    std::lock_guard<std::mutex> lock(playerPtrMapMutex_);
+    MEDIA_LOGI("player stub HandlePlayerFrozen begin services(%{public}zu) pidlist(%{public}zu) uid(%{public}d).",
+        playerStubPtrMap_.size(), pidList.size(), uid);
+    for (auto itPlayer = playerStubPtrMap_.begin(); itPlayer != playerStubPtrMap_.end(); itPlayer++) {
+        sptr<PlayerServiceStub> playerStub = itPlayer->first;
+        if (playerStub == nullptr) {
+            continue;
+        }
+        int32_t playerUid = playerStub->GetUid();
+        bool isRunning = playerStub->IsPlayerRunning();
+        MEDIA_LOGI("player stub HandlePlayerFrozen uid(%{public}d) isRunning(%{public}d).", uid, isRunning);
+        if (playerUid == uid && isRunning) {
+            MEDIA_LOGI("player stub HandlePlayerFrozen uid(%{public}d).", uid);
+            playerStub->HandleFrozen();
+        }
+    }
+    MEDIA_LOGI("player stub HandlePlayerFrozen end services(%{public}zu).", playerStubPtrMap_.size());
 }
 } // namespace Media
 } // namespace OHOS

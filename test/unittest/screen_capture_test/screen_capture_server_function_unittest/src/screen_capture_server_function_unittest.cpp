@@ -37,6 +37,7 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTUR
 constexpr int32_t FLIE_CREATE_FLAGS = 0777;
 static const std::string BUTTON_NAME_MIC = "mic";
 static const std::string BUTTON_NAME_STOP = "stop";
+static const int32_t MAX_SESSION_PER_UID = 8;
 }
 
 namespace OHOS {
@@ -108,9 +109,9 @@ void ScreenCaptureServerFunctionTest::TearDown()
     screenCaptureServer_ = nullptr;
 }
 
-int32_t ScreenCaptureServerFunctionTest::SetConfig()
+int32_t ScreenCaptureServerFunctionTest::SetInvalidConfig()
 {
-    AudioCaptureInfo miccapinfo = {
+    AudioCaptureInfo micCapinfo = {
         .audioSampleRate = 0,
         .audioChannels = 0,
         .audioSource = SOURCE_DEFAULT
@@ -135,7 +136,7 @@ int32_t ScreenCaptureServerFunctionTest::SetConfig()
     };
 
     AudioInfo audioInfo = {
-        .micCapInfo = miccapinfo,
+        .micCapInfo = micCapinfo,
         .innerCapInfo = innerCapInfo,
     };
 
@@ -153,7 +154,52 @@ int32_t ScreenCaptureServerFunctionTest::SetConfig()
     return MSERR_OK;
 }
 
-int32_t ScreenCaptureServerFunctionTest::SetConfigFile(RecorderInfo &recorderInfo)
+int32_t ScreenCaptureServerFunctionTest::SetValidConfig()
+{
+    AudioCaptureInfo micCapinfo = {
+        .audioSampleRate = 16000,
+        .audioChannels = 2,
+        .audioSource = AudioCaptureSourceType::SOURCE_DEFAULT
+    };
+
+    AudioCaptureInfo innerCapInfo = {
+        .audioSampleRate = 16000,
+        .audioChannels = 2,
+        .audioSource = AudioCaptureSourceType::ALL_PLAYBACK,
+    };
+
+    VideoCaptureInfo videocapinfo = {
+        .videoFrameWidth = 720,
+        .videoFrameHeight = 1280,
+        .videoSource = VIDEO_SOURCE_SURFACE_RGBA
+    };
+
+    VideoEncInfo videoEncInfo = {
+        .videoCodec = VideoCodecFormat::H264,
+        .videoBitrate = 2000000,
+        .videoFrameRate = 30
+    };
+
+    AudioInfo audioInfo = {
+        .micCapInfo = micCapinfo,
+        .innerCapInfo = innerCapInfo,
+    };
+
+    VideoInfo videoInfo = {
+        .videoCapInfo = videocapinfo,
+        .videoEncInfo = videoEncInfo
+    };
+
+    config_ = {
+        .captureMode = CAPTURE_HOME_SCREEN,
+        .dataType = ORIGINAL_STREAM,
+        .audioInfo = audioInfo,
+        .videoInfo = videoInfo
+    };
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureServerFunctionTest::SetInvalidConfigFile(RecorderInfo &recorderInfo)
 {
     AudioEncInfo audioEncInfo = {
         .audioBitrate = 48000,
@@ -178,14 +224,66 @@ int32_t ScreenCaptureServerFunctionTest::SetConfigFile(RecorderInfo &recorderInf
         .audioSource = AudioCaptureSourceType::SOURCE_DEFAULT,
     };
 
-    AudioCaptureInfo micCapInfo = {
+    AudioCaptureInfo micCapinfo = {
         .audioSampleRate = 0,
         .audioChannels = 0,
         .audioSource = AudioCaptureSourceType::SOURCE_DEFAULT,
     };
 
     AudioInfo audioInfo = {
-        .micCapInfo = micCapInfo,
+        .micCapInfo = micCapinfo,
+        .innerCapInfo = innerCapInfo,
+        .audioEncInfo = audioEncInfo
+    };
+
+    VideoInfo videoInfo = {
+        .videoCapInfo = videoCapInfo,
+        .videoEncInfo = videoEncInfo
+    };
+
+    config_ = {
+        .captureMode = CaptureMode::CAPTURE_HOME_SCREEN,
+        .dataType = DataType::CAPTURE_FILE,
+        .audioInfo = audioInfo,
+        .videoInfo = videoInfo,
+        .recorderInfo = recorderInfo
+    };
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureServerFunctionTest::SetValidConfigFile(RecorderInfo &recorderInfo)
+{
+    AudioEncInfo audioEncInfo = {
+        .audioBitrate = 48000,
+        .audioCodecformat = AudioCodecFormat::AAC_LC
+    };
+
+    VideoCaptureInfo videoCapInfo = {
+        .videoFrameWidth = 720,
+        .videoFrameHeight = 1080,
+        .videoSource = VideoSourceType::VIDEO_SOURCE_SURFACE_RGBA
+    };
+
+    VideoEncInfo videoEncInfo = {
+        .videoCodec = VideoCodecFormat::H264,
+        .videoBitrate = 2000000,
+        .videoFrameRate = 30
+    };
+
+    AudioCaptureInfo micCapinfo = {
+        .audioSampleRate = 16000,
+        .audioChannels = 2,
+        .audioSource = AudioCaptureSourceType::SOURCE_DEFAULT
+    };
+
+    AudioCaptureInfo innerCapInfo = {
+        .audioSampleRate = 16000,
+        .audioChannels = 2,
+        .audioSource = AudioCaptureSourceType::ALL_PLAYBACK,
+    };
+
+    AudioInfo audioInfo = {
+        .micCapInfo = micCapinfo,
         .innerCapInfo = innerCapInfo,
         .audioEncInfo = audioEncInfo
     };
@@ -309,7 +407,7 @@ int32_t ScreenCaptureServerFunctionTest::StartStreamAudioCapture()
 // videoCapInfo and innerCapInfo IGNORE
 HWTEST_F(ScreenCaptureServerFunctionTest, CaptureStreamParamsInvalid_001, TestSize.Level2)
 {
-    SetConfig();
+    SetInvalidConfig();
     config_.videoInfo.videoCapInfo.videoFrameWidth = 0;
     config_.videoInfo.videoCapInfo.videoFrameHeight = 0;
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
@@ -319,7 +417,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CaptureStreamParamsInvalid_001, TestSi
 // audioSampleRate INVALID
 HWTEST_F(ScreenCaptureServerFunctionTest, CaptureStreamParamsInvalid_002, TestSize.Level2)
 {
-    SetConfig();
+    SetInvalidConfig();
     config_.audioInfo.micCapInfo.audioSampleRate = 12345;
     config_.audioInfo.micCapInfo.audioChannels = 2;
     config_.audioInfo.micCapInfo.audioSource = AudioCaptureSourceType::SOURCE_DEFAULT;
@@ -332,7 +430,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CaptureStreamParamsInvalid_002, TestSi
 // videoCapInfo INVALID
 HWTEST_F(ScreenCaptureServerFunctionTest, CaptureStreamParamsInvalid_003, TestSize.Level2)
 {
-    SetConfig();
+    SetInvalidConfig();
     config_.audioInfo.micCapInfo.audioSampleRate = 16000;
     config_.audioInfo.micCapInfo.audioChannels = 2;
     config_.audioInfo.micCapInfo.audioSource = AudioCaptureSourceType::SOURCE_DEFAULT;
@@ -347,7 +445,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CaptureStreamParamsInvalid_003, TestSi
 // dataType INVALID
 HWTEST_F(ScreenCaptureServerFunctionTest, CaptureStreamParamsInvalid_004, TestSize.Level2)
 {
-    SetConfig();
+    SetInvalidConfig();
     config_.audioInfo.micCapInfo.audioSampleRate = 16000;
     config_.audioInfo.micCapInfo.audioChannels = 2;
     config_.audioInfo.micCapInfo.audioSource = AudioCaptureSourceType::SOURCE_DEFAULT;
@@ -361,7 +459,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CaptureStreamParamsInvalid_004, TestSi
 
 HWTEST_F(ScreenCaptureServerFunctionTest, CaptureStreamParamsInvalid_005, TestSize.Level2)
 {
-    SetConfig();
+    SetInvalidConfig();
     config_.audioInfo.micCapInfo.audioSampleRate = 16000;
     config_.audioInfo.micCapInfo.audioChannels = 2;
     config_.audioInfo.micCapInfo.audioSource = AudioCaptureSourceType::SOURCE_DEFAULT;
@@ -376,7 +474,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CaptureStreamParamsInvalid_005, TestSi
 
 HWTEST_F(ScreenCaptureServerFunctionTest, CaptureStreamParamsInvalid_006, TestSize.Level2)
 {
-    SetConfig();
+    SetInvalidConfig();
     config_.audioInfo.micCapInfo.audioSampleRate = 16000;
     config_.audioInfo.micCapInfo.audioChannels = 2;
     config_.audioInfo.micCapInfo.audioSource = AudioCaptureSourceType::SOURCE_DEFAULT;
@@ -391,7 +489,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CaptureFileParamsInvalid_001, TestSize
 {
     RecorderInfo recorderInfo;
     SetRecorderInfo("capture_file_params_invalid_001.mp4", recorderInfo);
-    SetConfigFile(recorderInfo);
+    SetInvalidConfigFile(recorderInfo);
     config_.audioInfo.micCapInfo.audioSampleRate = 16000;
     config_.audioInfo.micCapInfo.audioChannels = 2;
     config_.audioInfo.micCapInfo.audioSource = AudioCaptureSourceType::SOURCE_DEFAULT;
@@ -407,7 +505,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CaptureFileParamsInvalid_002, TestSize
 {
     RecorderInfo recorderInfo;
     SetRecorderInfo("capture_file_params_invalid_002.mp4", recorderInfo);
-    SetConfigFile(recorderInfo);
+    SetInvalidConfigFile(recorderInfo);
     config_.audioInfo.micCapInfo.audioSampleRate = 16000;
     config_.audioInfo.micCapInfo.audioChannels = 2;
     config_.audioInfo.micCapInfo.audioSource = AudioCaptureSourceType::SOURCE_DEFAULT;
@@ -421,7 +519,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CaptureFileParamsInvalid_003, TestSize
 {
     RecorderInfo recorderInfo;
     SetRecorderInfo("capture_file_params_invalid_003.mp4", recorderInfo);
-    SetConfigFile(recorderInfo);
+    SetInvalidConfigFile(recorderInfo);
     config_.audioInfo.micCapInfo.audioSampleRate = 16000;
     config_.audioInfo.micCapInfo.audioChannels = 2;
     config_.audioInfo.micCapInfo.audioSource = AudioCaptureSourceType::SOURCE_DEFAULT;
@@ -437,7 +535,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CaptureFileParamsInvalid_004, TestSize
 {
     RecorderInfo recorderInfo;
     SetRecorderInfo("capture_file_params_invalid_004.mp4", recorderInfo);
-    SetConfigFile(recorderInfo);
+    SetInvalidConfigFile(recorderInfo);
     config_.audioInfo.micCapInfo.audioSampleRate = 16000;
     config_.audioInfo.micCapInfo.audioChannels = 2;
     config_.audioInfo.micCapInfo.audioSource = AudioCaptureSourceType::SOURCE_DEFAULT;
@@ -454,7 +552,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CaptureFileParamsInvalid_005, TestSize
 {
     RecorderInfo recorderInfo;
     SetRecorderInfo("capture_file_params_invalid_005.mp4", recorderInfo);
-    SetConfigFile(recorderInfo);
+    SetInvalidConfigFile(recorderInfo);
     config_.audioInfo.micCapInfo.audioSampleRate = -1;
     config_.audioInfo.micCapInfo.audioChannels = 2;
     config_.audioInfo.micCapInfo.audioSource = AudioCaptureSourceType::SOURCE_DEFAULT;
@@ -469,7 +567,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CaptureFileParamsInvalid_006, TestSize
 {
     RecorderInfo recorderInfo;
     SetRecorderInfo("capture_file_params_invalid_006.mp4", recorderInfo);
-    SetConfigFile(recorderInfo);
+    SetInvalidConfigFile(recorderInfo);
     config_.audioInfo.micCapInfo.audioSampleRate = 16000;
     config_.audioInfo.micCapInfo.audioChannels = 2;
     config_.audioInfo.micCapInfo.audioSource = AudioCaptureSourceType::SOURCE_DEFAULT;
@@ -485,7 +583,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CaptureFileParamsInvalid_007, TestSize
 {
     RecorderInfo recorderInfo;
     SetRecorderInfo("capture_file_params_invalid_007.mp4", recorderInfo);
-    SetConfigFile(recorderInfo);
+    SetInvalidConfigFile(recorderInfo);
     config_.audioInfo.micCapInfo.audioSampleRate = 0;
     config_.audioInfo.micCapInfo.audioChannels = 0;
     config_.audioInfo.innerCapInfo.audioSampleRate = 16000;
@@ -495,6 +593,21 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CaptureFileParamsInvalid_007, TestSize
     ASSERT_EQ(screenCaptureServer_->CheckAllParams(), MSERR_OK);
 }
 
+// audioChannels is different
+HWTEST_F(ScreenCaptureServerFunctionTest, capture_file_params_invalid_008, TestSize.Level2)
+{
+    RecorderInfo recorderInfo;
+    SetRecorderInfo("capture_file_params_invalid_008.mp4", recorderInfo);
+    SetInvalidConfigFile(recorderInfo);
+    config_.audioInfo.micCapInfo.audioSampleRate = 16000;
+    config_.audioInfo.micCapInfo.audioChannels = 1;
+    config_.audioInfo.innerCapInfo.audioSampleRate = 16000;
+    config_.audioInfo.innerCapInfo.audioChannels = 2;
+    config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
+    screenCaptureServer_->captureConfig_ = config_;
+    ASSERT_NE(screenCaptureServer_->CheckAllParams(), MSERR_OK);
+}
+
 HWTEST_F(ScreenCaptureServerFunctionTest, StartPrivacyWindow_001, TestSize.Level2)
 {
     ASSERT_EQ(screenCaptureServer_->StartPrivacyWindow(), MSERR_OK);
@@ -502,7 +615,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StartPrivacyWindow_001, TestSize.Level
 
 HWTEST_F(ScreenCaptureServerFunctionTest, GetMissionIds_001, TestSize.Level2)
 {
-    SetConfig();
+    SetInvalidConfig();
     config_.audioInfo.micCapInfo.audioSampleRate = 16000;
     config_.audioInfo.micCapInfo.audioChannels = 2;
     config_.audioInfo.micCapInfo.audioSource = AudioCaptureSourceType::SOURCE_DEFAULT;
@@ -513,9 +626,24 @@ HWTEST_F(ScreenCaptureServerFunctionTest, GetMissionIds_001, TestSize.Level2)
     ASSERT_EQ(screenCaptureServer_->GetMissionIds(screenCaptureServer_->missionIds_), MSERR_OK);
 }
 
+HWTEST_F(ScreenCaptureServerFunctionTest, GetMissionIds_002, TestSize.Level2)
+{
+    SetInvalidConfig();
+    config_.audioInfo.micCapInfo.audioSampleRate = 16000;
+    config_.audioInfo.micCapInfo.audioChannels = 2;
+    config_.audioInfo.micCapInfo.audioSource = AudioCaptureSourceType::SOURCE_DEFAULT;
+    config_.audioInfo.innerCapInfo.audioSampleRate = 16000;
+    config_.audioInfo.innerCapInfo.audioChannels = 2;
+    config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
+    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
+    screenCaptureServer_->captureConfig_.videoInfo.videoCapInfo.taskIDs.push_back(1);
+    screenCaptureServer_->captureConfig_.videoInfo.videoCapInfo.taskIDs.push_back(2);
+    ASSERT_EQ(screenCaptureServer_->GetMissionIds(screenCaptureServer_->missionIds_), MSERR_OK);
+}
+
 HWTEST_F(ScreenCaptureServerFunctionTest, AudioDataSource_001, TestSize.Level2)
 {
-    SetConfig();
+    SetInvalidConfig();
     config_.audioInfo.micCapInfo.audioSampleRate = 16000;
     config_.audioInfo.micCapInfo.audioChannels = 2;
     config_.audioInfo.micCapInfo.audioSource = AudioCaptureSourceType::SOURCE_DEFAULT;
@@ -535,7 +663,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioDataSource_001, TestSize.Level2)
 
 HWTEST_F(ScreenCaptureServerFunctionTest, AudioDataSource_002, TestSize.Level2)
 {
-    SetConfig();
+    SetInvalidConfig();
     config_.audioInfo.micCapInfo.audioSampleRate = 16000;
     config_.audioInfo.micCapInfo.audioChannels = 2;
     config_.audioInfo.micCapInfo.audioSource = AudioCaptureSourceType::SOURCE_DEFAULT;
@@ -553,7 +681,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioDataSource_002, TestSize.Level2)
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ReportAVScreenCaptureUserChoice_001, TestSize.Level2)
 {
-    SetConfig();
+    SetInvalidConfig();
     config_.audioInfo.micCapInfo.audioSampleRate = 16000;
     config_.audioInfo.micCapInfo.audioChannels = 2;
     config_.audioInfo.micCapInfo.audioSource = AudioCaptureSourceType::SOURCE_DEFAULT;
@@ -563,12 +691,12 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ReportAVScreenCaptureUserChoice_001, T
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     int32_t sessionId = 0;
     std::string choice = "false";
-    screenCaptureServer_->ReportAVScreenCaptureUserChoice(sessionId, choice);
+    ASSERT_NE(screenCaptureServer_->ReportAVScreenCaptureUserChoice(sessionId, choice), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ReportAVScreenCaptureUserChoice_002, TestSize.Level2)
 {
-    SetConfig();
+    SetInvalidConfig();
     config_.audioInfo.micCapInfo.audioSampleRate = 16000;
     config_.audioInfo.micCapInfo.audioChannels = 2;
     config_.audioInfo.micCapInfo.audioSource = AudioCaptureSourceType::SOURCE_DEFAULT;
@@ -578,12 +706,42 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ReportAVScreenCaptureUserChoice_002, T
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     int32_t sessionId = 0;
     std::string choice = "true";
-    screenCaptureServer_->ReportAVScreenCaptureUserChoice(sessionId, choice);
+    ASSERT_NE(screenCaptureServer_->ReportAVScreenCaptureUserChoice(sessionId, choice), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, ReportAVScreenCaptureUserChoice_003, TestSize.Level2)
+{
+    SetInvalidConfig();
+    config_.audioInfo.micCapInfo.audioSampleRate = 16000;
+    config_.audioInfo.micCapInfo.audioChannels = 2;
+    config_.audioInfo.micCapInfo.audioSource = AudioCaptureSourceType::SOURCE_DEFAULT;
+    config_.audioInfo.innerCapInfo.audioSampleRate = 16000;
+    config_.audioInfo.innerCapInfo.audioChannels = 2;
+    config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
+    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
+    int32_t sessionId = -1;
+    std::string choice = "true";
+    ASSERT_NE(screenCaptureServer_->ReportAVScreenCaptureUserChoice(sessionId, choice), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, ReportAVScreenCaptureUserChoice_004, TestSize.Level2)
+{
+    SetInvalidConfig();
+    config_.audioInfo.micCapInfo.audioSampleRate = 16000;
+    config_.audioInfo.micCapInfo.audioChannels = 2;
+    config_.audioInfo.micCapInfo.audioSource = AudioCaptureSourceType::SOURCE_DEFAULT;
+    config_.audioInfo.innerCapInfo.audioSampleRate = 16000;
+    config_.audioInfo.innerCapInfo.audioChannels = 2;
+    config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
+    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
+    int32_t sessionId = 0;
+    std::string choice = "12345";
+    ASSERT_NE(screenCaptureServer_->ReportAVScreenCaptureUserChoice(sessionId, choice), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckScreenCapturePermission_001, TestSize.Level2)
 {
-    SetConfig();
+    SetInvalidConfig();
     config_.audioInfo.micCapInfo.audioSampleRate = 16000;
     config_.audioInfo.micCapInfo.audioChannels = 2;
     config_.audioInfo.micCapInfo.audioSource = AudioCaptureSourceType::SOURCE_DEFAULT;
@@ -596,35 +754,35 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckScreenCapturePermission_001, Test
 
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckVideoEncParam_001, TestSize.Level2)
 {
-    SetConfig();
+    SetInvalidConfig();
     config_.videoInfo.videoEncInfo.videoCodec = VIDEO_CODEC_FORMAT_BUTT;
     ASSERT_NE(screenCaptureServer_->CheckVideoEncParam(config_.videoInfo.videoEncInfo), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckVideoEncParam_002, TestSize.Level2)
 {
-    SetConfig();
+    SetInvalidConfig();
     config_.videoInfo.videoEncInfo.videoBitrate = screenCaptureServer_->VIDEO_BITRATE_MIN - 1;
     ASSERT_NE(screenCaptureServer_->CheckVideoEncParam(config_.videoInfo.videoEncInfo), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckVideoEncParam_003, TestSize.Level2)
 {
-    SetConfig();
+    SetInvalidConfig();
     config_.videoInfo.videoEncInfo.videoBitrate = screenCaptureServer_->VIDEO_BITRATE_MAX + 1;
     ASSERT_NE(screenCaptureServer_->CheckVideoEncParam(config_.videoInfo.videoEncInfo), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckVideoEncParam_004, TestSize.Level2)
 {
-    SetConfig();
+    SetInvalidConfig();
     config_.videoInfo.videoEncInfo.videoFrameRate = screenCaptureServer_->VIDEO_FRAME_RATE_MIN - 1;
     ASSERT_NE(screenCaptureServer_->CheckVideoEncParam(config_.videoInfo.videoEncInfo), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckVideoEncParam_005, TestSize.Level2)
 {
-    SetConfig();
+    SetInvalidConfig();
     config_.videoInfo.videoEncInfo.videoFrameRate = screenCaptureServer_->VIDEO_FRAME_RATE_MAX + 1;
     ASSERT_NE(screenCaptureServer_->CheckVideoEncParam(config_.videoInfo.videoEncInfo), MSERR_OK);
 }
@@ -636,7 +794,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetOutputFile_001, TestSize.Level2)
 
 HWTEST_F(ScreenCaptureServerFunctionTest, OnStartScreenCapture_001, TestSize.Level2)
 {
-    SetConfig();
+    SetInvalidConfig();
     config_.audioInfo.micCapInfo.audioSampleRate = 16000;
     config_.audioInfo.micCapInfo.audioChannels = 2;
     config_.audioInfo.micCapInfo.audioSource = AudioCaptureSourceType::SOURCE_DEFAULT;
@@ -651,7 +809,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnStartScreenCapture_002, TestSize.Lev
 {
     RecorderInfo recorderInfo;
     SetRecorderInfo("on_start_screen_capture_unittest_002.mp4", recorderInfo);
-    SetConfigFile(recorderInfo);
+    SetInvalidConfigFile(recorderInfo);
     config_.audioInfo.micCapInfo.audioSampleRate = 16000;
     config_.audioInfo.micCapInfo.audioChannels = 2;
     config_.audioInfo.micCapInfo.audioSource = AudioCaptureSourceType::SOURCE_DEFAULT;
@@ -665,6 +823,149 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnStartScreenCapture_002, TestSize.Lev
 HWTEST_F(ScreenCaptureServerFunctionTest, SetScreenScaleMode_001, TestSize.Level2)
 {
     ASSERT_NE(screenCaptureServer_->SetScreenScaleMode(), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, Create_001, TestSize.Level2)
+{
+    std::vector<std::shared_ptr<IScreenCaptureService>> tempServers(MAX_SESSION_PER_UID - 1, nullptr);
+    std::vector<std::shared_ptr<ScreenCaptureServer>> screenCaptureServers(MAX_SESSION_PER_UID - 1, nullptr);
+
+    for (int i = 0; i < MAX_SESSION_PER_UID - 1; ++i) {
+        tempServers[i] = ScreenCaptureServer::Create();
+        screenCaptureServers[i] = std::static_pointer_cast<ScreenCaptureServer>(tempServers[i]);
+        ASSERT_NE(screenCaptureServers[i], nullptr);
+    }
+    std::shared_ptr<IScreenCaptureService> tempServer2 = ScreenCaptureServer::Create();
+    ASSERT_EQ(tempServer2, nullptr);
+    for (int i = 0; i < MAX_SESSION_PER_UID - 1; ++i) {
+        screenCaptureServers[i]->Release();
+        screenCaptureServers[i] = nullptr;
+        tempServers[i] = nullptr;
+    }
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, RequestUserPrivacyAuthority_001, TestSize.Level2)
+{
+    screenCaptureServer_->appInfo_.appUid = ROOT_UID;
+#ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
+    screenCaptureServer_->isPrivacyAuthorityEnabled_ = true;
+#endif
+    ASSERT_EQ(screenCaptureServer_->RequestUserPrivacyAuthority(), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, RequestUserPrivacyAuthority_002, TestSize.Level2)
+{
+    screenCaptureServer_->appInfo_.appUid = ROOT_UID;
+#ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
+    screenCaptureServer_->isPrivacyAuthorityEnabled_ = true;
+    screenCaptureServer_->appName_ = ScreenRecorderBundleName;
+#endif
+    ASSERT_EQ(screenCaptureServer_->RequestUserPrivacyAuthority(), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, RequestUserPrivacyAuthority_003, TestSize.Level2)
+{
+    screenCaptureServer_->appInfo_.appUid = ROOT_UID + 1;
+#ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
+    screenCaptureServer_->isPrivacyAuthorityEnabled_ = true;
+#endif
+    ASSERT_EQ(screenCaptureServer_->RequestUserPrivacyAuthority(), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, RequestUserPrivacyAuthority_004, TestSize.Level2)
+{
+    screenCaptureServer_->appInfo_.appUid = ROOT_UID + 1;
+#ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
+    screenCaptureServer_->isPrivacyAuthorityEnabled_ = true;
+    screenCaptureServer_->appName_ = ScreenRecorderBundleName;
+#endif
+    ASSERT_EQ(screenCaptureServer_->RequestUserPrivacyAuthority(), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, OnReceiveUserPrivacyAuthority_001, TestSize.Level2)
+{
+    screenCaptureServer_->screenCaptureCb_ = std::make_shared<ScreenCaptureServerUnittestCallback>();
+    ASSERT_NE(screenCaptureServer_->OnReceiveUserPrivacyAuthority(false), MSERR_OK);
+    screenCaptureServer_->screenCaptureCb_ = nullptr;
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, OnReceiveUserPrivacyAuthority_002, TestSize.Level2)
+{
+    screenCaptureServer_->screenCaptureCb_ = std::make_shared<ScreenCaptureServerUnittestCallback>();
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTING;
+    ASSERT_NE(screenCaptureServer_->OnReceiveUserPrivacyAuthority(false), MSERR_OK);
+    screenCaptureServer_->screenCaptureCb_ = nullptr;
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, OnReceiveUserPrivacyAuthority_003, TestSize.Level2)
+{
+    screenCaptureServer_->screenCaptureCb_ = std::make_shared<ScreenCaptureServerUnittestCallback>();
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTING;
+    ASSERT_NE(screenCaptureServer_->OnReceiveUserPrivacyAuthority(true), MSERR_OK);
+    screenCaptureServer_->screenCaptureCb_ = nullptr;
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, RepeatStartAudioCapture_001, TestSize.Level2)
+{
+    SetInvalidConfig();
+    config_.audioInfo.micCapInfo.audioSampleRate = 16000;
+    config_.audioInfo.micCapInfo.audioChannels = 2;
+    config_.audioInfo.micCapInfo.audioSource = AudioCaptureSourceType::SOURCE_DEFAULT;
+    config_.audioInfo.innerCapInfo.audioSampleRate = 16000;
+    config_.audioInfo.innerCapInfo.audioChannels = 2;
+    config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
+    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
+    ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
+    ASSERT_NE(screenCaptureServer_->innerAudioCapture_->Start(screenCaptureServer_->appInfo_), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, RepeatResumeAudioCapture_001, TestSize.Level2)
+{
+    SetInvalidConfig();
+    config_.audioInfo.micCapInfo.audioSampleRate = 16000;
+    config_.audioInfo.micCapInfo.audioChannels = 2;
+    config_.audioInfo.micCapInfo.audioSource = AudioCaptureSourceType::SOURCE_DEFAULT;
+    config_.audioInfo.innerCapInfo.audioSampleRate = 16000;
+    config_.audioInfo.innerCapInfo.audioChannels = 2;
+    config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
+    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
+    ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
+    ASSERT_NE(screenCaptureServer_->innerAudioCapture_->Resume(), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, RepeatPauseAudioCapture_001, TestSize.Level2)
+{
+    SetInvalidConfig();
+    config_.audioInfo.micCapInfo.audioSampleRate = 16000;
+    config_.audioInfo.micCapInfo.audioChannels = 2;
+    config_.audioInfo.micCapInfo.audioSource = AudioCaptureSourceType::SOURCE_DEFAULT;
+    config_.audioInfo.innerCapInfo.audioSampleRate = 16000;
+    config_.audioInfo.innerCapInfo.audioChannels = 2;
+    config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
+    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
+    ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Pause(), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Pause(), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, UpdatePrivacyUsingPermissionState_001, TestSize.Level2)
+{
+    screenCaptureServer_->appInfo_.appUid = ROOT_UID;
+    ASSERT_EQ(screenCaptureServer_->UpdatePrivacyUsingPermissionState(START_VIDEO), true);
+    ASSERT_EQ(screenCaptureServer_->UpdatePrivacyUsingPermissionState(STOP_VIDEO), true);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, UpdatePrivacyUsingPermissionState_002, TestSize.Level2)
+{
+    screenCaptureServer_->appInfo_.appUid = ROOT_UID + 1;
+    ASSERT_EQ(screenCaptureServer_->UpdatePrivacyUsingPermissionState(START_VIDEO), true);
+    ASSERT_EQ(screenCaptureServer_->UpdatePrivacyUsingPermissionState(STOP_VIDEO), true);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, StartScreenCaptureWithSurface_001, TestSize.Level2)
+{
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
+    ASSERT_NE(screenCaptureServer_->StartScreenCaptureWithSurface(nullptr, true), MSERR_OK);
 }
 } // Media
 } // OHOS

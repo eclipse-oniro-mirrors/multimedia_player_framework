@@ -26,6 +26,7 @@
 
 namespace OHOS {
 namespace Media {
+class PlayerServiceStub;
 using DumperEntry = std::function<int32_t(int32_t)>;
 struct Dumper {
     pid_t pid_;
@@ -59,7 +60,8 @@ public:
     void DestroyDumper(StubType type, sptr<IRemoteObject> object);
     void DestroyDumperForPid(pid_t pid);
     void NotifyMemMgrLoaded();
-
+    void HandlePlayerActive(const std::vector<int32_t> &pidList, const int32_t uid);
+    void HandlePlayerFrozen(const std::vector<int32_t> &pidList, const int32_t uid);
 private:
     MediaServerManager();
 #ifdef SUPPORT_PLAYER
@@ -86,10 +88,12 @@ private:
     void DestroyAVPlayerStub(StubType type, sptr<IRemoteObject> object, pid_t pid);
     void DestroyAVRecorderStub(StubType type, sptr<IRemoteObject> object, pid_t pid);
     void DestroyAVTransCoderStub(StubType type, sptr<IRemoteObject> object, pid_t pid);
+    void DestroyAVScreenCaptureStub(StubType type, sptr<IRemoteObject> object, pid_t pid);
     void DestroyAVCodecStubForPid(pid_t pid);
     void DestroyAVPlayerStubForPid(pid_t pid);
     void DestroyAVRecorderStubForPid(pid_t pid);
     void DestroyAVTranscoderStubForPid(pid_t pid);
+    void DestroyAVScreenCaptureStubForPid(pid_t pid);
 
     std::atomic<bool> isMemMgrLoaded_ {false};
 
@@ -115,6 +119,8 @@ private:
     std::map<sptr<IRemoteObject>, pid_t> screenCaptureMonitorStubMap_;
     std::map<sptr<IRemoteObject>, pid_t> screenCaptureControllerStubMap_;
     std::map<StubType, std::vector<Dumper>> dumperTbl_;
+    std::mutex playerPtrMapMutex_;
+    std::map<sptr<PlayerServiceStub>, pid_t> playerStubPtrMap_;
     AsyncExecutor executor_;
 
     std::mutex mutex_;

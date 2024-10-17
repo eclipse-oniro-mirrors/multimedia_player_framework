@@ -21,6 +21,8 @@ class __attribute__((visibility("default"))) MediaPermission {
 public:
     static int32_t CheckMicPermission();
     static int32_t CheckNetWorkPermission(int32_t appUid, int32_t appPid, uint32_t appTokenId);
+    static int32_t CheckNetWorkPermission();
+    static int32_t CheckReadMediaPermission();
 };
 } // namespace Media
 } // namespace OHOS

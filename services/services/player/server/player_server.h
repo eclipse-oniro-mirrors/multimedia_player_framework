@@ -80,6 +80,7 @@ public:
     int32_t Prepare() override;
     int32_t SetRenderFirstFrame(bool display) override;
     int32_t SetPlayRange(int64_t start, int64_t end) override;
+    int32_t SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode) override;
     int32_t PrepareAsync() override;
     int32_t Stop() override;
     int32_t Reset() override;
@@ -117,6 +118,7 @@ public:
     int32_t SetPlayerCallback(const std::shared_ptr<PlayerCallback> &callback) override;
     virtual int32_t DumpInfo(int32_t fd);
     int32_t SelectBitRate(uint32_t bitRate) override;
+    int32_t StopBufferring(bool flag) override;
     int32_t BackGroundChangeState(PlayerStates state, bool isBackGroundCb);
     int32_t SelectTrack(int32_t index, PlayerSwitchMode mode) override;
     int32_t DeselectTrack(int32_t index) override;
@@ -135,7 +137,15 @@ public:
     std::shared_ptr<CommonEventReceiver> GetCommonEventReceiver();
     bool IsBootCompleted();
     int32_t SetMaxAmplitudeCbStatus(bool status) override;
+    int32_t SetDeviceChangeCbStatus(bool status) override;
 
+    int32_t StartReportStatus();
+    int32_t StopReportStatus();
+    int32_t GetUid()
+    {
+        return appUid_;
+    }
+    bool IsPlayerRunning();
 protected:
     class BaseState;
     class IdleState;
@@ -202,19 +212,25 @@ private:
     int32_t HandleStop();
     int32_t HandleReset();
     int32_t HandleSeek(int32_t mSeconds, PlayerSeekMode mode);
+    int32_t HandleSetPlayRange(int64_t start, int64_t end, PlayerSeekMode mode);
     int32_t HandleSetPlaybackSpeed(PlaybackRateMode mode);
     int32_t SetAudioEffectMode(const int32_t effectMode);
 
     void HandleEos();
     void PreparedHandleEos();
+    void HandleInterruptEvent(const Format &infoBody);
+    void HandleAudioDeviceChangeEvent(const Format &infoBody);
     void FormatToString(std::string &dumpString, std::vector<Format> &videoTrack);
     void OnErrorCb(int32_t errorCode, const std::string &errorMsg);
+    void InnerOnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody, const int32_t ret);
 
     int32_t CheckSeek(int32_t mSeconds, PlayerSeekMode mode);
     int32_t SeekContinous(int32_t mSeconds);
     int32_t HandleSeekContinous(int32_t mSeconds, int64_t batchNo);
     int32_t ExitSeekContinous(bool align);
     void UpdateContinousBatchNo();
+
+    bool CheckState(PlayerOnInfoType type, int32_t extra);
 
 #ifdef SUPPORT_VIDEO
     sptr<Surface> surface_ = nullptr;
@@ -225,6 +241,8 @@ private:
     bool isBackgroundCb_ = false;
     bool isBackgroundChanged_ = false;
     PlayerStates backgroundState_ = PLAYER_IDLE;
+    PlayerStates interruptEventState_ = PLAYER_IDLE;
+    PlayerStates audioDeviceChangeState_ = PLAYER_IDLE;
     uint32_t appTokenId_ = 0;
     uint32_t subtitleTrackNum_ = 0;
     int32_t appUid_ = 0;
@@ -241,6 +259,9 @@ private:
     std::atomic<int64_t> seekContinousBatchNo_ {-1};
     bool isAudioMuted_ = false;
     bool maxAmplitudeCbStatus_ = false;
+    bool deviceChangeCallbackflag_ = false;
+    std::atomic<bool> reportStatusFlag_ {true};
+    bool isStreamUsagePauseRequired_ = true;
 };
 } // namespace Media
 } // namespace OHOS

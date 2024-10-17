@@ -26,7 +26,7 @@ public:
     static sptr<PlayerServiceProxyFuzzer> Create();
     explicit PlayerServiceProxyFuzzer(const sptr<IRemoteObject> &impl);
     virtual ~PlayerServiceProxyFuzzer() {}
-    void SendRequest(int32_t code, uint8_t *inputData, size_t size, bool isFuzz);
+    void SendRequest(uint32_t code, uint8_t *inputData, size_t size, bool isFuzz);
     int32_t SetListenerObject(const sptr<IRemoteObject> &object) override
     {
         return 0;
@@ -167,6 +167,10 @@ public:
     {
         return 0;
     }
+    int32_t StopBufferring(bool flag) override
+    {
+        return 0;
+    }
     int32_t SelectTrack(int32_t index, PlayerSwitchMode mode) override
     {
         return 0;
@@ -188,48 +192,48 @@ public:
     {
         return 0;
     }
+    static int32_t SetListenerObjectStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
+    static int32_t SetSourceStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
+    static int32_t SetMediaDataSourceStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size,
+        bool isFuzz);
+    static int32_t SetFdSourceStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
+    static int32_t AddSubSourceStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
+    static int32_t AddSubFdSourceStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
+    static int32_t PlayStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
+    static int32_t PrepareStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
+    static int32_t PrepareAsyncStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
+    static int32_t PauseStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
+    static int32_t StopStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
+    static int32_t ResetStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
+    static int32_t ReleaseStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
+    static int32_t SetVolumeStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
+    static int32_t SeekStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
+    static int32_t GetCurrentTimeStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
+    static int32_t GetDurationStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
+    static int32_t SetPlaybackSpeedStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
+    static int32_t GetPlaybackSpeedStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
+    static int32_t SetVideoSurfaceStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
+    static int32_t IsPlayingStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
+    static int32_t IsLoopingStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
+    static int32_t SetLoopingStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
+    static int32_t SetParameterStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
+    static int32_t DestroyStubStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
+    static int32_t SetPlayerCallbackStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
+    static int32_t GetVideoTrackInfoStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
+    static int32_t GetPlaybackInfoStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
+    static int32_t GetAudioTrackInfoStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
+    static int32_t GetSubtitleTrackInfoStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size,
+        bool isFuzz);
+    static int32_t GetVideoWidthStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
+    static int32_t GetVideoHeightStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
+    static int32_t SelectBitRateStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
+    static int32_t SelectTrackStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
+    static int32_t DeselectTrackStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
+    static int32_t GetCurrentTrackStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
 
 private:
-    int32_t SetListenerObject(uint8_t *inputData, size_t size, bool isFuzz);
-    int32_t SetSource(uint8_t *inputData, size_t size, bool isFuzz);
-    int32_t SetMediaDataSource(uint8_t *inputData, size_t size, bool isFuzz);
-    int32_t SetFdSource(uint8_t *inputData, size_t size, bool isFuzz);
-    int32_t AddSubSource(uint8_t *inputData, size_t size, bool isFuzz);
-    int32_t AddSubFdSource(uint8_t *inputData, size_t size, bool isFuzz);
-    int32_t Play(uint8_t *inputData, size_t size, bool isFuzz);
-    int32_t Prepare(uint8_t *inputData, size_t size, bool isFuzz);
-    int32_t PrepareAsync(uint8_t *inputData, size_t size, bool isFuzz);
-    int32_t Pause(uint8_t *inputData, size_t size, bool isFuzz);
-    int32_t Stop(uint8_t *inputData, size_t size, bool isFuzz);
-    int32_t Reset(uint8_t *inputData, size_t size, bool isFuzz);
-    int32_t Release(uint8_t *inputData, size_t size, bool isFuzz);
-    int32_t SetVolume(uint8_t *inputData, size_t size, bool isFuzz);
-    int32_t Seek(uint8_t *inputData, size_t size, bool isFuzz);
-    int32_t GetCurrentTime(uint8_t *inputData, size_t size, bool isFuzz);
-    int32_t GetDuration(uint8_t *inputData, size_t size, bool isFuzz);
-    int32_t SetPlaybackSpeed(uint8_t *inputData, size_t size, bool isFuzz);
-    int32_t GetPlaybackSpeed(uint8_t *inputData, size_t size, bool isFuzz);
-    int32_t SetVideoSurface(uint8_t *inputData, size_t size, bool isFuzz);
-    int32_t IsPlaying(uint8_t *inputData, size_t size, bool isFuzz);
-    int32_t IsLooping(uint8_t *inputData, size_t size, bool isFuzz);
-    int32_t SetLooping(uint8_t *inputData, size_t size, bool isFuzz);
-    int32_t SetParameter(uint8_t *inputData, size_t size, bool isFuzz);
-    int32_t DestroyStub(uint8_t *inputData, size_t size, bool isFuzz);
-    int32_t SetPlayerCallback(uint8_t *inputData, size_t size, bool isFuzz);
-    int32_t GetVideoTrackInfo(uint8_t *inputData, size_t size, bool isFuzz);
-    int32_t GetPlaybackInfo(uint8_t *inputData, size_t size, bool isFuzz);
-    int32_t GetAudioTrackInfo(uint8_t *inputData, size_t size, bool isFuzz);
-    int32_t GetSubtitleTrackInfo(uint8_t *inputData, size_t size, bool isFuzz);
-    int32_t GetVideoWidth(uint8_t *inputData, size_t size, bool isFuzz);
-    int32_t GetVideoHeight(uint8_t *inputData, size_t size, bool isFuzz);
-    int32_t SelectBitRate(uint8_t *inputData, size_t size, bool isFuzz);
-    int32_t SelectTrack(uint8_t *inputData, size_t size, bool isFuzz);
-    int32_t DeselectTrack(uint8_t *inputData, size_t size, bool isFuzz);
-    int32_t GetCurrentTrack(uint8_t *inputData, size_t size, bool isFuzz);
     int32_t SendRequest(uint32_t code, MessageParcel &inputData, MessageParcel &reply, MessageOption &option);
     static inline BrokerDelegator<PlayerServiceProxyFuzzer> delegator_;
-    using PlayerStubFunc = int32_t(PlayerServiceProxyFuzzer::*)(uint8_t *inputData, size_t size, bool isFuzz);
-    std::map<uint32_t, PlayerStubFunc> playerFuncs_;
 };
 }
 }

@@ -56,6 +56,7 @@ public:
     int32_t SetMaxDuration(int32_t duration) override;
     int32_t SetOutputFormat(OutputFormatType format) override;
     int32_t SetOutputFile(int32_t fd) override;
+    int32_t SetFileGenerationMode(FileGenerationMode mode) override;
     int32_t SetNextOutputFile(int32_t fd) override;
     int32_t SetMaxFileSize(int64_t size) override;
     void SetLocation(float latitude, float longitude) override;

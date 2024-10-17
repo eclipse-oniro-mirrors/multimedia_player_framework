@@ -40,6 +40,8 @@ public:
     int32_t SetLoop(bool loop) override;
     int32_t SetAudioHapticPlayerCallback(const std::shared_ptr<AudioHapticPlayerCallback> &playerCallback) override;
     int32_t GetAudioCurrentTime() override;
+    HapticsMode GetHapticsMode() const override;
+    void SetHapticsMode(HapticsMode hapticsMode) override;
 
     void SetPlayerParam(const AudioHapticPlayerParam &param);
     void LoadPlayer();
@@ -51,6 +53,8 @@ public:
 private:
     // func for sound
     void ReleaseSound();
+    static void HandleEndOfStreamEventThreadFunc(std::weak_ptr<AudioHapticPlayerImpl> player);
+    void HandleEndOfStreamEvent();
     // func for vibration
     int32_t StartVibrate();
     void StopVibrate();
@@ -68,6 +72,7 @@ private:
     bool loop_ = false;
     AudioHapticPlayerState playerState_ = AudioHapticPlayerState::STATE_INVALID;
     std::mutex audioHapticPlayerLock_;
+    HapticsMode hapticsMode_ = HapticsMode::HAPTICS_MODE_INVALID;
 
     // var for callback
     std::weak_ptr<AudioHapticPlayerCallback> audioHapticPlayerCallback_;

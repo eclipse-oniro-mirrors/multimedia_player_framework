@@ -25,8 +25,32 @@
 #include "event_queue.h"
 #include "avplayer_callback.h"
 
+#ifndef CROSS_PLATFORM
+#include "os_account_manager.h"
+#include "bundle_mgr_interface.h"
+#include "system_ability_definition.h"
+#include "iservice_registry.h"
+#include "ipc_skeleton.h"
+#endif
+
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_ONLY_PRERELEASE, LOG_DOMAIN_PLAYER, "AVPlayerCallback" };
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_ONLY_PRERELEASE, LOG_DOMAIN_PLAYER, "AVPlayerCallback" };
+    int32_t ROUND_VERSION_NUMBER = 100;
+    int32_t API_VERSION_12 = 12;
+    int32_t FAULT_API_VERSION = -1;
+    std::set<int32_t> API13_EXT_IO_ERRORS = {
+        OHOS::Media::MSERR_EXT_API12_IO_CANNOT_FIND_HOST,
+        OHOS::Media::MSERR_EXT_API12_IO_CONNECTION_TIMEOUT,
+        OHOS::Media::MSERR_EXT_API12_IO_NETWORK_ABNORMAL,
+        OHOS::Media::MSERR_EXT_API12_IO_NETWORK_UNAVAILABLE,
+        OHOS::Media::MSERR_EXT_API12_IO_NO_PERMISSION,
+        OHOS::Media::MSERR_EXT_API12_IO_REQUEST_DENID,
+        OHOS::Media::MSERR_EXT_API12_IO_RESOURE_NOT_FOUND,
+        OHOS::Media::MSERR_EXT_API12_IO_SSL_CLIENT_CERT_NEEDED,
+        OHOS::Media::MSERR_EXT_API12_IO_SSL_CONNECT_FAIL,
+        OHOS::Media::MSERR_EXT_API12_IO_SSL_SERVER_CERT_UNTRUSTED,
+        OHOS::Media::MSERR_EXT_API12_IO_UNSUPPORTTED_REQEST,
+    };
 }
 
 namespace OHOS {
@@ -692,8 +716,18 @@ AVPlayerCallback::~AVPlayerCallback()
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instance destroy", FAKE_POINTER(this));
 }
 
+bool AVPlayerCallback::IsAPI13IOError(MediaServiceExtErrCodeAPI9 error)
+{
+    return API13_EXT_IO_ERRORS.find(error) != API13_EXT_IO_ERRORS.end();
+}
+
 void AVPlayerCallback::OnError(int32_t errorCode, const std::string &errorMsg)
 {
+#ifndef CROSS_PLATFORM
+    appUid_ = getuid();
+    auto apiTargetVersion = GetApiversion(appUid_);
+    MEDIA_LOGI("AVPlayer get apiVersion: %{public}d", apiTargetVersion);
+#endif
     MediaServiceExtErrCodeAPI9 errorCodeApi9 = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errorCode));
     if (errorCodeApi9 == MSERR_EXT_API9_NO_PERMISSION ||
         errorCodeApi9 == MSERR_EXT_API9_NO_MEMORY ||
@@ -703,6 +737,11 @@ void AVPlayerCallback::OnError(int32_t errorCode, const std::string &errorMsg)
         Format infoBody;
         AVPlayerCallback::OnInfo(INFO_TYPE_STATE_CHANGE, PLAYER_STATE_ERROR, infoBody);
     }
+#ifndef CROSS_PLATFORM
+    if (IsAPI13IOError(errorCodeApi9) && apiTargetVersion <= API_VERSION_12) {
+        errorCodeApi9 = MSERR_EXT_API9_IO;
+    }
+#endif
     AVPlayerCallback::OnErrorCb(errorCodeApi9, errorMsg);
 }
 
@@ -1353,5 +1392,37 @@ void AVPlayerCallback::Release()
     AVPlayerCallback::OnStateChangeCb(PlayerStates::PLAYER_RELEASED, infoBody);
     listener_ = nullptr;
 }
+
+#ifndef CROSS_PLATFORM
+int32_t AVPlayerCallback::GetApiversion(int32_t uid)
+{
+    MEDIA_LOGI("AVPlayerCallback::GetApiversion");
+    std::string bundleName = "";
+    int32_t userId = 0;
+    AppExecFwk::ApplicationInfo appInfo;
+
+    auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    CHECK_AND_RETURN_RET_LOG(samgr != nullptr, FAULT_API_VERSION, "Get ability manager failed");
+
+    sptr<IRemoteObject> object = samgr->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    CHECK_AND_RETURN_RET_LOG(object != nullptr, FAULT_API_VERSION, "object is NULL.");
+
+    sptr<OHOS::AppExecFwk::IBundleMgr> bms = iface_cast<OHOS::AppExecFwk::IBundleMgr>(object);
+    CHECK_AND_RETURN_RET_LOG(bms != nullptr, FAULT_API_VERSION, "bundle manager service is NULL.");
+
+    auto result = bms->GetNameForUid(uid, bundleName);
+    MEDIA_LOGI("bundle name is %{public}s ", bundleName.c_str());
+    CHECK_AND_RETURN_RET_LOG(result == ERR_OK, FAULT_API_VERSION, "Error GetBundleNameForUid fail.");
+
+    OHOS::AccountSA::OsAccountManager::GetOsAccountLocalIdFromUid(uid, userId);
+    auto flags = static_cast<int32_t>(AppExecFwk::GetApplicationFlag::GET_APPLICATION_INFO_DEFAULT);
+    auto applicationResult = bms->GetApplicationInfo(bundleName, flags, userId, appInfo);
+    CHECK_AND_RETURN_RET_LOG(applicationResult == true, FAULT_API_VERSION, "Error GetApplicationInfo fail.");
+
+    auto apiVersion = appInfo.apiTargetVersion;
+    auto apiVersionResult = apiVersion % ROUND_VERSION_NUMBER;
+    return apiVersionResult;
+}
+#endif
 } // namespace Media
 } // namespace OHOS

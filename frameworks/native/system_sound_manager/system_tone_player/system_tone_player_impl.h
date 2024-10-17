@@ -50,16 +50,24 @@ private:
     int32_t CreatePlayerWithOptions(const AudioHapticPlayerOptions &options);
     void DeletePlayer(const int32_t &streamId);
     void DeleteAllPlayer();
+    std::string GetNewHapticUriForAudioUri(const std::string &audioUri, const std::string &ringtonePath,
+        const std::string& hapticsPath);
+    void GetNewHapticUriForAudioUri(const std::string &audioUri,
+        std::map<ToneHapticsFeature, std::string> &hapticsUriMap);
     void GetHapticUriForAudioUri(const std::string &audioUri, std::map<ToneHapticsFeature, std::string> &hapticsUris);
-    bool GetMuteHapticsValue();
+    SystemToneOptions GetOptionsFromRingerMode();
     std::string ChangeUri(const std::string &uri);
     void InitHapticsSourceIds(const std::string &audioUri);
     void ReleaseHapticsSourceIds();
+    ToneHapticsType ConvertToToneHapticsType(SystemToneType type);
+    HapticsMode ConvertToHapticsMode(ToneHapticsMode toneHapticsMode);
+    void GetNewHapticSettings(std::map<ToneHapticsFeature, std::string> &hapticsUris);
+    std::string ChangeHapticsUri(const std::string &hapticsUri);
+    void UpdateStreamId();
 
     std::shared_ptr<AudioHapticManager> audioHapticManager_ = nullptr;
     std::unordered_map<int32_t, std::shared_ptr<AudioHapticPlayer>> playerMap_;
     std::unordered_map<int32_t, std::shared_ptr<SystemTonePlayerCallback>> callbackMap_;
-    bool muteHaptics_ = false;
     int32_t streamId_ = 0;
     std::string configuredUri_ = "";
     std::shared_ptr<AbilityRuntime::Context> context_;
@@ -70,6 +78,9 @@ private:
     ToneHapticsFeature hapticsFeature_ = ToneHapticsFeature::STANDARD;
     std::map<ToneHapticsFeature, int32_t> sourceIds_;
     std::vector<ToneHapticsFeature> supportedHapticsFeatures_;
+    HapticsMode hapticsMode_ = HapticsMode::HAPTICS_MODE_INVALID;
+    std::map<ToneHapticsFeature, std::string> hapticUriMap_;
+    bool isHapticUriEmpty_ = false;
 
     std::mutex systemTonePlayerMutex_;
 };

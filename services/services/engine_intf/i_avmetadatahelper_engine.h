@@ -115,6 +115,12 @@ public:
      * @returns Returns frame
      */
     virtual int32_t GetFrameIndexByTime(uint64_t time, uint32_t &index) = 0;
+
+    /**
+     * Set interrupt state to demuxer and source
+     * @param isInterruptNeeded : If should interrupt demuxer and source
+     */
+    virtual void SetInterruptState(bool isInterruptNeeded) {}
 };
 } // namespace Media
 } // namespace OHOS

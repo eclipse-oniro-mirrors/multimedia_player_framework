@@ -121,6 +121,11 @@ ohos_shared_library("media_service") {
     "sa_media/server/media_server.cpp",
     "sa_media/server/media_server_manager.cpp",
   ]
+
+  if (player_framework_support_efficiency_manager) {
+    sources += [ "sa_media/server/media_app_frozen_state_observer.cpp" ]
+  }
+
   if (player_framework_support_player) {
     sources += [
       "media_data_source/ipc/media_data_source_proxy.cpp",
@@ -153,6 +158,10 @@ ohos_shared_library("media_service") {
       "recorder_profiles/server/recorder_profiles_server.cpp",
       "sa_media/ipc/recorder_profiles_parcel.cpp",
     ]
+  }
+
+  if (player_framework_support_auto_create_file) {
+    sources += [ "recorder/server/media_library_adapter.cpp" ]
   }
 
   if (player_framework_support_metadata) {
@@ -209,12 +218,15 @@ ohos_shared_library("media_service") {
   external_deps = [
     "ability_runtime:ability_connect_callback_stub",
     "access_token:libaccesstoken_sdk",
+    "access_token:libtokenid_sdk",
     "audio_framework:audio_client",
     "av_codec:av_codec_client",
     "c_utils:utils",
     "call_manager:tel_call_manager_api",
     "common_event_service:cesfwk_innerkits",
     "core_service:tel_core_service_api",
+    "drivers_interface_camera:metadata",
+    "graphic_2d:librender_service_base",
     "hdf_core:libhdi",
     "hicollie:libhicollie",
     "hilog:libhilog",
@@ -234,12 +246,9 @@ ohos_shared_library("media_service") {
     "qos_manager:qos",
     "resource_schedule_service:ressched_client",
     "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
     "state_registry:tel_state_registry_api",
   ]
-
-  if (player_framework_support_video) {
-    external_deps += [ "graphic_surface:surface" ]
-  }
 
   if (player_framework_support_screen_capture) {
     external_deps += [
@@ -256,9 +265,14 @@ ohos_shared_library("media_service") {
       "audio_framework:audio_capturer",
       "audio_framework:audio_client",
       "distributed_notification_service:ans_innerkits",
+      "graphic_surface:sync_fence",
       "relational_store:native_rdb",
       "window_manager:libdm",
     ]
+  }
+
+  if (player_framework_support_video) {
+    external_deps += [ "graphic_surface:surface" ]
   }
 
   if (player_framework_support_avsession_background) {
@@ -269,6 +283,17 @@ ohos_shared_library("media_service") {
       "audio_framework:audio_client",
       "av_session:avsession_client",
       "input:libmmi-client",
+    ]
+  }
+
+  if (player_framework_support_auto_create_file) {
+    external_deps += [
+      "camera_framework:camera_framework",
+      "data_share:datashare_common",
+      "data_share:datashare_consumer",
+      "media_library:media_library",
+      "media_library:media_library_manager",
+      "samgr:samgr_proxy",
     ]
   }
 
@@ -284,6 +309,10 @@ ohos_shared_library("media_service") {
 
   if (player_framework_support_power_manager) {
     external_deps += [ "power_manager:powermgr_client" ]
+  }
+
+  if (player_framework_support_efficiency_manager) {
+    external_deps += [ "efficiency_manager:suspend_manager_client" ]
   }
 
   subsystem_name = "multimedia"

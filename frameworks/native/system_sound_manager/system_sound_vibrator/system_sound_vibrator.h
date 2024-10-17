@@ -17,6 +17,7 @@
 #define SYSTEM_SOUND_VIBRATOR_H
 
 #include <cstdint>
+#include <string>
 
 namespace OHOS {
 namespace Media {
@@ -28,7 +29,11 @@ enum class VibrationType {
 class SystemSoundVibrator {
 public:
     static int32_t StartVibrator(VibrationType type);
+    static int32_t StartVibratorForSystemTone(const std::string &hapticUri);
     static int32_t StopVibrator();
+
+private:
+    static int32_t ExtractFd(const std::string& hapticsUri);
 };
 } // namespace Media
 } // namespace OHOS

@@ -35,12 +35,14 @@ public:
     void SendErrorCallback(int32_t errCode, const std::string &msg);
     void SendStateCallback(const std::string &state, const StateChangeReason &reason);
     void SendAudioCaptureChangeCallback(const AudioRecorderChangeInfo &audioRecorderChangeInfo);
+    void SendPhotoAssertAvailableCallback(const std::string &uri);
     std::string GetState();
 
 protected:
     void OnError(RecorderErrorType errorType, int32_t errCode) override;
     void OnInfo(int32_t type, int32_t extra) override;
     void OnAudioCaptureChange(const AudioRecorderChangeInfo &audioRecorderChangeInfo) override;
+    void OnPhotoAssertAvailable(const std::string &uri) override;
 
 private:
     struct AVRecordJsCallback {
@@ -51,10 +53,14 @@ private:
         int32_t reason = 1;
         std::string state = "unknown";
         AudioRecorderChangeInfo audioRecorderChangeInfo;
+        std::string uri = "unknown";
     };
     void OnJsErrorCallBack(AVRecordJsCallback *jsCb) const;
     void OnJsStateCallBack(AVRecordJsCallback *jsCb) const;
     void OnJsAudioCaptureChangeCallback(AVRecordJsCallback *jsCb) const;
+#ifdef SUPPORT_RECORDER_CREATE_FILE
+    void OnJsPhotoAssertAvailableCallback(AVRecordJsCallback *jsCb) const;
+#endif
     napi_env env_ = nullptr;
     std::mutex mutex_;
     std::string currentState_ = AVRecorderState::STATE_IDLE;

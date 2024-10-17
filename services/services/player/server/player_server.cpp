@@ -34,6 +34,7 @@
 #include "qos.h"
 #include "player_server_event_receiver.h"
 #include "common/media_source.h"
+#include "audio_info.h"
 
 using namespace OHOS::QOS;
 
@@ -356,6 +357,43 @@ int32_t PlayerServer::SetPlayRange(int64_t start, int64_t end)
     return MSERR_OK;
 }
 
+int32_t PlayerServer::SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (lastOpStatus_ != PLAYER_INITIALIZED
+        && lastOpStatus_ != PLAYER_PREPARED
+        && lastOpStatus_ != PLAYER_PAUSED
+        && lastOpStatus_ != PLAYER_STOPPED
+        && lastOpStatus_ != PLAYER_PLAYBACK_COMPLETE) {
+        MEDIA_LOGE("Can not SetPlayRangeWithMode, currentState is %{public}s",
+            GetStatusDescription(lastOpStatus_).c_str());
+        return MSERR_INVALID_OPERATION;
+    }
+    if (isLiveStream_) {
+        MEDIA_LOGE("Can not SetPlayRangeWithMode, it is live-stream");
+        return MSERR_INVALID_OPERATION;
+    }
+    auto setPlayRangeTask = std::make_shared<TaskHandler<void>>([this, start, end, mode]() {
+        MediaTrace::TraceBegin("PlayerServer::SetPlayRange", FAKE_POINTER(this));
+        auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
+        (void)currState->SetPlayRangeWithMode(start, end, mode);
+    });
+    int ret = taskMgr_.LaunchTask(setPlayRangeTask, PlayerServerTaskType::STATE_CHANGE, "set playRange");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetPlayRangeWithMode failed");
+    return MSERR_OK;
+}
+
+int32_t PlayerServer::HandleSetPlayRange(int64_t start, int64_t end, PlayerSeekMode mode)
+{
+    MEDIA_LOGI("KPI-TRACE: PlayerServer HandleSetPlayRange in");
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_INVALID_OPERATION, "playerEngine_ is nullptr");
+    int32_t ret = playerEngine_->SetPlayRangeWithMode(start, end, mode);
+    taskMgr_.MarkTaskDone("HandleSetPlayRange done");
+    MediaTrace::TraceEnd("PlayerServer::SetPlayRange", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine SetPlayRangeWithMode Failed!");
+    return MSERR_OK;
+}
+
 int32_t PlayerServer::PrepareAsync()
 {
     if (inReleasing_.load()) {
@@ -645,6 +683,7 @@ int32_t PlayerServer::OnReset()
     lastOpStatus_ = PLAYER_IDLE;
     isLiveStream_ = false;
     subtitleTrackNum_ = 0;
+    isStreamUsagePauseRequired_ = true;
 
     return MSERR_OK;
 }
@@ -653,12 +692,12 @@ int32_t PlayerServer::HandleReset()
 {
     MEDIA_LOGD("PlayerServer HandleReset in");
     (void)playerEngine_->Reset();
-    std::thread([playerEngine = std::move(playerEngine_)]() mutable -> void {
+    std::thread([playerEngine = std::move(playerEngine_), uriHelper = std::move(uriHelper_)]() mutable -> void {
+        std::unique_ptr<UriHelper> helper = std::move(uriHelper);
         std::unique_ptr<IPlayerEngine> engine = std::move(playerEngine);
     }).detach();
     dataSrc_ = nullptr;
     config_.looping = false;
-    uriHelper_ = nullptr;
     mediaSource_ = nullptr;
     {
         decltype(subUriHelpers_) temp;
@@ -1052,7 +1091,15 @@ void PlayerServer::HandleEos()
             MediaTrace::TraceBegin("PlayerServer::Seek", FAKE_POINTER(this));
             disableNextSeekDone_ = true;
             auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
-            (void)currState->Seek(0, SEEK_PREVIOUS_SYNC);
+            if (playerEngine_ != nullptr) {
+                int64_t startTime = playerEngine_->GetPlayRangeStartTime();
+                int64_t endTime = playerEngine_->GetPlayRangeEndTime();
+                PlayerSeekMode seekMode = static_cast<PlayerSeekMode>(playerEngine_->GetPlayRangeSeekMode());
+                int32_t seekTime = (startTime != -1 && endTime != -1) ? startTime : 0;
+                (void)currState->Seek(seekTime, seekMode);
+            } else {
+                (void)currState->Seek(0, SEEK_PREVIOUS_SYNC);
+            }
         });
 
         auto cancelTask = std::make_shared<TaskHandler<void>>([this]() {
@@ -1076,6 +1123,36 @@ void PlayerServer::PreparedHandleEos()
     }
 }
 
+void PlayerServer::HandleInterruptEvent(const Format &infoBody)
+{
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " HandleInterruptEvent in ", FAKE_POINTER(this));
+    int32_t hintType = -1;
+    int32_t forceType = -1;
+    int32_t eventType = -1;
+    (void)infoBody.GetIntValue(PlayerKeys::AUDIO_INTERRUPT_TYPE, eventType);
+    (void)infoBody.GetIntValue(PlayerKeys::AUDIO_INTERRUPT_FORCE, forceType);
+    (void)infoBody.GetIntValue(PlayerKeys::AUDIO_INTERRUPT_HINT, hintType);
+    if (forceType == OHOS::AudioStandard::INTERRUPT_FORCE) {
+        if (hintType == OHOS::AudioStandard::INTERRUPT_HINT_PAUSE ||
+            hintType == OHOS::AudioStandard::INTERRUPT_HINT_STOP) {
+            interruptEventState_ = PLAYER_IDLE;
+        }
+    }
+}
+
+void PlayerServer::HandleAudioDeviceChangeEvent(const Format &infoBody)
+{
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " HandleAudioDeviceChangeEvent in ", FAKE_POINTER(this));
+    int32_t reason = -1;
+    (void)infoBody.GetIntValue(PlayerKeys::AUDIO_DEVICE_CHANGE_REASON, reason);
+    if (!deviceChangeCallbackflag_ &&
+        reason == static_cast<int32_t>(OHOS::AudioStandard::AudioStreamDeviceChangeReason::OLD_DEVICE_UNAVALIABLE) &&
+        isStreamUsagePauseRequired_) {
+        audioDeviceChangeState_ = PLAYER_PAUSED;
+        (void)BackGroundChangeState(PLAYER_PAUSED, true);
+    }
+}
+
 int32_t PlayerServer::GetPlaybackSpeed(PlaybackRateMode &mode)
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -1096,6 +1173,16 @@ int32_t PlayerServer::SelectBitRate(uint32_t bitRate)
     if (playerEngine_ != nullptr) {
         int ret = playerEngine_->SelectBitRate(bitRate);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine SelectBitRate Failed!");
+    }
+    return MSERR_OK;
+}
+
+int32_t PlayerServer::StopBufferring(bool flag)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    if (playerEngine_ != nullptr) {
+        int ret = playerEngine_->StopBufferring(flag);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine StopBufferring Failed!");
     }
     return MSERR_OK;
 }
@@ -1240,6 +1327,18 @@ int32_t PlayerServer::SetParameter(const Format &param)
     }
 
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
+
+    if (param.ContainKey(PlayerKeys::STREAM_USAGE)) {
+        int32_t streamUsage = OHOS::AudioStandard::STREAM_USAGE_UNKNOWN;
+        CHECK_AND_RETURN_RET(param.GetIntValue(PlayerKeys::STREAM_USAGE, streamUsage), MSERR_INVALID_VAL);
+        MEDIA_LOGI("streamUsage = %{public}d", streamUsage);
+        if (streamUsage != OHOS::AudioStandard::STREAM_USAGE_MUSIC &&
+            streamUsage != OHOS::AudioStandard::STREAM_USAGE_MOVIE &&
+            streamUsage != OHOS::AudioStandard::STREAM_USAGE_AUDIOBOOK) {
+            isStreamUsagePauseRequired_ = false;
+        }
+        MEDIA_LOGI("isStreamUsagePauseRequired_ = %{public}d", isStreamUsagePauseRequired_);
+    }
 
     if (param.ContainKey(PlayerKeys::AUDIO_EFFECT_MODE)) {
         int32_t effectMode = OHOS::AudioStandard::AudioEffectMode::EFFECT_DEFAULT;
@@ -1402,6 +1501,9 @@ int32_t PlayerServer::DumpInfo(int32_t fd)
 
 void PlayerServer::OnError(PlayerErrorType errorType, int32_t errorCode)
 {
+    if (reportStatusFlag_ == false) {
+        return;
+    }
     (void)errorType;
     auto errorMsg = MSErrorToExtErrorString(static_cast<MediaServiceErrCode>(errorCode));
     return OnErrorMessage(errorCode, errorMsg);
@@ -1450,26 +1552,25 @@ void PlayerServer::OnErrorCb(int32_t errorCode, const std::string &errorMsg)
 void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
 {
     std::lock_guard<std::mutex> lockCb(mutexCb_);
-    // notify info
+    if (reportStatusFlag_ == false) {
+        return;
+    }
     int32_t ret = HandleMessage(type, extra, infoBody);
+    InnerOnInfo(type, extra, infoBody, ret);
+}
+
+void PlayerServer::InnerOnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody, const int32_t ret)
+{
     if (type == INFO_TYPE_IS_LIVE_STREAM) {
         isLiveStream_ = true;
     } else if (type == INFO_TYPE_TRACK_NUM_UPDATE) {
         subtitleTrackNum_ = static_cast<uint32_t>(extra);
         return;
     }
-    auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
-    bool isCompletedInfo = type == INFO_TYPE_STATE_CHANGE && extra == PlayerStates::PLAYER_PLAYBACK_COMPLETE;
-    bool isEosInfo = type == INFO_TYPE_EOS;
-    if (currState == stoppedState_ && (isCompletedInfo || isEosInfo)) {
-        MEDIA_LOGW("completed or eos in stopped state");
-        return;
-    }
-
+    CHECK_AND_RETURN_LOG(CheckState(type, extra), "OnInfo check state failed");
     if (type == INFO_TYPE_DEFAULTTRACK || type == INFO_TYPE_TRACK_DONE || type == INFO_TYPE_ADD_SUBTITLE_DONE) {
         return;
     }
-
     if (playerCb_ != nullptr && type == INFO_TYPE_ERROR_MSG) {
         int32_t errorCode = extra;
         Format newInfo = infoBody;
@@ -1482,9 +1583,10 @@ void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &in
     if (type == INFO_TYPE_BUFFERING_UPDATE) {
         OnBufferingUpdate(type, extra, infoBody);
     }
-
     if (playerCb_ != nullptr && ret == MSERR_OK) {
-        if (isBackgroundChanged_ && type == INFO_TYPE_STATE_CHANGE && extra == backgroundState_) {
+        bool isBackgroudPause = (extra == backgroundState_ || extra == interruptEventState_ ||
+            extra == audioDeviceChangeState_);
+        if (isBackgroundChanged_ && type == INFO_TYPE_STATE_CHANGE && isBackgroudPause) {
             MEDIA_LOGI("Background change state to %{public}d, Status reporting %{public}d", extra, isBackgroundCb_);
             if (isBackgroundCb_) {
                 Format newInfo = infoBody;
@@ -1493,6 +1595,8 @@ void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &in
                 isBackgroundCb_ = false;
             }
             isBackgroundChanged_ = false;
+            interruptEventState_ = PLAYER_IDLE;
+            audioDeviceChangeState_ = PLAYER_IDLE;
         } else {
             playerCb_->OnInfo(type, extra, infoBody);
         }
@@ -1722,6 +1826,13 @@ int32_t PlayerServer::ExitSeekContinous(bool align)
     return playerEngine_->ExitSeekContinous(align, seekContinousBatchNo_.load());
 }
 
+int32_t PlayerServer::SetDeviceChangeCbStatus(bool status)
+{
+    deviceChangeCallbackflag_ = status;
+    MEDIA_LOGI("Set DeviceChangeFlag success, status = %{public}d", deviceChangeCallbackflag_);
+    return MSERR_OK;
+}
+
 void PlayerServer::UpdateContinousBatchNo()
 {
     seekContinousBatchNo_++;
@@ -1754,6 +1865,47 @@ int32_t PlayerServer::SetMaxAmplitudeCbStatus(bool status)
 {
     maxAmplitudeCbStatus_ = status;
     return MSERR_OK;
+}
+
+bool PlayerServer::CheckState(PlayerOnInfoType type, int32_t extra)
+{
+    auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
+    bool isCompletedInfo = type == INFO_TYPE_STATE_CHANGE && extra == PlayerStates::PLAYER_PLAYBACK_COMPLETE;
+    bool isEosInfo = type == INFO_TYPE_EOS;
+    CHECK_AND_RETURN_RET_LOG(currState != stoppedState_ || !(isCompletedInfo || isEosInfo), false,
+        "do not report completed or eos in stopped state");
+
+    bool isErrorInfo = type == INFO_TYPE_STATE_CHANGE && extra == PlayerStates::PLAYER_STATE_ERROR;
+    CHECK_AND_RETURN_RET_LOG(currState != idleState_ || !isErrorInfo, false, "do not report error in idle state");
+
+    bool isPreparedInfo = type == INFO_TYPE_STATE_CHANGE && extra == PlayerStates::PLAYER_PREPARED;
+    CHECK_AND_RETURN_RET_LOG(currState != idleState_ || !isPreparedInfo, false,
+        "do not report prepared in idle state");
+    return true;
+}
+
+int32_t PlayerServer::StartReportStatus()
+{
+    reportStatusFlag_.store(true);
+    return MSERR_OK;
+}
+
+int32_t PlayerServer::StopReportStatus()
+{
+    reportStatusFlag_.store(false);
+    return MSERR_OK;
+}
+
+bool PlayerServer::IsPlayerRunning()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (lastOpStatus_ == PLAYER_STATE_ERROR) {
+        MEDIA_LOGE("Can not judge IsCompleted, currentState is PLAYER_STATE_ERROR");
+        return false;
+    }
+    MEDIA_LOGI("IsPlayerRunning, currentState is %{public}d", static_cast<int32_t>(lastOpStatus_.load()));
+    return lastOpStatus_ == PLAYER_PREPARING || lastOpStatus_ == PLAYER_PREPARED
+           || lastOpStatus_ == PLAYER_STARTED || lastOpStatus_ == PLAYER_PAUSED;
 }
 } // namespace Media
 } // namespace OHOS

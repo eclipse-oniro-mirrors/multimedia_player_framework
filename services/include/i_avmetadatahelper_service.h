@@ -193,6 +193,12 @@ public:
      * @returns Returns frame
      */
     virtual int32_t GetFrameIndexByTime(uint64_t time, uint32_t &index) = 0;
+
+    /**
+     * Set is created from napi instance
+     * @param isNapiInstance : IsNapiInstance, bool
+     */
+    virtual void SetIsNapiInstance(bool isNapiInstance) = 0;
 };
 }  // namespace Media
 }  // namespace OHOS

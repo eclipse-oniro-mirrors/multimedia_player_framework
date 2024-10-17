@@ -138,11 +138,13 @@ const std::map<std::string, std::vector<std::string>> stateCtrlList = {
  * on(type: 'stateChange', callback: (state: AVPlayerState, reason: StateChangeReason) => void): void
  * on(type: 'error', callback: ErrorCallback): void
  * on(type: 'audioCaptureChange', callback: Callback<AudioCaptureChangeInfo>): void
+ * on(type: 'photoAssetAvailable', callback: Callback<photoAccessHelper.PhotoAsset>): void
  */
 namespace AVRecorderEvent {
 const std::string EVENT_STATE_CHANGE = "stateChange";
 const std::string EVENT_ERROR = "error";
 const std::string EVENT_AUDIO_CAPTURE_CHANGE = "audioCapturerChange";
+const std::string EVENT_PHOTO_ASSET_AVAILABLE = "photoAssetAvailable";
 }
 
 struct AVRecorderAsyncContext;
@@ -172,6 +174,7 @@ struct AVRecorderConfig {
     int32_t rotation = 0; // Optional
     Location location; // Optional
     AVMetadata metadata; // Optional
+    FileGenerationMode fileGenerationMode = FileGenerationMode::APP_CREATE;
     bool withVideo = false;
     bool withAudio = false;
     bool withLocation = false;
@@ -256,12 +259,14 @@ private:
      * on(type: 'stateChange', callback: (state: AVPlayerState, reason: StateChangeReason) => void): void
      * on(type: 'error', callback: ErrorCallback): void
      * on(type: 'audioCaptureChange', callback: Callback<AudioCaptureChangeInfo>): void
+     * on(type: 'photoAssetAvailable', callback: Callback<photoAccessHelper.PhotoAsset>): void
      */
     static napi_value JsSetEventCallback(napi_env env, napi_callback_info info);
     /**
      * off(type: 'stateChange'): void;
      * off(type: 'error'): void;
      * off(type: 'audioCaptureChange'): void
+     * off(type: 'photoAssetAvailable'): void
      */
     static napi_value JsCancelEventCallback(napi_env env, napi_callback_info info);
     /**
@@ -376,11 +381,13 @@ private:
     int32_t GetVideoProfile(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value item,
         AVRecorderProfile &profile);
     int32_t GetProfile(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
+    int32_t GetModeAndUrl(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
     int32_t GetConfig(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
     int32_t GetRotation(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
     int32_t GetMetaType(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
     int32_t GetAVMetaData(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
-    int32_t GetWatermarkParameter(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value *args);
+    int32_t GetWatermarkParameter(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env,
+        napi_value watermark, napi_value watermarkConfig);
     int32_t GetWatermark(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
     int32_t GetWatermarkConfig(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
 
@@ -389,6 +396,7 @@ private:
         napi_value sourceIdArgs, napi_value qualityArgs, const std::string &opt);
     RetInfo SetProfile(std::shared_ptr<AVRecorderConfig> config);
     RetInfo Configure(std::shared_ptr<AVRecorderConfig> config);
+    RetInfo ConfigureUrl(std::shared_ptr<AVRecorderConfig> config);
     int32_t ConfigAVBufferMeta(std::shared_ptr<PixelMap> &pixelMap, std::shared_ptr<WatermarkConfig> &watermarkConfig,
         std::shared_ptr<Meta> &meta);
 

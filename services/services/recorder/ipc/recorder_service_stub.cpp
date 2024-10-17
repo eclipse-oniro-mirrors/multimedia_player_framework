@@ -98,6 +98,8 @@ void RecorderServiceStub::FillRecFuncPart1()
         [this](MessageParcel &data, MessageParcel &reply) { return SetOutputFormat(data, reply); };
     recFuncs_[SET_OUTPUT_FILE] =
         [this](MessageParcel &data, MessageParcel &reply) { return SetOutputFile(data, reply); };
+    recFuncs_[SET_FILE_GENERATION_MODE] =
+        [this](MessageParcel &data, MessageParcel &reply) { return SetFileGenerationMode(data, reply); };
     recFuncs_[SET_LOCATION] =
         [this](MessageParcel &data, MessageParcel &reply) { return SetLocation(data, reply); };
     recFuncs_[SET_ORIENTATION_HINT] =
@@ -388,6 +390,12 @@ int32_t RecorderServiceStub::SetOutputFile(int32_t fd)
     return recorderServer_->SetOutputFile(fd);
 }
 
+int32_t RecorderServiceStub::SetFileGenerationMode(FileGenerationMode mode)
+{
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    return recorderServer_->SetFileGenerationMode(mode);
+}
+
 int32_t RecorderServiceStub::SetLocation(float latitude, float longitude)
 {
     CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
@@ -596,6 +604,8 @@ int32_t RecorderServiceStub::SetMetaSource(MessageParcel &data, MessageParcel &r
 int32_t RecorderServiceStub::SetMetaMimeType(MessageParcel &data, MessageParcel &reply)
 {
     int32_t sourceId = data.ReadInt32();
+    CHECK_AND_RETURN_RET_LOG(data.ReadCString() != nullptr, MSERR_INVALID_OPERATION,
+        "data.ReadCString() is nullptr");
     std::string_view mimetype(data.ReadCString());
     reply.WriteInt32(SetMetaMimeType(sourceId, mimetype));
     return MSERR_OK;
@@ -604,6 +614,8 @@ int32_t RecorderServiceStub::SetMetaMimeType(MessageParcel &data, MessageParcel 
 int32_t RecorderServiceStub::SetMetaTimedKey(MessageParcel &data, MessageParcel &reply)
 {
     int32_t sourceId = data.ReadInt32();
+    CHECK_AND_RETURN_RET_LOG(data.ReadCString() != nullptr, MSERR_INVALID_OPERATION,
+        "data.ReadCString() is nullptr");
     std::string_view timedKey(data.ReadCString());
     reply.WriteInt32(SetMetaTimedKey(sourceId, timedKey));
     return MSERR_OK;
@@ -612,6 +624,8 @@ int32_t RecorderServiceStub::SetMetaTimedKey(MessageParcel &data, MessageParcel 
 int32_t RecorderServiceStub::SetMetaSourceTrackMime(MessageParcel &data, MessageParcel &reply)
 {
     int32_t sourceId = data.ReadInt32();
+    CHECK_AND_RETURN_RET_LOG(data.ReadCString() != nullptr, MSERR_INVALID_OPERATION,
+        "data.ReadCString() is nullptr");
     std::string_view srcTrackMime(data.ReadCString());
     reply.WriteInt32(SetMetaSourceTrackMime(sourceId, srcTrackMime));
     return MSERR_OK;
@@ -712,6 +726,13 @@ int32_t RecorderServiceStub::SetOutputFile(MessageParcel &data, MessageParcel &r
     int32_t fd = data.ReadFileDescriptor();
     reply.WriteInt32(SetOutputFile(fd));
     (void)::close(fd);
+    return MSERR_OK;
+}
+
+int32_t RecorderServiceStub::SetFileGenerationMode(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t mode = data.ReadInt32();
+    reply.WriteInt32(SetFileGenerationMode(static_cast<FileGenerationMode>(mode)));
     return MSERR_OK;
 }
 
@@ -859,6 +880,10 @@ int32_t RecorderServiceStub::CheckPermission()
                 "ohos.permission.RECORD_VOICE_CALL");
         case AUDIO_MIC:
         case AUDIO_SOURCE_DEFAULT:
+        case AUDIO_SOURCE_VOICE_RECOGNITION:
+        case AUDIO_SOURCE_VOICE_COMMUNICATION:
+        case AUDIO_SOURCE_VOICE_MESSAGE:
+        case AUDIO_SOURCE_CAMCORDER:
             return Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
                 "ohos.permission.MICROPHONE");
         case AUDIO_INNER:
@@ -913,6 +938,7 @@ int32_t RecorderServiceStub::IsWatermarkSupported(MessageParcel &data, MessagePa
 int32_t RecorderServiceStub::SetWatermark(MessageParcel &data, MessageParcel &reply)
 {
     std::shared_ptr<AVBuffer> buffer = AVBuffer::CreateAVBuffer();
+    CHECK_AND_RETURN_RET_LOG(buffer != nullptr, MSERR_NO_MEMORY, "create AVBuffer failed");
     CHECK_AND_RETURN_RET_LOG(buffer->ReadFromMessageParcel(data), MSERR_INVALID_OPERATION, "read buffer failed");
     CHECK_AND_RETURN_RET_LOG(reply.WriteInt32(SetWatermark(buffer)), MSERR_INVALID_OPERATION, "reply write failed");
     return MSERR_OK;

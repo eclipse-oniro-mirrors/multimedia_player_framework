@@ -57,6 +57,7 @@ public:
     virtual int32_t SetMaxDuration(int32_t duration) = 0;
     virtual int32_t SetOutputFormat(OutputFormatType format) = 0;
     virtual int32_t SetOutputFile(int32_t fd) = 0;
+    virtual int32_t SetFileGenerationMode(FileGenerationMode mode) = 0;
     virtual int32_t SetNextOutputFile(int32_t fd)
     {
         (void)fd;
@@ -114,6 +115,7 @@ public:
         SET_MAX_DURATION,
         SET_OUTPUT_FORMAT,
         SET_OUTPUT_FILE,
+        SET_FILE_GENERATION_MODE,
         SET_NEXT_OUTPUT_FILE,
         SET_MAX_FILE_SIZE,
         SET_LOCATION,
@@ -136,14 +138,14 @@ public:
 		GET_AUDIO_CAPTURER_CHANGE_INFO,
         GET_AVAILABLE_ENCODER,
         GET_MAX_AMPLITUDE,
-        IS_WATERMARK_SUPPORTED,
-        SET_WATERMARK,
         SET_META_CONFIGS,
         SET_META_SOURCE,
         SET_META_MIME_TYPE,
         SET_META_TIMED_KEY,
         SET_META_TRACK_SRC_MIME_TYPE,
         GET_META_SURFACE,
+        IS_WATERMARK_SUPPORTED,
+        SET_WATERMARK,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardRecorderService");

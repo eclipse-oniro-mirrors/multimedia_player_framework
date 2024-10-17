@@ -1,0 +1,57 @@
+# Copyright (c) 2024 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/test.gni")
+import("//foundation/multimedia/player_framework/config.gni")
+
+module_output_path = "player_framework/video_editor"
+
+ohos_unittest("video_editor_unit_test") {
+  module_out_path = module_output_path
+  include_dirs = [
+    "./include",
+    "$MEDIA_PLAYER_ROOT_DIR/frameworks/native/video_editor",
+    "$MEDIA_PLAYER_ROOT_DIR/frameworks/native/video_editor/test/unittest",
+    "$MEDIA_PLAYER_ROOT_DIR/frameworks/native/video_editor/test/unittest/include",
+    "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native/video_editor/include",
+    "$MEDIA_PLAYER_ROOT_DIR/services/utils/include",
+  ]
+
+  cflags = [
+    "-Wall",
+    "-Werror",
+    "-Wno-deprecated-declarations",
+    "-fno-access-control",
+  ]
+
+  sources = [
+    "codec/video/decoder/video_decoder_engine_impl_test.cpp",
+    "codec/video/decoder/video_decoder_engine_test.cpp",
+    "codec/video/encoder/video_encoder_engine_impl_test.cpp",
+    "codec/video/encoder/video_encoder_engine_test.cpp",
+    "data_center/asset_test.cpp",
+    "video_editor_impl_test.cpp",
+    "video_editor_manager_test.cpp",
+  ]
+
+  deps = [
+    "../../../video_editor:video_editor",
+    "//third_party/googletest:gmock_main",
+  ]
+
+  external_deps = [
+    "av_codec:av_codec_client",
+    "hilog:libhilog",
+    "media_foundation:native_media_core",
+  ]
+}

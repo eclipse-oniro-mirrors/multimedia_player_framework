@@ -134,11 +134,24 @@ static const std::vector<struct JsEnumInt> g_videoRecorderQualityLevel = {
 static const std::vector<struct JsEnumInt> g_audioSourceType = {
     { "AUDIO_SOURCE_TYPE_DEFAULT", AudioSourceType::AUDIO_SOURCE_DEFAULT },
     { "AUDIO_SOURCE_TYPE_MIC", AudioSourceType::AUDIO_MIC },
+    { "AUDIO_SOURCE_TYPE_VOICE_RECOGNITION", AudioSourceType::AUDIO_SOURCE_VOICE_RECOGNITION },
+    { "AUDIO_SOURCE_TYPE_VOICE_COMMUNICATION", AudioSourceType::AUDIO_SOURCE_VOICE_COMMUNICATION },
+    { "AUDIO_SOURCE_TYPE_VOICE_MESSAGE", AudioSourceType::AUDIO_SOURCE_VOICE_MESSAGE },
+    { "AUDIO_SOURCE_TYPE_CAMCORDER", AudioSourceType::AUDIO_SOURCE_CAMCORDER },
 };
 
 static const std::vector<struct JsEnumInt> g_videoSourceType = {
     { "VIDEO_SOURCE_TYPE_SURFACE_YUV", VideoSourceType::VIDEO_SOURCE_SURFACE_YUV },
     { "VIDEO_SOURCE_TYPE_SURFACE_ES", VideoSourceType::VIDEO_SOURCE_SURFACE_ES },
+};
+
+static const std::vector<struct JsEnumInt> g_metaSourceType = {
+    { "VIDEO_MAKER_INFO", MetaSourceType::VIDEO_META_MAKER_INFO },
+};
+
+static const std::vector<struct JsEnumInt> g_fileGenerationMode = {
+    { "APP_CREATE", FileGenerationMode::APP_CREATE },
+    { "AUTO_CREATE_CAMERA_SCENE", FileGenerationMode::AUTO_CREATE_CAMERA_SCENE },
 };
 
 static const std::vector<struct JsEnumInt> g_frameFlags = {
@@ -285,6 +298,8 @@ static const std::vector<struct JsEnumInt> g_stateChangeReason = {
 static const std::vector<struct JsEnumString> g_containerFormatType = {
     { "CFT_MPEG_4", ContainerFormatType::CFT_MPEG_4 },
     { "CFT_MPEG_4A", ContainerFormatType::CFT_MPEG_4A },
+    { "CFT_MP3", "mp3" },
+    { "CFT_WAV", "wav" },
 };
 
 static const std::vector<struct JsEnumString> g_avMimeTypes = {
@@ -315,6 +330,8 @@ static const std::vector<struct JsEnumString> g_codecMimeType = {
     { "AUDIO_OPUS", OHOS::Media::Plugins::MimeType::AUDIO_OPUS },
     { "AUDIO_FLAC", OHOS::Media::Plugins::MimeType::AUDIO_FLAC },
     { "AUDIO_RAW", OHOS::Media::Plugins::MimeType::AUDIO_RAW },
+    { "AUDIO_MP3", "audio/mpeg" },
+    { "AUDIO_G711MU", "audio/g711mu" },
 };
 
 static const std::vector<struct JsEnumString> g_mediaDescriptionKey = {
@@ -348,6 +365,8 @@ static const std::vector<struct JsEnumString> g_mediaDescriptionKey = {
     { "MD_KEY_CUSTOM", "vendor.custom" },
     { "MD_KEY_LANGUAGE", "language" },
     { "MD_KEY_AUD_SAMPLE_DEPTH", "sample_depth" },
+    { "MD_KEY_TRACK_NAME", "track_name" },
+    { "MD_KEY_HDR_TYPE", "hdr_type" }
 };
 
 static const std::vector<struct JsEnumInt> g_screenCaptureRecordPreset = {
@@ -402,6 +421,8 @@ static const std::map<std::string_view, const std::vector<struct JsEnumInt>&> g_
     { "StateChangeReason", g_stateChangeReason},
     { "AVScreenCaptureRecordPreset", g_screenCaptureRecordPreset},
     { "AVScreenCaptureStateCode", g_screenCaptureStateCode},
+    { "FileGenerationMode", g_fileGenerationMode},
+    { "MetaSourceType", g_metaSourceType},
 };
 
 static const std::map<std::string_view, const std::vector<struct JsEnumString>&> g_stringEnumClassMap = {

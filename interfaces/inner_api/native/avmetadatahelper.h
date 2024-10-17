@@ -64,6 +64,17 @@ enum HelperStates : int32_t {
     HELPER_RELEASED = 4,
 };
 
+enum HelperState : int32_t {
+    /* error states */
+    HELPER_ERROR = -1,
+    /* idle states */
+    HELPER_STATE_IDLE,
+    /* RUNNABLE states */
+    HELPER_STATE_RUNNABLE,
+    /* released states */
+    HELPER_STATE_RELEASED,
+};
+
 /**
  * The meta data mappings from meta data enum keys to the string key.
  */
@@ -130,7 +141,7 @@ enum HdrType : int32_t {
 
 enum Scene : int32_t {
     /**
-     * This option is used to mark clone scene.
+     * This option is used to mark normal scene.
      */
     AV_META_SCENE_NORMAL,
     /**
@@ -361,14 +372,6 @@ public:
     virtual int32_t SetSource(const std::string &uri, int32_t usage = AVMetadataUsage::AV_META_USAGE_PIXEL_MAP) = 0;
 
     /**
-     * Set the media source uri to resolve. Calling this method before the reset
-     * of the methods in this class. This method maybe time consuming.
-     * @param scene indicates which scene the avmedatahelper's instance will
-     * be used to, see {@link Scene}.
-     */
-    virtual void SetScene(Scene scene) = 0;
-
-    /**
      * @brief Sets the media file descriptor source to resolve. Calling this method
      * before the reset of the methods in this class. This method maybe time consuming.
      * @param fd Indicates the file descriptor of media source.
@@ -471,6 +474,14 @@ public:
     virtual int32_t SetHelperCallback(const std::shared_ptr<HelperCallback> &callback) = 0;
 
     /**
+     * Set the media source uri to resolve. Calling this method before the reset
+     * of the methods in this class. This method maybe time consuming.
+     * @param scene indicates which scene the avmedatahelper's instance will
+     * be used to, see {@link Scene}.
+     */
+    virtual void SetScene(Scene scene) = 0;
+
+    /**
      * Get timestamp according to frame index.
      * @param timeUs : Index of the frame.
      * @returns returns time
@@ -483,6 +494,12 @@ public:
      * @returns Returns frame
      */
     virtual int32_t GetFrameIndexByTime(uint64_t time, uint32_t &index) = 0;
+
+    /**
+     * Set is created from napi instance
+     * @param isNapiInstance : IsNapiInstance, bool
+     */
+    virtual void SetIsNapiInstance(bool isNapiInstance) = 0;
 };
 
 class __attribute__((visibility("default"))) AVMetadataHelperFactory {

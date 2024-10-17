@@ -42,6 +42,7 @@ public:
     void SetScene(Scene scene) override;
     int32_t GetTimeByFrameIndex(uint32_t index, uint64_t &time) override;
     int32_t GetFrameIndexByTime(uint64_t time, uint32_t &index) override;
+    void SetIsNapiInstance(bool isNapiInstance) override;
 private:
     struct PixelMapInfo {
         int32_t rotation = 0;
@@ -58,6 +59,12 @@ private:
     sptr<SurfaceBuffer> CopySurfaceBuffer(sptr<SurfaceBuffer> &srcSurfaceBuffer);
     std::shared_ptr<PixelMap> CreatePixelMapYuv(const std::shared_ptr<AVBuffer> &frameBuffer,
                                                 PixelMapInfo &pixelMapInfo);
+    std::shared_ptr<PixelMap> OnCreatePixelMapSdr(const std::shared_ptr<AVBuffer> &frameBuffer,
+                                                  PixelMapInfo &pixelMapInfo,
+                                                  InitializationOptions &options);
+    std::shared_ptr<PixelMap> OnCreatePixelMapHdr(sptr<SurfaceBuffer> &mySurfaceBuffer);
+    void SetPixelMapYuvInfo(std::shared_ptr<PixelMap> pixelMap, bool isPlanesAvailable,
+                            OH_NativeBuffer_Planes *planes);
     void CopySurfaceBufferInfo(sptr<SurfaceBuffer> &source, sptr<SurfaceBuffer> &dst);
     bool GetSbStaticMetadata(sptr<SurfaceBuffer> &buffer, std::vector<uint8_t> &staticMetadata);
     bool GetSbDynamicMetadata(sptr<SurfaceBuffer> &buffer, std::vector<uint8_t> &dynamicMetadata);

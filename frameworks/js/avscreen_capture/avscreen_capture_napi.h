@@ -31,6 +31,7 @@ const std::string INIT = "Init";
 const std::string REPORT_USER_CHOICE = "ReportAVScreenCaptureUserChoice";
 const std::string START_RECORDING = "StartRecording";
 const std::string STOP_RECORDING = "StopRecording";
+const std::string SKIP_PRIVACY_MODE = "SkipPrivacyMode";
 const std::string SET_MIC_ENABLE = "SetMicrophoneEnable";
 const std::string RELEASE = "Release";
 }
@@ -86,6 +87,10 @@ private:
      */
     static napi_value JsStopRecording(napi_env env, napi_callback_info info);
     /**
+     * skipPrivacyMode(windowIDs: Array<number>): Promise<void>
+     */
+    static napi_value JsSkipPrivacyMode(napi_env env, napi_callback_info info);
+    /**
      * setMicrophoneEnabled(enable: boolean): Promise<void>
      */
     static napi_value JsSetMicrophoneEnabled(napi_env env, napi_callback_info info);
@@ -112,6 +117,8 @@ private:
         const std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx);
     static std::shared_ptr<TaskHandler<RetInfo>> GetSetMicrophoneEnableTask(
         const std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, const bool enable);
+    static std::shared_ptr<TaskHandler<RetInfo>> GetSkipPrivacyModeTask(
+        const std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, const std::vector<uint64_t> windowIDsVec);
     static int32_t GetPropertyInt32(napi_env env, napi_value configObj, const std::string &type, int32_t &result);
     static int32_t CheckVideoCodecFormat(const int32_t &preset);
     static int32_t CheckVideoFrameFormat(const int32_t &frameWidth, const int32_t &frameHeight,
@@ -122,6 +129,7 @@ private:
     static void AsyncJsReportAVScreenCaptureUserChoice(napi_env env, void *data);
     static int32_t CheckAudioSampleRate(const int32_t &audioSampleRate);
     static int32_t CheckAudioChannelCount(const int32_t &audioChannelCount);
+    static napi_status GetWindowIDsVectorParams(std::vector<uint64_t> &windowIDsVec, napi_env env, napi_value* args);
 
     AVScreenCaptureNapi();
     ~AVScreenCaptureNapi();
