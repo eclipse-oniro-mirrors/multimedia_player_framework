@@ -343,6 +343,11 @@ private:
     bool UpdatePrivacyUsingPermissionState(VideoPermissionState state);
     int32_t RequestUserPrivacyAuthority();
     int32_t StartPrivacyWindow();
+    void SetCaptureConfig(CaptureMode captureMode, int32_t missionId = -1);
+#ifdef PC_STANDARD
+    bool IsCaptureSpecifiedWindowValid();
+    void SendConfigToUIParams(AAFwk::Want& want);
+#endif
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
     int32_t TryStartNotification();
 #endif
@@ -358,7 +363,6 @@ private:
     void SystemRecorderInterruptLatestRecorder();
     int32_t ReStartMicForVoIPStatusSwitch();
     void RegisterPrivateWindowListener();
-    bool NoPreSetSpecifiedScreenParam();
 
 private:
     std::mutex mutex_;

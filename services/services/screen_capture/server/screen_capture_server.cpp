@@ -259,22 +259,35 @@ void ScreenCaptureServer::GetChoiceFromJson(Json::Value &root,
     }
 }
 
+void ScreenCaptureServer::SetCaptureConfig(CaptureMode captureMode, int32_t missionId)
+{
+    captureConfig_.captureMode = captureMode;
+    if (missionId != -1) {
+        captureConfig_.videoInfo.videoCapInfo.taskIDs.push_back(missionId);
+    } else {
+        captureConfig_.videoInfo.videoCapInfo.taskIDs = {};
+    }
+}
+
 void ScreenCaptureServer::PrepareSelectWindow(Json::Value &root, std::shared_ptr<ScreenCaptureServer> &server)
 {
     if (root.type() != Json::objectValue) {
         return;
-    }
-    const Json::Value missionIdJson = root["missionId"];
-    if (!missionIdJson.isNull() && missionIdJson.asInt64() >= 0) {
-        uint64_t missionId = missionIdJson.asInt64();
-        MEDIA_LOGI("Report Select MissionId: %{public}" PRIu64, missionId);
-        server->SetMissionId(missionId);
     }
     const Json::Value displayIdJson = root["displayId"];
     if (!displayIdJson.isNull() && displayIdJson.asInt64() >= 0) {
         uint64_t displayId = displayIdJson.asInt64();
         MEDIA_LOGI("Report Select DisplayId: %{public}" PRIu64, displayId);
         server->SetDisplayId(displayId);
+        // 手机模式 missionId displayId均为-1
+        server->SetCaptureConfig(CaptureMode::CAPTURE_SPECIFIED_SCREEN, -1);
+    }
+    const Json::Value missionIdJson = root["missionId"];
+    if (!missionIdJson.isNull() && missionIdJson.asInt() >= 0) {
+        int32_t missionId = missionIdJson.asInt();
+        MEDIA_LOGI("Report Select MissionId: %{public}d", missionId);
+        server->SetMissionId(missionId);
+        server->SetCaptureConfig(CaptureMode::CAPTURE_SPECIFIED_WINDOW, missionId);
     }
 }
 
@@ -1476,11 +1489,34 @@ int32_t ScreenCaptureServer::RegisterServerCallbacks()
     return MSERR_OK;
 }
 
-bool ScreenCaptureServer::NoPreSetSpecifiedScreenParam()
+#ifdef PC_STANDARD
+bool ScreenCaptureServer::IsCaptureSpecifiedWindowValid()
 {
-    return captureConfig_.videoInfo.videoCapInfo.displayId == static_cast<uint64_t>(-1) && missionIds_.size() == 0 &&
-        captureConfig_.videoInfo.videoCapInfo.taskIDs.size() == 0;
+    const int32_t missionIdNumMax = 2;
+    if (captureConfig_.captureMode == CAPTURE_SPECIFIED_Window &&
+        captureConfig_.videoInfo.videoCapInfo.taskIDs.size() < missionIdNumMax) {
+            return true;
+    }
+    return false;
 }
+
+void ScreenCaptureServer::SendConfigToUIParams(AAFwk::Want& want)
+{
+    want.SetParam("displayId", static_cast<int32_t>(captureConfig_.videoInfo.videoCapInfo.displayId));
+    if (captureConfig_.captureMode == CAPTURE_SPECIFIED_SCREEN) {
+        MEDIA_LOGI("CAPTURE_SPECIFIED_SCREEN, displayId: %{public}" PRId64 "missionId is dropped.",
+            captureConfig_.videoInfo.videoCapInfo.displayId);
+        captureConfig_.videoInfo.videoCapInfo.taskIDs = {};
+        want.SetParam("missionId", -1);
+    } else if (IsCaptureSpecifiedWindowValid() && captureConfig_.videoInfo.videoCapInfo.taskIDs.size() == 1) {
+        MEDIA_LOGI("CAPTURE_SPECIFIED_WINDOW, missionId: %{public}d",
+            *(captureConfig_.videoInfo.videoCapInfo.taskIDs.begin()));
+        want.SetParam("missionId", *(captureConfig_.videoInfo.videoCapInfo.taskIDs.begin()));
+    } else if (IsCaptureSpecifiedWindowValid() && captureConfig_.videoInfo.videoCapInfo.taskIDs.size() == 0) {
+        want.SetParam("missionId", -1);
+    }
+}
+#endif
 
 int32_t ScreenCaptureServer::StartPrivacyWindow()
 {
@@ -1498,7 +1534,7 @@ int32_t ScreenCaptureServer::StartPrivacyWindow()
     AAFwk::Want want;
     ErrCode ret = ERR_INVALID_VALUE;
 #ifdef PC_STANDARD
-    if (captureConfig_.captureMode == CAPTURE_SPECIFIED_SCREEN && NoPreSetSpecifiedScreenParam()) {
+    if (captureConfig_.captureMode == CAPTURE_SPECIFIED_SCREEN || IsCaptureSpecifiedWindowValid()) {
         AppExecFwk::ElementName element("",
             GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"],
             SELECT_ABILITY_NAME); // DeviceID
@@ -1506,6 +1542,7 @@ int32_t ScreenCaptureServer::StartPrivacyWindow()
         want.SetParam("params", comStr);
         want.SetParam("appLabel", callingLabel_);
         want.SetParam("sessionId", sessionId_);
+        SendConfigToUIParams(want);
         ret = AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want);
         MEDIA_LOGI("StartAbility end %{public}d, DeviceType : PC", ret);
     } else {
