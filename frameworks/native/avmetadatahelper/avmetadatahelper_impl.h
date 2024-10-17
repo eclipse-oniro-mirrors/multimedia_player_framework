@@ -19,6 +19,15 @@
 #include "nocopyable.h"
 #include "i_avmetadatahelper_service.h"
 #include "surface_buffer.h"
+#include <cerrno>
+#include <climits>
+#include <cmath>
+#include <cstdint>
+#include <cstdlib>
+#include <string>
+#include <fstream>
+#include <sstream>
+#include <chrono>
 
 namespace OHOS {
 namespace Media {
@@ -48,10 +57,26 @@ private:
         int32_t rotation = 0;
         PixelFormat pixelFormat = PixelFormat::NV12;
         bool isHdr = false;
+        int32_t outputHeight = 0;
     };
 
+    static std::string GetLocalTime()
+    {
+        // time string : "year-month-day hour_minute_second.millisecond", ':' is not supported in windows file name
+        auto now = std::chrono::system_clock::now();
+        auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+        std::time_t t = std::chrono::system_clock::to_time_t(now);
+        std::tm tmInfo = *std::localtime(&t);
+
+        std::stringstream ss;
+        int millSecondWidth = 3;
+        ss << std::put_time(&tmInfo, "%Y-%m-%d %H_%M_%S.") << std::setfill('0')
+           << std::setw(millSecondWidth) << ms.count();
+        return ss.str();
+    }
     std::shared_ptr<IAVMetadataHelperService> avMetadataHelperService_ = nullptr;
     int32_t rotation_ = 0;
+    bool isDump_ = false;
     static std::chrono::milliseconds cloneTimestamp;
     static std::chrono::milliseconds batchHandleTimestamp;
     void ReportSceneCode(Scene scene);
@@ -59,19 +84,27 @@ private:
     sptr<SurfaceBuffer> CopySurfaceBuffer(sptr<SurfaceBuffer> &srcSurfaceBuffer);
     std::shared_ptr<PixelMap> CreatePixelMapYuv(const std::shared_ptr<AVBuffer> &frameBuffer,
                                                 PixelMapInfo &pixelMapInfo);
-    std::shared_ptr<PixelMap> OnCreatePixelMapSdr(const std::shared_ptr<AVBuffer> &frameBuffer,
-                                                  PixelMapInfo &pixelMapInfo,
-                                                  InitializationOptions &options);
-    std::shared_ptr<PixelMap> OnCreatePixelMapHdr(sptr<SurfaceBuffer> &mySurfaceBuffer);
-    void SetPixelMapYuvInfo(std::shared_ptr<PixelMap> pixelMap, bool isPlanesAvailable,
-                            OH_NativeBuffer_Planes *planes);
+    std::shared_ptr<PixelMap> CreatePixelMapFromAVShareMemory(const std::shared_ptr<AVBuffer> &frameBuffer,
+                                                              PixelMapInfo &pixelMapInfo,
+                                                              InitializationOptions &options);
+    std::shared_ptr<PixelMap> CreatePixelMapFromSurfaceBuffer(sptr<SurfaceBuffer> &mySurfaceBuffer,
+                                                              PixelMapInfo &pixelMapInfo);
+    void SetPixelMapYuvInfo(sptr<SurfaceBuffer> &surfaceBuffer, std::shared_ptr<PixelMap> pixelMap,
+                            PixelMapInfo &pixelMapInfo);
+    std::string pixelFormatToString(PixelFormat pixelFormat);
     void CopySurfaceBufferInfo(sptr<SurfaceBuffer> &source, sptr<SurfaceBuffer> &dst);
     bool GetSbStaticMetadata(sptr<SurfaceBuffer> &buffer, std::vector<uint8_t> &staticMetadata);
     bool GetSbDynamicMetadata(sptr<SurfaceBuffer> &buffer, std::vector<uint8_t> &dynamicMetadata);
     bool SetSbStaticMetadata(sptr<SurfaceBuffer> &buffer, const std::vector<uint8_t> &staticMetadata);
     bool SetSbDynamicMetadata(sptr<SurfaceBuffer> &buffer, const std::vector<uint8_t> &dynamicMetadata);
-    int32_t CopySurfaceBufferPixels(sptr<SurfaceBuffer> &srcSurfaceBuffer, sptr<SurfaceBuffer> &dstSurfaceBuffer);
     static void ScalePixelMap(std::shared_ptr<PixelMap> &pixelMap, PixelMapInfo &info, const PixelMapParams &param);
+    int32_t CopySurfaceBufferToPixelMap(sptr<SurfaceBuffer> &SurfaceBuffer,
+                                        std::shared_ptr<PixelMap> pixelMap,
+                                        PixelMapInfo &pixelMapInfo);
+    int32_t SaveDataToFile(const std::string &fileName, const char *data, const size_t &totalSize);
+    void InitDumpFlag();
+    int32_t DumpPixelMap(bool isDump, std::shared_ptr<PixelMap> pixelMap, const std::string &fileName);
+    int32_t DumpAVBuffer(bool isDump, const std::shared_ptr<AVBuffer> &frameBuffer, const std::string &fileName);
 };
 } // namespace Media
 } // namespace OHOS

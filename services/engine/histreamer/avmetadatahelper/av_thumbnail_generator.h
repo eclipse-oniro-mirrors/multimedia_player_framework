@@ -84,7 +84,6 @@ private:
 
     std::shared_ptr<AVBuffer> GenerateAlignmentAvBuffer();
     std::shared_ptr<AVBuffer> GenerateAvBufferFromFCodec();
-    int32_t CopySurfaceBufferPixels(const sptr<SurfaceBuffer> &surfaceBuffer, std::shared_ptr<AVBuffer> &avBuffer);
     void CopySurfaceBufferInfo(sptr<SurfaceBuffer> &source, sptr<SurfaceBuffer> &dst);
     bool GetSbStaticMetadata(const sptr<SurfaceBuffer> &buffer, std::vector<uint8_t> &staticMetadata);
     bool GetSbDynamicMetadata(const sptr<SurfaceBuffer> &buffer, std::vector<uint8_t> &dynamicMetadata);
