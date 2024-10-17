@@ -371,6 +371,10 @@ int32_t SystemTonePlayerImpl::Prepare()
     CHECK_AND_RETURN_RET_LOG(systemToneState_ != SystemToneState::STATE_RELEASED, MSERR_INVALID_STATE,
         "System tone player has been released!");
 
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
+    if (dataShareHelper == nullptr) {
+        MEDIA_LOGE("Create dataShare failed, datashare or ringtone library error.");
+    }
     std::string audioUri = systemSoundMgr_.GetSystemToneUri(context_, systemToneType_);
     int32_t result = InitPlayer(audioUri);
     CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, result,
