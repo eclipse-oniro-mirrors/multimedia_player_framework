@@ -2057,6 +2057,7 @@ void HiPlayerImpl::HandleCompleteEvent(const Event& event)
     pipeline_->Pause();
     callbackLooper_.DoReportCompletedTime();
     if (!singleLoop_.load()) {
+        callbackLooper_.ReportRemainedMaxAmplitude();
         OnStateChanged(PlayerStateId::EOS);
     }
     if (startTime_ != -1) {
