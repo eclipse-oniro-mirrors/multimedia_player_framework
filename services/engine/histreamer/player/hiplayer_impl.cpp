@@ -2264,8 +2264,8 @@ void HiPlayerImpl::HandleCompleteEvent(const Event& event)
         endTimeWithMode_ = PLAY_RANGE_DEFAULT_VALUE;
         pipeline_->SetPlayRange(startTimeWithMode_, endTimeWithMode_);
     }
+    callbackLooper_.ReportRemainedMaxAmplitude();
     if (!singleLoop_.load()) {
-        callbackLooper_.ReportRemainedMaxAmplitude();
         OnStateChanged(PlayerStateId::EOS);
     }
     if (startTime_ != -1) {
