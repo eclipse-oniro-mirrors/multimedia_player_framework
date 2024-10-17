@@ -2038,7 +2038,7 @@ void HiPlayerImpl::OnEventSub(const Event &event)
         case EventType::BUFFERING_START : {
             if (isSeekClosest_.load()) {
                 if (isBufferingStartNotified_.load()) {
-                    MEDIA_LOG_I("BUFFERING_END BLOCKED");
+                    MEDIA_LOG_I("BUFFERING_START BLOCKED");
                     break;
                 } else {
                     MEDIA_LOG_I("Seek closest buffering start.");
