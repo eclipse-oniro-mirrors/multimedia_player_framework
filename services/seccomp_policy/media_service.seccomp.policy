@@ -108,7 +108,7 @@ mprotect;all
 madvise;all
 rt_tgsigqueueinfo;all
 wait4;all
-prlimit64;arm64
+prlimit64;all
 sched_setattr;all
 sched_getattr;all
 getrandom;all
