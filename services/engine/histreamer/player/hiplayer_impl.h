@@ -224,12 +224,14 @@ private:
     bool IsAudioMime(const std::string& mime);
     bool IsSubtitleMime(const std::string& mime);
     Status Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeekDone);
+    Status HandleSeek(int64_t seekPos, PlayerSeekMode mode);
     
     Status doPreparedSeek(int64_t seekPos, PlayerSeekMode mode);
     Status doStartedSeek(int64_t seekPos, PlayerSeekMode mode);
     Status doPausedSeek(int64_t seekPos, PlayerSeekMode mode);
     Status doCompletedSeek(int64_t seekPos, PlayerSeekMode mode);
     Status doSeek(int64_t seekPos, PlayerSeekMode mode);
+    Status HandleSeekClosest(int64_t seekPos, int64_t seekTimeUs);
     void NotifySeek(Status rtv, bool flag, int64_t seekPos);
     void ResetIfSourceExisted();
     void ReleaseInner();
@@ -267,6 +269,7 @@ private:
     std::atomic<bool> renderFirstFrame_ {false};
     std::atomic<bool> singleLoop_ {false};
     std::atomic<bool> isSeek_ {false};
+    std::atomic<bool> isSeekClosest_ {false};
     std::atomic<PlaybackRateMode> playbackRateMode_ {PlaybackRateMode::SPEED_FORWARD_1_00_X};
 
     std::shared_ptr<EventReceiver> playerEventReceiver_;
@@ -363,6 +366,8 @@ private:
     bool maxAmplitudeCbStatus_ {false};
     OHOS::Media::Mutex handleCompleteMutex_{};
     int64_t playStartTime_ = 0;
+    std::atomic<bool> isBufferingStartNotified_ {false};
+    std::atomic<bool> isBufferingEndNotified_ {false};
 };
 } // namespace Media
 } // namespace OHOS
