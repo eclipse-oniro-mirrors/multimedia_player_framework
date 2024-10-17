@@ -15,10 +15,12 @@
  
 #ifndef DRAGGING_PLAYER_AGENT_H
 #define DRAGGING_PLAYER_AGENT_H
- 
+
+#include <atomic>
 #include "dragging_player.h"
 #include "common/status.h"
- 
+#include "osal/task/task.h"
+
 namespace OHOS {
 namespace Media {
 using namespace std;
@@ -30,17 +32,20 @@ public:
     DraggingPlayerAgent(const DraggingPlayerAgent &) = delete;
     DraggingPlayerAgent operator=(const DraggingPlayerAgent &) = delete;
     ~DraggingPlayerAgent();
-    Status Init(const shared_ptr<DemuxerFilter> &demuxer, const shared_ptr<DecoderSurfaceFilter> &decoder);
+    Status Init(const shared_ptr<DemuxerFilter> &demuxer, const shared_ptr<DecoderSurfaceFilter> &decoder,
+        std::string playerId);
     void ConsumeVideoFrame(const std::shared_ptr<AVBuffer> avBuffer, uint32_t bufferIndex);
     bool IsVideoStreamDiscardable(const std::shared_ptr<AVBuffer> avBuffer);
     void UpdateSeekPos(int64_t seekMs);
+    void StopDragging(int64_t seekCnt);
     void Release();
  
 private:
     static bool LoadSymbol();
-    static void *LoadLibrary(const std::string &path);
+    static void *LoadLibrary();
     static bool CheckSymbol(void *handler);
     static mutex mtx_;
+    unique_ptr<OHOS::Media::Task> task_;
     static void *handler_;
     using CreateFunc = DraggingPlayer *(*)();
     using DestroyFunc = void (*)(DraggingPlayer *);
@@ -52,6 +57,9 @@ private:
     shared_ptr<DemuxerFilter> demuxer_ {nullptr};
     shared_ptr<DecoderSurfaceFilter> decoder_ {nullptr};
     bool isReleased_ {false};
+    atomic<int64_t> seekCnt_ {0};
+    mutex draggingMutex_ {};
+    std::string threadName_ {};
 };
  
 } // namespace Media

@@ -15,6 +15,7 @@
 
 #include "player_service_proxy.h"
 #include "player_listener_stub.h"
+
 #ifdef SUPPORT_AVPLAYER_DRM
 #include "key_session_service_proxy.h"
 #endif
@@ -920,10 +921,10 @@ int32_t PlayerServiceProxy::SetDeviceChangeCbStatus(bool status)
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-
+ 
     bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
-
+ 
     data.WriteInt32(status);
     int32_t error = SendRequest(SET_DEVICE_CHANGE_CB_STATUS, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
@@ -976,10 +977,10 @@ int32_t PlayerServiceProxy::SetMaxAmplitudeCbStatus(bool status)
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
- 
+
     bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
- 
+
     data.WriteInt32(status);
     int32_t error = SendRequest(SET_MAX_AMPLITUDE_CB_STATUS, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,

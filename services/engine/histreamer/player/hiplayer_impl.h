@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -163,7 +163,6 @@ public:
     int32_t SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted) override;
     float GetMaxAmplitude() override;
     int32_t SetMaxAmplitudeCbStatus(bool status) override;
-
 private:
     enum HiplayerSvpMode : int32_t {
         SVP_CLEAR = -1, /* it's not a protection video */
@@ -172,6 +171,7 @@ private:
     };
 
     Status DoSetSource(const std::shared_ptr<MediaSource> source);
+    void DoSetPlayStrategy(const std::shared_ptr<MediaSource> source);
     Status Resume();
     void GetDumpFlag();
     void HandleCompleteEvent(const Event& event);
@@ -206,7 +206,7 @@ private:
     bool IsFileUrl(const std::string &url) const;
     bool IsValidPlayRange(int64_t start, int64_t end) const;
     int32_t GetRealPath(const std::string &url, std::string &realUrlPath) const;
-    void SetDefaultAudioRenderInfo();
+    void SetDefaultAudioRenderInfo(const std::vector<std::shared_ptr<Meta>> &trackInfos);
     void AppendPlayerMediaInfo();
     int64_t GetCurrentMillisecond();
     void UpdatePlayStatistics();
@@ -221,15 +221,16 @@ private:
     bool IsAudioMime(const std::string& mime);
     bool IsSubtitleMime(const std::string& mime);
     Status Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeekDone);
-    
+    Status PrepareForSeek();
+
     Status doPreparedSeek(int64_t seekPos, PlayerSeekMode mode);
     Status doStartedSeek(int64_t seekPos, PlayerSeekMode mode);
     Status doPausedSeek(int64_t seekPos, PlayerSeekMode mode);
     Status doCompletedSeek(int64_t seekPos, PlayerSeekMode mode);
     Status doSeek(int64_t seekPos, PlayerSeekMode mode);
+    void NotifySeek(Status rtv, bool flag, int64_t seekPos);
     void ResetIfSourceExisted();
     void ReleaseInner();
-    void NotifySeek(Status rtv, bool flag, int64_t seekPos);
     int32_t InitDuration();
     int32_t InitVideoWidthAndHeight();
     int32_t SetFrameRateForSeekPerformance(double frameRate);
@@ -248,7 +249,9 @@ private:
     int64_t GetPlayStartTime();
     Status StartSeekContinous();
     int32_t InnerSelectTrack(std::string mime, int32_t trackId, PlayerSwitchMode mode);
+    bool NeedSeekClosest();
     void HandleEosFlagState(const Event& event);
+    Status InnerDoSeek(int64_t seekTimeUs, int64_t seekPos, PlayerSeekMode mode);
     int32_t GetSarVideoWidth(std::shared_ptr<Meta> trackInfo);
     int32_t GetSarVideoHeight(std::shared_ptr<Meta> trackInfo);
 
@@ -259,6 +262,7 @@ private:
     int32_t appTokenId_{0};
     int64_t appFullTokenId_{0};
     OHOS::Media::Mutex stateMutex_{};
+    OHOS::Media::Mutex initialPlayingEventMutex_{};
     OHOS::Media::ConditionVariable cond_{};
     std::atomic<bool> renderFirstFrame_ {false};
     std::atomic<bool> singleLoop_ {false};
@@ -298,6 +302,11 @@ private:
 
     bool isStreaming_{false};
 
+    int32_t rotation90 = 90;
+    int32_t rotation270 = 270;
+
+    std::shared_ptr<SeekAgent> seekAgent_;
+
     std::mutex drmMutex_;
     std::condition_variable drmConfigCond_;
     bool isDrmProtected_ = false;
@@ -311,17 +320,19 @@ private:
     std::vector<std::pair<std::string, bool>> completeState_;
     std::mutex seekMutex_;
     std::string bundleName_ {};
-    std::shared_ptr<SeekAgent> seekAgent_;
 
-    int32_t rotation90 = 90;
-    int32_t rotation270 = 270;
+    bool isInCompleted_ {false};
+    
     std::map<std::string, std::string> header_;
     uint32_t preferedWidth_ = 0;
     uint32_t preferedHeight_ = 0;
     uint32_t bufferDuration_ = 0;
     bool preferHDR_ = false;
     OHOS::Media::MediaType mutedMediaType_ = OHOS::Media::MediaType::MEDIA_TYPE_MAX_COUNT;
+    std::string audioLanguage_;
+    std::string subtitleLanguage_;
     std::string playerId_;
+    std::string mimeType_;
     int32_t currentAudioTrackId_ = -1;
     int32_t defaultAudioTrackId_ = -1;
     int32_t currentVideoTrackId_ = -1;
@@ -336,15 +347,14 @@ private:
     int64_t maxSurfaceSwapLatency_ = 0;
     int64_t playTotalDuration_ = 0;
     bool inEosSeek_ = false;
-    std::string mimeType_;
+    std::atomic<bool> isDoCompletedSeek_{false};
+    OHOS::Media::Mutex stateChangeMutex_{};
     int64_t playRangeStartTime_ = -1;
     int64_t playRangeEndTime_ = -1;
     bool isSetPlayRange_ = false;
     int64_t startTimeWithMode_ = -1;
     int64_t endTimeWithMode_ = -1;
     PlayerSeekMode playRangeSeekMode_ = PlayerSeekMode::SEEK_PREVIOUS_SYNC;
-    std::atomic<bool> isDoCompletedSeek_{false};
-    OHOS::Media::Mutex stateChangeMutex_{};
 
     std::mutex seekContinousMutex_;
     std::atomic<int64_t> seekContinousBatchNo_ {-1};

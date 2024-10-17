@@ -34,7 +34,7 @@ public:
     explicit SeekAgent(std::shared_ptr<Pipeline::DemuxerFilter> demuxer, int64_t startPts = 0);
     ~SeekAgent();
 
-    Status Seek(int64_t seekPos);
+    Status Seek(int64_t seekPos, bool &timeout);
     Status OnAudioBufferFilled(std::shared_ptr<AVBuffer>& buffer,
         sptr<AVBufferQueueProducer> producer, int32_t trackId);
     Status OnVideoBufferFilled(std::shared_ptr<AVBuffer>& buffer,
