@@ -1493,7 +1493,7 @@ int32_t ScreenCaptureServer::RegisterServerCallbacks()
 bool ScreenCaptureServer::IsCaptureSpecifiedWindowValid()
 {
     const int32_t missionIdNumMax = 2;
-    if (captureConfig_.captureMode == CAPTURE_SPECIFIED_Window &&
+    if (captureConfig_.captureMode == CAPTURE_SPECIFIED_WINDOW &&
         captureConfig_.videoInfo.videoCapInfo.taskIDs.size() < missionIdNumMax) {
             return true;
     }
@@ -1504,7 +1504,7 @@ void ScreenCaptureServer::SendConfigToUIParams(AAFwk::Want& want)
 {
     want.SetParam("displayId", static_cast<int32_t>(captureConfig_.videoInfo.videoCapInfo.displayId));
     if (captureConfig_.captureMode == CAPTURE_SPECIFIED_SCREEN) {
-        MEDIA_LOGI("CAPTURE_SPECIFIED_SCREEN, displayId: %{public}" PRId64 "missionId is dropped.",
+        MEDIA_LOGI("CAPTURE_SPECIFIED_SCREEN, displayId: %{public}" PRId64 " missionId is dropped.",
             captureConfig_.videoInfo.videoCapInfo.displayId);
         captureConfig_.videoInfo.videoCapInfo.taskIDs = {};
         want.SetParam("missionId", -1);
