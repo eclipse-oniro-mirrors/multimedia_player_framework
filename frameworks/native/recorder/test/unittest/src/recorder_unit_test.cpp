@@ -74,6 +74,13 @@ void RecorderUnitTest::SetUpTestCase(void)
                 .resDeviceID = { "local" },
                 .grantStatus = { PermissionState::PERMISSION_GRANTED },
                 .grantFlags = { 1 }
+            },
+            {
+                .permissionName = "ohos.permission.DUMP",
+                .isGeneral = true,
+                .resDeviceID = { "local" },
+                .grantStatus = { PermissionState::PERMISSION_GRANTED },
+                .grantFlags = { 1 }
             }
         }
     };
@@ -1572,7 +1579,7 @@ HWTEST_F(RecorderUnitTest, recorder_video_SetCustomInfo_002, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, recorder_->Release());
     close(videoRecorderConfig.outputFd);
 }
-         
+
 /**
  * @tc.name: recorder_video_GetMetaSurface
  * @tc.desc: record video with meta data
