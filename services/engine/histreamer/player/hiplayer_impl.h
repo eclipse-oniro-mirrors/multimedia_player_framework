@@ -224,6 +224,7 @@ private:
     bool IsAudioMime(const std::string& mime);
     bool IsSubtitleMime(const std::string& mime);
     Status Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeekDone);
+    Status HandleSeek(int64_t seekPos, PlayerSeekMode mode);
     
     Status doPreparedSeek(int64_t seekPos, PlayerSeekMode mode);
     Status doStartedSeek(int64_t seekPos, PlayerSeekMode mode);
