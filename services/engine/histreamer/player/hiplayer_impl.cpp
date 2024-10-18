@@ -1009,12 +1009,6 @@ Status HiPlayerImpl::Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeek
         audioSink_->SetIsTransitent(false);
     }
     isSeek_ = false;
-    if (isSeekClosest_.load() && isBufferingEndNotified_.load()) {
-        MEDIA_LOG_I("BUFFERING_END PLAYING");
-        MEDIA_LOG_I("Seek closest buffering end.");
-        NotifyBufferingEnd(0);
-    }
-    isSeekClosest_.store(false);
     UpdateMaxSeekLatency(mode, seekStartTime);
     return rtv;
 }
@@ -1203,10 +1197,7 @@ Status HiPlayerImpl::doSeek(int64_t seekPos, PlayerSeekMode mode)
 
 Status HiPlayerImpl::HandleSeekClosest(int64_t seekPos, int64_t seekTimeUs)
 {
-    isSeekClosest_.store(true);
     MEDIA_LOG_I_SHORT("doSeek SEEK_CLOSEST");
-    isBufferingStartNotified_.store(false);
-    isBufferingEndNotified_.store(false);
     isSeekClosest_.store(true);
     if (videoDecoder_ != nullptr) {
         videoDecoder_->SetSeekTime(seekTimeUs + mediaStartPts_);
@@ -2026,9 +2017,8 @@ void HiPlayerImpl::OnEventSub(const Event &event)
             break;
         }
         case EventType::BUFFERING_END : {
-            if (isSeekClosest_.load()) {
-                isBufferingEndNotified_.store(true);
-                MEDIA_LOG_I("BUFFERING_END BLOCKED");
+            if (!isBufferingStartNotified_.load() || isSeekClosest_.load()) {
+                MEDIA_LOG_I_SHORT("BUFFERING_END BLOCKED");
                 break;
             }
             MEDIA_LOG_I_SHORT("BUFFERING_END PLAYING");
@@ -2036,14 +2026,9 @@ void HiPlayerImpl::OnEventSub(const Event &event)
             break;
         }
         case EventType::BUFFERING_START : {
-            if (isSeekClosest_.load()) {
-                if (isBufferingStartNotified_.load()) {
-                    MEDIA_LOG_I("BUFFERING_START BLOCKED");
-                    break;
-                } else {
-                    MEDIA_LOG_I("Seek closest buffering start.");
-                    isBufferingStartNotified_.store(true);
-                }
+            if (isBufferingStartNotified_.load()) {
+                MEDIA_LOG_I_SHORT("BUFFERING_START BLOCKED");
+                break;
             }
             MEDIA_LOG_I_SHORT("BUFFERING_START PAUSE");
             NotifyBufferingStart(AnyCast<int32_t>(event.param));
@@ -2233,6 +2218,7 @@ void HiPlayerImpl::HandleErrorEvent(int32_t errorCode)
 void HiPlayerImpl::NotifyBufferingStart(int32_t param)
 {
     Format format;
+    isBufferingStartNotified_.store(true);
     callbackLooper_.StopReportMediaProgress();
     callbackLooper_.ManualReportMediaProgressOnce();
     (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_BUFFERING_START), 1);
@@ -2243,6 +2229,7 @@ void HiPlayerImpl::NotifyBufferingEnd(int32_t param)
 {
     MEDIA_LOG_I_SHORT("NotifyBufferingEnd");
     Format format;
+    isBufferingStartNotified_.store(false);
     (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_BUFFERING_END), 1);
     callbackLooper_.OnInfo(INFO_TYPE_BUFFERING_UPDATE, param, format);
 }
@@ -2455,6 +2442,13 @@ void HiPlayerImpl::NotifySeekDone(int32_t seekPos)
                 return !syncManager_->InSeeking();
             });
     }
+    if (demuxer_->IsBuffering()) {
+        demuxer_->WaitForBufferingEnd();
+    }
+    if (isSeekClosest_.load() && !demuxer_->IsBuffering()) {
+        NotifyBufferingEnd(0);
+    }
+    isSeekClosest_.store(false);
     MEDIA_LOG_D_SHORT("NotifySeekDone seekPos: %{public}d", seekPos);
     callbackLooper_.OnInfo(INFO_TYPE_POSITION_UPDATE, seekPos, format);
     callbackLooper_.OnInfo(INFO_TYPE_SEEKDONE, seekPos, format);
