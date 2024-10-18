@@ -288,7 +288,6 @@ private:
         size_t &argc, napi_value *argv);
     static bool JsHandleParameter(napi_env env, napi_value args, AVPlayerNapi *jsPlayer);
     static void SeekEnqueueTask(AVPlayerNapi *jsPlayer, int32_t time, int32_t mode);
-    static void SelectTrackEnqueueTask(AVPlayerNapi *jsPlayer, int32_t index, int32_t mode);
     AVPlayerNapi();
     ~AVPlayerNapi() override;
     void SaveCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref);
@@ -357,6 +356,8 @@ private:
         AVPlayerNapi *napi = nullptr;
     };
     void GetCurrentTrackTask(std::unique_ptr<AVPlayerContext> &promiseCtx, napi_env env, napi_value args);
+    void HandleSelectTrack(std::unique_ptr<AVPlayerContext> &promiseCtx, napi_env env, napi_value args[],
+        size_t argCount);
     static thread_local napi_ref constructor_;
     napi_env env_ = nullptr;
     std::shared_ptr<Player> player_ = nullptr;
@@ -394,6 +395,8 @@ private:
     std::shared_mutex drmMutex_{};
     std::multimap<std::string, std::vector<uint8_t>> localDrmInfos_;
     Format playbackInfo_;
+    int32_t index_ = -1;
+    int32_t mode_ = SWITCH_SMOOTH;
 };
 } // namespace Media
 } // namespace OHOS
