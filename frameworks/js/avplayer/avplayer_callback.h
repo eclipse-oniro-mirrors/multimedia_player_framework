@@ -83,7 +83,7 @@ private:
     bool IsValidState(PlayerStates state, std::string &stateStr);
     int32_t SetDrmInfoData(const uint8_t *drmInfoAddr, int32_t infoCount,
         std::multimap<std::string, std::vector<uint8_t>> &drmInfoMap);
-    bool IsAPI13IOError(MediaServiceExtErrCodeAPI9 error);
+    bool IsAPI14IOError(MediaServiceExtErrCodeAPI9 error);
     int32_t GetApiversion(int32_t uid);
     int32_t appUid_ = 0;
 

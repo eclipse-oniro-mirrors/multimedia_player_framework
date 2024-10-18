@@ -27,7 +27,7 @@
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "NativeAVPlayer"};
     constexpr uint32_t ERROR_CODE_MAP_LENGTH = 11;
-    constexpr uint32_t ERROR_CODE_API9_MAP_LENGTH = 11;
+    constexpr uint32_t ERROR_CODE_API9_MAP_LENGTH = 22;
     constexpr uint32_t STATE_MAP_LENGTH = 9;
     constexpr uint32_t INFO_TYPE_LENGTH = 19;
     constexpr int32_t UNSUPPORT_FORMAT_ERROR_CODE = 331350544;
@@ -109,6 +109,17 @@ static const PlayerErrorCodeApi9Convert g_errorCodeApi9Map[ERROR_CODE_API9_MAP_L
     {MSERR_EXT_API9_SERVICE_DIED, AV_ERR_SERVICE_DIED},
     {MSERR_EXT_API9_UNSUPPORT_FORMAT, AV_ERR_UNSUPPORT},
     {MSERR_EXT_API9_AUDIO_INTERRUPTED, AV_ERR_OPERATE_NOT_PERMIT},
+    {MSERR_EXT_API14_IO_CANNOT_FIND_HOST, AV_ERR_IO},
+    {MSERR_EXT_API14_IO_CONNECTION_TIMEOUT, AV_ERR_IO},
+    {MSERR_EXT_API14_IO_NETWORK_ABNORMAL, AV_ERR_IO},
+    {MSERR_EXT_API14_IO_NETWORK_UNAVAILABLE, AV_ERR_IO},
+    {MSERR_EXT_API14_IO_NO_PERMISSION, AV_ERR_IO},
+    {MSERR_EXT_API14_IO_REQUEST_DENID, AV_ERR_IO},
+    {MSERR_EXT_API14_IO_RESOURE_NOT_FOUND, AV_ERR_IO},
+    {MSERR_EXT_API14_IO_SSL_CLIENT_CERT_NEEDED, AV_ERR_IO},
+    {MSERR_EXT_API14_IO_SSL_CONNECT_FAIL, AV_ERR_IO},
+    {MSERR_EXT_API14_IO_SSL_SERVER_CERT_UNTRUSTED, AV_ERR_IO},
+    {MSERR_EXT_API14_IO_UNSUPPORTTED_REQEST, AV_ERR_IO},
 };
 
 static const StateConvert g_stateMap[STATE_MAP_LENGTH] = {
@@ -404,7 +415,7 @@ void NativeAVPlayerCallback::OnError(int32_t errorCode, const std::string &error
     int32_t avErrorCode;
     if (errorCallback_) { // errorCallback_ precedes over callback_.onInfo
         MediaServiceExtErrCodeAPI9 errorCodeApi9 = MSERR_EXT_API9_OK;
-        if (errorCode >= MSERR_EXT_API9_NO_PERMISSION && errorCode <= MSERR_EXT_API9_AUDIO_INTERRUPTED) {
+        if (errorCode >= MSERR_EXT_API9_NO_PERMISSION && errorCode <= MSERR_EXT_API14_IO_UNSUPPORTTED_REQEST) {
             errorCodeApi9 = static_cast<MediaServiceExtErrCodeAPI9>(errorCode);
             avErrorCode = MSErrCodeToAVErrCodeApi9(errorCodeApi9);
         } else {
