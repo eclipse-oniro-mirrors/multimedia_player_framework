@@ -20,6 +20,7 @@
 #include <string>
 #include <nativetoken_kit.h>
 #include "media_errors.h"
+#include "media_utils.h"
 #include "accesstoken_kit.h"
 #include "token_setproc.h"
 #include "screen_capture_listener_proxy.h"
@@ -53,7 +54,8 @@ protected:
     AVScreenCaptureConfig config_;
     int32_t outputFd_ = -1;
 private:
-    const std::string ScreenRecorderBundleName = "com.ohos.screenrecorder";
+    const std::string ScreenRecorderBundleName =
+        GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"];
 };
 
 class StandardScreenCaptureServerUnittestCallback : public IStandardScreenCaptureListener {
