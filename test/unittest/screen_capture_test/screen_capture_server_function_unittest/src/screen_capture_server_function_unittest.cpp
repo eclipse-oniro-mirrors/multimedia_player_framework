@@ -784,7 +784,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ReportAVScreenCaptureUserChoice_007, T
     config_.audioInfo.innerCapInfo.audioChannels = 2;
     config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    int32_t sessionId = 1;
+    int32_t sessionId = 0;
     ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
     std::string choice = "{\"choice\": \"true\", \"displayId\": 0, \"missionId\": 0}";
     ASSERT_NE(screenCaptureServer_->ReportAVScreenCaptureUserChoice(sessionId, choice), MSERR_OK);
@@ -800,9 +800,9 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ReportAVScreenCaptureUserChoice_008, T
     config_.audioInfo.innerCapInfo.audioChannels = 2;
     config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    int32_t sessionId = 1;
+    int32_t sessionId = 0;
     ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
-    std::string choice = "{\"choice\": \"true\"";
+    std::string choice = "{\"choice\": \"true\"}";
     ASSERT_NE(screenCaptureServer_->ReportAVScreenCaptureUserChoice(sessionId, choice), MSERR_OK);
 }
 
