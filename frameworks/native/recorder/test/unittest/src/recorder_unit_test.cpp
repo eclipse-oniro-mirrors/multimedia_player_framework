@@ -34,6 +34,27 @@ static VideoRecorderConfig g_videoRecorderConfig;
 
 void RecorderUnitTest::SetUpTestCase(void)
 {
+    SetSelfTokenPremission();
+}
+
+void RecorderUnitTest::TearDownTestCase(void) {}
+
+void RecorderUnitTest::SetUp(void)
+{
+    recorder_ = std::make_shared<RecorderMock>();
+    ASSERT_NE(nullptr, recorder_);
+    ASSERT_TRUE(recorder_->CreateRecorder());
+}
+
+void RecorderUnitTest::TearDown(void)
+{
+    if (recorder_ != nullptr) {
+        recorder_->Release();
+    }
+}
+
+void RecorderUnitTest::InitHapParams(HapInfoParams &info, HapPolicyParams &policy)
+{
     HapInfoParams info = {
         .userID = 100, // 100 user ID
         .bundleName = "com.ohos.test.recordertdd",
@@ -83,28 +104,20 @@ void RecorderUnitTest::SetUpTestCase(void)
                 .grantFlags = { 1 }
             }
         }
-    };
-    AccessTokenIDEx tokenIdEx = { 0 };
-    tokenIdEx = AccessTokenKit::AllocHapToken(info, policy);
-    int ret = SetSelfTokenID(tokenIdEx.tokenIDEx);
-    if (ret != 0) {
-        MEDIA_LOGE("Set hap token failed, err: %{public}d", ret);
     }
 }
 
-void RecorderUnitTest::TearDownTestCase(void) {}
-
-void RecorderUnitTest::SetUp(void)
+void RecorderUnitTest::SetSelfTokenPremission()
 {
-    recorder_ = std::make_shared<RecorderMock>();
-    ASSERT_NE(nullptr, recorder_);
-    ASSERT_TRUE(recorder_->CreateRecorder());
-}
+    HapInfoParams hapInfo;
+    HapPolicyParams hapPolicy;
+    InitHapParams(hapInfo, hapPolicy);
 
-void RecorderUnitTest::TearDown(void)
-{
-    if (recorder_ != nullptr) {
-        recorder_->Release();
+    AccessTokenIDEx tokenIdEx = { 0 };
+    tokenIdEx = AccessTokenKit::AllocHapToken(hapInfo, hapPolicy);
+    int ret = SetSelfTokenID(tokenIdEx.tokenIDEx);
+    if (ret != 0) {
+        MEDIA_LOGE("Set hap token failed, err: %{public}d", ret);
     }
 }
 
