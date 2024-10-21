@@ -20,8 +20,10 @@
 #include <string>
 #include <nativetoken_kit.h>
 #include "media_errors.h"
+#include "media_utils.h"
 #include "accesstoken_kit.h"
 #include "token_setproc.h"
+#include "screen_capture_listener_proxy.h"
 #include "screen_capture_server.h"
 #include "gtest/gtest.h"
 
@@ -52,16 +54,28 @@ protected:
     AVScreenCaptureConfig config_;
     int32_t outputFd_ = -1;
 private:
-    const std::string ScreenRecorderBundleName = "com.ohos.screenrecorder";
+    const std::string ScreenRecorderBundleName =
+        GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"];
 };
 
-class ScreenCaptureServerUnittestCallback : public ScreenCaptureCallBack {
+class StandardScreenCaptureServerUnittestCallback : public IStandardScreenCaptureListener {
+public:
+    virtual ~StandardScreenCaptureServerUnittestCallback() = default;
+    sptr<IRemoteObject> AsObject() { return nullptr; };
+    void OnError(ScreenCaptureErrorType errorType, int32_t errorCode) {};
+    void OnAudioBufferAvailable(bool isReady, AudioCaptureSourceType type) {};
+    void OnVideoBufferAvailable(bool isReady) {};
+    void OnStateChange(AVScreenCaptureStateCode stateCode) {};
+};
+
+class ScreenCaptureServerUnittestCallback : public ScreenCaptureListenerCallback {
 public:
     virtual ~ScreenCaptureServerUnittestCallback() = default;
     void OnError(ScreenCaptureErrorType errorType, int32_t errorCode) {};
     void OnAudioBufferAvailable(bool isReady, AudioCaptureSourceType type) {};
     void OnVideoBufferAvailable(bool isReady) {};
     void OnStateChange(AVScreenCaptureStateCode stateCode) {};
+    void Stop() {};
 };
 } // Media
 } // OHOS

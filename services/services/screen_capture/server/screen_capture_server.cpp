@@ -1135,6 +1135,7 @@ void ScreenCaptureServer::RegisterPrivateWindowListener()
     displayListener_ = new PrivateWindowListenerInScreenCapture(screenCaptureServer);
     DisplayManager::GetInstance().RegisterPrivateWindowListener(displayListener_);
 }
+
 void ScreenCaptureServer::PostStartScreenCaptureSuccessAction()
 {
     std::unordered_map<std::string, std::string> payload;

@@ -100,6 +100,8 @@ void ScreenCaptureServerFunctionTest::SetUp()
     SetHapPermission();
     std::shared_ptr<IScreenCaptureService> tempServer_ = ScreenCaptureServer::Create();
     screenCaptureServer_ = std::static_pointer_cast<ScreenCaptureServer>(tempServer_);
+    sptr<IStandardScreenCaptureListener> listener = new(std::nothrow) StandardScreenCaptureServerUnittestCallback();
+    screenCaptureServer_->screenCaptureCb_ = std::make_shared<ScreenCaptureListenerCallback>(listener);
     ASSERT_NE(screenCaptureServer_, nullptr);
 }
 
@@ -739,6 +741,71 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ReportAVScreenCaptureUserChoice_004, T
     ASSERT_NE(screenCaptureServer_->ReportAVScreenCaptureUserChoice(sessionId, choice), MSERR_OK);
 }
 
+HWTEST_F(ScreenCaptureServerFunctionTest, ReportAVScreenCaptureUserChoice_005, TestSize.Level2)
+{
+    SetInvalidConfig();
+    config_.audioInfo.micCapInfo.audioSampleRate = 16000;
+    config_.audioInfo.micCapInfo.audioChannels = 2;
+    config_.audioInfo.micCapInfo.audioSource = AudioCaptureSourceType::SOURCE_DEFAULT;
+    config_.audioInfo.innerCapInfo.audioSampleRate = 16000;
+    config_.audioInfo.innerCapInfo.audioChannels = 2;
+    config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
+    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
+    int32_t sessionId = 0;
+    ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTING;
+    std::string choice = "{\"choice\": \"true\", \"displayId\": -1, \"missionId\": -1}";
+    ASSERT_NE(screenCaptureServer_->ReportAVScreenCaptureUserChoice(sessionId, choice), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, ReportAVScreenCaptureUserChoice_006, TestSize.Level2)
+{
+    SetInvalidConfig();
+    config_.audioInfo.micCapInfo.audioSampleRate = 16000;
+    config_.audioInfo.micCapInfo.audioChannels = 2;
+    config_.audioInfo.micCapInfo.audioSource = AudioCaptureSourceType::SOURCE_DEFAULT;
+    config_.audioInfo.innerCapInfo.audioSampleRate = 16000;
+    config_.audioInfo.innerCapInfo.audioChannels = 2;
+    config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
+    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
+    int32_t sessionId = 1;
+    ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
+    std::string choice = "{\"choice\": \"true\", \"displayId\": -1, \"missionId\": -1}";
+    ASSERT_NE(screenCaptureServer_->ReportAVScreenCaptureUserChoice(sessionId, choice), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, ReportAVScreenCaptureUserChoice_007, TestSize.Level2)
+{
+    SetInvalidConfig();
+    config_.audioInfo.micCapInfo.audioSampleRate = 16000;
+    config_.audioInfo.micCapInfo.audioChannels = 2;
+    config_.audioInfo.micCapInfo.audioSource = AudioCaptureSourceType::SOURCE_DEFAULT;
+    config_.audioInfo.innerCapInfo.audioSampleRate = 16000;
+    config_.audioInfo.innerCapInfo.audioChannels = 2;
+    config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
+    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
+    int32_t sessionId = 0;
+    ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
+    std::string choice = "{\"choice\": \"true\", \"displayId\": 0, \"missionId\": 0}";
+    ASSERT_NE(screenCaptureServer_->ReportAVScreenCaptureUserChoice(sessionId, choice), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, ReportAVScreenCaptureUserChoice_008, TestSize.Level2)
+{
+    SetInvalidConfig();
+    config_.audioInfo.micCapInfo.audioSampleRate = 16000;
+    config_.audioInfo.micCapInfo.audioChannels = 2;
+    config_.audioInfo.micCapInfo.audioSource = AudioCaptureSourceType::SOURCE_DEFAULT;
+    config_.audioInfo.innerCapInfo.audioSampleRate = 16000;
+    config_.audioInfo.innerCapInfo.audioChannels = 2;
+    config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
+    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
+    int32_t sessionId = 0;
+    ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
+    std::string choice = "{\"choice\": \"true\"}";
+    ASSERT_NE(screenCaptureServer_->ReportAVScreenCaptureUserChoice(sessionId, choice), MSERR_OK);
+}
+
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckScreenCapturePermission_001, TestSize.Level2)
 {
     SetInvalidConfig();
@@ -879,30 +946,24 @@ HWTEST_F(ScreenCaptureServerFunctionTest, RequestUserPrivacyAuthority_004, TestS
     screenCaptureServer_->isPrivacyAuthorityEnabled_ = true;
     screenCaptureServer_->appName_ = ScreenRecorderBundleName;
 #endif
-    ASSERT_NE(screenCaptureServer_->RequestUserPrivacyAuthority(), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->RequestUserPrivacyAuthority(), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, OnReceiveUserPrivacyAuthority_001, TestSize.Level2)
 {
-    screenCaptureServer_->screenCaptureCb_ = std::make_shared<ScreenCaptureServerUnittestCallback>();
     ASSERT_NE(screenCaptureServer_->OnReceiveUserPrivacyAuthority(false), MSERR_OK);
-    screenCaptureServer_->screenCaptureCb_ = nullptr;
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, OnReceiveUserPrivacyAuthority_002, TestSize.Level2)
 {
-    screenCaptureServer_->screenCaptureCb_ = std::make_shared<ScreenCaptureServerUnittestCallback>();
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTING;
     ASSERT_NE(screenCaptureServer_->OnReceiveUserPrivacyAuthority(false), MSERR_OK);
-    screenCaptureServer_->screenCaptureCb_ = nullptr;
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, OnReceiveUserPrivacyAuthority_003, TestSize.Level2)
 {
-    screenCaptureServer_->screenCaptureCb_ = std::make_shared<ScreenCaptureServerUnittestCallback>();
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTING;
     ASSERT_NE(screenCaptureServer_->OnReceiveUserPrivacyAuthority(true), MSERR_OK);
-    screenCaptureServer_->screenCaptureCb_ = nullptr;
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, RepeatStartAudioCapture_001, TestSize.Level2)
@@ -966,6 +1027,65 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StartScreenCaptureWithSurface_001, Tes
 {
     screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
     ASSERT_NE(screenCaptureServer_->StartScreenCaptureWithSurface(nullptr, true), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, MixAudio_001, TestSize.Level2)
+{
+    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
+        AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+    const int channels = 2;
+    const int bufferSize = 10;
+    const char zeroChar = (char)0;
+    const char minChar = (char)127;
+    const char maxChar = (char)-128;
+    char innerBuffer[bufferSize] = {zeroChar, maxChar, minChar, zeroChar, maxChar, minChar, zeroChar, maxChar,
+        minChar, zeroChar};
+    char micBuffer[bufferSize] = {maxChar, minChar, zeroChar, maxChar, minChar, zeroChar, maxChar, minChar,
+        zeroChar, maxChar};
+    char* srcData[channels] = {nullptr};
+    srcData[0] = innerBuffer;
+    srcData[1] = micBuffer;
+    char mixData[bufferSize];
+    screenCaptureServer_->audioSource_->MixAudio(srcData, mixData, channels, bufferSize);
+    ASSERT_EQ(mixData[0], maxChar);
+    ASSERT_EQ(mixData[bufferSize - 1], maxChar);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, PrivateWindowListenerInScreenCapture_001, TestSize.Level2)
+{
+    screenCaptureServer_->RegisterPrivateWindowListener();
+    screenCaptureServer_->displayListener_->OnPrivateWindow(true);
+    ASSERT_NE(screenCaptureServer_->displayListener_, nullptr);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, PrivateWindowListenerInScreenCapture_002, TestSize.Level2)
+{
+    screenCaptureServer_->RegisterPrivateWindowListener();
+    screenCaptureServer_->displayListener_->OnPrivateWindow(false);
+    ASSERT_NE(screenCaptureServer_->displayListener_, nullptr);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, NotificationSubscriber_001, TestSize.Level2)
+{
+    auto notificationSubscriber = NotificationSubscriber();
+    notificationSubscriber.OnConnected();
+    notificationSubscriber.OnDisconnected();
+    notificationSubscriber.OnDied();
+    ASSERT_NE(&notificationSubscriber, nullptr);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, SetDisplayId_001, TestSize.Level2)
+{
+    uint64_t displayId = 0;
+    screenCaptureServer_->SetDisplayId(displayId);
+    ASSERT_EQ(screenCaptureServer_->captureConfig_.videoInfo.videoCapInfo.displayId, displayId);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, SetMissionId_001, TestSize.Level2)
+{
+    uint64_t missionId = 0;
+    screenCaptureServer_->SetMissionId(missionId);
+    ASSERT_EQ(screenCaptureServer_->missionIds_.back(), missionId);
 }
 } // Media
 } // OHOS
