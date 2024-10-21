@@ -1151,20 +1151,6 @@ void ScreenCaptureServer::PostStartScreenCaptureSuccessAction()
     }
 }
 
-void ScreenCaptureServer::TryNotificationOnPostStartScreenCapture()
-{
-    int32_t tryTimes = TryStartNotification();
-    if (tryTimes > NOTIFICATION_MAX_TRY_NUM) {
-        captureState_ = AVScreenCaptureState::STARTED;
-        if (screenCaptureCb_ != nullptr) {
-            screenCaptureCb_->OnError(ScreenCaptureErrorType::SCREEN_CAPTURE_ERROR_INTERNAL,
-                AVScreenCaptureErrorCode::SCREEN_CAPTURE_ERR_UNKNOWN);
-        }
-        StopScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID);
-        return;
-    }
-}
-
 void ScreenCaptureServer::PostStartScreenCapture(bool isSuccess)
 {
     CHECK_AND_RETURN(screenCaptureCb_ != nullptr);
@@ -1221,6 +1207,20 @@ int32_t ScreenCaptureServer::TryStartNotification()
         }
     }
     return tryTimes;
+}
+
+void ScreenCaptureServer::TryNotificationOnPostStartScreenCapture()
+{
+    int32_t tryTimes = TryStartNotification();
+    if (tryTimes > NOTIFICATION_MAX_TRY_NUM) {
+        captureState_ = AVScreenCaptureState::STARTED;
+        if (screenCaptureCb_ != nullptr) {
+            screenCaptureCb_->OnError(ScreenCaptureErrorType::SCREEN_CAPTURE_ERROR_INTERNAL,
+                AVScreenCaptureErrorCode::SCREEN_CAPTURE_ERR_UNKNOWN);
+        }
+        StopScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID);
+        return;
+    }
 }
 #endif
 
