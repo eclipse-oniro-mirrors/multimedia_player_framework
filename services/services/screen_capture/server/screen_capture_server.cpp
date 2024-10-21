@@ -92,7 +92,7 @@ static const int32_t MICROPHONE_STATE_COUNT = 2;
 static const int32_t MAX_SESSION_ID = 256;
 static const int32_t MAX_SESSION_PER_UID = 8;
 static const auto NOTIFICATION_SUBSCRIBER = NotificationSubscriber();
-static constexpr int32_t AUDIO_CHANGE_TIME = 100000; // 100 ms
+static constexpr int32_t AUDIO_CHANGE_TIME = 200000; // 200 ms
 
 void NotificationSubscriber::OnConnected()
 {
@@ -2505,6 +2505,7 @@ int32_t ScreenCaptureServer::StopScreenCaptureInner(AVScreenCaptureStateCode sta
         audioSource_->UnregisterAudioRendererEventListener(audioSource_->GetAppPid());
     }
     DisplayManager::GetInstance().UnregisterPrivateWindowListener(displayListener_);
+    displayListener_ = nullptr;
     if (captureState_ == AVScreenCaptureState::CREATED || captureState_ == AVScreenCaptureState::STARTING) {
         captureState_ = AVScreenCaptureState::STOPPED;
         ScreenCaptureMonitorServer::GetInstance()->CallOnScreenCaptureFinished(appInfo_.appPid);
