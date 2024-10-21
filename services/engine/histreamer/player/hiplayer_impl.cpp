@@ -2442,10 +2442,8 @@ void HiPlayerImpl::NotifySeekDone(int32_t seekPos)
                 return !syncManager_->InSeeking();
             });
     }
-    if (demuxer_->IsBuffering()) {
-        demuxer_->WaitForBufferingEnd();
-    }
-    if (isSeekClosest_.load() && !demuxer_->IsBuffering()) {
+    demuxer_->WaitForBufferingEnd();
+    if (isSeekClosest_.load() && isBufferingStartNotified_.load()) {
         NotifyBufferingEnd(0);
     }
     isSeekClosest_.store(false);
