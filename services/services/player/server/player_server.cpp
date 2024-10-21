@@ -1644,7 +1644,7 @@ void PlayerServer::OnSystemOperation(PlayerOnSystemOperationType type, PlayerOpe
     switch (type) {
         case OPERATION_TYPE_PAUSE:
             if (lastOpStatus_ == PLAYER_STARTED) {
-                OnPause(true);
+                (void)OnPause(true);
             }
             break;
         default:

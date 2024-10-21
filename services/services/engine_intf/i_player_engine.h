@@ -40,7 +40,7 @@ public:
         (void)errorMsg;
     }
     virtual void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody) = 0;
-    virtual void OnSystemOperation(PlayerOnSystemOperationType type, PlayerOperationReason reason) = 0;    
+    virtual void OnSystemOperation(PlayerOnSystemOperationType type, PlayerOperationReason reason) = 0;
 };
 
 class IPlayerEngine {
