@@ -1688,18 +1688,16 @@ napi_value AVPlayerNapi::JsSetDataSrc(napi_env env, napi_callback_info info)
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, ref);
     jsPlayer->dataSrcCb_->SaveCallbackReference(READAT_CALLBACK_NAME, autoRef);
 
-    auto task = std::make_shared<TaskHandler<void>>([jsPlayer]() {
-        MEDIA_LOGI("SetDataSrc Task");
-        if (jsPlayer->player_ != nullptr) {
-            if (jsPlayer->player_->SetSource(jsPlayer->dataSrcCb_) != MSERR_OK) {
-                jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "player SetSource DataSrc failed");
-            }
-            if (jsPlayer->dataSrcDescriptor_.fileSize == -1) {
-                jsPlayer->isLiveStream_ = true;
-            }
+    if (jsPlayer->player_ != nullptr) {
+        if (jsPlayer->player_->SetSource(jsPlayer->dataSrcCb_) != MSERR_OK) {
+            jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "player SetSource DataSrc failed");
+        } else {
+            jsPlayer->state_ = PlayerStates::PLAYER_INITIALIZED;
         }
-    });
-    (void)jsPlayer->taskQue_->EnqueueTask(task);
+        if (jsPlayer->dataSrcDescriptor_.fileSize == -1) {
+            jsPlayer->isLiveStream_ = true;
+        }
+    }
 
     MEDIA_LOGI("JsSetDataSrc Out");
     return result;
