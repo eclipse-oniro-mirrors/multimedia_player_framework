@@ -82,7 +82,7 @@ static HapPolicyParams hapPolicy = {
             .grantFlags = { 1 }
         }
     }
-}
+};
 
 void RecorderUnitTest::SetUpTestCase(void)
 {
