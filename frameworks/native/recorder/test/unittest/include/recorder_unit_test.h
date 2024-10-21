@@ -28,7 +28,6 @@ public:
     void TearDown(void);
 protected:
     std::shared_ptr<RecorderMock> recorder_ = nullptr;
-    void InitHapParams(Security::AccessToken::HapInfoParams &info, Security::AccessToken::HapPolicyParams &policy);
     void SetSelfTokenPremission();
 };
 } // namespace Media

@@ -32,6 +32,58 @@ namespace Media {
 // config for video to request buffer from surface
 static VideoRecorderConfig g_videoRecorderConfig;
 
+// HapParams for permission
+static HapInfoParams hapInfo = {
+    .userID = 100, // 100 user ID
+    .bundleName = "com.ohos.test.recordertdd",
+    .instIndex = 0, // 0 index
+    .appIDDesc = "com.ohos.test.recordertdd",
+    .isSystemApp = true
+};
+
+static HapPolicyParams hapPolicy = {
+    .apl = APL_SYSTEM_BASIC,
+    .domain = "test.avrecorder",
+    .permList = { },
+    .permStateList = {
+        {
+            .permissionName = "ohos.permission.MICROPHONE",
+            .isGeneral = true,
+            .resDeviceID = { "local" },
+            .grantStatus = { PermissionState::PERMISSION_GRANTED },
+            .grantFlags = { 1 }
+        },
+        {
+            .permissionName = "ohos.permission.READ_MEDIA",
+            .isGeneral = true,
+            .resDeviceID = { "local" },
+            .grantStatus = { PermissionState::PERMISSION_GRANTED },
+            .grantFlags = { 1 }
+        },
+        {
+            .permissionName = "ohos.permission.WRITE_MEDIA",
+            .isGeneral = true,
+            .resDeviceID = { "local" },
+            .grantStatus = { PermissionState::PERMISSION_GRANTED },
+            .grantFlags = { 1 }
+        },
+        {
+            .permissionName = "ohos.permission.KEEP_BACKGROUND_RUNNING",
+            .isGeneral = true,
+            .resDeviceID = { "local" },
+            .grantStatus = { PermissionState::PERMISSION_GRANTED },
+            .grantFlags = { 1 }
+        },
+        {
+            .permissionName = "ohos.permission.DUMP",
+            .isGeneral = true,
+            .resDeviceID = { "local" },
+            .grantStatus = { PermissionState::PERMISSION_GRANTED },
+            .grantFlags = { 1 }
+        }
+    }
+}
+
 void RecorderUnitTest::SetUpTestCase(void)
 {
     SetSelfTokenPremission();
@@ -53,66 +105,8 @@ void RecorderUnitTest::TearDown(void)
     }
 }
 
-void RecorderUnitTest::InitHapParams(HapInfoParams &info, HapPolicyParams &policy)
-{
-    HapInfoParams info = {
-        .userID = 100, // 100 user ID
-        .bundleName = "com.ohos.test.recordertdd",
-        .instIndex = 0, // 0 index
-        .appIDDesc = "com.ohos.test.recordertdd",
-        .isSystemApp = true
-    };
-
-    HapPolicyParams policy = {
-        .apl = APL_SYSTEM_BASIC,
-        .domain = "test.avrecorder",
-        .permList = { },
-        .permStateList = {
-            {
-                .permissionName = "ohos.permission.MICROPHONE",
-                .isGeneral = true,
-                .resDeviceID = { "local" },
-                .grantStatus = { PermissionState::PERMISSION_GRANTED },
-                .grantFlags = { 1 }
-            },
-            {
-                .permissionName = "ohos.permission.READ_MEDIA",
-                .isGeneral = true,
-                .resDeviceID = { "local" },
-                .grantStatus = { PermissionState::PERMISSION_GRANTED },
-                .grantFlags = { 1 }
-            },
-            {
-                .permissionName = "ohos.permission.WRITE_MEDIA",
-                .isGeneral = true,
-                .resDeviceID = { "local" },
-                .grantStatus = { PermissionState::PERMISSION_GRANTED },
-                .grantFlags = { 1 }
-            },
-            {
-                .permissionName = "ohos.permission.KEEP_BACKGROUND_RUNNING",
-                .isGeneral = true,
-                .resDeviceID = { "local" },
-                .grantStatus = { PermissionState::PERMISSION_GRANTED },
-                .grantFlags = { 1 }
-            },
-            {
-                .permissionName = "ohos.permission.DUMP",
-                .isGeneral = true,
-                .resDeviceID = { "local" },
-                .grantStatus = { PermissionState::PERMISSION_GRANTED },
-                .grantFlags = { 1 }
-            }
-        }
-    }
-}
-
 void RecorderUnitTest::SetSelfTokenPremission()
 {
-    HapInfoParams hapInfo;
-    HapPolicyParams hapPolicy;
-    InitHapParams(hapInfo, hapPolicy);
-
     AccessTokenIDEx tokenIdEx = { 0 };
     tokenIdEx = AccessTokenKit::AllocHapToken(hapInfo, hapPolicy);
     int ret = SetSelfTokenID(tokenIdEx.tokenIDEx);
