@@ -28,7 +28,7 @@ public:
     void TearDown(void);
 protected:
     std::shared_ptr<RecorderMock> recorder_ = nullptr;
-    void SetSelfTokenPremission();
+    static void SetSelfTokenPremission();
 };
 } // namespace Media
 } // namespace OHOS
