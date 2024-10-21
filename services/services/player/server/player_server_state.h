@@ -27,7 +27,7 @@ public:
 
     virtual int32_t Prepare();
     virtual int32_t Play();
-    virtual int32_t Pause();
+    virtual int32_t Pause(bool isSystemPause);
     virtual int32_t Seek(int32_t mSeconds, PlayerSeekMode mode);
     virtual int32_t SetPlaybackSpeed(PlaybackRateMode mode);
     virtual int32_t Stop();
@@ -118,7 +118,7 @@ public:
     ~PlayingState() = default;
 
     int32_t Play() override;
-    int32_t Pause() override;
+    int32_t Pause(bool isSystemPause) override;
     int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override;
     int32_t Stop() override;
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
@@ -142,7 +142,7 @@ public:
     ~PausedState() = default;
 
     int32_t Play() override;
-    int32_t Pause() override;
+    int32_t Pause(bool isSystemPause) override;
     int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override;
     int32_t Stop() override;
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;

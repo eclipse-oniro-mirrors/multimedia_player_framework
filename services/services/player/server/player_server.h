@@ -129,6 +129,7 @@ public:
     void OnError(PlayerErrorType errorType, int32_t errorCode) override;
     void OnErrorMessage(int32_t errorCode, const std::string &errorMsg) override;
     void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody = {}) override;
+    void OnSystemOperation(PlayerOnSystemOperationType type, PlayerOperationReason reason) override;
     void OnBufferingUpdate(PlayerOnInfoType type, int32_t extra, const Format &infoBody);
     void OnNotifyBufferingStart();
     void OnNotifyBufferingEnd();
@@ -202,12 +203,12 @@ private:
     int32_t InitPlayEngine(const std::string &url);
     int32_t OnPrepare(bool sync);
     int32_t OnPlay();
-    int32_t OnPause();
+    int32_t OnPause(bool isSystemPause);
     int32_t OnStop(bool sync);
     int32_t OnReset();
     int32_t HandlePrepare();
     int32_t HandlePlay();
-    int32_t HandlePause();
+    int32_t HandlePause(bool isSystemPause);
     int32_t HandlePauseDemuxer();
     int32_t HandleResumeDemuxer();
     int32_t HandleStop();

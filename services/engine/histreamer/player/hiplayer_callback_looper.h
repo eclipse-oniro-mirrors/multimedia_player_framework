@@ -50,6 +50,8 @@ public:
 
     void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody) override;
 
+    void OnSystemOperation(PlayerOnSystemOperationType type, PlayerOperationReason reason) override;
+
     void DoReportCompletedTime();
     void startCollectMaxAmplitude(int64_t updateIntervalMs);
     void StopCollectMaxAmplitude();
@@ -61,6 +63,7 @@ private:
     void DoReportInfo(const Any& info);
     void DoReportError(const Any& error);
     void DoCollectAmplitude();
+    void DoReportSystemOperation(const Any& info);
 
     struct Event {
         Event(int32_t inWhat, int64_t inWhenMs, Any inAny): what(inWhat), whenMs(inWhenMs),
