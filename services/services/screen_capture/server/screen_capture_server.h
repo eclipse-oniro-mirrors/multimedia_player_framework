@@ -190,11 +190,11 @@ public:
         const std::shared_ptr<AudioRendererStateChangeCallback> &callback);
     int32_t UnregisterAudioRendererEventListener(const int32_t clientPid);
     void SpeakerStateUpdate(
-        const std::vector<std::unique_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos);
+        const std::vector<std::shared_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos);
     bool HasSpeakerStream(
-        const std::vector<std::unique_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos);
+        const std::vector<std::shared_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos);
     void VoIPStateUpdate(
-        const std::vector<std::unique_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos);
+        const std::vector<std::shared_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos);
     void SetAppPid(int32_t appid);
     void SetAppName(std::string appName);
     int32_t GetAppPid();
@@ -230,7 +230,7 @@ private:
 
 class ScreenRendererAudioStateChangeCallback : public AudioRendererStateChangeCallback {
 public:
-    void OnRendererStateChange(const std::vector<std::unique_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos);
+    void OnRendererStateChange(const std::vector<std::shared_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos);
     void SetAudioSource(std::shared_ptr<AudioDataSource> audioSource);
     void SetAppName(std::string appName);
 private:

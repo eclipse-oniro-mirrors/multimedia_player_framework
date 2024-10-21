@@ -2855,7 +2855,7 @@ void ScreenRendererAudioStateChangeCallback::SetAppName(std::string appName)
 }
 
 void ScreenRendererAudioStateChangeCallback::OnRendererStateChange(
-    const std::vector<std::unique_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos)
+    const std::vector<std::shared_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos)
 {
     MEDIA_LOGD("ScreenRendererAudioStateChangeCallback IN");
     CHECK_AND_RETURN(audioSource_ != nullptr);
@@ -2868,10 +2868,10 @@ void ScreenRendererAudioStateChangeCallback::OnRendererStateChange(
 }
 
 void AudioDataSource::SpeakerStateUpdate(
-    const std::vector<std::unique_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos)
+    const std::vector<std::shared_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos)
 {
     (void)audioRendererChangeInfos;
-    std::vector<std::unique_ptr<AudioRendererChangeInfo>> allAudioRendererChangeInfos;
+    std::vector<std::shared_ptr<AudioRendererChangeInfo>> allAudioRendererChangeInfos;
     AudioStreamManager::GetInstance()->GetCurrentRendererChangeInfos(allAudioRendererChangeInfos);
     uint32_t changeInfoSize = allAudioRendererChangeInfos.size();
     if (changeInfoSize == 0) {
@@ -2891,12 +2891,12 @@ void AudioDataSource::SpeakerStateUpdate(
 }
 
 bool AudioDataSource::HasSpeakerStream(
-    const std::vector<std::unique_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos)
+    const std::vector<std::shared_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos)
 {
     uint32_t changeInfoIndex = 0;
     uint32_t headSetCount = 0;
     bool hasSpeakerStream = true;
-    for (const std::unique_ptr<AudioRendererChangeInfo> &changeInfo: audioRendererChangeInfos) {
+    for (const std::shared_ptr<AudioRendererChangeInfo> &changeInfo: audioRendererChangeInfos) {
         if (!changeInfo) {
             continue;
         }
@@ -2920,14 +2920,14 @@ bool AudioDataSource::HasSpeakerStream(
 }
 
 void AudioDataSource::VoIPStateUpdate(
-    const std::vector<std::unique_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos)
+    const std::vector<std::shared_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos)
 {
     std::lock_guard<std::mutex> lock(voipStatusChangeMutex_);
     (void)audioRendererChangeInfos;
-    std::vector<std::unique_ptr<AudioRendererChangeInfo>> allAudioRendererChangeInfos;
+    std::vector<std::shared_ptr<AudioRendererChangeInfo>> allAudioRendererChangeInfos;
     AudioStreamManager::GetInstance()->GetCurrentRendererChangeInfos(allAudioRendererChangeInfos);
     bool isInVoIPCall = false;
-    for (const std::unique_ptr<AudioRendererChangeInfo> &changeInfo: allAudioRendererChangeInfos) {
+    for (const std::shared_ptr<AudioRendererChangeInfo> &changeInfo: allAudioRendererChangeInfos) {
         if (!changeInfo) {
             continue;
         }
@@ -2978,7 +2978,7 @@ int32_t AudioDataSource::RegisterAudioRendererEventListener(const int32_t client
 {
     CHECK_AND_RETURN_RET_LOG(callback != nullptr, MSERR_INVALID_VAL, "audio callback is null");
     int32_t ret = AudioStreamManager::GetInstance()->RegisterAudioRendererEventListener(clientPid, callback);
-    std::vector<std::unique_ptr<AudioRendererChangeInfo>> audioRendererChangeInfos;
+    std::vector<std::shared_ptr<AudioRendererChangeInfo>> audioRendererChangeInfos;
     SpeakerStateUpdate(audioRendererChangeInfos);
     std::string region = Global::I18n::LocaleConfig::GetSystemRegion();
     if (GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"]

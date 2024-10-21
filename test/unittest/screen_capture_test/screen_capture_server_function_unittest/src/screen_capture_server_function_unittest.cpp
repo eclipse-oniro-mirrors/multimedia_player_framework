@@ -652,7 +652,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioDataSource_001, TestSize.Level2)
     config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
-    std::vector<std::unique_ptr<AudioRendererChangeInfo>> audioRendererChangeInfos;
+    std::vector<std::shared_ptr<AudioRendererChangeInfo>> audioRendererChangeInfos;
     screenCaptureServer_->captureCallback_->OnRendererStateChange(audioRendererChangeInfos);
     screenCaptureServer_->audioSource_->VoIPStateUpdate(audioRendererChangeInfos);
     screenCaptureServer_->audioSource_->isInVoIPCall_ = true;
@@ -672,7 +672,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioDataSource_002, TestSize.Level2)
     config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
-    std::vector<std::unique_ptr<AudioRendererChangeInfo>> audioRendererChangeInfos;
+    std::vector<std::shared_ptr<AudioRendererChangeInfo>> audioRendererChangeInfos;
     screenCaptureServer_->audioSource_->SpeakerStateUpdate(audioRendererChangeInfos);
     screenCaptureServer_->audioSource_->HasSpeakerStream(audioRendererChangeInfos);
     sleep(RECORDER_TIME);
