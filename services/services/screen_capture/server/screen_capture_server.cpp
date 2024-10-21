@@ -925,7 +925,7 @@ int32_t ScreenCaptureServer::StartAudioCapture()
     if (isMicrophoneOn_) {
         ret = StartStreamMicAudioCapture();
         if (ret != MSERR_OK) {
-            MEDIA_LOGE("StartStreamMicAudioCapture failed");
+            MEDIA_LOGE("StartAudioCapture StartStreamMicAudioCapture failed");
         }
     }
     ret = StartStreamInnerAudioCapture();
@@ -971,7 +971,9 @@ int32_t ScreenCaptureServer::StartStreamMicAudioCapture()
         if (ret != MSERR_OK) {
             MEDIA_LOGE("StartStreamMicAudioCapture failed");
             isMicrophoneOn_ = false;
-            screenCaptureCb_->OnStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE);
+            if (screenCaptureCb_ != nullptr) {
+                screenCaptureCb_->OnStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE);
+            }
             return ret;
         }
     }
@@ -1021,7 +1023,9 @@ int32_t ScreenCaptureServer::StartFileMicAudioCapture()
         if (ret != MSERR_OK) {
             MEDIA_LOGE("StartFileMicAudioCapture micCapture failed");
             isMicrophoneOn_ = false;
-            screenCaptureCb_->OnStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE);
+            if (screenCaptureCb_ != nullptr) {
+                screenCaptureCb_->OnStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE);
+            }
             return ret;
         }
     }
@@ -1142,11 +1146,28 @@ void ScreenCaptureServer::PostStartScreenCaptureSuccessAction()
     ResSchedReportData(value, payload);
     captureState_ = AVScreenCaptureState::STARTED;
     ScreenCaptureMonitorServer::GetInstance()->CallOnScreenCaptureStarted(appInfo_.appPid);
-    screenCaptureCb_->OnStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STARTED);
+    if (screenCaptureCb_ != nullptr) {
+        screenCaptureCb_->OnStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STARTED);
+    }
+}
+
+void ScreenCaptureServer::TryNotificationOnPostStartScreenCapture()
+{
+    int32_t tryTimes = TryStartNotification();
+    if (tryTimes > NOTIFICATION_MAX_TRY_NUM) {
+        captureState_ = AVScreenCaptureState::STARTED;
+        if (screenCaptureCb_ != nullptr) {
+            screenCaptureCb_->OnError(ScreenCaptureErrorType::SCREEN_CAPTURE_ERROR_INTERNAL,
+                AVScreenCaptureErrorCode::SCREEN_CAPTURE_ERR_UNKNOWN);
+        }
+        StopScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID);
+        return;
+    }
 }
 
 void ScreenCaptureServer::PostStartScreenCapture(bool isSuccess)
 {
+    CHECK_AND_RETURN(screenCaptureCb_ != nullptr);
     MediaTrace trace("ScreenCaptureServer::PostStartScreenCapture.");
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " PostStartScreenCapture start, isSuccess:%{public}s, "
         "dataType:%{public}d.", FAKE_POINTER(this), isSuccess ? "true" : "false", captureConfig_.dataType);
@@ -1156,14 +1177,7 @@ void ScreenCaptureServer::PostStartScreenCapture(bool isSuccess)
         if (isPrivacyAuthorityEnabled_ &&
             GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"]
                 .compare(appName_) != 0) {
-            int32_t tryTimes = TryStartNotification();
-            if (tryTimes > NOTIFICATION_MAX_TRY_NUM) {
-                captureState_ = AVScreenCaptureState::STARTED;
-                screenCaptureCb_->OnError(ScreenCaptureErrorType::SCREEN_CAPTURE_ERROR_INTERNAL,
-                    AVScreenCaptureErrorCode::SCREEN_CAPTURE_ERR_UNKNOWN);
-                StopScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID);
-                return;
-            }
+            TryNotificationOnPostStartScreenCapture();
         }
 #endif
         if (!UpdatePrivacyUsingPermissionState(START_VIDEO)) {
@@ -1480,7 +1494,9 @@ int32_t ScreenCaptureServer::RegisterServerCallbacks()
     screenCaptureObserverCb_ = std::make_shared<ScreenCaptureObserverCallBack>(wpScreenCaptureServer);
     if (InCallObserver::GetInstance().IsInCall() && !IsTelInCallSkipList()) {
         MEDIA_LOGI("ScreenCaptureServer Start InCall Abort");
-        screenCaptureCb_->OnStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_CALL);
+        if (screenCaptureCb_ != nullptr) {
+            screenCaptureCb_->OnStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_CALL);
+        }
         FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_, SCREEN_CAPTURE_ERR_UNSUPPORT,
             "ScreenCaptureServer Start InCall Abort");
         return MSERR_UNSUPPORT;
@@ -2255,7 +2271,7 @@ int32_t ScreenCaptureServer::SetMicrophoneOn()
     if (!micAudioCapture_) {
         if (captureConfig_.dataType == DataType::ORIGINAL_STREAM) {
             ret = StartStreamMicAudioCapture();
-            CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartStreamMicAudioCapture failed");
+            CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetMicrophoneOn StartStreamMicAudioCapture failed");
         } else if (captureConfig_.dataType == DataType::CAPTURE_FILE) {
             ret = StartFileMicAudioCapture();
             CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartFileMicAudioCapture failed");
@@ -2265,7 +2281,9 @@ int32_t ScreenCaptureServer::SetMicrophoneOn()
         if (ret != MSERR_OK) {
             MEDIA_LOGE("micAudioCapture Resume failed");
             isMicrophoneOn_ = false;
-            screenCaptureCb_->OnStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE);
+            if (screenCaptureCb_ != nullptr) {
+                screenCaptureCb_->OnStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE);
+            }
             return ret;
         }
     } else if (micAudioCapture_->GetAudioCapturerState() != CAPTURER_RECORDING) {
