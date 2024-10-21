@@ -544,23 +544,27 @@ int32_t PlayerServer::BackGroundChangeState(PlayerStates state, bool isBackGroun
 int32_t PlayerServer::Pause()
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " PlayerServer Pause in", FAKE_POINTER(this));
-
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " PlayerServer Pause in", FAKE_POINTER(this));
+    if (lastOpStatus_ == PLAYER_PAUSED) {
+        MEDIA_LOGE("Can not Pause, currentState is %{public}s", GetStatusDescription(lastOpStatus_).c_str());
+        return MSERR_OK;
+    }
     if (lastOpStatus_ != PLAYER_STARTED) {
         MEDIA_LOGE("Can not Pause, currentState is %{public}s", GetStatusDescription(lastOpStatus_).c_str());
         return MSERR_INVALID_OPERATION;
     }
-    return OnPause();
+    return OnPause(false);
 }
 
-int32_t PlayerServer::OnPause()
+int32_t PlayerServer::OnPause(bool isSystemPause)
 {
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " PlayerServer OnPause in", FAKE_POINTER(this));
 
-    auto pauseTask = std::make_shared<TaskHandler<void>>([this]() {
+    auto pauseTask = std::make_shared<TaskHandler<void>>([this, isSystemPause]() {
         MediaTrace::TraceBegin("PlayerServer::Pause", FAKE_POINTER(this));
         auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
-        (void)currState->Pause();
+        (void)currState->Pause(isSystemPause);
     });
 
     int ret = taskMgr_.LaunchTask(pauseTask, PlayerServerTaskType::STATE_CHANGE, "pause");
@@ -570,11 +574,11 @@ int32_t PlayerServer::OnPause()
     return MSERR_OK;
 }
 
-int32_t PlayerServer::HandlePause()
+int32_t PlayerServer::HandlePause(bool isSystemPause)
 {
     MEDIA_LOGI("KPI-TRACE: PlayerServer HandlePause in");
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_INVALID_OPERATION, "playerEngine_ is nullptr");
-    int32_t ret = playerEngine_->Pause();
+    int32_t ret = playerEngine_->Pause(isSystemPause);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine Pause Failed!");
 
     return MSERR_OK;
@@ -1543,7 +1547,7 @@ void PlayerServer::OnErrorMessage(int32_t errorCode, const std::string &errorMsg
             MediaTrace::TraceBegin("PlayerServer::PauseIoError", FAKE_POINTER(this));
             MEDIA_LOGI("PauseIoError start");
             auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
-            (void)currState->Pause();
+            (void)currState->Pause(true);
             OnErrorCb(errorCode, errorMsg);
             MEDIA_LOGI("PauseIoError end");
         });
@@ -1629,6 +1633,24 @@ void PlayerServer::InnerOnInfo(PlayerOnInfoType type, int32_t extra, const Forma
     } else {
         MEDIA_LOGD("0x%{public}06" PRIXPTR " playerCb_ != nullptr %{public}d, ret %{public}d",
             FAKE_POINTER(this), playerCb_ != nullptr, ret);
+    }
+}
+
+void PlayerServer::OnSystemOperation(PlayerOnSystemOperationType type, PlayerOperationReason reason)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    MEDIA_LOGI("PlayerServer OnSystemOperation start, type: %{public}d, reason: %{public}d", static_cast<int32_t>(type),
+        static_cast<int32_t>(reason));
+    switch (type) {
+        case OPERATION_TYPE_PAUSE:
+            if (lastOpStatus_ == PLAYER_STARTED) {
+                OnPause(true);
+            }
+            break;
+        default:
+            MEDIA_LOGI("Can not OnSystemOperation, currentState is %{public}s",
+                GetStatusDescription(lastOpStatus_).c_str());
+            break;
     }
 }
 
@@ -1752,7 +1774,7 @@ void PlayerServer::OnCommonEventReceived(const std::string &event)
             std::shared_ptr<PlayerServer> spServer = server.lock();
             if (spServer != nullptr) {
                 spServer->taskMgr_.MarkTaskDone("receiveccommonevent done");
-                (void)spServer->Pause();
+                (void)spServer->OnSystemOperation(OPERATION_TYPE_PAUSE, OPERATION_REASON_USER_BACKGROUND);
             }
         });
         taskMgr_.LaunchTask(pauseTask, PlayerServerTaskType::STATE_CHANGE, "receiveccommonevent");
@@ -1801,7 +1823,7 @@ int32_t PlayerServer::CheckSeek(int32_t mSeconds, PlayerSeekMode mode)
 int32_t PlayerServer::SeekContinous(int32_t mSeconds)
 {
     if (lastOpStatus_ == PLAYER_STARTED) {
-        OnPause();
+        OnPause(true);
     }
     {
         std::lock_guard<std::mutex> lock(seekContinousMutex_);
