@@ -1242,7 +1242,7 @@ int32_t PlayerServer::SetVideoSurface(sptr<Surface> surface)
     MEDIA_LOGD("PlayerServer SetVideoSurface in");
     {
         std::lock_guard<std::mutex> surfaceLock(surfaceMutex_);
-        surface_ = surface; 
+        surface_ = surface;
     }
     auto task = std::make_shared<TaskHandler<void>>([this, switchSurface]() {
         if (!switchSurface || playerEngine_ == nullptr) {
