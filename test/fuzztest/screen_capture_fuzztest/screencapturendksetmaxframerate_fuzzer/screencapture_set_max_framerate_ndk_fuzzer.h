@@ -25,7 +25,7 @@
 #include <cstdlib>
 #include "test_ndk_screen_capture.h"
 
-#define FUZZ_PROJECT_NAME "screencapturesetmaxframerate_ndk_fuzzer"
+#define FUZZ_PROJECT_NAME "ScreenCaptureMaxFramerateNdkFuzzer"
 
 namespace OHOS {
 namespace Media {

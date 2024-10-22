@@ -55,7 +55,7 @@ ohos_fuzztest("ScreenCaptureNdkSetMaxFrameRateFuzzTest") {
     sources = [
       "$MEDIA_ROOT_DIR/test/fuzztest/common/aw_common.cpp",
       "$MEDIA_ROOT_DIR/test/fuzztest/common/test_ndk_screen_capture.cpp",
-      "screencapturesetmaxframerate_ndk_fuzzer.cpp",
+      "screencapture_set_max_framerate_ndk_fuzzer.cpp",
     ]
   }
   deps = [
