@@ -114,13 +114,23 @@ public:
         const std::string &toneUri, std::shared_ptr<ToneHapticsAttrs> &toneHapticsAttrs) override;
     int32_t OpenToneHaptics(const std::shared_ptr<AbilityRuntime::Context> &context,
         const std::string &hapticsUri) override;
-    std::string GetHapticsUriByStyle(const std::string &standardHapticsUri, HapticsStyle hapticsStyle);
+
+    std::string GetHapticsUriByStyle(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
+        const std::string &standardHapticsUri, HapticsStyle hapticsStyle);
+    int32_t GetToneHapticsSettings(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
+        const std::string &toneUri, ToneHapticsType toneHapticsType, ToneHapticsSettings &settings);
+    int32_t GetHapticsAttrsSyncedWithTone(const std::string &toneUri,
+        std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
+        std::shared_ptr<ToneHapticsAttrs> &toneHapticsAttrs);
+    int32_t SetToneHapticsSettings(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
+        const std::string &toneUri, ToneHapticsType toneHapticsType, const ToneHapticsSettings &settings);
 
 private:
     void InitDefaultUriMap();
     void InitDefaultRingtoneUriMap(const std::string &ringtoneJsonPath);
     void InitDefaultSystemToneUriMap(const std::string &systemToneJsonPath);
     void InitDefaultToneHapticsMap();
+    void ReadDefaultToneHaptics(const char *paramName, ToneHapticsType toneHapticsType);
     std::string GetFullPath(const std::string &originalUri);
     std::string GetJsonValue(const std::string &jsonPath);
 
@@ -159,12 +169,15 @@ private:
         ToneHapticsType toneHapticsType);
     std::unique_ptr<SimcardSettingAsset> GetSimcardSettingAssetByToneHapticsType(
         std::shared_ptr<DataShare::DataShareHelper> dataShareHelper, ToneHapticsType toneHapticsType);
-    std::string GetToneSyncedHapticsUri(const std::shared_ptr<AbilityRuntime::Context> &context,
+
+    std::string GetToneSyncedHapticsUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
         const std::string &toneUri);
-    std::string GetDefaultNonSyncedHapticsUri(ToneHapticsType toneHapticsType);
-    std::string GetFirstNonSyncedHapticsUri(const std::shared_ptr<AbilityRuntime::Context> &context);
-    int32_t GetDefaultToneHapticsSettings(const std::shared_ptr<AbilityRuntime::Context> &context,
+    std::string GetDefaultNonSyncedHapticsUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
+        ToneHapticsType toneHapticsType);
+    std::string GetFirstNonSyncedHapticsUri();
+    int32_t GetDefaultToneHapticsSettings(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
         const std::string &currentToneUri, ToneHapticsType toneHapticsType, ToneHapticsSettings &settings);
+
     int32_t UpdateToneHapticsSettings(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
         const std::string &toneUri, ToneHapticsType toneHapticsType, const ToneHapticsSettings &settings);
     bool GetVibrateTypeByStyle(int standardVibrateType, HapticsStyle hapticsStyle, int &vibrateType);
