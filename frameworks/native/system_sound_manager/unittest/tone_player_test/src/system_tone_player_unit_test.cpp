@@ -381,11 +381,8 @@ HWTEST(SystemTonePlayerUnitTest, Media_TonePlayer_Unit_Test_018, TestSize.Level1
     SystemToneType systemToneType = SYSTEM_TONE_TYPE_SIM_CARD_0;
     auto systemTonePlayerImpl_ = std::make_shared<SystemTonePlayerImpl>(context_, *systemSoundMgr_, systemToneType);
     std::map<ToneHapticsFeature, std::string> hapticsUris;
-    hapticsUris[ToneHapticsFeature::STANDARD] = "test1";
-    hapticsUris[ToneHapticsFeature::GENTLE] = "test2";
-    systemTonePlayerImpl_->GetNewHapticSettings(hapticsUris);
-    EXPECT_EQ(hapticsUris[ToneHapticsFeature::STANDARD], "test1");
-    EXPECT_EQ(hapticsUris[ToneHapticsFeature::GENTLE], "test2");
+    systemTonePlayerImpl_->GetNewHapticSettings("", hapticsUris);
+    EXPECT_EQ(hapticsUris.empty(), true);
 }
 
 /**

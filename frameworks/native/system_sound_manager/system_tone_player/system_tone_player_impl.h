@@ -62,11 +62,13 @@ private:
     void ReleaseHapticsSourceIds();
     ToneHapticsType ConvertToToneHapticsType(SystemToneType type);
     HapticsMode ConvertToHapticsMode(ToneHapticsMode toneHapticsMode);
-    void GetNewHapticSettings(std::map<ToneHapticsFeature, std::string> &hapticsUris);
+    void GetNewHapticSettings(const std::string &audioUri, std::map<ToneHapticsFeature, std::string> &hapticsUris);
     std::string ChangeHapticsUri(const std::string &hapticsUri);
     void GetCurrentHapticSettings(const std::string &audioUri, std::map<ToneHapticsFeature, std::string> &hapticUriMap);
     bool IsSameHapticMaps(const std::map<ToneHapticsFeature, std::string> &hapticUriMap);
     void UpdateStreamId();
+    bool InitDataShareHelper();
+    void ReleaseDataShareHelper();
 
     std::shared_ptr<AudioHapticManager> audioHapticManager_ = nullptr;
     std::unordered_map<int32_t, std::shared_ptr<AudioHapticPlayer>> playerMap_;
@@ -85,6 +87,7 @@ private:
     HapticsMode hapticsMode_ = HapticsMode::HAPTICS_MODE_INVALID;
     std::map<ToneHapticsFeature, std::string> hapticUriMap_;
     bool isHapticUriEmpty_ = false;
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper_ = nullptr;
 
     std::mutex systemTonePlayerMutex_;
 };

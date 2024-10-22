@@ -57,10 +57,10 @@ const int ERROR = -1;
 const int SUCCESS = 0;
 
 // tone haptics default setting
-static const char PARAM_HAPTICS_SETTING_RINGTONE1[] = "const.multimedia.haptics_ringtone_sim_card_0_haptics";
-static const char PARAM_HAPTICS_SETTING_RINGTONE2[] = "const.multimedia.haptics_ringtone_sim_card_1_haptics";
-static const char PARAM_HAPTICS_SETTING_SHOT1[] = "const.multimedia.haptics_system_tone_sim_card_0_haptics";
-static const char PARAM_HAPTICS_SETTING_SHOT2[] = "const.multimedia.haptics_system_tone_sim_card_1_haptics";
+static const char PARAM_HAPTICS_SETTING_RINGTONE_CARD_ONE[] = "const.multimedia.haptics_ringtone_sim_card_0_haptics";
+static const char PARAM_HAPTICS_SETTING_RINGTONE_CARD_TWO[] = "const.multimedia.haptics_ringtone_sim_card_1_haptics";
+static const char PARAM_HAPTICS_SETTING_SHOT_CARD_ONE[] = "const.multimedia.haptics_system_tone_sim_card_0_haptics";
+static const char PARAM_HAPTICS_SETTING_SHOT_CARD_TWO[] = "const.multimedia.haptics_system_tone_sim_card_1_haptics";
 static const char PARAM_HAPTICS_SETTING_NOTIFICATIONTONE[] = "const.multimedia.notification_tone_haptics";
 static const int32_t SYSPARA_SIZE = 128;
 
@@ -344,53 +344,25 @@ void SystemSoundManagerImpl::InitDefaultSystemToneUriMap(const std::string &syst
     }
 }
 
-void SystemSoundManagerImpl::InitDefaultToneHapticsMap()
+void SystemSoundManagerImpl::ReadDefaultToneHaptics(const char *paramName, ToneHapticsType toneHapticsType)
 {
     char paramValue[SYSPARA_SIZE] = {0};
-    GetParameter(PARAM_HAPTICS_SETTING_RINGTONE1, "", paramValue, SYSPARA_SIZE);
+    GetParameter(paramName, "", paramValue, SYSPARA_SIZE);
     if (strcmp(paramValue, "")) {
-        defaultToneHapticsUriMap_.insert(make_pair(HAPTICS_RINGTONE_TYPE_SIM_CARD_0, string(paramValue)));
-        MEDIA_LOGI("InitDefaultToneHapticsMap: card 0 ringtone haptics is [%{public}s]", paramValue);
+        defaultToneHapticsUriMap_.insert(make_pair(toneHapticsType, string(paramValue)));
+        MEDIA_LOGI("ReadDefaultToneHaptics: tone [%{public}d] haptics is [%{public}s]", toneHapticsType, paramValue);
     } else {
-        MEDIA_LOGW("InitDefaultToneHapticsMap: failed to load uri of [%{public}s]", PARAM_HAPTICS_SETTING_RINGTONE1);
+        MEDIA_LOGW("ReadDefaultToneHaptics: failed to load uri of [%{public}s]", paramName);
     }
+}
 
-    memset_s(paramValue, sizeof(paramValue), 0, sizeof(paramValue));
-    GetParameter(PARAM_HAPTICS_SETTING_RINGTONE2, "", paramValue, SYSPARA_SIZE);
-    if (strcmp(paramValue, "")) {
-        defaultToneHapticsUriMap_.insert(make_pair(HAPTICS_RINGTONE_TYPE_SIM_CARD_1, string(paramValue)));
-        MEDIA_LOGI("InitDefaultToneHapticsMap: card 1 ringtone haptics is [%{public}s]", paramValue);
-    } else {
-        MEDIA_LOGW("InitDefaultToneHapticsMap: failed to load uri of [%{public}s]", PARAM_HAPTICS_SETTING_RINGTONE2);
-    }
-
-    memset_s(paramValue, sizeof(paramValue), 0, sizeof(paramValue));
-    GetParameter(PARAM_HAPTICS_SETTING_SHOT1, "", paramValue, SYSPARA_SIZE);
-    if (strcmp(paramValue, "")) {
-        defaultToneHapticsUriMap_.insert(make_pair(HAPTICS_SYSTEM_TONE_TYPE_SIM_CARD_0, string(paramValue)));
-        MEDIA_LOGI("InitDefaultToneHapticsMap: card 0 shot haptics is [%{public}s]", paramValue);
-    } else {
-        MEDIA_LOGW("InitDefaultToneHapticsMap: failed to load uri of [%{public}s]", PARAM_HAPTICS_SETTING_SHOT1);
-    }
-
-    memset_s(paramValue, sizeof(paramValue), 0, sizeof(paramValue));
-    GetParameter(PARAM_HAPTICS_SETTING_SHOT2, "", paramValue, SYSPARA_SIZE);
-    if (strcmp(paramValue, "")) {
-        defaultToneHapticsUriMap_.insert(make_pair(HAPTICS_SYSTEM_TONE_TYPE_SIM_CARD_1, string(paramValue)));
-        MEDIA_LOGI("InitDefaultToneHapticsMap: card 1 shot haptics is [%{public}s]", paramValue);
-    } else {
-        MEDIA_LOGW("InitDefaultToneHapticsMap: failed to load uri of [%{public}s]", PARAM_HAPTICS_SETTING_SHOT2);
-    }
-
-    memset_s(paramValue, sizeof(paramValue), 0, sizeof(paramValue));
-    GetParameter(PARAM_HAPTICS_SETTING_NOTIFICATIONTONE, "", paramValue, SYSPARA_SIZE);
-    if (strcmp(paramValue, "")) {
-        defaultToneHapticsUriMap_.insert(make_pair(HAPTICS_SYSTEM_TONE_TYPE_NOTIFICATION, string(paramValue)));
-        MEDIA_LOGI("InitDefaultToneHapticsMap: system notification haptics is [%{public}s]", paramValue);
-    } else {
-        MEDIA_LOGW("InitDefaultToneHapticsMap: failed to load uri of [%{public}s]",
-            PARAM_HAPTICS_SETTING_NOTIFICATIONTONE);
-    }
+void SystemSoundManagerImpl::InitDefaultToneHapticsMap()
+{
+    ReadDefaultToneHaptics(PARAM_HAPTICS_SETTING_RINGTONE_CARD_ONE, HAPTICS_RINGTONE_TYPE_SIM_CARD_0);
+    ReadDefaultToneHaptics(PARAM_HAPTICS_SETTING_RINGTONE_CARD_TWO, HAPTICS_RINGTONE_TYPE_SIM_CARD_1);
+    ReadDefaultToneHaptics(PARAM_HAPTICS_SETTING_SHOT_CARD_ONE, HAPTICS_SYSTEM_TONE_TYPE_SIM_CARD_0);
+    ReadDefaultToneHaptics(PARAM_HAPTICS_SETTING_SHOT_CARD_TWO, HAPTICS_SYSTEM_TONE_TYPE_SIM_CARD_1);
+    ReadDefaultToneHaptics(PARAM_HAPTICS_SETTING_NOTIFICATIONTONE, HAPTICS_SYSTEM_TONE_TYPE_NOTIFICATION);
 }
 
 std::string SystemSoundManagerImpl::GetFullPath(const std::string &originalUri)
@@ -641,11 +613,6 @@ std::shared_ptr<RingtonePlayer> SystemSoundManagerImpl::GetRingtonePlayer(const 
     CHECK_AND_RETURN_RET_LOG(IsRingtoneTypeValid(ringtoneType), nullptr, "invalid ringtone type");
     MEDIA_LOGI("GetRingtonePlayer: for ringtoneType %{public}d", ringtoneType);
 
-    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
-    if (dataShareHelper == nullptr) {
-        MEDIA_LOGE("Create dataShare failed, datashare or ringtone library error.");
-    }
-
     std::shared_ptr<RingtonePlayer> ringtonePlayer = std::make_shared<RingtonePlayerImpl>(context, *this, ringtoneType);
     CHECK_AND_RETURN_RET_LOG(ringtonePlayer != nullptr, nullptr,
         "Failed to create ringtone player object");
@@ -658,11 +625,6 @@ std::shared_ptr<SystemTonePlayer> SystemSoundManagerImpl::GetSystemTonePlayer(
     std::lock_guard<std::mutex> lock(playerMutex_);
     CHECK_AND_RETURN_RET_LOG(IsSystemToneTypeValid(systemToneType), nullptr, "invalid system tone type");
     MEDIA_LOGI("GetSystemTonePlayer: for systemToneType %{public}d", systemToneType);
-
-    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
-    if (dataShareHelper == nullptr) {
-        MEDIA_LOGE("Create dataShare failed, datashare or ringtone library error.");
-    }
 
     std::shared_ptr<SystemTonePlayer> systemTonePlayer =
         std::make_shared<SystemTonePlayerImpl>(context, *this, systemToneType);
@@ -1621,18 +1583,19 @@ std::unique_ptr<SimcardSettingAsset> SystemSoundManagerImpl::GetSimcardSettingAs
     return simcardSettingAsset;
 }
 
-std::string SystemSoundManagerImpl::GetToneSyncedHapticsUri(const std::shared_ptr<AbilityRuntime::Context> &context,
-    const std::string &toneUri)
+std::string SystemSoundManagerImpl::GetToneSyncedHapticsUri(
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper, const std::string &toneUri)
 {
     std::shared_ptr<ToneHapticsAttrs> toneHapticsAttrs;
-    int32_t result = GetHapticsAttrsSyncedWithTone(context, toneUri, toneHapticsAttrs);
+    int32_t result = GetHapticsAttrsSyncedWithTone(toneUri, dataShareHelper, toneHapticsAttrs);
     if (result == SUCCESS && toneHapticsAttrs) {
         return toneHapticsAttrs->GetUri();
     }
     return "";
 }
 
-std::string SystemSoundManagerImpl::GetDefaultNonSyncedHapticsUri(ToneHapticsType toneHapticsType)
+std::string SystemSoundManagerImpl::GetDefaultNonSyncedHapticsUri(
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper, ToneHapticsType toneHapticsType)
 {
     MEDIA_LOGD("GetDefaultNonSyncedHapticsUri: toneHapticsType %{public}d", toneHapticsType);
     auto toneHapticsItem = defaultToneHapticsUriMap_.find(toneHapticsType);
@@ -1641,7 +1604,6 @@ std::string SystemSoundManagerImpl::GetDefaultNonSyncedHapticsUri(ToneHapticsTyp
         return "";
     }
 
-    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, "",
         "Create dataShare failed, datashare or ringtone library error.");
 
@@ -1657,42 +1619,40 @@ std::string SystemSoundManagerImpl::GetDefaultNonSyncedHapticsUri(ToneHapticsTyp
     if (vibrateAssetByUri == nullptr) {
         MEDIA_LOGE("GetDefaultNonSyncedHapticsUri: no non_sync vibration called %{public}s",
             toneHapticsItem->second.c_str());
-        dataShareHelper->Release();
         return "";
     }
 
     string hapticsUri = vibrateAssetByUri->GetPath();
-    dataShareHelper->Release();
     MEDIA_LOGI("GetDefaultNonSyncedHapticsUri: toneHapticsType %{public}d default haptics %{public}s",
         toneHapticsType, hapticsUri.c_str());
     return hapticsUri;
 }
 
-std::string SystemSoundManagerImpl::GetFirstNonSyncedHapticsUri(
-    const std::shared_ptr<AbilityRuntime::Context> &context)
+std::string SystemSoundManagerImpl::GetFirstNonSyncedHapticsUri()
 {
     std::vector<std::shared_ptr<ToneHapticsAttrs>> toneHapticsAttrsArray;
-    int32_t result = GetToneHapticsList(context, false, toneHapticsAttrsArray);
+    int32_t result = GetToneHapticsList(nullptr, false, toneHapticsAttrsArray);
     if (result == SUCCESS && !toneHapticsAttrsArray.empty()) {
         return toneHapticsAttrsArray[0]->GetUri();
     }
     return "";
 }
 
-int32_t SystemSoundManagerImpl::GetDefaultToneHapticsSettings(const std::shared_ptr<AbilityRuntime::Context> &context,
-    const std::string &currentToneUri, ToneHapticsType toneHapticsType, ToneHapticsSettings &settings)
+int32_t SystemSoundManagerImpl::GetDefaultToneHapticsSettings(
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper, const std::string &currentToneUri,
+    ToneHapticsType toneHapticsType, ToneHapticsSettings &settings)
 {
-    settings.hapticsUri = GetToneSyncedHapticsUri(context, currentToneUri);
+    settings.hapticsUri = GetToneSyncedHapticsUri(dataShareHelper, currentToneUri);
     if (!settings.hapticsUri.empty()) {
         settings.mode = ToneHapticsMode::SYNC;
         return SUCCESS;
     }
-    settings.hapticsUri = GetDefaultNonSyncedHapticsUri(toneHapticsType);
+    settings.hapticsUri = GetDefaultNonSyncedHapticsUri(dataShareHelper, toneHapticsType);
     if (!settings.hapticsUri.empty()) {
         settings.mode = ToneHapticsMode::NON_SYNC;
         return SUCCESS;
     }
-    settings.hapticsUri = GetFirstNonSyncedHapticsUri(context);
+    settings.hapticsUri = GetFirstNonSyncedHapticsUri();
     if (!settings.hapticsUri.empty()) {
         settings.mode = ToneHapticsMode::NON_SYNC;
         return SUCCESS;
@@ -1704,30 +1664,44 @@ int32_t SystemSoundManagerImpl::GetToneHapticsSettings(const std::shared_ptr<Abi
     ToneHapticsType toneHapticsType, ToneHapticsSettings &settings)
 {
 #ifdef SUPPORT_VIBRATOR
-    std::lock_guard<std::mutex> lock(toneHapticsMutex_);
     CHECK_AND_RETURN_RET_LOG(IsToneHapticsTypeValid(toneHapticsType), IO_ERROR, "Invalid tone haptics type");
-    MEDIA_LOGI("GetToneHapticsSettings: toneHapticsType %{public}d", toneHapticsType);
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, IO_ERROR,
         "Create dataShare failed, datashare or ringtone library error.");
     string currentToneUri = GetCurrentToneUri(context, toneHapticsType);
-    CHECK_AND_RETURN_RET_LOG(!currentToneUri.empty(), IO_ERROR, "GetToneHapticsSettings: get current tone fail!");
+
+    int32_t result = GetToneHapticsSettings(dataShareHelper, currentToneUri, toneHapticsType, settings);
+    dataShareHelper->Release();
+    return result;
+#endif
+    return UNSUPPORTED_ERROR;
+}
+
+int32_t SystemSoundManagerImpl::GetToneHapticsSettings(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
+    const std::string &toneUri, ToneHapticsType toneHapticsType, ToneHapticsSettings &settings)
+{
+#ifdef SUPPORT_VIBRATOR
+    std::lock_guard<std::mutex> lock(toneHapticsMutex_);
+    MEDIA_LOGI("GetToneHapticsSettings: toneUri %{public}s toneHapticsType %{public}d", toneUri.c_str(),
+        toneHapticsType);
+    if (dataShareHelper == nullptr || toneUri.empty() || !IsToneHapticsTypeValid(toneHapticsType)) {
+        MEDIA_LOGE("GetToneHapticsSettings: param fail");
+        return IO_ERROR;
+    }
 
     int32_t result = SUCCESS;
     auto simcardSettingAsset = GetSimcardSettingAssetByToneHapticsType(dataShareHelper, toneHapticsType);
     if (simcardSettingAsset == nullptr || simcardSettingAsset->GetToneFile().empty()) {
-        result = GetDefaultToneHapticsSettings(context, currentToneUri, toneHapticsType, settings);
+        result = GetDefaultToneHapticsSettings(dataShareHelper, toneUri, toneHapticsType, settings);
         if (result != SUCCESS) {
             MEDIA_LOGE("GetToneHapticsSettings: get defaultTone haptics settings fail");
         }
-        dataShareHelper->Release();
         return result;
     }
 
-    if (currentToneUri == simcardSettingAsset->GetToneFile()) {
+    if (toneUri == simcardSettingAsset->GetToneFile()) {
         settings.hapticsUri = simcardSettingAsset->GetVibrateFile();
         settings.mode = IntToToneHapticsMode(simcardSettingAsset->GetRingMode());
-        dataShareHelper->Release();
         return SUCCESS;
     }
 
@@ -1735,15 +1709,13 @@ int32_t SystemSoundManagerImpl::GetToneHapticsSettings(const std::shared_ptr<Abi
         settings.hapticsUri = simcardSettingAsset->GetVibrateFile();
         settings.mode = IntToToneHapticsMode(simcardSettingAsset->GetRingMode());
     } else {
-        result = GetDefaultToneHapticsSettings(context, currentToneUri, toneHapticsType, settings);
+        result = GetDefaultToneHapticsSettings(dataShareHelper, toneUri, toneHapticsType, settings);
     }
     if (result == SUCCESS) {
-        result = UpdateToneHapticsSettings(dataShareHelper, currentToneUri, toneHapticsType, settings);
+        result = UpdateToneHapticsSettings(dataShareHelper, toneUri, toneHapticsType, settings);
     } else {
         MEDIA_LOGE("GetToneHapticsSettings: get defaultTone haptics settings fail");
     }
-
-    dataShareHelper->Release();
     return result;
 #endif
     return UNSUPPORTED_ERROR;
@@ -1753,15 +1725,30 @@ int32_t SystemSoundManagerImpl::SetToneHapticsSettings(const std::shared_ptr<Abi
     ToneHapticsType toneHapticsType, const ToneHapticsSettings &settings)
 {
 #ifdef SUPPORT_VIBRATOR
-    std::lock_guard<std::mutex> lock(toneHapticsMutex_);
     CHECK_AND_RETURN_RET_LOG(IsToneHapticsTypeValid(toneHapticsType), OPERATION_ERROR, "Invalid tone haptics type");
-    MEDIA_LOGI("SetToneHapticsSettings: toneHapticsType %{public}d, hapticsUri %{public}s toneHapticsMode %{public}d",
-        toneHapticsType, settings.hapticsUri.c_str(), settings.mode);
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, IO_ERROR,
         "Create dataShare failed, datashare or ringtone library error.");
     string currentToneUri = GetCurrentToneUri(context, toneHapticsType);
-    CHECK_AND_RETURN_RET_LOG(!currentToneUri.empty(), IO_ERROR, "SetToneHapticsSettings: get current tone fail!");
+
+    int32_t res = SetToneHapticsSettings(dataShareHelper, currentToneUri, toneHapticsType, settings);
+    dataShareHelper->Release();
+    return res;
+#endif
+    return UNSUPPORTED_ERROR;
+}
+
+int32_t SystemSoundManagerImpl::SetToneHapticsSettings(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
+    const std::string &toneUri, ToneHapticsType toneHapticsType, const ToneHapticsSettings &settings)
+{
+#ifdef SUPPORT_VIBRATOR
+    std::lock_guard<std::mutex> lock(toneHapticsMutex_);
+    MEDIA_LOGI("SetToneHapticsSettings: toneUri %{public}s type %{public}d hapticsUri %{public}s mode %{public}d",
+        toneUri.c_str(), toneHapticsType, settings.hapticsUri.c_str(), settings.mode);
+    if (dataShareHelper == nullptr || toneUri.empty() || !IsToneHapticsTypeValid(toneHapticsType)) {
+        MEDIA_LOGE("SetToneHapticsSettings: param fail");
+        return IO_ERROR;
+    }
 
     ToneHapticsSettings updateSettings = settings;
     if (updateSettings.mode == ToneHapticsMode::NON_SYNC) {
@@ -1776,25 +1763,22 @@ int32_t SystemSoundManagerImpl::SetToneHapticsSettings(const std::shared_ptr<Abi
         unique_ptr<VibrateAsset> vibrateAssetByUri = resultsByUri->GetFirstObject();
         if (vibrateAssetByUri == nullptr) {
             MEDIA_LOGE("SetToneHapticsSettings: vibration of uri is not in the ringtone library!");
-            dataShareHelper->Release();
             return OPERATION_ERROR;
         }
     } else if (settings.mode == ToneHapticsMode::SYNC) {
         std::shared_ptr<ToneHapticsAttrs> toneHapticsAttrs;
-        int32_t result = GetHapticsAttrsSyncedWithTone(context, currentToneUri, toneHapticsAttrs);
+        int32_t result = GetHapticsAttrsSyncedWithTone(toneUri, dataShareHelper, toneHapticsAttrs);
         if (result != SUCCESS) {
             MEDIA_LOGE("SetToneHapticsSettings: current tone does not support sync vibration!");
-            dataShareHelper->Release();
             return result;
         }
         updateSettings.hapticsUri = toneHapticsAttrs->GetUri();
     }
 
-    int32_t res = UpdateToneHapticsSettings(dataShareHelper, currentToneUri, toneHapticsType, updateSettings);
+    int32_t res = UpdateToneHapticsSettings(dataShareHelper, toneUri, toneHapticsType, updateSettings);
     if (res != SUCCESS) {
         MEDIA_LOGE("SetToneHapticsSettings: set tone haptics settings fail!");
     }
-    dataShareHelper->Release();
     return res;
 #endif
     return UNSUPPORTED_ERROR;
@@ -1895,15 +1879,30 @@ int32_t SystemSoundManagerImpl::GetHapticsAttrsSyncedWithTone(const std::shared_
 {
 #ifdef SUPPORT_VIBRATOR
     CHECK_AND_RETURN_RET_LOG(!toneUri.empty(), OPERATION_ERROR, "Invalid toneUri");
-    MEDIA_LOGI("GetHapticsAttrsSyncedWithTone: get %{public}s sync vibration.", toneUri.c_str());
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, IO_ERROR,
         "Create dataShare failed, datashare or ringtone library error.");
 
+    int32_t result = GetHapticsAttrsSyncedWithTone(toneUri, dataShareHelper, toneHapticsAttrs);
+    dataShareHelper->Release();
+    return result;
+#endif
+    return UNSUPPORTED_ERROR;
+}
+
+int32_t SystemSoundManagerImpl::GetHapticsAttrsSyncedWithTone(const std::string &toneUri,
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper, std::shared_ptr<ToneHapticsAttrs> &toneHapticsAttrs)
+{
+#ifdef SUPPORT_VIBRATOR
+    MEDIA_LOGI("GetHapticsAttrsSyncedWithTone: get %{public}s sync vibration.", toneUri.c_str());
+    if (dataShareHelper == nullptr || toneUri.empty()) {
+        MEDIA_LOGE("GetHapticsAttrsSyncedWithTone: param fail");
+        return IO_ERROR;
+    }
+
     unique_ptr<RingtoneAsset> ringtoneAsset = IsPresetRingtone(dataShareHelper, toneUri);
     if (ringtoneAsset == nullptr) {
         MEDIA_LOGE("GetHapticsAttrsSyncedWithTone: toneUri[%{public}s] is not presetRingtone!", toneUri.c_str());
-        dataShareHelper->Release();
         return OPERATION_ERROR;
     }
 
@@ -1923,13 +1922,11 @@ int32_t SystemSoundManagerImpl::GetHapticsAttrsSyncedWithTone(const std::shared_
     unique_ptr<VibrateAsset> vibrateAsset = vibrateResults->GetFirstObject();
     if (vibrateAsset == nullptr) {
         MEDIA_LOGE("GetHapticsAttrsSyncedWithTone: toneUri[%{public}s] is not sync vibration!", toneUri.c_str());
-        dataShareHelper->Release();
         return IO_ERROR;
     }
 
     toneHapticsAttrs = std::make_shared<ToneHapticsAttrs>(vibrateAsset->GetTitle(), vibrateAsset->GetDisplayName(),
         vibrateAsset->GetPath());
-    dataShareHelper->Release();
     return SUCCESS;
 #endif
     return UNSUPPORTED_ERROR;
@@ -1954,6 +1951,7 @@ int32_t SystemSoundManagerImpl::OpenToneHaptics(const std::shared_ptr<AbilityRun
     unique_ptr<VibrateAsset> vibrateAssetByUri = resultsByUri->GetFirstObject();
     if (vibrateAssetByUri == nullptr) {
         MEDIA_LOGE("OpenToneHaptics: vibration of uri is not in the ringtone library!");
+        dataShareHelper->Release();
         return OPERATION_ERROR;
     }
 
@@ -1985,12 +1983,13 @@ bool SystemSoundManagerImpl::GetVibrateTypeByStyle(int standardVibrateType, Hapt
     return true;
 }
 
-std::string SystemSoundManagerImpl::GetHapticsUriByStyle(const std::string &standardHapticsUri,
-    HapticsStyle hapticsStyle)
+std::string SystemSoundManagerImpl::GetHapticsUriByStyle(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
+    const std::string &standardHapticsUri, HapticsStyle hapticsStyle)
 {
-    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
-    CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, {},
-        "Create dataShare failed, datashare or ringtone library error.");
+    if (dataShareHelper == nullptr || standardHapticsUri.empty()) {
+        MEDIA_LOGE("GetHapticsUriByStyle: param fail, uri [%{public}s]", standardHapticsUri.c_str());
+        return "";
+    }
     MEDIA_LOGI("GetHapticsUriByStyle: standardHapticsUri %{public}s, style %{public}d", standardHapticsUri.c_str(),
         hapticsStyle);
 

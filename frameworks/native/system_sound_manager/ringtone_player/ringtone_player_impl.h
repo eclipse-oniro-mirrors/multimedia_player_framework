@@ -59,6 +59,8 @@ private:
     HapticsMode ConvertToHapticsMode(ToneHapticsMode toneHapticsMode);
     ToneHapticsSettings GetHapticSettings(std::string &audioUri, bool &muteHaptics);
     std::string ChangeHapticsUri(const std::string &hapticsUri);
+    bool InitDataShareHelper();
+    void ReleaseDataShareHelper();
 
     float volume_ = 1.0f;
     bool loop_ = false;
@@ -73,6 +75,7 @@ private:
     SystemSoundManagerImpl &systemSoundMgr_;
     RingtoneType type_ = RINGTONE_TYPE_SIM_CARD_0;
     RingtoneState ringtoneState_ = STATE_NEW;
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper_ = nullptr;
 
     std::mutex playerMutex_;
 };
