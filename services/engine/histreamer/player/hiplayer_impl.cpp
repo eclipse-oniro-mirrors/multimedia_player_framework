@@ -44,6 +44,8 @@ const int64_t SAMPLE_AMPLITUDE_INTERVAL = 100;
 const int64_t REPORT_PROGRESS_INTERVAL = 100; // progress interval is 100ms
 const double FRAME_RATE_DEFAULT = -1.0;
 const double FRAME_RATE_FOR_SEEK_PERFORMANCE = 2000.0;
+constexpr int32_t BUFFERING_LOG_FREQUENCY = 5;
+constexpr int32_t NOTIFY_BUFFERING_END_PARAM = 0;
 }
 
 namespace OHOS {
@@ -2018,7 +2020,7 @@ void HiPlayerImpl::OnEventSub(const Event &event)
         }
         case EventType::BUFFERING_END : {
             if (!isBufferingStartNotified_.load() || isSeekClosest_.load()) {
-                MEDIA_LOG_I_SHORT("BUFFERING_END BLOCKED");
+                MEDIA_LOGI_LIMIT(BUFFERING_LOG_FREQUENCY, "BUFFERING_END BLOCKED");
                 break;
             }
             MEDIA_LOG_I_SHORT("BUFFERING_END PLAYING");
@@ -2027,7 +2029,7 @@ void HiPlayerImpl::OnEventSub(const Event &event)
         }
         case EventType::BUFFERING_START : {
             if (isBufferingStartNotified_.load()) {
-                MEDIA_LOG_I_SHORT("BUFFERING_START BLOCKED");
+                MEDIA_LOGI_LIMIT(BUFFERING_LOG_FREQUENCY, "BUFFERING_START BLOCKED");
                 break;
             }
             MEDIA_LOG_I_SHORT("BUFFERING_START PAUSE");
@@ -2443,10 +2445,14 @@ void HiPlayerImpl::NotifySeekDone(int32_t seekPos)
             });
     }
     demuxer_->WaitForBufferingEnd();
-    if (isSeekClosest_.load() && isBufferingStartNotified_.load()) {
-        NotifyBufferingEnd(0);
+    if (isSeekClosest_.load()) {
+        isSeekClosest_.store(false);
+        if (isBufferingStartNotified_.load()) {
+            MEDIA_LOG_I_SHORT("SEEK_CLOSEST BUFFERING_END PLAYING");
+            NotifyBufferingEnd(NOTIFY_BUFFERING_END_PARAM);
+        }
     }
-    isSeekClosest_.store(false);
+    
     MEDIA_LOG_D_SHORT("NotifySeekDone seekPos: %{public}d", seekPos);
     callbackLooper_.OnInfo(INFO_TYPE_POSITION_UPDATE, seekPos, format);
     callbackLooper_.OnInfo(INFO_TYPE_SEEKDONE, seekPos, format);
