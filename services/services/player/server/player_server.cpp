@@ -419,6 +419,7 @@ int32_t PlayerServer::OnPrepare(bool sync)
         MediaTrace::TraceBegin("PlayerServer::PrepareAsync", FAKE_POINTER(this));
 #ifdef SUPPORT_VIDEO
         if (surface_ != nullptr) {
+            std::lock_guard<std::mutex> lock(surfaceMutex_);
             int32_t res = playerEngine_->SetVideoSurface(surface_);
             CHECK_AND_RETURN_RET_LOG(res == MSERR_OK,
                 static_cast<int32_t>(MSERR_INVALID_OPERATION), "Engine SetVideoSurface Failed!");
@@ -1239,8 +1240,12 @@ int32_t PlayerServer::SetVideoSurface(sptr<Surface> surface)
         return MSERR_INVALID_OPERATION;
     }
     MEDIA_LOGD("PlayerServer SetVideoSurface in");
-    surface_ = surface;
+    {
+        std::lock_guard<std::mutex> lock2(surfaceMutex_);
+        surface_ = surface; 
+    }
     if (switchSurface && playerEngine_ != nullptr) {
+        std::lock_guard<std::mutex> lock3(surfaceMutex_);
         int32_t res = playerEngine_->SetVideoSurface(surface_);
         CHECK_AND_RETURN_RET_LOG(res == MSERR_OK,
             static_cast<int32_t>(MSERR_INVALID_OPERATION), "Engine switch surface failed!");
