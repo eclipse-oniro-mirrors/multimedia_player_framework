@@ -19,7 +19,7 @@
 #include "string_ex.h"
 #include "media_errors.h"
 #include "directory_ex.h"
-#include "screencapture_set_max_framerate_ndk_fuzzer.h"
+#include "screencapture_set_max_framerate_fuzzer.h"
 
 using namespace std;
 using namespace OHOS;
