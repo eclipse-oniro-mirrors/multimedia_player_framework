@@ -92,6 +92,8 @@ group("fuzztest") {
     "screen_capture_fuzztest/screencapturevideoframeratefile_fuzzer:ScreenCaptureVideoFrameRateFileFuzzTest",
     "screen_capture_fuzztest/screencapturevideoframewidth_fuzzer:ScreenCaptureVideoFrameWidthFuzzTest",
     "screen_capture_fuzztest/screencapturevideosourcetype_fuzzer:ScreenCaptureVideoSourceTypeFuzzTest",
+    "screen_capture_fuzztest/screencapturendksetmaxframerate_fuzzer:ScreenCaptureNdkSetMaxFrameRateFuzzTest",
+    "screen_capture_fuzztest/screencapturesetmaxframerate_fuzzer:ScreenCaptureSetMaxFrameRateFuzzTest",
     "transcoder_fuzztest/transcoderservicestub_fuzzer:TranscoderServiceStubFuzzTest",
   ]
 }
