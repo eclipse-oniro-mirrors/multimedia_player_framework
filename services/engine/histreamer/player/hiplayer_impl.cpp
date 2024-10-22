@@ -2436,6 +2436,7 @@ void HiPlayerImpl::NotifyDurationUpdate(const std::string_view& type, int32_t pa
 
 void HiPlayerImpl::NotifySeekDone(int32_t seekPos)
 {
+    MediaTrace trace(std::string("HiPlayerImpl::NotifySeekDone, seekPos: ") + to_string(seekPos));
     Format format;
     // Report position firstly to make sure that client can get real position when seek done in playing state.
     if (curState_ == PlayerStateId::PLAYING) {
@@ -2447,7 +2448,6 @@ void HiPlayerImpl::NotifySeekDone(int32_t seekPos)
                 return !syncManager_->InSeeking();
             });
     }
-    MediaTrace trace("HiPlayerImpl::NotifySeekDone, WaitForBufferingEnd");
     auto startTime = std::chrono::steady_clock::now();
     demuxer_->WaitForBufferingEnd();
     auto endTime = std::chrono::steady_clock::now();
