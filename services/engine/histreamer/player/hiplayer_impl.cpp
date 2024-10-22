@@ -468,7 +468,7 @@ int32_t HiPlayerImpl::SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSee
             return TransStatus(rtv);
         }
         if (demuxer_->IsRenderNextVideoFrameSupported() && !demuxer_->IsVideoEos()) {
-            rtv = pipeline_->PrepareFrame(true);
+            rtv = pipeline_->Preroll(true);
         }
         if (pipelineStates_ == PlayerStates::PLAYER_PLAYBACK_COMPLETE) {
             isDoCompletedSeek_ = true;
@@ -541,7 +541,7 @@ int32_t HiPlayerImpl::PrepareAsync()
     FALSE_RETURN_V_MSG_E(ret == Status::OK, TransStatus(ret), "DoSetPlayRange failed");
     if (demuxer_ != nullptr && demuxer_->IsRenderNextVideoFrameSupported()
         && IsAppEnableRenderFirstFrame(appUid_)) {
-        ret = pipeline_->PrepareFrame(renderFirstFrame_);
+        ret = pipeline_->Preroll(renderFirstFrame_);
         auto code = TransStatus(ret);
         if (ret != Status::OK) {
             CollectionErrorInfo(code, "PrepareFrame failed.");
@@ -1088,6 +1088,9 @@ Status HiPlayerImpl::doPreparedSeek(int64_t seekPos, PlayerSeekMode mode)
     MEDIA_LOG_I_SHORT("doPreparedSeek.");
     pipeline_ -> Flush();
     auto rtv = doSeek(seekPos, mode);
+    if ((rtv == Status::OK) && demuxer_->IsRenderNextVideoFrameSupported() && !demuxer_->IsVideoEos()) {
+        rtv = pipeline_->Preroll(true);
+    }
     return rtv;
 }
 
@@ -1110,7 +1113,7 @@ Status HiPlayerImpl::doPausedSeek(int64_t seekPos, PlayerSeekMode mode)
     auto rtv = doSeek(seekPos, mode);
     inEosSeek_ = false;
     if ((rtv == Status::OK) && demuxer_->IsRenderNextVideoFrameSupported() && !demuxer_->IsVideoEos()) {
-        rtv = pipeline_->PrepareFrame(true);
+        rtv = pipeline_->Preroll(true);
     }
     return rtv;
 }
@@ -1125,6 +1128,9 @@ Status HiPlayerImpl::doCompletedSeek(int64_t seekPos, PlayerSeekMode mode)
         pipeline_->Resume();
         syncManager_->Resume();
     } else {
+        if ((rtv == Status::OK) && demuxer_->IsRenderNextVideoFrameSupported() && !demuxer_->IsVideoEos()) {
+            rtv = pipeline_->Preroll(true);
+        }
         isDoCompletedSeek_ = true;
         callbackLooper_.StopReportMediaProgress();
         callbackLooper_.StopCollectMaxAmplitude();
