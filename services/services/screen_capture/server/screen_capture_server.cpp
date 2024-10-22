@@ -1163,7 +1163,9 @@ void ScreenCaptureServer::PostStartScreenCapture(bool isSuccess)
         if (isPrivacyAuthorityEnabled_ &&
             GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"]
                 .compare(appName_) != 0) {
-            TryNotificationOnPostStartScreenCapture();
+            if (TryNotificationOnPostStartScreenCapture() == MSERR_UNKNOWN) {
+                return;
+            }
         }
 #endif
         if (!UpdatePrivacyUsingPermissionState(START_VIDEO)) {
@@ -1209,7 +1211,7 @@ int32_t ScreenCaptureServer::TryStartNotification()
     return tryTimes;
 }
 
-void ScreenCaptureServer::TryNotificationOnPostStartScreenCapture()
+int32_t ScreenCaptureServer::TryNotificationOnPostStartScreenCapture()
 {
     int32_t tryTimes = TryStartNotification();
     if (tryTimes > NOTIFICATION_MAX_TRY_NUM) {
@@ -1219,8 +1221,9 @@ void ScreenCaptureServer::TryNotificationOnPostStartScreenCapture()
                 AVScreenCaptureErrorCode::SCREEN_CAPTURE_ERR_UNKNOWN);
         }
         StopScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID);
-        return;
+        return MSERR_UNKNOWN;
     }
+    return MSERR_OK;
 }
 #endif
 
