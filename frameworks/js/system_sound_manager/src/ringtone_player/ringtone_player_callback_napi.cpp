@@ -18,7 +18,7 @@
 #include <uv.h>
 
 #include "media_errors.h"
-#include "media_log.h"
+#include "system_sound_log.h"
 
 namespace {
 const std::string AUDIO_INTERRUPT_CALLBACK_NAME = "audioInterrupt";

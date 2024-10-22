@@ -23,7 +23,7 @@
 #include <sys/stat.h>
 
 #include "media_errors.h"
-#include "media_log.h"
+#include "system_sound_log.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_AUDIO_NAPI, "SystemSoundVibrator"};

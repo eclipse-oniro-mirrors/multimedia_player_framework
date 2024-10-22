@@ -15,7 +15,7 @@
 
 #include "ringtone_common_napi.h"
 #include <climits>
-#include "media_log.h"
+#include "system_sound_log.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_AUDIO_NAPI, "RingtonePlayerCallbackNapi"};

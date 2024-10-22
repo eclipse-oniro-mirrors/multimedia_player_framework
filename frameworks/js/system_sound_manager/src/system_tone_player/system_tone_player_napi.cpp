@@ -15,7 +15,7 @@
 
 #include "system_tone_player_napi.h"
 
-#include "media_log.h"
+#include "system_sound_log.h"
 #include "common_napi.h"
 
 namespace {

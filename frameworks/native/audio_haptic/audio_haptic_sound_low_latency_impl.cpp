@@ -18,7 +18,7 @@
 #include <fcntl.h>
 
 #include "isoundpool.h"
-#include "media_log.h"
+#include "audio_haptic_log.h"
 #include "media_errors.h"
 
 namespace {
