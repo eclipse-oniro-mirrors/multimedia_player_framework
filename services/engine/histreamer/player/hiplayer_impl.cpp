@@ -16,6 +16,9 @@
 #define HST_LOG_TAG "HiPlayer"
 
 #include "hiplayer_impl.h"
+
+#include <chrono>
+
 #include "audio_info.h"
 #include "common/log.h"
 #include "common/media_source.h"
@@ -44,6 +47,8 @@ const int64_t SAMPLE_AMPLITUDE_INTERVAL = 100;
 const int64_t REPORT_PROGRESS_INTERVAL = 100; // progress interval is 100ms
 const double FRAME_RATE_DEFAULT = -1.0;
 const double FRAME_RATE_FOR_SEEK_PERFORMANCE = 2000.0;
+constexpr int32_t BUFFERING_LOG_FREQUENCY = 5;
+constexpr int32_t NOTIFY_BUFFERING_END_PARAM = 0;
 }
 
 namespace OHOS {
@@ -1002,29 +1007,7 @@ Status HiPlayerImpl::Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeek
     int64_t seekPos = std::max(static_cast<int64_t>(0), std::min(mSeconds, static_cast<int64_t>(durationMs_.load())));
     auto rtv = seekPos >= 0 ? Status::OK : Status::ERROR_INVALID_PARAMETER;
     if (rtv == Status::OK) {
-        switch (pipelineStates_) {
-            case PlayerStates::PLAYER_STARTED: {
-                rtv = doStartedSeek(seekPos, mode);
-                break;
-            }
-            case PlayerStates::PLAYER_PAUSED: {
-                rtv = doPausedSeek(seekPos, mode);
-                break;
-            }
-            case PlayerStates::PLAYER_PLAYBACK_COMPLETE: {
-                rtv = doCompletedSeek(seekPos, mode);
-                break;
-            }
-            case PlayerStates::PLAYER_PREPARED: {
-                rtv = doPreparedSeek(seekPos, mode);
-                break;
-            }
-            default:
-                MEDIA_LOG_I_SHORT("Seek in error pipelineStates: " PUBLIC_LOG_D32,
-                    static_cast<int32_t>(pipelineStates_));
-                rtv = Status::ERROR_WRONG_STATE;
-                break;
-        }
+        rtv = HandleSeek(seekPos, mode);
     }
     NotifySeek(rtv, notifySeekDone, seekPos);
     if (audioSink_ != nullptr) {
@@ -1033,6 +1016,28 @@ Status HiPlayerImpl::Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeek
     isSeek_ = false;
     UpdateMaxSeekLatency(mode, seekStartTime);
     return rtv;
+}
+
+Status HiPlayerImpl::HandleSeek(int64_t seekPos, PlayerSeekMode mode)
+{
+    switch (pipelineStates_) {
+        case PlayerStates::PLAYER_STARTED: {
+            return doStartedSeek(seekPos, mode);
+        }
+        case PlayerStates::PLAYER_PAUSED: {
+            return doPausedSeek(seekPos, mode);
+        }
+        case PlayerStates::PLAYER_PLAYBACK_COMPLETE: {
+            return doCompletedSeek(seekPos, mode);
+        }
+        case PlayerStates::PLAYER_PREPARED: {
+            return doPreparedSeek(seekPos, mode);
+        }
+        default:
+            MEDIA_LOG_I_SHORT("Seek in error pipelineStates: " PUBLIC_LOG_D32,
+                static_cast<int32_t>(pipelineStates_));
+            return Status::ERROR_WRONG_STATE;
+    }
 }
 
 bool HiPlayerImpl::IsSeekInSitu(int64_t mSeconds)
@@ -1173,29 +1178,7 @@ Status HiPlayerImpl::doSeek(int64_t seekPos, PlayerSeekMode mode)
     FALSE_RETURN_V_MSG_E(Plugins::Us2HstTime(seekPos, seekTimeUs),
         Status::ERROR_INVALID_PARAMETER, "Invalid seekPos: %{public}" PRId64, seekPos);
     if (mode == PlayerSeekMode::SEEK_CLOSEST && NeedSeekClosest()) {
-        MEDIA_LOG_I_SHORT("doSeek SEEK_CLOSEST");
-        if (videoDecoder_ != nullptr) {
-            videoDecoder_->SetSeekTime(seekTimeUs + mediaStartPts_);
-        }
-        seekAgent_ = std::make_shared<SeekAgent>(demuxer_, mediaStartPts_);
-        SetFrameRateForSeekPerformance(FRAME_RATE_FOR_SEEK_PERFORMANCE);
-        bool timeout = false;
-        auto res = seekAgent_->Seek(seekPos, timeout);
-        SetFrameRateForSeekPerformance(FRAME_RATE_DEFAULT);
-        MEDIA_LOG_I_SHORT("seekAgent_ Seek end");
-        if (res != Status::OK) {
-            MEDIA_LOG_E_SHORT("Seek closest failed");
-        } else {
-            syncManager_->Seek(seekTimeUs, true);
-            if (timeout && videoDecoder_ != nullptr) {
-                videoDecoder_->ResetSeekInfo();
-            }
-        }
-        if (subtitleSink_ != nullptr) {
-            subtitleSink_->NotifySeek();
-        }
-        seekAgent_.reset();
-        return res;
+        return HandleSeekClosest(seekPos, seekTimeUs);
     }
     if (mode == PlayerSeekMode::SEEK_CLOSEST) {   // reset mode
         mode = PlayerSeekMode::SEEK_NEXT_SYNC;
@@ -1221,6 +1204,34 @@ Status HiPlayerImpl::doSeek(int64_t seekPos, PlayerSeekMode mode)
         }
     }
     return rtv;
+}
+
+Status HiPlayerImpl::HandleSeekClosest(int64_t seekPos, int64_t seekTimeUs)
+{
+    MEDIA_LOG_I_SHORT("doSeek SEEK_CLOSEST");
+    isSeekClosest_.store(true);
+    if (videoDecoder_ != nullptr) {
+        videoDecoder_->SetSeekTime(seekTimeUs + mediaStartPts_);
+    }
+    seekAgent_ = std::make_shared<SeekAgent>(demuxer_, mediaStartPts_);
+    SetFrameRateForSeekPerformance(FRAME_RATE_FOR_SEEK_PERFORMANCE);
+    bool timeout = false;
+    auto res = seekAgent_->Seek(seekPos, timeout);
+    SetFrameRateForSeekPerformance(FRAME_RATE_DEFAULT);
+    MEDIA_LOG_I_SHORT("seekAgent_ Seek end");
+    if (res != Status::OK) {
+        MEDIA_LOG_E_SHORT("Seek closest failed");
+    } else {
+        syncManager_->Seek(seekTimeUs, true);
+        if (timeout && videoDecoder_ != nullptr) {
+            videoDecoder_->ResetSeekInfo();
+        }
+    }
+    if (subtitleSink_ != nullptr) {
+        subtitleSink_->NotifySeek();
+    }
+    seekAgent_.reset();
+    return res;
 }
 
 int32_t HiPlayerImpl::SetVolume(float leftVolume, float rightVolume)
@@ -2017,11 +2028,19 @@ void HiPlayerImpl::OnEventSub(const Event &event)
             break;
         }
         case EventType::BUFFERING_END : {
+            if (!isBufferingStartNotified_.load() || isSeekClosest_.load()) {
+                MEDIA_LOGI_LIMIT(BUFFERING_LOG_FREQUENCY, "BUFFERING_END BLOCKED");
+                break;
+            }
             MEDIA_LOG_I_SHORT("BUFFERING_END PLAYING");
             NotifyBufferingEnd(AnyCast<int32_t>(event.param));
             break;
         }
         case EventType::BUFFERING_START : {
+            if (isBufferingStartNotified_.load()) {
+                MEDIA_LOGI_LIMIT(BUFFERING_LOG_FREQUENCY, "BUFFERING_START BLOCKED");
+                break;
+            }
             MEDIA_LOG_I_SHORT("BUFFERING_START PAUSE");
             NotifyBufferingStart(AnyCast<int32_t>(event.param));
             break;
@@ -2210,6 +2229,7 @@ void HiPlayerImpl::HandleErrorEvent(int32_t errorCode)
 void HiPlayerImpl::NotifyBufferingStart(int32_t param)
 {
     Format format;
+    isBufferingStartNotified_.store(true);
     callbackLooper_.StopReportMediaProgress();
     callbackLooper_.ManualReportMediaProgressOnce();
     (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_BUFFERING_START), 1);
@@ -2220,6 +2240,7 @@ void HiPlayerImpl::NotifyBufferingEnd(int32_t param)
 {
     MEDIA_LOG_I_SHORT("NotifyBufferingEnd");
     Format format;
+    isBufferingStartNotified_.store(false);
     (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_BUFFERING_END), 1);
     callbackLooper_.OnInfo(INFO_TYPE_BUFFERING_UPDATE, param, format);
 }
@@ -2422,6 +2443,7 @@ void HiPlayerImpl::NotifyDurationUpdate(const std::string_view& type, int32_t pa
 
 void HiPlayerImpl::NotifySeekDone(int32_t seekPos)
 {
+    MediaTrace trace(std::string("HiPlayerImpl::NotifySeekDone, seekPos: ") + to_string(seekPos));
     Format format;
     // Report position firstly to make sure that client can get real position when seek done in playing state.
     if (curState_ == PlayerStateId::PLAYING) {
@@ -2433,6 +2455,19 @@ void HiPlayerImpl::NotifySeekDone(int32_t seekPos)
                 return !syncManager_->InSeeking();
             });
     }
+    auto startTime = std::chrono::steady_clock::now();
+    demuxer_->WaitForBufferingEnd();
+    auto endTime = std::chrono::steady_clock::now();
+    auto waitTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
+    MEDIA_LOG_D_SHORT("NotifySeekDone WaitForBufferingEnd: %{public}d ms", int(waitTime));
+    if (isSeekClosest_.load()) {
+        isSeekClosest_.store(false);
+        if (isBufferingStartNotified_.load()) {
+            MEDIA_LOG_I_SHORT("SEEK_CLOSEST BUFFERING_END PLAYING");
+            NotifyBufferingEnd(NOTIFY_BUFFERING_END_PARAM);
+        }
+    }
+    
     MEDIA_LOG_D_SHORT("NotifySeekDone seekPos: %{public}d", seekPos);
     callbackLooper_.OnInfo(INFO_TYPE_POSITION_UPDATE, seekPos, format);
     callbackLooper_.OnInfo(INFO_TYPE_SEEKDONE, seekPos, format);
