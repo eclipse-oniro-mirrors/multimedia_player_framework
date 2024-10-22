@@ -2640,7 +2640,7 @@ void __attribute__((no_sanitize("cfi"))) HiPlayerImpl::OnStateChanged(PlayerStat
     }
     MEDIA_LOG_D_SHORT("OnStateChanged " PUBLIC_LOG_D32 " > " PUBLIC_LOG_D32, pipelineStates_.load(),
             TransStateId2PlayerState(state));
-    UpdateStateNoLock(TransStateId2PlayerState(state, true, isSystemOperation));
+    UpdateStateNoLock(TransStateId2PlayerState(state), true, isSystemOperation);
     {
         AutoLock lock(stateMutex_);
         cond_.NotifyOne();
