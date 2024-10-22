@@ -70,6 +70,7 @@ group("fuzztest") {
     "screen_capture_fuzztest/screencapturendkfileformatfile_fuzzer:ScreenCaptureNdkFileFormatFileFuzzTest",
     "screen_capture_fuzztest/screencapturendkresizecanvas_fuzzer:ScreenCaptureNdkResizeCanvasFuzzTest",
     "screen_capture_fuzztest/screencapturendksetcanvasrotation_fuzzer:ScreenCaptureNdkSetCanvasRotationFuzzTest",
+    "screen_capture_fuzztest/screencapturendksetmaxframerate_fuzzer:ScreenCaptureNdkSetMaxFrameRateFuzzTest",
     "screen_capture_fuzztest/screencapturendksetmicrophoneenabled_fuzzer:ScreenCaptureNdkSetMicrophoneEnabledFuzzTest",
     "screen_capture_fuzztest/screencapturendkskipprivacymode_fuzzer:ScreenCaptureNdkSkipPrivacyModeFuzzTest",
     "screen_capture_fuzztest/screencapturendkurlfile_fuzzer:ScreenCaptureNdkUrlFileFuzzTest",
@@ -83,6 +84,7 @@ group("fuzztest") {
     "screen_capture_fuzztest/screencaptureserverstartcase_fuzzer:ScreenCaptureServerStartCaseFuzzTest",
     "screen_capture_fuzztest/screencaptureservicestub_fuzzer:ScreenCaptureServiceStubFuzzTest",
     "screen_capture_fuzztest/screencapturesetcanvasrotation_fuzzer:ScreenCaptureSetCanvasRotationFuzzTest",
+    "screen_capture_fuzztest/screencapturesetmaxframerate_fuzzer:ScreenCaptureSetMaxFrameRateFuzzTest",
     "screen_capture_fuzztest/screencapturesetmicrophoneenabled_fuzzer:ScreenCaptureSetMicrophoneEnabledFuzzTest",
     "screen_capture_fuzztest/screencaptureskipprivacymode_fuzzer:ScreenCaptureSkipPrivacyModeFuzzTest",
     "screen_capture_fuzztest/screencaptureurlfile_fuzzer:ScreenCaptureUrlFileFuzzTest",
@@ -92,8 +94,6 @@ group("fuzztest") {
     "screen_capture_fuzztest/screencapturevideoframeratefile_fuzzer:ScreenCaptureVideoFrameRateFileFuzzTest",
     "screen_capture_fuzztest/screencapturevideoframewidth_fuzzer:ScreenCaptureVideoFrameWidthFuzzTest",
     "screen_capture_fuzztest/screencapturevideosourcetype_fuzzer:ScreenCaptureVideoSourceTypeFuzzTest",
-    "screen_capture_fuzztest/screencapturendksetmaxframerate_fuzzer:ScreenCaptureNdkSetMaxFrameRateFuzzTest",
-    "screen_capture_fuzztest/screencapturesetmaxframerate_fuzzer:ScreenCaptureSetMaxFrameRateFuzzTest",
     "transcoder_fuzztest/transcoderservicestub_fuzzer:TranscoderServiceStubFuzzTest",
   ]
 }
