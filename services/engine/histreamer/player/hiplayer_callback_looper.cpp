@@ -202,8 +202,7 @@ void HiPlayerCallbackLooper::ReportRemainedMaxAmplitude()
     auto obs = obs_.lock();
     if (obs != nullptr) {
         if (vMaxAmplitudeArray_.size() != 0) {
-            int mSize = static_cast<int>(vMaxAmplitudeArray_.size());
-            const int size = mSize;
+            const int size = static_cast<int>(vMaxAmplitudeArray_.size());
             float* maxAmplitudeArray = vMaxAmplitudeArray_.data();
             Format amplitudeFormat;
             (void)amplitudeFormat.PutBuffer(std::string(PlayerKeys::AUDIO_MAX_AMPLITUDE),
