@@ -16,6 +16,9 @@
 #define HST_LOG_TAG "HiPlayer"
 
 #include "hiplayer_impl.h"
+
+#include <chrono>
+
 #include "audio_info.h"
 #include "common/log.h"
 #include "common/media_source.h"
@@ -2444,7 +2447,12 @@ void HiPlayerImpl::NotifySeekDone(int32_t seekPos)
                 return !syncManager_->InSeeking();
             });
     }
+    MediaTrace trace("HiPlayerImpl::NotifySeekDone, WaitForBufferingEnd");
+    auto startTime = std::chrono::steady_clock::now();
     demuxer_->WaitForBufferingEnd();
+    auto endTime = std::chrono::steady_clock::now();
+    auto waitTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
+    MEDIA_LOG_D_SHORT("NotifySeekDone WaitForBufferingEnd: %{public}d ms", int(waitTime));
     if (isSeekClosest_.load()) {
         isSeekClosest_.store(false);
         if (isBufferingStartNotified_.load()) {
