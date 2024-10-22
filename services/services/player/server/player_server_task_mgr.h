@@ -38,6 +38,7 @@ enum class PlayerServerTaskType : uint8_t {
     CANCEL_TASK,
     SEEK_CONTINOUS,
     LIGHT_TASK,
+    SET_VIDEO_SURFACE,
     BUTT,
 };
 
