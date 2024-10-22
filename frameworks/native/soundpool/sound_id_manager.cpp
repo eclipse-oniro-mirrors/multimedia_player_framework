@@ -46,12 +46,15 @@ SoundIDManager::~SoundIDManager()
     if (callback_ != nullptr) {
         callback_.reset();
     }
-    for (auto soundParser : soundParsers_) {
-        if (soundParser.second != nullptr) {
-            soundParser.second->Release();
+    {
+        std::lock_guard lock(soundManagerLock_);
+        for (auto soundParser : soundParsers_) {
+            if (soundParser.second != nullptr) {
+                soundParser.second->Release();
+            }
         }
+        soundParsers_.clear();
     }
-    soundParsers_.clear();
 
     if (isParsingThreadPoolStarted_) {
         if (soundParserThreadPool_ != nullptr) {
@@ -165,8 +168,8 @@ int32_t SoundIDManager::DoParser()
         const int32_t soundID = soundIDs_.front();
         soundIDs_.pop_front();
         queueSpaceValid_.notify_one();
-        lock.unlock();
         std::shared_ptr<SoundParser> soundParser = FindSoundParser(soundID);
+        lock.unlock();
         if (soundParser.get() != nullptr) {
             soundParser->SetCallback(callback_);
             soundParser->DoParser();
@@ -192,6 +195,7 @@ std::shared_ptr<SoundParser> SoundIDManager::FindSoundParser(int32_t soundID) co
 int32_t SoundIDManager::Unload(int32_t soundID)
 {
     MEDIA_LOGI("SoundIDManager::Unload soundID:%{public}d", soundID);
+    std::unique_lock lock(soundManagerLock_);
     CHECK_AND_RETURN_RET_LOG(!soundParsers_.empty(), MSERR_NO_MEMORY, "No sound in the soundParsers_");
     auto it = soundParsers_.find(soundID);
     if (it != soundParsers_.end()) {
