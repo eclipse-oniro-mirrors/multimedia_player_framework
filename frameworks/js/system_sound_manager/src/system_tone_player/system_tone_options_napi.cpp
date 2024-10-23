@@ -14,7 +14,7 @@
  */
 
 #include "system_tone_options_napi.h"
-#include "media_log.h"
+#include "system_sound_log.h"
 
 using namespace std;
 

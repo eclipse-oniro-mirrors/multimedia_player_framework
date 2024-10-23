@@ -17,7 +17,7 @@
 
 #include "audio_renderer_info_napi.h"
 #include "avplayer_napi.h"
-#include "media_log.h"
+#include "system_sound_log.h"
 
 using namespace std;
 

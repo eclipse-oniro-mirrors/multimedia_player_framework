@@ -22,7 +22,7 @@
 #include "audio_info.h"
 #include "config_policy_utils.h"
 
-#include "media_log.h"
+#include "system_sound_log.h"
 #include "media_errors.h"
 #include "system_sound_vibrator.h"
 
