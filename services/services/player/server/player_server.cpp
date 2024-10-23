@@ -1250,7 +1250,7 @@ int32_t PlayerServer::SetVideoSurface(sptr<Surface> surface)
     if (switchSurface && playerEngine_ != nullptr) {
         return MSERR_OK;
     }
-    auto task = std::make_shared<TaskHandler<void>>([this, switchSurface]() {
+    auto task = std::make_shared<TaskHandler<void>>([this]() {
         std::lock_guard<std::mutex> surfaceLock(surfaceMutex_);
         (void)playerEngine_->SetVideoSurface(surface_);
         taskMgr_.MarkTaskDone("SetVideoSurface done");
