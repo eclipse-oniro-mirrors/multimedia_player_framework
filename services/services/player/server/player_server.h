@@ -203,12 +203,12 @@ private:
     int32_t InitPlayEngine(const std::string &url);
     int32_t OnPrepare(bool sync);
     int32_t OnPlay();
-    int32_t OnPause(bool isSystemPause);
+    int32_t OnPause(bool isSystemOperation);
     int32_t OnStop(bool sync);
     int32_t OnReset();
     int32_t HandlePrepare();
     int32_t HandlePlay();
-    int32_t HandlePause(bool isSystemPause);
+    int32_t HandlePause(bool isSystemOperation);
     int32_t HandlePauseDemuxer();
     int32_t HandleResumeDemuxer();
     int32_t HandleStop();

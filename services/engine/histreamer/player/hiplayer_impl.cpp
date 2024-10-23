@@ -773,7 +773,7 @@ int32_t HiPlayerImpl::Play()
     return ret;
 }
 
-int32_t HiPlayerImpl::Pause(bool isSystemPause)
+int32_t HiPlayerImpl::Pause(bool isSystemOperation)
 {
     MediaTrace trace("HiPlayerImpl::Pause");
     MEDIA_LOG_I_SHORT("Pause in");
@@ -788,7 +788,7 @@ int32_t HiPlayerImpl::Pause(bool isSystemPause)
     callbackLooper_.StopReportMediaProgress();
     callbackLooper_.StopCollectMaxAmplitude();
     callbackLooper_.ManualReportMediaProgressOnce();
-    OnStateChanged(PlayerStateId::PAUSE, isSystemPause);
+    OnStateChanged(PlayerStateId::PAUSE, isSystemOperation);
     if (startTime_ != -1) {
         playTotalDuration_ += GetCurrentMillisecond() - startTime_;
     }

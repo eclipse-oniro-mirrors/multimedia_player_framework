@@ -44,8 +44,9 @@ int32_t PlayerServer::BaseState::Play()
     return MSERR_INVALID_STATE;
 }
 
-int32_t PlayerServer::BaseState::Pause(bool isSystemPause)
+int32_t PlayerServer::BaseState::Pause(bool isSystemOperation)
 {
+    (void)isSystemOperation;
     ReportInvalidOperation();
     return MSERR_INVALID_STATE;
 }
@@ -315,9 +316,9 @@ int32_t PlayerServer::PlayingState::Play()
     return MSERR_OK;
 }
 
-int32_t PlayerServer::PlayingState::Pause(bool isSystemPause)
+int32_t PlayerServer::PlayingState::Pause(bool isSystemOperation)
 {
-    return server_.HandlePause(isSystemPause);
+    return server_.HandlePause(isSystemOperation);
 }
 
 int32_t PlayerServer::PlayingState::PauseDemuxer()
@@ -422,7 +423,7 @@ int32_t PlayerServer::PausedState::Play()
     return server_.HandlePlay();
 }
 
-int32_t PlayerServer::PausedState::Pause(bool isSystemPause)
+int32_t PlayerServer::PausedState::Pause(bool isSystemOperation)
 {
     (void)server_.taskMgr_.MarkTaskDone("double pause");
     return MSERR_OK;

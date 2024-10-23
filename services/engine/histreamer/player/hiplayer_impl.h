@@ -106,7 +106,7 @@ public:
     int32_t SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode) override;
     int32_t PrepareAsync() override;
     int32_t Play() override;
-    int32_t Pause(bool isSystemPause) override;
+    int32_t Pause(bool isSystemOperation) override;
     int32_t Stop() override;
     int32_t Reset() override;
     int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override;

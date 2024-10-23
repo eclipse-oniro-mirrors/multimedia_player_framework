@@ -556,15 +556,15 @@ int32_t PlayerServer::Pause()
     return OnPause(false);
 }
 
-int32_t PlayerServer::OnPause(bool isSystemPause)
+int32_t PlayerServer::OnPause(bool isSystemOperation)
 {
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
     MEDIA_LOGI("0x%{public}06" PRIXPTR " PlayerServer OnPause in", FAKE_POINTER(this));
 
-    auto pauseTask = std::make_shared<TaskHandler<void>>([this, isSystemPause]() {
+    auto pauseTask = std::make_shared<TaskHandler<void>>([this, isSystemOperation]() {
         MediaTrace::TraceBegin("PlayerServer::Pause", FAKE_POINTER(this));
         auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
-        (void)currState->Pause(isSystemPause);
+        (void)currState->Pause(isSystemOperation);
     });
 
     int ret = taskMgr_.LaunchTask(pauseTask, PlayerServerTaskType::STATE_CHANGE, "pause");
@@ -574,11 +574,11 @@ int32_t PlayerServer::OnPause(bool isSystemPause)
     return MSERR_OK;
 }
 
-int32_t PlayerServer::HandlePause(bool isSystemPause)
+int32_t PlayerServer::HandlePause(bool isSystemOperation)
 {
     MEDIA_LOGI("KPI-TRACE: PlayerServer HandlePause in");
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_INVALID_OPERATION, "playerEngine_ is nullptr");
-    int32_t ret = playerEngine_->Pause(isSystemPause);
+    int32_t ret = playerEngine_->Pause(isSystemOperation);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine Pause Failed!");
 
     return MSERR_OK;
