@@ -1244,6 +1244,9 @@ int32_t PlayerServer::SetVideoSurface(sptr<Surface> surface)
         std::lock_guard<std::mutex> surfaceLock(surfaceMutex_);
         surface_ = surface;
     }
+    CHECK_AND_RETURN_RET_LOG(!switchSurface || playerEngine_ == nullptr, MSERR_OK,
+        "current state: %{public}s, playerEngine == nullptr : %{public}d, can not SetVideoSurface",
+        GetStatusDescription(lastOpStatus_).c_str(), playerEngine_ == nullptr);
     if (switchSurface && playerEngine_ != nullptr) {
         return MSERR_OK;
     }
