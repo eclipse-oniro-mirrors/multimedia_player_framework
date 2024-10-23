@@ -293,7 +293,10 @@ void RingtonePlayerImpl::InitPlayer(std::string &audioUri, ToneHapticsSettings &
     (void)audioHapticManager_->SetAudioLatencyMode(sourceId_, AUDIO_LATENCY_MODE_NORMAL);
     (void)audioHapticManager_->SetStreamUsage(sourceId_, AudioStandard::StreamUsage::STREAM_USAGE_VOICE_RINGTONE);
 
-    if (systemSoundMgr_.GetRingerMode() == AudioStandard::AudioRingerMode::RINGER_MODE_SILENT) {
+    bool hapticsSwitchStatus = systemSoundMgr_.CheckVibrareSwitchStatus();
+    AudioStandard::AudioRingerMode ringerMode = systemSoundMgr_.GetRingerMode();
+    if (ringerMode == AudioStandard::AudioRingerMode::RINGER_MODE_SILENT ||
+        (ringerMode == AudioStandard::AudioRingerMode::RINGER_MODE_NORMAL && !hapticsSwitchStatus)) {
         options.muteHaptics = true;
     }
     player_ = audioHapticManager_->CreatePlayer(sourceId_, options);

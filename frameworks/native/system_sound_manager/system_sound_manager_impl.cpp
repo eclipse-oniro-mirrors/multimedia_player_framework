@@ -25,6 +25,7 @@
 #include "media_errors.h"
 #include "ringtone_player_impl.h"
 #include "vibrate_type.h"
+#include "os_account_manager.h"
 #include "system_tone_player_impl.h"
 #include "parameter.h"
 
@@ -55,6 +56,17 @@ const int IO_ERROR = -3;
 const int TYPEERROR = -2;
 const int ERROR = -1;
 const int SUCCESS = 0;
+
+constexpr int32_t MIN_USER_ACCOUNT = 100;
+const std::string SETTING_COLUMN_KEYWORD = "KEYWORD";
+const std::string SETTING_COLUMN_VALUE = "VALUE";
+const std::string SETTING_URI_PROXY = "datashare:///com.ohos.settingsdata/entry/settingsdata/SETTINGSDATA?Proxy=true";
+const std::string SETTING_USER_URI_PROXY = "datashare:///com.ohos.settingsdata/entry/settingsdata/USER_SETTINGSDATA_";
+const std::string SETTING_USER_SECURE_URI_PROXY =
+    "datashare:///com.ohos.settingsdata/entry/settingsdata/USER_SETTINGSDATA_SECURE_";
+constexpr const char *SETTINGS_DATA_EXT_URI = "datashare:///com.ohos.settingsdata.DataAbility";
+constexpr int32_t RETRY_TIMES = 5;
+constexpr int64_t SLEEP_TIME = 1;
 
 // tone haptics default setting
 static const char PARAM_HAPTICS_SETTING_RINGTONE_CARD_ONE[] = "const.multimedia.haptics_ringtone_sim_card_0_haptics";
@@ -2027,6 +2039,135 @@ std::string SystemSoundManagerImpl::GetHapticsUriByStyle(std::shared_ptr<DataSha
     MEDIA_LOGI("GetHapticsUriByStyle: get style %{public}d vibration %{public}s!", hapticsStyle,
         vibrateAssetByDisplayName->GetPath().c_str());
     return vibrateAssetByDisplayName->GetPath();
+}
+
+int32_t SystemSoundManagerImpl::GetStringValue(const std::string &key,
+    std::string &value, std::string tableType)
+{
+    auto helper = CreateDataShareHelperProxy(tableType);
+    if (helper == nullptr) {
+        return MSERR_INVALID_VAL;
+    }
+    std::vector<std::string> columns = {SETTING_COLUMN_VALUE};
+    DataShare::DataSharePredicates predicates;
+    predicates.EqualTo(SETTING_COLUMN_KEYWORD, key);
+    Uri uri(AssembleUri(key, tableType));
+    auto resultSet = helper->Query(uri, predicates, columns);
+    helper->Release();
+    if (resultSet == nullptr) {
+        MEDIA_LOGE("helper->Query return nullptr");
+        return MSERR_INVALID_OPERATION;
+    }
+    int32_t count;
+    resultSet->GetRowCount(count);
+    if (count == 0) {
+        MEDIA_LOGW("not found value, key=%{public}s, count=%{public}d", key.c_str(), count);
+        resultSet->Close();
+        return MSERR_INVALID_OPERATION;
+    }
+    const int32_t INDEX = 0;
+    resultSet->GoToRow(INDEX);
+    int32_t ret = resultSet->GetString(INDEX, value);
+    if (ret != SUCCESS) {
+        MEDIA_LOGW("resultSet->GetString return not ok, ret=%{public}d", ret);
+        resultSet->Close();
+        return MSERR_INVALID_VAL;
+    }
+    resultSet->Close();
+    return MSERR_OK;
+}
+
+bool SystemSoundManagerImpl::CheckVibrareSwitchStatus()
+{
+    std::string key = "hw_vibrate_when_ringing";
+    std::string valueStr;
+    std::string tableType = "system";
+    int32_t ret = GetStringValue(key, valueStr, tableType);
+    if (ret != MSERR_OK) {
+        return true; // default status is open
+    }
+    MEDIA_LOGI("vibrare switch value %{public}s", valueStr.c_str());
+    return valueStr == "1"; // 1 for open, 0 for close
+}
+
+Uri SystemSoundManagerImpl::AssembleUri(const std::string &key, std::string tableType)
+{
+    int32_t currentuserId = GetCurrentUserId();
+    if (currentuserId < MIN_USER_ACCOUNT) {
+        currentuserId = MIN_USER_ACCOUNT;
+    }
+    std::string SettingSystemUrlProxy = "";
+
+    // deal with multi useraccount table
+    if (currentuserId > 0 && tableType == "system") {
+        SettingSystemUrlProxy = SETTING_USER_URI_PROXY + std::to_string(currentuserId) + "?Proxy=true";
+        Uri uri(SettingSystemUrlProxy + "&key=" + key);
+        return uri;
+    } else if (currentuserId > 0 && tableType == "secure") {
+        SettingSystemUrlProxy = SETTING_USER_SECURE_URI_PROXY + std::to_string(currentuserId) + "?Proxy=true";
+        Uri uri(SettingSystemUrlProxy + "&key=" + key);
+        return uri;
+    }
+    Uri uri(SETTING_URI_PROXY + "&key=" + key);
+    return uri;
+}
+
+int32_t SystemSoundManagerImpl::GetCurrentUserId()
+{
+    std::vector<int> ids;
+    int32_t currentuserId = -1;
+    ErrCode result;
+    int32_t retry = RETRY_TIMES;
+    while (retry--) {
+        result = AccountSA::OsAccountManager::QueryActiveOsAccountIds(ids);
+        if (result == ERR_OK && !ids.empty()) {
+            currentuserId = ids[0];
+            MEDIA_LOGD("current userId is :%{public}d", currentuserId);
+            break;
+        }
+        // sleep and wait for 1 millisecond
+        sleep(SLEEP_TIME);
+    }
+    if (result != ERR_OK || ids.empty()) {
+        MEDIA_LOGW("current userId is empty");
+    }
+    return currentuserId;
+}
+
+std::shared_ptr<DataShare::DataShareHelper> SystemSoundManagerImpl::CreateDataShareHelperProxy(std::string
+    tableType)
+{
+    int32_t currentuserId = GetCurrentUserId();
+    if (currentuserId < MIN_USER_ACCOUNT) {
+        currentuserId = MIN_USER_ACCOUNT;
+    }
+    auto saManager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (saManager == nullptr) {
+        return nullptr;
+    }
+    auto remoteObj = saManager->GetSystemAbility(STORAGE_MANAGER_MANAGER_ID);
+    if (remoteObj == nullptr) {
+        return nullptr;
+    }
+    std::shared_ptr<DataShare::DataShareHelper> helper = nullptr;
+    std::string SettingSystemUrlProxy = "";
+    // deal with multi useraccount table
+    if (currentuserId > 0 && tableType == "system") {
+        SettingSystemUrlProxy =
+            SETTING_USER_URI_PROXY + std::to_string(currentuserId) + "?Proxy=true";
+        helper = DataShare::DataShareHelper::Creator(remoteObj, SettingSystemUrlProxy, SETTINGS_DATA_EXT_URI);
+    } else if (currentuserId > 0 && tableType == "secure") {
+        SettingSystemUrlProxy =
+            SETTING_USER_SECURE_URI_PROXY + std::to_string(currentuserId) + "?Proxy=true";
+        helper = DataShare::DataShareHelper::Creator(remoteObj, SettingSystemUrlProxy, SETTINGS_DATA_EXT_URI);
+    } else {
+        helper = DataShare::DataShareHelper::Creator(remoteObj, SETTING_URI_PROXY, SETTINGS_DATA_EXT_URI);
+    }
+    if (helper == nullptr) {
+        MEDIA_LOGW("helper is nullptr, uri=%{public}s", SettingSystemUrlProxy.c_str());
+        return nullptr;
+    }
+    return helper;
 }
 
 // Ringer mode callback class symbols
