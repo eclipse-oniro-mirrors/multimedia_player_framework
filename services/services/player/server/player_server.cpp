@@ -1244,15 +1244,15 @@ int32_t PlayerServer::SetVideoSurface(sptr<Surface> surface)
         std::lock_guard<std::mutex> surfaceLock(surfaceMutex_);
         surface_ = surface;
     }
-    CHECK_AND_RETURN_RET_LOG(!switchSurface || playerEngine_ == nullptr, MSERR_OK,
-        "current state: %{public}s, playerEngine == nullptr : %{public}d, can not SetVideoSurface",
+    CHECK_AND_RETURN_RET_LOG(switchSurface || playerEngine_ != nullptr, MSERR_OK,
+        "current state: %{public}s, playerEngine == nullptr: %{public}d, can not SetVideoSurface",
         GetStatusDescription(lastOpStatus_).c_str(), playerEngine_ == nullptr);
     auto task = std::make_shared<TaskHandler<void>>([this]() {
         std::lock_guard<std::mutex> surfaceLock(surfaceMutex_);
         (void)playerEngine_->SetVideoSurface(surface_);
         taskMgr_.MarkTaskDone("SetVideoSurface done");
     });
-    int32_t ret = taskMgr_.LaunchTask(task, PlayerServerTaskType::SET_VIDEO_SURFACE, "SetVideoSurface");
+    int32_t ret = taskMgr_.SetVideoSurfaeTask(task, "SetVideoSurface");
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetVideoSurface launch task failed");
     return MSERR_OK;
 }
