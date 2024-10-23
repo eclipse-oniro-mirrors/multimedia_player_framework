@@ -1244,16 +1244,16 @@ int32_t PlayerServer::SetVideoSurface(sptr<Surface> surface)
         std::lock_guard<std::mutex> surfaceLock(surfaceMutex_);
         surface_ = surface;
     }
+    if (switchSurface && playerEngine_ != nullptr) {
+        return MSERR_OK;
+    }
     auto task = std::make_shared<TaskHandler<void>>([this, switchSurface]() {
-        if (!switchSurface || playerEngine_ == nullptr) {
-            return;
-        }
         std::lock_guard<std::mutex> surfaceLock(surfaceMutex_);
         (void)playerEngine_->SetVideoSurface(surface_);
-        taskMgr_.MarkTaskDone("SelectTrack done");
+        taskMgr_.MarkTaskDone("SetVideoSurface done");
     });
     int32_t ret = taskMgr_.LaunchTask(task, PlayerServerTaskType::SET_VIDEO_SURFACE, "SetVideoSurface");
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SelectTrack launch task failed");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetVideoSurface launch task failed");
     return MSERR_OK;
 }
 #endif
