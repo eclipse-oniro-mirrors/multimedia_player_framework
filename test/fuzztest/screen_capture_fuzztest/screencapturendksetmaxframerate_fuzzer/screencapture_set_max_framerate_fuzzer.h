@@ -23,8 +23,7 @@
 #include <climits>
 #include <cstdio>
 #include <cstdlib>
-#include "test_ndk_screen_capture.h"
-// NDK screen capture test header included.
+#include "test_ndk_screen_capture.h"// NDK screen capture test header included for testing purposes.
 
 #define FUZZ_PROJECT_NAME "ScreenCaptureMaxFramerateNdkFuzzer"
 
