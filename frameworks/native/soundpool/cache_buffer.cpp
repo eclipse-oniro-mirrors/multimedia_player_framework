@@ -308,14 +308,7 @@ void CacheBuffer::DealWriteData(size_t length)
 
 void CacheBuffer::OnFirstFrameWriting(uint64_t latency)
 {
-    {
-        std::lock_guard lock(cacheBufferLock_);
-        CHECK_AND_RETURN_LOG(audioRenderer_ != nullptr, "OnFirstFrameWriting audioRenderer_ is nullptr");
-        size_t bufferSize;
-        audioRenderer_->GetBufferSize(bufferSize);
-        MEDIA_LOGI("CacheBuffer::OnFirstFrameWriting bufferSize:%{public}zu, streamID_:%{public}d",
-            bufferSize, streamID_);
-    }
+    MEDIA_LOGI("CacheBuffer::OnFirstFrameWriting, streamID_:%{public}d", streamID_);
     CHECK_AND_RETURN_LOG(frameWriteCallback_ != nullptr, "frameWriteCallback is null.");
     frameWriteCallback_->OnFirstAudioFrameWritingCallback(latency);
 }
