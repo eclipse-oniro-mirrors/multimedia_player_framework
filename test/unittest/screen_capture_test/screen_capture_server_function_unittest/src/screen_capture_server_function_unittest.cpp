@@ -459,6 +459,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CaptureStreamParamsInvalid_004, TestSi
     ASSERT_NE(screenCaptureServer_->CheckAllParams(), MSERR_OK);
 }
 
+// surface_ is nullptr
 HWTEST_F(ScreenCaptureServerFunctionTest, CaptureStreamParamsInvalid_005, TestSize.Level2)
 {
     SetInvalidConfig();
@@ -474,6 +475,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CaptureStreamParamsInvalid_005, TestSi
     ASSERT_NE(screenCaptureServer_->CheckAllParams(), MSERR_OK);
 }
 
+// audioSampleRate INVALID
 HWTEST_F(ScreenCaptureServerFunctionTest, CaptureStreamParamsInvalid_006, TestSize.Level2)
 {
     SetInvalidConfig();
@@ -487,6 +489,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CaptureStreamParamsInvalid_006, TestSi
     ASSERT_NE(screenCaptureServer_->CheckAllParams(), MSERR_OK);
 }
 
+// videoFrameWidth and videoFrameHeight INVALID
 HWTEST_F(ScreenCaptureServerFunctionTest, CaptureFileParamsInvalid_001, TestSize.Level2)
 {
     RecorderInfo recorderInfo;
@@ -503,6 +506,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CaptureFileParamsInvalid_001, TestSize
     ASSERT_NE(InitFileScreenCaptureServer(), MSERR_OK);
 }
 
+// audioSampleRate INVALID
 HWTEST_F(ScreenCaptureServerFunctionTest, CaptureFileParamsInvalid_002, TestSize.Level2)
 {
     RecorderInfo recorderInfo;
@@ -517,6 +521,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CaptureFileParamsInvalid_002, TestSize
     ASSERT_NE(InitFileScreenCaptureServer(), MSERR_OK);
 }
 
+// audioSampleRate and audioSampleRate are not equal
 HWTEST_F(ScreenCaptureServerFunctionTest, CaptureFileParamsInvalid_003, TestSize.Level2)
 {
     RecorderInfo recorderInfo;
@@ -911,43 +916,37 @@ HWTEST_F(ScreenCaptureServerFunctionTest, Create_001, TestSize.Level2)
     }
 }
 
+#ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
 HWTEST_F(ScreenCaptureServerFunctionTest, RequestUserPrivacyAuthority_001, TestSize.Level2)
 {
     screenCaptureServer_->appInfo_.appUid = ROOT_UID;
-#ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
     screenCaptureServer_->isPrivacyAuthorityEnabled_ = true;
-#endif
     ASSERT_EQ(screenCaptureServer_->RequestUserPrivacyAuthority(), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, RequestUserPrivacyAuthority_002, TestSize.Level2)
 {
     screenCaptureServer_->appInfo_.appUid = ROOT_UID;
-#ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
     screenCaptureServer_->isPrivacyAuthorityEnabled_ = true;
     screenCaptureServer_->appName_ = ScreenRecorderBundleName;
-#endif
     ASSERT_EQ(screenCaptureServer_->RequestUserPrivacyAuthority(), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, RequestUserPrivacyAuthority_003, TestSize.Level2)
 {
     screenCaptureServer_->appInfo_.appUid = ROOT_UID + 1;
-#ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
     screenCaptureServer_->isPrivacyAuthorityEnabled_ = true;
-#endif
     ASSERT_NE(screenCaptureServer_->RequestUserPrivacyAuthority(), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, RequestUserPrivacyAuthority_004, TestSize.Level2)
 {
     screenCaptureServer_->appInfo_.appUid = ROOT_UID + 1;
-#ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
     screenCaptureServer_->isPrivacyAuthorityEnabled_ = true;
     screenCaptureServer_->appName_ = ScreenRecorderBundleName;
-#endif
     ASSERT_EQ(screenCaptureServer_->RequestUserPrivacyAuthority(), MSERR_OK);
 }
+#endif
 
 HWTEST_F(ScreenCaptureServerFunctionTest, OnReceiveUserPrivacyAuthority_001, TestSize.Level2)
 {
