@@ -86,21 +86,21 @@ private:
             },
             {
                 .permissionName = "ohos.permission.WRITE_MEDIA",
-                .isGeneral = true, 
+                .isGeneral = true,
                 .resDeviceID = { "local" },
                 .grantStatus = { Security::AccessToken::PermissionState::PERMISSION_GRANTED },
                 .grantFlags = { 1 }
             },
             {
                 .permissionName = "ohos.permission.KEEP_BACKGROUND_RUNNING",
-                .isGeneral = true, 
+                .isGeneral = true,
                 .resDeviceID = { "local" },
                 .grantStatus = { Security::AccessToken::PermissionState::PERMISSION_GRANTED },
                 .grantFlags = { 1 }
             },
             {
                 .permissionName = "ohos.permission.CAPTURE_SCREEN",
-                .isGeneral = true, 
+                .isGeneral = true,
                 .resDeviceID = { "local" },
                 .grantStatus = { Security::AccessToken::PermissionState::PERMISSION_GRANTED },
                 .grantFlags = { 1 }
