@@ -439,6 +439,7 @@ private:
     static constexpr int32_t VIDEO_FRAME_WIDTH_MAX = 10240;
     static constexpr int32_t VIDEO_FRAME_HEIGHT_MAX = 4320;
     static constexpr int32_t SESSION_ID_INVALID = -1;
+    static constexpr int32_t avScreenCaptureSessionUid = 1013;
 };
 } // namespace Media
 } // namespace OHOS

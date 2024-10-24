@@ -1538,12 +1538,12 @@ int32_t ScreenCaptureServer::StartNotification()
     std::shared_ptr<NotificationContent> content =
         std::make_shared<NotificationContent>(localLiveViewContent_);
 
-    auto uid = getuid();
     request.SetSlotType(NotificationConstant::SlotType::LIVE_VIEW);
     notificationId_ = sessionId_;
     request.SetNotificationId(notificationId_);
     request.SetContent(content);
-    request.SetCreatorUid(uid);
+    request.SetCreatorUid(avScreenCaptureSessionUid);
+    request.SetOwnerUid(avScreenCaptureSessionUid);
     request.SetUnremovable(true);
     request.SetInProgress(true);
 
@@ -1630,11 +1630,11 @@ void ScreenCaptureServer::UpdateMicrophoneEnabled()
     std::shared_ptr<NotificationContent> content =
         std::make_shared<NotificationContent>(localLiveViewContent_);
 
-    auto uid = getuid();
     request.SetSlotType(NotificationConstant::SlotType::LIVE_VIEW);
     request.SetNotificationId(notificationId_);
     request.SetContent(content);
-    request.SetCreatorUid(uid);
+    request.SetCreatorUid(avScreenCaptureSessionUid);
+    request.SetOwnerUid(avScreenCaptureSessionUid);
     request.SetUnremovable(true);
     request.SetInProgress(true);
 
