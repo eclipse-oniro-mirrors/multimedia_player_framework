@@ -2243,7 +2243,6 @@ void HiPlayerImpl::HandleCompleteEvent(const Event& event)
     if ((GetPlayRangeEndTime() == PLAY_RANGE_DEFAULT_VALUE) &&
         (durationMs_.load() > curPosMs && abs(durationMs_.load() - curPosMs) < AUDIO_SINK_MAX_LATENCY)) {
         MEDIA_LOG_I("OnComplete durationMs - curPosMs: " PUBLIC_LOG_D32, durationMs_.load() - curPosMs);
-        OHOS::Media::SleepInJob(durationMs_.load() - curPosMs);
     }
     if (!singleLoop_.load()) {
         callbackLooper_.StopReportMediaProgress();
