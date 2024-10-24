@@ -1552,7 +1552,8 @@ int32_t ScreenCaptureServer::StartNotification()
     request.SetBadgeIconStyle(NotificationRequest::BadgeStyle::LITTLE);
 
     result = NotificationHelper::PublishNotification(request);
-    MEDIA_LOGI("Screencapture service PublishNotification uid %{public}d, result %{public}d", uid, result);
+    MEDIA_LOGI("Screencapture service UpdateMicrophoneEnabled uid %{public}d, result %{public}d",
+        avScreenCaptureSessionUid, result);
     return result;
 }
 
@@ -1643,7 +1644,8 @@ void ScreenCaptureServer::UpdateMicrophoneEnabled()
     request.SetBadgeIconStyle(NotificationRequest::BadgeStyle::LITTLE);
 
     int32_t result = NotificationHelper::PublishNotification(request);
-    MEDIA_LOGI("Screencapture service UpdateMicrophoneEnabled uid %{public}d, result %{public}d", uid, result);
+    MEDIA_LOGI("Screencapture service UpdateMicrophoneEnabled uid %{public}d, result %{public}d",
+        avScreenCaptureSessionUid, result);
     micCount_.store(micCount_.load() + 1);
 }
 
