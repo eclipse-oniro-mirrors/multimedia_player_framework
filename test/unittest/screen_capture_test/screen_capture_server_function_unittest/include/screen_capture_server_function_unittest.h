@@ -56,6 +56,8 @@ protected:
 private:
     const std::string ScreenRecorderBundleName =
         GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"];
+    const std::string HiviewCareBundleName =
+        GetScreenCaptureSystemParam()["const.multimedia.screencapture.hiviewcarebundlename"];
 };
 
 class StandardScreenCaptureServerUnittestCallback : public IStandardScreenCaptureListener {

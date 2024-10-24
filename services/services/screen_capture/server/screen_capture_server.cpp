@@ -1542,8 +1542,8 @@ int32_t ScreenCaptureServer::StartNotification()
     notificationId_ = sessionId_;
     request.SetNotificationId(notificationId_);
     request.SetContent(content);
-    request.SetCreatorUid(avScreenCaptureSessionUid);
-    request.SetOwnerUid(avScreenCaptureSessionUid);
+    request.SetCreatorUid(AV_SCREEN_CAPTURE_SESSION_UID);
+    request.SetOwnerUid(AV_SCREEN_CAPTURE_SESSION_UID);
     request.SetUnremovable(true);
     request.SetInProgress(true);
 
@@ -1553,7 +1553,7 @@ int32_t ScreenCaptureServer::StartNotification()
 
     result = NotificationHelper::PublishNotification(request);
     MEDIA_LOGI("Screencapture service UpdateMicrophoneEnabled uid %{public}d, result %{public}d",
-        avScreenCaptureSessionUid, result);
+        AV_SCREEN_CAPTURE_SESSION_UID, result);
     return result;
 }
 
@@ -1634,8 +1634,8 @@ void ScreenCaptureServer::UpdateMicrophoneEnabled()
     request.SetSlotType(NotificationConstant::SlotType::LIVE_VIEW);
     request.SetNotificationId(notificationId_);
     request.SetContent(content);
-    request.SetCreatorUid(avScreenCaptureSessionUid);
-    request.SetOwnerUid(avScreenCaptureSessionUid);
+    request.SetCreatorUid(AV_SCREEN_CAPTURE_SESSION_UID);
+    request.SetOwnerUid(AV_SCREEN_CAPTURE_SESSION_UID);
     request.SetUnremovable(true);
     request.SetInProgress(true);
 
@@ -1645,7 +1645,7 @@ void ScreenCaptureServer::UpdateMicrophoneEnabled()
 
     int32_t result = NotificationHelper::PublishNotification(request);
     MEDIA_LOGI("Screencapture service UpdateMicrophoneEnabled uid %{public}d, result %{public}d",
-        avScreenCaptureSessionUid, result);
+        AV_SCREEN_CAPTURE_SESSION_UID, result);
     micCount_.store(micCount_.load() + 1);
 }
 
