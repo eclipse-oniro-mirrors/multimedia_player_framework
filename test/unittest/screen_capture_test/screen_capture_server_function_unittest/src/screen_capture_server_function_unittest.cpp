@@ -1098,7 +1098,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StartScreenCaptureInner_001, TestSize.
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    screenCaptureServer_->appInfo.appUid = ROOT_UID + 1;
+    screenCaptureServer_->appInfo_.appUid = ROOT_UID + 1;
     ASSERT_EQ(screenCaptureServer_->StartScreenCaptureInner(false), MSERR_OK);
 }
 
