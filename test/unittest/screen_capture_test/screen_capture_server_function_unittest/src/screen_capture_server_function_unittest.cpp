@@ -45,48 +45,8 @@ namespace Media {
 
 void ScreenCaptureServerFunctionTest::SetHapPermission()
 {
-    Security::AccessToken::HapInfoParams info = {
-        .userID = 100, // 100 UserID
-        .bundleName = "com.ohos.test.screencapturetdd",
-        .instIndex = 0, // 0 index
-        .appIDDesc = "com.ohos.test.screencapturetdd",
-        .isSystemApp = true
-    };
-    Security::AccessToken::HapPolicyParams policy = {
-        .apl = Security::AccessToken::APL_SYSTEM_BASIC,
-        .domain = "test.domain.screencapturetdd",
-        .permList = {},
-        .permStateList = {
-            {
-                .permissionName = "ohos.permission.MICROPHONE",
-                .isGeneral = true, .resDeviceID = { "local" },
-                .grantStatus = { Security::AccessToken::PermissionState::PERMISSION_GRANTED },
-                .grantFlags = { 1 }
-            },{
-                .permissionName = "ohos.permission.READ_MEDIA",
-                .isGeneral = true, .resDeviceID = { "local" },
-                .grantStatus = { Security::AccessToken::PermissionState::PERMISSION_GRANTED },
-                .grantFlags = { 1 }
-            },{
-                .permissionName = "ohos.permission.WRITE_MEDIA",
-                .isGeneral = true, .resDeviceID = { "local" },
-                .grantStatus = { Security::AccessToken::PermissionState::PERMISSION_GRANTED },
-                .grantFlags = { 1 }
-            },{
-                .permissionName = "ohos.permission.KEEP_BACKGROUND_RUNNING",
-                .isGeneral = true, .resDeviceID = { "local" },
-                .grantStatus = { Security::AccessToken::PermissionState::PERMISSION_GRANTED },
-                .grantFlags = { 1 }
-            },{
-                .permissionName = "ohos.permission.CAPTURE_SCREEN",
-                .isGeneral = true, .resDeviceID = { "local" },
-                .grantStatus = { Security::AccessToken::PermissionState::PERMISSION_GRANTED },
-                .grantFlags = { 1 }
-            }
-        }
-    };
     Security::AccessToken::AccessTokenIDEx tokenIdEx = {0};
-    tokenIdEx = Security::AccessToken::AccessTokenKit::AllocHapToken(info, policy);
+    tokenIdEx = Security::AccessToken::AccessTokenKit::AllocHapToken(info_, policy_);
     int ret = SetSelfTokenID(tokenIdEx.tokenIDEx);
     if (ret != 0) {
         MEDIA_LOGE("Set hap token failed, err: %{public}d", ret);
