@@ -668,6 +668,9 @@ void HiPlayerImpl::SetInterruptState(bool isInterruptNeeded)
     if (seekAgent_ != nullptr) {
         seekAgent_->SetInterruptState(isInterruptNeeded);
     }
+    if (videoDecoder_ != nullptr) {
+        videoDecoder_->SetInterruptState(isInterruptNeeded);
+    }
 }
 
 int32_t HiPlayerImpl::SelectBitRate(uint32_t bitRate)
