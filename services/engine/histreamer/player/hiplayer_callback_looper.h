@@ -53,6 +53,7 @@ public:
     void DoReportCompletedTime();
     void startCollectMaxAmplitude(int64_t updateIntervalMs);
     void StopCollectMaxAmplitude();
+    void ReportRemainedMaxAmplitude();
 
 private:
     void DoReportMediaProgress();

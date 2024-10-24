@@ -1133,7 +1133,7 @@ void AVPlayerCallback::OnMaxAmplitudeCollectedCb(const int32_t extra, const Form
     (void)extra;
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
     if (refMap_.find(AVPlayerEvent::EVENT_AMPLITUDE_UPDATE) == refMap_.end()) {
-        MEDIA_LOGW("can not find max amplitude collected callback!");
+        MEDIA_LOGD("can not find max amplitude collected callback!");
         return;
     }
 
