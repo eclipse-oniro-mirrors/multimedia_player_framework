@@ -219,7 +219,7 @@ int PlayerServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Messa
     if (itFunc != playerFuncs_.end()) {
         auto memberFunc = itFunc->second.second;
         auto funcName = itFunc->second.first;
-        if (funcName.compare("SetVolume") == 0) {
+        if (funcName.compare("SetVolume") == 0 || funcName.compare("Player::GetCurrentTime") == 0) {
             MEDIA_LOGD("0x%{public}06" PRIXPTR " %{public}s", FAKE_POINTER(this), funcName.c_str());
         } else {
             MEDIA_LOGI("0x%{public}06" PRIXPTR " %{public}s", FAKE_POINTER(this), funcName.c_str());
