@@ -60,6 +60,11 @@ VEFError VideoDecoderEngineImpl::StartDecode()
     return VEFError::ERR_OK;
 }
 
+int32_t VideoDecoderEngineImpl::GetColorRange()
+{
+    return 1;
+}
+
 VEFError VideoDecoderEngineImpl::StopDecode()
 {
     return VEFError::ERR_OK;

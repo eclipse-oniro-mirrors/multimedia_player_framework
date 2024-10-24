@@ -44,6 +44,7 @@ public:
     virtual VEFError StopDecode() = 0;
     virtual VEFError SetNativeWindow(OHNativeWindow* surfaceWindow) = 0;
     virtual OH_AVFormat* GetVideoFormat() = 0;
+    virtual int32_t GetColorRange() = 0;
 };
 
 } // namespace Media

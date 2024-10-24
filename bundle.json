@@ -118,6 +118,7 @@
           "ringtone_library",
           "os_account",
           "i18n",
+          "skia",
           "camera_framework",
           "drivers_interface_camera",
           "image_effect"

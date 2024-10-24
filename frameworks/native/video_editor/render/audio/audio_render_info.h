@@ -13,38 +13,16 @@
  * limitations under the License.
  */
 
-#ifndef OH_VEF_GRAPHICS_RENDER_INFO_H
-#define OH_VEF_GRAPHICS_RENDER_INFO_H
-
-#include <vector>
-#include <memory>
-#include "data_center/effect/effect.h"
-#ifdef IMAGE_EFFECT_SUPPORT
-#include "image_effect.h"
-#endif
-
+#ifndef AUDIO_RENDER_INFO_H
+#define AUDIO_RENDER_INFO_H
 namespace OHOS {
 namespace Media {
-
-struct EffectRenderInfo {
-    uint64_t id = 0;
-    EffectType type = EffectType::UNKNOWN;
-#ifdef IMAGE_EFFECT_SUPPORT
-    std::shared_ptr<OH_ImageEffect> imageEffect;
-#endif
-};
-
-class GraphicsRenderInfo {
+class AudioRenderInfo {
 public:
-    GraphicsRenderInfo() = default;
-    ~GraphicsRenderInfo() = default;
-public:
-    std::vector<std::shared_ptr<EffectRenderInfo>> effectInfoList_;
-    int32_t rotation_;
-    int32_t colorRange_;
+    AudioRenderInfo() = default;
+    ~AudioRenderInfo() = default;
 };
-
 } // namespace Media
 } // namespace OHOS
 
-#endif // OH_VEF_GRAPHICS_RENDER_INFO_H
+#endif

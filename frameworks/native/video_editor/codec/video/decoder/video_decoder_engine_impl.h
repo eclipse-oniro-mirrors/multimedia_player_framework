@@ -37,6 +37,7 @@ public:
 
     void OnDecodeFrame(uint64_t pts) override;
     void OnDecodeResult(VideoDecodeResult result) override;
+    int32_t GetColorRange() override;
 
     VEFError Init();
 
