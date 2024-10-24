@@ -59,29 +59,27 @@ void ScreenCaptureServerFunctionTest::SetHapPermission()
         .permStateList = {
             {
                 .permissionName = "ohos.permission.MICROPHONE",
-                .isGeneral = true,
-                .resDeviceID = { "local" },
+                .isGeneral = true, .resDeviceID = { "local" },
                 .grantStatus = { Security::AccessToken::PermissionState::PERMISSION_GRANTED },
                 .grantFlags = { 1 }
-            },
-            {
+            },{
                 .permissionName = "ohos.permission.READ_MEDIA",
-                .isGeneral = true,
-                .resDeviceID = { "local" },
+                .isGeneral = true, .resDeviceID = { "local" },
                 .grantStatus = { Security::AccessToken::PermissionState::PERMISSION_GRANTED },
                 .grantFlags = { 1 }
-            },
-            {
+            },{
                 .permissionName = "ohos.permission.WRITE_MEDIA",
-                .isGeneral = true,
-                .resDeviceID = { "local" },
+                .isGeneral = true, .resDeviceID = { "local" },
                 .grantStatus = { Security::AccessToken::PermissionState::PERMISSION_GRANTED },
                 .grantFlags = { 1 }
-            },
-            {
+            },{
                 .permissionName = "ohos.permission.KEEP_BACKGROUND_RUNNING",
-                .isGeneral = true,
-                .resDeviceID = { "local" },
+                .isGeneral = true, .resDeviceID = { "local" },
+                .grantStatus = { Security::AccessToken::PermissionState::PERMISSION_GRANTED },
+                .grantFlags = { 1 }
+            },{
+                .permissionName = "ohos.permission.CAPTURE_SCREEN",
+                .isGeneral = true, .resDeviceID = { "local" },
                 .grantStatus = { Security::AccessToken::PermissionState::PERMISSION_GRANTED },
                 .grantFlags = { 1 }
             }
@@ -760,7 +758,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ReportAVScreenCaptureUserChoice_005, T
     ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTING;
     std::string choice = "{\"choice\": \"true\", \"displayId\": -1, \"missionId\": -1}";
-    ASSERT_NE(screenCaptureServer_->ReportAVScreenCaptureUserChoice(sessionId, choice), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->ReportAVScreenCaptureUserChoice(sessionId, choice), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ReportAVScreenCaptureUserChoice_006, TestSize.Level2)
@@ -821,7 +819,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckScreenCapturePermission_001, Test
     config_.audioInfo.innerCapInfo.audioChannels = 2;
     config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->CheckScreenCapturePermission(), false);
+    ASSERT_EQ(screenCaptureServer_->CheckScreenCapturePermission(), true);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckVideoEncParam_001, TestSize.Level2)
@@ -874,7 +872,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnStartScreenCapture_001, TestSize.Lev
     config_.audioInfo.innerCapInfo.audioChannels = 2;
     config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    ASSERT_NE(screenCaptureServer_->OnStartScreenCapture(), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->OnStartScreenCapture(), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, OnStartScreenCapture_002, TestSize.Level2)
