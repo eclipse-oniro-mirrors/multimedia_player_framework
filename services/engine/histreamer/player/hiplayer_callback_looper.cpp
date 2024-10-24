@@ -33,6 +33,7 @@ constexpr int32_t WHAT_MEDIA_PROGRESS = 1;
 constexpr int32_t WHAT_INFO = 2;
 constexpr int32_t WHAT_ERROR = 3;
 constexpr int32_t WHAT_COLLECT_AMPLITUDE = 4;
+constexpr int32_t WHAT_SYSTEM_OPERATION = 5;
 
 constexpr int32_t TUPLE_POS_0 = 0;
 constexpr int32_t TUPLE_POS_1 = 1;
@@ -213,6 +214,22 @@ void HiPlayerCallbackLooper::ReportRemainedMaxAmplitude()
     }
 }
 
+void HiPlayerCallbackLooper::DoReportSystemOperation(const Any& info)
+{
+    OHOS::Media::AutoLock lock(loopMutex_);
+    auto obs = obs_.lock();
+    if (obs) {
+        auto ptr = AnyCast<std::pair<PlayerOnSystemOperationType, PlayerOperationReason>>(&info);
+        if (ptr == nullptr) {
+            MEDIA_LOG_E_SHORT("DoReportSystemOperation, ptr is nullptr");
+            return;
+        }
+        MEDIA_LOG_I("Do Report SystemOperation, type: " PUBLIC_LOG_D32 " resaon: " PUBLIC_LOG_D32,
+            static_cast<int32_t>(ptr->first), static_cast<int32_t>(ptr->second));
+        obs->OnSystemOperation(ptr->first, ptr->second);
+    }
+}
+
 void HiPlayerCallbackLooper::OnError(PlayerErrorType errorType, int32_t errorCode)
 {
     Enqueue(std::make_shared<HiPlayerCallbackLooper::Event>(WHAT_ERROR, SteadyClock::GetCurrentTimeMs(),
@@ -233,6 +250,12 @@ void HiPlayerCallbackLooper::DoReportError(const Any &error)
             static_cast<int32_t>(ptr->first), static_cast<int32_t>(ptr->second));
         obs->OnError(ptr->first, ptr->second);
     }
+}
+
+void HiPlayerCallbackLooper::OnSystemOperation(PlayerOnSystemOperationType type, PlayerOperationReason reason)
+{
+    Enqueue(std::make_shared<HiPlayerCallbackLooper::Event>(WHAT_SYSTEM_OPERATION, SteadyClock::GetCurrentTimeMs(),
+        std::make_pair(type, reason)));
 }
 
 void HiPlayerCallbackLooper::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
@@ -270,6 +293,9 @@ void HiPlayerCallbackLooper::LoopOnce(const std::shared_ptr<HiPlayerCallbackLoop
             break;
         case WHAT_COLLECT_AMPLITUDE:
             DoCollectAmplitude();
+            break;
+        case WHAT_SYSTEM_OPERATION:
+            DoReportSystemOperation(item->detail);
             break;
         default:
             break;

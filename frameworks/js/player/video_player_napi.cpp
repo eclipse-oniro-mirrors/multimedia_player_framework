@@ -468,6 +468,10 @@ int32_t VideoPlayerNapi::ProcessWork(napi_env env, napi_status status, void *dat
     } else if (asyncContext->asyncWorkType == AsyncWorkType::ASYNC_WORK_PLAY) {
         ret = player->Play();
     } else if (asyncContext->asyncWorkType == AsyncWorkType::ASYNC_WORK_PAUSE) {
+        auto cb = std::static_pointer_cast<VideoCallbackNapi>(asyncContext->jsPlayer->jsCallback_);
+        if (cb->GetCurrentState() == PLAYER_PAUSED) {
+            return MSERR_INVALID_OPERATION;
+        }
         ret = player->Pause();
     } else if (asyncContext->asyncWorkType == AsyncWorkType::ASYNC_WORK_STOP) {
         ret = player->Stop();

@@ -106,7 +106,7 @@ public:
     int32_t SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode) override;
     int32_t PrepareAsync() override;
     int32_t Play() override;
-    int32_t Pause() override;
+    int32_t Pause(bool isSystemOperation) override;
     int32_t Stop() override;
     int32_t Reset() override;
     int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override;
@@ -154,7 +154,7 @@ public:
     void OnEventSub(const Event &event);
     void OnEventSubTrackChange(const Event &event);
     void OnDfxEvent(const Event &event);
-    void OnStateChanged(PlayerStateId state);
+    void OnStateChanged(PlayerStateId state, bool isSystemOperation = false);
     Status OnCallback(std::shared_ptr<Filter> filter, const FilterCallBackCommand cmd,
                     StreamType outType);
     int32_t SeekContinous(int32_t mSeconds, int64_t seekContinousBatchNo) override;
@@ -190,7 +190,7 @@ private:
     void NotifyBufferingStart(int32_t param);
     void NotifyBufferingEnd(int32_t param);
     void NotifyCachedDuration(int32_t param);
-    void UpdateStateNoLock(PlayerStates newState, bool notifyUpward = true);
+    void UpdateStateNoLock(PlayerStates newState, bool notifyUpward = true, bool isSystemOperation = false);
     void NotifyBufferingUpdate(const std::string_view& type, int32_t param);
     void NotifyDurationUpdate(const std::string_view& type, int32_t param);
     void NotifySeekDone(int32_t seekPos);
