@@ -656,32 +656,40 @@ std::string AVMetadataHelperImpl::ResolveMetadata(int32_t key)
 {
     CHECK_AND_RETURN_RET_LOG(avMetadataHelperService_ != nullptr, "",
         "avmetadatahelper service does not exist.");
-
-    return avMetadataHelperService_->ResolveMetadata(key);
+    concurrentWorkCount_++;
+    auto res = avMetadataHelperService_->ResolveMetadata(key);
+    concurrentWorkCount_--;
+    return res;
 }
 
 std::unordered_map<int32_t, std::string> AVMetadataHelperImpl::ResolveMetadata()
 {
     CHECK_AND_RETURN_RET_LOG(avMetadataHelperService_ != nullptr, {},
         "avmetadatahelper service does not exist.");
-
-    return avMetadataHelperService_->ResolveMetadata();
+    concurrentWorkCount_++;
+    auto res = avMetadataHelperService_->ResolveMetadata();
+    concurrentWorkCount_--;
+    return res;
 }
 
 std::shared_ptr<Meta> AVMetadataHelperImpl::GetAVMetadata()
 {
     CHECK_AND_RETURN_RET_LOG(avMetadataHelperService_ != nullptr, nullptr,
         "avmetadatahelper service does not exist.");
-
-    return avMetadataHelperService_->GetAVMetadata();
+    concurrentWorkCount_++;
+    auto res = avMetadataHelperService_->GetAVMetadata();
+    concurrentWorkCount_--;
+    return res;
 }
 
 std::shared_ptr<AVSharedMemory> AVMetadataHelperImpl::FetchArtPicture()
 {
     CHECK_AND_RETURN_RET_LOG(avMetadataHelperService_ != nullptr, nullptr,
         "avmetadatahelper service does not exist.");
-
-    return avMetadataHelperService_->FetchArtPicture();
+    concurrentWorkCount_++;
+    auto res = avMetadataHelperService_->FetchArtPicture();
+    concurrentWorkCount_--;
+    return res;
 }
 
 std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameAtTime(
@@ -777,13 +785,19 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameYuv(int64_t timeUs, in
 int32_t AVMetadataHelperImpl::GetTimeByFrameIndex(uint32_t index, uint64_t &time)
 {
     CHECK_AND_RETURN_RET_LOG(avMetadataHelperService_ != nullptr, 0, "avmetadatahelper service does not exist.");
-    return avMetadataHelperService_->GetTimeByFrameIndex(index, time);
+    concurrentWorkCount_++;
+    auto res = avMetadataHelperService_->GetTimeByFrameIndex(index, time);
+    concurrentWorkCount_--;
+    return res;
 }
 
 int32_t AVMetadataHelperImpl::GetFrameIndexByTime(uint64_t time, uint32_t &index)
 {
     CHECK_AND_RETURN_RET_LOG(avMetadataHelperService_ != nullptr, 0, "avmetadatahelper service does not exist.");
-    return avMetadataHelperService_->GetFrameIndexByTime(time, index);
+    concurrentWorkCount_++;
+    auto res = avMetadataHelperService_->GetFrameIndexByTime(time, index);
+    concurrentWorkCount_--;
+    return res;
 }
 
 void AVMetadataHelperImpl::Release()
