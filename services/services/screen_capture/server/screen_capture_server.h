@@ -57,6 +57,7 @@
 #include "screen_capture_monitor_server.h"
 #include "json/json.h"
 #include "tokenid_kit.h"
+#include "window_manager.h"
 
 namespace OHOS {
 namespace Media {
@@ -343,7 +344,7 @@ private:
     bool UpdatePrivacyUsingPermissionState(VideoPermissionState state);
     int32_t RequestUserPrivacyAuthority();
     int32_t StartPrivacyWindow();
-    void SetCaptureConfig(CaptureMode captureMode, int32_t missionId = -1); // -1 无效值
+    void SetCaptureConfig(CaptureMode captureMode, int32_t missionId = -1); // -1 invalid
 #ifdef PC_STANDARD
     bool CheckCaptureSpecifiedWindowForSelectWindow();
     void SendConfigToUIParams(AAFwk::Want& want);
@@ -363,6 +364,7 @@ private:
     void SystemRecorderInterruptLatestRecorder();
     int32_t ReStartMicForVoIPStatusSwitch();
     void RegisterPrivateWindowListener();
+    uint64_t GetDisplayIdOfWindows(uint64_t displayId);
 
 private:
     std::mutex mutex_;

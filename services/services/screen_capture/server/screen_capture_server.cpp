@@ -279,7 +279,7 @@ void ScreenCaptureServer::PrepareSelectWindow(Json::Value &root, std::shared_ptr
     }
     const Json::Value displayIdJson = root["displayId"];
     if (!displayIdJson.isNull() && displayIdJson.asInt64() >= 0) {
-        uint64_t displayId = displayIdJson.asInt64();
+        uint64_t displayId = static_cast<uint64_t>(displayIdJson.asInt64());
         MEDIA_LOGI("Report Select DisplayId: %{public}" PRIu64, displayId);
         server->SetDisplayId(displayId);
         // 手机模式 missionId displayId 均为-1
@@ -1893,6 +1893,25 @@ int32_t ScreenCaptureServer::PrepareVirtualScreenMirror()
     return MSERR_OK;
 }
 
+uint64_t ScreenCaptureServer::GetDisplayIdOfWindows(uint64_t displayId)
+{
+    uint64_t defaultDisplayIdValue = displayId;
+    if (missionIds_.size() > 0) {
+        std::unordered_map<uint64_t, uint64_t> windowDisplayIdMap;
+        auto ret = WindowManager::GetInstance().GetDisplayIdByWindowId(missionIds_, windowDisplayIdMap);
+        MEDIA_LOGI("MakeVirtualScreenMirror 0x%{public}06" PRIXPTR
+            "GetWindowDisplayIds ret:%{public}d", FAKE_POINTER(this), ret);
+        for (const auto& pair : windowDisplayIdMap) {
+            MEDIA_LOGI("MakeVirtualScreenMirror 0x%{public}06" PRIXPTR " WindowId:%{public}" PRIu64
+                " in DisplayId:%{public}" PRIu64, FAKE_POINTER(this), pair.first, pair.second);
+            defaultDisplayIdValue = pair.second;
+        }
+        MEDIA_LOGI("MakeVirtualScreenMirror 0x%{public}06" PRIXPTR
+            " For Specific Window %{public}" PRIu64, FAKE_POINTER(this), defaultDisplayIdValue);
+    }
+    return defaultDisplayIdValue;
+}
+
 int32_t ScreenCaptureServer::MakeVirtualScreenMirror()
 {
     MediaTrace trace("ScreenCaptureServer::MakeVirtualScreenMirror");
@@ -1908,14 +1927,22 @@ int32_t ScreenCaptureServer::MakeVirtualScreenMirror()
     sptr<Rosen::Display> defaultDisplay = Rosen::DisplayManager::GetInstance().GetDefaultDisplaySync();
     CHECK_AND_RETURN_RET_LOG(defaultDisplay != nullptr, MSERR_UNKNOWN, "make mirror GetDefaultDisplaySync failed");
     ScreenId mirrorGroup = defaultDisplay->GetScreenId();
-
+    if (captureConfig_.captureMode == CAPTURE_SPECIFIED_WINDOW) {
+        uint64_t defaultDisplayId = GetDisplayIdOfWindows(defaultDisplay->GetScreenId());
+        ret = ScreenManager::GetInstance().MakeMirror(defaultDisplayId, mirrorIds, mirrorGroup);
+        CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK, MSERR_UNKNOWN,
+            "MakeVirtualScreenMirror failed to MakeMirror, captureMode:%{public}d, ret:%{public}d",
+            captureConfig_.captureMode, ret);
+        MEDIA_LOGI("MakeVirtualScreenMirror window screen success, screenId:%{public}" PRIu64, defaultDisplayId);
+        return MSERR_OK;
+    }
     if (captureConfig_.captureMode != CAPTURE_SPECIFIED_SCREEN) {
         MEDIA_LOGI("MakeVirtualScreenMirror DefaultDisplay, screenId:%{public}" PRIu64, defaultDisplay->GetScreenId());
         ret = ScreenManager::GetInstance().MakeMirror(defaultDisplay->GetScreenId(), mirrorIds, mirrorGroup);
         CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK, MSERR_UNKNOWN,
             "MakeVirtualScreenMirror failed to MakeMirror, captureMode:%{public}d, ret:%{public}d",
             captureConfig_.captureMode, ret);
-        MEDIA_LOGI("MakeVirtualScreenMirror main screen success, screenId:%{public}" PRIu64, screens[0]->GetId());
+        MEDIA_LOGI("MakeVirtualScreenMirror default screen success, screenId:%{public}" PRIu64, screens[0]->GetId());
         return MSERR_OK;
     }
     for (uint32_t i = 0; i < screens.size() ; i++) {
@@ -1923,7 +1950,7 @@ int32_t ScreenCaptureServer::MakeVirtualScreenMirror()
             ret = ScreenManager::GetInstance().MakeMirror(screens[i]->GetId(), mirrorIds, mirrorGroup);
             CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK, MSERR_UNKNOWN,
                 "MakeVirtualScreenMirror failed to MakeMirror for CAPTURE_SPECIFIED_SCREEN, ret:%{public}d", ret);
-            MEDIA_LOGI("MakeVirtualScreenMirror extand screen success, screenId:%{public}" PRIu64,
+            MEDIA_LOGI("MakeVirtualScreenMirror extend screen success, screenId:%{public}" PRIu64,
                 captureConfig_.videoInfo.videoCapInfo.displayId);
             return MSERR_OK;
         }
