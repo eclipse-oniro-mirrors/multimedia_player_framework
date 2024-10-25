@@ -311,7 +311,7 @@ RenderTexturePtr GraphicsRenderEngineImpl::RenderFrame(const std::shared_ptr<Gra
     glGetTexLevelParameteriv(GL_TEXTURE_EXTERNAL_OES, 0, GL_TEXTURE_WIDTH, &bufferW);
     glGetTexLevelParameteriv(GL_TEXTURE_EXTERNAL_OES, 0, GL_TEXTURE_HEIGHT, &bufferH);
     glBindTexture(GL_TEXTURE_EXTERNAL_OES, 0);
-    int32_t rotation = graphicsRenderInfo->rotation;
+    int32_t rotation = graphicsRenderInfo->rotation_;
     Mat4x4 matrix = GLUtils::GetOesSamplingMatrix({ bufferW, bufferH }, { bufferW, bufferH }, rotation, false);
     SurfaceDataPtr surfaceData = shaderPassSurface_->GetRenderEffectData();
     surfaceData->nativeTexId = surfaceTexture_->nativeTexId_;
