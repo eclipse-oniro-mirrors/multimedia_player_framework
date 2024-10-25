@@ -62,7 +62,7 @@ public:
     // Render frame data. Index indicates the PTS of the frame. This index is written to the output surface.
     // During encoding, the encoder encodes this index as the PTS of the frame.
     virtual VEFError Render(uint64_t index,
-                            const std::shared_ptr<GraphicsRenderInfo>& effectInfo, int32_t rotation,
+                            const std::shared_ptr<GraphicsRenderInfo>& effectInfo,
                             const RenderResultCallback& cb) = 0;
 };
 } // namespace Media

@@ -153,8 +153,7 @@ VEFError ImageEffectRender::CreateNativeBuffer(int32_t width, int32_t height, GL
                                               NATIVEBUFFER_USAGE_MEM_DMA};
     OH_NativeBuffer *nativeBufferPtr = OH_NativeBuffer_Alloc(&config);
     OH_NativeBuffer_ColorSpace colorSpace = OH_NativeBuffer_ColorSpace::OH_COLORSPACE_BT709_LIMIT;
-    if (colorRange_ == 1)
-    {
+    if (colorRange_ == 1) {
         colorSpace = OH_NativeBuffer_ColorSpace::OH_COLORSPACE_BT709_FULL;
     }
     OHNativeWindowBuffer* nativeWindowBufferPtr =
