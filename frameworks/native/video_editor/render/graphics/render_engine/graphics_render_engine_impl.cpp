@@ -72,7 +72,8 @@ VEFError GraphicsRenderEngineImpl::Init(OHNativeWindow* outputWindow)
 {
     MEDIA_LOGI("init graphics engine.");
     if (ready_) {
-        MEDIA_LOGW("[Render] graphics engine [id = %{public}llu] has been initialized, please do not initialize again.", id_);
+        MEDIA_LOGW("[Render] graphics engine [id = %{public}llu] has been initialized, please do not initialize again.",
+            id_);
         return VEFError::ERR_OK;
     }
 
@@ -288,9 +289,10 @@ VEFError GraphicsRenderEngineImpl::Render(uint64_t index, const std::shared_ptr<
             std::chrono::duration<double, std::milli> queueDelay = beginTime - launchTime;
             std::chrono::duration<double, std::milli> renderTime = renderEndTime - beginTime;
             std::chrono::duration<double, std::milli> drawtime = drawEndtime - renderEndTime;
-            MEDIA_LOGD("renderTime: %{public}lf frawTime: %{public}lf, queueDelay: %{public}lf, TaskId: %{public}" PRIu64 ","
-                "ExternId:  %{public}" PRIu64 ".", renderTime.count(), drawtime.count(), queueDelay.count(),
-                taskId, index);
+            MEDIA_LOGD("renderTime: %{public}lf frawTime: %{public}lf,"
+                " queueDelay: %{public}lf, TaskId: %{public}" PRIu64 ","
+                "ExternId:  %{public}" PRIu64 ".", renderTime.count(), drawtime.count(),
+                queueDelay.count(), taskId, index);
             cb(GraphicsRenderResult::SUCCESS);
         },
         EXPORT_TASK_TAG, taskId);

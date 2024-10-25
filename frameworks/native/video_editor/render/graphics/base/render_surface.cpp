@@ -25,7 +25,8 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_VIDEOEDITOR,
 RenderSurface::RenderSurface(std::string tag)
     : display_(EGL_NO_DISPLAY), config_(EGL_NO_CONFIG_KHR), surface_(EGL_NO_SURFACE) {}
 
-RenderSurface::~RenderSurface() {
+RenderSurface::~RenderSurface()
+{
     Release();
 }
 
