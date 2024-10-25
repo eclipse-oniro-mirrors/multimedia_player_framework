@@ -418,11 +418,13 @@ int32_t PlayerServer::OnPrepare(bool sync)
     auto preparedTask = std::make_shared<TaskHandler<int32_t>>([this]() {
         MediaTrace::TraceBegin("PlayerServer::PrepareAsync", FAKE_POINTER(this));
 #ifdef SUPPORT_VIDEO
-        if (surface_ != nullptr) {
-            std::lock_guard<std::mutex> lock(surfaceMutex_);
-            int32_t res = playerEngine_->SetVideoSurface(surface_);
-            CHECK_AND_RETURN_RET_LOG(res == MSERR_OK,
-                static_cast<int32_t>(MSERR_INVALID_OPERATION), "Engine SetVideoSurface Failed!");
+        {
+             std::lock_guard<std::mutex> lock(surfaceMutex_);
+            if (surface_ != nullptr) {
+                int32_t res = playerEngine_->SetVideoSurface(surface_);
+                CHECK_AND_RETURN_RET_LOG(res == MSERR_OK,
+                    static_cast<int32_t>(MSERR_INVALID_OPERATION), "Engine SetVideoSurface Failed!");
+            }
         }
 #endif
         auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
