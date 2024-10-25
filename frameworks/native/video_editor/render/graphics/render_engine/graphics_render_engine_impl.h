@@ -67,9 +67,9 @@ private:
     std::shared_ptr<RenderContext> context_{ nullptr };
     std::atomic_uint64_t currentTaskId_{ 0 };
 
-    std::shared_ptr<ShaderPassSurface> shaderPassSurface_ = nullptr;
-    std::shared_ptr<ShaderPassOnScreen> shaderPassOnScreen_ = nullptr;
-    std::shared_ptr<ShaderPassRotate> shaderPassRotate_ = nullptr;
+    std::shared_ptr<ShaderPassSurface> shaderPassSurface_{ nullptr };
+    std::shared_ptr<ShaderPassOnScreen> shaderPassOnScreen_{ nullptr };
+    std::shared_ptr<ShaderPassRotate> shaderPassRotate_{ nullptr };
     std::unordered_map<uint64_t, std::shared_ptr<ImageEffectRender>> imageEffectRenderList_;
 
     uint64_t id_{ 0 };
