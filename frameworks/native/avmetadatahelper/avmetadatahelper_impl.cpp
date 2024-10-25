@@ -208,9 +208,15 @@ static std::shared_ptr<PixelMap> CreatePixelMap(const std::shared_ptr<AVSharedMe
 int32_t AVMetadataHelperImpl::SaveDataToFile(const std::string &fileName, const char *data, const size_t &totalSize)
 {
     CHECK_AND_RETURN_RET_LOG(data != nullptr, MSERR_INVALID_VAL, "data is nullptr");
-    std::ofstream outFile(FILE_DIR_IN_THE_SANDBOX + fileName, std::ofstream::out);
+    auto rootPath = FILE_DIR_IN_THE_SANDBOX;
+    auto fullPath = rootPath + fileName;
+    char realPath[PATH_MAX] = { 0x00 };
+    CHECK_AND_RETURN_RET((fullPath.length() < PATH_MAX) && (realpath(rootPath.c_str(), realPath) != nullptr),
+                         MSERR_INVALID_VAL);
+    std::string verifiedPath(realPath);
+    std::ofstream outFile(verifiedPath.append("/" + fileName), std::ofstream::out);
     if (!outFile.is_open()) {
-        MEDIA_LOGI("winddraw::SaveDataToFile write error, path=%{public}s", fileName.c_str());
+        MEDIA_LOGI("winddraw::SaveDataToFile write error, path=%{public}s", verifiedPath.c_str());
         return MSERR_UNKNOWN;
     }
 
