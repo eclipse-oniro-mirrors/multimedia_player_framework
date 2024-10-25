@@ -47,6 +47,8 @@ StreamIDManager::~StreamIDManager()
     }
     for (auto cacheBuffer : cacheBuffers_) {
         if (cacheBuffer.second != nullptr) {
+            int32_t streamID = cacheBuffer.second->GetStreamID();
+            cacheBuffer.second->Stop(streamID);
             cacheBuffer.second->Release();
         }
     }
