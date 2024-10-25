@@ -195,6 +195,23 @@ void HiPlayerCallbackLooper::DoCollectAmplitude()
     }
 }
 
+void HiPlayerCallbackLooper::ReportRemainedMaxAmplitude()
+{
+    OHOS::Media::AutoLock lock(loopMutex_);
+    auto obs = obs_.lock();
+    if (obs != nullptr) {
+        if (vMaxAmplitudeArray_.size() != 0) {
+            const int size = static_cast<int>(vMaxAmplitudeArray_.size());
+            float* maxAmplitudeArray = vMaxAmplitudeArray_.data();
+            Format amplitudeFormat;
+            (void)amplitudeFormat.PutBuffer(std::string(PlayerKeys::AUDIO_MAX_AMPLITUDE),
+                static_cast<uint8_t *>(static_cast<void *>(maxAmplitudeArray)), size * sizeof(float));
+            obs->OnInfo(INFO_TYPE_MAX_AMPLITUDE_COLLECT, 0, amplitudeFormat);
+            vMaxAmplitudeArray_.clear();
+        }
+    }
+}
+
 void HiPlayerCallbackLooper::OnError(PlayerErrorType errorType, int32_t errorCode)
 {
     Enqueue(std::make_shared<HiPlayerCallbackLooper::Event>(WHAT_ERROR, SteadyClock::GetCurrentTimeMs(),
