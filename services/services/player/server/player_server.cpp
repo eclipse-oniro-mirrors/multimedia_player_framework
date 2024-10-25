@@ -418,10 +418,13 @@ int32_t PlayerServer::OnPrepare(bool sync)
     auto preparedTask = std::make_shared<TaskHandler<int32_t>>([this]() {
         MediaTrace::TraceBegin("PlayerServer::PrepareAsync", FAKE_POINTER(this));
 #ifdef SUPPORT_VIDEO
-        if (surface_ != nullptr) {
-            int32_t res = playerEngine_->SetVideoSurface(surface_);
-            CHECK_AND_RETURN_RET_LOG(res == MSERR_OK,
-                static_cast<int32_t>(MSERR_INVALID_OPERATION), "Engine SetVideoSurface Failed!");
+        {
+            std::lock_guard<std::mutex> lock(surfaceMutex_);
+            if (surface_ != nullptr) {
+                int32_t res = playerEngine_->SetVideoSurface(surface_);
+                CHECK_AND_RETURN_RET_LOG(res == MSERR_OK,
+                    static_cast<int32_t>(MSERR_INVALID_OPERATION), "Engine SetVideoSurface Failed!");
+            }
         }
 #endif
         auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
@@ -1243,12 +1246,20 @@ int32_t PlayerServer::SetVideoSurface(sptr<Surface> surface)
         return MSERR_INVALID_OPERATION;
     }
     MEDIA_LOGD("PlayerServer SetVideoSurface in");
-    surface_ = surface;
-    if (switchSurface && playerEngine_ != nullptr) {
-        int32_t res = playerEngine_->SetVideoSurface(surface_);
-        CHECK_AND_RETURN_RET_LOG(res == MSERR_OK,
-            static_cast<int32_t>(MSERR_INVALID_OPERATION), "Engine switch surface failed!");
+    {
+        std::lock_guard<std::mutex> surfaceLock(surfaceMutex_);
+        surface_ = surface;
     }
+    CHECK_AND_RETURN_RET_LOG(switchSurface || playerEngine_ != nullptr, MSERR_OK,
+        "current state: %{public}s, playerEngine == nullptr: %{public}d, can not SetVideoSurface",
+        GetStatusDescription(lastOpStatus_).c_str(), playerEngine_ == nullptr);
+    auto task = std::make_shared<TaskHandler<void>>([this]() {
+        std::lock_guard<std::mutex> surfaceLock(surfaceMutex_);
+        (void)playerEngine_->SetVideoSurface(surface_);
+        taskMgr_.MarkTaskDone("SetVideoSurface done");
+    });
+    int32_t ret = taskMgr_.SetVideoSurfaeTask(task, "SetVideoSurface");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetVideoSurface launch task failed");
     return MSERR_OK;
 }
 #endif

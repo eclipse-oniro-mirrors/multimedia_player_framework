@@ -264,6 +264,7 @@ private:
     bool deviceChangeCallbackflag_ = false;
     std::atomic<bool> reportStatusFlag_ {true};
     bool isStreamUsagePauseRequired_ = true;
+    std::mutex surfaceMutex_;
 };
 } // namespace Media
 } // namespace OHOS
