@@ -384,7 +384,6 @@ void GraphicsRenderEngineImpl::DrawFrame(uint64_t pts, const RenderTexturePtr& r
     renderEffectData->outputHeight_ = renderTexture->Height();
     shaderPassOnScreen_->Render();
     context_->SwapBuffers(surface_);
-    renderTexture->Release();
 }
 }
 }

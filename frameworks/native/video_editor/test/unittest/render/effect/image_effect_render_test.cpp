@@ -62,7 +62,7 @@ HWTEST_F(ImageEffectRenderTest, ImageEffectRenderTest_Render, TestSize.Level0)
     std::shared_ptr<OH_ImageEffect> imageEffect;
     ImageEffectRender imageEffectRender(imageEffect);
     RenderTexturePtr inputRenderTexture;
-    ASSERT_EQ(imageEffectRender.Render(nullptr, nullptr, inputRenderTexture), inputRenderTexture);
+    ASSERT_EQ(imageEffectRender.Render(nullptr, nullptr, inputRenderTexture, 1), inputRenderTexture);
 }
 } // namespace Media
 } // namespace OHOS
