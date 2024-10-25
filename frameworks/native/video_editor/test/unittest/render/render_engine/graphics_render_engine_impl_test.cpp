@@ -37,7 +37,7 @@ protected:
 HWTEST_F(GraphicsRenderEngineImplTest, GraphicsRenderEngineImplTest_Init, TestSize.Level0)
 {
     GraphicsRenderEngineImpl graphicsRenderEngineImpl(1);
-    EXPECT_EQ(graphicsRenderEngineImpl.Init(nullptr, 2), VEFError::ERR_INVALID_PARAM);  // 2 is rotation
+    EXPECT_EQ(graphicsRenderEngineImpl.Init(nullptr), VEFError::ERR_INVALID_PARAM);  // 2 is rotation
 }
 } // namespace Media
 } // namespace OHOS
