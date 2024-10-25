@@ -32,7 +32,7 @@ public:
         width_ = w;
         height_ = h;
     }
-    ~RenderTexture()
+    ~RenderTexture() override
     {
         Release();
     }
