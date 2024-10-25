@@ -124,6 +124,7 @@ public:
         std::shared_ptr<ToneHapticsAttrs> &toneHapticsAttrs);
     int32_t SetToneHapticsSettings(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
         const std::string &toneUri, ToneHapticsType toneHapticsType, const ToneHapticsSettings &settings);
+    bool CheckVibrareSwitchStatus();
 
 private:
     void InitDefaultUriMap();
@@ -190,6 +191,11 @@ private:
     bool IsSystemToneType(const std::unique_ptr<RingtoneAsset> &ringtoneAsset,
         const SystemToneType &systemToneType);
     bool IsToneHapticsTypeValid(ToneHapticsType toneHapticsType);
+
+    static int32_t GetCurrentUserId();
+    static Uri AssembleUri(const std::string &key, std::string tableType = "");
+    static std::shared_ptr<DataShare::DataShareHelper> CreateDataShareHelperProxy(std::string tableType = "");
+    int32_t GetStringValue(const std::string &key, std::string &value, std::string tableType = "");
 
     std::string systemSoundPath_ = "";
     std::mutex uriMutex_;
