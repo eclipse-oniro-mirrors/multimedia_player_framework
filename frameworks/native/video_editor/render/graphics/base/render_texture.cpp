@@ -17,7 +17,7 @@
 
 namespace OHOS {
 namespace Media {
-RenderTexture::~RenderTexture() 
+RenderTexture::~RenderTexture()
 {
     Release();
 }
