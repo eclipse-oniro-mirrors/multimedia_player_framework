@@ -419,7 +419,7 @@ int32_t PlayerServer::OnPrepare(bool sync)
         MediaTrace::TraceBegin("PlayerServer::PrepareAsync", FAKE_POINTER(this));
 #ifdef SUPPORT_VIDEO
         {
-             std::lock_guard<std::mutex> lock(surfaceMutex_);
+            std::lock_guard<std::mutex> lock(surfaceMutex_);
             if (surface_ != nullptr) {
                 int32_t res = playerEngine_->SetVideoSurface(surface_);
                 CHECK_AND_RETURN_RET_LOG(res == MSERR_OK,
