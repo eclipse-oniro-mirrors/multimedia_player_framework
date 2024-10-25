@@ -32,10 +32,7 @@ public:
         width_ = w;
         height_ = h;
     }
-    ~RenderTexture() override
-    {
-        Release();
-    }
+    ~RenderTexture() override;
 
     GLsizei Width()
     {

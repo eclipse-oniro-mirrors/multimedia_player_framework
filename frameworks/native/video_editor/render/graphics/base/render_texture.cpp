@@ -17,7 +17,10 @@
 
 namespace OHOS {
 namespace Media {
-RenderTexture::~RenderTexture() {}
+RenderTexture::~RenderTexture() 
+{
+    Release();
+}
 
 RenderTexturePtr CreateRenderTexture(RenderContext* ctx, GLsizei w, GLsizei h, GLenum interFmt)
 {
