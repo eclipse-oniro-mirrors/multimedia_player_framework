@@ -20,6 +20,7 @@
 #include <chrono>
 
 #include "audio_info.h"
+#include "audio_device_descriptor.h"
 #include "common/log.h"
 #include "common/media_source.h"
 #include "directory_ex.h"
@@ -834,7 +835,7 @@ int32_t HiPlayerImpl::Stop()
 {
     MediaTrace trace("HiPlayerImpl::Stop");
     MEDIA_LOG_I_SHORT("Stop entered.");
-    
+
     // triger drm waiting condition
     if (isDrmProtected_) {
         std::unique_lock<std::mutex> drmLock(drmMutex_);
@@ -2506,7 +2507,7 @@ void HiPlayerImpl::NotifyAudioInterrupt(const Event& event)
 void HiPlayerImpl::NotifyAudioDeviceChange(const Event& event)
 {
     MEDIA_LOG_I_SHORT("NotifyAudioDeviceChange");
-    auto [deviceInfo, reason] = AnyCast<std::pair<AudioStandard::DeviceInfo,
+    auto [deviceInfo, reason] = AnyCast<std::pair<AudioStandard::AudioDeviceDescriptor,
         AudioStandard::AudioStreamDeviceChangeReason>>(event.param);
     Format format;
     Parcel parcel;
