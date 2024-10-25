@@ -19,22 +19,24 @@
 
 namespace OHOS {
 namespace Media {
-constexpr const char* DEFAULT_VERTEX_SHADER_CODE = R"(attribute vec4 aPosition;\n
-    attribute vec4 aTextureCoord;\n
-    varying vec2 textureCoordinate;\n
-    void main()\n
-    {\n
-        gl_Position = aPosition;\n
-        textureCoordinate = aTextureCoord.xy;\n
-    }\n)";
+constexpr const char* DEFAULT_VERTEX_SHADER_CODE = R"(attribute vec4 aPosition;
+    attribute vec4 aTextureCoord;
+    varying vec2 textureCoordinate;
+    void main()
+    {
+        gl_Position = aPosition;
+        textureCoordinate = aTextureCoord.xy;
+    }
+    )";
 
-constexpr const char* DEFAULT_FRAGMENT_SHADER_CODE = R"(precision highp float;\n
-    varying vec2 textureCoordinate;\n
-    uniform sampler2D inputTexture;\n
-    void main()\n
-    {\n
-       gl_FragColor = texture2D(inputTexture, textureCoordinate);\n
-    }\n)";
+constexpr const char* DEFAULT_FRAGMENT_SHADER_CODE = R"(precision highp float;
+    varying vec2 textureCoordinate;
+    uniform sampler2D inputTexture;
+    void main()
+    {
+       gl_FragColor = texture2D(inputTexture, textureCoordinate);
+    }
+    )";
 
 ShaderPassOnScreen::ShaderPassOnScreen(RenderContext* context)
     : ShaderPass(context, DEFAULT_VERTEX_SHADER_CODE, DEFAULT_FRAGMENT_SHADER_CODE, DEFAULT_FLIP_VERTEX_DATA)

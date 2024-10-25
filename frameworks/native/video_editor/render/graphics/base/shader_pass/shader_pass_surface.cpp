@@ -22,22 +22,24 @@ namespace Media {
 #define GL_TEXTURE_EXTERNAL_OES 0x8D65
 #endif
 
-constexpr const char* SURFACE_VERTEX_SHADER_CODE = "uniform mat4 uTexMatrix;\n"
-    "attribute vec4 aPosition;\n"
-    "attribute vec4 aTextureCoord;\n"
-    "varying vec2 vTextureCoord;\n"
-    "void main() {\n"
-    "    gl_Position = aPosition;\n"
-    "    vTextureCoord = (uTexMatrix * vec4(aTextureCoord.xy, 0.0, 1.0)).xy;\n"
-    "}\n";
+constexpr const char* SURFACE_VERTEX_SHADER_CODE = R"(uniform mat4 uTexMatrix;
+    attribute vec4 aPosition;
+    attribute vec4 aTextureCoord;
+    varying vec2 vTextureCoord;
+    void main() {
+        gl_Position = aPosition;
+        vTextureCoord = (uTexMatrix * vec4(aTextureCoord.xy, 0.0, 1.0)).xy;
+    }
+    )";
 
-constexpr const char* SURFACE_FRAGMENT_SHADER_CODE = "#extension GL_OES_EGL_image_external : require\n"
-    "precision mediump float;\n"
-    "varying vec2 vTextureCoord;\n"
-    "uniform samplerExternalOES sTexture;\n"
-    "void main() {\n"
-    "    gl_FragColor = texture2D(sTexture, vTextureCoord);\n"
-    "}\n";
+constexpr const char* SURFACE_FRAGMENT_SHADER_CODE = R"(#extension GL_OES_EGL_image_external : require
+    precision mediump float;
+    varying vec2 vTextureCoord;
+    uniform samplerExternalOES sTexture;
+    void main() {
+        gl_FragColor = texture2D(sTexture, vTextureCoord);
+    }
+    )";
 
 ShaderPassSurface::ShaderPassSurface(RenderContext* context)
     : ShaderPass(context, SURFACE_VERTEX_SHADER_CODE, SURFACE_FRAGMENT_SHADER_CODE, DEFAULT_VERTEX_DATA)
