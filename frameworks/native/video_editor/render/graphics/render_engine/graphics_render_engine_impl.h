@@ -73,7 +73,6 @@ private:
     std::unordered_map<uint64_t, std::shared_ptr<ImageEffectRender>> imageEffectRenderList_;
 
     uint64_t id_{ 0 };
-    int32_t rotation_ = 0;
 };
 }
 }

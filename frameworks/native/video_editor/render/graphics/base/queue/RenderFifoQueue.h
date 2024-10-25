@@ -29,39 +29,39 @@ public:
 
     size_t GetSize() override
     {
-        return _list.size();
+        return list_.size();
     }
 
     bool Push(const T& data) override
     {
-        _list.emplace_back(data);
+        list_.emplace_back(data);
         return true;
     }
 
     bool Pop(T& result) override
     {
-        if (_list.size() == 0) {
+        if (list_.size() == 0) {
             return false;
         }
-        result = _list.front();
-        _list.pop_front();
+        result = list_.front();
+        list_.pop_front();
         return true;
     }
 
     bool PopWithCallBack(T& result, std::function<void(T&)>& callback) override
     {
-        if (_list.size() == 0) {
+        if (list_.size() == 0) {
             return false;
         }
-        result = _list.front();
-        _list.pop_front();
+        result = list_.front();
+        list_.pop_front();
         callback(result);
         return true;
     }
 
     T Find(const T& result) override
     {
-        for (typename list_t::iterator it = _list.begin(); it != _list.end(); ++it) {
+        for (typename list_t::iterator it = list_.begin(); it != list_.end(); ++it) {
             if (GetTag(*it) == GetTag(result)) {
                 return *it;
             }
@@ -71,34 +71,34 @@ public:
 
     bool Front(T& result) override
     {
-        if (_list.size() == 0) {
+        if (list_.size() == 0) {
             return false;
         }
-        result = _list.front();
+        result = list_.front();
         return true;
     }
 
     bool Back(T& result) override
     {
-        if (_list.size() == 0) {
+        if (list_.size() == 0) {
             return false;
         }
-        result = _list.back();
+        result = list_.back();
         return true;
     }
 
     void RemoveAll() override
     {
-        _list.clear();
+        list_.clear();
     }
 
     void Remove(const std::function<bool(T&)>& checkFunc) override
     {
-        _list.remove_if(checkFunc);
+        list_.remove_if(checkFunc);
     }
 
 private:
-    list_t _list;
+    list_t list_;
 };
 }
 }
