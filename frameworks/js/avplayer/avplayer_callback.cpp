@@ -16,6 +16,7 @@
 #include <map>
 #include <iostream>
 #include <sstream>
+#include <iomanip>
 #include <uv.h>
 #include "avplayer_napi.h"
 #include "media_errors.h"
@@ -1247,7 +1248,8 @@ int32_t AVPlayerCallback::SetDrmInfoData(const uint8_t *drmInfoAddr, int32_t inf
         std::stringstream ssConverter;
         std::string uuid;
         for (uint32_t index = 0; index < DrmConstant::DRM_MAX_M3U8_DRM_UUID_LEN; index++) {
-            ssConverter << std::hex << static_cast<int32_t>(temp.uuid[index]);
+            int32_t singleUuid = static_cast<int32_t>(temp.uuid[index]);
+            ssConverter << std::hex << std::setfill('0') << std::setw(2) << singleUuid; // 2:w
             uuid = ssConverter.str();
         }
         std::vector<uint8_t> pssh(temp.pssh, temp.pssh + temp.psshLen);
