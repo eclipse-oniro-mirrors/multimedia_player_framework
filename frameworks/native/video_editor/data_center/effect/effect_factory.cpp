@@ -36,7 +36,8 @@ std::shared_ptr<Effect> EffectFactory::CreateEffect(const std::string& descripti
             auto effect = std::make_shared<EffectImageEffect>(id_.fetch_add(1), description);
             auto err = effect->Init();
             if (err != VEFError::ERR_OK) {
-                MEDIA_LOGE("init effect[%{public}" PRIu64 "] failed, error: %{public}d", effect->GetId(), err);
+                MEDIA_LOGE("init effect[%{public}" PRIu64 "] failed, error: %{public}d",
+                    effect->GetId(), err);
             } else {
                 result = effect;
                 MEDIA_LOGI("init effect[%{public}" PRIu64 "] success.", effect->GetId());

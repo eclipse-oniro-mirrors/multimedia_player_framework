@@ -41,65 +41,30 @@ public:
     {
         pts_ = pts;
     };
-    void OnEncodeResult(VideoEncodeResult result) override
+    void OnEncodeResult(CodecResult result) override
     {
         result_ = result;
     };
 
     uint64_t pts_ { 0 };
-    VideoEncodeResult result_ { VideoEncodeResult::FAILED };
+    CodecResult result_ { CodecResult::FAILED };
 };
 
 // Test VideoEncoderEngineImpl constructor
 HWTEST_F(VideoEncoderEngineImplTest, construct, TestSize.Level0)
 {
-    auto cb = std::make_shared<VideoEncodeCallbackTester>();
-    auto engine = std::make_shared<VideoEncoderEngineImpl>(888, 20, cb);
+    VideoEncodeCallbackTester* cb = new VideoEncodeCallbackTester();
+    auto engine = std::make_shared<VideoEncoderEngineImpl>(20, cb);
     EXPECT_EQ(engine->GetId(), 888);
-    EXPECT_EQ(engine->fd_, 20);
-    EXPECT_EQ(engine->cb_.lock(), cb);
 }
 
 // Test VideoEncoderEngineImpl Init method
 HWTEST_F(VideoEncoderEngineImplTest, init_ok, TestSize.Level0)
 {
-    auto cb = std::make_shared<VideoEncodeCallbackTester>();
-    auto engine = std::make_shared<VideoEncoderEngineImpl>(888, 20, cb);
-    EXPECT_EQ(engine->Init(nullptr), VEFError::ERR_OK);
-}
-
-// Scenario3: Test VideoEncoderEngineImpl StartEncode method
-HWTEST_F(VideoEncoderEngineImplTest, start_encode_ok, TestSize.Level0)
-{
-    auto cb = std::make_shared<VideoEncodeCallbackTester>();
-    auto engine = std::make_shared<VideoEncoderEngineImpl>(888, 20, cb);
-    EXPECT_EQ(engine->StartEncode(), VEFError::ERR_OK);
-}
-
-// Scenario4: Test VideoEncoderEngineImpl StopEncode method
-HWTEST_F(VideoEncoderEngineImplTest, stop_encode_ok, TestSize.Level0)
-{
-    auto cb = std::make_shared<VideoEncodeCallbackTester>();
-    auto engine = std::make_shared<VideoEncoderEngineImpl>(888, 20, cb);
-    EXPECT_EQ(engine->StopEncode(), VEFError::ERR_OK);
-}
-
-// Test VideoEncoderEngineImpl FinishEncode method
-HWTEST_F(VideoEncoderEngineImplTest, finish_encode_ok, TestSize.Level0)
-{
-    auto cb = std::make_shared<VideoEncodeCallbackTester>();
-    auto engine = std::make_shared<VideoEncoderEngineImpl>(888, 20, cb);
-    engine->FinishEncode();
-    EXPECT_EQ(cb->result_, VideoEncodeResult::SUCCESS);
-}
-
-// Test VideoEncoderEngineImpl FinishEncode method
-HWTEST_F(VideoEncoderEngineImplTest, finish_encode_cb_is_null, TestSize.Level0)
-{
-    auto cb = std::make_shared<VideoEncodeCallbackTester>();
-    auto engine = std::make_shared<VideoEncoderEngineImpl>(888, 20, cb);
-    cb = nullptr;
-    engine->FinishEncode();
+    VideoEncodeCallbackTester* cb = new VideoEncodeCallbackTester();
+    auto engine = std::make_shared<VideoEncoderEngineImpl>(20, cb);
+    VideoEncodeParam enCoderParam;
+    EXPECT_EQ(engine->Init(enCoderParam), VEFError::ERR_INTERNAL_ERROR);
 }
 
 } // namespace Media

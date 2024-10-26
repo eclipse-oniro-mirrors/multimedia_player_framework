@@ -72,8 +72,8 @@ VEFError GraphicsRenderEngineImpl::Init(OHNativeWindow* outputWindow)
 {
     MEDIA_LOGI("init graphics engine.");
     if (ready_) {
-        MEDIA_LOGW("[Render] graphics engine [id = %{public}llu] has been initialized, please do not initialize again.",
-            id_);
+        MEDIA_LOGW("[Render] graphics engine [id = %{public}" PRIu64 "] has been initialized,"
+        " please do not initialize again.", id_);
         return VEFError::ERR_OK;
     }
 

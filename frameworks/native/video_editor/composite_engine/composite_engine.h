@@ -28,8 +28,7 @@ class ICompositeEngine {
 public:
     static std::shared_ptr<ICompositeEngine> CreateCompositeEngine(const std::shared_ptr<IDataCenter>& dc);
     virtual uint64_t GetId() const = 0;
-    virtual VEFError StartComposite(const std::shared_ptr<CompositionOptions>& options,
-                                    const OnCompositeResultFunc& func) = 0;
+    virtual VEFError StartComposite(const std::shared_ptr<CompositionOptions>& options) = 0;
     virtual VEFError StopComposite() = 0;
 };
 

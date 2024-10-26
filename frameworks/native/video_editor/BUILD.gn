@@ -16,6 +16,7 @@ import("//foundation/multimedia/player_framework/config.gni")
 import("./../../../multimedia_player_framework_aafwk.gni")
 
 ohos_shared_library("video_editor") {
+  version_script = "video_editor.versionscript"
   stack_protector_ret = true
   sanitize = {
     integer_overflow = true
@@ -28,10 +29,20 @@ ohos_shared_library("video_editor") {
 
   install_enable = true
   sources = [
+    "./codec/audio/decoder/audio_decoder.cpp",
+    "./codec/audio/encoder/audio_encoder.cpp",
+    "./codec/audio/pcm_buffer_queue.cpp",
+    "./codec/common/codec_decoder.cpp",
+    "./codec/common/codec_encoder.cpp",
+    "./codec/util/codec_util.cpp",
+    "./codec/video/decoder/video_decoder.cpp",
     "./codec/video/decoder/video_decoder_engine.cpp",
     "./codec/video/decoder/video_decoder_engine_impl.cpp",
+    "./codec/video/decoder/video_demuxer.cpp",
+    "./codec/video/encoder/video_encoder.cpp",
     "./codec/video/encoder/video_encoder_engine.cpp",
     "./codec/video/encoder/video_encoder_engine_impl.cpp",
+    "./codec/video/encoder/video_muxer.cpp",
     "./composite_engine/impl/composite_engine.cpp",
     "./composite_engine/impl/video_composite_engine.cpp",
     "./data_center/asset/asset.cpp",
@@ -58,6 +69,7 @@ ohos_shared_library("video_editor") {
     "./render/graphics/effect/image_effect_render.cpp",
     "./render/graphics/render_engine/graphics_render_engine.cpp",
     "./render/graphics/render_engine/graphics_render_engine_impl.cpp",
+    "./util/task/task_manager.cpp",
     "./video_editor_impl.cpp",
     "./video_editor_manager.cpp",
   ]
@@ -102,8 +114,41 @@ ohos_shared_library("video_editor") {
   }
 
   cflags = [
+    "-fno-exceptions",
     "-Wall",
     "-Werror",
+    "-fno-common",
+    "-fstack-protector-strong",
+    "-FPIC",
+    "-FS",
+    "-D_FORTIFY_SOURCE=2",
+    "-fvisibility=hidden",
+    "-fdata-sections",
+    "-ffunction-sections",
+    "-fno-asynchronous-unwind-tables",
+    "-fno-unwind-tables",
+    "-O2",
+  ]
+
+  cflags_cc = cflags
+
+  cflags_cc += [
+    "-std=c++17",
+    "-fno-rtti",
+    "-fvisibility-inlines-hidden",
+    "-Wunused-private-field",
+    "-Wunused-but-set-parameter",
+    "-Wunused-but-set-variable",
+    "-Wunused-const-variable",
+    "-Wunused-function",
+    "-Wunused-label",
+    "-Wunused-local-typedefs",
+    "-Wunused-macros",
+    "-Wunused-parameter",
+    "-Wunused-result",
+    "-Wunused-value",
+    "-Wunused-variable",
+    "-Wunreachable-code",
   ]
 
   public_configs = []

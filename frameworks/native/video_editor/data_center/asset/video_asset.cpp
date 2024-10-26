@@ -25,12 +25,11 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_VIDEOEDITOR,
 
 VideoAsset::VideoAsset(int64_t id, int fd) : Asset(id, AssetType::VIDEO, fd)
 {
-    MEDIA_LOGI("video asset[id = %{public}" PRIu64 "] construct for file: %{public}d.", id, fd);
 }
 
 VideoAsset::~VideoAsset()
 {
-    MEDIA_LOGI("video asset[id = %{public}" PRIu64 "] destruct.", id_);
+    MEDIA_LOGD("video asset[id = %{public}" PRIu64 "] destruct.", id_);
 }
 
 std::vector<const std::shared_ptr<Effect>> VideoAsset::GetEffectList() const

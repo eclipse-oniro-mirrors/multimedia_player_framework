@@ -16,35 +16,45 @@
 #ifndef OH_VEF_VIDEO_ENCODER_ENGINE_H
 #define OH_VEF_VIDEO_ENCODER_ENGINE_H
 
+#include "codec/common/codec_common.h"
 #include <memory>
 #include "video_editor.h"
 #include "native_avcodec_base.h"
+#include "codec/audio/pcm_buffer_queue.h"
 
 namespace OHOS {
 namespace Media {
 
-enum class VideoEncodeResult : uint32_t {
-    SUCCESS,
-    FAILED,
-    CANCELED
-};
-
 class VideoEncodeCallback {
 public:
     virtual void OnEncodeFrame(uint64_t pts) = 0;
-    virtual void OnEncodeResult(VideoEncodeResult result) = 0;
+    virtual void OnEncodeResult(CodecResult result) = 0;
+};
+
+struct VideoMuxerParam {
+    int targetFileFd { -1 };
+    OH_AVOutputFormat avOutputFormat = AV_OUTPUT_FORMAT_MPEG_4;
+    int32_t rotation = 0;
+};
+
+struct VideoEncodeParam {
+    VideoMuxerParam muxerParam;
+    OH_AVFormat* videoTrunkFormat = nullptr;
+    OH_AVFormat* audioTrunkFormat = nullptr;
 };
 
 class IVideoEncoderEngine {
 public:
-    static std::shared_ptr<IVideoEncoderEngine> Create(int fd, OH_AVFormat* videoFormat,
-        std::weak_ptr<VideoEncodeCallback> cb);
+    static std::shared_ptr<IVideoEncoderEngine> Create(const VideoEncodeParam& encodeParam, VideoEncodeCallback* cb);
 
+    virtual VEFError Init(const VideoEncodeParam& encodeParam) = 0;
     virtual uint64_t GetId() const = 0;
     virtual VEFError StartEncode() = 0;
     virtual VEFError StopEncode() = 0;
-    virtual void FinishEncode() = 0;
-    virtual OHNativeWindow* GetEncoderNativeWindow() = 0;
+    virtual VEFError SendEos() = 0;
+    virtual VEFError Flush() = 0;
+    virtual OHNativeWindow* GetVideoInputWindow() = 0;
+    virtual std::shared_ptr<PcmBufferQueue> GetAudioInputBufferQueue() const = 0;
 };
 
 } // namespace Media

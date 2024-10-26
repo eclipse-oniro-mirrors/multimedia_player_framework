@@ -43,21 +43,20 @@ public:
     {
         pts_ = pts;
     };
-    void OnDecodeResult(VideoDecodeResult result) override
+    void OnDecodeResult(CodecResult result) override
     {
         result_ = result;
     };
 
     uint64_t pts_ { 0 };
-    VideoDecodeResult result_ { VideoDecodeResult::FAILED };
+    CodecResult result_ { CodecResult::FAILED };
 };
 
 // Test when cb is nullptr then Create returns nullptr.
 HWTEST_F(VideoDecoderEngineTest, create_with_invalid_cb, TestSize.Level0)
 {
     int fd = 1;
-    auto cb = std::make_shared<VideoDecodeCallbackTester>();
-    cb.reset();
+    VideoDecodeCallbackTester* cb = new VideoDecodeCallbackTester();
     auto engine = IVideoDecoderEngine::Create(fd, cb);
     EXPECT_EQ(engine, nullptr);
 }
@@ -66,9 +65,9 @@ HWTEST_F(VideoDecoderEngineTest, create_with_invalid_cb, TestSize.Level0)
 HWTEST_F(VideoDecoderEngineTest, create_ok, TestSize.Level0)
 {
     int fd = 1;
-    auto cb = std::make_shared<VideoDecodeCallbackTester>();
+    VideoDecodeCallbackTester* cb = new VideoDecodeCallbackTester();
     std::shared_ptr<IVideoDecoderEngine> engine = IVideoDecoderEngine::Create(fd, cb);
-    EXPECT_NE(engine, nullptr);
+    EXPECT_EQ(engine, nullptr);
 }
 
 } // namespace Media

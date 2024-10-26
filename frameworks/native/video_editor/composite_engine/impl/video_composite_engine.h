@@ -16,6 +16,9 @@
 #ifndef OH_VEF_VIDEO_COMPOSITE_ENGINE_H
 #define OH_VEF_VIDEO_COMPOSITE_ENGINE_H
 
+#include "util/task/task_manager.h"
+#include "codec/common/codec_common.h"
+#include "data_center/asset/video_asset.h"
 #include "composite_engine/composite_engine.h"
 #include "codec/video_decoder_engine.h"
 #include "codec/video_encoder_engine.h"
@@ -30,15 +33,14 @@ public:
     virtual ~VideoCompositeEngine();
 
     uint64_t GetId() const override;
-    VEFError StartComposite(const std::shared_ptr<CompositionOptions>& options,
-                            const OnCompositeResultFunc& func) override;
+    VEFError StartComposite(const std::shared_ptr<CompositionOptions>& options) override;
     VEFError StopComposite() override;
 
     void OnDecodeFrame(uint64_t pts) override;
-    void OnDecodeResult(VideoDecodeResult result) override;
+    void OnDecodeResult(CodecResult result) override;
 
     void OnEncodeFrame(uint64_t pts) override;
-    void OnEncodeResult(VideoEncodeResult result) override;
+    void OnEncodeResult(CodecResult result) override;
 
     void OnRenderFinish(uint64_t pts, GraphicsRenderResult result);
 
@@ -48,6 +50,7 @@ private:
     VEFError StartComposite();
     VEFError CheckCompositeOptions(const std::shared_ptr<CompositionOptions>& options);
     VEFError OrchestratePipelines();
+    VEFError BuildEncoderParameter(VideoEncodeParam& param);
 
 private:
     uint64_t id_{ 0 };
@@ -55,8 +58,18 @@ private:
     int targetFileFd_ = -1;
     std::shared_ptr<CompositionCallback> callback_{ nullptr };
     std::shared_ptr<IDataCenter> dataCenter_{ nullptr };
+    std::shared_ptr<TaskManager> taskMgr_{ nullptr };
     std::shared_ptr<IVideoDecoderEngine> decoderEngine_{ nullptr };
     std::shared_ptr<IVideoEncoderEngine> encoderEngine_{ nullptr };
+    std::shared_ptr<IGraphicsRenderEngine> graphicsRenderEngine_{ nullptr };
+    std::shared_ptr<GraphicsRenderInfo> renderInfo_{ nullptr };
+    uint64_t duration_{ UINT64_MAX };
+    std::mutex renderingCntLock_;
+    std::condition_variable renderingCntCv_;
+    uint64_t renderingCnt_ = 0;
+    ffrt::mutex selfLock_;
+    enum class CompositeState : uint32_t { INIT = 0, COMPOSITING, FINISHING, FINISHED, CANCELING, CANCLED, FAILED };
+    CompositeState state_{ CompositeState::INIT };
 };
 
 } // namespace Media

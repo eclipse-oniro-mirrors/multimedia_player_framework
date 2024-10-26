@@ -42,7 +42,7 @@ std::shared_ptr<VideoEditor> VideoEditorManager::CreateVideoEditor()
 {
     auto videoEditor = std::make_shared<VideoEditorImpl>(id_.fetch_add(1));
     uint64_t id = videoEditor->GetId();
-    MEDIA_LOGI("create VideoEditor[id = %{public}" PRIu64 "] object success.", id);
+    MEDIA_LOGD("create VideoEditor[id = %{public}" PRIu64 "] object success.", id);
 
     VEFError error = videoEditor->Init();
     if (error != VEFError::ERR_OK) {
