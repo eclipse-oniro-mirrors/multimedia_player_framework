@@ -160,8 +160,10 @@ private:
         OH_AVSCREEN_CAPTURE_ErrCode errCode =
             AcquireAudioBuffer(screenCaptureObj->screenCapture_, ohAvBuffer, timestamp, audioSourceType);
         if (errCode == AV_SCREEN_CAPTURE_ERR_OK) {
+            MEDIA_LOGD("OnProcessAudioBuffer: 0x%{public}06" PRIXPTR " In", FAKE_POINTER(capture));
             callback_(capture, reinterpret_cast<OH_AVBuffer *>(ohAvBuffer.GetRefPtr()), bufferType, timestamp,
                 userData_);
+            MEDIA_LOGD("OnProcessAudioBuffer: 0x%{public}06" PRIXPTR " Out", FAKE_POINTER(capture));
             if (ohAvBuffer->buffer_->memory_ == nullptr) {
                 return AV_SCREEN_CAPTURE_ERR_INVALID_VAL;
             }
@@ -210,8 +212,10 @@ private:
         OH_AVSCREEN_CAPTURE_ErrCode errCode =
             AcquireVideoBuffer(screenCaptureObj->screenCapture_, hoAvBuffer, timestamp);
         if (errCode == AV_SCREEN_CAPTURE_ERR_OK) {
+            MEDIA_LOGD("OnProcessVideoBuffer: 0x%{public}06" PRIXPTR " In", FAKE_POINTER(capture));
             callback_(capture, reinterpret_cast<OH_AVBuffer *>(hoAvBuffer.GetRefPtr()),
                 OH_AVScreenCaptureBufferType::OH_SCREEN_CAPTURE_BUFFERTYPE_VIDEO, timestamp, userData_);
+            MEDIA_LOGD("OnProcessVideoBuffer: 0x%{public}06" PRIXPTR " Out", FAKE_POINTER(capture));
         }
         errCode = ReleaseVideoBuffer(screenCaptureObj->screenCapture_);
         return errCode;
@@ -551,6 +555,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StartScreenCaptureWithSurface(str
 
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StopScreenCapture(struct OH_AVScreenCapture *capture)
 {
+    MEDIA_LOGI("OH_AVScreenCapture_StopScreenCapture In: 0x%{public}06" PRIXPTR, FAKE_POINTER(capture));
     CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr!");
 
     struct ScreenCaptureObject *screenCaptureObj = reinterpret_cast<ScreenCaptureObject *>(capture);
@@ -581,6 +586,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StartScreenRecording(struct OH_AV
 
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StopScreenRecording(struct OH_AVScreenCapture *capture)
 {
+    MEDIA_LOGI("OH_AVScreenCapture_StopScreenRecording In: 0x%{public}06" PRIXPTR, FAKE_POINTER(capture));
     CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr!");
 
     struct ScreenCaptureObject *screenCaptureObj = reinterpret_cast<ScreenCaptureObject *>(capture);
@@ -724,6 +730,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetCallback(struct OH_AVScreenCap
 
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_Release(struct OH_AVScreenCapture *capture)
 {
+    MEDIA_LOGI("OH_AVScreenCapture_Release In: 0x%{public}06" PRIXPTR, FAKE_POINTER(capture));
     CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr!");
 
     struct ScreenCaptureObject *screenCaptureObj = reinterpret_cast<ScreenCaptureObject *>(capture);
