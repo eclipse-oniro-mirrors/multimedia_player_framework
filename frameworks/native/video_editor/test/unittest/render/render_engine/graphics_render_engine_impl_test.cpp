@@ -13,38 +13,31 @@
  * limitations under the License.
  */
 
-#ifndef OH_VEF_GRAPHICS_RENDER_INFO_H
-#define OH_VEF_GRAPHICS_RENDER_INFO_H
+#include "gtest/gtest.h"
+#include "render/graphics/render_engine/graphics_render_engine_impl.h"
 
-#include <vector>
-#include <memory>
-#include "data_center/effect/effect.h"
-#ifdef IMAGE_EFFECT_SUPPORT
-#include "image_effect.h"
-#endif
+using namespace testing;
+using namespace testing::ext;
 
 namespace OHOS {
 namespace Media {
 
-struct EffectRenderInfo {
-    uint64_t id = 0;
-    EffectType type = EffectType::UNKNOWN;
-#ifdef IMAGE_EFFECT_SUPPORT
-    std::shared_ptr<OH_ImageEffect> imageEffect;
-#endif
+class GraphicsRenderEngineImplTest : public testing::Test {
+protected:
+    void SetUp() override
+    {
+    }
+
+    void TearDown() override
+    {
+    }
 };
 
-class GraphicsRenderInfo {
-public:
-    GraphicsRenderInfo() = default;
-    ~GraphicsRenderInfo() = default;
-public:
-    std::vector<std::shared_ptr<EffectRenderInfo>> effectInfoList_;
-    int32_t rotation_;
-    int32_t colorRange_;
-};
-
+// test GraphicsRenderEngineImplTest Init method
+HWTEST_F(GraphicsRenderEngineImplTest, GraphicsRenderEngineImplTest_Init, TestSize.Level0)
+{
+    GraphicsRenderEngineImpl graphicsRenderEngineImpl(1);
+    EXPECT_EQ(graphicsRenderEngineImpl.Init(nullptr), VEFError::ERR_INVALID_PARAM);  // 2 is rotation
+}
 } // namespace Media
 } // namespace OHOS
-
-#endif // OH_VEF_GRAPHICS_RENDER_INFO_H

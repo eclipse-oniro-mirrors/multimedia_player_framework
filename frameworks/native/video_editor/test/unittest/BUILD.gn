@@ -40,6 +40,11 @@ ohos_unittest("video_editor_unit_test") {
     "codec/video/encoder/video_encoder_engine_impl_test.cpp",
     "codec/video/encoder/video_encoder_engine_test.cpp",
     "data_center/asset_test.cpp",
+    "render/base/gl_utils_test.cpp",
+    "render/base/render_context_test.cpp",
+    "render/base/render_surface_test.cpp",
+    "render/effect/image_effect_render_test.cpp",
+    "render/render_engine/graphics_render_engine_impl_test.cpp",
     "video_editor_impl_test.cpp",
     "video_editor_manager_test.cpp",
   ]
@@ -51,7 +56,32 @@ ohos_unittest("video_editor_unit_test") {
 
   external_deps = [
     "av_codec:av_codec_client",
+    "av_codec:native_media_acodec",
+    "av_codec:native_media_adec",
+    "av_codec:native_media_aenc",
+    "av_codec:native_media_avcencinfo",
+    "av_codec:native_media_avdemuxer",
+    "av_codec:native_media_avmuxer",
+    "av_codec:native_media_avsource",
+    "av_codec:native_media_codecbase",
+    "av_codec:native_media_vdec",
+    "av_codec:native_media_venc",
+    "ffrt:libffrt",
+    "graphic_2d:EGL",
+    "graphic_2d:GLESv3",
+    "graphic_2d:libnative_image",
+    "graphic_surface:surface",
     "hilog:libhilog",
     "media_foundation:native_media_core",
+    "skia:skia_canvaskit",
   ]
+
+  defines = []
+
+  if (defined(global_parts_info) &&
+      defined(global_parts_info.multimedia_image_effect) &&
+      global_parts_info.multimedia_image_effect) {
+    defines += [ "IMAGE_EFFECT_SUPPORT" ]
+    external_deps += [ "image_effect:image_effect" ]
+  }
 }
