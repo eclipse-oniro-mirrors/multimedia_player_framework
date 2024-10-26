@@ -70,8 +70,8 @@ private:
     void SetSource(std::string url);
     void ResetUserParameters();
 
-    int32_t GetFetchFrameArgs(
-        std::unique_ptr<AVImageGeneratorAsyncContext> &asyncCtx, napi_env env, napi_value param[]);
+    int32_t GetFetchFrameArgs(std::unique_ptr<AVImageGeneratorAsyncContext> &asyncCtx, napi_env env, napi_value timeUs,
+        napi_value option, napi_value params);
     void SetAVFileDescriptorTask(std::shared_ptr<AVMetadataHelper>& avHelper, AVFileDescriptor& fileDescriptor);
 
     std::string GetCurrentState();

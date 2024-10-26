@@ -25,8 +25,10 @@
 #include "xpower_event_js.h"
 #endif
 #include "av_common.h"
+#if !defined(CROSS_PLATFORM)
 #include "ipc_skeleton.h"
 #include "tokenid_kit.h"
+#endif
 
 using namespace OHOS::AudioStandard;
 
@@ -35,6 +37,8 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_METADATA, "
 constexpr uint8_t ARG_ZERO = 0;
 constexpr uint8_t ARG_ONE = 1;
 constexpr uint8_t ARG_TWO = 2;
+constexpr uint8_t ARG_THREE = 3;
+constexpr uint8_t ARG_FOUR = 4;
 }
 
 namespace OHOS {
@@ -157,13 +161,9 @@ napi_value AVImageGeneratorNapi::JsCreateAVImageGenerator(napi_env env, napi_cal
     return result;
 }
 
-int32_t AVImageGeneratorNapi::GetFetchFrameArgs(
-    std::unique_ptr<AVImageGeneratorAsyncContext> &asyncCtx, napi_env env, napi_value param[])
+int32_t AVImageGeneratorNapi::GetFetchFrameArgs(std::unique_ptr<AVImageGeneratorAsyncContext> &asyncCtx, napi_env env,
+    napi_value timeUs, napi_value option, napi_value params)
 {
-    napi_value timeUs = param[ARG_ZERO];
-    napi_value option = param[ARG_ONE];
-    napi_value params = param[ARG_TWO];
-
     napi_status ret = napi_get_value_int64(env, timeUs, &asyncCtx->napi->timeUs_);
     if (ret != napi_ok) {
         asyncCtx->SignError(MSERR_INVALID_VAL, "failed to get timeUs");
@@ -197,9 +197,9 @@ napi_value AVImageGeneratorNapi::JsFetchFrameAtTime(napi_env env, napi_callback_
 {
     MediaTrace trace("AVImageGeneratorNapi::JsFetchFrameAtTime");
     MEDIA_LOGI("JsFetchFrameAtTime  in");
-    const int32_t maxArgs = 4;  // args + callback
-    const int32_t argCallback = 3;
-    const int32_t argPixelParam = 2;
+    const int32_t maxArgs = ARG_FOUR;  // args + callback
+    const int32_t argCallback = ARG_THREE;  // index three, the 4th param if exist
+    const int32_t argPixelParam = ARG_TWO;  // index 2, the 3rd param
     size_t argCount = maxArgs;
     napi_value args[maxArgs] = { nullptr };
     napi_value result = nullptr;
@@ -214,7 +214,8 @@ napi_value AVImageGeneratorNapi::JsFetchFrameAtTime(napi_env env, napi_callback_
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
     napi_valuetype valueType = napi_undefined;
     bool notParamValid = argCount < argCallback || napi_typeof(env, args[argPixelParam], &valueType) != napi_ok ||
-                        valueType != napi_object || asyncCtx->napi->GetFetchFrameArgs(asyncCtx, env, args) != MSERR_OK;
+        valueType != napi_object ||
+        asyncCtx->napi->GetFetchFrameArgs(asyncCtx, env, args[ARG_ZERO], args[ARG_ONE], args[ARG_TWO]) != MSERR_OK;
     if (notParamValid) {
         asyncCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "JsFetchFrameAtTime");
     }

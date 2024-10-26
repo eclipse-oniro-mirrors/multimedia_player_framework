@@ -89,9 +89,7 @@ config("media_service_config") {
 
   defines = []
   defines += player_framework_defines
-  if (player_framework_feature_pc_select_window) {
-    defines += [ "PC_STANDARD" ]
-  }
+
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
@@ -254,7 +252,6 @@ ohos_shared_library("media_service") {
       "ability_base:want",
       "ability_base:zuri",
       "ability_runtime:ability_context_native",
-      "ability_runtime:ability_manager",
       "ability_runtime:abilitykit_native",
       "ability_runtime:extension_manager",
       "ability_runtime:runtime",
