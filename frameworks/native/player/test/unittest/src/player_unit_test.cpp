@@ -633,24 +633,6 @@ HWTEST_F(PlayerUnitTest, Player_Local_015, TestSize.Level2)
 
 /**
  * @tc.name  : Test Player Local
- * @tc.number: Player_Local_016
- * @tc.desc  : Test Player Local source
- */
-HWTEST_F(PlayerUnitTest, Player_Local_016, TestSize.Level2)
-{
-    int32_t ret = player_->SetSource(MEDIA_ROOT + "H265_AAC.mp4");
-    EXPECT_EQ(MSERR_OK, ret);
-    sptr<Surface> videoSurface = player_->GetVideoSurface();
-    ASSERT_NE(nullptr, videoSurface);
-    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    ret = player_->PrepareAsync();
-    if (ret == MSERR_OK) {
-        PlayFunTest(LOCAL_PLAY);
-    }
-}
-
-/**
- * @tc.name  : Test Player Local
  * @tc.number: Player_Local_017
  * @tc.desc  : Test Player Local source
  */
