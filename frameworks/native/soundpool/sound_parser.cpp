@@ -68,17 +68,25 @@ int32_t SoundParser::DoParser()
     MEDIA_LOGI("SoundParser::DoParser start, soundID:%{public}d", soundID_);
     std::unique_lock<ffrt::mutex> lock(soundParserLock_);
     isParsing_.store(true);
+    CHECK_AND_RETURN_RET_LOG(source_ != nullptr, MSERR_INVALID_VAL, "DoParser source_ is nullptr");
+    CHECK_AND_RETURN_RET_LOG(demuxer_ != nullptr, MSERR_INVALID_VAL, "DoParser demuxer_ is nullptr");
     int32_t result = MSERR_OK;
     result = DoDemuxer(&trackFormat_);
     if (result != MSERR_OK && callback_ != nullptr) {
         MEDIA_LOGI("DoDemuxer failed, call callback");
         callback_->OnError(MSERR_UNSUPPORT_FILE);
         return MSERR_INVALID_VAL;
+    } else if (result != MSERR_OK && callback_ == nullptr) {
+        MEDIA_LOGI("DoDemuxer failed, callback is nullptr");
+        return MSERR_INVALID_VAL;
     }
     result = DoDecode(trackFormat_);
     if (result != MSERR_OK && callback_ != nullptr) {
         MEDIA_LOGI("DoDecode failed, call callback");
         callback_->OnError(MSERR_UNSUPPORT_FILE);
+        return MSERR_INVALID_VAL;
+    } else if (result != MSERR_OK && callback_ == nullptr) {
+        MEDIA_LOGI("DoDecode failed, callback is nullptr");
         return MSERR_INVALID_VAL;
     }
     MEDIA_LOGI("SoundParser::DoParser end, soundID:%{public}d", soundID_);
