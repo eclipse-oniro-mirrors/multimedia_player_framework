@@ -27,12 +27,11 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_VIDEOEDITOR,
 VideoEditorImpl::VideoEditorImpl(uint64_t id) : id_(id)
 {
     logTag_ = "editorImpl-" + std::to_string(id);
-    MEDIA_LOGI("[%{public}s] construct.", logTag_.c_str());
 }
 
 VideoEditorImpl::~VideoEditorImpl()
 {
-    MEDIA_LOGI("[%{public}s] destruct.", logTag_.c_str());
+    MEDIA_LOGD("[%{public}s] destruct.", logTag_.c_str());
     if (state_ == VideoEditorState::COMPOSITING) {
         auto err = compositeEngine_->StopComposite();
         if (err != VEFError::ERR_OK) {
@@ -98,10 +97,7 @@ VEFError VideoEditorImpl::StartComposite(const std::shared_ptr<CompositionOption
         MEDIA_LOGE("[%{public}s] start composite failed, editor is busy, state: %{public}d.", logTag_.c_str(), state_);
         return VEFError::ERR_EDITOR_IS_BUSY;
     }
-    auto resultListener = [this] (VEFResult result) {
-        this->OnCompositeResult(result);
-    };
-    VEFError err = compositeEngine_->StartComposite(options, resultListener);
+    VEFError err = compositeEngine_->StartComposite(options);
     if (err != VEFError::ERR_OK) {
         MEDIA_LOGE("[%{public}s] start composite engine failed, error: %{public}d.", logTag_.c_str(), err);
         return err;

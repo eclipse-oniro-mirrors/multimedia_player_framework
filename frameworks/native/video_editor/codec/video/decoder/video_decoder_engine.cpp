@@ -25,9 +25,9 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_VIDEOEDITOR,
 }
 
 static std::atomic<uint64_t> g_decoderId { 1 };
-std::shared_ptr<IVideoDecoderEngine> IVideoDecoderEngine::Create(int fd, std::weak_ptr<VideoDecodeCallback> cb)
+std::shared_ptr<IVideoDecoderEngine> IVideoDecoderEngine::Create(int fd, VideoDecodeCallback* cb)
 {
-    if (cb.expired()) {
+    if (cb == nullptr) {
         MEDIA_LOGE("create video decoder for video [%{public}d] failed, the parameter cb is nullptr.", fd);
         return nullptr;
     }

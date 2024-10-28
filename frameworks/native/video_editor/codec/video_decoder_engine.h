@@ -19,32 +19,32 @@
 #include <memory>
 #include "video_editor.h"
 #include "native_avcodec_base.h"
+#include "common/codec_decoder.h"
+#include "codec/audio/pcm_buffer_queue.h"
 
 namespace OHOS {
 namespace Media {
 
-enum class VideoDecodeResult : uint32_t {
-    SUCCESS,
-    FAILED,
-    CANCELED
-};
-
 class VideoDecodeCallback {
 public:
     virtual void OnDecodeFrame(uint64_t pts) = 0;
-    virtual void OnDecodeResult(VideoDecodeResult result) = 0;
+    virtual void OnDecodeResult(CodecResult result) = 0;
 };
 
 class IVideoDecoderEngine {
 public:
-    static std::shared_ptr<IVideoDecoderEngine> Create(int fd, std::weak_ptr<VideoDecodeCallback> cb);
+    static std::shared_ptr<IVideoDecoderEngine> Create(int fd, VideoDecodeCallback* cb);
 
     virtual uint64_t GetId() const = 0;
+    virtual VEFError Init() = 0;
     virtual VEFError StartDecode() = 0;
     virtual VEFError StopDecode() = 0;
-    virtual VEFError SetNativeWindow(OHNativeWindow* surfaceWindow) = 0;
+    virtual VEFError SetVideoOutputWindow(OHNativeWindow* surfaceWindow) = 0;
+    virtual void SetAudioOutputBufferQueue(std::shared_ptr<PcmBufferQueue>& queue) = 0;
     virtual OH_AVFormat* GetVideoFormat() = 0;
-    virtual int32_t GetColorRange() = 0;
+    virtual OH_AVFormat* GetAudioFormat() = 0;
+    virtual int32_t GetRotation() const = 0;
+    virtual int64_t GetVideoDuration() const = 0;
 };
 
 } // namespace Media

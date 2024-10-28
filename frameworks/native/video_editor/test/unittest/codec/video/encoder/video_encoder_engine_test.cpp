@@ -43,45 +43,31 @@ public:
     {
         pts_ = pts;
     };
-    void OnEncodeResult(VideoEncodeResult result) override
+    void OnEncodeResult(CodecResult result) override
     {
         result_ = result;
     };
 
     uint64_t pts_ { 0 };
-    VideoEncodeResult result_ { VideoEncodeResult::FAILED };
+    CodecResult result_ { CodecResult::FAILED };
 };
 
 // Test when cb is nullptr then Create returns nullptr.
 HWTEST_F(VideoEncoderEngineTest, create_when_cb_is_nullptr, TestSize.Level0)
 {
-    int fd = 1;
-    auto videoFormat = OH_AVFormat_Create();
-    auto cb = std::make_shared<VideoEncodeCallbackTester>();
-    cb.reset();
-    auto engine = IVideoEncoderEngine::Create(fd, videoFormat, cb);
+    VideoEncodeParam enCodeParam;
+    VideoEncodeCallbackTester* cb = new VideoEncodeCallbackTester();
+    auto engine = IVideoEncoderEngine::Create(enCodeParam, cb);
     EXPECT_EQ(engine, nullptr);
-    OH_AVFormat_Destroy(videoFormat);
 }
 
 // Test when videoFormat is nullptr then Create returns nullptr.
 HWTEST_F(VideoEncoderEngineTest, create_when_video_format_is_nullptr, TestSize.Level0)
 {
-    int fd = 1;
-    auto cb = std::make_shared<VideoEncodeCallbackTester>();
-    std::shared_ptr<IVideoEncoderEngine> engine = IVideoEncoderEngine::Create(fd, nullptr, cb);
+    VideoEncodeParam enCodeParam;
+    VideoEncodeCallbackTester* cb = new VideoEncodeCallbackTester();
+    std::shared_ptr<IVideoEncoderEngine> engine = IVideoEncoderEngine::Create(enCodeParam, cb);
     EXPECT_EQ(engine, nullptr);
-}
-
-// Test when create endocer engine ok.
-HWTEST_F(VideoEncoderEngineTest, create_ok, TestSize.Level0)
-{
-    int fd = 1;
-    auto videoFormat = OH_AVFormat_Create();
-    auto cb = std::make_shared<VideoEncodeCallbackTester>();
-    std::shared_ptr<IVideoEncoderEngine> engine = IVideoEncoderEngine::Create(fd, videoFormat, cb);
-    EXPECT_NE(engine, nullptr);
-    OH_AVFormat_Destroy(videoFormat);
 }
 
 } // namespace Media

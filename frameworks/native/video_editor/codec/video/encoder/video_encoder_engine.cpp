@@ -25,23 +25,25 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_VIDEOEDITOR,
 }
 
 static std::atomic<uint64_t> g_encoderId { 1 };
-std::shared_ptr<IVideoEncoderEngine> IVideoEncoderEngine::Create(int fd,
-    OH_AVFormat* videoFormat, std::weak_ptr<VideoEncodeCallback> cb)
+std::shared_ptr<IVideoEncoderEngine> IVideoEncoderEngine::Create(const VideoEncodeParam& encodeParam,
+    VideoEncodeCallback* cb)
 {
-    if (cb.expired()) {
-        MEDIA_LOGE("create video encoder for video [%{public}d] failed, the parameter cb is nullptr.", fd);
+    if (cb == nullptr) {
+        MEDIA_LOGE("create video encoder for video failed, the parameter cb is nullptr.");
         return nullptr;
     }
 
-    if (videoFormat == nullptr) {
-        MEDIA_LOGE("create video encoder for video [%{public}d] failed, the parameter videoFormat is nullptr.", fd);
+    // videoTrunkFormat cannot be empty, the video file must contain video tracks, but the audio track is optional
+    if (encodeParam.videoTrunkFormat == nullptr) {
+        MEDIA_LOGE("create encoder engine failed, videoTrunkFormat is nullptr.");
         return nullptr;
     }
 
-    auto engine = std::make_shared<VideoEncoderEngineImpl>(g_encoderId.fetch_add(1), fd, cb);
-    auto error = engine->Init(videoFormat);
+    auto engine = std::make_shared<VideoEncoderEngineImpl>(g_encoderId.fetch_add(1), cb);
+    auto error = engine->Init(encodeParam);
     if (error != VEFError::ERR_OK) {
-        MEDIA_LOGE("init video encoder[id = %{public}" PRIu64 "] failed, error: %{public}d.", engine->GetId(), error);
+        MEDIA_LOGE("init video encoder[id = %{public}" PRIu64 "] failed, error: %{public}d.",
+            engine->GetId(), error);
         return nullptr;
     }
     return engine;
