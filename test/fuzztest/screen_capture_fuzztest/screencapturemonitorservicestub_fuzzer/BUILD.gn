@@ -31,6 +31,7 @@ ohos_fuzztest("ScreenCaptureMonitorServiceStubFuzzTest") {
     "../../../../services/services/screen_capture_monitor/ipc",
     "../../../../services/services/sa_media/ipc",
     "../../../../services/services/sa_media/server",
+    "../../../../services/services/sa_media/server_manager",
     "../../../../services/include",
     "../../../../../media_foundation/interface/inner_api",
     "../../../../../media_foundation/interface/inner_api/common",
