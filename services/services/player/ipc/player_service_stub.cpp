@@ -218,7 +218,7 @@ int PlayerServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Messa
     if (itFunc != playerFuncs_.end()) {
         auto memberFunc = itFunc->second.second;
         auto funcName = itFunc->second.first;
-        if (funcName.compare("Player::SetVolume") == 0) {
+        if (funcName.compare("Player::SetVolume") == 0 || funcName.compare("Player::GetCurrentTime") == 0) {
             MEDIA_LOGD("0x%{public}06" PRIXPTR " Stub: OnRemoteRequest task: %{public}s is received",
                 FAKE_POINTER(this), funcName.c_str());
         } else {
