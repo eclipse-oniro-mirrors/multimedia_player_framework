@@ -332,15 +332,13 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::CreatePixelMapYuv(const std::sha
 
     auto surfaceBuffer = frameBuffer->memory_->GetSurfaceBuffer();
     CHECK_AND_RETURN_RET_LOG(surfaceBuffer != nullptr, nullptr, "srcSurfaceBuffer is nullptr");
-    sptr<SurfaceBuffer> mySurfaceBuffer = CopySurfaceBuffer(surfaceBuffer);
-    CHECK_AND_RETURN_RET_LOG(mySurfaceBuffer != nullptr, nullptr, "Create SurfaceBuffer failed");
 
     int32_t outputHeight = height;
     bufferMeta->Get<Tag::VIDEO_SLICE_HEIGHT>(outputHeight);
     pixelMapInfo.outputHeight = outputHeight;
     MEDIA_LOGD("pixelMapInfo.outputHeight = %{public}d", pixelMapInfo.outputHeight);
 
-    return CreatePixelMapFromSurfaceBuffer(mySurfaceBuffer, pixelMapInfo);
+    return CreatePixelMapFromSurfaceBuffer(surfaceBuffer, pixelMapInfo);
 }
 
 std::shared_ptr<PixelMap> AVMetadataHelperImpl::CreatePixelMapFromAVShareMemory(const std::shared_ptr<AVBuffer>
@@ -474,75 +472,6 @@ void AVMetadataHelperImpl::SetPixelMapYuvInfo(sptr<SurfaceBuffer> &surfaceBuffer
     yuvDataInfo.uvOffset = planes->planes[PLANE_U].offset / ratio;
 
     pixelMap->SetImageYUVInfo(yuvDataInfo);
-}
-
-sptr<SurfaceBuffer> AVMetadataHelperImpl::CopySurfaceBuffer(sptr<SurfaceBuffer> &srcSurfaceBuffer)
-{
-    CHECK_AND_RETURN_RET_LOG(srcSurfaceBuffer != nullptr, nullptr, "srcSurfaceBuffer is nullptr");
-    sptr<SurfaceBuffer> dstSurfaceBuffer = SurfaceBuffer::Create();
-    BufferRequestConfig requestConfig = {
-        .width = srcSurfaceBuffer->GetWidth(),
-        .height = srcSurfaceBuffer->GetHeight(),
-        .strideAlignment = 0x2,
-        .format = srcSurfaceBuffer->GetFormat(),  // always yuv
-        .usage = srcSurfaceBuffer->GetUsage(),
-        .timeout = 0,
-    };
-    CHECK_AND_RETURN_RET_LOG(dstSurfaceBuffer != nullptr, nullptr, "Create surfaceBuffer failed");
-    GSError allocRes = dstSurfaceBuffer->Alloc(requestConfig);
-    CHECK_AND_RETURN_RET_LOG(allocRes == 0, nullptr, "Alloc surfaceBuffer failed, ecode %{public}d", allocRes);
-
-    CopySurfaceBufferInfo(srcSurfaceBuffer, dstSurfaceBuffer);
-    int32_t copyRes = memcpy_s(dstSurfaceBuffer->GetVirAddr(), dstSurfaceBuffer->GetSize(),
-                               srcSurfaceBuffer->GetVirAddr(), srcSurfaceBuffer->GetSize());
-    CHECK_AND_RETURN_RET_LOG(copyRes == EOK, nullptr, "copy surface buffer pixels failed, copyRes %{public}d", copyRes);
-    return dstSurfaceBuffer;
-}
-
-void AVMetadataHelperImpl::CopySurfaceBufferInfo(sptr<SurfaceBuffer> &source, sptr<SurfaceBuffer> &dst)
-{
-    if (source == nullptr || dst == nullptr) {
-        MEDIA_LOGI("CopySurfaceBufferInfo failed, source or dst is nullptr");
-        return;
-    }
-    std::vector<uint8_t> hdrMetadataTypeVec;
-    std::vector<uint8_t> colorSpaceInfoVec;
-    std::vector<uint8_t> staticData;
-    std::vector<uint8_t> dynamicData;
-
-    if (source->GetMetadata(ATTRKEY_HDR_METADATA_TYPE, hdrMetadataTypeVec) == GSERROR_OK) {
-        dst->SetMetadata(ATTRKEY_HDR_METADATA_TYPE, hdrMetadataTypeVec);
-    }
-    if (source->GetMetadata(ATTRKEY_COLORSPACE_INFO, colorSpaceInfoVec) == GSERROR_OK) {
-        dst->SetMetadata(ATTRKEY_COLORSPACE_INFO, colorSpaceInfoVec);
-    }
-    if (GetSbStaticMetadata(source, staticData) && (staticData.size() > 0)) {
-        SetSbStaticMetadata(dst, staticData);
-    }
-    if (GetSbDynamicMetadata(source, dynamicData) && (dynamicData.size()) > 0) {
-        SetSbDynamicMetadata(dst, dynamicData);
-    }
-}
-
-bool AVMetadataHelperImpl::GetSbStaticMetadata(sptr<SurfaceBuffer> &buffer, std::vector<uint8_t> &staticMetadata)
-{
-    return buffer->GetMetadata(ATTRKEY_HDR_STATIC_METADATA, staticMetadata) == GSERROR_OK;
-}
-
-bool AVMetadataHelperImpl::GetSbDynamicMetadata(sptr<SurfaceBuffer> &buffer, std::vector<uint8_t> &dynamicMetadata)
-{
-    return buffer->GetMetadata(ATTRKEY_HDR_DYNAMIC_METADATA, dynamicMetadata) == GSERROR_OK;
-}
-
-bool AVMetadataHelperImpl::SetSbStaticMetadata(sptr<SurfaceBuffer> &buffer, const std::vector<uint8_t> &staticMetadata)
-{
-    return buffer->SetMetadata(ATTRKEY_HDR_STATIC_METADATA, staticMetadata) == GSERROR_OK;
-}
-
-bool AVMetadataHelperImpl::SetSbDynamicMetadata(sptr<SurfaceBuffer> &buffer,
-                                                const std::vector<uint8_t> &dynamicMetadata)
-{
-    return buffer->SetMetadata(ATTRKEY_HDR_DYNAMIC_METADATA, dynamicMetadata) == GSERROR_OK;
 }
 
 std::shared_ptr<AVMetadataHelper> AVMetadataHelperFactory::CreateAVMetadataHelper()

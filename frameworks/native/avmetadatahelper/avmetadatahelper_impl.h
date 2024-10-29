@@ -85,7 +85,6 @@ private:
     static std::chrono::milliseconds batchHandleTimestamp;
     void ReportSceneCode(Scene scene);
 
-    sptr<SurfaceBuffer> CopySurfaceBuffer(sptr<SurfaceBuffer> &srcSurfaceBuffer);
     std::shared_ptr<PixelMap> CreatePixelMapYuv(const std::shared_ptr<AVBuffer> &frameBuffer,
                                                 PixelMapInfo &pixelMapInfo);
     std::shared_ptr<PixelMap> CreatePixelMapFromAVShareMemory(const std::shared_ptr<AVBuffer> &frameBuffer,
@@ -96,11 +95,6 @@ private:
     void SetPixelMapYuvInfo(sptr<SurfaceBuffer> &surfaceBuffer, std::shared_ptr<PixelMap> pixelMap,
                             PixelMapInfo &pixelMapInfo);
     std::string pixelFormatToString(PixelFormat pixelFormat);
-    void CopySurfaceBufferInfo(sptr<SurfaceBuffer> &source, sptr<SurfaceBuffer> &dst);
-    bool GetSbStaticMetadata(sptr<SurfaceBuffer> &buffer, std::vector<uint8_t> &staticMetadata);
-    bool GetSbDynamicMetadata(sptr<SurfaceBuffer> &buffer, std::vector<uint8_t> &dynamicMetadata);
-    bool SetSbStaticMetadata(sptr<SurfaceBuffer> &buffer, const std::vector<uint8_t> &staticMetadata);
-    bool SetSbDynamicMetadata(sptr<SurfaceBuffer> &buffer, const std::vector<uint8_t> &dynamicMetadata);
     static void ScalePixelMap(std::shared_ptr<PixelMap> &pixelMap, PixelMapInfo &info, const PixelMapParams &param);
     int32_t CopySurfaceBufferToPixelMap(sptr<SurfaceBuffer> &SurfaceBuffer,
                                         std::shared_ptr<PixelMap> pixelMap,
