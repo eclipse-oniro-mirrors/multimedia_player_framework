@@ -1528,12 +1528,12 @@ int32_t ScreenCaptureServer::StartNotification()
     std::shared_ptr<NotificationContent> content =
         std::make_shared<NotificationContent>(localLiveViewContent_);
 
-    auto uid = getuid();
     request.SetSlotType(NotificationConstant::SlotType::LIVE_VIEW);
     notificationId_ = sessionId_;
     request.SetNotificationId(notificationId_);
     request.SetContent(content);
-    request.SetCreatorUid(uid);
+    request.SetCreatorUid(AV_SCREEN_CAPTURE_SESSION_UID);
+    request.SetOwnerUid(AV_SCREEN_CAPTURE_SESSION_UID);
     request.SetUnremovable(true);
     request.SetInProgress(true);
 
@@ -1542,7 +1542,8 @@ int32_t ScreenCaptureServer::StartNotification()
     request.SetBadgeIconStyle(NotificationRequest::BadgeStyle::LITTLE);
 
     result = NotificationHelper::PublishNotification(request);
-    MEDIA_LOGI("Screencapture service PublishNotification uid %{public}d, result %{public}d", uid, result);
+    MEDIA_LOGI("Screencapture service PublishNotification uid %{public}d, result %{public}d",
+        AV_SCREEN_CAPTURE_SESSION_UID, result);
     return result;
 }
 
@@ -1620,11 +1621,11 @@ void ScreenCaptureServer::UpdateMicrophoneEnabled()
     std::shared_ptr<NotificationContent> content =
         std::make_shared<NotificationContent>(localLiveViewContent_);
 
-    auto uid = getuid();
     request.SetSlotType(NotificationConstant::SlotType::LIVE_VIEW);
     request.SetNotificationId(notificationId_);
     request.SetContent(content);
-    request.SetCreatorUid(uid);
+    request.SetCreatorUid(AV_SCREEN_CAPTURE_SESSION_UID);
+    request.SetOwnerUid(AV_SCREEN_CAPTURE_SESSION_UID);
     request.SetUnremovable(true);
     request.SetInProgress(true);
 
@@ -1633,7 +1634,8 @@ void ScreenCaptureServer::UpdateMicrophoneEnabled()
     request.SetBadgeIconStyle(NotificationRequest::BadgeStyle::LITTLE);
 
     int32_t result = NotificationHelper::PublishNotification(request);
-    MEDIA_LOGI("Screencapture service UpdateMicrophoneEnabled uid %{public}d, result %{public}d", uid, result);
+    MEDIA_LOGI("Screencapture service UpdateMicrophoneEnabled uid %{public}d, result %{public}d",
+        AV_SCREEN_CAPTURE_SESSION_UID, result);
     micCount_.store(micCount_.load() + 1);
 }
 
