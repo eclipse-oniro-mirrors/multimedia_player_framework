@@ -26,13 +26,6 @@
 #include "event_queue.h"
 #include "avplayer_callback.h"
 
-#ifndef CROSS_PLATFORM
-#include "os_account_manager.h"
-#include "bundle_mgr_interface.h"
-#include "system_ability_definition.h"
-#include "iservice_registry.h"
-#include "ipc_skeleton.h"
-#endif
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_ONLY_PRERELEASE, LOG_DOMAIN_PLAYER, "AVPlayerCallback" };
