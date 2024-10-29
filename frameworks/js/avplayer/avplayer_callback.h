@@ -84,8 +84,7 @@ private:
     int32_t SetDrmInfoData(const uint8_t *drmInfoAddr, int32_t infoCount,
         std::multimap<std::string, std::vector<uint8_t>> &drmInfoMap);
     bool IsAPI14IOError(MediaServiceExtErrCodeAPI9 error);
-    int32_t GetApiversion(int32_t uid);
-    int32_t appUid_ = 0;
+    int32_t apiTargetVersion = -1;
 
     std::mutex mutex_;
     napi_env env_ = nullptr;
