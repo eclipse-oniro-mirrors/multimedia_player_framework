@@ -45,6 +45,7 @@ config("screen_capture_test_config") {
     "./capi/include",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/sa_media/ipc",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/sa_media/server",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/sa_media/server_manager",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/common",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/player/ipc",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/player/player_mem_manage",

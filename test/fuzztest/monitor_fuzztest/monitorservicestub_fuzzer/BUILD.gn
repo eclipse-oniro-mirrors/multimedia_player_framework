@@ -32,6 +32,7 @@ ohos_fuzztest("MonitorServiceStubFuzzTest") {
     "../../../../services/services/monitor/ipc",
     "../../../../services/services/sa_media/ipc",
     "../../../../services/services/sa_media/server",
+    "../../../../services/services/sa_media/server_manager",
     "../../../../../media_foundation/interface/inner_api",
     "../../../../../media_foundation/interface/inner_api/common",
   ]

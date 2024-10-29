@@ -47,6 +47,7 @@ config("media_service_config") {
   include_dirs = [
     "sa_media/ipc",
     "sa_media/server",
+    "sa_media/server_manager",
     "common",
     "player/ipc",
     "player/player_mem_manage",
@@ -121,7 +122,7 @@ ohos_shared_library("media_service") {
     "sa_media/ipc/media_parcel.cpp",
     "sa_media/ipc/media_service_stub.cpp",
     "sa_media/server/media_server.cpp",
-    "sa_media/server/media_server_manager.cpp",
+    "sa_media/server_manager/media_server_manager.cpp",
   ]
 
   if (player_framework_support_efficiency_manager) {

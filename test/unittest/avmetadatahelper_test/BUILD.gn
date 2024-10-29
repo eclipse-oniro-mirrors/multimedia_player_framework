@@ -32,6 +32,7 @@ ohos_unittest("avmetadatahelper_unit_test") {
   include_dirs = [
     "sa_media/ipc",
     "sa_media/server",
+    "sa_media/server_manager",
     "common",
     "player/ipc",
     "player/player_mem_manage",
