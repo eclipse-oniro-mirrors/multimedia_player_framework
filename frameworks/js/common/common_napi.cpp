@@ -966,7 +966,7 @@ napi_status CommonNapi::SetValueDeviceInfo(const napi_env &env, const AudioStand
 {
     std::vector<std::shared_ptr<AudioStandard::AudioDeviceDescriptor>> deviceDescriptors;
     std::shared_ptr<AudioStandard::AudioDeviceDescriptor> audioDeviceDescriptor =
-        make_shared<AudioDeviceDescriptor>();
+        std::make_shared<AudioStandard::AudioDeviceDescriptor>();
     CHECK_AND_RETURN_RET_LOG(audioDeviceDescriptor != nullptr, napi_generic_failure,
         "audioDeviceDescriptor malloc failed");
     ConvertDeviceInfoToAudioDeviceDescriptor(audioDeviceDescriptor, deviceInfo);
