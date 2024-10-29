@@ -382,6 +382,13 @@ int32_t PlayerImpl::GetDuration(int32_t &duration)
     return playerService_->GetDuration(duration);
 }
 
+int32_t PlayerImpl::GetApiVersion(int32_t &apiVersion)
+{
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " GetApiVersion in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerService_->GetApiVersion(apiVersion);
+}
+
 #ifdef SUPPORT_VIDEO
 int32_t PlayerImpl::SetVideoSurface(sptr<Surface> surface)
 {

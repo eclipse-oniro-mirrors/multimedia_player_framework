@@ -120,6 +120,12 @@ public:
         (void)status;
         return 0;
     }
+
+    virtual int32_t GetApiVersion(int32_t &apiVersion)
+    {
+        (void)apiVersion;
+        return 0;
+    }
     /**
      * IPC code ID
      */
@@ -171,6 +177,7 @@ public:
         SET_MAX_AMPLITUDE_CB_STATUS,
         SET_DEVICE_CHANGE_CB_STATUS,
         MAX_IPC_ID,
+        GET_API_VERSION,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardPlayerService");

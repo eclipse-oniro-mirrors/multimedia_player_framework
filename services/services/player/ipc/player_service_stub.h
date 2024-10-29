@@ -65,6 +65,7 @@ public:
     int32_t GetSubtitleTrackInfo(std::vector<Format> &subtitleTrack) override;
     int32_t GetVideoHeight() override;
     int32_t GetDuration(int32_t &duration) override;
+    int32_t GetApiVersion(int32_t &apiVersion) override;
     int32_t SetPlaybackStrategy(AVPlayStrategy playbackStrategy) override;
     int32_t SetMediaMuted(MediaType mediaType, bool isMuted) override;
 #ifdef SUPPORT_VIDEO
@@ -137,6 +138,7 @@ private:
     int32_t GetVideoWidth(MessageParcel &data, MessageParcel &reply);
     int32_t GetVideoHeight(MessageParcel &data, MessageParcel &reply);
     int32_t GetDuration(MessageParcel &data, MessageParcel &reply);
+    int32_t GetApiVersion(MessageParcel &data, MessageParcel &reply);
     int32_t SetPlaybackSpeed(MessageParcel &data, MessageParcel &reply);
     int32_t GetPlaybackSpeed(MessageParcel &data, MessageParcel &reply);
 #ifdef SUPPORT_VIDEO
