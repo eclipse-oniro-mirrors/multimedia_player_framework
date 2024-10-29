@@ -32,6 +32,7 @@ using namespace OHOS::AudioStandard;
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_METADATA, "AVMetadataExtractorNapi"};
+constexpr uint8_t ARG_ONE = 1;
 constexpr uint8_t ARG_TWO = 2;
 }
 
@@ -328,7 +329,7 @@ void AVMetadataExtractorNapi::FetchArtPictureComplete(napi_env env, napi_status 
 void AVMetadataExtractorNapi::CommonCallbackRoutine(napi_env env, AVMetadataExtractorAsyncContext* &asyncContext,
     const napi_value &valueParam)
 {
-    napi_value result[2] = {0};
+    napi_value result[ARG_TWO] = {0};
     napi_value retVal;
     napi_value callback = nullptr;
 
@@ -424,8 +425,8 @@ napi_value AVMetadataExtractorNapi::JsSetAVFileDescriptor(napi_env env, napi_cal
         return result;
     }
 
-    bool notValidParam = argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object ||
-        !CommonNapi::GetFdArgument(env, args[0], extractor->fileDescriptor_);
+    bool notValidParam = argCount < ARG_ONE || napi_typeof(env, args[0], &valueType) != napi_ok
+        || valueType != napi_object || !CommonNapi::GetFdArgument(env, args[0], extractor->fileDescriptor_);
     CHECK_AND_RETURN_RET_LOG(!notValidParam, result, "Invalid file descriptor, return");
     CHECK_AND_RETURN_RET_LOG(extractor->helper_, result, "Invalid AVMetadataExtractorNapi.");
 
@@ -463,7 +464,7 @@ napi_value AVMetadataExtractorNapi::JsSetDataSrc(napi_env env, napi_callback_inf
     MEDIA_LOGI("JsSetDataSrc In");
 
     napi_value args[1] = { nullptr };
-    size_t argCount = 1;
+    size_t argCount = ARG_ONE;
     AVMetadataExtractorNapi *jsMetaHelper
         = AVMetadataExtractorNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(jsMetaHelper != nullptr, result, "failed to GetJsInstanceWithParameter");
@@ -559,8 +560,8 @@ napi_value AVMetadataExtractorNapi::JSGetTimeByFrameIndex(napi_env env, napi_cal
     napi_get_undefined(env, &result);
     MEDIA_LOGI("frame to time");
 
-    napi_value args[2] = { nullptr };
-    size_t argCount = 2;
+    napi_value args[ARG_TWO] = { nullptr };
+    size_t argCount = ARG_TWO;
     AVMetadataExtractorNapi* extractor
         = AVMetadataExtractorNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(extractor != nullptr, result, "failed to GetJsInstance");
@@ -623,8 +624,8 @@ napi_value AVMetadataExtractorNapi::JSGetFrameIndexByTime(napi_env env, napi_cal
     napi_get_undefined(env, &result);
     MEDIA_LOGI("time to frame");
 
-    napi_value args[2] = { nullptr };
-    size_t argCount = 2;
+    napi_value args[ARG_TWO] = { nullptr };
+    size_t argCount = ARG_TWO;
     AVMetadataExtractorNapi* extractor
         = AVMetadataExtractorNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(extractor != nullptr, result, "failed to GetJsInstance");

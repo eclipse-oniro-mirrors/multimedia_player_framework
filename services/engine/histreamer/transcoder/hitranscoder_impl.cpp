@@ -199,8 +199,8 @@ void HiTransCoderImpl::ConfigureMetaDataToTrackFormat(const std::shared_ptr<Meta
    
     bool isInitializeVideoEncFormat = false;
     bool isInitializeAudioEncFormat = false;
-    (void)SetValueByType(globalInfo, muxerFormat_);
     bool hasVideoTrack = false;
+    (void)SetValueByType(globalInfo, muxerFormat_);
     for (size_t index = 0; index < trackInfos.size(); index++) {
         MEDIA_LOG_I("trackInfos index: %{public}zu", index);
         std::shared_ptr<Meta> meta = trackInfos[index];
@@ -404,7 +404,7 @@ Status HiTransCoderImpl::SetTrackMime(const std::vector<std::shared_ptr<Meta>> &
         std::string audioMime;
         if (trackMime.find("video/") == 0 && !videoEncFormat_->GetData(Tag::MIME_TYPE, videoMime)) {
             videoEncFormat_->Set<Tag::MIME_TYPE>(trackMime);
-        } else if (trackMime.find("audio/" == 0) && !audioEncFormat_->GetData(Tag::MIME_TYPE, audioMime)) {
+        } else if (trackMime.find("audio/") == 0 && !audioEncFormat_->GetData(Tag::MIME_TYPE, audioMime)) {
             audioEncFormat_->Set<Tag::MIME_TYPE>(trackMime);
         }
     }
@@ -878,8 +878,8 @@ Status HiTransCoderImpl::LinkMuxerFilter(const std::shared_ptr<Pipeline::Filter>
             Status::ERROR_UNKNOWN, "muxerFilter SetOutputParameter fail");
         muxerFilter_->SetParameter(muxerFormat_);
         muxerFilter_->SetTransCoderMode();
-        MEDIA_LOG_I("HiTransCoder CloseFD, fd is %{public}d", fd_);
-        if (fd_ > 0) {
+        MEDIA_LOG_I("HiTransCoder CloseFd, fd is %{public}d", fd_);
+        if (fd_ >= 0) {
             (void)::close(fd_);
             fd_ = -1;
         }

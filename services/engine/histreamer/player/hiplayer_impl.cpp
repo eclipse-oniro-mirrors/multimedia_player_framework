@@ -93,7 +93,7 @@ HiPlayerImpl::HiPlayerImpl(int32_t appUid, int32_t appPid, uint32_t appTokenId, 
     : appUid_(appUid), appPid_(appPid), appTokenId_(appTokenId), appFullTokenId_(appFullTokenId)
 {
     MEDIA_LOG_D("hiPlayerImpl ctor appUid " PUBLIC_LOG_D32 " appPid " PUBLIC_LOG_D32
-            " appTokenId %{private}" PRIu32 " appFullTokenId %{private}" PRIu64,
+	    " appTokenId %{private}" PRIu32 " appFullTokenId %{private}" PRIu64,
         appUid_, appPid_, appTokenId_, appFullTokenId_);
     playerId_ = std::string("HiPlayer_") + std::to_string(OHOS::Media::Pipeline::Pipeline::GetNextPipelineId());
     pipeline_ = std::make_shared<OHOS::Media::Pipeline::Pipeline>();
@@ -667,9 +667,6 @@ void HiPlayerImpl::SetInterruptState(bool isInterruptNeeded)
     }
     if (seekAgent_ != nullptr) {
         seekAgent_->SetInterruptState(isInterruptNeeded);
-    }
-    if (videoDecoder_ != nullptr) {
-        videoDecoder_->SetInterruptState(isInterruptNeeded);
     }
 }
 

@@ -420,6 +420,28 @@ HWTEST_F(PlayerUnitTest, Player_SetSource_009, TestSize.Level2)
 
 /**
  * @tc.name  : Test Player SetSource API
+ * @tc.number: Player_SetSource_010
+ * @tc.desc  : Test Player SetSource interface
+ */
+HWTEST_F(PlayerUnitTest, Player_SetSource_010, TestSize.Level2)
+{
+    int32_t ret = player_->SetSource("http://domain/H264_MP3.mp4");
+    ASSERT_NE(MSERR_OK, ret);
+}
+
+/**
+ * @tc.name  : Test Player SetSource API
+ * @tc.number: Player_SetSource_011
+ * @tc.desc  : Test Player SetSource interface
+ */
+HWTEST_F(PlayerUnitTest, Player_SetSource_011, TestSize.Level2)
+{
+    int32_t ret = player_->SetSource("https://domain/H264_MP3.mp4");
+    ASSERT_NE(MSERR_OK, ret);
+}
+
+/**
+ * @tc.name  : Test Player SetSource API
  * @tc.number: Player_SetSource_012
  * @tc.desc  : Test Player SetSource interface
  */
@@ -1299,6 +1321,46 @@ HWTEST_F(PlayerUnitTest, Player_GetAudioTrackInfo_001, TestSize.Level2)
 }
 
 /**
+ * @tc.name  : Test SelectTrack and DeselectTrack API
+ * @tc.number: Player_SelectTrack_001
+ * @tc.desc  : Test Player SelectTrack and DeselectTrack
+ */
+HWTEST_F(PlayerUnitTest, Player_SelectTrack_001, TestSize.Level0)
+{
+    bool trackChange = false;
+    std::vector<Format> audioTrack;
+    std::vector<int32_t> audioTrackIds;
+    int32_t currentAudioTrackIndex = -1;
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE2));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->SetVolume(1, 1));
+    sleep(PLAYING_TIME_2_SEC);
+    EXPECT_EQ(MSERR_OK, player_->GetCurrentTrack(MediaType::MEDIA_TYPE_AUD, currentAudioTrackIndex));
+    EXPECT_EQ(MSERR_OK, player_->GetAudioTrackInfo(audioTrack));
+    for (Format audioTrackFormat: audioTrack) {
+        int32_t trackIndex = -1;
+        audioTrackFormat.GetIntValue("track_index", trackIndex);
+        audioTrackIds.push_back(trackIndex);
+    }
+    for (int32_t trackIndex: audioTrackIds) {
+        if (trackIndex != currentAudioTrackIndex) {
+            trackChange = false;
+            EXPECT_EQ(MSERR_OK, player_->SelectTrack(trackIndex, trackChange));
+            EXPECT_EQ(trackChange, true);
+            EXPECT_EQ(MSERR_OK, player_->GetCurrentTrack(MediaType::MEDIA_TYPE_AUD, currentAudioTrackIndex));
+            sleep(PLAYING_TIME_2_SEC);
+            trackChange = false;
+            EXPECT_EQ(MSERR_OK, player_->DeselectTrack(currentAudioTrackIndex, trackChange));
+            EXPECT_EQ(trackChange, true);
+            EXPECT_EQ(MSERR_OK, player_->GetCurrentTrack(MediaType::MEDIA_TYPE_AUD, currentAudioTrackIndex));
+            sleep(PLAYING_TIME_2_SEC);
+        }
+    }
+    EXPECT_EQ(MSERR_OK, player_->Stop());
+}
+
+/**
  * @tc.name  : Test SelectTrack API
  * @tc.number: Player_SelectTrack_002
  * @tc.desc  : Test Player SelectTrack invalid trackId
@@ -1651,6 +1713,39 @@ HWTEST_F(PlayerUnitTest, Player_SetRendererInfo_001, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->SetParameter(format));
     EXPECT_EQ(MSERR_OK, player_->Prepare());
     EXPECT_EQ(MSERR_OK, player_->Play());
+}
+
+/**
+ * @tc.name  : Test SetInterrupt API
+ * @tc.number: Player_SetInterrupt_001
+ * @tc.desc  : Test Player SetInterrupt
+ */
+HWTEST_F(PlayerUnitTest, Player_SetInterrupt_001, TestSize.Level0)
+{
+    Format format;
+    int32_t mode = 1;
+    int32_t type = 1;
+    std::shared_ptr<PlayerMock> player = nullptr;
+    std::shared_ptr<PlayerCallbackTest> callback = nullptr;
+    callback = std::make_shared<PlayerCallbackTest>();
+    ASSERT_NE(nullptr, callback);
+    player = std::make_shared<PlayerMock>(callback);
+    ASSERT_NE(nullptr, player);
+    EXPECT_TRUE(player->CreatePlayer());
+    EXPECT_EQ(MSERR_OK, player->SetPlayerCallback(callback));
+    ASSERT_EQ(MSERR_OK, player->SetSource(MEDIA_ROOT + "01.mp3"));
+    EXPECT_EQ(MSERR_OK, player->Prepare());
+
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    (void)format.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_MODE, mode);
+    (void)format.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_TYPE, type);
+    EXPECT_EQ(MSERR_OK, player->SetParameter(format));
+    EXPECT_EQ(MSERR_OK, player->Play());
+    sleep(PLAYING_TIME_2_SEC);
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    sleep(PLAYING_TIME_2_SEC);
+    EXPECT_EQ(MSERR_OK, player->ReleaseSync());
 }
 
 /**
@@ -2990,6 +3085,29 @@ HWTEST_F(PlayerUnitTest, Player_SetParameter_003, TestSize.Level0)
 }
 
 /**
+ * @tc.name  : Test SetPlayRange [0, 600]
+ * @tc.number: Player_SetPlayRange_001
+ * @tc.desc  : Test Player SetPlayRange interface
+ */
+HWTEST_F(PlayerUnitTest, Player_SetPlayRange_001, TestSize.Level0)
+{
+    int32_t duration = 0;
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->SetPlayRange(0, 600));
+    EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
+    EXPECT_EQ(MSERR_OK, player_->GetDuration(duration));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_TRUE(player_->IsPlaying());
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+    EXPECT_EQ(MSERR_OK, player_->SetPlayRange(0, duration));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+}
+ 
+/**
  * @tc.name  : Test SetPlayRange [-2, -1]
  * @tc.number: Player_SetPlayRange_003
  * @tc.desc  : Test Player SetPlayRange interface
@@ -3029,6 +3147,26 @@ HWTEST_F(PlayerUnitTest, Player_SetPlayRange_005, TestSize.Level0)
     ASSERT_NE(nullptr, videoSurface);
     EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
     ASSERT_NE(MSERR_OK, player_->SetPlayRange(-1, 0));
+}
+ 
+/**
+ * @tc.name  : Test SetPlayRange [100, 2]
+ * @tc.number: Player_SetPlayRange_007
+ * @tc.desc  : Test Player SetPlayRange interface
+ */
+HWTEST_F(PlayerUnitTest, Player_SetPlayRange_007, TestSize.Level0)
+{
+    int32_t duration = 0;
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
+    EXPECT_EQ(MSERR_OK, player_->GetDuration(duration));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_TRUE(player_->IsPlaying());
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+    ASSERT_NE(MSERR_OK, player_->SetPlayRange(100, 2));
 }
  
 /**
