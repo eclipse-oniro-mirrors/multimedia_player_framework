@@ -113,8 +113,6 @@ void PlayerServiceStub::FillPlayerFuncPart1()
         [this](MessageParcel &data, MessageParcel &reply) { return GetCurrentTime(data, reply); } };
     playerFuncs_[GET_DURATION] = { "GetDuration",
         [this](MessageParcel &data, MessageParcel &reply) { return GetDuration(data, reply); } };
-    playerFuncs_[GET_API_VERSION] = { "GetApiVersion",
-        [this](MessageParcel &data, MessageParcel &reply) { return GetApiVersion(data, reply); } };
     playerFuncs_[SET_PLAYERBACK_SPEED] = { "SetPlaybackSpeed",
         [this](MessageParcel &data, MessageParcel &reply) { return SetPlaybackSpeed(data, reply); } };
     playerFuncs_[GET_PLAYERBACK_SPEED] = { "GetPlaybackSpeed",
@@ -181,6 +179,8 @@ void PlayerServiceStub::FillPlayerFuncPart2()
         [this](MessageParcel &data, MessageParcel &reply) { return SetDeviceChangeCbStatus(data, reply); } };
     playerFuncs_[GET_LIVES_CURRENT_TIME] = { "GetPlaybackPosition",
         [this](MessageParcel &data, MessageParcel &reply) { return GetPlaybackPosition(data, reply); } };
+    playerFuncs_[GET_API_VERSION] = { "GetApiVersion",
+        [this](MessageParcel &data, MessageParcel &reply) { return GetApiVersion(data, reply); } };
 }
 
 int32_t PlayerServiceStub::Init()
