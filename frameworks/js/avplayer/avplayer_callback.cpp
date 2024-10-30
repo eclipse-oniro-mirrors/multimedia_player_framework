@@ -30,6 +30,7 @@
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_ONLY_PRERELEASE, LOG_DOMAIN_PLAYER, "AVPlayerCallback" };
     int32_t API_VERSION_14 = 14;
+    static int32_t apiVersion_ = -1;
     std::set<int32_t> API14_EXT_IO_ERRORS = {
         OHOS::Media::MSERR_EXT_API14_IO_CANNOT_FIND_HOST,
         OHOS::Media::MSERR_EXT_API14_IO_CONNECTION_TIMEOUT,
