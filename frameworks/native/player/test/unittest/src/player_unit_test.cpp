@@ -539,8 +539,7 @@ void PlayerUnitTest::MediaServiceErrCodeTest(MediaServiceErrCode code)
         EXPECT_EQ("extend error:" + std::to_string(static_cast<int32_t>(code - MSERR_EXTEND_START)),
             MSErrorToString(code));
     } else {
-        EXPECT_EQ("invalid error code:" + std::to_string(static_cast<int32_t>(code)),
-            MSErrorToString(code));
+        EXPECT_EQ("invalid error code:" + std::to_string(static_cast<int32_t>(code)), MSErrorToString(code));
     }
 
     if (MSERRCODE_INFOS.count(code) != 0 && MSERRCODE_TO_EXTERRORCODE.count(code) != 0 &&
@@ -3129,6 +3128,7 @@ HWTEST_F(PlayerUnitTest, Player_Media_Error, TestSize.Level0)
         code = (MediaServiceErrCode)(code + 1)) {
         MediaServiceErrCodeTest(code);
     }
+    MediaServiceErrCodeTest(MSERR_EXTEND_START);
 
     for (auto code = MSERR_EXT_OK; code <= MSERR_EXT_UNSUPPORT; code = (MediaServiceExtErrCode)(code + 1)) {
         EXPECT_EQ(MSEXTERRCODE_INFOS.at(code), MSExtErrorToString(code));
