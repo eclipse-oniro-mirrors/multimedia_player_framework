@@ -3122,14 +3122,13 @@ HWTEST_F(PlayerUnitTest, Player_Media_Error, TestSize.Level0)
 {
     std::array<MediaServiceErrCode, 5> errCodes = {MSERR_OK, MSERR_NO_MEMORY, MSERR_INVALID_OPERATION,
         MSERR_INVALID_VAL, MSERR_UNKNOWN};
-    for (const auto& errCode : errCodes) {
+    for (const auto& code : errCodes) {
         MediaServiceExtErrCodeTest(code);
     }
-    for (MediaServiceErrCode code = MSERR_SERVICE_DIED; code <= MSERR_EXT_UNSUPPORT;
+    for (MediaServiceErrCode code = MSERR_SERVICE_DIED; code <= MSERR_EXTEND_START;
         code = (MediaServiceErrCode)(code + 1)) {
         MediaServiceExtErrCodeTest(code);
     }
-    MediaServiceExtErrCodeTest(MSERR_EXTEND_START);
 
     for (auto code = MSERR_EXT_OK; code <= MSERR_EXT_UNSUPPORT; code = (MediaServiceExtErrCode)(code + 1)) {
         EXPECT_EQ(MSEXTERRCODE_INFOS.at(code), MSExtErrorToString(code));
@@ -3142,7 +3141,7 @@ HWTEST_F(PlayerUnitTest, Player_Media_Error, TestSize.Level0)
         MediaServiceExtErrCodeAPI9Test(errCodeApi9);
     }
     for (auto code = MSERR_EXT_API9_NO_MEMORY;
-        code <= MESERR_EXT_API9_AUDIO_INTERRUPTED; code = (MediaServiceExtErrCodeAPI9)(code + 1))
+        code <= MSERR_EXT_API9_AUDIO_INTERRUPTED; code = (MediaServiceExtErrCodeAPI9)(code + 1))
         MediaServiceExtErrCodeAPI9Test(code);
     }
 }
