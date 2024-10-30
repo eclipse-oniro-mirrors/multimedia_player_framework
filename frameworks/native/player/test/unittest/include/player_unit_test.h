@@ -38,6 +38,8 @@ protected:
     void PlayFunTest(const std::string &protocol = PlayerTestParam::LOCAL_PLAY);
     void NoRunPlayFunTest(const std::string &protocol = PlayerTestParam::LOCAL_PLAY);
     void GetSetParaFunTest();
+    void MediaServiceExtErrCodeTest(MediaServiceExtErrCode code);
+    void MediaServiceExtErrCodeAPI9Test(MediaServiceExtErrCodeAPI9 code);
 };
 } // namespace Media
 } // namespace OHOS
