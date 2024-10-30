@@ -86,6 +86,7 @@ private:
         std::multimap<std::string, std::vector<uint8_t>> &drmInfoMap);
     bool IsAPI14IOError(MediaServiceExtErrCodeAPI9 error);
     static int32_t apiVersion_ = -1;
+    bool flag_ = true;
 
     std::mutex mutex_;
     napi_env env_ = nullptr;

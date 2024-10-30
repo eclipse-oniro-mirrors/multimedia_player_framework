@@ -750,8 +750,9 @@ bool AVPlayerCallback::IsAPI14IOError(MediaServiceExtErrCodeAPI9 error)
 
 void AVPlayerCallback::OnError(int32_t errorCode, const std::string &errorMsg)
 {
-    if (listener_ != nullptr) {
+    if (listener_ != nullptr && flag_) {
         apiVersion_ = listener_->GetJsApiVersion();
+        flag_ = false;
     }
     MediaServiceExtErrCodeAPI9 errorCodeApi9 = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errorCode));
     if (errorCodeApi9 == MSERR_EXT_API9_NO_PERMISSION ||
