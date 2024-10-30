@@ -531,7 +531,7 @@ void PlayerUnitTest::GetSetParaFunTest()
     }
 }
 
-void PlayerUnitTest::MediaServiceExtErrCodeTest(MediaServiceExtErrCode code)
+void PlayerUnitTest::MediaServiceErrCodeTest(MediaServiceErrCode code)
 {
     if (MSERRCODE_INFOS.count(code) != 0) {
         EXPECT_EQ(MSERRCODE_INFOS.at(code), MSErrorToString(code));
