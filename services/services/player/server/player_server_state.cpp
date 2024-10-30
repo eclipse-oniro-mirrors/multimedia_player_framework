@@ -404,8 +404,9 @@ void PlayerServer::PlayingState::StateEnter()
     AccountSA::OsAccountManager::IsOsAccountForeground(userId, isForeground);
     MEDIA_LOGI("PlayingState userId %{public}d isForeground %{public}d isBootCompleted %{public}d",
         userId, isForeground, isBootCompleted);
-    if (!isForeground) {
-        server_.Pause();
+    if (!isForeground && !server_.GetInterruptState()) {
+        server_.OnSystemOperation(
+            PlayerOnSystemOperationType::OPERATION_TYPE_PAUSE, PlayerOperationReason::OPERATION_REASON_USER_BACKGROUND);
         return;
     }
     std::shared_ptr<CommonEventReceiver> receiver = server_.GetCommonEventReceiver();
