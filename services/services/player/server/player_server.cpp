@@ -94,6 +94,7 @@ int32_t PlayerServer::Init()
     appUid_ = IPCSkeleton::GetCallingUid();
     appPid_ = IPCSkeleton::GetCallingPid();
     MEDIA_LOGD("Get app uid: %{public}d, app pid: %{public}d, app tokenId: %{private}u", appUid_, appPid_, appTokenId_);
+    apiVersion_ = GetApiInfo(appUid_);
 
     PlayerServerStateMachine::Init(idleState_);
 
@@ -1008,6 +1009,13 @@ int32_t PlayerServer::GetDuration(int32_t &duration)
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine GetDuration Failed!");
     }
     MEDIA_LOGD("PlayerServer GetDuration %{public}d", duration);
+    return MSERR_OK;
+}
+
+int32_t PlayerServer::GetApiVersion(int32_t &apiVersion)
+{
+    apiVersion = apiVersion_;
+    MEDIA_LOGD("PlayerServer GetApiVersion %{public}d", apiVersion);
     return MSERR_OK;
 }
 

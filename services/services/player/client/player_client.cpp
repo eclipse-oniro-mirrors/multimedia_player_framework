@@ -331,6 +331,13 @@ int32_t PlayerClient::GetDuration(int32_t &duration)
     return playerProxy_->GetDuration(duration);
 }
 
+int32_t PlayerClient::GetApiVersion(int32_t &apiVersion)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerProxy_->GetApiVersion(apiVersion);
+}
+
 #ifdef SUPPORT_VIDEO
 int32_t PlayerClient::SetVideoSurface(sptr<Surface> surface)
 {
