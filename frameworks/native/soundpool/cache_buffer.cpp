@@ -107,14 +107,10 @@ std::unique_ptr<AudioStandard::AudioRenderer> CacheBuffer::CreateAudioRenderer(c
         audioRenderer->SetBufferDuration(bufferDuration);
         MEDIA_LOGI("Using buffer size:%{public}zu, duration %{public}zu", targetSize, bufferDuration);
     }
-    ret = audioRenderer->SetRendererWriteCallback(shared_from_this());
-    if (ret != MSERR_OK) {
-        MEDIA_LOGE("audio renderer write callback fail, ret %{public}d.", ret);
-    }
-    ret = audioRenderer->SetRendererFirstFrameWritingCallback(shared_from_this());
-    if (ret != MSERR_OK) {
-        MEDIA_LOGE("audio renderer first frame write callback fail, ret %{public}d.", ret);
-    }
+    int32_t retCallback = audioRenderer->SetRendererWriteCallback(shared_from_this());
+    int32_t retFirstCallback = audioRenderer->SetRendererFirstFrameWritingCallback(shared_from_this());
+    MEDIA_LOGI("CacheBuffer::CreateAudioRenderer retCallback:%{public}d, retFirstCallback:%{public}d",
+        retCallback, retFirstCallback);
     return audioRenderer;
 }
 
