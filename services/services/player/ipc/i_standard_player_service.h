@@ -176,8 +176,8 @@ public:
         GET_PLAYBACK_INFO,
         SET_MAX_AMPLITUDE_CB_STATUS,
         SET_DEVICE_CHANGE_CB_STATUS,
-        MAX_IPC_ID,
         GET_API_VERSION,
+        MAX_IPC_ID,                   // all IPC codes should be added before MAX_IPC_ID
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardPlayerService");

@@ -751,11 +751,11 @@ bool AVPlayerCallback::IsAPI14IOError(MediaServiceExtErrCodeAPI9 error)
 
 void AVPlayerCallback::OnError(int32_t errorCode, const std::string &errorMsg)
 {
-    if (listener_ != nullptr && apiTargetVersion == FAULT_API_VERSION) {
-        apiTargetVersion = listener_->GetJsApiVersion();
-        MEDIA_LOGI("AVPlayer get apiVersion: %{public}d", apiTargetVersion);
+    static int32_t apiTargetVersion_ = FAULT_API_VERSION;
+    if (listener_ != nullptr) {
+        apiTargetVersion_ = listener_->GetJsApiVersion();
+        MEDIA_LOGI("AVPlayer get apiVersion: %{public}d", apiTargetVersion_);
     }
-        
     MediaServiceExtErrCodeAPI9 errorCodeApi9 = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errorCode));
     if (errorCodeApi9 == MSERR_EXT_API9_NO_PERMISSION ||
         errorCodeApi9 == MSERR_EXT_API9_NO_MEMORY ||
@@ -765,7 +765,7 @@ void AVPlayerCallback::OnError(int32_t errorCode, const std::string &errorMsg)
         Format infoBody;
         AVPlayerCallback::OnInfo(INFO_TYPE_STATE_CHANGE, PLAYER_STATE_ERROR, infoBody);
     }
-    if (IsAPI14IOError(errorCodeApi9) && apiTargetVersion < API_VERSION_14) {
+    if (IsAPI14IOError(errorCodeApi9) && apiTargetVersion_ < API_VERSION_14) {
         errorCodeApi9 = MSERR_EXT_API9_IO;
     }
     AVPlayerCallback::OnErrorCb(errorCodeApi9, errorMsg);

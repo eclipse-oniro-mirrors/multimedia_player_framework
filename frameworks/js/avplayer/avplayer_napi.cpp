@@ -2968,7 +2968,9 @@ bool AVPlayerNapi::IsLiveSource() const
 int32_t AVPlayerNapi::GetJsApiVersion()
 {
     int32_t apiVersion = -1;
-    player_->GetApiVersion(apiVersion);
+    if (player_ != nullptr) {
+         player_->GetApiVersion(apiVersion);
+    }
     return apiVersion;
 }
 } // namespace Media
