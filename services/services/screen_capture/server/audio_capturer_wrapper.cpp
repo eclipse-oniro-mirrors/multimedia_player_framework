@@ -203,6 +203,7 @@ void AudioCapturerWrapper::SetInnerStreamUsage(std::vector<OHOS::AudioStandard::
     usages.push_back(AudioStandard::StreamUsage::STREAM_USAGE_NAVIGATION);
     usages.push_back(AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN);
     usages.push_back(AudioStandard::StreamUsage::STREAM_USAGE_VOICE_ASSISTANT);
+    usages.push_back(AudioStandard::StreamUsage::STREAM_USAGE_VOICE_MESSAGE);
     if (contentFilter_.filteredAudioContents.find(
         AVScreenCaptureFilterableAudioContent::SCREEN_CAPTURE_NOTIFICATION_AUDIO) ==
         contentFilter_.filteredAudioContents.end()) {
