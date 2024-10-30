@@ -30,7 +30,6 @@
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_ONLY_PRERELEASE, LOG_DOMAIN_PLAYER, "AVPlayerCallback" };
     int32_t API_VERSION_14 = 14;
-    int32_t FAULT_API_VERSION = -1;
     std::set<int32_t> API14_EXT_IO_ERRORS = {
         OHOS::Media::MSERR_EXT_API14_IO_CANNOT_FIND_HOST,
         OHOS::Media::MSERR_EXT_API14_IO_CONNECTION_TIMEOUT,
@@ -751,10 +750,9 @@ bool AVPlayerCallback::IsAPI14IOError(MediaServiceExtErrCodeAPI9 error)
 
 void AVPlayerCallback::OnError(int32_t errorCode, const std::string &errorMsg)
 {
-    static int32_t apiTargetVersion_ = FAULT_API_VERSION;
     if (listener_ != nullptr) {
-        apiTargetVersion_ = listener_->GetJsApiVersion();
-        MEDIA_LOGI("AVPlayer get apiVersion: %{public}d", apiTargetVersion_);
+        apiVersion_ = listener_->GetJsApiVersion();
+        MEDIA_LOGI("AVPlayer get apiVersion: %{public}d", apiVersion_);
     }
     MediaServiceExtErrCodeAPI9 errorCodeApi9 = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errorCode));
     if (errorCodeApi9 == MSERR_EXT_API9_NO_PERMISSION ||
@@ -765,7 +763,7 @@ void AVPlayerCallback::OnError(int32_t errorCode, const std::string &errorMsg)
         Format infoBody;
         AVPlayerCallback::OnInfo(INFO_TYPE_STATE_CHANGE, PLAYER_STATE_ERROR, infoBody);
     }
-    if (IsAPI14IOError(errorCodeApi9) && apiTargetVersion_ < API_VERSION_14) {
+    if (IsAPI14IOError(errorCodeApi9) && apiVersion_ < API_VERSION_14) {
         errorCodeApi9 = MSERR_EXT_API9_IO;
     }
     AVPlayerCallback::OnErrorCb(errorCodeApi9, errorMsg);
