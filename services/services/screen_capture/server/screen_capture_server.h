@@ -140,6 +140,16 @@ struct StatisticalEventInfo {
     int32_t startLatency = -1;
 };
 
+enum class SCBufferMessageType {
+    EXIT,
+    GET_BUFFER
+};
+
+struct SCBufferMessage {
+    SCBufferMessageType type;
+    std::string text;
+};
+
 class ScreenCapBufferConsumerListener : public IBufferConsumerListener {
 public:
     ScreenCapBufferConsumerListener(
@@ -152,6 +162,14 @@ public:
         OHOS::Rect &damage);
     int32_t ReleaseVideoBuffer();
     int32_t Release();
+    void OnBufferAvailableAction();
+    void StopBufferThread();
+
+public:
+    std::mutex bufferAvailableWorkerMtx_;
+    std::condition_variable bufferAvailableWorkerCv_;
+    std::queue<SCBufferMessage> messageQueueSCB_;
+    static constexpr uint64_t MAX_MESSAGE_QUEUE_SIZE = 5;
 
 private:
     int32_t ReleaseBuffer();
