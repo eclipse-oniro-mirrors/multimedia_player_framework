@@ -23,6 +23,8 @@
 #include "isoundpool.h"
 #include "media_description.h"
 #include "cpp/mutex.h"
+#include "media_dfx.h"
+#include "audio_system_manager.h"
 
 namespace OHOS {
 namespace Media {
