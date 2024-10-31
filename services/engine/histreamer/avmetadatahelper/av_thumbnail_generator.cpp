@@ -210,7 +210,7 @@ void AVThumbnailGenerator::OnOutputBufferAvailable(uint32_t index, std::shared_p
         if (isClosest && avBuffer_ != nullptr) {
             int64_t preDiff = seekTime_ - avBuffer_->pts_;
             int64_t nextDiff = buffer->pts_ - seekTime_;
-            if (preDiff > nextDiff) {
+            if (preDiff > nextDiff && !(buffer->flag_ & (uint32_t)(AVBufferFlag::EOS))) {
                 videoDecoder_->ReleaseOutputBuffer(bufferIndex_, false);
                 bufferIndex_ = index;
                 avBuffer_ = buffer;
