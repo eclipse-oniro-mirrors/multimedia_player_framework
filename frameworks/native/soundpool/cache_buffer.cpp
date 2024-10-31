@@ -41,6 +41,18 @@ CacheBuffer::~CacheBuffer()
     Release();
 }
 
+bool CacheBuffer::IsAudioRendererCanMix(const AudioStandard::AudioRendererInfo &audioRendererInfo)
+{
+    AudioStandard::AudioStreamType streamType = AudioStandard::AudioSystemManager::GetStreamType(
+        audioRendererInfo.contentType, audioRendererInfo.streamUsage);
+    if (streamType == AudioStandard::AudioStreamType::STREAM_MUSIC ||
+        streamType == AudioStandard::AudioStreamType::STREAM_MOVIE ||
+        streamType == AudioStandard::AudioStreamType::STREAM_SPEECH) {
+            return true;
+        }
+    return false;
+}
+
 std::unique_ptr<AudioStandard::AudioRenderer> CacheBuffer::CreateAudioRenderer(const int32_t streamID,
     const AudioStandard::AudioRendererInfo audioRendererInfo, const PlayParams playParams)
 {
@@ -63,6 +75,9 @@ std::unique_ptr<AudioStandard::AudioRenderer> CacheBuffer::CreateAudioRenderer(c
     trackFormat_.GetIntValue(MediaAVCodec::MediaDescriptionKey::MD_KEY_CHANNEL_COUNT, channelCount);
     rendererOptions.streamInfo.channels = static_cast<AudioStandard::AudioChannel>(channelCount);
     // contentType streamUsage rendererFlags come from user.
+    if (IsAudioRendererCanMix(audioRendererInfo)) {
+        rendererOptions.strategy.concurrencyMode = AudioStandard::AudioConcurrencyMode::MIX_WITH_OTHERS;
+    }
     rendererOptions.rendererInfo.contentType = audioRendererInfo.contentType;
     rendererOptions.rendererInfo.streamUsage = audioRendererInfo.streamUsage;
     rendererOptions.privacyType = AudioStandard::PRIVACY_TYPE_PUBLIC;
@@ -92,14 +107,10 @@ std::unique_ptr<AudioStandard::AudioRenderer> CacheBuffer::CreateAudioRenderer(c
         audioRenderer->SetBufferDuration(bufferDuration);
         MEDIA_LOGI("Using buffer size:%{public}zu, duration %{public}zu", targetSize, bufferDuration);
     }
-    ret = audioRenderer->SetRendererWriteCallback(shared_from_this());
-    if (ret != MSERR_OK) {
-        MEDIA_LOGE("audio renderer write callback fail, ret %{public}d.", ret);
-    }
-    ret = audioRenderer->SetRendererFirstFrameWritingCallback(shared_from_this());
-    if (ret != MSERR_OK) {
-        MEDIA_LOGE("audio renderer first frame write callback fail, ret %{public}d.", ret);
-    }
+    int32_t retCallback = audioRenderer->SetRendererWriteCallback(shared_from_this());
+    int32_t retFirstCallback = audioRenderer->SetRendererFirstFrameWritingCallback(shared_from_this());
+    MEDIA_LOGI("CacheBuffer::CreateAudioRenderer retCallback:%{public}d, retFirstCallback:%{public}d",
+        retCallback, retFirstCallback);
     return audioRenderer;
 }
 
