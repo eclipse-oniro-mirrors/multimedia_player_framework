@@ -216,7 +216,7 @@ SystemToneOptions SystemTonePlayerImpl::GetOptionsFromRingerMode()
     } else if (ringerMode == AudioStandard::AudioRingerMode::RINGER_MODE_VIBRATE) {
         options.muteAudio = true;
     } else if (ringerMode == AudioStandard::AudioRingerMode::RINGER_MODE_NORMAL) {
-        bool hapticsSwitchStatus = systemSoundMgr_.CheckVibrareSwitchStatus();
+        bool hapticsSwitchStatus = systemSoundMgr_.CheckVibrateSwitchStatus();
         options.muteHaptics = !hapticsSwitchStatus;
     }
     return options;

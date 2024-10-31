@@ -124,7 +124,7 @@ public:
         std::shared_ptr<ToneHapticsAttrs> &toneHapticsAttrs);
     int32_t SetToneHapticsSettings(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
         const std::string &toneUri, ToneHapticsType toneHapticsType, const ToneHapticsSettings &settings);
-    bool CheckVibrareSwitchStatus();
+    bool CheckVibrateSwitchStatus();
 
 private:
     void InitDefaultUriMap();
