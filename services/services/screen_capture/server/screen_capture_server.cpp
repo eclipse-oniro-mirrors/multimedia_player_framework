@@ -2499,7 +2499,7 @@ int32_t ScreenCaptureServer::ResizeCanvas(int32_t width, int32_t height)
         MEDIA_LOGE("ResizeCanvas dataType invalid, dataType:%{public}d", captureConfig_.dataType);
         return MSERR_INVALID_OPERATION;
     }
-    
+
     auto resizeRet = ScreenManager::GetInstance().ResizeVirtualScreen(screenId_, width, height);
     MEDIA_LOGI("ScreenCaptureServer::ResizeCanvas, ResizeVirtualScreen end, ret: %{public}d ", resizeRet);
     CHECK_AND_RETURN_RET_LOG(resizeRet == DMError::DM_OK, MSERR_UNSUPPORT, "ResizeVirtualScreen failed");
@@ -3026,13 +3026,13 @@ bool AudioDataSource::HasSpeakerStream(
         }
         MEDIA_LOGI("ChangeInfo Id: %{public}d, Client pid : %{public}d, State : %{public}d, DeviceType : %{public}d",
             changeInfoIndex, changeInfo->clientPid, static_cast<int32_t>(changeInfo->rendererState),
-            static_cast<int32_t>(changeInfo->outputDeviceInfo.deviceType));
-        if (changeInfo->outputDeviceInfo.deviceType == DEVICE_TYPE_WIRED_HEADSET ||
-            changeInfo->outputDeviceInfo.deviceType == DEVICE_TYPE_WIRED_HEADPHONES ||
-            changeInfo->outputDeviceInfo.deviceType == DEVICE_TYPE_BLUETOOTH_SCO ||
-            changeInfo->outputDeviceInfo.deviceType == DEVICE_TYPE_BLUETOOTH_A2DP ||
-            changeInfo->outputDeviceInfo.deviceType == DEVICE_TYPE_USB_HEADSET ||
-            changeInfo->outputDeviceInfo.deviceType == DEVICE_TYPE_USB_ARM_HEADSET) {
+            static_cast<int32_t>(changeInfo->outputDeviceInfo.deviceType_));
+        if (changeInfo->outputDeviceInfo.deviceType_ == DEVICE_TYPE_WIRED_HEADSET ||
+            changeInfo->outputDeviceInfo.deviceType_ == DEVICE_TYPE_WIRED_HEADPHONES ||
+            changeInfo->outputDeviceInfo.deviceType_ == DEVICE_TYPE_BLUETOOTH_SCO ||
+            changeInfo->outputDeviceInfo.deviceType_ == DEVICE_TYPE_BLUETOOTH_A2DP ||
+            changeInfo->outputDeviceInfo.deviceType_ == DEVICE_TYPE_USB_HEADSET ||
+            changeInfo->outputDeviceInfo.deviceType_ == DEVICE_TYPE_USB_ARM_HEADSET) {
             headSetCount++;
         }
         changeInfoIndex++;
@@ -3057,7 +3057,7 @@ void AudioDataSource::VoIPStateUpdate(
         }
         MEDIA_LOGI("Client pid : %{public}d, State : %{public}d, DeviceType : %{public}d",
             changeInfo->clientPid, static_cast<int32_t>(changeInfo->rendererState),
-            static_cast<int32_t>(changeInfo->outputDeviceInfo.deviceType));
+            static_cast<int32_t>(changeInfo->outputDeviceInfo.deviceType_));
         if (changeInfo->rendererState == RendererState::RENDERER_RUNNING &&
             changeInfo->rendererInfo.streamUsage == AudioStandard::StreamUsage::STREAM_USAGE_VOICE_COMMUNICATION) {
             isInVoIPCall = true;
