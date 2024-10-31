@@ -399,7 +399,7 @@ private:
     std::string callingLabel_;
     std::string liveViewText_;
     std::atomic<int32_t> micCount_{0};
-    int32_t density_ = 0;
+    float density_ = 0.0f;
     int32_t capsuleVpSize_ = 18;
     int32_t capsulePxSize_ = 0;
 

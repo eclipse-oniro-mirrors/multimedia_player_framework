@@ -164,7 +164,7 @@ struct AudioInfo {
 };
 
 struct VideoCaptureInfo {
-    uint64_t displayId = -1;
+    uint64_t displayId = 0;
     std::list<int32_t> taskIDs;
     int32_t videoFrameWidth = 0;
     int32_t videoFrameHeight = 0;
