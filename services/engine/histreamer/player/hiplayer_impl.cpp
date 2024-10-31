@@ -524,6 +524,7 @@ int32_t HiPlayerImpl::PrepareAsync()
         return errCode;
     }
     DoSetMediaSource(ret);
+    
     if (ret != Status::OK && !isInterruptNeeded_.load()) {
         auto errCode = TransStatus(Status::ERROR_UNSUPPORTED_FORMAT);
         CollectionErrorInfo(errCode, "PrepareAsync error: DoSetSource error");
