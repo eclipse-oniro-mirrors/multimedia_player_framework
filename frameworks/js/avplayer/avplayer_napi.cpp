@@ -2377,37 +2377,61 @@ napi_value AVPlayerNapi::JsGetTrackDescription(napi_env env, napi_callback_info 
     promiseCtx->napi = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     promiseCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
     promiseCtx->deferred = CommonNapi::CreatePromise(env, promiseCtx->callbackRef, result);
+    
+    auto jsPlayer = promiseCtx->napi;
+    CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstance");
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " JsGetTrackDescription EnqueueTask In", FAKE_POINTER(jsPlayer));
+    promiseCtx->asyncTask = jsPlayer->GetTrackDescriptionTask(promiseCtx);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " JsGetTrackDescription EnqueueTask Out", FAKE_POINTER(jsPlayer));
+
     // async work
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "JsGetTrackDescription", NAPI_AUTO_LENGTH, &resource);
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource,
         [](napi_env env, void *data) {
-            MEDIA_LOGI("GetTrackDescription Task");
+            MEDIA_LOGI("Wait JsGetTrackDescription Task Start");
             auto promiseCtx = reinterpret_cast<AVPlayerContext *>(data);
             CHECK_AND_RETURN_LOG(promiseCtx != nullptr, "promiseCtx is nullptr!");
-
-            auto jsPlayer = promiseCtx->napi;
-            if (jsPlayer == nullptr) {
-                return promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "avplayer is deconstructed");
+            if (promiseCtx->asyncTask) {
+                auto result = promiseCtx->asyncTask->GetResult();
+                if (!result.HasResult()) {
+                    return promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                                                 "task has been cleared");
+                }
+                if (result.Value().first != MSERR_EXT_API9_OK) {
+                    return promiseCtx->SignError(result.Value().first, result.Value().second);
+                }
+                promiseCtx->JsResult = std::make_unique<MediaJsResultArray>(promiseCtx->trackInfoVec_);
             }
-
-            std::vector<Format> &trackInfo = jsPlayer->trackInfoVec_;
-            trackInfo.clear();
-            if (jsPlayer->IsControllable()) {
-                (void)jsPlayer->player_->GetVideoTrackInfo(trackInfo);
-                (void)jsPlayer->player_->GetAudioTrackInfo(trackInfo);
-                (void)jsPlayer->player_->GetSubtitleTrackInfo(trackInfo);
-            } else {
-                return promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-                    "current state unsupport get track description");
-            }
-            promiseCtx->JsResult = std::make_unique<MediaJsResultArray>(trackInfo);
+            MEDIA_LOGI("Wait JsGetTrackDescription Task End");
         },
         MediaAsyncContext::CompleteCallback, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
     napi_queue_async_work_with_qos(env, promiseCtx->work, napi_qos_user_initiated);
     promiseCtx.release();
     MEDIA_LOGI("GetTrackDescription Out");
     return result;
+}
+
+std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::GetTrackDescriptionTask(const std::unique_ptr<AVPlayerContext>
+                                                                            &promiseCtx)
+{
+    auto task = std::make_shared<TaskHandler<TaskRet>>([this, &trackInfo = promiseCtx->trackInfoVec_]() {
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " GetTrackDescription Task In", FAKE_POINTER(this));
+        std::unique_lock<std::mutex> lock(taskMutex_);
+        trackInfo.clear();
+        if (IsControllable()) {
+            (void)player_->GetVideoTrackInfo(trackInfo);
+            (void)player_->GetAudioTrackInfo(trackInfo);
+            (void)player_->GetSubtitleTrackInfo(trackInfo);
+        } else {
+            return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                           "current state unsupport get track description");
+        }
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " GetTrackDescription Task Out", FAKE_POINTER(this));
+        return TaskRet(MSERR_EXT_API9_OK, "Success");
+    });
+    (void)taskQue_->EnqueueTask(task);
+    return task;
 }
 
 napi_value AVPlayerNapi::JsGetSelectedTracks(napi_env env, napi_callback_info info)
