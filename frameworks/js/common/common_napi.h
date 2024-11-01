@@ -89,7 +89,8 @@ public:
     static napi_status SetDeviceDescriptor(const napi_env &env, const AudioStandard::AudioDeviceDescriptor &deviceInfo,
         napi_value &result);
     static napi_status SetDeviceDescriptors(const napi_env &env,
-        const std::vector<std::shared_ptr<AudioStandard::AudioDeviceDescriptor>> &deviceDescriptors, napi_value &result);
+        const std::vector<std::shared_ptr<AudioStandard::AudioDeviceDescriptor>> &deviceDescriptors,
+        napi_value &result);
 };
 
 class MediaJsResult {
