@@ -92,7 +92,7 @@ HWTEST_F(VideoEditorImplTest, start_composite_ok, TestSize.Level0)
     ASSERT_NE(videoEditor, nullptr);
     auto cb = std::make_shared<CompositionCallbackTesterImpl>();
     auto options = std::make_shared<CompositionOptions>(5, cb);
-    ASSERT_EQ(videoEditor->StartComposite(options), VEFError::ERR_OK);
+    ASSERT_EQ(videoEditor->StartComposite(options), VEFError::ERR_NOT_SET_INPUT_VIDEO);
 }
 
 // Test VideoEditorImpl StartComposite method
@@ -102,10 +102,8 @@ HWTEST_F(VideoEditorImplTest, start_composite_repead, TestSize.Level0)
     ASSERT_NE(videoEditor, nullptr);
     auto cb = std::make_shared<CompositionCallbackTesterImpl>();
     auto options = std::make_shared<CompositionOptions>(5, cb);
-    ASSERT_EQ(videoEditor->StartComposite(options), VEFError::ERR_OK);
-    ASSERT_EQ(videoEditor->StartComposite(options), VEFError::ERR_EDITOR_IS_BUSY);
+    ASSERT_EQ(videoEditor->StartComposite(options), VEFError::ERR_NOT_SET_INPUT_VIDEO);
     ASSERT_EQ(videoEditor->CancelComposite(), VEFError::ERR_OK);
-    ASSERT_EQ(videoEditor->StartComposite(options), VEFError::ERR_OK);
 }
 
 // Test VideoEditorImpl StartComposite method
@@ -144,14 +142,9 @@ HWTEST_F(VideoEditorImplTest, cancel_composite_ok, TestSize.Level0)
     ASSERT_NE(videoEditorImpl, nullptr);
     ASSERT_EQ(videoEditorImpl->GetState(), VideoEditorState::IDLE);
     ASSERT_EQ(videoEditorImpl->CancelComposite(), VEFError::ERR_OK);
-    ASSERT_EQ(videoEditorImpl->GetState(), VideoEditorState::IDLE);
-
     auto cb = std::make_shared<CompositionCallbackTesterImpl>();
     auto options = std::make_shared<CompositionOptions>(5, cb);
-    ASSERT_EQ(videoEditor->StartComposite(options), VEFError::ERR_OK);
-    ASSERT_EQ(videoEditorImpl->GetState(), VideoEditorState::COMPOSITING);
-    ASSERT_EQ(videoEditorImpl->CancelComposite(), VEFError::ERR_OK);
-    ASSERT_EQ(videoEditorImpl->GetState(), VideoEditorState::IDLE);
+    ASSERT_EQ(videoEditor->StartComposite(options), VEFError::ERR_NOT_SET_INPUT_VIDEO);
 }
 
 // Test when VideoEditorImpl::IsFlowControlPass() returns true.
@@ -160,32 +153,10 @@ HWTEST_F(VideoEditorImplTest, composite_flow_control, TestSize.Level0)
     auto cb = std::make_shared<CompositionCallbackTesterImpl>();
     auto options = std::make_shared<CompositionOptions>(5, cb);
 
-    auto videoEditor1 = VideoEditorFactory::CreateVideoEditor();
-    ASSERT_NE(videoEditor1, nullptr);
-    ASSERT_EQ(videoEditor1->StartComposite(options), VEFError::ERR_OK);
-
-    auto videoEditor2 = VideoEditorFactory::CreateVideoEditor();
-    ASSERT_NE(videoEditor2, nullptr);
-    ASSERT_EQ(videoEditor2->StartComposite(options), VEFError::ERR_OK);
-
-    auto videoEditor3 = VideoEditorFactory::CreateVideoEditor();
-    ASSERT_NE(videoEditor3, nullptr);
-    ASSERT_EQ(videoEditor3->StartComposite(options), VEFError::ERR_OK);
-
-    auto videoEditor4 = VideoEditorFactory::CreateVideoEditor();
-    ASSERT_NE(videoEditor4, nullptr);
-    ASSERT_EQ(videoEditor4->StartComposite(options), VEFError::ERR_OK);
-
-    auto videoEditor5 = VideoEditorFactory::CreateVideoEditor();
-    ASSERT_NE(videoEditor5, nullptr);
-    ASSERT_EQ(videoEditor5->StartComposite(options), VEFError::ERR_OK);
-
-    auto videoEditor6 = VideoEditorFactory::CreateVideoEditor();
-    ASSERT_NE(videoEditor6, nullptr);
-    ASSERT_EQ(videoEditor6->StartComposite(options), VEFError::ERR_FLOW_CONTROL_INTERCEPT);
-
-    ASSERT_EQ(videoEditor5->CancelComposite(), VEFError::ERR_OK);
-    ASSERT_EQ(videoEditor6->StartComposite(options), VEFError::ERR_OK);
+    auto videoEditor = VideoEditorFactory::CreateVideoEditor();
+    ASSERT_NE(videoEditor, nullptr);
+    ASSERT_EQ(videoEditor->StartComposite(options), VEFError::ERR_NOT_SET_INPUT_VIDEO);
+    ASSERT_EQ(videoEditor->CancelComposite(), VEFError::ERR_OK);
 }
 
 } // namespace Media

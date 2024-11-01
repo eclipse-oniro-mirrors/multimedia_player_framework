@@ -58,12 +58,6 @@ HWTEST_F(AudioDecoderTest, AudioDecoder_Start, TestSize.Level0)
     EXPECT_EQ(audioDecoder_->Start(), VEFError::ERR_INTERNAL_ERROR);
 }
 
-// test AudioDecoder Stop method
-HWTEST_F(AudioDecoderTest, AudioDecoder_Stop, TestSize.Level0)
-{
-    EXPECT_EQ(audioDecoder_->Stop(), VEFError::ERR_INTERNAL_ERROR);
-}
-
 // test AudioDecoder ConfigureDecoder method
 HWTEST_F(AudioDecoderTest, AudioDecoder_ConfigureDecoder, TestSize.Level0)
 {

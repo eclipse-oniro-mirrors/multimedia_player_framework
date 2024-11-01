@@ -55,7 +55,7 @@ HWTEST_F(VideoEncoderEngineImplTest, construct, TestSize.Level0)
 {
     VideoEncodeCallbackTester* cb = new VideoEncodeCallbackTester();
     auto engine = std::make_shared<VideoEncoderEngineImpl>(20, cb);
-    EXPECT_EQ(engine->GetId(), 888);
+    EXPECT_EQ(engine->GetId(), 20);
 }
 
 // Test VideoEncoderEngineImpl Init method
