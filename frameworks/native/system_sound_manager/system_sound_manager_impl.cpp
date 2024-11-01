@@ -945,6 +945,7 @@ std::string SystemSoundManagerImpl::GetSystemToneUri(const std::shared_ptr<Abili
 std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultRingtoneAttrs(
     const shared_ptr<Context> &context, RingtoneType ringtoneType)
 {
+    MEDIA_LOGI("GetDefaultRingtoneAttrs : Enter the getDefaultRingtoneAttrs interface");
     std::lock_guard<std::mutex> lock(uriMutex_);
     CHECK_AND_RETURN_RET_LOG(IsRingtoneTypeValid(ringtoneType),  nullptr, "Invalid ringtone type");
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
@@ -973,12 +974,16 @@ std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultRingtoneAttrs(
     }
     resultSet == nullptr ? : resultSet->Close();
     dataShareHelper->Release();
+    MEDIA_LOGI("RingtoneAttrs_ : DisplayName = %{public}s, Path = %{public}s , Title = %{public}s",
+        ringtoneAsset->GetDisplayName().c_str(), ringtoneAsset->GetPath().c_str(),
+        ringtoneAsset->GetTitle().c_str());
     return ringtoneAttrs_;
 }
 
 std::vector<std::shared_ptr<ToneAttrs>> SystemSoundManagerImpl::GetRingtoneAttrList(
     const std::shared_ptr<AbilityRuntime::Context> &context, RingtoneType ringtoneType)
 {
+    MEDIA_LOGI("GetRingtoneAttrList : Enter the getRingtoneAttrList interface");
     std::lock_guard<std::mutex> lock(uriMutex_);
     ringtoneAttrsArray_.clear();
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
@@ -1004,12 +1009,15 @@ std::vector<std::shared_ptr<ToneAttrs>> SystemSoundManagerImpl::GetRingtoneAttrL
     }
     resultSet == nullptr ? : resultSet->Close();
     dataShareHelper->Release();
+    MEDIA_LOGI("RingtoneAttrsArray_ : DisplayName = %{public}s, Path = %{public}s",
+        ringtoneAsset->GetDisplayName().c_str(), ringtoneAsset->GetPath().c_str());
     return ringtoneAttrsArray_;
 }
 
 std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultSystemToneAttrs(
     const std::shared_ptr<AbilityRuntime::Context> &context, SystemToneType systemToneType)
 {
+    MEDIA_LOGI("GetDefaultSystemToneAttrs : Enter the getDefaultSystemToneAttrs interface");
     std::lock_guard<std::mutex> lock(uriMutex_);
     CHECK_AND_RETURN_RET_LOG(IsSystemToneTypeValid(systemToneType),  nullptr, "Invalid systemtone type");
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
@@ -1019,13 +1027,14 @@ std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultSystemToneAttrs(
         RINGTONE_COLUMN_NOTIFICATION_TONE_TYPE : RINGTONE_COLUMN_SHOT_TONE_TYPE;
     int32_t category = systemToneType == SYSTEM_TONE_TYPE_NOTIFICATION ?
         TONE_CATEGORY_NOTIFICATION : TONE_CATEGORY_TEXT_MESSAGE;
-    int32_t valueOfRingToneType = systemToneType == SYSTEM_TONE_TYPE_NOTIFICATION ?
-        NOTIFICATION_TONE_TYPE : SHOT_TONE_TYPE_SIM_CARD_BOTH;
     DataShare::DatashareBusinessError businessError;
     DataShare::DataSharePredicates queryPredicates;
     systemtoneAttrs_ = nullptr;
-    GetDefaultSystemToneAttrsExt(queryPredicates, systemToneType);
-    auto resultSet = dataShareHelper->Query(RINGTONEURI, queryPredicates, COLUMNS, &businessError);
+    std::vector<std::string> onClause;
+    onClause.push_back("ToneFiles.tone_id = PreloadConfig.tone_id");
+    queryPredicates.InnerJoin("PreloadConfig")->On(onClause)->EqualTo("PreloadConfig.ring_tone_type",
+        defaultsystemTypeMap_[systemToneType]);
+    auto resultSet = dataShareHelper->Query(RINGTONEURI, queryPredicates, JOIN_COLUMNS, &businessError);
     auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
     CHECK_AND_RETURN_RET_LOG(results != nullptr, nullptr, "query single systemtone failed, ringtone library error.");
     unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
@@ -1039,32 +1048,12 @@ std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultSystemToneAttrs(
     } else {
         MEDIA_LOGE("GetDefaultSystemToneAttrs: no single default systemtone in the ringtone library!");
     }
-    DataShare::DataSharePredicates queryPredicatesBothCard;
-    queryPredicatesBothCard.EqualTo(ringToneType, to_string(valueOfRingToneType));
-    resultSet = dataShareHelper->Query(RINGTONEURI, queryPredicatesBothCard, COLUMNS, &businessError);
-    results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
-    CHECK_AND_RETURN_RET_LOG(results != nullptr, nullptr, "query both systemtone failed, ringtone library error.");
-    unique_ptr<RingtoneAsset> ringtoneAssetBothCard = results->GetFirstObject();
-    while ((ringtoneAssetBothCard != nullptr) && IsSystemToneType(ringtoneAssetBothCard, systemToneType)) {
-        ringtoneAssetBothCard = results->GetNextObject();
-    }
-    if (ringtoneAssetBothCard != nullptr) {
-        systemtoneAttrs_ = std::make_shared<ToneAttrs>(ringtoneAssetBothCard->GetTitle(),
-            ringtoneAssetBothCard->GetDisplayName(), ringtoneAssetBothCard->GetPath(),
-            sourceTypeMap_[ringtoneAssetBothCard->GetSourceType()], category);
-    }
     resultSet == nullptr ? : resultSet->Close();
     dataShareHelper->Release();
+    MEDIA_LOGI("SystemtoneAttrs_ : DisplayName = %{public}s, Path = %{public}s , Title = %{public}s",
+        ringtoneAsset->GetDisplayName().c_str(), ringtoneAsset->GetPath().c_str(),
+        ringtoneAsset->GetTitle().c_str());
     return systemtoneAttrs_;
-}
-
-void SystemSoundManagerImpl::GetDefaultSystemToneAttrsExt(
-    DataShare::DataSharePredicates &queryPredicates, SystemToneType systemToneType)
-{
-    std::vector<std::string> onClause;
-    onClause.push_back("ToneFiles.tone_id = PreloadConfig.tone_id");
-    queryPredicates.InnerJoin("PreloadConfig")->On(onClause)->EqualTo("PreloadConfig.ring_tone_type",
-        defaultsystemTypeMap_[systemToneType]);
 }
 
 std::vector<std::shared_ptr<ToneAttrs>> SystemSoundManagerImpl::GetSystemToneAttrList(
@@ -1184,6 +1173,7 @@ std::string SystemSoundManagerImpl::GetAlarmToneUri(const std::shared_ptr<Abilit
 std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultAlarmToneAttrs(
     const std::shared_ptr<AbilityRuntime::Context> &context)
 {
+    MEDIA_LOGI("GetDefaultAlarmToneAttrs : Enter the getDefaultAlarmToneAttrs interface");
     std::lock_guard<std::mutex> lock(uriMutex_);
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, nullptr,
@@ -1212,6 +1202,9 @@ std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultAlarmToneAttrs(
     }
     resultSet == nullptr ? : resultSet->Close();
     dataShareHelper->Release();
+    MEDIA_LOGI("AlarmtoneAttrs_ : DisplayName = %{public}s, Path = %{public}s , Title = %{public}s",
+        ringtoneAsset->GetDisplayName().c_str(), ringtoneAsset->GetPath().c_str(),
+        ringtoneAsset->GetTitle().c_str());
     return alarmtoneAttrs_;
 }
 
