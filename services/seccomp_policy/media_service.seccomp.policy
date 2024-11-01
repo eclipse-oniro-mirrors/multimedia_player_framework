@@ -147,4 +147,3 @@ fgetxattr;all
 epoll_pwait;all
 timerfd_create;all
 timerfd_settime;all
-fchown:all
