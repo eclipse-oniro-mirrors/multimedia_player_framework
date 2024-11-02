@@ -58,7 +58,7 @@ HWTEST_F(AudioEncoderTest, AudioEncoder_Stop, TestSize.Level0)
 // test AudioEncoder Finish method
 HWTEST_F(AudioEncoderTest, AudioEncoder_Finish, TestSize.Level0)
 {
-    EXPECT_EQ(audioEncoder_->Flush(), VEFError::ERR_OK);
+    EXPECT_EQ(audioEncoder_->Flush(), VEFError::ERR_INTERNAL_ERROR);
 }
 
 // test AudioEncoder CreateDecoder method

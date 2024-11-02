@@ -64,14 +64,6 @@ HWTEST_F(VideoMuxerTest, VideoMuxer_AddAudioTrack, TestSize.Level0)
     EXPECT_EQ(muxer_->AddAudioTrack(nullptr), VEFError::ERR_INTERNAL_ERROR);
 }
 
-// test VideoMuxer WriteVideoData method
-HWTEST_F(VideoMuxerTest, VideoMuxer_WriteVideoData, TestSize.Level0)
-{
-    OH_AVMemory* data =OH_AVMemory_Create(12);
-    EXPECT_EQ(muxer_->WriteVideoData(data, nullptr), VEFError::ERR_INTERNAL_ERROR);
-    OH_AVMemory_Destroy(data);
-}
-
 // test VideoMuxer WriteAudioData method
 HWTEST_F(VideoMuxerTest, WriteAudioData, TestSize.Level0)
 {

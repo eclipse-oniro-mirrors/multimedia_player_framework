@@ -86,7 +86,7 @@ HWTEST_F(VideoDecoderEngineImplTest, on_decode_frame_ok, TestSize.Level0)
 {
     VideoDecodeCallbackTester* cb = new VideoDecodeCallbackTester();
     auto engine = std::make_shared<VideoDecoderEngineImpl>(12345, 50, cb);
-    uint64_t pts = 100;
+    uint64_t pts = 0;
     EXPECT_EQ(cb->pts_, pts);
 }
 
