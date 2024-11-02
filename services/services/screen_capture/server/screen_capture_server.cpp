@@ -85,7 +85,6 @@ static const int32_t SELECT_WINDOW_MISSION_ID_NUM_MAX = 2;
 #endif
 static const int32_t SVG_HEIGHT = 80;
 static const int32_t SVG_WIDTH = 80;
-static const int32_t MDPI = 160;
 static const int32_t MICROPHONE_OFF = 0;
 static const int32_t MICROPHONE_STATE_COUNT = 2;
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
@@ -1440,7 +1439,7 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
 
     sptr<Rosen::Display> display = Rosen::DisplayManager::GetInstance().GetDefaultDisplaySync();
     CHECK_AND_RETURN_RET_LOG(display != nullptr, MSERR_UNKNOWN, "GetDefaultDisplaySync failed");
-    density_ = display->GetDpi();
+    density_ = display->GetVirtualPixelRatio();
 
     appName_ = GetClientBundleName(appInfo_.appUid);
 
@@ -1629,7 +1628,7 @@ std::shared_ptr<NotificationLocalLiveViewContent> ScreenCaptureServer::GetLocalL
 
     auto capsule = NotificationCapsule();
     capsule.SetBackgroundColor(BACK_GROUND_COLOR);
-    capsulePxSize_ = capsuleVpSize_ * density_ / MDPI;
+    capsulePxSize_ = static_cast<int32_t>(capsuleVpSize_ * density_);
     std::shared_ptr<PixelMap> pixelMapCapSpr = GetPixelMapSvg(ICON_PATH_CAPSULE_STOP, capsulePxSize_, capsulePxSize_);
     capsule.SetIcon(pixelMapCapSpr);
 
@@ -1904,9 +1903,9 @@ int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string &name, sptr<O
     VirtualScreenOption virScrOption = InitVirtualScreenOption(name, consumer);
     sptr<Rosen::Display> display = Rosen::DisplayManager::GetInstance().GetDefaultDisplaySync();
     if (display != nullptr) {
-        MEDIA_LOGI("get displayInfo width:%{public}d,height:%{public}d,density:%{public}d", display->GetWidth(),
-                   display->GetHeight(), display->GetDpi());
-        virScrOption.density_ = display->GetDpi();
+        MEDIA_LOGI("get displayInfo width:%{public}d,height:%{public}d, density:%{public}f", display->GetWidth(),
+                   display->GetHeight(), display->GetVirtualPixelRatio());
+        virScrOption.density_ = display->GetVirtualPixelRatio();
     }
     if (missionIds_.size() > 0 && captureConfig_.captureMode == CAPTURE_SPECIFIED_WINDOW) {
         virScrOption.missionIds_ = missionIds_;

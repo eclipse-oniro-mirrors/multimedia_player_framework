@@ -765,8 +765,8 @@ int32_t AVScreenCaptureNapi::CheckVideoFrameFormat(const int32_t &frameWidth, co
         if (display == nullptr) {
             return MSERR_INVALID_VAL;
         }
-        MEDIA_LOGI("check video frame get displayInfo width:%{public}d,height:%{public}d,density:%{public}d",
-            display->GetWidth(), display->GetHeight(), display->GetDpi());
+        MEDIA_LOGI("check video frame get displayInfo width:%{public}d,height:%{public}d,density:%{public}f",
+            display->GetWidth(), display->GetHeight(), display->GetVirtualPixelRatio());
         if (frameWidth == AVSCREENCAPTURE_DEFAULT_FRAME_WIDTH || frameWidth == 0) { // 0 use default display
             videoFrameWidth = display->GetWidth();
         } else {
