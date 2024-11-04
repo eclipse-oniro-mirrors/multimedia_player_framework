@@ -355,7 +355,9 @@ private:
         }
         std::shared_ptr<TaskHandler<TaskRet>> asyncTask = nullptr;
         AVPlayerNapi *napi = nullptr;
+        std::vector<Format> trackInfoVec_;
     };
+    std::shared_ptr<TaskHandler<TaskRet>> GetTrackDescriptionTask(const std::unique_ptr<AVPlayerContext> &promiseCtx);
     void GetCurrentTrackTask(std::unique_ptr<AVPlayerContext> &promiseCtx, napi_env env, napi_value args);
     void HandleSelectTrack(std::unique_ptr<AVPlayerContext> &promiseCtx, napi_env env, napi_value args[],
         size_t argCount);
