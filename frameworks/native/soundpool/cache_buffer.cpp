@@ -264,8 +264,8 @@ void CacheBuffer::OnWriteData(size_t length)
             cacheBufferLock_.unlock();
             int32_t streamIDStop = streamID_;
             ThreadPool::Task cacheBufferStopTask = [this, streamIDStop] { this->Stop(streamIDStop); };
-            if (!cacheBufferStopThreadPool_.expired()) {
-                cacheBufferStopThreadPool_.lock()->AddTask(cacheBufferStopTask);
+            if (auto ptr = cacheBufferStopThreadPool_.lock()) {
+                ptr->AddTask(cacheBufferStopTask);
             }
             return;
         }
