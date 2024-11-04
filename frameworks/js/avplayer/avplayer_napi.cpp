@@ -2529,9 +2529,7 @@ napi_value AVPlayerNapi::JsSelectTrack(napi_env env, napi_callback_info info)
         auto promiseCtx = reinterpret_cast<AVPlayerContext *>(data);
         CHECK_AND_RETURN_LOG(promiseCtx != nullptr, "promiseCtx is nullptr!");
 
-        if (promiseCtx->errFlag) {
-            return;
-        }
+        CHECK_AND_RETURN(!promiseCtx->errFlag);
 
         auto jsPlayer = promiseCtx->napi;
         if (jsPlayer == nullptr) {
