@@ -97,6 +97,8 @@ int32_t PlayerServer::Init()
     apiVersion_ = GetApiInfo(appUid_);
 
     PlayerServerStateMachine::Init(idleState_);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances create 0x%{public}06" PRIXPTR,
+        FAKE_POINTER(this), FAKE_POINTER(GetCurrState().get()));
 
     std::string bootState = system::GetParameter("bootevent.boot.completed", "false");
     isBootCompleted_.store(bootState == "true");
