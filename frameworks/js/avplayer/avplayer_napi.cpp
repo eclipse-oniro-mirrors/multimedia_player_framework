@@ -2380,9 +2380,9 @@ napi_value AVPlayerNapi::JsGetTrackDescription(napi_env env, napi_callback_info 
     
     auto jsPlayer = promiseCtx->napi;
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstance");
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " JsGetTrackDescription EnqueueTask In", FAKE_POINTER(jsPlayer));
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " JsGetTrackDescription EnqueueTask In", FAKE_POINTER(jsPlayer));
     promiseCtx->asyncTask = jsPlayer->GetTrackDescriptionTask(promiseCtx);
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " JsGetTrackDescription EnqueueTask Out", FAKE_POINTER(jsPlayer));
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " JsGetTrackDescription EnqueueTask Out", FAKE_POINTER(jsPlayer));
 
     // async work
     napi_value resource = nullptr;
