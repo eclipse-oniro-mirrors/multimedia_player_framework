@@ -31,6 +31,8 @@ using DumperEntry = std::function<int32_t(int32_t)>;
 struct Dumper {
     pid_t pid_;
     pid_t uid_;
+    time_t createInsTime_ {0};
+    std::string insFakePointer_;
     DumperEntry entry_;
     sptr<IRemoteObject> remoteObject_;
 };
