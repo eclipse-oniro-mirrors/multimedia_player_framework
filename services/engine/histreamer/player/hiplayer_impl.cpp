@@ -2924,6 +2924,7 @@ int32_t HiPlayerImpl::ExitSeekContinous(bool align, int64_t seekContinousBatchNo
         draggingPlayerAgent_ = nullptr;
     }
     SetFrameRateForSeekPerformance(FRAME_RATE_DEFAULT);
+    demuxer_->PauseDragging();
     if (align) {
         Seek(lastSeekContinousPos_, PlayerSeekMode::SEEK_CLOSEST, false);
     }
