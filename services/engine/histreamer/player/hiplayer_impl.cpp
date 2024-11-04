@@ -673,6 +673,9 @@ void HiPlayerImpl::SetInterruptState(bool isInterruptNeeded)
     if (seekAgent_ != nullptr) {
         seekAgent_->SetInterruptState(isInterruptNeeded);
     }
+    if (videoDecoder_ != nullptr) {
+        videoDecoder_->SetInterruptState(isInterruptNeeded);
+    }
 }
 
 int32_t HiPlayerImpl::SelectBitRate(uint32_t bitRate)
@@ -2011,7 +2014,7 @@ void HiPlayerImpl::OnEventSub(const Event &event)
                 MEDIA_LOGI_LIMIT(BUFFERING_LOG_FREQUENCY, "BUFFERING_END BLOCKED");
                 break;
             }
-            MEDIA_LOG_I("BUFFERING_END PLAYING");
+            MEDIA_LOG_I_SHORT("BUFFERING_END PLAYING");
             NotifyBufferingEnd(AnyCast<int32_t>(event.param));
             break;
         }
@@ -2020,7 +2023,7 @@ void HiPlayerImpl::OnEventSub(const Event &event)
                 MEDIA_LOGI_LIMIT(BUFFERING_LOG_FREQUENCY, "BUFFERING_START BLOCKED");
                 break;
             }
-            MEDIA_LOG_D("BUFFERING_START PAUSE");
+            MEDIA_LOG_I_SHORT("BUFFERING_START PAUSE");
             NotifyBufferingStart(AnyCast<int32_t>(event.param));
             break;
         }
@@ -2446,7 +2449,7 @@ void HiPlayerImpl::NotifySeekDone(int32_t seekPos)
         }
     }
     
-    MEDIA_LOG_D("NotifySeekDone seekPos: %{public}d", seekPos);
+    MEDIA_LOG_D_SHORT("NotifySeekDone seekPos: %{public}d", seekPos);
     callbackLooper_.OnInfo(INFO_TYPE_POSITION_UPDATE, seekPos, format);
     callbackLooper_.OnInfo(INFO_TYPE_SEEKDONE, seekPos, format);
 }

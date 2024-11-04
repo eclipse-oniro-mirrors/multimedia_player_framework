@@ -221,8 +221,8 @@ private:
     bool IsAudioMime(const std::string& mime);
     bool IsSubtitleMime(const std::string& mime);
     Status Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeekDone);
-    Status HandleSeek(int64_t seekPos, PlayerSeekMode mode);
     Status PrepareForSeek();
+    Status HandleSeek(int64_t seekPos, PlayerSeekMode mode);
 
     Status doPreparedSeek(int64_t seekPos, PlayerSeekMode mode);
     Status doStartedSeek(int64_t seekPos, PlayerSeekMode mode);
@@ -367,6 +367,7 @@ private:
     std::shared_ptr<DfxAgent> dfxAgent_{};
     bool maxAmplitudeCbStatus_ {false};
     OHOS::Media::Mutex handleCompleteMutex_{};
+    int64_t playStartTime_ = 0;
     std::atomic<bool> isBufferingStartNotified_ {false};
 };
 } // namespace Media
