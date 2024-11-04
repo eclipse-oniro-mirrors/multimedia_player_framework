@@ -60,11 +60,19 @@ int32_t WriteInfo(int32_t fd, std::string &dumpString, std::vector<Dumper> dumpe
 {
     int32_t i = 0;
     for (auto iter : dumpers) {
-        dumpString += "-----Instance #" + std::to_string(i) + ": ";
+        dumpString += "-----#" + std::to_string(i) + ": ";
         dumpString += "pid = ";
         dumpString += std::to_string(iter.pid_);
-        dumpString += " uid = ";
-        dumpString += std::to_string(iter.uid_);
+        if (iter.insFakePointer_.size() > 0) {
+            dumpString += " ins = ";
+            dumpString += iter.insFakePointer_;
+        }
+        if (iter.createInsTime_ > 0) {
+            std::tm *pTm = std::localtime(&(iter.createInsTime_));
+            dumpString += " time = ";
+            dumpString += std::to_string(pTm->tm_mon + 1) + "-" + std::to_string(pTm->tm_mday) + " " +
+                std::to_string(pTm->tm_hour) + ":" + std::to_string(pTm->tm_min) + ":" + std::to_string(pTm->tm_sec);
+        }
         dumpString += "-----\n";
         if (fd != -1) {
             write(fd, dumpString.c_str(), dumpString.size());
@@ -220,6 +228,11 @@ sptr<IRemoteObject> MediaServerManager::CreatePlayerStubObject()
     sptr<PlayerServiceStub> playerStub = PlayerServiceStub::Create();
 #endif
     CHECK_AND_RETURN_RET_LOG(playerStub != nullptr, nullptr, "failed to create PlayerServiceStub");
+    std::time_t now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+    const uint8_t MAX_INSTANCE_LENGTH = 255;
+    char text[MAX_INSTANCE_LENGTH];
+    sprintf_s(text, MAX_INSTANCE_LENGTH, "0x%{public}06" PRIXPTR, FAKE_POINTER(playerStub.GetRefPtr()));
+    std::string InsPointerStr(text);
 
     sptr<IRemoteObject> object = playerStub->AsObject();
     CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "failed to create PlayerServiceStub");
@@ -237,6 +250,8 @@ sptr<IRemoteObject> MediaServerManager::CreatePlayerStubObject()
     };
     dumper.pid_ = pid;
     dumper.uid_ = IPCSkeleton::GetCallingUid();
+    dumper.createInsTime_ = now;
+    dumper.insFakePointer_ = InsPointerStr;
     dumper.remoteObject_ = object;
     dumperTbl_[StubType::PLAYER].emplace_back(dumper);
     MEDIA_LOGD("The number of player services(%{public}zu) pid(%{public}d).",
