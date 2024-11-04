@@ -189,7 +189,8 @@ int32_t PlayerServiceStub::Init()
         playerServer_ = PlayerServer::Create();
     }
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "failed to create PlayerServer");
-
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances create 0x%{public}06" PRIXPTR,
+        FAKE_POINTER(this), FAKE_POINTER(playerServer_.get()));
     appUid_ = IPCSkeleton::GetCallingUid();
     appPid_ = IPCSkeleton::GetCallingPid();
     SetPlayerFuncs();
