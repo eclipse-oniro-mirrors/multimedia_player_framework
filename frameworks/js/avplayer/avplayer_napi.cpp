@@ -2503,7 +2503,8 @@ void AVPlayerNapi::HandleSelectTrack(std::unique_ptr<AVPlayerContext> &promiseCt
 
     auto jsPlayer = promiseCtx->napi;
     napi_status status = napi_get_value_int32(env, args[0], &jsPlayer->index_);
-    if (status != napi_ok || jsPlayer->index_ < 0 || jsPlayer->index_ >= jsPlayer->trackInfoVec_.size()) {
+    if (status != napi_ok || jsPlayer->index_ < 0 || static_cast<int64_t>(jsPlayer->trackInfoVec_.size())
+    <= jsPlayer->index_) {
         promiseCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please check the track index");
         return;
     }
@@ -2551,6 +2552,8 @@ napi_value AVPlayerNapi::JsSelectTrack(napi_env env, napi_callback_info info)
         MEDIA_LOGI("JsSelectTrack Task");
         auto promiseCtx = reinterpret_cast<AVPlayerContext *>(data);
         CHECK_AND_RETURN_LOG(promiseCtx != nullptr, "promiseCtx is nullptr!");
+
+        CHECK_AND_RETURN(!promiseCtx->errFlag);
 
         auto jsPlayer = promiseCtx->napi;
         if (jsPlayer == nullptr) {
