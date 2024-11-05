@@ -162,12 +162,12 @@ napi_value AVImageGeneratorNapi::JsCreateAVImageGenerator(napi_env env, napi_cal
 int32_t AVImageGeneratorNapi::GetFetchFrameArgs(std::unique_ptr<AVImageGeneratorAsyncContext> &asyncCtx, napi_env env,
     napi_value timeUs, napi_value option, napi_value params)
 {
-    napi_status ret = napi_get_value_int64(env, timeUs, &asyncCtx->napi->timeUs_);
+    napi_status ret = napi_get_value_int64(env, timeUs, &asyncCtx->timeUs_);
     if (ret != napi_ok) {
         asyncCtx->SignError(MSERR_INVALID_VAL, "failed to get timeUs");
         return MSERR_INVALID_VAL;
     }
-    ret = napi_get_value_int32(env, option, &asyncCtx->napi->option_);
+    ret = napi_get_value_int32(env, option, &asyncCtx->option_);
     if (ret != napi_ok) {
         asyncCtx->SignError(MSERR_INVALID_VAL, "failed to get option");
         return MSERR_INVALID_VAL;
@@ -193,9 +193,9 @@ int32_t AVImageGeneratorNapi::GetFetchFrameArgs(std::unique_ptr<AVImageGenerator
         return MSERR_INVALID_VAL;
     }
 
-    asyncCtx->napi->param_.dstWidth = width;
-    asyncCtx->napi->param_.dstHeight = height;
-    asyncCtx->napi->param_.colorFormat = colorFormat;
+    asyncCtx->param_.dstWidth = width;
+    asyncCtx->param_.dstHeight = height;
+    asyncCtx->param_.colorFormat = colorFormat;
     return MSERR_OK;
 }
 
@@ -215,28 +215,28 @@ napi_value AVImageGeneratorNapi::JsFetchFrameAtTime(napi_env env, napi_callback_
     CHECK_AND_RETURN_RET_LOG(napi != nullptr, result, "failed to GetJsInstance");
 
     auto asyncCtx = std::make_unique<AVImageGeneratorAsyncContext>(env);
-    asyncCtx->napi = napi;
+    asyncCtx->innerHelper_ = napi->helper_;
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[argCallback]);
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
     napi_valuetype valueType = napi_undefined;
     bool notParamValid = argCount < argCallback || napi_typeof(env, args[argPixelParam], &valueType) != napi_ok ||
         valueType != napi_object ||
-        asyncCtx->napi->GetFetchFrameArgs(asyncCtx, env, args[ARG_ZERO], args[ARG_ONE], args[ARG_TWO]) != MSERR_OK;
+        napi->GetFetchFrameArgs(asyncCtx, env, args[ARG_ZERO], args[ARG_ONE], args[ARG_TWO]) != MSERR_OK;
     if (notParamValid) {
         asyncCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "JsFetchFrameAtTime");
     }
+
+    if (napi->state_ != HelperState::HELPER_STATE_RUNNABLE && !asyncCtx->errFlag) {
+        asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Current state is not runnable, can't fetchFrame.");
+    }
+
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "JsFetchFrameAtTime", NAPI_AUTO_LENGTH, &resource);
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void *data) {
         auto asyncCtx = reinterpret_cast<AVImageGeneratorAsyncContext *>(data);
-        CHECK_AND_RETURN_LOG(asyncCtx && asyncCtx->napi, "Invalid AVImageGeneratorAsyncContext.");
-        if (asyncCtx->napi->state_ != HelperState::HELPER_STATE_RUNNABLE) {
-            asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Current state is not runnable, can't fetchFrame.");
-            return;
-        }
-        CHECK_AND_RETURN_LOG(asyncCtx->napi->helper_ != nullptr, "Invalid AVImageGeneratorNapi.");
-        auto pixelMap = asyncCtx->napi->helper_->
-            FetchFrameYuv(asyncCtx->napi->timeUs_, asyncCtx->napi->option_, asyncCtx->napi->param_);
+        CHECK_AND_RETURN_LOG(asyncCtx && asyncCtx->innerHelper_, "Invalid AVImageGeneratorAsyncContext.");
+        auto pixelMap = asyncCtx->innerHelper_->
+            FetchFrameYuv(asyncCtx->timeUs_, asyncCtx->option_, asyncCtx->param_);
         asyncCtx->pixel_ = pixelMap;
         CHECK_AND_RETURN(asyncCtx->pixel_ == nullptr);
         asyncCtx->SignError(MSERR_EXT_API9_UNSUPPORT_FORMAT, "FetchFrameByTime failed.");
@@ -318,21 +318,20 @@ napi_value AVImageGeneratorNapi::JsRelease(napi_env env, napi_callback_info info
     size_t argCount = 1;
     AVImageGeneratorNapi *generator = AVImageGeneratorNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(generator != nullptr, result, "failed to GetJsInstance");
-    promiseCtx->napi = generator;
+    promiseCtx->innerHelper_ = generator->helper_;
     promiseCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
     promiseCtx->deferred = CommonNapi::CreatePromise(env, promiseCtx->callbackRef, result);
+
+    if (generator->state_ == HelperState::HELPER_STATE_RELEASED) {
+        promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Has released once, can't release again.");
+    }
 
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "JsRelease", NAPI_AUTO_LENGTH, &resource);
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void *data) {
         auto promiseCtx = reinterpret_cast<AVImageGeneratorAsyncContext *>(data);
-        CHECK_AND_RETURN_LOG(promiseCtx && promiseCtx->napi, "Invalid promiseCtx.");
-        if (promiseCtx->napi->state_ == HelperState::HELPER_STATE_RELEASED) {
-            promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Has released once, can't release again.");
-            return;
-        }
-        CHECK_AND_RETURN_LOG(promiseCtx->napi->helper_, "promiseCtx has invalid data.");
-        promiseCtx->napi->helper_->Release();
+        CHECK_AND_RETURN_LOG(promiseCtx && promiseCtx->innerHelper_, "Invalid promiseCtx.");
+        promiseCtx->innerHelper_->Release();
     }, MediaAsyncContext::CompleteCallback, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
     napi_queue_async_work_with_qos(env, promiseCtx->work, napi_qos_user_initiated);
     promiseCtx.release();
