@@ -235,7 +235,6 @@ private:
     void NotifySeek(Status rtv, bool flag, int64_t seekPos);
     void ResetIfSourceExisted();
     void ReleaseInner();
-    int32_t ReportErrorInfo(ret);
     int32_t InitDuration();
     int32_t InitVideoWidthAndHeight();
     int32_t SetFrameRateForSeekPerformance(double frameRate);
@@ -246,6 +245,7 @@ private:
     bool BreakIfInterruptted();
     bool IsSeekInSitu(int64_t mSeconds);
     void CollectionErrorInfo(int32_t errCode, const std::string& errMsg);
+    int32_t ReportErrorInfo(int32_t errCode);
     void NotifyUpdateTrackInfo();
     Status SelectSeekType(int64_t seekPos, PlayerSeekMode mode);
     Status DoSetPlayRange();
