@@ -61,6 +61,7 @@ const std::array<std::pair<PlaybackRateMode, float>, 10> PLAY_RATE_REFS = {
 };
 
 static int g_readSysParaIdx = 0;
+std::mutex readSysParaMapMtx_;
 static std::unordered_map<std::string, std::string> g_readSysParaMap;
 static int32_t FAULT_API_VERSION = -1;
 static int32_t ROUND_VERSION_NUMBER = 100;
@@ -299,10 +300,10 @@ bool __attribute__((visibility("default"))) IsAppEnableRenderFirstFrame(int32_t 
 bool __attribute__((visibility("default"))) GetPackageName(const char *key, std::string &value)
 {
     CHECK_AND_RETURN_RET_LOG(key != nullptr, false, "key is nullptr");
+    value = "";
     char paraValue[100] = {0};   // 100 for system parameter
     auto res = GetParameter(key, "-1", paraValue, sizeof(paraValue));
-
-    CHECK_AND_RETURN_RET_LOG(res > 0, false, "GetSysPara fail, key:%{public}s res:%{public}d", key, res);
+    CHECK_AND_RETURN_RET_LOG(res >= 0, false, "GetSysPara fail, key:%{public}s res:%{public}d", key, res);
     std::stringstream valueStr;
     valueStr << paraValue;
     valueStr >> value;
@@ -310,8 +311,9 @@ bool __attribute__((visibility("default"))) GetPackageName(const char *key, std:
     return true;
 }
 
-std::unordered_map<std::string, std::string> __attribute__((visibility("default"))) GetScreenCaptureSystemParam()
+std::unordered_map<std::string, std::string>& __attribute__((visibility("default"))) GetScreenCaptureSystemParam()
 {
+    std::lock_guard<std::mutex> lock(readSysParaMapMtx_);
     if (g_readSysParaIdx == 0) {
         GetPackageName("const.multimedia.screencapture.dialogconnectionbundlename",
             g_readSysParaMap["const.multimedia.screencapture.dialogconnectionbundlename"]);

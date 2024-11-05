@@ -46,7 +46,7 @@ namespace Media {
     bool __attribute__((visibility("default"))) IsEnableOptimizeDecode();
     bool __attribute__((visibility("default"))) IsAppEnableRenderFirstFrame(int32_t uid);
     bool __attribute__((visibility("default"))) GetPackageName(const char *key, std::string &value);
-    std::unordered_map<std::string, std::string> __attribute__((visibility("default"))) GetScreenCaptureSystemParam();
+    std::unordered_map<std::string, std::string>& __attribute__((visibility("default"))) GetScreenCaptureSystemParam();
 }  // namespace Media
 }  // namespace OHOS
 
