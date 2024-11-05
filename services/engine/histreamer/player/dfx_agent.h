@@ -17,7 +17,7 @@
 #define DFX_AGENT_H
  
 #include "osal/task/task.h"
-#include "demuxer_filter.h"
+#include "filter/filter.h"
  
 namespace OHOS {
 namespace Media {
@@ -31,28 +31,30 @@ enum class PlayerDfxSourceType : uint8_t {
     DFX_SOURCE_TYPE_MEDIASOURCE_NETWORK = 5,
     DFX_SOURCE_TYPE_UNKNOWN = 127,
 };
+
+class DfxAgent;
+using DfxEventHandleFunc = std::function<void(std::weak_ptr<DfxAgent> ptr, const DfxEvent&)>;
  
 class DfxAgent : public std::enable_shared_from_this<DfxAgent> {
 public:
     DfxAgent(const std::string& groupId, const std::string& appName);
     ~DfxAgent();
-    void SetDemuxer(std::weak_ptr<Pipeline::DemuxerFilter> demuxer);
     void SetSourceType(PlayerDfxSourceType type);
+    void OnDfxEvent(const DfxEvent &event);
     void SetInstanceId(const std::string& instanceId);
-    void OnAudioLagEvent(int64_t lagDuration);
-    void OnVideoLagEvent(int64_t lagDuration);
-    void OnStreamLagEvent(int64_t lagDuration);
     void ResetAgent();
 private:
     void ReportLagEvent(int64_t lagDuration, const std::string& eventMsg);
-    bool GetNetworkInfo(std::string& networkInfo);
+    static void ProcessVideoLagEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &event);
+    static void ProcessAudioLagEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &event);
+    static void ProcessStreamLagEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &event);
     std::string groupId_ {};
     std::string instanceId_ {};
     std::string appName_ {};
     PlayerDfxSourceType sourceType_ {PlayerDfxSourceType::DFX_SOURCE_TYPE_UNKNOWN};
     std::unique_ptr<Task> dfxTask_ {nullptr};
     bool hasReported_ {false};
-    std::weak_ptr<Pipeline::DemuxerFilter> demuxer_ {};
+    static const std::map<DfxEventType, DfxEventHandleFunc> DFX_EVENT_HANDLERS_;
 };
  
 } // namespace Media

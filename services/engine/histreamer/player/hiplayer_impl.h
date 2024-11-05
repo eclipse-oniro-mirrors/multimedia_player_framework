@@ -153,7 +153,7 @@ public:
     void OnEvent(const Event &event);
     void OnEventSub(const Event &event);
     void OnEventSubTrackChange(const Event &event);
-    void OnDfxEvent(const Event &event);
+    void HandleDfxEvent(const DfxEvent &event);
     void OnStateChanged(PlayerStateId state, bool isSystemOperation = false);
     Status OnCallback(std::shared_ptr<Filter> filter, const FilterCallBackCommand cmd,
                     StreamType outType);
