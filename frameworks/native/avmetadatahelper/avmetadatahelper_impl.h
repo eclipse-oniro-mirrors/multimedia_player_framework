@@ -60,6 +60,8 @@ private:
         int32_t outputHeight = 0;
     };
 
+    std::mutex releaseMutex_;
+
     static std::string GetLocalTime()
     {
         // time string : "year-month-day hour_minute_second.millisecond", ':' is not supported in windows file name
