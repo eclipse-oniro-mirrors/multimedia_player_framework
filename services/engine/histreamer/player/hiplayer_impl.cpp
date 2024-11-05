@@ -2372,7 +2372,6 @@ void HiPlayerImpl::HandleResolutionChangeEvent(const Event& event)
     int32_t height = videoSize.second;
 
     std::vector<std::shared_ptr<Meta>> metaInfo = demuxer_->GetStreamMetaInfo();
-    (void)GetCurrentTrack(OHOS::Media::MediaType::MEDIA_TYPE_VID, currentVideoTrackId_);
     if (currentVideoTrackId_ >= 0 && currentVideoTrackId_ < static_cast<int32_t>(metaInfo.size())) {
         double videoSar;
         bool ret = metaInfo[currentVideoTrackId_]->GetData(Tag::VIDEO_SAR, videoSar);
