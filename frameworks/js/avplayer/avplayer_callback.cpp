@@ -756,7 +756,6 @@ void AVPlayerCallback::OnError(int32_t errorCode, const std::string &errorMsg)
         getApiVersionFlag_ = false;
     }
     MediaServiceExtErrCodeAPI9 errorCodeApi9 = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errorCode));
-    MediaServiceExtErrCodeAPI9 errorCodeApi9 = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errorcode));
     if (errorCodeApi9 == MSERR_EXT_API9_NO_PERMISSION ||
         errorCodeApi9 == MSERR_EXT_API9_NO_MEMORY ||
         errorCodeApi9 == MSERR_EXT_API9_TIMEOUT ||
