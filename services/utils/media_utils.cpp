@@ -303,7 +303,6 @@ bool __attribute__((visibility("default"))) GetPackageName(const char *key, std:
     value = "";
     char paraValue[100] = {0};   // 100 for system parameter
     auto res = GetParameter(key, "-1", paraValue, sizeof(paraValue));
-    
     CHECK_AND_RETURN_RET_LOG(res >= 0, false, "GetSysPara fail, key:%{public}s res:%{public}d", key, res);
     std::stringstream valueStr;
     valueStr << paraValue;
