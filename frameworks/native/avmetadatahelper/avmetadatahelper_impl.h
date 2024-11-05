@@ -49,6 +49,7 @@ private:
         bool isHdr = false;
     };
 
+    std::mutex releaseMutex_;
     std::shared_ptr<IAVMetadataHelperService> avMetadataHelperService_ = nullptr;
     int32_t rotation_ = 0;
     static std::chrono::milliseconds cloneTimestamp;
