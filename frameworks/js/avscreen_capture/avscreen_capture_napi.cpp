@@ -340,9 +340,11 @@ napi_status AVScreenCaptureNapi::GetWindowIDsVectorParams(std::vector<uint64_t> 
     }
     for (uint32_t i = 0; i < array_length; i++) {
         napi_value temp;
-        napi_get_element(env, args[0], i, &temp);
-        int32_t tempValue;
-        napi_get_value_int32(env, temp, &tempValue);
+        status = napi_get_element(env, args[0], i, &temp);
+        int32_t tempValue = -1;
+        if (status == napi_ok) {
+            napi_get_value_int32(env, temp, &tempValue);
+        }
         if (tempValue >= 0) {
             windowIDsVec.push_back(static_cast<uint64_t>(tempValue));
         } else {
