@@ -24,6 +24,7 @@ namespace {
     // audiorender max concurrency.
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SOUNDPOOL, "StreamIDManager"};
     static const std::string THREAD_POOL_NAME = "OS_StreamMgr";
+    static const std::string THREAD_POOL_NAME_CACHE_BUFFER = "OS_CacheBuf";
     static const int32_t MAX_THREADS_NUM = std::thread::hardware_concurrency() >= 4 ? 2 : 1;
 }
 
@@ -59,6 +60,12 @@ StreamIDManager::~StreamIDManager()
         }
         isStreamPlayingThreadPoolStarted_.store(false);
     }
+    if (isCacheBufferStopThreadPoolStarted_.load()) {
+        if (cacheBufferStopThreadPool_ != nullptr) {
+            cacheBufferStopThreadPool_->Stop();
+        }
+        isCacheBufferStopThreadPoolStarted_.store(false);
+    }
 }
 
 int32_t StreamIDManager::InitThreadPool()
@@ -83,6 +90,11 @@ int32_t StreamIDManager::InitThreadPool()
     streamPlayingThreadPool_->SetMaxTaskNum(maxStreams_);
     isStreamPlayingThreadPoolStarted_.store(true);
 
+    cacheBufferStopThreadPool_ = std::make_shared<ThreadPool>(THREAD_POOL_NAME_CACHE_BUFFER);
+    cacheBufferStopThreadPool_->Start(CACHE_BUFFER_THREAD_NUMBER);
+    cacheBufferStopThreadPool_->SetMaxTaskNum(CACHE_BUFFER_THREAD_NUMBER);
+    isCacheBufferStopThreadPoolStarted_.store(true);
+
     return MSERR_OK;
 }
 
@@ -105,7 +117,7 @@ int32_t StreamIDManager::Play(std::shared_ptr<SoundParser> soundParser, PlayPara
                 cacheData.size(), cacheDataTotalSize);
             auto cacheBuffer =
                 std::make_shared<CacheBuffer>(soundParser->GetSoundTrackFormat(), cacheData, cacheDataTotalSize,
-                     soundID, streamID);
+                     soundID, streamID, cacheBufferStopThreadPool_);
             CHECK_AND_RETURN_RET_LOG(cacheBuffer != nullptr, -1, "failed to create cache buffer");
             CHECK_AND_RETURN_RET_LOG(callback_ != nullptr, MSERR_INVALID_VAL, "Invalid callback.");
             cacheBuffer->SetCallback(callback_);
