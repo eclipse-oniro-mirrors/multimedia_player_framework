@@ -331,7 +331,7 @@ void CacheBuffer::OnFirstFrameWriting(uint64_t latency)
 void CacheBuffer::OnInterrupt(const AudioStandard::InterruptEvent &interruptEvent)
 {
     MEDIA_LOGI("CacheBuffer::OnInterrupt, streamID_:%{public}d, eventType:%{public}d, forceType:%{public}d,"
-        " hintType:%{public}d",streamID_, interruptEvent.eventType, interruptEvent.forceType,
+        "hintType:%{public}d", streamID_, interruptEvent.eventType, interruptEvent.forceType,
         interruptEvent.hintType);
     if (interruptEvent.hintType == AudioStandard::InterruptHint::INTERRUPT_HINT_PAUSE ||
         interruptEvent.hintType == AudioStandard::InterruptHint::INTERRUPT_HINT_STOP) {
