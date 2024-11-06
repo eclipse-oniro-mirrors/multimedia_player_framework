@@ -2413,12 +2413,6 @@ void HiPlayerImpl::UpdateStateNoLock(PlayerStates newState, bool notifyUpward, b
             pendingStates_.push(newState);
         }
     }
-    if (forceType == OHOS::AudioStandard::INTERRUPT_FORCE) {
-        if (hintType == OHOS::AudioStandard::INTERRUPT_HINT_PAUSE
-            || hintType == OHOS::AudioStandard::INTERRUPT_HINT_STOP) {
-            callbackLooper_.OnSystemOperation(OPERATION_TYPE_PAUSE, OPERATION_REASON_AUDIO_INTERRUPT);
-        }
-    }
 }
 
 void HiPlayerImpl::NotifyBufferingUpdate(const std::string_view& type, int32_t param)
@@ -2497,6 +2491,12 @@ void HiPlayerImpl::NotifyAudioInterrupt(const Event& event)
     (void)format.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_FORCE, forceType);
     (void)format.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_HINT, hintType);
     callbackLooper_.OnInfo(INFO_TYPE_INTERRUPT_EVENT, hintType, format);
+    if (forceType == OHOS::AudioStandard::INTERRUPT_FORCE) {
+        if (hintType == OHOS::AudioStandard::INTERRUPT_HINT_PAUSE
+            || hintType == OHOS::AudioStandard::INTERRUPT_HINT_STOP) {
+            callbackLooper_.OnSystemOperation(OPERATION_TYPE_PAUSE, OPERATION_REASON_AUDIO_INTERRUPT);
+        }
+    }
 }
 
 void HiPlayerImpl::NotifyAudioDeviceChange(const Event& event)
