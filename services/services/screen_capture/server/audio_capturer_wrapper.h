@@ -29,9 +29,14 @@
 #include "screen_capture.h"
 #include "securec.h"
 
+#define AUDIO_NS_PER_SECOND ((uint64_t)1000000000)
+
 namespace OHOS {
 namespace Media {
 using namespace AudioStandard;
+
+const int64_t AUDIO_CAPTURE_READ_FAILED_WAIT_TIME = 20000000; // 20000000 us 20ms
+
 class AudioCapturerCallbackImpl : public AudioCapturerCallback {
 public:
     void OnInterrupt(const InterruptEvent &interruptEvent) override;
@@ -74,6 +79,7 @@ private:
         const OHOS::AudioStandard::AppInfo &appInfo);
     void SetInnerStreamUsage(std::vector<OHOS::AudioStandard::StreamUsage> &usages);
     void PartiallyPrintLog(int32_t lineNumber, std::string str);
+    int32_t RelativeSleep(int64_t nanoTime);
 
 protected:
     std::shared_ptr<ScreenCaptureCallBack> screenCaptureCb_;
