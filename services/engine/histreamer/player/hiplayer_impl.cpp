@@ -769,7 +769,7 @@ int32_t HiPlayerImpl::Play()
     return ret;
 }
 
-int32_t HiPlayerImpl::Pause()
+int32_t HiPlayerImpl::Pause(bool isSystemOperation)
 {
     MediaTrace trace("HiPlayerImpl::Pause");
     MEDIA_LOG_I("Pause in");
@@ -784,7 +784,7 @@ int32_t HiPlayerImpl::Pause()
     callbackLooper_.StopReportMediaProgress();
     callbackLooper_.StopCollectMaxAmplitude();
     callbackLooper_.ManualReportMediaProgressOnce();
-    OnStateChanged(PlayerStateId::PAUSE);
+    OnStateChanged(PlayerStateId::PAUSE, isSystemOperation);
     if (startTime_ != -1) {
         playTotalDuration_ += GetCurrentMillisecond() - startTime_;
     }
@@ -2384,7 +2384,7 @@ void HiPlayerImpl::NotifySubtitleUpdate(const Event& event)
     }
 }
 
-void HiPlayerImpl::UpdateStateNoLock(PlayerStates newState, bool notifyUpward)
+void HiPlayerImpl::UpdateStateNoLock(PlayerStates newState, bool notifyUpward, bool isSystemOperation)
 {
     if (pipelineStates_ == newState) {
         return;
@@ -2397,6 +2397,9 @@ void HiPlayerImpl::UpdateStateNoLock(PlayerStates newState, bool notifyUpward)
     if (notifyUpward) {
         if (callbackLooper_.IsStarted()) {
             Format format;
+            if (isSystemOperation) {
+                format.PutIntValue(PlayerKeys::PLAYER_STATE_CHANGED_REASON, StateChangeReason::BACKGROUND);
+            }
             while (!pendingStates_.empty()) {
                 auto pendingState = pendingStates_.front();
                 pendingStates_.pop();
@@ -2408,6 +2411,12 @@ void HiPlayerImpl::UpdateStateNoLock(PlayerStates newState, bool notifyUpward)
             callbackLooper_.OnInfo(INFO_TYPE_STATE_CHANGE, pipelineStates_, format);
         } else {
             pendingStates_.push(newState);
+        }
+    }
+    if (forceType == OHOS::AudioStandard::INTERRUPT_FORCE) {
+        if (hintType == OHOS::AudioStandard::INTERRUPT_HINT_PAUSE
+            || hintType == OHOS::AudioStandard::INTERRUPT_HINT_STOP) {
+            callbackLooper_.OnSystemOperation(OPERATION_TYPE_PAUSE, OPERATION_REASON_AUDIO_INTERRUPT);
         }
     }
 }
@@ -2649,7 +2658,7 @@ void HiPlayerImpl::HandleSubtitleTrackChangeEvent(const Event& event)
     return;
 }
 
-void __attribute__((no_sanitize("cfi"))) HiPlayerImpl::OnStateChanged(PlayerStateId state)
+void __attribute__((no_sanitize("cfi"))) HiPlayerImpl::OnStateChanged(PlayerStateId state, bool isSystemOperation)
 {
     {
         AutoLock lockEos(stateChangeMutex_);
@@ -2663,7 +2672,7 @@ void __attribute__((no_sanitize("cfi"))) HiPlayerImpl::OnStateChanged(PlayerStat
     }
     MEDIA_LOG_D("OnStateChanged " PUBLIC_LOG_D32 " > " PUBLIC_LOG_D32, pipelineStates_.load(),
         TransStateId2PlayerState(state));
-    UpdateStateNoLock(TransStateId2PlayerState(state));
+    UpdateStateNoLock(TransStateId2PlayerState(state), true, isSystemOperation);
     {
         AutoLock lock(stateMutex_);
         cond_.NotifyOne();
