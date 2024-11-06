@@ -277,6 +277,23 @@ void AudioCapturerWrapper::PartiallyPrintLog(int32_t lineNumber, std::string str
     captureAudioLogCountMap_[lineNumber]++;
 }
 
+int32_t AudioCapturerWrapper::RelativeSleep(int64_t nanoTime)
+{
+    int32_t ret = -1; // -1 for bad result.
+    CHECK_AND_RETURN_RET_LOG(nanoTime > 0, ret,
+        "ACW AbsoluteSleep invalid sleep time :%{public}" PRId64 " ns", nanoTime);
+    struct timespec time;
+    time.tv_sec = nanoTime / AUDIO_NS_PER_SECOND;
+    time.tv_nsec = nanoTime - (time.tv_sec * AUDIO_NS_PER_SECOND); // Avoids % operation.
+    clockid_t clockId = CLOCK_MONOTONIC;
+    const int relativeFlag = 0; // flag of relative sleep.
+    ret = clock_nanosleep(clockId, relativeFlag, &time, nullptr);
+    if (ret != 0) {
+        MEDIA_LOGI("ACW RelativeSleep may failed, ret is :%{public}d", ret);
+    }
+    return ret;
+}
+
 int32_t AudioCapturerWrapper::CaptureAudio()
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR " CaptureAudio S, name:%{public}s", FAKE_POINTER(this), threadName_.c_str());
@@ -297,6 +314,7 @@ int32_t AudioCapturerWrapper::CaptureAudio()
         memset_s(audioBuffer->buffer, bufferLen, 0, bufferLen);
         int32_t bufferRead = audioCapturer_->Read(*(audioBuffer->buffer), bufferLen, true);
         if (bufferRead <= 0) {
+            RelativeSleep(OHOS::Media::AUDIO_CAPTURE_READ_FAILED_WAIT_TIME);
             PartiallyPrintLog(__LINE__, "CaptureAudio read audio buffer failed " + name);
             continue;
         }
