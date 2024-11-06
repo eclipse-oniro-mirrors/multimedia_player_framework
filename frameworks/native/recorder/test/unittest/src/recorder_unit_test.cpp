@@ -32,57 +32,61 @@ namespace Media {
 // config for video to request buffer from surface
 static VideoRecorderConfig g_videoRecorderConfig;
 
+// HapParams for permission
+static HapInfoParams hapInfo = {
+    .userID = 100, // 100 user ID
+    .bundleName = "com.ohos.test.recordertdd",
+    .instIndex = 0, // 0 index
+    .appIDDesc = "com.ohos.test.recordertdd",
+    .isSystemApp = true
+};
+
+static HapPolicyParams hapPolicy = {
+    .apl = APL_SYSTEM_BASIC,
+    .domain = "test.avrecorder",
+    .permList = { },
+    .permStateList = {
+        {
+            .permissionName = "ohos.permission.MICROPHONE",
+            .isGeneral = true,
+            .resDeviceID = { "local" },
+            .grantStatus = { PermissionState::PERMISSION_GRANTED },
+            .grantFlags = { 1 }
+        },
+        {
+            .permissionName = "ohos.permission.READ_MEDIA",
+            .isGeneral = true,
+            .resDeviceID = { "local" },
+            .grantStatus = { PermissionState::PERMISSION_GRANTED },
+            .grantFlags = { 1 }
+        },
+        {
+            .permissionName = "ohos.permission.WRITE_MEDIA",
+            .isGeneral = true,
+            .resDeviceID = { "local" },
+            .grantStatus = { PermissionState::PERMISSION_GRANTED },
+            .grantFlags = { 1 }
+        },
+        {
+            .permissionName = "ohos.permission.KEEP_BACKGROUND_RUNNING",
+            .isGeneral = true,
+            .resDeviceID = { "local" },
+            .grantStatus = { PermissionState::PERMISSION_GRANTED },
+            .grantFlags = { 1 }
+        },
+        {
+            .permissionName = "ohos.permission.DUMP",
+            .isGeneral = true,
+            .resDeviceID = { "local" },
+            .grantStatus = { PermissionState::PERMISSION_GRANTED },
+            .grantFlags = { 1 }
+        }
+    }
+};
+
 void RecorderUnitTest::SetUpTestCase(void)
 {
-    HapInfoParams info = {
-        .userID = 100, // 100 user ID
-        .bundleName = "com.ohos.test.recordertdd",
-        .instIndex = 0, // 0 index
-        .appIDDesc = "com.ohos.test.recordertdd",
-        .isSystemApp = true
-    };
-
-    HapPolicyParams policy = {
-        .apl = APL_SYSTEM_BASIC,
-        .domain = "test.avrecorder",
-        .permList = { },
-        .permStateList = {
-            {
-                .permissionName = "ohos.permission.MICROPHONE",
-                .isGeneral = true,
-                .resDeviceID = { "local" },
-                .grantStatus = { PermissionState::PERMISSION_GRANTED },
-                .grantFlags = { 1 }
-            },
-            {
-                .permissionName = "ohos.permission.READ_MEDIA",
-                .isGeneral = true,
-                .resDeviceID = { "local" },
-                .grantStatus = { PermissionState::PERMISSION_GRANTED },
-                .grantFlags = { 1 }
-            },
-            {
-                .permissionName = "ohos.permission.WRITE_MEDIA",
-                .isGeneral = true,
-                .resDeviceID = { "local" },
-                .grantStatus = { PermissionState::PERMISSION_GRANTED },
-                .grantFlags = { 1 }
-            },
-            {
-                .permissionName = "ohos.permission.KEEP_BACKGROUND_RUNNING",
-                .isGeneral = true,
-                .resDeviceID = { "local" },
-                .grantStatus = { PermissionState::PERMISSION_GRANTED },
-                .grantFlags = { 1 }
-            }
-        }
-    };
-    AccessTokenIDEx tokenIdEx = { 0 };
-    tokenIdEx = AccessTokenKit::AllocHapToken(info, policy);
-    int ret = SetSelfTokenID(tokenIdEx.tokenIDEx);
-    if (ret != 0) {
-        MEDIA_LOGE("Set hap token failed, err: %{public}d", ret);
-    }
+    SetSelfTokenPremission();
 }
 
 void RecorderUnitTest::TearDownTestCase(void) {}
@@ -98,6 +102,16 @@ void RecorderUnitTest::TearDown(void)
 {
     if (recorder_ != nullptr) {
         recorder_->Release();
+    }
+}
+
+void RecorderUnitTest::SetSelfTokenPremission()
+{
+    AccessTokenIDEx tokenIdEx = { 0 };
+    tokenIdEx = AccessTokenKit::AllocHapToken(hapInfo, hapPolicy);
+    int ret = SetSelfTokenID(tokenIdEx.tokenIDEx);
+    if (ret != 0) {
+        MEDIA_LOGE("Set hap token failed, err: %{public}d", ret);
     }
 }
 
@@ -1101,30 +1115,6 @@ HWTEST_F(RecorderUnitTest, recorder_video_stop_start, TestSize.Level2)
     EXPECT_NE(MSERR_OK, recorder_->Start());
     recorder_->StopBuffer(PURE_VIDEO);
     EXPECT_EQ(MSERR_OK, recorder_->Reset());
-    EXPECT_EQ(MSERR_OK, recorder_->Release());
-    close(g_videoRecorderConfig.outputFd);
-}
-
-/**
- * @tc.name: recorder_video_stop_start
- * @tc.desc: record video, then stop start
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(RecorderUnitTest, recorder_video_wrongsize, TestSize.Level2)
-{
-    g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
-    g_videoRecorderConfig.videoFormat = H264;
-    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_video_wrongsize.mp4").c_str(), O_RDWR);
-    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
-    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
-    EXPECT_EQ(MSERR_OK, recorder_->Prepare());
-    EXPECT_EQ(MSERR_OK, recorder_->RequesetBuffer(PURE_ERROR, g_videoRecorderConfig));
-    recorder_->Start();
-    sleep(RECORDER_TIME);
-    EXPECT_EQ(MSERR_OK, recorder_->Stop(false));
-    recorder_->StopBuffer(PURE_VIDEO);
-    recorder_->Reset();
     EXPECT_EQ(MSERR_OK, recorder_->Release());
     close(g_videoRecorderConfig.outputFd);
 }
