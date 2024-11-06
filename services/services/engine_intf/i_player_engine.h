@@ -40,6 +40,7 @@ public:
         (void)errorMsg;
     }
     virtual void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody) = 0;
+    virtual void OnSystemOperation(PlayerOnSystemOperationType type, PlayerOperationReason reason) = 0;
 };
 
 class IPlayerEngine {
@@ -78,6 +79,7 @@ public:
         return 0;
     }
     virtual int32_t PrepareAsync() = 0;
+    virtual int32_t Pause(bool isSystemOperation) = 0;
     virtual int32_t Pause() = 0;
     virtual int32_t Stop() = 0;
     virtual int32_t Reset() = 0;
