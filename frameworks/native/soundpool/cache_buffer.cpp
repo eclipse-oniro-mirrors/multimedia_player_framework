@@ -101,6 +101,12 @@ std::unique_ptr<AudioStandard::AudioRenderer> CacheBuffer::CreateAudioRenderer(c
     }
 
     CHECK_AND_RETURN_RET_LOG(audioRenderer != nullptr, nullptr, "Invalid audioRenderer.");
+    PrepareAudioRenderer(audioRenderer);
+    return audioRenderer;
+}
+
+void CacheBuffer::PrepareAudioRenderer(std::unique_ptr<AudioStandard::AudioRenderer> &audioRenderer)
+{
     size_t targetSize = 0;
     int32_t ret = audioRenderer->GetBufferSize(targetSize);
     audioRenderer->SetRenderMode(AudioStandard::AudioRenderMode::RENDER_MODE_CALLBACK);
@@ -111,9 +117,9 @@ std::unique_ptr<AudioStandard::AudioRenderer> CacheBuffer::CreateAudioRenderer(c
     }
     int32_t retCallback = audioRenderer->SetRendererWriteCallback(shared_from_this());
     int32_t retFirstCallback = audioRenderer->SetRendererFirstFrameWritingCallback(shared_from_this());
-    MEDIA_LOGI("CacheBuffer::CreateAudioRenderer retCallback:%{public}d, retFirstCallback:%{public}d",
-        retCallback, retFirstCallback);
-    return audioRenderer;
+    int32_t retRenderCallback = audioRenderer->SetRendererCallback(shared_from_this());
+    MEDIA_LOGI("CacheBuffer::CreateAudioRenderer retCallback:%{public}d, retFirstCallback:%{public}d,"
+        " retRenderCallback:%{public}d", retCallback, retFirstCallback, retRenderCallback);
 }
 
 int32_t CacheBuffer::PreparePlay(const int32_t streamID, const AudioStandard::AudioRendererInfo audioRendererInfo,
@@ -140,6 +146,10 @@ int32_t CacheBuffer::DoPlay(const int32_t streamID)
     std::lock_guard lock(cacheBufferLock_);
     CHECK_AND_RETURN_RET_LOG(fullCacheData_ != nullptr, MSERR_INVALID_VAL, "fullCacheData_ is nullptr.");
     CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr, MSERR_INVALID_VAL, "Invalid audioRenderer.");
+    size_t bufferSize;
+    audioRenderer_->GetBufferSize(bufferSize);
+    MEDIA_LOGI("CacheBuffer::DoPlay, streamID_:%{public}d, bufferSize:%{public}zu, cacheDataFrameIndex_:%{public}zu",
+        streamID_, bufferSize, cacheDataFrameIndex_);
     cacheDataFrameIndex_ = 0;
     havePlayedCount_ = 0;
     isRunning_.store(true);
@@ -316,6 +326,28 @@ void CacheBuffer::OnFirstFrameWriting(uint64_t latency)
     MEDIA_LOGI("CacheBuffer::OnFirstFrameWriting, streamID_:%{public}d", streamID_);
     CHECK_AND_RETURN_LOG(frameWriteCallback_ != nullptr, "frameWriteCallback is null.");
     frameWriteCallback_->OnFirstAudioFrameWritingCallback(latency);
+}
+
+void CacheBuffer::OnInterrupt(const AudioStandard::InterruptEvent &interruptEvent)
+{
+    MEDIA_LOGI("CacheBuffer::OnInterrupt, streamID_:%{public}d, eventType:%{public}d, forceType:%{public}d,"
+        " hintType:%{public}d",streamID_, interruptEvent.eventType, interruptEvent.forceType,
+        interruptEvent.hintType);
+    if (interruptEvent.hintType == AudioStandard::InterruptHint::INTERRUPT_HINT_PAUSE ||
+        interruptEvent.hintType == AudioStandard::InterruptHint::INTERRUPT_HINT_STOP) {
+        MEDIA_LOGI("CacheBuffer::OnInterrupt, interrupt cacheBuffer, streamID_:%{public}d", streamID_);
+        int32_t streamIDInterrupt = streamID_;
+        ThreadPool::Task cacheBufferInterruptTask = [this, streamIDInterrupt] { this->Stop(streamIDInterrupt); };
+        if (auto ptr = cacheBufferStopThreadPool_.lock()) {
+            ptr->AddTask(cacheBufferInterruptTask);
+        }
+    }
+}
+
+void CacheBuffer::OnStateChange(const AudioStandard::RendererState state,
+    const AudioStandard::StateChangeCmdType cmdType)
+{
+    MEDIA_LOGI("CacheBuffer::OnStateChange, state:%{public}d", state);
 }
 
 int32_t CacheBuffer::Stop(const int32_t streamID)
