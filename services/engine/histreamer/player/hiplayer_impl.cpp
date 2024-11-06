@@ -559,10 +559,7 @@ int32_t HiPlayerImpl::PrepareAsync()
 int32_t HiPlayerImpl::ReportErrorInfo(int32_t errCode)
 {
     if (errCode == MSERR_UNKNOWN) {
-        errCode = TransStatus(Status::ERROR_UNSUPPORTED_FORMAT);
-        CollectionErrorInfo(errCode, "PrepareAsync error: DoSetSource error");
-        OnEvent({"engine", EventType::EVENT_ERROR, MSERR_UNSUPPORT_CONTAINER_TYPE});
-        return errCode;
+        errCode = MSERR_UNSUPPORT_CONTAINER_TYPE;
     }
     CollectionErrorInfo(errCode, "PrepareAsync error: DoSetSource error");
     OnEvent({"engine", EventType::EVENT_ERROR, errCode});
