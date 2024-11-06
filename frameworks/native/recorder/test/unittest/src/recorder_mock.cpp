@@ -428,7 +428,7 @@ void RecorderMock::HDICreateESBuffer()
         frameLenArray++;
         free(tempBuffer);
     }
-    cout << "exit camera hdi loop" << endl;
+    cout << "exit camera hdi loop" << endl; 
     if ((file_ != nullptr) && (file_->is_open())) {
         file_->close();
     }

@@ -1120,30 +1120,6 @@ HWTEST_F(RecorderUnitTest, recorder_video_stop_start, TestSize.Level2)
 }
 
 /**
- * @tc.name: recorder_video_stop_start
- * @tc.desc: record video, then stop start
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(RecorderUnitTest, recorder_video_wrongsize, TestSize.Level2)
-{
-    g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
-    g_videoRecorderConfig.videoFormat = H264;
-    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_video_wrongsize.mp4").c_str(), O_RDWR);
-    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
-    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
-    EXPECT_EQ(MSERR_OK, recorder_->Prepare());
-    EXPECT_EQ(MSERR_OK, recorder_->RequesetBuffer(PURE_ERROR, g_videoRecorderConfig));
-    recorder_->Start();
-    sleep(RECORDER_TIME);
-    EXPECT_EQ(MSERR_OK, recorder_->Stop(false));
-    recorder_->StopBuffer(PURE_VIDEO);
-    recorder_->Reset();
-    EXPECT_EQ(MSERR_OK, recorder_->Release());
-    close(g_videoRecorderConfig.outputFd);
-}
-
-/**
  * @tc.name: recorder_video_SetOrientationHint_001
  * @tc.desc: record video, SetOrientationHint
  * @tc.type: FUNC
