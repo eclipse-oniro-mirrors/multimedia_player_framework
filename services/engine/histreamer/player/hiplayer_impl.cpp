@@ -1069,7 +1069,7 @@ void HiPlayerImpl::NotifySeek(Status rtv, bool flag, int64_t seekPos)
         // change player state to PLAYER_STATE_ERROR when seek error.
         UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
         Format format;
-        callbackLooper_.OnError(PLAYER_ERROR, MSERR_DEMUER_FAILED));
+        callbackLooper_.OnError(PLAYER_ERROR, MSERR_DEMUXER_FAILED));
         callbackLooper_.OnInfo(INFO_TYPE_SEEKDONE, -1, format);
     }  else if (flag) {
         // only notify seekDone for external call.
