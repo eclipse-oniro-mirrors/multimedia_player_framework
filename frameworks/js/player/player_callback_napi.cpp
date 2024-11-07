@@ -85,6 +85,12 @@ PlayerStates PlayerCallbackNapi::GetCurrentState() const
 
 void PlayerCallbackNapi::OnError(int32_t errorCode, const std::string &errorMsg)
 {
+    if (static_cast<MediaServiceErrCode>(errorCode) == MSERR_IO_VIDEO_DEC_INIT_FAILED) {
+        static_cast<MediaServiceErrCode>(errorCode) = MSERR_UNSUPPORT_VID_DEC_TYPE;
+    }
+    if (static_cast<MediaServiceErrCode>errorCode == MSERR_IO_VIDEO_DEC_UNAVAILABLE) {
+        static_cast<MediaServiceErrCode>errorCode = MSERR_UNSUPPORT_VID_SRC_TYPE;
+    }
     MEDIA_LOGE("OnErrorCb:errorCode %{public}d, errorMsg %{public}s", errorCode, errorMsg.c_str());
     MediaServiceExtErrCode err = MSErrorToExtError(static_cast<MediaServiceErrCode>(errorCode));
     return SendErrorCallback(err, errorMsg);
