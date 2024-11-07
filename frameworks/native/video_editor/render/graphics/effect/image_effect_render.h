@@ -16,9 +16,7 @@
 #ifndef OH_VEF_GRAPHICS_IMAGE_EFFECT_RENDER_H
 #define OH_VEF_GRAPHICS_IMAGE_EFFECT_RENDER_H
 
-#ifdef IMAGE_EFFECT_SUPPORT
 #include "image_effect.h"
-#endif
 #include "render/graphics/base/render_texture.h"
 #include "video_editor.h"
 
@@ -26,7 +24,11 @@ namespace OHOS {
 namespace Media {
 class ImageEffectRender : public RenderObject {
 public:
+#ifdef IMAGE_EFFECT_SUPPORT
     explicit ImageEffectRender(const std::shared_ptr<OH_ImageEffect>& imageEffect);
+#else
+    explicit ImageEffectRender();
+#endif
     ~ImageEffectRender();
     bool Init() override;
     bool Release() override;
@@ -34,16 +36,14 @@ public:
         const int32_t colorRange);
 
 private:
-    VEFError CreateNativeBuffer(int32_t width, int32_t height, GLuint textureId,
-        OH_NativeBuffer** nativeBuffer, OHNativeWindowBuffer** nativeWindowBuffer);
-    VEFError InitNativeBuffer(int32_t width, int32_t height);
-    void ReleaseNativeBuffer();
+    VEFError InitEffectFilter();
 
 private:
+#ifdef IMAGE_EFFECT_SUPPORT
     std::shared_ptr<OH_ImageEffect> imageEffect_ { nullptr };
+    OH_EffectFilter *effectFilter_ { nullptr };
+#endif
     GLuint tempTexForEffect_ {GL_NONE};
-    OH_NativeBuffer *nativeBuffer_ = { nullptr };
-    OHNativeWindowBuffer *nativeWindowBuffer_ { nullptr };
     int32_t colorRange_ { -1 };
 };
 }
