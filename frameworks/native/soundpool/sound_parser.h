@@ -31,6 +31,7 @@
 #include "cache_buffer.h"
 #include "isoundpool.h"
 #include "media_description.h"
+#include "media_dfx.h"
 #include "media_errors.h"
 #include "media_log.h"
 #include "securec.h"
