@@ -82,9 +82,8 @@ public:
     static bool GetPropertyBool(napi_env env, napi_value configObj, const std::string &type, bool &result);
 
     static void ConvertDeviceInfoToAudioDeviceDescriptor(
-        sptr<AudioStandard::AudioDeviceDescriptor> audioDeviceDescriptor,
-        const AudioStandard::AudioDeviceDescriptor &deviceInfo);
-    static napi_status SetValueDeviceInfo(const napi_env &env, const AudioStandard::AudioDeviceDescriptor &deviceInfo,
+        sptr<AudioStandard::AudioDeviceDescriptor> audioDeviceDescriptor, const AudioStandard::DeviceInfo &deviceInfo);
+    static napi_status SetValueDeviceInfo(const napi_env &env, const AudioStandard::DeviceInfo &deviceInfo,
         napi_value &result);
     static napi_status SetDeviceDescriptor(const napi_env &env, const AudioStandard::AudioDeviceDescriptor &deviceInfo,
         napi_value &result);

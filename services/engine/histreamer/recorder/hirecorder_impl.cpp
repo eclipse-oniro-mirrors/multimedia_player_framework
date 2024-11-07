@@ -310,7 +310,7 @@ sptr<Surface> HiRecorderImpl::GetSurface(int32_t sourceId)
 sptr<Surface> HiRecorderImpl::GetMetaSurface(int32_t sourceId)
 {
     MEDIA_LOG_I("HiRecorderImpl GetMetaSurface enter.");
-
+    
     if (SourceIdGenerator::IsMeta(sourceId) &&
         (GetMetaSourceType(sourceId) > VIDEO_META_SOURCE_INVALID &&
         GetMetaSourceType(sourceId) < VIDEO_META_SOURCE_BUTT)) {
@@ -586,7 +586,7 @@ int32_t HiRecorderImpl::GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &ch
     FALSE_RETURN_V_MSG_E(audioCaptureFilter_ != nullptr,
         (int32_t)Status::ERROR_INVALID_OPERATION,
         "audioCaptureFilter_ is nullptr, cannot get audio capturer change info");
-
+    
     AudioStandard::AudioCapturerChangeInfo audioChangeInfo;
     Status ret = audioCaptureFilter_->GetCurrentCapturerChangeInfo(audioChangeInfo);
     changeInfo = ConvertCapturerChangeInfo(audioChangeInfo);
@@ -712,7 +712,7 @@ void HiRecorderImpl::ConfigureVideo(const RecorderParam &recParam)
     }
 }
 
-
+ 
 void HiRecorderImpl::ConfigureMeta(int32_t sourceId, const RecorderParam &recParam)
 {
     MEDIA_LOG_I("HiRecorderImpl ConfigureMeta enter");
@@ -893,29 +893,29 @@ AudioRecorderChangeInfo HiRecorderImpl::ConvertCapturerChangeInfo(
     audioRecorderChangeInfo.capturerInfo.sourceType = capturerChangeInfo.capturerInfo.sourceType;
     audioRecorderChangeInfo.capturerInfo.capturerFlags = capturerChangeInfo.capturerInfo.capturerFlags;
 
-    audioRecorderChangeInfo.inputDeviceInfo.deviceName = capturerChangeInfo.inputDeviceInfo.deviceName_;
-    audioRecorderChangeInfo.inputDeviceInfo.deviceId = capturerChangeInfo.inputDeviceInfo.deviceId_;
-    audioRecorderChangeInfo.inputDeviceInfo.channelMasks = capturerChangeInfo.inputDeviceInfo.channelMasks_;
-    audioRecorderChangeInfo.inputDeviceInfo.deviceRole = capturerChangeInfo.inputDeviceInfo.deviceRole_;
-    audioRecorderChangeInfo.inputDeviceInfo.deviceType = capturerChangeInfo.inputDeviceInfo.deviceType_;
-    audioRecorderChangeInfo.inputDeviceInfo.displayName = capturerChangeInfo.inputDeviceInfo.displayName_;
+    audioRecorderChangeInfo.inputDeviceInfo.deviceName = capturerChangeInfo.inputDeviceInfo.deviceName;
+    audioRecorderChangeInfo.inputDeviceInfo.deviceId = capturerChangeInfo.inputDeviceInfo.deviceId;
+    audioRecorderChangeInfo.inputDeviceInfo.channelMasks = capturerChangeInfo.inputDeviceInfo.channelMasks;
+    audioRecorderChangeInfo.inputDeviceInfo.deviceRole = capturerChangeInfo.inputDeviceInfo.deviceRole;
+    audioRecorderChangeInfo.inputDeviceInfo.deviceType = capturerChangeInfo.inputDeviceInfo.deviceType;
+    audioRecorderChangeInfo.inputDeviceInfo.displayName = capturerChangeInfo.inputDeviceInfo.displayName;
     audioRecorderChangeInfo.inputDeviceInfo.interruptGroupId =
-        capturerChangeInfo.inputDeviceInfo.interruptGroupId_;
+        capturerChangeInfo.inputDeviceInfo.interruptGroupId;
     audioRecorderChangeInfo.inputDeviceInfo.isLowLatencyDevice =
-        capturerChangeInfo.inputDeviceInfo.isLowLatencyDevice_;
-    audioRecorderChangeInfo.inputDeviceInfo.macAddress = capturerChangeInfo.inputDeviceInfo.macAddress_;
+        capturerChangeInfo.inputDeviceInfo.isLowLatencyDevice;
+    audioRecorderChangeInfo.inputDeviceInfo.macAddress = capturerChangeInfo.inputDeviceInfo.macAddress;
     audioRecorderChangeInfo.inputDeviceInfo.channelIndexMasks =
-        capturerChangeInfo.inputDeviceInfo.channelIndexMasks_;
-    for (auto item : capturerChangeInfo.inputDeviceInfo.audioStreamInfo_.channels) {
+        capturerChangeInfo.inputDeviceInfo.channelIndexMasks;
+    for (auto item : capturerChangeInfo.inputDeviceInfo.audioStreamInfo.channels) {
         audioRecorderChangeInfo.inputDeviceInfo.audioStreamInfo.channels.insert(static_cast<int32_t>(item));
     }
-    for (auto item : capturerChangeInfo.inputDeviceInfo.audioStreamInfo_.samplingRate) {
+    for (auto item : capturerChangeInfo.inputDeviceInfo.audioStreamInfo.samplingRate) {
         audioRecorderChangeInfo.inputDeviceInfo.audioStreamInfo.samplingRate.insert(static_cast<int32_t>(item));
     }
     audioRecorderChangeInfo.inputDeviceInfo.audioStreamInfo.encoding =
-        capturerChangeInfo.inputDeviceInfo.audioStreamInfo_.encoding;
+        capturerChangeInfo.inputDeviceInfo.audioStreamInfo.encoding;
     audioRecorderChangeInfo.inputDeviceInfo.audioStreamInfo.format =
-        capturerChangeInfo.inputDeviceInfo.audioStreamInfo_.format;
+        capturerChangeInfo.inputDeviceInfo.audioStreamInfo.format;
     return audioRecorderChangeInfo;
 }
 

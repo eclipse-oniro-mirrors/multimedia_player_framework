@@ -874,25 +874,24 @@ bool CommonNapi::GetPropertyBool(napi_env env, napi_value configObj, const std::
 }
 
 void CommonNapi::ConvertDeviceInfoToAudioDeviceDescriptor(
-    sptr<AudioStandard::AudioDeviceDescriptor> audioDeviceDescriptor,
-    const AudioStandard::AudioDeviceDescriptor &deviceInfo)
+    sptr<AudioStandard::AudioDeviceDescriptor> audioDeviceDescriptor, const AudioStandard::DeviceInfo &deviceInfo)
 {
     CHECK_AND_RETURN_LOG(audioDeviceDescriptor != nullptr, "audioDeviceDescriptor is nullptr");
-    audioDeviceDescriptor->deviceRole_ = deviceInfo.deviceRole_;
-    audioDeviceDescriptor->deviceType_ = deviceInfo.deviceType_;
-    audioDeviceDescriptor->deviceId_ = deviceInfo.deviceId_;
-    audioDeviceDescriptor->channelMasks_ = deviceInfo.channelMasks_;
-    audioDeviceDescriptor->channelIndexMasks_ = deviceInfo.channelIndexMasks_;
-    audioDeviceDescriptor->deviceName_ = deviceInfo.deviceName_;
-    audioDeviceDescriptor->macAddress_ = deviceInfo.macAddress_;
-    audioDeviceDescriptor->interruptGroupId_ = deviceInfo.interruptGroupId_;
-    audioDeviceDescriptor->volumeGroupId_ = deviceInfo.volumeGroupId_;
-    audioDeviceDescriptor->networkId_ = deviceInfo.networkId_;
-    audioDeviceDescriptor->displayName_ = deviceInfo.displayName_;
-    audioDeviceDescriptor->audioStreamInfo_.samplingRate = deviceInfo.audioStreamInfo_.samplingRate;
-    audioDeviceDescriptor->audioStreamInfo_.encoding = deviceInfo.audioStreamInfo_.encoding;
-    audioDeviceDescriptor->audioStreamInfo_.format = deviceInfo.audioStreamInfo_.format;
-    audioDeviceDescriptor->audioStreamInfo_.channels = deviceInfo.audioStreamInfo_.channels;
+    audioDeviceDescriptor->deviceRole_ = deviceInfo.deviceRole;
+    audioDeviceDescriptor->deviceType_ = deviceInfo.deviceType;
+    audioDeviceDescriptor->deviceId_ = deviceInfo.deviceId;
+    audioDeviceDescriptor->channelMasks_ = deviceInfo.channelMasks;
+    audioDeviceDescriptor->channelIndexMasks_ = deviceInfo.channelIndexMasks;
+    audioDeviceDescriptor->deviceName_ = deviceInfo.deviceName;
+    audioDeviceDescriptor->macAddress_ = deviceInfo.macAddress;
+    audioDeviceDescriptor->interruptGroupId_ = deviceInfo.interruptGroupId;
+    audioDeviceDescriptor->volumeGroupId_ = deviceInfo.volumeGroupId;
+    audioDeviceDescriptor->networkId_ = deviceInfo.networkId;
+    audioDeviceDescriptor->displayName_ = deviceInfo.displayName;
+    audioDeviceDescriptor->audioStreamInfo_.samplingRate = deviceInfo.audioStreamInfo.samplingRate;
+    audioDeviceDescriptor->audioStreamInfo_.encoding = deviceInfo.audioStreamInfo.encoding;
+    audioDeviceDescriptor->audioStreamInfo_.format = deviceInfo.audioStreamInfo.format;
+    audioDeviceDescriptor->audioStreamInfo_.channels = deviceInfo.audioStreamInfo.channels;
 }
 
 napi_status CommonNapi::SetDeviceDescriptor(const napi_env &env, const AudioStandard::AudioDeviceDescriptor &deviceInfo,
@@ -961,7 +960,7 @@ napi_status CommonNapi::SetDeviceDescriptors(const napi_env &env,
     return status;
 }
 
-napi_status CommonNapi::SetValueDeviceInfo(const napi_env &env, const AudioStandard::AudioDeviceDescriptor &deviceInfo,
+napi_status CommonNapi::SetValueDeviceInfo(const napi_env &env, const AudioStandard::DeviceInfo &deviceInfo,
     napi_value &result)
 {
     std::vector<sptr<AudioStandard::AudioDeviceDescriptor>> deviceDescriptors;
