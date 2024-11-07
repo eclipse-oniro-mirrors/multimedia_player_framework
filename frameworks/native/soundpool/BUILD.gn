@@ -40,7 +40,10 @@ ohos_shared_library("soundpool_client") {
     "${multimedia_player_framework_path}/services/utils/include",
   ]
 
-  deps = [ "${multimedia_player_framework_path}/interfaces/inner_api/native:media_client" ]
+  deps = [
+    "${multimedia_player_framework_path}/interfaces/inner_api/native:media_client",
+    "${multimedia_player_framework_path}/services/utils:media_service_utils",
+  ]
 
   external_deps = [
     "ability_base:want",
@@ -54,6 +57,7 @@ ohos_shared_library("soundpool_client") {
     "ffrt:libffrt",
     "graphic_surface:surface",
     "hilog:libhilog",
+    "hisysevent:libhisysevent",
     "init:libbegetutil",
     "ipc:ipc_core",
     "qos_manager:qos",

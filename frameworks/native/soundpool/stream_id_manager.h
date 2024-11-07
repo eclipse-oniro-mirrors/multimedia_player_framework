@@ -23,6 +23,7 @@
 #include "sound_parser.h"
 #include "thread_pool.h"
 #include "cpp/mutex.h"
+#include "media_dfx.h"
 
 namespace OHOS {
 namespace Media {
@@ -52,26 +53,26 @@ private:
             : streamIDManagerInner_(streamIDManager)
         {
             (void)HILOG_IMPL(LOG_CORE, LOG_INFO, LOG_DOMAIN_SOUNDPOOL, "SoundPool",
-                "Construction StreamIDManager::SoundPoolCallBack");
+                "Construction StreamIDManager::CacheBufferCallBack");
         }
         virtual ~CacheBufferCallBack() = default;
         void OnLoadCompleted(int32_t soundID)
         {
             (void)HILOG_IMPL(LOG_CORE, LOG_INFO, LOG_DOMAIN_SOUNDPOOL, "SoundPool",
-                "StreamIDManager::SoundPoolCallBack OnLoadCompleted");
+                "StreamIDManager::CacheBufferCallBack OnLoadCompleted");
         }
         void OnPlayFinished()
         {
             if (!streamIDManagerInner_.expired()) {
                 streamIDManagerInner_.lock()->OnPlayFinished();
                 (void)HILOG_IMPL(LOG_CORE, LOG_INFO, LOG_DOMAIN_SOUNDPOOL, "SoundPool",
-                    "StreamIDManager::SoundPoolCallBack OnPlayFinished");
+                    "StreamIDManager::CacheBufferCallBack OnPlayFinished");
             }
         }
         void OnError(int32_t errorCode)
         {
             (void)HILOG_IMPL(LOG_CORE, LOG_INFO, LOG_DOMAIN_SOUNDPOOL, "SoundPool",
-                "StreamIDManager::SoundPoolCallBack OnError");
+                "StreamIDManager::CacheBufferCallBack OnError");
         }
 
     private:
