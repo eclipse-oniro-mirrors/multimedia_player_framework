@@ -471,7 +471,7 @@ public:
         ON_SCOPE_EXIT(0) {
             delete jsCb;
         };
-
+        
         if (jsCb != nullptr && jsCb->callbackName == AVPlayerEvent::EVENT_BUFFERING_UPDATE) {
             napi_status ret = napi_send_event(env, [jsCb] () {
                 CHECK_AND_RETURN_LOG(jsCb != nullptr, "Work thread is nullptr");
@@ -579,8 +579,7 @@ public:
     };
 
     struct DeviceChangeNapi : public Base {
-        AudioStandard::AudioDeviceDescriptor deviceInfo =
-            AudioStandard::AudioDeviceDescriptor(AudioStandard::AudioDeviceDescriptor::DEVICE_INFO);
+        AudioStandard::DeviceInfo deviceInfo;
         int32_t reason;
         void UvWork() override
         {
@@ -728,7 +727,7 @@ void AVPlayerCallback::OnAudioDeviceChangeCb(const int32_t extra, const Format &
     infoBody.GetBuffer(PlayerKeys::AUDIO_DEVICE_CHANGE, &parcelBuffer, parcelSize);
     Parcel parcel;
     parcel.WriteBuffer(parcelBuffer, parcelSize);
-    AudioStandard::AudioDeviceDescriptor deviceInfo(AudioStandard::AudioDeviceDescriptor::DEVICE_INFO);
+    AudioStandard::DeviceInfo deviceInfo;
     deviceInfo.Unmarshalling(parcel);
 
     int32_t reason;
@@ -1358,7 +1357,7 @@ void AVPlayerCallback::OnTrackChangedCb(const int32_t extra, const Format &infoB
     infoBody.GetIntValue(std::string(PlayerKeys::PLAYER_TRACK_INDEX), index);
     infoBody.GetIntValue(std::string(PlayerKeys::PLAYER_IS_SELECT), isSelect);
     MEDIA_LOGI("OnTrackChangedCb index %{public}d, isSelect = %{public}d", index, isSelect);
-
+ 
     CHECK_AND_RETURN_LOG(refMap_.find(AVPlayerEvent::EVENT_TRACKCHANGE) != refMap_.end(),
         "can not find trackChange callback!");
 
@@ -1378,7 +1377,7 @@ void AVPlayerCallback::OnTrackInfoUpdate(const int32_t extra, const Format &info
     std::vector<Format> trackInfo;
     (void)infoBody.GetFormatVector(std::string(PlayerKeys::PLAYER_TRACK_INFO), trackInfo);
     MEDIA_LOGI("OnTrackInfoUpdate callback");
-
+ 
     CHECK_AND_RETURN_LOG(refMap_.find(AVPlayerEvent::EVENT_TRACK_INFO_UPDATE) != refMap_.end(),
         "can not find trackInfoUpdate callback!");
 
