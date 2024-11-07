@@ -1375,6 +1375,9 @@ RetInfo AVRecorderNapi::Start()
     }
 
     int32_t ret = recorder_->Start();
+    if (ret != MSERR_OK) {
+        StateCallback(AVRecorderState::STATE_ERROR);
+    }
     CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "Start", ""));
     StateCallback(AVRecorderState::STATE_STARTED);
     return RetInfo(MSERR_EXT_API9_OK, "");
