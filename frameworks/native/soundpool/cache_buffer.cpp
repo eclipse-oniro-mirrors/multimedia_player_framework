@@ -27,9 +27,10 @@ namespace OHOS {
 namespace Media {
 CacheBuffer::CacheBuffer(const Format &trackFormat,
     const std::deque<std::shared_ptr<AudioBufferEntry>> &cacheData,
-    const size_t &cacheDataTotalSize, const int32_t &soundID, const int32_t &streamID) : trackFormat_(trackFormat),
+    const size_t &cacheDataTotalSize, const int32_t &soundID, const int32_t &streamID,
+    std::shared_ptr<ThreadPool> cacheBufferStopThreadPool) : trackFormat_(trackFormat),
     cacheData_(cacheData), cacheDataTotalSize_(cacheDataTotalSize), soundID_(soundID), streamID_(streamID),
-    cacheDataFrameIndex_(0), havePlayedCount_(0)
+    cacheBufferStopThreadPool_(cacheBufferStopThreadPool), cacheDataFrameIndex_(0), havePlayedCount_(0)
 
 {
     MEDIA_LOGI("Construction CacheBuffer");
@@ -257,7 +258,11 @@ void CacheBuffer::OnWriteData(size_t length)
                 " havePlayedCount_:%{public}d, loop:%{public}d, streamID_:%{public}d, length: %{public}zu",
                 cacheDataFrameIndex_, havePlayedCount_, loop_, streamID_, length);
             cacheBufferLock_.unlock();
-            Stop(streamID_);
+            int32_t streamIDStop = streamID_;
+            ThreadPool::Task cacheBufferStopTask = [this, streamIDStop] { this->Stop(streamIDStop); };
+            if (auto ptr = cacheBufferStopThreadPool_.lock()) {
+                ptr->AddTask(cacheBufferStopTask);
+            }
             return;
         }
         cacheDataFrameIndex_ = 0;

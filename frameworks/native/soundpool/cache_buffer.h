@@ -23,6 +23,7 @@
 #include "isoundpool.h"
 #include "media_description.h"
 #include "cpp/mutex.h"
+#include "thread_pool.h"
 #include "audio_system_manager.h"
 
 namespace OHOS {
@@ -50,7 +51,8 @@ public:
     CacheBuffer(const Format &trackFormat,
         const std::deque<std::shared_ptr<AudioBufferEntry>> &cacheData,
         const size_t &cacheDataTotalSize,
-        const int32_t &soundID, const int32_t &streamID);
+        const int32_t &soundID, const int32_t &streamID,
+        std::shared_ptr<ThreadPool> cacheBufferStopThreadPool);
     ~CacheBuffer();
     void OnWriteData(size_t length) override;
     void OnFirstFrameWriting(uint64_t latency) override;
@@ -111,6 +113,7 @@ private:
     std::shared_ptr<ISoundPoolCallback> cacheBufferCallback_ = nullptr;
     std::shared_ptr<ISoundPoolFrameWriteCallback> frameWriteCallback_ = nullptr;
     ffrt::mutex cacheBufferLock_;
+    std::weak_ptr<ThreadPool> cacheBufferStopThreadPool_;
 
     int32_t loop_ = 0;
     int32_t priority_ = 0;
