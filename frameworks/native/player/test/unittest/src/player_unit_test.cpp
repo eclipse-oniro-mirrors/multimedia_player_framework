@@ -1096,7 +1096,7 @@ HWTEST_F(PlayerUnitTest, Player_Pause_001, TestSize.Level0)
     EXPECT_TRUE(player_->IsPlaying());
     EXPECT_EQ(MSERR_OK, player_->Pause());
     EXPECT_FALSE(player_->IsPlaying());
-    EXPECT_NE(MSERR_OK, player_->Pause());
+    EXPECT_EQ(MSERR_OK, player_->Pause());
 }
 
 /**

@@ -161,6 +161,16 @@ enum PlayerMessageType : int32_t {
     PLAYER_INFO_EXTEND_START = 0X1000,
 };
 
+enum PlayerOnSystemOperationType : int32_t {
+    OPERATION_TYPE_PLAY = 1,
+    OPERATION_TYPE_PAUSE,
+};
+
+enum PlayerOperationReason : int32_t {
+    OPERATION_REASON_AUDIO_INTERRUPT = 1,
+    OPERATION_REASON_USER_BACKGROUND,
+};
+
 enum PlayerOnInfoType : int32_t {
     /* return the message when seeking done. */
     INFO_TYPE_SEEKDONE = 1,
