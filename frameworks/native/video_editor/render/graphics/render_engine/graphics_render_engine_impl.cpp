@@ -363,9 +363,11 @@ RenderTexturePtr GraphicsRenderEngineImpl::RenderEffects(const RenderTexturePtr&
         if (it != imageEffectRenderList_.end()) {
             outputRenderTexture = it->second->Render(context_.get(), surface_, outputRenderTexture, colorRange);
         } else {
+#ifdef IMAGE_EFFECT_SUPPORT
             auto imageEffectRender = std::make_shared<ImageEffectRender>(effectInfo->imageEffect);
             imageEffectRenderList_[effectInfo->id] = imageEffectRender;
             outputRenderTexture = imageEffectRender->Render(context_.get(), surface_, outputRenderTexture, colorRange);
+#endif
         }
     }
 

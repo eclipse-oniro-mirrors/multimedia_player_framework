@@ -116,34 +116,26 @@ RenderTexturePtr ImageEffectRender::Render(
         MEDIA_LOGE("init RenderTexture object failed.");
         return inputRenderTexture;
     }
-    ImageEffect_Any inputTexVal = {
-        .dataType = ImageEffect_DataType::EFFECT_DATA_TYPE_INT32,
-        .dataValue.int32Value = (int32_t) inputRenderTexture->GetTextureId()
-    };
-    OH_EffectFilter_SetValue(effectFilter_, SET_INPUT_TEXTURE, &inputTexVal);
-
-    ImageEffect_Any outputTexVal = {
-        .dataType = ImageEffect_DataType::EFFECT_DATA_TYPE_INT32,
-        .dataValue.int32Value = (int32_t) tex->GetTextureId()
-    };
-    OH_EffectFilter_SetValue(effectFilter_, SET_INPUT_TEXTURE, &outputTexVal);
-
-    ImageEffect_Any widthVal = {
-        .dataType = ImageEffect_DataType::EFFECT_DATA_TYPE_INT32,
-        .dataValue.int32Value = (int32_t) width
-    };
-    OH_EffectFilter_SetValue(effectFilter_, SET_INPUT_TEXTURE, &widthVal);
-
-    ImageEffect_Any heightVal = {
-        .dataType = ImageEffect_DataType::EFFECT_DATA_TYPE_INT32,
-        .dataValue.int32Value = (int32_t) height
-    };
-    OH_EffectFilter_SetValue(effectFilter_, SET_INPUT_TEXTURE, &heightVal);
+    SetImageValue((int32_t) inputRenderTexture->GetTextureId(), SET_INPUT_TEXTURE);
+    SetImageValue((int32_t) tex->GetTextureId(), SET_OUTPUT_TEXTURE);
+    SetImageValue((int32_t) width, SET_TEXTURE_WIDTH);
+    SetImageValue((int32_t) height, SET_TEXTURE_HEIGHT);
 
     OH_EffectFilter_Render(effectFilter_, nullptr, nullptr);
     return tex;
 #else
-    return inputRenderTexture
+    return inputRenderTexture;
+#endif
+}
+
+void ImageEffectRender::SetImageValue(const int32_t value, const char valueName[])
+{
+#ifdef IMAGE_EFFECT_SUPPORT
+    ImageEffect_Any val = {
+        .dataType = ImageEffect_DataType::EFFECT_DATA_TYPE_INT32,
+        .dataValue.int32Value = (int32_t) value
+    };
+    OH_EffectFilter_SetValue(effectFilter_, valueName, &val);
 #endif
 }
 }

@@ -48,8 +48,8 @@ HWTEST_F(ImageEffectRenderTest, ImageEffectRenderTest_Release, TestSize.Level0)
     ASSERT_TRUE(imageEffectRender.Release());
 }
 
-// test ImageEffectRenderTest InitNativeBuffer method
-HWTEST_F(ImageEffectRenderTest, ImageEffectRenderTest_InitNativeBuffer, TestSize.Level0)
+// test ImageEffectRenderTest InitEffectFilter method
+HWTEST_F(ImageEffectRenderTest, ImageEffectRenderTest_InitEffectFilter, TestSize.Level0)
 {
     std::shared_ptr<OH_ImageEffect> imageEffect;
     ImageEffectRender imageEffectRender(imageEffect);
