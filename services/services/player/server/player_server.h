@@ -253,6 +253,7 @@ private:
     std::atomic<int64_t> seekContinousBatchNo_ {-1};
     bool deviceChangeCallbackflag_ = false;
     bool maxAmplitudeCbStatus_ = false;
+    std::mutex surfaceMutex_;
 };
 } // namespace Media
 } // namespace OHOS
