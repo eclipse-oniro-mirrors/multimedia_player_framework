@@ -53,7 +53,7 @@ HWTEST_F(ImageEffectRenderTest, ImageEffectRenderTest_InitNativeBuffer, TestSize
 {
     std::shared_ptr<OH_ImageEffect> imageEffect;
     ImageEffectRender imageEffectRender(imageEffect);
-    ASSERT_EQ(imageEffectRender.InitNativeBuffer(100, 100), VEFError::ERR_INTERNAL_ERROR);
+    ASSERT_EQ(imageEffectRender.InitEffectFilter(), VEFError::ERR_INTERNAL_ERROR);
 }
 
 // test ImageEffectRenderTest Render method
