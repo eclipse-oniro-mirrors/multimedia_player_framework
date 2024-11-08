@@ -16,7 +16,9 @@
 #ifndef OH_VEF_GRAPHICS_IMAGE_EFFECT_RENDER_H
 #define OH_VEF_GRAPHICS_IMAGE_EFFECT_RENDER_H
 
+#ifdef IMAGE_EFFECT_SUPPORT
 #include "image_effect.h"
+#endif
 #include "render/graphics/base/render_texture.h"
 #include "video_editor.h"
 
@@ -37,6 +39,7 @@ public:
 
 private:
     VEFError InitEffectFilter();
+    void SetImageValue(const int32_t value, const char valueName[]);
 
 private:
 #ifdef IMAGE_EFFECT_SUPPORT
