@@ -171,23 +171,21 @@ napi_value AVMetadataExtractorNapi::JsResolveMetadata(napi_env env, napi_callbac
     AVMetadataExtractorNapi* extractor
         = AVMetadataExtractorNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(extractor != nullptr, result, "failed to GetJsInstance");
-    promiseCtx->napi = extractor;
+    promiseCtx->innerHelper_ = extractor->helper_;
     promiseCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
     promiseCtx->deferred = CommonNapi::CreatePromise(env, promiseCtx->callbackRef, result);
+
+    if (extractor->state_ != HelperState::HELPER_STATE_RUNNABLE) {
+        promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Can't fetchMetadata, please set source.");
+    }
 
     // async work
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "JsResolveMetadata", NAPI_AUTO_LENGTH, &resource);
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void *data) {
         auto promiseCtx = reinterpret_cast<AVMetadataExtractorAsyncContext *>(data);
-        CHECK_AND_RETURN_LOG(promiseCtx && !promiseCtx->errFlag, "Invalid promiseCtx.");
-        CHECK_AND_RETURN_LOG(promiseCtx->napi != nullptr, "Invalid napi object.");
-        if (promiseCtx->napi->state_ != HelperState::HELPER_STATE_RUNNABLE) {
-            promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Can't fetchMetadata, please set source.");
-            return;
-        }
-        CHECK_AND_RETURN_LOG(promiseCtx->napi->helper_ != nullptr, "Invalid metadata napi.");
-        promiseCtx->metadata_ = promiseCtx->napi->helper_->GetAVMetadata();
+        CHECK_AND_RETURN_LOG(promiseCtx && !promiseCtx->errFlag && promiseCtx->innerHelper_, "Invalid promiseCtx.");
+        promiseCtx->metadata_ = promiseCtx->innerHelper_->GetAVMetadata();
         CHECK_AND_RETURN(promiseCtx->metadata_ == nullptr);
         MEDIA_LOGE("ResolveMetadata AVMetadata is nullptr");
         promiseCtx->SignError(MSERR_EXT_API9_UNSUPPORT_FORMAT, "failed to ResolveMetadata, AVMetadata is nullptr!");
@@ -280,9 +278,14 @@ napi_value AVMetadataExtractorNapi::JsFetchArtPicture(napi_env env, napi_callbac
     AVMetadataExtractorNapi* extractor
         = AVMetadataExtractorNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(extractor != nullptr, result, "failed to GetJsInstance");
-    promiseCtx->napi = extractor;
+    promiseCtx->innerHelper_ = extractor->helper_;
     promiseCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
     promiseCtx->deferred = CommonNapi::CreatePromise(env, promiseCtx->callbackRef, result);
+
+    if (extractor->state_ != HelperState::HELPER_STATE_RUNNABLE) {
+        promiseCtx->SignError(
+            MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Can't fetchAlbumCover, please set fdSrc or dataSrc.");
+    }
 
     // async work
     napi_value resource = nullptr;
@@ -290,16 +293,11 @@ napi_value AVMetadataExtractorNapi::JsFetchArtPicture(napi_env env, napi_callbac
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void *data) {
         MEDIA_LOGI("JsFetchArtPicture task start");
         auto promiseCtx = reinterpret_cast<AVMetadataExtractorAsyncContext *>(data);
-        CHECK_AND_RETURN_LOG(promiseCtx && promiseCtx ->napi, "Invalid context.");
-        if (promiseCtx->napi->state_ != HelperState::HELPER_STATE_RUNNABLE) {
-            promiseCtx->SignError(
-                MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Can't fetchAlbumCover, please set fdSrc or dataSrc.");
-            return;
-        }
-        auto sharedMemory = promiseCtx ->napi->helper_->FetchArtPicture();
-        promiseCtx ->artPicture_ = ConvertMemToPixelMap(sharedMemory);
-        if (promiseCtx ->artPicture_ == nullptr) {
-            promiseCtx ->SignError(MSERR_EXT_API9_UNSUPPORT_FORMAT, "Failed to fetchAlbumCover");
+        CHECK_AND_RETURN_LOG(promiseCtx && promiseCtx->innerHelper_, "Invalid context.");
+        auto sharedMemory = promiseCtx->innerHelper_->FetchArtPicture();
+        promiseCtx->artPicture_ = ConvertMemToPixelMap(sharedMemory);
+        if (promiseCtx->artPicture_ == nullptr) {
+            promiseCtx->SignError(MSERR_EXT_API9_UNSUPPORT_FORMAT, "Failed to fetchAlbumCover");
         }
     }, FetchArtPictureComplete, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
     NAPI_CALL(env, napi_queue_async_work(env, promiseCtx->work));
@@ -380,6 +378,7 @@ napi_value AVMetadataExtractorNapi::JsRelease(napi_env env, napi_callback_info i
     AVMetadataExtractorNapi *extractor
         = AVMetadataExtractorNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(extractor != nullptr, result, "failed to GetJsInstance");
+    promiseCtx->innerHelper_ = extractor->helper_;
     promiseCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
     promiseCtx->deferred = CommonNapi::CreatePromise(env, promiseCtx->callbackRef, result);
 
@@ -388,18 +387,16 @@ napi_value AVMetadataExtractorNapi::JsRelease(napi_env env, napi_callback_info i
         extractor->dataSrcCb_ = nullptr;
     }
 
+    if (extractor->state_ == HelperState::HELPER_STATE_RELEASED) {
+        promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Has released once, can't release again.");
+    }
+
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "JsRelease", NAPI_AUTO_LENGTH, &resource);
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void *data) {
         auto promiseCtx = reinterpret_cast<AVMetadataExtractorAsyncContext *>(data);
-        CHECK_AND_RETURN_LOG(promiseCtx && !promiseCtx->errFlag, "Invalid promiseCtx.");
-        CHECK_AND_RETURN_LOG(promiseCtx->napi != nullptr, "Invalid napi object.");
-        if (promiseCtx->napi->state_ == HelperState::HELPER_STATE_RELEASED) {
-            promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Has released once, can't release again.");
-            return;
-        }
-        CHECK_AND_RETURN_LOG(promiseCtx->napi->helper_, "PromiseCtx has invalid data.");
-        promiseCtx->napi->helper_->Release();
+        CHECK_AND_RETURN_LOG(promiseCtx && !promiseCtx->errFlag && promiseCtx->innerHelper_, "Invalid promiseCtx.");
+        promiseCtx->innerHelper_->Release();
     }, MediaAsyncContext::CompleteCallback, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
     napi_queue_async_work_with_qos(env, promiseCtx->work, napi_qos_user_initiated);
     promiseCtx.release();
@@ -473,9 +470,8 @@ napi_value AVMetadataExtractorNapi::JsSetDataSrc(napi_env env, napi_callback_inf
         jsMetaHelper->state_ == HelperState::HELPER_STATE_IDLE, result, "Has set source once, unsupport set again");
 
     napi_valuetype valueType = napi_undefined;
-    bool notValidParam = argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object ||
-        !CommonNapi::GetFdArgument(env, args[0], jsMetaHelper->fileDescriptor_);
-    CHECK_AND_RETURN_RET_LOG(!notValidParam, result, "Invalid file descriptor, return");
+    bool notValidParam = argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object;
+    CHECK_AND_RETURN_RET_LOG(!notValidParam, result, "Invalid dataSrc param, return");
     CHECK_AND_RETURN_RET_LOG(jsMetaHelper->helper_, result, "Invalid AVMetadataExtractorNapi.");
     (void)CommonNapi::GetPropertyInt64(env, args[0], "fileSize", jsMetaHelper->dataSrcDescriptor_.fileSize);
     CHECK_AND_RETURN_RET(
@@ -575,24 +571,22 @@ napi_value AVMetadataExtractorNapi::JSGetTimeByFrameIndex(napi_env env, napi_cal
         }
     }
 
-    promiseCtx->napi = extractor;
+    promiseCtx->innerHelper_ = extractor->helper_;
     promiseCtx->callbackRef = CommonNapi::CreateReference(env, args[1]);
     promiseCtx->deferred = CommonNapi::CreatePromise(env, promiseCtx->callbackRef, result);
+
+    if (extractor->state_ != HelperState::HELPER_STATE_RUNNABLE) {
+        promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Invalid state, please set source");
+    }
 
     // async work
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "JSGetTimeByFrameIndex", NAPI_AUTO_LENGTH, &resource);
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void *data) {
         auto promiseCtx = reinterpret_cast<AVMetadataExtractorAsyncContext *>(data);
-        CHECK_AND_RETURN_LOG(promiseCtx && !promiseCtx->errFlag, "Invalid promiseCtx.");
-        CHECK_AND_RETURN_LOG(promiseCtx->napi != nullptr, "Invalid napi object.");
-        if (promiseCtx->napi->state_ != HelperState::HELPER_STATE_RUNNABLE) {
-            promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Has released once, can't release again.");
-            return;
-        }
-        auto helper = promiseCtx->napi->helper_;
-        CHECK_AND_RETURN_LOG(helper, "PromiseCtx has invalid data.");
-        if (helper->GetTimeByFrameIndex(promiseCtx->index_, promiseCtx->timeStamp_) != MSERR_EXT_API9_OK) {
+        CHECK_AND_RETURN_LOG(promiseCtx && !promiseCtx->errFlag && promiseCtx->innerHelper_, "Invalid promiseCtx.");
+        auto res = promiseCtx->innerHelper_->GetTimeByFrameIndex(promiseCtx->index_, promiseCtx->timeStamp_);
+        if (res != MSERR_EXT_API9_OK) {
             MEDIA_LOGE("JSGetTimeByFrameIndex get result SignError");
             promiseCtx->SignError(MSERR_EXT_API9_UNSUPPORT_FORMAT, "Demuxer getTimeByFrameIndex failed.");
         }
@@ -640,24 +634,23 @@ napi_value AVMetadataExtractorNapi::JSGetFrameIndexByTime(napi_env env, napi_cal
         }
         promiseCtx->timeStamp_ = static_cast<uint64_t>(timeStamp);
     }
-    promiseCtx->napi = extractor;
+
+    promiseCtx->innerHelper_ = extractor->helper_;
     promiseCtx->callbackRef = CommonNapi::CreateReference(env, args[1]);
     promiseCtx->deferred = CommonNapi::CreatePromise(env, promiseCtx->callbackRef, result);
+
+    if (extractor->state_ != HelperState::HELPER_STATE_RUNNABLE) {
+        promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Invalid state, please set source");
+    }
 
     // async work
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "JSGetFrameIndexByTime", NAPI_AUTO_LENGTH, &resource);
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void *data) {
         auto promiseCtx = reinterpret_cast<AVMetadataExtractorAsyncContext *>(data);
-        CHECK_AND_RETURN_LOG(promiseCtx && !promiseCtx->errFlag, "Invalid promiseCtx.");
-        CHECK_AND_RETURN_LOG(promiseCtx->napi != nullptr, "Invalid napi object.");
-        if (promiseCtx->napi->state_ != HelperState::HELPER_STATE_RUNNABLE) {
-            promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Invalid state, please set source");
-            return;
-        }
-        auto helper = promiseCtx->napi->helper_;
-        CHECK_AND_RETURN_LOG(helper, "PromiseCtx has invalid data.");
-        if (helper->GetFrameIndexByTime(promiseCtx->timeStamp_, promiseCtx->index_) != MSERR_EXT_API9_OK) {
+        CHECK_AND_RETURN_LOG(promiseCtx && !promiseCtx->errFlag && promiseCtx->innerHelper_, "Invalid promiseCtx.");
+        auto res = promiseCtx->innerHelper_->GetFrameIndexByTime(promiseCtx->timeStamp_, promiseCtx->index_);
+        if (res != MSERR_EXT_API9_OK) {
             MEDIA_LOGE("JSGetFrameIndexByTime get result SignError");
             promiseCtx->SignError(MSERR_EXT_API9_UNSUPPORT_FORMAT, "Demuxer getFrameIndexByTime failed.");
         }

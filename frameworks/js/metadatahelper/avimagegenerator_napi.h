@@ -95,9 +95,6 @@ private:
     std::atomic<HelperState> state_ = HelperState::HELPER_STATE_IDLE;
     std::condition_variable stateChangeCond_;
     std::atomic<bool> stopWait_;
-    int64_t timeUs_ = 0;
-    int32_t option_ = 0;
-    PixelMapParams param_;
 };
 
 struct AVImageGeneratorAsyncContext : public MediaAsyncContext {
@@ -108,6 +105,10 @@ struct AVImageGeneratorAsyncContext : public MediaAsyncContext {
     std::string opt_ = "";
     std::shared_ptr<PixelMap> pixel_ = nullptr;
     int32_t status = 0;
+    int64_t timeUs_ = 0;
+    int32_t option_ = 0;
+    PixelMapParams param_;
+    std::shared_ptr<AVMetadataHelper> innerHelper_ = nullptr;
 };
 } // namespace Media
 } // namespace OHOS
