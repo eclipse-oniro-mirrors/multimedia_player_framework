@@ -2964,7 +2964,8 @@ int32_t HiPlayerImpl::ExitSeekContinous(bool align, int64_t seekContinousBatchNo
     draggingPlayerAgent_ = nullptr;
     SetFrameRateForSeekPerformance(FRAME_RATE_DEFAULT);
     int64_t seekTimeUs = 0;
-    FALSE_RETURN_V_MSG_E(Plugins::Us2HstTime(lastSeekContinousPos_, seekTimeUs));
+    FALSE_RETURN_V_MSG_E(Plugins::Us2HstTime(lastSeekContinousPos_, seekTimeUs),
+        TransStatus(Status::OK), "Invalid lastSeekContinousPos_: %{public}" PRId64, lastSeekContinousPos_);
     syncManager_->Seek(seekTimeUs, true);
     if (align) {
         seekAgent_ = std::make_shared<SeekAgent>(demuxer_);
