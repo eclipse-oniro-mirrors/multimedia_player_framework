@@ -44,6 +44,7 @@ public:
 
 private:
     int32_t StartVibrateForSoundPool();
+    int32_t StartVibrateWithEffect();
     int32_t StartVibrateForAVPlayer();
     int32_t StartNonSyncVibration();
     int32_t RunVibrationPatterns(std::unique_lock<std::mutex> &lock);
