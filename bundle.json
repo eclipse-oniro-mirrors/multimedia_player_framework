@@ -1,196 +1,196 @@
 {
-  "name": "@ohos/player_framework",
-  "description": "Media standard provides atomic capabilities",
-  "version": "3.1",
-  "license": "Apache License 2.0",
-  "publishAs": "code-segment",
-  "segment": {
-    "destPath": "foundation/multimedia/player_framework"
-  },
-  "dirs": {},
-  "scripts": {},
-  "component": {
-    "name": "player_framework",
-    "subsystem": "multimedia",
-    "syscap": [
-      "SystemCapability.Multimedia.Media.AVTranscoder",
-      "SystemCapability.Multimedia.Media.AVMetadataExtractor",
-      "SystemCapability.Multimedia.Media.AVImageGenerator",
-      "SystemCapability.Multimedia.SystemSound.Core",
-      "SystemCapability.Multimedia.AudioHaptic.Core",
-      "SystemCapability.Multimedia.Media.SoundPool",
-      "SystemCapability.Multimedia.Media.AVScreenCapture",
-      "SystemCapability.Multimedia.Media.AudioPlayer",
-      "SystemCapability.Multimedia.Media.VideoPlayer",
-      "SystemCapability.Multimedia.Media.AudioRecorder",
-      "SystemCapability.Multimedia.Media.VideoRecorder",
-      "SystemCapability.Multimedia.Media.AVPlayer",
-      "SystemCapability.Multimedia.Media.AVRecorder"
-    ],
-    "features": [
-      "player_framework_support_player",
-      "player_framework_support_recorder",
-      "player_framework_support_player_js_api9",
-      "player_framework_support_recorder_js_api9",
-      "player_framework_support_metadata",
-      "player_framework_support_histreamer",
-      "player_framework_support_video",
-      "player_framework_support_jsapi",
-      "player_framework_support_capi",
-      "player_framework_support_test",
-      "player_framework_support_xcollie",
-      "player_framework_support_jsstack",
-      "player_framework_support_seccomp",
-      "player_framework_support_screen_capture",
-      "player_framework_support_screen_capture_stopbycall",
-      "player_framework_support_screen_capture_controller",
-      "player_framework_support_jssoundpool",
-      "player_framework_support_mediasource",
-      "player_framework_check_video_is_hdr_vivid",
-      "player_framework_support_monitor",
-      "player_framework_support_avsession_background",
-      "player_framework_support_drm",
-      "player_framework_support_vibrator",
-      "player_framework_support_power_manager"
-    ],
-    "adapted_system_type": [ "standard" ],
-    "rom": "10000KB",
-    "ram": "10000KB",
-    "hisysevent_config": [
-      "//foundation/multimedia/player_framework/hisysevent.yaml"
-    ],
-    "deps": {
-      "components": [
-        "av_session",
-        "ets_runtime",
-        "safwk",
-        "hilog",
-        "window_manager",
-        "napi",
-        "samgr",
-        "hitrace",
-        "audio_framework",
-        "ipc",
-        "graphic_2d",
-        "graphic_surface",
-        "hisysevent",
-        "c_utils",
-        "zlib",
-        "access_token",
-        "image_framework",
-        "hiview",
-        "eventhandler",
-        "ffrt",
-        "init",
-        "input",
-        "hicollie",
-        "media_foundation",
-        "drivers_peripheral_codec",
-        "drivers_peripheral_display",
-        "hdf_core",
-        "ability_base",
-        "ability_runtime",
-        "bundle_framework",
-        "distributed_notification_service",
-        "relational_store",
-        "resource_management",
-        "av_codec",
-        "miscdevice",
-        "drm_framework",
-        "qos_manager",
-        "config_policy",
-        "power_manager",
-        "media_library",
-        "common_event_service",
-        "call_manager",
-        "core_service",
-        "state_registry",
-        "resource_schedule_service",
-        "ffmpeg",
-        "libxml2",
-        "bounds_checking_function",
-        "libuv",
-        "os_account",
-        "data_share",
-        "ringtone_library",
-        "drivers_interface_display",
-        "i18n"
-      ],
-      "third_party": []
+    "name": "@ohos/player_framework",
+    "description": "Media standard provides atomic capabilities",
+    "version": "3.1",
+    "license": "Apache License 2.0",
+    "publishAs": "code-segment",
+    "segment": {
+      "destPath": "foundation/multimedia/player_framework"
     },
-    "build": {
-      "group_type": {
-        "base_group": [],
-        "fwk_group": [
-          "//foundation/multimedia/player_framework/interfaces/kits/js:napi_packages",
-          "//foundation/multimedia/player_framework/interfaces/kits/c:capi_packages",
-          "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client"
-        ],
-        "service_group": [
-          "//foundation/multimedia/player_framework/services:media_services_package",
-          "//foundation/multimedia/player_framework/sa_profile:media_service_sa_profile"
-        ]
-      },
-      "inner_kits": [
-        {
-          "type": "so",
-          "name": "//foundation/multimedia/player_framework/services/utils:media_service_utils",
-          "header": {
-            "header_files": [
-            ],
-            "header_base": "//foundation/multimedia/player_framework/services/utils/include"
-          }
-        },
-        {
-          "type": "so",
-          "name": "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
-          "header": {
-            "header_files": [
-              "player.h",
-              "recorder.h",
-              "screen_capture.h"
-            ],
-            "header_base": "//foundation/multimedia/player_framework/interfaces/inner_api/native"
-          }
-        },
-        {
-          "type": "none",
-          "name": "//foundation/multimedia/player_framework/interfaces/kits/js:napi_packages",
-          "header": {
-            "header_files": [
-              "native_module_ohos_media.h"
-            ],
-            "header_base": "//foundation/multimedia/player_framework/interfaces/kits/js"
-          }
-        },
-        {
-          "type": "none",
-          "name": "//foundation/multimedia/player_framework/frameworks/native/system_sound_manager:system_sound_client",
-          "header": {
-            "header_files": [
-              "ringtone_player.h",
-              "system_sound_manager.h",
-              "system_tone_plyaer.h"
-            ],
-            "header_base": "//foundation/multimedia/player_framework/interfaces/inner_api/native/system_sound_manager/include"
-          }
-        },
-        {
-          "type": "none",
-          "name": "//foundation/multimedia/player_framework/frameworks/native/audio_haptic:audio_haptic",
-          "header": {
-            "header_files": [
-              "audio_haptic_manager.h",
-              "audio_haptic_player.h"
-            ],
-            "header_base": "//foundation/multimedia/player_framework/interfaces/inner_api/native/audio_haptic/include"
-          }
-        }
+    "dirs": {},
+    "scripts": {},
+    "component": {
+      "name": "player_framework",
+      "subsystem": "multimedia",
+      "syscap": [
+        "SystemCapability.Multimedia.Media.AVTranscoder",
+        "SystemCapability.Multimedia.Media.AVMetadataExtractor",
+        "SystemCapability.Multimedia.Media.AVImageGenerator",
+        "SystemCapability.Multimedia.SystemSound.Core",
+        "SystemCapability.Multimedia.AudioHaptic.Core",
+        "SystemCapability.Multimedia.Media.SoundPool",
+        "SystemCapability.Multimedia.Media.AVScreenCapture",
+        "SystemCapability.Multimedia.Media.AudioPlayer",
+        "SystemCapability.Multimedia.Media.VideoPlayer",
+        "SystemCapability.Multimedia.Media.AudioRecorder",
+        "SystemCapability.Multimedia.Media.VideoRecorder",
+        "SystemCapability.Multimedia.Media.AVPlayer",
+        "SystemCapability.Multimedia.Media.AVRecorder"
       ],
-      "test": [
-          "//foundation/multimedia/player_framework/test:media_fuzz_test",
-          "//foundation/multimedia/player_framework/test:media_unit_test"
-      ]
+      "features": [
+        "player_framework_support_player",
+        "player_framework_support_recorder",
+        "player_framework_support_player_js_api9",
+        "player_framework_support_recorder_js_api9",
+        "player_framework_support_metadata",
+        "player_framework_support_histreamer",
+        "player_framework_support_video",
+        "player_framework_support_jsapi",
+        "player_framework_support_capi",
+        "player_framework_support_test",
+        "player_framework_support_xcollie",
+        "player_framework_support_jsstack",
+        "player_framework_support_seccomp",
+        "player_framework_support_screen_capture",
+        "player_framework_support_screen_capture_stopbycall",
+        "player_framework_support_screen_capture_controller",
+        "player_framework_support_jssoundpool",
+        "player_framework_support_mediasource",
+        "player_framework_check_video_is_hdr_vivid",
+        "player_framework_support_monitor",
+        "player_framework_support_avsession_background",
+        "player_framework_support_drm",
+        "player_framework_support_vibrator",
+        "player_framework_support_power_manager"
+      ],
+      "adapted_system_type": [ "standard" ],
+      "rom": "10000KB",
+      "ram": "10000KB",
+      "hisysevent_config": [
+        "//foundation/multimedia/player_framework/hisysevent.yaml"
+      ],
+      "deps": {
+        "components": [
+          "av_session",
+          "ets_runtime",
+          "safwk",
+          "hilog",
+          "window_manager",
+          "napi",
+          "samgr",
+          "hitrace",
+          "audio_framework",
+          "ipc",
+          "graphic_2d",
+          "graphic_surface",
+          "hisysevent",
+          "c_utils",
+          "zlib",
+          "access_token",
+          "image_framework",
+          "hiview",
+          "eventhandler",
+          "ffrt",
+          "init",
+          "input",
+          "hicollie",
+          "media_foundation",
+          "drivers_peripheral_codec",
+          "drivers_peripheral_display",
+          "hdf_core",
+          "ability_base",
+          "ability_runtime",
+          "bundle_framework",
+          "distributed_notification_service",
+          "relational_store",
+          "resource_management",
+          "av_codec",
+          "miscdevice",
+          "drm_framework",
+          "qos_manager",
+          "config_policy",
+          "power_manager",
+          "media_library",
+          "common_event_service",
+          "call_manager",
+          "core_service",
+          "state_registry",
+          "resource_schedule_service",
+          "ffmpeg",
+          "libxml2",
+          "bounds_checking_function",
+          "libuv",
+          "os_account",
+          "data_share",
+          "ringtone_library",
+          "drivers_interface_display",
+          "i18n"
+        ],
+        "third_party": []
+      },
+      "build": {
+        "group_type": {
+          "base_group": [],
+          "fwk_group": [
+            "//foundation/multimedia/player_framework/interfaces/kits/js:napi_packages",
+            "//foundation/multimedia/player_framework/interfaces/kits/c:capi_packages",
+            "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client"
+          ],
+          "service_group": [
+            "//foundation/multimedia/player_framework/services:media_services_package",
+            "//foundation/multimedia/player_framework/sa_profile:media_service_sa_profile"
+          ]
+        },
+        "inner_kits": [
+          {
+            "type": "so",
+            "name": "//foundation/multimedia/player_framework/services/utils:media_service_utils",
+            "header": {
+              "header_files": [
+              ],
+              "header_base": "//foundation/multimedia/player_framework/services/utils/include"
+            }
+          },
+          {
+            "type": "so",
+            "name": "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
+            "header": {
+              "header_files": [
+                "player.h",
+                "recorder.h",
+                "screen_capture.h"
+              ],
+              "header_base": "//foundation/multimedia/player_framework/interfaces/inner_api/native"
+            }
+          },
+          {
+            "type": "none",
+            "name": "//foundation/multimedia/player_framework/interfaces/kits/js:napi_packages",
+            "header": {
+              "header_files": [
+                "native_module_ohos_media.h"
+              ],
+              "header_base": "//foundation/multimedia/player_framework/interfaces/kits/js"
+            }
+          },
+          {
+            "type": "none",
+            "name": "//foundation/multimedia/player_framework/frameworks/native/system_sound_manager:system_sound_client",
+            "header": {
+              "header_files": [
+                "ringtone_player.h",
+                "system_sound_manager.h",
+                "system_tone_plyaer.h"
+              ],
+              "header_base": "//foundation/multimedia/player_framework/interfaces/inner_api/native/system_sound_manager/include"
+            }
+          },
+          {
+            "type": "none",
+            "name": "//foundation/multimedia/player_framework/frameworks/native/audio_haptic:audio_haptic",
+            "header": {
+              "header_files": [
+                "audio_haptic_manager.h",
+                "audio_haptic_player.h"
+              ],
+              "header_base": "//foundation/multimedia/player_framework/interfaces/inner_api/native/audio_haptic/include"
+            }
+          }
+        ],
+        "test": [
+            "//foundation/multimedia/player_framework/test:media_fuzz_test",
+            "//foundation/multimedia/player_framework/test:media_unit_test"
+        ]
+      }
     }
-  }
 }
