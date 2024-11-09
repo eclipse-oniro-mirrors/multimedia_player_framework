@@ -39,7 +39,7 @@ public:
         sptr<AVBufferQueueProducer> producer, int32_t trackId);
     Status OnVideoBufferFilled(std::shared_ptr<AVBuffer>& buffer,
         sptr<AVBufferQueueProducer> producer, int32_t trackId);
-    Status AlignAudioPosition(int64_t audioPosition)
+    Status AlignAudioPosition(int64_t audioPosition);
     void SetInterruptState(bool isNeed);
 private:
     Status SetBufferFilledListener();
