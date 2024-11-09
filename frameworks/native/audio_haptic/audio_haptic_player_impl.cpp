@@ -353,6 +353,7 @@ int32_t AudioHapticPlayerImpl::StartVibrate()
             MEDIA_LOGI("StartVibrate: audio haptic player has been stopped.");
             return MSERR_OK;
         }
+        MEDIA_LOGI("The first frame of audio is about to start. Triggering the vibration.");
         audioHapticVibrator_->StartVibrate(latencyMode_);
     } while (loop_ && !isVibrationStopped_);
 
