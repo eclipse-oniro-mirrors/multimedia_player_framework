@@ -634,6 +634,7 @@ int32_t AVMetadataHelperImpl::GetFrameIndexByTime(uint64_t time, uint32_t &index
 void AVMetadataHelperImpl::Release()
 {
     std::lock_guard<std::mutex> lock(releaseMutex_);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Release", FAKE_POINTER(this));
     CHECK_AND_RETURN_LOG(avMetadataHelperService_ != nullptr, "avmetadatahelper service does not exist.");
     avMetadataHelperService_->Release();
     (void)MediaServiceFactory::GetInstance().DestroyAVMetadataHelperService(avMetadataHelperService_);
