@@ -131,6 +131,26 @@ Status SeekAgent::GetAllTrackInfo(uint32_t &videoTrackId, std::vector<uint32_t> 
     return Status::OK;
 }
 
+bool SeekAgent::GetAudioTrackId(uint32_t &audioTrackId)
+{
+    FALSE_RETURN_V_MSG_E(!producerMap_.empty(), false, "producerMap is empty.");
+    FALSE_RETURN_V_MSG_E(demuxer_ != nullptr, false, "Invalid demuxer filter instance.");
+    auto trackInfo = demuxer_->GetStreamMetaInfo();
+    FALSE_RETURN_V_MSG_E(!trackInfo.empty(), false, "track info is empty.");
+    for (uint32_t index = 0; index < trackInfo.size(); index++) {
+        auto trackMeta = trackInfo[index];
+        std::string mimeType;
+        if (!trackMeta->Get<Tag::MIME_TYPE>(mimeType) || mimeType.find("audio") != 0) {
+            continue;
+        }
+        if (producerMap_.find(index) != producerMap_.end() && producerMap_[index] != nullptr) {
+            audioTrackId = index;
+            return true;
+        }
+    }
+    return false;
+}
+
 Status SeekAgent::SetBufferFilledListener()
 {
     FALSE_RETURN_V_MSG_E(demuxer_ != nullptr, Status::ERROR_INVALID_PARAMETER, "Invalid demuxer filter instance.");
@@ -209,7 +229,7 @@ Status SeekAgent::OnAudioBufferFilled(std::shared_ptr<AVBuffer>& buffer,
             AutoLock lock(targetArrivedLock_);
             isAudioTargetArrived_ = true;
         }
-        MEDIA_LOG_I("audio arrive target.");
+        MEDIA_LOG_I("audio arrive target pts = %{public}" PRId64, buffer->pts_);
         FALSE_RETURN_V_MSG_E(demuxer_ != nullptr, Status::ERROR_NULL_POINTER, "demuxer_ is nullptr.");
         demuxer_->PauseTaskByTrackId(trackId);
         targetArrivedCond_.NotifyAll();
@@ -242,6 +262,35 @@ Status SeekAgent::OnVideoBufferFilled(std::shared_ptr<AVBuffer>& buffer,
     buffer->meta_->GetData(Media::Tag::VIDEO_BUFFER_CAN_DROP, canDrop);
     MEDIA_LOG_D("ReturnBuffer, pts: %{public}" PRId64 ", isPushBuffer: %{public}i", buffer->pts_, !canDrop);
     producer->ReturnBuffer(buffer, !canDrop);
+    return Status::OK;
+}
+
+Status SeekAgent::AlignAudioPosition(int64_t audioPosition)
+{
+    MEDIA_LOG_I("AlignAudioPosition, audioPosition: %{public}" PRId64, audioPosition);
+    FALSE_RETURN_V_MSG_E(demuxer_ != nullptr, Status::OK, "Invalid demuxer filter instance.");
+    producerMap_ = demuxer_->GetBufferQueueProducerMap();
+    FALSE_RETURN_V_MSG_E(!producerMap_.empty(), Status::OK, "producerMap is empty.");
+    uint32_t audioTrackId = 0;
+    FALSE_RETURN_V_MSG_E(GetAudioTrackId(audioTrackId), Status::OK, "audioTrackIds is empty.");
+    seekTargetPts_ = audioPosition * MS_TO_US;
+    sptr<IBrokerListener> audioListener
+        = new AudioBufferFilledListener(shared_from_this(), producerMap_[audioTrackId], audioTrackId);
+    {
+        AutoLock lock(targetArrivedLock_);
+        isAudioTargetArrived_ = false;
+    }
+    producerMap_[audioTrackId]->SetBufferFilledListener(audioListener);
+    listenerMap_.insert({audioTrackId, audioListener});
+    {
+        AutoLock lock(targetArrivedLock_);
+        demuxer_->ResumeAudioAlign();
+        targetArrivedCond_.WaitFor(lock, WAIT_MAX_MS, [this] {return isAudioTargetArrived_;});
+        MEDIA_LOG_I("Wait end");
+    }
+    MEDIA_LOG_I("PauseForSeek start");
+    demuxer_->PauseAudioAlign();
+    RemoveBufferFilledListener();
     return Status::OK;
 }
 

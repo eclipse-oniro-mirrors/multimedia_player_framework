@@ -160,14 +160,17 @@ void DraggingPlayerAgent::Release()
         task_->Stop();
     }
     std::unique_lock<std::mutex> lock(draggingMutex_);
+    if (draggingPlayer_ != nullptr) {
+        draggingPlayer_->Release();
+    }
+    if (draggingPlayer_ != nullptr) {
+        demuxer_->PauseDragging();
+    }
     if (demuxer_ != nullptr) {
         demuxer_->DeregisterVideoStreamReadyCallback();
     }
     if (decoder_ != nullptr) {
         decoder_->DeregisterVideoFrameReadyCallback();
-    }
-    if (draggingPlayer_ != nullptr) {
-        draggingPlayer_->Release();
     }
     isReleased_ = true;
 }
