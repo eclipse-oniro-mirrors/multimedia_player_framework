@@ -117,6 +117,12 @@ void VideoCallbackNapi::OnInfo(PlayerOnInfoType type, int32_t extra, const Forma
 
 void VideoCallbackNapi::OnError(int32_t errorCode, const std::string &errorMsg)
 {
+    if (errorCode == MSERR_IO_VIDEO_DEC_INIT_FAILED) {
+        errorCode = MSERR_UNSUPPORT_VID_DEC_TYPE;
+    }
+    if (errorCode == MSERR_IO_VIDEO_DEC_UNAVAILABLE) {
+        errorCode = MSERR_UNSUPPORT_VID_SRC_TYPE;
+    }
     MediaServiceExtErrCode extErrCode = MSErrorToExtError(static_cast<MediaServiceErrCode>(errorCode));
     if (extErrCode == MSERR_EXT_UNKNOWN) {
         extErrCode = MSERR_EXT_OPERATE_NOT_PERMIT;
