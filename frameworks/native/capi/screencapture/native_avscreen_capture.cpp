@@ -433,6 +433,7 @@ struct OH_AVScreenCapture *OH_AVScreenCapture_Create(void)
     return object;
 }
 
+namespace {
 void SetVideoCapInfo(OH_AVScreenCaptureConfig config, AVScreenCaptureConfig& config_)
 {
     config_.videoInfo.videoCapInfo.displayId = config.videoInfo.videoCapInfo.displayId;
@@ -454,6 +455,7 @@ void SetVideoCapInfo(OH_AVScreenCaptureConfig config, AVScreenCaptureConfig& con
     config_.videoInfo.videoCapInfo.videoFrameHeight = config.videoInfo.videoCapInfo.videoFrameHeight;
     config_.videoInfo.videoCapInfo.videoSource =
         static_cast<VideoSourceType>(config.videoInfo.videoCapInfo.videoSource);
+}
 }
 
 AVScreenCaptureConfig OH_AVScreenCapture_Convert(OH_AVScreenCaptureConfig config)
