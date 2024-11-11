@@ -282,15 +282,15 @@ void AVMetadataHelperServer::Release()
 
     auto task = std::make_shared<TaskHandler<void>>([&, this] {
         avMetadataHelperEngine_ = nullptr;
+        uriHelper_ = nullptr;
+        ChangeState(HelperStates::HELPER_RELEASED);
+        {
+            std::lock_guard<std::mutex> lockCb(mutexCb_);
+            helperCb_ = nullptr;
+        }
     });
     (void)taskQue_.EnqueueTask(task, true);
     (void)task->GetResult();
-    uriHelper_ = nullptr;
-    ChangeState(HelperStates::HELPER_RELEASED);
-    {
-        std::lock_guard<std::mutex> lockCb(mutexCb_);
-        helperCb_ = nullptr;
-    }
 }
 
 int32_t AVMetadataHelperServer::SetHelperCallback(const std::shared_ptr<HelperCallback> &callback)
