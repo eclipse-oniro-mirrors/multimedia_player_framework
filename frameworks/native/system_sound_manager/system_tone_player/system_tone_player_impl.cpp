@@ -156,12 +156,6 @@ int32_t SystemTonePlayerImpl::InitPlayer(const std::string &audioUri)
     std::map<ToneHapticsFeature, std::string> hapticUriMap;
     GetCurrentHapticSettings(audioUri, hapticUriMap);
 
-    if (!configuredUri_.empty() && configuredUri_ == audioUri && IsSameHapticMaps(hapticUriMap)) {
-        MEDIA_LOGI("The right system tone uri has been registered. Return directly.");
-        systemToneState_ = SystemToneState::STATE_PREPARED;
-        return MSERR_OK;
-    }
-
     configuredUri_ = audioUri;
     hapticUriMap_.swap(hapticUriMap);
 
