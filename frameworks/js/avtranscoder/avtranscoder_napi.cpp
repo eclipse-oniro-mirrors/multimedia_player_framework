@@ -701,6 +701,7 @@ int32_t AVTransCoderNapi::CheckStateMachine(const std::string &opt)
     CHECK_AND_RETURN_RET_LOG(napiCb != nullptr, MSERR_INVALID_OPERATION, "napiCb is nullptr!");
 
     std::string curState = napiCb->GetState();
+    CHECK_AND_RETURN_RET_LOG(STATE_LIST.find(curState) != STATE_LIST.end(), MSERR_INVALID_VAL, "state is not in list");
     std::vector<std::string> allowedOpt = STATE_LIST.at(curState);
     if (find(allowedOpt.begin(), allowedOpt.end(), opt) == allowedOpt.end()) {
         MEDIA_LOGE("The %{public}s operation is not allowed in the %{public}s state!", opt.c_str(), curState.c_str());
