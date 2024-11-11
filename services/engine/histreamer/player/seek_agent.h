@@ -45,7 +45,7 @@ private:
     Status SetBufferFilledListener();
     Status RemoveBufferFilledListener();
     Status GetAllTrackInfo(uint32_t &videoTrackId, std::vector<uint32_t> &audioTrackIds);
-    bool GetAudioTrackId(uint32_t &audioTrackId)
+    bool GetAudioTrackId(uint32_t &audioTrackId);
 
     std::shared_ptr<Pipeline::DemuxerFilter> demuxer_;
     Mutex targetArrivedLock_;
