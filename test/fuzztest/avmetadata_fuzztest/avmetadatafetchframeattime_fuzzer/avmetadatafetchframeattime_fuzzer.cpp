@@ -61,7 +61,8 @@ bool AVMetadataFetchFrameAtTimeFuzzer::FuzzAVMetadataFetchFrameAtTime(uint8_t *d
         AV_META_QUERY_CLOSEST
     };
 
-    int32_t option = avMetadataQueryOption[ProduceRandomNumberCrypt() % AV_METADATA_QUERY_OPTION_LIST];
+    int32_t reproducibleRandom = abs((data[0] << 24) | (data[1] << 16) | (data[2] << 8) | (data[3]));
+    int32_t option = avMetadataQueryOption[reproducibleRandom % AV_METADATA_QUERY_OPTION_LIST];
     PixelFormat colorFormats[AV_COLOR_FORMAT_LIST] {
         PixelFormat::UNKNOWN,
         PixelFormat::ARGB_8888,

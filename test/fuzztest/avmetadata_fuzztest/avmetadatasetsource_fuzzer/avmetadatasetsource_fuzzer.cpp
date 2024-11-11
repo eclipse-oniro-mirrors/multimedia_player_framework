@@ -62,7 +62,8 @@ bool AVMetadataSetSourceFuzzer::FuzzAVMetadataSetSource(uint8_t *data, size_t si
     int64_t setsourcesize = static_cast<int64_t>(buffer.st_size);
     AVMetadataUsage usage[USAGE_LIST] {AVMetadataUsage::AV_META_USAGE_META_ONLY,
                                     AVMetadataUsage::AV_META_USAGE_PIXEL_MAP};
-    int32_t setsourceusage = usage[ProduceRandomNumberCrypt() % USAGE_LIST];
+    int32_t reproducibleRandom = abs((data[0] << 24) | (data[1] << 16) | (data[2] << 8) | (data[3]));
+    int32_t setsourceusage = usage[reproducibleRandom % USAGE_LIST];
     int32_t retSetsource = avmetadata->SetSource(setsourcefd,
         *reinterpret_cast<int64_t *>(data), setsourcesize, setsourceusage);
     if (retSetsource != 0) {
