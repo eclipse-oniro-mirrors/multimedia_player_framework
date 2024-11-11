@@ -2359,6 +2359,17 @@ void HiPlayerImpl::HandleResolutionChangeEvent(const Event& event)
     int32_t height = videoSize.second;
     videoWidth_ = !needSwapWH_.load() ? width : height;
     videoHeight_ = !needSwapWH_.load() ? height : width;
+
+    std::vector<std::shared_ptr<Meta>> metaInfo = demuxer_->GetStreamMetaInfo();
+    if (currentVideoTrackId_ >= 0 && currentVideoTrackId_ < static_cast<int32_t>(metaInfo.size())) {
+        double videoSar;
+        bool ret = metaInfo[currentVideoTrackId_]->GetData(Tag::VIDEO_SAR, videoSar);
+        if (ret) {
+            height = (videoSar > 1) ? static_cast<int32_t>(height / videoSar) : height;
+            width = (videoSar < 1) ? static_cast<int32_t>(width * videoSar) : width;
+        }
+    }
+
     MEDIA_LOG_I("HandleResolutionChangeEvent, width = %{public}d, height = %{public}d",
         videoWidth_.load(), videoHeight_.load());
     // notify size change
