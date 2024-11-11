@@ -2919,24 +2919,32 @@ Status HiPlayerImpl::StartSeekContinous()
     FALSE_RETURN_V(demuxer_ && videoDecoder_, Status::OK);
     draggingPlayerAgent_ = DraggingPlayerAgent::Create();
     FALSE_RETURN_V_MSG_E(draggingPlayerAgent_ != nullptr, Status::ERROR_INVALID_OPERATION, "failed to create agent");
+    bool demuxerEOS = demuxer_->HasEosTrack();
+    bool decoderEOS = false;
+    for (std::pair<std::string, bool>& item: completeState_) {
+        if (item.second) {
+            decoderEOS = true;
+            break;
+        }
+    }
+    bool playerEOS = pipelineStates_ == PlayerStates::PLAYER_PLAYBACK_COMPLETE;
+    if (demuxerEOS || decoderEOS || playerEOS) {
+        MEDIA_LOG_I("flush first when eos");
+        pipeline_->Flush();
+        curState_ = PlayerStateId::PAUSE;
+        pipelineStates_ = TransStateId2PlayerState(PlayerStateId::PAUSE);
+        for (std::pair<std::string, bool>& item: completeState_) {
+            item.second = false;
+        }
+    }
     Status res = draggingPlayerAgent_->Init(demuxer_, videoDecoder_, playerId_);
     if (res != Status::OK) {
         draggingPlayerAgent_ = nullptr;
         return res;
     }
-    bool isVideoEOS = false;
-    for (std::pair<std::string, bool>& item: completeState_) {
-        if (item.first == "VideoSink" && item.second) {
-            isVideoEOS = true;
-            break;
-        }
-    }
-    if (pipelineStates_ == PlayerStates::PLAYER_PLAYBACK_COMPLETE || isVideoEOS) {
-        videoDecoder_->Flush();
-    }
+    SetFrameRateForSeekPerformance(FRAME_RATE_FOR_SEEK_PERFORMANCE);
     // Drive the head node to start the video channel.
     demuxer_->ResumeDragging();
-    SetFrameRateForSeekPerformance(FRAME_RATE_FOR_SEEK_PERFORMANCE);
     return res;
 }
 
@@ -2946,13 +2954,24 @@ int32_t HiPlayerImpl::ExitSeekContinous(bool align, int64_t seekContinousBatchNo
     FALSE_RETURN_V(demuxer_ && videoDecoder_, TransStatus(Status::OK));
     FALSE_RETURN_V(!isNetWorkPlay_, TransStatus(Status::OK));
     seekContinousBatchNo_.store(seekContinousBatchNo);
-    if (draggingPlayerAgent_ != nullptr) {
-        draggingPlayerAgent_->Release();
-        draggingPlayerAgent_ = nullptr;
+    if (draggingPlayerAgent_ == nullptr) {
+        if (align) {
+            Seek(lastSeekContinousPos_, PlayerSeekMode::SEEK_CLOSEST, false);
+        }
+        return TransStatus(Status::OK);
     }
-    demuxer_->PauseDragging();
+    draggingPlayerAgent_->Release();
+    draggingPlayerAgent_ = nullptr;
+    SetFrameRateForSeekPerformance(FRAME_RATE_DEFAULT);
+    int64_t seekTimeUs = 0;
+    FALSE_RETURN_V_MSG_E(Plugins::Us2HstTime(lastSeekContinousPos_, seekTimeUs),
+        TransStatus(Status::OK), "Invalid lastSeekContinousPos_: %{public}" PRId64, lastSeekContinousPos_);
+    syncManager_->Seek(seekTimeUs, true);
     if (align) {
-        Seek(lastSeekContinousPos_, PlayerSeekMode::SEEK_CLOSEST, false);
+        seekAgent_ = std::make_shared<SeekAgent>(demuxer_);
+        seekAgent_->AlignAudioPosition(lastSeekContinousPos_);
+        MEDIA_LOG_I_SHORT("seekAgent_ AlignAudioPosition end");
+        seekAgent_.reset();
     }
     return TransStatus(Status::OK);
 }

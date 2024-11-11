@@ -39,11 +39,13 @@ public:
         sptr<AVBufferQueueProducer> producer, int32_t trackId);
     Status OnVideoBufferFilled(std::shared_ptr<AVBuffer>& buffer,
         sptr<AVBufferQueueProducer> producer, int32_t trackId);
+    Status AlignAudioPosition(int64_t audioPosition);
     void SetInterruptState(bool isNeed);
 private:
     Status SetBufferFilledListener();
     Status RemoveBufferFilledListener();
     Status GetAllTrackInfo(uint32_t &videoTrackId, std::vector<uint32_t> &audioTrackIds);
+    bool GetAudioTrackId(uint32_t &audioTrackId);
 
     std::shared_ptr<Pipeline::DemuxerFilter> demuxer_;
     Mutex targetArrivedLock_;
