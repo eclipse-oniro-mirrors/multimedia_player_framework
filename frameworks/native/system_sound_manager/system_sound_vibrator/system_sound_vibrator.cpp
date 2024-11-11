@@ -96,6 +96,7 @@ int32_t SystemSoundVibrator::StartVibratorForSystemTone(const std::string &hapti
     result = Sensors::PlayVibratorCustom(fd, 0, statbuf.st_size);
     close(fd);
 #endif
+
     return result;
 }
 
