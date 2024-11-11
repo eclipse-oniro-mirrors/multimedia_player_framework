@@ -19,6 +19,7 @@
 #include <sys/stat.h>
 
 #include "audio_haptic_log.h"
+#include "directory_ex.h"
 #include "media_errors.h"
 
 namespace {
@@ -101,7 +102,9 @@ int32_t AudioHapticVibratorImpl::ExtractFd(const std::string& hapticsUri)
             return ERROR;
         }
     }
-    return std::stoi(numberPart);
+
+    int32_t fd = atoi(numberPart.c_str());
+    return fd > 0 ? fd : ERROR;
 }
 
 int32_t AudioHapticVibratorImpl::OpenHapticFile(const std::string &hapticUri)
@@ -110,6 +113,18 @@ int32_t AudioHapticVibratorImpl::OpenHapticFile(const std::string &hapticUri)
     int32_t fd = ExtractFd(hapticUri);
     if (fd == ERROR) {
         MEDIA_LOGW("OpenHapticFile: hapticUri is not new format.");
+
+        std::string absFilePath;
+        if (!PathToRealPath(hapticUri, absFilePath)) {
+            MEDIA_LOGE("file is not real path, file path: %{private}s", hapticUri.c_str());
+            return ERROR;
+        }
+        if (absFilePath.empty()) {
+            MEDIA_LOGE("Failed to obtain the canonical path for source path %{public}d %{private}s",
+                errno, hapticUri.c_str());
+            return ERROR;
+        }
+
         fd = open(hapticUri.c_str(), O_RDONLY);
         if (fd == ERROR) {
             // open file failed, return.
@@ -118,7 +133,9 @@ int32_t AudioHapticVibratorImpl::OpenHapticFile(const std::string &hapticUri)
     }
 
     vibratorFD_ = std::make_shared<VibratorFileDescription>();
+    CHECK_AND_RETURN_RET_LOG(vibratorFD_ != nullptr, ERROR, "vibratorFD_ is null");
     vibratorPkg_ = std::make_shared<VibratorPackage>();
+    CHECK_AND_RETURN_RET_LOG(vibratorPkg_ != nullptr, ERROR, "vibratorPkg_ is null");
 
     struct stat64 statbuf = { 0 };
     if (fstat64(fd, &statbuf) == 0) {

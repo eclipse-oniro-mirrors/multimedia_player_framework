@@ -54,6 +54,7 @@ ohos_shared_library("audio_haptic") {
 
   external_deps = [
     "audio_framework:audio_client",
+    "c_utils:utils",
     "graphic_surface:surface",
     "hilog:libhilog",
     "ipc:ipc_core",
