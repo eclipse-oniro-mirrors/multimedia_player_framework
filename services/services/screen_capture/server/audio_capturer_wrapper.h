@@ -29,7 +29,7 @@
 #include "screen_capture.h"
 #include "securec.h"
 
-#define AUDIO_NS_PER_SECOND ((uint64_t)1000000000)
+#define AUDIO_NS_PER_SECOND (static_cast<uint64_t>(1000000000))
 
 namespace OHOS {
 namespace Media {
