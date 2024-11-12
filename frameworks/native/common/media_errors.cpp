@@ -376,7 +376,7 @@ const std::map<MediaServiceErrCode, MediaServiceErrCode> MSERRCODE_TO_MSERRCODE 
     {MSERR_IO_AUDIO_DEC_INIT_FAILED,               MSERR_UNSUPPORT_AUD_DEC_TYPE},
     {MSERR_IO_VIDEO_DEC_UNAVAILABLE,               MSERR_UNSUPPORT_VID_DEC_TYPE},
     {MSERR_IO_VIDEO_DEC_INIT_FAILED,               MSERR_UNSUPPORT_VID_SRC_TYPE},
-}
+};
 
 std::string ErrorMessageOk(const std::string& param1, const std::string& param2)
 {

@@ -528,8 +528,9 @@ void PlayerImplCallback::OnError(int32_t errorCode, const std::string &errorMsg)
         playerCb = playerCb_;
     }
 
-    if (player_ != nullptr && getApiVersionFlag_) {
-        player_->GetApiVersion(apiVersion_);
+    auto player = player_.lock();
+    if (player != nullptr && getApiVersionFlag_) {
+        player->GetApiVersion(apiVersion_);
         getApiVersionFlag_ = false;
     }
     MEDIA_LOGI("PlayerImplCallback apiVersion %{public}d", apiVersion_);
