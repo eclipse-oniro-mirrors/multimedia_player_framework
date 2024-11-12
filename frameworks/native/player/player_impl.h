@@ -109,6 +109,7 @@ private:
     std::shared_ptr<PlayerCallback> playerCb_;
     std::weak_ptr<PlayerImpl> player_;
     std::mutex playerImplCbMutex_;
+    bool getApiVersionFlag_ = true;
 };
 } // namespace Media
 } // namespace OHOS

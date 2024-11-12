@@ -42,6 +42,8 @@
     "*MSErrorToExtError*";
     "*MSExtErrorAPI9ToString*";
     "*MSExtAVErrorToString*";
+    "*IsAPI14IOError*";
+    "*API14IOErrorToMSError*";
   local:
     *;
 };

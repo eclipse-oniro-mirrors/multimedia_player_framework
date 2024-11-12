@@ -23,6 +23,8 @@
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "PlayerImpl"};
+constexpr int32_t API_VERSION_14 = 14;
+static int32_t apiVersion_ = -1;
 }
 
 namespace OHOS {
@@ -526,6 +528,21 @@ void PlayerImplCallback::OnError(int32_t errorCode, const std::string &errorMsg)
         playerCb = playerCb_;
     }
 
+    if (player_ != nullptr && getApiVersionFlag_) {
+        player_->GetApiVersion(apiVersion_);
+        getApiVersionFlag_ = false;
+    }
+    MEDIA_LOGI("PlayerImplCallback apiVersion %{public}d", apiVersion_);
+    if (static_cast<MediaServiceExtErrCodeAPI9>(errorCode) == MSERR_EXT_API9_IO ||
+        errorCode == MSERR_DEMUXER_BUFFER_NO_MEMORY) {
+        errorCode = MSERR_IO_DATA_ABNORMAL;
+    }
+    if (apiVersion_ < API_VERSION_14) {
+        errorCode = API14IOErrorToMSError(static_cast<MediaServiceErrCode>(errorCode));
+        if (IsAPI14IOError(static_cast<MediaServiceErrCode>(errorCode))) {
+            errorCode = MSERR_DATA_SOURCE_IO_ERROR;
+        }
+    }
     CHECK_AND_RETURN_LOG(playerCb != nullptr, "playerCb does not exist..");
     playerCb->OnError(errorCode, errorMsg);
 }

@@ -15,6 +15,7 @@
 
 #include "media_errors.h"
 #include <map>
+#include <set>
 #include <string>
 
 namespace OHOS {
@@ -334,6 +335,49 @@ const std::map<MediaServiceExtErrCodeAPI9, std::string> MSEXTERRCODE_API9_INFOS 
     {MSERR_EXT_API14_IO_VIDEO_ENC_UNAVAILABLE, "video encode unavailable: "},
 };
 
+const std::set<MediaServiceErrCode> API14_EXT_IO_ERRORS = {
+    MSERR_IO_CANNOT_FIND_HOST,
+    MSERR_IO_CONNECTION_TIMEOUT,
+    MSERR_IO_NETWORK_ABNORMAL,
+    MSERR_IO_NETWORK_UNAVAILABLE,
+    MSERR_IO_NO_PERMISSION,
+    MSERR_IO_NETWORK_ACCESS_DENIED,
+    MSERR_IO_RESOURE_NOT_FOUND,
+    MSERR_IO_SSL_CLIENT_CERT_NEEDED,
+    MSERR_IO_SSL_CONNECT_FAIL,
+    MSERR_IO_SSL_SERVER_CERT_UNTRUSTED,
+    MSERR_IO_UNSUPPORTTED_REQUEST,
+    MSERR_IO_DATA_ABNORMAL,
+    MSERR_IO_FILE_ACCESS_DENIED,
+    MSERR_IO_FILE_BAD_HANDLE,
+    MSERR_IO_FILE_NOT_FOUND,
+    MSERR_IO_FILE_PERMISSION_DENIED,
+    MSERR_IO_AUDIO_DEC_FAILED,
+    MSERR_IO_AUDIO_DEC_INIT_FAILED,
+    MSERR_IO_AUDIO_DEC_UNAVAILABLE,
+    MSERR_IO_AUDIO_DEVICE_ERROR,
+    MSERR_IO_AUDIO_DEVICE_INVALID_STATE,
+    MSERR_IO_AUDIO_DEVICE_TIMEOUT,
+    MSERR_IO_AUDIO_DEVICE_UNAVAILABLE,
+    MSERR_IO_AUDIO_ENC_FAILED,
+    MSERR_IO_AUDIO_ENC_INIT_FAILED,
+    MSERR_IO_AUDIO_ENC_UNAVAILABLE,
+    MSERR_IO_VIDEO_DEC_FAILED,
+    MSERR_IO_VIDEO_DEC_INIT_FAILED,
+    MSERR_IO_VIDEO_DEC_UNAVAILABLE,
+    MSERR_IO_VIDEO_DEVICE_ERROR,
+    MSERR_IO_VIDEO_ENC_FAILED,
+    MSERR_IO_VIDEO_ENC_INIT_FAILED,
+    MSERR_IO_VIDEO_ENC_UNAVAILABLE,
+};
+
+const std::map<MediaServiceErrCode, MediaServiceErrCode> MSERRCODE_TO_MSERRCODE = {
+    {MSERR_IO_AUDIO_DEVICE_UNAVAILABLE,            MSERR_UNSUPPORT_AUD_SAMPLE_RATE},
+    {MSERR_IO_AUDIO_DEC_INIT_FAILED,               MSERR_UNSUPPORT_AUD_DEC_TYPE},
+    {MSERR_IO_VIDEO_DEC_UNAVAILABLE,               MSERR_UNSUPPORT_VID_DEC_TYPE},
+    {MSERR_IO_VIDEO_DEC_INIT_FAILED,               MSERR_UNSUPPORT_VID_SRC_TYPE},
+}
+
 std::string ErrorMessageOk(const std::string& param1, const std::string& param2)
 {
     (void)param1;
@@ -510,6 +554,19 @@ MediaServiceExtErrCodeAPI9 MSErrorToExtErrorAPI9(MediaServiceErrCode code)
     }
     // If error not in map, need add error and should not return default MSERR_EXT_API9_IO.
     return MSERR_EXT_API9_IO;
+}
+
+bool IsAPI14IOError(MediaServiceErrCode code)
+{
+    return API14_EXT_IO_ERRORS.find(code) != API14_EXT_IO_ERRORS.end();
+}
+
+MediaServiceErrCode API14IOErrorToMSError(MediaServiceErrCode code)
+{
+    if (MSERRCODE_TO_MSERRCODE.find(code) != MSERRCODE_TO_MSERRCODE.end()) {
+        return MSERRCODE_TO_MSERRCODE.at(code);
+    }
+    return code;
 }
 } // namespace Media
 } // namespace OHOS
