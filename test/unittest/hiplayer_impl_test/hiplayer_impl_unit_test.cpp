@@ -834,5 +834,57 @@ HWTEST_F(HiplayerImplUnitTest, GetSarVideoHeight_001, TestSize.Level0)
     EXPECT_EQ(1, hiplayer_->GetSarVideoHeight(trackInfo));
 }
 
+HWTEST_F(HiplayerImplUnitTest, TestHiplayerImplDestructor, TestSize.Level0)
+{
+    std::unique_ptr<HiPlayerImpl> player = std::make_unique<HiPlayerImpl>(0, 0, 0, 0);
+    EXPECT_NE(player, nullptr);
+    {
+        auto destructedPlayer = std::move(player);
+        EXPECT_NE(destructedPlayer, nullptr);
+    }
+    EXPECT_EQ(player, nullptr);
+}
+ 
+HWTEST_F(HiplayerImplUnitTest, TestHiplayerImplLag_001, TestSize.Level0)
+{
+    std::unique_ptr<HiPlayerImpl> player = std::make_unique<HiPlayerImpl>(0, 0, 0, 0);
+    ASSERT_NE(player, nullptr);
+    ASSERT_NE(player->dfxAgent_, nullptr);
+    EXPECT_EQ(player->dfxAgent_->hasReported_, false);
+    player->Init();
+    ASSERT_NE(player->playerEventReceiver_, nullptr);
+    player->playerEventReceiver_->OnDfxEvent(
+        {"HiPlayerImplUnitTest", DfxEventType::DFX_INFO_PLAYER_AUDIO_LAG, 1000});
+    usleep(100000); // sleep 100 ms to wait for hasReported_ change
+    EXPECT_EQ(player->dfxAgent_->hasReported_, true);
+}
+ 
+HWTEST_F(HiplayerImplUnitTest, TestHiplayerImplLag_002, TestSize.Level0)
+{
+    std::unique_ptr<HiPlayerImpl> player = std::make_unique<HiPlayerImpl>(0, 0, 0, 0);
+    ASSERT_NE(player, nullptr);
+    ASSERT_NE(player->dfxAgent_, nullptr);
+    EXPECT_EQ(player->dfxAgent_->hasReported_, false);
+    player->Init();
+    ASSERT_NE(player->playerEventReceiver_, nullptr);
+    player->playerEventReceiver_->OnDfxEvent(
+        {"HiPlayerImplUnitTest", DfxEventType::DFX_INFO_PLAYER_VIDEO_LAG, 1000});
+    usleep(100000); // sleep 100 ms to wait for hasReported_ change
+    EXPECT_EQ(player->dfxAgent_->hasReported_, true);
+}
+ 
+HWTEST_F(HiplayerImplUnitTest, TestHiplayerImplLag_003, TestSize.Level0)
+{
+    std::unique_ptr<HiPlayerImpl> player = std::make_unique<HiPlayerImpl>(0, 0, 0, 0);
+    ASSERT_NE(player, nullptr);
+    ASSERT_NE(player->dfxAgent_, nullptr);
+    EXPECT_EQ(player->dfxAgent_->hasReported_, false);
+    player->Init();
+    ASSERT_NE(player->playerEventReceiver_, nullptr);
+    player->playerEventReceiver_->OnDfxEvent(
+        {"HiPlayerImplUnitTest", DfxEventType::DFX_INFO_PLAYER_STREAM_LAG, 1000});
+    usleep(100000); // sleep 100 ms to wait for hasReported_ change
+    EXPECT_EQ(player->dfxAgent_->hasReported_, true);
+}
 } // namespace Media
 } // namespace OHOS
