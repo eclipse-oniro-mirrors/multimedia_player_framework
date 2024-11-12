@@ -61,6 +61,9 @@ private:
     std::string ChangeHapticsUri(const std::string &hapticsUri);
     bool InitDataShareHelper();
     void ReleaseDataShareHelper();
+    static int32_t ExtractFd(const std::string &uri);
+    int32_t RegisterSource(const std::string &audioUri, const std::string &hapticUri);
+    void UnregisterSource();
 
     float volume_ = 1.0f;
     bool loop_ = false;
@@ -76,6 +79,7 @@ private:
     RingtoneType type_ = RINGTONE_TYPE_SIM_CARD_0;
     RingtoneState ringtoneState_ = STATE_NEW;
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper_ = nullptr;
+    std::vector<std::pair<int32_t, bool>> fdArray_;
 
     std::mutex playerMutex_;
 };
