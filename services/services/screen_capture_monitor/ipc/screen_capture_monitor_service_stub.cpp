@@ -124,7 +124,7 @@ int32_t ScreenCaptureMonitorServiceStub::CloseListenerObject()
     return MSERR_OK;
 }
 
-int32_t ScreenCaptureMonitorServiceStub::IsScreenCaptureWorking()
+std::list<int32_t> ScreenCaptureMonitorServiceStub::IsScreenCaptureWorking()
 {
     CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorServer_ != nullptr, {}, "screen capture monitor server is nullptr");
     return screenCaptureMonitorServer_->IsScreenCaptureWorking();
