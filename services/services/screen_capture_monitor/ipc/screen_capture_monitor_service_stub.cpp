@@ -26,6 +26,7 @@
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "ScreenCaptureMonitorServiceStub"};
+constexpr int MAX_LIST_COUNT = 1000;
 }
 
 namespace OHOS {
@@ -125,8 +126,7 @@ int32_t ScreenCaptureMonitorServiceStub::CloseListenerObject()
 
 int32_t ScreenCaptureMonitorServiceStub::IsScreenCaptureWorking()
 {
-    CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorServer_ != nullptr, MSERR_NO_MEMORY,
-        "screen capture monitor server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorServer_ != nullptr, {}, "screen capture monitor server is nullptr");
     return screenCaptureMonitorServer_->IsScreenCaptureWorking();
 }
 
@@ -147,7 +147,18 @@ int32_t ScreenCaptureMonitorServiceStub::CloseListenerObject(MessageParcel &data
 int32_t ScreenCaptureMonitorServiceStub::IsScreenCaptureWorking(MessageParcel &data, MessageParcel &reply)
 {
     (void)data;
-    reply.WriteInt32(IsScreenCaptureWorking());
+    std::list<int32_t> pidList = IsScreenCaptureWorking();
+    int32_t size = static_cast<int32_t>(pidList.size());
+    reply.WriteInt32(size);
+    CHECK_AND_RETURN_RET_LOG(size < MAX_LIST_COUNT, {}, "content filter size exceed max range");
+
+    for (auto pid: pidList) {
+        MEDIA_LOGI("ScreenCaptureMonitorServiceStub::IsScreenCaptureWorking pid start.");
+        reply.WriteInt32(pid);
+    }
+    MEDIA_LOGI("ScreenCaptureMonitorServiceStub::IsScreenCaptureWorking pid end.");
+    // reply.WriteInt32Vector(IsScreenCaptureWorking())
+    // TODO
     return MSERR_OK;
 }
 

@@ -29,7 +29,7 @@ public:
     explicit ScreenCaptureMonitorClient(const sptr<IStandardScreenCaptureMonitorService> &ipcProxy);
     ~ScreenCaptureMonitorClient();
 
-    int32_t IsScreenCaptureWorking() override;
+    std::list<int32_t> IsScreenCaptureWorking() override;
     void RegisterScreenCaptureMonitorListener(
         sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> listener) override;
     void UnregisterScreenCaptureMonitorListener(

@@ -62,7 +62,7 @@ bool InCallObserver::RegisterInCallObserverCallBack(std::weak_ptr<InCallObserver
     std::unique_lock<std::mutex> lock(mutex_);
     auto callbackPtr = callback.lock();
     if (callbackPtr) {
-        inCallObserverCallBack_ = callback;
+        inCallObserverCallBacks_.push_back(callback);
         return true;
     } else {
         MEDIA_LOGI("0x%{public}06" PRIXPTR "InCallObserver CallBack is null", FAKE_POINTER(this));
@@ -72,8 +72,10 @@ bool InCallObserver::RegisterInCallObserverCallBack(std::weak_ptr<InCallObserver
 
 void InCallObserver::UnRegisterInCallObserverCallBack()
 {
-    if (!inCallObserverCallBack_.expired()) {
-        inCallObserverCallBack_.reset();
+    for (auto inCallObserverCallBack_: inCallObserverCallBacks_) {
+        if (!inCallObserverCallBack_.expired()) {
+            inCallObserverCallBack_.reset();
+        }
     }
 }
 
@@ -84,16 +86,19 @@ bool InCallObserver::OnCallStateUpdated(bool inCall)
         MEDIA_LOGI("Update InCall Status %{public}d", static_cast<int32_t>(inCall));
         inCall_.store(inCall);
     }
+    bool ret = true;
     if (inCall) {
-        auto callbackPtr = inCallObserverCallBack_.lock();
-        if (callbackPtr) {
-            MEDIA_LOGI("0x%{public}06" PRIXPTR " Stop and Release CallBack", FAKE_POINTER(this));
-            return callbackPtr->StopAndRelease(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_CALL);
-        } else {
-            MEDIA_LOGI("0x%{public}06" PRIXPTR "InCallObserver CallBack is null", FAKE_POINTER(this));
+        for (auto inCallObserverCallBack_: inCallObserverCallBacks_) {
+            auto callbackPtr = inCallObserverCallBack_.lock();
+            if (callbackPtr) {
+                MEDIA_LOGI("0x%{public}06" PRIXPTR " Stop and Release CallBack", FAKE_POINTER(this));
+                ret &= callbackPtr->StopAndRelease(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_CALL);
+            } else {
+                MEDIA_LOGI("0x%{public}06" PRIXPTR "InCallObserver CallBack is null", FAKE_POINTER(this));
+            }
         }
     }
-    return true;
+    return ret;
 }
 
 bool InCallObserver::Init()

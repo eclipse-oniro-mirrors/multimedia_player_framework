@@ -47,7 +47,7 @@ public:
 private:
 
     std::vector<MediaTelephonyListener *> mediaTelephonyListeners_;
-    std::weak_ptr<InCallObserverCallBack> inCallObserverCallBack_;
+    std::vector<std::weak_ptr<InCallObserverCallBack>> inCallObserverCallBacks_;
     InCallObserver();
     ~InCallObserver();
     std::atomic<bool> inCall_{false};

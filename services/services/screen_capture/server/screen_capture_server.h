@@ -58,6 +58,7 @@
 #include "json/json.h"
 #include "tokenid_kit.h"
 #include "window_manager.h"
+#include "limitIdGenerator.h"
 
 namespace OHOS {
 namespace Media {
@@ -84,9 +85,10 @@ enum VideoPermissionState : int32_t {
 
 enum AVScreenCaptureState : int32_t {
     CREATED = 0,
-    STARTING = 1,
-    STARTED = 2,
-    STOPPED = 3
+    POPUP_WINDOW = 1,
+    STARTING = 2,
+    STARTED = 3,
+    STOPPED = 4
 };
 
 enum AVScreenCaptureMixMode : int32_t {
@@ -264,9 +266,10 @@ class ScreenCaptureServer : public std::enable_shared_from_this<ScreenCaptureSer
         public IScreenCaptureService, public NoCopyable {
 public:
     static std::shared_ptr<IScreenCaptureService> Create();
+    static bool CanScreenCaptureInstanceBeCreate();
+    static std::shared_ptr<IScreenCaptureService> CreateScreenCaptureNewInstance();
     static int32_t ReportAVScreenCaptureUserChoice(int32_t sessionId, const std::string &content);
-    static int32_t GetRunningScreenCaptureInstancePid(int32_t &pid);
-    static int32_t GetSpecificServer(int32_t sessionId, std::shared_ptr<ScreenCaptureServer> &server);
+    static int32_t GetRunningScreenCaptureInstancePid(std::list<int32_t> &pidList);
     static void GetChoiceFromJson(Json::Value &root, const std::string &content, std::string key, std::string &value);
     static void PrepareSelectWindow(Json::Value &root, std::shared_ptr<ScreenCaptureServer> &server);
     ScreenCaptureServer();
@@ -316,6 +319,8 @@ public:
     void SetMissionId(uint64_t missionId);
     void SetDisplayId(uint64_t displayId);
     bool IsTelInCallSkipList();
+    int32_t GetAppPid();
+    int32_t GetAppUid();
 
 private:
     int32_t StartScreenCaptureInner(bool isPrivacyAuthorityEnabled);
@@ -383,7 +388,6 @@ private:
     int64_t GetCurrentMillisecond();
     void SetMetaDataReport();
     void SetErrorInfo(int32_t errCode, const std::string &errMsg, StopReason stopReason, bool userAgree);
-    void SystemRecorderInterruptLatestRecorder();
     int32_t ReStartMicForVoIPStatusSwitch();
     void RegisterPrivateWindowListener();
     uint64_t GetDisplayIdOfWindows(uint64_t displayId);

@@ -25,7 +25,7 @@ namespace Media {
 class IScreenCaptureMonitorService {
 public:
     virtual ~IScreenCaptureMonitorService() = default;
-    virtual int32_t IsScreenCaptureWorking() = 0;
+    virtual std::list<int32_t> IsScreenCaptureWorking() = 0;
     virtual void RegisterScreenCaptureMonitorListener(
         sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> listener) = 0;
     virtual void UnregisterScreenCaptureMonitorListener(

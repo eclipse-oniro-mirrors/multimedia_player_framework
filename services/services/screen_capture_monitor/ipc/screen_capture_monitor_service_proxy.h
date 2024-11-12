@@ -28,7 +28,7 @@ public:
 
     int32_t SetListenerObject(const sptr<IRemoteObject> &object) override;
     int32_t CloseListenerObject() override;
-    int32_t IsScreenCaptureWorking() override;
+    std::list<int32_t> IsScreenCaptureWorking() override;
     int32_t DestroyStub() override;
 
 private:

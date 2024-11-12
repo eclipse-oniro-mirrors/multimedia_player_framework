@@ -35,7 +35,7 @@ public:
     ScreenCaptureMonitorServer();
     ~ScreenCaptureMonitorServer();
     // IScreenCaptureMonitorService override
-    int32_t IsScreenCaptureWorking() override;
+    std::list<int32_t> IsScreenCaptureWorking() override;
 
     void SetScreenCaptureMonitorCallback(sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> listener);
     void RemoveScreenCaptureMonitorCallback(sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> listener);
