@@ -83,8 +83,6 @@ std::list<int32_t> ScreenCaptureMonitorServiceProxy::IsScreenCaptureWorking()
     for (int32_t i = 0; i < size; i++) {
         pidList.push_back(reply.ReadInt32());
     }
-    // TODO ReadInt32Vector
-    // return reply.ReadInt32()
     for (auto pid: pidList) {
         MEDIA_LOGI("ScreenCaptureMonitorServiceProxy::IsScreenCaptureWorking pid: %{public}d", pid);
     }

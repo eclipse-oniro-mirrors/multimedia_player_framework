@@ -51,7 +51,7 @@ namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "ScreenCaptureServer"};
 static std::map<int32_t, std::weak_ptr<OHOS::Media::ScreenCaptureServer>> serverMap;
 static const int32_t MAX_SESSION_ID = 256;
-static UniqueIDGenerator idGenerator(MAX_SESSION_ID);
+static UniqueIDGenerator g_idGenerator(MAX_SESSION_ID);
 std::list<int32_t> startedSessionIDList_;
 static const int32_t MAX_SESSION_PER_UID = 8;
 
@@ -71,7 +71,7 @@ static void removeScreenCaptureServerMap(int32_t sessionId)
 {
     std::unique_lock<std::shared_mutex> lock(mutexServerMapRWGlobal_);
     serverMap.erase(sessionId);
-    idGenerator.returnID(sessionId);
+    g_idGenerator.returnID(sessionId);
     MEDIA_LOGI("removeScreenCaptureServerMap end. sessionId: %{public}d, serverMap size: %{public}d.",
         sessionId, static_cast<uint32_t>(serverMap.size()));
 }
@@ -241,7 +241,7 @@ bool ScreenCaptureServer::CanScreenCaptureInstanceBeCreate()
 std::shared_ptr<IScreenCaptureService> ScreenCaptureServer::CreateScreenCaptureNewInstance()
 {
     MEDIA_LOGI("CreateScreenCaptureNewInstance");
-    int32_t id = idGenerator.getNewID();
+    int32_t id = g_idGenerator.getNewID();
     CHECK_AND_RETURN_RET_LOG(id != -1, nullptr, "getNewID failed.");
     MEDIA_LOGI("CreateScreenCaptureNewInstance newId: %{public}d", id);
     std::shared_ptr<ScreenCaptureServer> server = std::make_shared<ScreenCaptureServer>();

@@ -157,8 +157,6 @@ int32_t ScreenCaptureMonitorServiceStub::IsScreenCaptureWorking(MessageParcel &d
         reply.WriteInt32(pid);
     }
     MEDIA_LOGI("ScreenCaptureMonitorServiceStub::IsScreenCaptureWorking pid end.");
-    // reply.WriteInt32Vector(IsScreenCaptureWorking())
-    // TODO
     return MSERR_OK;
 }
 

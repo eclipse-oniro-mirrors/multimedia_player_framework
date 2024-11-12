@@ -22,10 +22,9 @@
 
 namespace OHOS {
 namespace Media {
-class UniqueIDGenerator
-{
+class UniqueIDGenerator {
 public:
-    UniqueIDGenerator(int32_t limit);
+    explicit UniqueIDGenerator(int32_t limit);
     ~UniqueIDGenerator();
     int32_t getNewID();
     void returnID(int32_t id);
