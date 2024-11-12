@@ -526,8 +526,10 @@ int32_t HiPlayerImpl::PrepareAsync()
     }
     DoSetMediaSource(ret);
     if (ret != Status::OK && !isInterruptNeeded_.load()) {
-        auto errCode = TransStatus(ret);
-        return ReportErrorInfo(errCode);
+        auto errCode = TransStatus(Status::ERROR_UNSUPPORTED_FORMAT);
+        CollectionErrorInfo(errCode, "PrepareAsync error: DoSetSource error");
+        OnEvent({"engine", EventType::EVENT_ERROR, MSERR_UNSUPPORT_CONTAINER_TYPE});
+        return errCode;
     }
     FALSE_RETURN_V(!BreakIfInterruptted(), TransStatus(Status::OK));
     NotifyBufferingUpdate(PlayerKeys::PLAYER_BUFFERING_START, 0);
@@ -555,16 +557,6 @@ int32_t HiPlayerImpl::PrepareAsync()
     UpdatePlayerStateAndNotify();
     MEDIA_LOG_D_SHORT("PrepareAsync End");
     return TransStatus(ret);
-}
-
-int32_t HiPlayerImpl::ReportErrorInfo(int32_t errCode)
-{
-    if (errCode == MSERR_UNKNOWN) {
-        errCode = MSERR_UNSUPPORT_CONTAINER_TYPE;
-    }
-    CollectionErrorInfo(errCode, "PrepareAsync error: DoSetSource error");
-    OnEvent({"engine", EventType::EVENT_ERROR, errCode});
-    return errCode;
 }
 
 void HiPlayerImpl::CollectionErrorInfo(int32_t errCode, const std::string& errMsg)

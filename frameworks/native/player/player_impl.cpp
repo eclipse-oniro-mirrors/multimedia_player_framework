@@ -539,7 +539,6 @@ void PlayerImplCallback::OnError(int32_t errorCode, const std::string &errorMsg)
         errorCode = MSERR_IO_DATA_ABNORMAL;
     }
     if (apiVersion_ < API_VERSION_14) {
-        errorCode = API14IOErrorToMSError(static_cast<MediaServiceErrCode>(errorCode));
         if (IsAPI14IOError(static_cast<MediaServiceErrCode>(errorCode))) {
             errorCode = MSERR_DATA_SOURCE_IO_ERROR;
         }

@@ -371,13 +371,6 @@ const std::set<MediaServiceErrCode> API14_EXT_IO_ERRORS = {
     MSERR_IO_VIDEO_ENC_UNAVAILABLE,
 };
 
-const std::map<MediaServiceErrCode, MediaServiceErrCode> MSERRCODE_TO_MSERRCODE = {
-    {MSERR_IO_AUDIO_DEVICE_UNAVAILABLE,            MSERR_UNSUPPORT_AUD_SAMPLE_RATE},
-    {MSERR_IO_AUDIO_DEC_INIT_FAILED,               MSERR_UNSUPPORT_AUD_DEC_TYPE},
-    {MSERR_IO_VIDEO_DEC_UNAVAILABLE,               MSERR_UNSUPPORT_VID_DEC_TYPE},
-    {MSERR_IO_VIDEO_DEC_INIT_FAILED,               MSERR_UNSUPPORT_VID_SRC_TYPE},
-};
-
 std::string ErrorMessageOk(const std::string& param1, const std::string& param2)
 {
     (void)param1;
@@ -559,14 +552,6 @@ MediaServiceExtErrCodeAPI9 MSErrorToExtErrorAPI9(MediaServiceErrCode code)
 bool IsAPI14IOError(MediaServiceErrCode code)
 {
     return API14_EXT_IO_ERRORS.find(code) != API14_EXT_IO_ERRORS.end();
-}
-
-MediaServiceErrCode API14IOErrorToMSError(MediaServiceErrCode code)
-{
-    if (MSERRCODE_TO_MSERRCODE.find(code) != MSERRCODE_TO_MSERRCODE.end()) {
-        return MSERRCODE_TO_MSERRCODE.at(code);
-    }
-    return code;
 }
 } // namespace Media
 } // namespace OHOS
