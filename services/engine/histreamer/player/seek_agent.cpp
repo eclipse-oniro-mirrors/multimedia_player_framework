@@ -289,9 +289,9 @@ Status SeekAgent::AlignAudioPosition(int64_t audioPosition)
         MEDIA_LOG_I("Wait end");
     }
     MEDIA_LOG_I("PauseForSeek start");
-    demuxer_->PauseAudioAlign();
+    auto ret = demuxer_->PauseAudioAlign();
     RemoveBufferFilledListener();
-    return Status::OK;
+    return ret;
 }
 
 void SeekAgent::SetInterruptState(bool isNeed)

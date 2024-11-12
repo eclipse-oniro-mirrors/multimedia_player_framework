@@ -164,7 +164,8 @@ void DraggingPlayerAgent::Release()
         draggingPlayer_->Release();
     }
     if (draggingPlayer_ != nullptr) {
-        demuxer_->PauseDragging();
+        auto res = demuxer_->PauseDragging();
+        FALSE_LOG_MSG(res == Status::OK, "PauseDragging failed");
     }
     if (demuxer_ != nullptr) {
         demuxer_->DeregisterVideoStreamReadyCallback();
