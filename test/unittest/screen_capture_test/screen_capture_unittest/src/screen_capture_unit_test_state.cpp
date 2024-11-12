@@ -1065,7 +1065,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_cb_07, TestSize.
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
     sleep(RECORDER_TIME);
-    EXPECT_NE({}, ScreenCaptureMonitor::GetInstance()->IsScreenCaptureWorking());
+    EXPECT_NE(0, (ScreenCaptureMonitor::GetInstance()->IsScreenCaptureWorking()).size());
     EXPECT_EQ(1, // 1 start
         static_cast<ScreenCaptureMonitorListenerMock *>(screenCaptureMonitorListener1.GetRefPtr())->stateFlag_);
     EXPECT_EQ(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STARTED, screenCaptureCb_->GetScreenCaptureState());
@@ -1075,7 +1075,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_cb_07, TestSize.
         static_cast<ScreenCaptureMonitorListenerMock *>(screenCaptureMonitorListener1.GetRefPtr())->stateFlag_);
     ScreenCaptureMonitor::GetInstance()->UnregisterScreenCaptureMonitorListener(screenCaptureMonitorListener1);
     ScreenCaptureMonitor::GetInstance()->UnregisterScreenCaptureMonitorListener(screenCaptureMonitorListener2);
-    EXPECT_EQ({}, ScreenCaptureMonitor::GetInstance()->IsScreenCaptureWorking());
+    EXPECT_EQ(0, (ScreenCaptureMonitor::GetInstance()->IsScreenCaptureWorking()).size());
     CloseFile();
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_cb_07 after");
 }
