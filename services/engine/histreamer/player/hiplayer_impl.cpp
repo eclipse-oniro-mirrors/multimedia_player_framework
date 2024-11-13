@@ -1067,7 +1067,7 @@ void HiPlayerImpl::NotifySeek(Status rtv, bool flag, int64_t seekPos)
     if (rtv != Status::OK) {
         MEDIA_LOG_E("Seek done, seek error");
         if (!isInterruptNeeded_.load()) {
-            MEDIA_LOG_E("isNotisInterruptNeeded_ seek error");
+            MEDIA_LOG_E("isNotIsInterruptNeeded_ seek error");
             // change player state to PLAYER_STATE_ERROR when seek error.
             UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
             Format format;
