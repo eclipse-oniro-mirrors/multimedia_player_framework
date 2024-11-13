@@ -203,10 +203,6 @@ int32_t AudioHapticPlayerImpl::Release()
 
 void AudioHapticPlayerImpl::ReleaseVibrator()
 {
-    if (audioHapticVibrator_ != nullptr) {
-        (void)audioHapticVibrator_->Release();
-        audioHapticVibrator_ = nullptr;
-    }
     {
         // When player is releasing，notify vibrate thread immediately
         std::lock_guard<std::mutex> lockVibrate(waitStartVibrateMutex_);
@@ -218,6 +214,10 @@ void AudioHapticPlayerImpl::ReleaseVibrator()
         vibrateThread_->join();
     }
     vibrateThread_.reset();
+    if (audioHapticVibrator_ != nullptr) {
+        (void)audioHapticVibrator_->Release();
+        audioHapticVibrator_ = nullptr;
+    }
 }
 
 void AudioHapticPlayerImpl::ReleaseSound()
