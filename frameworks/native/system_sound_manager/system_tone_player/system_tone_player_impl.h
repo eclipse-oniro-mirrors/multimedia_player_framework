@@ -69,6 +69,9 @@ private:
     void UpdateStreamId();
     bool InitDataShareHelper();
     void ReleaseDataShareHelper();
+    static int32_t ExtractFd(const std::string &uri);
+    int32_t RegisterSource(const std::string &audioUri, const std::string &hapticUri);
+    void UnregisterSource(int32_t sourceId);
 
     std::shared_ptr<AudioHapticManager> audioHapticManager_ = nullptr;
     std::unordered_map<int32_t, std::shared_ptr<AudioHapticPlayer>> playerMap_;
@@ -88,6 +91,7 @@ private:
     std::map<ToneHapticsFeature, std::string> hapticUriMap_;
     bool isHapticUriEmpty_ = false;
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper_ = nullptr;
+    std::unordered_map<int32_t, std::vector<std::pair<int32_t, bool>>> fdMap_;
 
     std::mutex systemTonePlayerMutex_;
 };

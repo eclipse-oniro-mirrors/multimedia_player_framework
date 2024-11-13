@@ -29,6 +29,7 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_AUDIO_NAPI, 
 
 namespace OHOS {
 namespace Media {
+const int32_t ERROR = -1;
 const int32_t ERRCODE_IOERROR = 5400103;
 const float HIGH_VOL = 1.0f;
 const float LOW_VOL = 0.0f;
@@ -66,7 +67,7 @@ RingtonePlayerImpl::~RingtonePlayerImpl()
         callback_ = nullptr;
     }
     if (audioHapticManager_ != nullptr) {
-        audioHapticManager_->UnregisterSource(sourceId_);
+        UnregisterSource();
         audioHapticManager_ = nullptr;
     }
     ReleaseDataShareHelper();
@@ -169,30 +170,27 @@ std::string RingtonePlayerImpl::ChangeUri(const std::string &audioUri)
 {
     const std::string FDHEAD = "fd://";
     std::string ringtoneUri = audioUri;
-    size_t found = audioUri.find(RINGTONE_CUSTOMIZED_BASE_PATH);
-    if (found != std::string::npos) {
-        std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
-            CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
-        CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, audioUri, "Failed to create dataShareHelper.");
-        DataShare::DatashareBusinessError businessError;
-        DataShare::DataSharePredicates queryPredicates;
-        Uri ringtonePathUri(RINGTONE_PATH_URI);
-        vector<string> columns = {{RINGTONE_COLUMN_TONE_ID}, {RINGTONE_COLUMN_DATA}};
-        queryPredicates.EqualTo(RINGTONE_COLUMN_DATA, audioUri);
-        auto resultSet = dataShareHelper->Query(ringtonePathUri, queryPredicates, columns, &businessError);
-        auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
-        unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
-        if (ringtoneAsset != nullptr) {
-            string uriStr = RINGTONE_PATH_URI + RINGTONE_SLASH_CHAR + to_string(ringtoneAsset->GetId());
-            Uri ofUri(uriStr);
-            int32_t fd = dataShareHelper->OpenFile(ofUri, "r");
-            if (fd > 0) {
-                ringtoneUri = FDHEAD + to_string(fd);
-            }
+    CHECK_AND_RETURN_RET_LOG(dataShareHelper_ != nullptr, ringtoneUri, "Failed to init dataShareHelper_.");
+
+    DataShare::DatashareBusinessError businessError;
+    DataShare::DataSharePredicates queryPredicates;
+    Uri ringtonePathUri(RINGTONE_PATH_URI);
+    vector<string> columns = {{RINGTONE_COLUMN_TONE_ID}, {RINGTONE_COLUMN_DATA}};
+    queryPredicates.EqualTo(RINGTONE_COLUMN_DATA, audioUri);
+    auto resultSet = dataShareHelper_->Query(ringtonePathUri, queryPredicates, columns, &businessError);
+    auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
+    unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
+    if (ringtoneAsset != nullptr) {
+        string uriStr = RINGTONE_PATH_URI + RINGTONE_SLASH_CHAR + to_string(ringtoneAsset->GetId());
+        MEDIA_LOGD("ChangeUri::Open ringtoneUri is %{public}s", uriStr.c_str());
+        Uri ofUri(uriStr);
+        int32_t fd = dataShareHelper_->OpenFile(ofUri, "r");
+        if (fd > 0) {
+            ringtoneUri = FDHEAD + to_string(fd);
         }
-        resultSet == nullptr ? : resultSet->Close();
-        dataShareHelper->Release();
     }
+
+    resultSet == nullptr ? : resultSet->Close();
     MEDIA_LOGI("RingtonePlayerImpl::ChangeUri ringtoneUri is %{public}s", ringtoneUri.c_str());
     return ringtoneUri;
 }
@@ -214,7 +212,7 @@ std::string RingtonePlayerImpl::ChangeHapticsUri(const std::string &hapticsUri)
     unique_ptr<VibrateAsset> vibrateAssetByUri = results->GetFirstObject();
     if (vibrateAssetByUri != nullptr) {
         string uriStr = VIBRATE_PATH_URI + RINGTONE_SLASH_CHAR + to_string(vibrateAssetByUri->GetId());
-        MEDIA_LOGI("ChangeHapticsUri::Open newHapticsUri is %{public}s", uriStr.c_str());
+        MEDIA_LOGD("ChangeHapticsUri::Open newHapticsUri is %{public}s", uriStr.c_str());
         Uri ofUri(uriStr);
         int32_t fd = dataShareHelper_->OpenFile(ofUri, "r");
         if (fd > 0) {
@@ -278,17 +276,75 @@ ToneHapticsSettings RingtonePlayerImpl::GetHapticSettings(std::string &audioUri,
     return settings;
 }
 
-void RingtonePlayerImpl::InitPlayer(std::string &audioUri, ToneHapticsSettings &settings,
-    AudioHapticPlayerOptions options)
+int32_t RingtonePlayerImpl::ExtractFd(const std::string& uri)
 {
-    MEDIA_LOGI("InitPlayer: ToneUri:%{public}s, hapticsUri:%{public}s, mode:%{public}d.",
-        audioUri.c_str(), settings.hapticsUri.c_str(), settings.mode);
+    const std::string prefix = "fd://";
+    if (uri.size() <= prefix.size() || uri.substr(0, prefix.length()) != prefix) {
+        MEDIA_LOGW("ExtractFd: Input does not start with the required prefix.");
+        return ERROR;
+    }
+
+    std::string numberPart = uri.substr(prefix.length());
+    for (char c : numberPart) {
+        if (!std::isdigit(c)) {
+            MEDIA_LOGE("ExtractFd: The part after the prefix is not all digits.");
+            return ERROR;
+        }
+    }
+
+    int32_t fd = atoi(numberPart.c_str());
+    return fd > 0 ? fd : ERROR;
+}
+
+int32_t RingtonePlayerImpl::RegisterSource(const std::string &audioUri, const std::string &hapticUri)
+{
+    string newAudioUri = ChangeUri(audioUri);
+    string newHapticUri = ChangeHapticsUri(hapticUri);
+
+    int32_t sourceId = audioHapticManager_->RegisterSource(newAudioUri, newHapticUri);
+
+    int32_t fd = ExtractFd(newAudioUri);
+    if (fd != ERROR) {
+        fdArray_.emplace_back(fd, false);
+    }
+
+    fd = ExtractFd(newHapticUri);
+    if (fd != ERROR) {
+        fdArray_.emplace_back(fd, false);
+    }
+
+    if (sourceId == -1) {
+        UnregisterSource();
+    }
+
+    return sourceId;
+}
+
+void RingtonePlayerImpl::UnregisterSource()
+{
     if (sourceId_ != -1) {
         (void)audioHapticManager_->UnregisterSource(sourceId_);
         sourceId_ = -1;
     }
 
-    sourceId_ = audioHapticManager_->RegisterSource(ChangeUri(audioUri), ChangeHapticsUri(settings.hapticsUri));
+    for (auto &[fd, isClose] : fdArray_) {
+        if (!isClose) {
+            MEDIA_LOGD("UnregisterSource: close fd: %{public}d.", fd);
+            close(fd);
+            fd = -1;
+        }
+    }
+    fdArray_.clear();
+}
+
+void RingtonePlayerImpl::InitPlayer(std::string &audioUri, ToneHapticsSettings &settings,
+    AudioHapticPlayerOptions options)
+{
+    MEDIA_LOGI("InitPlayer: ToneUri:%{public}s, hapticsUri:%{public}s, mode:%{public}d.",
+        audioUri.c_str(), settings.hapticsUri.c_str(), settings.mode);
+    UnregisterSource();
+
+    sourceId_ = RegisterSource(audioUri, settings.hapticsUri);
     CHECK_AND_RETURN_LOG(sourceId_ != -1, "Failed to register source for audio haptic manager");
     (void)audioHapticManager_->SetAudioLatencyMode(sourceId_, AUDIO_LATENCY_MODE_NORMAL);
     (void)audioHapticManager_->SetStreamUsage(sourceId_, AudioStandard::StreamUsage::STREAM_USAGE_VOICE_RINGTONE);
@@ -306,6 +362,10 @@ void RingtonePlayerImpl::InitPlayer(std::string &audioUri, ToneHapticsSettings &
     CHECK_AND_RETURN_LOG(result == MSERR_OK, "Failed to load source for audio haptic manager");
     configuredUri_ = audioUri;
     configuredHaptcisSettings_ = settings;
+    for (auto &[fd, isClose] : fdArray_) {
+        isClose = true;
+        MEDIA_LOGD("InitPlayer: transfer fd:%{public}d.", fd);
+    }
 
     if (callback_ == nullptr) {
         callback_ = std::make_shared<RingtonePlayerCallback>(*this);
@@ -387,10 +447,9 @@ int32_t RingtonePlayerImpl::Release()
     callback_ = nullptr;
 
     if (audioHapticManager_ != nullptr) {
-        audioHapticManager_->UnregisterSource(sourceId_);
+        UnregisterSource();
         audioHapticManager_ = nullptr;
     }
-    sourceId_ = -1;
     configuredUri_ = "";
 
     ringtoneState_ = STATE_RELEASED;
