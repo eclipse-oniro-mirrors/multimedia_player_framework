@@ -591,7 +591,10 @@ int32_t RecorderServiceProxy::SetLocation(float latitude, float longitude)
 
     data.WriteFloat(latitude);
     data.WriteFloat(longitude);
-    (void)Remote()->SendRequest(SET_LOCATION, data, reply, option);
+    int error = Remote()->SendRequest(SET_LOCATION, data, reply, option);
+    if (error != MSERR_OK) {
+        MEDIA_LOGW("SetLocation failed, error: %{public}d", error);
+    }
     return MSERR_OK;
 }
 
@@ -605,7 +608,10 @@ int32_t RecorderServiceProxy::SetOrientationHint(int32_t rotation)
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
     data.WriteInt32(rotation);
-    (void)Remote()->SendRequest(SET_ORIENTATION_HINT, data, reply, option);
+    int error = Remote()->SendRequest(SET_ORIENTATION_HINT, data, reply, option);
+    if (error != MSERR_OK) {
+        MEDIA_LOGW("SetOrientationHint failed, error: %{public}d", error);
+    }
     return MSERR_OK;
 }
 
