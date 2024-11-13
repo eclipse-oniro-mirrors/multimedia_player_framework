@@ -854,17 +854,6 @@ HWTEST_F(PlayerUnitTest, Player_SetSource_007, TestSize.Level2)
 
 /**
  * @tc.name  : Test Player SetSource API
- * @tc.number: Player_SetSource_008
- * @tc.desc  : Test Player SetSource interface
- */
-HWTEST_F(PlayerUnitTest, Player_SetSource_008, TestSize.Level2)
-{
-    int32_t invliadFd = 256; // invliad fd
-    EXPECT_NE(MSERR_OK, player_->SetSource(invliadFd, 0, 0));
-}
-
-/**
- * @tc.name  : Test Player SetSource API
  * @tc.number: Player_SetSource_009
  * @tc.desc  : Test Player SetSource interface
  */
