@@ -2961,7 +2961,8 @@ Status HiPlayerImpl::StartSeekContinous()
     }
     SetFrameRateForSeekPerformance(FRAME_RATE_FOR_SEEK_PERFORMANCE);
     // Drive the head node to start the video channel.
-    demuxer_->ResumeDragging();
+    res = demuxer_->ResumeDragging();
+    FALSE_LOG_MSG(res == Status::OK, "ResumeDragging failed");
     return res;
 }
 
@@ -2986,7 +2987,8 @@ int32_t HiPlayerImpl::ExitSeekContinous(bool align, int64_t seekContinousBatchNo
     syncManager_->Seek(seekTimeUs, true);
     if (align) {
         seekAgent_ = std::make_shared<SeekAgent>(demuxer_);
-        seekAgent_->AlignAudioPosition(lastSeekContinousPos_);
+        auto res = seekAgent_->AlignAudioPosition(lastSeekContinousPos_);
+        FALSE_LOG_MSG(res == Status::OK, "AlignAudioPosition failed");
         MEDIA_LOG_I_SHORT("seekAgent_ AlignAudioPosition end");
         seekAgent_.reset();
     }
