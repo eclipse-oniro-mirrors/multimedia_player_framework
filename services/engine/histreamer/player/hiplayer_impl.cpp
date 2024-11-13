@@ -1042,11 +1042,6 @@ Status HiPlayerImpl::Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeek
 {
     MediaTrace trace("HiPlayerImpl::Seek");
     MEDIA_LOG_I_SHORT("Seek ms " PUBLIC_LOG_D64 " mode " PUBLIC_LOG_D32, mSeconds, static_cast<int32_t>(mode));
-    if (IsSeekInSitu(mSeconds)) {
-        MEDIA_LOG_I_SHORT("Return and already at curPosMs: " PUBLIC_LOG_D64, mSeconds);
-        NotifySeek(Status::OK, notifySeekDone, mSeconds);
-        return Status::OK;
-    }
     int64_t seekStartTime = GetCurrentMillisecond();
     if (audioSink_ != nullptr) {
         audioSink_->SetIsTransitent(true);
@@ -1088,17 +1083,6 @@ Status HiPlayerImpl::HandleSeek(int64_t seekPos, PlayerSeekMode mode)
                 static_cast<int32_t>(pipelineStates_));
             return Status::ERROR_WRONG_STATE;
     }
-}
-
-bool HiPlayerImpl::IsSeekInSitu(int64_t mSeconds)
-{
-    int32_t curPosMs = 0;
-    GetCurrentTime(curPosMs);
-    int64_t currentMs = static_cast<int64_t>(curPosMs);
-    if (pipelineStates_ == PlayerStates::PLAYER_PREPARED || pipelineStates_ == PlayerStates::PLAYER_PAUSED) {
-        return mSeconds == currentMs;
-    }
-    return false;
 }
 
 void HiPlayerImpl::UpdateMaxSeekLatency(PlayerSeekMode mode, int64_t seekStartTime)
