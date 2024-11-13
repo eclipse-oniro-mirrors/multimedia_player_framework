@@ -245,7 +245,6 @@ private:
     bool BreakIfInterruptted();
     bool IsSeekInSitu(int64_t mSeconds);
     void CollectionErrorInfo(int32_t errCode, const std::string& errMsg);
-    int32_t ReportErrorInfo(int32_t errCode);
     void NotifyUpdateTrackInfo();
     Status SelectSeekType(int64_t seekPos, PlayerSeekMode mode);
     Status DoSetPlayRange();

@@ -84,8 +84,6 @@ private:
     bool IsValidState(PlayerStates state, std::string &stateStr);
     int32_t SetDrmInfoData(const uint8_t *drmInfoAddr, int32_t infoCount,
         std::multimap<std::string, std::vector<uint8_t>> &drmInfoMap);
-    bool IsAPI14IOError(MediaServiceExtErrCodeAPI9 error);
-    bool getApiVersionFlag_ = true;
 
     std::mutex mutex_;
     napi_env env_ = nullptr;

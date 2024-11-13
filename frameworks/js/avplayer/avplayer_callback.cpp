@@ -29,43 +29,6 @@
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_ONLY_PRERELEASE, LOG_DOMAIN_PLAYER, "AVPlayerCallback" };
-    int32_t API_VERSION_14 = 14;
-    static int32_t apiVersion_ = -1;
-    std::set<int32_t> API14_EXT_IO_ERRORS = {
-        OHOS::Media::MSERR_EXT_API14_IO_CANNOT_FIND_HOST,
-        OHOS::Media::MSERR_EXT_API14_IO_CONNECTION_TIMEOUT,
-        OHOS::Media::MSERR_EXT_API14_IO_NETWORK_ABNORMAL,
-        OHOS::Media::MSERR_EXT_API14_IO_NETWORK_UNAVAILABLE,
-        OHOS::Media::MSERR_EXT_API14_IO_NO_PERMISSION,
-        OHOS::Media::MSERR_EXT_API14_IO_NETWORK_ACCESS_DENIED,
-        OHOS::Media::MSERR_EXT_API14_IO_RESOURE_NOT_FOUND,
-        OHOS::Media::MSERR_EXT_API14_IO_SSL_CLIENT_CERT_NEEDED,
-        OHOS::Media::MSERR_EXT_API14_IO_SSL_CONNECT_FAIL,
-        OHOS::Media::MSERR_EXT_API14_IO_SSL_SERVER_CERT_UNTRUSTED,
-        OHOS::Media::MSERR_EXT_API14_IO_UNSUPPORTTED_REQUEST,
-        OHOS::Media::MSERR_EXT_API14_IO_DATA_ABNORMAL,
-        OHOS::Media::MSERR_EXT_API14_IO_FILE_ACCESS_DENIED,
-        OHOS::Media::MSERR_EXT_API14_IO_FILE_BAD_HANDLE,
-        OHOS::Media::MSERR_EXT_API14_IO_FILE_NOT_FOUND,
-        OHOS::Media::MSERR_EXT_API14_IO_FILE_PERMISSION_DENIED,
-        OHOS::Media::MSERR_EXT_API14_IO_AUDIO_DEC_FAILED,
-        OHOS::Media::MSERR_EXT_API14_IO_AUDIO_DEC_INIT_FAILED,
-        OHOS::Media::MSERR_EXT_API14_IO_AUDIO_DEC_UNAVAILABLE,
-        OHOS::Media::MSERR_EXT_API14_IO_AUDIO_DEVICE_ERROR,
-        OHOS::Media::MSERR_EXT_API14_IO_AUDIO_DEVICE_INVALID_STATE,
-        OHOS::Media::MSERR_EXT_API14_IO_AUDIO_DEVICE_TIMEOUT,
-        OHOS::Media::MSERR_EXT_API14_IO_AUDIO_DEVICE_UNAVAILABLE,
-        OHOS::Media::MSERR_EXT_API14_IO_AUDIO_ENC_FAILED,
-        OHOS::Media::MSERR_EXT_API14_IO_AUDIO_ENC_INIT_FAILED,
-        OHOS::Media::MSERR_EXT_API14_IO_AUDIO_ENC_UNAVAILABLE,
-        OHOS::Media::MSERR_EXT_API14_IO_VIDEO_DEC_FAILED,
-        OHOS::Media::MSERR_EXT_API14_IO_VIDEO_DEC_INIT_FAILED,
-        OHOS::Media::MSERR_EXT_API14_IO_VIDEO_DEC_UNAVAILABLE,
-        OHOS::Media::MSERR_EXT_API14_IO_VIDEO_DEVICE_ERROR,
-        OHOS::Media::MSERR_EXT_API14_IO_VIDEO_ENC_FAILED,
-        OHOS::Media::MSERR_EXT_API14_IO_VIDEO_ENC_INIT_FAILED,
-        OHOS::Media::MSERR_EXT_API14_IO_VIDEO_ENC_UNAVAILABLE,
-    };
 }
 
 namespace OHOS {
@@ -745,17 +708,8 @@ AVPlayerCallback::~AVPlayerCallback()
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instance destroy", FAKE_POINTER(this));
 }
 
-bool AVPlayerCallback::IsAPI14IOError(MediaServiceExtErrCodeAPI9 error)
-{
-    return API14_EXT_IO_ERRORS.find(error) != API14_EXT_IO_ERRORS.end();
-}
-
 void AVPlayerCallback::OnError(int32_t errorCode, const std::string &errorMsg)
 {
-    if (listener_ != nullptr && getApiVersionFlag_) {
-        apiVersion_ = listener_->GetJsApiVersion();
-        getApiVersionFlag_ = false;
-    }
     MediaServiceExtErrCodeAPI9 errorCodeApi9 = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errorCode));
     if (errorCodeApi9 == MSERR_EXT_API9_NO_PERMISSION ||
         errorCodeApi9 == MSERR_EXT_API9_NO_MEMORY ||
@@ -764,9 +718,6 @@ void AVPlayerCallback::OnError(int32_t errorCode, const std::string &errorMsg)
         errorCodeApi9 == MSERR_EXT_API9_UNSUPPORT_FORMAT) {
         Format infoBody;
         AVPlayerCallback::OnInfo(INFO_TYPE_STATE_CHANGE, PLAYER_STATE_ERROR, infoBody);
-    }
-    if (IsAPI14IOError(errorCodeApi9) && apiVersion_ < API_VERSION_14) {
-        errorCodeApi9 = MSERR_EXT_API9_IO;
     }
     AVPlayerCallback::OnErrorCb(errorCodeApi9, errorMsg);
 }
