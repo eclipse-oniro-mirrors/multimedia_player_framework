@@ -1064,6 +1064,9 @@ void HiPlayerImpl::UpdateMaxSeekLatency(PlayerSeekMode mode, int64_t seekStartTi
 
 void HiPlayerImpl::NotifySeek(Status rtv, bool flag, int64_t seekPos)
 {
+    if (isInterruptNeeded_.load()) {
+        rtv = Status::OK;
+    }
     if (rtv != Status::OK) {
         MEDIA_LOG_E_SHORT("Seek done, seek error");
         // change player state to PLAYER_STATE_ERROR when seek error.
