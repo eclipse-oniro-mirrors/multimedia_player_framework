@@ -873,35 +873,6 @@ int32_t PlayerServer::GetCurrentTime(int32_t &currentTime)
     return MSERR_OK;
 }
 
-int32_t PlayerServer::GetPlaybackPosition(int32_t &currentTime)
-{
-    // delete lock, cannot be called concurrently with Reset or Release
-    currentTime = -1;
-    if (lastOpStatus_ == PLAYER_IDLE || lastOpStatus_ == PLAYER_STATE_ERROR) {
-        MEDIA_LOGE("Can not GetCurrentTime, currentState is %{public}s",
-            GetStatusDescription(lastOpStatus_).c_str());
-        return MSERR_INVALID_OPERATION;
-    }
-    if (!isLiveStream_ || dataSrc_ != nullptr) {
-        return GetCurrentTime(currentTime);
-    }
-
-    MEDIA_LOGD("PlayerServer GetPlaybackPosition in, currentState is %{public}s",
-        GetStatusDescription(lastOpStatus_).c_str());
-    if (lastOpStatus_ != PLAYER_PREPARED && lastOpStatus_ != PLAYER_STARTED && lastOpStatus_ != PLAYER_PAUSED &&
-        lastOpStatus_ != PLAYER_PLAYBACK_COMPLETE) {
-        currentTime = 0;
-        MEDIA_LOGD("get position at state: %{public}s, return 0", GetStatusDescription(lastOpStatus_).c_str());
-        return MSERR_OK;
-    }
-
-    if (playerEngine_ != nullptr) {
-        int32_t ret = playerEngine_->GetLiveStreamCurrentTime(currentTime);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine GetCurrentTime Failed!");
-    }
-    return MSERR_OK;
-}
-
 int32_t PlayerServer::GetVideoTrackInfo(std::vector<Format> &videoTrack)
 {
     std::lock_guard<std::mutex> lock(mutex_);
