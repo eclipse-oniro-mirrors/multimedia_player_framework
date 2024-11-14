@@ -1064,16 +1064,12 @@ void HiPlayerImpl::UpdateMaxSeekLatency(PlayerSeekMode mode, int64_t seekStartTi
 
 void HiPlayerImpl::NotifySeek(Status rtv, bool flag, int64_t seekPos)
 {
-    MEDIA_LOG_I("NotifySeek in");
     if (rtv != Status::OK) {
         MEDIA_LOG_E("Seek done, seek error");
-        if (!isInterruptNeeded_.load()) {
-            MEDIA_LOG_E("isNotIsInterruptNeeded_ seek error");
-            // change player state to PLAYER_STATE_ERROR when seek error.
-            UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
-            Format format;
-            callbackLooper_.OnInfo(INFO_TYPE_SEEKDONE, -1, format);
-        }
+        // change player state to PLAYER_STATE_ERROR when seek error.
+        UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
+        Format format;
+        callbackLooper_.OnInfo(INFO_TYPE_SEEKDONE, -1, format);
     }  else if (flag) {
         // only notify seekDone for external call.
         NotifySeekDone(seekPos);
