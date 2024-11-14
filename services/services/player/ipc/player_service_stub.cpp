@@ -764,16 +764,6 @@ int32_t PlayerServiceStub::GetCurrentTime(MessageParcel &data, MessageParcel &re
     return MSERR_OK;
 }
 
-int32_t PlayerServiceStub::GetPlaybackPosition(MessageParcel &data, MessageParcel &reply)
-{
-    (void)data;
-    int32_t currentTime = -1;
-    int32_t ret = GetPlaybackPosition(currentTime);
-    reply.WriteInt32(currentTime);
-    reply.WriteInt32(ret);
-    return MSERR_OK;
-}
-
 int32_t PlayerServiceStub::GetVideoTrackInfo(MessageParcel &data, MessageParcel &reply)
 {
     (void)data;
