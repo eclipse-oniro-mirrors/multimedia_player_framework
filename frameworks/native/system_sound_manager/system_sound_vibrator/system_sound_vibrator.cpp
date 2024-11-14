@@ -17,6 +17,7 @@
 
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 #ifdef SUPPORT_VIBRATOR
 #include "vibrator_agent.h"
@@ -97,7 +98,9 @@ int32_t SystemSoundVibrator::StartVibratorForSystemTone(const std::string &hapti
     Sensors::SetUsage(USAGE_NOTIFICATION);
     Sensors::SetLoopCount(1);
     result = Sensors::PlayVibratorCustom(fd, 0, statbuf.st_size);
+    close(fd);
 #endif
+
     return result;
 }
 
