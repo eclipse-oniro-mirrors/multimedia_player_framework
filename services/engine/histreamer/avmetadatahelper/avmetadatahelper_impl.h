@@ -30,6 +30,7 @@
 
 namespace OHOS {
 namespace Media {
+class TimeAndIndexConversion;
 class AVMetadataHelperImpl : public IAVMetadataHelperEngine,
                              public std::enable_shared_from_this<AVMetadataHelperImpl>,
                              public NoCopyable {
@@ -59,10 +60,13 @@ private:
     std::unordered_map<int32_t, std::string> collectedMeta_;
     std::shared_ptr<AVSharedMemory> collectedArtPicture_;
     std::shared_ptr<AVSharedMemoryBase> fetchedFrameAtTime_;
+    std::shared_ptr<OHOS::Media::TimeAndIndexConversion> conversion_ { nullptr };
     std::atomic_bool stopProcessing_{ false };
+    std::atomic_bool isOnlyForFrameConvert_{ false };
 
-    Status SetSourceInternel(const std::string &uri);
+    Status SetSourceInternel(const std::string &uri, bool isOnlyForFrameConvert);
     Status SetSourceInternel(const std::shared_ptr<IMediaDataSource> &dataSrc);
+    Status SetSourceOnlyForFrameConvert(const std::string &uri);
     Status InitMetadataCollector();
     Status InitThumbnailGenerator();
 
