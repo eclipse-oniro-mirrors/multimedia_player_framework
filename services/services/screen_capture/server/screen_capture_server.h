@@ -163,6 +163,8 @@ public:
     int32_t ReleaseVideoBuffer();
     int32_t Release();
     void OnBufferAvailableAction();
+    void StartBufferThread();
+    void SurfaceBufferThreadRun();
     void StopBufferThread();
 
 public:
@@ -179,6 +181,8 @@ private:
     std::mutex mutex_;
     sptr<OHOS::Surface> consumer_ = nullptr;
     std::shared_ptr<ScreenCaptureCallBack> screenCaptureCb_ = nullptr;
+    bool isSurfaceCbInThreadStopped_ = true;
+    std::thread* surfaceCbInThread_ = nullptr;
 
     std::mutex bufferMutex_;
     std::condition_variable bufferCond_;
