@@ -1815,47 +1815,6 @@ int32_t ScreenCaptureServer::StartVideoCapture()
     return MSERR_OK;
 }
 
-void ScreenCapBufferConsumerListener::SurfaceBufferThreadRun()
-{
-    SCBufferMessage message;
-    std::string threadName = std::string("OS_SCBufferAvailableWorker");
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " BufferAvailableWorker name: %{public}s",
-        FAKE_POINTER(this), threadName.c_str());
-    pthread_setname_np(pthread_self(), threadName.c_str());
-    while (true) {
-        {
-            std::unique_lock<std::mutex> lock(bufferAvailableWorkerMtx_);
-            bufferAvailableWorkerCv_.wait(lock, [&]() { return !messageQueueSCB_.empty(); });
-            message = messageQueueSCB_.front();
-            if (static_cast<uint64_t>(messageQueueSCB_.size()) > MAX_MESSAGE_QUEUE_SIZE &&
-                message.type == SCBufferMessageType::GET_BUFFER) {
-                messageQueueSCB_.pop();
-                MEDIA_LOGE("0x%{public}06" PRIXPTR " BufferAvailableWorker skip get buffer", FAKE_POINTER(this));
-                continue;
-            }
-            messageQueueSCB_.pop();
-        }
-        if (message.type == SCBufferMessageType::EXIT) {
-            break;
-        }
-        if (message.type == SCBufferMessageType::GET_BUFFER) {
-            OnBufferAvailableAction();
-        }
-    }
-    surfaceCbInThread_ = nullptr;
-}
-
-void ScreenCapBufferConsumerListener::StartBufferThread()
-{
-    if (isSurfaceCbInThreadStopped_) {
-        surfaceCbInThread_ = new (std::nothrow) std::thread([this]() {
-            isSurfaceCbInThreadStopped_ = false;
-            this->SurfaceBufferThreadRun();
-            isSurfaceCbInThreadStopped_ = true;
-        });
-    }
-}
-
 int32_t ScreenCaptureServer::StartHomeVideoCapture()
 {
     MediaTrace trace("ScreenCaptureServer::StartHomeVideoCapture");
@@ -2882,6 +2841,47 @@ void ScreenCapBufferConsumerListener::OnBufferAvailableAction()
     }
     bufferCond_.notify_all();
     ProcessVideoBufferCallBack();
+}
+
+void ScreenCapBufferConsumerListener::SurfaceBufferThreadRun()
+{
+    SCBufferMessage message;
+    std::string threadName = std::string("OS_SCBufferAvailableWorker");
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " BufferAvailableWorker name: %{public}s",
+        FAKE_POINTER(this), threadName.c_str());
+    pthread_setname_np(pthread_self(), threadName.c_str());
+    while (true) {
+        {
+            std::unique_lock<std::mutex> lock(bufferAvailableWorkerMtx_);
+            bufferAvailableWorkerCv_.wait(lock, [&]() { return !messageQueueSCB_.empty(); });
+            message = messageQueueSCB_.front();
+            if (static_cast<uint64_t>(messageQueueSCB_.size()) > MAX_MESSAGE_QUEUE_SIZE &&
+                message.type == SCBufferMessageType::GET_BUFFER) {
+                messageQueueSCB_.pop();
+                MEDIA_LOGE("0x%{public}06" PRIXPTR " BufferAvailableWorker skip get buffer", FAKE_POINTER(this));
+                continue;
+            }
+            messageQueueSCB_.pop();
+        }
+        if (message.type == SCBufferMessageType::EXIT) {
+            break;
+        }
+        if (message.type == SCBufferMessageType::GET_BUFFER) {
+            OnBufferAvailableAction();
+        }
+    }
+    surfaceCbInThread_ = nullptr;
+}
+
+void ScreenCapBufferConsumerListener::StartBufferThread()
+{
+    if (isSurfaceCbInThreadStopped_) {
+        surfaceCbInThread_ = new (std::nothrow) std::thread([this]() {
+            isSurfaceCbInThreadStopped_ = false;
+            this->SurfaceBufferThreadRun();
+            isSurfaceCbInThreadStopped_ = true;
+        });
+    }
 }
 
 void ScreenCapBufferConsumerListener::ProcessVideoBufferCallBack()
