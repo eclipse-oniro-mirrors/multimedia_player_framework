@@ -26,7 +26,7 @@
 #include "avplayer.h"
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "NativeAVPlayer"};
-    constexpr uint32_t ERROR_CODE_API9_MAP_LENGTH = 26;
+    constexpr uint32_t ERROR_CODE_API9_MAP_LENGTH = 23;
     constexpr uint32_t STATE_MAP_LENGTH = 9;
     constexpr uint32_t INFO_TYPE_LENGTH = 19;
     constexpr int32_t UNSUPPORT_FORMAT_ERROR_CODE = 331350544;
@@ -101,9 +101,6 @@ static const PlayerErrorCodeApi9Convert g_errorCodeApi9Map[ERROR_CODE_API9_MAP_L
     {MSERR_EXT_API14_IO_SSL_CONNECT_FAIL, AV_ERR_IO_SSL_CONNECT_FAIL},
     {MSERR_EXT_API14_IO_SSL_SERVER_CERT_UNTRUSTED, AV_ERR_IO_SSL_SERVER_CERT_UNTRUSTED},
     {MSERR_EXT_API14_IO_UNSUPPORTTED_REQUEST, AV_ERR_IO_UNSUPPORTED_REQUEST},
-    {MSERR_EXT_API14_IO_DATA_ABNORMAL, AV_ERR_IO_DATA_ABNORMAL},
-    {MSERR_EXT_API14_IO_AUDIO_DEVICE_ERROR, AV_ERR_IO_AUDIO_DEVICE_ERROR},
-    {MSERR_EXT_API14_IO_VIDEO_DEVICE_ERROR, AV_ERR_IO_VIDEO_DEVICE_ERROR},
 };
 
 static const StateConvert g_stateMap[STATE_MAP_LENGTH] = {
@@ -388,7 +385,7 @@ void NativeAVPlayerCallback::OnError(int32_t errorCode, const std::string &error
     int32_t avErrorCode;
     if (errorCallback_) { // errorCallback_ precedes over callback_.onInfo
         MediaServiceExtErrCodeAPI9 errorCodeApi9 = MSERR_EXT_API9_OK;
-        if (errorCode >= MSERR_EXT_API9_NO_PERMISSION && errorCode <= MSERR_EXT_API14_IO_VIDEO_DEVICE_ERROR) {
+        if (errorCode >= MSERR_EXT_API9_NO_PERMISSION && errorCode <= MSERR_EXT_API14_IO_UNSUPPORTTED_REQUEST) {
             errorCodeApi9 = static_cast<MediaServiceExtErrCodeAPI9>(errorCode);
         } else {
             errorCodeApi9 = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errorCode));
