@@ -245,13 +245,6 @@ int32_t PlayerClient::GetCurrentTime(int32_t &currentTime)
     return playerProxy_->GetCurrentTime(currentTime);
 }
 
-int32_t PlayerClient::GetPlaybackPosition(int32_t &currentTime)
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
-    return playerProxy_->GetPlaybackPosition(currentTime);
-}
-
 int32_t PlayerClient::GetVideoTrackInfo(std::vector<Format> &videoTrack)
 {
     std::lock_guard<std::mutex> lock(mutex_);
