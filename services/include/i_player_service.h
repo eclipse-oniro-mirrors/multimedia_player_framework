@@ -266,17 +266,6 @@ public:
     virtual int32_t GetCurrentTime(int32_t &currentTime) = 0;
 
     /**
-     * @brief Obtains the playback position compatible with the livestream, accurate to millisecond.
-     *
-     * @param currentTime Indicates the playback position.
-     * @return Returns {@link MSERR_OK} if the current position is get; returns an error code defined
-     * in {@link media_errors.h} otherwise.
-     * @since 1.0
-     * @version 1.0
-     */
-    virtual int32_t GetPlaybackPosition(int32_t &currentTime) = 0;
-
-    /**
      * @brief Obtains the video track info, contains mimeType, bitRate, width, height, frameRata.
      *
      * @param video track info vec.
