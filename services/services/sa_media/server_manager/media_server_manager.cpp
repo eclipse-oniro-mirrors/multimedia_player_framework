@@ -69,9 +69,12 @@ int32_t WriteInfo(int32_t fd, std::string &dumpString, std::vector<Dumper> dumpe
         }
         if (iter.createInsTime_ > 0) {
             std::tm *pTm = std::localtime(&(iter.createInsTime_));
-            dumpString += " time = ";
-            dumpString += std::to_string(pTm->tm_mon + 1) + "-" + std::to_string(pTm->tm_mday) + " " +
-                std::to_string(pTm->tm_hour) + ":" + std::to_string(pTm->tm_min) + ":" + std::to_string(pTm->tm_sec);
+            if (pTm != nullptr) {
+                dumpString += " time = ";
+                dumpString += std::to_string(pTm->tm_mon + 1) + "-" + std::to_string(pTm->tm_mday) + " " +
+                    std::to_string(pTm->tm_hour) + ":" + std::to_string(pTm->tm_min) + ":" +
+                    std::to_string(pTm->tm_sec);
+            }
         }
         dumpString += "-----\n";
         if (fd != -1) {
@@ -231,8 +234,11 @@ sptr<IRemoteObject> MediaServerManager::CreatePlayerStubObject()
     std::time_t now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
     const uint8_t MAX_INSTANCE_LENGTH = 255;
     char text[MAX_INSTANCE_LENGTH];
-    sprintf_s(text, MAX_INSTANCE_LENGTH, "0x%{public}06" PRIXPTR, FAKE_POINTER(playerStub.GetRefPtr()));
-    std::string InsPointerStr(text);
+    auto ret = sprintf_s(text, MAX_INSTANCE_LENGTH, "0x%{public}06" PRIXPTR, FAKE_POINTER(playerStub.GetRefPtr()));
+    std::string InsPointerStr = "";
+    if (ret > 0) {
+        InsPointerStr.assign(text, ret);
+    }
 
     sptr<IRemoteObject> object = playerStub->AsObject();
     CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "failed to create PlayerServiceStub");
