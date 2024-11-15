@@ -2870,7 +2870,6 @@ void ScreenCapBufferConsumerListener::SurfaceBufferThreadRun()
             OnBufferAvailableAction();
         }
     }
-    surfaceCbInThread_ = nullptr;
     MEDIA_LOGD("ScreenCapBufferConsumerListener::SurfaceBufferThreadRun End.");
 }
 
@@ -2929,6 +2928,7 @@ ScreenCapBufferConsumerListener::~ScreenCapBufferConsumerListener()
     if (surfaceCbInThread_) {
         surfaceCbInThread_->join();
         delete surfaceCbInThread_;
+        surfaceCbInThread_ = nullptr;
     }
     std::unique_lock<std::mutex> lock(bufferMutex_);
     ReleaseBuffer();
