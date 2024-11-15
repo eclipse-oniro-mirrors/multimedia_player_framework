@@ -167,17 +167,15 @@ public:
     void SurfaceBufferThreadRun();
     void StopBufferThread();
 
-public:
-    std::mutex bufferAvailableWorkerMtx_;
-    std::condition_variable bufferAvailableWorkerCv_;
-    std::queue<SCBufferMessage> messageQueueSCB_;
-    static constexpr uint64_t MAX_MESSAGE_QUEUE_SIZE = 5;
-
 private:
     int32_t ReleaseBuffer();
     void ProcessVideoBufferCallBack();
 
 private:
+    std::mutex bufferAvailableWorkerMtx_;
+    std::condition_variable bufferAvailableWorkerCv_;
+    std::queue<SCBufferMessage> messageQueueSCB_;
+
     std::mutex mutex_;
     sptr<OHOS::Surface> consumer_ = nullptr;
     std::shared_ptr<ScreenCaptureCallBack> screenCaptureCb_ = nullptr;
@@ -188,6 +186,7 @@ private:
     std::condition_variable bufferCond_;
     std::queue<std::unique_ptr<SurfaceBufferEntry>> availBuffers_;
 
+    static constexpr uint64_t MAX_MESSAGE_QUEUE_SIZE = 5;
     static constexpr uint32_t MAX_BUFFER_SIZE = 3;
     static constexpr uint32_t OPERATION_TIMEOUT_IN_MS = 1000; // 1000ms
 };

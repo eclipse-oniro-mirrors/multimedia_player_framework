@@ -2871,6 +2871,7 @@ void ScreenCapBufferConsumerListener::SurfaceBufferThreadRun()
         }
     }
     surfaceCbInThread_ = nullptr;
+    MEDIA_LOGD("ScreenCapBufferConsumerListener::SurfaceBufferThreadRun End.");
 }
 
 void ScreenCapBufferConsumerListener::StartBufferThread()
@@ -2882,6 +2883,7 @@ void ScreenCapBufferConsumerListener::StartBufferThread()
             isSurfaceCbInThreadStopped_ = true;
         });
     }
+    MEDIA_LOGI("ScreenCapBufferConsumerListener::StartBufferThread End.");
 }
 
 void ScreenCapBufferConsumerListener::ProcessVideoBufferCallBack()
