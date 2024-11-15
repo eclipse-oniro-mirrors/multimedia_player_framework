@@ -179,7 +179,7 @@ private:
     std::mutex mutex_;
     sptr<OHOS::Surface> consumer_ = nullptr;
     std::shared_ptr<ScreenCaptureCallBack> screenCaptureCb_ = nullptr;
-    bool isSurfaceCbInThreadStopped_ = true;
+    std::atomic<bool> isSurfaceCbInThreadStopped_ {true};
     std::thread* surfaceCbInThread_ = nullptr;
 
     std::mutex bufferMutex_;

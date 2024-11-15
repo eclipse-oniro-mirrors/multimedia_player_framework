@@ -2875,11 +2875,11 @@ void ScreenCapBufferConsumerListener::SurfaceBufferThreadRun()
 
 void ScreenCapBufferConsumerListener::StartBufferThread()
 {
-    if (isSurfaceCbInThreadStopped_) {
+    if (isSurfaceCbInThreadStopped_.load()) {
         surfaceCbInThread_ = new (std::nothrow) std::thread([this]() {
-            isSurfaceCbInThreadStopped_ = false;
+            isSurfaceCbInThreadStopped_.store(false);
             this->SurfaceBufferThreadRun();
-            isSurfaceCbInThreadStopped_ = true;
+            isSurfaceCbInThreadStopped_.store(true);
         });
     }
     MEDIA_LOGI("ScreenCapBufferConsumerListener::StartBufferThread End.");
@@ -2925,7 +2925,7 @@ ScreenCapBufferConsumerListener::~ScreenCapBufferConsumerListener()
 {
     MEDIA_LOGD("ScreenCapBufferConsumerListener: 0x%{public}06" PRIXPTR " Destroy.", FAKE_POINTER(this));
     StopBufferThread();
-    if (surfaceCbInThread_) {
+    if (surfaceCbInThread_ && surfaceCbInThread_->joinable()) {
         surfaceCbInThread_->join();
         delete surfaceCbInThread_;
         surfaceCbInThread_ = nullptr;
