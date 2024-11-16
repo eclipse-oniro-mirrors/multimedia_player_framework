@@ -38,6 +38,7 @@ AudioDecoder::~AudioDecoder()
     MEDIA_LOGD("[%{public}s] destruct.", logTag_.c_str());
     if (decoder_) {
         OH_AudioDecoder_Destroy(decoder_);
+        decoder_ = nullptr;
     }
 }
 

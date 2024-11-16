@@ -14,9 +14,9 @@
  */
 
 #include "gtest/gtest.h"
-#include "gmock/gmock.h"
-#include "codec/video/decoder/video_decoder.h"
-#include "ut_common_data.h"
+#include "render/graphics/base/shader_pass/render_mesh.h"
+#include "render/graphics/base/shader_pass/shader_pass_on_screen.h"
+#include "render/graphics/base/shader_pass/render_program.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -24,35 +24,28 @@ using namespace testing::ext;
 namespace OHOS {
 namespace Media {
 
-class VideoDecoderTest : public testing::Test {
+class ShaderPassOnScreenTest : public testing::Test {
 protected:
-    void SetUp() override
+    RenderContext* context_;
+    ShaderPassOnScreen* shaderPassOnScreen_;
+
+    void SetUp() override 
     {
-        id_ = 1;
-        decoder_ = std::make_shared<VideoDecoder>(id_, cb_, onDecodeFrameCallback_, onDecodeResultCallback_);
+        context_ = new RenderContext();
+        shaderPassOnScreen_ = new ShaderPassOnScreen(context_);
     }
 
     void TearDown() override
     {
+        delete shaderPassOnScreen_;
+        delete context_;
     }
-
-    uint64_t id_;
-    CodecOnInData cb_;
-    std::shared_ptr<VideoDecoder> decoder_;
-    CodecOnDecodeFrame onDecodeFrameCallback_;
-    CodecOnDecodeResult onDecodeResultCallback_;
 };
 
-// test VideoDecoder Start method
-HWTEST_F(VideoDecoderTest, VideoDecoder_Start, TestSize.Level0)
+HWTEST_F(ShaderPassOnScreenTest, ShaderPassOnScreenTest_Render, TestSize.Level0)
 {
-    EXPECT_EQ(decoder_->Start(), VEFError::ERR_INTERNAL_ERROR);
-}
-
-// test VideoDecoder Stop method
-HWTEST_F(VideoDecoderTest, VideoDecoder_Stop, TestSize.Level0)
-{
-    EXPECT_EQ(decoder_->Stop(), VEFError::ERR_INTERNAL_ERROR);
+    RenderTexturePtr renderTexture = shaderPassOnScreen_->Render();
+    EXPECT_EQ(renderTexture, nullptr);
 }
 } // namespace Media
 } // namespace OHOS

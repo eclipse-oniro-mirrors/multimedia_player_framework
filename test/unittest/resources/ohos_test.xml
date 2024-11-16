@@ -407,5 +407,11 @@
             <option name="shell" value="restorecon /data/media/log"/>
         </preparer>
     </target>
+    <target name="video_editor_unit_test">
+        <preparer>
+            <option name="push" value="test_videofile/H264_AAC.mp4 -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/H264_AAC_multi_track.mp4 -> /data/test" src="res"/>
+        </preparer>
+    </target>
 </configuration>
 

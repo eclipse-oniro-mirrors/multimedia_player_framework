@@ -17,6 +17,7 @@
 #include "media_log.h"
 #include "codec/video_encoder_engine.h"
 #include "codec/video/encoder/video_encoder_engine_impl.h"
+#include "ut_common_data.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -33,23 +34,6 @@ protected:
     virtual void TearDown()
     {
     }
-};
-
-class VideoEncodeCallbackTester : public VideoEncodeCallback {
-public:
-    VideoEncodeCallbackTester() = default;
-    virtual ~VideoEncodeCallbackTester() = default;
-    void OnEncodeFrame(uint64_t pts) override
-    {
-        pts_ = pts;
-    };
-    void OnEncodeResult(CodecResult result) override
-    {
-        result_ = result;
-    };
-
-    uint64_t pts_ { 0 };
-    CodecResult result_ { CodecResult::FAILED };
 };
 
 // Test when cb is nullptr then Create returns nullptr.

@@ -15,6 +15,8 @@
 
 #include "gtest/gtest.h"
 #include "codec/video/decoder/video_demuxer.h"
+#include "ut_common_data.h"
+#include <fcntl.h>
 
 using namespace testing;
 using namespace testing::ext;
@@ -38,6 +40,15 @@ HWTEST_F(VideoDemuxerTest, VideoDemuxer_Init_001, TestSize.Level0)
 {
     VideoDeMuxer videoDeMuxer(1, 1);
     EXPECT_EQ(videoDeMuxer.Init(), VEFError::ERR_INTERNAL_ERROR);
+}
+
+HWTEST_F(VideoDemuxerTest, VideoDemuxer_Init_ok, TestSize.Level0)
+{
+    std::string fileName = "H264_AAC.mp4";
+    int32_t srcFd = VideoResource::instance().getFileResource(fileName);
+    VideoDeMuxer videoDeMuxer(1, srcFd);
+    EXPECT_EQ(videoDeMuxer.Init(), VEFError::ERR_OK);
+    (void)close(srcFd);
 }
 
 // test VideoDemuxer ParseTrackInfo method

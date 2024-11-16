@@ -14,9 +14,8 @@
  */
 
 #include "gtest/gtest.h"
-#include "gmock/gmock.h"
-#include "codec/video/decoder/video_decoder.h"
-#include "ut_common_data.h"
+#include "render/graphics/graphics_render_engine.h"
+#include "render/graphics/render_engine/graphics_render_engine_impl.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -24,35 +23,22 @@ using namespace testing::ext;
 namespace OHOS {
 namespace Media {
 
-class VideoDecoderTest : public testing::Test {
+class Graphics_Render_EngineTest : public testing::Test {
 protected:
-    void SetUp() override
+    void SetUp() override 
     {
-        id_ = 1;
-        decoder_ = std::make_shared<VideoDecoder>(id_, cb_, onDecodeFrameCallback_, onDecodeResultCallback_);
     }
 
     void TearDown() override
     {
     }
-
-    uint64_t id_;
-    CodecOnInData cb_;
-    std::shared_ptr<VideoDecoder> decoder_;
-    CodecOnDecodeFrame onDecodeFrameCallback_;
-    CodecOnDecodeResult onDecodeResultCallback_;
 };
 
-// test VideoDecoder Start method
-HWTEST_F(VideoDecoderTest, VideoDecoder_Start, TestSize.Level0)
+HWTEST_F(Graphics_Render_EngineTest, Graphics_Render_EngineTest_Create, TestSize.Level0)
 {
-    EXPECT_EQ(decoder_->Start(), VEFError::ERR_INTERNAL_ERROR);
-}
-
-// test VideoDecoder Stop method
-HWTEST_F(VideoDecoderTest, VideoDecoder_Stop, TestSize.Level0)
-{
-    EXPECT_EQ(decoder_->Stop(), VEFError::ERR_INTERNAL_ERROR);
+    OHNativeWindow* outputWindow = nullptr;
+    auto engine = IGraphicsRenderEngine::Create(outputWindow);
+    EXPECT_EQ(engine, nullptr);
 }
 } // namespace Media
 } // namespace OHOS

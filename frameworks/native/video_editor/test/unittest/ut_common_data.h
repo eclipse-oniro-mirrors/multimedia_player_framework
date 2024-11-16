@@ -19,6 +19,10 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "video_editor_impl.h"
+#include "codec/video_decoder_engine.h"
+#include "codec/video_encoder_engine.h"
+#include <fcntl.h>
+#include <iostream>
 
 namespace OHOS {
 namespace Media {
@@ -44,6 +48,78 @@ private:
     uint32_t progress_ = 0;
 };
 
+class VideoDecodeCallbackTester : public VideoDecodeCallback {
+public:
+    VideoDecodeCallbackTester() = default;
+    virtual ~VideoDecodeCallbackTester() = default;
+    void OnDecodeFrame(uint64_t pts) override
+    {
+        pts_ = pts;
+    };
+    void OnDecodeResult(CodecResult result) override
+    {
+        result_ = result;
+    };
+
+    uint64_t pts_ { 0 };
+    CodecResult result_ { CodecResult::FAILED };
+};
+
+class VideoEncodeCallbackTester : public VideoEncodeCallback {
+public:
+    VideoEncodeCallbackTester() = default;
+    virtual ~VideoEncodeCallbackTester() = default;
+    void OnEncodeFrame(uint64_t pts) override
+    {
+        pts_ = pts;
+    };
+    void OnEncodeResult(CodecResult result) override
+    {
+        result_ = result;
+    };
+
+    uint64_t pts_ { 0 };
+    CodecResult result_ { CodecResult::FAILED };
+};
+
+class VideoResource {
+public:
+    virtual ~VideoResource() {};
+    static VideoResource& instance()
+    {
+        static VideoResource instance;
+        return instance;
+    }
+
+    int32_t getFileResource(std::string& fileName)
+    {
+        const std::string videoFilePath = "/data/test/" + fileName;
+        int32_t srcFd = open(videoFilePath.c_str(), O_RDWR);
+        if (srcFd <= 0) {
+            std::cout << "Open file failed" << std::endl;
+            return -1;
+        }
+        return srcFd;
+    }
+
+    VideoEncodeParam getEncodeParam(int32_t& srcFd, std::shared_ptr<IVideoDecoderEngine> decoderEngine)
+    {
+        VideoEncodeParam enCodeParam;
+        if (decoderEngine == nullptr) {
+            std::cout << "decoderEngine is nullptr, get enCodeParam failed" << std::endl;
+            return enCodeParam;
+        }
+        enCodeParam.videoTrunkFormat = decoderEngine->GetVideoFormat();
+        enCodeParam.audioTrunkFormat = decoderEngine->GetAudioFormat();
+        enCodeParam.muxerParam.targetFileFd = srcFd;
+        enCodeParam.muxerParam.avOutputFormat = AV_OUTPUT_FORMAT_MPEG_4;
+        enCodeParam.muxerParam.rotation = decoderEngine->GetRotation();
+        return enCodeParam;
+    }
+
+private:
+    VideoResource() {};
+};
 } // namespace Media
 } // namespace OHOS
 
