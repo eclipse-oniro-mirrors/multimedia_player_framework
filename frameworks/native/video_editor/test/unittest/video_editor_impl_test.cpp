@@ -17,6 +17,7 @@
 #include "ut_common_data.h"
 #include "video_editor_impl.h"
 #include "video_editor_manager.h"
+#include <fcntl.h>
 
 using namespace std;
 using namespace testing::ext;
@@ -86,7 +87,7 @@ HWTEST_F(VideoEditorImplTest, append_video_file_invalid_fd_0, TestSize.Level0)
 }
 
 // Test VideoEditorImpl StartComposite method
-HWTEST_F(VideoEditorImplTest, start_composite_ok, TestSize.Level0)
+HWTEST_F(VideoEditorImplTest, start_composite_error, TestSize.Level0)
 {
     auto videoEditor = VideoEditorManager::GetInstance().CreateVideoEditor();
     ASSERT_NE(videoEditor, nullptr);
@@ -135,20 +136,22 @@ HWTEST_F(VideoEditorImplTest, start_composite_invalid_target_fd, TestSize.Level0
 }
 
 // Test VideoEditorImpl CancelComposite method
-HWTEST_F(VideoEditorImplTest, cancel_composite_ok, TestSize.Level0)
+HWTEST_F(VideoEditorImplTest, start_composite_ok, TestSize.Level0)
 {
-    auto videoEditor = VideoEditorManager::GetInstance().CreateVideoEditor();
-    auto videoEditorImpl = static_cast<VideoEditorImpl*>(videoEditor.get());
-    ASSERT_NE(videoEditorImpl, nullptr);
-    ASSERT_EQ(videoEditorImpl->GetState(), VideoEditorState::IDLE);
-    ASSERT_EQ(videoEditorImpl->CancelComposite(), VEFError::ERR_OK);
+    std::string fileName = "H264_AAC.mp4";
+    int32_t srcFd = VideoResource::instance().getFileResource(fileName);
     auto cb = std::make_shared<CompositionCallbackTesterImpl>();
-    auto options = std::make_shared<CompositionOptions>(5, cb);
-    ASSERT_EQ(videoEditor->StartComposite(options), VEFError::ERR_NOT_SET_INPUT_VIDEO);
+    auto options = std::make_shared<CompositionOptions>(srcFd, cb);
+    auto dataCenter = IDataCenter::Create();
+    ASSERT_EQ(dataCenter->AppendVideo(2, WATER_MARK_DESC), VEFError::ERR_OK);
+    auto compositeEngine = ICompositeEngine::CreateCompositeEngine(dataCenter);
+    ASSERT_NE(compositeEngine, nullptr);
+    ASSERT_EQ(compositeEngine->StartComposite(options), VEFError::ERR_INTERNAL_ERROR);
+    (void)close(srcFd);
 }
 
 // Test when VideoEditorImpl::IsFlowControlPass() returns true.
-HWTEST_F(VideoEditorImplTest, composite_flow_control, TestSize.Level0)
+HWTEST_F(VideoEditorImplTest, cancel_composite_ok, TestSize.Level0)
 {
     auto cb = std::make_shared<CompositionCallbackTesterImpl>();
     auto options = std::make_shared<CompositionOptions>(5, cb);

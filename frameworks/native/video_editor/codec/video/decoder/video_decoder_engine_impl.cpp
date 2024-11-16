@@ -143,6 +143,10 @@ VEFError VideoDecoderEngineImpl::StopDecode()
             return error;
         }
     }
+    if (videoDecoder_ == nullptr) {
+        MEDIA_LOGD("[%{public}s] StopDecode videoDecoder_ is null.", logTag_.c_str());
+        return VEFError::ERR_INTERNAL_ERROR;
+    }
     return videoDecoder_->Stop();
 }
 
