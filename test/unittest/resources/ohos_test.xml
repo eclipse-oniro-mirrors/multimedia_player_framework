@@ -331,6 +331,29 @@
             <option name="push" value="test_videofile/SDR.mp4 -> /data/test" src="res"/>
         </preparer>
     </target>
+    <target name="avmetadatahelper_unit_test">
+        <preparer>
+            <option name="push" value="test_videofile/H264_AAC.mp4 -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/H264_MP3.mp4 -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/MPEG2_AAC.mp4 -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/MPEG2_MP3.mp4 -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/MPEG4_AAC.mp4 -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/MPEG4_MP3.mp4 -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/out_480_320.mp4 -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/out_170_170.mp4 -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/aac_44100Hz_143kbs_stereo.aac -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/aac_48000Hz_70kbs_mono.m4a -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/mp3_48000Hz_64kbs_mono.mp3 -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/pcm_s16le_48000Hz_768kbs_mono.wav-> /data/test" src="res"/>
+            <option name="push" value="test_videofile/pcm_s16le_48000Hz_768kbs_mono_date.wav -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/vorbis_48000Hz_80kbs_mono.ogg -> /data/test" src="res"/>
+            <option name="push" value="res_avmetadata/MP3_SURFACE.mp3 -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/1kb.mp3 -> /data/test" src="res"/>
+            <option name="push" value="error.mp4 -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/HDR.mp4 -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/SDR.mp4 -> /data/test" src="res"/>
+        </preparer>
+    </target>
     <target name="vcodec_native_unit_test">
         <preparer>
             <option name="push" value="res_codec/out_320_240_10s.h264 -> /data/test/media" src="res"/>
