@@ -106,7 +106,8 @@ ohos_unittest("avmetadatahelper_unit_test") {
     "avmetadatahelper_server_unit_test.cpp",
   ]
 
-  resource_config_file = "$MEDIA_PLAYER_ROOT_DIR/test/unittest/resources/ohos_test.xml"
+  resource_config_file =
+      "$MEDIA_PLAYER_ROOT_DIR/test/unittest/resources/ohos_test.xml"
 
   deps = [
     "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native:media_client",
