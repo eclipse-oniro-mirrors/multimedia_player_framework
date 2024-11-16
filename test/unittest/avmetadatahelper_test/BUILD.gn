@@ -89,6 +89,10 @@ ohos_unittest("avmetadatahelper_unit_test") {
   defines = []
   defines += player_framework_defines
 
+  if (player_framework_check_video_is_hdr_vivid) {
+    defines += [ "CHECKING_VIDEO_IS_HDR_VIVID" ]
+  }
+
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
@@ -97,8 +101,13 @@ ohos_unittest("avmetadatahelper_unit_test") {
     "$MEDIA_PLAYER_ROOT_DIR/services/services/avmetadatahelper/server/avmetadatahelper_server.cpp",
     "./../../../../player_framework/services/services/factory/engine_factory_repo.cpp",
     "av_thumbnail_generator_unit_test.cpp",
+    "avmetadata_mock.cpp",
+    "avmetadata_unit_test.cpp",
     "avmetadatahelper_server_unit_test.cpp",
   ]
+
+  resource_config_file =
+      "$MEDIA_PLAYER_ROOT_DIR/test/unittest/resources/ohos_test.xml"
 
   deps = [
     "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native:media_client",
