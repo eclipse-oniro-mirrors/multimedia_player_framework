@@ -616,8 +616,25 @@ HWTEST_F(AVMetadataUnitTest, SetSource_API_0600, Level2)
 }
 
 /**
+    * @tc.number    : GetFrameIndexByTime_API_0100
+    * @tc.name      : SetSource H264_AAC.mp4
+    * @tc.desc      : SetSource API
+*/
+HWTEST_F(AVMetadataUnitTest, GetFrameIndexByTime_API_0100, Level2)
+{
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+        std::string("H264_AAC.mp4");
+    std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
+    ASSERT_NE(nullptr, helper);
+    ASSERT_EQ(true, helper->CreateAVMetadataHelper());
+    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
+    uint32_t index = 0;
+    ASSERT_EQ(MSERR_OK, helper->GetFrameIndexByTime(0, index));
+}
+
+/**
     * @tc.number    : GetTimeByFrameIndex_API_0100
-    * @tc.name      : SetSource invalid.mp4
+    * @tc.name      : SetSource H264_AAC.mp4
     * @tc.desc      : SetSource API
 */
 HWTEST_F(AVMetadataUnitTest, GetTimeByFrameIndex_API_0100, Level2)
@@ -630,6 +647,200 @@ HWTEST_F(AVMetadataUnitTest, GetTimeByFrameIndex_API_0100, Level2)
     ASSERT_EQ(MSERR_OK, helper->SetSource(uri, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
     uint64_t time = 0;
     ASSERT_EQ(MSERR_OK, helper->GetTimeByFrameIndex(0, time));
+}
+
+
+/**
+    * @tc.number    : GetFrameIndexByTime_PtsAndFrame_API_0100
+    * @tc.name      : SetSource camera_info_parser.mp4
+    * @tc.desc      : get pts by frameIndex(video track)
+*/
+HWTEST_F(AVMetadataUnitTest, GetFrameIndexByTime_PtsAndFrame_API_0100, Level2)
+{
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+                      std::string("camera_info_parser.mp4");
+    std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
+    ASSERT_NE(nullptr, helper);
+    ASSERT_EQ(true, helper->CreateAVMetadataHelper());
+    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, 0, 0, AVMetadataUsage::AV_META_USAGE_FRAME_INDEX_CONVERT));
+    uint64_t time = 66666;
+    uint32_t index = 0;
+    ASSERT_EQ(MSERR_OK, helper->GetFrameIndexByTime(time, index));
+    ASSERT_EQ(index, 4);
+}
+
+/**
+    * @tc.number    : GetFrameIndexByTime_PtsAndFrame_API_0200
+    * @tc.name      : SetSource h264.flv
+    * @tc.desc      : get pts by frameIndex(not mp4)
+*/
+HWTEST_F(AVMetadataUnitTest, GetFrameIndexByTime_PtsAndFrame_API_0200, Level2)
+{
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+                      std::string("h264.flv");
+    std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
+    ASSERT_NE(nullptr, helper);
+    ASSERT_EQ(true, helper->CreateAVMetadataHelper());
+    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, 0, 0, AVMetadataUsage::AV_META_USAGE_FRAME_INDEX_CONVERT));
+    uint64_t time = 69659;
+    uint32_t index = 0;
+    ASSERT_NE(MSERR_OK, helper->GetFrameIndexByTime(time, index));
+}
+
+/**
+    * @tc.number    : GetTimeByFrameIndex_PtsAndFrame_API_0100
+    * @tc.name      : SetSource camera_info_parser.mp4
+    * @tc.desc      : get pts by frameIndex(video track)
+*/
+HWTEST_F(AVMetadataUnitTest, GetTimeByFrameIndex_PtsAndFrame_API_0100, Level2)
+{
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+                      std::string("camera_info_parser.mp4");
+    std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
+    ASSERT_NE(nullptr, helper);
+    ASSERT_EQ(true, helper->CreateAVMetadataHelper());
+    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, 0, 0, AVMetadataUsage::AV_META_USAGE_FRAME_INDEX_CONVERT));
+    uint64_t time = 0;
+    uint32_t index = 2;
+    ASSERT_EQ(MSERR_OK, helper->GetTimeByFrameIndex(index, time));
+    ASSERT_EQ(time, 33333);
+}
+
+/**
+    * @tc.number    : GetTimeByFrameIndex_PtsAndFrame_API_0200
+    * @tc.name      : SetSource h264.flv
+    * @tc.desc      : get pts by frameIndex(not mp4)
+*/
+HWTEST_F(AVMetadataUnitTest, GetTimeByFrameIndex_PtsAndFrame_API_0200, Level2)
+{
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+                      std::string("h264.flv");
+    std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
+    ASSERT_NE(nullptr, helper);
+    ASSERT_EQ(true, helper->CreateAVMetadataHelper());
+    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, 0, 0, AVMetadataUsage::AV_META_USAGE_FRAME_INDEX_CONVERT));
+    uint64_t time = 0;
+    uint32_t index = 10;
+    ASSERT_NE(MSERR_OK, helper->GetTimeByFrameIndex(index, time));
+}
+
+
+/**
+    * @tc.number    : PtsAndFrameIndexConversion_API_0100
+    * @tc.name      : SetSource camera_info_parser.mp4
+    * @tc.desc      : pts and frameIndex convertion test(pts -> frameIndex -> pts)
+*/
+HWTEST_F(AVMetadataUnitTest, PtsAndFrameIndexConversion_API_0100, Level2)
+{
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+                      std::string("camera_info_parser.mp4");
+    std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
+    ASSERT_NE(nullptr, helper);
+    ASSERT_EQ(true, helper->CreateAVMetadataHelper());
+    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, 0, 0, AVMetadataUsage::AV_META_USAGE_FRAME_INDEX_CONVERT));
+    uint64_t time = 66666;
+    uint32_t index = 0;
+    ASSERT_EQ(MSERR_OK, helper->GetFrameIndexByTime(time, index));
+    ASSERT_EQ(index, 4);
+    time = 0;
+    ASSERT_EQ(MSERR_OK, helper->GetTimeByFrameIndex(index, time));
+    ASSERT_EQ(time, 66666);
+}
+
+/**
+    * @tc.number    : PtsAndFrameIndexConversion_API_0200
+    * @tc.name      : SetSource camera_info_parser.mp4
+    * @tc.desc      : pts and frameIndex convertion test(frameIndex -> pts -> frameIndex)
+*/
+HWTEST_F(AVMetadataUnitTest, PtsAndFrameIndexConversion_API_0200, Level2)
+{
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+                      std::string("camera_info_parser.mp4");
+    std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
+    ASSERT_NE(nullptr, helper);
+    ASSERT_EQ(true, helper->CreateAVMetadataHelper());
+    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, 0, 0, AVMetadataUsage::AV_META_USAGE_FRAME_INDEX_CONVERT));
+    uint64_t time = 0;
+    uint32_t index = 4;
+    ASSERT_EQ(MSERR_OK, helper->GetTimeByFrameIndex(index, time));
+    ASSERT_EQ(time, 66666);
+    index = 0;
+    ASSERT_EQ(MSERR_OK, helper->GetFrameIndexByTime(time, index));
+    ASSERT_EQ(index, 4);
+}
+
+/**
+    * @tc.number    : PTSOutOfRange_1000
+    * @tc.name      : SetSource camera_info_parser.mp4
+    * @tc.desc      : pts out of range
+*/
+HWTEST_F(AVMetadataUnitTest, PTSOutOfRange_API_0100, Level2)
+{
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+                      std::string("camera_info_parser.mp4");
+    std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
+    ASSERT_NE(nullptr, helper);
+    ASSERT_EQ(true, helper->CreateAVMetadataHelper());
+    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, 0, 0, AVMetadataUsage::AV_META_USAGE_FRAME_INDEX_CONVERT));
+    uint64_t time = 999999999;
+    uint32_t index = 0;
+    ASSERT_NE(MSERR_OK, helper->GetFrameIndexByTime(time, index));
+    ASSERT_EQ(index, 0);
+}
+
+/**
+    * @tc.number    : IndexOutOfRange_API_0100
+    * @tc.name      : SetSource camera_info_parser.mp4
+    * @tc.desc      : Index out of range
+*/
+HWTEST_F(AVMetadataUnitTest, IndexOutOfRange_API_0100, Level2)
+{
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+                      std::string("camera_info_parser.mp4");
+    std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
+    ASSERT_NE(nullptr, helper);
+    ASSERT_EQ(true, helper->CreateAVMetadataHelper());
+    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, 0, 0, AVMetadataUsage::AV_META_USAGE_FRAME_INDEX_CONVERT));
+    uint64_t time = 0;
+    uint32_t index = 9999999;
+    ASSERT_NE(MSERR_OK, helper->GetTimeByFrameIndex(index, time));
+    ASSERT_EQ(time, 0);
+}
+
+/**
+    * @tc.number    : SetSourceDoubleVideoTrack_API_0100
+    * @tc.name      : SetSource h264_double_video_audio.mp4
+    * @tc.desc      : double video track index
+*/
+HWTEST_F(AVMetadataUnitTest, SetSourceDoubleVideoTrack_API_0100, Level2)
+{
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+                      std::string("h264_double_video_audio.mp4");
+    std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
+    ASSERT_NE(nullptr, helper);
+    ASSERT_EQ(true, helper->CreateAVMetadataHelper());
+    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, 0, 0, AVMetadataUsage::AV_META_USAGE_FRAME_INDEX_CONVERT));
+    uint64_t time = 0;
+    uint32_t index = 0;
+    ASSERT_EQ(MSERR_OK, helper->GetFrameIndexByTime(time, index));
+}
+
+/**
+    * @tc.number    : SetSourceDoubleVideoTrack_API_0200
+    * @tc.name      : SetSource h264_double_video_audio.mp4
+    * @tc.desc      : double video track index
+*/
+HWTEST_F(AVMetadataUnitTest, SetSourceDoubleVideoTrack_API_0200, Level2)
+{
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+                      std::string("h264_double_video_audio.mp4");
+    std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
+    ASSERT_NE(nullptr, helper);
+    ASSERT_EQ(true, helper->CreateAVMetadataHelper());
+    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, 0, 0, AVMetadataUsage::AV_META_USAGE_FRAME_INDEX_CONVERT));
+    uint64_t time = 0;
+    uint32_t index = 0;
+    ASSERT_EQ(MSERR_OK, helper->GetTimeByFrameIndex(index, time));
 }
 
 /**
