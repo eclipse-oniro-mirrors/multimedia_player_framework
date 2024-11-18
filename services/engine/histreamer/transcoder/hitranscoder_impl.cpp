@@ -746,11 +746,8 @@ void HiTransCoderImpl::OnEvent(const Event &event)
         case EventType::EVENT_ERROR: {
             FALSE_RETURN_MSG(!ignoreError_.load(), "igore this error event!");
             HandleErrorEvent(AnyCast<int32_t>(event.param));
-            if (!pauseTask_) {
-                pauseTask_ = std::make_shared<Task>("PauseTransCoder", "",
-                    TaskType::SINGLETON, TaskPriority::NORMAL, false);
-            }
-            FALSE_RETURN_MSG(pauseTask_, "pauseTask_ is null!");
+            pauseTask_ = std::make_shared<Task>("PauseTransCoder", "",
+                TaskType::SINGLETON, TaskPriority::NORMAL, false);
             pauseTask_->SubmitJobOnce([this]() {
                 Pause();
             });
