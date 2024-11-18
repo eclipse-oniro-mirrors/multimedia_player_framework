@@ -60,7 +60,8 @@ bool RecorderSetVideoEncoderFuzzer::RecorderSetVideoEncoderFuzz(uint8_t *data, s
             VIDEO_CODEC_FORMAT_BUTT,
         };
         g_videoRecorderConfig.videoSourceId = *reinterpret_cast<int32_t *>(data);
-        int32_t videoFormat = abs((ProduceRandomNumberCrypt()) % (videoCodecFormatList));
+        int32_t reproducibleRandom = abs((data[0] << 24) | (data[1] << 16) | (data[2] << 8) | (data[3]));
+        int32_t videoFormat = (reproducibleRandom) % (videoCodecFormatList);
         g_videoRecorderConfig.videoFormat = videoCodecFormats[videoFormat];
 
         TestRecorder::SetVideoEncoder(g_videoRecorderConfig);
