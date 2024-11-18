@@ -650,6 +650,7 @@ int32_t HiTransCoderImpl::Cancel()
     MEDIA_LOG_I("HiTransCoderImpl::Cancel enter");
     MediaTrace trace("HiTransCoderImpl::Cancel()");
     callbackLooper_->StopReportMediaProgress();
+    ignoreError_.store(true);
     Status ret = pipeline_->Stop();
     callbackLooper_->Stop();
     if (ret != Status::OK) {
@@ -743,9 +744,13 @@ void HiTransCoderImpl::OnEvent(const Event &event)
 {
     switch (event.type) {
         case EventType::EVENT_ERROR: {
+            FALSE_RETURN_MSG(!ignoreError_.load(), "igore this error event!");
             HandleErrorEvent(AnyCast<int32_t>(event.param));
-            pauseTask_ = std::make_shared<Task>("PauseTransCoder", "",
-                TaskType::SINGLETON, TaskPriority::NORMAL, false);
+            if (!pauseTask_) {
+                pauseTask_ = std::make_shared<Task>("PauseTransCoder", "",
+                    TaskType::SINGLETON, TaskPriority::NORMAL, false);
+            }
+            FALSE_RETURN_MSG(pauseTask_, "pauseTask_ is null!");
             pauseTask_->SubmitJobOnce([this]() {
                 Pause();
             });

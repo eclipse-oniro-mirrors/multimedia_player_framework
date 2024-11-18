@@ -241,5 +241,19 @@ HWTEST_F(HitranscodeUnitTest, SetValueByType_003, TestSize.Level0)
 
     EXPECT_TRUE(result);
 }
+
+/**
+* @tc.name    : Test OnEvent API
+* @tc.number  : OnEvent_001
+* @tc.desc    : Test OnEvent interface, hit error event.
+* @tc.require : issueIB57UX
+*/
+HWTEST_F(HitranscodeUnitTest, OnEvent_001, TestSize.Level0)
+{
+    int32_t initResult = transcode_->Init();
+    EXPECT_EQ(initResult, static_cast<int32_t>(Status::OK));
+    transcode_->OnEvent({"video_resize_filter", EventType::EVENT_ERROR, MSERR_UNKNOWN});
+    transcode_->OnEvent({"video_resize_filter", EventType::EVENT_ERROR, MSERR_UNKNOWN});
+}
 } // namespace Media
 } // namespace OHOS

@@ -160,6 +160,8 @@ private:
     int64_t transcoderTotalDuration_ = 0;
     int32_t errCode_ = 0;
     std::string errMsg_ = "success";
+
+    std::atomic<bool> ignoreError_ = false;
 };
 } // namespace MEDIA
 } // namespace OHOS
