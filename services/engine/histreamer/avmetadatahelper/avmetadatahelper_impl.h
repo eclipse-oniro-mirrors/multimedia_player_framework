@@ -69,6 +69,8 @@ private:
     Status SetSourceOnlyForFrameConvert(const std::string &uri);
     Status InitMetadataCollector();
     Status InitThumbnailGenerator();
+    int32_t GetTimeForFrameConvert(uint32_t index, uint64_t &time);
+    int32_t GetIndexForFrameConvert(uint64_t time, uint32_t &index);
 
     void Reset();
     void Destroy();
