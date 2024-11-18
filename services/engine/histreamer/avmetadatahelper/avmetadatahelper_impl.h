@@ -62,11 +62,11 @@ private:
     std::shared_ptr<AVSharedMemoryBase> fetchedFrameAtTime_;
     std::shared_ptr<OHOS::Media::TimeAndIndexConversion> conversion_ { nullptr };
     std::atomic_bool stopProcessing_{ false };
-    std::atomic_bool isOnlyForFrameConvert_{ false };
+    std::atomic_bool isForFrameConvert_{ false };
 
-    Status SetSourceInternel(const std::string &uri, bool isOnlyForFrameConvert);
+    Status SetSourceInternel(const std::string &uri, bool isForFrameConvert);
     Status SetSourceInternel(const std::shared_ptr<IMediaDataSource> &dataSrc);
-    Status SetSourceOnlyForFrameConvert(const std::string &uri);
+    Status SetSourceForFrameConvert(const std::string &uri);
     Status InitMetadataCollector();
     Status InitThumbnailGenerator();
     int32_t GetTimeForFrameConvert(uint32_t index, uint64_t &time);
