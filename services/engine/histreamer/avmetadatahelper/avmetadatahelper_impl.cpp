@@ -81,9 +81,9 @@ int32_t AVMetadataHelperImpl::SetSource(const std::shared_ptr<IMediaDataSource> 
     return MSERR_OK;
 }
 
-Status AVMetadataHelperImpl::SetSourceInternel(const std::string &uri, bool isOnlyForFrameConvert)
+Status AVMetadataHelperImpl::SetSourceInternel(const std::string &uri, bool isForFrameConvert)
 {
-    CHECK_AND_RETURN_RET_LOG(!isOnlyForFrameConvert, SetSourceOnlyForFrameConvert(uri), "SetSource for frame convert");
+    CHECK_AND_RETURN_RET_LOG(!isForFrameConvert, SetSourceForFrameConvert(uri), "SetSource for frame convert");
     Reset();
     mediaDemuxer_ = std::make_shared<MediaDemuxer>();
     mediaDemuxer_->SetEnableOnlineFdCache(false);
@@ -97,13 +97,13 @@ Status AVMetadataHelperImpl::SetSourceInternel(const std::string &uri, bool isOn
     return Status::OK;
 }
 
-Status AVMetadataHelperImpl::SetSourceOnlyForFrameConvert(const std::string &uri)
+Status AVMetadataHelperImpl::SetSourceForFrameConvert(const std::string &uri)
 {
     Reset();
-    isOnlyForFrameConvert_ = true;
+    isForFrameConvert_ = true;
     conversion_ = std::make_shared<TimeAndIndexConversion>();
     CHECK_AND_RETURN_RET_LOG(
-        conversion_ != nullptr, Status::ERROR_INVALID_DATA, "SetSourceInternel conversion_ is nullptr");
+        conversion_ != nullptr, Status::ERROR_NO_MEMORY, "SetSourceInternel conversion_ is nullptr");
     Status ret = conversion_->SetDataSource(std::make_shared<MediaSource>(uri));
     CHECK_AND_RETURN_RET_LOG(ret == Status::OK, ret,
         "0x%{public}06" PRIXPTR " SetSourceInternel conversion_ failed", FAKE_POINTER(this));
@@ -175,16 +175,7 @@ std::shared_ptr<AVBuffer> AVMetadataHelperImpl::FetchFrameYuv(
 
 int32_t AVMetadataHelperImpl::GetTimeByFrameIndex(uint32_t index, uint64_t &time)
 {
-    if (isOnlyForFrameConvert_) {
-        CHECK_AND_RETURN_RET_LOG(conversion_ != nullptr, MSERR_INVALID_STATE, "conversion_ is nullptr");
-        uint32_t trackIndex = 0;
-        auto res = conversion_->GetFirstVideoTrackIndex(trackIndex);
-        CHECK_AND_RETURN_RET_LOG(res == Status::OK, MSERR_UNSUPPORT_FILE, "GetFirstVideoTrackIndex failed");
-        res = conversion_->GetRelativePresentationTimeUsByIndex(trackIndex, index, time);
-        MEDIA_LOGI("trackIndex: %{public}" PRIu32 ", index: %{public}" PRIu32 ", time: %{public}" PRIu64
-                   ", res: %{public}d", trackIndex, index, time, res);
-        return res == Status::OK ? MSERR_OK : MSERR_UNSUPPORT_FILE;
-    }
+    CHECK_AND_RETURN_RET(!isForFrameConvert_, GetTimeForFrameConvert(index, time));
     auto res = InitMetadataCollector();
     CHECK_AND_RETURN_RET_LOG(res == Status::OK, MSERR_INVALID_STATE, "Create collector failed");
     return metadataCollector_->GetTimeByFrameIndex(index, time);
@@ -192,19 +183,34 @@ int32_t AVMetadataHelperImpl::GetTimeByFrameIndex(uint32_t index, uint64_t &time
 
 int32_t AVMetadataHelperImpl::GetFrameIndexByTime(uint64_t time, uint32_t &index)
 {
-    if (isOnlyForFrameConvert_) {
-        CHECK_AND_RETURN_RET_LOG(conversion_ != nullptr, MSERR_INVALID_STATE, "conversion_ is nullptr");
-        uint32_t trackIndex = 0;
-        auto res = conversion_->GetFirstVideoTrackIndex(trackIndex);
-        CHECK_AND_RETURN_RET_LOG(res == Status::OK, MSERR_UNSUPPORT_FILE, "GetFirstVideoTrackIndex failed");
-        res = conversion_->GetIndexByRelativePresentationTimeUs(trackIndex, time, index);
-        MEDIA_LOGI("trackIndex: %{public}" PRIu32 ", index: %{public}" PRIu32 ", time: %{public}" PRIu64
-                   ", res: %{public}d", trackIndex, index, time, res);
-        return res == Status::OK ? MSERR_OK : MSERR_UNSUPPORT_FILE;
-    }
+    CHECK_AND_RETURN_RET(!isForFrameConvert_, GetIndexForFrameConvert(time, index));
     auto res = InitMetadataCollector();
     CHECK_AND_RETURN_RET_LOG(res == Status::OK, MSERR_INVALID_STATE, "Create collector failed");
     return metadataCollector_->GetFrameIndexByTime(time, index);
+}
+
+int32_t AVMetadataHelperImpl::GetTimeForFrameConvert(uint32_t index, uint64_t &time)
+{
+    CHECK_AND_RETURN_RET_LOG(conversion_ != nullptr, MSERR_INVALID_STATE, "conversion_ is nullptr");
+    uint32_t trackIndex = 0;
+    auto res = conversion_->GetFirstVideoTrackIndex(trackIndex);
+    CHECK_AND_RETURN_RET_LOG(res == Status::OK, MSERR_UNSUPPORT_FILE, "GetFirstVideoTrackIndex failed");
+    res = conversion_->GetRelativePresentationTimeUsByIndex(trackIndex, index, time);
+    MEDIA_LOGI("trackIndex: %{public}" PRIu32 ", index: %{public}" PRIu32 ", time: %{public}" PRIu64
+                ", res: %{public}d", trackIndex, index, time, res);
+    return res == Status::OK ? MSERR_OK : MSERR_UNSUPPORT_FILE;
+}
+
+int32_t AVMetadataHelperImpl::GetIndexForFrameConvert(uint64_t time, uint32_t &index)
+{
+    CHECK_AND_RETURN_RET_LOG(conversion_ != nullptr, MSERR_INVALID_STATE, "conversion_ is nullptr");
+    uint32_t trackIndex = 0;
+    auto res = conversion_->GetFirstVideoTrackIndex(trackIndex);
+    CHECK_AND_RETURN_RET_LOG(res == Status::OK, MSERR_UNSUPPORT_FILE, "GetFirstVideoTrackIndex failed");
+    res = conversion_->GetIndexByRelativePresentationTimeUs(trackIndex, time, index);
+    MEDIA_LOGI("trackIndex: %{public}" PRIu32 ", index: %{public}" PRIu32 ", time: %{public}" PRIu64
+                ", res: %{public}d", trackIndex, index, time, res);
+    return res == Status::OK ? MSERR_OK : MSERR_UNSUPPORT_FILE;
 }
 
 void AVMetadataHelperImpl::Reset()
@@ -221,7 +227,7 @@ void AVMetadataHelperImpl::Reset()
         mediaDemuxer_->Reset();
     }
 
-    isOnlyForFrameConvert_ = false;
+    isForFrameConvert_ = false;
 }
 
 void AVMetadataHelperImpl::Destroy()
