@@ -716,7 +716,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ReportAVScreenCaptureUserChoice_005, T
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     int32_t sessionId = 1;
     ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
-    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTING;
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::POPUP_WINDOW;
     std::string choice = "{\"choice\": \"true\", \"displayId\": -1, \"missionId\": -1}";
     ASSERT_EQ(screenCaptureServer_->ReportAVScreenCaptureUserChoice(sessionId, choice), MSERR_OK);
 }
