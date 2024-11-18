@@ -109,9 +109,7 @@ void NotificationSubscriber::OnDisconnected()
 void NotificationSubscriber::OnResponse(int32_t notificationId,
                                         OHOS::sptr<OHOS::Notification::NotificationButtonOption> buttonOption)
 {
-    if (buttonOption == nullptr) {
-        return;
-    }
+    CHECK_AND_RETURN(buttonOption != nullptr);
     MEDIA_LOGI("NotificationSubscriber OnResponse notificationId : %{public}d, ButtonName : %{public}s ",
         notificationId, (buttonOption->GetButtonName()).c_str());
 

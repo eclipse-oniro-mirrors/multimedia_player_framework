@@ -406,9 +406,8 @@ int32_t ScreenCaptureServiceStub::SetOutputFile(MessageParcel &data, MessageParc
     int32_t fd = data.ReadFileDescriptor();
     int32_t ret = SetOutputFile(fd);
     reply.WriteInt32(ret);
-    if (close(fd) != 0) {
-        MEDIA_LOGE("close fd failed, fd is %{public}d", fd);
-    }
+    CHECK_AND_RETURN_RET_LOG(fd >= 0, MSERR_INVALID_VAL, "fd is invalid, fd is %{public}d", fd);
+    CHECK_AND_RETURN_RET_LOG(close(fd) == 0, MSERR_UNKNOWN, "close fd failed, fd is %{public}d", fd);
     return MSERR_OK;
 }
 
