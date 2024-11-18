@@ -73,10 +73,14 @@ bool InCallObserver::RegisterInCallObserverCallBack(std::weak_ptr<InCallObserver
 void InCallObserver::UnRegisterInCallObserverCallBack()
 {
     for (auto inCallObserverCallBack_: inCallObserverCallBacks_) {
-        if (!inCallObserverCallBack_.expired()) {
+        auto inCallObserverCallBackPtr = inCallObserverCallBack_.lock();
+        if (inCallObserverCallBackPtr) {
             inCallObserverCallBack_.reset();
         }
     }
+    inCallObserverCallBacks_.clear();
+    MEDIA_LOGI("InCallObserver::UnRegisterInCallObserverCallBack END. inCallObserverCallBacks_.size(): %{public}d",
+        inCallObserverCallBacks_.size());
 }
 
 bool InCallObserver::OnCallStateUpdated(bool inCall)
