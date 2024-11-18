@@ -15,6 +15,8 @@
 
 #include "gtest/gtest.h"
 #include "codec/video/encoder/video_muxer.h"
+#include "ut_common_data.h"
+#include <native_avcodec_base.h>
 
 using namespace testing;
 using namespace testing::ext;
@@ -65,10 +67,41 @@ HWTEST_F(VideoMuxerTest, VideoMuxer_AddAudioTrack, TestSize.Level0)
 }
 
 // test VideoMuxer WriteAudioData method
-HWTEST_F(VideoMuxerTest, WriteAudioData, TestSize.Level0)
+HWTEST_F(VideoMuxerTest, VideoMuxer_WriteAudioData, TestSize.Level0)
 {
-    OH_AVMemory* data =OH_AVMemory_Create(12);
+    uint32_t buffersize = 1024 * 1024;
+    OH_AVMemory* data =OH_AVMemory_Create(buffersize);
+    OH_AVCodecBufferAttr attr;
+    attr.size = 1024 * 1024;
+    attr.pts = 100;
+    attr.flags = 1;
+    EXPECT_EQ(muxer_->WriteAudioData(nullptr, nullptr), VEFError::ERR_INTERNAL_ERROR);
     EXPECT_EQ(muxer_->WriteAudioData(data, nullptr), VEFError::ERR_INTERNAL_ERROR);
+    EXPECT_EQ(muxer_->WriteAudioData(nullptr, &attr), VEFError::ERR_INTERNAL_ERROR);
+    EXPECT_EQ(muxer_->WriteAudioData(data, &attr), VEFError::ERR_INTERNAL_ERROR);
+    OH_AVMemory_Destroy(data);
+}
+
+HWTEST_F(VideoMuxerTest, VideoMuxer_WriteVideoData, TestSize.Level0)
+{
+    std::string fileName = "H264_AAC_multi_track.mp4";
+    int32_t srcFd = VideoResource::instance().getFileResource(fileName);
+    VideoMuxerParam muxerParam;
+    muxerParam.targetFileFd = srcFd;
+    EXPECT_EQ(muxer_->Init(muxerParam), VEFError::ERR_OK);
+    uint32_t buffersize = 1024 * 1024;
+    OH_AVMemory* data =OH_AVMemory_Create(buffersize);
+    OH_AVCodecBufferAttr attr;
+    attr.size = 1024 * 1024;
+    attr.pts = 100;
+    attr.flags = 1;
+    EXPECT_EQ(muxer_->WriteVideoData(data, &attr), VEFError::ERR_OK);
+
+    OH_AVCodecBufferAttr attr1;
+    attr1.size = 1024 * 1024;
+    attr1.pts = 100;
+    attr1.flags = 1;
+    EXPECT_EQ(muxer_->WriteAudioData(data, &attr1), VEFError::ERR_INTERNAL_ERROR);
     OH_AVMemory_Destroy(data);
 }
 } // namespace Media

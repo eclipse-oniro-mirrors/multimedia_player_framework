@@ -181,8 +181,7 @@ void VideoDecoder::CodecOnStreamChangedInner(OH_AVFormat* format)
 
 void VideoDecoder::CodecOnNeedInputDataInner(OH_AVCodec* codec, uint32_t index, OH_AVMemory* data)
 {
-    MEDIA_LOGD("[%{public}s] CodecOnNeedInputDataInner index %{public}u, addr: %{public}s", logTag_.c_str(),
-        index, OH_AVMemory_GetAddr(data));
+    MEDIA_LOGD("[%{public}s] CodecOnNeedInputDataInner index %{public}u", logTag_.c_str(), index);
 
     OH_AVCodecBufferAttr attr;
     VEFError error = packetReadFunc_(codec, data, &attr);

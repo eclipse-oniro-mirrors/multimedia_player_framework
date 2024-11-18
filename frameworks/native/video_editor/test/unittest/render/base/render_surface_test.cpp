@@ -45,7 +45,7 @@ HWTEST_F(RenderSurfaceTest, RenderSurfaceTest_Init, TestSize.Level0)
 {
     std::string tagStr = "render_module";
     RenderSurface renderSurface(tagStr);
-    EXPECT_FALSE(renderSurface.Init());
+    EXPECT_TRUE(renderSurface.Init());
 }
 
 // test RenderSurfaceTest Release method return true

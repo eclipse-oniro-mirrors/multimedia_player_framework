@@ -122,6 +122,10 @@ VEFError VideoDecoderEngineImpl::StartDecode()
             return error;
         }
     }
+    if (videoDecoder_ == nullptr) {
+        MEDIA_LOGE("[%{public}s] StartDecode video decoder is nullptr.", logTag_.c_str());
+        return VEFError::ERR_INTERNAL_ERROR;
+    }
     videoDecoderState_ = CodecState::RUNNING;
     VEFError error = videoDecoder_->Start();
     if (error != VEFError::ERR_OK) {
@@ -144,7 +148,7 @@ VEFError VideoDecoderEngineImpl::StopDecode()
         }
     }
     if (videoDecoder_ == nullptr) {
-        MEDIA_LOGD("[%{public}s] StopDecode videoDecoder_ is null.", logTag_.c_str());
+        MEDIA_LOGD("[%{public}s] StopDecode video decoder is nullptr.", logTag_.c_str());
         return VEFError::ERR_INTERNAL_ERROR;
     }
     return videoDecoder_->Stop();
