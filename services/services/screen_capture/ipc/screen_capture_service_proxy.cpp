@@ -470,7 +470,7 @@ int32_t ScreenCaptureServiceProxy::SetCanvasRotation(bool canvasRotation)
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
     token = data.WriteBool(canvasRotation);
-    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write Microphone state!");
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write CanvasRotation state!");
 
     int error = Remote()->SendRequest(SET_SCREEN_ROTATION, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,

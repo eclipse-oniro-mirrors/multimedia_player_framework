@@ -109,6 +109,7 @@ void NotificationSubscriber::OnDisconnected()
 void NotificationSubscriber::OnResponse(int32_t notificationId,
                                         OHOS::sptr<OHOS::Notification::NotificationButtonOption> buttonOption)
 {
+    CHECK_AND_RETURN(buttonOption != nullptr);
     MEDIA_LOGI("NotificationSubscriber OnResponse notificationId : %{public}d, ButtonName : %{public}s ",
         notificationId, (buttonOption->GetButtonName()).c_str());
 
@@ -470,6 +471,7 @@ int32_t ScreenCaptureServer::SetOutputFile(int32_t outputFd)
     CloseFd();
     MEDIA_LOGI("ScreenCaptureServer fd in, fd is %{public}d", outputFd);
     outputFd_ = dup(outputFd);
+    CHECK_AND_RETURN_RET_LOG(outputFd_ >= 0, MSERR_NO_MEMORY, "dup outputFd failed");
     MEDIA_LOGI("ScreenCaptureServer fd dup, fd is %{public}d", outputFd_);
     MEDIA_LOGI("ScreenCaptureServer SetOutputFile End");
     return MSERR_OK;

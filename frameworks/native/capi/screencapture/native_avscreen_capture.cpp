@@ -164,7 +164,7 @@ private:
             callback_(capture, reinterpret_cast<OH_AVBuffer *>(ohAvBuffer.GetRefPtr()), bufferType, timestamp,
                 userData_);
             MEDIA_LOGD("OnProcessAudioBuffer: 0x%{public}06" PRIXPTR " Out", FAKE_POINTER(capture));
-            if (ohAvBuffer->buffer_->memory_ == nullptr) {
+            if (ohAvBuffer->buffer_ == nullptr || ohAvBuffer->buffer_->memory_ == nullptr) {
                 return AV_SCREEN_CAPTURE_ERR_INVALID_VAL;
             }
             free(ohAvBuffer->buffer_->memory_->GetAddr());
