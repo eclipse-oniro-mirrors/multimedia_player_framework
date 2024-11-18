@@ -99,6 +99,23 @@ enum AudioSourceType : int32_t {
     AUDIO_INNER = 20,
 };
 
+enum AVRecorder_State {
+    /* idle states */
+    IDLE = 0,
+    /* prepared states */
+    PREPARED = 1,
+    /* started states */
+    STARTED = 2,
+    /* paused states */
+    PAUSED = 3,
+    /* stopped states */
+    STOPPED = 4,
+    /* released states */
+    RELEASED = 5,
+    /* error states */
+    ERROR = 6,
+};
+
 /**
  * Unsupported app usage.
  * @brief Enumerates data source types.
@@ -445,6 +462,10 @@ struct AVMetadata {
 class RecorderCallback {
 public:
     virtual ~RecorderCallback() = default;
+
+    virtual void OnStateChange(AVRecorder_State state, StateChangeReason reason) = 0;
+
+    virtual void OnError(int32_t errorCode, Const char *errorMsg, void *userData) = 0;
 
     /**
      * @brief Called when an error occurs during recording. This callback is used to report recording errors.
