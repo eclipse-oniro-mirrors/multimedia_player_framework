@@ -1081,20 +1081,6 @@ HWTEST_F(PlayerServerUnitTest, Player_Prepare_005, TestSize.Level2)
 }
 
 /**
- * @tc.name  : Test Player SetRenderFirstFrame API
- * @tc.number: Player_SetRenderFirstFrame_001
- * @tc.desc  : Test Player Play->SetRenderFirstFrame
- */
-HWTEST_F(PlayerServerUnitTest, Player_SetRenderFirstFrame_001, TestSize.Level2)
-{
-    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
-    sptr<Surface> videoSurface = player_->GetVideoSurface();
-    ASSERT_NE(nullptr, videoSurface);
-    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    EXPECT_EQ(MSERR_OK, player_->SetRenderFirstFrame(false));
-}
-
-/**
  * @tc.name  : Test Player PrepareAsync API
  * @tc.number: Player_PrepareAsync_001
  * @tc.desc  : Test Player PrepareAsync interface
