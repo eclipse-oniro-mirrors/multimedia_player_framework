@@ -37,7 +37,7 @@ protected:
 };
 
 // Test when cb is nullptr then Create returns nullptr.
-HWTEST_F(VideoDecoderEngineTest, create_with_invalid_cb, TestSize.Level0)
+HWTEST_F(VideoDecoderEngineTest, create_with_invalid_fd, TestSize.Level0)
 {
     int fd = 1;
     VideoDecodeCallbackTester* cb = new VideoDecodeCallbackTester();
@@ -46,11 +46,10 @@ HWTEST_F(VideoDecoderEngineTest, create_with_invalid_cb, TestSize.Level0)
 }
 
 // Test when Init returns error then Create returns nullptr.
-HWTEST_F(VideoDecoderEngineTest, create_ok, TestSize.Level0)
+HWTEST_F(VideoDecoderEngineTest, create_with_invalid_cb, TestSize.Level0)
 {
     int fd = 1;
-    VideoDecodeCallbackTester* cb = new VideoDecodeCallbackTester();
-    std::shared_ptr<IVideoDecoderEngine> engine = IVideoDecoderEngine::Create(fd, cb);
+    std::shared_ptr<IVideoDecoderEngine> engine = IVideoDecoderEngine::Create(fd, nullptr);
     EXPECT_EQ(engine, nullptr);
 }
 

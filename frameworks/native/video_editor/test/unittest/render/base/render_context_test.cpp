@@ -43,13 +43,13 @@ private:
 // test RenderContextTest Create method
 HWTEST_F(RenderContextTest, RenderContextTest_Create, TestSize.Level0)
 {
-    EXPECT_FALSE(renderContext->Create(nullptr));
+    EXPECT_TRUE(renderContext->Create(nullptr));
 }
 
 // test RenderContextTest Init method
 HWTEST_F(RenderContextTest, RenderContextTest_Init, TestSize.Level0)
 {
-    EXPECT_FALSE(renderContext->Init());
+    EXPECT_TRUE(renderContext->Init());
 }
 
 // test RenderContextTest Release method

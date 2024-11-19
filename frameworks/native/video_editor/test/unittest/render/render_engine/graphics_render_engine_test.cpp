@@ -23,7 +23,7 @@ using namespace testing::ext;
 namespace OHOS {
 namespace Media {
 
-class Graphics_Render_EngineTest : public testing::Test {
+class GraphicsRenderEngineTest : public testing::Test {
 protected:
     void SetUp() override 
     {
@@ -34,7 +34,7 @@ protected:
     }
 };
 
-HWTEST_F(Graphics_Render_EngineTest, Graphics_Render_EngineTest_Create, TestSize.Level0)
+HWTEST_F(GraphicsRenderEngineTest, GraphicsRenderEngineTest_Create, TestSize.Level0)
 {
     OHNativeWindow* outputWindow = nullptr;
     auto engine = IGraphicsRenderEngine::Create(outputWindow);

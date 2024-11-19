@@ -16,6 +16,7 @@
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
 #include "codec/video/decoder/video_decoder_engine_impl.h"
+#include "render/graphics/graphics_render_engine.h"
 #include <fcntl.h>
 #include "ut_common_data.h"
 
@@ -161,6 +162,115 @@ HWTEST_F(VideoDecoderEngineImplTest, GetVideoDuration_ok, TestSize.Level0)
     EXPECT_EQ(engine->Init(), VEFError::ERR_OK);
     EXPECT_EQ(engine->GetVideoDuration(), 10034000);
     (void)close(srcFd);
+}
+
+HWTEST_F(VideoDecoderEngineImplTest, VideoDecoderEngineImpl_StartDecode, TestSize.Level0)
+{
+    std::string fileName = "H264_AAC_multi_track.mp4";
+    int32_t srcFd = VideoResource::instance().getFileResource(fileName);
+
+    VideoDecodeCallbackTester* deCb = new VideoDecodeCallbackTester();
+    auto decoderEngine = std::make_shared<VideoDecoderEngineImpl>(1, srcFd, deCb);
+    EXPECT_EQ(decoderEngine->StartDecode(), VEFError::ERR_INTERNAL_ERROR);
+    (void)close(srcFd);
+}
+
+HWTEST_F(VideoDecoderEngineImplTest, VideoDecoderEngineImpl_StopDecode, TestSize.Level0)
+{
+    std::string fileName = "H264_AAC_multi_track.mp4";
+    int32_t srcFd = VideoResource::instance().getFileResource(fileName);
+
+    VideoDecodeCallbackTester* deCb = new VideoDecodeCallbackTester();
+    auto decoderEngine = IVideoDecoderEngine::Create(srcFd, deCb);
+    ASSERT_NE(decoderEngine, nullptr);
+    VideoEncodeParam enCodeParam = VideoResource::instance().getEncodeParam(srcFd, decoderEngine);
+    VideoEncodeCallbackTester* enCb = new VideoEncodeCallbackTester();
+    auto encoderEngine = IVideoEncoderEngine::Create(enCodeParam, enCb);
+    ASSERT_NE(encoderEngine, nullptr);
+
+    OHNativeWindow* nativeWindowEncoder = encoderEngine->GetVideoInputWindow();
+    ASSERT_NE(nativeWindowEncoder, nullptr);
+    auto graphicsRenderEngine = IGraphicsRenderEngine::Create(nativeWindowEncoder);
+    ASSERT_NE(graphicsRenderEngine, nullptr);
+    OHNativeWindow* inputWindowOfRender = graphicsRenderEngine->GetInputWindow();
+    ASSERT_NE(inputWindowOfRender, nullptr);
+    auto inputPcmBufferQueue = encoderEngine->GetAudioInputBufferQueue();
+    decoderEngine->SetVideoOutputWindow(inputWindowOfRender);
+    decoderEngine->SetAudioOutputBufferQueue(inputPcmBufferQueue);
+    EXPECT_EQ(decoderEngine->StopDecode(), VEFError::ERR_INTERNAL_ERROR);
+    (void)close(srcFd);
+}
+
+HWTEST_F(VideoDecoderEngineImplTest, VideoDecoderEngineImpl_Enqueue, TestSize.Level0)
+{
+    std::string fileName = "H264_AAC_multi_track.mp4";
+    int32_t srcFd = VideoResource::instance().getFileResource(fileName);
+    VideoDecodeCallbackTester* deCb = new VideoDecodeCallbackTester();
+    auto decoderEngine = IVideoDecoderEngine::Create(srcFd, deCb);
+    ASSERT_NE(decoderEngine, nullptr);
+    VideoEncodeParam enCodeParam = VideoResource::instance().getEncodeParam(srcFd, decoderEngine);
+    VideoEncodeCallbackTester* enCb = new VideoEncodeCallbackTester();
+    auto encoderEngine = IVideoEncoderEngine::Create(enCodeParam, enCb);
+    ASSERT_NE(encoderEngine, nullptr);
+    auto inputPcmBufferQueue = encoderEngine->GetAudioInputBufferQueue();
+    ASSERT_NE(inputPcmBufferQueue, nullptr);
+    std::shared_ptr<PcmData> pcmData = std::make_shared<PcmData>();
+    pcmData->flags = 12;
+    pcmData->pts = 100;
+    pcmData->dataSize = 0;
+    pcmData->data = nullptr;
+    inputPcmBufferQueue->Enqueue(pcmData);
+    inputPcmBufferQueue->Dequeue();
+    ASSERT_FALSE(inputPcmBufferQueue->cancelEnqueueFlag_);
+    inputPcmBufferQueue->cancelEnqueueFlag_ = true;
+    inputPcmBufferQueue->Enqueue(pcmData);
+    (void)close(srcFd);
+}
+
+HWTEST_F(VideoDecoderEngineImplTest, VideoDecoderEngineImpl_ReadVideoPacket, TestSize.Level0)
+{
+    std::string fileName = "H264_AAC_multi_track.mp4";
+    int32_t srcFd = VideoResource::instance().getFileResource(fileName);
+    VideoDecodeCallbackTester* deCb = new VideoDecodeCallbackTester();
+    auto decoderEngine = std::make_shared<VideoDecoderEngineImpl>(1, srcFd, deCb);
+    EXPECT_EQ(decoderEngine->InitDeMuxer(), VEFError::ERR_OK);
+    uint32_t buffersize = 1024 * 1024;
+    OH_AVMemory* sampleMem = OH_AVMemory_Create(buffersize);
+    OH_AVCodecBufferAttr attr;
+    attr.size = 1024 * 1024;
+    attr.pts = 100;
+    attr.flags = 1;
+    EXPECT_EQ(decoderEngine->ReadVideoPacket(sampleMem, &attr), VEFError::ERR_OK);
+    OH_AVCodecBufferAttr attr1;
+    attr1.size = 1024 * 1024;
+    attr1.pts = 100;
+    attr1.flags = 0;
+    EXPECT_EQ(decoderEngine->ReadVideoPacket(sampleMem, &attr1), VEFError::ERR_OK);
+    (void)close(srcFd);
+    OH_AVMemory_Destroy(sampleMem);
+}
+
+HWTEST_F(VideoDecoderEngineImplTest, VideoDecoderEngineImpl_ReadAudioPacket, TestSize.Level0)
+{
+    std::string fileName = "H264_AAC_multi_track.mp4";
+    int32_t srcFd = VideoResource::instance().getFileResource(fileName);
+    VideoDecodeCallbackTester* deCb = new VideoDecodeCallbackTester();
+    auto decoderEngine = std::make_shared<VideoDecoderEngineImpl>(1, srcFd, deCb);
+    EXPECT_EQ(decoderEngine->InitDeMuxer(), VEFError::ERR_OK);
+    uint32_t buffersize = 1024 * 1024;
+    OH_AVMemory* sampleMem = OH_AVMemory_Create(buffersize);
+    OH_AVCodecBufferAttr attr;
+    attr.size = 1024 * 1024;
+    attr.pts = 100;
+    attr.flags = 1;
+    EXPECT_EQ(decoderEngine->ReadAudioPacket(sampleMem, &attr), VEFError::ERR_OK);
+    OH_AVCodecBufferAttr attr1;
+    attr1.size = 1024 * 1024;
+    attr1.pts = 100;
+    attr1.flags = 0;
+    EXPECT_EQ(decoderEngine->ReadAudioPacket(sampleMem, &attr1), VEFError::ERR_OK);
+    (void)close(srcFd);
+    OH_AVMemory_Destroy(sampleMem);
 }
 } // namespace Media
 } // namespace OHOS

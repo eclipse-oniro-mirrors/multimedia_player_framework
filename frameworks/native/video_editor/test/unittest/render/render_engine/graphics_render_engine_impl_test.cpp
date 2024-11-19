@@ -104,9 +104,52 @@ HWTEST_F(GraphicsRenderEngineImplTest, GraphicsRenderEngineImplTest_Render, Test
     renderInfo->rotation_ = decoderEngine->GetRotation();
     uint64_t pts = 99;
     RenderResultCallback onRenderFinishCb = [pts](GraphicsRenderResult result) {
-        std::cout << "pts=" << pts << "result=" << static_cast<int>(result) << std::endl;
+        std::cout << "pts=" << pts << "; result=" << static_cast<int>(result) << std::endl;
     };
     EXPECT_EQ(graphicsRenderEngine->Render(99, renderInfo, onRenderFinishCb), VEFError::ERR_OK);
+    (void)close(srcFd);
+}
+
+HWTEST_F(GraphicsRenderEngineImplTest, GraphicsRenderEngineImplTest_UnInit, TestSize.Level0)
+{
+    auto renderEngine = GraphicsRenderEngineImpl(1);
+    renderEngine.renderThread_ = nullptr;
+    EXPECT_EQ(renderEngine.UnInit(), VEFError::ERR_OK);
+}
+
+HWTEST_F(GraphicsRenderEngineImplTest, GraphicsRenderEngineImplTest_RenderEffects, TestSize.Level0)
+{
+    auto renderEngine = GraphicsRenderEngineImpl(1);
+    EXPECT_EQ(renderEngine.RenderEffects(nullptr, nullptr), nullptr);
+    auto renderInfo = std::make_shared<GraphicsRenderInfo>();
+    EXPECT_EQ(renderEngine.RenderEffects(nullptr, renderInfo), nullptr);
+}
+
+HWTEST_F(GraphicsRenderEngineImplTest, GraphicsRenderEngineImplTest_DrawFrame, TestSize.Level0)
+{
+    std::string fileName = "H264_AAC_multi_track.mp4";
+    int32_t srcFd = VideoResource::instance().getFileResource(fileName);
+
+    VideoDecodeCallbackTester* deCb = new VideoDecodeCallbackTester();
+    auto decoderEngine = IVideoDecoderEngine::Create(srcFd, deCb);
+    VideoEncodeParam enCodeParam = VideoResource::instance().getEncodeParam(srcFd, decoderEngine);
+    VideoEncodeCallbackTester* cb = new VideoEncodeCallbackTester();
+    auto encoderEngine = IVideoEncoderEngine::Create(enCodeParam, cb);
+    ASSERT_NE(encoderEngine, nullptr);
+    OHNativeWindow* window = encoderEngine->GetVideoInputWindow();
+    auto renderEngine = GraphicsRenderEngineImpl(1);
+    EXPECT_EQ(renderEngine.InitExportEngine(window), VEFError::ERR_OK);
+    renderEngine.context_ = std::make_shared<RenderContext>();
+    renderEngine.shaderPassOnScreen_ = std::make_shared<ShaderPassOnScreen>(renderEngine.context_.get());
+    auto renderTexture = std::make_shared<RenderTexture>(renderEngine.context_.get(), 320, 480, GL_RGBA8);
+    renderEngine.DrawFrame(100, renderTexture);
+
+    auto renderEngine1 = GraphicsRenderEngineImpl(1);
+    renderEngine1.context_ = std::make_shared<RenderContext>();
+    renderEngine1.shaderPassOnScreen_ = std::make_shared<ShaderPassOnScreen>(renderEngine1.context_.get());
+    auto renderTexture1 = std::make_shared<RenderTexture>(renderEngine1.context_.get(), 320, 480, GL_RGBA8);
+    EXPECT_EQ(renderEngine1.InitExportEngine(nullptr), VEFError::ERR_INVALID_PARAM);
+    renderEngine1.DrawFrame(100, renderTexture1);
     (void)close(srcFd);
 }
 } // namespace Media

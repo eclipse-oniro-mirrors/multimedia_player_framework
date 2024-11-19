@@ -16,6 +16,8 @@
 #include "gtest/gtest.h"
 #include "codec/video/encoder/video_encoder_engine_impl.h"
 #include "composite_engine/impl/video_composite_engine.h"
+#include <native_avcodec_videoencoder.h>
+#include <native_avcodec_base.h>
 #include "ut_common_data.h"
 #include <fcntl.h>
 
@@ -150,6 +152,76 @@ HWTEST_F(VideoEncoderEngineImplTest, SendEos_ok, TestSize.Level0)
     EXPECT_EQ(engine->Init(param), VEFError::ERR_OK);
     EXPECT_EQ(engine->SendEos(), VEFError::ERR_INTERNAL_ERROR);
     (void)close(srcFd);
+}
+
+HWTEST_F(VideoEncoderEngineImplTest, VideoEncoderEngineImplTest_OnEncodeResult, TestSize.Level0)
+{
+    std::string fileName = "H264_AAC.mp4";
+    int32_t srcFd = VideoResource::instance().getFileResource(fileName);
+    VideoEncodeCallbackTester* cb = new VideoEncodeCallbackTester();
+    auto engine = std::make_shared<VideoEncoderEngineImpl>(srcFd, cb);
+    CodecResult result = CodecResult::SUCCESS;
+    engine->OnEncodeResult(result);
+    engine->videoEncoderState_ = CodecState::FINISH_SUCCESS;
+    engine->OnEncodeResult(result);
+    engine->audioEncoderState_ = CodecState::FINISH_SUCCESS;
+    engine->OnEncodeResult(result);
+    engine->videoEncoderState_ = CodecState::RUNNING;
+    engine->audioEncoderState_ = CodecState::FINISH_SUCCESS;
+    engine->OnEncodeResult(result);
+    EXPECT_EQ(engine->videoEncoderState_, CodecState::RUNNING);
+    (void)close(srcFd);
+}
+
+HWTEST_F(VideoEncoderEngineImplTest, VideoEncoderEngineImplTest_OnVideoNewOutputDataCallBack, TestSize.Level0)
+{
+    std::string fileName = "H264_AAC.mp4";
+    int32_t srcFd = VideoResource::instance().getFileResource(fileName);
+    VideoEncodeCallbackTester* cb = new VideoEncodeCallbackTester();
+    auto engine = std::make_shared<VideoEncoderEngineImpl>(srcFd, cb);
+    uint32_t buffersize = 1024 * 1024;
+    OH_AVMemory* sampleMem = OH_AVMemory_Create(buffersize);
+    OH_AVCodecBufferAttr attr;
+    attr.size = 1024 * 1024;
+    attr.pts = 100;
+    attr.flags = 0;
+    VideoMuxerParam muxerParam;
+    muxerParam.targetFileFd = srcFd;
+    EXPECT_EQ(engine->InitVideoMuxer(muxerParam), VEFError::ERR_OK);
+    engine->OnVideoNewOutputDataCallBack(nullptr, nullptr);
+    engine->OnVideoNewOutputDataCallBack(sampleMem, nullptr);
+    engine->OnVideoNewOutputDataCallBack(nullptr, &attr);
+    engine->OnVideoNewOutputDataCallBack(sampleMem, &attr);
+    EXPECT_EQ(engine->videoEncoderState_, CodecState::INIT);
+    (void)close(srcFd);
+    OH_AVMemory_Destroy(sampleMem);
+}
+
+HWTEST_F(VideoEncoderEngineImplTest, VideoEncoderEngineImplTest_OnAudioEncodeOutput, TestSize.Level0)
+{
+    std::string fileName = "H264_AAC.mp4";
+    int32_t srcFd = VideoResource::instance().getFileResource(fileName);
+    VideoEncodeCallbackTester* cb = new VideoEncodeCallbackTester();
+    auto engine = std::make_shared<VideoEncoderEngineImpl>(srcFd, cb);
+    uint32_t buffersize = 1024 * 1024;
+    OH_AVMemory* sampleMem = OH_AVMemory_Create(buffersize);
+    OH_AVCodecBufferAttr attr;
+    attr.size = 1024 * 1024;
+    attr.pts = 100;
+    attr.flags = 0;
+    VideoMuxerParam muxerParam;
+    muxerParam.targetFileFd = srcFd;
+    EXPECT_EQ(engine->InitVideoMuxer(muxerParam), VEFError::ERR_OK);
+    OH_AVCodec* codec = OH_VideoEncoder_CreateByMime(OH_AVCODEC_MIMETYPE_VIDEO_AVC);
+    EXPECT_EQ(engine->OnAudioEncodeOutput(nullptr, 1, nullptr, nullptr), VEFError::ERR_INTERNAL_ERROR);
+    EXPECT_EQ(engine->OnAudioEncodeOutput(codec, 1, nullptr, nullptr), VEFError::ERR_INTERNAL_ERROR);
+    EXPECT_EQ(engine->OnAudioEncodeOutput(codec, 1, sampleMem, nullptr), VEFError::ERR_INTERNAL_ERROR);
+    EXPECT_EQ(engine->OnAudioEncodeOutput(nullptr, 1, sampleMem, &attr), VEFError::ERR_INTERNAL_ERROR);
+    EXPECT_EQ(engine->OnAudioEncodeOutput(codec, 1, nullptr, &attr), VEFError::ERR_INTERNAL_ERROR);
+    EXPECT_EQ(engine->OnAudioEncodeOutput(codec, 1, sampleMem, &attr), VEFError::ERR_INTERNAL_ERROR);
+    (void)close(srcFd);
+    OH_AVMemory_Destroy(sampleMem);
+    OH_VideoEncoder_Destroy(codec);
 }
 } // namespace Media
 } // namespace OHOS
