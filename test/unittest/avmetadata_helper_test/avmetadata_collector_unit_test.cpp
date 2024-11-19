@@ -162,7 +162,7 @@ HWTEST_F(AVMetaDataCollectorUnitTest, ExtractMetadataByKey, TestSize.Level1)
     avmetaDataCollector->collectedAVMetaData_ = {};
     avmetaDataCollector->collectedMeta_ = {
         {AV_KEY_ALBUM, "media"},
-        {AV_KEY_ALBUM_ARTIST,""},
+        {AV_KEY_ALBUM_ARTIST, ""},
     };
     
     std::string value = avmetaDataCollector->ExtractMetadata(AV_KEY_ALBUM);
