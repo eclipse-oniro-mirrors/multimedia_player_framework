@@ -297,15 +297,15 @@ typedef struct OH_AVRecorder_EncoderInfo {
     /* encoder type, audio or video */
     char *type;
     /* audio or video encoder bitRate range */
-    OH_Range bitRate;
+    OH_AVRecorder_Range bitRate;
     /* video encoder frame rate range */
-    OH_Range frameRate;
+    OH_AVRecorder_Range frameRate;
     /* video encoder width range */
-    OH_Range width;
+    OH_AVRecorder_Range width;
     /* video encoder height range */
-    OH_Range height;
+    OH_AVRecorder_Range height;
     /* audio encoder channel range */
-    OH_Range channels;
+    OH_AVRecorder_Range channels;
     /* audio encoder sample rate collection */
     int32_t *sampleRate;
     /* length of sampleRate list */
