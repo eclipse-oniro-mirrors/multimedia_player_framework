@@ -176,27 +176,6 @@ typedef enum OH_AVRecorder_FileGenerationMode {
 } OH_AVRecorder_FileGenerationMode;
 
 /**
- * @brief Provides the media recorder configuration definitions
- * @syscap SystemCapability.Multimedia.Media.AVRecorder
- * @since 14
- * @version 1.0
- */
-typedef struct OH_AVRecorder_Config {
-    /* Indicates the recording audio source type */
-    OH_AVRecorder_AudioSourceType audioSourceType;
-    /* Indicates the recording video source type */
-    OH_AVRecorder_VideoSourceType videoSourceType;
-    /* Contains the audio and video encoding profile settings */
-    OH_AVRecorder_Profile profile;
-    /* Defines the file URL */
-    char *url;
-    /* Specifies the file generation mode for recording output */
-    OH_AVRecorder_FileGenerationMode fileGenerationMode;
-    /* Contains additional metadata for the recorded media */
-    OH_AVRecorder_Metadata metadata;
-} OH_AVRecorder_Config;
-
-/**
  * @brief Provides the media recorder profile definitions
  * @syscap SystemCapability.Multimedia.Media.AVRecorder
  * @since 14
@@ -243,6 +222,19 @@ typedef struct OH_AVRecorder_Location {
 } OH_AVRecorder_Location;
 
 /**
+ * @brief define the basic template of metadata
+ * @syscap SystemCapability.Multimedia.Media.AVRecorder
+ * @since 14
+ * @version 1.0
+ */
+typedef struct OH_AVRecorder_MetadataTemplate {
+    /* key value of the matadata */
+    char *key;
+    /* contents of the matadata */
+    char *value;
+} OH_AVRecorder_MetadataTemplate;
+
+/**
  * @brief Provides the container definition for media data
  * @syscap SystemCapability.Multimedia.Media.AVRecorder
  * @since 14
@@ -260,17 +252,38 @@ typedef struct OH_AVRecorder_Metadata {
 } OH_AVRecorder_Metadata;
 
 /**
- * @brief define the basic template of metadata
+ * @brief Provides the media recorder configuration definitions
  * @syscap SystemCapability.Multimedia.Media.AVRecorder
  * @since 14
  * @version 1.0
  */
-typedef struct OH_AVRecorder_MetadataTemplate {
-    /* key value of the matadata */
-    char *key;
-    /* contents of the matadata */
-    char *value;
-} OH_AVRecorder_MetadataTemplate;
+typedef struct OH_AVRecorder_Config {
+    /* Indicates the recording audio source type */
+    OH_AVRecorder_AudioSourceType audioSourceType;
+    /* Indicates the recording video source type */
+    OH_AVRecorder_VideoSourceType videoSourceType;
+    /* Contains the audio and video encoding profile settings */
+    OH_AVRecorder_Profile profile;
+    /* Defines the file URL */
+    char *url;
+    /* Specifies the file generation mode for recording output */
+    OH_AVRecorder_FileGenerationMode fileGenerationMode;
+    /* Contains additional metadata for the recorded media */
+    OH_AVRecorder_Metadata metadata;
+} OH_AVRecorder_Config;
+
+/**
+ * @brief Provides Range with lower and upper limit
+ * @syscap SystemCapability.Multimedia.Media.AVRecorder
+ * @since 14
+ * @version 1.0
+ */
+typedef struct OH_AVRecorder_Range {
+    /* lower limit of the range */
+    int32_t min;
+    /* upper limit of the range */
+    int32_t max;
+} OH_AVRecorder_Range;
 
 /**
  * @brief Provides encoder info
@@ -298,19 +311,6 @@ typedef struct OH_AVRecorder_EncoderInfo {
     /* length of sampleRate list */
     int32_t sampleRateLen;
 } OH_AVRecorder_EncoderInfo;
-
-/**
- * @brief Provides Range with lower and upper limit
- * @syscap SystemCapability.Multimedia.Media.AVRecorder
- * @since 14
- * @version 1.0
- */
-typedef struct OH_AVRecorder_Range {
-    /* lower limit of the range */
-    int32_t min;
-    /* upper limit of the range */
-    int32_t max;
-} OH_AVRecorder_Range;
 
 /**
  * @brief Called when the state changed of current recording.
