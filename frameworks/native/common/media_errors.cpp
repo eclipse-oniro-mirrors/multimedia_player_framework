@@ -85,9 +85,6 @@ const std::map<MediaServiceErrCode, std::string> MSERRCODE_INFOS = {
     {MSERR_IO_SSL_CONNECT_FAIL, "IO SSL connect fail"},
     {MSERR_IO_SSL_SERVER_CERT_UNTRUSTED, "IO SSL server cert untrusted"},
     {MSERR_IO_UNSUPPORTTED_REQUEST, "IO unsupported request"},
-    {MSERR_IO_DATA_ABNORMAL, "IO data abnormal"},
-    {MSERR_IO_AUDIO_DEVICE_ERROR, "audio device error"},
-    {MSERR_IO_VIDEO_DEVICE_ERROR, "video device error"},
 };
 
 const std::map<MediaServiceErrCode, MediaServiceExtErrCode> MSERRCODE_TO_EXTERRORCODE = {
@@ -144,9 +141,6 @@ const std::map<MediaServiceErrCode, MediaServiceExtErrCode> MSERRCODE_TO_EXTERRO
     {MSERR_IO_SSL_CONNECT_FAIL,                 MSERR_EXT_IO},
     {MSERR_IO_SSL_SERVER_CERT_UNTRUSTED,        MSERR_EXT_IO},
     {MSERR_IO_UNSUPPORTTED_REQUEST,             MSERR_EXT_IO},
-    {MSERR_IO_DATA_ABNORMAL,                    MSERR_EXT_IO},
-    {MSERR_IO_AUDIO_DEVICE_ERROR,               MSERR_EXT_IO},
-    {MSERR_IO_VIDEO_DEVICE_ERROR,               MSERR_EXT_IO},
 };
 
 const std::map<MediaServiceExtErrCode, std::string> MSEXTERRCODE_INFOS = {
@@ -225,9 +219,6 @@ const std::map<MediaServiceErrCode, MediaServiceExtErrCodeAPI9> MSERRCODE_TO_EXT
     {MSERR_IO_SSL_CONNECT_FAIL,                 MSERR_EXT_API14_IO_SSL_CONNECT_FAIL},
     {MSERR_IO_SSL_SERVER_CERT_UNTRUSTED,        MSERR_EXT_API14_IO_SSL_SERVER_CERT_UNTRUSTED},
     {MSERR_IO_UNSUPPORTTED_REQUEST,             MSERR_EXT_API14_IO_UNSUPPORTTED_REQUEST},
-    {MSERR_IO_DATA_ABNORMAL,                    MSERR_EXT_API14_IO_DATA_ABNORMAL},
-    {MSERR_IO_AUDIO_DEVICE_ERROR,               MSERR_EXT_API14_IO_AUDIO_DEVICE_ERROR},
-    {MSERR_IO_VIDEO_DEVICE_ERROR,               MSERR_EXT_API14_IO_VIDEO_DEVICE_ERROR},
 };
 
 const std::map<MediaServiceExtErrCodeAPI9, std::string> MSEXTERRCODE_API9_INFOS = {
@@ -254,9 +245,6 @@ const std::map<MediaServiceExtErrCodeAPI9, std::string> MSEXTERRCODE_API9_INFOS 
     {MSERR_EXT_API14_IO_SSL_CONNECT_FAIL, "IO SSL Connect Fail: "},
     {MSERR_EXT_API14_IO_SSL_SERVER_CERT_UNTRUSTED, "IO SSL Server Cert Untrusted: "},
     {MSERR_EXT_API14_IO_UNSUPPORTTED_REQUEST, "IO Unsupported Request: "},
-    {MSERR_EXT_API14_IO_DATA_ABNORMAL, "IO data abnormal: "},
-    {MSERR_EXT_API14_IO_AUDIO_DEVICE_ERROR, "audio device error: "},
-    {MSERR_EXT_API14_IO_VIDEO_DEVICE_ERROR, "video device error: "},
 };
 
 const std::set<MediaServiceErrCode> API14_EXT_IO_ERRORS = {
@@ -271,9 +259,6 @@ const std::set<MediaServiceErrCode> API14_EXT_IO_ERRORS = {
     MSERR_IO_SSL_CONNECT_FAIL,
     MSERR_IO_SSL_SERVER_CERT_UNTRUSTED,
     MSERR_IO_UNSUPPORTTED_REQUEST,
-    MSERR_IO_DATA_ABNORMAL,
-    MSERR_IO_AUDIO_DEVICE_ERROR,
-    MSERR_IO_VIDEO_DEVICE_ERROR,
 };
 
 std::string ErrorMessageOk(const std::string& param1, const std::string& param2)

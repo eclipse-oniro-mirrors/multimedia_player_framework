@@ -534,10 +534,6 @@ void PlayerImplCallback::OnError(int32_t errorCode, const std::string &errorMsg)
         getApiVersionFlag_ = false;
     }
     MEDIA_LOGI("PlayerImplCallback apiVersion %{public}d", apiVersion_);
-    if (static_cast<MediaServiceExtErrCodeAPI9>(errorCode) == MSERR_EXT_API9_IO ||
-        errorCode == MSERR_DEMUXER_BUFFER_NO_MEMORY) {
-        errorCode = MSERR_IO_DATA_ABNORMAL;
-    }
     if (apiVersion_ < API_VERSION_14) {
         if (IsAPI14IOError(static_cast<MediaServiceErrCode>(errorCode))) {
             errorCode = MSERR_DATA_SOURCE_IO_ERROR;
