@@ -47,7 +47,6 @@
 #include "avrecorder_base.h"
 #include "native_averrors.h"
 #include "external_window.h"
-#include "oh_media_asset.h"
 
 #ifdef __cplusplus
 extern "C" {
