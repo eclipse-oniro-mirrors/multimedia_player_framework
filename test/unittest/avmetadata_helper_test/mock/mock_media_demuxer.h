@@ -35,7 +35,8 @@ public:
     MOCK_METHOD(Status, SetDataSource, (const std::shared_ptr<MediaSource> &source), (override));
     MOCK_METHOD(Status, SetSubtitleSource, (const std::shared_ptr<MediaSource> &source), (override));
     MOCK_METHOD(void, SetBundleName, (const std::string& bundleName), (override));
-    MOCK_METHOD(Status, SetOutputBufferQueue, (int32_t trackId, const sptr<AVBufferQueueProducer>& producer), (override));
+    MOCK_METHOD(Status, SetOutputBufferQueue, (int32_t trackId, const sptr<AVBufferQueueProducer>& producer),
+                (override));
  
     MOCK_METHOD(std::shared_ptr<Meta>, GetGlobalMetaInfo, (), (override));
     MOCK_METHOD(std::vector<std::shared_ptr<Meta>>, GetStreamMetaInfo, (), (override));
@@ -62,7 +63,8 @@ public:
     MOCK_METHOD(Status, GetBitRates, (std::vector<uint32_t> &bitRates), (override));
     MOCK_METHOD(Status, SelectBitRate, (uint32_t bitRate), (override));
     MOCK_METHOD(Status, GetMediaKeySystemInfo, ((std::multimap<std::string, std::vector<uint8_t>>) &infos), (override));
-    MOCK_METHOD(void, SetDrmCallback, (const std::shared_ptr<OHOS::MediaAVCodec::AVDemuxerCallback> &callback), (override));
+    MOCK_METHOD(void, SetDrmCallback, (const std::shared_ptr<OHOS::MediaAVCodec::AVDemuxerCallback> &callback),
+                (override));
     MOCK_METHOD(void, OnEvent, (const Plugins::PluginEvent &event), (override));
  
     MOCK_METHOD((std::map<uint32_t, sptr<AVBufferQueueProducer>>), GetBufferQueueProducerMap, (), (override));
@@ -76,7 +78,8 @@ public:
     MOCK_METHOD(void, SetDumpInfo, (bool isDump, uint64_t instanceId), (override));
  
     MOCK_METHOD(Status, OptimizeDecodeSlow, (bool isDecodeOptimizationEnabled), (override));
-    MOCK_METHOD(Status, SetDecoderFramerateUpperLimit, (int32_t decoderFramerateUpperLimit, uint32_t trackId), (override));
+    MOCK_METHOD(Status, SetDecoderFramerateUpperLimit, (int32_t decoderFramerateUpperLimit, uint32_t trackId),
+                (override));
     MOCK_METHOD(Status, SetSpeed, (float speed), (override));
     MOCK_METHOD(Status, SetFrameRate, (double frameRate, uint32_t trackId), (override));
  
@@ -87,14 +90,16 @@ public:
     MOCK_METHOD(void, OnDumpInfo, (int32_t fd), (override));
  
     MOCK_METHOD(Status, StartReferenceParser, (int64_t startTimeMs, bool isForward), (override));
-    MOCK_METHOD(Status, GetFrameLayerInfo, (std::shared_ptr<AVBuffer> videoSample, FrameLayerInfo &frameLayerInfo), (override));
+    MOCK_METHOD(Status, GetFrameLayerInfo, (std::shared_ptr<AVBuffer> videoSample,
+                FrameLayerInfo &frameLayerInfo), (override));
     MOCK_METHOD(Status, GetFrameLayerInfo, (uint32_t frameId, FrameLayerInfo &frameLayerInfo), (override));
     MOCK_METHOD(Status, GetGopLayerInfo, (uint32_t gopId, GopLayerInfo &gopLayerInfo), (override));
     MOCK_METHOD(bool, IsVideoEos, (), (override));
     MOCK_METHOD(bool, HasEosTrack, (), (override));
     MOCK_METHOD(Status, GetIFramePos, (std::vector<uint32_t> &IFramePos), (override));
     MOCK_METHOD(Status, Dts2FrameId, (int64_t dts, uint32_t &frameId, bool offset), (override));
-    MOCK_METHOD(void, RegisterVideoStreamReadyCallback, (const std::shared_ptr<VideoStreamReadyCallback> &callback), (override));
+    MOCK_METHOD(void, RegisterVideoStreamReadyCallback,
+                (const std::shared_ptr<VideoStreamReadyCallback> &callback), (override));
     MOCK_METHOD(void, DeregisterVideoStreamReadyCallback, (), (override));
  
     MOCK_METHOD(Status, GetIndexByRelativePresentationTimeUs, (const uint32_t trackIndex,
