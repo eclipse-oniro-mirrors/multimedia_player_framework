@@ -198,7 +198,8 @@ OH_AVErrCode OH_AVRecorder_Release(OH_AVRecorder *recorder);
  * @since 14
  * @version 1.0
  */
-OH_AVErrCode OH_AVRecorder_GetAvailableEncoder(OH_AVRecorder *recorder, OH_AVRecorder_EncoderInfo **info, int32_t *length);
+OH_AVErrCode OH_AVRecorder_GetAvailableEncoder(OH_AVRecorder *recorder, OH_AVRecorder_EncoderInfo **info,
+    int32_t *length);
 
 /**
  * @brief Set the state callback function so that your application can respond to the
