@@ -38,6 +38,7 @@
 #include <sync_fence.h>
 #include "parameter.h"
 #include <unordered_map>
+#include <algorithm>
 
 using OHOS::Rosen::DMError;
 
@@ -52,7 +53,7 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTUR
 static std::map<int32_t, std::weak_ptr<OHOS::Media::ScreenCaptureServer>> serverMap;
 static const int32_t MAX_SESSION_ID = 256;
 static UniqueIDGenerator g_idGenerator(MAX_SESSION_ID);
-std::list<int32_t> startedSessionIDList_;
+static std::list<int32_t> startedSessionIDList_;
 static const int32_t MAX_SESSION_PER_UID = 8;
 
 // As in the ScreenCaptureServer destructor function mutexGlobal_ is required to update serverMap
@@ -115,6 +116,18 @@ static std::list<int32_t> GetStartedScreenCaptureServerPidList()
         }
     }
     return startedScreenCapturePidList;
+}
+
+static int32_t CountStartedScreenCaptureServerNumByPid(int32_t pid)
+{
+    int32_t count = 0;
+    for (auto sessionId: startedSessionIDList_) {
+        std::shared_ptr<OHOS::Media::ScreenCaptureServer> currentServer = GetScreenCaptureServerByIdWithLock(sessionId);
+        if (currentServer != nullptr && currentServer->GetAppPid() == pid) {
+            count++;
+        }
+    }
+    return count;
 }
 
 static void addStartedSessionIdList(int32_t value)
@@ -1171,6 +1184,17 @@ void ScreenCaptureServer::PostStartScreenCaptureSuccessAction()
     }
 }
 
+bool ScreenCaptureServer::IsAppPidScreenCaptureServerStarted(int32_t pid)
+{
+    std::list<int32_t> pidList{};
+    OHOS::Media::ScreenCaptureServer::GetRunningScreenCaptureInstancePid(pidList);
+    std::list<int32_t>::iterator iter = find(pidList.begin(), pidList.end(), pid);
+    CHECK_AND_RETURN_RET_LOG(iter != pidList.end(), false,
+        "IsAppPidScreenCaptureServerStarted failed, pid: %{public}d", pid);
+    MEDIA_LOGI("ScreenCaptureServer::IsAppPidScreenCaptureServerStarted success, pid: %{public}d", pid);
+    return true;
+}
+
 void ScreenCaptureServer::PostStartScreenCapture(bool isSuccess)
 {
     CHECK_AND_RETURN(screenCaptureCb_ != nullptr);
@@ -1188,7 +1212,7 @@ void ScreenCaptureServer::PostStartScreenCapture(bool isSuccess)
             }
         }
 #endif
-        if (!UpdatePrivacyUsingPermissionState(START_VIDEO)) {
+        if (!IsAppPidScreenCaptureServerStarted(appInfo_.appPid) && !UpdatePrivacyUsingPermissionState(START_VIDEO)) {
             MEDIA_LOGE("UpdatePrivacyUsingPermissionState START failed, dataType:%{public}d", captureConfig_.dataType);
             captureState_ = AVScreenCaptureState::STARTED;
             screenCaptureCb_->OnError(ScreenCaptureErrorType::SCREEN_CAPTURE_ERROR_INTERNAL,
@@ -1196,6 +1220,7 @@ void ScreenCaptureServer::PostStartScreenCapture(bool isSuccess)
             StopScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID);
             return;
         }
+        MEDIA_LOGI("PostStartScreenCaptureSuccessAction START.");
         PostStartScreenCaptureSuccessAction();
     } else {
         MEDIA_LOGE("PostStartScreenCapture handle failure");
@@ -1390,7 +1415,7 @@ bool ScreenCaptureServer::UpdatePrivacyUsingPermissionState(VideoPermissionState
 
     int res = 0;
     if (state == START_VIDEO) {
-        res = PrivacyKit::StartUsingPermission(appInfo_.appTokenId, "ohos.permission.CAPTURE_SCREEN");
+        res = PrivacyKit::StartUsingPermission(appInfo_.appTokenId, "ohos.permission.CAPTURE_SCREEN", appInfo_.appPid);
         if (res != 0) {
             MEDIA_LOGE("start using perm error");
             return false;
@@ -1401,7 +1426,7 @@ bool ScreenCaptureServer::UpdatePrivacyUsingPermissionState(VideoPermissionState
             return false;
         }
     } else if (state == STOP_VIDEO) {
-        res = PrivacyKit::StopUsingPermission(appInfo_.appTokenId, "ohos.permission.CAPTURE_SCREEN");
+        res = PrivacyKit::StopUsingPermission(appInfo_.appTokenId, "ohos.permission.CAPTURE_SCREEN", appInfo_.appPid);
         if (res != 0) {
             MEDIA_LOGE("stop using perm error");
             return false;
@@ -2660,6 +2685,14 @@ int32_t ScreenCaptureServer::StopScreenCaptureInner(AVScreenCaptureStateCode sta
     return ret;
 }
 
+bool ScreenCaptureServer::IsLastAppPidStarted(int32_t pid)
+{
+    MEDIA_LOGI("ScreenCaptureServer::IsLastAppPidStarted START.");
+    CHECK_AND_RETURN_RET_LOG(CountStartedScreenCaptureServerNumByPid(pid) == 1, false,
+        "pid: %{public}d exists more than one instance.", pid);
+    return true;
+}
+
 void ScreenCaptureServer::PostStopScreenCapture(AVScreenCaptureStateCode stateCode)
 {
     MediaTrace trace("ScreenCaptureServer::PostStopScreenCapture");
@@ -2681,7 +2714,7 @@ void ScreenCaptureServer::PostStopScreenCapture(AVScreenCaptureStateCode stateCo
 #endif
     isPrivacyAuthorityEnabled_ = false;
 
-    if (!UpdatePrivacyUsingPermissionState(STOP_VIDEO)) {
+    if (IsLastAppPidStarted(appInfo_.appPid) && !UpdatePrivacyUsingPermissionState(STOP_VIDEO)) {
         MEDIA_LOGE("UpdatePrivacyUsingPermissionState STOP failed, dataType:%{public}d", captureConfig_.dataType);
     }
     std::unordered_map<std::string, std::string> payload;

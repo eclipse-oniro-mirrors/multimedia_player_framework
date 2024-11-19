@@ -326,6 +326,7 @@ private:
     int32_t StartScreenCaptureInner(bool isPrivacyAuthorityEnabled);
     int32_t RegisterServerCallbacks();
     int32_t OnStartScreenCapture();
+    bool IsAppPidScreenCaptureServerStarted(int32_t pid);
     void PostStartScreenCapture(bool isSuccess);
     void PostStartScreenCaptureSuccessAction();
     int32_t InitRecorderInfo(std::shared_ptr<IRecorderService> &recorder, AudioCaptureInfo audioInfo);
@@ -341,6 +342,7 @@ private:
     int32_t StartVideoCapture();
     int32_t StartHomeVideoCapture();
     int32_t StopScreenCaptureInner(AVScreenCaptureStateCode stateCode);
+    bool IsLastAppPidStarted(int32_t pid);
     void PostStopScreenCapture(AVScreenCaptureStateCode stateCode);
     int32_t StopAudioCapture();
     int32_t StopVideoCapture();
