@@ -246,8 +246,7 @@ OH_AVErrCode ConfigureUrl(OH_AVRecorder *recorder, OH_AVRecorder_Config *config)
     if (fileGenerationMode == FileGenerationMode::AUTO_CREATE_CAMERA_SCENE) {
         ret = recorderObj->recorder_->SetFileGenerationMode(fileGenerationMode);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "SetFileGenerationMode failed!");
-    }
-    else {
+    } else {
         ret = MSERR_PARAMETER_VERIFICATION_FAILED;
         const std::string fdHead = "fd://";
         CHECK_AND_RETURN_RET_LOG(url.find(fdHead) != std::string::npos, AV_ERR_INVALID_VAL,
