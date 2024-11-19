@@ -465,7 +465,7 @@ public:
 
     virtual void OnStateChange(AVRecorder_State state, StateChangeReason reason) = 0;
 
-    virtual void OnError(int32_t errorCode, Const char *errorMsg, void *userData) = 0;
+    virtual void OnError(int32_t errorCode, const char *errorMsg, void *userData) = 0;
 
     /**
      * @brief Called when an error occurs during recording. This callback is used to report recording errors.
