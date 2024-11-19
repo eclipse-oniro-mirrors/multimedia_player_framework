@@ -10,13 +10,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
- 
+
 import("//build/test.gni")
 import("//foundation/multimedia/player_framework/config.gni")
- 
+
 ohos_unittest("avmetadata_helper_unit_test") {
   module_out_path = "player_framework/avmetadatahelper"
- 
+
   cflags = [
     "-O2",
     "-fPIC",
@@ -28,7 +28,7 @@ ohos_unittest("avmetadata_helper_unit_test") {
     "-Dprivate=public",
     "-Dprotected=public",
   ]
- 
+
   include_dirs = [
     "./mock",
     "sa_media/ipc",
@@ -80,29 +80,29 @@ ohos_unittest("avmetadata_helper_unit_test") {
     "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/engine_intf",
   ]
- 
+
   if (player_framework_support_avsession_background) {
     include_dirs += [ "player/avsession_background" ]
   }
- 
+
   defines = []
   defines += player_framework_defines
- 
+
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
- 
+
   sources = [
     "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/avmetadatahelper/avmetadata_collector.cpp",
     "avmetadata_collector_unit_test.cpp",
   ]
- 
+
   deps = [
     "$MEDIA_PLAYER_ROOT_DIR/services/dfx:media_service_dfx",
     "$MEDIA_PLAYER_ROOT_DIR/services/dfx:media_service_log_dfx",
     "$MEDIA_PLAYER_ROOT_DIR/services/utils:media_service_utils",
   ]
- 
+
   external_deps = [
     "ability_runtime:ability_connect_callback_stub",
     "access_token:libaccesstoken_sdk",
@@ -140,7 +140,7 @@ ohos_unittest("avmetadata_helper_unit_test") {
     "samgr:samgr_proxy",
     "state_registry:tel_state_registry_api",
   ]
- 
+
   subsystem_name = "multimedia"
   part_name = "player_framework"
 }
