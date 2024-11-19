@@ -221,7 +221,8 @@ HWTEST_F(AVMetaDataCollectorUnitTest, GetTimeByFrameIndex, TestSize.Level1)
     EXPECT_EQ(ret, MSERR_UNSUPPORT_FILE);
     avmetaDataCollector->hasVideo_ = true;
     avmetaDataCollector->videoTrackId_ = 0;
-    EXPECT_CALL(*mediaDemuxer, GetRelativePresentationTimeUsByIndex(_, _, _)).WillRepeatedly(Return(Status::ERROR_INVALID_DATA));
+    EXPECT_CALL(*mediaDemuxer, GetRelativePresentationTimeUsByIndex(_, _, _))
+                .WillRepeatedly(Return(Status::ERROR_INVALID_DATA));
     ret = avmetaDataCollector->GetTimeByFrameIndex(index, timeUs);
     EXPECT_EQ(ret, MSERR_UNSUPPORT_FILE);
     EXPECT_CALL(*mediaDemuxer, GetRelativePresentationTimeUsByIndex(_, _, _)).WillRepeatedly(Return(Status::OK));
@@ -242,7 +243,8 @@ HWTEST_F(AVMetaDataCollectorUnitTest, GetFrameIndexByTime, TestSize.Level1)
     EXPECT_EQ(ret, MSERR_UNSUPPORT_FILE);
     avmetaDataCollector->hasVideo_ = true;
     avmetaDataCollector->videoTrackId_ = 0;
-    EXPECT_CALL(*mediaDemuxer, GetIndexByRelativePresentationTimeUs(_, _, _)).WillRepeatedly(Return(Status::ERROR_INVALID_DATA));
+    EXPECT_CALL(*mediaDemuxer, GetIndexByRelativePresentationTimeUs(_, _, _))
+                .WillRepeatedly(Return(Status::ERROR_INVALID_DATA));
     ret = avmetaDataCollector->GetFrameIndexByTime(timeUs, index);
     EXPECT_EQ(ret, MSERR_UNSUPPORT_FILE);
     EXPECT_CALL(*mediaDemuxer, GetIndexByRelativePresentationTimeUs(_, _, _)).WillRepeatedly(Return(Status::OK));
