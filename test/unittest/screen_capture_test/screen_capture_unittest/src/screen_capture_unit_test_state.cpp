@@ -653,7 +653,7 @@ void ScreenCaptureUnitTest::AudioLoopWithoutRelease(void)
                 MEDIA_LOGE("AcquireAudioBuffer failed, audio buffer is nullptr");
                 continue;
             }
-            MEDIA_LOGD("index audio:%{public}d, audioBufferLen:%{public}d, timestamp:%{public}" 
+            MEDIA_LOGD("index audio:%{public}d, audioBufferLen:%{public}d, timestamp:%{public}" PRId64
                 ", audioSourceType:%{public}d", index_audio_frame++, audioBuffer->length, audioBuffer->timestamp,
                 audioBuffer->sourcetype);
         } else {
