@@ -42,15 +42,15 @@ void UIExtensionAbilityConnection::OnAbilityConnectDone(const AppExecFwk::Elemen
         ["const.multimedia.screencapture.screenrecorderabilityname"]));
     data.WriteString16(u"parameters");
     data.WriteString16(Str8ToStr16(commandStr_));
-    MEDIA_LOGE("UIExtensionAbilityConnection::OnAbilityConnectDone  start ");
+    MEDIA_LOGI("UIExtensionAbilityConnection::OnAbilityConnectDone start");
     remoteObject->SendRequest(IAbilityConnection::ON_ABILITY_CONNECT_DONE, data, reply, option);
-    MEDIA_LOGE("UIExtensionAbilityConnection::OnAbilityConnectDone  end ");
+    MEDIA_LOGI("UIExtensionAbilityConnection::OnAbilityConnectDone end");
 }
 
 void UIExtensionAbilityConnection::OnAbilityDisconnectDone(const AppExecFwk::ElementName &element,
     int32_t resultCode)
 {
-    MEDIA_LOGE("UIExtensionAbilityConnection::OnAbilityDisconnectDone  start ");
+    MEDIA_LOGI("UIExtensionAbilityConnection::OnAbilityDisconnectDone start");
 }
 } // namespace Media
 } // namespace OHOS
