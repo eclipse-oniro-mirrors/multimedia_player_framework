@@ -114,7 +114,7 @@ void ScreenCaptureUnitTestCallback::OnVideoBufferAvailable(bool isReady)
     }
     int32_t length = surfacebuffer->GetSize();
     MEDIA_LOGD("AcquireVideoBuffer, videoBufferLen:%{public}d, videoBufferWidth:%{public}d,"
-        " videoBufferHeight:%{public}d, timestamp:%{public}" PRId64 ", size:%{public}d", surfacebuffer->GetSize(), 
+        " videoBufferHeight:%{public}d, timestamp:%{public}" PRId64 ", size:%{public}d", surfacebuffer->GetSize(),
         surfacebuffer->GetWidth(), surfacebuffer->GetHeight(), timestamp, length);
     frameNumber++;
     DumpVideoBuffer(surfacebuffer, timestamp);
