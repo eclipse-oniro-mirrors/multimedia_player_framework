@@ -56,6 +56,7 @@ private:
     int64_t seekTime_{0};
     std::atomic_bool hasFetchedFrame_{false};
     std::atomic_bool stopProcessing_{false};
+    std::atomic_bool readErrorFlag_{ false };
     std::string trackMime_;
     Plugins::VideoRotation rotation_ = Plugins::VideoRotation::VIDEO_ROTATION_0;
     size_t trackIndex_{0};
@@ -89,6 +90,10 @@ private:
     bool GetSbDynamicMetadata(const sptr<SurfaceBuffer> &buffer, std::vector<uint8_t> &dynamicMetadata);
     bool SetSbStaticMetadata(sptr<SurfaceBuffer> &buffer, const std::vector<uint8_t> &staticMetadata);
     bool SetSbDynamicMetadata(sptr<SurfaceBuffer> &buffer, const std::vector<uint8_t> &dynamicMetadata);
+
+    void HandleFetchFrameYuvRes();
+    void HandleFetchFrameYuvFailed();
+    void HandleFetchFrameAtTimeRes();
 
     void PauseFetchFrame();
 };
