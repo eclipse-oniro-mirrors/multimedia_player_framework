@@ -41,7 +41,7 @@ protected:
     std::string logTag_;
     OH_AVCodec* encoder_ { nullptr };
     std::string codecMime_;
-    CodecState state_;
+    CodecState state_ { CodecState::INIT };
 
 private:
     virtual void CodecOnStreamChangedInner(OH_AVFormat* format) = 0;

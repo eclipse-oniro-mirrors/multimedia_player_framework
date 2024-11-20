@@ -106,7 +106,7 @@ bool RenderSurface::Release()
 
 void* RenderSurface::GetRawSurface() const
 {
-    return (void*)surface_;
+    return static_cast<void*>(surface_);
 }
 }
 }

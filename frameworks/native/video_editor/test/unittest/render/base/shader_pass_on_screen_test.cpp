@@ -29,7 +29,7 @@ protected:
     RenderContext* context_;
     ShaderPassOnScreen* shaderPassOnScreen_;
 
-    void SetUp() override 
+    void SetUp() override
     {
         context_ = new RenderContext();
         shaderPassOnScreen_ = new ShaderPassOnScreen(context_);
