@@ -32,6 +32,7 @@
 #include "image_format_convert.h"
 #include "color_space.h"
 #include "param_wrapper.h"
+#include "hdr_type.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_METADATA, "AVMetadatahelperImpl" };
@@ -393,6 +394,7 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::CreatePixelMapFromSurfaceBuffer(
         RefBase *ref = reinterpret_cast<RefBase *>(nativeBuffer);
         ref->IncStrongRef(ref);
         if (isHdr) {
+            pixelMap->SetHdrType(ImageHdrType::HDR_VIVID_SINGLE);
             pixelMap->InnerSetColorSpace(OHOS::ColorManager::ColorSpace(ColorManager::ColorSpaceName::BT2020_HLG));
         }
         pixelMap->SetPixelsAddr(surfaceBuffer->GetVirAddr(), surfaceBuffer.GetRefPtr(), surfaceBuffer->GetSize(),
@@ -737,7 +739,7 @@ void AVMetadataHelperImpl::ScalePixelMap(
                      (dstWidth <= srcWidth && dstHeight <= srcHeight) &&
                      (dstWidth < srcWidth || dstHeight < srcHeight) && srcWidth > 0 && srcHeight > 0;
     CHECK_AND_RETURN(needScale);
-    pixelMap->scale((1.0f * dstWidth) / srcWidth, (1.0f * dstHeight) / srcHeight);
+    pixelMap->scale((1.0f * dstWidth) / srcWidth, (1.0f * dstHeight) / srcHeight, AntiAliasingOption::LOW);
 }
 
 std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameYuv(int64_t timeUs, int32_t option,
