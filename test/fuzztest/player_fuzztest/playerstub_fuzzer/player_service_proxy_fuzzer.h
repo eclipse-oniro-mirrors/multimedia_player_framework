@@ -99,10 +99,6 @@ public:
     {
         return 0;
     }
-    int32_t GetPlaybackPosition(int32_t &currentTime) override
-    {
-        return 0;
-    }
     int32_t GetVideoTrackInfo(std::vector<Format> &videoTrack) override
     {
         return 0;

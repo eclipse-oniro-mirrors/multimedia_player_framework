@@ -1389,14 +1389,6 @@ int32_t HiPlayerImpl::GetCurrentTime(int32_t& currentPositionMs)
     return TransStatus(Status::OK);
 }
 
-int32_t HiPlayerImpl::GetLiveStreamCurrentTime(int32_t& currentPositionMs)
-{
-    FALSE_RETURN_V(syncManager_ != nullptr, TransStatus(Status::ERROR_NULL_POINTER));
-    currentPositionMs = Plugins::HstTime2Us32(syncManager_->GetMediaTimeNow());
-    MEDIA_LOG_D("GetLiveStreamCurrentTime currentPositionMs: " PUBLIC_LOG_D32, currentPositionMs);
-    return TransStatus(Status::OK);
-}
-
 int32_t HiPlayerImpl::GetDuration(int32_t& durationMs)
 {
     durationMs = durationMs_.load();

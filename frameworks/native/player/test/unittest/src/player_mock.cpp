@@ -558,13 +558,6 @@ int32_t PlayerMock::GetCurrentTime(int32_t &currentTime)
     return player_->GetCurrentTime(currentTime);
 }
 
-int32_t PlayerMock::GetPlaybackPosition(int32_t &currentTime)
-{
-    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
-    std::unique_lock<std::mutex> lock(mutex_);
-    return player_->GetPlaybackPosition(currentTime);
-}
-
 int32_t PlayerMock::GetVideoTrackInfo(std::vector<Format> &videoTrack)
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");

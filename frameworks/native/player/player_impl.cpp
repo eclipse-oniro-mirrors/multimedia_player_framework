@@ -299,13 +299,6 @@ int32_t PlayerImpl::GetCurrentTime(int32_t &currentTime)
     return playerService_->GetCurrentTime(currentTime);
 }
 
-int32_t PlayerImpl::GetPlaybackPosition(int32_t &currentTime)
-{
-    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " GetPlaybackPosition in", FAKE_POINTER(this));
-    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
-    return playerService_->GetPlaybackPosition(currentTime);
-}
-
 int32_t PlayerImpl::GetVideoTrackInfo(std::vector<Format> &videoTrack)
 {
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " GetVideoTrackInfo in", FAKE_POINTER(this));

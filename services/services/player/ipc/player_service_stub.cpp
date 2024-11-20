@@ -177,8 +177,6 @@ void PlayerServiceStub::FillPlayerFuncPart2()
         [this](MessageParcel &data, MessageParcel &reply) { return SetMaxAmplitudeCbStatus(data, reply); } };
     playerFuncs_[SET_DEVICE_CHANGE_CB_STATUS] = { "Player::SetDeviceChangeCbStatus",
         [this](MessageParcel &data, MessageParcel &reply) { return SetDeviceChangeCbStatus(data, reply); } };
-    playerFuncs_[GET_LIVES_CURRENT_TIME] = { "GetPlaybackPosition",
-        [this](MessageParcel &data, MessageParcel &reply) { return GetPlaybackPosition(data, reply); } };
     playerFuncs_[GET_API_VERSION] = { "GetApiVersion",
         [this](MessageParcel &data, MessageParcel &reply) { return GetApiVersion(data, reply); } };
 }
@@ -395,13 +393,6 @@ int32_t PlayerServiceStub::GetCurrentTime(int32_t &currentTime)
     MediaTrace trace("PlayerServiceStub::GetCurrentTime");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
     return playerServer_->GetCurrentTime(currentTime);
-}
-
-int32_t PlayerServiceStub::GetPlaybackPosition(int32_t &currentTime)
-{
-    MediaTrace trace("PlayerServiceStub::GetPlaybackPosition");
-    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
-    return playerServer_->GetPlaybackPosition(currentTime);
 }
 
 int32_t PlayerServiceStub::GetVideoTrackInfo(std::vector<Format> &videoTrack)
@@ -768,16 +759,6 @@ int32_t PlayerServiceStub::GetCurrentTime(MessageParcel &data, MessageParcel &re
     (void)data;
     int32_t currentTime = -1;
     int32_t ret = GetCurrentTime(currentTime);
-    reply.WriteInt32(currentTime);
-    reply.WriteInt32(ret);
-    return MSERR_OK;
-}
-
-int32_t PlayerServiceStub::GetPlaybackPosition(MessageParcel &data, MessageParcel &reply)
-{
-    (void)data;
-    int32_t currentTime = -1;
-    int32_t ret = GetPlaybackPosition(currentTime);
     reply.WriteInt32(currentTime);
     reply.WriteInt32(ret);
     return MSERR_OK;

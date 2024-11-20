@@ -48,7 +48,6 @@ public:
     int32_t ReleaseSync() override;
     int32_t SetVolume(float leftVolume, float rightVolume) override;
     int32_t GetCurrentTime(int32_t &currentTime) override;
-    int32_t GetPlaybackPosition(int32_t &currentTime) override;
     int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override;
     int32_t GetAudioTrackInfo(std::vector<Format> &audioTrack) override;
     int32_t GetVideoTrackInfo(std::vector<Format> &videoTrack) override;
