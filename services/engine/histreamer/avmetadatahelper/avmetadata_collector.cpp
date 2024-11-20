@@ -233,7 +233,7 @@ std::shared_ptr<AVSharedMemory> AVMetaDataCollector::GetArtPicture()
             coverAddr = AnyCast<std::vector<uint8_t>>(mapIt->second);
         }
         CHECK_AND_RETURN_RET_LOG(!(coverAddr.size() == 0 || static_cast<int>(coverAddr.size()) > PICTURE_MAX_SIZE),
-            nullptr, "InvalidArtPictureSize %d", coverAddr.size());
+            nullptr, "InvalidArtPictureSize %zu", coverAddr.size());
         uint8_t *addr = coverAddr.data();
         size_t size = coverAddr.size();
         auto artPicMem =
@@ -244,7 +244,7 @@ std::shared_ptr<AVSharedMemory> AVMetaDataCollector::GetArtPicture()
         }
         errno_t rc = memcpy_s(artPicMem->GetBase(), static_cast<size_t>(artPicMem->GetSize()), addr, size);
         if (rc != EOK) {
-            MEDIA_LOGE("memcpy_s failed, trackCount no %{public}d", index);
+            MEDIA_LOGE("memcpy_s failed, trackCount no %{public}zu", index);
             return nullptr;
         }
         if (artPicMem == nullptr) {
