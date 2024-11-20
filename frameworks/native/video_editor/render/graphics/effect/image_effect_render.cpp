@@ -106,7 +106,10 @@ RenderTexturePtr ImageEffectRender::Render(
         MEDIA_LOGE("image effect render is not ready.");
         return inputRenderTexture;
     }
-
+    if (inputRenderTexture == nullptr) {
+        MEDIA_LOGE("inputRenderTexture is nullptr.");
+        return inputRenderTexture;
+    }
     GLsizei width = inputRenderTexture->Width();
     GLsizei height = inputRenderTexture->Height();
     colorRange_ = colorRange;

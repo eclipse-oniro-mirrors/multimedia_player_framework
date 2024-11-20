@@ -20,6 +20,8 @@
 using namespace testing;
 using namespace testing::ext;
 
+namespace OHOS {
+namespace Media {
 class TaskManagerTest : public testing::Test {
 protected:
     TaskManager* taskManager;
@@ -93,3 +95,5 @@ HWTEST_F(TaskManagerTest, TaskManager_RunTask_ShouldRunTask_WhenFunctionIsValid,
     taskManager->RunTask(func, "testFunction");
     EXPECT_EQ(taskManager->GetTaskCount(), 0);
 }
+} // namespace Media
+} // namespace OHOS

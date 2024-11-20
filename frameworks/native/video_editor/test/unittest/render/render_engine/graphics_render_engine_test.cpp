@@ -25,7 +25,7 @@ namespace Media {
 
 class GraphicsRenderEngineTest : public testing::Test {
 protected:
-    void SetUp() override 
+    void SetUp() override
     {
     }
 

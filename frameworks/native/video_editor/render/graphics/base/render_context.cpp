@@ -76,7 +76,7 @@ bool RenderContext::MakeCurrent(const RenderSurface* surface)
 
     EGLSurface rawSurface = EGL_NO_SURFACE;
     if (surface) {
-        rawSurface = (EGLSurface)(surface->GetRawSurface());
+        rawSurface = static_cast<EGLSurface>(surface->GetRawSurface());
     }
 
     EGLBoolean ret = eglMakeCurrent(display_, rawSurface, rawSurface, context_);
@@ -114,7 +114,7 @@ bool RenderContext::SwapBuffers(const RenderSurface* surface)
         MEDIA_LOGE("[Render] surface is null!");
         return false;
     }
-    EGLSurface rawSurface = (EGLSurface)(surface->GetRawSurface());
+    EGLSurface rawSurface = static_cast<EGLSurface>(surface->GetRawSurface());
     EGLBoolean ret = eglSwapBuffers(display_, rawSurface);
     if (ret != EGL_TRUE) {
         EGLint error = eglGetError();
