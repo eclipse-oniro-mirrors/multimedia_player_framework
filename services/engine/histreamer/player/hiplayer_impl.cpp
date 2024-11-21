@@ -1434,7 +1434,13 @@ int32_t HiPlayerImpl::InitVideoWidthAndHeight()
         MEDIA_LOG_E_SHORT("InitVideoWidthAndHeight failed, as videoTrackInfo is empty!");
         return TransStatus(Status::ERROR_INVALID_OPERATION);
     }
+    uint32_t currentVideoTrackId = demuxer_->GetCurrentVideoTrackId();
     for (auto& videoTrack : videoTrackInfo) {
+        int32_t videoTrackId;
+        videoTrack.GetIntValue("track_index", videoTrackId);
+        if (static_cast<uint32_t>(videoTrackId) != currentVideoTrackId) {
+            continue;
+        }
         int32_t height;
         videoTrack.GetIntValue("height", height);
         int32_t width;
