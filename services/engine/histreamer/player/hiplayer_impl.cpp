@@ -1437,8 +1437,8 @@ int32_t HiPlayerImpl::InitVideoWidthAndHeight()
     int32_t currentVideoTrackId = demuxer_->GetCurrentVideoTrackId();
     for (auto& videoTrack : videoTrackInfo) {
         int32_t videoTrackId;
-        videoTrack.GetIntValue("track_index", videoTrackId);
-        if (currentVideoTrackId != -1 && videoTrackId != currentVideoTrackId) {
+        bool ret = videoTrack.GetIntValue("track_index", videoTrackId);
+        if (ret && currentVideoTrackId != -1 && videoTrackId != currentVideoTrackId) {
             continue;
         }
         int32_t height;
