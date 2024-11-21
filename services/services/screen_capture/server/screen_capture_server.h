@@ -335,7 +335,7 @@ private:
     int32_t StartScreenCaptureStream();
     int32_t StartAudioCapture();
     int32_t AddSaltToSessionId(int32_t id);
-    std::string GetSaltedAudioCaptureThreadName(std::string threadName);
+    std::string GenerateThreadNameByPrefix(std::string threadName);
     int32_t StartStreamInnerAudioCapture();
     int32_t StartStreamMicAudioCapture();
     int32_t StartFileInnerAudioCapture();

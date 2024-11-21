@@ -26,8 +26,8 @@ class UniqueIDGenerator {
 public:
     explicit UniqueIDGenerator(int32_t limit);
     ~UniqueIDGenerator();
-    int32_t getNewID();
-    void returnID(int32_t id);
+    int32_t GetNewID();
+    void ReturnID(int32_t id);
 
 private:
     std::queue<int32_t> availableIDs;

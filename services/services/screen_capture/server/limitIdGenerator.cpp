@@ -37,7 +37,7 @@ UniqueIDGenerator::~UniqueIDGenerator()
     MEDIA_LOGI("0x%{public}06" PRIXPTR "Instances destroy", FAKE_POINTER(this));
 }
 
-int32_t UniqueIDGenerator::getNewID()
+int32_t UniqueIDGenerator::GetNewID()
 {
     std::unique_lock<std::mutex> lock(queueMtx);
     if (availableIDs.empty()) {
@@ -48,7 +48,7 @@ int32_t UniqueIDGenerator::getNewID()
     return id;
 }
 
-void UniqueIDGenerator::returnID(int32_t id)
+void UniqueIDGenerator::ReturnID(int32_t id)
 {
     std::unique_lock<std::mutex> lock(queueMtx);
     if (id < 1 || id > limit_) {

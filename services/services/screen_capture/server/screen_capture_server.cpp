@@ -62,19 +62,19 @@ static const int32_t MAX_SESSION_PER_UID = 8;
 std::shared_mutex mutexServerMapRWGlobal_;
 std::shared_mutex mutexListRWGlobal_;
 
-static void addScreenCaptureServerMap(int32_t sessionId, std::weak_ptr<OHOS::Media::ScreenCaptureServer> server)
+static void AddScreenCaptureServerMap(int32_t sessionId, std::weak_ptr<OHOS::Media::ScreenCaptureServer> server)
 {
     std::unique_lock<std::shared_mutex> lock(mutexServerMapRWGlobal_);
     serverMap.insert(std::make_pair(sessionId, server));
-    MEDIA_LOGI("addScreenCaptureServerMap end, serverMap size: %{public}d.", static_cast<uint32_t>(serverMap.size()));
+    MEDIA_LOGI("AddScreenCaptureServerMap end, serverMap size: %{public}d.", static_cast<uint32_t>(serverMap.size()));
 }
 
-static void removeScreenCaptureServerMap(int32_t sessionId)
+static void RemoveScreenCaptureServerMap(int32_t sessionId)
 {
     std::unique_lock<std::shared_mutex> lock(mutexServerMapRWGlobal_);
     serverMap.erase(sessionId);
-    g_idGenerator.returnID(sessionId);
-    MEDIA_LOGI("removeScreenCaptureServerMap end. sessionId: %{public}d, serverMap size: %{public}d.",
+    g_idGenerator.ReturnID(sessionId);
+    MEDIA_LOGI("RemoveScreenCaptureServerMap end. sessionId: %{public}d, serverMap size: %{public}d.",
         sessionId, static_cast<uint32_t>(serverMap.size()));
 }
 
@@ -131,13 +131,13 @@ static int32_t CountStartedScreenCaptureServerNumByPid(int32_t pid)
     return count;
 }
 
-static void addStartedSessionIdList(int32_t value)
+static void AddStartedSessionIdList(int32_t value)
 {
     std::unique_lock<std::shared_mutex> lock(mutexListRWGlobal_);
     startedSessionIDList_.push_back(value);
 }
 
-static void removeStartedSessionIdList(int32_t value)
+static void RemoveStartedSessionIdList(int32_t value)
 {
     std::unique_lock<std::shared_mutex> lock(mutexListRWGlobal_);
     startedSessionIDList_.remove(value);
@@ -255,13 +255,13 @@ bool ScreenCaptureServer::CanScreenCaptureInstanceBeCreate()
 std::shared_ptr<IScreenCaptureService> ScreenCaptureServer::CreateScreenCaptureNewInstance()
 {
     MEDIA_LOGI("CreateScreenCaptureNewInstance");
-    int32_t id = g_idGenerator.getNewID();
-    CHECK_AND_RETURN_RET_LOG(id != -1, nullptr, "getNewID failed.");
+    int32_t id = g_idGenerator.GetNewID();
+    CHECK_AND_RETURN_RET_LOG(id != -1, nullptr, "GetNewID failed.");
     MEDIA_LOGI("CreateScreenCaptureNewInstance newId: %{public}d", id);
     std::shared_ptr<ScreenCaptureServer> server = std::make_shared<ScreenCaptureServer>();
     CHECK_AND_RETURN_RET_LOG(server != nullptr, nullptr, "Failed to create ScreenCaptureServer.");
     server->SetSessionId(id);
-    addScreenCaptureServerMap(id, server);
+    AddScreenCaptureServerMap(id, server);
     return std::static_pointer_cast<OHOS::Media::IScreenCaptureService>(server);
 }
 
@@ -975,10 +975,10 @@ int32_t ScreenCaptureServer::AddSaltToSessionId(int32_t id)
     return (id + SESSION_ID_SALT) % MAX_SESSION_ID;
 }
 
-std::string ScreenCaptureServer::GetSaltedAudioCaptureThreadName(std::string threadName)
+std::string ScreenCaptureServer::GenerateThreadNameByPrefix(std::string threadName)
 {
     int32_t saltedSessionId = AddSaltToSessionId(sessionId_);
-    MEDIA_LOGI("ScreenCaptureServer::GetSaltedAudioCaptureThreadName threadName: %{public}s,"
+    MEDIA_LOGI("ScreenCaptureServer::GenerateThreadNameByPrefix threadName: %{public}s,"
         "saltedSessionId: %{public}d", threadName.c_str(), saltedSessionId);
     return threadName + std::to_string(saltedSessionId);
 }
@@ -992,7 +992,7 @@ int32_t ScreenCaptureServer::StartStreamInnerAudioCapture()
     if (captureConfig_.audioInfo.innerCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_VALID) {
         MediaTrace trace("ScreenCaptureServer::StartAudioCaptureInner");
         innerCapture = std::make_shared<AudioCapturerWrapper>(captureConfig_.audioInfo.innerCapInfo, screenCaptureCb_,
-            std::string(GetSaltedAudioCaptureThreadName("OS_StreamInnerAudioCap")), contentFilter_);
+            std::string(GenerateThreadNameByPrefix("OS_StreamInnerAudioCap")), contentFilter_);
         int32_t ret = innerCapture->Start(appInfo_);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartAudioCapture innerCapture failed");
     }
@@ -1011,7 +1011,7 @@ int32_t ScreenCaptureServer::StartStreamMicAudioCapture()
         MediaTrace trace("ScreenCaptureServer::StartAudioCaptureMic");
         ScreenCaptureContentFilter contentFilterMic;
         micCapture = std::make_shared<AudioCapturerWrapper>(captureConfig_.audioInfo.micCapInfo, screenCaptureCb_,
-            std::string(GetSaltedAudioCaptureThreadName("OS_StreamMicAudioCap")), contentFilterMic);
+            std::string(GenerateThreadNameByPrefix("OS_StreamMicAudioCap")), contentFilterMic);
         int32_t ret = micCapture->Start(appInfo_);
         if (ret != MSERR_OK) {
             MEDIA_LOGE("StartStreamMicAudioCapture failed");
@@ -1036,7 +1036,7 @@ int32_t ScreenCaptureServer::StartFileInnerAudioCapture()
     if (captureConfig_.audioInfo.innerCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_VALID) {
         MediaTrace trace("ScreenCaptureServer::StartFileInnerAudioCaptureInner");
         innerCapture = std::make_shared<AudioCapturerWrapper>(captureConfig_.audioInfo.innerCapInfo, screenCaptureCb_,
-            std::string(GetSaltedAudioCaptureThreadName("OS_FileInnerAudioCap")), contentFilter_);
+            std::string(GenerateThreadNameByPrefix("OS_FileInnerAudioCap")), contentFilter_);
         int32_t ret = innerCapture->Start(appInfo_);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartFileInnerAudioCapture failed");
         if (isMicrophoneOn_ && audioSource_ && audioSource_->GetSpeakerAliveStatus() &&
@@ -1060,7 +1060,7 @@ int32_t ScreenCaptureServer::StartFileMicAudioCapture()
         MediaTrace trace("ScreenCaptureServer::StartFileMicAudioCaptureInner");
         ScreenCaptureContentFilter contentFilterMic;
         micCapture = std::make_shared<AudioCapturerWrapper>(captureConfig_.audioInfo.micCapInfo, screenCaptureCb_,
-            std::string(GetSaltedAudioCaptureThreadName("OS_FileMicAudioCap")), contentFilterMic);
+            std::string(GenerateThreadNameByPrefix("OS_FileMicAudioCap")), contentFilterMic);
         if (audioSource_) {
             micCapture->SetIsInVoIPCall(audioSource_->GetIsInVoIPCall());
         }
@@ -1191,7 +1191,7 @@ void ScreenCaptureServer::PostStartScreenCaptureSuccessAction()
     int64_t value = ResourceSchedule::ResType::ScreenCaptureStatus::START_SCREEN_CAPTURE;
     ResSchedReportData(value, payload);
     captureState_ = AVScreenCaptureState::STARTED;
-    addStartedSessionIdList(this->sessionId_);
+    AddStartedSessionIdList(this->sessionId_);
     MEDIA_LOGI("sessionId: %{public}d is pushed, now the size of startedSessionIDList_ is: %{public}d",
         this->sessionId_, static_cast<uint32_t>(startedSessionIDList_.size()));
     ScreenCaptureMonitorServer::GetInstance()->CallOnScreenCaptureStarted(appInfo_.appPid);
@@ -2736,7 +2736,7 @@ void ScreenCaptureServer::PostStopScreenCapture(AVScreenCaptureStateCode stateCo
     std::unordered_map<std::string, std::string> payload;
     int64_t value = ResourceSchedule::ResType::ScreenCaptureStatus::STOP_SCREEN_CAPTURE;
     ResSchedReportData(value, payload);
-    removeStartedSessionIdList(this->sessionId_);
+    RemoveStartedSessionIdList(this->sessionId_);
     MEDIA_LOGI("PostStopScreenCapture sessionId: %{public}d is removed from list, list_size is %{public}d.",
         this->sessionId_, static_cast<uint32_t>(startedSessionIDList_.size()));
 }
@@ -2778,7 +2778,7 @@ void ScreenCaptureServer::ReleaseInner()
         MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances ReleaseInner Stop done, sessionId:%{public}d",
             FAKE_POINTER(this), sessionId);
     }
-    removeScreenCaptureServerMap(sessionId);
+    RemoveScreenCaptureServerMap(sessionId);
     skipPrivacyWindowIDsVec_.clear();
     SetMetaDataReport();
     screenCaptureObserverCb_ = nullptr;
