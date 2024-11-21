@@ -20,6 +20,7 @@ group("fuzztest") {
     # deps file
     "avmetadata_fuzztest/avmetadatafetchframeattime_fuzzer:AVmetadataFetchFrameAtTimeFuzzTest",
     "avmetadata_fuzztest/avmetadatafile_fuzzer:AVmetadataFileFuzzTest",
+    "avmetadata_fuzztest/avmetadatahelper_fuzzer:AVmetadataHelperFuzzTest",
     "avmetadata_fuzztest/avmetadataresolvemetadata_fuzzer:AVmetadataResolveMetadataFuzzTest",
     "avmetadata_fuzztest/avmetadatasetsource_fuzzer:AVmetadataSetSourceFuzzTest",
     "avmetadata_fuzztest/avmetadatastub_fuzzer:AVmetadataStubFuzzTest",
