@@ -21,7 +21,7 @@ MEDIA_ROOT_DIR = "//foundation/multimedia/player_framework/"
 ohos_fuzztest("PlayerMp4FuzzTest") {
   module_out_path = module_output_path
   fuzz_config_file =
-      "../../../../test/fuzztest/player_fuzztest/playermp4_fuzzer"
+      "$MEDIA_ROOT_DIR/test/fuzztest/player_fuzztest/playermp4_fuzzer"
 
   include_dirs = [
     "$MEDIA_ROOT_DIR/services/services/player/ipc",
@@ -59,11 +59,11 @@ ohos_fuzztest("PlayerMp4FuzzTest") {
   ]
   if (player_framework_support_player) {
     sources = [
-      "../../../../test/fuzztest/common/stub_common.cpp",
+      "$MEDIA_ROOT_DIR/test/fuzztest/common/stub_common.cpp",
       "playermp4_fuzzer.cpp",
     ]
   }
-  deps = [ "../../../../services/services:media_service" ]
+  deps = [ "$MEDIA_ROOT_DIR/services/services:media_service" ]
   external_deps = [
     "c_utils:utils",
     "graphic_surface:surface",
