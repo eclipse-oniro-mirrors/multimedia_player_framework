@@ -1328,10 +1328,10 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_buffertest_001, T
         sptr<OHOS::SurfaceBuffer> surfacebuffer = screenCapture_->AcquireVideoBuffer(fence, timestamp, damage);
         if (surfacebuffer != nullptr) {
             int32_t length = surfacebuffer->GetSize();
-            cout << "index video:" << index_video_frame++ << "; AcquireVideoBuffer, videoBufferLen:" <<
-                surfacebuffer->GetSize() << ", timestamp:" << timestamp << ", size:"<< length << endl;
+            MEDIA_LOGD("index video:%{public}d, videoBufferLen:%{public}d, timestamp:%{public}" PRId64
+                ", size:%{public}d", index_video_frame++, surfacebuffer->GetSize(), timestamp, length);
         } else {
-            cout << "AcquireVideoBuffer failed" << endl;
+            MEDIA_LOGE("AcquireVideoBuffer failed");
         }
         index--;
     }
@@ -1372,10 +1372,10 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_buffertest_002, T
         sptr<OHOS::SurfaceBuffer> surfacebuffer = screenCapture_->AcquireVideoBuffer(fence, timestamp, damage);
         if (surfacebuffer != nullptr) {
             int32_t length = surfacebuffer->GetSize();
-            cout << "index video:" << index_video_frame++ << "; AcquireVideoBuffer, videoBufferLen:" <<
-                surfacebuffer->GetSize() << ", timestamp:" << timestamp << ", size:"<< length << endl;
+            MEDIA_LOGD("index video:%{public}d, videoBufferLen:%{public}d, timestamp:%{public}" PRId64
+                ", size:%{public}d", index_video_frame++, surfacebuffer->GetSize(), timestamp, length);
         } else {
-            cout << "AcquireVideoBuffer failed" << endl;
+            MEDIA_LOGE("AcquireVideoBuffer failed");
         }
         index--;
     }
@@ -1417,10 +1417,10 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_buffertest_003, T
         sptr<OHOS::SurfaceBuffer> surfacebuffer = screenCapture_->AcquireVideoBuffer(fence, timestamp, damage);
         if (surfacebuffer != nullptr) {
             int32_t length = surfacebuffer->GetSize();
-            cout << "index video:" << index_video_frame++ << "; AcquireVideoBuffer, videoBufferLen:" <<
-                surfacebuffer->GetSize() << ", timestamp:" << timestamp << ", size:"<< length << endl;
+            MEDIA_LOGD("index video:%{public}d, videoBufferLen:%{public}d, timestamp:%{public}" PRId64
+                ", size:%{public}d", index_video_frame++, surfacebuffer->GetSize(), timestamp, length);
         } else {
-            cout << "AcquireVideoBuffer failed" << endl;
+            MEDIA_LOGE("AcquireVideoBuffer failed");
         }
         index--;
     }
@@ -1464,10 +1464,10 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_buffertest_004, T
         sptr<OHOS::SurfaceBuffer> surfacebuffer = screenCapture_->AcquireVideoBuffer(fence, timestamp, damage);
         if (surfacebuffer != nullptr) {
             int32_t length = surfacebuffer->GetSize();
-            cout << "index video:" << index_video_frame++ << "; AcquireVideoBuffer, videoBufferLen:" <<
-                surfacebuffer->GetSize() << ", timestamp:" << timestamp << ", size:"<< length << endl;
+            MEDIA_LOGD("index video:%{public}d, videoBufferLen:%{public}d, timestamp:%{public}" PRId64
+                ", size:%{public}d", index_video_frame++, surfacebuffer->GetSize(), timestamp, length);
         } else {
-            cout << "AcquireVideoBuffer failed" << endl;
+            MEDIA_LOGE("AcquireVideoBuffer failed");
         }
         index--;
     }
@@ -1513,10 +1513,10 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_buffertest_005, T
         sptr<OHOS::SurfaceBuffer> surfacebuffer = screenCapture_->AcquireVideoBuffer(fence, timestamp, damage);
         if (surfacebuffer != nullptr) {
             int32_t length = surfacebuffer->GetSize();
-            cout << "index video:" << index_video_frame++ << "; AcquireVideoBuffer, videoBufferLen:" <<
-                surfacebuffer->GetSize() << ", timestamp:" << timestamp << ", size:"<< length << endl;
+            MEDIA_LOGD("index video:%{public}d, videoBufferLen:%{public}d, timestamp:%{public}" PRId64
+                ", size:%{public}d", index_video_frame++, surfacebuffer->GetSize(), timestamp, length);
         } else {
-            cout << "AcquireVideoBuffer failed" << endl;
+            MEDIA_LOGE("AcquireVideoBuffer failed");
         }
         index--;
     }

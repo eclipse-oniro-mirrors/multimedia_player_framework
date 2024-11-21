@@ -908,7 +908,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_screen_01, TestSize.Lev
     EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_));
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
-    sleep(3);
+    sleep(RECORDER_TIME);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     CloseFile();
@@ -1669,10 +1669,10 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_buffertest_0001, TestSize.Level2)
         sptr<OHOS::SurfaceBuffer> surfacebuffer = screenCapture_->AcquireVideoBuffer(fence, timestamp, damage);
         if (surfacebuffer != nullptr) {
             int32_t length = surfacebuffer->GetSize();
-            cout << "index video:" << index_video_frame++ << "; AcquireVideoBuffer, videoBufferLen:" <<
-                surfacebuffer->GetSize() << ", timestamp:" << timestamp << ", size:"<< length << endl;
+            MEDIA_LOGD("index video:%{public}d, videoBufferLen:%{public}d, timestamp:%{public}" PRId64
+                ", size:%{public}d", index_video_frame++, surfacebuffer->GetSize(), timestamp, length);
         } else {
-            cout << "AcquireVideoBuffer failed" << endl;
+            MEDIA_LOGE("AcquireVideoBuffer failed");
         }
         index--;
     }
@@ -1700,7 +1700,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_buffertest_0002, TestSize.Level2)
     screenCapture_->SetMicrophoneEnabled(isMicrophone);
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
-    int index = 200;
+    int index = 10;
     int index_video_frame = 0;
     audioLoop_ = std::make_unique<std::thread>(&ScreenCaptureUnitTest::AudioLoop, this);
     while (index) {
@@ -1710,11 +1710,11 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_buffertest_0002, TestSize.Level2)
         sptr<OHOS::SurfaceBuffer> surfacebuffer = screenCapture_->AcquireVideoBuffer(fence, timestamp, damage);
         if (surfacebuffer != nullptr) {
             int32_t length = surfacebuffer->GetSize();
-            cout << "index video:" << index_video_frame++ << "; AcquireVideoBuffer, videoBufferLen:" <<
-                surfacebuffer->GetSize() << ", timestamp:" << timestamp << ", size:"<< length << endl;
+            MEDIA_LOGD("index video:%{public}d, videoBufferLen:%{public}d, timestamp:%{public}" PRId64
+                ", size:%{public}d", index_video_frame++, surfacebuffer->GetSize(), timestamp, length);
             screenCapture_->ReleaseVideoBuffer();
         } else {
-            cout << "AcquireVideoBuffer failed" << endl;
+            MEDIA_LOGE("AcquireVideoBuffer failed");
         }
         index--;
     }
@@ -1747,7 +1747,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_buffertest_0003, TestSize.Level2)
     EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_));
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
-    sleep(15);
+    sleep(RECORDER_TIME * 2);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
 }
@@ -1772,7 +1772,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_buffertest_0004, TestSize.Level2)
     EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_));
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
-    sleep(10);
+    sleep(RECORDER_TIME * 2);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
 }
@@ -1797,7 +1797,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_buffertest_0005, TestSize.Level2)
     EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_));
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
-    sleep(10);
+    sleep(RECORDER_TIME * 2);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
 }
@@ -1825,7 +1825,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_buffertest_Rotation, TestSize.Lev
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->SetCanvasRotation(canvasRotation));
-    sleep(10);
+    sleep(RECORDER_TIME * 2);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
 }
@@ -1856,13 +1856,13 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_mic_open_close_open, TestSize.Lev
     EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_));
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
-    sleep(5);
+    sleep(RECORDER_TIME * 2);
     isMicrophone = false;
     screenCapture_->SetMicrophoneEnabled(isMicrophone);
-    sleep(3);
+    sleep(RECORDER_TIME);
     isMicrophone = true;
     screenCapture_->SetMicrophoneEnabled(isMicrophone);
-    sleep(3);
+    sleep(RECORDER_TIME);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     CloseFile();
@@ -1894,13 +1894,13 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_mic_close_open_close, TestSize.Le
     EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_));
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
-    sleep(5);
+    sleep(RECORDER_TIME * 2);
     isMicrophone = true;
     screenCapture_->SetMicrophoneEnabled(isMicrophone);
-    sleep(3);
+    sleep(RECORDER_TIME);
     isMicrophone = false;
     screenCapture_->SetMicrophoneEnabled(isMicrophone);
-    sleep(3);
+    sleep(RECORDER_TIME);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     CloseFile();
@@ -2018,15 +2018,15 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_buffertest_resize_01, TestSize.Le
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_NE(MSERR_OK, screenCapture_->ResizeCanvas(270, 480));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
-    sleep(5);
+    sleep(RECORDER_TIME);
     cout << "screenCapture_->ResizeCanvas start 1" << endl;
     EXPECT_EQ(MSERR_OK, screenCapture_->ResizeCanvas(270, 480));
     cout << "screenCapture_->ResizeCanvas end 1" << endl;
-    sleep(5);
+    sleep(RECORDER_TIME);
     cout << "screenCapture_->ResizeCanvas start 2" << endl;
     EXPECT_EQ(MSERR_OK, screenCapture_->ResizeCanvas(1980, 3520));
     cout << "screenCapture_->ResizeCanvas end 2" << endl;
-    sleep(5);
+    sleep(RECORDER_TIME);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_NE(MSERR_OK, screenCapture_->ResizeCanvas(270, 480));
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
@@ -2098,15 +2098,15 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_with_surface_resize_show_size, Te
     consumer->RegisterConsumerListener(surfaceCb);
 
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCaptureWithSurface(producerSurface));
-    sleep(5);
+    sleep(RECORDER_TIME);
     cout << "screenCapture_->ResizeCanvas start 1" << endl;
     EXPECT_EQ(MSERR_OK, screenCapture_->ResizeCanvas(270, 480));
     cout << "screenCapture_->ResizeCanvas end 1" << endl;
-    sleep(5);
+    sleep(RECORDER_TIME);
     cout << "screenCapture_->ResizeCanvas start 2" << endl;
     EXPECT_EQ(MSERR_OK, screenCapture_->ResizeCanvas(1980, 3520));
     cout << "screenCapture_->ResizeCanvas end 2" << endl;
-    sleep(5);
+    sleep(RECORDER_TIME);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_NE(MSERR_OK, screenCapture_->ResizeCanvas(270, 480));
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());

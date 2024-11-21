@@ -39,53 +39,46 @@ namespace {
 void ScreenCaptureUnitTestCallback::OnError(int32_t errorCode)
 {
     ASSERT_FALSE(screenCapture_->IsErrorCallBackEnabled());
-    cout << "Error received, errorCode:" << errorCode << endl;
 }
 
 void ScreenCaptureUnitTestCallback::OnAudioBufferAvailable(bool isReady, AudioCaptureSourceType type)
 {
-    cout << "OnAudioBufferAvailable S, isReady:" << isReady << endl;
     ASSERT_FALSE(screenCapture_->IsDataCallBackEnabled());
     if (!isReady) {
-        cout << "OnAudioBufferAvailable isReady false E" << endl;
         return;
     }
     std::shared_ptr<AudioBuffer> audioBuffer = nullptr;
     if (screenCapture_->AcquireAudioBuffer(audioBuffer, type) == MSERR_OK) {
         if (audioBuffer == nullptr || audioBuffer->buffer == nullptr) {
-            cout << "AcquireAudioBuffer failed, audio buffer empty, PLEASE CHECK IF IT IS OK!!!" <<
-                "audioBuffer:" << (audioBuffer == nullptr) << endl;
+            MEDIA_LOGE("AcquireAudioBuffer failed, audio buffer empty, PLEASE CHECK IF IT IS OK!!!");
             return;
         }
-        cout << "AcquireAudioBuffer, audioBufferLen:" << audioBuffer->length <<
-            ", timestampe:" << audioBuffer->timestamp << ", audioSourceType:" << audioBuffer->sourcetype << endl;
+        MEDIA_LOGD("AcquireAudioBuffer, audioBufferLen:%{public}d, timeStamp:%{public}" PRId64
+            ", audioSourceType:%{public}d", audioBuffer->length, audioBuffer->timestamp, audioBuffer->sourcetype);
         DumpAudioBuffer(audioBuffer);
     }
     if (!screenCapture_->IsStateChangeCallBackEnabled()) {
         if (aFlag_ == 1) {
-            cout << "OnAudioBufferAvailable ReleaseAudioBuffer" << endl;
             screenCapture_->ReleaseAudioBuffer(type);
         }
     } else {
-        cout << "OnAudioBufferAvailable ReleaseAudioBuffer" << endl;
         screenCapture_->ReleaseAudioBuffer(type);
     }
-    cout << "OnAudioBufferAvailable isReady true E" << endl;
 }
 
 void ScreenCaptureUnitTestCallback::DumpAudioBuffer(std::shared_ptr<AudioBuffer> audioBuffer)
 {
     if ((audioBuffer == nullptr) || (audioBuffer->buffer == nullptr)) {
-        cout << "DumpAudioBuffer audioBuffer or audioBuffer->buffer is nullptr:" << (audioBuffer == nullptr) << endl;
+        MEDIA_LOGE("DumpAudioBuffer audioBuffer or audioBuffer->buffer is nullptr");
         return;
     }
     if (!screenCapture_->IsStateChangeCallBackEnabled()) {
         if (aFile_ == nullptr) {
-            cout << "DumpAudioBuffer aFile_ is nullptr" << endl;
+            MEDIA_LOGD("DumpAudioBuffer aFile_ is nullptr");
             return;
         }
         if (fwrite(audioBuffer->buffer, 1, audioBuffer->length, aFile_) != static_cast<size_t>(audioBuffer->length)) {
-            cout << "DumpAudioBuffer error occurred in fwrite:" << strerror(errno) <<endl;
+            MEDIA_LOGE("DumpAudioBuffer error occurred in fwrite");
         }
         return;
     }
@@ -102,59 +95,51 @@ void ScreenCaptureUnitTestCallback::DumpAudioBuffer(std::shared_ptr<AudioBuffer>
         DumpBuffer(innerAudioFile_, audioBuffer->buffer, audioBuffer->length, audioBuffer->timestamp, bufferType);
         return;
     }
-    cout << "DumpAudioBuffer invalid bufferType:" << bufferType << ", type:" << type << endl;
+    MEDIA_LOGE("DumpAudioBuffer invalid bufferType:%{public}d, type:%{public}d", bufferType, type);
 }
 
 void ScreenCaptureUnitTestCallback::OnVideoBufferAvailable(bool isReady)
 {
-    cout << "OnVideoBufferAvailable S, isReady:" << isReady << endl;
     ASSERT_FALSE(screenCapture_->IsDataCallBackEnabled());
     if (!isReady) {
-        cout << "OnVideoBufferAvailable isReady false E" << endl;
         return;
     }
-    cout << "OnVideoBufferAvailable isReady true" << endl;
     int32_t fence = 0;
     int64_t timestamp = 0;
     OHOS::Rect damage;
     sptr<OHOS::SurfaceBuffer> surfacebuffer = screenCapture_->AcquireVideoBuffer(fence, timestamp, damage);
     if (surfacebuffer == nullptr) {
-        cout << "OnVideoBufferAvailable isReady true, AcquireVideoBuffer failed" << endl;
+        MEDIA_LOGE("surfacebuffer is nullptr");
         return;
     }
     int32_t length = surfacebuffer->GetSize();
-    cout << "AcquireVideoBuffer, videoBufferLen: " << surfacebuffer->GetSize() <<
-        ",  videoBufferWidth:" << surfacebuffer->GetWidth() <<
-        ",  videoBufferHeight:" << surfacebuffer->GetHeight() <<
-        ",  timestamp:" << timestamp << ", size:"<< length << endl;
+    MEDIA_LOGD("AcquireVideoBuffer, videoBufferLen:%{public}d, videoBufferWidth:%{public}d,"
+        " videoBufferHeight:%{public}d, timestamp:%{public}" PRId64 ", size:%{public}d", surfacebuffer->GetSize(),
+        surfacebuffer->GetWidth(), surfacebuffer->GetHeight(), timestamp, length);
     frameNumber++;
     DumpVideoBuffer(surfacebuffer, timestamp);
     if (!screenCapture_->IsStateChangeCallBackEnabled()) {
         if (vFlag_ == 1) {
-            cout << "OnVideoBufferAvailable ReleaseVideoBuffer" << endl;
             screenCapture_->ReleaseVideoBuffer();
         }
     } else {
-        cout << "OnAudioBufferAvailable ReleaseVideoBuffer" << endl;
         screenCapture_->ReleaseVideoBuffer();
     }
-    cout << "OnVideoBufferAvailable isReady true E" << endl;
 }
 
 void ScreenCaptureUnitTestCallback::DumpVideoBuffer(sptr<OHOS::SurfaceBuffer> surfacebuffer, int64_t timestamp)
 {
     if ((surfacebuffer == nullptr) || (surfacebuffer->GetVirAddr() == nullptr)) {
-        cout << "DumpVideoBuffer surfacebuffer or surfacebuffer->GetVirAddr() is nullptr:" <<
-            (surfacebuffer == nullptr) << endl;
+        MEDIA_LOGE("DumpVideoBuffer surfacebuffer or surfacebuffer->GetVirAddr() is nullptr");
         return;
     }
     if (!screenCapture_->IsStateChangeCallBackEnabled()) {
         if (vFile_ == nullptr) {
-            cout << "DumpVideoBuffer vFile_ is nullptr" << endl;
+            MEDIA_LOGE("DumpVideoBuffer vFile_ is nullptr");
             return;
         }
         if (fwrite(surfacebuffer->GetVirAddr(), 1, surfacebuffer->GetSize(), vFile_) != surfacebuffer->GetSize()) {
-            cout << "DumpVideoBuffer error occurred in fwrite:" << strerror(errno) <<endl;
+            MEDIA_LOGE("DumpVideoBuffer error occurred in fwrite");
         }
         return;
     }
@@ -165,14 +150,13 @@ void ScreenCaptureUnitTestCallback::DumpVideoBuffer(sptr<OHOS::SurfaceBuffer> su
 void ScreenCaptureUnitTestCallback::OnError(int32_t errorCode, void *userData)
 {
     ASSERT_TRUE(screenCapture_->IsErrorCallBackEnabled());
-    cout << "Error received, errorCode:" << errorCode << ", userData:" << userData << endl;
+    MEDIA_LOGE("Error received, errorCode:%{public}d", errorCode);
 }
 
 void ScreenCaptureUnitTestCallback::OnStateChange(AVScreenCaptureStateCode stateCode)
 {
     MEDIA_LOGI("ScreenCaptureUnitTestCallback::OnStateChange stateCode:%{public}d", stateCode);
     screenCaptureState_ = stateCode;
-    cout << "OnStateChange received, stateCode:" << stateCode << endl;
 }
 
 void ScreenCaptureUnitTestCallback::OnBufferAvailable(std::shared_ptr<AVBuffer> buffer,
@@ -181,7 +165,6 @@ void ScreenCaptureUnitTestCallback::OnBufferAvailable(std::shared_ptr<AVBuffer> 
     ASSERT_TRUE(screenCapture_->IsDataCallBackEnabled());
     MEDIA_LOGD("ScreenCaptureUnitTestCallback::OnBufferAvailable bufferType:%{public}d, timestamp:%{public}" PRId64,
         bufferType, timestamp);
-    cout << "OnBufferAvailable received, bufferType:" << bufferType << ", timestamp:" << timestamp << endl;
     if (buffer == nullptr || buffer->memory_ == nullptr) {
         return;
     }
@@ -191,8 +174,6 @@ void ScreenCaptureUnitTestCallback::OnBufferAvailable(std::shared_ptr<AVBuffer> 
             if (surfaceBuffer == nullptr || surfaceBuffer->GetVirAddr() == nullptr) {
                 MEDIA_LOGW("OnBufferAvailable videoBuffer received is nullptr, PLEASE CHECK IF IT IS OK!!!"
                     "bufferType:%{public}d, timestamp:%{public}" PRId64, bufferType, timestamp);
-                cout << "OnBufferAvailable videoBuffer received is nullptr, PLEASE CHECK IF IT IS OK!!!" <<
-                    "bufferType:" << bufferType << ", timestamp:" << timestamp << (surfaceBuffer == nullptr) <<endl;
                 return;
             }
             ProcessVideoBuffer(surfaceBuffer, timestamp);
@@ -204,16 +185,14 @@ void ScreenCaptureUnitTestCallback::OnBufferAvailable(std::shared_ptr<AVBuffer> 
             if (auduioBuffer == nullptr) {
                 MEDIA_LOGW("OnBufferAvailable audioBuffer received is nullptr, PLEASE CHECK IF IT IS OK!!!"
                     "bufferType:%{public}d, timestamp:%{public}" PRId64, bufferType, timestamp);
-                cout << "OnBufferAvailable audioBuffer received is nullptr, PLEASE CHECK IF IT IS OK!!!" <<
-                    "bufferType:" << bufferType << ", timestamp:" << timestamp << endl;
                 return;
             }
             ProcessAudioBuffer(auduioBuffer, buffer->memory_->GetSize(), timestamp, bufferType);
             break;
         }
         default:
-            cout << "OnBufferAvailable received invalid bufferType:" << bufferType <<
-                ", timestamp:" << timestamp << endl;
+            MEDIA_LOGE("OnBufferAvailable received invalid bufferType:%{public}d, timestamp:%{public}" PRId64,
+                bufferType, timestamp);
             break;
     }
 }
@@ -221,15 +200,15 @@ void ScreenCaptureUnitTestCallback::OnBufferAvailable(std::shared_ptr<AVBuffer> 
 void ScreenCaptureUnitTestCallback::DumpBuffer(FILE *file, uint8_t *buffer, int32_t size, int64_t timestamp,
     AVScreenCaptureBufferType bufferType)
 {
-    cout << "DumpBuffer, bufferLen:" << size << ", bufferType:" << bufferType << ", timestamp:" << timestamp << endl;
+    MEDIA_LOGD("DumpBuffer, bufferLen:%{public}d, bufferType:%{public}d, timestamp:%{public}" PRId64, size,
+        bufferType, timestamp);
     if ((file == nullptr) || (buffer == nullptr)) {
-        cout << "DumpBuffer failed, file:" << (file == nullptr) << ", buffer:" << (buffer == nullptr) <<
-            ", bufferLen:" << size << ", bufferType:" << bufferType << ", timestamp:" << timestamp << endl;
+        MEDIA_LOGE("file or buffer is nullptr");
         return;
     }
     if (fwrite(buffer, 1, size, file) != static_cast<size_t>(size)) {
-        cout << "error occurred in fwrite:" << strerror(errno) << ", bufferType:" << bufferType <<
-            ", timestamp:" << timestamp << endl;
+        MEDIA_LOGE("error occurred in fwrite");
+        return;
     }
 }
 
@@ -280,7 +259,7 @@ void ScreenCaptureUnitTestCallback::ProcessAudioBuffer(uint8_t *buffer, int32_t 
         CheckDataCallbackAudio(AudioCaptureSourceType::MIC, micAudioFlag_);
         return;
     }
-    cout << "ProcessAudioBuffer invalid bufferType:" << bufferType << endl;
+    MEDIA_LOGE("DumpAudioBuffer invalid bufferType:%{public}d", bufferType);
 }
 
 int32_t ScreenCaptureUnitTestCallback::GetFrameNumber()
@@ -645,15 +624,15 @@ void ScreenCaptureUnitTest::AudioLoop(void)
         AudioCaptureSourceType type = MIC;
         if (screenCapture_->AcquireAudioBuffer(audioBuffer, type) == MSERR_OK) {
             if (audioBuffer == nullptr) {
-                cout << "AcquireAudioBuffer failed, audio buffer is nullptr" << endl;
+                MEDIA_LOGE("AcquireAudioBuffer failed, audio buffer is nullptr");
                 continue;
             }
-            cout << "index audio:" << index_audio_frame++ << ", AcquireAudioBuffer, audioBufferLen:" <<
-                audioBuffer->length << ", timestampe:" << audioBuffer->timestamp << ", audioSourceType:" <<
-                audioBuffer->sourcetype << endl;
+            MEDIA_LOGD("index audio:%{public}d, audioBufferLen:%{public}d, timestamp:%{public}" PRId64
+                ", audioSourceType:%{public}d", index_audio_frame++, audioBuffer->length, audioBuffer->timestamp,
+                audioBuffer->sourcetype);
             screenCapture_->ReleaseAudioBuffer(type);
         } else {
-            cout << "AcquireAudioBuffer failed" << endl;
+            MEDIA_LOGE("AcquireAudioBuffer failed");
         }
         index_--;
     }
@@ -671,14 +650,14 @@ void ScreenCaptureUnitTest::AudioLoopWithoutRelease(void)
         AudioCaptureSourceType type = MIC;
         if (screenCapture_->AcquireAudioBuffer(audioBuffer, type) == MSERR_OK) {
             if (audioBuffer == nullptr) {
-                cout << "AcquireAudioBuffer failed, audio buffer is nullptr" << endl;
+                MEDIA_LOGE("AcquireAudioBuffer failed, audio buffer is nullptr");
                 continue;
             }
-            cout << "index audio:" << index_audio_frame++ << ", AcquireAudioBuffer, audioBufferLen:" <<
-                audioBuffer->length << ", timestampe:" << audioBuffer->timestamp << ", audioSourceType:" <<
-                audioBuffer->sourcetype << endl;
+            MEDIA_LOGD("index audio:%{public}d, audioBufferLen:%{public}d, timestamp:%{public}" PRId64
+                ", audioSourceType:%{public}d", index_audio_frame++, audioBuffer->length, audioBuffer->timestamp,
+                audioBuffer->sourcetype);
         } else {
-            cout << "AcquireAudioBuffer failed" << endl;
+            MEDIA_LOGE("AcquireAudioBuffer failed");
         }
         index_--;
     }
@@ -692,12 +671,11 @@ void ScreenCapBufferDemoConsumerListener::OnBufferAvailable()
     OHOS::sptr<OHOS::SurfaceBuffer> buffer = nullptr;
     consumer_->AcquireBuffer(buffer, flushFence, timestamp, damage);
     if (buffer != nullptr) {
-        cout << "AcquireBuffer, videoBufferLen: " << buffer->GetSize() <<
-        ",  videoBufferWidth: " << buffer->GetWidth() <<
-        ",  videoBufferHeight: " << buffer->GetHeight() <<
-        ",  timestamp: " << timestamp << endl;
+        MEDIA_LOGD("AcquireBuffer, videoBufferLen:%{public}d, videoBufferWidth:%{public}d,"
+            "videoBufferHeight:%{public}d, timestamp:%{public}" PRId64, buffer->GetSize(), buffer->GetWidth(),
+            buffer->GetHeight(), timestamp);
     } else {
-        cout << "buffer empty" << endl;
+        MEDIA_LOGE("buffer empty");
     }
     consumer_->ReleaseBuffer(buffer, flushFence);
 }
