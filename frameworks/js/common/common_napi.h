@@ -82,14 +82,15 @@ public:
     static bool GetPropertyBool(napi_env env, napi_value configObj, const std::string &type, bool &result);
 
     static void ConvertDeviceInfoToAudioDeviceDescriptor(
-        sptr<AudioStandard::AudioDeviceDescriptor> audioDeviceDescriptor,
+        std::shared_ptr<AudioStandard::AudioDeviceDescriptor> audioDeviceDescriptor,
         const AudioStandard::AudioDeviceDescriptor &deviceInfo);
     static napi_status SetValueDeviceInfo(const napi_env &env, const AudioStandard::AudioDeviceDescriptor &deviceInfo,
         napi_value &result);
     static napi_status SetDeviceDescriptor(const napi_env &env, const AudioStandard::AudioDeviceDescriptor &deviceInfo,
         napi_value &result);
     static napi_status SetDeviceDescriptors(const napi_env &env,
-        const std::vector<sptr<AudioStandard::AudioDeviceDescriptor>> &deviceDescriptors, napi_value &result);
+        const std::vector<std::shared_ptr<AudioStandard::AudioDeviceDescriptor>> &deviceDescriptors,
+        napi_value &result);
 };
 
 class MediaJsResult {

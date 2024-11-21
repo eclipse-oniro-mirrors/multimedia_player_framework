@@ -874,7 +874,7 @@ bool CommonNapi::GetPropertyBool(napi_env env, napi_value configObj, const std::
 }
 
 void CommonNapi::ConvertDeviceInfoToAudioDeviceDescriptor(
-    sptr<AudioStandard::AudioDeviceDescriptor> audioDeviceDescriptor,
+    std::shared_ptr<AudioStandard::AudioDeviceDescriptor> audioDeviceDescriptor,
     const AudioStandard::AudioDeviceDescriptor &deviceInfo)
 {
     CHECK_AND_RETURN_LOG(audioDeviceDescriptor != nullptr, "audioDeviceDescriptor is nullptr");
@@ -948,7 +948,7 @@ napi_status CommonNapi::SetDeviceDescriptor(const napi_env &env, const AudioStan
 }
 
 napi_status CommonNapi::SetDeviceDescriptors(const napi_env &env,
-    const std::vector<sptr<AudioStandard::AudioDeviceDescriptor>> &deviceDescriptors, napi_value &result)
+    const std::vector<std::shared_ptr<AudioStandard::AudioDeviceDescriptor>> &deviceDescriptors, napi_value &result)
 {
     napi_status status = napi_create_array_with_length(env, deviceDescriptors.size(), &result);
     for (size_t i = 0; i < deviceDescriptors.size(); i++) {
@@ -964,9 +964,9 @@ napi_status CommonNapi::SetDeviceDescriptors(const napi_env &env,
 napi_status CommonNapi::SetValueDeviceInfo(const napi_env &env, const AudioStandard::AudioDeviceDescriptor &deviceInfo,
     napi_value &result)
 {
-    std::vector<sptr<AudioStandard::AudioDeviceDescriptor>> deviceDescriptors;
-    sptr<AudioStandard::AudioDeviceDescriptor> audioDeviceDescriptor =
-        new(std::nothrow) AudioStandard::AudioDeviceDescriptor();
+    std::vector<std::shared_ptr<AudioStandard::AudioDeviceDescriptor>> deviceDescriptors;
+    std::shared_ptr<AudioStandard::AudioDeviceDescriptor> audioDeviceDescriptor =
+        std::make_shared<AudioStandard::AudioDeviceDescriptor>();
     CHECK_AND_RETURN_RET_LOG(audioDeviceDescriptor != nullptr, napi_generic_failure,
         "audioDeviceDescriptor malloc failed");
     ConvertDeviceInfoToAudioDeviceDescriptor(audioDeviceDescriptor, deviceInfo);
