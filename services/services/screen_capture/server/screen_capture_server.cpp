@@ -52,6 +52,7 @@ namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "ScreenCaptureServer"};
 static std::map<int32_t, std::weak_ptr<OHOS::Media::ScreenCaptureServer>> serverMap;
 static const int32_t MAX_SESSION_ID = 256;
+static const int32_t SESSION_ID_SALT = 10;
 static UniqueIDGenerator g_idGenerator(MAX_SESSION_ID);
 static std::list<int32_t> startedSessionIDList_;
 static const int32_t MAX_SESSION_PER_UID = 8;
@@ -967,6 +968,21 @@ int32_t ScreenCaptureServer::StartAudioCapture()
     return MSERR_OK;
 }
 
+int32_t ScreenCaptureServer::AddSaltToSessionId(int32_t id)
+{
+    MEDIA_LOGI("AddSaltToSessionId initId: %{public}d, newId: %{public}d", id,
+        (id + SESSION_ID_SALT) % MAX_SESSION_ID);
+    return (id + SESSION_ID_SALT) % MAX_SESSION_ID;
+}
+
+std::string ScreenCaptureServer::GetSaltedAudioCaptureThreadName(std::string threadName)
+{
+    int32_t saltedSessionId = AddSaltToSessionId(sessionId_);
+    MEDIA_LOGI("ScreenCaptureServer::GetSaltedAudioCaptureThreadName threadName: %{public}s,"
+        "saltedSessionId: %{public}d", threadName.c_str(), saltedSessionId);
+    return threadName + std::to_string(saltedSessionId);
+}
+
 int32_t ScreenCaptureServer::StartStreamInnerAudioCapture()
 {
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StartStreamInnerAudioCapture start, dataType:%{public}d,"
@@ -976,7 +992,7 @@ int32_t ScreenCaptureServer::StartStreamInnerAudioCapture()
     if (captureConfig_.audioInfo.innerCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_VALID) {
         MediaTrace trace("ScreenCaptureServer::StartAudioCaptureInner");
         innerCapture = std::make_shared<AudioCapturerWrapper>(captureConfig_.audioInfo.innerCapInfo, screenCaptureCb_,
-            std::string("OS_InnerAudioCapture"), contentFilter_);
+            std::string(GetSaltedAudioCaptureThreadName("OS_StreamInnerAudioCap")), contentFilter_);
         int32_t ret = innerCapture->Start(appInfo_);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartAudioCapture innerCapture failed");
     }
@@ -995,7 +1011,7 @@ int32_t ScreenCaptureServer::StartStreamMicAudioCapture()
         MediaTrace trace("ScreenCaptureServer::StartAudioCaptureMic");
         ScreenCaptureContentFilter contentFilterMic;
         micCapture = std::make_shared<AudioCapturerWrapper>(captureConfig_.audioInfo.micCapInfo, screenCaptureCb_,
-            std::string("OS_MicAudioCapture"), contentFilterMic);
+            std::string(GetSaltedAudioCaptureThreadName("OS_StreamMicAudioCap")), contentFilterMic);
         int32_t ret = micCapture->Start(appInfo_);
         if (ret != MSERR_OK) {
             MEDIA_LOGE("StartStreamMicAudioCapture failed");
@@ -1020,7 +1036,7 @@ int32_t ScreenCaptureServer::StartFileInnerAudioCapture()
     if (captureConfig_.audioInfo.innerCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_VALID) {
         MediaTrace trace("ScreenCaptureServer::StartFileInnerAudioCaptureInner");
         innerCapture = std::make_shared<AudioCapturerWrapper>(captureConfig_.audioInfo.innerCapInfo, screenCaptureCb_,
-            std::string("OS_InnerAudioCapture"), contentFilter_);
+            std::string(GetSaltedAudioCaptureThreadName("OS_FileInnerAudioCap")), contentFilter_);
         int32_t ret = innerCapture->Start(appInfo_);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartFileInnerAudioCapture failed");
         if (isMicrophoneOn_ && audioSource_ && audioSource_->GetSpeakerAliveStatus() &&
@@ -1044,7 +1060,7 @@ int32_t ScreenCaptureServer::StartFileMicAudioCapture()
         MediaTrace trace("ScreenCaptureServer::StartFileMicAudioCaptureInner");
         ScreenCaptureContentFilter contentFilterMic;
         micCapture = std::make_shared<AudioCapturerWrapper>(captureConfig_.audioInfo.micCapInfo, screenCaptureCb_,
-            std::string("OS_MicAudioCapture"), contentFilterMic);
+            std::string(GetSaltedAudioCaptureThreadName("OS_FileMicAudioCap")), contentFilterMic);
         if (audioSource_) {
             micCapture->SetIsInVoIPCall(audioSource_->GetIsInVoIPCall());
         }

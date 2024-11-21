@@ -27,7 +27,7 @@ UniqueIDGenerator::UniqueIDGenerator(int32_t limit)
     MEDIA_LOGI("0x%{public}06" PRIXPTR "Instances create", FAKE_POINTER(this));
     limit_ = limit;
     std::unique_lock<std::mutex> lock(queueMtx);
-    for (int32_t i = 1; i < limit_; i++) {
+    for (int32_t i = 1; i <= limit_; i++) {
         availableIDs.push(i);
     }
 }
