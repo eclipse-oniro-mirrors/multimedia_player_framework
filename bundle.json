@@ -121,7 +121,11 @@
           "skia",
           "camera_framework",
           "drivers_interface_camera",
-          "image_effect"
+          "image_effect",
+          "jsoncpp",
+          "memmgr",
+          "memmgr_override",
+          "efficiency_manager"
         ],
         "third_party": [
           "bounds_checking_function"
