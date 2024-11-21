@@ -877,14 +877,14 @@ HWTEST_F(ScreenCaptureServerFunctionTest, Create_001, TestSize.Level2)
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
 HWTEST_F(ScreenCaptureServerFunctionTest, RequestUserPrivacyAuthority_001, TestSize.Level2)
 {
-    screenCaptureServer_->appInfo_.appUid = ROOT_UID;
+    screenCaptureServer_->appInfo_.appUid = ScreenCaptureServer::ROOT_UID;
     screenCaptureServer_->isPrivacyAuthorityEnabled_ = true;
     ASSERT_EQ(screenCaptureServer_->RequestUserPrivacyAuthority(), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, RequestUserPrivacyAuthority_002, TestSize.Level2)
 {
-    screenCaptureServer_->appInfo_.appUid = ROOT_UID;
+    screenCaptureServer_->appInfo_.appUid = ScreenCaptureServer::ROOT_UID;
     screenCaptureServer_->isPrivacyAuthorityEnabled_ = true;
     screenCaptureServer_->appName_ = ScreenRecorderBundleName;
     ASSERT_EQ(screenCaptureServer_->RequestUserPrivacyAuthority(), MSERR_OK);
@@ -892,14 +892,14 @@ HWTEST_F(ScreenCaptureServerFunctionTest, RequestUserPrivacyAuthority_002, TestS
 
 HWTEST_F(ScreenCaptureServerFunctionTest, RequestUserPrivacyAuthority_003, TestSize.Level2)
 {
-    screenCaptureServer_->appInfo_.appUid = ROOT_UID + 1;
+    screenCaptureServer_->appInfo_.appUid = ScreenCaptureServer::ROOT_UID + 1;
     screenCaptureServer_->isPrivacyAuthorityEnabled_ = true;
     ASSERT_NE(screenCaptureServer_->RequestUserPrivacyAuthority(), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, RequestUserPrivacyAuthority_004, TestSize.Level2)
 {
-    screenCaptureServer_->appInfo_.appUid = ROOT_UID + 1;
+    screenCaptureServer_->appInfo_.appUid = ScreenCaptureServer::ROOT_UID + 1;
     screenCaptureServer_->isPrivacyAuthorityEnabled_ = true;
     screenCaptureServer_->appName_ = ScreenRecorderBundleName;
     ASSERT_EQ(screenCaptureServer_->RequestUserPrivacyAuthority(), MSERR_OK);
@@ -968,14 +968,14 @@ HWTEST_F(ScreenCaptureServerFunctionTest, RepeatPauseAudioCapture_001, TestSize.
 
 HWTEST_F(ScreenCaptureServerFunctionTest, UpdatePrivacyUsingPermissionState_001, TestSize.Level2)
 {
-    screenCaptureServer_->appInfo_.appUid = ROOT_UID;
+    screenCaptureServer_->appInfo_.appUid = ScreenCaptureServer::ROOT_UID;
     ASSERT_EQ(screenCaptureServer_->UpdatePrivacyUsingPermissionState(START_VIDEO), true);
     ASSERT_EQ(screenCaptureServer_->UpdatePrivacyUsingPermissionState(STOP_VIDEO), true);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, UpdatePrivacyUsingPermissionState_002, TestSize.Level2)
 {
-    screenCaptureServer_->appInfo_.appUid = ROOT_UID + 1;
+    screenCaptureServer_->appInfo_.appUid = ScreenCaptureServer::ROOT_UID + 1;
     ASSERT_EQ(screenCaptureServer_->UpdatePrivacyUsingPermissionState(START_VIDEO), false);
     ASSERT_EQ(screenCaptureServer_->UpdatePrivacyUsingPermissionState(STOP_VIDEO), false);
 }
@@ -1071,7 +1071,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StartScreenCaptureInner_001, TestSize.
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    screenCaptureServer_->appInfo_.appUid = ROOT_UID + 1;
+    screenCaptureServer_->appInfo_.appUid = ScreenCaptureServer::ROOT_UID + 1;
     ASSERT_EQ(screenCaptureServer_->StartScreenCaptureInner(false), MSERR_OK);
 }
 
@@ -1094,6 +1094,21 @@ HWTEST_F(ScreenCaptureServerFunctionTest, IsTelInCallSkipList_003, TestSize.Leve
     screenCaptureServer_->isCalledBySystemApp_ = false;
     screenCaptureServer_->appName_ = "";
     ASSERT_EQ(screenCaptureServer_->IsTelInCallSkipList(), false);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, GetStringByResourceName_001, TestSize.Level2)
+{
+    screenCaptureServer_->InitResourceManager();
+    std::string liveViewText = ScreenCaptureServer::QUOTATION_MARKS_STRING;
+    liveViewText += screenCaptureServer_->GetStringByResourceName(
+        ScreenCaptureServer::NOTIFICATION_SCREEN_RECORDING_TITLE_ID).c_str();
+    MEDIA_LOGI("GetStringByResourceName liveViewText: %{public}s", liveViewText.c_str());
+    ASSERT_EQ(screenCaptureServer_->GetStringByResourceName(
+        ScreenCaptureServer::NOTIFICATION_SCREEN_RECORDING_TITLE_ID).size() > 0, true);
+    ASSERT_EQ(screenCaptureServer_->GetStringByResourceName("NOT_EXITS_ID").size() == 0, true);
+    screenCaptureServer_->resourceManager_ = nullptr;
+    ASSERT_EQ(screenCaptureServer_->GetStringByResourceName(
+        ScreenCaptureServer::NOTIFICATION_SCREEN_RECORDING_TITLE_ID).size() > 0, false);
 }
 } // Media
 } // OHOS

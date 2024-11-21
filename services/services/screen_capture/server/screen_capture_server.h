@@ -387,6 +387,9 @@ private:
     int32_t ReStartMicForVoIPStatusSwitch();
     void RegisterPrivateWindowListener();
     uint64_t GetDisplayIdOfWindows(uint64_t displayId);
+    std::string GetStringByResourceName(const char* name);
+    void RefreshResConfig();
+    void InitResourceManager();
 
 private:
     std::mutex mutex_;
@@ -444,6 +447,8 @@ private:
     std::vector<uint64_t> skipPrivacyWindowIDsVec_;
     sptr<DisplayManager::IPrivateWindowListener> displayListener_;
     bool isCalledBySystemApp_ = false;
+    Global::Resource::ResourceManager *resourceManager_ = nullptr;
+    Global::Resource::ResConfig *resConfig_ = nullptr;
 private:
     static int32_t CheckAudioCapParam(const AudioCaptureInfo &audioCapInfo);
     static int32_t CheckVideoCapParam(const VideoCaptureInfo &videoCapInfo);
@@ -468,6 +473,8 @@ private:
     static constexpr int32_t VIDEO_FRAME_HEIGHT_MAX = 4320;
     static constexpr int32_t SESSION_ID_INVALID = -1;
     static constexpr int32_t AV_SCREEN_CAPTURE_SESSION_UID = 1013;
+    static constexpr const char* NOTIFICATION_SCREEN_RECORDING_TITLE_ID = "notification_screen_recording_title";
+    static constexpr const char* QUOTATION_MARKS_STRING = "\"";
 };
 } // namespace Media
 } // namespace OHOS
