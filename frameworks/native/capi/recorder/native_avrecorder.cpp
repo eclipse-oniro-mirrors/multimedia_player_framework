@@ -54,29 +54,17 @@ typedef struct OH_AVRecorderCallback {
     OH_AVRecorder_OnError onError;
 } OH_AVRecorderCallback;
 
-OH_AVRecorder_StateChangeReason ConvertStateChangeReason(StateChangeReason reason)
-{
-    switch (reason) {
-        case StateChangeReason::USER:
-            return OH_AVRecorder_StateChangeReason::USER;
-        case StateChangeReason::BACKGROUND:
-            return OH_AVRecorder_StateChangeReason::BACKGROUND;
-        default:
-            return OH_AVRecorder_StateChangeReason::USER;
-    }
-}
-
 class NativeRecorderStateChangeCallback {
 public:
     NativeRecorderStateChangeCallback(OH_AVRecorder_OnStateChange callback, void *userData)
         : callback_(callback), userData_(userData) {}
     virtual ~NativeRecorderStateChangeCallback() = default;
 
-    void OnStateChange(struct OH_AVRecorder *recorder, AVRecorder_State state, StateChangeReason reason)
+    void OnStateChange(struct OH_AVRecorder *recorder, OH_AVRecorder_State state,
+        OH_AVRecorder_StateChangeReason reason)
     {
         CHECK_AND_RETURN(recorder != nullptr && callback_ != nullptr);
-        callback_(recorder, static_cast<OH_AVRecorder_State>(state),
-            ConvertStateChangeReason(reason), userData_);
+        callback_(recorder, static_cast<OH_AVRecorder_State>(state), reason, userData_);
     }
 
 private:
@@ -107,7 +95,7 @@ public:
         : recorder_(recorder), callback_(callback) {}
     virtual ~NativeRecorderCallback() = default;
 
-    void OnStateChange(AVRecorder_State state, StateChangeReason reason) override
+    void OnStateChange(OH_AVRecorder_State state, OH_AVRecorder_StateChangeReason reason)
     {
         MEDIA_LOGI("OnStateChange() is called, state: %{public}d", state);
         std::shared_lock<std::shared_mutex> lock(mutex_);
@@ -119,7 +107,7 @@ public:
         }
     }
 
-    void OnError(int32_t errorCode, const char *errorMsg, void *userData) override
+    void OnError(int32_t errorCode, const char *errorMsg, void *userData)
     {
         MEDIA_LOGE("OnError() is called, errorCode: %{public}d, errorMsg: %{public}s", errorCode, errorMsg);
         std::shared_lock<std::shared_mutex> lock(mutex_);
@@ -135,6 +123,7 @@ public:
             return;
         }
     }
+
     void OnError(RecorderErrorType errorType, int32_t errorCode) override
     {
         // No specific implementation is required and can be left blank.
