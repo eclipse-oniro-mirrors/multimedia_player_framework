@@ -32,7 +32,6 @@ ohos_fuzztest("PlayerMp4FuzzTest") {
     "$MEDIA_ROOT_DIR/interfaces/inner_api/native",
     "$MEDIA_ROOT_DIR/test/fuzztest/common",
     "$MEDIA_ROOT_DIR/interfaces/inner_api/native",
-    "$MEDIA_PLAYER_GRAPHIC/../graphic_surface/surface/include",
   ]
   cflags = [
     "-std=c++17",
