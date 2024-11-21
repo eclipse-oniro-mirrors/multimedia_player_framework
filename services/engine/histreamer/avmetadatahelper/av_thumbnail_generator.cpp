@@ -288,6 +288,7 @@ std::shared_ptr<AVBuffer> AVThumbnailGenerator::FetchFrameYuv(int64_t timeUs, in
                static_cast<int32_t>(param.colorFormat));
     CHECK_AND_RETURN_RET_LOG(mediaDemuxer_ != nullptr, nullptr, "FetchFrameAtTime demuxer is nullptr");
     avBuffer_ = nullptr;
+    readErrorFlag_ = false;
     hasFetchedFrame_ = false;
     outputConfig_ = param;
     seekTime_ = timeUs;
