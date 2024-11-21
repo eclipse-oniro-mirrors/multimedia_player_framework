@@ -45,6 +45,7 @@ AccountObserver::~AccountObserver()
 
 bool AccountObserver::RegisterAccountObserverCallBack(std::weak_ptr<AccountObserverCallBack> callback)
 {
+    MEDIA_LOGI("AccountObserver::RegisterAccountObserverCallBack START.");
     std::unique_lock<std::mutex> lock(mutex_);
     auto callbackPtr = callback.lock();
     if (callbackPtr) {
@@ -55,13 +56,20 @@ bool AccountObserver::RegisterAccountObserverCallBack(std::weak_ptr<AccountObser
     return false;
 }
 
-void AccountObserver::UnregisterAccountObserverCallBack()
+void AccountObserver::UnRegisterAccountObserverCallBack()
 {
-    for (auto accountObserverCallBack_: accountObserverCallBacks_) {
-        if (!accountObserverCallBack_.expired()) {
-            accountObserverCallBack_.reset();
+    MEDIA_LOGI("AccountObserver::UnRegisterAccountObserverCallBack Start.");
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_LOG(callback.lock(), "callback is null");
+    for (auto iter = accountObserverCallBacks_.begin(); iter != accountObserverCallBacks_.end();) {
+        if ((*iter).lock() == callback.lock()) {
+            iter = accountObserverCallBacks_.erase(iter);
+        } else {
+            iter++;
         }
     }
+    MEDIA_LOGI("UnRegisterAccountObserverCallBack END. accountObserverCallBacks_.size(): %{public}d",
+        static_cast<int32_t>(accountObserverCallBacks_.size()));
 }
 
 bool AccountObserver::OnAccountsSwitch()

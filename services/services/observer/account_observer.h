@@ -38,10 +38,9 @@ public:
     ~AccountObserver();
     bool OnAccountsSwitch();
     bool RegisterAccountObserverCallBack(std::weak_ptr<AccountObserverCallBack> callback);
-    void UnregisterAccountObserverCallBack();
+    void UnRegisterAccountObserverCallBack(std::weak_ptr<AccountObserverCallBack> callback);
 private:
     bool Init();
-
     std::vector<std::weak_ptr<AccountObserverCallBack>> accountObserverCallBacks_;
     std::atomic<bool> isAccountListenerDied_ = true;
     std::shared_ptr<AccountListener> accountListener_ = nullptr;

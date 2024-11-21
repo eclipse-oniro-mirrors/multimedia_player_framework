@@ -1049,7 +1049,7 @@ int32_t ScreenCaptureServer::StartFileInnerAudioCapture()
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StartFileInnerAudioCapture OK.", FAKE_POINTER(this));
     return MSERR_OK;
 }
-
+ 
 int32_t ScreenCaptureServer::StartFileMicAudioCapture()
 {
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StartFileMicAudioCapture start, dataType:%{public}d, "
@@ -2697,6 +2697,13 @@ int32_t ScreenCaptureServer::StopScreenCaptureInner(AVScreenCaptureStateCode sta
     captureState_ = AVScreenCaptureState::STOPPED;
     SetErrorInfo(MSERR_OK, "normal stopped", StopReason::NORMAL_STOPPED, IsUserPrivacyAuthorityNeeded());
     PostStopScreenCapture(stateCode);
+    if (surfaceCb_ != nullptr) {
+        (static_cast<ScreenCapBufferConsumerListener *>(surfaceCb_.GetRefPtr()))->StopBufferThread();
+        (static_cast<ScreenCapBufferConsumerListener *>(surfaceCb_.GetRefPtr()))->Release();
+        surfaceCb_ = nullptr;
+    }
+    InCallObserver::GetInstance().UnRegisterInCallObserverCallBack(screenCaptureObserverCb_);
+    AccountObserver::GetInstance().UnRegisterAccountObserverCallBack(screenCaptureObserverCb_);
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StopScreenCaptureInner end.", FAKE_POINTER(this));
     return ret;
 }
