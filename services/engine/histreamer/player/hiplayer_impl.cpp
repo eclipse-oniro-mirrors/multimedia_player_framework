@@ -1435,10 +1435,8 @@ int32_t HiPlayerImpl::InitVideoWidthAndHeight()
         return TransStatus(Status::ERROR_INVALID_OPERATION);
     }
     int32_t currentVideoTrackId = demuxer_->GetCurrentVideoTrackId();
-    if (currentVideoTrackId == -1) {
-        MEDIA_LOG_E_SHORT("InitVideoWidthAndHeight failed, as currentVideoTrackId is invalid!");
-        return TransStatus(Status::ERROR_INVALID_OPERATION);
-    }
+    FALSE_RETURNH_V_MSG_E(currentVideoTrackId != -1, TransStatus(Status::ERROR_INVALID_OPERATION),
+        "InitVideoWidthAndHeight failed, as currentVideoTrackId is invalid!");
     for (auto& videoTrack : videoTrackInfo) {
         int32_t videoTrackId = -1;
         videoTrack.GetIntValue("track_index", videoTrackId);
