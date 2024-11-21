@@ -72,13 +72,20 @@ template <typename QUEUE> RenderThread<QUEUE>::~RenderThread()
     Stop();
     thread_->join();
     delete thread_;
-    delete localMsgQueue_;
+    thread_ = nullptr;
+    if (localMsgQueue_ != nullptr) {
+        delete localMsgQueue_;
+        localMsgQueue_ = nullptr;
+    }
 }
 
 template <typename QUEUE>
 void RenderThread<QUEUE>::AddTask(const LocalTaskType& task, bool overwrite, std::function<void()> callback)
 {
     std::unique_lock<std::mutex> lk(cvMutex_);
+    if (localMsgQueue_ == nullptr) {
+        return;
+    }
     cvFull_.wait(lk, [this, &task]() {
         return (GetTag(task) == PREVIEW_TASK_TAG) || (localMsgQueue_->GetSize() < this->qSize_) || (!isWorking_);
     });
@@ -129,6 +136,9 @@ template <typename QUEUE> void RenderThread<QUEUE>::Stop()
 template <typename QUEUE> void RenderThread<QUEUE>::ClearTaskQueue()
 {
     std::unique_lock<std::mutex> lk(cvMutex_);
+    if (localMsgQueue_ == nullptr) {
+        return;
+    }
     localMsgQueue_->RemoveAll();
 }
 
@@ -136,6 +146,9 @@ template <typename QUEUE> void RenderThread<QUEUE>::Run()
 {
     while (isWorking_) {
         std::unique_lock<std::mutex> lk(cvMutex_);
+        if (localMsgQueue_ == nullptr) {
+            return;
+        }
         bool cvRet = cvEmpty_.wait_for(lk, std::chrono::milliseconds(2500),
             [this]() { return (localMsgQueue_->GetSize() > 0) || (!isWorking_); });
         if (cvRet) {

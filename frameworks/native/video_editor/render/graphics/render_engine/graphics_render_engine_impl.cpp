@@ -381,6 +381,10 @@ void GraphicsRenderEngineImpl::DrawFrame(uint64_t pts, const RenderTexturePtr& r
         MEDIA_LOGE("set native window opt faild, retcode = %{public}d", retCode);
     }
     RenderEffectDataPtr renderEffectData = shaderPassOnScreen_->GetRenderEffectData();
+    if (renderTexture == nullptr) {
+        MEDIA_LOGE("DrawFrame param renderTexture is nullptr.");
+        return;
+    }
     renderEffectData->inputTexture_ = renderTexture;
     renderEffectData->outputWidth_ = renderTexture->Width();
     renderEffectData->outputHeight_ = renderTexture->Height();
