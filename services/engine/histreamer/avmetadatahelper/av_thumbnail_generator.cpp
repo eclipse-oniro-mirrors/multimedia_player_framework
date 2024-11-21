@@ -184,7 +184,7 @@ void AVThumbnailGenerator::OnInputBufferAvailable(uint32_t index, std::shared_pt
     auto readSampleRes = mediaDemuxer_->ReadSample(trackIndex_, buffer);
     if (readSampleRes != Status::OK && readSampleRes != Status::END_OF_STREAM && readSampleRes != Status::ERROR_AGAIN) {
         std::unique_lock<std::mutex> lock(mutex_);
-        readErrorFlag_ = true;        
+        readErrorFlag_ = true;
         cond_.notify_all();
     }
     videoDecoder_->QueueInputBuffer(index);
