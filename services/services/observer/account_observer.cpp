@@ -56,7 +56,7 @@ bool AccountObserver::RegisterAccountObserverCallBack(std::weak_ptr<AccountObser
     return false;
 }
 
-void AccountObserver::UnRegisterAccountObserverCallBack()
+void AccountObserver::UnRegisterAccountObserverCallBack(std::weak_ptr<AccountObserverCallBack> callback)
 {
     MEDIA_LOGI("AccountObserver::UnRegisterAccountObserverCallBack Start.");
     std::unique_lock<std::mutex> lock(mutex_);
