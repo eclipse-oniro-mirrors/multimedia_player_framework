@@ -281,7 +281,6 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t *data, size_t size)
     /* Run your code on data */
     int fd = open(VIDEO_PATH, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
     if (fd < 0) {
-        close(fd);
         return 0;
     }
     int len = write(fd, data, size);
