@@ -19,8 +19,8 @@ group("capi_packages") {
   if (player_framework_support_capi) {
     deps += [
       "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c:avplayer",
-      "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c:native_avscreen_capture",
       "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c:avrecorder",
+      "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c:native_avscreen_capture",
     ]
   }
 }
@@ -156,13 +156,13 @@ ohos_shared_library("avrecorder") {
     debug = false
   }
 
-  sources = [ "$MEDIA_PLAYER_ROOT_DIR/frameworks/native/capi/recorder/native_avrecorder.cpp", ]
+  sources = [ "$MEDIA_PLAYER_ROOT_DIR/frameworks/native/capi/recorder/native_avrecorder.cpp" ]
 
   configs = [ ":media_capi_config" ]
 
   public_configs = [ ":media_capi_public_config" ]
 
-  deps = [ "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native:media_client", ]
+  deps = [ "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native:media_client" ]
 
   external_deps = [
     "av_codec:av_codec_client",
