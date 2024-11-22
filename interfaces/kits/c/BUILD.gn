@@ -178,3 +178,4 @@ ohos_shared_library("avrecorder") {
   subsystem_name = "multimedia"
   part_name = "player_framework"
 }
+
