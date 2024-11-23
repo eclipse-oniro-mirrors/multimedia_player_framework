@@ -19,6 +19,7 @@ module_output_path = "player_framework/player"
 ohos_unittest("player_unit_test") {
   module_out_path = module_output_path
   include_dirs = [
+    "../../../common",
     "./include",
     "//foundation/multimedia/player_framework/interfaces/inner_api/native",
     "//foundation/multimedia/player_framework/frameworks/native/player",
