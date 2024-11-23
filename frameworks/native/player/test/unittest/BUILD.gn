@@ -21,6 +21,7 @@ ohos_unittest("player_unit_test") {
   include_dirs = [
     "./include",
     "//foundation/multimedia/player_framework/interfaces/inner_api/native",
+    "//foundation/multimedia/player_framework/frameworks/native/common",
     "//foundation/multimedia/player_framework/frameworks/native/player",
     "//foundation/window/window_manager/interfaces/innerkits/wm",
     "//foundation/multimedia/player_framework/test/unittest/common/include",
