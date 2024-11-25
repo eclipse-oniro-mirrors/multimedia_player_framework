@@ -843,6 +843,8 @@ int32_t RecorderServiceProxy::GetAvailableEncoder(std::vector<EncoderCapabilityD
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "GetAvailableEncoder failed, error: %{public}d", error);
     int32_t encoderCnt = reply.ReadInt32();
+    CHECK_AND_RETURN_RET_LOG(0 < encoderCnt && encoderCnt < 100, MSERR_INVALID_OPERATION,
+        "Get encoderCnt exceed the limit(0 < encoderCnt < 100)");
     for (int32_t i = 0; i < encoderCnt; i++) {
         EncoderCapabilityData codecData;
         codecData.Unmarshalling(reply);
