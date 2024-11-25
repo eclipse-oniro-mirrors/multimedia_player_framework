@@ -70,9 +70,11 @@ RenderThread<QUEUE>::RenderThread(size_t queueSize, std::function<void()> idleTs
 template <typename QUEUE> RenderThread<QUEUE>::~RenderThread()
 {
     Stop();
-    thread_->join();
-    delete thread_;
-    thread_ = nullptr;
+    if (thread_ != nullptr) {
+        thread_->join();
+        delete thread_;
+        thread_ = nullptr;
+    }
     if (localMsgQueue_ != nullptr) {
         delete localMsgQueue_;
         localMsgQueue_ = nullptr;
