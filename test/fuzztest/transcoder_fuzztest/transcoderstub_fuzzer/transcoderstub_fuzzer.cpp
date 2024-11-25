@@ -272,21 +272,37 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t *data, size_t size)
 
     FuzzedDataProvider fdp(data, size);
     auto transcoder = OHOS::Media::CreateFuzzTranscoder();
+    usleep(2000000);
     OHOS::Media::FuzzTranscoderSetVideoEncoder(transcoder, fdp.ConsumeIntegral<int32_t>());
+    usleep(2000000);
     OHOS::Media::FuzzTranscoderSetVideoSize(transcoder, fdp.ConsumeIntegral<int32_t>(), fdp.ConsumeIntegral<int32_t>());
+    usleep(2000000);
     OHOS::Media::FuzzTranscoderSetVideoEncodingBitRate(transcoder, fdp.ConsumeIntegral<int32_t>());
+    usleep(2000000);
     OHOS::Media::FuzzTranscoderSetAudioEncoder(transcoder, fdp.ConsumeIntegral<int32_t>());
+    usleep(2000000);
     OHOS::Media::FuzzTranscoderSetAudioEncodingBitRate(transcoder, fdp.ConsumeIntegral<int32_t>());
+    usleep(2000000);
     OHOS::Media::FuzzTranscoderSetOutputFormat(transcoder, fdp.ConsumeIntegral<int32_t>());
+    usleep(2000000);
     OHOS::Media::FuzzTranscoderSetInputFile(transcoder);
+    usleep(2000000);
     OHOS::Media::FuzzTranscoderSetOutputFile(transcoder);
+    usleep(2000000);
     OHOS::Media::FuzzTranscoderPrepare(transcoder);
+    usleep(2000000);
     OHOS::Media::FuzzTranscoderStart(transcoder);
+    usleep(2000000);
     OHOS::Media::FuzzTranscoderPause(transcoder);
+    usleep(2000000);
     OHOS::Media::FuzzTranscoderResume(transcoder);
+    usleep(2000000);
     OHOS::Media::FuzzTranscoderCancel(transcoder);
+    usleep(2000000);
     OHOS::Media::FuzzTranscoderRelease(transcoder);
+    usleep(2000000);
     OHOS::Media::FuzzTranscoderDestroyStub(transcoder);
+    usleep(2000000);
 
     unlink(INPUT_VIDEO_PATH);
     unlink(OUTPUT_VIDEO_PATH);
