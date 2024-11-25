@@ -170,6 +170,7 @@ std::string AVMetadataHelperServer::ResolveMetadata(int32_t key)
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, "", "EnqueueTask failed");
 
     auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), "", "task has been cleared");
     ChangeState(HelperStates::HELPER_CALL_DONE);
     return result.Value();
 }
@@ -191,6 +192,7 @@ std::unordered_map<int32_t, std::string> AVMetadataHelperServer::ResolveMetadata
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, {}, "EnqueueTask failed");
 
     auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), {}, "task has been cleared");
     ChangeState(HelperStates::HELPER_CALL_DONE);
     return result.Value();
 }
@@ -209,6 +211,7 @@ std::shared_ptr<Meta> AVMetadataHelperServer::GetAVMetadata()
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, {}, "EnqueueTask failed");
 
     auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), {}, "task has been cleared");
     ChangeState(HelperStates::HELPER_CALL_DONE);
     return result.Value();
 }
@@ -227,6 +230,7 @@ std::shared_ptr<AVSharedMemory> AVMetadataHelperServer::FetchArtPicture()
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "EnqueueTask failed");
 
     auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), nullptr, "task has been cleared");
     if (result.Value() == nullptr) {
         MEDIA_LOGE("FetchArtPicture result is nullptr.");
         NotifyErrorCallback(HelperErrorType::INVALID_RESULT, "FetchArtPicture result is nullptr.");
@@ -251,6 +255,7 @@ std::shared_ptr<AVSharedMemory> AVMetadataHelperServer::FetchFrameAtTime(int64_t
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "EnqueueTask failed");
 
     auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), nullptr, "task has been cleared");
     ChangeState(HelperStates::HELPER_CALL_DONE);
     return result.Value();
 }
@@ -262,11 +267,14 @@ std::shared_ptr<AVBuffer> AVMetadataHelperServer::FetchFrameYuv(int64_t timeUs, 
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(avMetadataHelperEngine_ != nullptr, nullptr, "avMetadataHelperEngine_ is nullptr");
     auto task = std::make_shared<TaskHandler<std::shared_ptr<AVBuffer>>>([&, this] {
+        std::shared_ptr<AVBuffer> err = nullptr;
+        CHECK_AND_RETURN_RET(currState_ == HELPER_PREPARED || currState_ == HELPER_CALL_DONE, err);
         return avMetadataHelperEngine_->FetchFrameYuv(timeUs, option, param);
     });
     int32_t ret = taskQue_.EnqueueTask(task);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "EnqueueTask failed");
     auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), nullptr, "task has been cleared");
     return result.Value();
 }
 
@@ -319,6 +327,7 @@ int32_t AVMetadataHelperServer::GetTimeByFrameIndex(uint32_t index, uint64_t &ti
     int32_t ret = taskQue_.EnqueueTask(task);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_NO_MEMORY, "EnqueueTask failed");
     auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_STATE, "task has been cleared");
     return result.Value();
 }
 
@@ -335,6 +344,7 @@ int32_t AVMetadataHelperServer::GetFrameIndexByTime(uint64_t time, uint32_t &ind
     int32_t ret = taskQue_.EnqueueTask(task);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
     auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_STATE, "task has been cleared");
     return result.Value();
 }
 
