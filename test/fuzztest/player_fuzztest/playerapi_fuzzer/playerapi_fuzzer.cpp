@@ -37,6 +37,7 @@ const char *DATA_PATH = "/data/test/fuzz_create.mp4";
 const int32_t SYSTEM_ABILITY_ID = 3002;
 const bool RUN_ON_CREATE = false;
 const int32_t PLAY_TIME_1_SEC = 1;
+int32_t duration = 0;
 
 PlayerApiFuzzer::PlayerApiFuzzer()
 {
@@ -106,7 +107,6 @@ bool PlayerApiFuzzer::RunFuzz(uint8_t *data, size_t size)
     sleep(PLAY_TIME_1_SEC);
     playerStub->SetPlaybackSpeed(SPEED_FORWARD_0_50_X);
     sleep(PLAY_TIME_1_SEC);
-    int32_t duration = 0;
     playerStub->GetDuration(duration);
     if (duration == 0) {
         playerStub->Release();
