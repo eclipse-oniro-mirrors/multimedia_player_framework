@@ -93,6 +93,7 @@ VEFError AudioDecoder::Start()
             ret, CodecUtil::GetCodecErrorStr(ret));
         return VEFError::ERR_INTERNAL_ERROR;
     }
+    // OH_AudioDecoder_Start结果判断
     ret = OH_AudioDecoder_Start(decoder_);
     if (ret != AV_ERR_OK) {
         MEDIA_LOGE("[%{public}s] start failed, OH_AudioDecoder_Start return %{public}d(%{public}s).", logTag_.c_str(),
@@ -209,12 +210,16 @@ void AudioDecoder::CodecOnNewOutputDataInner(OH_AVCodec *codec, uint32_t index, 
         pcmData->data = nullptr;
     } else {
         pcmData->dataSize = attr->size;
-        pcmData->data = std::make_shared<uint8_t>(pcmData->dataSize);
-        OH_AudioDecoder_FreeOutputData(codec, index);
-        onDecodeResultCallback_(CodecResult::FAILED);
-
+        uint8_t* pcm = new (std::nothrow) uint8_t[pcmData->dataSize];
+        pcmData->data = std::shared_ptr<uint8_t>(pcm, std::default_delete<uint8_t[]>());
+        if (pcmData->data == nullptr) {
+            MEDIA_LOGE("[%{public}s] malloc memory for pcmData failed.", logTag_.c_str());
+            OH_AudioDecoder_FreeOutputData(codec, index);
+            onDecodeResultCallback_(CodecResult::FAILED);
+            return;
+        }
         uint8_t* rawData = OH_AVMemory_GetAddr(data) + attr->offset;
-        int32_t error = memcpy_s(pcmData->data.get(), pcmData->dataSize, rawData + attr->offset, attr->size);
+        int32_t error = memcpy_s(pcmData->data.get(), pcmData->dataSize, rawData, attr->size);
         if (error != EOK) {
             MEDIA_LOGE("[%{public}s] copy data failed, err = %{public}d.", logTag_.c_str(), error);
             OH_AudioDecoder_FreeOutputData(codec, index);
