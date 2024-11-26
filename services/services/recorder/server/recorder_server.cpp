@@ -140,7 +140,6 @@ void RecorderServer::OnError(ErrorType errorType, int32_t errorCode)
 {
     std::lock_guard<std::mutex> lock(cbMutex_);
     lastErrMsg_ = MSErrorToExtErrorString(static_cast<MediaServiceErrCode>(errorCode));
-    FaultEventWrite(lastErrMsg_, "Recorder");
     SetErrorInfo(errorCode, lastErrMsg_);
     CHECK_AND_RETURN(recorderCb_ != nullptr);
     recorderCb_->OnError(static_cast<RecorderErrorType>(errorType), errorCode);
