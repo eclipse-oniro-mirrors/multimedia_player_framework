@@ -89,6 +89,9 @@ bool ScreenCaptureServerStartCaseFuzzer::FuzzScreenCaptureServerStartCase(uint8_
     }
     std::shared_ptr<ScreenCaptureServer> screenCaptureServer_;
     std::shared_ptr<IScreenCaptureService> tempServer_ = ScreenCaptureServer::Create();
+    if (tempServer_ == nullptr) {
+        return false;
+    }
     screenCaptureServer_ = std::static_pointer_cast<ScreenCaptureServer>(tempServer_);
     RecorderInfo recorderInfo;
     int outputFd = open("/data/test/media/screen_capture_fuzz_server_start_file_01.mp4", O_RDWR);
@@ -106,8 +109,12 @@ bool ScreenCaptureServerStartCaseFuzzer::FuzzScreenCaptureServerStartCase(uint8_
     screenCaptureServer_->captureCallback_->SetAudioSource(screenCaptureServer_->audioSource_);
     screenCaptureServer_->StartStreamInnerAudioCapture();
     screenCaptureServer_->StartStreamMicAudioCapture();
-    screenCaptureServer_->innerAudioCapture_->Pause();
-    screenCaptureServer_->innerAudioCapture_->Resume();
+    if (screenCaptureServer_->innerAudioCapture_ != nullptr) {
+        screenCaptureServer_->innerAudioCapture_->Pause();
+    }
+    if (screenCaptureServer_->innerAudioCapture_ != nullptr) {
+        screenCaptureServer_->innerAudioCapture_->Resume();
+    }
     std::shared_ptr<TestScreenCaptureCallbackTest> callbackObj = std::make_shared<TestScreenCaptureCallbackTest>();
     TestScreenCapture::SetScreenCaptureCallback(callbackObj);
     screenCaptureServer_->ResizeCanvas(*reinterpret_cast<int32_t *>(data),
