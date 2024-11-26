@@ -178,6 +178,8 @@ void PlayerServiceStub::FillPlayerFuncPart2()
         [this](MessageParcel &data, MessageParcel &reply) { return SetMaxAmplitudeCbStatus(data, reply); } };
     playerFuncs_[SET_DEVICE_CHANGE_CB_STATUS] = { "Player::SetDeviceChangeCbStatus",
         [this](MessageParcel &data, MessageParcel &reply) { return SetDeviceChangeCbStatus(data, reply); } };
+    playerFuncs_[GET_API_VERSION] = { "GetApiVersion",
+        [this](MessageParcel &data, MessageParcel &reply) { return GetApiVersion(data, reply); } };
 }
 
 int32_t PlayerServiceStub::Init()
@@ -442,6 +444,13 @@ int32_t PlayerServiceStub::GetDuration(int32_t &duration)
     MediaTrace trace("PlayerServiceStub::GetDuration");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
     return playerServer_->GetDuration(duration);
+}
+
+int32_t PlayerServiceStub::GetApiVersion(int32_t &apiVersion)
+{
+    MediaTrace trace("PlayerServiceStub::GetApiVersion");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->GetApiVersion(apiVersion);
 }
 
 int32_t PlayerServiceStub::SetPlaybackSpeed(PlaybackRateMode mode)
@@ -827,6 +836,17 @@ int32_t PlayerServiceStub::GetDuration(MessageParcel &data, MessageParcel &reply
     int32_t duration = -1;
     int32_t ret = GetDuration(duration);
     reply.WriteInt32(duration);
+    reply.WriteInt32(ret);
+    return MSERR_OK;
+}
+
+
+int32_t PlayerServiceStub::GetApiVersion(MessageParcel &data, MessageParcel &reply)
+{
+    (void)data;
+    int32_t apiVersion = -1;
+    int32_t ret = GetApiVersion(apiVersion);
+    reply.WriteInt32(apiVersion);
     reply.WriteInt32(ret);
     return MSERR_OK;
 }

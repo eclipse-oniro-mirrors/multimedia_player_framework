@@ -74,6 +74,7 @@ public:
         bool svp) override;
     int32_t SetMaxAmplitudeCbStatus(bool status) override;
     int32_t SetDeviceChangeCbStatus(bool status) override;
+    int32_t GetApiVersion(int32_t &apiVersion) override;
 private:
     int32_t SendRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option);
     static inline BrokerDelegator<PlayerServiceProxy> delegator_;

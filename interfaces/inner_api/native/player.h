@@ -840,6 +840,20 @@ public:
         (void)status;
         return 0;
     }
+    
+    /**
+     * @brief Obtain the api version of application.
+     *
+     * @return Returns {@link MSERR_OK} if the current api version is get; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t GetApiVersion(int32_t &apiVersion)
+    {
+        (void)apiVersion;
+        return 0;
+    }
 };
 
 class __attribute__((visibility("default"))) PlayerFactory {

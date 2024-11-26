@@ -2963,5 +2963,14 @@ bool AVPlayerNapi::IsLiveSource() const
 {
     return isLiveStream_;
 }
+
+int32_t AVPlayerNapi::GetJsApiVersion()
+{
+    int32_t apiVersion = -1;
+    if (player_ != nullptr) {
+        player_->GetApiVersion(apiVersion);
+    }
+    return apiVersion;
+}
 } // namespace Media
 } // namespace OHOS

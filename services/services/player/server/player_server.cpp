@@ -1021,6 +1021,13 @@ int32_t PlayerServer::GetDuration(int32_t &duration)
     return MSERR_OK;
 }
 
+int32_t PlayerServer::GetApiVersion(int32_t &apiVersion)
+{
+    apiVersion = apiVersion_;
+    MEDIA_LOGD("PlayerServer GetApiVersion %{public}d", apiVersion);
+    return MSERR_OK;
+}
+
 void PlayerServer::ClearConfigInfo()
 {
     std::lock_guard<std::mutex> lock(mutex_);
