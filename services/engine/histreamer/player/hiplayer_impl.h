@@ -222,6 +222,7 @@ private:
 #endif
     bool IsAudioMime(const std::string& mime);
     bool IsSubtitleMime(const std::string& mime);
+    bool IsNeedAudioSinkChangeTrack(std::vector<std::shared_ptr<Meta>>& metaInfo, int32_t newAudioTrackId);
     Status Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeekDone);
     Status HandleSeek(int64_t seekPos, PlayerSeekMode mode);
     

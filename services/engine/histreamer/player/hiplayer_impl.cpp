@@ -1623,6 +1623,48 @@ bool HiPlayerImpl::IsSubtitleMime(const std::string& mime)
     return false;
 }
 
+bool HiPlayerImpl::IsNeedAudioSinkChangeTrack(std::vector<std::shared_ptr<Meta>>& metaInfo, int32_t trackId)
+{
+    if (trackId == currentAudioTrackId_) {
+        return false;
+    }
+    MEDIA_LOG_I("CurTrackId " PUBLIC_LOG_D32 " trackId " PUBLIC_LOG_D32, currentAudioTrackId_, trackId);
+
+    int32_t sampleRate = -1;
+    int32_t channels = -1;
+    Plugins::AudioSampleFormat sampleFormat;
+
+    int32_t currentSampleRate = -1;
+    int32_t currentChannels = -1;
+    Plugins::AudioSampleFormat currentSampleFormat;
+
+    FALSE_RETURN_V(metaInfo[trackId]->GetData(Tag::AUDIO_SAMPLE_RATE, sampleRate), true);
+    FALSE_RETURN_V(metaInfo[currentAudioTrackId_]->GetData(Tag::AUDIO_SAMPLE_RATE, currentSampleRate), true);
+    FALSE_RETURN_V(sampleRate == currentSampleRate, true);
+
+    FALSE_RETURN_V(metaInfo[trackId]->GetData(Tag::AUDIO_CHANNEL_COUNT, channels), true);
+    FALSE_RETURN_V(metaInfo[currentAudioTrackId_]->GetData(Tag::AUDIO_CHANNEL_COUNT, currentChannels), true);
+    FALSE_RETURN_V(channels == currentChannels, true);
+
+    FALSE_RETURN_V(metaInfo[trackId]->GetData(Tag::AUDIO_SAMPLE_FORMAT, sampleFormat), true);
+    FALSE_RETURN_V(metaInfo[currentAudioTrackId_]->GetData(Tag::AUDIO_SAMPLE_FORMAT, currentSampleFormat), true);
+    FALSE_RETURN_V(sampleFormat == currentSampleFormat, true);
+
+    std::string mimeType;
+    AudioStandard::AudioEncodingType encodingType;
+    std::string currentMimeType;
+    AudioStandard::AudioEncodingType currentEncodingType;
+    FALSE_RETURN_V(metaInfo[trackId]->GetData(Tag::MIME_TYPE, mimeType), true);
+    FALSE_RETURN_V(metaInfo[currentAudioTrackId_]->GetData(Tag::MIME_TYPE, currentMimeType), true);
+    encodingType = (mimeType == MimeType::AUDIO_AVS3DA)
+                ? AudioStandard::ENCODING_AUDIOVIVID : AudioStandard::ENCODING_PCM;
+    currentEncodingType = (currentMimeType == MimeType::AUDIO_AVS3DA)
+                ? AudioStandard::ENCODING_AUDIOVIVID : AudioStandard::ENCODING_PCM;
+    FALSE_RETURN_V(mimeType == currentMimeType, true);
+
+    return false;
+}
+
 int32_t HiPlayerImpl::GetCurrentTrack(int32_t trackType, int32_t &index)
 {
     FALSE_RETURN_V_MSG_W(trackType >= OHOS::Media::MediaType::MEDIA_TYPE_AUD &&
@@ -2605,9 +2647,12 @@ void HiPlayerImpl::HandleAudioTrackChangeEvent(const Event& event)
             MEDIA_LOG_E("HandleAudioTrackChangeEvent audioDecoder change plugin error");
             return;
         }
-        if (Status::OK != audioSink_->ChangeTrack(metaInfo[trackId])) {
-            MEDIA_LOG_E("HandleAudioTrackChangeEvent audioSink change track error");
-            return;
+        if (IsNeedAudioSinkChangeTrack(metaInfo, trackId)) {
+            MEDIA_LOG_I("AudioSink changeTrack in");
+            if (Status::OK != audioSink_->ChangeTrack(metaInfo[trackId])) {
+                MEDIA_LOG_E("HandleAudioTrackChangeEvent audioSink change track error");
+                return;
+            }
         }
         if (Status::OK != demuxer_->StartTask(trackId)) {
             MEDIA_LOG_E("HandleAudioTrackChangeEvent StartTask error. trackId is " PUBLIC_LOG_D32, trackId);
