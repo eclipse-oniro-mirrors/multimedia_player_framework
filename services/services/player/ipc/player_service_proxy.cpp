@@ -31,6 +31,9 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "Pla
 
 namespace OHOS {
 namespace Media {
+
+constexpr int MAX_TRACKCNT = 1000;
+
 PlayerServiceProxy::PlayerServiceProxy(const sptr<IRemoteObject> &impl)
     : IRemoteProxy<IStandardPlayerService>(impl)
 {
@@ -459,6 +462,7 @@ int32_t PlayerServiceProxy::GetVideoTrackInfo(std::vector<Format> &videoTrack)
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "GetVideoTrackInfo failed, error: %{public}d", error);
     int32_t trackCnt = reply.ReadInt32();
+    CHECK_AND_RETURN_RET_LOG(trackCnt < MAX_TRACKCNT, MSERR_INVALID_OPERATION, "Invalid trackCnt");
     for (int32_t i = 0; i < trackCnt; i++) {
         Format trackInfo;
         (void)MediaParcel::Unmarshalling(reply, trackInfo);
@@ -499,6 +503,7 @@ int32_t PlayerServiceProxy::GetAudioTrackInfo(std::vector<Format> &audioTrack)
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "GetAudioTrackInfo failed, error: %{public}d", error);
     int32_t trackCnt = reply.ReadInt32();
+    CHECK_AND_RETURN_RET_LOG(trackCnt < MAX_TRACKCNT, MSERR_INVALID_OPERATION, "Invalid trackCnt");
     for (int32_t i = 0; i < trackCnt; i++) {
         Format trackInfo;
         (void)MediaParcel::Unmarshalling(reply, trackInfo);
@@ -522,6 +527,7 @@ int32_t PlayerServiceProxy::GetSubtitleTrackInfo(std::vector<Format> &subtitleTr
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "GetSubtitleTrackInfo failed, error: %{public}d", error);
     int32_t trackCnt = reply.ReadInt32();
+    CHECK_AND_RETURN_RET_LOG(trackCnt < MAX_TRACKCNT, MSERR_INVALID_OPERATION, "Invalid trackCnt");
     for (int32_t i = 0; i < trackCnt; i++) {
         Format trackInfo;
         (void)MediaParcel::Unmarshalling(reply, trackInfo);
