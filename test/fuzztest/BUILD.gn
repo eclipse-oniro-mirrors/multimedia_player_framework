@@ -99,6 +99,7 @@ group("fuzztest") {
     "screen_capture_fuzztest/screencapturevideoframewidth_fuzzer:ScreenCaptureVideoFrameWidthFuzzTest",
     "screen_capture_fuzztest/screencapturevideosourcetype_fuzzer:ScreenCaptureVideoSourceTypeFuzzTest",
     "transcoder_fuzztest/transcoderservicestub_fuzzer:TranscoderServiceStubFuzzTest",
+    "transcoder_fuzztest/transcoderstub_fuzzer:TranscoderStubFuzzTest",
   ]
 }
 
