@@ -37,6 +37,7 @@ constexpr char INPUT_VIDEO_PATH[] = "/data/local/tmp/input.mp4";
 constexpr char OUTPUT_VIDEO_PATH[] = "/data/local/tmp/output.mp4";
 constexpr int32_t SYSTEM_ABILITY_ID = 3002;
 constexpr bool RUN_ON_CREATE = false;
+constexpr uint32_t SECOND_TWO = 2;
 }  // namespace
 
 namespace OHOS {
@@ -272,37 +273,25 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t *data, size_t size)
 
     FuzzedDataProvider fdp(data, size);
     auto transcoder = OHOS::Media::CreateFuzzTranscoder();
-    usleep(2000000);
     OHOS::Media::FuzzTranscoderSetVideoEncoder(transcoder, fdp.ConsumeIntegral<int32_t>());
-    usleep(2000000);
     OHOS::Media::FuzzTranscoderSetVideoSize(transcoder, fdp.ConsumeIntegral<int32_t>(), fdp.ConsumeIntegral<int32_t>());
-    usleep(2000000);
     OHOS::Media::FuzzTranscoderSetVideoEncodingBitRate(transcoder, fdp.ConsumeIntegral<int32_t>());
-    usleep(2000000);
     OHOS::Media::FuzzTranscoderSetAudioEncoder(transcoder, fdp.ConsumeIntegral<int32_t>());
-    usleep(2000000);
     OHOS::Media::FuzzTranscoderSetAudioEncodingBitRate(transcoder, fdp.ConsumeIntegral<int32_t>());
-    usleep(2000000);
     OHOS::Media::FuzzTranscoderSetOutputFormat(transcoder, fdp.ConsumeIntegral<int32_t>());
-    usleep(2000000);
     OHOS::Media::FuzzTranscoderSetInputFile(transcoder);
-    usleep(2000000);
     OHOS::Media::FuzzTranscoderSetOutputFile(transcoder);
-    usleep(2000000);
     OHOS::Media::FuzzTranscoderPrepare(transcoder);
-    usleep(2000000);
+    sleep(SECOND_TWO);
     OHOS::Media::FuzzTranscoderStart(transcoder);
-    usleep(2000000);
+    sleep(SECOND_TWO);
     OHOS::Media::FuzzTranscoderPause(transcoder);
-    usleep(2000000);
+    sleep(SECOND_TWO);
     OHOS::Media::FuzzTranscoderResume(transcoder);
-    usleep(2000000);
+    sleep(SECOND_TWO);
     OHOS::Media::FuzzTranscoderCancel(transcoder);
-    usleep(2000000);
     OHOS::Media::FuzzTranscoderRelease(transcoder);
-    usleep(2000000);
     OHOS::Media::FuzzTranscoderDestroyStub(transcoder);
-    usleep(2000000);
 
     unlink(INPUT_VIDEO_PATH);
     unlink(OUTPUT_VIDEO_PATH);
