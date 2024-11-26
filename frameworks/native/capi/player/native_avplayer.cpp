@@ -395,7 +395,6 @@ void NativeAVPlayerCallback::OnError(int32_t errorCode, const std::string &error
         errorCallback_->OnError(player_, avErrorCode, errorMsgExt.c_str());
         return;
     }
-
     if (callback_.onError != nullptr) {
         // To make sure compatibility only convert for UNSUPPORT_FORMAT_ERROR_CODE
         avErrorCode = errorCode;
