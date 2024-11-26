@@ -31,8 +31,9 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "Pla
 
 namespace OHOS {
 namespace Media {
-
-constexpr int MAX_TRACKCNT = 1000;
+namespace {
+    constexpr int MAX_TRACKCNT = 1000;
+}
 
 PlayerServiceProxy::PlayerServiceProxy(const sptr<IRemoteObject> &impl)
     : IRemoteProxy<IStandardPlayerService>(impl)
