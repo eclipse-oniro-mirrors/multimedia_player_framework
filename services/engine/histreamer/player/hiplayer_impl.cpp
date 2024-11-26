@@ -1623,7 +1623,7 @@ bool HiPlayerImpl::IsSubtitleMime(const std::string& mime)
     return false;
 }
 
-bool HiPlayerImpl::IsNeedChangeTrack(std::vector<std::shared_ptr<Meta>>& metaInfo, int32_t trackId)
+bool HiPlayerImpl::IsNeedAudioSinkChangeTrack(std::vector<std::shared_ptr<Meta>>& metaInfo, int32_t trackId)
 {
     if (trackId == currentAudioTrackId_) {
         return false;
@@ -2647,7 +2647,7 @@ void HiPlayerImpl::HandleAudioTrackChangeEvent(const Event& event)
             MEDIA_LOG_E("HandleAudioTrackChangeEvent audioDecoder change plugin error");
             return;
         }
-        if (IsNeedChangeTrack(metaInfo, trackId)) {
+        if (IsNeedAudioSinkChangeTrack(metaInfo, trackId)) {
             MEDIA_LOG_I("AudioSink changeTrack in");
             if (Status::OK != audioSink_->ChangeTrack(metaInfo[trackId])) {
                 MEDIA_LOG_E("HandleAudioTrackChangeEvent audioSink change track error");
