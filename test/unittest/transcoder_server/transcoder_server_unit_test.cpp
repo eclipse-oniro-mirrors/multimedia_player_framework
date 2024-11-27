@@ -35,8 +35,8 @@ namespace TranscoderTestParam {
     constexpr uint32_t TRASCODER_VIDEO_ENCODING_BIT_RATE = 30000;
     constexpr int32_t TRANSCODER_BUFFER_WIDTH = 320;
     constexpr int32_t TRANSCODER_BUFFER_HEIGHT = 240;
-    constexpr int32_t TRANSCODER_BUFFER_WIDTH_480p = 640;
-    constexpr int32_t TRANSCODER_BUFFER_HEIGHT_480p = 480;
+    constexpr int32_t TRANSCODER_BUFFER_WIDTH_480P = 640;
+    constexpr int32_t TRANSCODER_BUFFER_HEIGHT_480P = 480;
     constexpr uint64_t TRANSCODER_FILE_OFFSET = 37508084;
     constexpr uint64_t TRANSCODER_FILE_SIZE = 2735029;
     const std::string TRANSCODER_ROOT_SRC = "/data/test/media/transcoder_src/";
@@ -308,8 +308,8 @@ HWTEST_F(TransCoderUnitTest, transcoder_AudioVideo_001, TestSize.Level2)
         videoWidth = TRANSCODER_BUFFER_WIDTH;
         videoHeight = TRANSCODER_BUFFER_HEIGHT;
     } else {
-        videoWidth = TRANSCODER_BUFFER_WIDTH_480p;
-        videoHeight = TRANSCODER_BUFFER_HEIGHT_480p;
+        videoWidth = TRANSCODER_BUFFER_WIDTH_480P;
+        videoHeight = TRANSCODER_BUFFER_HEIGHT_480P;
     }
     EXPECT_EQ(MSERR_OK, transcoder_->SetVideoSize(videoWidth, videoHeight));
     EXPECT_EQ(MSERR_OK, transcoder_->Prepare());
@@ -352,8 +352,8 @@ HWTEST_F(TransCoderUnitTest, transcoder_AudioVideo_002, TestSize.Level2)
         videoWidth = TRANSCODER_BUFFER_WIDTH;
         videoHeight = TRANSCODER_BUFFER_HEIGHT;
     } else {
-        videoWidth = TRANSCODER_BUFFER_WIDTH_480p;
-        videoHeight = TRANSCODER_BUFFER_HEIGHT_480p;
+        videoWidth = TRANSCODER_BUFFER_WIDTH_480P;
+        videoHeight = TRANSCODER_BUFFER_HEIGHT_480P;
     }
     EXPECT_EQ(MSERR_OK, transcoder_->SetVideoSize(videoWidth, videoHeight));
     EXPECT_EQ(MSERR_OK, transcoder_->Prepare());
@@ -401,8 +401,8 @@ HWTEST_F(TransCoderUnitTest, transcoder_AudioVideo_003, TestSize.Level2)
         videoWidth = TRANSCODER_BUFFER_WIDTH;
         videoHeight = TRANSCODER_BUFFER_HEIGHT;
     } else {
-        videoWidth = TRANSCODER_BUFFER_WIDTH_480p;
-        videoHeight = TRANSCODER_BUFFER_HEIGHT_480p;
+        videoWidth = TRANSCODER_BUFFER_WIDTH_480P;
+        videoHeight = TRANSCODER_BUFFER_HEIGHT_480P;
     }
     EXPECT_EQ(MSERR_OK, transcoder_->SetVideoSize(videoWidth, videoHeight));
     EXPECT_EQ(MSERR_OK, transcoder_->Prepare());
@@ -448,8 +448,8 @@ HWTEST_F(TransCoderUnitTest, transcoder_AudioVideo_004, TestSize.Level2)
         videoWidth = TRANSCODER_BUFFER_WIDTH;
         videoHeight = TRANSCODER_BUFFER_HEIGHT;
     } else {
-        videoWidth = TRANSCODER_BUFFER_WIDTH_480p;
-        videoHeight = TRANSCODER_BUFFER_HEIGHT_480p;
+        videoWidth = TRANSCODER_BUFFER_WIDTH_480P;
+        videoHeight = TRANSCODER_BUFFER_HEIGHT_480P;
     }
     EXPECT_EQ(MSERR_OK, transcoder_->SetVideoSize(videoWidth, videoHeight));
     EXPECT_EQ(MSERR_OK, transcoder_->Prepare());
@@ -671,8 +671,8 @@ HWTEST_F(TransCoderUnitTest, transcoder_AudioVideoAbnormal_case_001, TestSize.Le
         videoWidth = TRANSCODER_BUFFER_WIDTH;
         videoHeight = TRANSCODER_BUFFER_HEIGHT;
     } else {
-        videoWidth = TRANSCODER_BUFFER_WIDTH_480p;
-        videoHeight = TRANSCODER_BUFFER_HEIGHT_480p;
+        videoWidth = TRANSCODER_BUFFER_WIDTH_480P;
+        videoHeight = TRANSCODER_BUFFER_HEIGHT_480P;
     }
     EXPECT_EQ(MSERR_OK, transcoder_->SetVideoSize(videoWidth, videoHeight));
     EXPECT_EQ(MSERR_OK, transcoder_->Cancel());
@@ -713,8 +713,8 @@ HWTEST_F(TransCoderUnitTest, transcoder_AudioVideoAbnormal_case_002, TestSize.Le
         videoWidth = TRANSCODER_BUFFER_WIDTH;
         videoHeight = TRANSCODER_BUFFER_HEIGHT;
     } else {
-        videoWidth = TRANSCODER_BUFFER_WIDTH_480p;
-        videoHeight = TRANSCODER_BUFFER_HEIGHT_480p;
+        videoWidth = TRANSCODER_BUFFER_WIDTH_480P;
+        videoHeight = TRANSCODER_BUFFER_HEIGHT_480P;
     }
     EXPECT_EQ(MSERR_OK, transcoder_->SetVideoSize(videoWidth, videoHeight));
     EXPECT_EQ(MSERR_INVALID_OPERATION, transcoder_->Pause());
@@ -755,8 +755,8 @@ HWTEST_F(TransCoderUnitTest, transcoder_AudioVideoAbnormal_case_003, TestSize.Le
         videoWidth = TRANSCODER_BUFFER_WIDTH;
         videoHeight = TRANSCODER_BUFFER_HEIGHT;
     } else {
-        videoWidth = TRANSCODER_BUFFER_WIDTH_480p;
-        videoHeight = TRANSCODER_BUFFER_HEIGHT_480p;
+        videoWidth = TRANSCODER_BUFFER_WIDTH_480P;
+        videoHeight = TRANSCODER_BUFFER_HEIGHT_480P;
     }
     EXPECT_EQ(MSERR_OK, transcoder_->SetVideoSize(videoWidth, videoHeight));
     EXPECT_EQ(MSERR_INVALID_OPERATION, transcoder_->Resume());
