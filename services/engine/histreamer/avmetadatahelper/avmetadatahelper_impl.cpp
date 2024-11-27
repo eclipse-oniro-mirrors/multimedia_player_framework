@@ -248,6 +248,8 @@ void AVMetadataHelperImpl::Destroy()
 
 Status AVMetadataHelperImpl::InitMetadataCollector()
 {
+    CHECK_AND_RETURN_RET_LOG(
+        mediaDemuxer_ != nullptr, Status::ERROR_INVALID_STATE, "mediaDemuxer_ is nullptr");
     if (metadataCollector_ == nullptr) {
         metadataCollector_ = std::make_shared<AVMetaDataCollector>(mediaDemuxer_);
     }
@@ -258,6 +260,8 @@ Status AVMetadataHelperImpl::InitMetadataCollector()
 
 Status AVMetadataHelperImpl::InitThumbnailGenerator()
 {
+    CHECK_AND_RETURN_RET_LOG(
+        mediaDemuxer_ != nullptr, Status::ERROR_INVALID_STATE, "mediaDemuxer_ is nullptr");
     if (thumbnailGenerator_ == nullptr) {
         thumbnailGenerator_ = std::make_shared<AVThumbnailGenerator>(mediaDemuxer_);
     }
