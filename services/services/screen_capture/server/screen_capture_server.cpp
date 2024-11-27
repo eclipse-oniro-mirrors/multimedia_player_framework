@@ -2722,7 +2722,7 @@ bool ScreenCaptureServer::IsLastStartedPidInstance(int32_t pid)
 {
     MEDIA_LOGI("ScreenCaptureServer::IsLastStartedPidInstance START.");
     if (CountStartedScreenCaptureServerNumByPid(pid) != 1) {
-        MEDIA_LOGD("pid: %{public}d exists more than one instance.");
+        MEDIA_LOGD("pid: %{public}d exists more than one instance.", pid);
         return false;
     }
     return true;
