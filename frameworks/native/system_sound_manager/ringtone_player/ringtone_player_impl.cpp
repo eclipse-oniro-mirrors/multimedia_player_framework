@@ -301,12 +301,12 @@ int32_t RingtonePlayerImpl::RegisterSource(const std::string &audioUri, const st
 
     int32_t fd = ExtractFd(newAudioUri);
     if (fd != ERROR) {
-        fdArray_.emplace_back(fd, false);
+        fdMap_[AUDIO_FD] = {fd, false};
     }
 
     fd = ExtractFd(newHapticUri);
     if (fd != ERROR) {
-        fdArray_.emplace_back(fd, false);
+        fdMap_[HAPTIC_FD] = {fd, false};
     }
 
     if (sourceId == -1) {
@@ -323,14 +323,16 @@ void RingtonePlayerImpl::UnregisterSource()
         sourceId_ = -1;
     }
 
-    for (auto &[fd, isClose] : fdArray_) {
+    for (auto &[type, fdInfo] : fdMap_) {
+        auto &[fd, isClose] = fdInfo;
         if (!isClose) {
-            MEDIA_LOGD("UnregisterSource: close fd: %{public}d.", fd);
+            MEDIA_LOGI("UnregisterSource: type:%{public}d close fd:%{public}d.", type, fd);
             close(fd);
             fd = -1;
         }
     }
-    fdArray_.clear();
+
+    fdMap_.clear();
 }
 
 void RingtonePlayerImpl::InitPlayer(std::string &audioUri, ToneHapticsSettings &settings,
@@ -355,13 +357,22 @@ void RingtonePlayerImpl::InitPlayer(std::string &audioUri, ToneHapticsSettings &
     CHECK_AND_RETURN_LOG(player_ != nullptr, "Failed to create ringtone player instance");
     player_->SetHapticsMode(ConvertToHapticsMode(settings.mode));
     int32_t result = player_->Prepare();
+
+    bool isSoundPrepare = false;
+    bool isVibratorPrepare = false;
+    player_->IsSoundAndVibratorPrepare(isSoundPrepare, isVibratorPrepare);
+    if (fdMap_.find(AUDIO_FD) != fdMap_.end() && isSoundPrepare) {
+        fdMap_[AUDIO_FD].second = true;
+        MEDIA_LOGD("CreatePlayerWithOptions: audio load fd:%{public}d.", fdMap_[AUDIO_FD].first);
+    }
+    if (fdMap_.find(HAPTIC_FD) != fdMap_.end() && isVibratorPrepare) {
+        fdMap_[HAPTIC_FD].second = true;
+        MEDIA_LOGD("CreatePlayerWithOptions: haptic load fd:%{public}d.", fdMap_[HAPTIC_FD].first);
+    }
+
     CHECK_AND_RETURN_LOG(result == MSERR_OK, "Failed to load source for audio haptic manager");
     configuredUri_ = audioUri;
     configuredHaptcisSettings_ = settings;
-    for (auto &[fd, isClose] : fdArray_) {
-        isClose = true;
-        MEDIA_LOGD("InitPlayer: transfer fd:%{public}d.", fd);
-    }
 
     if (callback_ == nullptr) {
         callback_ = std::make_shared<RingtonePlayerCallback>(*this);

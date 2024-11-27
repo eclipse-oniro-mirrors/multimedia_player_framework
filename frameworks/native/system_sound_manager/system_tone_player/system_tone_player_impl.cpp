@@ -185,16 +185,25 @@ int32_t SystemTonePlayerImpl::CreatePlayerWithOptions(const AudioHapticPlayerOpt
     playerMap_[streamId_]->SetHapticsMode(hapticsMode_);
 
     int32_t result = playerMap_[streamId_]->Prepare();
-    CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, result,
-        "Failed to prepare for system tone player: %{public}d", result);
 
-    int sourceId = sourceIds_[hapticsFeature_];
-    if (fdMap_.find(sourceId) != fdMap_.end()) {
-        for (auto &[fd, isClose] : fdMap_[sourceId]) {
-            isClose = true;
-            MEDIA_LOGD("CreatePlayerWithOptions: transfer fd:%{public}d.", fd);
+    bool isSoundPrepare = false;
+    bool isVibratorPrepare = false;
+    playerMap_[streamId_]->IsSoundAndVibratorPrepare(isSoundPrepare, isVibratorPrepare);
+    auto fdInfoItem = fdMap_.find(sourceIds_[hapticsFeature_]);
+    if (fdInfoItem != fdMap_.end()) {
+        auto &fdInfo = fdInfoItem->second;
+        if (fdInfo.find(AUDIO_FD) != fdInfo.end() && isSoundPrepare) {
+            fdInfo[AUDIO_FD].second = true;
+            MEDIA_LOGD("CreatePlayerWithOptions: audio load fd:%{public}d.", fdInfo[AUDIO_FD].first);
+        }
+        if (fdInfo.find(HAPTIC_FD) != fdInfo.end() && isVibratorPrepare) {
+            fdInfo[HAPTIC_FD].second = true;
+            MEDIA_LOGD("CreatePlayerWithOptions: haptic load fd:%{public}d.", fdInfo[HAPTIC_FD].first);
         }
     }
+
+    CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, result,
+        "Failed to prepare for system tone player: %{public}d", result);
     return MSERR_OK;
 }
 
@@ -725,12 +734,12 @@ int32_t SystemTonePlayerImpl::RegisterSource(const std::string &audioUri, const 
 
     int32_t fd = ExtractFd(newAudioUri);
     if (fd != ERROR) {
-        fdMap_[sourceId].emplace_back(fd, false);
+        fdMap_[sourceId][AUDIO_FD] = {fd, false};
     }
 
     fd = ExtractFd(newHapticUri);
     if (fd != ERROR) {
-        fdMap_[sourceId].emplace_back(fd, false);
+        fdMap_[sourceId][HAPTIC_FD] = {fd, false};
     }
 
     if (sourceId == -1) {
@@ -765,13 +774,15 @@ void SystemTonePlayerImpl::UnregisterSource(int32_t sourceId)
         return;
     }
 
-    for (auto &[fd, isClose] : fdInfoItem->second) {
+    for (auto &[type, fdInfo] : fdInfoItem->second) {
+        auto &[fd, isClose] = fdInfo;
         if (!isClose) {
-            MEDIA_LOGD("UnregisterSource: close fd:%{public}d.", fd);
+            MEDIA_LOGI("UnregisterSource: type:%{public}d close fd:%{public}d.", type, fd);
             close(fd);
             fd = -1;
         }
     }
+
     fdMap_.erase(fdInfoItem);
 }
 

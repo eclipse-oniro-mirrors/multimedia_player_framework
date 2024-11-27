@@ -30,6 +30,11 @@ class RingtonePlayerInterruptCallback;
 
 class RingtonePlayerImpl : public RingtonePlayer {
 public:
+    enum {
+        AUDIO_FD,
+        HAPTIC_FD,
+    };
+
     RingtonePlayerImpl(const std::shared_ptr<AbilityRuntime::Context> &context,
         SystemSoundManagerImpl &sysSoundMgr, RingtoneType type);
     ~RingtonePlayerImpl();
@@ -79,7 +84,7 @@ private:
     RingtoneType type_ = RINGTONE_TYPE_SIM_CARD_0;
     RingtoneState ringtoneState_ = STATE_NEW;
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper_ = nullptr;
-    std::vector<std::pair<int32_t, bool>> fdArray_;
+    std::map<int32_t, std::pair<int32_t, bool>> fdMap_;
 
     std::mutex playerMutex_;
 };

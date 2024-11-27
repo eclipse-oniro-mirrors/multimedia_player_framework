@@ -25,6 +25,11 @@ class SystemTonePlayerCallback;
 
 class SystemTonePlayerImpl : public SystemTonePlayer, public std::enable_shared_from_this<SystemTonePlayerImpl> {
 public:
+    enum {
+        AUDIO_FD,
+        HAPTIC_FD,
+    };
+
     SystemTonePlayerImpl(const std::shared_ptr<AbilityRuntime::Context> &context,
         SystemSoundManagerImpl &systemSoundMgr, SystemToneType systemToneType);
     ~SystemTonePlayerImpl();
@@ -91,7 +96,7 @@ private:
     std::map<ToneHapticsFeature, std::string> hapticUriMap_;
     bool isHapticUriEmpty_ = false;
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper_ = nullptr;
-    std::unordered_map<int32_t, std::vector<std::pair<int32_t, bool>>> fdMap_;
+    std::unordered_map<int32_t, std::map<int32_t, std::pair<int32_t, bool>>> fdMap_;
 
     std::mutex systemTonePlayerMutex_;
 };
