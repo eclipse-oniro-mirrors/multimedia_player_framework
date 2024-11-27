@@ -2245,12 +2245,6 @@ Status HiPlayerImpl::Resume()
     Status ret = Status::OK;
     syncManager_->Resume();
     ret = pipeline_->Resume();
-    if (audioSink_ != nullptr) {
-        audioSink_->Resume();
-    }
-    if (subtitleSink_ != nullptr) {
-        subtitleSink_->Resume();
-    }
     if (ret != Status::OK) {
         UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
     }
