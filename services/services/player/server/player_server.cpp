@@ -133,6 +133,7 @@ int32_t PlayerServer::Init()
     appUid_ = IPCSkeleton::GetCallingUid();
     appPid_ = IPCSkeleton::GetCallingPid();
     MEDIA_LOGD("Get app uid: %{public}d, app pid: %{public}d, app tokenId: %{private}u", appUid_, appPid_, appTokenId_);
+    apiVersion_ = GetApiInfo(appUid_);
 
     PlayerServerStateMachine::Init(idleState_);
 
