@@ -178,8 +178,6 @@ bool PlayerDataSrcFuzzer::RunFuzz(uint8_t *data, size_t size)
     sleep(PLAY_TIME_1_SEC);
     playerStub->Pause();
     sleep(PLAY_TIME_1_SEC);
-    playerStub->Play();
-    sleep(PLAY_TIME_1_SEC);
     playerStub->SetLooping(true);
     sleep(PLAY_TIME_1_SEC);
     playerStub->Stop();
