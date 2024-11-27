@@ -37,7 +37,7 @@ protected:
 };
 
 // Test when cb is nullptr then Create returns nullptr.
-HWTEST_F(VideoEncoderEngineTest, create_when_cb_is_nullptr, TestSize.Level0)
+HWTEST_F(VideoEncoderEngineTest, create_when_cb_is_not_nullptr, TestSize.Level0)
 {
     VideoEncodeParam enCodeParam;
     VideoEncodeCallbackTester* cb = new VideoEncodeCallbackTester();
@@ -54,5 +54,11 @@ HWTEST_F(VideoEncoderEngineTest, create_when_video_format_is_nullptr, TestSize.L
     EXPECT_EQ(engine, nullptr);
 }
 
+HWTEST_F(VideoEncoderEngineTest, create_when_callback_is_nullptr, TestSize.Level0)
+{
+    VideoEncodeParam enCodeParam;
+    std::shared_ptr<IVideoEncoderEngine> engine = IVideoEncoderEngine::Create(enCodeParam, nullptr);
+    EXPECT_EQ(engine, nullptr);
+}
 } // namespace Media
 } // namespace OHOS

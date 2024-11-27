@@ -31,6 +31,25 @@ constexpr const char* WATER_MARK_DESC =
     "{\"imageEffect\":{\"filters\":[{\"name\":\"InplaceSticker\",\"values\":"
     "{\"RESOURCE_DIRECTORY\":\"/sys_prod/resource/camera\"}}],\"name\":\"brandWaterMark\"}}";
 
+constexpr const char* SURFACE_VERTEX_SHADER_CODE = R"(uniform mat4 uTexMatrix;
+    attribute vec4 aPosition;
+    attribute vec4 aTextureCoord;
+    varying vec2 vTextureCoord;
+    void main() {
+        gl_Position = aPosition;
+        vTextureCoord = (uTexMatrix * vec4(aTextureCoord.xy, 0.0, 1.0)).xy;
+    }
+    )";
+
+constexpr const char* SURFACE_ROTATE_FRAGMENT_SHADER_CODE = R"(
+    precision mediump float;
+    varying vec2 vTextureCoord;
+    uniform sampler2D sTexture;
+    void main() {
+        gl_FragColor = texture2D(sTexture, vTextureCoord);
+    }
+    )";
+
 class CompositionCallbackTesterImpl : public CompositionCallback {
 public:
     CompositionCallbackTesterImpl() = default;

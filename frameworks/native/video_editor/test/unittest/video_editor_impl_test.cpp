@@ -162,5 +162,10 @@ HWTEST_F(VideoEditorImplTest, cancel_composite_ok, TestSize.Level0)
     ASSERT_EQ(videoEditor->CancelComposite(), VEFError::ERR_OK);
 }
 
+HWTEST_F(VideoEditorImplTest, CreateCompositeEngine_return_nullptr, TestSize.Level0)
+{
+    auto compositeEngine = ICompositeEngine::CreateCompositeEngine(nullptr);
+    ASSERT_EQ(compositeEngine, nullptr);
+}
 } // namespace Media
 } // namespace OHOS
