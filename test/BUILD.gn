@@ -41,6 +41,7 @@ group("media_unit_test") {
       "unittest/screen_capture_test:screen_capture_capi_unit_test",
       "unittest/screen_capture_test:screen_capture_native_unit_test",
       "unittest/screen_capture_test:screen_capture_server_function_unit_test",
+      "unittest/services/utils:utils_unit_test",
       "unittest/soundpool_test:soundpool_unit_test",
       "unittest/transcoder_server:transcoder_server_unit_test",
       "unittest/utils_test:player_framework_utils_test",
