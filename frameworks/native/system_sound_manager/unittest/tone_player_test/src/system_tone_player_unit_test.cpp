@@ -335,16 +335,16 @@ HWTEST(SystemTonePlayerUnitTest, Media_TonePlayer_Unit_Test_016, TestSize.Level1
     auto systemTonePlayerImpl_ = std::make_shared<SystemTonePlayerImpl>(context_, *systemSoundMgr_, systemToneType);
     ToneHapticsType result = systemTonePlayerImpl_->ConvertToToneHapticsType(
         SystemToneType::SYSTEM_TONE_TYPE_SIM_CARD_0);
-    EXPECT_EQ(result, ToneHapticsType::HAPTICS_SYSTEM_TONE_TYPE_SIM_CARD_0);
+    EXPECT_EQ(result, ToneHapticsType::TEXT_MESSAGE_SIM_CARD_0);
     result = systemTonePlayerImpl_->ConvertToToneHapticsType(
         SystemToneType::SYSTEM_TONE_TYPE_SIM_CARD_1);
-    EXPECT_EQ(result, ToneHapticsType::HAPTICS_SYSTEM_TONE_TYPE_SIM_CARD_1);
+    EXPECT_EQ(result, ToneHapticsType::TEXT_MESSAGE_SIM_CARD_1);
     result = systemTonePlayerImpl_->ConvertToToneHapticsType(
         SystemToneType::SYSTEM_TONE_TYPE_NOTIFICATION);
-    EXPECT_EQ(result, ToneHapticsType::HAPTICS_SYSTEM_TONE_TYPE_NOTIFICATION);
+    EXPECT_EQ(result, ToneHapticsType::NOTIFICATION);
     SystemToneType temp = static_cast<SystemToneType>(99);
     result = systemTonePlayerImpl_->ConvertToToneHapticsType(temp);
-    EXPECT_EQ(result, ToneHapticsType::HAPTICS_SYSTEM_TONE_TYPE_NOTIFICATION);
+    EXPECT_EQ(result, ToneHapticsType::NOTIFICATION);
 }
 
 /**

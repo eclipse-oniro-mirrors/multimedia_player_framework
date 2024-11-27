@@ -323,7 +323,7 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetToneHapticsSettings_001
     auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
     std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
     ToneHapticsSettings settings;
-    systemSoundManager_->GetToneHapticsSettings(context_, HAPTICS_RINGTONE_TYPE_SIM_CARD_0, settings);
+    systemSoundManager_->GetToneHapticsSettings(context_, CALL_SIM_CARD_0, settings);
     EXPECT_NE(systemSoundManager_, nullptr);
 }
 
@@ -337,7 +337,7 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetToneHapticsSettings_002
     auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
     std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
     ToneHapticsSettings settings;
-    systemSoundManager_->GetToneHapticsSettings(context_, HAPTICS_RINGTONE_TYPE_SIM_CARD_1, settings);
+    systemSoundManager_->GetToneHapticsSettings(context_, CALL_SIM_CARD_1, settings);
     EXPECT_NE(systemSoundManager_, nullptr);
 }
 
@@ -351,7 +351,7 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetToneHapticsSettings_003
     auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
     std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
     ToneHapticsSettings settings;
-    systemSoundManager_->GetToneHapticsSettings(context_, HAPTICS_SYSTEM_TONE_TYPE_SIM_CARD_0, settings);
+    systemSoundManager_->GetToneHapticsSettings(context_, TEXT_MESSAGE_SIM_CARD_0, settings);
     EXPECT_NE(systemSoundManager_, nullptr);
 }
 
@@ -365,7 +365,7 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetToneHapticsSettings_004
     auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
     std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
     ToneHapticsSettings settings;
-    systemSoundManager_->GetToneHapticsSettings(context_, HAPTICS_SYSTEM_TONE_TYPE_SIM_CARD_1, settings);
+    systemSoundManager_->GetToneHapticsSettings(context_, TEXT_MESSAGE_SIM_CARD_1, settings);
     EXPECT_NE(systemSoundManager_, nullptr);
 }
 
@@ -380,7 +380,7 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetToneHapticsSettings_005
     std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
 
     ToneHapticsSettings settings;
-    int32_t result = systemSoundManager_->GetToneHapticsSettings(context_, HAPTICS_SYSTEM_TONE_TYPE_NOTIFICATION,
+    int32_t result = systemSoundManager_->GetToneHapticsSettings(context_, NOTIFICATION,
         settings);
 
     std::vector<std::shared_ptr<ToneHapticsAttrs>> toneHapticsAttrsArray;
@@ -388,9 +388,9 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetToneHapticsSettings_005
     if (result == 0 && toneHapticsAttrsArray.size() > 0) {
         settings.hapticsUri = toneHapticsAttrsArray[0]->GetUri();
         settings.mode = ToneHapticsMode::NON_SYNC;
-        result = systemSoundManager_->SetToneHapticsSettings(context_, HAPTICS_SYSTEM_TONE_TYPE_NOTIFICATION, settings);
+        result = systemSoundManager_->SetToneHapticsSettings(context_, NOTIFICATION, settings);
         EXPECT_EQ(result, 0);
-        result = systemSoundManager_->GetToneHapticsSettings(context_, HAPTICS_SYSTEM_TONE_TYPE_NOTIFICATION, settings);
+        result = systemSoundManager_->GetToneHapticsSettings(context_, NOTIFICATION, settings);
         EXPECT_EQ(result, 0);
 
         auto ringtoneAttrsArray_ = systemSoundManager_->GetSystemToneAttrList(context_, SYSTEM_TONE_TYPE_NOTIFICATION);
@@ -401,7 +401,7 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetToneHapticsSettings_005
         std::string newToneUri = ringtoneAttrsArray_[index]->GetUri();
         result = systemSoundManager_->SetSystemToneUri(context_, newToneUri, SYSTEM_TONE_TYPE_NOTIFICATION);
         EXPECT_EQ(result, 0);
-        result = systemSoundManager_->GetToneHapticsSettings(context_, HAPTICS_SYSTEM_TONE_TYPE_NOTIFICATION, settings);
+        result = systemSoundManager_->GetToneHapticsSettings(context_, NOTIFICATION, settings);
         EXPECT_EQ(result, 0);
     }
     EXPECT_NE(systemSoundManager_, nullptr);
@@ -424,12 +424,12 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_SetToneHapticsSettings_001
         srcSetting.hapticsUri = toneHapticsAttrsArray[0]->GetUri();
         srcSetting.mode = ToneHapticsMode::NON_SYNC;
         result = systemSoundManager_->SetToneHapticsSettings(context_,
-            ToneHapticsType::HAPTICS_SYSTEM_TONE_TYPE_NOTIFICATION, srcSetting);
+            ToneHapticsType::NOTIFICATION, srcSetting);
         EXPECT_EQ(result, 0);
 
         ToneHapticsSettings dstSetting;
         result = systemSoundManager_->GetToneHapticsSettings(context_,
-            ToneHapticsType::HAPTICS_SYSTEM_TONE_TYPE_NOTIFICATION, dstSetting);
+            ToneHapticsType::NOTIFICATION, dstSetting);
         EXPECT_EQ(result, 0);
         EXPECT_EQ(srcSetting.hapticsUri, dstSetting.hapticsUri);
         EXPECT_EQ(srcSetting.mode, dstSetting.mode);
@@ -553,7 +553,7 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_IsSystemToneType_002, Test
 HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_IsToneHapticsTypeValid_001, TestSize.Level2)
 {
     auto systemSoundManager_ =std::make_shared<SystemSoundManagerImpl>();
-    EXPECT_TRUE(systemSoundManager_->IsToneHapticsTypeValid(ToneHapticsType::HAPTICS_RINGTONE_TYPE_SIM_CARD_0));
+    EXPECT_TRUE(systemSoundManager_->IsToneHapticsTypeValid(ToneHapticsType::CALL_SIM_CARD_0));
 
     int defaultToneHapticsType = 4;
     ToneHapticsType toneHapticsType = static_cast<ToneHapticsType>(defaultToneHapticsType);
@@ -1073,33 +1073,33 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetDefaultToneHapticsSetti
     ToneHapticsSettings settings_;
     std::string currentToneUri;
     currentToneUri = systemSoundManager_->GetCurrentToneUri(context_,
-        ToneHapticsType::HAPTICS_RINGTONE_TYPE_SIM_CARD_0);
+        ToneHapticsType::CALL_SIM_CARD_0);
     systemSoundManager_->GetDefaultToneHapticsSettings(dataShareHelper, currentToneUri,
-        ToneHapticsType::HAPTICS_RINGTONE_TYPE_SIM_CARD_0, settings_);
+        ToneHapticsType::CALL_SIM_CARD_0, settings_);
     EXPECT_NE(systemSoundManager_, nullptr);
 
     currentToneUri = systemSoundManager_->GetCurrentToneUri(context_,
-        ToneHapticsType::HAPTICS_RINGTONE_TYPE_SIM_CARD_1);
+        ToneHapticsType::CALL_SIM_CARD_1);
     systemSoundManager_->GetDefaultToneHapticsSettings(dataShareHelper, currentToneUri,
-        ToneHapticsType::HAPTICS_RINGTONE_TYPE_SIM_CARD_1, settings_);
+        ToneHapticsType::CALL_SIM_CARD_1, settings_);
     EXPECT_NE(systemSoundManager_, nullptr);
 
     currentToneUri = systemSoundManager_->GetCurrentToneUri(context_,
-        ToneHapticsType::HAPTICS_SYSTEM_TONE_TYPE_NOTIFICATION);
+        ToneHapticsType::NOTIFICATION);
     systemSoundManager_->GetDefaultToneHapticsSettings(dataShareHelper, currentToneUri,
-        ToneHapticsType::HAPTICS_SYSTEM_TONE_TYPE_NOTIFICATION, settings_);
+        ToneHapticsType::NOTIFICATION, settings_);
     EXPECT_NE(systemSoundManager_, nullptr);
 
     currentToneUri = systemSoundManager_->GetCurrentToneUri(context_,
-        ToneHapticsType::HAPTICS_SYSTEM_TONE_TYPE_SIM_CARD_0);
+        ToneHapticsType::TEXT_MESSAGE_SIM_CARD_0);
     systemSoundManager_->GetDefaultToneHapticsSettings(dataShareHelper, currentToneUri,
-        ToneHapticsType::HAPTICS_SYSTEM_TONE_TYPE_SIM_CARD_0, settings_);
+        ToneHapticsType::TEXT_MESSAGE_SIM_CARD_0, settings_);
     EXPECT_NE(systemSoundManager_, nullptr);
 
     currentToneUri = systemSoundManager_->GetCurrentToneUri(context_,
-        ToneHapticsType::HAPTICS_SYSTEM_TONE_TYPE_SIM_CARD_1);
+        ToneHapticsType::TEXT_MESSAGE_SIM_CARD_1);
     systemSoundManager_->GetDefaultToneHapticsSettings(dataShareHelper, currentToneUri,
-        ToneHapticsType::HAPTICS_SYSTEM_TONE_TYPE_SIM_CARD_1, settings_);
+        ToneHapticsType::TEXT_MESSAGE_SIM_CARD_1, settings_);
     EXPECT_NE(systemSoundManager_, nullptr);
 
     dataShareHelper->Release();

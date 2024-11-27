@@ -183,11 +183,11 @@ void SystemSoundManagerImpl::InitMap(void)
     hapticsModeMap_[SYNC] = VIBRATE_PLAYMODE_SYNC;
     hapticsModeMap_[NON_SYNC] = VIBRATE_PLAYMODE_CLASSIC;
     hapticsTypeWhereArgsMap_ = {
-        {HAPTICS_RINGTONE_TYPE_SIM_CARD_0, {RING_TONE_TYPE_SIM_CARD_1, TONE_SETTING_TYPE_RINGTONE}},
-        {HAPTICS_RINGTONE_TYPE_SIM_CARD_1, {RING_TONE_TYPE_SIM_CARD_2, TONE_SETTING_TYPE_RINGTONE}},
-        {HAPTICS_SYSTEM_TONE_TYPE_SIM_CARD_0, {RING_TONE_TYPE_SIM_CARD_1, TONE_SETTING_TYPE_SHOT}},
-        {HAPTICS_SYSTEM_TONE_TYPE_SIM_CARD_1, {RING_TONE_TYPE_SIM_CARD_2, TONE_SETTING_TYPE_SHOT}},
-        {HAPTICS_SYSTEM_TONE_TYPE_NOTIFICATION, {RING_TONE_TYPE_SIM_CARD_BOTH, TONE_SETTING_TYPE_NOTIFICATION}},
+        {ToneHapticsType::CALL_SIM_CARD_0, {RING_TONE_TYPE_SIM_CARD_1, TONE_SETTING_TYPE_RINGTONE}},
+        {ToneHapticsType::CALL_SIM_CARD_1, {RING_TONE_TYPE_SIM_CARD_2, TONE_SETTING_TYPE_RINGTONE}},
+        {ToneHapticsType::TEXT_MESSAGE_SIM_CARD_0, {RING_TONE_TYPE_SIM_CARD_1, TONE_SETTING_TYPE_SHOT}},
+        {ToneHapticsType::TEXT_MESSAGE_SIM_CARD_1, {RING_TONE_TYPE_SIM_CARD_2, TONE_SETTING_TYPE_SHOT}},
+        {ToneHapticsType::NOTIFICATION, {RING_TONE_TYPE_SIM_CARD_BOTH, TONE_SETTING_TYPE_NOTIFICATION}},
     };
     hapticsStyleMap_[VIBRATE_TYPE_STANDARD] = {
         {HAPTICS_STYLE_GENTLE, VIBRATE_TYPE_GENTLE},
@@ -254,11 +254,11 @@ bool SystemSoundManagerImpl::IsSystemToneType(const unique_ptr<RingtoneAsset> &r
 bool SystemSoundManagerImpl::IsToneHapticsTypeValid(ToneHapticsType toneHapticsType)
 {
     switch (toneHapticsType) {
-        case HAPTICS_RINGTONE_TYPE_SIM_CARD_0 :
-        case HAPTICS_RINGTONE_TYPE_SIM_CARD_1 :
-        case HAPTICS_SYSTEM_TONE_TYPE_SIM_CARD_0 :
-        case HAPTICS_SYSTEM_TONE_TYPE_SIM_CARD_1 :
-        case HAPTICS_SYSTEM_TONE_TYPE_NOTIFICATION :
+        case ToneHapticsType::CALL_SIM_CARD_0 :
+        case ToneHapticsType::CALL_SIM_CARD_1 :
+        case ToneHapticsType::TEXT_MESSAGE_SIM_CARD_0 :
+        case ToneHapticsType::TEXT_MESSAGE_SIM_CARD_1 :
+        case ToneHapticsType::NOTIFICATION :
             return true;
         default:
             MEDIA_LOGE("IsToneHapticsTypeValid: toneHapticsType %{public}d is unavailable", toneHapticsType);
@@ -377,11 +377,11 @@ void SystemSoundManagerImpl::ReadDefaultToneHaptics(const char *paramName, ToneH
 
 void SystemSoundManagerImpl::InitDefaultToneHapticsMap()
 {
-    ReadDefaultToneHaptics(PARAM_HAPTICS_SETTING_RINGTONE_CARD_ONE, HAPTICS_RINGTONE_TYPE_SIM_CARD_0);
-    ReadDefaultToneHaptics(PARAM_HAPTICS_SETTING_RINGTONE_CARD_TWO, HAPTICS_RINGTONE_TYPE_SIM_CARD_1);
-    ReadDefaultToneHaptics(PARAM_HAPTICS_SETTING_SHOT_CARD_ONE, HAPTICS_SYSTEM_TONE_TYPE_SIM_CARD_0);
-    ReadDefaultToneHaptics(PARAM_HAPTICS_SETTING_SHOT_CARD_TWO, HAPTICS_SYSTEM_TONE_TYPE_SIM_CARD_1);
-    ReadDefaultToneHaptics(PARAM_HAPTICS_SETTING_NOTIFICATIONTONE, HAPTICS_SYSTEM_TONE_TYPE_NOTIFICATION);
+    ReadDefaultToneHaptics(PARAM_HAPTICS_SETTING_RINGTONE_CARD_ONE, ToneHapticsType::CALL_SIM_CARD_0);
+    ReadDefaultToneHaptics(PARAM_HAPTICS_SETTING_RINGTONE_CARD_TWO, ToneHapticsType::CALL_SIM_CARD_1);
+    ReadDefaultToneHaptics(PARAM_HAPTICS_SETTING_SHOT_CARD_ONE, ToneHapticsType::TEXT_MESSAGE_SIM_CARD_0);
+    ReadDefaultToneHaptics(PARAM_HAPTICS_SETTING_SHOT_CARD_TWO, ToneHapticsType::TEXT_MESSAGE_SIM_CARD_1);
+    ReadDefaultToneHaptics(PARAM_HAPTICS_SETTING_NOTIFICATIONTONE, ToneHapticsType::NOTIFICATION);
 }
 
 std::string SystemSoundManagerImpl::GetFullPath(const std::string &originalUri)
@@ -1489,10 +1489,10 @@ AudioStandard::AudioRingerMode SystemSoundManagerImpl::GetRingerMode() const
 bool SystemSoundManagerImpl::ConvertToRingtoneType(ToneHapticsType toneHapticsType, RingtoneType &ringtoneType)
 {
     switch (toneHapticsType) {
-        case HAPTICS_RINGTONE_TYPE_SIM_CARD_0:
+        case ToneHapticsType::CALL_SIM_CARD_0 :
             ringtoneType = RINGTONE_TYPE_SIM_CARD_0;
             return true;
-        case HAPTICS_RINGTONE_TYPE_SIM_CARD_1:
+        case ToneHapticsType::CALL_SIM_CARD_1 :
             ringtoneType = RINGTONE_TYPE_SIM_CARD_1;
             return true;
         default:
@@ -1503,13 +1503,13 @@ bool SystemSoundManagerImpl::ConvertToRingtoneType(ToneHapticsType toneHapticsTy
 bool SystemSoundManagerImpl::ConvertToSystemToneType(ToneHapticsType toneHapticsType, SystemToneType &systemToneType)
 {
     switch (toneHapticsType) {
-        case HAPTICS_SYSTEM_TONE_TYPE_SIM_CARD_0:
+        case ToneHapticsType::TEXT_MESSAGE_SIM_CARD_0 :
             systemToneType = SYSTEM_TONE_TYPE_SIM_CARD_0;
             return true;
-        case HAPTICS_SYSTEM_TONE_TYPE_SIM_CARD_1:
+        case ToneHapticsType::TEXT_MESSAGE_SIM_CARD_1 :
             systemToneType = SYSTEM_TONE_TYPE_SIM_CARD_1;
             return true;
-        case HAPTICS_SYSTEM_TONE_TYPE_NOTIFICATION:
+        case ToneHapticsType::NOTIFICATION :
             systemToneType = SYSTEM_TONE_TYPE_NOTIFICATION;
             return true;
         default:

@@ -208,15 +208,15 @@ HWTEST(RingtonePlayerUnitTest, Media_RingtonePlayer_010, TestSize.Level1)
     RingtoneType type = RINGTONE_TYPE_SIM_CARD_0;
     auto ringtonePlayerImpl_ = std::make_shared<RingtonePlayerImpl>(context_, *sysSoundMgr, type);
     ToneHapticsType result = ringtonePlayerImpl_->ConvertToToneHapticsType(type);
-    EXPECT_EQ(result, ToneHapticsType::HAPTICS_RINGTONE_TYPE_SIM_CARD_0);
+    EXPECT_EQ(result, ToneHapticsType::CALL_SIM_CARD_0);
 
     type = RINGTONE_TYPE_SIM_CARD_1;
     result = ringtonePlayerImpl_->ConvertToToneHapticsType(type);
-    EXPECT_EQ(result, ToneHapticsType::HAPTICS_RINGTONE_TYPE_SIM_CARD_1);
+    EXPECT_EQ(result, ToneHapticsType::CALL_SIM_CARD_1);
 
     type = static_cast<RingtoneType>(99);
     result = ringtonePlayerImpl_->ConvertToToneHapticsType(type);
-    EXPECT_EQ(result, ToneHapticsType::HAPTICS_RINGTONE_TYPE_SIM_CARD_0);
+    EXPECT_EQ(result, ToneHapticsType::CALL_SIM_CARD_0);
 }
 
 /**

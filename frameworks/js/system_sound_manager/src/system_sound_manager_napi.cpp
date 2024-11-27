@@ -44,7 +44,7 @@ const int32_t SIZE = 1024;
 /* Constants for tone type */
 const int32_t CARD_0 = 0;
 const int32_t CARD_1 = 1;
-const int32_t NOTIFICATION = 32;
+const int32_t SYSTEM_NOTIFICATION = 32;
 
 const int TYPEERROR = -2;
 const int ERROR = -1;
@@ -124,6 +124,36 @@ napi_value SystemSoundManagerNapi::CreateSystemToneTypeObject(napi_env env)
             status = AddNamedProperty(env, result, propName, iter.second);
             if (status != napi_ok) {
                 MEDIA_LOGE("CreateSystemToneTypeObject: Failed to add named prop!");
+                break;
+            }
+            propName.clear();
+        }
+        if (status == napi_ok) {
+            status = napi_create_reference(env, result, refCount, &systemToneType_);
+            if (status == napi_ok) {
+                return result;
+            }
+        }
+    }
+    napi_get_undefined(env, &result);
+
+    return result;
+}
+
+napi_value SystemSoundManagerNapi::CreateToneHapticsTypeObject(napi_env env)
+{
+    napi_value result = nullptr;
+    napi_status status;
+    std::string propName;
+    int32_t refCount = 1;
+
+    status = napi_create_object(env, &result);
+    if (status == napi_ok) {
+        for (auto &iter: toneHapticsTypeMap) {
+            propName = iter.first;
+            status = AddNamedProperty(env, result, propName, iter.second);
+            if (status != napi_ok) {
+                MEDIA_LOGE("CreateToneHapticsTypeObject: Failed to add named prop!");
                 break;
             }
             propName.clear();
@@ -269,6 +299,7 @@ napi_status SystemSoundManagerNapi::DefineStaticProperties(napi_env env, napi_va
         DECLARE_NAPI_STATIC_FUNCTION("getSystemSoundManager", GetSystemSoundManager),
         DECLARE_NAPI_PROPERTY("RingtoneType", CreateRingtoneTypeObject(env)),
         DECLARE_NAPI_PROPERTY("SystemToneType", CreateSystemToneTypeObject(env)),
+        DECLARE_NAPI_PROPERTY("ToneHapticsType", CreateToneHapticsTypeObject(env)),
         DECLARE_NAPI_STATIC_FUNCTION("createCustomizedToneAttrs", CreateCustomizedToneAttrs),
         DECLARE_NAPI_PROPERTY("ToneCustomizedType", CreateToneCustomizedTypeObject(env)),
         DECLARE_NAPI_PROPERTY("TONE_CATEGORY_RINGTONE", CreateToneCategoryRingtoneObject(env)),
@@ -506,7 +537,6 @@ napi_value SystemSoundManagerNapi::SetRingtoneUri(napi_env env, napi_callback_in
             asyncContext->uri = ExtractStringToEnv(env, argv[i]);
         } else if (i == PARAM2 && valueType == napi_number) {
             napi_get_value_int32(env, argv[i], &asyncContext->ringtoneType);
-            asyncContext->ringtoneType = ConvertRingtoneTypeToToneRealyType(asyncContext->ringtoneType);
         } else if (i == PARAM3 && valueType == napi_function) {
             napi_create_reference(env, argv[i], refCount, &asyncContext->callbackRef);
             break;
@@ -575,7 +605,6 @@ napi_value SystemSoundManagerNapi::GetRingtoneUri(napi_env env, napi_callback_in
                 asyncContext->abilityContext_ = GetAbilityContext(env, argv[i]);
             } else if (i == PARAM1 && valueType == napi_number) {
                 napi_get_value_int32(env, argv[i], &asyncContext->ringtoneType);
-                asyncContext->ringtoneType = ConvertRingtoneTypeToToneRealyType(asyncContext->ringtoneType);
             } else if (i == PARAM2 && valueType == napi_function) {
                 napi_create_reference(env, argv[i], refCount, &asyncContext->callbackRef);
                 break;
@@ -683,7 +712,6 @@ napi_value SystemSoundManagerNapi::GetRingtonePlayer(napi_env env, napi_callback
                 asyncContext->abilityContext_ = GetAbilityContext(env, argv[i]);
             } else if (i == PARAM1 && valueType == napi_number) {
                 napi_get_value_int32(env, argv[i], &asyncContext->ringtoneType);
-                asyncContext->ringtoneType = ConvertRingtoneTypeToToneRealyType(asyncContext->ringtoneType);
             } else if (i == PARAM2 && valueType == napi_function) {
                 napi_create_reference(env, argv[i], refCount, &asyncContext->callbackRef);
                 break;
@@ -752,7 +780,6 @@ napi_value SystemSoundManagerNapi::SetSystemToneUri(napi_env env, napi_callback_
             asyncContext->uri = ExtractStringToEnv(env, argv[i]);
         } else if (i == PARAM2 && valueType == napi_number) {
             napi_get_value_int32(env, argv[i], &asyncContext->systemToneType);
-            asyncContext->systemToneType = ConvertSystemToneTypeToToneRealyType(asyncContext->systemToneType);
         } else if (i == PARAM3 && valueType == napi_function) {
             napi_create_reference(env, argv[i], refCount, &asyncContext->callbackRef);
             break;
@@ -821,7 +848,6 @@ napi_value SystemSoundManagerNapi::GetSystemToneUri(napi_env env, napi_callback_
                 asyncContext->abilityContext_ = GetAbilityContext(env, argv[i]);
             } else if (i == PARAM1 && valueType == napi_number) {
                 napi_get_value_int32(env, argv[i], &asyncContext->systemToneType);
-                asyncContext->systemToneType = ConvertSystemToneTypeToToneRealyType(asyncContext->systemToneType);
             } else if (i == PARAM2 && valueType == napi_function) {
                 napi_create_reference(env, argv[i], refCount, &asyncContext->callbackRef);
                 break;
@@ -883,7 +909,6 @@ napi_value SystemSoundManagerNapi::GetSystemTonePlayer(napi_env env, napi_callba
                 asyncContext->abilityContext_ = GetAbilityContext(env, argv[i]);
             } else if (i == PARAM1 && valueType == napi_number) {
                 napi_get_value_int32(env, argv[i], &asyncContext->systemToneType);
-                asyncContext->systemToneType = ConvertSystemToneTypeToToneRealyType(asyncContext->systemToneType);
             } else if (i == PARAM2 && valueType == napi_function) {
                 napi_create_reference(env, argv[i], refCount, &asyncContext->callbackRef);
                 break;
@@ -1015,7 +1040,6 @@ napi_value SystemSoundManagerNapi::GetDefaultRingtoneAttrs(napi_env env, napi_ca
                 asyncContext->abilityContext_ = GetAbilityContext(env, argv[i]);
             } else if (i == PARAM1 && valueType == napi_number) {
                 napi_get_value_int32(env, argv[i], &asyncContext->ringtoneType);
-                asyncContext->ringtoneType = ConvertRingtoneTypeToToneRealyType(asyncContext->ringtoneType);
             }
         }
         CHECK_AND_RETURN_RET_LOG(asyncContext->abilityContext_ != nullptr && (asyncContext->ringtoneType == CARD_0 ||
@@ -1102,7 +1126,6 @@ napi_value SystemSoundManagerNapi::GetRingtoneAttrList(napi_env env, napi_callba
                 asyncContext->abilityContext_ = GetAbilityContext(env, argv[i]);
             } else if (i == PARAM1 && valueType == napi_number) {
                 napi_get_value_int32(env, argv[i], &asyncContext->ringtoneType);
-                asyncContext->ringtoneType = ConvertRingtoneTypeToToneRealyType(asyncContext->ringtoneType);
             }
         }
         CHECK_AND_RETURN_RET_LOG(asyncContext->abilityContext_ != nullptr && (asyncContext->ringtoneType == CARD_0 ||
@@ -1194,11 +1217,10 @@ napi_value SystemSoundManagerNapi::GetDefaultSystemToneAttrs(napi_env env, napi_
                 asyncContext->abilityContext_ = GetAbilityContext(env, argv[i]);
             } else if (i == PARAM1 && valueType == napi_number) {
                 napi_get_value_int32(env, argv[i], &asyncContext->systemToneType);
-                asyncContext->systemToneType = ConvertSystemToneTypeToToneRealyType(asyncContext->systemToneType);
             }
         }
         CHECK_AND_RETURN_RET_LOG(asyncContext->abilityContext_ != nullptr && (asyncContext->systemToneType == CARD_0 ||
-            asyncContext->systemToneType == CARD_1 || asyncContext->systemToneType == NOTIFICATION),
+            asyncContext->systemToneType == CARD_1 || asyncContext->systemToneType == SYSTEM_NOTIFICATION),
             ThrowErrorAndReturn(env, NAPI_ERR_INPUT_INVALID_INFO, NAPI_ERR_INPUT_INVALID), "Parameter error");
         napi_create_promise(env, &asyncContext->deferred, &result);
         napi_create_string_utf8(env, "GetDefaultSystemToneAttrs", NAPI_AUTO_LENGTH, &resource);
@@ -1255,11 +1277,10 @@ napi_value SystemSoundManagerNapi::GetSystemToneAttrList(napi_env env, napi_call
                 asyncContext->abilityContext_ = GetAbilityContext(env, argv[i]);
             } else if (i == PARAM1 && valueType == napi_number) {
                 napi_get_value_int32(env, argv[i], &asyncContext->systemToneType);
-                asyncContext->systemToneType = ConvertSystemToneTypeToToneRealyType(asyncContext->systemToneType);
             }
         }
         CHECK_AND_RETURN_RET_LOG(asyncContext->abilityContext_ != nullptr && (asyncContext->systemToneType == CARD_0 ||
-            asyncContext->systemToneType == CARD_1 || asyncContext->systemToneType == NOTIFICATION),
+            asyncContext->systemToneType == CARD_1 || asyncContext->systemToneType == SYSTEM_NOTIFICATION),
             ThrowErrorAndReturn(env, NAPI_ERR_INPUT_INVALID_INFO, NAPI_ERR_INPUT_INVALID), "Parameter error");
         napi_create_promise(env, &asyncContext->deferred, &result);
         napi_create_string_utf8(env, "GetSystemToneAttrList", NAPI_AUTO_LENGTH, &resource);
