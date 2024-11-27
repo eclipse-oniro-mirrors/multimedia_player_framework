@@ -368,6 +368,7 @@ int32_t PlayerServerMem::Release()
     std::unique_lock<std::mutex> lock(mutex_);
     if (RecoverMemByUser() != MSERR_OK) {
         lastestUserSetTime_ = std::chrono::steady_clock::now();
+        MEDIA_LOGE("Release:RecoverMemByUser failed, force release!");
         return PlayerServer::Release();
     }
 
