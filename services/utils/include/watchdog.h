@@ -65,12 +65,12 @@ public:
      * This event will be triggered when the watchdog times out. A timeout will only be triggered once.
      * Please inherit and override the interface.
      */
-    virtual void Alarm();
+    void Alarm();
 
     /**
      * This event will be triggered when the watchdog is restored.
      */
-    virtual void AlarmRecovery();
+    void AlarmRecovery();
 
     /**
      * The thread used to monitor the watchdog.
