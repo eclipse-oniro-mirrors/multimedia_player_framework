@@ -336,7 +336,6 @@ private:
     void MaxAmplitudeCallbackOff(AVPlayerNapi *jsPlayer, std::string callbackName);
     void DeviceChangeCallbackOn(AVPlayerNapi *jsPlayer, std::string callbackName);
     void DeviceChangeCallbackOff(AVPlayerNapi *jsPlayer, std::string callbackName);
-    int32_t GetJsApiVersion() override;
 
     std::condition_variable stopTaskQueCond_;
     bool taskQueStoped_ = false;

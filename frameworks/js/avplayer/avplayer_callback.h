@@ -35,7 +35,6 @@ public:
     virtual void NotifyVideoSize(int32_t width, int32_t height) = 0;
     virtual void NotifyIsLiveStream() = 0;
     virtual void NotifyDrmInfoUpdated(const std::multimap<std::string, std::vector<uint8_t>> &infos) = 0;
-    virtual int32_t GetJsApiVersion();
 };
 using OnInfoFunc = std::function<void(const int32_t, const Format &)>;
 class AVPlayerCallback : public PlayerCallback {
