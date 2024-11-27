@@ -75,8 +75,8 @@ std::list<int32_t> ScreenCaptureMonitorServiceProxy::IsScreenCaptureWorking()
     CHECK_AND_RETURN_RET_LOG(token, {}, "Failed to write descriptor!");
     int error = Remote()->SendRequest(IS_SCREEN_CAPTURE_WORKING, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, {}, "IsScreenCaptureWorking failed, error: %{public}d", error);
-    MEDIA_LOGI("ScreenCaptureMonitorServiceProxy::IsScreenCaptureWorking pid start.");
 
+    MEDIA_LOGD("ScreenCaptureMonitorServiceProxy::IsScreenCaptureWorking pid start.");
     std::list<int32_t> pidList;
     int32_t size = reply.ReadInt32();
     CHECK_AND_RETURN_RET_LOG(size < MAX_LIST_COUNT, {}, "content filter size exceed max range.");
@@ -84,9 +84,9 @@ std::list<int32_t> ScreenCaptureMonitorServiceProxy::IsScreenCaptureWorking()
         pidList.push_back(reply.ReadInt32());
     }
     for (auto pid: pidList) {
-        MEDIA_LOGI("ScreenCaptureMonitorServiceProxy::IsScreenCaptureWorking pid: %{public}d", pid);
+        MEDIA_LOGD("ScreenCaptureMonitorServiceProxy::IsScreenCaptureWorking pid: %{public}d", pid);
     }
-    MEDIA_LOGI("ScreenCaptureMonitorServiceProxy::IsScreenCaptureWorking pid end.");
+    MEDIA_LOGD("ScreenCaptureMonitorServiceProxy::IsScreenCaptureWorking pid end.");
     return pidList;
 }
 

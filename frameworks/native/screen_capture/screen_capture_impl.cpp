@@ -276,12 +276,6 @@ int32_t ScreenCaptureImpl::InitCaptureFile(AVScreenCaptureConfig config)
 
 int32_t ScreenCaptureImpl::StartScreenCapture()
 {
-    MEDIA_LOGI("ScreenCaptureImpl::StartScreenCapture IsScreenCaptureWorking pid start.");
-    std::list<int32_t> myList = OHOS::Media::ScreenCaptureMonitor::GetInstance()->IsScreenCaptureWorking();
-    for (auto pid: myList) {
-        MEDIA_LOGI("ScreenCaptureImpl::StartScreenCapture IsScreenCaptureWorking pid: %{public}d", pid);
-    }
-    MEDIA_LOGI("ScreenCaptureImpl::StartScreenCapture IsScreenCaptureWorking pid end.");
     MEDIA_LOGD("ScreenCaptureImpl:0x%{public}06" PRIXPTR " StartScreenCapture in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(screenCaptureService_ != nullptr, MSERR_UNKNOWN,
         "screen capture service does not exist..");
@@ -323,12 +317,6 @@ int32_t ScreenCaptureImpl::StopScreenCapture()
 
 int32_t ScreenCaptureImpl::StartScreenRecording()
 {
-    MEDIA_LOGI("ScreenCaptureImpl::StartScreenRecording IsScreenCaptureWorking pid start.");
-    std::list<int32_t> myList = OHOS::Media::ScreenCaptureMonitor::GetInstance()->IsScreenCaptureWorking();
-    for (auto pid: myList) {
-        MEDIA_LOGI("ScreenCaptureImpl::StartScreenRecording IsScreenCaptureWorking pid: %{public}d", pid);
-    }
-    MEDIA_LOGI("ScreenCaptureImpl::StartScreenRecording IsScreenCaptureWorking pid end.");
     MEDIA_LOGD("ScreenCaptureImpl:0x%{public}06" PRIXPTR " StartScreenCapture in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(screenCaptureService_ != nullptr, MSERR_UNKNOWN,
         "screen capture service does not exist..");

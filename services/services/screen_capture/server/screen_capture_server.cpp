@@ -1200,14 +1200,24 @@ void ScreenCaptureServer::PostStartScreenCaptureSuccessAction()
     }
 }
 
-bool ScreenCaptureServer::IsAppPidScreenCaptureServerStarted(int32_t pid)
+bool ScreenCaptureServer::IsFirstStartPidInstance(int32_t pid)
 {
     std::list<int32_t> pidList{};
     OHOS::Media::ScreenCaptureServer::GetRunningScreenCaptureInstancePid(pidList);
     std::list<int32_t>::iterator iter = find(pidList.begin(), pidList.end(), pid);
-    CHECK_AND_RETURN_RET_LOG(iter != pidList.end(), false,
-        "IsAppPidScreenCaptureServerStarted failed, pid: %{public}d", pid);
-    MEDIA_LOGI("ScreenCaptureServer::IsAppPidScreenCaptureServerStarted success, pid: %{public}d", pid);
+    if (iter == pidList.end()) {
+        MEDIA_LOGD("ScreenCaptureServer::IsFirstStartPidInstance firstPid: %{public}d", pid);
+        return true;
+    }
+    MEDIA_LOGD("ScreenCaptureServer::IsFirstStartPidInstance pid: %{public}d exists", pid);
+    return false;
+}
+
+bool ScreenCaptureServer::FirstPidUpdatePrivacyUsingPermissionState(int32_t pid)
+{
+    if (IsFirstStartPidInstance(pid)) {
+        return UpdatePrivacyUsingPermissionState(START_VIDEO);
+    }
     return true;
 }
 
@@ -1228,7 +1238,7 @@ void ScreenCaptureServer::PostStartScreenCapture(bool isSuccess)
             }
         }
 #endif
-        if (!IsAppPidScreenCaptureServerStarted(appInfo_.appPid) && !UpdatePrivacyUsingPermissionState(START_VIDEO)) {
+        if (!FirstPidUpdatePrivacyUsingPermissionState(appInfo_.appPid)) {
             MEDIA_LOGE("UpdatePrivacyUsingPermissionState START failed, dataType:%{public}d", captureConfig_.dataType);
             captureState_ = AVScreenCaptureState::STARTED;
             screenCaptureCb_->OnError(ScreenCaptureErrorType::SCREEN_CAPTURE_ERROR_INTERNAL,
@@ -2708,11 +2718,21 @@ int32_t ScreenCaptureServer::StopScreenCaptureInner(AVScreenCaptureStateCode sta
     return ret;
 }
 
-bool ScreenCaptureServer::IsLastAppPidStarted(int32_t pid)
+bool ScreenCaptureServer::IsLastStartedPidInstance(int32_t pid)
 {
-    MEDIA_LOGI("ScreenCaptureServer::IsLastAppPidStarted START.");
-    CHECK_AND_RETURN_RET_LOG(CountStartedScreenCaptureServerNumByPid(pid) == 1, false,
-        "pid: %{public}d exists more than one instance.", pid);
+    MEDIA_LOGI("ScreenCaptureServer::IsLastStartedPidInstance START.");
+    if (CountStartedScreenCaptureServerNumByPid(pid) != 1) {
+        MEDIA_LOGD("pid: %{public}d exists more than one instance.");
+        return false;
+    }
+    return true;
+}
+
+bool ScreenCaptureServer::LastPidUpdatePrivacyUsingPermissionState(int32_t pid)
+{
+    if (IsLastStartedPidInstance(pid)) {
+        return UpdatePrivacyUsingPermissionState(STOP_VIDEO);
+    }
     return true;
 }
 
@@ -2737,7 +2757,7 @@ void ScreenCaptureServer::PostStopScreenCapture(AVScreenCaptureStateCode stateCo
 #endif
     isPrivacyAuthorityEnabled_ = false;
 
-    if (IsLastAppPidStarted(appInfo_.appPid) && !UpdatePrivacyUsingPermissionState(STOP_VIDEO)) {
+    if (!LastPidUpdatePrivacyUsingPermissionState(appInfo_.appPid)) {
         MEDIA_LOGE("UpdatePrivacyUsingPermissionState STOP failed, dataType:%{public}d", captureConfig_.dataType);
     }
     std::unordered_map<std::string, std::string> payload;

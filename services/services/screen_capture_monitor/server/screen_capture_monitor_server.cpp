@@ -72,7 +72,7 @@ std::list<int32_t> ScreenCaptureMonitorServer::IsScreenCaptureWorking()
     std::list<int32_t> pidList{};
     OHOS::Media::ScreenCaptureServer::GetRunningScreenCaptureInstancePid(pidList);
     for (auto pid: pidList) {
-        MEDIA_LOGI("ScreenCaptureMonitorServer::IsScreenCaptureWorking pid %{public}d", pid);
+        MEDIA_LOGD("ScreenCaptureMonitorServer::IsScreenCaptureWorking pid %{public}d", pid);
     }
     return pidList;
 }
