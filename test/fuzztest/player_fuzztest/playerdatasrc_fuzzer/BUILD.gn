@@ -22,7 +22,7 @@ ohos_fuzztest("PlayerDataSrcFuzzTest") {
   module_out_path = module_output_path
   fuzz_config_file =
       "$MEDIA_ROOT_DIR/test/fuzztest/player_fuzztest/playerdatasrc_fuzzer"
-    
+
   defines = [ "IMAGE_COLORSPACE_FLAG" ]
   defines += player_framework_defines
 
@@ -65,12 +65,12 @@ ohos_fuzztest("PlayerDataSrcFuzzTest") {
     "-DBINDER_IPC_32BIT",
   ]
   sources = [
-        "$MEDIA_ROOT_DIR/services/services/media_data_source/ipc/media_data_source_stub.cpp",
-        "$MEDIA_ROOT_DIR/test/fuzztest/common/stub_common.cpp",
-        "$MEDIA_ROOT_DIR/services/services/common/avsharedmemory_ipc.cpp",
-        "playerdatasrc_fuzzer.cpp",
-      ]
-  deps = [ 
+    "$MEDIA_ROOT_DIR/services/services/common/avsharedmemory_ipc.cpp",
+    "$MEDIA_ROOT_DIR/services/services/media_data_source/ipc/media_data_source_stub.cpp",
+    "$MEDIA_ROOT_DIR/test/fuzztest/common/stub_common.cpp",
+    "playerdatasrc_fuzzer.cpp",
+  ]
+  deps = [
     "$MEDIA_ROOT_DIR/interfaces/inner_api/native:media_client",
     "$MEDIA_ROOT_DIR/services/services:media_service",
     "$MEDIA_ROOT_DIR/services/utils:media_service_utils",
