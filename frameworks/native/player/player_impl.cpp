@@ -532,7 +532,6 @@ void PlayerImplCallback::OnError(int32_t errorCode, const std::string &errorMsg)
             errorCode = MSERR_DATA_SOURCE_IO_ERROR;
         }
     }
-
     CHECK_AND_RETURN_LOG(playerCb != nullptr, "playerCb does not exist..");
     playerCb->OnError(errorCode, errorMsg);
 }
