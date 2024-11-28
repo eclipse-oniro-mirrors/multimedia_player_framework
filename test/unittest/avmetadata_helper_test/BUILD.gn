@@ -93,9 +93,9 @@ ohos_unittest("avmetadata_helper_unit_test") {
 
   sources = [
     "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/avmetadatahelper/av_thumbnail_generator.cpp",
-    "avmetadata_collector_unit_test.cpp",
     "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/avmetadatahelper/avmetadata_collector.cpp",
     "av_thumbnail_generator_unit_test.cpp",
+    "avmetadata_collector_unit_test.cpp",
   ]
 
   deps = [
