@@ -63,6 +63,10 @@ ohos_unittest("avmetadatahelper_unit_test") {
     "$MEDIA_PLAYER_ROOT_DIR/frameworks/native/avmetadatahelper",
     "$MEDIA_PLAYER_ROOT_DIR/services/include",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/factory",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/monitor/ipc",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/sa_media/client",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/sa_media/ipc",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/avmetadatahelper/ipc",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/engine_intf",
     "$MEDIA_PLAYER_ROOT_DIR/services/utils/include",
     "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",
@@ -80,6 +84,12 @@ ohos_unittest("avmetadatahelper_unit_test") {
     "$MEDIA_PLAYER_ROOT_DIR/services/utils/include",
     "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/engine_intf",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_data_source/ipc",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/monitor/client",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/monitor/ipc",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/avmetadatahelper/client",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/avmetadatahelper/ipc",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/common",
   ]
 
   if (player_framework_support_avsession_background) {
@@ -103,6 +113,7 @@ ohos_unittest("avmetadatahelper_unit_test") {
     "av_thumbnail_generator_unit_test.cpp",
     "avmetadata_mock.cpp",
     "avmetadata_unit_test.cpp",
+    "avmetadatahelper_impl_unit_test.cpp",
     "avmetadatahelper_server_unit_test.cpp",
   ]
 
