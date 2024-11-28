@@ -139,6 +139,16 @@ HWTEST_F(VideoDecoderEngineImplTest, OnVideoDecodeResult_ok, TestSize.Level0)
     (void)close(srcFd);
 }
 
+HWTEST_F(VideoDecoderEngineImplTest, OnVideoDecodeResult_nullptr, TestSize.Level0)
+{
+    std::string fileName = "H264_AAC.mp4";
+    int32_t srcFd = VideoResource::instance().getFileResource(fileName);
+    auto engine = std::make_shared<VideoDecoderEngineImpl>(1, srcFd, nullptr);
+    engine->OnVideoDecoderFrame(80);
+    ASSERT_EQ(engine->cb_, nullptr);
+    (void)close(srcFd);
+}
+
 HWTEST_F(VideoDecoderEngineImplTest, OnVideoDecodeResult_success, TestSize.Level0)
 {
     std::string fileName = "H264_AAC.mp4";
@@ -164,6 +174,22 @@ HWTEST_F(VideoDecoderEngineImplTest, GetVideoDuration_ok, TestSize.Level0)
     (void)close(srcFd);
 }
 
+HWTEST_F(VideoDecoderEngineImplTest, VideoDecoderEngineImpl_GetVideoDuration_error, TestSize.Level0)
+{
+    VideoDecodeCallbackTester* cb = new VideoDecodeCallbackTester();
+    auto engine = std::make_shared<VideoDecoderEngineImpl>(1, 1, cb);
+    EXPECT_EQ(engine->InitDeMuxer(), VEFError::ERR_INTERNAL_ERROR);
+    EXPECT_EQ(engine->GetVideoDuration(), -1);
+}
+
+HWTEST_F(VideoDecoderEngineImplTest, VideoDecoderEngineImpl_GetRotation_zero, TestSize.Level0)
+{
+    VideoDecodeCallbackTester* cb = new VideoDecodeCallbackTester();
+    auto engine = std::make_shared<VideoDecoderEngineImpl>(1, 1, cb);
+    EXPECT_EQ(engine->InitDeMuxer(), VEFError::ERR_INTERNAL_ERROR);
+    EXPECT_EQ(engine->GetRotation(), 0);
+}
+
 HWTEST_F(VideoDecoderEngineImplTest, VideoDecoderEngineImpl_StartDecode, TestSize.Level0)
 {
     std::string fileName = "H264_AAC_multi_track.mp4";
@@ -172,6 +198,30 @@ HWTEST_F(VideoDecoderEngineImplTest, VideoDecoderEngineImpl_StartDecode, TestSiz
     VideoDecodeCallbackTester* deCb = new VideoDecodeCallbackTester();
     auto decoderEngine = std::make_shared<VideoDecoderEngineImpl>(1, srcFd, deCb);
     EXPECT_EQ(decoderEngine->StartDecode(), VEFError::ERR_INTERNAL_ERROR);
+    (void)close(srcFd);
+}
+
+HWTEST_F(VideoDecoderEngineImplTest, VideoDecoderEngineImpl_StartDecode_audioDecoder_not_nullptr, TestSize.Level0)
+{
+    std::string fileName = "H264_AAC.mp4";
+    int32_t srcFd = VideoResource::instance().getFileResource(fileName);
+    VideoDecodeCallbackTester* cb = new VideoDecodeCallbackTester();
+    auto engine = std::make_shared<VideoDecoderEngineImpl>(1, srcFd, cb);
+    EXPECT_EQ(engine->Init(), VEFError::ERR_OK);
+    engine->videoDecoder_->decoder_ = nullptr;
+    EXPECT_EQ(engine->StartDecode(), VEFError::ERR_INTERNAL_ERROR);
+    (void)close(srcFd);
+}
+
+HWTEST_F(VideoDecoderEngineImplTest, VideoDecoderEngineImpl_StartDecode_audioDecoder_decoder_nullptr, TestSize.Level0)
+{
+    std::string fileName = "H264_AAC.mp4";
+    int32_t srcFd = VideoResource::instance().getFileResource(fileName);
+    VideoDecodeCallbackTester* cb = new VideoDecodeCallbackTester();
+    auto engine = std::make_shared<VideoDecoderEngineImpl>(1, srcFd, cb);
+    EXPECT_EQ(engine->Init(), VEFError::ERR_OK);
+    engine->audioDecoder_->decoder_ = nullptr;
+    EXPECT_EQ(engine->StartDecode(), VEFError::ERR_INTERNAL_ERROR);
     (void)close(srcFd);
 }
 
@@ -270,6 +320,36 @@ HWTEST_F(VideoDecoderEngineImplTest, VideoDecoderEngineImpl_ReadAudioPacket, Tes
     attr1.flags = 0;
     EXPECT_EQ(decoderEngine->ReadAudioPacket(sampleMem, &attr1), VEFError::ERR_OK);
     (void)close(srcFd);
+    OH_AVMemory_Destroy(sampleMem);
+}
+
+HWTEST_F(VideoDecoderEngineImplTest, VideoDecoderEngineImpl_ReadAudioPacket_err, TestSize.Level0)
+{
+    VideoDecodeCallbackTester* deCb = new VideoDecodeCallbackTester();
+    auto decoderEngine = std::make_shared<VideoDecoderEngineImpl>(1, 1, deCb);
+    EXPECT_EQ(decoderEngine->InitDeMuxer(), VEFError::ERR_INTERNAL_ERROR);
+    uint32_t buffersize = 1024 * 1024;
+    OH_AVMemory* sampleMem = OH_AVMemory_Create(buffersize);
+    OH_AVCodecBufferAttr attr;
+    attr.size = 1024 * 1024;
+    attr.pts = 100;
+    attr.flags = 1;
+    EXPECT_EQ(decoderEngine->ReadAudioPacket(sampleMem, &attr), VEFError::ERR_INTERNAL_ERROR);
+    OH_AVMemory_Destroy(sampleMem);
+}
+
+HWTEST_F(VideoDecoderEngineImplTest, VideoDecoderEngineImpl_ReadVideoPacket_err, TestSize.Level0)
+{
+    VideoDecodeCallbackTester* deCb = new VideoDecodeCallbackTester();
+    auto decoderEngine = std::make_shared<VideoDecoderEngineImpl>(1, 1, deCb);
+    EXPECT_EQ(decoderEngine->InitDeMuxer(), VEFError::ERR_INTERNAL_ERROR);
+    uint32_t buffersize = 1024 * 1024;
+    OH_AVMemory* sampleMem = OH_AVMemory_Create(buffersize);
+    OH_AVCodecBufferAttr attr;
+    attr.size = 1024 * 1024;
+    attr.pts = 100;
+    attr.flags = 1;
+    EXPECT_EQ(decoderEngine->ReadVideoPacket(sampleMem, &attr), VEFError::ERR_INTERNAL_ERROR);
     OH_AVMemory_Destroy(sampleMem);
 }
 } // namespace Media

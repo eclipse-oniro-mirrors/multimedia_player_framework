@@ -16,6 +16,7 @@
 #include "gtest/gtest.h"
 #include "render/graphics/render_engine/graphics_render_engine_impl.h"
 #include "render/graphics/graphics_render_engine.h"
+#include "data_center/effect/effect_factory.h"
 #include "ut_common_data.h"
 #include <fcntl.h>
 
@@ -47,6 +48,13 @@ HWTEST_F(GraphicsRenderEngineImplTest, GraphicsRenderEngineImplTest_StopRender, 
 {
     GraphicsRenderEngineImpl graphicsRenderEngineImpl(1);
     EXPECT_EQ(graphicsRenderEngineImpl.StopRender(), VEFError::ERR_OK);
+}
+
+HWTEST_F(GraphicsRenderEngineImplTest, GraphicsRenderEngineImplTest_GetInputWindow_nullptr, TestSize.Level0)
+{
+    GraphicsRenderEngineImpl graphicsRenderEngineImpl(1);
+    graphicsRenderEngineImpl.surfaceTexture_ = nullptr;
+    EXPECT_EQ(graphicsRenderEngineImpl.GetInputWindow(), nullptr);
 }
 
 HWTEST_F(GraphicsRenderEngineImplTest, GraphicsRenderEngineImplTest_GetInputWindow, TestSize.Level0)
@@ -125,6 +133,21 @@ HWTEST_F(GraphicsRenderEngineImplTest, GraphicsRenderEngineImplTest_RenderEffect
     EXPECT_EQ(renderEngine.RenderEffects(nullptr, renderInfo), nullptr);
 }
 
+HWTEST_F(GraphicsRenderEngineImplTest, GraphicsRenderEngineImplTest_RenderEffects_list_not_empty, TestSize.Level0)
+{
+    auto renderEngine = GraphicsRenderEngineImpl(1);
+    auto renderInfo = std::make_shared<GraphicsRenderInfo>();
+    auto effect = EffectFactory::CreateEffect(WATER_MARK_DESC);
+    renderInfo->effectInfoList_.emplace_back(effect->GetRenderInfo());
+    EXPECT_EQ(renderEngine.RenderEffects(nullptr, renderInfo), nullptr);
+}
+
+HWTEST_F(GraphicsRenderEngineImplTest, GraphicsRenderEngineImplTest_CreateEffect_nullptr, TestSize.Level0)
+{
+    std::string description = "";
+    EXPECT_EQ(EffectFactory::CreateEffect(description), nullptr);
+}
+
 HWTEST_F(GraphicsRenderEngineImplTest, GraphicsRenderEngineImplTest_DrawFrame, TestSize.Level0)
 {
     std::string fileName = "H264_AAC_multi_track.mp4";
@@ -143,7 +166,7 @@ HWTEST_F(GraphicsRenderEngineImplTest, GraphicsRenderEngineImplTest_DrawFrame, T
     renderEngine.shaderPassOnScreen_ = std::make_shared<ShaderPassOnScreen>(renderEngine.context_.get());
     auto renderTexture = std::make_shared<RenderTexture>(renderEngine.context_.get(), 320, 480, GL_RGBA8);
     renderEngine.DrawFrame(100, renderTexture);
-
+    renderEngine.DrawFrame(100, nullptr);
     auto renderEngine1 = GraphicsRenderEngineImpl(1);
     renderEngine1.context_ = std::make_shared<RenderContext>();
     renderEngine1.shaderPassOnScreen_ = std::make_shared<ShaderPassOnScreen>(renderEngine1.context_.get());

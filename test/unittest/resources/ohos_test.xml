@@ -490,6 +490,9 @@
         <preparer>
             <option name="push" value="test_videofile/H264_AAC.mp4 -> /data/test" src="res"/>
             <option name="push" value="test_videofile/H264_AAC_multi_track.mp4 -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/H264_MP3.mp4 -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/H264_AAC_320x240.mp4 -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/ChineseColor_H264_AAC_480p_15fps.mp4 -> /data/test" src="res"/>
         </preparer>
     </target>
 </configuration>

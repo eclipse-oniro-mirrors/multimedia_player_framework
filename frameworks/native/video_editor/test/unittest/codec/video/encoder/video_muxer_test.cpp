@@ -29,17 +29,24 @@ protected:
     void SetUp() override
     {
         muxer_ = new VideoMuxer(1);
+        format_ = OH_AVFormat_Create();
     }
 
     void TearDown() override
     {
         if (muxer_ != nullptr) {
             delete muxer_;
+            muxer_ = nullptr;
         }
-        muxer_ = nullptr;
+        if (format_ != nullptr) {
+            OH_AVFormat_Destroy(format_);
+            format_ = nullptr;
+        }
     }
 
-    VideoMuxer* muxer_;
+private:
+    VideoMuxer* muxer_ = nullptr;
+    OH_AVFormat* format_ = nullptr;
 };
 
 // test VideoMuxer Start method
@@ -60,10 +67,20 @@ HWTEST_F(VideoMuxerTest, VideoMuxer_AddVideoTrack, TestSize.Level0)
     EXPECT_EQ(muxer_->AddVideoTrack(nullptr), VEFError::ERR_INTERNAL_ERROR);
 }
 
+HWTEST_F(VideoMuxerTest, VideoMuxer_AddVideoTrack_format_not_nullptr, TestSize.Level0)
+{
+    EXPECT_EQ(muxer_->AddVideoTrack(format_), VEFError::ERR_INTERNAL_ERROR);
+}
+
 // test VideoMuxer AddAudioTrack method
 HWTEST_F(VideoMuxerTest, VideoMuxer_AddAudioTrack, TestSize.Level0)
 {
     EXPECT_EQ(muxer_->AddAudioTrack(nullptr), VEFError::ERR_INTERNAL_ERROR);
+}
+
+HWTEST_F(VideoMuxerTest, VideoMuxer_AddAudioTrack_format_not_nullptr, TestSize.Level0)
+{
+    EXPECT_EQ(muxer_->AddAudioTrack(format_), VEFError::ERR_INTERNAL_ERROR);
 }
 
 // test VideoMuxer WriteAudioData method

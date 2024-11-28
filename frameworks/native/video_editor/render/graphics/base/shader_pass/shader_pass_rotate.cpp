@@ -62,10 +62,14 @@ SurfaceDataPtr ShaderPassRotate::GetRenderEffectData()
 void ShaderPassRotate::PreDraw()
 {
     SurfaceDataPtr surfaceData = std::static_pointer_cast<SurfaceData>(renderEffectData_);
-    if (shader_) {
-        shader_->BindTexture("sTexture", 0, surfaceData->inputTexture_->GetTextureId());
-        shader_->SetMat4("uTexMatrix", surfaceData->uTexMatrix);
+    if (shader_ == nullptr || surfaceData == nullptr) {
+        MEDIA_LOGE("ShaderPassRotate::PreDraw failed because the shader or surfaceData is nullptr.");
+        return;
     }
+    if (surfaceData->inputTexture_ != nullptr) {
+        shader_->BindTexture("sTexture", 0, surfaceData->inputTexture_->GetTextureId());
+    }
+    shader_->SetMat4("uTexMatrix", surfaceData->uTexMatrix);
 }
 
 void ShaderPassRotate::PostDraw()

@@ -101,6 +101,12 @@ HWTEST_F(VideoEncoderTest, VideoEncoder_ConfigureEncoder, TestSize.Level0)
     OH_AVFormat_Destroy(format);
 }
 
+HWTEST_F(VideoEncoderTest, VideoEncoder_ConfigureEncoder_format_nullptr, TestSize.Level0)
+{
+    VideoEncoder videoEncoder(1, nullptr);
+    EXPECT_EQ(videoEncoder.ConfigureEncoder(nullptr), VEFError::ERR_INTERNAL_ERROR);
+}
+
 // test VideoEncoder CreateEncoder method
 HWTEST_F(VideoEncoderTest, VideoEncoder_CreateEncoder, TestSize.Level0)
 {
@@ -174,6 +180,10 @@ HWTEST_F(VideoEncoderTest, VideoEncoder_WriteFrame, TestSize.Level0)
     auto encoder1 = std::make_shared<VideoEncoder>(12, encoderCb); // 12 VideoEncoder构造函数入参id
     encoder1->codecState_ = true;
     EXPECT_EQ(encoder1->WriteFrame(sampleMem_, &attr), VEFError::ERR_OK);
+
+    auto encoder2 = std::make_shared<VideoEncoder>(12, nullptr); // 12 VideoEncoder构造函数入参id
+    encoder2->codecState_ = true;
+    EXPECT_EQ(encoder2->WriteFrame(sampleMem_, &attr), VEFError::ERR_OK);
 }
 } // namespace Media
 } // namespace OHOS
