@@ -30,7 +30,8 @@ public:
 
     MOCK_METHOD(std::shared_ptr<AVBuffer>, CreateAVBuffer, (const AVBufferConfig &config), ());
 
-    MOCK_METHOD(std::shared_ptr<AVBuffer>, CreateAVBuffer, (std::shared_ptr<AVAllocator> allocator, int32_t capacity, int32_t align), ());
+    MOCK_METHOD(std::shared_ptr<AVBuffer>, CreateAVBuffer,
+                (std::shared_ptr<AVAllocator> allocator, int32_t capacity, int32_t align), ());
 
     MOCK_METHOD(std::shared_ptr<AVBuffer>, CreateAVBuffer, (uint8_t *ptr, int32_t capacity, int32_t size), ());
 

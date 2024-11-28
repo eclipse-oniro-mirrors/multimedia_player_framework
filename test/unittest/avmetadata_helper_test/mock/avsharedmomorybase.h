@@ -24,9 +24,11 @@ namespace OHOS {
 namespace Media {
 class AVSharedMemoryBase {
 public:
-    MOCK_METHOD(std::shared_ptr<AVSharedMemory>, CreateFromLocal, (int32_t size, uint32_t flags, const std::string &name), ());
+    MOCK_METHOD(std::shared_ptr<AVSharedMemory>, CreateFromLocal,
+                (int32_t size, uint32_t flags, const std::string &name), ());
 
-    MOCK_METHOD(std::shared_ptr<AVSharedMemory>, CreateFromRemote, (int32_t fd, int32_t size, uint32_t flags, const std::string &name), ());
+    MOCK_METHOD(std::shared_ptr<AVSharedMemory>, CreateFromRemote,
+                (int32_t fd, int32_t size, uint32_t flags, const std::string &name), ());
 
     ~AVSharedMemoryBase() = default;
     AVSharedMemoryBase() = default;
