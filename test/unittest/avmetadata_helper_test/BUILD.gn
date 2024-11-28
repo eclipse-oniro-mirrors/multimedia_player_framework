@@ -92,8 +92,10 @@ ohos_unittest("avmetadata_helper_unit_test") {
   }
 
   sources = [
-    "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/avmetadatahelper/avmetadata_collector.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/avmetadatahelper/av_thumbnail_generator.cpp",
     "avmetadata_collector_unit_test.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/avmetadatahelper/avmetadata_collector.cpp",
+    "av_thumbnail_generator_unit_test.cpp",
   ]
 
   deps = [
@@ -106,11 +108,13 @@ ohos_unittest("avmetadata_helper_unit_test") {
     "ability_runtime:ability_connect_callback_stub",
     "access_token:libaccesstoken_sdk",
     "audio_framework:audio_client",
+    "av_codec:av_codec_client",
     "c_utils:utils",
     "call_manager:tel_call_manager_api",
     "common_event_service:cesfwk_innerkits",
     "core_service:tel_core_service_api",
     "drivers_interface_camera:metadata",
+    "drivers_interface_display:display_commontype_idl_headers",
     "googletest:gmock_main",
     "graphic_2d:librender_service_base",
     "graphic_surface:surface",

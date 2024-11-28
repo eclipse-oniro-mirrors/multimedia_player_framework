@@ -147,15 +147,15 @@ std::shared_ptr<Meta> AVThumbnailGenerator::GetVideoTrackInfo()
         if (trackMime_.find("video/") == 0) {
             Plugins::MediaType mediaType;
             CHECK_AND_RETURN_RET_LOG(trackInfos[index]->GetData(Tag::MEDIA_TYPE, mediaType), nullptr,
-                                     "GetTargetTrackInfo failed to get mediaType, index:%{public}d", index);
+                                     "GetTargetTrackInfo failed to get mediaType, index:%{public}zu", index);
             CHECK_AND_RETURN_RET_LOG(
                 mediaType == Plugins::MediaType::VIDEO, nullptr,
-                "GetTargetTrackInfo mediaType is not video, index:%{public}d, mediaType:%{public}d", index,
+                "GetTargetTrackInfo mediaType is not video, index:%{public}d, mediaType:%{public}zu", index,
                 static_cast<int32_t>(mediaType));
             CHECK_AND_RETURN_RET_LOG(trackInfos[index]->Get<Tag::VIDEO_FRAME_RATE>(frameRate_) && frameRate_ > 0,
                 nullptr, "failed to get video frame rate");
             trackIndex_ = index;
-            MEDIA_LOGI("0x%{public}06" PRIXPTR " GetTrackInfo success trackIndex_:%{public}d, trackMime_:%{public}s",
+            MEDIA_LOGI("0x%{public}06" PRIXPTR " GetTrackInfo success trackIndex_:%{public}zu, trackMime_:%{public}s",
                        FAKE_POINTER(this), trackIndex_, trackMime_.c_str());
             if (trackInfos[index]->Get<Tag::VIDEO_ROTATION>(rotation_)) {
                 MEDIA_LOGI("rotation %{public}d", static_cast<int32_t>(rotation_));
@@ -484,7 +484,7 @@ int32_t AVThumbnailGenerator::GetYuvDataAlignStride(const sptr<SurfaceBuffer> &s
         std::make_shared<AVSharedMemoryBase>(sizeof(OutputFrame) + width * height * BYTES_PER_PIXEL_YUV,
             AVSharedMemory::Flags::FLAGS_READ_WRITE, "FetchedFrameMemory");
     auto ret = fetchedFrameAtTime_->Init();
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Create AVSharedmemory failed, ret:%{public}d");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Create AVSharedmemory failed, ret:%{public}d", ret);
     uint8_t *dstPtr = static_cast<uint8_t *>(sizeof(OutputFrame) + fetchedFrameAtTime_->GetBase());
     uint8_t *srcPtr = static_cast<uint8_t *>(surfaceBuffer->GetVirAddr());
     int32_t format = surfaceBuffer->GetFormat();

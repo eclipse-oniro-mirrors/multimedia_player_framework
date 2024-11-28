@@ -26,6 +26,7 @@
 #include "buffer/avbuffer.h"
 #include "common/media_source.h"
 #include "common/seek_callback.h"
+#include "demuxer/type_finder.h"
 #include "filter/filter.h"
 #include "meta/media_types.h"
 #include "osal/task/autolock.h"
@@ -33,6 +34,7 @@
 #include "plugin/plugin_base.h"
 #include "plugin/plugin_info.h"
 #include "plugin/plugin_time.h"
+#include "plugin/demuxer_plugin.h"
 
 namespace OHOS {
 namespace Media {

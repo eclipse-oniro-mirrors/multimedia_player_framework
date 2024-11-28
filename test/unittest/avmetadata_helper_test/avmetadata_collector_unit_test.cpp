@@ -111,6 +111,7 @@ HWTEST_F(AVMetaDataCollectorUnitTest, GetAVMetadata, TestSize.Level1)
         {AV_KEY_LOCATION_LATITUDE, "test"},
         {AV_KEY_LOCATION_LONGITUDE, "test"},
         {AV_KEY_VIDEO_IS_HDR_VIVID, "yes"},
+        {10086, "test"},
     };
     std::shared_ptr<Meta> customerInfo = std::make_shared<Meta>();
     EXPECT_CALL(*mediaDemuxer, GetUserMeta()).WillRepeatedly(Return(nullptr));
@@ -139,13 +140,13 @@ HWTEST_F(AVMetaDataCollectorUnitTest, GetArtPicture, TestSize.Level1)
     std::shared_ptr<Meta> imageMeta = std::make_shared<Meta>();
     std::vector<std::shared_ptr<Meta>> trackInfos;
     std::vector<uint8_t> coverAddr;
+    trackInfos.push_back(nullptr);
     coverAddr.push_back(1);
     videoMeta->SetData(Tag::MIME_TYPE, "video/mp4");
     videoMeta->SetData(Tag::MEDIA_COVER, coverAddr);
     imageMeta->SetData(Tag::MIME_TYPE, "image");
     trackInfos.push_back(videoMeta);
     trackInfos.push_back(imageMeta);
-    trackInfos.push_back(nullptr);
  
     EXPECT_CALL(*mediaDemuxer, GetStreamMetaInfo()).WillOnce(Return(trackInfos));
     EXPECT_TRUE(avmetaDataCollector->GetArtPicture() != nullptr);
@@ -263,12 +264,17 @@ HWTEST_F(AVMetaDataCollectorUnitTest, FormatMimeType, TestSize.Level1)
     std::shared_ptr<Meta> globalInfo = make_shared<Meta>();
     globalInfo->SetData(Tag::MEDIA_FILE_TYPE, Plugins::FileType::UNKNOW);
     avmetaDataCollector->FormatMimeType(avmeta, globalInfo);
-    EXPECT_TRUE(avmeta.tbl_.size() == 0);
-    EXPECT_TRUE(avmeta.tbl_.size() == 0);
-    avmeta.SetMeta(AV_KEY_HAS_AUDIO, "yes");
-    globalInfo->SetData(Tag::MEDIA_FILE_TYPE, "mp4");
+    EXPECT_FALSE(avmeta.HasMeta(AV_KEY_MIME_TYPE));
+
+    globalInfo->SetData(Tag::MEDIA_FILE_TYPE, "test");
+
     avmetaDataCollector->FormatMimeType(avmeta, globalInfo);
-    EXPECT_TRUE(avmeta.tbl_.size() != 0);
+    EXPECT_FALSE(avmeta.HasMeta(AV_KEY_MIME_TYPE));
+
+    avmeta.SetMeta(AV_KEY_HAS_AUDIO, "");
+    globalInfo->SetData(Tag::MEDIA_FILE_TYPE, Plugins::FileType::MP4);
+    avmetaDataCollector->FormatMimeType(avmeta, globalInfo);
+    EXPECT_FALSE(avmeta.HasMeta(AV_KEY_MIME_TYPE));
 }
  
 /**
