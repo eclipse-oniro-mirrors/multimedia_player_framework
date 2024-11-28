@@ -42,7 +42,7 @@ public:
     {
         CHECK_AND_RETURN_RET_LOG(memory != nullptr, MSERR_NO_MEMORY, "memory is nullptr");
         CacheFlag flag;
-        if (caches_ != nullptr && caches_ == memory.get()) {
+        if (caches_ != nullptr && caches_ == memory.get() && uniqueSharedMemoryID_ == memory->GetSharedMemoryID()) {
             MEDIA_LOGI("HIT_CACHE");
             flag = CacheFlag::HIT_CACHE;
             parcel.WriteUint8(static_cast<uint8_t>(flag));
@@ -51,12 +51,14 @@ public:
             MEDIA_LOGI("UPDATE_CACHE");
             flag = CacheFlag::UPDATE_CACHE;
             caches_ = memory.get();
+            uniqueSharedMemoryID_ = memory->GetSharedMemoryID();
             parcel.WriteUint8(static_cast<uint8_t>(flag));
             return WriteAVSharedMemoryToParcel(memory, parcel);
         }
     }
 
 private:
+    uint64_t uniqueSharedMemoryID_ = 0;
     AVSharedMemory *caches_;
 };
 
@@ -142,7 +144,10 @@ int32_t MediaDataSourceProxy::ReadAt(const std::shared_ptr<AVSharedMemory> &mem,
     data.WriteInt64(pos);
     int error = Remote()->SendRequest(static_cast<uint32_t>(ListenerMsg::READ_AT), data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, 0, "ReadAt failed, error: %{public}d", error);
-
+    std::uint8_t* bytePtr = reinterpret_cast<uint8_t*>(mem->GetBase());
+    for(int i = 0; i < 10; i++) {
+        MEDIA_LOGI("laamy_proxy_: %{public}d", static_cast<int>(bytePtr[i]));
+    }
     return reply.ReadInt32();
 }
 
