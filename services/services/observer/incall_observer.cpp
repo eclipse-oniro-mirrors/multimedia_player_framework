@@ -54,7 +54,7 @@ bool InCallObserver::IsInCall()
 {
     UnRegisterObserver();
     RegisterObserver();
-    return inCall_;
+    return inCall_.load();
 }
 
 bool InCallObserver::RegisterInCallObserverCallBack(std::weak_ptr<InCallObserverCallBack> callback)
