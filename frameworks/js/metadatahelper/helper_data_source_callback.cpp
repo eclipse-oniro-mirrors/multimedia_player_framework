@@ -14,7 +14,7 @@
  */
 
 #include "helper_data_source_callback.h"
-#include "buffer/avsharedmemory.h"
+#include "avsharedmemory.h"
 #include "media_dfx.h"
 #include "media_log.h"
 #include "media_errors.h"
@@ -26,6 +26,8 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_METADATA, "H
 
 namespace OHOS {
 namespace Media {
+const std::string HELPER_READAT_CALLBACK_NAME = "readAt";
+
 HelperDataSourceJsCallback::~HelperDataSourceJsCallback()
 {
     isExit_ = true;
@@ -85,11 +87,14 @@ int32_t HelperDataSourceCallback::ReadAt(const std::shared_ptr<AVSharedMemory> &
     CHECK_AND_RETURN_RET_LOG(loop != nullptr, 0, "Failed to get uv event loop");
     uv_work_t *work = new(std::nothrow) uv_work_t;
     CHECK_AND_RETURN_RET_LOG(work != nullptr, 0, "Failed to new uv_work_t");
-    ON_SCOPE_EXIT(1) {
-        delete work;
-    };
 
     HelperDataSourceJsCallbackWraper *cbWrap = new(std::nothrow) HelperDataSourceJsCallbackWraper();
+    ON_SCOPE_EXIT(1) {
+        if (cbWrap != nullptr) {
+            delete cbWrap;
+        }
+        delete work;
+    };
     CHECK_AND_RETURN_RET_LOG(cbWrap != nullptr, 0, "Failed to new HelperDataSourceJsCallbackWraper");
     cbWrap->cb_ = cb_;
     work->data = reinterpret_cast<void *>(cbWrap);
@@ -189,7 +194,6 @@ void HelperDataSourceCallback::SaveCallbackReference(const std::string &name, st
 
 int32_t HelperDataSourceCallback::GetCallback(const std::string &name, napi_value *callback)
 {
-    MEDIA_LOGD("GetCallback in");
     (void)name;
     if (refMap_.find(HELPER_READAT_CALLBACK_NAME) == refMap_.end()) {
         return MSERR_INVALID_VAL;
