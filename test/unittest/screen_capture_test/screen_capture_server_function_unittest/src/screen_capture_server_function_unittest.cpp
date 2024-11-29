@@ -913,13 +913,13 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnReceiveUserPrivacyAuthority_001, Tes
 
 HWTEST_F(ScreenCaptureServerFunctionTest, OnReceiveUserPrivacyAuthority_002, TestSize.Level2)
 {
-    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTING;
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::POPUP_WINDOW;
     ASSERT_NE(screenCaptureServer_->OnReceiveUserPrivacyAuthority(false), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, OnReceiveUserPrivacyAuthority_003, TestSize.Level2)
 {
-    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTING;
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::POPUP_WINDOW;
     ASSERT_NE(screenCaptureServer_->OnReceiveUserPrivacyAuthority(true), MSERR_OK);
 }
 

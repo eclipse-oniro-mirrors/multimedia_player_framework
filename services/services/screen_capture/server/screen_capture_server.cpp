@@ -55,7 +55,7 @@ static const int32_t MAX_SESSION_ID = 256;
 static const int32_t SESSION_ID_SALT = 10;
 static UniqueIDGenerator g_idGenerator(MAX_SESSION_ID);
 static std::list<int32_t> startedSessionIDList_;
-static const int32_t MAX_SESSION_PER_UID = 8;
+static const int32_t MAX_SESSION_PER_UID = 6;
 
 // As in the ScreenCaptureServer destructor function mutexGlobal_ is required to update serverMap
 // MAKE SURE THAT when mutexGlobal_ is been holding MUST NOT trigger ScreenCaptureServer destructor to be called
@@ -73,7 +73,8 @@ static void RemoveScreenCaptureServerMap(int32_t sessionId)
 {
     std::unique_lock<std::shared_mutex> lock(mutexServerMapRWGlobal_);
     serverMap.erase(sessionId);
-    g_idGenerator.ReturnID(sessionId);
+    int32_t returnId = g_idGenerator.ReturnID(sessionId);
+    CHECK_AND_RETURN_LOG(returnId != -1, "RemoveScreenCaptureServerMap returnId: %{public}d is invalid", returnId);
     MEDIA_LOGI("RemoveScreenCaptureServerMap end. sessionId: %{public}d, serverMap size: %{public}d.",
         sessionId, static_cast<uint32_t>(serverMap.size()));
 }
@@ -246,7 +247,7 @@ void ScreenCaptureServer::OnDMPrivateWindowChange(bool hasPrivate)
 bool ScreenCaptureServer::CanScreenCaptureInstanceBeCreate()
 {
     MEDIA_LOGI("CanScreenCaptureInstanceBeCreate start.");
-    CHECK_AND_RETURN_RET_LOG(serverMap.size() <= MAX_SESSION_ID, false,
+    CHECK_AND_RETURN_RET_LOG(serverMap.size() < MAX_SESSION_ID, false,
         "ScreenCaptureInstanceCanBeCreate exceed ScreenCaptureServer instances limit.");
     int32_t curAppUid = IPCSkeleton::GetCallingUid();
     return CheckScreenCaptureSessionIdLimit(curAppUid);
@@ -270,7 +271,7 @@ std::shared_ptr<IScreenCaptureService> ScreenCaptureServer::Create()
     std::list<int32_t> pidList{};
     OHOS::Media::ScreenCaptureServer::GetRunningScreenCaptureInstancePid(pidList);
     for (auto pid: pidList) {
-        MEDIA_LOGI("ScreenCaptureServer IsScreenCaptureWorking pid %{public}d", pid);
+        MEDIA_LOGD("ScreenCaptureServer IsScreenCaptureWorking pid %{public}d", pid);
     }
     MEDIA_LOGI("ScreenCaptureServer Create start.");
     CHECK_AND_RETURN_RET_LOG(CanScreenCaptureInstanceBeCreate(), nullptr,

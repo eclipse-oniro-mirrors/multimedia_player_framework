@@ -48,13 +48,14 @@ int32_t UniqueIDGenerator::GetNewID()
     return id;
 }
 
-void UniqueIDGenerator::ReturnID(int32_t id)
+int32_t UniqueIDGenerator::ReturnID(int32_t id)
 {
     std::unique_lock<std::mutex> lock(queueMtx);
     if (id < 1 || id > limit_) {
-        return;
+        return -1;
     }
     availableIDs.push(id);
+    return id;
 }
 } // namespace Media
 } // namespace OHOS
