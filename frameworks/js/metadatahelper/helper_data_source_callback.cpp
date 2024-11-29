@@ -86,7 +86,7 @@ int32_t HelperDataSourceCallback::ReadAt(const std::shared_ptr<AVSharedMemory> &
     uv_work_t *work = new(std::nothrow) uv_work_t;
     HelperDataSourceJsCallbackWraper *cbWrap = new(std::nothrow) HelperDataSourceJsCallbackWraper();
     ON_SCOPE_EXIT(1) {
-        if (cbWrap != nullptr) {
+        if (work != nullptr) {
             delete work;
         }
         if (cbWrap != nullptr) {
