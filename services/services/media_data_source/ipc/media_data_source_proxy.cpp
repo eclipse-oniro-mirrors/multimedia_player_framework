@@ -144,10 +144,6 @@ int32_t MediaDataSourceProxy::ReadAt(const std::shared_ptr<AVSharedMemory> &mem,
     data.WriteInt64(pos);
     int error = Remote()->SendRequest(static_cast<uint32_t>(ListenerMsg::READ_AT), data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, 0, "ReadAt failed, error: %{public}d", error);
-    std::uint8_t* bytePtr = reinterpret_cast<uint8_t*>(mem->GetBase());
-    for(int i = 0; i < 10; i++) {
-        MEDIA_LOGI("laamy_proxy_: %{public}d", static_cast<int>(bytePtr[i]));
-    }
     return reply.ReadInt32();
 }
 
