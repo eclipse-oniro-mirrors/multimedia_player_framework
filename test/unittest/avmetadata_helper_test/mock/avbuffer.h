@@ -26,7 +26,7 @@ namespace OHOS {
 namespace Media {
 class AVBuffer {
 public:
-    ~AVBuffer() = default;
+    ~AVBuffer() {};
 
     MOCK_METHOD(std::shared_ptr<AVBuffer>, CreateAVBuffer, (const AVBufferConfig &config), ());
 
