@@ -85,11 +85,14 @@ int32_t MediaDataSourceCallback::ReadAt(const std::shared_ptr<AVSharedMemory> &m
     CHECK_AND_RETURN_RET_LOG(loop != nullptr, 0, "Failed to get uv event loop");
     uv_work_t *work = new(std::nothrow) uv_work_t;
     CHECK_AND_RETURN_RET_LOG(work != nullptr, 0, "Failed to new uv_work_t");
-    ON_SCOPE_EXIT(1) {
-        delete work;
-    };
 
     MediaDataSourceJsCallbackWraper *cbWrap = new(std::nothrow) MediaDataSourceJsCallbackWraper();
+    ON_SCOPE_EXIT(1) {
+        if (cbWrap != nullptr) {
+            delete cbWrap;
+        }
+        delete work;
+    };
     CHECK_AND_RETURN_RET_LOG(cbWrap != nullptr, 0, "Failed to new MediaDataSourceJsCallbackWraper");
     cbWrap->cb_ = cb_;
     work->data = reinterpret_cast<void *>(cbWrap);
