@@ -84,15 +84,16 @@ int32_t HelperDataSourceCallback::ReadAt(const std::shared_ptr<AVSharedMemory> &
     napi_get_uv_event_loop(env_, &loop);
     CHECK_AND_RETURN_RET_LOG(loop != nullptr, 0, "Failed to get uv event loop");
     uv_work_t *work = new(std::nothrow) uv_work_t;
-    CHECK_AND_RETURN_RET_LOG(work != nullptr, 0, "Failed to new uv_work_t");
-
     HelperDataSourceJsCallbackWraper *cbWrap = new(std::nothrow) HelperDataSourceJsCallbackWraper();
     ON_SCOPE_EXIT(1) {
         if (cbWrap != nullptr) {
+            delete work;
+        }
+        if (cbWrap != nullptr) {
             delete cbWrap;
         }
-        delete work;
     };
+    CHECK_AND_RETURN_RET_LOG(work != nullptr, 0, "Failed to new uv_work_t");
     CHECK_AND_RETURN_RET_LOG(cbWrap != nullptr, 0, "Failed to new HelperDataSourceJsCallbackWraper");
     cbWrap->cb_ = cb_;
     work->data = reinterpret_cast<void *>(cbWrap);
