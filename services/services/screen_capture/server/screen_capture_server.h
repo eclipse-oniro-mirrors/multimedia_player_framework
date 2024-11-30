@@ -266,11 +266,11 @@ class ScreenCaptureServer : public std::enable_shared_from_this<ScreenCaptureSer
         public IScreenCaptureService, public NoCopyable {
 public:
     static std::map<int32_t, std::weak_ptr<ScreenCaptureServer>> serverMap;
-    static const int32_t MAX_SESSION_ID;
-    static const int32_t SESSION_ID_SALT;
-    static UniqueIDGenerator g_idGenerator;
+    static const int32_t maxSessionId;
+    static const int32_t sessionIdSalt;
+    static UniqueIDGenerator gIdGenerator;
     static std::list<int32_t> startedSessionIDList_;
-    static const int32_t MAX_SESSION_PER_UID;
+    static const int32_t maxSessionPerUid;
     static std::shared_mutex mutexServerMapRWGlobal_;
     static std::shared_mutex mutexListRWGlobal_;
 

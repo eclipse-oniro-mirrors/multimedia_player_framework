@@ -71,9 +71,9 @@ bool InCallObserver::RegisterInCallObserverCallBack(std::weak_ptr<InCallObserver
     return false;
 }
 
-void InCallObserver::UnRegisterInCallObserverCallBack(std::weak_ptr<InCallObserverCallBack> callback)
+void InCallObserver::UnregisterInCallObserverCallBack(std::weak_ptr<InCallObserverCallBack> callback)
 {
-    MEDIA_LOGI("InCallObserver::UnRegisterInCallObserverCallBack Start.");
+    MEDIA_LOGI("InCallObserver::UnregisterInCallObserverCallBack Start.");
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_LOG(callback.lock(), "callback is null");
     for (auto iter = inCallObserverCallBacks_.begin(); iter != inCallObserverCallBacks_.end();) {
@@ -83,7 +83,7 @@ void InCallObserver::UnRegisterInCallObserverCallBack(std::weak_ptr<InCallObserv
             iter++;
         }
     }
-    MEDIA_LOGI("UnRegisterInCallObserverCallBack END. inCallObserverCallBacks_.size(): %{public}d",
+    MEDIA_LOGI("UnregisterInCallObserverCallBack END. inCallObserverCallBacks_.size(): %{public}d",
         static_cast<int32_t>(inCallObserverCallBacks_.size()));
 }
 

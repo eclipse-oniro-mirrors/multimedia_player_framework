@@ -79,11 +79,11 @@ static const auto NOTIFICATION_SUBSCRIBER = NotificationSubscriber();
 static constexpr int32_t AUDIO_CHANGE_TIME = 200000; // 200 ms
 
 std::map<int32_t, std::weak_ptr<OHOS::Media::ScreenCaptureServer>> ScreenCaptureServer::serverMap;
-const int32_t ScreenCaptureServer::MAX_SESSION_ID = 256;
-const int32_t ScreenCaptureServer::SESSION_ID_SALT = 10;
-UniqueIDGenerator ScreenCaptureServer::g_idGenerator(MAX_SESSION_ID);
+const int32_t ScreenCaptureServer::maxSessionId = 256;
+const int32_t ScreenCaptureServer::sessionIdSalt = 10;
+UniqueIDGenerator ScreenCaptureServer::gIdGenerator(maxSessionId);
 std::list<int32_t> ScreenCaptureServer::startedSessionIDList_;
-const int32_t ScreenCaptureServer::MAX_SESSION_PER_UID = 6;
+const int32_t ScreenCaptureServer::maxSessionPerUid = 6;
 
 std::shared_mutex ScreenCaptureServer::mutexServerMapRWGlobal_;
 std::shared_mutex ScreenCaptureServer::mutexListRWGlobal_;
@@ -144,7 +144,8 @@ void PrivateWindowListenerInScreenCapture::OnPrivateWindow(bool hasPrivate)
     }
 }
 
-void ScreenCaptureServer::AddScreenCaptureServerMap(int32_t sessionId, std::weak_ptr<OHOS::Media::ScreenCaptureServer> server)
+void ScreenCaptureServer::AddScreenCaptureServerMap(int32_t sessionId,
+    std::weak_ptr<OHOS::Media::ScreenCaptureServer> server)
 {
     std::unique_lock<std::shared_mutex> lock(mutexServerMapRWGlobal_);
     serverMap.insert(std::make_pair(sessionId, server));
@@ -155,7 +156,7 @@ void ScreenCaptureServer::RemoveScreenCaptureServerMap(int32_t sessionId)
 {
     std::unique_lock<std::shared_mutex> lock(mutexServerMapRWGlobal_);
     serverMap.erase(sessionId);
-    int32_t returnId = g_idGenerator.ReturnID(sessionId);
+    int32_t returnId = gIdGenerator.ReturnID(sessionId);
     CHECK_AND_RETURN_LOG(returnId != -1, "RemoveScreenCaptureServerMap returnId: %{public}d is invalid", returnId);
     MEDIA_LOGI("RemoveScreenCaptureServerMap end. sessionId: %{public}d, serverMap size: %{public}d.",
         sessionId, static_cast<uint32_t>(serverMap.size()));
@@ -171,7 +172,7 @@ bool ScreenCaptureServer::CheckScreenCaptureSessionIdLimit(int32_t curAppUid)
             iter != serverMap.end(); iter++) {
                 if ((iter->second).lock() != nullptr) {
                     countForUid += (curAppUid == (iter->second).lock()->GetAppUid()) ? 1 : 0;
-                    CHECK_AND_RETURN_RET_LOG(countForUid < MAX_SESSION_PER_UID, false,
+                    CHECK_AND_RETURN_RET_LOG(countForUid < maxSessionPerUid, false,
                         "Create failed, uid(%{public}d) has created too many ScreenCaptureServer instances", curAppUid);
                 }
             }
@@ -245,7 +246,7 @@ void ScreenCaptureServer::OnDMPrivateWindowChange(bool hasPrivate)
 bool ScreenCaptureServer::CanScreenCaptureInstanceBeCreate()
 {
     MEDIA_LOGI("CanScreenCaptureInstanceBeCreate start.");
-    CHECK_AND_RETURN_RET_LOG(serverMap.size() < MAX_SESSION_ID, false,
+    CHECK_AND_RETURN_RET_LOG(serverMap.size() < maxSessionId, false,
         "ScreenCaptureInstanceCanBeCreate exceed ScreenCaptureServer instances limit.");
     int32_t curAppUid = IPCSkeleton::GetCallingUid();
     return CheckScreenCaptureSessionIdLimit(curAppUid);
@@ -254,7 +255,7 @@ bool ScreenCaptureServer::CanScreenCaptureInstanceBeCreate()
 std::shared_ptr<IScreenCaptureService> ScreenCaptureServer::CreateScreenCaptureNewInstance()
 {
     MEDIA_LOGI("CreateScreenCaptureNewInstance");
-    int32_t id = g_idGenerator.GetNewID();
+    int32_t id = gIdGenerator.GetNewID();
     CHECK_AND_RETURN_RET_LOG(id != -1, nullptr, "GetNewID failed.");
     MEDIA_LOGI("CreateScreenCaptureNewInstance newId: %{public}d", id);
     std::shared_ptr<ScreenCaptureServer> server = std::make_shared<ScreenCaptureServer>();
@@ -968,8 +969,8 @@ int32_t ScreenCaptureServer::StartAudioCapture()
 int32_t ScreenCaptureServer::AddSaltToSessionId(int32_t id)
 {
     MEDIA_LOGD("AddSaltToSessionId initId: %{public}d, newId: %{public}d", id,
-        (id + SESSION_ID_SALT) % MAX_SESSION_ID);
-    return (id + SESSION_ID_SALT) % MAX_SESSION_ID;
+        (id + sessionIdSalt) % maxSessionId);
+    return (id + sessionIdSalt) % maxSessionId;
 }
 
 std::string ScreenCaptureServer::GenerateThreadNameByPrefix(std::string threadName)

@@ -41,7 +41,7 @@ public:
     bool OnCallStateUpdated(bool inCall);
     bool IsInCall();
     bool RegisterInCallObserverCallBack(std::weak_ptr<InCallObserverCallBack> registerInCallObserverCallBack);
-    void UnRegisterInCallObserverCallBack(std::weak_ptr<InCallObserverCallBack> unRegisterInCallObserverCallBack);
+    void UnregisterInCallObserverCallBack(std::weak_ptr<InCallObserverCallBack> unRegisterInCallObserverCallBack);
 private:
     std::vector<MediaTelephonyListener *> mediaTelephonyListeners_;
     std::vector<std::weak_ptr<InCallObserverCallBack>> inCallObserverCallBacks_;
