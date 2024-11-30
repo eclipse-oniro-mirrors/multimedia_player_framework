@@ -38,7 +38,7 @@ public:
     ~AccountObserver();
     bool OnAccountsSwitch();
     bool RegisterAccountObserverCallBack(std::weak_ptr<AccountObserverCallBack> callback);
-    void UnRegisterAccountObserverCallBack(std::weak_ptr<AccountObserverCallBack> callback);
+    void UnregisterAccountObserverCallBack(std::weak_ptr<AccountObserverCallBack> callback);
 private:
     bool Init();
     std::vector<std::weak_ptr<AccountObserverCallBack>> accountObserverCallBacks_;

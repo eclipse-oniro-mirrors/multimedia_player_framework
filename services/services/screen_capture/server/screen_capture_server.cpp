@@ -44,112 +44,11 @@ using OHOS::Rosen::DMError;
 
 namespace {
 const std::string DUMP_PATH = "/data/media/screen_capture.bin";
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "ScreenCaptureServer"};
 }
 
 namespace OHOS {
 namespace Media {
-namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "ScreenCaptureServer"};
-static std::map<int32_t, std::weak_ptr<OHOS::Media::ScreenCaptureServer>> serverMap;
-static const int32_t MAX_SESSION_ID = 256;
-static const int32_t SESSION_ID_SALT = 10;
-static UniqueIDGenerator g_idGenerator(MAX_SESSION_ID);
-static std::list<int32_t> startedSessionIDList_;
-static const int32_t MAX_SESSION_PER_UID = 6;
-
-// As in the ScreenCaptureServer destructor function mutexGlobal_ is required to update serverMap
-// MAKE SURE THAT when mutexGlobal_ is been holding MUST NOT trigger ScreenCaptureServer destructor to be called
-std::shared_mutex mutexServerMapRWGlobal_;
-std::shared_mutex mutexListRWGlobal_;
-
-static void AddScreenCaptureServerMap(int32_t sessionId, std::weak_ptr<OHOS::Media::ScreenCaptureServer> server)
-{
-    std::unique_lock<std::shared_mutex> lock(mutexServerMapRWGlobal_);
-    serverMap.insert(std::make_pair(sessionId, server));
-    MEDIA_LOGI("AddScreenCaptureServerMap end, serverMap size: %{public}d.", static_cast<uint32_t>(serverMap.size()));
-}
-
-static void RemoveScreenCaptureServerMap(int32_t sessionId)
-{
-    std::unique_lock<std::shared_mutex> lock(mutexServerMapRWGlobal_);
-    serverMap.erase(sessionId);
-    int32_t returnId = g_idGenerator.ReturnID(sessionId);
-    CHECK_AND_RETURN_LOG(returnId != -1, "RemoveScreenCaptureServerMap returnId: %{public}d is invalid", returnId);
-    MEDIA_LOGI("RemoveScreenCaptureServerMap end. sessionId: %{public}d, serverMap size: %{public}d.",
-        sessionId, static_cast<uint32_t>(serverMap.size()));
-}
-
-static bool CheckScreenCaptureSessionIdLimit(int32_t curAppUid)
-{
-    int32_t countForUid = 0;
-    MEDIA_LOGI("CheckScreenCaptureSessionIdLimit start. curAppUid: %{public}d.", curAppUid);
-    {
-        std::unique_lock<std::shared_mutex> lock(mutexServerMapRWGlobal_);
-        for (std::map<int32_t, std::weak_ptr<OHOS::Media::ScreenCaptureServer>>::iterator iter = serverMap.begin();
-            iter != serverMap.end(); iter++) {
-                if ((iter->second).lock() != nullptr) {
-                    countForUid += (curAppUid == (iter->second).lock()->GetAppUid()) ? 1 : 0;
-                    CHECK_AND_RETURN_RET_LOG(countForUid < MAX_SESSION_PER_UID, false,
-                        "Create failed, uid(%{public}d) has created too many ScreenCaptureServer instances", curAppUid);
-                }
-            }
-    }
-    MEDIA_LOGI("CheckScreenCaptureSessionIdLimit end.");
-    return true;
-}
-
-static std::shared_ptr<OHOS::Media::ScreenCaptureServer> GetScreenCaptureServerByIdWithLock(int32_t id)
-{
-    std::unique_lock<std::shared_mutex> lock(mutexServerMapRWGlobal_);
-    auto iter = serverMap.find(id);
-    if (iter == serverMap.end()) {
-        return nullptr;
-    }
-    return (iter->second).lock();
-}
-
-static std::list<int32_t> GetStartedScreenCaptureServerPidList()
-{
-    std::list<int32_t> startedScreenCapturePidList{};
-    for (auto sessionId: startedSessionIDList_) {
-        std::shared_ptr<OHOS::Media::ScreenCaptureServer> currentServer = GetScreenCaptureServerByIdWithLock(sessionId);
-        if (currentServer != nullptr) {
-            startedScreenCapturePidList.push_back(currentServer->GetAppPid() == 0 ? -1 : currentServer->GetAppPid());
-        }
-    }
-    return startedScreenCapturePidList;
-}
-
-static int32_t CountStartedScreenCaptureServerNumByPid(int32_t pid)
-{
-    int32_t count = 0;
-    for (auto sessionId: startedSessionIDList_) {
-        std::shared_ptr<OHOS::Media::ScreenCaptureServer> currentServer = GetScreenCaptureServerByIdWithLock(sessionId);
-        if (currentServer != nullptr && currentServer->GetAppPid() == pid) {
-            count++;
-        }
-    }
-    return count;
-}
-
-static void AddStartedSessionIdList(int32_t value)
-{
-    std::unique_lock<std::shared_mutex> lock(mutexListRWGlobal_);
-    startedSessionIDList_.push_back(value);
-}
-
-static void RemoveStartedSessionIdList(int32_t value)
-{
-    std::unique_lock<std::shared_mutex> lock(mutexListRWGlobal_);
-    startedSessionIDList_.remove(value);
-}
-
-static std::list<int32_t> GetAllStartedSessionIdList()
-{
-    std::unique_lock<std::shared_mutex> lock(mutexListRWGlobal_);
-    return GetStartedScreenCaptureServerPidList();
-}
-}
 
 static const std::string MP4 = "mp4";
 static const std::string M4A = "m4a";
@@ -179,6 +78,16 @@ static const int32_t MICROPHONE_STATE_COUNT = 2;
 static const auto NOTIFICATION_SUBSCRIBER = NotificationSubscriber();
 static constexpr int32_t AUDIO_CHANGE_TIME = 200000; // 200 ms
 
+std::map<int32_t, std::weak_ptr<OHOS::Media::ScreenCaptureServer>> ScreenCaptureServer::serverMap;
+const int32_t ScreenCaptureServer::MAX_SESSION_ID = 256;
+const int32_t ScreenCaptureServer::SESSION_ID_SALT = 10;
+UniqueIDGenerator ScreenCaptureServer::g_idGenerator(MAX_SESSION_ID);
+std::list<int32_t> ScreenCaptureServer::startedSessionIDList_;
+const int32_t ScreenCaptureServer::MAX_SESSION_PER_UID = 6;
+
+std::shared_mutex ScreenCaptureServer::mutexServerMapRWGlobal_;
+std::shared_mutex ScreenCaptureServer::mutexListRWGlobal_;
+
 void NotificationSubscriber::OnConnected()
 {
     MEDIA_LOGI("NotificationSubscriber OnConnected");
@@ -196,7 +105,8 @@ void NotificationSubscriber::OnResponse(int32_t notificationId,
     MEDIA_LOGI("NotificationSubscriber OnResponse notificationId : %{public}d, ButtonName : %{public}s ",
         notificationId, (buttonOption->GetButtonName()).c_str());
 
-    std::shared_ptr<OHOS::Media::ScreenCaptureServer> server = GetScreenCaptureServerByIdWithLock(notificationId);
+    std::shared_ptr<OHOS::Media::ScreenCaptureServer> server =
+        ScreenCaptureServer::GetScreenCaptureServerByIdWithLock(notificationId);
     if (server == nullptr) {
         MEDIA_LOGW("OnResponse ScreenCaptureServer not exist, notificationId : %{public}d, ButtonName : %{public}s ",
             notificationId, (buttonOption->GetButtonName()).c_str());
@@ -234,6 +144,94 @@ void PrivateWindowListenerInScreenCapture::OnPrivateWindow(bool hasPrivate)
     }
 }
 
+void ScreenCaptureServer::AddScreenCaptureServerMap(int32_t sessionId, std::weak_ptr<OHOS::Media::ScreenCaptureServer> server)
+{
+    std::unique_lock<std::shared_mutex> lock(mutexServerMapRWGlobal_);
+    serverMap.insert(std::make_pair(sessionId, server));
+    MEDIA_LOGI("AddScreenCaptureServerMap end, serverMap size: %{public}d.", static_cast<uint32_t>(serverMap.size()));
+}
+
+void ScreenCaptureServer::RemoveScreenCaptureServerMap(int32_t sessionId)
+{
+    std::unique_lock<std::shared_mutex> lock(mutexServerMapRWGlobal_);
+    serverMap.erase(sessionId);
+    int32_t returnId = g_idGenerator.ReturnID(sessionId);
+    CHECK_AND_RETURN_LOG(returnId != -1, "RemoveScreenCaptureServerMap returnId: %{public}d is invalid", returnId);
+    MEDIA_LOGI("RemoveScreenCaptureServerMap end. sessionId: %{public}d, serverMap size: %{public}d.",
+        sessionId, static_cast<uint32_t>(serverMap.size()));
+}
+
+bool ScreenCaptureServer::CheckScreenCaptureSessionIdLimit(int32_t curAppUid)
+{
+    int32_t countForUid = 0;
+    MEDIA_LOGI("CheckScreenCaptureSessionIdLimit start. curAppUid: %{public}d.", curAppUid);
+    {
+        std::unique_lock<std::shared_mutex> lock(mutexServerMapRWGlobal_);
+        for (std::map<int32_t, std::weak_ptr<OHOS::Media::ScreenCaptureServer>>::iterator iter = serverMap.begin();
+            iter != serverMap.end(); iter++) {
+                if ((iter->second).lock() != nullptr) {
+                    countForUid += (curAppUid == (iter->second).lock()->GetAppUid()) ? 1 : 0;
+                    CHECK_AND_RETURN_RET_LOG(countForUid < MAX_SESSION_PER_UID, false,
+                        "Create failed, uid(%{public}d) has created too many ScreenCaptureServer instances", curAppUid);
+                }
+            }
+    }
+    MEDIA_LOGI("CheckScreenCaptureSessionIdLimit end.");
+    return true;
+}
+
+std::shared_ptr<OHOS::Media::ScreenCaptureServer> ScreenCaptureServer::GetScreenCaptureServerByIdWithLock(int32_t id)
+{
+    std::unique_lock<std::shared_mutex> lock(mutexServerMapRWGlobal_);
+    auto iter = serverMap.find(id);
+    if (iter == serverMap.end()) {
+        return nullptr;
+    }
+    return (iter->second).lock();
+}
+
+std::list<int32_t> ScreenCaptureServer::GetStartedScreenCaptureServerPidList()
+{
+    std::list<int32_t> startedScreenCapturePidList{};
+    for (auto sessionId: startedSessionIDList_) {
+        std::shared_ptr<OHOS::Media::ScreenCaptureServer> currentServer = GetScreenCaptureServerByIdWithLock(sessionId);
+        if (currentServer != nullptr) {
+            startedScreenCapturePidList.push_back(currentServer->GetAppPid() == 0 ? -1 : currentServer->GetAppPid());
+        }
+    }
+    return startedScreenCapturePidList;
+}
+
+int32_t ScreenCaptureServer::CountStartedScreenCaptureServerNumByPid(int32_t pid)
+{
+    int32_t count = 0;
+    for (auto sessionId: startedSessionIDList_) {
+        std::shared_ptr<OHOS::Media::ScreenCaptureServer> currentServer = GetScreenCaptureServerByIdWithLock(sessionId);
+        if (currentServer != nullptr && currentServer->GetAppPid() == pid) {
+            count++;
+        }
+    }
+    return count;
+}
+
+void ScreenCaptureServer::AddStartedSessionIdList(int32_t value)
+{
+    std::unique_lock<std::shared_mutex> lock(mutexListRWGlobal_);
+    startedSessionIDList_.push_back(value);
+}
+
+void ScreenCaptureServer::RemoveStartedSessionIdList(int32_t value)
+{
+    std::unique_lock<std::shared_mutex> lock(mutexListRWGlobal_);
+    startedSessionIDList_.remove(value);
+}
+
+std::list<int32_t> ScreenCaptureServer::GetAllStartedSessionIdList()
+{
+    std::unique_lock<std::shared_mutex> lock(mutexListRWGlobal_);
+    return GetStartedScreenCaptureServerPidList();
+}
+
 void ScreenCaptureServer::OnDMPrivateWindowChange(bool hasPrivate)
 {
     MEDIA_LOGI("OnDMPrivateWindowChange hasPrivateWindow: %{public}u", hasPrivate);
@@ -263,15 +261,13 @@ std::shared_ptr<IScreenCaptureService> ScreenCaptureServer::CreateScreenCaptureN
     CHECK_AND_RETURN_RET_LOG(server != nullptr, nullptr, "Failed to create ScreenCaptureServer.");
     server->SetSessionId(id);
     AddScreenCaptureServerMap(id, server);
-    return std::static_pointer_cast<OHOS::Media::IScreenCaptureService>(server);
+    return std::static_pointer_cast<IScreenCaptureService>(server);
 }
 
 std::shared_ptr<IScreenCaptureService> ScreenCaptureServer::Create()
 {
-    std::list<int32_t> pidList{};
-    OHOS::Media::ScreenCaptureServer::GetRunningScreenCaptureInstancePid(pidList);
-    for (auto pid: pidList) {
-        MEDIA_LOGD("ScreenCaptureServer IsScreenCaptureWorking pid %{public}d", pid);
+    for (auto sessionId: startedSessionIDList_) {
+        MEDIA_LOGD("ScreenCaptureServer::Create sessionId: %{public}d", sessionId);
     }
     MEDIA_LOGI("ScreenCaptureServer Create start.");
     CHECK_AND_RETURN_RET_LOG(CanScreenCaptureInstanceBeCreate(), nullptr,
@@ -971,7 +967,7 @@ int32_t ScreenCaptureServer::StartAudioCapture()
 
 int32_t ScreenCaptureServer::AddSaltToSessionId(int32_t id)
 {
-    MEDIA_LOGI("AddSaltToSessionId initId: %{public}d, newId: %{public}d", id,
+    MEDIA_LOGD("AddSaltToSessionId initId: %{public}d, newId: %{public}d", id,
         (id + SESSION_ID_SALT) % MAX_SESSION_ID);
     return (id + SESSION_ID_SALT) % MAX_SESSION_ID;
 }
@@ -1204,7 +1200,7 @@ void ScreenCaptureServer::PostStartScreenCaptureSuccessAction()
 bool ScreenCaptureServer::IsFirstStartPidInstance(int32_t pid)
 {
     std::list<int32_t> pidList{};
-    OHOS::Media::ScreenCaptureServer::GetRunningScreenCaptureInstancePid(pidList);
+    ScreenCaptureServer::GetRunningScreenCaptureInstancePid(pidList);
     std::list<int32_t>::iterator iter = find(pidList.begin(), pidList.end(), pid);
     if (iter == pidList.end()) {
         MEDIA_LOGD("ScreenCaptureServer::IsFirstStartPidInstance firstPid: %{public}d", pid);
@@ -2708,13 +2704,8 @@ int32_t ScreenCaptureServer::StopScreenCaptureInner(AVScreenCaptureStateCode sta
     captureState_ = AVScreenCaptureState::STOPPED;
     SetErrorInfo(MSERR_OK, "normal stopped", StopReason::NORMAL_STOPPED, IsUserPrivacyAuthorityNeeded());
     PostStopScreenCapture(stateCode);
-    if (surfaceCb_ != nullptr) {
-        (static_cast<ScreenCapBufferConsumerListener *>(surfaceCb_.GetRefPtr()))->StopBufferThread();
-        (static_cast<ScreenCapBufferConsumerListener *>(surfaceCb_.GetRefPtr()))->Release();
-        surfaceCb_ = nullptr;
-    }
-    InCallObserver::GetInstance().UnRegisterInCallObserverCallBack(screenCaptureObserverCb_);
-    AccountObserver::GetInstance().UnRegisterAccountObserverCallBack(screenCaptureObserverCb_);
+    InCallObserver::GetInstance().UnregisterInCallObserverCallBack(screenCaptureObserverCb_);
+    AccountObserver::GetInstance().UnregisterAccountObserverCallBack(screenCaptureObserverCb_);
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StopScreenCaptureInner end.", FAKE_POINTER(this));
     return ret;
 }

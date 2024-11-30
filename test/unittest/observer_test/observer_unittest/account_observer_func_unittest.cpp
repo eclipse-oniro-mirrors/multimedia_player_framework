@@ -93,7 +93,7 @@ HWTEST_F(AccountObserverInnerUnitTest, RegisterAccountObserverCallBack_01, TestS
 {
     auto accountObserverCallBack = std::make_shared<AccountObserverTestCallBack>();
     ASSERT_TRUE(AccountObserver::GetInstance().RegisterAccountObserverCallBack(accountObserverCallBack));
-    AccountObserver::GetInstance().UnRegisterAccountObserverCallBack(accountObserverCallBack);
+    AccountObserver::GetInstance().UnregisterAccountObserverCallBack(accountObserverCallBack);
     ASSERT_TRUE(accountObserverCallBack->StopAndRelease(
         AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_USER_SWITCHES));
 }
