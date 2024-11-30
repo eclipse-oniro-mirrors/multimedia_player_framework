@@ -159,6 +159,7 @@ int32_t MediaDataSourceCallback::UvWork(uv_loop_s *loop, uv_work_t *work)
             event->setResult_ = true;
             event->cond_.notify_all();
         } while (0);
+        delete wrap;
         delete work;
     }, uv_qos_user_initiated);
 }
