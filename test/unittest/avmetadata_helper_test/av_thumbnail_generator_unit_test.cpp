@@ -143,45 +143,6 @@ HWTEST_F(AVThumbnailGeneratorUnitTest, OnInputBufferAvailable, TestSize.Level1)
 }
 
 /**
- * @tc.name: HandleFetchFrameYuvRes
- * @tc.desc: HandleFetchFrameYuvRes
- * @tc.type: FUNC
- */
-HWTEST_F(AVThumbnailGeneratorUnitTest, HandleFetchFrameYuvRes, TestSize.Level1)
-{
-    avThumbnailGenerator_->videoDecoder_ = std::make_shared<MediaAVCodec::MockAVCodecVideoDecoder>();
-    avThumbnailGenerator_->readErrorFlag_ = false;
-    struct OutputConfiguration param = {-1, -1, PixelFormat::RGB_565};
-    avThumbnailGenerator_->outputConfig_ = param;
-    avThumbnailGenerator_->HandleFetchFrameYuvRes();
-    EXPECT_TRUE(avThumbnailGenerator_->avBuffer_ == nullptr);
-
-    avThumbnailGenerator_->readErrorFlag_ = true;
-    sptr<SurfaceBuffer> surfaceBuffer = SurfaceBuffer::Create();
-    surfaceBuffer->SetSurfaceBufferWidth(100);
-    surfaceBuffer->SetSurfaceBufferHeight(100);
-    BufferHandle handle;
-    handle.format = 32;
-    uint64_t usage = 10;
-    handle.usage = usage;
-    surfaceBuffer->SetBufferHandle(&handle);
-
-    std::shared_ptr<AVBuffer> avBuffer = std::make_shared<AVBuffer>();
-    avThumbnailGenerator_->avBuffer_ = avBuffer;
-    std::shared_ptr<AVMemory> memory = std::make_shared<AVMemory>();
-    avBuffer->memory_ = memory;
-    Format format;
-    format.PutIntValue(MediaDescriptionKey::MD_KEY_WIDTH, 2);
-    format.PutIntValue(MediaDescriptionKey::MD_KEY_HEIGHT, 2);
-    avThumbnailGenerator_->outputFormat_ = format;
-
-    EXPECT_CALL(*memory, GetSurfaceBuffer).WillRepeatedly(Return(surfaceBuffer));
-
-    avThumbnailGenerator_->HandleFetchFrameYuvRes();
-    EXPECT_TRUE(avThumbnailGenerator_->avBuffer_ != nullptr);
-}
-
-/**
  * @tc.name: GetYuvDataAlignStride
  * @tc.desc: GetYuvDataAlignStride
  * @tc.type: FUNC

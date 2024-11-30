@@ -21,7 +21,6 @@
 #include <mutex>
 #include <nocopyable.h>
 
-#include "mock/avbuffer.h"
 #include "mock/mock_avcodec_video_decoder.h"
 #include "mock/avsharedmomorybase.h"
 #include "mock/mock_media_demuxer.h"
