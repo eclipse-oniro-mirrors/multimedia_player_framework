@@ -229,7 +229,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, GetStartedSCSPidList_001, TestSize.Lev
     ScreenCaptureServer::AddScreenCaptureServerMap(sessionId, server);
     ScreenCaptureServer::AddStartedSessionIdList(sessionId);
     MEDIA_LOGD("GetStartedSCSPidList_001 listSize: %{public}d, mapSize: %{public}d",
-        static_cast<int32_t>(ScreenCaptureServer::GetStartedScreenCaptureServerPidList().size())
+        static_cast<int32_t>(ScreenCaptureServer::GetStartedScreenCaptureServerPidList().size()),
         static_cast<int32_t>(ScreenCaptureServer::serverMap.size()));
     ASSERT_EQ(ScreenCaptureServer::GetStartedScreenCaptureServerPidList().size()
         <= ScreenCaptureServer::serverMap.size(), true);
