@@ -157,7 +157,8 @@ HWTEST_F(AVThumbnailGeneratorUnitTest, GetYuvDataAlignStride, TestSize.Level1)
     uint64_t usage = 10;
     handle.usage = usage;
     handle.stride = 16;
-    surfaceBuffer->SetBufferHandle(&handle);
+    BufferHandle* ptrHandle = &handle;
+    surfaceBuffer->SetBufferHandle(ptrHandle);
 
     Format format;
     format.PutIntValue(MediaDescriptionKey::MD_KEY_WIDTH, 2);
@@ -165,6 +166,10 @@ HWTEST_F(AVThumbnailGeneratorUnitTest, GetYuvDataAlignStride, TestSize.Level1)
     avThumbnailGenerator_->outputFormat_ = format;
 
     EXPECT_EQ(avThumbnailGenerator_->GetYuvDataAlignStride(surfaceBuffer), 0);
+    if (ptrHandle) {
+        delete ptrHandle;
+        ptrHandle = nullptr;
+    }
 }
 
 /**
