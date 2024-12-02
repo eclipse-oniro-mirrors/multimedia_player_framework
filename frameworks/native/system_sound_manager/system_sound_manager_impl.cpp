@@ -1679,7 +1679,7 @@ int32_t SystemSoundManagerImpl::GetToneHapticsSettings(const std::shared_ptr<Abi
 {
 #ifdef SUPPORT_VIBRATOR
     CHECK_AND_RETURN_RET_LOG(IsToneHapticsTypeValid(toneHapticsType), IO_ERROR, "Invalid tone haptics type");
-    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelperUri(STORAGE_MANAGER_MANAGER_ID);
     CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, IO_ERROR,
         "Create dataShare failed, datashare or ringtone library error.");
     string currentToneUri = GetCurrentToneUri(context, toneHapticsType);
@@ -1740,7 +1740,7 @@ int32_t SystemSoundManagerImpl::SetToneHapticsSettings(const std::shared_ptr<Abi
 {
 #ifdef SUPPORT_VIBRATOR
     CHECK_AND_RETURN_RET_LOG(IsToneHapticsTypeValid(toneHapticsType), OPERATION_ERROR, "Invalid tone haptics type");
-    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelperUri(STORAGE_MANAGER_MANAGER_ID);
     CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, IO_ERROR,
         "Create dataShare failed, datashare or ringtone library error.");
     string currentToneUri = GetCurrentToneUri(context, toneHapticsType);
@@ -1771,7 +1771,7 @@ int32_t SystemSoundManagerImpl::SetToneHapticsSettings(std::shared_ptr<DataShare
         queryPredicatesByUri.EqualTo(VIBRATE_COLUMN_DATA, updateSettings.hapticsUri);
         queryPredicatesByUri.And();
         queryPredicatesByUri.EqualTo(VIBRATE_COLUMN_PLAY_MODE, hapticsModeMap_[updateSettings.mode]);
-        auto resultSetByUri = dataShareHelper->Query(VIBRATEURI, queryPredicatesByUri, VIBRATE_TABLE_COLUMNS,
+        auto resultSetByUri = dataShareHelper->Query(VIBRATEURI_PROXY, queryPredicatesByUri, VIBRATE_TABLE_COLUMNS,
             &businessError);
         auto resultsByUri = make_unique<RingtoneFetchResult<VibrateAsset>>(move(resultSetByUri));
         unique_ptr<VibrateAsset> vibrateAssetByUri = resultsByUri->GetFirstObject();
