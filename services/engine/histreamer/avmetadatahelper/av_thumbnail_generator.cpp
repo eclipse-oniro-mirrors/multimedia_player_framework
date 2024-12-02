@@ -484,7 +484,7 @@ int32_t AVThumbnailGenerator::GetYuvDataAlignStride(const sptr<SurfaceBuffer> &s
         std::make_shared<AVSharedMemoryBase>(sizeof(OutputFrame) + width * height * BYTES_PER_PIXEL_YUV,
             AVSharedMemory::Flags::FLAGS_READ_WRITE, "FetchedFrameMemory");
     auto ret = fetchedFrameAtTime_->Init();
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Create AVSharedmemory failed, ret:%{public}d");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Create AVSharedmemory failed, ret:%{public}d", ret);
     uint8_t *dstPtr = static_cast<uint8_t *>(sizeof(OutputFrame) + fetchedFrameAtTime_->GetBase());
     uint8_t *srcPtr = static_cast<uint8_t *>(surfaceBuffer->GetVirAddr());
     int32_t format = surfaceBuffer->GetFormat();
