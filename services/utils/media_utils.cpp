@@ -75,28 +75,28 @@ std::string __attribute__((visibility("default"))) GetClientBundleName(int32_t u
     std::string bundleName = "";
     auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (samgr == nullptr) {
-        MEDIA_LOG_E("Get ability manager failed");
+        MEDIA_LOG_E("Get ability manager failed, uid is %{public}d", uid);
         return bundleName;
     }
 
     sptr<IRemoteObject> object = samgr->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
     if (object == nullptr) {
-        MEDIA_LOG_E("object is NULL.");
+        MEDIA_LOG_E("object is NULL. uid is %{public}d", uid);
         return bundleName;
     }
 
     sptr<OHOS::AppExecFwk::IBundleMgr> bms = iface_cast<OHOS::AppExecFwk::IBundleMgr>(object);
     if (bms == nullptr) {
-        MEDIA_LOG_E("bundle manager service is NULL.");
+        MEDIA_LOG_E("bundle manager service is NULL. uid is %{public}d", uid);
         return bundleName;
     }
 
     auto result = bms->GetNameForUid(uid, bundleName);
     if (result != ERR_OK) {
-        MEDIA_LOG_E("Error GetBundleNameForUid fail");
+        MEDIA_LOG_E("Error GetBundleNameForUid fail, uid is %{public}d", uid);
         return "";
     }
-    MEDIA_LOG_I("bundle name is %{public}s ", bundleName.c_str());
+    MEDIA_LOG_I("bundle name is %{public}s uid is %{public}d", bundleName.c_str(), uid);
 
     return bundleName;
 }

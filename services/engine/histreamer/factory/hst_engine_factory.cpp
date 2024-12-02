@@ -61,9 +61,8 @@ int32_t HstEngineFactory::Score(Scene scene, const int32_t& appUid, const std::s
     MEDIA_LOG_D("Score in");
     (void)scene;
     (void)uri;
+    (void)appUid;
 
-    std::string bundleName = GetClientBundleName(appUid);
-    (void) bundleName;
     return MAX_SCORE;
 }
 
