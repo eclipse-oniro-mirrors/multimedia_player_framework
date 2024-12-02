@@ -363,7 +363,7 @@ int32_t AudioCapturerWrapper::AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &a
         return MSERR_UNKNOWN;
     }
     CHECK_AND_RETURN_RET_LOG(availBuffers_.front() != nullptr, MSERR_UNKNOWN, "AcquireAudioBuffer availBuffers_.front()"
-        " is nullptr %{public}s", name.c_str());
+        " is nullptr %{public}s", threadName_.c_str());
     audioBuffer = availBuffers_.front();
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Acquire Buffer E, name:%{public}s", FAKE_POINTER(this), threadName_.c_str());
     return MSERR_OK;
