@@ -32,9 +32,17 @@ int32_t WriteAVSharedMemoryToParcel(const std::shared_ptr<AVSharedMemory> &memor
     CHECK_AND_RETURN_RET_LOG(baseMem != nullptr, MSERR_INVALID_VAL, "memory is nullptr");
 
     int32_t fd = baseMem->GetFd();
+    if (fd < 0) {
+        MEDIA_LOGE("write fd is invalid, fd = %{public}d", fd);
+    }
+
     int32_t size = baseMem->GetSize();
 
-    (void)parcel.WriteFileDescriptor(fd);
+    bool res = parcel.WriteFileDescriptor(fd);
+    if (!res) {
+        MEDIA_LOGE("write file descriptor failed, fd = %{public}d", fd);
+    }
+
     parcel.WriteInt32(size);
     parcel.WriteUint32(baseMem->GetFlags());
     parcel.WriteString(baseMem->GetName());
@@ -45,6 +53,10 @@ int32_t WriteAVSharedMemoryToParcel(const std::shared_ptr<AVSharedMemory> &memor
 std::shared_ptr<AVSharedMemory> ReadAVSharedMemoryFromParcel(MessageParcel &parcel)
 {
     int32_t fd  = parcel.ReadFileDescriptor();
+    if (fd < 0) {
+        MEDIA_LOGE("read fd memory is invalid, fd = %{public}d", fd);
+    }
+
     int32_t size = parcel.ReadInt32();
     uint32_t flags = parcel.ReadUint32();
     std::string name = parcel.ReadString();
@@ -63,6 +75,10 @@ std::shared_ptr<AVSharedMemory> ReadAVSharedMemoryFromParcel(MessageParcel &parc
 std::shared_ptr<AVSharedMemory> ReadAVDataSrcMemoryFromParcel(MessageParcel &parcel)
 {
     int32_t fd  = parcel.ReadFileDescriptor();
+    if (fd < 0) {
+        MEDIA_LOGE("read fd dataSrc is invalid, fd = %{public}d", fd);
+    }
+
     int32_t size = parcel.ReadInt32();
     uint32_t flags = parcel.ReadUint32();
     std::string name = parcel.ReadString();
