@@ -34,10 +34,29 @@ namespace {
 using namespace OHOS;
 using namespace OHOS::Media;
 
-int32_t videoSourceID_ = -1;
-int32_t audioSourceID_ = -1;
-
 class NativeRecorderCallback;
+
+/**
+Enumerates the video rotation.
+*/
+enum RotationAngle {
+    /**
+    * Video without rotation
+    */
+    ROTATION_0 = 0,
+    /**
+    * Video rotated 90 degrees
+    */
+    ROTATION_90 = 90,
+    /**
+    * Video rotated 180 degrees
+    */
+    ROTATION_180 = 180,
+    /**
+    * Video rotated 270 degrees
+    */
+    ROTATION_270 = 270
+};
 
 struct RecorderObject : public OH_AVRecorder {
     explicit RecorderObject(const std::shared_ptr<Recorder>& recorder)
@@ -47,12 +66,10 @@ struct RecorderObject : public OH_AVRecorder {
     const std::shared_ptr<Recorder> recorder_ = nullptr;
     std::atomic<bool> isReleased_ = false;
     std::shared_ptr<NativeRecorderCallback> callback_ = nullptr;
+    int32_t videoSourceId_ = -1;
+    int32_t audioSourceId_ = -1;
+    bool hasConfigured_ = false;
 };
-
-typedef struct OH_AVRecorderCallback {
-    OH_AVRecorder_OnStateChange onStateChange;
-    OH_AVRecorder_OnError onError;
-} OH_AVRecorderCallback;
 
 class NativeRecorderStateChangeCallback {
 public:
@@ -91,8 +108,7 @@ private:
 
 class NativeRecorderCallback : public RecorderCallback {
 public:
-    NativeRecorderCallback(struct OH_AVRecorder *recorder, struct OH_AVRecorderCallback callback)
-        : recorder_(recorder), callback_(callback) {}
+    explicit NativeRecorderCallback(struct OH_AVRecorder *recorder) : recorder_(recorder) {}
     virtual ~NativeRecorderCallback() = default;
 
     void OnStateChange(OH_AVRecorder_State state, OH_AVRecorder_StateChangeReason reason)
@@ -107,37 +123,21 @@ public:
         }
     }
 
-    void OnError(int32_t errorCode, const char *errorMsg, void *userData)
+    void OnError(RecorderErrorType errorType, int32_t errorCode) override
     {
-        MEDIA_LOGE("OnError() is called, errorCode: %{public}d, errorMsg: %{public}s", errorCode, errorMsg);
+        MEDIA_LOGE("OnError() is called, errorType: %{public}d, errorCode: %{public}d", errorType, errorCode);
         std::shared_lock<std::shared_mutex> lock(mutex_);
         CHECK_AND_RETURN(recorder_ != nullptr);
 
         if (errorCallback_ != nullptr) {
-            errorCallback_->OnError(recorder_, errorCode, errorMsg);
+            errorCallback_->OnError(recorder_, errorCode, "error occurred!");
             return;
         }
-
-        if (callback_.onError != nullptr) {
-            callback_.onError(recorder_, errorCode, errorMsg, userData);
-            return;
-        }
-    }
-
-    void OnError(RecorderErrorType errorType, int32_t errorCode) override
-    {
-        // No specific implementation is required and can be left blank.
     }
 
     void OnInfo(int32_t type, int32_t extra) override
     {
         // No specific implementation is required and can be left blank.
-    }
-
-    void SetCallback(OH_AVRecorderCallback callback)
-    {
-        std::unique_lock<std::shared_mutex> lock(mutex_);
-        callback_ = callback;
     }
 
     bool SetStateChangeCallback(OH_AVRecorder_OnStateChange callback, void *userData)
@@ -157,7 +157,6 @@ public:
 private:
     std::shared_mutex mutex_;
     OH_AVRecorder *recorder_ = nullptr;
-    OH_AVRecorderCallback callback_;
     std::shared_ptr<NativeRecorderStateChangeCallback> stateChangeCallback_ = nullptr;
     std::shared_ptr<NativeRecorderErrorCallback> errorCallback_ = nullptr;
 };
@@ -165,13 +164,12 @@ private:
 OH_AVRecorder *OH_AVRecorder_Create(void)
 {
     std::shared_ptr<Recorder> recorder = RecorderFactory::CreateRecorder();
-    CHECK_AND_RETURN_RET_LOG(recorder != nullptr, nullptr, "failed to RecorderFactory::CreateRecorder");
+    CHECK_AND_RETURN_RET_LOG(recorder != nullptr, nullptr, "failed to create recorder in RecorderFactory.");
     struct RecorderObject *recorderObj = new (std::nothrow) RecorderObject(recorder);
     CHECK_AND_RETURN_RET_LOG(recorderObj != nullptr, nullptr, "failed to new RecorderObject");
     MEDIA_LOGI("0x%{public}06" PRIXPTR " OH_Recorder_Create", FAKE_POINTER(recorderObj));
     return recorderObj;
 }
-
 
 OH_AVErrCode SetProfile(OH_AVRecorder *recorder, OH_AVRecorder_Config *config)
 {
@@ -184,39 +182,40 @@ OH_AVErrCode SetProfile(OH_AVRecorder *recorder, OH_AVRecorder_Config *config)
     int32_t ret = recorderObj->recorder_->SetOutputFormat(outputFormat);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "Set output format failed!");
 
-    ret = recorderObj->recorder_->SetAudioEncodingBitRate(audioSourceID_, config->profile.audioBitrate);
+    ret = recorderObj->recorder_->SetAudioEncodingBitRate(recorderObj->audioSourceId_, config->profile.audioBitrate);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "Set audio encoding bitrate failed!");
 
-    ret = recorderObj->recorder_->SetAudioChannels(audioSourceID_, config->profile.audioChannels);
+    ret = recorderObj->recorder_->SetAudioChannels(recorderObj->audioSourceId_, config->profile.audioChannels);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "Set audio channels failed!");
 
     AudioCodecFormat audioCodec_ = static_cast<AudioCodecFormat>(config->profile.audioCodec);
-    ret = recorderObj->recorder_->SetAudioEncoder(audioSourceID_, audioCodec_);
+    ret = recorderObj->recorder_->SetAudioEncoder(recorderObj->audioSourceId_, audioCodec_);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "Set audio encoder failed!");
 
-    ret = recorderObj->recorder_->SetAudioSampleRate(audioSourceID_, config->profile.audioSampleRate);
+    ret = recorderObj->recorder_->SetAudioSampleRate(recorderObj->audioSourceId_, config->profile.audioSampleRate);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "Set audio sample rate failed!");
 
-    ret = recorderObj->recorder_->SetVideoEncodingBitRate(videoSourceID_, config->profile.videoBitrate);
+    ret = recorderObj->recorder_->SetVideoEncodingBitRate(recorderObj->videoSourceId_, config->profile.videoBitrate);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "Set video encoding bitrate failed!");
 
     VideoCodecFormat videoCodec_ = static_cast<VideoCodecFormat>(config->profile.videoCodec);
-    ret = recorderObj->recorder_->SetVideoEncoder(videoSourceID_, videoCodec_);
+    ret = recorderObj->recorder_->SetVideoEncoder(recorderObj->videoSourceId_, videoCodec_);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "Set video encoder failed!");
 
-    ret = recorderObj->recorder_->SetVideoSize(videoSourceID_, config->profile.videoFrameWidth,
+    ret = recorderObj->recorder_->SetVideoSize(recorderObj->videoSourceId_, config->profile.videoFrameWidth,
         config->profile.videoFrameHeight);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "Set video size failed!");
 
-    ret = recorderObj->recorder_->SetVideoFrameRate(videoSourceID_, config->profile.videoFrameRate);
+    ret = recorderObj->recorder_->SetVideoFrameRate(recorderObj->videoSourceId_, config->profile.videoFrameRate);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "Set video frame rate failed!");
 
     config->profile.isHdr = false;
-    ret = recorderObj->recorder_->SetVideoIsHdr(videoSourceID_, config->profile.isHdr);
+    ret = recorderObj->recorder_->SetVideoIsHdr(recorderObj->videoSourceId_, config->profile.isHdr);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "Set video IsHdr failed!");
 
     config->profile.enableTemporalScale = false;
-    ret = recorderObj->recorder_->SetVideoEnableTemporalScale(videoSourceID_, config->profile.enableTemporalScale);
+    ret = recorderObj->recorder_->SetVideoEnableTemporalScale(recorderObj->videoSourceId_,
+        config->profile.enableTemporalScale);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "SetVideoEnableTemporalScale failed!");
     
     return AV_ERR_OK;
@@ -260,13 +259,18 @@ OH_AVErrCode Configure(OH_AVRecorder *recorder, OH_AVRecorder_Config *config)
     CHECK_AND_RETURN_RET_LOG(recorderObj != nullptr, AV_ERR_INVALID_VAL, "recorderObj is nullptr");
     CHECK_AND_RETURN_RET_LOG(recorderObj->recorder_ != nullptr, AV_ERR_INVALID_VAL, "recorder_ is null");
 
+    if (recorderObj->hasConfigured_) {
+        MEDIA_LOGE("OH_AVRecorder_Config has been configured and will not be configured again.");
+        return AV_ERR_OK;
+    }
+
     AudioSourceType audioSourceType_ = static_cast<AudioSourceType>(config->audioSourceType);
-    int32_t ret = recorderObj->recorder_->SetAudioSource(audioSourceType_, audioSourceID_);
+    int32_t ret = recorderObj->recorder_->SetAudioSource(audioSourceType_, recorderObj->audioSourceId_);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL,
         "The audio parameter is not supported. Please check the type and range.");
 
     VideoSourceType videoSourceType_ = static_cast<VideoSourceType>(config->videoSourceType);
-    ret = recorderObj->recorder_->SetVideoSource(videoSourceType_, videoSourceID_);
+    ret = recorderObj->recorder_->SetVideoSource(videoSourceType_, recorderObj->videoSourceId_);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL,
         "The video parameter is not supported. Please check the type and range.");
 
@@ -280,18 +284,27 @@ OH_AVErrCode Configure(OH_AVRecorder *recorder, OH_AVRecorder_Config *config)
     err = ConfigureUrl(recorder, config);
     CHECK_AND_RETURN_RET_LOG(err == AV_ERR_OK, AV_ERR_INVALID_VAL, "ConfigureUrl failed!");
 
+    recorderObj->hasConfigured_ = true;
     return AV_ERR_OK;
 }
 
 OH_AVErrCode OH_AVRecorder_Prepare(OH_AVRecorder *recorder, OH_AVRecorder_Config *config)
 {
     CHECK_AND_RETURN_RET_LOG(recorder != nullptr, AV_ERR_INVALID_VAL, "input recorder is nullptr!");
+    CHECK_AND_RETURN_RET_LOG(config != nullptr, AV_ERR_INVALID_VAL, "input config is nullptr!");
+
     struct RecorderObject *recorderObj = reinterpret_cast<RecorderObject *>(recorder);
     CHECK_AND_RETURN_RET_LOG(recorderObj != nullptr, AV_ERR_INVALID_VAL, "recorderObj is nullptr");
     CHECK_AND_RETURN_RET_LOG(recorderObj->recorder_ != nullptr, AV_ERR_INVALID_VAL, "recorder_ is null");
+    
     int32_t ret = Configure(recorder, config);
     ret = recorderObj->recorder_->Prepare();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "recorder Prepare failed");
+
+    CHECK_AND_RETURN_RET_LOG(recorderObj->callback_ != nullptr, AV_ERR_INVALID_VAL,
+        "recorderObj->callback_ is nullptr!");
+    MEDIA_LOGI("Change state to state code: %{public}d", OH_AVRecorder_State::PREPARED);
+    recorderObj->callback_->OnStateChange(OH_AVRecorder_State::PREPARED, OH_AVRecorder_StateChangeReason::USER);
     return AV_ERR_OK;
 }
 
@@ -306,6 +319,9 @@ Location ConvertToLocation(const OH_AVRecorder_Location &ohLocation)
 OH_AVErrCode OH_AVRecorder_GetAVRecorderConfig(OH_AVRecorder *recorder, OH_AVRecorder_Config **config)
 {
     CHECK_AND_RETURN_RET_LOG(recorder != nullptr, AV_ERR_INVALID_VAL, "input recorder is nullptr!");
+    CHECK_AND_RETURN_RET_LOG(config != nullptr, AV_ERR_INVALID_VAL, "input config pointer is nullptr!");
+    CHECK_AND_RETURN_RET_LOG(*config != nullptr, AV_ERR_INVALID_VAL, "input config is nullptr!");
+
     struct RecorderObject *recorderObj = reinterpret_cast<RecorderObject *>(recorder);
     CHECK_AND_RETURN_RET_LOG(recorderObj != nullptr, AV_ERR_INVALID_VAL, "recorderObj is nullptr");
     CHECK_AND_RETURN_RET_LOG(recorderObj->recorder_ != nullptr, AV_ERR_INVALID_VAL, "recorder_ is null");
@@ -317,7 +333,6 @@ OH_AVErrCode OH_AVRecorder_GetAVRecorderConfig(OH_AVRecorder *recorder, OH_AVRec
     Location location = ConvertToLocation(ohlocation);
     recorderObj->recorder_->GetLocation(location);
 
-    *config = new OH_AVRecorder_Config();
     (*config)->profile.audioBitrate = configMap["audioBitrate"];
     (*config)->profile.audioChannels = configMap["audioChannels"];
     (*config)->profile.audioCodec = static_cast<OH_AVRecorder_CodecMimeType>(configMap["audioCodec"]);
@@ -332,19 +347,6 @@ OH_AVErrCode OH_AVRecorder_GetAVRecorderConfig(OH_AVRecorder *recorder, OH_AVRec
     (*config)->audioSourceType = static_cast<OH_AVRecorder_AudioSourceType>(configMap["audioSourceType"]);
     (*config)->videoSourceType = static_cast<OH_AVRecorder_VideoSourceType>(configMap["videoSourceType"]);
 
-    const std::string fdHead = "fd://";
-    (*config)->url = strdup((fdHead + std::to_string(configMap["url"])).c_str());
-
-    std::string rotationStr = std::to_string(configMap["rotation"]);
-    (*config)->metadata.videoOrientation = new char[rotationStr.length() + 1];
-    for (size_t i = 0; i < rotationStr.length(); ++i) {
-        (*config)->metadata.videoOrientation[i] = rotationStr[i];
-    }
-    (*config)->metadata.videoOrientation[rotationStr.length()] = '\0';
-
-    (*config)->metadata.location.latitude = location.latitude;
-    (*config)->metadata.location.longitude = location.longitude;
-
     return AV_ERR_OK;
 }
 
@@ -357,9 +359,12 @@ OH_AVErrCode OH_AVRecorder_GetInputSurface(OH_AVRecorder *recorder, OHNativeWind
     CHECK_AND_RETURN_RET_LOG(recorderObj != nullptr, AV_ERR_INVALID_VAL, "recorderObj is nullptr");
     CHECK_AND_RETURN_RET_LOG(recorderObj->recorder_ != nullptr, AV_ERR_INVALID_VAL, "recorder_ is null");
 
-    sptr<OHOS::Surface> surface = recorderObj->recorder_->GetSurface(videoSourceID_);
+    sptr<OHOS::Surface> surface = recorderObj->recorder_->GetSurface(recorderObj->videoSourceId_);
+    CHECK_AND_RETURN_RET_LOG(surface != nullptr, AV_ERR_INVALID_VAL, "surface is nullptr!");
+
     (*window) = CreateNativeWindowFromSurface(&surface);
-    CHECK_AND_RETURN_RET_LOG((*window)->surface != nullptr, AV_ERR_INVALID_VAL, "Failed to get surface from recorder");
+    CHECK_AND_RETURN_RET_LOG(*window != nullptr, AV_ERR_INVALID_VAL, "*window pointer is nullptr!");
+    CHECK_AND_RETURN_RET_LOG((*window)->surface != nullptr, AV_ERR_INVALID_VAL, "failed to get surface from recorder");
 
     SurfaceError error = SurfaceUtils::GetInstance()->Add((*window)->surface->GetUniqueId(), (*window)->surface);
     CHECK_AND_RETURN_RET_LOG(error == SURFACE_ERROR_OK, AV_ERR_INVALID_VAL, "failed to AddSurface");
@@ -373,6 +378,8 @@ OH_AVErrCode OH_AVRecorder_UpdateRotation(OH_AVRecorder *recorder, int32_t rotat
     struct RecorderObject *recorderObj = reinterpret_cast<RecorderObject *>(recorder);
     CHECK_AND_RETURN_RET_LOG(recorderObj != nullptr, AV_ERR_INVALID_VAL, "recorderObj is nullptr");
     CHECK_AND_RETURN_RET_LOG(recorderObj->recorder_ != nullptr, AV_ERR_INVALID_VAL, "recorder_ is null");
+    CHECK_AND_RETURN_RET_LOG(rotation == ROTATION_0 || rotation == ROTATION_90 || rotation == ROTATION_180 ||
+        rotation == ROTATION_270, AV_ERR_INVALID_VAL, "Invalid rotation value. Must be 0, 90, 180, or 270.");
     recorderObj->recorder_->SetOrientationHint(rotation);
     return AV_ERR_OK;
 }
@@ -383,8 +390,19 @@ OH_AVErrCode OH_AVRecorder_Start(OH_AVRecorder *recorder)
     struct RecorderObject *recorderObj = reinterpret_cast<RecorderObject *>(recorder);
     CHECK_AND_RETURN_RET_LOG(recorderObj != nullptr, AV_ERR_INVALID_VAL, "recorderObj is nullptr");
     CHECK_AND_RETURN_RET_LOG(recorderObj->recorder_ != nullptr, AV_ERR_INVALID_VAL, "recorder_ is null");
+
     int32_t ret = recorderObj->recorder_->Start();
+    CHECK_AND_RETURN_RET_LOG(recorderObj->callback_ != nullptr, AV_ERR_INVALID_VAL,
+        "recorderObj->callback_ is nullptr!");
+
+    if (ret != MSERR_OK) {
+        MEDIA_LOGI("Change state to state code: %{public}d", OH_AVRecorder_State::ERROR);
+        recorderObj->callback_->OnStateChange(OH_AVRecorder_State::ERROR, OH_AVRecorder_StateChangeReason::USER);
+    }
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_OPERATE_NOT_PERMIT, "StartRecorder failed!");
+
+    MEDIA_LOGI("Change state to state code: %{public}d", OH_AVRecorder_State::STARTED);
+    recorderObj->callback_->OnStateChange(OH_AVRecorder_State::STARTED, OH_AVRecorder_StateChangeReason::USER);
     return AV_ERR_OK;
 }
 
@@ -394,8 +412,14 @@ OH_AVErrCode OH_AVRecorder_Pause(OH_AVRecorder *recorder)
     struct RecorderObject *recorderObj = reinterpret_cast<RecorderObject *>(recorder);
     CHECK_AND_RETURN_RET_LOG(recorderObj != nullptr, AV_ERR_INVALID_VAL, "recorderObj is nullptr");
     CHECK_AND_RETURN_RET_LOG(recorderObj->recorder_ != nullptr, AV_ERR_INVALID_VAL, "recorder_ is null");
+
     int32_t ret = recorderObj->recorder_->Pause();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "recorder Pause failed");
+
+    CHECK_AND_RETURN_RET_LOG(recorderObj->callback_ != nullptr, AV_ERR_INVALID_VAL,
+        "recorderObj->callback_ is nullptr!");
+    MEDIA_LOGI("Change state to state code: %{public}d", OH_AVRecorder_State::PAUSED);
+    recorderObj->callback_->OnStateChange(OH_AVRecorder_State::PAUSED, OH_AVRecorder_StateChangeReason::USER);
     return AV_ERR_OK;
 }
 
@@ -405,8 +429,14 @@ OH_AVErrCode OH_AVRecorder_Resume(OH_AVRecorder *recorder)
     struct RecorderObject *recorderObj = reinterpret_cast<RecorderObject *>(recorder);
     CHECK_AND_RETURN_RET_LOG(recorderObj != nullptr, AV_ERR_INVALID_VAL, "recorderObj is nullptr");
     CHECK_AND_RETURN_RET_LOG(recorderObj->recorder_ != nullptr, AV_ERR_INVALID_VAL, "recorder_ is null");
+
     int32_t ret = recorderObj->recorder_->Resume();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "recorder Resume failed");
+
+    CHECK_AND_RETURN_RET_LOG(recorderObj->callback_ != nullptr, AV_ERR_INVALID_VAL,
+        "recorderObj->callback_ is nullptr!");
+    MEDIA_LOGI("Change state to state code: %{public}d", OH_AVRecorder_State::STARTED);
+    recorderObj->callback_->OnStateChange(OH_AVRecorder_State::STARTED, OH_AVRecorder_StateChangeReason::USER);
     return AV_ERR_OK;
 }
 
@@ -416,9 +446,17 @@ OH_AVErrCode OH_AVRecorder_Stop(OH_AVRecorder *recorder)
     struct RecorderObject *recorderObj = reinterpret_cast<RecorderObject *>(recorder);
     CHECK_AND_RETURN_RET_LOG(recorderObj != nullptr, AV_ERR_INVALID_VAL, "recorderObj is nullptr");
     CHECK_AND_RETURN_RET_LOG(recorderObj->recorder_ != nullptr, AV_ERR_INVALID_VAL, "recorder_ is null");
+
     bool block = false;
     int32_t ret = recorderObj->recorder_->Stop(block);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "recorder Stop failed");
+
+    CHECK_AND_RETURN_RET_LOG(recorderObj->callback_ != nullptr, AV_ERR_INVALID_VAL,
+        "recorderObj->callback_ is nullptr!");
+    MEDIA_LOGI("Change state to state code: %{public}d", OH_AVRecorder_State::STOPPED);
+    recorderObj->callback_->OnStateChange(OH_AVRecorder_State::STOPPED, OH_AVRecorder_StateChangeReason::USER);
+
+    recorderObj->hasConfigured_ = false;
     return AV_ERR_OK;
 }
 
@@ -428,8 +466,16 @@ OH_AVErrCode OH_AVRecorder_Reset(OH_AVRecorder *recorder)
     struct RecorderObject *recorderObj = reinterpret_cast<RecorderObject *>(recorder);
     CHECK_AND_RETURN_RET_LOG(recorderObj != nullptr, AV_ERR_INVALID_VAL, "recorderObj is nullptr");
     CHECK_AND_RETURN_RET_LOG(recorderObj->recorder_ != nullptr, AV_ERR_INVALID_VAL, "recorder_ is null");
+
     int32_t ret = recorderObj->recorder_->Reset();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "recorder Reset failed");
+
+    CHECK_AND_RETURN_RET_LOG(recorderObj->callback_ != nullptr, AV_ERR_INVALID_VAL,
+        "recorderObj->callback_ is nullptr!");
+    MEDIA_LOGI("Change state to state code: %{public}d", OH_AVRecorder_State::IDLE);
+    recorderObj->callback_->OnStateChange(OH_AVRecorder_State::IDLE, OH_AVRecorder_StateChangeReason::USER);
+
+    recorderObj->hasConfigured_ = false;
     return AV_ERR_OK;
 }
 
@@ -447,30 +493,18 @@ OH_AVErrCode OH_AVRecorder_Release(OH_AVRecorder *recorder)
     recorderObj->isReleased_.store(true);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "recorder Release failed");
     MEDIA_LOGI("0x%{public}06" PRIXPTR " OH_AVRecorder_Release", FAKE_POINTER(recorderObj));
+
+    CHECK_AND_RETURN_RET_LOG(recorderObj->callback_ != nullptr, AV_ERR_INVALID_VAL,
+        "recorderObj->callback_ is nullptr!");
+    MEDIA_LOGI("Change state to state code: %{public}d", OH_AVRecorder_State::RELEASED);
+    recorderObj->callback_->OnStateChange(OH_AVRecorder_State::RELEASED, OH_AVRecorder_StateChangeReason::USER);
+    
+    recorderObj->hasConfigured_ = false;
     return AV_ERR_OK;
 }
 
-OH_AVRecorder_CodecMimeType ConvertMimeType(const std::string &mimeType)
-{
-    static const std::unordered_map<std::string, OH_AVRecorder_CodecMimeType> mimeTypeMap = {
-        {"video/avc", OH_AVRecorder_CodecMimeType::VIDEO_AVC},
-        {"video/mp4v-es", OH_AVRecorder_CodecMimeType::VIDEO_MPEG4},
-        {"video/hevc", OH_AVRecorder_CodecMimeType::VIDEO_HEVC},
-        {"audio/mp4a-latm", OH_AVRecorder_CodecMimeType::AUDIO_AAC},
-        {"audio/mpeg", OH_AVRecorder_CodecMimeType::AUDIO_MP3},
-        {"audio/g711mu", OH_AVRecorder_CodecMimeType::AUDIO_G711MU}
-    };
-
-    auto it = mimeTypeMap.find(mimeType);
-    if (it != mimeTypeMap.end()) {
-        return it->second;
-    }
-
-    return static_cast<OH_AVRecorder_CodecMimeType>(0);
-}
-
 OH_AVErrCode OH_AVRecorder_GetAvailableEncoder(OH_AVRecorder *recorder,
-    OH_AVRecorder_EncoderInfo *info, uint32_t *length)
+    OH_AVRecorder_EncoderInfo **info, int32_t *length)
 {
     CHECK_AND_RETURN_RET_LOG(recorder != nullptr, AV_ERR_INVALID_VAL, "input recorder is nullptr!");
     CHECK_AND_RETURN_RET_LOG(info != nullptr, AV_ERR_INVALID_VAL, "input info is nullptr!");
@@ -479,46 +513,6 @@ OH_AVErrCode OH_AVRecorder_GetAvailableEncoder(OH_AVRecorder *recorder,
     CHECK_AND_RETURN_RET_LOG(recorderObj != nullptr, AV_ERR_INVALID_VAL, "recorderObj is nullptr");
     CHECK_AND_RETURN_RET_LOG(recorderObj->recorder_ != nullptr, AV_ERR_INVALID_VAL, "recorder_ is null");
     
-    std::vector<EncoderCapabilityData> encoderInfo;
-    int32_t ret = recorderObj->recorder_->GetAvailableEncoder(encoderInfo);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "GetAvailableEncoder failed!");
-
-    if (*length < encoderInfo.size()) {
-        *length = static_cast<uint32_t>(encoderInfo.size());
-        return AV_ERR_NO_MEMORY;
-    }
-    
-    *length = static_cast<uint32_t>(encoderInfo.size());
-
-    for (size_t i = 0; i < encoderInfo.size(); ++i) {
-        const EncoderCapabilityData &src = encoderInfo[i];
-        OH_AVRecorder_EncoderInfo &dest = info[i];
-
-        dest.mimeType = ConvertMimeType(src.mimeType);
-
-        dest.type = strdup(src.type.c_str());
-
-        dest.bitRate.min = src.bitrate.minVal;
-        dest.bitRate.max = src.bitrate.maxVal;
-
-        dest.frameRate.min = src.frameRate.minVal;
-        dest.frameRate.max = src.frameRate.maxVal;
-
-        dest.width.min = src.width.minVal;
-        dest.width.max = src.width.maxVal;
-
-        dest.height.min = src.height.minVal;
-        dest.height.max = src.height.maxVal;
-
-        dest.channels.min = src.channels.minVal;
-        dest.channels.max = src.channels.maxVal;
-
-        dest.sampleRateLen = static_cast<int32_t>(src.sampleRate.size());
-        dest.sampleRate = (int32_t *)malloc(dest.sampleRateLen * sizeof(int32_t));
-        for (int j = 0; j < dest.sampleRateLen; ++j) {
-            dest.sampleRate[j] = src.sampleRate[j];
-        }
-    }
     return AV_ERR_OK;
 }
 
@@ -534,16 +528,13 @@ OH_AVErrCode OH_AVRecorder_SetStateCallback(OH_AVRecorder *recorder,
     CHECK_AND_RETURN_RET_LOG(recorderObj != nullptr, AV_ERR_INVALID_VAL, "recorderObj is nullptr");
     CHECK_AND_RETURN_RET_LOG(recorderObj->recorder_ != nullptr, AV_ERR_INVALID_VAL, "recorder_ is null");
 
-    OH_AVRecorderCallback dummyCallback = {
-        .onStateChange = nullptr,
-        .onError = nullptr
-    };
-    recorderObj->callback_ = std::make_shared<NativeRecorderCallback>(recorder, dummyCallback);
-    CHECK_AND_RETURN_RET_LOG(recorderObj->callback_ != nullptr, AV_ERR_NO_MEMORY, "callback_ is nullptr!");
-
-    int32_t ret = recorderObj->recorder_->SetRecorderCallback(recorderObj->callback_);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_OPERATE_NOT_PERMIT, "SetRecorderCallback failed!");
-
+    if (recorderObj->callback_ == nullptr) {
+        recorderObj->callback_ = std::make_shared<NativeRecorderCallback>(recorder);
+        CHECK_AND_RETURN_RET_LOG(recorderObj->callback_ != nullptr, AV_ERR_INVALID_VAL, "callback_ is nullptr!");
+        int32_t ret = recorderObj->recorder_->SetRecorderCallback(recorderObj->callback_);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "SetRecorderCallback failed!");
+    }
+    
     if (recorderObj->callback_ == nullptr || !recorderObj->callback_->SetStateChangeCallback(callback, userData)) {
         MEDIA_LOGE("OH_AVRecorder_SetStateCallback error");
         return AV_ERR_NO_MEMORY;
@@ -565,15 +556,12 @@ OH_AVErrCode OH_AVRecorder_SetErrorCallback(OH_AVRecorder *recorder, OH_AVRecord
     CHECK_AND_RETURN_RET_LOG(recorderObj != nullptr, AV_ERR_INVALID_VAL, "recorderObj is nullptr");
     CHECK_AND_RETURN_RET_LOG(recorderObj->recorder_ != nullptr, AV_ERR_INVALID_VAL, "recorder_ is null");
 
-    OH_AVRecorderCallback dummyCallback = {
-        .onStateChange = nullptr,
-        .onError = nullptr
-    };
-    recorderObj->callback_ = std::make_shared<NativeRecorderCallback>(recorder, dummyCallback);
-    CHECK_AND_RETURN_RET_LOG(recorderObj->callback_ != nullptr, AV_ERR_NO_MEMORY, "callback_ is nullptr!");
-
-    int32_t ret = recorderObj->recorder_->SetRecorderCallback(recorderObj->callback_);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_OPERATE_NOT_PERMIT, "SetRecorderCallback failed!");
+    if (recorderObj->callback_ == nullptr) {
+        recorderObj->callback_ = std::make_shared<NativeRecorderCallback>(recorder);
+        CHECK_AND_RETURN_RET_LOG(recorderObj->callback_ != nullptr, AV_ERR_INVALID_VAL, "callback_ is nullptr!");
+        int32_t ret = recorderObj->recorder_->SetRecorderCallback(recorderObj->callback_);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "SetRecorderCallback failed!");
+    }
 
     if (recorderObj->callback_ == nullptr || !recorderObj->callback_->SetErrorCallback(callback, userData)) {
         MEDIA_LOGE("OH_AVRecorder_SetErrorCallback error");
