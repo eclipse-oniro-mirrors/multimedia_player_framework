@@ -40,6 +40,7 @@ using namespace OHOS::QOS;
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "PlayerServer"};
     constexpr int32_t MAX_SUBTITLE_TRACK_NUN = 8;
+    static bool g_isFirstInit = true;
 }
 
 namespace OHOS {
@@ -93,7 +94,13 @@ int32_t PlayerServer::Init()
     appTokenId_ = IPCSkeleton::GetCallingTokenID();
     appUid_ = IPCSkeleton::GetCallingUid();
     appPid_ = IPCSkeleton::GetCallingPid();
-    MEDIA_LOGD("Get app uid: %{public}d, app pid: %{public}d, app tokenId: %{private}u", appUid_, appPid_, appTokenId_);
+    appName_ = GetClientBundleName(appUid_);
+    if (g_isFirstInit) {
+        MEDIA_LOGI("appUid: %{public}d, appPid: %{public}d, appName: %{public}s", appUid_, appPid_, appName_.c_str());
+        g_isFirstInit = false;
+    } else {
+        MEDIA_LOGD("appUid: %{public}d, appPid: %{public}d, appName: %{public}s", appUid_, appPid_, appName_.c_str());
+    }
     apiVersion_ = GetApiInfo(appUid_);
 
     PlayerServerStateMachine::Init(idleState_);
@@ -122,27 +129,22 @@ int32_t PlayerServer::SetSource(const std::string &url)
     std::lock_guard<std::mutex> lock(mutex_);
     MediaTrace trace("PlayerServer::SetSource url");
     CHECK_AND_RETURN_RET_LOG(!url.empty(), MSERR_INVALID_VAL, "url is empty");
-    std::string appName = GetClientBundleName(appUid_);
-    std::string callerType = "player_framework";
-    std::string errmasg = "";
     MEDIA_LOGD("0x%{public}06" PRIXPTR " KPI-TRACE: PlayerServer SetSource in(url)", FAKE_POINTER(this));
     if (url.find("http") != std::string::npos) {
         int32_t permissionResult = MediaPermission::CheckNetWorkPermission(appUid_, appPid_, appTokenId_);
         if (permissionResult != Security::AccessToken::PERMISSION_GRANTED) {
             MEDIA_LOGE("user do not have the right to access INTERNET");
             OnErrorMessage(MSERR_USER_NO_PERMISSION, "user do not have the right to access INTERNET");
-            errmasg = "user do not have the right to access INTERNET";
-            FaultSourceEventWrite(appName, instanceId_, callerType, static_cast<int8_t>(SourceType::SOURCE_TYPE_URI),
-                url, errmasg);
+            FaultSourceEventWrite(appName_, instanceId_, "player_framework",
+                static_cast<int8_t>(SourceType::SOURCE_TYPE_URI), url, "user do not have the right to access INTERNET");
             return MSERR_INVALID_OPERATION;
         }
     }
     config_.url = url;
     int32_t ret = InitPlayEngine(url);
     if (ret != MSERR_OK) {
-        errmasg = "SetSource Failed!";
-        FaultSourceEventWrite(appName, instanceId_, callerType, static_cast<int8_t>(SourceType::SOURCE_TYPE_URI), url,
-            errmasg);
+        FaultSourceEventWrite(appName_, instanceId_, "player_framework",
+            static_cast<int8_t>(SourceType::SOURCE_TYPE_URI), url, "SetSource Failed!");
     }
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetSource Failed!");
     return ret;
@@ -157,14 +159,10 @@ int32_t PlayerServer::SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc
     dataSrc_ = dataSrc;
     std::string url = "media data source";
     config_.url = url;
-    std::string appName = GetClientBundleName(appUid_);
-    std::string callerType = "player_framework";
-    std::string errmasg = "";
     int32_t ret = InitPlayEngine(url);
     if (ret != MSERR_OK) {
-        errmasg = "SetSource Failed!";
-        FaultSourceEventWrite(appName, instanceId_, callerType, static_cast<int8_t>(SourceType::SOURCE_TYPE_STREAM),
-            url, errmasg);
+        FaultSourceEventWrite(appName_, instanceId_, "player_framework",
+            static_cast<int8_t>(SourceType::SOURCE_TYPE_STREAM), url, "SetSource Failed!");
     }
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "InitPlayEngine Failed!");
     int64_t size = 0;
@@ -184,16 +182,12 @@ int32_t PlayerServer::SetSource(int32_t fd, int64_t offset, int64_t size)
     MEDIA_LOGW("KPI-TRACE: PlayerServer SetSource in(fd), fd: %{public}d, offset: %{public}" PRId64
         ", size: %{public}" PRId64, fd, offset, size);
     int32_t ret;
-    std::string appName = GetClientBundleName(appUid_);
-    std::string callerType = "player_framework";
-    std::string errmasg = "";
     if (uriHelper_ != nullptr) {
         std::string uri = uriHelper_->FormattedUri();
         ret = InitPlayEngine(uri);
         if (ret != MSERR_OK) {
-            errmasg = "SetSource Failed!";
-            FaultSourceEventWrite(appName, instanceId_, callerType, static_cast<int8_t>(SourceType::SOURCE_TYPE_FD),
-                uri, errmasg);
+            FaultSourceEventWrite(appName_, instanceId_, "player_framework",
+                static_cast<int8_t>(SourceType::SOURCE_TYPE_FD), uri, "SetSource Failed!");
         }
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetSource Failed!");
     } else {
@@ -203,9 +197,8 @@ int32_t PlayerServer::SetSource(int32_t fd, int64_t offset, int64_t size)
             MSERR_INVALID_VAL, "Failed to read the fd");
         ret = InitPlayEngine(uriHelper->FormattedUri());
         if (ret != MSERR_OK) {
-            errmasg = "SetSource Failed!";
-            FaultSourceEventWrite(appName, instanceId_, callerType, static_cast<int8_t>(SourceType::SOURCE_TYPE_FD),
-                uriHelper->FormattedUri(), errmasg);
+            FaultSourceEventWrite(appName_, instanceId_, "player_framework",
+                static_cast<int8_t>(SourceType::SOURCE_TYPE_FD), uriHelper->FormattedUri(),  "SetSource Failed!");
         }
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetSource Failed!");
         uriHelper_ = std::move(uriHelper);
@@ -1501,7 +1494,7 @@ int32_t PlayerServer::DumpInfo(int32_t fd)
         dumpString += "PlayerServer enable HEBC: " + std::to_string(playerEngine_->GetHEBCMode()) + "\n";
         playerEngine_->OnDumpInfo(fd);
     }
-    dumpString += "PlayerServer client bundle name is: " + GetClientBundleName(appUid_, false) + "\n";
+    dumpString += "PlayerServer client bundle name is: " + appName_ + "\n";
     dumpString += "PlayerServer instance id is: " + std::to_string(instanceId_) + "\n";
     std::vector<Format> videoTrack;
     (void)GetVideoTrackInfo(videoTrack);
