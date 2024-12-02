@@ -230,7 +230,7 @@ void AVThumbnailGenerator::OnOutputBufferAvailable(uint32_t index, std::shared_p
             bufferIndex_ = index;
             avBuffer_ = buffer;
         }
-        MEDIA_LOGI("dstTime %{public}lld resTime %{public}ld", seekTime_, buffer->pts_);
+        MEDIA_LOGI("dstTime %{public}ld resTime %{public}ld", seekTime_, buffer->pts_);
         cond_.notify_all();
         PauseFetchFrame();
         return;
