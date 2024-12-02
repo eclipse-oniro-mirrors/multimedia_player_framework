@@ -40,6 +40,7 @@ using namespace OHOS::QOS;
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "PlayerServer"};
     constexpr int32_t MAX_SUBTITLE_TRACK_NUN = 8;
+    static bool g_isFirstInit = true;
 }
 
 namespace OHOS {
@@ -94,7 +95,12 @@ int32_t PlayerServer::Init()
     appUid_ = IPCSkeleton::GetCallingUid();
     appPid_ = IPCSkeleton::GetCallingPid();
     appName_ = GetClientBundleName(appUid_);
-    MEDIA_LOGI("Get appUid: %{public}d, appPid: %{public}d, appName: %{public}s", appUid_, appPid_, appName_.c_str());
+    if (g_isFirstInit) {
+        MEDIA_LOGI("appUid: %{public}d, appPid: %{public}d, appName: %{public}s", appUid_, appPid_, appName_.c_str());
+        g_isFirstInit = false;
+    } else {
+        MEDIA_LOGD("appUid: %{public}d, appPid: %{public}d, appName: %{public}s", appUid_, appPid_, appName_.c_str());
+    }
     apiVersion_ = GetApiInfo(appUid_);
 
     PlayerServerStateMachine::Init(idleState_);
