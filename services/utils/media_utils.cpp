@@ -67,7 +67,7 @@ static int32_t FAULT_API_VERSION = -1;
 static int32_t ROUND_VERSION_NUMBER = 100;
 }  // namespace
 
-std::string __attribute__((visibility("default"))) GetClientBundleName(int32_t uid, bool shouldLog)
+std::string __attribute__((visibility("default"))) GetClientBundleName(int32_t uid)
 {
     if (uid == 1003) { // 1003 is bootanimation uid
         return "bootanimation";
