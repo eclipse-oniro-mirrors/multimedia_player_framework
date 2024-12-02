@@ -343,5 +343,108 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CreateSCNewInstance_003, TestSize.Leve
     ScreenCaptureServer::serverMap.clear();
     ASSERT_NE(ScreenCaptureServer::Create(), nullptr);
 }
+
+/**
+* @tc.name: CheckFirstStartPidInstance_001
+* @tc.desc: CheckFirstStartPidInstance_001
+* @tc.type: FUNC
+*/
+HWTEST_F(ScreenCaptureServerFunctionTest, CheckFirstStartPidInstance_001, TestSize.Level2)
+{
+    ScreenCaptureServer::serverMap.clear();
+    ScreenCaptureServer::startedSessionIDList_.clear();
+    screenCaptureServer_->appInfo_.appPid = 1;
+    ASSERT_EQ(screenCaptureServer_->IsFirstStartPidInstance(screenCaptureServer_->appInfo_.appPid), true);
+    ASSERT_EQ(screenCaptureServer_->IsLastStartedPidInstance(screenCaptureServer_->appInfo_.appPid), false);
+}
+
+/**
+* @tc.name: CheckFirstStartPidInstance_002
+* @tc.desc: CheckFirstStartPidInstance_002
+* @tc.type: FUNC
+*/
+HWTEST_F(ScreenCaptureServerFunctionTest, CheckFirstStartPidInstance_002, TestSize.Level2)
+{
+    ScreenCaptureServer::serverMap.clear();
+    ScreenCaptureServer::startedSessionIDList_.clear();
+    std::shared_ptr<ScreenCaptureServer> server = std::make_shared<ScreenCaptureServer>();
+    int32_t sessionId = ScreenCaptureServer::gIdGenerator.GetNewID();
+    server->SetSessionId(sessionId);
+    server->appInfo_.appPid = 1;
+    ScreenCaptureServer::AddScreenCaptureServerMap(sessionId, server);
+    ScreenCaptureServer::AddStartedSessionIdList(sessionId);
+    ASSERT_EQ(server->IsFirstStartPidInstance(server->appInfo_.appPid), false);
+    ASSERT_EQ(server->FirstPidUpdatePrivacyUsingPermissionState(server->appInfo_.appPid), true);
+    ASSERT_EQ(server->IsLastStartedPidInstance(server->appInfo_.appPid), true);
+
+    ScreenCaptureServer::RemoveScreenCaptureServerMap(sessionId);
+    ScreenCaptureServer::serverMap.clear();
+    ScreenCaptureServer::startedSessionIDList_.clear();
+}
+
+/**
+* @tc.name: CheckFirstPidUpdatePrivacyUsingPermissionState_001
+* @tc.desc: CheckFirstPidUpdatePrivacyUsingPermissionState_001
+* @tc.type: FUNC
+*/
+HWTEST_F(ScreenCaptureServerFunctionTest, CheckFirstPidUpdatePrivacyUsingPermissionState_001, TestSize.Level2)
+{
+    ScreenCaptureServer::serverMap.clear();
+    ScreenCaptureServer::startedSessionIDList_.clear();
+    std::shared_ptr<ScreenCaptureServer> server = std::make_shared<ScreenCaptureServer>();
+    server->appInfo_.appUid = ROOT_UID;
+    server->appInfo_.appPid = 1;
+    ASSERT_EQ(server->IsFirstStartPidInstance(server->appInfo_.appPid), true);
+    ASSERT_EQ(server->FirstPidUpdatePrivacyUsingPermissionState(server->appInfo_.appPid), true);
+}
+
+/**
+* @tc.name: CheckLastStartedPidInstance_001
+* @tc.desc: CheckLastStartedPidInstance_001
+* @tc.type: FUNC
+*/
+HWTEST_F(ScreenCaptureServerFunctionTest, CheckLastStartedPidInstance_001, TestSize.Level2)
+{
+    ScreenCaptureServer::serverMap.clear();
+    ScreenCaptureServer::startedSessionIDList_.clear();
+    std::vector<std::shared_ptr<ScreenCaptureServer>> serverList;
+    for (int32_t i = 0; i < ScreenCaptureServer::maxSessionPerUid; i++) {
+        std::shared_ptr<ScreenCaptureServer> server = std::make_shared<ScreenCaptureServer>();
+        serverList.push_back(server);
+        int32_t sessionId = ScreenCaptureServer::gIdGenerator.GetNewID();
+        server->SetSessionId(sessionId);
+        server->appInfo_.appPid = 1;
+        ScreenCaptureServer::AddScreenCaptureServerMap(sessionId, server);
+        ScreenCaptureServer::AddStartedSessionIdList(sessionId);
+    }
+    screenCaptureServer_->appInfo_.appPid = 1;
+    ASSERT_EQ(screenCaptureServer_->IsLastStartedPidInstance(screenCaptureServer_->appInfo_.appPid), false);
+    ASSERT_EQ(screenCaptureServer_->LastPidUpdatePrivacyUsingPermissionState(screenCaptureServer_->appInfo_.appPid),
+        true);
+    
+    ScreenCaptureServer::serverMap.clear();
+    ScreenCaptureServer::startedSessionIDList_.clear();
+}
+
+/**
+* @tc.name: CheckLastPidUpdatePrivacyUsingPermissionState_001
+* @tc.desc: CheckLastPidUpdatePrivacyUsingPermissionState_001
+* @tc.type: FUNC
+*/
+HWTEST_F(ScreenCaptureServerFunctionTest, CheckLastPidUpdatePrivacyUsingPermissionState_001, TestSize.Level2)
+{
+    ScreenCaptureServer::serverMap.clear();
+    ScreenCaptureServer::startedSessionIDList_.clear();
+    std::shared_ptr<ScreenCaptureServer> server = std::make_shared<ScreenCaptureServer>();
+    int32_t sessionId = ScreenCaptureServer::gIdGenerator.GetNewID();
+    server->SetSessionId(sessionId);
+    server->appInfo_.appUid = ROOT_UID;
+    server->appInfo_.appPid = 1;
+    ScreenCaptureServer::AddScreenCaptureServerMap(sessionId, server);
+    ScreenCaptureServer::AddStartedSessionIdList(sessionId);
+    ASSERT_EQ(server->IsLastStartedPidInstance(server->appInfo_.appPid), true);
+    ASSERT_EQ(server->LastPidUpdatePrivacyUsingPermissionState(server->appInfo_.appPid), true);
+}
+
 } // Media
 } // OHOS
