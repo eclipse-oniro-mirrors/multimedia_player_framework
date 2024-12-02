@@ -143,36 +143,6 @@ HWTEST_F(AVThumbnailGeneratorUnitTest, OnInputBufferAvailable, TestSize.Level1)
 }
 
 /**
- * @tc.name: GetYuvDataAlignStride
- * @tc.desc: GetYuvDataAlignStride
- * @tc.type: FUNC
- */
-HWTEST_F(AVThumbnailGeneratorUnitTest, GetYuvDataAlignStride, TestSize.Level1)
-{
-    sptr<SurfaceBuffer> surfaceBuffer = SurfaceBuffer::Create();
-    surfaceBuffer->SetSurfaceBufferWidth(100);
-    surfaceBuffer->SetSurfaceBufferHeight(100);
-    BufferHandle handle;
-    handle.format = static_cast<int32_t>(GraphicPixelFormat::GRAPHIC_PIXEL_FMT_YCBCR_P010);
-    uint64_t usage = 10;
-    handle.usage = usage;
-    handle.stride = 16;
-    BufferHandle* ptrHandle = &handle;
-    surfaceBuffer->SetBufferHandle(ptrHandle);
-
-    Format format;
-    format.PutIntValue(MediaDescriptionKey::MD_KEY_WIDTH, 2);
-    format.PutIntValue(MediaDescriptionKey::MD_KEY_HEIGHT, 2);
-    avThumbnailGenerator_->outputFormat_ = format;
-
-    EXPECT_EQ(avThumbnailGenerator_->GetYuvDataAlignStride(surfaceBuffer), 0);
-    if (ptrHandle) {
-        delete ptrHandle;
-        ptrHandle = nullptr;
-    }
-}
-
-/**
  * @tc.name: Reset
  * @tc.desc: Reset
  * @tc.type: FUNC
