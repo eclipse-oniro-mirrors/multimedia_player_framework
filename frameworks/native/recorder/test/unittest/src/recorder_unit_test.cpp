@@ -652,7 +652,6 @@ HWTEST_F(RecorderUnitTest, recorder_configure_013, TestSize.Level2)
     EXPECT_NE(MSERR_OK, recorder_->Stop(false));
     EXPECT_EQ(MSERR_OK, recorder_->Reset());
     EXPECT_EQ(MSERR_OK, recorder_->Release());
-    close(g_videoRecorderConfig.outputFd);
 }
 
 /**
@@ -1467,6 +1466,7 @@ HWTEST_F(RecorderUnitTest, recorder_SetDataSource_001, TestSize.Level0)
     ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
     EXPECT_EQ(MSERR_INVALID_OPERATION,
         recorder_->SetDataSource(DataSourceType::METADATA, g_videoRecorderConfig.videoSourceId));
+    close(videoRecorderConfig.outputFd);
 }
 
 /**
