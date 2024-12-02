@@ -267,7 +267,6 @@ class ScreenCaptureServer : public std::enable_shared_from_this<ScreenCaptureSer
 public:
     static std::map<int32_t, std::weak_ptr<ScreenCaptureServer>> serverMap;
     static const int32_t maxSessionId;
-    static const int32_t sessionIdSalt;
     static UniqueIDGenerator gIdGenerator;
     static std::list<int32_t> startedSessionIDList_;
     static const int32_t maxSessionPerUid;
@@ -353,7 +352,6 @@ private:
     int32_t StartScreenCaptureFile();
     int32_t StartScreenCaptureStream();
     int32_t StartAudioCapture();
-    int32_t AddSaltToSessionId(int32_t id);
     std::string GenerateThreadNameByPrefix(std::string threadName);
     int32_t StartStreamInnerAudioCapture();
     int32_t StartStreamMicAudioCapture();

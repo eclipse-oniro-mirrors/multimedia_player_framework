@@ -80,7 +80,6 @@ static constexpr int32_t AUDIO_CHANGE_TIME = 200000; // 200 ms
 
 std::map<int32_t, std::weak_ptr<ScreenCaptureServer>> ScreenCaptureServer::serverMap;
 const int32_t ScreenCaptureServer::maxSessionId = 256;
-const int32_t ScreenCaptureServer::sessionIdSalt = 10;
 UniqueIDGenerator ScreenCaptureServer::gIdGenerator(maxSessionId);
 std::list<int32_t> ScreenCaptureServer::startedSessionIDList_;
 const int32_t ScreenCaptureServer::maxSessionPerUid = 6;
@@ -171,7 +170,9 @@ bool ScreenCaptureServer::CheckScreenCaptureSessionIdLimit(int32_t curAppUid)
         for (std::map<int32_t, std::weak_ptr<ScreenCaptureServer>>::iterator iter = serverMap.begin();
             iter != serverMap.end(); iter++) {
                 if ((iter->second).lock() != nullptr) {
-                    countForUid += (curAppUid == (iter->second).lock()->GetAppUid()) ? 1 : 0;
+                    if (curAppUid == (iter->second).lock()->GetAppUid()) {
+                        countForUid++;
+                    }
                     CHECK_AND_RETURN_RET_LOG(countForUid < maxSessionPerUid, false,
                         "Create failed, uid(%{public}d) has created too many ScreenCaptureServer instances", curAppUid);
                 }
@@ -966,19 +967,9 @@ int32_t ScreenCaptureServer::StartAudioCapture()
     return MSERR_OK;
 }
 
-int32_t ScreenCaptureServer::AddSaltToSessionId(int32_t id)
-{
-    MEDIA_LOGD("AddSaltToSessionId initId: %{public}d, newId: %{public}d", id,
-        (id + sessionIdSalt) % maxSessionId);
-    return (id + sessionIdSalt) % maxSessionId;
-}
-
 std::string ScreenCaptureServer::GenerateThreadNameByPrefix(std::string threadName)
 {
-    int32_t saltedSessionId = AddSaltToSessionId(sessionId_);
-    MEDIA_LOGI("ScreenCaptureServer::GenerateThreadNameByPrefix threadName: %{public}s,"
-        "saltedSessionId: %{public}d", threadName.c_str(), saltedSessionId);
-    return threadName + std::to_string(saltedSessionId);
+    return threadName + std::to_string(sessionId_);
 }
 
 int32_t ScreenCaptureServer::StartStreamInnerAudioCapture()
