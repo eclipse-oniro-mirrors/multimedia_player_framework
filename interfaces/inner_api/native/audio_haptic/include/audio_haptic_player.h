@@ -115,6 +115,8 @@ public:
     virtual HapticsMode GetHapticsMode() const = 0;
 
     virtual void SetHapticsMode(HapticsMode hapticsMode) = 0;
+
+    virtual void IsSoundAndVibratorPrepare(bool &isSoundPrepare, bool &isVibratorPrepare) = 0;
 };
 
 class AudioHapticPlayerCallback {

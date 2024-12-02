@@ -42,6 +42,7 @@ public:
     int32_t GetAudioCurrentTime() override;
     HapticsMode GetHapticsMode() const override;
     void SetHapticsMode(HapticsMode hapticsMode) override;
+    void IsSoundAndVibratorPrepare(bool &isSoundPrepare, bool &isVibratorPrepare) override;
 
     void SetPlayerParam(const AudioHapticPlayerParam &param);
     void LoadPlayer();
@@ -74,6 +75,8 @@ private:
     AudioHapticPlayerState playerState_ = AudioHapticPlayerState::STATE_INVALID;
     std::mutex audioHapticPlayerLock_;
     HapticsMode hapticsMode_ = HapticsMode::HAPTICS_MODE_INVALID;
+    bool isSoundPrepare_ = false;
+    bool isVibratorPrepare_ = false;
 
     // var for callback
     std::weak_ptr<AudioHapticPlayerCallback> audioHapticPlayerCallback_;
