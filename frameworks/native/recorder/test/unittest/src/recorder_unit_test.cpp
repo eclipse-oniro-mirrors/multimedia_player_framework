@@ -1466,7 +1466,7 @@ HWTEST_F(RecorderUnitTest, recorder_SetDataSource_001, TestSize.Level0)
     ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
     EXPECT_EQ(MSERR_INVALID_OPERATION,
         recorder_->SetDataSource(DataSourceType::METADATA, g_videoRecorderConfig.videoSourceId));
-    close(videoRecorderConfig.outputFd);
+    close(g_videoRecorderConfig.outputFd);
 }
 
 /**
