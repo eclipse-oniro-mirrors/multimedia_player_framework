@@ -268,7 +268,6 @@ private:
     std::atomic<bool> reportStatusFlag_ {true};
     bool isStreamUsagePauseRequired_ = true;
     std::mutex surfaceMutex_;
-    static bool isFirstInit_ = true;
 };
 } // namespace Media
 } // namespace OHOS
