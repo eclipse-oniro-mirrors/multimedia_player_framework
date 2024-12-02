@@ -147,15 +147,15 @@ std::shared_ptr<Meta> AVThumbnailGenerator::GetVideoTrackInfo()
         if (trackMime_.find("video/") == 0) {
             Plugins::MediaType mediaType;
             CHECK_AND_RETURN_RET_LOG(trackInfos[index]->GetData(Tag::MEDIA_TYPE, mediaType), nullptr,
-                                     "GetTargetTrackInfo failed to get mediaType, index:%{public}zu", index);
+                                     "GetTargetTrackInfo failed to get mediaType, index:%{public}d", index);
             CHECK_AND_RETURN_RET_LOG(
                 mediaType == Plugins::MediaType::VIDEO, nullptr,
-                "GetTargetTrackInfo mediaType is not video, index:%{public}d, mediaType:%{public}zu", index,
+                "GetTargetTrackInfo mediaType is not video, index:%{public}d, mediaType:%{public}d", index,
                 static_cast<int32_t>(mediaType));
             CHECK_AND_RETURN_RET_LOG(trackInfos[index]->Get<Tag::VIDEO_FRAME_RATE>(frameRate_) && frameRate_ > 0,
                 nullptr, "failed to get video frame rate");
             trackIndex_ = index;
-            MEDIA_LOGI("0x%{public}06" PRIXPTR " GetTrackInfo success trackIndex_:%{public}zu, trackMime_:%{public}s",
+            MEDIA_LOGI("0x%{public}06" PRIXPTR " GetTrackInfo success trackIndex_:%{public}d, trackMime_:%{public}s",
                        FAKE_POINTER(this), trackIndex_, trackMime_.c_str());
             if (trackInfos[index]->Get<Tag::VIDEO_ROTATION>(rotation_)) {
                 MEDIA_LOGI("rotation %{public}d", static_cast<int32_t>(rotation_));
@@ -195,7 +195,7 @@ void AVThumbnailGenerator::OnInputBufferAvailable(uint32_t index, std::shared_pt
 
 void AVThumbnailGenerator::OnOutputBufferAvailable(uint32_t index, std::shared_ptr<AVBuffer> buffer)
 {
-    MEDIA_LOGD("OnOutputBufferAvailable index:%{public}u , pts %{public}lld", index, buffer->pts_);
+    MEDIA_LOGD("OnOutputBufferAvailable index:%{public}u , pts %{public}ld", index, buffer->pts_);
     CHECK_AND_RETURN_LOG(videoDecoder_ != nullptr, "Video decoder not exist");
     bool isValidBuffer = buffer != nullptr && buffer->memory_ != nullptr &&
          (buffer->memory_->GetSize() != 0 || buffer->memory_->GetSurfaceBuffer() != nullptr);
@@ -230,7 +230,7 @@ void AVThumbnailGenerator::OnOutputBufferAvailable(uint32_t index, std::shared_p
             bufferIndex_ = index;
             avBuffer_ = buffer;
         }
-        MEDIA_LOGI("dstTime %{public}lld resTime %{public}lld", seekTime_, buffer->pts_);
+        MEDIA_LOGI("dstTime %{public}lld resTime %{public}ld", seekTime_, buffer->pts_);
         cond_.notify_all();
         PauseFetchFrame();
         return;
@@ -484,7 +484,7 @@ int32_t AVThumbnailGenerator::GetYuvDataAlignStride(const sptr<SurfaceBuffer> &s
         std::make_shared<AVSharedMemoryBase>(sizeof(OutputFrame) + width * height * BYTES_PER_PIXEL_YUV,
             AVSharedMemory::Flags::FLAGS_READ_WRITE, "FetchedFrameMemory");
     auto ret = fetchedFrameAtTime_->Init();
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Create AVSharedmemory failed, ret:%{public}d", ret);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Create AVSharedmemory failed, ret:%{public}d");
     uint8_t *dstPtr = static_cast<uint8_t *>(sizeof(OutputFrame) + fetchedFrameAtTime_->GetBase());
     uint8_t *srcPtr = static_cast<uint8_t *>(surfaceBuffer->GetVirAddr());
     int32_t format = surfaceBuffer->GetFormat();
