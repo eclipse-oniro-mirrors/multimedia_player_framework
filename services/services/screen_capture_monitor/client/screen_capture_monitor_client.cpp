@@ -82,10 +82,10 @@ int32_t ScreenCaptureMonitorClient::CloseListenerObject()
     return screenCaptureMonitorProxy_->CloseListenerObject();
 }
 
-int32_t ScreenCaptureMonitorClient::IsScreenCaptureWorking()
+std::list<int32_t> ScreenCaptureMonitorClient::IsScreenCaptureWorking()
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorProxy_ != nullptr, MSERR_NO_MEMORY,
+    CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorProxy_ != nullptr, {},
         "ScreenCaptureMonitor service does not exist.");
     return screenCaptureMonitorProxy_->IsScreenCaptureWorking();
 }

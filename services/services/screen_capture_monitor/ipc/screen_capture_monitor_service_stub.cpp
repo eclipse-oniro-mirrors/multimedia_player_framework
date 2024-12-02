@@ -26,6 +26,7 @@
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "ScreenCaptureMonitorServiceStub"};
+constexpr int MAX_LIST_COUNT = 1000;
 }
 
 namespace OHOS {
@@ -116,17 +117,16 @@ int32_t ScreenCaptureMonitorServiceStub::SetListenerObject(const sptr<IRemoteObj
 
 int32_t ScreenCaptureMonitorServiceStub::CloseListenerObject()
 {
-    CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorCallback_ != nullptr, MSERR_OK,
-        "screenCaptureMonitorCallback_ is nullptr");
+    CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorServer_ != nullptr, MSERR_OK,
+        "screenCaptureMonitorServer is nullptr");
     (void)screenCaptureMonitorServer_->RemoveScreenCaptureMonitorCallback(screenCaptureMonitorCallback_);
     screenCaptureMonitorCallback_ = nullptr;
     return MSERR_OK;
 }
 
-int32_t ScreenCaptureMonitorServiceStub::IsScreenCaptureWorking()
+std::list<int32_t> ScreenCaptureMonitorServiceStub::IsScreenCaptureWorking()
 {
-    CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorServer_ != nullptr, MSERR_NO_MEMORY,
-        "screen capture monitor server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorServer_ != nullptr, {}, "screen capture monitor server is nullptr");
     return screenCaptureMonitorServer_->IsScreenCaptureWorking();
 }
 
@@ -147,7 +147,17 @@ int32_t ScreenCaptureMonitorServiceStub::CloseListenerObject(MessageParcel &data
 int32_t ScreenCaptureMonitorServiceStub::IsScreenCaptureWorking(MessageParcel &data, MessageParcel &reply)
 {
     (void)data;
-    reply.WriteInt32(IsScreenCaptureWorking());
+    std::list<int32_t> pidList = IsScreenCaptureWorking();
+    int32_t size = static_cast<int32_t>(pidList.size());
+    CHECK_AND_RETURN_RET_LOG(size < MAX_LIST_COUNT, MSERR_INVALID_STATE, "content filter size exceed max range");
+    reply.WriteInt32(size);
+
+    MEDIA_LOGD("ScreenCaptureMonitorServiceStub::IsScreenCaptureWorking pid start.");
+    for (auto pid: pidList) {
+        MEDIA_LOGD("ScreenCaptureMonitorServiceStub::IsScreenCaptureWorking pid start.");
+        reply.WriteInt32(pid);
+    }
+    MEDIA_LOGD("ScreenCaptureMonitorServiceStub::IsScreenCaptureWorking pid end.");
     return MSERR_OK;
 }
 

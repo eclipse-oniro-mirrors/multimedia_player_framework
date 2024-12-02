@@ -45,34 +45,47 @@ AccountObserver::~AccountObserver()
 
 bool AccountObserver::RegisterAccountObserverCallBack(std::weak_ptr<AccountObserverCallBack> callback)
 {
+    MEDIA_LOGI("AccountObserver::RegisterAccountObserverCallBack START.");
     std::unique_lock<std::mutex> lock(mutex_);
     auto callbackPtr = callback.lock();
     if (callbackPtr) {
-        accountObserverCallBack_ = callback;
+        accountObserverCallBacks_.push_back(callback);
         return true;
     }
     MEDIA_LOGI("0x%{public}06" PRIXPTR "AccountObserver CallBack is null", FAKE_POINTER(this));
     return false;
 }
 
-void AccountObserver::UnregisterAccountObserverCallBack()
+void AccountObserver::UnregisterAccountObserverCallBack(std::weak_ptr<AccountObserverCallBack> callback)
 {
-    if (!accountObserverCallBack_.expired()) {
-        accountObserverCallBack_.reset();
+    MEDIA_LOGI("AccountObserver::UnregisterAccountObserverCallBack Start.");
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_LOG(callback.lock(), "callback is null");
+    for (auto iter = accountObserverCallBacks_.begin(); iter != accountObserverCallBacks_.end();) {
+        if ((*iter).lock() == callback.lock()) {
+            iter = accountObserverCallBacks_.erase(iter);
+        } else {
+            iter++;
+        }
     }
+    MEDIA_LOGI("UnregisterAccountObserverCallBack END. accountObserverCallBacks_.size(): %{public}d",
+        static_cast<int32_t>(accountObserverCallBacks_.size()));
 }
 
 bool AccountObserver::OnAccountsSwitch()
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    auto callbackPtr = accountObserverCallBack_.lock();
-    if (callbackPtr) {
-        MEDIA_LOGI("0x%{public}06" PRIXPTR " Stop and Release CallBack", FAKE_POINTER(this));
-        return callbackPtr->StopAndRelease(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_USER_SWITCHES);
-    } else {
-        MEDIA_LOGI("0x%{public}06" PRIXPTR "AccountObserver CallBack is null", FAKE_POINTER(this));
+    bool ret = true;
+    for (auto accountObserverCallBack : accountObserverCallBacks_) {
+        auto callbackPtr = accountObserverCallBack.lock();
+        if (callbackPtr) {
+            MEDIA_LOGI("0x%{public}06" PRIXPTR " Stop and Release CallBack", FAKE_POINTER(this));
+            ret &= callbackPtr->StopAndRelease(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_USER_SWITCHES);
+        } else {
+            MEDIA_LOGI("0x%{public}06" PRIXPTR "AccountObserver CallBack is null", FAKE_POINTER(this));
+        }
     }
-    return true;
+    return ret;
 }
 
 bool AccountObserver::Init()

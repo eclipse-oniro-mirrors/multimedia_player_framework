@@ -45,7 +45,7 @@ void ScreenCaptureMonitor::UnregisterScreenCaptureMonitorListener(
         UnregisterScreenCaptureMonitorListener(listener);
 }
 
-int32_t ScreenCaptureMonitor::IsScreenCaptureWorking()
+std::list<int32_t> ScreenCaptureMonitor::IsScreenCaptureWorking()
 {
     return static_cast<ScreenCaptureMonitorImpl *>(ScreenCaptureMonitor::GetInstance())->IsScreenCaptureWorking();
 }
@@ -79,11 +79,11 @@ void ScreenCaptureMonitorImpl::UnregisterScreenCaptureMonitorListener(
     screenCaptureMonitorService_->UnregisterScreenCaptureMonitorListener(listener);
 }
 
-int32_t ScreenCaptureMonitorImpl::IsScreenCaptureWorking()
+std::list<int32_t> ScreenCaptureMonitorImpl::IsScreenCaptureWorking()
 {
     MEDIA_LOGD("ScreenCaptureMonitorImpl:0x%{public}06" PRIXPTR " IsScreenCaptureWorking in", FAKE_POINTER(this));
-    CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorService_ != nullptr,  MSERR_INVALID_OPERATION,
-        "screen capture monitor service does not exist..");
+    CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorService_ != nullptr, {},
+        "screen capture monitor service does not exist.");
     return screenCaptureMonitorService_->IsScreenCaptureWorking();
 }
 

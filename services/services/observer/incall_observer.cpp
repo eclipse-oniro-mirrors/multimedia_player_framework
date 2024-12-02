@@ -59,10 +59,11 @@ bool InCallObserver::IsInCall()
 
 bool InCallObserver::RegisterInCallObserverCallBack(std::weak_ptr<InCallObserverCallBack> callback)
 {
+    MEDIA_LOGI("InCallObserver::RegisterInCallObserverCallBack START.");
     std::unique_lock<std::mutex> lock(mutex_);
     auto callbackPtr = callback.lock();
     if (callbackPtr) {
-        inCallObserverCallBack_ = callback;
+        inCallObserverCallBacks_.push_back(callback);
         return true;
     } else {
         MEDIA_LOGI("0x%{public}06" PRIXPTR "InCallObserver CallBack is null", FAKE_POINTER(this));
@@ -70,11 +71,20 @@ bool InCallObserver::RegisterInCallObserverCallBack(std::weak_ptr<InCallObserver
     return false;
 }
 
-void InCallObserver::UnRegisterInCallObserverCallBack()
+void InCallObserver::UnregisterInCallObserverCallBack(std::weak_ptr<InCallObserverCallBack> callback)
 {
-    if (!inCallObserverCallBack_.expired()) {
-        inCallObserverCallBack_.reset();
+    MEDIA_LOGI("InCallObserver::UnregisterInCallObserverCallBack Start.");
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_LOG(callback.lock(), "callback is null");
+    for (auto iter = inCallObserverCallBacks_.begin(); iter != inCallObserverCallBacks_.end();) {
+        if ((*iter).lock() == callback.lock()) {
+            iter = inCallObserverCallBacks_.erase(iter);
+        } else {
+            iter++;
+        }
     }
+    MEDIA_LOGI("UnregisterInCallObserverCallBack END. inCallObserverCallBacks_.size(): %{public}d",
+        static_cast<int32_t>(inCallObserverCallBacks_.size()));
 }
 
 bool InCallObserver::OnCallStateUpdated(bool inCall)
@@ -84,16 +94,19 @@ bool InCallObserver::OnCallStateUpdated(bool inCall)
         MEDIA_LOGI("Update InCall Status %{public}d", static_cast<int32_t>(inCall));
         inCall_.store(inCall);
     }
+    bool ret = true;
     if (inCall) {
-        auto callbackPtr = inCallObserverCallBack_.lock();
-        if (callbackPtr) {
-            MEDIA_LOGI("0x%{public}06" PRIXPTR " Stop and Release CallBack", FAKE_POINTER(this));
-            return callbackPtr->StopAndRelease(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_CALL);
-        } else {
-            MEDIA_LOGI("0x%{public}06" PRIXPTR "InCallObserver CallBack is null", FAKE_POINTER(this));
+        for (auto inCallObserverCallBack : inCallObserverCallBacks_) {
+            auto callbackPtr = inCallObserverCallBack.lock();
+            if (callbackPtr) {
+                MEDIA_LOGI("0x%{public}06" PRIXPTR " Stop and Release CallBack", FAKE_POINTER(this));
+                ret &= callbackPtr->StopAndRelease(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_CALL);
+            } else {
+                MEDIA_LOGI("0x%{public}06" PRIXPTR "InCallObserver CallBack is null", FAKE_POINTER(this));
+            }
         }
     }
-    return true;
+    return ret;
 }
 
 bool InCallObserver::Init()

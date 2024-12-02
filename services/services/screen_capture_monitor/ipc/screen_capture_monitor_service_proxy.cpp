@@ -19,6 +19,7 @@
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "ScreenCaptureMonitorServiceProxy"};
+constexpr int MAX_LIST_COUNT = 1000;
 }
 
 namespace OHOS {
@@ -64,18 +65,29 @@ int32_t ScreenCaptureMonitorServiceProxy::CloseListenerObject()
     return reply.ReadInt32();
 }
 
-int32_t ScreenCaptureMonitorServiceProxy::IsScreenCaptureWorking()
+std::list<int32_t> ScreenCaptureMonitorServiceProxy::IsScreenCaptureWorking()
 {
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
 
     bool token = data.WriteInterfaceToken(ScreenCaptureMonitorServiceProxy::GetDescriptor());
-    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+    CHECK_AND_RETURN_RET_LOG(token, {}, "Failed to write descriptor!");
     int error = Remote()->SendRequest(IS_SCREEN_CAPTURE_WORKING, data, reply, option);
-    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
-        "IsScreenCaptureWorking failed, error: %{public}d", error);
-    return reply.ReadInt32();
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, {}, "IsScreenCaptureWorking failed, error: %{public}d", error);
+
+    MEDIA_LOGD("ScreenCaptureMonitorServiceProxy::IsScreenCaptureWorking pid start.");
+    std::list<int32_t> pidList;
+    int32_t size = reply.ReadInt32();
+    CHECK_AND_RETURN_RET_LOG(size < MAX_LIST_COUNT, {}, "content filter size exceed max range.");
+    for (int32_t i = 0; i < size; i++) {
+        pidList.push_back(reply.ReadInt32());
+    }
+    for (auto pid: pidList) {
+        MEDIA_LOGD("ScreenCaptureMonitorServiceProxy::IsScreenCaptureWorking pid: %{public}d", pid);
+    }
+    MEDIA_LOGD("ScreenCaptureMonitorServiceProxy::IsScreenCaptureWorking pid end.");
+    return pidList;
 }
 
 int32_t ScreenCaptureMonitorServiceProxy::DestroyStub()

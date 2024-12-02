@@ -35,19 +35,16 @@ public:
 
 class InCallObserver {
 public:
-
     static InCallObserver& GetInstance();
     bool RegisterObserver();
     void UnRegisterObserver();
     bool OnCallStateUpdated(bool inCall);
     bool IsInCall();
-    bool RegisterInCallObserverCallBack(std::weak_ptr<InCallObserverCallBack> inCallObserverCallBack);
-    void UnRegisterInCallObserverCallBack();
-
+    bool RegisterInCallObserverCallBack(std::weak_ptr<InCallObserverCallBack> registerInCallObserverCallBack);
+    void UnregisterInCallObserverCallBack(std::weak_ptr<InCallObserverCallBack> unRegisterInCallObserverCallBack);
 private:
-
     std::vector<MediaTelephonyListener *> mediaTelephonyListeners_;
-    std::weak_ptr<InCallObserverCallBack> inCallObserverCallBack_;
+    std::vector<std::weak_ptr<InCallObserverCallBack>> inCallObserverCallBacks_;
     InCallObserver();
     ~InCallObserver();
     std::atomic<bool> inCall_{false};

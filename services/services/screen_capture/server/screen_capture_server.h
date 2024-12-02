@@ -58,6 +58,7 @@
 #include "json/json.h"
 #include "tokenid_kit.h"
 #include "window_manager.h"
+#include "limitIdGenerator.h"
 
 namespace OHOS {
 namespace Media {
@@ -84,9 +85,10 @@ enum VideoPermissionState : int32_t {
 
 enum AVScreenCaptureState : int32_t {
     CREATED = 0,
-    STARTING = 1,
-    STARTED = 2,
-    STOPPED = 3
+    POPUP_WINDOW = 1,
+    STARTING = 2,
+    STARTED = 3,
+    STOPPED = 4
 };
 
 enum AVScreenCaptureMixMode : int32_t {
@@ -263,12 +265,30 @@ private:
 class ScreenCaptureServer : public std::enable_shared_from_this<ScreenCaptureServer>,
         public IScreenCaptureService, public NoCopyable {
 public:
+    static std::map<int32_t, std::weak_ptr<ScreenCaptureServer>> serverMap;
+    static const int32_t maxSessionId;
+    static UniqueIDGenerator gIdGenerator;
+    static std::list<int32_t> startedSessionIDList_;
+    static const int32_t maxSessionPerUid;
+    static std::shared_mutex mutexServerMapRWGlobal_;
+    static std::shared_mutex mutexListRWGlobal_;
+
     static std::shared_ptr<IScreenCaptureService> Create();
+    static bool CanScreenCaptureInstanceBeCreate();
+    static std::shared_ptr<IScreenCaptureService> CreateScreenCaptureNewInstance();
     static int32_t ReportAVScreenCaptureUserChoice(int32_t sessionId, const std::string &content);
-    static int32_t GetRunningScreenCaptureInstancePid(int32_t &pid);
-    static int32_t GetSpecificServer(int32_t sessionId, std::shared_ptr<ScreenCaptureServer> &server);
+    static int32_t GetRunningScreenCaptureInstancePid(std::list<int32_t> &pidList);
     static void GetChoiceFromJson(Json::Value &root, const std::string &content, std::string key, std::string &value);
     static void PrepareSelectWindow(Json::Value &root, std::shared_ptr<ScreenCaptureServer> &server);
+    static void AddScreenCaptureServerMap(int32_t sessionId, std::weak_ptr<ScreenCaptureServer> server);
+    static void RemoveScreenCaptureServerMap(int32_t sessionId);
+    static bool CheckScreenCaptureSessionIdLimit(int32_t curAppUid);
+    static std::shared_ptr<ScreenCaptureServer> GetScreenCaptureServerByIdWithLock(int32_t id);
+    static std::list<int32_t> GetStartedScreenCaptureServerPidList();
+    static int32_t CountStartedScreenCaptureServerNumByPid(int32_t pid);
+    static void AddStartedSessionIdList(int32_t value);
+    static void RemoveStartedSessionIdList(int32_t value);
+    static std::list<int32_t> GetAllStartedSessionIdList();
     ScreenCaptureServer();
     ~ScreenCaptureServer();
 
@@ -316,11 +336,15 @@ public:
     void SetMissionId(uint64_t missionId);
     void SetDisplayId(uint64_t displayId);
     bool IsTelInCallSkipList();
+    int32_t GetAppPid();
+    int32_t GetAppUid();
 
 private:
     int32_t StartScreenCaptureInner(bool isPrivacyAuthorityEnabled);
     int32_t RegisterServerCallbacks();
     int32_t OnStartScreenCapture();
+    bool IsFirstStartPidInstance(int32_t pid);
+    bool FirstPidUpdatePrivacyUsingPermissionState(int32_t pid);
     void PostStartScreenCapture(bool isSuccess);
     void PostStartScreenCaptureSuccessAction();
     int32_t InitRecorderInfo(std::shared_ptr<IRecorderService> &recorder, AudioCaptureInfo audioInfo);
@@ -328,6 +352,7 @@ private:
     int32_t StartScreenCaptureFile();
     int32_t StartScreenCaptureStream();
     int32_t StartAudioCapture();
+    std::string GenerateThreadNameByPrefix(std::string threadName);
     int32_t StartStreamInnerAudioCapture();
     int32_t StartStreamMicAudioCapture();
     int32_t StartFileInnerAudioCapture();
@@ -336,6 +361,8 @@ private:
     int32_t StartVideoCapture();
     int32_t StartHomeVideoCapture();
     int32_t StopScreenCaptureInner(AVScreenCaptureStateCode stateCode);
+    bool IsLastStartedPidInstance(int32_t pid);
+    bool LastPidUpdatePrivacyUsingPermissionState(int32_t pid);
     void PostStopScreenCapture(AVScreenCaptureStateCode stateCode);
     int32_t StopAudioCapture();
     int32_t StopVideoCapture();
@@ -383,7 +410,6 @@ private:
     int64_t GetCurrentMillisecond();
     void SetMetaDataReport();
     void SetErrorInfo(int32_t errCode, const std::string &errMsg, StopReason stopReason, bool userAgree);
-    void SystemRecorderInterruptLatestRecorder();
     int32_t ReStartMicForVoIPStatusSwitch();
     void RegisterPrivateWindowListener();
     uint64_t GetDisplayIdOfWindows(uint64_t displayId);

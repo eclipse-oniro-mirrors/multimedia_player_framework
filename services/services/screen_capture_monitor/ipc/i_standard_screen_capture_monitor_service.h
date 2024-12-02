@@ -28,7 +28,7 @@ public:
     virtual ~IStandardScreenCaptureMonitorService() = default;
     virtual int32_t SetListenerObject(const sptr<IRemoteObject> &object) = 0;
     virtual int32_t CloseListenerObject() = 0;
-    virtual int32_t IsScreenCaptureWorking() = 0;
+    virtual std::list<int32_t> IsScreenCaptureWorking() = 0;
     virtual int32_t DestroyStub() = 0;
 
     /**

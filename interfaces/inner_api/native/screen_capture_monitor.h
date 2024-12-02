@@ -17,6 +17,7 @@
 #define SCREEN_CAPTURE_MONITOR_H
 #include <cstdint>
 #include <refbase.h>
+#include <list>
 
 namespace OHOS {
 namespace Media {
@@ -38,9 +39,9 @@ public:
         virtual void OnScreenCaptureFinished(int32_t pid) = 0;
     };
 
-    int32_t IsScreenCaptureWorking()
+    std::list<int32_t> IsScreenCaptureWorking()
     {
-        return -1;
+        return {};
     }
     void RegisterScreenCaptureMonitorListener(sptr<ScreenCaptureMonitorListener> listener) {}
     void UnregisterScreenCaptureMonitorListener(sptr<ScreenCaptureMonitorListener> listener) {}
@@ -64,7 +65,7 @@ public:
         virtual void OnScreenCaptureFinished(int32_t pid) = 0;
     };
 
-    int32_t IsScreenCaptureWorking();
+    std::list<int32_t> IsScreenCaptureWorking();
     void RegisterScreenCaptureMonitorListener(sptr<ScreenCaptureMonitorListener> listener);
     void UnregisterScreenCaptureMonitorListener(sptr<ScreenCaptureMonitorListener> listener);
     virtual ~ScreenCaptureMonitor() = default;

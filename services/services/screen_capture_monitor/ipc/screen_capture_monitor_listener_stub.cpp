@@ -65,6 +65,8 @@ void ScreenCaptureMonitorListenerStub::OnScreenCaptureStarted(int32_t pid)
         FAKE_POINTER(this));
     for (const auto& value : screenCaptureMonitorCallbacks_) {
         if (value != nullptr) {
+            MEDIA_LOGD("ScreenCaptureMonitorListenerStub::OnScreenCaptureStarted traversal"
+                "screenCaptureMonitorCallbacks_ pid: %{public}d", pid);
             value->OnScreenCaptureStarted(pid);
         }
     }
@@ -76,6 +78,8 @@ void ScreenCaptureMonitorListenerStub::OnScreenCaptureFinished(int32_t pid)
         FAKE_POINTER(this));
     for (const auto& value : screenCaptureMonitorCallbacks_) {
         if (value != nullptr) {
+            MEDIA_LOGD("ScreenCaptureMonitorListenerStub::OnScreenCaptureFinished traversal"
+                "screenCaptureMonitorCallbacks_ pid: %{public}d", pid);
             value->OnScreenCaptureFinished(pid);
         }
     }

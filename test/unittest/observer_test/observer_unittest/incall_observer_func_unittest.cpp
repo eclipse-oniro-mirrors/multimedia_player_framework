@@ -107,7 +107,7 @@ HWTEST_F(InCallObserverInnerUnitTest, RegisterInCallObserverCallBack_01, TestSiz
 {
     auto inCallObserverCallBack = std::make_shared<InCallObserverTestCallBack>();
     ASSERT_TRUE(InCallObserver::GetInstance().RegisterInCallObserverCallBack(inCallObserverCallBack));
-    InCallObserver::GetInstance().UnRegisterInCallObserverCallBack();
+    InCallObserver::GetInstance().UnregisterInCallObserverCallBack(inCallObserverCallBack);
     ASSERT_TRUE(inCallObserverCallBack->StopAndRelease(
         AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_CALL));
 }
@@ -146,7 +146,7 @@ HWTEST_F(InCallObserverInnerUnitTest, InCallCallBackReturn_02, TestSize.Level1)
     sleep(3); // 3 second
     ASSERT_TRUE(InCallObserver::GetInstance().OnCallStateUpdated(true));
     ASSERT_TRUE(InCallObserver::GetInstance().IsInCall());
-    InCallObserver::GetInstance().UnRegisterInCallObserverCallBack();
+    InCallObserver::GetInstance().UnregisterInCallObserverCallBack(inCallObserverCallBack);
     ASSERT_TRUE(InCallObserver::GetInstance().OnCallStateUpdated(true));
     ASSERT_TRUE(InCallObserver::GetInstance().IsInCall());
     InCallObserver::GetInstance().UnRegisterObserver();
@@ -168,7 +168,7 @@ HWTEST_F(InCallObserverInnerUnitTest, InCallCallBackReturn_03, TestSize.Level1)
     sleep(3); // 3 second
     ASSERT_FALSE(InCallObserver::GetInstance().OnCallStateUpdated(true));
     ASSERT_TRUE(InCallObserver::GetInstance().IsInCall());
-    InCallObserver::GetInstance().UnRegisterInCallObserverCallBack();
+    InCallObserver::GetInstance().UnregisterInCallObserverCallBack(inCallObserverTestFalseCallBack);
     ASSERT_TRUE(InCallObserver::GetInstance().OnCallStateUpdated(true));
     ASSERT_TRUE(InCallObserver::GetInstance().IsInCall());
     InCallObserver::GetInstance().UnRegisterObserver();
@@ -189,7 +189,7 @@ HWTEST_F(InCallObserverInnerUnitTest, InCallCallBackReturn_04, TestSize.Level1)
     ASSERT_FALSE(InCallObserver::GetInstance().RegisterInCallObserverCallBack(inCallObserverTestFalseCallBack));
     ASSERT_TRUE(InCallObserver::GetInstance().OnCallStateUpdated(false));
     ASSERT_TRUE(InCallObserver::GetInstance().OnCallStateUpdated(true));
-    InCallObserver::GetInstance().UnRegisterInCallObserverCallBack();
+    InCallObserver::GetInstance().UnregisterInCallObserverCallBack(inCallObserverTestFalseCallBack);
     InCallObserver::GetInstance().UnRegisterObserver();
 }
 

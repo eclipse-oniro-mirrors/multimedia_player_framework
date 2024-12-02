@@ -66,13 +66,15 @@ int32_t ScreenCaptureMonitorServer::Release()
     return MSERR_OK;
 }
 
-int32_t ScreenCaptureMonitorServer::IsScreenCaptureWorking()
+std::list<int32_t> ScreenCaptureMonitorServer::IsScreenCaptureWorking()
 {
     MEDIA_LOGI("ScreenCaptureMonitorServer:0x%{public}06" PRIXPTR " IsScreenCaptureWorking S", FAKE_POINTER(this));
-    int32_t pid = -1;
-    OHOS::Media::ScreenCaptureServer::GetRunningScreenCaptureInstancePid(pid);
-    MEDIA_LOGI("IsScreenCaptureWorking pid %{public}d E", pid);
-    return pid;
+    std::list<int32_t> pidList{};
+    OHOS::Media::ScreenCaptureServer::GetRunningScreenCaptureInstancePid(pidList);
+    for (auto pid: pidList) {
+        MEDIA_LOGD("ScreenCaptureMonitorServer::IsScreenCaptureWorking pid %{public}d", pid);
+    }
+    return pidList;
 }
 
 void ScreenCaptureMonitorServer::SetScreenCaptureMonitorCallback(
