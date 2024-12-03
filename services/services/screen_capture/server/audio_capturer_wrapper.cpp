@@ -312,6 +312,8 @@ int32_t AudioCapturerWrapper::CaptureAudio()
         CHECK_AND_RETURN_RET_LOG(buffer != nullptr, MSERR_OK, "CaptureAudio buffer is no memory, stop capture"
             " %{public}s", name.c_str());
         audioBuffer = std::make_shared<AudioBuffer>(buffer, 0, 0, audioInfo_.audioSource);
+        CHECK_AND_RETURN_RET_LOG(audioBuffer != nullptr, MSERR_OK, "CaptureAudio make_shared AudioBuffer failed"
+            " %{public}s", name.c_str());
         memset_s(audioBuffer->buffer, bufferLen, 0, bufferLen);
         int32_t bufferRead = audioCapturer_->Read(*(audioBuffer->buffer), bufferLen, true);
         if (bufferRead <= 0) {
@@ -360,6 +362,8 @@ int32_t AudioCapturerWrapper::AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &a
         MEDIA_LOGE("CAPTURER_RELEASED, threadName:%{public}s", threadName_.c_str());
         return MSERR_UNKNOWN;
     }
+    CHECK_AND_RETURN_RET_LOG(availBuffers_.front() != nullptr, MSERR_UNKNOWN, "AcquireAudioBuffer availBuffers_.front()"
+        " is nullptr %{public}s", threadName_.c_str());
     audioBuffer = availBuffers_.front();
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Acquire Buffer E, name:%{public}s", FAKE_POINTER(this), threadName_.c_str());
     return MSERR_OK;
