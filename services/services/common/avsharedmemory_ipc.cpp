@@ -69,10 +69,7 @@ std::shared_ptr<AVSharedMemory> ReadAVSharedMemoryFromParcel(MessageParcel &parc
 std::shared_ptr<AVSharedMemory> ReadAVDataSrcMemoryFromParcel(MessageParcel &parcel)
 {
     int32_t fd  = parcel.ReadFileDescriptor();
-    if (fd < 0) {
-        MEDIA_LOGE("read fd dataSrc is invalid, fd = %{public}d", fd);
-        return MSERR_INVALID_VAL;
-    }
+    CHECK_AND_RETURN_RET_LOG(fd >= 0, nullptr, "read fd is invalid, fd = %{public}d", fd);
 
     int32_t size = parcel.ReadInt32();
     uint32_t flags = parcel.ReadUint32();
