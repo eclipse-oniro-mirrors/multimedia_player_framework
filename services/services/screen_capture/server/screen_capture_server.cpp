@@ -1663,6 +1663,7 @@ std::shared_ptr<PixelMap> ScreenCaptureServer::GetPixelMap(std::string path)
     opts.formatHint = "image/png";
     std::unique_ptr<ImageSource> imageSource =
         ImageSource::CreateImageSource(path, opts, errorCode);
+    CHECK_AND_RETURN_RET_LOG(imageSource != nullptr, nullptr, "GetPixelMap CreateImageSource failed");
     DecodeOptions decodeOpts;
     std::unique_ptr<PixelMap> pixelMap = imageSource->CreatePixelMap(decodeOpts, errorCode);
     std::shared_ptr<PixelMap> pixelMapSpr = std::move(pixelMap);
@@ -1676,6 +1677,7 @@ std::shared_ptr<PixelMap> ScreenCaptureServer::GetPixelMapSvg(std::string path, 
     opts.formatHint = "image/svg+xml";
     std::unique_ptr<ImageSource> imageSource =
         ImageSource::CreateImageSource(path, opts, errorCode);
+    CHECK_AND_RETURN_RET_LOG(imageSource != nullptr, nullptr, "GetPixelMapSvg CreateImageSource failed");
     DecodeOptions decodeOpts;
     decodeOpts.desiredSize.width = width;
     decodeOpts.desiredSize.height = height;
