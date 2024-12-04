@@ -439,6 +439,31 @@ int32_t ReportMediaInfo(uint64_t instanceId)
     return MSERR_OK;
 }
 
+uint64_t GetMediaInfoContainInstanceNum()
+{
+    uint64_t mediaInsNum = 0;
+    {
+        std::lock_guard<std::mutex> lock(collectMut_);
+        for (const auto &typeUid : mediaInfoMap_) {
+            for (const auto &uidIns : typeUid.second) {
+                mediaInsNum += uidIns.second.size();
+            }
+        }
+    }
+    uint64_t reportInsNum = 0;
+    {
+        std::lock_guard<std::mutex> lock(reportMut_);
+        for (const auto &typeUid : reportMediaInfoMap_) {
+            for (const auto &uidIns : typeUid.second) {
+                reportInsNum += uidIns.second.size();
+            }
+        }
+    }
+    MEDIA_LOG_I("MediaInfo instances %{public}" PRIu64 ", ReportInfo instances %{public}" PRIu64,
+        mediaInsNum, reportInsNum);
+    return mediaInsNum + reportInsNum;
+}
+
 MediaTrace::MediaTrace(const std::string &funcName)
 {
     StartTrace(HITRACE_TAG_ZMEDIA, funcName);
