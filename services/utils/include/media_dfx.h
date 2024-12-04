@@ -93,6 +93,7 @@ __attribute__((visibility("default"))) void FaultScreenCaptureEventWrite(const s
 __attribute__((visibility("default"))) int32_t CreateMediaInfo(CallType callType, int32_t uid, uint64_t instanceId);
 __attribute__((visibility("default"))) int32_t AppendMediaInfo(const std::shared_ptr<Meta>& meta, uint64_t instanceId);
 __attribute__((visibility("default"))) int32_t ReportMediaInfo(uint64_t instanceId);
+__attribute__((visibility("default"))) int64_t GetMediaInfoContainInstanceNum();
 
 class __attribute__((visibility("default"))) MediaTrace : public NoCopyable {
 public:
