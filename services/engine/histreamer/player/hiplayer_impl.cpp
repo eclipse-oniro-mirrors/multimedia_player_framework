@@ -51,6 +51,14 @@ const double FRAME_RATE_DEFAULT = -1.0;
 const double FRAME_RATE_FOR_SEEK_PERFORMANCE = 2000.0;
 constexpr int32_t BUFFERING_LOG_FREQUENCY = 5;
 constexpr int32_t NOTIFY_BUFFERING_END_PARAM = 0;
+static const std::unordered_set<OHOS::AudioStandard::StreamUsage> FOCUS_EVENT_USAGE_SET = {
+    OHOS::AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN,
+    OHOS::AudioStandard::StreamUsage::STREAM_USAGE_MEDIA,
+    OHOS::AudioStandard::StreamUsage::STREAM_USAGE_MUSIC,
+    OHOS::AudioStandard::StreamUsage::STREAM_USAGE_MOVIE,
+    OHOS::AudioStandard::StreamUsage::STREAM_USAGE_GAME,
+    OHOS::AudioStandard::StreamUsage::STREAM_USAGE_AUDIOBOOK,
+};
 }
 
 namespace OHOS {
@@ -1029,6 +1037,20 @@ int32_t HiPlayerImpl::SeekToCurrentTime(int32_t mSeconds, PlayerSeekMode mode)
     MEDIA_LOG_I_SHORT("SeekToCurrentTime in. mSeconds : " PUBLIC_LOG_D32 ", seekMode : " PUBLIC_LOG_D32,
                 mSeconds, static_cast<int32_t>(mode));
     return Seek(mSeconds, mode);
+}
+
+int32_t HiPlayerImpl::HandleEosPlay()
+{
+    Plugins::AudioRenderInfo audioRenderInfo;
+    FALSE_RETURN_V(audioRenderInfo_->GetData(Tag::AUDIO_RENDER_INFO, audioRenderInfo), MSERR_INVALID_VAL);
+    FALSE_RETURN_V(audioRenderInfo.streamUsage > AudioStandard::StreamUsage::STREAM_USAGE_INVALID &&
+        audioRenderInfo.streamUsage < AudioStandard::StreamUsage::STREAM_USAGE_MAX, MSERR_INVALID_VAL);
+    auto it = FOCUS_EVENT_USAGE_SET.find(static_cast<AudioStandard::StreamUsage>(audioRenderInfo.streamUsage));
+    FALSE_RETURN_V(it != FOCUS_EVENT_USAGE_SET.end(), MSERR_INVALID_VAL);
+    FALSE_RETURN_V(dfxAgent_ != nullptr, MSERR_INVALID_STATE);
+    DfxEvent event = { .type = DfxEventType::DFX_INFO_PLAYER_EOS_SEEK, .param = appUid_ };
+    dfxAgent_->OnDfxEvent(event);
+    return MSERR_OK;
 }
 
 Status HiPlayerImpl::Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeekDone)

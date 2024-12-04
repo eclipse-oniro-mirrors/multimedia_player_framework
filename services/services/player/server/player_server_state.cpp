@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,9 +19,11 @@
 #include "media_dfx.h"
 #include "account_subscriber.h"
 #include "os_account_manager.h"
+#include "plugin/plugin_time.h"
 
 namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "PlayerServerState"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "PlayerServerState"};
+constexpr int32_t COMPLETED_PLAY_REPORT_MS = 3000;
 }
 
 namespace OHOS {
@@ -499,9 +501,22 @@ int32_t PlayerServer::StoppedState::SetPlayRangeWithMode(int64_t start, int64_t 
     return server_.HandleSetPlayRange(start, end, mode);
 }
 
+void PlayerServer::PlaybackCompletedState::StateEnter()
+{
+    MEDIA_LOGD("state enter completed");
+    stateEnterTimeMs_ = Plugins::GetCurrentMillisecond();
+}
+
 int32_t PlayerServer::PlaybackCompletedState::Play()
 {
-    return server_.HandlePlay();
+    auto res = server_.HandlePlay();
+    auto timeNow = Plugins::GetCurrentMillisecond();
+    auto timeDiff = timeNow - stateEnterTimeMs_;
+    MEDIA_LOGD("timeNow %{public}" PRId64 " timeStart %{public}" PRId64 " timeDiff %{public}" PRId64,
+        timeNow, stateEnterTimeMs_, timeDiff);
+    CHECK_AND_RETURN_RET(Plugins::GetCurrentMillisecond() - stateEnterTimeMs_ < COMPLETED_PLAY_REPORT_MS, res);
+    server_.HandleEosPlay();
+    return res;
 }
 
 int32_t PlayerServer::PlaybackCompletedState::Seek(int32_t mSeconds, PlayerSeekMode mode)
