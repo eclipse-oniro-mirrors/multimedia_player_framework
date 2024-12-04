@@ -1,0 +1,73 @@
+# Copyright (c) 2024 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/test.gni")
+import("//foundation/multimedia/player_framework/config.gni")
+
+module_output_path = "player_framework/recorder"
+
+ohos_unittest("recorder_native_unit_test") {
+  module_out_path = module_output_path
+  include_dirs = [
+    "./include",
+    "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c",
+    "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",
+    "$MEDIA_PLAYER_ROOT_DIR/frameworks/native/recorder",
+    "$MEDIA_PLAYER_ROOT_DIR/test/unittest/common/include",
+    "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",
+    "$MEDIA_PLAYER_ROOT_DIR/frameworks/native/capi/common",
+    "$MEDIA_PLAYER_ROOT_DIR/services/utils/include",
+  ]
+
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  cflags = [
+    "-Wall",
+    "-Werror",
+  ]
+
+  if (player_framework_support_recorder) {
+    sources = [ "src/recorder_unit_test.cpp" ]
+  }
+
+  public_deps = [ "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c:avrecorder" ]
+
+  external_deps = [
+    "ability_base:base",
+    "ability_base:want",
+    "ability_base:zuri",
+    "ability_runtime:ability_context_native",
+    "ability_runtime:ability_manager",
+    "ability_runtime:abilitykit_native",
+    "ability_runtime:app_context",
+    "ability_runtime:app_manager",
+    "ability_runtime:data_ability_helper",
+    "ability_runtime:mission_info",
+    "access_token:libaccesstoken_sdk",
+    "access_token:libnativetoken_shared",
+    "access_token:libtokensetproc_shared",
+    "av_codec:av_codec_client",
+    "c_utils:utils",
+    "graphic_2d:librender_service_base",
+    "graphic_surface:surface",
+    "hilog:libhilog",
+    "player_framework:media_client",
+    "window_manager:libdm",
+  ]
+
+  resource_config_file = "../resources/ohos_test.xml"
+}
