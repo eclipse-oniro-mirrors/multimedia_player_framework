@@ -265,11 +265,12 @@ private:
 class ScreenCaptureServer : public std::enable_shared_from_this<ScreenCaptureServer>,
         public IScreenCaptureService, public NoCopyable {
 public:
-    static std::map<int32_t, std::weak_ptr<ScreenCaptureServer>> serverMap;
-    static const int32_t maxSessionId;
-    static UniqueIDGenerator gIdGenerator;
+    static std::map<int32_t, std::weak_ptr<ScreenCaptureServer>> serverMap_;
+    static const int32_t maxSessionId_;
+    static const int32_t maxAppLimit_;
+    static UniqueIDGenerator gIdGenerator_;
     static std::list<int32_t> startedSessionIDList_;
-    static const int32_t maxSessionPerUid;
+    static const int32_t maxSessionPerUid_;
     static std::shared_mutex mutexServerMapRWGlobal_;
     static std::shared_mutex mutexListRWGlobal_;
 
@@ -283,6 +284,8 @@ public:
     static void AddScreenCaptureServerMap(int32_t sessionId, std::weak_ptr<ScreenCaptureServer> server);
     static void RemoveScreenCaptureServerMap(int32_t sessionId);
     static bool CheckScreenCaptureSessionIdLimit(int32_t curAppUid);
+    static void CountScreenCaptureAppNum(std::set<int32_t>& appSet);
+    static bool CheckScreenCaptureAppLimit(int32_t curAppUid);
     static std::shared_ptr<ScreenCaptureServer> GetScreenCaptureServerByIdWithLock(int32_t id);
     static std::list<int32_t> GetStartedScreenCaptureServerPidList();
     static int32_t CountStartedScreenCaptureServerNumByPid(int32_t pid);

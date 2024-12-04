@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Huawei Device Co., Ltd.
+ * Copyright (C) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -26,9 +26,9 @@ UniqueIDGenerator::UniqueIDGenerator(int32_t limit)
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR "Instances create", FAKE_POINTER(this));
     limit_ = limit;
-    std::unique_lock<std::mutex> lock(queueMtx);
+    std::unique_lock<std::mutex> lock(queueMtx_);
     for (int32_t i = 1; i <= limit_; i++) {
-        availableIDs.push(i);
+        availableIDs_.push(i);
     }
 }
 
@@ -39,22 +39,22 @@ UniqueIDGenerator::~UniqueIDGenerator()
 
 int32_t UniqueIDGenerator::GetNewID()
 {
-    std::unique_lock<std::mutex> lock(queueMtx);
-    if (availableIDs.empty()) {
-        return -1;
+    std::unique_lock<std::mutex> lock(queueMtx_);
+    if (availableIDs_.empty()) {
+        return -1;  // invalid
     }
-    int32_t id = availableIDs.front();
-    availableIDs.pop();
+    int32_t id = availableIDs_.front();
+    availableIDs_.pop();
     return id;
 }
 
 int32_t UniqueIDGenerator::ReturnID(int32_t id)
 {
-    std::unique_lock<std::mutex> lock(queueMtx);
+    std::unique_lock<std::mutex> lock(queueMtx_);
     if (id < 1 || id > limit_) {
-        return -1;
+        return -1;  // invalid
     }
-    availableIDs.push(id);
+    availableIDs_.push(id);
     return id;
 }
 } // namespace Media
