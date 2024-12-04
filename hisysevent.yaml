@@ -175,3 +175,8 @@ PLAYER_LAG:
   SOURCE_TYPE: {type: UINT8, desc: Enum of source type}
   LAG_DURATION: {type: INT32, desc: Lag duration}
   MSG: {type: STRING, desc: Lag info message}
+
+EOS_SEEK_0:
+  __BASE: {type: STATISTIC, level: CRITICAL, desc: eos seek 0, preserve: true}
+  APP_NAME: {type: STRING, desc: app name}
+  APP_UID: {type: INT32, desc: app uid}

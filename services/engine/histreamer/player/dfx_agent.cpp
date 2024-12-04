@@ -12,25 +12,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 #define HST_LOG_TAG "DfxAgent"
- 
+
 #include "dfx_agent.h"
 #include "common/log.h"
 #include "common/media_source.h"
 #include "hisysevent.h"
- 
+
 namespace OHOS {
 namespace Media {
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_PLAYER, "DfxAgent" };
     constexpr int64_t LAG_EVENT_THRESHOLD_MS = 500; // Lag threshold is 500 ms
+    ConcurrentUidSet g_appUidSet{};
 }
 
 const std::map<DfxEventType, DfxEventHandleFunc> DfxAgent::DFX_EVENT_HANDLERS_ = {
     { DfxEventType::DFX_INFO_PLAYER_VIDEO_LAG, DfxAgent::ProcessVideoLagEvent },
     { DfxEventType::DFX_INFO_PLAYER_AUDIO_LAG, DfxAgent::ProcessAudioLagEvent },
     { DfxEventType::DFX_INFO_PLAYER_STREAM_LAG, DfxAgent::ProcessStreamLagEvent },
+    { DfxEventType::DFX_INFO_PLAYER_EOS_SEEK, DfxAgent::ProcessEosSeekEvent },
 };
 
  
@@ -103,6 +105,20 @@ void DfxAgent::ReportLagEvent(int64_t lagDuration, const std::string& eventMsg)
     });
 }
 
+void DfxAgent::ReportEosSeek0Event(int32_t appUid)
+{
+    FALSE_RETURN(dfxTask_ != nullptr);
+    dfxTask_->SubmitJobOnce([appUid, appName = appName_] {
+        FALSE_RETURN(g_appUidSet.IsAppFirstEvent(appUid));
+        MEDIA_LOG_I("EOS_SEEK_0 event reported, appName = %{public}s appUid = %{public}d", appName.c_str(), appUid);
+        HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::MULTI_MEDIA,
+            "EOS_SEEK_0",
+            OHOS::HiviewDFX::HiSysEvent::EventType::STATISTIC,
+            "APP_NAME", appName,
+            "APP_UID", appUid);
+    });
+}
+
 void DfxAgent::ResetAgent()
 {
     FALSE_RETURN(dfxTask_ != nullptr);
@@ -142,6 +158,14 @@ void DfxAgent::ProcessStreamLagEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent
     FALSE_RETURN(lagDuration >= LAG_EVENT_THRESHOLD_MS);
     std::string msg = "lagEvent=Stream";
     agent->ReportLagEvent(lagDuration, msg);
+}
+
+void DfxAgent::ProcessEosSeekEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &event)
+{
+    auto agent = ptr.lock();
+    FALSE_RETURN(agent != nullptr);
+    int64_t appUid = AnyCast<int32_t>(event.param);
+    agent->ReportEosSeek0Event(appUid);
 }
 }  // namespace Media
 }  // namespace OHOS

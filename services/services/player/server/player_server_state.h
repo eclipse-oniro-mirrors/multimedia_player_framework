@@ -176,9 +176,13 @@ public:
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
     int32_t SeekContinous(int32_t mSeconds, int64_t batchNo) override;
     int32_t SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode) override;
+    void StateEnter() override;
 
 protected:
     void HandleStateChange(int32_t newState) override;
+
+private:
+    int64_t stateEnterTimeMs_ = 0;
 };
 }
 }
