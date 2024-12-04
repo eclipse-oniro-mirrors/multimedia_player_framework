@@ -913,7 +913,9 @@ int32_t HiPlayerImpl::Stop()
     }
 
     ResetPlayRangeParameter();
-    AppendPlayerMediaInfo();
+    if (pipelineStates_ != PlayerStates::PLAYER_PREPARED) {
+        AppendPlayerMediaInfo();
+    }
     OnStateChanged(PlayerStateId::STOPPED);
     ReportMediaInfo(instanceId_);
     GetMediaInfoContainInstanceNum();
