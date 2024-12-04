@@ -41,9 +41,7 @@ ohos_unittest("recorder_native_unit_test") {
   ]
 
   if (player_framework_support_recorder) {
-    sources = [
-      "src/recorder_unit_test.cpp",
-    ]
+    sources = [ "src/recorder_unit_test.cpp" ]
   }
 
   public_deps = [ "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c:avrecorder" ]
