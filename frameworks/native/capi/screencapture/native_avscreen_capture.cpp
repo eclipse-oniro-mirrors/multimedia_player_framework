@@ -263,11 +263,12 @@ public:
 
     void OnAudioBufferAvailable(bool isReady, AudioCaptureSourceType type) override
     {
+        CHECK_AND_RETURN(!isBufferAvailableCallbackStop_.load());
         MEDIA_LOGD("OnAudioBufferAvailable() is called, isReady:%{public}d, type:%{public}d", isReady, type);
         std::shared_lock<std::shared_mutex> lock(mutex_);
         CHECK_AND_RETURN(capture_ != nullptr);
 
-        if (dataCallback_ != nullptr) {
+        if (dataCallback_ != nullptr && hasDataCallback_.load()) {
             if (!isReady) {
                 MEDIA_LOGD("OnAudioBufferAvailable not ready");
                 return;
@@ -294,11 +295,12 @@ public:
 
     void OnVideoBufferAvailable(bool isReady) override
     {
+        CHECK_AND_RETURN(!isBufferAvailableCallbackStop_.load());
         MEDIA_LOGD("OnVideoBufferAvailable() is called, isReady:%{public}d", isReady);
         std::shared_lock<std::shared_mutex> lock(mutex_);
         CHECK_AND_RETURN(capture_ != nullptr);
 
-        if (dataCallback_ != nullptr) {
+        if (dataCallback_ != nullptr && hasDataCallback_.load()) {
             if (!isReady) {
                 MEDIA_LOGD("OnVideoBufferAvailable not ready");
                 return;
@@ -316,8 +318,10 @@ public:
 
     void StopCallback()
     {
+        isBufferAvailableCallbackStop_.store(true);
+        MEDIA_LOGD("StopCallback before lock"); // waiting for OnBufferAvailable
         std::unique_lock<std::shared_mutex> lock(mutex_);
-        capture_ = nullptr;
+        MEDIA_LOGD("StopCallback after lock");
     }
 
     void SetCallback(struct OH_AVScreenCaptureCallback callback)
@@ -356,6 +360,7 @@ public:
     {
         std::unique_lock<std::shared_mutex> lock(mutex_);
         dataCallback_ = std::make_shared<NativeScreenCaptureDataCallback>(callback, userData);
+        hasDataCallback_.store(true);
         return dataCallback_ != nullptr;
     }
 
@@ -363,6 +368,8 @@ private:
     std::shared_mutex mutex_;
     struct OH_AVScreenCapture *capture_ = nullptr;
     struct OH_AVScreenCaptureCallback callback_;
+    std::atomic<bool> isBufferAvailableCallbackStop_ = false;
+    std::atomic<bool> hasDataCallback_ = false;
     std::shared_ptr<NativeScreenCaptureStateChangeCallback> stateChangeCallback_ = nullptr;
     std::shared_ptr<NativeScreenCaptureErrorCallback> errorCallback_ = nullptr;
     std::shared_ptr<NativeScreenCaptureDataCallback> dataCallback_ = nullptr;
@@ -744,16 +751,15 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_Release(struct OH_AVScreenCapture
             screenCaptureObj->callback_->StopCallback();
         }
         int32_t ret = screenCaptureObj->screenCapture_->Release();
+        delete capture;
+        capture = nullptr;
         if (ret != MSERR_OK) {
             MEDIA_LOGE("screen capture Release failed!");
-            capture = nullptr;
             return AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT;
         }
     } else {
         MEDIA_LOGD("screen capture is nullptr!");
     }
-
-    delete capture;
     return AV_SCREEN_CAPTURE_ERR_OK;
 }
 
