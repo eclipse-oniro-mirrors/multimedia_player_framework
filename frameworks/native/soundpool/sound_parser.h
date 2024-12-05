@@ -126,49 +126,11 @@ private:
     class SoundParserListener : public SoundDecoderCallback::SoundDecodeListener {
     public:
         explicit SoundParserListener(const std::weak_ptr<SoundParser> soundParser) : soundParserInner_(soundParser) {}
-
-        void OnSoundDecodeCompleted(const std::deque<std::shared_ptr<AudioBufferEntry>> &availableAudioBuffers) override
-        {
-            if (!soundParserInner_.expired()) {
-                while (!soundParserInner_.lock()->soundParserLock_.try_lock()) {
-                    if (!soundParserInner_.lock()->isParsing_.load()) {
-                        return;
-                    }
-                }
-                soundData_ = availableAudioBuffers;
-                isSoundParserCompleted_.store(true);
-                soundParserInner_.lock()->soundParserLock_.unlock();
-            }
-        }
-        void SetSoundBufferTotalSize(const size_t soundBufferTotalSize) override
-        {
-            if (!soundParserInner_.expired()) {
-                while (!soundParserInner_.lock()->soundParserLock_.try_lock()) {
-                    if (!soundParserInner_.lock()->isParsing_.load()) {
-                        return;
-                    }
-                }
-                soundBufferTotalSize_ = soundBufferTotalSize;
-                soundParserInner_.lock()->soundParserLock_.unlock();
-            }
-        }
-        int32_t GetSoundData(std::deque<std::shared_ptr<AudioBufferEntry>> &soundData) const
-        {
-            std::unique_lock<ffrt::mutex> lock(soundParserInner_.lock()->soundParserLock_);
-            soundData = soundData_;
-            return MSERR_OK;
-        }
-
-        size_t GetSoundDataTotalSize() const
-        {
-            std::unique_lock<ffrt::mutex> lock(soundParserInner_.lock()->soundParserLock_);
-            return soundBufferTotalSize_;
-        }
-        bool IsSoundParserCompleted() const
-        {
-            std::unique_lock<ffrt::mutex> lock(soundParserInner_.lock()->soundParserLock_);
-            return isSoundParserCompleted_.load();
-        }
+        void OnSoundDecodeCompleted(const std::deque<std::shared_ptr<AudioBufferEntry>> &availableAudioBuffers) override;
+        void SetSoundBufferTotalSize(const size_t soundBufferTotalSize) override;
+        int32_t GetSoundData(std::deque<std::shared_ptr<AudioBufferEntry>> &soundData) const;
+        size_t GetSoundDataTotalSize() const;
+        bool IsSoundParserCompleted() const;
 
     private:
         std::weak_ptr<SoundParser> soundParserInner_;
@@ -188,7 +150,6 @@ private:
     std::shared_ptr<SoundParserListener> soundParserListener_;
     std::shared_ptr<ISoundPoolCallback> callback_ = nullptr;
     bool isRawFile_ = false;
-    std::atomic<bool> isParsing_ = false;
     int32_t fdSource_ = -1;
 
     MediaAVCodec::Format trackFormat_;
