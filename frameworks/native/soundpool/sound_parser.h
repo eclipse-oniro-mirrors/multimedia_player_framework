@@ -126,7 +126,8 @@ private:
     class SoundParserListener : public SoundDecoderCallback::SoundDecodeListener {
     public:
         explicit SoundParserListener(const std::weak_ptr<SoundParser> soundParser) : soundParserInner_(soundParser) {}
-        void OnSoundDecodeCompleted(const std::deque<std::shared_ptr<AudioBufferEntry>> &availableAudioBuffers) override;
+        void OnSoundDecodeCompleted(
+            const std::deque<std::shared_ptr<AudioBufferEntry>> &availableAudioBuffers) override;
         void SetSoundBufferTotalSize(const size_t soundBufferTotalSize) override;
         int32_t GetSoundData(std::deque<std::shared_ptr<AudioBufferEntry>> &soundData) const;
         size_t GetSoundDataTotalSize() const;
