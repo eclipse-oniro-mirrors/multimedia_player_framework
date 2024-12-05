@@ -1638,14 +1638,61 @@ int32_t ScreenCaptureServer::StartNotification()
     return result;
 }
 
+std::string ScreenCaptureServer::GetStringByResourceName(const char* name)
+{
+    std::string resourceContext;
+    CHECK_AND_RETURN_RET_LOG(resourceManager_ != nullptr, resourceContext, "resourceManager is null");
+    if (strcmp(name, NOTIFICATION_SCREEN_RECORDING_TITLE_ID) == 0) {
+        resourceManager_->GetStringByName(NOTIFICATION_SCREEN_RECORDING_TITLE_ID, resourceContext);
+        MEDIA_LOGD("get NOTIFICATION_SCREEN_RECORDING_TITLE_ID: %{public}s", resourceContext.c_str());
+    } else {
+        MEDIA_LOGE("resource name is error.");
+    }
+    return resourceContext;
+}
+
+void ScreenCaptureServer::RefreshResConfig()
+{
+    std::string language = Global::I18n::LocaleConfig::GetSystemLanguage();
+    UErrorCode status = U_ZERO_ERROR;
+    icu::Locale locale = icu::Locale::forLanguageTag(language, status);
+    if (status != U_ZERO_ERROR) {
+        MEDIA_LOGE("forLanguageTag failed, errCode:%{public}d", status);
+    }
+    if (resConfig_) {
+        resConfig_->SetLocaleInfo(locale.getLanguage(), locale.getScript(), locale.getCountry());
+    }
+    if (resourceManager_) {
+        resourceManager_->UpdateResConfig(*resConfig_);
+    }
+}
+
+void ScreenCaptureServer::InitResourceManager()
+{
+    if (resourceManager_ == nullptr) {
+        resourceManager_ = Global::Resource::GetSystemResourceManagerNoSandBox();
+    }
+    if (resConfig_ == nullptr) {
+        resConfig_ = Global::Resource::CreateResConfig();
+    }
+    RefreshResConfig();
+}
+
 std::shared_ptr<NotificationLocalLiveViewContent> ScreenCaptureServer::GetLocalLiveViewContent()
 {
     std::shared_ptr<NotificationLocalLiveViewContent> localLiveViewContent =
         std::make_shared<NotificationLocalLiveViewContent>();
     localLiveViewContent->SetType(1);
-    liveViewText_ = "\"";
-    liveViewText_ += callingLabel_.c_str();
-    liveViewText_ += "\"正在使用屏幕";
+    InitResourceManager();
+    std::string recordingScreenTitleStr = GetStringByResourceName(NOTIFICATION_SCREEN_RECORDING_TITLE_ID);
+    std::string from = "%s";
+    std::string to = QUOTATION_MARKS_STRING + callingLabel_ + QUOTATION_MARKS_STRING;
+    size_t startPos = recordingScreenTitleStr.find(from);
+    if (startPos != std::string::npos) {
+        recordingScreenTitleStr.replace(startPos, from.length(), to);
+        liveViewText_ = recordingScreenTitleStr;
+    }
+    MEDIA_LOGD("GetLocalLiveViewContent liveViewText: %{public}s", liveViewText_.c_str());
     localLiveViewContent->SetText(liveViewText_);
 
     auto capsule = NotificationCapsule();

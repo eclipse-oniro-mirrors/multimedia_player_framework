@@ -146,7 +146,9 @@ ohos_unittest("screen_capture_native_unit_test") {
     "graphic_2d:librender_service_base",
     "graphic_surface:surface",
     "hilog:libhilog",
+    "i18n:intl_util",
     "player_framework:media_client",
+    "resource_management:global_resmgr",
     "window_manager:libdm",
   ]
 
@@ -210,8 +212,10 @@ ohos_unittest("screen_capture_capi_unit_test") {
     "graphic_2d:librender_service_base",
     "graphic_surface:surface",
     "hilog:libhilog",
+    "i18n:intl_util",
     "media_foundation:media_foundation",
     "player_framework:media_client",
+    "resource_management:global_resmgr",
     "window_manager:libdm",
   ]
 
@@ -278,11 +282,13 @@ ohos_unittest("screen_capture_server_function_unit_test") {
     "graphic_2d:librender_service_base",
     "graphic_surface:surface",
     "hilog:libhilog",
+    "i18n:intl_util",
     "ipc:ipc_single",
     "media_foundation:media_foundation",
     "os_account:os_account_innerkits",
     "player_framework:media_client",
     "qos_manager:qos",
+    "resource_management:global_resmgr",
     "state_registry:tel_state_registry_api",
     "window_manager:libdm",
   ]
