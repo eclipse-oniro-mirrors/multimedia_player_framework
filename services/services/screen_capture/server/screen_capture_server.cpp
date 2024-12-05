@@ -200,7 +200,8 @@ bool ScreenCaptureServer::CheckScreenCaptureAppLimit(int32_t curAppUid)
     std::set<int32_t> appSet;
     CountScreenCaptureAppNum(appSet);
     MEDIA_LOGD("appSet.size(): %{public}d", static_cast<int32_t>(appSet.size()));
-    if (appSet.find(curAppUid) == appSet.end() && appSet.size() >= ScreenCaptureServer::maxAppLimit_) {
+    if (appSet.find(curAppUid) == appSet.end() &&
+        static_cast<int32_t>(appSet.size()) >= ScreenCaptureServer::maxAppLimit_) {
         return false;
     }
     return true;
