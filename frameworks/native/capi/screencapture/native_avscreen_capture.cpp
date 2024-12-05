@@ -330,6 +330,12 @@ public:
         callback_ = callback;
     }
 
+    bool IsDataCallbackEnabled()
+    {
+        std::shared_lock<std::shared_mutex> lock(mutex_);
+        return dataCallback_ != nullptr;
+    }
+
     bool IsStateChangeCallbackEnabled()
     {
         std::shared_lock<std::shared_mutex> lock(mutex_);
@@ -615,7 +621,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_AcquireAudioBuffer(struct OH_AVSc
     CHECK_AND_RETURN_RET_LOG(screenCaptureObj->screenCapture_ != nullptr,
         AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "screenCapture_ is null");
 
-    if (screenCaptureObj->callback_ != nullptr) {
+    if (screenCaptureObj->callback_ != nullptr && screenCaptureObj->callback_->IsDataCallbackEnabled()) {
         MEDIA_LOGE("AcquireAudioBuffer() not permit for has set DataCallback");
         return AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT;
     }
@@ -644,7 +650,7 @@ OH_NativeBuffer* OH_AVScreenCapture_AcquireVideoBuffer(struct OH_AVScreenCapture
     struct ScreenCaptureObject *screenCaptureObj = reinterpret_cast<ScreenCaptureObject *>(capture);
     CHECK_AND_RETURN_RET_LOG(screenCaptureObj->screenCapture_ != nullptr, nullptr, "screenCapture_ is null");
 
-    if (screenCaptureObj->callback_ != nullptr) {
+    if (screenCaptureObj->callback_ != nullptr && screenCaptureObj->callback_->IsDataCallbackEnabled()) {
         MEDIA_LOGE("AcquireVideoBuffer() not permit for has set DataCallback");
         return nullptr;
     }
@@ -673,7 +679,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ReleaseVideoBuffer(struct OH_AVSc
     CHECK_AND_RETURN_RET_LOG(screenCaptureObj->screenCapture_ != nullptr,
         AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "screenCapture_ is null");
 
-    if (screenCaptureObj->callback_ != nullptr) {
+    if (screenCaptureObj->callback_ != nullptr && screenCaptureObj->callback_->IsDataCallbackEnabled()) {
         MEDIA_LOGE("ReleaseVideoBuffer() not permit for has set DataCallback");
         return AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT;
     }
@@ -700,7 +706,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ReleaseAudioBuffer(struct OH_AVSc
     CHECK_AND_RETURN_RET_LOG(screenCaptureObj->screenCapture_ != nullptr,
         AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "screenCapture_ is null");
 
-    if (screenCaptureObj->callback_ != nullptr) {
+    if (screenCaptureObj->callback_ != nullptr && screenCaptureObj->callback_->IsDataCallbackEnabled()) {
         MEDIA_LOGE("ReleaseAudioBuffer() not permit for has set DataCallback");
         return AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT;
     }
