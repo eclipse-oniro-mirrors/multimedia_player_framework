@@ -27,8 +27,6 @@ namespace {
 namespace OHOS {
 namespace Media {
 
-void ScreenCaptureServerFunctionTest::
-
 /**
 * @tc.name: LimitIdGenerator_001
 * @tc.desc: idGenerator get invalid newId
