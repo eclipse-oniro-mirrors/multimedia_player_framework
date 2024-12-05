@@ -27,6 +27,8 @@ namespace {
 namespace OHOS {
 namespace Media {
 
+void ScreenCaptureServerFunctionTest::
+
 /**
 * @tc.name: LimitIdGenerator_001
 * @tc.desc: idGenerator get invalid newId
@@ -333,7 +335,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckCanSCInstanceBeCreate_001, TestSi
 
 /**
 * @tc.name: CheckCanSCInstanceBeCreate_002
-* @tc.desc: CanScreenCaptureInstanceBeCreate: false, ScreenCaptureInstanceCanBeCreate exceed ScreenCaptureServer instances limit.
+* @tc.desc: CanScreenCaptureInstanceBeCreate: false, exceed ScreenCaptureServer instances limit.
 * @tc.type: FUNC
 */
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckCanSCInstanceBeCreate_002, TestSize.Level2)
