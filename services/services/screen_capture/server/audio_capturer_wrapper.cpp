@@ -301,8 +301,8 @@ int32_t AudioCapturerWrapper::CaptureAudio()
     std::string name = threadName_.substr(0, std::min(threadName_.size(), static_cast<size_t>(MAX_THREAD_NAME_LENGTH)));
     pthread_setname_np(pthread_self(), name.c_str());
     size_t bufferLen;
-    CHECK_AND_RETURN_RET_LOG(audioCapturer_ != nullptr && audioCapturer_->GetBufferSize(bufferLen) >= 0,
-        MSERR_NO_MEMORY, "CaptureAudio GetBufferSize failed");
+    CHECK_AND_RETURN_RET_LOG(audioCapturer_ != nullptr && audioCapturer_->GetBufferSize(bufferLen) == MSERR_OK &&
+        bufferLen > 0, MSERR_NO_MEMORY, "CaptureAudio GetBufferSize failed");
     Timestamp timestamp;
     std::shared_ptr<AudioBuffer> audioBuffer;
     while (true) {
