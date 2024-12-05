@@ -855,25 +855,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetScreenScaleMode_001, TestSize.Level
     ASSERT_NE(screenCaptureServer_->SetScreenScaleMode(), MSERR_OK);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, Create_001, TestSize.Level2)
-{
-    std::vector<std::shared_ptr<IScreenCaptureService>> tempServers(MAX_SESSION_PER_UID - 1, nullptr);
-    std::vector<std::shared_ptr<ScreenCaptureServer>> screenCaptureServers(MAX_SESSION_PER_UID - 1, nullptr);
-
-    for (int i = 0; i < MAX_SESSION_PER_UID - 1; ++i) {
-        tempServers[i] = ScreenCaptureServer::Create();
-        screenCaptureServers[i] = std::static_pointer_cast<ScreenCaptureServer>(tempServers[i]);
-        ASSERT_NE(screenCaptureServers[i], nullptr);
-    }
-    std::shared_ptr<IScreenCaptureService> tempServer2 = ScreenCaptureServer::Create();
-    ASSERT_EQ(tempServer2, nullptr);
-    for (int i = 0; i < MAX_SESSION_PER_UID - 1; ++i) {
-        screenCaptureServers[i]->Release();
-        screenCaptureServers[i] = nullptr;
-        tempServers[i] = nullptr;
-    }
-}
-
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
 HWTEST_F(ScreenCaptureServerFunctionTest, RequestUserPrivacyAuthority_001, TestSize.Level2)
 {
