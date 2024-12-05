@@ -225,11 +225,11 @@ ToneHapticsType RingtonePlayerImpl::ConvertToToneHapticsType(RingtoneType type)
 {
     switch (type) {
         case RingtoneType::RINGTONE_TYPE_SIM_CARD_0:
-            return ToneHapticsType::HAPTICS_RINGTONE_TYPE_SIM_CARD_0;
+            return ToneHapticsType::CALL_SIM_CARD_0;
         case RingtoneType::RINGTONE_TYPE_SIM_CARD_1:
-            return ToneHapticsType::HAPTICS_RINGTONE_TYPE_SIM_CARD_1;
+            return ToneHapticsType::CALL_SIM_CARD_1;
         default:
-            return ToneHapticsType::HAPTICS_RINGTONE_TYPE_SIM_CARD_0;
+            return ToneHapticsType::CALL_SIM_CARD_0;
     }
 }
 

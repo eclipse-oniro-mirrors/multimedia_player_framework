@@ -73,7 +73,7 @@ napi_value SystemSoundManagerNapi::GetToneHapticsSettings(napi_env env, napi_cal
             asyncContext->abilityContext_ = GetAbilityContext(env, argv[i]);
         } else if (i == PARAM1 && valueType == napi_number) {
             napi_get_value_int32(env, argv[PARAM1], &asyncContext->toneHapticsType);
-            asyncContext->toneHapticsType = ConvertToneHapticsTypeToToneRealyType(asyncContext->toneHapticsType);
+            asyncContext->toneHapticsType = asyncContext->toneHapticsType;
         }
     }
     MEDIA_LOGI("GetToneHapticsSettings toneHapticsType : %{public}d", asyncContext->toneHapticsType);
@@ -190,7 +190,7 @@ napi_value SystemSoundManagerNapi::SetToneHapticsSettings(napi_env env, napi_cal
             asyncContext->abilityContext_ = GetAbilityContext(env, argv[i]);
         } else if (i == PARAM1 && valueType == napi_number) {
             napi_get_value_int32(env, argv[i], &asyncContext->toneHapticsType);
-            asyncContext->toneHapticsType = ConvertToneHapticsTypeToToneRealyType(asyncContext->toneHapticsType);
+            asyncContext->toneHapticsType = asyncContext->toneHapticsType;
         } else if (i == PARAM2 && valueType == napi_object) {
             GetToneHapticsSettingsToEnv(env, argv[PARAM2], asyncContext->toneHapticsSettings);
         }
@@ -545,56 +545,6 @@ void SystemSoundManagerNapi::OpenToneHapticsAsyncCallbackComp(napi_env env, napi
     napi_delete_async_work(env, context->work);
     delete context;
     context = nullptr;
-}
-
-int SystemSoundManagerNapi::ConvertRingtoneTypeToToneRealyType(int32_t toneRealyType)
-{
-    switch (toneRealyType) {
-        case ToneRealyType::REALY_RINGTONE_TYPE_SIM_CARD_0:
-            return RINGTONE_TYPE_SIM_CARD_0;
-        case ToneRealyType::REALY_RINGTONE_TYPE_SIM_CARD_1:
-            return RINGTONE_TYPE_SIM_CARD_1;
-        default:
-            MEDIA_LOGW("ConvertRingtoneTypeToToneRealyType: toneRealyType %{public}d is not enum value",
-                toneRealyType);
-            return toneRealyType;
-    }
-}
-
-int SystemSoundManagerNapi::ConvertSystemToneTypeToToneRealyType(int32_t toneRealyType)
-{
-    switch (toneRealyType) {
-        case ToneRealyType::REALY_SYSTEM_TONE_TYPE_SIM_CARD_0:
-            return SYSTEM_TONE_TYPE_SIM_CARD_0;
-        case ToneRealyType::REALY_SYSTEM_TONE_TYPE_SIM_CARD_1:
-            return SYSTEM_TONE_TYPE_SIM_CARD_1;
-        case ToneRealyType::REALY_SYSTEM_TONE_TYPE_NOTIFICATION:
-            return SYSTEM_TONE_TYPE_NOTIFICATION;
-        default:
-            MEDIA_LOGW("ConvertSystemToneTypeToToneRealyType: toneRealyType %{public}d is not enum value",
-                toneRealyType);
-            return toneRealyType;
-    }
-}
-
-int SystemSoundManagerNapi::ConvertToneHapticsTypeToToneRealyType(int32_t toneRealyType)
-{
-    switch (toneRealyType) {
-        case ToneRealyType::REALY_RINGTONE_TYPE_SIM_CARD_0:
-            return HAPTICS_RINGTONE_TYPE_SIM_CARD_0;
-        case ToneRealyType::REALY_RINGTONE_TYPE_SIM_CARD_1:
-            return HAPTICS_RINGTONE_TYPE_SIM_CARD_1;
-        case ToneRealyType::REALY_SYSTEM_TONE_TYPE_SIM_CARD_0:
-            return HAPTICS_SYSTEM_TONE_TYPE_SIM_CARD_0;
-        case ToneRealyType::REALY_SYSTEM_TONE_TYPE_SIM_CARD_1:
-            return HAPTICS_SYSTEM_TONE_TYPE_SIM_CARD_1;
-        case ToneRealyType::REALY_SYSTEM_TONE_TYPE_NOTIFICATION:
-            return HAPTICS_SYSTEM_TONE_TYPE_NOTIFICATION;
-        default:
-            MEDIA_LOGW("ConvertToneHapticsTypeToToneRealyType: toneRealyType %{public}d is not enum value",
-                toneRealyType);
-            return toneRealyType;
-    }
 }
 } // namespace Media
 } // namespace OHOS

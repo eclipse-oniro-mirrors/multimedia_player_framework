@@ -644,13 +644,13 @@ ToneHapticsType SystemTonePlayerImpl::ConvertToToneHapticsType(SystemToneType ty
 {
     switch (type) {
         case SystemToneType::SYSTEM_TONE_TYPE_SIM_CARD_0:
-            return ToneHapticsType::HAPTICS_SYSTEM_TONE_TYPE_SIM_CARD_0;
+            return ToneHapticsType::TEXT_MESSAGE_SIM_CARD_0;
         case SystemToneType::SYSTEM_TONE_TYPE_SIM_CARD_1:
-            return ToneHapticsType::HAPTICS_SYSTEM_TONE_TYPE_SIM_CARD_1;
+            return ToneHapticsType::TEXT_MESSAGE_SIM_CARD_1;
         case SystemToneType::SYSTEM_TONE_TYPE_NOTIFICATION:
-            return ToneHapticsType::HAPTICS_SYSTEM_TONE_TYPE_NOTIFICATION;
+            return ToneHapticsType::NOTIFICATION;
         default:
-            return ToneHapticsType::HAPTICS_SYSTEM_TONE_TYPE_NOTIFICATION;
+            return ToneHapticsType::NOTIFICATION;
     }
 }
 

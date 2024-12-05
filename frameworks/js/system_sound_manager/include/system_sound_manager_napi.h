@@ -33,25 +33,25 @@ namespace OHOS {
 namespace Media {
 static const std::string SYSTEM_SND_MNGR_NAPI_CLASS_NAME = "SystemSoundManager";
 
-enum ToneRealyType {
-    REALY_RINGTONE_TYPE_SIM_CARD_0 = 100,
-    REALY_RINGTONE_TYPE_SIM_CARD_1,
-    REALY_SYSTEM_TONE_TYPE_SIM_CARD_0,
-    REALY_SYSTEM_TONE_TYPE_SIM_CARD_1,
-    REALY_SYSTEM_TONE_TYPE_NOTIFICATION,
+static const std::map<std::string, RingtoneType> ringtoneTypeMap = {
+    {"RINGTONE_TYPE_DEFAULT", RINGTONE_TYPE_SIM_CARD_0}, // deprecated
+    {"RINGTONE_TYPE_MULTISIM", RINGTONE_TYPE_SIM_CARD_1}, // deprecated
+    {"RINGTONE_TYPE_SIM_CARD_0", RINGTONE_TYPE_SIM_CARD_0},
+    {"RINGTONE_TYPE_SIM_CARD_1", RINGTONE_TYPE_SIM_CARD_1}
 };
 
-static const std::map<std::string, ToneRealyType> ringtoneTypeMap = {
-    {"RINGTONE_TYPE_DEFAULT", REALY_RINGTONE_TYPE_SIM_CARD_0}, // deprecated
-    {"RINGTONE_TYPE_MULTISIM", REALY_RINGTONE_TYPE_SIM_CARD_1}, // deprecated
-    {"RINGTONE_TYPE_SIM_CARD_0", REALY_RINGTONE_TYPE_SIM_CARD_0},
-    {"RINGTONE_TYPE_SIM_CARD_1", REALY_RINGTONE_TYPE_SIM_CARD_1}
+static const std::map<std::string, SystemToneType> systemToneTypeMap = {
+    {"SYSTEM_TONE_TYPE_SIM_CARD_0", SYSTEM_TONE_TYPE_SIM_CARD_0},
+    {"SYSTEM_TONE_TYPE_SIM_CARD_1", SYSTEM_TONE_TYPE_SIM_CARD_1},
+    {"SYSTEM_TONE_TYPE_NOTIFICATION", SYSTEM_TONE_TYPE_NOTIFICATION}
 };
 
-static const std::map<std::string, ToneRealyType> systemToneTypeMap = {
-    {"SYSTEM_TONE_TYPE_SIM_CARD_0", REALY_SYSTEM_TONE_TYPE_SIM_CARD_0},
-    {"SYSTEM_TONE_TYPE_SIM_CARD_1", REALY_SYSTEM_TONE_TYPE_SIM_CARD_1},
-    {"SYSTEM_TONE_TYPE_NOTIFICATION", REALY_SYSTEM_TONE_TYPE_NOTIFICATION}
+static const std::map<std::string, ToneHapticsType> toneHapticsTypeMap = {
+    {"CALL_SIM_CARD_0", CALL_SIM_CARD_0},
+    {"CALL_SIM_CARD_1", CALL_SIM_CARD_1},
+    {"TEXT_MESSAGE_SIM_CARD_0", TEXT_MESSAGE_SIM_CARD_0},
+    {"TEXT_MESSAGE_SIM_CARD_1", TEXT_MESSAGE_SIM_CARD_1},
+    {"NOTIFICATION", NOTIFICATION},
 };
 
 static const std::map<std::string, ToneCustomizedType> toneCustomizedTypeMap = {
@@ -163,9 +163,6 @@ private:
     static void OpenToneHapticsAsyncCallbackComp(napi_env env, napi_status status, void *data);
     static void GetToneHapticsSettingsToEnv(const napi_env &env, const napi_value &argv,
         ToneHapticsSettings &toneHapticsSettings);
-    static int ConvertRingtoneTypeToToneRealyType(int32_t toneRealyType);
-    static int ConvertSystemToneTypeToToneRealyType(int32_t toneRealyType);
-    static int ConvertToneHapticsTypeToToneRealyType(int32_t toneRealyType);
     static std::string ExtractStringToEnv(const napi_env &env, const napi_value &argv);
 
     static thread_local napi_ref sConstructor_;
