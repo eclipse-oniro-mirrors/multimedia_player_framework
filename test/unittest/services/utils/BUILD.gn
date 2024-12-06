@@ -36,13 +36,19 @@ ohos_unittest("utils_unit_test") {
     "-Dprotected=public",
   ]
 
-  include_dirs = [ "$MEDIA_PLAYER_ROOT_DIR/services/utils/include" ]
+  include_dirs = [
+    "$MEDIA_PLAYER_ROOT_DIR/services/utils/include",
+    "//foundation/multimedia/player_framework/interfaces/inner_api/native",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/engine_intf",
+  ]
 
   cflags_cc = cflags
 
   sources = [
     "$MEDIA_PLAYER_ROOT_DIR/services/utils/watchdog.cpp",
     "watchdog_unit_test.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/services/utils/uri_helper.cpp",
+    "uri_helper_unit_test.cpp",
   ]
 
   external_deps = [

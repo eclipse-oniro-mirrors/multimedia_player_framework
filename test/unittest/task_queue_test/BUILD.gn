@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Huawei Device Co., Ltd.
+# Copyright (c) 2024 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -14,12 +14,24 @@
 import("//build/test.gni")
 import("//foundation/multimedia/player_framework/config.gni")
 
-ohos_unittest("player_framework_dfx_test") {
-  module_out_path = "player_framework/media_dfx"
+##################################################################################################################
+ohos_unittest("task_queue_unit_test") {
+  module_out_path = "player_framework/services/utils"
 
   cflags = [
+    "-std=c++17",
+    "-fno-rtti",
+    "-fno-exceptions",
     "-Wall",
-    "-Werror",
+    "-fno-common",
+    "-fstack-protector-all",
+    "-Wshadow",
+    "-FPIC",
+    "-FS",
+    "-O2",
+    "-D_FORTIFY_SOURCE=2",
+    "-Wformat=2",
+    "-Wdate-time",
     "-Dprivate=public",
     "-Dprotected=public",
   ]
@@ -28,12 +40,14 @@ ohos_unittest("player_framework_dfx_test") {
     "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/engine_intf",
     "$MEDIA_PLAYER_ROOT_DIR/services/utils/include",
-    "$MEDIA_PLAYER_ROOT_DIR/services/utils",
   ]
 
-  sources = [ "media_dfx_test.cpp" ]
+  cflags_cc = cflags
 
-  deps = [ "$MEDIA_PLAYER_ROOT_DIR/services/utils:media_service_utils" ]
+  sources = [
+    "$MEDIA_PLAYER_ROOT_DIR/services/utils/task_queue.cpp",
+    "task_queue_unit_test.cpp",
+  ]
 
   external_deps = [
     "access_token:libaccesstoken_sdk",
@@ -56,7 +70,4 @@ ohos_unittest("player_framework_dfx_test") {
     "qos_manager:qos",
     "samgr:samgr_proxy",
   ]
-
-  subsystem_name = "multimedia"
-  part_name = "player_framework"
 }
