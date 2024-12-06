@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef WATCH_DOG_UNIT_TEST_H
-#define WATCH_DOG_UNIT_TEST_H
+#ifndef URI_HELPER_UNIT_TEST_H
+#define URI_HELPER_UNIT_TEST_H
 
 #include "gtest/gtest.h"
 
@@ -36,4 +36,4 @@ public:
 }  // namespace Test
 }  // namespace Media
 }  // namespace OHOS
-#endif  // WATCH_DOG_UNIT_TEST_H
+#endif  // URI_HELPER_UNIT_TEST_H
