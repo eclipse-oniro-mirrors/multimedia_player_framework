@@ -36,11 +36,13 @@ void TaskQueueUnitTest::SetUpTestCase(void) {}
 
 void TaskQueueUnitTest::TearDownTestCase(void) {}
 
-void TaskQueueUnitTest::SetUp(void) {
+void TaskQueueUnitTest::SetUp(void)
+{
     taskQueue_ = std::make_shared<TaskQueue>("test_name");
 }
 
-void TaskQueueUnitTest::TearDown(void) {
+void TaskQueueUnitTest::TearDown(void)
+{
     taskQueue_ = nullptr;
 }
 
@@ -50,7 +52,7 @@ HWTEST_F(TaskQueueUnitTest, Stop_000, TestSize.Level0) {
     taskQueue_->thread_ = std::make_unique<std::thread>([&]() {
         result = taskQueue_->Stop();
     });
-    if(taskQueue_->thread_->joinable()){
+    if (taskQueue_->thread_->joinable()){
         taskQueue_->thread_->join();
     }
     ASSERT_EQ(result, MSERR_OK);

@@ -38,7 +38,7 @@ ohos_unittest("utils_unit_test") {
 
   include_dirs = [
     "$MEDIA_PLAYER_ROOT_DIR/services/utils/include",
-    "//foundation/multimedia/player_framework/interfaces/inner_api/native",
+    "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/engine_intf",
   ]
 

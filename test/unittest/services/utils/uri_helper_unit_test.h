@@ -32,9 +32,6 @@ public:
     void SetUp(void);
     // TearDown: Called after each test cases
     void TearDown(void);
-
-// protected:
-//     std::shared_ptr<WatchDog> watchDog_{ nullptr };
 };
 }  // namespace Test
 }  // namespace Media
