@@ -20,7 +20,7 @@
 
 namespace {
 constexpr int MAX_WINDOWS_LEN = 1000;
-constexpr int MAX_AUDIO_BUFFER_LEN = 100000;
+constexpr int MAX_AUDIO_BUFFER_LEN = 10 * 1024 * 1024; // 10M
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "ScreenCaptureServiceProxy"};
 }
 
