@@ -4174,5 +4174,261 @@ HWTEST_F(PlayerServerUnitTest, Player_SetMediaMuted_002, TestSize.Level0)
     ASSERT_EQ(MSERR_OK, player_->Stop());
     ASSERT_NE(MSERR_OK, player_->SetMediaMuted(OHOS::Media::MediaType::MEDIA_TYPE_VID, true));
 }
+
+
+/**
+ * @tc.name  : Test GetCurrentTime
+ * @tc.number: Player_GetCurrentTime_001
+ * @tc.desc  : Test GetCurrentTime interface with invalid parameters
+ */
+HWTEST_F(PlayerServerUnitTest, Player_GetCurrentTime_001, TestSize.Level0)
+{
+    int32_t time = 0;
+    int32_t duration = 0;
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    EXPECT_EQ(MSERR_OK, player_->GetCurrentTime(time));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->GetCurrentTime(time));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->GetCurrentTime(time));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->GetCurrentTime(time));
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+    EXPECT_EQ(MSERR_OK, player_->GetCurrentTime(time));
+    EXPECT_EQ(MSERR_OK, player_->GetDuration(duration));
+    EXPECT_EQ(MSERR_OK, player_->Seek(duration, SEEK_CLOSEST));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    sleep(PLAYING_TIME_2_SEC);
+    EXPECT_EQ(MSERR_OK, player_->GetCurrentTime(time));
+    EXPECT_EQ(MSERR_OK, player_->Stop());
+    EXPECT_EQ(MSERR_OK, player_->GetCurrentTime(time));
+    EXPECT_EQ(MSERR_OK, player_->Reset());
+    EXPECT_NE(MSERR_OK, player_->GetCurrentTime(time));
+}
+
+/**
+ * @tc.name  : Test GetPlaybackInfo API
+ * @tc.number: Player_GetPlaybackInfo_001
+ * @tc.desc  : Test Player GetPlaybackInfo
+ */
+HWTEST_F(PlayerServerUnitTest, Player_GetPlaybackInfo_001, TestSize.Level0)
+{
+    Format playbackInfo;
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->GetPlaybackInfo(playbackInfo));
+}
+
+/**
+ * @tc.name  : Test GetPlaybackInfo API
+ * @tc.number: Player_GetPlaybackInfo_002
+ * @tc.desc  : Test Player GetPlaybackInfo
+ */
+HWTEST_F(PlayerServerUnitTest, Player_GetPlaybackInfo_002, TestSize.Level2)
+{
+    Format playbackInfo;
+    int32_t duration = 0;
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    EXPECT_NE(MSERR_OK, player_->GetPlaybackInfo(playbackInfo));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_NE(MSERR_OK, player_->GetPlaybackInfo(playbackInfo));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->GetPlaybackInfo(playbackInfo));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->GetPlaybackInfo(playbackInfo));
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+    EXPECT_EQ(MSERR_OK, player_->GetPlaybackInfo(playbackInfo));
+    EXPECT_EQ(MSERR_OK, player_->GetDuration(duration));
+    EXPECT_EQ(MSERR_OK, player_->Seek(duration, SEEK_CLOSEST));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    sleep(PLAYING_TIME_2_SEC);
+    EXPECT_EQ(MSERR_OK, player_->GetPlaybackInfo(playbackInfo));
+    EXPECT_EQ(MSERR_OK, player_->Stop());
+    EXPECT_NE(MSERR_OK, player_->GetPlaybackInfo(playbackInfo));
+    EXPECT_EQ(MSERR_OK, player_->Reset());
+    EXPECT_NE(MSERR_OK, player_->GetPlaybackInfo(playbackInfo));
+}
+
+/**
+ * @tc.name  : Test GetSubtitleTrackInfo API
+ * @tc.number: Player_GetSubtitleTrackInfo_001
+ * @tc.desc  : Test Player GetSubtitleTrackInfo
+ */
+HWTEST_F(PlayerServerUnitTest, Player_GetSubtitleTrackInfo_001, TestSize.Level0)
+{
+    std::vector<Format> subtitleTrackInfo;
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->GetSubtitleTrackInfo(subtitleTrackInfo));
+}
+
+/**
+ * @tc.name  : Test GetSubtitleTrackInfo API
+ * @tc.number: Player_GetSubtitleTrackInfo_002
+ * @tc.desc  : Test Player GetSubtitleTrackInfo
+ */
+HWTEST_F(PlayerServerUnitTest, Player_GetSubtitleTrackInfo_002, TestSize.Level2)
+{
+    std::vector<Format> subtitleTrackInfo;
+    int32_t duration = 0;
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    EXPECT_NE(MSERR_OK, player_->GetSubtitleTrackInfo(subtitleTrackInfo));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_NE(MSERR_OK, player_->GetSubtitleTrackInfo(subtitleTrackInfo));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->GetSubtitleTrackInfo(subtitleTrackInfo));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->GetSubtitleTrackInfo(subtitleTrackInfo));
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+    EXPECT_EQ(MSERR_OK, player_->GetSubtitleTrackInfo(subtitleTrackInfo));
+    EXPECT_EQ(MSERR_OK, player_->GetDuration(duration));
+    EXPECT_EQ(MSERR_OK, player_->Seek(duration, SEEK_CLOSEST));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    sleep(PLAYING_TIME_2_SEC);
+    EXPECT_EQ(MSERR_OK, player_->GetSubtitleTrackInfo(subtitleTrackInfo));
+    EXPECT_EQ(MSERR_OK, player_->Stop());
+    EXPECT_NE(MSERR_OK, player_->GetSubtitleTrackInfo(subtitleTrackInfo));
+    EXPECT_EQ(MSERR_OK, player_->Reset());
+    EXPECT_NE(MSERR_OK, player_->GetSubtitleTrackInfo(subtitleTrackInfo));
+}
+
+
+/**
+ * @tc.name  : Test SetRenderFirstFrame API
+ * @tc.number: Player_SetRenderFirstFrame_001
+ * @tc.desc  : Test Player SetRenderFirstFrame
+ */
+HWTEST_F(PlayerServerUnitTest, Player_SetRenderFirstFrame_001, TestSize.Level0)
+{
+    bool display = false;
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE2));
+    EXPECT_EQ(MSERR_OK, player_->SetRenderFirstFrame(display));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_NE(MSERR_OK, player_->SetRenderFirstFrame(display));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_NE(MSERR_OK, player_->SetRenderFirstFrame(display));
+    EXPECT_EQ(MSERR_OK, player_->Reset());
+    display = true;
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE2));
+    EXPECT_EQ(MSERR_OK, player_->SetRenderFirstFrame(display));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_NE(MSERR_OK, player_->SetRenderFirstFrame(display));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_NE(MSERR_OK, player_->SetRenderFirstFrame(display));
+}
+
+/**
+ * @tc.name  : Test PreparedHandleEos API
+ * @tc.number: Player_PreparedHandleEos_001
+ * @tc.desc  : Test Player PreparedHandleEos
+ */
+HWTEST_F(PlayerServerUnitTest, Player_PreparedHandleEos_001, TestSize.Level0)
+{
+    std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
+    (void)server->Init();
+    ASSERT_EQ(MSERR_OK, server->SetSource(VIDEO_FILE1));
+    EXPECT_EQ(MSERR_OK, server->Prepare());
+    EXPECT_EQ(MSERR_OK, server->Play());
+    EXPECT_EQ(MSERR_OK, server->SetLooping(true));
+    EXPECT_EQ(true, server->IsLooping());
+    server->PreparedHandleEos();
+    EXPECT_NE(server->lastOpStatus_, PLAYER_PLAYBACK_COMPLETE);
+    EXPECT_EQ(MSERR_OK, server->SetLooping(false));
+    EXPECT_EQ(false, server->IsLooping());
+    server->PreparedHandleEos();
+    EXPECT_EQ(server->lastOpStatus_, PLAYER_PLAYBACK_COMPLETE);
+    server->Release();
+}
+
+/**
+ * @tc.name  : Test BackGroundChangeState API
+ * @tc.number: Player_BackGroundChangeState_001
+ * @tc.desc  : Test Player BackGroundChangeState
+ */
+HWTEST_F(PlayerServerUnitTest, Player_BackGroundChangeState_001, TestSize.Level0)
+{
+    std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
+    (void)server->Init();
+    ASSERT_EQ(MSERR_OK, server->SetSource(VIDEO_FILE1));
+    EXPECT_EQ(MSERR_OK, server->Prepare());
+    EXPECT_EQ(MSERR_OK, server->Play());
+    EXPECT_EQ(MSERR_OK, server->BackGroundChangeState(PLAYER_PAUSED, true));
+    EXPECT_EQ(MSERR_OK, server->BackGroundChangeState(PLAYER_STARTED, true));
+    EXPECT_EQ(MSERR_OK, server->Stop());
+    EXPECT_NE(MSERR_OK, server->BackGroundChangeState(PLAYER_STOPPED, true));
+}
+
+
+/**
+ * @tc.name  : Test PlayerState API
+ * @tc.number: Player_PlayerState_001
+ * @tc.desc  : Test Player PlayerState
+ */
+HWTEST_F(PlayerServerUnitTest, Player_PlayerState_001, TestSize.Level0)
+{
+    std::shared_ptr<PlayerServer> server_ = std::make_shared<PlayerServer>();
+    (void)server_->Init();
+    server_->lastOpStatus_ = PLAYER_STATE_ERROR;
+    EXPECT_EQ(false, server_->IsCompleted());
+    EXPECT_EQ(false, server_->IsPrepared());
+    EXPECT_EQ(false, server_->IsPlaying());
+
+    server_->lastOpStatus_ = PLAYER_PLAYBACK_COMPLETE;
+    EXPECT_EQ(true, server_->IsCompleted());
+    EXPECT_EQ(false, server_->IsPrepared());
+    EXPECT_EQ(false, server_->IsPlaying());
+
+    server_->lastOpStatus_ = PLAYER_STARTED;
+    EXPECT_EQ(false, server_->IsCompleted());
+    EXPECT_EQ(false, server_->IsPrepared());
+    EXPECT_EQ(true, server_->IsPlaying());
+}
+
+/**
+ * @tc.name  : Test AddSubSource API
+ * @tc.number: Player_AddSubSource_003
+ * @tc.desc  : Test Player AddSubSource
+ */
+HWTEST_F(PlayerServerUnitTest, Player_AddSubSource_003, TestSize.Level0)
+{
+    std::shared_ptr<PlayerServer> server_ = std::make_shared<PlayerServer>();
+    (void)server_->Init();
+    server_->subtitleTrackNum_ = 10;
+    EXPECT_NE(MSERR_OK, server_->AddSubSource(SUBTITLE_SRT_FIELE));
+    EXPECT_NE(MSERR_OK, server_->AddSubSource(0, 0, 0));
+}
+
+/**
+ * @tc.name  : Test PrepareInReleasing API
+ * @tc.number: Player_PrepareInReleasing_001
+ * @tc.desc  : Test Player PrepareInReleasing
+ */
+HWTEST_F(PlayerServerUnitTest, Player_PrepareInReleasing_001, TestSize.Level0)
+{
+    std::shared_ptr<PlayerServer> server_ = std::make_shared<PlayerServer>();
+    (void)server_->Init();
+    ASSERT_EQ(MSERR_OK, server_->SetSource(VIDEO_FILE1));
+    EXPECT_EQ(MSERR_OK, server_->Prepare());
+    EXPECT_EQ(MSERR_OK, server_->Play());
+    EXPECT_EQ(MSERR_OK, server_->Stop());
+    server_->inReleasing_ = true;
+    EXPECT_NE(MSERR_OK, server_->Prepare());
+    EXPECT_NE(MSERR_OK, server_->PrepareAsync());
+}
+
 } // namespace Media
 } // namespace OHOS
