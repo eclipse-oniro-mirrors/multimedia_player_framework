@@ -556,6 +556,12 @@ int32_t PlayerServerMock::GetAudioTrackInfo(std::vector<Format> &audioTrack)
     return player_->GetAudioTrackInfo(audioTrack);
 }
 
+int32_t PlayerServerMock::GetSubtitleTrackInfo(std::vector<Format> &subtitleTrack)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
+    return player_->GetSubtitleTrackInfo(subtitleTrack);
+}
+
 int32_t PlayerServerMock::GetVideoWidth()
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
@@ -767,5 +773,12 @@ int32_t PlayerServerMock::SetDeviceChangeCbStatus(bool status)
     UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
     return player_->SetDeviceChangeCbStatus(status);
 }
+
+int32_t PlayerServerMock::SetRenderFirstFrame(bool display)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
+    return player_->SetRenderFirstFrame(display);
+}
+
 } // namespace Media
 } // namespace OHOS
