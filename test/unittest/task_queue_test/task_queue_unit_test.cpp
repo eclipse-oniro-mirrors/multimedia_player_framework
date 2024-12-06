@@ -64,7 +64,7 @@ HWTEST_F(TaskQueueUnitTest, Stop_001, TestSize.Level0) {
     taskQueue_->thread_ = std::make_unique<std::thread>([&]() {
         result = taskQueue_->Stop();
     });
-    if(taskQueue_->thread_->joinable()){
+    if (taskQueue_->thread_->joinable()){
         taskQueue_->thread_->join();
     }
     ASSERT_EQ(result, MSERR_INVALID_OPERATION);
@@ -78,7 +78,7 @@ HWTEST_F(TaskQueueUnitTest, CancelNotExecutedTaskLocked_001, TestSize.Level0) {
     taskQueue_->thread_ = std::make_unique<std::thread>([&]() {
         taskQueue_->CancelNotExecutedTaskLocked();
     });
-    if(taskQueue_->thread_->joinable()){
+    if (taskQueue_->thread_->joinable()){
         taskQueue_->thread_->join();
     }
     ASSERT_TRUE(taskQueue_->taskList_.empty());
@@ -107,7 +107,7 @@ HWTEST_F(TaskQueueUnitTest, CancelNotExecutedTaskLocked_002, TestSize.Level0) {
     taskQueue_->thread_ = std::make_unique<std::thread>([&]() {
         taskQueue_->CancelNotExecutedTaskLocked();
     });
-    if(taskQueue_->thread_->joinable()){
+    if (taskQueue_->thread_->joinable()){
         taskQueue_->thread_->join();
     }
 
