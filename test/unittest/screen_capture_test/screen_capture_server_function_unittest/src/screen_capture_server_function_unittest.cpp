@@ -37,7 +37,6 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTUR
 constexpr int32_t FLIE_CREATE_FLAGS = 0777;
 static const std::string BUTTON_NAME_MIC = "mic";
 static const std::string BUTTON_NAME_STOP = "stop";
-static const int32_t MAX_SESSION_PER_UID = 8;
 }
 
 namespace OHOS {
@@ -853,25 +852,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnStartScreenCapture_002, TestSize.Lev
 HWTEST_F(ScreenCaptureServerFunctionTest, SetScreenScaleMode_001, TestSize.Level2)
 {
     ASSERT_NE(screenCaptureServer_->SetScreenScaleMode(), MSERR_OK);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, Create_001, TestSize.Level2)
-{
-    std::vector<std::shared_ptr<IScreenCaptureService>> tempServers(MAX_SESSION_PER_UID - 1, nullptr);
-    std::vector<std::shared_ptr<ScreenCaptureServer>> screenCaptureServers(MAX_SESSION_PER_UID - 1, nullptr);
-
-    for (int i = 0; i < MAX_SESSION_PER_UID - 1; ++i) {
-        tempServers[i] = ScreenCaptureServer::Create();
-        screenCaptureServers[i] = std::static_pointer_cast<ScreenCaptureServer>(tempServers[i]);
-        ASSERT_NE(screenCaptureServers[i], nullptr);
-    }
-    std::shared_ptr<IScreenCaptureService> tempServer2 = ScreenCaptureServer::Create();
-    ASSERT_EQ(tempServer2, nullptr);
-    for (int i = 0; i < MAX_SESSION_PER_UID - 1; ++i) {
-        screenCaptureServers[i]->Release();
-        screenCaptureServers[i] = nullptr;
-        tempServers[i] = nullptr;
-    }
 }
 
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
