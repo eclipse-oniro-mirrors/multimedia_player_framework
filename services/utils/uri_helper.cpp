@@ -57,9 +57,7 @@ static bool PathToRealFileUrl(const std::string_view &path, std::string &realPat
 template<typename T, typename = std::enable_if_t<std::is_same_v<int64_t, T> || std::is_same_v<int32_t, T>>>
 bool StrToInt(const std::string_view& str, T& value)
 {
-    if (str.empty() || (!isdigit(str.front()) && (str.front() != '-'))) {
-        return false;
-    }
+    CHECK_AND_RETURN_RET(!str.empty() && (isdigit(str.front()) || (str.front() == '-')), false);
     std::string valStr(str);
     char* end = nullptr;
     errno = 0;

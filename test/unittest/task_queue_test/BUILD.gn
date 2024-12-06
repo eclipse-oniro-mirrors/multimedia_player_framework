@@ -15,7 +15,7 @@ import("//build/test.gni")
 import("//foundation/multimedia/player_framework/config.gni")
 
 ##################################################################################################################
-ohos_unittest("utils_unit_test") {
+ohos_unittest("task_queue_unit_test") {
   module_out_path = "player_framework/services/utils"
 
   cflags = [
@@ -37,34 +37,37 @@ ohos_unittest("utils_unit_test") {
   ]
 
   include_dirs = [
-    "$MEDIA_PLAYER_ROOT_DIR/services/utils/include",
     "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/engine_intf",
+    "$MEDIA_PLAYER_ROOT_DIR/services/utils/include",
   ]
 
   cflags_cc = cflags
 
   sources = [
-    "$MEDIA_PLAYER_ROOT_DIR/services/utils/uri_helper.cpp",
-    "$MEDIA_PLAYER_ROOT_DIR/services/utils/watchdog.cpp",
-    "uri_helper_unit_test.cpp",
-    "watchdog_unit_test.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/services/utils/task_queue.cpp",
+    "task_queue_unit_test.cpp",
   ]
 
   external_deps = [
-    "audio_framework:audio_capturer",
-    "audio_framework:audio_client",
+    "access_token:libaccesstoken_sdk",
+    "access_token:libprivacy_sdk",
+    "av_codec:av_codec_client",
+    "bundle_framework:appexecfwk_base",
+    "bundle_framework:appexecfwk_core",
     "c_utils:utils",
-    "ffmpeg:libohosffmpeg",
-    "googletest:gmock_main",
     "graphic_surface:surface",
-    "graphic_surface:sync_fence",
+    "hicollie:libhicollie",
     "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "hitrace:hitrace_meter",
     "hitrace:libhitracechain",
     "init:libbegetutil",
     "ipc:ipc_single",
+    "libxml2:libxml2",
     "media_foundation:media_foundation",
-    "media_foundation:native_media_core",
-    "safwk:system_ability_fwk",
+    "os_account:os_account_innerkits",
+    "qos_manager:qos",
+    "samgr:samgr_proxy",
   ]
 }

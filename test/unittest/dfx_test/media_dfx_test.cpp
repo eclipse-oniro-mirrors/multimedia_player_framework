@@ -16,7 +16,7 @@
 #include <memory>
 #include <iostream>
 #include "gtest/gtest.h"
-#include "media_dfx.h"
+#include "media_dfx.cpp"
 #include "common/media_core.h"
 #include "meta/meta.h"
 
@@ -101,6 +101,33 @@ HWTEST_F(MediaDfxTest, CREATE_MEDIA_INFO_2, TestSize.Level1)
     ASSERT_NE(ret, MSERR_OK);
     ASSERT_EQ(ret, MSERR_INVALID_OPERATION);
 }
+
+HWTEST_F(MediaDfxTest, StatisticsEventReport_ShouldReturnError_WhenMapIsEmpty, TestSize.Level0)
+{
+    reportMediaInfoMap_.clear();
+    int32_t result = StatisticsEventReport();
+    ASSERT_EQ(result, OHOS::Media::MSERR_INVALID_OPERATION);
+}
+
+// Test when reportMediaInfoMap_ is not empty, StatisticsEventReport should return MSERR_OK
+HWTEST_F(MediaDfxTest, StatisticsEventReport_ShouldReturnSuccess_WhenMapIsNotEmpty_001, TestSize.Level0)
+{
+    reportMediaInfoMap_[OHOS::Media::CallType::AVPLAYER] = {};
+    int32_t result = StatisticsEventReport();
+    ASSERT_EQ(result, OHOS::Media::MSERR_OK);
+    reportMediaInfoMap_.clear();
+}
+
+// Test when reportMediaInfoMap_ is not empty, StatisticsEventReport should return MSERR_OK
+HWTEST_F(MediaDfxTest, StatisticsEventReport_ShouldReturnSuccess_WhenMapIsNotEmpty_002, TestSize.Level0)
+{
+    int32_t uid = 123;
+    reportMediaInfoMap_[OHOS::Media::CallType::AVPLAYER][uid] = {};
+    int32_t result = StatisticsEventReport();
+    ASSERT_EQ(result, OHOS::Media::MSERR_OK);
+    reportMediaInfoMap_.clear();
+}
+
 #ifdef SUPPORT_JSON
 // Scenario1: Test case for int32_t type
 HWTEST_F(MediaDfxTest, ParseOneEvent_ShouldParseInt32_WhenInt32Type, TestSize.Level0) {
@@ -192,6 +219,8 @@ HWTEST_F(MediaDfxTest, ParseOneEvent_ShouldParseBool_WhenBoolType, TestSize.Leve
 
     EXPECT_EQ(metaInfoJson[Tag::MEDIA_HAS_VIDEO], "true");
 }
+
+
 #endif
 }
 }
