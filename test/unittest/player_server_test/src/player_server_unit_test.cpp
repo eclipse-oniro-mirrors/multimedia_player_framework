@@ -4175,7 +4175,6 @@ HWTEST_F(PlayerServerUnitTest, Player_SetMediaMuted_002, TestSize.Level0)
     ASSERT_NE(MSERR_OK, player_->SetMediaMuted(OHOS::Media::MediaType::MEDIA_TYPE_VID, true));
 }
 
-
 /**
  * @tc.name  : Test GetCurrentTime
  * @tc.number: Player_GetCurrentTime_001
@@ -4306,7 +4305,6 @@ HWTEST_F(PlayerServerUnitTest, Player_GetSubtitleTrackInfo_002, TestSize.Level2)
     EXPECT_NE(MSERR_OK, player_->GetSubtitleTrackInfo(subtitleTrackInfo));
 }
 
-
 /**
  * @tc.name  : Test SetRenderFirstFrame API
  * @tc.number: Player_SetRenderFirstFrame_001
@@ -4371,7 +4369,6 @@ HWTEST_F(PlayerServerUnitTest, Player_BackGroundChangeState_001, TestSize.Level0
     EXPECT_EQ(MSERR_OK, server->Stop());
     EXPECT_NE(MSERR_OK, server->BackGroundChangeState(PLAYER_STOPPED, true));
 }
-
 
 /**
  * @tc.name  : Test PlayerState API
