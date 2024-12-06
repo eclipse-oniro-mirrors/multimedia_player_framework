@@ -159,7 +159,9 @@ void ScreenCaptureServer::RemoveScreenCaptureServerMap(int32_t sessionId)
     std::unique_lock<std::shared_mutex> lock(ScreenCaptureServer::mutexServerMapRWGlobal_);
     ScreenCaptureServer::serverMap_.erase(sessionId);
     int32_t returnId = ScreenCaptureServer::gIdGenerator_.ReturnID(sessionId);
-    CHECK_AND_RETURN_LOG(returnId != -1, "RemoveScreenCaptureServerMap returnId: %{public}d is invalid", returnId);
+    if (returnId == -1) {
+        MEDIA_LOGI("RemoveScreenCaptureServerMap returnId: %{public}d is invalid", returnId);
+    }
     MEDIA_LOGI("RemoveScreenCaptureServerMap end. sessionId: %{public}d, serverMap size: %{public}d.",
         sessionId, static_cast<uint32_t>(ScreenCaptureServer::serverMap_.size()));
 }
