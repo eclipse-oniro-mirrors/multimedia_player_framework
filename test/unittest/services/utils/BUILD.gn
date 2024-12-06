@@ -45,10 +45,10 @@ ohos_unittest("utils_unit_test") {
   cflags_cc = cflags
 
   sources = [
-    "$MEDIA_PLAYER_ROOT_DIR/services/utils/watchdog.cpp",
-    "watchdog_unit_test.cpp",
     "$MEDIA_PLAYER_ROOT_DIR/services/utils/uri_helper.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/services/utils/watchdog.cpp",
     "uri_helper_unit_test.cpp",
+    "watchdog_unit_test.cpp",
   ]
 
   external_deps = [
