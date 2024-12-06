@@ -26,6 +26,12 @@
 
 namespace OHOS {
 namespace Media {
+struct FdDesInfo {
+    int32_t fd = 0;
+    int64_t offset = 0;
+    int64_t size = 0;
+};
+
 /**
  * The simple utility is designed to facilitate the uri processing.
  */
@@ -50,6 +56,11 @@ public:
     uint8_t UriType() const;
     std::string FormattedUri() const;
     bool AccessCheck(uint8_t flag) const;
+
+    FdDesInfo GetFdInfo()
+    {
+        return { .fd = fd_, .offset = offset_, .size = size_ };
+    }
 
 private:
     void FormatMeForUri(const std::string_view &uri) noexcept;

@@ -88,6 +88,7 @@ PlayerServerMem::~PlayerServerMem()
 int32_t PlayerServerMem::SetSourceInternal()
 {
     int32_t ret;
+    FdDesInfo fdInfo;
     MEDIA_LOGI("sourceType:%{public}d", recoverConfig_.sourceType);
     switch (recoverConfig_.sourceType) {
         case static_cast<int32_t>(PlayerSourceType::SOURCE_TYPE_URL):
@@ -99,7 +100,9 @@ int32_t PlayerServerMem::SetSourceInternal()
             break;
 
         case static_cast<int32_t>(PlayerSourceType::SOURCE_TYPE_FD):
-            ret = PlayerServer::SetSource(recoverConfig_.fd, recoverConfig_.offset, recoverConfig_.size);
+            CHECK_AND_RETURN_RET(uriHelper_ != nullptr, MSERR_INVALID_VAL);
+            fdInfo = uriHelper_->GetFdInfo();
+            ret = PlayerServer::SetSource(fdInfo.fd, fdInfo.offset, fdInfo.size);
             break;
         
         default:
