@@ -32,15 +32,11 @@ void HitranscodeUnitTest::TearDownTestCase(void)
 void HitranscodeUnitTest::SetUp(void)
 {
     transcoder_ = std::make_unique<HiTransCoderImpl>(0, 0, 0, 0);
-    videoEncFormat_ = std::make_shared<Meta>();
-    audioEncFormat_ = std::make_shared<Meta>();
 }
 
 void HitranscodeUnitTest::TearDown(void)
 {
     transcoder_ = nullptr;
-    videoEncFormat_ = nullptr;
-    audioEncFormat_ = nullptr;
 }
 
 /**
@@ -284,7 +280,7 @@ HWTEST_F(HitranscodeUnitTest, SetValueByType_003, TestSize.Level0)
 */
 HWTEST_F(HitranscodeUnitTest, ConfigureVideoAudioMetaData_001, TestSize.Level0)
 {
-    demuxerFilter_ = nullptr;
+    transcoder_->demuxerFilter_ = nullptr;
     Status result = transcoder_->ConfigureVideoAudioMetaData();
     EXPECT_EQ(result, Status::ERROR_NULL_POINTER);
 }
@@ -297,7 +293,7 @@ HWTEST_F(HitranscodeUnitTest, ConfigureVideoAudioMetaData_001, TestSize.Level0)
 */
 HWTEST_F(HitranscodeUnitTest, Prepare_001, TestSize.Level0)
 {
-    isExistVideoTrack_ = true;
+    transcoder_->isExistVideoTrack_ = true;
     int32_t ret = transcoder_->Prepare();
     EXPECT_EQ(ret, static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER));
 }
@@ -310,10 +306,10 @@ HWTEST_F(HitranscodeUnitTest, Prepare_001, TestSize.Level0)
 */
 HWTEST_F(HitranscodeUnitTest, Prepare_002, TestSize.Level0)
 {
-    isExistVideoTrack_ = true;
+    transcoder_->isExistVideoTrack_ = true;
     std::string metaKey = Tag::VIDEO_WIDTH;
     int32_t width = 0;
-    videoEncFormat_->SetData(metaKey, width);
+    transcoder_->videoEncFormat_->SetData(metaKey, width);
     int32_t ret = transcoder_->Prepare();
     EXPECT_EQ(ret, static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER));
 }
@@ -326,10 +322,10 @@ HWTEST_F(HitranscodeUnitTest, Prepare_002, TestSize.Level0)
 */
 HWTEST_F(HitranscodeUnitTest, Prepare_003, TestSize.Level0)
 {
-    isExistVideoTrack_ = true;
+    transcoder_->isExistVideoTrack_ = true;
     std::string metaKey = Tag::VIDEO_HEIGHT;
     int32_t height = 0;
-    videoEncFormat_->SetData(metaKey, height);
+    transcoder_->videoEncFormat_->SetData(metaKey, height);
     int32_t ret = transcoder_->Prepare();
     EXPECT_EQ(ret, static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER));
 }
@@ -342,15 +338,15 @@ HWTEST_F(HitranscodeUnitTest, Prepare_003, TestSize.Level0)
 */
 HWTEST_F(HitranscodeUnitTest, Prepare_004, TestSize.Level0)
 {
-    isExistVideoTrack_ = true;
+    transcoder_->isExistVideoTrack_ = true;
     std::string widthMetaKey = Tag::VIDEO_WIDTH;
     int32_t width = 100;
-    videoEncFormat_->SetData(widthMetaKey, width);
+    transcoder_->videoEncFormat_->SetData(widthMetaKey, width);
     std::string heightMetaKey = Tag::VIDEO_HEIGHT;
     int32_t height = 100;
-    videoEncFormat_->SetData(heightMetaKey, height);
-    inputVideoWidth_ = 200;
-    inputVideoHeight_ =200;
+    transcoder_->videoEncFormat_->SetData(heightMetaKey, height);
+    transcoder_->inputVideoWidth_ = 200;
+    transcoder_->inputVideoHeight_ =200;
     int32_t ret = transcoder_->Prepare();
     EXPECT_EQ(ret, static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER));
 }
@@ -363,15 +359,15 @@ HWTEST_F(HitranscodeUnitTest, Prepare_004, TestSize.Level0)
 */
 HWTEST_F(HitranscodeUnitTest, Prepare_005, TestSize.Level0)
 {
-    isExistVideoTrack_ = true;
+    transcoder_->isExistVideoTrack_ = true;
     std::string widthMetaKey = Tag::VIDEO_WIDTH;
     int32_t width = 480;
-    videoEncFormat_->SetData(widthMetaKey, width);
+    transcoder_->videoEncFormat_->SetData(widthMetaKey, width);
     std::string heightMetaKey = Tag::VIDEO_HEIGHT;
     int32_t height = 640;
-    videoEncFormat_->SetData(heightMetaKey, height);
-    inputVideoWidth_ = 640;
-    inputVideoHeight_ = 480;
+    transcoder_->videoEncFormat_->SetData(heightMetaKey, height);
+    transcoder_->inputVideoWidth_ = 640;
+    transcoder_->inputVideoHeight_ = 480;
     int32_t ret = transcoder_->Prepare();
     EXPECT_EQ(ret, static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER));
 }
@@ -384,15 +380,15 @@ HWTEST_F(HitranscodeUnitTest, Prepare_005, TestSize.Level0)
 */
 HWTEST_F(HitranscodeUnitTest, Prepare_006, TestSize.Level0)
 {
-    isExistVideoTrack_ = true;
+    transcoder_->isExistVideoTrack_ = true;
     std::string widthMetaKey = Tag::VIDEO_WIDTH;
     int32_t width = 100;
-    videoEncFormat_->SetData(widthMetaKey, width);
+    transcoder_->videoEncFormat_->SetData(widthMetaKey, width);
     std::string heightMetaKey = Tag::VIDEO_HEIGHT;
     int32_t height = 100;
-    videoEncFormat_->SetData(heightMetaKey, height);
-    inputVideoWidth_ = 200;
-    inputVideoHeight_ = 50;
+    transcoder_->videoEncFormat_->SetData(heightMetaKey, height);
+    transcoder_->inputVideoWidth_ = 200;
+    transcoder_->inputVideoHeight_ = 50;
     int32_t ret = transcoder_->Prepare();
     EXPECT_EQ(ret, static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER));
 }
@@ -405,15 +401,15 @@ HWTEST_F(HitranscodeUnitTest, Prepare_006, TestSize.Level0)
 */
 HWTEST_F(HitranscodeUnitTest, Prepare_007, TestSize.Level0)
 {
-    isExistVideoTrack_ = true;
+    transcoder_->isExistVideoTrack_ = true;
     std::string widthMetaKey = Tag::VIDEO_WIDTH;
     int32_t width = 640;
-    videoEncFormat_->SetData(widthMetaKey, width);
+    transcoder_->videoEncFormat_->SetData(widthMetaKey, width);
     std::string heightMetaKey = Tag::VIDEO_HEIGHT;
     int32_t height = 480;
-    videoEncFormat_->SetData(heightMetaKey, height);
-    inputVideoWidth_ = 480;
-    inputVideoHeight_ = 640;
+    transcoder_->videoEncFormat_->SetData(heightMetaKey, height);
+    transcoder_->inputVideoWidth_ = 480;
+    transcoder_->inputVideoHeight_ = 640;
     int32_t ret = transcoder_->Prepare();
     EXPECT_EQ(ret, static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER));
 }
@@ -426,15 +422,15 @@ HWTEST_F(HitranscodeUnitTest, Prepare_007, TestSize.Level0)
 */
 HWTEST_F(HitranscodeUnitTest, Prepare_008, TestSize.Level0)
 {
-    isExistVideoTrack_ = true;
+    transcoder_->isExistVideoTrack_ = true;
     std::string widhtMetaKey = Tag::VIDEO_WIDTH;
     int32_t width = 100;
-    videoEncFormat_->SetData(widhtMetaKey, width);
+    transcoder_->videoEncFormat_->SetData(widhtMetaKey, width);
     std::string heightMetaKey = Tag::VIDEO_HEIGHT;
     int32_t height = 480;
-    videoEncFormat_->SetData(heightMetaKey, height);
-    inputVideoWidth_ = 50;
-    inputVideoHeight_ = 640;
+    transcoder_->videoEncFormat_->SetData(heightMetaKey, height);
+    transcoder_->inputVideoWidth_ = 50;
+    transcoder_->inputVideoHeight_ = 640;
     int32_t ret = transcoder_->Prepare();
     EXPECT_EQ(ret, static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER));
 }
@@ -447,15 +443,15 @@ HWTEST_F(HitranscodeUnitTest, Prepare_008, TestSize.Level0)
 */
 HWTEST_F(HitranscodeUnitTest, Prepare_009, TestSize.Level0)
 {
-    isExistVideoTrack_ = true;
+    transcoder_->isExistVideoTrack_ = true;
     std::string widthMetaKey = Tag::VIDEO_WIDTH;
     int32_t width = 640;
-    videoEncFormat_->SetData(widthMetaKey, width);
+    transcoder_->videoEncFormat_->SetData(widthMetaKey, width);
     std::string heightMetaKey = Tag::VIDEO_HEIGHT;
     int32_t height = 640;
-    videoEncFormat_->SetData(heightMetaKey, height);
-    inputVideoWidth_ = 480;
-    inputVideoHeight_ = 480;
+    transcoder_->videoEncFormat_->SetData(heightMetaKey, height);
+    transcoder_->inputVideoWidth_ = 480;
+    transcoder_->inputVideoHeight_ = 480;
     int32_t ret = transcoder_->Prepare();
     EXPECT_EQ(ret, static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER));
 }
@@ -468,15 +464,15 @@ HWTEST_F(HitranscodeUnitTest, Prepare_009, TestSize.Level0)
 */
 HWTEST_F(HitranscodeUnitTest, Prepare_010, TestSize.Level0)
 {
-    isExistVideoTrack_ = true;
+    transcoder_->isExistVideoTrack_ = true;
     std::string widthMetaKey = Tag::VIDEO_WIDTH;
     int32_t width = 100;
-    videoEncFormat_->SetData(widthMetaKey, width);
+    transcoder_->videoEncFormat_->SetData(widthMetaKey, width);
     std::string heightMetaKey = Tag::VIDEO_HEIGHT;
     int32_t height = 100;
-    videoEncFormat_->SetData(heightMetaKey, height);
-    inputVideoWidth_ = 50;
-    inputVideoHeight_ = 50;
+    transcoder_->videoEncFormat_->SetData(heightMetaKey, height);
+    transcoder_->inputVideoWidth_ = 50;
+    transcoder_->inputVideoHeight_ = 50;
     int32_t ret = transcoder_->Prepare();
     EXPECT_EQ(ret, static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER));
 }
@@ -660,8 +656,6 @@ HWTEST_F(HitranscodeUnitTest, ProcessMetaKey_013, TestSize.Level0)
     std::shared_ptr<Meta> innerMeta = std::make_shared<Meta>();
     std::shared_ptr<Meta> outputMeta = std::make_shared<Meta>();
     std::string metaKey = Tag::VIDEO_COLOR_RANGE;
-    bool boolVal = true;
-    innerMeta->SetData(metaKey, boolVal);
 
     // 2. Call the function to be tested
     bool result = transcoder_->ProcessMetaKey(innerMeta, outputMeta, metaKey);
@@ -710,19 +704,19 @@ HWTEST_F(HitranscodeUnitTest, ConfigureVideoEncoderFormat_001, TestSize.Level0)
     std::string metaKey = Tag::MIME_TYPE;
     std::string strVal = "video/avc";
     std::string outputStrVal;
-    EXPECT_TRUE(videoEncFormat_->GetData(metaKey, outputStrVal));
+    EXPECT_TRUE(transcoder_->videoEncFormat_->GetData(metaKey, outputStrVal));
     EXPECT_EQ(strVal, outputStrVal);
 
     metaKey = Tag::VIDEO_H264_PROFILE;
     int32_t intVal = static_cast<int32_t>(Plugins::VideoH264Profile::BASELINE);
     int32_t outputIntVal;
-    EXPECT_TRUE(videoEncFormat_->GetData(metaKey, outputIntVal));
+    EXPECT_TRUE(transcoder_->videoEncFormat_->GetData(metaKey, outputIntVal));
     EXPECT_EQ(intVal, outputIntVal);
 
     metaKey = Tag::VIDEO_H264_LEVEL;
     int32_t intVal2 = 32;
     int32_t outputIntVal2;
-    EXPECT_TRUE(videoEncFormat_->GetData(metaKey, outputIntVal2));
+    EXPECT_TRUE(transcoder_->videoEncFormat_->GetData(metaKey, outputIntVal2));
     EXPECT_EQ(intVal2, outputIntVal2);
     delete transcoderParam;
 }
@@ -743,7 +737,7 @@ HWTEST_F(HitranscodeUnitTest, ConfigureVideoEncoderFormat_002, TestSize.Level0)
     std::string metaKey = Tag::MIME_TYPE;
     std::string strVal = "video/mp4v-es";
     std::string outputStrVal;
-    EXPECT_TRUE(videoEncFormat_->GetData(metaKey, outputStrVal));
+    EXPECT_TRUE(transcoder_->videoEncFormat_->GetData(metaKey, outputStrVal));
     EXPECT_EQ(strVal, outputStrVal);
     delete transcoderParam;
 }
@@ -764,7 +758,7 @@ HWTEST_F(HitranscodeUnitTest, ConfigureVideoEncoderFormat_003, TestSize.Level0)
     std::string metaKey = Tag::MIME_TYPE;
     std::string strVal = "video/hevc";
     std::string outputStrVal;
-    EXPECT_TRUE(videoEncFormat_->GetData(metaKey, outputStrVal));
+    EXPECT_TRUE(transcoder_->videoEncFormat_->GetData(metaKey, outputStrVal));
     EXPECT_EQ(strVal, outputStrVal);
     delete transcoderParam;
 }
@@ -784,7 +778,7 @@ HWTEST_F(HitranscodeUnitTest, ConfigureVideoEncoderFormat_004, TestSize.Level0)
     
     std::string metaKey = Tag::MIME_TYPE;
     std::string outputStrVal;
-    EXPECT_FALSE(videoEncFormat_->GetData(metaKey, outputStrVal));
+    EXPECT_FALSE(transcoder_->videoEncFormat_->GetData(metaKey, outputStrVal));
     delete transcoderParam;
 }
 
@@ -822,7 +816,7 @@ HWTEST_F(HitranscodeUnitTest, SetTrackMime_002, TestSize.Level0)
     EXPECT_EQ(ret, Status::OK);
 
     std::string outputStrVal;
-    EXPECT_TRUE(videoEncFormat_->GetData(metaKey, outputStrVal));
+    EXPECT_TRUE(transcoder_->videoEncFormat_->GetData(metaKey, outputStrVal));
     EXPECT_EQ(strVal, outputStrVal);
 }
 
@@ -841,7 +835,7 @@ HWTEST_F(HitranscodeUnitTest, SetTrackMime_003, TestSize.Level0)
     std::vector<std::shared_ptr<Meta>> trackInfos;
     trackInfos.push_back(inputMeta);
 
-    videoEncFormat_->SetData(metaKey, strVal);
+    transcoder_->videoEncFormat_->SetData(metaKey, strVal);
 
     Status ret = transcoder_->SetTrackMime(trackInfos);
     EXPECT_EQ(ret, Status::OK);
@@ -866,7 +860,7 @@ HWTEST_F(HitranscodeUnitTest, SetTrackMime_004, TestSize.Level0)
     EXPECT_EQ(ret, Status::OK);
 
     std::string outputStrVal;
-    EXPECT_TRUE(audioEncFormat_->GetData(metaKey, outputStrVal));
+    EXPECT_TRUE(transcoder_->audioEncFormat_->GetData(metaKey, outputStrVal));
     EXPECT_EQ(strVal, outputStrVal);
 }
 
@@ -885,7 +879,7 @@ HWTEST_F(HitranscodeUnitTest, SetTrackMime_005, TestSize.Level0)
     std::vector<std::shared_ptr<Meta>> trackInfos;
     trackInfos.push_back(inputMeta);
 
-    audioEncFormat_->SetData(metaKey, strVal);
+    transcoder_->audioEncFormat_->SetData(metaKey, strVal);
 
     Status ret = transcoder_->SetTrackMime(trackInfos);
     EXPECT_EQ(ret, Status::OK);
