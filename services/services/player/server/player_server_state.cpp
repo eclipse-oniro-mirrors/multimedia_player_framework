@@ -513,7 +513,7 @@ int32_t PlayerServer::PlaybackCompletedState::Play()
     auto timeDiff = timeNow - stateEnterTimeMs_;
     MEDIA_LOGD("timeNow %{public}" PRId64 " timeStart %{public}" PRId64 " timeDiff %{public}" PRId64,
         timeNow, stateEnterTimeMs_, timeDiff);
-    CHECK_AND_RETURN_RET(Plugins::GetCurrentMillisecond() - stateEnterTimeMs_ < COMPLETED_PLAY_REPORT_MS, res);
+    CHECK_AND_RETURN_RET(timeDiff < COMPLETED_PLAY_REPORT_MS, res);
     server_.HandleEosPlay();
     return res;
 }
