@@ -767,7 +767,7 @@ HWTEST_F(HitranscodeUnitTest, ConfigureVideoEncoderFormat_003, TestSize.Level0)
 HWTEST_F(HitranscodeUnitTest, ConfigureVideoEncoderFormat_004, TestSize.Level0)
 {
     VideoEnc videoEnc(OHOS::Media::VideoCodecFormat::VIDEO_DEFAULT);
-    Status ret = transcoder_->ConfigureVideoEncoderFormat(*transcoderParam);
+    Status ret = transcoder_->ConfigureVideoEncoderFormat(videoEnc);
     EXPECT_EQ(ret, Status::OK);
     
     std::string metaKey = Tag::MIME_TYPE;
