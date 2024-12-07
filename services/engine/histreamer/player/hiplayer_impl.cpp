@@ -2223,7 +2223,7 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
         demuxer_->SetDumpFlag(isDump_);
     }
     if (ret == Status::OK && !MetaUtils::CheckFileType(demuxer_->GetGlobalMetaInfo())) {
-        MEDIA_LOG_W_SHORT("0x%{public}06 " PRIXPTR "SetSource unsupport", FAKE_POINTER(this));
+        MEDIA_LOG_W_SHORT("0x%{public}06" PRIXPTR " SetSource unsupport", FAKE_POINTER(this));
         ret = Status::ERROR_INVALID_DATA;
     }
     if (ret != Status::OK) {
