@@ -32,6 +32,7 @@ void HitranscodeUnitTest::TearDownTestCase(void)
 void HitranscodeUnitTest::SetUp(void)
 {
     transcoder_ = std::make_unique<HiTransCoderImpl>(0, 0, 0, 0);
+    transcoder_->Init();
 }
 
 void HitranscodeUnitTest::TearDown(void)
@@ -696,9 +697,8 @@ HWTEST_F(HitranscodeUnitTest, ProcessMetaKey_014, TestSize.Level0)
 */
 HWTEST_F(HitranscodeUnitTest, ConfigureVideoEncoderFormat_001, TestSize.Level0)
 {
-    TransCoderParam* transcoderParam = new TransCoderParam(
-        static_cast<uint32_t>(OHOS::Media::VideoCodecFormat::H264));
-    Status ret = transcoder_->ConfigureVideoEncoderFormat(*transcoderParam);
+    VideoEnc videoEnc(OHOS::Media::VideoCodecFormat::H264);
+    Status ret = transcoder_->ConfigureVideoEncoderFormat(videoEnc);
     EXPECT_EQ(ret, Status::OK);
     
     std::string metaKey = Tag::MIME_TYPE;
@@ -708,8 +708,8 @@ HWTEST_F(HitranscodeUnitTest, ConfigureVideoEncoderFormat_001, TestSize.Level0)
     EXPECT_EQ(strVal, outputStrVal);
 
     metaKey = Tag::VIDEO_H264_PROFILE;
-    int32_t intVal = static_cast<int32_t>(Plugins::VideoH264Profile::BASELINE);
-    int32_t outputIntVal;
+    VideoH264Profile intVal = Plugins::VideoH264Profile::BASELINE;
+    VideoH264Profile outputIntVal;
     EXPECT_TRUE(transcoder_->videoEncFormat_->GetData(metaKey, outputIntVal));
     EXPECT_EQ(intVal, outputIntVal);
 
@@ -718,7 +718,6 @@ HWTEST_F(HitranscodeUnitTest, ConfigureVideoEncoderFormat_001, TestSize.Level0)
     int32_t outputIntVal2;
     EXPECT_TRUE(transcoder_->videoEncFormat_->GetData(metaKey, outputIntVal2));
     EXPECT_EQ(intVal2, outputIntVal2);
-    delete transcoderParam;
 }
 
 /**
@@ -729,9 +728,8 @@ HWTEST_F(HitranscodeUnitTest, ConfigureVideoEncoderFormat_001, TestSize.Level0)
 */
 HWTEST_F(HitranscodeUnitTest, ConfigureVideoEncoderFormat_002, TestSize.Level0)
 {
-    TransCoderParam* transcoderParam = new TransCoderParam(
-        static_cast<uint32_t>(OHOS::Media::VideoCodecFormat::MPEG4));
-    Status ret = transcoder_->ConfigureVideoEncoderFormat(*transcoderParam);
+    VideoEnc videoEnc(OHOS::Media::VideoCodecFormat::MPEG4);
+    Status ret = transcoder_->ConfigureVideoEncoderFormat(videoEnc);
     EXPECT_EQ(ret, Status::OK);
     
     std::string metaKey = Tag::MIME_TYPE;
@@ -739,7 +737,6 @@ HWTEST_F(HitranscodeUnitTest, ConfigureVideoEncoderFormat_002, TestSize.Level0)
     std::string outputStrVal;
     EXPECT_TRUE(transcoder_->videoEncFormat_->GetData(metaKey, outputStrVal));
     EXPECT_EQ(strVal, outputStrVal);
-    delete transcoderParam;
 }
 
 /**
@@ -750,9 +747,8 @@ HWTEST_F(HitranscodeUnitTest, ConfigureVideoEncoderFormat_002, TestSize.Level0)
 */
 HWTEST_F(HitranscodeUnitTest, ConfigureVideoEncoderFormat_003, TestSize.Level0)
 {
-    TransCoderParam* transcoderParam = new TransCoderParam(
-        static_cast<uint32_t>(OHOS::Media::VideoCodecFormat::H265));
-    Status ret = transcoder_->ConfigureVideoEncoderFormat(*transcoderParam);
+    VideoEnc videoEnc(OHOS::Media::VideoCodecFormat::H265);
+    Status ret = transcoder_->ConfigureVideoEncoderFormat(videoEnc);
     EXPECT_EQ(ret, Status::OK);
     
     std::string metaKey = Tag::MIME_TYPE;
@@ -760,7 +756,6 @@ HWTEST_F(HitranscodeUnitTest, ConfigureVideoEncoderFormat_003, TestSize.Level0)
     std::string outputStrVal;
     EXPECT_TRUE(transcoder_->videoEncFormat_->GetData(metaKey, outputStrVal));
     EXPECT_EQ(strVal, outputStrVal);
-    delete transcoderParam;
 }
 
 /**
@@ -771,15 +766,13 @@ HWTEST_F(HitranscodeUnitTest, ConfigureVideoEncoderFormat_003, TestSize.Level0)
 */
 HWTEST_F(HitranscodeUnitTest, ConfigureVideoEncoderFormat_004, TestSize.Level0)
 {
-    TransCoderParam* transcoderParam = new TransCoderParam(
-        static_cast<uint32_t>(OHOS::Media::VideoCodecFormat::VIDEO_DEFAULT));
+    VideoEnc videoEnc(OHOS::Media::VideoCodecFormat::VIDEO_DEFAULT);
     Status ret = transcoder_->ConfigureVideoEncoderFormat(*transcoderParam);
     EXPECT_EQ(ret, Status::OK);
     
     std::string metaKey = Tag::MIME_TYPE;
     std::string outputStrVal;
     EXPECT_FALSE(transcoder_->videoEncFormat_->GetData(metaKey, outputStrVal));
-    delete transcoderParam;
 }
 
 /**
