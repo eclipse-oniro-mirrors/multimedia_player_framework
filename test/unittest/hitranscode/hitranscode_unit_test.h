@@ -18,6 +18,8 @@
 
 #include "gtest/gtest.h"
 #include "hitranscoder_impl.h"
+#include "demuxer_filter.h"
+#include "transcoder_param.h"
 
 namespace OHOS {
 namespace Media {
@@ -32,7 +34,13 @@ public:
     // TearDown: Called after each test cases
     void TearDown(void);
 
-    std::unique_ptr<HiTransCoderImpl> transcode_;
+    std::unique_ptr<HiTransCoderImpl> transcoder_;
+    std::shared_ptr<Pipeline::DemuxerFilter> demuxerFilter_;
+    bool isExistVideoTrack_{false};
+    std::shared_ptr<Meta> videoEncFormat_;
+    std::shared_ptr<Meta> audioEncFormat_;
+    int32_t inputVideoWidth_{0};
+    int32_t inputVideoHeight_{0};
 };
 } // namespace Media
 } // namespace OHOS
