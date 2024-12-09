@@ -56,6 +56,7 @@ const std::string DEFAULT_SYSTEM_TONE_URI_JSON = "ringtone_sms-notification.json
 const std::string DEFAULT_SYSTEM_TONE_PATH = "notifications/";
 const int STORAGE_MANAGER_MANAGER_ID = 5003;
 const int UNSUPPORTED_ERROR = -5;
+const int DATASHARE_ERR = 1001;
 #ifdef SUPPORT_VIBRATOR
 const int OPERATION_ERROR = -4;
 #endif
@@ -125,7 +126,7 @@ std::shared_ptr<SystemSoundManager> SystemSoundManagerFactory::CreateSystemSound
 
 static shared_ptr<DataShare::DataShareHelper> CreateDataShareHelperUri(int32_t systemAbilityId)
 {
-    MEDIA_LOGI("CreateDataShareHelperUri : Enter the CreateDataShareHelperUri interface");
+    MEDIA_LOGI("CreateDataShareHelperUri : Enter  CreateDataShareHelperUri()");
     CreateOptions options;
     options.enabled_ = true;
     return DataShare::DataShareHelper::Creator(RINGTONE_LIBRARY_PROXY_URI, options);
@@ -133,6 +134,7 @@ static shared_ptr<DataShare::DataShareHelper> CreateDataShareHelperUri(int32_t s
 
 static shared_ptr<DataShare::DataShareHelper> CreateDataShareHelper(int32_t systemAbilityId)
 {
+    MEDIA_LOGI("CreateDataShareHelper : Enter  CreateDataShareHelper()");
     auto saManager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (saManager == nullptr) {
         MEDIA_LOGE("Get system ability manager failed.");
@@ -880,6 +882,7 @@ std::string SystemSoundManagerImpl::GetNotificationToneUriByType(
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper)
 {
     std::string uri = "";
+    int errCode = 0;
     CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, uri,
         "Invalid dataShare, datashare or ringtone library error.");
     DataShare::DatashareBusinessError businessError;
@@ -887,7 +890,16 @@ std::string SystemSoundManagerImpl::GetNotificationToneUriByType(
     queryPredicates.SetWhereClause(RINGTONE_COLUMN_NOTIFICATION_TONE_TYPE + " = ? AND " +
         RINGTONE_COLUMN_NOTIFICATION_TONE_SOURCE_TYPE + " = ? ");
     queryPredicates.SetWhereArgs({to_string(NOTIFICATION_TONE_TYPE), to_string(SOURCE_TYPE_CUSTOMISED)});
-    auto resultSet = dataShareHelper->Query(RINGTONEURI_PROXY, queryPredicates, COLUMNS, &businessError);
+    Uri URI = RINGTONEURI_PROXY;
+    auto resultSet = dataShareHelper->Query(URI, queryPredicates, COLUMNS, &businessError);
+    errCode = businessError.GetCode();
+    if (errCode == DATASHARE_ERR) {
+        MEDIA_LOGE("GetNotificationToneUriByType: errCode = %{public}d", errCode);
+        URI = RINGTONEURI;
+        dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
+        CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, uri, "dataShare failed.");
+        resultSet = dataShareHelper->Query(URI, queryPredicates, COLUMNS, &businessError);
+    }
     auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
     CHECK_AND_RETURN_RET_LOG(results != nullptr, uri, "query failed, ringtone library error.");
     unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
@@ -902,6 +914,7 @@ std::string SystemSoundManagerImpl::GetPresetNotificationToneUri(
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper)
 {
     std::string uri = "";
+    int errCode = 0;
     CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, uri,
         "Invalid dataShare, datashare or ringtone library error.");
     DataShare::DatashareBusinessError businessError;
@@ -909,7 +922,16 @@ std::string SystemSoundManagerImpl::GetPresetNotificationToneUri(
     queryPredicates.SetWhereClause(RINGTONE_COLUMN_NOTIFICATION_TONE_TYPE + " = ? AND " +
         RINGTONE_COLUMN_NOTIFICATION_TONE_SOURCE_TYPE + " = ? ");
     queryPredicates.SetWhereArgs({to_string(NOTIFICATION_TONE_TYPE), to_string(SOURCE_TYPE_PRESET)});
-    auto resultSet = dataShareHelper->Query(RINGTONEURI_PROXY, queryPredicates, COLUMNS, &businessError);
+    Uri URI = RINGTONEURI_PROXY;
+    auto resultSet = dataShareHelper->Query(URI, queryPredicates, COLUMNS, &businessError);
+    errCode = businessError.GetCode();
+    if (errCode == DATASHARE_ERR) {
+        MEDIA_LOGE("GetPresetNotificationToneUri: errCode = %{public}d", errCode);
+        URI = RINGTONEURI;
+        dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
+        CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, uri, "dataShare failed.");
+        resultSet = dataShareHelper->Query(URI, queryPredicates, COLUMNS, &businessError);
+    }
     auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
     CHECK_AND_RETURN_RET_LOG(results != nullptr, uri, "query failed, ringtone library error.");
     unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
