@@ -218,7 +218,7 @@ void HiPlayerCallbackLooper::DoReportSystemOperation(const Any& info)
     std::shared_ptr<IPlayerEngineObs> obs;
     {
         OHOS::Media::AutoLock lock(loopMutex_);
-        obs = obs_.lock;
+        obs = obs_.lock();
     }
     if (obs) {
         auto ptr = AnyCast<std::pair<PlayerOnSystemOperationType, PlayerOperationReason>>(&info);
