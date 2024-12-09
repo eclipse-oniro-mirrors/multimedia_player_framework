@@ -70,7 +70,7 @@ int32_t AVMetadataHelperServer::SetSource(const std::string &uri, int32_t usage)
     MEDIA_LOGD("Current uri is : %{private}s %{public}u", uri.c_str(), usage);
     CHECK_AND_RETURN_RET_LOG(!uri.empty(), MSERR_INVALID_VAL, "uri is empty");
     int32_t setSourceRes = MSERR_OK;
-    std::atomic_bool isInitEngineEnd = false;
+    std::atomic<bool> isInitEngineEnd = false;
 
     auto task = std::make_shared<TaskHandler<int32_t>>([this, usage, uri, &isInitEngineEnd, &setSourceRes] {
         MediaTrace trace("AVMetadataHelperServer::SetSource_uri_task");
@@ -121,7 +121,7 @@ int32_t AVMetadataHelperServer::SetSource(int32_t fd, int64_t offset, int64_t si
     MediaTrace trace("AVMetadataHelperServer::SetSource_fd");
     MEDIA_LOGD("fd src, offset: %{public}" PRIi64 ", size: %{public}" PRIi64 " usage: %{public}u", offset, size, usage);
     int32_t setSourceRes = MSERR_OK;
-    std::atomic_bool isInitEngineEnd = false;
+    std::atomic<bool> isInitEngineEnd = false;
 
     auto task = std::make_shared<TaskHandler<int32_t>>([this, duplicateFd = dup(fd), offset, size,
                                                         usage, &isInitEngineEnd, &setSourceRes] {
@@ -177,7 +177,7 @@ int32_t AVMetadataHelperServer::SetSource(const std::shared_ptr<IMediaDataSource
     CHECK_AND_RETURN_RET_LOG(dataSrc != nullptr, MSERR_INVALID_VAL, "data source is nullptr");
     dataSrc_ = dataSrc;
     int32_t setSourceRes = MSERR_OK;
-    std::atomic_bool isInitEngineEnd = false;
+    std::atomic<bool> isInitEngineEnd = false;
     
     auto task = std::make_shared<TaskHandler<int32_t>>([this, dataSrc, &isInitEngineEnd, &setSourceRes] {
         MediaTrace trace("AVMetadataHelperServer::SetSource dataSrc_task");
