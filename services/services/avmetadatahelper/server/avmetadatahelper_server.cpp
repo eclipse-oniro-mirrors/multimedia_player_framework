@@ -192,17 +192,15 @@ int32_t AVMetadataHelperServer::SetSource(const std::shared_ptr<IMediaDataSource
             }
             ipcReturnCond_.notify_all();
         }
-        int32_t res = InitEngine("media data source");
-        CHECK_AND_RETURN_RET(res == MSERR_OK, res);
         CHECK_AND_RETURN_RET_LOG(avMetadataHelperEngine_ != nullptr,
             static_cast<int32_t>(MSERR_CREATE_AVMETADATAHELPER_ENGINE_FAILED),
             "Failed to create avmetadatahelper engine");
-        int32_t ret = avMetadataHelperEngine_->SetSource(dataSrc_);
+        int32_t ret = avMetadataHelperEngine_->SetSource(dataSrc);
         currState_ = ret == MSERR_OK ? HELPER_PREPARED : HELPER_STATE_ERROR;
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetSource failed!");
 
         int64_t size = 0;
-        (void)dataSrc_->GetSize(size);
+        (void)dataSrc->GetSize(size);
         if (size == -1) {
             config_.looping = false;
             isLiveStream_ = true;
