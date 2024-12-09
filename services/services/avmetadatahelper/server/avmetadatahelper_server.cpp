@@ -81,25 +81,25 @@ int32_t AVMetadataHelperServer::SetSource(const std::string &uri, int32_t usage)
                 MEDIA_LOGE("Failed to construct formatted uri");
                 setSourceRes = static_cast<int32_t>(MSERR_INVALID_VAL);
                 isInitEngineEnd = true;
-                cond_.notify_all();
+                ipcReturnCond_.notify_all();
                 return static_cast<int32_t>(MSERR_INVALID_VAL);
             }
             if (!uriHelper_->AccessCheck(UriHelper::URI_READ)) {
                 MEDIA_LOGE("Failed to read the file");
                 setSourceRes = static_cast<int32_t>(MSERR_INVALID_VAL);
                 isInitEngineEnd = true;
-                cond_.notify_all();
+                ipcReturnCond_.notify_all();
                 return static_cast<int32_t>(MSERR_INVALID_VAL);
             }
             int32_t res = InitEngine(uriHelper_->FormattedUri());
             if (res != MSERR_OK) {
                 setSourceRes = res;
                 isInitEngineEnd = true;
-                cond_.notify_all();
+                ipcReturnCond_.notify_all();
                 return res;
             }
             isInitEngineEnd = true;
-            cond_.notify_all();
+            ipcReturnCond_.notify_all();
         }
         CHECK_AND_RETURN_RET_LOG(avMetadataHelperEngine_ != nullptr,
             static_cast<int32_t>(MSERR_CREATE_AVMETADATAHELPER_ENGINE_FAILED), "Failed to create avmetadata engine");
@@ -109,7 +109,7 @@ int32_t AVMetadataHelperServer::SetSource(const std::string &uri, int32_t usage)
         return ret;
     });
     taskQue_.EnqueueTask(task);
-    cond_.wait(lock, [&isInitEngineEnd] {
+    ipcReturnCond_.wait(lock, [&isInitEngineEnd] {
         return isInitEngineEnd.load();
     });
     return setSourceRes;
@@ -134,25 +134,25 @@ int32_t AVMetadataHelperServer::SetSource(int32_t fd, int64_t offset, int64_t si
                 MEDIA_LOGE("Failed to construct formatted uri");
                 setSourceRes = static_cast<int32_t>(MSERR_INVALID_VAL);
                 isInitEngineEnd = true;
-                cond_.notify_all();
+                ipcReturnCond_.notify_all();
                 return static_cast<int32_t>(MSERR_INVALID_VAL);
             }
             if (!uriHelper_->AccessCheck(UriHelper::URI_READ)) {
                 MEDIA_LOGE("Failed to read the file");
                 setSourceRes = static_cast<int32_t>(MSERR_INVALID_VAL);
                 isInitEngineEnd = true;
-                cond_.notify_all();
+                ipcReturnCond_.notify_all();
                 return static_cast<int32_t>(MSERR_INVALID_VAL);
             }
             int32_t res = InitEngine(uriHelper_->FormattedUri());
             if (res != MSERR_OK) {
                 setSourceRes = res;
                 isInitEngineEnd = true;
-                cond_.notify_all();
+                ipcReturnCond_.notify_all();
                 return res;
             }
             isInitEngineEnd = true;
-            cond_.notify_all();
+            ipcReturnCond_.notify_all();
         }
         CHECK_AND_RETURN_RET_LOG(avMetadataHelperEngine_ != nullptr,
             static_cast<int32_t>(MSERR_CREATE_AVMETADATAHELPER_ENGINE_FAILED), "Failed to create avmetadata engine");
@@ -163,7 +163,7 @@ int32_t AVMetadataHelperServer::SetSource(int32_t fd, int64_t offset, int64_t si
         return ret;
     });
     taskQue_.EnqueueTask(task);
-    cond_.wait(lock, [&isInitEngineEnd] {
+    ipcReturnCond_.wait(lock, [&isInitEngineEnd] {
         return isInitEngineEnd.load();
     });
     return setSourceRes;
@@ -187,10 +187,10 @@ int32_t AVMetadataHelperServer::SetSource(const std::shared_ptr<IMediaDataSource
             isInitEngineEnd = true;
             if (res != MSERR_OK) {
                 setSourceRes = res;
-                cond_.notify_all();
+                ipcReturnCond_.notify_all();
                 return res;
             }
-            cond_.notify_all();
+            ipcReturnCond_.notify_all();
         }
         int32_t res = InitEngine("media data source");
         CHECK_AND_RETURN_RET(res == MSERR_OK, res);
@@ -210,7 +210,7 @@ int32_t AVMetadataHelperServer::SetSource(const std::shared_ptr<IMediaDataSource
         return ret;
     });
     taskQue_.EnqueueTask(task);
-    cond_.wait(lock, [&isInitEngineEnd] {
+    ipcReturnCond_.wait(lock, [&isInitEngineEnd] {
         return isInitEngineEnd.load();
     });
     return setSourceRes;
