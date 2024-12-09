@@ -102,8 +102,7 @@ int32_t AVMetadataHelperServer::SetSource(const std::string &uri, int32_t usage)
             cond_.notify_all();
         }
         CHECK_AND_RETURN_RET_LOG(avMetadataHelperEngine_ != nullptr,
-            static_cast<int32_t>(MSERR_CREATE_AVMETADATAHELPER_ENGINE_FAILED),
-            "Failed to create avmetadatahelper engine.");
+            static_cast<int32_t>(MSERR_CREATE_AVMETADATAHELPER_ENGINE_FAILED), "Failed to create avmetadata engine");
         int32_t ret = avMetadataHelperEngine_->SetSource(uriHelper_->FormattedUri(), usage);
         currState_ = ret == MSERR_OK ? HELPER_PREPARED : HELPER_STATE_ERROR;
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "0x%{public}06" PRIXPTR " SetSource failed", FAKE_POINTER(this));
@@ -120,8 +119,7 @@ int32_t AVMetadataHelperServer::SetSource(int32_t fd, int64_t offset, int64_t si
 {
     std::unique_lock<std::mutex> lock(mutex_);
     MediaTrace trace("AVMetadataHelperServer::SetSource_fd");
-    MEDIA_LOGD("Current is fd source, offset: %{public}" PRIi64 ", size: %{public}" PRIi64 " usage: %{public}u",
-               offset, size, usage);
+    MEDIA_LOGD("fd src, offset: %{public}" PRIi64 ", size: %{public}" PRIi64 " usage: %{public}u", offset, size, usage);
     int32_t setSourceRes = MSERR_OK;
     std::atomic_bool isInitEngineEnd = false;
 
@@ -157,13 +155,11 @@ int32_t AVMetadataHelperServer::SetSource(int32_t fd, int64_t offset, int64_t si
             cond_.notify_all();
         }
         CHECK_AND_RETURN_RET_LOG(avMetadataHelperEngine_ != nullptr,
-            static_cast<int32_t>(MSERR_CREATE_AVMETADATAHELPER_ENGINE_FAILED),
-            "Failed to create avmetadatahelper engine");
+            static_cast<int32_t>(MSERR_CREATE_AVMETADATAHELPER_ENGINE_FAILED), "Failed to create avmetadata engine");
 
         int32_t ret = avMetadataHelperEngine_->SetSource(uriHelper_->FormattedUri(), usage);
         currState_ = ret == MSERR_OK ? HELPER_PREPARED : HELPER_STATE_ERROR;
-        CHECK_AND_RETURN_RET_LOG(
-            ret == MSERR_OK, ret, "0x%{public}06" PRIXPTR " SetSource failed!", FAKE_POINTER(this));
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "0x%{public}06" PRIXPTR " SetSource failed", FAKE_POINTER(this));
         return ret;
     });
     taskQue_.EnqueueTask(task);
