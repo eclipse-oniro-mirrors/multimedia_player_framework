@@ -215,8 +215,11 @@ void HiPlayerCallbackLooper::ReportRemainedMaxAmplitude()
 
 void HiPlayerCallbackLooper::DoReportSystemOperation(const Any& info)
 {
-    OHOS::Media::AutoLock lock(loopMutex_);
-    auto obs = obs_.lock();
+    std::shared_ptr<IPlayerEngineObs> obs;
+    {
+        OHOS::Media::AutoLock lock(loopMutex_);
+        obs = obs_.lock();
+    }
     if (obs) {
         auto ptr = AnyCast<std::pair<PlayerOnSystemOperationType, PlayerOperationReason>>(&info);
         if (ptr == nullptr) {
