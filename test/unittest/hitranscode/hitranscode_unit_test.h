@@ -18,6 +18,7 @@
 
 #include "gtest/gtest.h"
 #include "hitranscoder_impl.h"
+#include "transcoder_param.h"
 
 namespace OHOS {
 namespace Media {
@@ -32,7 +33,7 @@ public:
     // TearDown: Called after each test cases
     void TearDown(void);
 
-    std::unique_ptr<HiTransCoderImpl> transcode_;
+    std::unique_ptr<HiTransCoderImpl> transcoder_;
 };
 } // namespace Media
 } // namespace OHOS
