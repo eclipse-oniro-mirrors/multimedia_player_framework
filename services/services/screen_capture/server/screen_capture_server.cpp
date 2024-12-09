@@ -993,8 +993,8 @@ int32_t ScreenCaptureServer::StartFileInnerAudioCapture()
             std::string("OS_InnerAudioCapture"), contentFilter_);
         int32_t ret = innerCapture->Start(appInfo_);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartFileInnerAudioCapture failed");
-        if (isMicrophoneOn_ && audioSource_ && audioSource_->GetSpeakerAliveStatus() &&
-            !audioSource_->GetIsInVoIPCall()) {
+        if (audioSource_ && audioSource_->GetSpeakerAliveStatus() && !audioSource_->GetIsInVoIPCall() &&
+            micAudioCapture_ && micAudioCapture_->GetAudioCapturerState() == CAPTURER_RECORDING) {
             ret = innerCapture->Pause();
             CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartAudioCapture innerCapture Pause failed");
         }
