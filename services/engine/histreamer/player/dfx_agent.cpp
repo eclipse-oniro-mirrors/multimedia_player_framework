@@ -50,16 +50,22 @@ DfxAgent::~DfxAgent()
 void DfxAgent::SetSourceType(PlayerDfxSourceType type)
 {
     FALSE_RETURN(dfxTask_ != nullptr);
-    dfxTask_->SubmitJobOnce([this, type] {
-        sourceType_ = type;
+    std::weak_ptr<DfxAgent> agent = shared_from_this();
+    dfxTask_->SubmitJobOnce([agent, type] {
+        auto ptr = agent.lock();
+        FALSE_RETURN_MSG(ptr != nullptr, "DfxAgent is released");
+        ptr->sourceType_ = type;
     });
 }
  
 void DfxAgent::SetInstanceId(const std::string& instanceId)
 {
     FALSE_RETURN(dfxTask_ != nullptr);
-    dfxTask_->SubmitJobOnce([this, instanceId] {
-        instanceId_ = instanceId;
+    std::weak_ptr<DfxAgent> agent = shared_from_this();
+    dfxTask_->SubmitJobOnce([agent, instanceId] {
+        auto ptr = agent.lock();
+        FALSE_RETURN_MSG(ptr != nullptr, "DfxAgent is released");
+        ptr->instanceId_ = instanceId;
     });
 }
  
@@ -68,28 +74,34 @@ void DfxAgent::OnDfxEvent(const DfxEvent &event)
     auto ret = DfxAgent::DFX_EVENT_HANDLERS_.find(event.type);
     FALSE_RETURN(ret != DfxAgent::DFX_EVENT_HANDLERS_.end());
     FALSE_RETURN(dfxTask_ != nullptr);
-    dfxTask_->SubmitJobOnce([this, event, handler = ret->second] {
-        handler(shared_from_this(), event);
+    std::weak_ptr<DfxAgent> agent = shared_from_this();
+    dfxTask_->SubmitJobOnce([agent, event, handler = ret->second] {
+        auto ptr = agent.lock();
+        FALSE_RETURN_MSG(ptr != nullptr, "DfxAgent is released");
+        handler(ptr, event);
     });
 }
  
 void DfxAgent::ReportLagEvent(int64_t lagDuration, const std::string& eventMsg)
 {
     FALSE_RETURN(dfxTask_ != nullptr);
-    dfxTask_->SubmitJobOnce([this, lagDuration, eventMsg] {
-        FALSE_RETURN(!hasReported_);
+    std::weak_ptr<DfxAgent> agent = shared_from_this();
+    dfxTask_->SubmitJobOnce([agent, lagDuration, eventMsg] {
+        auto ptr = agent.lock();
+        FALSE_RETURN_MSG(ptr != nullptr, "DfxAgent is released");
+        FALSE_RETURN(!(ptr->hasReported_));
         std::string msg = eventMsg;
         MEDIA_LOG_W("PLAYER_LAG event reported, lagDuration=" PUBLIC_LOG_D64 ", msg=" PUBLIC_LOG_S,
             lagDuration, eventMsg.c_str());
         HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::MULTI_MEDIA,
             "PLAYER_LAG",
             OHOS::HiviewDFX::HiSysEvent::EventType::FAULT,
-            "APP_NAME", appName_,
-            "INSTANCE_ID", instanceId_,
-            "SOURCE_TYPE", static_cast<uint8_t>(sourceType_),
+            "APP_NAME", ptr->appName_,
+            "INSTANCE_ID", ptr->instanceId_,
+            "SOURCE_TYPE", static_cast<uint8_t>(ptr->sourceType_),
             "LAG_DURATION", static_cast<int32_t>(lagDuration),
             "MSG", msg);
-        hasReported_ = true;
+        ptr->hasReported_ = true;
     });
 }
 
@@ -110,8 +122,11 @@ void DfxAgent::ReportEosSeek0Event(int32_t appUid)
 void DfxAgent::ResetAgent()
 {
     FALSE_RETURN(dfxTask_ != nullptr);
-    dfxTask_->SubmitJobOnce([this] {
-        hasReported_ = false;
+    std::weak_ptr<DfxAgent> agent = shared_from_this();
+    dfxTask_->SubmitJobOnce([agent] {
+        auto ptr = agent.lock();
+        FALSE_RETURN_MSG(ptr != nullptr, "DfxAgent is released");
+        ptr->hasReported_ = false;
     });
 }
 
