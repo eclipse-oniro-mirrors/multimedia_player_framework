@@ -3224,7 +3224,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetSurface_001, TestSize.Level0)
 HWTEST_F(PlayerServerUnitTest, Player_AddSubSource_001, TestSize.Level0)
 {
     ASSERT_NE(MSERR_OK, player_->AddSubSource(SUBTITLE_SRT_FIELE, 0, 0));
-    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "AVC_Baseline@L1.2_81.0Kbps_320x240.mp4", 0, 0));
+    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "H264_AAC.mp4", 0, 0));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
     EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
