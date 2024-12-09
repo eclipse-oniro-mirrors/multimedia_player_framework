@@ -1044,7 +1044,8 @@ int32_t HiPlayerImpl::SeekToCurrentTime(int32_t mSeconds, PlayerSeekMode mode)
 int32_t HiPlayerImpl::HandleEosPlay()
 {
     Plugins::AudioRenderInfo audioRenderInfo;
-    FALSE_RETURN_V(audioRenderInfo_->GetData(Tag::AUDIO_RENDER_INFO, audioRenderInfo), MSERR_INVALID_VAL);
+    FALSE_RETURN_V(
+        audioRenderInfo_ && audioRenderInfo_->GetData(Tag::AUDIO_RENDER_INFO, audioRenderInfo), MSERR_INVALID_VAL);
     FALSE_RETURN_V(audioRenderInfo.streamUsage > AudioStandard::StreamUsage::STREAM_USAGE_INVALID &&
         audioRenderInfo.streamUsage < AudioStandard::StreamUsage::STREAM_USAGE_MAX, MSERR_INVALID_VAL);
     auto it = FOCUS_EVENT_USAGE_SET.find(static_cast<AudioStandard::StreamUsage>(audioRenderInfo.streamUsage));
