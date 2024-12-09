@@ -58,6 +58,7 @@ private:
     int32_t appUid_;
     std::shared_ptr<IAVMetadataHelperEngine> avMetadataHelperEngine_ = nullptr;
     std::mutex mutex_;
+    std::condition_variable cond_;
     std::unique_ptr<UriHelper> uriHelper_;
     TaskQueue taskQue_;
     std::shared_ptr<IMediaDataSource> dataSrc_ = nullptr;
