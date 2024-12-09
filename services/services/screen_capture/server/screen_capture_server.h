@@ -391,7 +391,7 @@ private:
     std::shared_ptr<ScreenCaptureObserverCallBack> screenCaptureObserverCb_ = nullptr;
     std::shared_ptr<ScreenCaptureCallBack> screenCaptureCb_ = nullptr;
     bool canvasRotation_ = false;
-    bool isMicrophoneOn_ = true;
+    bool isMicrophoneSwitchTurnOn_ = true;
     bool isPrivacyAuthorityEnabled_ = false;
 
     int32_t sessionId_ = 0;

@@ -921,7 +921,7 @@ int32_t ScreenCaptureServer::OnReceiveUserPrivacyAuthority(bool isAllowed)
 int32_t ScreenCaptureServer::StartAudioCapture()
 {
     int32_t ret = MSERR_UNKNOWN;
-    if (isMicrophoneOn_) {
+    if (isMicrophoneSwitchTurnOn_) {
         ret = StartStreamMicAudioCapture();
         if (ret != MSERR_OK) {
             MEDIA_LOGE("StartAudioCapture StartStreamMicAudioCapture failed");
@@ -969,7 +969,6 @@ int32_t ScreenCaptureServer::StartStreamMicAudioCapture()
         int32_t ret = micCapture->Start(appInfo_);
         if (ret != MSERR_OK) {
             MEDIA_LOGE("StartStreamMicAudioCapture failed");
-            isMicrophoneOn_ = false;
             if (screenCaptureCb_ != nullptr) {
                 screenCaptureCb_->OnStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE);
             }
@@ -1021,7 +1020,6 @@ int32_t ScreenCaptureServer::StartFileMicAudioCapture()
         int32_t ret = micCapture->Start(appInfo_);
         if (ret != MSERR_OK) {
             MEDIA_LOGE("StartFileMicAudioCapture micCapture failed");
-            isMicrophoneOn_ = false;
             if (screenCaptureCb_ != nullptr) {
                 screenCaptureCb_->OnStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE);
             }
@@ -1078,7 +1076,7 @@ int32_t ScreenCaptureServer::StartScreenCaptureFile()
         DestroyVirtualScreen();
     };
 
-    if (isMicrophoneOn_) {
+    if (isMicrophoneSwitchTurnOn_) {
         int32_t retMic = StartFileMicAudioCapture();
         if (retMic != MSERR_OK) {
             MEDIA_LOGE("StartScreenCaptureFile StartFileMicAudioCapture failed");
@@ -1761,7 +1759,7 @@ int32_t ScreenCaptureServer::StartScreenCapture(bool isPrivacyAuthorityEnabled)
     MediaTrace trace("ScreenCaptureServer::StartScreenCapture");
     std::lock_guard<std::mutex> lock(mutex_);
     startTime_ = GetCurrentMillisecond();
-    statisticalEventInfo_.enableMic = isMicrophoneOn_;
+    statisticalEventInfo_.enableMic = isMicrophoneSwitchTurnOn_;
     GetDumpFlag();
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StartScreenCapture start, "
         "isPrivacyAuthorityEnabled:%{public}s, captureState:%{public}d.",
@@ -2310,10 +2308,10 @@ int32_t ScreenCaptureServer::SetMicrophoneEnabled(bool isMicrophone)
 {
     MediaTrace trace("ScreenCaptureServer::SetMicrophoneEnabled");
     std::lock_guard<std::mutex> lock(mutex_);
-    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " SetMicrophoneEnabled isMicrophoneOn_:%{public}d, "
-        "new isMicrophone:%{public}d", FAKE_POINTER(this), isMicrophoneOn_, isMicrophone);
+    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " SetMicrophoneEnabled isMicrophoneSwitchTurnOn_:"
+        "%{public}d, new isMicrophone:%{public}d", FAKE_POINTER(this), isMicrophoneSwitchTurnOn_, isMicrophone);
     int32_t ret = MSERR_UNKNOWN;
-    isMicrophoneOn_ = isMicrophone;
+    isMicrophoneSwitchTurnOn_ = isMicrophone;
     if (isMicrophone) {
         statisticalEventInfo_.enableMic = true;
     }
@@ -2353,7 +2351,6 @@ int32_t ScreenCaptureServer::SetMicrophoneOn()
         ret = micAudioCapture_->Resume();
         if (ret != MSERR_OK) {
             MEDIA_LOGE("micAudioCapture Resume failed");
-            isMicrophoneOn_ = false;
             if (screenCaptureCb_ != nullptr) {
                 screenCaptureCb_->OnStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE);
             }
@@ -2406,7 +2403,7 @@ int32_t ScreenCaptureServer::ReStartMicForVoIPStatusSwitch()
 {
     int32_t ret = MSERR_OK;
     StopMicAudioCapture();
-    if (isMicrophoneOn_) {
+    if (isMicrophoneSwitchTurnOn_) {
         ret = StartFileMicAudioCapture();
         if (ret != MSERR_OK) {
             MEDIA_LOGE("OnVoIPStatusChanged StartFileMicAudioCapture failed, ret: %{public}d", ret);
@@ -2443,8 +2440,7 @@ int32_t ScreenCaptureServer::OnVoIPStatusChanged(bool isInVoIPCall)
 
 bool ScreenCaptureServer::GetMicWorkingState()
 {
-    MEDIA_LOGD("ScreenCaptureServer: 0x%{public}06" PRIXPTR " GetMicWorkingState isMicrophoneOn_:%{public}d",
-        FAKE_POINTER(this), isMicrophoneOn_);
+    MEDIA_LOGD("ScreenCaptureServer: 0x%{public}06" PRIXPTR " GetMicWorkingState", FAKE_POINTER(this));
     if (micAudioCapture_ != nullptr) {
         return micAudioCapture_->GetAudioCapturerState() == CAPTURER_RECORDING;
     }
