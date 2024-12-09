@@ -2532,7 +2532,6 @@ void HiPlayerImpl::NotifyAudioFirstFrame(const Event& event)
 {
     uint64_t latency = AnyCast<uint64_t>(event.param);
     MEDIA_LOG_I("Audio first frame event in latency " PUBLIC_LOG_U64, latency);
-    playStatisticalInfo_.startLatency = static_cast<int32_t>(latency);
     Format format;
     (void)format.PutLongValue(PlayerKeys::AUDIO_FIRST_FRAME, latency);
     callbackLooper_.OnInfo(INFO_TYPE_AUDIO_FIRST_FRAME, 0, format);
