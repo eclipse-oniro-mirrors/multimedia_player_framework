@@ -741,6 +741,13 @@ int32_t PlayerServerMock::SetPlayRange(int64_t start, int64_t end)
     return player_->SetPlayRange(start, end);
 }
 
+int32_t PlayerServerMock::SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
+    std::unique_lock<std::mutex> lock(mutex_);
+    return player_->SetPlayRangeWithMode(start, end, mode);
+}
+
 int32_t PlayerServerMock::SeekContinuous(int32_t mseconds)
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");

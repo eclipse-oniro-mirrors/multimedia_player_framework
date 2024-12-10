@@ -2752,6 +2752,26 @@ HWTEST_F(PlayerUnitTest, Player_Media_Error, TestSize.Level0)
 }
 
 /**
+ * @tc.name  : Test media error
+ * @tc.number: Player_Media_Error_002
+ * @tc.desc  : Test Player Media Error
+ */
+HWTEST_F(PlayerUnitTest, Player_Media_Error_002, TestSize.Level0)
+{
+    for (MediaServiceErrCode code = MSERR_IO_CANNOT_FIND_HOST; code <= MSERR_IO_UNSUPPORTTED_REQUEST;
+        code = (MediaServiceErrCode)(code + 1)) {
+        MediaServiceErrCodeTest(code);
+    }
+    MediaServiceErrCodeTest(MSERR_EXTEND_START);
+
+    for (auto code = MSERR_EXT_API14_IO_CANNOT_FIND_HOST;
+        code <= MSERR_EXT_API14_IO_UNSUPPORTTED_REQUEST; code = (MediaServiceExtErrCodeAPI9)(code + 1)) {
+        EXPECT_EQ(MSEXTERRCODE_API9_INFOS.at(code), MSExtAVErrorToString(code));
+        MediaServiceExtErrCodeAPI9Test(code);
+    }
+}
+
+/**
  * @tc.name  : Test ChangeSurface
  * @tc.number: Player_ChangeSurface_001
  * @tc.desc  : Test video player change surface in idle state
