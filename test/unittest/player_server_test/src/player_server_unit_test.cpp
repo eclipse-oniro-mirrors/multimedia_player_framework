@@ -4432,7 +4432,7 @@ HWTEST_F(PlayerServerUnitTest, Player_PrepareInReleasing_001, TestSize.Level0)
  * @tc.number: Player_Media_Error_002
  * @tc.desc  : Test Player Media Error
  */
-HWTEST_F(PlayerUnitTest, Player_Media_Error_002, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_Media_Error_002, TestSize.Level0)
 {
     for (MediaServiceErrCode code = MSERR_IO_CANNOT_FIND_HOST; code <= MSERR_IO_UNSUPPORTTED_REQUEST;
         code = (MediaServiceErrCode)(code + 1)) {
@@ -4503,11 +4503,11 @@ HWTEST_F(PlayerServerUnitTest, Player_SetPlayRangeWithMode_003, TestSize.Level0)
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
     EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    EXPECT_EQ(MSERR_OK, player_->SetPlayRangeWithMode(0, 600, SEEK_CONTINUOUS));
+    EXPECT_EQ(MSERR_OK, player_->SetPlayRangeWithMode(0, 600, SEEK_CONTINOUS));
     ASSERT_NE(MSERR_OK, player_->PrepareAsync());
     EXPECT_EQ(MSERR_INVALID_OPERATION, player_->Play());
     EXPECT_EQ(MSERR_INVALID_OPERATION, player_->Pause());
-    EXPECT_EQ(MSERR_INVALID_OPERATION, player_->SetPlayRangeWithMode(0, 600, SEEK_CONTINUOUS));
+    EXPECT_EQ(MSERR_INVALID_OPERATION, player_->SetPlayRangeWithMode(0, 600, SEEK_CONTINOUS));
 }
 
 /**
@@ -4522,7 +4522,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetPlayRangeWithMode_004, TestSize.Level0)
     ASSERT_NE(nullptr, videoSurface);
     EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
     ASSERT_NE(MSERR_OK, player_->PrepareAsync());
-    EXPECT_EQ(MSERR_OK, player_->SetPlayRangeWithMode(0, 600, SEEK_CONTINUOUS));
+    EXPECT_EQ(MSERR_OK, player_->SetPlayRangeWithMode(0, 600, SEEK_CONTINOUS));
 }
 } // namespace Media
 } // namespace OHOS
