@@ -116,7 +116,6 @@ int32_t AVMetadataHelperServer::CheckSourceByUri(const std::string &uri)
 int32_t AVMetadataHelperServer::CheckSourceByFd(int32_t fd, int64_t offset, int64_t size)
 {
     uriHelper_ = std::make_unique<UriHelper>(fd, offset, size);
-    (void)::close(fd);
     CHECK_AND_RETURN_RET_LOG(uriHelper_ != nullptr, MSERR_NO_MEMORY, "Failed to create UriHelper");
     CHECK_AND_RETURN_RET_LOG(!uriHelper_->FormattedUri().empty(),
                              MSERR_INVALID_VAL,
@@ -135,12 +134,12 @@ int32_t AVMetadataHelperServer::SetSource(int32_t fd, int64_t offset, int64_t si
     int32_t setSourceRes = MSERR_OK;
     std::atomic<bool> isInitEngineEnd = false;
 
-    auto task = std::make_shared<TaskHandler<int32_t>>([this, duplicateFd = dup(fd), offset, size,
+    auto task = std::make_shared<TaskHandler<int32_t>>([this, fd, offset, size,
                                                         usage, &isInitEngineEnd, &setSourceRes] {
         MediaTrace trace("AVMetadataHelperServer::SetSource_fd_task");
         {
             std::unique_lock<std::mutex> lock(mutex_);
-            int32_t res = CheckSourceByFd(duplicateFd, offset, size);
+            int32_t res = CheckSourceByFd(fd, offset, size);
             isInitEngineEnd = true;
             if (res != MSERR_OK) {
                 setSourceRes = res;
