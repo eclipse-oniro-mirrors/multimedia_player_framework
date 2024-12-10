@@ -41,7 +41,7 @@ public:
         } else {
             MEDIA_LOGD("UPDATE_CACHE");
             memory = ReadAVDataSrcMemoryFromParcel(parcel);
-            CHECK_AND_RETURN_RET(memory != nullptr, MSERR_INVALID_VAL);
+            CHECK_AND_RETURN_RET_LOG(memory != nullptr, MSERR_INVALID_VAL, "ReadAVDataSrcMemory failed");
             caches_ = memory;
             return MSERR_OK;
         }
@@ -85,6 +85,7 @@ int MediaDataSourceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mes
             uint32_t offset = data.ReadUint32();
             uint32_t length = data.ReadUint32();
             int64_t pos = data.ReadInt64();
+            CHECK_AND_RETURN_RET_LOG(memory != nullptr, MSERR_NO_MEMORY, "memory is nullptr");
             std::static_pointer_cast<AVDataSrcMemory>(memory)->SetOffset(offset);
             MEDIA_LOGD("offset is %{public}u", offset);
             int32_t realLen = ReadAt(memory, length, pos);
