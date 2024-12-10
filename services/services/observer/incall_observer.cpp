@@ -88,6 +88,7 @@ bool InCallObserver::OnCallStateUpdated(bool inCall)
     if (inCall) {
         for (auto iter = inCallObserverCallBacks_.begin(); iter != inCallObserverCallBacks_.end();) {
             auto callbackPtr = (*iter).lock();
+            MEDIA_LOGD("0x%{public}06" PRIXPTR "OnCallStateUpdated", FAKE_POINTER(callbackPtr.get()));
             if (callbackPtr) {
                 MEDIA_LOGI("0x%{public}06" PRIXPTR " Stop and Release CallBack", FAKE_POINTER(this));
                 ret &= callbackPtr->StopAndRelease(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_CALL);
