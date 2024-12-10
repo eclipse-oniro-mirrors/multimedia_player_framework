@@ -38,6 +38,7 @@ group("media_unit_test") {
       "unittest/observer_test:incall_observer_unit_test",
       "unittest/player_server_mem_test:player_server_mem_test",
       "unittest/player_server_test:player_server_unit_test",
+      "unittest/recorder_test:recorder_server_unit_test",
       "unittest/screen_capture_test:screen_capture_capi_unit_test",
       "unittest/screen_capture_test:screen_capture_native_unit_test",
       "unittest/screen_capture_test:screen_capture_server_function_unit_test",

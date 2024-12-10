@@ -79,7 +79,8 @@ ohos_unittest("recorder_server_unit_test") {
   include_dirs = [
     "./recorder_server_unittest/include",
     "$MEDIA_PLAYER_ROOT_DIR/test/unittest/common/include",
-    "$MEDIA_PLAYER_ROOT_DIR/frameworks/services/services/recorder/server",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/recorder/server",
+    "$MEDIA_PLAYER_ROOT_DIR/services/include"
     "$MEDIA_PLAYER_ROOT_DIR/services/services/factory",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/engine_intf",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/common",
