@@ -333,7 +333,8 @@ int32_t RecorderServerMock::RequesetBuffer(const std::string &recorderType, Vide
                 g_yuvRequestConfig.format = PIXEL_FMT_YCRCB_420_SP;
             }
             if (recorderType == PURE_ERROR) {
-                camereHDIThread_.reset(new(std::nothrow) std::thread(&RecorderServerMock::HDICreateYUVBufferError, this));
+                camereHDIThread_.reset(new (std::nothrow)
+                                           std::thread(&RecorderServerMock::HDICreateYUVBufferError, this));
             } else {
                 camereHDIThread_.reset(new(std::nothrow) std::thread(&RecorderServerMock::HDICreateYUVBuffer, this));
             }
@@ -458,7 +459,7 @@ void RecorderServerMock::HDICreateYUVBufferError()
         sptr<SyncFence> tempFence = new SyncFence(releaseFence);
         tempFence->Wait(100); // 100ms
 
-        (void)srand((int)time(0));
+        srand((int)time(0));
         color_ = color_ - 3; // 3 is the step of the pic change
 
         if (color_ <= 0) {
@@ -495,7 +496,7 @@ void RecorderServerMock::HDICreateYUVBuffer()
         char *tempBuffer = static_cast<char *>(buffer->GetVirAddr());
         (void)memset_s(tempBuffer, YUV_BUFFER_SIZE, color_, YUV_BUFFER_SIZE);
 
-        (void)srand((int)time(0));
+        srand((int)time(0));
         for (uint32_t i = 0; i < YUV_BUFFER_SIZE - 1; i += (YUV_BUFFER_SIZE - 1)) {  // 100 is the steps between noise
             tempBuffer[i] = (unsigned char)(rand() % 255); // 255 is the size of yuv, add noise
         }
