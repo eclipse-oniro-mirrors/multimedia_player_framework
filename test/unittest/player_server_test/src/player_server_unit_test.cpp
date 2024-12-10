@@ -4427,5 +4427,102 @@ HWTEST_F(PlayerServerUnitTest, Player_PrepareInReleasing_001, TestSize.Level0)
     EXPECT_NE(MSERR_OK, server_->PrepareAsync());
 }
 
+/**
+ * @tc.name  : Test media error
+ * @tc.number: Player_Media_Error_002
+ * @tc.desc  : Test Player Media Error
+ */
+HWTEST_F(PlayerServerUnitTest, Player_Media_Error_002, TestSize.Level0)
+{
+    for (MediaServiceErrCode code = MSERR_IO_CANNOT_FIND_HOST; code <= MSERR_IO_UNSUPPORTTED_REQUEST;
+        code = (MediaServiceErrCode)(code + 1)) {
+        MediaServiceErrCodeTest(code);
+    }
+    MediaServiceErrCodeTest(MSERR_EXTEND_START);
+
+    for (auto code = MSERR_EXT_API14_IO_CANNOT_FIND_HOST;
+        code <= MSERR_EXT_API14_IO_UNSUPPORTTED_REQUEST; code = (MediaServiceExtErrCodeAPI9)(code + 1)) {
+        EXPECT_EQ(MSEXTERRCODE_API9_INFOS.at(code), MSExtAVErrorToString(code));
+        MediaServiceExtErrCodeAPI9Test(code);
+    }
+}
+
+/**
+ * @tc.name  : Test SetPlayRangeWithMode
+ * @tc.number: Player_SetPlayRangeWithMode_001
+ * @tc.desc  : Test Player SetPlayRangeWithMode interface
+ */
+HWTEST_F(PlayerServerUnitTest, Player_SetPlayRangeWithMode_001, TestSize.Level0)
+{
+    int32_t duration = 0;
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->SetPlayRange(0, 600));
+    EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
+    EXPECT_EQ(MSERR_OK, player_->GetDuration(duration));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_TRUE(player_->IsPlaying());
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+    EXPECT_EQ(MSERR_OK, player_->SetPlayRangeWithMode(0, duration, SEEK_PREVIOUS_SYNC));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+}
+
+/**
+ * @tc.name  : Test SetPlayRangeWithMode
+ * @tc.number: Player_SetPlayRangeWithMode_002
+ * @tc.desc  : Test Player SetPlayRangeWithMode interface
+ */
+HWTEST_F(PlayerServerUnitTest, Player_SetPlayRangeWithMode_002, TestSize.Level0)
+{
+    int32_t duration = 0;
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
+    EXPECT_EQ(MSERR_OK, player_->GetDuration(duration));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_TRUE(player_->IsPlaying());
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+    EXPECT_EQ(MSERR_OK, player_->SetPlayRangeWithMode(0, duration, SEEK_CLOSEST_SYNC));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+}
+
+/**
+ * @tc.name  : Test SetPlayRangeWithMode
+ * @tc.number: Player_SetPlayRangeWithMode_003
+ * @tc.desc  : Test Player SetPlayRangeWithMode interface
+ */
+HWTEST_F(PlayerServerUnitTest, Player_SetPlayRangeWithMode_003, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->SetPlayRangeWithMode(0, 600, SEEK_CONTINOUS));
+    ASSERT_NE(MSERR_OK, player_->PrepareAsync());
+    EXPECT_EQ(MSERR_INVALID_OPERATION, player_->Play());
+    EXPECT_EQ(MSERR_INVALID_OPERATION, player_->Pause());
+    EXPECT_EQ(MSERR_INVALID_OPERATION, player_->SetPlayRangeWithMode(0, 600, SEEK_CONTINOUS));
+}
+
+/**
+ * @tc.name  : Test SetPlayRangeWithMode
+ * @tc.number: Player_SetPlayRangeWithMode_004
+ * @tc.desc  : Test Player SetPlayRangeWithMode interface
+ */
+HWTEST_F(PlayerServerUnitTest, Player_SetPlayRangeWithMode_004, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
+    EXPECT_EQ(MSERR_OK, player_->SetPlayRangeWithMode(0, 600, SEEK_CONTINOUS));
+}
 } // namespace Media
 } // namespace OHOS

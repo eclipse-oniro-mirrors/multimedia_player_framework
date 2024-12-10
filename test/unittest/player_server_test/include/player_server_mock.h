@@ -156,6 +156,7 @@ public:
     sptr<Surface> GetVideoSurfaceNext();
     PlayerStates GetState();
     int32_t SetPlayRange(int64_t start, int64_t end);
+    int32_t SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode);
     int32_t SeekContinuous(int32_t mseconds);
     int32_t SetMaxAmplitudeCbStatus(bool status);
     int32_t SetPlaybackStrategy(AVPlayStrategy strategy);

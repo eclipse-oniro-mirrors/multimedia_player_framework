@@ -690,6 +690,63 @@ HWTEST_F(HitranscodeUnitTest, ProcessMetaKey_014, TestSize.Level0)
 }
 
 /**
+ * @tc.name: Test SetInputFile API
+ * @tc.number  : SetInputFile_001
+ * @tc.desc: Test GetRealPath interface, set url to "file:///storage/../test.mp3".
+ * @tc.require:
+ */
+HWTEST_F(HitranscodeUnitTest, SetInputFile_001, TestSize.Level0)
+{
+    // 1. Set up the test environment
+    std::string url = "file:///storage/../test.mp3";
+    std::string realUrlPath;
+
+    // 2. Call the function to be tested
+    int32_t ret = transcoder_->SetInputFile(url);
+
+    // 3. Verify the result
+    EXPECT_EQ(ret, MSERR_FILE_ACCESS_FAILED);
+}
+
+/**
+ * @tc.name: Test SetInputFile API
+ * @tc.number  : SetInputFile_002
+ * @tc.desc: Test GetRealPath interface, set url to "file".
+ * @tc.require:
+ */
+HWTEST_F(HitranscodeUnitTest, SetInputFile_002, TestSize.Level0)
+{
+    // 1. Set up the test environment
+    std::string url = "file";
+    std::string realUrlPath;
+
+    // 2. Call the function to be tested
+    int32_t ret = transcoder_->SetInputFile(url);
+
+    // 3. Verify the result
+    EXPECT_EQ(ret, MSERR_OPEN_FILE_FAILED);
+}
+
+/**
+ * @tc.name: Test SetInputFile API
+ * @tc.number  : SetInputFile_003
+ * @tc.desc: Test GetRealPath interface, set url to "file://".
+ * @tc.require:
+ */
+HWTEST_F(HitranscodeUnitTest, SetInputFile_003, TestSize.Level0)
+{
+    // 1. Set up the test environment
+    std::string url = "file://";
+    std::string realUrlPath;
+
+    // 2. Call the function to be tested
+    int32_t ret = transcoder_->SetInputFile(url);
+
+    // 3. Verify the result
+    EXPECT_EQ(ret, MSERR_OPEN_FILE_FAILED);
+}
+
+/**
 * @tc.name    : Test ConfigureVideoEncoderFormat API
 * @tc.number  : ConfigureVideoEncoderFormat_001
 * @tc.desc    : Test ConfigureVideoEncoderFormat interface, set VideoCodecFormat::H264.
