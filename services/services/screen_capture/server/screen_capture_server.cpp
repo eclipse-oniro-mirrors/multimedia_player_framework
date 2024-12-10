@@ -1011,7 +1011,7 @@ int32_t ScreenCaptureServer::StartStreamInnerAudioCapture()
     if (captureConfig_.audioInfo.innerCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_VALID) {
         MediaTrace trace("ScreenCaptureServer::StartAudioCaptureInner");
         innerCapture = std::make_shared<AudioCapturerWrapper>(captureConfig_.audioInfo.innerCapInfo, screenCaptureCb_,
-            std::string(GenerateThreadNameByPrefix("OS_StreamInnerAudioCap")), contentFilter_);
+            std::string(GenerateThreadNameByPrefix("OS_SInnAd")), contentFilter_);
         int32_t ret = innerCapture->Start(appInfo_);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartAudioCapture innerCapture failed");
     }
@@ -1030,7 +1030,7 @@ int32_t ScreenCaptureServer::StartStreamMicAudioCapture()
         MediaTrace trace("ScreenCaptureServer::StartAudioCaptureMic");
         ScreenCaptureContentFilter contentFilterMic;
         micCapture = std::make_shared<AudioCapturerWrapper>(captureConfig_.audioInfo.micCapInfo, screenCaptureCb_,
-            std::string(GenerateThreadNameByPrefix("OS_StreamMicAudioCap")), contentFilterMic);
+            std::string(GenerateThreadNameByPrefix("OS_SMicAd")), contentFilterMic);
         int32_t ret = micCapture->Start(appInfo_);
         if (ret != MSERR_OK) {
             MEDIA_LOGE("StartStreamMicAudioCapture failed");
@@ -1054,7 +1054,7 @@ int32_t ScreenCaptureServer::StartFileInnerAudioCapture()
     if (captureConfig_.audioInfo.innerCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_VALID) {
         MediaTrace trace("ScreenCaptureServer::StartFileInnerAudioCaptureInner");
         innerCapture = std::make_shared<AudioCapturerWrapper>(captureConfig_.audioInfo.innerCapInfo, screenCaptureCb_,
-            std::string(GenerateThreadNameByPrefix("OS_FileInnerAudioCap")), contentFilter_);
+            std::string(GenerateThreadNameByPrefix("OS_FInnAd")), contentFilter_);
         int32_t ret = innerCapture->Start(appInfo_);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartFileInnerAudioCapture failed");
         if (audioSource_ && audioSource_->GetSpeakerAliveStatus() && !audioSource_->GetIsInVoIPCall() &&
@@ -1078,7 +1078,7 @@ int32_t ScreenCaptureServer::StartFileMicAudioCapture()
         MediaTrace trace("ScreenCaptureServer::StartFileMicAudioCaptureInner");
         ScreenCaptureContentFilter contentFilterMic;
         micCapture = std::make_shared<AudioCapturerWrapper>(captureConfig_.audioInfo.micCapInfo, screenCaptureCb_,
-            std::string(GenerateThreadNameByPrefix("OS_FileMicAudioCap")), contentFilterMic);
+            std::string(GenerateThreadNameByPrefix("OS_FMicAd")), contentFilterMic);
         if (audioSource_) {
             micCapture->SetIsInVoIPCall(audioSource_->GetIsInVoIPCall());
         }
