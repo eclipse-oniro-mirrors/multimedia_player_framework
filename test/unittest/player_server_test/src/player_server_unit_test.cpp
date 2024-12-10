@@ -4459,13 +4459,13 @@ HWTEST_F(PlayerServerUnitTest, Player_SetPlayRangeWithMode_001, TestSize.Level0)
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
     EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    ASSERT_NE(MSERR_OK, player_->SetPlayRange(0, 600));
+    EXPECT_EQ(MSERR_OK, player_->SetPlayRange(0, 600));
     EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
     EXPECT_EQ(MSERR_OK, player_->GetDuration(duration));
     EXPECT_EQ(MSERR_OK, player_->Play());
     EXPECT_TRUE(player_->IsPlaying());
     EXPECT_EQ(MSERR_OK, player_->Pause());
-    ASSERT_NE(MSERR_OK, player_->SetPlayRangeWithMode(0, duration, SEEK_PREVIOUS_SYNC));
+    EXPECT_EQ(MSERR_OK, player_->SetPlayRangeWithMode(0, duration, SEEK_PREVIOUS_SYNC));
     EXPECT_EQ(MSERR_OK, player_->Play());
     EXPECT_EQ(MSERR_OK, player_->Pause());
 }
@@ -4487,7 +4487,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetPlayRangeWithMode_002, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->Play());
     EXPECT_TRUE(player_->IsPlaying());
     EXPECT_EQ(MSERR_OK, player_->Pause());
-    ASSERT_NE(MSERR_OK, player_->SetPlayRangeWithMode(0, duration, SEEK_CLOSEST_SYNC));
+    EXPECT_EQ(MSERR_OK, player_->SetPlayRangeWithMode(0, duration, SEEK_CLOSEST_SYNC));
     EXPECT_EQ(MSERR_OK, player_->Play());
     EXPECT_EQ(MSERR_OK, player_->Pause());
 }
@@ -4521,7 +4521,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetPlayRangeWithMode_004, TestSize.Level0)
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
     EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    ASSERT_NE(MSERR_OK, player_->PrepareAsync());
+    EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
     EXPECT_EQ(MSERR_OK, player_->SetPlayRangeWithMode(0, 600, SEEK_CONTINOUS));
 }
 } // namespace Media
