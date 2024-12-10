@@ -76,33 +76,18 @@ int32_t AVMetadataHelperServer::SetSource(const std::string &uri, int32_t usage)
         MediaTrace trace("AVMetadataHelperServer::SetSource_uri_task");
         {
             std::unique_lock<std::mutex> lock(mutex_);
-            uriHelper_ = std::make_unique<UriHelper>(uri);
-            if (uriHelper_->FormattedUri().empty()) {
-                MEDIA_LOGE("Failed to construct formatted uri");
-                setSourceRes = static_cast<int32_t>(MSERR_INVALID_VAL);
-                isInitEngineEnd = true;
-                ipcReturnCond_.notify_all();
-                return static_cast<int32_t>(MSERR_INVALID_VAL);
-            }
-            if (!uriHelper_->AccessCheck(UriHelper::URI_READ)) {
-                MEDIA_LOGE("Failed to read the file");
-                setSourceRes = static_cast<int32_t>(MSERR_INVALID_VAL);
-                isInitEngineEnd = true;
-                ipcReturnCond_.notify_all();
-                return static_cast<int32_t>(MSERR_INVALID_VAL);
-            }
-            int32_t res = InitEngine(uriHelper_->FormattedUri());
+            int32_t res = CheckSourceByUri(uri);
+            isInitEngineEnd = true;
             if (res != MSERR_OK) {
                 setSourceRes = res;
-                isInitEngineEnd = true;
                 ipcReturnCond_.notify_all();
                 return res;
             }
-            isInitEngineEnd = true;
             ipcReturnCond_.notify_all();
         }
         CHECK_AND_RETURN_RET_LOG(avMetadataHelperEngine_ != nullptr,
-            static_cast<int32_t>(MSERR_CREATE_AVMETADATAHELPER_ENGINE_FAILED), "Failed to create avmetadata engine");
+            static_cast<int32_t>(MSERR_CREATE_AVMETADATAHELPER_ENGINE_FAILED),
+            "Failed to create avmetadatahelper engine");
         int32_t ret = avMetadataHelperEngine_->SetSource(uriHelper_->FormattedUri(), usage);
         currState_ = ret == MSERR_OK ? HELPER_PREPARED : HELPER_STATE_ERROR;
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "0x%{public}06" PRIXPTR " SetSource failed", FAKE_POINTER(this));
@@ -113,6 +98,33 @@ int32_t AVMetadataHelperServer::SetSource(const std::string &uri, int32_t usage)
         return isInitEngineEnd.load();
     });
     return setSourceRes;
+}
+
+int32_t AVMetadataHelperServer::CheckSourceByUri(const std::string &uri)
+{
+    uriHelper_ = std::make_unique<UriHelper>(uri);
+    CHECK_AND_RETURN_RET_LOG(uriHelper_ != nullptr, MSERR_NO_MEMORY, "Failed to create UriHelper");
+    CHECK_AND_RETURN_RET_LOG(!uriHelper_->FormattedUri().empty(),
+                             MSERR_INVALID_VAL,
+                             "Failed to construct formatted uri");
+    CHECK_AND_RETURN_RET_LOG(uriHelper_->AccessCheck(UriHelper::URI_READ),
+                             MSERR_INVALID_VAL,
+                             "Failed to read the file");
+    return InitEngine(uriHelper_->FormattedUri());
+}
+
+int32_t AVMetadataHelperServer::CheckSourceByFd(int32_t fd, int64_t offset, int64_t size)
+{
+    uriHelper_ = std::make_unique<UriHelper>(fd, offset, size);
+    (void)::close(fd);
+    CHECK_AND_RETURN_RET_LOG(uriHelper_ != nullptr, MSERR_NO_MEMORY, "Failed to create UriHelper");
+    CHECK_AND_RETURN_RET_LOG(!uriHelper_->FormattedUri().empty(),
+                             MSERR_INVALID_VAL,
+                             "Failed to construct formatted uri");
+    CHECK_AND_RETURN_RET_LOG(uriHelper_->AccessCheck(UriHelper::URI_READ),
+                             MSERR_INVALID_VAL,
+                             "Failed to read the file");
+    return InitEngine(uriHelper_->FormattedUri());
 }
 
 int32_t AVMetadataHelperServer::SetSource(int32_t fd, int64_t offset, int64_t size, int32_t usage)
@@ -128,34 +140,18 @@ int32_t AVMetadataHelperServer::SetSource(int32_t fd, int64_t offset, int64_t si
         MediaTrace trace("AVMetadataHelperServer::SetSource_fd_task");
         {
             std::unique_lock<std::mutex> lock(mutex_);
-            uriHelper_ = std::make_unique<UriHelper>(duplicateFd, offset, size);
-            (void)::close(duplicateFd);
-            if (uriHelper_->FormattedUri().empty()) {
-                MEDIA_LOGE("Failed to construct formatted uri");
-                setSourceRes = static_cast<int32_t>(MSERR_INVALID_VAL);
-                isInitEngineEnd = true;
-                ipcReturnCond_.notify_all();
-                return static_cast<int32_t>(MSERR_INVALID_VAL);
-            }
-            if (!uriHelper_->AccessCheck(UriHelper::URI_READ)) {
-                MEDIA_LOGE("Failed to read the file");
-                setSourceRes = static_cast<int32_t>(MSERR_INVALID_VAL);
-                isInitEngineEnd = true;
-                ipcReturnCond_.notify_all();
-                return static_cast<int32_t>(MSERR_INVALID_VAL);
-            }
-            int32_t res = InitEngine(uriHelper_->FormattedUri());
+            int32_t res = CheckSourceByFd(duplicateFd, offset, size);
+            isInitEngineEnd = true;
             if (res != MSERR_OK) {
                 setSourceRes = res;
-                isInitEngineEnd = true;
                 ipcReturnCond_.notify_all();
                 return res;
             }
-            isInitEngineEnd = true;
             ipcReturnCond_.notify_all();
         }
         CHECK_AND_RETURN_RET_LOG(avMetadataHelperEngine_ != nullptr,
-            static_cast<int32_t>(MSERR_CREATE_AVMETADATAHELPER_ENGINE_FAILED), "Failed to create avmetadata engine");
+            static_cast<int32_t>(MSERR_CREATE_AVMETADATAHELPER_ENGINE_FAILED),
+            "Failed to create avmetadatahelper engine");
 
         int32_t ret = avMetadataHelperEngine_->SetSource(uriHelper_->FormattedUri(), usage);
         currState_ = ret == MSERR_OK ? HELPER_PREPARED : HELPER_STATE_ERROR;
