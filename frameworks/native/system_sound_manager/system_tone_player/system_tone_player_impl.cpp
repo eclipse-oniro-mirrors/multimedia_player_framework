@@ -265,11 +265,10 @@ void SystemTonePlayerImpl::GetNewHapticUriForAudioUri(const std::string &audioUr
         currAudioUri = systemSoundMgr_.GetDefaultSystemToneUri(SYSTEM_TONE_TYPE_NOTIFICATION);
         hapticUri = GetNewHapticUriForAudioUri(currAudioUri, RINGTONE_PATH, STANDARD_HAPTICS_PATH);
         if (hapticUri.empty()) {
-            MEDIA_LOGW("Failed to find the default json file.");
+            MEDIA_LOGW("Failed to find the default json file. Play system tone without vibration.");
+            isHapticUriEmpty_ = true;
             return;
         }
-        isHapticUriEmpty_ = true;
-        MEDIA_LOGW("haptic uri is empty. Play system tone without vibration");
     }
     supportedHapticsFeatures_.push_back(ToneHapticsFeature::STANDARD);
     hapticsUriMap[ToneHapticsFeature::STANDARD] = hapticUri;
@@ -294,11 +293,10 @@ void SystemTonePlayerImpl::GetHapticUriForAudioUri(const std::string &audioUri,
         currAudioUri = systemSoundMgr_.GetDefaultSystemToneUri(SYSTEM_TONE_TYPE_NOTIFICATION);
         hapticUri = FindHapticUriByAudioUri(currAudioUri, ToneHapticsFeature::STANDARD, isSupported);
         if (!isSupported) {
-            MEDIA_LOGW("Failed to find the default json file.");
+            MEDIA_LOGW("Failed to find the default json file. Play system tone without vibration.");
+            isHapticUriEmpty_ = true;
             return;
         }
-        isHapticUriEmpty_ = true;
-        MEDIA_LOGW("haptic uri is empty. Play system tone without vibration");
     }
     supportedHapticsFeatures_.push_back(ToneHapticsFeature::STANDARD);
     hapticsUriMap[ToneHapticsFeature::STANDARD] = hapticUri;
