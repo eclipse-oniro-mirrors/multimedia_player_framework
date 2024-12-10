@@ -93,10 +93,12 @@ int32_t AVMetadataHelperServer::SetSource(const std::string &uri, int32_t usage)
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "0x%{public}06" PRIXPTR " SetSource failed", FAKE_POINTER(this));
         return ret;
     });
+    CHECK_AND_RETURN_RET_LOG(task != nullptr, MSERR_NO_MEMORY, "Failed to create task");
     taskQue_.EnqueueTask(task);
-    ipcReturnCond_.wait(lock, [&isInitEngineEnd] {
-        return isInitEngineEnd.load();
+    ipcReturnCond_.wait(lock, [this, &isInitEngineEnd] {
+        return isInitEngineEnd.load() || isInterrupted_.load();
     });
+    CHECK_AND_RETURN_RET_LOG(isInterrupted_.load() == false, MSERR_INVALID_OPERATION, "SetSource interrupted");
     return setSourceRes;
 }
 
@@ -157,10 +159,12 @@ int32_t AVMetadataHelperServer::SetSource(int32_t fd, int64_t offset, int64_t si
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "0x%{public}06" PRIXPTR " SetSource failed", FAKE_POINTER(this));
         return ret;
     });
+    CHECK_AND_RETURN_RET_LOG(task != nullptr, MSERR_NO_MEMORY, "Failed to create task");
     taskQue_.EnqueueTask(task);
-    ipcReturnCond_.wait(lock, [&isInitEngineEnd] {
-        return isInitEngineEnd.load();
+    ipcReturnCond_.wait(lock, [this, &isInitEngineEnd] {
+        return isInitEngineEnd.load() || isInterrupted_.load();
     });
+    CHECK_AND_RETURN_RET_LOG(isInterrupted_.load() == false, MSERR_INVALID_OPERATION, "SetSource interrupted");
     return setSourceRes;
 }
 
@@ -202,10 +206,12 @@ int32_t AVMetadataHelperServer::SetSource(const std::shared_ptr<IMediaDataSource
         }
         return ret;
     });
+    CHECK_AND_RETURN_RET_LOG(task != nullptr, MSERR_NO_MEMORY, "Failed to create task");
     taskQue_.EnqueueTask(task);
-    ipcReturnCond_.wait(lock, [&isInitEngineEnd] {
-        return isInitEngineEnd.load();
+    ipcReturnCond_.wait(lock, [this, &isInitEngineEnd] {
+        return isInitEngineEnd.load() || isInterrupted_.load();
     });
+    CHECK_AND_RETURN_RET_LOG(isInterrupted_.load() == false, MSERR_INVALID_OPERATION, "SetSource interrupted");
     return setSourceRes;
 }
 
@@ -361,6 +367,11 @@ void AVMetadataHelperServer::Release()
         {
             std::lock_guard<std::mutex> lockCb(mutexCb_);
             helperCb_ = nullptr;
+        }
+        {
+            std::unique_lock<std::mutex> lock(mutex_);
+            isInterrupted_ = true;
+            ipcReturnCond_.notify_all();
         }
     });
     (void)taskQue_.EnqueueTask(task, true);
