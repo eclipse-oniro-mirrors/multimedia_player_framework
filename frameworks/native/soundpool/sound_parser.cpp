@@ -67,7 +67,6 @@ int32_t SoundParser::DoParser()
     MediaTrace trace("SoundParser::DoParser");
     MEDIA_LOGI("SoundParser::DoParser start, soundID:%{public}d", soundID_);
     std::unique_lock<ffrt::mutex> lock(soundParserLock_);
-    isParsing_.store(true);
     CHECK_AND_RETURN_RET_LOG(source_ != nullptr, MSERR_INVALID_VAL, "DoParser source_ is nullptr");
     CHECK_AND_RETURN_RET_LOG(demuxer_ != nullptr, MSERR_INVALID_VAL, "DoParser demuxer_ is nullptr");
     int32_t result = MSERR_OK;
@@ -196,18 +195,29 @@ int32_t SoundParser::Release()
 {
     MediaTrace trace("SoundParser::Release");
     MEDIA_LOGI("SoundParser::Release start, soundID:%{public}d", soundID_);
-    std::unique_lock<ffrt::mutex> lock(soundParserLock_);
-    isParsing_.store(false);
     int32_t ret = MSERR_OK;
-    if (soundParserListener_ != nullptr) soundParserListener_.reset();
-    if (audioDecCb_ != nullptr) {
-        ret = audioDecCb_->Release();
-        audioDecCb_.reset();
+    std::shared_ptr<SoundDecoderCallback> audioDecCbRelease;
+    {
+        std::unique_lock<ffrt::mutex> lock(soundParserLock_);
+        if (soundParserListener_ != nullptr) soundParserListener_.reset();
+        audioDecCbRelease = std::move(audioDecCb_);
+        audioDecCb_ = nullptr;
     }
-    if (audioDec_ != nullptr) {
-        ret = audioDec_->Release();
-        audioDec_.reset();
+    if (audioDecCbRelease != nullptr) {
+        ret = audioDecCbRelease->Release();
+        audioDecCbRelease.reset();
     }
+    std::shared_ptr<MediaAVCodec::AVCodecAudioDecoder> audioDecRelease;
+    {
+        std::unique_lock<ffrt::mutex> lock(soundParserLock_);
+        audioDecRelease = std::move(audioDec_);
+        audioDec_ = nullptr;
+    }
+    if (audioDecRelease != nullptr) {
+        ret = audioDecRelease->Release();
+        audioDecRelease.reset();
+    }
+    std::unique_lock<ffrt::mutex> lock(soundParserLock_);
     if (demuxer_ != nullptr) demuxer_.reset();
     if (source_ != nullptr) source_.reset();
     if (callback_ != nullptr) callback_.reset();
@@ -388,5 +398,44 @@ int32_t SoundDecoderCallback::Release()
     if (callback_ != nullptr) callback_.reset();
     return ret;
 }
+
+void SoundParser::SoundParserListener::OnSoundDecodeCompleted(
+    const std::deque<std::shared_ptr<AudioBufferEntry>> &availableAudioBuffers)
+{
+    if (std::shared_ptr<SoundParser> soundPaser = soundParserInner_.lock()) {
+        std::unique_lock<ffrt::mutex> lock(soundPaser->soundParserLock_);
+        soundData_ = availableAudioBuffers;
+        isSoundParserCompleted_.store(true);
+    }
+}
+
+void SoundParser::SoundParserListener::SetSoundBufferTotalSize(const size_t soundBufferTotalSize)
+{
+    if (std::shared_ptr<SoundParser> soundPaser = soundParserInner_.lock()) {
+        std::unique_lock<ffrt::mutex> lock(soundPaser->soundParserLock_);
+        soundBufferTotalSize_ = soundBufferTotalSize;
+    }
+}
+
+int32_t SoundParser::SoundParserListener::GetSoundData(
+    std::deque<std::shared_ptr<AudioBufferEntry>> &soundData) const
+{
+    if (std::shared_ptr<SoundParser> soundPaser = soundParserInner_.lock()) {
+        std::unique_lock<ffrt::mutex> lock(soundPaser->soundParserLock_);
+        soundData = soundData_;
+    }
+    return MSERR_OK;
+}
+
+size_t SoundParser::SoundParserListener::GetSoundDataTotalSize() const
+{
+    return soundBufferTotalSize_;
+}
+
+bool SoundParser::SoundParserListener::IsSoundParserCompleted() const
+{
+    return isSoundParserCompleted_.load();
+}
+
 } // namespace Media
 } // namespace OHOS
