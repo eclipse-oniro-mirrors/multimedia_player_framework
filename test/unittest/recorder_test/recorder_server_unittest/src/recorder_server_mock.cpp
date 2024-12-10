@@ -96,7 +96,7 @@ int32_t RecorderCallbackTest::GetErrorCode()
 
 bool RecorderServerMock::CreateRecorder()
 {
-    std::share_ptr<IRecorderService> tempServer_ = RecorderServer::Create();
+    std::shared_ptr<IRecorderService> tempServer_ = RecorderServer::Create();
     recorder_ = std::static_pointer_cast<OHOS::Media::RecorderServer>(tempServer_);
     return recorder_ != nullptr;
 }

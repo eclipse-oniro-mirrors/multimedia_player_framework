@@ -93,7 +93,7 @@ void RecorderServerUnitTest::TearDownTestCase(void) {}
 
 void RecorderServerUnitTest::SetUp(void)
 {
-    recorderServer_ = std::make_shared<RecorderMock>();
+    recorderServer_ = std::make_shared<RecorderServerMock>();
     ASSERT_NE(nullptr, recorderServer_);
     ASSERT_TRUE(recorderServer_->CreateRecorder());
 }

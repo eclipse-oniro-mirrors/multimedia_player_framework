@@ -99,18 +99,18 @@ ohos_unittest("recorder_server_unit_test") {
   ]
 
   if (player_framework_support_recorder) {
-    sources = [ 
+    sources = [
       "./recorder_server_unittest/src/recorder_server_mock.cpp",
       "./recorder_server_unittest/src/recorder_server_unit_test.cpp"
     ]
   }
 
-  public_deps = [ 
+  public_deps = [
     "$MEDIA_PLAYER_ROOT_DIR/services/services:media_service",
     "$MEDIA_PLAYER_ROOT_DIR/services/utils:media_service_utils",
     "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native:media_client",
   ]
- 
+
   external_deps = [
     "ability_base:base",
     "ability_base:want",
