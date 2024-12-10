@@ -67,66 +67,10 @@ void ScreenCaptureServerUnittestCallbackMock::Stop()
 HWTEST_F(ScreenCaptureServerFunctionTest, ScreenCaptureRecorder_001, TestSize.Level2)
 {
     std::shared_ptr<ScreenCaptureServer> screenCaptureServerInner;
-    std::shared_ptr<IScreenCaptureService> tempServer_ = ScreenCaptureServer::Create();
-    screenCaptureServerInner = std::static_pointer_cast<ScreenCaptureServer>(tempServer_);
+    std::shared_ptr<IScreenCaptureService> tempServer = ScreenCaptureServer::Create();
+    screenCaptureServerInner = std::static_pointer_cast<ScreenCaptureServer>(tempServer);
     RecorderInfo recorderInfo;
     int outputFd = open("/data/test/media/screen_capture_recorder_001.mp4", O_RDWR);
-    recorderInfo.url = "fd://" + std::to_string(outputFd);
-    recorderInfo.fileFormat = "mp4";
-    SetValidConfigFile(recorderInfo);
-    screenCaptureServerInner->SetScreenCaptureCallback(nullptr);
-    screenCaptureServerInner->SetCaptureMode(config_.captureMode);
-    screenCaptureServerInner->SetDataType(config_.dataType);
-    screenCaptureServerInner->SetRecorderInfo(config_.recorderInfo);
-    screenCaptureServerInner->SetOutputFile(outputFd);
-    screenCaptureServerInner->InitAudioEncInfo(config_.audioInfo.audioEncInfo);
-    screenCaptureServerInner->InitAudioCap(config_.audioInfo.micCapInfo);
-    screenCaptureServerInner->InitAudioCap(config_.audioInfo.innerCapInfo);
-    screenCaptureServerInner->InitVideoEncInfo(config_.videoInfo.videoEncInfo);
-    screenCaptureServerInner->InitVideoCap(config_.videoInfo.videoCapInfo);
-    int32_t ret = screenCaptureServerInner->StartScreenCapture(false);
-    ASSERT_EQ(ret, MSERR_OK);
-    sleep(RECORDER_TIME);
-    screenCaptureServerInner->StopScreenCapture();
-    screenCaptureServerInner->Release();
-    close(outputFd);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, ScreenCaptureRecorder_002, TestSize.Level2)
-{
-    std::shared_ptr<ScreenCaptureServer> screenCaptureServerInner;
-    std::shared_ptr<IScreenCaptureService> tempServer_ = ScreenCaptureServer::Create();
-    screenCaptureServerInner = std::static_pointer_cast<ScreenCaptureServer>(tempServer_);
-    RecorderInfo recorderInfo;
-    int outputFd = open("/data/test/media/screen_capture_recorder_002.mp4", O_RDWR);
-    recorderInfo.url = "fd://" + std::to_string(outputFd);
-    recorderInfo.fileFormat = "mp4";
-    SetValidConfigFile(recorderInfo);
-    screenCaptureServerInner->SetScreenCaptureCallback(nullptr);
-    screenCaptureServerInner->SetCaptureMode(config_.captureMode);
-    screenCaptureServerInner->SetDataType(config_.dataType);
-    screenCaptureServerInner->SetRecorderInfo(config_.recorderInfo);
-    screenCaptureServerInner->SetOutputFile(outputFd);
-    screenCaptureServerInner->InitAudioEncInfo(config_.audioInfo.audioEncInfo);
-    screenCaptureServerInner->InitAudioCap(config_.audioInfo.micCapInfo);
-    screenCaptureServerInner->InitAudioCap(config_.audioInfo.innerCapInfo);
-    screenCaptureServerInner->InitVideoEncInfo(config_.videoInfo.videoEncInfo);
-    screenCaptureServerInner->InitVideoCap(config_.videoInfo.videoCapInfo);
-    int32_t ret = screenCaptureServerInner->StartScreenCapture(true);
-    ASSERT_EQ(ret, MSERR_OK);
-    sleep(RECORDER_TIME);
-    screenCaptureServerInner->StopScreenCapture();
-    screenCaptureServerInner->Release();
-    close(outputFd);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, ScreenCaptureRecorder_003, TestSize.Level2)
-{
-    std::shared_ptr<ScreenCaptureServer> screenCaptureServerInner;
-    std::shared_ptr<IScreenCaptureService> tempServer_ = ScreenCaptureServer::Create();
-    screenCaptureServerInner = std::static_pointer_cast<ScreenCaptureServer>(tempServer_);
-    RecorderInfo recorderInfo;
-    int outputFd = open("/data/test/media/screen_capture_recorder_003.mp4", O_RDWR);
     recorderInfo.url = "fd://" + std::to_string(outputFd);
     recorderInfo.fileFormat = "mp4";
     SetValidConfigFile(recorderInfo);
@@ -151,11 +95,67 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ScreenCaptureRecorder_003, TestSize.Le
     close(outputFd);
 }
 
+HWTEST_F(ScreenCaptureServerFunctionTest, ScreenCaptureRecorder_002, TestSize.Level2)
+{
+    std::shared_ptr<ScreenCaptureServer> screenCaptureServerInner;
+    std::shared_ptr<IScreenCaptureService> tempServer = ScreenCaptureServer::Create();
+    screenCaptureServerInner = std::static_pointer_cast<ScreenCaptureServer>(tempServer);
+    RecorderInfo recorderInfo;
+    int outputFd = open("/data/test/media/screen_capture_recorder_002.mp4", O_RDWR);
+    recorderInfo.url = "fd://" + std::to_string(outputFd);
+    recorderInfo.fileFormat = "mp4";
+    SetValidConfigFile(recorderInfo);
+    screenCaptureServerInner->SetScreenCaptureCallback(nullptr);
+    screenCaptureServerInner->SetCaptureMode(config_.captureMode);
+    screenCaptureServerInner->SetDataType(config_.dataType);
+    screenCaptureServerInner->SetRecorderInfo(config_.recorderInfo);
+    screenCaptureServerInner->SetOutputFile(outputFd);
+    screenCaptureServerInner->InitAudioEncInfo(config_.audioInfo.audioEncInfo);
+    screenCaptureServerInner->InitAudioCap(config_.audioInfo.micCapInfo);
+    screenCaptureServerInner->InitAudioCap(config_.audioInfo.innerCapInfo);
+    screenCaptureServerInner->InitVideoEncInfo(config_.videoInfo.videoEncInfo);
+    screenCaptureServerInner->InitVideoCap(config_.videoInfo.videoCapInfo);
+    int32_t ret = screenCaptureServerInner->StartScreenCapture(false);
+    ASSERT_EQ(ret, MSERR_OK);
+    sleep(RECORDER_TIME);
+    screenCaptureServerInner->StopScreenCapture();
+    screenCaptureServerInner->Release();
+    close(outputFd);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, ScreenCaptureRecorder_003, TestSize.Level2)
+{
+    std::shared_ptr<ScreenCaptureServer> screenCaptureServerInner;
+    std::shared_ptr<IScreenCaptureService> tempServer = ScreenCaptureServer::Create();
+    screenCaptureServerInner = std::static_pointer_cast<ScreenCaptureServer>(tempServer);
+    RecorderInfo recorderInfo;
+    int outputFd = open("/data/test/media/screen_capture_recorder_003.mp4", O_RDWR);
+    recorderInfo.url = "fd://" + std::to_string(outputFd);
+    recorderInfo.fileFormat = "mp4";
+    SetValidConfigFile(recorderInfo);
+    screenCaptureServerInner->SetScreenCaptureCallback(nullptr);
+    screenCaptureServerInner->SetCaptureMode(config_.captureMode);
+    screenCaptureServerInner->SetDataType(config_.dataType);
+    screenCaptureServerInner->SetRecorderInfo(config_.recorderInfo);
+    screenCaptureServerInner->SetOutputFile(outputFd);
+    screenCaptureServerInner->InitAudioEncInfo(config_.audioInfo.audioEncInfo);
+    screenCaptureServerInner->InitAudioCap(config_.audioInfo.micCapInfo);
+    screenCaptureServerInner->InitAudioCap(config_.audioInfo.innerCapInfo);
+    screenCaptureServerInner->InitVideoEncInfo(config_.videoInfo.videoEncInfo);
+    screenCaptureServerInner->InitVideoCap(config_.videoInfo.videoCapInfo);
+    int32_t ret = screenCaptureServerInner->StartScreenCapture(true);
+    ASSERT_EQ(ret, MSERR_OK);
+    sleep(RECORDER_TIME);
+    screenCaptureServerInner->StopScreenCapture();
+    screenCaptureServerInner->Release();
+    close(outputFd);
+}
+
 HWTEST_F(ScreenCaptureServerFunctionTest, ScreenCaptureStream_001, TestSize.Level2)
 {
     std::shared_ptr<ScreenCaptureServer> screenCaptureServerInner;
-    std::shared_ptr<IScreenCaptureService> tempServer_ = ScreenCaptureServer::Create();
-    screenCaptureServerInner = std::static_pointer_cast<ScreenCaptureServer>(tempServer_);
+    std::shared_ptr<IScreenCaptureService> tempServer = ScreenCaptureServer::Create();
+    screenCaptureServerInner = std::static_pointer_cast<ScreenCaptureServer>(tempServer);
     RecorderInfo recorderInfo{};
     SetValidConfigFile(recorderInfo);
     config_.dataType = DataType::ORIGINAL_STREAM;
