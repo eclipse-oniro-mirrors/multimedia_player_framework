@@ -54,8 +54,7 @@ private:
     void NotifyErrorCallback(int32_t code, const std::string msg);
     void NotifyInfoCallback(HelperOnInfoType type, int32_t extra);
     int32_t InitEngine(const std::string &uri);
-    int32_t CheckSourceByUri(const std::string &uri);
-    int32_t CheckSourceByFd(int32_t fd, int64_t offset, int64_t size);
+    int32_t CheckSourceByUriHelper();
 
     int32_t appUid_;
     std::shared_ptr<IAVMetadataHelperEngine> avMetadataHelperEngine_ = nullptr;
