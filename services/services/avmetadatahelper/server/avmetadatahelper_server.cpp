@@ -76,7 +76,8 @@ int32_t AVMetadataHelperServer::SetSource(const std::string &uri, int32_t usage)
         MediaTrace trace("AVMetadataHelperServer::SetSource_uri_task");
         {
             std::unique_lock<std::mutex> lock(mutex_);
-            int32_t res = CheckSourceByUri(uri);
+            uriHelper_ = std::make_unique<UriHelper>(uri);
+            int32_t res = CheckSourceByUriHelper();
             isInitEngineEnd = true;
             if (res != MSERR_OK) {
                 setSourceRes = res;
@@ -102,22 +103,8 @@ int32_t AVMetadataHelperServer::SetSource(const std::string &uri, int32_t usage)
     return setSourceRes;
 }
 
-int32_t AVMetadataHelperServer::CheckSourceByUri(const std::string &uri)
+int32_t AVMetadataHelperServer::CheckSourceByUriHelper()
 {
-    uriHelper_ = std::make_unique<UriHelper>(uri);
-    CHECK_AND_RETURN_RET_LOG(uriHelper_ != nullptr, MSERR_NO_MEMORY, "Failed to create UriHelper");
-    CHECK_AND_RETURN_RET_LOG(!uriHelper_->FormattedUri().empty(),
-                             MSERR_INVALID_VAL,
-                             "Failed to construct formatted uri");
-    CHECK_AND_RETURN_RET_LOG(uriHelper_->AccessCheck(UriHelper::URI_READ),
-                             MSERR_INVALID_VAL,
-                             "Failed to read the file");
-    return InitEngine(uriHelper_->FormattedUri());
-}
-
-int32_t AVMetadataHelperServer::CheckSourceByFd(int32_t fd, int64_t offset, int64_t size)
-{
-    uriHelper_ = std::make_unique<UriHelper>(fd, offset, size);
     CHECK_AND_RETURN_RET_LOG(uriHelper_ != nullptr, MSERR_NO_MEMORY, "Failed to create UriHelper");
     CHECK_AND_RETURN_RET_LOG(!uriHelper_->FormattedUri().empty(),
                              MSERR_INVALID_VAL,
@@ -141,7 +128,8 @@ int32_t AVMetadataHelperServer::SetSource(int32_t fd, int64_t offset, int64_t si
         MediaTrace trace("AVMetadataHelperServer::SetSource_fd_task");
         {
             std::unique_lock<std::mutex> lock(mutex_);
-            int32_t res = CheckSourceByFd(fd, offset, size);
+            uriHelper_ = std::make_unique<UriHelper>(fd, offset, size);
+            int32_t res = CheckSourceByUriHelper();
             isInitEngineEnd = true;
             if (res != MSERR_OK) {
                 setSourceRes = res;
