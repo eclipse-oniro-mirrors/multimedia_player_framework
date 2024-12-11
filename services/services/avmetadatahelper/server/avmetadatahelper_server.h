@@ -54,10 +54,13 @@ private:
     void NotifyErrorCallback(int32_t code, const std::string msg);
     void NotifyInfoCallback(HelperOnInfoType type, int32_t extra);
     int32_t InitEngine(const std::string &uri);
+    int32_t CheckSourceByUriHelper();
 
     int32_t appUid_;
     std::shared_ptr<IAVMetadataHelperEngine> avMetadataHelperEngine_ = nullptr;
     std::mutex mutex_;
+    std::condition_variable ipcReturnCond_;
+    std::atomic<bool> isInterrupted_ = false;
     std::unique_ptr<UriHelper> uriHelper_;
     TaskQueue taskQue_;
     std::shared_ptr<IMediaDataSource> dataSrc_ = nullptr;
