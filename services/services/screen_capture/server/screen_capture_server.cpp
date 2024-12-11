@@ -965,6 +965,7 @@ int32_t ScreenCaptureServer::OnReceiveUserPrivacyAuthority(bool isAllowed)
         MEDIA_LOGE("OnReceiveUserPrivacyAuthority failed, capture is not POPUP_WINDOW");
         screenCaptureCb_->OnError(ScreenCaptureErrorType::SCREEN_CAPTURE_ERROR_INTERNAL,
             AVScreenCaptureErrorCode::SCREEN_CAPTURE_ERR_UNKNOWN);
+        StopScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID);
         return MSERR_UNKNOWN;
     }
     if (!isAllowed) {
@@ -1271,6 +1272,7 @@ void ScreenCaptureServer::PostStartScreenCapture(bool isSuccess)
             screenCaptureCb_->OnError(ScreenCaptureErrorType::SCREEN_CAPTURE_ERROR_INTERNAL,
                 AVScreenCaptureErrorCode::SCREEN_CAPTURE_ERR_UNKNOWN);
         }
+        StopScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID);
         isPrivacyAuthorityEnabled_ = false;
         isSurfaceMode_ = false;
         captureState_ = AVScreenCaptureState::STOPPED;
