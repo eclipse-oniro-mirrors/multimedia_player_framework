@@ -75,6 +75,7 @@ ohos_unittest("player_server_mem_test") {
   sources = [
     "$MEDIA_PLAYER_ROOT_DIR/services/services/player/player_mem_manage/player_server_mem.cpp",
     "player_server_mem_unit_test.cpp",
+    "player_server_mem_test.cpp",
   ]
 
   deps = [
