@@ -1125,11 +1125,13 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PrepareSelectWindow_003, TestSize.Leve
     ASSERT_NE(screenCaptureServer_, nullptr);
 }
 
+#ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
 HWTEST_F(ScreenCaptureServerFunctionTest, TryNotificationOnPostStartScreenCapture_001, TestSize.Level2)
 {
     int32_t ret = screenCaptureServer_->TryNotificationOnPostStartScreenCapture();
     ASSERT_NE(ret, MSERR_OK);
 }
+#endif
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ReleaseAudioBufferMix_001, TestSize.Level2)
 {

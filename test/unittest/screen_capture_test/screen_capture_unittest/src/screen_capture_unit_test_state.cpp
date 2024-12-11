@@ -56,13 +56,13 @@ void ScreenCaptureUnitTestCallback::OnAudioBufferAvailable(bool isReady, AudioCa
         MEDIA_LOGD("AcquireAudioBuffer, audioBufferLen:%{public}d, timeStamp:%{public}" PRId64
             ", audioSourceType:%{public}d", audioBuffer->length, audioBuffer->timestamp, audioBuffer->sourcetype);
         DumpAudioBuffer(audioBuffer);
-    }
-    if (!screenCapture_->IsStateChangeCallBackEnabled()) {
-        if (aFlag_ == 1) {
+        if (!screenCapture_->IsStateChangeCallBackEnabled()) {
+            if (aFlag_ == 1) {
+                screenCapture_->ReleaseAudioBuffer(type);
+            }
+        } else {
             screenCapture_->ReleaseAudioBuffer(type);
         }
-    } else {
-        screenCapture_->ReleaseAudioBuffer(type);
     }
 }
 
