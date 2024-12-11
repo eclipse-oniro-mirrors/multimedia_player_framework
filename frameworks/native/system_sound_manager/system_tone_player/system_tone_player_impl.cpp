@@ -174,6 +174,8 @@ int32_t SystemTonePlayerImpl::CreatePlayerWithOptions(const AudioHapticPlayerOpt
 {
     CHECK_AND_RETURN_RET_LOG(sourceIds_.find(hapticsFeature_) != sourceIds_.end(), MSERR_OPEN_FILE_FAILED,
         "Failed to find suorce id");
+    CHECK_AND_RETURN_RET_LOG(audioHapticManager_ != nullptr, MSERR_OPEN_FILE_FAILED,
+        "AudioHapticManager_ is nullptr");
     playerMap_[streamId_] = audioHapticManager_->CreatePlayer(sourceIds_[hapticsFeature_], options);
     CHECK_AND_RETURN_RET_LOG(playerMap_[streamId_] != nullptr, MSERR_OPEN_FILE_FAILED,
         "Failed to create system tone player instance");
