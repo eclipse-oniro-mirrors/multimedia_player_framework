@@ -99,6 +99,7 @@ ohos_unittest("video_editor_unit_test") {
     "render/base/shader_pass_on_screen_test.cpp",
     "render/base/shader_pass_rotate_test.cpp",
     "render/base/shader_pass_surface_test.cpp",
+    "render/base/surface_texture_test.cpp",
     "render/effect/image_effect_render_test.cpp",
     "render/render_engine/graphics_render_engine_impl_test.cpp",
     "render/render_engine/graphics_render_engine_test.cpp",

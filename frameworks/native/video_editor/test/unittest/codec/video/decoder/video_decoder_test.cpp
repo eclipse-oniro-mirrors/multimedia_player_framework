@@ -153,5 +153,27 @@ HWTEST_F(VideoDecoderTest, VideoDecoder_SetNativeWindow_with_nullptr, TestSize.L
 {
     EXPECT_EQ(decoder_->SetNativeWindow(nullptr), VEFError::ERR_INTERNAL_ERROR);
 }
+
+HWTEST_F(VideoDecoderTest, VideoDecoder_SetNativeWindow, TestSize.Level0)
+{
+    std::string fileName = "H264_AAC_multi_track.mp4";
+    int32_t srcFd = VideoResource::instance().getFileResource(fileName);
+    VideoDecodeCallbackTester* deCb = new VideoDecodeCallbackTester();
+    auto decoderEngine = IVideoDecoderEngine::Create(srcFd, deCb);
+    ASSERT_NE(decoderEngine, nullptr);
+    VideoEncodeParam enCodeParam = VideoResource::instance().getEncodeParam(srcFd, decoderEngine);
+    VideoEncodeCallbackTester* enCb = new VideoEncodeCallbackTester();
+    auto encoderEngine = IVideoEncoderEngine::Create(enCodeParam, enCb);
+    ASSERT_NE(encoderEngine, nullptr);
+    OHNativeWindow* nativeWindowEncoder = encoderEngine->GetVideoInputWindow();
+    ASSERT_NE(nativeWindowEncoder, nullptr);
+    std::function cb = [&](OH_AVCodec*, OH_AVMemory* data, OH_AVCodecBufferAttr* attr) -> VEFError {
+        return VEFError::ERR_OK;
+    };
+    auto decoder = std::make_shared<VideoDecoder>(1, cb, onDecodeFrameCallback_, onDecodeResultCallback_);
+    decoder->decoder_ = nullptr;
+    EXPECT_EQ(decoder->SetNativeWindow(nativeWindowEncoder), VEFError::ERR_INTERNAL_ERROR);
+    (void)close(srcFd);
+}
 } // namespace Media
 } // namespace OHOS

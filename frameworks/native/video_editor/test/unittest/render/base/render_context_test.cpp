@@ -59,10 +59,22 @@ HWTEST_F(RenderContextTest, RenderContextTest_Release, TestSize.Level0)
     EXPECT_FALSE(renderContext->Release());
 }
 
+HWTEST_F(RenderContextTest, RenderContextTest_Release_true, TestSize.Level0)
+{
+    renderContext->SetReady(false);
+    EXPECT_TRUE(renderContext->Release());
+}
+
 // test RenderContextTest MakeCurrent method
 HWTEST_F(RenderContextTest, RenderContextTest_MakeCurrent, TestSize.Level0)
 {
     renderContext->SetReady(true);
+    EXPECT_FALSE(renderContext->MakeCurrent(nullptr));
+}
+
+HWTEST_F(RenderContextTest, RenderContextTest_MakeCurrent_false, TestSize.Level0)
+{
+    renderContext->SetReady(false);
     EXPECT_FALSE(renderContext->MakeCurrent(nullptr));
 }
 
@@ -73,11 +85,26 @@ HWTEST_F(RenderContextTest, RenderContextTest_ReleaseCurrent, TestSize.Level0)
     EXPECT_FALSE(renderContext->ReleaseCurrent());
 }
 
+HWTEST_F(RenderContextTest, RenderContextTest_ReleaseCurrent_false, TestSize.Level0)
+{
+    renderContext->SetReady(false);
+    EXPECT_FALSE(renderContext->ReleaseCurrent());
+}
+
 // test RenderContextTest SwapBuffers method
 HWTEST_F(RenderContextTest, RenderContextTest_SwapBuffers, TestSize.Level0)
 {
     renderContext->SetReady(true);
     EXPECT_FALSE(renderContext->SwapBuffers(nullptr));
+}
+
+HWTEST_F(RenderContextTest, RenderContextTest_SwapBuffers_surface_not_nullptr, TestSize.Level0)
+{
+    renderContext->SetReady(true);
+    auto surface = new (std::nothrow) RenderSurface(std::string());
+    EXPECT_FALSE(renderContext->SwapBuffers(surface));
+    delete surface;
+    surface = nullptr;
 }
 } // namespace Media
 } // namespace OHOS

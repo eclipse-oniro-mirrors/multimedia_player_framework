@@ -18,6 +18,9 @@
 #include "codec/video/decoder/video_decoder_engine_impl.h"
 #include "render/graphics/render_engine/graphics_render_engine_impl.h"
 #include "composite_engine/impl/video_composite_engine.h"
+#include "render/graphics/graphics_render_engine.h"
+#include "data_center/asset/asset_factory.h"
+#include "data_center/impl/data_center_impl.h"
 #include <native_avcodec_videoencoder.h>
 #include <native_avcodec_base.h>
 #include "ut_common_data.h"
@@ -529,6 +532,80 @@ HWTEST_F(VideoEncoderEngineImplTest, OnEncodeFrame_state_compositing_1, TestSize
     videoCompositeEngine->callback_ = std::make_shared<CompositionCallbackTesterImpl>();
     videoCompositeEngine->duration_ = 33;
     videoCompositeEngine->OnEncodeFrame(99);
+}
+
+HWTEST_F(VideoEncoderEngineImplTest, CheckCompositeOptions_cb_nullptr, TestSize.Level0)
+{
+    auto videoCompositeEngine = std::make_shared<VideoCompositeEngine>(9);
+    ASSERT_NE(videoCompositeEngine, nullptr);
+    auto options = std::make_shared<CompositionOptions>(8, nullptr);
+    EXPECT_EQ(videoCompositeEngine->CheckCompositeOptions(options), VEFError::ERR_INVALID_PARAM);
+}
+
+HWTEST_F(VideoEncoderEngineImplTest, StartComposite_error, TestSize.Level0)
+{
+    std::string fileName = "H264_AAC_multi_track.mp4";
+    int32_t srcFd = VideoResource::instance().getFileResource(fileName);
+    auto videoCompositeEngine = std::make_shared<VideoCompositeEngine>(9);
+    ASSERT_NE(videoCompositeEngine, nullptr);
+    auto enEngine = std::make_shared<VideoEncoderEngineImpl>(srcFd, cb_);
+    enEngine->muxer_ = std::make_shared<VideoMuxer>(9);
+    videoCompositeEngine->encoderEngine_ = enEngine;
+    EXPECT_EQ(videoCompositeEngine->StartComposite(), VEFError::ERR_INTERNAL_ERROR);
+    (void)close(srcFd);
+}
+
+HWTEST_F(VideoEncoderEngineImplTest, StartEncode_AppendVideo, TestSize.Level0)
+{
+    std::string fileName = "H264_AAC.mp4";
+    int32_t srcFd = VideoResource::instance().getFileResource(fileName);
+    auto videoCompositeEngine = std::make_shared<VideoCompositeEngine>(12);
+    auto dataCenter = std::make_shared<DataCenterImpl>();
+    auto asset = AssetFactory::CreateAsset(AssetType::VIDEO, srcFd);
+    dataCenter->assetList_.emplace_back(asset);
+    ASSERT_EQ(dataCenter->AppendVideo(srcFd, WATER_MARK_DESC), VEFError::ERR_INPUT_VIDEO_COUNT_LIMITED);
+    (void)close(srcFd);
+}
+
+HWTEST_F(VideoEncoderEngineImplTest, TaskManager_wait_no_param, TestSize.Level0)
+{
+    auto videoCompositeEngine = std::make_shared<VideoCompositeEngine>(9);
+    ASSERT_NE(videoCompositeEngine, nullptr);
+    videoCompositeEngine->taskMgr_ = std::make_shared<TaskManager>("compositeEngine", TaskManagerTimeOpt::CONCURRENT);
+    videoCompositeEngine->taskMgr_->Wait();
+    EXPECT_EQ(videoCompositeEngine->taskMgr_->GetTaskCount(), 0);
+}
+
+HWTEST_F(VideoEncoderEngineImplTest, TaskManager_wait_param_if, TestSize.Level0)
+{
+    auto videoCompositeEngine = std::make_shared<VideoCompositeEngine>(9);
+    ASSERT_NE(videoCompositeEngine, nullptr);
+    videoCompositeEngine->taskMgr_ = std::make_shared<TaskManager>("compositeEngine", TaskManagerTimeOpt::SEQUENTIAL);
+    std::vector<TaskHandle> taskHandles;
+    videoCompositeEngine->taskMgr_->Wait(taskHandles);
+    EXPECT_EQ(videoCompositeEngine->taskMgr_->GetTaskCount(), 0);
+}
+
+HWTEST_F(VideoEncoderEngineImplTest, TaskManager_wait_param, TestSize.Level0)
+{
+    auto videoCompositeEngine = std::make_shared<VideoCompositeEngine>(9);
+    ASSERT_NE(videoCompositeEngine, nullptr);
+    videoCompositeEngine->taskMgr_ = std::make_shared<TaskManager>("compositeEngine", TaskManagerTimeOpt::CONCURRENT);
+    std::vector<TaskHandle> taskHandles;
+    videoCompositeEngine->taskMgr_->Wait(taskHandles);
+    EXPECT_EQ(videoCompositeEngine->taskMgr_->GetTaskCount(), 0);
+}
+
+HWTEST_F(VideoEncoderEngineImplTest, TaskManager_submit, TestSize.Level0)
+{
+    auto videoCompositeEngine = std::make_shared<VideoCompositeEngine>(9);
+    ASSERT_NE(videoCompositeEngine, nullptr);
+    videoCompositeEngine->taskMgr_ = std::make_shared<TaskManager>("compositeEngine", TaskManagerTimeOpt::CONCURRENT);
+    std::function<void()> func = []() {
+        std::cout << "TaskManager Submit testFunc" << std::endl;
+    };
+    EXPECT_NE(videoCompositeEngine->taskMgr_, nullptr);
+    videoCompositeEngine->taskMgr_->Submit(func, "testFunction");
 }
 } // namespace Media
 } // namespace OHOS
