@@ -148,7 +148,6 @@ int32_t PlayerServer::BaseState::MessageStateChange(int32_t extra)
         HandlePlaybackComplete(extra);
     } else {
         HandleStateChange(extra);
-        BehaviorEventWrite(server_.GetStatusDescription(extra).c_str(), "Player");
         MEDIA_LOGI("0x%{public}06" PRIXPTR " > %{public}s",
             FAKE_POINTER(this), server_.GetStatusDescription(extra).c_str());
     }
