@@ -496,7 +496,7 @@ HWTEST_F(HitranscodeUnitTest, Prepare_011, TestSize.Level0)
     transcoder_->inputVideoWidth_ = 640;
     transcoder_->inputVideoHeight_ = 640;
     int32_t ret = transcoder_->Prepare();
-    EXPECT_EQ(ret, Status::OK);
+    EXPECT_EQ(ret, static_cast<int32_t>(Status::OK));
 }
 
 /**
