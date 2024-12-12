@@ -30,7 +30,6 @@ namespace {
 const std::map<DfxEventType, DfxEventHandleFunc> DfxAgent::DFX_EVENT_HANDLERS_ = {
     { DfxEventType::DFX_INFO_PLAYER_VIDEO_LAG, DfxAgent::ProcessVideoLagEvent },
     { DfxEventType::DFX_INFO_PLAYER_AUDIO_LAG, DfxAgent::ProcessAudioLagEvent },
-    { DfxEventType::DFX_INFO_PLAYER_STREAM_LAG, DfxAgent::ProcessStreamLagEvent },
 };
 
  
@@ -116,16 +115,6 @@ void DfxAgent::ProcessAudioLagEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent 
     int64_t lagDuration = AnyCast<int64_t>(event.param);
     FALSE_RETURN(lagDuration >= LAG_EVENT_THRESHOLD_MS);
     std::string msg = "lagEvent=Audio";
-    agent->ReportLagEvent(lagDuration, msg);
-}
- 
-void DfxAgent::ProcessStreamLagEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &event)
-{
-    auto agent = ptr.lock();
-    FALSE_RETURN(agent != nullptr);
-    int64_t lagDuration = AnyCast<int64_t>(event.param);
-    FALSE_RETURN(lagDuration >= LAG_EVENT_THRESHOLD_MS);
-    std::string msg = "lagEvent=Stream";
     agent->ReportLagEvent(lagDuration, msg);
 }
 }  // namespace Media

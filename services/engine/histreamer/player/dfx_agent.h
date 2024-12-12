@@ -47,7 +47,6 @@ private:
     void ReportLagEvent(int64_t lagDuration, const std::string& eventMsg);
     static void ProcessVideoLagEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &event);
     static void ProcessAudioLagEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &event);
-    static void ProcessStreamLagEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &event);
     std::string groupId_ {};
     std::string instanceId_ {};
     std::string appName_ {};
