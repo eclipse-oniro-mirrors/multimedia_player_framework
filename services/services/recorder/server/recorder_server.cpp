@@ -159,7 +159,6 @@ void RecorderServer::OnAudioCaptureChange(const AudioRecorderChangeInfo &audioRe
     if (recorderCb_ != nullptr) {
         recorderCb_->OnAudioCaptureChange(audioRecorderChangeInfo);
     }
-    MEDIA_LOGI("RecorderServer OnAudioCaptureChange finish.");
 }
 
 int32_t RecorderServer::SetVideoSource(VideoSourceType source, int32_t &sourceId)

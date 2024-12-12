@@ -71,7 +71,6 @@ public:
         if (hiRecorderImpl_) {
             MEDIA_LOG_I("CapturerInfoChangeCallback hiRecorderImpl_->OnAudioCaptureChange start.");
             hiRecorderImpl_->OnAudioCaptureChange(capturerChangeInfo);
-            MEDIA_LOG_I("CapturerInfoChangeCallback hiRecorderImpl_->OnAudioCaptureChange finish.");
         }
     }
 
@@ -581,7 +580,6 @@ void HiRecorderImpl::OnAudioCaptureChange(const AudioStandard::AudioCapturerChan
     if (ptr != nullptr) {
         MEDIA_LOG_I("HiRecorderImpl OnAudioCaptureChange start.");
         ptr->OnAudioCaptureChange(ConvertCapturerChangeInfo(capturerChangeInfo));
-        MEDIA_LOG_I("HiRecorderImpl OnAudioCaptureChange finish.");
     }
 }
 
@@ -921,7 +919,6 @@ AudioRecorderChangeInfo HiRecorderImpl::ConvertCapturerChangeInfo(
         capturerChangeInfo.inputDeviceInfo.audioStreamInfo_.encoding;
     audioRecorderChangeInfo.inputDeviceInfo.audioStreamInfo.format =
         capturerChangeInfo.inputDeviceInfo.audioStreamInfo_.format;
-    MEDIA_LOG_I("HiRecorderImpl ConvertCapturerChangeInf finish.");
     return audioRecorderChangeInfo;
 }
 

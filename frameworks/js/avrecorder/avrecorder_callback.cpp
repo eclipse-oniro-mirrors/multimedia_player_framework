@@ -114,7 +114,6 @@ void AVRecorderCallback::SendAudioCaptureChangeCallback(const AudioRecorderChang
     cb->autoRef = refMap_.at(AVRecorderEvent::EVENT_AUDIO_CAPTURE_CHANGE);
     cb->callbackName = AVRecorderEvent::EVENT_AUDIO_CAPTURE_CHANGE;
     cb->audioRecorderChangeInfo = audioRecorderChangeInfo;
-    MEDIA_LOGI("AVRecorderCallback SendAudioCaptureChangeCallback is finish");
     return OnJsAudioCaptureChangeCallback(cb);
 }
 
@@ -173,7 +172,6 @@ void AVRecorderCallback::OnAudioCaptureChange(const AudioRecorderChangeInfo &aud
     MEDIA_LOGI("OnAudioCaptureChange() is called");
     MEDIA_LOGI("AVRecorderCallback OnAudioCaptureChange is start");
     SendAudioCaptureChangeCallback(audioRecorderChangeInfo);
-    MEDIA_LOGI("AVRecorderCallback OnAudioCaptureChange is start");
 }
 
 void AVRecorderCallback::OnPhotoAssertAvailable(const std::string &uri)
@@ -364,7 +362,6 @@ void AVRecorderCallback::OnJsAudioCaptureChangeCallback(AVRecordJsCallback *jsCb
 
     CANCEL_SCOPE_EXIT_GUARD(0);
     CANCEL_SCOPE_EXIT_GUARD(1);
-    MEDIA_LOGI("AVRecorderCallback OnJsAudioCaptureChangeCallback is finish");
 }
 
 void AVRecorderCallback::OnJsErrorCallBack(AVRecordJsCallback *jsCb) const
