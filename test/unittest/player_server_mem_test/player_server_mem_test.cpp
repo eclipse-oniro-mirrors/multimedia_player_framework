@@ -15,6 +15,7 @@
 
 #include "player_server_mem_test.h"
 #include "media_errors.h"
+#include "hiplayer_impl.h"
 
 namespace OHOS {
 namespace Media {
