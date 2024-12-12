@@ -69,6 +69,7 @@ public:
     void OnStateChange(const AudioStandard::AudioCapturerChangeInfo &capturerChangeInfo)
     {
         if (hiRecorderImpl_) {
+            MEDIA_LOG_I("CapturerInfoChangeCallback hiRecorderImpl_->OnAudioCaptureChange start.");
             hiRecorderImpl_->OnAudioCaptureChange(capturerChangeInfo);
         }
     }
@@ -577,6 +578,7 @@ void HiRecorderImpl::OnAudioCaptureChange(const AudioStandard::AudioCapturerChan
     MEDIA_LOG_I("OnAudioCaptureChange enter.");
     auto ptr = obs_.lock();
     if (ptr != nullptr) {
+        MEDIA_LOG_I("HiRecorderImpl OnAudioCaptureChange start.");
         ptr->OnAudioCaptureChange(ConvertCapturerChangeInfo(capturerChangeInfo));
     }
 }
@@ -883,6 +885,7 @@ void HiRecorderImpl::OnStateChanged(StateId state)
 AudioRecorderChangeInfo HiRecorderImpl::ConvertCapturerChangeInfo(
     const AudioStandard::AudioCapturerChangeInfo &capturerChangeInfo)
 {
+    MEDIA_LOG_I("HiRecorderImpl ConvertCapturerChangeInfo start.");
     AudioRecorderChangeInfo audioRecorderChangeInfo;
     audioRecorderChangeInfo.createrUID = capturerChangeInfo.createrUID;
     audioRecorderChangeInfo.clientUID = capturerChangeInfo.clientUID;

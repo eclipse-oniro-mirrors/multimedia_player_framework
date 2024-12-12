@@ -102,6 +102,7 @@ void AVRecorderCallback::SendStateCallback(const std::string &state, const State
 
 void AVRecorderCallback::SendAudioCaptureChangeCallback(const AudioRecorderChangeInfo &audioRecorderChangeInfo)
 {
+    MEDIA_LOGI("AVRecorderCallback SendAudioCaptureChangeCallback is start");
     std::lock_guard<std::mutex> lock(mutex_);
     if (refMap_.find(AVRecorderEvent::EVENT_AUDIO_CAPTURE_CHANGE) == refMap_.end()) {
         MEDIA_LOGW("can not find audioCaptureChange callback");
@@ -169,6 +170,7 @@ void AVRecorderCallback::OnInfo(int32_t type, int32_t extra)
 void AVRecorderCallback::OnAudioCaptureChange(const AudioRecorderChangeInfo &audioRecorderChangeInfo)
 {
     MEDIA_LOGI("OnAudioCaptureChange() is called");
+    MEDIA_LOGI("AVRecorderCallback OnAudioCaptureChange is start");
     SendAudioCaptureChangeCallback(audioRecorderChangeInfo);
 }
 
@@ -303,6 +305,7 @@ void AVRecorderCallback::OnJsPhotoAssertAvailableCallback(AVRecordJsCallback *js
 
 void AVRecorderCallback::OnJsAudioCaptureChangeCallback(AVRecordJsCallback *jsCb) const
 {
+    MEDIA_LOGI("AVRecorderCallback OnJsAudioCaptureChangeCallback is start");
     ON_SCOPE_EXIT(0) {
         delete jsCb;
     };

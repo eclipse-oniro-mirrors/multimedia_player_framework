@@ -154,6 +154,7 @@ void RecorderServer::OnInfo(InfoType type, int32_t extra)
 
 void RecorderServer::OnAudioCaptureChange(const AudioRecorderChangeInfo &audioRecorderChangeInfo)
 {
+    MEDIA_LOGI("RecorderServer OnAudioCaptureChange start.");
     std::lock_guard<std::mutex> lock(cbMutex_);
     if (recorderCb_ != nullptr) {
         recorderCb_->OnAudioCaptureChange(audioRecorderChangeInfo);
@@ -459,13 +460,13 @@ int32_t RecorderServer::SetAudioDataSource(const std::shared_ptr<IAudioDataSourc
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_INITIALIZED, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
- 
+
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->SetAudioDataSource(audioSource, sourceId);
     });
     int32_t ret = taskQue_.EnqueueTask(task);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
- 
+
     auto result = task->GetResult();
     return result.Value();
 }
@@ -691,7 +692,7 @@ int32_t RecorderServer::SetFileGenerationMode(FileGenerationMode mode)
     });
     int32_t ret = taskQue_.EnqueueTask(task);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
- 
+
     auto result = task->GetResult();
     return result.Value();
 #endif
@@ -788,6 +789,7 @@ int32_t RecorderServer::SetRecorderCallback(const std::shared_ptr<RecorderCallba
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     std::shared_ptr<IRecorderEngineObs> obs = shared_from_this();
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        MEDIA_LOGI("RecorderServer recorderEngine_->SetObs start.");
         return recorderEngine_->SetObs(obs);
     });
     int32_t ret = taskQue_.EnqueueTask(task);
