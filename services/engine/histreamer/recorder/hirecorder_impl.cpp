@@ -69,7 +69,9 @@ public:
     void OnStateChange(const AudioStandard::AudioCapturerChangeInfo &capturerChangeInfo)
     {
         if (hiRecorderImpl_) {
+            MEDIA_LOG_I("CapturerInfoChangeCallback hiRecorderImpl_->OnAudioCaptureChange start.");
             hiRecorderImpl_->OnAudioCaptureChange(capturerChangeInfo);
+            MEDIA_LOG_I("CapturerInfoChangeCallback hiRecorderImpl_->OnAudioCaptureChange finish.");
         }
     }
 
@@ -577,7 +579,9 @@ void HiRecorderImpl::OnAudioCaptureChange(const AudioStandard::AudioCapturerChan
     MEDIA_LOG_I("OnAudioCaptureChange enter.");
     auto ptr = obs_.lock();
     if (ptr != nullptr) {
+        MEDIA_LOG_I("HiRecorderImpl OnAudioCaptureChange start.");
         ptr->OnAudioCaptureChange(ConvertCapturerChangeInfo(capturerChangeInfo));
+        MEDIA_LOG_I("HiRecorderImpl OnAudioCaptureChange finish.");
     }
 }
 
@@ -883,6 +887,7 @@ void HiRecorderImpl::OnStateChanged(StateId state)
 AudioRecorderChangeInfo HiRecorderImpl::ConvertCapturerChangeInfo(
     const AudioStandard::AudioCapturerChangeInfo &capturerChangeInfo)
 {
+    MEDIA_LOG_I("HiRecorderImpl ConvertCapturerChangeInfo start.");
     AudioRecorderChangeInfo audioRecorderChangeInfo;
     audioRecorderChangeInfo.createrUID = capturerChangeInfo.createrUID;
     audioRecorderChangeInfo.clientUID = capturerChangeInfo.clientUID;
@@ -916,6 +921,7 @@ AudioRecorderChangeInfo HiRecorderImpl::ConvertCapturerChangeInfo(
         capturerChangeInfo.inputDeviceInfo.audioStreamInfo_.encoding;
     audioRecorderChangeInfo.inputDeviceInfo.audioStreamInfo.format =
         capturerChangeInfo.inputDeviceInfo.audioStreamInfo_.format;
+    MEDIA_LOG_I("HiRecorderImpl ConvertCapturerChangeInf finish.");
     return audioRecorderChangeInfo;
 }
 

@@ -102,6 +102,7 @@ void AVRecorderCallback::SendStateCallback(const std::string &state, const State
 
 void AVRecorderCallback::SendAudioCaptureChangeCallback(const AudioRecorderChangeInfo &audioRecorderChangeInfo)
 {
+    MEDIA_LOGI("AVRecorderCallback SendAudioCaptureChangeCallback is start");
     std::lock_guard<std::mutex> lock(mutex_);
     if (refMap_.find(AVRecorderEvent::EVENT_AUDIO_CAPTURE_CHANGE) == refMap_.end()) {
         MEDIA_LOGW("can not find audioCaptureChange callback");
@@ -113,6 +114,7 @@ void AVRecorderCallback::SendAudioCaptureChangeCallback(const AudioRecorderChang
     cb->autoRef = refMap_.at(AVRecorderEvent::EVENT_AUDIO_CAPTURE_CHANGE);
     cb->callbackName = AVRecorderEvent::EVENT_AUDIO_CAPTURE_CHANGE;
     cb->audioRecorderChangeInfo = audioRecorderChangeInfo;
+    MEDIA_LOGI("AVRecorderCallback SendAudioCaptureChangeCallback is finish");
     return OnJsAudioCaptureChangeCallback(cb);
 }
 
@@ -169,7 +171,9 @@ void AVRecorderCallback::OnInfo(int32_t type, int32_t extra)
 void AVRecorderCallback::OnAudioCaptureChange(const AudioRecorderChangeInfo &audioRecorderChangeInfo)
 {
     MEDIA_LOGI("OnAudioCaptureChange() is called");
+    MEDIA_LOGI("AVRecorderCallback OnAudioCaptureChange is start");
     SendAudioCaptureChangeCallback(audioRecorderChangeInfo);
+    MEDIA_LOGI("AVRecorderCallback OnAudioCaptureChange is start");
 }
 
 void AVRecorderCallback::OnPhotoAssertAvailable(const std::string &uri)
@@ -303,6 +307,7 @@ void AVRecorderCallback::OnJsPhotoAssertAvailableCallback(AVRecordJsCallback *js
 
 void AVRecorderCallback::OnJsAudioCaptureChangeCallback(AVRecordJsCallback *jsCb) const
 {
+    MEDIA_LOGI("AVRecorderCallback OnJsAudioCaptureChangeCallback is start");
     ON_SCOPE_EXIT(0) {
         delete jsCb;
     };
@@ -359,6 +364,7 @@ void AVRecorderCallback::OnJsAudioCaptureChangeCallback(AVRecordJsCallback *jsCb
 
     CANCEL_SCOPE_EXIT_GUARD(0);
     CANCEL_SCOPE_EXIT_GUARD(1);
+    MEDIA_LOGI("AVRecorderCallback OnJsAudioCaptureChangeCallback is finish");
 }
 
 void AVRecorderCallback::OnJsErrorCallBack(AVRecordJsCallback *jsCb) const
