@@ -332,8 +332,7 @@ public:
 
     bool IsDataCallbackEnabled()
     {
-        std::shared_lock<std::shared_mutex> lock(mutex_);
-        return dataCallback_ != nullptr;
+        return hasDataCallback_.load();
     }
 
     bool IsStateChangeCallbackEnabled()
