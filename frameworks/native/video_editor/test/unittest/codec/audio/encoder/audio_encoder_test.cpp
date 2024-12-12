@@ -17,6 +17,7 @@
 #include "codec/audio/encoder/audio_encoder.h"
 #include <native_avcodec_audioencoder.h>
 #include <avcodec_mime_type.h>
+#include "ut_common_data.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -122,6 +123,75 @@ HWTEST_F(AudioEncoderTest, AudioEncoder_CodecOnNeedInputDataInnerr, TestSize.Lev
     audioEncoder_->CodecOnNeedInputDataInner(nullptr, 1, sampleMem_);
     audioEncoder_->CodecOnNeedInputDataInner(codec_, 1, nullptr);
     EXPECT_EQ(audioEncoder_->Start(), VEFError::ERR_INTERNAL_ERROR);
+}
+
+HWTEST_F(AudioEncoderTest, AudioEncoder_CodecOnNeedInputDataInnerr_1, TestSize.Level0)
+{
+    std::string fileName = "H264_AAC_multi_track.mp4";
+    int32_t srcFd = VideoResource::instance().getFileResource(fileName);
+    VideoDecodeCallbackTester* deCb = new VideoDecodeCallbackTester();
+    auto decoderEngine = IVideoDecoderEngine::Create(srcFd, deCb);
+    ASSERT_NE(decoderEngine, nullptr);
+    VideoEncodeParam enCodeParam = VideoResource::instance().getEncodeParam(srcFd, decoderEngine);
+    VideoEncodeCallbackTester* enCb = new VideoEncodeCallbackTester();
+    auto encoderEngine = IVideoEncoderEngine::Create(enCodeParam, enCb);
+    ASSERT_NE(encoderEngine, nullptr);
+    std::shared_ptr<PcmData> pcmData = std::make_shared<PcmData>();
+    pcmData->flags = 12;
+    pcmData->pts = 100;
+    pcmData->dataSize = 0;
+    pcmData->data = nullptr;
+    audioEncoder_->pcmInputBufferQueue_->Enqueue(pcmData);
+    EXPECT_EQ(audioEncoder_->pcmInputBufferQueue_->queue_.size(), 1);
+    audioEncoder_->CodecOnNeedInputDataInner(codec_, 1, sampleMem_);
+    EXPECT_EQ(audioEncoder_->pcmInputBufferQueue_->queue_.size(), 0);
+    (void)close(srcFd);
+}
+
+HWTEST_F(AudioEncoderTest, AudioEncoder_CodecOnNeedInputDataInnerr_flag_one, TestSize.Level0)
+{
+    std::string fileName = "H264_AAC_multi_track.mp4";
+    int32_t srcFd = VideoResource::instance().getFileResource(fileName);
+    VideoDecodeCallbackTester* deCb = new VideoDecodeCallbackTester();
+    auto decoderEngine = IVideoDecoderEngine::Create(srcFd, deCb);
+    ASSERT_NE(decoderEngine, nullptr);
+    VideoEncodeParam enCodeParam = VideoResource::instance().getEncodeParam(srcFd, decoderEngine);
+    VideoEncodeCallbackTester* enCb = new VideoEncodeCallbackTester();
+    auto encoderEngine = IVideoEncoderEngine::Create(enCodeParam, enCb);
+    ASSERT_NE(encoderEngine, nullptr);
+    std::shared_ptr<PcmData> pcmData = std::make_shared<PcmData>();
+    pcmData->flags = 1;
+    pcmData->pts = 100;
+    pcmData->dataSize = 0;
+    pcmData->data = nullptr;
+    audioEncoder_->pcmInputBufferQueue_->Enqueue(pcmData);
+    EXPECT_EQ(audioEncoder_->pcmInputBufferQueue_->queue_.size(), 1);
+    audioEncoder_->CodecOnNeedInputDataInner(codec_, 1, sampleMem_);
+    EXPECT_EQ(audioEncoder_->pcmInputBufferQueue_->queue_.size(), 0);
+    (void)close(srcFd);
+}
+
+HWTEST_F(AudioEncoderTest, AudioEncoder_CodecOnNeedInputDataInnerr_dataSize_9, TestSize.Level0)
+{
+    std::string fileName = "H264_AAC_multi_track.mp4";
+    int32_t srcFd = VideoResource::instance().getFileResource(fileName);
+    VideoDecodeCallbackTester* deCb = new VideoDecodeCallbackTester();
+    auto decoderEngine = IVideoDecoderEngine::Create(srcFd, deCb);
+    ASSERT_NE(decoderEngine, nullptr);
+    VideoEncodeParam enCodeParam = VideoResource::instance().getEncodeParam(srcFd, decoderEngine);
+    VideoEncodeCallbackTester* enCb = new VideoEncodeCallbackTester();
+    auto encoderEngine = IVideoEncoderEngine::Create(enCodeParam, enCb);
+    ASSERT_NE(encoderEngine, nullptr);
+    std::shared_ptr<PcmData> pcmData = std::make_shared<PcmData>();
+    pcmData->flags = 12;
+    pcmData->pts = 100;
+    pcmData->dataSize = 9;
+    pcmData->data = nullptr;
+    audioEncoder_->pcmInputBufferQueue_->Enqueue(pcmData);
+    EXPECT_EQ(audioEncoder_->pcmInputBufferQueue_->queue_.size(), 1);
+    audioEncoder_->CodecOnNeedInputDataInner(codec_, 1, sampleMem_);
+    EXPECT_EQ(audioEncoder_->pcmInputBufferQueue_->queue_.size(), 0);
+    (void)close(srcFd);
 }
 
 HWTEST_F(AudioEncoderTest, AudioEncoder_PushPcmData, TestSize.Level0)

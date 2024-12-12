@@ -41,7 +41,23 @@ protected:
 HWTEST_F(GraphicsRenderEngineImplTest, GraphicsRenderEngineImplTest_Init, TestSize.Level0)
 {
     GraphicsRenderEngineImpl graphicsRenderEngineImpl(1);
-    EXPECT_EQ(graphicsRenderEngineImpl.Init(nullptr), VEFError::ERR_INVALID_PARAM);  // 2 is rotation
+    EXPECT_EQ(graphicsRenderEngineImpl.Init(nullptr), VEFError::ERR_INVALID_PARAM);
+}
+
+HWTEST_F(GraphicsRenderEngineImplTest, GraphicsRenderEngineImplTest_Init_ok, TestSize.Level0)
+{
+    GraphicsRenderEngineImpl graphicsRenderEngineImpl(1);
+    graphicsRenderEngineImpl.ready_ = true;
+    EXPECT_EQ(graphicsRenderEngineImpl.Init(nullptr), VEFError::ERR_OK);
+}
+
+HWTEST_F(GraphicsRenderEngineImplTest, GraphicsRenderEngineImplTest_Destroy_ok, TestSize.Level0)
+{
+    GraphicsRenderEngineImpl graphicsRenderEngineImpl(1);
+    graphicsRenderEngineImpl.ready_ = true;
+    graphicsRenderEngineImpl.renderThread_ = nullptr;
+    graphicsRenderEngineImpl.Destroy();
+    EXPECT_EQ(graphicsRenderEngineImpl.ready_, false);
 }
 
 HWTEST_F(GraphicsRenderEngineImplTest, GraphicsRenderEngineImplTest_StopRender, TestSize.Level0)
@@ -118,10 +134,30 @@ HWTEST_F(GraphicsRenderEngineImplTest, GraphicsRenderEngineImplTest_Render, Test
     (void)close(srcFd);
 }
 
+HWTEST_F(GraphicsRenderEngineImplTest, GraphicsRenderEngineImplTest_Render_error, TestSize.Level0)
+{
+    GraphicsRenderEngineImpl graphicsRenderEngineImpl(1);
+    graphicsRenderEngineImpl.ready_ = false;
+    uint64_t pts = 99;
+    RenderResultCallback onRenderFinishCb = [pts](GraphicsRenderResult result) {
+        std::cout << "pts=" << pts << "; result=" << static_cast<int>(result) << std::endl;
+    };
+    EXPECT_EQ(graphicsRenderEngineImpl.Render(99, nullptr, onRenderFinishCb), VEFError::ERR_INTERNAL_ERROR);
+}
+
 HWTEST_F(GraphicsRenderEngineImplTest, GraphicsRenderEngineImplTest_UnInit, TestSize.Level0)
 {
     auto renderEngine = GraphicsRenderEngineImpl(1);
     renderEngine.renderThread_ = nullptr;
+    EXPECT_EQ(renderEngine.UnInit(), VEFError::ERR_OK);
+}
+
+HWTEST_F(GraphicsRenderEngineImplTest, GraphicsRenderEngineImplTest_UnInit_1, TestSize.Level0)
+{
+    auto renderEngine = GraphicsRenderEngineImpl(1);
+    auto func = []() {};
+    renderEngine.renderThread_ = new (std::nothrow) RenderThread<>(RENDER_QUEUE_SIZE, func);
+    ASSERT_NE(renderEngine.renderThread_, nullptr);
     EXPECT_EQ(renderEngine.UnInit(), VEFError::ERR_OK);
 }
 

@@ -247,7 +247,7 @@ HWTEST_F(VideoDecoderEngineImplTest, VideoDecoderEngineImpl_StopDecode, TestSize
     auto inputPcmBufferQueue = encoderEngine->GetAudioInputBufferQueue();
     decoderEngine->SetVideoOutputWindow(inputWindowOfRender);
     decoderEngine->SetAudioOutputBufferQueue(inputPcmBufferQueue);
-    EXPECT_EQ(decoderEngine->StopDecode(), VEFError::ERR_INTERNAL_ERROR);
+    EXPECT_EQ(decoderEngine->StopDecode(), VEFError::ERR_OK);
     (void)close(srcFd);
 }
 
@@ -351,6 +351,35 @@ HWTEST_F(VideoDecoderEngineImplTest, VideoDecoderEngineImpl_ReadVideoPacket_err,
     attr.flags = 1;
     EXPECT_EQ(decoderEngine->ReadVideoPacket(sampleMem, &attr), VEFError::ERR_INTERNAL_ERROR);
     OH_AVMemory_Destroy(sampleMem);
+}
+
+HWTEST_F(VideoDecoderEngineImplTest, VideoDecoderEngineImpl_SetAudioOutputBufferQueue, TestSize.Level0)
+{
+    std::string fileName = "H264_AAC_multi_track.mp4";
+    int32_t srcFd = VideoResource::instance().getFileResource(fileName);
+    VideoDecodeCallbackTester* deCb = new VideoDecodeCallbackTester();
+    auto decoderEngine = IVideoDecoderEngine::Create(srcFd, deCb);
+    ASSERT_NE(decoderEngine, nullptr);
+    VideoEncodeParam enCodeParam = VideoResource::instance().getEncodeParam(srcFd, decoderEngine);
+    VideoEncodeCallbackTester* enCb = new VideoEncodeCallbackTester();
+    auto encoderEngine = IVideoEncoderEngine::Create(enCodeParam, enCb);
+    ASSERT_NE(encoderEngine, nullptr);
+    auto inputPcmBufferQueue = encoderEngine->GetAudioInputBufferQueue();
+    auto engine = std::make_shared<VideoDecoderEngineImpl>(1, srcFd, deCb);
+    engine->audioDecoder_ = nullptr;
+    engine->SetAudioOutputBufferQueue(inputPcmBufferQueue);
+    (void)close(srcFd);
+}
+
+HWTEST_F(VideoDecoderEngineImplTest, VideoDecoderEngineImpl_InitAudioDecoder, TestSize.Level0)
+{
+    std::string fileName = "H264_AAC_multi_track.mp4";
+    int32_t srcFd = VideoResource::instance().getFileResource(fileName);
+    VideoDecodeCallbackTester* deCb = new VideoDecodeCallbackTester();
+    auto engine = std::make_shared<VideoDecoderEngineImpl>(1, srcFd, deCb);
+    engine->deMuxer_ = std::make_shared<VideoDeMuxer>(9, srcFd);
+    EXPECT_EQ(engine->InitAudioDecoder(), VEFError::ERR_OK);
+    (void)close(srcFd);
 }
 } // namespace Media
 } // namespace OHOS

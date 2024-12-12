@@ -50,7 +50,11 @@ GraphicsRenderEngineImpl::~GraphicsRenderEngineImpl()
 void GraphicsRenderEngineImpl::Destroy()
 {
     std::lock_guard<std::recursive_mutex> guard(renderMutex_);
-
+    if (surface_ != nullptr) {
+        delete surface_;
+        surface_ = nullptr;
+        MEDIA_LOGI("Destroy graphics render surface");
+    }
     if (!ready_) {
         MEDIA_LOGW("graphics render engine[id=%{public}" PRIu64 "] is not ready, need not destroy.", id_);
         return;
@@ -135,6 +139,11 @@ VEFError GraphicsRenderEngineImpl::UnInit()
         delete renderThread_;
         renderThread_ = nullptr;
         MEDIA_LOGI("uninit graphics engine");
+    }
+    if (surface_ != nullptr) {
+        delete surface_;
+        surface_ = nullptr;
+        MEDIA_LOGI("unInit graphics surface");
     }
     return VEFError::ERR_OK;
 }

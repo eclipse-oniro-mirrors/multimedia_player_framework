@@ -189,5 +189,12 @@ HWTEST_F(GLUtilsTest, GLUtilsTest_GetOesSamplingMatrix, TestSize.Level0)
     expected[1][1] = 1;
     EXPECT_EQ(GLUtils::GetOesSamplingMatrix(bufferWH, displayWH, angle, flip), expected);
 }
+
+HWTEST_F(GLUtilsTest, GLUtilsTest_DeleteTexture, TestSize.Level0)
+{
+    GLuint texture = GLUtils::CreateTexture2D(320, 480, GL_RGBA8, GL_LINEAR, GL_LINEAR);
+    GLUtils::DeleteTexture(texture);
+    EXPECT_EQ(texture, 0);
+}
 } // namespace Media
 } // namespace OHOS
