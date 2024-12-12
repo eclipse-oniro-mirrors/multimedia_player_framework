@@ -154,7 +154,7 @@ int32_t ScreenCaptureMonitorServiceStub::IsScreenCaptureWorking(MessageParcel &d
 
     MEDIA_LOGD("ScreenCaptureMonitorServiceStub::IsScreenCaptureWorking pid start.");
     for (auto pid: pidList) {
-        MEDIA_LOGD("ScreenCaptureMonitorServiceStub::IsScreenCaptureWorking pid start.");
+        MEDIA_LOGD("pid: %{public}d", pid);
         reply.WriteInt32(pid);
     }
     MEDIA_LOGD("ScreenCaptureMonitorServiceStub::IsScreenCaptureWorking pid end.");

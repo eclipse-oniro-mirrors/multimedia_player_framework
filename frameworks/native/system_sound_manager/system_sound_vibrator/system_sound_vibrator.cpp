@@ -93,6 +93,7 @@ int32_t SystemSoundVibrator::StartVibratorForSystemTone(const std::string &hapti
     struct stat64 statbuf = { 0 };
     if (fstat64(fd, &statbuf) != 0) {
         MEDIA_LOGE("Failed to open fd and get size.");
+        close(fd);
         return MSERR_OPEN_FILE_FAILED;
     }
     Sensors::SetUsage(USAGE_NOTIFICATION);

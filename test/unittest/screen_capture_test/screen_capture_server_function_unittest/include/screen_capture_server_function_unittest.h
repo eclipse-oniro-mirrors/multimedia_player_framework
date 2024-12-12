@@ -119,14 +119,16 @@ public:
     void OnStateChange(AVScreenCaptureStateCode stateCode) {};
 };
 
-class ScreenCaptureServerUnittestCallback : public ScreenCaptureListenerCallback {
+class ScreenCaptureServerUnittestCallbackMock : public ScreenCaptureListenerCallback {
 public:
-    virtual ~ScreenCaptureServerUnittestCallback() = default;
-    void OnError(ScreenCaptureErrorType errorType, int32_t errorCode) {};
-    void OnAudioBufferAvailable(bool isReady, AudioCaptureSourceType type) {};
-    void OnVideoBufferAvailable(bool isReady) {};
-    void OnStateChange(AVScreenCaptureStateCode stateCode) {};
-    void Stop() {};
+    explicit ScreenCaptureServerUnittestCallbackMock(const sptr<IStandardScreenCaptureListener> &listener)
+        : ScreenCaptureListenerCallback(listener) {}
+    virtual ~ScreenCaptureServerUnittestCallbackMock() = default;
+    void OnError(ScreenCaptureErrorType errorType, int32_t errorCode);
+    void OnAudioBufferAvailable(bool isReady, AudioCaptureSourceType type);
+    void OnVideoBufferAvailable(bool isReady);
+    void OnStateChange(AVScreenCaptureStateCode stateCode);
+    void Stop();
 };
 } // Media
 } // OHOS

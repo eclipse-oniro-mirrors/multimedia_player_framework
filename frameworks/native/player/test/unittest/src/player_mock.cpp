@@ -313,7 +313,7 @@ sptr<Surface> PlayerMock::GetVideoSurface()
 {
     sptr<Rosen::WindowOption> option = new Rosen::WindowOption();
     option->SetWindowRect({ 0, 0, width_, height_ });
-    option->SetWindowType(Rosen::WindowType::WINDOW_TYPE_FLOAT);
+    option->SetWindowType(Rosen::WindowType::WINDOW_TYPE_TOAST);
     option->SetWindowMode(Rosen::WindowMode::WINDOW_MODE_FLOATING);
     previewWindow_ = Rosen::Window::Create("xcomponent_window", option);
     if (previewWindow_ == nullptr || previewWindow_->GetSurfaceNode() == nullptr) {
@@ -729,7 +729,7 @@ sptr<Surface> PlayerMock::GetVideoSurfaceNext()
 {
     sptr<Rosen::WindowOption> option = new Rosen::WindowOption();
     option->SetWindowRect({ 0, 0, nextSurfaceWidth_, nextSurfaceHeight_ });
-    option->SetWindowType(Rosen::WindowType::WINDOW_TYPE_FLOAT);
+    option->SetWindowType(Rosen::WindowType::WINDOW_TYPE_TOAST);
     option->SetWindowMode(Rosen::WindowMode::WINDOW_MODE_FLOATING);
     previewWindowNext_ = Rosen::Window::Create("xcomponent_window_next", option);
     if (previewWindowNext_ == nullptr || previewWindowNext_->GetSurfaceNode() == nullptr) {

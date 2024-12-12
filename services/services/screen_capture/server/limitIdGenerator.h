@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Huawei Device Co., Ltd.
+ * Copyright (C) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -30,9 +30,9 @@ public:
     int32_t ReturnID(int32_t id);
 
 private:
-    std::queue<int32_t> availableIDs;
+    std::queue<int32_t> availableIDs_;
     int32_t limit_ = 0;
-    std::mutex queueMtx;
+    std::mutex queueMtx_;
 };
 } // namespace Media
 } // namespace OHOS

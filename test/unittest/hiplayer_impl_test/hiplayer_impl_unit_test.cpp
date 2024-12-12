@@ -316,6 +316,68 @@ HWTEST_F(HiplayerImplUnitTest, ResetIfSourceExisted_002, TestSize.Level0)
     EXPECT_EQ(hiplayer_->audioDecoder_, nullptr);
 }
 
+/**
+* @tc.name    : Test BreakIfInterruptted API
+* @tc.number  : BreakIfInterruptted_001
+* @tc.desc    : Test ResetIfSourceExisted interface, return true.
+* @tc.require : issueI5NZAQ
+*/
+HWTEST_F(HiplayerImplUnitTest, BreakIfInterruptted_001, TestSize.Level0)
+{
+    // 1. Set up the test environment
+    hiplayer_->isInterruptNeeded_ = true;
+
+    // 2. Call the function to be tested
+    bool ret = hiplayer_->BreakIfInterruptted();
+
+    // 3. Verify the result
+    EXPECT_EQ(ret, true);
+}
+
+/**
+* @tc.name    : Test SetInterruptState API
+* @tc.number  : SetInterruptState_001
+* @tc.desc    : Test SetInterruptState interface, isInterruptNeeded_ is false.
+* @tc.require : issueI5NZAQ
+*/
+HWTEST_F(HiplayerImplUnitTest, SetInterruptState_001, TestSize.Level0)
+{
+    // 1. Set up the test environment
+    bool isInterruptNeeded = false;
+
+    // 2. Call the function to be tested
+    hiplayer_->SetInterruptState(isInterruptNeeded);
+
+    // 3. Verify the result
+    EXPECT_EQ(hiplayer_->isInterruptNeeded_, false);
+}
+
+/**
+* @tc.name    : Test SetInterruptState API
+* @tc.number  : SetInterruptState_002
+* @tc.desc    : Test SetInterruptState interface, isInterruptNeeded_ is true.
+* @tc.require : issueI5NZAQ
+*/
+HWTEST_F(HiplayerImplUnitTest, SetInterruptState_002, TestSize.Level0)
+{
+    // 1. Set up the test environment
+    bool isInterruptNeeded = true;
+
+    std::string name = "builtin.player.demuxer";
+    std::shared_ptr<DemuxerFilterMock> demuxerMock =
+        std::make_shared<DemuxerFilterMock>(name, FilterType::FILTERTYPE_DEMUXER);
+    hiplayer_->demuxer_ = demuxerMock;
+    
+    hiplayer_->seekAgent_ = std::make_shared<SeekAgent>(demuxerMock);
+
+    // 2. Call the function to be tested
+    hiplayer_->SetInterruptState(isInterruptNeeded);
+
+    // 3. Verify the result
+    EXPECT_EQ(hiplayer_->isInterruptNeeded_, true);
+    EXPECT_NE(hiplayer_->demuxer_, nullptr);
+    EXPECT_NE(hiplayer_->seekAgent_, nullptr);
+}
 
 /**
 * @tc.name    : Test DoInitializeForHttp API
@@ -490,6 +552,107 @@ HWTEST_F(HiplayerImplUnitTest, Play_004, TestSize.Level0)
     // 3. Verify the result
     EXPECT_EQ(ret, MSERR_INVALID_OPERATION);
     EXPECT_EQ(hiplayer_->isStreaming_, false);
+}
+
+/**
+* @tc.name    : Test PauseDemuxer API
+* @tc.number  : PauseDemuxer_001
+* @tc.desc    : Test PauseDemuxer interface, return MSERR_OK.
+* @tc.require : issueI5NZAQ
+*/
+HWTEST_F(HiplayerImplUnitTest, PauseDemuxer_001, TestSize.Level0)
+{
+    // 1. Set up the test environment
+    std::string name = "builtin.player.demuxer";
+    std::shared_ptr<DemuxerFilterMock> demuxerMock =
+        std::make_shared<DemuxerFilterMock>(name, FilterType::FILTERTYPE_DEMUXER);
+    hiplayer_->demuxer_ = demuxerMock;
+
+    // 2. Call the function to be tested
+    int32_t ret = hiplayer_->PauseDemuxer();
+
+    // 3. Verify the result
+    EXPECT_EQ(ret, MSERR_OK);
+}
+
+/**
+* @tc.name    : Test SeekToCurrentTime API
+* @tc.number  : SeekToCurrentTime_001
+* @tc.desc    : Test SeekToCurrentTime interface, return MSERR_INVALID_VAL.
+* @tc.require : issueI5NZAQ
+*/
+HWTEST_F(HiplayerImplUnitTest, SeekToCurrentTime_001, TestSize.Level0)
+{
+    // 1. Set up the test environment
+    int32_t mSeconds = -100;
+    PlayerSeekMode mode = PlayerSeekMode::SEEK_NEXT_SYNC;
+
+    // 2. Call the function to be tested
+    int32_t ret = hiplayer_->SeekToCurrentTime(mSeconds, mode);
+
+    // 3. Verify the result
+    EXPECT_EQ(ret, MSERR_INVALID_VAL);
+}
+
+/**
+* @tc.name    : Test HandleSeek API
+* @tc.number  : HandleSeek_001
+* @tc.desc    : Test HandleSeek interface, pipelineStates_ is PLAYER_STOPPED.
+* @tc.require : issueI5NZAQ
+*/
+HWTEST_F(HiplayerImplUnitTest, HandleSeek_001, TestSize.Level0)
+{
+    // 1. Set up the test environment
+    int64_t seekPos = 100;
+    PlayerSeekMode mode = PlayerSeekMode::SEEK_NEXT_SYNC;
+    hiplayer_->pipelineStates_ = PLAYER_STOPPED;
+
+    // 2. Call the function to be tested
+    Status ret = hiplayer_->HandleSeek(seekPos, mode);
+
+    // 3. Verify the result
+    EXPECT_EQ(ret, Status::ERROR_WRONG_STATE);
+}
+
+/**
+* @tc.name    : Test NotifySeek API
+* @tc.number  : NotifySeek_001
+* @tc.desc    : Test NotifySeek interface, Status is ERROR_UNKNOWN.
+* @tc.require : issueI5NZAQ
+*/
+HWTEST_F(HiplayerImplUnitTest, NotifySeek_001, TestSize.Level0)
+{
+    // 1. Set up the test environment
+    Status rtv = Status::ERROR_UNKNOWN;
+    bool flag = true;
+    int64_t seekPos = 100;
+
+    // 2. Call the function to be tested
+    hiplayer_->NotifySeek(rtv, flag, seekPos);
+
+    // 3. Verify the result
+    EXPECT_EQ(hiplayer_->pipelineStates_, PlayerStates::PLAYER_STATE_ERROR);
+}
+
+/**
+* @tc.name    : Test Seek API
+* @tc.number  : Seek_001
+* @tc.desc    : Test Seek interface, startTimeWithMode_ == PLAY_RANGE_DEFAULT_VALUE.
+* @tc.require : issueI5NZAQ
+*/
+HWTEST_F(HiplayerImplUnitTest, Seek_001, TestSize.Level0)
+{
+    // 1. Set up the test environment
+    hiplayer_->endTimeWithMode_ = 100;
+    hiplayer_->startTimeWithMode_  = -1;
+    int32_t mSeconds = 90;
+    PlayerSeekMode mode = PlayerSeekMode::SEEK_NEXT_SYNC;
+
+    // 2. Call the function to be tested
+    int32_t ret = hiplayer_->Seek(mSeconds, mode);
+
+    // 3. Verify the result
+    EXPECT_EQ(ret, MSERR_INVALID_VAL);
 }
 
 HWTEST_F(HiplayerImplUnitTest, GetCurrentTrack_001, TestSize.Level0)
@@ -762,6 +925,20 @@ HWTEST_F(HiplayerImplUnitTest, SetPlayRangeWithMode_005, TestSize.Level0)
     EXPECT_EQ(hiplayer_->SetPlayRangeWithMode(start, end, mode), MSERR_INVALID_VAL);
 }
 
+HWTEST_F(HiplayerImplUnitTest, SetRenderFirstFrame_001, TestSize.Level0)
+{
+    int32_t ret = hiplayer_->SetRenderFirstFrame(true);
+    EXPECT_EQ(ret, MSERR_OK);
+    EXPECT_EQ(hiplayer_->renderFirstFrame_, true);
+}
+ 
+HWTEST_F(HiplayerImplUnitTest, SetRenderFirstFrame_002, TestSize.Level0)
+{
+    int32_t ret = hiplayer_->SetRenderFirstFrame(false);
+    EXPECT_EQ(ret, MSERR_OK);
+    EXPECT_EQ(hiplayer_->renderFirstFrame_, false);
+}
+
 HWTEST_F(HiplayerImplUnitTest, PrepareAsync_001, TestSize.Level0)
 {
     int32_t ret = hiplayer_->SetSource(VIDEO_FILE1);
@@ -813,6 +990,34 @@ HWTEST_F(HiplayerImplUnitTest, SetPlaybackSpeed_001, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, hiplayer_->SetPlaybackSpeed(PlaybackRateMode::SPEED_FORWARD_2_00_X));
 }
 
+HWTEST_F(HiplayerImplUnitTest, SetPlaybackSpeed_002, TestSize.Level0)
+{
+    PlaybackRateMode mode = PlaybackRateMode::SPEED_FORWARD_2_00_X;
+    hiplayer_->audioSink_  = FilterFactory::Instance().CreateFilter<AudioSinkFilter>("player.audiosink",
+        FilterType::FILTERTYPE_ASINK);
+    hiplayer_->subtitleSink_ = nullptr;
+    EXPECT_EQ(MSERR_UNKNOWN, hiplayer_->SetPlaybackSpeed(mode));
+}
+
+HWTEST_F(HiplayerImplUnitTest, IsNeedAudioSinkChangeTrack_001, TestSize.Level0)
+{
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    std::vector<std::shared_ptr<Meta>> trackInfos{meta};
+    int32_t trackId = 0;
+    hiplayer_->currentAudioTrackId_ = 0;
+    EXPECT_EQ(false, hiplayer_->IsNeedAudioSinkChangeTrack(trackInfos, trackId));
+}
+
+HWTEST_F(HiplayerImplUnitTest, InnerSelectTrack_001, TestSize.Level0)
+{
+    std::string mime = "video/mp4";
+    int32_t trackId = 1;
+    PlayerSwitchMode mode = PlayerSwitchMode::SWITCH_SMOOTH;
+    hiplayer_->demuxer_ = FilterFactory::Instance().CreateFilter<DemuxerFilter>("builtin.player.demuxer",
+        FilterType::FILTERTYPE_DEMUXER);
+    EXPECT_EQ(MSERR_UNKNOWN, hiplayer_->InnerSelectTrack(mime, trackId, mode));
+}
+
 HWTEST_F(HiplayerImplUnitTest, GetSarVideoWidth_001, TestSize.Level0)
 {
     double videoSar = 0;
@@ -832,6 +1037,15 @@ HWTEST_F(HiplayerImplUnitTest, GetSarVideoHeight_001, TestSize.Level0)
     trackInfo->SetData(Tag::VIDEO_SAR, videoSar);
     trackInfo->SetData(Tag::VIDEO_HEIGHT, height);
     EXPECT_EQ(1, hiplayer_->GetSarVideoHeight(trackInfo));
+}
+
+HWTEST_F(HiplayerImplUnitTest, SetMaxAmplitudeCbStatus_001, TestSize.Level0)
+{
+    bool status = true;
+    hiplayer_->audioSink_ = FilterFactory::Instance().CreateFilter<AudioSinkFilter>("player.audiosink",
+        FilterType::FILTERTYPE_ASINK);
+    EXPECT_EQ(MSERR_OK, hiplayer_->SetMaxAmplitudeCbStatus(status));
+    EXPECT_EQ(true, hiplayer_->maxAmplitudeCbStatus_);
 }
 
 HWTEST_F(HiplayerImplUnitTest, TestHiplayerImplDestructor, TestSize.Level0)

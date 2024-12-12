@@ -63,7 +63,8 @@ int32_t AudioCapturerWrapper::Start(const OHOS::AudioStandard::AppInfo &appInfo)
         std::vector<SourceType> targetSources = {
             SourceType::SOURCE_TYPE_MIC,
             SourceType::SOURCE_TYPE_VOICE_RECOGNITION,
-            SourceType::SOURCE_TYPE_VOICE_MESSAGE
+            SourceType::SOURCE_TYPE_VOICE_MESSAGE,
+            SourceType::SOURCE_TYPE_CAMCORDER
         };
         std::string region = Global::I18n::LocaleConfig::GetSystemRegion();
         if (region == "CN") {
@@ -300,9 +301,9 @@ int32_t AudioCapturerWrapper::CaptureAudio()
     MEDIA_LOGI("0x%{public}06" PRIXPTR " CaptureAudio S, name:%{public}s", FAKE_POINTER(this), threadName_.c_str());
     std::string name = threadName_.substr(0, std::min(threadName_.size(), static_cast<size_t>(MAX_THREAD_NAME_LENGTH)));
     pthread_setname_np(pthread_self(), name.c_str());
-    size_t bufferLen;
-    CHECK_AND_RETURN_RET_LOG(audioCapturer_ != nullptr && audioCapturer_->GetBufferSize(bufferLen) >= 0,
-        MSERR_NO_MEMORY, "CaptureAudio GetBufferSize failed");
+    size_t bufferLen = 0;
+    CHECK_AND_RETURN_RET_LOG(audioCapturer_ != nullptr && audioCapturer_->GetBufferSize(bufferLen) == MSERR_OK &&
+        bufferLen > 0, MSERR_NO_MEMORY, "CaptureAudio GetBufferSize failed");
     Timestamp timestamp;
     std::shared_ptr<AudioBuffer> audioBuffer;
     while (true) {

@@ -20,6 +20,7 @@
 
 namespace {
 constexpr int MAX_WINDOWS_LEN = 1000;
+constexpr int MAX_AUDIO_BUFFER_LEN = 10 * 1024 * 1024; // 10M
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "ScreenCaptureServiceProxy"};
 }
 
@@ -332,7 +333,8 @@ int32_t ScreenCaptureServiceProxy::AcquireAudioBuffer(std::shared_ptr<AudioBuffe
     int ret = reply.ReadInt32();
     if (ret == MSERR_OK) {
         int32_t audioBufferLen = reply.ReadInt32();
-        if (audioBufferLen < 0) {
+        if (audioBufferLen <= 0 || audioBufferLen > MAX_AUDIO_BUFFER_LEN) {
+            MEDIA_LOGE("audioBufferLen is invalid");
             return MSERR_INVALID_VAL;
         }
         auto buffer = reply.ReadBuffer(audioBufferLen);

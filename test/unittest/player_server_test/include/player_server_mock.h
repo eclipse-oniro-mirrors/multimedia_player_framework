@@ -134,6 +134,7 @@ public:
     int32_t GetVideoTrackInfo(std::vector<Format> &videoTrack);
     int32_t GetPlaybackInfo(Format &playbackInfo);
     int32_t GetAudioTrackInfo(std::vector<Format> &audioTrack);
+    int32_t GetSubtitleTrackInfo(std::vector<Format> &subtitleTrack);
     int32_t GetVideoWidth();
     int32_t GetVideoHeight();
     int32_t GetDuration(int32_t &duration);
@@ -155,11 +156,13 @@ public:
     sptr<Surface> GetVideoSurfaceNext();
     PlayerStates GetState();
     int32_t SetPlayRange(int64_t start, int64_t end);
+    int32_t SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode);
     int32_t SeekContinuous(int32_t mseconds);
     int32_t SetMaxAmplitudeCbStatus(bool status);
     int32_t SetPlaybackStrategy(AVPlayStrategy strategy);
     int32_t SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted);
     int32_t SetDeviceChangeCbStatus(bool status);
+    int32_t SetRenderFirstFrame(bool display);
 private:
     void SeekPrepare(int32_t &mseconds, PlayerSeekMode &mode);
     std::shared_ptr<IPlayerService> player_ = nullptr;

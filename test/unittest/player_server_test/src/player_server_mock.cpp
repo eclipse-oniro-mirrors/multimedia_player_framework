@@ -313,7 +313,7 @@ sptr<Surface> PlayerServerMock::GetVideoSurface()
 {
     sptr<Rosen::WindowOption> option = new Rosen::WindowOption();
     option->SetWindowRect({ 0, 0, width_, height_ });
-    option->SetWindowType(Rosen::WindowType::WINDOW_TYPE_FLOAT);
+    option->SetWindowType(Rosen::WindowType::WINDOW_TYPE_TOAST);
     option->SetWindowMode(Rosen::WindowMode::WINDOW_MODE_FLOATING);
     previewWindow_ = Rosen::Window::Create("xcomponent_window", option);
     if (previewWindow_ == nullptr || previewWindow_->GetSurfaceNode() == nullptr) {
@@ -556,6 +556,12 @@ int32_t PlayerServerMock::GetAudioTrackInfo(std::vector<Format> &audioTrack)
     return player_->GetAudioTrackInfo(audioTrack);
 }
 
+int32_t PlayerServerMock::GetSubtitleTrackInfo(std::vector<Format> &subtitleTrack)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
+    return player_->GetSubtitleTrackInfo(subtitleTrack);
+}
+
 int32_t PlayerServerMock::GetVideoWidth()
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
@@ -709,7 +715,7 @@ sptr<Surface> PlayerServerMock::GetVideoSurfaceNext()
 {
     sptr<Rosen::WindowOption> option = new Rosen::WindowOption();
     option->SetWindowRect({ 0, 0, nextSurfaceWidth_, nextSurfaceHeight_ });
-    option->SetWindowType(Rosen::WindowType::WINDOW_TYPE_FLOAT);
+    option->SetWindowType(Rosen::WindowType::WINDOW_TYPE_TOAST);
     option->SetWindowMode(Rosen::WindowMode::WINDOW_MODE_FLOATING);
     previewWindowNext_ = Rosen::Window::Create("xcomponent_window_next", option);
     if (previewWindowNext_ == nullptr || previewWindowNext_->GetSurfaceNode() == nullptr) {
@@ -733,6 +739,13 @@ int32_t PlayerServerMock::SetPlayRange(int64_t start, int64_t end)
     UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
     std::unique_lock<std::mutex> lock(mutex_);
     return player_->SetPlayRange(start, end);
+}
+
+int32_t PlayerServerMock::SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
+    std::unique_lock<std::mutex> lock(mutex_);
+    return player_->SetPlayRangeWithMode(start, end, mode);
 }
 
 int32_t PlayerServerMock::SeekContinuous(int32_t mseconds)
@@ -767,5 +780,12 @@ int32_t PlayerServerMock::SetDeviceChangeCbStatus(bool status)
     UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
     return player_->SetDeviceChangeCbStatus(status);
 }
+
+int32_t PlayerServerMock::SetRenderFirstFrame(bool display)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
+    return player_->SetRenderFirstFrame(display);
+}
+
 } // namespace Media
 } // namespace OHOS
