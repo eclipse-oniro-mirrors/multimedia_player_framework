@@ -151,6 +151,128 @@ HWTEST_F(PlayerServerMemTest, SaveParameter, TestSize.Level1)
     playerServerMem_->SaveParameter(param);
     EXPECT_EQ(playerServerMem_->recoverConfig_.videoScaleType, 0);
     EXPECT_EQ(playerServerMem_->recoverConfig_.interruptMode, 0);
+    param.PutIntValue(PlayerKeys::CONTENT_TYPE, 0);
+    playerServerMem_->SaveParameter(param);
+    EXPECT_EQ(playerServerMem_->recoverConfig_.contentType, -1);
+}
+
+/**
+ * @tc.name  : GetCurrentTrack
+ * @tc.number: GetCurrentTrack
+ * @tc.desc  : FUNC
+ */
+HWTEST_F(PlayerServerMemTest, GetCurrentTrack, TestSize.Level1)
+{
+    int32_t trackType = Media::MediaType::MEDIA_TYPE_AUD;
+    int32_t index = -1;
+    playerServerMem_->isLocalResource_ = true;
+    playerServerMem_->isReleaseMemByManage_ = false;
+    int32_t result = playerServerMem_->GetCurrentTrack(trackType, index);
+    EXPECT_NE(result, MSERR_OK);
+}
+
+/**
+ * @tc.name  : DumpInfo
+ * @tc.number: DumpInfo
+ * @tc.desc  : FUNC
+ */
+HWTEST_F(PlayerServerMemTest, DumpInfo, TestSize.Level1)
+{
+    EXPECT_EQ(playerServerMem_->DumpInfo(-1), MSERR_OK);
+    playerServerMem_->isReleaseMemByManage_ = true;
+    EXPECT_EQ(playerServerMem_->DumpInfo(-1), MSERR_OK);
+}
+
+/**
+ * @tc.name  : HandleCodecBuffers
+ * @tc.number: HandleCodecBuffers
+ * @tc.desc  : FUNC
+ */
+HWTEST_F(PlayerServerMemTest, HandleCodecBuffers, TestSize.Level1)
+{
+    playerServerMem_->playerEngine_ = std::make_unique<HiPlayerImpl>(0, 0, 0, 0);
+    bool enable = true;
+    EXPECT_EQ(playerServerMem_->HandleCodecBuffers(enable), MSERR_INVALID_OPERATION);
+    playerServerMem_->lastOpStatus_ = PLAYER_PREPARED;
+    EXPECT_EQ(playerServerMem_->HandleCodecBuffers(enable), 0);
+}
+
+/**
+ * @tc.name  : SeekToCurrentTime
+ * @tc.number: SeekToCurrentTime
+ * @tc.desc  : FUNC
+ */
+HWTEST_F(PlayerServerMemTest, SeekToCurrentTime, TestSize.Level1)
+{
+    PlayerSeekMode mode = SEEK_PREVIOUS_SYNC;
+    playerServerMem_->playerEngine_ = std::make_unique<HiPlayerImpl>(0, 0, 0, 0);
+    EXPECT_EQ(playerServerMem_->SeekToCurrentTime(0, mode), MSERR_INVALID_OPERATION);
+    playerServerMem_->lastOpStatus_ = PLAYER_PREPARED;
+    playerServerMem_->isLiveStream_ = true;
+    EXPECT_EQ(playerServerMem_->SeekToCurrentTime(0, mode), MSERR_INVALID_OPERATION);
+}
+
+/**
+ * @tc.name  : OnInfo
+ * @tc.number: OnInfo
+ * @tc.desc  : FUNC
+ */
+HWTEST_F(PlayerServerMemTest, OnInfo, TestSize.Level1)
+{
+    playerServerMem_->isSeekToCurrentTime_ = true;
+    PlayerOnInfoType type = INFO_TYPE_TRACK_NUM_UPDATE;
+    Format infoBody;
+    int32_t extra = 1;
+    playerServerMem_->OnInfo(type, extra, infoBody);
+    EXPECT_EQ(playerServerMem_->subtitleTrackNum_, extra);
+
+    type = INFO_TYPE_SEEKDONE;
+    playerServerMem_->OnInfo(type, extra, infoBody);
+    EXPECT_EQ(playerServerMem_->isSeekToCurrentTime_, false);
+}
+
+/**
+ * @tc.name  : ReleaseMemByManage
+ * @tc.number: ReleaseMemByManage
+ * @tc.desc  : FUNC
+ */
+HWTEST_F(PlayerServerMemTest, ReleaseMemByManage, TestSize.Level1)
+{
+    playerServerMem_->isReleaseMemByManage_ = true;
+    EXPECT_EQ(playerServerMem_->ReleaseMemByManage(), MSERR_OK);
+
+    playerServerMem_->isLocalResource_ = true;
+    playerServerMem_->isReleaseMemByManage_ = false;
+    EXPECT_EQ(playerServerMem_->ReleaseMemByManage(), MSERR_INVALID_OPERATION);
+
+    playerServerMem_->isRecoverMemByUser_ = true;
+    EXPECT_EQ(playerServerMem_->ReleaseMemByManage(), MSERR_OK);
+
+    playerServerMem_->isReleaseMemByManage_ = true;
+    EXPECT_EQ(playerServerMem_->ReleaseMemByManage(), MSERR_OK);
+}
+
+/**
+ * @tc.name  : RecoverMemByUser
+ * @tc.number: RecoverMemByUser
+ * @tc.desc  : FUNC
+ */
+HWTEST_F(PlayerServerMemTest, RecoverMemByUser, TestSize.Level1)
+{
+    playerServerMem_->isReleaseMemByManage_ = true;
+    EXPECT_NE(playerServerMem_->RecoverMemByUser(), MSERR_OK);
+
+    playerServerMem_->isLocalResource_ = true;
+    playerServerMem_->isReleaseMemByManage_ = false;
+    playerServerMem_->isRecoverMemByUser_ = true;
+    EXPECT_EQ(playerServerMem_->RecoverMemByUser(), MSERR_OK);
+
+    playerServerMem_->isReleaseMemByManage_ = true;
+    EXPECT_EQ(playerServerMem_->RecoverMemByUser(), MSERR_OK);
+
+    playerServerMem_->isRecoverMemByUser_ = false;
+    playerServerMem_->Init();
+    EXPECT_EQ(playerServerMem_->RecoverMemByUser(), MSERR_INVALID_STATE);
 }
 }
 }
