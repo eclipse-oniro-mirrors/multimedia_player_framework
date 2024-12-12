@@ -166,7 +166,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperRelativeSleep_001,
     screenCaptureServer_->innerAudioCapture_ = std::make_shared<AudioCapturerWrapper>(
         screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo, screenCaptureServer_->screenCaptureCb_,
         std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
-    ASSERT_EQ(screenCaptureServer_->micAudioCapture_->RelativeSleep(1), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->RelativeSleep(1), MSERR_OK);
 }
 } // Media
 } // OHOS
