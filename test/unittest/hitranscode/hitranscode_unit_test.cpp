@@ -479,6 +479,27 @@ HWTEST_F(HitranscodeUnitTest, Prepare_010, TestSize.Level0)
 }
 
 /**
+* @tc.name    : Test Prepare API
+* @tc.number  : Prepare_011
+* @tc.desc    : Test Prepare interface.
+* @tc.require :
+*/
+HWTEST_F(HitranscodeUnitTest, Prepare_011, TestSize.Level0)
+{
+    transcoder_->isExistVideoTrack_ = true;
+    std::string widthMetaKey = Tag::VIDEO_WIDTH;
+    int32_t width = 480;
+    transcoder_->videoEncFormat_->SetData(widthMetaKey, width);
+    std::string heightMetaKey = Tag::VIDEO_HEIGHT;
+    int32_t height = 480;
+    transcoder_->videoEncFormat_->SetData(heightMetaKey, height);
+    transcoder_->inputVideoWidth_ = 640;
+    transcoder_->inputVideoHeight_ = 640;
+    int32_t ret = transcoder_->Prepare();
+    EXPECT_EQ(ret, static_cast<int32_t>(Status::OK));
+}
+
+/**
 * @tc.name    : Test GetRealPath API
 * @tc.number  : GetRealPath_001
 * @tc.desc    : Test GetRealPath interface, set url to "file://".
@@ -1010,6 +1031,170 @@ HWTEST_F(HitranscodeUnitTest, ConfigureMetaData_004, TestSize.Level0)
     std::vector<std::shared_ptr<Meta>> trackInfos;
     trackInfos.push_back(inputMeta);
     Status ret = transcoder_->ConfigureMetaData(trackInfos);
+    EXPECT_EQ(ret, Status::OK);
+}
+
+/**
+* @tc.name    : Test ConfigureMetaData API
+* @tc.number  : ConfigureMetaData_005
+* @tc.desc    : Test ConfigureMetaData interface.
+* @tc.require :
+*/
+HWTEST_F(HitranscodeUnitTest, ConfigureMetaData_005, TestSize.Level0)
+{
+    std::shared_ptr<Meta> inputMeta = std::make_shared<Meta>();
+    std::string metaKey = Tag::MEDIA_TYPE;
+    Plugins::MediaType mediaType = Plugins::MediaType::VIDEO;
+    inputMeta->SetData(metaKey, mediaType);
+    inputMeta->SetData(Tag::VIDEO_IS_HDR_VIVID, true);
+    std::vector<std::shared_ptr<Meta>> trackInfos;
+    trackInfos.push_back(inputMeta);
+
+    Status ret = transcoder_->ConfigureMetaData(trackInfos);
+    EXPECT_EQ(ret, Status::OK);
+}
+
+/**
+* @tc.name    : Test AppendSrcMediaInfo API
+* @tc.number  : AppendSrcMediaInfo_001
+* @tc.desc    : Test AppendSrcMediaInfo interface.
+* @tc.require :
+*/
+HWTEST_F(HitranscodeUnitTest, AppendSrcMediaInfo_001, TestSize.Level0)
+{
+    std::shared_ptr<Meta> inputMeta = std::make_shared<Meta>();
+    std::shared_ptr<Meta> srcVideoFormat_ = std::make_shared<Meta>();
+    std::shared_ptr<Meta> srcAudioFormat_ = std::make_shared<Meta>();
+    std::string metaKey = Tag::MEDIA_TYPE;
+    Plugins::MediaType mediaType = Plugins::MediaType::AUDIO;
+    transcoder_->srcAudioFormat_->SetData(metaKey, mediaType);
+
+    mediaType = Plugins::MediaType::VIDEO;
+    transcoder_->srcVideoFormat_->SetData(metaKey, mediaType);
+
+    int64_t srcVideoBitrate = 640;
+    transcoder_->srcVideoFormat_->SetData(Tag::MEDIA_BITRATE, srcVideoBitrate);
+
+    transcoder_->srcVideoFormat_->SetData(Tag::VIDEO_IS_HDR_VIVID, true);
+    EXPECT_TRUE(inputMeta != nullptr);
+    transcoder_->AppendSrcMediaInfo(inputMeta);
+    int32_t isHdrVivid_;
+    inputMeta->GetData(Tag::AV_TRANSCODER_SRC_HDR_TYPE, isHdrVivid_);
+    EXPECT_EQ(isHdrVivid_, 1);
+    int32_t srcVideoBitrate_;
+    inputMeta->GetData(Tag::AV_TRANSCODER_SRC_VIDEO_BITRATE, srcVideoBitrate_);
+    EXPECT_EQ(srcVideoBitrate_, srcVideoBitrate);
+}
+
+/**
+* @tc.name    : Test ConfigureVideoBitrate API
+* @tc.number  : ConfigureVideoBitrate_001
+* @tc.desc    : Test ConfigureVideoBitrate interface.
+* @tc.require :
+*/
+HWTEST_F(HitranscodeUnitTest, ConfigureVideoBitrate_001, TestSize.Level0)
+{
+    transcoder_->isExistVideoTrack_ = true;
+    std::string metaKey = Tag::VIDEO_WIDTH;
+    int32_t width = 1100;
+    transcoder_->videoEncFormat_->SetData(metaKey, width);
+
+    int32_t height = 1100;
+    metaKey = Tag::VIDEO_HEIGHT;
+    transcoder_->videoEncFormat_->SetData(metaKey, height);
+    Status ret = transcoder_->ConfigureVideoBitrate();
+    EXPECT_EQ(ret, Status::OK);
+}
+
+/**
+* @tc.name    : Test ConfigureVideoBitrate API
+* @tc.number  : ConfigureVideoBitrate_002
+* @tc.desc    : Test ConfigureVideoBitrate interface.
+* @tc.require :
+*/
+HWTEST_F(HitranscodeUnitTest, ConfigureVideoBitrate_002, TestSize.Level0)
+{
+    transcoder_->isExistVideoTrack_ = true;
+    std::string metaKey = Tag::VIDEO_WIDTH;
+    int32_t width = 800;
+    transcoder_->videoEncFormat_->SetData(metaKey, width);
+
+    int32_t height = 800;
+    metaKey = Tag::VIDEO_HEIGHT;
+    transcoder_->videoEncFormat_->SetData(metaKey, height);
+    auto ret = transcoder_->ConfigureVideoBitrate();
+    EXPECT_EQ(ret, Status::OK);
+}
+
+/**
+* @tc.name    : Test ConfigureVideoBitrate API
+* @tc.number  : ConfigureVideoBitrate_003
+* @tc.desc    : Test ConfigureVideoBitrate interface.
+* @tc.require :
+*/
+HWTEST_F(HitranscodeUnitTest, ConfigureVideoBitrate_003, TestSize.Level0)
+{
+    transcoder_->isExistVideoTrack_ = true;
+    std::string metaKey = Tag::VIDEO_WIDTH;
+    int32_t width = 500;
+    transcoder_->videoEncFormat_->SetData(metaKey, width);
+
+    int32_t height = 500;
+    metaKey = Tag::VIDEO_HEIGHT;
+    transcoder_->videoEncFormat_->SetData(metaKey, height);
+    auto ret = transcoder_->ConfigureVideoBitrate();
+    EXPECT_EQ(ret, Status::OK);
+}
+
+/**
+* @tc.name    : Test ConfigureVideoWidthHeight API
+* @tc.number  : ConfigureVideoWidthHeight_001
+* @tc.desc    : Test ConfigureVideoWidthHeight.
+* @tc.require :
+*/
+HWTEST_F(HitranscodeUnitTest, ConfigureVideoWidthHeight_001, TestSize.Level0)
+{
+    VideoRectangle videoRectangle(1920, 1080);
+    Status ret = transcoder_->ConfigureVideoWidthHeight(videoRectangle);
+    EXPECT_EQ(ret, Status::OK);
+}
+
+/**
+* @tc.name    : Test ConfigureVideoWidthHeight API
+* @tc.number  : ConfigureVideoWidthHeight_002
+* @tc.desc    : Test ConfigureVideoWidthHeight.
+* @tc.require :
+*/
+HWTEST_F(HitranscodeUnitTest, ConfigureVideoWidthHeight_002, TestSize.Level0)
+{
+    VideoRectangle videoRectangle(-1, -1);
+    Status ret = transcoder_->ConfigureVideoWidthHeight(videoRectangle);
+    EXPECT_EQ(ret, Status::OK);
+}
+
+/**
+* @tc.name    : Test ConfigureVideoWidthHeight API
+* @tc.number  : ConfigureVideoWidthHeight_003
+* @tc.desc    : Test ConfigureVideoWidthHeight.
+* @tc.require :
+*/
+HWTEST_F(HitranscodeUnitTest, ConfigureVideoWidthHeight_003, TestSize.Level0)
+{
+    VideoRectangle videoRectangle(1920, -1);
+    Status ret = transcoder_->ConfigureVideoWidthHeight(videoRectangle);
+    EXPECT_EQ(ret, Status::OK);
+}
+
+/**
+* @tc.name    : Test ConfigureVideoWidthHeight API
+* @tc.number  : ConfigureVideoWidthHeight_004
+* @tc.desc    : Test ConfigureVideoWidthHeight.
+* @tc.require :
+*/
+HWTEST_F(HitranscodeUnitTest, ConfigureVideoWidthHeight_004, TestSize.Level0)
+{
+    VideoRectangle videoRectangle(-1, 1080);
+    Status ret = transcoder_->ConfigureVideoWidthHeight(videoRectangle);
     EXPECT_EQ(ret, Status::OK);
 }
 } // namespace Media
