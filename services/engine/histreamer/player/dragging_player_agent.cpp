@@ -60,7 +60,7 @@ public:
     void ConsumeVideoFrame(const std::shared_ptr<AVBuffer> buffer, uint32_t bufferIndex) override
     {
         auto draggingPlayerAgent = draggingPlayerAgent_.lock();
-        if (draggingPlayerAgent != nullptr || buffer != nullptr) {
+        if (draggingPlayerAgent != nullptr && buffer != nullptr) {
             return draggingPlayerAgent->ConsumeVideoFrame(buffer, bufferIndex);
         }
     }
