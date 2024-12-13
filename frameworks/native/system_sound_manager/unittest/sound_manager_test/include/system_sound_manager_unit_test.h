@@ -22,6 +22,8 @@
 
 namespace OHOS {
 namespace Media {
+const std::string RING_TONE = "ring_tone";
+const std::string SYSTEM_TONE = "system_tone";
 class SystemSoundManagerUnitTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
