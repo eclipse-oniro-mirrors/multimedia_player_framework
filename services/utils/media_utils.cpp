@@ -62,8 +62,8 @@ const std::array<std::pair<PlaybackRateMode, float>, 10> PLAY_RATE_REFS = {
 
 static int g_readSysParaIdx = 0;
 static std::unordered_map<std::string, std::string> g_readSysParaMap;
-static int32_t FAULT_API_VERSION = -1;
-static int32_t ROUND_VERSION_NUMBER = 100;
+static int32_t g_faultApiVersion = -1;
+static int32_t g_roundVersionNumber = 100;
 }  // namespace
 
 std::string __attribute__((visibility("default"))) GetClientBundleName(int32_t uid)
@@ -103,7 +103,7 @@ std::string __attribute__((visibility("default"))) GetClientBundleName(int32_t u
 int32_t __attribute__((visibility("default"))) GetApiInfo(int32_t uid)
 {
     if (uid == 1003) { // 1003 is bootanimation uid
-        return FAULT_API_VERSION;
+        return g_faultApiVersion;
     }
     std::string bundleName = "";
     int32_t userId = 0;
@@ -111,25 +111,25 @@ int32_t __attribute__((visibility("default"))) GetApiInfo(int32_t uid)
     auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (samgr == nullptr) {
         MEDIA_LOG_E("Get ability manager failed");
-        return FAULT_API_VERSION;
+        return g_faultApiVersion;
     }
  
     sptr<IRemoteObject> object = samgr->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
     if (object == nullptr) {
         MEDIA_LOG_E("object is NULL.");
-        return FAULT_API_VERSION;
+        return g_faultApiVersion;
     }
  
     sptr<OHOS::AppExecFwk::IBundleMgr> bms = iface_cast<OHOS::AppExecFwk::IBundleMgr>(object);
     if (bms == nullptr) {
         MEDIA_LOG_E("bundle manager service is NULL.");
-        return FAULT_API_VERSION;
+        return g_faultApiVersion;
     }
  
     auto result = bms->GetNameForUid(uid, bundleName);
     if (result != ERR_OK) {
         MEDIA_LOG_E("Error GetBundleNameForUid fail");
-        return FAULT_API_VERSION;
+        return g_faultApiVersion;
     }
  
     AccountSA::OsAccountManager::GetOsAccountLocalIdFromUid(uid, userId);
@@ -137,11 +137,11 @@ int32_t __attribute__((visibility("default"))) GetApiInfo(int32_t uid)
     auto applicationResult = bms->GetApplicationInfo(bundleName, flags, userId, appInfo);
     if (applicationResult != true) {
         MEDIA_LOG_E("Error GetApplicationInfo fail");
-        return FAULT_API_VERSION;
+        return g_faultApiVersion;
     }
  
     auto apiVersion = appInfo.apiTargetVersion;
-    auto apiVersionResult = apiVersion % ROUND_VERSION_NUMBER;
+    auto apiVersionResult = apiVersion % g_roundVersionNumber;
     return apiVersionResult;
 }
 
