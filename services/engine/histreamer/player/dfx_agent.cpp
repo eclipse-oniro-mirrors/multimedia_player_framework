@@ -31,11 +31,8 @@ namespace {
 const std::map<DfxEventType, DfxEventHandleFunc> DfxAgent::DFX_EVENT_HANDLERS_ = {
     { DfxEventType::DFX_INFO_PLAYER_VIDEO_LAG, DfxAgent::ProcessVideoLagEvent },
     { DfxEventType::DFX_INFO_PLAYER_AUDIO_LAG, DfxAgent::ProcessAudioLagEvent },
-<<<<<<< HEAD
-=======
     { DfxEventType::DFX_INFO_PLAYER_STREAM_LAG, DfxAgent::ProcessStreamLagEvent },
     { DfxEventType::DFX_INFO_PLAYER_EOS_SEEK, DfxAgent::ProcessEosSeekEvent },
->>>>>>> master
 };
 
  
@@ -152,8 +149,6 @@ void DfxAgent::ProcessAudioLagEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent 
     std::string msg = "lagEvent=Audio";
     agent->ReportLagEvent(lagDuration, msg);
 }
-<<<<<<< HEAD
-=======
  
 void DfxAgent::ProcessStreamLagEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &event)
 {
@@ -172,6 +167,5 @@ void DfxAgent::ProcessEosSeekEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &
     int64_t appUid = AnyCast<int32_t>(event.param);
     agent->ReportEosSeek0Event(appUid);
 }
->>>>>>> master
 }  // namespace Media
 }  // namespace OHOS
