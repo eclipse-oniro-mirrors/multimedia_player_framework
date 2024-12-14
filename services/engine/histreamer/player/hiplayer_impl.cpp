@@ -1017,6 +1017,7 @@ int32_t HiPlayerImpl::Reset()
     singleLoop_ = false;
     auto ret = Stop();
     if (syncManager_ != nullptr) {
+        syncManager_->ResetMediaStartPts();
         syncManager_->Reset();
     }
     if (dfxAgent_ != nullptr) {
