@@ -1906,7 +1906,8 @@ int32_t ScreenCaptureServer::StartStreamVideoCapture()
     }
     CHECK_AND_RETURN_RET_LOG(
         captureConfig_.videoInfo.videoCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_VALID,
-        MSERR_INVALID_VAL, "StartStreamVideoCapture failed, invalid param, dataType:%{public}d", captureConfig_.dataType);
+        MSERR_INVALID_VAL, "StartStreamVideoCapture failed, invalid param, dataType:%{public}d",
+        captureConfig_.dataType);
 
     int32_t ret = StartStreamHomeVideoCapture();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret,
@@ -1919,8 +1920,8 @@ int32_t ScreenCaptureServer::StartStreamVideoCapture()
 int32_t ScreenCaptureServer::StartStreamHomeVideoCapture()
 {
     MediaTrace trace("ScreenCaptureServer::StartStreamHomeVideoCapture");
-    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StartStreamHomeVideoCapture start, isSurfaceMode:%{public}s.",
-        FAKE_POINTER(this), isSurfaceMode_ ? "true" : "false");
+    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StartStreamHomeVideoCapture start, "
+        "isSurfaceMode: %{public}s.", FAKE_POINTER(this), isSurfaceMode_ ? "true" : "false");
     std::string virtualScreenName = "screen_capture";
     if (isSurfaceMode_) {
         int32_t ret = CreateVirtualScreen(virtualScreenName, surface_);
