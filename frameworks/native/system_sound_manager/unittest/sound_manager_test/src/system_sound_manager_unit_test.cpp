@@ -1185,5 +1185,320 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetDefaultSystemToneUri_00
     systemSoundManager_->GetDefaultSystemToneUri(static_cast<SystemToneType>(SYSTEM_TONE_TYPE_SIM_CARD_DEFAULT));
     EXPECT_NE(systemSoundManager_, nullptr);
 }
+
+/**
+ * @tc.name  : GetDefaultRingtoneUri_ShouldReturnUri_WhenTypeIsValid
+ * @tc.number: GetDefaultRingtoneUri_ShouldReturnUri_WhenTypeIsValid_001
+ * @tc.desc  : Test GetDefaultRingtoneUri method when ringtone type is valid.
+ */
+HWTEST(SystemSoundManagerUnitTest, GetDefaultRingtoneUri_ShouldReturnUri_WhenTypeIsValid_001, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
+        std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    EXPECT_NE(systemSoundManagerImpl_, nullptr);
+
+    // Arrange
+    RingtoneType validType = static_cast<RingtoneType>(0);
+
+    // Act
+    std::string result = systemSoundManagerImpl_->GetDefaultRingtoneUri(validType);
+
+    // Assert
+    EXPECT_EQ(result, "");
+}
+
+/**
+ * @tc.name  : GetDefaultRingtoneUri_ShouldReturnEmpty_WhenTypeIsInvalid
+ * @tc.number: GetDefaultRingtoneUri_ShouldReturnEmpty_WhenTypeIsInvalid_001
+ * @tc.desc  : Test GetDefaultRingtoneUri method when ringtone type is invalid.
+ */
+HWTEST(SystemSoundManagerUnitTest, GetDefaultRingtoneUri_ShouldReturnEmpty_WhenTypeIsInvalid_001, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
+        std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    EXPECT_NE(systemSoundManagerImpl_, nullptr);
+
+    // Arrange
+    RingtoneType invalidType = static_cast<RingtoneType>(99); // Assuming 99 is an invalid type
+
+    // Act
+    std::string result = systemSoundManagerImpl_->GetDefaultRingtoneUri(invalidType);
+
+    // Assert
+    EXPECT_EQ(result, "");
+}
+
+/**
+ * @tc.name  : GetDefaultSystemToneUri_ShouldReturnUri_WhenTypeIsRinging
+ * @tc.number: GetDefaultSystemToneUri_001
+ * @tc.desc  : Test GetDefaultSystemToneUri function when SystemToneType is Ringing
+ */
+HWTEST(SystemSoundManagerUnitTest, GetDefaultSystemToneUri_001, testing::ext::TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
+        std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    EXPECT_NE(systemSoundManagerImpl_, nullptr);
+
+    // Arrange
+    SystemToneType systemToneType = SystemToneType::SYSTEM_TONE_TYPE_SIM_CARD_0;
+    std::string expectedUri = "system_ringing_tone.mp3";
+
+    // Act
+    std::string actualUri = systemSoundManagerImpl_->GetDefaultSystemToneUri(systemToneType);
+
+    // Assert
+    EXPECT_NE(expectedUri, actualUri);
+}
+
+/**
+ * @tc.name  : GetDefaultSystemToneUri_ShouldReturnUri_WhenTypeIsNotification
+ * @tc.number: GetDefaultSystemToneUri_002
+ * @tc.desc  : Test GetDefaultSystemToneUri function when SystemToneType is Notification
+ */
+HWTEST(SystemSoundManagerUnitTest, GetDefaultSystemToneUri_002, testing::ext::TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
+        std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    EXPECT_NE(systemSoundManagerImpl_, nullptr);
+
+    // Arrange
+    SystemToneType systemToneType = SystemToneType::SYSTEM_TONE_TYPE_SIM_CARD_1;
+    std::string expectedUri = "system_notification_tone.mp3";
+
+    // Act
+    std::string actualUri = systemSoundManagerImpl_->GetDefaultSystemToneUri(systemToneType);
+
+    // Assert
+    EXPECT_NE(expectedUri, actualUri);
+}
+
+/**
+ * @tc.name  : GetDefaultSystemToneUri_ShouldReturnUri_WhenTypeIsAlarm
+ * @tc.number: GetDefaultSystemToneUri_003
+ * @tc.desc  : Test GetDefaultSystemToneUri function when SystemToneType is Alarm
+ */
+HWTEST(SystemSoundManagerUnitTest, GetDefaultSystemToneUri_003, testing::ext::TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
+        std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    EXPECT_NE(systemSoundManagerImpl_, nullptr);
+
+    // Arrange
+    SystemToneType systemToneType = SystemToneType::SYSTEM_TONE_TYPE_NOTIFICATION;
+    std::string expectedUri = "system_alarm_tone.mp3";
+
+    // Act
+    std::string actualUri = systemSoundManagerImpl_->GetDefaultSystemToneUri(systemToneType);
+
+    // Assert
+    EXPECT_NE(expectedUri, actualUri);
+}
+
+/**
+ * @tc.name  : GetKeyForDatabase_ShouldReturnCorrectKey_WhenRingtoneTypeIsSimCard0
+ * @tc.number: GetKeyForDatabase_RING_TONE_001
+ * @tc.desc  : Test GetKeyForDatabase function when systemSoundType is RING_TONE and type is RINGTONE_TYPE_SIM_CARD_0
+ */
+HWTEST(SystemSoundManagerUnitTest, GetKeyForDatabase_RING_TONE_001, testing::ext::TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
+        std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    EXPECT_NE(systemSoundManagerImpl_, nullptr);
+
+    std::string result = systemSoundManagerImpl_->GetKeyForDatabase(RING_TONE, 0);
+    EXPECT_EQ(result, "ringtone_for_sim_card_0");
+    result = systemSoundManagerImpl_->GetKeyForDatabase(RING_TONE, 1);
+    EXPECT_EQ(result, "ringtone_for_sim_card_1");
+    result = systemSoundManagerImpl_->GetKeyForDatabase(RING_TONE, 100);
+    EXPECT_EQ(result, "");
+}
+
+
+/**
+ * @tc.name  : GetKeyForDatabase_SystemTone_SimCard0
+ * @tc.number: GetKeyForDatabase_001
+ * @tc.desc  : Test GetKeyForDatabase function with SYSTEM_TONE and SIM_CARD_0
+ */
+HWTEST(SystemSoundManagerUnitTest, GetKeyForDatabase_SystemTone_SimCard0, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
+        std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    EXPECT_NE(systemSoundManagerImpl_, nullptr);
+
+    std::string result = systemSoundManagerImpl_->GetKeyForDatabase(SYSTEM_TONE, 0);
+    EXPECT_EQ(result, "system_tone_for_sim_card_0");
+    result = systemSoundManagerImpl_->GetKeyForDatabase(SYSTEM_TONE, 1);
+    EXPECT_EQ(result, "system_tone_for_sim_card_1");
+    result = systemSoundManagerImpl_->GetKeyForDatabase(SYSTEM_TONE, 32);
+    EXPECT_EQ(result, "system_tone_for_notification");
+    result = systemSoundManagerImpl_->GetKeyForDatabase(SYSTEM_TONE, 100);
+    EXPECT_EQ(result, "");
+    result = systemSoundManagerImpl_->GetKeyForDatabase("unavailable_system_sound_type", 100);
+    EXPECT_EQ(result, "");
+}
+
+/**
+ * @tc.name  : UpdateRingtoneUri_UpdateOnly_Test
+ * @tc.number: UpdateRingtoneUri_001
+ * @tc.desc  : Test UpdateRingtoneUri method when only updateOnlyPredicates and updateOnlyValuesBucket are used.
+ */
+HWTEST(SystemSoundManagerUnitTest, UpdateRingtoneUri_UpdateOnly_Test, testing::ext::TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
+        std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    EXPECT_NE(systemSoundManagerImpl_, nullptr);
+
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
+    EXPECT_NE(dataShareHelper, nullptr);
+
+    int32_t toneId = 1;
+    RingtoneType ringtoneType = RingtoneType::RINGTONE_TYPE_SIM_CARD_1;
+    int32_t num = 1;
+
+    systemSoundManagerImpl_->UpdateRingtoneUri(dataShareHelper, toneId, ringtoneType, num);
+}
+
+/**
+ * @tc.name  : UpdateRingtoneUri_UpdateBoth_Test
+ * @tc.number: UpdateRingtoneUri_002
+ * @tc.desc  : Test UpdateRingtoneUri method
+ */
+HWTEST(SystemSoundManagerUnitTest, UpdateRingtoneUri_UpdateBoth_Test, testing::ext::TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
+        std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    EXPECT_NE(systemSoundManagerImpl_, nullptr);
+
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
+    EXPECT_NE(dataShareHelper, nullptr);
+
+    int32_t toneId = 1;
+    RingtoneType ringtoneType = RingtoneType::RINGTONE_TYPE_SIM_CARD_1;
+    int32_t num = 2;
+
+    systemSoundManagerImpl_->UpdateRingtoneUri(dataShareHelper, toneId, ringtoneType, num);
+}
+
+/**
+ * @tc.name  : UpdateRingtoneUri_UpdatePredicates_Test
+ * @tc.number: UpdateRingtoneUri_003
+ * @tc.desc  : Test UpdateRingtoneUri method when updatePredicates and updateValuesBucket are used.
+ */
+HWTEST(SystemSoundManagerUnitTest, UpdateRingtoneUri_UpdatePredicates_Test, testing::ext::TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
+        std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    EXPECT_NE(systemSoundManagerImpl_, nullptr);
+
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
+    EXPECT_NE(dataShareHelper, nullptr);
+
+    int32_t toneId = 1;
+    RingtoneType ringtoneType = RingtoneType::RINGTONE_TYPE_SIM_CARD_1;
+    int32_t num = 1;
+
+    systemSoundManagerImpl_->UpdateRingtoneUri(dataShareHelper, toneId, ringtoneType, num);
+}
+
+/**
+ * @tc.name  : GetRingtoneTitle_ShouldReturnTitle_WhenDataShareHelperIsNotNull
+ * @tc.number: GetRingtoneTitle_001
+ * @tc.desc  : Test GetRingtoneTitle method when dataShareHelper is not null.
+ */
+HWTEST(SystemSoundManagerUnitTest, GetRingtoneTitle_ShouldReturnTitle_WhenDataShareHelperIsNotNull, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
+        std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    EXPECT_NE(systemSoundManagerImpl_, nullptr);
+
+    std::string ringtoneUri = "testUri";
+    std::string ringtoneTitle = "";
+
+    std::string result = systemSoundManagerImpl_->GetRingtoneTitle(ringtoneUri);
+    EXPECT_EQ(result, ringtoneTitle);
+}
+
+/**
+ * @tc.name  : UpdateShotToneUri_ShouldUpdate_WhenSystemToneTypeIsSimCard1AndNumIsSimCard1
+ * @tc.number: UpdateShotToneUri_001
+ * @tc.desc  : Test UpdateShotToneUri
+ */
+HWTEST(SystemSoundManagerUnitTest, UpdateShotToneUri_001, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
+        std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    EXPECT_NE(systemSoundManagerImpl_, nullptr);
+
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
+    EXPECT_NE(dataShareHelper, nullptr);
+	
+    int32_t toneId = 1;
+    SystemToneType systemToneType = SystemToneType::SYSTEM_TONE_TYPE_SIM_CARD_0;
+    int32_t num = SHOT_TONE_TYPE_SIM_CARD_1;
+
+    int32_t result = systemSoundManagerImpl_->UpdateShotToneUri(dataShareHelper, toneId, systemToneType, num);
+
+    EXPECT_EQ(result, 1);
+}
+
+/**
+ * @tc.name  : UpdateShotToneUri_ShouldUpdate_WhenSystemToneTypeIsSimCard2AndNumIsSimCard2
+ * @tc.number: UpdateShotToneUri_002
+ * @tc.desc  : Test UpdateShotToneUri method
+ */
+HWTEST(SystemSoundManagerUnitTest, UpdateShotToneUri_002, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
+        std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    EXPECT_NE(systemSoundManagerImpl_, nullptr);
+
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
+    EXPECT_NE(dataShareHelper, nullptr);
+	
+    int32_t toneId = 2;
+    SystemToneType systemToneType = SystemToneType::SYSTEM_TONE_TYPE_SIM_CARD_1;
+    int32_t num = SHOT_TONE_TYPE_SIM_CARD_2;
+
+    int32_t result = systemSoundManagerImpl_->UpdateShotToneUri(dataShareHelper, toneId, systemToneType, num);
+
+    EXPECT_EQ(result, 1);
+}
+
+/**
+ * @tc.name  : UpdateShotToneUri_ShouldUpdate_WhenSystemToneTypeIsSimCardBothAndNumIsSimCardBoth
+ * @tc.number: UpdateShotToneUri_003
+ * @tc.desc  : Test UpdateShotToneUri method
+ */
+HWTEST(SystemSoundManagerUnitTest, UpdateShotToneUri_003, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
+        std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    EXPECT_NE(systemSoundManagerImpl_, nullptr);
+
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
+    EXPECT_NE(dataShareHelper, nullptr);
+	
+    int32_t toneId = 3;
+    SystemToneType systemToneType = SystemToneType::SYSTEM_TONE_TYPE_NOTIFICATION;
+    int32_t num = SHOT_TONE_TYPE_SIM_CARD_BOTH;
+
+    int32_t result = systemSoundManagerImpl_->UpdateShotToneUri(dataShareHelper, toneId, systemToneType, num);
+
+    EXPECT_EQ(result, 1);
+}
 } // namespace Media
 } // namespace OHOS
