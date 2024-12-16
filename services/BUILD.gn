@@ -19,7 +19,6 @@ group("media_services_package") {
     ":codec_caps",
     ":recorder_configs",
     "engine:media_engine_package",
-    "etc:media_service.cfg",
     "services:media_service",
   ]
   if (player_framework_support_seccomp) {

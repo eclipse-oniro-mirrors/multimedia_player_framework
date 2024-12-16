@@ -34,6 +34,7 @@ declare_args() {
   player_framework_support_mediasource = true
   player_framework_support_auto_create_file = false
   player_framework_check_video_is_hdr_vivid = false
+  player_framework_enable_start_stop_on_demand = false
   if (defined(build_seccomp) && build_seccomp) {
     player_framework_support_seccomp = true
   }

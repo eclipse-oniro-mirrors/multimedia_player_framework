@@ -75,6 +75,14 @@ void MediaServer::OnStop()
         SYSTEM_PROCESS_TYPE, SYSTEM_STATUS_STOP, OHOS::PLAYER_DISTRIBUTED_SERVICE_ID);
 }
 
+int32_t MediaServer::OnIdle(const SystemAbilityOnDemandReason &idleReason)
+{
+    MEDIA_LOGD("MediaServer OnIdle");
+    auto instanceCount = MediaServerManager::GetInstance().GetInstanceCount();
+    CHECK_AND_RETURN_RET_LOG(instanceCount == 0, -1, "%{public}u instance are not released", instanceCount);
+    return 0;
+}
+
 void MediaServer::OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId)
 {
     MEDIA_LOGD("OnAddSystemAbility systemAbilityId:%{public}d", systemAbilityId);
@@ -88,6 +96,10 @@ void MediaServer::OnAddSystemAbility(int32_t systemAbilityId, const std::string 
 sptr<IRemoteObject> MediaServer::GetSubSystemAbility(IStandardMediaService::MediaSystemAbility subSystemId,
     const sptr<IRemoteObject> &listener)
 {
+    MEDIA_LOGD("GetSubSystemAbility, subSystemId is %{public}d", subSystemId);
+    bool saInActiveState = (GetAbilityState() != SystemAbilityState::IDLE) || CancelIdle();
+    CHECK_AND_RETURN_RET_LOG(saInActiveState, nullptr, "media service in idle state, but cancel idle failed");
+
     int32_t ret = MediaServiceStub::SetDeathListener(listener);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed set death listener");
 

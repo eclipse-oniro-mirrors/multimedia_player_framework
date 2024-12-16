@@ -38,6 +38,7 @@ namespace {
 PlayerServiceProxy::PlayerServiceProxy(const sptr<IRemoteObject> &impl)
     : IRemoteProxy<IStandardPlayerService>(impl)
 {
+    MEDIA_LOGE("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
     playerFuncs_[SET_LISTENER_OBJ] = "Player::SetListenerObject";
     playerFuncs_[SET_SOURCE] = "Player::SetSource";
