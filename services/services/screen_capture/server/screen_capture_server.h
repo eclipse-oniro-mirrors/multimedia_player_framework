@@ -164,8 +164,8 @@ public:
         OHOS::Rect &damage);
     int32_t ReleaseVideoBuffer();
     int32_t Release();
+    int32_t StartBufferThread();
     void OnBufferAvailableAction();
-    void StartBufferThread();
     void SurfaceBufferThreadRun();
     void StopBufferThread();
 
