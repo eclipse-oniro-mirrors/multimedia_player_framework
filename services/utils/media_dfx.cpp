@@ -206,6 +206,7 @@ void MediaEvent::CommonStatisicsEventWrite(CallType callType, OHOS::HiviewDFX::H
         return;
     }
     std::vector<std::string> infoArr;
+#ifdef SUPPORT_JSON
     for (const auto& kv : infoMap) {
         json jsonArray;
         json eventInfoJson;
@@ -220,10 +221,11 @@ void MediaEvent::CommonStatisicsEventWrite(CallType callType, OHOS::HiviewDFX::H
         jsonArray.push_back(eventInfoJson);
         infoArr.push_back(jsonArray.dump());
     }
-
+#endif
     StatisicsHiSysEventWrite(callType, type, infoArr);
 }
 
+#ifdef SUPPORT_JSON
 void MediaEvent::ParseOneEvent(const std::pair<uint64_t, std::shared_ptr<OHOS::Media::Meta>> &listPair,
     json& metaInfoJson)
 {
@@ -261,6 +263,7 @@ void MediaEvent::ParseOneEvent(const std::pair<uint64_t, std::shared_ptr<OHOS::M
         }
     }
 }
+#endif
 
 void MediaEvent::StatisicsHiSysEventWrite(CallType callType, OHOS::HiviewDFX::HiSysEvent::EventType type,
     const std::vector<std::string>& infoArr)
