@@ -116,5 +116,71 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnVoIPStatusChanged_004, TestSize.Leve
     ASSERT_EQ(screenCaptureServer_->GetMicWorkingState(), true);
     ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
 }
+
+HWTEST_F(ScreenCaptureServerFunctionTest, SetMicrophoneEnabledFile_001, TestSize.Level2)
+{
+    RecorderInfo recorderInfo;
+    SetRecorderInfo("set_microphone_enabled_file_001.mp4", recorderInfo);
+    SetValidConfigFile(recorderInfo);
+    ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
+    screenCaptureServer_->SetMicrophoneEnabled(true);
+    ASSERT_EQ(StartFileAudioCapture(), MSERR_OK);
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
+    sleep(RECORDER_TIME / 2);
+    screenCaptureServer_->SetMicrophoneEnabled(false);
+    sleep(RECORDER_TIME / 2);
+    screenCaptureServer_->SetMicrophoneEnabled(true);
+    sleep(RECORDER_TIME / 2);
+    ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
+}
+
+
+HWTEST_F(ScreenCaptureServerFunctionTest, SetMicrophoneEnabledFile_002, TestSize.Level2)
+{
+    RecorderInfo recorderInfo;
+    SetRecorderInfo("set_microphone_enabled_file_002.mp4", recorderInfo);
+    SetValidConfigFile(recorderInfo);
+    ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
+    screenCaptureServer_->SetMicrophoneEnabled(false);
+    ASSERT_EQ(StartFileAudioCapture(), MSERR_OK);
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
+    sleep(RECORDER_TIME / 2);
+    screenCaptureServer_->SetMicrophoneEnabled(true);
+    sleep(RECORDER_TIME / 2);
+    screenCaptureServer_->SetMicrophoneEnabled(false);
+    sleep(RECORDER_TIME / 2);
+    ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, SetMicrophoneEnabledStream_001, TestSize.Level2)
+{
+    SetValidConfig();
+    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
+    screenCaptureServer_->SetMicrophoneEnabled(true);
+    ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
+    sleep(RECORDER_TIME / 2);
+    screenCaptureServer_->SetMicrophoneEnabled(false);
+    sleep(RECORDER_TIME / 2);
+    screenCaptureServer_->SetMicrophoneEnabled(true);
+    sleep(RECORDER_TIME / 2);
+    ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
+}
+
+
+HWTEST_F(ScreenCaptureServerFunctionTest, SetMicrophoneEnabledStream_002, TestSize.Level2)
+{
+    SetValidConfig();
+    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
+    screenCaptureServer_->SetMicrophoneEnabled(false);
+    ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
+    sleep(RECORDER_TIME / 2);
+    screenCaptureServer_->SetMicrophoneEnabled(true);
+    sleep(RECORDER_TIME / 2);
+    screenCaptureServer_->SetMicrophoneEnabled(false);
+    sleep(RECORDER_TIME / 2);
+    ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
+}
 } // Media
 } // OHOS
