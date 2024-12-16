@@ -1232,10 +1232,10 @@ HWTEST(SystemSoundManagerUnitTest, GetDefaultRingtoneUri_ShouldReturnEmpty_WhenT
 
 /**
  * @tc.name  : GetDefaultSystemToneUri_ShouldReturnUri_WhenTypeIsRinging
- * @tc.number: GetDefaultSystemToneUri_ShouldReturnUri_WhenTypeIsRinging_001
+ * @tc.number: GetDefaultSystemToneUri_001
  * @tc.desc  : Test GetDefaultSystemToneUri function when SystemToneType is Ringing
  */
-HWTEST(SystemSoundManagerUnitTest, GetDefaultSystemToneUri_ShouldReturnUri_WhenTypeIsRinging, testing::ext::TestSize.Level0)
+HWTEST(SystemSoundManagerUnitTest, GetDefaultSystemToneUri_001, testing::ext::TestSize.Level0)
 {
     auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
     std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
@@ -1255,10 +1255,10 @@ HWTEST(SystemSoundManagerUnitTest, GetDefaultSystemToneUri_ShouldReturnUri_WhenT
 
 /**
  * @tc.name  : GetDefaultSystemToneUri_ShouldReturnUri_WhenTypeIsNotification
- * @tc.number: GetDefaultSystemToneUri_ShouldReturnUri_WhenTypeIsNotification_002
+ * @tc.number: GetDefaultSystemToneUri_002
  * @tc.desc  : Test GetDefaultSystemToneUri function when SystemToneType is Notification
  */
-HWTEST(SystemSoundManagerUnitTest, GetDefaultSystemToneUri_ShouldReturnUri_WhenTypeIsNotification, testing::ext::TestSize.Level0)
+HWTEST(SystemSoundManagerUnitTest, GetDefaultSystemToneUri_002, testing::ext::TestSize.Level0)
 {
     auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
     std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
@@ -1278,10 +1278,10 @@ HWTEST(SystemSoundManagerUnitTest, GetDefaultSystemToneUri_ShouldReturnUri_WhenT
 
 /**
  * @tc.name  : GetDefaultSystemToneUri_ShouldReturnUri_WhenTypeIsAlarm
- * @tc.number: GetDefaultSystemToneUri_ShouldReturnUri_WhenTypeIsAlarm_003
+ * @tc.number: GetDefaultSystemToneUri_003
  * @tc.desc  : Test GetDefaultSystemToneUri function when SystemToneType is Alarm
  */
-HWTEST(SystemSoundManagerUnitTest, GetDefaultSystemToneUri_ShouldReturnUri_WhenTypeIsAlarm, testing::ext::TestSize.Level0)
+HWTEST(SystemSoundManagerUnitTest, GetDefaultSystemToneUri_003, testing::ext::TestSize.Level0)
 {
     auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
     std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
@@ -1315,7 +1315,7 @@ HWTEST(SystemSoundManagerUnitTest, GetKeyForDatabase_RING_TONE_001, testing::ext
     EXPECT_EQ(result, "ringtone_for_sim_card_0");
     result = systemSoundManagerImpl_->GetKeyForDatabase(RING_TONE, 1);
     EXPECT_EQ(result, "ringtone_for_sim_card_1");
-	result = systemSoundManagerImpl_->GetKeyForDatabase(RING_TONE, 100);
+    result = systemSoundManagerImpl_->GetKeyForDatabase(RING_TONE, 100);
     EXPECT_EQ(result, "");
 }
 
@@ -1369,7 +1369,7 @@ HWTEST(SystemSoundManagerUnitTest, UpdateRingtoneUri_UpdateOnly_Test, testing::e
 /**
  * @tc.name  : UpdateRingtoneUri_UpdateBoth_Test
  * @tc.number: UpdateRingtoneUri_002
- * @tc.desc  : Test UpdateRingtoneUri method when both updateOnlyPredicates, updateOnlyValuesBucket and updateBothPredicates, updateBothValuesBucket are used.
+ * @tc.desc  : Test UpdateRingtoneUri method
  */
 HWTEST(SystemSoundManagerUnitTest, UpdateRingtoneUri_UpdateBoth_Test, testing::ext::TestSize.Level0)
 {
@@ -1432,9 +1432,9 @@ HWTEST(SystemSoundManagerUnitTest, GetRingtoneTitle_ShouldReturnTitle_WhenDataSh
 /**
  * @tc.name  : UpdateShotToneUri_ShouldUpdate_WhenSystemToneTypeIsSimCard1AndNumIsSimCard1
  * @tc.number: UpdateShotToneUri_001
- * @tc.desc  : Test UpdateShotToneUri method when systemToneType is SYSTEM_TONE_TYPE_SIM_CARD_0 and num is SHOT_TONE_TYPE_SIM_CARD_1
+ * @tc.desc  : Test UpdateShotToneUri
  */
-HWTEST(SystemSoundManagerUnitTest, UpdateShotToneUri_ShouldUpdate_WhenSystemToneTypeIsSimCard1AndNumIsSimCard1, TestSize.Level0)
+HWTEST(SystemSoundManagerUnitTest, UpdateShotToneUri_001, TestSize.Level0)
 {
     auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
     std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
@@ -1456,9 +1456,9 @@ HWTEST(SystemSoundManagerUnitTest, UpdateShotToneUri_ShouldUpdate_WhenSystemTone
 /**
  * @tc.name  : UpdateShotToneUri_ShouldUpdate_WhenSystemToneTypeIsSimCard2AndNumIsSimCard2
  * @tc.number: UpdateShotToneUri_002
- * @tc.desc  : Test UpdateShotToneUri method when systemToneType is SYSTEM_TONE_TYPE_SIM_CARD_1 and num is SHOT_TONE_TYPE_SIM_CARD_2
+ * @tc.desc  : Test UpdateShotToneUri method
  */
-HWTEST(SystemSoundManagerUnitTest, UpdateShotToneUri_ShouldUpdate_WhenSystemToneTypeIsSimCard2AndNumIsSimCard2, TestSize.Level0)
+HWTEST(SystemSoundManagerUnitTest, UpdateShotToneUri_002, TestSize.Level0)
 {
     auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
     std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
@@ -1480,9 +1480,9 @@ HWTEST(SystemSoundManagerUnitTest, UpdateShotToneUri_ShouldUpdate_WhenSystemTone
 /**
  * @tc.name  : UpdateShotToneUri_ShouldUpdate_WhenSystemToneTypeIsSimCardBothAndNumIsSimCardBoth
  * @tc.number: UpdateShotToneUri_003
- * @tc.desc  : Test UpdateShotToneUri method when systemToneType is SHOT_TONE_TYPE_SIM_CARD_BOTH and num is SHOT_TONE_TYPE_SIM_CARD_BOTH
+ * @tc.desc  : Test UpdateShotToneUri method
  */
-HWTEST(SystemSoundManagerUnitTest, UpdateShotToneUri_ShouldUpdate_WhenSystemToneTypeIsSimCardBothAndNumIsSimCardBoth, TestSize.Level0)
+HWTEST(SystemSoundManagerUnitTest, UpdateShotToneUri_003, TestSize.Level0)
 {
     auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
     std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
