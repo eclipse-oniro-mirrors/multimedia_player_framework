@@ -162,9 +162,16 @@ std::shared_ptr<IPlayerService> MediaClient::CreatePlayerService()
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(IsAlived(), nullptr, "media service does not exist.");
 
-    sptr<IRemoteObject> object = mediaProxy_->GetSubSystemAbility(
-        IStandardMediaService::MediaSystemAbility::MEDIA_PLAYER, listenerStub_->AsObject());
-    CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "player proxy object is nullptr.");
+    sptr<IRemoteObject> object = nullptr;
+    if (!IsOnBootPeriodForCurentUID()) {
+        object = mediaProxy_->GetSubSystemAbility(
+            IStandardMediaService::MediaSystemAbility::MEDIA_PLAYER, listenerStub_->AsObject());
+    } else {
+        constexpr uint32_t MAX_WAIT_TIME = 5000;
+        object = mediaProxy_->GetSubSystemAbilityWithTimeOut(
+            IStandardMediaService::MediaSystemAbility::MEDIA_PLAYER, listenerStub_->AsObject(), MAX_WAIT_TIME);
+        MEDIA_LOGI("MediaClient::CreatePlayerService GetSubSystemAbilityWithTimeOut for uid:%{public}u", getuid());
+    }
 
     sptr<IStandardPlayerService> playerProxy = iface_cast<IStandardPlayerService>(object);
     CHECK_AND_RETURN_RET_LOG(playerProxy != nullptr, nullptr, "player proxy is nullptr.");
@@ -427,6 +434,19 @@ void MediaClient::DoMediaServerDied()
         }
     }
 #endif
+}
+
+bool MediaClient::IsOnBootPeriodForCurentUID() const
+{
+    uint32_t currentUid = getuid();
+    const static std::array<uint32_t, 2> uidsDuringBoot = {
+        // bootanimation
+        1003,
+        // sceneboard
+        20020025,
+    };
+    auto it = std::find(uidsDuringBoot.begin(), uidsDuringBoot.end(), currentUid);
+    return it != uidsDuringBoot.end();
 }
 } // namespace Media
 } // namespace OHOS

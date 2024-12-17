@@ -110,6 +110,7 @@ ohos_shared_library("media_client") {
     "$MEDIA_ROOT_DIR/services/services/sa_media/client/media_client.cpp",
     "$MEDIA_ROOT_DIR/services/services/sa_media/ipc/media_listener_stub.cpp",
     "$MEDIA_ROOT_DIR/services/services/sa_media/ipc/media_parcel.cpp",
+    "$MEDIA_ROOT_DIR/services/services/sa_media/ipc/media_reply_stub.cpp",
     "$MEDIA_ROOT_DIR/services/services/sa_media/ipc/media_service_proxy.cpp",
   ]
   if (player_framework_support_player) {

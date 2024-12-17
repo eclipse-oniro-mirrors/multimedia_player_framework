@@ -52,10 +52,19 @@ public:
         const sptr<IRemoteObject> &listener) = 0;
 
     /**
+     * Create Player/Recorder/AVCodec/Codeclist/Split/AVmetadata Service Ability
+     *
+     * @return Returns remote object sptr, nullptr on failure or timeout when wait beyond timeoutMs milliseconds.
+     */
+    virtual sptr<IRemoteObject> GetSubSystemAbilityWithTimeOut(IStandardMediaService::MediaSystemAbility subSystemId,
+        const sptr<IRemoteObject> &listener, uint32_t timeoutMs) = 0;
+
+    /**
      * IPC code ID
      */
     enum MediaServiceMsg : int32_t {
         GET_SUBSYSTEM = 0,
+        GET_SUBSYSTEM_AYNC = 1,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardMediaService");

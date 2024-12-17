@@ -14,6 +14,7 @@
  */
 
 #include "media_service_proxy.h"
+#include "media_reply_stub.h"
 #include "media_log.h"
 #include "media_errors.h"
 #include "player_xcollie.h"
@@ -53,6 +54,36 @@ sptr<IRemoteObject> MediaServiceProxy::GetSubSystemAbility(IStandardMediaService
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, nullptr,
         "Create player proxy failed, error: %{public}d", error);
     return reply.ReadRemoteObject();
+}
+
+sptr<IRemoteObject> MediaServiceProxy::GetSubSystemAbilityWithTimeOut(
+    IStandardMediaService::MediaSystemAbility subSystemId, const sptr<IRemoteObject> &listener, uint32_t timeoutMs)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option = { MessageOption::TF_ASYNC };
+
+    CHECK_AND_RETURN_RET_LOG(listener != nullptr, nullptr, "listener is nullptr!");
+    bool token = data.WriteInterfaceToken(MediaServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, nullptr, "Failed to write descriptor!");
+
+    (void)data.WriteInt32(static_cast<int32_t>(subSystemId));
+    (void)data.WriteRemoteObject(listener);
+
+    sptr<MediaReplyStub> mediaReplyStub = new(std::nothrow) MediaReplyStub();
+    CHECK_AND_RETURN_RET_LOG(mediaReplyStub != nullptr, nullptr, "failed to create MediaReplyStub.");
+
+    (void) data.WriteUint32(timeoutMs);
+    sptr<IRemoteObject> object = mediaReplyStub->AsObject();
+    CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "mediaReplyStub object is nullptr.");
+    (void)data.WriteRemoteObject(object);
+
+    int32_t error = MSERR_UNKNOWN;
+    error = Remote()->SendRequest(MediaServiceMsg::GET_SUBSYSTEM_AYNC, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, nullptr,
+        "SendRequest failed, error: %{public}d", error);
+    
+    return mediaReplyStub->WaitForAsyncSubSystemAbility(timeoutMs);
 }
 } // namespace Media
 } // namespace OHOS

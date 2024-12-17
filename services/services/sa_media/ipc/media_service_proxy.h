@@ -28,8 +28,12 @@ public:
 
     sptr<IRemoteObject> GetSubSystemAbility(IStandardMediaService::MediaSystemAbility subSystemId,
         const sptr<IRemoteObject> &listener) override;
+    
+    sptr<IRemoteObject> GetSubSystemAbilityWithTimeOut(IStandardMediaService::MediaSystemAbility subSystemId,
+        const sptr<IRemoteObject> &listener, uint32_t timeoutMs) override;
 
 private:
+    bool IsGetSubSystemAbilityASync() const;
     static inline BrokerDelegator<MediaServiceProxy> delegator_;
 };
 } // namespace Media

@@ -38,5 +38,12 @@ sptr<IRemoteObject> MediaServiceProxyFuzzer::GetSubSystemAbility(IStandardMediaS
     }
     return reply.ReadRemoteObject();
 }
+
+sptr<IRemoteObject> MediaServiceProxyFuzzer::GetSubSystemAbilityWithTimeOut(
+    IStandardMediaService::MediaSystemAbility subSystemId, const sptr<IRemoteObject> &listener, uint32_t timeoutMs)
+{
+    (void) timeoutMs;
+    return GetSubSystemAbility(subSystemId, listener);
+}
 }
 }

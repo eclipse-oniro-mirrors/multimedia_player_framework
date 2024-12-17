@@ -120,6 +120,7 @@ ohos_shared_library("media_service") {
     "monitor/server/monitor_server_object.cpp",
     "sa_media/ipc/media_listener_proxy.cpp",
     "sa_media/ipc/media_parcel.cpp",
+    "sa_media/ipc/media_reply_proxy.cpp",
     "sa_media/ipc/media_service_stub.cpp",
     "sa_media/server/media_server.cpp",
     "sa_media/server_manager/media_server_manager.cpp",
