@@ -18,6 +18,7 @@
 #include "hiplayer_impl.h"
 
 #include <chrono>
+#include <shared_mutex>
 
 #include "audio_info.h"
 #include "common/log.h"
@@ -60,18 +61,39 @@ public:
     explicit PlayerEventReceiver(HiPlayerImpl* hiPlayerImpl, std::string playerId)
     {
         MEDIA_LOG_I("PlayerEventReceiver ctor called.");
+        std::unique_lock<std::shared_mutex> lk(cbMutex_);
         hiPlayerImpl_ = hiPlayerImpl;
         task_ = std::make_unique<Task>("PlayerEventReceiver", playerId, TaskType::GLOBAL,
             OHOS::Media::TaskPriority::HIGH, false);
     }
 
-    void OnEvent(const Event &event)
+    void OnEvent(const Event &event) override
     {
         MEDIA_LOG_D("PlayerEventReceiver OnEvent.");
-        task_->SubmitJobOnce([this, event] { hiPlayerImpl_->OnEvent(event); });
+        task_->SubmitJobOnce([this, event] {
+            std::shared_lock<std::shared_mutex> lk(cbMutex_);
+            FALSE_RETURN(hiPlayerImpl_ != nullptr);
+            hiPlayerImpl_->OnEvent(event);
+        });
+    }
+
+    void OnDfxEvent(const DfxEvent &event) override
+    {
+        MEDIA_LOG_D_SHORT("PlayerEventReceiver OnDfxEvent.");
+        std::shared_lock<std::shared_mutex> lk(cbMutex_);
+        FALSE_RETURN(hiPlayerImpl_ != nullptr);
+        hiPlayerImpl_->HandleDfxEvent(event);
+    }
+
+    void NotifyRelease() override
+    {
+        MEDIA_LOG_D_SHORT("PlayerEventReceiver NotifyRelease.");
+        std::unique_lock<std::shared_mutex> lk(cbMutex_);
+        hiPlayerImpl_ = nullptr;
     }
 
 private:
+    std::shared_mutex cbMutex_ {};
     HiPlayerImpl* hiPlayerImpl_;
     std::unique_ptr<Task> task_;
 };
@@ -81,16 +103,27 @@ public:
     explicit PlayerFilterCallback(HiPlayerImpl* hiPlayerImpl)
     {
         MEDIA_LOG_I("PlayerFilterCallback ctor called.");
+        std::unique_lock<std::shared_mutex> lk(cbMutex_);
         hiPlayerImpl_ = hiPlayerImpl;
     }
 
-    Status OnCallback(const std::shared_ptr<Filter>& filter, FilterCallBackCommand cmd, StreamType outType)
+    Status OnCallback(const std::shared_ptr<Filter>& filter, FilterCallBackCommand cmd, StreamType outType) override
     {
         MEDIA_LOG_I("PlayerFilterCallback OnCallback.");
+        std::shared_lock<std::shared_mutex> lk(cbMutex_);
+        FALSE_RETURN_V(hiPlayerImpl_ != nullptr, Status::OK); // hiPlayerImpl_ is destructed
         return hiPlayerImpl_->OnCallback(filter, cmd, outType);
     }
 
+    void NotifyRelease() override
+    {
+        MEDIA_LOG_D_SHORT("PlayerEventReceiver NotifyRelease.");
+        std::unique_lock<std::shared_mutex> lk(cbMutex_);
+        hiPlayerImpl_ = nullptr;
+    }
+
 private:
+    std::shared_mutex cbMutex_ {};
     HiPlayerImpl* hiPlayerImpl_;
 };
 
@@ -117,6 +150,12 @@ HiPlayerImpl::~HiPlayerImpl()
     if (dfxAgent_ != nullptr) {
         dfxAgent_.reset();
     }
+    if (playerEventReceiver_ != nullptr) {
+        playerEventReceiver_->NotifyRelease();
+    }
+    if (playerFilterCallback_ != nullptr) {
+        playerFilterCallback_->NotifyRelease();
+    }
     PipeLineThreadPool::GetInstance().DestroyThread(playerId_);
 }
 
@@ -142,15 +181,17 @@ Status HiPlayerImpl::Init()
 {
     MediaTrace trace("HiPlayerImpl::Init");
     MEDIA_LOG_I("Init start");
-    std::shared_ptr<EventReceiver> playerEventReceiver = std::make_shared<PlayerEventReceiver>(this, playerId_);
+    auto playerEventReceiver = std::make_shared<PlayerEventReceiver>(this, playerId_);
+    auto playerFilterCallback = std::make_shared<PlayerFilterCallback>(this);
+    FALSE_RETURN_V_MSG_E(playerEventReceiver != nullptr && playerFilterCallback != nullptr, Status::ERROR_NO_MEMORY,
+        "fail to allocate memory for PlayerEventReceiver or PlayerFilterCallback");
     playerEventReceiver_ = playerEventReceiver;
+    playerFilterCallback_ = playerFilterCallback;
     if (syncManager_ != nullptr) {
         syncManager_->SetEventReceiver(playerEventReceiver_);
     }
-    std::shared_ptr<FilterCallback> playerFilterCallback = std::make_shared<PlayerFilterCallback>(this);
-    playerFilterCallback_ = playerFilterCallback;
     MEDIA_LOG_D("pipeline init");
-    pipeline_->Init(playerEventReceiver, playerFilterCallback, playerId_);
+    pipeline_->Init(playerEventReceiver_, playerFilterCallback_, playerId_);
     MEDIA_LOG_D("pipeline Init out");
     for (std::pair<std::string, bool>& item: completeState_) {
         item.second = false;
@@ -2053,7 +2094,6 @@ void HiPlayerImpl::OnEventSub(const Event &event)
             break;
     }
     OnEventSubTrackChange(event);
-    OnDfxEvent(event);
 }
 
 void HiPlayerImpl::OnEventSubTrackChange(const Event &event)
@@ -2069,27 +2109,6 @@ void HiPlayerImpl::OnEventSubTrackChange(const Event &event)
         }
         case EventType::EVENT_SUBTITLE_TRACK_CHANGE: {
             HandleSubtitleTrackChangeEvent(event);
-            break;
-        }
-        default:
-            break;
-    }
-}
-
-void HiPlayerImpl::OnDfxEvent(const Event &event)
-{
-    FALSE_RETURN(dfxAgent_ != nullptr);
-    switch (event.type) {
-        case EventType::EVENT_VIDEO_LAG: {
-            dfxAgent_->OnVideoLagEvent(AnyCast<int64_t>(event.param));
-            break;
-        }
-        case EventType::EVENT_AUDIO_LAG: {
-            dfxAgent_->OnAudioLagEvent(AnyCast<int64_t>(event.param));
-            break;
-        }
-        case EventType::EVENT_STREAM_LAG: {
-            dfxAgent_->OnStreamLagEvent(AnyCast<int64_t>(event.param));
             break;
         }
         default:
@@ -2154,9 +2173,6 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
     demuxer_->SetInterruptState(isInterruptNeeded_);
     pipeline_->AddHeadFilters({demuxer_});
     demuxer_->Init(playerEventReceiver_, playerFilterCallback_);
-    if (dfxAgent_ != nullptr) {
-        dfxAgent_->SetDemuxer(demuxer_);
-    }
     DoSetPlayStrategy(source);
     if (!mimeType_.empty()) {
         source->SetMimeType(mimeType_);
@@ -2971,6 +2987,12 @@ int32_t HiPlayerImpl::ExitSeekContinous(bool align, int64_t seekContinousBatchNo
         seekAgent_.reset();
     }
     return TransStatus(Status::OK);
+}
+
+void HiPlayerImpl::HandleDfxEvent(const DfxEvent &event)
+{
+    FALSE_RETURN(dfxAgent_ != nullptr);
+    dfxAgent_->OnDfxEvent(event);
 }
 
 int32_t HiPlayerImpl::SetMaxAmplitudeCbStatus(bool status)
