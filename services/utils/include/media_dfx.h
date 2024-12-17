@@ -25,7 +25,7 @@
 #include "nocopyable.h"
 #include "hisysevent.h"
 #include "meta/meta.h"
-#ifndef CROSS_PLATFORM
+#ifdef SUPPORT_JSON
 #include "nlohmann/json.hpp"
 #endif
 #include <chrono>
@@ -33,7 +33,7 @@
 
 namespace OHOS {
 namespace Media {
-#ifndef CROSS_PLATFORM
+#ifdef SUPPORT_JSON
 using json = nlohmann::json;
 #endif
 enum CallType {
@@ -73,7 +73,7 @@ public:
 private:
     void StatisicsHiSysEventWrite(CallType callType, OHOS::HiviewDFX::HiSysEvent::EventType type,
         const std::vector<std::string>& infoArr);
-#ifndef CROSS_PLATFORM
+#ifdef SUPPORT_JSON
     void ParseOneEvent(const std::pair<uint64_t, std::shared_ptr<OHOS::Media::Meta>> &listPair, json& metaInfoJson);
 #endif
     std::string msg_;
