@@ -95,7 +95,7 @@ void MediaClient::CreateMediaServiceInstance(IStandardMediaService::MediaSystemA
         continue;
     }
 #else
-    CHECK_AND_RETURN_RET_LOG(IsAlived(), nullptr, "media service does not exist.");
+    CHECK_AND_RETURN_LOG(IsAlived(), "media service does not exist.");
     object = mediaProxy_->GetSubSystemAbility(subSystemId, listenerStub_->AsObject());
 #endif
 }

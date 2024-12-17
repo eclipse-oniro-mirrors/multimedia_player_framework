@@ -83,7 +83,7 @@ private:
     void DoMediaServerDied();
     void AVPlayerServerDied();
     void AVCodecServerDied();
-    void CreateInstanceAndTryInTimes(IStandardMediaService::MediaSystemAbility subSystemId,
+    void CreateMediaServiceInstance(IStandardMediaService::MediaSystemAbility subSystemId,
                                      sptr<IRemoteObject> &object);
 
     sptr<IStandardMediaService> mediaProxy_ = nullptr;
