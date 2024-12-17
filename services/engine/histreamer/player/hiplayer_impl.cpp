@@ -796,20 +796,20 @@ int32_t HiPlayerImpl::Play()
             TransStatus(Seek(GetPlayStartTime(), playRangeSeekMode_, false)) :
             TransStatus(Seek(0, PlayerSeekMode::SEEK_PREVIOUS_SYNC, false)));
         callbackLooper_.StartReportMediaProgress(REPORT_PROGRESS_INTERVAL);
-        callbackLooper_.startCollectMaxAmplitude(SAMPLE_AMPLITUDE_INTERVAL);
+        callbackLooper_.StartCollectMaxAmplitude(SAMPLE_AMPLITUDE_INTERVAL);
     } else if (pipelineStates_ == PlayerStates::PLAYER_PAUSED) {
         if (playRangeStartTime_ > PLAY_RANGE_DEFAULT_VALUE) {
             ret = TransStatus(Seek(playRangeStartTime_, PlayerSeekMode::SEEK_PREVIOUS_SYNC, false));
         }
         callbackLooper_.StartReportMediaProgress(REPORT_PROGRESS_INTERVAL);
-        callbackLooper_.startCollectMaxAmplitude(SAMPLE_AMPLITUDE_INTERVAL);
+        callbackLooper_.StartCollectMaxAmplitude(SAMPLE_AMPLITUDE_INTERVAL);
         ret = TransStatus(Resume());
     } else {
         if (playRangeStartTime_ > PLAY_RANGE_DEFAULT_VALUE) {
             ret = TransStatus(Seek(playRangeStartTime_, PlayerSeekMode::SEEK_PREVIOUS_SYNC, false));
         }
         callbackLooper_.StartReportMediaProgress(REPORT_PROGRESS_INTERVAL);
-        callbackLooper_.startCollectMaxAmplitude(SAMPLE_AMPLITUDE_INTERVAL);
+        callbackLooper_.StartCollectMaxAmplitude(SAMPLE_AMPLITUDE_INTERVAL);
         syncManager_->Resume();
         ret = TransStatus(pipeline_->Start());
         if (ret != MSERR_OK) {
@@ -868,7 +868,7 @@ int32_t HiPlayerImpl::ResumeDemuxer()
     FALSE_RETURN_V_MSG_E(pipelineStates_ != PlayerStates::PLAYER_STATE_ERROR,
         TransStatus(Status::OK), "PLAYER_STATE_ERROR not allow ResumeDemuxer");
     callbackLooper_.StartReportMediaProgress(REPORT_PROGRESS_INTERVAL);
-    callbackLooper_.startCollectMaxAmplitude(SAMPLE_AMPLITUDE_INTERVAL);
+    callbackLooper_.StartCollectMaxAmplitude(SAMPLE_AMPLITUDE_INTERVAL);
     Status ret = demuxer_->ResumeDemuxerReadLoop();
     return TransStatus(ret);
 }
