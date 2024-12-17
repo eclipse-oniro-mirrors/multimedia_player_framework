@@ -47,6 +47,7 @@ struct AudioBufferEntry {
 class CacheBuffer :
     public AudioStandard::AudioRendererWriteCallback,
     public AudioStandard::AudioRendererFirstFrameWritingCallback,
+    public AudioStandard::AudioRendererCallback,
     public std::enable_shared_from_this<CacheBuffer> {
 public:
     CacheBuffer(const Format &trackFormat,
@@ -57,6 +58,9 @@ public:
     ~CacheBuffer();
     void OnWriteData(size_t length) override;
     void OnFirstFrameWriting(uint64_t latency) override;
+    void OnInterrupt(const AudioStandard::InterruptEvent &interruptEvent) override;
+    void OnStateChange(const AudioStandard::RendererState state,
+        const AudioStandard::StateChangeCmdType cmdType) override;
     int32_t PreparePlay(const int32_t streamID, const AudioStandard::AudioRendererInfo audioRendererInfo,
         const PlayParams playParams);
     int32_t DoPlay(const int32_t streamID);
@@ -94,6 +98,7 @@ private:
 
     std::unique_ptr<AudioStandard::AudioRenderer> CreateAudioRenderer(const int32_t streamID,
         const AudioStandard::AudioRendererInfo audioRendererInfo, const PlayParams playParams);
+    void PrepareAudioRenderer(std::unique_ptr<AudioStandard::AudioRenderer> &audioRenderer);
     int32_t ReCombineCacheData();
     int32_t DealPlayParamsBeforePlay(const int32_t streamID, const PlayParams playParams);
     static AudioStandard::AudioRendererRate CheckAndAlignRendererRate(const int32_t rate);
