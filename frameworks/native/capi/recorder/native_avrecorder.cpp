@@ -568,6 +568,34 @@ OH_AVRecorder_CodecMimeType ConvertMimeType(const std::string &mimeType)
     return OH_AVRecorder_CodecMimeType::VIDEO_AVC;
 }
 
+void ConvertEncoderInfo(const EncoderCapabilityData &src, OH_AVRecorder_EncoderInfo &dest)
+{
+    dest.mimeType = ConvertMimeType(src.mimeType);
+
+    dest.type = strdup(src.type.c_str());
+
+    dest.bitRate.min = src.bitrate.minVal;
+    dest.bitRate.max = src.bitrate.maxVal;
+
+    dest.frameRate.min = src.frameRate.minVal;
+    dest.frameRate.max = src.frameRate.maxVal;
+
+    dest.width.min = src.width.minVal;
+    dest.width.max = src.width.maxVal;
+
+    dest.height.min = src.height.minVal;
+    dest.height.max = src.height.maxVal;
+
+    dest.channels.min = src.channels.minVal;
+    dest.channels.max = src.channels.maxVal;
+
+    dest.sampleRateLen = static_cast<int32_t>(src.sampleRate.size());
+    dest.sampleRate = (int32_t *)malloc(dest.sampleRateLen * sizeof(int32_t));
+    for (int j = 0; j < dest.sampleRateLen; ++j) {
+        dest.sampleRate[j] = src.sampleRate[j];
+    }
+}
+
 OH_AVErrCode OH_AVRecorder_GetAvailableEncoder(OH_AVRecorder *recorder,
     OH_AVRecorder_EncoderInfo **info, int32_t *length)
 {
@@ -579,14 +607,18 @@ OH_AVErrCode OH_AVRecorder_GetAvailableEncoder(OH_AVRecorder *recorder,
     CHECK_AND_RETURN_RET_LOG(recorderObj->recorder_ != nullptr, AV_ERR_INVALID_VAL, "recorder_ is null");
     
     recorderObj->ReleaseEncoderInfo(recorderObj->info_, recorderObj->length_);
-    recorderObj->info_ = *info;
 
     std::vector<EncoderCapabilityData> encoderInfo;
     int32_t ret = recorderObj->recorder_->GetAvailableEncoder(encoderInfo);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "GetAvailableEncoder failed!");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK || !encoderInfo.empty(),
+    	AV_ERR_INVALID_VAL, "GetAvailableEncoder failed!");
     
-    *length = static_cast<int32_t>(encoderInfo.size());
-    recorderObj->length_ = *length;
+    int32_t count = 0;
+    for (size_t i = 0; i < encoderInfo.size(); ++i) {
+        ++count;
+    }
+    recorderObj->length_ = count;
+    *length = recorderObj->length_;
 
     recorderObj->info_ = (OH_AVRecorder_EncoderInfo *)malloc(*length * sizeof(OH_AVRecorder_EncoderInfo));
     CHECK_AND_RETURN_RET_LOG(recorderObj->info_ != nullptr, AV_ERR_INVALID_VAL, "Memory allocation failed for info!");
@@ -594,32 +626,10 @@ OH_AVErrCode OH_AVRecorder_GetAvailableEncoder(OH_AVRecorder *recorder,
     for (size_t i = 0; i < encoderInfo.size(); ++i) {
         const EncoderCapabilityData &src = encoderInfo[i];
         OH_AVRecorder_EncoderInfo &dest = (recorderObj->info_)[i];
-
-        dest.mimeType = ConvertMimeType(src.mimeType);
-
-        dest.type = strdup(src.type.c_str());
-
-        dest.bitRate.min = src.bitrate.minVal;
-        dest.bitRate.max = src.bitrate.maxVal;
-
-        dest.frameRate.min = src.frameRate.minVal;
-        dest.frameRate.max = src.frameRate.maxVal;
-
-        dest.width.min = src.width.minVal;
-        dest.width.max = src.width.maxVal;
-
-        dest.height.min = src.height.minVal;
-        dest.height.max = src.height.maxVal;
-
-        dest.channels.min = src.channels.minVal;
-        dest.channels.max = src.channels.maxVal;
-
-        dest.sampleRateLen = static_cast<int32_t>(src.sampleRate.size());
-        dest.sampleRate = (int32_t *)malloc(dest.sampleRateLen * sizeof(int32_t));
-        for (int j = 0; j < dest.sampleRateLen; ++j) {
-            dest.sampleRate[j] = src.sampleRate[j];
-        }
+        ConvertEncoderInfo(src, dest);
     }
+
+    *info = recorderObj->info_;
     return AV_ERR_OK;
 }
 
