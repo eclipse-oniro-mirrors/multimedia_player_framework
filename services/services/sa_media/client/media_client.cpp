@@ -78,6 +78,7 @@ bool MediaClient::IsAlived()
 void MediaClient::CreateInstanceAndTryInTimes(IStandardMediaService::MediaSystemAbility subSystemId,
                                               sptr<IRemoteObject> &object)
 {
+#ifdef SUPPORT_START_STOP_ON_DEMAND
     int32_t tryTimes = RETRY_TIME;
     while (tryTimes-- > 0) {
         if (!IsAlived()) {
@@ -87,13 +88,17 @@ void MediaClient::CreateInstanceAndTryInTimes(IStandardMediaService::MediaSystem
         }
         object = mediaProxy_->GetSubSystemAbility(subSystemId, listenerStub_->AsObject());
         if (object != nullptr) {
-            break;
+            return;
         }
         MEDIA_LOGI("GetSubSystemAbility failed, sleep and retry");
         std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_TIME));
         continue;
     }
-    return;
+#endif
+#ifdef UNSUPPORT_START_STOP_ON_DEMAND
+    CHECK_AND_RETURN_RET_LOG(IsAlived(), nullptr, "media service does not exist.");
+    object = mediaProxy_->GetSubSystemAbility(subSystemId, listenerStub_->AsObject());
+#endif
 }
 
 #ifdef SUPPORT_RECORDER

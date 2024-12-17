@@ -892,10 +892,10 @@ void MediaServerManager::HandlePlayerFrozen(const std::vector<int32_t> &pidList,
 int32_t MediaServerManager::GetInstanceCount()
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    return recorderStubMap_.size() + playerStubMap_.size() + avMetadataHelperStubMap_.size() +
+    return static_cast<int32_t>(recorderStubMap_.size() + playerStubMap_.size() + avMetadataHelperStubMap_.size() +
            avCodecListStubMap_.size() + avCodecStubMap_.size() + recorderProfilesStubMap_.size() +
            screenCaptureStubMap_.size() + screenCaptureControllerStubMap_.size() +
-           screenCaptureControllerStubMap_.size() + transCoderStubMap_.size();
+           screenCaptureControllerStubMap_.size() + transCoderStubMap_.size());
 }
 } // namespace Media
 } // namespace OHOS
