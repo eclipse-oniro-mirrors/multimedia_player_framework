@@ -76,7 +76,7 @@ bool MediaClient::IsAlived()
 }
 
 void MediaClient::CreateMediaServiceInstance(IStandardMediaService::MediaSystemAbility subSystemId,
-                                              sptr<IRemoteObject> &object)
+    sptr<IRemoteObject> &object)
 {
 #ifdef SUPPORT_START_STOP_ON_DEMAND
     int32_t tryTimes = RETRY_TIME;
