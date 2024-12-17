@@ -194,6 +194,10 @@ if (player_framework_support_json) {
   player_framework_defines += [ "SUPPORT_JSON" ]
 }
 
+if (player_framework_enable_start_stop_on_demand) {
+  player_framework_defines += [ "SUPPORT_START_STOP_ON_DEMAND" ]
+}
+
 # Config path
 MEDIA_PLAYER_ROOT_DIR = "//foundation/multimedia/player_framework"
 MEDIA_PLAYER_AVCODEC = "//foundation/multimedia/av_codec"

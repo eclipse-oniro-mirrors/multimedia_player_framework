@@ -79,7 +79,7 @@ int32_t MediaServer::OnIdle(const SystemAbilityOnDemandReason &idleReason)
 {
     MEDIA_LOGD("MediaServer OnIdle");
     auto instanceCount = MediaServerManager::GetInstance().GetInstanceCount();
-    CHECK_AND_RETURN_RET_LOG(instanceCount == 0, -1, "%{public}u instance are not released", instanceCount);
+    CHECK_AND_RETURN_RET_LOG(instanceCount == 0, -1, "%{public} " PRId32 "instance are not released", instanceCount);
     return 0;
 }
 
@@ -97,8 +97,10 @@ sptr<IRemoteObject> MediaServer::GetSubSystemAbility(IStandardMediaService::Medi
     const sptr<IRemoteObject> &listener)
 {
     MEDIA_LOGD("GetSubSystemAbility, subSystemId is %{public}d", subSystemId);
+    #ifdef SUPPORT_START_STOP_ON_DEMAND
     bool saInActiveState = (GetAbilityState() != SystemAbilityState::IDLE) || CancelIdle();
     CHECK_AND_RETURN_RET_LOG(saInActiveState, nullptr, "media service in idle state, but cancel idle failed");
+    #endif
 
     int32_t ret = MediaServiceStub::SetDeathListener(listener);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed set death listener");

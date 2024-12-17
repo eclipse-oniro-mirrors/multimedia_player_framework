@@ -49,6 +49,7 @@ namespace OHOS {
 namespace Media {
 constexpr int32_t SLEEP_TIME = 100;
 constexpr int32_t LOAD_TIME = 30;
+constexpr int32_t RETRY_TIME = 3;
 static MediaClient g_mediaClientInstance;
 IMediaService &MediaServiceFactory::GetInstance()
 {
@@ -75,10 +76,12 @@ bool MediaClient::IsAlived()
 }
 
 void MediaClient::CreateInstanceAndTryInTimes(IStandardMediaService::MediaSystemAbility subSystemId,
-                                              sptr<IRemoteObject> &object, uint32_t tryTimes)
+                                              sptr<IRemoteObject> &object)
 {
+    int32_t tryTimes = RETRY_TIME;
     while (tryTimes-- > 0) {
         if (!IsAlived()) {
+            MEDIA_LOGI("media service does not exist, sleep and retry");
             std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_TIME));
             continue;
         }
@@ -86,6 +89,7 @@ void MediaClient::CreateInstanceAndTryInTimes(IStandardMediaService::MediaSystem
         if (object != nullptr) {
             break;
         }
+        MEDIA_LOGI("GetSubSystemAbility failed, sleep and retry");
         std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_TIME));
         continue;
     }
