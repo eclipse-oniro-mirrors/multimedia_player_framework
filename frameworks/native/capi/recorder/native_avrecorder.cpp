@@ -611,7 +611,7 @@ OH_AVErrCode OH_AVRecorder_GetAvailableEncoder(OH_AVRecorder *recorder,
     std::vector<EncoderCapabilityData> encoderInfo;
     int32_t ret = recorderObj->recorder_->GetAvailableEncoder(encoderInfo);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK || !encoderInfo.empty(),
-    	AV_ERR_INVALID_VAL, "GetAvailableEncoder failed!");
+        AV_ERR_INVALID_VAL, "GetAvailableEncoder failed!");
     
     int32_t count = 0;
     for (size_t i = 0; i < encoderInfo.size(); ++i) {
