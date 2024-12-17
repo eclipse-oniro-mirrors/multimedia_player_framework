@@ -56,8 +56,8 @@ bool PlayerSeekFuzzer::FuzzSeek(uint8_t* data, size_t size)
     sleep(1);
     player_->Play();
     if (size >= sizeof(int32_t)) {
-        int32_t mseconds = *reinterpret_cast<int32_t *>(data);
-        player_->Seek(mseconds, SEEK_NEXT_SYNC);
+        int32_t mSeconds = *reinterpret_cast<int32_t *>(data);
+        player_->Seek(mSeconds, SEEK_NEXT_SYNC);
         sleep(1);
     }
     player_->Release();
