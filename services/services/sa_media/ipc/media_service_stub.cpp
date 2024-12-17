@@ -44,7 +44,7 @@ void MediaServiceStub::Init()
 {
     mediaFuncs_[GET_SUBSYSTEM] =
         [this](MessageParcel &data, MessageParcel &reply) { return GetSystemAbility(data, reply); };
-    mediaFuncs_[GET_SUBSYSTEM_AYNC] =
+    mediaFuncs_[GET_SUBSYSTEM_ASYNC] =
         [this](MessageParcel &data, MessageParcel &reply) { return GetSystemAbilityAync(data, reply); };
 }
 

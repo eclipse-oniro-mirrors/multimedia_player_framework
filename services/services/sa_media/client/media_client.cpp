@@ -162,8 +162,9 @@ std::shared_ptr<IPlayerService> MediaClient::CreatePlayerService()
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(IsAlived(), nullptr, "media service does not exist.");
 
-    sptr<IRemoteObject> object = mediaProxy_->GetSubSystemAbility(
-        IStandardMediaService::MediaSystemAbility::MEDIA_PLAYER, listenerStub_->AsObject());
+    constexpr uint32_t MAX_WAIT_TIME = 5000;
+    sptr<IRemoteObject> object = mediaProxy_->GetSubSystemAbilityWithTimeOut(
+        IStandardMediaService::MediaSystemAbility::MEDIA_PLAYER, listenerStub_->AsObject(), MAX_WAIT_TIME);
     CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "player proxy object is nullptr.");
 
     sptr<IStandardPlayerService> playerProxy = iface_cast<IStandardPlayerService>(object);

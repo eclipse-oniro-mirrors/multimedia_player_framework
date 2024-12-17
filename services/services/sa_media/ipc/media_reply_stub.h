@@ -33,9 +33,10 @@ public:
     sptr<IRemoteObject> WaitForAsyncSubSystemAbility(uint32_t timeoutMs);
 
 private:
-    std::mutex mutex_;
-    std::condition_variable cv_;
-    sptr<IRemoteObject> subSystemAbility_;
+    std::mutex asyncRemoteObjRecvMtx__;
+    std::condition_variable asyncRemoteObjRecvCv_;
+    bool cvWaitExitFlag_ = false;
+    sptr<IRemoteObject> subSystemAbility_ {nullptr};
 };
 } // namespace Media
 } // namespace OHOS

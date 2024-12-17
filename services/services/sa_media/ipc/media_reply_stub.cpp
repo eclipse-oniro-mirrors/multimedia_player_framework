@@ -48,28 +48,31 @@ int MediaReplyStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageP
         sptr<IRemoteObject> object = data.ReadRemoteObject();
         return SendSubSystemAbilityAync(object);
     }
-    MEDIA_LOGW("mediaFuncs_: no member func supporting, applying default process");
+    MEDIA_LOGW("no MediaReplyMsg %{public}" PRIu32 "supporting, applying default process", code);
     return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
 }
 
 int32_t MediaReplyStub::SendSubSystemAbilityAync(sptr<IRemoteObject> &subSystemAbility)
 {
-    std::unique_lock<std::mutex> lck(mutex_);
+    std::unique_lock<std::mutex> lck(asyncRemoteObjRecvMtx__);
     subSystemAbility_ = subSystemAbility;
-    cv_.notify_all();
+    cvWaitExitFlag_ = true;
+    asyncRemoteObjRecvCv_.notify_all();
     return MSERR_OK;
 }
 
 sptr<IRemoteObject> MediaReplyStub::WaitForAsyncSubSystemAbility(uint32_t timeoutMs)
 {
-    std::unique_lock<std::mutex> lck(mutex_);
-    subSystemAbility_ = nullptr;
-    cv_.wait_for(lck, std::chrono::milliseconds(timeoutMs), [this]() {
-        return subSystemAbility_ != nullptr;
+    std::unique_lock<std::mutex> lck(asyncRemoteObjRecvMtx__);
+    if (subSystemAbility_ != nullptr) {
+        return subSystemAbility_;
+    }
+    asyncRemoteObjRecvCv_.wait_for(lck, std::chrono::milliseconds(timeoutMs), [this]() {
+        return cvWaitExitFlag_;
     });
 
     if (subSystemAbility_ == nullptr) {
-        MEDIA_LOGW(" timeout %{public}u Ms for get subSystemAbility_", timeoutMs);
+        MEDIA_LOGW(" timeout %{public}" PRIu32 " Ms for get subSystemAbility_", timeoutMs);
     }
     return subSystemAbility_;
 }

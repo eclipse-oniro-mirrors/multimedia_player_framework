@@ -78,8 +78,7 @@ sptr<IRemoteObject> MediaServiceProxy::GetSubSystemAbilityWithTimeOut(
     CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "mediaReplyStub object is nullptr.");
     (void)data.WriteRemoteObject(object);
 
-    int32_t error = MSERR_UNKNOWN;
-    error = Remote()->SendRequest(MediaServiceMsg::GET_SUBSYSTEM_AYNC, data, reply, option);
+    int32_t error = Remote()->SendRequest(MediaServiceMsg::GET_SUBSYSTEM_ASYNC, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, nullptr,
         "SendRequest failed, error: %{public}d", error);
     

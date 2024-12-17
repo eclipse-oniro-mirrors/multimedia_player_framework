@@ -64,7 +64,7 @@ public:
      */
     enum MediaServiceMsg : int32_t {
         GET_SUBSYSTEM = 0,
-        GET_SUBSYSTEM_AYNC = 1,
+        GET_SUBSYSTEM_ASYNC = 1,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardMediaService");
