@@ -75,7 +75,7 @@ bool MediaClient::IsAlived()
     return (mediaProxy_ != nullptr) ? true : false;
 }
 
-void MediaClient::CreateInstanceAndTryInTimes(IStandardMediaService::MediaSystemAbility subSystemId,
+void MediaClient::CreateMediaServiceInstance(IStandardMediaService::MediaSystemAbility subSystemId,
                                               sptr<IRemoteObject> &object)
 {
 #ifdef SUPPORT_START_STOP_ON_DEMAND
@@ -94,8 +94,7 @@ void MediaClient::CreateInstanceAndTryInTimes(IStandardMediaService::MediaSystem
         std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_TIME));
         continue;
     }
-#endif
-#ifdef UNSUPPORT_START_STOP_ON_DEMAND
+#else
     CHECK_AND_RETURN_RET_LOG(IsAlived(), nullptr, "media service does not exist.");
     object = mediaProxy_->GetSubSystemAbility(subSystemId, listenerStub_->AsObject());
 #endif
@@ -106,7 +105,8 @@ std::shared_ptr<IRecorderService> MediaClient::CreateRecorderService()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     sptr<IRemoteObject> object = nullptr;
-    CreateInstanceAndTryInTimes(IStandardMediaService::MediaSystemAbility::MEDIA_RECORDER, object);
+    
+    CreateMediaServiceInstance(IStandardMediaService::MediaSystemAbility::MEDIA_RECORDER, object);
     CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "recorder proxy object is nullptr.");
 
     sptr<IStandardRecorderService> recorderProxy = iface_cast<IStandardRecorderService>(object);
@@ -139,7 +139,7 @@ std::shared_ptr<IRecorderProfilesService> MediaClient::CreateRecorderProfilesSer
 {
     std::lock_guard<std::mutex> lock(mutex_);
     sptr<IRemoteObject> object = nullptr;
-    CreateInstanceAndTryInTimes(IStandardMediaService::MediaSystemAbility::RECORDER_PROFILES, object);
+    CreateMediaServiceInstance(IStandardMediaService::MediaSystemAbility::RECORDER_PROFILES, object);
     CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "recorderProfiles proxy object is nullptr.");
 
     sptr<IStandardRecorderProfilesService> recorderProfilesProxy = iface_cast<IStandardRecorderProfilesService>(object);
@@ -158,7 +158,7 @@ std::shared_ptr<ITransCoderService> MediaClient::CreateTransCoderService()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     sptr<IRemoteObject> object = nullptr;
-    CreateInstanceAndTryInTimes(IStandardMediaService::MediaSystemAbility::MEDIA_TRANSCODER, object);
+    CreateMediaServiceInstance(IStandardMediaService::MediaSystemAbility::MEDIA_TRANSCODER, object);
     CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "transCoder proxy object is nullptr.");
  
     sptr<IStandardTransCoderService> transCoderProxy = iface_cast<IStandardTransCoderService>(object);
@@ -185,7 +185,7 @@ std::shared_ptr<IPlayerService> MediaClient::CreatePlayerService()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     sptr<IRemoteObject> object = nullptr;
-    CreateInstanceAndTryInTimes(IStandardMediaService::MediaSystemAbility::MEDIA_PLAYER, object);
+    CreateMediaServiceInstance(IStandardMediaService::MediaSystemAbility::MEDIA_PLAYER, object);
     CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "player proxy object is nullptr.");
 
     sptr<IStandardPlayerService> playerProxy = iface_cast<IStandardPlayerService>(object);
@@ -212,7 +212,7 @@ std::shared_ptr<IAVMetadataHelperService> MediaClient::CreateAVMetadataHelperSer
 {
     std::lock_guard<std::mutex> lock(mutex_);
     sptr<IRemoteObject> object = nullptr;
-    CreateInstanceAndTryInTimes(IStandardMediaService::MediaSystemAbility::MEDIA_AVMETADATAHELPER, object);
+    CreateMediaServiceInstance(IStandardMediaService::MediaSystemAbility::MEDIA_AVMETADATAHELPER, object);
     CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "avmetadatahelper proxy object is nullptr.");
 
     sptr<IStandardAVMetadataHelperService> avMetadataHelperProxy = iface_cast<IStandardAVMetadataHelperService>(object);
@@ -240,7 +240,7 @@ std::shared_ptr<IScreenCaptureMonitorService> MediaClient::CreateScreenCaptureMo
 {
     std::lock_guard<std::mutex> lock(mutex_);
     sptr<IRemoteObject> object = nullptr;
-    CreateInstanceAndTryInTimes(IStandardMediaService::MediaSystemAbility::MEDIA_SCREEN_CAPTURE_MONITOR, object);
+    CreateMediaServiceInstance(IStandardMediaService::MediaSystemAbility::MEDIA_SCREEN_CAPTURE_MONITOR, object);
     CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "screenCaptureMonitor proxy object is nullptr.");
 
     sptr<IStandardScreenCaptureMonitorService> screenCaptureMonitorProxy =
@@ -268,7 +268,7 @@ std::shared_ptr<IScreenCaptureService> MediaClient::CreateScreenCaptureService()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     sptr<IRemoteObject> object = nullptr;
-    CreateInstanceAndTryInTimes(IStandardMediaService::MediaSystemAbility::MEDIA_SCREEN_CAPTURE, object);
+    CreateMediaServiceInstance(IStandardMediaService::MediaSystemAbility::MEDIA_SCREEN_CAPTURE, object);
     CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "screenCapture proxy object is nullptr.");
 
     sptr<IStandardScreenCaptureService> screenCaptureProxy = iface_cast<IStandardScreenCaptureService>(object);
@@ -296,7 +296,7 @@ std::shared_ptr<IScreenCaptureController> MediaClient::CreateScreenCaptureContro
     MEDIA_LOGI("MediaClient::CreateScreenCaptureControllerClient() start");
 
     sptr<IRemoteObject> object = nullptr;
-    CreateInstanceAndTryInTimes(IStandardMediaService::MediaSystemAbility::MEDIA_SCREEN_CAPTURE_CONTROLLER, object);
+    CreateMediaServiceInstance(IStandardMediaService::MediaSystemAbility::MEDIA_SCREEN_CAPTURE_CONTROLLER, object);
     CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "screenCapture controller proxy object is nullptr.");
 
     sptr<IStandardScreenCaptureController> controllerProxy = iface_cast<IStandardScreenCaptureController>(object);
@@ -324,7 +324,7 @@ sptr<IStandardMonitorService> MediaClient::GetMonitorProxy()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     sptr<IRemoteObject> object = nullptr;
-    CreateInstanceAndTryInTimes(IStandardMediaService::MediaSystemAbility::MEDIA_MONITOR, object);
+    CreateMediaServiceInstance(IStandardMediaService::MediaSystemAbility::MEDIA_MONITOR, object);
     CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "monitor proxy object is nullptr.");
 
     sptr<IStandardMonitorService> monitorProxy = iface_cast<IStandardMonitorService>(object);
