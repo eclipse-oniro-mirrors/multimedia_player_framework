@@ -83,7 +83,6 @@ private:
     void DoMediaServerDied();
     void AVPlayerServerDied();
     void AVCodecServerDied();
-    bool IsOnBootPeriodForCurentUID() const;
 
     sptr<IStandardMediaService> mediaProxy_ = nullptr;
     sptr<MediaListenerStub> listenerStub_ = nullptr;
