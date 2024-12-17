@@ -206,7 +206,7 @@ void MediaEvent::CommonStatisicsEventWrite(CallType callType, OHOS::HiviewDFX::H
         return;
     }
     std::vector<std::string> infoArr;
-#ifdef SUPPORT_JSON
+#ifdef CROSS_PLATFORM
     for (const auto& kv : infoMap) {
         json jsonArray;
         json eventInfoJson;
@@ -226,7 +226,7 @@ void MediaEvent::CommonStatisicsEventWrite(CallType callType, OHOS::HiviewDFX::H
 }
 
 
-#ifdef SUPPORT_JSON
+#ifdef CROSS_PLATFORM
 void MediaEvent::ParseOneEvent(const std::pair<uint64_t, std::shared_ptr<OHOS::Media::Meta>> &listPair,
     json& metaInfoJson)
 {
