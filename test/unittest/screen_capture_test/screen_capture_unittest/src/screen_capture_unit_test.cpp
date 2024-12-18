@@ -811,17 +811,14 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_screen_file_02, TestSiz
         MEDIA_LOGI("screen_capture_specified_screen_file_02 screens id(size-1):%{public}s",
             std::to_string(screens[0]->GetId()).c_str());
         config_.videoInfo.videoCapInfo.displayId = screens[0]->GetId();
+        EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+        EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenRecording());
+        sleep(RECORDER_TIME);
+        EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenRecording());
+        EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     } else {
         MEDIA_LOGE("screen_capture_specified_screen_file_02 GetAllScreens failed");
     }
-
-    config_.videoInfo.videoCapInfo.displayId = screens[0]->GetId();
-
-    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
-    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenRecording());
-    sleep(RECORDER_TIME);
-    EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenRecording());
-    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_screen_file_02 after");
 }
 
