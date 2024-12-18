@@ -41,6 +41,7 @@
 #include <string>
 #include <stdint.h>
 #include "native_avbuffer.h"
+#include "media_asset_helper.h"
 
 #ifdef __cplusplus
 extern "C" {
