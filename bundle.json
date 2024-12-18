@@ -53,7 +53,8 @@
         "player_framework_support_vibrator",
         "player_framework_support_power_manager",
         "player_framework_support_json",
-        "player_framework_feature_pc_select_window"
+        "player_framework_feature_pc_select_window",
+        "player_framework_enable_start_stop_on_demand"
       ],
       "adapted_system_type": [ "standard" ],
       "rom": "10000KB",
@@ -141,7 +142,7 @@
           ],
           "service_group": [
             "//foundation/multimedia/player_framework/services:media_services_package",
-            "//foundation/multimedia/player_framework/sa_profile:media_service_sa_profile"
+            "//foundation/multimedia/player_framework/services/etc:media_service_etc"
           ]
         },
         "inner_kits": [

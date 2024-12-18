@@ -888,5 +888,14 @@ void MediaServerManager::HandlePlayerFrozen(const std::vector<int32_t> &pidList,
     }
     MEDIA_LOGI("player stub HandlePlayerFrozen end services(%{public}zu).", playerStubPtrMap_.size());
 }
+
+int32_t MediaServerManager::GetInstanceCount()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    return static_cast<int32_t>(recorderStubMap_.size() + playerStubMap_.size() + avMetadataHelperStubMap_.size() +
+           avCodecListStubMap_.size() + avCodecStubMap_.size() + recorderProfilesStubMap_.size() +
+           screenCaptureStubMap_.size() + screenCaptureControllerStubMap_.size() +
+           screenCaptureControllerStubMap_.size() + transCoderStubMap_.size());
+}
 } // namespace Media
 } // namespace OHOS
