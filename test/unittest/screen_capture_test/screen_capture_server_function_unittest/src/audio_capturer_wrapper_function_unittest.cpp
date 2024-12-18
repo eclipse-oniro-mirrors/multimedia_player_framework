@@ -182,7 +182,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperOnInterrupt_001, T
         std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
     ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Start(screenCaptureServer_->appInfo_), MSERR_OK);
     AudioStandard::InterruptEvent interruptEvent;
-    screenCaptureServer_->innerAudioCapture_->audioCaptureCallback_->OnInterrupt();
+    screenCaptureServer_->innerAudioCapture_->audioCaptureCallback_->OnInterrupt(interruptEvent);
     sleep(RECORDER_TIME);
     ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Stop(), MSERR_OK);
 }
