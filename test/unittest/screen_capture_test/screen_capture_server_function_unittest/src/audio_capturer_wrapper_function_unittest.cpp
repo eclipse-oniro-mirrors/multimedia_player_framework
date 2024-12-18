@@ -168,5 +168,23 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperRelativeSleep_001,
         std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
     ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->RelativeSleep(1), MSERR_OK);
 }
+
+HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerOnInterrupt_004, TestSize.Level2)
+{
+    SetValidConfig();
+    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
+    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
+        AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+    screenCaptureServer_->captureCallback_ = std::make_shared<ScreenRendererAudioStateChangeCallback>();
+    screenCaptureServer_->captureCallback_->SetAudioSource(screenCaptureServer_->audioSource_);
+    screenCaptureServer_->innerAudioCapture_ = std::make_shared<AudioCapturerWrapper>(
+        screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo, screenCaptureServer_->screenCaptureCb_,
+        std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
+    ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Start(screenCaptureServer_->appInfo_), MSERR_OK);
+    AudioStandard::InterruptEvent interruptEvent;
+    screenCaptureServer_->innerAudioCapture_->audioCaptureCallback_->OnInterrupt();
+    sleep(RECORDER_TIME);
+    ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Stop(), MSERR_OK);
+}
 } // Media
 } // OHOS
