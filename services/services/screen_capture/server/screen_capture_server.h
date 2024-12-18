@@ -220,7 +220,7 @@ public:
     void VoIPStateUpdate(
         const std::vector<std::shared_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos);
     bool HasVoIPStream(
-        const std::vector<std::shared_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos)
+        const std::vector<std::shared_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos);
     void SetAppPid(int32_t appid);
     void SetAppName(std::string appName);
     int32_t GetAppPid();
