@@ -219,8 +219,6 @@ HWTEST_F(MediaDfxTest, ParseOneEvent_ShouldParseBool_WhenBoolType, TestSize.Leve
 
     EXPECT_EQ(metaInfoJson[Tag::MEDIA_HAS_VIDEO], "true");
 }
-
-
 #endif
 }
 }
