@@ -47,6 +47,7 @@ PlayerClient::~PlayerClient()
     listenerStub_ = nullptr;
     if (playerProxy_ != nullptr) {
         (void)playerProxy_->DestroyStub();
+        playerProxy_ = nullptr;
     }
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
