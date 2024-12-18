@@ -97,10 +97,10 @@ sptr<IRemoteObject> MediaServer::GetSubSystemAbility(IStandardMediaService::Medi
     const sptr<IRemoteObject> &listener)
 {
     MEDIA_LOGD("GetSubSystemAbility, subSystemId is %{public}d", subSystemId);
-    #ifdef SUPPORT_START_STOP_ON_DEMAND
-    bool saInActiveState = (GetAbilityState() != SystemAbilityState::IDLE) || CancelIdle();
-    CHECK_AND_RETURN_RET_LOG(saInActiveState, nullptr, "media service in idle state, but cancel idle failed");
-    #endif
+#ifdef SUPPORT_START_STOP_ON_DEMAND
+    bool isSaInActive = (GetAbilityState() != SystemAbilityState::IDLE) || CancelIdle();
+    CHECK_AND_RETURN_RET_LOG(isSaInActive, nullptr, "media service in idle state, but cancel idle failed");
+#endif
 
     int32_t ret = MediaServiceStub::SetDeathListener(listener);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed set death listener");
