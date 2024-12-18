@@ -47,9 +47,11 @@ namespace {
 
 namespace OHOS {
 namespace Media {
-constexpr int32_t SLEEP_TIME = 100;
 constexpr int32_t LOAD_TIME = 30;
+#ifdef SUPPORT_START_STOP_ON_DEMAND
+constexpr int32_t SLEEP_TIME = 100;
 constexpr int32_t RETRY_TIME = 3;
+#endif
 static MediaClient g_mediaClientInstance;
 IMediaService &MediaServiceFactory::GetInstance()
 {
