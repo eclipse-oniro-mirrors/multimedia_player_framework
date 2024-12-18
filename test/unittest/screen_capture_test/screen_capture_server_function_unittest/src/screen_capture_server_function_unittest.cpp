@@ -354,7 +354,7 @@ int32_t ScreenCaptureServerFunctionTest::StartStreamAudioCapture()
     screenCaptureServer_->captureCallback_->SetAudioSource(screenCaptureServer_->audioSource_);
     MEDIA_LOGI("StartStreamAudioCapture start");
     int32_t ret = screenCaptureServer_->StartStreamInnerAudioCapture();
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartFileInnerAudioCapture failed, ret:%{public}d,"
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartStreamInnerAudioCapture failed, ret:%{public}d,"
         "dataType:%{public}d", ret, screenCaptureServer_->captureConfig_.dataType);
     ret = screenCaptureServer_->StartStreamMicAudioCapture();
     if (ret != MSERR_OK) {
@@ -639,7 +639,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioDataSource_002, TestSize.Level2)
     ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
     std::vector<std::shared_ptr<AudioRendererChangeInfo>> audioRendererChangeInfos;
     screenCaptureServer_->audioSource_->SpeakerStateUpdate(audioRendererChangeInfos);
-    screenCaptureServer_->audioSource_->HasSpeakerStream(audioRendererChangeInfos);
+    ASSERT_EQ(screenCaptureServer_->audioSource_->HasSpeakerStream(audioRendererChangeInfos), true);
     sleep(RECORDER_TIME);
     ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
 }
@@ -1178,11 +1178,11 @@ HWTEST_F(ScreenCaptureServerFunctionTest, NotificationSubscriber_004, TestSize.L
     sleep(RECORDER_TIME);
 
     auto notificationSubscriber = NotificationSubscriber();
-    int32_t notificationId = ScreenCaptureServer::maxSessionId_ + 1;
+    int32_t invalidNotificationId = ScreenCaptureServer::maxSessionId_ + 1;
     OHOS::sptr<OHOS::Notification::NotificationButtonOption> buttonOption =
         new(std::nothrow) OHOS::Notification::NotificationButtonOption();
     buttonOption->SetButtonName("null");
-    notificationSubscriber.OnResponse(notificationId, buttonOption);
+    notificationSubscriber.OnResponse(invalidNotificationId, buttonOption);
 
     sleep(RECORDER_TIME);
     ASSERT_NE(&notificationSubscriber, nullptr);
@@ -1409,7 +1409,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, GetChoiceFromJson_001, TestSize.Level2
 HWTEST_F(ScreenCaptureServerFunctionTest, GetChoiceFromJson_002, TestSize.Level2)
 {
     Json::Value root;
-    std::string content = "{\"choice\": \"true\"}";
+    std::string content = "{\"choice_\": \"true\"}";
     std::string value;
     screenCaptureServer_->GetChoiceFromJson(root, content, "choice", value);
     ASSERT_NE(screenCaptureServer_, nullptr);
@@ -1419,7 +1419,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StartFileInnerAudioCapture_001, TestSi
 {
     RecorderInfo recorderInfo;
     SetRecorderInfo("start_file_inner_audio_capture_001.mp4", recorderInfo);
-    SetInvalidConfigFile(recorderInfo);
+    SetValidConfigFile(recorderInfo);
     ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
     screenCaptureServer_->SetMicrophoneEnabled(true);
     screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
@@ -1439,7 +1439,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StartFileInnerAudioCapture_002, TestSi
 {
     RecorderInfo recorderInfo;
     SetRecorderInfo("start_file_inner_audio_capture_002.mp4", recorderInfo);
-    SetInvalidConfigFile(recorderInfo);
+    SetValidConfigFile(recorderInfo);
     ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
     screenCaptureServer_->SetMicrophoneEnabled(true);
     screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
