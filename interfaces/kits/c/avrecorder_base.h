@@ -338,6 +338,17 @@ typedef void (*OH_AVRecorder_OnStateChange)(OH_AVRecorder *recorder,
 typedef void (*OH_AVRecorder_OnError)(OH_AVRecorder *recorder, int32_t errorCode, const char *errorMsg,
     void *userData);
 
+/**
+ * @brief Called when current recording is finished in OH_AVRecorder_FileGenerationMode.AUTO_CREATE_CAMERA_SCENE
+ * @syscap SystemCapability.Multimedia.Media.AVRecorder
+ * @param recorder Pointer to an OH_AVRecorder instance.
+ * @param asset Error code.
+ * @param userData Pointer to user specific data.
+ * @since 14
+ * @version 1.0
+ */
+typedef void (*OH_AVRecorder_OnUri)(OH_AVRecorder *recorder, OH_MediaAsset *asset, void *userData);
+
 #ifdef __cplusplus
 }
 #endif
