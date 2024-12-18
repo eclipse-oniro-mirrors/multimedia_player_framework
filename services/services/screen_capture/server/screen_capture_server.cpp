@@ -3189,7 +3189,7 @@ void AudioDataSource::VoIPStateUpdate(
 bool AudioDataSource::HasVoIPStream(
     const std::vector<std::shared_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos)
 {
-    for (const std::shared_ptr<AudioRendererChangeInfo> &changeInfo: allAudioRendererChangeInfos) {
+    for (const std::shared_ptr<AudioRendererChangeInfo> &changeInfo: audioRendererChangeInfos) {
         if (!changeInfo) {
             continue;
         }
