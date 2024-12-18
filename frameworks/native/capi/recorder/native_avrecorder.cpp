@@ -74,9 +74,11 @@ struct RecorderObject : public OH_AVRecorder {
         }
         if (config->url) {
             free(config->url);
+            config->url = nullptr;
         }
         if (config->metadata.videoOrientation) {
             free(config->metadata.videoOrientation);
+            config->metadata.videoOrientation = nullptr;
         }
     }
 
@@ -87,9 +89,12 @@ struct RecorderObject : public OH_AVRecorder {
         }
         for (int i = 0; i < length; ++i) {
             free(info[i].sampleRate);
+            info[i].sampleRate = nullptr;
             free(info[i].type);
+            info[i].type = nullptr;
         }
         free(info);
+        info = nullptr;
     }
 
     const std::shared_ptr<Recorder> recorder_ = nullptr;
@@ -139,6 +144,32 @@ private:
     void *userData_;
 };
 
+class NativeRecorderUriCallback {
+public:
+    NativeRecorderUriCallback(OH_AVRecorder_OnUri callback, void *userData)
+        : callback_(callback), userData_(userData) {}
+    virtual ~NativeRecorderUriCallback() = default;
+ 
+    void OnUri(struct OH_AVRecorder *recorder, const std::string &uri)
+    {
+        CHECK_AND_RETURN_LOG(recorder != nullptr && callback_ != nullptr, "recorder or callback_ is nullptr!");
+        auto mediaAssetHelper = Media::MediaAssetHelperFactory::CreateMediaAssetHelper();
+        CHECK_AND_RETURN_LOG(mediaAssetHelper != nullptr, "Create mediaAssetHelper failed!");
+ 
+        auto mediaAssetPtr = mediaAssetHelper->GetOhMediaAsset(uri);
+        CHECK_AND_RETURN_LOG(mediaAssetPtr != nullptr, "mediaAssetPtr is nullptr!");
+
+        OH_MediaAsset* mediaAsset = mediaAssetPtr.get();
+        CHECK_AND_RETURN_LOG(mediaAsset != nullptr, "Create mediaAsset failed!");
+ 
+        callback_(recorder, mediaAsset, userData_);
+    }
+ 
+private:
+    OH_AVRecorder_OnUri callback_;
+    void *userData_;
+};
+
 class NativeRecorderCallback : public RecorderCallback {
 public:
     explicit NativeRecorderCallback(struct OH_AVRecorder *recorder) : recorder_(recorder) {}
@@ -168,6 +199,18 @@ public:
         }
     }
 
+    void OnPhotoAssertAvailable(const std::string &uri) override
+    {
+        MEDIA_LOGE("OnPhotoAssertAvailable() is called, uri: %{public}s", uri.c_str());
+        std::shared_lock<std::shared_mutex> lock(mutex_);
+        CHECK_AND_RETURN(recorder_ != nullptr);
+ 
+        if (uriCallback_ != nullptr) {
+            uriCallback_->OnUri(recorder_, uri);
+            return;
+        }
+    }
+
     void OnInfo(int32_t type, int32_t extra) override
     {
         // No specific implementation is required and can be left blank.
@@ -187,11 +230,19 @@ public:
         return errorCallback_ != nullptr;
     }
 
+    bool SetUriCallback(OH_AVRecorder_OnUri callback, void *userData)
+    {
+        std::unique_lock<std::shared_mutex> lock(mutex_);
+        uriCallback_ = std::make_shared<NativeRecorderUriCallback>(callback, userData);
+        return uriCallback_ != nullptr;
+    }
+ 
 private:
     std::shared_mutex mutex_;
     OH_AVRecorder *recorder_ = nullptr;
     std::shared_ptr<NativeRecorderStateChangeCallback> stateChangeCallback_ = nullptr;
     std::shared_ptr<NativeRecorderErrorCallback> errorCallback_ = nullptr;
+    std::shared_ptr<NativeRecorderUriCallback> uriCallback_ = nullptr;
 };
 
 OH_AVRecorder *OH_AVRecorder_Create(void)
@@ -687,5 +738,33 @@ OH_AVErrCode OH_AVRecorder_SetErrorCallback(OH_AVRecorder *recorder, OH_AVRecord
 
     MEDIA_LOGD("OH_AVRecorder_SetErrorCallback End");
 
+    return AV_ERR_OK;
+}
+
+OH_AVErrCode OH_AVRecorder_SetUriCallback(OH_AVRecorder *recorder, OH_AVRecorder_OnUri callback, void *userData)
+{
+    MEDIA_LOGD("OH_AVRecorder_SetUriCallback Start");
+ 
+    CHECK_AND_RETURN_RET_LOG(recorder != nullptr, AV_ERR_INVALID_VAL, "input recorder is nullptr!");
+    CHECK_AND_RETURN_RET_LOG(callback != nullptr, AV_ERR_INVALID_VAL, "input errorCallback is nullptr!");
+ 
+    RecorderObject *recorderObj = reinterpret_cast<RecorderObject *>(recorder);
+    CHECK_AND_RETURN_RET_LOG(recorderObj != nullptr, AV_ERR_INVALID_VAL, "recorderObj is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderObj->recorder_ != nullptr, AV_ERR_INVALID_VAL, "recorder_ is null");
+ 
+    if (recorderObj->callback_ == nullptr) {
+        recorderObj->callback_ = std::make_shared<NativeRecorderCallback>(recorder);
+        CHECK_AND_RETURN_RET_LOG(recorderObj->callback_ != nullptr, AV_ERR_INVALID_VAL, "callback_ is nullptr!");
+        int32_t ret = recorderObj->recorder_->SetRecorderCallback(recorderObj->callback_);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "SetRecorderCallback failed!");
+    }
+ 
+    if (recorderObj->callback_ == nullptr || !recorderObj->callback_->SetUriCallback(callback, userData)) {
+        MEDIA_LOGE("OH_AVRecorder_SetUriCallback error");
+        return AV_ERR_NO_MEMORY;
+    }
+ 
+    MEDIA_LOGD("OH_AVRecorder_SetUriCallback End");
+ 
     return AV_ERR_OK;
 }
