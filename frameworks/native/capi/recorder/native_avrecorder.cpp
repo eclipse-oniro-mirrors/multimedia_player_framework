@@ -74,9 +74,11 @@ struct RecorderObject : public OH_AVRecorder {
         }
         if (config->url) {
             free(config->url);
+            config->url = nullptr;
         }
         if (config->metadata.videoOrientation) {
             free(config->metadata.videoOrientation);
+            config->metadata.videoOrientation = nullptr;
         }
     }
 
@@ -87,9 +89,12 @@ struct RecorderObject : public OH_AVRecorder {
         }
         for (int i = 0; i < length; ++i) {
             free(info[i].sampleRate);
+            info[i].sampleRate = nullptr;
             free(info[i].type);
+            info[i].type = nullptr;
         }
         free(info);
+        info = nullptr;
     }
 
     const std::shared_ptr<Recorder> recorder_ = nullptr;
@@ -147,18 +152,15 @@ public:
  
     void OnUri(struct OH_AVRecorder *recorder, const std::string &uri)
     {
-        CHECK_AND_RETURN(recorder != nullptr && callback_ != nullptr);
+        CHECK_AND_RETURN_LOG(recorder != nullptr && callback_ != nullptr, "recorder or callback_ is nullptr!");
         auto mediaAssetHelper = Media::MediaAssetHelperFactory::CreateMediaAssetHelper();
-        if (mediaAssetHelper == nullptr) {
-            MEDIA_LOGE("Create mediaAssetHelper failed!");
-            return;
-        }
+        CHECK_AND_RETURN_LOG(mediaAssetHelper != nullptr, "Create mediaAssetHelper failed!");
  
-        OH_MediaAsset* mediaAsset = mediaAssetHelper->GetOhMediaAsset(uri).get();
-        if (mediaAsset == nullptr) {
-            MEDIA_LOGE("Create mediaAsset failed!");
-            return;
-        }
+        auto mediaAssetPtr = mediaAssetHelper->GetOhMediaAsset(uri);
+        CHECK_AND_RETURN_LOG(mediaAssetPtr != nullptr, "mediaAssetPtr is nullptr!");
+
+        OH_MediaAsset* mediaAsset = mediaAssetPtr.get();
+        CHECK_AND_RETURN_LOG(mediaAsset != nullptr, "Create mediaAsset failed!");
  
         callback_(recorder, mediaAsset, userData_);
     }
