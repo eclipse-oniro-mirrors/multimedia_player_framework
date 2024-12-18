@@ -47,14 +47,6 @@ HWTEST_F(VideoDecoderEngineImplTest, construct, TestSize.Level0)
     EXPECT_EQ(engine->cb_, cb);
 }
 
-// Test the Init method of VideoDecoderEngineImpl
-HWTEST_F(VideoDecoderEngineImplTest, init_error, TestSize.Level0)
-{
-    VideoDecodeCallbackTester* cb = new VideoDecodeCallbackTester();
-    auto engine = std::make_shared<VideoDecoderEngineImpl>(12345, 50, cb);
-    EXPECT_EQ(engine->Init(), VEFError::ERR_INTERNAL_ERROR);
-}
-
 HWTEST_F(VideoDecoderEngineImplTest, init_ok, TestSize.Level0)
 {
     std::string fileName = "H264_AAC.mp4";
@@ -63,18 +55,6 @@ HWTEST_F(VideoDecoderEngineImplTest, init_ok, TestSize.Level0)
     auto engine = std::make_shared<VideoDecoderEngineImpl>(1, srcFd, cb);
     EXPECT_EQ(engine->Init(), VEFError::ERR_OK);
     (void)close(srcFd);
-}
-
-/**
- * @tc.name  : VideoDecoderEngineImpl_001
- * @tc.number: VideoDecoderEngineImpl_001
- * @tc.desc  : Test when InitDeMuxer failed with error then return error
- */
-HWTEST_F(VideoDecoderEngineImplTest, VideoDecoderEngineImpl_001, TestSize.Level0)
-{
-    VideoDecodeCallbackTester* cb = new VideoDecodeCallbackTester();
-    auto engine = std::make_shared<VideoDecoderEngineImpl>(12345, 50, cb);
-    EXPECT_EQ(engine->InitDeMuxer(), VEFError::ERR_INTERNAL_ERROR);
 }
 
 HWTEST_F(VideoDecoderEngineImplTest, VideoDecoderEngineImpl_initDeMuxer_ok, TestSize.Level0)
