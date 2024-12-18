@@ -164,8 +164,8 @@ public:
         OHOS::Rect &damage);
     int32_t ReleaseVideoBuffer();
     int32_t Release();
+    int32_t StartBufferThread();
     void OnBufferAvailableAction();
-    void StartBufferThread();
     void SurfaceBufferThreadRun();
     void StopBufferThread();
 
@@ -361,8 +361,8 @@ private:
     int32_t StartFileInnerAudioCapture();
     int32_t StartFileMicAudioCapture();
     int32_t StopMicAudioCapture();
-    int32_t StartVideoCapture();
-    int32_t StartHomeVideoCapture();
+    int32_t StartStreamVideoCapture();
+    int32_t StartStreamHomeVideoCapture();
     int32_t StopScreenCaptureInner(AVScreenCaptureStateCode stateCode);
     bool IsLastStartedPidInstance(int32_t pid);
     bool LastPidUpdatePrivacyUsingPermissionState(int32_t pid);

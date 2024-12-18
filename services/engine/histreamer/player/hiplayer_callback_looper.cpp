@@ -92,9 +92,9 @@ void HiPlayerCallbackLooper::StartReportMediaProgress(int64_t updateIntervalMs)
             SteadyClock::GetCurrentTimeMs() + reportProgressIntervalMs_, Any()));
 }
 
-void HiPlayerCallbackLooper::startCollectMaxAmplitude(int64_t updateIntervalMs)
+void HiPlayerCallbackLooper::StartCollectMaxAmplitude(int64_t updateIntervalMs)
 {
-    MEDIA_LOG_I("HiPlayerCallbackLooper startCollectMaxAmplitude");
+    MEDIA_LOG_I("HiPlayerCallbackLooper StartCollectMaxAmplitude");
     collectMaxAmplitudeIntervalMs_ = updateIntervalMs;
     if (collectMaxAmplitude_) { // already set
         return;

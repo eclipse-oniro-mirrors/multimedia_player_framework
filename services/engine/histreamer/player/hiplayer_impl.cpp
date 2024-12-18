@@ -796,20 +796,20 @@ int32_t HiPlayerImpl::Play()
             TransStatus(Seek(GetPlayStartTime(), playRangeSeekMode_, false)) :
             TransStatus(Seek(0, PlayerSeekMode::SEEK_PREVIOUS_SYNC, false)));
         callbackLooper_.StartReportMediaProgress(REPORT_PROGRESS_INTERVAL);
-        callbackLooper_.startCollectMaxAmplitude(SAMPLE_AMPLITUDE_INTERVAL);
+        callbackLooper_.StartCollectMaxAmplitude(SAMPLE_AMPLITUDE_INTERVAL);
     } else if (pipelineStates_ == PlayerStates::PLAYER_PAUSED) {
         if (playRangeStartTime_ > PLAY_RANGE_DEFAULT_VALUE) {
             ret = TransStatus(Seek(playRangeStartTime_, PlayerSeekMode::SEEK_PREVIOUS_SYNC, false));
         }
         callbackLooper_.StartReportMediaProgress(REPORT_PROGRESS_INTERVAL);
-        callbackLooper_.startCollectMaxAmplitude(SAMPLE_AMPLITUDE_INTERVAL);
+        callbackLooper_.StartCollectMaxAmplitude(SAMPLE_AMPLITUDE_INTERVAL);
         ret = TransStatus(Resume());
     } else {
         if (playRangeStartTime_ > PLAY_RANGE_DEFAULT_VALUE) {
             ret = TransStatus(Seek(playRangeStartTime_, PlayerSeekMode::SEEK_PREVIOUS_SYNC, false));
         }
         callbackLooper_.StartReportMediaProgress(REPORT_PROGRESS_INTERVAL);
-        callbackLooper_.startCollectMaxAmplitude(SAMPLE_AMPLITUDE_INTERVAL);
+        callbackLooper_.StartCollectMaxAmplitude(SAMPLE_AMPLITUDE_INTERVAL);
         syncManager_->Resume();
         ret = TransStatus(pipeline_->Start());
         if (ret != MSERR_OK) {
@@ -868,7 +868,7 @@ int32_t HiPlayerImpl::ResumeDemuxer()
     FALSE_RETURN_V_MSG_E(pipelineStates_ != PlayerStates::PLAYER_STATE_ERROR,
         TransStatus(Status::OK), "PLAYER_STATE_ERROR not allow ResumeDemuxer");
     callbackLooper_.StartReportMediaProgress(REPORT_PROGRESS_INTERVAL);
-    callbackLooper_.startCollectMaxAmplitude(SAMPLE_AMPLITUDE_INTERVAL);
+    callbackLooper_.StartCollectMaxAmplitude(SAMPLE_AMPLITUDE_INTERVAL);
     Status ret = demuxer_->ResumeDemuxerReadLoop();
     return TransStatus(ret);
 }
@@ -1049,7 +1049,7 @@ int32_t HiPlayerImpl::HandleEosPlay()
     FALSE_RETURN_V(audioRenderInfo.streamUsage > AudioStandard::StreamUsage::STREAM_USAGE_INVALID &&
         audioRenderInfo.streamUsage < AudioStandard::StreamUsage::STREAM_USAGE_MAX, MSERR_INVALID_VAL);
     auto it = FOCUS_EVENT_USAGE_SET.find(static_cast<AudioStandard::StreamUsage>(audioRenderInfo.streamUsage));
-    FALSE_RETURN_V(it != FOCUS_EVENT_USAGE_SET.end(), MSERR_INVALID_VAL);
+    FALSE_RETURN_V(it == FOCUS_EVENT_USAGE_SET.end(), MSERR_INVALID_VAL);
     FALSE_RETURN_V(dfxAgent_ != nullptr, MSERR_INVALID_STATE);
     DfxEvent event = { .type = DfxEventType::DFX_INFO_PLAYER_EOS_SEEK, .param = appUid_ };
     dfxAgent_->OnDfxEvent(event);
@@ -1117,9 +1117,11 @@ void HiPlayerImpl::NotifySeek(Status rtv, bool flag, int64_t seekPos)
 {
     if (rtv != Status::OK) {
         MEDIA_LOG_E_SHORT("Seek done, seek error");
+        FALSE_RETURN_MSG(!isInterruptNeeded_.load(), " Seek is Interrupted");
         // change player state to PLAYER_STATE_ERROR when seek error.
         UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
         Format format;
+        callbackLooper_.OnError(PLAYER_ERROR, MSERR_DATA_SOURCE_IO_ERROR);
         callbackLooper_.OnInfo(INFO_TYPE_SEEKDONE, -1, format);
     }  else if (flag) {
         // only notify seekDone for external call.
@@ -1265,6 +1267,9 @@ Status HiPlayerImpl::HandleSeekClosest(int64_t seekPos, int64_t seekTimeUs)
     if (videoDecoder_ != nullptr) {
         videoDecoder_->SetSeekTime(seekTimeUs + mediaStartPts_);
     }
+    if (audioSink_ != nullptr) {
+        audioSink_->SetIsCancelStart(true);
+    }
     seekAgent_ = std::make_shared<SeekAgent>(demuxer_, mediaStartPts_);
     SetFrameRateForSeekPerformance(FRAME_RATE_FOR_SEEK_PERFORMANCE);
     bool timeout = false;
@@ -1278,6 +1283,9 @@ Status HiPlayerImpl::HandleSeekClosest(int64_t seekPos, int64_t seekTimeUs)
         if (timeout && videoDecoder_ != nullptr) {
             videoDecoder_->ResetSeekInfo();
         }
+    }
+    if (audioSink_ != nullptr) {
+        audioSink_->SetIsCancelStart(false);
     }
     if (subtitleSink_ != nullptr) {
         subtitleSink_->NotifySeek();
@@ -2226,6 +2234,7 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
 {
     MediaTrace trace("HiPlayerImpl::DoSetSource");
     ResetIfSourceExisted();
+    completeState_.clear();
     demuxer_ = FilterFactory::Instance().CreateFilter<DemuxerFilter>("builtin.player.demuxer",
         FilterType::FILTERTYPE_DEMUXER);
     if (demuxer_ == nullptr) {
