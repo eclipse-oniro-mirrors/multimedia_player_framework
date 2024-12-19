@@ -353,6 +353,7 @@ void PlayerServerUnitTest::SetUpTestCase(void)
 
 void PlayerServerUnitTest::TearDownTestCase(void)
 {
+    sleep(1);
 }
 
 void PlayerServerUnitTest::SetUp(void)
