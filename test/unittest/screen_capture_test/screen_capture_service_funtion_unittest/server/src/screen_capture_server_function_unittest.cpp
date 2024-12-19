@@ -689,6 +689,26 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioDataSource_004, TestSize.Level2)
     ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
 }
 
+HWTEST_F(ScreenCaptureServerFunctionTest, AudioDataSource_005, TestSize.Level2)
+{
+    SetInvalidConfig();
+    config_.audioInfo.micCapInfo.audioSampleRate = 16000;
+    config_.audioInfo.micCapInfo.audioChannels = 2;
+    config_.audioInfo.micCapInfo.audioSource = AudioCaptureSourceType::SOURCE_DEFAULT;
+    config_.audioInfo.innerCapInfo.audioSampleRate = 16000;
+    config_.audioInfo.innerCapInfo.audioChannels = 2;
+    config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
+    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
+    ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
+    std::vector<std::shared_ptr<AudioRendererChangeInfo>> audioRendererChangeInfos;
+    screenCaptureServer_->audioSource_->speakerAliveStatus_ = true;
+    screenCaptureServer_->audioSource_->SpeakerStateUpdate(audioRendererChangeInfos);
+    screenCaptureServer_->audioSource_->speakerAliveStatus_ = false;
+    screenCaptureServer_->audioSource_->SpeakerStateUpdate(audioRendererChangeInfos);
+    sleep(RECORDER_TIME);
+    ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
+}
+
 HWTEST_F(ScreenCaptureServerFunctionTest, ReportAVScreenCaptureUserChoice_001, TestSize.Level2)
 {
     SetInvalidConfig();
