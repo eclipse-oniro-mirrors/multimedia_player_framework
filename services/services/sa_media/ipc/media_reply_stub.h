@@ -33,7 +33,7 @@ public:
     sptr<IRemoteObject> WaitForAsyncSubSystemAbility(uint32_t timeoutMs);
 
 private:
-    std::mutex asyncRemoteObjRecvMtx__;
+    std::mutex asyncRemoteObjRecvMtx_;
     std::condition_variable asyncRemoteObjRecvCv_;
     bool cvWaitExitFlag_ = false;
     sptr<IRemoteObject> subSystemAbility_ {nullptr};

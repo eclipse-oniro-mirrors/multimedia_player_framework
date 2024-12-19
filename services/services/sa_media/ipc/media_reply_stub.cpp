@@ -54,7 +54,7 @@ int MediaReplyStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageP
 
 int32_t MediaReplyStub::SendSubSystemAbilityAync(sptr<IRemoteObject> &subSystemAbility)
 {
-    std::unique_lock<std::mutex> lck(asyncRemoteObjRecvMtx__);
+    std::unique_lock<std::mutex> lck(asyncRemoteObjRecvMtx_);
     subSystemAbility_ = subSystemAbility;
     cvWaitExitFlag_ = true;
     asyncRemoteObjRecvCv_.notify_all();
@@ -63,7 +63,7 @@ int32_t MediaReplyStub::SendSubSystemAbilityAync(sptr<IRemoteObject> &subSystemA
 
 sptr<IRemoteObject> MediaReplyStub::WaitForAsyncSubSystemAbility(uint32_t timeoutMs)
 {
-    std::unique_lock<std::mutex> lck(asyncRemoteObjRecvMtx__);
+    std::unique_lock<std::mutex> lck(asyncRemoteObjRecvMtx_);
     if (subSystemAbility_ != nullptr) {
         return subSystemAbility_;
     }
