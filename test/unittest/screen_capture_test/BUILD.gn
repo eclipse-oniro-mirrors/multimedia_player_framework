@@ -81,7 +81,7 @@ config("screen_capture_test_config") {
     "$MEDIA_PLAYER_ROOT_DIR/services/services/common",
     "$MEDIA_PLAYER_ROOT_DIR/services/engine/common/recorder_profiles",
     "$MEDIA_PLAYER_ROOT_DIR/test/unittest/common/include",
-    "$MEDIA_PLAYER_ROOT_DIR/test/unittest/screen_capture_test/screen_capture_server_function_unittest/include",
+    "$MEDIA_PLAYER_ROOT_DIR/test/unittest/screen_capture_test/screen_capture_service_function_unittest/server/include",
     "$MEDIA_PLAYER_GRAPHIC_SURFACE/interfaces/inner_api/surface",
   ]
 
@@ -251,11 +251,11 @@ ohos_unittest("screen_capture_server_function_unit_test") {
 
   if (player_framework_support_screen_capture) {
     sources = [
-      "screen_capture_server_function_unittest/src/audio_capturer_wrapper_function_unittest.cpp",
-      "screen_capture_server_function_unittest/src/screen_capture_server_function_unittest.cpp",
-      "screen_capture_server_function_unittest/src/screen_capture_server_function_unittest_multiInstance.cpp",
-      "screen_capture_server_function_unittest/src/screen_capture_server_function_unittest_recorder.cpp",
-      "screen_capture_server_function_unittest/src/screen_capture_server_function_unittest_voip.cpp",
+      "screen_capture_service_function_unittest/server/src/audio_capturer_wrapper_function_unittest.cpp",
+      "screen_capture_service_function_unittest/server/src/screen_capture_server_function_unittest.cpp",
+      "screen_capture_service_function_unittest/server/src/screen_capture_server_function_unittest_multiInstance.cpp",
+      "screen_capture_service_function_unittest/server/src/screen_capture_server_function_unittest_recorder.cpp",
+      "screen_capture_service_function_unittest/server/src/screen_capture_server_function_unittest_voip.cpp",
     ]
   }
 

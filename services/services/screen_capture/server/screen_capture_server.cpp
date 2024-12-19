@@ -3177,8 +3177,19 @@ void AudioDataSource::VoIPStateUpdate(
     (void)audioRendererChangeInfos;
     std::vector<std::shared_ptr<AudioRendererChangeInfo>> allAudioRendererChangeInfos;
     AudioStreamManager::GetInstance()->GetCurrentRendererChangeInfos(allAudioRendererChangeInfos);
-    bool isInVoIPCall = false;
-    for (const std::shared_ptr<AudioRendererChangeInfo> &changeInfo: allAudioRendererChangeInfos) {
+    bool isInVoIPCall = HasVoIPStream(allAudioRendererChangeInfos);
+    if (isInVoIPCall_.load() == isInVoIPCall) {
+        return;
+    }
+    isInVoIPCall_.store(isInVoIPCall);
+    CHECK_AND_RETURN(screenCaptureServer_ != nullptr);
+    screenCaptureServer_->OnVoIPStatusChanged(isInVoIPCall);
+}
+
+bool AudioDataSource::HasVoIPStream(
+    const std::vector<std::shared_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos)
+{
+    for (const std::shared_ptr<AudioRendererChangeInfo> &changeInfo: audioRendererChangeInfos) {
         if (!changeInfo) {
             continue;
         }
@@ -3187,16 +3198,10 @@ void AudioDataSource::VoIPStateUpdate(
             static_cast<int32_t>(changeInfo->outputDeviceInfo.deviceType_));
         if (changeInfo->rendererState == RendererState::RENDERER_RUNNING &&
             changeInfo->rendererInfo.streamUsage == AudioStandard::StreamUsage::STREAM_USAGE_VOICE_COMMUNICATION) {
-            isInVoIPCall = true;
-            break;
+            return true;
         }
     }
-    if (isInVoIPCall_.load() == isInVoIPCall) {
-        return;
-    }
-    isInVoIPCall_.store(isInVoIPCall);
-    CHECK_AND_RETURN(screenCaptureServer_ != nullptr);
-    screenCaptureServer_->OnVoIPStatusChanged(isInVoIPCall);
+    return false;
 }
 
 void AudioDataSource::SetAppPid(int32_t appid)

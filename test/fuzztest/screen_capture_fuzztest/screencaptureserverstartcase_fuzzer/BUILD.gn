@@ -66,7 +66,7 @@ ohos_fuzztest("ScreenCaptureServerStartCaseFuzzTest") {
     "$MEDIA_ROOT_DIR/services/engine/common/recorder_profiles",
     "$MEDIA_ROOT_DIR/test/fuzztest/common/",
     "$MEDIA_ROOT_DIR/test/unittest/common/include",
-    "$MEDIA_ROOT_DIR/test/unittest/screen_capture_test/screen_capture_server_function_unittest/include",
+    "$MEDIA_ROOT_DIR/test/unittest/screen_capture_test/screen_capture_service_function_unittest/server/include",
     "$MEDIA_PLAYER_GRAPHIC_SURFACE/interfaces/inner_api/surface",
     "$MEDIA_PLAYER_GRAPHIC/interfaces/innerkits/surface",
     "$MEDIA_ROOT_DIR/../media_foundation/interface/inner_api",

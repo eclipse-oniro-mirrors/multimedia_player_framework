@@ -408,6 +408,10 @@
             <option name="shell" value="touch /data/test/media/screen_capture_voip_002.mp4"/>
             <option name="shell" value="touch /data/test/media/screen_capture_voip_003.mp4"/>
             <option name="shell" value="touch /data/test/media/screen_capture_voip_004.mp4"/>
+            <option name="shell" value="touch /data/test/media/set_microphone_enabled_file_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/set_microphone_enabled_file_002.mp4"/>
+            <option name="shell" value="touch /data/test/media/set_microphone_file_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/set_microphone_file_002.mp4"/>
             <option name="shell" value="touch /data/test/media/capture_file_params_invalid_001.mp4"/>
             <option name="shell" value="touch /data/test/media/capture_file_params_invalid_002.mp4"/>
             <option name="shell" value="touch /data/test/media/capture_file_params_invalid_003.mp4"/>
@@ -417,6 +421,8 @@
             <option name="shell" value="touch /data/test/media/capture_file_params_invalid_007.mp4"/>
             <option name="shell" value="touch /data/test/media/capture_file_params_invalid_008.mp4"/>
             <option name="shell" value="touch /data/test/media/on_start_screen_capture_unittest_002.mp4"/>
+            <option name="shell" value="touch /data/test/media/start_file_inner_audio_capture_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/start_file_inner_audio_capture_002.mp4"/>
             <option name="shell" value="touch /data/test/media/screen_capture_recorder_001.mp4"/>
             <option name="shell" value="touch /data/test/media/screen_capture_recorder_002.mp4"/>
             <option name="shell" value="touch /data/test/media/screen_capture_recorder_003.mp4"/>

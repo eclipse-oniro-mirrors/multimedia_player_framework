@@ -46,7 +46,7 @@ public:
     int32_t InitStreamScreenCaptureServer();
     void SetHapPermission();
     int32_t SetScreenCaptureObserver();
-    int32_t StartFileAudioCapture();
+    int32_t StartFileAudioCapture(AVScreenCaptureMixMode mixMode);
     int32_t StartStreamAudioCapture();
 
 protected:
