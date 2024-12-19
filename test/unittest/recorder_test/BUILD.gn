@@ -19,7 +19,7 @@ module_output_path = "player_framework/recorder"
 ohos_unittest("recorder_native_unit_test") {
   module_out_path = module_output_path
   include_dirs = [
-    "./include",
+    "./capi/include",
     "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c",
     "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",
     "$MEDIA_PLAYER_ROOT_DIR/frameworks/native/recorder",
@@ -41,7 +41,7 @@ ohos_unittest("recorder_native_unit_test") {
   ]
 
   if (player_framework_support_recorder) {
-    sources = [ "src/recorder_unit_test.cpp" ]
+    sources = [ "capi/src/recorder_unit_test.cpp" ]
   }
 
   public_deps = [ "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c:avrecorder" ]
@@ -106,9 +106,9 @@ ohos_unittest("recorder_server_unit_test") {
   }
 
   public_deps = [
+    "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native:media_client",
     "$MEDIA_PLAYER_ROOT_DIR/services/services:media_service",
     "$MEDIA_PLAYER_ROOT_DIR/services/utils:media_service_utils",
-    "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native:media_client",
   ]
 
   external_deps = [
@@ -127,8 +127,8 @@ ohos_unittest("recorder_server_unit_test") {
     "graphic_2d:librender_service_base",
     "graphic_surface:surface",
     "hilog:libhilog",
-    "qos_manager:qos",
     "power_manager:powermgr_client",
+    "qos_manager:qos",
   ]
 
   resource_config_file = "../resources/ohos_test.xml"

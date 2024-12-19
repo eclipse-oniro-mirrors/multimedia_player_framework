@@ -31,7 +31,8 @@ public:
     void TearDown(void);
 
 protected:
-    std::shared_ptr<OHOS::Media::Recorder> recorder_{ nullptr };
+    OH_AVRecorder *recorder_ = nullptr;
+    static void SetSelfTokenPremission();
 };
 
 #endif // RECORDER_UNIT_TEST_H
