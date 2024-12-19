@@ -224,7 +224,7 @@ ohos_unittest("screen_capture_capi_unit_test") {
 
 ##################################################################################################################
 
-ohos_unittest("screen_capture_service_function_unit_test") {
+ohos_unittest("screen_capture_server_function_unit_test") {
   module_out_path = module_output_path
   stack_protector_ret = true
   install_enable = true
