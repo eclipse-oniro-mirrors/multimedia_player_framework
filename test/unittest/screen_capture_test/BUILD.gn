@@ -83,8 +83,6 @@ config("screen_capture_test_config") {
     "$MEDIA_PLAYER_ROOT_DIR/services/engine/common/recorder_profiles",
     "$MEDIA_PLAYER_ROOT_DIR/test/unittest/common/include",
     "$MEDIA_PLAYER_ROOT_DIR/test/unittest/screen_capture_test/screen_capture_service_function_unittest/server/include",
-    "$MEDIA_PLAYER_ROOT_DIR/test/unittest/screen_capture_test/screen_capture_service_function_unittest/client/include",
-    "$MEDIA_PLAYER_ROOT_DIR/test/unittest/screen_capture_test/screen_capture_client_funtion_unittest/include",
     "$MEDIA_PLAYER_GRAPHIC_SURFACE/interfaces/inner_api/surface",
   ]
 
