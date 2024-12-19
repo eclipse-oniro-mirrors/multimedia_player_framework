@@ -353,7 +353,7 @@ void PlayerServerUnitTest::SetUpTestCase(void)
 
 void PlayerServerUnitTest::TearDownTestCase(void)
 {
-    sleep(1);
+    sleep(1); //let PlayEngine safe exit.
 }
 
 void PlayerServerUnitTest::SetUp(void)
