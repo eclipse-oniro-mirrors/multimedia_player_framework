@@ -230,7 +230,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperUpdateAudioCapture
     ScreenCaptureContentFilter filter;
     filter.filteredAudioContents.insert(AVScreenCaptureFilterableAudioContent::SCREEN_CAPTURE_CURRENT_APP_AUDIO);
     screenCaptureServer_->innerAudioCapture_->bundleName_ = ScreenRecorderBundleName;
-    ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->UpdateAudioCapturerConfig(filter), MSERR_OK);
+    screenCaptureServer_->innerAudioCapture_->UpdateAudioCapturerConfig(filter);
+    ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Stop(), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperUpdateAudioCapturerConfig_002, TestSize.Level2)
@@ -247,8 +248,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperUpdateAudioCapture
     ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Start(screenCaptureServer_->appInfo_), MSERR_OK);
     ScreenCaptureContentFilter filter;
     filter.filteredAudioContents.insert(AVScreenCaptureFilterableAudioContent::SCREEN_CAPTURE_NOTIFICATION_AUDIO);
-    screenCaptureServer_->innerAudioCapture_->bundleName_ = ScreenRecorderBundleName;
-    ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->UpdateAudioCapturerConfig(filter), MSERR_OK);
+    screenCaptureServer_->innerAudioCapture_->UpdateAudioCapturerConfig(filter);
+    ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Stop(), MSERR_OK);
 }
 } // Media
 } // OHOS

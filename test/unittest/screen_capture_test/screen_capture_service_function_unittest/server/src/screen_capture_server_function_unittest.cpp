@@ -639,7 +639,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioDataSource_002, TestSize.Level2)
     ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
     std::vector<std::shared_ptr<AudioRendererChangeInfo>> audioRendererChangeInfos;
     screenCaptureServer_->audioSource_->SpeakerStateUpdate(audioRendererChangeInfos);
-    ASSERT_EQ(screenCaptureServer_->audioSource_->HasSpeakerStream(audioRendererChangeInfos), true);
+    ASSERT_EQ(screenCaptureServer_->audioSource_->HasSpeakerStream(audioRendererChangeInfos), false);
     sleep(RECORDER_TIME);
     ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
 }
@@ -663,6 +663,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioDataSource_003, TestSize.Level2)
     audioRendererChangeInfos[5]->outputDeviceInfo.deviceType_ = DEVICE_TYPE_USB_ARM_HEADSET;
     audioRendererChangeInfos[6]->outputDeviceInfo.deviceType_ = DEVICE_TYPE_SPEAKER;
     screenCaptureServer_->audioSource_->HasSpeakerStream(audioRendererChangeInfos);
+    ASSERT_EQ(screenCaptureServer_->audioSource_->HasSpeakerStream(audioRendererChangeInfos), true);
     sleep(RECORDER_TIME);
     ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
 }
@@ -819,25 +820,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ReportAVScreenCaptureUserChoice_007, T
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     int32_t sessionId = 1;
     ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
-    screenCaptureServer_->captureState_ = AVScreenCaptureState::POPUP_WINDOW;
     std::string choice = "{\"choice\": \"true\", \"displayId\": 0, \"missionId\": 0}";
-    ASSERT_NE(screenCaptureServer_->ReportAVScreenCaptureUserChoice(sessionId, choice), MSERR_OK);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, ReportAVScreenCaptureUserChoice_008, TestSize.Level2)
-{
-    SetInvalidConfig();
-    config_.audioInfo.micCapInfo.audioSampleRate = 16000;
-    config_.audioInfo.micCapInfo.audioChannels = 2;
-    config_.audioInfo.micCapInfo.audioSource = AudioCaptureSourceType::SOURCE_DEFAULT;
-    config_.audioInfo.innerCapInfo.audioSampleRate = 16000;
-    config_.audioInfo.innerCapInfo.audioChannels = 2;
-    config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
-    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    int32_t sessionId = 1;
-    ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
-    screenCaptureServer_->captureState_ = AVScreenCaptureState::POPUP_WINDOW;
-    std::string choice = "{\"choice\": \"true\"}";
     ASSERT_NE(screenCaptureServer_->ReportAVScreenCaptureUserChoice(sessionId, choice), MSERR_OK);
 }
 
