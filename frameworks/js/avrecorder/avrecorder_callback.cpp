@@ -503,6 +503,7 @@ napi_status AudioCaptureChangeInfoJsCallback::SetDeviceInfo(napi_env env,
     napi_value &deviceDescriptors, napi_value &result)
 {
     napi_value element;
+    napi_status ret = napi_ok;
     CHECK_AND_RETURN_RET((ret = napi_create_object(env, &element)) == napi_ok, ret);
     CHECK_AND_RETURN_RET(SetDeviceProperty(env, element) == napi_ok, napi_generic_failure);
 
