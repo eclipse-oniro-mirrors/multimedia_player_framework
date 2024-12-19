@@ -146,6 +146,13 @@ sptr<IRemoteObject> MediaServer::GetSubSystemAbility(IStandardMediaService::Medi
     }
 }
 
+sptr<IRemoteObject> MediaServer::GetSubSystemAbilityWithTimeOut(IStandardMediaService::MediaSystemAbility subSystemId,
+    const sptr<IRemoteObject> &listener, uint32_t timeoutMs)
+{
+    (void) timeoutMs;
+    return GetSubSystemAbility(subSystemId, listener);
+}
+
 int32_t MediaServer::Dump(int32_t fd, const std::vector<std::u16string> &args)
 {
     CHECK_AND_RETURN_RET_LOG(fd > 0, OHOS::INVALID_OPERATION, "Failed to check fd.");

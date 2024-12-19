@@ -38,6 +38,7 @@ protected:
 private:
     void Init();
     int32_t GetSystemAbility(MessageParcel &data, MessageParcel &reply);
+    int32_t GetSystemAbilityAync(MessageParcel &data, MessageParcel &reply);
     void ClientDied(pid_t pid);
     int32_t DestroyStubForPid(pid_t pid);
 

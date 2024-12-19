@@ -34,6 +34,8 @@ public:
     // IStandardMediaService override
     sptr<IRemoteObject> GetSubSystemAbility(IStandardMediaService::MediaSystemAbility subSystemId,
         const sptr<IRemoteObject> &listener) override;
+    sptr<IRemoteObject> GetSubSystemAbilityWithTimeOut(IStandardMediaService::MediaSystemAbility subSystemId,
+        const sptr<IRemoteObject> &listener, uint32_t timeoutMs) override;
 
 protected:
     // SystemAbility override
