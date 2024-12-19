@@ -65,7 +65,16 @@ ohos_unittest("recorder_native_unit_test") {
     "graphic_2d:librender_service_base",
     "graphic_surface:surface",
     "hilog:libhilog",
+    "image_framework:image",
+    "image_framework:image_native",
+    "image_framework:image_source",
+    "image_framework:ohimage",
+    "media_library:media_library",
+    "media_library:media_library_asset_manager",
+    "media_library:native_media_asset_manager",
+    "napi:ace_napi",
     "player_framework:media_client",
+    "resource_management:librawfile",
     "window_manager:libdm",
   ]
 
