@@ -353,6 +353,7 @@ void PlayerServerUnitTest::SetUpTestCase(void)
 
 void PlayerServerUnitTest::TearDownTestCase(void)
 {
+    std::cout << "sleep one second to protect PlayerEngine safely exit." << endl;
     sleep(1); //let PlayEngine safe exit.
 }
 
