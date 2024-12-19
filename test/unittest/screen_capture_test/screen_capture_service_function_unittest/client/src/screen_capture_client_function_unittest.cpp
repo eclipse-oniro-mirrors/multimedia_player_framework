@@ -16,6 +16,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include "screen_capture_client_function_unittest.h"
+#include "screen_capture_server_function_unittest.h"
 #include "ui_extension_ability_connection.h"
 #include "image_source.h"
 #include "image_type.h"
@@ -65,7 +66,6 @@ void ScreenCaptureClientFunctionTest::TearDown()
         screenCaptureClient_ = nullptr;
     }
     if (screenCaptureClient_) {
-        screenCaptureClientController_->Release();
         screenCaptureClientController_ = nullptr;
     }
 }

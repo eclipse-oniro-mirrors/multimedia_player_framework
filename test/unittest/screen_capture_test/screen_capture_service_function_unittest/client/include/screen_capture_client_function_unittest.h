@@ -88,7 +88,7 @@ private:
             }
         }
     };
-    static void SetHapPermission();
+    void SetHapPermission();
 };
 } // Media
 } // OHOS
