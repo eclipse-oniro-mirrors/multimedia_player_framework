@@ -29,7 +29,6 @@
 #include "param_wrapper.h"
 
 using namespace testing::ext;
-using namespace OHOS::Media::ScreenCaptureTestParam;
 using namespace OHOS::Media;
 
 namespace {
@@ -53,24 +52,10 @@ void ScreenCaptureClientFunctionTest::SetUp()
 {
     SetHapPermission();
     // create client
-    sptr<IRemoteObject> object = mediaProxy_->GetSubSystemAbility(
-        IStandardMediaService::MediaSystemAbility::MEDIA_SCREEN_CAPTURE, listenerStub_->AsObject());
-    CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "screenCapture proxy object is nullptr.");
-
-    sptr<IStandardScreenCaptureService> screenCaptureProxy = iface_cast<IStandardScreenCaptureService>(object);
-    CHECK_AND_RETURN_RET_LOG(screenCaptureProxy != nullptr, nullptr, "screenCapture proxy is nullptr.");
-
-    screenCaptureClient_ = ScreenCaptureClient::Create(screenCaptureProxy);
-    CHECK_AND_RETURN_RET_LOG(screenCaptureClient_ != nullptr, nullptr, "failed to create screenCapture client.");
+    screenCaptureClient_ = ScreenCaptureClient::Create(nullptr);
 
     // create controller client
-    sptr<IRemoteObject> object = mediaProxy_->GetSubSystemAbility(
-        IStandardMediaService::MediaSystemAbility::MEDIA_SCREEN_CAPTURE_CONTROLLER, listenerStub_->AsObject());
-    CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "screenCapture controller proxy object is nullptr.");
-
-    sptr<IStandardScreenCaptureController> controllerProxy = iface_cast<IStandardScreenCaptureController>(object);
-    CHECK_AND_RETURN_RET_LOG(controllerProxy != nullptr, nullptr, "controllerProxy is nullptr.");
-    screenCaptureClientController_ = ScreenCaptureControllerClient::Create(controllerProxy);
+    screenCaptureClientController_ = ScreenCaptureControllerClient::Create(nullptr);
 }
 
 void ScreenCaptureClientFunctionTest::TearDown()

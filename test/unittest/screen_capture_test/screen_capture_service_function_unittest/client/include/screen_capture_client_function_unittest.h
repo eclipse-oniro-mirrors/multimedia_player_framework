@@ -24,6 +24,7 @@
 #include "accesstoken_kit.h"
 #include "token_setproc.h"
 #include "screen_capture_client.h"
+#include "screen_capture_controller_client.h"
 #include "gtest/gtest.h"
 
 namespace OHOS {
@@ -87,6 +88,7 @@ private:
             }
         }
     };
+    static void SetHapPermission();
 };
 } // Media
 } // OHOS

@@ -171,13 +171,13 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperPause_003, TestSiz
     sleep(RECORDER_TIME);
     ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Pause(), MSERR_OK);
     sleep(RECORDER_TIME);
-    screenCaptureServer_->innerAudioCapture_->isRunning_store(true);
+    screenCaptureServer_->innerAudioCapture_->isRunning_.store(true);
     ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Pause(), MSERR_OK);
     sleep(RECORDER_TIME);
-    screenCaptureServer_->innerAudioCapture_->isRunning_store(true);
-    screenCaptureServer_->innerAudioCapture_->audioCapture_->Stop();
-    screenCaptureServer_->innerAudioCapture_->audioCapture_->Release();
-    screenCaptureServer_->innerAudioCapture_->audioCapture_ = nullptr;
+    screenCaptureServer_->innerAudioCapture_->isRunning_.store(true);
+    screenCaptureServer_->innerAudioCapture_->audioCapturer_->Stop();
+    screenCaptureServer_->innerAudioCapture_->audioCapturer_->Release();
+    screenCaptureServer_->innerAudioCapture_->audioCapturer_ = nullptr;
     ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Pause(), MSERR_OK);
     sleep(RECORDER_TIME);
     ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Stop(), MSERR_OK);
@@ -230,7 +230,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperUpdateAudioCapture
     ScreenCaptureContentFilter filter;
     filter.filteredAudioContents.insert(AVScreenCaptureFilterableAudioContent::SCREEN_CAPTURE_CURRENT_APP_AUDIO);
     screenCaptureServer_->innerAudioCapture_->bundleName_ = ScreenRecorderBundleName;
-    ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->UpdateAudioCaptureConfig(filter), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->UpdateAudioCapturerConfig(filter), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperUpdateAudioCapturerConfig_002, TestSize.Level2)
@@ -248,7 +248,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperUpdateAudioCapture
     ScreenCaptureContentFilter filter;
     filter.filteredAudioContents.insert(AVScreenCaptureFilterableAudioContent::SCREEN_CAPTURE_NOTIFICATION_AUDIO);
     screenCaptureServer_->innerAudioCapture_->bundleName_ = ScreenRecorderBundleName;
-    ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->UpdateAudioCaptureConfig(filter), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->UpdateAudioCapturerConfig(filter), MSERR_OK);
 }
 } // Media
 } // OHOS
