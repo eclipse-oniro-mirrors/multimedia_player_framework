@@ -147,6 +147,8 @@ HWTEST_F(PlayerServerMemTest, IsLooping, TestSize.Level1)
 HWTEST_F(PlayerServerMemTest, SaveParameter, TestSize.Level1)
 {
     Format param;
+    playerServerMem_->SaveParameter(param);
+    EXPECT_EQ(playerServerMem_->recoverConfig_.videoScaleType, -1);
     param.PutIntValue(PlayerKeys::VIDEO_SCALE_TYPE, 0);
     param.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_MODE, 0);
     playerServerMem_->SaveParameter(param);
@@ -155,6 +157,9 @@ HWTEST_F(PlayerServerMemTest, SaveParameter, TestSize.Level1)
     param.PutIntValue(PlayerKeys::CONTENT_TYPE, 0);
     playerServerMem_->SaveParameter(param);
     EXPECT_EQ(playerServerMem_->recoverConfig_.contentType, -1);
+    param.PutIntValue(PlayerKeys::STREAM_USAGE, 0);
+    playerServerMem_->SaveParameter(param);
+    EXPECT_EQ(playerServerMem_->recoverConfig_.contentType, 0);
 }
 
 /**
