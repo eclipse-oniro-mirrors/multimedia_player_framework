@@ -50,6 +50,7 @@ const double FRAME_RATE_DEFAULT = -1.0;
 const double FRAME_RATE_FOR_SEEK_PERFORMANCE = 2000.0;
 constexpr int32_t BUFFERING_LOG_FREQUENCY = 5;
 constexpr int32_t NOTIFY_BUFFERING_END_PARAM = 0;
+constexpr int32_t INVALID_TRACK_ID = -1;
 }
 
 namespace OHOS {
@@ -1446,7 +1447,15 @@ int32_t HiPlayerImpl::InitVideoWidthAndHeight()
         MEDIA_LOG_E("InitVideoWidthAndHeight failed, as videoTrackInfo is empty!");
         return TransStatus(Status::ERROR_INVALID_OPERATION);
     }
+    int32_t currentVideoTrackId = demuxer_->GetCurrentVideoTrackId();
+    FALSE_RETURN_V_MSG_E(currentVideoTrackId != INVALID_TRACK_ID, TransStatus(Status::ERROR_INVALID_OPERATION),
+        "InitVideoWidthAndHeight failed, as currentVideoTrackId is invalid!");
     for (auto& videoTrack : videoTrackInfo) {
+        int32_t videoTrackId = INVALID_TRACK_ID;
+        videoTrack.GetIntValue("track_index", videoTrackId);
+        if (videoTrackId != currentVideoTrackId) {
+            continue;
+        }
         int32_t height;
         videoTrack.GetIntValue("height", height);
         int32_t width;
