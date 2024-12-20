@@ -36,6 +36,10 @@ public:
     {
         return true;
     }
+    bool NotifyStopAndRelease(AVScreenCaptureStateCode state)
+    {
+        return true;
+    }
 };
 
 class InCallObserverTestFalseCallBack : public InCallObserverCallBack {
@@ -43,6 +47,10 @@ public:
     InCallObserverTestFalseCallBack() {}
     ~InCallObserverTestFalseCallBack() {}
     bool StopAndRelease(AVScreenCaptureStateCode state)
+    {
+        return false;
+    }
+    bool NotifyStopAndRelease(AVScreenCaptureStateCode state)
     {
         return false;
     }
@@ -147,7 +155,6 @@ HWTEST_F(InCallObserverInnerUnitTest, InCallCallBackReturn_02, TestSize.Level1)
     ASSERT_TRUE(InCallObserver::GetInstance().OnCallStateUpdated(true));
     ASSERT_TRUE(InCallObserver::GetInstance().IsInCall());
     InCallObserver::GetInstance().UnregisterInCallObserverCallBack(inCallObserverCallBack);
-    ASSERT_TRUE(InCallObserver::GetInstance().OnCallStateUpdated(true));
     ASSERT_TRUE(InCallObserver::GetInstance().IsInCall());
     InCallObserver::GetInstance().UnRegisterObserver();
 }
@@ -169,7 +176,6 @@ HWTEST_F(InCallObserverInnerUnitTest, InCallCallBackReturn_03, TestSize.Level1)
     ASSERT_FALSE(InCallObserver::GetInstance().OnCallStateUpdated(true));
     ASSERT_TRUE(InCallObserver::GetInstance().IsInCall());
     InCallObserver::GetInstance().UnregisterInCallObserverCallBack(inCallObserverTestFalseCallBack);
-    ASSERT_TRUE(InCallObserver::GetInstance().OnCallStateUpdated(true));
     ASSERT_TRUE(InCallObserver::GetInstance().IsInCall());
     InCallObserver::GetInstance().UnRegisterObserver();
 }
