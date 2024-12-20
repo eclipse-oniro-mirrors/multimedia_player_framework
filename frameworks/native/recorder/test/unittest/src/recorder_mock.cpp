@@ -313,6 +313,23 @@ int32_t RecorderMock::SetParameter(int32_t sourceId, const Format &format)
     return recorder_->SetParameter(sourceId, format);
 }
 
+int32_t RecorderMock::GetAvailableEncoder(std::vector<EncoderCapabilityData> &encoderInfo)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
+    return recorder_->GetAvailableEncoder(encoderInfo);
+}
+
+int32_t RecorderMock::IsWatermarkSupported(bool &isWatermarkSupported)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
+    return recorder_->IsWatermarkSupported(isWatermarkSupported);
+}
+
+int32_t RecorderMock::SetVideoIsHdr(int32_t sourceId, bool isHdr)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
+    return recorder_->SetVideoIsHdr(sourceId, isHdr);
+}
 
 int32_t RecorderMock::RequesetBuffer(const std::string &recorderType, VideoRecorderConfig &recorderConfig)
 {
