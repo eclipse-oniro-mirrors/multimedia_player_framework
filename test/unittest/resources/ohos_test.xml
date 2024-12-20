@@ -132,6 +132,12 @@
             <option name="shell" value="touch /data/test/media/recorder_video_yuv_H264.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_video_SetMaxFileSize_001.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_video_SetMaxFileSize_002.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_GetAvailableEncoder_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_GetAvailableEncoder_002.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_IsWatermarkSupported_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_IsWatermarkSupported_002.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetVideoIsHdr_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetVideoIsHdr_002.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_video_SetParameter_001.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_SetDataSource_001.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_video_SetOrientationHint_001.mp4"/>
@@ -153,6 +159,7 @@
             <option name="shell" value="touch /data/test/media/recorder_configure_019.wav"/>
             <option name="shell" value="touch /data/test/media/recorder_configure_020.wav"/>
             <option name="shell" value="touch /data/test/media/recorder_configure_021.wav"/>
+            <option name="shell" value="touch /data/test/media/recorder_configure_022.wav"/>
             <option name="shell" value="touch /data/test/media/recorder_WAV_001.wav"/>
             <option name="shell" value="touch /data/test/media/recorder_mp3_001.mp3"/>
             <option name="shell" value="touch /data/test/media/recorder_prepare.mp4"/>
@@ -165,6 +172,7 @@
             <option name="shell" value="touch /data/test/media/recorder_video_GetSurface_Error_001.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_video_SetVideoSourceRepeat_001.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_video_SetAudioSourceRepeat_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_video_SetAudioSourceRepeat_002.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_video_DrainBufferTrue_001.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_video_SetVideoSourceRGBA_001.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_video_DrainBufferStarted_001.mp4"/>
