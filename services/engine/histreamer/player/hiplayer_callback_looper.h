@@ -53,7 +53,7 @@ public:
     void OnSystemOperation(PlayerOnSystemOperationType type, PlayerOperationReason reason) override;
 
     void DoReportCompletedTime();
-    void startCollectMaxAmplitude(int64_t updateIntervalMs);
+    void StartCollectMaxAmplitude(int64_t updateIntervalMs);
     void StopCollectMaxAmplitude();
     void ReportRemainedMaxAmplitude();
 
