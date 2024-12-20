@@ -313,6 +313,7 @@ int32_t RecorderMock::SetParameter(int32_t sourceId, const Format &format)
     return recorder_->SetParameter(sourceId, format);
 }
 
+
 int32_t RecorderMock::RequesetBuffer(const std::string &recorderType, VideoRecorderConfig &recorderConfig)
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");

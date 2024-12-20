@@ -124,6 +124,7 @@
     <target name="recorder_unit_test">
         <preparer>
             <option name="push" value="res_recorder/out_320_240_10s.h264 -> /data/test/media" src="res"/>
+            
             <option name="shell" value="touch /data/test/media/recorder_video_pause_resume.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_video_es.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_audio_es.m4a"/>

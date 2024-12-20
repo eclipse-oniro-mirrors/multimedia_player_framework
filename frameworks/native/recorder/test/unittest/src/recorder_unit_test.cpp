@@ -1434,7 +1434,7 @@ HWTEST_F(RecorderUnitTest, recorder_video_SetMaxFileSize_002, TestSize.Level0)
 }
 
 /**
- * @tc.name: recorder_video_SetParameter_001
+ * @tc.name: recorder_video_SetParameter_0010
  * @tc.desc: record video, SetParameter
  * @tc.type: FUNC
  * @tc.require:
