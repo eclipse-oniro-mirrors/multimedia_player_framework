@@ -107,7 +107,7 @@ HWTEST_F(RecorderProfilesServerUnitTest, recorder_profile_HasVideoRecorderProfil
 {
     int32_t sourceId = 0;
     int32_t qualityLevel = RECORDER_QUALITY_HIGH;
-    EXPECT_FALSE(recorderProfilesServer_->HasVideoRecorderProfile(sourceId, qualityLevel));
+    EXPECT_TRUE(recorderProfilesServer_->HasVideoRecorderProfile(sourceId, qualityLevel));
 }
 
 /**
@@ -189,7 +189,7 @@ HWTEST_F(RecorderProfilesServerUnitTest, recorder_profile_GetAudioRecorderCaps_0
         std::shared_ptr<AudioRecorderCaps> audioRecorderCaps = std::make_shared<AudioRecorderCaps>((*iter).audioCaps);
         audioRecorderCapsArray.push_back(audioRecorderCaps);
     }
-    EXPECT_TRUE(CheckAudioRecorderCapsArray(audioRecorderArray));
+    EXPECT_TRUE(CheckAudioRecorderCapsArray(audioRecorderCapsArray));
 }
 
 /**
@@ -220,7 +220,7 @@ HWTEST_F(RecorderProfilesServerUnitTest, recorder_profile_GetVideoRecorderProfil
 {
     int32_t sourceId = 0;
     int32_t qualityLevel = RECORDER_QUALITY_LOW;
-    RecorderProfilesData capability = recorderProfilesService_->GetVideoRecorderProfileInfo(sourceId, qualityLevel);
+    RecorderProfilesData capability = recorderProfilesServer_->GetVideoRecorderProfileInfo(sourceId, qualityLevel);
     std::shared_ptr<VideoRecorderProfile> videoRecorderProfile =
         std::make_shared<VideoRecorderProfile>(capability.recorderProfile);
     ASSERT_TRUE(videoRecorderProfile != nullptr);
@@ -248,7 +248,7 @@ HWTEST_F(RecorderProfilesServerUnitTest, recorder_profile_GetVideoRecorderProfil
 {
     int32_t sourceId = -1;
     int32_t qualityLevel = RECORDER_QUALITY_HIGH;
-    RecorderProfilesData capability = recorderProfilesService_->GetVideoRecorderProfileInfo(sourceId, qualityLevel);
+    RecorderProfilesData capability = recorderProfilesServer_->GetVideoRecorderProfileInfo(sourceId, qualityLevel);
     std::shared_ptr<VideoRecorderProfile> videoRecorderProfile =
         std::make_shared<VideoRecorderProfile>(capability.recorderProfile);
     ASSERT_TRUE(videoRecorderProfile != nullptr);
@@ -265,11 +265,11 @@ HWTEST_F(RecorderProfilesServerUnitTest, recorder_profile_GetVideoRecorderProfil
 {
     int32_t sourceId = 0;
     int32_t qualityLevel = RECORDER_QUALITY_HIGH;
-    RecorderProfilesData capability = recorderProfilesService_->GetVideoRecorderProfileInfo(sourceId, qualityLevel);
+    RecorderProfilesData capability = recorderProfilesServer_->GetVideoRecorderProfileInfo(sourceId, qualityLevel);
     std::shared_ptr<VideoRecorderProfile> videoRecorderProfile =
         std::make_shared<VideoRecorderProfile>(capability.recorderProfile);
     ASSERT_TRUE(videoRecorderProfile != nullptr);
-    EXPECT_NE(ContainerFormatType::CFT_MPEG_4, videoRecorderProfile->containerFormatType);
+    EXPECT_EQ(ContainerFormatType::CFT_MPEG_4, videoRecorderProfile->containerFormatType);
 }
 
 /**
@@ -282,7 +282,7 @@ HWTEST_F(RecorderProfilesServerUnitTest, recorder_profile_GetVideoRecorderProfil
 {
     int32_t sourceId = -1;
     int32_t qualityLevel = RECORDER_QUALITY_LOW;
-    RecorderProfilesData capability = recorderProfilesService_->GetVideoRecorderProfileInfo(sourceId, qualityLevel);
+    RecorderProfilesData capability = recorderProfilesServer_->GetVideoRecorderProfileInfo(sourceId, qualityLevel);
     std::shared_ptr<VideoRecorderProfile> videoRecorderProfile =
         std::make_shared<VideoRecorderProfile>(capability.recorderProfile);
     ASSERT_TRUE(videoRecorderProfile != nullptr);
