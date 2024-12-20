@@ -36,6 +36,10 @@ public:
     {
         return true;
     }
+    bool NotifyStopAndRelease(AVScreenCaptureStateCode state)
+    {
+        return true;
+    }
 };
 
 class AccountObserverTestFalseCallBack : public AccountObserverCallBack {
@@ -43,6 +47,10 @@ public:
     AccountObserverTestFalseCallBack() {}
     ~AccountObserverTestFalseCallBack() {}
     bool StopAndRelease(AVScreenCaptureStateCode state)
+    {
+        return false;
+    }
+    bool NotifyStopAndRelease(AVScreenCaptureStateCode state)
     {
         return false;
     }

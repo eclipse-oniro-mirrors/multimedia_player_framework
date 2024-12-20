@@ -496,5 +496,41 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckLastPidUpdatePrivacyUsingPermissi
     ASSERT_EQ(server->LastPidUpdatePrivacyUsingPermissionState(server->appInfo_.appPid), true);
 }
 
+/**
+* @tc.name: StopScreenCaptureByEvent_001
+* @tc.desc: StopScreenCaptureByEvent_001
+* @tc.type: FUNC
+*/
+HWTEST_F(ScreenCaptureServerFunctionTest, StopScreenCaptureByEvent_001, TestSize.Level2)
+{
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STOPPED;
+    ASSERT_EQ(screenCaptureServer_->StopScreenCaptureByEvent(AVScreenCaptureStateCode::
+        SCREEN_CAPTURE_STATE_STOPPED_BY_USER), MSERR_OK);
+}
+
+/**
+* @tc.name: StopScreenCapture_001
+* @tc.desc: StopScreenCapture_001
+* @tc.type: FUNC
+*/
+HWTEST_F(ScreenCaptureServerFunctionTest, StopScreenCapture_001, TestSize.Level2)
+{
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STOPPED;
+    ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
+}
+
+/**
+* @tc.name: NotifyStopAndRelease_001
+* @tc.desc: NotifyStopAndRelease_001
+* @tc.type: FUNC
+*/
+HWTEST_F(ScreenCaptureServerFunctionTest, NotifyStopAndRelease_001, TestSize.Level2)
+{
+    ScreenCaptureObserverCallBack* obcb = new ScreenCaptureObserverCallBack(screenCaptureServer_);
+    if (obcb) {
+        ASSERT_EQ(obcb->NotifyStopAndRelease(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_USER), true);
+    }
+}
+
 } // Media
 } // OHOS

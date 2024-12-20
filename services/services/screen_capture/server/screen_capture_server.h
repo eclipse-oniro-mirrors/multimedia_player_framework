@@ -196,11 +196,13 @@ private:
 class ScreenCaptureObserverCallBack : public InCallObserverCallBack, public AccountObserverCallBack {
 public:
     explicit ScreenCaptureObserverCallBack(std::weak_ptr<ScreenCaptureServer> screenCaptureServer);
-    ~ScreenCaptureObserverCallBack() = default;
+    ~ScreenCaptureObserverCallBack();
     bool StopAndRelease(AVScreenCaptureStateCode state) override;
+    bool NotifyStopAndRelease(AVScreenCaptureStateCode state) override;
 
 private:
     std::weak_ptr<ScreenCaptureServer> screenCaptureServer_;
+    TaskQueue taskQueObserverCb_;
 };
 
 class AudioDataSource : public IAudioDataSource {

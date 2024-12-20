@@ -439,6 +439,7 @@ ScreenCaptureServer::~ScreenCaptureServer()
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
     ReleaseInner();
+    screenCaptureObserverCb_ = nullptr;
     CloseFd();
 }
 
@@ -2731,6 +2732,10 @@ int32_t ScreenCaptureServer::StopScreenCaptureByEvent(AVScreenCaptureStateCode s
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances StopScreenCaptureByEvent S", FAKE_POINTER(this));
     MediaTrace trace("ScreenCaptureServer::StopScreenCaptureByEvent");
+    if (captureState_ == AVScreenCaptureState::STOPPED) {
+        MEDIA_LOGI("StopScreenCaptureByEvent repeat, capture is STOPPED.");
+        return MSERR_OK;
+    }
     std::lock_guard<std::mutex> lock(mutex_);
     return StopScreenCaptureInner(stateCode);
 }
@@ -2838,6 +2843,10 @@ int32_t ScreenCaptureServer::StopScreenCapture()
     MediaTrace trace("ScreenCaptureServer::StopScreenCapture");
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances StopScreenCapture S", FAKE_POINTER(this));
 
+    if (captureState_ == AVScreenCaptureState::STOPPED) {
+        MEDIA_LOGI("StopScreenCapture repeat, capture is STOPPED.");
+        return MSERR_OK;
+    }
     std::lock_guard<std::mutex> lock(mutex_);
     int32_t ret = StopScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID);
     if (statisticalEventInfo_.startLatency == -1) {
@@ -2861,27 +2870,28 @@ void ScreenCaptureServer::ReleaseInner()
 {
     MediaTrace trace("ScreenCaptureServer::ReleaseInner");
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances ReleaseInner S", FAKE_POINTER(this));
-    int32_t sessionId;
-    {
+    if (captureState_ != AVScreenCaptureState::STOPPED) {
         std::lock_guard<std::mutex> lock(mutex_);
         StopScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID);
-        sessionId = sessionId_;
-        sessionId_ = SESSION_ID_INVALID;
         MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances ReleaseInner Stop done, sessionId:%{public}d",
-            FAKE_POINTER(this), sessionId);
+            FAKE_POINTER(this), sessionId_);
     }
-    RemoveScreenCaptureServerMap(sessionId);
+    MEDIA_LOGI("ScreenCaptureServer::ReleaseInner before RemoveScreenCaptureServerMap");
+    RemoveScreenCaptureServerMap(sessionId_);
+    sessionId_ = SESSION_ID_INVALID;
+    MEDIA_LOGD("ReleaseInner removeMap success, mapSize: %{public}d",
+        static_cast<int32_t>(ScreenCaptureServer::serverMap_.size()));
     skipPrivacyWindowIDsVec_.clear();
     SetMetaDataReport();
-    screenCaptureObserverCb_ = nullptr;
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances ReleaseInner E", FAKE_POINTER(this));
 }
 
 ScreenCaptureObserverCallBack::ScreenCaptureObserverCallBack(
-    std::weak_ptr<ScreenCaptureServer> screenCaptureServer)
+    std::weak_ptr<ScreenCaptureServer> screenCaptureServer): taskQueObserverCb_("NotifyStopSc")
 {
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
     screenCaptureServer_ = screenCaptureServer;
+    taskQueObserverCb_.Start();
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
 
 bool ScreenCaptureObserverCallBack::StopAndRelease(AVScreenCaptureStateCode state)
@@ -2893,6 +2903,25 @@ bool ScreenCaptureObserverCallBack::StopAndRelease(AVScreenCaptureStateCode stat
         scrServer->Release();
     }
     return true;
+}
+
+bool ScreenCaptureObserverCallBack::NotifyStopAndRelease(AVScreenCaptureStateCode state)
+{
+    MEDIA_LOGI("ScreenCaptureObserverCallBack::NotifyStopAndRelease START.");
+    bool ret = true;
+    auto task = std::make_shared<TaskHandler<void>>([&, this, state] {
+        ret = StopAndRelease(state);
+        return ret;
+    });
+    int32_t res = taskQueObserverCb_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(res == MSERR_OK, false, "NotifyStopAndRelease EnqueueTask failed.");
+    return true;
+}
+
+ScreenCaptureObserverCallBack::~ScreenCaptureObserverCallBack()
+{
+    taskQueObserverCb_.Stop();
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
 void ScreenCapBufferConsumerListener::OnBufferAvailable()
