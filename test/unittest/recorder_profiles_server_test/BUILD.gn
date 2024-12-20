@@ -65,4 +65,3 @@ ohos_unittest("recorder_profiles_server_unit_test") {
     "image_framework:image_native",
   ]
 }
-
