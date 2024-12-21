@@ -27,6 +27,10 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "Med
 
 namespace OHOS {
 namespace Media {
+namespace {
+constexpr int32_t READ_AT_ERR_CODE = INT32_MIN;
+}
+
 class MediaDataSourceProxy::BufferCache : public NoCopyable {
 public:
     BufferCache()
@@ -42,7 +46,7 @@ public:
     {
         CHECK_AND_RETURN_RET_LOG(memory != nullptr, MSERR_NO_MEMORY, "memory is nullptr");
         CacheFlag flag;
-        if (caches_ != nullptr && caches_ == memory.get()) {
+        if (caches_ != nullptr && caches_ == memory.get() && uniqueSharedMemoryID_ == memory->GetSharedMemoryID()) {
             MEDIA_LOGI("HIT_CACHE");
             flag = CacheFlag::HIT_CACHE;
             parcel.WriteUint8(static_cast<uint8_t>(flag));
@@ -51,12 +55,14 @@ public:
             MEDIA_LOGI("UPDATE_CACHE");
             flag = CacheFlag::UPDATE_CACHE;
             caches_ = memory.get();
+            uniqueSharedMemoryID_ = memory->GetSharedMemoryID();
             parcel.WriteUint8(static_cast<uint8_t>(flag));
             return WriteAVSharedMemoryToParcel(memory, parcel);
         }
     }
 
 private:
+    uint64_t uniqueSharedMemoryID_ = 0;
     AVSharedMemory *caches_;
 };
 
@@ -141,8 +147,7 @@ int32_t MediaDataSourceProxy::ReadAt(const std::shared_ptr<AVSharedMemory> &mem,
     data.WriteUint32(length);
     data.WriteInt64(pos);
     int error = Remote()->SendRequest(static_cast<uint32_t>(ListenerMsg::READ_AT), data, reply, option);
-    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, 0, "ReadAt failed, error: %{public}d", error);
-
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, READ_AT_ERR_CODE, "ReadAt failed, error: %{public}d", error);
     return reply.ReadInt32();
 }
 

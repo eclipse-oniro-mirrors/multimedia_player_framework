@@ -120,7 +120,6 @@ int32_t RecorderServer::Init()
     CHECK_AND_RETURN_RET_LOG(result.Value() == MSERR_OK, result.Value(), "Result failed");
 
     status_ = REC_INITIALIZED;
-    BehaviorEventWrite(GetStatusDescription(status_), "Recorder");
 #ifdef SUPPORT_POWER_MANAGER
     syncCallback_ = new SaveDocumentSyncCallback();
 #endif
@@ -140,7 +139,6 @@ void RecorderServer::OnError(ErrorType errorType, int32_t errorCode)
 {
     std::lock_guard<std::mutex> lock(cbMutex_);
     lastErrMsg_ = MSErrorToExtErrorString(static_cast<MediaServiceErrCode>(errorCode));
-    FaultEventWrite(lastErrMsg_, "Recorder");
     SetErrorInfo(errorCode, lastErrMsg_);
     CHECK_AND_RETURN(recorderCb_ != nullptr);
     recorderCb_->OnError(static_cast<RecorderErrorType>(errorType), errorCode);
@@ -654,7 +652,6 @@ int32_t RecorderServer::SetOutputFormat(OutputFormatType format)
     auto result = task->GetResult();
     ret = result.Value();
     status_ = (ret == MSERR_OK ? REC_CONFIGURED : REC_INITIALIZED);
-    BehaviorEventWrite(GetStatusDescription(status_), "Recorder");
     return ret;
 }
 
@@ -820,7 +817,6 @@ int32_t RecorderServer::Prepare()
     auto result = task->GetResult();
     ret = result.Value();
     status_ = (ret == MSERR_OK ? REC_PREPARED : REC_ERROR);
-    BehaviorEventWrite(GetStatusDescription(status_), "Recorder");
     return ret;
 }
 
@@ -853,7 +849,6 @@ int32_t RecorderServer::Start()
     auto result = task->GetResult();
     ret = result.Value();
     status_ = (ret == MSERR_OK ? REC_RECORDING : REC_ERROR);
-    BehaviorEventWrite(GetStatusDescription(status_), "Recorder");
     if (status_ == REC_RECORDING) {
         int64_t endTime = GetCurrentMillisecond();
         statisticalEventInfo_.startLatency = static_cast<int32_t>(endTime - startTime_);
@@ -881,7 +876,6 @@ int32_t RecorderServer::Pause()
     auto result = task->GetResult();
     ret = result.Value();
     status_ = (ret == MSERR_OK ? REC_PAUSED : REC_ERROR);
-    BehaviorEventWrite(GetStatusDescription(status_), "Recorder");
     return ret;
 }
 
@@ -905,7 +899,6 @@ int32_t RecorderServer::Resume()
     auto result = task->GetResult();
     ret = result.Value();
     status_ = (ret == MSERR_OK ? REC_RECORDING : REC_ERROR);
-    BehaviorEventWrite(GetStatusDescription(status_), "Recorder");
     return ret;
 }
 
@@ -937,7 +930,6 @@ int32_t RecorderServer::Stop(bool block)
         }
 #endif
     }
-    BehaviorEventWrite(GetStatusDescription(status_), "Recorder");
     return ret;
 }
 
@@ -956,7 +948,6 @@ int32_t RecorderServer::Reset()
     auto result = task->GetResult();
     ret = result.Value();
     status_ = (ret == MSERR_OK ? REC_INITIALIZED : REC_ERROR);
-    BehaviorEventWrite(GetStatusDescription(status_), "Recorder");
     return ret;
 }
 

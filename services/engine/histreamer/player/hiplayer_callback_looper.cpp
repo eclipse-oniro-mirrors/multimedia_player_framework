@@ -91,9 +91,9 @@ void HiPlayerCallbackLooper::StartReportMediaProgress(int64_t updateIntervalMs)
             SteadyClock::GetCurrentTimeMs() + reportProgressIntervalMs_, Any()));
 }
 
-void HiPlayerCallbackLooper::startCollectMaxAmplitude(int64_t updateIntervalMs)
+void HiPlayerCallbackLooper::StartCollectMaxAmplitude(int64_t updateIntervalMs)
 {
-    MEDIA_LOG_I("HiPlayerCallbackLooper startCollectMaxAmplitude");
+    MEDIA_LOG_I("HiPlayerCallbackLooper StartCollectMaxAmplitude");
     collectMaxAmplitudeIntervalMs_ = updateIntervalMs;
     if (collectMaxAmplitude_) { // already set
         return;
@@ -215,8 +215,11 @@ void HiPlayerCallbackLooper::ReportRemainedMaxAmplitude()
 
 void HiPlayerCallbackLooper::DoReportSystemOperation(const Any& info)
 {
-    OHOS::Media::AutoLock lock(loopMutex_);
-    auto obs = obs_.lock();
+    std::shared_ptr<IPlayerEngineObs> obs;
+    {
+        OHOS::Media::AutoLock lock(loopMutex_);
+        obs = obs_.lock();
+    }
     if (obs) {
         auto ptr = AnyCast<std::pair<PlayerOnSystemOperationType, PlayerOperationReason>>(&info);
         if (ptr == nullptr) {

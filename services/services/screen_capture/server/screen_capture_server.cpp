@@ -2397,6 +2397,31 @@ int32_t ScreenCaptureServer::SkipPrivacyModeInner()
     return MSERR_OK;
 }
 
+int32_t ScreenCaptureServer::SetMaxVideoFrameRate(int32_t frameRate)
+{
+    MediaTrace trace("ScreenCaptureServer::SetMaxVideoFrameRate");
+    std::lock_guard<std::mutex> lock(mutex_);
+    MEDIA_LOGI("ScreenCaptureServer::SetMaxVideoFrameRate start, frameRate:%{public}d", frameRate);
+    if (captureState_ != AVScreenCaptureState::STARTED) {
+        MEDIA_LOGE("SetMaxVideoFrameRate captureState_ invalid, captureState_:%{public}d", captureState_);
+        return MSERR_INVALID_OPERATION;
+    }
+    if (frameRate <= 0) {
+        MEDIA_LOGE("SetMaxVideoFrameRate frameRate is invalid, frameRate:%{public}d", frameRate);
+        return MSERR_INVALID_VAL;
+    }
+    
+    uint32_t actualRefreshRate = 0;
+    auto res = ScreenManager::GetInstance().SetVirtualScreenMaxRefreshRate(screenId_,
+        static_cast<uint32_t>(frameRate), actualRefreshRate);
+
+    CHECK_AND_RETURN_RET_LOG(res == DMError::DM_OK, MSERR_UNSUPPORT, "SetMaxVideoFrameRate failed");
+
+    MEDIA_LOGI("ScreenCaptureServer::SetMaxVideoFrameRate end, frameRate:%{public}d, actualRefreshRate:%{public}u",
+        frameRate, actualRefreshRate);
+    return MSERR_OK;
+}
+
 int32_t ScreenCaptureServer::SetScreenScaleMode()
 {
     MediaTrace trace("ScreenCaptureServer::SetScreenScaleMode");

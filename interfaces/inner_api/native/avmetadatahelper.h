@@ -168,6 +168,10 @@ enum AVMetadataUsage : int32_t {
      * and resolving metadata from the given media resource.
      */
     AV_META_USAGE_PIXEL_MAP,
+    /**
+     * Only for video frame index convert, if use this usage, can only GetTimeByFrameIndex / GetFrameIndexByTime
+     */
+    AV_META_USAGE_FRAME_INDEX_CONVERT,
 };
 
 /**

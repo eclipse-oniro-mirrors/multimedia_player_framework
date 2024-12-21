@@ -103,7 +103,7 @@ static const PlayerErrorCodeApi9Convert g_errorCodeApi9Map[ERROR_CODE_API9_MAP_L
     {MSERR_EXT_API14_IO_UNSUPPORTTED_REQUEST, AV_ERR_IO_UNSUPPORTED_REQUEST},
 };
 
-static const StateConvert g_stateMap[STATE_MAP_LENGTH] = {
+static const StateConvert STATE_MAP[STATE_MAP_LENGTH] = {
     { PLAYER_STATE_ERROR, AV_ERROR},
     { PLAYER_IDLE, AV_IDLE },
     { PLAYER_INITIALIZED, AV_INITIALIZED },
@@ -115,7 +115,7 @@ static const StateConvert g_stateMap[STATE_MAP_LENGTH] = {
     { PLAYER_RELEASED, AV_RELEASED },
 };
 
-static const PlayerOnInfoTypeConvert g_onInfoType[INFO_TYPE_LENGTH] = {
+static const PlayerOnInfoTypeConvert ON_INFO_TYPE[INFO_TYPE_LENGTH] = {
     { INFO_TYPE_SEEKDONE, AV_INFO_TYPE_SEEKDONE },
     { INFO_TYPE_SPEEDDONE, AV_INFO_TYPE_SPEEDDONE },
     { INFO_TYPE_BITRATEDONE, AV_INFO_TYPE_BITRATEDONE },
@@ -139,8 +139,8 @@ static const PlayerOnInfoTypeConvert g_onInfoType[INFO_TYPE_LENGTH] = {
 static OH_AVErrCode MSErrCodeToAVErrCodeApi9(MediaServiceExtErrCodeAPI9 errorCode)
 {
     for (uint32_t i = 0; i < ERROR_CODE_API9_MAP_LENGTH; i++) {
-        if (g_errorCodeApi9Map[i].errorCodeApi9 == errorCode) {
-            return g_errorCodeApi9Map[i].avErrorCode;
+        if (ERROR_CODE_API9_MAP[i].errorCodeApi9 == errorCode) {
+            return ERROR_CODE_API9_MAP[i].avErrorCode;
         }
     }
     return AV_ERR_UNKNOWN;
@@ -357,18 +357,18 @@ void NativeAVPlayerCallback::OnInfo(PlayerOnInfoType type, int32_t extra, const 
         PlayerStates state = static_cast<PlayerStates>(extra);
         player_->state_ = state;
         for (uint32_t i = 0; i < STATE_MAP_LENGTH; i++) {
-            if (g_stateMap[i].playerStates != state) {
+            if (STATE_MAP[i].playerStates != state) {
                 continue;
             }
-            int32_t convertState = g_stateMap[i].avPlayerState;
+            int32_t convertState = STATE_MAP[i].avPlayerState;
             callback_.onInfo(player_, AV_INFO_TYPE_STATE_CHANGE, convertState);
             return;
         };
         return;
     }
     for (uint32_t i = 0; i < INFO_TYPE_LENGTH; i++) {
-        if (g_onInfoType[i].playerOnInfoType == type) {
-            callback_.onInfo(player_, g_onInfoType[i].aVPlayerOnInfoType, extra);
+        if (ON_INFO_TYPE[i].playerOnInfoType == type) {
+            callback_.onInfo(player_, ON_INFO_TYPE[i].aVPlayerOnInfoType, extra);
             break;
         }
     }
@@ -559,10 +559,10 @@ void NativeAVPlayerCallback::OnStateChangeCb(const int32_t extra, const Format &
     PlayerStates state = static_cast<PlayerStates>(extra);
     player_->state_ = state;
     for (uint32_t i = 0; i < STATE_MAP_LENGTH; i++) {
-        if (g_stateMap[i].playerStates != state) {
+        if (STATE_MAP[i].playerStates != state) {
             continue;
         }
-        AVPlayerState convertState = g_stateMap[i].avPlayerState;
+        AVPlayerState convertState = STATE_MAP[i].avPlayerState;
         OHOS::sptr<OH_AVFormat> avFormat = new (std::nothrow) OH_AVFormat();
         CHECK_AND_RETURN_LOG(avFormat != nullptr, "OnStateChangeCb OH_AVFormat create failed");
 
@@ -1125,8 +1125,8 @@ OH_AVErrCode OH_AVPlayer_GetState(OH_AVPlayer *player, AVPlayerState *state)
         return AV_ERR_OK;
     }
     for (uint32_t i = 0; i < STATE_MAP_LENGTH; i++) {
-        if (g_stateMap[i].playerStates == player->state_) {
-            *state = g_stateMap[i].avPlayerState;
+        if (STATE_MAP[i].playerStates == player->state_) {
+            *state = STATE_MAP[i].avPlayerState;
             return AV_ERR_OK;
         }
     }

@@ -18,6 +18,7 @@
 #include "hiplayer_impl.h"
 
 #include <chrono>
+#include <shared_mutex>
 
 #include "audio_info.h"
 #include "common/log.h"
@@ -49,6 +50,7 @@ const double FRAME_RATE_DEFAULT = -1.0;
 const double FRAME_RATE_FOR_SEEK_PERFORMANCE = 2000.0;
 constexpr int32_t BUFFERING_LOG_FREQUENCY = 5;
 constexpr int32_t NOTIFY_BUFFERING_END_PARAM = 0;
+constexpr int32_t INVALID_TRACK_ID = -1;
 }
 
 namespace OHOS {
@@ -60,18 +62,39 @@ public:
     explicit PlayerEventReceiver(HiPlayerImpl* hiPlayerImpl, std::string playerId)
     {
         MEDIA_LOG_I("PlayerEventReceiver ctor called.");
+        std::unique_lock<std::shared_mutex> lk(cbMutex_);
         hiPlayerImpl_ = hiPlayerImpl;
         task_ = std::make_unique<Task>("PlayerEventReceiver", playerId, TaskType::GLOBAL,
             OHOS::Media::TaskPriority::HIGH, false);
     }
 
-    void OnEvent(const Event &event)
+    void OnEvent(const Event &event) override
     {
         MEDIA_LOG_D("PlayerEventReceiver OnEvent.");
-        task_->SubmitJobOnce([this, event] { hiPlayerImpl_->OnEvent(event); });
+        task_->SubmitJobOnce([this, event] {
+            std::shared_lock<std::shared_mutex> lk(cbMutex_);
+            FALSE_RETURN(hiPlayerImpl_ != nullptr);
+            hiPlayerImpl_->OnEvent(event);
+        });
+    }
+
+    void OnDfxEvent(const DfxEvent &event) override
+    {
+        MEDIA_LOG_D_SHORT("PlayerEventReceiver OnDfxEvent.");
+        std::shared_lock<std::shared_mutex> lk(cbMutex_);
+        FALSE_RETURN(hiPlayerImpl_ != nullptr);
+        hiPlayerImpl_->HandleDfxEvent(event);
+    }
+
+    void NotifyRelease() override
+    {
+        MEDIA_LOG_D_SHORT("PlayerEventReceiver NotifyRelease.");
+        std::unique_lock<std::shared_mutex> lk(cbMutex_);
+        hiPlayerImpl_ = nullptr;
     }
 
 private:
+    std::shared_mutex cbMutex_ {};
     HiPlayerImpl* hiPlayerImpl_;
     std::unique_ptr<Task> task_;
 };
@@ -81,16 +104,27 @@ public:
     explicit PlayerFilterCallback(HiPlayerImpl* hiPlayerImpl)
     {
         MEDIA_LOG_I("PlayerFilterCallback ctor called.");
+        std::unique_lock<std::shared_mutex> lk(cbMutex_);
         hiPlayerImpl_ = hiPlayerImpl;
     }
 
-    Status OnCallback(const std::shared_ptr<Filter>& filter, FilterCallBackCommand cmd, StreamType outType)
+    Status OnCallback(const std::shared_ptr<Filter>& filter, FilterCallBackCommand cmd, StreamType outType) override
     {
         MEDIA_LOG_I("PlayerFilterCallback OnCallback.");
+        std::shared_lock<std::shared_mutex> lk(cbMutex_);
+        FALSE_RETURN_V(hiPlayerImpl_ != nullptr, Status::OK); // hiPlayerImpl_ is destructed
         return hiPlayerImpl_->OnCallback(filter, cmd, outType);
     }
 
+    void NotifyRelease() override
+    {
+        MEDIA_LOG_D_SHORT("PlayerEventReceiver NotifyRelease.");
+        std::unique_lock<std::shared_mutex> lk(cbMutex_);
+        hiPlayerImpl_ = nullptr;
+    }
+
 private:
+    std::shared_mutex cbMutex_ {};
     HiPlayerImpl* hiPlayerImpl_;
 };
 
@@ -117,6 +151,12 @@ HiPlayerImpl::~HiPlayerImpl()
     if (dfxAgent_ != nullptr) {
         dfxAgent_.reset();
     }
+    if (playerEventReceiver_ != nullptr) {
+        playerEventReceiver_->NotifyRelease();
+    }
+    if (playerFilterCallback_ != nullptr) {
+        playerFilterCallback_->NotifyRelease();
+    }
     PipeLineThreadPool::GetInstance().DestroyThread(playerId_);
 }
 
@@ -142,15 +182,17 @@ Status HiPlayerImpl::Init()
 {
     MediaTrace trace("HiPlayerImpl::Init");
     MEDIA_LOG_I("Init start");
-    std::shared_ptr<EventReceiver> playerEventReceiver = std::make_shared<PlayerEventReceiver>(this, playerId_);
+    auto playerEventReceiver = std::make_shared<PlayerEventReceiver>(this, playerId_);
+    auto playerFilterCallback = std::make_shared<PlayerFilterCallback>(this);
+    FALSE_RETURN_V_MSG_E(playerEventReceiver != nullptr && playerFilterCallback != nullptr, Status::ERROR_NO_MEMORY,
+        "fail to allocate memory for PlayerEventReceiver or PlayerFilterCallback");
     playerEventReceiver_ = playerEventReceiver;
+    playerFilterCallback_ = playerFilterCallback;
     if (syncManager_ != nullptr) {
         syncManager_->SetEventReceiver(playerEventReceiver_);
     }
-    std::shared_ptr<FilterCallback> playerFilterCallback = std::make_shared<PlayerFilterCallback>(this);
-    playerFilterCallback_ = playerFilterCallback;
     MEDIA_LOG_D("pipeline init");
-    pipeline_->Init(playerEventReceiver, playerFilterCallback, playerId_);
+    pipeline_->Init(playerEventReceiver_, playerFilterCallback_, playerId_);
     MEDIA_LOG_D("pipeline Init out");
     for (std::pair<std::string, bool>& item: completeState_) {
         item.second = false;
@@ -722,6 +764,7 @@ int32_t HiPlayerImpl::Play()
     MediaTrace trace("HiPlayerImpl::Play");
     MEDIA_LOG_I("Play entered.");
     startTime_ = GetCurrentMillisecond();
+    playStartTime_ = GetCurrentMillisecond();
     int32_t ret = MSERR_INVALID_VAL;
     if (!IsValidPlayRange(playRangeStartTime_, playRangeEndTime_)) {
         MEDIA_LOG_E("SetPlayRange failed! start: " PUBLIC_LOG_D64 ", end: " PUBLIC_LOG_D64,
@@ -731,26 +774,24 @@ int32_t HiPlayerImpl::Play()
     }
     if (pipelineStates_ == PlayerStates::PLAYER_PLAYBACK_COMPLETE) {
         isStreaming_ = true;
-        if (GetPlayRangeStartTime() > PLAY_RANGE_DEFAULT_VALUE) {
-            ret = TransStatus(Seek(GetPlayStartTime(), playRangeSeekMode_, false));
-        } else {
-            ret = TransStatus(Seek(0, PlayerSeekMode::SEEK_PREVIOUS_SYNC, false));
-        }
+        ret = ((GetPlayRangeStartTime() > PLAY_RANGE_DEFAULT_VALUE) ?
+            TransStatus(Seek(GetPlayStartTime(), playRangeSeekMode_, false)) :
+            TransStatus(Seek(0, PlayerSeekMode::SEEK_PREVIOUS_SYNC, false)));
         callbackLooper_.StartReportMediaProgress(REPORT_PROGRESS_INTERVAL);
-        callbackLooper_.startCollectMaxAmplitude(SAMPLE_AMPLITUDE_INTERVAL);
+        callbackLooper_.StartCollectMaxAmplitude(SAMPLE_AMPLITUDE_INTERVAL);
     } else if (pipelineStates_ == PlayerStates::PLAYER_PAUSED) {
         if (playRangeStartTime_ > PLAY_RANGE_DEFAULT_VALUE) {
             ret = TransStatus(Seek(playRangeStartTime_, PlayerSeekMode::SEEK_PREVIOUS_SYNC, false));
         }
         callbackLooper_.StartReportMediaProgress(REPORT_PROGRESS_INTERVAL);
-        callbackLooper_.startCollectMaxAmplitude(SAMPLE_AMPLITUDE_INTERVAL);
+        callbackLooper_.StartCollectMaxAmplitude(SAMPLE_AMPLITUDE_INTERVAL);
         ret = TransStatus(Resume());
     } else {
         if (playRangeStartTime_ > PLAY_RANGE_DEFAULT_VALUE) {
             ret = TransStatus(Seek(playRangeStartTime_, PlayerSeekMode::SEEK_PREVIOUS_SYNC, false));
         }
         callbackLooper_.StartReportMediaProgress(REPORT_PROGRESS_INTERVAL);
-        callbackLooper_.startCollectMaxAmplitude(SAMPLE_AMPLITUDE_INTERVAL);
+        callbackLooper_.StartCollectMaxAmplitude(SAMPLE_AMPLITUDE_INTERVAL);
         syncManager_->Resume();
         ret = TransStatus(pipeline_->Start());
         if (ret != MSERR_OK) {
@@ -811,7 +852,7 @@ int32_t HiPlayerImpl::ResumeDemuxer()
         TransStatus(Status::OK), "PLAYER_STATE_ERROR not allow ResumeDemuxer");
     callbackLooper_.StartReportMediaProgress(REPORT_PROGRESS_INTERVAL);
     callbackLooper_.ManualReportMediaProgressOnce();
-    callbackLooper_.startCollectMaxAmplitude(SAMPLE_AMPLITUDE_INTERVAL);
+    callbackLooper_.StartCollectMaxAmplitude(SAMPLE_AMPLITUDE_INTERVAL);
     Status ret = demuxer_->ResumeDemuxerReadLoop();
     return TransStatus(ret);
 }
@@ -860,7 +901,9 @@ int32_t HiPlayerImpl::Stop()
     }
 
     ResetPlayRangeParameter();
-    AppendPlayerMediaInfo();
+    if (pipelineStates_ != PlayerStates::PLAYER_PREPARED) {
+        AppendPlayerMediaInfo();
+    }
     OnStateChanged(PlayerStateId::STOPPED);
     ReportMediaInfo(instanceId_);
     return TransStatus(ret);
@@ -1404,7 +1447,15 @@ int32_t HiPlayerImpl::InitVideoWidthAndHeight()
         MEDIA_LOG_E("InitVideoWidthAndHeight failed, as videoTrackInfo is empty!");
         return TransStatus(Status::ERROR_INVALID_OPERATION);
     }
+    int32_t currentVideoTrackId = demuxer_->GetCurrentVideoTrackId();
+    FALSE_RETURN_V_MSG_E(currentVideoTrackId != INVALID_TRACK_ID, TransStatus(Status::ERROR_INVALID_OPERATION),
+        "InitVideoWidthAndHeight failed, as currentVideoTrackId is invalid!");
     for (auto& videoTrack : videoTrackInfo) {
+        int32_t videoTrackId = INVALID_TRACK_ID;
+        videoTrack.GetIntValue("track_index", videoTrackId);
+        if (videoTrackId != currentVideoTrackId) {
+            continue;
+        }
         int32_t height;
         videoTrack.GetIntValue("height", height);
         int32_t width;
@@ -1988,7 +2039,6 @@ void HiPlayerImpl::OnEvent(const Event &event)
         case EventType::EVENT_VIDEO_RENDERING_START: {
             MEDIA_LOG_I("video first frame reneder received");
             Format format;
-            playStatisticalInfo_.startLatency = static_cast<int32_t>(AnyCast<uint64_t>(event.param));
             callbackLooper_.OnInfo(INFO_TYPE_MESSAGE, PlayerMessageType::PLAYER_INFO_VIDEO_RENDERING_START, format);
             HandleInitialPlayingStateChange(event.type);
             break;
@@ -2053,7 +2103,6 @@ void HiPlayerImpl::OnEventSub(const Event &event)
             break;
     }
     OnEventSubTrackChange(event);
-    OnDfxEvent(event);
 }
 
 void HiPlayerImpl::OnEventSubTrackChange(const Event &event)
@@ -2069,27 +2118,6 @@ void HiPlayerImpl::OnEventSubTrackChange(const Event &event)
         }
         case EventType::EVENT_SUBTITLE_TRACK_CHANGE: {
             HandleSubtitleTrackChangeEvent(event);
-            break;
-        }
-        default:
-            break;
-    }
-}
-
-void HiPlayerImpl::OnDfxEvent(const Event &event)
-{
-    FALSE_RETURN(dfxAgent_ != nullptr);
-    switch (event.type) {
-        case EventType::EVENT_VIDEO_LAG: {
-            dfxAgent_->OnVideoLagEvent(AnyCast<int64_t>(event.param));
-            break;
-        }
-        case EventType::EVENT_AUDIO_LAG: {
-            dfxAgent_->OnAudioLagEvent(AnyCast<int64_t>(event.param));
-            break;
-        }
-        case EventType::EVENT_STREAM_LAG: {
-            dfxAgent_->OnStreamLagEvent(AnyCast<int64_t>(event.param));
             break;
         }
         default:
@@ -2124,6 +2152,9 @@ void HiPlayerImpl::HandleInitialPlayingStateChange(const EventType& eventType)
 
     isInitialPlay_ = false;
     OnStateChanged(PlayerStateId::PLAYING);
+
+    int64_t nowTimeMs = GetCurrentMillisecond();
+    playStatisticalInfo_.startLatency = static_cast<int32_t>(nowTimeMs - playStartTime_);
 }
 
 void HiPlayerImpl::DoSetPlayStrategy(const std::shared_ptr<MediaSource> source)
@@ -2145,15 +2176,13 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
 {
     MediaTrace trace("HiPlayerImpl::DoSetSource");
     ResetIfSourceExisted();
+    completeState_.clear();
     demuxer_ = FilterFactory::Instance().CreateFilter<DemuxerFilter>("builtin.player.demuxer",
         FilterType::FILTERTYPE_DEMUXER);
     FALSE_RETURN_V(demuxer_ != nullptr, Status::ERROR_NULL_POINTER);
     demuxer_->SetInterruptState(isInterruptNeeded_);
     pipeline_->AddHeadFilters({demuxer_});
     demuxer_->Init(playerEventReceiver_, playerFilterCallback_);
-    if (dfxAgent_ != nullptr) {
-        dfxAgent_->SetDemuxer(demuxer_);
-    }
     DoSetPlayStrategy(source);
     if (!mimeType_.empty()) {
         source->SetMimeType(mimeType_);
@@ -2192,12 +2221,6 @@ Status HiPlayerImpl::Resume()
     Status ret = Status::OK;
     syncManager_->Resume();
     ret = pipeline_->Resume();
-    if (audioSink_ != nullptr) {
-        audioSink_->Resume();
-    }
-    if (subtitleSink_ != nullptr) {
-        subtitleSink_->Resume();
-    }
     if (ret != Status::OK) {
         UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
     }
@@ -2535,7 +2558,6 @@ void HiPlayerImpl::NotifyAudioFirstFrame(const Event& event)
 {
     uint64_t latency = AnyCast<uint64_t>(event.param);
     MEDIA_LOG_I("Audio first frame event in latency " PUBLIC_LOG_U64, latency);
-    playStatisticalInfo_.startLatency = static_cast<int32_t>(latency);
     Format format;
     (void)format.PutLongValue(PlayerKeys::AUDIO_FIRST_FRAME, latency);
     callbackLooper_.OnInfo(INFO_TYPE_AUDIO_FIRST_FRAME, 0, format);
@@ -2975,6 +2997,12 @@ int32_t HiPlayerImpl::ExitSeekContinous(bool align, int64_t seekContinousBatchNo
         seekAgent_.reset();
     }
     return TransStatus(Status::OK);
+}
+
+void HiPlayerImpl::HandleDfxEvent(const DfxEvent &event)
+{
+    FALSE_RETURN(dfxAgent_ != nullptr);
+    dfxAgent_->OnDfxEvent(event);
 }
 
 int32_t HiPlayerImpl::SetMaxAmplitudeCbStatus(bool status)

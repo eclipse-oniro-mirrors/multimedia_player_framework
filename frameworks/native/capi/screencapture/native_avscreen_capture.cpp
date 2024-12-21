@@ -920,3 +920,21 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SkipPrivacyMode(struct OH_AVScree
                              "SkipPrivacyMode failed!");
     return AV_SCREEN_CAPTURE_ERR_OK;
 }
+
+OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetMaxVideoFrameRate(struct OH_AVScreenCapture *capture,
+    int32_t frameRate)
+{
+    CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr!");
+
+    struct ScreenCaptureObject *screenCaptureObj = reinterpret_cast<ScreenCaptureObject *>(capture);
+    CHECK_AND_RETURN_RET_LOG(screenCaptureObj->screenCapture_ != nullptr,
+                             AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "screenCapture_ is null");
+
+    CHECK_AND_RETURN_RET_LOG(frameRate > 0, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input frameRate invalid!");
+    
+    int32_t ret = screenCaptureObj->screenCapture_->SetMaxVideoFrameRate(frameRate);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT,
+                             "SetMaxVideoFrameRate failed!");
+
+    return AV_SCREEN_CAPTURE_ERR_OK;
+}

@@ -90,7 +90,6 @@ int32_t TransCoderServer::Init()
     CHECK_AND_RETURN_RET_LOG(result.Value() == MSERR_OK, result.Value(), "Result failed");
 
     status_ = REC_INITIALIZED;
-    BehaviorEventWrite(GetStatusDescription(status_), "TransCoder");
     return MSERR_OK;
 }
 
@@ -108,7 +107,6 @@ void TransCoderServer::OnError(TransCoderErrorType errorType, int32_t errorCode)
     (void)errorType;
     std::lock_guard<std::mutex> lock(cbMutex_);
     lastErrMsg_ = MSErrorToExtErrorString(static_cast<MediaServiceErrCode>(errorCode));
-    FaultEventWrite(lastErrMsg_, "TransCoder");
     CHECK_AND_RETURN(transCoderCb_ != nullptr);
     transCoderCb_->OnError(errorCode, lastErrMsg_);
 }
@@ -228,7 +226,6 @@ int32_t TransCoderServer::SetOutputFormat(OutputFormatType format)
     auto result = task->GetResult();
     ret = result.Value();
     status_ = (ret == MSERR_OK ? REC_CONFIGURED : REC_INITIALIZED);
-    BehaviorEventWrite(GetStatusDescription(status_), "TransCoder");
     return ret;
 }
 
@@ -310,7 +307,6 @@ int32_t TransCoderServer::Prepare()
     auto result = task->GetResult();
     ret = result.Value();
     status_ = (ret == MSERR_OK ? REC_PREPARED : REC_ERROR);
-    BehaviorEventWrite(GetStatusDescription(status_), "TransCoder");
     return ret;
 }
 
@@ -331,7 +327,6 @@ int32_t TransCoderServer::Start()
     auto result = task->GetResult();
     ret = result.Value();
     status_ = (ret == MSERR_OK ? REC_TRANSCODERING : REC_ERROR);
-    BehaviorEventWrite(GetStatusDescription(status_), "TransCoder");
     return ret;
 }
 
@@ -352,7 +347,6 @@ int32_t TransCoderServer::Pause()
     auto result = task->GetResult();
     ret = result.Value();
     status_ = (ret == MSERR_OK ? REC_PAUSED : REC_ERROR);
-    BehaviorEventWrite(GetStatusDescription(status_), "TransCoder");
     return ret;
 }
 
@@ -373,7 +367,6 @@ int32_t TransCoderServer::Resume()
     auto result = task->GetResult();
     ret = result.Value();
     status_ = (ret == MSERR_OK ? REC_TRANSCODERING : REC_ERROR);
-    BehaviorEventWrite(GetStatusDescription(status_), "TransCoder");
     return ret;
 }
 
@@ -391,7 +384,6 @@ int32_t TransCoderServer::Cancel()
     auto result = task->GetResult();
     ret = result.Value();
     status_ = (ret == MSERR_OK ? REC_INITIALIZED : REC_ERROR);
-    BehaviorEventWrite(GetStatusDescription(status_), "TransCoder");
     return ret;
 }
 

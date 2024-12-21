@@ -61,7 +61,7 @@ bool RecorderServiceStubFuzzer::FuzzRecorderOnRemoteRequest(uint8_t *data, size_
     }
 
     const int maxIpcNum = 50;
-    bool isWirteToken = size >0 && data[0] % 9 != 0;
+    bool isWirteToken = size > 0 && data[0] % 9 != 0;
     for (uint32_t code = 0; code <= maxIpcNum; code++) {
         MessageParcel msg;
         if (isWirteToken) {

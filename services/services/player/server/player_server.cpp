@@ -1573,7 +1573,6 @@ void PlayerServer::OnErrorCb(int32_t errorCode, const std::string &errorMsg)
 {
     std::lock_guard<std::mutex> lockCb(mutexCb_);
     lastErrMsg_ = errorMsg;
-    FaultEventWrite(lastErrMsg_, "Player");
     if (playerCb_ != nullptr && !errorCbOnce_) {
         playerCb_->OnError(errorCode, errorMsg);
         errorCbOnce_ = true;
