@@ -1252,6 +1252,9 @@ Status HiPlayerImpl::HandleSeekClosest(int64_t seekPos, int64_t seekTimeUs)
     if (videoDecoder_ != nullptr) {
         videoDecoder_->SetSeekTime(seekTimeUs + mediaStartPts_);
     }
+    if (audioSink_ != nullptr) {
+        audioSink_->SetIsCancelStart(true);
+    }
     seekAgent_ = std::make_shared<SeekAgent>(demuxer_, mediaStartPts_);
     SetFrameRateForSeekPerformance(FRAME_RATE_FOR_SEEK_PERFORMANCE);
     bool timeout = false;
@@ -1265,6 +1268,9 @@ Status HiPlayerImpl::HandleSeekClosest(int64_t seekPos, int64_t seekTimeUs)
         if (timeout && videoDecoder_ != nullptr) {
             videoDecoder_->ResetSeekInfo();
         }
+    }
+    if (audioSink_ != nullptr) {
+        audioSink_->SetIsCancelStart(false);
     }
     if (subtitleSink_ != nullptr) {
         subtitleSink_->NotifySeek();
