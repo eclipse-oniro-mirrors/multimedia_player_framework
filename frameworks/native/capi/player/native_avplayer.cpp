@@ -139,8 +139,8 @@ static const PlayerOnInfoTypeConvert ON_INFO_TYPE[INFO_TYPE_LENGTH] = {
 static OH_AVErrCode MSErrCodeToAVErrCodeApi9(MediaServiceExtErrCodeAPI9 errorCode)
 {
     for (uint32_t i = 0; i < ERROR_CODE_API9_MAP_LENGTH; i++) {
-        if (ERROR_CODE_API9_MAP[i].errorCodeApi9 == errorCode) {
-            return ERROR_CODE_API9_MAP[i].avErrorCode;
+        if (g_errorCodeApi9Map[i].errorCodeApi9 == errorCode) {
+            return g_errorCodeApi9Map[i].avErrorCode;
         }
     }
     return AV_ERR_UNKNOWN;
