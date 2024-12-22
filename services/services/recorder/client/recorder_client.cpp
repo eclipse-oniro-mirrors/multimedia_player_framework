@@ -61,9 +61,9 @@ void RecorderClient::MediaServerDied()
         std::lock_guard<std::mutex> lock(mutex_);
         recorderProxy_ = nullptr;
         listenerStub_ = nullptr;
-        if (callback_ != nullptr) {
-            callback_->OnError(RECORDER_ERROR_INTERNAL, MSERR_SERVICE_DIED);
-        }
+        
+        CHECK_AND_RETURN(callback_ != nullptr);
+        callback_->OnError(RECORDER_ERROR_INTERNAL, MSERR_SERVICE_DIED);
     }
 }
 
@@ -387,9 +387,8 @@ int32_t RecorderClient::Prepare()
 
 int32_t RecorderClient::ExecuteWhen(int32_t ret, bool ok)
 {
-    if ((ok && (ret == MSERR_OK)) || ((!ok) && (ret != MSERR_OK))) {
-        (void)DisableMonitor();
-    }
+    CHECK_AND_RETURN_RET((ok && (ret == MSERR_OK)) || ((!ok) && (ret != MSERR_OK)), ret);
+    (void)DisableMonitor();
     return ret;
 }
 

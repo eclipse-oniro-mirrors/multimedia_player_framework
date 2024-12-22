@@ -147,18 +147,18 @@ void RecorderServer::OnError(ErrorType errorType, int32_t errorCode)
 void RecorderServer::OnInfo(InfoType type, int32_t extra)
 {
     std::lock_guard<std::mutex> lock(cbMutex_);
-    if (recorderCb_ != nullptr) {
-        recorderCb_->OnInfo(type, extra);
-    }
+
+    CHECK_AND_RETURN_LOG(recorderCb_ != nullptr, "RecorderServer OnInfo recorderCb_ is null");
+    recorderCb_->OnInfo(type, extra);
 }
 
 void RecorderServer::OnAudioCaptureChange(const AudioRecorderChangeInfo &audioRecorderChangeInfo)
 {
     MEDIA_LOGI("RecorderServer OnAudioCaptureChange start.");
     std::lock_guard<std::mutex> lock(cbMutex_);
-    if (recorderCb_ != nullptr) {
-        recorderCb_->OnAudioCaptureChange(audioRecorderChangeInfo);
-    }
+
+    CHECK_AND_RETURN_LOG(recorderCb_ != nullptr, "RecorderServer OnAudioCaptureChange recorderCb_ is null");
+    recorderCb_->OnAudioCaptureChange(audioRecorderChangeInfo);
 }
 
 int32_t RecorderServer::SetVideoSource(VideoSourceType source, int32_t &sourceId)

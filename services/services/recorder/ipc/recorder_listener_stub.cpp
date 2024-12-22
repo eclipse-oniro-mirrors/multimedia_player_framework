@@ -86,23 +86,20 @@ void RecorderListenerStub::OnError(int32_t errorType, int32_t errorCode)
 
 void RecorderListenerStub::OnInfo(int32_t type, int32_t extra)
 {
-    if (callback_ != nullptr) {
-        callback_->OnInfo(type, extra);
-    }
+    CHECK_AND_RETURN(callback_ != nullptr);
+    callback_->OnInfo(type, extra);
 }
 
 void RecorderListenerStub::OnAudioCaptureChange(const AudioRecorderChangeInfo &audioRecorderChangeInfo)
 {
-    if (callback_ != nullptr) {
-        callback_->OnAudioCaptureChange(audioRecorderChangeInfo);
-    }
+    CHECK_AND_RETURN(callback_ != nullptr);
+    callback_->OnAudioCaptureChange(audioRecorderChangeInfo);
 }
 
 void RecorderListenerStub::OnPhotoAssertAvailable(const std::string &uri)
 {
-    if (callback_ != nullptr) {
-        callback_->OnPhotoAssertAvailable(uri);
-    }
+    CHECK_AND_RETURN(callback_ != nullptr);
+    callback_->OnPhotoAssertAvailable(uri);
 }
 
 void RecorderListenerStub::SetRecorderCallback(const std::shared_ptr<RecorderCallback> &callback)

@@ -68,10 +68,9 @@ public:
 
     void OnStateChange(const AudioStandard::AudioCapturerChangeInfo &capturerChangeInfo)
     {
-        if (hiRecorderImpl_) {
-            MEDIA_LOG_I("CapturerInfoChangeCallback hiRecorderImpl_->OnAudioCaptureChange start.");
-            hiRecorderImpl_->OnAudioCaptureChange(capturerChangeInfo);
-        }
+        FALSE_RETURN(hiRecorderImpl_);
+        MEDIA_LOG_I("CapturerInfoChangeCallback hiRecorderImpl_->OnAudioCaptureChange start.");
+        hiRecorderImpl_->OnAudioCaptureChange(capturerChangeInfo);
     }
 
 private:
@@ -145,13 +144,13 @@ int32_t HiRecorderImpl::SetVideoSource(VideoSourceType source, int32_t &sourceId
         ret = Status::OK;
     }
     FALSE_RETURN_V_MSG_E(ret == Status::OK, (int32_t)ret, "AddFilters videoEncoder to pipeline fail");
-    if (ret == Status::OK) {
-        MEDIA_LOG_I("SetVideoSource success.");
-        videoCount_++;
-        videoSourceId_ = tempSourceId;
-        sourceId = videoSourceId_;
-        OnStateChanged(StateId::RECORDING_SETTING);
-    }
+
+    MEDIA_LOG_I("SetVideoSource success.");
+    videoCount_++;
+    videoSourceId_ = tempSourceId;
+    sourceId = videoSourceId_;
+    OnStateChanged(StateId::RECORDING_SETTING);
+
     return (int32_t)ret;
 }
 
@@ -177,11 +176,11 @@ int32_t HiRecorderImpl::SetMetaSource(MetaSourceType source, int32_t &sourceId)
     } else {
         ret = pipeline_->AddHeadFilters({metaDataFilters_.at(tempSourceId)});
     }
-    if (ret == Status::OK) {
-        MEDIA_LOG_I("SetMetaSource success.");
-        sourceId = tempSourceId;
-        OnStateChanged(StateId::RECORDING_SETTING);
-    }
+    FALSE_RETURN_V(ret == Status::OK, (int32_t)ret);
+    
+    MEDIA_LOG_I("SetMetaSource success.");
+    sourceId = tempSourceId;
+    OnStateChanged(StateId::RECORDING_SETTING);
     return (int32_t)ret;
 }
 
@@ -203,13 +202,13 @@ int32_t HiRecorderImpl::SetAudioSource(AudioSourceType source, int32_t &sourceId
     audioCaptureFilter_->SetAudioSource(source);
     Status ret = pipeline_->AddHeadFilters({audioCaptureFilter_});
     FALSE_RETURN_V_MSG_E(ret == Status::OK, (int32_t)ret, "AddFilters audioCapture to pipeline fail");
-    if (ret == Status::OK) {
-        MEDIA_LOG_I("SetAudioSource success.");
-        audioCount_++;
-        audioSourceId_ = tempSourceId;
-        sourceId = static_cast<int32_t>(audioSourceId_);
-        OnStateChanged(StateId::RECORDING_SETTING);
-    }
+
+    MEDIA_LOG_I("SetAudioSource success.");
+    audioCount_++;
+    audioSourceId_ = tempSourceId;
+    sourceId = static_cast<int32_t>(audioSourceId_);
+    OnStateChanged(StateId::RECORDING_SETTING);
+
     return (int32_t)ret;
 }
 
@@ -225,13 +224,13 @@ int32_t HiRecorderImpl::SetAudioDataSource(const std::shared_ptr<IAudioDataSourc
     audioDataSourceFilter_->SetAudioDataSource(audioSource);
     Status ret = pipeline_->AddHeadFilters({audioDataSourceFilter_});
     FALSE_RETURN_V_MSG_E(ret == Status::OK, (int32_t)ret, "AddFilters audioDataSource to pipeline fail");
-    if (ret == Status::OK) {
-        MEDIA_LOG_I("SetAudioSource success.");
-        audioCount_++;
-        audioSourceId_ = tempSourceId;
-        sourceId = static_cast<int32_t>(audioSourceId_);
-        OnStateChanged(StateId::RECORDING_SETTING);
-    }
+
+    MEDIA_LOG_I("SetAudioSource success.");
+    audioCount_++;
+    audioSourceId_ = tempSourceId;
+    sourceId = static_cast<int32_t>(audioSourceId_);
+    OnStateChanged(StateId::RECORDING_SETTING);
+
     return (int32_t)ret;
 }
 
@@ -398,9 +397,8 @@ int32_t HiRecorderImpl::Start()
     } else {
         ret = pipeline_->Start();
     }
-    if (ret == Status::OK) {
-        OnStateChanged(StateId::RECORDING);
-    }
+    FALSE_RETURN_V_MSG_E(ret == Status::OK, (int32_t)ret, "HiRecorderImpl Start fail");
+    OnStateChanged(StateId::RECORDING);
     return (int32_t)ret;
 }
 
@@ -411,9 +409,12 @@ int32_t HiRecorderImpl::Pause()
     Status ret = Status::OK;
     if (curState_ != StateId::READY) {
         ret = pipeline_->Pause();
+        FALSE_RETURN_V_MSG_E(ret == Status::OK, (int32_t)ret, "HiRecorderImpl Pause fail");
     }
-    if (ret == Status::OK) {
         OnStateChanged(StateId::PAUSE);
+        OnStateChanged(StateId::PAUSE);
+    }
+    OnStateChanged(StateId::PAUSE);
     }
     return (int32_t)ret;
 }
@@ -424,9 +425,8 @@ int32_t HiRecorderImpl::Resume()
     MEDIA_LOG_I("Resume enter.");
     Status ret = Status::OK;
     ret = pipeline_->Resume();
-    if (ret == Status::OK) {
-        OnStateChanged(StateId::RECORDING);
-    }
+    FALSE_RETURN_V_MSG_E(ret == Status::OK, (int32_t)ret, "HiRecorderImpl Resume fail");
+    OnStateChanged(StateId::RECORDING);
     return (int32_t)ret;
 }
 
@@ -526,50 +526,51 @@ void HiRecorderImpl::OnEvent(const Event &event)
 void HiRecorderImpl::CloseFd()
 {
     MEDIA_LOG_I("HiRecorderImpl: 0x%{public}06" PRIXPTR " CloseFd, fd is %{public}d", FAKE_POINTER(this), fd_);
-    if (fd_ >= 0) {
-        (void)::close(fd_);
-        fd_ = -1;
-    }
+    FALSE_RETURN(fd_ >= 0);
+
+    (void)::close(fd_);
+    fd_ = -1;
+
 }
 
 Status HiRecorderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, const Pipeline::FilterCallBackCommand cmd,
     Pipeline::StreamType outType)
 {
     MEDIA_LOG_I("OnCallback enter.");
-    if (cmd == Pipeline::FilterCallBackCommand::NEXT_FILTER_NEEDED) {
-        switch (outType) {
-            case Pipeline::StreamType::STREAMTYPE_RAW_AUDIO:
-                audioEncoderFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::AudioEncoderFilter>
-                    ("audioEncoderFilter", Pipeline::FilterType::FILTERTYPE_AENC);
-                FALSE_RETURN_V_MSG_E(audioEncoderFilter_ != nullptr,
-                    Status::ERROR_NULL_POINTER, "audioEncoderFilter_ is null");
-                audioEncoderFilter_->SetCallingInfo(appUid_, appPid_, bundleName_, instanceId_);
-                audioEncoderFilter_->SetCodecFormat(audioEncFormat_);
-                audioEncoderFilter_->Init(recorderEventReceiver_, recorderCallback_);
-                FALSE_RETURN_V_MSG_E(audioEncoderFilter_->Configure(audioEncFormat_) == Status::OK,
-                    Status::ERROR_INVALID_DATA, "audioEncoderFilter_ Configure fail");
-                pipeline_->LinkFilters(filter, {audioEncoderFilter_}, outType);
-                break;
-            case Pipeline::StreamType::STREAMTYPE_ENCODED_AUDIO:
-            case Pipeline::StreamType::STREAMTYPE_ENCODED_VIDEO:
-                if (muxerFilter_ == nullptr) {
-                    muxerFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::MuxerFilter>
-                        ("muxerFilter", Pipeline::FilterType::FILTERTYPE_MUXER);
-                    FALSE_RETURN_V_MSG_E(muxerFilter_ != nullptr,
-                        Status::ERROR_NULL_POINTER, "muxerFilter_ is null");
-                    muxerFilter_->SetCallingInfo(appUid_, appPid_, bundleName_, instanceId_);
-                    muxerFilter_->Init(recorderEventReceiver_, recorderCallback_);
-                    muxerFilter_->SetOutputParameter(appUid_, appPid_, fd_, outputFormatType_);
-                    muxerFilter_->SetParameter(muxerFormat_);
-                    muxerFilter_->SetUserMeta(userMeta_);
-                    CloseFd();
-                }
-                pipeline_->LinkFilters(filter, {muxerFilter_}, outType);
-                break;
-            default:
-                break;
-        }
-    }
+    
+    FALSE_RETURN_V(cmd == Pipeline::FilterCallBackCommand::NEXT_FILTER_NEEDED, Status::OK);
+
+    switch (outType) {
+        case Pipeline::StreamType::STREAMTYPE_RAW_AUDIO:
+            audioEncoderFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::AudioEncoderFilter>
+                ("audioEncoderFilter", Pipeline::FilterType::FILTERTYPE_AENC);
+            FALSE_RETURN_V_MSG_E(audioEncoderFilter_ != nullptr,
+                Status::ERROR_NULL_POINTER, "audioEncoderFilter_ is null");
+            audioEncoderFilter_->SetCallingInfo(appUid_, appPid_, bundleName_, instanceId_);
+            audioEncoderFilter_->SetCodecFormat(audioEncFormat_);
+            audioEncoderFilter_->Init(recorderEventReceiver_, recorderCallback_);
+            FALSE_RETURN_V_MSG_E(audioEncoderFilter_->Configure(audioEncFormat_) == Status::OK,
+                Status::ERROR_INVALID_DATA, "audioEncoderFilter_ Configure fail");
+            pipeline_->LinkFilters(filter, {audioEncoderFilter_}, outType);
+            break;
+        case Pipeline::StreamType::STREAMTYPE_ENCODED_AUDIO:
+        case Pipeline::StreamType::STREAMTYPE_ENCODED_VIDEO:
+            if (muxerFilter_ == nullptr) {
+                muxerFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::MuxerFilter>
+                    ("muxerFilter", Pipeline::FilterType::FILTERTYPE_MUXER);
+                FALSE_RETURN_V_MSG_E(muxerFilter_ != nullptr,
+                    Status::ERROR_NULL_POINTER, "muxerFilter_ is null");
+                muxerFilter_->SetCallingInfo(appUid_, appPid_, bundleName_, instanceId_);
+                muxerFilter_->Init(recorderEventReceiver_, recorderCallback_);
+                muxerFilter_->SetOutputParameter(appUid_, appPid_, fd_, outputFormatType_);
+                muxerFilter_->SetParameter(muxerFormat_);
+                muxerFilter_->SetUserMeta(userMeta_);
+                CloseFd();
+            }
+            pipeline_->LinkFilters(filter, {muxerFilter_}, outType);
+            break;
+        default:
+            break;
     return Status::OK;
 }
 
@@ -577,10 +578,10 @@ void HiRecorderImpl::OnAudioCaptureChange(const AudioStandard::AudioCapturerChan
 {
     MEDIA_LOG_I("OnAudioCaptureChange enter.");
     auto ptr = obs_.lock();
-    if (ptr != nullptr) {
-        MEDIA_LOG_I("HiRecorderImpl OnAudioCaptureChange start.");
-        ptr->OnAudioCaptureChange(ConvertCapturerChangeInfo(capturerChangeInfo));
-    }
+    FALSE_RETURN_MSG(ptr != nullptr, "HiRecorderImpl OnAudioCaptureChange obs_ is null");
+    
+    MEDIA_LOG_I("HiRecorderImpl OnAudioCaptureChange start.");
+    ptr->OnAudioCaptureChange(ConvertCapturerChangeInfo(capturerChangeInfo));
 }
 
 int32_t HiRecorderImpl::GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &changeInfo)
