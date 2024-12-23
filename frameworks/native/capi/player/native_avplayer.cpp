@@ -77,7 +77,7 @@ typedef struct PlayerOnInfoTypeConvert {
     AVPlayerOnInfoType aVPlayerOnInfoType;
 } PlayerOnInfoTypeConvert;
 
-static const PlayerErrorCodeApi9Convert g_errorCodeApi9Map[ERROR_CODE_API9_MAP_LENGTH] = {
+static const PlayerErrorCodeApi9Convert ERROR_CODE_API9_MAP[ERROR_CODE_API9_MAP_LENGTH] = {
     {MSERR_EXT_API9_OK, AV_ERR_OK},
     {MSERR_EXT_API9_NO_PERMISSION, AV_ERR_OPERATE_NOT_PERMIT},
     {MSERR_EXT_API9_PERMISSION_DENIED, AV_ERR_OPERATE_NOT_PERMIT},
@@ -139,8 +139,8 @@ static const PlayerOnInfoTypeConvert ON_INFO_TYPE[INFO_TYPE_LENGTH] = {
 static OH_AVErrCode MSErrCodeToAVErrCodeApi9(MediaServiceExtErrCodeAPI9 errorCode)
 {
     for (uint32_t i = 0; i < ERROR_CODE_API9_MAP_LENGTH; i++) {
-        if (g_errorCodeApi9Map[i].errorCodeApi9 == errorCode) {
-            return g_errorCodeApi9Map[i].avErrorCode;
+        if (ERROR_CODE_API9_MAP[i].errorCodeApi9 == errorCode) {
+            return ERROR_CODE_API9_MAP[i].avErrorCode;
         }
     }
     return AV_ERR_UNKNOWN;
