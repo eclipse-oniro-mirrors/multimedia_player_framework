@@ -89,6 +89,7 @@ private:
     int32_t mSeekPosition = INT32_MIN;
     PlayerSeekMode mSeekMode = PlayerSeekMode::SEEK_PREVIOUS_SYNC;
     std::atomic<bool> isSeeking_{false};
+    int32_t prevTrackIndex = INT32_MIN;
     std::shared_ptr<PlayerCallback> callback_;
 
     std::shared_ptr<IPlayerService> playerService_ = nullptr;
