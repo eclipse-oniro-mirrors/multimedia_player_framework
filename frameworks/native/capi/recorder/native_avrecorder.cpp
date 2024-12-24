@@ -59,6 +59,11 @@ enum RotationAngle {
     ROTATION_270 = 270
 };
 
+const float MAX_LATITUDE = 90.0f;
+const float MIN_LATITUDE = -90.0f;
+const float MAX_LONGITUDE = 180.0f;
+const float MIN_LONGITUDE = -180.0f;
+
 struct RecorderObject : public OH_AVRecorder {
     explicit RecorderObject(const std::shared_ptr<Recorder>& recorder)
         : recorder_(recorder) {}
