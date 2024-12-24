@@ -334,7 +334,7 @@ OH_AVErrCode ConfigureUrl(OH_AVRecorder *recorder, OH_AVRecorder_Config *config)
         CHECK_AND_RETURN_RET_LOG(url.find(fdHead) != std::string::npos, AV_ERR_INVALID_VAL,
             "url wrong: missing 'fd://' prefix!");
 
-        int32_t fd = -1;
+        int32_t fd = -1;    // -1 invalid value
         std::string inputFd = url.substr(fdHead.size());
         CHECK_AND_RETURN_RET_LOG(StrToInt(inputFd, fd) == true && fd >= 0, AV_ERR_INVALID_VAL,
             "url wrong: invalid file descriptor in url!");
@@ -356,7 +356,7 @@ int32_t GetVideoOrientation(const char* videoOrientation)
     };
 
     if (videoOrientation == nullptr || videoOrientation[0] == '\0') {
-        return 0;   // default value
+        return 0;   // 0 default value
     }
 
     auto it = validOrientations.find(videoOrientation);
@@ -365,7 +365,7 @@ int32_t GetVideoOrientation(const char* videoOrientation)
     } else {
         MEDIA_LOGE("Invalid videoOrientation value: %{public}s. Must be 0, 90, 180, or 270.",
                    videoOrientation);
-        return -1;  // invalid value
+        return -1;  // -1 invalid value
     }
 }
 
@@ -395,7 +395,7 @@ OH_AVErrCode Configure(OH_AVRecorder *recorder, OH_AVRecorder_Config *config)
     CHECK_AND_RETURN_RET_LOG(err == AV_ERR_OK, AV_ERR_INVALID_VAL, "SetProfile failed!");
   
     int32_t videoOrientation = GetVideoOrientation(config->metadata.videoOrientation);
-    if (videoOrientation == -1) {   // invalid value
+    if (videoOrientation == -1) {   // -1 invalid value
         return AV_ERR_INVALID_VAL;
     }
     recorderObj->recorder_->SetOrientationHint(videoOrientation);
