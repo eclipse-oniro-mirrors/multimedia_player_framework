@@ -201,7 +201,7 @@ public:
 
     void OnPhotoAssertAvailable(const std::string &uri) override
     {
-        MEDIA_LOGE("OnPhotoAssertAvailable() is called, uri: %{public}s", uri.c_str());
+        MEDIA_LOGI("OnPhotoAssertAvailable() is called, uri: %{public}s", uri.c_str());
         std::shared_lock<std::shared_mutex> lock(mutex_);
         CHECK_AND_RETURN(recorder_ != nullptr);
  
@@ -251,7 +251,7 @@ OH_AVRecorder *OH_AVRecorder_Create(void)
     CHECK_AND_RETURN_RET_LOG(recorder != nullptr, nullptr, "failed to create recorder in RecorderFactory.");
     struct RecorderObject *recorderObj = new (std::nothrow) RecorderObject(recorder);
     CHECK_AND_RETURN_RET_LOG(recorderObj != nullptr, nullptr, "failed to new RecorderObject");
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " OH_Recorder_Create", FAKE_POINTER(recorderObj));
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " OH_AVRecorder_Create", FAKE_POINTER(recorderObj));
     return recorderObj;
 }
 
@@ -272,8 +272,8 @@ OH_AVErrCode SetProfile(OH_AVRecorder *recorder, OH_AVRecorder_Config *config)
     ret = recorderObj->recorder_->SetAudioChannels(recorderObj->audioSourceId_, config->profile.audioChannels);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "Set audio channels failed!");
 
-    AudioCodecFormat audioCodec_ = static_cast<AudioCodecFormat>(config->profile.audioCodec);
-    ret = recorderObj->recorder_->SetAudioEncoder(recorderObj->audioSourceId_, audioCodec_);
+    AudioCodecFormat audioCodec = static_cast<AudioCodecFormat>(config->profile.audioCodec);
+    ret = recorderObj->recorder_->SetAudioEncoder(recorderObj->audioSourceId_, audioCodec);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "Set audio encoder failed!");
 
     ret = recorderObj->recorder_->SetAudioSampleRate(recorderObj->audioSourceId_, config->profile.audioSampleRate);
@@ -282,8 +282,8 @@ OH_AVErrCode SetProfile(OH_AVRecorder *recorder, OH_AVRecorder_Config *config)
     ret = recorderObj->recorder_->SetVideoEncodingBitRate(recorderObj->videoSourceId_, config->profile.videoBitrate);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "Set video encoding bitrate failed!");
 
-    VideoCodecFormat videoCodec_ = static_cast<VideoCodecFormat>(config->profile.videoCodec);
-    ret = recorderObj->recorder_->SetVideoEncoder(recorderObj->videoSourceId_, videoCodec_);
+    VideoCodecFormat videoCodec = static_cast<VideoCodecFormat>(config->profile.videoCodec);
+    ret = recorderObj->recorder_->SetVideoEncoder(recorderObj->videoSourceId_, videoCodec);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "Set video encoder failed!");
 
     ret = recorderObj->recorder_->SetVideoSize(recorderObj->videoSourceId_, config->profile.videoFrameWidth,
@@ -293,11 +293,15 @@ OH_AVErrCode SetProfile(OH_AVRecorder *recorder, OH_AVRecorder_Config *config)
     ret = recorderObj->recorder_->SetVideoFrameRate(recorderObj->videoSourceId_, config->profile.videoFrameRate);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "Set video frame rate failed!");
 
-    config->profile.isHdr = false;
+    if (!config->profile.isHdr) {
+        config->profile.isHdr = false;
+    }
     ret = recorderObj->recorder_->SetVideoIsHdr(recorderObj->videoSourceId_, config->profile.isHdr);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "Set video IsHdr failed!");
 
-    config->profile.enableTemporalScale = false;
+    if (!config->profile.enableTemporalScale) {
+        config->profile.enableTemporalScale = false;
+    }
     ret = recorderObj->recorder_->SetVideoEnableTemporalScale(recorderObj->videoSourceId_,
         config->profile.enableTemporalScale);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "SetVideoEnableTemporalScale failed!");
@@ -313,13 +317,18 @@ OH_AVErrCode ConfigureUrl(OH_AVRecorder *recorder, OH_AVRecorder_Config *config)
     CHECK_AND_RETURN_RET_LOG(recorderObj->recorder_ != nullptr, AV_ERR_INVALID_VAL, "recorder_ is null");
 
     int32_t ret;
+    if (!config->fileGenerationMode) {
+        config->fileGenerationMode = OH_AVRecorder_FileGenerationMode::APP_CREATE;
+    }
     FileGenerationMode fileGenerationMode = static_cast<FileGenerationMode>(config->fileGenerationMode);
-    std::string url = std::string(config->url);
     if (fileGenerationMode == FileGenerationMode::AUTO_CREATE_CAMERA_SCENE) {
         ret = recorderObj->recorder_->SetFileGenerationMode(fileGenerationMode);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "SetFileGenerationMode failed!");
     } else {
         ret = MSERR_PARAMETER_VERIFICATION_FAILED;
+        CHECK_AND_RETURN_RET_LOG(config->url != nullptr && config->url[0] != '\0', AV_ERR_INVALID_VAL,
+            "config->url is null or empty!");
+        std::string url = std::string(config->url);
         const std::string fdHead = "fd://";
         CHECK_AND_RETURN_RET_LOG(url.find(fdHead) != std::string::npos, AV_ERR_INVALID_VAL,
             "url wrong: missing 'fd://' prefix!");
@@ -348,22 +357,41 @@ OH_AVErrCode Configure(OH_AVRecorder *recorder, OH_AVRecorder_Config *config)
         return AV_ERR_OK;
     }
 
-    AudioSourceType audioSourceType_ = static_cast<AudioSourceType>(config->audioSourceType);
-    int32_t ret = recorderObj->recorder_->SetAudioSource(audioSourceType_, recorderObj->audioSourceId_);
+    AudioSourceType audioSourceType = static_cast<AudioSourceType>(config->audioSourceType);
+    int32_t ret = recorderObj->recorder_->SetAudioSource(audioSourceType, recorderObj->audioSourceId_);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL,
         "The audio parameter is not supported. Please check the type and range.");
 
-    VideoSourceType videoSourceType_ = static_cast<VideoSourceType>(config->videoSourceType);
-    ret = recorderObj->recorder_->SetVideoSource(videoSourceType_, recorderObj->videoSourceId_);
+    VideoSourceType videoSourceType = static_cast<VideoSourceType>(config->videoSourceType);
+    ret = recorderObj->recorder_->SetVideoSource(videoSourceType, recorderObj->videoSourceId_);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL,
         "The video parameter is not supported. Please check the type and range.");
 
     OH_AVErrCode err = SetProfile(recorder, config);
     CHECK_AND_RETURN_RET_LOG(err == AV_ERR_OK, AV_ERR_INVALID_VAL, "SetProfile failed!");
-
-    int32_t videoOrientation = static_cast<int32_t>(std::stoi(config->metadata.videoOrientation));
+    
+    int32_t videoOrientation;
+    if (config->metadata.videoOrientation == nullptr || config->metadata.videoOrientation[0] == '\0') {
+        videoOrientation = 0;
+    } else {
+        videoOrientation = static_cast<int32_t>(std::stoi(config->metadata.videoOrientation));
+    }
+    CHECK_AND_RETURN_RET_LOG(videoOrientation == ROTATION_0 || videoOrientation == ROTATION_90 ||
+        videoOrientation == ROTATION_180 || videoOrientation == ROTATION_270, AV_ERR_INVALID_VAL,
+        "Invalid rotation value. Must be 0, 90, 180, or 270.");
     recorderObj->recorder_->SetOrientationHint(videoOrientation);
+
+    CHECK_AND_RETURN_RET_LOG(config->metadata.location.latitude >= -90.0f && config->metadata.location.latitude <= 90.0f
+        && config->metadata.location.longitude >= -180.0f && config->metadata.location.longitude <= 180.0f,
+        AV_ERR_INVALID_VAL, "Invalid latitude or longitude! Latitude: %{public}.6f, Longitude: %{public}.6f",
+        config->metadata.location.latitude, config->metadata.location.longitude);
     recorderObj->recorder_->SetLocation(config->metadata.location.latitude, config->metadata.location.longitude);
+
+    if (config->metadata.genre != nullptr && config->metadata.genre[0] != '\0') {
+        std::string genre = config->metadata.genre;
+        ret = recorderObj->recorder_->SetGenre(genre);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "SetGenre failed!");
+    }
 
     err = ConfigureUrl(recorder, config);
     CHECK_AND_RETURN_RET_LOG(err == AV_ERR_OK, AV_ERR_INVALID_VAL, "ConfigureUrl failed!");
@@ -598,6 +626,8 @@ OH_AVErrCode OH_AVRecorder_Release(OH_AVRecorder *recorder)
     
     recorderObj->hasConfigured_ = false;
     delete recorderObj;
+    recorderObj = nullptr;
+    recorder = nullptr;
     return AV_ERR_OK;
 }
 
