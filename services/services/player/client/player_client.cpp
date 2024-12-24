@@ -47,6 +47,7 @@ PlayerClient::~PlayerClient()
     listenerStub_ = nullptr;
     if (playerProxy_ != nullptr) {
         (void)playerProxy_->DestroyStub();
+        playerProxy_ = nullptr;
     }
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
@@ -321,6 +322,13 @@ int32_t PlayerClient::GetDuration(int32_t &duration)
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     return playerProxy_->GetDuration(duration);
+}
+
+int32_t PlayerClient::GetApiVersion(int32_t &apiVersion)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerProxy_->GetApiVersion(apiVersion);
 }
 
 #ifdef SUPPORT_VIDEO

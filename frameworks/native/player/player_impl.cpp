@@ -20,6 +20,8 @@
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "PlayerImpl"};
+constexpr int32_t API_VERSION_14 = 14;
+static int32_t apiVersion_ = -1;
 }
 
 namespace OHOS {
@@ -375,6 +377,13 @@ int32_t PlayerImpl::GetDuration(int32_t &duration)
     return playerService_->GetDuration(duration);
 }
 
+int32_t PlayerImpl::GetApiVersion(int32_t &apiVersion)
+{
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " GetApiVersion in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerService_->GetApiVersion(apiVersion);
+}
+
 #ifdef SUPPORT_VIDEO
 int32_t PlayerImpl::SetVideoSurface(sptr<Surface> surface)
 {
@@ -512,6 +521,17 @@ void PlayerImplCallback::OnError(int32_t errorCode, const std::string &errorMsg)
         playerCb = playerCb_;
     }
 
+    auto player = player_.lock();
+    if (player != nullptr && getApiVersionFlag_) {
+        player->GetApiVersion(apiVersion_);
+        getApiVersionFlag_ = false;
+    }
+    MEDIA_LOGI("PlayerImplCallback apiVersion %{public}d", apiVersion_);
+    if (apiVersion_ < API_VERSION_14) {
+        if (IsAPI14IOError(static_cast<MediaServiceErrCode>(errorCode))) {
+            errorCode = MSERR_DATA_SOURCE_IO_ERROR;
+        }
+    }
     CHECK_AND_RETURN_LOG(playerCb != nullptr, "playerCb does not exist..");
     playerCb->OnError(errorCode, errorMsg);
 }

@@ -57,6 +57,7 @@ public:
     int32_t GetVideoHeight() override;
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
     int32_t GetDuration(int32_t &duration) override;
+    int32_t GetApiVersion(int32_t &apiVersion) override;
     int32_t GetPlaybackSpeed(PlaybackRateMode &mode) override;
     int32_t SetLooping(bool loop) override;
 #ifdef SUPPORT_VIDEO
@@ -107,6 +108,7 @@ private:
     std::shared_ptr<PlayerCallback> playerCb_;
     std::weak_ptr<PlayerImpl> player_;
     std::mutex playerImplCbMutex_;
+    bool getApiVersionFlag_ = true;
 };
 } // namespace Media
 } // namespace OHOS

@@ -96,6 +96,7 @@ public:
     int32_t GetAudioTrackInfo(std::vector<Format> &audioTrack) override;
     int32_t GetSubtitleTrackInfo(std::vector<Format> &subtitleTrack) override;
     int32_t GetDuration(int32_t &duration) override;
+    int32_t GetApiVersion(int32_t &apiVersion) override;
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
     int32_t SetSource(const std::string &url) override;
     int32_t SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc) override;
@@ -241,6 +242,7 @@ private:
     uint32_t subtitleTrackNum_ = 0;
     int32_t appUid_ = 0;
     int32_t appPid_ = 0;
+    int32_t apiVersion_ = -1;
     std::atomic<bool> inReleasing_ = false;
     std::atomic<int32_t> userId_ = -1;
     std::atomic<bool> isBootCompleted_ = false;

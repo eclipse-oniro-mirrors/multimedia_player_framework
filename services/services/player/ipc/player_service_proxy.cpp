@@ -54,6 +54,7 @@ PlayerServiceProxy::PlayerServiceProxy(const sptr<IRemoteObject> &impl)
     playerFuncs_[SEEK] = "Player::Seek";
     playerFuncs_[GET_CURRENT_TIME] = "Player::GetCurrentTime";
     playerFuncs_[GET_DURATION] = "Player::GetDuration";
+    playerFuncs_[GET_API_VERSION] = "Player::GetApiVersion";
     playerFuncs_[SET_PLAYERBACK_SPEED] = "Player::SetPlaybackSpeed";
     playerFuncs_[GET_PLAYERBACK_SPEED] = "Player::GetPlaybackSpeed";
 #ifdef SUPPORT_VIDEO
@@ -577,6 +578,23 @@ int32_t PlayerServiceProxy::GetDuration(int32_t &duration)
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "GetDuration failed, error: %{public}d", error);
     duration = reply.ReadInt32();
+    return reply.ReadInt32();
+}
+
+int32_t PlayerServiceProxy::GetApiVersion(int32_t &apiVersion)
+{
+    MediaTrace trace("PlayerServiceProxy::GetApiVersion");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    int32_t error = SendRequest(GET_API_VERSION, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "GetApiVersion failed, error: %{public}d", error);
+    apiVersion = reply.ReadInt32();
     return reply.ReadInt32();
 }
 
