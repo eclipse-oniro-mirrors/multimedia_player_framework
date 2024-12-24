@@ -346,6 +346,29 @@ OH_AVErrCode ConfigureUrl(OH_AVRecorder *recorder, OH_AVRecorder_Config *config)
     return AV_ERR_OK;
 }
 
+int32_t GetVideoOrientation(const char* videoOrientation)
+{
+    std::unordered_map<std::string, int32_t> validOrientations = {
+        {"0", 0},       // videoOrientation set to 0 degree
+        {"90", 90},     // videoOrientation set to 90 degrees
+        {"180", 180},   // videoOrientation set to 180 degrees
+        {"270", 270}    // videoOrientation set to 270 degrees
+    };
+
+    if (videoOrientation == nullptr || videoOrientation[0] == '\0') {
+        return 0;   // default value
+    }
+
+    auto it = validOrientations.find(videoOrientation);
+    if (it != validOrientations.end()) {
+        return it->second;
+    } else {
+        MEDIA_LOGE("Invalid videoOrientation value: %{public}s. Must be 0, 90, 180, or 270.",
+                   videoOrientation);
+        return -1;  // invalid value
+    }
+}
+
 OH_AVErrCode Configure(OH_AVRecorder *recorder, OH_AVRecorder_Config *config)
 {
     CHECK_AND_RETURN_RET_LOG(recorder != nullptr, AV_ERR_INVALID_VAL, "input recorder is nullptr!");
@@ -370,21 +393,17 @@ OH_AVErrCode Configure(OH_AVRecorder *recorder, OH_AVRecorder_Config *config)
 
     OH_AVErrCode err = SetProfile(recorder, config);
     CHECK_AND_RETURN_RET_LOG(err == AV_ERR_OK, AV_ERR_INVALID_VAL, "SetProfile failed!");
-    
-    int32_t videoOrientation;
-    if (config->metadata.videoOrientation == nullptr || config->metadata.videoOrientation[0] == '\0') {
-        videoOrientation = 0;
-    } else {
-        videoOrientation = static_cast<int32_t>(std::stoi(config->metadata.videoOrientation));
+  
+    int32_t videoOrientation = GetVideoOrientation(config->metadata.videoOrientation);
+    if (videoOrientation == -1) {   // invalid value
+        return AV_ERR_INVALID_VAL;
     }
-    CHECK_AND_RETURN_RET_LOG(videoOrientation == ROTATION_0 || videoOrientation == ROTATION_90 ||
-        videoOrientation == ROTATION_180 || videoOrientation == ROTATION_270, AV_ERR_INVALID_VAL,
-        "Invalid rotation value. Must be 0, 90, 180, or 270.");
     recorderObj->recorder_->SetOrientationHint(videoOrientation);
 
-    CHECK_AND_RETURN_RET_LOG(config->metadata.location.latitude >= -90.0f && config->metadata.location.latitude <= 90.0f
-        && config->metadata.location.longitude >= -180.0f && config->metadata.location.longitude <= 180.0f,
-        AV_ERR_INVALID_VAL, "Invalid latitude or longitude! Latitude: %{public}.6f, Longitude: %{public}.6f",
+    CHECK_AND_RETURN_RET_LOG(config->metadata.location.latitude >= MIN_LATITUDE &&
+        config->metadata.location.latitude <= MAX_LATITUDE && config->metadata.location.longitude >= MIN_LONGITUDE &&
+        config->metadata.location.longitude <= MAX_LONGITUDE, AV_ERR_INVALID_VAL,
+        "Invalid latitude or longitude! Latitude: %{public}.6f, Longitude: %{public}.6f",
         config->metadata.location.latitude, config->metadata.location.longitude);
     recorderObj->recorder_->SetLocation(config->metadata.location.latitude, config->metadata.location.longitude);
 
