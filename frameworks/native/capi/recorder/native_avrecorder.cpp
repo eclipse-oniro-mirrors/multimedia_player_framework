@@ -25,6 +25,7 @@
 #include "media_errors.h"
 #include "surface_utils.h"
 #include "native_window.h"
+#include "media_asset_helper.h"
 #include "native_player_magic.h"
 
 namespace {
@@ -293,13 +294,13 @@ OH_AVErrCode SetProfile(OH_AVRecorder *recorder, OH_AVRecorder_Config *config)
     ret = recorderObj->recorder_->SetVideoFrameRate(recorderObj->videoSourceId_, config->profile.videoFrameRate);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "Set video frame rate failed!");
 
-    if (!config->profile.isHdr) {
+    if (config->profile.isHdr != true) {
         config->profile.isHdr = false;
     }
     ret = recorderObj->recorder_->SetVideoIsHdr(recorderObj->videoSourceId_, config->profile.isHdr);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "Set video IsHdr failed!");
 
-    if (!config->profile.enableTemporalScale) {
+    if (config->profile.enableTemporalScale != true) {
         config->profile.enableTemporalScale = false;
     }
     ret = recorderObj->recorder_->SetVideoEnableTemporalScale(recorderObj->videoSourceId_,
