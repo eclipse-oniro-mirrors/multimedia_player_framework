@@ -51,6 +51,7 @@ const double FRAME_RATE_DEFAULT = -1.0;
 const double FRAME_RATE_FOR_SEEK_PERFORMANCE = 2000.0;
 constexpr int32_t BUFFERING_LOG_FREQUENCY = 5;
 constexpr int32_t NOTIFY_BUFFERING_END_PARAM = 0;
+constexpr int64_t FIRST_FRAME_FRAME_REPORT_DELAY_MS = 30;
 static const std::unordered_set<OHOS::AudioStandard::StreamUsage> FOCUS_EVENT_USAGE_SET = {
     OHOS::AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN,
     OHOS::AudioStandard::StreamUsage::STREAM_USAGE_MEDIA,
@@ -2102,8 +2103,11 @@ void HiPlayerImpl::OnEvent(const Event &event)
         }
         case EventType::EVENT_VIDEO_RENDERING_START: {
             MEDIA_LOG_D_SHORT("video first frame reneder received");
-            Format format;
-            callbackLooper_.OnInfo(INFO_TYPE_MESSAGE, PlayerMessageType::PLAYER_INFO_VIDEO_RENDERING_START, format);
+            if (IsAppEnableRenderFirstFrame(appUid_)) {
+                // if app enable render first frame, notify first frame render event at once
+                Format format;
+                callbackLooper_.OnInfo(INFO_TYPE_MESSAGE, PlayerMessageType::PLAYER_INFO_VIDEO_RENDERING_START, format);
+            }
             HandleInitialPlayingStateChange(event.type);
             break;
         }
@@ -2209,6 +2213,12 @@ void HiPlayerImpl::HandleInitialPlayingStateChange(const EventType& eventType)
     MEDIA_LOG_D_SHORT("av first frame reneder all received");
 
     isInitialPlay_ = false;
+    if (!IsAppEnableRenderFirstFrame(appUid_)) {
+        // if app not enable render first frame, notify first frame render event when notify playing state
+        Format format;
+        callbackLooper_.OnInfoDelay(INFO_TYPE_MESSAGE, PlayerMessageType::PLAYER_INFO_VIDEO_RENDERING_START, format,
+            FIRST_FRAME_FRAME_REPORT_DELAY_MS);
+    }
     OnStateChanged(PlayerStateId::PLAYING);
 
     int64_t nowTimeMs = GetCurrentMillisecond();

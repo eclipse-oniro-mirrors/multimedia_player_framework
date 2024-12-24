@@ -318,5 +318,11 @@ void HiPlayerCallbackLooper::Enqueue(const std::shared_ptr<HiPlayerCallbackLoope
         LoopOnce(event);
     }, delayUs);
 }
+
+void HiPlayerCallbackLooper::OnInfoDelay(PlayerOnInfoType type, int32_t extra, const Format &infoBody, int64_t delayMs)
+{
+    Enqueue(std::make_shared<HiPlayerCallbackLooper::Event>(WHAT_INFO, SteadyClock::GetCurrentTimeMs() + delayMs,
+        std::make_tuple(type, extra, infoBody)));
+}
 }  // namespace Media
 }  // namespace OHOS
