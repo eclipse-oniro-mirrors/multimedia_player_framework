@@ -28,10 +28,11 @@
 #include "media_demuxer.h"
 #include "pipeline/pipeline.h"
 #include "video_decoder_adapter.h"
+#include "buffer/avbuffer.h"
 
 namespace OHOS {
 namespace Media {
-class AVThumbnailGenerator : public NoCopyable {
+class AVThumbnailGenerator : public NoCopyable, public std::enable_shared_from_this<AVThumbnailGenerator> {
 public:
     explicit AVThumbnailGenerator(std::shared_ptr<MediaDemuxer> &mediaDemuxer);
     ~AVThumbnailGenerator();
@@ -49,6 +50,8 @@ public:
     void OnInputBufferAvailable(uint32_t index, std::shared_ptr<AVBuffer> buffer);
     void OnOutputBufferAvailable(uint32_t index, std::shared_ptr<AVBuffer> buffer);
     void OnFetchedFrameBufferAvailable();
+    int32_t Init();
+    void AcquireAvailableInputBuffer();
 
 private:
     OutputConfiguration outputConfig_;
@@ -57,18 +60,26 @@ private:
     std::atomic_bool hasFetchedFrame_{false};
     std::atomic_bool stopProcessing_{false};
     std::atomic_bool readErrorFlag_{ false };
+    std::atomic_bool isBufferAvailable_{ false };
     std::string trackMime_;
     Plugins::VideoRotation rotation_ = Plugins::VideoRotation::VIDEO_ROTATION_0;
     size_t trackIndex_{0};
     std::shared_ptr<Meta> trackInfo_;
     std::mutex mutex_;
+    std::mutex queueMutex_;
     std::condition_variable cond_;
+    std::condition_variable bufferAvailableCond_;
     std::atomic<uint32_t> bufferIndex_;
     std::shared_ptr<AVBuffer> avBuffer_;
     sptr<SurfaceBuffer> surfaceBuffer_;
     std::shared_ptr<AVSharedMemoryBase> fetchedFrameAtTime_;
     std::shared_ptr<OHOS::Media::MediaDemuxer> mediaDemuxer_;
     std::shared_ptr<MediaAVCodec::AVCodecVideoDecoder> videoDecoder_;
+    std::shared_ptr<Media::AVBufferQueue> inputBufferQueue_;
+    sptr<Media::AVBufferQueueProducer> inputBufferQueueProducer_;
+    sptr<Media::AVBufferQueueConsumer> inputBufferQueueConsumer_;
+    std::unique_ptr<Task> readTask_;
+    std::vector<std::shared_ptr<AVBuffer>> bufferVector_;
 
     Status InitDecoder();
     std::shared_ptr<Meta> GetVideoTrackInfo();
@@ -97,6 +108,9 @@ private:
 
     void PauseFetchFrame();
     void GetDuration();
+    int64_t ReadLoop();
+    void FlushBufferQueue();
+    int64_t StopTask();
 };
 }  // namespace Media
 }  // namespace OHOS

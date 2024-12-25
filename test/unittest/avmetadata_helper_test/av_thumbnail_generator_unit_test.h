@@ -21,6 +21,9 @@
 #include <mutex>
 #include <nocopyable.h>
 
+#include "mock/mock_avbuffer_queue.h"
+#include "mock/mock_avbuffer_queue_consumer.h"
+#include "mock/mock_avbuffer_queue_producer.h"
 #include "mock/mock_avcodec_video_decoder.h"
 #include "mock/avsharedmomorybase.h"
 #include "mock/mock_media_demuxer.h"
@@ -49,6 +52,9 @@ protected:
     std::shared_ptr<AVThumbnailGenerator> avThumbnailGenerator_{ nullptr };
     std::shared_ptr<MediaDemuxer> mediaDemuxer_{ nullptr };
     std::shared_ptr<MockMediaDemuxer> mockMediaDemuxer_{ nullptr };
+    std::shared_ptr<Media::MockAVBufferQueue> mockInputBufferQueue_{ nullptr };
+    sptr<Media::MockAVBufferQueueConsumer> mockInputBufferQueueConsumer_{ nullptr };
+    sptr<Media::MockAVBufferQueueProducer> mockInputBufferQueueProducer_{ nullptr };
 };
 }  // namespace Test
 }  // namespace Media
