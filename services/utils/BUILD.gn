@@ -54,6 +54,7 @@ ohos_shared_library("media_service_utils") {
   if (is_emulator) {
     defines += [ "EMULATOR_ENABLED" ]
   }
+
   if (is_arkui_x) {
     defines += [ "CROSS_PLATFORM" ]
   }
