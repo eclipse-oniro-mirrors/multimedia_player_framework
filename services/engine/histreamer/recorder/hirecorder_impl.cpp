@@ -411,11 +411,7 @@ int32_t HiRecorderImpl::Pause()
         ret = pipeline_->Pause();
         FALSE_RETURN_V_MSG_E(ret == Status::OK, (int32_t)ret, "HiRecorderImpl Pause fail");
     }
-        OnStateChanged(StateId::PAUSE);
-        OnStateChanged(StateId::PAUSE);
-    }
-    OnStateChanged(StateId::PAUSE);
-    }
+    OnStateChanged(StateId::PAUSE); 
     return (int32_t)ret;
 }
 
@@ -571,6 +567,7 @@ Status HiRecorderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, cons
             break;
         default:
             break;
+    }
     return Status::OK;
 }
 
