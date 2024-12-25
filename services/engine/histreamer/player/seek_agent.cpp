@@ -84,6 +84,7 @@ Status SeekAgent::Seek(int64_t seekPos, bool &timeout)
     st = SetBufferFilledListener();
     FALSE_RETURN_V_MSG_E(st == Status::OK, Status::ERROR_INVALID_OPERATION, "SetBufferFilledListener failed.");
 
+    demuxer_->SetIsNotPrepareBeforeStart(true);
     MEDIA_LOG_I("demuxer_ realSeekTime: %{public}" PRId64 "ns", realSeekTime);
     demuxer_->PrepareBeforeStart();
     MEDIA_LOG_I("ResumeForSeek end");
