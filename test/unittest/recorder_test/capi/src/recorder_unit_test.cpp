@@ -345,8 +345,8 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Prepare_004, TestSize.Level2)
     config.url = strdup("fd://1234");
     config.metadata.genre = strdup("");
     config.metadata.videoOrientation = strdup("90");
-    config.metadata.customInfo.key = strdup("com.android.manufacturer");
-    config.metadata.customInfo.value = strdup("HUAWEI");
+    config.metadata.customInfo.key = strdup("abc");
+    config.metadata.customInfo.value = strdup("123");
     config.profile.audioBitrate = 96000;
     config.profile.audioChannels = 2;
     config.profile.audioCodec = OH_AVRecorder_CodecMimeType::AUDIO_AAC;
@@ -389,8 +389,8 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Prepare_005, TestSize.Level2)
     config.url = strdup("invalid_url");
     config.metadata.genre = strdup("");
     config.metadata.videoOrientation = strdup("90");
-    config.metadata.customInfo.key = strdup("com.android.manufacturer");
-    config.metadata.customInfo.value = strdup("HUAWEI");
+    config.metadata.customInfo.key = strdup("abc");
+    config.metadata.customInfo.value = strdup("123");
     config.profile.audioBitrate = 96000;
     config.profile.audioChannels = 2;
     config.profile.audioCodec = OH_AVRecorder_CodecMimeType::AUDIO_AAC;
@@ -433,8 +433,8 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Prepare_006, TestSize.Level2)
     config.url = strdup("fd://-1");
     config.metadata.genre = strdup("");
     config.metadata.videoOrientation = strdup("90");
-    config.metadata.customInfo.key = strdup("com.android.manufacturer");
-    config.metadata.customInfo.value = strdup("HUAWEI");
+    config.metadata.customInfo.key = strdup("abc");
+    config.metadata.customInfo.value = strdup("123");
     config.profile.audioBitrate = 96000;
     config.profile.audioChannels = 2;
     config.profile.audioCodec = OH_AVRecorder_CodecMimeType::AUDIO_AAC;
@@ -477,8 +477,8 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Prepare_007, TestSize.Level2)
     config.url = strdup("");
     config.metadata.genre = strdup("");
     config.metadata.videoOrientation = strdup("invalid");
-    config.metadata.customInfo.key = strdup("com.android.manufacturer");
-    config.metadata.customInfo.value = strdup("HUAWEI");
+    config.metadata.customInfo.key = strdup("abc");
+    config.metadata.customInfo.value = strdup("123");
     config.profile.audioBitrate = 96000;
     config.profile.audioChannels = 2;
     config.profile.audioCodec = OH_AVRecorder_CodecMimeType::AUDIO_AAC;
@@ -521,8 +521,8 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Prepare_008, TestSize.Level2)
     config.url = strdup("");
     config.metadata.genre = strdup("");
     config.metadata.videoOrientation = nullptr;
-    config.metadata.customInfo.key = strdup("com.android.manufacturer");
-    config.metadata.customInfo.value = strdup("HUAWEI");
+    config.metadata.customInfo.key = strdup("abc");
+    config.metadata.customInfo.value = strdup("123");
     config.profile.audioBitrate = 96000;
     config.profile.audioChannels = 2;
     config.profile.audioCodec = OH_AVRecorder_CodecMimeType::AUDIO_AAC;
@@ -565,8 +565,8 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Prepare_009, TestSize.Level2)
     config.url = strdup("");
     config.metadata.genre = strdup("");
     config.metadata.videoOrientation = nullptr;
-    config.metadata.customInfo.key = strdup("com.android.manufacturer");
-    config.metadata.customInfo.value = strdup("HUAWEI");
+    config.metadata.customInfo.key = strdup("abc");
+    config.metadata.customInfo.value = strdup("123");
     config.profile.audioBitrate = 96000;
     config.profile.audioChannels = 2;
     config.profile.audioCodec = OH_AVRecorder_CodecMimeType::AUDIO_AAC;
@@ -611,8 +611,8 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Prepare_010, TestSize.Level2)
     config.url = strdup("");
     config.metadata.genre = strdup("");
     config.metadata.videoOrientation = strdup("95");
-    config.metadata.customInfo.key = strdup("com.android.manufacturer");
-    config.metadata.customInfo.value = strdup("HUAWEI");
+    config.metadata.customInfo.key = strdup("abc");
+    config.metadata.customInfo.value = strdup("123");
     config.profile.audioBitrate = 96000;
     config.profile.audioChannels = 2;
     config.profile.audioCodec = OH_AVRecorder_CodecMimeType::AUDIO_AAC;
