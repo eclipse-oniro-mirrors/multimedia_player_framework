@@ -1307,7 +1307,7 @@ bool ScreenCaptureServer::RegisterMMISystemAbilityListener()
     }
     int32_t ret = abilityManager->SubscribeSystemAbility(MULTIMODAL_INPUT_SERVICE_ID, listener);
     if (ret != ERR_OK) {
-        MEDIA_LOGE("failed t subscribe systemAbility, ret:%{public}d", ret);
+        MEDIA_LOGE("failed to subscribe systemAbility, ret:%{public}d", ret);
         return false;
     }
     mmiListener_ = listener;
@@ -1362,7 +1362,7 @@ void MMISystemAbilityListener::OnRemoveSystemAbility(int32_t systemAbilityId, co
     auto scrServer = screenCaptureServer_.lock();
     int32_t ret = MMI::InputManager::GetInstance()->UnregisterDevListener("change",
         scrServer->GetMouseChangeListener());
-    scrServer->mouseChangeListener_ = nullptr;
+    scrServer->SetMouseChangeListener(nullptr);
     if (ret != MSERR_OK) {
         MEDIA_LOGE("OnRemoveSystemAbility UnregisterDevListener falied");
     }
