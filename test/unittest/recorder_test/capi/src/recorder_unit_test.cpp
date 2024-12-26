@@ -90,7 +90,7 @@ static HapPolicyParams hapPolicy = {
     }
 };
 
-static OH_AVRecorder_Profile sProfile = {
+static OH_AVRecorder_Profile profile_ = {
     .audioBitrate = 48000,
     .audioChannels = 2,
     .audioCodec = OH_AVRecorder_CodecMimeType::AUDIO_AAC,
@@ -105,42 +105,76 @@ static OH_AVRecorder_Profile sProfile = {
     .enableTemporalScale = false,
 };
 
-static OH_AVRecorder_Location sLocation = {
+static OH_AVRecorder_Location location_ = {
     .latitude = 31.123456,
     .longitude = 121.123456,
 };
 
-static OH_AVRecorder_MetadataTemplate sCustomInfo = {
+static OH_AVRecorder_MetadataTemplate customInfo_ = {
     .key = nullptr,
     .value = nullptr,
 };
 
-static OH_AVRecorder_Metadata sMetadata = {
+static OH_AVRecorder_Metadata metadata_ = {
     .genre = nullptr,
     .videoOrientation = nullptr,
-    .location = sLocation,
-    .customInfo = sCustomInfo,
+    .location = location_,
+    .customInfo = customInfo_,
 };
 
-static OH_AVRecorder_Config sConfig = {
+static OH_AVRecorder_Config config_ = {
     .audioSourceType = OH_AVRecorder_AudioSourceType::MIC,
     .videoSourceType = OH_AVRecorder_VideoSourceType::SURFACE_YUV,
-    .profile = sProfile,
+    .profile = profile_,
     .url = nullptr,
     .fileGenerationMode = OH_AVRecorder_FileGenerationMode::AUTO_CREATE_CAMERA_SCENE,
-    .metadata = sMetadata,
+    .metadata = metadata_,
 };
 
-static void AVRecorderStateChangeCb(OH_AVRecorder *recorder,
-    OH_AVRecorder_State state, OH_AVRecorder_StateChangeReason reason, void *userData)
+static void OnStateChange(OH_AVRecorder *recorder, OH_AVRecorder_State state,
+    OH_AVRecorder_StateChangeReason reason, void *userData)
 {
-    MEDIA_LOGI("AVRecorderStateChangeCb reason: %d, OH_AVRecorder_State: %d \n", reason, state);
+    (void)recorder;
+    (void)userData;
+
+    const char *reasonStr = (reason == OH_AVRecorder_StateChangeReason::USER) ? "USER" :
+        (reason == OH_AVRecorder_StateChangeReason::BACKGROUND) ? "BACKGROUND" : "UNKNOWN";
+
+    if (state == IDLE) {
+        MEDIA_LOGI("AVRecorder OnStateChange IDLE, reason: %{public}s", reasonStr);
+    }
+    if (state == PREPARED) {
+        MEDIA_LOGI("AVRecorder OnStateChange PREPARED, reason: %{public}s", reasonStr);
+    }
+    if (state == STARTED) {
+        MEDIA_LOGI("AVRecorder OnStateChange STARTED, reason: %{public}s", reasonStr);
+    }
+    if (state == PAUSED) {
+        MEDIA_LOGI("AVRecorder OnStateChange PAUSED, reason: %{public}s", reasonStr);
+    }
+    if (state == STOPPED) {
+        MEDIA_LOGI("AVRecorder OnStateChange STOPPED, reason: %{public}s", reasonStr);
+    }
+    if (state == RELEASED) {
+        MEDIA_LOGI("AVRecorder OnStateChange RELEASED, reason: %{public}s", reasonStr);
+    }
+    if (state == ERROR) {
+        MEDIA_LOGI("AVRecorder OnStateChange ERROR, reason: %{public}s", reasonStr);
+    }
 }
 
-static void AVRecorderErrorCb(OH_AVRecorder *recorder, int32_t errorCode, const char *errorMsg,
-    void *userData)
+static void OnError(OH_AVRecorder *recorder, int32_t errorCode, const char *errorMsg, void *userData)
 {
-    MEDIA_LOGE("AVRecorderErrorCb errorCode: %d, errorMsg: %s \n", errorCode, errorMsg);
+    (void)recorder;
+    (void)userData;
+    
+    MEDIA_LOGE("AVRecorder ErrorCallback errorCode: %d, errorMsg: %s \n", errorCode, errorMsg);
+}
+
+static void OnUri(OH_AVRecorder *recorder, OH_MediaAsset *asset, void *userData)
+{
+    (void)recorder;
+    (void)userData;
 }
 
 void NativeRecorderUnitTest::SetUpTestCase(void)
@@ -155,13 +189,13 @@ void NativeRecorderUnitTest::SetUp(void)
     recorder_ = OH_AVRecorder_Create();
     EXPECT_NE(recorder_, nullptr);
 
-    int32_t ret = AV_ERR_OK;
-    OH_AVRecorder_OnStateChange stateChangeCb = AVRecorderStateChangeCb;
-    ret = OH_AVRecorder_SetStateCallback(recorder_, stateChangeCb, nullptr);
+    int32_t ret = OH_AVRecorder_SetStateCallback(recorder_, OnStateChange, nullptr);
     EXPECT_EQ(ret, AV_ERR_OK);
 
-    OH_AVRecorder_OnError errorCb = AVRecorderErrorCb;
-    ret = OH_AVRecorder_SetErrorCallback(recorder_, errorCb, nullptr);
+    ret = OH_AVRecorder_SetErrorCallback(recorder_, OnError, nullptr);
+    EXPECT_EQ(ret, AV_ERR_OK);
+
+    ret = OH_AVRecorder_SetUriCallback(recorder_, OnUri, nullptr);
     EXPECT_EQ(ret, AV_ERR_OK);
 }
 
@@ -192,7 +226,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Prepare_001, TestSize.Level2)
 {
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_Prepare_001 in.");
 
-    OH_AVRecorder_Config config = sConfig;
+    OH_AVRecorder_Config config = config_;
     config.url = strdup("");
     config.metadata.genre = strdup("");
     config.metadata.videoOrientation = strdup("0");
@@ -221,14 +255,14 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Prepare_002, TestSize.Level2)
 {
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_Prepare_002 in.");
 
-    OH_AVRecorder_Config config = sConfig;
+    OH_AVRecorder_Config config = config_;
     config.url = strdup("");
     config.metadata.genre = strdup("");
     config.metadata.videoOrientation = strdup("0");
     config.metadata.customInfo.key = strdup("");
     config.metadata.customInfo.value = strdup("");
     config.profile.audioBitrate = 48000;
-    config.profile.audioChannels = 2;
+    config.profile.audioChannels = 1;
     config.profile.audioCodec = OH_AVRecorder_CodecMimeType::AUDIO_AAC;
     config.profile.audioSampleRate = 48000;
     config.profile.fileFormat = OH_AVRecorder_ContainerFormatType::CFT_MPEG_4;
@@ -264,13 +298,13 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Prepare_003, TestSize.Level2)
 {
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_Prepare_003 in.");
 
-    OH_AVRecorder_Config config = sConfig;
+    OH_AVRecorder_Config config = config_;
     config.url = strdup("");
     config.metadata.genre = strdup("");
     config.metadata.videoOrientation = strdup("270");
     config.metadata.customInfo.key = strdup("");
     config.metadata.customInfo.value = strdup("");
-    config.profile.audioBitrate = 48000;
+    config.profile.audioBitrate = 96000;
     config.profile.audioChannels = 2;
     config.profile.audioCodec = OH_AVRecorder_CodecMimeType::AUDIO_AAC;
     config.profile.audioSampleRate = 48000;
@@ -296,6 +330,316 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Prepare_003, TestSize.Level2)
     free(config.metadata.customInfo.value);
 
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_Prepare_003 out.");
+}
+
+/**
+ * @tc.name: Recorder_Prepare_004
+ * @tc.desc: Test recorder preparation process
+ * @tc.type: FUNC
+ */
+HWTEST_F(NativeRecorderUnitTest, Recorder_Prepare_004, TestSize.Level2)
+{
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Prepare_004 in.");
+
+    OH_AVRecorder_Config config = config_;
+    config.url = strdup("fd://1234");
+    config.metadata.genre = strdup("");
+    config.metadata.videoOrientation = strdup("90");
+    config.metadata.customInfo.key = strdup("abc");
+    config.metadata.customInfo.value = strdup("123");
+    config.profile.audioBitrate = 96000;
+    config.profile.audioChannels = 2;
+    config.profile.audioCodec = OH_AVRecorder_CodecMimeType::AUDIO_AAC;
+    config.profile.audioSampleRate = 48000;
+    config.profile.fileFormat = OH_AVRecorder_ContainerFormatType::CFT_MPEG_4;
+    config.profile.videoBitrate = 2000000;
+    config.profile.videoCodec = OH_AVRecorder_CodecMimeType::VIDEO_HEVC;
+    config.profile.videoFrameWidth = 640;
+    config.profile.videoFrameHeight = 480;
+    config.profile.videoFrameRate = 30;
+    config.profile.isHdr = false;
+    config.profile.enableTemporalScale = false;
+    config.audioSourceType = OH_AVRecorder_AudioSourceType::MIC;
+    config.videoSourceType = OH_AVRecorder_VideoSourceType::SURFACE_YUV;
+    config.fileGenerationMode = OH_AVRecorder_FileGenerationMode::APP_CREATE;
+
+    int32_t ret = AV_ERR_OK;
+    ret = OH_AVRecorder_Prepare(recorder_, &config);
+    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
+
+    free(config.url);
+    free(config.metadata.genre);
+    free(config.metadata.videoOrientation);
+    free(config.metadata.customInfo.key);
+    free(config.metadata.customInfo.value);
+
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Prepare_004 out.");
+}
+
+/**
+ * @tc.name: Recorder_Prepare_005
+ * @tc.desc: Test recorder preparation process failure situation
+ * @tc.type: FUNC
+ */
+HWTEST_F(NativeRecorderUnitTest, Recorder_Prepare_005, TestSize.Level2)
+{
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Prepare_005 in.");
+
+    OH_AVRecorder_Config config = config_;
+    config.url = strdup("invalid_url");
+    config.metadata.genre = strdup("");
+    config.metadata.videoOrientation = strdup("90");
+    config.metadata.customInfo.key = strdup("abc");
+    config.metadata.customInfo.value = strdup("123");
+    config.profile.audioBitrate = 96000;
+    config.profile.audioChannels = 2;
+    config.profile.audioCodec = OH_AVRecorder_CodecMimeType::AUDIO_AAC;
+    config.profile.audioSampleRate = 48000;
+    config.profile.fileFormat = OH_AVRecorder_ContainerFormatType::CFT_MPEG_4;
+    config.profile.videoBitrate = 2000000;
+    config.profile.videoCodec = OH_AVRecorder_CodecMimeType::VIDEO_HEVC;
+    config.profile.videoFrameWidth = 640;
+    config.profile.videoFrameHeight = 480;
+    config.profile.videoFrameRate = 30;
+    config.profile.isHdr = false;
+    config.profile.enableTemporalScale = false;
+    config.audioSourceType = OH_AVRecorder_AudioSourceType::MIC;
+    config.videoSourceType = OH_AVRecorder_VideoSourceType::SURFACE_YUV;
+    config.fileGenerationMode = OH_AVRecorder_FileGenerationMode::APP_CREATE;
+
+    int32_t ret = AV_ERR_OK;
+    ret = OH_AVRecorder_Prepare(recorder_, &config);
+    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
+
+    free(config.url);
+    free(config.metadata.genre);
+    free(config.metadata.videoOrientation);
+    free(config.metadata.customInfo.key);
+    free(config.metadata.customInfo.value);
+
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Prepare_005 out.");
+}
+
+/**
+ * @tc.name: Recorder_Prepare_006
+ * @tc.desc: Test recorder preparation process failure situation 2
+ * @tc.type: FUNC
+ */
+HWTEST_F(NativeRecorderUnitTest, Recorder_Prepare_006, TestSize.Level2)
+{
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Prepare_006 in.");
+
+    OH_AVRecorder_Config config = config_;
+    config.url = strdup("fd://-1");
+    config.metadata.genre = strdup("");
+    config.metadata.videoOrientation = strdup("90");
+    config.metadata.customInfo.key = strdup("abc");
+    config.metadata.customInfo.value = strdup("123");
+    config.profile.audioBitrate = 96000;
+    config.profile.audioChannels = 2;
+    config.profile.audioCodec = OH_AVRecorder_CodecMimeType::AUDIO_AAC;
+    config.profile.audioSampleRate = 48000;
+    config.profile.fileFormat = OH_AVRecorder_ContainerFormatType::CFT_MPEG_4;
+    config.profile.videoBitrate = 2000000;
+    config.profile.videoCodec = OH_AVRecorder_CodecMimeType::VIDEO_HEVC;
+    config.profile.videoFrameWidth = 640;
+    config.profile.videoFrameHeight = 480;
+    config.profile.videoFrameRate = 30;
+    config.profile.isHdr = false;
+    config.profile.enableTemporalScale = false;
+    config.audioSourceType = OH_AVRecorder_AudioSourceType::MIC;
+    config.videoSourceType = OH_AVRecorder_VideoSourceType::SURFACE_YUV;
+    config.fileGenerationMode = OH_AVRecorder_FileGenerationMode::APP_CREATE;
+
+    int32_t ret = AV_ERR_OK;
+    ret = OH_AVRecorder_Prepare(recorder_, &config);
+    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
+
+    free(config.url);
+    free(config.metadata.genre);
+    free(config.metadata.videoOrientation);
+    free(config.metadata.customInfo.key);
+    free(config.metadata.customInfo.value);
+
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Prepare_006 out.");
+}
+
+/**
+ * @tc.name: Recorder_Prepare_007
+ * @tc.desc: Test recorder preparation process failure situation 3
+ * @tc.type: FUNC
+ */
+HWTEST_F(NativeRecorderUnitTest, Recorder_Prepare_007, TestSize.Level2)
+{
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Prepare_007 in.");
+
+    OH_AVRecorder_Config config = config_;
+    config.url = strdup("");
+    config.metadata.genre = strdup("");
+    config.metadata.videoOrientation = strdup("invalid");
+    config.metadata.customInfo.key = strdup("abc");
+    config.metadata.customInfo.value = strdup("123");
+    config.profile.audioBitrate = 96000;
+    config.profile.audioChannels = 2;
+    config.profile.audioCodec = OH_AVRecorder_CodecMimeType::AUDIO_AAC;
+    config.profile.audioSampleRate = 48000;
+    config.profile.fileFormat = OH_AVRecorder_ContainerFormatType::CFT_MPEG_4;
+    config.profile.videoBitrate = 2000000;
+    config.profile.videoCodec = OH_AVRecorder_CodecMimeType::VIDEO_HEVC;
+    config.profile.videoFrameWidth = 1280;
+    config.profile.videoFrameHeight = 720;
+    config.profile.videoFrameRate = 30;
+    config.profile.isHdr = false;
+    config.profile.enableTemporalScale = false;
+    config.audioSourceType = OH_AVRecorder_AudioSourceType::MIC;
+    config.videoSourceType = OH_AVRecorder_VideoSourceType::SURFACE_YUV;
+    config.fileGenerationMode = OH_AVRecorder_FileGenerationMode::AUTO_CREATE_CAMERA_SCENE;
+
+    int32_t ret = AV_ERR_OK;
+    ret = OH_AVRecorder_Prepare(recorder_, &config);
+    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
+
+    free(config.url);
+    free(config.metadata.genre);
+    free(config.metadata.videoOrientation);
+    free(config.metadata.customInfo.key);
+    free(config.metadata.customInfo.value);
+
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Prepare_007 out.");
+}
+
+/**
+ * @tc.name: Recorder_Prepare_008
+ * @tc.desc: Test recorder preparation process success situation
+ * @tc.type: FUNC
+ */
+HWTEST_F(NativeRecorderUnitTest, Recorder_Prepare_008, TestSize.Level2)
+{
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Prepare_008 in.");
+
+    OH_AVRecorder_Config config = config_;
+    config.url = strdup("");
+    config.metadata.genre = strdup("");
+    config.metadata.videoOrientation = nullptr;
+    config.metadata.customInfo.key = strdup("abc");
+    config.metadata.customInfo.value = strdup("123");
+    config.profile.audioBitrate = 96000;
+    config.profile.audioChannels = 2;
+    config.profile.audioCodec = OH_AVRecorder_CodecMimeType::AUDIO_AAC;
+    config.profile.audioSampleRate = 48000;
+    config.profile.fileFormat = OH_AVRecorder_ContainerFormatType::CFT_MPEG_4;
+    config.profile.videoBitrate = 2000000;
+    config.profile.videoCodec = OH_AVRecorder_CodecMimeType::VIDEO_HEVC;
+    config.profile.videoFrameWidth = 1280;
+    config.profile.videoFrameHeight = 720;
+    config.profile.videoFrameRate = 30;
+    config.profile.isHdr = false;
+    config.profile.enableTemporalScale = false;
+    config.audioSourceType = OH_AVRecorder_AudioSourceType::MIC;
+    config.videoSourceType = OH_AVRecorder_VideoSourceType::SURFACE_YUV;
+    config.fileGenerationMode = OH_AVRecorder_FileGenerationMode::AUTO_CREATE_CAMERA_SCENE;
+
+    int32_t ret = AV_ERR_OK;
+    ret = OH_AVRecorder_Prepare(recorder_, &config);
+    EXPECT_EQ(ret, AV_ERR_OK);
+
+    free(config.url);
+    free(config.metadata.genre);
+    free(config.metadata.videoOrientation);
+    free(config.metadata.customInfo.key);
+    free(config.metadata.customInfo.value);
+
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Prepare_008 out.");
+}
+
+/**
+ * @tc.name: Recorder_Prepare_009
+ * @tc.desc: Test recorder preparation process success situation 2
+ * @tc.type: FUNC
+ */
+HWTEST_F(NativeRecorderUnitTest, Recorder_Prepare_009, TestSize.Level2)
+{
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Prepare_009 in.");
+
+    OH_AVRecorder_Config config = config_;
+    config.url = strdup("");
+    config.metadata.genre = strdup("");
+    config.metadata.videoOrientation = nullptr;
+    config.metadata.customInfo.key = strdup("abc");
+    config.metadata.customInfo.value = strdup("123");
+    config.profile.audioBitrate = 96000;
+    config.profile.audioChannels = 2;
+    config.profile.audioCodec = OH_AVRecorder_CodecMimeType::AUDIO_AAC;
+    config.profile.audioSampleRate = 48000;
+    config.profile.fileFormat = OH_AVRecorder_ContainerFormatType::CFT_MPEG_4;
+    config.profile.videoBitrate = 2000000;
+    config.profile.videoCodec = OH_AVRecorder_CodecMimeType::VIDEO_HEVC;
+    config.profile.videoFrameWidth = 1280;
+    config.profile.videoFrameHeight = 720;
+    config.profile.videoFrameRate = 30;
+    config.profile.isHdr = false;
+    config.profile.enableTemporalScale = false;
+    config.audioSourceType = OH_AVRecorder_AudioSourceType::MIC;
+    config.videoSourceType = OH_AVRecorder_VideoSourceType::SURFACE_YUV;
+    config.fileGenerationMode = OH_AVRecorder_FileGenerationMode::AUTO_CREATE_CAMERA_SCENE;
+
+
+    int32_t ret = AV_ERR_OK;
+    ret = OH_AVRecorder_Prepare(recorder_, &config);
+    ret = OH_AVRecorder_Prepare(recorder_, &config);
+    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
+
+    free(config.url);
+    free(config.metadata.genre);
+    free(config.metadata.videoOrientation);
+    free(config.metadata.customInfo.key);
+    free(config.metadata.customInfo.value);
+
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Prepare_009 out.");
+}
+
+/**
+ * @tc.name: Recorder_Prepare_010
+ * @tc.desc: Test recorder preparation process failure situation
+ * @tc.type: FUNC
+ */
+HWTEST_F(NativeRecorderUnitTest, Recorder_Prepare_010, TestSize.Level2)
+{
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Prepare_010 in.");
+
+    OH_AVRecorder_Config config = config_;
+    config.url = strdup("");
+    config.metadata.genre = strdup("");
+    config.metadata.videoOrientation = strdup("95");
+    config.metadata.customInfo.key = strdup("abc");
+    config.metadata.customInfo.value = strdup("123");
+    config.profile.audioBitrate = 96000;
+    config.profile.audioChannels = 2;
+    config.profile.audioCodec = OH_AVRecorder_CodecMimeType::AUDIO_AAC;
+    config.profile.audioSampleRate = 48000;
+    config.profile.fileFormat = OH_AVRecorder_ContainerFormatType::CFT_MPEG_4;
+    config.profile.videoBitrate = 2000000;
+    config.profile.videoCodec = OH_AVRecorder_CodecMimeType::VIDEO_HEVC;
+    config.profile.videoFrameWidth = 1280;
+    config.profile.videoFrameHeight = 720;
+    config.profile.videoFrameRate = 30;
+    config.profile.isHdr = false;
+    config.profile.enableTemporalScale = false;
+    config.audioSourceType = OH_AVRecorder_AudioSourceType::MIC;
+    config.videoSourceType = OH_AVRecorder_VideoSourceType::SURFACE_YUV;
+    config.fileGenerationMode = OH_AVRecorder_FileGenerationMode::AUTO_CREATE_CAMERA_SCENE;
+
+    int32_t ret = AV_ERR_OK;
+    ret = OH_AVRecorder_Prepare(recorder_, &config);
+    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
+
+    free(config.url);
+    free(config.metadata.genre);
+    free(config.metadata.videoOrientation);
+    free(config.metadata.customInfo.key);
+    free(config.metadata.customInfo.value);
+
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Prepare_010 out.");
 }
 
 /**
@@ -342,7 +686,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_GetAVRecorderConfig_002, TestSize.Leve
 {
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_GetAVRecorderConfig_002 in.");
 
-    OH_AVRecorder_Config config = sConfig;
+    OH_AVRecorder_Config config = config_;
     config.url = strdup("fd://02");
     config.metadata.genre = strdup("");
     config.metadata.videoOrientation = strdup("90");
@@ -390,7 +734,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_GetAVRecorderConfig_003, TestSize.Leve
 {
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_GetAVRecorderConfig_003 in.");
 
-    OH_AVRecorder_Config config = sConfig;
+    OH_AVRecorder_Config config = config_;
     config.url = strdup("fd://10");
     config.metadata.genre = strdup("");
     config.metadata.videoOrientation = strdup("270");
@@ -471,7 +815,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_GetInputSurface_002, TestSize.Level2)
 {
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_GetInputSurface_002 in.");
 
-    OH_AVRecorder_Config config = sConfig;
+    OH_AVRecorder_Config config = config_;
     config.url = strdup("");
     config.metadata.genre = strdup("");
     config.metadata.videoOrientation = strdup("0");
@@ -523,7 +867,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_UpdateRotation_002, TestSize.Level2)
 {
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_UpdateRotation_002 in.");
 
-    OH_AVRecorder_Config config = sConfig;
+    OH_AVRecorder_Config config = config_;
     config.url = strdup("");
     config.metadata.genre = strdup("");
     config.metadata.videoOrientation = strdup("0");
@@ -545,6 +889,84 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_UpdateRotation_002, TestSize.Level2)
     free(config.metadata.customInfo.value);
 
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_UpdateRotation_002 out.");
+}
+
+/**
+ * @tc.name: Recorder_UpdateRotation_003
+ * @tc.desc: Test recorder UpdateRotation process 003
+ * @tc.type: FUNC
+ */
+HWTEST_F(NativeRecorderUnitTest, Recorder_UpdateRotation_003, TestSize.Level2)
+{
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_UpdateRotation_003 in.");
+
+    OH_AVRecorder_Config config = config_;
+    config.url = strdup("");
+    config.metadata.genre = strdup("");
+    config.metadata.videoOrientation = strdup("0");
+    config.metadata.customInfo.key = strdup("");
+    config.metadata.customInfo.value = strdup("");
+
+    int32_t rotation = 90;
+
+    int32_t ret = AV_ERR_OK;
+    ret = OH_AVRecorder_Prepare(recorder_, &config);
+    EXPECT_EQ(ret, AV_ERR_OK);
+    ret = OH_AVRecorder_UpdateRotation(recorder_, rotation);
+    EXPECT_EQ(ret, AV_ERR_OK);
+
+    free(config.url);
+    free(config.metadata.genre);
+    free(config.metadata.videoOrientation);
+    free(config.metadata.customInfo.key);
+    free(config.metadata.customInfo.value);
+
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_UpdateRotation_003 out.");
+}
+
+/**
+ * @tc.name: Recorder_UpdateRotation_004
+ * @tc.desc: Test recorder UpdateRotation process 004
+ * @tc.type: FUNC
+ */
+HWTEST_F(NativeRecorderUnitTest, Recorder_UpdateRotation_004, TestSize.Level2)
+{
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_UpdateRotation_004 in.");
+
+    OH_AVRecorder_Config config = config_;
+    config.url = strdup("");
+    config.metadata.genre = strdup("");
+    config.metadata.videoOrientation = strdup("0");
+    config.metadata.customInfo.key = strdup("");
+    config.metadata.customInfo.value = strdup("");
+
+    int32_t ret = AV_ERR_OK;
+    ret = OH_AVRecorder_Prepare(recorder_, &config);
+    EXPECT_EQ(ret, AV_ERR_OK);
+
+    int32_t rotation = 0;
+    ret = OH_AVRecorder_UpdateRotation(recorder_, rotation);
+    EXPECT_EQ(ret, AV_ERR_OK);
+
+    rotation = 90;
+    ret = OH_AVRecorder_UpdateRotation(recorder_, rotation);
+    EXPECT_EQ(ret, AV_ERR_OK);
+
+    rotation = 180;
+    ret = OH_AVRecorder_UpdateRotation(recorder_, rotation);
+    EXPECT_EQ(ret, AV_ERR_OK);
+
+    rotation = 270;
+    ret = OH_AVRecorder_UpdateRotation(recorder_, rotation);
+    EXPECT_EQ(ret, AV_ERR_OK);
+    
+    free(config.url);
+    free(config.metadata.genre);
+    free(config.metadata.videoOrientation);
+    free(config.metadata.customInfo.key);
+    free(config.metadata.customInfo.value);
+
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_UpdateRotation_004 out.");
 }
 
 /**
@@ -574,7 +996,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Start_failure_002, TestSize.Level2)
 {
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_Start_failure_002 in.");
 
-    OH_AVRecorder_Config config = sConfig;
+    OH_AVRecorder_Config config = config_;
     config.url = strdup("");
     config.metadata.genre = strdup("");
     config.metadata.videoOrientation = strdup("0");
@@ -625,7 +1047,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Pause_failure_002, TestSize.Level2)
 {
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_Pause_failure_002 in.");
 
-    OH_AVRecorder_Config config = sConfig;
+    OH_AVRecorder_Config config = config_;
     config.url = strdup("");
     config.metadata.genre = strdup("");
     config.metadata.videoOrientation = strdup("0");
@@ -657,7 +1079,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Pause_failure_003, TestSize.Level2)
 {
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_Pause_failure_003 in.");
 
-    OH_AVRecorder_Config config = sConfig;
+    OH_AVRecorder_Config config = config_;
     config.url = strdup("");
     config.metadata.genre = strdup("");
     config.metadata.videoOrientation = strdup("0");
@@ -710,7 +1132,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Resume_failure_002, TestSize.Level2)
 {
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_Resume_failure_002 in.");
 
-    OH_AVRecorder_Config config = sConfig;
+    OH_AVRecorder_Config config = config_;
     config.url = strdup("");
     config.metadata.genre = strdup("");
     config.metadata.videoOrientation = strdup("0");
@@ -742,7 +1164,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Resume_failure_003, TestSize.Level2)
 {
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_Resume_failure_003 in.");
 
-    OH_AVRecorder_Config config = sConfig;
+    OH_AVRecorder_Config config = config_;
     config.url = strdup("");
     config.metadata.genre = strdup("");
     config.metadata.videoOrientation = strdup("0");
@@ -777,7 +1199,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Resume_failure_004, TestSize.Level2)
 {
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_Resume_failure_004 in.");
 
-    OH_AVRecorder_Config config = sConfig;
+    OH_AVRecorder_Config config = config_;
     config.url = strdup("");
     config.metadata.genre = strdup("");
     config.metadata.videoOrientation = strdup("0");
@@ -831,7 +1253,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Stop_failure_002, TestSize.Level2)
 {
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_Stop_failure_002 in.");
 
-    OH_AVRecorder_Config config = sConfig;
+    OH_AVRecorder_Config config = config_;
     config.url = strdup("");
     config.metadata.genre = strdup("");
     config.metadata.videoOrientation = strdup("0");
@@ -862,7 +1284,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Stop_failure_003, TestSize.Level2)
 {
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_Stop_failure_003 in.");
 
-    OH_AVRecorder_Config config = sConfig;
+    OH_AVRecorder_Config config = config_;
     config.url = strdup("");
     config.metadata.genre = strdup("");
     config.metadata.videoOrientation = strdup("0");
@@ -896,7 +1318,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Stop_failure_004, TestSize.Level2)
 {
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_Stop_failure_004 in.");
 
-    OH_AVRecorder_Config config = sConfig;
+    OH_AVRecorder_Config config = config_;
     config.url = strdup("");
     config.metadata.genre = strdup("");
     config.metadata.videoOrientation = strdup("0");
@@ -952,7 +1374,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Reset_002, TestSize.Level2)
 {
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_Reset_002 in.");
 
-    OH_AVRecorder_Config config = sConfig;
+    OH_AVRecorder_Config config = config_;
     config.url = strdup("");
     config.metadata.genre = strdup("");
     config.metadata.videoOrientation = strdup("0");
@@ -983,7 +1405,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Reset_003, TestSize.Level2)
 {
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_Reset_003 in.");
 
-    OH_AVRecorder_Config config = sConfig;
+    OH_AVRecorder_Config config = config_;
     config.url = strdup("");
     config.metadata.genre = strdup("");
     config.metadata.videoOrientation = strdup("0");
@@ -1017,7 +1439,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Reset_004, TestSize.Level2)
 {
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_Reset_004 in.");
 
-    OH_AVRecorder_Config config = sConfig;
+    OH_AVRecorder_Config config = config_;
     config.url = strdup("");
     config.metadata.genre = strdup("");
     config.metadata.videoOrientation = strdup("0");
@@ -1089,23 +1511,63 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_GetAvailableEncoder_001, TestSize.Leve
  * @tc.desc: Test recorder setStateCallback process 001
  * @tc.type: FUNC
  */
-static void AVRecorderStateChangeCbAlter(OH_AVRecorder *recorder,
-    OH_AVRecorder_State state, OH_AVRecorder_StateChangeReason reason, void *userData)
-{
-    MEDIA_LOGI("AVRecorderStateChangeCbAlter reason: %d, OH_AVRecorder_State: %d \n", reason, state);
-}
-
 HWTEST_F(NativeRecorderUnitTest, Recorder_SetStateCallback_001, TestSize.Level2)
 {
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_SetStateCallback_001 in.");
 
-    OH_AVRecorder_OnStateChange stateChangeCb = AVRecorderStateChangeCbAlter;
-
-    int32_t ret = AV_ERR_OK;
-    ret = OH_AVRecorder_SetStateCallback(recorder_, stateChangeCb, nullptr);
+    int32_t ret = OH_AVRecorder_SetStateCallback(recorder_, OnStateChange, nullptr);
     EXPECT_EQ(ret, AV_ERR_OK);
 
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_SetStateCallback_001 out.");
+}
+
+/**
+ * @tc.name: Recorder_SetStateCallback_002
+ * @tc.desc: Test recorder setStateCallback process 002
+ * @tc.type: FUNC
+ */
+HWTEST_F(NativeRecorderUnitTest, Recorder_SetStateCallback_002, TestSize.Level2)
+{
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_SetStateCallback_002 in.");
+
+    OH_AVRecorder_Release(recorder_);
+    recorder_ = OH_AVRecorder_Create();
+    int32_t ret = OH_AVRecorder_SetStateCallback(recorder_, OnStateChange, nullptr);
+    EXPECT_EQ(ret, AV_ERR_OK);
+
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_SetStateCallback_002 out.");
+}
+
+/**
+ * @tc.name: Recorder_SetStateCallback_003
+ * @tc.desc: Test recorder setStateCallback process 003
+ * @tc.type: FUNC
+ */
+HWTEST_F(NativeRecorderUnitTest, Recorder_SetStateCallback_003, TestSize.Level2)
+{
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_SetStateCallback_003 in.");
+
+    OH_AVRecorder_Release(recorder_);
+    recorder_ = OH_AVRecorder_Create();
+    int32_t ret = OH_AVRecorder_SetStateCallback(recorder_, nullptr, nullptr);
+    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
+
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_SetStateCallback_003 out.");
+}
+
+/**
+ * @tc.name: Recorder_SetStateCallback_004
+ * @tc.desc: Test recorder SetStateCallback process 004
+ * @tc.type: FUNC
+ */
+HWTEST_F(NativeRecorderUnitTest, Recorder_SetStateCallback_004, TestSize.Level2)
+{
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_SetStateCallback_004 in.");
+
+    int32_t ret = OH_AVRecorder_SetStateCallback(recorder_, nullptr, nullptr);
+    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
+
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_SetStateCallback_004 out.");
 }
 
 /**
@@ -1113,21 +1575,125 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_SetStateCallback_001, TestSize.Level2)
  * @tc.desc: Test recorder setErrorCallback process 001
  * @tc.type: FUNC
  */
-static void AVRecorderErrorCbAlter(OH_AVRecorder *recorder, int32_t errorCode, const char *errorMsg,
-    void *userData)
-{
-    MEDIA_LOGE("AVRecorderErrorCbAlter errorCode: %d, errorMsg: %s \n", errorCode, errorMsg);
-}
-
 HWTEST_F(NativeRecorderUnitTest, Recorder_SetErrorCallback_001, TestSize.Level2)
 {
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_SetErrorCallback_001 in.");
 
-    OH_AVRecorder_OnError errorCb = AVRecorderErrorCbAlter;
-
-    int32_t ret = AV_ERR_OK;
-    ret = OH_AVRecorder_SetErrorCallback(recorder_, errorCb, nullptr);
+    int32_t ret = OH_AVRecorder_SetErrorCallback(recorder_, OnError, nullptr);
     EXPECT_EQ(ret, AV_ERR_OK);
 
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_SetErrorCallback_001 out.");
+}
+
+/**
+ * @tc.name: Recorder_SetErrorCallback_002
+ * @tc.desc: Test recorder SetErrorCallback process 002
+ * @tc.type: FUNC
+ */
+HWTEST_F(NativeRecorderUnitTest, Recorder_SetErrorCallback_002, TestSize.Level2)
+{
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_SetErrorCallback_002 in.");
+
+    OH_AVRecorder_Release(recorder_);
+    recorder_ = OH_AVRecorder_Create();
+    int32_t ret = OH_AVRecorder_SetErrorCallback(recorder_, OnError, nullptr);
+    EXPECT_EQ(ret, AV_ERR_OK);
+
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_SetErrorCallback_002 out.");
+}
+
+/**
+ * @tc.name: Recorder_SetErrorCallback_003
+ * @tc.desc: Test recorder SetErrorCallback process 003
+ * @tc.type: FUNC
+ */
+HWTEST_F(NativeRecorderUnitTest, Recorder_SetErrorCallback_003, TestSize.Level2)
+{
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_SetErrorCallback_003 in.");
+
+    OH_AVRecorder_Release(recorder_);
+    recorder_ = OH_AVRecorder_Create();
+    int32_t ret = OH_AVRecorder_SetErrorCallback(recorder_, nullptr, nullptr);
+    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
+
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_SetErrorCallback_003 out.");
+}
+
+/**
+ * @tc.name: Recorder_SetErrorCallback_004
+ * @tc.desc: Test recorder SetErrorCallback process 004
+ * @tc.type: FUNC
+ */
+HWTEST_F(NativeRecorderUnitTest, Recorder_SetErrorCallback_004, TestSize.Level2)
+{
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_SetErrorCallback_004 in.");
+
+    int32_t ret = OH_AVRecorder_SetErrorCallback(recorder_, nullptr, nullptr);
+    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
+
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_SetErrorCallback_004 out.");
+}
+
+/**
+ * @tc.name: Recorder_SetUriCallback_001
+ * @tc.desc: Test recorder SetUriCallback process 001
+ * @tc.type: FUNC
+ */
+HWTEST_F(NativeRecorderUnitTest, Recorder_SetUriCallback_001, TestSize.Level2)
+{
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_SetUriCallback_001 in.");
+
+    int32_t ret = OH_AVRecorder_SetUriCallback(recorder_, OnUri, nullptr);
+    EXPECT_EQ(ret, AV_ERR_OK);
+
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_SetErrorCallback_001 out.");
+}
+
+/**
+ * @tc.name: Recorder_SetUriCallback_002
+ * @tc.desc: Test recorder SetUriCallback process 002
+ * @tc.type: FUNC
+ */
+HWTEST_F(NativeRecorderUnitTest, Recorder_SetUriCallback_002, TestSize.Level2)
+{
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_SetUriCallback_002 in.");
+
+    OH_AVRecorder_Release(recorder_);
+    recorder_ = OH_AVRecorder_Create();
+    int32_t ret = OH_AVRecorder_SetUriCallback(recorder_, OnUri, nullptr);
+    EXPECT_EQ(ret, AV_ERR_OK);
+
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_SetUriCallback_002 out.");
+}
+
+/**
+ * @tc.name: Recorder_SetUriCallback_003
+ * @tc.desc: Test recorder SetUriCallback process 003
+ * @tc.type: FUNC
+ */
+HWTEST_F(NativeRecorderUnitTest, Recorder_SetUriCallback_003, TestSize.Level2)
+{
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_SetUriCallback_003 in.");
+
+    OH_AVRecorder_Release(recorder_);
+    recorder_ = OH_AVRecorder_Create();
+    int32_t ret = OH_AVRecorder_SetUriCallback(recorder_, nullptr, nullptr);
+    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
+
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_SetUriCallback_003 out.");
+}
+
+/**
+ * @tc.name: Recorder_SetUriCallback_004
+ * @tc.desc: Test recorder SetUriCallback process 004
+ * @tc.type: FUNC
+ */
+HWTEST_F(NativeRecorderUnitTest, Recorder_SetUriCallback_004, TestSize.Level2)
+{
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_SetUriCallback_004 in.");
+
+    int32_t ret = OH_AVRecorder_SetUriCallback(recorder_, nullptr, nullptr);
+    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
+
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_SetUriCallback_004 out.");
 }
