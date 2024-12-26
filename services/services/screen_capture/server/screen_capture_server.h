@@ -254,7 +254,7 @@ public:
     InputDeviceInfo() = default;
 
     virtual ~InputDeviceInfo() = default;
-}
+};
 
 class MouseChangeListener : public MMI::IInputDeviceListener {
 public:
@@ -267,18 +267,18 @@ public:
 
 private:
     std::weak_ptr<ScreenCaptureServer> screenCaptureServer_;
-}
+};
 
 class MMISystemAbilityListener : public SystemAbilityStatusChangeStub {
 public:
     explicit MMISystemAbilityListener(std::weak_ptr<ScreenCaptureServer> screenCaptureServer);
-    ~MMISystemAbiltyListener() = default;
+    ~MMISystemAbilityListener() = default;
     virtual void OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId) override;
     virtual void OnRemoveSystemAbility(int32_t systemAbilityId, const std::string &deviceId) override;
 
 private:
     std::weak_ptr<ScreenCaptureServer> screenCaptureServer_;
-}
+};
 
 class PrivateWindowListenerInScreenCapture : public DisplayManager::IPrivateWindowListener {
 public:

@@ -20,7 +20,7 @@
 #include "extension_manager_client.h"
 #include "image_source.h"
 #include "image_type.h"
-#include "iservice_register.h"
+#include "iservice_registry.h"
 #include "pixel_map.h"
 #include "media_log.h"
 #include "media_errors.h"
@@ -147,10 +147,10 @@ int32_t MouseChangeListener::GetDeviceInfo(int32_t deviceId, std::shared_ptr<Inp
                 deviceInfo->SetType(device->GetType());
                 deviceInfo->SetName(device->GetName());
             }
-        }
+        };
     int32_t ret = MMI::InputManager::GetInstance()->GetDevice(
         deviceId, [&callback](std::shared_ptr<MMI::InputDevice> device) {callback(device);});
-    CHECK_AND_RETURN_LOG(ret == MSERR_OK, ret,
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret,
         "Calling method GetDevice failed. Device ID: %{public}d", deviceId);
     return ret;
 }
@@ -1290,7 +1290,7 @@ std::shared_ptr<MouseChangeListener> ScreenCaptureServer::GetMouseChangeListener
 bool ScreenCaptureServer::RegisterMMISystemAbilityListener()
 {
     MEDIA_LOGI("RegisterMMISystemAbilityListener start.");
-    if (mmiListener != nullptr) {
+    if (mmiListener_ != nullptr) {
         MEDIA_LOGI("RegisterMMISystemAbilityListener already registered");
         return true;
     }
@@ -1300,7 +1300,7 @@ bool ScreenCaptureServer::RegisterMMISystemAbilityListener()
         return false;
     }
     std::weak_ptr<ScreenCaptureServer> screenCaptureServer(shared_from_this());
-    sptr<ISystemAbilityStatusChange> listener(new (std::nothrow) MMISystemAbiltyListener(screenCaptureServer));
+    sptr<ISystemAbilityStatusChange> listener(new (std::nothrow) MMISystemAbilityListener(screenCaptureServer));
     if (listener == nullptr) {
         MEDIA_LOGE("create listener failed.");
         return false;
@@ -1379,7 +1379,7 @@ int32_t ScreenCaptureServer::RegisterMouseChangeListener(std::string type)
     std::weak_ptr<ScreenCaptureServer> screenCaptureServer(shared_from_this());
     mouseChangeListener_ = std::make_shared<MouseChangeListener>(screenCaptureServer);
     int32_t ret = MMI::InputManager::GetInstance()->RegisterDevListener(type, mouseChangeListener_);
-    CHECK_AND_RETURN_LOG(ret == MSERR_OK, ret, "RegisterMouseChangeListener failed");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "RegisterMouseChangeListener failed");
     MEDIA_LOGI("RegisterMouseChangeListener end.");
     return ret;
 }
@@ -1393,7 +1393,7 @@ int32_t ScreenCaptureServer::UnRegisterMouseChangeListener(std::string type)
     }
     int32_t ret = MMI::InputManager::GetInstance()->UnregisterDevListener(type, mouseChangeListener_);
     mouseChangeListener_ = nullptr;
-    CHECK_AND_RETURN_LOG(ret == MSERR_OK, ret, "UnRegisterMouseChangeListener failed");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "UnRegisterMouseChangeListener failed");
     MEDIA_LOGI("UnRegisterMouseChangeListener end.");
     return ret;
 }
@@ -2755,7 +2755,7 @@ int32_t ScreenCaptureServer::SetCanvasRotationInner()
 int32_t ScreenCaptureServer::ShowCursor(bool showCursor)
 {
     MediaTrace trace("ScreenCaptureServer::ShowCursor");
-    std::lock_guard<std::muxtex> lock(mutex_);
+    std::lock_guard<std::mutex> lock(mutex_);
     if (showCursor == showCursor_) {
         return MSERR_OK;
     }
@@ -2782,13 +2782,13 @@ int32_t ScreenCaptureServer::ShowCursorInner()
 {
     MediaTrace trace("ScreenCaptureServer::ShowCursorInner");
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " ShowCursorInner start.", FAKE_POINTER(this));
-    CHECK_AND_RETURN_LOG(screenId_ != SCREEN_ID_INVALID, MSERR_INVALID_VAL,
+    CHECK_AND_RETURN_RET_LOG(screenId_ != SCREEN_ID_INVALID, MSERR_INVALID_VAL,
         "ShowCursorInner failed, virtual screen not init");
     if (!showCursor_) {
         MEDIA_LOGI("ScreenCaptureServer::ShowCursorInner, not show cursor");
         uint64_t surfaceId = {};
         int32_t ret = MMI::InputManager::GetInstance()->GetCursorSurfaceId(surfaceId);
-        CHECK_AND_RETURN_LOG(ret == MSERR_OK, ret, "GetCursorSurfaceId failed");
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "GetCursorSurfaceId failed");
         std::string surfaceIdStr = std::to_string(surfaceId);
         MEDIA_LOGI("GetCursorSurfaceId success, surfaceId: %{public}s", surfaceIdStr.c_str());
         surfaceIdList_ = {};
