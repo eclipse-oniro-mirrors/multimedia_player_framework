@@ -105,30 +105,26 @@ RecorderListenerCallback::~RecorderListenerCallback()
 
 void RecorderListenerCallback::OnError(RecorderErrorType errorType, int32_t errorCode)
 {
-    if (listener_ != nullptr) {
-        listener_->OnError(errorType, errorCode);
-    }
+    CHECK_AND_RETURN(listener_ != nullptr);
+    listener_->OnError(errorType, errorCode);
 }
 
 void RecorderListenerCallback::OnInfo(int32_t type, int32_t extra)
 {
-    if (listener_ != nullptr) {
-        listener_->OnInfo(type, extra);
-    }
+    CHECK_AND_RETURN(listener_ != nullptr);
+    listener_->OnInfo(type, extra);
 }
 
 void RecorderListenerCallback::OnAudioCaptureChange(const AudioRecorderChangeInfo &audioRecorderChangeInfo)
 {
-    if (listener_ != nullptr) {
-        listener_->OnAudioCaptureChange(audioRecorderChangeInfo);
-    }
+    CHECK_AND_RETURN(listener_ != nullptr);
+    listener_->OnAudioCaptureChange(audioRecorderChangeInfo);
 }
 
 void RecorderListenerCallback::OnPhotoAssertAvailable(const std::string &uri)
 {
-    if (listener_ != nullptr) {
-        listener_->OnPhotoAssertAvailable(uri);
-    }
+    CHECK_AND_RETURN(listener_ != nullptr);
+    listener_->OnPhotoAssertAvailable(uri);
 }
 } // namespace Media
 } // namespace OHOS

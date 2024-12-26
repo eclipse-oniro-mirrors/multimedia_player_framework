@@ -450,10 +450,7 @@ int32_t RecorderServiceProxy::SetUserCustomInfo(Meta &userCustomInfo)
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
     bool ret = userCustomInfo.ToParcel(data);
-    if (!ret) {
-        MEDIA_LOGE("userCustomInfo ToParcel failed");
-        return MSERR_INVALID_OPERATION;
-    }
+    CHECK_AND_RETURN_RET_LOG(ret, MSERR_INVALID_OPERATION, "userCustomInfo ToParcel failed");
     int error = Remote()->SendRequest(SET_USER_CUSTOM_INFO, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetUserCustomInfo failed, error: %{public}d", error);
@@ -592,9 +589,7 @@ int32_t RecorderServiceProxy::SetLocation(float latitude, float longitude)
     data.WriteFloat(latitude);
     data.WriteFloat(longitude);
     int error = Remote()->SendRequest(SET_LOCATION, data, reply, option);
-    if (error != MSERR_OK) {
-        MEDIA_LOGW("SetLocation failed, error: %{public}d", error);
-    }
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_OK, "SetLocation failed, error: %{public}d", error);
     return MSERR_OK;
 }
 
@@ -609,9 +604,7 @@ int32_t RecorderServiceProxy::SetOrientationHint(int32_t rotation)
 
     data.WriteInt32(rotation);
     int error = Remote()->SendRequest(SET_ORIENTATION_HINT, data, reply, option);
-    if (error != MSERR_OK) {
-        MEDIA_LOGW("SetOrientationHint failed, error: %{public}d", error);
-    }
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_OK, "SetOrientationHint failed, error: %{public}d", error);
     return MSERR_OK;
 }
 
