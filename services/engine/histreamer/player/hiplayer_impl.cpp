@@ -197,9 +197,6 @@ Status HiPlayerImpl::Init()
         "fail to allocate memory for PlayerEventReceiver or PlayerFilterCallback");
     playerEventReceiver_ = playerEventReceiver;
     playerFilterCallback_ = playerFilterCallback;
-    if (syncManager_ != nullptr) {
-        syncManager_->SetEventReceiver(playerEventReceiver_);
-    }
     MEDIA_LOG_D_SHORT("pipeline init");
     pipeline_->Init(playerEventReceiver_, playerFilterCallback_, playerId_);
     MEDIA_LOG_D_SHORT("pipeline Init out");
@@ -458,9 +455,6 @@ void HiPlayerImpl::ResetIfSourceExisted()
 
     pipeline_ = std::make_shared<OHOS::Media::Pipeline::Pipeline>();
     syncManager_ = std::make_shared<MediaSyncManager>();
-    if (syncManager_ != nullptr) {
-        syncManager_->SetEventReceiver(playerEventReceiver_);
-    }
     MEDIA_LOG_I_SHORT("Reset the relatived objects end");
 }
 
