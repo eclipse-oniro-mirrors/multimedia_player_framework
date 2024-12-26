@@ -45,6 +45,7 @@ public:
     virtual int32_t StopScreenCapture() = 0;
     virtual int32_t SetMicrophoneEnabled(bool isMicrophone) = 0;
     virtual int32_t SetCanvasRotation(bool canvasRotation) = 0;
+    virtual int32_t ShowCursor(bool showCursor) = 0;
     virtual int32_t ResizeCanvas(int32_t width, int32_t height) = 0;
     virtual int32_t SkipPrivacyMode(std::vector<uint64_t> &windowIDsVec) = 0;
     virtual int32_t SetMaxVideoFrameRate(int32_t frameRate) = 0;
@@ -84,6 +85,7 @@ public:
         RESIZE_CANVAS = 21,
         SKIP_PRIVACY = 22,
         SET_MAX_FRAME_RATE = 23,
+        SHOW_CURSOR = 24,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardScreenCaptureService");

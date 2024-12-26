@@ -480,6 +480,24 @@ int32_t ScreenCaptureServiceProxy::SetCanvasRotation(bool canvasRotation)
     return reply.ReadInt32();
 }
 
+int32_t ScreenCaptureServiceProxy::ShowCursor(bool showCursor)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(ScreenCaptureServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    token = data.WriteBool(showCursor);
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write ShowCursor state!");
+
+    int error = Remote->SendRequest(SHOW_CURSOR, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+                             "ShowCursor failed, error: %{public}d", error);
+    return reply.ReadInt32();
+}
+
 int32_t ScreenCaptureServiceProxy::ResizeCanvas(int32_t width, int32_t height)
 {
     MessageParcel data;
