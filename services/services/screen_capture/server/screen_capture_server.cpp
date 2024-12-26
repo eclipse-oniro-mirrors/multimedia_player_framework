@@ -1337,13 +1337,13 @@ bool ScreenCaptureServer::UnRegisterMMISystemAbilityListener()
     return true;
 }
 
-MMISystemAbiltyListener::MMISystemAbiltyListener(std::weak_ptr<ScreenCaptureServer> screenCaptureServer)
+MMISystemAbilityListener::MMISystemAbilityListener(std::weak_ptr<ScreenCaptureServer> screenCaptureServer)
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
     screenCaptureServer_ = screenCaptureServer;
 }
 
-void MMISystemAbiltyListener::OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId)
+void MMISystemAbilityListener::OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId)
 {
     MEDIA_LOGI("OnAddSystemAbility start.");
     auto scrServer = screenCaptureServer_.lock();
@@ -1357,7 +1357,7 @@ void MMISystemAbiltyListener::OnAddSystemAbility(int32_t systemAbilityId, const 
     MEDIA_LOGI("OnAddSystemAbility end.");
 }
 
-void MMISystemAbiltyListener::OnRemoveSystemAbility(int32_t systemAbilityId, const std::string &deviceId)
+void MMISystemAbilityListener::OnRemoveSystemAbility(int32_t systemAbilityId, const std::string &deviceId)
 {
     auto scrServer = screenCaptureServer_.lock();
     int32_t ret = MMI::InputManager::GetInstance()->UnregisterDevListener("change",

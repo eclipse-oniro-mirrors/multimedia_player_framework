@@ -269,9 +269,9 @@ private:
     std::weak_ptr<ScreenCaptureServer> screenCaptureServer_;
 }
 
-class MMISystemAbiltyListener : public SystemAbilityStatusChangeStub {
+class MMISystemAbilityListener : public SystemAbilityStatusChangeStub {
 public:
-    explicit MMISystemAbiltyListener(std::weak_ptr<ScreenCaptureServer> screenCaptureServer);
+    explicit MMISystemAbilityListener(std::weak_ptr<ScreenCaptureServer> screenCaptureServer);
     ~MMISystemAbiltyListener() = default;
     virtual void OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId) override;
     virtual void OnRemoveSystemAbility(int32_t systemAbilityId, const std::string &deviceId) override;
