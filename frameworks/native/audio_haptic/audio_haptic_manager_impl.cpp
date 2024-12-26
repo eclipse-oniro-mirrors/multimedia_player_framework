@@ -30,9 +30,50 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_AUDIO_NAPI, 
 namespace OHOS {
 namespace Media {
 const std::int32_t MAX_PLAYER_NUM = 128;
+const int32_t ERROR = -1;
+const std::string FDHAED = "fd://";
 
 std::shared_ptr<AudioHapticManager> AudioHapticManagerFactory::audioHapticManager_ = nullptr;
 std::mutex AudioHapticManagerFactory::audioHapticManagerMutex_;
+
+static int32_t ExtractFd(const std::string& uri)
+{
+    if (uri.size() <= FDHAED.size() || uri.substr(0, FDHAED.length()) != FDHAED) {
+        return ERROR;
+    }
+
+    std::string numberPart = uri.substr(FDHAED.length());
+    for (char c : numberPart) {
+        if (!std::isdigit(c)) {
+            MEDIA_LOGE("ExtractFd: The part after the FDHAED is not all digits.");
+            return ERROR;
+        }
+    }
+
+    int32_t fd = atoi(numberPart.c_str());
+    return fd > 0 ? fd : ERROR;
+}
+
+static std::string DupFdFromUri(const std::string &uri)
+{
+    MEDIA_LOGI("DupFdFromUri uri: %{public}s", uri.c_str());
+    if (uri.find(FDHAED) == std::string::npos) {
+        return uri;
+    }
+
+    int32_t fd = ExtractFd(uri);
+    if (fd == ERROR) {
+        MEDIA_LOGE("DupFdFromUri ExtractFd failed");
+        return "";
+    }
+
+    int32_t dupFd = dup(fd);
+    if (dupFd == ERROR) {
+        MEDIA_LOGE("DupFdFromUri failed. uri: %{public}s", uri.c_str());
+        return "";
+    }
+    return FDHAED + std::to_string(dupFd);
+}
 
 std::shared_ptr<AudioHapticManager> AudioHapticManagerFactory::CreateAudioHapticManager()
 {
@@ -54,6 +95,21 @@ AudioHapticManagerImpl::AudioHapticManagerImpl()
 
 AudioHapticManagerImpl::~AudioHapticManagerImpl()
 {
+    for (auto &[sourceId, info] : audioHapticPlayerMap_) {
+        (void)sourceId;
+        if (!info->audioUri_.empty()) {
+            int32_t fd = ExtractFd(info->audioUri_);
+            if (fd != ERROR) {
+                close(fd);
+            }
+        }
+        if (!info->hapticSource_.hapticUri.empty()) {
+            int32_t fd = ExtractFd(info->hapticSource_.hapticUri);
+            if (fd != ERROR) {
+                close(fd);
+            }
+        }
+    }
     audioHapticPlayerMap_.clear();
     curPlayerIndex_ = 0;
     curPlayerCount_ = 0;
@@ -96,13 +152,16 @@ int32_t AudioHapticManagerImpl::RegisterSource(const std::string &audioUri, cons
     while (audioHapticPlayerMap_[curPlayerIndex_] != nullptr) {
         curPlayerIndex_ = (curPlayerIndex_ + 1) % MAX_PLAYER_NUM;
     }
+    std::string audioUriStr = DupFdFromUri(audioUri);
+    std::string hapticUriStr = DupFdFromUri(hapticUri);
+
     int32_t sourceId = curPlayerIndex_;
-    HapticSource sourceUri = {hapticUri, ""};
-    audioHapticPlayerMap_[sourceId] = std::make_shared<AudioHapticPlayerInfo>(audioUri, sourceUri,
+    HapticSource sourceUri = {hapticUriStr, ""};
+    audioHapticPlayerMap_[sourceId] = std::make_shared<AudioHapticPlayerInfo>(audioUriStr, sourceUri,
         AUDIO_LATENCY_MODE_NORMAL, AudioStandard::StreamUsage::STREAM_USAGE_MUSIC);
     curPlayerCount_ += 1;
     MEDIA_LOGI("Finish to RegisterSource. audioUri: %{public}s, hapticUri: %{public}s, sourceId: %{public}d",
-        audioUri.c_str(), hapticUri.c_str(), sourceId);
+        audioUriStr.c_str(), hapticUriStr.c_str(), sourceId);
     return sourceId;
 }
 
@@ -114,6 +173,21 @@ int32_t AudioHapticManagerImpl::UnregisterSource(const int32_t &sourceID)
         MEDIA_LOGE("UnregisterSource failed sourceID: %{public}d", sourceID);
         return MSERR_INVALID_VAL;
     }
+
+    std::shared_ptr<AudioHapticPlayerInfo> info = audioHapticPlayerMap_[sourceID];
+    if (!info->audioUri_.empty()) {
+        int32_t fd = ExtractFd(info->audioUri_);
+        if (fd != ERROR) {
+            close(fd);
+        }
+    }
+    if (!info->hapticSource_.hapticUri.empty()) {
+        int32_t fd = ExtractFd(info->hapticSource_.hapticUri);
+        if (fd != ERROR) {
+            close(fd);
+        }
+    }
+
     audioHapticPlayerMap_[sourceID] = nullptr;
     audioHapticPlayerMap_.erase(sourceID);
     curPlayerCount_ -= 1;

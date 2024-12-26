@@ -31,7 +31,6 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_AUDIO_NAPI, 
 
 namespace OHOS {
 namespace Media {
-const int32_t ERROR = -1;
 const int32_t ERRCODE_IOERROR = 5400103;
 const float HIGH_VOL = 1.0f;
 const float LOW_VOL = 0.0f;
@@ -69,7 +68,7 @@ RingtonePlayerImpl::~RingtonePlayerImpl()
         callback_ = nullptr;
     }
     if (audioHapticManager_ != nullptr) {
-        UnregisterSource();
+        (void)audioHapticManager_->UnregisterSource(sourceId_);
         audioHapticManager_ = nullptr;
     }
     ReleaseDataShareHelper();
@@ -272,26 +271,6 @@ ToneHapticsSettings RingtonePlayerImpl::GetHapticSettings(std::string &audioUri,
     return settings;
 }
 
-int32_t RingtonePlayerImpl::ExtractFd(const std::string& uri)
-{
-    const std::string prefix = "fd://";
-    if (uri.size() <= prefix.size() || uri.substr(0, prefix.length()) != prefix) {
-        MEDIA_LOGW("ExtractFd: Input does not start with the required prefix.");
-        return ERROR;
-    }
-
-    std::string numberPart = uri.substr(prefix.length());
-    for (char c : numberPart) {
-        if (!std::isdigit(c)) {
-            MEDIA_LOGE("ExtractFd: The part after the prefix is not all digits.");
-            return ERROR;
-        }
-    }
-
-    int32_t fd = atoi(numberPart.c_str());
-    return fd > 0 ? fd : ERROR;
-}
-
 int32_t RingtonePlayerImpl::RegisterSource(const std::string &audioUri, const std::string &hapticUri)
 {
     string newAudioUri = ChangeUri(audioUri);
@@ -299,40 +278,21 @@ int32_t RingtonePlayerImpl::RegisterSource(const std::string &audioUri, const st
 
     int32_t sourceId = audioHapticManager_->RegisterSource(newAudioUri, newHapticUri);
 
-    int32_t fd = ExtractFd(newAudioUri);
-    if (fd != ERROR) {
-        fdMap_[AUDIO_FD] = {fd, false};
-    }
-
-    fd = ExtractFd(newHapticUri);
-    if (fd != ERROR) {
-        fdMap_[HAPTIC_FD] = {fd, false};
-    }
-
-    if (sourceId == -1) {
-        UnregisterSource();
-    }
-
-    return sourceId;
-}
-
-void RingtonePlayerImpl::UnregisterSource()
-{
-    if (sourceId_ != -1) {
-        (void)audioHapticManager_->UnregisterSource(sourceId_);
-        sourceId_ = -1;
-    }
-
-    for (auto &[type, fdInfo] : fdMap_) {
-        auto &[fd, isClose] = fdInfo;
-        if (!isClose) {
-            MEDIA_LOGI("UnregisterSource: type:%{public}d close fd:%{public}d.", type, fd);
+    const std::string fdHead = "fd://";
+    if (newAudioUri.find(fdHead) != std::string::npos) {
+        int32_t fd = atoi(newAudioUri.substr(fdHead.size()).c_str());
+        if (fd > 0) {
             close(fd);
-            fd = -1;
+        }
+    }
+    if (newHapticUri.find(fdHead) != std::string::npos) {
+        int32_t fd = atoi(newHapticUri.substr(fdHead.size()).c_str());
+        if (fd > 0) {
+            close(fd);
         }
     }
 
-    fdMap_.clear();
+    return sourceId;
 }
 
 void RingtonePlayerImpl::InitPlayer(std::string &audioUri, ToneHapticsSettings &settings,
@@ -340,7 +300,10 @@ void RingtonePlayerImpl::InitPlayer(std::string &audioUri, ToneHapticsSettings &
 {
     MEDIA_LOGI("InitPlayer: ToneUri:%{public}s, hapticsUri:%{public}s, mode:%{public}d.",
         audioUri.c_str(), settings.hapticsUri.c_str(), settings.mode);
-    UnregisterSource();
+    if (sourceId_ != -1) {
+        (void)audioHapticManager_->UnregisterSource(sourceId_);
+        sourceId_ = -1;
+    }
 
     sourceId_ = RegisterSource(audioUri, settings.hapticsUri);
     CHECK_AND_RETURN_LOG(sourceId_ != -1, "Failed to register source for audio haptic manager");
@@ -357,19 +320,6 @@ void RingtonePlayerImpl::InitPlayer(std::string &audioUri, ToneHapticsSettings &
     CHECK_AND_RETURN_LOG(player_ != nullptr, "Failed to create ringtone player instance");
     player_->SetHapticsMode(ConvertToHapticsMode(settings.mode));
     int32_t result = player_->Prepare();
-
-    bool isSoundPrepare = false;
-    bool isVibratorPrepare = false;
-    player_->IsSoundAndVibratorPrepare(isSoundPrepare, isVibratorPrepare);
-    if (fdMap_.find(AUDIO_FD) != fdMap_.end() && isSoundPrepare) {
-        fdMap_[AUDIO_FD].second = true;
-        MEDIA_LOGD("CreatePlayerWithOptions: audio load fd:%{public}d.", fdMap_[AUDIO_FD].first);
-    }
-    if (fdMap_.find(HAPTIC_FD) != fdMap_.end() && isVibratorPrepare) {
-        fdMap_[HAPTIC_FD].second = true;
-        MEDIA_LOGD("CreatePlayerWithOptions: haptic load fd:%{public}d.", fdMap_[HAPTIC_FD].first);
-    }
-
     CHECK_AND_RETURN_LOG(result == MSERR_OK, "Failed to load source for audio haptic manager");
     configuredUri_ = audioUri;
     configuredHaptcisSettings_ = settings;
@@ -454,7 +404,7 @@ int32_t RingtonePlayerImpl::Release()
     callback_ = nullptr;
 
     if (audioHapticManager_ != nullptr) {
-        UnregisterSource();
+        (void)audioHapticManager_->UnregisterSource(sourceId_);
         audioHapticManager_ = nullptr;
     }
     configuredUri_ = "";

@@ -40,7 +40,6 @@ namespace Media {
 const std::string FDHEAD = "fd://";
 const std::string AUDIO_FORMAT_STR = ".ogg";
 const std::string HAPTIC_FORMAT_STR = ".json";
-const int32_t ERROR = -1;
 const int32_t MAX_STREAM_ID = 128;
 const int32_t ERRCODE_OPERATION_NOT_ALLOWED = 5400102;
 const int32_t ERRCODE_IOERROR = 5400103;
@@ -159,6 +158,12 @@ int32_t SystemTonePlayerImpl::InitPlayer(const std::string &audioUri)
     std::map<ToneHapticsFeature, std::string> hapticUriMap;
     GetCurrentHapticSettings(audioUri, hapticUriMap);
 
+    if (configuredUri_ == audioUri && IsSameHapticMaps(hapticUriMap)) {
+        MEDIA_LOGI("The right system tone uri has been registered. Return directly.");
+        systemToneState_ = SystemToneState::STATE_PREPARED;
+        return MSERR_OK;
+    }
+
     configuredUri_ = audioUri;
     hapticUriMap_.swap(hapticUriMap);
 
@@ -187,23 +192,6 @@ int32_t SystemTonePlayerImpl::CreatePlayerWithOptions(const AudioHapticPlayerOpt
     playerMap_[streamId_]->SetHapticsMode(hapticsMode_);
 
     int32_t result = playerMap_[streamId_]->Prepare();
-
-    bool isSoundPrepare = false;
-    bool isVibratorPrepare = false;
-    playerMap_[streamId_]->IsSoundAndVibratorPrepare(isSoundPrepare, isVibratorPrepare);
-    auto fdInfoItem = fdMap_.find(sourceIds_[hapticsFeature_]);
-    if (fdInfoItem != fdMap_.end()) {
-        auto &fdInfo = fdInfoItem->second;
-        if (fdInfo.find(AUDIO_FD) != fdInfo.end() && isSoundPrepare) {
-            fdInfo[AUDIO_FD].second = true;
-            MEDIA_LOGD("CreatePlayerWithOptions: audio load fd:%{public}d.", fdInfo[AUDIO_FD].first);
-        }
-        if (fdInfo.find(HAPTIC_FD) != fdInfo.end() && isVibratorPrepare) {
-            fdInfo[HAPTIC_FD].second = true;
-            MEDIA_LOGD("CreatePlayerWithOptions: haptic load fd:%{public}d.", fdInfo[HAPTIC_FD].first);
-        }
-    }
-
     CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, result,
         "Failed to prepare for system tone player: %{public}d", result);
     return MSERR_OK;
@@ -705,26 +693,6 @@ void SystemTonePlayerImpl::GetCurrentHapticSettings(const std::string &audioUri,
     }
 }
 
-int32_t SystemTonePlayerImpl::ExtractFd(const std::string& uri)
-{
-    const std::string prefix = "fd://";
-    if (uri.size() <= prefix.size() || uri.substr(0, prefix.length()) != prefix) {
-        MEDIA_LOGW("ExtractFd: Input does not start with the required prefix.");
-        return ERROR;
-    }
-
-    std::string numberPart = uri.substr(prefix.length());
-    for (char c : numberPart) {
-        if (!std::isdigit(c)) {
-            MEDIA_LOGE("ExtractFd: The part after the prefix is not all digits.");
-            return ERROR;
-        }
-    }
-
-    int32_t fd = atoi(numberPart.c_str());
-    return fd > 0 ? fd : ERROR;
-}
-
 int32_t SystemTonePlayerImpl::RegisterSource(const std::string &audioUri, const std::string &hapticUri)
 {
     string newAudioUri = ChangeUri(audioUri);
@@ -732,18 +700,18 @@ int32_t SystemTonePlayerImpl::RegisterSource(const std::string &audioUri, const 
 
     int32_t sourceId = audioHapticManager_->RegisterSource(newAudioUri, newHapticUri);
 
-    int32_t fd = ExtractFd(newAudioUri);
-    if (fd != ERROR) {
-        fdMap_[sourceId][AUDIO_FD] = {fd, false};
+    const std::string fdHead = "fd://";
+    if (newAudioUri.find(fdHead) != std::string::npos) {
+        int32_t fd = atoi(newAudioUri.substr(fdHead.size()).c_str());
+        if (fd > 0) {
+            close(fd);
+        }
     }
-
-    fd = ExtractFd(newHapticUri);
-    if (fd != ERROR) {
-        fdMap_[sourceId][HAPTIC_FD] = {fd, false};
-    }
-
-    if (sourceId == -1) {
-        UnregisterSource(sourceId);
+    if (newHapticUri.find(fdHead) != std::string::npos) {
+        int32_t fd = atoi(newHapticUri.substr(fdHead.size()).c_str());
+        if (fd > 0) {
+            close(fd);
+        }
     }
 
     return sourceId;
@@ -767,31 +735,11 @@ void SystemTonePlayerImpl::InitHapticsSourceIds()
     }
 }
 
-void SystemTonePlayerImpl::UnregisterSource(int32_t sourceId)
-{
-    auto fdInfoItem = fdMap_.find(sourceId);
-    if (fdInfoItem == fdMap_.end()) {
-        return;
-    }
-
-    for (auto &[type, fdInfo] : fdInfoItem->second) {
-        auto &[fd, isClose] = fdInfo;
-        if (!isClose) {
-            MEDIA_LOGI("UnregisterSource: type:%{public}d close fd:%{public}d.", type, fd);
-            close(fd);
-            fd = -1;
-        }
-    }
-
-    fdMap_.erase(fdInfoItem);
-}
-
 void SystemTonePlayerImpl::ReleaseHapticsSourceIds()
 {
     for (auto it = sourceIds_.begin(); it != sourceIds_.end(); ++it) {
         if (it->second != -1) {
-            audioHapticManager_->UnregisterSource(it->second);
-            UnregisterSource(it->second);
+            (void)audioHapticManager_->UnregisterSource(it->second);
             it->second = -1;
         }
     }
