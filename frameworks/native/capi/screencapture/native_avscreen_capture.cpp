@@ -891,7 +891,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ShowCursor(struct OH_AVScreenCapt
 
     struct ScreenCaptureObject *screenCaptureObj = reinterpret_cast<ScreenCaptureObject *>(capture);
     CHECK_AND_RETURN_RET_LOG(screenCaptureObj->screenCapture_ != nullptr,
-                            AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "screenCapture_ is null");
+                             AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "screenCapture_ is null");
     int32_t ret = screenCaptureObj->screenCapture_->ShowCursor(showCursor);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT,
                              "ShowCursor failed!");

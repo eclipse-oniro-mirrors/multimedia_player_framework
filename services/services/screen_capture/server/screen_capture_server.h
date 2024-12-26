@@ -273,8 +273,8 @@ class MMISystemAbilityListener : public SystemAbilityStatusChangeStub {
 public:
     explicit MMISystemAbilityListener(std::weak_ptr<ScreenCaptureServer> screenCaptureServer);
     ~MMISystemAbilityListener() = default;
-    virtual void OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId) override;
-    virtual void OnRemoveSystemAbility(int32_t systemAbilityId, const std::string &deviceId) override;
+    void OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId) override;
+    void OnRemoveSystemAbility(int32_t systemAbilityId, const std::string &deviceId) override;
 
 private:
     std::weak_ptr<ScreenCaptureServer> screenCaptureServer_;
@@ -383,7 +383,6 @@ public:
     int32_t GetAppUid();
     void SetMouseChangeListener(std::shared_ptr<MouseChangeListener> listener);
     std::shared_ptr<MouseChangeListener> GetMouseChangeListener();
-
 
 private:
     int32_t StartScreenCaptureInner(bool isPrivacyAuthorityEnabled);

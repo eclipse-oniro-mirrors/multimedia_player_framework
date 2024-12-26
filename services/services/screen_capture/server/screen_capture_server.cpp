@@ -141,7 +141,7 @@ int32_t MouseChangeListener::GetDeviceInfo(int32_t deviceId, std::shared_ptr<Inp
 {
     MEDIA_LOGI("Get device info by deviceId %{public}d", deviceId);
 
-    std::function<void(std::shared_ptr<MMI::InputDevice>)> callback = 
+    std::function<void(std::shared_ptr<MMI::InputDevice>)> callback =
         [&deviceInfo](std::shared_ptr<MMI::InputDevice> device) {
             if (device) {
                 deviceInfo->SetType(device->GetType());
