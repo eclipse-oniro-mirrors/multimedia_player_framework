@@ -14,6 +14,7 @@
  */
 
 #include "avrecorder.h"
+#include "avrecorder_extension.h"
 
 #include <mutex>
 #include <shared_mutex>
@@ -36,33 +37,6 @@ using namespace OHOS;
 using namespace OHOS::Media;
 
 class NativeRecorderCallback;
-
-/**
-Enumerates the video rotation.
-*/
-enum RotationAngle {
-    /**
-    * Video without rotation
-    */
-    ROTATION_0 = 0,
-    /**
-    * Video rotated 90 degrees
-    */
-    ROTATION_90 = 90,
-    /**
-    * Video rotated 180 degrees
-    */
-    ROTATION_180 = 180,
-    /**
-    * Video rotated 270 degrees
-    */
-    ROTATION_270 = 270
-};
-
-const float MAX_LATITUDE = 90.0f;
-const float MIN_LATITUDE = -90.0f;
-const float MAX_LONGITUDE = 180.0f;
-const float MIN_LONGITUDE = -180.0f;
 
 struct RecorderObject : public OH_AVRecorder {
     explicit RecorderObject(const std::shared_ptr<Recorder>& recorder)
@@ -125,7 +99,7 @@ public:
         OH_AVRecorder_StateChangeReason reason)
     {
         CHECK_AND_RETURN(recorder != nullptr && callback_ != nullptr);
-        callback_(recorder, static_cast<OH_AVRecorder_State>(state), reason, userData_);
+        callback_(recorder, state, reason, userData_);
     }
 
 private:
