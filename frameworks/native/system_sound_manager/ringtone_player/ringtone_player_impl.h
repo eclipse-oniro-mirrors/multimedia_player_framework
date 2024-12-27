@@ -30,11 +30,6 @@ class RingtonePlayerInterruptCallback;
 
 class RingtonePlayerImpl : public RingtonePlayer {
 public:
-    enum {
-        AUDIO_FD,
-        HAPTIC_FD,
-    };
-
     RingtonePlayerImpl(const std::shared_ptr<AbilityRuntime::Context> &context,
         SystemSoundManagerImpl &sysSoundMgr, RingtoneType type);
     ~RingtonePlayerImpl();
@@ -66,9 +61,7 @@ private:
     std::string ChangeHapticsUri(const std::string &hapticsUri);
     bool InitDataShareHelper();
     void ReleaseDataShareHelper();
-    static int32_t ExtractFd(const std::string &uri);
     int32_t RegisterSource(const std::string &audioUri, const std::string &hapticUri);
-    void UnregisterSource();
 
     float volume_ = 1.0f;
     bool loop_ = false;
@@ -84,7 +77,6 @@ private:
     RingtoneType type_ = RINGTONE_TYPE_SIM_CARD_0;
     RingtoneState ringtoneState_ = STATE_NEW;
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper_ = nullptr;
-    std::map<int32_t, std::pair<int32_t, bool>> fdMap_;
 
     std::mutex playerMutex_;
 };
