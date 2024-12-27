@@ -31,21 +31,21 @@ namespace OHOS {
 namespace Media {
 const std::int32_t MAX_PLAYER_NUM = 128;
 const int32_t ERROR = -1;
-const std::string FDHAED = "fd://";
+const std::string FDHEAD = "fd://";
 
 std::shared_ptr<AudioHapticManager> AudioHapticManagerFactory::audioHapticManager_ = nullptr;
 std::mutex AudioHapticManagerFactory::audioHapticManagerMutex_;
 
 static int32_t ExtractFd(const std::string& uri)
 {
-    if (uri.size() <= FDHAED.size() || uri.substr(0, FDHAED.length()) != FDHAED) {
+    if (uri.size() <= FDHEAD.size() || uri.substr(0, FDHEAD.length()) != FDHEAD) {
         return ERROR;
     }
 
-    std::string numberPart = uri.substr(FDHAED.length());
+    std::string numberPart = uri.substr(FDHEAD.length());
     for (char c : numberPart) {
         if (!std::isdigit(c)) {
-            MEDIA_LOGE("ExtractFd: The part after the FDHAED is not all digits.");
+            MEDIA_LOGE("ExtractFd: The part after the FDHEAD is not all digits.");
             return ERROR;
         }
     }
@@ -57,7 +57,7 @@ static int32_t ExtractFd(const std::string& uri)
 static std::string DupFdFromUri(const std::string &uri)
 {
     MEDIA_LOGI("DupFdFromUri uri: %{public}s", uri.c_str());
-    if (uri.find(FDHAED) == std::string::npos) {
+    if (uri.find(FDHEAD) == std::string::npos) {
         return uri;
     }
 
@@ -72,7 +72,7 @@ static std::string DupFdFromUri(const std::string &uri)
         MEDIA_LOGE("DupFdFromUri failed. uri: %{public}s", uri.c_str());
         return "";
     }
-    return FDHAED + std::to_string(dupFd);
+    return FDHEAD + std::to_string(dupFd);
 }
 
 std::shared_ptr<AudioHapticManager> AudioHapticManagerFactory::CreateAudioHapticManager()
