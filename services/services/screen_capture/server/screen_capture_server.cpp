@@ -160,19 +160,15 @@ void MouseChangeListener::OnDeviceAdded(int32_t deviceId, const std::string &typ
     MEDIA_LOGI("OnDeviceAdded start.");
     std::shared_ptr<InputDeviceInfo> deviceInfo = std::make_shared<InputDeviceInfo>();
     int32_t ret = GetDeviceInfo(deviceId, deviceInfo);
-    if (ret != MSERR_OK) {
-        MEDIA_LOGE("Get deviceInfo(%{public}d) failed", deviceId);
-        return;
-    }
+    CHECK_AND_RETURN_LOG(ret == MSERR_OK, "Get deviceInfo(%{public}d) failed", deviceId);
     MEDIA_LOGI("Add device type: %{public}d, name:%{public}s", deviceInfo->GetType(), deviceInfo->GetName().c_str());
 
     if (deviceInfo->GetType() == MOUSE_DEVICE) {
         MEDIA_LOGI("Add device is mouse, type (%{public}d)", deviceInfo->GetType());
         auto scrServer = screenCaptureServer_.lock();
+        CHECK_AND_RETURN_LOG(scrServer != nullptr, "screenCaptureServer is nullptr");
         ret = scrServer->ShowCursorInner();
-        if (ret != MSERR_OK) {
-            MEDIA_LOGE("OnDeviceAdded ShowCursorInner failed");
-        }
+        CHECK_AND_RETURN_LOG(ret == MSERR_OK, "OnDeviceAdded, showCursorInner failed");
     }
     MEDIA_LOGI("OnDeviceAdded end.");
 }
@@ -181,23 +177,10 @@ void MouseChangeListener::OnDeviceRemoved(int32_t deviceId, const std::string &t
 {
     MEDIA_LOGI("OnDeviceRemoved start, deviceId: %{public}d, type:%{public}s", deviceId, type.c_str());
     std::shared_ptr<InputDeviceInfo> deviceInfo = std::make_shared<InputDeviceInfo>();
-    int32_t ret = GetDeviceInfo(deviceId, deviceInfo);
-    if (ret != MSERR_OK) {
-        MEDIA_LOGE("Get deviceInfo(%{public}d) failed", deviceId);
-        return;
-    }
-    MEDIA_LOGI("Remove device type: %{public}d, name:%{public}s",
-        deviceInfo->GetType(), deviceInfo->GetName().c_str());
-    
-    if (deviceInfo->GetType() != MOUSE_DEVICE) {
-        MEDIA_LOGI("Remove device is not mouse");
-        return;
-    }
     auto scrServer = screenCaptureServer_.lock();
-    ret = scrServer->ShowCursorInner();
-    if (ret != MSERR_OK) {
-        MEDIA_LOGE("OnDeviceRemoved ShowCursorInner failed");
-    }
+    CHECK_AND_RETURN_LOG(scrServer != nullptr, "screenCaptureServer is nullptr");
+    int32_t ret = scrServer->ShowCursorInner();
+    CHECK_AND_RETURN_LOG(ret == MSERR_OK, "OnDeviceRemoved ShowCursorInner failed");
     MEDIA_LOGI("OnDeviceRemoved end.");
 }
 
@@ -1295,21 +1278,13 @@ bool ScreenCaptureServer::RegisterMMISystemAbilityListener()
         return true;
     }
     auto abilityManager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    if (abilityManager == nullptr) {
-        MEDIA_LOGE("RegisterMMISystemAbilityListener abilityManager is nullptr");
-        return false;
-    }
+    CHECK_AND_RETURN_RET_LOG(abilityManager != nullptr, false, "RegisterMMISystemAbilityListener abilityManager is nullptr.");
     std::weak_ptr<ScreenCaptureServer> screenCaptureServer(shared_from_this());
     sptr<ISystemAbilityStatusChange> listener(new (std::nothrow) MMISystemAbilityListener(screenCaptureServer));
-    if (listener == nullptr) {
-        MEDIA_LOGE("create listener failed.");
-        return false;
-    }
+    CHECK_AND_RETURN_RET_LOG(listener != nullptr, false, "create listener failed.");
     int32_t ret = abilityManager->SubscribeSystemAbility(MULTIMODAL_INPUT_SERVICE_ID, listener);
-    if (ret != ERR_OK) {
-        MEDIA_LOGE("failed to subscribe systemAbility, ret:%{public}d", ret);
-        return false;
-    }
+    CHECK_AND_RETURN_RET_LOG(ret == ERR_OK, false, "failed to subscribe systemAbility, ret:%{public}d", ret);
+
     mmiListener_ = listener;
     MEDIA_LOGI("RegisterMMISystemAbilityListener end.");
     return true;
@@ -1323,16 +1298,10 @@ bool ScreenCaptureServer::UnRegisterMMISystemAbilityListener()
         return true;
     }
     auto abilityManager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    if (abilityManager == nullptr) {
-        MEDIA_LOGE("UnRegisterMMISystemAbilityListener abilityManager is nullptr");
-        return false;
-    }
+    CHECK_AND_RETURN_RET_LOG(abilityManager != nullptr, false, "UnRegisterMMISystemAbilityListener abilityManager is nullptr.");
     int32_t ret = abilityManager->UnSubscribeSystemAbility(MULTIMODAL_INPUT_SERVICE_ID, mmiListener_);
     mmiListener_ = nullptr;
-    if (ret != ERR_OK) {
-        MEDIA_LOGE("failed t subscribe systemAbility, ret:%{public}d", ret);
-        return false;
-    }
+    CHECK_AND_RETURN_RET_LOG(ret == ERR_OK, false, "failed to unsubscribe systemAbility, ret:%{public}d", ret);
     MEDIA_LOGI("UnRegisterMMISystemAbilityListener end.");
     return true;
 }
@@ -1347,26 +1316,25 @@ void MMISystemAbilityListener::OnAddSystemAbility(int32_t systemAbilityId, const
 {
     MEDIA_LOGI("OnAddSystemAbility start.");
     auto scrServer = screenCaptureServer_.lock();
+    CHECK_AND_RETURN_LOG(scrServer != nullptr, "screenCaptureServer is nullptr");
+
+    int32_t ret = MMI::InputManager::GetInstance()->UnregisterDevListener("change",
+        scrServer->GetMouseChangeListener());
+    scrServer->SetMouseChangeListener(nullptr);
+    CHECK_AND_RETURN_LOG(ret == MSERR_OK, "OnAddSystemAbility UnRegisterMMISystemAbilityListener failed");
+
     std::shared_ptr<MouseChangeListener> listener = std::make_shared<MouseChangeListener>(scrServer);
+    ret = MMI::InputManager::GetInstance()->RegisterDevListener("change", listener);
+    CHECK_AND_RETURN_LOG(ret == MSERR_OK, "OnAddSystemAbility RegisterDevListener failed");
     scrServer->SetMouseChangeListener(listener);
-    int32_t ret = MMI::InputManager::GetInstance()->RegisterDevListener("change", listener);
-    if (ret != MSERR_OK) {
-        MEDIA_LOGE("OnAddSystemAbility RegisterDevListener falied");
-    }
+
     scrServer->ShowCursorInner();
     MEDIA_LOGI("OnAddSystemAbility end.");
 }
 
 void MMISystemAbilityListener::OnRemoveSystemAbility(int32_t systemAbilityId, const std::string &deviceId)
 {
-    auto scrServer = screenCaptureServer_.lock();
-    int32_t ret = MMI::InputManager::GetInstance()->UnregisterDevListener("change",
-        scrServer->GetMouseChangeListener());
-    scrServer->SetMouseChangeListener(nullptr);
-    if (ret != MSERR_OK) {
-        MEDIA_LOGE("OnRemoveSystemAbility UnregisterDevListener falied");
-    }
-    MEDIA_LOGI("OnRemoveSystemAbility end.");
+    MEDIA_LOGI("OnRemoveSystemAbility success.");
 }
 
 int32_t ScreenCaptureServer::RegisterMouseChangeListener(std::string type)
