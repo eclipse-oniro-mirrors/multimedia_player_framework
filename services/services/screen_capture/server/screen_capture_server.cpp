@@ -2150,6 +2150,8 @@ int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string &name, sptr<O
         virScrOption.missionIds_ = missionIds_;
     }
     screenId_ = ScreenManager::GetInstance().CreateVirtualScreen(virScrOption);
+    CHECK_AND_RETURN_RET_LOG(screenId_ >= 0, MSERR_UNKNOWN, "CreateVirtualScreen failed, invalid screenId");
+
     if (!showCursor_) {
         MEDIA_LOGI("CreateVirtualScreen without cursor");
         int32_t ret = ShowCursorInner();
@@ -2157,7 +2159,6 @@ int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string &name, sptr<O
             MEDIA_LOGE("CreateVirtualScreen SetVirtualScreenBlackList failed");
         }
     }
-    CHECK_AND_RETURN_RET_LOG(screenId_ >= 0, MSERR_UNKNOWN, "CreateVirtualScreen failed, invalid screenId");
     MEDIA_LOGI("CreateVirtualScreen success, screenId: %{public}" PRIu64, screenId_);
     return PrepareVirtualScreenMirror();
 }
@@ -2757,8 +2758,7 @@ int32_t ScreenCaptureServer::ShowCursorInner()
         uint64_t surfaceId = {};
         int32_t ret = MMI::InputManager::GetInstance()->GetCursorSurfaceId(surfaceId);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "GetCursorSurfaceId failed");
-        std::string surfaceIdStr = std::to_string(surfaceId);
-        MEDIA_LOGI("GetCursorSurfaceId success, surfaceId: %{public}s", surfaceIdStr.c_str());
+        MEDIA_LOGI("GetCursorSurfaceId success, surfaceId: %{public}s", std::to_string(surfaceId).c_str());
         surfaceIdList_ = {};
         surfaceIdList_.push_back(surfaceId);
     } else {
