@@ -558,6 +558,7 @@ napi_value SoundPoolNapi::JsRelease(napi_env env, napi_callback_info info)
     asyncCtx->napi = SoundPoolNapi::GetJsInstanceAndArgs(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(asyncCtx->napi != nullptr, result, "failed to GetJsInstanceAndArgs");
     asyncCtx->soundPool_ = asyncCtx->napi->soundPool_;
+    asyncCtx->callbackNapi_ = asyncCtx->napi->callbackNapi_;
 
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[PARAM0]);
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
@@ -570,7 +571,8 @@ napi_value SoundPoolNapi::JsRelease(napi_env env, napi_callback_info info)
             CHECK_AND_RETURN_LOG(asyncCtx->soundPool_ != nullptr, "soundPool_ is nullptr!");
             int32_t ret = asyncCtx->soundPool_->Release();
             CHECK_AND_RETURN_LOG(ret == MSERR_OK, "Release failed!");
-            asyncCtx->napi->CancelCallback();
+            CHECK_AND_RETURN_LOG(asyncCtx->callbackNapi_ != nullptr, "release callbackNapi_ is nullptr!");
+            asyncCtx->napi->CancelCallback(asyncCtx->callbackNapi_);
             MEDIA_LOGI("The js thread of JsRelease finishes execution and returns");
         }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
         NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
@@ -837,10 +839,10 @@ void SoundPoolNapi::CancelCallbackReference(const std::string &callbackName)
     eventCbMap_[callbackName] = nullptr;
 }
 
-void SoundPoolNapi::CancelCallback()
+void SoundPoolNapi::CancelCallback(std::shared_ptr<ISoundPoolCallback> callback)
 {
-    CHECK_AND_RETURN_LOG(callbackNapi_ != nullptr, "soundpoolCb_ is nullptr!");
-    auto napiCb = std::static_pointer_cast<SoundPoolCallBackNapi>(callbackNapi_);
+    CHECK_AND_RETURN_LOG(callback != nullptr, "soundpoolCb_ is nullptr!");
+    auto napiCb = std::static_pointer_cast<SoundPoolCallBackNapi>(callback);
     napiCb->ClearCallbackReference();
 }
 
