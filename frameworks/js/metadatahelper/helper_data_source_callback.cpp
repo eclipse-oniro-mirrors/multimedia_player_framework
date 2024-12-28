@@ -80,44 +80,34 @@ int32_t HelperDataSourceCallback::ReadAt(const std::shared_ptr<AVSharedMemory> &
         cb_ = nullptr;
     };
 
-    uv_loop_s *loop = nullptr;
-    napi_get_uv_event_loop(env_, &loop);
-    CHECK_AND_RETURN_RET_LOG(loop != nullptr, 0, "Failed to get uv event loop");
-    uv_work_t *work = new(std::nothrow) uv_work_t;
     HelperDataSourceJsCallbackWraper *cbWrap = new(std::nothrow) HelperDataSourceJsCallbackWraper();
     ON_SCOPE_EXIT(1) {
-        if (work != nullptr) {
-            delete work;
-        }
         if (cbWrap != nullptr) {
             delete cbWrap;
         }
     };
-    CHECK_AND_RETURN_RET_LOG(work != nullptr, 0, "Failed to new uv_work_t");
     CHECK_AND_RETURN_RET_LOG(cbWrap != nullptr, 0, "Failed to new HelperDataSourceJsCallbackWraper");
     cbWrap->cb_ = cb_;
-    work->data = reinterpret_cast<void *>(cbWrap);
-    // async callback, jsWork and jsWork->data should be heap object.
-    int ret = UvWork(loop, work);
-    CHECK_AND_RETURN_RET_LOG(ret == 0, SOURCE_ERROR_IO, "Failed to execute uv queue work");
+
+    auto ret = UvWork(cbWrap);
+    CHECK_AND_RETURN_RET_LOG(ret == napi_status::napi_ok, SOURCE_ERROR_IO,
+                             "Failed to SendEvent, ret = %{public}d", ret);
     CANCEL_SCOPE_EXIT_GUARD(1);
     cb_->WaitResult();
     MEDIA_LOGD("HelperDataSourceCallback ReadAt out");
     return cb_->readSize_;
 }
 
-int32_t HelperDataSourceCallback::UvWork(uv_loop_s *loop, uv_work_t *work)
+napi_status HelperDataSourceCallback::UvWork(HelperDataSourceJsCallbackWraper *cbWrap)
 {
     MEDIA_LOGD("begin UvWork");
-    return uv_queue_work_with_qos(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
+    auto task = [cbWrap]() {
         // Js Thread
-        CHECK_AND_RETURN_LOG(work != nullptr && work->data != nullptr, "work is nullptr");
-        HelperDataSourceJsCallbackWraper *wrap = reinterpret_cast<HelperDataSourceJsCallbackWraper *>(work->data);
-        std::shared_ptr<HelperDataSourceJsCallback> event = wrap->cb_.lock();
-        CHECK_AND_RETURN_LOG(event != nullptr, "HelperDataSourceJsCallback is nullptr");
-        MEDIA_LOGD("length is %{public}u", event->length_);
+        CHECK_AND_RETURN_LOG(cbWrap != nullptr, "MediaDataSourceJsCallbackWraper is nullptr");
+        std::shared_ptr<HelperDataSourceJsCallback> event = cbWrap->cb_.lock();
         do {
-            CHECK_AND_BREAK(status != UV_ECANCELED);
+            CHECK_AND_BREAK_LOG(event != nullptr, "HelperDataSourceJsCallback is nullptr");
+            MEDIA_LOGD("length is %{public}u", event->length_);
             std::shared_ptr<AutoRef> ref = event->callback_.lock();
             CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", event->callbackName_.c_str());
 
@@ -159,9 +149,9 @@ int32_t HelperDataSourceCallback::UvWork(uv_loop_s *loop, uv_work_t *work)
             event->setResult_ = true;
             event->cond_.notify_all();
         } while (0);
-        delete wrap;
-        delete work;
-    }, uv_qos_user_initiated);
+        delete cbWrap;
+    };
+    return napi_send_event(env_, task, napi_eprio_immediate);
 }
 
 int32_t HelperDataSourceCallback::ReadAt(int64_t pos, uint32_t length, const std::shared_ptr<AVSharedMemory> &mem)

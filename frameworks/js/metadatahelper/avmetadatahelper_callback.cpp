@@ -100,36 +100,17 @@ public:
 
     static void CompleteCallback(napi_env env, NapiCallback::Base *jsCb)
     {
-        ON_SCOPE_EXIT(0) {
+        CHECK_AND_RETURN(jsCb != nullptr);
+        napi_status ret = napi_send_event(env, [jsCb] () {
+            CHECK_AND_RETURN_LOG(jsCb != nullptr, "jsCb is nullptr");
+            MEDIA_LOGI("JsCallBack %{public}s start", jsCb->callbackName.c_str());
+            jsCb->UvWork();
             delete jsCb;
-        };
-
-        uv_loop_s *loop = nullptr;
-        napi_get_uv_event_loop(env, &loop);
-        CHECK_AND_RETURN_LOG(loop != nullptr, "Fail to napi_get_uv_event_loop");
-
-        uv_work_t *work = new(std::nothrow) uv_work_t;
-        CHECK_AND_RETURN_LOG(work != nullptr, "Fail to new uv_work_t");
-
-        work->data = reinterpret_cast<void *>(jsCb);
-        // async callback, jsWork and jsWork->data should be heap object.
-        int ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
-            CHECK_AND_RETURN_LOG(work != nullptr, "Work thread is nullptr");
-            (void)status;
-            NapiCallback::Base *cb = reinterpret_cast<NapiCallback::Base *>(work->data);
-            if (cb != nullptr) {
-                MEDIA_LOGI("JsCallBack %{public}s, uv_queue_work start", cb->callbackName.c_str());
-                cb->UvWork();
-                delete cb;
-            }
-            delete work;
-        });
-        if (ret != 0) {
-            MEDIA_LOGE("Failed to execute libuv work queue");
+        }, napi_eprio_high);
+        if (ret != napi_ok) {
+            MEDIA_LOGE("Failed to execute libuv work queue, ret = %{public}d", ret);
             delete jsCb;
-            delete work;
         }
-        CANCEL_SCOPE_EXIT_GUARD(0);
     }
 };
 

@@ -133,38 +133,11 @@ void AVTransCoderCallback::OnInfo(int32_t type, int32_t extra)
 
 void AVTransCoderCallback::OnJsCompleteCallBack(AVTransCoderJsCallback *jsCb) const
 {
-    ON_SCOPE_EXIT(0) {
-        delete jsCb;
-    };
-
-    uv_loop_s *loop = nullptr;
-    napi_get_uv_event_loop(env_, &loop);
-    CHECK_AND_RETURN_LOG(loop != nullptr, "Fail to get uv event loop");
-
-    uv_work_t *work = new(std::nothrow) uv_work_t;
-    CHECK_AND_RETURN_LOG(work != nullptr, "fail to new uv_work_t");
-    ON_SCOPE_EXIT(1) {
-        delete work;
-    };
-
-    work->data = reinterpret_cast<void *>(jsCb);
-    int ret = QueueCompleteWork(loop, work);
-    CHECK_AND_RETURN_LOG(ret == 0, "fail to uv_queue_work_with_qos task");
-
-    CANCEL_SCOPE_EXIT_GUARD(0);
-    CANCEL_SCOPE_EXIT_GUARD(1);
-}
-
-int32_t AVTransCoderCallback::QueueCompleteWork(uv_loop_s *loop, uv_work_t *work) const
-{
-    int ret = uv_queue_work_with_qos(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
-        // Js Thread
-        CHECK_AND_RETURN_LOG(work != nullptr, "work is nullptr");
-        AVTransCoderJsCallback *event = reinterpret_cast<AVTransCoderJsCallback *>(work->data);
+    auto task = [event = jsCb]() {
+        CHECK_AND_RETURN_LOG(event != nullptr, "jsCb is nullptr");
         std::string request = event->callbackName;
         MEDIA_LOGI("uv_queue_work_with_qos start, state changes to %{public}s", event->state.c_str());
         do {
-            CHECK_AND_BREAK_LOG(status != UV_ECANCELED, "%{public}s canceled", request.c_str());
             std::shared_ptr<AutoRef> ref = event->autoRef.lock();
             CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
 
@@ -188,49 +161,21 @@ int32_t AVTransCoderCallback::QueueCompleteWork(uv_loop_s *loop, uv_work_t *work
             CHECK_AND_BREAK_LOG(nstatus == napi_ok, "%{public}s fail to napi call function", request.c_str());
         } while (0);
         delete event;
-        delete work;
-    }, uv_qos_user_initiated);
-    return ret;
+    };
+
+    auto ret = napi_send_event(env_, task, napi_eprio_immediate);
+    if (ret != napi_status::napi_ok) {
+        MEDIA_LOGE("Failed to SendEvent, ret = %{public}d", ret);
+        delete jsCb;
+    }
 }
 
 void AVTransCoderCallback::OnJsProgressUpdateCallback(AVTransCoderJsCallback *jsCb) const
 {
-    ON_SCOPE_EXIT(0) {
-        delete jsCb;
-    };
-
-    uv_loop_s *loop = nullptr;
-    napi_get_uv_event_loop(env_, &loop);
-    CHECK_AND_RETURN_LOG(loop != nullptr, "Fail to get uv event loop");
-
-    uv_work_t *work = new(std::nothrow) uv_work_t;
-    CHECK_AND_RETURN_LOG(work != nullptr, "fail to new uv_work_t");
-    ON_SCOPE_EXIT(1) {
-        delete work;
-    };
-
-    work->data = reinterpret_cast<void *>(jsCb);
-    int ret = QueueProgressUpdateWork(loop, work);
-    CHECK_AND_RETURN_LOG(ret == 0, "fail to uv_queue_work_with_qos task");
-
-    CANCEL_SCOPE_EXIT_GUARD(0);
-    CANCEL_SCOPE_EXIT_GUARD(1);
-}
-
-int32_t AVTransCoderCallback::QueueProgressUpdateWork(uv_loop_s *loop, uv_work_t *work) const
-{
-    int ret = uv_queue_work_with_qos(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
-        // Js Thread
-        CHECK_AND_RETURN_LOG(work != nullptr, "work is nullptr");
-        if (work->data == nullptr) {
-            delete work;
-            MEDIA_LOGE("workdata is nullptr");
-            return;
-        }
-        AVTransCoderJsCallback *event = reinterpret_cast<AVTransCoderJsCallback *>(work->data);
+    auto task = [event = jsCb]() {
+        CHECK_AND_RETURN_LOG(event != nullptr, "jsCb is nullptr");
         std::string request = event->callbackName;
         do {
-            CHECK_AND_BREAK_LOG(status != UV_ECANCELED, "%{public}s canceled", request.c_str());
             std::shared_ptr<AutoRef> ref = event->autoRef.lock();
             CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
 
@@ -257,9 +202,13 @@ int32_t AVTransCoderCallback::QueueProgressUpdateWork(uv_loop_s *loop, uv_work_t
             CHECK_AND_BREAK_LOG(nstatus == napi_ok, "%{public}s fail to napi call function", request.c_str());
         } while (0);
         delete event;
-        delete work;
-    }, uv_qos_user_initiated);
-    return ret;
+    };
+
+    auto ret = napi_send_event(env_, task, napi_eprio_immediate);
+    if (ret != napi_status::napi_ok) {
+        MEDIA_LOGE("Failed to SendEvent, ret = %{public}d", ret);
+        delete jsCb;
+    }
 }
 
 std::string AVTransCoderCallback::GetState()
@@ -270,45 +219,12 @@ std::string AVTransCoderCallback::GetState()
 
 void AVTransCoderCallback::OnJsErrorCallBack(AVTransCoderJsCallback *jsCb) const
 {
-    ON_SCOPE_EXIT(0) {
-        delete jsCb;
-    };
-
-    uv_loop_s *loop = nullptr;
-    napi_get_uv_event_loop(env_, &loop);
-    CHECK_AND_RETURN_LOG(loop != nullptr, "Fail to get uv event loop");
-
-    uv_work_t *work = new(std::nothrow) uv_work_t;
-    CHECK_AND_RETURN_LOG(work != nullptr, "fail to new uv_work_t");
-    ON_SCOPE_EXIT(1) {
-        delete work;
-    };
-
-    work->data = reinterpret_cast<void *>(jsCb);
-    // async callback, jsWork and jsWork->data should be heap object.
-    int ret = QueueErrorWork(loop, work);
-    CHECK_AND_RETURN_LOG(ret == 0, "fail to uv_queue_work_with_qos task");
-
-    CANCEL_SCOPE_EXIT_GUARD(0);
-    CANCEL_SCOPE_EXIT_GUARD(1);
-}
-
-int32_t AVTransCoderCallback::QueueErrorWork(uv_loop_s *loop, uv_work_t *work) const
-{
-    int ret = uv_queue_work_with_qos(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
-        // Js Thread
-        CHECK_AND_RETURN_LOG(work != nullptr, "work is nullptr");
-        if (work->data == nullptr) {
-            delete work;
-            MEDIA_LOGE("workdata is nullptr");
-            return;
-        }
-        AVTransCoderJsCallback *event = reinterpret_cast<AVTransCoderJsCallback *>(work->data);
+    auto task = [event = jsCb]() {
+        CHECK_AND_RETURN_LOG(event != nullptr, "jsCb is nullptr");
         std::string request = event->callbackName;
         MEDIA_LOGI("uv_queue_work_with_qos start, errorcode:%{public}d , errormessage:%{public}s:",
             event->errorCode, event->errorMsg.c_str());
         do {
-            CHECK_AND_BREAK_LOG(status != UV_ECANCELED, "%{public}s canceled", request.c_str());
             std::shared_ptr<AutoRef> ref = event->autoRef.lock();
             CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
 
@@ -341,9 +257,13 @@ int32_t AVTransCoderCallback::QueueErrorWork(uv_loop_s *loop, uv_work_t *work) c
             CHECK_AND_BREAK_LOG(nstatus == napi_ok, "%{public}s fail to napi call function", request.c_str());
         } while (0);
         delete event;
-        delete work;
-    }, uv_qos_user_initiated);
-    return ret;
+    };
+
+    auto ret = napi_send_event(env_, task, napi_eprio_immediate);
+    if (ret != napi_status::napi_ok) {
+        MEDIA_LOGE("Failed to SendEvent, ret = %{public}d", ret);
+        delete jsCb;
+    }
 }
 } // namespace Media
 } // namespace OHOS
