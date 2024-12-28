@@ -1278,7 +1278,8 @@ bool ScreenCaptureServer::RegisterMMISystemAbilityListener()
         return true;
     }
     auto abilityManager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    CHECK_AND_RETURN_RET_LOG(abilityManager != nullptr, false, "RegisterMMISystemAbilityListener abilityManager is nullptr.");
+    CHECK_AND_RETURN_RET_LOG(abilityManager != nullptr, false,
+        "RegisterMMISystemAbilityListener abilityManager is nullptr.");
     std::weak_ptr<ScreenCaptureServer> screenCaptureServer(shared_from_this());
     sptr<ISystemAbilityStatusChange> listener(new (std::nothrow) MMISystemAbilityListener(screenCaptureServer));
     CHECK_AND_RETURN_RET_LOG(listener != nullptr, false, "create listener failed.");
@@ -1298,7 +1299,8 @@ bool ScreenCaptureServer::UnRegisterMMISystemAbilityListener()
         return true;
     }
     auto abilityManager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    CHECK_AND_RETURN_RET_LOG(abilityManager != nullptr, false, "UnRegisterMMISystemAbilityListener abilityManager is nullptr.");
+    CHECK_AND_RETURN_RET_LOG(abilityManager != nullptr, false,
+        "UnRegisterMMISystemAbilityListener abilityManager is nullptr.");
     int32_t ret = abilityManager->UnSubscribeSystemAbility(MULTIMODAL_INPUT_SERVICE_ID, mmiListener_);
     mmiListener_ = nullptr;
     CHECK_AND_RETURN_RET_LOG(ret == ERR_OK, false, "failed to unsubscribe systemAbility, ret:%{public}d", ret);
