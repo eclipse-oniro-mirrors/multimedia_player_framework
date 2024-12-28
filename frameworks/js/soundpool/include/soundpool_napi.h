@@ -143,7 +143,7 @@ private:
     void ErrorCallback(int32_t errCode, const std::string &operate, const std::string &add = "");
     void SetCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref);
     void CancelCallbackReference(const std::string &callbackName);
-    void CancelCallback();
+    void CancelCallback(std::shared_ptr<ISoundPoolCallback> callback);
 
     static thread_local napi_ref constructor_;
     static int32_t maxStreams;
@@ -162,6 +162,7 @@ struct SoundPoolAsyncContext : public MediaAsyncContext {
         const std::string &param, const std::string &add = "");
     SoundPoolNapi *napi = nullptr;
     std::shared_ptr<ISoundPool> soundPool_;
+    std::shared_ptr<ISoundPoolCallback> callbackNapi_;
     std::string url_ = "";
     int32_t fd_ = 0;
     int64_t offset_ = 0;
