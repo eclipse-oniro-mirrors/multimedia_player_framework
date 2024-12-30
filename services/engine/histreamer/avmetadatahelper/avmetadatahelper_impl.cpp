@@ -40,6 +40,10 @@ AVMetadataHelperImpl::AVMetadataHelperImpl()
 {
     MEDIA_LOGD("Constructor, instance: 0x%{public}06" PRIXPTR "", FAKE_POINTER(this));
     groupId_ = std::string("AVMeta_") + std::to_string(OHOS::Media::Pipeline::Pipeline::GetNextPipelineId());
+    interruptMonitor_ = std::make_shared<InterruptMonitor>();
+    if (interruptMonitor_ == nullptr) {
+        MEDIA_LOGE("fail to allocate memory for InterruptMonitor");
+    }
 }
 
 AVMetadataHelperImpl::~AVMetadataHelperImpl()
@@ -87,10 +91,12 @@ Status AVMetadataHelperImpl::SetSourceInternel(const std::string &uri, bool isFo
     Reset();
     mediaDemuxer_ = std::make_shared<MediaDemuxer>();
     mediaDemuxer_->SetEnableOnlineFdCache(false);
-    mediaDemuxer_->SetInterruptState(isInterruptNeeded_.load());
     mediaDemuxer_->SetPlayerId(groupId_);
     CHECK_AND_RETURN_RET_LOG(
         mediaDemuxer_ != nullptr, Status::ERROR_INVALID_DATA, "SetSourceInternel demuxer is nullptr");
+    if (interruptMonitor_) {
+        interruptMonitor_->RegisterListener(mediaDemuxer_);
+    }
     Status ret = mediaDemuxer_->SetDataSource(std::make_shared<MediaSource>(uri));
     CHECK_AND_RETURN_RET_LOG(ret == Status::OK, ret,
         "0x%{public}06" PRIXPTR " SetSourceInternel demuxer failed to call SetDataSource", FAKE_POINTER(this));
@@ -118,6 +124,9 @@ Status AVMetadataHelperImpl::SetSourceInternel(const std::shared_ptr<IMediaDataS
     mediaDemuxer_->SetPlayerId(groupId_);
     CHECK_AND_RETURN_RET_LOG(
         mediaDemuxer_ != nullptr, Status::ERROR_INVALID_DATA, "SetSourceInternel demuxer is nullptr");
+    if (interruptMonitor_) {
+        interruptMonitor_->RegisterListener(mediaDemuxer_);
+    }
     Status ret = mediaDemuxer_->SetDataSource(std::make_shared<MediaSource>(dataSrc));
     CHECK_AND_RETURN_RET_LOG(ret == Status::OK, ret, "Failed to call SetDataSource");
     return Status::OK;
@@ -243,6 +252,9 @@ void AVMetadataHelperImpl::Destroy()
     metadataCollector_ = nullptr;
     thumbnailGenerator_ = nullptr;
     PipeLineThreadPool::GetInstance().DestroyThread(groupId_);
+    if (interruptMonitor_) {
+        interruptMonitor_->DeregisterListener(mediaDemuxer_);
+    }
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Finish Destroy.", FAKE_POINTER(this));
 }
 
@@ -274,8 +286,7 @@ void AVMetadataHelperImpl::SetInterruptState(bool isInterruptNeeded)
 {
     MEDIA_LOGI("Metadata set interrupt state %{public}d", isInterruptNeeded);
     isInterruptNeeded_ = isInterruptNeeded;
-    CHECK_AND_RETURN(mediaDemuxer_ != nullptr);
-    mediaDemuxer_->SetInterruptState(isInterruptNeeded);
+    interruptMonitor_->SetInterruptState(isInterruptNeeded);
 }
 }  // namespace Media
 }  // namespace OHOS

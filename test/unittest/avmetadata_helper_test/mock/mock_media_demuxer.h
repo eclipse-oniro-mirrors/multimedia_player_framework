@@ -74,7 +74,7 @@ public:
     MOCK_METHOD(void, SetEventReceiver, (const std::shared_ptr<Pipeline::EventReceiver> &receiver), (override));
     MOCK_METHOD(bool, GetDuration, (int64_t& durationMs), (override));
     MOCK_METHOD(void, SetPlayerId, (const std::string &playerId), (override));
-    MOCK_METHOD(void, SetInterruptState, (bool isInterruptNeeded), (override));
+    MOCK_METHOD(void, OnInterrupted, (bool isInterruptNeeded), (override));
     MOCK_METHOD(void, SetDumpInfo, (bool isDump, uint64_t instanceId), (override));
  
     MOCK_METHOD(Status, OptimizeDecodeSlow, (bool isDecodeOptimizationEnabled), (override));
