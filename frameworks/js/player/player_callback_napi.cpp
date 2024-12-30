@@ -275,29 +275,11 @@ void PlayerCallbackNapi::OnAudioInterruptCb(const Format &infoBody) const
 
 void PlayerCallbackNapi::OnJsCallBack(PlayerJsCallback *jsCb) const
 {
-    uv_loop_s *loop = nullptr;
-    napi_get_uv_event_loop(env_, &loop);
-    if (loop == nullptr) {
-        delete jsCb;
-        return;
-    }
-
-    uv_work_t *work = new(std::nothrow) uv_work_t;
-    if (work == nullptr) {
-        MEDIA_LOGE("No memory");
-        delete jsCb;
-        return;
-    }
-    work->data = reinterpret_cast<void *>(jsCb);
-
-    int ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
-        // Js Thread
-        CHECK_AND_RETURN_LOG(work != nullptr, "work is nullptr");
-        PlayerJsCallback *event = reinterpret_cast<PlayerJsCallback *>(work->data);
+    auto task = [event = jsCb]() {
+                // Js Thread
         std::string request = event->callbackName;
         MEDIA_LOGD("JsCallBack %{public}s, uv_queue_work start", request.c_str());
         do {
-            CHECK_AND_BREAK_LOG(status != UV_ECANCELED, "%{public}s canceled", request.c_str());
             std::shared_ptr<AutoRef> ref = event->callback.lock();
             CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
 
@@ -319,12 +301,12 @@ void PlayerCallbackNapi::OnJsCallBack(PlayerJsCallback *jsCb) const
             CHECK_AND_BREAK_LOG(nstatus == napi_ok, "%{public}s fail to napi call function", request.c_str());
         } while (0);
         delete event;
-        delete work;
-    });
-    if (ret != 0) {
-        MEDIA_LOGE("Failed to execute libuv work queue");
+    };
+
+    auto ret = napi_send_event(env_, task, napi_eprio_high);
+    if (ret != napi_status::napi_ok) {
+        MEDIA_LOGE("Failed to SendEvent, ret = %{public}d", ret);
         delete jsCb;
-        delete work;
     }
 }
 
@@ -334,22 +316,11 @@ void PlayerCallbackNapi::OnJsCallBackError(PlayerJsCallback *jsCb) const
         delete jsCb;
     };
 
-    uv_loop_s *loop = nullptr;
-    napi_get_uv_event_loop(env_, &loop);
-    CHECK_AND_RETURN_LOG(loop != nullptr, "Fail to napi_get_uv_event_loop");
-
-    uv_work_t *work = new(std::nothrow) uv_work_t;
-    CHECK_AND_RETURN_LOG(work != nullptr, "Fail to new uv_work_t");
-    work->data = reinterpret_cast<void *>(jsCb);
-
-    int ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
+    auto task = [event = jsCb]() {
         // Js Thread
-        CHECK_AND_RETURN_LOG(work != nullptr, "work is nullptr");
-        PlayerJsCallback *event = reinterpret_cast<PlayerJsCallback *>(work->data);
         std::string request = event->callbackName;
         MEDIA_LOGD("JsCallBack %{public}s, uv_queue_work start", request.c_str());
         do {
-            CHECK_AND_BREAK_LOG(status != UV_ECANCELED, "%{public}s canceled", request.c_str());
             std::shared_ptr<AutoRef> ref = event->callback.lock();
             CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
 
@@ -382,48 +353,32 @@ void PlayerCallbackNapi::OnJsCallBackError(PlayerJsCallback *jsCb) const
             CHECK_AND_BREAK_LOG(nstatus == napi_ok, "%{public}s fail to napi call function", request.c_str());
         } while (0);
         delete event;
-        delete work;
-    });
-    if (ret != 0) {
-        MEDIA_LOGE("Failed to execute libuv work queue");
+    };
+
+    auto ret = napi_send_event(env_, task, napi_eprio_high);
+    if (ret != napi_status::napi_ok) {
+        MEDIA_LOGE("Failed to SendEvent, ret = %{public}d", ret);
         delete jsCb;
-        delete work;
     }
     CANCEL_SCOPE_EXIT_GUARD(0);
 }
 
 void PlayerCallbackNapi::OnJsCallBackInt(PlayerJsCallback *jsCb) const
 {
-    uv_loop_s *loop = nullptr;
-    napi_get_uv_event_loop(env_, &loop);
-    if (loop == nullptr) {
-        delete jsCb;
-        return;
-    }
-
-    uv_work_t *work = new(std::nothrow) uv_work_t;
-    if (work == nullptr) {
-        MEDIA_LOGE("No memory");
-        delete jsCb;
-        return;
-    }
-    work->data = reinterpret_cast<void *>(jsCb);
-
-    int ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
+    auto task = [event = jsCb]() {
         // Js Thread
-        CHECK_AND_RETURN_LOG(work != nullptr, "work is nullptr");
-        PlayerJsCallback *event = reinterpret_cast<PlayerJsCallback *>(work->data);
         std::string request = event->callbackName;
         MEDIA_LOGD("JsCallBack %{public}s, uv_queue_work start", request.c_str());
         do {
-            CHECK_AND_BREAK_LOG(status != UV_ECANCELED, "%{public}s canceled", request.c_str());
             std::shared_ptr<AutoRef> ref = event->callback.lock();
             CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
 
             napi_handle_scope scope = nullptr;
             napi_open_handle_scope(ref->env_, &scope);
             CHECK_AND_BREAK_LOG(scope != nullptr, "%{public}s scope is nullptr", request.c_str());
-            ON_SCOPE_EXIT(0) { napi_close_handle_scope(ref->env_, scope); };
+            ON_SCOPE_EXIT(0) {
+                napi_close_handle_scope(ref->env_, scope);
+            };
 
             napi_value jsCallback = nullptr;
             napi_status nstatus = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
@@ -442,12 +397,12 @@ void PlayerCallbackNapi::OnJsCallBackInt(PlayerJsCallback *jsCb) const
             CHECK_AND_BREAK_LOG(nstatus == napi_ok, "%{public}s fail to call seekDone callback", request.c_str());
         } while (0);
         delete event;
-        delete work;
-    });
-    if (ret != 0) {
-        MEDIA_LOGE("Failed to execute libuv work queue");
+    };
+
+    auto ret = napi_send_event(env_, task, napi_eprio_high);
+    if (ret != napi_status::napi_ok) {
+        MEDIA_LOGE("Failed to SendEvent, ret = %{public}d", ret);
         delete jsCb;
-        delete work;
     }
 }
 
@@ -457,22 +412,11 @@ void PlayerCallbackNapi::OnJsCallBackIntVec(PlayerJsCallback *jsCb) const
         delete jsCb;
     };
 
-    uv_loop_s *loop = nullptr;
-    napi_get_uv_event_loop(env_, &loop);
-    CHECK_AND_RETURN_LOG(loop != nullptr, "Fail to napi_get_uv_event_loop");
-
-    uv_work_t *work = new(std::nothrow) uv_work_t;
-    CHECK_AND_RETURN_LOG(work != nullptr, "Fail to new uv_work_t");
-    work->data = reinterpret_cast<void *>(jsCb);
-
-    int ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
+    auto task = [event = jsCb]() {
         // Js Thread
-        CHECK_AND_RETURN_LOG(work != nullptr, "work is nullptr");
-        PlayerJsCallback *event = reinterpret_cast<PlayerJsCallback *>(work->data);
         std::string request = event->callbackName;
         MEDIA_LOGD("JsCallBack %{public}s, uv_queue_work start", request.c_str());
         do {
-            CHECK_AND_BREAK_LOG(status != UV_ECANCELED, "%{public}s canceled", request.c_str());
             std::shared_ptr<AutoRef> ref = event->callback.lock();
             CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
 
@@ -505,42 +449,24 @@ void PlayerCallbackNapi::OnJsCallBackIntVec(PlayerJsCallback *jsCb) const
             CHECK_AND_BREAK_LOG(nstatus == napi_ok, "%{public}s fail to call callback", request.c_str());
         } while (0);
         delete event;
-        delete work;
-    });
-    if (ret != 0) {
-        MEDIA_LOGE("Failed to execute libuv work queue");
+    };
+
+    auto ret = napi_send_event(env_, task, napi_eprio_high);
+    if (ret != napi_status::napi_ok) {
+        MEDIA_LOGE("Failed to SendEvent, ret = %{public}d", ret);
         delete jsCb;
-        delete work;
     }
     CANCEL_SCOPE_EXIT_GUARD(0);
 }
 
 void PlayerCallbackNapi::OnJsCallBackIntArray(PlayerJsCallback *jsCb) const
 {
-    uv_loop_s *loop = nullptr;
-    napi_get_uv_event_loop(env_, &loop);
-    if (loop == nullptr) {
-        delete jsCb;
-        return;
-    }
-
-    uv_work_t *work = new(std::nothrow) uv_work_t;
-    if (work == nullptr) {
-        MEDIA_LOGE("No memory");
-        delete jsCb;
-        return;
-    }
-    work->data = reinterpret_cast<void *>(jsCb);
-
-    int ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
+    auto task = [event = jsCb]() {
         // Js Thread
-        CHECK_AND_RETURN_LOG(work != nullptr, "work is nullptr");
-        PlayerJsCallback *event = reinterpret_cast<PlayerJsCallback *>(work->data);
         std::string request = event->callbackName;
         MEDIA_LOGD("JsCallBack %{public}s, size = %{public}zu", request.c_str(), event->valueVec.size());
 
         do {
-            CHECK_AND_BREAK_LOG(status != UV_ECANCELED, "%{public}s canceled", request.c_str());
             std::shared_ptr<AutoRef> ref = event->callback.lock();
             CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
 
@@ -566,12 +492,12 @@ void PlayerCallbackNapi::OnJsCallBackIntArray(PlayerJsCallback *jsCb) const
             CHECK_AND_BREAK_LOG(nstatus == napi_ok, "%{public}s fail to call callback", request.c_str());
         } while (0);
         delete event;
-        delete work;
-    });
-    if (ret != 0) {
-        MEDIA_LOGE("Failed to execute libuv work queue");
+    };
+
+    auto ret = napi_send_event(env_, task, napi_eprio_high);
+    if (ret != napi_status::napi_ok) {
+        MEDIA_LOGE("Failed to SendEvent, ret = %{public}d", ret);
         delete jsCb;
-        delete work;
     }
 }
 
@@ -581,22 +507,11 @@ void PlayerCallbackNapi::OnJsCallBackInterrupt(PlayerJsCallback *jsCb) const
         delete jsCb;
     };
 
-    uv_loop_s *loop = nullptr;
-    napi_get_uv_event_loop(env_, &loop);
-    CHECK_AND_RETURN_LOG(loop != nullptr, "Fail to napi_get_uv_event_loop");
-
-    uv_work_t *work = new(std::nothrow) uv_work_t;
-    CHECK_AND_RETURN_LOG(work != nullptr, "Fail to new uv_work_t");
-    work->data = reinterpret_cast<void *>(jsCb);
-
-    int ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
-        CHECK_AND_RETURN_LOG(work != nullptr, "work is nullptr");
-        PlayerJsCallback *event = reinterpret_cast<PlayerJsCallback *>(work->data);
+    auto task = [event = jsCb]() {
         std::string request = event->callbackName;
         MEDIA_LOGD("JsCallBack %{public}s", request.c_str());
 
         do {
-            CHECK_AND_BREAK_LOG(status != UV_ECANCELED, "%{public}s canceled", request.c_str());
             std::shared_ptr<AutoRef> ref = event->callback.lock();
             CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
 
@@ -626,12 +541,12 @@ void PlayerCallbackNapi::OnJsCallBackInterrupt(PlayerJsCallback *jsCb) const
             CHECK_AND_BREAK_LOG(nstatus == napi_ok, "%{public}s fail to call callback", request.c_str());
         } while (0);
         delete event;
-        delete work;
-    });
-    if (ret != 0) {
-        MEDIA_LOGE("Failed to execute libuv work queue");
+    };
+
+    auto ret = napi_send_event(env_, task, napi_eprio_high);
+    if (ret != napi_status::napi_ok) {
+        MEDIA_LOGE("Failed to SendEvent, ret = %{public}d", ret);
         delete jsCb;
-        delete work;
     }
     CANCEL_SCOPE_EXIT_GUARD(0);
 }

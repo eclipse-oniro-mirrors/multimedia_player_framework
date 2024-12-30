@@ -149,12 +149,12 @@ napi_value AVImageGeneratorNapi::JsCreateAVImageGenerator(napi_env env, napi_cal
     asyncContext->JsResult = std::make_unique<MediaJsResultInstance>(constructor_);
     asyncContext->ctorFlag = true;
 
-    napi_value resource = nullptr;
-    napi_create_string_utf8(env, "JsCreateAVImageGenerator", NAPI_AUTO_LENGTH, &resource);
-    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void *data) {},
-        MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncContext.get()), &asyncContext->work));
-    NAPI_CALL(env, napi_queue_async_work(env, asyncContext->work));
-    asyncContext.release();
+    auto ret = MediaAsyncContext::SendCompleteEvent(env, asyncContext.get(), napi_eprio_high);
+    if (ret != napi_status::napi_ok) {
+        MEDIA_LOGE("failed to SendEvent, ret = %{public}d", ret);
+    } else {
+        asyncContext.release();
+    }
     MEDIA_LOGI("JsCreateAVImageGenerator Out");
     return result;
 }
