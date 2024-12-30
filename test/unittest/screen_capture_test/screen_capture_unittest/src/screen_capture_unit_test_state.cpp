@@ -417,6 +417,12 @@ int32_t ScreenCaptureUnitTest::SetConfig(AVScreenCaptureConfig &config)
         .audioSource = SOURCE_DEFAULT
     };
 
+    AudioCaptureInfo innercapinfo = {
+        .audioSampleRate = 16000,
+        .audioChannels = 2,
+        .audioSource = SOURCE_DEFAULT
+    };
+
     VideoCaptureInfo videocapinfo = {
         .videoFrameWidth = 720,
         .videoFrameHeight = 1280,
@@ -431,6 +437,7 @@ int32_t ScreenCaptureUnitTest::SetConfig(AVScreenCaptureConfig &config)
 
     AudioInfo audioinfo = {
         .micCapInfo = miccapinfo,
+        .innerCapInfo = innercapinfo,
     };
 
     VideoInfo videoinfo = {

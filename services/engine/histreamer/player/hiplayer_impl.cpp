@@ -51,6 +51,7 @@ const double FRAME_RATE_DEFAULT = -1.0;
 const double FRAME_RATE_FOR_SEEK_PERFORMANCE = 2000.0;
 constexpr int32_t BUFFERING_LOG_FREQUENCY = 5;
 constexpr int32_t NOTIFY_BUFFERING_END_PARAM = 0;
+constexpr int64_t FIRST_FRAME_FRAME_REPORT_DELAY_MS = 50;
 static const std::unordered_set<OHOS::AudioStandard::StreamUsage> FOCUS_EVENT_USAGE_SET = {
     OHOS::AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN,
     OHOS::AudioStandard::StreamUsage::STREAM_USAGE_MEDIA,
@@ -461,9 +462,6 @@ void HiPlayerImpl::ResetIfSourceExisted()
 
     pipeline_ = std::make_shared<OHOS::Media::Pipeline::Pipeline>();
     syncManager_ = std::make_shared<MediaSyncManager>();
-    if (syncManager_ != nullptr) {
-        syncManager_->SetEventReceiver(playerEventReceiver_);
-    }
     MEDIA_LOG_I_SHORT("Reset the relatived objects end");
 }
 
@@ -1047,7 +1045,7 @@ int32_t HiPlayerImpl::HandleEosPlay()
     FALSE_RETURN_V(audioRenderInfo.streamUsage > AudioStandard::StreamUsage::STREAM_USAGE_INVALID &&
         audioRenderInfo.streamUsage < AudioStandard::StreamUsage::STREAM_USAGE_MAX, MSERR_INVALID_VAL);
     auto it = FOCUS_EVENT_USAGE_SET.find(static_cast<AudioStandard::StreamUsage>(audioRenderInfo.streamUsage));
-    FALSE_RETURN_V(it != FOCUS_EVENT_USAGE_SET.end(), MSERR_INVALID_VAL);
+    FALSE_RETURN_V(it == FOCUS_EVENT_USAGE_SET.end(), MSERR_INVALID_VAL);
     FALSE_RETURN_V(dfxAgent_ != nullptr, MSERR_INVALID_STATE);
     DfxEvent event = { .type = DfxEventType::DFX_INFO_PLAYER_EOS_SEEK, .param = appUid_ };
     dfxAgent_->OnDfxEvent(event);
@@ -1115,9 +1113,11 @@ void HiPlayerImpl::NotifySeek(Status rtv, bool flag, int64_t seekPos)
 {
     if (rtv != Status::OK) {
         MEDIA_LOG_E_SHORT("Seek done, seek error");
+        FALSE_RETURN_MSG(!isInterruptNeeded_.load(), " Seek is Interrupted");
         // change player state to PLAYER_STATE_ERROR when seek error.
         UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
         Format format;
+        callbackLooper_.OnError(PLAYER_ERROR, MSERR_DATA_SOURCE_IO_ERROR);
         callbackLooper_.OnInfo(INFO_TYPE_SEEKDONE, -1, format);
     }  else if (flag) {
         // only notify seekDone for external call.
@@ -1263,6 +1263,9 @@ Status HiPlayerImpl::HandleSeekClosest(int64_t seekPos, int64_t seekTimeUs)
     if (videoDecoder_ != nullptr) {
         videoDecoder_->SetSeekTime(seekTimeUs + mediaStartPts_);
     }
+    if (audioSink_ != nullptr) {
+        audioSink_->SetIsCancelStart(true);
+    }
     seekAgent_ = std::make_shared<SeekAgent>(demuxer_, mediaStartPts_);
     interruptMonitor_->RegisterListener(seekAgent_);
     SetFrameRateForSeekPerformance(FRAME_RATE_FOR_SEEK_PERFORMANCE);
@@ -1277,6 +1280,9 @@ Status HiPlayerImpl::HandleSeekClosest(int64_t seekPos, int64_t seekTimeUs)
         if (timeout && videoDecoder_ != nullptr) {
             videoDecoder_->ResetSeekInfo();
         }
+    }
+    if (audioSink_ != nullptr) {
+        audioSink_->SetIsCancelStart(false);
     }
     if (subtitleSink_ != nullptr) {
         subtitleSink_->NotifySeek();
@@ -2094,8 +2100,11 @@ void HiPlayerImpl::OnEvent(const Event &event)
         }
         case EventType::EVENT_VIDEO_RENDERING_START: {
             MEDIA_LOG_D_SHORT("video first frame reneder received");
-            Format format;
-            callbackLooper_.OnInfo(INFO_TYPE_MESSAGE, PlayerMessageType::PLAYER_INFO_VIDEO_RENDERING_START, format);
+            if (IsAppEnableRenderFirstFrame(appUid_)) {
+                // if app enable render first frame, notify first frame render event at once
+                Format format;
+                callbackLooper_.OnInfo(INFO_TYPE_MESSAGE, PlayerMessageType::PLAYER_INFO_VIDEO_RENDERING_START, format);
+            }
             HandleInitialPlayingStateChange(event.type);
             break;
         }
@@ -2201,6 +2210,12 @@ void HiPlayerImpl::HandleInitialPlayingStateChange(const EventType& eventType)
     MEDIA_LOG_D_SHORT("av first frame reneder all received");
 
     isInitialPlay_ = false;
+    if (!IsAppEnableRenderFirstFrame(appUid_)) {
+        // if app not enable render first frame, notify first frame render event when notify playing state
+        Format format;
+        callbackLooper_.OnInfoDelay(INFO_TYPE_MESSAGE, PlayerMessageType::PLAYER_INFO_VIDEO_RENDERING_START, format,
+            FIRST_FRAME_FRAME_REPORT_DELAY_MS);
+    }
     OnStateChanged(PlayerStateId::PLAYING);
 
     int64_t nowTimeMs = GetCurrentMillisecond();
@@ -2226,6 +2241,7 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
 {
     MediaTrace trace("HiPlayerImpl::DoSetSource");
     ResetIfSourceExisted();
+    completeState_.clear();
     demuxer_ = FilterFactory::Instance().CreateFilter<DemuxerFilter>("builtin.player.demuxer",
         FilterType::FILTERTYPE_DEMUXER);
     if (demuxer_ == nullptr) {

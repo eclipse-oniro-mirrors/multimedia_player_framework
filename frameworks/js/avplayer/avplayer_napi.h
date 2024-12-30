@@ -400,6 +400,7 @@ private:
     Format playbackInfo_;
     int32_t index_ = -1;
     int32_t mode_ = SWITCH_SMOOTH;
+    std::mutex syncMutex_;
 };
 } // namespace Media
 } // namespace OHOS

@@ -44,6 +44,9 @@ constexpr int32_t RATE_UV = 2;
 constexpr int32_t SHIFT_BITS_P010_2_NV12 = 8;
 constexpr double VIDEO_FRAME_RATE = 2000.0;
 constexpr int32_t MAX_WAIT_TIME_SECOND = 3;
+constexpr uint32_t REQUEST_BUFFER_TIMEOUT = 0; // Requesting buffer overtimes 0ms means no retry
+constexpr uint32_t ERROR_AGAIN_SLEEP_TIME_US = 1000;
+const std::string AV_THUMBNAIL_GENERATOR_INPUT_BUFFER_QUEUE_NAME = "AVThumbnailGeneratorInputBufferQueue";
 
 class ThumnGeneratorCodecCallback : public OHOS::MediaAVCodec::MediaCodecCallback {
 public:
@@ -75,6 +78,25 @@ private:
     AVThumbnailGenerator *generator_;
 };
 
+class ThumbnailGeneratorAVBufferAvailableListener : public OHOS::Media::IConsumerListener {
+public:
+    explicit ThumbnailGeneratorAVBufferAvailableListener(std::shared_ptr<AVThumbnailGenerator> generator)
+        : generator_(generator)
+    {
+    }
+
+    void OnBufferAvailable() override
+    {
+        if (auto generator = generator_.lock()) {
+            generator->AcquireAvailableInputBuffer();
+        } else {
+            MEDIA_LOGE("invalid AVThumbnailGenerator");
+        }
+    }
+private:
+    std::weak_ptr<AVThumbnailGenerator> generator_;
+};
+
 AVThumbnailGenerator::AVThumbnailGenerator(std::shared_ptr<MediaDemuxer> &mediaDemuxer) : mediaDemuxer_(mediaDemuxer)
 {
     MEDIA_LOGI("Constructor, instance: 0x%{public}06" PRIXPTR "", FAKE_POINTER(this));
@@ -89,7 +111,12 @@ AVThumbnailGenerator::~AVThumbnailGenerator()
 void AVThumbnailGenerator::OnError(MediaAVCodec::AVCodecErrorType errorType, int32_t errorCode)
 {
     MEDIA_LOGE("OnError errorType:%{public}d, errorCode:%{public}d", static_cast<int32_t>(errorType), errorCode);
-    stopProcessing_ = true;
+    {
+        std::scoped_lock lock(mutex_, queueMutex_);
+        stopProcessing_ = true;
+    }
+    cond_.notify_all();
+    bufferAvailableCond_.notify_all();
 }
 
 Status AVThumbnailGenerator::InitDecoder()
@@ -122,6 +149,57 @@ Status AVThumbnailGenerator::InitDecoder()
     auto res = videoDecoder_->Start();
     CHECK_AND_RETURN_RET(res == MSERR_OK, Status::ERROR_WRONG_STATE);
     return Status::OK;
+}
+
+int32_t AVThumbnailGenerator::Init()
+{
+    CHECK_AND_RETURN_RET_LOG(inputBufferQueue_ == nullptr, MSERR_OK, "InputBufferQueue already create");
+
+    inputBufferQueue_ = AVBufferQueue::Create(0,
+        MemoryType::UNKNOWN_MEMORY, AV_THUMBNAIL_GENERATOR_INPUT_BUFFER_QUEUE_NAME, true);
+    CHECK_AND_RETURN_RET_LOG(inputBufferQueue_ != nullptr, MSERR_NO_MEMORY, "BufferQueue is nullptr");
+
+    inputBufferQueueProducer_ = inputBufferQueue_->GetProducer();
+    CHECK_AND_RETURN_RET_LOG(inputBufferQueueProducer_ != nullptr, MSERR_UNKNOWN, "QueueProducer is nullptr");
+
+    inputBufferQueueConsumer_ = inputBufferQueue_->GetConsumer();
+    CHECK_AND_RETURN_RET_LOG(inputBufferQueueConsumer_ != nullptr, MSERR_UNKNOWN, "QueueConsumer is nullptr");
+
+    sptr<IConsumerListener> listener = new ThumbnailGeneratorAVBufferAvailableListener(shared_from_this());
+    CHECK_AND_RETURN_RET_LOG(listener != nullptr, MSERR_NO_MEMORY, "listener is nullptr");
+    inputBufferQueueConsumer_->SetBufferAvailableListener(listener);
+
+    readTask_ = std::make_unique<Task>(std::string("AVThumbReadLoop"));
+    CHECK_AND_RETURN_RET_LOG(readTask_ != nullptr, MSERR_NO_MEMORY, "Task is nullptr");
+
+    readTask_->RegisterJob([this] {return ReadLoop();});
+    readTask_->Start();
+
+    return MSERR_OK;
+}
+
+void AVThumbnailGenerator::AcquireAvailableInputBuffer()
+{
+    CHECK_AND_RETURN_LOG(inputBufferQueueConsumer_ != nullptr, "QueueConsumer is nullptr");
+
+    std::shared_ptr<AVBuffer> filledInputBuffer;
+    Status ret = inputBufferQueueConsumer_->AcquireBuffer(filledInputBuffer);
+    CHECK_AND_RETURN_LOG(ret == Status::OK, "AcquireBuffer fail");
+
+    CHECK_AND_RETURN_LOG(filledInputBuffer->meta_ != nullptr, "filledInputBuffer meta is nullptr.");
+    uint32_t index;
+    CHECK_AND_RETURN_LOG(filledInputBuffer->meta_->GetData(Tag::BUFFER_INDEX, index), "get index failed.");
+
+    CHECK_AND_RETURN_LOG(videoDecoder_ != nullptr, "videoDecoder_ is nullptr.");
+    if (videoDecoder_->QueueInputBuffer(index) != ERR_OK) {
+        MEDIA_LOGE("QueueInputBuffer failed, index: %{public}u,  bufferid: %{public}" PRIu64
+            ", pts: %{public}" PRIu64", flag: %{public}u", index, filledInputBuffer->GetUniqueId(),
+            filledInputBuffer->pts_, filledInputBuffer->flag_);
+    } else {
+        MEDIA_LOGD("QueueInputBuffer success, index: %{public}u,  bufferid: %{public}" PRIu64
+            ", pts: %{public}" PRIu64", flag: %{public}u", index, filledInputBuffer->GetUniqueId(),
+            filledInputBuffer->pts_, filledInputBuffer->flag_);
+    }
 }
 
 void AVThumbnailGenerator::GetDuration()
@@ -183,20 +261,93 @@ void AVThumbnailGenerator::OnOutputFormatChanged(const MediaAVCodec::Format &for
 
 void AVThumbnailGenerator::OnInputBufferAvailable(uint32_t index, std::shared_ptr<AVBuffer> buffer)
 {
-    MEDIA_LOGD("OnInputBufferAvailable index:%{public}u", index);
+    CHECK_AND_RETURN_LOG(buffer != nullptr && buffer->meta_ != nullptr, "meta_ is nullptr.");
+
+    MEDIA_LOGD("OnInputBufferAvailable enter. index: %{public}u, bufferid: %{public}" PRIu64", pts: %{public}" PRIu64
+        ", flag: %{public}u", index, buffer->GetUniqueId(), buffer->pts_, buffer->flag_);
+
+    buffer->meta_->SetData(Tag::BUFFER_INDEX, index);
+
+    CHECK_AND_RETURN_LOG(inputBufferQueueConsumer_ != nullptr, "QueueConsumer is nullptr");
+
     if (stopProcessing_.load() || hasFetchedFrame_.load() || readErrorFlag_.load()) {
         MEDIA_LOGD("stop or has fetched frame, need not queue input buffer");
         return;
     }
-    CHECK_AND_RETURN_LOG(mediaDemuxer_ != nullptr, "OnInputBufferAvailable demuxer is nullptr.");
-    CHECK_AND_RETURN_LOG(videoDecoder_ != nullptr, "OnInputBufferAvailable decoder is nullptr.");
-    auto readSampleRes = mediaDemuxer_->ReadSample(trackIndex_, buffer);
-    if (readSampleRes != Status::OK && readSampleRes != Status::END_OF_STREAM && readSampleRes != Status::ERROR_AGAIN) {
-        std::unique_lock<std::mutex> lock(mutex_);
-        readErrorFlag_ = true;
-        cond_.notify_all();
+
+    {
+        std::unique_lock<std::mutex> lock(queueMutex_);
+        if (inputBufferQueueConsumer_->IsBufferInQueue(buffer)) {
+            if (inputBufferQueueConsumer_->ReleaseBuffer(buffer) != Status::OK) {
+                MEDIA_LOGE("IsBufferInQueue ReleaseBuffer failed. index: %{public}u, bufferid: %{public}" PRIu64
+                    ", pts: %{public}" PRIu64", flag: %{public}u", index, buffer->GetUniqueId(),
+                    buffer->pts_, buffer->flag_);
+                return;
+            } else {
+                MEDIA_LOGD("IsBufferInQueue ReleaseBuffer success. index: %{public}u, bufferid: %{public}" PRIu64
+                    ", pts: %{public}" PRIu64", flag: %{public}u", index, buffer->GetUniqueId(),
+                    buffer->pts_, buffer->flag_);
+            }
+        } else {
+            uint32_t size = inputBufferQueueConsumer_->GetQueueSize() + 1;
+            MEDIA_LOGI("AttachBuffer enter. index: %{public}u,  size: %{public}u , bufferid: %{public}" PRIu64,
+                index, size, buffer->GetUniqueId());
+            inputBufferQueueConsumer_->SetQueueSizeAndAttachBuffer(size, buffer, false);
+            bufferVector_.push_back(buffer);
+        }
+        isBufferAvailable_ = true;
     }
-    videoDecoder_->QueueInputBuffer(index);
+    bufferAvailableCond_.notify_all();
+}
+
+int64_t AVThumbnailGenerator::ReadLoop()
+{
+    std::shared_ptr<AVBuffer> emptyBuffer = nullptr;
+    {
+        std::unique_lock<std::mutex> lock(queueMutex_);
+        bufferAvailableCond_.wait(lock, [this] {
+            return stopProcessing_.load() ||
+                   (!hasFetchedFrame_.load() && !readErrorFlag_.load() && isBufferAvailable_.load());
+        });
+
+        CHECK_AND_RETURN_RET_LOG(!stopProcessing_.load(), StopTask(), "Stop Readloop");
+
+        CHECK_AND_RETURN_RET_LOG(inputBufferQueueProducer_ != nullptr, StopTask(), "QueueProducer is nullptr");
+
+        AVBufferConfig avBufferConfig;
+        auto res = inputBufferQueueProducer_->RequestBuffer(emptyBuffer, avBufferConfig, REQUEST_BUFFER_TIMEOUT);
+        if (res != Status::OK) {
+            isBufferAvailable_ = false;
+            return 0;
+        }
+    }
+
+    CHECK_AND_RETURN_RET_LOG(mediaDemuxer_ != nullptr, StopTask(), "mediaDemuxer is nullptr");
+
+    auto readSampleRes = mediaDemuxer_->ReadSample(trackIndex_, emptyBuffer);
+    if (readSampleRes != Status::OK && readSampleRes != Status::END_OF_STREAM && readSampleRes != Status::ERROR_AGAIN) {
+        {
+            std::unique_lock<std::mutex> lock(mutex_);
+            readErrorFlag_ = true;
+        }
+        cond_.notify_all();
+        inputBufferQueueProducer_->PushBuffer(emptyBuffer, false);
+        return 0;
+    }
+    if (readSampleRes == Status::ERROR_AGAIN) {
+        inputBufferQueueProducer_->PushBuffer(emptyBuffer, false);
+        return ERROR_AGAIN_SLEEP_TIME_US;
+    }
+    inputBufferQueueProducer_->PushBuffer(emptyBuffer, true);
+    return 0;
+}
+
+int64_t AVThumbnailGenerator::StopTask()
+{
+    if (readTask_ != nullptr) {
+        readTask_->Stop();
+    }
+    return 0;
 }
 
 void AVThumbnailGenerator::OnOutputBufferAvailable(uint32_t index, std::shared_ptr<AVBuffer> buffer)
@@ -221,7 +372,10 @@ void AVThumbnailGenerator::OnOutputBufferAvailable(uint32_t index, std::shared_p
         return;
     }
     if (isAvailableFrame) {
-        hasFetchedFrame_ = true;
+        {
+            std::unique_lock<std::mutex> lock(mutex_);
+            hasFetchedFrame_ = true;
+        }
         if (isClosest && avBuffer_ != nullptr) {
             int64_t preDiff = seekTime_ - avBuffer_->pts_;
             int64_t nextDiff = buffer->pts_ - seekTime_;
@@ -255,6 +409,7 @@ std::shared_ptr<AVSharedMemory> AVThumbnailGenerator::FetchFrameAtTime(int64_t t
 
     readErrorFlag_ = false;
     hasFetchedFrame_ = false;
+    isBufferAvailable_ = false;
     outputConfig_ = param;
     seekTime_ = timeUs;
     trackInfo_ = GetVideoTrackInfo();
@@ -270,7 +425,7 @@ std::shared_ptr<AVSharedMemory> AVThumbnailGenerator::FetchFrameAtTime(int64_t t
 
         // wait up to 3s to fetch frame AVSharedMemory at time.
         if (cond_.wait_for(lock, std::chrono::seconds(MAX_WAIT_TIME_SECOND),
-            [this] { return hasFetchedFrame_.load() || readErrorFlag_.load(); })) {
+            [this] { return hasFetchedFrame_.load() || readErrorFlag_.load() || stopProcessing_.load(); })) {
             HandleFetchFrameAtTimeRes();
         } else {
             PauseFetchFrame();
@@ -282,6 +437,7 @@ std::shared_ptr<AVSharedMemory> AVThumbnailGenerator::FetchFrameAtTime(int64_t t
 void AVThumbnailGenerator::HandleFetchFrameAtTimeRes()
 {
     CHECK_AND_RETURN_RET_LOG(!readErrorFlag_.load(), PauseFetchFrame(), "ReadSample error, exit fetchFrame");
+    CHECK_AND_RETURN_RET_LOG(!stopProcessing_.load(), PauseFetchFrame(), "Destroy or Decoder error, exit fetchFrame");
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Fetch frame OK width:%{public}d, height:%{public}d",
             FAKE_POINTER(this), outputConfig_.dstWidth, outputConfig_.dstHeight);
     ConvertToAVSharedMemory();
@@ -299,6 +455,7 @@ std::shared_ptr<AVBuffer> AVThumbnailGenerator::FetchFrameYuv(int64_t timeUs, in
     avBuffer_ = nullptr;
     readErrorFlag_ = false;
     hasFetchedFrame_ = false;
+    isBufferAvailable_ = false;
     outputConfig_ = param;
     seekTime_ = timeUs;
     trackInfo_ = GetVideoTrackInfo();
@@ -313,7 +470,7 @@ std::shared_ptr<AVBuffer> AVThumbnailGenerator::FetchFrameYuv(int64_t timeUs, in
 
         // wait up to 3s to fetch frame AVSharedMemory at time.
         if (cond_.wait_for(lock, std::chrono::seconds(MAX_WAIT_TIME_SECOND),
-            [this] { return hasFetchedFrame_.load() || readErrorFlag_.load(); })) {
+            [this] { return hasFetchedFrame_.load() || readErrorFlag_.load() || stopProcessing_.load(); })) {
             HandleFetchFrameYuvRes();
         } else {
             HandleFetchFrameYuvFailed();
@@ -325,6 +482,8 @@ std::shared_ptr<AVBuffer> AVThumbnailGenerator::FetchFrameYuv(int64_t timeUs, in
 void AVThumbnailGenerator::HandleFetchFrameYuvRes()
 {
     CHECK_AND_RETURN_RET_LOG(!readErrorFlag_.load(), HandleFetchFrameYuvFailed(), "ReadSample error, exit fetchFrame");
+    CHECK_AND_RETURN_RET_LOG(!stopProcessing_.load(), HandleFetchFrameYuvFailed(),
+                             "Destroy or Decoder error, exit fetchFrame");
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Fetch frame OK width:%{public}d, height:%{public}d",
                 FAKE_POINTER(this), outputConfig_.dstWidth, outputConfig_.dstHeight);
     avBuffer_ = GenerateAlignmentAvBuffer();
@@ -553,8 +712,23 @@ void AVThumbnailGenerator::Reset()
         videoDecoder_->Reset();
     }
 
+    FlushBufferQueue();
+
     hasFetchedFrame_ = false;
     trackInfo_ = nullptr;
+}
+
+void AVThumbnailGenerator::FlushBufferQueue()
+{
+    std::unique_lock<std::mutex> lock(queueMutex_);
+    if (inputBufferQueueConsumer_ != nullptr) {
+        for (auto &buffer : bufferVector_) {
+            inputBufferQueueConsumer_->DetachBuffer(buffer);
+        }
+        bufferVector_.clear();
+        inputBufferQueueConsumer_->SetQueueSize(0);
+    }
+    isBufferAvailable_ = false;
 }
 
 void AVThumbnailGenerator::CopySurfaceBufferInfo(sptr<SurfaceBuffer> &source, sptr<SurfaceBuffer> &dst)
@@ -606,7 +780,16 @@ bool AVThumbnailGenerator::SetSbDynamicMetadata(sptr<SurfaceBuffer> &buffer,
 
 void AVThumbnailGenerator::Destroy()
 {
-    stopProcessing_ = true;
+    {
+        std::unique_lock<std::mutex> lock(queueMutex_);
+        stopProcessing_ = true;
+    }
+    bufferAvailableCond_.notify_all();
+
+    if (readTask_ != nullptr) {
+        readTask_->Stop();
+    }
+
     if (videoDecoder_ != nullptr) {
         videoDecoder_->Stop();
         videoDecoder_->Release();
@@ -625,6 +808,7 @@ void AVThumbnailGenerator::PauseFetchFrame()
     Format format;
     format.PutDoubleValue(MediaDescriptionKey::MD_KEY_FRAME_RATE, frameRate_);
     videoDecoder_->SetParameter(format);
+    FlushBufferQueue();
 }
 }  // namespace Media
 }  // namespace OHOS

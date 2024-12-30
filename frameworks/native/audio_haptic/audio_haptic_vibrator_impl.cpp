@@ -110,8 +110,15 @@ int32_t AudioHapticVibratorImpl::ExtractFd(const std::string& hapticsUri)
 int32_t AudioHapticVibratorImpl::OpenHapticFile(const std::string &hapticUri)
 {
 #ifdef SUPPORT_VIBRATOR
-    int32_t fd = ExtractFd(hapticUri);
-    if (fd == ERROR) {
+    int32_t newFd = -1;
+    int32_t oldFd = ExtractFd(hapticUri);
+    if (oldFd != ERROR) {
+        newFd = dup(oldFd);
+        if (newFd == ERROR) {
+            MEDIA_LOGE("OpenHapticFile: dup failed, file path: %{public}s", hapticUri.c_str());
+            return MSERR_OPEN_FILE_FAILED;
+        }
+    } else {
         MEDIA_LOGW("OpenHapticFile: hapticUri is not new format.");
 
         std::string absFilePath;
@@ -125,9 +132,10 @@ int32_t AudioHapticVibratorImpl::OpenHapticFile(const std::string &hapticUri)
             return ERROR;
         }
 
-        fd = open(hapticUri.c_str(), O_RDONLY);
-        if (fd == ERROR) {
+        newFd = open(hapticUri.c_str(), O_RDONLY);
+        if (newFd == ERROR) {
             // open file failed, return.
+            MEDIA_LOGE("OpenHapticFile: open file failed, file path: %{public}s", hapticUri.c_str());
             return MSERR_OPEN_FILE_FAILED;
         }
     }
@@ -138,13 +146,13 @@ int32_t AudioHapticVibratorImpl::OpenHapticFile(const std::string &hapticUri)
     CHECK_AND_RETURN_RET_LOG(vibratorPkg_ != nullptr, ERROR, "vibratorPkg_ is null");
 
     struct stat64 statbuf = { 0 };
-    if (fstat64(fd, &statbuf) == 0) {
-        vibratorFD_->fd = fd;
+    if (fstat64(newFd, &statbuf) == 0) {
+        vibratorFD_->fd = newFd;
         vibratorFD_->offset = 0;
         vibratorFD_->length = statbuf.st_size;
         return MSERR_OK;
     } else {
-        close(fd);
+        close(newFd);
         return MSERR_OPEN_FILE_FAILED;
     }
 #endif

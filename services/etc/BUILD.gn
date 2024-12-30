@@ -12,12 +12,36 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
+import("//build/ohos/sa_profile/sa_profile.gni")
+import("//foundation/multimedia/player_framework/config.gni")
+
+etc_file = {
+  if (player_framework_enable_start_stop_on_demand) {
+    process_cfg = "./on_demand/media_service.cfg"
+    sa_profile_json = "./on_demand/3002.json"
+  } else {
+    process_cfg = "./media_service.cfg"
+    sa_profile_json = "./3002.json"
+  }
+}
 
 ohos_prebuilt_etc("media_service.cfg") {
-  source = "media_service.cfg"
+  source = etc_file.process_cfg
   relative_install_dir = "init"
   part_name = "player_framework"
   subsystem_name = "multimedia"
+}
+
+ohos_sa_profile("media_service_profile") {
+  sources = [ etc_file.sa_profile_json ]
+  part_name = "player_framework"
+}
+
+group("media_service_etc") {
+  deps = [
+    ":media_service.cfg",
+    ":media_service_profile",
+  ]
 }
 
 ohos_prebuilt_etc("screen_capture_capsule_image") {

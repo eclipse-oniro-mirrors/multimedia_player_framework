@@ -81,7 +81,9 @@ int32_t AudioHapticSoundNormalImpl::ResetAVPlayer()
     const std::string fdHead = "fd://";
 
     if (audioUri_.find(fdHead) != std::string::npos) {
-        fileDes_ = std::stoi(audioUri_.substr(fdHead.size()));
+        int32_t fd = atoi(audioUri_.substr(fdHead.size()).c_str());
+        CHECK_AND_RETURN_RET_LOG(fd > 0, MSERR_OPEN_FILE_FAILED, "Prepare: Failed to extract fd for avplayer.");
+        fileDes_ = dup(fd);
         MEDIA_LOGI("fileDes_ == %{public}d", fileDes_);
     } else {
         char realPathRes[PATH_MAX + 1] = {'\0'};

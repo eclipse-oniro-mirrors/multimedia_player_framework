@@ -23,6 +23,7 @@
 #include <atomic>
 #include "media_telephony_listener.h"
 #include "screen_capture.h"
+#include "task_queue.h"
 
 namespace OHOS {
 namespace Media {
@@ -31,6 +32,7 @@ class InCallObserverCallBack {
 public:
     virtual ~InCallObserverCallBack() = default;
     virtual bool StopAndRelease(AVScreenCaptureStateCode state);
+    virtual bool NotifyStopAndRelease(AVScreenCaptureStateCode state);
 };
 
 class InCallObserver {
@@ -51,6 +53,7 @@ private:
     std::mutex mutex_;
     bool Init();
     bool isTelephonyStateListenerDied_ = true;
+    TaskQueue taskQue_;
 };
 }
 }

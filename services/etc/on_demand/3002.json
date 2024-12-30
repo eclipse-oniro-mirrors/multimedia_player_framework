@@ -1,0 +1,25 @@
+{
+    "process": "media_service",
+    "systemability": [
+        {
+            "name": 3002,
+            "libpath": "libmedia_service.z.so",
+            "run-on-create": false,
+            "auto-restart": true,
+            "distributed": false,
+            "start-on-demand": {
+                "commonevent": [
+                    {
+                        "name": "usual.event.BOOT_COMPLETED"
+                    }
+                ]
+            },
+            "stop-on-demand": {
+                "allow-update": false,
+                "longtimeunused-unload": 180,
+                "recycle-delaytime": 180000,
+                "unreferenced-unload": true
+            }
+        }
+    ]
+}

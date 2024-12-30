@@ -164,8 +164,8 @@ public:
         OHOS::Rect &damage);
     int32_t ReleaseVideoBuffer();
     int32_t Release();
+    int32_t StartBufferThread();
     void OnBufferAvailableAction();
-    void StartBufferThread();
     void SurfaceBufferThreadRun();
     void StopBufferThread();
 
@@ -196,11 +196,13 @@ private:
 class ScreenCaptureObserverCallBack : public InCallObserverCallBack, public AccountObserverCallBack {
 public:
     explicit ScreenCaptureObserverCallBack(std::weak_ptr<ScreenCaptureServer> screenCaptureServer);
-    ~ScreenCaptureObserverCallBack() = default;
+    ~ScreenCaptureObserverCallBack();
     bool StopAndRelease(AVScreenCaptureStateCode state) override;
+    bool NotifyStopAndRelease(AVScreenCaptureStateCode state) override;
 
 private:
     std::weak_ptr<ScreenCaptureServer> screenCaptureServer_;
+    TaskQueue taskQueObserverCb_;
 };
 
 class AudioDataSource : public IAudioDataSource {
@@ -218,6 +220,8 @@ public:
     bool HasSpeakerStream(
         const std::vector<std::shared_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos);
     void VoIPStateUpdate(
+        const std::vector<std::shared_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos);
+    bool HasVoIPStream(
         const std::vector<std::shared_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos);
     void SetAppPid(int32_t appid);
     void SetAppName(std::string appName);
@@ -361,8 +365,8 @@ private:
     int32_t StartFileInnerAudioCapture();
     int32_t StartFileMicAudioCapture();
     int32_t StopMicAudioCapture();
-    int32_t StartVideoCapture();
-    int32_t StartHomeVideoCapture();
+    int32_t StartStreamVideoCapture();
+    int32_t StartStreamHomeVideoCapture();
     int32_t StopScreenCaptureInner(AVScreenCaptureStateCode stateCode);
     bool IsLastStartedPidInstance(int32_t pid);
     bool LastPidUpdatePrivacyUsingPermissionState(int32_t pid);

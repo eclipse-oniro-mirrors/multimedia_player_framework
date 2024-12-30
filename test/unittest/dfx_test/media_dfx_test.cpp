@@ -128,7 +128,7 @@ HWTEST_F(MediaDfxTest, StatisticsEventReport_ShouldReturnSuccess_WhenMapIsNotEmp
     reportMediaInfoMap_.clear();
 }
 
-#ifdef SUPPORT_JSON
+#ifndef CROSS_PLATFORM
 // Scenario1: Test case for int32_t type
 HWTEST_F(MediaDfxTest, ParseOneEvent_ShouldParseInt32_WhenInt32Type, TestSize.Level0) {
     std::pair<uint64_t, std::shared_ptr<Meta>> listPair;
@@ -219,8 +219,6 @@ HWTEST_F(MediaDfxTest, ParseOneEvent_ShouldParseBool_WhenBoolType, TestSize.Leve
 
     EXPECT_EQ(metaInfoJson[Tag::MEDIA_HAS_VIDEO], "true");
 }
-
-
 #endif
 }
 }

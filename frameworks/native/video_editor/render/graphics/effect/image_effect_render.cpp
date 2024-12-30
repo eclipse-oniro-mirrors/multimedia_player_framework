@@ -134,9 +134,10 @@ RenderTexturePtr ImageEffectRender::Render(
 void ImageEffectRender::SetImageValue(const int32_t value, const char valueName[])
 {
 #ifdef IMAGE_EFFECT_SUPPORT
+    ImageEffect_DataValue dataValue = { .int32Value = static_cast<int32_t>(value) };
     ImageEffect_Any val = {
         .dataType = ImageEffect_DataType::EFFECT_DATA_TYPE_INT32,
-        .dataValue.int32Value = (int32_t) value
+        .dataValue = dataValue
     };
     OH_EffectFilter_SetValue(effectFilter_, valueName, &val);
 #endif

@@ -14,6 +14,7 @@
  */
 
 #include "media_service_stub.h"
+#include "i_standard_media_reply.h"
 #include "media_log.h"
 #include "media_errors.h"
 #include "media_server_manager.h"
@@ -43,6 +44,8 @@ void MediaServiceStub::Init()
 {
     mediaFuncs_[GET_SUBSYSTEM] =
         [this](MessageParcel &data, MessageParcel &reply) { return GetSystemAbility(data, reply); };
+    mediaFuncs_[GET_SUBSYSTEM_ASYNC] =
+        [this](MessageParcel &data, MessageParcel &reply) { return GetSystemAbilityAync(data, reply); };
 }
 
 int32_t MediaServiceStub::DestroyStubForPid(pid_t pid)
@@ -161,6 +164,22 @@ int32_t MediaServiceStub::GetSystemAbility(MessageParcel &data, MessageParcel &r
     MediaSystemAbility id = static_cast<MediaSystemAbility>(mediaSystemAbility);
     sptr<IRemoteObject> listenerObj = data.ReadRemoteObject();
     LISTENER(reply.WriteRemoteObject(GetSubSystemAbility(id, listenerObj)),
+        TASK_NAME + ":" + std::to_string(mediaSystemAbility), false, TIME_OUT_SECOND);
+    return MSERR_OK;
+}
+
+int32_t MediaServiceStub::GetSystemAbilityAync(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t mediaSystemAbility = data.ReadInt32();
+    MediaSystemAbility id = static_cast<MediaSystemAbility>(mediaSystemAbility);
+    sptr<IRemoteObject> listenerObj = data.ReadRemoteObject();
+
+    uint32_t timeOutMs = data.ReadUint32();
+    sptr<IStandardMediaReply> mediaReplyProxy = iface_cast<IStandardMediaReply>(data.ReadRemoteObject());
+    CHECK_AND_RETURN_RET_LOG(mediaReplyProxy != nullptr, MSERR_UNKNOWN, "mediaReplyProxy remote object is nullptr");
+    
+    sptr<IRemoteObject> subSystemAbility = GetSubSystemAbilityWithTimeOut(id, listenerObj, timeOutMs);
+    LISTENER(mediaReplyProxy->SendSubSystemAbilityAync(subSystemAbility),
         TASK_NAME + ":" + std::to_string(mediaSystemAbility), false, TIME_OUT_SECOND);
     return MSERR_OK;
 }

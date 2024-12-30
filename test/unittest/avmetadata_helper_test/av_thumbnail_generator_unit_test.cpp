@@ -143,6 +143,169 @@ HWTEST_F(AVThumbnailGeneratorUnitTest, OnInputBufferAvailable, TestSize.Level1)
 }
 
 /**
+ * @tc.name: OnInputBufferAvailable_001
+ * @tc.desc: OnInputBufferAvailable_001
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVThumbnailGeneratorUnitTest, OnInputBufferAvailable_001, TestSize.Level1)
+{
+    uint32_t index = 0;
+    uint8_t data[100];
+    std::shared_ptr<AVBuffer> buffer = AVBuffer::CreateAVBuffer(data, sizeof(data), sizeof(data));
+    avThumbnailGenerator_->stopProcessing_ = false;
+    avThumbnailGenerator_->hasFetchedFrame_ = false;
+    avThumbnailGenerator_->readErrorFlag_ = false;
+    avThumbnailGenerator_->isBufferAvailable_ = false;
+    
+    avThumbnailGenerator_->OnInputBufferAvailable(index, buffer);
+    EXPECT_TRUE(buffer != nullptr);
+
+    mockInputBufferQueueConsumer_ = new MockAVBufferQueueConsumer();
+    avThumbnailGenerator_->inputBufferQueueConsumer_ = mockInputBufferQueueConsumer_;
+
+    EXPECT_CALL(*(mockInputBufferQueueConsumer_),
+                IsBufferInQueue(buffer)).WillRepeatedly(Return(false));
+    avThumbnailGenerator_->OnInputBufferAvailable(index, buffer);
+    EXPECT_TRUE(avThumbnailGenerator_->isBufferAvailable_);
+}
+
+/**
+ * @tc.name: OnInputBufferAvailable_002
+ * @tc.desc: OnInputBufferAvailable_002
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVThumbnailGeneratorUnitTest, OnInputBufferAvailable_002, TestSize.Level1)
+{
+    uint32_t index = 0;
+    uint8_t data[100];
+    std::shared_ptr<AVBuffer> buffer = AVBuffer::CreateAVBuffer(data, sizeof(data), sizeof(data));
+    avThumbnailGenerator_->stopProcessing_ = false;
+    avThumbnailGenerator_->hasFetchedFrame_ = false;
+    avThumbnailGenerator_->readErrorFlag_ = false;
+    avThumbnailGenerator_->isBufferAvailable_ = false;
+
+    mockInputBufferQueueConsumer_ = new MockAVBufferQueueConsumer();
+    avThumbnailGenerator_->inputBufferQueueConsumer_ = mockInputBufferQueueConsumer_;
+
+    EXPECT_CALL(*(mockInputBufferQueueConsumer_),
+                IsBufferInQueue(buffer)).WillRepeatedly(Return(true));
+    EXPECT_CALL(*(mockInputBufferQueueConsumer_),
+                ReleaseBuffer(buffer)).WillRepeatedly(Return(Status::OK));
+    avThumbnailGenerator_->OnInputBufferAvailable(index, buffer);
+    EXPECT_TRUE(avThumbnailGenerator_->isBufferAvailable_);
+
+    avThumbnailGenerator_->isBufferAvailable_ = false;
+    EXPECT_CALL(*(mockInputBufferQueueConsumer_),
+                ReleaseBuffer(buffer)).WillRepeatedly(Return(Status::ERROR_UNKNOWN));
+    avThumbnailGenerator_->OnInputBufferAvailable(index, buffer);
+    EXPECT_TRUE(!avThumbnailGenerator_->isBufferAvailable_);
+}
+
+/**
+ * @tc.name: AcquireAvailableInputBuffer
+ * @tc.desc: AcquireAvailableInputBuffer
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVThumbnailGeneratorUnitTest, AcquireAvailableInputBuffer, TestSize.Level1)
+{
+    mockInputBufferQueueConsumer_ = new MockAVBufferQueueConsumer();
+    avThumbnailGenerator_->inputBufferQueueConsumer_ = mockInputBufferQueueConsumer_;
+
+    EXPECT_CALL(*(mockInputBufferQueueConsumer_),
+                AcquireBuffer(_)).WillOnce(Return(Status::ERROR_UNKNOWN));
+    avThumbnailGenerator_->AcquireAvailableInputBuffer();
+    
+    EXPECT_CALL(*(mockInputBufferQueueConsumer_), AcquireBuffer(_))
+                .WillOnce(Invoke([] (std::shared_ptr<AVBuffer>& buffer) {
+                    uint32_t index = 0;
+                    uint8_t data[100];
+                    buffer = AVBuffer::CreateAVBuffer(data, sizeof(data), sizeof(data));
+                    buffer->meta_->SetData(Tag::BUFFER_INDEX, index);
+                    return Status::OK;
+                }));
+    auto mockAVCodecVideoDecoder = std::make_shared<MediaAVCodec::MockAVCodecVideoDecoder>();
+    avThumbnailGenerator_->videoDecoder_ = mockAVCodecVideoDecoder;
+    EXPECT_CALL(*(mockAVCodecVideoDecoder),
+                QueueInputBuffer(_)).WillRepeatedly(Return(-1));
+    avThumbnailGenerator_->AcquireAvailableInputBuffer();
+
+    auto res = avThumbnailGenerator_->Init();
+    EXPECT_TRUE(res == MSERR_OK);
+}
+
+/**
+ * @tc.name: Init_001
+ * @tc.desc: Init_001
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVThumbnailGeneratorUnitTest, Init_001, TestSize.Level1)
+{
+    mockInputBufferQueue_ = std::make_shared<MockAVBufferQueue>();
+    avThumbnailGenerator_->inputBufferQueue_ = mockInputBufferQueue_;
+
+    EXPECT_CALL(*(mockInputBufferQueue_),
+                GetQueueSize()).WillRepeatedly(Return(1));
+    
+    auto res = avThumbnailGenerator_->Init();
+    EXPECT_TRUE(res == MSERR_OK);
+}
+
+/**
+ * @tc.name: Init_001
+ * @tc.desc: Init_001
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVThumbnailGeneratorUnitTest, Init_002, TestSize.Level1)
+{
+    mockInputBufferQueue_ = std::make_shared<MockAVBufferQueue>();
+    auto res = avThumbnailGenerator_->Init();
+    EXPECT_TRUE(res == MSERR_OK);
+    res = avThumbnailGenerator_->Init();
+    EXPECT_TRUE(res == MSERR_OK);
+}
+
+/**
+ * @tc.name: ReadLoop
+ * @tc.desc: ReadLoop
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVThumbnailGeneratorUnitTest, ReadLoop, TestSize.Level1)
+{
+    avThumbnailGenerator_->stopProcessing_ = false;
+    avThumbnailGenerator_->hasFetchedFrame_ = false;
+    avThumbnailGenerator_->readErrorFlag_ = false;
+    avThumbnailGenerator_->isBufferAvailable_ = true;
+
+    mockInputBufferQueueProducer_ = new MockAVBufferQueueProducer();
+    avThumbnailGenerator_->inputBufferQueueProducer_ = mockInputBufferQueueProducer_;
+
+    EXPECT_CALL(*(mockInputBufferQueueProducer_),
+                RequestBuffer(_, _, _)).WillRepeatedly(Return(Status::ERROR_UNKNOWN));
+    avThumbnailGenerator_->ReadLoop();
+    EXPECT_TRUE(!avThumbnailGenerator_->isBufferAvailable_);
+
+    avThumbnailGenerator_->isBufferAvailable_ = true;
+    EXPECT_CALL(*(mockInputBufferQueueProducer_),
+                RequestBuffer(_, _, _)).WillRepeatedly(Return(Status::OK));
+
+    EXPECT_CALL(*mockMediaDemuxer_, ReadSample).WillRepeatedly(Return(Status::OK));
+    avThumbnailGenerator_->ReadLoop();
+    EXPECT_TRUE(!avThumbnailGenerator_->readErrorFlag_);
+
+    EXPECT_CALL(*mockMediaDemuxer_, ReadSample).WillRepeatedly(Return(Status::END_OF_STREAM));
+    avThumbnailGenerator_->ReadLoop();
+    EXPECT_TRUE(!avThumbnailGenerator_->readErrorFlag_);
+
+    EXPECT_CALL(*mockMediaDemuxer_, ReadSample).WillRepeatedly(Return(Status::ERROR_AGAIN));
+    avThumbnailGenerator_->ReadLoop();
+    EXPECT_TRUE(!avThumbnailGenerator_->readErrorFlag_);
+
+    EXPECT_CALL(*mockMediaDemuxer_, ReadSample).WillRepeatedly(Return(Status::ERROR_UNKNOWN));
+    avThumbnailGenerator_->ReadLoop();
+    EXPECT_TRUE(avThumbnailGenerator_->readErrorFlag_);
+}
+
+/**
  * @tc.name: Reset
  * @tc.desc: Reset
  * @tc.type: FUNC

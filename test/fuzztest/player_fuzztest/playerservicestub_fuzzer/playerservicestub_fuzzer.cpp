@@ -55,6 +55,13 @@ public:
         return reply.ReadRemoteObject();
     }
 
+    sptr<IRemoteObject> GetSubSystemAbilityWithTimeOut(IStandardMediaService::MediaSystemAbility subSystemId,
+        const sptr<IRemoteObject> &listener, uint32_t timeoutMs)
+    {
+        (void) timeoutMs;
+        return GetSubSystemAbility(subSystemId, listener);
+    }
+
 private:
     static inline BrokerDelegator<MediaServiceProxyFuzzer> delegator_;
 };

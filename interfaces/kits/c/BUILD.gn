@@ -169,9 +169,18 @@ ohos_shared_library("avrecorder") {
     "c_utils:utils",
     "graphic_surface:surface",
     "hilog:libhilog",
+    "image_framework:image",
+    "image_framework:image_native",
+    "image_framework:image_source",
+    "image_framework:ohimage",
     "ipc:ipc_core",
     "media_foundation:media_foundation",
+    "media_library:media_library",
+    "media_library:media_library_asset_manager",
+    "media_library:native_media_asset_manager",
+    "napi:ace_napi",
     "qos_manager:qos",
+    "resource_management:librawfile",
     "window_manager:libdm",
   ]
   output_extension = "so"

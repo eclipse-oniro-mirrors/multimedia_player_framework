@@ -64,6 +64,7 @@ public:
     void NotifyMemMgrLoaded();
     void HandlePlayerActive(const std::vector<int32_t> &pidList, const int32_t uid);
     void HandlePlayerFrozen(const std::vector<int32_t> &pidList, const int32_t uid);
+    int32_t GetInstanceCount();
 private:
     MediaServerManager();
 #ifdef SUPPORT_PLAYER

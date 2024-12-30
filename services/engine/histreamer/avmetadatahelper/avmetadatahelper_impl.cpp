@@ -276,9 +276,15 @@ Status AVMetadataHelperImpl::InitThumbnailGenerator()
         mediaDemuxer_ != nullptr, Status::ERROR_INVALID_STATE, "mediaDemuxer_ is nullptr");
     if (thumbnailGenerator_ == nullptr) {
         thumbnailGenerator_ = std::make_shared<AVThumbnailGenerator>(mediaDemuxer_);
+        CHECK_AND_RETURN_RET_LOG(
+            thumbnailGenerator_ != nullptr, Status::ERROR_INVALID_STATE, "create thumbnail generator failed.");
+        auto res = thumbnailGenerator_->Init();
+        if (res != MSERR_OK) {
+            MEDIA_LOGI("Init thumbnail generator failed");
+            thumbnailGenerator_ = nullptr;
+            return Status::ERROR_INVALID_STATE;
+        }
     }
-    CHECK_AND_RETURN_RET_LOG(
-        thumbnailGenerator_ != nullptr, Status::ERROR_INVALID_STATE, "Init thumbnail generator failed.");
     return Status::OK;
 }
 

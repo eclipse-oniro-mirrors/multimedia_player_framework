@@ -56,6 +56,7 @@ public:
     void StartCollectMaxAmplitude(int64_t updateIntervalMs);
     void StopCollectMaxAmplitude();
     void ReportRemainedMaxAmplitude();
+    void OnInfoDelay(PlayerOnInfoType type, int32_t extra, const Format &infoBody, int64_t delayMs);
 
 private:
 

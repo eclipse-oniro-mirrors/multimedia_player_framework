@@ -300,6 +300,27 @@ HWTEST_F(RecorderUnitTest, recorder_SetAudioSourceRepeat_001, TestSize.Level2)
 }
 
 /**
+ * @tc.name: recorder_SetAudioSourceRepeat_002
+ * @tc.desc: record video with AudioSourceRepeat
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderUnitTest, recorder_SetAudioSourceRepeat_002, TestSize.Level2)
+{
+    g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
+    g_videoRecorderConfig.aSource = AUDIO_SOURCE_DEFAULT;
+    g_videoRecorderConfig.videoFormat = H264;
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT +
+            "recorder_video_SetAudioSourceRepeat_002.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(AUDIO_VIDEO, g_videoRecorderConfig));
+    int32_t audioSourceId = 0;
+    EXPECT_NE(MSERR_OK, recorder_->SetAudioSource(AUDIO_SOURCE_INVALID, audioSourceId));
+    close(g_videoRecorderConfig.outputFd);
+}
+
+/**
  * @tc.name: recorder_DrainBufferTrue_001
  * @tc.desc: record video with DrainBufferTrue, stop true
  * @tc.type: FUNC
@@ -816,6 +837,29 @@ HWTEST_F(RecorderUnitTest, recorder_configure_021, TestSize.Level2)
     videoRecorderConfig.channelCount = 2;
     videoRecorderConfig.sampleRate = 8000;
     videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_configure_021.wav").c_str(), O_RDWR);
+    ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
+
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_AUDIO, videoRecorderConfig));
+    EXPECT_NE(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_OK, recorder_->Release());
+    close(videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_configure_022
+ * @tc.desc: record wav with channelCount 2
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderUnitTest, recorder_configure_022, TestSize.Level2)
+{
+    VideoRecorderConfig videoRecorderConfig;
+    videoRecorderConfig.audioFormat = AUDIO_CODEC_FORMAT_BUTT;
+    videoRecorderConfig.outPutFormat = FORMAT_WAV;
+    videoRecorderConfig.audioEncodingBitRate = 64000;
+    videoRecorderConfig.channelCount = 2;
+    videoRecorderConfig.sampleRate = 8000;
+    videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_configure_022.wav").c_str(), O_RDWR);
     ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
 
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_AUDIO, videoRecorderConfig));
@@ -1430,6 +1474,118 @@ HWTEST_F(RecorderUnitTest, recorder_video_SetMaxFileSize_002, TestSize.Level0)
     recorder_->SetMaxFileSize(-1);
     recorder_->SetNextOutputFile(g_videoRecorderConfig.outputFd);
     recorder_->SetFileSplitDuration(FileSplitType::FILE_SPLIT_POST, -1, 1000);
+    close(g_videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_GetAvailableEncoder_001
+ * @tc.desc: record GetAvailableEncoder
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderUnitTest, recorder_GetAvailableEncoder_001, TestSize.Level0)
+{
+    g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
+    g_videoRecorderConfig.videoFormat = MPEG4;
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_GetAvailableEncoder_001.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
+    std::vector<EncoderCapabilityData> encoderInfo;
+    EXPECT_EQ(MSERR_OK, recorder_->GetAvailableEncoder(encoderInfo));
+    EXPECT_NE(0, encoderInfo.size());
+    close(g_videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_GetAvailableEncoder_002
+ * @tc.desc: record GetAvailableEncoder
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderUnitTest, recorder_GetAvailableEncoder_002, TestSize.Level0)
+{
+    g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
+    g_videoRecorderConfig.videoFormat = H265;
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_GetAvailableEncoder_002.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
+    std::vector<EncoderCapabilityData> encoderInfo;
+    EXPECT_EQ(MSERR_OK, recorder_->GetAvailableEncoder(encoderInfo));
+    EXPECT_EQ(MSERR_OK, recorder_->GetAvailableEncoder(encoderInfo));
+    EXPECT_NE(0, encoderInfo.size());
+    close(g_videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_IsWatermarkSupported_001
+ * @tc.desc: record IsWatermarkSupported
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderUnitTest, recorder_IsWatermarkSupported_001, TestSize.Level0)
+{
+    g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
+    g_videoRecorderConfig.videoFormat = H264;
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_IsWatermarkSupported_001.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
+    bool isWatermarkSupported = false;
+    EXPECT_EQ(MSERR_OK, recorder_->IsWatermarkSupported(isWatermarkSupported));
+    close(g_videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_IsWatermarkSupported_002
+ * @tc.desc: record IsWatermarkSupported
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderUnitTest, recorder_IsWatermarkSupported_002, TestSize.Level0)
+{
+    g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
+    g_videoRecorderConfig.videoFormat = H265;
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_IsWatermarkSupported_002.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
+    bool isWatermarkSupported = false;
+    EXPECT_EQ(MSERR_OK, recorder_->IsWatermarkSupported(isWatermarkSupported));
+    EXPECT_EQ(MSERR_OK, recorder_->IsWatermarkSupported(isWatermarkSupported));
+    close(g_videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_SetVideoIsHdr_001
+ * @tc.desc: record SetVideoIsHdr
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderUnitTest, recorder_SetVideoIsHdr_001, TestSize.Level0)
+{
+    g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
+    g_videoRecorderConfig.videoFormat = H265;
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_SetVideoIsHdr_001.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
+    bool isHdr = false;
+    EXPECT_EQ(MSERR_OK, recorder_->SetVideoIsHdr(g_videoRecorderConfig.videoSourceId, isHdr));
+    close(g_videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_SetVideoIsHdr_002
+ * @tc.desc: record SetVideoIsHdr
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderUnitTest, recorder_SetVideoIsHdr_002, TestSize.Level0)
+{
+    g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
+    g_videoRecorderConfig.videoFormat = H265;
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_SetVideoIsHdr_002.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
+    bool isHdr = true;
+    EXPECT_EQ(MSERR_OK, recorder_->SetVideoIsHdr(g_videoRecorderConfig.videoSourceId, isHdr));
     close(g_videoRecorderConfig.outputFd);
 }
 

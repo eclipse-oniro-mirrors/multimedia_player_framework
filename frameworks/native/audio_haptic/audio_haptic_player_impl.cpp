@@ -126,31 +126,19 @@ int32_t AudioHapticPlayerImpl::Prepare()
 {
     int32_t result = MSERR_OK;
     std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
-    isSoundPrepare_ = false;
-    isVibratorPrepare_ = false;
-
     CHECK_AND_RETURN_RET_LOG(audioHapticSound_ != nullptr, MSERR_INVALID_OPERATION,
         "Audio haptic sound is nullptr");
     CHECK_AND_RETURN_RET_LOG(audioUri_ != "", MSERR_OPEN_FILE_FAILED, "Invalid val: audio uri is empty");
     result = audioHapticSound_->PrepareSound();
-    isSoundPrepare_ = true;
     CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, result, "Failed to load audio file");
 
     CHECK_AND_RETURN_RET_LOG(audioHapticVibrator_ != nullptr, MSERR_INVALID_OPERATION,
         "Audio haptic vibrator is nullptr");
     result = audioHapticVibrator_->PreLoad(hapticSource_, streamUsage_);
-    isVibratorPrepare_ = true;
     CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, result, "Failed to load vobration file");
 
     playerState_ = AudioHapticPlayerState::STATE_PREPARED;
     return MSERR_OK;
-}
-
-void AudioHapticPlayerImpl::IsSoundAndVibratorPrepare(bool &isSoundPrepare, bool &isVibratorPrepare)
-{
-    std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
-    isSoundPrepare = isSoundPrepare_;
-    isVibratorPrepare = isVibratorPrepare_;
 }
 
 int32_t AudioHapticPlayerImpl::Start()

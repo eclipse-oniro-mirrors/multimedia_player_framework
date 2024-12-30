@@ -34,12 +34,15 @@ public:
     // IStandardMediaService override
     sptr<IRemoteObject> GetSubSystemAbility(IStandardMediaService::MediaSystemAbility subSystemId,
         const sptr<IRemoteObject> &listener) override;
+    sptr<IRemoteObject> GetSubSystemAbilityWithTimeOut(IStandardMediaService::MediaSystemAbility subSystemId,
+        const sptr<IRemoteObject> &listener, uint32_t timeoutMs) override;
 
 protected:
     // SystemAbility override
     void OnDump() override;
     void OnStart() override;
     void OnStop() override;
+    int32_t OnIdle(const SystemAbilityOnDemandReason& idleReason) override;
     int32_t Dump(int32_t fd, const std::vector<std::u16string>& args) override;
 
 private:

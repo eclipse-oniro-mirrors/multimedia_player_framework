@@ -644,9 +644,12 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::ReleaseTask()
             PauseListenCurrentResource(); // Pause event listening for the current resource
             ResetUserParameters();
 
-            if (player_ != nullptr) {
-                (void)player_->ReleaseSync();
-                player_ = nullptr;
+            {
+                std::lock_guard<std::mutex> lock(syncMutex_);
+                if (player_ != nullptr) {
+                    (void)player_->ReleaseSync();
+                    player_ = nullptr;
+                }
             }
 
             if (playerCb_ != nullptr) {
@@ -1247,7 +1250,7 @@ napi_value AVPlayerNapi::JsSetDecryptConfig(napi_env env, napi_callback_info inf
     napi_value sessionObj;
     status = napi_coerce_to_object(env, args[0], &sessionObj);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "JsSetDecryptConfig get sessionObj failure!");
-    
+
     napi_valuetype valueType;
     if (argCount < 1 || napi_typeof(env, sessionObj, &valueType) != napi_ok || valueType != napi_object) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "mediaKeySession should be drm.MediaKeySession.");
@@ -1271,7 +1274,9 @@ napi_value AVPlayerNapi::JsSetDecryptConfig(napi_env env, napi_callback_info inf
         sptr<DrmStandard::IMediaKeySessionService> keySessionServiceProxy =
             keySessionImpl->GetMediaKeySessionServiceProxy();
         MEDIA_LOGD("And it's count is: %{public}d", keySessionServiceProxy->GetSptrRefCount());
-        if (jsPlayer->player_ != nullptr) {
+        {
+            std::lock_guard<std::mutex> lock(jsPlayer->syncMutex_);
+            CHECK_AND_RETURN_RET_LOG((jsPlayer->player_ != nullptr), result, "JsSetDecryptConfig player_ nullptr");
             (void)jsPlayer->player_->SetDecryptConfig(keySessionServiceProxy, svp);
         }
     } else {

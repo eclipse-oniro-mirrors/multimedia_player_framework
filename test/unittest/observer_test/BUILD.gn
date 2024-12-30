@@ -67,6 +67,7 @@ ohos_unittest("incall_observer_unit_test") {
     "hilog:libhilog",
     "init:libbegetutil",
     "player_framework:media_client",
+    "qos_manager:qos",
     "state_registry:tel_state_registry_api",
     "window_manager:libdm",
   ]
@@ -131,6 +132,7 @@ ohos_unittest("account_observer_unit_test") {
     "init:libbegetutil",
     "os_account:os_account_innerkits",
     "player_framework:media_client",
+    "qos_manager:qos",
     "state_registry:tel_state_registry_api",
     "window_manager:libdm",
   ]

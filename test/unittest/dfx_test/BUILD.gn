@@ -24,6 +24,10 @@ ohos_unittest("player_framework_dfx_test") {
     "-Dprotected=public",
   ]
 
+  if (is_arkui_x) {
+    defines += [ "CROSS_PLATFORM" ]
+  }
+
   include_dirs = [
     "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/engine_intf",
@@ -34,6 +38,11 @@ ohos_unittest("player_framework_dfx_test") {
   sources = [ "media_dfx_test.cpp" ]
 
   deps = [ "$MEDIA_PLAYER_ROOT_DIR/services/utils:media_service_utils" ]
+
+  public_external_deps = []
+  if (!is_arkui_x) {
+    public_external_deps += [ "json:nlohmann_json_static" ]
+  }
 
   external_deps = [
     "access_token:libaccesstoken_sdk",
