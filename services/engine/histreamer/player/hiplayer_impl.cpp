@@ -587,6 +587,7 @@ int32_t HiPlayerImpl::PrepareAsync()
         return errCode;
     }
     InitDuration();
+    UpdateMediaFirstPts();
     ret = DoSetPlayRange();
     FALSE_RETURN_V_MSG_E(ret == Status::OK, TransStatus(ret), "DoSetPlayRange failed");
     if (demuxer_ != nullptr && demuxer_->IsRenderNextVideoFrameSupported()
@@ -666,7 +667,6 @@ void HiPlayerImpl::UpdatePlayerStateAndNotify()
     NotifyResolutionChange();
     NotifyPositionUpdate();
     DoInitializeForHttp();
-    UpdateMediaFirstPts();
     OnStateChanged(PlayerStateId::READY);
 }
 
@@ -3064,6 +3064,7 @@ int32_t HiPlayerImpl::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
     preferedHeight_ = playbackStrategy.preferredHeight;
     bufferDuration_ = playbackStrategy.preferredBufferDuration;
     preferHDR_ = playbackStrategy.preferredHdr;
+    renderFirstFrame_ = playbackStrategy.showFirstFrameOnPrepare;
     return MSERR_OK;
 }
 

@@ -1064,6 +1064,7 @@ int32_t PlayerServiceStub::SetPlaybackStrategy(MessageParcel &data, MessageParce
         .preferredHeight = data.ReadUint32(),
         .preferredBufferDuration = data.ReadUint32(),
         .preferredHdr = data.ReadBool(),
+        .showFirstFrameOnPrepare = data.ReadBool(),
         .mutedMediaType = static_cast<OHOS::Media::MediaType>(data.ReadInt32())
     };
     reply.WriteInt32(SetPlaybackStrategy(avPlaybackStrategy));

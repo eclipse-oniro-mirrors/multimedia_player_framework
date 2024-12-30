@@ -3939,6 +3939,27 @@ HWTEST_F(PlayerUnitTest, Player_SetPlaybackStrategy_001, TestSize.Level0)
 }
 
 /**
+ * @tc.name  : Test SetPlaybackStrategy
+ * @tc.number: Player_SetPlaybackStrategy_002
+ * @tc.desc  : Test Player SetPlaybackStrategy
+ */
+HWTEST_F(PlayerUnitTest, Player_SetPlaybackStrategy_002, TestSize.Level0)
+{
+    AVPlayStrategy playbackStrategy = {
+        .showFirstFrameOnPrepare = true
+    };
+    ASSERT_NE(MSERR_OK, player_->SetPlaybackStrategy(playbackStrategy));
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    ASSERT_EQ(MSERR_OK, player_->SetPlaybackStrategy(playbackStrategy));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+}
+
+/**
  * @tc.name  : Test SetMediaMuted
  * @tc.number: Player_SetMediaMuted_001
  * @tc.desc  : Test Player SetMediaMuted
