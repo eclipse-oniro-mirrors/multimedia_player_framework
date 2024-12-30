@@ -1374,6 +1374,18 @@ napi_value AVPlayerNapi::JsGetPlaybackInfo(napi_env env, napi_callback_info info
     return result;
 }
 
+void AVPlayerNapi::GetAVPlayStrategyFromStrategyTmp(AVPlayStrategy &strategy, const AVPlayStrategyTmp &strategyTmp)
+{
+    strategy.preferredWidth = strategyTmp.preferredWidth;
+    strategy.preferredHeight = strategyTmp.preferredHeight;
+    strategy.preferredBufferDuration = strategyTmp.preferredBufferDuration;
+    strategy.preferredHdr = strategyTmp.preferredHdr;
+    strategy.showFirstFrameOnPrepare = strategyTmp.showFirstFrameOnPrepare;
+    strategy.mutedMediaType = static_cast<MediaType>(strategyTmp.mutedMediaType);
+    strategy.preferredAudioLanguage = strategyTmp.preferredAudioLanguage;
+    strategy.preferredSubtitleLanguage = strategyTmp.preferredSubtitleLanguage;
+}
+
 napi_value AVPlayerNapi::JsSetPlaybackStrategy(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("AVPlayerNapi::JsSetPlaybackStrategy");
@@ -1398,18 +1410,12 @@ napi_value AVPlayerNapi::JsSetPlaybackStrategy(napi_env env, napi_callback_info 
     } else {
         AVPlayStrategyTmp strategyTmp;
         (void)CommonNapi::GetPlayStrategy(env, args[0], strategyTmp);
-        if (strategyTmp.mutedMediaType != MediaType::MEDIA_TYPE_AUD) {
+        if (strategyTmp.mutedMediaType != MediaType::MEDIA_TYPE_AUD &&
+            strategyTmp.mutedMediaType != MediaType::MEDIA_TYPE_MAX_COUNT) {
             promiseCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "only support mute media type audio now");
         } else {
-            AVPlayStrategy strategy = {
-                .preferredWidth = strategyTmp.preferredWidth,
-                .preferredHeight = strategyTmp.preferredHeight,
-                .preferredBufferDuration = strategyTmp.preferredBufferDuration,
-                .preferredHdr = strategyTmp.preferredHdr,
-                .mutedMediaType = static_cast<MediaType>(strategyTmp.mutedMediaType),
-                .preferredAudioLanguage = strategyTmp.preferredAudioLanguage,
-                .preferredSubtitleLanguage = strategyTmp.preferredSubtitleLanguage
-            };
+            AVPlayStrategy strategy;
+            jsPlayer->GetAVPlayStrategyFromStrategyTmp(strategy, strategyTmp);
             promiseCtx->asyncTask = jsPlayer->SetPlaybackStrategyTask(strategy);
         }
     }

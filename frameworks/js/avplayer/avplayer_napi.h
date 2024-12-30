@@ -335,6 +335,7 @@ private:
     void DeviceChangeCallbackOn(AVPlayerNapi *jsPlayer, std::string callbackName);
     void DeviceChangeCallbackOff(AVPlayerNapi *jsPlayer, std::string callbackName);
     int32_t GetJsApiVersion() override;
+    void GetAVPlayStrategyFromStrategyTmp(AVPlayStrategy &strategy, const AVPlayStrategyTmp &strategyTmp);
 
     std::condition_variable stopTaskQueCond_;
     bool taskQueStoped_ = false;

@@ -963,6 +963,7 @@ int32_t PlayerServiceProxy::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
     (void)data.WriteUint32(playbackStrategy.preferredHeight);
     (void)data.WriteUint32(playbackStrategy.preferredBufferDuration);
     (void)data.WriteBool(playbackStrategy.preferredHdr);
+    (void)data.WriteBool(playbackStrategy.showFirstFrameOnPrepare);
     (void)data.WriteInt32(static_cast<int32_t>(playbackStrategy.mutedMediaType));
     int32_t error = SendRequest(SET_PLAYBACK_STRATEGY, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
