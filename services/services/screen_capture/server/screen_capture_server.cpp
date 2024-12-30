@@ -1273,10 +1273,8 @@ std::shared_ptr<MouseChangeListener> ScreenCaptureServer::GetMouseChangeListener
 bool ScreenCaptureServer::RegisterMMISystemAbilityListener()
 {
     MEDIA_LOGI("RegisterMMISystemAbilityListener start.");
-    if (mmiListener_ != nullptr) {
-        MEDIA_LOGI("RegisterMMISystemAbilityListener already registered");
-        return true;
-    }
+    CHECK_AND_RETURN_RET_LOG(mmiListener_ == nullptr, true, "RegisterMMISystemAbilityListener already registered.");
+    
     auto abilityManager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     CHECK_AND_RETURN_RET_LOG(abilityManager != nullptr, false,
         "RegisterMMISystemAbilityListener abilityManager is nullptr.");
@@ -1294,10 +1292,8 @@ bool ScreenCaptureServer::RegisterMMISystemAbilityListener()
 bool ScreenCaptureServer::UnRegisterMMISystemAbilityListener()
 {
     MEDIA_LOGI("UnRegisterMMISystemAbilityListener start.");
-    if (mmiListener_ == nullptr) {
-        MEDIA_LOGI("mmiListener already unregistered.");
-        return true;
-    }
+    CHECK_AND_RETURN_RET_LOG(mmiListener_ != nullptr, true, "RegisterMMISystemAbilityListener already unregistered.");
+
     auto abilityManager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     CHECK_AND_RETURN_RET_LOG(abilityManager != nullptr, false,
         "UnRegisterMMISystemAbilityListener abilityManager is nullptr.");
@@ -1342,10 +1338,9 @@ void MMISystemAbilityListener::OnRemoveSystemAbility(int32_t systemAbilityId, co
 int32_t ScreenCaptureServer::RegisterMouseChangeListener(std::string type)
 {
     MEDIA_LOGI("RegisterMouseChangeListener start.");
-    if (mouseChangeListener_ != nullptr) {
-        MEDIA_LOGI("RegisterMouseChangeListener mouseChangeListener already registered");
-        return MSERR_OK;
-    }
+    CHECK_AND_RETURN_RET_LOG(mouseChangeListener_ == nullptr, MSERR_OK,
+        "RegisterMouseChangeListener already registered.");
+
     std::weak_ptr<ScreenCaptureServer> screenCaptureServer(shared_from_this());
     mouseChangeListener_ = std::make_shared<MouseChangeListener>(screenCaptureServer);
     int32_t ret = MMI::InputManager::GetInstance()->RegisterDevListener(type, mouseChangeListener_);
@@ -1357,10 +1352,9 @@ int32_t ScreenCaptureServer::RegisterMouseChangeListener(std::string type)
 int32_t ScreenCaptureServer::UnRegisterMouseChangeListener(std::string type)
 {
     MEDIA_LOGI("UnRegisterMouseChangeListener start.");
-    if (mouseChangeListener_ == nullptr) {
-        MEDIA_LOGI("RegisterMouseChangeListener mouseChangeListener already unregistered");
-        return MSERR_OK;
-    }
+    CHECK_AND_RETURN_RET_LOG(mouseChangeListener_ != nullptr, MSERR_OK,
+        "RegisterMouseChangeListener already unregistered.");
+
     int32_t ret = MMI::InputManager::GetInstance()->UnregisterDevListener(type, mouseChangeListener_);
     mouseChangeListener_ = nullptr;
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "UnRegisterMouseChangeListener failed");
@@ -2765,7 +2759,7 @@ int32_t ScreenCaptureServer::ShowCursorInner()
         surfaceIdList_.push_back(surfaceId);
     } else {
         MEDIA_LOGI("ScreenCaptureServer::ShowCursorInner, show cursor");
-        return MSERR_OK;
+        surfaceIdList_ = {};
     }
     Rosen::DisplayManager::GetInstance().SetVirtualScreenBlackList(screenId_, contentFilter_.windowIDsVec,
         surfaceIdList_);
