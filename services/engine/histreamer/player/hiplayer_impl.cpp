@@ -201,9 +201,6 @@ Status HiPlayerImpl::Init()
     playerEventReceiver_ = playerEventReceiver;
     playerFilterCallback_ = playerFilterCallback;
     interruptMonitor_ = interruptMonitor;
-    if (syncManager_ != nullptr) {
-        syncManager_->SetEventReceiver(playerEventReceiver_);
-    }
     MEDIA_LOG_D_SHORT("pipeline init");
     pipeline_->Init(playerEventReceiver_, playerFilterCallback_, playerId_);
     MEDIA_LOG_D_SHORT("pipeline Init out");
