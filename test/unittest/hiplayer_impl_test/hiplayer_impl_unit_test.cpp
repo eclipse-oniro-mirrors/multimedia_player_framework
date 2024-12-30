@@ -307,7 +307,7 @@ HWTEST_F(HiplayerImplUnitTest, ResetIfSourceExisted_002, TestSize.Level0)
     hiplayer_->audioDecoder_ = FilterFactory::Instance().CreateFilter<AudioDecoderFilter>("player.audiodecoder",
         FilterType::FILTERTYPE_ADEC);
 
-    hiplayer_->audioDecoder_->mediaCodec_ = std::make_shared<MediaCodec>();
+    hiplayer_->audioDecoder_->audioDecoder_ = std::make_shared<AudioDecoderAdapter>();
     // 2. Call the function to be tested
     hiplayer_->ResetIfSourceExisted();
 
