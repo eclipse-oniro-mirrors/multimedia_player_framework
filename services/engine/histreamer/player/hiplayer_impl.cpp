@@ -194,10 +194,9 @@ Status HiPlayerImpl::Init()
     MEDIA_LOG_I_SHORT("Init start");
     auto playerEventReceiver = std::make_shared<PlayerEventReceiver>(this, playerId_);
     auto playerFilterCallback = std::make_shared<PlayerFilterCallback>(this);
-    auto interruptMonitor = std::make_shared<interruptMonitor>();
+    auto interruptMonitor = std::make_shared<InterruptMonitor>();
     FALSE_RETURN_V_MSG_E(playerEventReceiver != nullptr && playerFilterCallback != nullptr &&
-        interruptMonitor != nullptr, Status::ERROR_NO_MEMORY,
-        "fail to allocate memory for PlayerEventReceiver or PlayerFilterCallback or InterruptMonitor");
+        interruptMonitor != nullptr, Status::ERROR_NO_MEMORY, "fail to init hiplayImpl");
     playerEventReceiver_ = playerEventReceiver;
     playerFilterCallback_ = playerFilterCallback;
     interruptMonitor_ = interruptMonitor;
