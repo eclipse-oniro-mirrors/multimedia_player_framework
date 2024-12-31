@@ -1495,20 +1495,20 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StopAndRelease_002, TestSize.Level2)
 HWTEST_F(ScreenCaptureServerFunctionTest, ShowCursor_001, TestSize.Level2)
 {
     screenCaptureServer_->showCursor_ = true;
-    int ret = screenCaptureServer_->showCursor(true);
+    int ret = screenCaptureServer_->ShowCursor(true);
     ASSERT_EQ(ret, MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ShowCursor_002, TestSize.Level2)
 {
     screenCaptureServer_->showCursor_ = false;
-    int ret = screenCaptureServer_->showCursor(true);
+    int ret = screenCaptureServer_->ShowCursor(true);
     ASSERT_EQ(ret, MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ShowCursor_003, TestSize.Level2)
 {
-    int ret = screenCaptureServer_->showCursor(false);
+    int ret = screenCaptureServer_->ShowCursor(false);
     ASSERT_EQ(ret, MSERR_OK);
 }
 
@@ -1516,20 +1516,20 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ShowCursor_004, TestSize.Level2)
 {
     screenCaptureServer_->showCursor_ = false;
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
-    int ret = screenCaptureServer_->showCursor(true);
+    int ret = screenCaptureServer_->ShowCursor(true);
     ASSERT_EQ(ret, MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ShowCursorInner_001, TestSize.Level2)
 {
-    int ret = screenCaptureServer_->showCursorInner();
+    int ret = screenCaptureServer_->ShowCursorInner();
     ASSERT_EQ(ret, MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ShowCursorInner_002, TestSize.Level2)
 {
     screenCaptureServer_->showCursor_ = false;
-    int ret = screenCaptureServer_->showCursorInner();
+    int ret = screenCaptureServer_->ShowCursorInner();
     ASSERT_EQ(ret, MSERR_OK);
 }
 
@@ -1600,7 +1600,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnRemoveSystemAbility_001, TestSize.Le
 HWTEST_F(ScreenCaptureServerFunctionTest, RegisterMouseChangeListener_001, TestSize.Level2)
 {
     std::string type = "change";
-    screenCaptureServer_->RegisterMouseChangeListene(type);
+    screenCaptureServer_->RegisterMouseChangeListener(type);
     ASSERT_EQ(type == "change", true);
 }
 
@@ -1608,15 +1608,15 @@ HWTEST_F(ScreenCaptureServerFunctionTest, RegisterMouseChangeListener_001, TestS
 HWTEST_F(ScreenCaptureServerFunctionTest, RegisterMouseChangeListener_002, TestSize.Level2)
 {
     std::string type = "change";
-    screenCaptureServer_->RegisterMouseChangeListene(type);
-    screenCaptureServer_->RegisterMouseChangeListene(type);
+    screenCaptureServer_->RegisterMouseChangeListener(type);
+    screenCaptureServer_->RegisterMouseChangeListener(type);
     ASSERT_EQ(type == "change", true);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, UnRegisterMouseChangeListener_001, TestSize.Level2)
 {
     std::string type = "change";
-    screenCaptureServer_->UnRegisterMouseChangeListene(type);
+    screenCaptureServer_->UnRegisterMouseChangeListener(type);
     ASSERT_EQ(type == "change", true);
 }
 
@@ -1624,8 +1624,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, UnRegisterMouseChangeListener_001, Tes
 HWTEST_F(ScreenCaptureServerFunctionTest, UnRegisterMouseChangeListener_002, TestSize.Level2)
 {
     std::string type = "change";
-    screenCaptureServer_->UnRegisterMouseChangeListene(type);
-    screenCaptureServer_->UnRegisterMouseChangeListene(type);
+    screenCaptureServer_->UnRegisterMouseChangeListener(type);
+    screenCaptureServer_->UnRegisterMouseChangeListener(type);
     ASSERT_EQ(type == "change", true);
 }
 
