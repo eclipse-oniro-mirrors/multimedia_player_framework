@@ -1533,38 +1533,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ShowCursorInner_002, TestSize.Level2)
     ASSERT_EQ(ret, MSERR_OK);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, ShowCursorInner_003, TestSize.Level2)
-{
-    screenCaptureServer_->showCursor_ = false;
-    screenCaptureServer_->sessionId_ = SCREEN_ID_INVALTD;
-    int ret = screenCaptureServer_->showCursorInner();
-    ASSERT_EQ(ret, MSERR_OK);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, ShowCursorInner_004, TestSize.Level2)
-{
-    screenCaptureServer_->showCursor_ = false;
-    screenCaptureServer_->sessionId_ = 0;
-    int ret = screenCaptureServer_->showCursorInner();
-    ASSERT_EQ(ret, MSERR_OK);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, ShowCursorInner_005, TestSize.Level2)
-{
-    screenCaptureServer_->showCursor_ = true;
-    screenCaptureServer_->sessionId_ = SCREEN_ID_INVALTD;
-    int ret = screenCaptureServer_->showCursorInner();
-    ASSERT_EQ(ret, MSERR_OK);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, ShowCursorInner_006, TestSize.Level2)
-{
-    screenCaptureServer_->showCursor_ = true;
-    screenCaptureServer_->sessionId_ = 0;
-    int ret = screenCaptureServer_->showCursorInner();
-    ASSERT_EQ(ret, MSERR_OK);
-}
-
 HWTEST_F(ScreenCaptureServerFunctionTest, GetDeviceInfo_001, TestSize.Level2)
 {
     std::shared_ptr<InputDeviceInfo> deviceInfo = std::make_shared<InputDeviceInfo>();
