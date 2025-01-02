@@ -1177,6 +1177,9 @@ Status HiPlayerImpl::doCompletedSeek(int64_t seekPos, PlayerSeekMode mode)
     MEDIA_LOG_D_SHORT("doCompletedSeek");
     pipeline_ -> Flush();
     auto rtv = doSeek(seekPos, mode);
+    if (audioSink_) {
+        audioSink_->SetSeekTime(0);
+    }
     if (isStreaming_) {
         MEDIA_LOG_D_SHORT("doCompletedSeek isStreaming_ is true");
         pipeline_->Resume();
