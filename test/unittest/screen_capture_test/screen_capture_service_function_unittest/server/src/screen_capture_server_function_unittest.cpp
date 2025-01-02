@@ -1516,18 +1516,21 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ShowCursor_004, TestSize.Level2)
 {
     screenCaptureServer_->showCursor_ = false;
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
+    screenCaptureServer_->screenId_ = 0;
     int ret = screenCaptureServer_->ShowCursor(true);
     ASSERT_EQ(ret, MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ShowCursorInner_001, TestSize.Level2)
 {
+    screenCaptureServer_->screenId_ = 0;
     int ret = screenCaptureServer_->ShowCursorInner();
     ASSERT_EQ(ret, MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ShowCursorInner_002, TestSize.Level2)
 {
+    screenCaptureServer_->screenId_ = 0;
     screenCaptureServer_->showCursor_ = false;
     int ret = screenCaptureServer_->ShowCursorInner();
     ASSERT_EQ(ret, MSERR_OK);
