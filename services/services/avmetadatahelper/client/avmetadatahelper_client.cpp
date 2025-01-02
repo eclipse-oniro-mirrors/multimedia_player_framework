@@ -140,14 +140,6 @@ std::shared_ptr<AVSharedMemory> AVMetadataHelperClient::FetchFrameAtTime(int64_t
     return avMetadataHelperProxy_->FetchFrameAtTime(timeUs, option, param);
 }
 
-std::shared_ptr<AVBuffer> AVMetadataHelperClient::FetchFrameYuv(int64_t timeUs, int32_t option,
-    const OutputConfiguration &param)
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(avMetadataHelperProxy_ != nullptr, nullptr, "avmetadatahelper service does not exist.");
-    return avMetadataHelperProxy_->FetchFrameYuv(timeUs, option, param);
-}
-
 int32_t AVMetadataHelperClient::GetTimeByFrameIndex(uint32_t index, uint64_t &time)
 {
     CHECK_AND_RETURN_RET_LOG(avMetadataHelperProxy_ != nullptr, 0, "avmetadatahelper service does not exist.");
@@ -158,6 +150,14 @@ int32_t AVMetadataHelperClient::GetFrameIndexByTime(uint64_t time, uint32_t &ind
 {
     CHECK_AND_RETURN_RET_LOG(avMetadataHelperProxy_ != nullptr, 0, "avmetadatahelper service does not exist.");
     return avMetadataHelperProxy_->GetFrameIndexByTime(time, index);
+}
+
+std::shared_ptr<AVBuffer> AVMetadataHelperClient::FetchFrameYuv(int64_t timeUs, int32_t option,
+    const OutputConfiguration &param)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(avMetadataHelperProxy_ != nullptr, nullptr, "avmetadatahelper service does not exist.");
+    return avMetadataHelperProxy_->FetchFrameYuv(timeUs, option, param);
 }
 
 void AVMetadataHelperClient::Release()
@@ -179,12 +179,6 @@ int32_t AVMetadataHelperClient::CreateListenerObject()
 
     MEDIA_LOGD("SetListenerObject");
     return avMetadataHelperProxy_->SetListenerObject(object);
-}
-
-void AVMetadataHelperClient::SetIsNapiInstance(bool isNapiInstance)
-{
-    CHECK_AND_RETURN_LOG(avMetadataHelperProxy_ != nullptr, "player service does not exist..");
-    return avMetadataHelperProxy_->SetIsNapiInstance(isNapiInstance);
 }
 } // namespace Media
 } // namespace OHOS

@@ -59,7 +59,6 @@ public:
     void OnInfoDelay(PlayerOnInfoType type, int32_t extra, const Format &infoBody, int64_t delayMs);
 
 private:
-
     void DoReportMediaProgress();
     void DoReportInfo(const Any& info);
     void DoReportError(const Any& error);
@@ -72,6 +71,18 @@ private:
         int32_t what {0};
         int64_t whenMs {INT64_MAX};
         Any detail;
+    };
+    class EventQueue {
+    public:
+        void Enqueue(const std::shared_ptr<Event>& event);
+        std::shared_ptr<Event> Next();
+        void RemoveMediaProgressEvent();
+        void Quit();
+    private:
+        OHOS::Media::Mutex queueMutex_ {};
+        OHOS::Media::ConditionVariable queueHeadUpdatedCond_ {};
+        std::list<std::shared_ptr<Event>> queue_ {};
+        bool quit_ {false};
     };
 
     void LoopOnce(const std::shared_ptr<HiPlayerCallbackLooper::Event>& item);

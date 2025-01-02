@@ -125,11 +125,6 @@ ohos_shared_library("media_service") {
     "sa_media/server/media_server.cpp",
     "sa_media/server_manager/media_server_manager.cpp",
   ]
-
-  if (player_framework_support_efficiency_manager) {
-    sources += [ "sa_media/server/media_app_frozen_state_observer.cpp" ]
-  }
-
   if (player_framework_support_player) {
     sources += [
       "media_data_source/ipc/media_data_source_proxy.cpp",
@@ -256,6 +251,10 @@ ohos_shared_library("media_service") {
     "state_registry:tel_state_registry_api",
   ]
 
+  if (player_framework_support_video) {
+    external_deps += [ "graphic_surface:surface" ]
+  }
+
   if (player_framework_support_screen_capture) {
     external_deps += [
       "ability_base:base",
@@ -276,10 +275,6 @@ ohos_shared_library("media_service") {
       "relational_store:native_rdb",
       "window_manager:libdm",
     ]
-  }
-
-  if (player_framework_support_video) {
-    external_deps += [ "graphic_surface:surface" ]
   }
 
   if (player_framework_support_avsession_background) {
@@ -316,10 +311,6 @@ ohos_shared_library("media_service") {
 
   if (player_framework_support_power_manager) {
     external_deps += [ "power_manager:powermgr_client" ]
-  }
-
-  if (player_framework_support_efficiency_manager) {
-    external_deps += [ "efficiency_manager:suspend_manager_client" ]
   }
 
   subsystem_name = "multimedia"

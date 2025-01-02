@@ -37,6 +37,8 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_METADATA, "
 constexpr uint8_t ARG_ZERO = 0;
 constexpr uint8_t ARG_ONE = 1;
 constexpr uint8_t ARG_TWO = 2;
+constexpr uint8_t ARG_THREE = 3;
+constexpr uint8_t ARG_FOUR = 4;
 }
 
 namespace OHOS {
@@ -203,9 +205,9 @@ napi_value AVImageGeneratorNapi::JsFetchFrameAtTime(napi_env env, napi_callback_
 {
     MediaTrace trace("AVImageGeneratorNapi::JsFetchFrameAtTime");
     MEDIA_LOGI("JsFetchFrameAtTime  in");
-    const int32_t maxArgs = 4;  // args + callback
-    const int32_t argCallback = 3;
-    const int32_t argPixelParam = 2;
+    const int32_t maxArgs = ARG_FOUR;  // args + callback
+    const int32_t argCallback = ARG_THREE;  // index three, the 4th param if exist
+    const int32_t argPixelParam = ARG_TWO;  // index 2, the 3rd param
     size_t argCount = maxArgs;
     napi_value args[maxArgs] = { nullptr };
     napi_value result = nullptr;
@@ -234,7 +236,7 @@ napi_value AVImageGeneratorNapi::JsFetchFrameAtTime(napi_env env, napi_callback_
     napi_create_string_utf8(env, "JsFetchFrameAtTime", NAPI_AUTO_LENGTH, &resource);
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void *data) {
         auto asyncCtx = reinterpret_cast<AVImageGeneratorAsyncContext *>(data);
-        CHECK_AND_RETURN_LOG(asyncCtx && asyncCtx->innerHelper_, "Invalid AVImageGeneratorAsyncContext.");
+        CHECK_AND_RETURN_LOG(asyncCtx && !asyncCtx->errFlag && asyncCtx->innerHelper_, "Invalid context.");
         auto pixelMap = asyncCtx->innerHelper_->
             FetchFrameYuv(asyncCtx->timeUs_, asyncCtx->option_, asyncCtx->param_);
         asyncCtx->pixel_ = pixelMap;

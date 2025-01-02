@@ -14,6 +14,12 @@
      limitations under the License.
 -->
 <configuration ver="2.0">
+    <target name="PlayerDataSrcFuzzTest">
+        <preparer>
+            <option name="push" value="player/H264_AAC.mp4 -> /data/test/media" src="res"/>
+            <option name="shell" value="restorecon /data/test/media"/>
+        </preparer>
+    </target>
     <target name="PlayerFileFuzzTest">
         <preparer>
             <option name="shell" value="mkdir /data/test"/>
@@ -23,12 +29,6 @@
         </preparer>
     </target>
     <target name="PlayerApiFuzzTest">
-        <preparer>
-            <option name="push" value="player/H264_AAC.mp4 -> /data/test/media" src="res"/>
-            <option name="shell" value="restorecon /data/test/media"/>
-        </preparer>
-    </target>
-    <target name="PlayerDataSrcFuzzTest">
         <preparer>
             <option name="push" value="player/H264_AAC.mp4 -> /data/test/media" src="res"/>
             <option name="shell" value="restorecon /data/test/media"/>

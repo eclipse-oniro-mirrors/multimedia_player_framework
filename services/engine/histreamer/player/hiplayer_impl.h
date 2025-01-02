@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -123,7 +123,6 @@ public:
     int32_t SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, AVPlayStrategy strategy) override;
     int32_t GetPlaybackSpeed(PlaybackRateMode& mode) override;
     int32_t SelectBitRate(uint32_t bitRate) override;
-    int32_t StopBufferring(bool flag) override;
     int32_t GetAudioEffectMode(int32_t &effectMode) override;
     int32_t SetAudioEffectMode(int32_t effectMode) override;
 
@@ -164,7 +163,6 @@ public:
     int32_t SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted) override;
     float GetMaxAmplitude() override;
     int32_t SetMaxAmplitudeCbStatus(bool status) override;
-
 private:
     enum HiplayerSvpMode : int32_t {
         SVP_CLEAR = -1, /* it's not a protection video */
@@ -356,11 +354,11 @@ private:
     int64_t startTimeWithMode_ = -1;
     int64_t endTimeWithMode_ = -1;
     PlayerSeekMode playRangeSeekMode_ = PlayerSeekMode::SEEK_PREVIOUS_SYNC;
+
     std::mutex seekContinousMutex_;
     std::atomic<int64_t> seekContinousBatchNo_ {-1};
     std::shared_ptr<DraggingPlayerAgent> draggingPlayerAgent_ {nullptr};
     int64_t lastSeekContinousPos_ {-1};
-    bool isSetVideoSurface_ = false;
     std::atomic<bool> needUpdateSubtitle_ {true};
     std::shared_ptr<DfxAgent> dfxAgent_{};
     bool maxAmplitudeCbStatus_ {false};

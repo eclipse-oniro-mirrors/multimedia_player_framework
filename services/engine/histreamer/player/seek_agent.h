@@ -60,7 +60,7 @@ private:
     std::map<uint32_t, sptr<AVBufferQueueProducer>> producerMap_;
     std::map<uint32_t, sptr<IBrokerListener>> listenerMap_;
 
-    static constexpr uint32_t WAIT_MAX_MS = 10000;
+    static constexpr uint32_t WAIT_MAX_MS = 4000;
     static constexpr uint32_t MS_TO_US = 1000;
 };
 

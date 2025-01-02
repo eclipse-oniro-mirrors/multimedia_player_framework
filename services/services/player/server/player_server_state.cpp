@@ -148,12 +148,12 @@ int32_t PlayerServer::BaseState::MessageStateChange(int32_t extra)
         HandlePlaybackComplete(extra);
     } else {
         HandleStateChange(extra);
-        MEDIA_LOGI("0x%{public}06" PRIXPTR " > %{public}s",
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " Callback State change, currentState is %{public}s",
             FAKE_POINTER(this), server_.GetStatusDescription(extra).c_str());
     }
 
     if (extra == PLAYER_STOPPED && server_.disableStoppedCb_) {
-        MEDIA_LOGI("0x%{public}06" PRIXPTR " disable StoppedCb", FAKE_POINTER(this));
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " Callback State change disable StoppedCb", FAKE_POINTER(this));
         server_.disableStoppedCb_ = false;
         return MSERR_UNSUPPORT;
     }
@@ -299,7 +299,6 @@ void PlayerServer::PreparedState::HandleStateChange(int32_t newState)
         server_.ChangeState(server_.stoppedState_);
         (void)server_.taskMgr_.MarkTaskDone("prepared->stopped done");
     } else if (newState == PLAYER_STATE_ERROR) {
-        MediaTrace::TraceEnd("PlayerServer::Error", FAKE_POINTER(&server_));
         server_.lastOpStatus_ = PLAYER_STATE_ERROR;
         server_.ChangeState(server_.initializedState_);
         (void)server_.taskMgr_.MarkTaskDone("prepared->error done");
@@ -397,13 +396,14 @@ void PlayerServer::PlayingState::StateEnter()
     int32_t userId = server_.GetUserId();
     bool isBootCompleted = server_.IsBootCompleted();
     if (userId <= 0 || !isBootCompleted) {
-        MEDIA_LOGI("PlayingState userId %{public}d, isBootCompleted %{public}d", userId, isBootCompleted);
+        MEDIA_LOGI("PlayingState::StateEnter userId = %{public}d, isBootCompleted = %{public}d, return",
+            userId, isBootCompleted);
         return;
     }
 
     bool isForeground = true;
     AccountSA::OsAccountManager::IsOsAccountForeground(userId, isForeground);
-    MEDIA_LOGI("PlayingState userId %{public}d isForeground %{public}d isBootCompleted %{public}d",
+    MEDIA_LOGI("PlayingState::StateEnter userId = %{public}d isForeground = %{public}d isBootCompleted = %{public}d",
         userId, isForeground, isBootCompleted);
     if (!isForeground && !server_.GetInterruptState()) {
         server_.OnSystemOperation(

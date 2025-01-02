@@ -247,10 +247,6 @@ std::shared_ptr<AVSharedMemory> AVMetaDataCollector::GetArtPicture()
             MEDIA_LOGE("memcpy_s failed, trackCount no %{public}zu", index);
             return nullptr;
         }
-        if (artPicMem == nullptr) {
-            MEDIA_LOGE("GetArtPictureMemory Failed");
-            return nullptr;
-        }
         collectedArtPicture_ = artPicMem;
         return collectedArtPicture_;
     }

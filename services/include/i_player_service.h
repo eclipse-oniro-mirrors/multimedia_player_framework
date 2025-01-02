@@ -350,12 +350,7 @@ public:
      * @version 1.0
      */
     virtual int32_t SelectBitRate(uint32_t bitRate) = 0;
-
-    virtual int32_t StopBufferring(bool flag)
-    {
-        (void)flag;
-        return 0;
-    }
+    
     /**
      * @brief get the current player playback rate
      *
