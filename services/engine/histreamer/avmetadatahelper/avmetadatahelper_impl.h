@@ -27,6 +27,7 @@
 #include "i_avmetadatahelper_service.h"
 #include "media_demuxer.h"
 #include "nocopyable.h"
+#include "interrupt_monitor.h"
 
 namespace OHOS {
 namespace Media {
@@ -61,6 +62,7 @@ private:
     std::shared_ptr<AVSharedMemory> collectedArtPicture_;
     std::shared_ptr<AVSharedMemoryBase> fetchedFrameAtTime_;
     std::shared_ptr<OHOS::Media::TimeAndIndexConversion> conversion_ { nullptr };
+    std::shared_ptr<InterruptMonitor> interruptMonitor_ {nullptr};
     std::atomic_bool stopProcessing_{ false };
     std::atomic_bool isForFrameConvert_{ false };
 
