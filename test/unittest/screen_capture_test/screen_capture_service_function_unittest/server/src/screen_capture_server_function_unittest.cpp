@@ -1545,7 +1545,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnDeviceAdded_001, TestSize.Level2)
 {
     std::shared_ptr<MouseChangeListener> listener = std::make_shared<MouseChangeListener>(screenCaptureServer_);
     int32_t inputDeviceId = 9;
-    listener->OnDeviceAdded(inputDeviceId,"test");
+    listener->OnDeviceAdded(inputDeviceId, "test");
     ASSERT_EQ(inputDeviceId == 9, true);
 }
 
@@ -1553,7 +1553,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnDeviceRemoved_001, TestSize.Level2)
 {
     std::shared_ptr<MouseChangeListener> listener = std::make_shared<MouseChangeListener>(screenCaptureServer_);
     int32_t inputDeviceId = 9;
-    listener->OnDeviceRemoved(inputDeviceId,"test");
+    listener->OnDeviceRemoved(inputDeviceId, "test");
     ASSERT_EQ(inputDeviceId == 9, true);
 }
 
@@ -1574,7 +1574,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnAddSystemAbility_001, TestSize.Level
     sptr<MMISystemAbilityListener> listener = new MMISystemAbilityListener(screenCaptureServer_);
     int32_t systemAbilityId = 10;
     std::string deviceId = "9";
-    listener->OnAddSystemAbility(systemAbilityId,deviceId);
+    listener->OnAddSystemAbility(systemAbilityId, deviceId);
     ASSERT_EQ(systemAbilityId == 10, true);
 }
 
@@ -1584,7 +1584,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnAddSystemAbility_002, TestSize.Level
     int32_t systemAbilityId = 10;
     std::string deviceId = "9";
     screenCaptureServer_->SetMouseChangeListener(nullptr);
-    listener->OnAddSystemAbility(systemAbilityId,deviceId);
+    listener->OnAddSystemAbility(systemAbilityId, deviceId);
     ASSERT_EQ(systemAbilityId == 10, true);
 }
 
@@ -1593,7 +1593,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnRemoveSystemAbility_001, TestSize.Le
     sptr<MMISystemAbilityListener> listener = new MMISystemAbilityListener(screenCaptureServer_);
     int32_t systemAbilityId = 10;
     std::string deviceId = "9";
-    listener->OnRemoveSystemAbility(systemAbilityId,deviceId);
+    listener->OnRemoveSystemAbility(systemAbilityId, deviceId);
     ASSERT_EQ(systemAbilityId == 10, true);
 }
 
@@ -1633,14 +1633,14 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PostStartScreenCaptureSuccessAction_00
 {
     screenCaptureServer_->showCursor_ = false;
     screenCaptureServer_->PostStartScreenCaptureSuccessAction();
-     ASSERT_EQ(screenCaptureServer_->showCursor_ == false, true);
+    ASSERT_EQ(screenCaptureServer_->showCursor_ == false, true);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, PostStartScreenCaptureSuccessAction_002, TestSize.Level2)
 {
     screenCaptureServer_->showCursor_ = true;
     screenCaptureServer_->PostStartScreenCaptureSuccessAction();
-     ASSERT_EQ(screenCaptureServer_->showCursor_ == true, true);
+    ASSERT_EQ(screenCaptureServer_->showCursor_ == true, true);
 }
 } // Media
 } // OHOS
