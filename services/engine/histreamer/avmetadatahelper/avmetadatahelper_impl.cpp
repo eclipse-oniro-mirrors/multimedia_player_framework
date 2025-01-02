@@ -292,7 +292,9 @@ void AVMetadataHelperImpl::SetInterruptState(bool isInterruptNeeded)
 {
     MEDIA_LOGI("Metadata set interrupt state %{public}d", isInterruptNeeded);
     isInterruptNeeded_ = isInterruptNeeded;
-    interruptMonitor_->SetInterruptState(isInterruptNeeded);
+    if (interruptMonitor_) {
+        interruptMonitor_->SetInterruptState(isInterruptNeeded);
+    }
 }
 }  // namespace Media
 }  // namespace OHOS
