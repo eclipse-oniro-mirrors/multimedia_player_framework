@@ -90,7 +90,7 @@ void MediaServer::OnAddSystemAbility(int32_t systemAbilityId, const std::string 
 sptr<IRemoteObject> MediaServer::GetSubSystemAbility(IStandardMediaService::MediaSystemAbility subSystemId,
     const sptr<IRemoteObject> &listener)
 {
-        MEDIA_LOGD("GetSubSystemAbility, subSystemId is %{public}d", subSystemId);
+    MEDIA_LOGD("GetSubSystemAbility, subSystemId is %{public}d", subSystemId);
 #ifdef SUPPORT_START_STOP_ON_DEMAND
     bool isSaInActive = (GetAbilityState() != SystemAbilityState::IDLE) || CancelIdle();
     CHECK_AND_RETURN_RET_LOG(isSaInActive, nullptr, "media service in idle state, but cancel idle failed");
