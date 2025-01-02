@@ -1344,7 +1344,7 @@ void MMISystemAbilityListener::OnRemoveSystemAbility(int32_t systemAbilityId, co
 int32_t ScreenCaptureServer::RegisterMouseChangeListener(std::string type)
 {
     MEDIA_LOGI("RegisterMouseChangeListener start.");
-     if (mouseChangeListener_ != nullptr) {
+    if (mouseChangeListener_ != nullptr) {
         MEDIA_LOGI("RegisterMouseChangeListener mouseChangeListener already registered");
         return MSERR_OK;
     }
