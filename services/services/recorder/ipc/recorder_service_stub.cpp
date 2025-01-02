@@ -604,10 +604,10 @@ int32_t RecorderServiceStub::SetMetaSource(MessageParcel &data, MessageParcel &r
 int32_t RecorderServiceStub::SetMetaMimeType(MessageParcel &data, MessageParcel &reply)
 {
     int32_t sourceId = data.ReadInt32();
-    const char *mimetypeStr = data.ReadCString();
-    CHECK_AND_RETURN_RET_LOG(mimetypeStr != nullptr, MSERR_INVALID_OPERATION,
-        "data.ReadCString() is nullptr,");
-    std::string_view mimetype(mimetypeStr);
+    const char *mimetypeCString = data.ReadCString();
+    CHECK_AND_RETURN_RET_LOG(mimetypeCString != nullptr, MSERR_INVALID_OPERATION,
+        "SetMetaMimeType: data.ReadCString() returned nullptr for mimeType!");
+    std::string_view mimetype(mimetypeCString);
     reply.WriteInt32(SetMetaMimeType(sourceId, mimetype));
     return MSERR_OK;
 }
@@ -615,10 +615,10 @@ int32_t RecorderServiceStub::SetMetaMimeType(MessageParcel &data, MessageParcel 
 int32_t RecorderServiceStub::SetMetaTimedKey(MessageParcel &data, MessageParcel &reply)
 {
     int32_t sourceId = data.ReadInt32();
-    const char *mimetypeStr = data.ReadCString();
-    CHECK_AND_RETURN_RET_LOG(mimetypeStr != nullptr, MSERR_INVALID_OPERATION,
-        "data.ReadCString() is nullptr");
-    std::string_view timedKey(mimetypeStr);
+    const char *timedKeyCString = data.ReadCString();
+    CHECK_AND_RETURN_RET_LOG(timedKeyCString != nullptr, MSERR_INVALID_OPERATION,
+        "SetMetaTimedKey: data.ReadCString() returned nullptr for timedKey!");
+    std::string_view timedKey(timedKeyCString);
     reply.WriteInt32(SetMetaTimedKey(sourceId, timedKey));
     return MSERR_OK;
 }
@@ -626,10 +626,10 @@ int32_t RecorderServiceStub::SetMetaTimedKey(MessageParcel &data, MessageParcel 
 int32_t RecorderServiceStub::SetMetaSourceTrackMime(MessageParcel &data, MessageParcel &reply)
 {
     int32_t sourceId = data.ReadInt32();
-    const char *mimetypeStr = data.ReadCString();
-    CHECK_AND_RETURN_RET_LOG(mimetypeStr != nullptr, MSERR_INVALID_OPERATION,
-        "data.ReadCString() is nullptr");
-    std::string_view srcTrackMime(mimetypeStr);
+    const char *srcTrackMimeCString = data.ReadCString();
+    CHECK_AND_RETURN_RET_LOG(srcTrackMimeCString != nullptr, MSERR_INVALID_OPERATION,
+        "srcTrackMime: data.ReadCString() returned nullptr for srcTrackMime!");
+    std::string_view srcTrackMime(srcTrackMimeCString);
     reply.WriteInt32(SetMetaSourceTrackMime(sourceId, srcTrackMime));
     return MSERR_OK;
 }
