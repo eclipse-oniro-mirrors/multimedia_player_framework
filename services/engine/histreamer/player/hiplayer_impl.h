@@ -37,6 +37,7 @@
 #include "meta/meta.h"
 #include <chrono>
 #include "dragging_player_agent.h"
+#include "interrupt_monitor.h"
 #ifdef SUPPORT_VIDEO
 #include "decoder_surface_filter.h"
 #endif
@@ -280,6 +281,7 @@ private:
     std::shared_ptr<AudioDecoderFilter> audioDecoder_;
     std::shared_ptr<AudioSinkFilter> audioSink_;
     std::shared_ptr<SubtitleSinkFilter> subtitleSink_;
+    std::shared_ptr<InterruptMonitor> interruptMonitor_;
 #ifdef SUPPORT_VIDEO
     std::shared_ptr<DecoderSurfaceFilter> videoDecoder_;
 #endif

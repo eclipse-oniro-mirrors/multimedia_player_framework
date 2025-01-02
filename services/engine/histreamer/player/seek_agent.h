@@ -24,12 +24,13 @@
 #include "osal/task/mutex.h"
 #include "iremote_stub.h"
 #include "demuxer_filter.h"
+#include "interrupt_listener.h"
 
 namespace OHOS {
 namespace Media {
 class HiPlayerImpl;
 
-class SeekAgent : public std::enable_shared_from_this<SeekAgent> {
+class SeekAgent : public std::enable_shared_from_this<SeekAgent>, public InterruptListener {
 public:
     explicit SeekAgent(std::shared_ptr<Pipeline::DemuxerFilter> demuxer, int64_t startPts = 0);
     ~SeekAgent();
@@ -40,7 +41,7 @@ public:
     Status OnVideoBufferFilled(std::shared_ptr<AVBuffer>& buffer,
         sptr<AVBufferQueueProducer> producer, int32_t trackId);
     Status AlignAudioPosition(int64_t audioPosition);
-    void SetInterruptState(bool isNeed);
+    void OnInterrupted(bool isInterruptNeeded) override;
 private:
     Status SetBufferFilledListener();
     Status RemoveBufferFilledListener();
@@ -55,7 +56,7 @@ private:
 
     int64_t seekTargetPts_{-1};
     int64_t mediaStartPts_{0};
-    bool isInterrputNeeded_{false};
+    bool isInterruptNeeded_{false};
     std::atomic<bool> isSeeking_{false};
     std::map<uint32_t, sptr<AVBufferQueueProducer>> producerMap_;
     std::map<uint32_t, sptr<IBrokerListener>> listenerMap_;

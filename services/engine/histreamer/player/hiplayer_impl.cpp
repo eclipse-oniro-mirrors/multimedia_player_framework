@@ -175,6 +175,7 @@ void HiPlayerImpl::ReleaseInner()
     audioSink_.reset();
 #ifdef SUPPORT_VIDEO
     if (videoDecoder_) {
+        interruptMonitor_->DeregisterListener(videoDecoder_);
         videoDecoder_.reset();
     }
 #endif
@@ -193,10 +194,12 @@ Status HiPlayerImpl::Init()
     MEDIA_LOG_I("Init start");
     auto playerEventReceiver = std::make_shared<PlayerEventReceiver>(this, playerId_);
     auto playerFilterCallback = std::make_shared<PlayerFilterCallback>(this);
-    FALSE_RETURN_V_MSG_E(playerEventReceiver != nullptr && playerFilterCallback != nullptr, Status::ERROR_NO_MEMORY,
-        "fail to allocate memory for PlayerEventReceiver or PlayerFilterCallback");
+    auto interruptMonitor = std::make_shared<InterruptMonitor>();
+    FALSE_RETURN_V_MSG_E(playerEventReceiver != nullptr && playerFilterCallback != nullptr &&
+        interruptMonitor != nullptr, Status::ERROR_NO_MEMORY, "fail to init hiplayImpl");
     playerEventReceiver_ = playerEventReceiver;
     playerFilterCallback_ = playerFilterCallback;
+    interruptMonitor_ = interruptMonitor;
     MEDIA_LOG_D("pipeline init");
     pipeline_->Init(playerEventReceiver_, playerFilterCallback_, playerId_);
     MEDIA_LOG_D("pipeline Init out");
@@ -709,16 +712,10 @@ bool HiPlayerImpl::BreakIfInterruptted()
 
 void HiPlayerImpl::SetInterruptState(bool isInterruptNeeded)
 {
-    MEDIA_LOG_I("SetInterrupt");
+    MEDIA_LOG_I("Hiplayer SetInterrupt %{public}d", isInterruptNeeded);
     isInterruptNeeded_ = isInterruptNeeded;
-    if (demuxer_ != nullptr) {
-        demuxer_->SetInterruptState(isInterruptNeeded);
-    }
-    if (seekAgent_ != nullptr) {
-        seekAgent_->SetInterruptState(isInterruptNeeded);
-    }
-    if (videoDecoder_ != nullptr) {
-        videoDecoder_->SetInterruptState(isInterruptNeeded);
+    if (interruptMonitor_) {
+        interruptMonitor_->SetInterruptState(isInterruptNeeded);
     }
 }
 
@@ -1257,6 +1254,7 @@ Status HiPlayerImpl::HandleSeekClosest(int64_t seekPos, int64_t seekTimeUs)
         audioSink_->SetIsCancelStart(true);
     }
     seekAgent_ = std::make_shared<SeekAgent>(demuxer_, mediaStartPts_);
+    interruptMonitor_->RegisterListener(seekAgent_);
     SetFrameRateForSeekPerformance(FRAME_RATE_FOR_SEEK_PERFORMANCE);
     bool timeout = false;
     auto res = seekAgent_->Seek(seekPos, timeout);
@@ -1276,6 +1274,7 @@ Status HiPlayerImpl::HandleSeekClosest(int64_t seekPos, int64_t seekTimeUs)
     if (subtitleSink_ != nullptr) {
         subtitleSink_->NotifySeek();
     }
+    interruptMonitor_->DeregisterListener(seekAgent_);
     seekAgent_.reset();
     return res;
 }
@@ -2240,7 +2239,7 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
         return Status::ERROR_NULL_POINTER;
     }
     pipeline_->AddHeadFilters({demuxer_});
-    demuxer_->Init(playerEventReceiver_, playerFilterCallback_);
+    demuxer_->Init(playerEventReceiver_, playerFilterCallback_, interruptMonitor_);
     DoSetPlayStrategy(source);
     if (!mimeType_.empty()) {
         source->SetMimeType(mimeType_);
@@ -2911,6 +2910,7 @@ Status HiPlayerImpl::LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFi
             FilterType::FILTERTYPE_VDEC);
         FALSE_RETURN_V(videoDecoder_ != nullptr, Status::ERROR_NULL_POINTER);
         videoDecoder_->Init(playerEventReceiver_, playerFilterCallback_);
+        interruptMonitor_->RegisterListener(videoDecoder_);
         videoDecoder_->SetSyncCenter(syncManager_);
         videoDecoder_->SetCallingInfo(appUid_, appPid_, bundleName_, instanceId_);
         if (surface_ != nullptr) {
@@ -3059,9 +3059,11 @@ int32_t HiPlayerImpl::ExitSeekContinous(bool align, int64_t seekContinousBatchNo
     syncManager_->Seek(seekTimeUs, true);
     if (align) {
         seekAgent_ = std::make_shared<SeekAgent>(demuxer_);
+        interruptMonitor_->RegisterListener(seekAgent_);
         auto res = seekAgent_->AlignAudioPosition(lastSeekContinousPos_);
         FALSE_LOG_MSG(res == Status::OK, "AlignAudioPosition failed");
         MEDIA_LOG_I_SHORT("seekAgent_ AlignAudioPosition end");
+        interruptMonitor_->DeregisterListener(seekAgent_);
         seekAgent_.reset();
     }
     return TransStatus(Status::OK);

@@ -93,14 +93,14 @@ Status SeekAgent::Seek(int64_t seekPos, bool &timeout)
         demuxer_->ResumeForSeek();
         MEDIA_LOG_I("ResumeForSeek end");
         isClosetSeekDone = targetArrivedCond_.WaitFor(lock, WAIT_MAX_MS,
-            [this] {return (isAudioTargetArrived_ && isVideoTargetArrived_) || isInterrputNeeded_;});
+            [this] {return (isAudioTargetArrived_ && isVideoTargetArrived_) || isInterruptNeeded_;});
         MEDIA_LOG_I("Wait end");
     }
     MEDIA_LOG_I("PauseForSeek start");
     demuxer_->PauseForSeek();
     st = RemoveBufferFilledListener();
     // interrupt with error
-    if (isInterrputNeeded_) {
+    if (isInterruptNeeded_) {
         return Status::ERROR_INVALID_OPERATION;
     }
     if (!isClosetSeekDone) {
@@ -295,9 +295,10 @@ Status SeekAgent::AlignAudioPosition(int64_t audioPosition)
     return ret;
 }
 
-void SeekAgent::SetInterruptState(bool isNeed)
+void SeekAgent::OnInterrupted(bool isInterruptNeeded)
 {
-    isInterrputNeeded_ = isNeed;
+    MEDIA_LOG_D("SeekAgent onInterrupted %{public}d", isInterruptNeeded);
+    isInterruptNeeded_ = isInterruptNeeded;
     targetArrivedCond_.NotifyAll();
 }
 }  // namespace Media

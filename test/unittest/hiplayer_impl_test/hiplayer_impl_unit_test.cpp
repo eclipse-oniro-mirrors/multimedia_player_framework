@@ -380,6 +380,24 @@ HWTEST_F(HiplayerImplUnitTest, SetInterruptState_002, TestSize.Level0)
 }
 
 /**
+* @tc.name    : Test SetInterruptState API
+* @tc.number  : SetInterruptState_003
+* @tc.desc    : Test SetInterruptState interface, interruptMonitor_ exist.
+* @tc.require : issueI5NZAQ
+*/
+HWTEST_F(HiplayerImplUnitTest, SetInterruptState_003, TestSize.Level0)
+{
+    bool isInterruptNeeded = false;
+    hiplayer_->interruptMonitor_ = std::make_shared<InterruptMonitor>();
+ 
+    hiplayer_->SetInterruptState(isInterruptNeeded);
+    EXPECT_EQ(hiplayer_->isInterruptNeeded_, false);
+    isInterruptNeeded = true;
+    hiplayer_->SetInterruptState(isInterruptNeeded);
+    EXPECT_EQ(hiplayer_->isInterruptNeeded_, true);
+}
+
+/**
 * @tc.name    : Test DoInitializeForHttp API
 * @tc.number  : DoInitializeForHttp_001
 * @tc.desc    : Test DoInitializeForHttp interface, isNetWorkPlay_ is false.

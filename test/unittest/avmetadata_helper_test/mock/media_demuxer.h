@@ -88,7 +88,7 @@ public:
     virtual void SetEventReceiver(const std::shared_ptr<Pipeline::EventReceiver> &receiver);
     virtual bool GetDuration(int64_t& durationMs);
     virtual void SetPlayerId(const std::string &playerId);
-    virtual void SetInterruptState(bool isInterruptNeeded);
+    virtual void OnInterrupted(bool isInterruptNeeded);
     virtual void SetDumpInfo(bool isDump, uint64_t instanceId);
 
     virtual Status OptimizeDecodeSlow(bool isDecodeOptimizationEnabled);
