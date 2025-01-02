@@ -15,7 +15,9 @@
  
 #ifndef DFX_AGENT_H
 #define DFX_AGENT_H
- 
+
+#include <unordered_set>
+
 #include "osal/task/task.h"
 #include "filter/filter.h"
  
@@ -45,9 +47,11 @@ public:
     void ResetAgent();
 private:
     void ReportLagEvent(int64_t lagDuration, const std::string& eventMsg);
+    void ReportEosSeek0Event(int32_t appUid);
     static void ProcessVideoLagEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &event);
     static void ProcessAudioLagEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &event);
     static void ProcessStreamLagEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &event);
+    static void ProcessEosSeekEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &event);
     std::string groupId_ {};
     std::string instanceId_ {};
     std::string appName_ {};
@@ -55,6 +59,23 @@ private:
     std::unique_ptr<Task> dfxTask_ {nullptr};
     bool hasReported_ {false};
     static const std::map<DfxEventType, DfxEventHandleFunc> DFX_EVENT_HANDLERS_;
+};
+
+class ConcurrentUidSet {
+public:
+    bool IsAppFirstEvent(int32_t uid)
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (set_.find(uid) == set_.end()) {
+            set_.insert(uid);
+            return true;
+        }
+        return false;
+    }
+
+private:
+    std::mutex mutex_{};
+    std::unordered_set<int32_t> set_{};
 };
  
 } // namespace Media

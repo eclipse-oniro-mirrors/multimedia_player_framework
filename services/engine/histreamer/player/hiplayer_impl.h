@@ -256,6 +256,7 @@ private:
     Status InnerDoSeek(int64_t seekTimeUs, int64_t seekPos, PlayerSeekMode mode);
     int32_t GetSarVideoWidth(std::shared_ptr<Meta> trackInfo);
     int32_t GetSarVideoHeight(std::shared_ptr<Meta> trackInfo);
+    int32_t HandleEosPlay() override;
 
     bool isNetWorkPlay_ = false;
     bool isDump_ = false;
