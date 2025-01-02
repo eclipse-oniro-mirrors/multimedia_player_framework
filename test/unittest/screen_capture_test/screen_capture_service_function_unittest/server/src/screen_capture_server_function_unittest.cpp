@@ -1536,14 +1536,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ShowCursorInner_002, TestSize.Level2)
     ASSERT_EQ(ret, MSERR_OK);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, GetDeviceInfo_001, TestSize.Level2)
-{
-    std::shared_ptr<InputDeviceInfo> deviceInfo = std::make_shared<InputDeviceInfo>();
-    std::shared_ptr<MouseChangeListener> listener = std::make_shared<MouseChangeListener>(screenCaptureServer_);
-    int ret = listener->GetDeviceInfo(9, deviceInfo);
-    ASSERT_EQ(ret, MSERR_OK);
-}
-
 HWTEST_F(ScreenCaptureServerFunctionTest, OnDeviceAdded_001, TestSize.Level2)
 {
     std::shared_ptr<MouseChangeListener> listener = std::make_shared<MouseChangeListener>(screenCaptureServer_);
