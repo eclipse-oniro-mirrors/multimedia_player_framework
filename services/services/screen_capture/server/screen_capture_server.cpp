@@ -140,6 +140,7 @@ MouseChangeListener::MouseChangeListener(std::weak_ptr<ScreenCaptureServer> scre
 int32_t MouseChangeListener::GetDeviceInfo(int32_t deviceId, std::shared_ptr<InputDeviceInfo> deviceInfo)
 {
     MEDIA_LOGI("Get device info by deviceId %{public}d", deviceId);
+    CHECK_AND_RETURN_RET_LOG(deviceInfo != nullptr, MSERR_INVALID_VAL, "Input deviceInfo is nullptr");
 
     std::function<void(std::shared_ptr<MMI::InputDevice>)> callback =
         [&deviceInfo](std::shared_ptr<MMI::InputDevice> device) {
@@ -2759,15 +2760,15 @@ int32_t ScreenCaptureServer::ShowCursorInner()
     CHECK_AND_RETURN_RET_LOG(screenId_ != SCREEN_ID_INVALID, MSERR_INVALID_VAL,
         "ShowCursorInner failed, virtual screen not init");
     if (!showCursor_) {
-        MEDIA_LOGI("ScreenCaptureServer::ShowCursorInner, not show cursor");
+        MEDIA_LOGI("ScreenCaptureServer 0x%{public}06" PRIXPTR " ShowCursorInner not show cursor", FAKE_POINTER(this));
         uint64_t surfaceId = {};
         int32_t ret = MMI::InputManager::GetInstance()->GetCursorSurfaceId(surfaceId);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "GetCursorSurfaceId failed");
-        MEDIA_LOGI("GetCursorSurfaceId success, surfaceId: %{public}s", std::to_string(surfaceId).c_str());
+        MEDIA_LOGI("GetCursorSurfaceId success, surfaceId: %{public}" PRIu64, surfaceId);
         surfaceIdList_ = {};
         surfaceIdList_.push_back(surfaceId);
     } else {
-        MEDIA_LOGI("ScreenCaptureServer::ShowCursorInner, show cursor");
+        MEDIA_LOGI("ScreenCaptureServer 0x%{public}06" PRIXPTR " ShowCursorInner, show cursor", FAKE_POINTER(this));
         surfaceIdList_ = {};
     }
     Rosen::DisplayManager::GetInstance().SetVirtualScreenBlackList(screenId_, contentFilter_.windowIDsVec,
