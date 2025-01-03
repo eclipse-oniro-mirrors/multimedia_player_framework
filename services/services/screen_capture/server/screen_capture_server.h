@@ -270,6 +270,7 @@ class ScreenCaptureServer : public std::enable_shared_from_this<ScreenCaptureSer
         public IScreenCaptureService, public NoCopyable {
 public:
     static std::map<int32_t, std::weak_ptr<ScreenCaptureServer>> serverMap_;
+    static std::map<int32_t, int32_t> saAppInfoMap_;
     static const int32_t maxSessionId_;
     static const int32_t maxAppLimit_;
     static UniqueIDGenerator gIdGenerator_;
@@ -277,9 +278,11 @@ public:
     static const int32_t maxSessionPerUid_;
     static std::shared_mutex mutexServerMapRWGlobal_;
     static std::shared_mutex mutexListRWGlobal_;
+    static std::shared_mutex mutexSaAppInfoMapGlobal_;
 
     static std::shared_ptr<IScreenCaptureService> Create();
-    static bool CanScreenCaptureInstanceBeCreate();
+    static bool IsSAServiceCalling();
+    static bool CanScreenCaptureInstanceBeCreate(int32_t appUid);
     static std::shared_ptr<IScreenCaptureService> CreateScreenCaptureNewInstance();
     static int32_t ReportAVScreenCaptureUserChoice(int32_t sessionId, const std::string &content);
     static int32_t GetRunningScreenCaptureInstancePid(std::list<int32_t> &pidList);
@@ -296,6 +299,9 @@ public:
     static void AddStartedSessionIdList(int32_t value);
     static void RemoveStartedSessionIdList(int32_t value);
     static std::list<int32_t> GetAllStartedSessionIdList();
+    static void AddSaAppInfoMap(int32_t saUid, int32_t curAppUid);
+    static void RemoveSaAppInfoMap(int32_t saUid);
+    static bool IsSaUidValid(int32_t saUid, int32_t appUid);
     ScreenCaptureServer();
     ~ScreenCaptureServer();
 
@@ -303,6 +309,8 @@ public:
     int32_t SetDataType(DataType dataType) override;
     int32_t SetRecorderInfo(RecorderInfo recorderInfo) override;
     int32_t SetOutputFile(int32_t outputFd) override;
+    int32_t SetAndCheckLimit() override;
+    int32_t SetAndCheckSaLimit(OHOS::AudioStandard::AppInfo &appInfo) override;
     int32_t InitAudioEncInfo(AudioEncInfo audioEncInfo) override;
     int32_t InitAudioCap(AudioCaptureInfo audioInfo) override;
     int32_t InitVideoEncInfo(VideoEncInfo videoEncInfo) override;
@@ -345,6 +353,9 @@ public:
     bool IsTelInCallSkipList();
     int32_t GetAppPid();
     int32_t GetAppUid();
+    int32_t SetAndCheckAppInfo(OHOS::AudioStandard::AppInfo &appInfo);
+    void SetSCServerSaUid(int32_t saUid);
+    int32_t GetSCServerSaUid();
 
 private:
     int32_t StartScreenCaptureInner(bool isPrivacyAuthorityEnabled);
@@ -441,6 +452,7 @@ private:
     float density_ = 0.0f;
     int32_t capsuleVpSize_ = 18;
     int32_t capsulePxSize_ = 0;
+    int32_t saUid_ = -1;
 
     /* used for both CAPTURE STREAM and CAPTURE FILE */
     OHOS::AudioStandard::AppInfo appInfo_;

@@ -33,6 +33,8 @@ public:
     int32_t SetDataType(DataType dataType) override;
     int32_t SetRecorderInfo(RecorderInfo recorderInfo) override;
     int32_t SetOutputFile(int32_t fd) override;
+    int32_t SetAndCheckLimit() override;
+    int32_t SetAndCheckSaLimit(OHOS::AudioStandard::AppInfo &appInfo) override;
     int32_t InitAudioEncInfo(AudioEncInfo audioEncInfo) override;
     int32_t InitAudioCap(AudioCaptureInfo audioInfo) override;
     int32_t InitVideoEncInfo(VideoEncInfo videoEncInfo) override;
@@ -61,6 +63,8 @@ private:
     int32_t SetDataType(MessageParcel &data, MessageParcel &reply);
     int32_t SetRecorderInfo(MessageParcel &data, MessageParcel &reply);
     int32_t SetOutputFile(MessageParcel &data, MessageParcel &reply);
+    int32_t SetAndCheckLimit(MessageParcel &data, MessageParcel &reply);
+    int32_t SetAndCheckSaLimit(MessageParcel &data, MessageParcel &reply);
     int32_t InitAudioEncInfo(MessageParcel &data, MessageParcel &reply);
     int32_t InitAudioCap(MessageParcel &data, MessageParcel &reply);
     int32_t InitVideoEncInfo(MessageParcel &data, MessageParcel &reply);

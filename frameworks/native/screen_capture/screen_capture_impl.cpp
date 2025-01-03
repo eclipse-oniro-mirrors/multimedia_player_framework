@@ -43,6 +43,33 @@ int32_t ScreenCaptureImpl::Init()
     screenCaptureService_ = MediaServiceFactory::GetInstance().CreateScreenCaptureService();
     CHECK_AND_RETURN_RET_LOG(screenCaptureService_ != nullptr, MSERR_UNKNOWN,
         "failed to create ScreenCapture service");
+    MEDIA_LOGI("ScreenCaptureImpl::Init SetAndCheckLimit START.");
+    int32_t ret = screenCaptureService_->SetAndCheckLimit();
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Init: SetAndCheckLimit failed.");
+    return MSERR_OK;
+}
+
+std::shared_ptr<ScreenCapture> ScreenCaptureFactory::CreateScreenCapture(OHOS::AudioStandard::AppInfo &appInfo)
+{
+    std::shared_ptr<ScreenCaptureImpl> impl = std::make_shared<ScreenCaptureImpl>();
+    CHECK_AND_RETURN_RET_LOG(impl != nullptr, nullptr, "failed to new ScreenCaptureImpl");
+
+    int32_t ret = impl->Init(appInfo);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed to init ScreenCaptureImpl");
+
+    return impl;
+}
+
+int32_t ScreenCaptureImpl::Init(OHOS::AudioStandard::AppInfo &appInfo)
+{
+    MEDIA_LOGD("ScreenCaptureImpl:0x%{public}06" PRIXPTR " Init in", FAKE_POINTER(this));
+    HiTraceChain::SetId(traceId_);
+    screenCaptureService_ = MediaServiceFactory::GetInstance().CreateScreenCaptureService();
+    CHECK_AND_RETURN_RET_LOG(screenCaptureService_ != nullptr, MSERR_UNKNOWN,
+        "failed to create ScreenCapture service");
+    MEDIA_LOGI("ScreenCaptureImpl::Init(appInfo) SetAndCheckSaLimit START.");
+    int32_t ret = screenCaptureService_->SetAndCheckSaLimit(appInfo);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Init: SetAndCheckSaLimit failed.");
     return MSERR_OK;
 }
 
@@ -280,6 +307,7 @@ int32_t ScreenCaptureImpl::StartScreenCapture()
     CHECK_AND_RETURN_RET_LOG(screenCaptureService_ != nullptr, MSERR_UNKNOWN,
         "screen capture service does not exist..");
     if (dataType_ == ORIGINAL_STREAM) {
+        SetPrivacyAuthorityEnabled();
         return screenCaptureService_->StartScreenCapture(isPrivacyAuthorityEnabled_);
     } else {
         MEDIA_LOGE("ScreenCaptureImpl::StartScreenCapture error , dataType_ : %{public}d", dataType_);
@@ -294,6 +322,7 @@ int32_t ScreenCaptureImpl::StartScreenCaptureWithSurface(sptr<Surface> surface)
         "screen capture service does not exist..");
     CHECK_AND_RETURN_RET_LOG(surface != nullptr, MSERR_UNKNOWN, "surface is nullptr");
     if (dataType_ == ORIGINAL_STREAM) {
+        SetPrivacyAuthorityEnabled();
         return screenCaptureService_->StartScreenCaptureWithSurface(surface, isPrivacyAuthorityEnabled_);
     } else {
         MEDIA_LOGE("ScreenCaptureImpl::StartScreenCaptureWithSurface error , dataType_ : %{public}d", dataType_);

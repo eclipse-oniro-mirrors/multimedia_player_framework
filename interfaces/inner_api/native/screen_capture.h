@@ -23,6 +23,7 @@
 #include "avcodec_info.h"
 #include "surface.h"
 #include "recorder.h"
+#include "audio_info.h"
 
 namespace OHOS {
 namespace Media {
@@ -246,6 +247,7 @@ class ScreenCapture {
 public:
     virtual ~ScreenCapture() = default;
     virtual int32_t Init(AVScreenCaptureConfig config) = 0;
+    virtual int32_t Init(OHOS::AudioStandard::AppInfo &appInfo) = 0;
     virtual int32_t SetMicrophoneEnabled(bool isMicrophone) = 0;
     virtual int32_t SetCanvasRotation(bool canvasRotation) = 0;
     virtual int32_t ResizeCanvas(int32_t width, int32_t height) = 0;
@@ -275,6 +277,7 @@ public:
     }
 #else
     static std::shared_ptr<ScreenCapture> CreateScreenCapture();
+    static std::shared_ptr<ScreenCapture> CreateScreenCapture(OHOS::AudioStandard::AppInfo &appInfo);
 #endif
 
 private:

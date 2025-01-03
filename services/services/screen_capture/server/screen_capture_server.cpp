@@ -80,6 +80,7 @@ static const auto NOTIFICATION_SUBSCRIBER = NotificationSubscriber();
 static constexpr int32_t AUDIO_CHANGE_TIME = 200000; // 200 ms
 
 std::map<int32_t, std::weak_ptr<ScreenCaptureServer>> ScreenCaptureServer::serverMap_;
+std::map<int32_t, int32_t> ScreenCaptureServer::saAppInfoMap_;
 const int32_t ScreenCaptureServer::maxSessionId_ = 8;
 const int32_t ScreenCaptureServer::maxAppLimit_ = 4;
 UniqueIDGenerator ScreenCaptureServer::gIdGenerator_(ScreenCaptureServer::maxSessionId_);
@@ -88,6 +89,7 @@ const int32_t ScreenCaptureServer::maxSessionPerUid_ = 2;
 
 std::shared_mutex ScreenCaptureServer::mutexServerMapRWGlobal_;
 std::shared_mutex ScreenCaptureServer::mutexListRWGlobal_;
+std::shared_mutex ScreenCaptureServer::mutexSaAppInfoMapGlobal_;
 
 void NotificationSubscriber::OnConnected()
 {
@@ -178,7 +180,7 @@ bool ScreenCaptureServer::CheckScreenCaptureSessionIdLimit(int32_t curAppUid)
                     if (curAppUid == (iter->second).lock()->GetAppUid()) {
                         countForUid++;
                     }
-                    CHECK_AND_RETURN_RET_LOG(countForUid < ScreenCaptureServer::maxSessionPerUid_, false,
+                    CHECK_AND_RETURN_RET_LOG(countForUid <= ScreenCaptureServer::maxSessionPerUid_, false,
                         "Create failed, uid(%{public}d) has created too many ScreenCaptureServer instances", curAppUid);
                 }
             }
@@ -201,9 +203,8 @@ bool ScreenCaptureServer::CheckScreenCaptureAppLimit(int32_t curAppUid)
 {
     std::set<int32_t> appSet;
     CountScreenCaptureAppNum(appSet);
-    MEDIA_LOGD("appSet.size(): %{public}d", static_cast<int32_t>(appSet.size()));
-    if (appSet.find(curAppUid) == appSet.end() &&
-        static_cast<int32_t>(appSet.size()) >= ScreenCaptureServer::maxAppLimit_) {
+    MEDIA_LOGI("appSet.size(): %{public}d", static_cast<int32_t>(appSet.size()));
+    if (static_cast<int32_t>(appSet.size()) > ScreenCaptureServer::maxAppLimit_) {
         return false;
     }
     return true;
@@ -271,16 +272,15 @@ void ScreenCaptureServer::OnDMPrivateWindowChange(bool hasPrivate)
     }
 }
 
-bool ScreenCaptureServer::CanScreenCaptureInstanceBeCreate()
+bool ScreenCaptureServer::CanScreenCaptureInstanceBeCreate(int32_t appUid)
 {
     MEDIA_LOGI("CanScreenCaptureInstanceBeCreate start.");
-    CHECK_AND_RETURN_RET_LOG(ScreenCaptureServer::serverMap_.size() < ScreenCaptureServer::maxSessionId_, false,
+    CHECK_AND_RETURN_RET_LOG(ScreenCaptureServer::serverMap_.size() <= ScreenCaptureServer::maxSessionId_, false,
         "ScreenCaptureInstanceCanBeCreate exceed ScreenCaptureServer instances limit.");
-    int32_t curAppUid = IPCSkeleton::GetCallingUid();
-    MEDIA_LOGD("curAppUid: %{public}d", curAppUid);
-    CHECK_AND_RETURN_RET_LOG(CheckScreenCaptureAppLimit(curAppUid), false,
+    MEDIA_LOGI("curAppUid: %{public}d", appUid);
+    CHECK_AND_RETURN_RET_LOG(CheckScreenCaptureAppLimit(appUid), false,
         "CurScreenCaptureAppNum reach limit, cannot create more app.");
-    return CheckScreenCaptureSessionIdLimit(curAppUid);
+    return CheckScreenCaptureSessionIdLimit(appUid);
 }
 
 std::shared_ptr<IScreenCaptureService> ScreenCaptureServer::CreateScreenCaptureNewInstance()
@@ -296,15 +296,113 @@ std::shared_ptr<IScreenCaptureService> ScreenCaptureServer::CreateScreenCaptureN
     return std::static_pointer_cast<IScreenCaptureService>(server);
 }
 
+bool ScreenCaptureServer::IsSAServiceCalling()
+{
+    MEDIA_LOGI("ScreenCaptureServer::IsSAServiceCalling START.");
+    const auto tokenId = IPCSkeleton::GetCallingTokenID();
+    const auto flag = Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(tokenId);
+    if (flag == Security::AccessToken::TokenTypeEnum::TOKEN_NATIVE ||
+        flag == Security::AccessToken::TokenTypeEnum::TOKEN_SHELL) {
+        MEDIA_LOGI("ScreenCaptureServer::IsSAServiceCalling true.");
+        return true;
+    }
+    return false;
+}
+
 std::shared_ptr<IScreenCaptureService> ScreenCaptureServer::Create()
 {
     for (auto sessionId: ScreenCaptureServer::startedSessionIDList_) {
         MEDIA_LOGD("ScreenCaptureServer::Create sessionId: %{public}d", sessionId);
     }
     MEDIA_LOGI("ScreenCaptureServer Create start.");
-    CHECK_AND_RETURN_RET_LOG(CanScreenCaptureInstanceBeCreate(), nullptr,
-        "Create error, there are too many ScreenCaptureServer instances.");
     return CreateScreenCaptureNewInstance();
+}
+
+void ScreenCaptureServer::AddSaAppInfoMap(int32_t saUid, int32_t curAppUid)
+{
+    std::unique_lock<std::shared_mutex> lock(ScreenCaptureServer::mutexSaAppInfoMapGlobal_);
+    ScreenCaptureServer::saAppInfoMap_.insert(std::make_pair(saUid, curAppUid));
+    MEDIA_LOGI("AddSaAppInfoMap end, saAppInfoMap_.size: %{public}d",
+        static_cast<uint32_t>(ScreenCaptureServer::saAppInfoMap_.size()));
+}
+
+void ScreenCaptureServer::RemoveSaAppInfoMap(int32_t saUid)
+{
+    std::unique_lock<std::shared_mutex> lock(ScreenCaptureServer::mutexSaAppInfoMapGlobal_);
+    ScreenCaptureServer::saAppInfoMap_.erase(saUid);
+    MEDIA_LOGI("RemoveSaAppInfoMap end, saAppInfoMap_.size: %{public}d",
+        static_cast<uint32_t>(ScreenCaptureServer::saAppInfoMap_.size()));
+}
+
+bool ScreenCaptureServer::IsSaUidValid(int32_t saUid, int32_t appUid)
+{
+    std::unique_lock<std::shared_mutex> lock(ScreenCaptureServer::mutexSaAppInfoMapGlobal_);
+    CHECK_AND_RETURN_RET_LOG(IsSAServiceCalling(), false, "fake SAServiceCalling!");
+    auto iter = ScreenCaptureServer::saAppInfoMap_.find(saUid);
+    if (iter != ScreenCaptureServer::saAppInfoMap_.end() && ScreenCaptureServer::saAppInfoMap_[saUid] != appUid) {
+        MEDIA_LOGI("saUid Invalid! saUid: %{public}d, appUid: %{public}d exists.", saUid, appUid);
+        return false;
+    }
+    return true;
+}
+
+int32_t ScreenCaptureServer::SetAndCheckAppInfo(OHOS::AudioStandard::AppInfo &appInfo)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    MEDIA_LOGI("ScreenCaptureServer::SetAndCheckAppInfo(appInfo)");
+    const int32_t saUid = IPCSkeleton::GetCallingUid();
+    if (!IsSaUidValid(saUid, appInfo.appUid)) {
+        MEDIA_LOGI("SetAndCheckAppInfo failed, saUid-appUid exists.");
+        RemoveScreenCaptureServerMap(sessionId_);
+        return MSERR_INVALID_OPERATION;
+    }
+
+    appInfo_.appUid = appInfo.appUid;
+    appInfo_.appPid = appInfo.appPid;
+    appInfo_.appTokenId = appInfo.appTokenId;
+    appInfo_.appFullTokenId = appInfo.appFullTokenId;
+    appName_ = GetClientBundleName(appInfo_.appUid);
+    AddSaAppInfoMap(saUid, appInfo_.appUid);
+    MEDIA_LOGI("ScreenCaptureServer::SetAndCheckAppInfo end.");
+    return MSERR_OK;
+}
+
+void ScreenCaptureServer::SetSCServerSaUid(int32_t saUid)
+{
+    saUid_ = saUid;
+}
+
+int32_t ScreenCaptureServer::GetSCServerSaUid()
+{
+    return saUid_;
+}
+
+int32_t ScreenCaptureServer::SetAndCheckSaLimit(OHOS::AudioStandard::AppInfo &appInfo)
+{
+    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " SetAndCheckSaLimit START.", FAKE_POINTER(this));
+    int32_t ret = SetAndCheckAppInfo(appInfo);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetAndCheckSaLimit failed, saUid exists.");
+    bool flag = CanScreenCaptureInstanceBeCreate(appInfo.appUid);
+    if (!flag) {
+        MEDIA_LOGI("SetAndCheckSaLimit failed, cannot create ScreenCapture Instance.");
+        RemoveSaAppInfoMap(IPCSkeleton::GetCallingUid());
+        RemoveScreenCaptureServerMap(sessionId_);
+    }
+    CHECK_AND_RETURN_RET_LOG(flag, MSERR_INVALID_OPERATION, "SetAndCheckSaLimit failed");
+    SetSCServerSaUid(IPCSkeleton::GetCallingUid());
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureServer::SetAndCheckLimit()
+{
+    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " SetAndCheckLimit START.", FAKE_POINTER(this));
+    bool flag = CanScreenCaptureInstanceBeCreate(IPCSkeleton::GetCallingUid());
+    if (!flag) {
+        MEDIA_LOGI("SetAndCheckLimit failed, cannot create ScreenCapture Instance.");
+        RemoveScreenCaptureServerMap(sessionId_);
+    }
+    CHECK_AND_RETURN_RET_LOG(flag, MSERR_INVALID_OPERATION, "SetAndCheckLimit failed");
+    return MSERR_OK;
 }
 
 int32_t ScreenCaptureServer::GetRunningScreenCaptureInstancePid(std::list<int32_t> &pidList)
@@ -2129,7 +2227,7 @@ void ScreenCaptureServer::CloseFd()
 VirtualScreenOption ScreenCaptureServer::InitVirtualScreenOption(const std::string &name, sptr<OHOS::Surface> consumer)
 {
     MediaTrace trace("ScreenCaptureServer::InitVirtualScreenOption");
-    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " InitVirtualScreenOption start, naem:%{public}s.",
+    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " InitVirtualScreenOption start, name:%{public}s.",
         FAKE_POINTER(this), name.c_str());
     VirtualScreenOption virScrOption = {
         .name_ = name,
@@ -2877,6 +2975,10 @@ void ScreenCaptureServer::ReleaseInner()
             FAKE_POINTER(this), sessionId_);
     }
     MEDIA_LOGI("ScreenCaptureServer::ReleaseInner before RemoveScreenCaptureServerMap");
+    if (saUid_ != -1) {
+        MEDIA_LOGI("ReleaseInner saUid: %{public}d is valid, RemoveSaAppInfoMap(saUid)", saUid_);
+        RemoveSaAppInfoMap(saUid_);
+    }
     RemoveScreenCaptureServerMap(sessionId_);
     sessionId_ = SESSION_ID_INVALID;
     MEDIA_LOGD("ReleaseInner removeMap success, mapSize: %{public}d",

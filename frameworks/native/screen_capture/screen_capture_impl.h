@@ -32,6 +32,7 @@ public:
 
     int32_t Init();
     int32_t Init(AVScreenCaptureConfig config) override;
+    int32_t Init(OHOS::AudioStandard::AppInfo &appInfo) override;
     int32_t SetMicrophoneEnabled(bool isMicrophone) override;
     int32_t SetCanvasRotation(bool canvasRotation) override;
     int32_t ResizeCanvas(int32_t width, int32_t height) override;

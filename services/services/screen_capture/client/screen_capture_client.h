@@ -35,6 +35,8 @@ public:
     int32_t SetDataType(DataType dataType) override;
     int32_t SetRecorderInfo(RecorderInfo recorderInfo) override;
     int32_t SetOutputFile(int32_t fd) override;
+    int32_t SetAndCheckLimit() override;
+    int32_t SetAndCheckSaLimit(OHOS::AudioStandard::AppInfo &appInfo) override;
     int32_t InitAudioEncInfo(AudioEncInfo audioEncInfo) override;
     int32_t InitAudioCap(AudioCaptureInfo audioInfo) override;
     int32_t InitVideoEncInfo(VideoEncInfo videoEncInfo) override;
