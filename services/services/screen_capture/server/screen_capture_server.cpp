@@ -176,7 +176,6 @@ void MouseChangeListener::OnDeviceAdded(int32_t deviceId, const std::string &typ
 void MouseChangeListener::OnDeviceRemoved(int32_t deviceId, const std::string &type)
 {
     MEDIA_LOGI("OnDeviceRemoved start, deviceId: %{public}d, type:%{public}s", deviceId, type.c_str());
-    std::shared_ptr<InputDeviceInfo> deviceInfo = std::make_shared<InputDeviceInfo>();
     auto scrServer = screenCaptureServer_.lock();
     CHECK_AND_RETURN_LOG(scrServer != nullptr, "screenCaptureServer is nullptr");
     int32_t ret = scrServer->ShowCursorInner();
