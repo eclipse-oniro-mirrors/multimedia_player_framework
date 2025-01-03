@@ -687,32 +687,36 @@ int32_t AVScreenCaptureNapi::GetVideoInfo(std::unique_ptr<AVScreenCaptureAsyncCo
     int32_t preset = AVScreenCaptureRecorderPreset::SCREEN_RECORD_PRESET_H264_AAC_MP4;
     int32_t frameWidth = AVSCREENCAPTURE_DEFAULT_FRAME_WIDTH;
     int32_t frameHeight = AVSCREENCAPTURE_DEFAULT_FRAME_HEIGHT;
-
+    int32_t displayId = AVSCREENCAPTURE_DEFAULT_DISPLAY_ID;
     VideoEncInfo &encoderConfig = asyncCtx->config_.videoInfo.videoEncInfo;
     VideoCaptureInfo &videoConfig = asyncCtx->config_.videoInfo.videoCapInfo;
-
-    int32_t ret = AVScreenCaptureNapi::GetPropertyInt32(env, args, "videoBitrate", videoBitrate);
+    int32_t ret = AVScreenCaptureNapi::GetPropertyInt32(env, args, "displayId", displayId);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK && displayId >= 0,
+        (asyncCtx->AVScreenCaptureSignError(MSERR_INVALID_VAL, "getDisplayId", "displayId"), MSERR_INVALID_VAL));
+    videoConfig.displayId = static_cast<uint64_t>(displayId);
+    if (videoConfig.displayId > 0) {
+        asyncCtx->config_.captureMode = CaptureMode::CAPTURE_SPECIFIED_SCREEN;
+    }
+    MEDIA_LOGI("input displayId %{public}" PRIu64, videoConfig.displayId);
+    ret = AVScreenCaptureNapi::GetPropertyInt32(env, args, "videoBitrate", videoBitrate);
     CHECK_AND_RETURN_RET(ret == MSERR_OK,
         (asyncCtx->AVScreenCaptureSignError(ret, "getVideoBitrate", "videoBitrate"), ret));
     encoderConfig.videoBitrate = videoBitrate;
     encoderConfig.videoFrameRate = AVSCREENCAPTURE_DEFAULT_VIDEO_FRAME_RATE;
     MEDIA_LOGI("input videoBitrate %{public}d", encoderConfig.videoBitrate);
-
     ret = AVScreenCaptureNapi::GetPropertyInt32(env, args, "preset", preset);
     CHECK_AND_RETURN_RET(ret == MSERR_OK, (asyncCtx->AVScreenCaptureSignError(ret, "getPreset", "preset"), ret));
     ret = AVScreenCaptureNapi::CheckVideoCodecFormat(preset);
     CHECK_AND_RETURN_RET(ret == MSERR_OK, (asyncCtx->AVScreenCaptureSignError(ret, "getPreset", "preset"), ret));
     encoderConfig.videoCodec = AVScreenCaptureNapi::GetVideoCodecFormat(preset);
     MEDIA_LOGI("input videoCodec %{public}d", encoderConfig.videoCodec);
-
     ret = AVScreenCaptureNapi::GetPropertyInt32(env, args, "frameWidth", frameWidth);
     CHECK_AND_RETURN_RET(ret == MSERR_OK,
         (asyncCtx->AVScreenCaptureSignError(ret, "getFrameWidth", "frameWidth"), ret));
     ret = AVScreenCaptureNapi::GetPropertyInt32(env, args, "frameHeight", frameHeight);
     CHECK_AND_RETURN_RET(ret == MSERR_OK,
         (asyncCtx->AVScreenCaptureSignError(ret, "getFrameHeight", "frameHeight"), ret));
-    MEDIA_LOGI("input frameWidth %{public}d, frameHeight %{public}d",
-        frameWidth, frameHeight);
+    MEDIA_LOGI("input frameWidth %{public}d, frameHeight %{public}d", frameWidth, frameHeight);
     ret = AVScreenCaptureNapi::CheckVideoFrameFormat(frameWidth, frameHeight,
         videoConfig.videoFrameWidth, videoConfig.videoFrameHeight);
     CHECK_AND_RETURN_RET(ret == MSERR_OK,
