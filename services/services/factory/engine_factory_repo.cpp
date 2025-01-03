@@ -66,7 +66,7 @@ int32_t __attribute__((no_sanitize("cfi"))) EngineFactoryRepo::LoadLib(const std
     void *handle = dlopen(libPath.c_str(), RTLD_NOW | RTLD_LOCAL);
     if (handle == nullptr) {
         MEDIA_LOGE("failed to dlopen %{public}s, errno:%{public}d, errormsg:%{public}s",
-            libPath.c_str(), errno, dlerror());
+                   libPath.c_str(), errno, dlerror());
         return MSERR_OPEN_FILE_FAILED;
     }
 
@@ -92,9 +92,8 @@ int32_t __attribute__((no_sanitize("cfi"))) EngineFactoryRepo::LoadLib(const std
 
 int32_t EngineFactoryRepo::LoadHistreamerEngine(const int32_t& appUid)
 {
-    MEDIA_LOGD("LoadHistreamerEngine entered.");
     std::unique_lock<std::mutex> lock(mutex_);
-    if (isLoadHistreamer_) {
+    if (histreamerLoad_) {
         MEDIA_LOGD("Histreamer is enabled");
         return MSERR_OK;
     }
@@ -108,7 +107,7 @@ int32_t EngineFactoryRepo::LoadHistreamerEngine(const int32_t& appUid)
             continue;
         } else {
             CHECK_AND_RETURN_RET_LOG(LoadLib(file) == MSERR_OK, MSERR_OPEN_FILE_FAILED, "LoadLib failed");
-            isLoadHistreamer_ = true;
+            histreamerLoad_ = true;
             break;
         }
     }
@@ -123,7 +122,7 @@ std::shared_ptr<IEngineFactory> EngineFactoryRepo::GetEngineFactory(
     (void)LoadHistreamerEngine(appUid);
 
     if (factorys_.empty()) {
-        isLoadHistreamer_ = false;
+        histreamerLoad_ = false;
         MEDIA_LOGE("Failed to load media engine library");
         return nullptr;
     }

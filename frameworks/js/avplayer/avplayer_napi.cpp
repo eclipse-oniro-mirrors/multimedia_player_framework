@@ -98,9 +98,9 @@ napi_value AVPlayerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("addSubtitleFromFd", JsAddSubtitleAVFileDescriptor),
         DECLARE_NAPI_FUNCTION("setDecryptionConfig", JsSetDecryptConfig),
         DECLARE_NAPI_FUNCTION("getMediaKeySystemInfos", JsGetMediaKeySystemInfos),
-        DECLARE_NAPI_FUNCTION("getPlaybackInfo", JsGetPlaybackInfo),
         DECLARE_NAPI_FUNCTION("setPlaybackStrategy", JsSetPlaybackStrategy),
         DECLARE_NAPI_FUNCTION("setMediaMuted", JsSetMediaMuted),
+        DECLARE_NAPI_FUNCTION("getPlaybackInfo", JsGetPlaybackInfo),
 
         DECLARE_NAPI_GETTER_SETTER("url", JsGetUrl, JsSetUrl),
         DECLARE_NAPI_GETTER_SETTER("fdSrc", JsGetAVFileDescriptor, JsSetAVFileDescriptor),
@@ -1539,7 +1539,7 @@ napi_value AVPlayerNapi::JsGetUrl(napi_env env, napi_callback_info info)
     napi_value value = nullptr;
     (void)napi_create_string_utf8(env, jsPlayer->url_.c_str(), NAPI_AUTO_LENGTH, &value);
 
-    MEDIA_LOGD("JsGetUrl Out Currelt Url: %{private}s", jsPlayer->url_.c_str());
+    MEDIA_LOGD("JsGetUrl Out Current Url: %{private}s", jsPlayer->url_.c_str());
     return value;
 }
 
@@ -2718,20 +2718,6 @@ void AVPlayerNapi::GetCurrentTrackTask(std::unique_ptr<AVPlayerContext> &promise
     return;
 }
 
-void AVPlayerNapi::MaxAmplitudeCallbackOn(AVPlayerNapi *jsPlayer, std::string callbackName)
-{
-    if (jsPlayer == nullptr) {
-        calMaxAmplitude_ = false;
-        return;
-    }
-    if (callbackName == "amplitudeUpdate") {
-        calMaxAmplitude_ = true;
-    }
-    if (jsPlayer->player_ != nullptr && calMaxAmplitude_) {
-        (void)jsPlayer->player_->SetMaxAmplitudeCbStatus(calMaxAmplitude_);
-    }
-}
-
 void AVPlayerNapi::DeviceChangeCallbackOn(AVPlayerNapi *jsPlayer, std::string callbackName)
 {
     if (jsPlayer == nullptr) {
@@ -2753,6 +2739,20 @@ void AVPlayerNapi::DeviceChangeCallbackOff(AVPlayerNapi *jsPlayer, std::string c
         if (jsPlayer->player_ != nullptr) {
             (void)jsPlayer->player_->SetDeviceChangeCbStatus(deviceChangeCallbackflag_);
         }
+    }
+}
+
+void AVPlayerNapi::MaxAmplitudeCallbackOn(AVPlayerNapi *jsPlayer, std::string callbackName)
+{
+    if (jsPlayer == nullptr) {
+        calMaxAmplitude_ = false;
+        return;
+    }
+    if (callbackName == "amplitudeUpdate") {
+        calMaxAmplitude_ = true;
+    }
+    if (jsPlayer->player_ != nullptr && calMaxAmplitude_) {
+        (void)jsPlayer->player_->SetMaxAmplitudeCbStatus(calMaxAmplitude_);
     }
 }
 

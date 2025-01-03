@@ -973,13 +973,6 @@ HWTEST_F(HiplayerImplUnitTest, PrepareAsync_002, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, hiplayer_->PrepareAsync());
 }
 
-HWTEST_F(HiplayerImplUnitTest, StopBufferring_001, TestSize.Level0)
-{
-    std::string url = VIDEO_FILE1;
-    hiplayer_->DoSetSource(std::make_shared<MediaSource>(url));
-    EXPECT_EQ(MSERR_OK, hiplayer_->StopBufferring(false));
-}
-
 HWTEST_F(HiplayerImplUnitTest, SetAudioEffectMode_001, TestSize.Level0)
 {
     EXPECT_EQ(MSERR_OK, hiplayer_->SetAudioEffectMode(0));

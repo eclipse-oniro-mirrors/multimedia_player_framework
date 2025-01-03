@@ -25,7 +25,7 @@
 
 namespace OHOS {
 namespace Media {
-using PlayerStubFunc = std::function<int32_t(MessageParcel &, MessageParcel &)>;
+using PlayerStubFunc = std::function<int32_t (MessageParcel &, MessageParcel &)>;
 class PlayerServiceStub
     : public IRemoteStub<IStandardPlayerService>,
       public MonitorServerObject,
@@ -74,7 +74,6 @@ public:
     int32_t SetLooping(bool loop) override;
     int32_t SetParameter(const Format &param) override;
     int32_t SelectBitRate(uint32_t bitRate) override;
-    int32_t StopBufferring(bool flag) override;
     int32_t SelectTrack(int32_t index, PlayerSwitchMode mode) override;
     int32_t DestroyStub() override;
     int32_t SetPlayerCallback() override;
@@ -89,15 +88,8 @@ public:
     // MonitorServerObject override
     int32_t DoIpcAbnormality() override;
     int32_t DoIpcRecovery(bool fromMonitor) override;
-    int32_t SetMaxAmplitudeCbStatus(bool status) override;
     int32_t SetDeviceChangeCbStatus(bool status) override;
-
-    int32_t HandleActive();
-    int32_t HandleFrozen();
-    int32_t StartReportStatus();
-    int32_t StopReportStatus();
-    int32_t GetUid();
-    bool IsPlayerRunning();
+    int32_t SetMaxAmplitudeCbStatus(bool status) override;
 protected:
     PlayerServiceStub();
     virtual int32_t Init();
@@ -156,8 +148,8 @@ private:
     int32_t SetMediaSource(MessageParcel &data, MessageParcel &reply);
     int32_t SetPlaybackStrategy(MessageParcel &data, MessageParcel &reply);
     int32_t SetMediaMuted(MessageParcel &data, MessageParcel &reply);
-    int32_t SetMaxAmplitudeCbStatus(MessageParcel &data, MessageParcel &reply);
     int32_t SetDeviceChangeCbStatus(MessageParcel &data, MessageParcel &reply);
+    int32_t SetMaxAmplitudeCbStatus(MessageParcel &data, MessageParcel &reply);
 
     std::map<uint32_t, std::pair<std::string, PlayerStubFunc>> playerFuncs_;
     void FillPlayerFuncPart1();

@@ -22,7 +22,7 @@
 #include "osal/utils/steady_clock.h"
 
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_ONLY_PRERELEASE, LOG_DOMAIN_PLAYER, "HiPlayerCallbackLooper" };
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_PLAYER, "HiPlayerCallbackLooper" };
 }
 
 namespace OHOS {
@@ -69,20 +69,19 @@ void HiPlayerCallbackLooper::StartWithPlayerEngineObs(const std::weak_ptr<IPlaye
     if (!taskStarted_) {
         task_->Start();
         taskStarted_ = true;
-        MEDIA_LOG_I_SHORT("HiPlayerCallbackLooper start callback looper");
+        MEDIA_LOG_I("start callback looper");
     }
 }
 void HiPlayerCallbackLooper::SetPlayEngine(IPlayerEngine* engine, std::string playerId)
 {
     OHOS::Media::AutoLock lock(loopMutex_);
     playerEngine_ = engine;
-    task_ = std::make_unique<Task>("callbackThread", playerId, TaskType::GLOBAL,
-        OHOS::Media::TaskPriority::NORMAL, false);
+    task_ = std::make_unique<Task>("callbackThread", playerId, TaskType::GLOBAL, TaskPriority::NORMAL, false);
 }
 
 void HiPlayerCallbackLooper::StartReportMediaProgress(int64_t updateIntervalMs)
 {
-    MEDIA_LOG_I_SHORT("HiPlayerCallbackLooper StartReportMediaProgress start");
+    MEDIA_LOG_I("HiPlayerCallbackLooper StartReportMediaProgress");
     reportProgressIntervalMs_ = updateIntervalMs;
     if (reportMediaProgress_) { // already set
         return;
@@ -111,8 +110,8 @@ void HiPlayerCallbackLooper::ManualReportMediaProgressOnce()
 
 void HiPlayerCallbackLooper::StopReportMediaProgress()
 {
+    MEDIA_LOG_I("HiPlayerCallbackLooper StopReportMediaProgress");
     OHOS::Media::AutoLock lock(loopMutex_);
-    MEDIA_LOG_I_SHORT("HiPlayerCallbackLooper StopReportMediaProgress");
     reportMediaProgress_ = false;
 }
 
@@ -131,15 +130,15 @@ void HiPlayerCallbackLooper::DoReportCompletedTime()
         Format format;
         int32_t playRangeEndTime = static_cast<int32_t>(playerEngine_->GetPlayRangeEndTime());
         if (playRangeEndTime != -1) {
-            MEDIA_LOG_D_SHORT("EVENT_AUDIO_PROGRESS endTime position updated: " PUBLIC_LOG_D32, playRangeEndTime);
+            MEDIA_LOG_D("EVENT_AUDIO_PROGRESS endTime position updated: " PUBLIC_LOG_D32, playRangeEndTime);
             obs->OnInfo(INFO_TYPE_POSITION_UPDATE, playRangeEndTime, format);
         } else {
             int32_t currentPositionMs;
             if (playerEngine_->GetDuration(currentPositionMs) == 0) {
-                MEDIA_LOG_D_SHORT("EVENT_AUDIO_PROGRESS completed position updated " PUBLIC_LOG_D32, currentPositionMs);
+                MEDIA_LOG_D("EVENT_AUDIO_PROGRESS completed position updated: " PUBLIC_LOG_D32, currentPositionMs);
                 obs->OnInfo(INFO_TYPE_POSITION_UPDATE, currentPositionMs, format);
             } else {
-                MEDIA_LOG_W_SHORT("get player engine current time error");
+                MEDIA_LOG_W("get player engine current time error");
             }
         }
     }
@@ -156,10 +155,10 @@ void HiPlayerCallbackLooper::DoReportMediaProgress()
         Format format;
         int32_t currentPositionMs;
         if (playerEngine_->GetCurrentTime(currentPositionMs) == 0) {
-            MEDIA_LOG_D_SHORT("EVENT_AUDIO_PROGRESS position updated: " PUBLIC_LOG_D32, currentPositionMs);
+            MEDIA_LOG_D("EVENT_AUDIO_PROGRESS position updated: " PUBLIC_LOG_D32, currentPositionMs);
             obs->OnInfo(INFO_TYPE_POSITION_UPDATE, currentPositionMs, format);
         } else {
-            MEDIA_LOG_W_SHORT("get player engine current time error");
+            MEDIA_LOG_W("get player engine current time error");
         }
     }
     isDropMediaProgress_ = false;
@@ -249,7 +248,7 @@ void HiPlayerCallbackLooper::DoReportError(const Any &error)
             MEDIA_LOG_E_SHORT("DoReportError error, ptr is nullptr");
             return;
         }
-        MEDIA_LOG_E_SHORT("Report error, error type: " PUBLIC_LOG_D32 " error value: " PUBLIC_LOG_D32,
+        MEDIA_LOG_E("Report error, error type: " PUBLIC_LOG_D32 " error value: " PUBLIC_LOG_D32,
             static_cast<int32_t>(ptr->first), static_cast<int32_t>(ptr->second));
         obs->OnError(ptr->first, ptr->second);
     }
@@ -276,7 +275,7 @@ void HiPlayerCallbackLooper::DoReportInfo(const Any& info)
             MEDIA_LOG_E_SHORT("DoReportInfo error, ptr is nullptr");
             return;
         }
-        MEDIA_LOG_I_SHORT("Report info, info type: " PUBLIC_LOG_D32 " info value: " PUBLIC_LOG_D32,
+        MEDIA_LOG_I("Report info, info type: " PUBLIC_LOG_D32 " info value: " PUBLIC_LOG_D32,
             static_cast<int32_t>(std::get<TUPLE_POS_0>(*ptr)), static_cast<int32_t>(std::get<TUPLE_POS_1>(*ptr)));
         obs->OnInfo(std::get<TUPLE_POS_0>(*ptr), std::get<TUPLE_POS_1>(*ptr), std::get<TUPLE_POS_2>(*ptr));
     }
@@ -311,7 +310,7 @@ void HiPlayerCallbackLooper::Enqueue(const std::shared_ptr<HiPlayerCallbackLoope
         return;
     }
     if (event->what == WHAT_NONE) {
-        MEDIA_LOG_I_SHORT("invalid event");
+        MEDIA_LOG_I("invalid event");
     }
     int64_t delayUs = (event->whenMs - SteadyClock::GetCurrentTimeMs()) * 1000;
     task_->SubmitJob([this, event]() {

@@ -25,6 +25,7 @@
 
 namespace OHOS {
 namespace Media {
+using OnInfoFunc = std::function<void (const int32_t, const Format &)>;
 namespace AVMetadataHelperState {
 const std::string STATE_IDLE = "idle";
 const std::string STATE_PREPARED = "prepared";
@@ -62,7 +63,7 @@ public:
 
 private:
     void OnStateChangeCb(const int32_t extra, const Format &infoBody);
-
+    std::map<HelperOnInfoType, OnInfoFunc> onInfoFuncs_;
     std::mutex mutex_;
     napi_env env_ = nullptr;
     std::map<std::string, std::weak_ptr<AutoRef>> refMap_;

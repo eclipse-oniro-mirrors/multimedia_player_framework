@@ -117,6 +117,11 @@ HiTransCoderImpl::~HiTransCoderImpl()
     MEDIA_LOG_I("~HiTransCoderImpl");
 }
 
+void HiTransCoderImpl::SetInstanceId(uint64_t instanceId)
+{
+    instanceId_ = instanceId;
+}
+
 int32_t HiTransCoderImpl::Init()
 {
     MEDIA_LOG_I("HiTransCoderImpl::Init()");
@@ -127,11 +132,6 @@ int32_t HiTransCoderImpl::Init()
     callbackLooper_ = std::make_shared<HiTransCoderCallbackLooper>();
     callbackLooper_->SetTransCoderEngine(this, transCoderId_);
     return static_cast<int32_t>(Status::OK);
-}
-
-void HiTransCoderImpl::SetInstanceId(uint64_t instanceId)
-{
-    instanceId_ = instanceId;
 }
 
 int32_t HiTransCoderImpl::GetRealPath(const std::string &url, std::string &realUrlPath) const
@@ -155,6 +155,7 @@ int32_t HiTransCoderImpl::GetRealPath(const std::string &url, std::string &realU
 
 int32_t HiTransCoderImpl::SetInputFile(const std::string &url)
 {
+    MEDIA_LOG_I("HiTransCoderImpl::SetInputFile()");
     MediaTrace trace("HiTransCoderImpl::SetInputFile()");
     inputFile_ = url;
     if (url.find("://") == std::string::npos || url.find("file://") == 0) {
@@ -195,7 +196,7 @@ void HiTransCoderImpl::ConfigureMetaDataToTrackFormat(const std::shared_ptr<Meta
 {
     FALSE_RETURN_MSG(
         globalInfo != nullptr && trackInfos.size() != 0, "globalInfo or trackInfos are invalid.");
-    
+   
     bool isInitializeVideoEncFormat = false;
     bool isInitializeAudioEncFormat = false;
     bool hasVideoTrack = false;
@@ -212,7 +213,6 @@ void HiTransCoderImpl::ConfigureMetaDataToTrackFormat(const std::shared_ptr<Meta
         if (trackMime.find("video/") == 0) {
             hasVideoTrack = true;
         }
-        
         if (!isInitializeVideoEncFormat && (trackMime.find("video/") == 0)) {
             (void)SetValueByType(meta, videoEncFormat_);
             (void)SetValueByType(meta, muxerFormat_);
@@ -345,7 +345,7 @@ Status HiTransCoderImpl::ConfigureInputVideoMetaData(const std::vector<std::shar
         srcVideoFormat_->SetData(Tag::VIDEO_IS_HDR_VIVID, VIDEO_HDR_TYPE_VIVID);
     } else {
         videoEncFormat_->SetData(Tag::VIDEO_IS_HDR_VIVID, VIDEO_HDR_TYPE_NONE);
-        srcVideoFormat_->SetData(Tag::VIDEO_IS_HDR_VIVID, VIDEO_HDR_TYPE_VIVID);
+        srcVideoFormat_->SetData(Tag::VIDEO_IS_HDR_VIVID, VIDEO_HDR_TYPE_NONE);
     }
     return Status::OK;
 }

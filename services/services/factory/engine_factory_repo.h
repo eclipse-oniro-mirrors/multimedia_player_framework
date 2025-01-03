@@ -39,7 +39,7 @@ private:
     std::mutex mutex_;
     std::vector<std::shared_ptr<IEngineFactory>> factorys_;
     std::vector<void*> factoryLibs_;
-    bool isLoadHistreamer_ = false;
+    bool histreamerLoad_ = false;
 };
 } // namespace Media
 } // namespace OHOS

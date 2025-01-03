@@ -252,6 +252,7 @@ napi_value VideoPlayerNapi::SetUrl(napi_env env, napi_callback_info info)
     const std::string fdHead = "fd://";
     const std::string httpHead = "http";
     int32_t ret = MSERR_EXT_INVALID_VAL;
+    MEDIA_LOGD("input url is %{private}s!", jsPlayer->url_.c_str());
     if (jsPlayer->url_.find(fdHead) != std::string::npos) {
         std::string inputFd = jsPlayer->url_.substr(fdHead.size());
         int32_t fd = -1;
@@ -425,7 +426,7 @@ napi_value VideoPlayerNapi::SetDisplaySurface(napi_env env, napi_callback_info i
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    MEDIA_LOGD("VideoPlayerNapi::SetDisplaySurface In");
+    MEDIA_LOGD("SetDisplaySurface In");
     std::unique_ptr<VideoPlayerAsyncContext> asyncContext = std::make_unique<VideoPlayerAsyncContext>(env);
 
     // get args
@@ -574,7 +575,7 @@ napi_value VideoPlayerNapi::Play(napi_env env, napi_callback_info info)
 {
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
-    MEDIA_LOGD("VideoPlayerNapi::Play In");
+    MEDIA_LOGD("Play In");
 
     std::unique_ptr<VideoPlayerAsyncContext> asyncContext = std::make_unique<VideoPlayerAsyncContext>(env);
     asyncContext->asyncWorkType = AsyncWorkType::ASYNC_WORK_PLAY;
@@ -804,7 +805,7 @@ napi_value VideoPlayerNapi::SetSpeed(napi_env env, napi_callback_info info)
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    MEDIA_LOGD("VideoPlayerNapi::SetSpeed In");
+    MEDIA_LOGD("SetSpeed In");
     std::unique_ptr<VideoPlayerAsyncContext> asyncContext = std::make_unique<VideoPlayerAsyncContext>(env);
     asyncContext->asyncWorkType = AsyncWorkType::ASYNC_WORK_SPEED;
 
@@ -1046,7 +1047,7 @@ napi_value VideoPlayerNapi::SetLoop(napi_env env, napi_callback_info info)
     napi_value undefinedResult = nullptr;
     napi_get_undefined(env, &undefinedResult);
 
-    MEDIA_LOGD("VideoPlayerNapi::SetLoop In");
+    MEDIA_LOGD("SetLoop In");
     size_t argCount = 1;
     napi_value args[1] = { nullptr };
     napi_value jsThis = nullptr;

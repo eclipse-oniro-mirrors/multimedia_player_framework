@@ -71,7 +71,7 @@ void AccountSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &eventDat
     const AAFwk::Want& want = eventData.GetWant();
     std::string action = want.GetAction();
     int32_t userId = eventData.GetCode();
-    MEDIA_LOGI("receive action %{public}s, userId %{public}d", action.c_str(), userId);
+    MEDIA_LOGI("receive action %{public}s, userId %{public}u", action.c_str(), userId);
     if (action == EventFwk::CommonEventSupport::COMMON_EVENT_USER_BACKGROUND) {
         // prevent dead lock caused by NewUnSubscribeCommonEvent and OnReceiveEvent run parallelly.
         std::shared_ptr<AccountSubscriber> subscriber = shared_from_this();
@@ -85,14 +85,14 @@ void AccountSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &eventDat
 void AccountSubscriber::RegisterCommonEventReceiver(int32_t userId,
     const std::shared_ptr<CommonEventReceiver> &receiver)
 {
-    MEDIA_LOGD("receiver is 0x%{public}06" PRIXPTR ", userId %{public}d", FAKE_POINTER(receiver.get()), userId);
+    MEDIA_LOGI("receiver is 0x%{public}06" PRIXPTR ", userId %{public}d", FAKE_POINTER(receiver.get()), userId);
     if (userId < 0 || receiver == nullptr) {
         return;
     }
     std::lock_guard<std::mutex> lock(userMutex_);
     if (userMap_.empty()) {
         EventFwk::CommonEventManager::NewSubscribeCommonEvent(instance_);
-        MEDIA_LOGD("first register receiver, SubscribeCommonEvent");
+        MEDIA_LOGI("first register receiver, SubscribeCommonEvent");
     }
     auto mapIt = userMap_.find(userId);
     if (mapIt == userMap_.end()) {
@@ -113,7 +113,7 @@ void AccountSubscriber::RegisterCommonEventReceiver(int32_t userId,
 void AccountSubscriber::UnregisterCommonEventReceiver(int32_t userId,
     const std::shared_ptr<CommonEventReceiver> &receiver)
 {
-    MEDIA_LOGD("receiver is 0x%{public}06" PRIXPTR ", userId %{public}d", FAKE_POINTER(receiver.get()), userId);
+    MEDIA_LOGI("receiver is 0x%{public}06" PRIXPTR ", userId %{public}d", FAKE_POINTER(receiver.get()), userId);
     if (userId < 0 || receiver == nullptr) {
         return;
     }
@@ -133,11 +133,11 @@ void AccountSubscriber::UnregisterCommonEventReceiver(int32_t userId,
     if (mapIt->second.empty()) {
         userMap_.erase(mapIt);
         MEDIA_LOGI("remove userId %{public}d, map size %{public}u", userId,
-            static_cast<int32_t>(userMap_.size()));
+            static_cast<uint32_t>(userMap_.size()));
     }
     if (userMap_.empty()) {
         EventFwk::CommonEventManager::NewUnSubscribeCommonEvent(instance_);
-        MEDIA_LOGD("user map empty, UnSubscribeCommonEvent");
+        MEDIA_LOGI("user map empty, UnSubscribeCommonEvent");
     }
 }
 } // namespace Media

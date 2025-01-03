@@ -117,6 +117,8 @@ public:
 AVMetadataHelperCallback::AVMetadataHelperCallback(napi_env env, AVMetadataHelperNotify *listener)
     : env_(env), listener_(listener)
 {
+    onInfoFuncs_[HELPER_INFO_TYPE_STATE_CHANGE] =
+        [this](const int32_t extra, const Format &infoBody) { OnStateChangeCb(extra, infoBody); };
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
 
@@ -160,12 +162,10 @@ void AVMetadataHelperCallback::OnInfo(HelperOnInfoType type, int32_t extra, cons
 {
     std::lock_guard<std::mutex> lock(mutex_);
     MEDIA_LOGI("OnInfo is called, OnInfoType: %{public}d", type);
-    switch (type) {
-        case static_cast<int32_t>(HelperOnInfoType::HELPER_INFO_TYPE_STATE_CHANGE):
-            OnStateChangeCb(extra, infoBody);
-            break;
-        default:
-            MEDIA_LOGI("OnInfo: no member func supporting, %{public}d", type);
+    if (onInfoFuncs_.count(type) > 0) {
+        onInfoFuncs_[type](extra, infoBody);
+    } else {
+        MEDIA_LOGI("OnInfo: no member func supporting, %{public}d", type);
     }
 }
 

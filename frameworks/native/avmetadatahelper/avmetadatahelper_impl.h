@@ -51,7 +51,6 @@ public:
     void SetScene(Scene scene) override;
     int32_t GetTimeByFrameIndex(uint32_t index, uint64_t &time) override;
     int32_t GetFrameIndexByTime(uint64_t time, uint32_t &index) override;
-    void SetIsNapiInstance(bool isNapiInstance) override;
 private:
     struct PixelMapInfo {
         int32_t rotation = 0;

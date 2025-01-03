@@ -167,10 +167,6 @@ public:
     {
         return 0;
     }
-    int32_t StopBufferring(bool flag) override
-    {
-        return 0;
-    }
     int32_t SelectTrack(int32_t index, PlayerSwitchMode mode) override
     {
         return 0;

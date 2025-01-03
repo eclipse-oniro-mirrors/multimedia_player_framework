@@ -85,11 +85,6 @@ public:
     virtual int32_t DestroyStub() = 0;
     virtual int32_t SetPlayerCallback() = 0;
     virtual int32_t SelectBitRate(uint32_t bitRate) = 0;
-    virtual int32_t StopBufferring(bool flag)
-    {
-        (void)flag;
-        return 0;
-    }
     virtual int32_t SelectTrack(int32_t index, PlayerSwitchMode mode = PlayerSwitchMode::SWITCH_SMOOTH) = 0;
     virtual int32_t DeselectTrack(int32_t index) = 0;
     virtual int32_t GetCurrentTrack(int32_t trackType, int32_t &index) = 0;
@@ -98,7 +93,12 @@ public:
         (void)playbackStrategy;
         return 0;
     }
-    virtual int32_t SetMediaMuted(MediaType mediaType, bool isMuted) = 0;
+    virtual int32_t SetMediaMuted(MediaType mediaType, bool isMuted)
+    {
+        (void)mediaType;
+        (void)isMuted;
+        return 0;
+    }
 
     virtual int32_t SetDecryptConfig(const sptr<OHOS::DrmStandard::IMediaKeySessionService> &keySessionProxy,
         bool svp)
@@ -171,8 +171,8 @@ public:
         SET_DECRYPT_CONFIG,
         SET_PLAYBACK_STRATEGY,
         SET_MEDIA_MUTED,
-        GET_PLAYBACK_INFO,
         SET_MAX_AMPLITUDE_CB_STATUS,
+        GET_PLAYBACK_INFO,
         SET_DEVICE_CHANGE_CB_STATUS,
         GET_API_VERSION,
         MAX_IPC_ID,                   // all IPC codes should be added before MAX_IPC_ID

@@ -58,7 +58,7 @@ sptr<PlayerServiceStub> PlayerServiceStubMem::Create()
 
 PlayerServiceStubMem::PlayerServiceStubMem()
 {
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
 
 PlayerServiceStubMem::~PlayerServiceStubMem()
@@ -81,13 +81,13 @@ int32_t PlayerServiceStubMem::Init()
         appUid_ = IPCSkeleton::GetCallingUid();
         appPid_ = IPCSkeleton::GetCallingPid();
         memRecallStruct_ = {
-            [this] { this -> ResetFrontGroundForMemManageRecall(); },
-            [this] { this ->ResetBackGroundForMemManageRecall(); },
+            [this] { this->ResetFrontGroundForMemManageRecall(); },
+            [this] { this->ResetBackGroundForMemManageRecall(); },
             [this] { this->ResetMemmgrForMemManageRecall(); },
             [this] { this->RecoverByMemManageRecall(); },
             &playerServer_,
         };
-        MEDIA_LOGI_NO_RELEASE("RegisterPlayerServer uid:%{public}d pid:%{public}d", appUid_, appPid_);
+        MEDIA_LOGI("RegisterPlayerServer uid:%{public}d pid:%{public}d", appUid_, appPid_);
         PlayerMemManage::GetInstance().RegisterPlayerServer(appUid_, appPid_, memRecallStruct_);
     }
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "failed to create PlayerServer");

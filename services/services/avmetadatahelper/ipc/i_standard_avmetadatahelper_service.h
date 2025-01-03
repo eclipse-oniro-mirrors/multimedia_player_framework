@@ -45,7 +45,6 @@ public:
     virtual int32_t SetListenerObject(const sptr<IRemoteObject> &object) = 0;
     virtual int32_t GetTimeByFrameIndex(uint32_t index, uint64_t &time) = 0;
     virtual int32_t GetFrameIndexByTime(uint64_t time, uint32_t &index) = 0;
-    virtual void SetIsNapiInstance(bool isNapiInstance) = 0;
 
     /**
      * IPC code ID
@@ -66,7 +65,6 @@ public:
         GET_AVMETADATA,
         GET_TIME_BY_FRAME_INDEX,
         GET_FRAME_INDEX_BY_TIME,
-        SET_IS_NAPI_INSTANCE,
         MAX_IPC_ID,
     };
 
