@@ -172,6 +172,13 @@ int32_t ScreenCaptureClient::SetCanvasRotation(bool canvasRotation)
     return screenCaptureProxy_->SetCanvasRotation(canvasRotation);
 }
 
+int32_t ScreenCaptureClient::ShowCursor(bool showCursor)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
+    return screenCaptureProxy_->ShowCursor(showCursor);
+}
+
 int32_t ScreenCaptureClient::ResizeCanvas(int32_t width, int32_t height)
 {
     std::lock_guard<std::mutex> lock(mutex_);
