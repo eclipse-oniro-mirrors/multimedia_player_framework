@@ -685,7 +685,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioDataSource_004, TestSize.Level2)
     audioRendererChangeInfos[3]->rendererState = RendererState::RENDERER_RUNNING;
     audioRendererChangeInfos[3]->rendererInfo.streamUsage =
         AudioStandard::StreamUsage::STREAM_USAGE_VOICE_COMMUNICATION;
-    screenCaptureServer_->audioSource_->HasSpeakerStream(audioRendererChangeInfos);
+    screenCaptureServer_->audioSource_->HasVoIPStream(audioRendererChangeInfos);
     sleep(RECORDER_TIME);
     ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
 }

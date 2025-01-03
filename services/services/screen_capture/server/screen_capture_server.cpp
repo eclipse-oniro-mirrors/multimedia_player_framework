@@ -1600,11 +1600,11 @@ int32_t ScreenCaptureServer::StartPrivacyWindow()
     callingLabel_ = GetBundleResourceLabel(bundleName);
 
     std::string comStr = "{\"ability.want.params.uiExtensionType\":\"sys/commonUI\",\"sessionId\":\"";
-    comStr += std::to_string(sessionId_).c_str();
+    comStr += std::to_string(sessionId_);
     comStr += "\",\"callerUid\":\"";
-    comStr += std::to_string(appInfo_.appUid).c_str();
+    comStr += std::to_string(appInfo_.appUid);
     comStr += "\",\"appLabel\":\"";
-    comStr += callingLabel_.c_str();
+    comStr += callingLabel_;
     comStr += "\"}";
 
     AAFwk::Want want;

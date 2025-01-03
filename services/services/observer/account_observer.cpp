@@ -73,10 +73,12 @@ void AccountObserver::UnregisterAccountObserverCallBack(std::weak_ptr<AccountObs
     MEDIA_LOGI("AccountObserver::UnregisterAccountObserverCallBack START.");
     std::unique_lock<std::mutex> lock(mutex_);
     auto task = std::make_shared<TaskHandler<void>>([&, this, callback] {
+        auto unregisterCallBack = callback.lock();
         for (auto iter = accountObserverCallBacks_.begin(); iter != accountObserverCallBacks_.end();) {
-            if ((*iter).lock() == callback.lock() || callback.lock() == nullptr) {
+            auto iterCallback = (*iter).lock();
+            if (iterCallback == unregisterCallBack || unregisterCallBack == nullptr) {
                 MEDIA_LOGD("0x%{public}06" PRIXPTR "UnregisterAccountObserverCallBack",
-                    FAKE_POINTER((*iter).lock().get()));
+                    FAKE_POINTER(iterCallback.get()));
                 iter = accountObserverCallBacks_.erase(iter);
             } else {
                 iter++;
