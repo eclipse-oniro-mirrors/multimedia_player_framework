@@ -356,14 +356,14 @@ void AVMetadataHelperServer::Release()
             std::lock_guard<std::mutex> lockCb(mutexCb_);
             helperCb_ = nullptr;
         }
-        {
-            std::unique_lock<std::mutex> lock(mutex_);
-            isInterrupted_ = true;
-            ipcReturnCond_.notify_all();
-        }
     });
     (void)taskQue_.EnqueueTask(task, true);
     (void)task->GetResult();
+    {
+        std::unique_lock<std::mutex> lock(mutex_);
+        isInterrupted_ = true;
+        ipcReturnCond_.notify_all();
+    }
 }
 
 int32_t AVMetadataHelperServer::SetHelperCallback(const std::shared_ptr<HelperCallback> &callback)

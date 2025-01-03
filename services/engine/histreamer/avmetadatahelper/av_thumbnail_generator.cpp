@@ -420,16 +420,18 @@ std::shared_ptr<AVSharedMemory> AVThumbnailGenerator::FetchFrameAtTime(int64_t t
     auto res = SeekToTime(Plugins::Us2Ms(timeUs), static_cast<Plugins::SeekMode>(option), realSeekTime);
     CHECK_AND_RETURN_RET_LOG(res == Status::OK, nullptr, "Seek fail");
     CHECK_AND_RETURN_RET_LOG(InitDecoder() == Status::OK, nullptr, "FetchFrameAtTime InitDecoder failed.");
+    bool fetchFrameRes = false;
     {
         std::unique_lock<std::mutex> lock(mutex_);
 
         // wait up to 3s to fetch frame AVSharedMemory at time.
-        if (cond_.wait_for(lock, std::chrono::seconds(MAX_WAIT_TIME_SECOND),
-            [this] { return hasFetchedFrame_.load() || readErrorFlag_.load() || stopProcessing_.load(); })) {
-            HandleFetchFrameAtTimeRes();
-        } else {
-            PauseFetchFrame();
-        }
+        fetchFrameRes = cond_.wait_for(lock, std::chrono::seconds(MAX_WAIT_TIME_SECOND),
+            [this] { return hasFetchedFrame_.load() || readErrorFlag_.load() || stopProcessing_.load(); });
+    }
+    if (fetchFrameRes) {
+        HandleFetchFrameAtTimeRes();
+    } else {
+        PauseFetchFrame();
     }
     return fetchedFrameAtTime_;
 }
@@ -465,16 +467,18 @@ std::shared_ptr<AVBuffer> AVThumbnailGenerator::FetchFrameYuv(int64_t timeUs, in
     auto res = SeekToTime(Plugins::Us2Ms(timeUs), static_cast<Plugins::SeekMode>(option), realSeekTime);
     CHECK_AND_RETURN_RET_LOG(res == Status::OK, nullptr, "Seek fail");
     CHECK_AND_RETURN_RET_LOG(InitDecoder() == Status::OK, nullptr, "FetchFrameAtTime InitDecoder failed.");
+    bool fetchFrameRes = false;
     {
         std::unique_lock<std::mutex> lock(mutex_);
 
         // wait up to 3s to fetch frame AVSharedMemory at time.
-        if (cond_.wait_for(lock, std::chrono::seconds(MAX_WAIT_TIME_SECOND),
-            [this] { return hasFetchedFrame_.load() || readErrorFlag_.load() || stopProcessing_.load(); })) {
-            HandleFetchFrameYuvRes();
-        } else {
-            HandleFetchFrameYuvFailed();
-        }
+        fetchFrameRes = cond_.wait_for(lock, std::chrono::seconds(MAX_WAIT_TIME_SECOND),
+            [this] { return hasFetchedFrame_.load() || readErrorFlag_.load() || stopProcessing_.load(); });
+    }
+    if (fetchFrameRes) {
+        HandleFetchFrameYuvRes();
+    } else {
+        HandleFetchFrameYuvFailed();
     }
     return avBuffer_;
 }
