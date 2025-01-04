@@ -42,6 +42,7 @@ public:
     ~TestScreenCapture();
     std::shared_ptr<ScreenCapture> screenCapture = nullptr;
     bool CreateScreenCapture();
+    bool CreateScreenCapture(OHOS::AudioStandard::AppInfo& appInfo);
     int32_t SetScreenCaptureCallback(const std::shared_ptr<ScreenCaptureCallBack>& callback);
     int32_t Init(AVScreenCaptureConfig config);
     int32_t StartScreenCapture();

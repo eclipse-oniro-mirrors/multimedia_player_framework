@@ -76,6 +76,7 @@ ohos_fuzztest("ScreenCaptureServiceStubFuzzTest") {
     "ipc:ipc_single",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "player_framework:media_client",
   ]
 
   part_name = "player_framework"
