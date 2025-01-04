@@ -68,7 +68,7 @@ public:
 
     void OnStateChange(const AudioStandard::AudioCapturerChangeInfo &capturerChangeInfo)
     {
-        CHECK_AND_RETURN_RET_LOG(hiRecorderImpl_, "hiRecorderImpl_ is nullptr");
+        FALSE_RETURN_MSG(hiRecorderImpl_ != nullptr, "hiRecorderImpl_ is nullptr");
         MEDIA_LOG_I("CapturerInfoChangeCallback hiRecorderImpl_->OnAudioCaptureChange start.");
         hiRecorderImpl_->OnAudioCaptureChange(capturerChangeInfo);
     }
@@ -123,7 +123,8 @@ int32_t HiRecorderImpl::SetVideoSource(VideoSourceType source, int32_t &sourceId
             videoEncoderFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::SurfaceEncoderFilter>
                 ("videoEncoderFilter", Pipeline::FilterType::FILTERTYPE_VENC);
         }
-        CHECK_AND_RETURN_RET_LOG(videoEncoderFilter_, "create videoEncoderFilter failed");
+        FALSE_RETURN_V_MSG_E(videoEncoderFilter_ != nullptr, (int32_t)Status::ERROR_NULL_POINTER,
+            "create videoEncoderFilter failed");
         videoEncoderFilter_->SetCallingInfo(appUid_, appPid_, bundleName_, instanceId_);
         ret = pipeline_->AddHeadFilters({videoEncoderFilter_});
         if (source == VideoSourceType::VIDEO_SOURCE_SURFACE_RGBA) {
@@ -137,7 +138,8 @@ int32_t HiRecorderImpl::SetVideoSource(VideoSourceType source, int32_t &sourceId
         videoSourceIsRGBA_ = false;
         videoCaptureFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::VideoCaptureFilter>
             ("videoEncoderFilter", Pipeline::FilterType::VIDEO_CAPTURE);
-        CHECK_AND_RETURN_RET_LOG(videoEncoderFilter_, "create videoEncoderFilter failed");
+        FALSE_RETURN_V_MSG_E(videoEncoderFilter_ != nullptr, (int32_t)Status::ERROR_NULL_POINTER,
+            "create videoEncoderFilter failed");
         ret = pipeline_->AddHeadFilters({videoCaptureFilter_});
         MEDIA_LOG_I("SetVideoSource VIDEO_SOURCE_SURFACE_ES.");
     } else {
