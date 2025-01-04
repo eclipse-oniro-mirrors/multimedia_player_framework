@@ -89,7 +89,7 @@ void RecorderListenerProxy::OnPhotoAssertAvailable(const std::string &uri)
  
     data.WriteString(uri);
     int error = Remote()->SendRequest(RecorderListenerMsg::ON_PHOTO_ASSERT_AVAILABLE, data, reply, option);
-    CHECK_AND_RETURN_LOG(error == MSERR_OK, "on audio capture change failed, error: %{public}d", error);
+    CHECK_AND_RETURN_LOG(error == MSERR_OK, "on photo assert available failed, error: %{public}d", error);
 }
 
 RecorderListenerCallback::RecorderListenerCallback(const sptr<IStandardRecorderListener> &listener)

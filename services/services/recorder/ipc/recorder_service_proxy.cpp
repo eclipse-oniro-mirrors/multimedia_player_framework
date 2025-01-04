@@ -44,7 +44,9 @@ int32_t RecorderServiceProxy::SetListenerObject(const sptr<IRemoteObject> &objec
     bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
-    (void)data.WriteRemoteObject(object);
+    token = data.WriteRemoteObject(object);
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write RemoteObject!");
+
     int error = Remote()->SendRequest(SET_LISTENER_OBJ, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetListenerObject failed, error: %{public}d", error);
@@ -61,7 +63,9 @@ int32_t RecorderServiceProxy::SetVideoSource(VideoSourceType source, int32_t &so
     bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
-    data.WriteInt32(source);
+    token = data.WriteInt32(source);
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write source!");
+
     int error = Remote()->SendRequest(SET_VIDEO_SOURCE, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetVideoSource failed, error: %{public}d", error);
@@ -79,8 +83,9 @@ int32_t RecorderServiceProxy::SetVideoEncoder(int32_t sourceId, VideoCodecFormat
     bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
-    data.WriteInt32(sourceId);
-    data.WriteInt32(encoder);
+    token = data.WriteInt32(sourceId) && data.WriteInt32(encoder);
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "write data failed");
+
     int error = Remote()->SendRequest(SET_VIDEO_ENCODER, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetVideoEncoder failed, error: %{public}d", error);
@@ -97,9 +102,9 @@ int32_t RecorderServiceProxy::SetVideoSize(int32_t sourceId, int32_t width, int3
     bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
-    data.WriteInt32(sourceId);
-    data.WriteInt32(width);
-    data.WriteInt32(height);
+    token = data.WriteInt32(sourceId) && data.WriteInt32(width) && data.WriteInt32(height);
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "write data failed");
+
     int error = Remote()->SendRequest(SET_VIDEO_SIZE, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetVideoSize failed, error: %{public}d", error);
@@ -116,8 +121,9 @@ int32_t RecorderServiceProxy::SetVideoFrameRate(int32_t sourceId, int32_t frameR
     bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
-    data.WriteInt32(sourceId);
-    data.WriteInt32(frameRate);
+    token = data.WriteInt32(sourceId) && data.WriteInt32(frameRate);
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "write data failed");
+
     int error = Remote()->SendRequest(SET_VIDEO_FARAME_RATE, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetVideoFrameRate failed, error: %{public}d", error);
@@ -134,8 +140,9 @@ int32_t RecorderServiceProxy::SetVideoEncodingBitRate(int32_t sourceId, int32_t 
     bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
-    data.WriteInt32(sourceId);
-    data.WriteInt32(rate);
+    token = data.WriteInt32(sourceId) && data.WriteInt32(rate);
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "write data failed");
+
     int error = Remote()->SendRequest(SET_VIDEO_ENCODING_BIT_RATE, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetVideoEncodingBitRate failed, error: %{public}d", error);
@@ -152,8 +159,9 @@ int32_t RecorderServiceProxy::SetVideoIsHdr(int32_t sourceId, bool isHdr)
     bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
-    data.WriteInt32(sourceId);
-    data.WriteBool(isHdr);
+    token = data.WriteInt32(sourceId) && data.WriteBool(isHdr);
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "write data failed");
+
     int error = Remote()->SendRequest(SET_VIDEO_IS_HDR, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetVideoIsHdr failed, error: %{public}d", error);
@@ -170,8 +178,9 @@ int32_t RecorderServiceProxy::SetVideoEnableTemporalScale(int32_t sourceId, bool
     bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
-    data.WriteInt32(sourceId);
-    data.WriteBool(enableTemporalScale);
+    token = data.WriteInt32(sourceId) && data.WriteBool(enableTemporalScale);
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "write data failed");
+
     int error = Remote()->SendRequest(SET_VIDEO_ENABLE_TEMPORAL_SCALE, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetVideoEnableTemporalScale failed, error: %{public}d", error);
@@ -188,7 +197,9 @@ int32_t RecorderServiceProxy::SetMetaConfigs(int32_t sourceId)
     bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
-    data.WriteInt32(sourceId);
+    token = data.WriteInt32(sourceId);
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "write data failed");
+
     int error = Remote()->SendRequest(SET_META_CONFIGS, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetMetaConfigs failed, error: %{public}d", error);
@@ -205,7 +216,9 @@ int32_t RecorderServiceProxy::SetMetaSource(MetaSourceType source, int32_t &sour
     bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
-    data.WriteInt32(source);
+    token = data.WriteInt32(source);
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "write data failed");
+
     int error = Remote()->SendRequest(SET_META_SOURCE, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetMetaSource failed, error: %{public}d", error);
@@ -223,8 +236,9 @@ int32_t RecorderServiceProxy::SetMetaMimeType(int32_t sourceId, const std::strin
     bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
-    data.WriteInt32(sourceId);
-    data.WriteCString(type.data());
+    token = data.WriteInt32(sourceId) && data.WriteCString(type.data());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "write data failed");
+
     int error = Remote()->SendRequest(SET_META_MIME_TYPE, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetMetaMimeType failed, error: %{public}d", error);
@@ -241,8 +255,9 @@ int32_t RecorderServiceProxy::SetMetaTimedKey(int32_t sourceId, const std::strin
     bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
-    data.WriteInt32(sourceId);
-    data.WriteCString(timedKey.data());
+    token = data.WriteInt32(sourceId) && data.WriteCString(timedKey.data());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "write data failed");
+
     int error = Remote()->SendRequest(SET_META_TIMED_KEY, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetMetaTimedKey failed, error: %{public}d", error);
@@ -259,8 +274,9 @@ int32_t RecorderServiceProxy::SetMetaSourceTrackMime(int32_t sourceId, const std
     bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
-    data.WriteInt32(sourceId);
-    data.WriteCString(srcTrackMime.data());
+    token = data.WriteInt32(sourceId) && data.WriteCString(srcTrackMime.data());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "write data failed");
+
     int error = Remote()->SendRequest(SET_META_TRACK_SRC_MIME_TYPE, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetMetaSourceTrackMime failed, error: %{public}d", error);
@@ -277,8 +293,9 @@ int32_t RecorderServiceProxy::SetCaptureRate(int32_t sourceId, double fps)
     bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
-    data.WriteInt32(sourceId);
-    data.WriteDouble(fps);
+    token = data.WriteInt32(sourceId) && data.WriteDouble(fps);
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "write data failed");
+
     int error = Remote()->SendRequest(SET_CAPTURE_RATE, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetCaptureRate failed, error: %{public}d", error);
@@ -295,7 +312,9 @@ sptr<OHOS::Surface> RecorderServiceProxy::GetSurface(int32_t sourceId)
     bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, nullptr, "Failed to write descriptor!");
 
-    data.WriteInt32(sourceId);
+    token = data.WriteInt32(sourceId);
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "write data failed");
+
     int error = Remote()->SendRequest(GET_SURFACE, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, nullptr,
         "GetSurface failed, error: %{public}d", error);
@@ -318,7 +337,9 @@ sptr<OHOS::Surface> RecorderServiceProxy::GetMetaSurface(int32_t sourceId)
     bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, nullptr, "Failed to write descriptor!");
 
-    data.WriteInt32(sourceId);
+    token = data.WriteInt32(sourceId);
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "write data failed");
+
     int error = Remote()->SendRequest(GET_META_SURFACE, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, nullptr,
         "GetMetaSurface failed, error: %{public}d", error);
@@ -341,7 +362,9 @@ int32_t RecorderServiceProxy::SetAudioSource(AudioSourceType source, int32_t &so
     bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
-    data.WriteInt32(static_cast<int32_t>(source));
+    token = data.WriteInt32(static_cast<int32_t>(source));
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "write data failed");
+
     int error = Remote()->SendRequest(SET_AUDIO_SOURCE, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetAudioSource failed, error: %{public}d", error);
@@ -359,8 +382,9 @@ int32_t RecorderServiceProxy::SetAudioEncoder(int32_t sourceId, AudioCodecFormat
     bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
-    data.WriteInt32(sourceId);
-    data.WriteInt32(static_cast<int32_t>(encoder));
+    token = data.WriteInt32(sourceId) && data.WriteInt32(static_cast<int32_t>(encoder));
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "write data failed");
+
     int error = Remote()->SendRequest(SET_AUDIO_ENCODER, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetAudioEncoder failed, error: %{public}d", error);
@@ -377,8 +401,9 @@ int32_t RecorderServiceProxy::SetAudioSampleRate(int32_t sourceId, int32_t rate)
     bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
-    data.WriteInt32(sourceId);
-    data.WriteInt32(rate);
+    token = data.WriteInt32(sourceId) && data.WriteInt32(rate);
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "write data failed");
+
     int error = Remote()->SendRequest(SET_AUDIO_SAMPLE_RATE, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetAudioSampleRate failed, error: %{public}d", error);
@@ -395,8 +420,9 @@ int32_t RecorderServiceProxy::SetAudioChannels(int32_t sourceId, int32_t num)
     bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
-    data.WriteInt32(sourceId);
-    data.WriteInt32(num);
+    token = data.WriteInt32(sourceId) && data.WriteInt32(num);
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "write data failed");
+
     int error = Remote()->SendRequest(SET_AUDIO_CHANNELS, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetAudioChannels failed, error: %{public}d", error);
@@ -413,8 +439,9 @@ int32_t RecorderServiceProxy::SetAudioEncodingBitRate(int32_t sourceId, int32_t 
     bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
-    data.WriteInt32(sourceId);
-    data.WriteInt32(bitRate);
+    token = data.WriteInt32(sourceId) && data.WriteInt32(bitRate);
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "write data failed");
+
     int error = Remote()->SendRequest(SET_AUDIO_ENCODING_BIT_RATE, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetAudioEncodingBitRate failed, error: %{public}d", error);
@@ -431,7 +458,9 @@ int32_t RecorderServiceProxy::SetDataSource(DataSourceType dataType, int32_t &so
     bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
-    data.WriteInt32(static_cast<int32_t>(dataType));
+    token = data.WriteInt32(static_cast<int32_t>(dataType));
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "write data failed");
+
     int error = Remote()->SendRequest(SET_DATA_SOURCE, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetDataSource failed, error: %{public}d", error);
@@ -467,7 +496,9 @@ int32_t RecorderServiceProxy::SetGenre(std::string &genre)
     bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
-    data.WriteString(genre);
+    token = data.WriteString(genre);
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "write data failed");
+
     int error = Remote()->SendRequest(SET_GENRE, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetGenre failed, error: %{public}d", error);
@@ -484,7 +515,9 @@ int32_t RecorderServiceProxy::SetMaxDuration(int32_t duration)
     bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
-    data.WriteInt32(duration);
+    token = data.WriteInt32(duration);
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "write data failed");
+
     int error = Remote()->SendRequest(SET_MAX_DURATION, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetMaxDuration failed, error: %{public}d", error);
@@ -501,7 +534,9 @@ int32_t RecorderServiceProxy::SetOutputFormat(OutputFormatType format)
     bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
-    data.WriteInt32(static_cast<int32_t>(format));
+    token = data.WriteInt32(static_cast<int32_t>(format));
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "write data failed");
+
     int error = Remote()->SendRequest(SET_OUTPUT_FORMAT, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetOutputFormat failed, error: %{public}d", error);
@@ -518,7 +553,9 @@ int32_t RecorderServiceProxy::SetOutputFile(int32_t fd)
     bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
-    (void)data.WriteFileDescriptor(fd);
+    token = data.WriteFileDescriptor(fd);
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "write FileDescriptor failed");
+
     int error = Remote()->SendRequest(SET_OUTPUT_FILE, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetOutputFile failed, error: %{public}d", error);
@@ -535,7 +572,9 @@ int32_t RecorderServiceProxy::SetFileGenerationMode(FileGenerationMode mode)
     bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
  
-    (void)data.WriteInt32(static_cast<int32_t>(mode));
+    token = data.WriteInt32(static_cast<int32_t>(mode));
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "write data failed");
+
     int error = Remote()->SendRequest(SET_FILE_GENERATION_MODE, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetFileGenerationMode failed, error: %{public}d", error);
@@ -552,7 +591,9 @@ int32_t RecorderServiceProxy::SetNextOutputFile(int32_t fd)
     bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
-    (void)data.WriteFileDescriptor(fd);
+    token = data.WriteFileDescriptor(fd);
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "write data failed");
+
     int error = Remote()->SendRequest(SET_NEXT_OUTPUT_FILE, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetNextOutputFile failed, error: %{public}d", error);
@@ -569,7 +610,9 @@ int32_t RecorderServiceProxy::SetMaxFileSize(int64_t size)
     bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
-    data.WriteInt64(size);
+    token = data.WriteInt64(size);
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "write data failed");
+
     int error = Remote()->SendRequest(SET_MAX_FILE_SIZE, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetMaxFileSize failed, error: %{public}d", error);
@@ -586,8 +629,9 @@ int32_t RecorderServiceProxy::SetLocation(float latitude, float longitude)
     bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
-    data.WriteFloat(latitude);
-    data.WriteFloat(longitude);
+    token = data.WriteFloat(latitude) && data.WriteFloat(longitude);
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "write data failed");
+
     int error = Remote()->SendRequest(SET_LOCATION, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_OK, "SetLocation failed, error: %{public}d", error);
     return MSERR_OK;
@@ -602,7 +646,9 @@ int32_t RecorderServiceProxy::SetOrientationHint(int32_t rotation)
     bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
-    data.WriteInt32(rotation);
+    token = data.WriteInt32(rotation);
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "write data failed");
+
     int error = Remote()->SendRequest(SET_ORIENTATION_HINT, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_OK, "SetOrientationHint failed, error: %{public}d", error);
     return MSERR_OK;
@@ -681,7 +727,9 @@ int32_t RecorderServiceProxy::Stop(bool block)
     bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
-    data.WriteBool(block);
+    token = data.WriteBool(block);
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "write data failed");
+
     int error = Remote()->SendRequest(STOP, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "Stop failed, error: %{public}d", error);
@@ -730,9 +778,9 @@ int32_t RecorderServiceProxy::SetFileSplitDuration(FileSplitType type, int64_t t
     bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
-    data.WriteInt32(static_cast<int32_t>(type));
-    data.WriteInt64(timestamp);
-    data.WriteUint32(duration);
+    token = data.WriteInt32(static_cast<int32_t>(type)) && data.WriteInt64(timestamp) && data.WriteUint32(duration);
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "write data failed");
+
     int error = Remote()->SendRequest(SET_FILE_SPLIT_DURATION, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetFileSplitDuration failed, error: %{public}d", error);
