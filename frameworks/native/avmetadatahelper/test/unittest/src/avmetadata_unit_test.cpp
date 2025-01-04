@@ -661,7 +661,6 @@ HWTEST_F(AVMetadataUnitTest, GetTimeByFrameIndex_API_0100, Level2)
     ASSERT_EQ(MSERR_OK, helper->GetTimeByFrameIndex(0, time));
 }
 
-
 /**
     * @tc.number    : GetFrameIndexByTime_PtsAndFrame_API_0100
     * @tc.name      : SetSource camera_info_parser.mp4
