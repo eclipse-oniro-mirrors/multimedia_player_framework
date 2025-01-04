@@ -28,7 +28,6 @@ using namespace OHOS::Media::PlayerTestParam;
 
 namespace OHOS {
 namespace Media {
-const std::string HEVC_LIB_PATH = std::string(AV_CODEC_PATH) + "/libav_codec_hevc_parser.z.so";
 
 void PlayerUnitTest::SetUpTestCase(void)
 {
@@ -645,16 +644,14 @@ HWTEST_F(PlayerUnitTest, Player_Local_015, TestSize.Level2)
  */
 HWTEST_F(PlayerUnitTest, Player_Local_016, TestSize.Level2)
 {
-    if (access(HEVC_LIB_PATH.c_str(), F_OK) == 0) {
-        int32_t ret = player_->SetSource(MEDIA_ROOT + "H265_AAC.mp4");
-        EXPECT_EQ(MSERR_OK, ret);
-        sptr<Surface> videoSurface = player_->GetVideoSurface();
-        ASSERT_NE(nullptr, videoSurface);
-        EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-        ret = player_->PrepareAsync();
-        if (ret == MSERR_OK) {
-            PlayFunTest(LOCAL_PLAY);
-        }
+    int32_t ret = player_->SetSource(MEDIA_ROOT + "H265_AAC.mp4");
+    EXPECT_EQ(MSERR_OK, ret);
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    ret = player_->PrepareAsync();
+    if (ret == MSERR_OK) {
+        PlayFunTest(LOCAL_PLAY);
     }
 }
 
