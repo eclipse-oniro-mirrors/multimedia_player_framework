@@ -1771,7 +1771,7 @@ int32_t HiPlayerImpl::SelectTrack(int32_t trackId, PlayerSwitchMode mode)
         FALSE_RETURN_V_MSG_W(trackId != currentSubtitleTrackId_, MSERR_INVALID_VAL, "SelectTrack trackId invalid");
         if (currentSubtitleTrackId_ < 0) {
             if (Status::OK != InitSubtitleDefaultTrackIndex()) {
-                MEDIA_LOG_W("Init video default track index fail");
+                MEDIA_LOG_W("Init subtitle default track index fail");
             }
         }
     } else {
