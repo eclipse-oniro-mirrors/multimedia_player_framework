@@ -245,7 +245,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckScreenCaptureAppLimit_003, TestSi
 HWTEST_F(ScreenCaptureServerFunctionTest, ProcessStartedSessionIdList_001, TestSize.Level2)
 {
     int32_t beforeSize = ScreenCaptureServer::startedSessionIDList_.size();
-    int32_t sessionId = ScreenCaptureServer::gIdGenerator_.GetNewID();
+    UniqueIDGenerator gIdGenerator_(20);
+    int32_t sessionId = gIdGenerator_.GetNewID();
     ScreenCaptureServer::AddStartedSessionIdList(sessionId);
     ASSERT_EQ(ScreenCaptureServer::startedSessionIDList_.size(), beforeSize + 1);
     ScreenCaptureServer::RemoveStartedSessionIdList(sessionId);
@@ -260,7 +261,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ProcessStartedSessionIdList_001, TestS
 HWTEST_F(ScreenCaptureServerFunctionTest, ProcessStartedSessionIdList_002, TestSize.Level2)
 {
     int32_t beforeSize = ScreenCaptureServer::startedSessionIDList_.size();
-    int32_t sessionId = ScreenCaptureServer::gIdGenerator_.GetNewID();
+    UniqueIDGenerator gIdGenerator_(20);
+    int32_t sessionId = gIdGenerator_.GetNewID();
     ScreenCaptureServer::AddStartedSessionIdList(sessionId);
     ScreenCaptureServer::RemoveStartedSessionIdList(sessionId);
     ASSERT_EQ(ScreenCaptureServer::startedSessionIDList_.size(), beforeSize);
@@ -275,7 +277,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ProcessStartedSessionIdList_002, TestS
 HWTEST_F(ScreenCaptureServerFunctionTest, GetStartedSCSPidList_001, TestSize.Level2)
 {
     std::shared_ptr<ScreenCaptureServer> server = std::make_shared<ScreenCaptureServer>();
-    int32_t sessionId = ScreenCaptureServer::gIdGenerator_.GetNewID();
+    UniqueIDGenerator gIdGenerator_(20);
+    int32_t sessionId = gIdGenerator_.GetNewID();
     server->SetSessionId(sessionId);
     ScreenCaptureServer::AddScreenCaptureServerMap(sessionId, server);
     ScreenCaptureServer::AddStartedSessionIdList(sessionId);
@@ -296,7 +299,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, GetStartedSCSPidList_001, TestSize.Lev
 HWTEST_F(ScreenCaptureServerFunctionTest, GetStartedSCSPidList_002, TestSize.Level2)
 {
     std::shared_ptr<ScreenCaptureServer> server = std::make_shared<ScreenCaptureServer>();
-    int32_t sessionId = ScreenCaptureServer::gIdGenerator_.GetNewID();
+    UniqueIDGenerator gIdGenerator_(20);
+    int32_t sessionId = gIdGenerator_.GetNewID();
     server->SetSessionId(sessionId);
     ScreenCaptureServer::AddScreenCaptureServerMap(sessionId, server);
     ScreenCaptureServer::AddStartedSessionIdList(sessionId);
@@ -313,7 +317,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, GetStartedSCSPidList_002, TestSize.Lev
 HWTEST_F(ScreenCaptureServerFunctionTest, GetStartedSCSPidList_003, TestSize.Level2)
 {
     std::shared_ptr<ScreenCaptureServer> server = std::make_shared<ScreenCaptureServer>();
-    int32_t sessionId = ScreenCaptureServer::gIdGenerator_.GetNewID();
+    UniqueIDGenerator gIdGenerator_(20);
+    int32_t sessionId = gIdGenerator_.GetNewID();
     server->SetSessionId(sessionId);
     ScreenCaptureServer::AddScreenCaptureServerMap(sessionId, server);
     ScreenCaptureServer::AddStartedSessionIdList(sessionId);

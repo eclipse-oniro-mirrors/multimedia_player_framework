@@ -50,6 +50,7 @@ public:
     int32_t Release();
     int32_t SetMicrophoneEnabled(bool isMicrophone);
     int32_t SetCanvasRotation(bool canvasRotation);
+    int32_t ShowCursor(bool showCursor);
     int32_t ResizeCanvas(int32_t width, int32_t height);
     int32_t SkipPrivacyMode(std::vector<uint64_t> &windowIDsVec);
     int32_t SetMaxFrameRate(int32_t frameRate);

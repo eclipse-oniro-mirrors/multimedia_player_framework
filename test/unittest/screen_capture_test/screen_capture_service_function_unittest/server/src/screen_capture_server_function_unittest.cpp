@@ -685,7 +685,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioDataSource_004, TestSize.Level2)
     audioRendererChangeInfos[3]->rendererState = RendererState::RENDERER_RUNNING;
     audioRendererChangeInfos[3]->rendererInfo.streamUsage =
         AudioStandard::StreamUsage::STREAM_USAGE_VOICE_COMMUNICATION;
-    screenCaptureServer_->audioSource_->HasSpeakerStream(audioRendererChangeInfos);
+    screenCaptureServer_->audioSource_->HasVoIPStream(audioRendererChangeInfos);
     sleep(RECORDER_TIME);
     ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
 }
@@ -1490,6 +1490,152 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StopAndRelease_002, TestSize.Level2)
         screenCaptureServer_ = nullptr;
         ASSERT_EQ(obcb->StopAndRelease(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_USER), true);
     }
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, ShowCursor_001, TestSize.Level2)
+{
+    screenCaptureServer_->showCursor_ = true;
+    int ret = screenCaptureServer_->ShowCursor(true);
+    ASSERT_EQ(ret, MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, ShowCursor_002, TestSize.Level2)
+{
+    screenCaptureServer_->showCursor_ = false;
+    int ret = screenCaptureServer_->ShowCursor(true);
+    ASSERT_EQ(ret, MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, ShowCursor_003, TestSize.Level2)
+{
+    int ret = screenCaptureServer_->ShowCursor(false);
+    ASSERT_EQ(ret, MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, ShowCursor_004, TestSize.Level2)
+{
+    screenCaptureServer_->showCursor_ = false;
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
+    screenCaptureServer_->screenId_ = 0;
+    int ret = screenCaptureServer_->ShowCursor(true);
+    ASSERT_EQ(ret, MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, ShowCursorInner_001, TestSize.Level2)
+{
+    screenCaptureServer_->screenId_ = 0;
+    int ret = screenCaptureServer_->ShowCursorInner();
+    ASSERT_EQ(ret, MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, ShowCursorInner_002, TestSize.Level2)
+{
+    screenCaptureServer_->screenId_ = 0;
+    screenCaptureServer_->showCursor_ = false;
+    int ret = screenCaptureServer_->ShowCursorInner();
+    ASSERT_EQ(ret, MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, OnDeviceAdded_001, TestSize.Level2)
+{
+    std::shared_ptr<MouseChangeListener> listener = std::make_shared<MouseChangeListener>(screenCaptureServer_);
+    int32_t inputDeviceId = 9;
+    listener->OnDeviceAdded(inputDeviceId, "test");
+    ASSERT_EQ(inputDeviceId == 9, true);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, OnDeviceRemoved_001, TestSize.Level2)
+{
+    std::shared_ptr<MouseChangeListener> listener = std::make_shared<MouseChangeListener>(screenCaptureServer_);
+    int32_t inputDeviceId = 9;
+    listener->OnDeviceRemoved(inputDeviceId, "test");
+    ASSERT_EQ(inputDeviceId == 9, true);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, RegisterMMISystemAbilityListener_001, TestSize.Level2)
+{
+    sptr<ISystemAbilityStatusChange> listener(new (std::nothrow) MMISystemAbilityListener(screenCaptureServer_));
+    ASSERT_EQ(screenCaptureServer_->RegisterMMISystemAbilityListener(), true);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, UnRegisterMMISystemAbilityListener_001, TestSize.Level2)
+{
+    sptr<ISystemAbilityStatusChange> listener(new (std::nothrow) MMISystemAbilityListener(screenCaptureServer_));
+    ASSERT_EQ(screenCaptureServer_->UnRegisterMMISystemAbilityListener(), true);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, OnAddSystemAbility_001, TestSize.Level2)
+{
+    sptr<MMISystemAbilityListener> listener = new MMISystemAbilityListener(screenCaptureServer_);
+    int32_t systemAbilityId = 10;
+    std::string deviceId = "9";
+    listener->OnAddSystemAbility(systemAbilityId, deviceId);
+    ASSERT_EQ(systemAbilityId == 10, true);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, OnAddSystemAbility_002, TestSize.Level2)
+{
+    sptr<MMISystemAbilityListener> listener = new MMISystemAbilityListener(screenCaptureServer_);
+    int32_t systemAbilityId = 10;
+    std::string deviceId = "9";
+    screenCaptureServer_->SetMouseChangeListener(nullptr);
+    listener->OnAddSystemAbility(systemAbilityId, deviceId);
+    ASSERT_EQ(systemAbilityId == 10, true);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, OnRemoveSystemAbility_001, TestSize.Level2)
+{
+    sptr<MMISystemAbilityListener> listener = new MMISystemAbilityListener(screenCaptureServer_);
+    int32_t systemAbilityId = 10;
+    std::string deviceId = "9";
+    listener->OnRemoveSystemAbility(systemAbilityId, deviceId);
+    ASSERT_EQ(systemAbilityId == 10, true);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, RegisterMouseChangeListener_001, TestSize.Level2)
+{
+    std::string type = "change";
+    screenCaptureServer_->RegisterMouseChangeListener(type);
+    ASSERT_EQ(type == "change", true);
+}
+
+
+HWTEST_F(ScreenCaptureServerFunctionTest, RegisterMouseChangeListener_002, TestSize.Level2)
+{
+    std::string type = "change";
+    screenCaptureServer_->RegisterMouseChangeListener(type);
+    screenCaptureServer_->RegisterMouseChangeListener(type);
+    ASSERT_EQ(type == "change", true);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, UnRegisterMouseChangeListener_001, TestSize.Level2)
+{
+    std::string type = "change";
+    screenCaptureServer_->UnRegisterMouseChangeListener(type);
+    ASSERT_EQ(type == "change", true);
+}
+
+
+HWTEST_F(ScreenCaptureServerFunctionTest, UnRegisterMouseChangeListener_002, TestSize.Level2)
+{
+    std::string type = "change";
+    screenCaptureServer_->UnRegisterMouseChangeListener(type);
+    screenCaptureServer_->UnRegisterMouseChangeListener(type);
+    ASSERT_EQ(type == "change", true);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, PostStartScreenCaptureSuccessAction_001, TestSize.Level2)
+{
+    screenCaptureServer_->showCursor_ = false;
+    screenCaptureServer_->PostStartScreenCaptureSuccessAction();
+    ASSERT_EQ(screenCaptureServer_->showCursor_ == false, true);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, PostStartScreenCaptureSuccessAction_002, TestSize.Level2)
+{
+    screenCaptureServer_->showCursor_ = true;
+    screenCaptureServer_->PostStartScreenCaptureSuccessAction();
+    ASSERT_EQ(screenCaptureServer_->showCursor_ == true, true);
 }
 } // Media
 } // OHOS

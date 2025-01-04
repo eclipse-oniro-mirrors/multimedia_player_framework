@@ -1996,6 +1996,30 @@ HWTEST_F(PlayerServerUnitTest, Player_SetLooping_001, TestSize.Level0)
 }
 
 /**
+ * @tc.name  : Test SetLooping API
+ * @tc.number: Player_SetLooping_002
+ * @tc.desc  : Test Player SetLooping liveStream
+ */
+HWTEST_F(PlayerServerUnitTest, Player_SetLooping_002, TestSize.Level0)
+{
+    std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
+    server->isLiveStream_ = true;
+    EXPECT_EQ(MSERR_INVALID_OPERATION, server->SetLooping(true));
+}
+
+/**
+ * @tc.name  : Test SetLooping API
+ * @tc.number: Player_SetLooping_003
+ * @tc.desc  : Test Player SetLooping invalid playerEngine
+ */
+HWTEST_F(PlayerServerUnitTest, Player_SetLooping_003, TestSize.Level0)
+{
+    std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
+    server->lastOpStatus_ = PLAYER_STARTED;
+    EXPECT_EQ(MSERR_OK, server->SetLooping(true));
+}
+
+/**
  * @tc.name  : Test SetVolume API
  * @tc.number: Player_SetVolume_001
  * @tc.desc  : Test Player SetVolume
@@ -2161,6 +2185,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetInterrupt_001, TestSize.Level0)
  */
 HWTEST_F(PlayerServerUnitTest, Player_SelectBitRate_001, TestSize.Level0)
 {
+    EXPECT_EQ(MSERR_OK, player_->SelectBitRate(0));
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
@@ -3842,6 +3867,28 @@ HWTEST_F(PlayerServerUnitTest, Player_SetPlayRange_011, TestSize.Level0)
 }
 
 /**
+ * @tc.name  : Test SetPlayRange
+ * @tc.number: Player_SetPlayRange_012
+ * @tc.desc  : Test Player SetPlayRange invalid state
+ */
+HWTEST_F(PlayerServerUnitTest, Player_SetPlayRange_012, TestSize.Level0)
+{
+    EXPECT_NE(MSERR_OK, player_->SetPlayRange(100, 10037));
+}
+
+/**
+ * @tc.name  : Test SetPlayRange
+ * @tc.number: Player_SetPlayRange_013
+ * @tc.desc  : Test Player SetPlayRange invalid playerEngine
+ */
+HWTEST_F(PlayerServerUnitTest, Player_SetPlayRange_013, TestSize.Level0)
+{
+    std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
+    server->lastOpStatus_ = PLAYER_INITIALIZED;
+    EXPECT_EQ(MSERR_OK, server->SetPlayRange(100, 10037));
+}
+
+/**
  * @tc.name  : Test SeekContinuous in prepared
  * @tc.number: Player_SeekContinuous_001
  * @tc.desc  : Test Player SeekContinuous
@@ -4210,6 +4257,20 @@ HWTEST_F(PlayerServerUnitTest, Player_GetCurrentTime_001, TestSize.Level0)
 }
 
 /**
+ * @tc.name  : Test GetCurrentTime
+ * @tc.number: Player_GetCurrentTime_002
+ * @tc.desc  : Test GetCurrentTime interface with invalid parameters
+ */
+HWTEST_F(PlayerServerUnitTest, Player_GetCurrentTime_002, TestSize.Level0)
+{
+    std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
+    int32_t time = 0;
+    server->lastOpStatus_ = PLAYER_INITIALIZED;
+    server->isLiveStream_ = true;
+    EXPECT_EQ(MSERR_OK, server->GetCurrentTime(time));
+}
+
+/**
  * @tc.name  : Test GetPlaybackInfo API
  * @tc.number: Player_GetPlaybackInfo_001
  * @tc.desc  : Test Player GetPlaybackInfo
@@ -4332,6 +4393,19 @@ HWTEST_F(PlayerServerUnitTest, Player_SetRenderFirstFrame_001, TestSize.Level0)
 }
 
 /**
+ * @tc.name  : Test SetRenderFirstFrame API
+ * @tc.number: Player_SetRenderFirstFrame_002
+ * @tc.desc  : Test Player SetRenderFirstFrame invalid playerEngine
+ */
+HWTEST_F(PlayerServerUnitTest, Player_SetRenderFirstFrame_002, TestSize.Level0)
+{
+    bool display = false;
+    std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
+    server->lastOpStatus_ = PLAYER_INITIALIZED;
+    EXPECT_EQ(MSERR_OK, server->SetRenderFirstFrame(display));
+}
+
+/**
  * @tc.name  : Test PreparedHandleEos API
  * @tc.number: Player_PreparedHandleEos_001
  * @tc.desc  : Test Player PreparedHandleEos
@@ -4352,6 +4426,39 @@ HWTEST_F(PlayerServerUnitTest, Player_PreparedHandleEos_001, TestSize.Level0)
     server->PreparedHandleEos();
     EXPECT_EQ(server->lastOpStatus_, PLAYER_PLAYBACK_COMPLETE);
     server->Release();
+}
+
+/**
+ * @tc.name  : Test HandleEos API
+ * @tc.number: Player_HandleEos_001
+ * @tc.desc  : Test Player HandleEos
+ */
+HWTEST_F(PlayerServerUnitTest, Player_HandleEos_001, TestSize.Level0)
+{
+    std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
+    server->HandleEos();
+    EXPECT_EQ(server->disableNextSeekDone_, false);
+}
+
+/**
+ * @tc.name  : Test HandleInterruptEvent API
+ * @tc.number: Player_HandleInterruptEvent_001
+ * @tc.desc  : Test Player HandleInterruptEvent
+ */
+HWTEST_F(PlayerServerUnitTest, Player_HandleInterruptEvent_001, TestSize.Level0)
+{
+    std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
+    server->interruptEventState_ = PLAYER_PREPARING;
+    Format infoBody;
+    infoBody.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_TYPE, -1);
+    infoBody.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_FORCE, -1);
+    infoBody.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_HINT, -1);
+    server->HandleInterruptEvent(infoBody);
+    EXPECT_EQ(server->interruptEventState_, PLAYER_PREPARING);
+
+    infoBody.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_FORCE, OHOS::AudioStandard::INTERRUPT_FORCE);
+    server->HandleInterruptEvent(infoBody);
+    EXPECT_EQ(server->interruptEventState_, PLAYER_PREPARING);
 }
 
 /**
@@ -4409,6 +4516,20 @@ HWTEST_F(PlayerServerUnitTest, Player_AddSubSource_003, TestSize.Level0)
     server_->subtitleTrackNum_ = 10;
     EXPECT_NE(MSERR_OK, server_->AddSubSource(SUBTITLE_SRT_FIELE));
     EXPECT_NE(MSERR_OK, server_->AddSubSource(0, 0, 0));
+}
+
+/**
+ * @tc.name  : Test AddSubSource API
+ * @tc.number: Player_AddSubSource_004
+ * @tc.desc  : Test Player AddSubSource invalid subtitleTrackNum
+ */
+HWTEST_F(PlayerServerUnitTest, Player_AddSubSource_004, TestSize.Level0)
+{
+    std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
+    ASSERT_EQ(MSERR_OK, server->SetSource(VIDEO_FILE1));
+    server->subtitleTrackNum_ = 10;
+    EXPECT_NE(MSERR_OK, server->AddSubSource(SUBTITLE_SRT_FIELE));
+    EXPECT_NE(MSERR_OK, server->AddSubSource(0, 0, 0));
 }
 
 /**

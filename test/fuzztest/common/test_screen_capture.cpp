@@ -144,6 +144,14 @@ int32_t TestScreenCapture::SetCanvasRotation(bool canvasRotation)
     return screenCapture->SetCanvasRotation(canvasRotation);
 }
 
+int32_t TestScreenCapture::ShowCursor(bool showCursor)
+{
+    if (screenCapture == nullptr) {
+        return MSERR_INVALID_OPERATION;
+    }
+    return screenCapture->ShowCursor(showCursor);
+}
+
 int32_t TestScreenCapture::AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audioBuffer, AudioCaptureSourceType type)
 {
     if (screenCapture == nullptr) {

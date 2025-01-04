@@ -152,6 +152,14 @@ int32_t ScreenCaptureImpl::SetCanvasRotation(bool canvasRotation)
     return screenCaptureService_->SetCanvasRotation(canvasRotation);
 }
 
+int32_t ScreenCaptureImpl::ShowCursor(bool showCursor)
+{
+    MEDIA_LOGD("ShowCursor:0x%{public}06" PRIXPTR " init in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(screenCaptureService_ != nullptr, MSERR_NO_MEMORY,
+                             "screen capture service does not exist.");
+    return screenCaptureService_->ShowCursor(showCursor);
+}
+
 int32_t ScreenCaptureImpl::ResizeCanvas(int32_t width, int32_t height)
 {
     MEDIA_LOGD("SetCanvasSize:0x%{public}06" PRIXPTR " init in", FAKE_POINTER(this));
