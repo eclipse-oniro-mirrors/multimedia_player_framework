@@ -1041,7 +1041,7 @@ int32_t HiPlayerImpl::HandleEosPlay()
 Status HiPlayerImpl::Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeekDone)
 {
     MediaTrace trace("HiPlayerImpl::Seek");
-    MEDIA_LOG_I("Seek entered, mSeconds : " PUBLIC_LOG_D64 ", seekMode : " PUBLIC_LOG_D32,
+    MEDIA_LOG_I("Seek entered. mSeconds : " PUBLIC_LOG_D64 ", seekMode : " PUBLIC_LOG_D32,
                 mSeconds, static_cast<int32_t>(mode));
     int64_t seekStartTime = GetCurrentMillisecond();
     if (audioSink_ != nullptr) {
@@ -1398,7 +1398,7 @@ int32_t HiPlayerImpl::GetCurrentTime(int32_t& currentPositionMs)
     }
     FALSE_RETURN_V(syncManager_ != nullptr, TransStatus(Status::ERROR_NULL_POINTER));
     currentPositionMs = Plugins::HstTime2Us32(syncManager_->GetMediaTimeNow());
-    MEDIA_LOG_D("GetCurrentTime currentPositionMs: ", PUBLIC_LOG_D32, currentPositionMs);
+    MEDIA_LOG_D("GetCurrentTime currentPositionMs: " PUBLIC_LOG_D32, currentPositionMs);
     if (currentPositionMs < 0) {
         currentPositionMs = 0;
     }
@@ -2192,7 +2192,7 @@ void HiPlayerImpl::HandleInitialPlayingStateChange(const EventType& eventType)
     }
     for (auto item : initialAVStates_) {
         if (item.second == false) {
-            MEDIA_LOG_I("HandleInitialPlayingStateChange another event type received = " PUBLIC_LOG_D32,
+            MEDIA_LOG_I("HandleInitialPlayingStateChange another event type not received " PUBLIC_LOG_D32,
                 static_cast<int32_t>(item.first));
             return;
         }
