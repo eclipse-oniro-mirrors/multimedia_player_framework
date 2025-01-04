@@ -4448,17 +4448,17 @@ HWTEST_F(PlayerServerUnitTest, Player_HandleEos_001, TestSize.Level0)
 HWTEST_F(PlayerServerUnitTest, Player_HandleInterruptEvent_001, TestSize.Level0)
 {
     std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
-    server->lastOpStatus_ = PLAYER_PREPARING;
+    server->interruptEventState_ = PLAYER_PREPARING;
     Format infoBody;
     infoBody.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_TYPE, -1);
     infoBody.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_FORCE, -1);
     infoBody.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_HINT, -1);
     server->HandleInterruptEvent(infoBody);
-    EXPECT_EQ(server->lastOpStatus_, PLAYER_PREPARING);
+    EXPECT_EQ(server->interruptEventState_, PLAYER_PREPARING);
 
     infoBody.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_FORCE, OHOS::AudioStandard::INTERRUPT_FORCE);
     server->HandleInterruptEvent(infoBody);
-    EXPECT_EQ(server->lastOpStatus_, PLAYER_PREPARING);
+    EXPECT_EQ(server->interruptEventState_, PLAYER_PREPARING);
 }
 
 /**
