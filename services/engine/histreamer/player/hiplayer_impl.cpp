@@ -2053,7 +2053,7 @@ int32_t HiPlayerImpl::SetAudioInterruptMode(const int32_t interruptMode)
 
 void HiPlayerImpl::OnEvent(const Event &event)
 {
-    MEDIA_LOG_D("OnEvent %{public}d", event.type);
+    MEDIA_LOG_D("OnEvent entered, event type is: %{public}d", event.type);
     switch (event.type) {
         case EventType::EVENT_IS_LIVE_STREAM: {
             HandleIsLiveStreamEvent(AnyCast<bool>(event.param));
@@ -2179,6 +2179,7 @@ void HiPlayerImpl::OnEventSubTrackChange(const Event &event)
 
 void HiPlayerImpl::HandleInitialPlayingStateChange(const EventType& eventType)
 {
+    AutoLock lock(initialPlayingEventMutex_);
     MEDIA_LOG_I("HandleInitialPlayingStateChange");
     if (!isInitialPlay_) {
         return;
@@ -2190,6 +2191,7 @@ void HiPlayerImpl::HandleInitialPlayingStateChange(const EventType& eventType)
             item.second = true;
         }
     }
+
     for (auto item : initialAVStates_) {
         if (item.second == false) {
             MEDIA_LOG_I("HandleInitialPlayingStateChange another event type not received " PUBLIC_LOG_D32,
@@ -2235,9 +2237,7 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
     completeState_.clear();
     demuxer_ = FilterFactory::Instance().CreateFilter<DemuxerFilter>("builtin.player.demuxer",
         FilterType::FILTERTYPE_DEMUXER);
-    if (demuxer_ == nullptr) {
-        return Status::ERROR_NULL_POINTER;
-    }
+    FALSE_RETURN_V(demuxer_ != nullptr, Status::ERROR_NULL_POINTER);
     pipeline_->AddHeadFilters({demuxer_});
     demuxer_->Init(playerEventReceiver_, playerFilterCallback_, interruptMonitor_);
     DoSetPlayStrategy(source);
