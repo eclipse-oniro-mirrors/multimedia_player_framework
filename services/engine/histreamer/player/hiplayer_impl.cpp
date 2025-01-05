@@ -3083,5 +3083,13 @@ int32_t HiPlayerImpl::SetMaxAmplitudeCbStatus(bool status)
     }
     return MSERR_OK;
 }
+
+int32_t HiPlayerImpl::IsSeekContinuousSupported(bool &isSeekContinuousSupported)
+{
+    FALSE_RETURN_V_MSG_E(demuxer_ != nullptr && videoDecoder_ != nullptr, TransStatus(Status::ERROR_WRONG_STATE),
+        "demuxer or decoder is null");
+    isSeekContinuousSupported = DraggingPlayerAgent::IsDraggingSupported(demuxer_, videoDecoder_);
+    return TransStatus(Status::OK);
+}
 }  // namespace Media
 }  // namespace OHOS

@@ -860,6 +860,18 @@ public:
         (void)apiVersion;
         return 0;
     }
+
+    /**
+     * @brief Checks whether the player supports SeekContinuous.
+     *
+     * @return Returns true if the player supports SeekContinuous; false otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual bool IsSeekContinuousSupported()
+    {
+        return false;
+    }
 };
 
 class __attribute__((visibility("default"))) PlayerFactory {
