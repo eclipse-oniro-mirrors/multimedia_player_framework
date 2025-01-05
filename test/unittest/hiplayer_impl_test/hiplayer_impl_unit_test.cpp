@@ -1112,7 +1112,6 @@ HWTEST_F(HiplayerImplUnitTest, TestHiplayerImplLag_003, TestSize.Level0)
     EXPECT_EQ(player->dfxAgent_->hasReported_, true);
 }
 
-
 /**
 * @tc.name    : Test IsSeekContinuousSupported API
 * @tc.number  : IsSeekContinuousSupported_001
