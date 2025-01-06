@@ -265,6 +265,7 @@ private:
     int32_t appTokenId_{0};
     int64_t appFullTokenId_{0};
     OHOS::Media::Mutex stateMutex_{};
+    OHOS::Media::Mutex initialPlayingEventMutex_{};
     OHOS::Media::ConditionVariable cond_{};
     std::atomic<bool> renderFirstFrame_ {false};
     std::atomic<bool> singleLoop_ {false};

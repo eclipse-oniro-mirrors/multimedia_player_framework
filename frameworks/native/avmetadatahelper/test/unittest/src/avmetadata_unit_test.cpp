@@ -661,7 +661,6 @@ HWTEST_F(AVMetadataUnitTest, GetTimeByFrameIndex_API_0100, Level2)
     ASSERT_EQ(MSERR_OK, helper->GetTimeByFrameIndex(0, time));
 }
 
-
 /**
     * @tc.number    : GetFrameIndexByTime_PtsAndFrame_API_0100
     * @tc.name      : SetSource camera_info_parser.mp4
@@ -680,7 +679,7 @@ HWTEST_F(AVMetadataUnitTest, GetFrameIndexByTime_PtsAndFrame_API_0100, Level2)
     ASSERT_EQ(MSERR_OK, helper->GetFrameIndexByTime(time, index));
     ASSERT_EQ(index, 4);
 }
- 
+
 /**
     * @tc.number    : GetFrameIndexByTime_PtsAndFrame_API_0200
     * @tc.name      : SetSource h264.flv
@@ -698,7 +697,7 @@ HWTEST_F(AVMetadataUnitTest, GetFrameIndexByTime_PtsAndFrame_API_0200, Level2)
     uint32_t index = 0;
     ASSERT_NE(MSERR_OK, helper->GetFrameIndexByTime(time, index));
 }
- 
+
 /**
     * @tc.number    : GetTimeByFrameIndex_PtsAndFrame_API_0100
     * @tc.name      : SetSource camera_info_parser.mp4
@@ -717,7 +716,7 @@ HWTEST_F(AVMetadataUnitTest, GetTimeByFrameIndex_PtsAndFrame_API_0100, Level2)
     ASSERT_EQ(MSERR_OK, helper->GetTimeByFrameIndex(index, time));
     ASSERT_EQ(time, 33333);
 }
- 
+
 /**
     * @tc.number    : GetTimeByFrameIndex_PtsAndFrame_API_0200
     * @tc.name      : SetSource h264.flv
@@ -735,8 +734,7 @@ HWTEST_F(AVMetadataUnitTest, GetTimeByFrameIndex_PtsAndFrame_API_0200, Level2)
     uint32_t index = 10;
     ASSERT_NE(MSERR_OK, helper->GetTimeByFrameIndex(index, time));
 }
- 
- 
+
 /**
     * @tc.number    : PtsAndFrameIndexConversion_API_0100
     * @tc.name      : SetSource camera_info_parser.mp4
@@ -758,7 +756,7 @@ HWTEST_F(AVMetadataUnitTest, PtsAndFrameIndexConversion_API_0100, Level2)
     ASSERT_EQ(MSERR_OK, helper->GetTimeByFrameIndex(index, time));
     ASSERT_EQ(time, 66666);
 }
- 
+
 /**
     * @tc.number    : PtsAndFrameIndexConversion_API_0200
     * @tc.name      : SetSource camera_info_parser.mp4
@@ -780,7 +778,7 @@ HWTEST_F(AVMetadataUnitTest, PtsAndFrameIndexConversion_API_0200, Level2)
     ASSERT_EQ(MSERR_OK, helper->GetFrameIndexByTime(time, index));
     ASSERT_EQ(index, 4);
 }
- 
+
 /**
     * @tc.number    : PTSOutOfRange_1000
     * @tc.name      : SetSource camera_info_parser.mp4
@@ -799,7 +797,7 @@ HWTEST_F(AVMetadataUnitTest, PTSOutOfRange_API_0100, Level2)
     ASSERT_NE(MSERR_OK, helper->GetFrameIndexByTime(time, index));
     ASSERT_EQ(index, 0);
 }
- 
+
 /**
     * @tc.number    : IndexOutOfRange_API_0100
     * @tc.name      : SetSource camera_info_parser.mp4
@@ -818,7 +816,7 @@ HWTEST_F(AVMetadataUnitTest, IndexOutOfRange_API_0100, Level2)
     ASSERT_NE(MSERR_OK, helper->GetTimeByFrameIndex(index, time));
     ASSERT_EQ(time, 0);
 }
- 
+
 /**
     * @tc.number    : SetSourceDoubleVideoTrack_API_0100
     * @tc.name      : SetSource h264_double_video_audio.mp4
@@ -836,7 +834,7 @@ HWTEST_F(AVMetadataUnitTest, SetSourceDoubleVideoTrack_API_0100, Level2)
     uint32_t index = 0;
     ASSERT_EQ(MSERR_OK, helper->GetFrameIndexByTime(time, index));
 }
- 
+
 /**
     * @tc.number    : SetSourceDoubleVideoTrack_API_0200
     * @tc.name      : SetSource h264_double_video_audio.mp4

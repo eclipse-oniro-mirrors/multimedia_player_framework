@@ -693,8 +693,10 @@ int32_t PlayerServer::HandleReset()
 {
     (void)playerEngine_->Reset();
     std::thread([playerEngine = std::move(playerEngine_), uriHelper = std::move(uriHelper_)]() mutable -> void {
+        MEDIA_LOGI("HandleReset: create new thread");
         std::unique_ptr<UriHelper> helper = std::move(uriHelper);
         std::unique_ptr<IPlayerEngine> engine = std::move(playerEngine);
+        MEDIA_LOGI("HandleReset: thread finished");
     }).detach();
     dataSrc_ = nullptr;
     config_.looping = false;
