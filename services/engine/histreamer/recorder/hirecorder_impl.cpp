@@ -138,8 +138,8 @@ int32_t HiRecorderImpl::SetVideoSource(VideoSourceType source, int32_t &sourceId
         videoSourceIsRGBA_ = false;
         videoCaptureFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::VideoCaptureFilter>
             ("videoEncoderFilter", Pipeline::FilterType::VIDEO_CAPTURE);
-        FALSE_RETURN_V_MSG_E(videoEncoderFilter_ != nullptr, (int32_t)Status::ERROR_NULL_POINTER,
-            "create videoEncoderFilter failed");
+        FALSE_RETURN_V_MSG_E(videoCaptureFilter_ != nullptr, (int32_t)Status::ERROR_NULL_POINTER,
+            "create videoCaptureFilter failed");
         ret = pipeline_->AddHeadFilters({videoCaptureFilter_});
         MEDIA_LOG_I("SetVideoSource VIDEO_SOURCE_SURFACE_ES.");
     } else {
