@@ -136,11 +136,8 @@ public:
         auto mediaAssetHelper = Media::MediaAssetHelperFactory::CreateMediaAssetHelper();
         CHECK_AND_RETURN_LOG(mediaAssetHelper != nullptr, "Create mediaAssetHelper failed!");
  
-        auto mediaAssetPtr = mediaAssetHelper->GetOhMediaAsset(uri);
-        CHECK_AND_RETURN_LOG(mediaAssetPtr != nullptr, "mediaAssetPtr is nullptr!");
-
-        OH_MediaAsset* mediaAsset = mediaAssetPtr.get();
-        CHECK_AND_RETURN_LOG(mediaAsset != nullptr, "Create mediaAsset failed!");
+        OH_MediaAsset* mediaAsset = mediaAssetHelper->GetOhMediaAsset(uri);
+        CHECK_AND_RETURN_LOG(mediaAsset != nullptr, "mediaAsset is nullptr!");
  
         callback_(recorder, mediaAsset, userData_);
     }
