@@ -313,7 +313,7 @@ sptr<OHOS::Surface> RecorderServiceProxy::GetSurface(int32_t sourceId)
     CHECK_AND_RETURN_RET_LOG(token, nullptr, "Failed to write descriptor!");
 
     token = data.WriteInt32(sourceId);
-    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "write data failed");
+    CHECK_AND_RETURN_RET_LOG(token, nullptr, "write data failed");
 
     int error = Remote()->SendRequest(GET_SURFACE, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, nullptr,
@@ -338,7 +338,7 @@ sptr<OHOS::Surface> RecorderServiceProxy::GetMetaSurface(int32_t sourceId)
     CHECK_AND_RETURN_RET_LOG(token, nullptr, "Failed to write descriptor!");
 
     token = data.WriteInt32(sourceId);
-    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "write data failed");
+    CHECK_AND_RETURN_RET_LOG(token, nullptr, "write data failed");
 
     int error = Remote()->SendRequest(GET_META_SURFACE, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, nullptr,
