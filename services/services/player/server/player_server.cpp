@@ -19,7 +19,6 @@
 #include <unordered_set>
 #include "media_log.h"
 #include "media_errors.h"
-#include "media_utils.h"
 #include "engine_factory_repo.h"
 #include "player_server_state.h"
 #include "media_dfx.h"
@@ -116,7 +115,7 @@ int32_t PlayerServer::Init()
         std::weak_ptr<PlayerServer> server = std::static_pointer_cast<PlayerServer>(shared_from_this());
         commonEventReceiver_ = std::make_shared<PlayerServerCommonEventReceiver>(server);
     }
-    MEDIA_LOGI_NO_RELEASE("0x%{public}06" PRIXPTR "Dump Info: lastOpStatus: %{public}s, lastErrMsg: %{public}s, "
+    MEDIA_LOGI("0x%{public}06" PRIXPTR "Dump Info: lastOpStatus: %{public}s, lastErrMsg: %{public}s, "
         "speedMode: %{public}d, looping: %{public}s, effectMode: %{public}d, leftVolume: %{public}f, "
         "rightVolume: %{public}f", FAKE_POINTER(this), lastOpStatus_?"true":"false",
         lastErrMsg_.c_str(), config_.speedMode, config_.looping?"true":"false", config_.effectMode,
@@ -129,7 +128,7 @@ int32_t PlayerServer::SetSource(const std::string &url)
     std::lock_guard<std::mutex> lock(mutex_);
     MediaTrace trace("PlayerServer::SetSource url");
     CHECK_AND_RETURN_RET_LOG(!url.empty(), MSERR_INVALID_VAL, "url is empty");
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " KPI-TRACE: PlayerServer SetSource in(url)", FAKE_POINTER(this));
+    MEDIA_LOGW("0x%{public}06" PRIXPTR " KPI-TRACE: PlayerServer SetSource in(url)", FAKE_POINTER(this));
     if (url.find("http") != std::string::npos) {
         int32_t permissionResult = MediaPermission::CheckNetWorkPermission(appUid_, appPid_, appTokenId_);
         if (permissionResult != Security::AccessToken::PERMISSION_GRANTED) {
@@ -184,6 +183,7 @@ int32_t PlayerServer::SetSource(int32_t fd, int64_t offset, int64_t size)
     int32_t ret;
     if (uriHelper_ != nullptr) {
         std::string uri = uriHelper_->FormattedUri();
+        MEDIA_LOGI("UriHelper already existed, uri: %{private}s", uri.c_str());
         ret = InitPlayEngine(uri);
         if (ret != MSERR_OK) {
             FaultSourceEventWrite(appName_, instanceId_, "player_framework",
@@ -191,7 +191,7 @@ int32_t PlayerServer::SetSource(int32_t fd, int64_t offset, int64_t size)
         }
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetSource Failed!");
     } else {
-        MEDIA_LOGD("UriHelper is nullptr, create a new instance.");
+        MEDIA_LOGI("UriHelper is nullptr, create a new instance.");
         auto uriHelper = std::make_unique<UriHelper>(fd, offset, size);
         CHECK_AND_RETURN_RET_LOG(uriHelper->AccessCheck(UriHelper::URI_READ),
             MSERR_INVALID_VAL, "Failed to read the fd");
@@ -210,7 +210,7 @@ int32_t PlayerServer::SetSource(int32_t fd, int64_t offset, int64_t size)
 
 int32_t PlayerServer::InitPlayEngine(const std::string &url)
 {
-    MEDIA_LOGD("PlayEngine Init");
+    MEDIA_LOGI("PlayEngine Init");
     if (lastOpStatus_ != PLAYER_IDLE) {
         MEDIA_LOGE("current state is: %{public}s, not support SetSource",
             GetStatusDescription(lastOpStatus_).c_str());
@@ -219,6 +219,7 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
 
     int32_t ret = taskMgr_.Init();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "task mgr init failed");
+    MEDIA_LOGI("current url is : %{private}s", url.c_str());
     auto engineFactory = EngineFactoryRepo::Instance().GetEngineFactory(
         IEngineFactory::Scene::SCENE_PLAYBACK, appUid_, url);
     CHECK_AND_RETURN_RET_LOG(engineFactory != nullptr, MSERR_CREATE_PLAYER_ENGINE_FAILED,
@@ -227,7 +228,7 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_CREATE_PLAYER_ENGINE_FAILED,
         "failed to create player engine");
     playerEngine_->SetInstancdId(instanceId_);
-    MEDIA_LOGD("InitPlayEngine::Setted InstanceId");
+    MEDIA_LOGI("InitPlayEngine::Setted InstanceId");
     if (dataSrc_ != nullptr) {
         ret = playerEngine_->SetSource(dataSrc_);
     } else if (mediaSource_ != nullptr) {
@@ -236,10 +237,9 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
         ret = playerEngine_->SetSource(url);
     }
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetSource Failed!");
-    MEDIA_LOGD("player engine SetSource success");
+    MEDIA_LOGI("player engine SetSource success");
     std::shared_ptr<IPlayerEngineObs> obs = shared_from_this();
     ret = playerEngine_->SetObs(obs);
-
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetObs Failed!");
     ret = playerEngine_->SetMaxAmplitudeCbStatus(maxAmplitudeCbStatus_);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetMaxAmplitudeCbStatus Failed!");
@@ -410,6 +410,7 @@ int32_t PlayerServer::OnPrepare(bool sync)
 
     int32_t ret = MSERR_OK;
     lastOpStatus_ = PLAYER_PREPARED;
+    isInterruptNeeded_ = false;
     playerEngine_->SetInterruptState(false);
     auto preparedTask = std::make_shared<TaskHandler<int32_t>>([this]() {
         MediaTrace::TraceBegin("PlayerServer::PrepareAsync", FAKE_POINTER(this));
@@ -439,7 +440,7 @@ int32_t PlayerServer::OnPrepare(bool sync)
 
 int32_t PlayerServer::HandlePrepare()
 {
-    MEDIA_LOGI("HandlePrepare");
+    MEDIA_LOGI("KPI-TRACE: PlayerServer HandlePrepare in");
     int32_t ret = playerEngine_->PrepareAsync();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Server Prepare Failed!");
     CHECK_AND_RETURN_RET_LOG(!isInterruptNeeded_, MSERR_OK, "Cancel prepare");
@@ -615,7 +616,7 @@ int32_t PlayerServer::Stop()
         disableStoppedCb_ = false;
         return OnStop(false);
     }
-    MEDIA_LOGE("Cant Pause | %{public}s", GetStatusDescription(lastOpStatus_).c_str());
+    MEDIA_LOGE("Can not Stop, currentState is %{public}s", GetStatusDescription(lastOpStatus_).c_str());
     return MSERR_INVALID_OPERATION;
 }
 
@@ -690,16 +691,14 @@ int32_t PlayerServer::OnReset()
 
 int32_t PlayerServer::HandleReset()
 {
-    MEDIA_LOGD("PlayerServer HandleReset in");
     (void)playerEngine_->Reset();
     std::thread([playerEngine = std::move(playerEngine_), uriHelper = std::move(uriHelper_)]() mutable -> void {
-        MEDIA_LOGI("HandleReset: create new thread");
         std::unique_ptr<UriHelper> helper = std::move(uriHelper);
         std::unique_ptr<IPlayerEngine> engine = std::move(playerEngine);
-        MEDIA_LOGI("HandleReset: thread finished");
     }).detach();
     dataSrc_ = nullptr;
     config_.looping = false;
+    uriHelper_ = nullptr;
     mediaSource_ = nullptr;
     {
         decltype(subUriHelpers_) temp;
@@ -808,10 +807,10 @@ int32_t PlayerServer::Seek(int32_t mSeconds, PlayerSeekMode mode)
     }
     auto seekTask = std::make_shared<TaskHandler<void>>([this, mSeconds, mode]() {
         MediaTrace::TraceBegin("PlayerServer::Seek", FAKE_POINTER(this));
-        MEDIA_LOGI("Seek start");
+        MEDIA_LOGI("PlayerServer::Seek start");
         auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
         (void)currState->Seek(mSeconds, mode);
-        MEDIA_LOGI("Seek end");
+        MEDIA_LOGI("PlayerServer::Seek end");
     });
 
     auto cancelTask = std::make_shared<TaskHandler<void>>([this, mSeconds]() {
@@ -1009,7 +1008,6 @@ void PlayerServer::ClearConfigInfo()
 int32_t PlayerServer::SetPlaybackSpeed(PlaybackRateMode mode)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    MEDIA_LOGD("PlayerServer::SetPlaybackSpeed in");
 
     if ((lastOpStatus_ != PLAYER_STARTED) && (lastOpStatus_ != PLAYER_PREPARED) &&
         (lastOpStatus_ != PLAYER_PAUSED) && (lastOpStatus_ != PLAYER_PLAYBACK_COMPLETE)) {
@@ -1190,16 +1188,6 @@ int32_t PlayerServer::SelectBitRate(uint32_t bitRate)
     if (playerEngine_ != nullptr) {
         int ret = playerEngine_->SelectBitRate(bitRate);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine SelectBitRate Failed!");
-    }
-    return MSERR_OK;
-}
-
-int32_t PlayerServer::StopBufferring(bool flag)
-{
-    std::unique_lock<std::mutex> lock(mutex_);
-    if (playerEngine_ != nullptr) {
-        int ret = playerEngine_->StopBufferring(flag);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine StopBufferring Failed!");
     }
     return MSERR_OK;
 }
@@ -1526,9 +1514,6 @@ int32_t PlayerServer::DumpInfo(int32_t fd)
 
 void PlayerServer::OnError(PlayerErrorType errorType, int32_t errorCode)
 {
-    if (reportStatusFlag_ == false) {
-        return;
-    }
     (void)errorType;
     auto errorMsg = MSErrorToExtErrorString(static_cast<MediaServiceErrCode>(errorCode));
     return OnErrorMessage(errorCode, errorMsg);
@@ -1540,11 +1525,11 @@ void PlayerServer::OnErrorMessage(int32_t errorCode, const std::string &errorMsg
         MEDIA_LOGD("0x%{public}06" PRIXPTR " PlayerServer OnErrorMessage Error in", FAKE_POINTER(this));
         auto pauseTask = std::make_shared<TaskHandler<void>>([this, errorCode, errorMsg]() {
             MediaTrace::TraceBegin("PlayerServer::PauseIoError", FAKE_POINTER(this));
-            MEDIA_LOGI("PauseIoError start");
+            MEDIA_LOGI("PlayerServer::PauseIoError start");
             auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
             (void)currState->Pause(true);
             OnErrorCb(errorCode, errorMsg);
-            MEDIA_LOGI("PauseIoError end");
+            MEDIA_LOGI("PlayerServer::PauseIoError end");
         });
         taskMgr_.LaunchTask(pauseTask, PlayerServerTaskType::STATE_CHANGE, "pause");
         MEDIA_LOGI("0x%{public}06" PRIXPTR " PlayerServer OnErrorMessage IO Error out", FAKE_POINTER(this));
@@ -1576,9 +1561,6 @@ void PlayerServer::OnErrorCb(int32_t errorCode, const std::string &errorMsg)
 void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
 {
     std::lock_guard<std::mutex> lockCb(mutexCb_);
-    if (reportStatusFlag_ == false) {
-        return;
-    }
     int32_t ret = HandleMessage(type, extra, infoBody);
     InnerOnInfo(type, extra, infoBody, ret);
 }
@@ -1746,7 +1728,8 @@ void PlayerServerStateMachine::ChangeState(const std::shared_ptr<PlayerServerSta
             MEDIA_LOGD("exit state %{public}s", currState_->name_.c_str());
             currState_->StateExit();
         }
-        MEDIA_LOGI_NO_RELEASE("0x%{public}06" PRIXPTR " > %{public}s", FAKE_POINTER(this), state->name_.c_str());
+        MEDIA_LOGI("instance: 0x%{public}06" PRIXPTR " change state to %{public}s",
+            FAKE_POINTER(this), state->name_.c_str());
         currState_ = state;
     }
     state->StateEnter();
@@ -1790,11 +1773,34 @@ bool PlayerServer::IsBootCompleted()
     return isBootCompleted_.load();
 }
 
+int32_t PlayerServer::SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted)
+{
+    MediaTrace::TraceBegin("PlayerServer::SetMediaMuted", FAKE_POINTER(this));
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET(lastOpStatus_ == PLAYER_INITIALIZED || lastOpStatus_ == PLAYER_PREPARED ||
+                             lastOpStatus_ == PLAYER_STARTED || lastOpStatus_ == PLAYER_PLAYBACK_COMPLETE ||
+                             lastOpStatus_ == PLAYER_PAUSED || lastOpStatus_ == PLAYER_STOPPED,
+                         MSERR_INVALID_STATE);
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    return playerEngine_->SetMediaMuted(mediaType, isMuted);
+}
+
+int32_t PlayerServer::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
+{
+    MediaTrace::TraceBegin("PlayerServer::SetPlaybackStrategy", FAKE_POINTER(this));
+    std::lock_guard<std::mutex> lock(mutex_);
+    bool isValidState = lastOpStatus_ == PLAYER_INITIALIZED || lastOpStatus_ == PLAYER_STOPPED;
+    CHECK_AND_RETURN_RET_LOG(isValidState, MSERR_INVALID_STATE,
+        "can not set playback strategy, current state is %{public}d", static_cast<int32_t>(lastOpStatus_.load()));
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    return playerEngine_->SetPlaybackStrategy(playbackStrategy);
+}
+
 int32_t PlayerServer::CheckSeek(int32_t mSeconds, PlayerSeekMode mode)
 {
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
 
-    MEDIA_LOGD("KPI-TRACE: PlayerServer Seek in");
+    MEDIA_LOGI("KPI-TRACE: PlayerServer Seek in");
     if (lastOpStatus_ != PLAYER_PREPARED && lastOpStatus_ != PLAYER_PAUSED &&
         lastOpStatus_ != PLAYER_STARTED && lastOpStatus_ != PLAYER_PLAYBACK_COMPLETE) {
         MEDIA_LOGE("Can not Seek, currentState is %{public}s", GetStatusDescription(lastOpStatus_).c_str());
@@ -1830,10 +1836,10 @@ int32_t PlayerServer::SeekContinous(int32_t mSeconds)
 
     auto seekContinousTask = std::make_shared<TaskHandler<void>>([this, mSeconds, seekContinousBatchNo]() {
         MediaTrace::TraceBegin("PlayerServer::SeekContinous", FAKE_POINTER(this));
-        MEDIA_LOGI("Seek start");
+        MEDIA_LOGI("PlayerServer::Seek start");
         auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
         (void)currState->SeekContinous(mSeconds, seekContinousBatchNo);
-        MEDIA_LOGI("SeekContinous end");
+        MEDIA_LOGI("PlayerServer::SeekContinous end");
         taskMgr_.MarkTaskDone("seek continous done");
     });
 
@@ -1846,11 +1852,11 @@ int32_t PlayerServer::SeekContinous(int32_t mSeconds)
 
 int32_t PlayerServer::HandleSeekContinous(int32_t mSeconds, int64_t batchNo)
 {
-    MEDIA_LOGD("KPI-TRACE: PlayerServer HandleSeek in, mSeconds: %{public}d, "
+    MEDIA_LOGI("KPI-TRACE: PlayerServer HandleSeek in, mSeconds: %{public}d, "
         "instanceId: %{public}" PRIu64 "", mSeconds, instanceId_);
     int32_t ret = playerEngine_->SeekContinous(mSeconds, batchNo);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine Seek Failed!");
-    MEDIA_LOGI("HandleSeek end");
+    MEDIA_LOGI("PlayerServer HandleSeek end");
     return MSERR_OK;
 }
 
@@ -1880,35 +1886,6 @@ void PlayerServer::UpdateContinousBatchNo()
     seekContinousBatchNo_++;
 }
 
-int32_t PlayerServer::SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted)
-{
-    MediaTrace::TraceBegin("PlayerServer::SetMediaMuted", FAKE_POINTER(this));
-    std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET(lastOpStatus_ == PLAYER_INITIALIZED || lastOpStatus_ == PLAYER_PREPARED ||
-                             lastOpStatus_ == PLAYER_STARTED || lastOpStatus_ == PLAYER_PLAYBACK_COMPLETE ||
-                             lastOpStatus_ == PLAYER_PAUSED || lastOpStatus_ == PLAYER_STOPPED,
-                         MSERR_INVALID_STATE);
-    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
-    return playerEngine_->SetMediaMuted(mediaType, isMuted);
-}
-
-int32_t PlayerServer::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
-{
-    MediaTrace::TraceBegin("PlayerServer::SetPlaybackStrategy", FAKE_POINTER(this));
-    std::lock_guard<std::mutex> lock(mutex_);
-    bool isValidState = lastOpStatus_ == PLAYER_INITIALIZED || lastOpStatus_ == PLAYER_STOPPED;
-    CHECK_AND_RETURN_RET_LOG(isValidState, MSERR_INVALID_STATE,
-        "can not set playback strategy, current state is %{public}d", static_cast<int32_t>(lastOpStatus_.load()));
-    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
-    return playerEngine_->SetPlaybackStrategy(playbackStrategy);
-}
-
-int32_t PlayerServer::SetMaxAmplitudeCbStatus(bool status)
-{
-    maxAmplitudeCbStatus_ = status;
-    return MSERR_OK;
-}
-
 bool PlayerServer::CheckState(PlayerOnInfoType type, int32_t extra)
 {
     auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
@@ -1926,28 +1903,23 @@ bool PlayerServer::CheckState(PlayerOnInfoType type, int32_t extra)
     return true;
 }
 
-int32_t PlayerServer::StartReportStatus()
+int32_t PlayerServer::SetMaxAmplitudeCbStatus(bool status)
 {
-    reportStatusFlag_.store(true);
+    maxAmplitudeCbStatus_ = status;
     return MSERR_OK;
 }
 
-int32_t PlayerServer::StopReportStatus()
+bool PlayerServer::IsSeekContinuousSupported()
 {
-    reportStatusFlag_.store(false);
-    return MSERR_OK;
-}
-
-bool PlayerServer::IsPlayerRunning()
-{
+    MediaTrace::TraceBegin("PlayerServer::IsSeekContinuousSupported", FAKE_POINTER(this));
     std::lock_guard<std::mutex> lock(mutex_);
-    if (lastOpStatus_ == PLAYER_STATE_ERROR) {
-        MEDIA_LOGE("Can not judge IsCompleted, currentState is PLAYER_STATE_ERROR");
-        return false;
-    }
-    MEDIA_LOGI("IsPlayerRunning, currentState is %{public}d", static_cast<int32_t>(lastOpStatus_.load()));
-    return lastOpStatus_ == PLAYER_PREPARING || lastOpStatus_ == PLAYER_PREPARED
-           || lastOpStatus_ == PLAYER_STARTED || lastOpStatus_ == PLAYER_PAUSED;
+    CHECK_AND_RETURN_RET(lastOpStatus_ == PLAYER_PREPARED || lastOpStatus_ == PLAYER_STARTED ||
+        lastOpStatus_ == PLAYER_PLAYBACK_COMPLETE || lastOpStatus_ == PLAYER_PAUSED || lastOpStatus_ == PLAYER_STOPPED,
+        MSERR_INVALID_STATE);
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, false, "engine is nullptr");
+    bool isSeekContinuousSupported = false;
+    int32_t ret = playerEngine_->IsSeekContinuousSupported(isSeekContinuousSupported);
+    return ret == MSERR_OK && isSeekContinuousSupported;
 }
 } // namespace Media
 } // namespace OHOS

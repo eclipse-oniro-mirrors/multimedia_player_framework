@@ -119,7 +119,8 @@ int32_t AVMetadataHelperServer::SetSource(int32_t fd, int64_t offset, int64_t si
 {
     std::unique_lock<std::mutex> lock(mutex_);
     MediaTrace trace("AVMetadataHelperServer::SetSource_fd");
-    MEDIA_LOGD("fd src, offset: %{public}" PRIi64 ", size: %{public}" PRIi64 " usage: %{public}u", offset, size, usage);
+    MEDIA_LOGD("Current is fd source, offset: %{public}" PRIi64 ", size: %{public}" PRIi64 " usage: %{public}u",
+               offset, size, usage);
     int32_t setSourceRes = MSERR_OK;
     std::atomic<bool> isInitEngineEnd = false;
 
@@ -351,6 +352,7 @@ void AVMetadataHelperServer::Release()
         CHECK_AND_RETURN_LOG(avMetadataHelperEngine != nullptr, "avMetadataHelperEngine_ is nullptr");
         avMetadataHelperEngine->SetInterruptState(true);
     }
+    
     auto task = std::make_shared<TaskHandler<void>>([&, this] {
         avMetadataHelperEngine_ = nullptr;
         uriHelper_ = nullptr;
@@ -487,11 +489,5 @@ const std::string &AVMetadataHelperServer::GetStatusDescription(int32_t status)
 
     return STATUS_TO_STATUS_DESCRIPTION_TABLE.find(status)->second;
 }
-
-void AVMetadataHelperServer::SetIsNapiInstance(bool isNapiInstance)
-{
-    isNapiInstance_ = isNapiInstance;
-}
-
 } // namespace Media
 } // namespace OHOS

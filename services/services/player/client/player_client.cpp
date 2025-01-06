@@ -74,7 +74,6 @@ void PlayerClient::MediaServerDied()
         playerProxy_ = nullptr;
         listenerStub_ = nullptr;
     }
-    MEDIA_LOGD("PlayerClient:MediaServerDied");
     if (callback_ != nullptr) {
         callback_->OnError(MSERR_SERVICE_DIED,
             "mediaserver is died, please create a new playback instance again");
@@ -444,6 +443,13 @@ int32_t PlayerClient::SetMaxAmplitudeCbStatus(bool status)
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
     return playerProxy_->SetMaxAmplitudeCbStatus(status);
+}
+
+bool PlayerClient::IsSeekContinuousSupported()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
+    return playerProxy_->IsSeekContinuousSupported();
 }
 } // namespace Media
 } // namespace OHOS

@@ -90,10 +90,6 @@ public:
     {
         return 0;
     }
-    void SetIsNapiInstance(bool isNapiInstance) override
-    {
-        (void)isNapiInstance;
-    }
     static int32_t SetUriSourceStatic(AVMetadataServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
     static int32_t SetFdSourceStatic(AVMetadataServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
     static int32_t ResolveMetadataStatic(AVMetadataServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size,

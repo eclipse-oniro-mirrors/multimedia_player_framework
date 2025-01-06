@@ -240,14 +240,17 @@ private:
      */
     static napi_value JsGetMediaKeySystemInfos(napi_env env, napi_callback_info info);
 
+    static napi_value JsSetPlaybackStrategy(napi_env env, napi_callback_info info);
+
+    static napi_value JsSetMediaMuted(napi_env env, napi_callback_info info);
+
     /**
      * getPlaybackInfo(): playbackInfo;
      */
     static napi_value JsGetPlaybackInfo(napi_env env, napi_callback_info info);
 
-    static napi_value JsSetPlaybackStrategy(napi_env env, napi_callback_info info);
+    static napi_value JsIsSeekContinuousSupported(napi_env env, napi_callback_info info);
 
-    static napi_value JsSetMediaMuted(napi_env env, napi_callback_info info);
     /**
      * on(type: 'stateChange', callback: (state: AVPlayerState, reason: StateChangeReason) => void): void;
      * off(type: 'stateChange'): void;

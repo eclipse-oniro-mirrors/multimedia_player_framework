@@ -350,12 +350,7 @@ public:
      * @version 1.0
      */
     virtual int32_t SelectBitRate(uint32_t bitRate) = 0;
-
-    virtual int32_t StopBufferring(bool flag)
-    {
-        (void)flag;
-        return 0;
-    }
+    
     /**
      * @brief get the current player playback rate
      *
@@ -561,6 +556,15 @@ public:
         (void)apiVersion;
         return 0;
     }
+
+    /**
+     * @brief Checks whether the player supports SeekContinuous.
+     *
+     * @return Returns true if the player supports SeekContinuous; false otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual bool IsSeekContinuousSupported() = 0;
 };
 } // namespace Media
 } // namespace OHOS

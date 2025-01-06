@@ -92,6 +92,7 @@ int32_t PlayerImpl::SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc)
 
 int32_t PlayerImpl::SetSource(const std::string &url)
 {
+    MEDIA_LOGD("PlayerImpl:0x%{private}06" PRIXPTR " SetSource in(url): %{private}s", FAKE_POINTER(this), url.c_str());
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     CHECK_AND_RETURN_RET_LOG(!url.empty(), MSERR_INVALID_VAL, "url is empty..");
     return playerService_->SetSource(url);
@@ -106,6 +107,8 @@ int32_t PlayerImpl::SetSource(int32_t fd, int64_t offset, int64_t size)
 
 int32_t PlayerImpl::AddSubSource(const std::string &url)
 {
+    MEDIA_LOGD("PlayerImpl:0x%{private}06" PRIXPTR " AddSubSource in(url): %{private}s",
+        FAKE_POINTER(this), url.c_str());
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     CHECK_AND_RETURN_RET_LOG(!url.empty(), MSERR_INVALID_VAL, "url is empty..");
     return playerService_->AddSubSource(url);
@@ -496,19 +499,26 @@ int32_t PlayerImpl::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
     return playerService_->SetPlaybackStrategy(playbackStrategy);
 }
 
-PlayerImplCallback::PlayerImplCallback(const std::shared_ptr<PlayerCallback> playerCb,
-    std::shared_ptr<PlayerImpl> player)
-{
-    playerCb_ = playerCb;
-    player_ = player;
-}
-
 int32_t PlayerImpl::SetMaxAmplitudeCbStatus(bool status)
 {
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetMaxAmplitudeCbStatus in, status is %{public}d",
         FAKE_POINTER(this), status);
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
     return playerService_->SetMaxAmplitudeCbStatus(status);
+}
+
+bool PlayerImpl::IsSeekContinuousSupported()
+{
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " IsSeekContinuousSupported in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
+    return playerService_->IsSeekContinuousSupported();
+}
+
+PlayerImplCallback::PlayerImplCallback(const std::shared_ptr<PlayerCallback> playerCb,
+    std::shared_ptr<PlayerImpl> player)
+{
+    playerCb_ = playerCb;
+    player_ = player;
 }
 
 void PlayerImplCallback::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)

@@ -478,8 +478,8 @@ public:
     virtual int32_t SetHelperCallback(const std::shared_ptr<HelperCallback> &callback) = 0;
 
     /**
-     * Set the media source uri to resolve. Calling this method before the reset
-     * of the methods in this class. This method maybe time consuming.
+     * Set scene, to identity the sepcial scene.
+     *
      * @param scene indicates which scene the avmedatahelper's instance will
      * be used to, see {@link Scene}.
      */
@@ -498,12 +498,6 @@ public:
      * @returns Returns frame
      */
     virtual int32_t GetFrameIndexByTime(uint64_t time, uint32_t &index) = 0;
-
-    /**
-     * Set is created from napi instance
-     * @param isNapiInstance : IsNapiInstance, bool
-     */
-    virtual void SetIsNapiInstance(bool isNapiInstance) = 0;
 };
 
 class __attribute__((visibility("default"))) AVMetadataHelperFactory {

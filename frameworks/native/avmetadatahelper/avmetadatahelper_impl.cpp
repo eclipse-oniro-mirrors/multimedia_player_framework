@@ -29,8 +29,8 @@
 #include "media_errors.h"
 #include "scope_guard.h"
 #include "hisysevent.h"
-#include "image_format_convert.h"
 #include "color_space.h"
+#include "image_type.h"
 #include "param_wrapper.h"
 #include "hdr_type.h"
 
@@ -569,6 +569,8 @@ int32_t AVMetadataHelperImpl::SetSource(int32_t fd, int64_t offset, int64_t size
         "avmetadatahelper service does not exist..");
     MEDIA_LOGI("Set file source fd: %{public}d, offset: %{public}" PRIu64 ", size: %{public}" PRIu64,
         fd, offset, size);
+    CHECK_AND_RETURN_RET_LOG(fd > 0 && offset >= 0 && size >= -1, MSERR_INVALID_VAL,
+        "invalid param");
 
     concurrentWorkCount_++;
     ReportSceneCode(AV_META_SCENE_BATCH_HANDLE);
@@ -745,12 +747,6 @@ void AVMetadataHelperImpl::Release()
     avMetadataHelperService_->Release();
     (void)MediaServiceFactory::GetInstance().DestroyAVMetadataHelperService(avMetadataHelperService_);
     avMetadataHelperService_ = nullptr;
-}
-
-void AVMetadataHelperImpl::SetIsNapiInstance(bool isNapiInstance)
-{
-    CHECK_AND_RETURN_LOG(avMetadataHelperService_ != nullptr, "avmetadatahelper service does not exist.");
-    avMetadataHelperService_->SetIsNapiInstance(isNapiInstance);
 }
 } // namespace Media
 } // namespace OHOS

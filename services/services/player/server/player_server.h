@@ -120,7 +120,6 @@ public:
     int32_t SetPlayerCallback(const std::shared_ptr<PlayerCallback> &callback) override;
     virtual int32_t DumpInfo(int32_t fd);
     int32_t SelectBitRate(uint32_t bitRate) override;
-    int32_t StopBufferring(bool flag) override;
     int32_t BackGroundChangeState(PlayerStates state, bool isBackGroundCb);
     int32_t SelectTrack(int32_t index, PlayerSwitchMode mode) override;
     int32_t DeselectTrack(int32_t index) override;
@@ -141,14 +140,8 @@ public:
     bool IsBootCompleted();
     int32_t SetMaxAmplitudeCbStatus(bool status) override;
     int32_t SetDeviceChangeCbStatus(bool status) override;
+    bool IsSeekContinuousSupported() override;
 
-    int32_t StartReportStatus();
-    int32_t StopReportStatus();
-    int32_t GetUid()
-    {
-        return appUid_;
-    }
-    bool IsPlayerRunning();
 protected:
     class BaseState;
     class IdleState;
@@ -256,17 +249,16 @@ private:
     std::atomic<bool> inReleasing_ = false;
     std::atomic<int32_t> userId_ = -1;
     std::atomic<bool> isBootCompleted_ = false;
-    uint64_t instanceId_ = 0;
     std::shared_ptr<AVMediaSource> mediaSource_ = nullptr;
     AVPlayStrategy strategy_;
+    uint64_t instanceId_ = 0;
     std::atomic<bool> isInterruptNeeded_{false};
+    bool isAudioMuted_ = false;
     std::mutex seekContinousMutex_;
     std::atomic<bool> isInSeekContinous_ {false};
     std::atomic<int64_t> seekContinousBatchNo_ {-1};
-    bool isAudioMuted_ = false;
-    bool maxAmplitudeCbStatus_ = false;
     bool deviceChangeCallbackflag_ = false;
-    std::atomic<bool> reportStatusFlag_ {true};
+    bool maxAmplitudeCbStatus_ = false;
     bool isStreamUsagePauseRequired_ = true;
     std::mutex surfaceMutex_;
 };

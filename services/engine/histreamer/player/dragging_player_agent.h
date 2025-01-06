@@ -28,6 +28,8 @@ using namespace Pipeline;
 class DraggingPlayerAgent : public std::enable_shared_from_this<DraggingPlayerAgent> {
 public:
     static shared_ptr<DraggingPlayerAgent> Create();
+    static bool IsDraggingSupported(const shared_ptr<DemuxerFilter> &demuxer,
+        const shared_ptr<DecoderSurfaceFilter> &decoder);
     DraggingPlayerAgent() {};
     DraggingPlayerAgent(const DraggingPlayerAgent &) = delete;
     DraggingPlayerAgent operator=(const DraggingPlayerAgent &) = delete;
@@ -41,6 +43,7 @@ public:
     void Release();
  
 private:
+    static bool loaded_;
     static bool LoadSymbol();
     static void *LoadLibrary();
     static bool CheckSymbol(void *handler);
@@ -49,8 +52,10 @@ private:
     static void *handler_;
     using CreateFunc = DraggingPlayer *(*)();
     using DestroyFunc = void (*)(DraggingPlayer *);
+    using CheckSupportedFunc = bool (*) (DemuxerFilter *, DecoderSurfaceFilter *);
     static CreateFunc createFunc_;
     static DestroyFunc destroyFunc_;
+    static CheckSupportedFunc checkSupportedFunc_;
     DraggingPlayer *draggingPlayer_ {nullptr};
     shared_ptr<VideoStreamReadyCallback> videoStreamReadyCb_ {nullptr};
     shared_ptr<VideoFrameReadyCallback> videoFrameReadyCb_ {nullptr};

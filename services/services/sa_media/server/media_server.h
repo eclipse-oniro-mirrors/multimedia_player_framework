@@ -22,9 +22,6 @@
 
 namespace OHOS {
 namespace Media {
-#ifdef USE_EFFICIENCY_MANAGER
-class MediaAppFrozenStateObserver;
-#endif
 class __attribute__((visibility("default"))) MediaServer : public SystemAbility, public MediaServiceStub {
     DECLARE_SYSTEM_ABILITY(MediaServer);
 public:
@@ -47,11 +44,6 @@ protected:
 
 private:
     void OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId) override;
-    void RegisterMediaAppFrozenStateObserver();
-private:
-#ifdef USE_EFFICIENCY_MANAGER
-    sptr<MediaAppFrozenStateObserver> mediaAppFrozenStateObserver_;
-#endif
 };
 } // namespace Media
 } // namespace OHOS

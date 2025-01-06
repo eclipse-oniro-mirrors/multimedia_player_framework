@@ -336,21 +336,6 @@ int32_t AVMetadataHelperServiceProxy::GetFrameIndexByTime(uint64_t time, uint32_
     index = reply.ReadUint32();
     return MSERR_OK;
 }
-
-void AVMetadataHelperServiceProxy::SetIsNapiInstance(bool isNapiInstance)
-{
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-
-    bool token = data.WriteInterfaceToken(AVMetadataHelperServiceProxy::GetDescriptor());
-    CHECK_AND_RETURN_LOG(token, "Failed to write descriptor!");
-
-    (void)data.WriteBool(isNapiInstance);
-
-    int32_t error = Remote()->SendRequest(SET_IS_NAPI_INSTANCE, data, reply, option);
-    CHECK_AND_RETURN_LOG(error == MSERR_OK, "SetIsNapiInstance failed, error: %{public}d", error);
-}
 } // namespace Media
 } // namespace OHOS
 

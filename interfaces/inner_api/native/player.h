@@ -99,7 +99,7 @@ public:
     static constexpr std::string_view PLAYER_WIDTH = "width";
     static constexpr std::string_view PLAYER_HEIGHT = "height";
     static constexpr std::string_view PLAYER_MIME = "codec_mime";
-    static constexpr std::string_view PLAYER_BITRATE = "bitrate_vector";
+    static constexpr std::string_view PLAYER_BITRATE = "bitrate";
     static constexpr std::string_view PLAYER_FRAMERATE = "frame_rate";
     static constexpr std::string_view PLAYER_LANGUGAE = "language_code";
     static constexpr std::string_view PLAYER_SAMPLE_RATE = "sample_rate";
@@ -617,9 +617,18 @@ public:
      * @since 1.0
      * @version 1.0
      */
-    virtual int32_t SetPlaybackStrategy(AVPlayStrategy playbackStrategy) = 0;
+    virtual int32_t SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
+    {
+        (void)playbackStrategy;
+        return 0;
+    }
 
-    virtual int32_t SetMediaMuted(OHOS::Media::MediaType type, bool isMuted) = 0;
+    virtual int32_t SetMediaMuted(OHOS::Media::MediaType type, bool isMuted)
+    {
+        (void)type;
+        (void)isMuted;
+        return 0;
+    }
 
 #ifdef SUPPORT_AUDIO_ONLY
 #else
@@ -850,6 +859,18 @@ public:
     {
         (void)apiVersion;
         return 0;
+    }
+
+    /**
+     * @brief Checks whether the player supports SeekContinuous.
+     *
+     * @return Returns true if the player supports SeekContinuous; false otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual bool IsSeekContinuousSupported()
+    {
+        return false;
     }
 };
 

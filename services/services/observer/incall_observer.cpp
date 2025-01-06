@@ -87,10 +87,12 @@ void InCallObserver::UnregisterInCallObserverCallBack(std::weak_ptr<InCallObserv
     MEDIA_LOGI("InCallObserver::UnregisterInCallObserverCallBack START.");
     std::unique_lock<std::mutex> lock(mutex_);
     auto task = std::make_shared<TaskHandler<void>>([&, this, callback] {
+        auto unregisterCallBack = callback.lock();
         for (auto iter = inCallObserverCallBacks_.begin(); iter != inCallObserverCallBacks_.end();) {
-            if ((*iter).lock() == callback.lock() || callback.lock() == nullptr) {
+            auto iterCallback = (*iter).lock();
+            if (iterCallback == unregisterCallBack || unregisterCallBack == nullptr) {
                 MEDIA_LOGD("0x%{public}06" PRIXPTR "UnregisterInCallObserverCallBack",
-                    FAKE_POINTER((*iter).lock().get()));
+                    FAKE_POINTER(iterCallback.get()));
                 iter = inCallObserverCallBacks_.erase(iter);
             } else {
                 iter++;

@@ -720,7 +720,6 @@ HWTEST_F(HitranscodeUnitTest, SetInputFile_001, TestSize.Level0)
 {
     // 1. Set up the test environment
     std::string url = "file:///storage/../test.mp3";
-    std::string realUrlPath;
 
     // 2. Call the function to be tested
     int32_t ret = transcoder_->SetInputFile(url);
@@ -739,6 +738,7 @@ HWTEST_F(HitranscodeUnitTest, SetInputFile_002, TestSize.Level0)
 {
     // 1. Set up the test environment
     std::string url = "file";
+
     std::string realUrlPath;
 
     // 2. Call the function to be tested

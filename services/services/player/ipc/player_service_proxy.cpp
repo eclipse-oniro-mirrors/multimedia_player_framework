@@ -15,6 +15,7 @@
 
 #include "player_service_proxy.h"
 #include "player_listener_stub.h"
+
 #ifdef SUPPORT_AVPLAYER_DRM
 #include "key_session_service_proxy.h"
 #endif
@@ -81,8 +82,9 @@ PlayerServiceProxy::PlayerServiceProxy(const sptr<IRemoteObject> &impl)
     playerFuncs_[GET_CURRENT_TRACK] = "Player::GetCurrentTrack";
     playerFuncs_[SET_DECRYPT_CONFIG] = "Player::SetDecryptConfig";
     playerFuncs_[SET_MEDIA_SOURCE] = "Player::SetMediaSource";
-    playerFuncs_[SET_MAX_AMPLITUDE_CB_STATUS] = "Player::SetMaxAmplitudeCbStatus";
     playerFuncs_[SET_DEVICE_CHANGE_CB_STATUS] = "Player::SetDeviceChangeCbStatus";
+    playerFuncs_[SET_MAX_AMPLITUDE_CB_STATUS] = "Player::SetMaxAmplitudeCbStatus";
+    playerFuncs_[IS_SEEK_CONTINUOUS_SUPPORTED] = "Player::IsSeekContinuousSupported";
 }
 
 PlayerServiceProxy::~PlayerServiceProxy()
@@ -995,15 +997,32 @@ int32_t PlayerServiceProxy::SetMaxAmplitudeCbStatus(bool status)
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
- 
+
     bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
- 
+
     data.WriteInt32(status);
     int32_t error = SendRequest(SET_MAX_AMPLITUDE_CB_STATUS, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetMaxAmplitudeCbStatus failed, error: %{public}d", error);
     return reply.ReadInt32();
+}
+
+bool PlayerServiceProxy::IsSeekContinuousSupported()
+{
+    MediaTrace trace("PlayerServiceProxy::IsSeekContinuousSupported");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, false, "Failed to write descriptor!");
+
+    int32_t error = SendRequest(IS_SEEK_CONTINUOUS_SUPPORTED, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, false,
+        "IsSeekContinuousSupported failed, error: %{public}d", error);
+
+    return reply.ReadBool();
 }
 } // namespace Media
 } // namespace OHOS
