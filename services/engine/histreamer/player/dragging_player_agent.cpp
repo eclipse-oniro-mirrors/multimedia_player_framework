@@ -35,6 +35,8 @@ namespace Media {
 void *DraggingPlayerAgent::handler_ = nullptr;
 DraggingPlayerAgent::CreateFunc DraggingPlayerAgent::createFunc_ = nullptr;
 DraggingPlayerAgent::DestroyFunc DraggingPlayerAgent::destroyFunc_ = nullptr;
+DraggingPlayerAgent::CheckSupportedFunc DraggingPlayerAgent::checkSupportedFunc_ = nullptr;
+bool DraggingPlayerAgent::loaded_ = false;
 std::mutex DraggingPlayerAgent::mtx_;
  
 class VideoStreamReadyCallbackImpl : public VideoStreamReadyCallback {
@@ -81,6 +83,15 @@ shared_ptr<DraggingPlayerAgent> DraggingPlayerAgent::Create()
     }
  
     return agent;
+}
+
+bool DraggingPlayerAgent::IsDraggingSupported(const shared_ptr<DemuxerFilter> &demuxer,
+    const shared_ptr<DecoderSurfaceFilter> &decoder)
+{
+    if (!LoadSymbol() || checkSupportedFunc_ == nullptr) {
+        return false;
+    }
+    return checkSupportedFunc_(demuxer.get(), decoder.get());
 }
  
 DraggingPlayerAgent::~DraggingPlayerAgent()
@@ -197,10 +208,16 @@ bool DraggingPlayerAgent::CheckSymbol(void *handler)
     if (handler) {
         std::string createFuncName = "CreateDraggingPlayer";
         std::string destroyFuncName = "DestroyDraggingPlayer";
+        std::string checkSupportedFuncName = "IsDraggingSupported";
         CreateFunc createFunc = nullptr;
         DestroyFunc destroyFunc = nullptr;
+        CheckSupportedFunc checkSupportedFunc = nullptr;
         createFunc = (CreateFunc)(::dlsym(handler, createFuncName.c_str()));
         destroyFunc = (DestroyFunc)(::dlsym(handler, destroyFuncName.c_str()));
+        checkSupportedFunc = (CheckSupportedFunc)(::dlsym(handler, checkSupportedFuncName.c_str()));
+        if (checkSupportedFunc != nullptr) {
+            checkSupportedFunc_ = checkSupportedFunc;
+        }
         if (createFunc && destroyFunc) {
             MEDIA_LOG_D("CheckSymbol:  createFuncName %{public}s", createFuncName.c_str());
             MEDIA_LOG_D("CheckSymbol:  destroyFuncName %{public}s", destroyFuncName.c_str());
@@ -215,7 +232,11 @@ bool DraggingPlayerAgent::CheckSymbol(void *handler)
 bool DraggingPlayerAgent::LoadSymbol()
 {
     lock_guard<mutex> lock(mtx_);
+    if (loaded_ && handler_ == nullptr) {
+        return false;
+    }
     if (handler_ == nullptr) {
+        loaded_ = true;
         if (!CheckSymbol(LoadLibrary())) {
             MEDIA_LOG_E("Load Reference parser so fail");
             return false;

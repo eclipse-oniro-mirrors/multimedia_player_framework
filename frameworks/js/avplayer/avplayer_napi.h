@@ -249,6 +249,8 @@ private:
      */
     static napi_value JsGetPlaybackInfo(napi_env env, napi_callback_info info);
 
+    static napi_value JsIsSeekContinuousSupported(napi_env env, napi_callback_info info);
+
     /**
      * on(type: 'stateChange', callback: (state: AVPlayerState, reason: StateChangeReason) => void): void;
      * off(type: 'stateChange'): void;

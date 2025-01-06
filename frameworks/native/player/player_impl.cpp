@@ -507,6 +507,13 @@ int32_t PlayerImpl::SetMaxAmplitudeCbStatus(bool status)
     return playerService_->SetMaxAmplitudeCbStatus(status);
 }
 
+bool PlayerImpl::IsSeekContinuousSupported()
+{
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " IsSeekContinuousSupported in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
+    return playerService_->IsSeekContinuousSupported();
+}
+
 PlayerImplCallback::PlayerImplCallback(const std::shared_ptr<PlayerCallback> playerCb,
     std::shared_ptr<PlayerImpl> player)
 {
