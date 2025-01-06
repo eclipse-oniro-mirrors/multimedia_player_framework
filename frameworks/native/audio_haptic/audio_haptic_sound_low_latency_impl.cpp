@@ -98,7 +98,7 @@ int32_t AudioHapticSoundLowLatencyImpl::OpenAudioUri(const std::string &audioUri
             return MSERR_OPEN_FILE_FAILED;
         }
     }
-    return MSERR_OK;
+    return fileDes_ != -1 ? MSERR_OK : MSERR_OPEN_FILE_FAILED;
 }
 
 int32_t AudioHapticSoundLowLatencyImpl::PrepareSound()
@@ -115,8 +115,8 @@ int32_t AudioHapticSoundLowLatencyImpl::PrepareSound()
     }
 
     MEDIA_LOGI("Set audio source to soundpool. audioUri [%{public}s]", audioUri_.c_str());
-    CHECK_AND_RETURN_RET_LOG(OpenAudioUri(audioUri_) == MSERR_OK &&
-        fileDes_ != -1, MSERR_OPEN_FILE_FAILED, "Failed to get audio uri fd.");
+    result = OpenAudioUri(audioUri_);
+    CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, result, "Failed to get audio uri fd.");
     std::string uri = "fd://" + std::to_string(fileDes_);
 
     int32_t soundID = soundPoolPlayer_->Load(uri);
