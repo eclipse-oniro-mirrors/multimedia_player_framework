@@ -152,45 +152,52 @@ void SoundPoolCallBackNapi::OnJsErrorCallBack(SoundPoolJsCallBack *jsCb) const
         // Js Thread
         CHECK_AND_RETURN_LOG(work != nullptr, "work is nullptr");
         SoundPoolJsCallBack *event = reinterpret_cast<SoundPoolJsCallBack *>(work->data);
-        std::string request = event->callbackName;
-        do {
-            CHECK_AND_BREAK_LOG(status != UV_ECANCELED, "%{public}s canceled", request.c_str());
-            std::shared_ptr<AutoRef> ref = event->autoRef.lock();
-            CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
-
-            napi_handle_scope scope = nullptr;
-            napi_open_handle_scope(ref->env_, &scope);
-            CHECK_AND_BREAK_LOG(scope != nullptr, "%{public}s scope is nullptr", request.c_str());
-            ON_SCOPE_EXIT(0) {
-                napi_close_handle_scope(ref->env_, scope);
-            };
-
-            napi_value jsCallback = nullptr;
-            napi_status nstatus = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
-            CHECK_AND_BREAK_LOG(nstatus == napi_ok && jsCallback != nullptr, "%{public}s get reference value fail",
-                request.c_str());
-
-            napi_value msgValStr = nullptr;
-            nstatus = napi_create_string_utf8(ref->env_, event->errorMsg.c_str(), NAPI_AUTO_LENGTH, &msgValStr);
-            CHECK_AND_BREAK_LOG(nstatus == napi_ok && msgValStr != nullptr, "create error message str fail");
-
-            napi_value args[1] = { nullptr };
-            nstatus = napi_create_error(ref->env_, nullptr, msgValStr, &args[0]);
-            CHECK_AND_BREAK_LOG(nstatus == napi_ok && args[0] != nullptr, "create error callback fail");
-            
-            nstatus = CommonNapi::FillErrorArgs(ref->env_, event->errorCode, args[0]);
-            CHECK_AND_BREAK_LOG(nstatus == napi_ok, "create error callback fail");
-            // Call back function
-            napi_value result = nullptr;
-            nstatus = napi_call_function(ref->env_, nullptr, jsCallback, 1, args, &result);
-            CHECK_AND_BREAK_LOG(nstatus == napi_ok, "%{public}s fail to napi call function", request.c_str());
-        } while (0);
+        event->RunJsErrorCallBackTask(status, event);
         delete event;
         delete work;
     }, uv_qos_user_initiated);
-    CHECK_AND_RETURN_LOG(ret == 0, "fail to uv_queue_work_with_qos task");
+    if (ret != 0) {
+        MEDIA_LOGI("fail to uv_queue_work_with_qos task");
+    }
     CANCEL_SCOPE_EXIT_GUARD(0);
     CANCEL_SCOPE_EXIT_GUARD(1);
+}
+
+void SoundPoolCallBackNapi::SoundPoolJsCallBack::RunJsErrorCallBackTask(int status, SoundPoolJsCallBack *event)
+{
+    std::string request = event->callbackName;
+    do {
+        CHECK_AND_BREAK_LOG(status != UV_ECANCELED, "%{public}s canceled", request.c_str());
+        std::shared_ptr<AutoRef> ref = event->autoRef.lock();
+        CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
+
+        napi_handle_scope scope = nullptr;
+        napi_open_handle_scope(ref->env_, &scope);
+        CHECK_AND_BREAK_LOG(scope != nullptr, "%{public}s scope is nullptr", request.c_str());
+        ON_SCOPE_EXIT(0) {
+            napi_close_handle_scope(ref->env_, scope);
+        };
+
+        napi_value jsCallback = nullptr;
+        napi_status nstatus = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
+        CHECK_AND_BREAK_LOG(nstatus == napi_ok && jsCallback != nullptr, "%{public}s get reference value fail",
+            request.c_str());
+
+        napi_value msgValStr = nullptr;
+        nstatus = napi_create_string_utf8(ref->env_, event->errorMsg.c_str(), NAPI_AUTO_LENGTH, &msgValStr);
+        CHECK_AND_BREAK_LOG(nstatus == napi_ok && msgValStr != nullptr, "create error message str fail");
+
+        napi_value args[1] = { nullptr };
+        nstatus = napi_create_error(ref->env_, nullptr, msgValStr, &args[0]);
+        CHECK_AND_BREAK_LOG(nstatus == napi_ok && args[0] != nullptr, "create error callback fail");
+        
+        nstatus = CommonNapi::FillErrorArgs(ref->env_, event->errorCode, args[0]);
+        CHECK_AND_BREAK_LOG(nstatus == napi_ok, "create error callback fail");
+        // Call back function
+        napi_value result = nullptr;
+        nstatus = napi_call_function(ref->env_, nullptr, jsCallback, 1, args, &result);
+        CHECK_AND_BREAK_LOG(nstatus == napi_ok, "%{public}s fail to napi call function", request.c_str());
+    } while (0);
 }
 
 void SoundPoolCallBackNapi::OnJsloadCompletedCallBack(SoundPoolJsCallBack *jsCb) const
@@ -216,37 +223,45 @@ void SoundPoolCallBackNapi::OnJsloadCompletedCallBack(SoundPoolJsCallBack *jsCb)
         if (work->data != nullptr) {
             MEDIA_LOGD("work data not nullptr");
             SoundPoolJsCallBack *event = reinterpret_cast<SoundPoolJsCallBack *>(work->data);
-            std::string request = event->callbackName;
-            do {
-                CHECK_AND_BREAK_LOG(status != UV_ECANCELED, "%{public}s canceled", request.c_str());
-                std::shared_ptr<AutoRef> ref = event->autoRef.lock();
-                CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
-                napi_handle_scope scope = nullptr;
-                napi_open_handle_scope(ref->env_, &scope);
-                CHECK_AND_BREAK_LOG(scope != nullptr, "%{public}s scope is nullptr", request.c_str());
-                ON_SCOPE_EXIT(0) {
-                    napi_close_handle_scope(ref->env_, scope);
-                };
-                napi_value jsCallback = nullptr;
-                napi_status nstatus = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
-                CHECK_AND_BREAK_LOG(nstatus == napi_ok && jsCallback != nullptr, "%{public}s get reference value fail",
-                    request.c_str());
-                napi_value args[1] = { nullptr };
-                nstatus = napi_create_int32(ref->env_, event->loadSoundId, &args[0]);
-                CHECK_AND_BREAK_LOG(nstatus == napi_ok && args[0] != nullptr,
-                    "%{public}s fail to create callback", request.c_str());
-                const size_t argCount = 1;
-                napi_value result = nullptr;
-                nstatus = napi_call_function(ref->env_, nullptr, jsCallback, argCount, args, &result);
-                CHECK_AND_BREAK_LOG(nstatus == napi_ok, "%{public}s fail to napi call function", request.c_str());
-            } while (0);
+            event->RunJsloadCompletedCallBackTask(status, event);
             delete event;
         }
         delete work;
     }, uv_qos_user_initiated);
-    CHECK_AND_RETURN_LOG(ret == 0, "fail to uv_queue_work_with_qos task");
+    if (ret != 0) {
+        MEDIA_LOGI("fail to uv_queue_work_with_qos task");
+    }
     CANCEL_SCOPE_EXIT_GUARD(0);
     CANCEL_SCOPE_EXIT_GUARD(1);
+}
+
+void SoundPoolCallBackNapi::SoundPoolJsCallBack::RunJsloadCompletedCallBackTask(int status,
+    SoundPoolJsCallBack *event)
+{
+    std::string request = event->callbackName;
+    do {
+        CHECK_AND_BREAK_LOG(status != UV_ECANCELED, "%{public}s canceled", request.c_str());
+        std::shared_ptr<AutoRef> ref = event->autoRef.lock();
+        CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
+        napi_handle_scope scope = nullptr;
+        napi_open_handle_scope(ref->env_, &scope);
+        CHECK_AND_BREAK_LOG(scope != nullptr, "%{public}s scope is nullptr", request.c_str());
+        ON_SCOPE_EXIT(0) {
+            napi_close_handle_scope(ref->env_, scope);
+        };
+        napi_value jsCallback = nullptr;
+        napi_status nstatus = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
+        CHECK_AND_BREAK_LOG(nstatus == napi_ok && jsCallback != nullptr, "%{public}s get reference value fail",
+            request.c_str());
+        napi_value args[1] = { nullptr };
+        nstatus = napi_create_int32(ref->env_, event->loadSoundId, &args[0]);
+        CHECK_AND_BREAK_LOG(nstatus == napi_ok && args[0] != nullptr,
+            "%{public}s fail to create callback", request.c_str());
+        const size_t argCount = 1;
+        napi_value result = nullptr;
+        nstatus = napi_call_function(ref->env_, nullptr, jsCallback, argCount, args, &result);
+        CHECK_AND_BREAK_LOG(nstatus == napi_ok, "%{public}s fail to napi call function", request.c_str());
+    } while (0);
 }
 
 void SoundPoolCallBackNapi::OnJsplayCompletedCallBack(SoundPoolJsCallBack *jsCb) const
@@ -273,35 +288,44 @@ void SoundPoolCallBackNapi::OnJsplayCompletedCallBack(SoundPoolJsCallBack *jsCb)
         if (work->data != nullptr) {
             MEDIA_LOGI("work data not nullptr");
             SoundPoolJsCallBack *event = reinterpret_cast<SoundPoolJsCallBack *>(work->data);
-            std::string request = event->callbackName;
-            do {
-                CHECK_AND_BREAK_LOG(status != UV_ECANCELED, "%{public}s canceled", request.c_str());
-                std::shared_ptr<AutoRef> ref = event->autoRef.lock();
-                CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
-
-                napi_handle_scope scope = nullptr;
-                napi_open_handle_scope(ref->env_, &scope);
-                CHECK_AND_BREAK_LOG(scope != nullptr, "%{public}s scope is nullptr", request.c_str());
-                ON_SCOPE_EXIT(0) {
-                    napi_close_handle_scope(ref->env_, scope);
-                };
-                napi_value jsCallback = nullptr;
-                napi_status nstatus = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
-                CHECK_AND_BREAK_LOG(nstatus == napi_ok && jsCallback != nullptr, "%{public}s get reference value fail",
-                    request.c_str());
-
-                napi_value result = nullptr;
-                nstatus = napi_call_function(ref->env_, nullptr, jsCallback, 0, nullptr, &result);
-                CHECK_AND_BREAK_LOG(nstatus == napi_ok, "%{public}s fail to napi call function", request.c_str());
-            } while (0);
+            event->RunJsplayCompletedCallBackTask(status, event);
             delete event;
         }
         delete work;
     }, uv_qos_user_initiated);
-    CHECK_AND_RETURN_LOG(ret == 0, "fail to uv_queue_work_with_qos task");
+    if (ret != 0) {
+        MEDIA_LOGI("fail to uv_queue_work_with_qos task");
+    }
 
     CANCEL_SCOPE_EXIT_GUARD(0);
     CANCEL_SCOPE_EXIT_GUARD(1);
 }
+
+void SoundPoolCallBackNapi::SoundPoolJsCallBack::RunJsplayCompletedCallBackTask(int status,
+    SoundPoolJsCallBack *event)
+{
+    std::string request = event->callbackName;
+    do {
+        CHECK_AND_BREAK_LOG(status != UV_ECANCELED, "%{public}s canceled", request.c_str());
+        std::shared_ptr<AutoRef> ref = event->autoRef.lock();
+        CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
+
+        napi_handle_scope scope = nullptr;
+        napi_open_handle_scope(ref->env_, &scope);
+        CHECK_AND_BREAK_LOG(scope != nullptr, "%{public}s scope is nullptr", request.c_str());
+        ON_SCOPE_EXIT(0) {
+            napi_close_handle_scope(ref->env_, scope);
+        };
+        napi_value jsCallback = nullptr;
+        napi_status nstatus = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
+        CHECK_AND_BREAK_LOG(nstatus == napi_ok && jsCallback != nullptr, "%{public}s get reference value fail",
+            request.c_str());
+
+        napi_value result = nullptr;
+        nstatus = napi_call_function(ref->env_, nullptr, jsCallback, 0, nullptr, &result);
+        CHECK_AND_BREAK_LOG(nstatus == napi_ok, "%{public}s fail to napi call function", request.c_str());
+    } while (0);
+}
+
 } // namespace Media
 } // namespace OHOS

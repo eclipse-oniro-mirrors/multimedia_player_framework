@@ -49,6 +49,10 @@ protected:
 
 private:
     struct SoundPoolJsCallBack {
+        void RunJsErrorCallBackTask(int status, SoundPoolJsCallBack *event);
+        void RunJsloadCompletedCallBackTask(int status, SoundPoolJsCallBack *event);
+        void RunJsplayCompletedCallBackTask(int status, SoundPoolJsCallBack *event);
+        
         std::weak_ptr<AutoRef> autoRef;
         std::string callbackName = "unknown";
         std::string errorMsg = "unknown";
