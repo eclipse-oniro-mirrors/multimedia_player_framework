@@ -346,8 +346,11 @@ std::shared_ptr<AVBuffer> AVMetadataHelperServer::FetchFrameYuv(int64_t timeUs, 
 void AVMetadataHelperServer::Release()
 {
     MediaTrace trace("AVMetadataHelperServer::Release");
-    CHECK_AND_RETURN_LOG(avMetadataHelperEngine_ != nullptr, "avMetadataHelperEngine_ is nullptr");
-    avMetadataHelperEngine_->SetInterruptState(true);
+    {
+        auto avMetadataHelperEngine = avMetadataHelperEngine_;
+        CHECK_AND_RETURN_LOG(avMetadataHelperEngine != nullptr, "avMetadataHelperEngine_ is nullptr");
+        avMetadataHelperEngine->SetInterruptState(true);
+    }
     auto task = std::make_shared<TaskHandler<void>>([&, this] {
         avMetadataHelperEngine_ = nullptr;
         uriHelper_ = nullptr;
@@ -359,11 +362,9 @@ void AVMetadataHelperServer::Release()
     });
     (void)taskQue_.EnqueueTask(task, true);
     (void)task->GetResult();
-    {
-        std::unique_lock<std::mutex> lock(mutex_);
-        isInterrupted_ = true;
-        ipcReturnCond_.notify_all();
-    }
+    std::unique_lock<std::mutex> lock(mutex_);
+    isInterrupted_ = true;
+    ipcReturnCond_.notify_all();
 }
 
 int32_t AVMetadataHelperServer::SetHelperCallback(const std::shared_ptr<HelperCallback> &callback)
