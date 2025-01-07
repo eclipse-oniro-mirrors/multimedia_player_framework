@@ -432,5 +432,23 @@ int32_t StreamIDManager::SetFrameWriteCallback(const std::shared_ptr<ISoundPoolF
     frameWriteCallback_ = callback;
     return MSERR_OK;
 }
+
+void StreamIDManager::CacheBufferCallBack::OnLoadCompleted(int32_t soundID)
+{
+    (void)soundID;
+}
+
+void StreamIDManager::CacheBufferCallBack::OnPlayFinished()
+{
+    if (std::shared_ptr<StreamIDManager> ptr = streamIDManagerInner_.lock()) {
+        ptr->OnPlayFinished();
+    }
+}
+
+void StreamIDManager::CacheBufferCallBack::OnError(int32_t errorCode)
+{
+    (void)errorCode;
+}
+
 } // namespace Media
 } // namespace OHOS
