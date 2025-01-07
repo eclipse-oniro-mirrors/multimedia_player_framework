@@ -96,6 +96,9 @@ config("media_service_config") {
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
+  if (player_framework_support_screen_capture_stopbycall) {
+    defines += [ "SUPPORT_CALL" ]
+  }
 }
 
 ohos_shared_library("media_service") {

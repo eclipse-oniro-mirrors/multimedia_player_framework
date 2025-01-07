@@ -439,7 +439,9 @@ ScreenCaptureServer::~ScreenCaptureServer()
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
     ReleaseInner();
+#ifdef SUPPORT_CALL
     screenCaptureObserverCb_ = nullptr;
+#endif
     CloseFd();
 }
 
@@ -1487,8 +1489,10 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
         ", isSurfaceMode:%{public}d, dataType:%{public}d", appInfo_.appUid, appInfo_.appPid, isPrivacyAuthorityEnabled,
         isSurfaceMode_, captureConfig_.dataType);
     MediaTrace trace("ScreenCaptureServer::StartScreenCaptureInner");
+#ifdef SUPPORT_CALL
     int32_t ret = RegisterServerCallbacks();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "RegisterServerCallbacks failed");
+#endif
 
     ret = CheckAllParams();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartScreenCaptureInner failed, invalid params");
@@ -1541,6 +1545,7 @@ bool ScreenCaptureServer::IsTelInCallSkipList()
     return false;
 }
 
+#ifdef SUPPORT_CALL
 int32_t ScreenCaptureServer::RegisterServerCallbacks()
 {
     uint64_t tokenId = IPCSkeleton::GetCallingFullTokenID();
@@ -1563,6 +1568,7 @@ int32_t ScreenCaptureServer::RegisterServerCallbacks()
     AccountObserver::GetInstance().RegisterAccountObserverCallBack(screenCaptureObserverCb_);
     return MSERR_OK;
 }
+#endif
 
 #ifdef PC_STANDARD
 bool ScreenCaptureServer::CheckCaptureSpecifiedWindowForSelectWindow()
@@ -2886,6 +2892,7 @@ void ScreenCaptureServer::ReleaseInner()
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances ReleaseInner E", FAKE_POINTER(this));
 }
 
+#ifdef SUPPORT_CALL
 ScreenCaptureObserverCallBack::ScreenCaptureObserverCallBack(
     std::weak_ptr<ScreenCaptureServer> screenCaptureServer): taskQueObserverCb_("NotifyStopSc")
 {
@@ -2923,6 +2930,7 @@ ScreenCaptureObserverCallBack::~ScreenCaptureObserverCallBack()
     taskQueObserverCb_.Stop();
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
+#endif
 
 void ScreenCapBufferConsumerListener::OnBufferAvailable()
 {
