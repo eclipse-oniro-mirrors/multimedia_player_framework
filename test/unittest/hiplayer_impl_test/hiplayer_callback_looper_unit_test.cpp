@@ -191,7 +191,7 @@ HWTEST_F(HiplayerCallbackLooperUnitTest, LoopOnce_001, TestSize.Level0)
 
 /**
  * @tc.name  : Test LoopOnce
- * @tc.number: LoopOnce_001
+ * @tc.number: LoopOnce_002
  * @tc.desc  : Test LoopOnce
  */
 HWTEST_F(HiplayerCallbackLooperUnitTest, LoopOnce_002, TestSize.Level0)
