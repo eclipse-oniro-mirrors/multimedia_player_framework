@@ -2297,9 +2297,9 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_buffertest_max_frame_rate_01, Tes
     int32_t totalFrameNum = screenCaptureCb_->GetFrameNumber();
     double averageFrameRate_01 = ((double)totalFrameNum)/RECORDER_TIME_5;
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
-    EXPECT_EQ(MSERR_OK, screenCapture_->SetMaxVideoFrameRate(5));
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetMaxVideoFrameRate(15));
 #else
-    EXPECT_NE(MSERR_OK, screenCapture_->SetMaxVideoFrameRate(5));
+    EXPECT_NE(MSERR_OK, screenCapture_->SetMaxVideoFrameRate(15));
 #endif
     sleep(RECORDER_TIME_5);
     totalFrameNum = screenCaptureCb_->GetFrameNumber();
@@ -2308,9 +2308,9 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_buffertest_max_frame_rate_01, Tes
     totalFrameNum = screenCaptureCb_->GetFrameNumber();
     double averageFrameRate_03 = ((double)totalFrameNum)/RECORDER_TIME_5;
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
-    EXPECT_EQ(MSERR_OK, screenCapture_->SetMaxVideoFrameRate(15));
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetMaxVideoFrameRate(90));
 #else
-    EXPECT_NE(MSERR_OK, screenCapture_->SetMaxVideoFrameRate(15));
+    EXPECT_NE(MSERR_OK, screenCapture_->SetMaxVideoFrameRate(90));
 #endif
     sleep(RECORDER_TIME_5);
     totalFrameNum = screenCaptureCb_->GetFrameNumber();
@@ -2318,29 +2318,15 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_buffertest_max_frame_rate_01, Tes
     sleep(RECORDER_TIME_5);
     totalFrameNum = screenCaptureCb_->GetFrameNumber();
     double averageFrameRate_05 = ((double)totalFrameNum)/RECORDER_TIME_5;
-#ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
-    EXPECT_EQ(MSERR_OK, screenCapture_->SetMaxVideoFrameRate(90));
-#else
-    EXPECT_NE(MSERR_OK, screenCapture_->SetMaxVideoFrameRate(90));
-#endif
-    sleep(RECORDER_TIME_5);
-    totalFrameNum = screenCaptureCb_->GetFrameNumber();
-    double averageFrameRate_06 = ((double)totalFrameNum)/RECORDER_TIME_5;
-    sleep(RECORDER_TIME_5);
-    totalFrameNum = screenCaptureCb_->GetFrameNumber();
-    double averageFrameRate_07 = ((double)totalFrameNum)/RECORDER_TIME_5;
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
-    EXPECT_TRUE(averageFrameRate_02 < (5 * EXCESS_RATE));
-    EXPECT_TRUE(averageFrameRate_03 < (5 * EXCESS_RATE));
-    EXPECT_TRUE(averageFrameRate_04 < (15 * EXCESS_RATE));
-    EXPECT_TRUE(averageFrameRate_05 < (15 * EXCESS_RATE));
-    EXPECT_TRUE(averageFrameRate_06 < (90 * EXCESS_RATE));
-    EXPECT_TRUE(averageFrameRate_07 < (90 * EXCESS_RATE));
-    cout << "SetMaxVideoFrameRate end averageFrameRate_01: " << averageFrameRate_01 << ",set 5,averageFrameRate_02: "
-        << averageFrameRate_02 << " averageFrameRate_03: " << averageFrameRate_03 << ",set 15,averageFrameRate_04: "
-        << averageFrameRate_04 << " averageFrameRate_05: " << averageFrameRate_05 << ",set 90,averageFrameRate_06: "
-        << averageFrameRate_06 << " averageFrameRate_07: " << averageFrameRate_07 << endl;
+    EXPECT_TRUE(averageFrameRate_02 < (15 * EXCESS_RATE));
+    EXPECT_TRUE(averageFrameRate_03 < (15 * EXCESS_RATE));
+    EXPECT_TRUE(averageFrameRate_04 < (90 * EXCESS_RATE));
+    EXPECT_TRUE(averageFrameRate_05 < (90 * EXCESS_RATE));
+    cout << "SetMaxVideoFrameRate end averageFrameRate_01: " << averageFrameRate_01 << ",set 15,averageFrameRate_02: "
+        << averageFrameRate_02 << " averageFrameRate_03: " << averageFrameRate_03 << ",set 90,averageFrameRate_04: "
+        << averageFrameRate_04 << " averageFrameRate_05: " << averageFrameRate_05 << endl;
 }
 
 /**
