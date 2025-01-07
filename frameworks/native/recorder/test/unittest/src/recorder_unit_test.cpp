@@ -600,7 +600,7 @@ HWTEST_F(RecorderUnitTest, recorder_configure_010, TestSize.Level2)
     videoRecorderConfig.videoFormat = H264;
     videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_configure_error.mp4").c_str(), O_RDWR);
 
-    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(AUDIO_VIDEO, videoRecorderConfig));
+    EXPECT_NE(MSERR_OK, recorder_->SetFormat(AUDIO_VIDEO, videoRecorderConfig));
     EXPECT_NE(MSERR_OK, recorder_->Prepare());
     EXPECT_EQ(MSERR_OK, recorder_->Release());
     close(videoRecorderConfig.outputFd);
