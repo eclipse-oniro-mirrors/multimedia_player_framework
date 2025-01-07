@@ -464,9 +464,13 @@ OH_AVErrCode OH_AVRecorder_GetAVRecorderConfig(OH_AVRecorder *recorder, OH_AVRec
 
     const std::string fdHead = "fd://";
     recorderObj->config_->url = strdup((fdHead + std::to_string(configMap["url"])).c_str());
+    CHECK_AND_RETURN_RET_LOG(recorderObj->config_->url != nullptr, AV_ERR_NO_MEMORY,
+        "Failed to allocate memory for url string!");
 
     std::string videoOrientation = std::to_string(configMap["rotation"]);
     recorderObj->config_->metadata.videoOrientation = strdup(videoOrientation.c_str());
+    CHECK_AND_RETURN_RET_LOG(recorderObj->config_->metadata.videoOrientation != nullptr, AV_ERR_NO_MEMORY,
+        "Failed to allocate memory for videoOrientation string!");
 
     recorderObj->config_->metadata.location.latitude = location.latitude;
     recorderObj->config_->metadata.location.longitude = location.longitude;
@@ -653,6 +657,7 @@ void ConvertEncoderInfo(const EncoderCapabilityData &src, OH_AVRecorder_EncoderI
     dest.mimeType = ConvertMimeType(src.mimeType);
 
     dest.type = strdup(src.type.c_str());
+    CHECK_AND_RETURN_LOG(dest.type != nullptr, "Failed to allocate memory for type string!");
 
     dest.bitRate.min = src.bitrate.minVal;
     dest.bitRate.max = src.bitrate.maxVal;
@@ -670,7 +675,12 @@ void ConvertEncoderInfo(const EncoderCapabilityData &src, OH_AVRecorder_EncoderI
     dest.channels.max = src.channels.maxVal;
 
     dest.sampleRateLen = static_cast<int32_t>(src.sampleRate.size());
+    if (dest.sampleRateLen == 0) {
+        dest.sampleRate = nullptr;
+        return;
+    }
     dest.sampleRate = (int32_t *)malloc(dest.sampleRateLen * sizeof(int32_t));
+    CHECK_AND_RETURN_LOG(dest.sampleRate != nullptr, "Failed to allocate memory for sampleRate array!");
     for (int j = 0; j < dest.sampleRateLen; ++j) {
         dest.sampleRate[j] = src.sampleRate[j];
     }
@@ -700,8 +710,9 @@ OH_AVErrCode OH_AVRecorder_GetAvailableEncoder(OH_AVRecorder *recorder,
     recorderObj->length_ = count;
     *length = recorderObj->length_;
 
+    CHECK_AND_RETURN_RET_LOG(*length > 0, AV_ERR_INVALID_VAL, "Invalid length, should be larger than zero!");
     recorderObj->info_ = (OH_AVRecorder_EncoderInfo *)malloc(*length * sizeof(OH_AVRecorder_EncoderInfo));
-    CHECK_AND_RETURN_RET_LOG(recorderObj->info_ != nullptr, AV_ERR_INVALID_VAL, "Memory allocation failed for info!");
+    CHECK_AND_RETURN_RET_LOG(recorderObj->info_ != nullptr, AV_ERR_NO_MEMORY, "Memory allocation failed for info!");
 
     for (size_t i = 0; i < encoderInfo.size(); ++i) {
         const EncoderCapabilityData &src = encoderInfo[i];
