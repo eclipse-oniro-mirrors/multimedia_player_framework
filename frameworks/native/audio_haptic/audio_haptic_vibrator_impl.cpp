@@ -19,6 +19,7 @@
 #include <sys/stat.h>
 
 #include "audio_haptic_log.h"
+#include "directory_ex.h"
 #include "media_errors.h"
 
 namespace {
@@ -57,6 +58,7 @@ static const std::unordered_map<AudioStandard::StreamUsage, VibratorUsage> USAGE
     {AudioStandard::StreamUsage::STREAM_USAGE_VIDEO_COMMUNICATION, VibratorUsage::USAGE_COMMUNICATION},
 };
 #endif
+const int ERROR = -1;
 
 AudioHapticVibratorImpl::AudioHapticVibratorImpl(AudioHapticPlayer &audioHapticPlayer)
     : audioHapticPlayer_(audioHapticPlayer)
@@ -85,6 +87,78 @@ void AudioHapticVibratorImpl::SetIsSupportEffectId(bool isSupport)
 #endif
 }
 
+int32_t AudioHapticVibratorImpl::ExtractFd(const std::string& hapticsUri)
+{
+    const std::string prefix = "fd://";
+    if (hapticsUri.size() <= prefix.size() || hapticsUri.substr(0, prefix.length()) != prefix) {
+        MEDIA_LOGW("ExtractFd: Input does not start with the required prefix.");
+        return ERROR;
+    }
+
+    std::string numberPart = hapticsUri.substr(prefix.length());
+    for (char c : numberPart) {
+        if (!std::isdigit(c)) {
+            MEDIA_LOGE("ExtractFd: The part after the prefix is not all digits.");
+            return ERROR;
+        }
+    }
+
+    int32_t fd = atoi(numberPart.c_str());
+    return fd > 0 ? fd : ERROR;
+}
+
+int32_t AudioHapticVibratorImpl::OpenHapticFile(const std::string &hapticUri)
+{
+#ifdef SUPPORT_VIBRATOR
+    int32_t newFd = -1;
+    int32_t oldFd = ExtractFd(hapticUri);
+    if (oldFd != ERROR) {
+        newFd = dup(oldFd);
+        if (newFd == ERROR) {
+            MEDIA_LOGE("OpenHapticFile: dup failed, file path: %{public}s", hapticUri.c_str());
+            return MSERR_OPEN_FILE_FAILED;
+        }
+    } else {
+        MEDIA_LOGW("OpenHapticFile: hapticUri is not new format.");
+
+        std::string absFilePath;
+        if (!PathToRealPath(hapticUri, absFilePath)) {
+            MEDIA_LOGE("file is not real path, file path: %{private}s", hapticUri.c_str());
+            return ERROR;
+        }
+        if (absFilePath.empty()) {
+            MEDIA_LOGE("Failed to obtain the canonical path for source path %{public}d %{private}s",
+                errno, hapticUri.c_str());
+            return ERROR;
+        }
+
+        newFd = open(hapticUri.c_str(), O_RDONLY);
+        if (newFd == ERROR) {
+            // open file failed, return.
+            MEDIA_LOGE("OpenHapticFile: open file failed, file path: %{public}s", hapticUri.c_str());
+            return MSERR_OPEN_FILE_FAILED;
+        }
+    }
+
+    vibratorFD_ = std::make_shared<VibratorFileDescription>();
+    CHECK_AND_RETURN_RET_LOG(vibratorFD_ != nullptr, ERROR, "vibratorFD_ is null");
+    vibratorPkg_ = std::make_shared<VibratorPackage>();
+    CHECK_AND_RETURN_RET_LOG(vibratorPkg_ != nullptr, ERROR, "vibratorPkg_ is null");
+
+    struct stat64 statbuf = { 0 };
+    if (fstat64(newFd, &statbuf) == 0) {
+        vibratorFD_->fd = newFd;
+        vibratorFD_->offset = 0;
+        vibratorFD_->length = statbuf.st_size;
+        return MSERR_OK;
+    } else {
+        close(newFd);
+        return MSERR_OPEN_FILE_FAILED;
+    }
+#endif
+    return MSERR_OK;
+}
+
 int32_t AudioHapticVibratorImpl::PreLoad(const HapticSource &hapticSource,
     const AudioStandard::StreamUsage &streamUsage)
 {
@@ -92,6 +166,10 @@ int32_t AudioHapticVibratorImpl::PreLoad(const HapticSource &hapticSource,
         hapticSource.hapticUri.c_str(), hapticSource.effectId.c_str(), streamUsage);
     streamUsage_ = streamUsage;
 #ifdef SUPPORT_VIBRATOR
+    if (audioHapticPlayer_.GetHapticsMode() == HapticsMode::HAPTICS_MODE_NONE) {
+        MEDIA_LOGI("The hapticdMopde value of audioHapticPlayer_ is NONE. No need to vibrate.");
+        return MSERR_OK;
+    }
     auto iterator = USAGE_MAP.find(streamUsage_);
     if (iterator != USAGE_MAP.end()) {
         vibratorUsage_ = iterator->second;
@@ -112,26 +190,13 @@ int32_t AudioHapticVibratorImpl::PreLoad(const HapticSource &hapticSource,
             return MSERR_UNSUPPORT_FILE;
         }
     }
-    int32_t fd = open(hapticSource.hapticUri.c_str(), O_RDONLY);
-    if (fd == -1) {
-        // open file failed, return.
-        return MSERR_OPEN_FILE_FAILED;
-    }
-    vibratorFD_ = std::make_shared<VibratorFileDescription>();
-    vibratorPkg_ = std::make_shared<VibratorPackage>();
 
-    struct stat64 statbuf = { 0 };
-    if (fstat64(fd, &statbuf) == 0) {
-        vibratorFD_->fd = fd;
-        vibratorFD_->offset = 0;
-        vibratorFD_->length = statbuf.st_size;
-    } else {
+    if (OpenHapticFile(hapticSource.hapticUri) != MSERR_OK) {
         return MSERR_OPEN_FILE_FAILED;
     }
 
     int32_t result = Sensors::PreProcess(*vibratorFD_, *vibratorPkg_);
     if (result != 0) {
-        MEDIA_LOGE("PreProcess: %{public}d", result);
         return MSERR_UNSUPPORT_FILE;
     }
 #endif
@@ -177,22 +242,40 @@ void AudioHapticVibratorImpl::ResetStopState()
 
 int32_t AudioHapticVibratorImpl::StartVibrate(const AudioLatencyMode &latencyMode)
 {
-    MEDIA_LOGD("StartVibrate: for latency mode %{public}d", latencyMode);
+    MEDIA_LOGI("StartVibrate: for latency mode %{public}d", latencyMode);
     int32_t result = MSERR_OK;
 #ifdef SUPPORT_VIBRATOR
+    if (audioHapticPlayer_.GetHapticsMode() == HapticsMode::HAPTICS_MODE_NONE) {
+        return result;
+    } else if (audioHapticPlayer_.GetHapticsMode() == HapticsMode::HAPTICS_MODE_NON_SYNC) {
+        return StartNonSyncVibration();
+    }
     if (latencyMode == AUDIO_LATENCY_MODE_NORMAL) {
         return StartVibrateForAVPlayer();
     } else if (latencyMode == AUDIO_LATENCY_MODE_FAST) {
         if (isSupportEffectId_) {
-            std::lock_guard<std::mutex> lock(vibrateMutex_);
-            (void)Sensors::SetUsage(vibratorUsage_);
-            result = Sensors::PlayPrimitiveEffect(hapticSource_.effectId.c_str(), vibrateIntensity_);
-            MEDIA_LOGD("StartVibrate effectId: %{public}s, result: %{public}d", hapticSource_.effectId.c_str(), result);
+            return StartVibrateWithEffect();
         } else {
             return StartVibrateForSoundPool();
         }
     } else {
         return MSERR_INVALID_OPERATION;
+    }
+#endif
+    return result;
+}
+
+int32_t AudioHapticVibratorImpl::StartVibrateWithEffect()
+{
+    int32_t result = MSERR_OK;
+#ifdef SUPPORT_VIBRATOR
+    std::lock_guard<std::mutex> lock(vibrateMutex_);
+    (void)Sensors::SetUsage(vibratorUsage_);
+    MEDIA_LOGI("PlayPrimitiveEffect with effectId: %{public}s", hapticSource_.effectId.c_str());
+    result = Sensors::PlayPrimitiveEffect(hapticSource_.effectId.c_str(), vibrateIntensity_);
+    if (result != 0) {
+        MEDIA_LOGE("Failed to PlayPrimitiveEffect with effectId: %{public}s, result: %{public}d",
+            hapticSource_.effectId.c_str(), result);
     }
 #endif
     return result;
@@ -221,9 +304,66 @@ int32_t AudioHapticVibratorImpl::StartVibrateForSoundPool()
         CHECK_AND_RETURN_RET_LOG(!isStopped_, result,
             "StartVibrateForSoundPool: Stop() is call when waiting");
         (void)Sensors::SetUsage(vibratorUsage_);
+        MEDIA_LOGI("PlayPattern for SoundPool.");
         result = Sensors::PlayPattern(vibratorPkg_->patterns[i]);
         if (result != 0) {
-            MEDIA_LOGE("StartVibrateForSoundPool: PlayPattern error %{public}d", result);
+            MEDIA_LOGE("Failed to PlayPattern for SoundPool. Error %{public}d", result);
+            return result;
+        }
+    }
+#endif
+    return result;
+}
+
+int32_t AudioHapticVibratorImpl::RunVibrationPatterns(std::unique_lock<std::mutex> &lock)
+{
+    int32_t result = MSERR_OK;
+#ifdef SUPPORT_VIBRATOR
+    int32_t vibrateTime = 0; // record the pattern time which has been played
+    for (int32_t i = 0; i < vibratorPkg_->patternNum; ++i) {
+        int32_t patternTime = vibratorPkg_->patterns[i].time - vibrateTime; // calculate the time of single pattern
+        vibrateTime = vibratorPkg_->patterns[i].time;
+        (void)vibrateCV_.wait_for(lock, std::chrono::milliseconds(patternTime),
+            [this]() { return isStopped_; });
+        CHECK_AND_RETURN_RET_LOG(!isStopped_, result,
+            "RunVibrationPatterns: Stop() is call when waiting");
+        (void)Sensors::SetUsage(vibratorUsage_);
+        MEDIA_LOGI("PlayPattern for NonSyncVibration");
+        result = Sensors::PlayPattern(vibratorPkg_->patterns[i]);
+        if (result != 0) {
+            MEDIA_LOGE("Failed to PlayPattern for NonSyncVibration. Error %{public}d", result);
+            return result;
+        }
+        if (i == vibratorPkg_->patternNum - 1) {
+            int32_t lastPatternDuration = vibratorPkg_->patterns[i].patternDuration;
+            (void)vibrateCV_.wait_for(lock, std::chrono::milliseconds(lastPatternDuration),
+                [this]() { return isStopped_; });
+            CHECK_AND_RETURN_RET_LOG(!isStopped_, result,
+                "RunVibrationPatterns: Stop() is call when waiting");
+        }
+    }
+#endif
+    return result;
+}
+
+int32_t AudioHapticVibratorImpl::StartNonSyncVibration()
+{
+    std::unique_lock<std::mutex> lock(vibrateMutex_);
+    if (isStopped_) {
+        MEDIA_LOGW("Vibrator has been stopped. Return ok immediately");
+        return MSERR_OK;
+    }
+
+    int32_t result = MSERR_OK;
+#ifdef SUPPORT_VIBRATOR
+    if (vibratorPkg_ == nullptr || vibratorFD_ == nullptr) {
+        MEDIA_LOGE("Vibration source file is not prepared. Can not start vibrating");
+        return MSERR_INVALID_OPERATION;
+    }
+    while (!isStopped_) {
+        result = RunVibrationPatterns(lock);
+        if (result != MSERR_OK) {
+            MEDIA_LOGI("StartNonSyncVibration: RunVibrationPatterns fail.");
             return result;
         }
     }
@@ -254,9 +394,10 @@ int32_t AudioHapticVibratorImpl::StartVibrateForAVPlayer()
         CHECK_AND_RETURN_RET_LOG(!isStopped_, result,
             "StartVibrateForAVPlayer: Stop() is call when waiting");
         (void)Sensors::SetUsage(vibratorUsage_);
+        MEDIA_LOGI("PlayPattern for AVPlayer successfully!");
         result = Sensors::PlayPattern(vibratorPkg_->patterns[i]);
         CHECK_AND_RETURN_RET_LOG(result == 0, result,
-            "StartVibrateForAVPlayer: PlayPattern error %{public}d", result);
+            "Failed to PlayPattern for AVPlayer. Error %{public}d", result);
 
         // get the audio time every second and handle the delay time
         if (i + 1 >= vibratorPkg_->patternNum) {

@@ -48,14 +48,25 @@ public:
         const std::shared_ptr<RingtonePlayerInterruptCallback> &interruptCallback) override;
 
 private:
-    void InitPlayer(std::string &audioUri);
+    void InitPlayer(std::string &audioUri, ToneHapticsSettings &settings, AudioHapticPlayerOptions options);
+    std::string GetNewHapticUriForAudioUri(const std::string &audioUri, const std::string &ringtonePath,
+        const std::string& hapticsPath);
+    std::string GetNewHapticUriForAudioUri(const std::string &audioUri);
     std::string GetHapticUriForAudioUri(const std::string &audioUri);
     bool IsFileExisting(const std::string &fileUri);
     std::string ChangeUri(const std::string &audioUri);
+    ToneHapticsType ConvertToToneHapticsType(RingtoneType type);
+    HapticsMode ConvertToHapticsMode(ToneHapticsMode toneHapticsMode);
+    ToneHapticsSettings GetHapticSettings(std::string &audioUri, bool &muteHaptics);
+    std::string ChangeHapticsUri(const std::string &hapticsUri);
+    bool InitDataShareHelper();
+    void ReleaseDataShareHelper();
+    int32_t RegisterSource(const std::string &audioUri, const std::string &hapticUri);
 
     float volume_ = 1.0f;
     bool loop_ = false;
     std::string configuredUri_ = "";
+    ToneHapticsSettings configuredHaptcisSettings_;
     std::shared_ptr<AudioHapticManager> audioHapticManager_ = nullptr;
     int32_t sourceId_ = -1;
     std::shared_ptr<AudioHapticPlayer> player_ = nullptr;
@@ -65,6 +76,7 @@ private:
     SystemSoundManagerImpl &systemSoundMgr_;
     RingtoneType type_ = RINGTONE_TYPE_SIM_CARD_0;
     RingtoneState ringtoneState_ = STATE_NEW;
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper_ = nullptr;
 
     std::mutex playerMutex_;
 };

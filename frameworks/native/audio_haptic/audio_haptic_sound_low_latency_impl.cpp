@@ -31,9 +31,10 @@ const int32_t MAX_SOUND_POOL_STREAMS = 1; // ensure that only one stream for sou
 const int32_t LOAD_WAIT_SECONDS = 2;
 
 AudioHapticSoundLowLatencyImpl::AudioHapticSoundLowLatencyImpl(const std::string &audioUri, const bool &muteAudio,
-    const AudioStandard::StreamUsage &streamUsage)
+    const AudioStandard::StreamUsage &streamUsage, const bool &parallelPlayFlag)
     : audioUri_(audioUri),
       muteAudio_(muteAudio),
+      parallelPlayFlag_(parallelPlayFlag),
       streamUsage_(streamUsage)
 {
 }
@@ -71,6 +72,35 @@ int32_t AudioHapticSoundLowLatencyImpl::LoadSoundPoolPlayer()
     return MSERR_OK;
 }
 
+int32_t AudioHapticSoundLowLatencyImpl::OpenAudioUri(const std::string &audioUri)
+{
+    if (fileDes_ != -1) {
+        (void)close(fileDes_);
+        fileDes_ = -1;
+    }
+
+    const std::string fdHead = "fd://";
+    if (audioUri_.find(fdHead) != std::string::npos) {
+        int32_t fd = atoi(audioUri_.substr(fdHead.size()).c_str());
+        CHECK_AND_RETURN_RET_LOG(fd > 0, MSERR_OPEN_FILE_FAILED, "GetAudioUriFd: Failed to extract fd for avplayer.");
+        fileDes_ = dup(fd);
+        MEDIA_LOGI("fileDes_ == %{public}d", fileDes_);
+    } else {
+        char realPathRes[PATH_MAX + 1] = {'\0'};
+        if (audioUri.size() >= PATH_MAX || realpath(audioUri_.c_str(), realPathRes) == nullptr) {
+            MEDIA_LOGE("Invalid file path length");
+            return MSERR_UNSUPPORT_FILE;
+        }
+        std::string realPathStr(realPathRes);
+        fileDes_ = open(realPathStr.c_str(), O_RDONLY);
+        if (fileDes_ == -1) {
+            MEDIA_LOGE("GetAudioUriFd: Failed to open the audio uri for sound pool.");
+            return MSERR_OPEN_FILE_FAILED;
+        }
+    }
+    return fileDes_ != -1 ? MSERR_OK : MSERR_OPEN_FILE_FAILED;
+}
+
 int32_t AudioHapticSoundLowLatencyImpl::PrepareSound()
 {
     MEDIA_LOGI("Enter PrepareSound with sound pool");
@@ -85,20 +115,8 @@ int32_t AudioHapticSoundLowLatencyImpl::PrepareSound()
     }
 
     MEDIA_LOGI("Set audio source to soundpool. audioUri [%{public}s]", audioUri_.c_str());
-    char realPathRes[PATH_MAX + 1] = {'\0'};
-    CHECK_AND_RETURN_RET_LOG((strlen(audioUri_.c_str()) < PATH_MAX) &&
-        (realpath(audioUri_.c_str(), realPathRes) != nullptr), MSERR_UNSUPPORT_FILE, "Invalid file path length");
-    std::string realPathStr(realPathRes);
-
-    if (fileDes_ != -1) {
-        (void)close(fileDes_);
-        fileDes_ = -1;
-    }
-    fileDes_ = open(realPathStr.c_str(), O_RDONLY);
-    if (fileDes_ == -1) {
-        MEDIA_LOGE("Prepare: Failed to open the audio uri for sound pool.");
-        return MSERR_OPEN_FILE_FAILED;
-    }
+    result = OpenAudioUri(audioUri_);
+    CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, result, "Failed to get audio uri fd.");
     std::string uri = "fd://" + std::to_string(fileDes_);
 
     int32_t soundID = soundPoolPlayer_->Load(uri);
@@ -140,7 +158,7 @@ int32_t AudioHapticSoundLowLatencyImpl::StartSound()
         .leftVolume = volume_ * (muteAudio_ ? 0 : 1),
         .rightVolume = volume_ * (muteAudio_ ? 0 : 1),
         .priority = 0,
-        .parallelPlayFlag = false,
+        .parallelPlayFlag = parallelPlayFlag_,
     };
     streamID_ = soundPoolPlayer_->Play(soundID_, playParams);
     playerState_ = AudioHapticPlayerState::STATE_RUNNING;

@@ -52,6 +52,14 @@ enum AudioLatencyMode {
 struct AudioHapticPlayerOptions {
     bool muteAudio;
     bool muteHaptics;
+    bool parallelPlayFlag = false;
+};
+
+enum HapticsMode {
+    HAPTICS_MODE_INVALID = -1,
+    HAPTICS_MODE_NONE = 0,
+    HAPTICS_MODE_SYNC = 1,
+    HAPTICS_MODE_NON_SYNC = 2,
 };
 
 struct HapticSource {
@@ -103,6 +111,10 @@ public:
         const std::shared_ptr<AudioHapticPlayerCallback> &playerCallback) = 0;
 
     virtual int32_t GetAudioCurrentTime() = 0;
+
+    virtual HapticsMode GetHapticsMode() const = 0;
+
+    virtual void SetHapticsMode(HapticsMode hapticsMode) = 0;
 };
 
 class AudioHapticPlayerCallback {

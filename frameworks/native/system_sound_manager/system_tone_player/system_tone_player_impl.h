@@ -36,6 +36,11 @@ public:
     int32_t Start(const SystemToneOptions &systemToneOptions) override;
     int32_t Stop(const int32_t &streamID) override;
     int32_t Release() override;
+    int32_t SetAudioVolume(float volume) override;
+    int32_t GetAudioVolume(float &recvValue) override;
+    int32_t GetSupportHapticsFeatures(std::vector<ToneHapticsFeature> &recvFeatures) override;
+    int32_t SetHapticsFeature(ToneHapticsFeature feature) override;
+    int32_t GetHapticsFeature(ToneHapticsFeature &feature) override;
 
     void NotifyEndofStreamEvent(const int32_t &streamId);
     void NotifyInterruptEvent(const int32_t &streamId, const AudioStandard::InterruptEvent &interruptEvent);
@@ -45,17 +50,30 @@ private:
     int32_t CreatePlayerWithOptions(const AudioHapticPlayerOptions &options);
     void DeletePlayer(const int32_t &streamId);
     void DeleteAllPlayer();
-    std::string GetHapticUriForAudioUri(const std::string &audioUri);
-    bool IsFileExisting(const std::string &fileUri);
+    std::string GetNewHapticUriForAudioUri(const std::string &audioUri, const std::string &ringtonePath,
+        const std::string& hapticsPath);
+    void GetNewHapticUriForAudioUri(const std::string &audioUri,
+        std::map<ToneHapticsFeature, std::string> &hapticsUriMap);
+    void GetHapticUriForAudioUri(const std::string &audioUri, std::map<ToneHapticsFeature, std::string> &hapticsUris);
     std::string GetDefaultNonSyncHapticsPath();
     SystemToneOptions GetOptionsFromRingerMode();
-    void UpdateStreamId();
     std::string ChangeUri(const std::string &uri);
+    void InitHapticsSourceIds();
+    void ReleaseHapticsSourceIds();
+    ToneHapticsType ConvertToToneHapticsType(SystemToneType type);
+    HapticsMode ConvertToHapticsMode(ToneHapticsMode toneHapticsMode);
+    void GetNewHapticSettings(const std::string &audioUri, std::map<ToneHapticsFeature, std::string> &hapticsUris);
+    std::string ChangeHapticsUri(const std::string &hapticsUri);
+    void GetCurrentHapticSettings(const std::string &audioUri, std::map<ToneHapticsFeature, std::string> &hapticUriMap);
+    bool IsSameHapticMaps(const std::map<ToneHapticsFeature, std::string> &hapticUriMap);
+    void UpdateStreamId();
+    bool InitDataShareHelper();
+    void ReleaseDataShareHelper();
+    int32_t RegisterSource(const std::string &audioUri, const std::string &hapticUri);
 
     std::shared_ptr<AudioHapticManager> audioHapticManager_ = nullptr;
     std::unordered_map<int32_t, std::shared_ptr<AudioHapticPlayer>> playerMap_;
     std::unordered_map<int32_t, std::shared_ptr<SystemTonePlayerCallback>> callbackMap_;
-    int32_t sourceId_ = -1;
     int32_t streamId_ = 0;
     std::string configuredUri_ = "";
     std::string defaultNonSyncHapticUri_ = "";
@@ -63,8 +81,14 @@ private:
     SystemSoundManagerImpl &systemSoundMgr_;
     SystemToneType systemToneType_;
     SystemToneState systemToneState_ = SystemToneState::STATE_INVALID;
-    std::string hapticUri_ = "";
+    float volume_ = SYS_TONE_PLAYER_MAX_VOLUME;
+    ToneHapticsFeature hapticsFeature_ = ToneHapticsFeature::STANDARD;
+    std::map<ToneHapticsFeature, int32_t> sourceIds_;
+    std::vector<ToneHapticsFeature> supportedHapticsFeatures_;
+    HapticsMode hapticsMode_ = HapticsMode::HAPTICS_MODE_INVALID;
+    std::map<ToneHapticsFeature, std::string> hapticUriMap_;
     bool isHapticUriEmpty_ = false;
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper_ = nullptr;
 
     std::mutex systemTonePlayerMutex_;
 };

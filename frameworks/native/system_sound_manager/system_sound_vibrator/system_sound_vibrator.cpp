@@ -15,13 +15,13 @@
 
 #include "system_sound_vibrator.h"
 
-#ifdef SUPPORT_VIBRATOR
-#include "vibrator_agent.h"
-#endif
-
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
+
+#ifdef SUPPORT_VIBRATOR
+#include "vibrator_agent.h"
+#endif
 
 #include "media_errors.h"
 #include "system_sound_log.h"
@@ -79,7 +79,11 @@ int32_t SystemSoundVibrator::StartVibratorForSystemTone(const std::string &hapti
     int32_t fd = ExtractFd(hapticUri);
     if (fd == -1) {
         MEDIA_LOGI("hapticUri is not fd. Try to open it");
-        fd = open(hapticUri.c_str(), O_RDONLY);
+        char realPathRes[PATH_MAX + 1] = {'\0'};
+        CHECK_AND_RETURN_RET_LOG((strlen(hapticUri.c_str()) < PATH_MAX) &&
+            (realpath(hapticUri.c_str(), realPathRes) != nullptr), MSERR_OPEN_FILE_FAILED, "Invalid file path length");
+        std::string realPathStr(realPathRes);
+        fd = open(realPathStr.c_str(), O_RDONLY);
         if (fd == -1) {
             MEDIA_LOGE("Failed to open hapticUri!");
             return MSERR_OPEN_FILE_FAILED;
@@ -89,6 +93,7 @@ int32_t SystemSoundVibrator::StartVibratorForSystemTone(const std::string &hapti
     struct stat64 statbuf = { 0 };
     if (fstat64(fd, &statbuf) != 0) {
         MEDIA_LOGE("Failed to open fd and get size.");
+        close(fd);
         return MSERR_OPEN_FILE_FAILED;
     }
     Sensors::SetUsage(USAGE_NOTIFICATION);

@@ -13,18 +13,29 @@
  * limitations under the License.
  */
 
-#ifndef MEDIA_SOUND_MANAGER_UNIT_TEST_H
-#define MEDIA_SOUND_MANAGER_UNIT_TEST_H
-#include "../../../system_sound_manager_impl.h"
+#ifndef RINGTONE_PLAYER_UNIT_TEST_H
+#define RINGTONE_PLAYER_UNIT_TEST_H
 #include <gtest/gtest.h>
+#include "ringtone_player_impl.h"
 #include "context_impl.h"
 #include "tone_attrs.h"
 
 namespace OHOS {
 namespace Media {
-const std::string RING_TONE = "ring_tone";
-const std::string SYSTEM_TONE = "system_tone";
-class SystemSoundManagerUnitTest : public testing::Test {
+
+class RingtonePlayerInterruptCallbackTest : public RingtonePlayerInterruptCallback {
+public:
+    virtual ~RingtonePlayerInterruptCallbackTest() = default;
+    /**
+     * Called when an interrupt is received.
+     *
+     * @param interruptEvent Indicates the InterruptEvent information needed by client.
+     * For details, refer InterruptEventInternal struct in audio_info.h
+     */
+    virtual void OnInterrupt(const AudioStandard::InterruptEvent &interruptEvent) {};
+};
+
+class RingtonePlayerUnitTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
@@ -35,4 +46,4 @@ public:
 } // namespace Media
 } // namespace OHOS
 
-#endif // MEDIA_SOUND_MANAGER_UNIT_TEST_H
+#endif // RINGTONE_PLAYER_UNIT_TEST_H
