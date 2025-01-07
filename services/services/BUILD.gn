@@ -96,9 +96,6 @@ config("media_service_config") {
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
-  if (player_framework_support_screen_capture_stopbycall) {
-    defines += [ "SUPPORT_CALL" ]
-  }
 }
 
 ohos_shared_library("media_service") {
@@ -225,9 +222,7 @@ ohos_shared_library("media_service") {
     "audio_framework:audio_client",
     "av_codec:av_codec_client",
     "c_utils:utils",
-    "call_manager:tel_call_manager_api",
     "common_event_service:cesfwk_innerkits",
-    "core_service:tel_core_service_api",
     "drivers_interface_camera:metadata",
     "graphic_2d:librender_service_base",
     "hdf_core:libhdi",
@@ -251,11 +246,18 @@ ohos_shared_library("media_service") {
     "resource_schedule_service:ressched_client",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "state_registry:tel_state_registry_api",
   ]
 
   if (player_framework_support_video) {
     external_deps += [ "graphic_surface:surface" ]
+  }
+
+  if (player_framework_support_screen_capture_stopbycall) {
+    external_deps += [
+      "call_manager:tel_call_manager_api",
+      "core_service:tel_core_service_api",
+      "state_registry:tel_state_registry_api",
+    ]
   }
 
   if (player_framework_support_screen_capture) {

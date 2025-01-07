@@ -1491,8 +1491,10 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
     MediaTrace trace("ScreenCaptureServer::StartScreenCaptureInner");
 #ifdef SUPPORT_CALL
     int32_t ret = RegisterServerCallbacks();
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "RegisterServerCallbacks failed");
+#else
+    int32_t ret = 0;
 #endif
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "RegisterServerCallbacks failed");
 
     ret = CheckAllParams();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartScreenCaptureInner failed, invalid params");
