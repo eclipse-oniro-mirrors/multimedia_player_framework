@@ -23,6 +23,7 @@
 #include "ringtone_player.h"
 #include "system_tone_player.h"
 #include "tone_attrs.h"
+#include "tone_haptics_attrs.h"
 
 namespace OHOS {
 namespace Media {
@@ -37,6 +38,14 @@ enum SystemToneType {
     SYSTEM_TONE_TYPE_SIM_CARD_0 = 0,
     SYSTEM_TONE_TYPE_SIM_CARD_1 = 1,
     SYSTEM_TONE_TYPE_NOTIFICATION = 32,
+};
+
+enum ToneHapticsType {
+    CALL_SIM_CARD_0 = 0,
+    CALL_SIM_CARD_1 = 1,
+    TEXT_MESSAGE_SIM_CARD_0 = 20,
+    TEXT_MESSAGE_SIM_CARD_1 = 21,
+    NOTIFICATION = 40,
 };
 
 class SystemSoundManager {
@@ -267,6 +276,69 @@ public:
      */
     virtual int32_t RemoveCustomizedTone(const std::shared_ptr<AbilityRuntime::Context> &context,
         const std::string &uri) = 0;
+
+    /**
+     * @brief Returns the tone haptics settings.
+     *
+     * @param context Indicates the Context object on OHOS.
+     * @param toneHapticsType Indicates the tone type.
+     * @param settings tone haptics settings.
+     * @return Returns {@link MSERR_OK} if get the tone haptics settings successfully;
+     * returns an error code defined in {@link media_errors.h} otherwise.
+     * @since 12
+     */
+    virtual int32_t GetToneHapticsSettings(const std::shared_ptr<AbilityRuntime::Context> &context,
+        ToneHapticsType toneHapticsType, ToneHapticsSettings &settings) = 0;
+
+     /**
+     * @brief  Sets tone haptics of the current tone.
+     *
+     * @param context Indicates the Context object on OHOS.
+     * @param toneHapticsType Indicates which haptics to be set for tone.
+     * @param settings Indicates the haptics settings.
+     * @return Returns {@link MSERR_OK} if set the tone haptics successfully;
+     * returns an error code defined in {@link media_errors.h} otherwise.
+     * @since 12
+     */
+    virtual int32_t SetToneHapticsSettings(const std::shared_ptr<AbilityRuntime::Context> &context,
+        ToneHapticsType toneHapticsType, const ToneHapticsSettings &settings) = 0;
+
+    /**
+     * @brief Returns the list of tone haptics attributes.
+     *
+     * @param context Indicates the Context object on OHOS.
+     * @param isSynced Indicates the haptics is synced.
+     * @param toneHapticsAttrsArray the list of tone haptics attrs.
+     * @return Returns {@link MSERR_OK} if set the tone haptics successfully;
+     * returns an error code defined in {@link media_errors.h} otherwise.
+     * @since 12
+     */
+    virtual int32_t GetToneHapticsList(const std::shared_ptr<AbilityRuntime::Context> &context,
+        bool isSynced, std::vector<std::shared_ptr<ToneHapticsAttrs>> &toneHapticsAttrsArray) = 0;
+
+    /**
+     * @brief Returns the haptics attributes synced with tone.
+     *
+     * @param context Indicates the Context object on OHOS.
+     * @param toneUri Get the ringtone uri of the sync haptics.
+     * @param toneHapticsAttrsthe haptics attrs synced with tone.
+     * @return Returns {@link MSERR_OK} if set the tone haptics successfully;
+     * returns an error code defined in {@link media_errors.h} otherwise.
+     * @since 12
+     */
+    virtual int32_t GetHapticsAttrsSyncedWithTone(const std::shared_ptr<AbilityRuntime::Context> &context,
+        const std::string &toneUri, std::shared_ptr<ToneHapticsAttrs> &toneHapticsAttrs) = 0;
+
+    /**
+     * @brief Open the tone haptics file.
+     *
+     * @param context Indicates the Context object on OHOS.
+     * @param hapticsUri Uri of haptics to open.
+     * @return Returns the fd of haptics.
+     * @since 12
+     */
+    virtual int32_t OpenToneHaptics(const std::shared_ptr<AbilityRuntime::Context> &context,
+        const std::string &hapticsUri) = 0;
 };
 
 class __attribute__((visibility("default"))) SystemSoundManagerFactory {

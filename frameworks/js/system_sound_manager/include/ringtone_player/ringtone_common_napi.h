@@ -35,6 +35,7 @@ const int32_t  NAPI_ERR_INVALID_PARAM = 6800101;
 const int32_t  NAPI_ERR_NO_MEMORY = 6800102;
 const int32_t  NAPI_ERR_UNSUPPORTED = 6800104;
 const int32_t  NAPI_ERR_SYSTEM = 6800301;
+const int32_t  NAPI_ERR_UNSUPPORTED_OPERATION = 20700003;
 
 const std::string NAPI_ERR_NO_PERMISSION_INFO = "Permission denied";
 const std::string NAPI_ERR_PERMISSION_DENIED_INFO = "Caller is not a system application";
@@ -45,6 +46,7 @@ const std::string NAPI_ERR_IO_ERROR_INFO = "I/O error";
 const std::string NAPI_ERR_INVALID_PARAM_INFO = "invalid parameter";
 const std::string NAPI_ERR_NO_MEMORY_INFO = "allocate memory failed";
 const std::string NAPI_ERR_SYSTEM_INFO = "system error";
+const std::string NAPI_ERR_UNSUPPORTED_OPERATION_INFO = "Unsupported operation";
 
 class RingtoneCommonNapi {
 public:

@@ -40,6 +40,8 @@ public:
     int32_t SetLoop(bool loop) override;
     int32_t SetAudioHapticPlayerCallback(const std::shared_ptr<AudioHapticPlayerCallback> &playerCallback) override;
     int32_t GetAudioCurrentTime() override;
+    HapticsMode GetHapticsMode() const override;
+    void SetHapticsMode(HapticsMode hapticsMode) override;
 
     void SetPlayerParam(const AudioHapticPlayerParam &param);
     void LoadPlayer();
@@ -64,12 +66,14 @@ private:
     AudioStandard::StreamUsage streamUsage_ = AudioStandard::STREAM_USAGE_UNKNOWN;
     bool muteAudio_;
     bool muteHaptic_;
+    bool parallelPlayFlag_ = false;
     std::string audioUri_;
     HapticSource hapticSource_;
     float volume_ = 1.0f;
     bool loop_ = false;
     AudioHapticPlayerState playerState_ = AudioHapticPlayerState::STATE_INVALID;
     std::mutex audioHapticPlayerLock_;
+    HapticsMode hapticsMode_ = HapticsMode::HAPTICS_MODE_INVALID;
 
     // var for callback
     std::weak_ptr<AudioHapticPlayerCallback> audioHapticPlayerCallback_;

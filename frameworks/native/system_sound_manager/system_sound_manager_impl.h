@@ -28,6 +28,8 @@
 #include "system_ability_definition.h"
 #include "ringtone_db_const.h"
 #include "ringtone_asset.h"
+#include "simcard_setting_asset.h"
+#include "vibrate_asset.h"
 #include "ringtone_fetch_result.h"
 #include "iservice_registry.h"
 #include <unistd.h>
@@ -41,6 +43,11 @@
 namespace OHOS {
 namespace Media {
 class RingerModeCallbackImpl;
+
+enum HapticsStyle {
+    HAPTICS_STYLE_STANDARD = 1,
+    HAPTICS_STYLE_GENTLE,
+};
 
 class SystemSoundManagerImpl : public SystemSoundManager {
 public:
@@ -66,7 +73,7 @@ public:
         SystemToneType systemToneType) override;
     std::shared_ptr<SystemTonePlayer> GetSystemTonePlayer(const std::shared_ptr<AbilityRuntime::Context> &context,
         SystemToneType systemToneType) override;
-    
+
     std::shared_ptr<ToneAttrs> GetDefaultRingtoneAttrs(const std::shared_ptr<AbilityRuntime::Context> &context,
         RingtoneType ringtoneType) override;
     std::vector<std::shared_ptr<ToneAttrs>> GetRingtoneAttrList(const std::shared_ptr<AbilityRuntime::Context> &context,
@@ -94,10 +101,34 @@ public:
         const std::string &uri) override;
     std::string GetRingtoneTitle(const std::string &ringtoneUri);
 
+    int32_t GetToneHapticsSettings(const std::shared_ptr<AbilityRuntime::Context> &context,
+        ToneHapticsType toneHapticsType, ToneHapticsSettings &settings) override;
+    int32_t SetToneHapticsSettings(const std::shared_ptr<AbilityRuntime::Context> &context,
+        ToneHapticsType toneHapticsType, const ToneHapticsSettings &settings) override;
+    int32_t GetToneHapticsList(const std::shared_ptr<AbilityRuntime::Context> &context,
+        bool isSynced, std::vector<std::shared_ptr<ToneHapticsAttrs>> &toneHapticsAttrsArray) override;
+    int32_t GetHapticsAttrsSyncedWithTone(const std::shared_ptr<AbilityRuntime::Context> &context,
+        const std::string &toneUri, std::shared_ptr<ToneHapticsAttrs> &toneHapticsAttrs) override;
+    int32_t OpenToneHaptics(const std::shared_ptr<AbilityRuntime::Context> &context,
+        const std::string &hapticsUri) override;
+
+    std::string GetHapticsUriByStyle(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
+        const std::string &standardHapticsUri, HapticsStyle hapticsStyle);
+    int32_t GetToneHapticsSettings(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
+        const std::string &toneUri, ToneHapticsType toneHapticsType, ToneHapticsSettings &settings);
+    int32_t GetHapticsAttrsSyncedWithTone(const std::string &toneUri,
+        std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
+        std::shared_ptr<ToneHapticsAttrs> &toneHapticsAttrs);
+    int32_t SetToneHapticsSettings(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
+        const std::string &toneUri, ToneHapticsType toneHapticsType, const ToneHapticsSettings &settings);
+    bool CheckVibrateSwitchStatus();
+
 private:
     void InitDefaultUriMap();
     void InitDefaultRingtoneUriMap(const std::string &ringtoneJsonPath);
     void InitDefaultSystemToneUriMap(const std::string &systemToneJsonPath);
+    void InitDefaultToneHapticsMap();
+    void ReadDefaultToneHaptics(const char *paramName, ToneHapticsType toneHapticsType);
     std::string GetFullPath(const std::string &originalUri);
     std::string GetJsonValue(const std::string &jsonPath);
 
@@ -128,16 +159,52 @@ private:
     int32_t RemoveSourceTypeForSystemTone(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
         SystemToneType systemToneType, SourceType sourceType);
 
-    bool isRingtoneTypeValid(RingtoneType ringtongType);
-    bool isSystemToneTypeValid(SystemToneType systemToneType);
+    bool ConvertToRingtoneType(ToneHapticsType toneHapticsType, RingtoneType &ringtoneType);
+    bool ConvertToSystemToneType(ToneHapticsType toneHapticsType, SystemToneType &systemToneType);
+    std::string ConvertToHapticsFileName(const std::string &fileName);
+    ToneHapticsMode IntToToneHapticsMode(int32_t value);
+    std::string GetCurrentToneUri(const std::shared_ptr<AbilityRuntime::Context> &context,
+        ToneHapticsType toneHapticsType);
+    std::unique_ptr<SimcardSettingAsset> GetSimcardSettingAssetByToneHapticsType(
+        std::shared_ptr<DataShare::DataShareHelper> dataShareHelper, ToneHapticsType toneHapticsType);
+
+    std::string GetToneSyncedHapticsUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
+        const std::string &toneUri);
+    std::string GetDefaultNonSyncedHapticsUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
+        ToneHapticsType toneHapticsType);
+    std::string GetFirstNonSyncedHapticsUri();
+    int32_t GetDefaultToneHapticsSettings(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
+        const std::string &currentToneUri, ToneHapticsType toneHapticsType, ToneHapticsSettings &settings);
+
+    int32_t UpdateToneHapticsSettings(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
+        const std::string &toneUri, ToneHapticsType toneHapticsType, const ToneHapticsSettings &settings);
+    bool GetVibrateTypeByStyle(int standardVibrateType, HapticsStyle hapticsStyle, int &vibrateType);
+    std::unique_ptr<RingtoneAsset> IsPresetRingtone(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
+        const std::string &toneUri);
+    int GetStandardVibrateType(int toneType);
+
+    bool IsRingtoneTypeValid(RingtoneType ringtongType);
+    bool IsSystemToneTypeValid(SystemToneType systemToneType);
+    bool IsSystemToneType(const std::unique_ptr<RingtoneAsset> &ringtoneAsset,
+        const SystemToneType &systemToneType);
+    bool IsToneHapticsTypeValid(ToneHapticsType toneHapticsType);
+
+    static int32_t GetCurrentUserId();
+    static Uri AssembleUri(const std::string &key, std::string tableType = "");
+    static std::shared_ptr<DataShare::DataShareHelper> CreateDataShareHelperProxy(std::string tableType = "");
+    int32_t GetStringValue(const std::string &key, std::string &value, std::string tableType = "");
 
     std::string systemSoundPath_ = "";
     std::mutex uriMutex_;
     std::mutex playerMutex_;
+#ifdef SUPPORT_VIBRATOR
+    std::mutex toneHapticsMutex_;
+#endif
     std::string mimeType_ = "";
     std::string displayName_ = "";
     std::unordered_map<RingtoneType, std::string> defaultRingtoneUriMap_;
     std::unordered_map<SystemToneType, std::string> defaultSystemToneUriMap_;
+    std::unordered_map<ToneHapticsType, std::string> defaultToneHapticsUriMap_;
     std::shared_ptr<ToneAttrs> ringtoneAttrs_;
     std::shared_ptr<ToneAttrs> systemtoneAttrs_;
     std::shared_ptr<ToneAttrs> alarmtoneAttrs_;
