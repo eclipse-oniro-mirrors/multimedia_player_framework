@@ -99,8 +99,6 @@ HWTEST_F(HiplayerCallbackLooperUnitTest, DoReportMediaProgress_002, TestSize.Lev
 HWTEST_F(HiplayerCallbackLooperUnitTest, StartReportMediaProgress_001, TestSize.Level0)
 {
     int32_t updateIntervalMs = 0;
-    // callback_->StartReportMediaProgress(updateIntervalMs);
-    // EXPECT_EQ(callback_->reportMediaProgress_, true);
     callback_->reportMediaProgress_ = true;
     callback_->StartReportMediaProgress(updateIntervalMs);
     EXPECT_EQ(callback_->reportMediaProgress_, true);

@@ -68,8 +68,8 @@ ohos_unittest("hiplayer_impl_unit_test") {
     "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/player/seek_agent.cpp",
     "$MEDIA_PLAYER_ROOT_DIR/services/utils/media_dfx.cpp",
     "$MEDIA_PLAYER_ROOT_DIR/services/utils/media_utils.cpp",
-    "hiplayer_impl_unit_test.cpp",
     "hiplayer_callback_looper_unit_test.cpp",
+    "hiplayer_impl_unit_test.cpp",
   ]
 
   configs = [

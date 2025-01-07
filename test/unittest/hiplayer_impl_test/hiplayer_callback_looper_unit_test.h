@@ -20,7 +20,6 @@
 #include "hiplayer_callback_looper.h"
 #include <gmock/gmock.h>
 #include "osal/utils/steady_clock.h"
-// #include "mock/mock_taskinner.h"
 #include "mock/mock_iplayer_engine.h"
 
 namespace OHOS {
