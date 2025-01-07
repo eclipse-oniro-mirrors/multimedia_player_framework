@@ -1411,14 +1411,9 @@ napi_value AVPlayerNapi::JsSetPlaybackStrategy(napi_env env, napi_callback_info 
     } else {
         AVPlayStrategyTmp strategyTmp;
         (void)CommonNapi::GetPlayStrategy(env, args[0], strategyTmp);
-        if (strategyTmp.mutedMediaType != MediaType::MEDIA_TYPE_AUD &&
-            strategyTmp.mutedMediaType != MediaType::MEDIA_TYPE_MAX_COUNT) {
-            promiseCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "only support mute media type audio now");
-        } else {
-            AVPlayStrategy strategy;
-            jsPlayer->GetAVPlayStrategyFromStrategyTmp(strategy, strategyTmp);
-            promiseCtx->asyncTask = jsPlayer->SetPlaybackStrategyTask(strategy);
-        }
+        AVPlayStrategy strategy;
+        jsPlayer->GetAVPlayStrategyFromStrategyTmp(strategy, strategyTmp);
+        promiseCtx->asyncTask = jsPlayer->SetPlaybackStrategyTask(strategy);
     }
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "JsSetPlaybackStrategy", NAPI_AUTO_LENGTH, &resource);
@@ -1652,12 +1647,7 @@ napi_value AVPlayerNapi::JsSetMediaSource(napi_env env, napi_callback_info info)
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "strategy type should be PlaybackStrategy.");
         return result;
     }
-    strategy.preferredBufferDuration = strategyTmp.preferredBufferDuration;
-    strategy.preferredHeight = strategyTmp.preferredHeight;
-    strategy.preferredWidth = strategyTmp.preferredWidth;
-    strategy.preferredHdr = strategyTmp.preferredHdr;
-    strategy.preferredAudioLanguage = strategyTmp.preferredAudioLanguage;
-    strategy.preferredSubtitleLanguage = strategyTmp.preferredSubtitleLanguage;
+    jsPlayer->GetAVPlayStrategyFromStrategyTmp(strategy, strategyTmp);
     auto task = std::make_shared<TaskHandler<void>>([jsPlayer, mediaSource, strategy]() {
         if (jsPlayer->player_ != nullptr) {
             (void)jsPlayer->player_->SetMediaSource(mediaSource, strategy);

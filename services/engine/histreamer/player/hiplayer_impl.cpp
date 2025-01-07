@@ -381,6 +381,8 @@ int32_t HiPlayerImpl::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
     preferedHeight_ = strategy.preferredHeight;
     bufferDuration_ = strategy.preferredBufferDuration;
     preferHDR_ = strategy.preferredHdr;
+    renderFirstFrame_ = strategy.showFirstFrameOnPrepare;
+    mutedMediaType_ = strategy.mutedMediaType;
     audioLanguage_ = strategy.preferredAudioLanguage;
     subtitleLanguage_ = strategy.preferredSubtitleLanguage;
     mimeType_ = mediaSource->GetMimeType();
@@ -2980,6 +2982,9 @@ int32_t HiPlayerImpl::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
     preferedHeight_ = playbackStrategy.preferredHeight;
     bufferDuration_ = playbackStrategy.preferredBufferDuration;
     preferHDR_ = playbackStrategy.preferredHdr;
+    renderFirstFrame_ = playbackStrategy.showFirstFrameOnPrepare;
+    audioLanguage_ = playbackStrategy.preferredAudioLanguage;
+    subtitleLanguage_ = playbackStrategy.preferredSubtitleLanguage;
     return MSERR_OK;
 }
 
