@@ -2375,7 +2375,11 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_buffertest_max_frame_rate_02, Tes
     sleep(RECORDER_TIME_5);
     totalFrameNum = screenCaptureCb_->GetFrameNumber();
     double averageFrameRate_03 = ((double)totalFrameNum)/RECORDER_TIME_5;
+#ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
     EXPECT_EQ(MSERR_OK, screenCapture_->SetMaxVideoFrameRate(1000000000));
+#else
+    EXPECT_NE(MSERR_OK, screenCapture_->SetMaxVideoFrameRate(1000000000));
+#endif
     sleep(RECORDER_TIME_5);
     totalFrameNum = screenCaptureCb_->GetFrameNumber();
     double averageFrameRate_04 = ((double)totalFrameNum)/RECORDER_TIME_5;
