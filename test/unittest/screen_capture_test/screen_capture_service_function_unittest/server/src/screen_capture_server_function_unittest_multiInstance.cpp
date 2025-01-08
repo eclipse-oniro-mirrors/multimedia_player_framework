@@ -519,6 +519,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StopScreenCapture_001, TestSize.Level2
     ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
 }
 
+#ifdef SUPPORT_CALL
 /**
 * @tc.name: NotifyStopAndRelease_001
 * @tc.desc: NotifyStopAndRelease_001
@@ -531,6 +532,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, NotifyStopAndRelease_001, TestSize.Lev
         ASSERT_EQ(obcb->NotifyStopAndRelease(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_USER), true);
     }
 }
+#endif
 
 } // Media
 } // OHOS

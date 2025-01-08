@@ -1474,6 +1474,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StartFileInnerAudioCapture_002, TestSi
     ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
 }
 
+#ifdef SUPPORT_CALL
 HWTEST_F(ScreenCaptureServerFunctionTest, StopAndRelease_001, TestSize.Level2)
 {
     ScreenCaptureObserverCallBack* obcb = new ScreenCaptureObserverCallBack(screenCaptureServer_);
@@ -1491,5 +1492,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StopAndRelease_002, TestSize.Level2)
         ASSERT_EQ(obcb->StopAndRelease(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_USER), true);
     }
 }
+#endif
 } // Media
 } // OHOS
