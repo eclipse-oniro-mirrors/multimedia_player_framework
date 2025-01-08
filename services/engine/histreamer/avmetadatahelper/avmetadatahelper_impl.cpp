@@ -96,6 +96,7 @@ Status AVMetadataHelperImpl::SetSourceInternel(const std::string &uri, bool isFo
         mediaDemuxer_ != nullptr, Status::ERROR_INVALID_DATA, "SetSourceInternel demuxer is nullptr");
     if (interruptMonitor_) {
         interruptMonitor_->RegisterListener(mediaDemuxer_);
+        interruptMonitor_->SetInterruptState(isInterruptNeeded_.load());
     }
     Status ret = mediaDemuxer_->SetDataSource(std::make_shared<MediaSource>(uri));
     CHECK_AND_RETURN_RET_LOG(ret == Status::OK, ret,
