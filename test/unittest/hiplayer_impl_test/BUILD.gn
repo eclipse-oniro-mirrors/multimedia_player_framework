@@ -33,6 +33,7 @@ config("hiplayer_impl_unit_test_config") {
   cflags_cc = cflags
   include_dirs = [
     "./",
+    "./mock",
     "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",
     "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/player",
     "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/utils",
@@ -67,6 +68,7 @@ ohos_unittest("hiplayer_impl_unit_test") {
     "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/player/seek_agent.cpp",
     "$MEDIA_PLAYER_ROOT_DIR/services/utils/media_dfx.cpp",
     "$MEDIA_PLAYER_ROOT_DIR/services/utils/media_utils.cpp",
+    "hiplayer_callback_looper_unit_test.cpp",
     "hiplayer_impl_unit_test.cpp",
   ]
 
@@ -96,6 +98,7 @@ ohos_unittest("hiplayer_impl_unit_test") {
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
+    "googletest:gmock_main",
     "graphic_surface:surface",
     "graphic_surface:sync_fence",
     "hicollie:libhicollie",
