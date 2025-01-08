@@ -693,8 +693,10 @@ int32_t PlayerServer::HandleReset()
 {
     (void)playerEngine_->Reset();
     std::thread([playerEngine = std::move(playerEngine_), uriHelper = std::move(uriHelper_)]() mutable -> void {
+        MEDIA_LOGI("HandleReset: create new thread");
         std::unique_ptr<UriHelper> helper = std::move(uriHelper);
         std::unique_ptr<IPlayerEngine> engine = std::move(playerEngine);
+        MEDIA_LOGI("HandleReset: thread finished");
     }).detach();
     dataSrc_ = nullptr;
     config_.looping = false;
@@ -1907,6 +1909,19 @@ int32_t PlayerServer::SetMaxAmplitudeCbStatus(bool status)
 {
     maxAmplitudeCbStatus_ = status;
     return MSERR_OK;
+}
+
+bool PlayerServer::IsSeekContinuousSupported()
+{
+    MediaTrace::TraceBegin("PlayerServer::IsSeekContinuousSupported", FAKE_POINTER(this));
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET(lastOpStatus_ == PLAYER_PREPARED || lastOpStatus_ == PLAYER_STARTED ||
+        lastOpStatus_ == PLAYER_PLAYBACK_COMPLETE || lastOpStatus_ == PLAYER_PAUSED || lastOpStatus_ == PLAYER_STOPPED,
+        MSERR_INVALID_STATE);
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, false, "engine is nullptr");
+    bool isSeekContinuousSupported = false;
+    int32_t ret = playerEngine_->IsSeekContinuousSupported(isSeekContinuousSupported);
+    return ret == MSERR_OK && isSeekContinuousSupported;
 }
 } // namespace Media
 } // namespace OHOS

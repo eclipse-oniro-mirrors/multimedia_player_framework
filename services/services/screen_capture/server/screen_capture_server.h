@@ -61,6 +61,9 @@
 #include "tokenid_kit.h"
 #include "window_manager.h"
 #include "limitIdGenerator.h"
+#include "system_ability_status_change_stub.h"
+#include "i_input_device_listener.h"
+#include "input_manager.h"
 
 namespace OHOS {
 namespace Media {
@@ -250,6 +253,37 @@ private:
     static constexpr int32_t ADS_LOG_SKIP_NUM = 1000;
 };
 
+class InputDeviceInfo : public MMI::InputDevice {
+public:
+    InputDeviceInfo() = default;
+
+    virtual ~InputDeviceInfo() = default;
+};
+
+class MouseChangeListener : public MMI::IInputDeviceListener {
+public:
+    explicit MouseChangeListener(std::weak_ptr<ScreenCaptureServer> screenCaptureServer);
+    ~MouseChangeListener() = default;
+    int32_t GetDeviceInfo(int32_t deviceId, std::shared_ptr<InputDeviceInfo> deviceInfo);
+
+    void OnDeviceAdded(int32_t deviceId, const std::string &type) override;
+    void OnDeviceRemoved(int32_t deviceId, const std::string &type) override;
+
+private:
+    std::weak_ptr<ScreenCaptureServer> screenCaptureServer_;
+};
+
+class MMISystemAbilityListener : public SystemAbilityStatusChangeStub {
+public:
+    explicit MMISystemAbilityListener(std::weak_ptr<ScreenCaptureServer> screenCaptureServer);
+    ~MMISystemAbilityListener() = default;
+    void OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId) override;
+    void OnRemoveSystemAbility(int32_t systemAbilityId, const std::string &deviceId) override;
+
+private:
+    std::weak_ptr<ScreenCaptureServer> screenCaptureServer_;
+};
+
 class PrivateWindowListenerInScreenCapture : public DisplayManager::IPrivateWindowListener {
 public:
     explicit PrivateWindowListenerInScreenCapture(std::weak_ptr<ScreenCaptureServer> screenCaptureServer);
@@ -323,6 +357,7 @@ public:
     int32_t SetMicrophoneEnabled(bool isMicrophone) override;
     bool GetMicWorkingState();
     int32_t SetCanvasRotation(bool canvasRotation) override;
+    int32_t ShowCursor(bool showCursor) override;
     int32_t ResizeCanvas(int32_t width, int32_t height) override;
     int32_t SkipPrivacyMode(std::vector<uint64_t> &windowIDsVec) override;
     int32_t SetMaxVideoFrameRate(int32_t frameRate) override;
@@ -343,12 +378,15 @@ public:
     int32_t GetMicAudioCaptureBufferSize(size_t &size);
     int32_t OnVoIPStatusChanged(bool isInVoIPCall);
     int32_t OnSpeakerAliveStatusChanged(bool speakerAliveStatus);
+    int32_t ShowCursorInner();
     void OnDMPrivateWindowChange(bool hasPrivate);
     void SetMissionId(uint64_t missionId);
     void SetDisplayId(uint64_t displayId);
     bool IsTelInCallSkipList();
     int32_t GetAppPid();
     int32_t GetAppUid();
+    void SetMouseChangeListener(std::shared_ptr<MouseChangeListener> listener);
+    std::shared_ptr<MouseChangeListener> GetMouseChangeListener();
 
 private:
     int32_t StartScreenCaptureInner(bool isPrivacyAuthorityEnabled);
@@ -425,6 +463,10 @@ private:
     void SetErrorInfo(int32_t errCode, const std::string &errMsg, StopReason stopReason, bool userAgree);
     int32_t ReStartMicForVoIPStatusSwitch();
     void RegisterPrivateWindowListener();
+    bool RegisterMMISystemAbilityListener();
+    bool UnRegisterMMISystemAbilityListener();
+    int32_t RegisterMouseChangeListener(std::string type);
+    int32_t UnRegisterMouseChangeListener(std::string type);
     uint64_t GetDisplayIdOfWindows(uint64_t displayId);
     std::string GetStringByResourceName(const char* name);
     void RefreshResConfig();
@@ -438,8 +480,10 @@ private:
 #endif
     std::shared_ptr<ScreenCaptureCallBack> screenCaptureCb_ = nullptr;
     bool canvasRotation_ = false;
+    bool showCursor_ = true;
     bool isMicrophoneSwitchTurnOn_ = true;
     bool isPrivacyAuthorityEnabled_ = false;
+    std::vector<uint64_t> surfaceIdList_ = {};
 
     int32_t sessionId_ = 0;
     int32_t notificationId_ = 0;
@@ -466,6 +510,8 @@ private:
     AVScreenCaptureState captureState_ = AVScreenCaptureState::CREATED;
     std::shared_ptr<NotificationLocalLiveViewContent> localLiveViewContent_;
     int64_t startTime_ = 0;
+    sptr<ISystemAbilityStatusChange> mmiListener_ = nullptr;
+    std::shared_ptr<MouseChangeListener> mouseChangeListener_ = nullptr;
 
     /* used for CAPTURE STREAM */
     sptr<IBufferConsumerListener> surfaceCb_ = nullptr;

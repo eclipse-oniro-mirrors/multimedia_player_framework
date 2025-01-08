@@ -81,6 +81,7 @@ public:
     void MediaServerDied();
     int32_t SetMaxAmplitudeCbStatus(bool status) override;
     int32_t SetDeviceChangeCbStatus(bool status) override;
+    bool IsSeekContinuousSupported() override;
 
 private:
     int32_t CreateListenerObject();
