@@ -125,6 +125,11 @@ public:
         (void)apiVersion;
         return 0;
     }
+
+    virtual bool IsSeekContinuousSupported()
+    {
+        return false;
+    }
     /**
      * IPC code ID
      */
@@ -175,6 +180,7 @@ public:
         GET_PLAYBACK_INFO,
         SET_DEVICE_CHANGE_CB_STATUS,
         GET_API_VERSION,
+        IS_SEEK_CONTINUOUS_SUPPORTED,
         MAX_IPC_ID,                   // all IPC codes should be added before MAX_IPC_ID
     };
 

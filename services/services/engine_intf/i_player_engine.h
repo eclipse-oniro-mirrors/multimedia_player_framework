@@ -245,6 +245,12 @@ public:
     {
         return 0;
     }
+
+    virtual int32_t IsSeekContinuousSupported(bool &IsSeekContinuousSupported)
+    {
+        (void)IsSeekContinuousSupported;
+        return 0;
+    }
 };
 } // namespace Media
 } // namespace OHOS

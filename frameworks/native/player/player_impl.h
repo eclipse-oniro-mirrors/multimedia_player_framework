@@ -80,6 +80,7 @@ public:
     int32_t SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted) override;
     int32_t SetMaxAmplitudeCbStatus(bool status) override;
     int32_t SetDeviceChangeCbStatus(bool status) override;
+    bool IsSeekContinuousSupported() override;
 private:
     void ResetSeekVariables();
     void HandleSeekDoneInfo(PlayerOnInfoType type, int32_t extra);

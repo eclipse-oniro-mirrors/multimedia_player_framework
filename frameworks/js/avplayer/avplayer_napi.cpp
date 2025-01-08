@@ -101,6 +101,7 @@ napi_value AVPlayerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("setPlaybackStrategy", JsSetPlaybackStrategy),
         DECLARE_NAPI_FUNCTION("setMediaMuted", JsSetMediaMuted),
         DECLARE_NAPI_FUNCTION("getPlaybackInfo", JsGetPlaybackInfo),
+        DECLARE_NAPI_FUNCTION("isSeekContinuousSupported", JsIsSeekContinuousSupported),
 
         DECLARE_NAPI_GETTER_SETTER("url", JsGetUrl, JsSetUrl),
         DECLARE_NAPI_GETTER_SETTER("fdSrc", JsGetAVFileDescriptor, JsSetAVFileDescriptor),
@@ -2962,6 +2963,25 @@ AVPlayerNapi* AVPlayerNapi::GetJsInstanceWithParameter(napi_env env, napi_callba
 bool AVPlayerNapi::IsLiveSource() const
 {
     return isLiveStream_;
+}
+
+napi_value AVPlayerNapi::JsIsSeekContinuousSupported(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVPlayerNapi::isSeekContinuousSupported");
+    MEDIA_LOGI("JsIsSeekContinuousSupported In");
+    napi_value result = nullptr;
+    bool isSeekContinuousSupported = false;
+    napi_status status = napi_get_boolean(env, isSeekContinuousSupported, &result);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "napi_get_boolean failed");
+    size_t argCount = 0;
+    AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, nullptr);
+    CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstance");
+    if (jsPlayer->player_ != nullptr) {
+        isSeekContinuousSupported = jsPlayer->player_->IsSeekContinuousSupported();
+        status = napi_get_boolean(env, isSeekContinuousSupported, &result);
+        CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "napi_get_boolean failed");
+    }
+    return result;
 }
 } // namespace Media
 } // namespace OHOS

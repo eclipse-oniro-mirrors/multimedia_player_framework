@@ -1937,5 +1937,18 @@ int32_t PlayerServer::SetMaxAmplitudeCbStatus(bool status)
     maxAmplitudeCbStatus_ = status;
     return MSERR_OK;
 }
+
+bool PlayerServer::IsSeekContinuousSupported()
+{
+    MediaTrace::TraceBegin("PlayerServer::IsSeekContinuousSupported", FAKE_POINTER(this));
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET(lastOpStatus_ == PLAYER_PREPARED || lastOpStatus_ == PLAYER_STARTED ||
+        lastOpStatus_ == PLAYER_PLAYBACK_COMPLETE || lastOpStatus_ == PLAYER_PAUSED || lastOpStatus_ == PLAYER_STOPPED,
+        MSERR_INVALID_STATE);
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, false, "engine is nullptr");
+    bool isSeekContinuousSupported = false;
+    int32_t ret = playerEngine_->IsSeekContinuousSupported(isSeekContinuousSupported);
+    return ret == MSERR_OK && isSeekContinuousSupported;
+}
 } // namespace Media
 } // namespace OHOS
