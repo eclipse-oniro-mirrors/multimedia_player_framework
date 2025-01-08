@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Huawei Device Co., Ltd.
+ * Copyright (C) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -33,7 +33,7 @@ namespace OHOS {
 namespace Media {
 std::string TimeFormatUtils::FormatDateTimeByTimeZone(const std::string &iso8601Str)
 {
-    std::regex pattern(R"((\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(.\d{1,6})?((\+|-\d{4})?)Z?)");
+    std::regex pattern(R"((\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(.\d{1,6})?(((\+|-)\d{4})|Z)?)");
     std::smatch match;
     if (!std::regex_match(iso8601Str, match, pattern)) {
         return iso8601Str;  // not standard ISO8601 type string
@@ -52,10 +52,15 @@ std::string TimeFormatUtils::FormatDateTimeByTimeZone(const std::string &iso8601
     }
     uint32_t length = iso8601Str.length();
     long diffTime = 0;
-    if (iso8601Str.substr(length - 1, length).compare("Z") != 0) {
+    if (iso8601Str.substr(length - 1, 1).compare("Z") != 0) {
+        char symbol = iso8601Str.at(length - 5);
+        if (symbol != '+' && symbol != '-') {
+            std::ostringstream oss;
+            oss << std::put_time(&tm, "%Y-%m-%d %H:%M:%S");
+            return oss.str();
+        }
         int mins = std::stoi(iso8601Str.substr(length - 2, 2));
         int hours = std::stoi(iso8601Str.substr(length - 4, 2));
-        char symbol = iso8601Str.at(length - 5);
         long seconds = (hours * 60 + mins) * 60;
         diffTime = symbol == '+' ? seconds : -seconds;
     }
