@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Huawei Device Co., Ltd.
+ * Copyright (C) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -62,6 +62,49 @@ HWTEST_F(TimeFormatUtilsUnitTest, FormatDateTimeByTimeZone_003, TestSize.Level0)
 // Scenario4: Test ISO8601 type string with invalid time
 HWTEST_F(TimeFormatUtilsUnitTest, FormatDateTimeByTimeZone_004, TestSize.Level0) {
     std::string iso8601Str = "2023-01-01T24:01:01Z";
+    EXPECT_EQ(TimeFormatUtils::FormatDateTimeByTimeZone(iso8601Str), iso8601Str);
+}
+
+// Scenario5: Test ISO8601 type string with no timezone
+HWTEST_F(TimeFormatUtilsUnitTest, FormatDateTimeByTimeZone_005, TestSize.Level0) {
+    std::string iso8601Str = "2023-01-01T01:01:01.123";
+    std::string expected = "2023-01-01 01:01:01";
+    EXPECT_EQ(TimeFormatUtils::FormatDateTimeByTimeZone(iso8601Str), expected);
+}
+
+// Scenario6: Test ISO8601 type string with invalid time
+HWTEST_F(TimeFormatUtilsUnitTest, FormatDateTimeByTimeZone_006, TestSize.Level0) {
+    std::string iso8601Str = "023-01-01T01:01:01.123";
+    EXPECT_EQ(TimeFormatUtils::FormatDateTimeByTimeZone(iso8601Str), iso8601Str);
+}
+
+// Scenario7: Test ISO8601 type string with invalid time
+HWTEST_F(TimeFormatUtilsUnitTest, FormatDateTimeByTimeZone_007, TestSize.Level0) {
+    std::string iso8601Str = "2023-01-01T01";
+    EXPECT_EQ(TimeFormatUtils::FormatDateTimeByTimeZone(iso8601Str), iso8601Str);
+}
+
+// Scenario8: Test ISO8601 type string with invalid time
+HWTEST_F(TimeFormatUtilsUnitTest, FormatDateTimeByTimeZone_008, TestSize.Level0) {
+    std::string iso8601Str = "2023-01-01T01.01.01.123";
+    EXPECT_EQ(TimeFormatUtils::FormatDateTimeByTimeZone(iso8601Str), iso8601Str);
+}
+
+// Scenario9: Test ISO8601 type string with invalid time
+HWTEST_F(TimeFormatUtilsUnitTest, FormatDateTimeByTimeZone_009, TestSize.Level0) {
+    std::string iso8601Str = "2023-01-01T01:01:01.123+0800Z";
+    EXPECT_EQ(TimeFormatUtils::FormatDateTimeByTimeZone(iso8601Str), iso8601Str);
+}
+
+// Scenario10: Test ISO8601 type string with invalid time
+HWTEST_F(TimeFormatUtilsUnitTest, FormatDateTimeByTimeZone_010, TestSize.Level0) {
+    std::string iso8601Str = "2023-01-01T01:01:01.123+08";
+    EXPECT_EQ(TimeFormatUtils::FormatDateTimeByTimeZone(iso8601Str), iso8601Str);
+}
+
+// Scenario11: Test ISO8601 type string with invalid time
+HWTEST_F(TimeFormatUtilsUnitTest, FormatDateTimeByTimeZone_011, TestSize.Level0) {
+    std::string iso8601Str = "2023-01-01T01:01:01.123+0800T";
     EXPECT_EQ(TimeFormatUtils::FormatDateTimeByTimeZone(iso8601Str), iso8601Str);
 }
 
