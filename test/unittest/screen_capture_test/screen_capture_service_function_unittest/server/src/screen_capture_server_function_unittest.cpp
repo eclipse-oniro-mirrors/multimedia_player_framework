@@ -1637,5 +1637,137 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PostStartScreenCaptureSuccessAction_00
     screenCaptureServer_->PostStartScreenCaptureSuccessAction();
     ASSERT_EQ(screenCaptureServer_->showCursor_ == true, true);
 }
+
+HWTEST_F(ScreenCaptureServerFunctionTest, SetCanvasRotation_001, TestSize.Level2)
+{
+    int ret = screenCaptureServer_->SetCanvasRotation(true);
+    ASSERT_EQ(ret, MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, SetCanvasRotation_002, TestSize.Level2)
+{
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
+    int ret = screenCaptureServer_->SetCanvasRotation(true);
+    ASSERT_EQ(ret, MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, ResizeCanvas_001, TestSize.Level2)
+{
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
+    screenCaptureServer_->screenId_ = 0;
+    int ret = screenCaptureServer_->ResizeCanvas(580, 1280);
+    ASSERT_EQ(ret, MSERR_INVALID_OPERATION);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, ResizeCanvas_002, TestSize.Level2)
+{
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
+    int ret = screenCaptureServer_->ResizeCanvas(580, 1280);
+    ASSERT_EQ(ret, MSERR_INVALID_OPERATION);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, ResizeCanvas_003, TestSize.Level2)
+{
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
+    int ret = screenCaptureServer_->ResizeCanvas(-580, 1280);
+    ASSERT_EQ(ret, MSERR_INVALID_VAL);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, ResizeCanvas_004, TestSize.Level2)
+{
+    screenCaptureServer_->screenId_ = 0;
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
+    int ret = screenCaptureServer_->ResizeCanvas(10241, 1280);
+    ASSERT_EQ(ret, MSERR_INVALID_VAL);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, ResizeCanvas_005, TestSize.Level2)
+{
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
+    int ret = screenCaptureServer_->ResizeCanvas(580, -1280);
+    ASSERT_EQ(ret, MSERR_INVALID_VAL);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, ResizeCanvas_006, TestSize.Level2)
+{
+    screenCaptureServer_->screenId_ = 0;
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
+    int ret = screenCaptureServer_->ResizeCanvas(580, 4321);
+    ASSERT_EQ(ret, MSERR_INVALID_VAL);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, StopScreenCaptureByEvent_002, TestSize.Level2)
+{
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
+    int ret = screenCaptureServer_->StopScreenCaptureByEvent(AVScreenCaptureStateCode::
+        SCREEN_CAPTURE_STATE_STOPPED_BY_USER);
+    ASSERT_EQ(ret, MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, StopScreenCaptureByEvent_003, TestSize.Level2)
+{
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STOPPED;
+    int ret = screenCaptureServer_->StopScreenCaptureByEvent(AVScreenCaptureStateCode::
+        SCREEN_CAPTURE_STATE_STOPPED_BY_USER);
+    ASSERT_EQ(ret, MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, SkipPrivacyMode_001, TestSize.Level2)
+{
+    std::vector<uint64_t> windowIDsVec;
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
+    int ret = screenCaptureServer_->SkipPrivacyMode(windowIDsVec);
+    ASSERT_EQ(ret, MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, SetMaxVideoFrameRate_001, TestSize.Level2)
+{
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
+    int ret = screenCaptureServer_->SetMaxVideoFrameRate(-1);
+    ASSERT_EQ(ret, MSERR_INVALID_VAL);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, SetMaxVideoFrameRate_002, TestSize.Level2)
+{
+    screenCaptureServer_->screenId_ = 0;
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
+    int ret = screenCaptureServer_->SetMaxVideoFrameRate(5);
+    ASSERT_EQ(ret, MSERR_INVALID_VAL);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, SetMicrophoneOn_001, TestSize.Level2)
+{
+    screenCaptureServer_->captureConfig_.dataType = DataType::ORIGINAL_STREAM;
+    int ret = screenCaptureServer_->SetMicrophoneOn();
+    ASSERT_EQ(ret, MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, SetMicrophoneOn_002, TestSize.Level2)
+{
+    screenCaptureServer_->captureConfig_.dataType = DataType::CAPTURE_FILE;
+    int ret = screenCaptureServer_->SetMicrophoneOn();
+    ASSERT_EQ(ret, MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, SetMicrophoneOff_001, TestSize.Level2)
+{
+    int ret = screenCaptureServer_->SetMicrophoneOff();
+    ASSERT_EQ(ret, MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, SetMicrophoneEnabled_001, TestSize.Level2)
+{
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
+    int ret = screenCaptureServer_->SetMicrophoneEnabled(true);
+    ASSERT_EQ(ret, MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, SetMicrophoneEnabled_002, TestSize.Level2)
+{
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
+    int ret = screenCaptureServer_->SetMicrophoneEnabled(false);
+    ASSERT_EQ(ret, MSERR_OK);
+}
+
 } // Media
 } // OHOS
