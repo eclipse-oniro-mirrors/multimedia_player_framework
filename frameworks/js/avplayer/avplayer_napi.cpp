@@ -2337,6 +2337,8 @@ napi_value AVPlayerNapi::JsGetState(napi_env env, napi_callback_info info)
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstance");
 
     std::string curState = jsPlayer->GetCurrentState();
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " JsGetState curState: %{public}s ",
+        FAKE_POINTER(jsPlayer), curState.c_str());
     napi_value value = nullptr;
     (void)napi_create_string_utf8(env, curState.c_str(), NAPI_AUTO_LENGTH, &value);
     MEDIA_LOGD("JsGetState Out");
