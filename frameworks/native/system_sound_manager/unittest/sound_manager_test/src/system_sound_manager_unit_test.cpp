@@ -1208,7 +1208,7 @@ HWTEST(SystemSoundManagerUnitTest, GetDefaultRingtoneUri_ShouldReturnUri_WhenTyp
     std::string result = systemSoundManagerImpl_->GetDefaultRingtoneUri(validType);
 
     // Assert
-    EXPECT_EQ(result, "");
+    EXPECT_NE(result, "");
 }
 
 /**
