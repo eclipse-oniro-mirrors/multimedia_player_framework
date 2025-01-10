@@ -603,7 +603,7 @@ std::shared_ptr<AVBuffer> AVThumbnailGenerator::GenerateAlignmentAvBuffer()
     if (avBuffer_->memory_->GetSize() != 0 && avBuffer_->memory_->GetSurfaceBuffer() == nullptr) {
         return GenerateAvBufferFromFCodec();
     }
-    CHECK_AND_RETURN_RET_LOG(avBuffer_->memory_->GetSurfaceBuffer(), nullptr,
+    CHECK_AND_RETURN_RET_LOG(avBuffer_->memory_->GetSurfaceBuffer() != nullptr, nullptr,
         "Memory size is 0, SurfaceBuffer is nullptr.");
     auto srcSurfaceBuffer = avBuffer_->memory_->GetSurfaceBuffer();
     auto width = srcSurfaceBuffer->GetWidth();
