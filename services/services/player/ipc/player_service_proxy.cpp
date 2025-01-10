@@ -34,6 +34,13 @@ namespace OHOS {
 namespace Media {
 namespace {
     constexpr int MAX_TRACKCNT = 1000;
+    constexpr int32_t MAX_INT_DIGIT = 9;
+    bool IsNumber(const std::string& str)
+    {
+        bool g_isNumStr = str.length() > 0 && str.length() <= MAX_INT_DIGIT;
+        return str.find_first_not_of("0123456789") == std::string::npos && g_isNumStr;
+    }
+}
 }
 
 PlayerServiceProxy::PlayerServiceProxy(const sptr<IRemoteObject> &impl)
@@ -658,6 +665,7 @@ int32_t PlayerServiceProxy::SetMediaSource(const std::shared_ptr<AVMediaSource> 
     if (mimeType == AVMimeType::APPLICATION_M3U8 && fdHeadPos != std::string::npos &&
         fdTailPos != std::string::npos) {
         std::string fdStr = uri.substr(strlen("fd://"), fdTailPos - strlen("fd://"));
+        CHECK_AND_RETURN_RET_LOG(IsNumber(fdStr), MSERR_INVALID_VAL, "Failed to read fd.");
         fd = stoi(fdStr);
         (void)data.WriteFileDescriptor(fd);
         MEDIA_LOGI("fd : %d", fd);
