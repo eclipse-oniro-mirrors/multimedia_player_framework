@@ -906,6 +906,8 @@ int32_t PlayerServiceStub::SetMediaSource(MessageParcel &data, MessageParcel &re
     strategy.preferredHeight = data.ReadUint32();
     strategy.preferredBufferDuration = data.ReadUint32();
     strategy.preferredHdr = data.ReadBool();
+    strategy.showFirstFrameOnPrepare = data.ReadBool();
+    strategy.mutedMediaType = static_cast<OHOS::Media::MediaType>(data.ReadInt32());
     strategy.preferredAudioLanguage = data.ReadString();
     strategy.preferredSubtitleLanguage = data.ReadString();
     reply.WriteInt32(SetMediaSource(mediaSource, strategy));
@@ -1077,7 +1079,9 @@ int32_t PlayerServiceStub::SetPlaybackStrategy(MessageParcel &data, MessageParce
         .preferredBufferDuration = data.ReadUint32(),
         .preferredHdr = data.ReadBool(),
         .showFirstFrameOnPrepare = data.ReadBool(),
-        .mutedMediaType = static_cast<OHOS::Media::MediaType>(data.ReadInt32())
+        .mutedMediaType = static_cast<OHOS::Media::MediaType>(data.ReadInt32()),
+        .preferredAudioLanguage = data.ReadString(),
+        .preferredSubtitleLanguage = data.ReadString()
     };
     reply.WriteInt32(SetPlaybackStrategy(avPlaybackStrategy));
     return MSERR_OK;
