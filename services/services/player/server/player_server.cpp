@@ -43,8 +43,8 @@ namespace {
     constexpr int32_t MAX_INT_DIGIT = 9;
     bool IsNumber(const std::string& str)
     {
-        bool g_isNumStr = str.length() > 0 && str.length() <= MAX_INT_DIGIT;
-        return str.find_first_not_of("0123456789") == std::string::npos && g_isNumStr;
+        bool g_isIntStr = str.length() > 0 && str.length() <= MAX_INT_DIGIT;
+        return str.find_first_not_of("0123456789") == std::string::npos && g_isIntStr;
     }
 }
 
