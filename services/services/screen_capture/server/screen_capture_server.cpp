@@ -495,9 +495,7 @@ ScreenCaptureServer::~ScreenCaptureServer()
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
     ReleaseInner();
-#ifdef SUPPORT_CALL
     screenCaptureObserverCb_ = nullptr;
-#endif
     CloseFd();
 }
 
@@ -1657,11 +1655,7 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
         ", isSurfaceMode:%{public}d, dataType:%{public}d", appInfo_.appUid, appInfo_.appPid, isPrivacyAuthorityEnabled,
         isSurfaceMode_, captureConfig_.dataType);
     MediaTrace trace("ScreenCaptureServer::StartScreenCaptureInner");
-#ifdef SUPPORT_CALL
     int32_t ret = RegisterServerCallbacks();
-#else
-    int32_t ret = 0;
-#endif
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "RegisterServerCallbacks failed");
 
     ret = CheckAllParams();
@@ -1715,14 +1709,14 @@ bool ScreenCaptureServer::IsTelInCallSkipList()
     return false;
 }
 
-#ifdef SUPPORT_CALL
 int32_t ScreenCaptureServer::RegisterServerCallbacks()
 {
+    std::weak_ptr<ScreenCaptureServer> wpScreenCaptureServer(shared_from_this());
+    screenCaptureObserverCb_ = std::make_shared<ScreenCaptureObserverCallBack>(wpScreenCaptureServer);
+#ifdef SUPPORT_CALL
     uint64_t tokenId = IPCSkeleton::GetCallingFullTokenID();
     isCalledBySystemApp_ = OHOS::Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(tokenId);
     MEDIA_LOGI("ScreenCaptureServer::RegisterServerCallbacks isCalledBySystemApp : %{public}d", isCalledBySystemApp_);
-    std::weak_ptr<ScreenCaptureServer> wpScreenCaptureServer(shared_from_this());
-    screenCaptureObserverCb_ = std::make_shared<ScreenCaptureObserverCallBack>(wpScreenCaptureServer);
     if (InCallObserver::GetInstance().IsInCall() && !IsTelInCallSkipList()) {
         MEDIA_LOGI("ScreenCaptureServer Start InCall Abort");
         if (screenCaptureCb_ != nullptr) {
@@ -1735,10 +1729,10 @@ int32_t ScreenCaptureServer::RegisterServerCallbacks()
         MEDIA_LOGI("ScreenCaptureServer Start RegisterScreenCaptureCallBack");
         InCallObserver::GetInstance().RegisterInCallObserverCallBack(screenCaptureObserverCb_);
     }
+#endif
     AccountObserver::GetInstance().RegisterAccountObserverCallBack(screenCaptureObserverCb_);
     return MSERR_OK;
 }
-#endif
 
 #ifdef PC_STANDARD
 bool ScreenCaptureServer::CheckCaptureSpecifiedWindowForSelectWindow()
@@ -3022,7 +3016,9 @@ int32_t ScreenCaptureServer::StopScreenCaptureInner(AVScreenCaptureStateCode sta
     captureState_ = AVScreenCaptureState::STOPPED;
     SetErrorInfo(MSERR_OK, "normal stopped", StopReason::NORMAL_STOPPED, IsUserPrivacyAuthorityNeeded());
     PostStopScreenCapture(stateCode);
+#ifdef SUPPORT_CALL
     InCallObserver::GetInstance().UnregisterInCallObserverCallBack(screenCaptureObserverCb_);
+#endif
     AccountObserver::GetInstance().UnregisterAccountObserverCallBack(screenCaptureObserverCb_);
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StopScreenCaptureInner end.", FAKE_POINTER(this));
     return ret;
@@ -3126,7 +3122,6 @@ void ScreenCaptureServer::ReleaseInner()
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances ReleaseInner E", FAKE_POINTER(this));
 }
 
-#ifdef SUPPORT_CALL
 ScreenCaptureObserverCallBack::ScreenCaptureObserverCallBack(
     std::weak_ptr<ScreenCaptureServer> screenCaptureServer): taskQueObserverCb_("NotifyStopSc")
 {
@@ -3164,7 +3159,6 @@ ScreenCaptureObserverCallBack::~ScreenCaptureObserverCallBack()
     taskQueObserverCb_.Stop();
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
-#endif
 
 void ScreenCapBufferConsumerListener::OnBufferAvailable()
 {
