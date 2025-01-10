@@ -213,7 +213,6 @@ private:
     std::weak_ptr<ScreenCaptureServer> screenCaptureServer_;
     TaskQueue taskQueObserverCb_;
 };
-#endif
 
 class AudioDataSource : public IAudioDataSource {
 public:
