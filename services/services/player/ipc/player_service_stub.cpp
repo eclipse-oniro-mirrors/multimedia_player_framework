@@ -180,6 +180,8 @@ void PlayerServiceStub::FillPlayerFuncPart2()
         [this](MessageParcel &data, MessageParcel &reply) { return SetDeviceChangeCbStatus(data, reply); } };
     playerFuncs_[GET_API_VERSION] = { "GetApiVersion",
         [this](MessageParcel &data, MessageParcel &reply) { return GetApiVersion(data, reply); } };
+    playerFuncs_[IS_SEEK_CONTINUOUS_SUPPORTED] = { "IsSeekContinuousSupported",
+        [this](MessageParcel &data, MessageParcel &reply) { return IsSeekContinuousSupported(data, reply); } };
 }
 
 int32_t PlayerServiceStub::Init()
@@ -532,6 +534,13 @@ int32_t PlayerServiceStub::SetParameter(const Format &param)
     MediaTrace trace("PlayerServiceStub::SetParameter");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
     return playerServer_->SetParameter(param);
+}
+
+bool PlayerServiceStub::IsSeekContinuousSupported()
+{
+    MediaTrace trace("PlayerServiceStub::IsSeekContinuousSupported");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, false, "player server is nullptr");
+    return playerServer_->IsSeekContinuousSupported();
 }
 
 int32_t PlayerServiceStub::SetPlayerCallback()
@@ -995,6 +1004,13 @@ int32_t PlayerServiceStub::SetParameter(MessageParcel &data, MessageParcel &repl
 
     reply.WriteInt32(SetParameter(param));
 
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::IsSeekContinuousSupported(MessageParcel &data, MessageParcel &reply)
+{
+    (void)data;
+    reply.WriteBool(IsSeekContinuousSupported());
     return MSERR_OK;
 }
 

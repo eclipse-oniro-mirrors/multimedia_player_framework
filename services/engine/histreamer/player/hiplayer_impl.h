@@ -163,6 +163,7 @@ public:
     int32_t SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted) override;
     float GetMaxAmplitude() override;
     int32_t SetMaxAmplitudeCbStatus(bool status) override;
+    int32_t IsSeekContinuousSupported(bool &isSeekContinuousSupported) override;
 private:
     enum HiplayerSvpMode : int32_t {
         SVP_CLEAR = -1, /* it's not a protection video */
