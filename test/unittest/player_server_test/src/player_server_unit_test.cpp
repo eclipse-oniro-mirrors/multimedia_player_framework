@@ -4647,5 +4647,109 @@ HWTEST_F(PlayerServerUnitTest, Player_SetPlayRangeWithMode_004, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
     EXPECT_EQ(MSERR_OK, player_->SetPlayRangeWithMode(0, 600, SEEK_CONTINOUS));
 }
+
+/**
+ * @tc.name  : Test InnerOnInfo
+ * @tc.number: Player_InnerOnInfo_001
+ * @tc.desc  : Test Player InnerOnInfo interface
+ */
+HWTEST_F(PlayerServerUnitTest, Player_InnerOnInfo_001, TestSize.Level0)
+{
+    std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
+    Format infoBody;
+    PlayerOnInfoType type = INFO_TYPE_IS_LIVE_STREAM;
+    server->InnerOnInfo(type, 0, infoBody, 0);
+    EXPECT_EQ(server->isLiveStream_, true);
+}
+
+/**
+ * @tc.name  : Test InnerOnInfo
+ * @tc.number: Player_InnerOnInfo_002
+ * @tc.desc  : Test Player InnerOnInfo interface
+ */
+HWTEST_F(PlayerServerUnitTest, Player_InnerOnInfo_002, TestSize.Level0)
+{
+    std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
+    Format infoBody;
+    PlayerOnInfoType type = INFO_TYPE_DEFAULTTRACK;
+    server->InnerOnInfo(type, 1, infoBody, 0);
+    EXPECT_NE(server->isLiveStream_, true);
+    type = INFO_TYPE_TRACK_DONE;
+    server->InnerOnInfo(type, 1, infoBody, 0);
+    EXPECT_NE(server->isLiveStream_, true);
+    type = INFO_TYPE_ADD_SUBTITLE_DONE;
+    server->InnerOnInfo(type, 1, infoBody, 0);
+    EXPECT_NE(server->isLiveStream_, true);
+}
+
+/**
+ * @tc.name  : Test InnerOnInfo
+ * @tc.number: Player_InnerOnInfo_003
+ * @tc.desc  : Test Player InnerOnInfo interface
+ */
+HWTEST_F(PlayerServerUnitTest, Player_InnerOnInfo_003, TestSize.Level0)
+{
+    std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
+    std::shared_ptr<PlayerCallbackTest> callback = std::make_shared<PlayerCallbackTest>();
+    server->SetPlayerCallback(callback);
+    Format infoBody;
+    PlayerOnInfoType type = INFO_TYPE_SEEKDONE;
+    server->InnerOnInfo(type, 0, infoBody, 0);
+    EXPECT_EQ(callback->seekDoneFlag_, true);
+
+    server->isBackgroundChanged_ = true;
+    callback->seekDoneFlag_ = false;
+    server->InnerOnInfo(type, 0, infoBody, 0);
+    EXPECT_EQ(callback->seekDoneFlag_, true);
+
+    type = INFO_TYPE_STATE_CHANGE;
+    server->InnerOnInfo(type, 2, infoBody, 0);
+    EXPECT_EQ(callback->state_, PLAYER_INITIALIZED);
+
+    server->isBackgroundCb_ = true;
+    server->isBackgroundChanged_ = true;
+    server->InnerOnInfo(type, 1, infoBody, 0);
+    EXPECT_FALSE(server->isBackgroundCb_);
+}
+
+/**
+ * @tc.name  : Test GetStatusDescription
+ * @tc.number: Player_GetStatusDescription_001
+ * @tc.desc  : Test Player GetStatusDescription interface
+ */
+HWTEST_F(PlayerServerUnitTest, Player_GetStatusDescription_001, TestSize.Level0)
+{
+    std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
+    EXPECT_EQ(server->GetStatusDescription(-1), "PLAYER_STATUS_ILLEGAL");
+    EXPECT_EQ(server->GetStatusDescription(10), "PLAYER_STATUS_ILLEGAL");
+}
+
+/**
+ * @tc.name  : Test ChangeState
+ * @tc.number: Player_ChangeState_001
+ * @tc.desc  : Test Player ChangeState interface
+ */
+HWTEST_F(PlayerServerUnitTest, Player_ChangeState_001, TestSize.Level0)
+{
+    std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
+    std::shared_ptr<PlayerServerState> state = nullptr;
+    server->ChangeState(state);
+    EXPECT_EQ(server->currState_, state);
+}
+
+/**
+ * @tc.name  : Test CheckSeek
+ * @tc.number: Player_CheckSeek_001
+ * @tc.desc  : Test Player CheckSeek interface
+ */
+HWTEST_F(PlayerServerUnitTest, Player_CheckSeek_001, TestSize.Level0)
+{
+    std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
+    server->SetSource(VIDEO_FILE1);
+    server->lastOpStatus_ = PLAYER_PREPARING;
+    PlayerSeekMode mode = SEEK_PREVIOUS_SYNC;
+    server->isLiveStream_ = true;
+    EXPECT_EQ(server->CheckSeek(0, mode), MSERR_INVALID_OPERATION);
+}
 } // namespace Media
 } // namespace OHOS
