@@ -27,7 +27,7 @@ declare_args() {
   player_framework_support_jsstack = true
   player_framework_support_seccomp = false
   player_framework_support_screen_capture = true
-  player_framework_support_screen_capture_stopbycall = true
+  player_framework_support_screen_capture_stopbycall = false
   player_framework_support_screen_capture_controller = false
   player_framework_feature_pc_select_window = false
   player_framework_support_jssoundpool = true
@@ -37,6 +37,10 @@ declare_args() {
   player_framework_enable_start_stop_on_demand = false
   if (defined(build_seccomp) && build_seccomp) {
     player_framework_support_seccomp = true
+  }
+  if (defined(global_parts_info) &&
+      defined(global_parts_info.telephony_core_service)) {
+    player_framework_support_screen_capture_stopbycall = true
   }
   if (defined(global_parts_info) &&
       defined(global_parts_info.multimedia_camera_framework) &&
@@ -196,6 +200,10 @@ if (player_framework_support_json) {
 
 if (player_framework_enable_start_stop_on_demand) {
   player_framework_defines += [ "SUPPORT_START_STOP_ON_DEMAND" ]
+}
+
+if (player_framework_support_screen_capture_stopbycall) {
+  player_framework_defines += [ "SUPPORT_CALL" ]
 }
 
 # Config path
