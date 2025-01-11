@@ -1076,6 +1076,8 @@ int32_t PlayerServer::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
     size_t pos3 = uri.find("&");
     if (mimeType == AVMimeType::APPLICATION_M3U8 && pos1 != std::string::npos && pos2 != std::string::npos &&
         pos3 != std::string::npos) {
+        CHECK_AND_RETURN_RET_LOG(strlen("fd://") < pos1, MSERR_INVALID_VAL, "Failed to read fd.");
+        CHECK_AND_RETURN_RET_LOG(pos2 + strlen("offset=") < pos3, MSERR_INVALID_VAL, "Failed to read fd.");
         std::string fdStr = uri.substr(strlen("fd://"), pos1 - strlen("fd://"));
         std::string offsetStr = uri.substr(pos2 + strlen("offset="), pos3 - pos2 - strlen("offset="));
         std::string sizeStr = uri.substr(pos3 + sizeof("&size"));
