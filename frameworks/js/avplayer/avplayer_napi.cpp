@@ -50,7 +50,7 @@ namespace {
     constexpr uint32_t TASK_TIME_LIMIT_MS = 2000; // ms
     constexpr size_t PARAM_COUNT_SINGLE = 1;
     constexpr int32_t API_VERSION_16 = 16;
-    static int32_t apiVersion = -1;
+    static int32_t g_apiVersion = -1;
 }
 
 namespace OHOS {
@@ -3016,10 +3016,10 @@ int32_t AVPlayerNapi::GetJsApiVersion()
 {
     if (player_ != nullptr && getApiVersionFlag_) {
         getApiVersionFlag_ = false;
-        player_->GetApiVersion(apiVersion);
-        MEDIA_LOGI("apiVersion is: %{public}d", apiVersion);
+        player_->GetApiVersion(g_apiVersion);
+        MEDIA_LOGI("apiVersion is: %{public}d", g_apiVersion);
     }
-    return apiVersion;
+    return g_apiVersion;
 }
 
 napi_value AVPlayerNapi::JsIsSeekContinuousSupported(napi_env env, napi_callback_info info)
