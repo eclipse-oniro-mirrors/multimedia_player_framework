@@ -284,7 +284,7 @@ void RecorderImpl::SetLocation(float latitude, float longitude)
 
 void RecorderImpl::SetOrientationHint(int32_t rotation)
 {
-    MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetMaxDuration in, rotation is %{public}d",
+    MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetOrientationHint in, rotation is %{public}d",
         FAKE_POINTER(this), rotation);
     CHECK_AND_RETURN_LOG(recorderService_ != nullptr, "recorder service does not exist..");
     recorderService_->SetOrientationHint(rotation);

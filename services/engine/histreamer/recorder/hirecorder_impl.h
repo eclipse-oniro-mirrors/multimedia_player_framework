@@ -136,7 +136,7 @@ private:
     std::weak_ptr<IRecorderEngineObs> obs_{};
     OutputFormatType outputFormatType_{OutputFormatType::FORMAT_BUTT};
     int32_t fd_ = -1;
-    int64_t maxDuration_ = 0;
+    int32_t maxDuration_ = 0;
     int64_t maxSize_ = 0;
 
     bool videoSourceIsYuv_ = false;

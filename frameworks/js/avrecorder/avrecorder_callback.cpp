@@ -165,6 +165,10 @@ void AVRecorderCallback::OnError(RecorderErrorType errorType, int32_t errCode)
 void AVRecorderCallback::OnInfo(int32_t type, int32_t extra)
 {
     MEDIA_LOGI("OnInfo() is called, type: %{public}d, extra: %{public}d", type, extra);
+    if (type == RecorderInfoType::RECORDER_INFO_MAX_DURATION_REACHED) {
+        MEDIA_LOGI("OnInfo() type = MAX_DURATION_REACHED, type: %{public}d, extra: %{public}d", type, extra);
+        SendStateCallback(AVRecorderState::STATE_STOPPED, StateChangeReason::BACKGROUND);
+    }
 }
 
 void AVRecorderCallback::OnAudioCaptureChange(const AudioRecorderChangeInfo &audioRecorderChangeInfo)

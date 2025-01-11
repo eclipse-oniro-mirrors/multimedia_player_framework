@@ -1454,6 +1454,7 @@ int32_t AVRecorderNapi::GetAVRecorderConfig(std::shared_ptr<AVRecorderConfig> &c
     const std::string fdHead = "fd://";
     config->url = fdHead + std::to_string(configMap["url"]);
     config->rotation = configMap["rotation"];
+    config->maxDuration = configMap["maxDuration"];
     config->withVideo = configMap["withVideo"];
     config->withAudio = configMap["withAudio"];
     config->withLocation = configMap["withLocation"];
@@ -2136,6 +2137,14 @@ RetInfo AVRecorderNapi::Configure(std::shared_ptr<AVRecorderConfig> config)
 
     RetInfo retInfo = SetProfile(config);
     CHECK_AND_RETURN_RET_LOG(retInfo.first == MSERR_OK, retInfo, "Fail to set videoBitrate");
+
+    if (config->maxDuration < 1) {
+        config->maxDuration = INT32_MAX;
+        MEDIA_LOGI("AVRecorderNapi::Configure maxDuration = %{public}d is invalid, set to default",
+        config->maxDuration);
+    }
+    recorder_->SetMaxDuration(config->maxDuration);
+    MEDIA_LOGI("AVRecorderNapi::Configure SetMaxDuration = %{public}d", config->maxDuration);
 
     if (config->withLocation) {
         recorder_->SetLocation(config->metadata.location.latitude, config->metadata.location.longitude);

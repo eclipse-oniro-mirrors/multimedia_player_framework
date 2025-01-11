@@ -270,6 +270,8 @@ typedef struct OH_AVRecorder_Config {
     OH_AVRecorder_FileGenerationMode fileGenerationMode;
     /* Contains additional metadata for the recorded media */
     OH_AVRecorder_Metadata metadata;
+    /* Set the longest duration allowed for current recording */
+    int32_t maxDuration;
 } OH_AVRecorder_Config;
 
 /**

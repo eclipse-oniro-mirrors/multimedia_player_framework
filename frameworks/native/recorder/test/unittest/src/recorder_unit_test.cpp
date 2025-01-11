@@ -1843,5 +1843,197 @@ HWTEST_F(RecorderUnitTest, recorder_SetAudioSourceType_003, TestSize.Level2)
     EXPECT_EQ(MSERR_OK, recorder_->Release());
     close(g_videoRecorderConfig.outputFd);
 }
+
+/**
+ * @tc.name: recorder_SetMaxDuration_001
+ * @tc.desc: record set max duration is undefined
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderUnitTest, recorder_SetMaxDuration_001, TestSize.Level2)
+{
+    g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
+    g_videoRecorderConfig.videoFormat = H264;
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_SetMaxDuration_001.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(AUDIO_VIDEO, g_videoRecorderConfig));
+    EXPECT_EQ(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_OK, recorder_->RequesetBuffer(AUDIO_VIDEO, g_videoRecorderConfig));
+
+    EXPECT_EQ(MSERR_OK, recorder_->Start());
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, recorder_->Stop(false));
+    recorder_->StopBuffer(PURE_VIDEO);
+    EXPECT_EQ(MSERR_OK, recorder_->Reset());
+    EXPECT_EQ(MSERR_OK, recorder_->Release());
+    close(g_videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_SetMaxDuration_002
+ * @tc.desc: record set max duration -1
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderUnitTest, recorder_SetMaxDuration_002, TestSize.Level2)
+{
+    g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
+    g_videoRecorderConfig.videoFormat = H264;
+    g_videoRecorderConfig.maxDuration = -1;
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_SetMaxDuration_002.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(AUDIO_VIDEO, g_videoRecorderConfig));
+    EXPECT_EQ(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_OK, recorder_->RequesetBuffer(AUDIO_VIDEO, g_videoRecorderConfig));
+
+    EXPECT_EQ(MSERR_OK, recorder_->Start());
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, recorder_->Stop(false));
+    recorder_->StopBuffer(PURE_VIDEO);
+    EXPECT_EQ(MSERR_OK, recorder_->Reset());
+    EXPECT_EQ(MSERR_OK, recorder_->Release());
+    close(g_videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_SetMaxDuration_003
+ * @tc.desc: record set max duration 0
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderUnitTest, recorder_SetMaxDuration_003, TestSize.Level2)
+{
+    g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
+    g_videoRecorderConfig.videoFormat = H264;
+    g_videoRecorderConfig.maxDuration = 0;
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_SetMaxDuration_003.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(AUDIO_VIDEO, g_videoRecorderConfig));
+    EXPECT_EQ(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_OK, recorder_->RequesetBuffer(AUDIO_VIDEO, g_videoRecorderConfig));
+
+    EXPECT_EQ(MSERR_OK, recorder_->Start());
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, recorder_->Stop(false));
+    recorder_->StopBuffer(PURE_VIDEO);
+    EXPECT_EQ(MSERR_OK, recorder_->Reset());
+    EXPECT_EQ(MSERR_OK, recorder_->Release());
+    close(g_videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_SetMaxDuration_004
+ * @tc.desc: record set max duration 1
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderUnitTest, recorder_SetMaxDuration_004, TestSize.Level2)
+{
+    g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
+    g_videoRecorderConfig.videoFormat = H264;
+    g_videoRecorderConfig.maxDuration = 1;
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_SetMaxDuration_004.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(AUDIO_VIDEO, g_videoRecorderConfig));
+    EXPECT_EQ(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_OK, recorder_->RequesetBuffer(AUDIO_VIDEO, g_videoRecorderConfig));
+
+    EXPECT_EQ(MSERR_OK, recorder_->Start());
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, recorder_->Stop(false));
+    recorder_->StopBuffer(PURE_VIDEO);
+    EXPECT_EQ(MSERR_OK, recorder_->Reset());
+    EXPECT_EQ(MSERR_OK, recorder_->Release());
+    close(g_videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_SetMaxDuration_005
+ * @tc.desc: record set max duration 5
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderUnitTest, recorder_SetMaxDuration_005, TestSize.Level2)
+{
+    g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
+    g_videoRecorderConfig.videoFormat = H264;
+    g_videoRecorderConfig.maxDuration = 5;
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_SetMaxDuration_005.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(AUDIO_VIDEO, g_videoRecorderConfig));
+    EXPECT_EQ(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_OK, recorder_->RequesetBuffer(AUDIO_VIDEO, g_videoRecorderConfig));
+
+    EXPECT_EQ(MSERR_OK, recorder_->Start());
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, recorder_->Stop(false));
+    recorder_->StopBuffer(PURE_VIDEO);
+    EXPECT_EQ(MSERR_OK, recorder_->Reset());
+    EXPECT_EQ(MSERR_OK, recorder_->Release());
+    close(g_videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_SetMaxDuration_006
+ * @tc.desc: record set max duration but stop first
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderUnitTest, recorder_SetMaxDuration_006, TestSize.Level2)
+{
+    g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
+    g_videoRecorderConfig.videoFormat = H264;
+    g_videoRecorderConfig.maxDuration = INT32_MAX;
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_SetMaxDuration_006.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(AUDIO_VIDEO, g_videoRecorderConfig));
+    EXPECT_EQ(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_OK, recorder_->RequesetBuffer(AUDIO_VIDEO, g_videoRecorderConfig));
+
+    EXPECT_EQ(MSERR_OK, recorder_->Start());
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, recorder_->Stop(false));
+    recorder_->StopBuffer(PURE_VIDEO);
+    EXPECT_EQ(MSERR_OK, recorder_->Reset());
+    EXPECT_EQ(MSERR_OK, recorder_->Release());
+    close(g_videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_SetMaxDuration_007
+ * @tc.desc: record set max duration, pause, resume
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderUnitTest, recorder_SetMaxDuration_007, TestSize.Level2)
+{
+    g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
+    g_videoRecorderConfig.videoFormat = H264;
+    g_videoRecorderConfig.maxDuration = INT32_MAX;
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_SetMaxDuration_007.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(AUDIO_VIDEO, g_videoRecorderConfig));
+    EXPECT_EQ(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_OK, recorder_->RequesetBuffer(AUDIO_VIDEO, g_videoRecorderConfig));
+
+    EXPECT_EQ(MSERR_OK, recorder_->Start());
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, recorder_->Pause());
+    sleep(RECORDER_TIME / 2);
+    EXPECT_EQ(MSERR_OK, recorder_->Resume());
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, recorder_->Stop(false));
+    recorder_->StopBuffer(PURE_VIDEO);
+    EXPECT_EQ(MSERR_OK, recorder_->Reset());
+    EXPECT_EQ(MSERR_OK, recorder_->Release());
+    close(g_videoRecorderConfig.outputFd);
+}
 } // namespace Media
 } // namespace OHOS
