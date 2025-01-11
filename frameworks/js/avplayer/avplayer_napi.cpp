@@ -1413,7 +1413,8 @@ napi_value AVPlayerNapi::JsSetPlaybackStrategy(napi_env env, napi_callback_info 
     } else {
         AVPlayStrategyTmp strategyTmp;
         (void)CommonNapi::GetPlayStrategy(env, args[0], strategyTmp);
-        if ((GetJsApiVersion() < API_VERSION_16) && (strategyTmp.mutedMediaType != MediaType::MEDIA_TYPE_AUD)) {
+        if ((jsPlayer->GetJsApiVersion() < API_VERSION_16) &&
+            (strategyTmp.mutedMediaType != MediaType::MEDIA_TYPE_AUD)) {
             promiseCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "only support mute media type audio now");
         } else {
             AVPlayStrategy strategy;
@@ -1654,7 +1655,7 @@ napi_value AVPlayerNapi::JsSetMediaSource(napi_env env, napi_callback_info info)
         return result;
     }
     jsPlayer->GetAVPlayStrategyFromStrategyTmp(strategy, strategyTmp);
-    if (GetJsApiVersion() < API_VERSION_16) {
+    if (jsPlayer->GetJsApiVersion() < API_VERSION_16) {
         strategy.mutedMediaType = MediaType::MEDIA_TYPE_MAX_COUNT;
     }
     auto task = std::make_shared<TaskHandler<void>>([jsPlayer, mediaSource, strategy]() {
