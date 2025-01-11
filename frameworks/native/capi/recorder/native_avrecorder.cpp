@@ -379,6 +379,12 @@ OH_AVErrCode Configure(OH_AVRecorder *recorder, OH_AVRecorder_Config *config)
     }
     recorderObj->recorder_->SetOrientationHint(videoOrientation);
 
+    if (config->maxDuration < 1) {
+        config->maxDuration = INT32_MAX;
+        MEDIA_LOGI("maxDuration = %{public}d is invalid, set to default", config->maxDuration);
+    }
+    recorderObj->recorder_->SetMaxDuration(config->maxDuration);
+
     CHECK_AND_RETURN_RET_LOG(config->metadata.location.latitude >= MIN_LATITUDE &&
         config->metadata.location.latitude <= MAX_LATITUDE && config->metadata.location.longitude >= MIN_LONGITUDE &&
         config->metadata.location.longitude <= MAX_LONGITUDE, AV_ERR_INVALID_VAL,
@@ -471,7 +477,7 @@ OH_AVErrCode OH_AVRecorder_GetAVRecorderConfig(OH_AVRecorder *recorder, OH_AVRec
     recorderObj->config_->metadata.videoOrientation = strdup(videoOrientation.c_str());
     CHECK_AND_RETURN_RET_LOG(recorderObj->config_->metadata.videoOrientation != nullptr, AV_ERR_NO_MEMORY,
         "Failed to allocate memory for videoOrientation string!");
-
+    recorderObj->config_->maxDuration = configMap["maxDuration"];
     recorderObj->config_->metadata.location.latitude = location.latitude;
     recorderObj->config_->metadata.location.longitude = location.longitude;
 

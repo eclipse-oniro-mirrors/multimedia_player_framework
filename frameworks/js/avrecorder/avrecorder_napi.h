@@ -172,6 +172,7 @@ struct AVRecorderConfig {
     AVRecorderProfile profile;
     std::string url;
     int32_t rotation = 0; // Optional
+    int32_t maxDuration = INT32_MAX; // Optional
     Location location; // Optional
     AVMetadata metadata; // Optional
     FileGenerationMode fileGenerationMode = FileGenerationMode::APP_CREATE;

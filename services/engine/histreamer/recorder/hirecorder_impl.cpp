@@ -279,6 +279,7 @@ int32_t HiRecorderImpl::Configure(int32_t sourceId, const RecorderParam &recPara
         case RecorderPublicParamType::GEO_LOCATION:
         case RecorderPublicParamType::GENRE_INFO:
         case RecorderPublicParamType::CUSTOM_INFO:
+        case RecorderPublicParamType::MAX_DURATION:
             ConfigureMuxer(recParam);
             break;
         case RecorderPublicParamType::META_MIME_TYPE:
@@ -514,6 +515,17 @@ void HiRecorderImpl::OnEvent(const Event &event)
             break;
         }
         case EventType::EVENT_COMPLETE: {
+            MEDIA_LOG_I("EVENT_COMPLETE.");
+            if (curState_ == StateId::INIT) {
+                MEDIA_LOG_I("EVENT_COMPLETE exit. the reason is already stopped");
+                break;
+            }
+            Stop(true);
+            auto ptr = obs_.lock();
+            if (ptr != nullptr) {
+                MEDIA_LOG_I("EVENT_COMPLETE ptr->OnInfo MAX_DURATION_REACHED BACKGROUND");
+                ptr->OnInfo(IRecorderEngineObs::InfoType::MAX_DURATION_REACHED, BACKGROUND);
+            }
             break;
         }
         default:
@@ -562,6 +574,7 @@ Status HiRecorderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, cons
                 muxerFilter_->SetOutputParameter(appUid_, appPid_, fd_, outputFormatType_);
                 muxerFilter_->SetParameter(muxerFormat_);
                 muxerFilter_->SetUserMeta(userMeta_);
+                muxerFilter_->SetMaxDuration(maxDuration_);
                 CloseFd();
             }
             pipeline_->LinkFilters(filter, {muxerFilter_}, outType);
@@ -830,6 +843,9 @@ void HiRecorderImpl::ConfigureMuxer(const RecorderParam &recParam)
         case RecorderPublicParamType::MAX_SIZE: {
             MaxFileSize maxFileSize = static_cast<const MaxFileSize&>(recParam);
             maxSize_ = maxFileSize.size;
+            if (muxerFilter_) {
+                muxerFilter_->SetMaxDuration(maxDuration_);
+            }
             break;
         }
         case RecorderPublicParamType::VID_ORIENTATION_HINT: {

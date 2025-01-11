@@ -185,6 +185,13 @@
             <option name="shell" value="touch /data/test/media/recorder_SetAudioSourceType_001.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_SetAudioSourceType_002.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_SetAudioSourceType_003.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetMaxDuration_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetMaxDuration_002.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetMaxDuration_003.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetMaxDuration_004.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetMaxDuration_005.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetMaxDuration_006.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetMaxDuration_007.mp4"/>
         </preparer>
     </target>
      <target name="recorder_server_unit_test">
@@ -243,6 +250,13 @@
             <option name="shell" value="touch /data/test/media/recorder_SetAudioSourceType_001.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_SetAudioSourceType_002.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_SetAudioSourceType_003.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetMaxDuration_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetMaxDuration_002.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetMaxDuration_003.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetMaxDuration_004.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetMaxDuration_005.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetMaxDuration_006.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetMaxDuration_007.mp4"/>
         </preparer>
     </target>
     <target name="screen_capture_native_unit_test">
