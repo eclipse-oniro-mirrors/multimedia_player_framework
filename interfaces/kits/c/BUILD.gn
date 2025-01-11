@@ -79,6 +79,7 @@ ohos_shared_library("native_avscreen_capture") {
   deps = [ "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native:media_client" ]
 
   external_deps = [
+    "audio_framework:audio_client",
     "av_codec:av_codec_client",
     "c_utils:utils",
     "graphic_surface:surface",
@@ -165,6 +166,7 @@ ohos_shared_library("avrecorder") {
   deps = [ "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native:media_client" ]
 
   external_deps = [
+    "audio_framework:audio_client",
     "av_codec:av_codec_client",
     "c_utils:utils",
     "graphic_surface:surface",
