@@ -3016,6 +3016,7 @@ int32_t AVPlayerNapi::GetJsApiVersion()
     if (player_ != nullptr && getApiVersionFlag_) {
         getApiVersionFlag_ = false;
         player_->GetApiVersion(apiVersion);
+        MEDIA_LOGI("apiVersion is: %{public}d", apiVersion);
     }
     return apiVersion;
 }
