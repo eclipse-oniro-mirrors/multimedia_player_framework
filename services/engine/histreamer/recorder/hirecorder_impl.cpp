@@ -843,10 +843,8 @@ void HiRecorderImpl::ConfigureMuxer(const RecorderParam &recParam)
         case RecorderPublicParamType::MAX_SIZE: {
             MaxFileSize maxFileSize = static_cast<const MaxFileSize&>(recParam);
             maxSize_ = maxFileSize.size;
-            MEDIA_LOG_I("HiRecorderImpl::ConfigureMuxer MAX_DURATION = %{public}d", maxDuration_);
             if (muxerFilter_) {
                 muxerFilter_->SetMaxDuration(maxDuration_);
-                MEDIA_LOG_I("HiRecorderImpl::ConfigureMuxer muxerFilter_ SetMaxDuration = %{public}d", maxDuration_);
             }
             break;
         }

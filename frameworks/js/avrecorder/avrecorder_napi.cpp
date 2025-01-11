@@ -2141,7 +2141,7 @@ RetInfo AVRecorderNapi::Configure(std::shared_ptr<AVRecorderConfig> config)
     if (config->maxDuration < 1) {
         config->maxDuration = INT32_MAX;
         MEDIA_LOGI("AVRecorderNapi::Configure maxDuration = %{public}d is invalid, set to default",
-        config->maxDuration);
+            config->maxDuration);
     }
     recorder_->SetMaxDuration(config->maxDuration);
     MEDIA_LOGI("AVRecorderNapi::Configure SetMaxDuration = %{public}d", config->maxDuration);
