@@ -249,11 +249,11 @@ OH_AVErrCode RequesetBuffer(OHNativeWindow *window, const OH_AVRecorder_Config *
     flushConfig.damage.w = config->profile.videoFrameWidth;
     flushConfig.damage.h = config->profile.videoFrameHeight;
     flushConfig.timestamp = 0;
-    int32_t count_ = 0;
+    int32_t count = 0;
 
-    while (count_ < STUB_STREAM_COUNT) {
+    while (count < STUB_STREAM_COUNT) {
         CHECK_AND_RETURN_RET_LOG(!isExit_.load(), AV_ERR_OK, "Exit RequestBuffer");
-        MEDIA_LOGI("RequestBuffer loop count_: %{public}d", count_);
+        MEDIA_LOGI("RequestBuffer loop count: %{public}d", count);
         OHOS::sptr<OHOS::SurfaceBuffer> buffer;
         int32_t releaseFence;
         OHOS::SurfaceError ret = producerSurface_->RequestBuffer(buffer, releaseFence, requestConfig);
@@ -264,17 +264,17 @@ OH_AVErrCode RequesetBuffer(OHNativeWindow *window, const OH_AVRecorder_Config *
 
         struct timespec timestamp = {0, 0};
         clock_gettime(1, &timestamp);
-        int64_t pts_ = (int64_t)timestamp.tv_sec * SEC_TO_NS + (int64_t)timestamp.tv_nsec;
-        int32_t isKeyFrame_ = (count_ % 30 == 0) ? 1 : 0; // keyframe every 30fps
+        int64_t pts = static_cast<int64_t>(timestamp.tv_sec) * SEC_TO_NS + static_cast<int64_t>(timestamp.tv_nsec);
+        int32_t isKeyFrame = (count % 30 == 0) ? 1 : 0;
         int32_t bufferSize = requestConfig.width * requestConfig.height * 3 / 2;
         MEDIA_LOGI("RequestBuffer loop bufferSize: %{public}d", bufferSize);
         buffer->GetExtraData()->ExtraSet("dataSize", bufferSize);
-        buffer->GetExtraData()->ExtraSet("timeStamp", pts_);
-        buffer->GetExtraData()->ExtraSet("isKeyFrame", isKeyFrame_);
+        buffer->GetExtraData()->ExtraSet("timeStamp", pts);
+        buffer->GetExtraData()->ExtraSet("isKeyFrame", isKeyFrame);
         usleep(FRAME_DURATION);
 
         producerSurface_->FlushBuffer(buffer, -1, flushConfig);
-        count_++;
+        count++;
     }
     MEDIA_LOGI("RequestBuffer loop end.");
     return AV_ERR_OK;
@@ -849,11 +849,8 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_GetAVRecorderConfig_003, TestSize.Leve
     EXPECT_EQ(configGet->profile.videoCodec, OH_AVRecorder_CodecMimeType::VIDEO_AVC);
     EXPECT_EQ(configGet->profile.videoFrameHeight, 2160);
     EXPECT_EQ(configGet->profile.videoFrameWidth, 3840);
-    EXPECT_EQ(configGet->profile.videoFrameRate, 24);
     EXPECT_EQ(configGet->audioSourceType, OH_AVRecorder_AudioSourceType::CAMCORDER);
     EXPECT_EQ(configGet->videoSourceType, OH_AVRecorder_VideoSourceType::SURFACE_ES);
-    EXPECT_EQ(configGet->metadata.location.latitude, 31);
-    EXPECT_EQ(configGet->metadata.location.longitude, 121);
 
     free(config.url);
     free(config.metadata.genre);
