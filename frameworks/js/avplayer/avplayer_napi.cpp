@@ -49,6 +49,8 @@ namespace {
     constexpr int32_t INDEX_C = 2;
     constexpr uint32_t TASK_TIME_LIMIT_MS = 2000; // ms
     constexpr size_t PARAM_COUNT_SINGLE = 1;
+    constexpr int32_t API_VERSION_16 = 16;
+    static int32_t g_apiVersion = -1;
 }
 
 namespace OHOS {
@@ -1411,9 +1413,14 @@ napi_value AVPlayerNapi::JsSetPlaybackStrategy(napi_env env, napi_callback_info 
     } else {
         AVPlayStrategyTmp strategyTmp;
         (void)CommonNapi::GetPlayStrategy(env, args[0], strategyTmp);
-        AVPlayStrategy strategy;
-        jsPlayer->GetAVPlayStrategyFromStrategyTmp(strategy, strategyTmp);
-        promiseCtx->asyncTask = jsPlayer->SetPlaybackStrategyTask(strategy);
+        if ((jsPlayer->GetJsApiVersion() < API_VERSION_16) &&
+            (strategyTmp.mutedMediaType != MediaType::MEDIA_TYPE_AUD)) {
+            promiseCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "only support mute media type audio now");
+        } else {
+            AVPlayStrategy strategy;
+            jsPlayer->GetAVPlayStrategyFromStrategyTmp(strategy, strategyTmp);
+            promiseCtx->asyncTask = jsPlayer->SetPlaybackStrategyTask(strategy);
+        }
     }
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "JsSetPlaybackStrategy", NAPI_AUTO_LENGTH, &resource);
@@ -1648,6 +1655,9 @@ napi_value AVPlayerNapi::JsSetMediaSource(napi_env env, napi_callback_info info)
         return result;
     }
     jsPlayer->GetAVPlayStrategyFromStrategyTmp(strategy, strategyTmp);
+    if (jsPlayer->GetJsApiVersion() < API_VERSION_16) {
+        strategy.mutedMediaType = MediaType::MEDIA_TYPE_MAX_COUNT;
+    }
     auto task = std::make_shared<TaskHandler<void>>([jsPlayer, mediaSource, strategy]() {
         if (jsPlayer->player_ != nullptr) {
             (void)jsPlayer->player_->SetMediaSource(mediaSource, strategy);
@@ -3004,11 +3014,12 @@ bool AVPlayerNapi::IsLiveSource() const
 
 int32_t AVPlayerNapi::GetJsApiVersion()
 {
-    int32_t apiVersion = -1;
-    if (player_ != nullptr) {
-        player_->GetApiVersion(apiVersion);
+    if (player_ != nullptr && getApiVersionFlag_) {
+        getApiVersionFlag_ = false;
+        player_->GetApiVersion(g_apiVersion);
+        MEDIA_LOGI("apiVersion is: %{public}d", g_apiVersion);
     }
-    return apiVersion;
+    return g_apiVersion;
 }
 
 napi_value AVPlayerNapi::JsIsSeekContinuousSupported(napi_env env, napi_callback_info info)

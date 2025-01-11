@@ -405,6 +405,7 @@ private:
     int32_t index_ = -1;
     int32_t mode_ = SWITCH_SMOOTH;
     std::mutex syncMutex_;
+    bool getApiVersionFlag_ = true;
 };
 } // namespace Media
 } // namespace OHOS
