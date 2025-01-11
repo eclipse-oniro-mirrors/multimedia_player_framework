@@ -16,6 +16,7 @@
 #include "recorder_unit_test.h"
 
 #include <iostream>
+#include <fcntl.h>
 #include <nativetoken_kit.h>
 #include <token_setproc.h>
 #include <accesstoken_kit.h>
