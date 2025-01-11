@@ -40,12 +40,6 @@ namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "PlayerServer"};
     constexpr int32_t MAX_SUBTITLE_TRACK_NUN = 8;
     static bool g_isFirstInit = true;
-    constexpr int32_t MAX_INT_DIGIT = 9;
-    bool IsNumber(const std::string& str)
-    {
-        bool isIntStr = str.length() > 0 && str.length() <= MAX_INT_DIGIT;
-        return str.find_first_not_of("0123456789") == std::string::npos && isIntStr;
-    }
 }
 
 namespace OHOS {
@@ -1085,13 +1079,12 @@ int32_t PlayerServer::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
         std::string fdStr = uri.substr(strlen("fd://"), pos1 - strlen("fd://"));
         std::string offsetStr = uri.substr(pos2 + strlen("offset="), pos3 - pos2 - strlen("offset="));
         std::string sizeStr = uri.substr(pos3 + sizeof("&size"));
-        CHECK_AND_RETURN_RET_LOG(IsNumber(fdStr), MSERR_INVALID_VAL, "Failed to read fd.");
-        CHECK_AND_RETURN_RET_LOG(IsNumber(offsetStr), MSERR_INVALID_VAL, "Failed to read offset.");
-        CHECK_AND_RETURN_RET_LOG(IsNumber(sizeStr), MSERR_INVALID_VAL, "Failed to read size.");
-
-        int32_t fd = stoi(fdStr);
-        int32_t offset = stoi(offsetStr);
-        int32_t size = stoi(sizeStr);
+        int32_t fd = -1;
+        int32_t offset = -1;
+        int32_t size = -1;
+        CHECK_AND_RETURN_RET_LOG(StrToInt(fdStr, fd), MSERR_INVALID_VAL, "Failed to read fd.");
+        CHECK_AND_RETURN_RET_LOG(StrToInt(offsetStr, offset), MSERR_INVALID_VAL, "Failed to read offset.");
+        CHECK_AND_RETURN_RET_LOG(StrToInt(sizeStr, size), MSERR_INVALID_VAL, "Failed to read size.");
 
         auto uriHelper = std::make_unique<UriHelper>(fd, offset, size);
         CHECK_AND_RETURN_RET_LOG(uriHelper->AccessCheck(UriHelper::URI_READ), MSERR_INVALID_VAL, "Failed ro read fd.");

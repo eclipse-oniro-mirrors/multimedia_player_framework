@@ -34,12 +34,29 @@ namespace OHOS {
 namespace Media {
 namespace {
     constexpr int MAX_TRACKCNT = 1000;
-    constexpr int32_t MAX_INT_DIGIT = 9;
-    bool IsNumber(const std::string& str)
-    {
-        bool isIntStr = str.length() > 0 && str.length() <= MAX_INT_DIGIT;
-        return str.find_first_not_of("0123456789") == std::string::npos && isIntStr;
+}
+
+template<typename T, typename = std::enable_if_t<std::is_same_v<int64_t, T> || std::is_same_v<int32_t, T>>>
+bool StrToInt(const std::string_view& str, T& value)
+{
+    CHECK_AND_RETURN_RET(!str.empty() && (isdigit(str.front()) || (str.front() == '-')), false);
+    std::string valStr(str);
+    char* end = nullptr;
+    errno = 0;
+    const char* addr = valStr.c_str();
+    long long result = strtoll(addr, &end, 10); /* 10 means decimal */
+    CHECK_AND_RETURN_RET_LOG(result >= LLONG_MIN && result <= LLONG_MAX, false,
+        "call StrToInt func false,  input str is: %{public}s!", valStr.c_str());
+    CHECK_AND_RETURN_RET_LOG(end != addr && end[0] == '\0' && errno != ERANGE, false,
+        "call StrToInt func false,  input str is: %{public}s!", valStr.c_str());
+    if constexpr (std::is_same<int32_t, T>::value) {
+        CHECK_AND_RETURN_RET_LOG(result >= INT_MIN && result <= INT_MAX, false,
+            "call StrToInt func false,  input str is: %{public}s!", valStr.c_str());
+        value = static_cast<int32_t>(result);
+        return true;
     }
+    value = result;
+    return true;
 }
 
 PlayerServiceProxy::PlayerServiceProxy(const sptr<IRemoteObject> &impl)
@@ -663,9 +680,10 @@ int32_t PlayerServiceProxy::SetMediaSource(const std::shared_ptr<AVMediaSource> 
     size_t fdTailPos = uri.find("?");
     if (mimeType == AVMimeType::APPLICATION_M3U8 && fdHeadPos != std::string::npos &&
         fdTailPos != std::string::npos) {
+        CHECK_AND_RETURN_RET_LOG(fdHeadPos < fdTailPos, MSERR_INVALID_VAL, "Failed to read fd.");
         std::string fdStr = uri.substr(strlen("fd://"), fdTailPos - strlen("fd://"));
-        CHECK_AND_RETURN_RET_LOG(IsNumber(fdStr), MSERR_INVALID_VAL, "Failed to read fd.");
-        fd = stoi(fdStr);
+        CHECK_AND_RETURN_RET_LOG(StrToInt(fdStr, fd), MSERR_INVALID_VAL, "Failed to read fd.");
+
         (void)data.WriteFileDescriptor(fd);
         MEDIA_LOGI("fd : %d", fd);
     }
