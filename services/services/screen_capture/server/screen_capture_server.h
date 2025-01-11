@@ -49,7 +49,9 @@
 #include "notification_request.h"
 #include "notification_constant.h"
 #include "notification_slot.h"
+#ifdef SUPPORT_CALL
 #include "incall_observer.h"
+#endif
 #include "account_observer.h"
 #include "media_data_source.h"
 #include "meta/meta.h"
@@ -196,6 +198,7 @@ private:
     static constexpr uint32_t OPERATION_TIMEOUT_IN_MS = 1000; // 1000ms
 };
 
+#ifdef SUPPORT_CALL
 class ScreenCaptureObserverCallBack : public InCallObserverCallBack, public AccountObserverCallBack {
 public:
     explicit ScreenCaptureObserverCallBack(std::weak_ptr<ScreenCaptureServer> screenCaptureServer);
@@ -207,6 +210,7 @@ private:
     std::weak_ptr<ScreenCaptureServer> screenCaptureServer_;
     TaskQueue taskQueObserverCb_;
 };
+#endif
 
 class AudioDataSource : public IAudioDataSource {
 public:
@@ -397,7 +401,9 @@ public:
 
 private:
     int32_t StartScreenCaptureInner(bool isPrivacyAuthorityEnabled);
+#ifdef SUPPORT_CALL
     int32_t RegisterServerCallbacks();
+#endif
     int32_t OnStartScreenCapture();
     bool IsFirstStartPidInstance(int32_t pid);
     bool FirstPidUpdatePrivacyUsingPermissionState(int32_t pid);
@@ -480,7 +486,9 @@ private:
 private:
     std::mutex mutex_;
     std::mutex cbMutex_;
+#ifdef SUPPORT_CALL
     std::shared_ptr<ScreenCaptureObserverCallBack> screenCaptureObserverCb_ = nullptr;
+#endif
     std::shared_ptr<ScreenCaptureCallBack> screenCaptureCb_ = nullptr;
     bool canvasRotation_ = false;
     bool showCursor_ = true;

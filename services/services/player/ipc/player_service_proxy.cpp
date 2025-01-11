@@ -84,6 +84,7 @@ PlayerServiceProxy::PlayerServiceProxy(const sptr<IRemoteObject> &impl)
     playerFuncs_[SET_MEDIA_SOURCE] = "Player::SetMediaSource";
     playerFuncs_[SET_DEVICE_CHANGE_CB_STATUS] = "Player::SetDeviceChangeCbStatus";
     playerFuncs_[SET_MAX_AMPLITUDE_CB_STATUS] = "Player::SetMaxAmplitudeCbStatus";
+    playerFuncs_[IS_SEEK_CONTINUOUS_SUPPORTED] = "Player::IsSeekContinuousSupported";
 }
 
 PlayerServiceProxy::~PlayerServiceProxy()
@@ -667,6 +668,8 @@ int32_t PlayerServiceProxy::SetMediaSource(const std::shared_ptr<AVMediaSource> 
     (void)data.WriteUint32(strategy.preferredHeight);
     (void)data.WriteUint32(strategy.preferredBufferDuration);
     (void)data.WriteBool(strategy.preferredHdr);
+    (void)data.WriteBool(strategy.showFirstFrameOnPrepare);
+    (void)data.WriteInt32(static_cast<int32_t>(strategy.mutedMediaType));
     (void)data.WriteString(strategy.preferredAudioLanguage);
     (void)data.WriteString(strategy.preferredSubtitleLanguage);
     int32_t error = SendRequest(SET_MEDIA_SOURCE, data, reply, option);
@@ -966,6 +969,8 @@ int32_t PlayerServiceProxy::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
     (void)data.WriteBool(playbackStrategy.preferredHdr);
     (void)data.WriteBool(playbackStrategy.showFirstFrameOnPrepare);
     (void)data.WriteInt32(static_cast<int32_t>(playbackStrategy.mutedMediaType));
+    (void)data.WriteString(playbackStrategy.preferredAudioLanguage);
+    (void)data.WriteString(playbackStrategy.preferredSubtitleLanguage);
     int32_t error = SendRequest(SET_PLAYBACK_STRATEGY, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetPlaybackStrategy failed, error: %{public}d", error);
@@ -1005,6 +1010,23 @@ int32_t PlayerServiceProxy::SetMaxAmplitudeCbStatus(bool status)
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetMaxAmplitudeCbStatus failed, error: %{public}d", error);
     return reply.ReadInt32();
+}
+
+bool PlayerServiceProxy::IsSeekContinuousSupported()
+{
+    MediaTrace trace("PlayerServiceProxy::IsSeekContinuousSupported");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, false, "Failed to write descriptor!");
+
+    int32_t error = SendRequest(IS_SEEK_CONTINUOUS_SUPPORTED, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, false,
+        "IsSeekContinuousSupported failed, error: %{public}d", error);
+
+    return reply.ReadBool();
 }
 } // namespace Media
 } // namespace OHOS

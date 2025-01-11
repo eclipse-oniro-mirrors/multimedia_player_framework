@@ -140,6 +140,7 @@ public:
     bool IsBootCompleted();
     int32_t SetMaxAmplitudeCbStatus(bool status) override;
     int32_t SetDeviceChangeCbStatus(bool status) override;
+    bool IsSeekContinuousSupported() override;
 
 protected:
     class BaseState;

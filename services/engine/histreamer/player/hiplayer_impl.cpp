@@ -381,6 +381,8 @@ int32_t HiPlayerImpl::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
     preferedHeight_ = strategy.preferredHeight;
     bufferDuration_ = strategy.preferredBufferDuration;
     preferHDR_ = strategy.preferredHdr;
+    renderFirstFrame_ = strategy.showFirstFrameOnPrepare;
+    mutedMediaType_ = strategy.mutedMediaType;
     audioLanguage_ = strategy.preferredAudioLanguage;
     subtitleLanguage_ = strategy.preferredSubtitleLanguage;
     mimeType_ = mediaSource->GetMimeType();
@@ -1041,7 +1043,7 @@ int32_t HiPlayerImpl::HandleEosPlay()
 Status HiPlayerImpl::Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeekDone)
 {
     MediaTrace trace("HiPlayerImpl::Seek");
-    MEDIA_LOG_I("Seek entered, mSeconds : " PUBLIC_LOG_D64 ", seekMode : " PUBLIC_LOG_D32,
+    MEDIA_LOG_I("Seek entered. mSeconds : " PUBLIC_LOG_D64 ", seekMode : " PUBLIC_LOG_D32,
                 mSeconds, static_cast<int32_t>(mode));
     int64_t seekStartTime = GetCurrentMillisecond();
     if (audioSink_ != nullptr) {
@@ -1165,6 +1167,9 @@ Status HiPlayerImpl::doCompletedSeek(int64_t seekPos, PlayerSeekMode mode)
     MEDIA_LOG_D("doCompletedSeek");
     pipeline_ -> Flush();
     auto rtv = doSeek(seekPos, mode);
+    if (mode != SEEK_CLOSEST && audioSink_ != nullptr) {
+        audioSink_->SetSeekTime(0);
+    }
     if (isStreaming_) {
         MEDIA_LOG_D("doCompletedSeek isStreaming_ is true");
         pipeline_->Resume();
@@ -1398,7 +1403,7 @@ int32_t HiPlayerImpl::GetCurrentTime(int32_t& currentPositionMs)
     }
     FALSE_RETURN_V(syncManager_ != nullptr, TransStatus(Status::ERROR_NULL_POINTER));
     currentPositionMs = Plugins::HstTime2Us32(syncManager_->GetMediaTimeNow());
-    MEDIA_LOG_D("GetCurrentTime currentPositionMs: ", PUBLIC_LOG_D32, currentPositionMs);
+    MEDIA_LOG_D("GetCurrentTime currentPositionMs: " PUBLIC_LOG_D32, currentPositionMs);
     if (currentPositionMs < 0) {
         currentPositionMs = 0;
     }
@@ -1771,7 +1776,7 @@ int32_t HiPlayerImpl::SelectTrack(int32_t trackId, PlayerSwitchMode mode)
         FALSE_RETURN_V_MSG_W(trackId != currentSubtitleTrackId_, MSERR_INVALID_VAL, "SelectTrack trackId invalid");
         if (currentSubtitleTrackId_ < 0) {
             if (Status::OK != InitSubtitleDefaultTrackIndex()) {
-                MEDIA_LOG_W("Init video default track index fail");
+                MEDIA_LOG_W("Init subtitle default track index fail");
             }
         }
     } else {
@@ -2053,7 +2058,7 @@ int32_t HiPlayerImpl::SetAudioInterruptMode(const int32_t interruptMode)
 
 void HiPlayerImpl::OnEvent(const Event &event)
 {
-    MEDIA_LOG_D("OnEvent %{public}d", event.type);
+    MEDIA_LOG_D("OnEvent entered, event type is: %{public}d", event.type);
     switch (event.type) {
         case EventType::EVENT_IS_LIVE_STREAM: {
             HandleIsLiveStreamEvent(AnyCast<bool>(event.param));
@@ -2179,6 +2184,7 @@ void HiPlayerImpl::OnEventSubTrackChange(const Event &event)
 
 void HiPlayerImpl::HandleInitialPlayingStateChange(const EventType& eventType)
 {
+    AutoLock lock(initialPlayingEventMutex_);
     MEDIA_LOG_I("HandleInitialPlayingStateChange");
     if (!isInitialPlay_) {
         return;
@@ -2190,9 +2196,10 @@ void HiPlayerImpl::HandleInitialPlayingStateChange(const EventType& eventType)
             item.second = true;
         }
     }
+
     for (auto item : initialAVStates_) {
         if (item.second == false) {
-            MEDIA_LOG_I("HandleInitialPlayingStateChange another event type received = " PUBLIC_LOG_D32,
+            MEDIA_LOG_I("HandleInitialPlayingStateChange another event type not received " PUBLIC_LOG_D32,
                 static_cast<int32_t>(item.first));
             return;
         }
@@ -2235,9 +2242,7 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
     completeState_.clear();
     demuxer_ = FilterFactory::Instance().CreateFilter<DemuxerFilter>("builtin.player.demuxer",
         FilterType::FILTERTYPE_DEMUXER);
-    if (demuxer_ == nullptr) {
-        return Status::ERROR_NULL_POINTER;
-    }
+    FALSE_RETURN_V(demuxer_ != nullptr, Status::ERROR_NULL_POINTER);
     pipeline_->AddHeadFilters({demuxer_});
     demuxer_->Init(playerEventReceiver_, playerFilterCallback_, interruptMonitor_);
     DoSetPlayStrategy(source);
@@ -2977,6 +2982,9 @@ int32_t HiPlayerImpl::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
     preferedHeight_ = playbackStrategy.preferredHeight;
     bufferDuration_ = playbackStrategy.preferredBufferDuration;
     preferHDR_ = playbackStrategy.preferredHdr;
+    renderFirstFrame_ = playbackStrategy.showFirstFrameOnPrepare;
+    audioLanguage_ = playbackStrategy.preferredAudioLanguage;
+    subtitleLanguage_ = playbackStrategy.preferredSubtitleLanguage;
     return MSERR_OK;
 }
 
@@ -3082,6 +3090,14 @@ int32_t HiPlayerImpl::SetMaxAmplitudeCbStatus(bool status)
         return audioSink_->SetMaxAmplitudeCbStatus(maxAmplitudeCbStatus_);
     }
     return MSERR_OK;
+}
+
+int32_t HiPlayerImpl::IsSeekContinuousSupported(bool &isSeekContinuousSupported)
+{
+    FALSE_RETURN_V_MSG_E(demuxer_ != nullptr && videoDecoder_ != nullptr, TransStatus(Status::ERROR_WRONG_STATE),
+        "demuxer or decoder is null");
+    isSeekContinuousSupported = DraggingPlayerAgent::IsDraggingSupported(demuxer_, videoDecoder_);
+    return TransStatus(Status::OK);
 }
 }  // namespace Media
 }  // namespace OHOS

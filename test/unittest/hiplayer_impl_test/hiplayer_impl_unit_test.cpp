@@ -307,7 +307,7 @@ HWTEST_F(HiplayerImplUnitTest, ResetIfSourceExisted_002, TestSize.Level0)
     hiplayer_->audioDecoder_ = FilterFactory::Instance().CreateFilter<AudioDecoderFilter>("player.audiodecoder",
         FilterType::FILTERTYPE_ADEC);
 
-    hiplayer_->audioDecoder_->mediaCodec_ = std::make_shared<MediaCodec>();
+    hiplayer_->audioDecoder_->decoder_ = std::make_shared<AudioDecoderAdapter>();
     // 2. Call the function to be tested
     hiplayer_->ResetIfSourceExisted();
 
@@ -1110,6 +1110,25 @@ HWTEST_F(HiplayerImplUnitTest, TestHiplayerImplLag_003, TestSize.Level0)
         {"HiPlayerImplUnitTest", DfxEventType::DFX_INFO_PLAYER_STREAM_LAG, 1000});
     usleep(100000); // sleep 100 ms to wait for hasReported_ change
     EXPECT_EQ(player->dfxAgent_->hasReported_, true);
+}
+
+/**
+* @tc.name    : Test IsSeekContinuousSupported API
+* @tc.number  : IsSeekContinuousSupported_001
+* @tc.desc    : Test IsSeekContinuousSupported interface.
+* @tc.require :
+*/
+HWTEST_F(HiplayerImplUnitTest, TestIsSeekContinuousSupported_001, TestSize.Level0)
+{
+    std::unique_ptr<HiPlayerImpl> player = std::make_unique<HiPlayerImpl>(0, 0, 0, 0);
+    ASSERT_NE(player, nullptr);
+    bool isSupported = false;
+    ASSERT_NE(player->IsSeekContinuousSupported(isSupported), 0);
+    player->demuxer_ = FilterFactory::Instance().CreateFilter<DemuxerFilter>("builtin.player.demuxer",
+        FilterType::FILTERTYPE_DEMUXER);
+    player->videoDecoder_ = FilterFactory::Instance().CreateFilter<DecoderSurfaceFilter>("player.videodecoder",
+        FilterType::FILTERTYPE_VDEC);
+    EXPECT_EQ(player->IsSeekContinuousSupported(isSupported), 0);
 }
 } // namespace Media
 } // namespace OHOS

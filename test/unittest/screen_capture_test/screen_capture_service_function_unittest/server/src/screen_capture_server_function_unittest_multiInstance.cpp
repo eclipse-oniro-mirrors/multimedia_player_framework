@@ -528,19 +528,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StopScreenCapture_001, TestSize.Level2
 }
 
 /**
-* @tc.name: NotifyStopAndRelease_001
-* @tc.desc: NotifyStopAndRelease_001
-* @tc.type: FUNC
-*/
-HWTEST_F(ScreenCaptureServerFunctionTest, NotifyStopAndRelease_001, TestSize.Level2)
-{
-    ScreenCaptureObserverCallBack* obcb = new ScreenCaptureObserverCallBack(screenCaptureServer_);
-    if (obcb) {
-        ASSERT_EQ(obcb->NotifyStopAndRelease(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_USER), true);
-    }
-}
-
-/**
 * @tc.name: ProcessSCServerSaUid_001
 * @tc.desc: check SCServerSaUid
 * @tc.type: FUNC
@@ -687,6 +674,5 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckReleaseInner_001, TestSize.Level2
     ASSERT_EQ(ScreenCaptureServer::saAppInfoMap_.size(), appInfoMapSizeBefore - 1);
     ASSERT_EQ(ScreenCaptureServer::serverMap_.size(), serverMapSizeBefore - 1);
 }
-
 } // Media
 } // OHOS
