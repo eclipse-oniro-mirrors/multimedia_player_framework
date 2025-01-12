@@ -502,7 +502,6 @@ void HiRecorderImpl::OnEvent(const Event &event)
                         // audio interrupted, report error and recorder stop
                         ptr->OnError(IRecorderEngineObs::ErrorType::ERROR_INTERNAL, MSERR_AUD_INTERRUPT);
                         Stop(false);
-                        OnStateChanged(StateId::INIT);
                         break;
                     default:
                         ptr->OnError(IRecorderEngineObs::ErrorType::ERROR_INTERNAL, MSERR_EXT_API9_INVALID_PARAMETER);
