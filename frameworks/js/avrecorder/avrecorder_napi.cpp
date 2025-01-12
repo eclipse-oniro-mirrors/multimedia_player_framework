@@ -1878,6 +1878,9 @@ int32_t AVRecorderNapi::GetConfig(std::unique_ptr<AVRecorderAsyncContext> &async
                 "location type should be Location."), MSERR_INCORRECT_PARAMETER_TYPE));
     }
 
+    ret = AVRecorderNapi::GetPropertyInt32(env, args, "maxDuration", config->maxDuration, getValue);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "failed to GetMaxDuration");
+
     if (CommonNapi::CheckhasNamedProperty(env, args, "metadata")) {
         CHECK_AND_RETURN_RET_LOG(AVRecorderNapi::GetAVMetaData(asyncCtx, env, args) == MSERR_OK,
             MSERR_INVALID_VAL, "failed to GetAVMetaData");
