@@ -496,15 +496,17 @@ void HiRecorderImpl::OnEvent(const Event &event)
     switch (event.type) {
         case EventType::EVENT_ERROR: {
             MEDIA_LOG_I("EVENT_ERROR.");
-            OnStateChanged(StateId::ERROR);
             auto ptr = obs_.lock();
             if (ptr != nullptr) {
                 switch (AnyCast<Status>(event.param)) {
                     case Status::ERROR_AUDIO_INTERRUPT:
+                        // audio interrupted, report error and recorder stop
                         ptr->OnError(IRecorderEngineObs::ErrorType::ERROR_INTERNAL, MSERR_AUD_INTERRUPT);
+                        Stop(false);
                         break;
                     default:
                         ptr->OnError(IRecorderEngineObs::ErrorType::ERROR_INTERNAL, MSERR_EXT_API9_INVALID_PARAMETER);
+                        OnStateChanged(StateId::ERROR);
                         break;
                 }
             }
