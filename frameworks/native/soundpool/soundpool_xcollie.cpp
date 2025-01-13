@@ -41,7 +41,7 @@ SoundPoolXCollie::~SoundPoolXCollie()
 
 void SoundPoolXCollie::CancelXCollieTimer()
 {
-    if (!isCanceled_) {
+    if (!isCanceled_ && id_ != HiviewDFX::INVALID_ID) {
         HiviewDFX::XCollie::GetInstance().CancelTimer(id_);
         isCanceled_ = true;
     }
