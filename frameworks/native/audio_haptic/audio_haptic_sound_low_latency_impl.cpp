@@ -335,8 +335,9 @@ void AHSoundLowLatencyCallback::OnLoadCompleted(int32_t soundId)
     soundLowLatencyImpl->NotifyPreparedEvent();
 }
 
-void AHSoundLowLatencyCallback::OnPlayFinished()
+void AHSoundLowLatencyCallback::OnPlayFinished(int32_t streamID)
 {
+    (void)streamID;
     MEDIA_LOGI("OnPlayFinished reported from sound pool.");
     std::shared_ptr<AudioHapticSoundLowLatencyImpl> soundLowLatencyImpl = soundLowLatencyImpl_.lock();
     if (soundLowLatencyImpl == nullptr) {

@@ -173,7 +173,7 @@ int32_t CacheBuffer::DoPlay(const int32_t streamID)
             isRunning_.store(true);
             if (callback_ != nullptr) {
                 MEDIA_LOGI("CacheBuffer::DoPlay callback_ OnPlayFinished, streamID:%{public}d", streamID);
-                callback_->OnPlayFinished();
+                callback_->OnPlayFinished(streamID_);
             }
             return MSERR_OK;
         } else {
@@ -390,11 +390,11 @@ int32_t CacheBuffer::Stop(const int32_t streamID)
         havePlayedCount_ = 0;
         if (callback_ != nullptr) {
             MEDIA_LOGI("cachebuffer callback_ OnPlayFinished.");
-            callback_->OnPlayFinished();
+            callback_->OnPlayFinished(streamID_);
         }
         if (cacheBufferCallback_ != nullptr) {
             MEDIA_LOGI("cachebuffer cacheBufferCallback_ OnPlayFinished.");
-            cacheBufferCallback_->OnPlayFinished();
+            cacheBufferCallback_->OnPlayFinished(streamID_);
         }
     }
     return MSERR_OK;
