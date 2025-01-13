@@ -23,12 +23,12 @@
 namespace OHOS {
 namespace Media {
 
-static constexpr unsigned int soundPoolXCollieFlagLog = (1 << 0);
+constexpr unsigned int SOUNDPOOL_XCOLLIE_FLAG_LOG = (1 << 0);
 
 class SoundPoolXCollie {
 public:
     SoundPoolXCollie(const std::string &tag, uint32_t timeoutSeconds,
-        std::function<void(void *)> func = nullptr, void *arg = nullptr, uint32_t flag = soundPoolXCollieFlagLog);
+        std::function<void(void *)> func = nullptr, void *arg = nullptr, uint32_t flag = SOUNDPOOL_XCOLLIE_FLAG_LOG);
     ~SoundPoolXCollie();
     void CancelXCollieTimer();
 private:
