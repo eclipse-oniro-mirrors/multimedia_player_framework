@@ -622,7 +622,7 @@ HWTEST_F(PlayerServerUnitTest, Player_StrToInt_002, TestSize.Level0)
  */
 HWTEST_F(PlayerServerUnitTest, Player_StrToInt_003, TestSize.Level0)
 {
-    std::string str = "100000000000000";
+    std::string str = "9223372036854775809";
     int32_t fd = -1;
     auto res = StrToInt(str, fd);
     EXPECT_EQ(res, false);
