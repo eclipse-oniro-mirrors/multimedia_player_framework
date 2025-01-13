@@ -90,6 +90,10 @@ std::unique_ptr<AudioStandard::AudioRenderer> CacheBuffer::CreateAudioRenderer(c
 
     rendererFlags_ = audioRendererInfo.rendererFlags;
     rendererOptions.rendererInfo.rendererFlags = rendererFlags_;
+    SoundPoolXCollie soundPoolXCollie("AudioRenderer::Create time out", timeOutSecondsCreateRelease,
+        [](void *) {
+            MEDIA_LOGI("AudioRenderer::Create time out");
+        }, nullptr);
     std::unique_ptr<AudioStandard::AudioRenderer> audioRenderer =
         AudioStandard::AudioRenderer::Create(cacheDir, rendererOptions);
 
@@ -99,6 +103,7 @@ std::unique_ptr<AudioStandard::AudioRenderer> CacheBuffer::CreateAudioRenderer(c
         rendererOptions.rendererInfo.rendererFlags = rendererFlags_;
         audioRenderer = AudioStandard::AudioRenderer::Create(cacheDir, rendererOptions);
     }
+    soundPoolXCollie.CancelXCollieTimer();
 
     CHECK_AND_RETURN_RET_LOG(audioRenderer != nullptr, nullptr, "Invalid audioRenderer.");
     PrepareAudioRenderer(audioRenderer);
@@ -130,12 +135,15 @@ int32_t CacheBuffer::PreparePlay(const int32_t streamID, const AudioStandard::Au
         MEDIA_LOGI("CacheBuffer::PreparePlay CreateAudioRenderer start streamID:%{public}d", streamID);
         audioRenderer_ = CreateAudioRenderer(streamID, audioRendererInfo, playParams);
         MEDIA_LOGI("CacheBuffer::PreparePlay CreateAudioRenderer end streamID:%{public}d", streamID);
-        ReCombineCacheData();
+        CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr, MSERR_INVALID_VAL, "Invalid CreateAudioRenderer");
+        int32_t ret = ReCombineCacheData();
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_VAL, "Invalid ReCombineCacheData");
     } else {
         MEDIA_LOGI("CacheBuffer::PreparePlay audioRenderer inited, streamID:%{public}d", streamID);
     }
     // deal play params
-    DealPlayParamsBeforePlay(streamID, playParams);
+    int32_t result = DealPlayParamsBeforePlay(streamID, playParams);
+    CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, MSERR_INVALID_VAL, "Invalid DealPlayParamsBeforePlay");
     return MSERR_OK;
 }
 
@@ -153,7 +161,12 @@ int32_t CacheBuffer::DoPlay(const int32_t streamID)
     cacheDataFrameIndex_ = 0;
     havePlayedCount_ = 0;
     isRunning_.store(true);
+    SoundPoolXCollie soundPoolXCollie("audioRenderer::Start time out", timeOutSecondsStartStop,
+        [](void *) {
+            MEDIA_LOGI("audioRenderer::Start time out");
+        }, nullptr);
     if (!audioRenderer_->Start()) {
+        soundPoolXCollie.CancelXCollieTimer();
         OHOS::AudioStandard::RendererState state = audioRenderer_->GetStatus();
         if (state == OHOS::AudioStandard::RendererState::RENDERER_RUNNING) {
             MEDIA_LOGI("CacheBuffer::DoPlay audioRenderer has started, streamID:%{public}d", streamID);
@@ -173,6 +186,8 @@ int32_t CacheBuffer::DoPlay(const int32_t streamID)
             if (cacheBufferCallback_ != nullptr) cacheBufferCallback_->OnError(MSERR_INVALID_VAL);
             return MSERR_INVALID_VAL;
         }
+    } else {
+        soundPoolXCollie.CancelXCollieTimer();
     }
     MEDIA_LOGI("CacheBuffer::DoPlay success, streamID:%{public}d", streamID);
     return MSERR_OK;
@@ -354,32 +369,35 @@ int32_t CacheBuffer::Stop(const int32_t streamID)
 {
     MediaTrace trace("CacheBuffer::Stop");
     std::lock_guard lock(cacheBufferLock_);
-    if (streamID == streamID_) {
-        MEDIA_LOGI("CacheBuffer::Stop streamID:%{public}d", streamID_);
-        if (audioRenderer_ != nullptr && isRunning_.load()) {
-            isRunning_.store(false);
-            if (audioRenderer_->IsFastRenderer()) {
-                MEDIA_LOGI("audioRenderer fast renderer pause.");
-                audioRenderer_->Pause();
-                audioRenderer_->Flush();
-            } else {
-                MEDIA_LOGI("audioRenderer normal stop.");
-                audioRenderer_->Stop();
-            }
-            cacheDataFrameIndex_ = 0;
-            havePlayedCount_ = 0;
-            if (callback_ != nullptr) {
-                MEDIA_LOGI("cachebuffer callback_ OnPlayFinished.");
-                callback_->OnPlayFinished();
-            }
-            if (cacheBufferCallback_ != nullptr) {
-                MEDIA_LOGI("cachebuffer cacheBufferCallback_ OnPlayFinished.");
-                cacheBufferCallback_->OnPlayFinished();
-            }
+    CHECK_AND_RETURN_RET_LOG(streamID == streamID_, MSERR_INVALID_VAL, "Invalid streamID_.");
+    MEDIA_LOGI("CacheBuffer::Stop streamID:%{public}d", streamID_);
+    if (audioRenderer_ != nullptr && isRunning_.load()) {
+        isRunning_.store(false);
+        SoundPoolXCollie soundPoolXCollie("audioRenderer::Pause or Stop time out", timeOutSecondsStartStop,
+            [](void *) {
+                MEDIA_LOGI("audioRenderer::Pause or Stop time out");
+            }, nullptr);
+        if (audioRenderer_->IsFastRenderer()) {
+            MEDIA_LOGI("audioRenderer fast renderer pause.");
+            audioRenderer_->Pause();
+            audioRenderer_->Flush();
+        } else {
+            MEDIA_LOGI("audioRenderer normal stop.");
+            audioRenderer_->Stop();
         }
-        return MSERR_OK;
+        soundPoolXCollie.CancelXCollieTimer();
+        cacheDataFrameIndex_ = 0;
+        havePlayedCount_ = 0;
+        if (callback_ != nullptr) {
+            MEDIA_LOGI("cachebuffer callback_ OnPlayFinished.");
+            callback_->OnPlayFinished();
+        }
+        if (cacheBufferCallback_ != nullptr) {
+            MEDIA_LOGI("cachebuffer cacheBufferCallback_ OnPlayFinished.");
+            cacheBufferCallback_->OnPlayFinished();
+        }
     }
-    return MSERR_INVALID_VAL;
+    return MSERR_OK;
 }
 
 int32_t CacheBuffer::SetVolume(const int32_t streamID, const float leftVolume, const float rightVolume)
@@ -455,11 +473,16 @@ int32_t CacheBuffer::Release()
     MEDIA_LOGI("CacheBuffer::Release start, streamID:%{public}d", streamID_);
     // Use audioRenderer to release and don't lock, so it will not cause dead lock. if here locked, audioRenderer
     // will wait callback thread stop, and the callback thread can't get the lock, it will cause dead lock
+    SoundPoolXCollie soundPoolXCollie("audioRenderer::Stop or Release time out", timeOutSecondsCreateRelease,
+        [](void *) {
+            MEDIA_LOGI("audioRenderer::Stop or Release time out");
+        }, nullptr);
     if (audioRenderer != nullptr) {
         audioRenderer->Stop();
         audioRenderer->Release();
         audioRenderer = nullptr;
     }
+    soundPoolXCollie.CancelXCollieTimer();
 
     std::lock_guard lock(cacheBufferLock_);
     if (!cacheData_.empty()) cacheData_.clear();

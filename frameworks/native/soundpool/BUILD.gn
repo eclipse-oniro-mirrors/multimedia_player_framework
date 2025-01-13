@@ -32,6 +32,7 @@ ohos_shared_library("soundpool_client") {
     "sound_parser.cpp",
     "soundpool.cpp",
     "soundpool_manager.cpp",
+    "soundpool_xcollie.cpp",
     "stream_id_manager.cpp",
   ]
 
@@ -56,6 +57,7 @@ ohos_shared_library("soundpool_client") {
     "c_utils:utils",
     "ffrt:libffrt",
     "graphic_surface:surface",
+    "hicollie:libhicollie",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "init:libbegetutil",

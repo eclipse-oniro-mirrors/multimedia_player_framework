@@ -26,6 +26,7 @@
 #include "media_dfx.h"
 #include "thread_pool.h"
 #include "audio_system_manager.h"
+#include "soundpool_xcollie.h"
 
 namespace OHOS {
 namespace Media {
@@ -95,6 +96,8 @@ public:
 private:
     static constexpr int32_t NORMAL_PLAY_RENDERER_FLAGS = 0;
     static constexpr int32_t LOW_LATENCY_PLAY_RENDERER_FLAGS = 1;
+    static constexpr int32_t timeOutSecondsStartStop = 3;
+    static constexpr int32_t timeOutSecondsCreateRelease = 6;
 
     std::unique_ptr<AudioStandard::AudioRenderer> CreateAudioRenderer(const int32_t streamID,
         const AudioStandard::AudioRendererInfo audioRendererInfo, const PlayParams playParams);
