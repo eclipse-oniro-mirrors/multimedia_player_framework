@@ -108,12 +108,12 @@ void AVScreenCaptureCallback::OnJsErrorCallBack(AVScreenCaptureJsCallback *jsCb)
         delete jsCb;
     };
 
-    auto task = [jscb]() {
-        std::string request = jscb->callbackName;
+    auto task = [jsCb]() {
+        std::string request = jsCb->callbackName;
         MEDIA_LOGI("uv_queue_work_with_qos start, errorcode:%{public}d , errormessage:%{public}s:",
-            jscb->errorCode, jscb->errorMsg.c_str());
+            jsCb->errorCode, jsCb->errorMsg.c_str());
         do {
-            std::shared_ptr<AutoRef> ref = jscb->autoRef.lock();
+            std::shared_ptr<AutoRef> ref = jsCb->autoRef.lock();
             CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
 
             napi_handle_scope scope = nullptr;
@@ -129,14 +129,14 @@ void AVScreenCaptureCallback::OnJsErrorCallBack(AVScreenCaptureJsCallback *jsCb)
                 request.c_str());
 
             napi_value msgValStr = nullptr;
-            nstatus = napi_create_string_utf8(ref->env_, jscb->errorMsg.c_str(), NAPI_AUTO_LENGTH, &msgValStr);
+            nstatus = napi_create_string_utf8(ref->env_, jsCb->errorMsg.c_str(), NAPI_AUTO_LENGTH, &msgValStr);
             CHECK_AND_BREAK_LOG(nstatus == napi_ok && msgValStr != nullptr, "create error message str fail");
 
             napi_value args[1] = { nullptr };
             nstatus = napi_create_error(ref->env_, nullptr, msgValStr, &args[0]);
             CHECK_AND_BREAK_LOG(nstatus == napi_ok && args[0] != nullptr, "create error callback fail");
 
-            nstatus = CommonNapi::FillErrorArgs(ref->env_, jscb->errorCode, args[0]);
+            nstatus = CommonNapi::FillErrorArgs(ref->env_, jsCb->errorCode, args[0]);
             CHECK_AND_BREAK_LOG(nstatus == napi_ok, "create error callback fail");
 
             // Call back function
@@ -144,7 +144,7 @@ void AVScreenCaptureCallback::OnJsErrorCallBack(AVScreenCaptureJsCallback *jsCb)
             nstatus = napi_call_function(ref->env_, nullptr, jsCallback, 1, args, &result);
             CHECK_AND_BREAK_LOG(nstatus == napi_ok, "%{public}s fail to napi call function", request.c_str());
         } while (0);
-        delete jscb;
+        delete jsCb;
     }
     CHECK_AND_RETURN_LOG(napi_send_event(env_, task, napi_eprio_immediate) == napi_status::napi_ok,
         "OnJsErrorCallBack napi_send_event failed");
@@ -158,11 +158,11 @@ void AVScreenCaptureCallback::OnJsStateChangeCallBack(AVScreenCaptureJsCallback 
         delete jsCb;
     };
 
-    auto task = [jscb]() {
-        std::string request = jscb->callbackName;
+    auto task = [jsCb]() {
+        std::string request = jsCb->callbackName;
         do {
             CHECK_AND_BREAK_LOG(status != UV_ECANCELED, "%{public}s canceled", request.c_str());
-            std::shared_ptr<AutoRef> ref = jscb->autoRef.lock();
+            std::shared_ptr<AutoRef> ref = jsCb->autoRef.lock();
             CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
 
             napi_handle_scope scope = nullptr;
@@ -178,7 +178,7 @@ void AVScreenCaptureCallback::OnJsStateChangeCallBack(AVScreenCaptureJsCallback 
                 request.c_str());
 
             napi_value args[1] = { nullptr };
-            nstatus = napi_create_int32(ref->env_, jscb->stateCode, &args[0]);
+            nstatus = napi_create_int32(ref->env_, jsCb->stateCode, &args[0]);
             CHECK_AND_BREAK_LOG(nstatus == napi_ok && args[0] != nullptr,
                 "%{public}s fail to create callback", request.c_str());
 
@@ -187,7 +187,7 @@ void AVScreenCaptureCallback::OnJsStateChangeCallBack(AVScreenCaptureJsCallback 
             nstatus = napi_call_function(ref->env_, nullptr, jsCallback, argCount, args, &result);
             CHECK_AND_BREAK_LOG(nstatus == napi_ok, "%{public}s fail to napi call function", request.c_str());
         } while (0);
-        delete jscb;
+        delete jsCb;
     };
     CHECK_AND_RETURN_LOG(napi_send_event(env_, task, napi_eprio_immediate) == napi_status::napi_ok,
         "OnJsStateChangeCallBack napi_send_event failed");
