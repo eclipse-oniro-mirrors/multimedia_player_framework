@@ -61,7 +61,13 @@ public:
     void DestroyDumper(StubType type, sptr<IRemoteObject> object);
     void DestroyDumperForPid(pid_t pid);
     void NotifyMemMgrLoaded();
+#ifdef SUPPORT_START_STOP_ON_DEMAND
     int32_t GetInstanceCount();
+    size_t GetMSSystemClock();
+    size_t GetReleaseAllInstanceTime();
+    void SetReleaseAllInstanceTime();
+    int32_t ExistInstanceNum();
+#endif
 private:
     MediaServerManager();
 #ifdef SUPPORT_PLAYER
@@ -122,6 +128,9 @@ private:
     AsyncExecutor executor_;
 
     std::mutex mutex_;
+#ifdef SUPPORT_START_STOP_ON_DEMAND
+    size_t releaseAllInstanceTime_ {0};
+#endif
 };
 } // namespace Media
 } // namespace OHOS

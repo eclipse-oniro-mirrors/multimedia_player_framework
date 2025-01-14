@@ -33,6 +33,10 @@ constexpr int32_t SYSTEM_STATUS_STOP = 0;
 constexpr int32_t SYSTEM_PROCESS_TYPE = 1;
 
 #ifdef SUPPORT_START_STOP_ON_DEMAND
+const int32_t SECOND_CONVERT_MS = 1000;
+const std::string SA_ONDEMAND_CONFIG = std::string(SA_CONFIG_PATH);
+const std::string CONFIG_DELAYTIME_KEY = std::string(DELAY_TIME_KEY);
+using json = nlohmann::json
 REGISTER_SYSTEM_ABILITY_BY_ID(MediaServer, PLAYER_DISTRIBUTED_SERVICE_ID, false)
 #else
 REGISTER_SYSTEM_ABILITY_BY_ID(MediaServer, PLAYER_DISTRIBUTED_SERVICE_ID, true)
@@ -69,13 +73,35 @@ void MediaServer::OnStop()
         SYSTEM_PROCESS_TYPE, SYSTEM_STATUS_STOP, OHOS::PLAYER_DISTRIBUTED_SERVICE_ID);
 }
 
+#ifdef SUPPORT_START_STOP_ON_DEMAND
 int32_t MediaServer::OnIdle(const SystemAbilityOnDemandReason &idleReason)
 {
     MEDIA_LOGD("MediaServer OnIdle");
-    auto instanceCount = MediaServerManager::GetInstance().GetInstanceCount();
+    auto instanceCount = MediaServerManager::GetInstance().ExistInstanceNum();
     CHECK_AND_RETURN_RET_LOG(instanceCount == 0, -1, "%{public} " PRId32 "instance are not released", instanceCount);
+    unloadDealyTime_ = unloadDealyTime_ == -1 ? GetUnloadDelayTime() : unloadDealyTime_;
+    size_t lastReleaseAllInstanceTime = MediaServerManager::GetInstance().GetReleaseAllInstanceTime();
+    size_t currentTime = MediaServerManager::GetInstance().GetMSSystemClock();
+    int32_t diffTime = unloadDealyTime_ * SECOND_CONVERT_MS -
+        static_cast<int32_t>(currentTime - lastReleaseAllInstanceTime);
+    CHECK_AND_RETURN_RET_LOG(diffTime <=0, -1, "%{public} " PRId32 "ms wait to unload", diffTime);
     return 0;
 }
+
+int32_t MediaServer::GetUnloadDelayTime()
+{
+    int32_t delayTIme = -1;
+    std::ifstream sa_ondemand_config_file(SA_ONDEMAND_CONFIG);
+    CHECK_AND_RETURN_RET_LOG(sa_ondemand_config_file.is_open(), -1, "open SA config failed");
+    json SAOnDemandConfig;
+    sa_ondemand_config_file >> SAOnDemandConfig;
+    sa_ondemand_config_file.close();
+    std::map<std::string, json> flattenJson = SAOnDemandConfig.flatten();
+    CHECK_AND_RETURN_RET_LOG(flattenJson.find(CONFIG_DELAYTIME_KEY) != flattenJson.end(), -1, "get delay time failed");
+    delayTime = flattenJson.find(CONFIG_DELAYTIME_KEY)->second.get<int32_t>();
+    return delayTime;
+}
+#endif
 
 void MediaServer::OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId)
 {
@@ -94,6 +120,7 @@ sptr<IRemoteObject> MediaServer::GetSubSystemAbility(IStandardMediaService::Medi
 #ifdef SUPPORT_START_STOP_ON_DEMAND
     bool isSaInActive = (GetAbilityState() != SystemAbilityState::IDLE) || CancelIdle();
     CHECK_AND_RETURN_RET_LOG(isSaInActive, nullptr, "media service in idle state, but cancel idle failed");
+    MediaServerManager::GetInstance().SetReleaseAllInstanceTime();
 #endif
 
     int32_t ret = MediaServiceStub::SetDeathListener(listener);

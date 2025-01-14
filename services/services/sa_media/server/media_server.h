@@ -19,6 +19,10 @@
 #include "media_service_stub.h"
 #include "system_ability.h"
 #include "nocopyable.h"
+#ifdef SUPPORT_START_STOP_ON_DEMAND
+#inlcude <fstream>
+#include "nlohmann/json.hpp"
+#endif
 
 namespace OHOS {
 namespace Media {
@@ -39,11 +43,17 @@ protected:
     void OnDump() override;
     void OnStart() override;
     void OnStop() override;
+#ifdef SUPPORT_START_STOP_ON_DEMAND
     int32_t OnIdle(const SystemAbilityOnDemandReason& idleReason) override;
+    int32_t GetUnloadDelayTime();
+#endif
     int32_t Dump(int32_t fd, const std::vector<std::u16string>& args) override;
 
 private:
     void OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId) override;
+#ifdef SUPPORT_START_STOP_ON_DEMAND
+    int32_t unloadDealyTime_ {-1};
+#endif
 };
 } // namespace Media
 } // namespace OHOS

@@ -84,7 +84,7 @@ private:
     void AVPlayerServerDied();
     void AVCodecServerDied();
     void CreateMediaServiceInstance(IStandardMediaService::MediaSystemAbility subSystemId,
-                                    sptr<IRemoteObject> &object);
+                                    sptr<IRemoteObject> &object, std::unique_lock<std::mutex> &lock);
 
     sptr<IStandardMediaService> mediaProxy_ = nullptr;
     sptr<MediaListenerStub> listenerStub_ = nullptr;
@@ -108,6 +108,9 @@ private:
     std::list<std::shared_ptr<IScreenCaptureController>> screenCaptureControllerList_;
 #endif
     std::mutex mutex_;
+#ifdef SUPPORT_START_STOP_ON_DEMAND
+    std::condition_variable serviceDiedCondition_;
+#endif
 };
 } // namespace Media
 } // namespace OHOS

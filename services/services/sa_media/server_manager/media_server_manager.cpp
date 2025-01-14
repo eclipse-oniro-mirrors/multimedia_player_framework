@@ -623,6 +623,11 @@ void MediaServerManager::DestroyStubObject(StubType type, sptr<IRemoteObject> ob
             break;
         }
     }
+#ifdef SUPPORT_START_STOP_ON_DEMAND
+    if (GetInstanceCount() == 0 && releaseAllInstanceTime_ == 0) {
+        releaseAllInstanceTime_ = GetMSSystemClock();
+    }
+#endif
 }
 
 void MediaServerManager::DestroyAVScreenCaptureStubForPid(pid_t pid)
@@ -763,6 +768,11 @@ void MediaServerManager::DestroyStubObjectForPid(pid_t pid)
     DestroyAVScreenCaptureStubForPid(pid);
     MonitorServiceStub::GetInstance()->OnClientDie(pid);
     executor_.Clear();
+#ifdef SUPPORT_START_STOP_ON_DEMAND
+    if (GetInstanceCount() == 0 && releaseAllInstanceTime_ == 0) {
+        releaseAllInstanceTime_ = GetMSSystemClock();
+    }
+#endif
 }
 
 void MediaServerManager::DestroyDumper(StubType type, sptr<IRemoteObject> object)
@@ -818,13 +828,39 @@ void MediaServerManager::AsyncExecutor::HandleAsyncExecution()
     tempList.clear();
 }
 
-int32_t MediaServerManager::GetInstanceCount()
+#ifdef SUPPORT_START_STOP_ON_DEMAND
+int32_t MediaServerManager::ExistInstanceNum()
 {
     std::lock_guard<std::mutex> lock(mutex_);
+    return GetInstanceCount();
+}
+
+int32_t MediaServerManager::GetInstanceCount()
+{
     return static_cast<int32_t>(recorderStubMap_.size() + playerStubMap_.size() + avMetadataHelperStubMap_.size() +
            avCodecListStubMap_.size() + avCodecStubMap_.size() + recorderProfilesStubMap_.size() +
            screenCaptureStubMap_.size() + screenCaptureControllerStubMap_.size() +
-           screenCaptureControllerStubMap_.size() + transCoderStubMap_.size());
+           screenCaptureMonitorStubMap_.size() + transCoderStubMap_.size());
 }
+
+size_t MediaServerManager::GetMSSystemClock()
+{
+    auto now = std::chrono::high_resolution_clock::now();
+    auto now_ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch());
+    return now_ms.count();
+}
+
+size_t MediaServerManager::GetReleaseAllInstanceTime()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    return releaseAllInstanceTime_;
+}
+
+void MediaServerManager::SetReleaseAllInstanceTime()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    releaseAllInstanceTime_ = 0;
+}
+#endif
 } // namespace Media
 } // namespace OHOS
