@@ -629,11 +629,9 @@ int32_t PlayerServiceProxy::SetMediaSource(const std::shared_ptr<AVMediaSource> 
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-
     CHECK_AND_RETURN_RET_LOG(mediaSource != nullptr, MSERR_INVALID_VAL, "mediaSource is nullptr!");
     bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
-
     data.WriteString(mediaSource->url);
     auto headerSize = static_cast<uint32_t>(mediaSource->header.size());
     if (!data.WriteUint32(headerSize)) {
@@ -650,7 +648,6 @@ int32_t PlayerServiceProxy::SetMediaSource(const std::shared_ptr<AVMediaSource> 
             return MSERR_INVALID_OPERATION;
         }
     }
-    
     std::string mimeType = mediaSource->GetMimeType();
     data.WriteString(mimeType);
     std::string uri = mediaSource->url;
@@ -666,7 +663,6 @@ int32_t PlayerServiceProxy::SetMediaSource(const std::shared_ptr<AVMediaSource> 
         (void)data.WriteFileDescriptor(fd);
         MEDIA_LOGI("fd : %d", fd);
     }
-
     (void)data.WriteUint32(strategy.preferredWidth);
     (void)data.WriteUint32(strategy.preferredHeight);
     (void)data.WriteUint32(strategy.preferredBufferDuration);
