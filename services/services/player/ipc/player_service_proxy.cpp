@@ -25,6 +25,8 @@
 #include "media_dfx.h"
 #include "av_common.h"
 #include "player_xcollie.h"
+#include "string_ex.h"
+#include "uri_helper.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "PlayerServiceProxy"};
@@ -34,29 +36,6 @@ namespace OHOS {
 namespace Media {
 namespace {
     constexpr int MAX_TRACKCNT = 1000;
-}
-
-template<typename T, typename = std::enable_if_t<std::is_same_v<int64_t, T> || std::is_same_v<int32_t, T>>>
-bool StrToInt(const std::string_view& str, T& value)
-{
-    CHECK_AND_RETURN_RET(!str.empty() && (isdigit(str.front()) || (str.front() == '-')), false);
-    std::string valStr(str);
-    char* end = nullptr;
-    errno = 0;
-    const char* addr = valStr.c_str();
-    long long result = strtoll(addr, &end, 10); /* 10 means decimal */
-    CHECK_AND_RETURN_RET_LOG(result >= LLONG_MIN && result <= LLONG_MAX, false,
-        "call StrToInt func false,  input str is: %{public}s!", valStr.c_str());
-    CHECK_AND_RETURN_RET_LOG(end != addr && end[0] == '\0' && errno != ERANGE, false,
-        "call StrToInt func false,  input str is: %{public}s!", valStr.c_str());
-    if constexpr (std::is_same<int32_t, T>::value) {
-        CHECK_AND_RETURN_RET_LOG(result >= INT_MIN && result <= INT_MAX, false,
-            "call StrToInt func false,  input str is: %{public}s!", valStr.c_str());
-        value = static_cast<int32_t>(result);
-        return true;
-    }
-    value = result;
-    return true;
 }
 
 PlayerServiceProxy::PlayerServiceProxy(const sptr<IRemoteObject> &impl)
