@@ -27,7 +27,7 @@ constexpr unsigned int SOUNDPOOL_XCOLLIE_FLAG_LOG = (1 << 0);
 
 class SoundPoolXCollie {
 public:
-    SoundPoolXCollie(const std::string &tag, std::function<void(void *)> func = nullptr,
+    explicit SoundPoolXCollie(const std::string &tag, std::function<void(void *)> func = nullptr,
         uint32_t timeoutSeconds = TIME_OUT_SECONDS_DEFAULT, void *arg = nullptr,
         uint32_t flag = SOUNDPOOL_XCOLLIE_FLAG_LOG);
     ~SoundPoolXCollie();
