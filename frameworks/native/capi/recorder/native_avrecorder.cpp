@@ -449,7 +449,7 @@ OH_AVErrCode OH_AVRecorder_GetAVRecorderConfig(OH_AVRecorder *recorder, OH_AVRec
     ConfigMap configMap;
     recorderObj->recorder_->GetAVRecorderConfig(configMap);
 
-    OH_AVRecorder_Location ohlocation;
+    OH_AVRecorder_Location ohlocation = {0.0f, 0.0f};
     Location location = ConvertToLocation(ohlocation);
     recorderObj->recorder_->GetLocation(location);
 
