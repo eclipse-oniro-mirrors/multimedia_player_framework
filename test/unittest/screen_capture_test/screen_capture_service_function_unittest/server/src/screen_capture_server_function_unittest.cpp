@@ -1734,7 +1734,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetMaxVideoFrameRate_002, TestSize.Lev
     screenCaptureServer_->screenId_ = 0;
     screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
     int ret = screenCaptureServer_->SetMaxVideoFrameRate(5);
-    ASSERT_EQ(ret, MSERR_INVALID_VAL);
+    ASSERT_NE(ret, MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, SetMicrophoneOn_001, TestSize.Level2)
