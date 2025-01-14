@@ -45,6 +45,8 @@ bool StrToInt(const std::string_view& str, T& value)
     errno = 0;
     const char* addr = valStr.c_str();
     long long result = strtoll(addr, &end, 10); /* 10 means decimal */
+    CHECK_AND_RETURN_RET_LOG(result >= LLONG_MIN && result <= LLONG_MAX, false,
+        "call StrToInt func false,  input str is: %{public}s!", valStr.c_str());
     CHECK_AND_RETURN_RET_LOG(end != addr && end[0] == '\0' && errno != ERANGE, false,
         "call StrToInt func false,  input str is: %{public}s!", valStr.c_str());
     if constexpr (std::is_same<int32_t, T>::value) {
