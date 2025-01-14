@@ -132,6 +132,7 @@ public:
     static constexpr std::string_view PLAYER_DRM_INFO_COUNT = "drm_info_count";
     static constexpr std::string_view PLAYER_AVAILABLE_BITRATES = "available_bitRates";
     static constexpr std::string_view AUDIO_MAX_AMPLITUDE = "max_amplitude";
+    static constexpr std::string_view SEI_PLAYBACK_POSITION = "sei_playbackPosition";
 };
 
 class PlaybackInfoKey {
@@ -240,6 +241,8 @@ enum PlayerOnInfoType : int32_t {
     INFO_TYPE_SUBTITLE_UPDATE_INFO,
     /* return audio uv value */
     INFO_TYPE_MAX_AMPLITUDE_COLLECT,
+    /* return the sei info */
+    INFO_TYPE_SEI_UPDATE_INFO,
 };
 
 enum PlayerStates : int32_t {
@@ -871,6 +874,36 @@ public:
     virtual bool IsSeekContinuousSupported()
     {
         return false;
+    }
+
+     /**
+     * @brief Obtains the playback position, accurate to millisecond.
+     *
+     * @param playbackPosition Indicates the playback position.
+     * @return Returns {@link MSERR_OK} if the current position is get; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t GetPlaybackPosition(int32_t &playbackPosition)
+    {
+        playbackPosition = 0;
+        return 0;
+    }
+ 
+    /**
+     * @brief set get sei message callback status.
+     *
+     * @return Returns {@link MSERR_OK} if the single display is set; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t SetSeiMessageCbStatus(bool status, const std::vector<int32_t> &payloadTypes)
+    {
+        (void)status;
+        (void)payloadTypes;
+        return 0;
     }
 };
 

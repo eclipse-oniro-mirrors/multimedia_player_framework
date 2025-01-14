@@ -130,6 +130,16 @@ public:
     {
         return false;
     }
+
+    virtual int32_t GetPlaybackPosition(int32_t &playbackPosition) = 0;
+
+    virtual int32_t SetSeiMessageCbStatus(bool status, const std::vector<int32_t> &payloadTypes)
+    {
+        (void)status;
+        (void)payloadTypes;
+        return 0;
+    }
+
     /**
      * IPC code ID
      */
@@ -153,6 +163,7 @@ public:
         SET_VOLUME,
         SEEK,
         GET_CURRENT_TIME,
+        GET_PLAY_BACK_POSITION,
         GET_DURATION,
         SET_PLAYERBACK_SPEED,
         GET_PLAYERBACK_SPEED,
@@ -177,6 +188,7 @@ public:
         SET_PLAYBACK_STRATEGY,
         SET_MEDIA_MUTED,
         SET_MAX_AMPLITUDE_CB_STATUS,
+        SET_SEI_MESSAGE_CB_STATUS,
         GET_PLAYBACK_INFO,
         SET_DEVICE_CHANGE_CB_STATUS,
         GET_API_VERSION,

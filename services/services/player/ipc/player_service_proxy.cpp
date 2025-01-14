@@ -85,6 +85,8 @@ PlayerServiceProxy::PlayerServiceProxy(const sptr<IRemoteObject> &impl)
     playerFuncs_[SET_DEVICE_CHANGE_CB_STATUS] = "Player::SetDeviceChangeCbStatus";
     playerFuncs_[SET_MAX_AMPLITUDE_CB_STATUS] = "Player::SetMaxAmplitudeCbStatus";
     playerFuncs_[IS_SEEK_CONTINUOUS_SUPPORTED] = "Player::IsSeekContinuousSupported";
+    playerFuncs_[GET_PLAY_BACK_POSITION] = "Player::GetPlaybackPosition";
+    playerFuncs_[SET_SEI_MESSAGE_CB_STATUS] = "Player::SetSeiMessageCbStatus";
 }
 
 PlayerServiceProxy::~PlayerServiceProxy()
@@ -451,6 +453,23 @@ int32_t PlayerServiceProxy::GetCurrentTime(int32_t &currentTime)
     return reply.ReadInt32();
 }
 
+int32_t PlayerServiceProxy::GetPlaybackPosition(int32_t &playbackPosition)
+{
+    MediaTrace trace("PlayerServiceProxy::GetPlaybackPosition");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    int32_t error = SendRequest(GET_PLAY_BACK_POSITION, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "GetPlaybackPosition failed, error: %{public}d", error);
+    playbackPosition = reply.ReadInt32();
+    return reply.ReadInt32();
+}
+
 int32_t PlayerServiceProxy::GetVideoTrackInfo(std::vector<Format> &videoTrack)
 {
     MediaTrace trace("PlayerServiceProxy::GetVideoTrackInfo");
@@ -471,6 +490,27 @@ int32_t PlayerServiceProxy::GetVideoTrackInfo(std::vector<Format> &videoTrack)
         (void)MediaParcel::Unmarshalling(reply, trackInfo);
         videoTrack.push_back(trackInfo);
     }
+    return reply.ReadInt32();
+}
+
+int32_t PlayerServiceProxy::SetSeiMessageCbStatus(bool status, const std::vector<int32_t> &payloadTypes)
+{
+    MediaTrace trace("binder::SetSeiMessageCbStatus");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+ 
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+ 
+    data.WriteBool(status);
+    data.WriteInt32(static_cast<int32_t>(payloadTypes.size()));
+    for (auto payloadType : payloadTypes) {
+        data.WriteInt32(payloadType);
+    }
+    int32_t error = SendRequest(SET_SEI_MESSAGE_CB_STATUS, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetSeiMessageCbStatus failed, error: %{public}d", error);
     return reply.ReadInt32();
 }
 

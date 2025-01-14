@@ -58,6 +58,7 @@ public:
     int32_t GetVideoWidth() override;
     int32_t GetAudioTrackInfo(std::vector<Format> &audioTrack) override;
     int32_t GetCurrentTime(int32_t &currentTime) override;
+    int32_t GetPlaybackPosition(int32_t &playbackPosition) override;
     int32_t GetVideoTrackInfo(std::vector<Format> &videoTrack) override;
     int32_t GetPlaybackInfo(Format &playbackInfo) override;
     int32_t GetPlaybackSpeed(PlaybackRateMode &mode) override;
@@ -91,6 +92,7 @@ public:
     int32_t SetDeviceChangeCbStatus(bool status) override;
     int32_t SetMaxAmplitudeCbStatus(bool status) override;
     bool IsSeekContinuousSupported() override;
+    int32_t SetSeiMessageCbStatus(bool status, const std::vector<int32_t> &payloadTypes) override;
 protected:
     PlayerServiceStub();
     virtual int32_t Init();
@@ -122,6 +124,7 @@ private:
     int32_t SetVolume(MessageParcel &data, MessageParcel &reply);
     int32_t Seek(MessageParcel &data, MessageParcel &reply);
     int32_t GetCurrentTime(MessageParcel &data, MessageParcel &reply);
+    int32_t GetPlaybackPosition(MessageParcel &data, MessageParcel &reply);
     int32_t GetVideoTrackInfo(MessageParcel &data, MessageParcel &reply);
     int32_t GetPlaybackInfo(MessageParcel &data, MessageParcel &reply);
     int32_t GetAudioTrackInfo(MessageParcel &data, MessageParcel &reply);
@@ -152,6 +155,7 @@ private:
     int32_t SetDeviceChangeCbStatus(MessageParcel &data, MessageParcel &reply);
     int32_t SetMaxAmplitudeCbStatus(MessageParcel &data, MessageParcel &reply);
     int32_t IsSeekContinuousSupported(MessageParcel &data, MessageParcel &reply);
+    int32_t SetSeiMessageCbStatus(MessageParcel &data, MessageParcel &reply);
 
     std::map<uint32_t, std::pair<std::string, PlayerStubFunc>> playerFuncs_;
     void FillPlayerFuncPart1();

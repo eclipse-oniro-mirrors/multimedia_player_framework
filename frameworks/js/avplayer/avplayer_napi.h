@@ -65,6 +65,7 @@ const std::string EVENT_AUDIO_DEVICE_CHANGE = "audioOutputDeviceChangeWithInfo";
 const std::string EVENT_SUBTITLE_UPDATE = "subtitleUpdate";
 const std::string EVENT_ERROR = "error";
 const std::string EVENT_AMPLITUDE_UPDATE = "amplitudeUpdate";
+const std::string EVENT_SEI_MESSAGE_INFO = "seiMessageReceived";
 }
 
 using TaskRet = std::pair<int32_t, std::string>;
@@ -191,6 +192,10 @@ private:
      */
     static napi_value JsGetCurrentTime(napi_env env, napi_callback_info info);
     /**
+     * readonly currentPlaybackPosition: number
+     */
+    static napi_value JsGetPlaybackPosition(napi_env env, napi_callback_info info);
+    /**
      * readonly duration: number
      */
     static napi_value JsGetDuration(napi_env env, napi_callback_info info);
@@ -291,6 +296,8 @@ private:
         size_t &argc, napi_value *argv);
     static bool JsHandleParameter(napi_env env, napi_value args, AVPlayerNapi *jsPlayer);
     static void SeekEnqueueTask(AVPlayerNapi *jsPlayer, int32_t time, int32_t mode);
+    static bool VerifyExpectedType(const NapiTypeCheckUnit &unit, AVPlayerNapi *jsPlayer, const std::string &msg);
+
     AVPlayerNapi();
     ~AVPlayerNapi() override;
     void SaveCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref);
@@ -337,6 +344,8 @@ private:
     void MaxAmplitudeCallbackOff(AVPlayerNapi *jsPlayer, std::string callbackName);
     void DeviceChangeCallbackOn(AVPlayerNapi *jsPlayer, std::string callbackName);
     void DeviceChangeCallbackOff(AVPlayerNapi *jsPlayer, std::string callbackName);
+    void SeiMessageCallbackOn(AVPlayerNapi *jsPlayer, std::string callbackName, const std::vector<int32_t> &payloadTypes);
+    void SeiMessageCallbackOff(AVPlayerNapi *jsPlayer, std::string &callbackName);
     int32_t GetJsApiVersion() override;
     void GetAVPlayStrategyFromStrategyTmp(AVPlayStrategy &strategy, const AVPlayStrategyTmp &strategyTmp);
 
@@ -344,6 +353,7 @@ private:
     bool taskQueStoped_ = false;
     bool calMaxAmplitude_ = false;
     bool deviceChangeCallbackflag_ = false;
+    bool seiMessageCallbackflag_ = false;
 
     struct AVPlayerContext : public MediaAsyncContext {
         explicit AVPlayerContext(napi_env env) : MediaAsyncContext(env) {}

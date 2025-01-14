@@ -51,6 +51,7 @@ public:
     int32_t GetVideoWidth() override;
     int32_t SetVolume(float leftVolume, float rightVolume) override;
     int32_t GetCurrentTime(int32_t &currentTime) override;
+    int32_t GetPlaybackPosition(int32_t &playbackPosition) override;
     int32_t GetVideoTrackInfo(std::vector<Format> &videoTrack) override;
     int32_t GetPlaybackInfo(Format& playbackInfo) override;
     int32_t GetSubtitleTrackInfo(std::vector<Format> &subtitleTrack) override;
@@ -76,6 +77,7 @@ public:
     int32_t SetDeviceChangeCbStatus(bool status) override;
     int32_t GetApiVersion(int32_t &apiVersion) override;
     bool IsSeekContinuousSupported() override;
+    int32_t SetSeiMessageCbStatus(bool status, const std::vector<int32_t> &payloadTypes) override;
 private:
     int32_t SendRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option);
     static inline BrokerDelegator<PlayerServiceProxy> delegator_;

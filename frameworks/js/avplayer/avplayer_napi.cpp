@@ -51,6 +51,9 @@ namespace {
     constexpr size_t PARAM_COUNT_SINGLE = 1;
     constexpr int32_t API_VERSION_16 = 16;
     static int32_t g_apiVersion = -1;
+    constexpr size_t PAYLOADTYPE_ENABLE = 5;
+    constexpr int32_t ARGS_TWO = 2;
+    constexpr int32_t ARGS_THREE = 3;
 }
 
 namespace OHOS {
@@ -104,6 +107,7 @@ napi_value AVPlayerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("setMediaMuted", JsSetMediaMuted),
         DECLARE_NAPI_FUNCTION("getPlaybackInfo", JsGetPlaybackInfo),
         DECLARE_NAPI_FUNCTION("isSeekContinuousSupported", JsIsSeekContinuousSupported),
+        DECLARE_NAPI_FUNCTION("getPlaybackPosition", JsGetPlaybackPosition),
 
         DECLARE_NAPI_GETTER_SETTER("url", JsGetUrl, JsSetUrl),
         DECLARE_NAPI_GETTER_SETTER("fdSrc", JsGetAVFileDescriptor, JsSetAVFileDescriptor),
@@ -2258,6 +2262,42 @@ napi_value AVPlayerNapi::JsGetCurrentTime(napi_env env, napi_callback_info info)
     return value;
 }
 
+napi_value AVPlayerNapi::JsGetPlaybackPosition(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVPlayerNapi::get playbackPosition");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    MEDIA_LOGD("JsGetPlaybackPosition In");
+
+    AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstance(env, info);
+    CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstance");
+    CHECK_AND_RETURN_RET_LOG(jsPlayer->player_ != nullptr, result, "failed to check player_");
+
+    std::string curState = jsPlayer->GetCurrentState();
+    if (curState == AVPlayerState::STATE_IDLE ||
+        curState == AVPlayerState::STATE_INITIALIZED ||
+        curState == AVPlayerState::STATE_STOPPED ||
+        curState == AVPlayerState::STATE_RELEASED ||
+        curState == AVPlayerState::STATE_ERROR) {
+        return CommonNapi::ThrowError(env, MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "current state is not prepared/playing/paused/completed, not support get playback position");
+    }
+
+    int32_t playbackPosition = 0;
+    (void)jsPlayer->player_->GetPlaybackPosition(playbackPosition);
+    if (playbackPosition != 0) {
+        MEDIA_LOGD("0x%{public}06" PRIXPTR " JsGetPlaybackPosition Out, state %{public}s, time: %{public}d",
+            FAKE_POINTER(jsPlayer), curState.c_str(), playbackPosition);
+    }
+
+    napi_value value = nullptr;
+    napi_status status = napi_create_int32(env, playbackPosition, &value);
+    if (status != napi_ok) {
+        MEDIA_LOGE("JsGetPlaybackPosition status != napi_ok");
+    }
+    return value;
+}
+
 napi_value AVPlayerNapi::JsGetDuration(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("AVPlayerNapi::get duration");
@@ -2759,6 +2799,25 @@ void AVPlayerNapi::MaxAmplitudeCallbackOn(AVPlayerNapi *jsPlayer, std::string ca
     }
 }
 
+void AVPlayerNapi::SeiMessageCallbackOn(AVPlayerNapi *jsPlayer, std::string callbackName,
+    const std::vector<int32_t> &payloadTypes)
+{
+    if (callbackName == "seiMessageReceived") {
+        seiMessageCallbackflag_ = true;
+    }
+
+    if (std::find(payloadTypes.begin(), payloadTypes.end(), PAYLOADTYPE_ENABLE) == payloadTypes.end()) {
+        seiMessageCallbackflag_ = false;
+        MEDIA_LOGI("payloadTypes is not 5");
+        return;
+    }
+
+    if (jsPlayer->player_ != nullptr && seiMessageCallbackflag_) {
+        MEDIA_LOGI("seiMessageCallbackflag_ = %{public}d", seiMessageCallbackflag_);
+        (void)jsPlayer->player_->SetSeiMessageCbStatus(seiMessageCallbackflag_, payloadTypes);
+    }
+}
+
 napi_value AVPlayerNapi::JsSetOnCallback(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("AVPlayerNapi::on");
@@ -2766,48 +2825,56 @@ napi_value AVPlayerNapi::JsSetOnCallback(napi_env env, napi_callback_info info)
     napi_get_undefined(env, &result);
     MEDIA_LOGD("JsSetOnCallback In");
 
-    constexpr size_t requireArgc = 2;
-    napi_value args[ARRAY_ARG_COUNTS_TWO] = { nullptr }; // args[0]:type, args[1]:callback
-    size_t argCount = 2; // args[0]:type, args[1]:callback
+    napi_value args[ARRAY_ARG_COUNTS_THREE] = { nullptr }; // args[0]:type, args[1]: payloadTypes  args[2]:callback
+    size_t argCount = ARRAY_ARG_COUNTS_THREE;
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
+    if (argCount < ARRAY_ARG_COUNTS_TWO || argCount > ARRAY_ARG_COUNTS_THREE) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "Mandatory parameters are left unspecified.");
+        return result;
+    }
 
     if (jsPlayer->GetCurrentState() == AVPlayerState::STATE_RELEASED) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is released, unsupport to on event");
         return result;
     }
 
-    napi_valuetype valueType0 = napi_undefined;
-    napi_valuetype valueType1 = napi_undefined;
-    if (argCount < requireArgc) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "Mandatory parameters are left unspecified.");
-        return result;
-    }
-
-    if (napi_typeof(env, args[0], &valueType0) != napi_ok || valueType0 != napi_string) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "type should be string.");
-        return result;
-    }
-
-    if (napi_typeof(env, args[1], &valueType1) != napi_ok || valueType1 != napi_function) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "callback type should be Callback or function.");
-        return result;
-    }
-
+    CHECK_AND_RETURN_RET_NOLOG(
+        VerifyExpectedType({ env, args[0], napi_string }, jsPlayer, "type should be string."), result);
     std::string callbackName = CommonNapi::GetStringArgument(env, args[0]);
-    jsPlayer->MaxAmplitudeCallbackOn(jsPlayer, callbackName);
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " set callbackName: %{public}s", FAKE_POINTER(jsPlayer), callbackName.c_str());
 
     napi_ref ref = nullptr;
-    napi_status status = napi_create_reference(env, args[1], 1, &ref);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok && ref != nullptr, result, "failed to create reference!");
-
+    if (argCount == ARGS_THREE) {
+        CHECK_AND_RETURN_RET_NOLOG(
+            VerifyExpectedType({ env, args[1], napi_object }, jsPlayer, "payloadTypes should be an Array."), result);
+        CHECK_AND_RETURN_RET_NOLOG(
+            VerifyExpectedType({ env, args[ARGS_TWO], napi_function }, jsPlayer, "param should be function."), result);
+        std::vector<int32_t> payloadTypes = {};
+        (void)CommonNapi::GetIntArrayArgument(env, args[1], payloadTypes);
+        jsPlayer->SeiMessageCallbackOn(jsPlayer, callbackName, payloadTypes);
+        napi_status status = napi_create_reference(env, args[ARGS_TWO], 1, &ref);
+        CHECK_AND_RETURN_RET_LOG(status == napi_ok && ref != nullptr, result, "failed to create reference!");
+    } else if (argCount == ARGS_TWO) {
+        CHECK_AND_RETURN_RET_NOLOG(
+            VerifyExpectedType({env, args[1], napi_function}, jsPlayer, "param should be function."), result);
+        jsPlayer->MaxAmplitudeCallbackOn(jsPlayer, callbackName);
+        napi_status status = napi_create_reference(env, args[1], 1, &ref);
+        CHECK_AND_RETURN_RET_LOG(status == napi_ok && ref != nullptr, result, "failed to create reference!");
+    }
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, ref);
-    jsPlayer->SaveCallbackReference(callbackName, autoRef);
-
+        jsPlayer->SaveCallbackReference(callbackName, autoRef);
     MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSetOnCallback callbackName: %{public}s success",
         FAKE_POINTER(jsPlayer), callbackName.c_str());
     return result;
+}
+
+bool AVPlayerNapi::VerifyExpectedType(const NapiTypeCheckUnit &unit, AVPlayerNapi *jsPlayer, const std::string &msg)
+{
+    napi_valuetype tmpType;
+    CHECK_AND_RETURN_RET_NOLOG(
+        napi_typeof(unit.env, unit.param, &tmpType) != napi_ok || tmpType != unit.expectedType, true);
+    jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, msg);
+    return false;
 }
 
 void AVPlayerNapi::MaxAmplitudeCallbackOff(AVPlayerNapi *jsPlayer, std::string callbackName)
@@ -2820,6 +2887,19 @@ void AVPlayerNapi::MaxAmplitudeCallbackOff(AVPlayerNapi *jsPlayer, std::string c
     }
 }
 
+void AVPlayerNapi::SeiMessageCallbackOff(AVPlayerNapi *jsPlayer, std::string &callbackName)
+{
+    if (jsPlayer == nullptr || seiMessageCallbackflag_ || callbackName != "seiMessageReceived") {
+        return;
+    }
+    seiMessageCallbackflag_ = false;
+    if (jsPlayer->player_ == nullptr) {
+        return;
+    }
+    std::vector<int32_t> payloadTypes = {};
+    (void)jsPlayer->player_->SetSeiMessageCbStatus(seiMessageCallbackflag_, payloadTypes);
+}
+
 napi_value AVPlayerNapi::JsClearOnCallback(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("AVPlayerNapi::off");
@@ -2827,8 +2907,8 @@ napi_value AVPlayerNapi::JsClearOnCallback(napi_env env, napi_callback_info info
     napi_get_undefined(env, &result);
     MEDIA_LOGD("JsClearOnCallback In");
 
-    napi_value args[ARRAY_ARG_COUNTS_TWO] = { nullptr }; // args[0]:type, args[1]:callback
-    size_t argCount = 2; // args[0]:type, args[1]:callback
+    napi_value args[ARRAY_ARG_COUNTS_THREE] = { nullptr }; // args[0]:type, args[1]:callback
+    size_t argCount = 3; // args[0]:type, args[1]:callback
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
 
@@ -2849,6 +2929,7 @@ napi_value AVPlayerNapi::JsClearOnCallback(napi_env env, napi_callback_info info
 
     std::string callbackName = CommonNapi::GetStringArgument(env, args[0]);
     jsPlayer->MaxAmplitudeCallbackOff(jsPlayer, callbackName);
+    jsPlayer->SeiMessageCallbackOff(jsPlayer, callbackName);
     MEDIA_LOGI("0x%{public}06" PRIXPTR " set callbackName: %{public}s", FAKE_POINTER(jsPlayer), callbackName.c_str());
 
     jsPlayer->ClearCallbackReference(callbackName);

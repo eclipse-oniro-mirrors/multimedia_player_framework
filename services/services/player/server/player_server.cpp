@@ -242,6 +242,7 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
     ret = playerEngine_->SetObs(obs);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetObs Failed!");
     ret = playerEngine_->SetMaxAmplitudeCbStatus(maxAmplitudeCbStatus_);
+    ret = playerEngine_->SetSeiMessageCbStatus(seiMessageCbStatus_, payloadTypes_);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetMaxAmplitudeCbStatus Failed!");
 
     lastOpStatus_ = PLAYER_INITIALIZED;
@@ -873,6 +874,31 @@ int32_t PlayerServer::GetCurrentTime(int32_t &currentTime)
     if (playerEngine_ != nullptr) {
         int32_t ret = playerEngine_->GetCurrentTime(currentTime);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine GetCurrentTime Failed!");
+    }
+    return MSERR_OK;
+}
+
+int32_t PlayerServer::GetPlaybackPosition(int32_t &playbackPosition)
+{
+    // delete lock, cannot be called concurrently with Reset or Release
+    if (lastOpStatus_ == PLAYER_IDLE || lastOpStatus_ == PLAYER_STATE_ERROR) {
+        MEDIA_LOGE("Can not GetPlaybackPosition, currentState is %{public}s",
+            GetStatusDescription(lastOpStatus_).c_str());
+        return MSERR_INVALID_OPERATION;
+    }
+
+    MEDIA_LOGD("PlayerServer GetPlaybackPosition in, currentState is %{public}s",
+        GetStatusDescription(lastOpStatus_).c_str());
+    if (lastOpStatus_ != PLAYER_PREPARED && lastOpStatus_ != PLAYER_STARTED && lastOpStatus_ != PLAYER_PAUSED &&
+        lastOpStatus_ != PLAYER_PLAYBACK_COMPLETE) {
+        playbackPosition = 0;
+        MEDIA_LOGD("get position at state: %{public}s, return 0", GetStatusDescription(lastOpStatus_).c_str());
+        return MSERR_OK;
+    }
+
+    if (playerEngine_ != nullptr) {
+        int32_t ret = playerEngine_->GetPlaybackPosition(playbackPosition);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine GetPlaybackPosition Failed!");
     }
     return MSERR_OK;
 }
@@ -1922,6 +1948,16 @@ bool PlayerServer::IsSeekContinuousSupported()
     bool isSeekContinuousSupported = false;
     int32_t ret = playerEngine_->IsSeekContinuousSupported(isSeekContinuousSupported);
     return ret == MSERR_OK && isSeekContinuousSupported;
+}
+
+int32_t PlayerServer::SetSeiMessageCbStatus(bool status, const std::vector<int32_t> &payloadTypes)
+{
+    seiMessageCbStatus_ = status;
+    payloadTypes_.assign(payloadTypes.begin(), payloadTypes.end());
+    CHECK_AND_RETURN_RET_LOG(isLiveStream_, MSERR_UNSUPPORT, "Can not SetSeiMessageCbStatus, not live-stream");
+    CHECK_AND_RETURN_RET_NOLOG(
+        playerEngine_ == nullptr, playerEngine_->SetSeiMessageCbStatus(status, payloadTypes));
+    return MSERR_OK;
 }
 } // namespace Media
 } // namespace OHOS

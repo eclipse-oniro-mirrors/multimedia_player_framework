@@ -1413,6 +1413,14 @@ int32_t HiPlayerImpl::GetCurrentTime(int32_t& currentPositionMs)
     return TransStatus(Status::OK);
 }
 
+int32_t HiPlayerImpl::GetPlaybackPosition(int32_t& playbackPositionMs)
+{
+    FALSE_RETURN_V(syncManager_ != nullptr, TransStatus(Status::ERROR_NULL_POINTER));
+    playbackPositionMs = Plugins::HstTime2Us32(syncManager_->GetMediaTimeNow());
+    MEDIA_LOG_D("GetPlaybackPosition playbackPositionMs: " PUBLIC_LOG_D32, playbackPositionMs);
+    return TransStatus(Status::OK);
+}
+
 int32_t HiPlayerImpl::GetDuration(int32_t& durationMs)
 {
     durationMs = durationMs_.load();
@@ -2105,10 +2113,23 @@ void HiPlayerImpl::OnEvent(const Event &event)
             HandleResolutionChangeEvent(event);
             break;
         }
+        case EventType::EVENT_SEI_INFO: {
+            HandleSeiInfoEvent(event);
+            break;
+        }
         default:
             break;
     }
     OnEventSub(event);
+}
+
+void HiPlayerImpl::HandleSeiInfoEvent(const Event &event)
+{
+    Format format = AnyCast<Format>(event.param);
+    callbackLooper_.OnInfo(INFO_TYPE_SEI_UPDATE_INFO, 0, format);
+    int32_t param = -1;
+    format.GetIntValue(Tag::AV_PLAYER_SEI_PLAYBACK_POSITION, param);
+    MEDIA_LOG_I("winddraw %{public}d", param);
 }
 
 void HiPlayerImpl::OnEventSub(const Event &event)
@@ -2249,9 +2270,11 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
     if (!mimeType_.empty()) {
         source->SetMimeType(mimeType_);
     }
-    if (surface_ == nullptr) {
+    if (!seiMessageCbStatus_ && surface_ == nullptr) {
+        MEDIA_LOG_D("HiPlayerImpl::DisableMediaTrack");
         demuxer_->DisableMediaTrack(OHOS::Media::Plugins::MediaType::VIDEO);
     }
+    FALSE_RETURN_V(!isInterruptNeeded_, Status::OK);
     auto ret = demuxer_->SetDataSource(source);
     if (demuxer_ != nullptr) {
         demuxer_->SetCallerInfo(instanceId_, bundleName_);
@@ -2910,6 +2933,18 @@ Status HiPlayerImpl::LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFi
 {
     MediaTrace trace("HiPlayerImpl::LinkVideoDecoderFilter");
     MEDIA_LOG_I("LinkVideoDecoderFilter");
+    if (surface_ == nullptr && seiMessageCbStatus_) {
+        MEDIA_LOG_I("Link SeiParserFilterFilter Enter.");
+        if (seiDecoder_ == nullptr) {
+            seiDecoder_ = FilterFactory::Instance().CreateFilter<SeiParserFilter>("player.sei",
+            FilterType::FILTERTYPE_SEI);
+            FALSE_RETURN_V(seiDecoder_ != nullptr, Status::ERROR_NULL_POINTER);
+            seiDecoder_->Init(playerEventReceiver_, playerFilterCallback_);
+            seiDecoder_->SetSeiMessageCbStatus(seiMessageCbStatus_, payloadTypes_);
+        }
+        return pipeline_->LinkFilters(preFilter, {seiDecoder_}, type);
+    }
+
     if (videoDecoder_ == nullptr) {
         videoDecoder_ = FilterFactory::Instance().CreateFilter<DecoderSurfaceFilter>("player.videodecoder",
             FilterType::FILTERTYPE_VDEC);
@@ -2920,6 +2955,7 @@ Status HiPlayerImpl::LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFi
         videoDecoder_->SetCallingInfo(appUid_, appPid_, bundleName_, instanceId_);
         if (surface_ != nullptr) {
             videoDecoder_->SetVideoSurface(surface_);
+            videoDecoder_->SetSeiMessageCbStatus(seiMessageCbStatus_, payloadTypes_);
         }
 
         // set decrypt config for drm videos
@@ -3098,6 +3134,19 @@ int32_t HiPlayerImpl::IsSeekContinuousSupported(bool &isSeekContinuousSupported)
         "demuxer or decoder is null");
     isSeekContinuousSupported = DraggingPlayerAgent::IsDraggingSupported(demuxer_, videoDecoder_);
     return TransStatus(Status::OK);
+}
+
+int32_t HiPlayerImpl::SetSeiMessageCbStatus(bool status, const std::vector<int32_t> &payloadTypes)
+{
+    seiMessageCbStatus_ = status;
+    payloadTypes_ = payloadTypes;
+    if (videoDecoder_ != nullptr && surface_ != nullptr) {
+        return videoDecoder_->SetSeiMessageCbStatus(seiMessageCbStatus_, payloadTypes_);
+    }
+    if (seiDecoder_ != nullptr && surface_ == nullptr) {
+        return seiDecoder_->SetSeiMessageCbStatus(seiMessageCbStatus_, payloadTypes_);
+    }
+    return MSERR_OK;
 }
 }  // namespace Media
 }  // namespace OHOS

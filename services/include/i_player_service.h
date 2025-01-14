@@ -266,6 +266,17 @@ public:
     virtual int32_t GetCurrentTime(int32_t &currentTime) = 0;
 
     /**
+     * @brief Obtains the playback position, accurate to millisecond.
+     *
+     * @param playbackPosition Indicates the playback position.
+     * @return Returns {@link MSERR_OK} if the current position is get; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t GetPlaybackPosition(int32_t &playbackPosition) = 0;
+
+    /**
      * @brief Obtains the video track info, contains mimeType, bitRate, width, height, frameRata.
      *
      * @param video track info vec.
@@ -565,6 +576,22 @@ public:
      * @version 1.0
      */
     virtual bool IsSeekContinuousSupported() = 0;
+
+    /**
+     * @brief Set get sei message callback status.
+     *
+     * @param status callback status.
+     * @return Returns {@link MSERR_OK} if the callback status is set; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t SetSeiMessageCbStatus(bool status, const std::vector<int32_t> &payloadTypes)
+    {
+        (void)status;
+        (void)payloadTypes;
+        return 0;
+    }
 };
 } // namespace Media
 } // namespace OHOS

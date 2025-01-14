@@ -302,6 +302,13 @@ int32_t PlayerImpl::GetCurrentTime(int32_t &currentTime)
     return playerService_->GetCurrentTime(currentTime);
 }
 
+int32_t PlayerImpl::GetPlaybackPosition(int32_t &playbackPosition)
+{
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " GetPlaybackPosition in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerService_->GetPlaybackPosition(playbackPosition);
+}
+
 int32_t PlayerImpl::GetVideoTrackInfo(std::vector<Format> &videoTrack)
 {
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " GetVideoTrackInfo in", FAKE_POINTER(this));
@@ -512,6 +519,14 @@ bool PlayerImpl::IsSeekContinuousSupported()
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " IsSeekContinuousSupported in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
     return playerService_->IsSeekContinuousSupported();
+}
+
+int32_t PlayerImpl::SetSeiMessageCbStatus(bool status, const std::vector<int32_t> &payloadTypes)
+{
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetSeiMessageCbStatus in, status is %{public}d",
+        FAKE_POINTER(this), status);
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
+    return playerService_->SetSeiMessageCbStatus(status, payloadTypes);
 }
 
 PlayerImplCallback::PlayerImplCallback(const std::shared_ptr<PlayerCallback> playerCb,

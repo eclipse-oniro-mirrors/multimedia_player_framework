@@ -182,6 +182,10 @@ void PlayerServiceStub::FillPlayerFuncPart2()
         [this](MessageParcel &data, MessageParcel &reply) { return GetApiVersion(data, reply); } };
     playerFuncs_[IS_SEEK_CONTINUOUS_SUPPORTED] = { "IsSeekContinuousSupported",
         [this](MessageParcel &data, MessageParcel &reply) { return IsSeekContinuousSupported(data, reply); } };
+    playerFuncs_[GET_PLAY_BACK_POSITION] = { "Player::GetPlaybackPosition",
+        [this](MessageParcel &data, MessageParcel &reply) { return GetPlaybackPosition(data, reply); } };
+    playerFuncs_[SET_SEI_MESSAGE_CB_STATUS] = { "Player::SetSeiMessageCbStatus",
+        [this](MessageParcel &data, MessageParcel &reply) { return SetSeiMessageCbStatus(data, reply); } };
 }
 
 int32_t PlayerServiceStub::Init()
@@ -398,6 +402,13 @@ int32_t PlayerServiceStub::GetCurrentTime(int32_t &currentTime)
     MediaTrace trace("PlayerServiceStub::GetCurrentTime");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
     return playerServer_->GetCurrentTime(currentTime);
+}
+
+int32_t PlayerServiceStub::GetPlaybackPosition(int32_t &playbackPosition)
+{
+    MediaTrace trace("PlayerServiceStub::GetPlaybackPosition");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->GetPlaybackPosition(playbackPosition);
 }
 
 int32_t PlayerServiceStub::GetVideoTrackInfo(std::vector<Format> &videoTrack)
@@ -769,6 +780,16 @@ int32_t PlayerServiceStub::GetCurrentTime(MessageParcel &data, MessageParcel &re
     return MSERR_OK;
 }
 
+int32_t PlayerServiceStub::GetPlaybackPosition(MessageParcel &data, MessageParcel &reply)
+{
+    (void)data;
+    int32_t playbackPosition = 0;
+    int32_t ret = GetPlaybackPosition(playbackPosition);
+    reply.WriteInt32(playbackPosition);
+    reply.WriteInt32(ret);
+    return MSERR_OK;
+}
+
 int32_t PlayerServiceStub::GetVideoTrackInfo(MessageParcel &data, MessageParcel &reply)
 {
     (void)data;
@@ -1119,6 +1140,25 @@ int32_t PlayerServiceStub::SetDeviceChangeCbStatus(MessageParcel &data, MessageP
 {
     bool status = data.ReadInt32();
     reply.WriteInt32(SetDeviceChangeCbStatus(status));
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::SetSeiMessageCbStatus(bool status, const std::vector<int32_t> &payloadTypes)
+{
+    MediaTrace trace("binder::SetSeiMessageCbStatus");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->SetSeiMessageCbStatus(status, payloadTypes);
+}
+
+int32_t PlayerServiceStub::SetSeiMessageCbStatus(MessageParcel &data, MessageParcel &reply)
+{
+    bool status = data.ReadBool();
+    int32_t payloadTypesSize = data.ReadInt32();
+    std::vector<int32_t> payloadTypes;
+    for (int32_t i = 0; i < payloadTypesSize; ++i) {
+        payloadTypes.push_back(data.ReadInt32());
+    }
+    reply.WriteInt32(SetSeiMessageCbStatus(status, payloadTypes));
     return MSERR_OK;
 }
 } // namespace Media
