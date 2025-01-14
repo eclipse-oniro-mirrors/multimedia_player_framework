@@ -90,20 +90,25 @@ std::unique_ptr<AudioStandard::AudioRenderer> CacheBuffer::CreateAudioRenderer(c
 
     rendererFlags_ = audioRendererInfo.rendererFlags;
     rendererOptions.rendererInfo.rendererFlags = rendererFlags_;
-    SoundPoolXCollie soundPoolXCollie("AudioRenderer::Create time out", timeOutSecondsCreateRelease,
+    SoundPoolXCollie soundPoolXCollie("AudioRenderer::Create time out",
         [](void *) {
             MEDIA_LOGI("AudioRenderer::Create time out");
-        }, nullptr);
+        });
     std::unique_ptr<AudioStandard::AudioRenderer> audioRenderer =
         AudioStandard::AudioRenderer::Create(cacheDir, rendererOptions);
+    soundPoolXCollie.CancelXCollieTimer();
 
     if (audioRenderer == nullptr) {
         MEDIA_LOGE("create audiorenderer failed, try again.");
         rendererFlags_ = NORMAL_PLAY_RENDERER_FLAGS;
         rendererOptions.rendererInfo.rendererFlags = rendererFlags_;
+        SoundPoolXCollie soundPoolXCollieNormal("AudioRenderer::Create normal time out",
+            [](void *) {
+                MEDIA_LOGI("AudioRenderer::Create normal time out");
+            });
         audioRenderer = AudioStandard::AudioRenderer::Create(cacheDir, rendererOptions);
+        soundPoolXCollieNormal.CancelXCollieTimer();
     }
-    soundPoolXCollie.CancelXCollieTimer();
 
     CHECK_AND_RETURN_RET_LOG(audioRenderer != nullptr, nullptr, "Invalid audioRenderer.");
     PrepareAudioRenderer(audioRenderer);
@@ -161,10 +166,10 @@ int32_t CacheBuffer::DoPlay(const int32_t streamID)
     cacheDataFrameIndex_ = 0;
     havePlayedCount_ = 0;
     isRunning_.store(true);
-    SoundPoolXCollie soundPoolXCollie("audioRenderer::Start time out", timeOutSecondsStartStop,
+    SoundPoolXCollie soundPoolXCollie("audioRenderer::Start time out",
         [](void *) {
             MEDIA_LOGI("audioRenderer::Start time out");
-        }, nullptr);
+        });
     if (!audioRenderer_->Start()) {
         soundPoolXCollie.CancelXCollieTimer();
         OHOS::AudioStandard::RendererState state = audioRenderer_->GetStatus();
@@ -373,10 +378,10 @@ int32_t CacheBuffer::Stop(const int32_t streamID)
     MEDIA_LOGI("CacheBuffer::Stop streamID:%{public}d", streamID_);
     if (audioRenderer_ != nullptr && isRunning_.load()) {
         isRunning_.store(false);
-        SoundPoolXCollie soundPoolXCollie("audioRenderer::Pause or Stop time out", timeOutSecondsStartStop,
+        SoundPoolXCollie soundPoolXCollie("audioRenderer::Pause or Stop time out",
             [](void *) {
                 MEDIA_LOGI("audioRenderer::Pause or Stop time out");
-            }, nullptr);
+            });
         if (audioRenderer_->IsFastRenderer()) {
             MEDIA_LOGI("audioRenderer fast renderer pause.");
             audioRenderer_->Pause();
@@ -473,16 +478,21 @@ int32_t CacheBuffer::Release()
     MEDIA_LOGI("CacheBuffer::Release start, streamID:%{public}d", streamID_);
     // Use audioRenderer to release and don't lock, so it will not cause dead lock. if here locked, audioRenderer
     // will wait callback thread stop, and the callback thread can't get the lock, it will cause dead lock
-    SoundPoolXCollie soundPoolXCollie("audioRenderer::Stop or Release time out", timeOutSecondsCreateRelease,
-        [](void *) {
-            MEDIA_LOGI("audioRenderer::Stop or Release time out");
-        }, nullptr);
     if (audioRenderer != nullptr) {
+        SoundPoolXCollie soundPoolXCollie("Release audioRenderer::Stop time out",
+            [](void *) {
+                MEDIA_LOGI("Release audioRenderer::Stop time out");
+            });
         audioRenderer->Stop();
+        soundPoolXCollie.CancelXCollieTimer();
+        SoundPoolXCollie soundPoolXCollieRelease("Release audioRenderer::Release time out",
+        [](void *) {
+            MEDIA_LOGI("Release audioRenderer::Release time out");
+        });
         audioRenderer->Release();
+        soundPoolXCollieRelease.CancelXCollieTimer();
         audioRenderer = nullptr;
     }
-    soundPoolXCollie.CancelXCollieTimer();
 
     std::lock_guard lock(cacheBufferLock_);
     if (!cacheData_.empty()) cacheData_.clear();
