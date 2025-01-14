@@ -1078,12 +1078,17 @@ int32_t PlayerServer::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
     size_t pos3 = uri.find("&");
     if (mimeType == AVMimeType::APPLICATION_M3U8 && pos1 != std::string::npos && pos2 != std::string::npos &&
         pos3 != std::string::npos) {
+        CHECK_AND_RETURN_RET_LOG(strlen("fd://") < pos1, MSERR_INVALID_VAL, "Failed to read fd.");
+        CHECK_AND_RETURN_RET_LOG(pos2 + strlen("offset=") < pos3, MSERR_INVALID_VAL, "Failed to read fd.");
         std::string fdStr = uri.substr(strlen("fd://"), pos1 - strlen("fd://"));
         std::string offsetStr = uri.substr(pos2 + strlen("offset="), pos3 - pos2 - strlen("offset="));
         std::string sizeStr = uri.substr(pos3 + sizeof("&size"));
-        int32_t fd = stoi(fdStr);
-        int32_t offset = stoi(offsetStr);
-        int32_t size = stoi(sizeStr);
+        int32_t fd = -1;
+        int32_t offset = -1;
+        int32_t size = -1;
+        CHECK_AND_RETURN_RET_LOG(StrToInt(fdStr, fd), MSERR_INVALID_VAL, "Failed to read fd.");
+        CHECK_AND_RETURN_RET_LOG(StrToInt(offsetStr, offset), MSERR_INVALID_VAL, "Failed to read offset.");
+        CHECK_AND_RETURN_RET_LOG(StrToInt(sizeStr, size), MSERR_INVALID_VAL, "Failed to read size.");
 
         auto uriHelper = std::make_unique<UriHelper>(fd, offset, size);
         CHECK_AND_RETURN_RET_LOG(uriHelper->AccessCheck(UriHelper::URI_READ), MSERR_INVALID_VAL, "Failed ro read fd.");

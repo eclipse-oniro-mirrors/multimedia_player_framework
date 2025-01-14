@@ -25,6 +25,8 @@
 #include "media_dfx.h"
 #include "av_common.h"
 #include "player_xcollie.h"
+#include "string_ex.h"
+#include "uri_helper.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "PlayerServiceProxy"};
@@ -628,11 +630,9 @@ int32_t PlayerServiceProxy::SetMediaSource(const std::shared_ptr<AVMediaSource> 
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-
     CHECK_AND_RETURN_RET_LOG(mediaSource != nullptr, MSERR_INVALID_VAL, "mediaSource is nullptr!");
     bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
-
     data.WriteString(mediaSource->url);
     auto headerSize = static_cast<uint32_t>(mediaSource->header.size());
     if (!data.WriteUint32(headerSize)) {
@@ -649,7 +649,6 @@ int32_t PlayerServiceProxy::SetMediaSource(const std::shared_ptr<AVMediaSource> 
             return MSERR_INVALID_OPERATION;
         }
     }
-    
     std::string mimeType = mediaSource->GetMimeType();
     data.WriteString(mimeType);
     std::string uri = mediaSource->url;
@@ -658,12 +657,13 @@ int32_t PlayerServiceProxy::SetMediaSource(const std::shared_ptr<AVMediaSource> 
     size_t fdTailPos = uri.find("?");
     if (mimeType == AVMimeType::APPLICATION_M3U8 && fdHeadPos != std::string::npos &&
         fdTailPos != std::string::npos) {
+        CHECK_AND_RETURN_RET_LOG(fdHeadPos < fdTailPos, MSERR_INVALID_VAL, "Failed to read fd.");
         std::string fdStr = uri.substr(strlen("fd://"), fdTailPos - strlen("fd://"));
+        CHECK_AND_RETURN_RET_LOG(StrToInt(fdStr, fd), MSERR_INVALID_VAL, "Failed to read fd.");
         fd = stoi(fdStr);
         (void)data.WriteFileDescriptor(fd);
         MEDIA_LOGI("fd : %d", fd);
     }
-
     (void)data.WriteUint32(strategy.preferredWidth);
     (void)data.WriteUint32(strategy.preferredHeight);
     (void)data.WriteUint32(strategy.preferredBufferDuration);
