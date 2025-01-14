@@ -2141,11 +2141,6 @@ void HiPlayerImpl::HandleSeiInfoEvent(const Event &event)
     MEDIA_LOG_I("winddraw %{public}d", param);
 }
 
-void HiPlayerImpl::HandleRenderFirstFrame()
-{
-    
-}
-
 void HiPlayerImpl::OnEventSub(const Event &event)
 {
     switch (event.type) {
