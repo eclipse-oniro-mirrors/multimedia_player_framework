@@ -2108,8 +2108,17 @@ void HiPlayerImpl::OnEvent(const Event &event)
             HandleInitialPlayingStateChange(event.type);
             break;
         }
+        default:
+            return OnEvent2(const Event &event);
+    }
+    OnEventSub(event);
+}
+
+void HiPlayerImpl::OnEvent2(const Event &event)
+{
+    MEDIA_LOG_D("OnEvent entered, event type is: %{public}d", event.type);
+    switch (event.type) {
         case EventType::EVENT_RESOLUTION_CHANGE: {
-            MEDIA_LOG_D_SHORT("resolution change event received");
             HandleResolutionChangeEvent(event);
             break;
         }
@@ -2120,7 +2129,6 @@ void HiPlayerImpl::OnEvent(const Event &event)
         default:
             break;
     }
-    OnEventSub(event);
 }
 
 void HiPlayerImpl::HandleSeiInfoEvent(const Event &event)
@@ -2130,6 +2138,11 @@ void HiPlayerImpl::HandleSeiInfoEvent(const Event &event)
     int32_t param = -1;
     format.GetIntValue(Tag::AV_PLAYER_SEI_PLAYBACK_POSITION, param);
     MEDIA_LOG_I("winddraw %{public}d", param);
+}
+
+void HiPlayerImpl::HandleRenderFirstFrame()
+{
+    
 }
 
 void HiPlayerImpl::OnEventSub(const Event &event)

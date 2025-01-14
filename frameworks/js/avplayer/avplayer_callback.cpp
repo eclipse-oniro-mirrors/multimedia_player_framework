@@ -635,6 +635,11 @@ AVPlayerCallback::AVPlayerCallback(napi_env env, AVPlayerNotify *listener)
     : env_(env), listener_(listener)
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    InitInfoFuncs();
+}
+
+void AVPlayerCallback::InitInfoFuncs()
+{
     onInfoFuncs_ = {
         { INFO_TYPE_STATE_CHANGE,
             [this](const int32_t extra, const Format &infoBody) { OnStateChangeCb(extra, infoBody); } },

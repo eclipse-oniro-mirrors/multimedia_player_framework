@@ -495,7 +495,7 @@ int32_t PlayerServiceProxy::GetVideoTrackInfo(std::vector<Format> &videoTrack)
 
 int32_t PlayerServiceProxy::SetSeiMessageCbStatus(bool status, const std::vector<int32_t> &payloadTypes)
 {
-    MediaTrace trace("binder::SetSeiMessageCbStatus");
+    MediaTrace trace("PlayerServiceProxy::SetSeiMessageCbStatus");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;

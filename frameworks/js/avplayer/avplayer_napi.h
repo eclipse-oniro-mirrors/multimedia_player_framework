@@ -344,7 +344,8 @@ private:
     void MaxAmplitudeCallbackOff(AVPlayerNapi *jsPlayer, std::string callbackName);
     void DeviceChangeCallbackOn(AVPlayerNapi *jsPlayer, std::string callbackName);
     void DeviceChangeCallbackOff(AVPlayerNapi *jsPlayer, std::string callbackName);
-    void SeiMessageCallbackOn(AVPlayerNapi *jsPlayer, std::string callbackName, const std::vector<int32_t> &payloadTypes);
+    void SeiMessageCallbackOn(
+        AVPlayerNapi *jsPlayer, std::string callbackName, const std::vector<int32_t> &payloadTypes);
     void SeiMessageCallbackOff(AVPlayerNapi *jsPlayer, std::string &callbackName);
     int32_t GetJsApiVersion() override;
     void GetAVPlayStrategyFromStrategyTmp(AVPlayStrategy &strategy, const AVPlayStrategyTmp &strategyTmp);

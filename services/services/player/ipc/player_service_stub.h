@@ -160,6 +160,7 @@ private:
     std::map<uint32_t, std::pair<std::string, PlayerStubFunc>> playerFuncs_;
     void FillPlayerFuncPart1();
     void FillPlayerFuncPart2();
+    void FillPlayerFuncPart3();
 };
 } // namespace Media
 } // namespace OHOS

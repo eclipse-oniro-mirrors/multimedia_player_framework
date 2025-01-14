@@ -77,6 +77,7 @@ void PlayerServiceStub::SetPlayerFuncs()
 {
     FillPlayerFuncPart1();
     FillPlayerFuncPart2();
+    FillPlayerFuncPart3();
     (void)RegisterMonitor(appPid_);
 }
 
@@ -182,6 +183,10 @@ void PlayerServiceStub::FillPlayerFuncPart2()
         [this](MessageParcel &data, MessageParcel &reply) { return GetApiVersion(data, reply); } };
     playerFuncs_[IS_SEEK_CONTINUOUS_SUPPORTED] = { "IsSeekContinuousSupported",
         [this](MessageParcel &data, MessageParcel &reply) { return IsSeekContinuousSupported(data, reply); } };
+}
+
+void PlayerServiceStub::FillPlayerFuncPart3()
+{
     playerFuncs_[GET_PLAY_BACK_POSITION] = { "Player::GetPlaybackPosition",
         [this](MessageParcel &data, MessageParcel &reply) { return GetPlaybackPosition(data, reply); } };
     playerFuncs_[SET_SEI_MESSAGE_CB_STATUS] = { "Player::SetSeiMessageCbStatus",
@@ -1145,7 +1150,7 @@ int32_t PlayerServiceStub::SetDeviceChangeCbStatus(MessageParcel &data, MessageP
 
 int32_t PlayerServiceStub::SetSeiMessageCbStatus(bool status, const std::vector<int32_t> &payloadTypes)
 {
-    MediaTrace trace("binder::SetSeiMessageCbStatus");
+    MediaTrace trace("PlayerServiceStub::SetSeiMessageCbStatus");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
     return playerServer_->SetSeiMessageCbStatus(status, payloadTypes);
 }
