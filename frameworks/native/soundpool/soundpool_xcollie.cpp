@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Huawei Device Co., Ltd.
+ * Copyright (C) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -27,8 +27,8 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "Sou
 namespace OHOS {
 namespace Media {
 
-SoundPoolXCollie::SoundPoolXCollie(const std::string &tag, uint32_t timeoutSeconds,
-    std::function<void(void *)> func, void *arg, uint32_t flag)
+SoundPoolXCollie::SoundPoolXCollie(const std::string &tag, std::function<void(void *)> func,
+    uint32_t timeoutSeconds, void *arg, uint32_t flag)
 {
     id_ = HiviewDFX::XCollie::GetInstance().SetTimer(tag, timeoutSeconds, func, arg, flag);
     tag_ = tag;
