@@ -2119,6 +2119,7 @@ void HiPlayerImpl::OnEvent2(const Event &event)
     MEDIA_LOG_D("OnEvent entered, event type is: %{public}d", event.type);
     switch (event.type) {
         case EventType::EVENT_RESOLUTION_CHANGE: {
+            MEDIA_LOG_D_SHORT("resolution change event received");
             HandleResolutionChangeEvent(event);
             break;
         }
