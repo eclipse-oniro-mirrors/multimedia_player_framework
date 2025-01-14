@@ -306,7 +306,8 @@ std::shared_ptr<IScreenCaptureController> MediaClient::CreateScreenCaptureContro
     MEDIA_LOGI("MediaClient::CreateScreenCaptureControllerClient() start");
 
     sptr<IRemoteObject> object = nullptr;
-    CreateMediaServiceInstance(IStandardMediaService::MediaSystemAbility::MEDIA_SCREEN_CAPTURE_CONTROLLER, object, lock);
+    CreateMediaServiceInstance(IStandardMediaService::MediaSystemAbility::MEDIA_SCREEN_CAPTURE_CONTROLLER,
+        object, lock);
     CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "screenCapture controller proxy object is nullptr.");
 
     sptr<IStandardScreenCaptureController> controllerProxy = iface_cast<IStandardScreenCaptureController>(object);
@@ -413,11 +414,9 @@ void MediaClient::DoMediaServerDied()
     }
     listenerStub_ = nullptr;
     deathRecipient_ = nullptr;
-
     std::shared_ptr<MonitorClient> monitor = MonitorClient::GetInstance();
     CHECK_AND_RETURN_LOG(monitor != nullptr, "Failed to get monitor Instance!");
     monitor->MediaServerDied();
-
     AVPlayerServerDied();
 #ifdef SUPPORT_RECORDER
     for (auto &it : recorderClientList_) {
@@ -426,7 +425,6 @@ void MediaClient::DoMediaServerDied()
             recorder->MediaServerDied();
         }
     }
-
     for (auto &it : recorderProfilesClientList_) {
         auto recorderProfilesClient = std::static_pointer_cast<RecorderProfilesClient>(it);
         if (recorderProfilesClient != nullptr) {
@@ -434,7 +432,6 @@ void MediaClient::DoMediaServerDied()
         }
     }
 #endif
-
 #ifdef SUPPORT_SCREEN_CAPTURE
     for (auto &it : screenCaptureClientList_) {
         auto screenCaptureClient = std::static_pointer_cast<ScreenCaptureClient>(it);
@@ -455,9 +452,7 @@ void MediaClient::DoMediaServerDied()
         }
     }
 #endif
-#ifdef SUPPORT_START_STOP_ON_DEMAND
     serviceDiedCondition_.notify_all();
-#endif
 }
 } // namespace Media
 } // namespace OHOS
