@@ -869,6 +869,100 @@ HWTEST_F(RecorderUnitTest, recorder_configure_022, TestSize.Level2)
 }
 
 /**
+ * @tc.name: recorder_configure_023
+ * @tc.desc: record audioFormat = AUDIO_AMR_NB, outPutFormat = FORMAT_AMR, audioEncodingBitRate = 4750
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderUnitTest, recorder_configure_023, TestSize.Level2)
+{
+    VideoRecorderConfig videoRecorderConfig;
+    videoRecorderConfig.audioFormat = AUDIO_AMR_NB;
+    videoRecorderConfig.outPutFormat = FORMAT_AMR;
+    videoRecorderConfig.audioEncodingBitRate = 4750;
+    videoRecorderConfig.channelCount = 1;
+    videoRecorderConfig.sampleRate = 8000;
+    videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_configure_023.amr").c_str(), O_RDWR);
+    ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
+    // correct config
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_AUDIO, videoRecorderConfig));
+    EXPECT_EQ(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_OK, recorder_->Reset());
+    
+    // incorrect config
+    videoRecorderConfig.audioEncodingBitRate = 2750;
+    videoRecorderConfig.channelCount = 1;
+    videoRecorderConfig.sampleRate = 8000;
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_AUDIO, videoRecorderConfig));
+    EXPECT_NE(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_OK, recorder_->Reset());
+    
+    videoRecorderConfig.audioEncodingBitRate = 4750;
+    videoRecorderConfig.channelCount = 2;
+    videoRecorderConfig.sampleRate = 8000;
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_AUDIO, videoRecorderConfig));
+    EXPECT_NE(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_OK, recorder_->Reset());
+    
+    videoRecorderConfig.audioEncodingBitRate = 4750;
+    videoRecorderConfig.channelCount = 1;
+    videoRecorderConfig.sampleRate = 16000;
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_AUDIO, videoRecorderConfig));
+    EXPECT_NE(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_OK, recorder_->Reset());
+    
+    EXPECT_EQ(MSERR_OK, recorder_->Release());
+    close(videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_configure_024
+ * @tc.desc: record audioFormat = AUDIO_AMR_WB, outPutFormat = FORMAT_AMR, audioEncodingBitRate = 6600
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderUnitTest, recorder_configure_024, TestSize.Level2)
+{
+    VideoRecorderConfig videoRecorderConfig;
+    videoRecorderConfig.audioFormat = AUDIO_AMR_WB;
+    videoRecorderConfig.outPutFormat = FORMAT_AMR;
+    videoRecorderConfig.audioEncodingBitRate = 6600;
+    videoRecorderConfig.channelCount = 1;
+    videoRecorderConfig.sampleRate = 16000;
+    videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_configure_024.amr").c_str(), O_RDWR);
+    ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
+    // incorrect config
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_AUDIO, videoRecorderConfig));
+    EXPECT_EQ(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_OK, recorder_->Reset());
+    
+    // incorrect config
+    videoRecorderConfig.audioEncodingBitRate = 2600;
+    videoRecorderConfig.channelCount = 1;
+    videoRecorderConfig.sampleRate = 16000;
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_AUDIO, videoRecorderConfig));
+    EXPECT_NE(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_OK, recorder_->Reset());
+    
+    videoRecorderConfig.audioEncodingBitRate = 6600;
+    videoRecorderConfig.channelCount = 2;
+    videoRecorderConfig.sampleRate = 16000;
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_AUDIO, videoRecorderConfig));
+    EXPECT_NE(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_OK, recorder_->Reset());
+    
+    videoRecorderConfig.audioEncodingBitRate = 6600;
+    videoRecorderConfig.channelCount = 1;
+    videoRecorderConfig.sampleRate = 26000;
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_AUDIO, videoRecorderConfig));
+    EXPECT_NE(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_OK, recorder_->Reset());
+    
+    EXPECT_EQ(MSERR_OK, recorder_->Release());
+    close(videoRecorderConfig.outputFd);
+}
+
+/**
  * @tc.name: recorder_mp3_001
  * @tc.desc: record mp3
  * @tc.type: FUNC

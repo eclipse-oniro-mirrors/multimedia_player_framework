@@ -1638,6 +1638,8 @@ int32_t AVRecorderNapi::GetAudioCodecFormat(const std::string &mime, AudioCodecF
         { CodecMimeType::AUDIO_AAC, AudioCodecFormat::AAC_LC },
         { CodecMimeType::AUDIO_MPEG, AudioCodecFormat::AUDIO_MPEG },
         { CodecMimeType::AUDIO_G711MU, AudioCodecFormat::AUDIO_G711MU },
+        { CodecMimeType::AUDIO_AMR_NB, AudioCodecFormat::AUDIO_AMR_NB },
+        { CodecMimeType::AUDIO_AMR_WB, AudioCodecFormat::AUDIO_AMR_WB },
         { "", AudioCodecFormat::AUDIO_DEFAULT },
     };
 
@@ -1675,6 +1677,7 @@ int32_t AVRecorderNapi::GetOutputFormat(const std::string &extension, OutputForm
         { "m4a", OutputFormatType::FORMAT_M4A },
         { "mp3", OutputFormatType::FORMAT_MP3 },
         { "wav", OutputFormatType::FORMAT_WAV },
+        { "amr", OutputFormatType::FORMAT_AMR },
         { "", OutputFormatType::FORMAT_DEFAULT },
     };
 
@@ -2424,6 +2427,8 @@ int32_t MediaJsResultExtensionMethod::SetAudioCodecFormat(AudioCodecFormat &code
         { AudioCodecFormat::AAC_LC, CodecMimeType::AUDIO_AAC },
         { AudioCodecFormat::AUDIO_MPEG, CodecMimeType::AUDIO_MPEG },
         { AudioCodecFormat::AUDIO_G711MU, CodecMimeType::AUDIO_G711MU },
+        { AudioCodecFormat::AUDIO_AMR_NB, CodecMimeType::AUDIO_AMR_NB },
+        { AudioCodecFormat::AUDIO_AMR_WB, CodecMimeType::AUDIO_AMR_WB },
         { AudioCodecFormat::AUDIO_DEFAULT, "" },
     };
 
@@ -2461,6 +2466,7 @@ int32_t MediaJsResultExtensionMethod::SetFileFormat(OutputFormatType &type, std:
         { OutputFormatType::FORMAT_M4A, "m4a" },
         { OutputFormatType::FORMAT_MP3, "mp3" },
         { OutputFormatType::FORMAT_WAV, "wav" },
+        { OutputFormatType::FORMAT_AMR, "amr" },
         { OutputFormatType::FORMAT_DEFAULT, "" },
     };
 

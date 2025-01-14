@@ -648,7 +648,9 @@ OH_AVRecorder_CodecMimeType ConvertMimeType(const std::string &mimeType)
         {"video/hevc", OH_AVRecorder_CodecMimeType::VIDEO_HEVC},
         {"audio/mp4a-latm", OH_AVRecorder_CodecMimeType::AUDIO_AAC},
         {"audio/mpeg", OH_AVRecorder_CodecMimeType::AUDIO_MP3},
-        {"audio/g711mu", OH_AVRecorder_CodecMimeType::AUDIO_G711MU}
+        {"audio/g711mu", OH_AVRecorder_CodecMimeType::AUDIO_G711MU},
+        {"audio/3gpp", OH_AVRecorder_CodecMimeType::AUDIO_AMR_NB},
+        {"audio/amr-wb", OH_AVRecorder_CodecMimeType::AUDIO_AMR_WB},
     };
 
     auto it = mimeTypeMap.find(mimeType);
