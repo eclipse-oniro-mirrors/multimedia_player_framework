@@ -82,7 +82,7 @@ public:
 
     // ISoundPoolCallback override
     void OnLoadCompleted(int32_t soundId) override;
-    void OnPlayFinished() override;
+    void OnPlayFinished(int32_t streamID) override;
     void OnError(int32_t errorCode) override;
 
 private:

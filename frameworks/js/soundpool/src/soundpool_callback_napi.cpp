@@ -37,10 +37,10 @@ void SoundPoolCallBackNapi::OnLoadCompleted(int32_t soundId)
     SendLoadCompletedCallback(soundId);
 }
 
-void SoundPoolCallBackNapi::OnPlayFinished()
+void SoundPoolCallBackNapi::OnPlayFinished(int32_t streamID)
 {
     MEDIA_LOGI("OnPlayFinished recived");
-    SendPlayCompletedCallback();
+    SendPlayCompletedCallback(streamID);
 }
 
 void SoundPoolCallBackNapi::OnError(int32_t errorCode)
@@ -115,18 +115,36 @@ void SoundPoolCallBackNapi::SendLoadCompletedCallback(int32_t soundId)
     return OnJsloadCompletedCallBack(cb);
 }
 
-void SoundPoolCallBackNapi::SendPlayCompletedCallback()
+void SoundPoolCallBackNapi::SendPlayCompletedCallback(int32_t streamID)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (refMap_.find(SoundPoolEvent::EVENT_PLAY_FINISHED) == refMap_.end()) {
+    if (refMap_.find(SoundPoolEvent::EVENT_PLAY_FINISHED) == refMap_.end() &&
+        refMap_.find(SoundPoolEvent::EVENT_PLAY_FINISHED_WITH_STREAM_ID) == refMap_.end()) {
         MEDIA_LOGW("can not find playfinished callback!");
         return;
     }
 
     SoundPoolJsCallBack *cb = new(std::nothrow) SoundPoolJsCallBack();
     CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
-    cb->autoRef = refMap_.at(SoundPoolEvent::EVENT_PLAY_FINISHED);
-    cb->callbackName = SoundPoolEvent::EVENT_PLAY_FINISHED;
+    std::weak_ptr<AutoRef> autoRefFinished;
+    std::weak_ptr<AutoRef> autoRefFinishedStreamID;
+    auto it = refMap_.find(SoundPoolEvent::EVENT_PLAY_FINISHED);
+    if (it != refMap_.end()) {
+        autoRefFinished = it->second;
+    }
+    auto itStreamId = refMap_.find(SoundPoolEvent::EVENT_PLAY_FINISHED_WITH_STREAM_ID);
+    if (itStreamId != refMap_.end()) {
+        autoRefFinishedStreamID = itStreamId->second;
+    }
+
+    if (std::shared_ptr<AutoRef> ref = autoRefFinishedStreamID.lock()) {
+        cb->autoRef = autoRefFinishedStreamID;
+        cb->callbackName = SoundPoolEvent::EVENT_PLAY_FINISHED_WITH_STREAM_ID;
+        cb->playFinishedStreamID = streamID;
+    } else {
+        cb->autoRef = autoRefFinished;
+        cb->callbackName = SoundPoolEvent::EVENT_PLAY_FINISHED;
+    }
     return OnJsplayCompletedCallBack(cb);
 }
 
@@ -321,9 +339,20 @@ void SoundPoolCallBackNapi::SoundPoolJsCallBack::RunJsplayCompletedCallBackTask(
         CHECK_AND_BREAK_LOG(nstatus == napi_ok && jsCallback != nullptr, "%{public}s get reference value fail",
             request.c_str());
 
-        napi_value result = nullptr;
-        nstatus = napi_call_function(ref->env_, nullptr, jsCallback, 0, nullptr, &result);
-        CHECK_AND_BREAK_LOG(nstatus == napi_ok, "%{public}s fail to napi call function", request.c_str());
+        if (request == SoundPoolEvent::EVENT_PLAY_FINISHED_WITH_STREAM_ID) {
+            napi_value args[1] = { nullptr };
+            nstatus = napi_create_int32(ref->env_, event->playFinishedStreamID, &args[0]);
+            CHECK_AND_BREAK_LOG(nstatus == napi_ok && args[0] != nullptr,
+                "%{public}s fail to create callback", request.c_str());
+            const size_t argCount = 1;
+            napi_value result = nullptr;
+            nstatus = napi_call_function(ref->env_, nullptr, jsCallback, argCount, args, &result);
+            CHECK_AND_BREAK_LOG(nstatus == napi_ok, "%{public}s fail to napi call function", request.c_str());
+        } else {
+            napi_value result = nullptr;
+            nstatus = napi_call_function(ref->env_, nullptr, jsCallback, 0, nullptr, &result);
+            CHECK_AND_BREAK_LOG(nstatus == napi_ok, "%{public}s fail to napi call function", request.c_str());
+        }
     } while (0);
 }
 

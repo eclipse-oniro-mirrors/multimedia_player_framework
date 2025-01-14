@@ -187,7 +187,7 @@ public:
      * @since 1.0
      * @version 1.0
      */
-    virtual void OnPlayFinished() = 0;
+    virtual void OnPlayFinished(int32_t streamID) = 0;
 
     /**
      * @brief Register listens for sound play error events.

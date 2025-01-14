@@ -53,7 +53,7 @@ private:
             : streamIDManagerInner_(streamIDManager) {}
         virtual ~CacheBufferCallBack() = default;
         void OnLoadCompleted(int32_t soundID);
-        void OnPlayFinished();
+        void OnPlayFinished(int32_t streamID);
         void OnError(int32_t errorCode);
 
     private:
