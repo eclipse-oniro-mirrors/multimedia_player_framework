@@ -145,7 +145,7 @@ void AVScreenCaptureCallback::OnJsErrorCallBack(AVScreenCaptureJsCallback *jsCb)
             CHECK_AND_BREAK_LOG(nstatus == napi_ok, "%{public}s fail to napi call function", request.c_str());
         } while (0);
         delete jsCb;
-    }
+    };
     CHECK_AND_RETURN_LOG(napi_send_event(env_, task, napi_eprio_immediate) == napi_status::napi_ok,
         "OnJsErrorCallBack napi_send_event failed");
 
