@@ -376,22 +376,23 @@ void VideoCallbackNapi::UvWorkCallBack(uv_work_t *work, int status)
 
 void VideoCallbackNapi::OnJsCallBack(VideoPlayerAsyncContext *context) const
 {
-    uv_loop_s *loop = nullptr;
-    napi_get_uv_event_loop(env_, &loop);
-    if (loop != nullptr) {
-        uv_work_t *work = new(std::nothrow) uv_work_t;
-        if (work != nullptr) {
-            work->data = reinterpret_cast<void *>(context);
-            int ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, VideoCallbackNapi::UvWorkCallBack);
-            if (ret != 0) {
-                MEDIA_LOGE("Failed to execute libuv work queue");
-                delete context;
-                delete work;
-            }
-        } else {
+    napi_status ret = napi_send_event(env_, [context] () {
+        CHECK_AND_RETURN_LOG(context != nullptr, "context is nullptr");
+        napi_handle_scope scope = nullptr;
+        napi_env env = context->env_;
+        napi_open_handle_scope(env, &scope);
+        if (scope == nullptr) {
+            MEDIA_LOGE("scope is nullptr");
             delete context;
+            return;
         }
-    } else {
+        ON_SCOPE_EXIT(0) {
+            napi_close_handle_scope(env, scope);
+        };
+        MediaAsyncContext::CompleteCallback(context->env_, napi_ok, static_cast<void *>(context));
+    }, napi_eprio_high);
+    if (ret != napi_ok) {
+        MEDIA_LOGE("Failed to execute libuv work queue, ret = %{public}d", ret);
         delete context;
     }
 }
