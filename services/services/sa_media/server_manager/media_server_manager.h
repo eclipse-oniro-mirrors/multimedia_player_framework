@@ -63,10 +63,11 @@ public:
     void NotifyMemMgrLoaded();
 #ifdef SUPPORT_START_STOP_ON_DEMAND
     int32_t GetInstanceCount();
-    size_t GetMSSystemClock();
-    size_t GetReleaseAllInstanceTime();
-    void SetReleaseAllInstanceTime();
-    int32_t ExistInstanceNum();
+    int32_t GetInstanceCountLocked();
+    size_t GetCurrentSystemClockMs();
+    size_t GetAllInstancesReleasedTime();
+    void ResetAllInstancesReleasedTime();
+    void UpdateAllInstancesReleasedTime();
 #endif
 private:
     MediaServerManager();
@@ -129,7 +130,7 @@ private:
 
     std::mutex mutex_;
 #ifdef SUPPORT_START_STOP_ON_DEMAND
-    size_t releaseAllInstanceTime_ {0};
+    size_t allInstancesReleasedTime_ {0};
 #endif
 };
 } // namespace Media

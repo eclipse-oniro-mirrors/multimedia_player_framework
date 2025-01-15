@@ -624,9 +624,7 @@ void MediaServerManager::DestroyStubObject(StubType type, sptr<IRemoteObject> ob
         }
     }
 #ifdef SUPPORT_START_STOP_ON_DEMAND
-    if (GetInstanceCount() == 0 && releaseAllInstanceTime_ == 0) {
-        releaseAllInstanceTime_ = GetMSSystemClock();
-    }
+    UpdateAllInstancesReleasedTime();
 #endif
 }
 
@@ -769,9 +767,7 @@ void MediaServerManager::DestroyStubObjectForPid(pid_t pid)
     MonitorServiceStub::GetInstance()->OnClientDie(pid);
     executor_.Clear();
 #ifdef SUPPORT_START_STOP_ON_DEMAND
-    if (GetInstanceCount() == 0 && releaseAllInstanceTime_ == 0) {
-        releaseAllInstanceTime_ = GetMSSystemClock();
-    }
+    UpdateAllInstancesReleasedTime();
 #endif
 }
 
@@ -829,7 +825,7 @@ void MediaServerManager::AsyncExecutor::HandleAsyncExecution()
 }
 
 #ifdef SUPPORT_START_STOP_ON_DEMAND
-int32_t MediaServerManager::ExistInstanceNum()
+int32_t MediaServerManager::GetInstanceCountLocked()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     return GetInstanceCount();
@@ -843,23 +839,30 @@ int32_t MediaServerManager::GetInstanceCount()
            screenCaptureMonitorStubMap_.size() + transCoderStubMap_.size());
 }
 
-size_t MediaServerManager::GetMSSystemClock()
+size_t MediaServerManager::GetCurrentSystemClockMs()
 {
     auto now = std::chrono::high_resolution_clock::now();
     auto now_ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch());
     return now_ms.count();
 }
 
-size_t MediaServerManager::GetReleaseAllInstanceTime()
+size_t MediaServerManager::GetAllInstancesReleasedTime()
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    return releaseAllInstanceTime_;
+    return allInstancesReleasedTime_;
 }
 
-void MediaServerManager::SetReleaseAllInstanceTime()
+void MediaServerManager::ResetAllInstancesReleasedTime()
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    releaseAllInstanceTime_ = 0;
+    allInstancesReleasedTIme_ = 0;
+}
+
+void MediaServerManager::UpdateAllInstancesReleasedTime()
+{
+    if (allInstancesReleasedTIme_ == 0 && GetInstanceCount() == 0) {
+        allInstancesReleasedTIme_ = GetCurrentSystemClockMs();
+    }
 }
 #endif
 } // namespace Media
