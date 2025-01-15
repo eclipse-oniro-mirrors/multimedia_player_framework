@@ -1980,5 +1980,49 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_041, TestSize.Level2)
     MEDIA_LOGI("soundpool_unit_test soundpool_function_041 after");
 }
 
+
+/**
+ * @tc.name: soundpool_function_042
+ * @tc.desc: function test playFinished with streamId
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(SoundPoolUnitTest, soundpool_function_042, TestSize.Level2)
+{
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_042 before");
+    int maxStreams = 3;
+    create(maxStreams);
+    std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
+    soundPool_->SetSoundPoolCallback(cb);
+    loadUrl(g_fileName[4], loadNum_++);
+    loadUrl(g_fileName[5], loadNum_++);
+    sleep(waitTime3);
+    struct PlayParams playParameters;
+    streamIDs_[playNum_] = soundPool_->Play(soundIDs_[0], playParameters);
+    EXPECT_GT(streamIDs_[playNum_], 0);
+    sleep(waitTime1);
+    playNum_++;
+    streamIDs_[playNum_] = soundPool_->Play(soundIDs_[1], playParameters);
+    EXPECT_GT(streamIDs_[playNum_], 0);
+    int32_t totalNum = playNum_ + 1;
+    int32_t matchNum = 0;
+    sleep(waitTime10);
+
+    std::vector<int32_t> vector = cb->GetHavePlayedStreamID();
+    EXPECT_EQ(totalNum, vector.size());
+    for (int32_t i = 0; i < totalNum; ++i) {
+        for (int32_t playStreamId : vector) {
+            if (playStreamId == streamIDs_[i]) {
+                matchNum++;
+            }
+        }
+    }
+    EXPECT_EQ(totalNum, matchNum);
+
+    cb->ResetHavePlayedStreamID();
+    cb->ResetHavePlayedSoundNum();
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_042 after");
+}
+
 } // namespace Media
 } // namespace OHOS

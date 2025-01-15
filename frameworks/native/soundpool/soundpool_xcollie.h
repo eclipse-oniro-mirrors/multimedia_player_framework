@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Huawei Device Co., Ltd.
+ * Copyright (C) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,13 +22,14 @@
 
 namespace OHOS {
 namespace Media {
-
+constexpr uint32_t TIME_OUT_SECONDS_DEFAULT = 3;
 constexpr unsigned int SOUNDPOOL_XCOLLIE_FLAG_LOG = (1 << 0);
 
 class SoundPoolXCollie {
 public:
-    SoundPoolXCollie(const std::string &tag, uint32_t timeoutSeconds,
-        std::function<void(void *)> func = nullptr, void *arg = nullptr, uint32_t flag = SOUNDPOOL_XCOLLIE_FLAG_LOG);
+    explicit SoundPoolXCollie(const std::string &tag, std::function<void(void *)> func = nullptr,
+        uint32_t timeoutSeconds = TIME_OUT_SECONDS_DEFAULT, void *arg = nullptr,
+        uint32_t flag = SOUNDPOOL_XCOLLIE_FLAG_LOG);
     ~SoundPoolXCollie();
     void CancelXCollieTimer();
 private:

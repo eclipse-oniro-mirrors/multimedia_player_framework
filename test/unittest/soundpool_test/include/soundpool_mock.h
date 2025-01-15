@@ -90,14 +90,25 @@ public:
         havePlayedSoundNumInner_ = 0;
         cout << "After ResetHavePlayedSoundNum havePlayedSoundNumInner_:" << havePlayedSoundNumInner_ << endl;
     }
+
+    std::vector<int32_t> GetHavePlayedStreamID()
+    {
+        return vector_;
+    }
+
+    void ResetHavePlayedStreamID()
+    {
+        vector_.clear();
+    }
     std::shared_ptr<SoundPoolMock> soundPool_ = nullptr;
     void OnLoadCompleted(int32_t soundId) override;
-    void OnPlayFinished() override;
+    void OnPlayFinished(int32_t streamID) override;
     void OnError(int32_t errorCode) override;
 
 private:
     int32_t haveLoadedSoundNumInner_ = 0;
     int32_t havePlayedSoundNumInner_ = 0;
+    std::vector<int32_t> vector_;
 };
 } // namespace Media
 } // namespace OHOS

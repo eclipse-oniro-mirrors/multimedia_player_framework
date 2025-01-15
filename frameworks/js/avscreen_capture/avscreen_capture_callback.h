@@ -52,7 +52,6 @@ private:
         int32_t errorCode = MSERR_EXT_UNKNOWN;
         AVScreenCaptureStateCode stateCode;
     };
-    static void OnJsErrorCallBackWork(uv_work_t *work, int status);
     void OnJsErrorCallBack(AVScreenCaptureJsCallback *jsCb) const;
     void OnJsStateChangeCallBack(AVScreenCaptureJsCallback *jsCb) const;
     napi_env env_ = nullptr;

@@ -588,6 +588,47 @@ HWTEST_F(PlayerServerUnitTest, Player_SetMediaSource_006, TestSize.Level0)
 }
 
 /**
+ * @tc.name  : Test Player StrToInt API
+ * @tc.number: Player_StrToInt_001
+ * @tc.desc  : Test Player StrToInt interface
+ */
+HWTEST_F(PlayerServerUnitTest, Player_StrToInt_001, TestSize.Level0)
+{
+    std::string str = "123";
+    int32_t fd = -1;
+    int32_t num = 123;
+    auto res = StrToInt(str, fd);
+    EXPECT_EQ(res, true);
+    EXPECT_EQ(fd, num);
+}
+
+/**
+ * @tc.name  : Test Player StrToInt API
+ * @tc.number: Player_StrToInt_002
+ * @tc.desc  : Test Player StrToInt interface
+ */
+HWTEST_F(PlayerServerUnitTest, Player_StrToInt_002, TestSize.Level0)
+{
+    std::string str = "12a3";
+    int32_t fd = -1;
+    auto res = StrToInt(str, fd);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.name  : Test Player StrToInt API
+ * @tc.number: Player_StrToInt_003
+ * @tc.desc  : Test Player StrToInt interface
+ */
+HWTEST_F(PlayerServerUnitTest, Player_StrToInt_003, TestSize.Level0)
+{
+    std::string str = "9223372036854775809";
+    int32_t fd = -1;
+    auto res = StrToInt(str, fd);
+    EXPECT_EQ(res, false);
+}
+
+/**
  * @tc.name  : Test Player SetSource API
  * @tc.number: Player_SetSource_001
  * @tc.desc  : Test Player SetSource interface

@@ -432,8 +432,9 @@ void StreamIDManager::CacheBufferCallBack::OnLoadCompleted(int32_t soundID)
     (void)soundID;
 }
 
-void StreamIDManager::CacheBufferCallBack::OnPlayFinished()
+void StreamIDManager::CacheBufferCallBack::OnPlayFinished(int32_t streamID)
 {
+    (void)streamID;
     if (std::shared_ptr<StreamIDManager> ptr = streamIDManagerInner_.lock()) {
         ptr->OnPlayFinished();
     }
