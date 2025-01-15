@@ -199,12 +199,12 @@ napi_value AudioRecorderNapi::CreateAudioRecorderAsync(napi_env env, napi_callba
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
     asyncCtx->JsResult = std::make_unique<MediaJsResultInstance>(constructor_);
-    napi_value resource = nullptr;
-    napi_create_string_utf8(env, "CreateAudioRecorderAsync", NAPI_AUTO_LENGTH, &resource);
-    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {},
-        MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
-    NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
-    asyncCtx.release();
+    auto ret = MediaAsyncContext::SendCompleteEvent(env, asyncCtx.get(), napi_eprio_immediate);
+    if (ret != napi_status::napi_ok) {
+        MEDIA_LOGE("failed to SendEvent, ret = %{public}d", ret);
+    } else {
+        asyncCtx.release();
+    }
     MEDIA_LOGD("CreateAudioRecorderAsync Out");
 
     return result;
