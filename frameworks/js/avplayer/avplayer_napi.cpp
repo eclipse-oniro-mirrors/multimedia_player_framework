@@ -2274,11 +2274,10 @@ napi_value AVPlayerNapi::JsGetPlaybackPosition(napi_env env, napi_callback_info 
     CHECK_AND_RETURN_RET_LOG(jsPlayer->player_ != nullptr, result, "failed to check player_");
 
     std::string curState = jsPlayer->GetCurrentState();
-    if (curState == AVPlayerState::STATE_IDLE ||
-        curState == AVPlayerState::STATE_INITIALIZED ||
-        curState == AVPlayerState::STATE_STOPPED ||
-        curState == AVPlayerState::STATE_RELEASED ||
-        curState == AVPlayerState::STATE_ERROR) {
+    if (curState == AVPlayerState::STATE_PLAYING &&
+        curState == AVPlayerState::STATE_PAUSED &&
+        curState == AVPlayerState::STATE_PREPARED &&
+        curState == AVPlayerState::STATE_COMPLETED) {
         return CommonNapi::ThrowError(env, MSERR_EXT_API9_OPERATE_NOT_PERMIT,
             "current state is not prepared/playing/paused/completed, not support get playback position");
     }
