@@ -36,7 +36,13 @@ constexpr int32_t SYSTEM_PROCESS_TYPE = 1;
 const int32_t SECOND_CONVERT_MS = 1000;
 const std::string SA_ONDEMAND_CONFIG = std::string(SA_CONFIG_PATH);
 const std::string CONFIG_DELAYTIME_KEY = std::string(DELAY_TIME_KEY);
+#ifdef CROSS_PLATFORM
 using json = nlohmann::json
+const int32_t DEFAULT_DELAY_TIME = 180;
+const std::string SYSTEMABILITY = std::string("systemability");
+const std::string STOPONDEMAND = std::string("stop-on-demand");
+const std::string LONGTIMEUNUSED = std::string("longtimeunused-unload");
+#endif
 REGISTER_SYSTEM_ABILITY_BY_ID(MediaServer, PLAYER_DISTRIBUTED_SERVICE_ID, false)
 #else
 REGISTER_SYSTEM_ABILITY_BY_ID(MediaServer, PLAYER_DISTRIBUTED_SERVICE_ID, true)

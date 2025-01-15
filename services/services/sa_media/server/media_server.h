@@ -20,8 +20,10 @@
 #include "system_ability.h"
 #include "nocopyable.h"
 #ifdef SUPPORT_START_STOP_ON_DEMAND
+#ifdef CROSS_PLATFORM
 #inlcude <fstream>
 #include "nlohmann/json.hpp"
+#endif
 #endif
 
 namespace OHOS {

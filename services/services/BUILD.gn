@@ -98,10 +98,7 @@ config("media_service_config") {
   }
   if (player_framework_enable_start_stop_on_demand) {
     sa_config_path = "\"/system/profile/media_service.json\""
-    key_of_delay_time =
-        "\"/systemability/0/stop-on-demand/longtimeunused-unload\""
     defines += [ "SA_CONFIG_PATH=${sa_config_path}" ]
-    defines += [ "DELAY_TIME_KEY=${key_of_delay_time}" ]
   }
 }
 

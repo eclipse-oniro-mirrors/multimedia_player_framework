@@ -108,7 +108,7 @@ private:
     std::list<std::shared_ptr<IScreenCaptureController>> screenCaptureControllerList_;
 #endif
     std::mutex mutex_;
-    std::condition_variable serviceDiedCondition_;
+    std::condition_variable mediaProxyUpdateCondition_;
 };
 } // namespace Media
 } // namespace OHOS
