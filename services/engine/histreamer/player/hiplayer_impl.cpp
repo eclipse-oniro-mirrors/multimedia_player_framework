@@ -2109,12 +2109,12 @@ void HiPlayerImpl::OnEvent(const Event &event)
             break;
         }
         default:
-            return OnEvent2(event);
+            return OnEventContinue(event);
     }
     OnEventSub(event);
 }
 
-void HiPlayerImpl::OnEvent2(const Event &event)
+void HiPlayerImpl::OnEventContinue(const Event &event)
 {
     MEDIA_LOG_D("OnEvent entered, event type is: %{public}d", event.type);
     switch (event.type) {

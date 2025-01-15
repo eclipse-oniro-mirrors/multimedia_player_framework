@@ -2806,12 +2806,6 @@ void AVPlayerNapi::SeiMessageCallbackOn(AVPlayerNapi *jsPlayer, std::string call
         seiMessageCallbackflag_ = true;
     }
 
-    if (std::find(payloadTypes.begin(), payloadTypes.end(), PAYLOADTYPE_ENABLE) == payloadTypes.end()) {
-        seiMessageCallbackflag_ = false;
-        MEDIA_LOGI("payloadTypes is not 5");
-        return;
-    }
-
     if (jsPlayer->player_ != nullptr && seiMessageCallbackflag_) {
         MEDIA_LOGI("seiMessageCallbackflag_ = %{public}d", seiMessageCallbackflag_);
         (void)jsPlayer->player_->SetSeiMessageCbStatus(seiMessageCallbackflag_, payloadTypes);
@@ -2887,16 +2881,16 @@ void AVPlayerNapi::MaxAmplitudeCallbackOff(AVPlayerNapi *jsPlayer, std::string c
     }
 }
 
-void AVPlayerNapi::SeiMessageCallbackOff(AVPlayerNapi *jsPlayer, std::string &callbackName)
+void AVPlayerNapi::SeiMessageCallbackOff(AVPlayerNapi *jsPlayer, std::string &callbackName,
+    const std::vector<int32_t> &payloadTypes)
 {
-    if (jsPlayer == nullptr || seiMessageCallbackflag_ || callbackName != "seiMessageReceived") {
+    if (jsPlayer == nullptr || !seiMessageCallbackflag_ || callbackName != "seiMessageReceived") {
         return;
     }
     seiMessageCallbackflag_ = false;
     if (jsPlayer->player_ == nullptr) {
         return;
     }
-    std::vector<int32_t> payloadTypes = {};
     (void)jsPlayer->player_->SetSeiMessageCbStatus(seiMessageCallbackflag_, payloadTypes);
 }
 
@@ -2907,8 +2901,8 @@ napi_value AVPlayerNapi::JsClearOnCallback(napi_env env, napi_callback_info info
     napi_get_undefined(env, &result);
     MEDIA_LOGD("JsClearOnCallback In");
 
-    napi_value args[ARRAY_ARG_COUNTS_THREE] = { nullptr }; // args[0]:type, args[1]:callback
-    size_t argCount = 3; // args[0]:type, args[1]:callback
+    napi_value args[ARRAY_ARG_COUNTS_THREE] = { nullptr }; // args[0]:type, args[1]: payloadTypes  args[2]:callback
+    size_t argCount = 3;
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
 
@@ -2928,8 +2922,13 @@ napi_value AVPlayerNapi::JsClearOnCallback(napi_env env, napi_callback_info info
     }
 
     std::string callbackName = CommonNapi::GetStringArgument(env, args[0]);
-    jsPlayer->MaxAmplitudeCallbackOff(jsPlayer, callbackName);
-    jsPlayer->SeiMessageCallbackOff(jsPlayer, callbackName);
+    if (callbackName != "seiMessageReceived") {
+        jsPlayer->MaxAmplitudeCallbackOff(jsPlayer, callbackName);
+    } else {
+        std::vector<int32_t> payloadTypes = {};
+        (void)CommonNapi::GetIntArrayArgument(env, args[1], payloadTypes);
+        jsPlayer->SeiMessageCallbackOff(jsPlayer, callbackName, payloadTypes);
+    }
     MEDIA_LOGI("0x%{public}06" PRIXPTR " set callbackName: %{public}s", FAKE_POINTER(jsPlayer), callbackName.c_str());
 
     jsPlayer->ClearCallbackReference(callbackName);

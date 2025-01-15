@@ -152,7 +152,7 @@ public:
 
     // internal interfaces
     void OnEvent(const Event &event);
-    void OnEvent2(const Event &event);
+    void OnEventContinue(const Event &event);
     void OnEventSub(const Event &event);
     void OnEventSubTrackChange(const Event &event);
     void HandleDfxEvent(const DfxEvent &event);
