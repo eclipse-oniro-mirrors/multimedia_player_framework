@@ -452,7 +452,7 @@ void MediaClient::DoMediaServerDied()
         }
     }
 #endif
-    mediaProxyUpdateCondition__.notify_all();
+    mediaProxyUpdateCondition_.notify_all();
 }
 } // namespace Media
 } // namespace OHOS
