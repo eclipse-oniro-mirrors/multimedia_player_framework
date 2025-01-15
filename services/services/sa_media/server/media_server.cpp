@@ -103,7 +103,7 @@ int32_t MediaServer::GetUnloadDelayTime()
     sa_ondemand_config_file >> SAOnDemandConfig;
     sa_ondemand_config_file.close();
     json systemability = SAOnDemandConfig[SYSTEMABILITY];
-    CHECK_AND_RETURN_RET_LOG(systemability.is_array(); -1, "systemability not exist");
+    CHECK_AND_RETURN_RET_LOG(systemability.is_array(), -1, "systemability not exist");
     for (auto& ability : systemability) {
         json stopOnDemand = ability[STOPONDEMAND];
         CHECK_AND_CONTINUE_LOG(stopOnDemand.is_object(), "stop-on-demand not exist");
