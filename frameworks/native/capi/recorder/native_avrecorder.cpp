@@ -350,7 +350,8 @@ int32_t GetVideoOrientation(const char* videoOrientation)
     }
 }
 
-bool IsLocationValid(const OH_AVRecorder_Location &location) {
+bool IsLocationValid(const OH_AVRecorder_Location &location)
+{
     return location.latitude >= MIN_LATITUDE &&
            location.latitude <= MAX_LATITUDE &&
            location.longitude >= MIN_LONGITUDE &&
