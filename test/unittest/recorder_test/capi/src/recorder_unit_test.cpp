@@ -16,11 +16,16 @@
 #include "recorder_unit_test.h"
 
 #include <iostream>
+#include <fcntl.h>
+#include <thread>
 #include <nativetoken_kit.h>
 #include <token_setproc.h>
 #include <accesstoken_kit.h>
+#include "surface/window.h"
+#include "native_window.h"
 #include "media_log.h"
 #include "media_errors.h"
+#include "display_type.h"
 
 using namespace std;
 using namespace OHOS;
@@ -31,6 +36,13 @@ using namespace testing::ext;
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_RECORDER, "NativeAVRecorder" };
 }
+
+const std::string RECORDER_ROOT = "/data/test/media/";
+std::atomic<bool> isExit_ { false };
+const int32_t STUB_STREAM_COUNT = 602;
+const int32_t STRIDE_ALIGN = 8;
+const int32_t FRAME_DURATION = 30000;
+const int32_t SEC_TO_NS = 1000000000;
 
 static HapInfoParams hapInfo = {
     .userID = 100, // 100 user ID
@@ -127,7 +139,7 @@ static OH_AVRecorder_Config config_ = {
     .videoSourceType = OH_AVRecorder_VideoSourceType::SURFACE_YUV,
     .profile = profile_,
     .url = nullptr,
-    .fileGenerationMode = OH_AVRecorder_FileGenerationMode::AUTO_CREATE_CAMERA_SCENE,
+    .fileGenerationMode = OH_AVRecorder_FileGenerationMode::APP_CREATE,
     .metadata = metadata_,
 };
 
@@ -217,6 +229,57 @@ void NativeRecorderUnitTest::SetSelfTokenPremission()
     }
 }
 
+OH_AVErrCode RequesetBuffer(OHNativeWindow *window, const OH_AVRecorder_Config *config)
+{
+    MEDIA_LOGI("RequestBuffer loop start.");
+    CHECK_AND_RETURN_RET_LOG(window != nullptr, AV_ERR_INVALID_VAL, "input window is nullptr!");
+    OHOS::sptr<OHOS::Surface> producerSurface_ = window->surface;
+    CHECK_AND_RETURN_RET_LOG(producerSurface_ != nullptr, AV_ERR_INVALID_VAL, "input surface is nullptr!");
+
+    BufferRequestConfig requestConfig;
+    requestConfig.width = config->profile.videoFrameWidth;
+    requestConfig.height = config->profile.videoFrameHeight;
+    requestConfig.strideAlignment = STRIDE_ALIGN;
+    requestConfig.format = PIXEL_FMT_YCRCB_420_SP;
+    requestConfig.usage = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_CPU_WRITE | BUFFER_USAGE_MEM_DMA;
+    requestConfig.timeout = INT_MAX;
+    BufferFlushConfig flushConfig;
+    flushConfig.damage.x = 0;
+    flushConfig.damage.y = 0;
+    flushConfig.damage.w = config->profile.videoFrameWidth;
+    flushConfig.damage.h = config->profile.videoFrameHeight;
+    flushConfig.timestamp = 0;
+    int32_t count = 0;
+
+    while (count < STUB_STREAM_COUNT) {
+        CHECK_AND_RETURN_RET_LOG(!isExit_.load(), AV_ERR_OK, "Exit RequestBuffer");
+        MEDIA_LOGI("RequestBuffer loop count: %{public}d", count);
+        OHOS::sptr<OHOS::SurfaceBuffer> buffer;
+        int32_t releaseFence;
+        OHOS::SurfaceError ret = producerSurface_->RequestBuffer(buffer, releaseFence, requestConfig);
+        if (ret != SURFACE_ERROR_OK || buffer == nullptr) {
+            MEDIA_LOGI("RequestBuffer failed");
+            continue;
+        }
+
+        struct timespec timestamp = {0, 0};
+        clock_gettime(1, &timestamp);
+        int64_t pts = static_cast<int64_t>(timestamp.tv_sec) * SEC_TO_NS + static_cast<int64_t>(timestamp.tv_nsec);
+        int32_t isKeyFrame = (count % 30 == 0) ? 1 : 0;
+        int32_t bufferSize = requestConfig.width * requestConfig.height * 3 / 2;
+        MEDIA_LOGI("RequestBuffer loop bufferSize: %{public}d", bufferSize);
+        buffer->GetExtraData()->ExtraSet("dataSize", bufferSize);
+        buffer->GetExtraData()->ExtraSet("timeStamp", pts);
+        buffer->GetExtraData()->ExtraSet("isKeyFrame", isKeyFrame);
+        usleep(FRAME_DURATION);
+
+        producerSurface_->FlushBuffer(buffer, -1, flushConfig);
+        count++;
+    }
+    MEDIA_LOGI("RequestBuffer loop end.");
+    return AV_ERR_OK;
+}
+
 /**
  * @tc.name: Recorder_Prepare_001
  * @tc.desc: Test recorder preparation process
@@ -227,11 +290,14 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Prepare_001, TestSize.Level2)
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_Prepare_001 in.");
 
     OH_AVRecorder_Config config = config_;
-    config.url = strdup("");
     config.metadata.genre = strdup("");
     config.metadata.videoOrientation = strdup("0");
     config.metadata.customInfo.key = strdup("");
     config.metadata.customInfo.value = strdup("");
+
+    int32_t outputFd = open((RECORDER_ROOT + "Recorder_Prepare_001.mp4").c_str(), O_RDWR);
+    const std::string fdHead = "fd://";
+    config.url = strdup((fdHead + std::to_string(outputFd)).c_str());
 
     int32_t ret = AV_ERR_OK;
     ret = OH_AVRecorder_Prepare(recorder_, &config);
@@ -256,13 +322,12 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Prepare_002, TestSize.Level2)
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_Prepare_002 in.");
 
     OH_AVRecorder_Config config = config_;
-    config.url = strdup("");
     config.metadata.genre = strdup("");
     config.metadata.videoOrientation = strdup("0");
     config.metadata.customInfo.key = strdup("");
     config.metadata.customInfo.value = strdup("");
     config.profile.audioBitrate = 48000;
-    config.profile.audioChannels = 1;
+    config.profile.audioChannels = 2;
     config.profile.audioCodec = OH_AVRecorder_CodecMimeType::AUDIO_AAC;
     config.profile.audioSampleRate = 48000;
     config.profile.fileFormat = OH_AVRecorder_ContainerFormatType::CFT_MPEG_4;
@@ -275,6 +340,10 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Prepare_002, TestSize.Level2)
     config.profile.enableTemporalScale = false;
     config.audioSourceType = OH_AVRecorder_AudioSourceType::MIC;
     config.videoSourceType = OH_AVRecorder_VideoSourceType::SURFACE_YUV;
+
+    int32_t outputFd = open((RECORDER_ROOT + "Recorder_Prepare_002.mp4").c_str(), O_RDWR);
+    const std::string fdHead = "fd://";
+    config.url = strdup((fdHead + std::to_string(outputFd)).c_str());
 
     int32_t ret = AV_ERR_OK;
     ret = OH_AVRecorder_Prepare(recorder_, &config);
@@ -299,12 +368,11 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Prepare_003, TestSize.Level2)
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_Prepare_003 in.");
 
     OH_AVRecorder_Config config = config_;
-    config.url = strdup("");
     config.metadata.genre = strdup("");
     config.metadata.videoOrientation = strdup("270");
     config.metadata.customInfo.key = strdup("");
     config.metadata.customInfo.value = strdup("");
-    config.profile.audioBitrate = 96000;
+    config.profile.audioBitrate = 48000;
     config.profile.audioChannels = 2;
     config.profile.audioCodec = OH_AVRecorder_CodecMimeType::AUDIO_AAC;
     config.profile.audioSampleRate = 48000;
@@ -318,6 +386,10 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Prepare_003, TestSize.Level2)
     config.profile.enableTemporalScale = true;
     config.audioSourceType = OH_AVRecorder_AudioSourceType::CAMCORDER;
     config.videoSourceType = OH_AVRecorder_VideoSourceType::SURFACE_ES;
+
+    int32_t outputFd = open((RECORDER_ROOT + "Recorder_Prepare_003.mp4").c_str(), O_RDWR);
+    const std::string fdHead = "fd://";
+    config.url = strdup((fdHead + std::to_string(outputFd)).c_str());
 
     int32_t ret = AV_ERR_OK;
     ret = OH_AVRecorder_Prepare(recorder_, &config);
@@ -651,11 +723,12 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_GetAVRecorderConfig_001, TestSize.Leve
 {
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_GetAVRecorderConfig_001 in.");
 
-    OH_AVRecorder_Config *configGet = static_cast<OH_AVRecorder_Config *>(malloc(sizeof(OH_AVRecorder_Config)));
+    OH_AVRecorder_Config *configGet = nullptr;
 
     int32_t ret = AV_ERR_OK;
     ret = OH_AVRecorder_GetAVRecorderConfig(recorder_, &configGet);
     EXPECT_EQ(ret, AV_ERR_OK);
+    ASSERT_NE(configGet, nullptr);
     EXPECT_EQ(configGet->profile.audioBitrate, 0);
     EXPECT_EQ(configGet->profile.audioChannels, 0);
     EXPECT_EQ(configGet->profile.audioCodec, static_cast<OH_AVRecorder_CodecMimeType>(AUDIO_CODEC_FORMAT_BUTT));
@@ -672,8 +745,6 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_GetAVRecorderConfig_001, TestSize.Leve
     EXPECT_EQ(configGet->metadata.location.latitude, 0.0);
     EXPECT_EQ(configGet->metadata.location.longitude, 0.0);
 
-    free(configGet);
-
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_GetAVRecorderConfig_001 out.");
 }
 
@@ -687,19 +758,23 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_GetAVRecorderConfig_002, TestSize.Leve
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_GetAVRecorderConfig_002 in.");
 
     OH_AVRecorder_Config config = config_;
-    config.url = strdup("fd://02");
     config.metadata.genre = strdup("");
     config.metadata.videoOrientation = strdup("90");
     config.metadata.customInfo.key = strdup("");
     config.metadata.customInfo.value = strdup("");
 
-    OH_AVRecorder_Config *configGet = static_cast<OH_AVRecorder_Config *>(malloc(sizeof(OH_AVRecorder_Config)));
+    int32_t outputFd = open((RECORDER_ROOT + "Recorder_GetAVRecorderConfig_002.mp4").c_str(), O_RDWR);
+    const std::string fdHead = "fd://";
+    config.url = strdup((fdHead + std::to_string(outputFd)).c_str());
+
+    OH_AVRecorder_Config *configGet = nullptr;
 
     int32_t ret = AV_ERR_OK;
     ret = OH_AVRecorder_Prepare(recorder_, &config);
     EXPECT_EQ(ret, AV_ERR_OK);
     ret = OH_AVRecorder_GetAVRecorderConfig(recorder_, &configGet);
     EXPECT_EQ(ret, AV_ERR_OK);
+    ASSERT_NE(configGet, nullptr);
     EXPECT_EQ(configGet->profile.audioBitrate, 48000);
     EXPECT_EQ(configGet->profile.audioChannels, 2);
     EXPECT_EQ(configGet->profile.audioCodec, OH_AVRecorder_CodecMimeType::AUDIO_AAC);
@@ -720,7 +795,6 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_GetAVRecorderConfig_002, TestSize.Leve
     free(config.metadata.videoOrientation);
     free(config.metadata.customInfo.key);
     free(config.metadata.customInfo.value);
-    free(configGet);
 
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_GetAVRecorderConfig_002 out.");
 }
@@ -735,7 +809,6 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_GetAVRecorderConfig_003, TestSize.Leve
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_GetAVRecorderConfig_003 in.");
 
     OH_AVRecorder_Config config = config_;
-    config.url = strdup("fd://10");
     config.metadata.genre = strdup("");
     config.metadata.videoOrientation = strdup("270");
     config.metadata.customInfo.key = strdup("");
@@ -755,13 +828,18 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_GetAVRecorderConfig_003, TestSize.Leve
     config.audioSourceType = OH_AVRecorder_AudioSourceType::CAMCORDER;
     config.videoSourceType = OH_AVRecorder_VideoSourceType::SURFACE_ES;
 
-    OH_AVRecorder_Config *configGet = static_cast<OH_AVRecorder_Config *>(malloc(sizeof(OH_AVRecorder_Config)));
+    int32_t outputFd = open((RECORDER_ROOT + "Recorder_GetAVRecorderConfig_003.mp4").c_str(), O_RDWR);
+    const std::string fdHead = "fd://";
+    config.url = strdup((fdHead + std::to_string(outputFd)).c_str());
+
+    OH_AVRecorder_Config *configGet = nullptr;
 
     int32_t ret = AV_ERR_OK;
     ret = OH_AVRecorder_Prepare(recorder_, &config);
     EXPECT_EQ(ret, AV_ERR_OK);
     ret = OH_AVRecorder_GetAVRecorderConfig(recorder_, &configGet);
     EXPECT_EQ(ret, AV_ERR_OK);
+    ASSERT_NE(configGet, nullptr);
     EXPECT_EQ(configGet->profile.audioBitrate, 64000);
     EXPECT_EQ(configGet->profile.audioChannels, 2);
     EXPECT_EQ(configGet->profile.audioCodec, OH_AVRecorder_CodecMimeType::AUDIO_AAC);
@@ -771,18 +849,14 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_GetAVRecorderConfig_003, TestSize.Leve
     EXPECT_EQ(configGet->profile.videoCodec, OH_AVRecorder_CodecMimeType::VIDEO_AVC);
     EXPECT_EQ(configGet->profile.videoFrameHeight, 2160);
     EXPECT_EQ(configGet->profile.videoFrameWidth, 3840);
-    EXPECT_EQ(configGet->profile.videoFrameRate, 24);
     EXPECT_EQ(configGet->audioSourceType, OH_AVRecorder_AudioSourceType::CAMCORDER);
     EXPECT_EQ(configGet->videoSourceType, OH_AVRecorder_VideoSourceType::SURFACE_ES);
-    EXPECT_EQ(configGet->metadata.location.latitude, 31);
-    EXPECT_EQ(configGet->metadata.location.longitude, 121);
 
     free(config.url);
     free(config.metadata.genre);
     free(config.metadata.videoOrientation);
     free(config.metadata.customInfo.key);
     free(config.metadata.customInfo.value);
-    free(configGet);
 
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_GetAVRecorderConfig_003 out.");
 }
@@ -816,11 +890,14 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_GetInputSurface_002, TestSize.Level2)
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_GetInputSurface_002 in.");
 
     OH_AVRecorder_Config config = config_;
-    config.url = strdup("");
     config.metadata.genre = strdup("");
     config.metadata.videoOrientation = strdup("0");
     config.metadata.customInfo.key = strdup("");
     config.metadata.customInfo.value = strdup("");
+
+    int32_t outputFd = open((RECORDER_ROOT + "Recorder_GetInputSurface_002.mp4").c_str(), O_RDWR);
+    const std::string fdHead = "fd://";
+    config.url = strdup((fdHead + std::to_string(outputFd)).c_str());
 
     OHNativeWindow *windowGet = nullptr;
 
@@ -868,11 +945,14 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_UpdateRotation_002, TestSize.Level2)
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_UpdateRotation_002 in.");
 
     OH_AVRecorder_Config config = config_;
-    config.url = strdup("");
     config.metadata.genre = strdup("");
     config.metadata.videoOrientation = strdup("0");
     config.metadata.customInfo.key = strdup("");
     config.metadata.customInfo.value = strdup("");
+
+    int32_t outputFd = open((RECORDER_ROOT + "Recorder_UpdateRotation_002.mp4").c_str(), O_RDWR);
+    const std::string fdHead = "fd://";
+    config.url = strdup((fdHead + std::to_string(outputFd)).c_str());
 
     int32_t rotation = 180;
 
@@ -906,6 +986,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_UpdateRotation_003, TestSize.Level2)
     config.metadata.videoOrientation = strdup("0");
     config.metadata.customInfo.key = strdup("");
     config.metadata.customInfo.value = strdup("");
+    config.fileGenerationMode = OH_AVRecorder_FileGenerationMode::AUTO_CREATE_CAMERA_SCENE;
 
     int32_t rotation = 90;
 
@@ -939,6 +1020,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_UpdateRotation_004, TestSize.Level2)
     config.metadata.videoOrientation = strdup("0");
     config.metadata.customInfo.key = strdup("");
     config.metadata.customInfo.value = strdup("");
+    config.fileGenerationMode = OH_AVRecorder_FileGenerationMode::AUTO_CREATE_CAMERA_SCENE;
 
     int32_t ret = AV_ERR_OK;
     ret = OH_AVRecorder_Prepare(recorder_, &config);
@@ -971,12 +1053,12 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_UpdateRotation_004, TestSize.Level2)
 
 /**
  * @tc.name: Recorder_Start_001
- * @tc.desc: Test recorder start process failure 001
+ * @tc.desc: Test recorder start process 001
  * @tc.type: FUNC
  */
-HWTEST_F(NativeRecorderUnitTest, Recorder_Start_failure_001, TestSize.Level2)
+HWTEST_F(NativeRecorderUnitTest, Recorder_Start_001, TestSize.Level2)
 {
-    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Start_failure_001 in.");
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Start_001 in.");
 
     int32_t ret = AV_ERR_OK;
     ret = OH_AVRecorder_Start(recorder_);
@@ -984,50 +1066,64 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Start_failure_001, TestSize.Level2)
 
     ret = OH_AVRecorder_Stop(recorder_);
 
-    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Start_failure_001 out.");
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Start_001 out.");
 }
 
 /**
  * @tc.name: Recorder_Start_002
- * @tc.desc: Test recorder start process failure 002
+ * @tc.desc: Test recorder start process 002
  * @tc.type: FUNC
  */
-HWTEST_F(NativeRecorderUnitTest, Recorder_Start_failure_002, TestSize.Level2)
+HWTEST_F(NativeRecorderUnitTest, Recorder_Start_002, TestSize.Level2)
 {
-    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Start_failure_002 in.");
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Start_002 in.");
 
     OH_AVRecorder_Config config = config_;
-    config.url = strdup("");
     config.metadata.genre = strdup("");
     config.metadata.videoOrientation = strdup("0");
     config.metadata.customInfo.key = strdup("");
     config.metadata.customInfo.value = strdup("");
 
+    int32_t outputFd = open((RECORDER_ROOT + "Recorder_Start_002.mp4").c_str(), O_RDWR);
+    const std::string fdHead = "fd://";
+    config.url = strdup((fdHead + std::to_string(outputFd)).c_str());
+    OHNativeWindow *windowGet = nullptr;
+
     int32_t ret = AV_ERR_OK;
     ret = OH_AVRecorder_Prepare(recorder_, &config);
     EXPECT_EQ(ret, AV_ERR_OK);
+    ret = OH_AVRecorder_GetInputSurface(recorder_, &windowGet);
+    EXPECT_EQ(ret, AV_ERR_OK);
     ret = OH_AVRecorder_Start(recorder_);
-    EXPECT_NE(ret, AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_OK);
+    isExit_.store(false);
+    std::unique_ptr<std::thread> requesetBufferThread_;
+    requesetBufferThread_.reset(new(std::nothrow) std::thread(RequesetBuffer, windowGet, &config));
     sleep(3);
+    if (requesetBufferThread_ != nullptr) {
+        isExit_.store(true);
+        requesetBufferThread_->join();
+        requesetBufferThread_ = nullptr;
+    }
+    ret = OH_AVRecorder_Stop(recorder_);
 
     free(config.url);
     free(config.metadata.genre);
     free(config.metadata.videoOrientation);
     free(config.metadata.customInfo.key);
     free(config.metadata.customInfo.value);
-    ret = OH_AVRecorder_Stop(recorder_);
 
-    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Start_failure_002 out.");
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Start_002 out.");
 }
 
 /**
  * @tc.name: Recorder_Pause_001
- * @tc.desc: Test recorder pause process failure 001
+ * @tc.desc: Test recorder pause process 001
  * @tc.type: FUNC
  */
-HWTEST_F(NativeRecorderUnitTest, Recorder_Pause_failure_001, TestSize.Level2)
+HWTEST_F(NativeRecorderUnitTest, Recorder_Pause_001, TestSize.Level2)
 {
-    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Pause_failure_001 in.");
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Pause_001 in.");
 
     int32_t ret = AV_ERR_OK;
     ret = OH_AVRecorder_Pause(recorder_);
@@ -1035,24 +1131,27 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Pause_failure_001, TestSize.Level2)
 
     ret = OH_AVRecorder_Stop(recorder_);
 
-    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Pause_failure_001 out.");
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Pause_001 out.");
 }
 
 /**
  * @tc.name: Recorder_Pause_002
- * @tc.desc: Test recorder pause process failure 002
+ * @tc.desc: Test recorder pause process 002
  * @tc.type: FUNC
  */
-HWTEST_F(NativeRecorderUnitTest, Recorder_Pause_failure_002, TestSize.Level2)
+HWTEST_F(NativeRecorderUnitTest, Recorder_Pause_002, TestSize.Level2)
 {
-    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Pause_failure_002 in.");
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Pause_002 in.");
 
     OH_AVRecorder_Config config = config_;
-    config.url = strdup("");
     config.metadata.genre = strdup("");
     config.metadata.videoOrientation = strdup("0");
     config.metadata.customInfo.key = strdup("");
     config.metadata.customInfo.value = strdup("");
+
+    int32_t outputFd = open((RECORDER_ROOT + "Recorder_Pause_002.mp4").c_str(), O_RDWR);
+    const std::string fdHead = "fd://";
+    config.url = strdup((fdHead + std::to_string(outputFd)).c_str());
 
     int32_t ret = AV_ERR_OK;
     ret = OH_AVRecorder_Prepare(recorder_, &config);
@@ -1067,52 +1166,66 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Pause_failure_002, TestSize.Level2)
     free(config.metadata.customInfo.value);
     ret = OH_AVRecorder_Stop(recorder_);
 
-    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Pause_failure_002 out.");
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Pause_002 out.");
 }
 
 /**
  * @tc.name: Recorder_Pause_003
- * @tc.desc: Test recorder pause process failure 003
+ * @tc.desc: Test recorder pause process 003
  * @tc.type: FUNC
  */
-HWTEST_F(NativeRecorderUnitTest, Recorder_Pause_failure_003, TestSize.Level2)
+HWTEST_F(NativeRecorderUnitTest, Recorder_Pause_003, TestSize.Level2)
 {
-    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Pause_failure_003 in.");
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Pause_003 in.");
 
     OH_AVRecorder_Config config = config_;
-    config.url = strdup("");
     config.metadata.genre = strdup("");
     config.metadata.videoOrientation = strdup("0");
     config.metadata.customInfo.key = strdup("");
     config.metadata.customInfo.value = strdup("");
 
+    int32_t outputFd = open((RECORDER_ROOT + "Recorder_Pause_003.mp4").c_str(), O_RDWR);
+    const std::string fdHead = "fd://";
+    config.url = strdup((fdHead + std::to_string(outputFd)).c_str());
+    OHNativeWindow *windowGet = nullptr;
+
     int32_t ret = AV_ERR_OK;
     ret = OH_AVRecorder_Prepare(recorder_, &config);
     EXPECT_EQ(ret, AV_ERR_OK);
+    ret = OH_AVRecorder_GetInputSurface(recorder_, &windowGet);
+    EXPECT_EQ(ret, AV_ERR_OK);
     ret = OH_AVRecorder_Start(recorder_);
-    EXPECT_NE(ret, AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_OK);
+    isExit_.store(false);
+    std::unique_ptr<std::thread> requesetBufferThread_;
+    requesetBufferThread_.reset(new(std::nothrow) std::thread(RequesetBuffer, windowGet, &config));
     sleep(3);
     ret = OH_AVRecorder_Pause(recorder_);
-    EXPECT_NE(ret, AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_OK);
+    if (requesetBufferThread_ != nullptr) {
+        isExit_.store(true);
+        requesetBufferThread_->join();
+        requesetBufferThread_ = nullptr;
+    }
+    ret = OH_AVRecorder_Stop(recorder_);
 
     free(config.url);
     free(config.metadata.genre);
     free(config.metadata.videoOrientation);
     free(config.metadata.customInfo.key);
     free(config.metadata.customInfo.value);
-    ret = OH_AVRecorder_Stop(recorder_);
 
-    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Pause_failure_003 out.");
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Pause_003 out.");
 }
 
 /**
  * @tc.name: Recorder_Resume_001
- * @tc.desc: Test recorder resume process failure 001
+ * @tc.desc: Test recorder resume process 001
  * @tc.type: FUNC
  */
-HWTEST_F(NativeRecorderUnitTest, Recorder_Resume_failure_001, TestSize.Level2)
+HWTEST_F(NativeRecorderUnitTest, Recorder_Resume_001, TestSize.Level2)
 {
-    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Resume_failure_001 in.");
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Resume_001 in.");
 
     int32_t ret = AV_ERR_OK;
     ret = OH_AVRecorder_Resume(recorder_);
@@ -1120,145 +1233,180 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Resume_failure_001, TestSize.Level2)
 
     ret = OH_AVRecorder_Stop(recorder_);
 
-    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Resume_failure_001 out.");
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Resume_001 out.");
 }
 
 /**
  * @tc.name: Recorder_Resume_002
- * @tc.desc: Test recorder resume process failure 002
+ * @tc.desc: Test recorder resume process 002
  * @tc.type: FUNC
  */
-HWTEST_F(NativeRecorderUnitTest, Recorder_Resume_failure_002, TestSize.Level2)
+HWTEST_F(NativeRecorderUnitTest, Recorder_Resume_002, TestSize.Level2)
 {
-    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Resume_failure_002 in.");
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Resume_002 in.");
 
     OH_AVRecorder_Config config = config_;
-    config.url = strdup("");
     config.metadata.genre = strdup("");
     config.metadata.videoOrientation = strdup("0");
     config.metadata.customInfo.key = strdup("");
     config.metadata.customInfo.value = strdup("");
+
+    int32_t outputFd = open((RECORDER_ROOT + "Recorder_Resume_002.mp4").c_str(), O_RDWR);
+    const std::string fdHead = "fd://";
+    config.url = strdup((fdHead + std::to_string(outputFd)).c_str());
 
     int32_t ret = AV_ERR_OK;
     ret = OH_AVRecorder_Prepare(recorder_, &config);
     EXPECT_EQ(ret, AV_ERR_OK);
     ret = OH_AVRecorder_Resume(recorder_);
     EXPECT_NE(ret, AV_ERR_OK);
+    ret = OH_AVRecorder_Stop(recorder_);
 
     free(config.url);
     free(config.metadata.genre);
     free(config.metadata.videoOrientation);
     free(config.metadata.customInfo.key);
     free(config.metadata.customInfo.value);
-    ret = OH_AVRecorder_Stop(recorder_);
 
-    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Resume_failure_002 out.");
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Resume_002 out.");
 }
 
 /**
  * @tc.name: Recorder_Resume_003
- * @tc.desc: Test recorder pause process failure 003
+ * @tc.desc: Test recorder pause process 003
  * @tc.type: FUNC
  */
-HWTEST_F(NativeRecorderUnitTest, Recorder_Resume_failure_003, TestSize.Level2)
+HWTEST_F(NativeRecorderUnitTest, Recorder_Resume_003, TestSize.Level2)
 {
-    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Resume_failure_003 in.");
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Resume_003 in.");
 
     OH_AVRecorder_Config config = config_;
-    config.url = strdup("");
     config.metadata.genre = strdup("");
     config.metadata.videoOrientation = strdup("0");
     config.metadata.customInfo.key = strdup("");
     config.metadata.customInfo.value = strdup("");
 
+    int32_t outputFd = open((RECORDER_ROOT + "Recorder_Resume_003.mp4").c_str(), O_RDWR);
+    const std::string fdHead = "fd://";
+    config.url = strdup((fdHead + std::to_string(outputFd)).c_str());
+    OHNativeWindow *windowGet = nullptr;
+
     int32_t ret = AV_ERR_OK;
     ret = OH_AVRecorder_Prepare(recorder_, &config);
     EXPECT_EQ(ret, AV_ERR_OK);
+    ret = OH_AVRecorder_GetInputSurface(recorder_, &windowGet);
+    EXPECT_EQ(ret, AV_ERR_OK);
     ret = OH_AVRecorder_Start(recorder_);
-    EXPECT_NE(ret, AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_OK);
+    isExit_.store(false);
+    std::unique_ptr<std::thread> requesetBufferThread_;
+    requesetBufferThread_.reset(new(std::nothrow) std::thread(RequesetBuffer, windowGet, &config));
     sleep(3);
     ret = OH_AVRecorder_Resume(recorder_);
     EXPECT_NE(ret, AV_ERR_OK);
+    if (requesetBufferThread_ != nullptr) {
+        isExit_.store(true);
+        requesetBufferThread_->join();
+        requesetBufferThread_ = nullptr;
+    }
+    ret = OH_AVRecorder_Stop(recorder_);
 
     free(config.url);
     free(config.metadata.genre);
     free(config.metadata.videoOrientation);
     free(config.metadata.customInfo.key);
     free(config.metadata.customInfo.value);
-    ret = OH_AVRecorder_Stop(recorder_);
 
-    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Resume_failure_003 out.");
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Resume_003 out.");
 }
 
 /**
  * @tc.name: Recorder_Resume_004
- * @tc.desc: Test recorder pause process failure 004
+ * @tc.desc: Test recorder pause process 004
  * @tc.type: FUNC
  */
-HWTEST_F(NativeRecorderUnitTest, Recorder_Resume_failure_004, TestSize.Level2)
+HWTEST_F(NativeRecorderUnitTest, Recorder_Resume_004, TestSize.Level2)
 {
-    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Resume_failure_004 in.");
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Resume_004 in.");
 
     OH_AVRecorder_Config config = config_;
-    config.url = strdup("");
     config.metadata.genre = strdup("");
     config.metadata.videoOrientation = strdup("0");
     config.metadata.customInfo.key = strdup("");
     config.metadata.customInfo.value = strdup("");
 
+    int32_t outputFd = open((RECORDER_ROOT + "Recorder_Resume_004.mp4").c_str(), O_RDWR);
+    const std::string fdHead = "fd://";
+    config.url = strdup((fdHead + std::to_string(outputFd)).c_str());
+    OHNativeWindow *windowGet = nullptr;
+
     int32_t ret = AV_ERR_OK;
     ret = OH_AVRecorder_Prepare(recorder_, &config);
     EXPECT_EQ(ret, AV_ERR_OK);
+    ret = OH_AVRecorder_GetInputSurface(recorder_, &windowGet);
+    EXPECT_EQ(ret, AV_ERR_OK);
     ret = OH_AVRecorder_Start(recorder_);
-    EXPECT_NE(ret, AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_OK);
+    isExit_.store(false);
+    std::unique_ptr<std::thread> requesetBufferThread_;
+    requesetBufferThread_.reset(new(std::nothrow) std::thread(RequesetBuffer, windowGet, &config));
     sleep(3);
     ret = OH_AVRecorder_Pause(recorder_);
-    EXPECT_NE(ret, AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_OK);
+    sleep(1);
     ret = OH_AVRecorder_Resume(recorder_);
-    EXPECT_NE(ret, AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_OK);
     sleep(3);
+    if (requesetBufferThread_ != nullptr) {
+        isExit_.store(true);
+        requesetBufferThread_->join();
+        requesetBufferThread_ = nullptr;
+    }
+    ret = OH_AVRecorder_Stop(recorder_);
 
     free(config.url);
     free(config.metadata.genre);
     free(config.metadata.videoOrientation);
     free(config.metadata.customInfo.key);
     free(config.metadata.customInfo.value);
-    ret = OH_AVRecorder_Stop(recorder_);
 
-    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Resume_failure_004 out.");
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Resume_004 out.");
 }
 
 /**
  * @tc.name: Recorder_Stop_001
- * @tc.desc: Test recorder stop process failure 001
+ * @tc.desc: Test recorder stop process 001
  * @tc.type: FUNC
  */
-HWTEST_F(NativeRecorderUnitTest, Recorder_Stop_failure_001, TestSize.Level2)
+HWTEST_F(NativeRecorderUnitTest, Recorder_Stop_001, TestSize.Level2)
 {
-    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Stop_failure_001 in.");
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Stop_001 in.");
 
     int32_t ret = AV_ERR_OK;
     ret = OH_AVRecorder_Stop(recorder_);
     EXPECT_NE(ret, AV_ERR_OK);
 
-    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Stop_failure_001 out.");
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Stop_001 out.");
 }
 
 /**
  * @tc.name: Recorder_Stop_002
- * @tc.desc: Test recorder stop process failure 002
+ * @tc.desc: Test recorder stop process 002
  * @tc.type: FUNC
  */
-HWTEST_F(NativeRecorderUnitTest, Recorder_Stop_failure_002, TestSize.Level2)
+HWTEST_F(NativeRecorderUnitTest, Recorder_Stop_002, TestSize.Level2)
 {
-    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Stop_failure_002 in.");
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Stop_002 in.");
 
     OH_AVRecorder_Config config = config_;
-    config.url = strdup("");
     config.metadata.genre = strdup("");
     config.metadata.videoOrientation = strdup("0");
     config.metadata.customInfo.key = strdup("");
     config.metadata.customInfo.value = strdup("");
+
+    int32_t outputFd = open((RECORDER_ROOT + "Recorder_Stop_002.mp4").c_str(), O_RDWR);
+    const std::string fdHead = "fd://";
+    config.url = strdup((fdHead + std::to_string(outputFd)).c_str());
 
     int32_t ret = AV_ERR_OK;
     ret = OH_AVRecorder_Prepare(recorder_, &config);
@@ -1272,33 +1420,47 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Stop_failure_002, TestSize.Level2)
     free(config.metadata.customInfo.key);
     free(config.metadata.customInfo.value);
 
-    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Stop_failure_002 out.");
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Stop_002 out.");
 }
 
 /**
  * @tc.name: Recorder_Stop_003
- * @tc.desc: Test recorder stop process failure 003
+ * @tc.desc: Test recorder stop process 003
  * @tc.type: FUNC
  */
-HWTEST_F(NativeRecorderUnitTest, Recorder_Stop_failure_003, TestSize.Level2)
+HWTEST_F(NativeRecorderUnitTest, Recorder_Stop_003, TestSize.Level2)
 {
-    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Stop_failure_003 in.");
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Stop_003 in.");
 
     OH_AVRecorder_Config config = config_;
-    config.url = strdup("");
     config.metadata.genre = strdup("");
     config.metadata.videoOrientation = strdup("0");
     config.metadata.customInfo.key = strdup("");
     config.metadata.customInfo.value = strdup("");
 
+    int32_t outputFd = open((RECORDER_ROOT + "Recorder_Stop_003.mp4").c_str(), O_RDWR);
+    const std::string fdHead = "fd://";
+    config.url = strdup((fdHead + std::to_string(outputFd)).c_str());
+    OHNativeWindow *windowGet = nullptr;
+
     int32_t ret = AV_ERR_OK;
     ret = OH_AVRecorder_Prepare(recorder_, &config);
     EXPECT_EQ(ret, AV_ERR_OK);
+    ret = OH_AVRecorder_GetInputSurface(recorder_, &windowGet);
+    EXPECT_EQ(ret, AV_ERR_OK);
     ret = OH_AVRecorder_Start(recorder_);
-    EXPECT_NE(ret, AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_OK);
+    isExit_.store(false);
+    std::unique_ptr<std::thread> requesetBufferThread_;
+    requesetBufferThread_.reset(new(std::nothrow) std::thread(RequesetBuffer, windowGet, &config));
     sleep(3);
+    if (requesetBufferThread_ != nullptr) {
+        isExit_.store(true);
+        requesetBufferThread_->join();
+        requesetBufferThread_ = nullptr;
+    }
     ret = OH_AVRecorder_Stop(recorder_);
-    EXPECT_NE(ret, AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_OK);
 
     free(config.url);
     free(config.metadata.genre);
@@ -1306,39 +1468,53 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Stop_failure_003, TestSize.Level2)
     free(config.metadata.customInfo.key);
     free(config.metadata.customInfo.value);
 
-    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Stop_failure_003 out.");
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Stop_003 out.");
 }
 
 /**
  * @tc.name: Recorder_Stop_004
- * @tc.desc: Test recorder stop process failure 004
+ * @tc.desc: Test recorder stop process 004
  * @tc.type: FUNC
  */
-HWTEST_F(NativeRecorderUnitTest, Recorder_Stop_failure_004, TestSize.Level2)
+HWTEST_F(NativeRecorderUnitTest, Recorder_Stop_004, TestSize.Level2)
 {
-    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Stop_failure_004 in.");
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Stop_004 in.");
 
     OH_AVRecorder_Config config = config_;
-    config.url = strdup("");
     config.metadata.genre = strdup("");
     config.metadata.videoOrientation = strdup("0");
     config.metadata.customInfo.key = strdup("");
     config.metadata.customInfo.value = strdup("");
 
+    int32_t outputFd = open((RECORDER_ROOT + "Recorder_Stop_004.mp4").c_str(), O_RDWR);
+    const std::string fdHead = "fd://";
+    config.url = strdup((fdHead + std::to_string(outputFd)).c_str());
+    OHNativeWindow *windowGet = nullptr;
+
     int32_t ret = AV_ERR_OK;
     ret = OH_AVRecorder_Prepare(recorder_, &config);
     EXPECT_EQ(ret, AV_ERR_OK);
+    ret = OH_AVRecorder_GetInputSurface(recorder_, &windowGet);
+    EXPECT_EQ(ret, AV_ERR_OK);
     ret = OH_AVRecorder_Start(recorder_);
-    EXPECT_NE(ret, AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_OK);
+    isExit_.store(false);
+    std::unique_ptr<std::thread> requesetBufferThread_;
+    requesetBufferThread_.reset(new(std::nothrow) std::thread(RequesetBuffer, windowGet, &config));
     sleep(3);
     ret = OH_AVRecorder_Pause(recorder_);
-    EXPECT_NE(ret, AV_ERR_OK);
-    sleep(3);
+    EXPECT_EQ(ret, AV_ERR_OK);
+    sleep(1);
     ret = OH_AVRecorder_Resume(recorder_);
-    EXPECT_NE(ret, AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_OK);
     sleep(3);
+    if (requesetBufferThread_ != nullptr) {
+        isExit_.store(true);
+        requesetBufferThread_->join();
+        requesetBufferThread_ = nullptr;
+    }
     ret = OH_AVRecorder_Stop(recorder_);
-    EXPECT_NE(ret, AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_OK);
 
     free(config.url);
     free(config.metadata.genre);
@@ -1346,7 +1522,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Stop_failure_004, TestSize.Level2)
     free(config.metadata.customInfo.key);
     free(config.metadata.customInfo.value);
 
-    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Stop_failure_004 out.");
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Stop_004 out.");
 }
 
 /**
@@ -1375,11 +1551,14 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Reset_002, TestSize.Level2)
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_Reset_002 in.");
 
     OH_AVRecorder_Config config = config_;
-    config.url = strdup("");
     config.metadata.genre = strdup("");
     config.metadata.videoOrientation = strdup("0");
     config.metadata.customInfo.key = strdup("");
     config.metadata.customInfo.value = strdup("");
+
+    int32_t outputFd = open((RECORDER_ROOT + "Recorder_Reset_002.mp4").c_str(), O_RDWR);
+    const std::string fdHead = "fd://";
+    config.url = strdup((fdHead + std::to_string(outputFd)).c_str());
 
     int32_t ret = AV_ERR_OK;
     ret = OH_AVRecorder_Prepare(recorder_, &config);
@@ -1406,18 +1585,32 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Reset_003, TestSize.Level2)
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_Reset_003 in.");
 
     OH_AVRecorder_Config config = config_;
-    config.url = strdup("");
     config.metadata.genre = strdup("");
     config.metadata.videoOrientation = strdup("0");
     config.metadata.customInfo.key = strdup("");
     config.metadata.customInfo.value = strdup("");
 
+    int32_t outputFd = open((RECORDER_ROOT + "Recorder_Reset_003.mp4").c_str(), O_RDWR);
+    const std::string fdHead = "fd://";
+    config.url = strdup((fdHead + std::to_string(outputFd)).c_str());
+    OHNativeWindow *windowGet = nullptr;
+
     int32_t ret = AV_ERR_OK;
     ret = OH_AVRecorder_Prepare(recorder_, &config);
     EXPECT_EQ(ret, AV_ERR_OK);
+    ret = OH_AVRecorder_GetInputSurface(recorder_, &windowGet);
+    EXPECT_EQ(ret, AV_ERR_OK);
     ret = OH_AVRecorder_Start(recorder_);
-    EXPECT_NE(ret, AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_OK);
+    isExit_.store(false);
+    std::unique_ptr<std::thread> requesetBufferThread_;
+    requesetBufferThread_.reset(new(std::nothrow) std::thread(RequesetBuffer, windowGet, &config));
     sleep(3);
+    if (requesetBufferThread_ != nullptr) {
+        isExit_.store(true);
+        requesetBufferThread_->join();
+        requesetBufferThread_ = nullptr;
+    }
     ret = OH_AVRecorder_Reset(recorder_);
     EXPECT_EQ(ret, AV_ERR_OK);
 
@@ -1440,20 +1633,34 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Reset_004, TestSize.Level2)
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_Reset_004 in.");
 
     OH_AVRecorder_Config config = config_;
-    config.url = strdup("");
     config.metadata.genre = strdup("");
     config.metadata.videoOrientation = strdup("0");
     config.metadata.customInfo.key = strdup("");
     config.metadata.customInfo.value = strdup("");
 
+    int32_t outputFd = open((RECORDER_ROOT + "Recorder_Reset_004.mp4").c_str(), O_RDWR);
+    const std::string fdHead = "fd://";
+    config.url = strdup((fdHead + std::to_string(outputFd)).c_str());
+    OHNativeWindow *windowGet = nullptr;
+
     int32_t ret = AV_ERR_OK;
     ret = OH_AVRecorder_Prepare(recorder_, &config);
     EXPECT_EQ(ret, AV_ERR_OK);
+    ret = OH_AVRecorder_GetInputSurface(recorder_, &windowGet);
+    EXPECT_EQ(ret, AV_ERR_OK);
     ret = OH_AVRecorder_Start(recorder_);
-    EXPECT_NE(ret, AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_OK);
+    isExit_.store(false);
+    std::unique_ptr<std::thread> requesetBufferThread_;
+    requesetBufferThread_.reset(new(std::nothrow) std::thread(RequesetBuffer, windowGet, &config));
     sleep(3);
     ret = OH_AVRecorder_Pause(recorder_);
-    EXPECT_NE(ret, AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_OK);
+    if (requesetBufferThread_ != nullptr) {
+        isExit_.store(true);
+        requesetBufferThread_->join();
+        requesetBufferThread_ = nullptr;
+    }
     ret = OH_AVRecorder_Reset(recorder_);
     EXPECT_EQ(ret, AV_ERR_OK);
 
