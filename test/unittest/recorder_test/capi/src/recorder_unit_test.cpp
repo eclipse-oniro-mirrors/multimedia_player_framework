@@ -723,11 +723,12 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_GetAVRecorderConfig_001, TestSize.Leve
 {
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_GetAVRecorderConfig_001 in.");
 
-    OH_AVRecorder_Config *configGet = static_cast<OH_AVRecorder_Config *>(malloc(sizeof(OH_AVRecorder_Config)));
+    OH_AVRecorder_Config *configGet = nullptr;
 
     int32_t ret = AV_ERR_OK;
     ret = OH_AVRecorder_GetAVRecorderConfig(recorder_, &configGet);
     EXPECT_EQ(ret, AV_ERR_OK);
+    ASSERT_NE(configGet, nullptr);
     EXPECT_EQ(configGet->profile.audioBitrate, 0);
     EXPECT_EQ(configGet->profile.audioChannels, 0);
     EXPECT_EQ(configGet->profile.audioCodec, static_cast<OH_AVRecorder_CodecMimeType>(AUDIO_CODEC_FORMAT_BUTT));
@@ -743,8 +744,6 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_GetAVRecorderConfig_001, TestSize.Leve
     EXPECT_EQ(configGet->videoSourceType, static_cast<OH_AVRecorder_VideoSourceType>(VIDEO_SOURCE_BUTT));
     EXPECT_EQ(configGet->metadata.location.latitude, 0.0);
     EXPECT_EQ(configGet->metadata.location.longitude, 0.0);
-
-    free(configGet);
 
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_GetAVRecorderConfig_001 out.");
 }
@@ -768,13 +767,14 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_GetAVRecorderConfig_002, TestSize.Leve
     const std::string fdHead = "fd://";
     config.url = strdup((fdHead + std::to_string(outputFd)).c_str());
 
-    OH_AVRecorder_Config *configGet = static_cast<OH_AVRecorder_Config *>(malloc(sizeof(OH_AVRecorder_Config)));
+    OH_AVRecorder_Config *configGet = nullptr;
 
     int32_t ret = AV_ERR_OK;
     ret = OH_AVRecorder_Prepare(recorder_, &config);
     EXPECT_EQ(ret, AV_ERR_OK);
     ret = OH_AVRecorder_GetAVRecorderConfig(recorder_, &configGet);
     EXPECT_EQ(ret, AV_ERR_OK);
+    ASSERT_NE(configGet, nullptr);
     EXPECT_EQ(configGet->profile.audioBitrate, 48000);
     EXPECT_EQ(configGet->profile.audioChannels, 2);
     EXPECT_EQ(configGet->profile.audioCodec, OH_AVRecorder_CodecMimeType::AUDIO_AAC);
@@ -795,7 +795,6 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_GetAVRecorderConfig_002, TestSize.Leve
     free(config.metadata.videoOrientation);
     free(config.metadata.customInfo.key);
     free(config.metadata.customInfo.value);
-    free(configGet);
 
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_GetAVRecorderConfig_002 out.");
 }
@@ -833,13 +832,14 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_GetAVRecorderConfig_003, TestSize.Leve
     const std::string fdHead = "fd://";
     config.url = strdup((fdHead + std::to_string(outputFd)).c_str());
 
-    OH_AVRecorder_Config *configGet = static_cast<OH_AVRecorder_Config *>(malloc(sizeof(OH_AVRecorder_Config)));
+    OH_AVRecorder_Config *configGet = nullptr;
 
     int32_t ret = AV_ERR_OK;
     ret = OH_AVRecorder_Prepare(recorder_, &config);
     EXPECT_EQ(ret, AV_ERR_OK);
     ret = OH_AVRecorder_GetAVRecorderConfig(recorder_, &configGet);
     EXPECT_EQ(ret, AV_ERR_OK);
+    ASSERT_NE(configGet, nullptr);
     EXPECT_EQ(configGet->profile.audioBitrate, 64000);
     EXPECT_EQ(configGet->profile.audioChannels, 2);
     EXPECT_EQ(configGet->profile.audioCodec, OH_AVRecorder_CodecMimeType::AUDIO_AAC);
@@ -857,7 +857,6 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_GetAVRecorderConfig_003, TestSize.Leve
     free(config.metadata.videoOrientation);
     free(config.metadata.customInfo.key);
     free(config.metadata.customInfo.value);
-    free(configGet);
 
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_GetAVRecorderConfig_003 out.");
 }
