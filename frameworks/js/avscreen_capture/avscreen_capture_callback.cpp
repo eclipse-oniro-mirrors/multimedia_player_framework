@@ -110,7 +110,7 @@ void AVScreenCaptureCallback::OnJsErrorCallBack(AVScreenCaptureJsCallback *jsCb)
 
     auto task = [jsCb]() {
         std::string request = jsCb->callbackName;
-        MEDIA_LOGI("uv_queue_work_with_qos start, errorcode:%{public}d , errormessage:%{public}s:",
+        MEDIA_LOGI("OnJsErrorCallBack task start, errorcode:%{public}d , errormessage:%{public}s:",
             jsCb->errorCode, jsCb->errorMsg.c_str());
         do {
             std::shared_ptr<AutoRef> ref = jsCb->autoRef.lock();
