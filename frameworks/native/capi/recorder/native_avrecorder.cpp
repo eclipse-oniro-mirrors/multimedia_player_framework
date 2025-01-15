@@ -60,6 +60,8 @@ struct RecorderObject : public OH_AVRecorder {
             free(config->metadata.videoOrientation);
             config->metadata.videoOrientation = nullptr;
         }
+        delete config;
+        config = nullptr;
     }
 
     void ReleaseEncoderInfo(OH_AVRecorder_EncoderInfo *info, int32_t length)
@@ -348,6 +350,14 @@ int32_t GetVideoOrientation(const char* videoOrientation)
     }
 }
 
+bool IsLocationValid(const OH_AVRecorder_Location &location)
+{
+    return location.latitude >= MIN_LATITUDE &&
+           location.latitude <= MAX_LATITUDE &&
+           location.longitude >= MIN_LONGITUDE &&
+           location.longitude <= MAX_LONGITUDE;
+}
+
 OH_AVErrCode Configure(OH_AVRecorder *recorder, OH_AVRecorder_Config *config)
 {
     CHECK_AND_RETURN_RET_LOG(recorder != nullptr, AV_ERR_INVALID_VAL, "input recorder is nullptr!");
@@ -385,9 +395,7 @@ OH_AVErrCode Configure(OH_AVRecorder *recorder, OH_AVRecorder_Config *config)
     }
     recorderObj->recorder_->SetMaxDuration(config->maxDuration);
 
-    CHECK_AND_RETURN_RET_LOG(config->metadata.location.latitude >= MIN_LATITUDE &&
-        config->metadata.location.latitude <= MAX_LATITUDE && config->metadata.location.longitude >= MIN_LONGITUDE &&
-        config->metadata.location.longitude <= MAX_LONGITUDE, AV_ERR_INVALID_VAL,
+    CHECK_AND_RETURN_RET_LOG(IsLocationValid(config->metadata.location), AV_ERR_INVALID_VAL,
         "Invalid latitude or longitude! Latitude: %{public}.6f, Longitude: %{public}.6f",
         config->metadata.location.latitude, config->metadata.location.longitude);
     recorderObj->recorder_->SetLocation(config->metadata.location.latitude, config->metadata.location.longitude);
@@ -436,16 +444,18 @@ Location ConvertToLocation(const OH_AVRecorder_Location &ohLocation)
 OH_AVErrCode OH_AVRecorder_GetAVRecorderConfig(OH_AVRecorder *recorder, OH_AVRecorder_Config **config)
 {
     CHECK_AND_RETURN_RET_LOG(recorder != nullptr, AV_ERR_INVALID_VAL, "input recorder is nullptr!");
-    CHECK_AND_RETURN_RET_LOG(config != nullptr, AV_ERR_INVALID_VAL, "config is nullptr!");
-    CHECK_AND_RETURN_RET_LOG(*config != nullptr, AV_ERR_INVALID_VAL, "*config is nullptr!");
+    CHECK_AND_RETURN_RET_LOG(*config == nullptr, AV_ERR_INVALID_VAL,
+        "input OH_AVRecorder_Config *config should be nullptr!");
 
     struct RecorderObject *recorderObj = reinterpret_cast<RecorderObject *>(recorder);
     CHECK_AND_RETURN_RET_LOG(recorderObj != nullptr, AV_ERR_INVALID_VAL, "recorderObj is nullptr");
     CHECK_AND_RETURN_RET_LOG(recorderObj->recorder_ != nullptr, AV_ERR_INVALID_VAL, "recorder_ is null");
 
     recorderObj->ReleaseConfig(recorderObj->config_);
-    recorderObj->config_ = *config;
 
+    recorderObj->config_ = new OH_AVRecorder_Config();
+    CHECK_AND_RETURN_RET_LOG(recorderObj->config_ != nullptr, AV_ERR_NO_MEMORY,
+        "Memory allocation failed for OH_AVRecorder_Config *config!");
     ConfigMap configMap;
     recorderObj->recorder_->GetAVRecorderConfig(configMap);
 
@@ -481,6 +491,7 @@ OH_AVErrCode OH_AVRecorder_GetAVRecorderConfig(OH_AVRecorder *recorder, OH_AVRec
     recorderObj->config_->metadata.location.latitude = location.latitude;
     recorderObj->config_->metadata.location.longitude = location.longitude;
 
+    *config = recorderObj->config_;
     return AV_ERR_OK;
 }
 
