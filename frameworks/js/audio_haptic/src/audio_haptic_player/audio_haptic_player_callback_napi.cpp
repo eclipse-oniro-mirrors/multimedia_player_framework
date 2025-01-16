@@ -110,30 +110,26 @@ void AudioHapticPlayerCallbackNapi::OnInterrupt(const AudioStandard::InterruptEv
 
 void AudioHapticPlayerCallbackNapi::OnInterruptJsCallback(std::unique_ptr<AudioHapticPlayerJsCallback> &jsCb)
 {
-    uv_loop_s *loop = nullptr;
-    napi_get_uv_event_loop(env_, &loop);
-    CHECK_AND_RETURN(loop != nullptr);
-
-    uv_work_t *work = new(std::nothrow) uv_work_t;
-    CHECK_AND_RETURN_LOG(work != nullptr, "OnInterruptJsCallback: No memory");
     if (jsCb.get() == nullptr) {
-        MEDIA_LOGE("OnInterruptJsCallback: jsCb.get() is null");
-        delete work;
+        MEDIA_LOGE("AudioHapticPlayerJsCallback: jsCb.get() is null");
         return;
     }
-    work->data = reinterpret_cast<void *>(jsCb.get());
-
-    int ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
-        // Js Thread
-        AudioHapticPlayerJsCallback *event = reinterpret_cast<AudioHapticPlayerJsCallback *>(work->data);
+    AudioHapticPlayerJsCallback *event = jsCb.get();
+    auto task = [event]() {
+        std::shared_ptr<AudioHapticPlayerJsCallback> context(
+            static_cast<AudioHapticPlayerJsCallback*>(event),
+            [](AudioHapticPlayerJsCallback* ptr) {
+                delete ptr;
+        });
+        CHECK_AND_RETURN_LOG(event != nullptr, "event is nullptr");
         std::string request = event->callbackName;
         napi_env env = event->callback->env_;
         napi_ref callback = event->callback->cb_;
         napi_handle_scope scope = nullptr;
         napi_open_handle_scope(env, &scope);
-        MEDIA_LOGI("OnInterruptJsCallback: %{public}s JsCallBack, uv_queue_work start", request.c_str());
+        MEDIA_LOGI("AudioHapticPlayerJsCallback: %{public}s JsCallBack, uv_queue_work start", request.c_str());
         do {
-            CHECK_AND_BREAK_LOG(status != UV_ECANCELED, "%{public}s cancelled", request.c_str());
+            CHECK_AND_BREAK_LOG(event != nullptr, "event is nullptr");
 
             napi_value jsCallback = nullptr;
             napi_status napiStatus = napi_get_reference_value(env, callback, &jsCallback);
@@ -153,12 +149,10 @@ void AudioHapticPlayerCallbackNapi::OnInterruptJsCallback(std::unique_ptr<AudioH
         } while (0);
         napi_close_handle_scope(env, scope);
         delete event;
-        delete work;
-    });
-    if (ret != 0) {
-        MEDIA_LOGE("OnInterruptJsCallback: Failed to execute libuv work queue");
-        delete work;
-    } else {
+    };
+    auto ret = napi_send_event(env_, task, napi_eprio_high);
+    if (ret != napi_status::napi_ok) {
+        MEDIA_LOGE("Failed to SendEvent, ret = %{public}d", ret);
         jsCb.release();
     }
 }
@@ -183,22 +177,18 @@ void AudioHapticPlayerCallbackNapi::OnError(int32_t errorCode)
 
 void AudioHapticPlayerCallbackNapi::OnEndOfStreamJsCallback(std::unique_ptr<AudioHapticPlayerJsCallback> &jsCb)
 {
-    uv_loop_s *loop = nullptr;
-    napi_get_uv_event_loop(env_, &loop);
-    CHECK_AND_RETURN(loop != nullptr);
-
-    uv_work_t *work = new(std::nothrow) uv_work_t;
-    CHECK_AND_RETURN_LOG(work != nullptr, "OnEndOfStreamJsCallback: No memory");
     if (jsCb.get() == nullptr) {
-        MEDIA_LOGE("OnEndOfStreamJsCallback: jsCb.get() is null");
-        delete work;
+        MEDIA_LOGE("AudioHapticPlayerJsCallback: jsCb.get() is null");
         return;
     }
-    work->data = reinterpret_cast<void *>(jsCb.get());
-
-    int ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
-        // Js Thread
-        AudioHapticPlayerJsCallback *event = reinterpret_cast<AudioHapticPlayerJsCallback *>(work->data);
+    AudioHapticPlayerJsCallback *event = jsCb.get();
+    auto task = [event]() {
+        std::shared_ptr<AudioHapticPlayerJsCallback> context(
+            static_cast<AudioHapticPlayerJsCallback*>(event),
+            [](AudioHapticPlayerJsCallback* ptr) {
+                delete ptr;
+        });
+        CHECK_AND_RETURN_LOG(event != nullptr, "event is nullptr");
         std::string request = event->callbackName;
         napi_env env = event->callback->env_;
         napi_ref callback = event->callback->cb_;
@@ -206,7 +196,7 @@ void AudioHapticPlayerCallbackNapi::OnEndOfStreamJsCallback(std::unique_ptr<Audi
         napi_open_handle_scope(env, &scope);
         MEDIA_LOGI("OnEndOfStreamJsCallback: %{public}s JsCallBack, uv_queue_work start", request.c_str());
         do {
-            CHECK_AND_BREAK_LOG(status != UV_ECANCELED, "%{public}s cancelled", request.c_str());
+            CHECK_AND_BREAK_LOG(event != nullptr, "event is nullptr");
 
             napi_value jsCallback = nullptr;
             napi_status napiStatus = napi_get_reference_value(env, callback, &jsCallback);
@@ -220,12 +210,10 @@ void AudioHapticPlayerCallbackNapi::OnEndOfStreamJsCallback(std::unique_ptr<Audi
         } while (0);
         napi_close_handle_scope(env, scope);
         delete event;
-        delete work;
-    });
-    if (ret != 0) {
-        MEDIA_LOGE("OnEndOfStreamJsCallback: Failed to execute libuv work queue");
-        delete work;
-    } else {
+    };
+    auto ret = napi_send_event(env_, task, napi_eprio_high);
+    if (ret != napi_status::napi_ok) {
+        MEDIA_LOGE("Failed to SendEvent, ret = %{public}d", ret);
         jsCb.release();
     }
 }
