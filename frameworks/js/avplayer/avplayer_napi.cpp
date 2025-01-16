@@ -51,7 +51,6 @@ namespace {
     constexpr size_t PARAM_COUNT_SINGLE = 1;
     constexpr int32_t API_VERSION_16 = 16;
     static int32_t g_apiVersion = -1;
-    constexpr size_t PAYLOADTYPE_ENABLE = 5;
     constexpr int32_t ARGS_TWO = 2;
     constexpr int32_t ARGS_THREE = 3;
 }

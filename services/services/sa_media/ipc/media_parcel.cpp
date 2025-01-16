@@ -47,8 +47,8 @@ static bool DoMarshalling(MessageParcel &parcel, const Format &format)
                 (void)parcel.WriteString(it->second.stringVal);
                 break;
             case FORMAT_TYPE_ADDR:
-                (void)parcel.WriteInt32(static_cast<int32_t>(it->second.size));
-                (void)parcel.WriteBuffer(reinterpret_cast<const void *>(it->second.addr), it->second.size);
+                (void)parcel.WriteUInt8Vector(
+                    std::vector<uint8_t>(it->second.addr, it->second.addr + it->second.size));
                 break;
             default:
                 MEDIA_LOGE("fail to Marshalling Key: %{public}s", it->first.c_str());
@@ -110,13 +110,9 @@ static bool DoUnmarshalling(MessageParcel &parcel, Format &format)
                 (void)format.PutStringValue(key, parcel.ReadString());
                 break;
             case FORMAT_TYPE_ADDR: {
-                auto addrSize = parcel.ReadInt32();
-                auto addr = parcel.ReadBuffer(static_cast<size_t>(addrSize));
-                if (addr == nullptr) {
-                    MEDIA_LOGE("fail to ReadBuffer Key: %{public}s", key.c_str());
-                    return false;
-                }
-                unMarshallRes = format.PutBuffer(key, addr, static_cast<size_t>(addrSize));
+                std::vector<uint8_t> vector;
+                (void)parcel.ReadUInt8Vector(&vector);
+                unMarshallRes = format.PutBuffer(key, vector.data(), vector.size());
                 CHECK_AND_RETURN_RET_LOG(unMarshallRes, false, "Buffer unmarshalling failed");
                 break;
             }
