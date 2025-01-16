@@ -855,13 +855,13 @@ size_t MediaServerManager::GetAllInstancesReleasedTime()
 void MediaServerManager::ResetAllInstancesReleasedTime()
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    allInstancesReleasedTIme_ = 0;
+    allInstancesReleasedTime_ = 0;
 }
 
 void MediaServerManager::UpdateAllInstancesReleasedTime()
 {
-    if (allInstancesReleasedTIme_ == 0 && GetInstanceCount() == 0) {
-        allInstancesReleasedTIme_ = GetCurrentSystemClockMs();
+    if (allInstancesReleasedTime_ == 0 && GetInstanceCount() == 0) {
+        allInstancesReleasedTime_ = GetCurrentSystemClockMs();
     }
 }
 #endif
