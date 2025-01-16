@@ -1096,6 +1096,28 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PrivateWindowListenerInScreenCapture_0
     ASSERT_NE(screenCaptureServer_->displayListener_, nullptr);
 }
 
+HWTEST_F(ScreenCaptureServerFunctionTest, ScreenConnectListenerInScreenCapture_001, TestSize.Level2)
+{
+    screenCaptureServer_->displayScreenId_ = 1; // 1 display screen id
+    screenCaptureServer_->RegisterScreenConnectListener();
+    uint64_t screenId = 1; // 1 disconnect screen id
+    screenCaptureServer_->screenConnectListener_->OnConnect(screenId);
+    screenCaptureServer_->screenConnectListener_->OnDisconnect(screenId);
+    screenCaptureServer_->screenConnectListener_->OnChange(screenId);
+    ASSERT_NE(screenCaptureServer_->screenConnectListener_, nullptr);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, ScreenConnectListenerInScreenCapture_002, TestSize.Level2)
+{
+    screenCaptureServer_->displayScreenId_ = 2;  // 2 display screen id
+    screenCaptureServer_->RegisterScreenConnectListener();
+    uint64_t screenId = 1; // 1 disconnect screen id
+    screenCaptureServer_->screenConnectListener_->OnConnect(screenId);
+    screenCaptureServer_->screenConnectListener_->OnDisconnect(screenId);
+    screenCaptureServer_->screenConnectListener_->OnChange(screenId);
+    ASSERT_NE(screenCaptureServer_->screenConnectListener_, nullptr);
+}
+
 HWTEST_F(ScreenCaptureServerFunctionTest, NotificationSubscriber_001, TestSize.Level2)
 {
     auto notificationSubscriber = NotificationSubscriber();
@@ -1518,21 +1540,21 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ShowCursor_004, TestSize.Level2)
 {
     screenCaptureServer_->showCursor_ = false;
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
-    screenCaptureServer_->screenId_ = 0;
+    screenCaptureServer_->virtualScreenId_ = 0;
     int ret = screenCaptureServer_->ShowCursor(true);
     ASSERT_EQ(ret, MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ShowCursorInner_001, TestSize.Level2)
 {
-    screenCaptureServer_->screenId_ = 0;
+    screenCaptureServer_->virtualScreenId_ = 0;
     int ret = screenCaptureServer_->ShowCursorInner();
     ASSERT_EQ(ret, MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ShowCursorInner_002, TestSize.Level2)
 {
-    screenCaptureServer_->screenId_ = 0;
+    screenCaptureServer_->virtualScreenId_ = 0;
     screenCaptureServer_->showCursor_ = false;
     int ret = screenCaptureServer_->ShowCursorInner();
     ASSERT_EQ(ret, MSERR_OK);
@@ -1656,7 +1678,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetCanvasRotation_002, TestSize.Level2
 HWTEST_F(ScreenCaptureServerFunctionTest, ResizeCanvas_001, TestSize.Level2)
 {
     screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
-    screenCaptureServer_->screenId_ = 0;
+    screenCaptureServer_->virtualScreenId_ = 0;
     int ret = screenCaptureServer_->ResizeCanvas(580, 1280);
     ASSERT_EQ(ret, MSERR_INVALID_OPERATION);
 }
@@ -1677,7 +1699,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ResizeCanvas_003, TestSize.Level2)
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ResizeCanvas_004, TestSize.Level2)
 {
-    screenCaptureServer_->screenId_ = 0;
+    screenCaptureServer_->virtualScreenId_ = 0;
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
     int ret = screenCaptureServer_->ResizeCanvas(10241, 1280);
     ASSERT_EQ(ret, MSERR_INVALID_VAL);
@@ -1692,7 +1714,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ResizeCanvas_005, TestSize.Level2)
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ResizeCanvas_006, TestSize.Level2)
 {
-    screenCaptureServer_->screenId_ = 0;
+    screenCaptureServer_->virtualScreenId_ = 0;
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
     int ret = screenCaptureServer_->ResizeCanvas(580, 4321);
     ASSERT_EQ(ret, MSERR_INVALID_VAL);
@@ -1731,7 +1753,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetMaxVideoFrameRate_001, TestSize.Lev
 
 HWTEST_F(ScreenCaptureServerFunctionTest, SetMaxVideoFrameRate_002, TestSize.Level2)
 {
-    screenCaptureServer_->screenId_ = 0;
+    screenCaptureServer_->virtualScreenId_ = 0;
     screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
     int ret = screenCaptureServer_->SetMaxVideoFrameRate(5);
     ASSERT_NE(ret, MSERR_OK);
