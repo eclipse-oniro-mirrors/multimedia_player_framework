@@ -155,7 +155,7 @@ void SoundPoolCallBackNapi::OnJsErrorCallBack(SoundPoolJsCallBack *jsCb) const
         delete event;
     };
 
-    auto ret = napi_send_event(env_, task, napi_eprio_high);
+    auto ret = napi_send_event(env_, task, napi_eprio_immediate);
     if (ret != napi_status::napi_ok) {
         MEDIA_LOGE("Failed to SendEvent CallBack, ret = %{public}d", ret);
         delete jsCb;
@@ -205,7 +205,7 @@ void SoundPoolCallBackNapi::OnJsloadCompletedCallBack(SoundPoolJsCallBack *jsCb)
         delete event;
     };
 
-    auto ret = napi_send_event(env_, task, napi_eprio_high);
+    auto ret = napi_send_event(env_, task, napi_eprio_immediate);
     if (ret != napi_status::napi_ok) {
         MEDIA_LOGE("Failed to SendEvent CallBack, ret = %{public}d", ret);
         delete jsCb;
@@ -246,7 +246,7 @@ void SoundPoolCallBackNapi::OnJsplayCompletedCallBack(SoundPoolJsCallBack *jsCb)
         delete event;
     };
 
-    auto ret = napi_send_event(env_, task, napi_eprio_high);
+    auto ret = napi_send_event(env_, task, napi_eprio_immediate);
     if (ret != napi_status::napi_ok) {
         MEDIA_LOGE("Failed to SendEvent CallBack, ret = %{public}d", ret);
         delete jsCb;
