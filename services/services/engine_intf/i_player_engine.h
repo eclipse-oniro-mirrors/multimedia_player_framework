@@ -85,7 +85,6 @@ public:
     virtual int32_t SetVolume(float leftVolume, float rightVolume) = 0;
     virtual int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) = 0;
     virtual int32_t GetCurrentTime(int32_t &currentTime) = 0;
-    virtual int32_t GetPlaybackPosition(int32_t &playbackPosition) = 0;
     virtual int32_t GetVideoTrackInfo(std::vector<Format> &videoTrack) = 0;
     virtual int32_t GetPlaybackInfo(Format &playbackInfo) = 0;
     virtual int32_t GetAudioTrackInfo(std::vector<Format> &audioTrack) = 0;
@@ -250,6 +249,12 @@ public:
     virtual int32_t IsSeekContinuousSupported(bool &IsSeekContinuousSupported)
     {
         (void)IsSeekContinuousSupported;
+        return 0;
+    }
+
+    virtual int32_t GetPlaybackPosition(int32_t &playbackPosition)
+    {
+        (void)playbackPosition;
         return 0;
     }
 
