@@ -672,7 +672,7 @@ void HiRecorderImpl::ConfigureAudio(const RecorderParam &recParam)
                     break;
                 case OHOS::Media::AudioCodecFormat::AUDIO_AMR_WB:
                     audioEncFormat_->Set<Tag::MIME_TYPE>(Plugins::MimeType::AUDIO_AMR_WB);
-                    break;  
+                    break;
                 default:
                     break;
             }
