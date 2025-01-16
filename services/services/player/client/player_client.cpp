@@ -245,11 +245,25 @@ int32_t PlayerClient::GetCurrentTime(int32_t &currentTime)
     return playerProxy_->GetCurrentTime(currentTime);
 }
 
+int32_t PlayerClient::GetPlaybackPosition(int32_t &playbackPosition)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerProxy_->GetPlaybackPosition(playbackPosition);
+}
+
 int32_t PlayerClient::GetVideoTrackInfo(std::vector<Format> &videoTrack)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     return playerProxy_->GetVideoTrackInfo(videoTrack);
+}
+
+int32_t PlayerClient::SetSeiMessageCbStatus(bool status, const std::vector<int32_t> &payloadTypes)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
+    return playerProxy_->SetSeiMessageCbStatus(status, payloadTypes);
 }
 
 int32_t PlayerClient::GetPlaybackInfo(Format &playbackInfo)

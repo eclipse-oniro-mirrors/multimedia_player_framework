@@ -251,6 +251,17 @@ public:
         (void)IsSeekContinuousSupported;
         return 0;
     }
+
+    virtual int32_t GetPlaybackPosition(int32_t &playbackPosition)
+    {
+        (void)playbackPosition;
+        return 0;
+    }
+
+    virtual int32_t SetSeiMessageCbStatus(bool status, const std::vector<int32_t> &payloadTypes)
+    {
+        return 0;
+    }
 };
 } // namespace Media
 } // namespace OHOS

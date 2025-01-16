@@ -44,6 +44,35 @@ std::string CommonNapi::GetStringArgument(napi_env env, napi_value value, size_t
     return strValue;
 }
 
+bool CommonNapi::GetIntArrayArgument(napi_env env, napi_value value, std::vector<int32_t> &vec, size_t maxLength)
+{
+    napi_valuetype type;
+    napi_status status = napi_typeof(env, value, &type);
+    if (status != napi_ok || type != napi_object) {
+        return false;
+    }
+    uint32_t arrayLength = 0;
+    status = napi_get_array_length(env, value, &arrayLength);
+    if (status != napi_ok || arrayLength == 0 || arrayLength > maxLength) {
+        return false;
+    }
+
+    for (size_t i = 0; i < arrayLength; ++i) {
+        napi_value element;
+        status = napi_get_element(env, value, i, &element);
+        if (status != napi_ok) {
+            return false;
+        }
+        int32_t elementValue = 0;
+        status = napi_get_value_int32(env, element, &elementValue);
+        if (status != napi_ok) {
+            return false;
+        }
+        vec.push_back(elementValue);
+    }
+    return true;
+}
+
 bool CommonNapi::CheckValueType(napi_env env, napi_value arg, napi_valuetype type)
 {
     napi_valuetype valueType = napi_undefined;
@@ -457,6 +486,22 @@ bool CommonNapi::AddArrayProperty(napi_env env, napi_value obj, const std::strin
     return true;
 }
 
+bool CommonNapi::SetPropertyArrayBuffer(
+    const napi_env &env, napi_value &result, const std::string &fieldStr, size_t bufferLen, uint8_t *bufferData)
+{
+    void *native = nullptr;
+    napi_value arrayBuffer = nullptr;
+    napi_status status = napi_create_arraybuffer(env, bufferLen, &native, &arrayBuffer);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, false, "napi_create_arraybuffer failed");
+    CHECK_AND_RETURN_RET_LOG(memcpy_s(native, bufferLen, bufferData, bufferLen) == 0, false, "memcpy failed");
+
+    status = napi_set_named_property(env, result, fieldStr.c_str(), arrayBuffer);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, false, "napi_set_named_property failed");
+
+    return true;
+}
+
+
 bool CommonNapi::AddArrayInt(napi_env env, napi_value &array, const std::vector<int32_t> &vec)
 {
     if (vec.size() == 0) {
@@ -567,9 +612,11 @@ bool CommonNapi::SetPropertyString(napi_env env, napi_value &obj, const std::str
 
 napi_value CommonNapi::CreateFormatBuffer(napi_env env, Format &format)
 {
-    napi_value buffer = nullptr;
     int32_t intValue = 0;
+    size_t bufferLen = 0;
     std::string strValue;
+    uint8_t *bufferData = nullptr;
+    napi_value buffer = nullptr;
     napi_status status = napi_create_object(env, &buffer);
     CHECK_AND_RETURN_RET(status == napi_ok, nullptr);
 
@@ -599,6 +646,12 @@ napi_value CommonNapi::CreateFormatBuffer(napi_env env, Format &format)
             case FORMAT_TYPE_STRING:
                 if (format.GetStringValue(iter.first, strValue)) {
                     CHECK_AND_RETURN_RET(SetPropertyString(env, buffer, iter.first, strValue) == true, nullptr);
+                }
+                break;
+            case FORMAT_TYPE_ADDR:
+                if (format.GetBuffer(iter.first, &bufferData, bufferLen)) {
+                    CHECK_AND_RETURN_RET(
+                        SetPropertyArrayBuffer(env, buffer, iter.first, bufferLen, bufferData) == true, nullptr);
                 }
                 break;
             default:
@@ -753,6 +806,16 @@ void MediaAsyncContext::SignError(int32_t code, const std::string &message, bool
     errFlag = true;
     delFlag = del;
     MEDIA_LOGE("SignError: %{public}s", message.c_str());
+}
+
+napi_value CommonNapi::ThrowError(napi_env env, const int32_t errCode, const std::string errMsg)
+{
+    napi_value result = nullptr;
+    napi_status status = napi_throw_error(env, std::to_string(errCode).c_str(), errMsg.c_str());
+    if (status == napi_ok) {
+        napi_get_undefined(env, &result);
+    }
+    return result;
 }
 
 void MediaAsyncContext::CompleteCallback(napi_env env, napi_status status, void *data)

@@ -19,6 +19,7 @@
 #include <memory>
 #include <unordered_map>
 #include <queue>
+#include <chrono>
 
 #include "audio_decoder_filter.h"
 #include "audio_sink_filter.h"
@@ -35,11 +36,11 @@
 #include "dfx_agent.h"
 #include "subtitle_sink_filter.h"
 #include "meta/meta.h"
-#include <chrono>
 #include "dragging_player_agent.h"
 #include "interrupt_monitor.h"
 #ifdef SUPPORT_VIDEO
 #include "decoder_surface_filter.h"
+#include "sei_parser_filter.h"
 #endif
 
 namespace OHOS {
@@ -119,6 +120,7 @@ public:
     int32_t SetParameter(const Format& params) override;
     int32_t SetObs(const std::weak_ptr<IPlayerEngineObs>& obs) override;
     int32_t GetCurrentTime(int32_t& currentPositionMs) override;
+    int32_t GetPlaybackPosition(int32_t& playbackPositionMs) override;
     int32_t GetDuration(int32_t& durationMs) override;
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
     int32_t SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, AVPlayStrategy strategy) override;
@@ -150,6 +152,7 @@ public:
 
     // internal interfaces
     void OnEvent(const Event &event);
+    void OnEventContinue(const Event &event);
     void OnEventSub(const Event &event);
     void OnEventSubTrackChange(const Event &event);
     void HandleDfxEvent(const DfxEvent &event);
@@ -165,6 +168,7 @@ public:
     float GetMaxAmplitude() override;
     int32_t SetMaxAmplitudeCbStatus(bool status) override;
     int32_t IsSeekContinuousSupported(bool &isSeekContinuousSupported) override;
+    int32_t SetSeiMessageCbStatus(bool status, const std::vector<int32_t> &payloadTypes) override;
 private:
     enum HiplayerSvpMode : int32_t {
         SVP_CLEAR = -1, /* it's not a protection video */
@@ -186,6 +190,7 @@ private:
     void HandleAudioTrackChangeEvent(const Event& event);
     void HandleVideoTrackChangeEvent(const Event& event);
     void HandleSubtitleTrackChangeEvent(const Event& event);
+    void HandleSeiInfoEvent(const Event &event);
     void NotifyBufferingStart(int32_t param);
     void NotifyBufferingEnd(int32_t param);
     void NotifyCachedDuration(int32_t param);
@@ -286,6 +291,7 @@ private:
     std::shared_ptr<InterruptMonitor> interruptMonitor_;
 #ifdef SUPPORT_VIDEO
     std::shared_ptr<DecoderSurfaceFilter> videoDecoder_;
+    std::shared_ptr<SeiParserFilter> seiDecoder_;
 #endif
     std::shared_ptr<MediaSyncManager> syncManager_;
     std::atomic<PlayerStateId> curState_;
@@ -369,6 +375,9 @@ private:
     OHOS::Media::Mutex handleCompleteMutex_{};
     int64_t playStartTime_ = 0;
     std::atomic<bool> isBufferingStartNotified_ {false};
+    std::atomic<bool> needUpdateSei_ {true};
+    bool seiMessageCbStatus_ {false};
+    std::vector<int32_t> payloadTypes_{};
 };
 } // namespace Media
 } // namespace OHOS
