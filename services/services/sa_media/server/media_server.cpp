@@ -36,7 +36,7 @@ constexpr int32_t SYSTEM_PROCESS_TYPE = 1;
 const int32_t SECOND_CONVERT_MS = 1000;
 const std::string SA_ONDEMAND_CONFIG = std::string(SA_CONFIG_PATH);
 #ifdef CROSS_PLATFORM
-using json = nlohmann::json
+using json = nlohmann::json;
 const int32_t DEFAULT_DELAY_TIME = 180;
 const std::string SYSTEMABILITY = std::string("systemability");
 const std::string STOPONDEMAND = std::string("stop-on-demand");
