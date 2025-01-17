@@ -999,6 +999,19 @@ void ScreenCaptureServer::SetErrorInfo(int32_t errCode, const std::string &errMs
     statisticalEventInfo_.userAgree = userAgree;
 }
 
+bool ScreenCaptureServer::CheckPrivacyWindowSkipPermission()
+{
+    MEDIA_LOGI("ScreenCaptureServer::CheckPrivacyWindowSkipPermission() START.");
+    int result = Security::AccessToken::AccessTokenKit::VerifyAccessToken(appInfo_.appTokenId,
+        "ohos.permission.EXEMPT_CAPTURE_SCREEN_AUTHORIZE");
+    if (result == Security::AccessToken::PERMISSION_GRANTED) {
+        MEDIA_LOGI("CheckPrivacyWindowSkipPermission: user have the right to skip privacywindow");
+        return true;
+    }
+    MEDIA_LOGD("CheckPrivacyWindowSkipPermission: user do not have the right to skip privacywindow");
+    return false;
+}
+
 int32_t ScreenCaptureServer::RequestUserPrivacyAuthority()
 {
     MediaTrace trace("ScreenCaptureServer::RequestUserPrivacyAuthority");
@@ -1011,7 +1024,7 @@ int32_t ScreenCaptureServer::RequestUserPrivacyAuthority()
 
     if (isPrivacyAuthorityEnabled_) {
         if (GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"]
-                .compare(appName_) != 0) {
+                .compare(appName_) != 0 && !CheckPrivacyWindowSkipPermission()) {
             return StartPrivacyWindow();
         } else {
             MEDIA_LOGI("ScreenCaptureServer::RequestUserPrivacyAuthority support screenrecorder");
@@ -1710,7 +1723,7 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
     if (IsUserPrivacyAuthorityNeeded()) {
         if (isPrivacyAuthorityEnabled_ &&
             GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"]
-                .compare(appName_) != 0) {
+                .compare(appName_) != 0 && !CheckPrivacyWindowSkipPermission()) {
             MEDIA_LOGI("Wait for user interactions to ALLOW/DENY capture");
             return MSERR_OK;
         }

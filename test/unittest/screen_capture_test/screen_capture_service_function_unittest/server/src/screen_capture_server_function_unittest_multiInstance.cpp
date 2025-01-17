@@ -526,5 +526,17 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StopScreenCapture_001, TestSize.Level2
     ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
 }
 
+/**
+* @tc.name: CheckPrivacyWindowSkipPermission_001
+* @tc.desc: CheckPrivacyWindowSkipPermission_001
+* @tc.type: FUNC
+*/
+HWTEST_F(ScreenCaptureServerFunctionTest, CheckPrivacyWindowSkipPermission_001, TestSize.Level2)
+{
+    std::shared_ptr<ScreenCaptureServer> server = std::make_shared<ScreenCaptureServer>();
+    server->appInfo_.appUid = ROOT_UID;
+    server->appInfo_.appPid = 1;
+    ASSERT_EQ(server->CheckPrivacyWindowSkipPermission(), false);
+}
 } // Media
 } // OHOS
