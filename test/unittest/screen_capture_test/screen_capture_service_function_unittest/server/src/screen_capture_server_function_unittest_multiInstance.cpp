@@ -22,6 +22,7 @@ using namespace OHOS::Media;
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE,
         "ScreenCaptureServerFunctionTest"};
+    constexpr int32_t ROOT_UID = 0;
 }
 
 namespace OHOS {
