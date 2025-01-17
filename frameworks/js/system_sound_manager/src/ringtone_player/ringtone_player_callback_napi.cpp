@@ -105,22 +105,17 @@ void RingtonePlayerCallbackNapi::OnInterrupt(const AudioStandard::InterruptEvent
 
 void RingtonePlayerCallbackNapi::OnJsCallbackInterrupt(std::unique_ptr<RingtonePlayerJsCallback> &jsCb)
 {
-    uv_loop_s *loop = nullptr;
-    napi_get_uv_event_loop(env_, &loop);
-    CHECK_AND_RETURN(loop != nullptr);
-
-    uv_work_t *work = new(std::nothrow) uv_work_t;
-    CHECK_AND_RETURN_LOG(work != nullptr, "RingtonePlayerCallbackNapi: OnJsCallBackInterrupt: No memory");
     if (jsCb.get() == nullptr) {
-        MEDIA_LOGE("RingtonePlayerCallbackNapi: OnJsCallBackInterrupt: jsCb.get() is null");
-        delete work;
+        MEDIA_LOGE("OnJsCallbackVolumeEvent: jsCb.get() is null");
         return;
     }
-    work->data = reinterpret_cast<void *>(jsCb.get());
-
-    int ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
-        // Js Thread
-        RingtonePlayerJsCallback *event = reinterpret_cast<RingtonePlayerJsCallback *>(work->data);
+    RingtonePlayerJsCallback *event = jsCb.get();
+    auto task = [event]() {
+        std::shared_ptr<RingtonePlayerJsCallback> context(
+            static_cast<RingtonePlayerJsCallback*>(event),
+            [](RingtonePlayerJsCallback* ptr) {
+                delete ptr;
+        });
         std::string request = event->callbackName;
         napi_env env = event->callback->env_;
         napi_ref callback = event->callback->cb_;
@@ -128,8 +123,6 @@ void RingtonePlayerCallbackNapi::OnJsCallbackInterrupt(std::unique_ptr<RingtoneP
         napi_open_handle_scope(env, &scope);
         MEDIA_LOGI("RingtonePlayerCallbackNapi: JsCallBack %{public}s, uv_queue_work start", request.c_str());
         do {
-            CHECK_AND_BREAK_LOG(status != UV_ECANCELED, "%{public}s cancelled", request.c_str());
-
             napi_value jsCallback = nullptr;
             napi_status napiStatus = napi_get_reference_value(env, callback, &jsCallback);
             CHECK_AND_BREAK_LOG(napiStatus == napi_ok && jsCallback != nullptr,
@@ -148,12 +141,10 @@ void RingtonePlayerCallbackNapi::OnJsCallbackInterrupt(std::unique_ptr<RingtoneP
         } while (0);
         napi_close_handle_scope(env, scope);
         delete event;
-        delete work;
-    });
-    if (ret != 0) {
-        MEDIA_LOGE("Failed to execute libuv work queue");
-        delete work;
-    } else {
+    };
+    auto ret = napi_send_event(env_, task, napi_eprio_high);
+    if (ret != napi_status::napi_ok) {
+        MEDIA_LOGE("Failed to SendEvent, ret = %{public}d", ret);
         jsCb.release();
     }
 }
