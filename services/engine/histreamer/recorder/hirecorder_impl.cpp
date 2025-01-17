@@ -654,33 +654,38 @@ void HiRecorderImpl::ConfigureAudio(const RecorderParam &recParam)
             break;
         }
         case RecorderPublicParamType::AUD_ENC_FMT: {
-            AudEnc audEnc = static_cast<const AudEnc&>(recParam);
-            switch (audEnc.encFmt) {
-                case OHOS::Media::AudioCodecFormat::AUDIO_DEFAULT:
-                case OHOS::Media::AudioCodecFormat::AAC_LC:
-                    audioEncFormat_->Set<Tag::MIME_TYPE>(Plugins::MimeType::AUDIO_AAC);
-                    audioEncFormat_->Set<Tag::AUDIO_AAC_PROFILE>(Plugins::AudioAacProfile::LC);
-                    break;
-                case OHOS::Media::AudioCodecFormat::AUDIO_MPEG:
-                    audioEncFormat_->Set<Tag::MIME_TYPE>(Plugins::MimeType::AUDIO_MPEG);
-                    break;
-                case OHOS::Media::AudioCodecFormat::AUDIO_G711MU:
-                    audioEncFormat_->Set<Tag::MIME_TYPE>(Plugins::MimeType::AUDIO_G711MU);
-                    break;
-                case OHOS::Media::AudioCodecFormat::AUDIO_AMR_NB:
-                    audioEncFormat_->Set<Tag::MIME_TYPE>(Plugins::MimeType::AUDIO_AMR_NB);
-                    break;
-                case OHOS::Media::AudioCodecFormat::AUDIO_AMR_WB:
-                    audioEncFormat_->Set<Tag::MIME_TYPE>(Plugins::MimeType::AUDIO_AMR_WB);
-                    break;
-                default:
-                    break;
-            }
+            ConfigureAudioCodecFormat(recParam);
             break;
         }
         default: {
             break;
         }
+    }
+}
+
+void HiRecorderImpl::ConfigureAudioCodecFormat(const RecorderParam &recParam)
+{
+    AudEnc audEnc = static_cast<const AudEnc&>(recParam);
+    switch (audEnc.encFmt) {
+        case OHOS::Media::AudioCodecFormat::AUDIO_DEFAULT:
+        case OHOS::Media::AudioCodecFormat::AAC_LC:
+            audioEncFormat_->Set<Tag::MIME_TYPE>(Plugins::MimeType::AUDIO_AAC);
+            audioEncFormat_->Set<Tag::AUDIO_AAC_PROFILE>(Plugins::AudioAacProfile::LC);
+            break;
+        case OHOS::Media::AudioCodecFormat::AUDIO_MPEG:
+            audioEncFormat_->Set<Tag::MIME_TYPE>(Plugins::MimeType::AUDIO_MPEG);
+            break;
+        case OHOS::Media::AudioCodecFormat::AUDIO_G711MU:
+            audioEncFormat_->Set<Tag::MIME_TYPE>(Plugins::MimeType::AUDIO_G711MU);
+            break;
+        case OHOS::Media::AudioCodecFormat::AUDIO_AMR_NB:
+            audioEncFormat_->Set<Tag::MIME_TYPE>(Plugins::MimeType::AUDIO_AMR_NB);
+            break;
+        case OHOS::Media::AudioCodecFormat::AUDIO_AMR_WB:
+            audioEncFormat_->Set<Tag::MIME_TYPE>(Plugins::MimeType::AUDIO_AMR_WB);
+            break;
+        default:
+            break;
     }
 }
 
