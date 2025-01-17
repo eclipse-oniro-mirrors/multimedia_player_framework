@@ -2135,6 +2135,11 @@ void HiPlayerImpl::OnEventContinue(const Event &event)
 void HiPlayerImpl::HandleSeiInfoEvent(const Event &event)
 {
     Format format = AnyCast<Format>(event.param);
+
+    int32_t playbackPos = 0;
+    format.GetIntValue(Tag::AV_PLAYER_SEI_PLAYBACK_POSITION, playbackPos);
+    format.PutIntValue(Tag::AV_PLAYER_SEI_PLAYBACK_POSITION, Plugins::Us2Ms(playbackPos - mediaStartPts_));
+
     callbackLooper_.OnInfo(INFO_TYPE_SEI_UPDATE_INFO, 0, format);
     int32_t param = -1;
     format.GetIntValue(Tag::AV_PLAYER_SEI_PLAYBACK_POSITION, param);
