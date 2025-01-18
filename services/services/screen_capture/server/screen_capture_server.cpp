@@ -2195,6 +2195,13 @@ int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string &name, sptr<O
         }
     }
     MEDIA_LOGI("CreateVirtualScreen success, screenId: %{public}" PRIu64, virtualScreenId_);
+    if (captureConfig_.dataType == DataType::ORIGINAL_STREAM) {
+        std::vector<ScreenId> screenIds;
+        screenIds.push_back(virtualScreenId_);
+        auto ret = ScreenManager::GetInstance().SetScreenSkipProtectedWindow(screenIds, true);
+        CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK, MSERR_UNKNOWN, "SetScreenSkipProtectedWindow failed");
+        MEDIA_LOGI("SetScreenSkipProtectedWindow success");
+    }
     return PrepareVirtualScreenMirror();
 }
 
