@@ -2187,6 +2187,14 @@ int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string &name, sptr<O
     virtualScreenId_ = ScreenManager::GetInstance().CreateVirtualScreen(virScrOption);
     CHECK_AND_RETURN_RET_LOG(virtualScreenId_ >= 0, MSERR_UNKNOWN, "CreateVirtualScreen failed, invalid screenId");
 
+    if (captureConfig_.dataType == DataType::ORIGINAL_STREAM) {
+        std::vector<ScreenId> screenIds;
+        screenIds.push_back(virtualScreenId_);
+        auto ret = ScreenManager::GetInstance().SetScreenSkipProtectedWindow(screenIds, true);
+        CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK || ret == DMError::DM_ERROR_DEVICE_NOT_SUPPORT, MSERR_UNKNOWN,
+            "SetScreenSkipProtectedWindow failed");
+        MEDIA_LOGI("SetScreenSkipProtectedWindow success");
+    }
     if (!showCursor_) {
         MEDIA_LOGI("CreateVirtualScreen without cursor");
         int32_t ret = ShowCursorInner();
@@ -2195,13 +2203,6 @@ int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string &name, sptr<O
         }
     }
     MEDIA_LOGI("CreateVirtualScreen success, screenId: %{public}" PRIu64, virtualScreenId_);
-    if (captureConfig_.dataType == DataType::ORIGINAL_STREAM) {
-        std::vector<ScreenId> screenIds;
-        screenIds.push_back(virtualScreenId_);
-        auto ret = ScreenManager::GetInstance().SetScreenSkipProtectedWindow(screenIds, true);
-        CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK, MSERR_UNKNOWN, "SetScreenSkipProtectedWindow failed");
-        MEDIA_LOGI("SetScreenSkipProtectedWindow success");
-    }
     return PrepareVirtualScreenMirror();
 }
 
