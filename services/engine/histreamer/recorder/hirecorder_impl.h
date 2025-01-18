@@ -86,6 +86,7 @@ public:
 private:
     void ConfigureAudioCapture();
     void ConfigureAudio(const RecorderParam &recParam);
+    void ConfigureAudioCodecFormat(const RecorderParam &recParam);
     void ConfigureVideo(const RecorderParam &recParam);
     void ConfigureMeta(int32_t sourceId, const RecorderParam &recParam);
     void ConfigureMuxer(const RecorderParam &recParam);

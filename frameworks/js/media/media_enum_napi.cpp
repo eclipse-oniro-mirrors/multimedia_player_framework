@@ -311,6 +311,7 @@ static const std::vector<struct JsEnumString> g_containerFormatType = {
     { "CFT_MPEG_4A", ContainerFormatType::CFT_MPEG_4A },
     { "CFT_MP3", "mp3" },
     { "CFT_WAV", "wav" },
+    { "CFT_AMR", "amr" },
 };
 
 static const std::vector<struct JsEnumString> g_avMimeTypes = {
