@@ -2138,12 +2138,9 @@ void HiPlayerImpl::HandleSeiInfoEvent(const Event &event)
 
     int32_t playbackPos = 0;
     format.GetIntValue(Tag::AV_PLAYER_SEI_PLAYBACK_POSITION, playbackPos);
-    format.PutIntValue(Tag::AV_PLAYER_SEI_PLAYBACK_POSITION, Plugins::Us2Ms(playbackPos - mediaStartPts_));
+    format.PutIntValue(Tag::AV_PLAYER_SEI_PLAYBACK_POSITION, playbackPos - Plugins::Us2Ms(mediaStartPts_));
 
     callbackLooper_.OnInfo(INFO_TYPE_SEI_UPDATE_INFO, 0, format);
-    int32_t param = -1;
-    format.GetIntValue(Tag::AV_PLAYER_SEI_PLAYBACK_POSITION, param);
-    MEDIA_LOG_I("winddraw %{public}d", param);
 }
 
 void HiPlayerImpl::OnEventSub(const Event &event)
@@ -2964,6 +2961,7 @@ Status HiPlayerImpl::LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFi
             FALSE_RETURN_V(seiDecoder_ != nullptr, Status::ERROR_NULL_POINTER);
             seiDecoder_->Init(playerEventReceiver_, playerFilterCallback_);
             seiDecoder_->SetSeiMessageCbStatus(seiMessageCbStatus_, payloadTypes_);
+            seiDecoder_->SetSyncCenter(syncManager_);
             interruptMonitor_->RegisterListener(seiDecoder_);
         }
         return pipeline_->LinkFilters(preFilter, {seiDecoder_}, type);
