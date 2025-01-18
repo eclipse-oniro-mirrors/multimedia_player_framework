@@ -2193,7 +2193,7 @@ int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string &name, sptr<O
         auto ret = ScreenManager::GetInstance().SetScreenSkipProtectedWindow(screenIds, true);
         CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK || ret == DMError::DM_ERROR_DEVICE_NOT_SUPPORT, MSERR_UNKNOWN,
             "0x%{public}06" PRIXPTR " SetScreenSkipProtectedWindow failed, ret: %{public}d", FAKE_POINTER(this), ret);
-        MEDIA_LOGI("SetScreenSkipProtectedWindow success");
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " SetScreenSkipProtectedWindow success", FAKE_POINTER(this));
     }
     if (!showCursor_) {
         MEDIA_LOGI("CreateVirtualScreen without cursor");
