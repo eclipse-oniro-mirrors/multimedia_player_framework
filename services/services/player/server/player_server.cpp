@@ -1957,7 +1957,6 @@ bool PlayerServer::IsSeekContinuousSupported()
 
 int32_t PlayerServer::SetSeiMessageCbStatus(bool status, const std::vector<int32_t> &payloadTypes)
 {
-    CHECK_AND_RETURN_RET_LOG(isLiveStream_, MSERR_UNSUPPORT, "Can not SetSeiMessageCbStatus, not live-stream");
     seiMessageCbStatus_ = status;
     payloadTypes_.assign(payloadTypes.begin(), payloadTypes.end());
     CHECK_AND_RETURN_RET_NOLOG(
