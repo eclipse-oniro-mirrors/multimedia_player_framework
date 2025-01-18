@@ -88,8 +88,8 @@ struct RecorderObject : public OH_AVRecorder {
     OH_AVRecorder_Config *config_ = nullptr;
     OH_AVRecorder_EncoderInfo *info_ = nullptr;
     int32_t length_ = -1;
-    bool withVideo = false;
-    bool withAudio = false;
+    bool withVideo = true;
+    bool withAudio = true;
 };
 
 
