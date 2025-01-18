@@ -2168,7 +2168,7 @@ int32_t ScreenCaptureServer::StartStreamHomeVideoCapture()
 int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string &name, sptr<OHOS::Surface> consumer)
 {
     MediaTrace trace("ScreenCaptureServer::CreateVirtualScreen");
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " CreateVirtualScreen Start", FAKE_POINTER(this));
+    MEDIA_LOGI("CreateVirtualScreen Start");
     isConsumerStart_ = false;
     VirtualScreenOption virScrOption = InitVirtualScreenOption(name, consumer);
     sptr<Rosen::Display> display = Rosen::DisplayManager::GetInstance().GetDefaultDisplaySync();
@@ -2187,14 +2187,6 @@ int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string &name, sptr<O
     virtualScreenId_ = ScreenManager::GetInstance().CreateVirtualScreen(virScrOption);
     CHECK_AND_RETURN_RET_LOG(virtualScreenId_ >= 0, MSERR_UNKNOWN, "CreateVirtualScreen failed, invalid screenId");
 
-    if (captureConfig_.dataType == DataType::ORIGINAL_STREAM) {
-        std::vector<ScreenId> screenIds;
-        screenIds.push_back(virtualScreenId_);
-        auto ret = ScreenManager::GetInstance().SetScreenSkipProtectedWindow(screenIds, true);
-        CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK || ret == DMError::DM_ERROR_DEVICE_NOT_SUPPORT, MSERR_UNKNOWN,
-            "0x%{public}06" PRIXPTR " SetScreenSkipProtectedWindow failed, ret: %{public}d", FAKE_POINTER(this), ret);
-        MEDIA_LOGI("0x%{public}06" PRIXPTR " SetScreenSkipProtectedWindow success", FAKE_POINTER(this));
-    }
     if (!showCursor_) {
         MEDIA_LOGI("CreateVirtualScreen without cursor");
         int32_t ret = ShowCursorInner();
