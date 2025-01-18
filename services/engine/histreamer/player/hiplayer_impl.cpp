@@ -2943,12 +2943,20 @@ Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilte
     return res;
 }
 
+bool HiPlayerImpl::IsLiveStream()
+{
+    FALSE_RETURN_V_NOLOG(demuxer_ != nullptr, false);
+    auto globalMeta = demuxer_->GetGlobalMetaInfo();
+    FALSE_RETURN_V_NOLOG(globalMeta != nullptr, false);
+    return globalMeta->Find(Tag::MEDIA_DURATION) == globalMeta->end();
+}
+
 #ifdef SUPPORT_VIDEO
 Status HiPlayerImpl::LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFilter, StreamType type)
 {
     MediaTrace trace("HiPlayerImpl::LinkVideoDecoderFilter");
     MEDIA_LOG_I("LinkVideoDecoderFilter");
-    if (surface_ == nullptr && seiMessageCbStatus_) {
+    if (surface_ == nullptr && seiMessageCbStatus_ && IsLiveStream()) {
         MEDIA_LOG_I("Link SeiParserFilterFilter Enter.");
         if (seiDecoder_ == nullptr) {
             seiDecoder_ = FilterFactory::Instance().CreateFilter<SeiParserFilter>("player.sei",
@@ -2956,6 +2964,7 @@ Status HiPlayerImpl::LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFi
             FALSE_RETURN_V(seiDecoder_ != nullptr, Status::ERROR_NULL_POINTER);
             seiDecoder_->Init(playerEventReceiver_, playerFilterCallback_);
             seiDecoder_->SetSeiMessageCbStatus(seiMessageCbStatus_, payloadTypes_);
+            interruptMonitor_->RegisterListener(seiDecoder_);
         }
         return pipeline_->LinkFilters(preFilter, {seiDecoder_}, type);
     }
@@ -2970,7 +2979,7 @@ Status HiPlayerImpl::LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFi
         videoDecoder_->SetCallingInfo(appUid_, appPid_, bundleName_, instanceId_);
         if (surface_ != nullptr) {
             videoDecoder_->SetVideoSurface(surface_);
-            videoDecoder_->SetSeiMessageCbStatus(seiMessageCbStatus_, payloadTypes_);
+            videoDecoder_->SetSeiMessageCbStatus(seiMessageCbStatus_  && IsLiveStream(), payloadTypes_);
         }
 
         // set decrypt config for drm videos
