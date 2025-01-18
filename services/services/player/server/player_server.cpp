@@ -1959,7 +1959,6 @@ int32_t PlayerServer::SetSeiMessageCbStatus(bool status, const std::vector<int32
 {
     seiMessageCbStatus_ = status;
     payloadTypes_.assign(payloadTypes.begin(), payloadTypes.end());
-    CHECK_AND_RETURN_RET_LOG(isLiveStream_, MSERR_UNSUPPORT, "Can not SetSeiMessageCbStatus, not live-stream");
     CHECK_AND_RETURN_RET_NOLOG(
         playerEngine_ == nullptr, playerEngine_->SetSeiMessageCbStatus(status, payloadTypes));
     return MSERR_OK;

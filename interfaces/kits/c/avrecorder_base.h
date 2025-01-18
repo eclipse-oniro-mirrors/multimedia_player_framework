@@ -103,6 +103,10 @@ typedef enum OH_AVRecorder_CodecMimeType {
     AVRECORDER_VIDEO_MPEG4 = 6,
     /* H.265 codec MIME type. */
     AVRECORDER_VIDEO_HEVC = 8,
+    /* AMR_NB codec MIME type. */
+    AVRECORDER_AUDIO_AMR_NB = 9,
+    /* AMR_WB codec MIME type. */
+    AVRECORDER_AUDIO_AMR_WB = 10,
 } OH_AVRecorder_CodecMimeType;
 
 /**
@@ -113,11 +117,13 @@ typedef enum OH_AVRecorder_CodecMimeType {
 typedef enum OH_AVRecorder_ContainerFormatType {
     /* A video container format type mp4. */
     AVRECORDER_CFT_MPEG_4 = 2,
-    /* An audio container format type m4a. */
+    /* A audio container format type m4a. */
     AVRECORDER_CFT_MPEG_4A = 6,
-    /* An audio container format type mp3. */
+    /* A audio container format type amr. */
+    AVRECORDER_CFT_AMR = 8,
+    /* A audio container format type mp3. */
     AVRECORDER_CFT_MP3 = 9,
-    /* An audio container format type wav. */
+    /* A audio container format type wav. */
     AVRECORDER_CFT_WAV = 10,
 } OH_AVRecorder_ContainerFormatType;
 
