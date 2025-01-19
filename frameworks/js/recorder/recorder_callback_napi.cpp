@@ -108,14 +108,6 @@ void RecorderCallbackNapi::OnAudioCaptureChange(const AudioRecorderChangeInfo &a
 
 void RecorderCallbackNapi::OnJsStateCallBack(RecordJsCallback *jsCb) const
 {
-    uv_work_t *work = new(std::nothrow) uv_work_t;
-    if (work == nullptr) {
-        MEDIA_LOGE("failed to new uv_work_t");
-        delete jsCb;
-        return;
-    }
-
-    work->data = reinterpret_cast<void *>(jsCb);
     auto task = [event = jsCb]() {
         std::string request = event->callbackName;
         do {
@@ -146,14 +138,6 @@ void RecorderCallbackNapi::OnJsStateCallBack(RecordJsCallback *jsCb) const
 
 void RecorderCallbackNapi::OnJsErrorCallBack(RecordJsCallback *jsCb) const
 {
-    uv_work_t *work = new(std::nothrow) uv_work_t;
-    if (work == nullptr) {
-        MEDIA_LOGE("No memory");
-        delete jsCb;
-        return;
-    }
-    work->data = reinterpret_cast<void *>(jsCb);
-
     auto task = [event = jsCb]() {
         std::string request = event->callbackName;
         do {
