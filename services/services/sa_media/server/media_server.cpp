@@ -85,36 +85,36 @@ int32_t MediaServer::OnIdle(const SystemAbilityOnDemandReason &idleReason)
     auto instanceCount = MediaServerManager::GetInstance().GetInstanceCountLocked();
     CHECK_AND_RETURN_RET_LOG(instanceCount == 0, -1, "%{public} " PRId32 "instance are not released", instanceCount);
     unloadDealyTime_ = unloadDealyTime_ == -1 ? GetUnloadDelayTime() : unloadDealyTime_;
-    size_t allInstancesReleasedTime = MediaServerManager::GetInstance().GetAllInstancesReleasedTime();
-    size_t currentTime = MediaServerManager::GetInstance().GetCurrentSystemClockMs();
-    int32_t diffTime = unloadDealyTime_ - static_cast<int32_t>(currentTime - allInstancesReleasedTime);
-    CHECK_AND_RETURN_RET_LOG(diffTime <=0, -1, "%{public} " PRId32 "ms wait to unload", diffTime);
+    int64_t ildeTimeStart = MediaServerManager::GetInstance().GetAllInstancesReleasedTime();
+    int64_t currentTime = MediaServerManager::GetInstance().GetCurrentSystemTimeMs();
+    int32_t idleTime = currentTime > ildeTimeStart  ? currentTime - ildeTimeStart : ildeTimeStart - currentTime;
+    CHECK_AND_RETURN_RET_LOG(unloadDealyTime_ <= idleTime, -1, "%{public} " PRId32 "ms wait to unload", unloadDealyTime_ - idleTime);
     return 0;
 }
 
 int32_t MediaServer::GetUnloadDelayTime()
 {
-    int32_t delayTIme = -1;
+    int32_t delayTIme = DEFAULT_DELAY_TIME * SECOND_CONVERT_MS;
 #ifdef CROSS_PLATFORM
     std::ifstream sa_ondemand_config_file(SA_ONDEMAND_CONFIG);
-    CHECK_AND_RETURN_RET_LOG(sa_ondemand_config_file.is_open(), -1, "open SA config failed");
+    CHECK_AND_RETURN_RET_LOG(sa_ondemand_config_file.is_open(), delayTIme, "open SA config failed");
     json SAOnDemandConfig;
     sa_ondemand_config_file >> SAOnDemandConfig;
     sa_ondemand_config_file.close();
     json systemability = SAOnDemandConfig[SYSTEMABILITY];
-    CHECK_AND_RETURN_RET_LOG(systemability.is_array(), -1, "systemability not exist");
+    CHECK_AND_RETURN_RET_LOG(systemability.is_array(), delayTIme, "systemability not exist");
     for (auto& ability : systemability) {
         json stopOnDemand = ability[STOPONDEMAND];
         CHECK_AND_CONTINUE_LOG(stopOnDemand.is_object(), "stop-on-demand not exist");
         json longTimeUnusedUnload = stopOnDemand[LONGTIMEUNUSED];
         CHECK_AND_CONTINUE_LOG(longTimeUnusedUnload.is_number(), "longtimeunused-Unload not exist");
-        delayTime = longTimeUnusedUnload.get<int32_t>();
+        delayTime = longTimeUnusedUnload.get<int32_t>() * SECOND_CONVERT_MS;
         break;
     }
 #endif
-    delayTime = delayTime == -1 ? DEFAULT_DELAY_TIME : delayTime;
+    delayTime = delayTime <= 0 ? DEFAULT_DELAY_TIME : delayTime;
     MEDIA_LOGI("the unload delay time is %{public}d", delayTime);
-    return delayTime * SECOND_CONVERT_MS;
+    return delayTime;
 }
 #endif
 
