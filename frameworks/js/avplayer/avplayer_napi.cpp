@@ -33,6 +33,8 @@
 #include "meta/video_types.h"
 #include "media_source_napi.h"
 #include "media_log.h"
+#include "ipc_skeleton.h"
+#include "tokenid_kit.h"
 
 using namespace OHOS::AudioStandard;
 
@@ -196,6 +198,12 @@ void AVPlayerNapi::Destructor(napi_env env, void *nativeObject, void *finalize)
     MEDIA_LOGD("Destructor success");
 }
 
+bool AVPlayerNapi::IsSystemApp()
+{
+    uint64_t tokenId = IPCSkeleton::GetSelfTokenID();
+    return Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(tokenId);
+}
+
 napi_value AVPlayerNapi::JsCreateAVPlayer(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("AVPlayerNapi::createAVPlayer");
@@ -276,7 +284,10 @@ napi_value AVPlayerNapi::JsPrepare(napi_env env, napi_callback_info info)
     size_t argCount = 1;
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstance");
-
+    if (!IsSystemApp()) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_PERMISSION_DENIED, "Caller is not a system application.");
+        return result;
+    }
     promiseCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
     promiseCtx->deferred = CommonNapi::CreatePromise(env, promiseCtx->callbackRef, result);
     auto state = jsPlayer->GetCurrentState();
