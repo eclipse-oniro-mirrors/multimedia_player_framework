@@ -2920,17 +2920,24 @@ napi_value AVPlayerNapi::JsClearOnCallback(napi_env env, napi_callback_info info
     }
 
     std::string callbackName = CommonNapi::GetStringArgument(env, args[0]);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " set callbackName: %{public}s", FAKE_POINTER(jsPlayer), callbackName.c_str());
     if (callbackName != "seiMessageReceived") {
         jsPlayer->MaxAmplitudeCallbackOff(jsPlayer, callbackName);
-    } else {
-        std::vector<int32_t> payloadTypes = {};
-        (void)CommonNapi::GetIntArrayArgument(env, args[1], payloadTypes);
-        jsPlayer->SeiMessageCallbackOff(jsPlayer, callbackName, payloadTypes);
+        jsPlayer->ClearCallbackReference(callbackName);
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " JsClearOnCallback success", FAKE_POINTER(jsPlayer));
+        return result;
     }
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " set callbackName: %{public}s", FAKE_POINTER(jsPlayer), callbackName.c_str());
-
-    jsPlayer->ClearCallbackReference(callbackName);
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " JsClearOnCallback success", FAKE_POINTER(jsPlayer));
+    
+    std::vector<int32_t> payloadTypes;
+    if (CommonNapi::GetIntArrayArgument(env, args[1], payloadTypes)) {
+        jsPlayer->SeiMessageCallbackOff(jsPlayer, callbackName, payloadTypes);
+    } else {
+        MEDIA_LOGD("No payloadTypes provided or invalid argument.");
+        jsPlayer->SeiMessageCallbackOff(jsPlayer, callbackName, {});
+        jsPlayer->ClearCallbackReference(callbackName);
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " JsClearOnCallback success", FAKE_POINTER(jsPlayer));
+    }
+    
     return result;
 }
 
