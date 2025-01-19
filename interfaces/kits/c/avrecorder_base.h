@@ -19,9 +19,9 @@
  *
  * @brief Provides APIs of request capability for Recorder.
  *
- * @Syscap SystemCapability.Multimedia.Media.AVRecorder
- * @since 14
- * @version 1.0
+ * @syscap SystemCapability.Multimedia.Media.AVRecorder
+ * @since 16
+ * @}
  */
  
 /**
@@ -31,8 +31,8 @@
  *
  * @kit MediaKit
  * @library libavrecorder.so
- * @since 14
- * @version 1.0
+ * @syscap SystemCapability.Multimedia.Media.AVRecorder
+ * @since 16
  */
  
 #ifndef MULTIMEDIA_PLAYER_FRAMEWORK_NATIVE_AVRECORDER_BASE_H
@@ -49,64 +49,60 @@ extern "C" {
 /**
  * @brief Initialization of avrecorder
  * @syscap SystemCapability.Multimedia.Media.AVRecorder
- * @since 14
- * @version 1.0
+ * @since 16
  */
 typedef struct OH_AVRecorder OH_AVRecorder;
 
 /**
  * @brief audio source type for recorder
  * @syscap SystemCapability.Multimedia.Media.AVRecorder
- * @since 14
- * @version 1.0
+ * @since 16
  */
 typedef enum OH_AVRecorder_AudioSourceType {
     /* Default audio source type. */
-    DEFAULT = 0,
+    AVRECORDER_DEFAULT = 0,
     /* Source type mic. */
-    MIC = 1,
+    AVRECORDER_MIC = 1,
     /* Source type Voice recognition. */
-    VOICE_RECOGNITION = 2,
+    AVRECORDER_VOICE_RECOGNITION = 2,
     /* Source type Voice communication. */
-    VOICE_COMMUNICATION = 7,
+    AVRECORDER_VOICE_COMMUNICATION = 7,
     /* Source type Voice message. */
-    VOICE_MESSAGE = 10,
+    AVRECORDER_VOICE_MESSAGE = 10,
     /* Source type Camcorder. */
-    CAMCORDER = 13,
+    AVRECORDER_CAMCORDER = 13,
 } OH_AVRecorder_AudioSourceType;
 
 /**
  * @brief video source type for recorder
  * @syscap SystemCapability.Multimedia.Media.AVRecorder
- * @since 14
- * @version 1.0
+ * @since 16
  */
 typedef enum OH_AVRecorder_VideoSourceType {
     /* Surface raw data. */
-    SURFACE_YUV = 0,
+    AVRECORDER_SURFACE_YUV = 0,
     /* Surface ES data. */
-    SURFACE_ES = 1,
+    AVRECORDER_SURFACE_ES = 1,
 } OH_AVRecorder_VideoSourceType;
 
 /**
  * @brief Enumerates Codec MIME types
  * @syscap SystemCapability.Multimedia.Media.AVRecorder
- * @since 14
- * @version 1.0
+ * @since 16
  */
 typedef enum OH_AVRecorder_CodecMimeType {
     /* H.264 codec MIME type. */
-    VIDEO_AVC = 2,
+    AVRECORDER_VIDEO_AVC = 2,
     /* AAC codec MIME type. */
-    AUDIO_AAC = 3,
+    AVRECORDER_AUDIO_AAC = 3,
     /* mp3 codec MIME type. */
-    AUDIO_MP3 = 4,
+    AVRECORDER_AUDIO_MP3 = 4,
     /* G711-mulaw codec MIME type. */
-    AUDIO_G711MU = 5,
+    AVRECORDER_AUDIO_G711MU = 5,
     /* MPEG4 codec MIME type. */
-    VIDEO_MPEG4 = 6,
+    AVRECORDER_VIDEO_MPEG4 = 6,
     /* H.265 codec MIME type. */
-    VIDEO_HEVC = 8,
+    AVRECORDER_VIDEO_HEVC = 8,
     /* AMR_NB codec MIME type. */
     AVRECORDER_AUDIO_AMR_NB = 9,
     /* AMR_WB codec MIME type. */
@@ -116,76 +112,71 @@ typedef enum OH_AVRecorder_CodecMimeType {
 /**
  * @brief Enumerates container format type(The abbreviation for 'container format type' is CFT)
  * @syscap SystemCapability.Multimedia.Media.AVRecorder
- * @since 14
- * @version 1.0
+ * @since 16
  */
 typedef enum OH_AVRecorder_ContainerFormatType {
     /* A video container format type mp4. */
-    CFT_MPEG_4 = 2,
+    AVRECORDER_CFT_MPEG_4 = 2,
     /* A audio container format type m4a. */
-    CFT_MPEG_4A = 6,
+    AVRECORDER_CFT_MPEG_4A = 6,
     /* A audio container format type amr. */
     AVRECORDER_CFT_AMR = 8,
     /* A audio container format type mp3. */
-    CFT_MP3 = 9,
+    AVRECORDER_CFT_MP3 = 9,
     /* A audio container format type wav. */
-    CFT_WAV = 10,
+    AVRECORDER_CFT_WAV = 10,
 } OH_AVRecorder_ContainerFormatType;
 
 /**
  * @brief Recorder States
  * @syscap SystemCapability.Multimedia.Media.AVRecorder
- * @since 14
- * @version 1.0
+ * @since 16
  */
 typedef enum OH_AVRecorder_State {
     /* idle states */
-    IDLE = 0,
+    AVRECORDER_IDLE = 0,
     /* prepared states */
-    PREPARED = 1,
+    AVRECORDER_PREPARED = 1,
     /* started states */
-    STARTED = 2,
+    AVRECORDER_STARTED = 2,
     /* paused states */
-    PAUSED = 3,
+    AVRECORDER_PAUSED = 3,
     /* stopped states */
-    STOPPED = 4,
+    AVRECORDER_STOPPED = 4,
     /* released states */
-    RELEASED = 5,
+    AVRECORDER_RELEASED = 5,
     /* error states */
-    ERROR = 6,
+    AVRECORDER_ERROR = 6,
 } OH_AVRecorder_State;
 
 /**
  * @brief reason of recorder state change
  * @syscap SystemCapability.Multimedia.Media.AVRecorder
- * @since 14
- * @version 1.0
+ * @since 16
  */
 typedef enum OH_AVRecorder_StateChangeReason {
     /* State changed by user operation */
-    USER = 0,
+    AVRECORDER_USER = 0,
     /* State changed by background action */
-    BACKGROUND = 1,
+    AVRECORDER_BACKGROUND = 1,
 } OH_AVRecorder_StateChangeReason;
 
 /**
  * @brief mode of creating recorder file
  * @syscap SystemCapability.Multimedia.Media.AVRecorder
- * @since 14
- * @version 1.0
+ * @since 16
  */
 typedef enum OH_AVRecorder_FileGenerationMode {
     /* Application Creation */
-    APP_CREATE = 0,
+    AVRECORDER_APP_CREATE = 0,
     /* System Creation. Valid only in camera scene */
-    AUTO_CREATE_CAMERA_SCENE = 1,
+    AVRECORDER_AUTO_CREATE_CAMERA_SCENE = 1,
 } OH_AVRecorder_FileGenerationMode;
 
 /**
  * @brief Provides the media recorder profile definitions
  * @syscap SystemCapability.Multimedia.Media.AVRecorder
- * @since 14
- * @version 1.0
+ * @since 16
  */
 typedef struct OH_AVRecorder_Profile {
     /* Indicates the audio bitrate */
@@ -217,8 +208,7 @@ typedef struct OH_AVRecorder_Profile {
 /**
  * @brief Provides the geographical location definitions for media resources
  * @syscap SystemCapability.Multimedia.Media.AVRecorder
- * @since 14
- * @version 1.0
+ * @since 16
  */
 typedef struct OH_AVRecorder_Location {
     /* Latitude */
@@ -230,21 +220,19 @@ typedef struct OH_AVRecorder_Location {
 /**
  * @brief define the basic template of metadata
  * @syscap SystemCapability.Multimedia.Media.AVRecorder
- * @since 14
- * @version 1.0
+ * @since 16
  */
 typedef struct OH_AVRecorder_MetadataTemplate {
-    /* key value of the matadata */
+    /* key value of the metadata */
     char *key;
-    /* contents of the matadata */
+    /* contents of the metadata */
     char *value;
 } OH_AVRecorder_MetadataTemplate;
 
 /**
  * @brief Provides the container definition for media data
  * @syscap SystemCapability.Multimedia.Media.AVRecorder
- * @since 14
- * @version 1.0
+ * @since 16
  */
 typedef struct OH_AVRecorder_Metadata {
     /* The metadata to retrieve the content type or genre of the data source */
@@ -260,8 +248,7 @@ typedef struct OH_AVRecorder_Metadata {
 /**
  * @brief Provides the media recorder configuration definitions
  * @syscap SystemCapability.Multimedia.Media.AVRecorder
- * @since 14
- * @version 1.0
+ * @since 16
  */
 typedef struct OH_AVRecorder_Config {
     /* Indicates the recording audio source type */
@@ -283,8 +270,7 @@ typedef struct OH_AVRecorder_Config {
 /**
  * @brief Provides Range with lower and upper limit
  * @syscap SystemCapability.Multimedia.Media.AVRecorder
- * @since 14
- * @version 1.0
+ * @since 16
  */
 typedef struct OH_AVRecorder_Range {
     /* lower limit of the range */
@@ -296,8 +282,7 @@ typedef struct OH_AVRecorder_Range {
 /**
  * @brief Provides encoder info
  * @syscap SystemCapability.Multimedia.Media.AVRecorder
- * @since 14
- * @version 1.0
+ * @since 16
  */
 typedef struct OH_AVRecorder_EncoderInfo {
     /* encoder format MIME */
@@ -325,10 +310,9 @@ typedef struct OH_AVRecorder_EncoderInfo {
  * @syscap SystemCapability.Multimedia.Media.AVRecorder
  * @param recorder The pointer to an OH_AVRecorder instance.
  * @param state Indicates the recorder state. For details, see {@link OH_AVRecorder_State}.
- * @param reason for recorder state change. For details, see {@link OH_AVRecorder_StateChangeReason}.
+ * @param reason Reason for recorder state change. For details, see {@link OH_AVRecorder_StateChangeReason}.
  * @param userData Pointer to user specific data.
- * @since 14
- * @version 1.0
+ * @since 16
  */
 typedef void (*OH_AVRecorder_OnStateChange)(OH_AVRecorder *recorder,
     OH_AVRecorder_State state, OH_AVRecorder_StateChangeReason reason, void *userData);
@@ -340,8 +324,7 @@ typedef void (*OH_AVRecorder_OnStateChange)(OH_AVRecorder *recorder,
  * @param errorCode Error code.
  * @param errorMsg Error message.
  * @param userData Pointer to user specific data.
- * @since 14
- * @version 1.0
+ * @since 16
  */
 typedef void (*OH_AVRecorder_OnError)(OH_AVRecorder *recorder, int32_t errorCode, const char *errorMsg,
     void *userData);
@@ -350,10 +333,9 @@ typedef void (*OH_AVRecorder_OnError)(OH_AVRecorder *recorder, int32_t errorCode
  * @brief Called when current recording is finished in OH_AVRecorder_FileGenerationMode.AUTO_CREATE_CAMERA_SCENE
  * @syscap SystemCapability.Multimedia.Media.AVRecorder
  * @param recorder Pointer to an OH_AVRecorder instance.
- * @param asset Error code.
+ * @param asset Pointer to an OH_MediaAsset instance.
  * @param userData Pointer to user specific data.
- * @since 14
- * @version 1.0
+ * @since 16
  */
 typedef void (*OH_AVRecorder_OnUri)(OH_AVRecorder *recorder, OH_MediaAsset *asset, void *userData);
 

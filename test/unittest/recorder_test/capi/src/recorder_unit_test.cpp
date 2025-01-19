@@ -105,11 +105,11 @@ static HapPolicyParams hapPolicy = {
 static OH_AVRecorder_Profile profile_ = {
     .audioBitrate = 48000,
     .audioChannels = 2,
-    .audioCodec = OH_AVRecorder_CodecMimeType::AUDIO_AAC,
+    .audioCodec = OH_AVRecorder_CodecMimeType::AVRECORDER_AUDIO_AAC,
     .audioSampleRate = 48000,
-    .fileFormat = OH_AVRecorder_ContainerFormatType::CFT_MPEG_4,
+    .fileFormat = OH_AVRecorder_ContainerFormatType::AVRECORDER_CFT_MPEG_4,
     .videoBitrate = 2000000,
-    .videoCodec = OH_AVRecorder_CodecMimeType::VIDEO_HEVC,
+    .videoCodec = OH_AVRecorder_CodecMimeType::AVRECORDER_VIDEO_HEVC,
     .videoFrameWidth = 1920,
     .videoFrameHeight = 1080,
     .videoFrameRate = 30,
@@ -135,11 +135,11 @@ static OH_AVRecorder_Metadata metadata_ = {
 };
 
 static OH_AVRecorder_Config config_ = {
-    .audioSourceType = OH_AVRecorder_AudioSourceType::MIC,
-    .videoSourceType = OH_AVRecorder_VideoSourceType::SURFACE_YUV,
+    .audioSourceType = OH_AVRecorder_AudioSourceType::AVRECORDER_MIC,
+    .videoSourceType = OH_AVRecorder_VideoSourceType::AVRECORDER_SURFACE_YUV,
     .profile = profile_,
     .url = nullptr,
-    .fileGenerationMode = OH_AVRecorder_FileGenerationMode::APP_CREATE,
+    .fileGenerationMode = OH_AVRecorder_FileGenerationMode::AVRECORDER_APP_CREATE,
     .metadata = metadata_,
 };
 
@@ -149,28 +149,28 @@ static void OnStateChange(OH_AVRecorder *recorder, OH_AVRecorder_State state,
     (void)recorder;
     (void)userData;
 
-    const char *reasonStr = (reason == OH_AVRecorder_StateChangeReason::USER) ? "USER" :
-        (reason == OH_AVRecorder_StateChangeReason::BACKGROUND) ? "BACKGROUND" : "UNKNOWN";
+    const char *reasonStr = (reason == OH_AVRecorder_StateChangeReason::AVRECORDER_USER) ? "USER" :
+        (reason == OH_AVRecorder_StateChangeReason::AVRECORDER_BACKGROUND) ? "BACKGROUND" : "UNKNOWN";
 
-    if (state == IDLE) {
+    if (state == AVRECORDER_IDLE) {
         MEDIA_LOGI("AVRecorder OnStateChange IDLE, reason: %{public}s", reasonStr);
     }
-    if (state == PREPARED) {
+    if (state == AVRECORDER_PREPARED) {
         MEDIA_LOGI("AVRecorder OnStateChange PREPARED, reason: %{public}s", reasonStr);
     }
-    if (state == STARTED) {
+    if (state == AVRECORDER_STARTED) {
         MEDIA_LOGI("AVRecorder OnStateChange STARTED, reason: %{public}s", reasonStr);
     }
-    if (state == PAUSED) {
+    if (state == AVRECORDER_PAUSED) {
         MEDIA_LOGI("AVRecorder OnStateChange PAUSED, reason: %{public}s", reasonStr);
     }
-    if (state == STOPPED) {
+    if (state == AVRECORDER_STOPPED) {
         MEDIA_LOGI("AVRecorder OnStateChange STOPPED, reason: %{public}s", reasonStr);
     }
-    if (state == RELEASED) {
+    if (state == AVRECORDER_RELEASED) {
         MEDIA_LOGI("AVRecorder OnStateChange RELEASED, reason: %{public}s", reasonStr);
     }
-    if (state == ERROR) {
+    if (state == AVRECORDER_ERROR) {
         MEDIA_LOGI("AVRecorder OnStateChange ERROR, reason: %{public}s", reasonStr);
     }
 }
@@ -328,18 +328,18 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Prepare_002, TestSize.Level2)
     config.metadata.customInfo.value = strdup("");
     config.profile.audioBitrate = 48000;
     config.profile.audioChannels = 2;
-    config.profile.audioCodec = OH_AVRecorder_CodecMimeType::AUDIO_AAC;
+    config.profile.audioCodec = OH_AVRecorder_CodecMimeType::AVRECORDER_AUDIO_AAC;
     config.profile.audioSampleRate = 48000;
-    config.profile.fileFormat = OH_AVRecorder_ContainerFormatType::CFT_MPEG_4;
+    config.profile.fileFormat = OH_AVRecorder_ContainerFormatType::AVRECORDER_CFT_MPEG_4;
     config.profile.videoBitrate = 280000;
-    config.profile.videoCodec = OH_AVRecorder_CodecMimeType::VIDEO_AVC;
+    config.profile.videoCodec = OH_AVRecorder_CodecMimeType::AVRECORDER_VIDEO_AVC;
     config.profile.videoFrameWidth = 176;
     config.profile.videoFrameHeight = 144;
     config.profile.videoFrameRate = 30;
     config.profile.isHdr = false;
     config.profile.enableTemporalScale = false;
-    config.audioSourceType = OH_AVRecorder_AudioSourceType::MIC;
-    config.videoSourceType = OH_AVRecorder_VideoSourceType::SURFACE_YUV;
+    config.audioSourceType = OH_AVRecorder_AudioSourceType::AVRECORDER_MIC;
+    config.videoSourceType = OH_AVRecorder_VideoSourceType::AVRECORDER_SURFACE_YUV;
 
     int32_t outputFd = open((RECORDER_ROOT + "Recorder_Prepare_002.mp4").c_str(), O_RDWR);
     const std::string fdHead = "fd://";
@@ -374,18 +374,18 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Prepare_003, TestSize.Level2)
     config.metadata.customInfo.value = strdup("");
     config.profile.audioBitrate = 48000;
     config.profile.audioChannels = 2;
-    config.profile.audioCodec = OH_AVRecorder_CodecMimeType::AUDIO_AAC;
+    config.profile.audioCodec = OH_AVRecorder_CodecMimeType::AVRECORDER_AUDIO_AAC;
     config.profile.audioSampleRate = 48000;
-    config.profile.fileFormat = OH_AVRecorder_ContainerFormatType::CFT_MPEG_4;
+    config.profile.fileFormat = OH_AVRecorder_ContainerFormatType::AVRECORDER_CFT_MPEG_4;
     config.profile.videoBitrate = 70000000;
-    config.profile.videoCodec = OH_AVRecorder_CodecMimeType::VIDEO_HEVC;
+    config.profile.videoCodec = OH_AVRecorder_CodecMimeType::AVRECORDER_VIDEO_HEVC;
     config.profile.videoFrameWidth = 3840;
     config.profile.videoFrameHeight = 2160;
     config.profile.videoFrameRate = 60;
     config.profile.isHdr = true;
     config.profile.enableTemporalScale = true;
-    config.audioSourceType = OH_AVRecorder_AudioSourceType::CAMCORDER;
-    config.videoSourceType = OH_AVRecorder_VideoSourceType::SURFACE_ES;
+    config.audioSourceType = OH_AVRecorder_AudioSourceType::AVRECORDER_CAMCORDER;
+    config.videoSourceType = OH_AVRecorder_VideoSourceType::AVRECORDER_SURFACE_ES;
 
     int32_t outputFd = open((RECORDER_ROOT + "Recorder_Prepare_003.mp4").c_str(), O_RDWR);
     const std::string fdHead = "fd://";
@@ -421,19 +421,19 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Prepare_004, TestSize.Level2)
     config.metadata.customInfo.value = strdup("123");
     config.profile.audioBitrate = 96000;
     config.profile.audioChannels = 2;
-    config.profile.audioCodec = OH_AVRecorder_CodecMimeType::AUDIO_AAC;
+    config.profile.audioCodec = OH_AVRecorder_CodecMimeType::AVRECORDER_AUDIO_AAC;
     config.profile.audioSampleRate = 48000;
-    config.profile.fileFormat = OH_AVRecorder_ContainerFormatType::CFT_MPEG_4;
+    config.profile.fileFormat = OH_AVRecorder_ContainerFormatType::AVRECORDER_CFT_MPEG_4;
     config.profile.videoBitrate = 2000000;
-    config.profile.videoCodec = OH_AVRecorder_CodecMimeType::VIDEO_HEVC;
+    config.profile.videoCodec = OH_AVRecorder_CodecMimeType::AVRECORDER_VIDEO_HEVC;
     config.profile.videoFrameWidth = 640;
     config.profile.videoFrameHeight = 480;
     config.profile.videoFrameRate = 30;
     config.profile.isHdr = false;
     config.profile.enableTemporalScale = false;
-    config.audioSourceType = OH_AVRecorder_AudioSourceType::MIC;
-    config.videoSourceType = OH_AVRecorder_VideoSourceType::SURFACE_YUV;
-    config.fileGenerationMode = OH_AVRecorder_FileGenerationMode::APP_CREATE;
+    config.audioSourceType = OH_AVRecorder_AudioSourceType::AVRECORDER_MIC;
+    config.videoSourceType = OH_AVRecorder_VideoSourceType::AVRECORDER_SURFACE_YUV;
+    config.fileGenerationMode = OH_AVRecorder_FileGenerationMode::AVRECORDER_APP_CREATE;
 
     int32_t ret = AV_ERR_OK;
     ret = OH_AVRecorder_Prepare(recorder_, &config);
@@ -465,19 +465,19 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Prepare_005, TestSize.Level2)
     config.metadata.customInfo.value = strdup("123");
     config.profile.audioBitrate = 96000;
     config.profile.audioChannels = 2;
-    config.profile.audioCodec = OH_AVRecorder_CodecMimeType::AUDIO_AAC;
+    config.profile.audioCodec = OH_AVRecorder_CodecMimeType::AVRECORDER_AUDIO_AAC;
     config.profile.audioSampleRate = 48000;
-    config.profile.fileFormat = OH_AVRecorder_ContainerFormatType::CFT_MPEG_4;
+    config.profile.fileFormat = OH_AVRecorder_ContainerFormatType::AVRECORDER_CFT_MPEG_4;
     config.profile.videoBitrate = 2000000;
-    config.profile.videoCodec = OH_AVRecorder_CodecMimeType::VIDEO_HEVC;
+    config.profile.videoCodec = OH_AVRecorder_CodecMimeType::AVRECORDER_VIDEO_HEVC;
     config.profile.videoFrameWidth = 640;
     config.profile.videoFrameHeight = 480;
     config.profile.videoFrameRate = 30;
     config.profile.isHdr = false;
     config.profile.enableTemporalScale = false;
-    config.audioSourceType = OH_AVRecorder_AudioSourceType::MIC;
-    config.videoSourceType = OH_AVRecorder_VideoSourceType::SURFACE_YUV;
-    config.fileGenerationMode = OH_AVRecorder_FileGenerationMode::APP_CREATE;
+    config.audioSourceType = OH_AVRecorder_AudioSourceType::AVRECORDER_MIC;
+    config.videoSourceType = OH_AVRecorder_VideoSourceType::AVRECORDER_SURFACE_YUV;
+    config.fileGenerationMode = OH_AVRecorder_FileGenerationMode::AVRECORDER_APP_CREATE;
 
     int32_t ret = AV_ERR_OK;
     ret = OH_AVRecorder_Prepare(recorder_, &config);
@@ -509,19 +509,19 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Prepare_006, TestSize.Level2)
     config.metadata.customInfo.value = strdup("123");
     config.profile.audioBitrate = 96000;
     config.profile.audioChannels = 2;
-    config.profile.audioCodec = OH_AVRecorder_CodecMimeType::AUDIO_AAC;
+    config.profile.audioCodec = OH_AVRecorder_CodecMimeType::AVRECORDER_AUDIO_AAC;
     config.profile.audioSampleRate = 48000;
-    config.profile.fileFormat = OH_AVRecorder_ContainerFormatType::CFT_MPEG_4;
+    config.profile.fileFormat = OH_AVRecorder_ContainerFormatType::AVRECORDER_CFT_MPEG_4;
     config.profile.videoBitrate = 2000000;
-    config.profile.videoCodec = OH_AVRecorder_CodecMimeType::VIDEO_HEVC;
+    config.profile.videoCodec = OH_AVRecorder_CodecMimeType::AVRECORDER_VIDEO_HEVC;
     config.profile.videoFrameWidth = 640;
     config.profile.videoFrameHeight = 480;
     config.profile.videoFrameRate = 30;
     config.profile.isHdr = false;
     config.profile.enableTemporalScale = false;
-    config.audioSourceType = OH_AVRecorder_AudioSourceType::MIC;
-    config.videoSourceType = OH_AVRecorder_VideoSourceType::SURFACE_YUV;
-    config.fileGenerationMode = OH_AVRecorder_FileGenerationMode::APP_CREATE;
+    config.audioSourceType = OH_AVRecorder_AudioSourceType::AVRECORDER_MIC;
+    config.videoSourceType = OH_AVRecorder_VideoSourceType::AVRECORDER_SURFACE_YUV;
+    config.fileGenerationMode = OH_AVRecorder_FileGenerationMode::AVRECORDER_APP_CREATE;
 
     int32_t ret = AV_ERR_OK;
     ret = OH_AVRecorder_Prepare(recorder_, &config);
@@ -553,19 +553,19 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Prepare_007, TestSize.Level2)
     config.metadata.customInfo.value = strdup("123");
     config.profile.audioBitrate = 96000;
     config.profile.audioChannels = 2;
-    config.profile.audioCodec = OH_AVRecorder_CodecMimeType::AUDIO_AAC;
+    config.profile.audioCodec = OH_AVRecorder_CodecMimeType::AVRECORDER_AUDIO_AAC;
     config.profile.audioSampleRate = 48000;
-    config.profile.fileFormat = OH_AVRecorder_ContainerFormatType::CFT_MPEG_4;
+    config.profile.fileFormat = OH_AVRecorder_ContainerFormatType::AVRECORDER_CFT_MPEG_4;
     config.profile.videoBitrate = 2000000;
-    config.profile.videoCodec = OH_AVRecorder_CodecMimeType::VIDEO_HEVC;
+    config.profile.videoCodec = OH_AVRecorder_CodecMimeType::AVRECORDER_VIDEO_HEVC;
     config.profile.videoFrameWidth = 1280;
     config.profile.videoFrameHeight = 720;
     config.profile.videoFrameRate = 30;
     config.profile.isHdr = false;
     config.profile.enableTemporalScale = false;
-    config.audioSourceType = OH_AVRecorder_AudioSourceType::MIC;
-    config.videoSourceType = OH_AVRecorder_VideoSourceType::SURFACE_YUV;
-    config.fileGenerationMode = OH_AVRecorder_FileGenerationMode::AUTO_CREATE_CAMERA_SCENE;
+    config.audioSourceType = OH_AVRecorder_AudioSourceType::AVRECORDER_MIC;
+    config.videoSourceType = OH_AVRecorder_VideoSourceType::AVRECORDER_SURFACE_YUV;
+    config.fileGenerationMode = OH_AVRecorder_FileGenerationMode::AVRECORDER_AUTO_CREATE_CAMERA_SCENE;
 
     int32_t ret = AV_ERR_OK;
     ret = OH_AVRecorder_Prepare(recorder_, &config);
@@ -597,19 +597,19 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Prepare_008, TestSize.Level2)
     config.metadata.customInfo.value = strdup("123");
     config.profile.audioBitrate = 96000;
     config.profile.audioChannels = 2;
-    config.profile.audioCodec = OH_AVRecorder_CodecMimeType::AUDIO_AAC;
+    config.profile.audioCodec = OH_AVRecorder_CodecMimeType::AVRECORDER_AUDIO_AAC;
     config.profile.audioSampleRate = 48000;
-    config.profile.fileFormat = OH_AVRecorder_ContainerFormatType::CFT_MPEG_4;
+    config.profile.fileFormat = OH_AVRecorder_ContainerFormatType::AVRECORDER_CFT_MPEG_4;
     config.profile.videoBitrate = 2000000;
-    config.profile.videoCodec = OH_AVRecorder_CodecMimeType::VIDEO_HEVC;
+    config.profile.videoCodec = OH_AVRecorder_CodecMimeType::AVRECORDER_VIDEO_HEVC;
     config.profile.videoFrameWidth = 1280;
     config.profile.videoFrameHeight = 720;
     config.profile.videoFrameRate = 30;
     config.profile.isHdr = false;
     config.profile.enableTemporalScale = false;
-    config.audioSourceType = OH_AVRecorder_AudioSourceType::MIC;
-    config.videoSourceType = OH_AVRecorder_VideoSourceType::SURFACE_YUV;
-    config.fileGenerationMode = OH_AVRecorder_FileGenerationMode::AUTO_CREATE_CAMERA_SCENE;
+    config.audioSourceType = OH_AVRecorder_AudioSourceType::AVRECORDER_MIC;
+    config.videoSourceType = OH_AVRecorder_VideoSourceType::AVRECORDER_SURFACE_YUV;
+    config.fileGenerationMode = OH_AVRecorder_FileGenerationMode::AVRECORDER_AUTO_CREATE_CAMERA_SCENE;
 
     int32_t ret = AV_ERR_OK;
     ret = OH_AVRecorder_Prepare(recorder_, &config);
@@ -641,19 +641,19 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Prepare_009, TestSize.Level2)
     config.metadata.customInfo.value = strdup("123");
     config.profile.audioBitrate = 96000;
     config.profile.audioChannels = 2;
-    config.profile.audioCodec = OH_AVRecorder_CodecMimeType::AUDIO_AAC;
+    config.profile.audioCodec = OH_AVRecorder_CodecMimeType::AVRECORDER_AUDIO_AAC;
     config.profile.audioSampleRate = 48000;
-    config.profile.fileFormat = OH_AVRecorder_ContainerFormatType::CFT_MPEG_4;
+    config.profile.fileFormat = OH_AVRecorder_ContainerFormatType::AVRECORDER_CFT_MPEG_4;
     config.profile.videoBitrate = 2000000;
-    config.profile.videoCodec = OH_AVRecorder_CodecMimeType::VIDEO_HEVC;
+    config.profile.videoCodec = OH_AVRecorder_CodecMimeType::AVRECORDER_VIDEO_HEVC;
     config.profile.videoFrameWidth = 1280;
     config.profile.videoFrameHeight = 720;
     config.profile.videoFrameRate = 30;
     config.profile.isHdr = false;
     config.profile.enableTemporalScale = false;
-    config.audioSourceType = OH_AVRecorder_AudioSourceType::MIC;
-    config.videoSourceType = OH_AVRecorder_VideoSourceType::SURFACE_YUV;
-    config.fileGenerationMode = OH_AVRecorder_FileGenerationMode::AUTO_CREATE_CAMERA_SCENE;
+    config.audioSourceType = OH_AVRecorder_AudioSourceType::AVRECORDER_MIC;
+    config.videoSourceType = OH_AVRecorder_VideoSourceType::AVRECORDER_SURFACE_YUV;
+    config.fileGenerationMode = OH_AVRecorder_FileGenerationMode::AVRECORDER_AUTO_CREATE_CAMERA_SCENE;
 
 
     int32_t ret = AV_ERR_OK;
@@ -687,19 +687,19 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Prepare_010, TestSize.Level2)
     config.metadata.customInfo.value = strdup("123");
     config.profile.audioBitrate = 96000;
     config.profile.audioChannels = 2;
-    config.profile.audioCodec = OH_AVRecorder_CodecMimeType::AUDIO_AAC;
+    config.profile.audioCodec = OH_AVRecorder_CodecMimeType::AVRECORDER_AUDIO_AAC;
     config.profile.audioSampleRate = 48000;
-    config.profile.fileFormat = OH_AVRecorder_ContainerFormatType::CFT_MPEG_4;
+    config.profile.fileFormat = OH_AVRecorder_ContainerFormatType::AVRECORDER_CFT_MPEG_4;
     config.profile.videoBitrate = 2000000;
-    config.profile.videoCodec = OH_AVRecorder_CodecMimeType::VIDEO_HEVC;
+    config.profile.videoCodec = OH_AVRecorder_CodecMimeType::AVRECORDER_VIDEO_HEVC;
     config.profile.videoFrameWidth = 1280;
     config.profile.videoFrameHeight = 720;
     config.profile.videoFrameRate = 30;
     config.profile.isHdr = false;
     config.profile.enableTemporalScale = false;
-    config.audioSourceType = OH_AVRecorder_AudioSourceType::MIC;
-    config.videoSourceType = OH_AVRecorder_VideoSourceType::SURFACE_YUV;
-    config.fileGenerationMode = OH_AVRecorder_FileGenerationMode::AUTO_CREATE_CAMERA_SCENE;
+    config.audioSourceType = OH_AVRecorder_AudioSourceType::AVRECORDER_MIC;
+    config.videoSourceType = OH_AVRecorder_VideoSourceType::AVRECORDER_SURFACE_YUV;
+    config.fileGenerationMode = OH_AVRecorder_FileGenerationMode::AVRECORDER_AUTO_CREATE_CAMERA_SCENE;
 
     int32_t ret = AV_ERR_OK;
     ret = OH_AVRecorder_Prepare(recorder_, &config);
@@ -777,16 +777,16 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_GetAVRecorderConfig_002, TestSize.Leve
     ASSERT_NE(configGet, nullptr);
     EXPECT_EQ(configGet->profile.audioBitrate, 48000);
     EXPECT_EQ(configGet->profile.audioChannels, 2);
-    EXPECT_EQ(configGet->profile.audioCodec, OH_AVRecorder_CodecMimeType::AUDIO_AAC);
+    EXPECT_EQ(configGet->profile.audioCodec, OH_AVRecorder_CodecMimeType::AVRECORDER_AUDIO_AAC);
     EXPECT_EQ(configGet->profile.audioSampleRate, 48000);
-    EXPECT_EQ(configGet->profile.fileFormat, OH_AVRecorder_ContainerFormatType::CFT_MPEG_4);
+    EXPECT_EQ(configGet->profile.fileFormat, OH_AVRecorder_ContainerFormatType::AVRECORDER_CFT_MPEG_4);
     EXPECT_EQ(configGet->profile.videoBitrate, 2000000);
-    EXPECT_EQ(configGet->profile.videoCodec, OH_AVRecorder_CodecMimeType::VIDEO_HEVC);
+    EXPECT_EQ(configGet->profile.videoCodec, OH_AVRecorder_CodecMimeType::AVRECORDER_VIDEO_HEVC);
     EXPECT_EQ(configGet->profile.videoFrameHeight, 1080);
     EXPECT_EQ(configGet->profile.videoFrameWidth, 1920);
     EXPECT_EQ(configGet->profile.videoFrameRate, 30);
-    EXPECT_EQ(configGet->audioSourceType, OH_AVRecorder_AudioSourceType::MIC);
-    EXPECT_EQ(configGet->videoSourceType, OH_AVRecorder_VideoSourceType::SURFACE_YUV);
+    EXPECT_EQ(configGet->audioSourceType, OH_AVRecorder_AudioSourceType::AVRECORDER_MIC);
+    EXPECT_EQ(configGet->videoSourceType, OH_AVRecorder_VideoSourceType::AVRECORDER_SURFACE_YUV);
     EXPECT_EQ(configGet->metadata.location.latitude, 31);
     EXPECT_EQ(configGet->metadata.location.longitude, 121);
 
@@ -815,18 +815,18 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_GetAVRecorderConfig_003, TestSize.Leve
     config.metadata.customInfo.value = strdup("");
     config.profile.audioBitrate = 64000;
     config.profile.audioChannels = 2;
-    config.profile.audioCodec = OH_AVRecorder_CodecMimeType::AUDIO_AAC;
+    config.profile.audioCodec = OH_AVRecorder_CodecMimeType::AVRECORDER_AUDIO_AAC;
     config.profile.audioSampleRate = 64000;
-    config.profile.fileFormat = OH_AVRecorder_ContainerFormatType::CFT_MPEG_4;
+    config.profile.fileFormat = OH_AVRecorder_ContainerFormatType::AVRECORDER_CFT_MPEG_4;
     config.profile.videoBitrate = 25000000;
-    config.profile.videoCodec = OH_AVRecorder_CodecMimeType::VIDEO_AVC;
+    config.profile.videoCodec = OH_AVRecorder_CodecMimeType::AVRECORDER_VIDEO_AVC;
     config.profile.videoFrameWidth = 3840;
     config.profile.videoFrameHeight = 2160;
     config.profile.videoFrameRate = 24;
     config.profile.isHdr = true;
     config.profile.enableTemporalScale = true;
-    config.audioSourceType = OH_AVRecorder_AudioSourceType::CAMCORDER;
-    config.videoSourceType = OH_AVRecorder_VideoSourceType::SURFACE_ES;
+    config.audioSourceType = OH_AVRecorder_AudioSourceType::AVRECORDER_CAMCORDER;
+    config.videoSourceType = OH_AVRecorder_VideoSourceType::AVRECORDER_SURFACE_ES;
 
     int32_t outputFd = open((RECORDER_ROOT + "Recorder_GetAVRecorderConfig_003.mp4").c_str(), O_RDWR);
     const std::string fdHead = "fd://";
@@ -842,15 +842,15 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_GetAVRecorderConfig_003, TestSize.Leve
     ASSERT_NE(configGet, nullptr);
     EXPECT_EQ(configGet->profile.audioBitrate, 64000);
     EXPECT_EQ(configGet->profile.audioChannels, 2);
-    EXPECT_EQ(configGet->profile.audioCodec, OH_AVRecorder_CodecMimeType::AUDIO_AAC);
+    EXPECT_EQ(configGet->profile.audioCodec, OH_AVRecorder_CodecMimeType::AVRECORDER_AUDIO_AAC);
     EXPECT_EQ(configGet->profile.audioSampleRate, 64000);
-    EXPECT_EQ(configGet->profile.fileFormat, OH_AVRecorder_ContainerFormatType::CFT_MPEG_4);
+    EXPECT_EQ(configGet->profile.fileFormat, OH_AVRecorder_ContainerFormatType::AVRECORDER_CFT_MPEG_4);
     EXPECT_EQ(configGet->profile.videoBitrate, 25000000);
-    EXPECT_EQ(configGet->profile.videoCodec, OH_AVRecorder_CodecMimeType::VIDEO_AVC);
+    EXPECT_EQ(configGet->profile.videoCodec, OH_AVRecorder_CodecMimeType::AVRECORDER_VIDEO_AVC);
     EXPECT_EQ(configGet->profile.videoFrameHeight, 2160);
     EXPECT_EQ(configGet->profile.videoFrameWidth, 3840);
-    EXPECT_EQ(configGet->audioSourceType, OH_AVRecorder_AudioSourceType::CAMCORDER);
-    EXPECT_EQ(configGet->videoSourceType, OH_AVRecorder_VideoSourceType::SURFACE_ES);
+    EXPECT_EQ(configGet->audioSourceType, OH_AVRecorder_AudioSourceType::AVRECORDER_CAMCORDER);
+    EXPECT_EQ(configGet->videoSourceType, OH_AVRecorder_VideoSourceType::AVRECORDER_SURFACE_ES);
 
     free(config.url);
     free(config.metadata.genre);
@@ -986,7 +986,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_UpdateRotation_003, TestSize.Level2)
     config.metadata.videoOrientation = strdup("0");
     config.metadata.customInfo.key = strdup("");
     config.metadata.customInfo.value = strdup("");
-    config.fileGenerationMode = OH_AVRecorder_FileGenerationMode::AUTO_CREATE_CAMERA_SCENE;
+    config.fileGenerationMode = OH_AVRecorder_FileGenerationMode::AVRECORDER_AUTO_CREATE_CAMERA_SCENE;
 
     int32_t rotation = 90;
 
@@ -1020,7 +1020,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_UpdateRotation_004, TestSize.Level2)
     config.metadata.videoOrientation = strdup("0");
     config.metadata.customInfo.key = strdup("");
     config.metadata.customInfo.value = strdup("");
-    config.fileGenerationMode = OH_AVRecorder_FileGenerationMode::AUTO_CREATE_CAMERA_SCENE;
+    config.fileGenerationMode = OH_AVRecorder_FileGenerationMode::AVRECORDER_AUTO_CREATE_CAMERA_SCENE;
 
     int32_t ret = AV_ERR_OK;
     ret = OH_AVRecorder_Prepare(recorder_, &config);

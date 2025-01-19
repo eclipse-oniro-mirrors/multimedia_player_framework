@@ -88,8 +88,8 @@ struct RecorderObject : public OH_AVRecorder {
     OH_AVRecorder_Config *config_ = nullptr;
     OH_AVRecorder_EncoderInfo *info_ = nullptr;
     int32_t length_ = -1;
-    bool withVideo = false;
-    bool withAudio = false;
+    bool withVideo = true;
+    bool withAudio = true;
 };
 
 
@@ -307,7 +307,7 @@ OH_AVErrCode ConfigureUrl(OH_AVRecorder *recorder, OH_AVRecorder_Config *config)
 
     int32_t ret;
     if (!config->fileGenerationMode) {
-        config->fileGenerationMode = OH_AVRecorder_FileGenerationMode::APP_CREATE;
+        config->fileGenerationMode = OH_AVRecorder_FileGenerationMode::AVRECORDER_APP_CREATE;
     }
     FileGenerationMode fileGenerationMode = static_cast<FileGenerationMode>(config->fileGenerationMode);
     if (fileGenerationMode == FileGenerationMode::AUTO_CREATE_CAMERA_SCENE) {
@@ -453,8 +453,9 @@ OH_AVErrCode OH_AVRecorder_Prepare(OH_AVRecorder *recorder, OH_AVRecorder_Config
 
     CHECK_AND_RETURN_RET_LOG(recorderObj->callback_ != nullptr, AV_ERR_INVALID_VAL,
         "recorderObj->callback_ is nullptr!");
-    MEDIA_LOGI("Change state to state code: %{public}d", OH_AVRecorder_State::PREPARED);
-    recorderObj->callback_->OnStateChange(OH_AVRecorder_State::PREPARED, OH_AVRecorder_StateChangeReason::USER);
+    MEDIA_LOGI("Change state to state code: %{public}d", OH_AVRecorder_State::AVRECORDER_PREPARED);
+    recorderObj->callback_->OnStateChange(OH_AVRecorder_State::AVRECORDER_PREPARED,
+        OH_AVRecorder_StateChangeReason::AVRECORDER_USER);
     return AV_ERR_OK;
 }
 
@@ -571,13 +572,15 @@ OH_AVErrCode OH_AVRecorder_Start(OH_AVRecorder *recorder)
         "recorderObj->callback_ is nullptr!");
 
     if (ret != MSERR_OK) {
-        MEDIA_LOGI("Change state to state code: %{public}d", OH_AVRecorder_State::ERROR);
-        recorderObj->callback_->OnStateChange(OH_AVRecorder_State::ERROR, OH_AVRecorder_StateChangeReason::USER);
+        MEDIA_LOGI("Change state to state code: %{public}d", OH_AVRecorder_State::AVRECORDER_ERROR);
+        recorderObj->callback_->OnStateChange(OH_AVRecorder_State::AVRECORDER_ERROR,
+            OH_AVRecorder_StateChangeReason::AVRECORDER_USER);
     }
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_OPERATE_NOT_PERMIT, "StartRecorder failed!");
 
-    MEDIA_LOGI("Change state to state code: %{public}d", OH_AVRecorder_State::STARTED);
-    recorderObj->callback_->OnStateChange(OH_AVRecorder_State::STARTED, OH_AVRecorder_StateChangeReason::USER);
+    MEDIA_LOGI("Change state to state code: %{public}d", OH_AVRecorder_State::AVRECORDER_STARTED);
+    recorderObj->callback_->OnStateChange(OH_AVRecorder_State::AVRECORDER_STARTED,
+        OH_AVRecorder_StateChangeReason::AVRECORDER_USER);
     return AV_ERR_OK;
 }
 
@@ -593,8 +596,9 @@ OH_AVErrCode OH_AVRecorder_Pause(OH_AVRecorder *recorder)
 
     CHECK_AND_RETURN_RET_LOG(recorderObj->callback_ != nullptr, AV_ERR_INVALID_VAL,
         "recorderObj->callback_ is nullptr!");
-    MEDIA_LOGI("Change state to state code: %{public}d", OH_AVRecorder_State::PAUSED);
-    recorderObj->callback_->OnStateChange(OH_AVRecorder_State::PAUSED, OH_AVRecorder_StateChangeReason::USER);
+    MEDIA_LOGI("Change state to state code: %{public}d", OH_AVRecorder_State::AVRECORDER_PAUSED);
+    recorderObj->callback_->OnStateChange(OH_AVRecorder_State::AVRECORDER_PAUSED,
+        OH_AVRecorder_StateChangeReason::AVRECORDER_USER);
     return AV_ERR_OK;
 }
 
@@ -610,8 +614,9 @@ OH_AVErrCode OH_AVRecorder_Resume(OH_AVRecorder *recorder)
 
     CHECK_AND_RETURN_RET_LOG(recorderObj->callback_ != nullptr, AV_ERR_INVALID_VAL,
         "recorderObj->callback_ is nullptr!");
-    MEDIA_LOGI("Change state to state code: %{public}d", OH_AVRecorder_State::STARTED);
-    recorderObj->callback_->OnStateChange(OH_AVRecorder_State::STARTED, OH_AVRecorder_StateChangeReason::USER);
+    MEDIA_LOGI("Change state to state code: %{public}d", OH_AVRecorder_State::AVRECORDER_STARTED);
+    recorderObj->callback_->OnStateChange(OH_AVRecorder_State::AVRECORDER_STARTED,
+        OH_AVRecorder_StateChangeReason::AVRECORDER_USER);
     return AV_ERR_OK;
 }
 
@@ -628,8 +633,9 @@ OH_AVErrCode OH_AVRecorder_Stop(OH_AVRecorder *recorder)
 
     CHECK_AND_RETURN_RET_LOG(recorderObj->callback_ != nullptr, AV_ERR_INVALID_VAL,
         "recorderObj->callback_ is nullptr!");
-    MEDIA_LOGI("Change state to state code: %{public}d", OH_AVRecorder_State::STOPPED);
-    recorderObj->callback_->OnStateChange(OH_AVRecorder_State::STOPPED, OH_AVRecorder_StateChangeReason::USER);
+    MEDIA_LOGI("Change state to state code: %{public}d", OH_AVRecorder_State::AVRECORDER_STOPPED);
+    recorderObj->callback_->OnStateChange(OH_AVRecorder_State::AVRECORDER_STOPPED,
+        OH_AVRecorder_StateChangeReason::AVRECORDER_USER);
 
     recorderObj->hasConfigured_ = false;
     return AV_ERR_OK;
@@ -647,8 +653,9 @@ OH_AVErrCode OH_AVRecorder_Reset(OH_AVRecorder *recorder)
 
     CHECK_AND_RETURN_RET_LOG(recorderObj->callback_ != nullptr, AV_ERR_INVALID_VAL,
         "recorderObj->callback_ is nullptr!");
-    MEDIA_LOGI("Change state to state code: %{public}d", OH_AVRecorder_State::IDLE);
-    recorderObj->callback_->OnStateChange(OH_AVRecorder_State::IDLE, OH_AVRecorder_StateChangeReason::USER);
+    MEDIA_LOGI("Change state to state code: %{public}d", OH_AVRecorder_State::AVRECORDER_IDLE);
+    recorderObj->callback_->OnStateChange(OH_AVRecorder_State::AVRECORDER_IDLE,
+        OH_AVRecorder_StateChangeReason::AVRECORDER_USER);
 
     recorderObj->hasConfigured_ = false;
     return AV_ERR_OK;
@@ -671,8 +678,9 @@ OH_AVErrCode OH_AVRecorder_Release(OH_AVRecorder *recorder)
 
     CHECK_AND_RETURN_RET_LOG(recorderObj->callback_ != nullptr, AV_ERR_INVALID_VAL,
         "recorderObj->callback_ is nullptr!");
-    MEDIA_LOGI("Change state to state code: %{public}d", OH_AVRecorder_State::RELEASED);
-    recorderObj->callback_->OnStateChange(OH_AVRecorder_State::RELEASED, OH_AVRecorder_StateChangeReason::USER);
+    MEDIA_LOGI("Change state to state code: %{public}d", OH_AVRecorder_State::AVRECORDER_RELEASED);
+    recorderObj->callback_->OnStateChange(OH_AVRecorder_State::AVRECORDER_RELEASED,
+        OH_AVRecorder_StateChangeReason::AVRECORDER_USER);
     
     recorderObj->hasConfigured_ = false;
     delete recorderObj;
@@ -684,12 +692,12 @@ OH_AVErrCode OH_AVRecorder_Release(OH_AVRecorder *recorder)
 OH_AVRecorder_CodecMimeType ConvertMimeType(const std::string &mimeType)
 {
     static const std::unordered_map<std::string, OH_AVRecorder_CodecMimeType> mimeTypeMap = {
-        {"video/avc", OH_AVRecorder_CodecMimeType::VIDEO_AVC},
-        {"video/mp4v-es", OH_AVRecorder_CodecMimeType::VIDEO_MPEG4},
-        {"video/hevc", OH_AVRecorder_CodecMimeType::VIDEO_HEVC},
-        {"audio/mp4a-latm", OH_AVRecorder_CodecMimeType::AUDIO_AAC},
-        {"audio/mpeg", OH_AVRecorder_CodecMimeType::AUDIO_MP3},
-        {"audio/g711mu", OH_AVRecorder_CodecMimeType::AUDIO_G711MU},
+        {"video/avc", OH_AVRecorder_CodecMimeType::AVRECORDER_VIDEO_AVC},
+        {"video/mp4v-es", OH_AVRecorder_CodecMimeType::AVRECORDER_VIDEO_MPEG4},
+        {"video/hevc", OH_AVRecorder_CodecMimeType::AVRECORDER_VIDEO_HEVC},
+        {"audio/mp4a-latm", OH_AVRecorder_CodecMimeType::AVRECORDER_AUDIO_AAC},
+        {"audio/mpeg", OH_AVRecorder_CodecMimeType::AVRECORDER_AUDIO_MP3},
+        {"audio/g711mu", OH_AVRecorder_CodecMimeType::AVRECORDER_AUDIO_G711MU},
         {"audio/3gpp", OH_AVRecorder_CodecMimeType::AVRECORDER_AUDIO_AMR_NB},
         {"audio/amr-wb", OH_AVRecorder_CodecMimeType::AVRECORDER_AUDIO_AMR_WB},
     };
@@ -698,7 +706,7 @@ OH_AVRecorder_CodecMimeType ConvertMimeType(const std::string &mimeType)
     if (it != mimeTypeMap.end()) {
         return it->second;
     }
-    return OH_AVRecorder_CodecMimeType::VIDEO_AVC;
+    return OH_AVRecorder_CodecMimeType::AVRECORDER_VIDEO_AVC;
 }
 
 void ConvertEncoderInfo(const EncoderCapabilityData &src, OH_AVRecorder_EncoderInfo &dest)
