@@ -190,13 +190,6 @@ void AVRecorderCallback::OnJsStateCallBack(AVRecordJsCallback *jsCb) const
         delete jsCb;
     };
 
-    uv_work_t *work = new(std::nothrow) uv_work_t;
-    CHECK_AND_RETURN_LOG(work != nullptr, "failed to new uv_work_t");
-    ON_SCOPE_EXIT(1) {
-        delete work;
-    };
-
-    work->data = reinterpret_cast<void *>(jsCb);
     auto task = [event = jsCb]() {
         std::string request = event->callbackName;
         do {
@@ -242,13 +235,6 @@ void AVRecorderCallback::OnJsPhotoAssertAvailableCallback(AVRecordJsCallback *js
         delete jsCb;
     };
 
-    uv_work_t *work = new(std::nothrow) uv_work_t;
-    CHECK_AND_RETURN_LOG(work != nullptr, "failed to new uv_work_t");
-    ON_SCOPE_EXIT(1) {
-        delete work;
-    };
-
-    work->data = reinterpret_cast<void *>(jsCb);
     auto task = [event = jsCb]() {
         std::string request = event->callbackName;
         do {
@@ -291,13 +277,6 @@ void AVRecorderCallback::OnJsAudioCaptureChangeCallback(AVRecordJsCallback *jsCb
         delete jsCb;
     };
 
-    uv_work_t *work = new(std::nothrow) uv_work_t;
-    CHECK_AND_RETURN_LOG(work != nullptr, "failed to new uv_work_t");
-    ON_SCOPE_EXIT(1) {
-        delete work;
-    };
-
-    work->data = reinterpret_cast<void *>(jsCb);
     auto task = [event = jsCb]() {
         std::string request = event->callbackName;
         do {
@@ -337,14 +316,6 @@ void AVRecorderCallback::OnJsErrorCallBack(AVRecordJsCallback *jsCb) const
         delete jsCb;
     };
 
-    uv_work_t *work = new(std::nothrow) uv_work_t;
-    CHECK_AND_RETURN_LOG(work != nullptr, "failed to new uv_work_t");
-    ON_SCOPE_EXIT(1) {
-        delete work;
-    };
-
-    work->data = reinterpret_cast<void *>(jsCb);
-    // async callback, jsWork and jsWork->data should be heap object.
     auto task = [event = jsCb]() {
         std::string request = event->callbackName;
         do {
