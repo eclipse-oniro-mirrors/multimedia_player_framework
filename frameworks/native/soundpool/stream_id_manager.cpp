@@ -34,6 +34,7 @@ StreamIDManager::StreamIDManager(int32_t maxStreams,
     AudioStandard::AudioRendererInfo audioRenderInfo) : audioRendererInfo_(audioRenderInfo), maxStreams_(maxStreams)
 {
     MEDIA_LOGI("Construction StreamIDManager.");
+    audioRendererInfo_.playerType = AudioStandard::PlayerType::PLAYER_TYPE_SOUND_POOL;
     InitThreadPool();
 }
 
@@ -127,6 +128,9 @@ int32_t StreamIDManager::Play(std::shared_ptr<SoundParser> soundParser, PlayPara
             if (frameWriteCallback_ != nullptr) {
                 cacheBuffer->SetFrameWriteCallback(frameWriteCallback_);
             }
+            std::chrono::microseconds duration(soundParser->GetSourceDuration());
+            int64_t durationMs = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
+            cacheBuffer->SetSourceDuration(durationMs);
             cacheBuffers_.emplace(streamID, cacheBuffer);
         }
     }

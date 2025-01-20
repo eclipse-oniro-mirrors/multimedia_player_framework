@@ -1552,6 +1552,11 @@ int32_t HiPlayerImpl::InitDuration()
     }
     durationMs_ = std::max(durationMs_.load(), 0);
     MEDIA_LOG_D("duration: " PUBLIC_LOG_D32, durationMs_.load());
+    auto meta = std::make_shared<Meta>();
+    if (audioSink_ && meta) {
+        meta->SetData(Tag::MEDIA_DURATION, durationMs_.load());
+        audioSink_->SetParameter(meta);
+    }
     return TransStatus(Status::OK);
 }
 
