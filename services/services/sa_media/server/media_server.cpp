@@ -88,7 +88,8 @@ int32_t MediaServer::OnIdle(const SystemAbilityOnDemandReason &idleReason)
     int64_t ildeTimeStart = MediaServerManager::GetInstance().GetAllInstancesReleasedTime();
     int64_t currentTime = MediaServerManager::GetInstance().GetCurrentSystemClockMs();
     int32_t idleTime = currentTime > ildeTimeStart  ? currentTime - ildeTimeStart : ildeTimeStart - currentTime;
-    CHECK_AND_RETURN_RET_LOG(unloadDelayTime_ <= idleTime, -1, "%{public} " PRId32 "ms wait to unload", unloadDelayTime_ - idleTime);
+    CHECK_AND_RETURN_RET_LOG(unloadDelayTime_ <= idleTime, -1, "%{public} " PRId32 "ms wait to unload",
+        unloadDelayTime_ - idleTime);
     return 0;
 }
 
