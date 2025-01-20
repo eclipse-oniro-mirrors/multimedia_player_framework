@@ -95,15 +95,16 @@ int32_t MediaServer::OnIdle(const SystemAbilityOnDemandReason &idleReason)
 
 int32_t MediaServer::GetUnloadDelayTime()
 {
-    int32_t delayTIme = DEFAULT_DELAY_TIME * SECOND_CONVERT_MS;
+    int32_t delayTime = -1;
+    int32_t defaultDelayTime = DEFAULT_DELAY_TIME * SECOND_CONVERT_MS;
 #ifdef CROSS_PLATFORM
     std::ifstream sa_ondemand_config_file(SA_ONDEMAND_CONFIG);
-    CHECK_AND_RETURN_RET_LOG(sa_ondemand_config_file.is_open(), delayTIme, "open SA config failed");
+    CHECK_AND_RETURN_RET_LOG(sa_ondemand_config_file.is_open(), defaultDelayTime, "open SA config failed");
     json SAOnDemandConfig;
     sa_ondemand_config_file >> SAOnDemandConfig;
     sa_ondemand_config_file.close();
     json systemability = SAOnDemandConfig[SYSTEMABILITY];
-    CHECK_AND_RETURN_RET_LOG(systemability.is_array(), delayTIme, "systemability not exist");
+    CHECK_AND_RETURN_RET_LOG(systemability.is_array(), defaultDelayTime, "systemability not exist");
     for (auto& ability : systemability) {
         json stopOnDemand = ability[STOPONDEMAND];
         CHECK_AND_CONTINUE_LOG(stopOnDemand.is_object(), "stop-on-demand not exist");
@@ -113,7 +114,7 @@ int32_t MediaServer::GetUnloadDelayTime()
         break;
     }
 #endif
-    delayTime = delayTime <= 0 ? DEFAULT_DELAY_TIME : delayTime;
+    delayTime = delayTime <= 0 ? defaultDelayTime : delayTime;
     MEDIA_LOGI("the unload delay time is %{public}d", delayTime);
     return delayTime;
 }

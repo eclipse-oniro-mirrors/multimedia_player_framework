@@ -64,8 +64,8 @@ public:
 #ifdef SUPPORT_START_STOP_ON_DEMAND
     int32_t GetInstanceCount();
     int32_t GetInstanceCountLocked();
-    size_t GetCurrentSystemClockMs();
-    size_t GetAllInstancesReleasedTime();
+    int64_t GetCurrentSystemClockMs();
+    int64_t GetAllInstancesReleasedTime();
     void ResetAllInstancesReleasedTime();
     void UpdateAllInstancesReleasedTime();
 #endif
@@ -130,7 +130,7 @@ private:
 
     std::mutex mutex_;
 #ifdef SUPPORT_START_STOP_ON_DEMAND
-    size_t allInstancesReleasedTime_ {0};
+    int64_t allInstancesReleasedTime_ {0};
 #endif
 };
 } // namespace Media

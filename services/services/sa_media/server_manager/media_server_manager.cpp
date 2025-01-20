@@ -839,13 +839,13 @@ int32_t MediaServerManager::GetInstanceCount()
            screenCaptureMonitorStubMap_.size() + transCoderStubMap_.size());
 }
 
-size_t MediaServerManager::GetCurrentSystemClockMs()
+int64_t MediaServerManager::GetCurrentSystemClockMs()
 {
     return std::chrono::duration_cast<std::chrono::milliseconds>(
-        std::chrono::steady_clock::now().time_since_epoch).count();
+        std::chrono::steady_clock::now().time_since_epoch()).count();
 }
 
-size_t MediaServerManager::GetAllInstancesReleasedTime()
+int64_t MediaServerManager::GetAllInstancesReleasedTime()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     return allInstancesReleasedTime_;
