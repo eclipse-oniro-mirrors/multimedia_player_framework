@@ -200,8 +200,11 @@ void AVPlayerNapi::Destructor(napi_env env, void *nativeObject, void *finalize)
 
 bool AVPlayerNapi::IsSystemApp()
 {
+#ifndef CROSS_PLATFORM
     uint64_t tokenId = IPCSkeleton::GetSelfTokenID();
     return Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(tokenId);
+#endif
+    return false;
 }
 
 napi_value AVPlayerNapi::JsCreateAVPlayer(napi_env env, napi_callback_info info)
