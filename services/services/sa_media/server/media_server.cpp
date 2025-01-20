@@ -33,6 +33,15 @@ constexpr int32_t SYSTEM_STATUS_STOP = 0;
 constexpr int32_t SYSTEM_PROCESS_TYPE = 1;
 
 #ifdef SUPPORT_START_STOP_ON_DEMAND
+const int32_t SECOND_CONVERT_MS = 1000;
+const std::string SA_ONDEMAND_CONFIG = std::string(SA_CONFIG_PATH);
+const int32_t DEFAULT_DELAY_TIME = 180;
+#ifdef CROSS_PLATFORM
+using json = nlohmann::json;
+const std::string SYSTEMABILITY = std::string("systemability");
+const std::string STOPONDEMAND = std::string("stop-on-demand");
+const std::string LONGTIMEUNUSED = std::string("longtimeunused-unload");
+#endif
 REGISTER_SYSTEM_ABILITY_BY_ID(MediaServer, PLAYER_DISTRIBUTED_SERVICE_ID, false)
 #else
 REGISTER_SYSTEM_ABILITY_BY_ID(MediaServer, PLAYER_DISTRIBUTED_SERVICE_ID, true)
@@ -69,13 +78,47 @@ void MediaServer::OnStop()
         SYSTEM_PROCESS_TYPE, SYSTEM_STATUS_STOP, OHOS::PLAYER_DISTRIBUTED_SERVICE_ID);
 }
 
+#ifdef SUPPORT_START_STOP_ON_DEMAND
 int32_t MediaServer::OnIdle(const SystemAbilityOnDemandReason &idleReason)
 {
     MEDIA_LOGD("MediaServer OnIdle");
-    auto instanceCount = MediaServerManager::GetInstance().GetInstanceCount();
+    auto instanceCount = MediaServerManager::GetInstance().GetInstanceCountLocked();
     CHECK_AND_RETURN_RET_LOG(instanceCount == 0, -1, "%{public} " PRId32 "instance are not released", instanceCount);
+    unloadDelayTime_ = unloadDelayTime_ == -1 ? GetUnloadDelayTime() : unloadDelayTime_;
+    int64_t ildeTimeStart = MediaServerManager::GetInstance().GetAllInstancesReleasedTime();
+    int64_t currentTime = MediaServerManager::GetInstance().GetCurrentSystemClockMs();
+    int32_t idleTime = currentTime > ildeTimeStart  ? currentTime - ildeTimeStart : ildeTimeStart - currentTime;
+    CHECK_AND_RETURN_RET_LOG(unloadDelayTime_ <= idleTime, -1, "%{public} " PRId32 "ms wait to unload",
+        unloadDelayTime_ - idleTime);
     return 0;
 }
+
+int32_t MediaServer::GetUnloadDelayTime()
+{
+    int32_t delayTime = -1;
+    int32_t defaultDelayTime = DEFAULT_DELAY_TIME * SECOND_CONVERT_MS;
+#ifdef CROSS_PLATFORM
+    std::ifstream sa_ondemand_config_file(SA_ONDEMAND_CONFIG);
+    CHECK_AND_RETURN_RET_LOG(sa_ondemand_config_file.is_open(), defaultDelayTime, "open SA config failed");
+    json SAOnDemandConfig;
+    sa_ondemand_config_file >> SAOnDemandConfig;
+    sa_ondemand_config_file.close();
+    json systemability = SAOnDemandConfig[SYSTEMABILITY];
+    CHECK_AND_RETURN_RET_LOG(systemability.is_array(), defaultDelayTime, "systemability not exist");
+    for (auto& ability : systemability) {
+        json stopOnDemand = ability[STOPONDEMAND];
+        CHECK_AND_CONTINUE_LOG(stopOnDemand.is_object(), "stop-on-demand not exist");
+        json longTimeUnusedUnload = stopOnDemand[LONGTIMEUNUSED];
+        CHECK_AND_CONTINUE_LOG(longTimeUnusedUnload.is_number(), "longtimeunused-Unload not exist");
+        delayTime = longTimeUnusedUnload.get<int32_t>() * SECOND_CONVERT_MS;
+        break;
+    }
+#endif
+    delayTime = delayTime <= 0 ? defaultDelayTime : delayTime;
+    MEDIA_LOGI("the unload delay time is %{public}d", delayTime);
+    return delayTime;
+}
+#endif
 
 void MediaServer::OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId)
 {
@@ -94,6 +137,7 @@ sptr<IRemoteObject> MediaServer::GetSubSystemAbility(IStandardMediaService::Medi
 #ifdef SUPPORT_START_STOP_ON_DEMAND
     bool isSaInActive = (GetAbilityState() != SystemAbilityState::IDLE) || CancelIdle();
     CHECK_AND_RETURN_RET_LOG(isSaInActive, nullptr, "media service in idle state, but cancel idle failed");
+    MediaServerManager::GetInstance().ResetAllInstancesReleasedTime();
 #endif
 
     int32_t ret = MediaServiceStub::SetDeathListener(listener);

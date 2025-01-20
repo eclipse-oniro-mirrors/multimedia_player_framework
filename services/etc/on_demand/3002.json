@@ -16,9 +16,7 @@
             },
             "stop-on-demand": {
                 "allow-update": false,
-                "longtimeunused-unload": 180,
-                "recycle-delaytime": 180000,
-                "unreferenced-unload": true
+                "longtimeunused-unload": 180
             }
         }
     ]

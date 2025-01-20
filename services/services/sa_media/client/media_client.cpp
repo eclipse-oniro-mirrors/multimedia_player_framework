@@ -78,14 +78,15 @@ bool MediaClient::IsAlived()
 }
 
 void MediaClient::CreateMediaServiceInstance(IStandardMediaService::MediaSystemAbility subSystemId,
-    sptr<IRemoteObject> &object)
+    sptr<IRemoteObject> &object, std::unique_lock<std::mutex> &lock)
 {
+    (void)(lock);
 #ifdef SUPPORT_START_STOP_ON_DEMAND
     int32_t tryTimes = RETRY_TIME;
     while (tryTimes-- > 0) {
         if (!IsAlived()) {
             MEDIA_LOGI("media service does not exist, sleep and retry");
-            std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_TIME));
+            mediaProxyUpdatedCondition_.wait_for(lock, std::chrono::milliseconds(SLEEP_TIME));
             continue;
         }
         object = mediaProxy_->GetSubSystemAbility(subSystemId, listenerStub_->AsObject());
@@ -93,7 +94,7 @@ void MediaClient::CreateMediaServiceInstance(IStandardMediaService::MediaSystemA
             return;
         }
         MEDIA_LOGI("GetSubSystemAbility failed, sleep and retry");
-        std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_TIME));
+        mediaProxyUpdatedCondition_.wait_for(lock, std::chrono::milliseconds(SLEEP_TIME));
         continue;
     }
 #else
@@ -105,10 +106,10 @@ void MediaClient::CreateMediaServiceInstance(IStandardMediaService::MediaSystemA
 #ifdef SUPPORT_RECORDER
 std::shared_ptr<IRecorderService> MediaClient::CreateRecorderService()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::unique_lock<std::mutex> lock(mutex_);
     sptr<IRemoteObject> object = nullptr;
     
-    CreateMediaServiceInstance(IStandardMediaService::MediaSystemAbility::MEDIA_RECORDER, object);
+    CreateMediaServiceInstance(IStandardMediaService::MediaSystemAbility::MEDIA_RECORDER, object, lock);
     CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "recorder proxy object is nullptr.");
 
     sptr<IStandardRecorderService> recorderProxy = iface_cast<IStandardRecorderService>(object);
@@ -139,9 +140,9 @@ int32_t MediaClient::DestroyRecorderService(std::shared_ptr<IRecorderService> re
 
 std::shared_ptr<IRecorderProfilesService> MediaClient::CreateRecorderProfilesService()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::unique_lock<std::mutex> lock(mutex_);
     sptr<IRemoteObject> object = nullptr;
-    CreateMediaServiceInstance(IStandardMediaService::MediaSystemAbility::RECORDER_PROFILES, object);
+    CreateMediaServiceInstance(IStandardMediaService::MediaSystemAbility::RECORDER_PROFILES, object, lock);
     CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "recorderProfiles proxy object is nullptr.");
 
     sptr<IStandardRecorderProfilesService> recorderProfilesProxy = iface_cast<IStandardRecorderProfilesService>(object);
@@ -158,9 +159,9 @@ std::shared_ptr<IRecorderProfilesService> MediaClient::CreateRecorderProfilesSer
 #ifdef SUPPORT_TRANSCODER
 std::shared_ptr<ITransCoderService> MediaClient::CreateTransCoderService()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::unique_lock<std::mutex> lock(mutex_);
     sptr<IRemoteObject> object = nullptr;
-    CreateMediaServiceInstance(IStandardMediaService::MediaSystemAbility::MEDIA_TRANSCODER, object);
+    CreateMediaServiceInstance(IStandardMediaService::MediaSystemAbility::MEDIA_TRANSCODER, object, lock);
     CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "transCoder proxy object is nullptr.");
  
     sptr<IStandardTransCoderService> transCoderProxy = iface_cast<IStandardTransCoderService>(object);
@@ -185,10 +186,10 @@ int32_t MediaClient::DestroyTransCoderService(std::shared_ptr<ITransCoderService
 #ifdef SUPPORT_PLAYER
 std::shared_ptr<IPlayerService> MediaClient::CreatePlayerService()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::unique_lock<std::mutex> lock(mutex_);
     sptr<IRemoteObject> object = nullptr;
 #ifdef SUPPORT_START_STOP_ON_DEMAND
-    CreateMediaServiceInstance(IStandardMediaService::MediaSystemAbility::MEDIA_PLAYER, object);
+    CreateMediaServiceInstance(IStandardMediaService::MediaSystemAbility::MEDIA_PLAYER, object, lock);
 #else
     CHECK_AND_RETURN_RET_LOG(IsAlived(), nullptr, "media service does not exist.");
     constexpr uint32_t MAX_WAIT_TIME = 5000;
@@ -219,9 +220,9 @@ int32_t MediaClient::DestroyPlayerService(std::shared_ptr<IPlayerService> player
 #ifdef SUPPORT_METADATA
 std::shared_ptr<IAVMetadataHelperService> MediaClient::CreateAVMetadataHelperService()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::unique_lock<std::mutex> lock(mutex_);
     sptr<IRemoteObject> object = nullptr;
-    CreateMediaServiceInstance(IStandardMediaService::MediaSystemAbility::MEDIA_AVMETADATAHELPER, object);
+    CreateMediaServiceInstance(IStandardMediaService::MediaSystemAbility::MEDIA_AVMETADATAHELPER, object, lock);
     CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "avmetadatahelper proxy object is nullptr.");
 
     sptr<IStandardAVMetadataHelperService> avMetadataHelperProxy = iface_cast<IStandardAVMetadataHelperService>(object);
@@ -247,9 +248,9 @@ int32_t MediaClient::DestroyAVMetadataHelperService(std::shared_ptr<IAVMetadataH
 #ifdef SUPPORT_SCREEN_CAPTURE
 std::shared_ptr<IScreenCaptureMonitorService> MediaClient::CreateScreenCaptureMonitorService()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::unique_lock<std::mutex> lock(mutex_);
     sptr<IRemoteObject> object = nullptr;
-    CreateMediaServiceInstance(IStandardMediaService::MediaSystemAbility::MEDIA_SCREEN_CAPTURE_MONITOR, object);
+    CreateMediaServiceInstance(IStandardMediaService::MediaSystemAbility::MEDIA_SCREEN_CAPTURE_MONITOR, object, lock);
     CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "screenCaptureMonitor proxy object is nullptr.");
 
     sptr<IStandardScreenCaptureMonitorService> screenCaptureMonitorProxy =
@@ -275,9 +276,9 @@ int32_t MediaClient::DestroyScreenCaptureMonitorService(
 
 std::shared_ptr<IScreenCaptureService> MediaClient::CreateScreenCaptureService()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::unique_lock<std::mutex> lock(mutex_);
     sptr<IRemoteObject> object = nullptr;
-    CreateMediaServiceInstance(IStandardMediaService::MediaSystemAbility::MEDIA_SCREEN_CAPTURE, object);
+    CreateMediaServiceInstance(IStandardMediaService::MediaSystemAbility::MEDIA_SCREEN_CAPTURE, object, lock);
     CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "screenCapture proxy object is nullptr.");
 
     sptr<IStandardScreenCaptureService> screenCaptureProxy = iface_cast<IStandardScreenCaptureService>(object);
@@ -301,11 +302,12 @@ int32_t MediaClient::DestroyScreenCaptureService(std::shared_ptr<IScreenCaptureS
 
 std::shared_ptr<IScreenCaptureController> MediaClient::CreateScreenCaptureControllerClient()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::unique_lock<std::mutex> lock(mutex_);
     MEDIA_LOGI("MediaClient::CreateScreenCaptureControllerClient() start");
 
     sptr<IRemoteObject> object = nullptr;
-    CreateMediaServiceInstance(IStandardMediaService::MediaSystemAbility::MEDIA_SCREEN_CAPTURE_CONTROLLER, object);
+    CreateMediaServiceInstance(IStandardMediaService::MediaSystemAbility::MEDIA_SCREEN_CAPTURE_CONTROLLER,
+        object, lock);
     CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "screenCapture controller proxy object is nullptr.");
 
     sptr<IStandardScreenCaptureController> controllerProxy = iface_cast<IStandardScreenCaptureController>(object);
@@ -331,9 +333,9 @@ int32_t MediaClient::DestroyScreenCaptureControllerClient(std::shared_ptr<IScree
 
 sptr<IStandardMonitorService> MediaClient::GetMonitorProxy()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::unique_lock<std::mutex> lock(mutex_);
     sptr<IRemoteObject> object = nullptr;
-    CreateMediaServiceInstance(IStandardMediaService::MediaSystemAbility::MEDIA_MONITOR, object);
+    CreateMediaServiceInstance(IStandardMediaService::MediaSystemAbility::MEDIA_MONITOR, object, lock);
     CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "monitor proxy object is nullptr.");
 
     sptr<IStandardMonitorService> monitorProxy = iface_cast<IStandardMonitorService>(object);
@@ -412,11 +414,9 @@ void MediaClient::DoMediaServerDied()
     }
     listenerStub_ = nullptr;
     deathRecipient_ = nullptr;
-
     std::shared_ptr<MonitorClient> monitor = MonitorClient::GetInstance();
     CHECK_AND_RETURN_LOG(monitor != nullptr, "Failed to get monitor Instance!");
     monitor->MediaServerDied();
-
     AVPlayerServerDied();
 #ifdef SUPPORT_RECORDER
     for (auto &it : recorderClientList_) {
@@ -425,7 +425,6 @@ void MediaClient::DoMediaServerDied()
             recorder->MediaServerDied();
         }
     }
-
     for (auto &it : recorderProfilesClientList_) {
         auto recorderProfilesClient = std::static_pointer_cast<RecorderProfilesClient>(it);
         if (recorderProfilesClient != nullptr) {
@@ -433,7 +432,6 @@ void MediaClient::DoMediaServerDied()
         }
     }
 #endif
-
 #ifdef SUPPORT_SCREEN_CAPTURE
     for (auto &it : screenCaptureClientList_) {
         auto screenCaptureClient = std::static_pointer_cast<ScreenCaptureClient>(it);
@@ -454,6 +452,7 @@ void MediaClient::DoMediaServerDied()
         }
     }
 #endif
+    mediaProxyUpdatedCondition_.notify_all();
 }
 } // namespace Media
 } // namespace OHOS
