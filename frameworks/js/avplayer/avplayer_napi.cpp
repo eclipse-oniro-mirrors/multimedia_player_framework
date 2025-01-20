@@ -33,8 +33,10 @@
 #include "meta/video_types.h"
 #include "media_source_napi.h"
 #include "media_log.h"
+#ifndef CROSS_PLATFORM
 #include "ipc_skeleton.h"
 #include "tokenid_kit.h"
+#endif
 
 using namespace OHOS::AudioStandard;
 
