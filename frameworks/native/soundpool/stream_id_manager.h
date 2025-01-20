@@ -63,6 +63,7 @@ private:
     static constexpr int32_t MAX_PLAY_STREAMS_NUMBER = 32;
     static constexpr int32_t MIN_PLAY_STREAMS_NUMBER = 1;
     static constexpr int32_t CACHE_BUFFER_THREAD_NUMBER = 1;
+    static constexpr int32_t errorStreamId = -1;
 
     struct StreamIDAndPlayParamsInfo {
         int32_t streamID;

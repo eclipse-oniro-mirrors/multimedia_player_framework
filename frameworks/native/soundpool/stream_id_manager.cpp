@@ -133,7 +133,8 @@ int32_t StreamIDManager::Play(std::shared_ptr<SoundParser> soundParser, PlayPara
         }
     }
     MEDIA_LOGI("StreamIDManager::SetPlay start soundID:%{public}d, streamID:%{public}d", soundID, streamID);
-    SetPlay(soundID, streamID, playParameters);
+    int32_t result = SetPlay(soundID, streamID, playParameters);
+    CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, errorStreamId, "Invalid SetPlay");
     return streamID;
 }
 
@@ -148,8 +149,9 @@ int32_t StreamIDManager::SetPlay(const int32_t soundID, const int32_t streamID, 
         "Failed to obtain stream play threadpool.");
     // CacheBuffer must prepare before play.
     std::shared_ptr<CacheBuffer> freshCacheBuffer = FindCacheBuffer(streamID);
-    CHECK_AND_RETURN_RET_LOG(freshCacheBuffer != nullptr, -1, "Invalid fresh cache buffer");
-    freshCacheBuffer->PreparePlay(streamID, audioRendererInfo_, playParameters);
+    CHECK_AND_RETURN_RET_LOG(freshCacheBuffer != nullptr, MSERR_INVALID_VAL, "Invalid fresh cache buffer");
+    int32_t result = freshCacheBuffer->PreparePlay(streamID, audioRendererInfo_, playParameters);
+    CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, MSERR_INVALID_VAL, "Invalid PreparePlay");
     int32_t tempMaxStream = maxStreams_;
     MEDIA_LOGI("StreamIDManager cur task num:%{public}zu, maxStreams_:%{public}d",
         playingStreamIDs_.size(), maxStreams_);
@@ -158,8 +160,8 @@ int32_t StreamIDManager::SetPlay(const int32_t soundID, const int32_t streamID, 
     } else {
         int32_t playingStreamID = playingStreamIDs_.back();
         std::shared_ptr<CacheBuffer> playingCacheBuffer = FindCacheBuffer(playingStreamID);
-        CHECK_AND_RETURN_RET_LOG(freshCacheBuffer != nullptr, -1, "Invalid fresh cache buffer");
-        CHECK_AND_RETURN_RET_LOG(playingCacheBuffer != nullptr, -1, "Invalid playingCacheBuffer");
+        CHECK_AND_RETURN_RET_LOG(freshCacheBuffer != nullptr, MSERR_INVALID_VAL, "Invalid fresh cache buffer");
+        CHECK_AND_RETURN_RET_LOG(playingCacheBuffer != nullptr, MSERR_INVALID_VAL, "Invalid playingCacheBuffer");
         MEDIA_LOGI("StreamIDManager fresh sound priority:%{public}d, playing stream priority:%{public}d",
             freshCacheBuffer->GetPriority(), playingCacheBuffer->GetPriority());
         if (freshCacheBuffer->GetPriority() >= playingCacheBuffer->GetPriority()) {
@@ -175,14 +177,6 @@ int32_t StreamIDManager::SetPlay(const int32_t soundID, const int32_t streamID, 
             freshStreamIDAndPlayParamsInfo.playParameters = playParameters;
             QueueAndSortWillPlayStreamID(freshStreamIDAndPlayParamsInfo);
         }
-    }
-    for (size_t i = 0; i < playingStreamIDs_.size(); i++) {
-        int32_t playingStreamID = playingStreamIDs_[i];
-        MEDIA_LOGD("StreamIDManager::SetPlay  playingStreamID:%{public}d", playingStreamID);
-    }
-    for (size_t i = 0; i < willPlayStreamInfos_.size(); i++) {
-        StreamIDAndPlayParamsInfo willPlayInfo = willPlayStreamInfos_[i];
-        MEDIA_LOGD("StreamIDManager::SetPlay  willPlayStreamID:%{public}d", willPlayInfo.streamID);
     }
     return MSERR_OK;
 }
