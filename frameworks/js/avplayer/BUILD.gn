@@ -84,6 +84,7 @@ ohos_shared_library("media_avplayer") {
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
     "ipc:ipc_core",
+    "ipc:ipc_single",
     "libuv:uv",
     "napi:ace_napi",
     "qos_manager:qos",
