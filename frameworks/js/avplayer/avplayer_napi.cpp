@@ -33,6 +33,8 @@
 #include "meta/video_types.h"
 #include "media_source_napi.h"
 #include "media_log.h"
+#include "ipc_skeleton.h"
+#include "tokenid_kit.h"
 
 using namespace OHOS::AudioStandard;
 
@@ -194,6 +196,12 @@ void AVPlayerNapi::Destructor(napi_env env, void *nativeObject, void *finalize)
         }).detach();
     }
     MEDIA_LOGD("Destructor success");
+}
+
+bool AVPlayerNapi::IsSystemApp()
+{
+    uint64_t tokenId = IPCSkeleton::GetSelfTokenID();
+    return Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(tokenId);
 }
 
 napi_value AVPlayerNapi::JsCreateAVPlayer(napi_env env, napi_callback_info info)
@@ -3118,6 +3126,10 @@ napi_value AVPlayerNapi::JsIsSeekContinuousSupported(napi_env env, napi_callback
     size_t argCount = 0;
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, nullptr);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstance");
+    if (!IsSystemApp()) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_PERMISSION_DENIED, "Caller is not a system application.");
+        return result;
+    }
     if (jsPlayer->player_ != nullptr) {
         isSeekContinuousSupported = jsPlayer->player_->IsSeekContinuousSupported();
         status = napi_get_boolean(env, isSeekContinuousSupported, &result);
