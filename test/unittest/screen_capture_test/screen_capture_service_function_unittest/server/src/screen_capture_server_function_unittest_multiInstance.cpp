@@ -227,10 +227,11 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckScreenCaptureAppLimit_003, TestSi
 {
     ScreenCaptureServer::serverMap_.clear();
     std::vector<std::shared_ptr<ScreenCaptureServer>> serverList;
+    UniqueIDGenerator gIdGenerator(20);
     for (int32_t i = 0; i < ScreenCaptureServer::maxAppLimit_; i++) {
         std::shared_ptr<ScreenCaptureServer> server = std::make_shared<ScreenCaptureServer>();
         serverList.push_back(server);
-        int32_t sessionId = ScreenCaptureServer::gIdGenerator_.GetNewID();
+        int32_t sessionId = gIdGenerator.GetNewID();
         server->SetSessionId(sessionId);
         server->appInfo_.appUid = ROOT_UID + i;
         ScreenCaptureServer::AddScreenCaptureServerMap(sessionId, server);
