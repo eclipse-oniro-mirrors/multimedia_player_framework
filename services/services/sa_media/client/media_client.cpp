@@ -86,7 +86,7 @@ void MediaClient::CreateMediaServiceInstance(IStandardMediaService::MediaSystemA
     while (tryTimes-- > 0) {
         if (!IsAlived()) {
             MEDIA_LOGI("media service does not exist, sleep and retry");
-            mediaProxyUpdateCondition_.wait_for(lock, std::chrono::milliseconds(SLEEP_TIME));
+            mediaProxyUpdatedCondition_.wait_for(lock, std::chrono::milliseconds(SLEEP_TIME));
             continue;
         }
         object = mediaProxy_->GetSubSystemAbility(subSystemId, listenerStub_->AsObject());
@@ -94,7 +94,7 @@ void MediaClient::CreateMediaServiceInstance(IStandardMediaService::MediaSystemA
             return;
         }
         MEDIA_LOGI("GetSubSystemAbility failed, sleep and retry");
-        mediaProxyUpdateCondition_.wait_for(lock, std::chrono::milliseconds(SLEEP_TIME));
+        mediaProxyUpdatedCondition_.wait_for(lock, std::chrono::milliseconds(SLEEP_TIME));
         continue;
     }
 #else
@@ -452,7 +452,7 @@ void MediaClient::DoMediaServerDied()
         }
     }
 #endif
-    mediaProxyUpdateCondition_.notify_all();
+    mediaProxyUpdatedCondition_.notify_all();
 }
 } // namespace Media
 } // namespace OHOS

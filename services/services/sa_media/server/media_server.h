@@ -54,7 +54,7 @@ protected:
 private:
     void OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId) override;
 #ifdef SUPPORT_START_STOP_ON_DEMAND
-    int32_t unloadDealyTime_ {-1};
+    int32_t unloadDelayTime_ {-1};
 #endif
 };
 } // namespace Media

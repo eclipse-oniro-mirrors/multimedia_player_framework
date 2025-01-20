@@ -842,7 +842,7 @@ int32_t MediaServerManager::GetInstanceCount()
 size_t MediaServerManager::GetCurrentSystemClockMs()
 {
     return std::chrono::duration_cast<std::chrono::milliseconds>(
-        std::chrono::steady_clock::now()).count();
+        std::chrono::steady_clock::now().time_since_epoch).count();
 }
 
 size_t MediaServerManager::GetAllInstancesReleasedTime()

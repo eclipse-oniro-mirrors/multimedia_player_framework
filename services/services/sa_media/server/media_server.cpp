@@ -35,9 +35,9 @@ constexpr int32_t SYSTEM_PROCESS_TYPE = 1;
 #ifdef SUPPORT_START_STOP_ON_DEMAND
 const int32_t SECOND_CONVERT_MS = 1000;
 const std::string SA_ONDEMAND_CONFIG = std::string(SA_CONFIG_PATH);
+const int32_t DEFAULT_DELAY_TIME = 180;
 #ifdef CROSS_PLATFORM
 using json = nlohmann::json;
-const int32_t DEFAULT_DELAY_TIME = 180;
 const std::string SYSTEMABILITY = std::string("systemability");
 const std::string STOPONDEMAND = std::string("stop-on-demand");
 const std::string LONGTIMEUNUSED = std::string("longtimeunused-unload");
@@ -84,11 +84,11 @@ int32_t MediaServer::OnIdle(const SystemAbilityOnDemandReason &idleReason)
     MEDIA_LOGD("MediaServer OnIdle");
     auto instanceCount = MediaServerManager::GetInstance().GetInstanceCountLocked();
     CHECK_AND_RETURN_RET_LOG(instanceCount == 0, -1, "%{public} " PRId32 "instance are not released", instanceCount);
-    unloadDealyTime_ = unloadDealyTime_ == -1 ? GetUnloadDelayTime() : unloadDealyTime_;
+    unloadDelayTime_ = unloadDelayTime_ == -1 ? GetUnloadDelayTime() : unloadDelayTime_;
     int64_t ildeTimeStart = MediaServerManager::GetInstance().GetAllInstancesReleasedTime();
-    int64_t currentTime = MediaServerManager::GetInstance().GetCurrentSystemTimeMs();
+    int64_t currentTime = MediaServerManager::GetInstance().GetCurrentSystemClockMs();
     int32_t idleTime = currentTime > ildeTimeStart  ? currentTime - ildeTimeStart : ildeTimeStart - currentTime;
-    CHECK_AND_RETURN_RET_LOG(unloadDealyTime_ <= idleTime, -1, "%{public} " PRId32 "ms wait to unload", unloadDealyTime_ - idleTime);
+    CHECK_AND_RETURN_RET_LOG(unloadDelayTime_ <= idleTime, -1, "%{public} " PRId32 "ms wait to unload", unloadDelayTime_ - idleTime);
     return 0;
 }
 
