@@ -69,6 +69,7 @@ ohos_fuzztest("ScreenCaptureServiceStubFuzzTest") {
     "../../../../services/utils:media_service_utils",
   ]
   external_deps = [
+    "audio_framework:audio_client",
     "av_codec:av_codec_client",
     "c_utils:utils",
     "graphic_surface:surface",
