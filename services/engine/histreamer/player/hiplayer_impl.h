@@ -223,6 +223,7 @@ private:
     void UpdateMaxSeekLatency(PlayerSeekMode mode, int64_t seekStartTime);
 #ifdef SUPPORT_VIDEO
     Status LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
+    Status LinkSeiDecoder(const std::shared_ptr<Filter>& preFilter, StreamType type);
     bool IsVideoMime(const std::string& mime);
 #endif
     bool IsAudioMime(const std::string& mime);

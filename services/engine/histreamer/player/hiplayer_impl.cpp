@@ -2949,24 +2949,27 @@ bool HiPlayerImpl::IsLiveStream()
 }
 
 #ifdef SUPPORT_VIDEO
+Status HiPlayerImpl::LinkSeiDecoder(const std::shared_ptr<Filter>& preFilter, StreamType type)
+{
+    MEDIA_LOG_I("Link SeiParserFilterFilter Enter.");
+    if (seiDecoder_ == nullptr) {
+        seiDecoder_ = FilterFactory::Instance().CreateFilter<SeiParserFilter>("player.sei", FilterType::FILTERTYPE_SEI);
+        FALSE_RETURN_V(seiDecoder_ != nullptr, Status::ERROR_NULL_POINTER);
+        seiDecoder_->Init(playerEventReceiver_, playerFilterCallback_);
+        seiDecoder_->SetSeiMessageCbStatus(seiMessageCbStatus_, payloadTypes_);
+        seiDecoder_->SetSyncCenter(syncManager_);
+        interruptMonitor_->RegisterListener(seiDecoder_);
+    }
+    return pipeline_->LinkFilters(preFilter, {seiDecoder_}, type);
+}
+
 Status HiPlayerImpl::LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFilter, StreamType type)
 {
     MediaTrace trace("HiPlayerImpl::LinkVideoDecoderFilter");
     MEDIA_LOG_I("LinkVideoDecoderFilter");
     if (surface_ == nullptr && seiMessageCbStatus_ && IsLiveStream()) {
-        MEDIA_LOG_I("Link SeiParserFilterFilter Enter.");
-        if (seiDecoder_ == nullptr) {
-            seiDecoder_ = FilterFactory::Instance().CreateFilter<SeiParserFilter>("player.sei",
-            FilterType::FILTERTYPE_SEI);
-            FALSE_RETURN_V(seiDecoder_ != nullptr, Status::ERROR_NULL_POINTER);
-            seiDecoder_->Init(playerEventReceiver_, playerFilterCallback_);
-            seiDecoder_->SetSeiMessageCbStatus(seiMessageCbStatus_, payloadTypes_);
-            seiDecoder_->SetSyncCenter(syncManager_);
-            interruptMonitor_->RegisterListener(seiDecoder_);
-        }
-        return pipeline_->LinkFilters(preFilter, {seiDecoder_}, type);
+        return LinkSeiDecoder(preFilter, type);
     }
-
     if (videoDecoder_ == nullptr) {
         videoDecoder_ = FilterFactory::Instance().CreateFilter<DecoderSurfaceFilter>("player.videodecoder",
             FilterType::FILTERTYPE_VDEC);
@@ -3001,7 +3004,11 @@ Status HiPlayerImpl::LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFi
     }
     completeState_.emplace_back(std::make_pair("VideoSink", false));
     initialAVStates_.emplace_back(std::make_pair(EventType::EVENT_VIDEO_RENDERING_START, false));
+#ifdef SUPPORT_START_STOP_ON_DEMAND
+    return pipeline_->LinkFilters(preFilter, {videoDecoder_}, type, true);
+#else
     return pipeline_->LinkFilters(preFilter, {videoDecoder_}, type);
+#endif
 }
 #endif
 
