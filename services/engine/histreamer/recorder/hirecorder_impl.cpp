@@ -890,29 +890,29 @@ AudioRecorderChangeInfo HiRecorderImpl::ConvertCapturerChangeInfo(
     audioRecorderChangeInfo.capturerInfo.sourceType = capturerChangeInfo.capturerInfo.sourceType;
     audioRecorderChangeInfo.capturerInfo.capturerFlags = capturerChangeInfo.capturerInfo.capturerFlags;
 
-    audioRecorderChangeInfo.inputDeviceInfo.deviceName = capturerChangeInfo.inputDeviceInfo.deviceName;
-    audioRecorderChangeInfo.inputDeviceInfo.deviceId = capturerChangeInfo.inputDeviceInfo.deviceId;
-    audioRecorderChangeInfo.inputDeviceInfo.channelMasks = capturerChangeInfo.inputDeviceInfo.channelMasks;
-    audioRecorderChangeInfo.inputDeviceInfo.deviceRole = capturerChangeInfo.inputDeviceInfo.deviceRole;
-    audioRecorderChangeInfo.inputDeviceInfo.deviceType = capturerChangeInfo.inputDeviceInfo.deviceType;
-    audioRecorderChangeInfo.inputDeviceInfo.displayName = capturerChangeInfo.inputDeviceInfo.displayName;
+    audioRecorderChangeInfo.inputDeviceInfo.deviceName = capturerChangeInfo.inputDeviceInfo.deviceName_;
+    audioRecorderChangeInfo.inputDeviceInfo.deviceId = capturerChangeInfo.inputDeviceInfo.deviceId_;
+    audioRecorderChangeInfo.inputDeviceInfo.channelMasks = capturerChangeInfo.inputDeviceInfo.channelMasks_;
+    audioRecorderChangeInfo.inputDeviceInfo.deviceRole = capturerChangeInfo.inputDeviceInfo.deviceRole_;
+    audioRecorderChangeInfo.inputDeviceInfo.deviceType = capturerChangeInfo.inputDeviceInfo.deviceType_;
+    audioRecorderChangeInfo.inputDeviceInfo.displayName = capturerChangeInfo.inputDeviceInfo.displayName_;
     audioRecorderChangeInfo.inputDeviceInfo.interruptGroupId =
-        capturerChangeInfo.inputDeviceInfo.interruptGroupId;
+        capturerChangeInfo.inputDeviceInfo.interruptGroupId_;
     audioRecorderChangeInfo.inputDeviceInfo.isLowLatencyDevice =
-        capturerChangeInfo.inputDeviceInfo.isLowLatencyDevice;
-    audioRecorderChangeInfo.inputDeviceInfo.macAddress = capturerChangeInfo.inputDeviceInfo.macAddress;
+        capturerChangeInfo.inputDeviceInfo.isLowLatencyDevice_;
+    audioRecorderChangeInfo.inputDeviceInfo.macAddress = capturerChangeInfo.inputDeviceInfo.macAddress_;
     audioRecorderChangeInfo.inputDeviceInfo.channelIndexMasks =
-        capturerChangeInfo.inputDeviceInfo.channelIndexMasks;
-    for (auto item : capturerChangeInfo.inputDeviceInfo.audioStreamInfo.channels) {
+        capturerChangeInfo.inputDeviceInfo.channelIndexMasks_;
+    for (auto item : capturerChangeInfo.inputDeviceInfo.audioStreamInfo_.channels) {
         audioRecorderChangeInfo.inputDeviceInfo.audioStreamInfo.channels.insert(static_cast<int32_t>(item));
     }
-    for (auto item : capturerChangeInfo.inputDeviceInfo.audioStreamInfo.samplingRate) {
+    for (auto item : capturerChangeInfo.inputDeviceInfo.audioStreamInfo_.samplingRate) {
         audioRecorderChangeInfo.inputDeviceInfo.audioStreamInfo.samplingRate.insert(static_cast<int32_t>(item));
     }
     audioRecorderChangeInfo.inputDeviceInfo.audioStreamInfo.encoding =
-        capturerChangeInfo.inputDeviceInfo.audioStreamInfo.encoding;
+        capturerChangeInfo.inputDeviceInfo.audioStreamInfo_.encoding;
     audioRecorderChangeInfo.inputDeviceInfo.audioStreamInfo.format =
-        capturerChangeInfo.inputDeviceInfo.audioStreamInfo.format;
+        capturerChangeInfo.inputDeviceInfo.audioStreamInfo_.format;
     return audioRecorderChangeInfo;
 }
 
