@@ -174,6 +174,7 @@ private:
     bool CheckScreenCapturePermission();
     bool IsUserPrivacyAuthorityNeeded();
     bool UpdatePrivacyUsingPermissionState(VideoPermissionState state);
+    bool CheckPrivacyWindowSkipPermission();
     int32_t RequestUserPrivacyAuthority();
     int32_t StartPrivacyWindow();
     void SetCaptureConfig(CaptureMode captureMode, int32_t missionId = -1); // -1 invalid
