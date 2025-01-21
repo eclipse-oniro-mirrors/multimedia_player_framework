@@ -2109,7 +2109,7 @@ void HiPlayerImpl::OnEvent(const Event &event)
             break;
         }
         default:
-            return OnEventContinue(event);
+            OnEventContinue(event);
     }
     OnEventSub(event);
 }
