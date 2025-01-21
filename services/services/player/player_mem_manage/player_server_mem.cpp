@@ -405,12 +405,18 @@ int32_t PlayerServerMem::Seek(int32_t mSeconds, PlayerSeekMode mode)
 int32_t PlayerServerMem::GetCurrentTime(int32_t &currentTime)
 {
     std::unique_lock<std::mutex> lock(mutex_);
+    return PlayerServer::GetCurrentTime(currentTime);
+}
+
+int32_t PlayerServerMem::GetPlaybackPosition(int32_t &playbackPosition)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
     if (isLocalResource_ && isReleaseMemByManage_) {
-        MEDIA_LOGI("User call GetCurrentTime:%{public}d", recoverConfig_.currentTime);
-        currentTime = recoverConfig_.currentTime;
+        MEDIA_LOGI("User call GetPlaybackPosition:%{public}d", recoverConfig_.playbackPosition);
+        playbackPosition = recoverConfig_.playbackPosition;
         return MSERR_OK;
     }
-    return PlayerServer::GetCurrentTime(currentTime);
+    return PlayerServer::GetPlaybackPosition(playbackPosition);
 }
 
 int32_t PlayerServerMem::GetVideoTrackInfo(std::vector<Format> &videoTrack)

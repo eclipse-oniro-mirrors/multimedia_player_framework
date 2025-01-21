@@ -28,6 +28,7 @@ namespace Media {
 namespace SoundPoolEvent {
     const std::string EVENT_LOAD_COMPLETED = "loadComplete";
     const std::string EVENT_PLAY_FINISHED = "playFinished";
+    const std::string EVENT_PLAY_FINISHED_WITH_STREAM_ID = "playFinishedWithStreamId";
     const std::string EVENT_ERROR = "error";
 }
 
@@ -40,18 +41,18 @@ public:
     void ClearCallbackReference();
     void SendErrorCallback(int32_t errCode, const std::string &msg);
     void SendLoadCompletedCallback(int32_t soundId);
-    void SendPlayCompletedCallback();
+    void SendPlayCompletedCallback(int32_t streamID);
 
 protected:
     void OnLoadCompleted(int32_t soundId) override;
-    void OnPlayFinished() override;
+    void OnPlayFinished(int32_t streamID) override;
     void OnError(int32_t errorCode) override;
 
 private:
     struct SoundPoolJsCallBack {
-        void RunJsErrorCallBackTask(int status, SoundPoolJsCallBack *event);
-        void RunJsloadCompletedCallBackTask(int status, SoundPoolJsCallBack *event);
-        void RunJsplayCompletedCallBackTask(int status, SoundPoolJsCallBack *event);
+        void RunJsErrorCallBackTask(SoundPoolJsCallBack *event);
+        void RunJsloadCompletedCallBackTask(SoundPoolJsCallBack *event);
+        void RunJsplayCompletedCallBackTask(SoundPoolJsCallBack *event);
         
         std::weak_ptr<AutoRef> autoRef;
         std::string callbackName = "unknown";
@@ -59,6 +60,7 @@ private:
         int32_t errorCode = MSERR_EXT_UNKNOWN;
         int32_t reason = 1;
         int32_t loadSoundId = 0;
+        int32_t playFinishedStreamID = 0;
     };
     void OnJsErrorCallBack(SoundPoolJsCallBack *jsCb) const;
     void OnJsloadCompletedCallBack(SoundPoolJsCallBack *jsCb) const;

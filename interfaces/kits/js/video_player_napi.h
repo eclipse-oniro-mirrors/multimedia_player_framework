@@ -163,7 +163,7 @@ private:
     static napi_value On(napi_env env, napi_callback_info info);
     static void AsyncGetTrackDescription(napi_env env, void *data);
     static void AsyncSetDisplaySurface(napi_env env, void *data);
-    static void CompleteAsyncWork(napi_env env, napi_status status, void *data);
+    static napi_status CompleteAsyncWork(napi_env env, void *data, napi_event_priority prio);
     static int32_t ProcessWork(napi_env env, napi_status status, void *data);
     void ErrorCallback(MediaServiceExtErrCode errCode, std::string errMsg = "unknown");
     void SetCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref);

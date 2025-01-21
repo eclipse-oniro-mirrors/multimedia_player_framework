@@ -242,6 +242,7 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
     ret = playerEngine_->SetObs(obs);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetObs Failed!");
     ret = playerEngine_->SetMaxAmplitudeCbStatus(maxAmplitudeCbStatus_);
+    ret = playerEngine_->SetSeiMessageCbStatus(seiMessageCbStatus_, payloadTypes_);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetMaxAmplitudeCbStatus Failed!");
 
     lastOpStatus_ = PLAYER_INITIALIZED;
@@ -877,6 +878,31 @@ int32_t PlayerServer::GetCurrentTime(int32_t &currentTime)
     return MSERR_OK;
 }
 
+int32_t PlayerServer::GetPlaybackPosition(int32_t &playbackPosition)
+{
+    // delete lock, cannot be called concurrently with Reset or Release
+    if (lastOpStatus_ == PLAYER_IDLE || lastOpStatus_ == PLAYER_STATE_ERROR) {
+        MEDIA_LOGE("Can not GetPlaybackPosition, currentState is %{public}s",
+            GetStatusDescription(lastOpStatus_).c_str());
+        return MSERR_INVALID_OPERATION;
+    }
+
+    MEDIA_LOGD("PlayerServer GetPlaybackPosition in, currentState is %{public}s",
+        GetStatusDescription(lastOpStatus_).c_str());
+    if (lastOpStatus_ != PLAYER_PREPARED && lastOpStatus_ != PLAYER_STARTED && lastOpStatus_ != PLAYER_PAUSED &&
+        lastOpStatus_ != PLAYER_PLAYBACK_COMPLETE) {
+        playbackPosition = 0;
+        MEDIA_LOGD("get position at state: %{public}s, return 0", GetStatusDescription(lastOpStatus_).c_str());
+        return MSERR_OK;
+    }
+
+    if (playerEngine_ != nullptr) {
+        int32_t ret = playerEngine_->GetPlaybackPosition(playbackPosition);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine GetPlaybackPosition Failed!");
+    }
+    return MSERR_OK;
+}
+
 int32_t PlayerServer::GetVideoTrackInfo(std::vector<Format> &videoTrack)
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -1078,12 +1104,17 @@ int32_t PlayerServer::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
     size_t pos3 = uri.find("&");
     if (mimeType == AVMimeType::APPLICATION_M3U8 && pos1 != std::string::npos && pos2 != std::string::npos &&
         pos3 != std::string::npos) {
+        CHECK_AND_RETURN_RET_LOG(strlen("fd://") < pos1, MSERR_INVALID_VAL, "Failed to read fd.");
+        CHECK_AND_RETURN_RET_LOG(pos2 + strlen("offset=") < pos3, MSERR_INVALID_VAL, "Failed to read fd.");
         std::string fdStr = uri.substr(strlen("fd://"), pos1 - strlen("fd://"));
         std::string offsetStr = uri.substr(pos2 + strlen("offset="), pos3 - pos2 - strlen("offset="));
         std::string sizeStr = uri.substr(pos3 + sizeof("&size"));
-        int32_t fd = stoi(fdStr);
-        int32_t offset = stoi(offsetStr);
-        int32_t size = stoi(sizeStr);
+        int32_t fd = -1;
+        int32_t offset = -1;
+        int32_t size = -1;
+        CHECK_AND_RETURN_RET_LOG(StrToInt(fdStr, fd), MSERR_INVALID_VAL, "Failed to read fd.");
+        CHECK_AND_RETURN_RET_LOG(StrToInt(offsetStr, offset), MSERR_INVALID_VAL, "Failed to read offset.");
+        CHECK_AND_RETURN_RET_LOG(StrToInt(sizeStr, size), MSERR_INVALID_VAL, "Failed to read size.");
 
         auto uriHelper = std::make_unique<UriHelper>(fd, offset, size);
         CHECK_AND_RETURN_RET_LOG(uriHelper->AccessCheck(UriHelper::URI_READ), MSERR_INVALID_VAL, "Failed ro read fd.");
@@ -1922,6 +1953,15 @@ bool PlayerServer::IsSeekContinuousSupported()
     bool isSeekContinuousSupported = false;
     int32_t ret = playerEngine_->IsSeekContinuousSupported(isSeekContinuousSupported);
     return ret == MSERR_OK && isSeekContinuousSupported;
+}
+
+int32_t PlayerServer::SetSeiMessageCbStatus(bool status, const std::vector<int32_t> &payloadTypes)
+{
+    seiMessageCbStatus_ = status;
+    payloadTypes_.assign(payloadTypes.begin(), payloadTypes.end());
+    CHECK_AND_RETURN_RET_NOLOG(
+        playerEngine_ == nullptr, playerEngine_->SetSeiMessageCbStatus(status, payloadTypes));
+    return MSERR_OK;
 }
 } // namespace Media
 } // namespace OHOS

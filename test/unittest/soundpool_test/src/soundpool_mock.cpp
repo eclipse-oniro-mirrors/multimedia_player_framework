@@ -31,10 +31,13 @@ void SoundPoolCallbackTest::OnLoadCompleted(int32_t soundId)
     haveLoadedSoundNumInner_++;
 }
 
-void SoundPoolCallbackTest::OnPlayFinished()
+void SoundPoolCallbackTest::OnPlayFinished(int32_t streamID)
 {
     cout << "OnPlayFinished haveLoadedSoundNumInner_: "<< havePlayedSoundNumInner_ << endl;
     havePlayedSoundNumInner_++;
+    if (streamID > 0) {
+        vector_.push_back(streamID);
+    }
 }
 
 bool SoundPoolMock::CreateSoundPool(int maxStreams, AudioStandard::AudioRendererInfo audioRenderInfo)

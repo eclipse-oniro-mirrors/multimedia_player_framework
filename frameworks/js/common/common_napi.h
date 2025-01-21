@@ -48,6 +48,8 @@ public:
     CommonNapi() = delete;
     ~CommonNapi() = delete;
     static std::string GetStringArgument(napi_env env, napi_value value, size_t maxLength = PATH_MAX);
+    static bool GetIntArrayArgument(
+        napi_env env, napi_value value, std::vector<int32_t> &vec, size_t maxLength = PATH_MAX);
     static bool CheckValueType(napi_env env, napi_value arg, napi_valuetype type);
     static bool CheckhasNamedProperty(napi_env env, napi_value arg, std::string type);
     static bool GetPropertyInt32(napi_env env, napi_value configObj, const std::string &type, int32_t &result);
@@ -70,6 +72,8 @@ public:
     static bool SetPropertyDouble(napi_env env, napi_value &obj, const std::string &key, double value);
     static bool SetPropertyBool(napi_env env, napi_value &obj, const std::string &key, bool value);
     static bool SetPropertyString(napi_env env, napi_value &obj, const std::string &key, const std::string &value);
+    static bool SetPropertyArrayBuffer(
+        const napi_env &env, napi_value &result, const std::string &fieldStr, size_t bufferLen, uint8_t *bufferData);
     static napi_value CreateFormatBuffer(napi_env env, Format &format);
     static bool CreateFormatBufferByRef(napi_env env, Format &format, napi_value &result);
     static bool AddRangeProperty(napi_env env, napi_value obj, const std::string &name, int32_t min, int32_t max);
@@ -91,12 +95,19 @@ public:
     static napi_status SetDeviceDescriptors(const napi_env &env,
         const std::vector<std::shared_ptr<AudioStandard::AudioDeviceDescriptor>> &deviceDescriptors,
         napi_value &result);
+    static napi_value ThrowError(napi_env env, const int32_t errCode, const std::string errMsg);
 };
 
 class MediaJsResult {
 public:
     virtual ~MediaJsResult() = default;
     virtual napi_status GetJsResult(napi_env env, napi_value &result) = 0;
+};
+
+struct NapiTypeCheckUnit {
+    napi_env env;
+    napi_value param;
+    napi_valuetype expectedType;
 };
 
 class MediaJsResultBoolean : public MediaJsResult {

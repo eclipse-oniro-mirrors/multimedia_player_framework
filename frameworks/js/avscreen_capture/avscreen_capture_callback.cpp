@@ -108,75 +108,48 @@ void AVScreenCaptureCallback::OnJsErrorCallBack(AVScreenCaptureJsCallback *jsCb)
         delete jsCb;
     };
 
-    uv_loop_s *loop = nullptr;
-    napi_get_uv_event_loop(env_, &loop);
-    CHECK_AND_RETURN_LOG(loop != nullptr, "Fail to get uv event loop");
+    auto task = [jsCb]() {
+        std::string request = jsCb->callbackName;
+        MEDIA_LOGI("OnJsErrorCallBack task start, errorcode:%{public}d , errormessage:%{public}s:",
+            jsCb->errorCode, jsCb->errorMsg.c_str());
+        do {
+            std::shared_ptr<AutoRef> ref = jsCb->autoRef.lock();
+            CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
 
-    uv_work_t *work = new(std::nothrow) uv_work_t;
-    CHECK_AND_RETURN_LOG(work != nullptr, "fail to new uv_work_t");
-    ON_SCOPE_EXIT(1) {
-        delete work;
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(ref->env_, &scope);
+            CHECK_AND_BREAK_LOG(scope != nullptr, "%{public}s scope is nullptr", request.c_str());
+            ON_SCOPE_EXIT(0) {
+                napi_close_handle_scope(ref->env_, scope);
+            };
+
+            napi_value jsCallback = nullptr;
+            napi_status nstatus = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
+            CHECK_AND_BREAK_LOG(nstatus == napi_ok && jsCallback != nullptr, "%{public}s get reference value fail",
+                request.c_str());
+
+            napi_value msgValStr = nullptr;
+            nstatus = napi_create_string_utf8(ref->env_, jsCb->errorMsg.c_str(), NAPI_AUTO_LENGTH, &msgValStr);
+            CHECK_AND_BREAK_LOG(nstatus == napi_ok && msgValStr != nullptr, "create error message str fail");
+
+            napi_value args[1] = { nullptr };
+            nstatus = napi_create_error(ref->env_, nullptr, msgValStr, &args[0]);
+            CHECK_AND_BREAK_LOG(nstatus == napi_ok && args[0] != nullptr, "create error callback fail");
+
+            nstatus = CommonNapi::FillErrorArgs(ref->env_, jsCb->errorCode, args[0]);
+            CHECK_AND_BREAK_LOG(nstatus == napi_ok, "create error callback fail");
+
+            // Call back function
+            napi_value result = nullptr;
+            nstatus = napi_call_function(ref->env_, nullptr, jsCallback, 1, args, &result);
+            CHECK_AND_BREAK_LOG(nstatus == napi_ok, "%{public}s fail to napi call function", request.c_str());
+        } while (0);
+        delete jsCb;
     };
-
-    work->data = reinterpret_cast<void *>(jsCb);
-    // async callback, jsWork and jsWork->data should be heap object.
-    int ret = uv_queue_work_with_qos(loop, work, [] (uv_work_t *work) {
-        MEDIA_LOGD("OnJsErrorCallBack uv_queue_work_with_qos");
-    }, OnJsErrorCallBackWork, uv_qos_user_initiated);
-    CHECK_AND_RETURN_LOG(ret == 0, "fail to uv_queue_work_with_qos task");
+    CHECK_AND_RETURN_LOG(napi_send_event(env_, task, napi_eprio_immediate) == napi_status::napi_ok,
+        "OnJsErrorCallBack napi_send_event failed");
 
     CANCEL_SCOPE_EXIT_GUARD(0);
-    CANCEL_SCOPE_EXIT_GUARD(1);
-}
-
-void AVScreenCaptureCallback::OnJsErrorCallBackWork(uv_work_t *work, int status)
-{
-    // Js Thread
-    CHECK_AND_RETURN_LOG(work != nullptr, "work is nullptr");
-    if (work->data == nullptr) {
-        delete work;
-        MEDIA_LOGE("workdata is nullptr error");
-        return;
-    }
-    AVScreenCaptureJsCallback *event = reinterpret_cast<AVScreenCaptureJsCallback *>(work->data);
-    std::string request = event->callbackName;
-    MEDIA_LOGI("uv_queue_work_with_qos start, errorcode:%{public}d , errormessage:%{public}s:",
-        event->errorCode, event->errorMsg.c_str());
-    do {
-        CHECK_AND_BREAK_LOG(status != UV_ECANCELED, "%{public}s canceled", request.c_str());
-        std::shared_ptr<AutoRef> ref = event->autoRef.lock();
-        CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
-
-        napi_handle_scope scope = nullptr;
-        napi_open_handle_scope(ref->env_, &scope);
-        CHECK_AND_BREAK_LOG(scope != nullptr, "%{public}s scope is nullptr", request.c_str());
-        ON_SCOPE_EXIT(0) {
-            napi_close_handle_scope(ref->env_, scope);
-        };
-
-        napi_value jsCallback = nullptr;
-        napi_status nstatus = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
-        CHECK_AND_BREAK_LOG(nstatus == napi_ok && jsCallback != nullptr, "%{public}s get reference value fail",
-            request.c_str());
-
-        napi_value msgValStr = nullptr;
-        nstatus = napi_create_string_utf8(ref->env_, event->errorMsg.c_str(), NAPI_AUTO_LENGTH, &msgValStr);
-        CHECK_AND_BREAK_LOG(nstatus == napi_ok && msgValStr != nullptr, "create error message str fail");
-
-        napi_value args[1] = { nullptr };
-        nstatus = napi_create_error(ref->env_, nullptr, msgValStr, &args[0]);
-        CHECK_AND_BREAK_LOG(nstatus == napi_ok && args[0] != nullptr, "create error callback fail");
-
-        nstatus = CommonNapi::FillErrorArgs(ref->env_, event->errorCode, args[0]);
-        CHECK_AND_BREAK_LOG(nstatus == napi_ok, "create error callback fail");
-
-        // Call back function
-        napi_value result = nullptr;
-        nstatus = napi_call_function(ref->env_, nullptr, jsCallback, 1, args, &result);
-        CHECK_AND_BREAK_LOG(nstatus == napi_ok, "%{public}s fail to napi call function", request.c_str());
-    } while (0);
-    delete event;
-    delete work;
 }
 
 void AVScreenCaptureCallback::OnJsStateChangeCallBack(AVScreenCaptureJsCallback *jsCb) const
@@ -185,27 +158,10 @@ void AVScreenCaptureCallback::OnJsStateChangeCallBack(AVScreenCaptureJsCallback 
         delete jsCb;
     };
 
-    uv_loop_s *loop = nullptr;
-    napi_get_uv_event_loop(env_, &loop);
-    CHECK_AND_RETURN_LOG(loop != nullptr, "Fail to get uv event loop");
-
-    uv_work_t *work = new(std::nothrow) uv_work_t;
-    CHECK_AND_RETURN_LOG(work != nullptr, "fail to new uv_work_t");
-    ON_SCOPE_EXIT(1) {
-        delete work;
-    };
-
-    work->data = reinterpret_cast<void *>(jsCb);
-    int ret = uv_queue_work_with_qos(loop, work, [] (uv_work_t *work) {
-        MEDIA_LOGD("OnJsStateChangeCallBack uv_queue_work_with_qos");
-    }, [] (uv_work_t *work, int status) {
-        // Js Thread
-        CHECK_AND_RETURN_LOG(work != nullptr, "work is nullptr");
-        AVScreenCaptureJsCallback *event = reinterpret_cast<AVScreenCaptureJsCallback *>(work->data);
-        std::string request = event->callbackName;
+    auto task = [jsCb]() {
+        std::string request = jsCb->callbackName;
         do {
-            CHECK_AND_BREAK_LOG(status != UV_ECANCELED, "%{public}s canceled", request.c_str());
-            std::shared_ptr<AutoRef> ref = event->autoRef.lock();
+            std::shared_ptr<AutoRef> ref = jsCb->autoRef.lock();
             CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
 
             napi_handle_scope scope = nullptr;
@@ -221,7 +177,7 @@ void AVScreenCaptureCallback::OnJsStateChangeCallBack(AVScreenCaptureJsCallback 
                 request.c_str());
 
             napi_value args[1] = { nullptr };
-            nstatus = napi_create_int32(ref->env_, event->stateCode, &args[0]);
+            nstatus = napi_create_int32(ref->env_, jsCb->stateCode, &args[0]);
             CHECK_AND_BREAK_LOG(nstatus == napi_ok && args[0] != nullptr,
                 "%{public}s fail to create callback", request.c_str());
 
@@ -230,13 +186,12 @@ void AVScreenCaptureCallback::OnJsStateChangeCallBack(AVScreenCaptureJsCallback 
             nstatus = napi_call_function(ref->env_, nullptr, jsCallback, argCount, args, &result);
             CHECK_AND_BREAK_LOG(nstatus == napi_ok, "%{public}s fail to napi call function", request.c_str());
         } while (0);
-        delete event;
-        delete work;
-    }, uv_qos_user_initiated);
-    CHECK_AND_RETURN_LOG(ret == 0, "fail to uv_queue_work_with_qos task");
+        delete jsCb;
+    };
+    CHECK_AND_RETURN_LOG(napi_send_event(env_, task, napi_eprio_immediate) == napi_status::napi_ok,
+        "OnJsStateChangeCallBack napi_send_event failed");
 
     CANCEL_SCOPE_EXIT_GUARD(0);
-    CANCEL_SCOPE_EXIT_GUARD(1);
 }
 
 } // namespace Media

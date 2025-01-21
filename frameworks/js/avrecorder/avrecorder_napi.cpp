@@ -1454,6 +1454,7 @@ int32_t AVRecorderNapi::GetAVRecorderConfig(std::shared_ptr<AVRecorderConfig> &c
     const std::string fdHead = "fd://";
     config->url = fdHead + std::to_string(configMap["url"]);
     config->rotation = configMap["rotation"];
+    config->maxDuration = configMap["maxDuration"];
     config->withVideo = configMap["withVideo"];
     config->withAudio = configMap["withAudio"];
     config->withLocation = configMap["withLocation"];
@@ -1637,6 +1638,8 @@ int32_t AVRecorderNapi::GetAudioCodecFormat(const std::string &mime, AudioCodecF
         { CodecMimeType::AUDIO_AAC, AudioCodecFormat::AAC_LC },
         { CodecMimeType::AUDIO_MPEG, AudioCodecFormat::AUDIO_MPEG },
         { CodecMimeType::AUDIO_G711MU, AudioCodecFormat::AUDIO_G711MU },
+        { CodecMimeType::AUDIO_AMR_NB, AudioCodecFormat::AUDIO_AMR_NB },
+        { CodecMimeType::AUDIO_AMR_WB, AudioCodecFormat::AUDIO_AMR_WB },
         { "", AudioCodecFormat::AUDIO_DEFAULT },
     };
 
@@ -1674,6 +1677,7 @@ int32_t AVRecorderNapi::GetOutputFormat(const std::string &extension, OutputForm
         { "m4a", OutputFormatType::FORMAT_M4A },
         { "mp3", OutputFormatType::FORMAT_MP3 },
         { "wav", OutputFormatType::FORMAT_WAV },
+        { "amr", OutputFormatType::FORMAT_AMR },
         { "", OutputFormatType::FORMAT_DEFAULT },
     };
 
@@ -1876,6 +1880,9 @@ int32_t AVRecorderNapi::GetConfig(std::unique_ptr<AVRecorderAsyncContext> &async
             (asyncCtx->AVRecorderSignError(MSERR_INCORRECT_PARAMETER_TYPE, "GetLocation", "Location",
                 "location type should be Location."), MSERR_INCORRECT_PARAMETER_TYPE));
     }
+
+    ret = AVRecorderNapi::GetPropertyInt32(env, args, "maxDuration", config->maxDuration, getValue);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "failed to GetMaxDuration");
 
     if (CommonNapi::CheckhasNamedProperty(env, args, "metadata")) {
         CHECK_AND_RETURN_RET_LOG(AVRecorderNapi::GetAVMetaData(asyncCtx, env, args) == MSERR_OK,
@@ -2136,6 +2143,14 @@ RetInfo AVRecorderNapi::Configure(std::shared_ptr<AVRecorderConfig> config)
 
     RetInfo retInfo = SetProfile(config);
     CHECK_AND_RETURN_RET_LOG(retInfo.first == MSERR_OK, retInfo, "Fail to set videoBitrate");
+
+    if (config->maxDuration < 1) {
+        config->maxDuration = INT32_MAX;
+        MEDIA_LOGI("AVRecorderNapi::Configure maxDuration = %{public}d is invalid, set to default",
+            config->maxDuration);
+    }
+    recorder_->SetMaxDuration(config->maxDuration);
+    MEDIA_LOGI("AVRecorderNapi::Configure SetMaxDuration = %{public}d", config->maxDuration);
 
     if (config->withLocation) {
         recorder_->SetLocation(config->metadata.location.latitude, config->metadata.location.longitude);
@@ -2412,6 +2427,8 @@ int32_t MediaJsResultExtensionMethod::SetAudioCodecFormat(AudioCodecFormat &code
         { AudioCodecFormat::AAC_LC, CodecMimeType::AUDIO_AAC },
         { AudioCodecFormat::AUDIO_MPEG, CodecMimeType::AUDIO_MPEG },
         { AudioCodecFormat::AUDIO_G711MU, CodecMimeType::AUDIO_G711MU },
+        { AudioCodecFormat::AUDIO_AMR_NB, CodecMimeType::AUDIO_AMR_NB },
+        { AudioCodecFormat::AUDIO_AMR_WB, CodecMimeType::AUDIO_AMR_WB },
         { AudioCodecFormat::AUDIO_DEFAULT, "" },
     };
 
@@ -2449,6 +2466,7 @@ int32_t MediaJsResultExtensionMethod::SetFileFormat(OutputFormatType &type, std:
         { OutputFormatType::FORMAT_M4A, "m4a" },
         { OutputFormatType::FORMAT_MP3, "mp3" },
         { OutputFormatType::FORMAT_WAV, "wav" },
+        { OutputFormatType::FORMAT_AMR, "amr" },
         { OutputFormatType::FORMAT_DEFAULT, "" },
     };
 

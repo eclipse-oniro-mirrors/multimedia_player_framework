@@ -96,6 +96,11 @@ config("media_service_config") {
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
+
+  if (player_framework_enable_start_stop_on_demand) {
+    sa_config_path = "\"/system/profile/media_service.json\""
+    defines += [ "SA_CONFIG_PATH=${sa_config_path}" ]
+  }
 }
 
 ohos_shared_library("media_service") {

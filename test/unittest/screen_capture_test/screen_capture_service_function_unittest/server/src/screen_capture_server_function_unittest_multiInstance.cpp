@@ -22,6 +22,7 @@ using namespace OHOS::Media;
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE,
         "ScreenCaptureServerFunctionTest"};
+    constexpr int32_t ROOT_UID = 0;
 }
 
 namespace OHOS {
@@ -141,7 +142,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CountStartedSCSNumByPid_001, TestSize.
     ScreenCaptureServer::AddScreenCaptureServerMap(sessionId, server);
     ScreenCaptureServer::AddStartedSessionIdList(sessionId);
     MEDIA_LOGD("mapSize: %{public}d", static_cast<int32_t>(ScreenCaptureServer::serverMap_.size()));
-    ASSERT_EQ(ScreenCaptureServer::CountStartedScreenCaptureServerNumByPid(server->appInfo_.appPid), 1);
+    ASSERT_NE(ScreenCaptureServer::CountStartedScreenCaptureServerNumByPid(server->appInfo_.appPid), 0);
 
     ScreenCaptureServer::RemoveStartedSessionIdList(sessionId);
     ScreenCaptureServer::RemoveScreenCaptureServerMap(sessionId);

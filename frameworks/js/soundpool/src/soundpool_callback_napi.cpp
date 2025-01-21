@@ -37,10 +37,10 @@ void SoundPoolCallBackNapi::OnLoadCompleted(int32_t soundId)
     SendLoadCompletedCallback(soundId);
 }
 
-void SoundPoolCallBackNapi::OnPlayFinished()
+void SoundPoolCallBackNapi::OnPlayFinished(int32_t streamID)
 {
     MEDIA_LOGI("OnPlayFinished recived");
-    SendPlayCompletedCallback();
+    SendPlayCompletedCallback(streamID);
 }
 
 void SoundPoolCallBackNapi::OnError(int32_t errorCode)
@@ -115,59 +115,57 @@ void SoundPoolCallBackNapi::SendLoadCompletedCallback(int32_t soundId)
     return OnJsloadCompletedCallBack(cb);
 }
 
-void SoundPoolCallBackNapi::SendPlayCompletedCallback()
+void SoundPoolCallBackNapi::SendPlayCompletedCallback(int32_t streamID)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (refMap_.find(SoundPoolEvent::EVENT_PLAY_FINISHED) == refMap_.end()) {
+    if (refMap_.find(SoundPoolEvent::EVENT_PLAY_FINISHED) == refMap_.end() &&
+        refMap_.find(SoundPoolEvent::EVENT_PLAY_FINISHED_WITH_STREAM_ID) == refMap_.end()) {
         MEDIA_LOGW("can not find playfinished callback!");
         return;
     }
 
     SoundPoolJsCallBack *cb = new(std::nothrow) SoundPoolJsCallBack();
     CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
-    cb->autoRef = refMap_.at(SoundPoolEvent::EVENT_PLAY_FINISHED);
-    cb->callbackName = SoundPoolEvent::EVENT_PLAY_FINISHED;
+    std::weak_ptr<AutoRef> autoRefFinished;
+    std::weak_ptr<AutoRef> autoRefFinishedStreamID;
+    auto it = refMap_.find(SoundPoolEvent::EVENT_PLAY_FINISHED);
+    if (it != refMap_.end()) {
+        autoRefFinished = it->second;
+    }
+    auto itStreamId = refMap_.find(SoundPoolEvent::EVENT_PLAY_FINISHED_WITH_STREAM_ID);
+    if (itStreamId != refMap_.end()) {
+        autoRefFinishedStreamID = itStreamId->second;
+    }
+
+    if (std::shared_ptr<AutoRef> ref = autoRefFinishedStreamID.lock()) {
+        cb->autoRef = autoRefFinishedStreamID;
+        cb->callbackName = SoundPoolEvent::EVENT_PLAY_FINISHED_WITH_STREAM_ID;
+        cb->playFinishedStreamID = streamID;
+    } else {
+        cb->autoRef = autoRefFinished;
+        cb->callbackName = SoundPoolEvent::EVENT_PLAY_FINISHED;
+    }
     return OnJsplayCompletedCallBack(cb);
 }
 
 void SoundPoolCallBackNapi::OnJsErrorCallBack(SoundPoolJsCallBack *jsCb) const
 {
-    ON_SCOPE_EXIT(0) {
-        delete jsCb;
-    };
-    uv_loop_s *loop = nullptr;
-    napi_get_uv_event_loop(env_, &loop);
-    CHECK_AND_RETURN_LOG(loop != nullptr, "Fail to get uv event loop");
-
-    uv_work_t *work = new(std::nothrow) uv_work_t;
-    CHECK_AND_RETURN_LOG(work != nullptr, "fail to new uv_work_t");
-    ON_SCOPE_EXIT(1) {
-        delete work;
-    };
-    work->data = reinterpret_cast<void *>(jsCb);
-    // async callback, jsWork and jsWork->data should be heap object.
-    int ret = uv_queue_work_with_qos(loop, work, [] (uv_work_t *work) {
-        MEDIA_LOGD("OnJsErrorCallBack uv_queue_work_with_qos");
-    }, [] (uv_work_t *work, int status) {
-        // Js Thread
-        CHECK_AND_RETURN_LOG(work != nullptr, "work is nullptr");
-        SoundPoolJsCallBack *event = reinterpret_cast<SoundPoolJsCallBack *>(work->data);
-        event->RunJsErrorCallBackTask(status, event);
+    auto task = [event = jsCb]() {
+        event->RunJsErrorCallBackTask(event);
         delete event;
-        delete work;
-    }, uv_qos_user_initiated);
-    if (ret != 0) {
-        MEDIA_LOGI("fail to uv_queue_work_with_qos task");
+    };
+
+    auto ret = napi_send_event(env_, task, napi_eprio_immediate);
+    if (ret != napi_status::napi_ok) {
+        MEDIA_LOGE("Failed to SendEvent CallBack, ret = %{public}d", ret);
+        delete jsCb;
     }
-    CANCEL_SCOPE_EXIT_GUARD(0);
-    CANCEL_SCOPE_EXIT_GUARD(1);
 }
 
-void SoundPoolCallBackNapi::SoundPoolJsCallBack::RunJsErrorCallBackTask(int status, SoundPoolJsCallBack *event)
+void SoundPoolCallBackNapi::SoundPoolJsCallBack::RunJsErrorCallBackTask(SoundPoolJsCallBack *event)
 {
     std::string request = event->callbackName;
     do {
-        CHECK_AND_BREAK_LOG(status != UV_ECANCELED, "%{public}s canceled", request.c_str());
         std::shared_ptr<AutoRef> ref = event->autoRef.lock();
         CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
 
@@ -202,45 +200,22 @@ void SoundPoolCallBackNapi::SoundPoolJsCallBack::RunJsErrorCallBackTask(int stat
 
 void SoundPoolCallBackNapi::OnJsloadCompletedCallBack(SoundPoolJsCallBack *jsCb) const
 {
-    ON_SCOPE_EXIT(0) {
-        delete jsCb;
+    auto task = [event = jsCb]() {
+        event->RunJsloadCompletedCallBackTask(event);
+        delete event;
     };
-    uv_loop_s *loop = nullptr;
-    napi_get_uv_event_loop(env_, &loop);
-    CHECK_AND_RETURN_LOG(loop != nullptr, "Fail to get uv event loop");
 
-    uv_work_t *work = new(std::nothrow) uv_work_t;
-    CHECK_AND_RETURN_LOG(work != nullptr, "fail to new uv_work_t");
-    ON_SCOPE_EXIT(1) {
-        delete work;
-    };
-    work->data = reinterpret_cast<void *>(jsCb);
-    // async callback, jsWork and jsWork->data should be heap object.
-    int ret = uv_queue_work_with_qos(loop, work, [] (uv_work_t *work) {
-        MEDIA_LOGD("OnJsloadCompletedCallBack uv_queue_work_with_qos");
-    }, [] (uv_work_t *work, int status) {
-        CHECK_AND_RETURN_LOG(work != nullptr, "work is nullptr");
-        if (work->data != nullptr) {
-            MEDIA_LOGD("work data not nullptr");
-            SoundPoolJsCallBack *event = reinterpret_cast<SoundPoolJsCallBack *>(work->data);
-            event->RunJsloadCompletedCallBackTask(status, event);
-            delete event;
-        }
-        delete work;
-    }, uv_qos_user_initiated);
-    if (ret != 0) {
-        MEDIA_LOGI("fail to uv_queue_work_with_qos task");
+    auto ret = napi_send_event(env_, task, napi_eprio_immediate);
+    if (ret != napi_status::napi_ok) {
+        MEDIA_LOGE("Failed to SendEvent CallBack, ret = %{public}d", ret);
+        delete jsCb;
     }
-    CANCEL_SCOPE_EXIT_GUARD(0);
-    CANCEL_SCOPE_EXIT_GUARD(1);
 }
 
-void SoundPoolCallBackNapi::SoundPoolJsCallBack::RunJsloadCompletedCallBackTask(int status,
-    SoundPoolJsCallBack *event)
+void SoundPoolCallBackNapi::SoundPoolJsCallBack::RunJsloadCompletedCallBackTask(SoundPoolJsCallBack *event)
 {
     std::string request = event->callbackName;
     do {
-        CHECK_AND_BREAK_LOG(status != UV_ECANCELED, "%{public}s canceled", request.c_str());
         std::shared_ptr<AutoRef> ref = event->autoRef.lock();
         CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
         napi_handle_scope scope = nullptr;
@@ -266,47 +241,22 @@ void SoundPoolCallBackNapi::SoundPoolJsCallBack::RunJsloadCompletedCallBackTask(
 
 void SoundPoolCallBackNapi::OnJsplayCompletedCallBack(SoundPoolJsCallBack *jsCb) const
 {
-    ON_SCOPE_EXIT(0) {
+    auto task = [event = jsCb]() {
+        event->RunJsplayCompletedCallBackTask(event);
+        delete event;
+    };
+
+    auto ret = napi_send_event(env_, task, napi_eprio_immediate);
+    if (ret != napi_status::napi_ok) {
+        MEDIA_LOGE("Failed to SendEvent CallBack, ret = %{public}d", ret);
         delete jsCb;
-    };
-    uv_loop_s *loop = nullptr;
-    napi_get_uv_event_loop(env_, &loop);
-    CHECK_AND_RETURN_LOG(loop != nullptr, "Fail to get uv event loop");
-
-    uv_work_t *work = new(std::nothrow) uv_work_t;
-    CHECK_AND_RETURN_LOG(work != nullptr, "fail to new uv_work_t");
-    ON_SCOPE_EXIT(1) {
-        delete work;
-    };
-    work->data = reinterpret_cast<void *>(jsCb);
-    // async callback, jsWork and jsWork->data should be heap object.
-    int ret = uv_queue_work_with_qos(loop, work, [] (uv_work_t *work) {
-        MEDIA_LOGD("OnJsplayCompletedCallBack uv_queue_work_with_qos");
-    }, [] (uv_work_t *work, int status) {
-        // Js Thread
-        CHECK_AND_RETURN_LOG(work != nullptr, "work is nullptr");
-        if (work->data != nullptr) {
-            MEDIA_LOGI("work data not nullptr");
-            SoundPoolJsCallBack *event = reinterpret_cast<SoundPoolJsCallBack *>(work->data);
-            event->RunJsplayCompletedCallBackTask(status, event);
-            delete event;
-        }
-        delete work;
-    }, uv_qos_user_initiated);
-    if (ret != 0) {
-        MEDIA_LOGI("fail to uv_queue_work_with_qos task");
     }
-
-    CANCEL_SCOPE_EXIT_GUARD(0);
-    CANCEL_SCOPE_EXIT_GUARD(1);
 }
 
-void SoundPoolCallBackNapi::SoundPoolJsCallBack::RunJsplayCompletedCallBackTask(int status,
-    SoundPoolJsCallBack *event)
+void SoundPoolCallBackNapi::SoundPoolJsCallBack::RunJsplayCompletedCallBackTask(SoundPoolJsCallBack *event)
 {
     std::string request = event->callbackName;
     do {
-        CHECK_AND_BREAK_LOG(status != UV_ECANCELED, "%{public}s canceled", request.c_str());
         std::shared_ptr<AutoRef> ref = event->autoRef.lock();
         CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
 
@@ -321,9 +271,20 @@ void SoundPoolCallBackNapi::SoundPoolJsCallBack::RunJsplayCompletedCallBackTask(
         CHECK_AND_BREAK_LOG(nstatus == napi_ok && jsCallback != nullptr, "%{public}s get reference value fail",
             request.c_str());
 
-        napi_value result = nullptr;
-        nstatus = napi_call_function(ref->env_, nullptr, jsCallback, 0, nullptr, &result);
-        CHECK_AND_BREAK_LOG(nstatus == napi_ok, "%{public}s fail to napi call function", request.c_str());
+        if (request == SoundPoolEvent::EVENT_PLAY_FINISHED_WITH_STREAM_ID) {
+            napi_value args[1] = { nullptr };
+            nstatus = napi_create_int32(ref->env_, event->playFinishedStreamID, &args[0]);
+            CHECK_AND_BREAK_LOG(nstatus == napi_ok && args[0] != nullptr,
+                "%{public}s fail to create callback", request.c_str());
+            const size_t argCount = 1;
+            napi_value result = nullptr;
+            nstatus = napi_call_function(ref->env_, nullptr, jsCallback, argCount, args, &result);
+            CHECK_AND_BREAK_LOG(nstatus == napi_ok, "%{public}s fail to napi call function", request.c_str());
+        } else {
+            napi_value result = nullptr;
+            nstatus = napi_call_function(ref->env_, nullptr, jsCallback, 0, nullptr, &result);
+            CHECK_AND_BREAK_LOG(nstatus == napi_ok, "%{public}s fail to napi call function", request.c_str());
+        }
     } while (0);
 }
 

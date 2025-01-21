@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Huawei Device Co., Ltd.
+ * Copyright (C) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -28,7 +28,8 @@
 
 
 namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_PLAYER, "AVPlayerCallback" };
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_PLAYER, "AVPlayerCallback" };
+constexpr int32_t ARGS_TWO = 2;
 }
 
 namespace OHOS {
@@ -585,12 +586,60 @@ public:
                 "%{public}s failed to napi_call_function", callbackName.c_str());
         }
     };
+
+    struct SeiInfoUpadte : public Base {
+        int32_t playbackPosition;
+        std::vector<Format> payloadGroup;
+
+        void UvWork() override
+        {
+            std::shared_ptr<AutoRef> seiInfoRef = callback.lock();
+            CHECK_AND_RETURN_LOG(seiInfoRef != nullptr, "%{public}s AutoRef is nullptr", callbackName.c_str());
+
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(seiInfoRef->env_, &scope);
+            CHECK_AND_RETURN_LOG(scope != nullptr, "%{public}s scope is nullptr", callbackName.c_str());
+            ON_SCOPE_EXIT(0) {
+                napi_close_handle_scope(seiInfoRef->env_, scope);
+            };
+
+            napi_value jsCallback = nullptr;
+            napi_status status = napi_get_reference_value(seiInfoRef->env_, seiInfoRef->cb_, &jsCallback);
+            CHECK_AND_RETURN_LOG(status == napi_ok && jsCallback != nullptr,
+                "%{public}s failed to napi_get_reference_value", callbackName.c_str());
+            
+            napi_value position = nullptr;
+            status = napi_create_int32(seiInfoRef->env_, playbackPosition, &position);
+            CHECK_AND_RETURN_LOG(status == napi_ok, "failed to create js number %{public}d", playbackPosition);
+
+            napi_value array = nullptr;
+            status = napi_create_array_with_length(seiInfoRef->env_, payloadGroup.size(), &array);
+            CHECK_AND_RETURN_LOG(status == napi_ok, "failed to create js array len %{public}zu", payloadGroup.size());
+            for (uint32_t i = 0; i < payloadGroup.size(); i++) {
+                napi_value seiPayload = nullptr;
+                seiPayload = CommonNapi::CreateFormatBuffer(seiInfoRef->env_, payloadGroup[i]);
+                status = napi_set_element(seiInfoRef->env_, array, i, seiPayload);
+                CHECK_AND_RETURN_LOG(status == napi_ok, "failed to set sei element %{public}d", i);
+            }
+
+            napi_value args[ARGS_TWO] = { array, position };
+            napi_value result = nullptr;
+            status = napi_call_function(seiInfoRef->env_, nullptr, jsCallback, ARGS_TWO, args, &result);
+            CHECK_AND_RETURN_LOG(status == napi_ok,
+                "%{public}s failed to napi_call_function", callbackName.c_str());
+        }
+    };
 };
 
 AVPlayerCallback::AVPlayerCallback(napi_env env, AVPlayerNotify *listener)
     : env_(env), listener_(listener)
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    InitInfoFuncs();
+}
+
+void AVPlayerCallback::InitInfoFuncs()
+{
     onInfoFuncs_ = {
         { INFO_TYPE_STATE_CHANGE,
             [this](const int32_t extra, const Format &infoBody) { OnStateChangeCb(extra, infoBody); } },
@@ -635,7 +684,9 @@ AVPlayerCallback::AVPlayerCallback(napi_env env, AVPlayerNotify *listener)
         { INFO_TYPE_AUDIO_DEVICE_CHANGE,
             [this](const int32_t extra, const Format &infoBody) { OnAudioDeviceChangeCb(extra, infoBody); } },
         { INFO_TYPE_MAX_AMPLITUDE_COLLECT,
-             [this](const int32_t extra, const Format &infoBody) { OnMaxAmplitudeCollectedCb(extra, infoBody); } },
+            [this](const int32_t extra, const Format &infoBody) { OnMaxAmplitudeCollectedCb(extra, infoBody); } },
+        { INFO_TYPE_SEI_UPDATE_INFO,
+            [this](const int32_t extra, const Format &infoBody) { OnSeiInfoCb(extra, infoBody); } },
     };
 }
 
@@ -1148,6 +1199,30 @@ void AVPlayerCallback::OnMaxAmplitudeCollectedCb(const int32_t extra, const Form
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_AMPLITUDE_UPDATE);
     cb->callbackName = AVPlayerEvent::EVENT_AMPLITUDE_UPDATE;
     cb->valueVec = MaxAmplitudeVec;
+    NapiCallback::CompleteCallback(env_, cb);
+}
+
+void AVPlayerCallback::OnSeiInfoCb(const int32_t extra, const Format &infoBody)
+{
+    CHECK_AND_RETURN_LOG(
+        refMap_.find(AVPlayerEvent::EVENT_SEI_MESSAGE_INFO) != refMap_.end(), "can not find on sei message callback!");
+
+    (void)extra;
+    int32_t playbackPosition = 0;
+    bool res = infoBody.GetIntValue(Tag::AV_PLAYER_SEI_PLAYBACK_POSITION, playbackPosition);
+    CHECK_AND_RETURN_LOG(res, "get playback position failed");
+
+    std::vector<Format> formatVec;
+    res = infoBody.GetFormatVector(Tag::AV_PLAYER_SEI_PLAYBACK_GROUP, formatVec);
+    CHECK_AND_RETURN_LOG(res, "get sei payload group failed");
+
+    NapiCallback::SeiInfoUpadte *cb = new(std::nothrow) NapiCallback::SeiInfoUpadte();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new IntArray");
+
+    cb->callback = refMap_.at(AVPlayerEvent::EVENT_SEI_MESSAGE_INFO);
+    cb->callbackName = AVPlayerEvent::EVENT_SEI_MESSAGE_INFO;
+    cb->playbackPosition = playbackPosition;
+    cb->payloadGroup = formatVec;
     NapiCallback::CompleteCallback(env_, cb);
 }
 

@@ -279,6 +279,7 @@ int32_t HiRecorderImpl::Configure(int32_t sourceId, const RecorderParam &recPara
         case RecorderPublicParamType::GEO_LOCATION:
         case RecorderPublicParamType::GENRE_INFO:
         case RecorderPublicParamType::CUSTOM_INFO:
+        case RecorderPublicParamType::MAX_DURATION:
             ConfigureMuxer(recParam);
             break;
         case RecorderPublicParamType::META_MIME_TYPE:
@@ -495,15 +496,17 @@ void HiRecorderImpl::OnEvent(const Event &event)
     switch (event.type) {
         case EventType::EVENT_ERROR: {
             MEDIA_LOG_I("EVENT_ERROR.");
-            OnStateChanged(StateId::ERROR);
             auto ptr = obs_.lock();
             if (ptr != nullptr) {
                 switch (AnyCast<Status>(event.param)) {
                     case Status::ERROR_AUDIO_INTERRUPT:
+                        // audio interrupted, report error and recorder stop
                         ptr->OnError(IRecorderEngineObs::ErrorType::ERROR_INTERNAL, MSERR_AUD_INTERRUPT);
+                        Stop(false);
                         break;
                     default:
                         ptr->OnError(IRecorderEngineObs::ErrorType::ERROR_INTERNAL, MSERR_EXT_API9_INVALID_PARAMETER);
+                        OnStateChanged(StateId::ERROR);
                         break;
                 }
             }
@@ -514,6 +517,17 @@ void HiRecorderImpl::OnEvent(const Event &event)
             break;
         }
         case EventType::EVENT_COMPLETE: {
+            MEDIA_LOG_I("EVENT_COMPLETE.");
+            if (curState_ == StateId::INIT) {
+                MEDIA_LOG_I("EVENT_COMPLETE exit. the reason is already stopped");
+                break;
+            }
+            Stop(true);
+            auto ptr = obs_.lock();
+            if (ptr != nullptr) {
+                MEDIA_LOG_I("EVENT_COMPLETE ptr->OnInfo MAX_DURATION_REACHED BACKGROUND");
+                ptr->OnInfo(IRecorderEngineObs::InfoType::MAX_DURATION_REACHED, BACKGROUND);
+            }
             break;
         }
         default:
@@ -562,6 +576,7 @@ Status HiRecorderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, cons
                 muxerFilter_->SetOutputParameter(appUid_, appPid_, fd_, outputFormatType_);
                 muxerFilter_->SetParameter(muxerFormat_);
                 muxerFilter_->SetUserMeta(userMeta_);
+                muxerFilter_->SetMaxDuration(maxDuration_);
                 CloseFd();
             }
             pipeline_->LinkFilters(filter, {muxerFilter_}, outType);
@@ -639,27 +654,38 @@ void HiRecorderImpl::ConfigureAudio(const RecorderParam &recParam)
             break;
         }
         case RecorderPublicParamType::AUD_ENC_FMT: {
-            AudEnc audEnc = static_cast<const AudEnc&>(recParam);
-            switch (audEnc.encFmt) {
-                case OHOS::Media::AudioCodecFormat::AUDIO_DEFAULT:
-                case OHOS::Media::AudioCodecFormat::AAC_LC:
-                    audioEncFormat_->Set<Tag::MIME_TYPE>(Plugins::MimeType::AUDIO_AAC);
-                    audioEncFormat_->Set<Tag::AUDIO_AAC_PROFILE>(Plugins::AudioAacProfile::LC);
-                    break;
-                case OHOS::Media::AudioCodecFormat::AUDIO_MPEG:
-                    audioEncFormat_->Set<Tag::MIME_TYPE>(Plugins::MimeType::AUDIO_MPEG);
-                    break;
-                case OHOS::Media::AudioCodecFormat::AUDIO_G711MU:
-                    audioEncFormat_->Set<Tag::MIME_TYPE>(Plugins::MimeType::AUDIO_G711MU);
-                    break;
-                default:
-                    break;
-            }
+            ConfigureAudioCodecFormat(recParam);
             break;
         }
         default: {
             break;
         }
+    }
+}
+
+void HiRecorderImpl::ConfigureAudioCodecFormat(const RecorderParam &recParam)
+{
+    AudEnc audEnc = static_cast<const AudEnc&>(recParam);
+    switch (audEnc.encFmt) {
+        case OHOS::Media::AudioCodecFormat::AUDIO_DEFAULT:
+        case OHOS::Media::AudioCodecFormat::AAC_LC:
+            audioEncFormat_->Set<Tag::MIME_TYPE>(Plugins::MimeType::AUDIO_AAC);
+            audioEncFormat_->Set<Tag::AUDIO_AAC_PROFILE>(Plugins::AudioAacProfile::LC);
+            break;
+        case OHOS::Media::AudioCodecFormat::AUDIO_MPEG:
+            audioEncFormat_->Set<Tag::MIME_TYPE>(Plugins::MimeType::AUDIO_MPEG);
+            break;
+        case OHOS::Media::AudioCodecFormat::AUDIO_G711MU:
+            audioEncFormat_->Set<Tag::MIME_TYPE>(Plugins::MimeType::AUDIO_G711MU);
+            break;
+        case OHOS::Media::AudioCodecFormat::AUDIO_AMR_NB:
+            audioEncFormat_->Set<Tag::MIME_TYPE>(Plugins::MimeType::AUDIO_AMR_NB);
+            break;
+        case OHOS::Media::AudioCodecFormat::AUDIO_AMR_WB:
+            audioEncFormat_->Set<Tag::MIME_TYPE>(Plugins::MimeType::AUDIO_AMR_WB);
+            break;
+        default:
+            break;
     }
 }
 
@@ -830,6 +856,9 @@ void HiRecorderImpl::ConfigureMuxer(const RecorderParam &recParam)
         case RecorderPublicParamType::MAX_SIZE: {
             MaxFileSize maxFileSize = static_cast<const MaxFileSize&>(recParam);
             maxSize_ = maxFileSize.size;
+            if (muxerFilter_) {
+                muxerFilter_->SetMaxDuration(maxDuration_);
+            }
             break;
         }
         case RecorderPublicParamType::VID_ORIENTATION_HINT: {

@@ -25,6 +25,8 @@
 #include "media_dfx.h"
 #include "av_common.h"
 #include "player_xcollie.h"
+#include "string_ex.h"
+#include "uri_helper.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "PlayerServiceProxy"};
@@ -85,6 +87,8 @@ PlayerServiceProxy::PlayerServiceProxy(const sptr<IRemoteObject> &impl)
     playerFuncs_[SET_DEVICE_CHANGE_CB_STATUS] = "Player::SetDeviceChangeCbStatus";
     playerFuncs_[SET_MAX_AMPLITUDE_CB_STATUS] = "Player::SetMaxAmplitudeCbStatus";
     playerFuncs_[IS_SEEK_CONTINUOUS_SUPPORTED] = "Player::IsSeekContinuousSupported";
+    playerFuncs_[GET_PLAY_BACK_POSITION] = "Player::GetPlaybackPosition";
+    playerFuncs_[SET_SEI_MESSAGE_CB_STATUS] = "Player::SetSeiMessageCbStatus";
 }
 
 PlayerServiceProxy::~PlayerServiceProxy()
@@ -451,6 +455,23 @@ int32_t PlayerServiceProxy::GetCurrentTime(int32_t &currentTime)
     return reply.ReadInt32();
 }
 
+int32_t PlayerServiceProxy::GetPlaybackPosition(int32_t &playbackPosition)
+{
+    MediaTrace trace("PlayerServiceProxy::GetPlaybackPosition");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    int32_t error = SendRequest(GET_PLAY_BACK_POSITION, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "GetPlaybackPosition failed, error: %{public}d", error);
+    playbackPosition = reply.ReadInt32();
+    return reply.ReadInt32();
+}
+
 int32_t PlayerServiceProxy::GetVideoTrackInfo(std::vector<Format> &videoTrack)
 {
     MediaTrace trace("PlayerServiceProxy::GetVideoTrackInfo");
@@ -471,6 +492,27 @@ int32_t PlayerServiceProxy::GetVideoTrackInfo(std::vector<Format> &videoTrack)
         (void)MediaParcel::Unmarshalling(reply, trackInfo);
         videoTrack.push_back(trackInfo);
     }
+    return reply.ReadInt32();
+}
+
+int32_t PlayerServiceProxy::SetSeiMessageCbStatus(bool status, const std::vector<int32_t> &payloadTypes)
+{
+    MediaTrace trace("PlayerServiceProxy::SetSeiMessageCbStatus");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+ 
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+ 
+    data.WriteBool(status);
+    data.WriteInt32(static_cast<int32_t>(payloadTypes.size()));
+    for (auto payloadType : payloadTypes) {
+        data.WriteInt32(payloadType);
+    }
+    int32_t error = SendRequest(SET_SEI_MESSAGE_CB_STATUS, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetSeiMessageCbStatus failed, error: %{public}d", error);
     return reply.ReadInt32();
 }
 
@@ -628,11 +670,9 @@ int32_t PlayerServiceProxy::SetMediaSource(const std::shared_ptr<AVMediaSource> 
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-
     CHECK_AND_RETURN_RET_LOG(mediaSource != nullptr, MSERR_INVALID_VAL, "mediaSource is nullptr!");
     bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
-
     data.WriteString(mediaSource->url);
     auto headerSize = static_cast<uint32_t>(mediaSource->header.size());
     if (!data.WriteUint32(headerSize)) {
@@ -649,7 +689,6 @@ int32_t PlayerServiceProxy::SetMediaSource(const std::shared_ptr<AVMediaSource> 
             return MSERR_INVALID_OPERATION;
         }
     }
-    
     std::string mimeType = mediaSource->GetMimeType();
     data.WriteString(mimeType);
     std::string uri = mediaSource->url;
@@ -658,12 +697,12 @@ int32_t PlayerServiceProxy::SetMediaSource(const std::shared_ptr<AVMediaSource> 
     size_t fdTailPos = uri.find("?");
     if (mimeType == AVMimeType::APPLICATION_M3U8 && fdHeadPos != std::string::npos &&
         fdTailPos != std::string::npos) {
+        CHECK_AND_RETURN_RET_LOG(fdHeadPos < fdTailPos, MSERR_INVALID_VAL, "Failed to read fd.");
         std::string fdStr = uri.substr(strlen("fd://"), fdTailPos - strlen("fd://"));
-        fd = stoi(fdStr);
+        CHECK_AND_RETURN_RET_LOG(StrToInt(fdStr, fd), MSERR_INVALID_VAL, "Failed to read fd.");
         (void)data.WriteFileDescriptor(fd);
         MEDIA_LOGI("fd : %d", fd);
     }
-
     (void)data.WriteUint32(strategy.preferredWidth);
     (void)data.WriteUint32(strategy.preferredHeight);
     (void)data.WriteUint32(strategy.preferredBufferDuration);

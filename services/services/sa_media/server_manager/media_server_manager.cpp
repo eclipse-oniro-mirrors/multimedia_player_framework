@@ -623,6 +623,9 @@ void MediaServerManager::DestroyStubObject(StubType type, sptr<IRemoteObject> ob
             break;
         }
     }
+#ifdef SUPPORT_START_STOP_ON_DEMAND
+    UpdateAllInstancesReleasedTime();
+#endif
 }
 
 void MediaServerManager::DestroyAVScreenCaptureStubForPid(pid_t pid)
@@ -763,6 +766,9 @@ void MediaServerManager::DestroyStubObjectForPid(pid_t pid)
     DestroyAVScreenCaptureStubForPid(pid);
     MonitorServiceStub::GetInstance()->OnClientDie(pid);
     executor_.Clear();
+#ifdef SUPPORT_START_STOP_ON_DEMAND
+    UpdateAllInstancesReleasedTime();
+#endif
 }
 
 void MediaServerManager::DestroyDumper(StubType type, sptr<IRemoteObject> object)
@@ -818,13 +824,45 @@ void MediaServerManager::AsyncExecutor::HandleAsyncExecution()
     tempList.clear();
 }
 
-int32_t MediaServerManager::GetInstanceCount()
+#ifdef SUPPORT_START_STOP_ON_DEMAND
+int32_t MediaServerManager::GetInstanceCountLocked()
 {
     std::lock_guard<std::mutex> lock(mutex_);
+    return GetInstanceCount();
+}
+
+int32_t MediaServerManager::GetInstanceCount()
+{
     return static_cast<int32_t>(recorderStubMap_.size() + playerStubMap_.size() + avMetadataHelperStubMap_.size() +
            avCodecListStubMap_.size() + avCodecStubMap_.size() + recorderProfilesStubMap_.size() +
            screenCaptureStubMap_.size() + screenCaptureControllerStubMap_.size() +
-           screenCaptureControllerStubMap_.size() + transCoderStubMap_.size());
+           screenCaptureMonitorStubMap_.size() + transCoderStubMap_.size());
 }
+
+int64_t MediaServerManager::GetCurrentSystemClockMs()
+{
+    return std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::steady_clock::now().time_since_epoch()).count();
+}
+
+int64_t MediaServerManager::GetAllInstancesReleasedTime()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    return allInstancesReleasedTime_;
+}
+
+void MediaServerManager::ResetAllInstancesReleasedTime()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    allInstancesReleasedTime_ = 0;
+}
+
+void MediaServerManager::UpdateAllInstancesReleasedTime()
+{
+    if (allInstancesReleasedTime_ == 0 && GetInstanceCount() == 0) {
+        allInstancesReleasedTime_ = GetCurrentSystemClockMs();
+    }
+}
+#endif
 } // namespace Media
 } // namespace OHOS

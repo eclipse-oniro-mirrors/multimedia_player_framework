@@ -49,6 +49,7 @@ public:
     int32_t AddSubSource(int32_t fd, int64_t offset, int64_t size) override;
     int32_t Release() override;
     int32_t GetCurrentTime(int32_t &currentTime) override;
+    int32_t GetPlaybackPosition(int32_t &playbackPosition) override;
     int32_t GetVideoWidth() override;
     int32_t GetVideoHeight() override;
     int32_t GetVideoTrackInfo(std::vector<Format> &videoTrack) override;
@@ -126,6 +127,7 @@ private:
         std::shared_ptr<PlayerCallback> callback = nullptr;
         uint32_t bitRate = 0;
         int32_t currentTime = 0;
+        int32_t playbackPosition = 0;
         std::vector<Format> videoTrack;
         std::vector<Format> audioTrack;
         int32_t videoWidth = 0;

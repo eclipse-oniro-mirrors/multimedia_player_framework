@@ -89,6 +89,7 @@ public:
     int32_t SetVolume(float leftVolume, float rightVolume) override;
     int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override;
     int32_t GetCurrentTime(int32_t &currentTime) override;
+    int32_t GetPlaybackPosition(int32_t &playbackPosition) override;
     int32_t GetVideoWidth() override;
     int32_t GetVideoHeight() override;
     int32_t GetVideoTrackInfo(std::vector<Format> &videoTrack) override;
@@ -141,6 +142,7 @@ public:
     int32_t SetMaxAmplitudeCbStatus(bool status) override;
     int32_t SetDeviceChangeCbStatus(bool status) override;
     bool IsSeekContinuousSupported() override;
+    int32_t SetSeiMessageCbStatus(bool status, const std::vector<int32_t> &payloadTypes) override;
 
 protected:
     class BaseState;
@@ -259,6 +261,8 @@ private:
     std::atomic<int64_t> seekContinousBatchNo_ {-1};
     bool deviceChangeCallbackflag_ = false;
     bool maxAmplitudeCbStatus_ = false;
+    bool seiMessageCbStatus_ = false;
+    std::vector<int32_t> payloadTypes_ {};
     bool isStreamUsagePauseRequired_ = true;
     std::mutex surfaceMutex_;
 };
