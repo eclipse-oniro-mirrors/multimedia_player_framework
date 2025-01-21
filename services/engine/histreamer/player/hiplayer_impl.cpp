@@ -2904,7 +2904,11 @@ Status HiPlayerImpl::LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFi
     }
     completeState_.emplace_back(std::make_pair("VideoSink", false));
     initialAVStates_.emplace_back(std::make_pair(EventType::EVENT_VIDEO_RENDERING_START, false));
+#ifdef SUPPORT_START_STOP_ON_DEMAND
+    return pipeline_->LinkFilters(preFilter, {videoDecoder_}, type, true);
+#else
     return pipeline_->LinkFilters(preFilter, {videoDecoder_}, type);
+#endif
 }
 #endif
 
