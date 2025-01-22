@@ -1704,6 +1704,8 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
     density_ = display->GetVirtualPixelRatio();
 
     appName_ = GetClientBundleName(appInfo_.appUid);
+    callingLabel_ = GetBundleResourceLabel(appName_);
+    MEDIA_LOGD("StartScreenCaptureInner callingLabel: %{public}s", callingLabel_.c_str());
 
     isPrivacyAuthorityEnabled_ = isPrivacyAuthorityEnabled;
     captureState_ = AVScreenCaptureState::POPUP_WINDOW;
@@ -1802,9 +1804,6 @@ void ScreenCaptureServer::SendConfigToUIParams(AAFwk::Want& want)
 
 int32_t ScreenCaptureServer::StartPrivacyWindow()
 {
-    auto bundleName = GetClientBundleName(appInfo_.appUid);
-    callingLabel_ = GetBundleResourceLabel(bundleName);
-
     std::string comStr = "{\"ability.want.params.uiExtensionType\":\"sys/commonUI\",\"sessionId\":\"";
     comStr += std::to_string(sessionId_);
     comStr += "\",\"callerUid\":\"";
