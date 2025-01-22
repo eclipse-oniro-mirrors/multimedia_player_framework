@@ -405,6 +405,11 @@ int32_t PlayerServerMem::Seek(int32_t mSeconds, PlayerSeekMode mode)
 int32_t PlayerServerMem::GetCurrentTime(int32_t &currentTime)
 {
     std::unique_lock<std::mutex> lock(mutex_);
+    if (isLocalResource_ && isReleaseMemByManage_) {
+        MEDIA_LOGI("User call GetCurrentTime:%{public}d", recoverConfig_.currentTime);
+        currentTime = recoverConfig_.currentTime;
+        return MSERR_OK;
+    }
     return PlayerServer::GetCurrentTime(currentTime);
 }
 
