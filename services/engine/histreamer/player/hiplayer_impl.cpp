@@ -21,6 +21,7 @@
 #include <shared_mutex>
 
 #include "audio_info.h"
+#include "audio_device_descriptor.h"
 #include "common/log.h"
 #include "common/media_source.h"
 #include "directory_ex.h"
@@ -876,7 +877,7 @@ int32_t HiPlayerImpl::Stop()
 {
     MediaTrace trace("HiPlayerImpl::Stop");
     MEDIA_LOG_I("Stop entered.");
-    
+
     // triger drm waiting condition
     if (isDrmProtected_) {
         std::unique_lock<std::mutex> drmLock(drmMutex_);
@@ -1131,7 +1132,7 @@ void HiPlayerImpl::NotifySeek(Status rtv, bool flag, int64_t seekPos)
         NotifySeekDone(seekPos);
     }
 }
- 
+
 int32_t HiPlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
 {
     MediaTrace trace("HiPlayerImpl::Seek.");
@@ -1697,7 +1698,7 @@ int32_t HiPlayerImpl::GetCurrentTrack(int32_t trackType, int32_t &index)
     } else {
         (void)index;
     }
- 
+
     return MSERR_OK;
 }
 
@@ -1764,7 +1765,7 @@ int32_t HiPlayerImpl::SelectTrack(int32_t trackId, PlayerSwitchMode mode)
     }
     return InnerSelectTrack(mime, trackId, mode);
 }
- 
+
 int32_t HiPlayerImpl::DeselectTrack(int32_t trackId)
 {
     MEDIA_LOG_I("DeselectTrack trackId is " PUBLIC_LOG_D32, trackId);
@@ -2524,7 +2525,7 @@ void HiPlayerImpl::NotifySeekDone(int32_t seekPos)
             NotifyBufferingEnd(NOTIFY_BUFFERING_END_PARAM);
         }
     }
-    
+
     MEDIA_LOG_D_SHORT("NotifySeekDone seekPos: %{public}d", seekPos);
     callbackLooper_.OnInfo(INFO_TYPE_POSITION_UPDATE, seekPos, format);
     callbackLooper_.OnInfo(INFO_TYPE_SEEKDONE, seekPos, format);
@@ -2569,7 +2570,7 @@ void HiPlayerImpl::NotifyAudioInterrupt(const Event& event)
 void HiPlayerImpl::NotifyAudioDeviceChange(const Event& event)
 {
     MEDIA_LOG_I("NotifyAudioDeviceChange");
-    auto [deviceInfo, reason] = AnyCast<std::pair<AudioStandard::DeviceInfo,
+    auto [deviceInfo, reason] = AnyCast<std::pair<AudioStandard::AudioDeviceDescriptor,
         AudioStandard::AudioStreamDeviceChangeReason>>(event.param);
     Format format;
     Parcel parcel;
@@ -2624,11 +2625,11 @@ void HiPlayerImpl::NotifyUpdateTrackInfo()
     GetVideoTrackInfo(trackInfo);
     GetAudioTrackInfo(trackInfo);
     GetSubtitleTrackInfo(trackInfo);
- 
+
     Format body;
     body.PutFormatVector(std::string(PlayerKeys::PLAYER_TRACK_INFO), trackInfo);
     MEDIA_LOG_I("NotifyUpdateTrackInfo");
- 
+
     callbackLooper_.OnInfo(INFO_TYPE_TRACK_INFO_UPDATE, 0, body);
 }
 
@@ -2661,7 +2662,7 @@ void HiPlayerImpl::HandleAudioTrackChangeEvent(const Event& event)
         audioTrackInfo.PutIntValue("track_is_select", 1);
         callbackLooper_.OnInfo(INFO_TYPE_TRACKCHANGE, 0, audioTrackInfo);
         currentAudioTrackId_ = trackId;
- 
+
         NotifyUpdateTrackInfo();
     }
     return;
