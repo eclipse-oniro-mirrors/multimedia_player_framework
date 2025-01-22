@@ -137,6 +137,7 @@
           "base_group": [],
           "fwk_group": [
             "//foundation/multimedia/player_framework/interfaces/kits/js:napi_packages",
+            "//foundation/multimedia/player_framework/frameworks/cj/audio_haptic:cj_audiohaptic_ffi",
             "//foundation/multimedia/player_framework/interfaces/kits/c:capi_packages",
             "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client"
           ],
