@@ -17,6 +17,9 @@
 TRAP
 
 @allowList
+timer_create;all
+timer_settime;all
+timer_delete;all
 getcwd;all
 eventfd2;all
 epoll_create1;all
