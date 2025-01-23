@@ -28,6 +28,7 @@
 namespace OHOS {
 namespace Media {
 const std::string NO_SYSTEM_SOUND = "no_system_sound";
+const std::string NO_RING_SOUND = "no_ring_sound";
 
 enum RingtoneType {
     RINGTONE_TYPE_SIM_CARD_0 = 0,
