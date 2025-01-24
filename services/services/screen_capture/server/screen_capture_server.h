@@ -25,7 +25,7 @@ class ScreenCaptureServer : public std::enable_shared_from_this<ScreenCaptureSer
         public IScreenCaptureService, public NoCopyable {
 public:
     static std::map<int32_t, std::weak_ptr<ScreenCaptureServer>> serverMap_;
-    static std::map<int32_t, int32_t> saAppInfoMap_;
+    static std::map<int32_t, std::pair<int32_t, int32_t>> saUidAppUidMap_;
     static const int32_t maxSessionId_;
     static const int32_t maxAppLimit_;
     static UniqueIDGenerator gIdGenerator_;
@@ -56,6 +56,7 @@ public:
     static std::list<int32_t> GetAllStartedSessionIdList();
     static void AddSaAppInfoMap(int32_t saUid, int32_t curAppUid);
     static void RemoveSaAppInfoMap(int32_t saUid);
+    static bool CheckSaUid(int32_t saUid, int32_t appUid);
     static bool IsSaUidValid(int32_t saUid, int32_t appUid);
     ScreenCaptureServer();
     ~ScreenCaptureServer();

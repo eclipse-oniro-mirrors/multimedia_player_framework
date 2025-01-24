@@ -82,8 +82,8 @@ static const int32_t MOUSE_DEVICE = 5;
 static const auto NOTIFICATION_SUBSCRIBER = NotificationSubscriber();
 static constexpr int32_t AUDIO_CHANGE_TIME = 200000; // 200 ms
 
-std::map<int32_t, std::weak_ptr<ScreenCaptureServer>> ScreenCaptureServer::serverMap_;
-std::map<int32_t, int32_t> ScreenCaptureServer::saAppInfoMap_;
+std::map<int32_t, std::weak_ptr<ScreenCaptureServer>> ScreenCaptureServer::serverMap_{};
+std::map<int32_t, std::pair<int32_t, int32_t>> ScreenCaptureServer::saUidAppUidMap_{};
 const int32_t ScreenCaptureServer::maxSessionId_ = 8;
 const int32_t ScreenCaptureServer::maxAppLimit_ = 4;
 UniqueIDGenerator ScreenCaptureServer::gIdGenerator_(ScreenCaptureServer::maxSessionId_);
@@ -373,9 +373,9 @@ bool ScreenCaptureServer::IsSAServiceCalling()
 {
     MEDIA_LOGI("ScreenCaptureServer::IsSAServiceCalling START.");
     const auto tokenId = IPCSkeleton::GetCallingTokenID();
-    const auto flag = Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(tokenId);
-    if (flag == Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE ||
-        flag == Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL) {
+    const auto tokenTypeFlag = Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(tokenId);
+    if (tokenTypeFlag == Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE ||
+        tokenTypeFlag == Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL) {
         MEDIA_LOGI("ScreenCaptureServer::IsSAServiceCalling true.");
         return true;
     }
@@ -394,29 +394,48 @@ std::shared_ptr<IScreenCaptureService> ScreenCaptureServer::Create()
 void ScreenCaptureServer::AddSaAppInfoMap(int32_t saUid, int32_t curAppUid)
 {
     std::unique_lock<std::shared_mutex> lock(ScreenCaptureServer::mutexSaAppInfoMapGlobal_);
-    ScreenCaptureServer::saAppInfoMap_.insert(std::make_pair(saUid, curAppUid));
-    MEDIA_LOGI("AddSaAppInfoMap end, saAppInfoMap_.size: %{public}d",
-        static_cast<uint32_t>(ScreenCaptureServer::saAppInfoMap_.size()));
+    if (ScreenCaptureServer::saUidAppUidMap_.find(saUid) == ScreenCaptureServer::saUidAppUidMap_.end()) {
+        ScreenCaptureServer::saUidAppUidMap_.insert({saUid, std::make_pair(curAppUid, 1)});
+        MEDIA_LOGI("AddSaAppInfoMap insert SUCCESS! mapSize: %{public}d",
+            static_cast<uint32_t>(ScreenCaptureServer::saUidAppUidMap_.size()));
+    } else {
+        ScreenCaptureServer::saUidAppUidMap_[saUid].second++;
+    }
 }
 
 void ScreenCaptureServer::RemoveSaAppInfoMap(int32_t saUid)
 {
+    CHECK_AND_RETURN(saUid != -1);
+    MEDIA_LOGI("RemoveSaAppInfoMap saUid: %{public}d is valid.", saUid);
     std::unique_lock<std::shared_mutex> lock(ScreenCaptureServer::mutexSaAppInfoMapGlobal_);
-    ScreenCaptureServer::saAppInfoMap_.erase(saUid);
-    MEDIA_LOGI("RemoveSaAppInfoMap end, saAppInfoMap_.size: %{public}d",
-        static_cast<uint32_t>(ScreenCaptureServer::saAppInfoMap_.size()));
+    ScreenCaptureServer::saUidAppUidMap_[saUid].second--;
+    if (ScreenCaptureServer::saUidAppUidMap_[saUid].second == 0) {
+        ScreenCaptureServer::saUidAppUidMap_.erase(saUid);
+    }
+    MEDIA_LOGI("RemoveSaAppInfoMap END! mapSize: %{public}d",
+        static_cast<uint32_t>(ScreenCaptureServer::saUidAppUidMap_.size()));
+}
+
+bool ScreenCaptureServer::CheckSaUid(int32_t saUid, int32_t appUid)
+{
+    std::unique_lock<std::shared_mutex> lock(ScreenCaptureServer::mutexSaAppInfoMapGlobal_);
+    if (ScreenCaptureServer::saUidAppUidMap_.find(saUid) != ScreenCaptureServer::saUidAppUidMap_.end()) {
+        if (ScreenCaptureServer::saUidAppUidMap_[saUid].first != appUid ||
+            (ScreenCaptureServer::saUidAppUidMap_[saUid].first == appUid &&
+            ScreenCaptureServer::saUidAppUidMap_[saUid].second >= ScreenCaptureServer::maxSessionPerUid_)) {
+                MEDIA_LOGI("saUid Invalid! saUid: %{public}d linked with appUid: %{public}d, curAppUid: %{public}d",
+                    saUid, ScreenCaptureServer::saUidAppUidMap_[saUid].first, appUid);
+                return false;
+            }
+    }
+    return true;
 }
 
 bool ScreenCaptureServer::IsSaUidValid(int32_t saUid, int32_t appUid)
 {
-    std::unique_lock<std::shared_mutex> lock(ScreenCaptureServer::mutexSaAppInfoMapGlobal_);
+    CHECK_AND_RETURN_RET_LOG(saUid >= 0 && appUid >= 0, false, "saUid or appUid is invalid.");
     CHECK_AND_RETURN_RET_LOG(IsSAServiceCalling(), false, "fake SAServiceCalling!");
-    auto iter = ScreenCaptureServer::saAppInfoMap_.find(saUid);
-    if (iter != ScreenCaptureServer::saAppInfoMap_.end() && ScreenCaptureServer::saAppInfoMap_[saUid] != appUid) {
-        MEDIA_LOGI("saUid Invalid! saUid: %{public}d, appUid: %{public}d exists.", saUid, appUid);
-        return false;
-    }
-    return true;
+    return CheckSaUid(saUid, appUid);
 }
 
 int32_t ScreenCaptureServer::SetAndCheckAppInfo(OHOS::AudioStandard::AppInfo &appInfo)
@@ -424,8 +443,12 @@ int32_t ScreenCaptureServer::SetAndCheckAppInfo(OHOS::AudioStandard::AppInfo &ap
     std::lock_guard<std::mutex> lock(mutex_);
     MEDIA_LOGI("ScreenCaptureServer::SetAndCheckAppInfo(appInfo)");
     const int32_t saUid = IPCSkeleton::GetCallingUid();
+    if (saUid >= 0) {
+        SetSCServerSaUid(saUid);
+    }
     if (!IsSaUidValid(saUid, appInfo.appUid)) {
         MEDIA_LOGI("SetAndCheckAppInfo failed, saUid-appUid exists.");
+        SetSCServerSaUid(-1);
         RemoveScreenCaptureServerMap(sessionId_);
         return MSERR_INVALID_OPERATION;
     }
@@ -455,26 +478,28 @@ int32_t ScreenCaptureServer::SetAndCheckSaLimit(OHOS::AudioStandard::AppInfo &ap
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " SetAndCheckSaLimit START.", FAKE_POINTER(this));
     int32_t ret = SetAndCheckAppInfo(appInfo);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetAndCheckSaLimit failed, saUid exists.");
-    bool flag = CanScreenCaptureInstanceBeCreate(appInfo.appUid);
-    if (!flag) {
+    bool createFlag = CanScreenCaptureInstanceBeCreate(appInfo.appUid);
+    if (!createFlag) {
         MEDIA_LOGI("SetAndCheckSaLimit failed, cannot create ScreenCapture Instance.");
-        RemoveSaAppInfoMap(IPCSkeleton::GetCallingUid());
+        RemoveSaAppInfoMap(GetSCServerSaUid());
+        SetSCServerSaUid(-1);
         RemoveScreenCaptureServerMap(sessionId_);
+        return MSERR_INVALID_OPERATION;
     }
-    CHECK_AND_RETURN_RET_LOG(flag, MSERR_INVALID_OPERATION, "SetAndCheckSaLimit failed");
-    SetSCServerSaUid(IPCSkeleton::GetCallingUid());
+    MEDIA_LOGI("SetAndCheckSaLimit SUCCESS! appUid: %{public}d, saUid: %{public}d",
+        appInfo.appUid, GetSCServerSaUid());
     return MSERR_OK;
 }
 
 int32_t ScreenCaptureServer::SetAndCheckLimit()
 {
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " SetAndCheckLimit START.", FAKE_POINTER(this));
-    bool flag = CanScreenCaptureInstanceBeCreate(IPCSkeleton::GetCallingUid());
-    if (!flag) {
+    bool createFlag = CanScreenCaptureInstanceBeCreate(IPCSkeleton::GetCallingUid());
+    if (!createFlag) {
         MEDIA_LOGI("SetAndCheckLimit failed, cannot create ScreenCapture Instance.");
         RemoveScreenCaptureServerMap(sessionId_);
+        return MSERR_INVALID_OPERATION;
     }
-    CHECK_AND_RETURN_RET_LOG(flag, MSERR_INVALID_OPERATION, "SetAndCheckLimit failed");
     return MSERR_OK;
 }
 
@@ -3265,10 +3290,8 @@ void ScreenCaptureServer::ReleaseInner()
             FAKE_POINTER(this), sessionId_);
     }
     MEDIA_LOGI("ScreenCaptureServer::ReleaseInner before RemoveScreenCaptureServerMap");
-    if (saUid_ != -1) {
-        MEDIA_LOGI("ReleaseInner saUid: %{public}d is valid, RemoveSaAppInfoMap(saUid)", saUid_);
-        RemoveSaAppInfoMap(saUid_);
-    }
+
+    RemoveSaAppInfoMap(saUid_);
     RemoveScreenCaptureServerMap(sessionId_);
     sessionId_ = SESSION_ID_INVALID;
     MEDIA_LOGD("ReleaseInner removeMap success, mapSize: %{public}d",

@@ -556,33 +556,33 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ProcessSCServerSaUid_001, TestSize.Lev
 }
 
 /**
-* @tc.name: ProcessSaAppInfoMap_001
+* @tc.name: ProcesssaUidAppUidMap_001
 * @tc.desc: check AddSaAppInfoMap
 * @tc.type: FUNC
 */
-HWTEST_F(ScreenCaptureServerFunctionTest, ProcessSaAppInfoMap_001, TestSize.Level2)
+HWTEST_F(ScreenCaptureServerFunctionTest, ProcesssaUidAppUidMap_001, TestSize.Level2)
 {
-    ScreenCaptureServer::saAppInfoMap_.clear();
+    ScreenCaptureServer::saUidAppUidMap_.clear();
     int32_t appUid = ROOT_UID;
     int32_t saUid = appUid + 1;
     ScreenCaptureServer::AddSaAppInfoMap(saUid, appUid);
-    ASSERT_EQ(ScreenCaptureServer::saAppInfoMap_.size(), 1);
+    ASSERT_EQ(ScreenCaptureServer::saUidAppUidMap_.size(), 1);
 }
 
 /**
-* @tc.name: ProcessSaAppInfoMap_002
+* @tc.name: ProcesssaUidAppUidMap_002
 * @tc.desc: check RemoveSaAppInfoMap
 * @tc.type: FUNC
 */
-HWTEST_F(ScreenCaptureServerFunctionTest, ProcessSaAppInfoMap_002, TestSize.Level2)
+HWTEST_F(ScreenCaptureServerFunctionTest, ProcesssaUidAppUidMap_002, TestSize.Level2)
 {
-    ScreenCaptureServer::saAppInfoMap_.clear();
+    ScreenCaptureServer::saUidAppUidMap_.clear();
     int32_t appUid = ROOT_UID;
     int32_t saUid = appUid + 1;
     ScreenCaptureServer::AddSaAppInfoMap(saUid, appUid);
-    ASSERT_EQ(ScreenCaptureServer::saAppInfoMap_.size(), 1);
+    ASSERT_EQ(ScreenCaptureServer::saUidAppUidMap_.size(), 1);
     ScreenCaptureServer::RemoveSaAppInfoMap(saUid);
-    ASSERT_EQ(ScreenCaptureServer::saAppInfoMap_.size(), 0);
+    ASSERT_EQ(ScreenCaptureServer::saUidAppUidMap_.size(), 0);
 }
 
 /**
@@ -603,7 +603,9 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckIsSAServiceCalling_001, TestSize.
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckIsSaUidValid_001, TestSize.Level2)
 {
     int32_t appUid = ROOT_UID;
-    int32_t saUid = appUid + 1;
+    int32_t saUid = -1;
+    ASSERT_EQ(ScreenCaptureServer::IsSaUidValid(saUid, appUid), false);
+    saUid = appUid + 1;
     ASSERT_EQ(ScreenCaptureServer::IsSaUidValid(saUid, appUid), false);
 }
 
@@ -672,6 +674,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetAndCheckLimit_002, TestSize.Level2)
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckReleaseInner_001, TestSize.Level2)
 {
     ScreenCaptureServer::serverMap_.clear();
+    ScreenCaptureServer::saUidAppUidMap_.clear();
     UniqueIDGenerator gIdGenerator(20);
     int32_t sessionId = gIdGenerator.GetNewID();
     std::shared_ptr<ScreenCaptureServer> server = std::make_shared<ScreenCaptureServer>();
@@ -683,11 +686,11 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckReleaseInner_001, TestSize.Level2
     int32_t saUid = 1;
     server->SetSCServerSaUid(saUid);
     server->AddSaAppInfoMap(saUid, appUid);
-    int32_t appInfoMapSizeBefore = ScreenCaptureServer::saAppInfoMap_.size();
+    int32_t appInfoMapSizeBefore = ScreenCaptureServer::saUidAppUidMap_.size();
     int32_t serverMapSizeBefore = ScreenCaptureServer::serverMap_.size();
     server->ReleaseInner();
 
-    ASSERT_EQ(ScreenCaptureServer::saAppInfoMap_.size(), appInfoMapSizeBefore - 1);
+    ASSERT_EQ(ScreenCaptureServer::saUidAppUidMap_.size(), appInfoMapSizeBefore - 1);
     ASSERT_EQ(ScreenCaptureServer::serverMap_.size(), serverMapSizeBefore - 1);
 }
 } // Media
