@@ -2941,14 +2941,18 @@ napi_value AVPlayerNapi::JsClearOnCallback(napi_env env, napi_callback_info info
         return result;
     }
     
-    std::vector<int32_t> payloadTypes;
-    if (CommonNapi::GetIntArrayArgument(env, args[1], payloadTypes)) {
-        jsPlayer->SeiMessageCallbackOff(jsPlayer, callbackName, payloadTypes);
-    } else {
-        MEDIA_LOGD("No payloadTypes provided or invalid argument.");
+    napi_valuetype valueType1 = napi_undefined;
+    if (napi_typeof(env, args[1], &valueType1) != napi_ok || valueType1 != napi_object) {
         jsPlayer->SeiMessageCallbackOff(jsPlayer, callbackName, {});
         jsPlayer->ClearCallbackReference(callbackName);
         MEDIA_LOGI("0x%{public}06" PRIXPTR " JsClearOnCallback success", FAKE_POINTER(jsPlayer));
+        return result;
+    }
+    std::vector<int32_t> payloadTypes = {};
+    if (CommonNapi::GetIntArrayArgument(env, args[1], payloadTypes)) {
+        jsPlayer->SeiMessageCallbackOff(jsPlayer, callbackName, payloadTypes);
+    } else {
+        MEDIA_LOGD("The array is empty, no processing is performed.");
     }
     
     return result;
