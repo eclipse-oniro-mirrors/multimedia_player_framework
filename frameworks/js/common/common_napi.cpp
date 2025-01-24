@@ -296,6 +296,10 @@ bool CommonNapi::GetPlayStrategy(napi_env env, napi_value value, AVPlayStrategyT
     }
     playStrategy.preferredAudioLanguage = GetPropertyString(env, value, "preferredAudioLanguage");
     playStrategy.preferredSubtitleLanguage = GetPropertyString(env, value, "preferredSubtitleLanguage");
+    if (!GetPropertyDouble(env, value, "preferredBufferDurationForPlaying",
+        playStrategy.preferredBufferDurationForPlaying)) {
+        playStrategy.preferredBufferDurationForPlaying = 0; // use default value
+    }
     return true;
 }
 

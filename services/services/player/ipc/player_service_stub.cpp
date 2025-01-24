@@ -931,6 +931,7 @@ int32_t PlayerServiceStub::SetMediaSource(MessageParcel &data, MessageParcel &re
     strategy.preferredWidth = data.ReadUint32();
     strategy.preferredHeight = data.ReadUint32();
     strategy.preferredBufferDuration = data.ReadUint32();
+    strategy.preferredBufferDurationForPlaying = data.ReadDouble();
     strategy.preferredHdr = data.ReadBool();
     strategy.showFirstFrameOnPrepare = data.ReadBool();
     strategy.mutedMediaType = static_cast<OHOS::Media::MediaType>(data.ReadInt32());
@@ -1103,6 +1104,7 @@ int32_t PlayerServiceStub::SetPlaybackStrategy(MessageParcel &data, MessageParce
         .preferredWidth = data.ReadUint32(),
         .preferredHeight = data.ReadUint32(),
         .preferredBufferDuration = data.ReadUint32(),
+        .preferredBufferDurationForPlaying = data.ReadDouble(),
         .preferredHdr = data.ReadBool(),
         .showFirstFrameOnPrepare = data.ReadBool(),
         .mutedMediaType = static_cast<OHOS::Media::MediaType>(data.ReadInt32()),

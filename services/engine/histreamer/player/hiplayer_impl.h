@@ -338,6 +338,7 @@ private:
     uint32_t preferedWidth_ = 0;
     uint32_t preferedHeight_ = 0;
     uint32_t bufferDuration_ = 0;
+    double bufferDurationForPlaying_ = 0;
     bool preferHDR_ = false;
     OHOS::Media::MediaType mutedMediaType_ = OHOS::Media::MediaType::MEDIA_TYPE_MAX_COUNT;
     std::string audioLanguage_;

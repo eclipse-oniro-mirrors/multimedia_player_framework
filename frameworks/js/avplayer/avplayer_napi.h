@@ -351,6 +351,9 @@ private:
         AVPlayerNapi *jsPlayer, std::string &callbackName, const std::vector<int32_t> &payloadTypes);
     int32_t GetJsApiVersion() override;
     void GetAVPlayStrategyFromStrategyTmp(AVPlayStrategy &strategy, const AVPlayStrategyTmp &strategyTmp);
+    bool IsPalyingDurationValid(const AVPlayStrategyTmp &strategyTmp);
+    void EnqueueMediaSourceTask(AVPlayerNapi *jsPlayer, const std::shared_ptr<AVMediaSource> &mediaSource,
+                                const struct AVPlayStrategy &strategy);
 
     std::condition_variable stopTaskQueCond_;
     bool taskQueStoped_ = false;
