@@ -243,7 +243,7 @@ OH_AVErrCode SetProfile(OH_AVRecorder *recorder, OH_AVRecorder_Config *config)
 
     if (recorderObj->withAudio) {
         ret = recorderObj->recorder_->SetAudioEncodingBitRate(recorderObj->audioSourceId_,
-                                                              config->profile.audioBitrate);
+            config->profile.audioBitrate);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "Set audio encoding bitrate failed!");
 
         ret = recorderObj->recorder_->SetAudioChannels(recorderObj->audioSourceId_, config->profile.audioChannels);
@@ -259,7 +259,7 @@ OH_AVErrCode SetProfile(OH_AVRecorder *recorder, OH_AVRecorder_Config *config)
 
     if (recorderObj->withVideo) {
         ret = recorderObj->recorder_->SetVideoEncodingBitRate(recorderObj->videoSourceId_,
-                                                              config->profile.videoBitrate);
+            config->profile.videoBitrate);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "Set video encoding bitrate failed!");
 
         VideoCodecFormat videoCodec = static_cast<VideoCodecFormat>(config->profile.videoCodec);
@@ -267,7 +267,7 @@ OH_AVErrCode SetProfile(OH_AVRecorder *recorder, OH_AVRecorder_Config *config)
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "Set video encoder failed!");
 
         ret = recorderObj->recorder_->SetVideoSize(recorderObj->videoSourceId_, config->profile.videoFrameWidth,
-                                                   config->profile.videoFrameHeight);
+            config->profile.videoFrameHeight);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "Set video size failed!");
 
         ret = recorderObj->recorder_->SetVideoFrameRate(recorderObj->videoSourceId_, config->profile.videoFrameRate);
@@ -283,7 +283,7 @@ OH_AVErrCode SetProfile(OH_AVRecorder *recorder, OH_AVRecorder_Config *config)
             config->profile.enableTemporalScale = false;
         }
         ret = recorderObj->recorder_->SetVideoEnableTemporalScale(recorderObj->videoSourceId_,
-                                                                  config->profile.enableTemporalScale);
+            config->profile.enableTemporalScale);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "SetVideoEnableTemporalScale failed!");
     }
     return AV_ERR_OK;
@@ -307,21 +307,82 @@ OH_AVErrCode ConfigureUrl(OH_AVRecorder *recorder, OH_AVRecorder_Config *config)
     } else {
         ret = MSERR_PARAMETER_VERIFICATION_FAILED;
         CHECK_AND_RETURN_RET_LOG(config->url != nullptr && config->url[0] != '\0', AV_ERR_INVALID_VAL,
-                                 "config->url is null or empty!");
+            "config->url is null or empty!");
         std::string url = std::string(config->url);
         const std::string fdHead = "fd://";
         CHECK_AND_RETURN_RET_LOG(url.find(fdHead) != std::string::npos, AV_ERR_INVALID_VAL,
-                                 "url wrong: missing 'fd://' prefix!");
+            "url wrong: missing 'fd://' prefix!");
 
-        int32_t fd = -1;  // -1 invalid value
+        int32_t fd = -1; // -1 invalid value
         std::string inputFd = url.substr(fdHead.size());
         CHECK_AND_RETURN_RET_LOG(StrToInt(inputFd, fd) == true && fd >= 0, AV_ERR_INVALID_VAL,
-                                 "url wrong: invalid file descriptor in url!");
+            "url wrong: invalid file descriptor in url!");
 
         ret = recorderObj->recorder_->SetOutputFile(fd);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "SetOutputFile failed!");
     }
 
+    return AV_ERR_OK;
+}
+
+OH_AVErrCode Configure(OH_AVRecorder *recorder, OH_AVRecorder_Config *config)
+{
+    CHECK_AND_RETURN_RET_LOG(recorder != nullptr, AV_ERR_INVALID_VAL, "input recorder is nullptr!");
+    struct RecorderObject *recorderObj = reinterpret_cast<RecorderObject *>(recorder);
+    CHECK_AND_RETURN_RET_LOG(recorderObj != nullptr, AV_ERR_INVALID_VAL, "recorderObj is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderObj->recorder_ != nullptr, AV_ERR_INVALID_VAL, "recorder_ is null");
+
+    if (recorderObj->hasConfigured_) {
+        MEDIA_LOGE("OH_AVRecorder_Config has been configured and will not be configured again.");
+        return AV_ERR_OK;
+    }
+
+    if (recorderObj->withAudio) {
+        AudioSourceType audioSourceType = static_cast<AudioSourceType>(config->audioSourceType);
+        int32_t ret = recorderObj->recorder_->SetAudioSource(audioSourceType, recorderObj->audioSourceId_);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL,
+            "The audio parameter is not supported. Please check the type and range.");
+    }
+
+    if (recorderObj->withVideo) {
+        VideoSourceType videoSourceType = static_cast<VideoSourceType>(config->videoSourceType);
+        int32_t ret = recorderObj->recorder_->SetVideoSource(videoSourceType, recorderObj->videoSourceId_);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL,
+            "The video parameter is not supported. Please check the type and range.");
+    }
+
+    OH_AVErrCode err = SetProfile(recorder, config);
+    CHECK_AND_RETURN_RET_LOG(err == AV_ERR_OK, AV_ERR_INVALID_VAL, "SetProfile failed!");
+
+    if (recorderObj->withVideo) {
+        int32_t videoOrientation = GetVideoOrientation(config->metadata.videoOrientation);
+        if (videoOrientation == -1) { // -1 invalid value
+            return AV_ERR_INVALID_VAL;
+        }
+        recorderObj->recorder_->SetOrientationHint(videoOrientation);
+    }
+
+    if (config->maxDuration < 1) {
+        config->maxDuration = INT32_MAX;
+        MEDIA_LOGI("maxDuration = %{public}d is invalid, set to default", config->maxDuration);
+    }
+    recorderObj->recorder_->SetMaxDuration(config->maxDuration);
+
+    CHECK_AND_RETURN_RET_LOG(IsLocationValid(config->metadata.location), AV_ERR_INVALID_VAL,
+        "Invalid latitude or longitude! Latitude: %{public}.6f, Longitude: %{public}.6f",
+        config->metadata.location.latitude, config->metadata.location.longitude);
+    recorderObj->recorder_->SetLocation(config->metadata.location.latitude, config->metadata.location.longitude);
+
+    if (config->metadata.genre != nullptr && config->metadata.genre[0] != '\0') {
+        std::string genre = config->metadata.genre;
+        int32_t ret = recorderObj->recorder_->SetGenre(genre);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "SetGenre failed!");
+    }
+
+    err = ConfigureUrl(recorder, config);
+    CHECK_AND_RETURN_RET_LOG(err == AV_ERR_OK, AV_ERR_INVALID_VAL, "ConfigureUrl failed!");
+
+    recorderObj->hasConfigured_ = true;
     return AV_ERR_OK;
 }
 
@@ -335,7 +396,7 @@ int32_t GetVideoOrientation(const char *videoOrientation)
     };
 
     if (videoOrientation == nullptr || videoOrientation[0] == '\0') {
-        return 0;  // 0 default value
+        return 0; // 0 default value
     }
 
     auto it = validOrientations.find(videoOrientation);
@@ -343,7 +404,7 @@ int32_t GetVideoOrientation(const char *videoOrientation)
         return it->second;
     } else {
         MEDIA_LOGE("Invalid videoOrientation value: %{public}s. Must be 0, 90, 180, or 270.", videoOrientation);
-        return -1;  // -1 invalid value
+        return -1; // -1 invalid value
     }
 }
 
@@ -425,67 +486,6 @@ OH_AVRecorder *OH_AVRecorder_Create(void)
     CHECK_AND_RETURN_RET_LOG(recorderObj != nullptr, nullptr, "failed to new RecorderObject");
     MEDIA_LOGI("0x%{public}06" PRIXPTR " OH_AVRecorder_Create", FAKE_POINTER(recorderObj));
     return recorderObj;
-}
-
-OH_AVErrCode Configure(OH_AVRecorder *recorder, OH_AVRecorder_Config *config)
-{
-    CHECK_AND_RETURN_RET_LOG(recorder != nullptr, AV_ERR_INVALID_VAL, "input recorder is nullptr!");
-    struct RecorderObject *recorderObj = reinterpret_cast<RecorderObject *>(recorder);
-    CHECK_AND_RETURN_RET_LOG(recorderObj != nullptr, AV_ERR_INVALID_VAL, "recorderObj is nullptr");
-    CHECK_AND_RETURN_RET_LOG(recorderObj->recorder_ != nullptr, AV_ERR_INVALID_VAL, "recorder_ is null");
-
-    if (recorderObj->hasConfigured_) {
-        MEDIA_LOGE("OH_AVRecorder_Config has been configured and will not be configured again.");
-        return AV_ERR_OK;
-    }
-
-    if (recorderObj->withAudio) {
-        AudioSourceType audioSourceType = static_cast<AudioSourceType>(config->audioSourceType);
-        int32_t ret = recorderObj->recorder_->SetAudioSource(audioSourceType, recorderObj->audioSourceId_);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL,
-            "The audio parameter is not supported. Please check the type and range.");
-    }
-
-    if (recorderObj->withVideo) {
-        VideoSourceType videoSourceType = static_cast<VideoSourceType>(config->videoSourceType);
-        int32_t ret = recorderObj->recorder_->SetVideoSource(videoSourceType, recorderObj->videoSourceId_);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL,
-            "The video parameter is not supported. Please check the type and range.");
-    }
-
-    OH_AVErrCode err = SetProfile(recorder, config);
-    CHECK_AND_RETURN_RET_LOG(err == AV_ERR_OK, AV_ERR_INVALID_VAL, "SetProfile failed!");
-
-    if (recorderObj->withVideo) {
-        int32_t videoOrientation = GetVideoOrientation(config->metadata.videoOrientation);
-        if (videoOrientation == -1) { // -1 invalid value
-            return AV_ERR_INVALID_VAL;
-        }
-        recorderObj->recorder_->SetOrientationHint(videoOrientation);
-    }
-
-    if (config->maxDuration < 1) {
-        config->maxDuration = INT32_MAX;
-        MEDIA_LOGI("maxDuration = %{public}d is invalid, set to default", config->maxDuration);
-    }
-    recorderObj->recorder_->SetMaxDuration(config->maxDuration);
-
-    CHECK_AND_RETURN_RET_LOG(IsLocationValid(config->metadata.location), AV_ERR_INVALID_VAL,
-        "Invalid latitude or longitude! Latitude: %{public}.6f, Longitude: %{public}.6f",
-        config->metadata.location.latitude, config->metadata.location.longitude);
-    recorderObj->recorder_->SetLocation(config->metadata.location.latitude, config->metadata.location.longitude);
-
-    if (config->metadata.genre != nullptr && config->metadata.genre[0] != '\0') {
-        std::string genre = config->metadata.genre;
-        int32_t ret = recorderObj->recorder_->SetGenre(genre);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "SetGenre failed!");
-    }
-
-    err = ConfigureUrl(recorder, config);
-    CHECK_AND_RETURN_RET_LOG(err == AV_ERR_OK, AV_ERR_INVALID_VAL, "ConfigureUrl failed!");
-
-    recorderObj->hasConfigured_ = true;
-    return AV_ERR_OK;
 }
 
 OH_AVErrCode OH_AVRecorder_Prepare(OH_AVRecorder *recorder, OH_AVRecorder_Config *config)
