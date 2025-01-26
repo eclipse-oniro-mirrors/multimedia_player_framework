@@ -408,9 +408,12 @@ void ScreenCaptureServer::RemoveSaAppInfoMap(int32_t saUid)
     CHECK_AND_RETURN(saUid != -1);
     MEDIA_LOGI("RemoveSaAppInfoMap saUid: %{public}d is valid.", saUid);
     std::unique_lock<std::shared_mutex> lock(ScreenCaptureServer::mutexSaAppInfoMapGlobal_);
-    ScreenCaptureServer::saUidAppUidMap_[saUid].second--;
-    if (ScreenCaptureServer::saUidAppUidMap_[saUid].second == 0) {
-        ScreenCaptureServer::saUidAppUidMap_.erase(saUid);
+    if (ScreenCaptureServer::saUidAppUidMap_.find(saUid) != ScreenCaptureServer::saUidAppUidMap_.end() &&
+        ScreenCaptureServer::saUidAppUidMap_[saUid].second > 0) {
+        ScreenCaptureServer::saUidAppUidMap_[saUid].second--;
+        if (ScreenCaptureServer::saUidAppUidMap_[saUid].second == 0) {
+            ScreenCaptureServer::saUidAppUidMap_.erase(saUid);
+        }
     }
     MEDIA_LOGI("RemoveSaAppInfoMap END! mapSize: %{public}d",
         static_cast<uint32_t>(ScreenCaptureServer::saUidAppUidMap_.size()));
