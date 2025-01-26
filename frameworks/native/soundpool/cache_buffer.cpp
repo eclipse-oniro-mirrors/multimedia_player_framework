@@ -54,16 +54,12 @@ bool CacheBuffer::IsAudioRendererCanMix(const AudioStandard::AudioRendererInfo &
     return false;
 }
 
-std::unique_ptr<AudioStandard::AudioRenderer> CacheBuffer::CreateAudioRenderer(const int32_t streamID,
-    const AudioStandard::AudioRendererInfo audioRendererInfo, const PlayParams playParams)
+void CacheBuffer::DealAudioRendererParams(AudioStandard::AudioRendererOptions &rendererOptions,
+    const AudioStandard::AudioRendererInfo &audioRendererInfo)
 {
-    MediaTrace trace("CacheBuffer::CreateAudioRenderer");
-    CHECK_AND_RETURN_RET_LOG(streamID == streamID_, nullptr,
-        "Invalid streamID, failed to create normal audioRenderer.");
     int32_t sampleRate;
     int32_t sampleFormat;
     int32_t channelCount;
-    AudioStandard::AudioRendererOptions rendererOptions = {};
     // Set to PCM encoding
     rendererOptions.streamInfo.encoding = AudioStandard::AudioEncodingType::ENCODING_PCM;
     // Get sample rate from trackFormat and set it to audiorender.
@@ -83,13 +79,25 @@ std::unique_ptr<AudioStandard::AudioRenderer> CacheBuffer::CreateAudioRenderer(c
     rendererOptions.rendererInfo.contentType = audioRendererInfo.contentType;
     rendererOptions.rendererInfo.streamUsage = audioRendererInfo.streamUsage;
     rendererOptions.privacyType = AudioStandard::PRIVACY_TYPE_PUBLIC;
+    rendererFlags_ = audioRendererInfo.rendererFlags;
+    rendererOptions.rendererInfo.rendererFlags = rendererFlags_;
+    rendererOptions.rendererInfo.playerType = AudioStandard::PlayerType::PLAYER_TYPE_SOUND_POOL;
+    rendererOptions.rendererInfo.expectedPlaybackDurationBytes = static_cast<uint64_t>(cacheDataTotalSize_);
+}
+
+std::unique_ptr<AudioStandard::AudioRenderer> CacheBuffer::CreateAudioRenderer(const int32_t streamID,
+    const AudioStandard::AudioRendererInfo audioRendererInfo, const PlayParams playParams)
+{
+    MediaTrace trace("CacheBuffer::CreateAudioRenderer");
+    CHECK_AND_RETURN_RET_LOG(streamID == streamID_, nullptr,
+        "Invalid streamID, failed to create normal audioRenderer.");
+    AudioStandard::AudioRendererOptions rendererOptions = {};
+    DealAudioRendererParams(rendererOptions, audioRendererInfo);
     std::string cacheDir = "/data/storage/el2/base/temp";
     if (playParams.cacheDir != "") {
         cacheDir = playParams.cacheDir;
     }
 
-    rendererFlags_ = audioRendererInfo.rendererFlags;
-    rendererOptions.rendererInfo.rendererFlags = rendererFlags_;
     SoundPoolXCollie soundPoolXCollie("AudioRenderer::Create time out",
         [](void *) {
             MEDIA_LOGI("AudioRenderer::Create time out");
