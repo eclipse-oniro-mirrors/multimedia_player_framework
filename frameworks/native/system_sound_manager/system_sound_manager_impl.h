@@ -142,6 +142,12 @@ private:
     void InitMap();
     std::string GetRingtoneUriByType(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
         const std::string &type);
+    std::string GetPresetRingToneUriByType(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
+        const std::string &type);
+    int32_t SetNoRingToneUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
+        RingtoneType ringtoneType);
+    int32_t RemoveSourceTypeForRingTone(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
+        RingtoneType ringtoneType, SourceType sourceType);
     int32_t UpdateRingtoneUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper, const int32_t &toneId,
         RingtoneType ringtoneType, const int32_t &num);
     std::string GetShotToneUriByType(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,

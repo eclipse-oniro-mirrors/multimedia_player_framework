@@ -16,10 +16,12 @@
 #include "ringtone_player_impl.h"
 
 #include <sys/stat.h>
+#include "config_policy_utils.h"
 
 #include "ringtone_proxy_uri.h"
 #include "directory_ex.h"
-#include "media_log.h"
+#include "system_sound_log.h"
+#include "system_sound_vibrator.h"
 #include "media_errors.h"
 
 using namespace std;
@@ -38,6 +40,7 @@ const std::string AUDIO_FORMAT_STR = ".ogg";
 const std::string HAPTIC_FORMAT_STR = ".json";
 const std::string RINGTONE_PATH = "/media/audio/";
 const std::string STANDARD_HAPTICS_PATH = "/media/haptics/standard/synchronized/";
+const std::string NON_SYNC_HAPTICS_PATH = "resource/media/haptics/standard/non-synchronized/";
 
 RingtonePlayerImpl::RingtonePlayerImpl(const shared_ptr<Context> &context,
     SystemSoundManagerImpl &sysSoundMgr, RingtoneType type)
@@ -72,6 +75,20 @@ RingtonePlayerImpl::~RingtonePlayerImpl()
         audioHapticManager_ = nullptr;
     }
     ReleaseDataShareHelper();
+}
+
+std::string RingtonePlayerImpl::GetDefaultNonSyncHapticsPath()
+{
+    char buf[MAX_PATH_LEN];
+    char *path = GetOneCfgFile(NON_SYNC_HAPTICS_PATH.c_str(), buf, MAX_PATH_LEN);
+    if (path == nullptr || *path == '\0') {
+        MEDIA_LOGE("Failed to get default non-sync haptics path");
+        return "";
+    }
+    std::string filePath = path;
+    MEDIA_LOGI("Default non-sync haptics path [%{public}s]", filePath.c_str());
+    filePath = filePath + "Classic.json";
+    return filePath;
 }
 
 bool RingtonePlayerImpl::IsFileExisting(const std::string &fileUri)
@@ -320,6 +337,17 @@ void RingtonePlayerImpl::InitPlayer(std::string &audioUri, ToneHapticsSettings &
     CHECK_AND_RETURN_LOG(player_ != nullptr, "Failed to create ringtone player instance");
     player_->SetHapticsMode(ConvertToHapticsMode(settings.mode));
     int32_t result = player_->Prepare();
+    if (audioUri == NO_RING_SOUND) {
+        if (!configuredUri_.empty() && configuredUri_ == audioUri) {
+            MEDIA_LOGI("The right ring tone uri has been registered. Return directly.");
+            ringtoneState_ = RingtoneState::STATE_PREPARED;
+        }
+        defaultNonSyncHapticUri_ = GetDefaultNonSyncHapticsPath();
+        configuredUri_ = NO_RING_SOUND;
+        ringtoneState_ = RingtoneState::STATE_NEW;
+        result = MSERR_OK;
+    }
+
     CHECK_AND_RETURN_LOG(result == MSERR_OK, "Failed to load source for audio haptic manager");
     configuredUri_ = audioUri;
     configuredHaptcisSettings_ = settings;
@@ -362,6 +390,15 @@ int32_t RingtonePlayerImpl::Start()
         return ERRCODE_IOERROR;
     }
     std::string ringtoneUri = systemSoundMgr_.GetRingtoneUri(context_, type_);
+    if (ringtoneUri == NO_RING_SOUND) {
+        AudioHapticPlayerOptions options = {true, true};
+        ToneHapticsSettings settings = GetHapticSettings(ringtoneUri, options.muteHaptics);
+        MEDIA_LOGI("settings.hapticsUri: %{public}s, ", settings.hapticsUri.c_str());
+        InitPlayer(ringtoneUri, settings, options);
+        std::string hapticUri = settings.hapticsUri;
+        return SystemSoundVibrator::StartVibratorForSystemTone(hapticUri);
+    }
+
     AudioHapticPlayerOptions options = {false, false};
     ToneHapticsSettings settings = GetHapticSettings(ringtoneUri, options.muteHaptics);
     if (ringtoneUri != configuredUri_ || settings.hapticsUri != configuredHaptcisSettings_.hapticsUri ||

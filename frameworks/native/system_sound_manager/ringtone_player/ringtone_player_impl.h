@@ -53,6 +53,7 @@ private:
         const std::string& hapticsPath);
     std::string GetNewHapticUriForAudioUri(const std::string &audioUri);
     std::string GetHapticUriForAudioUri(const std::string &audioUri);
+    std::string GetDefaultNonSyncHapticsPath();
     bool IsFileExisting(const std::string &fileUri);
     std::string ChangeUri(const std::string &audioUri);
     ToneHapticsType ConvertToToneHapticsType(RingtoneType type);
@@ -63,6 +64,7 @@ private:
     void ReleaseDataShareHelper();
     int32_t RegisterSource(const std::string &audioUri, const std::string &hapticUri);
 
+    std::string defaultNonSyncHapticUri_ = "";
     float volume_ = 1.0f;
     bool loop_ = false;
     std::string configuredUri_ = "";
