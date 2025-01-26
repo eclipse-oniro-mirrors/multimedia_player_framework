@@ -264,7 +264,7 @@ private:
     int32_t GetSarVideoHeight(std::shared_ptr<Meta> trackInfo);
     int32_t HandleEosPlay() override;
     bool IsLiveStream();
-    int32_t SetSeiMessageListener();
+    Status SetSeiMessageListener();
 
     bool isNetWorkPlay_ = false;
     bool isDump_ = false;

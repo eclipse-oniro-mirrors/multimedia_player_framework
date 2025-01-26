@@ -3171,11 +3171,11 @@ int32_t HiPlayerImpl::SetSeiMessageCbStatus(bool status, const std::vector<int32
     seiMessageCbStatus_ = status;
     payloadTypes_ = payloadTypes;
     MEDIA_LOG_I("SetSeiMessageCbStatus seiMessageCbStatus_  = " PUBLIC_LOG_D32, seiMessageCbStatus_);
-    SetSeiMessageListener();
-    return MSERR_OK;
+    Status ret = SetSeiMessageListener();
+    return TransStatus(ret);
 }
 
-int32_t  HiPlayerImpl::SetSeiMessageListener()
+Status HiPlayerImpl::SetSeiMessageListener()
 {
     if (videoDecoder_ != nullptr && surface_ != nullptr) {
         return videoDecoder_->SetSeiMessageCbStatus(seiMessageCbStatus_, payloadTypes_);
@@ -3183,7 +3183,7 @@ int32_t  HiPlayerImpl::SetSeiMessageListener()
     if (seiDecoder_ != nullptr && surface_ == nullptr) {
         return seiDecoder_->SetSeiMessageCbStatus(seiMessageCbStatus_, payloadTypes_);
     }
-    return MSERR_OK;
+    return Status::OK;
 }
 }  // namespace Media
 }  // namespace OHOS

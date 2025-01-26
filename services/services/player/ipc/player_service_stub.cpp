@@ -36,6 +36,7 @@
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "PlayerServiceStub"};
     constexpr uint32_t MAX_MAP_SIZE = 100;
+    constexpr size_t MAX_PAYLOAD_TYPES_SIZE = 100;
 }
 
 namespace OHOS {
@@ -1159,6 +1160,8 @@ int32_t PlayerServiceStub::SetSeiMessageCbStatus(MessageParcel &data, MessagePar
 {
     bool status = data.ReadBool();
     int32_t payloadTypesSize = data.ReadInt32();
+    CHECK_AND_RETURN_RET_LOG(
+        payloadTypesSize <= MAX_PAYLOAD_TYPES_SIZE, MSERR_INVALID_OPERATION, "Invalid payloadTypes size");
     std::vector<int32_t> payloadTypes;
     for (int32_t i = 0; i < payloadTypesSize; ++i) {
         payloadTypes.push_back(data.ReadInt32());

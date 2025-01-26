@@ -526,10 +526,6 @@ int32_t PlayerImpl::SetSeiMessageCbStatus(bool status, const std::vector<int32_t
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetSeiMessageCbStatus in, status is %{public}d",
         FAKE_POINTER(this), status);
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
-    if (!status && payloadTypes.empty()) {
-        MEDIA_LOGD("payloadTypes is not provided, seiMessageReceived off");
-        return 0;
-    }
     return playerService_->SetSeiMessageCbStatus(status, payloadTypes);
 }
 
