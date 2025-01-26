@@ -230,6 +230,96 @@ private:
 };
 
 namespace {
+int32_t GetVideoOrientation(const char *videoOrientation)
+{
+    std::unordered_map<std::string, int32_t> validOrientations = {
+        { "0", 0 },      // videoOrientation set to 0 degree
+        { "90", 90 },    // videoOrientation set to 90 degrees
+        { "180", 180 },  // videoOrientation set to 180 degrees
+        { "270", 270 }   // videoOrientation set to 270 degrees
+    };
+
+    if (videoOrientation == nullptr || videoOrientation[0] == '\0') {
+        return 0; // 0 default value
+    }
+
+    auto it = validOrientations.find(videoOrientation);
+    if (it != validOrientations.end()) {
+        return it->second;
+    } else {
+        MEDIA_LOGE("Invalid videoOrientation value: %{public}s. Must be 0, 90, 180, or 270.", videoOrientation);
+        return -1; // -1 invalid value
+    }
+}
+
+bool IsLocationValid(const OH_AVRecorder_Location &location)
+{
+    return location.latitude >= MIN_LATITUDE && location.latitude <= MAX_LATITUDE &&
+           location.longitude >= MIN_LONGITUDE && location.longitude <= MAX_LONGITUDE;
+}
+
+Location ConvertToLocation(const OH_AVRecorder_Location &ohLocation)
+{
+    Location location;
+    location.latitude = static_cast<float>(ohLocation.latitude);
+    location.longitude = static_cast<float>(ohLocation.longitude);
+    return location;
+}
+
+OH_AVRecorder_CodecMimeType ConvertMimeType(const std::string &mimeType)
+{
+    static const std::unordered_map<std::string, OH_AVRecorder_CodecMimeType> mimeTypeMap = {
+        { "video/avc", OH_AVRecorder_CodecMimeType::AVRECORDER_VIDEO_AVC },
+        { "video/mp4v-es", OH_AVRecorder_CodecMimeType::AVRECORDER_VIDEO_MPEG4 },
+        { "video/hevc", OH_AVRecorder_CodecMimeType::AVRECORDER_VIDEO_HEVC },
+        { "audio/mp4a-latm", OH_AVRecorder_CodecMimeType::AVRECORDER_AUDIO_AAC },
+        { "audio/mpeg", OH_AVRecorder_CodecMimeType::AVRECORDER_AUDIO_MP3 },
+        { "audio/g711mu", OH_AVRecorder_CodecMimeType::AVRECORDER_AUDIO_G711MU },
+        { "audio/3gpp", OH_AVRecorder_CodecMimeType::AVRECORDER_AUDIO_AMR_NB },
+        { "audio/amr-wb", OH_AVRecorder_CodecMimeType::AVRECORDER_AUDIO_AMR_WB },
+    };
+
+    auto it = mimeTypeMap.find(mimeType);
+    if (it != mimeTypeMap.end()) {
+        return it->second;
+    }
+    return OH_AVRecorder_CodecMimeType::AVRECORDER_VIDEO_AVC;
+}
+
+void ConvertEncoderInfo(const EncoderCapabilityData &src, OH_AVRecorder_EncoderInfo &dest)
+{
+    dest.mimeType = ConvertMimeType(src.mimeType);
+
+    dest.type = strdup(src.type.c_str());
+    CHECK_AND_RETURN_LOG(dest.type != nullptr, "Failed to allocate memory for type string!");
+
+    dest.bitRate.min = src.bitrate.minVal;
+    dest.bitRate.max = src.bitrate.maxVal;
+
+    dest.frameRate.min = src.frameRate.minVal;
+    dest.frameRate.max = src.frameRate.maxVal;
+
+    dest.width.min = src.width.minVal;
+    dest.width.max = src.width.maxVal;
+
+    dest.height.min = src.height.minVal;
+    dest.height.max = src.height.maxVal;
+
+    dest.channels.min = src.channels.minVal;
+    dest.channels.max = src.channels.maxVal;
+
+    dest.sampleRateLen = static_cast<int32_t>(src.sampleRate.size());
+    if (dest.sampleRateLen == 0) {
+        dest.sampleRate = nullptr;
+        return;
+    }
+    dest.sampleRate = (int32_t *)malloc(dest.sampleRateLen * sizeof(int32_t));
+    CHECK_AND_RETURN_LOG(dest.sampleRate != nullptr, "Failed to allocate memory for sampleRate array!");
+    for (int j = 0; j < dest.sampleRateLen; ++j) {
+        dest.sampleRate[j] = src.sampleRate[j];
+    }
+}
+
 OH_AVErrCode SetProfile(OH_AVRecorder *recorder, OH_AVRecorder_Config *config)
 {
     CHECK_AND_RETURN_RET_LOG(recorder != nullptr, AV_ERR_INVALID_VAL, "input recorder is nullptr!");
@@ -385,97 +475,6 @@ OH_AVErrCode Configure(OH_AVRecorder *recorder, OH_AVRecorder_Config *config)
     recorderObj->hasConfigured_ = true;
     return AV_ERR_OK;
 }
-
-int32_t GetVideoOrientation(const char *videoOrientation)
-{
-    std::unordered_map<std::string, int32_t> validOrientations = {
-        { "0", 0 },      // videoOrientation set to 0 degree
-        { "90", 90 },    // videoOrientation set to 90 degrees
-        { "180", 180 },  // videoOrientation set to 180 degrees
-        { "270", 270 }   // videoOrientation set to 270 degrees
-    };
-
-    if (videoOrientation == nullptr || videoOrientation[0] == '\0') {
-        return 0; // 0 default value
-    }
-
-    auto it = validOrientations.find(videoOrientation);
-    if (it != validOrientations.end()) {
-        return it->second;
-    } else {
-        MEDIA_LOGE("Invalid videoOrientation value: %{public}s. Must be 0, 90, 180, or 270.", videoOrientation);
-        return -1; // -1 invalid value
-    }
-}
-
-bool IsLocationValid(const OH_AVRecorder_Location &location)
-{
-    return location.latitude >= MIN_LATITUDE && location.latitude <= MAX_LATITUDE &&
-           location.longitude >= MIN_LONGITUDE && location.longitude <= MAX_LONGITUDE;
-}
-
-Location ConvertToLocation(const OH_AVRecorder_Location &ohLocation)
-{
-    Location location;
-    location.latitude = static_cast<float>(ohLocation.latitude);
-    location.longitude = static_cast<float>(ohLocation.longitude);
-    return location;
-}
-
-OH_AVRecorder_CodecMimeType ConvertMimeType(const std::string &mimeType)
-{
-    static const std::unordered_map<std::string, OH_AVRecorder_CodecMimeType> mimeTypeMap = {
-        { "video/avc", OH_AVRecorder_CodecMimeType::AVRECORDER_VIDEO_AVC },
-        { "video/mp4v-es", OH_AVRecorder_CodecMimeType::AVRECORDER_VIDEO_MPEG4 },
-        { "video/hevc", OH_AVRecorder_CodecMimeType::AVRECORDER_VIDEO_HEVC },
-        { "audio/mp4a-latm", OH_AVRecorder_CodecMimeType::AVRECORDER_AUDIO_AAC },
-        { "audio/mpeg", OH_AVRecorder_CodecMimeType::AVRECORDER_AUDIO_MP3 },
-        { "audio/g711mu", OH_AVRecorder_CodecMimeType::AVRECORDER_AUDIO_G711MU },
-        { "audio/3gpp", OH_AVRecorder_CodecMimeType::AVRECORDER_AUDIO_AMR_NB },
-        { "audio/amr-wb", OH_AVRecorder_CodecMimeType::AVRECORDER_AUDIO_AMR_WB },
-    };
-
-    auto it = mimeTypeMap.find(mimeType);
-    if (it != mimeTypeMap.end()) {
-        return it->second;
-    }
-    return OH_AVRecorder_CodecMimeType::AVRECORDER_VIDEO_AVC;
-}
-
-void ConvertEncoderInfo(const EncoderCapabilityData &src, OH_AVRecorder_EncoderInfo &dest)
-{
-    dest.mimeType = ConvertMimeType(src.mimeType);
-
-    dest.type = strdup(src.type.c_str());
-    CHECK_AND_RETURN_LOG(dest.type != nullptr, "Failed to allocate memory for type string!");
-
-    dest.bitRate.min = src.bitrate.minVal;
-    dest.bitRate.max = src.bitrate.maxVal;
-
-    dest.frameRate.min = src.frameRate.minVal;
-    dest.frameRate.max = src.frameRate.maxVal;
-
-    dest.width.min = src.width.minVal;
-    dest.width.max = src.width.maxVal;
-
-    dest.height.min = src.height.minVal;
-    dest.height.max = src.height.maxVal;
-
-    dest.channels.min = src.channels.minVal;
-    dest.channels.max = src.channels.maxVal;
-
-    dest.sampleRateLen = static_cast<int32_t>(src.sampleRate.size());
-    if (dest.sampleRateLen == 0) {
-        dest.sampleRate = nullptr;
-        return;
-    }
-    dest.sampleRate = (int32_t *)malloc(dest.sampleRateLen * sizeof(int32_t));
-    CHECK_AND_RETURN_LOG(dest.sampleRate != nullptr, "Failed to allocate memory for sampleRate array!");
-    for (int j = 0; j < dest.sampleRateLen; ++j) {
-        dest.sampleRate[j] = src.sampleRate[j];
-    }
-}
-
 }  // namespace
 
 OH_AVRecorder *OH_AVRecorder_Create(void)
