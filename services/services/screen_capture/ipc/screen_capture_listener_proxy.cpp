@@ -93,6 +93,21 @@ void ScreenCaptureListenerProxy::OnStateChange(AVScreenCaptureStateCode stateCod
         error, stateCode);
 }
 
+void ScreenCaptureListenerProxy::OnDisplaySelected(uint64_t displayId)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_ASYNC);
+
+    bool token = data.WriteInterfaceToken(ScreenCaptureListenerProxy::GetDescriptor());
+    CHECK_AND_RETURN_LOG(token, "Failed to write descriptor!");
+
+    data.WriteUint64(displayId);
+    int error = Remote()->SendRequest(ScreenCaptureListenerMsg::ON_DISPLAY_SELECTED, data, reply, option);
+    CHECK_AND_RETURN_LOG(error == MSERR_OK, "OnDisplaySelected failed, error: %{public}d, displayId: %{public}lu",
+        error, displayId);
+}
+
 ScreenCaptureListenerCallback::ScreenCaptureListenerCallback(const sptr<IStandardScreenCaptureListener> &listener)
     : listener_(listener)
 {
@@ -140,6 +155,15 @@ void ScreenCaptureListenerCallback::OnStateChange(AVScreenCaptureStateCode state
         FAKE_POINTER(this), isStopped_.load(), stateCode);
     if (listener_ != nullptr) {
         listener_->OnStateChange(stateCode);
+    }
+}
+
+void ScreenCaptureListenerCallback::OnDisplaySelected(uint64_t displayId)
+{
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances isStopped:%{public}d, displayId:%{public}lu",
+        FAKE_POINTER(this), isStopped_.load(), displayId);
+    if (listener_ != nullptr) {
+        listener_->OnDisplaySelected(displayId);
     }
 }
 } // namespace Media
