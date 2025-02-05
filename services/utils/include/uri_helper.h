@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -32,6 +32,12 @@ struct FdDesInfo {
     int64_t size = 0;
 };
 
+enum FdLocation : int32_t {
+    INVALID = 0,
+    LOCAL,
+    CLOUD,
+};
+
 /**
  * The simple utility is designed to facilitate the uri processing.
  */
@@ -62,11 +68,14 @@ public:
         return { .fd = fd_, .offset = offset_, .size = size_ };
     }
 
+    FdLocation GetFdLocation();
+
 private:
     void FormatMeForUri(const std::string_view &uri) noexcept;
     void FormatMeForFd() noexcept;
     bool ParseFdUri(std::string_view uri);
     bool CorrectFdParam();
+    void DetermineFdLocation();
 
     std::string formattedUri_ = "";
     std::string_view rawFileUri_ = "";
@@ -74,6 +83,7 @@ private:
     int32_t fd_ = -1;
     int64_t offset_ = 0;
     int64_t size_ = 0;
+    FdLocation fdLocation_ = FdLocation::INVALID;
 };
 } // namespace Media
 } // namespace OHOS
