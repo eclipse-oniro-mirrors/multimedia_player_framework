@@ -79,6 +79,14 @@ void ScreenCaptureCapiMock::OnStateChange(OH_AVScreenCapture *screenCapture,
     }
 }
 
+void ScreenCaptureCapiMock::OnDisplaySelected(OH_AVScreenCapture *screenCapture, uint64_t displayId, void *userData)
+{
+    std::shared_ptr<ScreenCaptureCallBackMock> mockCb = GetCallback(screenCapture);
+    if (mockCb != nullptr) {
+        mockCb->OnDisplaySelected(displayId);
+    }
+}
+
 OH_AVScreenCaptureConfig ScreenCaptureCapiMock::Convert(AVScreenCaptureConfig config)
 {
     OH_AVScreenCaptureConfig tempConfig;
