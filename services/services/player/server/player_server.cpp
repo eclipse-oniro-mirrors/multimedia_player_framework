@@ -230,6 +230,7 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_CREATE_PLAYER_ENGINE_FAILED,
         "failed to create player engine");
     playerEngine_->SetInstancdId(instanceId_);
+    playerEngine_->SetApiVersion(apiVersion_);
     MEDIA_LOGI("Setted InstanceId %{public}" PRIu64, instanceId_);
     if (dataSrc_ != nullptr) {
         ret = playerEngine_->SetSource(dataSrc_);
