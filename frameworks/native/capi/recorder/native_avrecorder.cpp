@@ -251,26 +251,22 @@ OH_AVErrCode SetProfile(OH_AVRecorder *recorder, OH_AVRecorder_Config *config)
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "Set output format failed!");
 
     if (recorderObj->withAudio) {
-        ret = recorderObj->recorder_->SetAudioEncodingBitRate(recorderObj->audioSourceId_,
-            config->profile.audioBitrate);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "Set audio encoding bitrate failed!");
-
-        ret = recorderObj->recorder_->SetAudioChannels(recorderObj->audioSourceId_, config->profile.audioChannels);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "Set audio channels failed!");
-
         AudioCodecFormat audioCodec = static_cast<AudioCodecFormat>(config->profile.audioCodec);
         ret = recorderObj->recorder_->SetAudioEncoder(recorderObj->audioSourceId_, audioCodec);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "Set audio encoder failed!");
 
         ret = recorderObj->recorder_->SetAudioSampleRate(recorderObj->audioSourceId_, config->profile.audioSampleRate);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "Set audio sample rate failed!");
+
+        ret = recorderObj->recorder_->SetAudioChannels(recorderObj->audioSourceId_, config->profile.audioChannels);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "Set audio channels failed!");
+
+        ret = recorderObj->recorder_->SetAudioEncodingBitRate(recorderObj->audioSourceId_,
+            config->profile.audioBitrate);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "Set audio encoding bitrate failed!");
     }
 
     if (recorderObj->withVideo) {
-        ret = recorderObj->recorder_->SetVideoEncodingBitRate(recorderObj->videoSourceId_,
-            config->profile.videoBitrate);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "Set video encoding bitrate failed!");
-
         VideoCodecFormat videoCodec = static_cast<VideoCodecFormat>(config->profile.videoCodec);
         ret = recorderObj->recorder_->SetVideoEncoder(recorderObj->videoSourceId_, videoCodec);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "Set video encoder failed!");
@@ -281,6 +277,10 @@ OH_AVErrCode SetProfile(OH_AVRecorder *recorder, OH_AVRecorder_Config *config)
 
         ret = recorderObj->recorder_->SetVideoFrameRate(recorderObj->videoSourceId_, config->profile.videoFrameRate);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "Set video frame rate failed!");
+
+        ret = recorderObj->recorder_->SetVideoEncodingBitRate(recorderObj->videoSourceId_,
+            config->profile.videoBitrate);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "Set video encoding bitrate failed!");
 
         if (config->profile.isHdr != true) {
             config->profile.isHdr = false;

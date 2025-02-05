@@ -36,6 +36,8 @@ public:
     virtual int32_t SetDataType(DataType dataType) = 0;
     virtual int32_t SetRecorderInfo(RecorderInfo recorderInfo) = 0;
     virtual int32_t SetOutputFile(int32_t fd) = 0;
+    virtual int32_t SetAndCheckLimit() = 0;
+    virtual int32_t SetAndCheckSaLimit(OHOS::AudioStandard::AppInfo &appInfo) = 0;
     virtual int32_t InitAudioEncInfo(AudioEncInfo audioEncInfo) = 0;
     virtual int32_t InitAudioCap(AudioCaptureInfo audioInfo) = 0;
     virtual int32_t InitVideoEncInfo(VideoEncInfo videoEncInfo) = 0;
@@ -86,6 +88,8 @@ public:
         SKIP_PRIVACY = 22,
         SET_MAX_FRAME_RATE = 23,
         SHOW_CURSOR = 24,
+        SET_CHECK_SA_LIMIT = 25,
+        SET_CHECK_LIMIT = 26,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardScreenCaptureService");

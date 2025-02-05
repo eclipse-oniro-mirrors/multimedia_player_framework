@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -202,6 +202,8 @@ int32_t PlayerServer::SetSource(int32_t fd, int64_t offset, int64_t size)
         }
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetSource Failed!");
         uriHelper_ = std::move(uriHelper);
+        playerEngine_->SetPerfRecEnabled(
+            uriHelper_ != nullptr && uriHelper_->GetFdLocation() == FdLocation::LOCAL);
     }
     config_.url = "file descriptor source";
 
@@ -228,7 +230,7 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_CREATE_PLAYER_ENGINE_FAILED,
         "failed to create player engine");
     playerEngine_->SetInstancdId(instanceId_);
-    MEDIA_LOGI("InitPlayEngine::Setted InstanceId");
+    MEDIA_LOGI("Setted InstanceId %{public}" PRIu64, instanceId_);
     if (dataSrc_ != nullptr) {
         ret = playerEngine_->SetSource(dataSrc_);
     } else if (mediaSource_ != nullptr) {

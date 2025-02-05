@@ -79,6 +79,8 @@ int32_t ScreenCaptureServiceStub::Init()
     screenCaptureStubFuncs_[DESTROY] = &ScreenCaptureServiceStub::DestroyStub;
     screenCaptureStubFuncs_[EXCLUDE_CONTENT] = &ScreenCaptureServiceStub::ExcludeContent;
     screenCaptureStubFuncs_[SHOW_CURSOR] = &ScreenCaptureServiceStub::ShowCursor;
+    screenCaptureStubFuncs_[SET_CHECK_SA_LIMIT] = &ScreenCaptureServiceStub::SetAndCheckSaLimit;
+    screenCaptureStubFuncs_[SET_CHECK_LIMIT] = &ScreenCaptureServiceStub::SetAndCheckLimit;
 
     return MSERR_OK;
 }
@@ -144,6 +146,20 @@ int32_t ScreenCaptureServiceStub::SetOutputFile(int32_t fd)
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
         "screen capture server is nullptr");
     return screenCaptureServer_->SetOutputFile(fd);
+}
+
+int32_t ScreenCaptureServiceStub::SetAndCheckLimit()
+{
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
+        "screen capture server is nullptr");
+    return screenCaptureServer_->SetAndCheckLimit();
+}
+
+int32_t ScreenCaptureServiceStub::SetAndCheckSaLimit(OHOS::AudioStandard::AppInfo &appInfo)
+{
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
+        "screen capture server is nullptr");
+    return screenCaptureServer_->SetAndCheckSaLimit(appInfo);
 }
 
 int32_t ScreenCaptureServiceStub::InitAudioEncInfo(AudioEncInfo audioEncInfo)
@@ -427,6 +443,30 @@ int32_t ScreenCaptureServiceStub::SetOutputFile(MessageParcel &data, MessageParc
     reply.WriteInt32(ret);
     CHECK_AND_RETURN_RET_LOG(fd >= 0, MSERR_INVALID_VAL, "fd is invalid, fd is %{public}d", fd);
     CHECK_AND_RETURN_RET_LOG(close(fd) == 0, MSERR_UNKNOWN, "close fd failed, fd is %{public}d", fd);
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureServiceStub::SetAndCheckLimit(MessageParcel &data, MessageParcel &reply)
+{
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
+        "screen capture server is nullptr");
+    (void)data;
+    int32_t ret = SetAndCheckLimit();
+    reply.WriteInt32(ret);
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureServiceStub::SetAndCheckSaLimit(MessageParcel &data, MessageParcel &reply)
+{
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
+        "screen capture server is nullptr");
+    OHOS::AudioStandard::AppInfo appInfo;
+    appInfo.appUid = data.ReadInt32();
+    appInfo.appPid = data.ReadInt32();
+    appInfo.appTokenId = data.ReadUint32();
+    appInfo.appFullTokenId = data.ReadUint64();
+    int32_t ret = SetAndCheckSaLimit(appInfo);
+    reply.WriteInt32(ret);
     return MSERR_OK;
 }
 

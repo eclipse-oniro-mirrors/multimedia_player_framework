@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -26,6 +26,11 @@ namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_PLAYER, "DfxAgent" };
     constexpr int64_t LAG_EVENT_THRESHOLD_MS = 500; // Lag threshold is 500 ms
     ConcurrentUidSet g_appUidSet{};
+    const std::string SOURCE = "SRC";
+    const std::string DEMUXER = "DEMUX";
+    const std::string VIDEO_SINK = "VSINK";
+    const std::string AUDIO_SINK = "ASINK";
+    const std::string VIDEO_RENDERER = "VRNDR";
 }
 
 const std::map<DfxEventType, DfxEventHandleFunc> DfxAgent::DFX_EVENT_HANDLERS_ = {
@@ -33,6 +38,15 @@ const std::map<DfxEventType, DfxEventHandleFunc> DfxAgent::DFX_EVENT_HANDLERS_ =
     { DfxEventType::DFX_INFO_PLAYER_AUDIO_LAG, DfxAgent::ProcessAudioLagEvent },
     { DfxEventType::DFX_INFO_PLAYER_STREAM_LAG, DfxAgent::ProcessStreamLagEvent },
     { DfxEventType::DFX_INFO_PLAYER_EOS_SEEK, DfxAgent::ProcessEosSeekEvent },
+    { DfxEventType::DFX_INFO_PERF_REPORT, DfxAgent::ProcessPerfInfoEvent },
+};
+
+const std::unordered_map<std::string, bool> PERF_ITEM_NECESSITY = {
+    { SOURCE, false },
+    { DEMUXER, false },
+    { VIDEO_SINK, true },
+    { AUDIO_SINK, false },
+    { VIDEO_RENDERER, true },
 };
 
  
@@ -134,10 +148,13 @@ void DfxAgent::ProcessVideoLagEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent 
 {
     auto agent = ptr.lock();
     FALSE_RETURN(agent != nullptr);
+    auto perfStr = agent->GetPerfStr(false);
+    MEDIA_LOG_W("%{public}s", perfStr.c_str());
+    agent->needPrintPerfLog_ = true;
     int64_t lagDuration = AnyCast<int64_t>(event.param);
     FALSE_RETURN(lagDuration >= LAG_EVENT_THRESHOLD_MS);
-    std::string msg = "lagEvent=Video";
-    agent->ReportLagEvent(lagDuration, msg);
+    std::string msg = "lagEvent=Video ";
+    agent->ReportLagEvent(lagDuration, msg + perfStr);
 }
  
 void DfxAgent::ProcessAudioLagEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &event)
@@ -166,6 +183,43 @@ void DfxAgent::ProcessEosSeekEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &
     FALSE_RETURN(agent != nullptr);
     int64_t appUid = AnyCast<int32_t>(event.param);
     agent->ReportEosSeek0Event(appUid);
+}
+
+void DfxAgent::ProcessPerfInfoEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &event)
+{
+    auto agent = ptr.lock();
+    FALSE_RETURN(agent != nullptr);
+    agent->UpdateDfxInfo(event);
+}
+
+void DfxAgent::UpdateDfxInfo(const DfxEvent &event)
+{
+    auto data = AnyCast<MainPerfData>(event.param);
+    perfDataMap_.insert_or_assign(event.callerName, data);
+    FALSE_RETURN_NOLOG(needPrintPerfLog_);
+    MEDIA_LOG_W("%{public}s", GetPerfStr(true).c_str());
+}
+
+std::string DfxAgent::GetPerfStr(const bool needWaitAllData)
+{
+    bool isAllDataReady = true;
+    std::string waitFor = "not all ready, wait for";
+    std::string perfStr = needPrintPerfLog_ ? "AfterLag\n" : "Lag\n";
+    for (auto it = PERF_ITEM_NECESSITY.begin(); it != PERF_ITEM_NECESSITY.end(); ++it) {
+        auto dataMapIt = perfDataMap_.find(it->first);
+        if (dataMapIt != perfDataMap_.end()) {
+            perfStr += "[" + it->first + " speed] max " + std::to_string(dataMapIt->second.max) + " min " +
+                std::to_string(dataMapIt->second.min) + " avg " + std::to_string(dataMapIt->second.avg) + "\n";
+        } else if (!it->second) {
+            perfStr += "not enough data, but " + it->first + " is not bottleneck\n";
+        } else {
+            waitFor += " " + it->first;
+            isAllDataReady = false;
+        }
+    }
+    perfDataMap_.clear();
+    needPrintPerfLog_ = !isAllDataReady;
+    return (!isAllDataReady && needWaitAllData) ? waitFor : perfStr;
 }
 }  // namespace Media
 }  // namespace OHOS
