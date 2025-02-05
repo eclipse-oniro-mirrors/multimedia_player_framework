@@ -62,8 +62,8 @@ private:
     PlayerDfxSourceType sourceType_ {PlayerDfxSourceType::DFX_SOURCE_TYPE_UNKNOWN};
     std::unique_ptr<Task> dfxTask_ {nullptr};
     bool hasReported_ {false};
-    std::atomic<bool> needPrintPerfLog_ { false };
-    std::map<std::string, MainPerfData> perfDataMap_ {};
+    bool needPrintPerfLog_ { false };
+    std::unordered_map<std::string, MainPerfData> perfDataMap_ {};
 
     static const std::map<DfxEventType, DfxEventHandleFunc> DFX_EVENT_HANDLERS_;
 };

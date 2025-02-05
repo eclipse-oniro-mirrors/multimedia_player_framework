@@ -951,11 +951,9 @@ void HiPlayerImpl::UpdatePlayStatistics()
     }
 }
 
-bool HiPlayerImpl::IsStatisticalInfoValid()
+inline bool HiPlayerImpl::IsStatisticalInfoValid()
 {
-    FALSE_RETURN_V(playStatisticalInfo_.playDuration >= 0, false);
-    FALSE_RETURN_V(playStatisticalInfo_.startLatency >= 0, false);
-    return true;
+    return playStatisticalInfo_.playDuration >= 0 && playStatisticalInfo_.startLatency >= 0;
 }
 
 void HiPlayerImpl::UpdatePlayTotalDuration()

@@ -26,11 +26,11 @@ namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_PLAYER, "DfxAgent" };
     constexpr int64_t LAG_EVENT_THRESHOLD_MS = 500; // Lag threshold is 500 ms
     ConcurrentUidSet g_appUidSet{};
-    const std::string SOURCE = "source";
-    const std::string DEMUXER = "demuxer";
-    const std::string VIDEO_SINK = "videoSink";
-    const std::string AUDIO_SINK = "audioSink";
-    const std::string VIDEO_RENDERER = "videoRenderer";
+    const std::string SOURCE = "SRC";
+    const std::string DEMUXER = "DEMUX";
+    const std::string VIDEO_SINK = "VSINK";
+    const std::string AUDIO_SINK = "ASINK";
+    const std::string VIDEO_RENDERER = "VRNDR";
 }
 
 const std::map<DfxEventType, DfxEventHandleFunc> DfxAgent::DFX_EVENT_HANDLERS_ = {

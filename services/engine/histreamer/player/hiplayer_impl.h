@@ -267,7 +267,7 @@ private:
     int32_t HandleEosPlay() override;
     bool IsLiveStream();
     void UpdatePlayTotalDuration();
-    bool IsStatisticalInfoValid();
+    inline bool IsStatisticalInfoValid();
 
     bool isNetWorkPlay_ = false;
     bool isDump_ = false;

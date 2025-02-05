@@ -83,7 +83,7 @@ private:
     int32_t fd_ = -1;
     int64_t offset_ = 0;
     int64_t size_ = 0;
-    std::atomic<FdLocation> fdLocation_ = FdLocation::INVALID;
+    FdLocation fdLocation_ = FdLocation::INVALID;
 };
 } // namespace Media
 } // namespace OHOS

@@ -211,7 +211,7 @@ void UriHelper::DetermineFdLocation()
  
 FdLocation UriHelper::GetFdLocation()
 {
-    return fdLocation_.load();
+    return fdLocation_;
 }
 
 uint8_t UriHelper::UriType() const
