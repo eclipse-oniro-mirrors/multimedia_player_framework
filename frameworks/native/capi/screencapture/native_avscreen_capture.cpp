@@ -280,7 +280,7 @@ public:
 
     void OnDisplaySelected(uint64_t displayId) override
     {
-        MEDIA_LOGI("OnDisplaySelected() is called, displayId %{public}lu", displayId);
+        MEDIA_LOGI("OnDisplaySelected() is called, displayId (%{public}" PRIu64 ")", displayId);
         std::shared_lock<std::shared_mutex> lock(mutex_);
         CHECK_AND_RETURN(capture_ != nullptr);
 

@@ -104,8 +104,8 @@ void ScreenCaptureListenerProxy::OnDisplaySelected(uint64_t displayId)
 
     data.WriteUint64(displayId);
     int error = Remote()->SendRequest(ScreenCaptureListenerMsg::ON_DISPLAY_SELECTED, data, reply, option);
-    CHECK_AND_RETURN_LOG(error == MSERR_OK, "OnDisplaySelected failed, error: %{public}d, displayId: %{public}lu",
-        error, displayId);
+    CHECK_AND_RETURN_LOG(error == MSERR_OK, "OnDisplaySelected failed, error: %{public}d, displayId: (%{public}" PRIu64
+        ")",error, displayId);
 }
 
 ScreenCaptureListenerCallback::ScreenCaptureListenerCallback(const sptr<IStandardScreenCaptureListener> &listener)
@@ -160,7 +160,7 @@ void ScreenCaptureListenerCallback::OnStateChange(AVScreenCaptureStateCode state
 
 void ScreenCaptureListenerCallback::OnDisplaySelected(uint64_t displayId)
 {
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances isStopped:%{public}d, displayId:%{public}lu",
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances isStopped:%{public}d, displayId:%{public}" PRIu64 ")",
         FAKE_POINTER(this), isStopped_.load(), displayId);
     if (listener_ != nullptr) {
         listener_->OnDisplaySelected(displayId);

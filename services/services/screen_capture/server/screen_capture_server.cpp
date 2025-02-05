@@ -1451,7 +1451,7 @@ void ScreenCaptureServer::NotifyStateChange(AVScreenCaptureStateCode stateCode)
 void ScreenCaptureServer::NotifyDisplaySelected(uint64_t displayId)
 {
     if (screenCaptureCb_ != nullptr) {
-        MEDIA_LOGD("NotifyDisplaySelected displayId: %{public}lu", displayId);
+        MEDIA_LOGD("NotifyDisplaySelected displayId: (%{public}" PRIu64 ")", displayId);
         screenCaptureCb_->OnDisplaySelected(displayId);
     }
 }
