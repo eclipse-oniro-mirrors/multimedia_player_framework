@@ -530,7 +530,8 @@ typedef void (*OH_AVScreenCapture_OnBufferAvailable)(OH_AVScreenCapture *capture
  *
  * @since 15
  */
-typedef void (*OH_AVScreenCapture_OnDisplaySelected)(struct OH_AVScreenCapture *capture, uint64_t displayId, void *userData);
+typedef void (*OH_AVScreenCapture_OnDisplaySelected)(struct OH_AVScreenCapture *capture, uint64_t displayId,
+    void *userData);
 
 #ifdef __cplusplus
 }
