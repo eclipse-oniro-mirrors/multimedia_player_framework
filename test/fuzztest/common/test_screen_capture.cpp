@@ -53,6 +53,15 @@ bool TestScreenCapture::CreateScreenCapture()
     return true;
 }
 
+bool TestScreenCapture::CreateScreenCapture(OHOS::AudioStandard::AppInfo& appInfo)
+{
+    screenCapture = ScreenCaptureFactory::CreateScreenCapture(appInfo);
+    if (screenCapture == nullptr) {
+        return false;
+    }
+    return true;
+}
+
 int32_t TestScreenCapture::SetScreenCaptureCallback(const std::shared_ptr<ScreenCaptureCallBack>& callback)
 {
     if (screenCapture == nullptr) {

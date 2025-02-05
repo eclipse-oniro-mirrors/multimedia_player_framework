@@ -158,6 +158,42 @@ int32_t ScreenCaptureServiceProxy::SetOutputFile(int32_t fd)
     return reply.ReadInt32();
 }
 
+int32_t ScreenCaptureServiceProxy::SetAndCheckLimit()
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(ScreenCaptureServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    int error = Remote()->SendRequest(SET_CHECK_LIMIT, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetAndCheckLimit failed, error: %{public}d", error);
+
+    return reply.ReadInt32();
+}
+
+int32_t ScreenCaptureServiceProxy::SetAndCheckSaLimit(OHOS::AudioStandard::AppInfo &appInfo)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(ScreenCaptureServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    token = data.WriteInt32(appInfo.appUid) && data.WriteInt32(appInfo.appPid) &&
+        data.WriteUint32(appInfo.appTokenId) && data.WriteUint64(appInfo.appFullTokenId);
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write appInfo!");
+
+    int error = Remote()->SendRequest(SET_CHECK_SA_LIMIT, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetAndCheckSaLimit failed, error: %{public}d", error);
+        
+    return reply.ReadInt32();
+}
+
 int32_t ScreenCaptureServiceProxy::InitAudioEncInfo(AudioEncInfo audioEncInfo)
 {
     MessageParcel data;

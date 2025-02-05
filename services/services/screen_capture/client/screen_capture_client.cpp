@@ -123,6 +123,20 @@ int32_t ScreenCaptureClient::SetOutputFile(int32_t fd)
     return screenCaptureProxy_->SetOutputFile(fd);
 }
 
+int32_t ScreenCaptureClient::SetAndCheckLimit()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
+    return screenCaptureProxy_->SetAndCheckLimit();
+}
+
+int32_t ScreenCaptureClient::SetAndCheckSaLimit(OHOS::AudioStandard::AppInfo &appInfo)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
+    return screenCaptureProxy_->SetAndCheckSaLimit(appInfo);
+}
+
 int32_t ScreenCaptureClient::InitAudioEncInfo(AudioEncInfo audioEncInfo)
 {
     std::lock_guard<std::mutex> lock(mutex_);

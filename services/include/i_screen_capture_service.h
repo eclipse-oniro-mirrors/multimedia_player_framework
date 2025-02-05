@@ -33,6 +33,8 @@ public:
     virtual int32_t SetDataType(DataType dataType) = 0;
     virtual int32_t SetRecorderInfo(RecorderInfo recorderInfo) = 0;
     virtual int32_t SetOutputFile(int32_t fd) = 0;
+    virtual int32_t SetAndCheckLimit() = 0;
+    virtual int32_t SetAndCheckSaLimit(OHOS::AudioStandard::AppInfo &appInfo) = 0;
     virtual int32_t InitAudioEncInfo(AudioEncInfo audioEncInfo) = 0;
     virtual int32_t InitAudioCap(AudioCaptureInfo audioInfo) = 0;
     virtual int32_t InitVideoEncInfo(VideoEncInfo videoEncInfo) = 0;
