@@ -36,6 +36,7 @@ namespace OHOS {
 namespace Media {
 namespace {
     constexpr int MAX_TRACKCNT = 1000;
+    constexpr size_t MAX_PAYLOAD_TYPES_SIZE = 100;
 }
 
 PlayerServiceProxy::PlayerServiceProxy(const sptr<IRemoteObject> &impl)
@@ -506,6 +507,8 @@ int32_t PlayerServiceProxy::SetSeiMessageCbStatus(bool status, const std::vector
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
  
     data.WriteBool(status);
+    CHECK_AND_RETURN_RET_LOG(
+        payloadTypes.size() <= MAX_PAYLOAD_TYPES_SIZE, MSERR_INVALID_OPERATION, "Invalid payloadTypes size");
     data.WriteInt32(static_cast<int32_t>(payloadTypes.size()));
     for (auto payloadType : payloadTypes) {
         data.WriteInt32(payloadType);

@@ -24,7 +24,6 @@
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "PlayerImpl"};
 constexpr int32_t API_VERSION_14 = 14;
-constexpr size_t PAYLOADTYPE_ENABLE = 5;
 static int32_t apiVersion_ = -1;
 }
 
@@ -527,12 +526,6 @@ int32_t PlayerImpl::SetSeiMessageCbStatus(bool status, const std::vector<int32_t
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetSeiMessageCbStatus in, status is %{public}d",
         FAKE_POINTER(this), status);
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
-
-    if (std::find(payloadTypes.begin(), payloadTypes.end(), PAYLOADTYPE_ENABLE) == payloadTypes.end()) {
-        status = false;
-        MEDIA_LOGI("payloadTypes is not 5");
-        return 0;
-    }
     return playerService_->SetSeiMessageCbStatus(status, payloadTypes);
 }
 

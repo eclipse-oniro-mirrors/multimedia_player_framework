@@ -595,6 +595,7 @@ int32_t HiPlayerImpl::PrepareAsync()
         return errCode;
     }
     InitDuration();
+    SetSeiMessageListener();
     UpdateMediaFirstPts();
     ret = DoSetPlayRange();
     FALSE_RETURN_V_MSG_E(ret == Status::OK, TransStatus(ret), "DoSetPlayRange failed");
@@ -3171,13 +3172,20 @@ int32_t HiPlayerImpl::SetSeiMessageCbStatus(bool status, const std::vector<int32
 {
     seiMessageCbStatus_ = status;
     payloadTypes_ = payloadTypes;
+    MEDIA_LOG_I("SetSeiMessageCbStatus seiMessageCbStatus_  = " PUBLIC_LOG_D32, seiMessageCbStatus_);
+    Status ret = SetSeiMessageListener();
+    return TransStatus(ret);
+}
+
+Status HiPlayerImpl::SetSeiMessageListener()
+{
     if (videoDecoder_ != nullptr && surface_ != nullptr) {
         return videoDecoder_->SetSeiMessageCbStatus(seiMessageCbStatus_, payloadTypes_);
     }
     if (seiDecoder_ != nullptr && surface_ == nullptr) {
         return seiDecoder_->SetSeiMessageCbStatus(seiMessageCbStatus_, payloadTypes_);
     }
-    return MSERR_OK;
+    return Status::OK;
 }
 
 void HiPlayerImpl::SetPerfRecEnabled(bool isPerfRecEnabled)
