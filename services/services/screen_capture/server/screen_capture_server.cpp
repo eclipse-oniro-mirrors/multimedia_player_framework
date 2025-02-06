@@ -1414,7 +1414,7 @@ void ScreenCaptureServer::PostStartScreenCaptureSuccessAction()
         this->sessionId_, static_cast<uint32_t>(ScreenCaptureServer::startedSessionIDList_.size()));
     ScreenCaptureMonitorServer::GetInstance()->CallOnScreenCaptureStarted(appInfo_.appPid);
     NotifyStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STARTED);
-    if (displayScreenId_ != -1) { // -1 无效值
+    if (displayScreenId_ != SCREEN_ID_INVALID) {
         NotifyDisplaySelected(displayScreenId_);
     }
 }
