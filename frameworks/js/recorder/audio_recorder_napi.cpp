@@ -202,9 +202,9 @@ napi_value AudioRecorderNapi::CreateAudioRecorderAsync(napi_env env, napi_callba
     auto ret = MediaAsyncContext::SendCompleteEvent(env, asyncCtx.get(), napi_eprio_immediate);
     if (ret != napi_status::napi_ok) {
         MEDIA_LOGE("failed to SendEvent, ret = %{public}d", ret);
-    } else {
-        asyncCtx.release();
     }
+    asyncCtx.release();
+
     MEDIA_LOGD("CreateAudioRecorderAsync Out");
 
     return result;
