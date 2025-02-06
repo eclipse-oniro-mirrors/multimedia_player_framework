@@ -1020,8 +1020,8 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetDisplayCallback(struct OH_AVSc
 {
     MEDIA_LOGD("OH_AVScreenCapture_SetDisplayCallback S");
     CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr!");
-    CHECK_AND_RETURN_RET_LOG(callback != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input displayCallback is nullptr!"
-        );
+    CHECK_AND_RETURN_RET_LOG(callback != nullptr,
+        AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input displayCallback is nullptr!");
     struct ScreenCaptureObject *screenCaptureObj = reinterpret_cast<ScreenCaptureObject *>(capture);
     CHECK_AND_RETURN_RET_LOG(screenCaptureObj->screenCapture_ != nullptr,
         AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "screenCapture_ is null");
