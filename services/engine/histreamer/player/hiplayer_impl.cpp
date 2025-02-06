@@ -331,6 +331,11 @@ void HiPlayerImpl::SetInstancdId(uint64_t instanceId)
     }
 }
 
+void HiPlayerImpl::SetApiVersion(int32_t apiVersion)
+{
+    apiVersion_ = apiVersion;
+}
+
 int32_t HiPlayerImpl::SetSource(const std::string& uri)
 {
     MediaTrace trace("HiPlayerImpl::SetSource uri");
@@ -2285,6 +2290,7 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
         FilterType::FILTERTYPE_DEMUXER);
     FALSE_RETURN_V(demuxer_ != nullptr, Status::ERROR_NULL_POINTER);
     demuxer_->SetPerfRecEnabled(isPerfRecEnabled_);
+    demuxer_->SetApiVersion(apiVersion_);
     pipeline_->AddHeadFilters({demuxer_});
     demuxer_->Init(playerEventReceiver_, playerFilterCallback_, interruptMonitor_);
     DoSetPlayStrategy(source);

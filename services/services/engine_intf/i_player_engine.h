@@ -190,6 +190,10 @@ public:
     {
         (void)instanceId;
     }
+    virtual void SetApiVersion(int32_t apiVersion)
+    {
+        (void)apiVersion;
+    }
 
     virtual int64_t GetPlayRangeStartTime()
     {
