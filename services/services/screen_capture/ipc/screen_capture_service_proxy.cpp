@@ -336,6 +336,7 @@ int32_t ScreenCaptureServiceProxy::AcquireAudioBuffer(std::shared_ptr<AudioBuffe
             return MSERR_INVALID_VAL;
         }
         auto buffer = reply.ReadBuffer(audioBufferLen);
+        CHECK_AND_RETURN_RET_LOG(buffer != nullptr, MSERR_INVALID_VAL, "read buffer failed");
         uint8_t* audiobuffer = static_cast<uint8_t *>(malloc(audioBufferLen));
         CHECK_AND_RETURN_RET_LOG(audiobuffer != nullptr, MSERR_NO_MEMORY, "audio buffer malloc failed");
         memset_s(audiobuffer, audioBufferLen, 0, audioBufferLen);
