@@ -194,14 +194,14 @@ napi_value AVRecorderNapi::JsCreateAVRecorder(napi_env env, napi_callback_info i
     asyncCtx->JsResult = std::make_unique<MediaJsResultInstance>(constructor_);
     asyncCtx->ctorFlag = true;
 
-    napi_value resource = nullptr;
-    napi_create_string_utf8(env, "JsCreateAVRecorder", NAPI_AUTO_LENGTH, &resource);
-    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {},
-              MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
-    NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
+    auto ret = MediaAsyncContext::SendCompleteEvent(env, asyncCtx.get(), napi_eprio_immediate);
+    if (ret != napi_status::napi_ok) {
+        MEDIA_LOGE("failed to SendEvent, ret = %{public}d", ret);
+    }
     asyncCtx.release();
 
     MEDIA_LOGI("Js CreateAVRecorder End");
+    
     return result;
 }
 

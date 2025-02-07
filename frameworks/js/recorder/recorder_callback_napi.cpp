@@ -108,30 +108,9 @@ void RecorderCallbackNapi::OnAudioCaptureChange(const AudioRecorderChangeInfo &a
 
 void RecorderCallbackNapi::OnJsStateCallBack(RecordJsCallback *jsCb) const
 {
-    uv_loop_s *loop = nullptr;
-    napi_get_uv_event_loop(env_, &loop);
-    if (loop == nullptr) {
-        MEDIA_LOGE("fail to get uv event loop");
-        delete jsCb;
-        return;
-    }
-
-    uv_work_t *work = new(std::nothrow) uv_work_t;
-    if (work == nullptr) {
-        MEDIA_LOGE("fail to new uv_work_t");
-        delete jsCb;
-        return;
-    }
-
-    work->data = reinterpret_cast<void *>(jsCb);
-    int ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
-        // Js Thread
-        CHECK_AND_RETURN_LOG(work != nullptr, "work is nullptr");
-        RecordJsCallback *event = reinterpret_cast<RecordJsCallback *>(work->data);
+    auto task = [event = jsCb]() {
         std::string request = event->callbackName;
-        MEDIA_LOGD("OnJsStateCallBack %{public}s, uv_queue_work start", request.c_str());
         do {
-            CHECK_AND_BREAK_LOG(status != UV_ECANCELED, "%{public}s canceled", request.c_str());
             std::shared_ptr<AutoRef> ref = event->autoRef.lock();
             CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
 
@@ -144,45 +123,24 @@ void RecorderCallbackNapi::OnJsStateCallBack(RecordJsCallback *jsCb) const
 
             napi_value jsCallback = nullptr;
             napi_status nstatus = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
-            CHECK_AND_BREAK_LOG(nstatus == napi_ok && jsCallback != nullptr, "%{public}s get reference value fail",
+            CHECK_AND_BREAK_LOG(nstatus == napi_ok && jsCallback != nullptr, "%{public}s get reference value failed",
                 request.c_str());
 
             napi_value result = nullptr;
             nstatus = napi_call_function(ref->env_, nullptr, jsCallback, 0, nullptr, &result);
-            CHECK_AND_BREAK_LOG(nstatus == napi_ok, "%{public}s fail to napi call function", request.c_str());
+            CHECK_AND_BREAK_LOG(nstatus == napi_ok, "%{public}s failed to napi call function", request.c_str());
         } while (0);
         delete event;
-        delete work;
-    });
-    if (ret != 0) {
-        MEDIA_LOGE("fail to uv_queue_work task");
-        delete jsCb;
-        delete work;
-    }
+    };
+    auto ret = napi_send_event(env_, task, napi_eprio_immediate);
+    CHECK_AND_RETURN_LOG(ret == napi_status::napi_ok, "failed to napi_send_event task");
 }
 
 void RecorderCallbackNapi::OnJsErrorCallBack(RecordJsCallback *jsCb) const
 {
-    uv_loop_s *loop = nullptr;
-    napi_get_uv_event_loop(env_, &loop);
-
-    uv_work_t *work = new(std::nothrow) uv_work_t;
-    if (work == nullptr) {
-        MEDIA_LOGE("No memory");
-        delete jsCb;
-        return;
-    }
-    work->data = reinterpret_cast<void *>(jsCb);
-
-    // async callback, jsWork and jsWork->data should be heap object.
-    int ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
-        // Js Thread
-        CHECK_AND_RETURN_LOG(work != nullptr, "work is nullptr");
-        RecordJsCallback *event = reinterpret_cast<RecordJsCallback *>(work->data);
+    auto task = [event = jsCb]() {
         std::string request = event->callbackName;
-        MEDIA_LOGD("JsCallBack %{public}s, uv_queue_work start", request.c_str());
         do {
-            CHECK_AND_BREAK_LOG(status != UV_ECANCELED, "%{public}s canceled", request.c_str());
             std::shared_ptr<AutoRef> ref = event->autoRef.lock();
             CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
 
@@ -193,35 +151,31 @@ void RecorderCallbackNapi::OnJsErrorCallBack(RecordJsCallback *jsCb) const
 
             napi_value jsCallback = nullptr;
             napi_status nstatus = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
-            CHECK_AND_BREAK_LOG(nstatus == napi_ok && jsCallback != nullptr, "%{public}s get reference value fail",
+            CHECK_AND_BREAK_LOG(nstatus == napi_ok && jsCallback != nullptr, "%{public}s get reference value failed",
                 request.c_str());
 
             napi_value msgValStr = nullptr;
             nstatus = napi_create_string_utf8(ref->env_, event->errorMsg.c_str(), NAPI_AUTO_LENGTH, &msgValStr);
-            CHECK_AND_BREAK_LOG(nstatus == napi_ok && msgValStr != nullptr, "%{public}s fail to get error code value",
+            CHECK_AND_BREAK_LOG(nstatus == napi_ok && msgValStr != nullptr, "%{public}s failed to get error code value",
                 request.c_str());
 
             napi_value args[1] = { nullptr };
             nstatus = napi_create_error(ref->env_, nullptr, msgValStr, &args[0]);
-            CHECK_AND_BREAK_LOG(nstatus == napi_ok && args[0] != nullptr, "%{public}s fail to create error callback",
+            CHECK_AND_BREAK_LOG(nstatus == napi_ok && args[0] != nullptr, "%{public}s failed to create error callback",
                 request.c_str());
 
             nstatus = CommonNapi::FillErrorArgs(ref->env_, event->errorCode, args[0]);
-            CHECK_AND_BREAK_LOG(nstatus == napi_ok, "create error callback fail");
+            CHECK_AND_BREAK_LOG(nstatus == napi_ok, "create error callback failed");
 
             // Call back function
             napi_value result = nullptr;
             nstatus = napi_call_function(ref->env_, nullptr, jsCallback, 1, args, &result);
-            CHECK_AND_BREAK_LOG(nstatus == napi_ok, "%{public}s fail to napi call function", request.c_str());
+            CHECK_AND_BREAK_LOG(nstatus == napi_ok, "%{public}s failed to napi call function", request.c_str());
         } while (0);
         delete event;
-        delete work;
-    });
-    if (ret != 0) {
-        MEDIA_LOGE("Failed to execute libuv work queue");
-        delete jsCb;
-        delete work;
-    }
+    };
+    auto ret = napi_send_event(env_, task, napi_eprio_immediate);
+    CHECK_AND_RETURN_LOG(ret == napi_status::napi_ok, "failed to napi_send_event task");
 }
 } // namespace Media
 } // namespace OHOS

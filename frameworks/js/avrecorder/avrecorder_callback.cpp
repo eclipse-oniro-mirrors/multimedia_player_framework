@@ -190,25 +190,9 @@ void AVRecorderCallback::OnJsStateCallBack(AVRecordJsCallback *jsCb) const
         delete jsCb;
     };
 
-    uv_loop_s *loop = nullptr;
-    napi_get_uv_event_loop(env_, &loop);
-    CHECK_AND_RETURN_LOG(loop != nullptr, "Fail to get uv event loop");
-
-    uv_work_t *work = new(std::nothrow) uv_work_t;
-    CHECK_AND_RETURN_LOG(work != nullptr, "fail to new uv_work_t");
-    ON_SCOPE_EXIT(1) {
-        delete work;
-    };
-
-    work->data = reinterpret_cast<void *>(jsCb);
-    int ret = uv_queue_work_with_qos(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
-        // Js Thread
-        CHECK_AND_RETURN_LOG(work != nullptr, "work is nullptr");
-        AVRecordJsCallback *event = reinterpret_cast<AVRecordJsCallback *>(work->data);
+    auto task = [event = jsCb]() {
         std::string request = event->callbackName;
-        MEDIA_LOGI("uv_queue_work_with_qos start, state changes to %{public}s", event->state.c_str());
         do {
-            CHECK_AND_BREAK_LOG(status != UV_ECANCELED, "%{public}s canceled", request.c_str());
             std::shared_ptr<AutoRef> ref = event->autoRef.lock();
             CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
 
@@ -219,30 +203,29 @@ void AVRecorderCallback::OnJsStateCallBack(AVRecordJsCallback *jsCb) const
 
             napi_value jsCallback = nullptr;
             napi_status nstatus = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
-            CHECK_AND_BREAK_LOG(nstatus == napi_ok && jsCallback != nullptr, "%{public}s get reference value fail",
+            CHECK_AND_BREAK_LOG(nstatus == napi_ok && jsCallback != nullptr, "%{public}s get reference value failed",
                 request.c_str());
 
             napi_value args[2] = { nullptr };
             nstatus = napi_create_string_utf8(ref->env_, event->state.c_str(), NAPI_AUTO_LENGTH, &args[0]);
             CHECK_AND_BREAK_LOG(nstatus == napi_ok && args[0] != nullptr,
-                "%{public}s fail to create callback", request.c_str());
+                "%{public}s failed to create callback", request.c_str());
 
             nstatus = napi_create_int32(ref->env_, event->reason, &args[1]);
             CHECK_AND_BREAK_LOG(nstatus == napi_ok && args[1] != nullptr,
-                "%{public}s fail to create callback", request.c_str());
+                "%{public}s failed to create callback", request.c_str());
 
             const size_t argCount = 2;
             napi_value result = nullptr;
             nstatus = napi_call_function(ref->env_, nullptr, jsCallback, argCount, args, &result);
-            CHECK_AND_BREAK_LOG(nstatus == napi_ok, "%{public}s fail to napi call function", request.c_str());
+            CHECK_AND_BREAK_LOG(nstatus == napi_ok, "%{public}s failed to napi call function", request.c_str());
         } while (0);
         delete event;
-        delete work;
-    }, uv_qos_user_initiated);
-    CHECK_AND_RETURN_LOG(ret == 0, "fail to uv_queue_work_with_qos task");
+    };
+    auto ret = napi_send_event(env_, task, napi_eprio_immediate);
+    CHECK_AND_RETURN_LOG(ret == napi_status::napi_ok, "failed to napi_send_event task");
 
     CANCEL_SCOPE_EXIT_GUARD(0);
-    CANCEL_SCOPE_EXIT_GUARD(1);
 }
 
 #ifdef SUPPORT_RECORDER_CREATE_FILE
@@ -252,28 +235,9 @@ void AVRecorderCallback::OnJsPhotoAssertAvailableCallback(AVRecordJsCallback *js
         delete jsCb;
     };
 
-    uv_loop_s *loop = nullptr;
-    napi_get_uv_event_loop(env_, &loop);
-    CHECK_AND_RETURN_LOG(loop != nullptr, "Fail to get uv event loop");
-
-    uv_work_t *work = new(std::nothrow) uv_work_t;
-    CHECK_AND_RETURN_LOG(work != nullptr, "fail to new uv_work_t");
-    ON_SCOPE_EXIT(1) {
-        delete work;
-    };
-
-    work->data = reinterpret_cast<void *>(jsCb);
-    int ret = uv_queue_work_with_qos(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
-        CHECK_AND_RETURN_LOG(work != nullptr, "work is nullptr");
-        if (work->data == nullptr) {
-            delete work;
-            MEDIA_LOGE("workdata is nullptr");
-            return;
-        }
-        AVRecordJsCallback *event = reinterpret_cast<AVRecordJsCallback *>(work->data);
+    auto task = [event = jsCb]() {
         std::string request = event->callbackName;
         do {
-            CHECK_AND_BREAK_LOG(status != UV_ECANCELED, "%{public}s canceled", request.c_str());
             std::shared_ptr<AutoRef> ref = event->autoRef.lock();
             CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
 
@@ -286,7 +250,7 @@ void AVRecorderCallback::OnJsPhotoAssertAvailableCallback(AVRecordJsCallback *js
 
             napi_value jsCallback = nullptr;
             napi_status nstatus = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
-            CHECK_AND_BREAK_LOG(nstatus == napi_ok && jsCallback != nullptr, "%{public}s get reference value fail",
+            CHECK_AND_BREAK_LOG(nstatus == napi_ok && jsCallback != nullptr, "%{public}s get reference value failed",
                 request.c_str());
 
             const size_t argCount = 1;
@@ -295,15 +259,14 @@ void AVRecorderCallback::OnJsPhotoAssertAvailableCallback(AVRecordJsCallback *js
             args[0] = Media::MediaLibraryCommNapi::CreatePhotoAssetNapi(ref->env_, event->uri, CAMERA_SHOT_TYPE);
             napi_value result = nullptr;
             nstatus = napi_call_function(ref->env_, nullptr, jsCallback, argCount, args, &result);
-            CHECK_AND_BREAK_LOG(nstatus == napi_ok, "%{public}s fail to napi call function", request.c_str());
+            CHECK_AND_BREAK_LOG(nstatus == napi_ok, "%{public}s failed to napi call function", request.c_str());
         } while (0);
         delete event;
-        delete work;
-    }, uv_qos_user_initiated);
-    CHECK_AND_RETURN_LOG(ret == 0, "fail to uv_queue_work_with_qos task");
+    };
+    auto ret = napi_send_event(env_, task, napi_eprio_immediate);
+    CHECK_AND_RETURN_LOG(ret == napi_status::napi_ok, "failed to napi_send_event task");
 
     CANCEL_SCOPE_EXIT_GUARD(0);
-    CANCEL_SCOPE_EXIT_GUARD(1);
 }
 #endif
 
@@ -314,29 +277,9 @@ void AVRecorderCallback::OnJsAudioCaptureChangeCallback(AVRecordJsCallback *jsCb
         delete jsCb;
     };
 
-    uv_loop_s *loop = nullptr;
-    napi_get_uv_event_loop(env_, &loop);
-    CHECK_AND_RETURN_LOG(loop != nullptr, "Fail to get uv event loop");
-
-    uv_work_t *work = new(std::nothrow) uv_work_t;
-    CHECK_AND_RETURN_LOG(work != nullptr, "fail to new uv_work_t");
-    ON_SCOPE_EXIT(1) {
-        delete work;
-    };
-
-    work->data = reinterpret_cast<void *>(jsCb);
-    int ret = uv_queue_work_with_qos(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
-        // Js Thread
-        CHECK_AND_RETURN_LOG(work != nullptr, "work is nullptr");
-        if (work->data == nullptr) {
-            delete work;
-            MEDIA_LOGE("workdata is nullptr");
-            return;
-        }
-        AVRecordJsCallback *event = reinterpret_cast<AVRecordJsCallback *>(work->data);
+    auto task = [event = jsCb]() {
         std::string request = event->callbackName;
         do {
-            CHECK_AND_BREAK_LOG(status != UV_ECANCELED, "%{public}s canceled", request.c_str());
             std::shared_ptr<AutoRef> ref = event->autoRef.lock();
             CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
 
@@ -347,7 +290,7 @@ void AVRecorderCallback::OnJsAudioCaptureChangeCallback(AVRecordJsCallback *jsCb
 
             napi_value jsCallback = nullptr;
             napi_status nstatus = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
-            CHECK_AND_BREAK_LOG(nstatus == napi_ok && jsCallback != nullptr, "%{public}s get reference value fail",
+            CHECK_AND_BREAK_LOG(nstatus == napi_ok && jsCallback != nullptr, "%{public}s get reference value failed",
                 request.c_str());
 
             const size_t argCount = 1;
@@ -357,15 +300,14 @@ void AVRecorderCallback::OnJsAudioCaptureChangeCallback(AVRecordJsCallback *jsCb
             nstatus = ChangeInfoJsCallback->GetJsResult(ref->env_, args[0]);
             napi_value result = nullptr;
             nstatus = napi_call_function(ref->env_, nullptr, jsCallback, argCount, args, &result);
-            CHECK_AND_BREAK_LOG(nstatus == napi_ok, "%{public}s fail to napi call function", request.c_str());
+            CHECK_AND_BREAK_LOG(nstatus == napi_ok, "%{public}s failed to napi call function", request.c_str());
         } while (0);
         delete event;
-        delete work;
-    }, uv_qos_user_initiated);
-    CHECK_AND_RETURN_LOG(ret == 0, "fail to uv_queue_work_with_qos task");
+    };
+    auto ret = napi_send_event(env_, task, napi_eprio_immediate);
+    CHECK_AND_RETURN_LOG(ret == napi_status::napi_ok, "failed to napi_send_event task");
 
     CANCEL_SCOPE_EXIT_GUARD(0);
-    CANCEL_SCOPE_EXIT_GUARD(1);
 }
 
 void AVRecorderCallback::OnJsErrorCallBack(AVRecordJsCallback *jsCb) const
@@ -374,32 +316,9 @@ void AVRecorderCallback::OnJsErrorCallBack(AVRecordJsCallback *jsCb) const
         delete jsCb;
     };
 
-    uv_loop_s *loop = nullptr;
-    napi_get_uv_event_loop(env_, &loop);
-    CHECK_AND_RETURN_LOG(loop != nullptr, "Fail to get uv event loop");
-
-    uv_work_t *work = new(std::nothrow) uv_work_t;
-    CHECK_AND_RETURN_LOG(work != nullptr, "fail to new uv_work_t");
-    ON_SCOPE_EXIT(1) {
-        delete work;
-    };
-
-    work->data = reinterpret_cast<void *>(jsCb);
-    // async callback, jsWork and jsWork->data should be heap object.
-    int ret = uv_queue_work_with_qos(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
-        // Js Thread
-        CHECK_AND_RETURN_LOG(work != nullptr, "work is nullptr");
-        if (work->data == nullptr) {
-            delete work;
-            MEDIA_LOGE("workdata is nullptr");
-            return;
-        }
-        AVRecordJsCallback *event = reinterpret_cast<AVRecordJsCallback *>(work->data);
+    auto task = [event = jsCb]() {
         std::string request = event->callbackName;
-        MEDIA_LOGI("uv_queue_work_with_qos start, errorcode:%{public}d , errormessage:%{public}s:",
-            event->errorCode, event->errorMsg.c_str());
         do {
-            CHECK_AND_BREAK_LOG(status != UV_ECANCELED, "%{public}s canceled", request.c_str());
             std::shared_ptr<AutoRef> ref = event->autoRef.lock();
             CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
 
@@ -410,32 +329,31 @@ void AVRecorderCallback::OnJsErrorCallBack(AVRecordJsCallback *jsCb) const
 
             napi_value jsCallback = nullptr;
             napi_status nstatus = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
-            CHECK_AND_BREAK_LOG(nstatus == napi_ok && jsCallback != nullptr, "%{public}s get reference value fail",
+            CHECK_AND_BREAK_LOG(nstatus == napi_ok && jsCallback != nullptr, "%{public}s get reference value failed",
                 request.c_str());
 
             napi_value msgValStr = nullptr;
             nstatus = napi_create_string_utf8(ref->env_, event->errorMsg.c_str(), NAPI_AUTO_LENGTH, &msgValStr);
-            CHECK_AND_BREAK_LOG(nstatus == napi_ok && msgValStr != nullptr, "create error message str fail");
+            CHECK_AND_BREAK_LOG(nstatus == napi_ok && msgValStr != nullptr, "create error message str failed");
 
             napi_value args[1] = { nullptr };
             nstatus = napi_create_error(ref->env_, nullptr, msgValStr, &args[0]);
-            CHECK_AND_BREAK_LOG(nstatus == napi_ok && args[0] != nullptr, "create error callback fail");
+            CHECK_AND_BREAK_LOG(nstatus == napi_ok && args[0] != nullptr, "create error callback failed");
 
             nstatus = CommonNapi::FillErrorArgs(ref->env_, event->errorCode, args[0]);
-            CHECK_AND_BREAK_LOG(nstatus == napi_ok, "create error callback fail");
+            CHECK_AND_BREAK_LOG(nstatus == napi_ok, "create error callback failed");
 
             // Call back function
             napi_value result = nullptr;
             nstatus = napi_call_function(ref->env_, nullptr, jsCallback, 1, args, &result);
-            CHECK_AND_BREAK_LOG(nstatus == napi_ok, "%{public}s fail to napi call function", request.c_str());
+            CHECK_AND_BREAK_LOG(nstatus == napi_ok, "%{public}s failed to napi call function", request.c_str());
         } while (0);
         delete event;
-        delete work;
-    }, uv_qos_user_initiated);
-    CHECK_AND_RETURN_LOG(ret == 0, "fail to uv_queue_work_with_qos task");
+    };
+    auto ret = napi_send_event(env_, task, napi_eprio_immediate);
+    CHECK_AND_RETURN_LOG(ret == napi_status::napi_ok, "failed to napi_send_event task");
 
     CANCEL_SCOPE_EXIT_GUARD(0);
-    CANCEL_SCOPE_EXIT_GUARD(1);
 }
 
 napi_status AudioCaptureChangeInfoJsCallback::GetJsResult(napi_env env, napi_value &result)
