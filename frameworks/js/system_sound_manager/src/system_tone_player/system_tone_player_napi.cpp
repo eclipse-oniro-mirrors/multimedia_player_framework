@@ -17,15 +17,25 @@
 
 #include "system_sound_log.h"
 #include "common_napi.h"
+#include "access_token.h"
+#include "accesstoken_kit.h"
+#include "ipc_skeleton.h"
+#include "tokenid_kit.h"
+#include "ringtone_common_napi.h"
 
 namespace {
 /* Constants for array index */
 const int32_t PARAM0 = 0;
 const int32_t PARAM1 = 1;
+const int32_t PARAM2 = 2;
 
 /* Constants for array size */
 const int32_t ARGS_ONE = 1;
 const int32_t ARGS_TWO = 2;
+const int32_t ARGS_THREE = 3;
+const int32_t ALL_STREAMID = 0;
+const std::string PLAY_FINISHED_CALLBACK_NAME = "playFinished";
+const std::string ERROR_CALLBACK_NAME = "error";
 
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_AUDIO_NAPI, "SystemTonePlayerNapi"};
 }
@@ -56,6 +66,8 @@ napi_value SystemTonePlayerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getSupportedHapticsFeatures", GetSupportedHapticsFeatures),
         DECLARE_NAPI_FUNCTION("setHapticsFeature", SetHapticsFeature),
         DECLARE_NAPI_FUNCTION("getHapticsFeature", GetHapticsFeature),
+        DECLARE_NAPI_FUNCTION("on", On),
+        DECLARE_NAPI_FUNCTION("off", Off),
     };
 
     status = napi_define_class(env, SYSTEM_TONE_PLAYER_NAPI_CLASS_NAME.c_str(), NAPI_AUTO_LENGTH,
@@ -91,6 +103,13 @@ napi_value SystemTonePlayerNapi::SystemTonePlayerNapiConstructor(napi_env env, n
             } else {
                 MEDIA_LOGE("Failed to create sSystemTonePlayer_ instance.");
                 return result;
+            }
+
+            if (obj->systemTonePlayer_ != nullptr && obj->callbackNapi_ == nullptr) {
+                obj->callbackNapi_ = std::make_shared<SystemTonePlayerCallbackNapi>(env);
+                CHECK_AND_RETURN_RET_LOG(obj->callbackNapi_ != nullptr, result, "No memory");
+                int32_t ret = obj->systemTonePlayer_->SetSystemTonePlayerFinishedAndErrorCallback(obj->callbackNapi_);
+                MEDIA_LOGI("SetSystemTonePlayerFinishedAndErrorCallback %{public}s", ret == 0 ? "succeess" : "failed");
             }
 
             status = napi_wrap(env, thisVar, reinterpret_cast<void*>(obj.get()),
@@ -417,6 +436,11 @@ void SystemTonePlayerNapi::AsyncStart(napi_env env, void *data)
         return;
     }
     context->streamID = napiSystemTonePlayer->systemTonePlayer_->Start(context->systemToneOptions);
+    std::shared_ptr<SystemTonePlayerCallbackNapi> cb =
+        std::static_pointer_cast<SystemTonePlayerCallbackNapi>(napiSystemTonePlayer->callbackNapi_);
+    if (cb) {
+        cb->RemovePlayFinishedCallbackReference(context->streamID);
+    }
     context->status = MSERR_OK;
 }
 
@@ -761,6 +785,196 @@ napi_value SystemTonePlayerNapi::GetHapticsFeature(napi_env env, napi_callback_i
         }
     }
     return result;
+}
+
+bool SystemTonePlayerNapi::VerifySelfSystemPermission()
+{
+    Security::AccessToken::FullTokenID selfTokenID = IPCSkeleton::GetSelfTokenID();
+    auto tokenTypeFlag = Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(static_cast<uint32_t>(selfTokenID));
+    if (tokenTypeFlag == Security::AccessToken::TOKEN_NATIVE ||
+        tokenTypeFlag == Security::AccessToken::TOKEN_SHELL ||
+        Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(selfTokenID)) {
+        return true;
+    }
+    return false;
+}
+
+napi_value SystemTonePlayerNapi::ThrowErrorAndReturn(napi_env env, int32_t errCode, const std::string &errMsg)
+{
+    napi_value message = nullptr;
+    napi_value code = nullptr;
+    napi_value errVal = nullptr;
+    napi_value errNameVal = nullptr;
+    napi_value result{};
+    napi_create_string_utf8(env, errMsg.c_str(), NAPI_AUTO_LENGTH, &message);
+    napi_create_error(env, nullptr, message, &errVal);
+    napi_create_int32(env, errCode, &code);
+    napi_set_named_property(env, errVal, "code", code);
+    napi_create_string_utf8(env, errMsg.c_str(), NAPI_AUTO_LENGTH, &errNameVal);
+    napi_set_named_property(env, errVal, "BusinessError", errNameVal);
+    napi_throw(env, errVal);
+    napi_get_undefined(env, &result);
+    return result;
+}
+
+napi_value SystemTonePlayerNapi::On(napi_env env, napi_callback_info info)
+{
+    CHECK_AND_RETURN_RET_LOG(VerifySelfSystemPermission(), ThrowErrorAndReturn(env, NAPI_ERR_PERMISSION_DENIED,
+        NAPI_ERR_PERMISSION_DENIED_INFO), "No system permission");
+
+    size_t argc = ARGS_THREE;
+    napi_value argv[ARGS_THREE] = {nullptr};
+    napi_value jsThis = nullptr;
+    napi_status status = napi_get_cb_info(env, info, &argc, argv, &jsThis, nullptr);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsThis != nullptr, ThrowErrorAndReturn(env, NAPI_ERR_INPUT_INVALID,
+        NAPI_ERR_INPUT_INVALID_INFO), "On: napi_get_cb_info fail");
+    CHECK_AND_RETURN_RET_LOG(argc >= ARGS_TWO, ThrowErrorAndReturn(env, NAPI_ERR_INPUT_INVALID,
+        NAPI_ERR_INPUT_INVALID_INFO), "invalid arguments");
+
+    napi_valuetype argvType = napi_undefined;
+    napi_typeof(env, argv[PARAM0], &argvType);
+    CHECK_AND_RETURN_RET_LOG(argvType == napi_string, ThrowErrorAndReturn(env, NAPI_ERR_INPUT_INVALID,
+        NAPI_ERR_INPUT_INVALID_INFO), "The type of callbackName must be string");
+
+    std::string callbackName = RingtoneCommonNapi::GetStringArgument(env, argv[0]);
+    MEDIA_LOGI("On: callbackName: %{public}s", callbackName.c_str());
+
+    if (argc == ARGS_TWO) {
+        napi_valuetype callbackFunction = napi_undefined;
+        napi_typeof(env, argv[PARAM1], &callbackFunction);
+        CHECK_AND_RETURN_RET_LOG(callbackFunction == napi_function, ThrowErrorAndReturn(env, NAPI_ERR_INPUT_INVALID,
+            NAPI_ERR_INPUT_INVALID_INFO), "The type of callback must be function");
+    } else {
+        napi_valuetype paramArg1 = napi_undefined;
+        napi_typeof(env, argv[PARAM1], &paramArg1);
+        CHECK_AND_RETURN_RET_LOG(paramArg1 == napi_number, ThrowErrorAndReturn(env, NAPI_ERR_INPUT_INVALID,
+            NAPI_ERR_INPUT_INVALID_INFO), "The type of streamId must be number");
+
+        napi_valuetype paramArg2 = napi_undefined;
+        napi_typeof(env, argv[PARAM2], &paramArg2);
+        CHECK_AND_RETURN_RET_LOG(paramArg2 == napi_function, ThrowErrorAndReturn(env, NAPI_ERR_INPUT_INVALID,
+            NAPI_ERR_INPUT_INVALID_INFO), "The type of callback must be function");
+    }
+
+    return RegisterCallback(env, jsThis, argv, callbackName);
+}
+
+napi_value SystemTonePlayerNapi::RegisterCallback(napi_env env, napi_value jsThis, napi_value *argv,
+    const std::string &cbName)
+{
+    SystemTonePlayerNapi *systemTonePlayerNapi = nullptr;
+    napi_status status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&systemTonePlayerNapi));
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, ThrowErrorAndReturn(env, NAPI_ERR_INPUT_INVALID,
+        NAPI_ERR_INPUT_INVALID_INFO), "system err");
+    CHECK_AND_RETURN_RET_LOG(systemTonePlayerNapi != nullptr, ThrowErrorAndReturn(env, NAPI_ERR_INPUT_INVALID,
+        NAPI_ERR_INPUT_INVALID_INFO), "systemTonePlayerNapi is nullptr");
+    CHECK_AND_RETURN_RET_LOG(systemTonePlayerNapi->systemTonePlayer_ != nullptr, ThrowErrorAndReturn(env,
+        NAPI_ERR_INPUT_INVALID, NAPI_ERR_INPUT_INVALID_INFO), "systemTonePlayer_ is nullptr");
+
+    if (!cbName.compare(PLAY_FINISHED_CALLBACK_NAME) ||
+        !cbName.compare(ERROR_CALLBACK_NAME)) {
+        return RegisterSystemTonePlayerCallback(env, argv, cbName, systemTonePlayerNapi);
+    }
+
+    return ThrowErrorAndReturn(env, NAPI_ERR_PARAM_CHECK_ERROR, NAPI_ERR_PARAM_CHECK_ERROR_INFO);
+}
+
+napi_value SystemTonePlayerNapi::RegisterSystemTonePlayerCallback(napi_env env, napi_value *argv,
+    const std::string &cbName, SystemTonePlayerNapi *systemTonePlayerNapi)
+{
+    CHECK_AND_RETURN_RET_LOG(systemTonePlayerNapi->callbackNapi_ != nullptr, ThrowErrorAndReturn(env,
+        NAPI_ERR_INPUT_INVALID, NAPI_ERR_INPUT_INVALID_INFO), "callbackNapi_ is nullptr");
+
+    std::shared_ptr<SystemTonePlayerCallbackNapi> cb =
+        std::static_pointer_cast<SystemTonePlayerCallbackNapi>(systemTonePlayerNapi->callbackNapi_);
+    if (cbName == PLAY_FINISHED_CALLBACK_NAME) {
+        int32_t streamId = -1;
+        napi_get_value_int32(env, argv[PARAM1], &streamId);
+        // streamId is 0 means all streamId
+        CHECK_AND_RETURN_RET_LOG(systemTonePlayerNapi->systemTonePlayer_->IsStreamIdExist(streamId) ||
+            streamId == ALL_STREAMID,
+            ThrowErrorAndReturn(env, NAPI_ERR_PARAM_CHECK_ERROR, NAPI_ERR_PARAM_CHECK_ERROR_INFO),
+            "streamId is not exists");
+        cb->SavePlayFinishedCallbackReference(cbName, argv[PARAM2], streamId);
+    } else if (cbName == ERROR_CALLBACK_NAME) {
+        cb->SaveCallbackReference(cbName, argv[PARAM1]);
+    }
+
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    return result;
+}
+
+napi_value SystemTonePlayerNapi::Off(napi_env env, napi_callback_info info)
+{
+    CHECK_AND_RETURN_RET_LOG(VerifySelfSystemPermission(), ThrowErrorAndReturn(env, NAPI_ERR_PERMISSION_DENIED,
+        NAPI_ERR_PERMISSION_DENIED_INFO), "No system permission");
+
+    size_t argc = ARGS_THREE;
+    napi_value argv[ARGS_THREE] = {nullptr};
+    napi_value jsThis = nullptr;
+    napi_status status = napi_get_cb_info(env, info, &argc, argv, &jsThis, nullptr);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsThis != nullptr, ThrowErrorAndReturn(env, NAPI_ERR_INPUT_INVALID,
+        NAPI_ERR_INPUT_INVALID_INFO), "Off: napi_get_cb_info fail");
+    CHECK_AND_RETURN_RET_LOG(argc >= ARGS_ONE, ThrowErrorAndReturn(env, NAPI_ERR_INPUT_INVALID,
+        NAPI_ERR_INPUT_INVALID_INFO), "invalid arguments");
+
+    napi_valuetype argvType = napi_undefined;
+    napi_typeof(env, argv[PARAM0], &argvType);
+    CHECK_AND_RETURN_RET_LOG(argvType == napi_string, ThrowErrorAndReturn(env, NAPI_ERR_INPUT_INVALID,
+        NAPI_ERR_INPUT_INVALID_INFO), "The type of callbackName must be string");
+
+    std::string callbackName = RingtoneCommonNapi::GetStringArgument(env, argv[0]);
+    MEDIA_LOGI("Off: callbackName: %{public}s", callbackName.c_str());
+
+    napi_value callback = nullptr;
+    if (argc == ARGS_TWO) {
+        napi_valuetype callbackFunction = napi_undefined;
+        napi_typeof(env, argv[PARAM1], &callbackFunction);
+        CHECK_AND_RETURN_RET_LOG(callbackFunction == napi_function, ThrowErrorAndReturn(env, NAPI_ERR_INPUT_INVALID,
+            NAPI_ERR_INPUT_INVALID_INFO), "The type of callback must be function");
+        callback = argv[PARAM1];
+    }
+
+    return UnregisterCallback(env, jsThis, callbackName, callback);
+}
+
+napi_value SystemTonePlayerNapi::UnregisterCallback(napi_env env, napi_value jsThis, const std::string &cbName,
+    const napi_value &callback)
+{
+    SystemTonePlayerNapi *systemTonePlayerNapi = nullptr;
+    napi_status status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&systemTonePlayerNapi));
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, ThrowErrorAndReturn(env, NAPI_ERR_INPUT_INVALID,
+        NAPI_ERR_INPUT_INVALID_INFO), "system err");
+    CHECK_AND_RETURN_RET_LOG(systemTonePlayerNapi != nullptr, ThrowErrorAndReturn(env, NAPI_ERR_INPUT_INVALID,
+        NAPI_ERR_INPUT_INVALID_INFO), "systemTonePlayerNapi is nullptr");
+    CHECK_AND_RETURN_RET_LOG(systemTonePlayerNapi->systemTonePlayer_  != nullptr, ThrowErrorAndReturn(env,
+        NAPI_ERR_INPUT_INVALID, NAPI_ERR_INPUT_INVALID_INFO), "systemTonePlayer_ is nullptr");
+
+    if (!cbName.compare(PLAY_FINISHED_CALLBACK_NAME) ||
+        !cbName.compare(ERROR_CALLBACK_NAME)) {
+        UnregisterSystemTonePlayerCallback(env, systemTonePlayerNapi, cbName, callback);
+    } else {
+        ThrowErrorAndReturn(env, NAPI_ERR_PARAM_CHECK_ERROR, NAPI_ERR_PARAM_CHECK_ERROR_INFO);
+    }
+
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    return result;
+}
+
+void SystemTonePlayerNapi::UnregisterSystemTonePlayerCallback(napi_env env, SystemTonePlayerNapi *systemTonePlayerNapi,
+    const std::string &cbName, const napi_value &callback)
+{
+    if (systemTonePlayerNapi->callbackNapi_ == nullptr) {
+        ThrowErrorAndReturn(env, NAPI_ERR_INPUT_INVALID, NAPI_ERR_INPUT_INVALID_INFO);
+        MEDIA_LOGE("callbackNapi_ is nullptr");
+        return;
+    }
+
+    std::shared_ptr<SystemTonePlayerCallbackNapi> cb =
+        std::static_pointer_cast<SystemTonePlayerCallbackNapi>(systemTonePlayerNapi->callbackNapi_);
+    cb->RemoveCallbackReference(cbName, callback);
 }
 } // namespace Media
 } // namespace OHOS
