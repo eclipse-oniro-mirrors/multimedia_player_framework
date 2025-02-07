@@ -26,6 +26,7 @@
 #include "media_dfx.h"
 #include "thread_pool.h"
 #include "audio_system_manager.h"
+#include "soundpool_xcollie.h"
 
 namespace OHOS {
 namespace Media {
