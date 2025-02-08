@@ -239,6 +239,16 @@ private:
 #endif
 };
 
+namespace {
+int32_t GetVideoOrientation(const char *videoOrientation)
+{
+    std::unordered_map<std::string, int32_t> validOrientations = {
+        { "0", 0 },      // videoOrientation set to 0 degree
+        { "90", 90 },    // videoOrientation set to 90 degrees
+        { "180", 180 },  // videoOrientation set to 180 degrees
+        { "270", 270 }   // videoOrientation set to 270 degrees
+    };
+
     if (videoOrientation == nullptr || videoOrientation[0] == '\0') {
         return 0; // 0 default value
     }
