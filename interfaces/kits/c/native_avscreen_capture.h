@@ -399,7 +399,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ShowCursor(struct OH_AVScreenCapt
  *         {@link AV_SCREEN_CAPTURE_ERR_INVALID_VAL} input capture is nullptr or input callback is nullptr.
  *         {@link AV_SCREEN_CAPTURE_ERR_NO_MEMORY} no memory, mem allocate failed.
  *         {@link AV_SCREEN_CAPTURE_ERR_INVALID_STATE} This interface should be called before Start is called.
- * @since 16
+ * @since 15
  */
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetDisplayCallback(struct OH_AVScreenCapture *capture,
     OH_AVScreenCapture_OnDisplaySelected callback, void *userData);
