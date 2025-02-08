@@ -26,8 +26,10 @@
 #include "media_errors.h"
 #include "surface_utils.h"
 #include "native_window.h"
-#include "media_asset_helper.h"
 #include "native_player_magic.h"
+#ifdef SUPPORT_MEDIA_LIBRARY
+#include "media_asset_helper.h"
+#endif
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_RECORDER, "NativeAVRecorder" };
@@ -128,6 +130,7 @@ private:
     void *userData_;
 };
 
+#ifdef SUPPORT_MEDIA_LIBRARY
 class NativeRecorderUriCallback {
 public:
     NativeRecorderUriCallback(OH_AVRecorder_OnUri callback, void *userData)
@@ -153,6 +156,7 @@ private:
     OH_AVRecorder_OnUri callback_;
     void *userData_;
 };
+#endif
 
 class NativeRecorderCallback : public RecorderCallback {
 public:
@@ -183,6 +187,7 @@ public:
         }
     }
 
+#ifdef SUPPORT_MEDIA_LIBRARY
     void OnPhotoAssertAvailable(const std::string &uri) override
     {
         MEDIA_LOGI("OnPhotoAssertAvailable() is called, uri: %{public}s", uri.c_str());
@@ -194,6 +199,7 @@ public:
             return;
         }
     }
+#endif
 
     void OnInfo(int32_t type, int32_t extra) override
     {
@@ -214,30 +220,24 @@ public:
         return errorCallback_ != nullptr;
     }
 
+#ifdef SUPPORT_MEDIA_LIBRARY
     bool SetUriCallback(OH_AVRecorder_OnUri callback, void *userData)
     {
         std::unique_lock<std::shared_mutex> lock(mutex_);
         uriCallback_ = std::make_shared<NativeRecorderUriCallback>(callback, userData);
         return uriCallback_ != nullptr;
     }
- 
+#endif
+
 private:
     std::shared_mutex mutex_;
     OH_AVRecorder *recorder_ = nullptr;
     std::shared_ptr<NativeRecorderStateChangeCallback> stateChangeCallback_ = nullptr;
     std::shared_ptr<NativeRecorderErrorCallback> errorCallback_ = nullptr;
+#ifdef SUPPORT_MEDIA_LIBRARY
     std::shared_ptr<NativeRecorderUriCallback> uriCallback_ = nullptr;
+#endif
 };
-
-namespace {
-int32_t GetVideoOrientation(const char *videoOrientation)
-{
-    std::unordered_map<std::string, int32_t> validOrientations = {
-        { "0", 0 },      // videoOrientation set to 0 degree
-        { "90", 90 },    // videoOrientation set to 90 degrees
-        { "180", 180 },  // videoOrientation set to 180 degrees
-        { "270", 270 }   // videoOrientation set to 270 degrees
-    };
 
     if (videoOrientation == nullptr || videoOrientation[0] == '\0') {
         return 0; // 0 default value
@@ -837,6 +837,7 @@ OH_AVErrCode OH_AVRecorder_SetErrorCallback(OH_AVRecorder *recorder, OH_AVRecord
     return AV_ERR_OK;
 }
 
+#ifdef SUPPORT_MEDIA_LIBRARY
 OH_AVErrCode OH_AVRecorder_SetUriCallback(OH_AVRecorder *recorder, OH_AVRecorder_OnUri callback, void *userData)
 {
     MEDIA_LOGD("OH_AVRecorder_SetUriCallback Start");
@@ -864,3 +865,4 @@ OH_AVErrCode OH_AVRecorder_SetUriCallback(OH_AVRecorder *recorder, OH_AVRecorder
  
     return AV_ERR_OK;
 }
+#endif
