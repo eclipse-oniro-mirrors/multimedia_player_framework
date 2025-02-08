@@ -241,6 +241,12 @@ public:
         (void)stateCode;
         return;
     }
+
+    virtual void OnDisplaySelected(uint64_t displayId)
+    {
+        (void)displayId;
+        return;
+    }
 };
 
 class ScreenCapture {

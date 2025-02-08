@@ -112,6 +112,7 @@ public:
     int32_t GetAppPid();
     int32_t GetAppUid();
     void NotifyStateChange(AVScreenCaptureStateCode stateCode);
+    void NotifyDisplaySelected(uint64_t displayId);
     void SetMouseChangeListener(std::shared_ptr<MouseChangeListener> listener);
     std::shared_ptr<MouseChangeListener> GetMouseChangeListener();
     int32_t SetAndCheckAppInfo(OHOS::AudioStandard::AppInfo &appInfo);

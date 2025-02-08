@@ -59,6 +59,11 @@ void ScreenCaptureServerUnittestCallbackMock::OnStateChange(AVScreenCaptureState
     MEDIA_LOGI("OnStateChange() is called, stateCode %{public}d", stateCode);
 }
 
+void ScreenCaptureServerUnittestCallbackMock::OnDisplaySelected(uint64_t displayId)
+{
+    MEDIA_LOGI("OnDisplaySelected() is called, displayId %{public}" PRIu64, displayId);
+}
+
 void ScreenCaptureServerUnittestCallbackMock::Stop()
 {
     MEDIA_LOGD("Stop() is called");

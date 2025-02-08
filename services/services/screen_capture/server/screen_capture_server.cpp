@@ -1540,6 +1540,9 @@ void ScreenCaptureServer::PostStartScreenCaptureSuccessAction()
         this->sessionId_, static_cast<uint32_t>(ScreenCaptureServer::startedSessionIDList_.size()));
     ScreenCaptureMonitorServer::GetInstance()->CallOnScreenCaptureStarted(appInfo_.appPid);
     NotifyStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STARTED);
+    if (displayScreenId_ != SCREEN_ID_INVALID) {
+        NotifyDisplaySelected(displayScreenId_);
+    }
 }
 
 bool ScreenCaptureServer::IsFirstStartPidInstance(int32_t pid)
@@ -1568,6 +1571,14 @@ void ScreenCaptureServer::NotifyStateChange(AVScreenCaptureStateCode stateCode)
     if (screenCaptureCb_ != nullptr) {
         MEDIA_LOGD("NotifyStateChange stateCode: %{public}d", stateCode);
         screenCaptureCb_->OnStateChange(stateCode);
+    }
+}
+
+void ScreenCaptureServer::NotifyDisplaySelected(uint64_t displayId)
+{
+    if (screenCaptureCb_ != nullptr) {
+        MEDIA_LOGD("NotifyDisplaySelected displayId: (%{public}" PRIu64 ")", displayId);
+        screenCaptureCb_->OnDisplaySelected(displayId);
     }
 }
 

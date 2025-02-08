@@ -56,6 +56,14 @@ void ScreenCaptureNativeCallbackMock::OnStateChange(AVScreenCaptureStateCode sta
     }
 }
 
+void ScreenCaptureNativeCallbackMock::OnDisplaySelected(uint64_t displayId)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    if (mockCb_ != nullptr) {
+        mockCb_->OnDisplaySelected(displayId);
+    }
+}
+
 void ScreenCaptureNativeCallbackMock::OnRelease()
 {
     std::unique_lock<std::mutex> lock(mutex_);

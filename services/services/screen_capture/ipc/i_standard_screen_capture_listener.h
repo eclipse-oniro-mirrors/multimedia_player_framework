@@ -31,6 +31,7 @@ public:
     virtual void OnAudioBufferAvailable(bool isReady, AudioCaptureSourceType type) = 0;
     virtual void OnVideoBufferAvailable(bool isReady) = 0;
     virtual void OnStateChange(AVScreenCaptureStateCode stateCode) = 0;
+    virtual void OnDisplaySelected(uint64_t displayId) = 0;
     /**
      * IPC code ID
      */
@@ -38,7 +39,8 @@ public:
         ON_ERROR = 0,
         ON_AUDIO_AVAILABLE = 1,
         ON_VIDEO_AVAILABLE = 2,
-        ON_STAGE_CHANGE = 3
+        ON_STAGE_CHANGE = 3,
+        ON_DISPLAY_SELECTED = 4
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardScreenCaptureListener");
