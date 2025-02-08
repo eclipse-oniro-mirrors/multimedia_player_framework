@@ -48,7 +48,8 @@ declare_args() {
       defined(global_parts_info.multimedia_media_library)) {
     player_framework_support_auto_create_file = true
   }
-  if (defined(global_parts_info) && defined(global_parts_info.multimedia_media_library)) {
+  if (defined(global_parts_info) &&
+      defined(global_parts_info.multimedia_media_library)) {
     player_framework_support_media_library = true
   }
   player_framework_support_monitor = true
@@ -198,7 +199,7 @@ if (player_framework_support_auto_create_file) {
   player_framework_defines += [ "SUPPORT_RECORDER_CREATE_FILE" ]
 }
 
-if (player_framework_support_media_library ) {
+if (player_framework_support_media_library) {
   player_framework_defines += [ "SUPPORT_MEDIA_LIBRARY" ]
 }
 
