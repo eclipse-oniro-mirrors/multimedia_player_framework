@@ -47,6 +47,7 @@ struct ScreenCaptureObject : public OH_AVScreenCapture {
 
     const std::shared_ptr<ScreenCapture> screenCapture_ = nullptr;
     std::shared_ptr<NativeScreenCaptureCallback> callback_ = nullptr;
+    bool isStart = false;
 };
 
 class NativeScreenCaptureStateChangeCallback {
@@ -576,7 +577,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StartScreenCapture(struct OH_AVSc
     CHECK_AND_RETURN_RET(ret == AV_SCREEN_CAPTURE_ERR_OK, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT);
     ret = screenCaptureObj->screenCapture_->StartScreenCapture();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT, "StartScreenCapture failed!");
-
+    screenCaptureObj->isStart = true;
     return AV_SCREEN_CAPTURE_ERR_OK;
 }
 
@@ -596,7 +597,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StartScreenCaptureWithSurface(str
     CHECK_AND_RETURN_RET(ret == AV_SCREEN_CAPTURE_ERR_OK, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT);
     ret = screenCaptureObj->screenCapture_->StartScreenCaptureWithSurface(window->surface);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT, "StartScreenCapture failed!");
-
+    screenCaptureObj->isStart = true;
     return AV_SCREEN_CAPTURE_ERR_OK;
 }
 
@@ -611,7 +612,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StopScreenCapture(struct OH_AVScr
 
     int32_t ret = screenCaptureObj->screenCapture_->StopScreenCapture();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT, "StopScreenCapture failed!");
-
+    screenCaptureObj->isStart = false;
     return AV_SCREEN_CAPTURE_ERR_OK;
 }
 
@@ -627,7 +628,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StartScreenRecording(struct OH_AV
     CHECK_AND_RETURN_RET(ret == MSERR_OK, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT);
     ret = screenCaptureObj->screenCapture_->StartScreenRecording();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT, "StartScreenRecording failed!");
-
+    screenCaptureObj->isStart = true;
     return AV_SCREEN_CAPTURE_ERR_OK;
 }
 
@@ -642,7 +643,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StopScreenRecording(struct OH_AVS
 
     int32_t ret = screenCaptureObj->screenCapture_->StopScreenRecording();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT, "StopScreenRecording failed!");
-
+    screenCaptureObj->isStart = false;
     return AV_SCREEN_CAPTURE_ERR_OK;
 }
 
@@ -1026,6 +1027,8 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetDisplayCallback(struct OH_AVSc
     CHECK_AND_RETURN_RET_LOG(screenCaptureObj->screenCapture_ != nullptr,
         AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "screenCapture_ is null");
 
+    CHECK_AND_RETURN_RET_LOG(!screenCaptureObj->isStart,
+        AV_SCREEN_CAPTURE_ERR_INVALID_STATE, "This interface should be called before Start is called!");
     OH_AVSCREEN_CAPTURE_ErrCode errCode = AVScreenCaptureSetCallback(capture, screenCaptureObj);
     CHECK_AND_RETURN_RET_LOG(errCode == AV_SCREEN_CAPTURE_ERR_OK, errCode, "SetDisplayCallback is null");
 
