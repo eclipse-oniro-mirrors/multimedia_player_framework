@@ -190,7 +190,7 @@ ohos_shared_library("avrecorder") {
       "media_library:native_media_asset_manager",
     ]
   }
-  
+
   output_extension = "so"
   subsystem_name = "multimedia"
   part_name = "player_framework"
