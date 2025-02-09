@@ -183,7 +183,7 @@ ohos_shared_library("avrecorder") {
     "window_manager:libdm",
   ]
 
-  if (player_framework_support_auto_create_file ) {
+  if (player_framework_support_auto_create_file) {
     external_deps += [
       "media_library:media_library",
       "media_library:media_library_asset_manager",
