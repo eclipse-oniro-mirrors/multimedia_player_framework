@@ -40,7 +40,7 @@
 
 #include <string>
 #include <stdint.h>
-#ifdef SUPPORT_MEDIA_LIBRARY
+#ifdef SUPPORT_RECORDER_CREATE_FILE
 #include "media_asset_base_capi.h"
 #endif
 
@@ -331,7 +331,7 @@ typedef void (*OH_AVRecorder_OnStateChange)(OH_AVRecorder *recorder,
 typedef void (*OH_AVRecorder_OnError)(OH_AVRecorder *recorder, int32_t errorCode, const char *errorMsg,
     void *userData);
 
-#ifdef SUPPORT_MEDIA_LIBRARY
+#ifdef SUPPORT_RECORDER_CREATE_FILE
 /**
  * @brief Called when current recording is finished in OH_AVRecorder_FileGenerationMode.AUTO_CREATE_CAMERA_SCENE
  * @syscap SystemCapability.Multimedia.Media.AVRecorder
