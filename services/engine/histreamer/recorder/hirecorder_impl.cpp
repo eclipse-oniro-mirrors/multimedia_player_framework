@@ -439,6 +439,9 @@ int32_t HiRecorderImpl::Stop(bool isDrainAll)
     }
     Status ret = Status::OK;
     outputFormatType_ = OutputFormatType::FORMAT_BUTT;
+    if (videoEncoderFilter_) {
+        ret = videoEncoderFilter_->SetStopTime();
+    }
     if (audioCaptureFilter_) {
         ret = audioCaptureFilter_->SendEos();
     }
