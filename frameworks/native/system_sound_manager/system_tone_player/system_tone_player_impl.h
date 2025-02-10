@@ -41,9 +41,13 @@ public:
     int32_t GetSupportHapticsFeatures(std::vector<ToneHapticsFeature> &recvFeatures) override;
     int32_t SetHapticsFeature(ToneHapticsFeature feature) override;
     int32_t GetHapticsFeature(ToneHapticsFeature &feature) override;
+    bool IsStreamIdExist(int32_t streamId) override;
+    int32_t SetSystemTonePlayerFinishedAndErrorCallback(
+        const std::shared_ptr<SystemTonePlayerFinishedAndErrorCallback> &finishedAndErrorCallback) override;
 
     void NotifyEndofStreamEvent(const int32_t &streamId);
     void NotifyInterruptEvent(const int32_t &streamId, const AudioStandard::InterruptEvent &interruptEvent);
+    void NotifyErrorEvent(int32_t errCode);
 
 private:
     int32_t InitPlayer(const std::string &audioUri);
@@ -89,6 +93,7 @@ private:
     std::map<ToneHapticsFeature, std::string> hapticUriMap_;
     bool isHapticUriEmpty_ = false;
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper_ = nullptr;
+    std::shared_ptr<SystemTonePlayerFinishedAndErrorCallback> finishedAndErrorCallback_ = nullptr;
 
     std::mutex systemTonePlayerMutex_;
 };

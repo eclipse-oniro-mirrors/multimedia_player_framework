@@ -23,6 +23,7 @@
 #include "system_sound_log.h"
 #include "system_tone_options_napi.h"
 #include "system_tone_player.h"
+#include "system_tone_callback_napi.h"
 
 namespace OHOS {
 namespace Media {
@@ -50,6 +51,8 @@ private:
     static napi_value GetSupportedHapticsFeatures(napi_env env, napi_callback_info info);
     static napi_value SetHapticsFeature(napi_env env, napi_callback_info info);
     static napi_value GetHapticsFeature(napi_env env, napi_callback_info info);
+    static napi_value On(napi_env env, napi_callback_info info);
+    static napi_value Off(napi_env env, napi_callback_info info);
     static void AsyncStart(napi_env env, void *data);
     static void AsyncStop(napi_env env, void *data);
     static void AsyncRelease(napi_env env, void *data);
@@ -57,9 +60,19 @@ private:
     static void CommonAsyncCallbackComplete(napi_env env, napi_status status, void* data);
     static void GetTitleAsyncCallbackComplete(napi_env env, napi_status status, void *data);
     static void StartAsyncCallbackComplete(napi_env env, napi_status status, void *data);
+    static bool VerifySelfSystemPermission();
+    static napi_value ThrowErrorAndReturn(napi_env env, int32_t errCode, const std::string &errMsg);
+    static napi_value RegisterCallback(napi_env env, napi_value jsThis, napi_value *argv, const std::string &cbName);
+    static napi_value RegisterSystemTonePlayerCallback(napi_env env, napi_value *argv, const std::string &cbName,
+        SystemTonePlayerNapi *systemTonePlayerNapi);
+    static napi_value UnregisterCallback(napi_env env, napi_value jsThis, const std::string &cbName,
+        const napi_value &callback);
+    static void UnregisterSystemTonePlayerCallback(napi_env env, SystemTonePlayerNapi *systemTonePlayerNapi,
+        const std::string &cbName, const napi_value &callback);
 
     napi_env env_;
     std::shared_ptr<SystemTonePlayer> systemTonePlayer_;
+    std::shared_ptr<SystemTonePlayerFinishedAndErrorCallback> callbackNapi_ = nullptr;
 
     static thread_local napi_ref sConstructor_;
     static std::shared_ptr<SystemTonePlayer> sSystemTonePlayer_;

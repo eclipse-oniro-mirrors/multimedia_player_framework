@@ -522,12 +522,28 @@ void SystemTonePlayerImpl::NotifyEndofStreamEvent(const int32_t &streamId)
     std::lock_guard<std::mutex> lock(systemTonePlayerMutex_);
     // onPlayFinished for a stream.
     DeletePlayer(streamId);
+    if (finishedAndErrorCallback_ != nullptr) {
+        finishedAndErrorCallback_->OnEndOfStream(streamId);
+        MEDIA_LOGI("SystemTonePlayerImpl::NotifyEndofStreamEvent sreamId %{public}d", streamId);
+    } else {
+        MEDIA_LOGE("SystemTonePlayerImpl::NotifyEndofStreamEvent is nullptr");
+    }
 }
 
 void SystemTonePlayerImpl::NotifyInterruptEvent(const int32_t &streamId,
     const AudioStandard::InterruptEvent &interruptEvent)
 {
     MEDIA_LOGW("Interrupt event is not supported for system tone player!");
+}
+
+void SystemTonePlayerImpl::NotifyErrorEvent(int32_t errCode)
+{
+    if (finishedAndErrorCallback_ != nullptr) {
+        finishedAndErrorCallback_->OnError(errCode);
+        MEDIA_LOGI("SystemTonePlayerImpl::NotifyErrorEvent errCode %{public}d", errCode);
+    } else {
+        MEDIA_LOGE("SystemTonePlayerImpl::NotifyErrorEvent is nullptr");
+    }
 }
 
 // Callback class symbols
@@ -563,6 +579,12 @@ void SystemTonePlayerCallback::OnEndOfStream(void)
 void SystemTonePlayerCallback::OnError(int32_t errorCode)
 {
     MEDIA_LOGI("OnError from audio haptic player. errorCode %{public}d", errorCode);
+    std::shared_ptr<SystemTonePlayerImpl> player = systemTonePlayerImpl_.lock();
+    if (player == nullptr) {
+        MEDIA_LOGE("The audio haptic player has been released.");
+        return;
+    }
+    player->NotifyErrorEvent(errorCode);
 }
 
 static bool IsValidVolume(float &scale)
@@ -625,6 +647,22 @@ int32_t SystemTonePlayerImpl::GetHapticsFeature(ToneHapticsFeature &feature)
     CHECK_AND_RETURN_RET_LOG(systemToneState_ != SystemToneState::STATE_RELEASED, ERRCODE_UNSUPPORTED_OPERATION,
         "System tone player has been released!");
     feature = hapticsFeature_;
+    return MSERR_OK;
+}
+
+bool SystemTonePlayerImpl::IsStreamIdExist(int32_t streamId)
+{
+    MEDIA_LOGI("Query streamId: %{public}d", streamId);
+    std::lock_guard<std::mutex> lock(systemTonePlayerMutex_);
+    return playerMap_.count(streamId) != 0 && playerMap_[streamId] != nullptr;
+}
+
+int32_t SystemTonePlayerImpl::SetSystemTonePlayerFinishedAndErrorCallback(
+    const std::shared_ptr<SystemTonePlayerFinishedAndErrorCallback> &finishedAndErrorCallback)
+{
+    MEDIA_LOGI("SystemTonePlayer register callback");
+    std::lock_guard<std::mutex> lock(systemTonePlayerMutex_);
+    finishedAndErrorCallback_ = finishedAndErrorCallback;
     return MSERR_OK;
 }
 

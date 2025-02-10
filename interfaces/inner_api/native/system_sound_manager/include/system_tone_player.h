@@ -51,6 +51,8 @@ enum ToneHapticsFeature : int32_t {
 
 #define SYS_TONE_PLAYER_MAX_VOLUME 1.0f
 
+class SystemTonePlayerFinishedAndErrorCallback;
+
 class SystemTonePlayer {
 public:
     virtual ~SystemTonePlayer() = default;
@@ -159,6 +161,43 @@ public:
      * @since 12
      */
     virtual int32_t GetHapticsFeature(ToneHapticsFeature &feature) = 0;
+
+    /**
+     * @brief Checks if the stream ID exists
+     *
+     * @param streamId stream id
+     * @return Returns true if exists, false if it not exists.
+     * @since 14
+     */
+    virtual bool IsStreamIdExist(int32_t streamId) = 0;
+
+    /**
+     * @brief Registers the systemTone player callback listener.
+     *
+     * @return Returns {@link MSERR_OK} if callback registration is successful;
+     * returns an error code defined in {@link media_errors.h} otherwise.
+     * @since 14
+     */
+    virtual int32_t SetSystemTonePlayerFinishedAndErrorCallback(
+        const std::shared_ptr<SystemTonePlayerFinishedAndErrorCallback> &finishedAndErrorCallback) = 0;
+};
+
+class SystemTonePlayerFinishedAndErrorCallback {
+public:
+    virtual ~SystemTonePlayerFinishedAndErrorCallback() = default;
+    /**
+     * Called when reaching the end of stream.
+     *
+     * @param streamId stream id.
+     */
+    virtual void OnEndOfStream(int32_t streamId) = 0;
+
+    /**
+     * Called when reaching errs from player.
+     *
+     * @param errorCode error code.
+     */
+    virtual void OnError(int32_t errorCode) = 0;
 };
 } // namespace Media
 } // namespace OHOS
