@@ -57,6 +57,22 @@ namespace {
     static int32_t g_apiVersion = -1;
     constexpr int32_t ARGS_TWO = 2;
     constexpr int32_t ARGS_THREE = 3;
+    constexpr int32_t BASE = 10;
+    bool StrToULL(const std::string &str, uint64_t &value)
+    {
+        CHECK_AND_RETURN_RET(!str.empty() && (isdigit(str.front())), false);
+        std::string valStr(str);
+        const char* addr = valStr.c_str();
+        char* end = nullptr;
+        errno = 0;
+        unsigned long long result = strtoull(addr, &end, BASE);
+        CHECK_AND_RETURN_RET_LOG(result <= ULLONG_MAX, false,
+            "call StrToULL func false,  input str is: %{public}s!", valStr.c_str());
+        CHECK_AND_RETURN_RET_LOG(end != addr && end[0] == '\0' && errno != ERANGE, false,
+            "call StrToULL func false,  input str is: %{public}s!", valStr.c_str());
+        value = result;
+        return true;
+    }
 }
 
 namespace OHOS {
@@ -1773,7 +1789,11 @@ void AVPlayerNapi::SetSurface(const std::string &surfaceStr)
             "Please obtain the surface from XComponentController.getXComponentSurfaceId");
         return;
     }
-    surfaceId = std::stoull(surfaceStr);
+    if (!StrToULL(surfaceStr, surfaceId)) {
+        OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
+            "invalid parameters, failed to obtain surfaceId");
+        return;
+    }
     MEDIA_LOGI("get surface, surfaceId = (%{public}" PRIu64 ")", surfaceId);
 
     auto surface = SurfaceUtils::GetInstance()->GetSurface(surfaceId);
