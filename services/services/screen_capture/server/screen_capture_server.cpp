@@ -544,7 +544,7 @@ void ScreenCaptureServer::PrepareSelectWindow(Json::Value &root, std::shared_ptr
         return;
     }
     const Json::Value displayIdJson = root["displayId"];
-    if (!displayIdJson.isNull() && displayIdJson.asInt64() >= 0) {
+    if (!displayIdJson.isNull() && displayIdJson.isInt() && displayIdJson.asInt64() >= 0) {
         uint64_t displayId = static_cast<uint64_t>(displayIdJson.asInt64());
         MEDIA_LOGI("Report Select DisplayId: %{public}" PRIu64, displayId);
         server->SetDisplayId(displayId);
@@ -552,7 +552,7 @@ void ScreenCaptureServer::PrepareSelectWindow(Json::Value &root, std::shared_ptr
         server->SetCaptureConfig(CaptureMode::CAPTURE_SPECIFIED_SCREEN, -1);
     }
     const Json::Value missionIdJson = root["missionId"];
-    if (!missionIdJson.isNull() && missionIdJson.asInt() >= 0) {
+    if (!missionIdJson.isNull() && missionIdJson.isInt() && missionIdJson.asInt() >= 0) {
         int32_t missionId = missionIdJson.asInt();
         MEDIA_LOGI("Report Select MissionId: %{public}d", missionId);
         server->SetMissionId(missionId);
