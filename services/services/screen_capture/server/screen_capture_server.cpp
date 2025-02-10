@@ -523,7 +523,7 @@ void ScreenCaptureServer::GetChoiceFromJson(Json::Value &root,
         return;
     }
     const Json::Value keyJson = root[key];
-    if (!keyJson.isNull()) {
+    if (!keyJson.isNull() && keyJson.isString()) {
         value = keyJson.asString();
     }
 }
