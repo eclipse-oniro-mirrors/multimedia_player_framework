@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,18 +16,22 @@
 #include "uri_helper.h"
 #include <cstring>
 #include <climits>
+#include <sys/ioctl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <type_traits>
 #include "media_errors.h"
 #include "media_log.h"
+#include "osal/filesystem/file_system.h"
 
 namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "UriHelper"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "UriHelper"};
+constexpr unsigned int HMDFS_IOC = 0xf2;
 }
 
 namespace OHOS {
 namespace Media {
+#define HMDFS_IOC_GET_LOCATION _IOR(HMDFS_IOC, 7, unsigned int)
 static const std::map<std::string_view, uint8_t> g_validUriTypes = {
     {"", UriHelper::UriType::URI_TYPE_FILE }, // empty uri head is treated as the file type uri.
     {"file", UriHelper::UriType::URI_TYPE_FILE},
@@ -194,7 +198,22 @@ bool UriHelper::CorrectFdParam()
     formattedUri_ = std::string("fd://") + std::to_string(fd_) + "?offset=" +
         std::to_string(offset_) + "&size=" + std::to_string(size_);
     MEDIA_LOGI("CorrectFdParam formattedUri: %{public}s", formattedUri_.c_str());
+    DetermineFdLocation();
     return true;
+}
+
+void UriHelper::DetermineFdLocation()
+{
+    CHECK_AND_RETURN(fd_ > 0);
+    int loc = 1;
+    ioctl(fd_, HMDFS_IOC_GET_LOCATION, &loc);
+
+    fdLocation_ = static_cast<FdLocation>(loc);
+}
+ 
+FdLocation UriHelper::GetFdLocation()
+{
+    return fdLocation_;
 }
 
 uint8_t UriHelper::UriType() const

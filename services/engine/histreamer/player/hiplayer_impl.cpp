@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -835,10 +835,7 @@ int32_t HiPlayerImpl::Pause(bool isSystemOperation)
     callbackLooper_.StopCollectMaxAmplitude();
     callbackLooper_.ManualReportMediaProgressOnce();
     OnStateChanged(PlayerStateId::PAUSE, isSystemOperation);
-    if (startTime_ != -1) {
-        playTotalDuration_ += GetCurrentMillisecond() - startTime_;
-    }
-    startTime_ = -1;
+    UpdatePlayTotalDuration();
     return TransStatus(ret);
 }
 
@@ -868,9 +865,8 @@ int32_t HiPlayerImpl::ResumeDemuxer()
 
 int64_t HiPlayerImpl::GetCurrentMillisecond()
 {
-    std::chrono::system_clock::duration duration = std::chrono::system_clock::now().time_since_epoch();
-    int64_t time = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
-    return time;
+    auto duration = std::chrono::steady_clock::now().time_since_epoch();
+    return std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
 }
 
 int32_t HiPlayerImpl::Stop()
@@ -960,19 +956,31 @@ void HiPlayerImpl::UpdatePlayStatistics()
     }
 }
 
+inline bool HiPlayerImpl::IsStatisticalInfoValid()
+{
+    return playStatisticalInfo_.playDuration >= 0 && playStatisticalInfo_.startLatency >= 0;
+}
+
+void HiPlayerImpl::UpdatePlayTotalDuration()
+{
+    int64_t startTime = startTime_.load();
+    FALSE_RETURN_NOLOG(startTime != -1);
+    startTime_ = -1;
+    playTotalDuration_ += GetCurrentMillisecond() - startTime;
+}
+
 void HiPlayerImpl::AppendPlayerMediaInfo()
 {
     MEDIA_LOG_I("AppendPlayerMediaInfo entered.");
-    if (startTime_ != -1) {
-        playTotalDuration_ += GetCurrentMillisecond() - startTime_;
-    }
-    startTime_ = -1;
+    UpdatePlayTotalDuration();
     playStatisticalInfo_.playDuration = static_cast<int32_t>(playTotalDuration_);
     playStatisticalInfo_.maxSeekLatency = static_cast<int32_t>(maxSeekLatency_);
     playStatisticalInfo_.maxAccurateSeekLatency = static_cast<int32_t>(maxAccurateSeekLatency_);
     playStatisticalInfo_.maxSurfaceSwapLatency = static_cast<int32_t>(maxSurfaceSwapLatency_);
-    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
     playStatisticalInfo_.containerMime = playStatisticalInfo_.videoMime + " : " + playStatisticalInfo_.audioMime;
+    FALSE_RETURN_MSG(IsStatisticalInfoValid(), "statistical info is invalid, don't report to bigdata");
+
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
     meta->SetData(Tag::AV_PLAYER_ERR_CODE, playStatisticalInfo_.errCode);
     meta->SetData(Tag::AV_PLAYER_ERR_MSG, playStatisticalInfo_.errMsg);
     meta->SetData(Tag::AV_PLAYER_PLAY_DURATION, playStatisticalInfo_.playDuration);
@@ -2214,6 +2222,7 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
         FilterType::FILTERTYPE_DEMUXER);
     FALSE_RETURN_V(demuxer_ != nullptr, Status::ERROR_NULL_POINTER);
     demuxer_->SetInterruptState(isInterruptNeeded_);
+    demuxer_->SetPerfRecEnabled(isPerfRecEnabled_);
     pipeline_->AddHeadFilters({demuxer_});
     demuxer_->Init(playerEventReceiver_, playerFilterCallback_);
     DoSetPlayStrategy(source);
@@ -2225,17 +2234,13 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
     }
     demuxer_->SetIsEnableReselectVideoTrack(true);
     auto ret = demuxer_->SetDataSource(source);
-    if (demuxer_ != nullptr) {
-        demuxer_->SetCallerInfo(instanceId_, bundleName_);
-        demuxer_->SetDumpFlag(isDump_);
-    }
+    demuxer_->SetCallerInfo(instanceId_, bundleName_);
+    demuxer_->SetDumpFlag(isDump_);
     if (ret == Status::OK && !MetaUtils::CheckFileType(demuxer_->GetGlobalMetaInfo())) {
         MEDIA_LOG_W("0x%{public}06 " PRIXPTR "SetSource unsupport", FAKE_POINTER(this));
         ret = Status::ERROR_INVALID_DATA;
     }
-    if (ret != Status::OK) {
-        return ret;
-    }
+    FALSE_RETURN_V_NOLOG(ret == Status::OK, ret);
     std::unique_lock<std::mutex> lock(drmMutex_);
     isDrmProtected_ = demuxer_->IsDrmProtected();
     MEDIA_LOG_I("Is the source drm-protected : %{public}d", isDrmProtected_);
@@ -2350,10 +2355,7 @@ void HiPlayerImpl::HandleCompleteEvent(const Event& event)
     if (!singleLoop_.load()) {
         OnStateChanged(PlayerStateId::EOS);
     }
-    if (startTime_ != -1) {
-        playTotalDuration_ += GetCurrentMillisecond() - startTime_;
-    }
-    startTime_ = -1;
+    UpdatePlayTotalDuration();
     callbackLooper_.OnInfo(INFO_TYPE_EOS, static_cast<int32_t>(singleLoop_.load()), format);
     for (std::pair<std::string, bool>& item: completeState_) {
         item.second = false;
@@ -2882,7 +2884,7 @@ Status HiPlayerImpl::LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFi
         if (surface_ != nullptr) {
             videoDecoder_->SetVideoSurface(surface_);
         }
-
+        videoDecoder_->SetPerfRecEnabled(isPerfRecEnabled_);
         // set decrypt config for drm videos
         if (isDrmProtected_) {
             std::unique_lock<std::mutex> lock(drmMutex_);
@@ -3058,6 +3060,12 @@ int32_t HiPlayerImpl::IsSeekContinuousSupported(bool &isSeekContinuousSupported)
         "demuxer or decoder is null");
     isSeekContinuousSupported = DraggingPlayerAgent::IsDraggingSupported(demuxer_, videoDecoder_);
     return TransStatus(Status::OK);
+}
+
+void HiPlayerImpl::SetPerfRecEnabled(bool isPerfRecEnabled)
+{
+    MEDIA_LOG_I("SetPerfRecEnabled %{public}d", isPerfRecEnabled);
+    isPerfRecEnabled_ = isPerfRecEnabled;
 }
 }  // namespace Media
 }  // namespace OHOS

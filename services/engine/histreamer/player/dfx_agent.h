@@ -1,5 +1,5 @@
  /*
- * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,6 +20,7 @@
 
 #include "osal/task/task.h"
 #include "filter/filter.h"
+#include "common/performance_utils.h"
  
 namespace OHOS {
 namespace Media {
@@ -48,16 +49,22 @@ public:
 private:
     void ReportLagEvent(int64_t lagDuration, const std::string& eventMsg);
     void ReportEosSeek0Event(int32_t appUid);
+    void UpdateDfxInfo(const DfxEvent &event);
+    std::string GetPerfStr(const bool needWaitAllData);
     static void ProcessVideoLagEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &event);
     static void ProcessAudioLagEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &event);
     static void ProcessStreamLagEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &event);
     static void ProcessEosSeekEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &event);
+    static void ProcessPerfInfoEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &event);
     std::string groupId_ {};
     std::string instanceId_ {};
     std::string appName_ {};
     PlayerDfxSourceType sourceType_ {PlayerDfxSourceType::DFX_SOURCE_TYPE_UNKNOWN};
     std::unique_ptr<Task> dfxTask_ {nullptr};
     bool hasReported_ {false};
+    bool needPrintPerfLog_ { false };
+    std::unordered_map<std::string, MainPerfData> perfDataMap_ {};
+
     static const std::map<DfxEventType, DfxEventHandleFunc> DFX_EVENT_HANDLERS_;
 };
 

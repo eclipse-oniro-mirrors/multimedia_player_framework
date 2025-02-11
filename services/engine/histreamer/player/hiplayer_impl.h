@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -164,6 +164,8 @@ public:
     float GetMaxAmplitude() override;
     int32_t SetMaxAmplitudeCbStatus(bool status) override;
     int32_t IsSeekContinuousSupported(bool &isSeekContinuousSupported) override;
+    void SetPerfRecEnabled(bool isPerfRecEnabled) override;
+
 private:
     enum HiplayerSvpMode : int32_t {
         SVP_CLEAR = -1, /* it's not a protection video */
@@ -258,6 +260,8 @@ private:
     int32_t GetSarVideoWidth(std::shared_ptr<Meta> trackInfo);
     int32_t GetSarVideoHeight(std::shared_ptr<Meta> trackInfo);
     int32_t HandleEosPlay() override;
+    void UpdatePlayTotalDuration();
+    inline bool IsStatisticalInfoValid();
 
     bool isNetWorkPlay_ = false;
     bool isDump_ = false;
@@ -345,7 +349,7 @@ private:
     int32_t currentSubtitleTrackId_ = -1;
     int32_t defaultSubtitleTrackId_ = -1;
     PlayStatisticalInfo playStatisticalInfo_;
-    int64_t startTime_ = 0;
+    std::atomic<int64_t> startTime_ = 0;
     int64_t maxSeekLatency_ = 0;
     int64_t maxAccurateSeekLatency_ = 0;
     uint64_t instanceId_ = 0;
@@ -371,6 +375,7 @@ private:
     OHOS::Media::Mutex handleCompleteMutex_{};
     int64_t playStartTime_ = 0;
     std::atomic<bool> isBufferingStartNotified_ {false};
+    bool isPerfRecEnabled_ { false };
 };
 } // namespace Media
 } // namespace OHOS

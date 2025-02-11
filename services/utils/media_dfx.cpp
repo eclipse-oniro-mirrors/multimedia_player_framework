@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -14,7 +14,11 @@
  */
 
 #include <media_dfx.h>
+
+#include <cstdint>
+#include <format>
 #include <unistd.h>
+
 #include "securec.h"
 #include "hitrace_meter.h"
 #include "hitrace/tracechain.h"
@@ -24,7 +28,7 @@
 #include "common/log.h"
 #include "common/media_core.h"
 #include "meta/any.h"
-#include <cstdint>
+#include "osal/utils/string_utils.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_SYSTEM_PLAYER, "MediaDFX" };
@@ -257,6 +261,11 @@ void MediaEvent::ParseOneEvent(const std::pair<uint64_t, std::shared_ptr<OHOS::M
             bool isTrue;
             if (listPair.second->GetData(it->first, isTrue)) {
                 metaInfoJson[it->first] = isTrue ? "true" : "false";
+            }
+        } else if (Any::IsSameTypeWith<float>(valueType)) {
+            float floatVal = 0.0f;
+            if (listPair.second->GetData(it->first, floatVal)) {
+                metaInfoJson[it->first] = OSAL::FloatToString(floatVal);
             }
         } else {
             MEDIA_LOG_I("not found type matched with it->first: %{public}s", it->first.c_str());
