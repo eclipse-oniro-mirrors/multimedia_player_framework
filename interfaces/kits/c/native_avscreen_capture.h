@@ -371,6 +371,21 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SkipPrivacyMode(struct OH_AVScree
  */
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetMaxVideoFrameRate(struct OH_AVScreenCapture *capture,
     int32_t frameRate);
+
+/**
+ * @brief determines whether the cursor is visible in the session
+ * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+ * @param capture Pointer to an OH_AVScreenCapture instance
+ * @param showCursor The switch of the cursor
+ * @return Function result code.
+ *         {@link AV_SCREEN_CAPTURE_ERR_OK} if the execution is successful.
+ *         {@link AV_SCREEN_CAPTURE_ERR_INVALID_VAL} input capture is nullptr.
+ *         {@link AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT} opertation not be permitted, show cursor failed.
+ * @since 15
+ * @version 1.0
+ */
+OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ShowCursor(struct OH_AVScreenCapture *capture,
+    bool showCursor);
 #ifdef __cplusplus
 }
 #endif

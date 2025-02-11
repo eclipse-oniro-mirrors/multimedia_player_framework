@@ -78,6 +78,7 @@ int32_t ScreenCaptureServiceStub::Init()
     screenCaptureStubFuncs_[RELEASE_VIDEO_BUF] = &ScreenCaptureServiceStub::ReleaseVideoBuffer;
     screenCaptureStubFuncs_[DESTROY] = &ScreenCaptureServiceStub::DestroyStub;
     screenCaptureStubFuncs_[EXCLUDE_CONTENT] = &ScreenCaptureServiceStub::ExcludeContent;
+    screenCaptureStubFuncs_[SHOW_CURSOR] = &ScreenCaptureServiceStub::ShowCursor;
 
     return MSERR_OK;
 }
@@ -230,6 +231,13 @@ int32_t ScreenCaptureServiceStub::SetCanvasRotation(bool canvasRotation)
     return screenCaptureServer_->SetCanvasRotation(canvasRotation);
 }
 
+int32_t ScreenCaptureServiceStub::ShowCursor(bool showCursor)
+{
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
+                             "screen capture server is nullptr");
+    return screenCaptureServer_->ShowCursor(showCursor);
+}
+
 int32_t ScreenCaptureServiceStub::ResizeCanvas(int32_t width, int32_t height)
 {
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, false,
@@ -324,6 +332,16 @@ int32_t ScreenCaptureServiceStub::SetCanvasRotation(MessageParcel &data, Message
                              "screen capture server is nullptr");
     bool canvasRotation = data.ReadBool();
     int32_t ret = SetCanvasRotation(canvasRotation);
+    reply.WriteInt32(ret);
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureServiceStub::ShowCursor(MessageParcel &data, MessageParcel &reply)
+{
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
+                             "screen capture server is nullptr");
+    bool showCursor = data.ReadBool();
+    int32_t ret = ShowCursor(showCursor);
     reply.WriteInt32(ret);
     return MSERR_OK;
 }
