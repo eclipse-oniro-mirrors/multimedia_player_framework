@@ -15,7 +15,10 @@ import("//build/ohos.gni")
 
 group("ffi_packages") {
   deps = [
+    "audio_haptic:cj_audiohaptic_ffi",
     "avplayer:cj_avplayer_ffi",
+    "avscreen_capture:cj_avscreen_capture_ffi",
+    "metadatahelper:cj_metadatahelper_ffi",
     "soundpool:cj_soundpool_ffi",
   ]
 }
