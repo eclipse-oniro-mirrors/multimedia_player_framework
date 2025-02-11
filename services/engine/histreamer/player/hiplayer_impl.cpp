@@ -354,6 +354,7 @@ int32_t HiPlayerImpl::SetSource(const std::string& uri)
         }
         url_ = "file://" + realUriPath;
         sourceType = PlayerDfxSourceType::DFX_SOURCE_TYPE_URL_FILE;
+        SetPerfRecEnabled(true);
     }
     if (url_.find("http") == 0 || url_.find("https") == 0) {
         isNetWorkPlay_ = true;
@@ -361,6 +362,7 @@ int32_t HiPlayerImpl::SetSource(const std::string& uri)
     }
     if (url_.find("fd://") == 0) {
         sourceType = PlayerDfxSourceType::DFX_SOURCE_TYPE_URL_FD;
+        SetPerfRecEnabled(true);
     }
     if (dfxAgent_ != nullptr) {
         dfxAgent_->SetSourceType(sourceType);
@@ -2303,7 +2305,8 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
     }
     FALSE_RETURN_V(!isInterruptNeeded_, Status::OK);
     demuxer_->SetIsEnableReselectVideoTrack(true);
-    auto ret = demuxer_->SetDataSource(source);
+    Status ret = Status::OK;
+    MEDIA_LOG_I("SetDataSource cost ms %{public}" PRId64, CALC_EXPR_TIME_MS(ret = demuxer_->SetDataSource(source)));
     demuxer_->SetCallerInfo(instanceId_, bundleName_);
     demuxer_->SetDumpFlag(isDump_);
     if (ret == Status::OK && !MetaUtils::CheckFileType(demuxer_->GetGlobalMetaInfo())) {
@@ -2909,6 +2912,7 @@ Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilte
     FALSE_RETURN_V(audioSink_ != nullptr, Status::ERROR_NULL_POINTER);
     audioSink_->Init(playerEventReceiver_, playerFilterCallback_);
     audioSink_->SetMaxAmplitudeCbStatus(maxAmplitudeCbStatus_);
+    audioSink_->SetPerfRecEnabled(isPerfRecEnabled_);
     if (demuxer_ != nullptr && audioRenderInfo_ == nullptr) {
         std::vector<std::shared_ptr<Meta>> trackInfos = demuxer_->GetStreamMetaInfo();
         SetDefaultAudioRenderInfo(trackInfos);
