@@ -99,6 +99,8 @@ private:
     std::unique_ptr<AudioStandard::AudioRenderer> CreateAudioRenderer(const int32_t streamID,
         const AudioStandard::AudioRendererInfo audioRendererInfo, const PlayParams playParams);
     void PrepareAudioRenderer(std::unique_ptr<AudioStandard::AudioRenderer> &audioRenderer);
+    void DealAudioRendererParams(AudioStandard::AudioRendererOptions &rendererOptions,
+        const AudioStandard::AudioRendererInfo &audioRendererInfo);
     int32_t ReCombineCacheData();
     int32_t DealPlayParamsBeforePlay(const int32_t streamID, const PlayParams playParams);
     static AudioStandard::AudioRendererRate CheckAndAlignRendererRate(const int32_t rate);
