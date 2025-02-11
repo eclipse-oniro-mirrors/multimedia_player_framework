@@ -32,6 +32,8 @@ class RingtonePlayerImpl : public RingtonePlayer {
 public:
     RingtonePlayerImpl(const std::shared_ptr<AbilityRuntime::Context> &context,
         SystemSoundManagerImpl &sysSoundMgr, RingtoneType type);
+    RingtonePlayerImpl(const std::shared_ptr<AbilityRuntime::Context> &context,
+        SystemSoundManagerImpl &sysSoundMgr, const RingtoneType type, std::string &ringtoneUri);
     ~RingtonePlayerImpl();
     void NotifyEndofStreamEvent();
     void NotifyInterruptEvent(const AudioStandard::InterruptEvent &interruptEvent);
@@ -79,6 +81,7 @@ private:
     RingtoneType type_ = RINGTONE_TYPE_SIM_CARD_0;
     RingtoneState ringtoneState_ = STATE_NEW;
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper_ = nullptr;
+    std::string specifyRingtoneUri_ = "";
 
     std::mutex playerMutex_;
 };

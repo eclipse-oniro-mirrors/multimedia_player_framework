@@ -65,6 +65,17 @@ public:
         RingtoneType ringtoneType) = 0;
 
     /**
+     * @brief Return to the dedicated contact ringtone player instance.
+     *
+     * @param context Indicates the Context object on OHOS.
+     * @param ringtoneType Indicates the ringtone type for which player instance has to be returned.
+     * @param ringtoneUri Indicates the ringtone URI for a specific contact.
+     * @return Returns SpecificRingTonePlayer.
+     */
+    virtual std::shared_ptr<RingtonePlayer> GetSpecificRingTonePlayer(const std::shared_ptr<AbilityRuntime::Context>
+        &context, const RingtoneType ringtoneType, std::string &ringtoneUri) = 0;
+
+    /**
      * @brief API used for setting the ringtone uri.
      *
      * @param context Indicates the Context object on OHOS.

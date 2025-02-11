@@ -27,6 +27,7 @@
 #include <iostream>
 #include "system_ability_definition.h"
 #include "ringtone_db_const.h"
+#include "ringtone_type.h"
 #include "ringtone_asset.h"
 #include "simcard_setting_asset.h"
 #include "vibrate_asset.h"
@@ -66,6 +67,8 @@ public:
         RingtoneType ringtoneType) override;
     std::shared_ptr<RingtonePlayer> GetRingtonePlayer(const std::shared_ptr<AbilityRuntime::Context> &context,
         RingtoneType ringtoneType) override;
+    std::shared_ptr<RingtonePlayer> GetSpecificRingTonePlayer(const std::shared_ptr<AbilityRuntime::Context> &context,
+        const RingtoneType ringtoneType, std::string &ringtoneUri) override;
 
     int32_t SetSystemToneUri(const std::shared_ptr<AbilityRuntime::Context> &context, const std::string &uri,
         SystemToneType systemToneType) override;

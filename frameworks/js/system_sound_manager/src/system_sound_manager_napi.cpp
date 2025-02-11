@@ -258,6 +258,13 @@ napi_value SystemSoundManagerNapi::CreateToneCategoryAlarmObject(napi_env env)
     return toneCategoryAlarm;
 }
 
+napi_value SystemSoundManagerNapi::CreateToneCategoryContactsObject(napi_env env)
+{
+    napi_value toneCategoryContacts;
+    napi_create_int32(env, TONE_CATEGORY_CONTACTS, &toneCategoryContacts);
+    return toneCategoryContacts;
+}
+
 napi_status SystemSoundManagerNapi::DefineClassProperties(napi_env env, napi_value &ctorObj)
 {
     napi_property_descriptor syssndmgr_prop[] = {
@@ -305,6 +312,7 @@ napi_status SystemSoundManagerNapi::DefineStaticProperties(napi_env env, napi_va
         DECLARE_NAPI_PROPERTY("TONE_CATEGORY_RINGTONE", CreateToneCategoryRingtoneObject(env)),
         DECLARE_NAPI_PROPERTY("TONE_CATEGORY_TEXT_MESSAGE", CreateToneCategoryTextMessageObject(env)),
         DECLARE_NAPI_PROPERTY("TONE_CATEGORY_NOTIFICATION", CreateToneCategoryNotificationObject(env)),
+        DECLARE_NAPI_PROPERTY("TONE_CATEGORY_CONTACTS", CreateToneCategoryContactsObject(env)),
         DECLARE_NAPI_PROPERTY("TONE_CATEGORY_ALARM", CreateToneCategoryAlarmObject(env)),
         DECLARE_NAPI_PROPERTY("ToneHapticsMode", CreateToneHapticsModeObject(env)),
     };

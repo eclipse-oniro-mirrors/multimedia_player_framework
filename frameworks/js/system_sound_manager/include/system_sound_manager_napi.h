@@ -86,6 +86,7 @@ private:
     static napi_value CreateToneCategoryRingtoneObject(napi_env env);
     static napi_value CreateToneCategoryTextMessageObject(napi_env env);
     static napi_value CreateToneCategoryNotificationObject(napi_env env);
+    static napi_value CreateToneCategoryContactsObject(napi_env env);
     static napi_value CreateToneCategoryAlarmObject(napi_env env);
     static napi_value CreateToneHapticsTypeObject(napi_env env);
     static napi_value CreateToneHapticsModeObject(napi_env env);
