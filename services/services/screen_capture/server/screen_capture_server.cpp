@@ -150,7 +150,6 @@ int32_t MouseChangeListener::GetDeviceInfo(int32_t deviceId, std::shared_ptr<Inp
     MEDIA_LOGI("Get device info by deviceId %{public}d", deviceId);
     CHECK_AND_RETURN_RET_LOG(deviceInfo != nullptr, MSERR_INVALID_VAL, "Input deviceInfo is nullptr");
 
-
     std::function<void(std::shared_ptr<MMI::InputDevice>)> callback =
         [&deviceInfo](std::shared_ptr<MMI::InputDevice> device) {
             if (device) {
