@@ -44,6 +44,7 @@ struct AVPlayStrategy {
     uint32_t preferredWidth = 0;
     uint32_t preferredHeight = 0;
     uint32_t preferredBufferDuration = 0;
+    double preferredBufferDurationForPlaying = 0;
     bool preferredHdr = false;
     bool showFirstFrameOnPrepare = false;
     OHOS::Media::MediaType mutedMediaType = OHOS::Media::MediaType::MEDIA_TYPE_MAX_COUNT;

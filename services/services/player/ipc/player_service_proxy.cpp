@@ -709,6 +709,7 @@ int32_t PlayerServiceProxy::SetMediaSource(const std::shared_ptr<AVMediaSource> 
     (void)data.WriteUint32(strategy.preferredWidth);
     (void)data.WriteUint32(strategy.preferredHeight);
     (void)data.WriteUint32(strategy.preferredBufferDuration);
+    (void)data.WriteDouble(strategy.preferredBufferDurationForPlaying);
     (void)data.WriteBool(strategy.preferredHdr);
     (void)data.WriteBool(strategy.showFirstFrameOnPrepare);
     (void)data.WriteInt32(static_cast<int32_t>(strategy.mutedMediaType));
@@ -1008,6 +1009,7 @@ int32_t PlayerServiceProxy::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
     (void)data.WriteUint32(playbackStrategy.preferredWidth);
     (void)data.WriteUint32(playbackStrategy.preferredHeight);
     (void)data.WriteUint32(playbackStrategy.preferredBufferDuration);
+    (void)data.WriteDouble(playbackStrategy.preferredBufferDurationForPlaying);
     (void)data.WriteBool(playbackStrategy.preferredHdr);
     (void)data.WriteBool(playbackStrategy.showFirstFrameOnPrepare);
     (void)data.WriteInt32(static_cast<int32_t>(playbackStrategy.mutedMediaType));

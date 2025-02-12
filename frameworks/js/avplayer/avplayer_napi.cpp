@@ -1403,6 +1403,17 @@ void AVPlayerNapi::GetAVPlayStrategyFromStrategyTmp(AVPlayStrategy &strategy, co
     strategy.mutedMediaType = static_cast<MediaType>(strategyTmp.mutedMediaType);
     strategy.preferredAudioLanguage = strategyTmp.preferredAudioLanguage;
     strategy.preferredSubtitleLanguage = strategyTmp.preferredSubtitleLanguage;
+    strategy.preferredBufferDurationForPlaying = strategyTmp.preferredBufferDurationForPlaying;
+}
+
+bool AVPlayerNapi::IsPalyingDurationValid(const AVPlayStrategyTmp &strategyTmp)
+{
+    if ((strategyTmp.preferredBufferDuration > 0 && strategyTmp.preferredBufferDurationForPlaying > 0 &&
+                   strategyTmp.preferredBufferDurationForPlaying > strategyTmp.preferredBufferDuration) ||
+                   strategyTmp.preferredBufferDurationForPlaying < 0) {
+        return false;
+    }
+    return true;
 }
 
 napi_value AVPlayerNapi::JsSetPlaybackStrategy(napi_env env, napi_callback_info info)
@@ -1432,6 +1443,9 @@ napi_value AVPlayerNapi::JsSetPlaybackStrategy(napi_env env, napi_callback_info 
         if ((jsPlayer->GetJsApiVersion() < API_VERSION_16) &&
             (strategyTmp.mutedMediaType != MediaType::MEDIA_TYPE_AUD)) {
             promiseCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "only support mute media type audio now");
+        } else if (!jsPlayer->IsPalyingDurationValid(strategyTmp)) {
+            promiseCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER,
+                                  "playing duration is above buffer duration or below zero");
         } else {
             AVPlayStrategy strategy;
             jsPlayer->GetAVPlayStrategyFromStrategyTmp(strategy, strategyTmp);
@@ -1650,7 +1664,6 @@ napi_value AVPlayerNapi::JsSetMediaSource(napi_env env, napi_callback_info info)
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "src type should be MediaSource.");
         return result;
     }
-
     if (napi_typeof(env, args[1], &valueType) != napi_ok || valueType != napi_object) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "strategy type should be PlaybackStrategy.");
         return result;
@@ -1663,24 +1676,34 @@ napi_value AVPlayerNapi::JsSetMediaSource(napi_env env, napi_callback_info info)
 
     std::shared_ptr<AVMediaSource> mediaSource = std::make_shared<AVMediaSource>(srcTmp->url, srcTmp->header);
     mediaSource->SetMimeType(srcTmp->GetMimeType());
-
     struct AVPlayStrategyTmp strategyTmp;
     struct AVPlayStrategy strategy;
     if (!CommonNapi::GetPlayStrategy(env, args[1], strategyTmp)) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "strategy type should be PlaybackStrategy.");
         return result;
     }
+    if (!jsPlayer->IsPalyingDurationValid(strategyTmp)) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
+                            "playing duration is above buffer duration or below zero");
+        return result;
+    }
     jsPlayer->GetAVPlayStrategyFromStrategyTmp(strategy, strategyTmp);
     if (jsPlayer->GetJsApiVersion() < API_VERSION_16) {
         strategy.mutedMediaType = MediaType::MEDIA_TYPE_MAX_COUNT;
     }
+    jsPlayer->EnqueueMediaSourceTask(jsPlayer, mediaSource, strategy);
+    return result;
+}
+
+void AVPlayerNapi::EnqueueMediaSourceTask(AVPlayerNapi *jsPlayer, const std::shared_ptr<AVMediaSource> &mediaSource,
+                                          const struct AVPlayStrategy &strategy)
+{
     auto task = std::make_shared<TaskHandler<void>>([jsPlayer, mediaSource, strategy]() {
         if (jsPlayer->player_ != nullptr) {
             (void)jsPlayer->player_->SetMediaSource(mediaSource, strategy);
         }
     });
     (void)jsPlayer->taskQue_->EnqueueTask(task);
-    return result;
 }
 
 napi_value AVPlayerNapi::JsSetDataSrc(napi_env env, napi_callback_info info)

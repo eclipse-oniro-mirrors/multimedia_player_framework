@@ -393,6 +393,7 @@ int32_t HiPlayerImpl::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
     audioLanguage_ = strategy.preferredAudioLanguage;
     subtitleLanguage_ = strategy.preferredSubtitleLanguage;
     mimeType_ = mediaSource->GetMimeType();
+    bufferDurationForPlaying_ = strategy.preferredBufferDurationForPlaying;
     PlayerDfxSourceType sourceType = PlayerDfxSourceType::DFX_SOURCE_TYPE_MEDIASOURCE_LOCAL;
     if (mimeType_ != AVMimeTypes::APPLICATION_M3U8 && IsFileUrl(url_)) {
         std::string realUriPath;
@@ -2277,6 +2278,7 @@ void HiPlayerImpl::DoSetPlayStrategy(const std::shared_ptr<MediaSource> source)
     playStrategy->preferHDR = preferHDR_;
     playStrategy->audioLanguage = audioLanguage_;
     playStrategy->subtitleLanguage = subtitleLanguage_;
+    playStrategy->bufferDurationForPlaying = bufferDurationForPlaying_;
     if (source) {
         source->SetPlayStrategy(playStrategy);
         source->SetAppUid(appUid_);
@@ -3063,6 +3065,7 @@ int32_t HiPlayerImpl::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
     renderFirstFrame_ = playbackStrategy.showFirstFrameOnPrepare;
     audioLanguage_ = playbackStrategy.preferredAudioLanguage;
     subtitleLanguage_ = playbackStrategy.preferredSubtitleLanguage;
+    bufferDurationForPlaying_ = playbackStrategy.preferredBufferDurationForPlaying;
     return MSERR_OK;
 }
 
