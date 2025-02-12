@@ -139,7 +139,8 @@
             "//foundation/multimedia/player_framework/interfaces/kits/js:napi_packages",
             "//foundation/multimedia/player_framework/frameworks/cj/audio_haptic:cj_audiohaptic_ffi",
             "//foundation/multimedia/player_framework/interfaces/kits/c:capi_packages",
-            "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client"
+            "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
+            "//foundation/multimedia/player_framework/frameworks/cj:ffi_packages"
           ],
           "service_group": [
             "//foundation/multimedia/player_framework/services:media_services_package",
@@ -210,6 +211,26 @@
                 "audio_haptic_player.h"
               ],
               "header_base": "//foundation/multimedia/player_framework/interfaces/inner_api/native/audio_haptic/include"
+            }
+          },
+          {
+            "type": "so",
+            "name": "//foundation/multimedia/player_framework/frameworks/cj/avplayer:cj_avplayer_ffi",
+            "header": {
+              "header_files": [
+                "cj_avplayer_ffi.h"
+              ],
+              "header_base": "//foundation/multimedia/player_framework/frameworks/cj/avplayer"
+            }
+          },
+          {
+            "type": "so",
+            "name": "//foundation/multimedia/player_framework/frameworks/cj/soundpool:cj_soundpool_ffi",
+            "header": {
+              "header_files": [
+                "soundpool_ffi.h"
+              ],
+              "header_base": "//foundation/multimedia/player_framework/frameworks/cj/soundpool/include"
             }
           }
         ],
