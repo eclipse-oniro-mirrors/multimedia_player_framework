@@ -34,6 +34,7 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_AUDIO_NAPI, 
 namespace OHOS {
 namespace Media {
 const int32_t ERRCODE_IOERROR = 5400103;
+const int32_t ERR_CREATE = -5400103;
 const float HIGH_VOL = 1.0f;
 const float LOW_VOL = 0.0f;
 const std::string AUDIO_FORMAT_STR = ".ogg";
@@ -58,6 +59,26 @@ RingtonePlayerImpl::RingtonePlayerImpl(const shared_ptr<Context> &context,
         AudioHapticPlayerOptions options = {false, false};
         ToneHapticsSettings settings = GetHapticSettings(ringtoneUri, options.muteHaptics);
         InitPlayer(ringtoneUri, settings, options);
+        ReleaseDataShareHelper();
+    }
+}
+
+RingtonePlayerImpl::RingtonePlayerImpl(const shared_ptr<Context> &context,
+    SystemSoundManagerImpl &sysSoundMgr, const RingtoneType type, string &ringtoneUri)
+    : volume_(HIGH_VOL),
+      loop_(false),
+      context_(context),
+      systemSoundMgr_(sysSoundMgr),
+      type_(type),
+      specifyRingtoneUri_(ringtoneUri)
+{
+    audioHapticManager_ = AudioHapticManagerFactory::CreateAudioHapticManager();
+    CHECK_AND_RETURN_LOG(audioHapticManager_ != nullptr, "Failed to get audio haptic manager");
+
+    if (InitDataShareHelper()) {
+        AudioHapticPlayerOptions options = {false, false};
+        ToneHapticsSettings settings = GetHapticSettings(specifyRingtoneUri_, options.muteHaptics);
+        InitPlayer(specifyRingtoneUri_, settings, options);
         ReleaseDataShareHelper();
     }
 }
@@ -385,11 +406,24 @@ int32_t RingtonePlayerImpl::Start()
     std::lock_guard<std::mutex> lock(playerMutex_);
     CHECK_AND_RETURN_RET_LOG(ringtoneState_ != STATE_RUNNING, MSERR_INVALID_OPERATION, "ringtone player is running");
     CHECK_AND_RETURN_RET_LOG(player_ != nullptr && ringtoneState_ != STATE_INVALID, MSERR_INVALID_VAL, "no player_");
+    CHECK_AND_RETURN_RET_LOG(dataShareHelper_ != nullptr, ERR_CREATE, "Failed to create dataShareHelper.");
 
     if (!InitDataShareHelper()) {
         return ERRCODE_IOERROR;
     }
-    std::string ringtoneUri = systemSoundMgr_.GetRingtoneUri(context_, type_);
+    MEDIA_LOGI("ringtoneUri::specifyRingtoneUri_  %{public}s", specifyRingtoneUri_.c_str());
+    Uri specifyRingtoneUri(specifyRingtoneUri_);
+    int32_t fd = dataShareHelper_->OpenFile(specifyRingtoneUri, "r");
+    std::string ringtoneUri = "";
+    if (specifyRingtoneUri_ == "" || fd < 0) {
+        ringtoneUri = systemSoundMgr_.GetRingtoneUri(context_, type_);
+        MEDIA_LOGI("ringtoneUri::Start  %{public}s", ringtoneUri.c_str());
+    } else if (specifyRingtoneUri_ == "-1") {
+        ringtoneUri = NO_RING_SOUND;
+    } else {
+        ringtoneUri = specifyRingtoneUri_;
+    }
+
     if (ringtoneUri == NO_RING_SOUND) {
         AudioHapticPlayerOptions options = {true, true};
         ToneHapticsSettings settings = GetHapticSettings(ringtoneUri, options.muteHaptics);

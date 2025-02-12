@@ -312,7 +312,8 @@ napi_value ToneAttrsNapi::SetCategory(napi_env env, napi_callback_info info)
     int32_t toneAttrsCategory = TONE_CATEGORY_INVALID;
     napi_get_value_int32(env, argv[0], &toneAttrsCategory);
     if (toneAttrsCategory == TONE_CATEGORY_RINGTONE || toneAttrsCategory == TONE_CATEGORY_TEXT_MESSAGE ||
-        toneAttrsCategory == TONE_CATEGORY_NOTIFICATION || toneAttrsCategory == TONE_CATEGORY_ALARM) {
+        toneAttrsCategory == TONE_CATEGORY_NOTIFICATION || toneAttrsCategory == TONE_CATEGORY_ALARM ||
+        toneAttrsCategory == TONE_CATEGORY_CONTACTS) {
         isCategoryValid = true;
     }
     CHECK_AND_RETURN_RET_LOG(argc == 1 && isCategoryValid,

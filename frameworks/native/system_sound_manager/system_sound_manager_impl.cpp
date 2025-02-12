@@ -727,6 +727,44 @@ std::shared_ptr<RingtonePlayer> SystemSoundManagerImpl::GetRingtonePlayer(const 
     return ringtonePlayer;
 }
 
+std::shared_ptr<RingtonePlayer> SystemSoundManagerImpl::GetSpecificRingTonePlayer(
+    const shared_ptr<Context> &context, const RingtoneType ringtoneType, string &ringtoneUri)
+{
+    std::lock_guard<std::mutex> lock(playerMutex_);
+    CHECK_AND_RETURN_RET_LOG(IsRingtoneTypeValid(ringtoneType), nullptr, "invalid ringtone type");
+    MEDIA_LOGI("GetSpecificRingTonePlayer: for ringtoneType %{public}d", ringtoneType);
+
+    if (ringtoneUri.empty()) {
+        std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
+        CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, nullptr,
+            "Create dataShare failed, datashare or ringtone library error.");
+
+        ringtoneUri = GetRingtoneUriByType(dataShareHelper, to_string(ringtoneTypeMap_[ringtoneType]));
+        if (ringtoneUri.empty()) {
+            ringtoneUri = GetRingtoneUriByType(dataShareHelper, to_string(RING_TONE_TYPE_SIM_CARD_BOTH));
+        }
+        if (ringtoneUri.empty()) {
+            std::shared_ptr<ToneAttrs> ringtoneAttrs = GetDefaultRingtoneAttrs(context, ringtoneType);
+            if (ringtoneAttrs != nullptr) {
+                ringtoneUri = ringtoneAttrs ->GetUri();
+            } else {
+                MEDIA_LOGE("GetRingtoneUri: Failed to get the default ringtone!");
+            }
+        }
+        dataShareHelper->Release();
+        std::shared_ptr<RingtonePlayer> ringtonePlayer = std::make_shared<RingtonePlayerImpl>(context,
+            *this, ringtoneType);
+        CHECK_AND_RETURN_RET_LOG(ringtonePlayer != nullptr, nullptr,
+            "Failed to create ringtone player object");
+        return ringtonePlayer;
+    }
+    std::shared_ptr<RingtonePlayer> ringtonePlayer = std::make_shared<RingtonePlayerImpl>(context,
+        *this, ringtoneType, ringtoneUri);
+    CHECK_AND_RETURN_RET_LOG(ringtonePlayer != nullptr, nullptr,
+        "Failed to create ringtone player object");
+    return ringtonePlayer;
+}
+
 std::shared_ptr<SystemTonePlayer> SystemSoundManagerImpl::GetSystemTonePlayer(
     const std::shared_ptr<AbilityRuntime::Context> &context, SystemToneType systemToneType)
 {
@@ -1487,6 +1525,11 @@ int32_t SystemSoundManagerImpl::AddCustomizedTone(const std::shared_ptr<DataShar
         case TONE_CATEGORY_ALARM:
             toneAttrs->SetUri(RINGTONE_CUSTOMIZED_ALARM_PATH + RINGTONE_SLASH_CHAR + displayName_);
             valuesBucket.Put(RINGTONE_COLUMN_TONE_TYPE, static_cast<int>(TONE_TYPE_ALARM));
+            break;
+        case TONE_CATEGORY_CONTACTS:
+            toneAttrs->SetUri(RINGTONE_CUSTOMIZED_CONTACTS_PATH + RINGTONE_SLASH_CHAR + displayName_);
+            valuesBucket.Put(RINGTONE_COLUMN_TONE_TYPE, static_cast<int>(TONE_TYPE_CONTACTS));
+            MEDIA_LOGI("displayName : %{public}s", displayName_.c_str());
             break;
         default:
             break;

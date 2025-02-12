@@ -33,6 +33,7 @@ constexpr int32_t TONE_CATEGORY_RINGTONE = 1;
 constexpr int32_t TONE_CATEGORY_TEXT_MESSAGE = 2;
 constexpr int32_t TONE_CATEGORY_NOTIFICATION = 4;
 constexpr int32_t TONE_CATEGORY_ALARM = 8;
+constexpr int32_t TONE_CATEGORY_CONTACTS = 16;
 
 class ToneAttrs {
 public:
