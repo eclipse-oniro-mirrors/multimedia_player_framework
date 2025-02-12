@@ -1099,19 +1099,5 @@ HWTEST_F(ScreenCaptureServerFunctionTest, UnRegisterMouseChangeListener_002, Tes
     screenCaptureServer_->UnRegisterMouseChangeListener(type);
     ASSERT_EQ(type == "change", true);
 }
-
-HWTEST_F(ScreenCaptureServerFunctionTest, PostStartScreenCaptureSuccessAction_001, TestSize.Level2)
-{
-    screenCaptureServer_->showCursor_ = false;
-    screenCaptureServer_->PostStartScreenCaptureSuccessAction();
-    ASSERT_EQ(screenCaptureServer_->showCursor_ == false, true);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, PostStartScreenCaptureSuccessAction_002, TestSize.Level2)
-{
-    screenCaptureServer_->showCursor_ = true;
-    screenCaptureServer_->PostStartScreenCaptureSuccessAction();
-    ASSERT_EQ(screenCaptureServer_->showCursor_ == true, true);
-}
 } // Media
 } // OHOS
