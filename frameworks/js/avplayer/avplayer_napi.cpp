@@ -17,6 +17,7 @@
 #include "avplayer_callback.h"
 #include "media_errors.h"
 #include "common_napi.h"
+#include "media_utils.h"
 #ifdef SUPPORT_AVPLAYER_DRM
 #include "key_session_impl.h"
 #endif
@@ -57,22 +58,6 @@ namespace {
     static int32_t g_apiVersion = -1;
     constexpr int32_t ARGS_TWO = 2;
     constexpr int32_t ARGS_THREE = 3;
-    constexpr int32_t BASE = 10;
-    bool StrToULL(const std::string &str, uint64_t &value)
-    {
-        CHECK_AND_RETURN_RET(!str.empty() && (isdigit(str.front())), false);
-        std::string valStr(str);
-        char* end = nullptr;
-        errno = 0;
-        unsigned long long result = strtoull(valStr.c_str(), &end, BASE);
-        // end will not be nullptr here
-        CHECK_AND_RETURN_RET_LOG(result <= ULLONG_MAX, false,
-            "call StrToULL func false,  input str is: %{public}s!", valStr.c_str());
-        CHECK_AND_RETURN_RET_LOG(end != valStr.c_str() && end[0] == '\0' && errno != ERANGE, false,
-            "call StrToULL func false,  input str is: %{public}s!", valStr.c_str());
-        value = result;
-        return true;
-    }
 }
 
 namespace OHOS {
