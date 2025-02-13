@@ -183,6 +183,11 @@ private:
 #ifdef PC_STANDARD
     bool CheckCaptureSpecifiedWindowForSelectWindow();
     void SendConfigToUIParams(AAFwk::Want& want);
+    bool IsHopper();
+    int32_t MakeVirtualScreenMirrorForHomeScreenForHopper(sptr<Rosen::Display> defaultDisplay,
+        std::vector<ScreenId> mirrorIds);
+    int32_t MakeVirtualScreenMirrorForSpecifiedScreenForHopper(sptr<Rosen::Display> defaultDisplay,
+        std::vector<ScreenId> mirrorIds);
 #endif
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
     int32_t TryStartNotification();
