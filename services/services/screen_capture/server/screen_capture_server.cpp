@@ -2445,7 +2445,8 @@ int32_t ScreenCaptureServer::MakeVirtualScreenMirrorForHomeScreenForHopper(sptr<
 {
     ScreenId mirrorGroup = defaultDisplay->GetScreenId();
     MEDIA_LOGI("MakeVirtualScreenMirror DefaultDisplay, screenId:%{public}" PRIu64, mirrorGroup);
-    DMError ret = ScreenManager::GetInstance().MakeMirrorForRecord(defaultDisplay->GetScreenId(), mirrorIds, mirrorGroup);
+    DMError ret = ScreenManager::GetInstance().MakeMirrorForRecord(defaultDisplay->GetScreenId(), mirrorIds,
+        mirrorGroup);
     CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK, MSERR_UNKNOWN,
         "MakeMirrorForRecord failed, captureMode:%{public}d, ret:%{public}d", captureConfig_.captureMode, ret);
     displayScreenId_ = defaultDisplay->GetScreenId();
