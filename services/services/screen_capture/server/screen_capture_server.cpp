@@ -2491,7 +2491,7 @@ int32_t ScreenCaptureServer::MakeVirtualScreenMirrorForSpecifiedScreenForHopper(
     for (uint32_t i = 0; i < allDisplayIds.size() ; i++) {
         if (allDisplayIds[i] == captureConfig_.videoInfo.videoCapInfo.displayId) {
             ScreenId mirrorGroup = defaultDisplay->GetScreenId();
-            ret = ScreenManager::GetInstance().MakeMirrorForRecord(allDisplayIds[i], mirrorIds, mirrorGroup);
+            DMError ret = ScreenManager::GetInstance().MakeMirrorForRecord(allDisplayIds[i], mirrorIds, mirrorGroup);
             CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK, MSERR_UNKNOWN,
                 "MakeVirtualScreenMirror failed to MakeMirrorForRecord for CAPTURE_SPECIFIED_SCREEN, ret:%{public}d",
                 ret);
