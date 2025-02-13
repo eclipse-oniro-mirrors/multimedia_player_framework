@@ -74,7 +74,7 @@ ohos_unittest("recorder_native_unit_test") {
     "resource_management:librawfile",
     "window_manager:libdm",
   ]
-  
+
   if (player_framework_support_auto_create_file) {
     external_deps += [
       "media_library:media_library",
