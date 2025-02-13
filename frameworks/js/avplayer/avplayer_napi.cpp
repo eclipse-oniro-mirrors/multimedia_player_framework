@@ -65,6 +65,7 @@ namespace {
         char* end = nullptr;
         errno = 0;
         unsigned long long result = strtoull(valStr.c_str(), &end, BASE);
+        // end will not be nullptr here
         CHECK_AND_RETURN_RET_LOG(result <= ULLONG_MAX, false,
             "call StrToULL func false,  input str is: %{public}s!", valStr.c_str());
         CHECK_AND_RETURN_RET_LOG(end != valStr.c_str() && end[0] == '\0' && errno != ERANGE, false,
