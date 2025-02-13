@@ -379,6 +379,7 @@ private:
     bool CheckScreenCapturePermission();
     bool IsUserPrivacyAuthorityNeeded();
     bool UpdatePrivacyUsingPermissionState(VideoPermissionState state);
+    bool CheckPrivacyWindowSkipPermission();
     int32_t RequestUserPrivacyAuthority();
     int32_t StartPrivacyWindow();
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
