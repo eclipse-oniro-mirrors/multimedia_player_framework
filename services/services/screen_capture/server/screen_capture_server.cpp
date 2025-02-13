@@ -42,7 +42,9 @@
 #include <unordered_map>
 #include <algorithm>
 #include <set>
+#ifdef PC_STANDARD
 #include <parameters.h>
+#endif
 
 using OHOS::Rosen::DMError;
 
