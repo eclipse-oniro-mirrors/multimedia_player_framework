@@ -495,11 +495,6 @@ int32_t ScreenCaptureServer::SetAndCheckLimit()
 {
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " SetAndCheckLimit START.", FAKE_POINTER(this));
     bool createFlag = CanScreenCaptureInstanceBeCreate(IPCSkeleton::GetCallingUid());
-    if (!createFlag) {
-        MEDIA_LOGI("SetAndCheckLimit failed, cannot create ScreenCapture Instance.");
-        RemoveScreenCaptureServerMap(sessionId_);
-        return MSERR_INVALID_OPERATION;
-    }
     CHECK_AND_RETURN_RET_LOG(createFlag, MSERR_INVALID_OPERATION,
         "SetAndCheckLimit failed, cannot create ScreenCapture Instance.");
     return MSERR_OK;
