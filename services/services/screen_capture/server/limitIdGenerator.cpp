@@ -41,40 +41,20 @@ int32_t UniqueIDGenerator::GetNewID()
 {
     std::unique_lock<std::mutex> lock(queueMtx_);
     if (availableIDs_.empty()) {
-        MEDIA_LOGI("UniqueIDGenerator::GetNewID availableIDs is empty.");
         return -1;  // invalid
     }
     int32_t id = availableIDs_.front();
-    MEDIA_LOGI("UniqueIDGenerator::GetNewID id: %{public}d", id);
     availableIDs_.pop();
     return id;
-}
-
-bool UniqueIDGenerator::IsIDExists(int32_t id)
-{
-    std::queue<int32_t> tempQ = availableIDs_;
-    while (!tempQ.empty()) {
-        if (id == tempQ.front()) {
-            MEDIA_LOGI("Id: %{public}d exists, avoid pushing again.", id);
-            return true;
-        } else {
-            tempQ.pop();
-        }
-    }
-    MEDIA_LOGI("UniqueIDGenerator::IsIDExists false.");
-    return false;
 }
 
 int32_t UniqueIDGenerator::ReturnID(int32_t id)
 {
     std::unique_lock<std::mutex> lock(queueMtx_);
-    MEDIA_LOGI("UniqueIDGenerator::ReturnID Id:%{public}d", id);
     if (id < 1 || id > limit_) {
         return -1;  // invalid
     }
-    if (!IsIDExists(id)) {
-        availableIDs_.push(id);
-    }
+    availableIDs_.push(id);
     return id;
 }
 } // namespace Media

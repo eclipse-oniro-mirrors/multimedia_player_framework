@@ -28,7 +28,6 @@ public:
     ~UniqueIDGenerator();
     int32_t GetNewID();
     int32_t ReturnID(int32_t id);
-    bool IsIDExists(int32_t id);
 
 private:
     std::queue<int32_t> availableIDs_;
