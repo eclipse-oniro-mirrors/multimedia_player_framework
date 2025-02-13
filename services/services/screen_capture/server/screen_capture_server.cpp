@@ -42,6 +42,9 @@
 #include <unordered_map>
 #include <algorithm>
 #include <set>
+#ifdef PC_STANDARD
+#include <parameters.h>
+#endif
 
 using OHOS::Rosen::DMError;
 
@@ -2398,6 +2401,19 @@ uint64_t ScreenCaptureServer::GetDisplayIdOfWindows(uint64_t displayId)
     return defaultDisplayIdValue;
 }
 
+#ifdef PC_STANDARD
+bool ScreenCaptureServer::IsHopper()
+{
+    std::string foldScreenFlag = system::GetParameter("const.window.foldscreen.type", "0,0,0,0");
+    if (foldScreenFlag.empty()) {
+        MEDIA_LOGI("foldscreen type is empty");
+        return false;
+    }
+    MEDIA_LOGI("foldscreen type is %{public}s", foldScreenFlag.c_str());
+    return foldScreenFlag[0] == '5';
+}
+#endif
+
 int32_t ScreenCaptureServer::MakeVirtualScreenMirrorForWindow(sptr<Rosen::Display> defaultDisplay,
     std::vector<ScreenId> mirrorIds)
 {
@@ -2425,6 +2441,23 @@ int32_t ScreenCaptureServer::MakeVirtualScreenMirrorForHomeScreen(sptr<Rosen::Di
     return MSERR_OK;
 }
 
+#ifdef PC_STANDARD
+int32_t ScreenCaptureServer::MakeVirtualScreenMirrorForHomeScreenForHopper(sptr<Rosen::Display> defaultDisplay,
+    std::vector<ScreenId> mirrorIds)
+{
+    ScreenId mirrorGroup = defaultDisplay->GetScreenId();
+    MEDIA_LOGI("MakeVirtualScreenMirror DefaultDisplay, screenId:%{public}" PRIu64, mirrorGroup);
+    DMError ret = ScreenManager::GetInstance().MakeMirrorForRecord(defaultDisplay->GetScreenId(), mirrorIds,
+        mirrorGroup);
+    CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK, MSERR_UNKNOWN,
+        "MakeMirrorForRecord failed, captureMode:%{public}d, ret:%{public}d", captureConfig_.captureMode, ret);
+    displayScreenId_ = defaultDisplay->GetScreenId();
+    MEDIA_LOGI("MakeVirtualScreenMirror default screen success, screenId:%{public}" PRIu64,
+        defaultDisplay->GetScreenId());
+    return MSERR_OK;
+}
+#endif
+
 int32_t ScreenCaptureServer::MakeVirtualScreenMirrorForSpecifiedScreen(sptr<Rosen::Display> defaultDisplay,
     std::vector<ScreenId> mirrorIds)
 {
@@ -2451,6 +2484,34 @@ int32_t ScreenCaptureServer::MakeVirtualScreenMirrorForSpecifiedScreen(sptr<Rose
     return MSERR_UNKNOWN;
 }
 
+#ifdef PC_STANDARD
+int32_t ScreenCaptureServer::MakeVirtualScreenMirrorForSpecifiedScreenForHopper(sptr<Rosen::Display> defaultDisplay,
+    std::vector<ScreenId> mirrorIds)
+{
+    std::vector<Rosen::DisplayId> allDisplayIds = Rosen::DisplayManager::GetInstance().GetAllDisplayIds();
+    CHECK_AND_RETURN_RET_LOG(allDisplayIds.size() > 0, MSERR_UNKNOWN,
+        "MakeVirtualScreenMirror failed to GetAllDisplayIds, allDisplayIds is empty");
+    for (uint32_t i = 0; i < allDisplayIds.size() ; i++) {
+        if (allDisplayIds[i] == captureConfig_.videoInfo.videoCapInfo.displayId) {
+            ScreenId mirrorGroup = defaultDisplay->GetScreenId();
+            DMError ret = ScreenManager::GetInstance().MakeMirrorForRecord(allDisplayIds[i], mirrorIds, mirrorGroup);
+            CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK, MSERR_UNKNOWN,
+                "MakeVirtualScreenMirror failed to MakeMirrorForRecord for CAPTURE_SPECIFIED_SCREEN, ret:%{public}d",
+                ret);
+            displayScreenId_ = allDisplayIds[i];
+            MEDIA_LOGI("MakeVirtualScreenMirrorForHopper extend screen success, displayId:%{public}" PRIu64,
+                captureConfig_.videoInfo.videoCapInfo.displayId);
+            return MSERR_OK;
+        }
+    }
+    MEDIA_LOGE("MakeVirtualScreenMirror failed to find displayId:%{public}" PRIu64,
+        captureConfig_.videoInfo.videoCapInfo.displayId);
+    FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_, SCREEN_CAPTURE_ERR_UNKNOWN,
+        "MakeVirtualScreenMirror failed to find displayId");
+    return MSERR_UNKNOWN;
+}
+#endif
+
 int32_t ScreenCaptureServer::MakeVirtualScreenMirror()
 {
     MediaTrace trace("ScreenCaptureServer::MakeVirtualScreenMirror");
@@ -2465,6 +2526,14 @@ int32_t ScreenCaptureServer::MakeVirtualScreenMirror()
     if (captureConfig_.captureMode == CAPTURE_SPECIFIED_WINDOW) {
         return MakeVirtualScreenMirrorForWindow(defaultDisplay, mirrorIds);
     }
+#ifdef PC_STANDARD
+    if (IsHopper()) {
+        if (captureConfig_.captureMode != CAPTURE_SPECIFIED_SCREEN) {
+            return MakeVirtualScreenMirrorForHomeScreenForHopper(defaultDisplay, mirrorIds);
+        }
+        return MakeVirtualScreenMirrorForSpecifiedScreenForHopper(defaultDisplay, mirrorIds);
+    }
+#endif
     if (captureConfig_.captureMode != CAPTURE_SPECIFIED_SCREEN) {
         return MakeVirtualScreenMirrorForHomeScreen(defaultDisplay, mirrorIds);
     }
