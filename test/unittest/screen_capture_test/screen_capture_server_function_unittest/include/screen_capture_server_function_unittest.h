@@ -62,6 +62,7 @@ public:
     void OnAudioBufferAvailable(bool isReady, AudioCaptureSourceType type) {};
     void OnVideoBufferAvailable(bool isReady) {};
     void OnStateChange(AVScreenCaptureStateCode stateCode) {};
+    void OnDisplaySelected(uint64_t displayId) {};
 };
 } // Media
 } // OHOS
