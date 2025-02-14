@@ -72,6 +72,10 @@ ohos_unittest("player_server_mem_test") {
     "safwk:system_ability_fwk",
   ]
 
+  if (player_framework_support_drm) {
+    external_deps += [ "drm_framework:drm_framework" ]
+  }
+
   sources = [
     "$MEDIA_PLAYER_ROOT_DIR/services/services/player/player_mem_manage/player_server_mem.cpp",
     "player_server_mem_test.cpp",
