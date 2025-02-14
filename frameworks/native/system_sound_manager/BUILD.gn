@@ -70,6 +70,7 @@ ohos_shared_library("system_sound_client") {
     "access_token:libnativetoken_shared",
     "access_token:libtokensetproc_shared",
     "audio_framework:audio_client",
+    "audio_framework:audio_renderer",
     "bundle_framework:appexecfwk_base",
     "c_utils:utils",
     "config_policy:configpolicy_util",
