@@ -275,6 +275,18 @@
               ],
               "header_base": "//foundation/multimedia/player_framework/frameworks/cj/avscreen_capture/include"
             }
+          },
+          {
+            "type": "so",
+            "name": "//foundation/multimedia/player_framework/frameworks/cj/avrecorder:cj_media_avrecorder_ffi",
+            "header": {
+              "header_files": [
+                "avrecorder_ffi.h",
+                "cj_avrecorder_callback.h",
+                "cj_avrecorder.h"
+              ],
+              "header_base": "//foundation/multimedia/player_framework/frameworks/cj/avrecorder"
+            }
           }
         ],
         "test": [
