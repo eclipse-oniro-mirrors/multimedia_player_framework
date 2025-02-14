@@ -116,6 +116,10 @@ ohos_unittest("hiplayer_impl_unit_test") {
     "samgr:samgr_proxy",
   ]
 
+  if (player_framework_support_drm) {
+    external_deps += [ "drm_framework:drm_framework" ]
+  }
+
   deps = [
     "$MEDIA_PLAYER_ROOT_DIR/services/dfx:media_service_log_dfx",
     "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/player:media_engine_histreamer_player",

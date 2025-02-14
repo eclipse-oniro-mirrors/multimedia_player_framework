@@ -91,6 +91,10 @@ ohos_unittest("player_server_unit_test") {
     "window_manager:libwm",
   ]
 
+  if (player_framework_support_drm) {
+    external_deps += [ "drm_framework:drm_framework" ]
+  }
+
   resource_config_file =
       "$MEDIA_PLAYER_ROOT_DIR/test/unittest/resources/ohos_test.xml"
 }

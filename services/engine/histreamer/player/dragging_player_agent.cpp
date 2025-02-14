@@ -21,6 +21,10 @@
 #include "dragging_player_agent.h"
 #include "osal/task/pipeline_threadpool.h"
  
+#ifdef SUPPORT_AVPLAYER_DRM
+#include "i_keysession_service.h"
+#endif
+
 namespace {
 const std::string REFERENCE_LIB_PATH = std::string(DRAGGING_PLAYER_PATH);
 const std::string FILESEPARATOR = "/";
