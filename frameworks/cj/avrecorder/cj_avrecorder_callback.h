@@ -26,7 +26,8 @@ void InitDeviceChannels(CDeviceDescriptor* device, const DeviceInfo& deviceInfo)
 void ConvertToCDeviceInfo(CDeviceDescriptor* device, const DeviceInfo& deviceInfo);
 void ConvertToCArrDeviceDescriptor(CArrDeviceDescriptor& devices, const DeviceInfo& deviceInfo);
 void ConvertToCAudioCapturerChangeInfo(CAudioCapturerChangeInfo& cInfo, const AudioRecorderChangeInfo& changeInfo);
-void ConvertToCArrEncoderInfo(CArrEncoderInfo& cInfo, std::vector<EncoderCapabilityData>& encoderInfo)
+void ConvertToCEncoderInfo(CEncoderInfo& cInfo, EncoderCapabilityData& encoderInfo);
+void ConvertToCArrEncoderInfo(CArrEncoderInfo& cInfo, std::vector<EncoderCapabilityData>& encoderInfo);
 
 namespace CJAVRecorderEvent {
 const int32_t EVENT_STATE_CHANGE = 1;
@@ -40,8 +41,8 @@ public:
     CJAVRecorderCallback() = default;
     virtual ~CJAVRecorderCallback() = default;
 
-    void Register(const int32_t &type, int64_t id);
-    void UnRegister(const int32_t &type);
+    void Register(const int32_t type, int64_t id);
+    void UnRegister(const int32_t type);
     std::string GetState();
     void ExecuteStateCallback(CStateChangeHandler &handler);
 
@@ -63,7 +64,7 @@ private:
     void InitPhotoAssertAvailable(int64_t id);
 
     std::mutex mutex_;
-    std::string currentState_ = AVRecorderState::STATE_IDLE;
+    std::string currentState_ = CjAVRecorderState::STATE_IDLE;
 };
 } // namespace Media
 } // namespace OHOS

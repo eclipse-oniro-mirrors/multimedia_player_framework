@@ -161,7 +161,7 @@ int32_t FfiOHOSMediaAVRecorderOn(int64_t id, int32_t type, int64_t callback)
     auto Cb_ = std::static_pointer_cast<CJAVRecorderCallback>(cjAVRecorder->recorderCb_);
     if (!Cb_) {
         MEDIA_LOGE("FfiOHOSMediaAVRecorderOn - Cb_ is nullptr!");
-        return -1;       
+        return -1;
     }
     Cb_->Register(type, callback);
     return 0;
@@ -183,46 +183,62 @@ int32_t FfiOHOSMediaAVRecorderOff(int64_t id, int32_t type)
     auto Cb_ = std::static_pointer_cast<CJAVRecorderCallback>(cjAVRecorder->recorderCb_);
     if (!Cb_) {
         MEDIA_LOGE("FfiOHOSMediaAVRecorderOn - Cb_ is nullptr!");
-        return -1;       
+        return -1;
     }
     Cb_->UnRegister(type);
-    return 0;    
+    return 0;
 }
 
 CAudioCapturerChangeInfo FfiOHOSMediaAVRecorderGetCurrentAudioCapturerInfo(int64_t id, int32_t *errCode)
 {
-    CAudioCapturerChangeInfo cInfo;
+    CAudioCapturerChangeInfo cInfo {};
     auto cjAVRecorder = FFIData::GetData<CjAVRecorder>(id);
     if (!cjAVRecorder) {
         MEDIA_LOGE("FfiOHOSMediaAVRecorderOn - cjAVRecorder is nullptr!");
+        if (!errCode) {
+            *errCode = -1;
+        }
         return cInfo;
     }
 
-    AudioRecorderChangeInfo changeInfo;
+    AudioRecorderChangeInfo changeInfo {};
     auto ret = cjAVRecorder->GetCurrentAudioCapturerInfo(changeInfo);
     if (ret != MSERR_EXT_API9_OK) {
-        *errCode = static_cast<int32_t>(ret);
+        if (!errCode) {
+            *errCode = static_cast<int32_t>(ret);
+        }
         return cInfo;
     }
     ConvertToCAudioCapturerChangeInfo(cInfo, changeInfo);
+    if (!errCode) {
+        *errCode = 0;
+    }
     return cInfo;
 }
 
 CArrEncoderInfo FfiOHOSMediaAVRecorderGetEncoderInfo(int64_t id, int32_t *errCode)
 {
-    CArrEncoderInfo cInfo;
+    CArrEncoderInfo cInfo {};
     auto cjAVRecorder = FFIData::GetData<CjAVRecorder>(id);
     if (!cjAVRecorder) {
         MEDIA_LOGE("FfiOHOSMediaAVRecorderOn - cjAVRecorder is nullptr!");
+        if (!errCode) {
+            *errCode = -1;
+        }
         return cInfo;
     }
-    std::vector<OHOS::Media::EncoderCapabilityData> encoderInfo;
+    std::vector<OHOS::Media::EncoderCapabilityData> encoderInfo {};
     auto ret = cjAVRecorder->GetAvailableEncoder(encoderInfo);
-        if (ret != MSERR_EXT_API9_OK) {
-        *errCode = static_cast<int32_t>(ret);
+    if (ret != MSERR_EXT_API9_OK) {
+        if (!errCode) {
+            *errCode = static_cast<int32_t>(ret);
+        }
         return cInfo;
     }
     ConvertToCArrEncoderInfo(cInfo, encoderInfo);
+    if (!errCode) {
+        *errCode = 0;
+    }
     return cInfo;
 }
 }

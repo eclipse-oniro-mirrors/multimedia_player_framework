@@ -45,8 +45,8 @@ ohos_shared_library("cj_media_avrecorder_ffi") {
   cflags_cc = cflags
 
   deps = [
-    "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
-    "//foundation/multimedia/player_framework/services/utils:media_service_utils",
+    "${multimedia_player_framework_path}/interfaces/inner_api/native:media_client",
+    "${multimedia_player_framework_path}/services/utils:media_service_utils",
   ]
 
   external_deps = [
@@ -74,7 +74,7 @@ ohos_shared_library("cj_media_avrecorder_ffi") {
   ]
 
   if (player_framework_support_auto_create_file) {
-    external_deps += [ "media_librart:cj_photoaccesshelper_ffi" ]
+    external_deps += [ "media_library:cj_photoaccesshelper_ffi" ]
   }
 
   innerapi_tags = [ "platformsdk" ]

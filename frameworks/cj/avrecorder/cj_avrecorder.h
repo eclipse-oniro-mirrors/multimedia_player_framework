@@ -173,12 +173,11 @@ public:
     CAVRecorderConfig GetAVRecorderConfig(int32_t *errCode);
     int32_t GetAudioCapturerMaxAmplitude(int32_t *errCode);
     int32_t GetCurrentAudioCapturerInfo(AudioRecorderChangeInfo &changeInfo);
-    int32_t GetAvailableEncoder(std::verctor<EncoderCapabilityData> &encoderInfo);
+    int32_t GetAvailableEncoder(std::vector<EncoderCapabilityData> &encoderInfo);
     void UpdateRotation(int32_t rotation, int32_t *errCode);
-
+    std::shared_ptr<RecorderCallback> recorderCb_ = nullptr;
 private:
     std::shared_ptr<Recorder> recorder_ = nullptr; //
-    std::shared_ptr<RecoderCallback> recorderCb_ = nullptr;
     std::map<MetaSourceType, int32_t> metaSourceIDMap_;
     sptr<Surface> surface_ = nullptr;
     int32_t surfaceId_ = -1;

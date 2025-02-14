@@ -13,8 +13,9 @@
  * limitations under the License.
  */
 
-#include "avrecorder_callback.h"
+#include "cj_avrecorder_callback.h"
 #include "cj_lambda.h"
+#include "media_log.h"
 #ifdef SUPPORT_RECORDER_CREATE_FILE
 #include "photo_asset_helper.h"
 #endif
@@ -39,7 +40,7 @@ std::string CJAVRecorderCallback::GetState()
 void CJAVRecorderCallback::Register(const int32_t type, int64_t id)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    switch(type) {
+    switch (type) {
         case CJAVRecorderEvent::EVENT_STATE_CHANGE:
             InitStateChange(id);
             break;
@@ -49,20 +50,19 @@ void CJAVRecorderCallback::Register(const int32_t type, int64_t id)
         case CJAVRecorderEvent::EVENT_AUDIO_CAPTURE_CHANGE:
             InitAudioRecorderChange(id);
             break;
-        case CJAVRecorderEvent::EVENT_PHOTO_ASSET_AVAILABLE
+        case CJAVRecorderEvent::EVENT_PHOTO_ASSET_AVAILABLE:
             InitPhotoAssertAvailable(id);
             break;
         default:
             MEDIA_LOGE("invalid type");
             return;
     }
-
 }
 
 void CJAVRecorderCallback::UnRegister(const int32_t type)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    switch(type) {
+    switch (type) {
         case CJAVRecorderEvent::EVENT_STATE_CHANGE:
             onStateChange = nullptr;
             break;
@@ -70,9 +70,9 @@ void CJAVRecorderCallback::UnRegister(const int32_t type)
             onError = nullptr;
             break;
         case CJAVRecorderEvent::EVENT_AUDIO_CAPTURE_CHANGE:
-            onAudioRecorderChange = nullptr;
+            onAudioCapturerChange = nullptr;
             break;
-        case CJAVRecorderEvent::EVENT_PHOTO_ASSET_AVAILABLE
+        case CJAVRecorderEvent::EVENT_PHOTO_ASSET_AVAILABLE:
             onPhotoAssertAvailable = nullptr;
             break;
         default:
@@ -98,27 +98,30 @@ void CJAVRecorderCallback::OnError(RecorderErrorType errorType, int32_t errCode)
         MEDIA_LOGE("onError is null");
         return;
     }
-    CErrorInfo errorInfo;
+    CErrorInfo errorInfo {};
     if (errCode == MSERR_DATA_SOURCE_IO_ERROR) {
         errorInfo.code = MSERR_EXT_API9_TIMEOUT;
-        errorInfo.msg = MallocCString("The video input stream timed out. Please confirm that the input stream is normal.")
+        errorInfo.msg = MallocCString(
+            "The video input stream timed out. Please confirm that the input stream is normal.");
     } else if (errCode == MSERR_DATA_SOURCE_OBTAIN_MEM_ERROR) {
         errorInfo.code = MSERR_EXT_API9_TIMEOUT;
-        errorInfo.msg = MallocCString("Read data from audio timeout, please confirm whether the audio module is normal.")
+        errorInfo.msg = MallocCString(
+            "Read data from audio timeout, please confirm whether the audio module is normal.");
     } else if (errCode == MSERR_DATA_SOURCE_ERROR_UNKNOWN) {
         errorInfo.code = MSERR_EXT_API9_IO;
-        errorInfo.msg = MallocCString("Please confirm that the pts, width, height, size and other data are normal.")
+        errorInfo.msg = MallocCString(
+            "Please confirm that the pts, width, height, size and other data are normal.");
     } else if (errCode == MSERR_AUD_INTERRUPT) {
         errorInfo.code = MSERR_EXT_API9_AUDIO_INTERRUPTED;
-        errorInfo.msg = MallocCString("Record failed by audio interrupt.")
+        errorInfo.msg = MallocCString("Record failed by audio interrupt.");
     } else {
         errorInfo.code = MSERR_EXT_API9_IO;
-        errorInfo.msg = MallocCString("IO error happened.")
+        errorInfo.msg = MallocCString("IO error happened.");
     }
     onError(errorInfo);
-    CStageChangeHandler handler;
+    CStateChangeHandler handler {};
     handler.state = MallocCString(CjAVRecorderState::STATE_ERROR);
-    handler.reason = static_cast<int32_t>(StateChangeReason::BACKGROUND)
+    handler.reason = static_cast<int32_t>(StateChangeReason::BACKGROUND);
     ExecuteStateCallback(handler);
 }
 
@@ -127,9 +130,9 @@ void CJAVRecorderCallback::OnInfo(int32_t type, int32_t extra)
     MEDIA_LOGI("OnInfo() is called, type: %{public}d, extra: %{public}d", type, extra);
     if (type == RecorderInfoType::RECORDER_INFO_MAX_DURATION_REACHED) {
         MEDIA_LOGI("OnInfo() type = MAX_DURATION_REACHED, type: %{public}d, extra: %{public}d", type, extra);
-        CStageChangeHandler handler;
+        CStateChangeHandler handler {};
         handler.state = MallocCString(CjAVRecorderState::STATE_STOPPED);
-        handler.reason = static_cast<int32_t>(StateChangeReason::BACKGROUND)
+        handler.reason = static_cast<int32_t>(StateChangeReason::BACKGROUND);
         ExecuteStateCallback(handler);
     }
 }
@@ -137,10 +140,10 @@ void CJAVRecorderCallback::OnInfo(int32_t type, int32_t extra)
 void CJAVRecorderCallback::OnAudioCaptureChange(const AudioRecorderChangeInfo &audioRecorderChangeInfo)
 {
     if (!onAudioCapturerChange) {
-        MEDIA_LOGE("onAudioCaptureChange is null");
+        MEDIA_LOGE("onAudioCapturerChange is null");
         return;
     }
-    CAudioCapturerChangeInfo cInfo;
+    CAudioCapturerChangeInfo cInfo {};
     ConvertToCAudioCapturerChangeInfo(cInfo, audioRecorderChangeInfo);
     onAudioCapturerChange(cInfo);
 }
@@ -153,7 +156,7 @@ void CJAVRecorderCallback::OnPhotoAssertAvailable(const std::string &uri)
     }
 
     if (uri.empty()) {
-        MEDIA_LOGE("uri is empty")
+        MEDIA_LOGE("uri is empty");
         return;
     }
 #ifdef SUPPORT_RECORDER_CREATE_FILE
@@ -164,7 +167,6 @@ void CJAVRecorderCallback::OnPhotoAssertAvailable(const std::string &uri)
 
 void CJAVRecorderCallback::InitError(int64_t id)
 {
-    MEDIA_LOGD("InitError called")
     auto callback = reinterpret_cast<void(*)(CErrorInfo)>(id);
     onError = [lambda = CJLambda::Create(callback)](CErrorInfo value) -> void {
         lambda(value);
@@ -181,8 +183,8 @@ void CJAVRecorderCallback::InitStateChange(int64_t id)
 
 void CJAVRecorderCallback::InitAudioRecorderChange(int64_t id)
 {
-    auto callback = reinterpret_cast<void(*)(CAudioCaptureChangeInfo)>(id);
-    onAudioCaptureChange = [lambda = CJLambda::Create(callback)](CAudioCaptureChangeInfo value) -> void {
+    auto callback = reinterpret_cast<void(*)(CAudioCapturerChangeInfo)>(id);
+    onAudioCapturerChange = [lambda = CJLambda::Create(callback)](CAudioCapturerChangeInfo value) -> void {
         lambda(value);
     };
 }
@@ -206,25 +208,26 @@ void InitDeviceRates(CDeviceDescriptor* device, const DeviceInfo& deviceInfo)
     int32_t mallocSize = static_cast<int32_t>(sizeof(int32_t) * rateSize);
     if (mallocSize <= 0) {
         MEDIA_LOGE("mallocSize is illeagle");
-        return;        
+        return;
     }
 
     auto rates = static_cast<int32_t*>(malloc(mallocSize));
     if (!rates) {
         MEDIA_LOGE("malloc is failed");
-        return;        
+        return;
     }
 
     device->sampleRates.size = static_cast<int64_t>(rateSize);
     device->sampleRates.head = rates;
     if (memset_s(rates, mallocSize, 0, mallocSize) != EOK) {
         MEDIA_LOGE("initial memory space failed");
+        free(rates);
         return;
     }
 
     int32_t iter = 0;
     for (auto rate: deviceInfo.audioStreamInfo.samplingRate) {
-        rates[i] = rate;
+        rates[iter] = rate;
         iter++;
     }
 }
@@ -240,27 +243,27 @@ void InitDeviceChannels(CDeviceDescriptor* device, const DeviceInfo& deviceInfo)
     int32_t mallocSize = static_cast<int32_t>(sizeof(int32_t) * channelSize);
     if (mallocSize <= 0) {
         MEDIA_LOGE("mallocSize is illeagle");
-        return;        
+        return;
     }
 
     auto channels = static_cast<int32_t*>(malloc(mallocSize));
     if (!channels) {
         MEDIA_LOGE("malloc is failed");
-        return;        
+        return;
     }
-
     device->channelCounts.size = static_cast<int64_t>(channelSize);
     device->channelCounts.head = channels;
     if (memset_s(channels, mallocSize, 0, mallocSize) != EOK) {
         MEDIA_LOGE("initial memory space failed");
+        free(channels);
         return;
     }
 
     int32_t iter = 0;
     for (auto channel: deviceInfo.audioStreamInfo.channels) {
-        channels[i] = channel;
+        channels[iter] = channel;
         iter++;
-    }   
+    }
 }
 
 void ConvertToCDeviceInfo(CDeviceDescriptor* device, const DeviceInfo& deviceInfo)
@@ -279,18 +282,19 @@ void ConvertToCDeviceInfo(CDeviceDescriptor* device, const DeviceInfo& deviceInf
     int32_t mallocSize = static_cast<int32_t>(sizeof(int32_t) * deviceSize);
     if (mallocSize <= 0) {
         MEDIA_LOGE("mallocSize is illeagle");
-        return;        
+        return;
     }
     auto masks = static_cast<int32_t*>(malloc(mallocSize));
     if (!masks) {
         MEDIA_LOGE("malloc is failed");
-        return;        
+        return;
     }
 
     device->channelMasks.size = deviceSize;
     device->channelMasks.head = masks;
     if (memset_s(masks, mallocSize, 0, mallocSize) != EOK) {
         MEDIA_LOGE("initial memory space failed");
+        free(masks);
         return;
     }
 
@@ -299,7 +303,8 @@ void ConvertToCDeviceInfo(CDeviceDescriptor* device, const DeviceInfo& deviceInf
     auto encodings = static_cast<int32_t*>(malloc(mallocSize));
     if (!encodings) {
         MEDIA_LOGE("malloc is failed");
-        return;        
+        free(masks);
+        return;
     }
 
     device->encodingTypes.hasValue = true;
@@ -307,11 +312,12 @@ void ConvertToCDeviceInfo(CDeviceDescriptor* device, const DeviceInfo& deviceInf
     device->encodingTypes.arr.head = encodings;
     if (memset_s(encodings, mallocSize, 0, mallocSize) != EOK) {
         MEDIA_LOGE("initial memory space failed");
+        free(masks);
+        free(encodings);
         return;
     }
 
     encodings[0] = deviceInfo.audioStreamInfo.encoding;
-
 }
 
 void ConvertToCArrDeviceDescriptor(CArrDeviceDescriptor& devices, const DeviceInfo& deviceInfo)
@@ -320,25 +326,24 @@ void ConvertToCArrDeviceDescriptor(CArrDeviceDescriptor& devices, const DeviceIn
     int32_t mallocSize = static_cast<int32_t>(sizeof(CDeviceDescriptor) * deviceSize);
     if (mallocSize <= 0) {
         MEDIA_LOGE("mallocSize is illeagle");
-        return;        
+        return;
     }
 
     CDeviceDescriptor* device = static_cast<CDeviceDescriptor*>(malloc(mallocSize));
     if (!device) {
         MEDIA_LOGE("malloc is failed");
-        return;           
+        return;
     }
 
     devices.head = device;
     devices.size = static_cast<int64_t>(deviceSize);
     if (memset_s(device, mallocSize, 0, mallocSize) != EOK) {
         MEDIA_LOGE("initial memory space failed");
+        free(device);
         return;
     }
 
-    for (int32_t i = 0; i < deviceSize; i++) {
-        ConvertToCDeviceInfo(&(device[i]), devicesInfo);
-    }
+    ConvertToCDeviceInfo(&(device[0]), deviceInfo);
 }
 
 void ConvertToCAudioCapturerChangeInfo(CAudioCapturerChangeInfo& cInfo, const AudioRecorderChangeInfo& changeInfo)
@@ -350,7 +355,7 @@ void ConvertToCAudioCapturerChangeInfo(CAudioCapturerChangeInfo& cInfo, const Au
     ConvertToCArrDeviceDescriptor(cInfo.deviceDescriptors, changeInfo.inputDeviceInfo);
 }
 
-void ConvertToCArrEncoderInfo(CArrEncoderInfo& cInfo, std::vector<EncoderCapabilityData>& encoderInfo)
+void ConvertToCEncoderInfo(CEncoderInfo* cInfo, EncoderCapabilityData& encoderInfo)
 {
     cInfo->mimeType = MallocCString(encoderInfo.mimeType);
     cInfo->type = MallocCString(encoderInfo.type);
@@ -374,28 +379,56 @@ void ConvertToCArrEncoderInfo(CArrEncoderInfo& cInfo, std::vector<EncoderCapabil
     int32_t mallocSize = static_cast<int32_t>(sizeof(int32_t) * rateSize);
     if (mallocSize <= 0) {
         MEDIA_LOGE("mallocSize is illeagle");
-        return;        
+        return;
     }
 
     auto rates = static_cast<int32_t*>(malloc(mallocSize));
     if (!rates) {
         MEDIA_LOGE("malloc is failed");
-        return;        
+        return;
     }
 
     cInfo->sampleRates.size = static_cast<int64_t>(rateSize);
     cInfo->sampleRates.head = rates;
     if (memset_s(rates, mallocSize, 0, mallocSize) != EOK) {
         MEDIA_LOGE("initial memory space failed");
+        free(rates);
         return;
     }
 
     int32_t iter = 0;
     for (auto rate: encoderInfo.sampleRate) {
-        rates[i] = rate;
+        rates[iter] = rate;
         iter++;
     }
 }
 
+void ConvertToCArrEncoderInfo(CArrEncoderInfo& cInfo, std::vector<EncoderCapabilityData>& encoderInfo)
+{
+    int32_t encoderSize = encoderInfo.size();
+    int32_t mallocSize = static_cast<int32_t>(sizeof(CEncoderInfo) * encoderSize);
+    if (mallocSize <= 0) {
+        MEDIA_LOGE("mallocSize is illeagle");
+        return;
+    }
+
+    CEncoderInfo* encoders = static_cast<CEncoderInfo*>(malloc(mallocSize));
+    if (!encoders) {
+        MEDIA_LOGE("malloc is failed");
+        return;
+    }
+
+    cInfo.head = encoders;
+    cInfo.size = static_cast<int64_t>(encoderSize);
+    if (memset_s(encoders, mallocSize, 0, mallocSize) != EOK) {
+        MEDIA_LOGE("initial memory space failed");
+        free(encoders);
+        return;
+    }
+
+    for (int32_t i = 0; i < encoderSize; i++) {
+        ConvertToCEncoderInfo(&(encoders[i]), encoderInfo[i]);
+    }
+}
 } // namespace Media
 } // namespace OHOS

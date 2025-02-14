@@ -97,7 +97,7 @@ struct CRange {
 
 struct CEncoderInfo {
     char* mimeType;
-    char& type;
+    char* type;
     CRange bitRate;
     CRange frameRate;
     CRange width;
@@ -152,7 +152,7 @@ struct CArrDeviceDescriptor {
 struct CAudioCapturerChangeInfo {
     CAudioCapturerInfo audioCapturerInfo;
     CArrDeviceDescriptor deviceDescriptors;
-    int32_t streamId;
     bool muted;
+    int32_t streamId;
 };
 #endif /* AV_RECORDER_COMMON_H */

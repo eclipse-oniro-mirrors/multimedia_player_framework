@@ -25,7 +25,6 @@
 #include "string_ex.h"
 #include "avcodec_info.h"
 #include "av_common.h"
-#include "avrecorder_callback.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_RECORDER, "AVRecorderFfi"};
@@ -38,7 +37,7 @@ constexpr uint32_t CUSTOM_MAX_COUNT = 500;
 // use on AVRecorderConfig.metadata.customInfo
 constexpr uint32_t CUSTOM_INFO_MAX_LENGTH = 1001;
 
-constexpr int32_t AVRECORDER_GetInputSurface = 1;
+constexpr int32_t AVRECORDER_GETINPUTSURFACE = 1;
 constexpr int32_t AVRECORDER_START = 2;
 constexpr int32_t AVRECORDER_PAUSE = 3;
 constexpr int32_t AVRECORDER_RESUME = 4;
@@ -56,7 +55,7 @@ int64_t CjAVRecorder::CreateAVRecorder(int32_t *errCode)
     }
     cjAVRecorder->recorder_ = RecorderFactory::CreateRecorder();
     if (!cjAVRecorder->recorder_) {
-        MEDIA_LOGE("recoder_ is null");
+        MEDIA_LOGE("recorder_ is null");
         *errCode = MSERR_NO_MEMORY;
         return 0;
     }
@@ -74,7 +73,7 @@ int64_t CjAVRecorder::CreateAVRecorder(int32_t *errCode)
 RetInfo CjAVRecorder::DealTask(std::string opt)
 {
     std::map<std::string, int32_t> taskOptMap = {
-        {CjAVRecordergOpt::GETINPUTSURFACE, AVRECORDER_GetInputSurface},
+        {CjAVRecordergOpt::GETINPUTSURFACE, AVRECORDER_GETINPUTSURFACE},
         {CjAVRecordergOpt::START, AVRECORDER_START},
         {CjAVRecordergOpt::PAUSE, AVRECORDER_PAUSE},
         {CjAVRecordergOpt::RESUME, AVRECORDER_RESUME},
@@ -84,7 +83,7 @@ RetInfo CjAVRecorder::DealTask(std::string opt)
     };
     int32_t optValue = taskOptMap[opt];
     switch (optValue) {
-        case AVRECORDER_GetInputSurface:
+        case AVRECORDER_GETINPUTSURFACE:
             return DoGetInputSurface();
         case AVRECORDER_START:
             return DoStart();
@@ -133,7 +132,7 @@ int32_t CjAVRecorder::Prepare(CAVRecorderConfig config)
         return retInfo.first;
     }
     RemoveSurface();
-    StateCallback(CjAVRecorderState::STATE_PREPARED)
+    StateCallback(CjAVRecorderState::STATE_PREPARED);
     getVideoInputSurface_ = false;
     withVideo_ = config_->withVideo;
     return MSERR_OK;
@@ -141,7 +140,7 @@ int32_t CjAVRecorder::Prepare(CAVRecorderConfig config)
 
 int32_t CjAVRecorder::CheckStateMachine(const std::string &opt)
 {
-    auto napiCb = std::static_pointer_cast<AVRecorderCallback>(recorderCb_);
+    auto napiCb = std::static_pointer_cast<CJAVRecorderCallback>(recorderCb_);
     CHECK_AND_RETURN_RET_LOG(napiCb != nullptr, MSERR_INVALID_OPERATION, "napiCb is nullptr!");
     std::string curState = napiCb->GetState();
     std::vector<std::string> allowedOpt = STATE_CTRL_LIST.at(curState);
@@ -477,8 +476,6 @@ RetInfo CjAVRecorder::SetAVConfigParams()
     CHECK_AND_RETURN_RET_LOG(retInfo.first == MSERR_OK, retInfo, "Fail to set videoBitrate");
 
     if (config_->maxDuration < 1) {
-        MEDIA_LOGI("CjAVRecorder::Configure maxDuration = %{public}d is invalid, set to default",
-            config_->maxDuration);
         config_->maxDuration = INT32_MAX;
     }
     recorder_->SetMaxDuration(config_->maxDuration);
@@ -519,7 +516,8 @@ char *CjAVRecorder::GetInputSurface(int32_t *errCode)
 {
     RetInfo result = ExecuteOptTask(CjAVRecordergOpt::GETINPUTSURFACE);
     if (result.first != MSERR_OK) {
-        MEDIA_LOGE("getInputSurface failed, errCode %{public}d, errMsg %{public}s", result.first, result.second.c_str());
+        MEDIA_LOGE("getInputSurface failed, errCode %{public}d, errMsg %{public}s",
+            result.first, result.second.c_str());
         *errCode = result.first;
         return nullptr;
     }
@@ -837,7 +835,7 @@ RetInfo CjAVRecorder::DoStart()
 
     int32_t ret = recorder_->Start();
     if (ret != MSERR_OK) {
-        StateCallback(CjAVRecorderState::STATE_ERROR)
+        StateCallback(CjAVRecorderState::STATE_ERROR);
     }
     CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "Start", ""));
     StateCallback(CjAVRecorderState::STATE_STARTED);
@@ -914,7 +912,7 @@ int32_t CjAVRecorder::CheckRepeatOperation(const std::string &opt)
         {CjAVRecorderState::STATE_ERROR, {}},
     };
 
-    auto napiCb = std::static_pointer_cast<AVRecorderCallback>(recorderCb_);
+    auto napiCb = std::static_pointer_cast<CJAVRecorderCallback>(recorderCb_);
     CHECK_AND_RETURN_RET_LOG(napiCb != nullptr, MSERR_INVALID_OPERATION, "napiCb is nullptr!");
     std::string curState = napiCb->GetState();
     std::vector<std::string> repeatOpt = stateCtrl.at(curState);
@@ -976,11 +974,21 @@ void CjAVRecorder::StateCallback(const std::string &state)
 {
     MEDIA_LOGI("Change state to %{public}s", state.c_str());
     CHECK_AND_RETURN_LOG(recorderCb_ != nullptr, "recorderCb_ is nullptr!");
-    auto napiCb = std::static_pointer_cast<AVRecorderCallback>(recorderCb_);
-    CStageChangeHandler handler;
+    auto napiCb = std::static_pointer_cast<CJAVRecorderCallback>(recorderCb_);
+    CStateChangeHandler handler;
     handler.state = MallocCString(state);
-    handler.reason = static_cast<int32_t>(StateChangeReason::USER)
+    handler.reason = static_cast<int32_t>(StateChangeReason::USER);
     napiCb->ExecuteStateCallback(handler);
+}
+
+char *MallocCString(const std::string &origin)
+{
+    auto len = origin.length() + 1;
+    char *res = static_cast<char *>(malloc(sizeof(char) * len));
+    if (res == nullptr) {
+        return nullptr;
+    }
+    return std::char_traits<char>::copy(res, origin.c_str(), len);
 }
 }
 }
