@@ -88,6 +88,7 @@ private:
     HapticsMode hapticsMode_ = HapticsMode::HAPTICS_MODE_INVALID;
     std::map<ToneHapticsFeature, std::string> hapticUriMap_;
     bool isHapticUriEmpty_ = false;
+    bool isNoneHaptics_ = false;
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper_ = nullptr;
 
     std::mutex systemTonePlayerMutex_;
