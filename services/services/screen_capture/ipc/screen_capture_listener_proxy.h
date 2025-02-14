@@ -32,6 +32,7 @@ public:
     void OnAudioBufferAvailable(bool isReady, AudioCaptureSourceType type) override;
     void OnVideoBufferAvailable(bool isReady) override;
     void OnStateChange(AVScreenCaptureStateCode stateCode) override;
+    void OnDisplaySelected(uint64_t displayId) override;
     void Stop()
     {
         isStopped_ = true;
@@ -51,6 +52,7 @@ public:
     void OnAudioBufferAvailable(bool isReady, AudioCaptureSourceType type) override;
     void OnVideoBufferAvailable(bool isReady) override;
     void OnStateChange(AVScreenCaptureStateCode stateCode) override;
+    void OnDisplaySelected(uint64_t displayId) override;
 
 private:
     static inline BrokerDelegator<ScreenCaptureListenerProxy> delegator_;

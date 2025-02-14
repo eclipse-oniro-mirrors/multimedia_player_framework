@@ -71,6 +71,7 @@ private:
         OH_AVScreenCaptureBufferType bufferType, int64_t timestamp, void *userData);
     static void OnStateChange(struct OH_AVScreenCapture *capture,
         OH_AVScreenCaptureStateCode stateCode, void *userData);
+    static void OnDisplaySelected(struct OH_AVScreenCapture *capture, uint64_t displayId, void *userData);
     OH_AVScreenCaptureConfig Convert(AVScreenCaptureConfig config);
 
     static std::mutex mutex_;

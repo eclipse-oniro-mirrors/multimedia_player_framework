@@ -47,6 +47,7 @@ struct ScreenCaptureObject : public OH_AVScreenCapture {
 
     const std::shared_ptr<ScreenCapture> screenCapture_ = nullptr;
     std::shared_ptr<NativeScreenCaptureCallback> callback_ = nullptr;
+    bool isStart = false;
 };
 
 class NativeScreenCaptureStateChangeCallback {
@@ -63,6 +64,23 @@ public:
 
 private:
     OH_AVScreenCapture_OnStateChange callback_;
+    void *userData_;
+};
+
+class NativeScreenCaptureDisplaySelectedCallback {
+public:
+    NativeScreenCaptureDisplaySelectedCallback(OH_AVScreenCapture_OnDisplaySelected callback, void *userData)
+        : callback_(callback), userData_(userData) {}
+    virtual ~NativeScreenCaptureDisplaySelectedCallback() = default;
+
+    void OnDisplaySelected(struct OH_AVScreenCapture *capture, uint64_t displayId)
+    {
+        CHECK_AND_RETURN(capture != nullptr && callback_ != nullptr);
+        callback_(capture, displayId, userData_);
+    }
+
+private:
+    OH_AVScreenCapture_OnDisplaySelected callback_;
     void *userData_;
 };
 
@@ -257,6 +275,18 @@ public:
         }
     }
 
+    void OnDisplaySelected(uint64_t displayId) override
+    {
+        MEDIA_LOGI("OnDisplaySelected() is called, displayId (%{public}" PRIu64 ")", displayId);
+        std::shared_lock<std::shared_mutex> lock(mutex_);
+        CHECK_AND_RETURN(capture_ != nullptr);
+
+        if (displaySelectedCallback_ != nullptr) {
+            displaySelectedCallback_->OnDisplaySelected(capture_, displayId);
+            return;
+        }
+    }
+
     void OnAudioBufferAvailable(bool isReady, AudioCaptureSourceType type) override
     {
         MEDIA_LOGD("OnAudioBufferAvailable() is called, isReady:%{public}d, type:%{public}d", isReady, type);
@@ -353,6 +383,13 @@ public:
         return dataCallback_ != nullptr;
     }
 
+    bool SetDisplayCallback(OH_AVScreenCapture_OnDisplaySelected callback, void *userData)
+    {
+        std::unique_lock<std::shared_mutex> lock(mutex_);
+        displaySelectedCallback_ = std::make_shared<NativeScreenCaptureDisplaySelectedCallback>(callback, userData);
+        return displaySelectedCallback_ != nullptr;
+    }
+
 private:
     std::shared_mutex mutex_;
     struct OH_AVScreenCapture *capture_ = nullptr;
@@ -360,6 +397,7 @@ private:
     std::shared_ptr<NativeScreenCaptureStateChangeCallback> stateChangeCallback_ = nullptr;
     std::shared_ptr<NativeScreenCaptureErrorCallback> errorCallback_ = nullptr;
     std::shared_ptr<NativeScreenCaptureDataCallback> dataCallback_ = nullptr;
+    std::shared_ptr<NativeScreenCaptureDisplaySelectedCallback> displaySelectedCallback_ = nullptr;
 };
 
 struct ScreenCaptureContentFilterObject : public OH_AVScreenCapture_ContentFilter {
@@ -517,7 +555,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StartScreenCapture(struct OH_AVSc
     CHECK_AND_RETURN_RET(ret == AV_SCREEN_CAPTURE_ERR_OK, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT);
     ret = screenCaptureObj->screenCapture_->StartScreenCapture();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT, "StartScreenCapture failed!");
-
+    screenCaptureObj->isStart = true;
     return AV_SCREEN_CAPTURE_ERR_OK;
 }
 
@@ -537,7 +575,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StartScreenCaptureWithSurface(str
     CHECK_AND_RETURN_RET(ret == AV_SCREEN_CAPTURE_ERR_OK, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT);
     ret = screenCaptureObj->screenCapture_->StartScreenCaptureWithSurface(window->surface);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT, "StartScreenCapture failed!");
-
+    screenCaptureObj->isStart = true;
     return AV_SCREEN_CAPTURE_ERR_OK;
 }
 
@@ -551,7 +589,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StopScreenCapture(struct OH_AVScr
 
     int32_t ret = screenCaptureObj->screenCapture_->StopScreenCapture();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT, "StopScreenCapture failed!");
-
+    screenCaptureObj->isStart = false;
     return AV_SCREEN_CAPTURE_ERR_OK;
 }
 
@@ -567,7 +605,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StartScreenRecording(struct OH_AV
     CHECK_AND_RETURN_RET(ret == MSERR_OK, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT);
     ret = screenCaptureObj->screenCapture_->StartScreenRecording();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT, "StartScreenRecording failed!");
-
+    screenCaptureObj->isStart = true;
     return AV_SCREEN_CAPTURE_ERR_OK;
 }
 
@@ -581,7 +619,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StopScreenRecording(struct OH_AVS
 
     int32_t ret = screenCaptureObj->screenCapture_->StopScreenRecording();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT, "StopScreenRecording failed!");
-
+    screenCaptureObj->isStart = false;
     return AV_SCREEN_CAPTURE_ERR_OK;
 }
 
@@ -951,5 +989,30 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetMaxVideoFrameRate(struct OH_AV
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT,
                              "SetMaxVideoFrameRate failed!");
 
+    return AV_SCREEN_CAPTURE_ERR_OK;
+}
+
+OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetDisplayCallback(struct OH_AVScreenCapture *capture,
+    OH_AVScreenCapture_OnDisplaySelected callback, void *userData)
+{
+    MEDIA_LOGD("OH_AVScreenCapture_SetDisplayCallback S");
+    CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr!");
+    CHECK_AND_RETURN_RET_LOG(callback != nullptr,
+        AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input displayCallback is nullptr!");
+    struct ScreenCaptureObject *screenCaptureObj = reinterpret_cast<ScreenCaptureObject *>(capture);
+    CHECK_AND_RETURN_RET_LOG(screenCaptureObj->screenCapture_ != nullptr,
+        AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "screenCapture_ is null");
+
+    CHECK_AND_RETURN_RET_LOG(!screenCaptureObj->isStart,
+        AV_SCREEN_CAPTURE_ERR_INVALID_STATE, "This interface should be called before Start is called!");
+    OH_AVSCREEN_CAPTURE_ErrCode errCode = AVScreenCaptureSetCallback(capture, screenCaptureObj);
+    CHECK_AND_RETURN_RET_LOG(errCode == AV_SCREEN_CAPTURE_ERR_OK, errCode, "SetDisplayCallback is null");
+
+    if (screenCaptureObj->callback_ == nullptr ||
+        !screenCaptureObj->callback_->SetDisplayCallback(callback, userData)) {
+        MEDIA_LOGE("OH_AVScreenCapture_SetDisplayCallback error");
+        return AV_SCREEN_CAPTURE_ERR_NO_MEMORY;
+    }
+    MEDIA_LOGD("OH_AVScreenCapture_SetDisplayCallback E");
     return AV_SCREEN_CAPTURE_ERR_OK;
 }
