@@ -1,4 +1,4 @@
-# Copyright (c) 2025 Huawei Device Co., Ltd.
+# Copyright (c) 2024 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -14,52 +14,59 @@
 import("//build/ohos.gni")
 import("//build/ohos/ace/ace.gni")
 import("//foundation/multimedia/player_framework/config.gni")
+MEDIA_ROOT_DIR = "//foundation/multimedia/player_framework/"
 
 config("public_ffi_config") {
-  include_dirs = [ "include" ]
+  include_dirs = []
 }
 
-ohos_shared_library("cj_audiohaptic_ffi") {
+ohos_shared_library("cj_avplayer_ffi") {
   public_configs = [ ":public_ffi_config" ]
 
-  stack_protector_ret = true
   sanitize = {
-    integer_overflow = true
-    ubsan = true
     boundary_sanitize = true
+    ubsan = true
     cfi = true
     cfi_cross_dso = true
     debug = false
   }
 
   include_dirs = [
-    "./include",
-    "./include/audio_haptic_player",
-    "./../../native/audio_haptic",
-    "./../../../interfaces/inner_api/native",
-    "./../../../interfaces/inner_api/native/audio_haptic/include",
-    "./../../../services/utils/include",
+    "$MEDIA_ROOT_DIR/frameworks/cj/avplayer",
+    "$MEDIA_ROOT_DIR/frameworks/cj/mediasource",
+    "$MEDIA_ROOT_DIR/interfaces/inner_api",
+    "$MEDIA_ROOT_DIR/services/utils/include",
+    "$MEDIA_ROOT_DIR/frameworks/js/avplayer",
+    "$MEDIA_ROOT_DIR/frameworks/js/common",
   ]
 
   sources = [
-    "./src/cj_audio_haptic_ffi.cpp",
-    "./src/cj_audio_haptic_manager.cpp",
-    "./src/cj_audio_haptic_player.cpp",
+    "$MEDIA_ROOT_DIR/frameworks/cj/mediasource/media_source_ffi.cpp",
+    "cj_avplayer.cpp",
+    "cj_avplayer_callback.cpp",
+    "cj_avplayer_ffi.cpp",
+    "cj_avplayer_utils.cpp",
+    "cj_media_data_source_callback.cpp",
   ]
 
-  deps = [ "./../../native/audio_haptic:audio_haptic" ]
+  deps = [
+    "$MEDIA_ROOT_DIR/frameworks/js/avplayer:media_avplayer",
+    "$MEDIA_ROOT_DIR/interfaces/inner_api/native:media_client",
+    "$MEDIA_ROOT_DIR/services/utils:media_service_utils",
+  ]
 
   external_deps = [
     "audio_framework:audio_client",
-    "c_utils:utils",
+    "audio_framework:audio_foundation",
+    "audio_framework:cj_multimedia_audio_ffi",
     "hilog:libhilog",
-    "ipc:ipc_single",
-    "media_foundation:media_foundation",
+    "napi:ace_napi",
     "napi:cj_bind_ffi",
     "napi:cj_bind_native",
+    "qos_manager:qos",
   ]
 
   innerapi_tags = [ "platformsdk" ]
-  part_name = "player_framework"
   subsystem_name = "multimedia"
+  part_name = "player_framework"
 }
