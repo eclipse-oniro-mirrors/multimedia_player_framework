@@ -455,7 +455,6 @@ int32_t ScreenCaptureServer::SetAndCheckAppInfo(OHOS::AudioStandard::AppInfo &ap
     if (!IsSaUidValid(saUid, appInfo.appUid)) {
         MEDIA_LOGI("SetAndCheckAppInfo failed, saUid-appUid exists.");
         SetSCServerSaUid(-1);
-        RemoveScreenCaptureServerMap(sessionId_);
         return MSERR_INVALID_OPERATION;
     }
 
@@ -487,9 +486,7 @@ int32_t ScreenCaptureServer::SetAndCheckSaLimit(OHOS::AudioStandard::AppInfo &ap
     bool createFlag = CanScreenCaptureInstanceBeCreate(appInfo.appUid);
     if (!createFlag) {
         MEDIA_LOGI("SetAndCheckSaLimit failed, cannot create ScreenCapture Instance.");
-        RemoveSaAppInfoMap(GetSCServerSaUid());
         SetSCServerSaUid(-1);
-        RemoveScreenCaptureServerMap(sessionId_);
         return MSERR_INVALID_OPERATION;
     }
     MEDIA_LOGI("SetAndCheckSaLimit SUCCESS! appUid: %{public}d, saUid: %{public}d",
@@ -501,11 +498,8 @@ int32_t ScreenCaptureServer::SetAndCheckLimit()
 {
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " SetAndCheckLimit START.", FAKE_POINTER(this));
     bool createFlag = CanScreenCaptureInstanceBeCreate(IPCSkeleton::GetCallingUid());
-    if (!createFlag) {
-        MEDIA_LOGI("SetAndCheckLimit failed, cannot create ScreenCapture Instance.");
-        RemoveScreenCaptureServerMap(sessionId_);
-        return MSERR_INVALID_OPERATION;
-    }
+    CHECK_AND_RETURN_RET_LOG(createFlag, MSERR_INVALID_OPERATION,
+        "SetAndCheckLimit failed, cannot create ScreenCapture Instance.");
     return MSERR_OK;
 }
 
