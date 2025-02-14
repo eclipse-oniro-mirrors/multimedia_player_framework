@@ -21,6 +21,7 @@
 #include <queue>
 #include <chrono>
 
+#include "audio_info.h"
 #include "audio_decoder_filter.h"
 #include "audio_sink_filter.h"
 #include "common/status.h"
@@ -270,6 +271,7 @@ private:
     Status SetSeiMessageListener();
     void UpdatePlayTotalDuration();
     inline bool IsStatisticalInfoValid();
+    void ReportAudioInterruptEvent();
 
     bool isNetWorkPlay_ = false;
     bool isDump_ = false;
@@ -389,6 +391,11 @@ private:
     bool seiMessageCbStatus_ {false};
     std::vector<int32_t> payloadTypes_{};
     bool isPerfRecEnabled_ { false };
+    OHOS::Media::Mutex interruptMutex_{};
+    bool isHintPauseReceived_ { false };
+    std::atomic<bool> interruptNotifyPlay_ {false};
+    std::atomic<bool> isSaveInterruptEventNeeded_ {true};
+    OHOS::AudioStandard::InterruptEvent interruptEvent_;
 };
 } // namespace Media
 } // namespace OHOS
