@@ -57,6 +57,7 @@
 #include "screen_capture_monitor_server.h"
 #include "json/json.h"
 #include "tokenid_kit.h"
+#include "window_manager.h"
 #include "system_ability_status_change_stub.h"
 #include "i_input_device_listener.h"
 #include "input_manager.h"
