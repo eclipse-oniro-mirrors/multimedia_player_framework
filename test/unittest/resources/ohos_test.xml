@@ -475,6 +475,9 @@
             <option name="shell" value="touch /data/test/media/screen_capture_recorder_001.mp4"/>
             <option name="shell" value="touch /data/test/media/screen_capture_recorder_002.mp4"/>
             <option name="shell" value="touch /data/test/media/screen_capture_recorder_003.mp4"/>
+            <option name="shell" value="touch /data/test/media/screen_capture_tel_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/screen_capture_tel_002.mp4"/>
+            <option name="shell" value="touch /data/test/media/screen_capture_tel_003.mp4"/>
             <option name="shell" value="restorecon /data/test/media"/>
         </preparer>
     </target>

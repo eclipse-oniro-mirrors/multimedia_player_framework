@@ -1239,6 +1239,9 @@ int32_t ScreenCaptureServer::StartStreamMicAudioCapture()
         ScreenCaptureContentFilter contentFilterMic;
         micCapture = std::make_shared<AudioCapturerWrapper>(captureConfig_.audioInfo.micCapInfo, screenCaptureCb_,
             std::string(GenerateThreadNameByPrefix("OS_SMicAd")), contentFilterMic);
+#ifdef SUPPORT_CALL
+        micCapture->SetIsInTelCall(InCallObserver::GetInstance().IsInCall() && !IsTelInCallSkipList());
+#endif
         int32_t ret = micCapture->Start(appInfo_);
         if (ret != MSERR_OK) {
             MEDIA_LOGE("StartStreamMicAudioCapture failed");
@@ -1285,6 +1288,9 @@ int32_t ScreenCaptureServer::StartFileMicAudioCapture()
         ScreenCaptureContentFilter contentFilterMic;
         micCapture = std::make_shared<AudioCapturerWrapper>(captureConfig_.audioInfo.micCapInfo, screenCaptureCb_,
             std::string(GenerateThreadNameByPrefix("OS_FMicAd")), contentFilterMic);
+#ifdef SUPPORT_CALL
+        micCapture->SetIsInTelCall(InCallObserver::GetInstance().IsInCall() && !IsTelInCallSkipList());
+#endif
         if (audioSource_) {
             micCapture->SetIsInVoIPCall(audioSource_->GetIsInVoIPCall());
         }
@@ -1891,16 +1897,8 @@ int32_t ScreenCaptureServer::RegisterServerCallbacks()
     uint64_t tokenId = IPCSkeleton::GetCallingFullTokenID();
     isCalledBySystemApp_ = OHOS::Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(tokenId);
     MEDIA_LOGI("ScreenCaptureServer::RegisterServerCallbacks isCalledBySystemApp : %{public}d", isCalledBySystemApp_);
-    if (InCallObserver::GetInstance().IsInCall() && !IsTelInCallSkipList()) {
-        MEDIA_LOGI("ScreenCaptureServer Start InCall Abort");
-        NotifyStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_CALL);
-        FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_, SCREEN_CAPTURE_ERR_UNSUPPORT,
-            "ScreenCaptureServer Start InCall Abort");
-        return MSERR_UNSUPPORT;
-    } else {
-        MEDIA_LOGI("ScreenCaptureServer Start RegisterScreenCaptureCallBack");
-        InCallObserver::GetInstance().RegisterInCallObserverCallBack(screenCaptureObserverCb_);
-    }
+    MEDIA_LOGI("ScreenCaptureServer Start RegisterScreenCaptureCallBack");
+    InCallObserver::GetInstance().RegisterInCallObserverCallBack(screenCaptureObserverCb_);
 #endif
     AccountObserver::GetInstance().RegisterAccountObserverCallBack(screenCaptureObserverCb_);
     return MSERR_OK;
@@ -2946,6 +2944,58 @@ int32_t ScreenCaptureServer::OnVoIPStatusChanged(bool isInVoIPCall)
     return MSERR_OK;
 }
 
+#ifdef SUPPORT_CALL
+int32_t ScreenCaptureServer::OnTelCallStateChanged(bool isInTelCall)
+{
+    int32_t ret = MSERR_OK;
+    if (IsTelInCallSkipList()) {
+        return ret;
+    }
+    if (isInTelCall) {
+        if (innerAudioCapture_ && innerAudioCapture_->GetAudioCapturerState() == CAPTURER_PAUSED) {
+            ret = innerAudioCapture_->Resume();
+            CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "innerAudioCapture Resume failed");
+        }
+        usleep(AUDIO_CHANGE_TIME);
+        if (micAudioCapture_) {
+            micAudioCapture_->SetIsInTelCall(true);
+            if (micAudioCapture_->GetAudioCapturerState() == CAPTURER_RECORDING) {
+                ret = micAudioCapture_->Pause();
+                CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "micAudioCapture Pause failed");
+            }
+        }
+    } else {
+        if (micAudioCapture_) {
+            micAudioCapture_->SetIsInTelCall(true);
+            if (isMicrophoneSwitchTurnOn_ && micAudioCapture_->GetAudioCapturerState() == CAPTURER_PAUSED) {
+                ret = micAudioCapture_->Resume();
+                if (ret != MSERR_OK) {
+                    MEDIA_LOGE("micAudioCapture Resume failed");
+                    NotifyStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE);
+                    return ret;
+                }
+            }
+        }
+        if (!micAudioCapture_ && isMicrophoneSwitchTurnOn_) {
+            if (captureConfig_.dataType == DataType::ORIGINAL_STREAM) {
+                ret = StartStreamMicAudioCapture();
+                CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetMicrophoneOn StartStreamMicAudioCapture failed");
+            } else if (captureConfig_.dataType == DataType::CAPTURE_FILE) {
+                ret = StartFileMicAudioCapture();
+                CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartFileMicAudioCapture failed");
+            }
+        }
+        usleep(AUDIO_CHANGE_TIME);
+        if (innerAudioCapture_ && innerAudioCapture_->GetAudioCapturerState() == CAPTURER_RECORDING &&
+            audioSource_ && audioSource_->GetSpeakerAliveStatus() && !audioSource_->GetIsInVoIPCall()) {
+            ret = innerAudioCapture_->Pause();
+            CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "innerAudioCapture Pause failed");
+        }
+    }
+    return MSERR_OK;
+}
+#endif
+
 bool ScreenCaptureServer::GetMicWorkingState()
 {
     MEDIA_LOGD("ScreenCaptureServer: 0x%{public}06" PRIXPTR " GetMicWorkingState", FAKE_POINTER(this));
@@ -3408,6 +3458,29 @@ bool ScreenCaptureObserverCallBack::NotifyStopAndRelease(AVScreenCaptureStateCod
     CHECK_AND_RETURN_RET_LOG(res == MSERR_OK, false, "NotifyStopAndRelease EnqueueTask failed.");
     return true;
 }
+
+#ifdef SUPPORT_CALL
+bool ScreenCaptureObserverCallBack::TelCallStateUpdated(bool isInCall)
+{
+    MEDIA_LOGI("ScreenCaptureObserverCallBack::TelCallStateUpdated");
+    auto scrServer = screenCaptureServer_.lock();
+    (void)srcServer->OnTelCallStateChanged(isInCall);
+    return true;
+}
+
+bool ScreenCaptureObserverCallBack::NotifyTelCallStateUpdated(bool isInCall)
+{
+    MEDIA_LOGI("ScreenCaptureObserverCallBack::NotifyTelCallStateUpdated START.");
+    bool ret = true;
+    auto task = std::make_shared<TaskHandler<void>>([&, this, state] {
+        ret = TelCallStateUpdated(state);
+        return ret;
+    });
+    int32_t res = taskQueObserverCb_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(res == MSERR_OK, false, "NotifyTelCallStateUpdated EnqueueTask failed.");
+    return true;
+}
+#endif
 
 ScreenCaptureObserverCallBack::~ScreenCaptureObserverCallBack()
 {

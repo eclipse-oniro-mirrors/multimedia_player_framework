@@ -93,6 +93,9 @@ public:
     void SetSessionId(int32_t sessionId);
     int32_t OnReceiveUserPrivacyAuthority(bool isAllowed);
     int32_t StopScreenCaptureByEvent(AVScreenCaptureStateCode stateCode);
+#ifdef SUPPORT_CALL
+    int32_t OnTelCallStateChanged(bool isInCall);
+#endif
     void UpdateMicrophoneEnabled();
 
     int32_t AcquireAudioBufferMix(std::shared_ptr<AudioBuffer> &innerAudioBuffer,

@@ -208,7 +208,10 @@ public:
     ~ScreenCaptureObserverCallBack();
     bool StopAndRelease(AVScreenCaptureStateCode state) override;
     bool NotifyStopAndRelease(AVScreenCaptureStateCode state) override;
-
+#ifdef SUPPORT_CALL
+    bool TelCallStateUpdated(bool isInCall) override;
+    bool NotifyTelCallStateUpdated(bool isInCall) override;
+#endif
 private:
     std::weak_ptr<ScreenCaptureServer> screenCaptureServer_;
     TaskQueue taskQueObserverCb_;

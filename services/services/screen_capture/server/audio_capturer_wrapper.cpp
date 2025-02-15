@@ -54,7 +54,10 @@ int32_t AudioCapturerWrapper::Start(const OHOS::AudioStandard::AppInfo &appInfo)
         MEDIA_LOGE("Start failed, is running, threadName:%{public}s", threadName_.c_str());
         return MSERR_UNKNOWN;
     }
-
+    if (isInTelCall_.load()) {
+        MEDIA_LOGE("Start failed, is in telephony call, threadName:%{public}s", threadName_.c_str());
+        return MSERR_UNKNOWN;
+    }
     appInfo_ = appInfo;
     std::shared_ptr<AudioCapturer> audioCapturer = CreateAudioCapturer(appInfo);
     CHECK_AND_RETURN_RET_LOG(audioCapturer != nullptr, MSERR_UNKNOWN, "Start failed, create AudioCapturer failed");
@@ -119,6 +122,10 @@ int32_t AudioCapturerWrapper::Resume()
     std::lock_guard<std::mutex> lock(mutex_);
     if (isRunning_.load()) {
         MEDIA_LOGE("Resume failed, is running, threadName:%{public}s", threadName_.c_str());
+        return MSERR_UNKNOWN;
+    }
+    if (isInTelCall_.load()) {
+        MEDIA_LOGE("Start failed, is in telephony call, threadName:%{public}s", threadName_.c_str());
         return MSERR_UNKNOWN;
     }
     CHECK_AND_RETURN_RET_LOG(audioCapturer_ != nullptr, MSERR_UNKNOWN, "Resume failed, audioCapturer_ is nullptr");
@@ -402,6 +409,11 @@ int32_t AudioCapturerWrapper::ReleaseAudioBuffer()
 void AudioCapturerWrapper::SetIsInVoIPCall(bool isInVoIPCall)
 {
     isInVoIPCall_.store(isInVoIPCall);
+}
+
+void AudioCapturerWrapper::SetIsInTelCall(bool isInTelCall)
+{
+    isInTelCall_.store(isInTelCall);
 }
 
 void AudioCapturerWrapper::OnStartFailed(ScreenCaptureErrorType errorType, int32_t errorCode)

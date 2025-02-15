@@ -1514,6 +1514,122 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StopAndRelease_002, TestSize.Level2)
         ASSERT_EQ(obcb->StopAndRelease(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_USER), true);
     }
 }
+
+/**
+* @tc.name: OnTelCallStateChanged_001
+* @tc.desc: in call with tel skip
+* @tc.type: FUNC
+*/
+HWTEST_F(ScreenCaptureServerFunctionTest, OnTelCallStateChanged_001, TestSize.Level2)
+{
+    RecorderInfo recorderInfo;
+    SetRecorderInfo("screen_capture_tel_001.mp4", recorderInfo);
+    SetValidConfigFile(recorderInfo);
+    ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
+    screenCaptureServer_->SetMicrophoneEnabled(true);
+    ASSERT_EQ(StartFileAudioCapture(AVScreenCaptureMixMode::MIX_MODE), MSERR_OK);
+    screenCaptureServer_->appName_ = HiviewCareBundleName;
+    ASSERT_EQ(screenCaptureServer_->OnTelCallStateChanged(true), MSERR_OK);
+    sleep(RECORDER_TIME);
+    ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
+}
+
+/**
+* @tc.name: OnTelCallStateChanged_002
+* @tc.desc: in call and out call with mic on, CAPTURE_FILE
+* @tc.type: FUNC
+*/
+HWTEST_F(ScreenCaptureServerFunctionTest, OnTelCallStateChanged_002, TestSize.Level2)
+{
+    RecorderInfo recorderInfo;
+    SetRecorderInfo("screen_capture_tel_002.mp4", recorderInfo);
+    SetValidConfigFile(recorderInfo);
+    ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
+    screenCaptureServer_->SetMicrophoneEnabled(true);
+    ASSERT_EQ(StartFileAudioCapture(AVScreenCaptureMixMode::MIX_MODE), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->OnTelCallStateChanged(true), MSERR_OK);
+    sleep(RECORDER_TIME);
+    ASSERT_EQ(screenCaptureServer_->OnTelCallStateChanged(false), MSERR_OK);
+    sleep(RECORDER_TIME);
+    ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
+}
+
+/**
+* @tc.name: OnTelCallStateChanged_003
+* @tc.desc: in call and out call with mic off, CAPTURE_FILE
+* @tc.type: FUNC
+*/
+HWTEST_F(ScreenCaptureServerFunctionTest, OnTelCallStateChanged_003, TestSize.Level2)
+{
+    RecorderInfo recorderInfo;
+    SetRecorderInfo("screen_capture_tel_003.mp4", recorderInfo);
+    SetValidConfigFile(recorderInfo);
+    ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
+    screenCaptureServer_->SetMicrophoneEnabled(false);
+    ASSERT_EQ(StartFileAudioCapture(AVScreenCaptureMixMode::MIX_MODE), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->OnTelCallStateChanged(true), MSERR_OK);
+    sleep(RECORDER_TIME);
+    ASSERT_EQ(screenCaptureServer_->OnTelCallStateChanged(false), MSERR_OK);
+    sleep(RECORDER_TIME);
+    ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
+}
+
+/**
+* @tc.name: OnTelCallStateChanged_004
+* @tc.desc: in call and out call with mic on, ORIGINAL_STREAM
+* @tc.type: FUNC
+*/
+HWTEST_F(ScreenCaptureServerFunctionTest, OnTelCallStateChanged_004, TestSize.Level2)
+{
+    SetValidConfig();
+    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
+    ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
+    sleep(RECORDER_TIME);
+    screenCaptureServer_->SetMicrophoneEnabled(true);
+    ASSERT_EQ(screenCaptureServer_->OnTelCallStateChanged(true), MSERR_OK);
+    sleep(RECORDER_TIME);
+    ASSERT_EQ(screenCaptureServer_->OnTelCallStateChanged(false), MSERR_OK);
+    sleep(RECORDER_TIME);
+    ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
+}
+
+/**
+* @tc.name: OnTelCallStateChanged_005
+* @tc.desc: out call and out call with mic on, ORIGINAL_STREAM (invalid state)
+* @tc.type: FUNC
+*/
+HWTEST_F(ScreenCaptureServerFunctionTest, OnTelCallStateChanged_005, TestSize.Level2)
+{
+    SetValidConfig();
+    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
+    ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
+    sleep(RECORDER_TIME);
+    screenCaptureServer_->SetMicrophoneEnabled(true);
+    ASSERT_EQ(screenCaptureServer_->OnTelCallStateChanged(false), MSERR_OK);
+    sleep(RECORDER_TIME);
+    ASSERT_EQ(screenCaptureServer_->OnTelCallStateChanged(false), MSERR_OK);
+    sleep(RECORDER_TIME);
+    ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
+}
+
+/**
+* @tc.name: OnTelCallStateChanged_006
+* @tc.desc: in call and in call with mic on, ORIGINAL_STREAM (invalid state)
+* @tc.type: FUNC
+*/
+HWTEST_F(ScreenCaptureServerFunctionTest, OnTelCallStateChanged_006, TestSize.Level2)
+{
+    SetValidConfig();
+    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
+    ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
+    sleep(RECORDER_TIME);
+    screenCaptureServer_->SetMicrophoneEnabled(true);
+    ASSERT_EQ(screenCaptureServer_->OnTelCallStateChanged(true), MSERR_OK);
+    sleep(RECORDER_TIME);
+    ASSERT_EQ(screenCaptureServer_->OnTelCallStateChanged(true), MSERR_OK);
+    sleep(RECORDER_TIME);
+    ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
+}
 #endif
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ShowCursor_001, TestSize.Level2)
@@ -1792,6 +1908,5 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetMicrophoneEnabled_002, TestSize.Lev
     int ret = screenCaptureServer_->SetMicrophoneEnabled(false);
     ASSERT_EQ(ret, MSERR_OK);
 }
-
 } // Media
 } // OHOS
