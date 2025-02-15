@@ -924,10 +924,14 @@ int32_t ScreenCaptureServer::RequestUserPrivacyAuthority()
     MediaTrace trace("ScreenCaptureServer::RequestUserPrivacyAuthority");
     // If Root is treated as whitelisted, how to guarantee RequestUserPrivacyAuthority function by TDD cases.
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " RequestUserPrivacyAuthority start.", FAKE_POINTER(this));
+    if (!IsUserPrivacyAuthorityNeeded()) {
+        MEDIA_LOGI("Privacy Authority Granted. uid: %{public}d", appInfo_.appUid);
+        return MSERR_OK;
+    }
 
     if (isPrivacyAuthorityEnabled_) {
         if (GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"]
-                .compare(appName_) != 0) {
+                .compare(appName_) != 0 && !isScreenCaptureAuthority_) {
             return StartPrivacyWindow();
         } else {
             MEDIA_LOGI("ScreenCaptureServer::RequestUserPrivacyAuthority support screenrecorder");
@@ -1590,19 +1594,20 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
 
     isPrivacyAuthorityEnabled_ = isPrivacyAuthorityEnabled;
     captureState_ = AVScreenCaptureState::STARTING;
-    if (!CheckPrivacyWindowSkipPermission() && IsUserPrivacyAuthorityNeeded()) {
-        ret = RequestUserPrivacyAuthority();
-        if (ret != MSERR_OK) {
-            captureState_ = AVScreenCaptureState::STOPPED;
-            SetErrorInfo(ret, "StartScreenCaptureInner RequestUserPrivacyAuthority failed",
-                StopReason::REQUEST_USER_PRIVACY_AUTHORITY_FAILED, IsUserPrivacyAuthorityNeeded());
-            MEDIA_LOGE("StartScreenCaptureInner RequestUserPrivacyAuthority failed");
-            return ret;
-        }
+    isScreenCaptureAuthority_ = CheckPrivacyWindowSkipPermission();
+    ret = RequestUserPrivacyAuthority();
+    if (ret != MSERR_OK) {
+        captureState_ = AVScreenCaptureState::STOPPED;
+        SetErrorInfo(ret, "StartScreenCaptureInner RequestUserPrivacyAuthority failed",
+            StopReason::REQUEST_USER_PRIVACY_AUTHORITY_FAILED, IsUserPrivacyAuthorityNeeded());
+        MEDIA_LOGE("StartScreenCaptureInner RequestUserPrivacyAuthority failed");
+        return ret;
+    }
 
+    if (IsUserPrivacyAuthorityNeeded()) {
         if (isPrivacyAuthorityEnabled_ &&
             GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"]
-                .compare(appName_) != 0) {
+                .compare(appName_) != 0 && !isScreenCaptureAuthority_) {
             MEDIA_LOGI("Wait for user interactions to ALLOW/DENY capture");
             return MSERR_OK;
         } else {
@@ -2859,6 +2864,7 @@ int32_t ScreenCaptureServer::StopScreenCapture()
     }
 
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances StopScreenCapture E", FAKE_POINTER(this));
+    isScreenCaptureAuthority_ = false;
     return ret;
 }
 

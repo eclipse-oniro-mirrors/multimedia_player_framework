@@ -849,7 +849,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, RequestUserPrivacyAuthority_001, TestS
 {
     screenCaptureServer_->appInfo_.appUid = ScreenCaptureServer::ROOT_UID;
     screenCaptureServer_->isPrivacyAuthorityEnabled_ = true;
-    ASSERT_NE(screenCaptureServer_->RequestUserPrivacyAuthority(), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->RequestUserPrivacyAuthority(), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, RequestUserPrivacyAuthority_002, TestSize.Level2)
