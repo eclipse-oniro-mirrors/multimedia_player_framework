@@ -925,7 +925,7 @@ int32_t ScreenCaptureServer::RequestUserPrivacyAuthority()
     // If Root is treated as whitelisted, how to guarantee RequestUserPrivacyAuthority function by TDD cases.
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " RequestUserPrivacyAuthority start.", FAKE_POINTER(this));
     if (!IsUserPrivacyAuthorityNeeded()) {
-        MEDIA_LOGI("Privacy Authority Granted. uid: %{public}d", appInfo_.appUid);
+        MEDIA_LOGI("Privacy Authority Granted. uid:%{public}d", appInfo_.appUid);
         return MSERR_OK;
     }
 
