@@ -40,6 +40,12 @@ public:
     {
         return true;
     }
+    bool TelCallStateUpdated(bool isInCall) {
+        return true;
+    }
+    bool NotifyTelCallStateUpdated(bool isInCall) {
+        return true;
+    }
 };
 
 class InCallObserverTestFalseCallBack : public InCallObserverCallBack {
@@ -52,6 +58,12 @@ public:
     }
     bool NotifyStopAndRelease(AVScreenCaptureStateCode state)
     {
+        return false;
+    }
+    bool TelCallStateUpdated(bool isInCall) {
+        return false;
+    }
+    bool NotifyTelCallStateUpdated(bool isInCall) {
         return false;
     }
 };
