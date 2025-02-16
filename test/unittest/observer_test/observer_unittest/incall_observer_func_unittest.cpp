@@ -61,10 +61,10 @@ public:
         return false;
     }
     bool TelCallStateUpdated(bool isInCall) {
-        return false;
+        return true;
     }
     bool NotifyTelCallStateUpdated(bool isInCall) {
-        return false;
+        return true;
     }
 };
 
