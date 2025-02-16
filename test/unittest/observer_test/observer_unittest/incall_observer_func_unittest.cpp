@@ -61,10 +61,10 @@ public:
         return false;
     }
     bool TelCallStateUpdated(bool isInCall) {
-        return true;
+        return false;
     }
     bool NotifyTelCallStateUpdated(bool isInCall) {
-        return true;
+        return false;
     }
 };
 
@@ -182,7 +182,7 @@ HWTEST_F(InCallObserverInnerUnitTest, InCallCallBackReturn_03, TestSize.Level1)
     ASSERT_TRUE(InCallObserver::GetInstance().RegisterObserver());
     auto inCallObserverTestFalseCallBack = std::make_shared<InCallObserverTestFalseCallBack>();
     ASSERT_TRUE(InCallObserver::GetInstance().RegisterInCallObserverCallBack(inCallObserverTestFalseCallBack));
-    ASSERT_TRUE(InCallObserver::GetInstance().OnCallStateUpdated(false));
+    ASSERT_FALSE(InCallObserver::GetInstance().OnCallStateUpdated(false));
     ASSERT_FALSE(InCallObserver::GetInstance().IsInCall());
     sleep(3); // 3 second
     ASSERT_FALSE(InCallObserver::GetInstance().OnCallStateUpdated(true));
