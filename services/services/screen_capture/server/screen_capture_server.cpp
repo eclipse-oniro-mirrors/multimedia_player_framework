@@ -1234,14 +1234,16 @@ int32_t ScreenCaptureServer::StartStreamMicAudioCapture()
         "micCapInfo.state:%{public}d.",
         FAKE_POINTER(this), captureConfig_.dataType, captureConfig_.audioInfo.micCapInfo.state);
     std::shared_ptr<AudioCapturerWrapper> micCapture;
+#ifdef SUPPORT_CALL
+    if (captureConfig_.audioInfo.micCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_VALID &&
+        (!InCallObserver::GetInstance().IsInCall() || IsTelInCallSkipList())) {
+#else
     if (captureConfig_.audioInfo.micCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_VALID) {
+#endif
         MediaTrace trace("ScreenCaptureServer::StartAudioCaptureMic");
         ScreenCaptureContentFilter contentFilterMic;
         micCapture = std::make_shared<AudioCapturerWrapper>(captureConfig_.audioInfo.micCapInfo, screenCaptureCb_,
             std::string(GenerateThreadNameByPrefix("OS_SMicAd")), contentFilterMic);
-#ifdef SUPPORT_CALL
-        micCapture->SetIsInTelCall(InCallObserver::GetInstance().IsInCall() && !IsTelInCallSkipList());
-#endif
         int32_t ret = micCapture->Start(appInfo_);
         if (ret != MSERR_OK) {
             MEDIA_LOGE("StartStreamMicAudioCapture failed");
@@ -1283,14 +1285,16 @@ int32_t ScreenCaptureServer::StartFileMicAudioCapture()
         "micCapInfo.state:%{public}d.",
         FAKE_POINTER(this), captureConfig_.dataType, captureConfig_.audioInfo.micCapInfo.state);
     std::shared_ptr<AudioCapturerWrapper> micCapture;
+#ifdef SUPPORT_CALL
+    if (captureConfig_.audioInfo.micCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_VALID &&
+        (!InCallObserver::GetInstance().IsInCall() || IsTelInCallSkipList())) {
+#else
     if (captureConfig_.audioInfo.micCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_VALID) {
+#endif
         MediaTrace trace("ScreenCaptureServer::StartFileMicAudioCaptureInner");
         ScreenCaptureContentFilter contentFilterMic;
         micCapture = std::make_shared<AudioCapturerWrapper>(captureConfig_.audioInfo.micCapInfo, screenCaptureCb_,
             std::string(GenerateThreadNameByPrefix("OS_FMicAd")), contentFilterMic);
-#ifdef SUPPORT_CALL
-        micCapture->SetIsInTelCall(InCallObserver::GetInstance().IsInCall() && !IsTelInCallSkipList());
-#endif
         if (audioSource_) {
             micCapture->SetIsInVoIPCall(audioSource_->GetIsInVoIPCall());
         }
@@ -2966,7 +2970,7 @@ int32_t ScreenCaptureServer::OnTelCallStateChanged(bool isInTelCall)
         }
     } else {
         if (micAudioCapture_) {
-            micAudioCapture_->SetIsInTelCall(true);
+            micAudioCapture_->SetIsInTelCall(false);
             if (isMicrophoneSwitchTurnOn_ && micAudioCapture_->GetAudioCapturerState() == CAPTURER_PAUSED) {
                 ret = micAudioCapture_->Resume();
                 if (ret != MSERR_OK) {
@@ -3464,7 +3468,7 @@ bool ScreenCaptureObserverCallBack::TelCallStateUpdated(bool isInCall)
 {
     MEDIA_LOGI("ScreenCaptureObserverCallBack::TelCallStateUpdated");
     auto scrServer = screenCaptureServer_.lock();
-    (void)srcServer->OnTelCallStateChanged(isInCall);
+    (void)scrServer->OnTelCallStateChanged(isInCall);
     return true;
 }
 
@@ -3472,8 +3476,8 @@ bool ScreenCaptureObserverCallBack::NotifyTelCallStateUpdated(bool isInCall)
 {
     MEDIA_LOGI("ScreenCaptureObserverCallBack::NotifyTelCallStateUpdated START.");
     bool ret = true;
-    auto task = std::make_shared<TaskHandler<void>>([&, this, state] {
-        ret = TelCallStateUpdated(state);
+    auto task = std::make_shared<TaskHandler<void>>([&, this, isInCall] {
+        ret = TelCallStateUpdated(isInCall);
         return ret;
     });
     int32_t res = taskQueObserverCb_.EnqueueTask(task);
