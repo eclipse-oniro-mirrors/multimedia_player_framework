@@ -2650,9 +2650,6 @@ void HiPlayerImpl::NotifyAudioInterrupt(const Event& event)
             Status ret = Status::OK;
             ret = pipeline_->Pause();
             syncManager_->Pause();
-            if (audioSink_ != nullptr) {
-                audioSink_->Pause();
-            }
             if (ret != Status::OK) {
                 UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
             }
@@ -2915,6 +2912,7 @@ Status HiPlayerImpl::LinkAudioDecoderFilter(const std::shared_ptr<Filter>& preFi
     audioDecoder_ = FilterFactory::Instance().CreateFilter<AudioDecoderFilter>("player.audiodecoder",
         FilterType::FILTERTYPE_ADEC);
     FALSE_RETURN_V(audioDecoder_ != nullptr, Status::ERROR_NULL_POINTER);
+    interruptMonitor_->RegisterListener(audioDecoder_);
     audioDecoder_->Init(playerEventReceiver_, playerFilterCallback_);
 
     audioDecoder_->SetCallerInfo(instanceId_, bundleName_);
