@@ -2058,49 +2058,53 @@ void SoundPoolUnitTest::functionTest043(std::shared_ptr<SoundPoolMock> soundPool
     std::shared_ptr<SoundPoolMock> soundPool2, std::shared_ptr<SoundPoolCallbackTest> cb1,
     std::shared_ptr<SoundPoolCallbackTest> cb2)
 {
-    int soundNum = 2;
-    fds_[0] = open(g_fileName[0].c_str(), O_RDWR);
-    fds_[1] = open(g_fileName[1].c_str(), O_RDWR);
-    std::string url0 = "fd://" + std::to_string(fds_[0]);
-    std::string url1 = "fd://" + std::to_string(fds_[1]);
-    soundIDs_[0] = soundPool1->Load(url0);
-    soundIDs_[1] = soundPool1->Load(url1);
-    EXPECT_GT(soundIDs_[0], 0);
-    EXPECT_GT(soundIDs_[1], 0);
+    int32_t soundNum = 2;
+    int32_t num0 = 0;
+    int32_t num1 = 1;
+    int32_t num2 = 2;
+    int32_t num3 = 3;
+    fds_[num0] = open(g_fileName[num0].c_str(), O_RDWR);
+    fds_[num1] = open(g_fileName[num1].c_str(), O_RDWR);
+    std::string url0 = "fd://" + std::to_string(fds_[num0]);
+    std::string url1 = "fd://" + std::to_string(fds_[num1]);
+    soundIDs_[num0] = soundPool1->Load(url0);
+    soundIDs_[num1] = soundPool1->Load(url1);
+    EXPECT_GT(soundIDs_[num0], 0);
+    EXPECT_GT(soundIDs_[num1], 0);
     
-    fds_[2] = open(g_fileName[2].c_str(), O_RDWR);
-    fds_[3] = open(g_fileName[3].c_str(), O_RDWR);
-    std::string url2 = "fd://" + std::to_string(fds_[2]);
-    std::string url3 = "fd://" + std::to_string(fds_[3]);
-    soundIDs_[2] = soundPool2->Load(url2);
-    soundIDs_[3] = soundPool2->Load(url3);
-    EXPECT_GT(soundIDs_[2], 0);
-    EXPECT_GT(soundIDs_[3], 0);
+    fds_[num2] = open(g_fileName[num2].c_str(), O_RDWR);
+    fds_[num3] = open(g_fileName[num3].c_str(), O_RDWR);
+    std::string url2 = "fd://" + std::to_string(fds_[num2]);
+    std::string url3 = "fd://" + std::to_string(fds_[num3]);
+    soundIDs_[num2] = soundPool2->Load(url2);
+    soundIDs_[num3] = soundPool2->Load(url3);
+    EXPECT_GT(soundIDs_[num2], 0);
+    EXPECT_GT(soundIDs_[num3], 0);
     sleep(waitTime3);
 
     struct PlayParams playParameters;
-    streamIDs_[0] = soundPool1->Play(soundIDs_[0], playParameters);
-    streamIDs_[1] = soundPool1->Play(soundIDs_[1], playParameters);
-    EXPECT_GT(streamIDs_[0], 0);
-    EXPECT_GT(streamIDs_[1], 0);
-    streamIDs_[2] = soundPool2->Play(soundIDs_[2], playParameters);
-    streamIDs_[3] = soundPool2->Play(soundIDs_[3], playParameters);
-    EXPECT_GT(streamIDs_[2], 0);
-    EXPECT_GT(streamIDs_[3], 0);
+    streamIDs_[num0] = soundPool1->Play(soundIDs_[num0], playParameters);
+    streamIDs_[num1] = soundPool1->Play(soundIDs_[num1], playParameters);
+    EXPECT_GT(streamIDs_[num0], 0);
+    EXPECT_GT(streamIDs_[num1], 0);
+    streamIDs_[num2] = soundPool2->Play(soundIDs_[num2], playParameters);
+    streamIDs_[num3] = soundPool2->Play(soundIDs_[num3], playParameters);
+    EXPECT_GT(streamIDs_[num2], 0);
+    EXPECT_GT(streamIDs_[num3], 0);
     sleep(waitTime3);
 
-    EXPECT_EQ(MSERR_OK, soundPool1->Stop(streamIDs_[0]));
-    EXPECT_EQ(MSERR_OK, soundPool1->Stop(streamIDs_[1]));
-    EXPECT_EQ(MSERR_OK, soundPool2->Stop(streamIDs_[2]));
-    EXPECT_EQ(MSERR_OK, soundPool2->Stop(streamIDs_[3]));
+    EXPECT_EQ(MSERR_OK, soundPool1->Stop(streamIDs_[num0]));
+    EXPECT_EQ(MSERR_OK, soundPool1->Stop(streamIDs_[num1]));
+    EXPECT_EQ(MSERR_OK, soundPool2->Stop(streamIDs_[num2]));
+    EXPECT_EQ(MSERR_OK, soundPool2->Stop(streamIDs_[num3]));
 
     EXPECT_EQ(soundNum, cb1->GetHaveLoadedSoundNum());
     EXPECT_EQ(soundNum, cb2->GetHavePlayedSoundNum());
 
-    EXPECT_EQ(MSERR_OK, soundPool1->Unload(soundIDs_[0]));
-    EXPECT_EQ(MSERR_OK, soundPool1->Unload(soundIDs_[1]));
-    EXPECT_EQ(MSERR_OK, soundPool2->Unload(soundIDs_[2]));
-    EXPECT_EQ(MSERR_OK, soundPool2->Unload(soundIDs_[3]));
+    EXPECT_EQ(MSERR_OK, soundPool1->Unload(soundIDs_[num0]));
+    EXPECT_EQ(MSERR_OK, soundPool1->Unload(soundIDs_[num1]));
+    EXPECT_EQ(MSERR_OK, soundPool2->Unload(soundIDs_[num2]));
+    EXPECT_EQ(MSERR_OK, soundPool2->Unload(soundIDs_[num3]));
 
     EXPECT_EQ(MSERR_OK, soundPool1->Release());
     EXPECT_EQ(MSERR_OK, soundPool2->Release());

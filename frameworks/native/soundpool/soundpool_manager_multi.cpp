@@ -57,7 +57,7 @@ int32_t SoundPoolManagerMulti::GetSoundPoolInstance(std::shared_ptr<SoundPool>& 
 int32_t SoundPoolManagerMulti::ReleaseInstance(std::shared_ptr<SoundPool> soundPool)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    for (auto it = soundPools_.begin(); it != soundPools_.end(); ) {
+    for (auto it = soundPools_.begin(); it != soundPools_.end();) {
         if (*it == soundPool) {
             it = soundPools_.erase(it);
         } else {
