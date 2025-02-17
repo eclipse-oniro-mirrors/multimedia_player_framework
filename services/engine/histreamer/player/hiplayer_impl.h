@@ -143,6 +143,7 @@ public:
     void SetInterruptState(bool isInterruptNeeded) override;
     void OnDumpInfo(int32_t fd) override;
     void SetInstancdId(uint64_t instanceId) override;
+    void SetApiVersion(int32_t apiVersion) override;
     int64_t GetPlayRangeStartTime() override;
     int64_t GetPlayRangeEndTime() override;
     int32_t GetPlayRangeSeekMode() override;
@@ -353,6 +354,7 @@ private:
     int64_t maxSeekLatency_ = 0;
     int64_t maxAccurateSeekLatency_ = 0;
     uint64_t instanceId_ = 0;
+    int32_t apiVersion_ = 0;
     int64_t maxSurfaceSwapLatency_ = 0;
     int64_t playTotalDuration_ = 0;
     bool inEosSeek_ = false;
