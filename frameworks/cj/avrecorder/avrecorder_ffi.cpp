@@ -171,18 +171,18 @@ int32_t FfiOHOSMediaAVRecorderOff(int64_t id, int32_t type)
 {
     auto cjAVRecorder = FFIData::GetData<CjAVRecorder>(id);
     if (!cjAVRecorder) {
-        MEDIA_LOGE("FfiOHOSMediaAVRecorderOn - cjAVRecorder is nullptr!");
+        MEDIA_LOGE("FfiOHOSMediaAVRecorderOff - cjAVRecorder is nullptr!");
         return -1;
     }
 
     if (!cjAVRecorder->recorderCb_) {
-        MEDIA_LOGE("FfiOHOSMediaAVRecorderOn - recorderCb_ is nullptr!");
+        MEDIA_LOGE("FfiOHOSMediaAVRecorderOff - recorderCb_ is nullptr!");
         return -1;
     }
 
     auto Cb_ = std::static_pointer_cast<CJAVRecorderCallback>(cjAVRecorder->recorderCb_);
     if (!Cb_) {
-        MEDIA_LOGE("FfiOHOSMediaAVRecorderOn - Cb_ is nullptr!");
+        MEDIA_LOGE("FfiOHOSMediaAVRecorderOff - Cb_ is nullptr!");
         return -1;
     }
     Cb_->UnRegister(type);
@@ -194,7 +194,7 @@ CAudioCapturerChangeInfo FfiOHOSMediaAVRecorderGetCurrentAudioCapturerInfo(int64
     CAudioCapturerChangeInfo cInfo {};
     auto cjAVRecorder = FFIData::GetData<CjAVRecorder>(id);
     if (!cjAVRecorder) {
-        MEDIA_LOGE("FfiOHOSMediaAVRecorderOn - cjAVRecorder is nullptr!");
+        MEDIA_LOGE("FfiOHOSMediaAVRecorderGetCurrentAudioCapturerInfo - cjAVRecorder is nullptr!");
         if (!errCode) {
             *errCode = -1;
         }
@@ -221,7 +221,7 @@ CArrEncoderInfo FfiOHOSMediaAVRecorderGetEncoderInfo(int64_t id, int32_t *errCod
     CArrEncoderInfo cInfo {};
     auto cjAVRecorder = FFIData::GetData<CjAVRecorder>(id);
     if (!cjAVRecorder) {
-        MEDIA_LOGE("FfiOHOSMediaAVRecorderOn - cjAVRecorder is nullptr!");
+        MEDIA_LOGE("FfiOHOSMediaAVRecorderGetEncoderInfo - cjAVRecorder is nullptr!");
         if (!errCode) {
             *errCode = -1;
         }
@@ -240,6 +240,30 @@ CArrEncoderInfo FfiOHOSMediaAVRecorderGetEncoderInfo(int64_t id, int32_t *errCod
         *errCode = 0;
     }
     return cInfo;
+}
+
+char* FfiOHOSMediaAVRecorderGetState(int64_t id, int32_t *errCode)
+{
+    auto cjAVRecorder = FFIData::GetData<CjAVRecorder>(id);
+    if (!cjAVRecorder) {
+        MEDIA_LOGE("FfiOHOSMediaAVRecorderGetState - cjAVRecorder is nullptr!");
+        if (!errCode) {
+            *errCode = -1;
+        }
+        return nullptr;
+    }
+    std::string state = "";
+    auto ret = cjAVRecorder->GetState(state);
+    if (ret != MSERR_EXT_API9_OK) {
+        if (!errCode) {
+            *errCode = static_cast<int32_t>(ret);
+        }
+        return nullptr;
+    }
+    if (!errCode) {
+        *errCode = 0;
+    }
+    return MallocCString(state);
 }
 }
 }

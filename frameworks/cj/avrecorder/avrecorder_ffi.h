@@ -38,6 +38,7 @@ extern "C" {
     FFI_EXPORT int32_t FfiOHOSMediaAVRecorderOff(int64_t id, int32_t type);
     FFI_EXPORT CAudioCapturerChangeInfo FfiOHOSMediaAVRecorderGetCurrentAudioCapturerInfo(int64_t id, int32_t *errCode);
     FFI_EXPORT CArrEncoderInfo FfiOHOSMediaAVRecorderGetEncoderInfo(int64_t id, int32_t *errCode);
+    FFI_EXPORT char* FfiOHOSMediaAVRecorderGetState(int64_t id, int32_t *errCode);
 }
 
 #endif /* AV_RECORDER_FFI_H */
