@@ -346,5 +346,39 @@ std::unordered_map<std::string, std::string>& __attribute__((visibility("default
     }
     return g_readSysParaMap;
 }
+
+int32_t __attribute__((visibility("default"))) GetAPIVersion()
+{
+    #if !defined(IOS_PLATFORM) && !defined(ANDROID_PLATFORM)
+        uint32_t targetVersion = 0;
+        auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+        if (samgr == nullptr) {
+            MEDIA_LOG_E("Get ability manager failed");
+            return FAULT_API_VERSION;
+        }
+        sptr<IRemoteObject> object = samgr->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+        if (object == nullptr) {
+            MEDIA_LOG_E("Object is NULL");
+            return FAULT_API_VERSION;
+        }
+
+        sptr<OHOS::AppExecFwk::IBundleMgr> bms = iface_cast<OHOS::AppExecFwk::IBundleMgr>(object);
+        if (bms == nullptr) {
+            MEDIA_LOG_E("Bundle manager service is NULL.");
+            return FAULT_API_VERSION;
+        }
+        AppExecFwk::BundleInfo bundleInfo;
+        if (bms->GetBundleInfoForSelf(0, bundleInfo) != ERR_OK) {
+            MEDIA_LOG_E("Get bundle info for self failed");
+            return FAULT_API_VERSION;
+        }
+        targetVersion = bundleInfo.targetVersion;
+        int32_t apiVersionResult = static_cast<int32_t>(targetVersion % 100);
+        return apiVersionResult;
+    #else
+        return FAULT_API_VERSION;
+    #endif
+}
+
 }  // namespace Media
 }  // namespace OHOS

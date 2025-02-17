@@ -30,9 +30,9 @@ public:
     SoundIDManager();
     ~SoundIDManager();
 
-    int32_t Load(std::string url);
+    int32_t Load(std::string url, int32_t apiVersion);
 
-    int32_t Load(int32_t fd, int64_t offset, int64_t length);
+    int32_t Load(int32_t fd, int64_t offset, int64_t length, int32_t apiVersion);
     int32_t DoLoad(int32_t soundID);
     int32_t DoParser();
 
@@ -61,7 +61,6 @@ private:
     static const int32_t invalidSoundIDFlag = -1;
     static constexpr int32_t MAX_SOUND_ID_QUEUE = 128;
     static constexpr int32_t WAIT_TIME_BEFORE_CLOSE_MS = 1000;
-    static constexpr size_t MAX_LOAD_NUM = 32;
 };
 } // namespace Media
 } // namespace OHOS
