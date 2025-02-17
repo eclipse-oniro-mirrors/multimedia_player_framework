@@ -735,7 +735,6 @@ void HiPlayerImpl::SetInterruptState(bool isInterruptNeeded)
     }
     std::unique_lock<std::mutex> lock(seekMutex_);
     syncManager_->seekCond_.notify_all();
-
 }
 
 int32_t HiPlayerImpl::SelectBitRate(uint32_t bitRate)
