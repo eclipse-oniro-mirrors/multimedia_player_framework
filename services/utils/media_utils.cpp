@@ -65,7 +65,7 @@ std::mutex readSysParaMapMtx_;
 static std::unordered_map<std::string, std::string> g_readSysParaMap;
 static int32_t FAULT_API_VERSION = -1;
 static int32_t ROUND_VERSION_NUMBER = 100;
-static int32_t g_decimal = 10;
+constexpr int32_t DECIMAL = 10;
 }  // namespace
 
 std::string __attribute__((visibility("default"))) GetClientBundleName(int32_t uid)
@@ -108,7 +108,7 @@ bool __attribute__((visibility("default"))) StrToULL(const std::string &str, uin
     std::string valStr(str);
     char* end = nullptr;
     errno = 0;
-    unsigned long long result = strtoull(valStr.c_str(), &end, g_decimal);
+    unsigned long long result = strtoull(valStr.c_str(), &end, DECIMAL);
     // end will not be nullptr here
     CHECK_AND_RETURN_RET_LOG(result <= ULLONG_MAX, false,
         "call StrToULL func false,  input str is: %{public}s!", valStr.c_str());
