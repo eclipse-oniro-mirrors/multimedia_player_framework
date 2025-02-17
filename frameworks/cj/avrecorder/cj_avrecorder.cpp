@@ -102,6 +102,18 @@ RetInfo CjAVRecorder::DealTask(std::string opt)
     }
 }
 
+int32_t CjAVRecorder::GetState(std::string& state)
+{
+    RetInfo retInfo = RetInfo(MSERR_OK, "");
+    auto Cb_ = std::static_pointer_cast<CJAVRecorderCallback>(recorderCb_);
+    if (!Cb_) {
+        retInfo = GetRetInfo(MSERR_INVALID_OPERATION, "GetState", "", "recorderCb_ is nullptr");
+        return retInfo.first;
+    }
+    state = Cb_->GetState();
+    return  MSERR_OK;
+}
+
 int32_t CjAVRecorder::Prepare(CAVRecorderConfig config)
 {
     MEDIA_LOGD("CjAVRecorder::prepare");

@@ -164,6 +164,7 @@ public:
     static int64_t CreateAVRecorder(int32_t *errCode);
     int32_t Prepare(CAVRecorderConfig config);
     char *GetInputSurface(int32_t *errCode);
+    int32_t GetState(std::string& state);
     int32_t Start();
     int32_t Pause();
     int32_t Resume();
