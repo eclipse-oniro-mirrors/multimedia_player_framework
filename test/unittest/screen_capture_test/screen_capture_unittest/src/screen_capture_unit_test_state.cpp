@@ -175,6 +175,12 @@ void ScreenCaptureUnitTestCallback::OnStateChange(AVScreenCaptureStateCode state
     cout << "OnStateChange received, stateCode:" << stateCode << endl;
 }
 
+void ScreenCaptureUnitTestCallback::OnDisplaySelected(uint64_t displayId)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTestCallback::OnDisplaySelected displayId:%{public}" PRIu64, displayId);
+    screenCaptureDisplayId_ = displayId;
+}
+
 void ScreenCaptureUnitTestCallback::OnBufferAvailable(std::shared_ptr<AVBuffer> buffer,
     AVScreenCaptureBufferType bufferType, int64_t timestamp)
 {

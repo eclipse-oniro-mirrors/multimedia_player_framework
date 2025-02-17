@@ -47,6 +47,7 @@ public:
     virtual void OnAudioBufferAvailable(bool isReady, AudioCaptureSourceType type) = 0;
     virtual void OnVideoBufferAvailable(bool isReady) = 0;
     virtual void OnStateChange(AVScreenCaptureStateCode stateCode) = 0;
+    virtual void OnDisplaySelected(uint64_t displayId) = 0;
     virtual void OnError(int32_t errorCode, void *userData)
     {
         (void)errorCode;

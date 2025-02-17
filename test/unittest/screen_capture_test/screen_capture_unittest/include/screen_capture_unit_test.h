@@ -32,6 +32,7 @@ public:
     void OnAudioBufferAvailable(bool isReady, AudioCaptureSourceType type) override;
     void OnVideoBufferAvailable(bool isReady) override;
     void OnStateChange(AVScreenCaptureStateCode stateCode) override;
+    void OnDisplaySelected(uint64_t displayId) override;
     void OnError(int32_t errorCode, void *userData) override;
     void OnBufferAvailable(std::shared_ptr<AVBuffer> buffer, AVScreenCaptureBufferType bufferType,
         int64_t timestamp) override;
@@ -59,6 +60,7 @@ private:
     int32_t micAudioFlag_ = 0;
     int32_t videoFlag_ = 0;
     std::atomic<AVScreenCaptureStateCode> screenCaptureState_ = AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID;
+    uint64_t screenCaptureDisplayId_ = -1;
 
     FILE *aFile_ = nullptr;
     FILE *vFile_ = nullptr;

@@ -65,6 +65,11 @@ int ScreenCaptureListenerStub::OnRemoteRequest(uint32_t code, MessageParcel &dat
             OnStateChange(stateCode);
             return MSERR_OK;
         }
+        case ScreenCaptureListenerMsg::ON_DISPLAY_SELECTED: {
+            uint64_t displayId = data.ReadUint64();
+            OnDisplaySelected(displayId);
+            return MSERR_OK;
+        }
         default: {
             MEDIA_LOGE("default case, need check ScreenCaptureListenerStub");
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -102,6 +107,13 @@ void ScreenCaptureListenerStub::OnStateChange(AVScreenCaptureStateCode stateCode
 {
     if (callback_ != nullptr) {
         callback_->OnStateChange(stateCode);
+    }
+}
+
+void ScreenCaptureListenerStub::OnDisplaySelected(uint64_t displayId)
+{
+    if (callback_ != nullptr) {
+        callback_->OnDisplaySelected(displayId);
     }
 }
 } // namespace Media

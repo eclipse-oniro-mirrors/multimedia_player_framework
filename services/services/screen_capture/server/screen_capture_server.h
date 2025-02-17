@@ -57,6 +57,7 @@
 #include "screen_capture_monitor_server.h"
 #include "json/json.h"
 #include "tokenid_kit.h"
+#include "window_manager.h"
 #include "system_ability_status_change_stub.h"
 #include "i_input_device_listener.h"
 #include "input_manager.h"
@@ -330,6 +331,8 @@ public:
     void SetMissionId(uint64_t missionId);
     void SetDisplayId(uint64_t displayId);
     bool IsTelInCallSkipList();
+    void NotifyStateChange(AVScreenCaptureStateCode stateCode);
+    void NotifyDisplaySelected(uint64_t displayId);
     void SetMouseChangeListener(std::shared_ptr<MouseChangeListener> listener);
     std::shared_ptr<MouseChangeListener> GetMouseChangeListener();
 
@@ -371,6 +374,12 @@ private:
 
     VirtualScreenOption InitVirtualScreenOption(const std::string &name, sptr<OHOS::Surface> consumer);
     int32_t GetMissionIds(std::vector<uint64_t> &missionIds);
+    int32_t MakeVirtualScreenMirrorForWindow(sptr<Rosen::Display> defaultDisplay,
+        std::vector<ScreenId> mirrorIds);
+    int32_t MakeVirtualScreenMirrorForHomeScreen(sptr<Rosen::Display> defaultDisplay,
+         std::vector<ScreenId> mirrorIds);
+    int32_t MakeVirtualScreenMirrorForSpecifiedScreen(sptr<Rosen::Display> defaultDisplay,
+        std::vector<ScreenId> mirrorIds);
     int32_t MakeVirtualScreenMirror();
     int32_t CreateVirtualScreen(const std::string &name, sptr<OHOS::Surface> consumer);
     int32_t PrepareVirtualScreenMirror();
@@ -398,6 +407,7 @@ private:
     void RegisterPrivateWindowListener();
     bool RegisterMMISystemAbilityListener();
     bool UnRegisterMMISystemAbilityListener();
+    uint64_t GetDisplayIdOfWindows(uint64_t displayId);
     int32_t RegisterMouseChangeListener(std::string type);
     int32_t UnRegisterMouseChangeListener(std::string type);
 
@@ -431,7 +441,8 @@ private:
     sptr<OHOS::Surface> consumer_ = nullptr;
     bool isConsumerStart_ = false;
     bool isDump_ = false;
-    ScreenId screenId_ = SCREEN_ID_INVALID;
+    ScreenId virtualScreenId_ = SCREEN_ID_INVALID;
+    ScreenId displayScreenId_ = SCREEN_ID_INVALID;
     std::vector<uint64_t> missionIds_;
     ScreenCaptureContentFilter contentFilter_;
     AVScreenCaptureState captureState_ = AVScreenCaptureState::CREATED;
