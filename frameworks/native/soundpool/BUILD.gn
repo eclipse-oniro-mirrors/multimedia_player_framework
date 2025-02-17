@@ -67,6 +67,10 @@ ohos_shared_library("soundpool_client") {
     "qos_manager:qos",
   ]
 
+  if (player_framework_support_drm) {
+    external_deps += [ "drm_framework:drm_framework" ]
+  }
+
   public_external_deps = [ "av_codec:av_codec_client" ]
 
   cflags = [
