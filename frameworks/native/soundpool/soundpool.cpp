@@ -247,7 +247,7 @@ int32_t SoundPool::ReleaseInner()
     if (apiVersion_ > 0 && apiVersion_ < SOUNDPOOL_API_VERSION_ISOLATION) {
         SoundPoolManager::GetInstance().Release(getpid());
     } else if (apiVersion_ == FAULT_API_VERSION || apiVersion_ >= SOUNDPOOL_API_VERSION_ISOLATION) {
-        std::shared_ptr<SoundPool> sharedPtr(this, [](SoundPool*){
+        std::shared_ptr<SoundPool> sharedPtr(this, [](SoundPool*) {
         });
         SoundPoolManagerMulti::GetInstance().ReleaseInstance(sharedPtr);
     } else {
