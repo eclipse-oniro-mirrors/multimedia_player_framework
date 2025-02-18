@@ -226,7 +226,7 @@ OH_AVErrCode OH_AVMetadataExtractor_FetchAlbumCover(OH_AVMetadataExtractor* extr
     std::shared_ptr<PixelMap> pixelMapInner = ConvertMemToPixelMap(sharedMemPtr);
     CHECK_AND_RETURN_RET_LOG(pixelMapInner != nullptr, AV_ERR_UNKNOWN, "ConvertMemToPixelMap failed");
 
-    *pixelMap = new OH_PixelmapNative(pixelMapInner);
+    *pixelMap = new(std::nothrow) OH_PixelmapNative(pixelMapInner);
     CHECK_AND_RETURN_RET_LOG(*pixelMap != nullptr, AV_ERR_NO_MEMORY, "create OH_PixelmapNative failed");
     return AV_ERR_OK;
 }
