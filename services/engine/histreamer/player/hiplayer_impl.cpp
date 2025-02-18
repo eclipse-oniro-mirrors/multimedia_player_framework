@@ -3142,8 +3142,25 @@ Status HiPlayerImpl::StartSeekContinous()
 {
     FALSE_RETURN_V(!draggingPlayerAgent_, Status::OK);
     FALSE_RETURN_V(demuxer_ && videoDecoder_, Status::OK);
-    draggingPlayerAgent_ = DraggingPlayerAgent::Create();
+    draggingPlayerAgent_ = DraggingPlayerAgent::Create(pipeline_, demuxer_, videoDecoder_, playerId_);
     FALSE_RETURN_V_MSG_E(draggingPlayerAgent_ != nullptr, Status::ERROR_INVALID_OPERATION, "failed to create agent");
+    Status res = draggingPlayerAgent_->Init();
+    if (res != Status::OK) {
+        draggingPlayerAgent_ = nullptr;
+        return res;
+    }
+    if (draggingPlayerAgent_->GetDraggingMode() == DraggingMode::DRAGGING_CONTINUOUS) {
+        FlushVideoEOS();
+        // Drive the head node to start the video channel.
+        res = demuxer_->ResumeDragging();
+        FALSE_LOG_MSG(res == Status::OK, "ResumeDragging failed");
+    }
+    SetFrameRateForSeekPerformance(FRAME_RATE_FOR_SEEK_PERFORMANCE);
+    return res;
+}
+
+void HiPlayerImpl::FlushVideoEOS()
+{
     bool demuxerEOS = demuxer_->HasEosTrack();
     bool decoderEOS = false;
     for (std::pair<std::string, bool>& item: completeState_) {
@@ -3162,16 +3179,6 @@ Status HiPlayerImpl::StartSeekContinous()
             item.second = false;
         }
     }
-    Status res = draggingPlayerAgent_->Init(demuxer_, videoDecoder_, playerId_);
-    if (res != Status::OK) {
-        draggingPlayerAgent_ = nullptr;
-        return res;
-    }
-    SetFrameRateForSeekPerformance(FRAME_RATE_FOR_SEEK_PERFORMANCE);
-    // Drive the head node to start the video channel.
-    res = demuxer_->ResumeDragging();
-    FALSE_LOG_MSG(res == Status::OK, "ResumeDragging failed");
-    return res;
 }
 
 int32_t HiPlayerImpl::ExitSeekContinous(bool align, int64_t seekContinousBatchNo)
@@ -3180,12 +3187,7 @@ int32_t HiPlayerImpl::ExitSeekContinous(bool align, int64_t seekContinousBatchNo
     FALSE_RETURN_V(demuxer_ && videoDecoder_, TransStatus(Status::OK));
     FALSE_RETURN_V(!isNetWorkPlay_, TransStatus(Status::OK));
     seekContinousBatchNo_.store(seekContinousBatchNo);
-    if (draggingPlayerAgent_ == nullptr) {
-        if (align) {
-            Seek(lastSeekContinousPos_, PlayerSeekMode::SEEK_CLOSEST, false);
-        }
-        return TransStatus(Status::OK);
-    }
+    FALSE_RETURN_V(draggingPlayerAgent_ != nullptr, TransStatus(Status::OK));
     draggingPlayerAgent_->Release();
     draggingPlayerAgent_ = nullptr;
     SetFrameRateForSeekPerformance(FRAME_RATE_DEFAULT);
@@ -3196,6 +3198,7 @@ int32_t HiPlayerImpl::ExitSeekContinous(bool align, int64_t seekContinousBatchNo
     if (align) {
         seekAgent_ = std::make_shared<SeekAgent>(demuxer_);
         interruptMonitor_->RegisterListener(seekAgent_);
+        audioSink_->Flush();
         auto res = seekAgent_->AlignAudioPosition(lastSeekContinousPos_);
         FALSE_LOG_MSG(res == Status::OK, "AlignAudioPosition failed");
         MEDIA_LOG_I_SHORT("seekAgent_ AlignAudioPosition end");
@@ -3224,6 +3227,8 @@ int32_t HiPlayerImpl::IsSeekContinuousSupported(bool &isSeekContinuousSupported)
 {
     FALSE_RETURN_V_MSG_E(demuxer_ != nullptr && videoDecoder_ != nullptr, TransStatus(Status::ERROR_WRONG_STATE),
         "demuxer or decoder is null");
+    FALSE_RETURN_V_MSG_E(pipelineStates_ != PlayerStates::PLAYER_STOPPED, TransStatus(Status::ERROR_WRONG_STATE),
+        "call IsSeekContinuousSupported in stopped state");
     isSeekContinuousSupported = DraggingPlayerAgent::IsDraggingSupported(demuxer_, videoDecoder_);
     return TransStatus(Status::OK);
 }

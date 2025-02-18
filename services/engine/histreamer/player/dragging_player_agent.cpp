@@ -35,6 +35,7 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "Dra
  
 namespace OHOS {
 namespace Media {
+using namespace Pipeline;
  
 void *DraggingPlayerAgent::handler_ = nullptr;
 DraggingPlayerAgent::CreateFunc DraggingPlayerAgent::createFunc_ = nullptr;
@@ -45,150 +46,106 @@ std::mutex DraggingPlayerAgent::mtx_;
  
 class VideoStreamReadyCallbackImpl : public VideoStreamReadyCallback {
 public:
-    explicit VideoStreamReadyCallbackImpl(const std::shared_ptr<DraggingPlayerAgent> draggingPlayerAgent)
-        : draggingPlayerAgent_(draggingPlayerAgent) {}
+    explicit VideoStreamReadyCallbackImpl(const std::shared_ptr<DraggingDelegator> draggingDelegator)
+        : draggingDelegator_(draggingDelegator) {}
     bool IsVideoStreamDiscardable(const std::shared_ptr<AVBuffer> buffer) override
     {
-        auto draggingPlayerAgent = draggingPlayerAgent_.lock();
-        if (draggingPlayerAgent != nullptr && buffer != nullptr) {
-            return draggingPlayerAgent->IsVideoStreamDiscardable(buffer);
+        auto draggingDelegator = draggingDelegator_.lock();
+        if (draggingDelegator != nullptr && buffer != nullptr) {
+            return draggingDelegator->IsVideoStreamDiscardable(buffer);
         }
         return false;
     }
 private:
-    std::weak_ptr<DraggingPlayerAgent> draggingPlayerAgent_;
+    std::weak_ptr<DraggingDelegator> draggingDelegator_;
 };
  
 class VideoFrameReadyCallbackImpl : public VideoFrameReadyCallback {
 public:
-    explicit VideoFrameReadyCallbackImpl(const std::shared_ptr<DraggingPlayerAgent> draggingPlayerAgent)
-        : draggingPlayerAgent_(draggingPlayerAgent) {}
+    explicit VideoFrameReadyCallbackImpl(const std::shared_ptr<DraggingDelegator> draggingDelegator)
+        : draggingDelegator_(draggingDelegator) {}
     void ConsumeVideoFrame(const std::shared_ptr<AVBuffer> buffer, uint32_t bufferIndex) override
     {
-        auto draggingPlayerAgent = draggingPlayerAgent_.lock();
-        if (draggingPlayerAgent != nullptr && buffer != nullptr) {
-            return draggingPlayerAgent->ConsumeVideoFrame(buffer, bufferIndex);
+        auto draggingDelegator = draggingDelegator_.lock();
+        if (draggingDelegator != nullptr && buffer != nullptr) {
+            return draggingDelegator->ConsumeVideoFrame(buffer, bufferIndex);
         }
     }
 private:
-    std::weak_ptr<DraggingPlayerAgent> draggingPlayerAgent_;
+    std::weak_ptr<DraggingDelegator> draggingDelegator_;
 };
  
-shared_ptr<DraggingPlayerAgent> DraggingPlayerAgent::Create()
+shared_ptr<DraggingPlayerAgent> DraggingPlayerAgent::Create(
+    const shared_ptr<OHOS::Media::Pipeline::Pipeline> pipeline,
+    const shared_ptr<DemuxerFilter> demuxer,
+    const shared_ptr<DecoderSurfaceFilter> decoder,
+    const string &playerId)
 {
-    shared_ptr<DraggingPlayerAgent> agent = make_shared<DraggingPlayerAgent>();
-    if (!agent->LoadSymbol()) {
-        return nullptr;
-    }
-    agent->draggingPlayer_ = agent->createFunc_();
-    if (agent->draggingPlayer_ == nullptr) {
-        MEDIA_LOG_E("createFunc_ fail");
-        return nullptr;
-    }
- 
+    FALSE_RETURN_V_MSG_E(demuxer != nullptr && decoder != nullptr, nullptr, "Invalid demuxer filter instance.");
+    shared_ptr<DraggingPlayerAgent> agent = make_shared<DraggingPlayerAgent>(pipeline, demuxer, decoder, playerId);
+    FALSE_RETURN_V(DraggingPlayerAgent::LoadSymbol(), agent);
+    FALSE_RETURN_V(DraggingPlayerAgent::IsDraggingSupported(demuxer, decoder), agent);
+    agent->draggingMode_ = DraggingMode::DRAGGING_CONTINUOUS;
     return agent;
 }
 
-bool DraggingPlayerAgent::IsDraggingSupported(const shared_ptr<DemuxerFilter> &demuxer,
-    const shared_ptr<DecoderSurfaceFilter> &decoder)
+bool DraggingPlayerAgent::IsDraggingSupported(const shared_ptr<DemuxerFilter> demuxer,
+    const shared_ptr<DecoderSurfaceFilter> decoder)
 {
+    FALSE_RETURN_V_MSG_E(demuxer != nullptr && decoder != nullptr, false, "demuxer or decoder is null");
+    FALSE_RETURN_V_MSG_E(demuxer->IsLocalFd(), false, "source is not local fd");
     if (!LoadSymbol() || checkSupportedFunc_ == nullptr) {
         return false;
     }
     return checkSupportedFunc_(demuxer.get(), decoder.get());
 }
- 
+
+DraggingPlayerAgent::DraggingPlayerAgent(
+    const shared_ptr<OHOS::Media::Pipeline::Pipeline> pipeline,
+    const shared_ptr<DemuxerFilter> demuxer,
+    const shared_ptr<DecoderSurfaceFilter> decoder,
+    const string &playerId)
+    : pipeline_(pipeline), demuxer_(demuxer), decoder_(decoder), playerId_(playerId)
+{
+}
+
 DraggingPlayerAgent::~DraggingPlayerAgent()
 {
     if (!isReleased_) {
         Release();
     }
-    PipeLineThreadPool::GetInstance().DestroyThread(threadName_);
-    if (draggingPlayer_ != nullptr) {
-        destroyFunc_(draggingPlayer_);
-        draggingPlayer_ = nullptr;
+    if (delegator_ != nullptr) {
+        delegator_ = nullptr;
     }
 }
- 
-Status DraggingPlayerAgent::Init(const shared_ptr<DemuxerFilter> &demuxer,
-    const shared_ptr<DecoderSurfaceFilter> &decoder, std::string playerId)
+
+Status DraggingPlayerAgent::Init()
 {
-    FALSE_RETURN_V_MSG_E(demuxer != nullptr && decoder != nullptr,
+    FALSE_RETURN_V_MSG_E(demuxer_ != nullptr && decoder_ != nullptr,
         Status::ERROR_INVALID_PARAMETER, "Invalid demuxer filter instance.");
-    demuxer_ = demuxer;
-    decoder_ = decoder;
-    Status ret = draggingPlayer_->Init(demuxer, decoder);
-    if (ret != Status::OK) {
-        MEDIA_LOG_E("liyudebug DraggingPlayerAgent::Init failed");
-        return ret;
-    }
-    MEDIA_LOG_I("DraggingPlayerAgent::Init register");
-    videoStreamReadyCb_ = std::make_shared<VideoStreamReadyCallbackImpl>(shared_from_this());
-    demuxer->RegisterVideoStreamReadyCallback(videoStreamReadyCb_);
-    videoFrameReadyCb_ = std::make_shared<VideoFrameReadyCallbackImpl>(shared_from_this());
-    decoder->RegisterVideoFrameReadyCallback(videoFrameReadyCb_);
-    threadName_ = "DraggingTask_" + playerId;
-    task_ = std::make_unique<Task>("draggingThread", threadName_, TaskType::GLOBAL, TaskPriority::NORMAL, false);
-    task_->Start();
-    return Status::OK;
-}
- 
-bool DraggingPlayerAgent::IsVideoStreamDiscardable(const std::shared_ptr<AVBuffer> avBuffer)
-{
-    FALSE_RETURN_V_MSG_E(draggingPlayer_ != nullptr, false, "Invalid draggingPlayer_ instance.");
-    return draggingPlayer_->IsVideoStreamDiscardable(avBuffer);
-}
- 
-void DraggingPlayerAgent::ConsumeVideoFrame(const std::shared_ptr<AVBuffer> avBuffer, uint32_t bufferIndex)
-{
-    FALSE_RETURN(draggingPlayer_ != nullptr);
-    draggingPlayer_->ConsumeVideoFrame(avBuffer, bufferIndex);
+    delegator_ = DraggingDelegatorFactory::CreateDelegator(pipeline_, demuxer_, decoder_, playerId_, draggingMode_);
+    FALSE_RETURN_V_MSG_E(delegator_ != nullptr, Status::ERROR_INVALID_DATA, "delegator_ is null");
+    Status ret = delegator_->Init();
+    FALSE_RETURN_V_MSG_E(ret == Status::OK, ret, "delegator_ init failed");
+    return ret;
 }
  
 void DraggingPlayerAgent::UpdateSeekPos(int64_t seekMs)
 {
-    std::unique_lock<std::mutex> lock(draggingMutex_);
-    FALSE_RETURN(draggingPlayer_ != nullptr);
-    seekCnt_.fetch_add(1);
-    draggingPlayer_->UpdateSeekPos(seekMs);
-    if (task_) {
-        int64_t seekCnt = seekCnt_.load();
-        lock.unlock();
-        task_->SubmitJob([this, seekCnt]() { StopDragging(seekCnt); }, 33333); // 33333 means 33333us, 33ms
-    }
-}
-
-void DraggingPlayerAgent::StopDragging(int64_t seekCnt)
-{
-    std::unique_lock<std::mutex> lock(draggingMutex_);
-    FALSE_RETURN(!isReleased_);
-    FALSE_RETURN(draggingPlayer_ != nullptr);
-    if (seekCnt_.load() != seekCnt) {
-        return;
-    }
-    draggingPlayer_->StopDragging();
+    FALSE_RETURN_MSG(delegator_ != nullptr, "delegator_ is null");
+    delegator_->UpdateSeekPos(seekMs);
 }
  
 void DraggingPlayerAgent::Release()
 {
-    if (task_) {
-        task_->Stop();
-    }
     std::unique_lock<std::mutex> lock(draggingMutex_);
-    if (draggingPlayer_ != nullptr) {
-        draggingPlayer_->Release();
-    }
-    if (draggingPlayer_ != nullptr) {
-        auto res = demuxer_->PauseDragging();
-        FALSE_LOG_MSG(res == Status::OK, "PauseDragging failed");
-    }
-    if (demuxer_ != nullptr) {
-        demuxer_->DeregisterVideoStreamReadyCallback();
-    }
-    if (decoder_ != nullptr) {
-        decoder_->DeregisterVideoFrameReadyCallback();
-    }
+    delegator_->Release();
     isReleased_ = true;
+}
+
+DraggingMode DraggingPlayerAgent::GetDraggingMode()
+{
+    return draggingMode_;
 }
  
 void *DraggingPlayerAgent::LoadLibrary()
@@ -247,6 +204,241 @@ bool DraggingPlayerAgent::LoadSymbol()
         }
     }
     return true;
+}
+
+shared_ptr<DraggingDelegator> DraggingDelegatorFactory::CreateDelegator(
+    const shared_ptr<OHOS::Media::Pipeline::Pipeline> pipeline,
+    const shared_ptr<DemuxerFilter> demuxer,
+    const shared_ptr<DecoderSurfaceFilter> decoder,
+    const string &playerId,
+    DraggingMode &draggingMode)
+{
+    FALSE_RETURN_V_MSG_E(draggingMode != DraggingMode::DRAGGING_NONE, nullptr, "Invalid draggingMode.");
+    shared_ptr<DraggingDelegator> delegator = nullptr;
+    if (draggingMode == DraggingMode::DRAGGING_CONTINUOUS) {
+        shared_ptr<DraggingDelegator> delegator
+            = SeekContinuousDelegator::Create(pipeline, demuxer, decoder, playerId);
+        FALSE_RETURN_V_NOLOG(delegator == nullptr, delegator);
+    }
+    draggingMode = DraggingMode::DRAGGING_CLOSEST;
+    return SeekClosestDelegator::Create(pipeline, demuxer, decoder, playerId);
+}
+
+shared_ptr<SeekContinuousDelegator> SeekContinuousDelegator::Create(
+    const shared_ptr<OHOS::Media::Pipeline::Pipeline> pipeline,
+    const shared_ptr<DemuxerFilter> demuxer,
+    const shared_ptr<DecoderSurfaceFilter> decoder,
+    const string &playerId)
+{
+    shared_ptr<SeekContinuousDelegator> delegator
+        = make_shared<SeekContinuousDelegator>(pipeline, demuxer, decoder, playerId);
+    FALSE_RETURN_V_MSG_E(delegator != nullptr && delegator->draggingPlayer_ != nullptr,
+        nullptr, "delegator is nullptr");
+    Status ret = delegator->Init();
+    if (ret != Status::OK) {
+        delegator = nullptr;
+    }
+    return delegator;
+}
+
+SeekContinuousDelegator::SeekContinuousDelegator(
+    const shared_ptr<OHOS::Media::Pipeline::Pipeline> pipeline,
+    const shared_ptr<DemuxerFilter> demuxer,
+    const shared_ptr<DecoderSurfaceFilter> decoder,
+    const string &playerId)
+    : DraggingDelegator(pipeline, demuxer, decoder, playerId)
+{
+    if (DraggingPlayerAgent::createFunc_ != nullptr) {
+        draggingPlayer_ = DraggingPlayerAgent::createFunc_();
+    }
+}
+
+SeekContinuousDelegator::~SeekContinuousDelegator()
+{
+    if (!isReleased_) {
+        Release();
+    }
+    PipeLineThreadPool::GetInstance().DestroyThread(threadName_);
+    if (draggingPlayer_ != nullptr) {
+        DraggingPlayerAgent::destroyFunc_(draggingPlayer_);
+        draggingPlayer_ = nullptr;
+    }
+}
+
+Status SeekContinuousDelegator::Init()
+{
+    FALSE_RETURN_V_MSG_E(demuxer_ != nullptr && decoder_ != nullptr,
+        Status::ERROR_INVALID_PARAMETER, "Invalid demuxer filter instance.");
+    Status ret = draggingPlayer_->Init(demuxer_, decoder_);
+    if (ret != Status::OK) {
+        MEDIA_LOG_E("liyudebug DraggingPlayerAgent::Init failed");
+        return ret;
+    }
+    MEDIA_LOG_I("DraggingPlayerAgent::Init register");
+    videoStreamReadyCb_ = std::make_shared<VideoStreamReadyCallbackImpl>(shared_from_this());
+    demuxer_->RegisterVideoStreamReadyCallback(videoStreamReadyCb_);
+    videoFrameReadyCb_ = std::make_shared<VideoFrameReadyCallbackImpl>(shared_from_this());
+    decoder_->RegisterVideoFrameReadyCallback(videoFrameReadyCb_);
+    threadName_ = "DraggingTask_" + playerId_;
+    monitorTask_ = std::make_unique<Task>("draggingThread", threadName_, TaskType::GLOBAL, TaskPriority::NORMAL, false);
+    monitorTask_->Start();
+    return Status::OK;
+}
+
+void SeekContinuousDelegator::UpdateSeekPos(int64_t seekMs)
+{
+    std::unique_lock<std::mutex> lock(draggingMutex_);
+    FALSE_RETURN(draggingPlayer_ != nullptr);
+    seekCnt_.fetch_add(1);
+    draggingPlayer_->UpdateSeekPos(seekMs);
+    if (monitorTask_ != nullptr) {
+        int64_t seekCnt = seekCnt_.load();
+        lock.unlock();
+        monitorTask_->SubmitJob([this, seekCnt]() { StopDragging(seekCnt); }, 33333); // 33333 means 33333us, 33ms
+    }
+}
+
+void SeekContinuousDelegator::Release()
+{
+    if (monitorTask_) {
+        monitorTask_->Stop();
+    }
+    std::unique_lock<std::mutex> lock(draggingMutex_);
+    if (draggingPlayer_ != nullptr) {
+        draggingPlayer_->Release();
+    }
+    if (draggingPlayer_ != nullptr) {
+        auto res = demuxer_->PauseDragging();
+        FALSE_LOG_MSG(res == Status::OK, "PauseDragging failed");
+    }
+    if (demuxer_ != nullptr) {
+        demuxer_->DeregisterVideoStreamReadyCallback();
+    }
+    if (decoder_ != nullptr) {
+        decoder_->DeregisterVideoFrameReadyCallback();
+    }
+    isReleased_ = true;
+}
+
+void SeekContinuousDelegator::ConsumeVideoFrame(const std::shared_ptr<AVBuffer> avBuffer, uint32_t bufferIndex)
+{
+    FALSE_RETURN(draggingPlayer_ != nullptr);
+    draggingPlayer_->ConsumeVideoFrame(avBuffer, bufferIndex);
+}
+
+bool SeekContinuousDelegator::IsVideoStreamDiscardable(const std::shared_ptr<AVBuffer> avBuffer)
+{
+    FALSE_RETURN_V_MSG_E(draggingPlayer_ != nullptr, false, "Invalid draggingPlayer_ instance.");
+    return draggingPlayer_->IsVideoStreamDiscardable(avBuffer);
+}
+
+void SeekContinuousDelegator::StopDragging(int64_t seekCnt)
+{
+    std::unique_lock<std::mutex> lock(draggingMutex_);
+    FALSE_RETURN(!isReleased_);
+    FALSE_RETURN(draggingPlayer_ != nullptr);
+    if (seekCnt_.load() != seekCnt) {
+        return;
+    }
+    draggingPlayer_->StopDragging();
+}
+
+shared_ptr<SeekClosestDelegator> SeekClosestDelegator::Create(
+    const shared_ptr<OHOS::Media::Pipeline::Pipeline> pipeline,
+    const shared_ptr<DemuxerFilter> demuxer,
+    const shared_ptr<DecoderSurfaceFilter> decoder,
+    const string &playerId)
+{
+    shared_ptr<SeekClosestDelegator> delegator
+        = make_shared<SeekClosestDelegator>(pipeline, demuxer, decoder, playerId);
+    FALSE_RETURN_V_MSG_E(delegator != nullptr, delegator, "delegator is nullptr");
+    Status ret = delegator->Init();
+    if (ret != Status::OK) {
+        delegator = nullptr;
+    }
+    return delegator;
+}
+
+SeekClosestDelegator::SeekClosestDelegator(
+    const shared_ptr<OHOS::Media::Pipeline::Pipeline> pipeline,
+    const shared_ptr<DemuxerFilter> demuxer,
+    const shared_ptr<DecoderSurfaceFilter> decoder,
+    const std::string &playerId)
+    : DraggingDelegator(pipeline, demuxer, decoder, playerId)
+{
+}
+
+SeekClosestDelegator::~SeekClosestDelegator()
+{
+    if (!isReleased_) {
+        Release();
+    }
+    PipeLineThreadPool::GetInstance().DestroyThread(threadName_);
+}
+
+Status SeekClosestDelegator::Init()
+{
+    threadName_ = "SeekTask_" + playerId_;
+    seekTask_ = std::make_unique<Task>("seekThread", threadName_, TaskType::GLOBAL, TaskPriority::NORMAL, false);
+    seekTask_->Start();
+    return Status::OK;
+}
+
+void SeekClosestDelegator::UpdateSeekPos(int64_t seekMs)
+{
+    lock_guard<mutex> lock(queueMutex_);
+    seekTimeMsQue_.push_back(seekMs);
+    if (seekTimeMsQue_.size() == 1) {
+        seekTask_->SubmitJob([this]() { SeekJob(); });
+    }
+}
+
+void SeekClosestDelegator::Release()
+{
+    if (seekTask_) {
+        seekTask_->Stop();
+    }
+    int64_t lastSeekTimeMs = -1;
+    {
+        lock_guard<mutex> lock(queueMutex_);
+        if (seekTimeMsQue_.size() > 0) {
+            lastSeekTimeMs = seekTimeMsQue_.back();
+            seekTimeMsQue_.clear();
+        }
+    }
+    DoSeek(lastSeekTimeMs);
+    isReleased_ = true;
+}
+
+void SeekClosestDelegator::SeekJob()
+{
+    int64_t seekTimeMs = -1;
+    {
+        lock_guard<mutex> lock(queueMutex_);
+        if (seekTimeMsQue_.size() <= 0) {
+            return;
+        }
+        seekTimeMs = seekTimeMsQue_.back();
+        seekTimeMsQue_.clear();
+    }
+    DoSeek(seekTimeMs);
+}
+
+void SeekClosestDelegator::DoSeek(int64_t seekTimeMs)
+{
+    FALSE_RETURN_MSG(seekTimeMs >= 0, "invalid seekTimeMs");
+    FALSE_RETURN_MSG(pipeline_ != nullptr && demuxer_ != nullptr && decoder_ != nullptr, "key objects is null");
+    lock_guard<mutex> lock(seekClosestMutex_);
+    int64_t seekTimeUs = 0;
+    FALSE_RETURN_MSG(seekTimeMs != curSeekTimeMs_, "the same seek time with last seek;");
+    curSeekTimeMs_ = seekTimeMs;
+    FALSE_RETURN_MSG(Plugins::Us2HstTime(seekTimeMs, seekTimeUs), "cast seekTime ms to us failed");
+    pipeline_->Flush();
+    decoder_->SetSeekTime(seekTimeUs);
+    int64_t realSeekTimeUs = seekTimeUs;
+    Status res = demuxer_->SeekTo(seekTimeUs, Plugins::SeekMode::SEEK_CLOSEST_INNER, realSeekTimeUs);
+    FALSE_RETURN_MSG(res == Status::OK, "demuxer seekto error.");
+    pipeline_->Preroll(true);
 }
 }  // namespace Media
 }  // namespace OHOS
