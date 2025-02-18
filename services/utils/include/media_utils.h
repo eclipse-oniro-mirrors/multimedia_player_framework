@@ -33,7 +33,6 @@ enum class PlayerStateId {
 
 namespace OHOS {
 namespace Media {
-    bool __attribute__((visibility("default"))) StrToULL(const std::string &str, uint64_t &value);
     std::string __attribute__((visibility("default"))) GetClientBundleName(int32_t uid);
     int32_t __attribute__((visibility("default"))) GetApiInfo(int32_t uid);
     std::string __attribute__((visibility("default"))) GetBundleResourceLabel(std::string bundleName);
