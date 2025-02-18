@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -167,6 +167,10 @@ public:
     {
         return 0;
     }
+    int32_t StopBufferring(bool flag) override
+    {
+        return 0;
+    }
     int32_t SelectTrack(int32_t index, PlayerSwitchMode mode) override
     {
         return 0;
@@ -205,6 +209,8 @@ public:
     static int32_t SetVolumeStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
     static int32_t SeekStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
     static int32_t GetCurrentTimeStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
+    static int32_t GetPlaybackPositionStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size,
+        bool isFuzz)
     static int32_t GetDurationStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
     static int32_t SetPlaybackSpeedStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
     static int32_t GetPlaybackSpeedStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
