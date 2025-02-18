@@ -36,12 +36,12 @@ ohos_shared_library("media_avplayer") {
   ]
 
   sources = [
+    "$MEDIA_ROOT_DIR/frameworks/js/common/js_common_utils.cpp",
     "$MEDIA_ROOT_DIR/frameworks/js/mediasource/media_source_napi.cpp",
     "./media_data_source_callback.cpp",
     "//foundation/multimedia/player_framework/frameworks/js/avplayer/avplayer_callback.cpp",
     "//foundation/multimedia/player_framework/frameworks/js/avplayer/avplayer_napi.cpp",
     "//foundation/multimedia/player_framework/frameworks/js/common/common_napi.cpp",
-    "$MEDIA_ROOT_DIR/frameworks/js/common/js_common_utils.cpp",
   ]
 
   cflags = [
