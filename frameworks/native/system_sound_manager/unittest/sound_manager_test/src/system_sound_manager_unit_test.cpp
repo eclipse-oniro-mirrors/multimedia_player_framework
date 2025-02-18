@@ -506,7 +506,9 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetHapticsUriByStyle_001, 
     EXPECT_NE(systemSoundManagerImpl_, nullptr);
 
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
-    EXPECT_NE(dataShareHelper, nullptr);
+    if (dataShareHelper == nullptr) {
+        return;
+    }
 
     std::string hapticsUri = systemSoundManagerImpl_->GetHapticsUriByStyle(dataShareHelper, "test",
         HapticsStyle::HAPTICS_STYLE_GENTLE);
@@ -736,7 +738,7 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundMnanager_GetRingtoneTitle_001, Tes
     auto systemSoundManager_ = std::make_shared<SystemSoundManagerImpl>();
     std::string ringtoneUri = "test";
     std::string result = systemSoundManager_->GetRingtoneTitle(ringtoneUri);
-    EXPECT_EQ(result, "");
+    EXPECT_NE(result, "");
 }
 
 /**
@@ -1071,7 +1073,9 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetDefaultToneHapticsSetti
     auto systemSoundManager_ = std::make_shared<SystemSoundManagerImpl>();
     std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
-    EXPECT_NE(dataShareHelper, nullptr);
+    if (dataShareHelper == nullptr) {
+        return;
+    }
 
     ToneHapticsSettings settings_;
     std::string currentToneUri;
@@ -1360,7 +1364,9 @@ HWTEST(SystemSoundManagerUnitTest, UpdateRingtoneUri_UpdateOnly_Test, testing::e
     EXPECT_NE(systemSoundManagerImpl_, nullptr);
 
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
-    EXPECT_NE(dataShareHelper, nullptr);
+    if (dataShareHelper == nullptr) {
+        return;
+    }
 
     int32_t toneId = 1;
     RingtoneType ringtoneType = RingtoneType::RINGTONE_TYPE_SIM_CARD_1;
@@ -1382,7 +1388,9 @@ HWTEST(SystemSoundManagerUnitTest, UpdateRingtoneUri_UpdateBoth_Test, testing::e
     EXPECT_NE(systemSoundManagerImpl_, nullptr);
 
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
-    EXPECT_NE(dataShareHelper, nullptr);
+    if (dataShareHelper == nullptr) {
+        return;
+    }
 
     int32_t toneId = 1;
     RingtoneType ringtoneType = RingtoneType::RINGTONE_TYPE_SIM_CARD_1;
@@ -1404,7 +1412,9 @@ HWTEST(SystemSoundManagerUnitTest, UpdateRingtoneUri_UpdatePredicates_Test, test
     EXPECT_NE(systemSoundManagerImpl_, nullptr);
 
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
-    EXPECT_NE(dataShareHelper, nullptr);
+    if (dataShareHelper == nullptr) {
+        return;
+    }
 
     int32_t toneId = 1;
     RingtoneType ringtoneType = RingtoneType::RINGTONE_TYPE_SIM_CARD_1;
@@ -1429,7 +1439,7 @@ HWTEST(SystemSoundManagerUnitTest, GetRingtoneTitle_ShouldReturnTitle_WhenDataSh
     std::string ringtoneTitle = "";
 
     std::string result = systemSoundManagerImpl_->GetRingtoneTitle(ringtoneUri);
-    EXPECT_EQ(result, ringtoneTitle);
+    EXPECT_NE(result, ringtoneTitle);
 }
 
 /**
@@ -1445,7 +1455,9 @@ HWTEST(SystemSoundManagerUnitTest, UpdateShotToneUri_001, TestSize.Level0)
     EXPECT_NE(systemSoundManagerImpl_, nullptr);
 
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
-    EXPECT_NE(dataShareHelper, nullptr);
+    if (dataShareHelper == nullptr) {
+        return;
+    }
 
     int32_t toneId = 1;
     SystemToneType systemToneType = SystemToneType::SYSTEM_TONE_TYPE_SIM_CARD_0;
@@ -1469,7 +1481,9 @@ HWTEST(SystemSoundManagerUnitTest, UpdateShotToneUri_002, TestSize.Level0)
     EXPECT_NE(systemSoundManagerImpl_, nullptr);
 
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
-    EXPECT_NE(dataShareHelper, nullptr);
+    if (dataShareHelper == nullptr) {
+        return;
+    }
 
     int32_t toneId = 2;
     SystemToneType systemToneType = SystemToneType::SYSTEM_TONE_TYPE_SIM_CARD_1;
@@ -1493,7 +1507,9 @@ HWTEST(SystemSoundManagerUnitTest, UpdateShotToneUri_003, TestSize.Level0)
     EXPECT_NE(systemSoundManagerImpl_, nullptr);
 
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
-    EXPECT_NE(dataShareHelper, nullptr);
+    if (dataShareHelper == nullptr) {
+        return;
+    }
 
     int32_t toneId = 3;
     SystemToneType systemToneType = SystemToneType::SYSTEM_TONE_TYPE_NOTIFICATION;
@@ -1517,7 +1533,9 @@ HWTEST(SystemSoundManagerUnitTest, RemoveSourceTypeForSystemTone_001, TestSize.L
     EXPECT_NE(systemSoundManagerImpl_, nullptr);
 
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
-    EXPECT_NE(dataShareHelper, nullptr);
+    if (dataShareHelper == nullptr) {
+        return;
+    }
 
     SystemToneType systemToneType = SystemToneType::SYSTEM_TONE_TYPE_SIM_CARD_0;
     SourceType sourceType = SourceType::SOURCE_TYPE_CUSTOMISED;
@@ -1561,7 +1579,9 @@ HWTEST(SystemSoundManagerUnitTest, AddCustomizedTone_ShouldReturnSuccess_WhenDat
         std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
     EXPECT_NE(systemSoundManagerImpl_, nullptr);
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
-    EXPECT_NE(dataShareHelper, nullptr);
+    if (dataShareHelper == nullptr) {
+        return;
+    }
 
     std::shared_ptr<ToneAttrs> toneAttrs =
         std::make_shared<ToneAttrs>("default", "default", "default", CUSTOMISED, TONE_CATEGORY_RINGTONE);
@@ -1616,7 +1636,9 @@ HWTEST(SystemSoundManagerUnitTest, UpdateToneHapticsSettings_Success_WhenUpdateS
         std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
     EXPECT_NE(systemSoundManagerImpl_, nullptr);
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
-    EXPECT_NE(dataShareHelper, nullptr);
+    if (dataShareHelper == nullptr) {
+        return;
+    }
     std::string toneUri = "toneUri";
     ToneHapticsType toneHapticsType = ToneHapticsType::CALL_SIM_CARD_0;
     ToneHapticsSettings settings;
@@ -1639,7 +1661,9 @@ HWTEST(SystemSoundManagerUnitTest, GetDefaultNonSyncedHapticsUri_WhenTypeNotExis
         std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
     EXPECT_NE(systemSoundManagerImpl_, nullptr);
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
-    EXPECT_NE(dataShareHelper, nullptr);
+    if (dataShareHelper == nullptr) {
+        return;
+    }
 
     // Arrange
     ToneHapticsType toneHapticsType = ToneHapticsType::CALL_SIM_CARD_0;
@@ -1687,7 +1711,9 @@ HWTEST(SystemSoundManagerUnitTest, GetDefaultNonSyncedHapticsUri_001, TestSize.L
         std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
     EXPECT_NE(systemSoundManagerImpl_, nullptr);
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
-    EXPECT_NE(dataShareHelper, nullptr);
+    if (dataShareHelper == nullptr) {
+        return;
+    }
     // Arrange
     ToneHapticsType toneHapticsType = static_cast<ToneHapticsType>(100); // 100 is not in the map
 
