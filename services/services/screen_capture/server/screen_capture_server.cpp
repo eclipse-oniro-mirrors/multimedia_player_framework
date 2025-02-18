@@ -906,6 +906,19 @@ void ScreenCaptureServer::SetErrorInfo(int32_t errCode, const std::string &errMs
     statisticalEventInfo_.userAgree = userAgree;
 }
 
+bool ScreenCaptureServer::CheckPrivacyWindowSkipPermission()
+{
+    MEDIA_LOGI("ScreenCaptureServer::CheckPrivacyWindowSkipPermission() START.");
+    int result = Security::AccessToken::AccessTokenKit::VerifyAccessToken(appInfo_.appTokenId,
+        "ohos.permission.EXEMPT_CAPTURE_SCREEN_AUTHORIZE");
+    if (result == Security::AccessToken::PERMISSION_GRANTED) {
+        MEDIA_LOGI("CheckPrivacyWindowSkipPermission: user have the right to skip privacywindow");
+        return true;
+    }
+    MEDIA_LOGD("CheckPrivacyWindowSkipPermission: user do not have the right to skip privacywindow");
+    return false;
+}
+
 int32_t ScreenCaptureServer::RequestUserPrivacyAuthority()
 {
     MediaTrace trace("ScreenCaptureServer::RequestUserPrivacyAuthority");
@@ -918,7 +931,7 @@ int32_t ScreenCaptureServer::RequestUserPrivacyAuthority()
 
     if (isPrivacyAuthorityEnabled_) {
         if (GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"]
-                .compare(appName_) != 0) {
+                .compare(appName_) != 0 && !isScreenCaptureAuthority_) {
             return StartPrivacyWindow();
         } else {
             MEDIA_LOGI("ScreenCaptureServer::RequestUserPrivacyAuthority support screenrecorder");
@@ -1595,9 +1608,12 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
     density_ = display->GetDpi();
 
     appName_ = GetClientBundleName(appInfo_.appUid);
+    callingLabel_ = GetBundleResourceLabel(appName_);
+    MEDIA_LOGD("StartScreenCaptureInner callingLabel: %{public}s", callingLabel_.c_str());
 
     isPrivacyAuthorityEnabled_ = isPrivacyAuthorityEnabled;
     captureState_ = AVScreenCaptureState::STARTING;
+    isScreenCaptureAuthority_ = CheckPrivacyWindowSkipPermission();
     ret = RequestUserPrivacyAuthority();
     if (ret != MSERR_OK) {
         captureState_ = AVScreenCaptureState::STOPPED;
@@ -1610,7 +1626,7 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
     if (IsUserPrivacyAuthorityNeeded()) {
         if (isPrivacyAuthorityEnabled_ &&
             GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"]
-                .compare(appName_) != 0) {
+                .compare(appName_) != 0 && !isScreenCaptureAuthority_) {
             MEDIA_LOGI("Wait for user interactions to ALLOW/DENY capture");
             return MSERR_OK;
         } else {
@@ -1619,7 +1635,7 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
         }
         MEDIA_LOGI("privacy notification window not support, app has CAPTURE_SCREEN permission and go on");
     } else {
-        MEDIA_LOGI("Privacy Authority granted automatically and go on"); // for root
+        MEDIA_LOGI("Privacy Authority granted automatically and go on"); // for root and skip permission
     }
 
     ret = OnStartScreenCapture();
@@ -1664,9 +1680,6 @@ int32_t ScreenCaptureServer::RegisterServerCallbacks()
 
 int32_t ScreenCaptureServer::StartPrivacyWindow()
 {
-    auto bundleName = GetClientBundleName(appInfo_.appUid);
-    callingLabel_ = GetBundleResourceLabel(bundleName);
-
     std::string comStr = "{\"ability.want.params.uiExtensionType\":\"sys/commonUI\",\"sessionId\":\"";
     comStr += std::to_string(sessionId_).c_str();
     comStr += "\",\"callerUid\":\"";
@@ -2920,6 +2933,7 @@ int32_t ScreenCaptureServer::StopScreenCapture()
     }
 
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances StopScreenCapture E", FAKE_POINTER(this));
+    isScreenCaptureAuthority_ = false;
     return ret;
 }
 

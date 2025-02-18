@@ -388,6 +388,7 @@ private:
     bool CheckScreenCapturePermission();
     bool IsUserPrivacyAuthorityNeeded();
     bool UpdatePrivacyUsingPermissionState(VideoPermissionState state);
+    bool CheckPrivacyWindowSkipPermission();
     int32_t RequestUserPrivacyAuthority();
     int32_t StartPrivacyWindow();
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
@@ -433,6 +434,7 @@ private:
 
     /* used for both CAPTURE STREAM and CAPTURE FILE */
     OHOS::AudioStandard::AppInfo appInfo_;
+    bool isScreenCaptureAuthority_ = false;
     std::string appName_ = "";
     AVScreenCaptureConfig captureConfig_;
     AVScreenCaptureAvType avType_ = AVScreenCaptureAvType::INVALID_TYPE;
