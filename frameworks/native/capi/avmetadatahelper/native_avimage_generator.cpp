@@ -89,7 +89,7 @@ OH_AVErrCode OH_AVImageGenerator_FetchFrameByTime(OH_AVImageGenerator* generator
     auto pixelMapInner = generatorObj->aVMetadataHelper_->FetchFrameYuv(timeUs, static_cast<int32_t>(options), param);
     CHECK_AND_RETURN_RET_LOG(pixelMapInner != nullptr, AV_ERR_UNKNOWN, "aVImageGenerator FetchFrame failed");
 
-    *pixelMap = new OH_PixelmapNative(pixelMapInner);
+    *pixelMap = new(std::nothrow) OH_PixelmapNative(pixelMapInner);
     CHECK_AND_RETURN_RET_LOG(*pixelMap != nullptr, AV_ERR_NO_MEMORY, "create OH_PixelmapNative failed");
     return AV_ERR_OK;
 }
