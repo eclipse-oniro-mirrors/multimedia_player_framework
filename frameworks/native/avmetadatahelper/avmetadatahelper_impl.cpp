@@ -95,6 +95,12 @@ static const std::unordered_map<unsigned int, ColorManager::ColorSpaceName> SDR_
     { CM_LINEAR_BT709, ColorManager::ColorSpaceName::LINEAR_BT709 },
     { CM_LINEAR_P3, ColorManager::ColorSpaceName::LINEAR_P3 },
     { CM_LINEAR_BT2020, ColorManager::ColorSpaceName::LINEAR_BT2020 },
+
+    // sdr pixelMap can use BT2020 color space, but hdr can't use color space except BT2020
+    { CM_BT2020_HLG_FULL, ColorManager::ColorSpaceName::BT2020_HLG },
+    { CM_BT2020_PQ_FULL, ColorManager::ColorSpaceName::BT2020_PQ },
+    { CM_BT2020_HLG_LIMIT, ColorManager::ColorSpaceName::BT2020_HLG_LIMIT },
+    { CM_BT2020_PQ_LIMIT, ColorManager::ColorSpaceName::BT2020_PQ_LIMIT },
 };
 
 static const std::unordered_map<unsigned int, ColorManager::ColorSpaceName> HDR_COLORSPACE_MAP = {
@@ -484,7 +490,7 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::CreatePixelMapFromSurfaceBuffer(
         pixelMap = PixelMap::Create(reinterpret_cast<const uint32_t *>(pixelMap->GetPixels()),
                                     pixelMap->GetByteCount(), options);
         pixelMap->InnerSetColorSpace(OHOS::ColorManager::ColorSpace(
-            getColorSpaceInfoRes == Status::OK ? pixelMapInfo.colorSpaceName : ColorManager::NONE));
+            getColorSpaceInfoRes == Status::OK ? pixelMapInfo.colorSpaceName : ColorManager::SRGB));
         CHECK_AND_RETURN_RET_LOG(pixelMap != nullptr, nullptr, "Create non-DMA pixelMap failed");
     } else {
         pixelMap = PixelMap::Create(reinterpret_cast<const uint32_t *>(surfaceBuffer->GetVirAddr()),
