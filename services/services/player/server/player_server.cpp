@@ -95,7 +95,7 @@ int32_t PlayerServer::Init()
     appPid_ = IPCSkeleton::GetCallingPid();
     appName_ = GetClientBundleName(appUid_);
     uint64_t tokenId = IPCSkeleton::GetCallingFullTokenID();
-    isCalledBySystemApp_ = OHOS::Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(tokenId);
+    isCalledBySystemApp_ = OHOS::Security::AccessToken::AccessTokenKit::IsSystemAppByFullTokenID(tokenId);
     if (g_isFirstInit) {
         MEDIA_LOGI("appUid: %{public}d, appPid: %{public}d, appName: %{public}s", appUid_, appPid_, appName_.c_str());
         g_isFirstInit = false;
