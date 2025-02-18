@@ -29,6 +29,9 @@
 #include <sstream>
 #include <chrono>
 
+#include "color_space.h"
+#include "v1_0/cm_color_space.h"
+
 namespace OHOS {
 namespace Media {
 class AVMetadataHelperImpl : public AVMetadataHelper, public NoCopyable {
@@ -57,6 +60,8 @@ private:
         PixelFormat pixelFormat = PixelFormat::NV12;
         bool isHdr = false;
         int32_t outputHeight = 0;
+        uint8_t srcRange = 0;
+        ColorManager::ColorSpaceName colorSpaceName = ColorManager::ColorSpaceName::NONE;
     };
 
     std::mutex releaseMutex_;
@@ -79,6 +84,10 @@ private:
            << std::setw(millSecondWidth) << ms.count();
         return ss.str();
     }
+
+    void FormatColorSpaceInfo(OHOS::HDI::Display::Graphic::Common::V1_0::CM_ColorSpaceInfo &colorSpaceInfo);
+    Status GetColorSpace(sptr<SurfaceBuffer> &surfaceBuffer, PixelMapInfo &pixelMapInfo);
+
     std::shared_ptr<IAVMetadataHelperService> avMetadataHelperService_ = nullptr;
     int32_t rotation_ = 0;
     bool isDump_ = false;
