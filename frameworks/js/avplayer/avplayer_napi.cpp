@@ -17,6 +17,7 @@
 #include "avplayer_callback.h"
 #include "media_errors.h"
 #include "common_napi.h"
+#include "js_common_utils.h"
 #ifdef SUPPORT_AVPLAYER_DRM
 #include "key_session_impl.h"
 #endif
