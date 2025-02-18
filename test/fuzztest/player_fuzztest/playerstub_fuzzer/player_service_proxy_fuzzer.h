@@ -206,7 +206,7 @@ public:
     static int32_t SeekStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
     static int32_t GetCurrentTimeStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
     static int32_t GetPlaybackPositionStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size,
-        bool isFuzz)
+        bool isFuzz);
     static int32_t GetDurationStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
     static int32_t SetPlaybackSpeedStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
     static int32_t GetPlaybackSpeedStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData, size_t size, bool isFuzz);
