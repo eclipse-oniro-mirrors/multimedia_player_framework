@@ -18,7 +18,6 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "v1_0/cm_color_space.h"
 #include "v1_0/hdr_static_metadata.h"
 #include "v1_0/buffer_handle_meta_key_type.h"
 
@@ -29,10 +28,10 @@
 #include "media_errors.h"
 #include "scope_guard.h"
 #include "hisysevent.h"
-#include "color_space.h"
 #include "image_type.h"
 #include "param_wrapper.h"
 #include "hdr_type.h"
+#include "metadata_convertor.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_METADATA, "AVMetadatahelperImpl" };
@@ -50,6 +49,11 @@ const std::string DUMP_FILE_NAME_AVBUFFER = "_avbuffer.dat";
 const std::string DUMP_FILE_NAME_PIXEMAP = "_pixelMap.dat";
 const std::string DUMP_FILE_NAME_AFTER_SCLAE = "_afterScale.dat";
 const std::string DUMP_FILE_NAME_AFTER_ROTATE = "_afterRotate.dat";
+
+constexpr uint8_t COLORPRIMARIES_OFFSET = 0;
+constexpr uint8_t TRANSFUNC_OFFSET = 8;
+constexpr uint8_t MATRIX_OFFSET = 16;
+constexpr uint8_t RANGE_OFFSET = 21;
 }
 
 namespace OHOS {
@@ -60,6 +64,45 @@ static std::map<Scene, long> SCENE_CODE_MAP = { { Scene::AV_META_SCENE_CLONE, 1 
                                                 { Scene::AV_META_SCENE_BATCH_HANDLE, 2 } };
 static std::map<Scene, int64_t> SCENE_TIMESTAMP_MAP = { { Scene::AV_META_SCENE_CLONE, 0 },
                                                         { Scene::AV_META_SCENE_BATCH_HANDLE, 0 } };
+/*
+ * CM_ColorSpaceType from
+ * {@link ${system_general}/drivers/interface/display/graphic/common/v1_0/CMColorSpace.idl}
+ *
+ * ColorManager::ColorSpaceName from
+ * {@link ${system_general}/foundation/graphic/graphic_2d/utils/color_manager/export/color_space.h}
+ *
+ * maps with #IsHdr()
+ * {@link ${system_general}/foundation/multimedia/image_framework/frameworks/innerkitsimpl/common/src/pixel_map.cpp}
+ */
+static const std::unordered_map<unsigned int, ColorManager::ColorSpaceName> SDR_COLORSPACE_MAP = {
+    { CM_BT601_EBU_FULL, ColorManager::ColorSpaceName::BT601_EBU },
+    { CM_BT601_EBU_LIMIT, ColorManager::ColorSpaceName::BT601_EBU_LIMIT },
+    { CM_BT601_SMPTE_C_FULL, ColorManager::ColorSpaceName::BT601_SMPTE_C },
+    { CM_BT601_SMPTE_C_LIMIT, ColorManager::ColorSpaceName::BT601_SMPTE_C_LIMIT },
+    { CM_BT709_FULL, ColorManager::ColorSpaceName::BT709 },
+    { CM_BT709_LIMIT, ColorManager::ColorSpaceName::BT709_LIMIT },
+    { CM_SRGB_FULL, ColorManager::ColorSpaceName::SRGB },
+    { CM_SRGB_LIMIT, ColorManager::ColorSpaceName::SRGB_LIMIT },
+    { CM_P3_FULL, ColorManager::ColorSpaceName::DISPLAY_P3 },
+    { CM_P3_LIMIT, ColorManager::ColorSpaceName::DISPLAY_P3_LIMIT },
+    { CM_P3_HLG_FULL, ColorManager::ColorSpaceName::P3_HLG },
+    { CM_P3_HLG_LIMIT, ColorManager::ColorSpaceName::P3_HLG_LIMIT },
+    { CM_P3_PQ_FULL, ColorManager::ColorSpaceName::P3_PQ_LIMIT },
+    { CM_P3_PQ_LIMIT, ColorManager::ColorSpaceName::P3_PQ_LIMIT },
+    { CM_ADOBERGB_FULL, ColorManager::ColorSpaceName::ADOBE_RGB },
+    { CM_ADOBERGB_LIMIT, ColorManager::ColorSpaceName::ADOBE_RGB_LIMIT },
+    { CM_LINEAR_SRGB, ColorManager::ColorSpaceName::LINEAR_SRGB },
+    { CM_LINEAR_BT709, ColorManager::ColorSpaceName::LINEAR_BT709 },
+    { CM_LINEAR_P3, ColorManager::ColorSpaceName::LINEAR_P3 },
+    { CM_LINEAR_BT2020, ColorManager::ColorSpaceName::LINEAR_BT2020 },
+};
+
+static const std::unordered_map<unsigned int, ColorManager::ColorSpaceName> HDR_COLORSPACE_MAP = {
+    { CM_BT2020_HLG_FULL, ColorManager::ColorSpaceName::BT2020_HLG },
+    { CM_BT2020_PQ_FULL, ColorManager::ColorSpaceName::BT2020_PQ },
+    { CM_BT2020_HLG_LIMIT, ColorManager::ColorSpaceName::BT2020_HLG_LIMIT },
+    { CM_BT2020_PQ_LIMIT, ColorManager::ColorSpaceName::BT2020_PQ_LIMIT },
+};
 
 struct PixelMapMemHolder {
     bool isShmem;
@@ -217,7 +260,7 @@ int32_t AVMetadataHelperImpl::SaveDataToFile(const std::string &fileName, const 
     std::string verifiedPath(realPath);
     std::ofstream outFile(verifiedPath.append("/" + fileName), std::ofstream::out);
     if (!outFile.is_open()) {
-        MEDIA_LOGI("winddraw::SaveDataToFile write error, path=%{public}s", verifiedPath.c_str());
+        MEDIA_LOGI("SaveDataToFile write error, path=%{public}s", verifiedPath.c_str());
         return MSERR_UNKNOWN;
     }
 
@@ -360,23 +403,74 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::CreatePixelMapFromAVShareMemory(
                                                    .height = pixelMap->GetHeight() },
                                          .srcPixelFormat = PixelFormat::NV12,
                                          .pixelFormat = pixelMapInfo.pixelFormat };
-    pixelMap =  PixelMap::Create(reinterpret_cast<const uint32_t *>(pixelMap->GetPixels()),
-                                 pixelMap->GetByteCount(), opts);
+    pixelMap = PixelMap::Create(reinterpret_cast<const uint32_t *>(pixelMap->GetPixels()),
+                                pixelMap->GetByteCount(), opts);
     sptr<SurfaceBuffer> surfaceBuffer = nullptr;
     SetPixelMapYuvInfo(surfaceBuffer, pixelMap, pixelMapInfo);
     return pixelMap;
+}
+
+void AVMetadataHelperImpl::FormatColorSpaceInfo(CM_ColorSpaceInfo &colorSpaceInfo)
+{
+    switch (colorSpaceInfo.primaries) {
+        case CM_ColorPrimaries::COLORPRIMARIES_P3_D65:
+            if (colorSpaceInfo.matrix == CM_Matrix::MATRIX_BT601_P) {
+                colorSpaceInfo.matrix = CM_Matrix::MATRIX_P3; // MATRIX_P3 equals MATRIX_BT601_P and MATRIX_BT601_N
+            }
+            break;
+        case CM_ColorPrimaries::COLORPRIMARIES_BT601_P:
+            if (colorSpaceInfo.matrix == CM_Matrix::MATRIX_BT601_N || colorSpaceInfo.matrix == CM_Matrix::MATRIX_P3) {
+                colorSpaceInfo.matrix = CM_Matrix::MATRIX_BT601_P; // MATRIX_P3 equals MATRIX_BT601_P and MATRIX_BT601_N
+            }
+            break;
+        default:
+            break;
+    }
+}
+
+Status AVMetadataHelperImpl::GetColorSpace(sptr<SurfaceBuffer> &surfaceBuffer, PixelMapInfo &pixelMapInfo)
+{
+    std::vector<uint8_t> colorSpaceInfoVec;
+    if (surfaceBuffer->GetMetadata(ATTRKEY_COLORSPACE_INFO, colorSpaceInfoVec) != GSERROR_OK) {
+        MEDIA_LOGW("cant find colorSpace");
+        return Status::ERROR_UNKNOWN;
+    }
+    auto outColor = reinterpret_cast<CM_ColorSpaceInfo *>(colorSpaceInfoVec.data());
+    CHECK_AND_RETURN_RET_LOG(outColor != nullptr, Status::ERROR_UNKNOWN, "colorSpaceInfoVec init failed");
+    auto colorSpaceInfo = outColor[0];
+    FormatColorSpaceInfo(colorSpaceInfo);
+    pixelMapInfo.srcRange = colorSpaceInfo.range == CM_Range::RANGE_FULL ? 1 : 0;
+    auto type = ((static_cast<unsigned int>(colorSpaceInfo.primaries) << COLORPRIMARIES_OFFSET) +
+                 (static_cast<unsigned int>(colorSpaceInfo.transfunc) << TRANSFUNC_OFFSET) +
+                 (static_cast<unsigned int>(colorSpaceInfo.matrix) << MATRIX_OFFSET) +
+                 (static_cast<unsigned int>(colorSpaceInfo.range) << RANGE_OFFSET));
+    MEDIA_LOGI("colorSpaceType is %{public}u", type);
+    if (pixelMapInfo.isHdr) {
+        auto it = HDR_COLORSPACE_MAP.find(type);
+        CHECK_AND_RETURN_RET_LOG(it != HDR_COLORSPACE_MAP.end(), Status::ERROR_UNKNOWN,
+            "can't find mapped colorSpace name in hdr map");
+        pixelMapInfo.colorSpaceName = it->second;
+        return Status::OK;
+    }
+    auto it = SDR_COLORSPACE_MAP.find(type);
+    CHECK_AND_RETURN_RET_LOG(it != SDR_COLORSPACE_MAP.end(), Status::ERROR_UNKNOWN,
+        "can't find mapped colorSpace name in sdr map");
+    pixelMapInfo.colorSpaceName = it->second;
+    return Status::OK;
 }
 
 std::shared_ptr<PixelMap> AVMetadataHelperImpl::CreatePixelMapFromSurfaceBuffer(sptr<SurfaceBuffer> &surfaceBuffer,
                                                                                 PixelMapInfo &pixelMapInfo)
 {
     CHECK_AND_RETURN_RET_LOG(surfaceBuffer != nullptr, nullptr, "surfaceBuffer is nullptr");
+    auto getColorSpaceInfoRes = GetColorSpace(surfaceBuffer, pixelMapInfo);
     InitializationOptions options = { .size = { .width = surfaceBuffer->GetWidth(),
                                                 .height = surfaceBuffer->GetHeight() } };
     bool isHdr = pixelMapInfo.isHdr;
     options.srcPixelFormat = isHdr ? PixelFormat::YCBCR_P010 : PixelFormat::NV12;
     options.pixelFormat = isHdr ? PixelFormat::YCBCR_P010 : PixelFormat::NV12;
     options.useDMA = (isHdr || pixelMapInfo.pixelFormat == PixelFormat::NV12) ? true : false;
+    options.convertColorSpace.srcRange = pixelMapInfo.srcRange;
     int32_t colorLength = surfaceBuffer->GetWidth() * surfaceBuffer->GetHeight() * PIXEL_SIZE_HDR_YUV;
     colorLength = isHdr ? colorLength : colorLength / HDR_PIXEL_SIZE;
     std::shared_ptr<PixelMap> pixelMap;
@@ -389,6 +483,8 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::CreatePixelMapFromSurfaceBuffer(
         options.pixelFormat = pixelMapInfo.pixelFormat;
         pixelMap = PixelMap::Create(reinterpret_cast<const uint32_t *>(pixelMap->GetPixels()),
                                     pixelMap->GetByteCount(), options);
+        pixelMap->InnerSetColorSpace(OHOS::ColorManager::ColorSpace(
+            getColorSpaceInfoRes == Status::OK ? pixelMapInfo.colorSpaceName : ColorManager::NONE));
         CHECK_AND_RETURN_RET_LOG(pixelMap != nullptr, nullptr, "Create non-DMA pixelMap failed");
     } else {
         pixelMap = PixelMap::Create(reinterpret_cast<const uint32_t *>(surfaceBuffer->GetVirAddr()),
@@ -399,7 +495,8 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::CreatePixelMapFromSurfaceBuffer(
         ref->IncStrongRef(ref);
         if (isHdr) {
             pixelMap->SetHdrType(ImageHdrType::HDR_VIVID_SINGLE);
-            pixelMap->InnerSetColorSpace(OHOS::ColorManager::ColorSpace(ColorManager::ColorSpaceName::BT2020_HLG));
+            pixelMap->InnerSetColorSpace(OHOS::ColorManager::ColorSpace(
+                getColorSpaceInfoRes == Status::OK ? pixelMapInfo.colorSpaceName : ColorManager::BT2020_HLG));
         }
         pixelMap->SetPixelsAddr(surfaceBuffer->GetVirAddr(), surfaceBuffer.GetRefPtr(), surfaceBuffer->GetSize(),
                                 AllocatorType::DMA_ALLOC, FreeSurfaceBuffer);
@@ -716,6 +813,8 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameYuv(int64_t timeUs, in
     if (pixelMapInfo.rotation > 0) {
         pixelMap->rotate(pixelMapInfo.rotation);
     }
+
+    MEDIA_LOGI("final colorSpace %{public}u", pixelMap->InnerGetGrColorSpace().GetColorSpaceName());
 
     DumpPixelMap(isDump_, pixelMap, DUMP_FILE_NAME_AFTER_ROTATE);
     return pixelMap;
