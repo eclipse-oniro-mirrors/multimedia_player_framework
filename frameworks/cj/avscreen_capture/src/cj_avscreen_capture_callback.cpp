@@ -53,7 +53,7 @@ void CJAVScreenCaptureCallback::SendStateCallback(AVScreenCaptureStateCode state
 void CJAVScreenCaptureCallback::SaveCallbackReference(const std::string &name, int64_t callbackId)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if(name == CJAVScreenCaptureEvent::EVENT_ERROR) {
+    if (name == CJAVScreenCaptureEvent::EVENT_ERROR) {
         auto func = reinterpret_cast<void (*)(int32_t, const std::string &)>(callbackId);
         onerrorfunc = [lambda = CJLambda::Create(func)](int32_t errCode, const std::string &msg) {
             lambda(errCode, msg);
@@ -70,7 +70,7 @@ void CJAVScreenCaptureCallback::SaveCallbackReference(const std::string &name, i
 void CJAVScreenCaptureCallback::CancelCallbackReference(const std::string &name)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if(name == CJAVScreenCaptureEvent::EVENT_ERROR) {
+    if (name == CJAVScreenCaptureEvent::EVENT_ERROR) {
         onerrorfunc = nullptr;
     } else {
         onstatechangefunc = nullptr;
