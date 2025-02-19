@@ -334,7 +334,9 @@ private:
     bool isDrmProtected_ = false;
     bool isDrmPrepared_ = false;
     bool stopWaitingDrmConfig_ = false;
+#ifdef SUPPORT_AVPLAYER_DRM
     sptr<DrmStandard::IMediaKeySessionService> keySessionServiceProxy_{nullptr};
+#endif
     int32_t svpMode_ = HiplayerSvpMode::SVP_CLEAR;
 
     bool isInitialPlay_ = true;

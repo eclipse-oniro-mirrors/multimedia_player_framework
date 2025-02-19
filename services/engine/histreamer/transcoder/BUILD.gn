@@ -22,6 +22,10 @@ config("media_engine_histreamer_transcoder_config") {
     "MEDIA_OHOS",
   ]
 
+  if (player_framework_support_drm) {
+    defines += [ "SUPPORT_AVPLAYER_DRM" ]
+  }
+
   cflags = [
     "-O2",
     "-fPIC",
