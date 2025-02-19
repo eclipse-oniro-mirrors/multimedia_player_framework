@@ -50,7 +50,7 @@ extern "C" {
         fconfig.audioInfo.micCapInfo.audioSource = static_cast<AudioCaptureSourceType>(config.audioInfo.micCapInfo.audioSource);
         fconfig.audioInfo.innerCapInfo.audioSource = static_cast<AudioCaptureSourceType>(config.audioInfo.innerCapInfo.audioSource);//audioSource
         fconfig.audioInfo.audioEncInfo.audioBitrate = config.audioInfo.audioEncInfo.audioBitrate;
-        fconfig.audioInfo.audioEncInfo.audioCodecformat = static_cast<AudioCodecFormat>(config.audioInfo.micCapInfo.audioCodecformat);
+        fconfig.audioInfo.audioEncInfo.audioCodecformat = static_cast<AudioCodecFormat>(config.audioInfo.audioEncInfo.audioCodecformat);
 
         int32_t displayId = 0;
         fconfig.videoInfo.videoCapInfo.displayId = static_cast<uint64_t>(displayId);
