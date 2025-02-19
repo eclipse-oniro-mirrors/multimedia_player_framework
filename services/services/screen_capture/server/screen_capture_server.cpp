@@ -2867,12 +2867,13 @@ int32_t ScreenCaptureServer::SetMicrophoneOn()
     } else if (micAudioCapture_->GetAudioCapturerState() != CAPTURER_RECORDING) {
         MEDIA_LOGE("AudioCapturerState invalid");
     }
-    usleep(AUDIO_CHANGE_TIME);
-    if (captureConfig_.dataType == DataType::CAPTURE_FILE && innerAudioCapture_ &&
-        innerAudioCapture_->GetAudioCapturerState() == CAPTURER_RECORDING && audioSource_ &&
-        audioSource_->GetSpeakerAliveStatus() && !audioSource_->GetIsInVoIPCall()) {
-        ret = innerAudioCapture_->Pause();
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "innerAudioCapture Pause failed");
+    if (captureConfig_.dataType == DataType::CAPTURE_FILE) {
+        usleep(AUDIO_CHANGE_TIME);
+        if (innerAudioCapture_ && innerAudioCapture_->GetAudioCapturerState() == CAPTURER_RECORDING &&
+            audioSource_ && audioSource_->GetSpeakerAliveStatus() && !audioSource_->GetIsInVoIPCall()) {
+            ret = innerAudioCapture_->Pause();
+            CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "innerAudioCapture Pause failed");
+        }
     }
     return MSERR_OK;
 }
