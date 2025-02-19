@@ -15,6 +15,9 @@
 
 #ifndef RINGTONE_PLAYER_IMPL_H
 #define RINGTONE_PLAYER_IMPL_H
+#include "audio_stream_info.h"
+#include "audio_info.h"
+#include "audio_renderer.h"
 
 #include "audio_haptic_manager.h"
 #include "player.h"
@@ -55,7 +58,6 @@ private:
         const std::string& hapticsPath);
     std::string GetNewHapticUriForAudioUri(const std::string &audioUri);
     std::string GetHapticUriForAudioUri(const std::string &audioUri);
-    std::string GetDefaultNonSyncHapticsPath();
     bool IsFileExisting(const std::string &fileUri);
     std::string ChangeUri(const std::string &audioUri);
     ToneHapticsType ConvertToToneHapticsType(RingtoneType type);
@@ -66,7 +68,6 @@ private:
     void ReleaseDataShareHelper();
     int32_t RegisterSource(const std::string &audioUri, const std::string &hapticUri);
 
-    std::string defaultNonSyncHapticUri_ = "";
     float volume_ = 1.0f;
     bool loop_ = false;
     std::string configuredUri_ = "";
@@ -82,6 +83,8 @@ private:
     RingtoneState ringtoneState_ = STATE_NEW;
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper_ = nullptr;
     std::string specifyRingtoneUri_ = "";
+    std::unique_ptr<AudioStandard::AudioRenderer> audioRenderer_ {nullptr};
+    AudioStandard::AudioRendererParams rendererParams_ {};
 
     std::mutex playerMutex_;
 };

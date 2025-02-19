@@ -20,7 +20,6 @@
 #include <chrono>
 #include <shared_mutex>
 
-#include "audio_info.h"
 #include "audio_device_descriptor.h"
 #include "common/log.h"
 #include "common/media_source.h"
@@ -569,6 +568,13 @@ int32_t HiPlayerImpl::SetRenderFirstFrame(bool display)
     return TransStatus(Status::OK);
 }
 
+int32_t HiPlayerImpl::SetIsCalledBySystemApp(bool isCalledBySystemApp)
+{
+    MEDIA_LOG_I("SetIsCalledBySystemApp in, isCalledBySystemApp: " PUBLIC_LOG_D32, isCalledBySystemApp);
+    isCalledBySystemApp_ = isCalledBySystemApp;
+    return TransStatus(Status::OK);
+}
+
 int32_t HiPlayerImpl::PrepareAsync()
 {
     MediaTrace trace("HiPlayerImpl::PrepareAsync");
@@ -835,9 +841,34 @@ int32_t HiPlayerImpl::Pause(bool isSystemOperation)
     callbackLooper_.StopReportMediaProgress();
     callbackLooper_.StopCollectMaxAmplitude();
     callbackLooper_.ManualReportMediaProgressOnce();
-    OnStateChanged(PlayerStateId::PAUSE, isSystemOperation);
+    {
+        AutoLock lock(interruptMutex_);
+        OnStateChanged(PlayerStateId::PAUSE, isSystemOperation);
+        if (isSystemOperation) {
+            ReportAudioInterruptEvent();
+        }
+    }
     UpdatePlayTotalDuration();
     return TransStatus(ret);
+}
+
+void HiPlayerImpl::ReportAudioInterruptEvent()
+{
+    isHintPauseReceived_ = false;
+    if (!interruptNotifyPlay_.load()) {
+        isSaveInterruptEventNeeded_.store(false);
+        return;
+    }
+    MEDIA_LOG_I("alreay receive an interrupt end event");
+    interruptNotifyPlay_.store(false);
+    Format format;
+    int32_t hintType = interruptEvent_.hintType;
+    int32_t forceType = interruptEvent_.forceType;
+    int32_t eventType = interruptEvent_.eventType;
+    (void)format.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_TYPE, eventType);
+    (void)format.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_FORCE, forceType);
+    (void)format.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_HINT, hintType);
+    callbackLooper_.OnInfo(INFO_TYPE_INTERRUPT_EVENT, hintType, format);
 }
 
 int32_t HiPlayerImpl::PauseDemuxer()
@@ -1372,6 +1403,9 @@ int32_t HiPlayerImpl::SetLooping(bool loop)
 {
     MEDIA_LOG_I("SetLooping in, loop: " PUBLIC_LOG_D32, loop);
     singleLoop_ = loop;
+    if (audioSink_ != nullptr) {
+        audioSink_->SetLooping(loop);
+    }
     return TransStatus(Status::OK);
 }
 
@@ -2612,27 +2646,38 @@ void HiPlayerImpl::NotifySeekDone(int32_t seekPos)
 
 void HiPlayerImpl::NotifyAudioInterrupt(const Event& event)
 {
-    MEDIA_LOG_I("NotifyAudioInterrupt");
     Format format;
     auto interruptEvent = AnyCast<AudioStandard::InterruptEvent>(event.param);
     int32_t hintType = interruptEvent.hintType;
     int32_t forceType = interruptEvent.forceType;
     int32_t eventType = interruptEvent.eventType;
+    MEDIA_LOG_I("NotifyAudioInterrupt eventType: %{public}d, hintType: %{public}d, forceType: %{public}d",
+        eventType, hintType, forceType);
     if (forceType == OHOS::AudioStandard::INTERRUPT_FORCE) {
         if (hintType == OHOS::AudioStandard::INTERRUPT_HINT_PAUSE
             || hintType == OHOS::AudioStandard::INTERRUPT_HINT_STOP) {
+            isHintPauseReceived_ = true;
             Status ret = Status::OK;
             ret = pipeline_->Pause();
             syncManager_->Pause();
-            if (audioSink_ != nullptr) {
-                audioSink_->Pause();
-            }
             if (ret != Status::OK) {
                 UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
             }
             callbackLooper_.StopReportMediaProgress();
             callbackLooper_.StopCollectMaxAmplitude();
         }
+    }
+    {
+        AutoLock lock(interruptMutex_);
+        if (isSaveInterruptEventNeeded_.load() && isHintPauseReceived_
+            && eventType == OHOS::AudioStandard::INTERRUPT_TYPE_END
+            && forceType == OHOS::AudioStandard::INTERRUPT_SHARE
+            && hintType == OHOS::AudioStandard::INTERRUPT_HINT_RESUME) {
+            interruptNotifyPlay_.store(true);
+            interruptEvent_ = interruptEvent;
+            return;
+        }
+        isSaveInterruptEventNeeded_.store(true);
     }
     (void)format.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_TYPE, eventType);
     (void)format.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_FORCE, forceType);
@@ -2877,6 +2922,7 @@ Status HiPlayerImpl::LinkAudioDecoderFilter(const std::shared_ptr<Filter>& preFi
     audioDecoder_ = FilterFactory::Instance().CreateFilter<AudioDecoderFilter>("player.audiodecoder",
         FilterType::FILTERTYPE_ADEC);
     FALSE_RETURN_V(audioDecoder_ != nullptr, Status::ERROR_NULL_POINTER);
+    interruptMonitor_->RegisterListener(audioDecoder_);
     audioDecoder_->Init(playerEventReceiver_, playerFilterCallback_);
 
     audioDecoder_->SetCallerInfo(instanceId_, bundleName_);
@@ -2915,6 +2961,7 @@ Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilte
     audioSink_->Init(playerEventReceiver_, playerFilterCallback_);
     audioSink_->SetMaxAmplitudeCbStatus(maxAmplitudeCbStatus_);
     audioSink_->SetPerfRecEnabled(isPerfRecEnabled_);
+    audioSink_->SetIsCalledBySystemApp(isCalledBySystemApp_);
     if (demuxer_ != nullptr && audioRenderInfo_ == nullptr) {
         std::vector<std::shared_ptr<Meta>> trackInfos = demuxer_->GetStreamMetaInfo();
         SetDefaultAudioRenderInfo(trackInfos);

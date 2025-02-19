@@ -908,7 +908,7 @@ int32_t RecorderServiceProxy::GetMaxAmplitude()
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "GetMaxAmplitude failed, error: %{public}d", error);
     int32_t amplitude = reply.ReadInt32();
-    MEDIA_LOGI("GetMaxAmplitude amplitude result: %d", amplitude);
+    MEDIA_LOGI("GetMaxAmplitude amplitude result: %{public}d", amplitude);
     return amplitude;
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -42,6 +42,7 @@ namespace {
         {Fuzzer::SET_VOLUME, Fuzzer::SetVolumeStatic},
         {Fuzzer::SEEK, Fuzzer::SeekStatic},
         {Fuzzer::GET_CURRENT_TIME, Fuzzer::GetCurrentTimeStatic},
+        {Fuzzer::GET_PLAY_BACK_POSITION, Fuzzer::GetPlaybackPositionStatic},
         {Fuzzer::GET_DURATION, Fuzzer::GetDurationStatic},
         {Fuzzer::SET_PLAYERBACK_SPEED, Fuzzer::SetPlaybackSpeedStatic},
         {Fuzzer::GET_PLAYERBACK_SPEED, Fuzzer::GetPlaybackSpeedStatic},
@@ -435,6 +436,25 @@ int32_t PlayerServiceProxyFuzzer::GetCurrentTimeStatic(PlayerServiceProxyFuzzer*
 
     (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
     return ptr->SendRequest(GET_CURRENT_TIME, data, reply, option);
+}
+
+int32_t PlayerServiceProxyFuzzer::GetPlaybackPositionStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData,
+    size_t size, bool isFuzz)
+{
+    (void)size;
+    (void)isFuzz;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxyFuzzer::GetDescriptor());
+    if (!token) {
+        std::cout << "GetPlaybackPosition:Failed to write descriptor!" << std::endl;
+        return false;
+    }
+
+    (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
+    return ptr->SendRequest(GET_PLAY_BACK_POSITION, data, reply, option);
 }
 
 int32_t PlayerServiceProxyFuzzer::GetDurationStatic(PlayerServiceProxyFuzzer* ptr, uint8_t *inputData,

@@ -265,6 +265,7 @@ private:
     std::vector<int32_t> payloadTypes_ {};
     bool isStreamUsagePauseRequired_ = true;
     std::mutex surfaceMutex_;
+    bool isCalledBySystemApp_ = false;
 };
 } // namespace Media
 } // namespace OHOS

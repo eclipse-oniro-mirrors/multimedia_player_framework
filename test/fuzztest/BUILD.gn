@@ -31,6 +31,7 @@ group("fuzztest") {
     "player_fuzztest/playerfile_fuzzer:PlayerFileFuzzTest",
     "player_fuzztest/playermp4_fuzzer:PlayerMp4FuzzTest",
     "player_fuzztest/playerseek_fuzzer:PlayerSeekFuzzTest",
+    "player_fuzztest/playersei_fuzzer:PlayerSeiFuzzTest",
     "player_fuzztest/playerservicestub_fuzzer:PlayerServiceStubFuzzTest",
     "player_fuzztest/playersetvolume_fuzzer:PlayerSetVolumeFuzzTest",
     "player_fuzztest/playerstub_fuzzer:PlayerStubFuzzTest",

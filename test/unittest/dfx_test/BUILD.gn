@@ -66,6 +66,10 @@ ohos_unittest("player_framework_dfx_test") {
     "samgr:samgr_proxy",
   ]
 
+  if (player_framework_support_drm) {
+    external_deps += [ "drm_framework:drm_framework" ]
+  }
+
   subsystem_name = "multimedia"
   part_name = "player_framework"
 }

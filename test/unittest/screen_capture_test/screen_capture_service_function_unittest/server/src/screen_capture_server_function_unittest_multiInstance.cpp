@@ -693,5 +693,19 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckReleaseInner_001, TestSize.Level2
     ASSERT_EQ(ScreenCaptureServer::saUidAppUidMap_.size(), appInfoMapSizeBefore - 1);
     ASSERT_EQ(ScreenCaptureServer::serverMap_.size(), serverMapSizeBefore - 1);
 }
+
+/**
+* @tc.name: CheckIsIDExist_001
+* @tc.desc: CheckIsIDExist_001
+* @tc.type: FUNC
+*/
+HWTEST_F(ScreenCaptureServerFunctionTest, CheckIsIDExist_001, TestSize.Level2)
+{
+    UniqueIDGenerator gIdGenerator(20);
+    int32_t sessionId = gIdGenerator.GetNewID();
+    ASSERT_EQ(gIdGenerator.IsIDExists(sessionId), false);
+    int32_t sessionId1 = gIdGenerator.ReturnID(sessionId);
+    ASSERT_EQ(gIdGenerator.IsIDExists(sessionId1), true);
+}
 } // Media
 } // OHOS

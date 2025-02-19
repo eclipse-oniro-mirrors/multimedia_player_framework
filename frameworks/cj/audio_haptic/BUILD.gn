@@ -15,7 +15,13 @@ import("//build/ohos.gni")
 import("//build/ohos/ace/ace.gni")
 import("//foundation/multimedia/player_framework/config.gni")
 
+config("public_ffi_config") {
+  include_dirs = [ "include" ]
+}
+
 ohos_shared_library("cj_audiohaptic_ffi") {
+  public_configs = [ ":public_ffi_config" ]
+
   stack_protector_ret = true
   sanitize = {
     integer_overflow = true
