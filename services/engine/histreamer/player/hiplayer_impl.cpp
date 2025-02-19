@@ -2937,8 +2937,10 @@ Status HiPlayerImpl::LinkAudioDecoderFilter(const std::shared_ptr<Filter>& preFi
         });
         if (notTimeout && isDrmPrepared_) {
             MEDIA_LOG_I("LinkAudioDecoderFilter will SetDecryptConfig");
+#ifdef SUPPORT_AVPLAYER_DRM
             bool svpFlag = svpMode_ == HiplayerSvpMode::SVP_TRUE ? true : false;
             audioDecoder_->SetDecryptionConfig(keySessionServiceProxy_, svpFlag);
+#endif
         } else {
             MEDIA_LOG_E("HiPlayerImpl Drmcond wait timeout or has been stopped! Play drm protected audio failed!");
             return Status::ERROR_INVALID_OPERATION;
@@ -3054,8 +3056,10 @@ Status HiPlayerImpl::LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFi
             });
             if (notTimeout && isDrmPrepared_) {
                 MEDIA_LOG_I("LinkVideoDecoderFilter will SetDecryptConfig");
+#ifdef SUPPORT_AVPLAYER_DRM
                 bool svpFlag = svpMode_ == HiplayerSvpMode::SVP_TRUE ? true : false;
                 videoDecoder_->SetDecryptConfig(keySessionServiceProxy_, svpFlag);
+#endif
             } else {
                 MEDIA_LOG_E("HiPlayerImpl Drmcond wait timeout or has been stopped! Play drm protected video failed!");
                 return Status::ERROR_INVALID_OPERATION;
