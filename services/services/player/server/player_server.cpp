@@ -809,11 +809,10 @@ int32_t PlayerServer::Seek(int32_t mSeconds, PlayerSeekMode mode)
     CHECK_AND_RETURN_RET_LOG(checkRet == MSERR_OK, checkRet, "check seek faild");
 
     MEDIA_LOGD("seek position %{public}d, seek mode is %{public}d", mSeconds, mode);
-    mSeconds = std::max(0, mSeconds);
-
     if (mode == SEEK_CONTINOUS) {
         return SeekContinous(mSeconds);
     }
+    mSeconds = std::max(0, mSeconds);
     auto seekTask = std::make_shared<TaskHandler<void>>([this, mSeconds, mode]() {
         MediaTrace::TraceBegin("PlayerServer::Seek", FAKE_POINTER(this));
         MEDIA_LOGI("PlayerServer::Seek start");
@@ -1861,6 +1860,10 @@ int32_t PlayerServer::CheckSeek(int32_t mSeconds, PlayerSeekMode mode)
 
 int32_t PlayerServer::SeekContinous(int32_t mSeconds)
 {
+    if (mSeconds == -1) {
+        ExitSeekContinous(true);
+        return MSERR_OK;
+    }
     if (lastOpStatus_ == PLAYER_STARTED) {
         OnPause(true);
     }
@@ -1872,7 +1875,7 @@ int32_t PlayerServer::SeekContinous(int32_t mSeconds)
         }
     }
     int64_t seekContinousBatchNo = seekContinousBatchNo_.load();
-
+    mSeconds = std::max(0, mSeconds);
     auto seekContinousTask = std::make_shared<TaskHandler<void>>([this, mSeconds, seekContinousBatchNo]() {
         MediaTrace::TraceBegin("PlayerServer::SeekContinous", FAKE_POINTER(this));
         MEDIA_LOGI("PlayerServer::Seek start");

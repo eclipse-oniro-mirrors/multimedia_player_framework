@@ -262,6 +262,7 @@ private:
     bool IsInValidSeekTime(int32_t seekPos);
     int64_t GetPlayStartTime();
     Status StartSeekContinous();
+    void FlushVideoEOS();
     int32_t InnerSelectTrack(std::string mime, int32_t trackId, PlayerSwitchMode mode);
     bool NeedSeekClosest();
     void HandleEosFlagState(const Event& event);
