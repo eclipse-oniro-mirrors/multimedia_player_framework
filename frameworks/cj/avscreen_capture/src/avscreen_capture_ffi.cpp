@@ -40,7 +40,7 @@ extern "C" {
             return -1;
         }
         AVScreenCaptureConfig fconfig;
-        fconfig.captureSource = CaptureMode::CAPTURE_HOME_SCREEN;
+        fconfig.captureMode = CaptureMode::CAPTURE_HOME_SCREEN;
         fconfig.dataType = static_cast<DataType>(config.dataType);
         //audioInfo
         fconfig.audioInfo.micCapInfo.audioSampleRate = config.audioInfo.micCapInfo.audioSampleRate;
