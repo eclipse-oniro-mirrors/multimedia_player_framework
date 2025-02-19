@@ -3714,9 +3714,9 @@ bool AudioDataSource::HasVoIPStream(
         if (!changeInfo) {
             continue;
         }
-        MEDIA_LOGI("Client pid : %{public}d, State : %{public}d, DeviceType : %{public}d",
+        MEDIA_LOGI("Client pid : %{public}d, State : %{public}d, usage : %{public}d",
             changeInfo->clientPid, static_cast<int32_t>(changeInfo->rendererState),
-            static_cast<int32_t>(changeInfo->outputDeviceInfo.deviceType_));
+            static_cast<int32_t>(changeInfo->rendererInfo.streamUsage));
         if (changeInfo->rendererState == RendererState::RENDERER_RUNNING &&
             changeInfo->rendererInfo.streamUsage == AudioStandard::StreamUsage::STREAM_USAGE_VOICE_COMMUNICATION) {
             return true;
