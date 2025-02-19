@@ -2868,7 +2868,7 @@ int32_t ScreenCaptureServer::SetMicrophoneOn()
         MEDIA_LOGE("AudioCapturerState invalid");
     }
     usleep(AUDIO_CHANGE_TIME);
-    if (captureConfig_.dataType == DataType::CAPTURE_FILE && innerAudioCapture_ && 
+    if (captureConfig_.dataType == DataType::CAPTURE_FILE && innerAudioCapture_ &&
         innerAudioCapture_->GetAudioCapturerState() == CAPTURER_RECORDING && audioSource_ &&
         audioSource_->GetSpeakerAliveStatus() && !audioSource_->GetIsInVoIPCall()) {
         ret = innerAudioCapture_->Pause();
