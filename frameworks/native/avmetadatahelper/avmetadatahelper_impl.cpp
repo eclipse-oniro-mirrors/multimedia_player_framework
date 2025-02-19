@@ -374,6 +374,10 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::CreatePixelMapYuv(const std::sha
     pixelMapInfo.rotation = static_cast<int32_t>(rotation);
     bufferMeta->Get<Tag::VIDEO_IS_HDR_VIVID>(pixelMapInfo.isHdr);
 
+    if (pixelMapInfo.pixelFormat == PixelFormat::UNKNOWN) {
+        pixelMapInfo.pixelFormat = pixelMapInfo.isHdr ? PixelFormat::YCBCR_P010 : PixelFormat::NV12;
+    }
+
     if (frameBuffer->memory_->GetSize() != 0 && frameBuffer->memory_->GetSurfaceBuffer() == nullptr) {
         InitializationOptions options = { .size = { .width = width, .height = height },
                                           .pixelFormat = PixelFormat::NV12 };
@@ -475,7 +479,7 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::CreatePixelMapFromSurfaceBuffer(
     bool isHdr = pixelMapInfo.isHdr;
     options.srcPixelFormat = isHdr ? PixelFormat::YCBCR_P010 : PixelFormat::NV12;
     options.pixelFormat = isHdr ? PixelFormat::YCBCR_P010 : PixelFormat::NV12;
-    options.useDMA = (isHdr || pixelMapInfo.pixelFormat == PixelFormat::NV12) ? true : false;
+    options.useDMA = isHdr ? true : false;
     options.convertColorSpace.srcRange = pixelMapInfo.srcRange;
     int32_t colorLength = surfaceBuffer->GetWidth() * surfaceBuffer->GetHeight() * PIXEL_SIZE_HDR_YUV;
     colorLength = isHdr ? colorLength : colorLength / HDR_PIXEL_SIZE;

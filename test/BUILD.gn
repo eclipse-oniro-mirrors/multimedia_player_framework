@@ -34,6 +34,8 @@ group("media_unit_test") {
       "unittest/dfx_test:player_framework_dfx_test",
       "unittest/hiplayer_impl_test:hiplayer_impl_unit_test",
       "unittest/hitranscode:hitranscode_unit_test",
+      "unittest/native_avimagegenerate:native_avimagegenerator_unit_test",
+      "unittest/native_avmetadataextractor:native_avmetadataextractor_unit_test",
       "unittest/observer_test:account_observer_unit_test",
       "unittest/observer_test:incall_observer_unit_test",
       "unittest/player_server_mem_test:player_server_mem_test",
