@@ -26,7 +26,7 @@ namespace OHOS {
 namespace Media {
 SoundPoolManagerMulti::~SoundPoolManagerMulti()
 {
-    MEDIA_LOGI("Destruction SoundPoolManagerMulti.");
+    MEDIA_LOGI("Destruction SoundPoolManagerMulti");
     std::lock_guard<std::mutex> lock(mutex_);
     soundPools_.clear();
 };
@@ -42,13 +42,13 @@ int32_t SoundPoolManagerMulti::GetSoundPoolInstance(std::shared_ptr<SoundPool>& 
     std::lock_guard<std::mutex> lock(mutex_);
     uint32_t instanceNum = soundPools_.size();
     if (instanceNum >= SOUNDPOOL_INSTANCE_MAX_NUM) {
-        MEDIA_LOGI("create soundpool fail, instanceNum:%{public}u.", instanceNum);
+        MEDIA_LOGI("create soundpool fail, instanceNum:%{public}u", instanceNum);
         return MSERR_INVALID_OPERATION;
     } else {
         soundPool = std::make_shared<SoundPool>();
         soundPools_.push_back(soundPool);
         instanceNum = soundPools_.size();
-        MEDIA_LOGI("create soundpool success, instanceNum:%{public}u.", instanceNum);
+        MEDIA_LOGI("create soundpool success, instanceNum:%{public}zu", soundPools_.size());
     }
 
     return MSERR_OK;
@@ -65,7 +65,7 @@ int32_t SoundPoolManagerMulti::ReleaseInstance(std::shared_ptr<SoundPool> soundP
         }
     }
     uint32_t instanceNum = soundPools_.size();
-    MEDIA_LOGI("release soundpool after, instanceNum:%{public}u.", instanceNum);
+    MEDIA_LOGI("release soundpool after, instanceNum:%{public}zu", soundPools_.size());
     return MSERR_OK;
 }
 

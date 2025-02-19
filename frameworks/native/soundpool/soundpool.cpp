@@ -37,6 +37,7 @@ std::shared_ptr<ISoundPool> SoundPoolFactory::CreateSoundPool(int maxStreams,
         return nullptr;
     }
     int32_t apiVersion = GetAPIVersion();
+    CHECK_AND_RETURN_RET_LOG(apiVersion > 0 || apiVersion == FAULT_API_VERSION, nullptr, "invalid apiVersion");
     if (apiVersion > 0 && apiVersion < SOUNDPOOL_API_VERSION_ISOLATION) {
         MEDIA_LOGI("SoundPoolFactory::CreateSoundPool go old version");
         SoundPoolManager::GetInstance().SetSoundPool(getpid(), impl);
@@ -48,7 +49,7 @@ std::shared_ptr<ISoundPool> SoundPoolFactory::CreateSoundPool(int maxStreams,
         impl->SetApiVersion(apiVersion);
 
         return impl;
-    } else if (apiVersion == FAULT_API_VERSION || apiVersion >= SOUNDPOOL_API_VERSION_ISOLATION) {
+    } else {
         int32_t ret = SoundPoolManagerMulti::GetInstance().GetSoundPoolInstance(impl);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK && impl != nullptr, nullptr, "failed to get SoundPoolMulti");
 
@@ -57,9 +58,6 @@ std::shared_ptr<ISoundPool> SoundPoolFactory::CreateSoundPool(int maxStreams,
         impl->SetApiVersion(apiVersion);
 
         return impl;
-    } else {
-        MEDIA_LOGI("SoundPoolFactory::CreateSoundPool error apiVersion: %{public}d", apiVersion);
-        return nullptr;
     }
 }
 
