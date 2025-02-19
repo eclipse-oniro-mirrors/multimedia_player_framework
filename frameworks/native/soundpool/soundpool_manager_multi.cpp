@@ -47,7 +47,6 @@ int32_t SoundPoolManagerMulti::GetSoundPoolInstance(std::shared_ptr<SoundPool>& 
     } else {
         soundPool = std::make_shared<SoundPool>();
         soundPools_.push_back(soundPool);
-        instanceNum = soundPools_.size();
         MEDIA_LOGI("create soundpool success, instanceNum:%{public}zu", soundPools_.size());
     }
 
@@ -60,11 +59,11 @@ int32_t SoundPoolManagerMulti::ReleaseInstance(std::shared_ptr<SoundPool> soundP
     for (auto it = soundPools_.begin(); it != soundPools_.end();) {
         if (*it == soundPool) {
             it = soundPools_.erase(it);
+            break;
         } else {
             ++it;
         }
     }
-    uint32_t instanceNum = soundPools_.size();
     MEDIA_LOGI("release soundpool after, instanceNum:%{public}zu", soundPools_.size());
     return MSERR_OK;
 }
