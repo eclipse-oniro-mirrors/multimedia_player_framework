@@ -2232,7 +2232,8 @@ void HiPlayerImpl::OnEventSub(const Event &event)
             break;
         }
         case EventType::EVENT_CACHED_DURATION: {
-            NotifyCachedDuration(AnyCast<int32_t>(event.param));
+            int32_t cachedDuration = AnyCast<int32_t>(event.param);
+            NotifyCachedDuration(AdjustCachedDuration(cachedDuration));
             break;
         }
         case EventType::EVENT_BUFFER_PROGRESS: {
@@ -2263,6 +2264,22 @@ void HiPlayerImpl::OnEventSubTrackChange(const Event &event)
         default:
             break;
     }
+}
+
+int32_t HiPlayerImpl::AdjustCachedDuration(int32_t cachedDuration)
+{
+    int32_t durationMs = durationMs_.load();
+    FALSE_RETURN_V_NOLOG(durationMs > 0, cachedDuration);
+    int32_t currentTime = 0;
+    int32_t res = GetCurrentTime(currentTime);
+    FALSE_RETURN_V_NOLOG(res == MSERR_OK && currentTime > 0, std::min(cachedDuration, durationMs));
+    int64_t remaining  = static_cast<int64_t>(durationMs) - static_cast<int64_t>(currentTime);
+    int32_t safeRemaining = static_cast<int32_t>(std::clamp(
+        remaining,
+        static_cast<int64_t>(0),
+        static_cast<int64_t>(durationMs)
+    ));
+    return std::min(cachedDuration, safeRemaining);
 }
 
 void HiPlayerImpl::HandleInitialPlayingStateChange(const EventType& eventType)
