@@ -2867,11 +2867,13 @@ int32_t ScreenCaptureServer::SetMicrophoneOn()
     } else if (micAudioCapture_->GetAudioCapturerState() != CAPTURER_RECORDING) {
         MEDIA_LOGE("AudioCapturerState invalid");
     }
-    usleep(AUDIO_CHANGE_TIME);
-    if (innerAudioCapture_ && innerAudioCapture_->GetAudioCapturerState() == CAPTURER_RECORDING &&
-        audioSource_ && audioSource_->GetSpeakerAliveStatus() && !audioSource_->GetIsInVoIPCall()) {
-        ret = innerAudioCapture_->Pause();
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "innerAudioCapture Pause failed");
+    if (captureConfig_.dataType == DataType::CAPTURE_FILE) {
+        usleep(AUDIO_CHANGE_TIME);
+        if (innerAudioCapture_ && innerAudioCapture_->GetAudioCapturerState() == CAPTURER_RECORDING &&
+            audioSource_ && audioSource_->GetSpeakerAliveStatus() && !audioSource_->GetIsInVoIPCall()) {
+            ret = innerAudioCapture_->Pause();
+            CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "innerAudioCapture Pause failed");
+        }
     }
     return MSERR_OK;
 }
@@ -3713,9 +3715,9 @@ bool AudioDataSource::HasVoIPStream(
         if (!changeInfo) {
             continue;
         }
-        MEDIA_LOGI("Client pid : %{public}d, State : %{public}d, DeviceType : %{public}d",
+        MEDIA_LOGI("Client pid : %{public}d, State : %{public}d, usage : %{public}d",
             changeInfo->clientPid, static_cast<int32_t>(changeInfo->rendererState),
-            static_cast<int32_t>(changeInfo->outputDeviceInfo.deviceType_));
+            static_cast<int32_t>(changeInfo->rendererInfo.streamUsage));
         if (changeInfo->rendererState == RendererState::RENDERER_RUNNING &&
             changeInfo->rendererInfo.streamUsage == AudioStandard::StreamUsage::STREAM_USAGE_VOICE_COMMUNICATION) {
             return true;
