@@ -27,7 +27,7 @@ extern "C" {
         return CJAVScreenCapture::CreateAVScreenCaptureRecorder(errorcode);
     }
 
-    int32_t FfiAVScreenCaptureinit(int64_t id, AVScreenCaptureConfig config)
+    int32_t FfiAVScreenCaptureinit(int64_t id, CAVScreenCaptureConfig config)
     {
         auto cjAVScreenCapture = FFIData::GetData<CJAVScreenCapture>(id);
         if (!cjAVScreenCapture) {
@@ -39,7 +39,35 @@ extern "C" {
             MEDIA_LOGE("[CJAVScreenCapture] screenCapture_ is nullptr!");
             return -1;
         }
-        return cjAVScreenCapture->AVScreenCaptureinit(screenCapture, config);
+        AVScreenCaptureConfig fconfig;
+        fconfig.captureSource = CaptureMode::CAPTURE_HOME_SCREEN;
+        fconfig.dataType = static_cast<DataType>(config.dataType);
+        //audioInfo
+        fconfig.audioInfo.micCapInfo.audioSampleRate = config.audioInfo.micCapInfo.audioSampleRate;
+        fconfig.audioInfo.innerCapInfo.audioSampleRate = config.audioInfo.innerCapInfo.audioSampleRate;//audioSampleRate
+        fconfig.audioInfo.micCapInfo.audioChannels = config.audioInfo.micCapInfo.audioChannels;
+        fconfig.audioInfo.innerCapInfo.audioChannels = config.audioInfo.innerCapInfo.audioChannels;//audioChannels
+        fconfig.audioInfo.micCapInfo.audioSource = static_cast<AudioCaptureSourceType>(config.audioInfo.micCapInfo.audioSource);
+        fconfig.audioInfo.innerCapInfo.audioSource = static_cast<AudioCaptureSourceType>(config.audioInfo.innerCapInfo.audioSource);//audioSource
+        fconfig.audioInfo.audioEncInfo.audioBitrate = config.audioInfo.audioEncInfo.audioBitrate;
+        fconfig.audioInfo.audioEncInfo.audioCodecformat = static_cast<AudioCodecFormat>(config.audioInfo.micCapInfo.audioCodecformat);
+
+        int32_t displayId = 0;
+        fconfig.videoInfo.videoCapInfo.displayId = static_cast<uint64_t>(displayId);
+        fconfig.videoInfo.videoCapInfo.videoFrameHeight = config.videoInfo.videoCapInfo.videoFrameHeight;
+        fconfig.videoInfo.videoCapInfo.videoFrameWidth = config.videoInfo.videoCapInfo.videoFrameWidth;
+        fconfig.videoInfo.videoCapInfo.videoSource = static_cast<VideoSourceType>(config.videoInfo.videoCapInfo.videoSource);
+
+        fconfig.videoInfo.videoEncInfo.videoCodec = static_cast<VideoCodecFormat>(config.videoInfo.videoEncInfo.videoCodec);
+        fconfig.videoInfo.videoEncInfo.videoBitrate = config.videoInfo.videoEncInfo.videoBitrate;
+        int32_t AVSCREENCAPTURE_DEFAULT_VIDEO_FRAME_RATE = 60;
+        fconfig.videoInfo.videoEncInfo.videoFrameRate = AVSCREENCAPTURE_DEFAULT_VIDEO_FRAME_RATE;
+
+        std::string AVSCREENCAPTURE_DEFAULT_FILE_FORMAT = "mp4";
+        fconfig.recorderInfo.fileFormat = AVSCREENCAPTURE_DEFAULT_FILE_FORMAT;
+        fconfig.recorderInfo.url = config.recorderInfo.url;
+        
+        return cjAVScreenCapture->AVScreenCaptureinit(screenCapture, fconfig);
     }
 
     int32_t FfiAVScreenCaptureStartRecording(int64_t id)

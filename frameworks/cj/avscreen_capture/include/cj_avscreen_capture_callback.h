@@ -49,7 +49,8 @@ protected:
     }
 private:
     std::mutex mutex_;
-    std::map<std::string, int64_t> refMap_;
+    std::function<void(AVScreenCaptureStateCode)> onstatechangefunc;
+    std::function<void(int32_t, const std::string &)> onerrorfunc;
 };
 }
 }
