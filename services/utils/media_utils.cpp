@@ -65,7 +65,6 @@ std::mutex readSysParaMapMtx_;
 static std::unordered_map<std::string, std::string> g_readSysParaMap;
 static int32_t FAULT_API_VERSION = -1;
 static int32_t ROUND_VERSION_NUMBER = 100;
-static int32_t g_decimal = 10;
 }  // namespace
 
 std::string __attribute__((visibility("default"))) GetClientBundleName(int32_t uid)
@@ -100,22 +99,6 @@ std::string __attribute__((visibility("default"))) GetClientBundleName(int32_t u
     MEDIA_LOG_I("bundle name is %{public}s uid is %{public}d", bundleName.c_str(), uid);
 
     return bundleName;
-}
-
-bool __attribute__((visibility("default"))) StrToULL(const std::string &str, uint64_t &value)
-{
-    CHECK_AND_RETURN_RET(!str.empty() && (isdigit(str.front())), false);
-    std::string valStr(str);
-    char* end = nullptr;
-    errno = 0;
-    unsigned long long result = strtoull(valStr.c_str(), &end, g_decimal);
-    // end will not be nullptr here
-    CHECK_AND_RETURN_RET_LOG(result <= ULLONG_MAX, false,
-        "call StrToULL func false,  input str is: %{public}s!", valStr.c_str());
-    CHECK_AND_RETURN_RET_LOG(end != valStr.c_str() && end[0] == '\0' && errno != ERANGE, false,
-        "call StrToULL func false,  input str is: %{public}s!", valStr.c_str());
-    value = result;
-    return true;
 }
 
 int32_t __attribute__((visibility("default"))) GetApiInfo(int32_t uid)
