@@ -63,6 +63,7 @@ constexpr int32_t AVRECORDER_DEFAULT_FRAME_HEIGHT = -1;
 constexpr int32_t AVRECORDER_DEFAULT_FRAME_WIDTH = -1;
 constexpr int32_t AVRECORDER_DEFAULT_FRAME_RATE = 30;
 constexpr int32_t INVALID_AV_VALUE = -1;
+constexpr int32_t ERROR_CODE_INVALID_PARAM = 401;
 
 const std::map<std::string, std::vector<std::string>> STATE_CTRL_LIST = {
     {CjAVRecorderState::STATE_IDLE, {
@@ -181,7 +182,7 @@ private:
     std::shared_ptr<Recorder> recorder_ = nullptr; //
     std::map<MetaSourceType, int32_t> metaSourceIDMap_;
     sptr<Surface> surface_ = nullptr;
-    int32_t surfaceId_ = -1;
+    uint64_t surfaceId_ = 0;
     std::mutex mutex_;
     std::string currentState_ = CjAVRecorderState::STATE_IDLE; // set callback
     std::shared_ptr<CjAVRecorderConfig> config_ = nullptr;

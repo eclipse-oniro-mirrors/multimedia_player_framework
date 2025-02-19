@@ -47,6 +47,9 @@ constexpr int32_t AVRECORDER_RELEASE = 7;
 
 int64_t CjAVRecorder::CreateAVRecorder(int32_t *errCode)
 {
+    if (!errCode) {
+        return 0;
+    }
     auto cjAVRecorder = FFIData::Create<CjAVRecorder>();
     if (!cjAVRecorder) {
         *errCode = MSERR_NO_MEMORY;
@@ -66,6 +69,7 @@ int64_t CjAVRecorder::CreateAVRecorder(int32_t *errCode)
         *errCode = MSERR_NO_MEMORY;
         return 0;
     }
+    *errCode = MSERR_OK;
     cjAVRecorder->recorder_->SetRecorderCallback(cjAVRecorder->recorderCb_);
     return cjAVRecorder->GetID();
 }
@@ -473,7 +477,7 @@ RetInfo CjAVRecorder::SetAVConfigParams()
     if (config_->withAudio) {
         ret = recorder_->SetAudioSource(config_->audioSourceType, audioSourceID_);
         if (ret != MSERR_OK) {
-            return GetRetInfo(ret, "SetVideoSource", "audioSourceType");
+            return GetRetInfo(ret, "SetAudioSource", "audioSourceType");
         }
     }
 
@@ -526,6 +530,10 @@ void CjAVRecorder::RemoveSurface()
 
 char *CjAVRecorder::GetInputSurface(int32_t *errCode)
 {
+    if (!errCode) {
+        return nullptr;
+    }
+    *errCode = MSERR_OK;
     RetInfo result = ExecuteOptTask(CjAVRecordergOpt::GETINPUTSURFACE);
     if (result.first != MSERR_OK) {
         MEDIA_LOGE("getInputSurface failed, errCode %{public}d, errMsg %{public}s",
@@ -594,6 +602,10 @@ CAVRecorderConfig CjAVRecorder::GetAVRecorderConfig(int32_t *errCode)
 {
     const std::string &opt = CjAVRecordergOpt::GET_AV_RECORDER_CONFIG;
     CAVRecorderConfig retConfig = {};
+    if (!errCode) {
+        MEDIA_LOGE("Nullptr");
+        return retConfig;
+    }
     RetInfo retInfo = RetInfo(MSERR_OK, "");
     if (!config_ || !recorder_) {
         retInfo = GetRetInfo(MSERR_INVALID_OPERATION, "GetAVRecorderConfig", "");
@@ -604,11 +616,10 @@ CAVRecorderConfig CjAVRecorder::GetAVRecorderConfig(int32_t *errCode)
     if (CheckStateMachine(opt) == MSERR_OK && DoGetAVRecorderConfig(config_) == MSERR_OK) {
         int32_t ret = ToCAVRecorderConfig(retConfig);
         retInfo = GetRetInfo(ret, "GetAVRecorderConfig", "");
-        *errCode = retInfo.first;
     } else {
         retInfo = GetRetInfo(MSERR_INVALID_OPERATION, "GetAVRecorderConfig", "", "CheckStateMachine failed");
-        *errCode = retInfo.first;
     }
+    *errCode = retInfo.first;
     return retConfig;
 }
 
@@ -673,6 +684,10 @@ int32_t CjAVRecorder::GetAudioCapturerMaxAmplitude(int32_t *errCode)
     const std::string &opt = CjAVRecordergOpt::GET_MAX_AMPLITUDE;
     RetInfo ret = RetInfo(MSERR_OK, "");
     int32_t retMaxAmplitude = -1;
+    if (!errCode) {
+        return retMaxAmplitude;
+    }
+    *errCode = MSERR_OK;
     if (!recorder_) {
         MEDIA_LOGE("recorder_ is nullptr!");
         ret = GetRetInfo(MSERR_INVALID_OPERATION, "GetAudioCapturerMaxAmplitude", "", "recorder_ is nullptr");
@@ -692,8 +707,12 @@ void CjAVRecorder::UpdateRotation(int32_t rotation, int32_t *errCode)
 {
     const std::string &opt = CjAVRecordergOpt::SET_ORIENTATION_HINT;
     RetInfo ret = RetInfo(MSERR_OK, "");
+    if (!errCode) {
+        MEDIA_LOGE("Param nullptr!");
+        return;
+    }
     *errCode = MSERR_OK;
-    if (!recorder_ && !config_) {
+    if (!recorder_ || !config_) {
         ret = GetRetInfo(MSERR_INVALID_OPERATION, "UpdateRotation", "", "nullptr");
         *errCode = ret.first;
         return;
