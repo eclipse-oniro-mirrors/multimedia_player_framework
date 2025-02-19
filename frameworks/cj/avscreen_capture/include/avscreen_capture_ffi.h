@@ -23,8 +23,61 @@
 namespace OHOS {
 namespace Media {
 extern "C" {
+struct CAudioCaptureInfo {
+    int32_t audioSampleRate;
+    int32_t audioChannels;
+    int32_t audioSource;
+    int32_t state;
+};
+
+struct CVideoCaptureInfo {
+    std::uint64_t displayId;
+    CArrI32 taskIDs;
+    int32_t videoFrameWidth;
+    int32_t videoFrameHeight;
+    int32_t videoSource;
+    int32_t state;
+};
+
+struct CVideoEncInfo {
+    int32_t videoCodec;
+    int32_t videoBitrate;
+    int32_t videoFrameRate;
+    int32_t state;
+};
+
+struct CVideoInfo {
+    CVideoCaptureInfo videoCapInfo;
+    CVideoEncInfo videoEncInfo;
+};
+
+struct CAudioEncInfo {
+    int32_t audioBitrate;
+    int32_t audioCodecformat;
+    int32_t state;
+};
+
+struct CAudioInfo {
+    CAudioCaptureInfo micCapInfo;
+    CAudioCaptureInfo innerCapInfo;
+    CAudioEncInfo audioEncInfo;
+};
+
+struct CRecorderInfo {
+    char* url;
+    char* fileFormat;
+};
+
+struct CAVScreenCaptureConfig {
+    int32_t captureMode;
+    int32_t dataType;
+    CAudioInfo audioInfo;
+    CVideoInfo videoInfo;
+    CRecorderInfo recorderInfo;
+};
+
 FFI_EXPORT int64_t FfiAVScreenCaptureCreateAVScreenCaptureRecorder(int32_t* errorcode);
-FFI_EXPORT int32_t FfiAVScreenCaptureinit(int64_t id, AVScreenCaptureConfig config);
+FFI_EXPORT int32_t FfiAVScreenCaptureinit(int64_t id, CAVScreenCaptureConfig config);
 FFI_EXPORT int32_t FfiAVScreenCaptureStartRecording(int64_t id);
 FFI_EXPORT int32_t FfiAVScreenCaptureStopRecording(int64_t id);
 FFI_EXPORT int32_t FfiAVScreenCaptureSkipPrivacyMode(int64_t id, CArrUnit windowIDsVec);

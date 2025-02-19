@@ -33,44 +33,47 @@ CJAVScreenCaptureCallback::~CJAVScreenCaptureCallback()
 void CJAVScreenCaptureCallback::SendErrorCallback(int32_t errCode, const std::string &msg)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (refMap_.find(CJAVScreenCaptureEvent::EVENT_ERROR) == refMap_.end()) {
+    if (onerrorfunc == nullptr) {
         MEDIA_LOGW("can not find error callback!");
         return;
     }
-
-    int64_t callbackId = refMap_.at(CJAVScreenCaptureEvent::EVENT_ERROR);
-    auto func = reinterpret_cast<void (*)(int32_t, const std::string &)>(callbackId);
-    auto handler = CJLambda::Create(func);
-    handler(errCode, msg);
+    onerrorfunc(errCode, msg);
 }
 
 void CJAVScreenCaptureCallback::SendStateCallback(AVScreenCaptureStateCode stateCode)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (refMap_.find(CJAVScreenCaptureEvent::EVENT_STATE_CHANGE) == refMap_.end()) {
+    if (onstatechangefunc == nullptr) {
         MEDIA_LOGW("can not find stateChange callback!");
         return;
     }
-
-    int64_t callbackId = refMap_.at(CJAVScreenCaptureEvent::EVENT_STATE_CHANGE);
-    auto func = reinterpret_cast<void (*)(AVScreenCaptureStateCode)>(callbackId);
-    auto handler = CJLambda::Create(func);
-    handler(stateCode);
+    onstatechangefunc(stateCode);
 }
 
 void CJAVScreenCaptureCallback::SaveCallbackReference(const std::string &name, int64_t callbackId)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    refMap_[name] = callbackId;
+    if (name == CJAVScreenCaptureEvent::EVENT_ERROR) {
+        auto func = reinterpret_cast<void (*)(int32_t, const std::string &)>(callbackId);
+        onerrorfunc = [lambda = CJLambda::Create(func)](int32_t errCode, const std::string &msg) {
+            lambda(errCode, msg);
+        };
+    } else {
+        auto func = reinterpret_cast<void (*)(AVScreenCaptureStateCode)>(callbackId);
+        onstatechangefunc = [lambda = CJLambda::Create(func)](AVScreenCaptureStateCode stateCode) {
+            lambda(stateCode);
+        };
+    }
     MEDIA_LOGI("Set callback type: %{public}s", name.c_str());
 }
 
 void CJAVScreenCaptureCallback::CancelCallbackReference(const std::string &name)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    auto iter = refMap_.find(name);
-    if (iter != refMap_.end()) {
-        refMap_.erase(iter);
+    if (name == CJAVScreenCaptureEvent::EVENT_ERROR) {
+        onerrorfunc = nullptr;
+    } else {
+        onstatechangefunc = nullptr;
     }
     MEDIA_LOGI("Cancel callback type: %{public}s", name.c_str());
 }
@@ -78,7 +81,8 @@ void CJAVScreenCaptureCallback::CancelCallbackReference(const std::string &name)
 void CJAVScreenCaptureCallback::ClearCallbackReference()
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    refMap_.clear();
+    onerrorfunc = nullptr;
+    onstatechangefunc = nullptr;
     MEDIA_LOGI("ClearCallback!");
 }
 
