@@ -16,8 +16,6 @@
 #ifndef JS_COMMON_UTILS_H
 #define JS_COMMON_UTILS_H
 #include <string>
-#include <vector>
-#include <unordered_map>
 
 namespace OHOS {
 namespace Media {
