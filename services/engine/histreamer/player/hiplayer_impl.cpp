@@ -2791,6 +2791,7 @@ void HiPlayerImpl::HandleAudioTrackChangeEvent(const Event& event)
             MEDIA_LOG_E("HandleAudioTrackChangeEvent audioDecoder change plugin error");
             return;
         }
+        audioSink_->RecordChangeTrack();
         if (IsNeedAudioSinkChangeTrack(metaInfo, trackId)) {
             MEDIA_LOG_I("AudioSink changeTrack in");
             if (Status::OK != audioSink_->ChangeTrack(metaInfo[trackId])) {
@@ -3221,6 +3222,8 @@ int32_t HiPlayerImpl::ExitSeekContinous(bool align, int64_t seekContinousBatchNo
         TransStatus(Status::OK), "Invalid lastSeekContinousPos_: %{public}" PRId64, lastSeekContinousPos_);
     syncManager_->Seek(seekTimeUs, true);
     if (align) {
+        audioSink_->DoFlush();
+        audioDecoder_->DoFlush();
         seekAgent_ = std::make_shared<SeekAgent>(demuxer_);
         interruptMonitor_->RegisterListener(seekAgent_);
         audioSink_->Flush();
