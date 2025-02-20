@@ -734,6 +734,13 @@ void HiPlayerImpl::SetInterruptState(bool isInterruptNeeded)
     if (interruptMonitor_) {
         interruptMonitor_->SetInterruptState(isInterruptNeeded);
     }
+    if (isDrmProtected_) {
+        std::unique_lock<std::mutex> drmLock(drmMutex_);
+        stopWaitingDrmConfig_ = true;
+        drmConfigCond_.notify_all();
+    }
+    std::unique_lock<std::mutex> lock(seekMutex_);
+    syncManager_->seekCond_.notify_all();
 }
 
 int32_t HiPlayerImpl::SelectBitRate(uint32_t bitRate)
@@ -904,12 +911,6 @@ int32_t HiPlayerImpl::Stop()
     MediaTrace trace("HiPlayerImpl::Stop");
     MEDIA_LOG_I("Stop entered.");
 
-    // triger drm waiting condition
-    if (isDrmProtected_) {
-        std::unique_lock<std::mutex> drmLock(drmMutex_);
-        stopWaitingDrmConfig_ = true;
-        drmConfigCond_.notify_all();
-    }
     AutoLock lock(handleCompleteMutex_);
     UpdatePlayStatistics();
     callbackLooper_.StopReportMediaProgress();
@@ -2623,7 +2624,7 @@ void HiPlayerImpl::NotifySeekDone(int32_t seekPos)
             lock,
             std::chrono::milliseconds(PLAYING_SEEK_WAIT_TIME),
             [this]() {
-                return !syncManager_->InSeeking();
+                return !syncManager_->InSeeking() || isInterruptNeeded_.load();
             });
     }
     auto startTime = std::chrono::steady_clock::now();
@@ -2963,7 +2964,7 @@ Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilte
     audioSink_ = FilterFactory::Instance().CreateFilter<AudioSinkFilter>("player.audiosink",
         FilterType::FILTERTYPE_ASINK);
     FALSE_RETURN_V(audioSink_ != nullptr, Status::ERROR_NULL_POINTER);
-    audioSink_->Init(playerEventReceiver_, playerFilterCallback_);
+    audioSink_->Init(playerEventReceiver_, playerFilterCallback_, interruptMonitor_);
     audioSink_->SetMaxAmplitudeCbStatus(maxAmplitudeCbStatus_);
     audioSink_->SetPerfRecEnabled(isPerfRecEnabled_);
     audioSink_->SetIsCalledBySystemApp(isCalledBySystemApp_);
@@ -3088,7 +3089,7 @@ Status HiPlayerImpl::LinkSubtitleSinkFilter(const std::shared_ptr<Filter>& preFi
     subtitleSink_ = FilterFactory::Instance().CreateFilter<SubtitleSinkFilter>("player.subtitlesink",
         FilterType::FILTERTYPE_SSINK);
     FALSE_RETURN_V(subtitleSink_ != nullptr, Status::ERROR_NULL_POINTER);
-    subtitleSink_->Init(playerEventReceiver_, playerFilterCallback_);
+    subtitleSink_->Init(playerEventReceiver_, playerFilterCallback_, interruptMonitor_);
     std::shared_ptr<Meta> globalMeta = std::make_shared<Meta>();
     if (demuxer_ != nullptr) {
         globalMeta = demuxer_->GetGlobalMetaInfo();
