@@ -1529,7 +1529,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnTelCallStateChanged_001, TestSize.Le
     screenCaptureServer_->SetMicrophoneEnabled(true);
     ASSERT_EQ(StartFileAudioCapture(AVScreenCaptureMixMode::MIX_MODE), MSERR_OK);
     screenCaptureServer_->appName_ = HiviewCareBundleName;
-    ASSERT_EQ(screenCaptureServer_->OnTelCallStateChanged(true), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->TelCallStateUpdated(true), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->TelCallAudioStateUpdated(true), MSERR_OK);
     sleep(RECORDER_TIME);
     ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
 }
@@ -1547,9 +1548,11 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnTelCallStateChanged_002, TestSize.Le
     ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
     screenCaptureServer_->SetMicrophoneEnabled(true);
     ASSERT_EQ(StartFileAudioCapture(AVScreenCaptureMixMode::MIX_MODE), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->OnTelCallStateChanged(true), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->TelCallStateUpdated(true), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->TelCallAudioStateUpdated(true), MSERR_OK);
     sleep(RECORDER_TIME);
-    ASSERT_EQ(screenCaptureServer_->OnTelCallStateChanged(false), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->TelCallStateUpdated(false), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->TelCallAudioStateUpdated(false), MSERR_OK);
     sleep(RECORDER_TIME);
     ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
 }
@@ -1567,9 +1570,11 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnTelCallStateChanged_003, TestSize.Le
     ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
     screenCaptureServer_->SetMicrophoneEnabled(false);
     ASSERT_EQ(StartFileAudioCapture(AVScreenCaptureMixMode::MIX_MODE), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->OnTelCallStateChanged(true), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->TelCallStateUpdated(true), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->TelCallAudioStateUpdated(true), MSERR_OK);
     sleep(RECORDER_TIME);
-    ASSERT_EQ(screenCaptureServer_->OnTelCallStateChanged(false), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->TelCallStateUpdated(false), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->TelCallAudioStateUpdated(false), MSERR_OK);
     sleep(RECORDER_TIME);
     ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
 }
@@ -1586,9 +1591,11 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnTelCallStateChanged_004, TestSize.Le
     ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
     sleep(RECORDER_TIME);
     screenCaptureServer_->SetMicrophoneEnabled(true);
-    ASSERT_EQ(screenCaptureServer_->OnTelCallStateChanged(true), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->TelCallStateUpdated(true), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->TelCallAudioStateUpdated(true), MSERR_OK);
     sleep(RECORDER_TIME);
-    ASSERT_EQ(screenCaptureServer_->OnTelCallStateChanged(false), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->TelCallStateUpdated(false), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->TelCallAudioStateUpdated(false), MSERR_OK);
     sleep(RECORDER_TIME);
     ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
 }
@@ -1605,9 +1612,11 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnTelCallStateChanged_005, TestSize.Le
     ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
     sleep(RECORDER_TIME);
     screenCaptureServer_->SetMicrophoneEnabled(true);
-    ASSERT_EQ(screenCaptureServer_->OnTelCallStateChanged(false), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->TelCallStateUpdated(false), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->TelCallAudioStateUpdated(false), MSERR_OK);
     sleep(RECORDER_TIME);
-    ASSERT_EQ(screenCaptureServer_->OnTelCallStateChanged(false), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->TelCallStateUpdated(false), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->TelCallAudioStateUpdated(false), MSERR_OK);
     sleep(RECORDER_TIME);
     ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
 }
@@ -1624,9 +1633,11 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnTelCallStateChanged_006, TestSize.Le
     ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
     sleep(RECORDER_TIME);
     screenCaptureServer_->SetMicrophoneEnabled(true);
-    ASSERT_EQ(screenCaptureServer_->OnTelCallStateChanged(true), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->TelCallStateUpdated(true), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->TelCallAudioStateUpdated(true), MSERR_OK);
     sleep(RECORDER_TIME);
-    ASSERT_EQ(screenCaptureServer_->OnTelCallStateChanged(true), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->TelCallStateUpdated(true), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->TelCallAudioStateUpdated(true), MSERR_OK);
     sleep(RECORDER_TIME);
     ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
 }

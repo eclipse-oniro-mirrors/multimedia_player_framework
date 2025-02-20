@@ -2869,11 +2869,13 @@ int32_t ScreenCaptureServer::SetMicrophoneOn()
     } else if (micAudioCapture_->GetAudioCapturerState() != CAPTURER_RECORDING) {
         MEDIA_LOGE("AudioCapturerState invalid");
     }
-    usleep(AUDIO_CHANGE_TIME);
-    if (innerAudioCapture_ && innerAudioCapture_->GetAudioCapturerState() == CAPTURER_RECORDING &&
-        audioSource_ && audioSource_->GetSpeakerAliveStatus() && !audioSource_->GetIsInVoIPCall()) {
-        ret = innerAudioCapture_->Pause();
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "innerAudioCapture Pause failed");
+    if (captureConfig_.dataType == DataType::CAPTURE_FILE) {
+        usleep(AUDIO_CHANGE_TIME);
+        if (innerAudioCapture_ && innerAudioCapture_->GetAudioCapturerState() == CAPTURER_RECORDING &&
+            audioSource_ && audioSource_->GetSpeakerAliveStatus() && !audioSource_->GetIsInVoIPCall()) {
+            ret = innerAudioCapture_->Pause();
+            CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "innerAudioCapture Pause failed");
+        }
     }
     return MSERR_OK;
 }
@@ -2949,13 +2951,31 @@ int32_t ScreenCaptureServer::OnVoIPStatusChanged(bool isInVoIPCall)
 }
 
 #ifdef SUPPORT_CALL
-int32_t ScreenCaptureServer::OnTelCallStateChanged(bool isInTelCall)
+int32_t ScreenCaptureServer::TelCallStateUpdated(bool isInTelCall)
+{
+    if (isInTelCall_ == isInTelCall) {
+        return MSERR_OK;
+    }
+    isInTelCall_ = isInTelCall;
+    return OnTelCallStateChanged();
+}
+
+int32_t ScreenCaptureServer::TelCallAudioStateUpdated(bool isInTelCallAudio)
+{
+    if (isInTelCallAudio_ == isInTelCallAudio) {
+        return MSERR_OK;
+    }
+    isInTelCallAudio_ = isInTelCallAudio;
+    return OnTelCallStateChanged();
+}
+
+int32_t ScreenCaptureServer::OnTelCallStateChanged()
 {
     int32_t ret = MSERR_OK;
     if (IsTelInCallSkipList()) {
         return ret;
     }
-    if (isInTelCall) {
+    if (isInTelCall_ || isInTelCallAudio_) {
         if (innerAudioCapture_ && innerAudioCapture_->GetAudioCapturerState() == CAPTURER_PAUSED) {
             ret = innerAudioCapture_->Resume();
             CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "innerAudioCapture Resume failed");
@@ -2973,11 +2993,7 @@ int32_t ScreenCaptureServer::OnTelCallStateChanged(bool isInTelCall)
             micAudioCapture_->SetIsInTelCall(false);
             if (isMicrophoneSwitchTurnOn_ && micAudioCapture_->GetAudioCapturerState() == CAPTURER_PAUSED) {
                 ret = micAudioCapture_->Resume();
-                if (ret != MSERR_OK) {
-                    MEDIA_LOGE("micAudioCapture Resume failed");
-                    NotifyStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE);
-                    return ret;
-                }
+                CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "micAudioCapture Resume failed");
             }
         }
         if (!micAudioCapture_ && isMicrophoneSwitchTurnOn_) {
@@ -2989,11 +3005,13 @@ int32_t ScreenCaptureServer::OnTelCallStateChanged(bool isInTelCall)
                 CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartFileMicAudioCapture failed");
             }
         }
-        usleep(AUDIO_CHANGE_TIME);
-        if (innerAudioCapture_ && innerAudioCapture_->GetAudioCapturerState() == CAPTURER_RECORDING &&
-            audioSource_ && audioSource_->GetSpeakerAliveStatus() && !audioSource_->GetIsInVoIPCall()) {
-            ret = innerAudioCapture_->Pause();
-            CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "innerAudioCapture Pause failed");
+        if (captureConfig_.dataType == DataType::CAPTURE_FILE) {
+            usleep(AUDIO_CHANGE_TIME);
+            if (innerAudioCapture_ && innerAudioCapture_->GetAudioCapturerState() == CAPTURER_RECORDING &&
+                audioSource_ && audioSource_->GetSpeakerAliveStatus() && !audioSource_->GetIsInVoIPCall()) {
+                ret = innerAudioCapture_->Pause();
+                CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "innerAudioCapture Pause failed");
+            }
         }
     }
     return MSERR_OK;
@@ -3468,7 +3486,7 @@ bool ScreenCaptureObserverCallBack::TelCallStateUpdated(bool isInCall)
 {
     MEDIA_LOGI("ScreenCaptureObserverCallBack::TelCallStateUpdated");
     auto scrServer = screenCaptureServer_.lock();
-    (void)scrServer->OnTelCallStateChanged(isInCall);
+    (void)scrServer->TelCallStateUpdated(isInCall);
     return true;
 }
 
@@ -3708,6 +3726,9 @@ void ScreenRendererAudioStateChangeCallback::OnRendererStateChange(
     MEDIA_LOGD("ScreenRendererAudioStateChangeCallback IN");
     CHECK_AND_RETURN(audioSource_ != nullptr);
     audioSource_->SpeakerStateUpdate(audioRendererChangeInfos);
+#ifdef SUPPORT_CALL
+    audioSource_->TelCallAudioStateUpdate(audioRendererChangeInfos);
+#endif
     std::string region = Global::I18n::LocaleConfig::GetSystemRegion();
     if (GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"]
             .compare(appName_) == 0 && region == "CN") {
@@ -3737,6 +3758,29 @@ void AudioDataSource::SpeakerStateUpdate(
         }
     }
 }
+
+#ifdef SUPPORT_CALL
+void AudioDataSource::TelCallAudioStateUpdate(
+    const std::vector<std::shared_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos)
+{
+    CHECK_AND_RETURN(screenCaptureServer_ != nullptr);
+    for (const std::shared_ptr<AudioRendererChangeInfo> &changeInfo: audioRendererChangeInfos) {
+        if (!changeInfo) {
+            continue;
+        }
+        MEDIA_LOGI("Client pid : %{public}d, State : %{public}d, usage : %{public}d",
+            changeInfo->clientPid, static_cast<int32_t>(changeInfo->rendererState),
+            static_cast<int32_t>(changeInfo->rendererInfo.streamUsage));
+        if (changeInfo->rendererInfo.streamUsage == AudioStandard::StreamUsage::STREAM_USAGE_VOICE_COMMUNICATION &&
+            (changeInfo->rendererState == RendererState::RENDERER_RUNNING ||
+            changeInfo->rendererState == RendererState::RENDERER_PREPARED)) {
+            screenCaptureServer_->TelCallAudioStateUpdated(true);
+            return;
+        }
+    }
+    screenCaptureServer_->TelCallAudioStateUpdated(false);
+}
+#endif
 
 bool AudioDataSource::HasSpeakerStream(
     const std::vector<std::shared_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos)
@@ -3771,10 +3815,7 @@ void AudioDataSource::VoIPStateUpdate(
     const std::vector<std::shared_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos)
 {
     std::lock_guard<std::mutex> lock(voipStatusChangeMutex_);
-    (void)audioRendererChangeInfos;
-    std::vector<std::shared_ptr<AudioRendererChangeInfo>> allAudioRendererChangeInfos;
-    AudioStreamManager::GetInstance()->GetCurrentRendererChangeInfos(allAudioRendererChangeInfos);
-    bool isInVoIPCall = HasVoIPStream(allAudioRendererChangeInfos);
+    bool isInVoIPCall = HasVoIPStream(audioRendererChangeInfos);
     if (isInVoIPCall_.load() == isInVoIPCall) {
         return;
     }
@@ -3790,9 +3831,9 @@ bool AudioDataSource::HasVoIPStream(
         if (!changeInfo) {
             continue;
         }
-        MEDIA_LOGI("Client pid : %{public}d, State : %{public}d, DeviceType : %{public}d",
+        MEDIA_LOGI("Client pid : %{public}d, State : %{public}d, usage : %{public}d",
             changeInfo->clientPid, static_cast<int32_t>(changeInfo->rendererState),
-            static_cast<int32_t>(changeInfo->outputDeviceInfo.deviceType_));
+            static_cast<int32_t>(changeInfo->rendererInfo.streamUsage));
         if (changeInfo->rendererState == RendererState::RENDERER_RUNNING &&
             changeInfo->rendererInfo.streamUsage == AudioStandard::StreamUsage::STREAM_USAGE_VOICE_COMMUNICATION) {
             return true;

@@ -94,7 +94,8 @@ public:
     int32_t OnReceiveUserPrivacyAuthority(bool isAllowed);
     int32_t StopScreenCaptureByEvent(AVScreenCaptureStateCode stateCode);
 #ifdef SUPPORT_CALL
-    int32_t OnTelCallStateChanged(bool isInCall);
+    int32_t TelCallStateUpdated(bool isInTelCall);
+    int32_t TelCallAudioStateUpdated(bool isInTelCallAudio);
 #endif
     void UpdateMicrophoneEnabled();
 
@@ -216,6 +217,9 @@ private:
     std::string GetStringByResourceName(const char* name);
     void RefreshResConfig();
     void InitResourceManager();
+#ifdef SUPPORT_CALL
+    int32_t OnTelCallStateChanged(bool isInCall);
+#endif
 
 private:
     std::mutex mutex_;
@@ -282,6 +286,11 @@ private:
     Global::Resource::ResourceManager *resourceManager_ = nullptr;
     Global::Resource::ResConfig *resConfig_ = nullptr;
     OHOS::sptr<Rosen::ScreenManager::IScreenListener> screenConnectListener_ = nullptr;
+#ifdef SUPPORT_CALL
+    std::atomic<bool> isInTelCall_ = false;
+    std::atomic<bool> isInTelCallAudio_ = false;
+#endif
+
 private:
     static int32_t CheckAudioCapParam(const AudioCaptureInfo &audioCapInfo);
     static int32_t CheckVideoCapParam(const VideoCaptureInfo &videoCapInfo);

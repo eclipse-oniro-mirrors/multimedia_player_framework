@@ -240,6 +240,10 @@ public:
     int32_t GetAppPid();
     bool GetIsInVoIPCall();
     bool GetSpeakerAliveStatus();
+#ifdef SUPPORT_CALL
+    void TelCallAudioStateUpdate(
+        const std::vector<std::shared_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos)
+#endif
 
 private:
     int32_t MixModeBufferWrite(std::shared_ptr<AudioBuffer> &innerAudioBuffer,
