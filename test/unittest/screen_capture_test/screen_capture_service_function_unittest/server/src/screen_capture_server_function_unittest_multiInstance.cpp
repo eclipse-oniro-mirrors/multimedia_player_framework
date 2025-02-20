@@ -707,5 +707,54 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckIsIDExist_001, TestSize.Level2)
     int32_t sessionId1 = gIdGenerator.ReturnID(sessionId);
     ASSERT_EQ(gIdGenerator.IsIDExists(sessionId1), true);
 }
+
+/**
+* @tc.name: CheckSpecifiedDataTypeNum_001
+* @tc.desc: CheckSCServerSpecifiedDataTypeNum Success
+* @tc.type: FUNC
+*/
+HWTEST_F(ScreenCaptureServerFunctionTest, CheckSpecifiedDataTypeNum_001, TestSize.Level2)
+{
+    ScreenCaptureServer::serverMap_.clear();
+    UniqueIDGenerator gIdGenerator(20);
+    int32_t sessionId = gIdGenerator.GetNewID();
+    std::shared_ptr<ScreenCaptureServer> server = std::make_shared<ScreenCaptureServer>();
+    server->SetSessionId(sessionId);
+    server->captureConfig_.dataType = DataType::ORIGINAL_STREAM;
+    server->appInfo_.appUid = ROOT_UID;
+    ASSERT_EQ(ScreenCaptureServer::CheckSCServerSpecifiedDataTypeNum(server->appInfo_.appUid,
+        server->captureConfig_.dataType), true);
+}
+
+/**
+* @tc.name: CheckSpecifiedDataTypeNum_002
+* @tc.desc: CheckSCServerSpecifiedDataTypeNum Failed
+* @tc.type: FUNC
+*/
+HWTEST_F(ScreenCaptureServerFunctionTest, CheckSpecifiedDataTypeNum_002, TestSize.Level2)
+{
+    ScreenCaptureServer::serverMap_.clear();
+    UniqueIDGenerator gIdGenerator(20);
+    std::vector<std::shared_ptr<ScreenCaptureServer>> serverList;
+    for (int32_t i = 0; i < ScreenCaptureServer::maxSCServerDataTypePerUid_; i++) {
+        std::shared_ptr<ScreenCaptureServer> server = std::make_shared<ScreenCaptureServer>();
+        serverList.push_back(server);
+        int32_t sessionId = gIdGenerator.GetNewID();
+        server->SetSessionId(sessionId);
+        server->appInfo_.appUid = IPCSkeleton::GetCallingUid();
+        server->captureConfig_.dataType = DataType::ORIGINAL_STREAM;
+        ScreenCaptureServer::AddScreenCaptureServerMap(sessionId, server);
+        ASSERT_EQ(ScreenCaptureServer::CheckSCServerSpecifiedDataTypeNum(server->appInfo_.appUid,
+            server->captureConfig_.dataType), true);
+    }
+    std::shared_ptr<ScreenCaptureServer> server = std::make_shared<ScreenCaptureServer>();
+    int32_t sessionId = gIdGenerator.GetNewID();
+    server->SetSessionId(sessionId);
+    server->appInfo_.appUid = IPCSkeleton::GetCallingUid();
+    server->captureConfig_.dataType = DataType::ORIGINAL_STREAM;
+    ScreenCaptureServer::AddScreenCaptureServerMap(sessionId, server);
+    ASSERT_EQ(ScreenCaptureServer::CheckSCServerSpecifiedDataTypeNum(server->appInfo_.appUid,
+        server->captureConfig_.dataType), false);
+}
 } // Media
 } // OHOS
