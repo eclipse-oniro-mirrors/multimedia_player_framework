@@ -440,7 +440,7 @@ int32_t SystemTonePlayerImpl::Start(const SystemToneOptions &systemToneOptions)
         if (!actualMuteHaptics) {
             std::string hapticUri = (configuredUri_ == NO_SYSTEM_SOUND) ?
                 defaultNonSyncHapticUri_ : hapticUriMap_[hapticsFeature_];
-            SystemSoundVibrator::StartVibratorForSystemTone(hapticUri);
+            SystemSoundVibrator::StartVibratorForSystemTone(ChangeHapticsUri(hapticUri));
         }
         return streamId_;
     }
