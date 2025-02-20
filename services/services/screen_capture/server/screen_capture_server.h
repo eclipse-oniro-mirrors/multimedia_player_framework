@@ -218,7 +218,7 @@ private:
     void RefreshResConfig();
     void InitResourceManager();
 #ifdef SUPPORT_CALL
-    int32_t OnTelCallStateChanged(bool isInCall);
+    int32_t OnTelCallStateChanged();
 #endif
 
 private:

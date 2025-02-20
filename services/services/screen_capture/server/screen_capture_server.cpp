@@ -3771,7 +3771,8 @@ void AudioDataSource::TelCallAudioStateUpdate(
         MEDIA_LOGI("Client pid : %{public}d, State : %{public}d, usage : %{public}d",
             changeInfo->clientPid, static_cast<int32_t>(changeInfo->rendererState),
             static_cast<int32_t>(changeInfo->rendererInfo.streamUsage));
-        if (changeInfo->rendererInfo.streamUsage == AudioStandard::StreamUsage::STREAM_USAGE_VOICE_COMMUNICATION &&
+        if (changeInfo->rendererInfo.streamUsage ==
+            AudioStandard::StreamUsage::STREAM_USAGE_VOICE_MODEM_COMMUNICATION &&
             (changeInfo->rendererState == RendererState::RENDERER_RUNNING ||
             changeInfo->rendererState == RendererState::RENDERER_PREPARED)) {
             screenCaptureServer_->TelCallAudioStateUpdated(true);
