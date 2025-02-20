@@ -78,6 +78,11 @@ public:
         (void)mode;
         return 0;
     }
+    virtual int32_t SetIsCalledBySystemApp(bool isCalledBySystemApp)
+    {
+        (void)isCalledBySystemApp;
+        return 0;
+    }
     virtual int32_t PrepareAsync() = 0;
     virtual int32_t Pause(bool isSystemOperation) = 0;
     virtual int32_t Stop() = 0;

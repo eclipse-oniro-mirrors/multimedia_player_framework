@@ -568,6 +568,13 @@ int32_t HiPlayerImpl::SetRenderFirstFrame(bool display)
     return TransStatus(Status::OK);
 }
 
+int32_t HiPlayerImpl::SetIsCalledBySystemApp(bool isCalledBySystemApp)
+{
+    MEDIA_LOG_I("SetIsCalledBySystemApp in, isCalledBySystemApp: " PUBLIC_LOG_D32, isCalledBySystemApp);
+    isCalledBySystemApp_ = isCalledBySystemApp;
+    return TransStatus(Status::OK);
+}
+
 int32_t HiPlayerImpl::PrepareAsync()
 {
     MediaTrace trace("HiPlayerImpl::PrepareAsync");
@@ -1390,6 +1397,9 @@ int32_t HiPlayerImpl::SetLooping(bool loop)
 {
     MEDIA_LOG_I("SetLooping in, loop: " PUBLIC_LOG_D32, loop);
     singleLoop_ = loop;
+    if (audioSink_ != nullptr) {
+        audioSink_->SetLooping(loop);
+    }
     return TransStatus(Status::OK);
 }
 
@@ -2839,6 +2849,7 @@ Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilte
         FilterType::FILTERTYPE_ASINK);
     FALSE_RETURN_V(audioSink_ != nullptr, Status::ERROR_NULL_POINTER);
     audioSink_->Init(playerEventReceiver_, playerFilterCallback_);
+    audioSink_->SetIsCalledBySystemApp(isCalledBySystemApp_);
     audioSink_->SetMaxAmplitudeCbStatus(maxAmplitudeCbStatus_);
     if (demuxer_ != nullptr && audioRenderInfo_ == nullptr) {
         std::vector<std::shared_ptr<Meta>> trackInfos = demuxer_->GetStreamMetaInfo();
