@@ -31,6 +31,7 @@ public:
     static UniqueIDGenerator gIdGenerator_;
     static std::list<int32_t> startedSessionIDList_;
     static const int32_t maxSessionPerUid_;
+    static const int32_t maxSCServerDataTypePerUid_;
     static std::shared_mutex mutexServerMapRWGlobal_;
     static std::shared_mutex mutexListRWGlobal_;
     static std::shared_mutex mutexSaAppInfoMapGlobal_;
@@ -46,6 +47,7 @@ public:
     static void AddScreenCaptureServerMap(int32_t sessionId, std::weak_ptr<ScreenCaptureServer> server);
     static void RemoveScreenCaptureServerMap(int32_t sessionId);
     static bool CheckScreenCaptureSessionIdLimit(int32_t curAppUid);
+    static bool CheckSCServerSpecifiedDataTypeNum(int32_t curAppUid, DataType dataType);
     static void CountScreenCaptureAppNum(std::set<int32_t>& appSet);
     static bool CheckScreenCaptureAppLimit(int32_t curAppUid);
     static std::shared_ptr<ScreenCaptureServer> GetScreenCaptureServerByIdWithLock(int32_t id);
@@ -118,6 +120,7 @@ public:
     int32_t SetAndCheckAppInfo(OHOS::AudioStandard::AppInfo &appInfo);
     void SetSCServerSaUid(int32_t saUid);
     int32_t GetSCServerSaUid();
+    DataType GetSCServerDataType();
 
 private:
     int32_t StartScreenCaptureInner(bool isPrivacyAuthorityEnabled);
@@ -180,6 +183,7 @@ private:
     int32_t RequestUserPrivacyAuthority();
     int32_t StartPrivacyWindow();
     void SetCaptureConfig(CaptureMode captureMode, int32_t missionId = -1); // -1 invalid
+    bool CheckSCServerDataTypeValid();
 #ifdef PC_STANDARD
     bool CheckCaptureSpecifiedWindowForSelectWindow();
     void SendConfigToUIParams(AAFwk::Want& want);
