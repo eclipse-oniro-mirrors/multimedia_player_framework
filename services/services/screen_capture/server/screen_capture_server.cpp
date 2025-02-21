@@ -2974,60 +2974,62 @@ int32_t ScreenCaptureServer::TelCallAudioStateUpdated(bool isInTelCallAudio)
     if (isInTelCall) {
         return OnTelCallStart();
     }
-    return OnTelCallStateStop();
+    return OnTelCallStop();
 }
 
 int32_t ScreenCaptureServer::OnTelCallStart()
 {
     int32_t ret = MSERR_OK;
-    if (isInTelCall_ || isInTelCallAudio_) {
-        if (innerAudioCapture_ && innerAudioCapture_->GetAudioCapturerState() == CAPTURER_PAUSED) {
-            ret = innerAudioCapture_->Resume();
-            CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "innerAudioCapture Resume failed");
-        }
-        usleep(AUDIO_CHANGE_TIME);
-        if (micAudioCapture_) {
-            micAudioCapture_->SetIsInTelCall(true);
-            if (micAudioCapture_->GetAudioCapturerState() == CAPTURER_RECORDING) {
-                ret = micAudioCapture_->Pause();
-                CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "micAudioCapture Pause failed");
-            }
+    if (!isInTelCall_ && !isInTelCallAudio_) {
+        return ret;
+    }
+    if (innerAudioCapture_ && innerAudioCapture_->GetAudioCapturerState() == CAPTURER_PAUSED) {
+        ret = innerAudioCapture_->Resume();
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "innerAudioCapture Resume failed");
+    }
+    usleep(AUDIO_CHANGE_TIME);
+    if (micAudioCapture_) {
+        micAudioCapture_->SetIsInTelCall(true);
+        if (micAudioCapture_->GetAudioCapturerState() == CAPTURER_RECORDING) {
+            ret = micAudioCapture_->Pause();
+            CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "micAudioCapture Pause failed");
         }
     }
     return MSERR_OK;
 }
 
-int32_t ScreenCaptureServer::OnTelCallStopped()
+int32_t ScreenCaptureServer::OnTelCallStop()
 {
     int32_t ret = MSERR_OK;
-    if (isInTelCall_ && isInTelCallAudio_) {
-        if (micAudioCapture_) {
-            micAudioCapture_->SetIsInTelCall(false);
-            if (isMicrophoneSwitchTurnOn_ && micAudioCapture_->GetAudioCapturerState() == CAPTURER_PAUSED) {
-                ret = micAudioCapture_->Resume();
-                if (ret != MSERR_OK) {
-                    MEDIA_LOGE("micAudioCapture Resume failed");
-                    NotifyStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE);
+    if (isInTelCall_ || isInTelCallAudio_) {
+        return ret;
+    }
+    if (micAudioCapture_) {
+        micAudioCapture_->SetIsInTelCall(false);
+        if (isMicrophoneSwitchTurnOn_ && micAudioCapture_->GetAudioCapturerState() == CAPTURER_PAUSED) {
+            ret = micAudioCapture_->Resume();
+            if (ret != MSERR_OK) {
+                MEDIA_LOGE("micAudioCapture Resume failed");
+                NotifyStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE);
                     return ret;
-                }
             }
         }
-        if (!micAudioCapture_ && isMicrophoneSwitchTurnOn_) {
-            if (captureConfig_.dataType == DataType::ORIGINAL_STREAM) {
-                ret = StartStreamMicAudioCapture();
-                CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetMicrophoneOn StartStreamMicAudioCapture failed");
-            } else if (captureConfig_.dataType == DataType::CAPTURE_FILE) {
-                ret = StartFileMicAudioCapture();
-                CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartFileMicAudioCapture failed");
-            }
+    }
+    if (!micAudioCapture_ && isMicrophoneSwitchTurnOn_) {
+        if (captureConfig_.dataType == DataType::ORIGINAL_STREAM) {
+            ret = StartStreamMicAudioCapture();
+            CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetMicrophoneOn StartStreamMicAudioCapture failed");
+        } else if (captureConfig_.dataType == DataType::CAPTURE_FILE) {
+            ret = StartFileMicAudioCapture();
+            CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartFileMicAudioCapture failed");
         }
-        if (captureConfig_.dataType == DataType::CAPTURE_FILE) {
-            usleep(AUDIO_CHANGE_TIME);
-            if (innerAudioCapture_ && innerAudioCapture_->GetAudioCapturerState() == CAPTURER_RECORDING &&
-                audioSource_ && audioSource_->GetSpeakerAliveStatus() && !audioSource_->GetIsInVoIPCall()) {
-                ret = innerAudioCapture_->Pause();
-                CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "innerAudioCapture Pause failed");
-            }
+    }
+    if (captureConfig_.dataType == DataType::CAPTURE_FILE) {
+        usleep(AUDIO_CHANGE_TIME);
+        if (innerAudioCapture_ && innerAudioCapture_->GetAudioCapturerState() == CAPTURER_RECORDING &&
+            audioSource_ && audioSource_->GetSpeakerAliveStatus() && !audioSource_->GetIsInVoIPCall()) {
+            ret = innerAudioCapture_->Pause();
+            CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "innerAudioCapture Pause failed");
         }
     }
     return MSERR_OK;

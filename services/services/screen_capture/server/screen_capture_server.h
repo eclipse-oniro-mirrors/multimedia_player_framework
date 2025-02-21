@@ -219,7 +219,7 @@ private:
     void InitResourceManager();
 #ifdef SUPPORT_CALL
     int32_t OnTelCallStart();
-    int32_t OnTelCallStopped();
+    int32_t OnTelCallStop();
 #endif
 
 private:
