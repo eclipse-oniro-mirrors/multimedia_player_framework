@@ -434,7 +434,10 @@ public:
             delete jsCb;
         };
 
-        if (jsCb != nullptr && jsCb->callbackName == AVPlayerEvent::EVENT_BUFFERING_UPDATE) {
+        if (jsCb != nullptr &&
+            (jsCb->callbackName == AVPlayerEvent::EVENT_BUFFERING_UPDATE ||
+            jsCb->callbackName == AVPlayerEvent::EVENT_STATE_CHANGE ||
+            jsCb->callbackName == AVPlayerEvent::EVENT_AUDIO_INTERRUPT)) {
             napi_status ret = napi_send_event(env, [jsCb] () {
                 CHECK_AND_RETURN_LOG(jsCb != nullptr, "Work thread is nullptr");
                 MEDIA_LOGD("JsCallBack %{public}s start", jsCb->callbackName.c_str());
