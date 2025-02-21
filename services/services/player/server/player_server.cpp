@@ -26,6 +26,7 @@
 #include "ipc_skeleton.h"
 #include "media_permission.h"
 #include "accesstoken_kit.h"
+#include "tokenid_kit.h"
 #include "av_common.h"
 #include "parameter.h"
 #include "parameters.h"
@@ -132,6 +133,8 @@ int32_t PlayerServer::Init()
     appTokenId_ = IPCSkeleton::GetCallingTokenID();
     appUid_ = IPCSkeleton::GetCallingUid();
     appPid_ = IPCSkeleton::GetCallingPid();
+    uint64_t tokenId = IPCSkeleton::GetCallingFullTokenID();
+    isCalledBySystemApp_ = OHOS::Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(tokenId);
     MEDIA_LOGD("Get app uid: %{public}d, app pid: %{public}d, app tokenId: %{private}u", appUid_, appPid_, appTokenId_);
     apiVersion_ = GetApiInfo(appUid_);
 
@@ -276,6 +279,7 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
         "failed to create player engine");
     playerEngine_->SetInstancdId(instanceId_);
     playerEngine_->SetApiVersion(apiVersion_);
+    playerEngine_->SetIsCalledBySystemApp(isCalledBySystemApp_);
     MEDIA_LOGI("Setted InstanceId %{public}" PRIu64, instanceId_);
     if (dataSrc_ != nullptr) {
         ret = playerEngine_->SetSource(dataSrc_);

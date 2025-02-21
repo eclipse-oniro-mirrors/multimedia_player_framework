@@ -259,6 +259,7 @@ private:
     bool deviceChangeCallbackflag_ = false;
     bool maxAmplitudeCbStatus_ = false;
     std::mutex surfaceMutex_;
+    bool isCalledBySystemApp_ = false;
 };
 } // namespace Media
 } // namespace OHOS

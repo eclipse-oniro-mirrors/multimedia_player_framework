@@ -105,6 +105,7 @@ public:
     int32_t SetRenderFirstFrame(bool display) override;
     int32_t SetPlayRange(int64_t start, int64_t end) override;
     int32_t SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode) override;
+    int32_t SetIsCalledBySystemApp(bool isCalledBySystemApp) override;
     int32_t PrepareAsync() override;
     int32_t Play() override;
     int32_t Pause(bool isSystemOperation) override;
@@ -378,6 +379,7 @@ private:
     bool maxAmplitudeCbStatus_ {false};
     OHOS::Media::Mutex handleCompleteMutex_{};
     int64_t playStartTime_ = 0;
+    bool isCalledBySystemApp_ { false };
     std::atomic<bool> isBufferingStartNotified_ {false};
     bool isPerfRecEnabled_ { false };
     OHOS::Media::Mutex interruptMutex_{};
