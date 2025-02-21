@@ -212,6 +212,7 @@ public:
     bool TelCallStateUpdated(bool isInCall) override;
     bool NotifyTelCallStateUpdated(bool isInCall) override;
 #endif
+
 private:
     std::weak_ptr<ScreenCaptureServer> screenCaptureServer_;
     TaskQueue taskQueObserverCb_;

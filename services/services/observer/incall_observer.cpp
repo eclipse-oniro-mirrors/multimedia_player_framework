@@ -109,10 +109,11 @@ bool InCallObserver::OnCallStateUpdated(bool inCall)
 {
     MEDIA_LOGI("InCallObserver::OnCallStateUpdated START.");
     std::unique_lock<std::mutex> lock(mutex_);
-    if (inCall_.load() != inCall) {
-        MEDIA_LOGD("Update InCall Status %{public}d", static_cast<int32_t>(inCall));
-        inCall_.store(inCall);
+    if (inCall_.load() == inCall) {
+        return true;
     }
+    MEDIA_LOGD("Update InCall Status %{public}d", static_cast<int32_t>(inCall));
+    inCall_.store(inCall);
     bool ret = true;
     for (auto iter = inCallObserverCallBacks_.begin(); iter != inCallObserverCallBacks_.end(); iter++) {
         auto callbackPtr = (*iter).lock();

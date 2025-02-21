@@ -128,7 +128,7 @@ int32_t AudioCapturerWrapper::Resume()
     }
 #ifdef SUPPORT_CALL
     if (isInTelCall_.load()) {
-        MEDIA_LOGE("Start failed, is in telephony call, threadName:%{public}s", threadName_.c_str());
+        MEDIA_LOGE("Resume failed, is in telephony call, threadName:%{public}s", threadName_.c_str());
         return MSERR_UNKNOWN;
     }
 #endif

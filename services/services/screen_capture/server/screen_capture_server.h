@@ -218,7 +218,8 @@ private:
     void RefreshResConfig();
     void InitResourceManager();
 #ifdef SUPPORT_CALL
-    int32_t OnTelCallStateChanged();
+    int32_t OnTelCallStart();
+    int32_t OnTelCallStopped();
 #endif
 
 private:

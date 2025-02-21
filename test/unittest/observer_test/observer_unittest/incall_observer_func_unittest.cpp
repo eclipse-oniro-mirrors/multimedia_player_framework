@@ -40,10 +40,12 @@ public:
     {
         return true;
     }
-    bool TelCallStateUpdated(bool isInCall) {
+    bool TelCallStateUpdated(bool isInCall)
+    {
         return true;
     }
-    bool NotifyTelCallStateUpdated(bool isInCall) {
+    bool NotifyTelCallStateUpdated(bool isInCall)
+    {
         return true;
     }
 };
@@ -60,10 +62,12 @@ public:
     {
         return false;
     }
-    bool TelCallStateUpdated(bool isInCall) {
+    bool TelCallStateUpdated(bool isInCall)
+    {
         return false;
     }
-    bool NotifyTelCallStateUpdated(bool isInCall) {
+    bool NotifyTelCallStateUpdated(bool isInCall)
+    {
         return false;
     }
 };
