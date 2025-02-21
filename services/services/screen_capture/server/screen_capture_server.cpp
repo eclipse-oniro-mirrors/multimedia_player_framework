@@ -690,18 +690,6 @@ int32_t ScreenCaptureServer::SetCaptureMode(CaptureMode captureMode)
     return MSERR_OK;
 }
 
-bool ScreenCaptureServer::CheckSCServerDataTypeValid()
-{
-    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR
-        "CheckSCServerDataTypeValid START. curSCServerMapSize: %{public}d",
-        FAKE_POINTER(this), static_cast<int32_t>(serverMap_.size()));
-    CHECK_AND_RETURN_RET_LOG(CheckSCServerSpecifiedDataTypeNum(GetAppUid(), GetSCServerDataType()), false,
-        "CheckSCServerDataTypeValid FAILED. curSCServerMapSize: %{public}d", static_cast<int32_t>(serverMap_.size()));
-    MEDIA_LOGI("CheckSCServerDataTypeValid SUCCESS. curSCServerMapSize: %{public}d",
-        static_cast<int32_t>(serverMap_.size()));
-    return true;
-}
-
 int32_t ScreenCaptureServer::SetDataType(DataType dataType)
 {
     MediaTrace trace("ScreenCaptureServer::SetDataType");
@@ -712,7 +700,8 @@ int32_t ScreenCaptureServer::SetDataType(DataType dataType)
     int32_t ret = CheckDataType(dataType);
     CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
     captureConfig_.dataType = dataType;
-    CHECK_AND_RETURN_RET_LOG(CheckSCServerDataTypeValid(), MSERR_INVALID_OPERATION,
+    CHECK_AND_RETURN_RET_LOG(CheckSCServerSpecifiedDataTypeNum(GetAppUid(), GetSCServerDataType()),
+        MSERR_INVALID_OPERATION,
         "ScreenCaptureServer: 0x%{public}06" PRIXPTR "SetDataType failed.", FAKE_POINTER(this));
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " SetDataType OK.", FAKE_POINTER(this));
     return MSERR_OK;

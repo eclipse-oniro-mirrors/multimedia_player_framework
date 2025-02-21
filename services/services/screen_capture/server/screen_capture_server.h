@@ -183,7 +183,6 @@ private:
     int32_t RequestUserPrivacyAuthority();
     int32_t StartPrivacyWindow();
     void SetCaptureConfig(CaptureMode captureMode, int32_t missionId = -1); // -1 invalid
-    bool CheckSCServerDataTypeValid();
 #ifdef PC_STANDARD
     bool CheckCaptureSpecifiedWindowForSelectWindow();
     void SendConfigToUIParams(AAFwk::Want& want);
