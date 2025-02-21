@@ -20,6 +20,7 @@
 #include <unordered_map>
 #include <queue>
 
+#include "audio_info.h"
 #include "audio_decoder_filter.h"
 #include "audio_sink_filter.h"
 #include "common/status.h"
@@ -263,6 +264,7 @@ private:
     int32_t HandleEosPlay() override;
     void UpdatePlayTotalDuration();
     inline bool IsStatisticalInfoValid();
+    void ReportAudioInterruptEvent();
 
     bool isNetWorkPlay_ = false;
     bool isDump_ = false;
@@ -378,6 +380,11 @@ private:
     int64_t playStartTime_ = 0;
     std::atomic<bool> isBufferingStartNotified_ {false};
     bool isPerfRecEnabled_ { false };
+    OHOS::Media::Mutex interruptMutex_{};
+    bool isHintPauseReceived_ { false };
+    std::atomic<bool> interruptNotifyPlay_ {false};
+    std::atomic<bool> isSaveInterruptEventNeeded_ {true};
+    OHOS::AudioStandard::InterruptEvent interruptEvent_;
 };
 } // namespace Media
 } // namespace OHOS
