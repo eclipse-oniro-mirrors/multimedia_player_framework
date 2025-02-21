@@ -712,7 +712,7 @@ int32_t ScreenCaptureServer::SetDataType(DataType dataType)
     int32_t ret = CheckDataType(dataType);
     CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
     captureConfig_.dataType = dataType;
-    CHECK_AND_RETURN_RET_LOG(CheckSCServerDataTypeValid(), MSERR_INVALID_VAL,
+    CHECK_AND_RETURN_RET_LOG(CheckSCServerDataTypeValid(), MSERR_INVALID_OPERATION,
         "ScreenCaptureServer: 0x%{public}06" PRIXPTR "SetDataType failed.", FAKE_POINTER(this));
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " SetDataType OK.", FAKE_POINTER(this));
     return MSERR_OK;
