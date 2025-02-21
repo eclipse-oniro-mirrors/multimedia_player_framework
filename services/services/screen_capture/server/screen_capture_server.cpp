@@ -2962,7 +2962,7 @@ int32_t ScreenCaptureServer::TelCallStateUpdated(bool isInTelCall)
     if (isInTelCall) {
         return OnTelCallStart();
     }
-    return OnTelCallStateStop();
+    return OnTelCallStop();
 }
 
 int32_t ScreenCaptureServer::TelCallAudioStateUpdated(bool isInTelCallAudio)
@@ -2971,7 +2971,7 @@ int32_t ScreenCaptureServer::TelCallAudioStateUpdated(bool isInTelCallAudio)
         return MSERR_OK;
     }
     isInTelCallAudio_.store(isInTelCallAudio);
-    if (isInTelCall) {
+    if (isInTelCallAudio) {
         return OnTelCallStart();
     }
     return OnTelCallStop();
