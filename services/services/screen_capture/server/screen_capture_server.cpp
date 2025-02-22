@@ -2874,6 +2874,8 @@ int32_t ScreenCaptureServer::SetMicrophoneOn()
     }
     if (captureConfig_.dataType == DataType::CAPTURE_FILE) {
         usleep(AUDIO_CHANGE_TIME);
+        CHECK_AND_RETURN_RET_LOG(micAudioCapture_ && micAudioCapture_->GetAudioCapturerState() == CAPTURER_RECORDING,
+            MSERR_UNKNOWN, "micAudioCapture is not recording");
         if (innerAudioCapture_ && innerAudioCapture_->GetAudioCapturerState() == CAPTURER_RECORDING &&
             audioSource_ && audioSource_->GetSpeakerAliveStatus() && !audioSource_->GetIsInVoIPCall()) {
             ret = innerAudioCapture_->Pause();
@@ -2962,7 +2964,7 @@ int32_t ScreenCaptureServer::OnVoIPStatusChanged(bool isInVoIPCall)
 #ifdef SUPPORT_CALL
 int32_t ScreenCaptureServer::TelCallStateUpdated(bool isInTelCall)
 {
-    if (IsTelInCallSkipList() || isInTelCall_ == isInTelCall) {
+    if (isInTelCall_ == isInTelCall) {
         return MSERR_OK;
     }
     isInTelCall_.store(isInTelCall);
@@ -2994,8 +2996,8 @@ int32_t ScreenCaptureServer::OnTelCallStart()
         ret = innerAudioCapture_->Resume();
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "innerAudioCapture Resume failed");
     }
-    usleep(AUDIO_CHANGE_TIME);
     if (micAudioCapture_) {
+        usleep(AUDIO_CHANGE_TIME);
         micAudioCapture_->SetIsInTelCall(true);
         if (micAudioCapture_->GetAudioCapturerState() == CAPTURER_RECORDING) {
             ret = micAudioCapture_->Pause();
@@ -3018,7 +3020,7 @@ int32_t ScreenCaptureServer::OnTelCallStop()
             if (ret != MSERR_OK) {
                 MEDIA_LOGE("micAudioCapture Resume failed");
                 NotifyStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE);
-                    return ret;
+                return ret;
             }
         }
     }
@@ -3033,6 +3035,8 @@ int32_t ScreenCaptureServer::OnTelCallStop()
     }
     if (captureConfig_.dataType == DataType::CAPTURE_FILE) {
         usleep(AUDIO_CHANGE_TIME);
+        CHECK_AND_RETURN_RET_LOG(micAudioCapture_ && micAudioCapture_->GetAudioCapturerState() == CAPTURER_RECORDING,
+            MSERR_UNKNOWN, "micAudioCapture is not recording");
         if (innerAudioCapture_ && innerAudioCapture_->GetAudioCapturerState() == CAPTURER_RECORDING &&
             audioSource_ && audioSource_->GetSpeakerAliveStatus() && !audioSource_->GetIsInVoIPCall()) {
             ret = innerAudioCapture_->Pause();
