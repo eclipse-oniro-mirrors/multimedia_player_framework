@@ -1981,7 +1981,7 @@ int32_t PlayerServer::SetMaxAmplitudeCbStatus(bool status)
 
 bool PlayerServer::IsSeekContinuousSupported()
 {
-    MediaTrace::TraceBegin("PlayerServer::IsSeekContinuousSupported", FAKE_POINTER(this));
+    MediaTrace trace("PlayerServer::IsSeekContinuousSupported");
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET(lastOpStatus_ == PLAYER_PREPARED || lastOpStatus_ == PLAYER_STARTED ||
         lastOpStatus_ == PLAYER_PLAYBACK_COMPLETE || lastOpStatus_ == PLAYER_PAUSED || lastOpStatus_ == PLAYER_STOPPED,
