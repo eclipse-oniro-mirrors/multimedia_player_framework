@@ -633,7 +633,8 @@ int32_t RecorderServiceProxy::SetLocation(float latitude, float longitude)
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "write data failed");
 
     int error = Remote()->SendRequest(SET_LOCATION, data, reply, option);
-    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION, "SetLocation failed, error: %{public}d", error);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetLocation failed, error: %{public}d", error);
     return MSERR_OK;
 }
 
@@ -650,7 +651,8 @@ int32_t RecorderServiceProxy::SetOrientationHint(int32_t rotation)
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "write data failed");
 
     int error = Remote()->SendRequest(SET_ORIENTATION_HINT, data, reply, option);
-    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION, "SetOrientationHint failed, error: %{public}d", error);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetOrientationHint failed, error: %{public}d", error);
     return MSERR_OK;
 }
 
