@@ -208,6 +208,10 @@ public:
     ~ScreenCaptureObserverCallBack();
     bool StopAndRelease(AVScreenCaptureStateCode state) override;
     bool NotifyStopAndRelease(AVScreenCaptureStateCode state) override;
+#ifdef SUPPORT_CALL
+    bool TelCallStateUpdated(bool isInCall) override;
+    bool NotifyTelCallStateUpdated(bool isInCall) override;
+#endif
 
 private:
     std::weak_ptr<ScreenCaptureServer> screenCaptureServer_;
@@ -237,6 +241,10 @@ public:
     int32_t GetAppPid();
     bool GetIsInVoIPCall();
     bool GetSpeakerAliveStatus();
+#ifdef SUPPORT_CALL
+    void TelCallAudioStateUpdate(
+        const std::vector<std::shared_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos);
+#endif
 
 private:
     int32_t MixModeBufferWrite(std::shared_ptr<AudioBuffer> &innerAudioBuffer,
