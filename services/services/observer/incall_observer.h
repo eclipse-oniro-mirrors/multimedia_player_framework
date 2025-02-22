@@ -33,6 +33,8 @@ public:
     virtual ~InCallObserverCallBack() = default;
     virtual bool StopAndRelease(AVScreenCaptureStateCode state);
     virtual bool NotifyStopAndRelease(AVScreenCaptureStateCode state);
+    virtual bool TelCallStateUpdated(bool isInCall);
+    virtual bool NotifyTelCallStateUpdated(bool isInCall);
 };
 
 class InCallObserver {

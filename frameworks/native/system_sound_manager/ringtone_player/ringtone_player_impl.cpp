@@ -94,6 +94,10 @@ RingtonePlayerImpl::~RingtonePlayerImpl()
         (void)audioHapticManager_->UnregisterSource(sourceId_);
         audioHapticManager_ = nullptr;
     }
+    if (audioRenderer_ != nullptr) {
+        (void)audioRenderer_->Release();
+        audioRenderer_ = nullptr;
+    }
     ReleaseDataShareHelper();
 }
 
@@ -352,7 +356,6 @@ void RingtonePlayerImpl::InitPlayer(std::string &audioUri, ToneHapticsSettings &
         ringtoneState_ = RingtoneState::STATE_NEW;
         result = MSERR_OK;
     }
-
     CHECK_AND_RETURN_LOG(result == MSERR_OK, "Failed to load source for audio haptic manager");
     configuredUri_ = audioUri;
     configuredHaptcisSettings_ = settings;
@@ -375,6 +378,13 @@ int32_t RingtonePlayerImpl::Configure(const float &volume, const bool &loop)
         MSERR_INVALID_VAL, "Volume level invalid");
 
     std::lock_guard<std::mutex> lock(playerMutex_);
+
+    if (configuredUri_ == NO_RING_SOUND && ringtoneState_ == STATE_RUNNING) {
+        MEDIA_LOGI("Set volume to 0.0 for NO_RING_SOUND. Stop vibrator!");
+        SystemSoundVibrator::StopVibrator();
+        return MSERR_OK;
+    }
+
     CHECK_AND_RETURN_RET_LOG(player_ != nullptr && ringtoneState_ != STATE_INVALID, MSERR_INVALID_VAL, "no player_");
     volume_ = volume;
     loop_ = loop;
@@ -411,7 +421,7 @@ int32_t RingtonePlayerImpl::Start()
         AudioHapticPlayerOptions options = {true, true};
         ToneHapticsSettings settings = GetHapticSettings(ringtoneUri, options.muteHaptics);
         InitPlayer(ringtoneUri, settings, options);
-        std::string hapticUri = settings.hapticsUri;
+        std::string hapticUri = ChangeHapticsUri(settings.hapticsUri);
         rendererParams_.sampleFormat = AudioStandard::SAMPLE_S24LE;
         rendererParams_.channelCount = AudioStandard::STEREO;
         audioRenderer_ = AudioStandard::AudioRenderer::Create(AudioStandard::AudioStreamType::STREAM_VOICE_RING);
@@ -419,8 +429,8 @@ int32_t RingtonePlayerImpl::Start()
         int32_t ret = audioRenderer_->SetParams(rendererParams_);
         bool isStarted = audioRenderer_->Start();
         ringtoneState_ = isStarted ? STATE_RUNNING : ringtoneState_;
-        MEDIA_LOGI(" isStarted : %{public}d, ret: %{public}d, ", isStarted, ret);
-        return SystemSoundVibrator::StartVibratorForSystemTone(hapticUri);
+        MEDIA_LOGI("isStarted : %{public}d, ret: %{public}d, ", isStarted, ret);
+        return SystemSoundVibrator::StartVibratorForRingtone(hapticUri);
     }
     AudioHapticPlayerOptions options = {false, false};
     ToneHapticsSettings settings = GetHapticSettings(ringtoneUri, options.muteHaptics);
@@ -446,13 +456,14 @@ int32_t RingtonePlayerImpl::Stop()
     CHECK_AND_RETURN_RET_LOG(player_ != nullptr && ringtoneState_ != STATE_INVALID, MSERR_INVALID_VAL, "no player_");
 
     (void)player_->Stop();
+    if (configuredUri_ == NO_RING_SOUND && ringtoneState_ == STATE_RUNNING) {
+        SystemSoundVibrator::StopVibrator();
+    }
     if (audioRenderer_ != nullptr) {
-        bool isStoped = audioRenderer_->Stop();
-        if (isStoped) {
-            ringtoneState_ = STATE_STOPPED;
-            MEDIA_LOGI("RingtonePlayerImpl::audioRenderer_::Stop()");
+        bool isStopped = audioRenderer_->Stop();
+        if (!isStopped) {
+            MEDIA_LOGE("Failed to stop audioRenderer_ for NO_RING_SOUND");
         }
-        return MSERR_OK;
     }
     ringtoneState_ = STATE_STOPPED;
 
@@ -468,13 +479,15 @@ int32_t RingtonePlayerImpl::Release()
     CHECK_AND_RETURN_RET_LOG(player_ != nullptr && ringtoneState_ != STATE_INVALID, MSERR_INVALID_VAL, "no player_");
 
     (void)player_->Release();
+    if (configuredUri_ == NO_RING_SOUND && ringtoneState_ == STATE_RUNNING) {
+        SystemSoundVibrator::StopVibrator();
+    }
     if (audioRenderer_ != nullptr) {
         bool isReleased = audioRenderer_->Release();
-        if (isReleased) {
-            ringtoneState_ = STATE_RELEASED;
-            MEDIA_LOGI("RingtonePlayerImpl::audioRenderer_::Release()");
+        if (!isReleased) {
+            MEDIA_LOGE("Failed to release audioRenderer_ for NO_RING_SOUND");
         }
-        return MSERR_OK;
+        audioRenderer_ = nullptr;
     }
     player_ = nullptr;
     callback_ = nullptr;

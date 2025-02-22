@@ -58,6 +58,7 @@ namespace {
     static int32_t g_apiVersion = -1;
     constexpr int32_t ARGS_TWO = 2;
     constexpr int32_t ARGS_THREE = 3;
+    constexpr int32_t SEEK_CONTINUOUS_TS_ENUM_NUM = 3;
 }
 
 namespace OHOS {
@@ -346,6 +347,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PlayTask()
                     "failed to play, avplayer enter error status, please check error callback messages!");
             }
         } else if (state == AVPlayerState::STATE_PLAYING) {
+            player_->Seek(-1, SEEK_CONTINOUS);
             MEDIA_LOGI("current state is playing, invalid operation");
         } else {
             return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
@@ -763,11 +765,13 @@ napi_value AVPlayerNapi::JsSeek(napi_env env, napi_callback_info info)
             return result;
         }
         status = napi_get_value_int32(env, args[1], &mode);
-        if (status != napi_ok || mode < SEEK_NEXT_SYNC || mode > SEEK_CONTINOUS) {
+        if (status != napi_ok || mode < SEEK_NEXT_SYNC || mode > SEEK_CONTINUOUS_TS_ENUM_NUM) {
             jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please check seek mode");
             return result;
         }
-        if (status != napi_ok || (time < 0 && (time != -1 || mode != SEEK_CONTINOUS))) {
+        bool isNegativeTime = time < 0;
+        bool isExitSeekContinuous = time == -1 && mode == SEEK_CONTINUOUS_TS_ENUM_NUM;
+        if (isNegativeTime && !isExitSeekContinuous) {
             jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please check seek time");
             return result;
         }
@@ -3167,10 +3171,6 @@ napi_value AVPlayerNapi::JsIsSeekContinuousSupported(napi_env env, napi_callback
     size_t argCount = 0;
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, nullptr);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstance");
-    if (!IsSystemApp()) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_PERMISSION_DENIED, "Caller is not a system application.");
-        return result;
-    }
     if (jsPlayer->player_ != nullptr) {
         isSeekContinuousSupported = jsPlayer->player_->IsSeekContinuousSupported();
         status = napi_get_boolean(env, isSeekContinuousSupported, &result);

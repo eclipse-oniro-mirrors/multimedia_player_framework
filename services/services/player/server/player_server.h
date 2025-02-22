@@ -227,6 +227,7 @@ private:
     int32_t SeekContinous(int32_t mSeconds);
     int32_t HandleSeekContinous(int32_t mSeconds, int64_t batchNo);
     int32_t ExitSeekContinous(bool align);
+    int32_t ExitSeekContinousAsync(bool align);
     void UpdateContinousBatchNo();
 
     bool CheckState(PlayerOnInfoType type, int32_t extra);

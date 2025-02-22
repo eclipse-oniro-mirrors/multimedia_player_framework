@@ -31,6 +31,7 @@ public:
     static UniqueIDGenerator gIdGenerator_;
     static std::list<int32_t> startedSessionIDList_;
     static const int32_t maxSessionPerUid_;
+    static const int32_t maxSCServerDataTypePerUid_;
     static std::shared_mutex mutexServerMapRWGlobal_;
     static std::shared_mutex mutexListRWGlobal_;
     static std::shared_mutex mutexSaAppInfoMapGlobal_;
@@ -46,6 +47,7 @@ public:
     static void AddScreenCaptureServerMap(int32_t sessionId, std::weak_ptr<ScreenCaptureServer> server);
     static void RemoveScreenCaptureServerMap(int32_t sessionId);
     static bool CheckScreenCaptureSessionIdLimit(int32_t curAppUid);
+    static bool CheckSCServerSpecifiedDataTypeNum(int32_t curAppUid, DataType dataType);
     static void CountScreenCaptureAppNum(std::set<int32_t>& appSet);
     static bool CheckScreenCaptureAppLimit(int32_t curAppUid);
     static std::shared_ptr<ScreenCaptureServer> GetScreenCaptureServerByIdWithLock(int32_t id);
@@ -93,6 +95,10 @@ public:
     void SetSessionId(int32_t sessionId);
     int32_t OnReceiveUserPrivacyAuthority(bool isAllowed);
     int32_t StopScreenCaptureByEvent(AVScreenCaptureStateCode stateCode);
+#ifdef SUPPORT_CALL
+    int32_t TelCallStateUpdated(bool isInTelCall);
+    int32_t TelCallAudioStateUpdated(bool isInTelCallAudio);
+#endif
     void UpdateMicrophoneEnabled();
 
     int32_t AcquireAudioBufferMix(std::shared_ptr<AudioBuffer> &innerAudioBuffer,
@@ -118,6 +124,7 @@ public:
     int32_t SetAndCheckAppInfo(OHOS::AudioStandard::AppInfo &appInfo);
     void SetSCServerSaUid(int32_t saUid);
     int32_t GetSCServerSaUid();
+    DataType GetSCServerDataType();
 
 private:
     int32_t StartScreenCaptureInner(bool isPrivacyAuthorityEnabled);
@@ -213,6 +220,10 @@ private:
     std::string GetStringByResourceName(const char* name);
     void RefreshResConfig();
     void InitResourceManager();
+#ifdef SUPPORT_CALL
+    int32_t OnTelCallStart();
+    int32_t OnTelCallStop();
+#endif
 
 private:
     std::mutex mutex_;
@@ -279,6 +290,11 @@ private:
     Global::Resource::ResourceManager *resourceManager_ = nullptr;
     Global::Resource::ResConfig *resConfig_ = nullptr;
     OHOS::sptr<Rosen::ScreenManager::IScreenListener> screenConnectListener_ = nullptr;
+#ifdef SUPPORT_CALL
+    std::atomic<bool> isInTelCall_ = false;
+    std::atomic<bool> isInTelCallAudio_ = false;
+#endif
+
 private:
     static int32_t CheckAudioCapParam(const AudioCaptureInfo &audioCapInfo);
     static int32_t CheckVideoCapParam(const VideoCaptureInfo &videoCapInfo);

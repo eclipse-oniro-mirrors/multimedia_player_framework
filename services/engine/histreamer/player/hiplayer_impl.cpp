@@ -3166,6 +3166,14 @@ int32_t HiPlayerImpl::SeekContinous(int32_t mSeconds, int64_t seekContinousBatch
 
 Status HiPlayerImpl::StartSeekContinous()
 {
+    if (curState_ == PlayerStateId::PLAYING) {
+        // pause inner when start seek continuous in playing state
+        Status res = pipeline_->Pause();
+        if (res != Status::OK) {
+            UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
+        }
+        syncManager_->Pause();
+    }
     FALSE_RETURN_V(!draggingPlayerAgent_, Status::OK);
     FALSE_RETURN_V(demuxer_ && videoDecoder_, Status::OK);
     draggingPlayerAgent_ = DraggingPlayerAgent::Create(pipeline_, demuxer_, videoDecoder_, playerId_);
@@ -3180,6 +3188,8 @@ Status HiPlayerImpl::StartSeekContinous()
         // Drive the head node to start the video channel.
         res = demuxer_->ResumeDragging();
         FALSE_LOG_MSG(res == Status::OK, "ResumeDragging failed");
+    } else {
+        callbackLooper_.OnError(PLAYER_ERROR, MSERR_SEEK_CONTINUOUS_UNSUPPORTED);
     }
     SetFrameRateForSeekPerformance(FRAME_RATE_FOR_SEEK_PERFORMANCE);
     return res;
@@ -3221,17 +3231,25 @@ int32_t HiPlayerImpl::ExitSeekContinous(bool align, int64_t seekContinousBatchNo
     FALSE_RETURN_V_MSG_E(Plugins::Us2HstTime(lastSeekContinousPos_, seekTimeUs),
         TransStatus(Status::OK), "Invalid lastSeekContinousPos_: %{public}" PRId64, lastSeekContinousPos_);
     syncManager_->Seek(seekTimeUs, true);
-    if (align) {
+    FALSE_RETURN_V_MSG_E(align, TransStatus(Status::OK), "dont need align");
+    if (align && audioDecoder_ != nullptr && audioSink_ != nullptr) {
         audioSink_->DoFlush();
         audioDecoder_->DoFlush();
         seekAgent_ = std::make_shared<SeekAgent>(demuxer_);
         interruptMonitor_->RegisterListener(seekAgent_);
-        audioSink_->Flush();
         auto res = seekAgent_->AlignAudioPosition(lastSeekContinousPos_);
         FALSE_LOG_MSG(res == Status::OK, "AlignAudioPosition failed");
         MEDIA_LOG_I_SHORT("seekAgent_ AlignAudioPosition end");
         interruptMonitor_->DeregisterListener(seekAgent_);
         seekAgent_.reset();
+    }
+    if (curState_ == PlayerStateId::PLAYING) {
+        // pause inner when start seek continuous in playing state
+        syncManager_->Resume();
+        Status res = pipeline_->Resume();
+        if (res != Status::OK) {
+            UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
+        }
     }
     return TransStatus(Status::OK);
 }

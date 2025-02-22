@@ -85,6 +85,7 @@ const std::map<MediaServiceErrCode, std::string> MSERRCODE_INFOS = {
     {MSERR_IO_SSL_CONNECT_FAIL, "IO SSL connect fail"},
     {MSERR_IO_SSL_SERVER_CERT_UNTRUSTED, "IO SSL server cert untrusted"},
     {MSERR_IO_UNSUPPORTTED_REQUEST, "IO unsupported request"},
+    {MSERR_SEEK_CONTINUOUS_UNSUPPORTED, "seek continonous is unsupported for this source"},
 };
 
 const std::map<MediaServiceErrCode, MediaServiceExtErrCode> MSERRCODE_TO_EXTERRORCODE = {
@@ -219,6 +220,7 @@ const std::map<MediaServiceErrCode, MediaServiceExtErrCodeAPI9> MSERRCODE_TO_EXT
     {MSERR_IO_SSL_CONNECT_FAIL,                 MSERR_EXT_API14_IO_SSL_CONNECT_FAIL},
     {MSERR_IO_SSL_SERVER_CERT_UNTRUSTED,        MSERR_EXT_API14_IO_SSL_SERVER_CERT_UNTRUSTED},
     {MSERR_IO_UNSUPPORTTED_REQUEST,             MSERR_EXT_API14_IO_UNSUPPORTTED_REQUEST},
+    {MSERR_SEEK_CONTINUOUS_UNSUPPORTED,         MSERR_EXT_API16_SEEK_CONTINUOUS_UNSUPPORTED},
 };
 
 const std::map<MediaServiceExtErrCodeAPI9, std::string> MSEXTERRCODE_API9_INFOS = {
@@ -245,6 +247,7 @@ const std::map<MediaServiceExtErrCodeAPI9, std::string> MSEXTERRCODE_API9_INFOS 
     {MSERR_EXT_API14_IO_SSL_CONNECT_FAIL, "IO SSL Connect Fail: "},
     {MSERR_EXT_API14_IO_SSL_SERVER_CERT_UNTRUSTED, "IO SSL Server Cert Untrusted: "},
     {MSERR_EXT_API14_IO_UNSUPPORTTED_REQUEST, "IO Unsupported Request: "},
+    {MSERR_EXT_API16_SEEK_CONTINUOUS_UNSUPPORTED, "Seek continuous unsupported: "},
 };
 
 const std::set<MediaServiceErrCode> API14_EXT_IO_ERRORS = {

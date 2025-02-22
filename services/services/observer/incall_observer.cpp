@@ -109,22 +109,20 @@ bool InCallObserver::OnCallStateUpdated(bool inCall)
 {
     MEDIA_LOGI("InCallObserver::OnCallStateUpdated START.");
     std::unique_lock<std::mutex> lock(mutex_);
-    if (inCall_.load() != inCall) {
-        MEDIA_LOGD("Update InCall Status %{public}d", static_cast<int32_t>(inCall));
-        inCall_.store(inCall);
+    if (inCall_.load() == inCall) {
+        return true;
     }
+    MEDIA_LOGD("Update InCall Status %{public}d", static_cast<int32_t>(inCall));
+    inCall_.store(inCall);
     bool ret = true;
-    if (inCall) {
-        for (auto iter = inCallObserverCallBacks_.begin(); iter != inCallObserverCallBacks_.end(); iter++) {
-            auto callbackPtr = (*iter).lock();
-            MEDIA_LOGI("0x%{public}06" PRIXPTR "OnCallStateUpdated", FAKE_POINTER(callbackPtr.get()));
-            if (callbackPtr) {
-                MEDIA_LOGI("0x%{public}06" PRIXPTR "OnCallStateUpdated NotifyStopAndRelease start",
-                    FAKE_POINTER(callbackPtr.get()));
-                ret &= callbackPtr->NotifyStopAndRelease(AVScreenCaptureStateCode::
-                    SCREEN_CAPTURE_STATE_STOPPED_BY_CALL);
-                MEDIA_LOGD("OnCallStateUpdated NotifyStopAndRelease ret: %{public}d.", ret);
-            }
+    for (auto iter = inCallObserverCallBacks_.begin(); iter != inCallObserverCallBacks_.end(); iter++) {
+        auto callbackPtr = (*iter).lock();
+        MEDIA_LOGI("0x%{public}06" PRIXPTR "OnCallStateUpdated", FAKE_POINTER(callbackPtr.get()));
+        if (callbackPtr) {
+            MEDIA_LOGI("0x%{public}06" PRIXPTR "OnCallStateUpdated NotifyTelCallStateUpdated start",
+                FAKE_POINTER(callbackPtr.get()));
+            ret &= callbackPtr->NotifyTelCallStateUpdated(inCall);
+            MEDIA_LOGD("OnCallStateUpdated NotifyTelCallStateUpdated ret: %{public}d.", ret);
         }
     }
     return ret;

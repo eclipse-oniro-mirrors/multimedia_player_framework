@@ -271,10 +271,10 @@ Status SeekContinuousDelegator::Init()
         Status::ERROR_INVALID_PARAMETER, "Invalid demuxer filter instance.");
     Status ret = draggingPlayer_->Init(demuxer_, decoder_);
     if (ret != Status::OK) {
-        MEDIA_LOG_E("liyudebug DraggingPlayerAgent::Init failed");
+        MEDIA_LOG_E("SeekContinuousDelegator::Init failed");
         return ret;
     }
-    MEDIA_LOG_I("DraggingPlayerAgent::Init register");
+    MEDIA_LOG_I("SeekContinuousDelegator::Init register");
     videoStreamReadyCb_ = std::make_shared<VideoStreamReadyCallbackImpl>(shared_from_this());
     demuxer_->RegisterVideoStreamReadyCallback(videoStreamReadyCb_);
     videoFrameReadyCb_ = std::make_shared<VideoFrameReadyCallbackImpl>(shared_from_this());
@@ -429,14 +429,14 @@ void SeekClosestDelegator::DoSeek(int64_t seekTimeMs)
     FALSE_RETURN_MSG(seekTimeMs >= 0, "invalid seekTimeMs");
     FALSE_RETURN_MSG(pipeline_ != nullptr && demuxer_ != nullptr && decoder_ != nullptr, "key objects is null");
     lock_guard<mutex> lock(seekClosestMutex_);
-    int64_t seekTimeUs = 0;
     FALSE_RETURN_MSG(seekTimeMs != curSeekTimeMs_, "the same seek time with last seek;");
     curSeekTimeMs_ = seekTimeMs;
+    int64_t seekTimeUs = 0;
     FALSE_RETURN_MSG(Plugins::Us2HstTime(seekTimeMs, seekTimeUs), "cast seekTime ms to us failed");
     pipeline_->Flush();
     decoder_->SetSeekTime(seekTimeUs);
-    int64_t realSeekTimeUs = seekTimeUs;
-    Status res = demuxer_->SeekTo(seekTimeUs, Plugins::SeekMode::SEEK_CLOSEST_INNER, realSeekTimeUs);
+    int64_t realSeekTimeMs = seekTimeMs;
+    Status res = demuxer_->SeekTo(seekTimeMs, Plugins::SeekMode::SEEK_CLOSEST_INNER, realSeekTimeMs);
     FALSE_RETURN_MSG(res == Status::OK, "demuxer seekto error.");
     pipeline_->Preroll(true);
 }

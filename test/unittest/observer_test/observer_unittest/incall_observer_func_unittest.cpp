@@ -40,6 +40,14 @@ public:
     {
         return true;
     }
+    bool TelCallStateUpdated(bool isInCall)
+    {
+        return true;
+    }
+    bool NotifyTelCallStateUpdated(bool isInCall)
+    {
+        return true;
+    }
 };
 
 class InCallObserverTestFalseCallBack : public InCallObserverCallBack {
@@ -51,6 +59,14 @@ public:
         return false;
     }
     bool NotifyStopAndRelease(AVScreenCaptureStateCode state)
+    {
+        return false;
+    }
+    bool TelCallStateUpdated(bool isInCall)
+    {
+        return false;
+    }
+    bool NotifyTelCallStateUpdated(bool isInCall)
     {
         return false;
     }
@@ -170,7 +186,7 @@ HWTEST_F(InCallObserverInnerUnitTest, InCallCallBackReturn_03, TestSize.Level1)
     ASSERT_TRUE(InCallObserver::GetInstance().RegisterObserver());
     auto inCallObserverTestFalseCallBack = std::make_shared<InCallObserverTestFalseCallBack>();
     ASSERT_TRUE(InCallObserver::GetInstance().RegisterInCallObserverCallBack(inCallObserverTestFalseCallBack));
-    ASSERT_TRUE(InCallObserver::GetInstance().OnCallStateUpdated(false));
+    ASSERT_FALSE(InCallObserver::GetInstance().OnCallStateUpdated(false));
     ASSERT_FALSE(InCallObserver::GetInstance().IsInCall());
     sleep(3); // 3 second
     ASSERT_FALSE(InCallObserver::GetInstance().OnCallStateUpdated(true));

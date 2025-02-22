@@ -81,6 +81,7 @@ static const std::vector<struct JsEnumInt> g_AVErrorCode = {
     { "AVERR_IO_SSL_CONNECTION_FAILED", MediaServiceExtErrCodeAPI9::MSERR_EXT_API14_IO_SSL_CONNECT_FAIL },
     { "AVERR_IO_SSL_SERVER_CERT_UNTRUSTED", MediaServiceExtErrCodeAPI9::MSERR_EXT_API14_IO_SSL_SERVER_CERT_UNTRUSTED },
     { "AVERR_IO_UNSUPPORTED_REQUEST", MediaServiceExtErrCodeAPI9::MSERR_EXT_API14_IO_UNSUPPORTTED_REQUEST },
+    { "AVERR_SEEK_CONTINUOUS_UNSUPPORTED", MediaServiceExtErrCodeAPI9::MSERR_EXT_API16_SEEK_CONTINUOUS_UNSUPPORTED },
 };
 
 static const std::vector<struct JsEnumInt> g_avDataSourceError = {

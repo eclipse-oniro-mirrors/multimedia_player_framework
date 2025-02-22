@@ -69,6 +69,9 @@ public:
     int32_t GetBufferSize(size_t &size);
     int32_t ReleaseAudioBuffer();
     void SetIsInVoIPCall(bool isInVoIPCall);
+#ifdef SUPPORT_CALL
+    void SetIsInTelCall(bool isInTelCall);
+#endif
     AudioCapturerWrapperState GetAudioCapturerState();
 
 protected:
@@ -100,6 +103,9 @@ private:
     std::queue<std::shared_ptr<AudioBuffer>> availBuffers_;
     std::string bundleName_;
     std::atomic<bool> isInVoIPCall_ = false;
+#ifdef SUPPORT_CALL
+    std::atomic<bool> isInTelCall_ = false;
+#endif
     std::atomic<AudioCapturerWrapperState> captureState_ {CAPTURER_UNKNOWN};
 
     /* used for hilog output */

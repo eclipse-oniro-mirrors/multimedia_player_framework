@@ -252,5 +252,53 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperUpdateAudioCapture
     screenCaptureServer_->innerAudioCapture_->UpdateAudioCapturerConfig(filter);
     ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Stop(), MSERR_OK);
 }
+
+#ifdef SUPPORT_CALL
+/**
+* @tc.name: AudioCapturerWrapperInTelCall_001
+* @tc.desc: start audio capture wrapper during telephone call
+* @tc.type: FUNC
+*/
+HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperStartInTelCall_001, TestSize.Level2)
+{
+    SetValidConfig();
+    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
+    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
+        AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+    screenCaptureServer_->captureCallback_ = std::make_shared<ScreenRendererAudioStateChangeCallback>();
+    screenCaptureServer_->captureCallback_->SetAudioSource(screenCaptureServer_->audioSource_);
+    screenCaptureServer_->micAudioCapture_ = std::make_shared<MicAudioCapturerWrapper>(
+        screenCaptureServer_->captureConfig_.audioInfo.micCapInfo, screenCaptureServer_->screenCaptureCb_,
+        std::string("OS_MicAudioCapture"), screenCaptureServer_->contentFilter_);
+    screenCaptureServer_->micAudioCapture_->SetIsInTelCall(true);
+    ASSERT_NE(screenCaptureServer_->micAudioCapture_->Start(screenCaptureServer_->appInfo_), MSERR_OK);
+    screenCaptureServer_->micAudioCapture_->screenCaptureCb_ = nullptr;
+}
+
+/**
+* @tc.name: AudioCapturerWrapperInTelCall_002
+* @tc.desc: resume audio capture wrapper during telephone call
+* @tc.type: FUNC
+*/
+HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperInTelCall_002, TestSize.Level2)
+{
+    SetValidConfig();
+    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
+    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
+        AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+    screenCaptureServer_->captureCallback_ = std::make_shared<ScreenRendererAudioStateChangeCallback>();
+    screenCaptureServer_->captureCallback_->SetAudioSource(screenCaptureServer_->audioSource_);
+    screenCaptureServer_->micAudioCapture_ = std::make_shared<MicAudioCapturerWrapper>(
+        screenCaptureServer_->captureConfig_.audioInfo.micCapInfo, screenCaptureServer_->screenCaptureCb_,
+        std::string("OS_MicAudioCapture"), screenCaptureServer_->contentFilter_);
+    ASSERT_EQ(screenCaptureServer_->micAudioCapture_->Start(screenCaptureServer_->appInfo_), MSERR_OK);
+    sleep(RECORDER_TIME);
+    ASSERT_EQ(screenCaptureServer_->micAudioCapture_->Pause(), MSERR_OK);
+    sleep(RECORDER_TIME);
+    screenCaptureServer_->micAudioCapture_->SetIsInTelCall(true);
+    sleep(RECORDER_TIME);
+    ASSERT_NE(screenCaptureServer_->micAudioCapture_->Resume(), MSERR_OK);
+}
+#endif
 } // Media
 } // OHOS
