@@ -348,11 +348,7 @@ int32_t PlayerServer::PlayingState::SetPlaybackSpeed(PlaybackRateMode mode)
 
 int32_t PlayerServer::PlayingState::SeekContinous(int32_t mSeconds, int64_t batchNo)
 {
-    MEDIA_LOGE("not supported SeekContinous in PlayingState, please pause in player server");
-    (void)mSeconds;
-    (void)batchNo;
-    ReportInvalidOperation();
-    return MSERR_INVALID_STATE;
+    return server_.HandleSeekContinous(mSeconds, batchNo);
 }
 
 void PlayerServer::PlayingState::HandleStateChange(int32_t newState)

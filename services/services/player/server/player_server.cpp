@@ -493,6 +493,9 @@ int32_t PlayerServer::Play()
         lastOpStatus_ == PLAYER_PAUSED) {
         return OnPlay();
     }
+    if (lastOpStatus_ == PLAYER_STARTED && isInSeekContinous_.load()) {
+        return ExitSeekContinousAsync(true);
+    }
     MEDIA_LOGE("Can not Play, currentState is %{public}s", GetStatusDescription(lastOpStatus_).c_str());
     return MSERR_INVALID_OPERATION;
 }
@@ -1861,11 +1864,8 @@ int32_t PlayerServer::CheckSeek(int32_t mSeconds, PlayerSeekMode mode)
 int32_t PlayerServer::SeekContinous(int32_t mSeconds)
 {
     if (mSeconds == -1) {
-        ExitSeekContinous(true);
+        ExitSeekContinousAsync(true);
         return MSERR_OK;
-    }
-    if (lastOpStatus_ == PLAYER_STARTED) {
-        OnPause(true);
     }
     {
         std::lock_guard<std::mutex> lock(seekContinousMutex_);
@@ -1877,7 +1877,7 @@ int32_t PlayerServer::SeekContinous(int32_t mSeconds)
     int64_t seekContinousBatchNo = seekContinousBatchNo_.load();
     mSeconds = std::max(0, mSeconds);
     auto seekContinousTask = std::make_shared<TaskHandler<void>>([this, mSeconds, seekContinousBatchNo]() {
-        MediaTrace::TraceBegin("PlayerServer::SeekContinous", FAKE_POINTER(this));
+        MediaTrace trace("PlayerServer::SeekContinous");
         MEDIA_LOGI("PlayerServer::Seek start");
         auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
         (void)currState->SeekContinous(mSeconds, seekContinousBatchNo);
@@ -1914,6 +1914,34 @@ int32_t PlayerServer::ExitSeekContinous(bool align)
     }
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
     return playerEngine_->ExitSeekContinous(align, seekContinousBatchNo_.load());
+}
+
+int32_t PlayerServer::ExitSeekContinousAsync(bool align)
+{
+    {
+        std::lock_guard<std::mutex> lock(seekContinousMutex_);
+        if (!isInSeekContinous_.load()) {
+            return MSERR_OK;
+        }
+        UpdateContinousBatchNo();
+        isInSeekContinous_.store(false);
+    }
+    int64_t seekContinousBatchNo = seekContinousBatchNo_.load();
+    auto exitSeekContinousTask = std::make_shared<TaskHandler<void>>([this, align, seekContinousBatchNo]() {
+        MediaTrace trace("PlayerServer::ExitSeekContinousAsync");
+        MEDIA_LOGI("PlayerServer::ExitSeekContinous start");
+        if (playerEngine_ == nullptr) {
+            MEDIA_LOGE("playerEngine_ is nullptr!");
+            taskMgr_.MarkTaskDone("exit seek continous done");
+            return;
+        }
+        playerEngine_->ExitSeekContinous(align, seekContinousBatchNo);
+        MEDIA_LOGI("PlayerServer::ExitSeekContinous end");
+        taskMgr_.MarkTaskDone("exit seek continous done");
+    });
+    int32_t ret = taskMgr_.SeekContinousTask(exitSeekContinousTask, "exit seek continous");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SeekContinous failed");
+    return MSERR_OK;
 }
 
 int32_t PlayerServer::SetDeviceChangeCbStatus(bool status)
@@ -1953,7 +1981,7 @@ int32_t PlayerServer::SetMaxAmplitudeCbStatus(bool status)
 
 bool PlayerServer::IsSeekContinuousSupported()
 {
-    MediaTrace::TraceBegin("PlayerServer::IsSeekContinuousSupported", FAKE_POINTER(this));
+    MediaTrace trace("PlayerServer::IsSeekContinuousSupported");
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET(lastOpStatus_ == PLAYER_PREPARED || lastOpStatus_ == PLAYER_STARTED ||
         lastOpStatus_ == PLAYER_PLAYBACK_COMPLETE || lastOpStatus_ == PLAYER_PAUSED || lastOpStatus_ == PLAYER_STOPPED,

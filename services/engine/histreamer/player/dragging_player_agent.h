@@ -164,7 +164,7 @@ public:
 
 private:
     void SeekJob();
-    void DoSeek(int64_t seekMs);
+    void DoSeek(int64_t seekTimeMs);
     bool isReleased_ {false};
     string threadName_ {};
     unique_ptr<Task> seekTask_ {nullptr};
