@@ -1233,12 +1233,6 @@ int32_t ScreenCaptureServer::StartStreamMicAudioCapture()
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StartStreamMicAudioCapture start, dataType:%{public}d, "
         "micCapInfo.state:%{public}d.",
         FAKE_POINTER(this), captureConfig_.dataType, captureConfig_.audioInfo.micCapInfo.state);
-#ifdef SUPPORT_CALL
-    if (InCallObserver::GetInstance().IsInCall() && !IsTelInCallSkipList()) {
-        MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " skip creating micAudioCapture", FAKE_POINTER(this));
-        return MSERR_OK;
-    }
-#endif
     std::shared_ptr<AudioCapturerWrapper> micCapture;
     if (captureConfig_.audioInfo.micCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_VALID) {
         MediaTrace trace("ScreenCaptureServer::StartAudioCaptureMic");
@@ -1361,6 +1355,7 @@ int32_t ScreenCaptureServer::StartScreenCaptureFile()
         int32_t retMic = StartFileMicAudioCapture();
         if (retMic != MSERR_OK) {
             MEDIA_LOGE("StartScreenCaptureFile StartFileMicAudioCapture failed");
+            // not return, if start mic capture failed, inner capture will be started
         }
     }
     int32_t retInner = StartFileInnerAudioCapture();
@@ -2852,6 +2847,12 @@ int32_t ScreenCaptureServer::SetMicrophoneEnabled(bool isMicrophone)
 
 int32_t ScreenCaptureServer::SetMicrophoneOn()
 {
+#ifdef SUPPORT_CALL
+    if (InCallObserver::GetInstance().IsInCall() && !IsTelInCallSkipList()) {
+        NotifyStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE);
+        return MSERR_UNKNOWN;
+    }
+#endif
     int32_t ret = MSERR_UNKNOWN;
     if (!micAudioCapture_) {
         if (captureConfig_.dataType == DataType::ORIGINAL_STREAM) {
@@ -2918,6 +2919,12 @@ int32_t ScreenCaptureServer::ReStartMicForVoIPStatusSwitch()
     int32_t ret = MSERR_OK;
     StopMicAudioCapture();
     if (isMicrophoneSwitchTurnOn_) {
+#ifdef SUPPORT_CALL
+        if (InCallObserver::GetInstance().IsInCall() && !IsTelInCallSkipList()) {
+            NotifyStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE);
+            return MSERR_UNKNOWN;
+        }
+#endif
         ret = StartFileMicAudioCapture();
         if (ret != MSERR_OK) {
             MEDIA_LOGE("OnVoIPStatusChanged StartFileMicAudioCapture failed, ret: %{public}d", ret);
