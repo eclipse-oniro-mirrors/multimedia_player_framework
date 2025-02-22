@@ -271,10 +271,10 @@ Status SeekContinuousDelegator::Init()
         Status::ERROR_INVALID_PARAMETER, "Invalid demuxer filter instance.");
     Status ret = draggingPlayer_->Init(demuxer_, decoder_);
     if (ret != Status::OK) {
-        MEDIA_LOG_E("liyudebug DraggingPlayerAgent::Init failed");
+        MEDIA_LOG_E("SeekContinuousDelegator::Init failed");
         return ret;
     }
-    MEDIA_LOG_I("DraggingPlayerAgent::Init register");
+    MEDIA_LOG_I("SeekContinuousDelegator::Init register");
     videoStreamReadyCb_ = std::make_shared<VideoStreamReadyCallbackImpl>(shared_from_this());
     demuxer_->RegisterVideoStreamReadyCallback(videoStreamReadyCb_);
     videoFrameReadyCb_ = std::make_shared<VideoFrameReadyCallbackImpl>(shared_from_this());

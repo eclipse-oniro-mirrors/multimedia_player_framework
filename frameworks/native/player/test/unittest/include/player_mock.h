@@ -38,6 +38,7 @@ inline constexpr int32_t SEEK_CONTINUOUS_WAIT_US = 16666;
 const std::string MEDIA_ROOT = "file:///data/test/";
 const std::string VIDEO_FILE1 = MEDIA_ROOT + "H264_AAC.mp4";
 const std::string VIDEO_FILE2 = MEDIA_ROOT + "H264_AAC_multi_track.mp4";
+const std::string VIDEO_FILE3 = MEDIA_ROOT + "H264_AAC.mkv";
 const std::string SUBTITLE_SRT_FIELE = MEDIA_ROOT + "utf8.srt";
 const std::string SUBTITLE_SRT_FIELE1 = MEDIA_ROOT + "utf8_test1.srt";
 const std::string SUBTITLE_0_SEC = "MediaOS: test for subtitle_1";
