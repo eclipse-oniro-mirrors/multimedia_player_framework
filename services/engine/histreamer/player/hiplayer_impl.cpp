@@ -20,7 +20,6 @@
 #include <chrono>
 #include <shared_mutex>
 
-#include "audio_info.h"
 #include "audio_device_descriptor.h"
 #include "common/log.h"
 #include "common/media_source.h"
@@ -569,6 +568,13 @@ int32_t HiPlayerImpl::SetRenderFirstFrame(bool display)
     return TransStatus(Status::OK);
 }
 
+int32_t HiPlayerImpl::SetIsCalledBySystemApp(bool isCalledBySystemApp)
+{
+    MEDIA_LOG_I("SetIsCalledBySystemApp in, isCalledBySystemApp: " PUBLIC_LOG_D32, isCalledBySystemApp);
+    isCalledBySystemApp_ = isCalledBySystemApp;
+    return TransStatus(Status::OK);
+}
+
 int32_t HiPlayerImpl::PrepareAsync()
 {
     MediaTrace trace("HiPlayerImpl::PrepareAsync");
@@ -728,6 +734,13 @@ void HiPlayerImpl::SetInterruptState(bool isInterruptNeeded)
     if (interruptMonitor_) {
         interruptMonitor_->SetInterruptState(isInterruptNeeded);
     }
+    if (isDrmProtected_) {
+        std::unique_lock<std::mutex> drmLock(drmMutex_);
+        stopWaitingDrmConfig_ = true;
+        drmConfigCond_.notify_all();
+    }
+    std::unique_lock<std::mutex> lock(seekMutex_);
+    syncManager_->seekCond_.notify_all();
 }
 
 int32_t HiPlayerImpl::SelectBitRate(uint32_t bitRate)
@@ -835,9 +848,34 @@ int32_t HiPlayerImpl::Pause(bool isSystemOperation)
     callbackLooper_.StopReportMediaProgress();
     callbackLooper_.StopCollectMaxAmplitude();
     callbackLooper_.ManualReportMediaProgressOnce();
-    OnStateChanged(PlayerStateId::PAUSE, isSystemOperation);
+    {
+        AutoLock lock(interruptMutex_);
+        OnStateChanged(PlayerStateId::PAUSE, isSystemOperation);
+        if (isSystemOperation) {
+            ReportAudioInterruptEvent();
+        }
+    }
     UpdatePlayTotalDuration();
     return TransStatus(ret);
+}
+
+void HiPlayerImpl::ReportAudioInterruptEvent()
+{
+    isHintPauseReceived_ = false;
+    if (!interruptNotifyPlay_.load()) {
+        isSaveInterruptEventNeeded_.store(false);
+        return;
+    }
+    MEDIA_LOG_I("alreay receive an interrupt end event");
+    interruptNotifyPlay_.store(false);
+    Format format;
+    int32_t hintType = interruptEvent_.hintType;
+    int32_t forceType = interruptEvent_.forceType;
+    int32_t eventType = interruptEvent_.eventType;
+    (void)format.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_TYPE, eventType);
+    (void)format.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_FORCE, forceType);
+    (void)format.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_HINT, hintType);
+    callbackLooper_.OnInfo(INFO_TYPE_INTERRUPT_EVENT, hintType, format);
 }
 
 int32_t HiPlayerImpl::PauseDemuxer()
@@ -873,12 +911,6 @@ int32_t HiPlayerImpl::Stop()
     MediaTrace trace("HiPlayerImpl::Stop");
     MEDIA_LOG_I("Stop entered.");
 
-    // triger drm waiting condition
-    if (isDrmProtected_) {
-        std::unique_lock<std::mutex> drmLock(drmMutex_);
-        stopWaitingDrmConfig_ = true;
-        drmConfigCond_.notify_all();
-    }
     AutoLock lock(handleCompleteMutex_);
     UpdatePlayStatistics();
     callbackLooper_.StopReportMediaProgress();
@@ -1372,6 +1404,9 @@ int32_t HiPlayerImpl::SetLooping(bool loop)
 {
     MEDIA_LOG_I("SetLooping in, loop: " PUBLIC_LOG_D32, loop);
     singleLoop_ = loop;
+    if (audioSink_ != nullptr) {
+        audioSink_->SetLooping(loop);
+    }
     return TransStatus(Status::OK);
 }
 
@@ -2198,7 +2233,8 @@ void HiPlayerImpl::OnEventSub(const Event &event)
             break;
         }
         case EventType::EVENT_CACHED_DURATION: {
-            NotifyCachedDuration(AnyCast<int32_t>(event.param));
+            int32_t cachedDuration = AnyCast<int32_t>(event.param);
+            NotifyCachedDuration(AdjustCachedDuration(cachedDuration));
             break;
         }
         case EventType::EVENT_BUFFER_PROGRESS: {
@@ -2229,6 +2265,22 @@ void HiPlayerImpl::OnEventSubTrackChange(const Event &event)
         default:
             break;
     }
+}
+
+int32_t HiPlayerImpl::AdjustCachedDuration(int32_t cachedDuration)
+{
+    int32_t durationMs = durationMs_.load();
+    FALSE_RETURN_V_NOLOG(durationMs > 0, cachedDuration);
+    int32_t currentTime = 0;
+    int32_t res = GetCurrentTime(currentTime);
+    FALSE_RETURN_V_NOLOG(res == MSERR_OK && currentTime > 0, std::min(cachedDuration, durationMs));
+    int64_t remaining  = static_cast<int64_t>(durationMs) - static_cast<int64_t>(currentTime);
+    int32_t safeRemaining = static_cast<int32_t>(std::clamp(
+        remaining,
+        static_cast<int64_t>(0),
+        static_cast<int64_t>(durationMs)
+    ));
+    return std::min(cachedDuration, safeRemaining);
 }
 
 void HiPlayerImpl::HandleInitialPlayingStateChange(const EventType& eventType)
@@ -2589,7 +2641,7 @@ void HiPlayerImpl::NotifySeekDone(int32_t seekPos)
             lock,
             std::chrono::milliseconds(PLAYING_SEEK_WAIT_TIME),
             [this]() {
-                return !syncManager_->InSeeking();
+                return !syncManager_->InSeeking() || isInterruptNeeded_.load();
             });
     }
     auto startTime = std::chrono::steady_clock::now();
@@ -2612,27 +2664,38 @@ void HiPlayerImpl::NotifySeekDone(int32_t seekPos)
 
 void HiPlayerImpl::NotifyAudioInterrupt(const Event& event)
 {
-    MEDIA_LOG_I("NotifyAudioInterrupt");
     Format format;
     auto interruptEvent = AnyCast<AudioStandard::InterruptEvent>(event.param);
     int32_t hintType = interruptEvent.hintType;
     int32_t forceType = interruptEvent.forceType;
     int32_t eventType = interruptEvent.eventType;
+    MEDIA_LOG_I("NotifyAudioInterrupt eventType: %{public}d, hintType: %{public}d, forceType: %{public}d",
+        eventType, hintType, forceType);
     if (forceType == OHOS::AudioStandard::INTERRUPT_FORCE) {
         if (hintType == OHOS::AudioStandard::INTERRUPT_HINT_PAUSE
             || hintType == OHOS::AudioStandard::INTERRUPT_HINT_STOP) {
+            isHintPauseReceived_ = true;
             Status ret = Status::OK;
             ret = pipeline_->Pause();
             syncManager_->Pause();
-            if (audioSink_ != nullptr) {
-                audioSink_->Pause();
-            }
             if (ret != Status::OK) {
                 UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
             }
             callbackLooper_.StopReportMediaProgress();
             callbackLooper_.StopCollectMaxAmplitude();
         }
+    }
+    {
+        AutoLock lock(interruptMutex_);
+        if (isSaveInterruptEventNeeded_.load() && isHintPauseReceived_
+            && eventType == OHOS::AudioStandard::INTERRUPT_TYPE_END
+            && forceType == OHOS::AudioStandard::INTERRUPT_SHARE
+            && hintType == OHOS::AudioStandard::INTERRUPT_HINT_RESUME) {
+            interruptNotifyPlay_.store(true);
+            interruptEvent_ = interruptEvent;
+            return;
+        }
+        isSaveInterruptEventNeeded_.store(true);
     }
     (void)format.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_TYPE, eventType);
     (void)format.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_FORCE, forceType);
@@ -2816,6 +2879,9 @@ void __attribute__((no_sanitize("cfi"))) HiPlayerImpl::OnStateChanged(PlayerStat
         } else if ((curState_ == PlayerStateId::EOS) && (state == PlayerStateId::PAUSE)) {
             MEDIA_LOG_E("already at completed and not allow pause");
             return;
+        } else if ((curState_ == PlayerStateId::ERROR) && (state == PlayerStateId::READY)) {
+            MEDIA_LOG_E("already at error and not allow ready");
+            return;
         }
         curState_ = state;
     }
@@ -2877,6 +2943,7 @@ Status HiPlayerImpl::LinkAudioDecoderFilter(const std::shared_ptr<Filter>& preFi
     audioDecoder_ = FilterFactory::Instance().CreateFilter<AudioDecoderFilter>("player.audiodecoder",
         FilterType::FILTERTYPE_ADEC);
     FALSE_RETURN_V(audioDecoder_ != nullptr, Status::ERROR_NULL_POINTER);
+    interruptMonitor_->RegisterListener(audioDecoder_);
     audioDecoder_->Init(playerEventReceiver_, playerFilterCallback_);
 
     audioDecoder_->SetCallerInfo(instanceId_, bundleName_);
@@ -2891,8 +2958,10 @@ Status HiPlayerImpl::LinkAudioDecoderFilter(const std::shared_ptr<Filter>& preFi
         });
         if (notTimeout && isDrmPrepared_) {
             MEDIA_LOG_I("LinkAudioDecoderFilter will SetDecryptConfig");
+#ifdef SUPPORT_AVPLAYER_DRM
             bool svpFlag = svpMode_ == HiplayerSvpMode::SVP_TRUE ? true : false;
             audioDecoder_->SetDecryptionConfig(keySessionServiceProxy_, svpFlag);
+#endif
         } else {
             MEDIA_LOG_E("HiPlayerImpl Drmcond wait timeout or has been stopped! Play drm protected audio failed!");
             return Status::ERROR_INVALID_OPERATION;
@@ -2912,9 +2981,10 @@ Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilte
     audioSink_ = FilterFactory::Instance().CreateFilter<AudioSinkFilter>("player.audiosink",
         FilterType::FILTERTYPE_ASINK);
     FALSE_RETURN_V(audioSink_ != nullptr, Status::ERROR_NULL_POINTER);
-    audioSink_->Init(playerEventReceiver_, playerFilterCallback_);
+    audioSink_->Init(playerEventReceiver_, playerFilterCallback_, interruptMonitor_);
     audioSink_->SetMaxAmplitudeCbStatus(maxAmplitudeCbStatus_);
     audioSink_->SetPerfRecEnabled(isPerfRecEnabled_);
+    audioSink_->SetIsCalledBySystemApp(isCalledBySystemApp_);
     if (demuxer_ != nullptr && audioRenderInfo_ == nullptr) {
         std::vector<std::shared_ptr<Meta>> trackInfos = demuxer_->GetStreamMetaInfo();
         SetDefaultAudioRenderInfo(trackInfos);
@@ -3007,8 +3077,10 @@ Status HiPlayerImpl::LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFi
             });
             if (notTimeout && isDrmPrepared_) {
                 MEDIA_LOG_I("LinkVideoDecoderFilter will SetDecryptConfig");
+#ifdef SUPPORT_AVPLAYER_DRM
                 bool svpFlag = svpMode_ == HiplayerSvpMode::SVP_TRUE ? true : false;
                 videoDecoder_->SetDecryptConfig(keySessionServiceProxy_, svpFlag);
+#endif
             } else {
                 MEDIA_LOG_E("HiPlayerImpl Drmcond wait timeout or has been stopped! Play drm protected video failed!");
                 return Status::ERROR_INVALID_OPERATION;
@@ -3034,7 +3106,7 @@ Status HiPlayerImpl::LinkSubtitleSinkFilter(const std::shared_ptr<Filter>& preFi
     subtitleSink_ = FilterFactory::Instance().CreateFilter<SubtitleSinkFilter>("player.subtitlesink",
         FilterType::FILTERTYPE_SSINK);
     FALSE_RETURN_V(subtitleSink_ != nullptr, Status::ERROR_NULL_POINTER);
-    subtitleSink_->Init(playerEventReceiver_, playerFilterCallback_);
+    subtitleSink_->Init(playerEventReceiver_, playerFilterCallback_, interruptMonitor_);
     std::shared_ptr<Meta> globalMeta = std::make_shared<Meta>();
     if (demuxer_ != nullptr) {
         globalMeta = demuxer_->GetGlobalMetaInfo();
@@ -3095,8 +3167,25 @@ Status HiPlayerImpl::StartSeekContinous()
 {
     FALSE_RETURN_V(!draggingPlayerAgent_, Status::OK);
     FALSE_RETURN_V(demuxer_ && videoDecoder_, Status::OK);
-    draggingPlayerAgent_ = DraggingPlayerAgent::Create();
+    draggingPlayerAgent_ = DraggingPlayerAgent::Create(pipeline_, demuxer_, videoDecoder_, playerId_);
     FALSE_RETURN_V_MSG_E(draggingPlayerAgent_ != nullptr, Status::ERROR_INVALID_OPERATION, "failed to create agent");
+    Status res = draggingPlayerAgent_->Init();
+    if (res != Status::OK) {
+        draggingPlayerAgent_ = nullptr;
+        return res;
+    }
+    if (draggingPlayerAgent_->GetDraggingMode() == DraggingMode::DRAGGING_CONTINUOUS) {
+        FlushVideoEOS();
+        // Drive the head node to start the video channel.
+        res = demuxer_->ResumeDragging();
+        FALSE_LOG_MSG(res == Status::OK, "ResumeDragging failed");
+    }
+    SetFrameRateForSeekPerformance(FRAME_RATE_FOR_SEEK_PERFORMANCE);
+    return res;
+}
+
+void HiPlayerImpl::FlushVideoEOS()
+{
     bool demuxerEOS = demuxer_->HasEosTrack();
     bool decoderEOS = false;
     for (std::pair<std::string, bool>& item: completeState_) {
@@ -3115,16 +3204,6 @@ Status HiPlayerImpl::StartSeekContinous()
             item.second = false;
         }
     }
-    Status res = draggingPlayerAgent_->Init(demuxer_, videoDecoder_, playerId_);
-    if (res != Status::OK) {
-        draggingPlayerAgent_ = nullptr;
-        return res;
-    }
-    SetFrameRateForSeekPerformance(FRAME_RATE_FOR_SEEK_PERFORMANCE);
-    // Drive the head node to start the video channel.
-    res = demuxer_->ResumeDragging();
-    FALSE_LOG_MSG(res == Status::OK, "ResumeDragging failed");
-    return res;
 }
 
 int32_t HiPlayerImpl::ExitSeekContinous(bool align, int64_t seekContinousBatchNo)
@@ -3133,12 +3212,7 @@ int32_t HiPlayerImpl::ExitSeekContinous(bool align, int64_t seekContinousBatchNo
     FALSE_RETURN_V(demuxer_ && videoDecoder_, TransStatus(Status::OK));
     FALSE_RETURN_V(!isNetWorkPlay_, TransStatus(Status::OK));
     seekContinousBatchNo_.store(seekContinousBatchNo);
-    if (draggingPlayerAgent_ == nullptr) {
-        if (align) {
-            Seek(lastSeekContinousPos_, PlayerSeekMode::SEEK_CLOSEST, false);
-        }
-        return TransStatus(Status::OK);
-    }
+    FALSE_RETURN_V(draggingPlayerAgent_ != nullptr, TransStatus(Status::OK));
     draggingPlayerAgent_->Release();
     draggingPlayerAgent_ = nullptr;
     SetFrameRateForSeekPerformance(FRAME_RATE_DEFAULT);
@@ -3149,6 +3223,7 @@ int32_t HiPlayerImpl::ExitSeekContinous(bool align, int64_t seekContinousBatchNo
     if (align) {
         seekAgent_ = std::make_shared<SeekAgent>(demuxer_);
         interruptMonitor_->RegisterListener(seekAgent_);
+        audioSink_->Flush();
         auto res = seekAgent_->AlignAudioPosition(lastSeekContinousPos_);
         FALSE_LOG_MSG(res == Status::OK, "AlignAudioPosition failed");
         MEDIA_LOG_I_SHORT("seekAgent_ AlignAudioPosition end");
@@ -3177,6 +3252,8 @@ int32_t HiPlayerImpl::IsSeekContinuousSupported(bool &isSeekContinuousSupported)
 {
     FALSE_RETURN_V_MSG_E(demuxer_ != nullptr && videoDecoder_ != nullptr, TransStatus(Status::ERROR_WRONG_STATE),
         "demuxer or decoder is null");
+    FALSE_RETURN_V_MSG_E(pipelineStates_ != PlayerStates::PLAYER_STOPPED, TransStatus(Status::ERROR_WRONG_STATE),
+        "call IsSeekContinuousSupported in stopped state");
     isSeekContinuousSupported = DraggingPlayerAgent::IsDraggingSupported(demuxer_, videoDecoder_);
     return TransStatus(Status::OK);
 }

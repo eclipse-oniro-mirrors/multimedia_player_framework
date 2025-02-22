@@ -17,6 +17,7 @@
 #include "avplayer_callback.h"
 #include "media_errors.h"
 #include "common_napi.h"
+#include "js_common_utils.h"
 #ifdef SUPPORT_AVPLAYER_DRM
 #include "key_session_impl.h"
 #endif
@@ -751,7 +752,7 @@ napi_value AVPlayerNapi::JsSeek(napi_env env, napi_callback_info info)
     }
     int32_t time = -1;
     napi_status status = napi_get_value_int32(env, args[0], &time);
-    if (status != napi_ok || time < 0) {
+    if (status != napi_ok || (time < 0 && argCount == 1)) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please check seek time");
         return result;
     }
@@ -764,6 +765,10 @@ napi_value AVPlayerNapi::JsSeek(napi_env env, napi_callback_info info)
         status = napi_get_value_int32(env, args[1], &mode);
         if (status != napi_ok || mode < SEEK_NEXT_SYNC || mode > SEEK_CONTINOUS) {
             jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please check seek mode");
+            return result;
+        }
+        if (status != napi_ok || (time < 0 && (time != -1 || mode != SEEK_CONTINOUS))) {
+            jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please check seek time");
             return result;
         }
     }
@@ -1796,7 +1801,11 @@ void AVPlayerNapi::SetSurface(const std::string &surfaceStr)
             "Please obtain the surface from XComponentController.getXComponentSurfaceId");
         return;
     }
-    surfaceId = std::stoull(surfaceStr);
+    if (!StrToULL(surfaceStr, surfaceId)) {
+        OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
+            "invalid parameters, failed to obtain surfaceId");
+        return;
+    }
     MEDIA_LOGI("get surface, surfaceId = (%{public}" PRIu64 ")", surfaceId);
 
     auto surface = SurfaceUtils::GetInstance()->GetSurface(surfaceId);

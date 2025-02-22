@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024 Huawei Device Co., Ltd.
+ * Copyright (C) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,6 +20,7 @@
 #include "screen_capture.h"
 #include "player.h"
 #include "recorder.h"
+#include "avmetadatahelper.h"
 
 struct OH_AVScreenCapture : public OHOS::RefBase {
     OH_AVScreenCapture() = default;
@@ -40,5 +41,15 @@ struct OH_AVPlayer : public OHOS::RefBase {
 struct OH_AVRecorder : public OHOS::RefBase {
     OH_AVRecorder() = default;
     virtual ~OH_AVRecorder() = default;
+};
+
+struct OH_AVImageGenerator : public OHOS::RefBase {
+    OH_AVImageGenerator() = default;
+    virtual ~OH_AVImageGenerator() = default;
+};
+
+struct OH_AVMetadataExtractor : public OHOS::RefBase {
+    OH_AVMetadataExtractor() = default;
+    virtual ~OH_AVMetadataExtractor() = default;
 };
 #endif // NATIVE_SCREEN_CAPTURE_MAGIC_H

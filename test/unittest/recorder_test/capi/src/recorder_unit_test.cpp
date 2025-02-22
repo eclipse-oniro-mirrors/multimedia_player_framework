@@ -183,11 +183,13 @@ static void OnError(OH_AVRecorder *recorder, int32_t errorCode, const char *erro
     MEDIA_LOGE("AVRecorder ErrorCallback errorCode: %d, errorMsg: %s \n", errorCode, errorMsg);
 }
 
+#ifdef SUPPORT_RECORDER_CREATE_FILE
 static void OnUri(OH_AVRecorder *recorder, OH_MediaAsset *asset, void *userData)
 {
     (void)recorder;
     (void)userData;
 }
+#endif
 
 void NativeRecorderUnitTest::SetUpTestCase(void)
 {
@@ -206,9 +208,11 @@ void NativeRecorderUnitTest::SetUp(void)
 
     ret = OH_AVRecorder_SetErrorCallback(recorder_, OnError, nullptr);
     EXPECT_EQ(ret, AV_ERR_OK);
-
+    
+    #ifdef SUPPORT_RECORDER_CREATE_FILE
     ret = OH_AVRecorder_SetUriCallback(recorder_, OnUri, nullptr);
     EXPECT_EQ(ret, AV_ERR_OK);
+    #endif
 }
 
 void NativeRecorderUnitTest::TearDown(void)
@@ -613,7 +617,12 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Prepare_008, TestSize.Level2)
 
     int32_t ret = AV_ERR_OK;
     ret = OH_AVRecorder_Prepare(recorder_, &config);
+    
+    #ifdef SUPPORT_RECORDER_CREATE_FILE
     EXPECT_EQ(ret, AV_ERR_OK);
+    #else
+    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
+    #endif
 
     free(config.url);
     free(config.metadata.genre);
@@ -991,10 +1000,16 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_UpdateRotation_003, TestSize.Level2)
     int32_t rotation = 90;
 
     int32_t ret = AV_ERR_OK;
+    
     ret = OH_AVRecorder_Prepare(recorder_, &config);
+    #ifdef SUPPORT_RECORDER_CREATE_FILE
     EXPECT_EQ(ret, AV_ERR_OK);
+    #else
+    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
+    #endif
     ret = OH_AVRecorder_UpdateRotation(recorder_, rotation);
     EXPECT_EQ(ret, AV_ERR_OK);
+
 
     free(config.url);
     free(config.metadata.genre);
@@ -1023,8 +1038,13 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_UpdateRotation_004, TestSize.Level2)
     config.fileGenerationMode = OH_AVRecorder_FileGenerationMode::AVRECORDER_AUTO_CREATE_CAMERA_SCENE;
 
     int32_t ret = AV_ERR_OK;
+    
     ret = OH_AVRecorder_Prepare(recorder_, &config);
+    #ifdef SUPPORT_RECORDER_CREATE_FILE
     EXPECT_EQ(ret, AV_ERR_OK);
+    #else
+    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
+    #endif
 
     int32_t rotation = 0;
     ret = OH_AVRecorder_UpdateRotation(recorder_, rotation);
@@ -1846,6 +1866,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_SetErrorCallback_004, TestSize.Level2)
  * @tc.desc: Test recorder SetUriCallback process 001
  * @tc.type: FUNC
  */
+#ifdef SUPPORT_RECORDER_CREATE_FILE
 HWTEST_F(NativeRecorderUnitTest, Recorder_SetUriCallback_001, TestSize.Level2)
 {
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_SetUriCallback_001 in.");
@@ -1855,12 +1876,14 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_SetUriCallback_001, TestSize.Level2)
 
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_SetErrorCallback_001 out.");
 }
+#endif
 
 /**
  * @tc.name: Recorder_SetUriCallback_002
  * @tc.desc: Test recorder SetUriCallback process 002
  * @tc.type: FUNC
  */
+#ifdef SUPPORT_RECORDER_CREATE_FILE
 HWTEST_F(NativeRecorderUnitTest, Recorder_SetUriCallback_002, TestSize.Level2)
 {
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_SetUriCallback_002 in.");
@@ -1872,12 +1895,14 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_SetUriCallback_002, TestSize.Level2)
 
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_SetUriCallback_002 out.");
 }
+#endif
 
 /**
  * @tc.name: Recorder_SetUriCallback_003
  * @tc.desc: Test recorder SetUriCallback process 003
  * @tc.type: FUNC
  */
+#ifdef SUPPORT_RECORDER_CREATE_FILE
 HWTEST_F(NativeRecorderUnitTest, Recorder_SetUriCallback_003, TestSize.Level2)
 {
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_SetUriCallback_003 in.");
@@ -1889,12 +1914,14 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_SetUriCallback_003, TestSize.Level2)
 
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_SetUriCallback_003 out.");
 }
+#endif
 
 /**
  * @tc.name: Recorder_SetUriCallback_004
  * @tc.desc: Test recorder SetUriCallback process 004
  * @tc.type: FUNC
  */
+#ifdef SUPPORT_RECORDER_CREATE_FILE
 HWTEST_F(NativeRecorderUnitTest, Recorder_SetUriCallback_004, TestSize.Level2)
 {
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_SetUriCallback_004 in.");
@@ -1904,3 +1931,4 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_SetUriCallback_004, TestSize.Level2)
 
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_SetUriCallback_004 out.");
 }
+#endif

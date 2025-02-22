@@ -21,6 +21,7 @@
 #include <queue>
 #include <chrono>
 
+#include "audio_info.h"
 #include "audio_decoder_filter.h"
 #include "audio_sink_filter.h"
 #include "common/status.h"
@@ -106,6 +107,7 @@ public:
     int32_t SetRenderFirstFrame(bool display) override;
     int32_t SetPlayRange(int64_t start, int64_t end) override;
     int32_t SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode) override;
+    int32_t SetIsCalledBySystemApp(bool isCalledBySystemApp) override;
     int32_t PrepareAsync() override;
     int32_t Play() override;
     int32_t Pause(bool isSystemOperation) override;
@@ -260,6 +262,7 @@ private:
     bool IsInValidSeekTime(int32_t seekPos);
     int64_t GetPlayStartTime();
     Status StartSeekContinous();
+    void FlushVideoEOS();
     int32_t InnerSelectTrack(std::string mime, int32_t trackId, PlayerSwitchMode mode);
     bool NeedSeekClosest();
     void HandleEosFlagState(const Event& event);
@@ -270,6 +273,8 @@ private:
     Status SetSeiMessageListener();
     void UpdatePlayTotalDuration();
     inline bool IsStatisticalInfoValid();
+    void ReportAudioInterruptEvent();
+    int32_t AdjustCachedDuration(int32_t cachedDuration);
 
     bool isNetWorkPlay_ = false;
     bool isDump_ = false;
@@ -331,7 +336,9 @@ private:
     bool isDrmProtected_ = false;
     bool isDrmPrepared_ = false;
     bool stopWaitingDrmConfig_ = false;
+#ifdef SUPPORT_AVPLAYER_DRM
     sptr<DrmStandard::IMediaKeySessionService> keySessionServiceProxy_{nullptr};
+#endif
     int32_t svpMode_ = HiplayerSvpMode::SVP_CLEAR;
 
     bool isInitialPlay_ = true;
@@ -389,6 +396,12 @@ private:
     bool seiMessageCbStatus_ {false};
     std::vector<int32_t> payloadTypes_{};
     bool isPerfRecEnabled_ { false };
+    OHOS::Media::Mutex interruptMutex_{};
+    bool isHintPauseReceived_ { false };
+    std::atomic<bool> interruptNotifyPlay_ {false};
+    std::atomic<bool> isSaveInterruptEventNeeded_ {true};
+    OHOS::AudioStandard::InterruptEvent interruptEvent_;
+    bool isCalledBySystemApp_ { false };
 };
 } // namespace Media
 } // namespace OHOS

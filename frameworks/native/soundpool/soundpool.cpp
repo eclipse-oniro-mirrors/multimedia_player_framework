@@ -17,10 +17,13 @@
 #include "media_errors.h"
 #include "media_log.h"
 #include "soundpool_manager.h"
+#include "soundpool_manager_multi.h"
 #include "soundpool.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SOUNDPOOL, "SoundPool"};
+    static const int32_t SOUNDPOOL_API_VERSION_ISOLATION = 16;
+    static const int32_t FAULT_API_VERSION = -1;
 }
 
 namespace OHOS {
@@ -33,14 +36,29 @@ std::shared_ptr<ISoundPool> SoundPoolFactory::CreateSoundPool(int maxStreams,
     if (!SoundPool::CheckInitParam(maxStreams, audioRenderInfo)) {
         return nullptr;
     }
-    SoundPoolManager::GetInstance().SetSoundPool(getpid(), impl);
-    SoundPoolManager::GetInstance().GetSoundPool(getpid(), impl);
-    CHECK_AND_RETURN_RET_LOG(impl != nullptr, nullptr, "failed to get SoundPool");
+    int32_t apiVersion = GetAPIVersion();
+    CHECK_AND_RETURN_RET_LOG(apiVersion > 0 || apiVersion == FAULT_API_VERSION, nullptr, "invalid apiVersion");
+    if (apiVersion > 0 && apiVersion < SOUNDPOOL_API_VERSION_ISOLATION) {
+        MEDIA_LOGI("SoundPoolFactory::CreateSoundPool go old version");
+        SoundPoolManager::GetInstance().SetSoundPool(getpid(), impl);
+        SoundPoolManager::GetInstance().GetSoundPool(getpid(), impl);
+        CHECK_AND_RETURN_RET_LOG(impl != nullptr, nullptr, "failed to get SoundPool");
 
-    int32_t ret = impl->Init(maxStreams, audioRenderInfo);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed to init SoundPool");
+        int32_t ret = impl->Init(maxStreams, audioRenderInfo);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed to init SoundPool");
+        impl->SetApiVersion(apiVersion);
 
-    return impl;
+        return impl;
+    } else {
+        int32_t ret = SoundPoolManagerMulti::GetInstance().GetSoundPoolInstance(impl);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK && impl != nullptr, nullptr, "failed to get SoundPoolMulti");
+
+        ret = impl->Init(maxStreams, audioRenderInfo);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed to init SoundPoolMulti");
+        impl->SetApiVersion(apiVersion);
+
+        return impl;
+    }
 }
 
 SoundPool::SoundPool()
@@ -85,7 +103,7 @@ int32_t SoundPool::Load(const std::string url)
     MEDIA_LOGI("SoundPool::Load url::%{public}s", url.c_str());
     CHECK_AND_RETURN_RET_LOG(!url.empty(), -1, "Failed to obtain SoundPool for load");
     CHECK_AND_RETURN_RET_LOG(soundIDManager_ != nullptr, -1, "sound id manager have released.");
-    return soundIDManager_->Load(url);
+    return soundIDManager_->Load(url, apiVersion_);
 }
 
 int32_t SoundPool::Load(int32_t fd, int64_t offset, int64_t length)
@@ -96,7 +114,7 @@ int32_t SoundPool::Load(int32_t fd, int64_t offset, int64_t length)
         std::to_string(offset).c_str(), std::to_string(length).c_str());
     CHECK_AND_RETURN_RET_LOG((fd > 0 && length > 0 && offset >= 0), -1, "Invalid fd param.");
     CHECK_AND_RETURN_RET_LOG(soundIDManager_ != nullptr, -1, "sound id manager have released.");
-    return soundIDManager_->Load(fd, offset, length);
+    return soundIDManager_->Load(fd, offset, length, apiVersion_);
 }
 
 int32_t SoundPool::Play(int32_t soundID, PlayParams playParameters)
@@ -223,7 +241,16 @@ int32_t SoundPool::ReleaseInner()
     if (frameWriteCallback_ != nullptr) {
         frameWriteCallback_.reset();
     }
-    SoundPoolManager::GetInstance().Release(getpid());
+    
+    if (apiVersion_ > 0 && apiVersion_ < SOUNDPOOL_API_VERSION_ISOLATION) {
+        SoundPoolManager::GetInstance().Release(getpid());
+    } else if (apiVersion_ == FAULT_API_VERSION || apiVersion_ >= SOUNDPOOL_API_VERSION_ISOLATION) {
+        std::shared_ptr<SoundPool> sharedPtr(this, [](SoundPool*) {
+        });
+        SoundPoolManagerMulti::GetInstance().ReleaseInstance(sharedPtr);
+    } else {
+        MEDIA_LOGI("SoundPool::ReleaseInner error apiVersion_: %{public}d", apiVersion_);
+    }
     return MSERR_OK;
 }
 
@@ -259,5 +286,12 @@ bool SoundPool::CheckVolumeVaild(float *leftVol, float *rightVol)
     }
     return true;
 }
+
+void SoundPool::SetApiVersion(int32_t apiVersion)
+{
+    std::lock_guard lock(soundPoolLock_);
+    apiVersion_ = apiVersion;
+}
+
 } // namespace Media
 } // namespace OHOS

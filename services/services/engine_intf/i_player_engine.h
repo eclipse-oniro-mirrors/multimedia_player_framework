@@ -24,7 +24,9 @@
 #include "meta/video_types.h"
 #include "nocopyable.h"
 
+#ifdef SUPPORT_AVPLAYER_DRM
 #include "i_keysession_service.h"
+#endif
 
 namespace OHOS {
 class Surface;
@@ -76,6 +78,11 @@ public:
         (void)start;
         (void)end;
         (void)mode;
+        return 0;
+    }
+    virtual int32_t SetIsCalledBySystemApp(bool isCalledBySystemApp)
+    {
+        (void)isCalledBySystemApp;
         return 0;
     }
     virtual int32_t PrepareAsync() = 0;

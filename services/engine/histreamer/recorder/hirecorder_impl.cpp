@@ -503,9 +503,9 @@ void HiRecorderImpl::OnEvent(const Event &event)
             if (ptr != nullptr) {
                 switch (AnyCast<Status>(event.param)) {
                     case Status::ERROR_AUDIO_INTERRUPT:
-                        // audio interrupted, report error and recorder stop
+                        // audio interrupted, recorder first stop then error
+                        Stop(true);
                         ptr->OnError(IRecorderEngineObs::ErrorType::ERROR_INTERNAL, MSERR_AUD_INTERRUPT);
-                        Stop(false);
                         break;
                     default:
                         ptr->OnError(IRecorderEngineObs::ErrorType::ERROR_INTERNAL, MSERR_EXT_API9_INVALID_PARAMETER);

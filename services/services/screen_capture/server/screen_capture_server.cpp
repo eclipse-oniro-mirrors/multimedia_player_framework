@@ -87,11 +87,12 @@ static constexpr int32_t AUDIO_CHANGE_TIME = 200000; // 200 ms
 
 std::map<int32_t, std::weak_ptr<ScreenCaptureServer>> ScreenCaptureServer::serverMap_{};
 std::map<int32_t, std::pair<int32_t, int32_t>> ScreenCaptureServer::saUidAppUidMap_{};
-const int32_t ScreenCaptureServer::maxSessionId_ = 8;
+const int32_t ScreenCaptureServer::maxSessionId_ = 16;
 const int32_t ScreenCaptureServer::maxAppLimit_ = 4;
 UniqueIDGenerator ScreenCaptureServer::gIdGenerator_(ScreenCaptureServer::maxSessionId_);
 std::list<int32_t> ScreenCaptureServer::startedSessionIDList_;
-const int32_t ScreenCaptureServer::maxSessionPerUid_ = 2;
+const int32_t ScreenCaptureServer::maxSessionPerUid_ = 4;
+const int32_t ScreenCaptureServer::maxSCServerDataTypePerUid_ = 2;
 
 std::shared_mutex ScreenCaptureServer::mutexServerMapRWGlobal_;
 std::shared_mutex ScreenCaptureServer::mutexListRWGlobal_;
@@ -264,6 +265,30 @@ bool ScreenCaptureServer::CheckScreenCaptureSessionIdLimit(int32_t curAppUid)
             }
     }
     MEDIA_LOGI("CheckScreenCaptureSessionIdLimit end.");
+    return true;
+}
+
+bool ScreenCaptureServer::CheckSCServerSpecifiedDataTypeNum(int32_t curAppUid, DataType dataType)
+{
+    int32_t countForUidDataType = 0;
+    MEDIA_LOGI("CheckSCServerSpecifiedDataTypeNum start. curAppUid: %{public}d, dataType: %{public}d.",
+        curAppUid, dataType);
+    {
+        std::unique_lock<std::shared_mutex> lock(ScreenCaptureServer::mutexServerMapRWGlobal_);
+        for (auto iter = ScreenCaptureServer::serverMap_.begin(); iter != ScreenCaptureServer::serverMap_.end();
+            iter++) {
+                if ((iter->second).lock() != nullptr) {
+                    if (curAppUid == (iter->second).lock()->GetAppUid() &&
+                        dataType == (iter->second).lock()->GetSCServerDataType()) {
+                            countForUidDataType++;
+                    }
+                    CHECK_AND_RETURN_RET_LOG(countForUidDataType <= ScreenCaptureServer::maxSCServerDataTypePerUid_,
+                        false, "CheckSCServerSpecifiedDataTypeNum failed,"
+                        "uid(%{public}d) has created too many instances of dataType(%{public}d)", curAppUid, dataType);
+                }
+            }
+    }
+    MEDIA_LOGI("CheckSCServerSpecifiedDataTypeNum end.");
     return true;
 }
 
@@ -595,6 +620,11 @@ int32_t ScreenCaptureServer::GetAppUid()
     return appInfo_.appUid;
 }
 
+DataType ScreenCaptureServer::GetSCServerDataType()
+{
+    return captureConfig_.dataType;
+}
+
 void ScreenCaptureServer::SetDisplayId(uint64_t displayId)
 {
     captureConfig_.videoInfo.videoCapInfo.displayId = displayId;
@@ -670,6 +700,9 @@ int32_t ScreenCaptureServer::SetDataType(DataType dataType)
     int32_t ret = CheckDataType(dataType);
     CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
     captureConfig_.dataType = dataType;
+    CHECK_AND_RETURN_RET_LOG(CheckSCServerSpecifiedDataTypeNum(GetAppUid(), GetSCServerDataType()),
+        MSERR_INVALID_OPERATION,
+        "ScreenCaptureServer: 0x%{public}06" PRIXPTR "SetDataType failed.", FAKE_POINTER(this));
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " SetDataType OK.", FAKE_POINTER(this));
     return MSERR_OK;
 }
@@ -2576,6 +2609,7 @@ VirtualScreenOption ScreenCaptureServer::InitVirtualScreenOption(const std::stri
         .flags_ = 0,
         .isForShot_ = true,
         .missionIds_ = {},
+        .virtualScreenType_ = VirtualScreenType::SCREEN_RECORDING,
     };
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " InitVirtualScreenOption end.", FAKE_POINTER(this));
     return virScrOption;

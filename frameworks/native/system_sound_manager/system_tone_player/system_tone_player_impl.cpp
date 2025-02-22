@@ -144,6 +144,19 @@ int32_t SystemTonePlayerImpl::InitPlayer(const std::string &audioUri)
     MEDIA_LOGI("Enter InitPlayer() with audio uri %{public}s", audioUri.c_str());
 
     if (audioUri == NO_SYSTEM_SOUND) {
+        ToneHapticsSettings settings;
+        int32_t result = systemSoundMgr_.GetToneHapticsSettings(dataShareHelper_, audioUri,
+            ConvertToToneHapticsType(systemToneType_), settings);
+        if (result == MSERR_OK) {
+            isNoneHaptics_ = settings.mode == ToneHapticsMode::NONE;
+            defaultNonSyncHapticUri_ = settings.hapticsUri;
+            MEDIA_LOGI("Default haptics uri: %{public}s, mode: %{public}d", settings.hapticsUri.c_str(), settings.mode);
+            configuredUri_ = NO_SYSTEM_SOUND;
+            systemToneState_ = SystemToneState::STATE_NEW;
+            return MSERR_OK;
+        }
+        MEDIA_LOGW("Failed to get tone haptics settings: %{public}d", result);
+
         if (!configuredUri_.empty() && configuredUri_ == audioUri) {
             MEDIA_LOGI("The right system tone uri has been registered. Return directly.");
             systemToneState_ = SystemToneState::STATE_PREPARED;
@@ -420,13 +433,14 @@ int32_t SystemTonePlayerImpl::Start(const SystemToneOptions &systemToneOptions)
     SystemToneOptions ringerModeOptions = GetOptionsFromRingerMode();
     bool actualMuteAudio = ringerModeOptions.muteAudio || systemToneOptions.muteAudio ||
         configuredUri_ == NO_SYSTEM_SOUND || std::abs(volume_) <= std::numeric_limits<float>::epsilon();
-    bool actualMuteHaptics = ringerModeOptions.muteHaptics || systemToneOptions.muteHaptics || isHapticUriEmpty_;
+    bool actualMuteHaptics = ringerModeOptions.muteHaptics || systemToneOptions.muteHaptics || isHapticUriEmpty_ ||
+        isNoneHaptics_;
     if (actualMuteAudio) {
         // the audio of system tone player has been muted. Only start vibrator.
         if (!actualMuteHaptics) {
             std::string hapticUri = (configuredUri_ == NO_SYSTEM_SOUND) ?
                 defaultNonSyncHapticUri_ : hapticUriMap_[hapticsFeature_];
-            SystemSoundVibrator::StartVibratorForSystemTone(hapticUri);
+            SystemSoundVibrator::StartVibratorForSystemTone(ChangeHapticsUri(hapticUri));
         }
         return streamId_;
     }
@@ -705,6 +719,7 @@ void SystemTonePlayerImpl::GetNewHapticSettings(const std::string &audioUri,
         MEDIA_LOGW("GetNewHapticSettings: get haptic settings fail");
         return;
     }
+    isNoneHaptics_ = settings.mode == ToneHapticsMode::NONE;
     hapticsMode_ = ConvertToHapticsMode(settings.mode);
     supportedHapticsFeatures_.push_back(ToneHapticsFeature::STANDARD);
     hapticsUris[ToneHapticsFeature::STANDARD] = settings.hapticsUri;

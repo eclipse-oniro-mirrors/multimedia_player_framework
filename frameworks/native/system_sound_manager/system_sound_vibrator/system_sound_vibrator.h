@@ -17,7 +17,9 @@
 #define SYSTEM_SOUND_VIBRATOR_H
 
 #include <cstdint>
+#include <mutex>
 #include <string>
+#include <thread>
 
 namespace OHOS {
 namespace Media {
@@ -30,10 +32,19 @@ class SystemSoundVibrator {
 public:
     static int32_t StartVibrator(VibrationType type);
     static int32_t StartVibratorForSystemTone(const std::string &hapticUri);
+    static int32_t StartVibratorForRingtone(const std::string &hapticUri);
     static int32_t StopVibrator();
 
 private:
-    static int32_t ExtractFd(const std::string& hapticsUri);
+    static int32_t ExtractFd(const std::string &hapticsUri);
+    static int32_t VibrateForRingtone(const std::string &hapticUri);
+    static int32_t VibrateLoopFunc(std::unique_lock<std::mutex> &lock, int32_t fd);
+
+    static std::mutex g_vibrateMutex;
+    static std::string g_hapticUri;
+    static std::shared_ptr<std::thread> g_vibrateThread;
+    static bool g_isRunning;
+    static std::condition_variable g_vibrateCV;
 };
 } // namespace Media
 } // namespace OHOS

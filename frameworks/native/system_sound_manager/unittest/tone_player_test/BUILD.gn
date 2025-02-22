@@ -62,6 +62,7 @@ ohos_unittest("system_tone_player_unit_test") {
     "access_token:libnativetoken",
     "access_token:libtoken_setproc",
     "audio_framework:audio_client",
+    "audio_framework:audio_renderer",
     "bundle_framework:appexecfwk_base",
     "c_utils:utils",
     "config_policy:configpolicy_util",

@@ -615,5 +615,17 @@
             <option name="push" value="test_videofile/ChineseColor_H264_AAC_480p_15fps.mp4 -> /data/test" src="res"/>
         </preparer>
     </target>
+    <target name="native_avimagegenerator_unit_test">
+        <preparer>
+            <option name="push" value="test_videofile/ChineseColor_H264_AAC_480p_15fps.mp4 -> /data/test" src="res"/>
+        </preparer>
+    </target>
+    <target name="native_avmetadataextractor_unit_test">
+        <preparer>
+            <option name="push" value="res_avmetadata/MP3_SURFACE.mp3 -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/ChineseColor_H264_AAC_480p_15fps.mp4 -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/camera_info_parser.mp4 -> /data/test" src="res"/>
+        </preparer>
+    </target>
 </configuration>
 

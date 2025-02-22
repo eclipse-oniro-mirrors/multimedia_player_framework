@@ -23,6 +23,10 @@ namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SOUNDPOOL, "SoundIDManager"};
     static const std::string THREAD_POOL_NAME = "OS_SoundMgr";
     static const int32_t MAX_THREADS_NUM = std::thread::hardware_concurrency() >= 4 ? 2 : 1;
+    static constexpr size_t MAX_LOAD_NUM = 32;
+    static constexpr size_t MAX_LOAD_NUM_API16 = 128;
+    static const int32_t SOUNDPOOL_API_VERSION_ISOLATION = 16;
+    static const int32_t FAULT_API_VERSION = -1;
 }
 
 namespace OHOS {
@@ -77,14 +81,18 @@ int32_t SoundIDManager::InitThreadPool()
     return MSERR_OK;
 }
 
-int32_t SoundIDManager::Load(std::string url)
+int32_t SoundIDManager::Load(std::string url, int32_t apiVersion)
 {
     int32_t soundID;
     {
         std::lock_guard lock(soundManagerLock_);
-        if (soundParsers_.size() >= MAX_LOAD_NUM) {
-            MEDIA_LOGI("SoundPool MAX_LOAD_NUM:%{public}zu.", MAX_LOAD_NUM);
-            return invalidSoundIDFlag;
+        size_t soundParserNum = soundParsers_.size();
+        if (apiVersion > 0 && apiVersion < SOUNDPOOL_API_VERSION_ISOLATION) {
+            CHECK_AND_RETURN_RET_LOG(soundParserNum < MAX_LOAD_NUM, invalidSoundIDFlag,
+                "failed to create soundParser url soundParsers_ :%{public}zu", soundParserNum);
+        } else if (apiVersion == FAULT_API_VERSION || apiVersion >= SOUNDPOOL_API_VERSION_ISOLATION) {
+            CHECK_AND_RETURN_RET_LOG(soundParserNum < MAX_LOAD_NUM_API16, invalidSoundIDFlag,
+                "failed to create soundParser url api16 soundParsers_ :%{public}zu", soundParserNum);
         }
         const std::string fdHead = "fd://";
         if (url.find(fdHead) == std::string::npos) {
@@ -107,15 +115,18 @@ int32_t SoundIDManager::Load(std::string url)
     return soundID;
 }
 
-int32_t SoundIDManager::Load(int32_t fd, int64_t offset, int64_t length)
+int32_t SoundIDManager::Load(int32_t fd, int64_t offset, int64_t length, int32_t apiVersion)
 {
     int32_t soundID;
     {
         std::lock_guard lock(soundManagerLock_);
-        MEDIA_LOGI("SoundIDManager startLoad");
-        if (soundParsers_.size() >= MAX_LOAD_NUM) {
-            MEDIA_LOGI("SoundPool MAX_LOAD_NUM:%{public}zu.", MAX_LOAD_NUM);
-            return invalidSoundIDFlag;
+        size_t soundParserNum = soundParsers_.size();
+        if (apiVersion > 0 && apiVersion < SOUNDPOOL_API_VERSION_ISOLATION) {
+            CHECK_AND_RETURN_RET_LOG(soundParserNum < MAX_LOAD_NUM, invalidSoundIDFlag,
+                "failed to create soundParser fd soundParsers_ :%{public}zu", soundParserNum);
+        } else if (apiVersion == FAULT_API_VERSION || apiVersion >= SOUNDPOOL_API_VERSION_ISOLATION) {
+            CHECK_AND_RETURN_RET_LOG(soundParserNum < MAX_LOAD_NUM_API16, invalidSoundIDFlag,
+                "failed to create soundParser fd api16 soundParsers_ :%{public}zu", soundParserNum);
         }
         do {
             nextSoundID_ = nextSoundID_ == INT32_MAX ? 1 : nextSoundID_ + 1;
