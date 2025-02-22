@@ -408,7 +408,7 @@ void VideoPlayerNapi::AsyncSetDisplaySurface(napi_env env, void *data)
         return;
     }
     if (!StrToULL(asyncContext->surface, surfaceId)) {
-        asyncContext->SignError((MSERR_EXT_INVALID_VAL, "invalid parameters, failed to obtain surfaceId");
+        asyncContext->SignError(MSERR_EXT_INVALID_VAL, "invalid parameters, failed to obtain surfaceId");
         return;
     }
     MEDIA_LOGD("get surface, surfaceId = (%{public}" PRIu64 ")", surfaceId);
