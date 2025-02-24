@@ -1313,7 +1313,7 @@ int32_t ScreenCaptureServer::StartFileMicAudioCapture()
         "micCapInfo.state:%{public}d.",
         FAKE_POINTER(this), captureConfig_.dataType, captureConfig_.audioInfo.micCapInfo.state);
 #ifdef SUPPORT_CALL
-    if (InCallObserver::GetInstance().IsInCall() && !IsTelInCallSkipList()) {
+    if (InCallObserver::GetInstance().IsInCall(true) && !IsTelInCallSkipList()) {
         MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " skip creating micAudioCapture", FAKE_POINTER(this));
         return MSERR_OK;
     }
@@ -2375,7 +2375,7 @@ int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string &name, sptr<O
 int32_t ScreenCaptureServer::PrepareVirtualScreenMirror()
 {
     for (size_t i = 0; i < contentFilter_.windowIDsVec.size(); i++) {
-        MEDIA_LOGI("After CreateVirtualScreen windowIDsVec value :%{public}" PRIu64, contentFilter_.windowIDsVec[i]);
+        MEDIA_LOGD("After CreateVirtualScreen windowIDsVec value :%{public}" PRIu64, contentFilter_.windowIDsVec[i]);
     }
     if (GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"]
             .compare(appName_) == 0) {
@@ -2417,7 +2417,7 @@ uint64_t ScreenCaptureServer::GetDisplayIdOfWindows(uint64_t displayId)
         MEDIA_LOGI("MakeVirtualScreenMirror 0x%{public}06" PRIXPTR
             "GetWindowDisplayIds ret:%{public}d", FAKE_POINTER(this), ret);
         for (const auto& pair : windowDisplayIdMap) {
-            MEDIA_LOGI("MakeVirtualScreenMirror 0x%{public}06" PRIXPTR " WindowId:%{public}" PRIu64
+            MEDIA_LOGD("MakeVirtualScreenMirror 0x%{public}06" PRIXPTR " WindowId:%{public}" PRIu64
                 " in DisplayId:%{public}" PRIu64, FAKE_POINTER(this), pair.first, pair.second);
             defaultDisplayIdValue = pair.second;
         }
@@ -2622,7 +2622,7 @@ int32_t ScreenCaptureServer::GetMissionIds(std::vector<uint64_t> &missionIds)
     for (int32_t i = 0; i < size; i++) {
         int32_t taskId = taskIDListTemp.front();
         taskIDListTemp.pop_front();
-        MEDIA_LOGI("ScreenCaptureServer::GetMissionIds taskId : %{public}s", std::to_string(taskId).c_str());
+        MEDIA_LOGD("ScreenCaptureServer::GetMissionIds taskId : %{public}s", std::to_string(taskId).c_str());
         uint64_t uintNum = static_cast<uint64_t>(taskId);
         missionIds.push_back(uintNum);
     }
@@ -2882,7 +2882,8 @@ int32_t ScreenCaptureServer::SetMicrophoneEnabled(bool isMicrophone)
 int32_t ScreenCaptureServer::SetMicrophoneOn()
 {
 #ifdef SUPPORT_CALL
-    if (InCallObserver::GetInstance().IsInCall() && !IsTelInCallSkipList()) {
+    if (InCallObserver::GetInstance().IsInCall(true) && !IsTelInCallSkipList()) {
+        MEDIA_LOGE("Try SetMicrophoneOn But In Call");
         NotifyStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE);
         return MSERR_UNKNOWN;
     }
@@ -2956,7 +2957,8 @@ int32_t ScreenCaptureServer::ReStartMicForVoIPStatusSwitch()
     StopMicAudioCapture();
     if (isMicrophoneSwitchTurnOn_) {
 #ifdef SUPPORT_CALL
-        if (InCallObserver::GetInstance().IsInCall() && !IsTelInCallSkipList()) {
+        if (InCallObserver::GetInstance().IsInCall(true) && !IsTelInCallSkipList()) {
+            MEDIA_LOGE("Try ReStartMicForVoIPStatusSwitch But In Call");
             NotifyStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE);
             return MSERR_UNKNOWN;
         }
@@ -3022,6 +3024,7 @@ int32_t ScreenCaptureServer::TelCallAudioStateUpdated(bool isInTelCallAudio)
 
 int32_t ScreenCaptureServer::OnTelCallStart()
 {
+    MEDIA_LOGI("OnTelCallStart InTelCall:%{public}d, InTelCallAudio:%{public}d", isInTelCall_, isInTelCallAudio_);
     int32_t ret = MSERR_OK;
     if (!isInTelCall_ && !isInTelCallAudio_) {
         return ret;
@@ -3043,6 +3046,7 @@ int32_t ScreenCaptureServer::OnTelCallStart()
 
 int32_t ScreenCaptureServer::OnTelCallStop()
 {
+    MEDIA_LOGI("OnTelCallStop InTelCall:%{public}d, InTelCallAudio:%{public}d", isInTelCall_, isInTelCallAudio_);
     int32_t ret = MSERR_OK;
     if (isInTelCall_ || isInTelCallAudio_) {
         return ret;
@@ -3202,7 +3206,7 @@ int32_t ScreenCaptureServer::SkipPrivacyMode(std::vector<uint64_t> &windowIDsVec
     MEDIA_LOGI("ScreenCaptureServer::SkipPrivacyMode, windowIDsVec size:%{public}d",
         static_cast<int32_t>(windowIDsVec.size()));
     for (size_t i = 0; i < windowIDsVec.size(); i++) {
-        MEDIA_LOGI("SkipPrivacyMode windowIDsVec value :%{public}" PRIu64, windowIDsVec[i]);
+        MEDIA_LOGD("SkipPrivacyMode windowIDsVec value :%{public}" PRIu64, windowIDsVec[i]);
     }
     skipPrivacyWindowIDsVec_.assign(windowIDsVec.begin(), windowIDsVec.end());
     if (captureState_ != AVScreenCaptureState::STARTED) { // Before Start
@@ -3547,7 +3551,7 @@ bool ScreenCaptureObserverCallBack::NotifyStopAndRelease(AVScreenCaptureStateCod
 #ifdef SUPPORT_CALL
 bool ScreenCaptureObserverCallBack::TelCallStateUpdated(bool isInCall)
 {
-    MEDIA_LOGI("ScreenCaptureObserverCallBack::TelCallStateUpdated");
+    MEDIA_LOGI("ScreenCaptureObserverCallBack::TelCallStateUpdated InCall:%{public}d", isInCall);
     auto scrServer = screenCaptureServer_.lock();
     if (scrServer && !scrServer->IsTelInCallSkipList()) {
         scrServer->TelCallStateUpdated(isInCall);
@@ -3557,7 +3561,7 @@ bool ScreenCaptureObserverCallBack::TelCallStateUpdated(bool isInCall)
 
 bool ScreenCaptureObserverCallBack::NotifyTelCallStateUpdated(bool isInCall)
 {
-    MEDIA_LOGI("ScreenCaptureObserverCallBack::NotifyTelCallStateUpdated START.");
+    MEDIA_LOGD("ScreenCaptureObserverCallBack::NotifyTelCallStateUpdated START InCall:%{public}d", isInCall);
     bool ret = true;
     auto task = std::make_shared<TaskHandler<void>>([&, this, isInCall] {
         ret = TelCallStateUpdated(isInCall);
@@ -3836,7 +3840,7 @@ void AudioDataSource::TelCallAudioStateUpdate(
         if (!changeInfo) {
             continue;
         }
-        MEDIA_LOGI("Client pid : %{public}d, State : %{public}d, usage : %{public}d",
+        MEDIA_LOGD("Client pid : %{public}d, State : %{public}d, usage : %{public}d",
             changeInfo->clientPid, static_cast<int32_t>(changeInfo->rendererState),
             static_cast<int32_t>(changeInfo->rendererInfo.streamUsage));
         if (changeInfo->rendererInfo.streamUsage ==
@@ -3903,7 +3907,7 @@ bool AudioDataSource::HasVoIPStream(
         if (!changeInfo) {
             continue;
         }
-        MEDIA_LOGI("Client pid : %{public}d, State : %{public}d, usage : %{public}d",
+        MEDIA_LOGD("Client pid : %{public}d, State : %{public}d, usage : %{public}d",
             changeInfo->clientPid, static_cast<int32_t>(changeInfo->rendererState),
             static_cast<int32_t>(changeInfo->rendererInfo.streamUsage));
         if (changeInfo->rendererState == RendererState::RENDERER_RUNNING &&
