@@ -93,6 +93,7 @@ UniqueIDGenerator ScreenCaptureServer::gIdGenerator_(ScreenCaptureServer::maxSes
 std::list<int32_t> ScreenCaptureServer::startedSessionIDList_;
 const int32_t ScreenCaptureServer::maxSessionPerUid_ = 4;
 const int32_t ScreenCaptureServer::maxSCServerDataTypePerUid_ = 2;
+int32_t ScreenCaptureServer::systemScreenRecorderPid_ = -1;
 
 std::shared_mutex ScreenCaptureServer::mutexServerMapRWGlobal_;
 std::shared_mutex ScreenCaptureServer::mutexListRWGlobal_;
@@ -363,6 +364,13 @@ std::list<int32_t> ScreenCaptureServer::GetAllStartedSessionIdList()
 {
     std::unique_lock<std::shared_mutex> lock(ScreenCaptureServer::mutexListRWGlobal_);
     return GetStartedScreenCaptureServerPidList();
+}
+
+bool ScreenCaptureServer::CheckPidIsScreenRecorder(int32_t pid)
+{
+    MEDIA_LOGI("CheckPidIsScreenRecorder ScreenRecorder pid(%{public}d), input pid(%{public}d)",
+        systemScreenRecorderPid_, pid);
+    return pid == systemScreenRecorderPid_;
 }
 
 void ScreenCaptureServer::OnDMPrivateWindowChange(bool hasPrivate)
@@ -1575,6 +1583,7 @@ void ScreenCaptureServer::PostStartScreenCaptureSuccessAction()
     AddStartedSessionIdList(this->sessionId_);
     MEDIA_LOGI("sessionId: %{public}d is pushed, now the size of startedSessionIDList_ is: %{public}d",
         this->sessionId_, static_cast<uint32_t>(ScreenCaptureServer::startedSessionIDList_.size()));
+    SetSystemScreenRecorderStatus(true);
     ScreenCaptureMonitorServer::GetInstance()->CallOnScreenCaptureStarted(appInfo_.appPid);
     NotifyStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STARTED);
     if (displayScreenId_ != SCREEN_ID_INVALID) {
@@ -3361,6 +3370,20 @@ int32_t ScreenCaptureServer::StopScreenCaptureByEvent(AVScreenCaptureStateCode s
     return StopScreenCaptureInner(stateCode);
 }
 
+void ScreenCaptureServer::SetSystemScreenRecorderStatus(bool status)
+{
+    if (GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"]
+            .compare(appName_) != 0) {
+        return;
+    }
+    if (status) {
+        systemScreenRecorderPid_ = appInfo_.appPid;
+        ScreenCaptureMonitorServer::GetInstance()->SetSystemScreenRecorderStatus(true);
+    } else {
+        ScreenCaptureMonitorServer::GetInstance()->SetSystemScreenRecorderStatus(false);
+    }
+}
+
 int32_t ScreenCaptureServer::StopScreenCaptureInner(AVScreenCaptureStateCode stateCode)
 {
     MediaTrace trace("ScreenCaptureServer::StopScreenCaptureInner");
@@ -3377,6 +3400,7 @@ int32_t ScreenCaptureServer::StopScreenCaptureInner(AVScreenCaptureStateCode sta
     if (captureState_ == AVScreenCaptureState::CREATED || captureState_ == AVScreenCaptureState::POPUP_WINDOW ||
         captureState_ == AVScreenCaptureState::STARTING) {
         captureState_ = AVScreenCaptureState::STOPPED;
+        SetSystemScreenRecorderStatus(false);
         ScreenCaptureMonitorServer::GetInstance()->CallOnScreenCaptureFinished(appInfo_.appPid);
         if (screenCaptureCb_ != nullptr && stateCode != AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID) {
             screenCaptureCb_->OnStateChange(stateCode);
@@ -3435,6 +3459,7 @@ void ScreenCaptureServer::PostStopScreenCapture(AVScreenCaptureStateCode stateCo
     MediaTrace trace("ScreenCaptureServer::PostStopScreenCapture");
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " PostStopScreenCapture start, stateCode:%{public}d.",
         FAKE_POINTER(this), stateCode);
+    SetSystemScreenRecorderStatus(false);
     ScreenCaptureMonitorServer::GetInstance()->CallOnScreenCaptureFinished(appInfo_.appPid);
     if (screenCaptureCb_ != nullptr && stateCode != AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID) {
         screenCaptureCb_->OnStateChange(stateCode);

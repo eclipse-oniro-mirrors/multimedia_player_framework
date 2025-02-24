@@ -64,6 +64,10 @@ int32_t ScreenCaptureMonitorServiceStub::Init()
         &ScreenCaptureMonitorServiceStub::IsScreenCaptureWorking;
     screenCaptureMonitorStubFuncs_[DESTROY] = &ScreenCaptureMonitorServiceStub::DestroyStub;
     screenCaptureMonitorStubFuncs_[CLOSE_LISTENER_OBJ] = &ScreenCaptureMonitorServiceStub::CloseListenerObject;
+    screenCaptureMonitorStubFuncs_[IS_SYSTEM_SCREEN_RECORDER] =
+        &ScreenCaptureMonitorServiceStub::IsSystemScreenRecorder;
+    screenCaptureMonitorStubFuncs_[IS_SYSTEM_SCREEN_RECORDER_WORKING] =
+        &ScreenCaptureMonitorServiceStub::IsSystemScreenRecorderWorking;
 
     return MSERR_OK;
 }
@@ -130,6 +134,18 @@ std::list<int32_t> ScreenCaptureMonitorServiceStub::IsScreenCaptureWorking()
     return screenCaptureMonitorServer_->IsScreenCaptureWorking();
 }
 
+bool ScreenCaptureMonitorServiceStub::IsSystemScreenRecorder(int32_t pid)
+{
+    CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorServer_ != nullptr, {}, "screen capture monitor server is nullptr");
+    return screenCaptureMonitorServer_->IsSystemScreenRecorder(pid);
+}
+
+bool ScreenCaptureMonitorServiceStub::IsSystemScreenRecorderWorking()
+{
+    CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorServer_ != nullptr, {}, "screen capture monitor server is nullptr");
+    return screenCaptureMonitorServer_->IsSystemScreenRecorderWorking();
+}
+
 int32_t ScreenCaptureMonitorServiceStub::SetListenerObject(MessageParcel &data, MessageParcel &reply)
 {
     sptr<IRemoteObject> object = data.ReadRemoteObject();
@@ -165,6 +181,28 @@ int32_t ScreenCaptureMonitorServiceStub::DestroyStub(MessageParcel &data, Messag
 {
     (void)data;
     reply.WriteInt32(DestroyStub());
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureMonitorServiceStub::IsSystemScreenRecorder(MessageParcel &data, MessageParcel &reply)
+{
+    MEDIA_LOGD("ScreenCaptureMonitorServiceStub::IsSystemScreenRecorder pid start.");
+    int32_t pid = data.ReadInt32();
+
+    bool isSystem = IsSystemScreenRecorder(pid);
+    reply.WriteBool(isSystem);
+    MEDIA_LOGD("ScreenCaptureMonitorServiceStub::IsSystemScreenRecorder pid end.");
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureMonitorServiceStub::IsSystemScreenRecorderWorking(MessageParcel &data, MessageParcel &reply)
+{
+    MEDIA_LOGD("ScreenCaptureMonitorServiceStub::IsSystemScreenRecorder pid start.");
+    (void)data;
+
+    bool isSystemWorking = IsSystemScreenRecorderWorking();
+    reply.WriteBool(isSystemWorking);
+    MEDIA_LOGD("ScreenCaptureMonitorServiceStub::IsSystemScreenRecorder pid end.");
     return MSERR_OK;
 }
 } // namespace Media

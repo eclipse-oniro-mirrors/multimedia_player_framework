@@ -30,6 +30,8 @@ public:
     std::list<int32_t> IsScreenCaptureWorking();
     void RegisterScreenCaptureMonitorListener(sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> listener);
     void UnregisterScreenCaptureMonitorListener(sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> listener);
+    bool IsSystemScreenRecorder(int32_t pid);
+    bool IsSystemScreenRecorderWorking();
     int32_t Init();
 private:
     std::shared_ptr<IScreenCaptureMonitorService> screenCaptureMonitorService_ = nullptr;

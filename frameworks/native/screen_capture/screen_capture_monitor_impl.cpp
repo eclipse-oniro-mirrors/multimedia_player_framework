@@ -50,6 +50,17 @@ std::list<int32_t> ScreenCaptureMonitor::IsScreenCaptureWorking()
     return static_cast<ScreenCaptureMonitorImpl *>(ScreenCaptureMonitor::GetInstance())->IsScreenCaptureWorking();
 }
 
+bool ScreenCaptureMonitor::IsSystemScreenRecorder(int32_t pid)
+{
+    return static_cast<ScreenCaptureMonitorImpl *>(ScreenCaptureMonitor::GetInstance())->IsSystemScreenRecorder(pid);
+}
+
+bool ScreenCaptureMonitor::IsSystemScreenRecorderWorking()
+{
+    return static_cast<ScreenCaptureMonitorImpl *>(ScreenCaptureMonitor::GetInstance())->
+        IsSystemScreenRecorderWorking();
+}
+
 int32_t ScreenCaptureMonitorImpl::Init()
 {
     MEDIA_LOGD("ScreenCaptureMonitorImpl:0x%{public}06" PRIXPTR " Init in", FAKE_POINTER(this));
@@ -85,6 +96,23 @@ std::list<int32_t> ScreenCaptureMonitorImpl::IsScreenCaptureWorking()
     CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorService_ != nullptr, {},
         "screen capture monitor service does not exist.");
     return screenCaptureMonitorService_->IsScreenCaptureWorking();
+}
+
+bool ScreenCaptureMonitorImpl::IsSystemScreenRecorder(int32_t pid)
+{
+    MEDIA_LOGD("ScreenCaptureMonitorImpl:0x%{public}06" PRIXPTR " IsSystemScreenRecorder in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorService_ != nullptr, {},
+        "screen capture monitor service does not exist.");
+    return screenCaptureMonitorService_->IsSystemScreenRecorder(pid);
+}
+
+bool ScreenCaptureMonitorImpl::IsSystemScreenRecorderWorking()
+{
+    MEDIA_LOGD("ScreenCaptureMonitorImpl:0x%{public}06" PRIXPTR " IsSystemScreenRecorderWorking in",
+        FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorService_ != nullptr, {},
+        "screen capture monitor service does not exist.");
+    return screenCaptureMonitorService_->IsSystemScreenRecorderWorking();
 }
 
 ScreenCaptureMonitorImpl::ScreenCaptureMonitorImpl()

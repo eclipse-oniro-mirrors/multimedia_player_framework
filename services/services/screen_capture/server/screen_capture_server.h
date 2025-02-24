@@ -35,6 +35,7 @@ public:
     static std::shared_mutex mutexServerMapRWGlobal_;
     static std::shared_mutex mutexListRWGlobal_;
     static std::shared_mutex mutexSaAppInfoMapGlobal_;
+    static int32_t systemScreenRecorderPid_;
 
     static std::shared_ptr<IScreenCaptureService> Create();
     static bool IsSAServiceCalling();
@@ -60,6 +61,7 @@ public:
     static void RemoveSaAppInfoMap(int32_t saUid);
     static bool CheckSaUid(int32_t saUid, int32_t appUid);
     static bool IsSaUidValid(int32_t saUid, int32_t appUid);
+    static bool CheckPidIsScreenRecorder(int32_t pid);
     ScreenCaptureServer();
     ~ScreenCaptureServer();
 
@@ -220,6 +222,7 @@ private:
     std::string GetStringByResourceName(const char* name);
     void RefreshResConfig();
     void InitResourceManager();
+    void SetSystemScreenRecorderStatus(bool status);
 #ifdef SUPPORT_CALL
     int32_t OnTelCallStart();
     int32_t OnTelCallStop();

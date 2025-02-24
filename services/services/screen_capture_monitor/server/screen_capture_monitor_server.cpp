@@ -135,5 +135,25 @@ int32_t ScreenCaptureMonitorServer::CallOnScreenCaptureFinished(int32_t pid)
     }
     return MSERR_OK;
 }
+
+void ScreenCaptureMonitorServer::SetSystemScreenRecorderStatus(bool started)
+{
+    MEDIA_LOGI("ScreenCaptureMonitorServer::SetSystemScreenRecorderStatus S, state: %{public}d", started);
+    isSystemScreenRecorderWorking_ = started;
+}
+
+bool ScreenCaptureMonitorServer::IsSystemScreenRecorder(int32_t pid)
+{
+    MEDIA_LOGI("ScreenCaptureMonitorServer::IsSystemScreenRecorder S");
+    bool result = ScreenCaptureServer::CheckPidIsScreenRecorder(pid);
+    MEDIA_LOGI("ScreenCaptureMonitorServer::IsSystemScreenRecorder result: %{public}d", result);
+    return result;
+}
+
+bool ScreenCaptureMonitorServer::IsSystemScreenRecorderWorking()
+{
+    MEDIA_LOGI("ScreenCaptureMonitorServer::IsSystemScreenRecorderWorking S");
+    return isSystemScreenRecorderWorking_;
+}
 } // namespace Media
 } // namespace OHOS

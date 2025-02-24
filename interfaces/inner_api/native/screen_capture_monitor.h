@@ -26,6 +26,11 @@ enum ScreenCaptureMonitorErrorType : int32_t {
     SCREEN_CAPTURE_MONITOR_ERROR_INTERNAL,
 };
 
+enum ScreenCaptureMonitorEvent : int32_t {
+    SCREENCAPTURE_STARTED = 0,
+    SCREENCAPTURE_STOPPED = 1
+};
+
 class ScreenCaptureMonitor {
 public:
 #ifdef UNSUPPORT_SCREEN_CAPTURE
