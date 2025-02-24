@@ -53,19 +53,19 @@ OH_AVImageGenerator* OH_AVImageGenerator_Create(void)
 
 OH_AVErrCode OH_AVImageGenerator_SetFDSource(OH_AVImageGenerator* generator, int32_t fd, int64_t offset, int64_t size)
 {
-    CHECK_AND_RETURN_RET_LOG(generator != nullptr, AV_ERR_INPUT_DATA_ERROR, "input aVImageGenerator is nullptr");
+    CHECK_AND_RETURN_RET_LOG(generator != nullptr, AV_ERR_INVALID_VAL, "input aVImageGenerator is nullptr");
     struct AVImageGeneratorObject *generatorObj = reinterpret_cast<AVImageGeneratorObject *>(generator);
-    CHECK_AND_RETURN_RET_LOG(generatorObj->aVMetadataHelper_ != nullptr, AV_ERR_INPUT_DATA_ERROR,
+    CHECK_AND_RETURN_RET_LOG(generatorObj->aVMetadataHelper_ != nullptr, AV_ERR_INVALID_VAL,
                              "aVMetadataHelper_ is nullptr");
     
-    CHECK_AND_RETURN_RET_LOG(fd >= 0, AV_ERR_INPUT_DATA_ERROR, "fd is invalid");
+    CHECK_AND_RETURN_RET_LOG(fd >= 0, AV_ERR_INVALID_VAL, "fd is invalid");
 
     CHECK_AND_RETURN_RET_LOG(generatorObj->state_ == HelperState::HELPER_STATE_IDLE,
                              AV_ERR_OPERATE_NOT_PERMIT, "Has set source once, unsupport set again");
     
     int32_t ret = generatorObj->aVMetadataHelper_->SetSource(fd, offset, size);
     generatorObj->state_ = ret == MSERR_OK ? HelperState::HELPER_STATE_RUNNABLE : HelperState::HELPER_ERROR;
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret == MSERR_NO_MEMORY ? AV_ERR_NO_MEMORY : AV_ERR_INPUT_DATA_ERROR,
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret == MSERR_NO_MEMORY ? AV_ERR_NO_MEMORY : AV_ERR_INVALID_VAL,
                              "aVImageGenerator setFdSource failed");
     return AV_ERR_OK;
 }
@@ -73,10 +73,10 @@ OH_AVErrCode OH_AVImageGenerator_SetFDSource(OH_AVImageGenerator* generator, int
 OH_AVErrCode OH_AVImageGenerator_FetchFrameByTime(OH_AVImageGenerator* generator,
     int64_t timeUs, OH_AVImageGenerator_QueryOptions options, OH_PixelmapNative** pixelMap)
 {
-    CHECK_AND_RETURN_RET_LOG(generator != nullptr, AV_ERR_INPUT_DATA_ERROR, "input aVImageGenerator is nullptr");
-    CHECK_AND_RETURN_RET_LOG(pixelMap != nullptr, AV_ERR_INPUT_DATA_ERROR, "input pixelMap is nullptr");
+    CHECK_AND_RETURN_RET_LOG(generator != nullptr, AV_ERR_INVALID_VAL, "input aVImageGenerator is nullptr");
+    CHECK_AND_RETURN_RET_LOG(pixelMap != nullptr, AV_ERR_INVALID_VAL, "input pixelMap is nullptr");
     struct AVImageGeneratorObject *generatorObj = reinterpret_cast<AVImageGeneratorObject *>(generator);
-    CHECK_AND_RETURN_RET_LOG(generatorObj->aVMetadataHelper_ != nullptr, AV_ERR_INPUT_DATA_ERROR,
+    CHECK_AND_RETURN_RET_LOG(generatorObj->aVMetadataHelper_ != nullptr, AV_ERR_INVALID_VAL,
                              "aVMetadataHelper_ is nullptr");
 
     CHECK_AND_RETURN_RET_LOG(generatorObj->state_ == HelperState::HELPER_STATE_RUNNABLE,
@@ -97,9 +97,9 @@ OH_AVErrCode OH_AVImageGenerator_FetchFrameByTime(OH_AVImageGenerator* generator
 
 OH_AVErrCode OH_AVImageGenerator_Release(OH_AVImageGenerator* generator)
 {
-    CHECK_AND_RETURN_RET_LOG(generator != nullptr, AV_ERR_INPUT_DATA_ERROR, "input aVImageGenerator is nullptr");
+    CHECK_AND_RETURN_RET_LOG(generator != nullptr, AV_ERR_INVALID_VAL, "input aVImageGenerator is nullptr");
     struct AVImageGeneratorObject *generatorObj = reinterpret_cast<AVImageGeneratorObject *>(generator);
-    CHECK_AND_RETURN_RET_LOG(generatorObj->aVMetadataHelper_ != nullptr, AV_ERR_INPUT_DATA_ERROR,
+    CHECK_AND_RETURN_RET_LOG(generatorObj->aVMetadataHelper_ != nullptr, AV_ERR_INVALID_VAL,
                              "aVMetadataHelper_ is nullptr");
     generatorObj->aVMetadataHelper_->Release();
     delete generatorObj;
