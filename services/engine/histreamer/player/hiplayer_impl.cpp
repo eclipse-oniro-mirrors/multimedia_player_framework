@@ -3172,6 +3172,8 @@ Status HiPlayerImpl::StartSeekContinous()
             UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
         }
         syncManager_->Pause();
+        callbackLooper_.StopReportMediaProgress();
+        callbackLooper_.StopCollectMaxAmplitude();
     }
     FALSE_RETURN_V(!draggingPlayerAgent_, Status::OK);
     FALSE_RETURN_V(demuxer_ && videoDecoder_, Status::OK);
@@ -3241,7 +3243,9 @@ int32_t HiPlayerImpl::ExitSeekContinous(bool align, int64_t seekContinousBatchNo
         seekAgent_.reset();
     }
     if (curState_ == PlayerStateId::PLAYING) {
-        // pause inner when start seek continuous in playing state
+        // resume inner when exit seek continuous in playing state
+        callbackLooper_.StartReportMediaProgress(REPORT_PROGRESS_INTERVAL);
+        callbackLooper_.StartCollectMaxAmplitude(SAMPLE_AMPLITUDE_INTERVAL);
         syncManager_->Resume();
         Status res = pipeline_->Resume();
         if (res != Status::OK) {
