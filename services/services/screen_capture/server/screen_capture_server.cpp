@@ -2984,10 +2984,10 @@ int32_t ScreenCaptureServer::OnVoIPStatusChanged(bool isInVoIPCall)
     } else {
         ReStartMicForVoIPStatusSwitch();
         CHECK_AND_RETURN_RET_LOG(innerAudioCapture_, MSERR_UNKNOWN, "innerAudioCapture is nullptr");
-        usleep(AUDIO_CHANGE_TIME);
         if (innerAudioCapture_->GetAudioCapturerState() == CAPTURER_RECORDING &&
             micAudioCapture_ && micAudioCapture_->GetAudioCapturerState() == CAPTURER_RECORDING &&
             audioSource_ && audioSource_->GetSpeakerAliveStatus()) {
+            usleep(AUDIO_CHANGE_TIME);
             ret = innerAudioCapture_->Pause();
             CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "innerAudioCapture Pause failed");
         }
