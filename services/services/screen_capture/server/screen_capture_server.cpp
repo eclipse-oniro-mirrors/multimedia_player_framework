@@ -2907,11 +2907,11 @@ int32_t ScreenCaptureServer::SetMicrophoneOn()
         MEDIA_LOGE("AudioCapturerState invalid");
     }
     if (captureConfig_.dataType == DataType::CAPTURE_FILE) {
-        usleep(AUDIO_CHANGE_TIME);
         CHECK_AND_RETURN_RET_LOG(micAudioCapture_ && micAudioCapture_->GetAudioCapturerState() == CAPTURER_RECORDING,
-            MSERR_UNKNOWN, "micAudioCapture is not recording");
+            MSERR_OK, "micAudioCapture is not recording");
         if (innerAudioCapture_ && innerAudioCapture_->GetAudioCapturerState() == CAPTURER_RECORDING &&
             audioSource_ && audioSource_->GetSpeakerAliveStatus() && !audioSource_->GetIsInVoIPCall()) {
+            usleep(AUDIO_CHANGE_TIME);
             ret = innerAudioCapture_->Pause();
             CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "innerAudioCapture Pause failed");
         }
@@ -2926,8 +2926,8 @@ int32_t ScreenCaptureServer::SetMicrophoneOff()
         ret = innerAudioCapture_->Resume();
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "innerAudioCapture Resume failed");
     }
-    usleep(AUDIO_CHANGE_TIME);
     if (micAudioCapture_ && micAudioCapture_->GetAudioCapturerState() == CAPTURER_RECORDING) {
+        usleep(AUDIO_CHANGE_TIME);
         ret = micAudioCapture_->Pause();
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "micAudioCapture Pause failed");
     }
@@ -2983,11 +2983,11 @@ int32_t ScreenCaptureServer::OnVoIPStatusChanged(bool isInVoIPCall)
         ReStartMicForVoIPStatusSwitch();
     } else {
         ReStartMicForVoIPStatusSwitch();
-        usleep(AUDIO_CHANGE_TIME);
         CHECK_AND_RETURN_RET_LOG(innerAudioCapture_, MSERR_UNKNOWN, "innerAudioCapture is nullptr");
         if (innerAudioCapture_->GetAudioCapturerState() == CAPTURER_RECORDING &&
             micAudioCapture_ && micAudioCapture_->GetAudioCapturerState() == CAPTURER_RECORDING &&
             audioSource_ && audioSource_->GetSpeakerAliveStatus()) {
+            usleep(AUDIO_CHANGE_TIME);
             ret = innerAudioCapture_->Pause();
             CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "innerAudioCapture Pause failed");
         }
@@ -3068,9 +3068,9 @@ int32_t ScreenCaptureServer::OnTelCallStop()
         }
     }
     if (captureConfig_.dataType == DataType::CAPTURE_FILE) {
-        usleep(AUDIO_CHANGE_TIME);
         CHECK_AND_RETURN_RET_LOG(micAudioCapture_ && micAudioCapture_->GetAudioCapturerState() == CAPTURER_RECORDING,
-            MSERR_UNKNOWN, "micAudioCapture is not recording");
+            MSERR_OK, "micAudioCapture is not recording");
+        usleep(AUDIO_CHANGE_TIME);
         if (innerAudioCapture_ && innerAudioCapture_->GetAudioCapturerState() == CAPTURER_RECORDING &&
             audioSource_ && audioSource_->GetSpeakerAliveStatus() && !audioSource_->GetIsInVoIPCall()) {
             ret = innerAudioCapture_->Pause();
@@ -3861,7 +3861,7 @@ bool AudioDataSource::HasSpeakerStream(
         if (!changeInfo) {
             continue;
         }
-        MEDIA_LOGI("ChangeInfo Id: %{public}d, Client pid : %{public}d, State : %{public}d, DeviceType : %{public}d",
+        MEDIA_LOGD("ChangeInfo Id: %{public}d, Client pid : %{public}d, State : %{public}d, DeviceType : %{public}d",
             changeInfoIndex, changeInfo->clientPid, static_cast<int32_t>(changeInfo->rendererState),
             static_cast<int32_t>(changeInfo->outputDeviceInfo.deviceType_));
         if (changeInfo->outputDeviceInfo.deviceType_ == DEVICE_TYPE_WIRED_HEADSET ||
