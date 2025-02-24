@@ -3000,7 +3000,7 @@ int32_t ScreenCaptureServer::OnVoIPStatusChanged(bool isInVoIPCall)
 #ifdef SUPPORT_CALL
 int32_t ScreenCaptureServer::TelCallStateUpdated(bool isInTelCall)
 {
-    if (isInTelCall_ == isInTelCall) {
+    if (isInTelCall_.load() == isInTelCall) {
         return MSERR_OK;
     }
     isInTelCall_.store(isInTelCall);
@@ -3012,7 +3012,7 @@ int32_t ScreenCaptureServer::TelCallStateUpdated(bool isInTelCall)
 
 int32_t ScreenCaptureServer::TelCallAudioStateUpdated(bool isInTelCallAudio)
 {
-    if (IsTelInCallSkipList() || isInTelCallAudio_ == isInTelCallAudio) {
+    if (IsTelInCallSkipList() || isInTelCallAudio_.load() == isInTelCallAudio) {
         return MSERR_OK;
     }
     isInTelCallAudio_.store(isInTelCallAudio);
@@ -3024,9 +3024,9 @@ int32_t ScreenCaptureServer::TelCallAudioStateUpdated(bool isInTelCallAudio)
 
 int32_t ScreenCaptureServer::OnTelCallStart()
 {
-    MEDIA_LOGI("OnTelCallStart InTelCall:%{public}d, InTelCallAudio:%{public}d", isInTelCall_, isInTelCallAudio_);
+    MEDIA_LOGI("OnTelCallStart InTelCall:%{public}d, Audio:%{public}d", isInTelCall_.load(), isInTelCallAudio_.load());
     int32_t ret = MSERR_OK;
-    if (!isInTelCall_ && !isInTelCallAudio_) {
+    if (!isInTelCall_.load() && !isInTelCallAudio_.load()) {
         return ret;
     }
     if (innerAudioCapture_ && innerAudioCapture_->GetAudioCapturerState() == CAPTURER_PAUSED) {
@@ -3046,9 +3046,9 @@ int32_t ScreenCaptureServer::OnTelCallStart()
 
 int32_t ScreenCaptureServer::OnTelCallStop()
 {
-    MEDIA_LOGI("OnTelCallStop InTelCall:%{public}d, InTelCallAudio:%{public}d", isInTelCall_, isInTelCallAudio_);
+    MEDIA_LOGI("OnTelCallStop InTelCall:%{public}d, Audio:%{public}d", isInTelCall_.load(), isInTelCallAudio_.load());
     int32_t ret = MSERR_OK;
-    if (isInTelCall_ || isInTelCallAudio_) {
+    if (isInTelCall_.load() || isInTelCallAudio_.load()) {
         return ret;
     }
     if (micAudioCapture_) {
