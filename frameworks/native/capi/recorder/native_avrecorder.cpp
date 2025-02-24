@@ -489,16 +489,22 @@ OH_AVErrCode Configure(OH_AVRecorder *recorder, OH_AVRecorder_Config *config)
 
 OH_AVRecorder *OH_AVRecorder_Create(void)
 {
+    MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_Create in.");
+    
     std::shared_ptr<Recorder> recorder = RecorderFactory::CreateRecorder();
     CHECK_AND_RETURN_RET_LOG(recorder != nullptr, nullptr, "failed to create recorder in RecorderFactory.");
     struct RecorderObject *recorderObj = new (std::nothrow) RecorderObject(recorder);
     CHECK_AND_RETURN_RET_LOG(recorderObj != nullptr, nullptr, "failed to new RecorderObject");
     MEDIA_LOGI("0x%{public}06" PRIXPTR " OH_AVRecorder_Create", FAKE_POINTER(recorderObj));
+
+    MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_Create out.");
     return recorderObj;
 }
 
 OH_AVErrCode OH_AVRecorder_Prepare(OH_AVRecorder *recorder, OH_AVRecorder_Config *config)
 {
+    MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_Prepare in.");
+
     CHECK_AND_RETURN_RET_LOG(recorder != nullptr, AV_ERR_INVALID_VAL, "input recorder is nullptr!");
     CHECK_AND_RETURN_RET_LOG(config != nullptr, AV_ERR_INVALID_VAL, "input config is nullptr!");
 
@@ -527,11 +533,15 @@ OH_AVErrCode OH_AVRecorder_Prepare(OH_AVRecorder *recorder, OH_AVRecorder_Config
     MEDIA_LOGI("Change state to state code: %{public}d", OH_AVRecorder_State::AVRECORDER_PREPARED);
     recorderObj->callback_->OnStateChange(OH_AVRecorder_State::AVRECORDER_PREPARED,
         OH_AVRecorder_StateChangeReason::AVRECORDER_USER);
+
+    MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_Prepare out.");
     return AV_ERR_OK;
 }
 
 OH_AVErrCode OH_AVRecorder_GetAVRecorderConfig(OH_AVRecorder *recorder, OH_AVRecorder_Config **config)
 {
+    MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_GetAVRecorderConfig in.");
+
     CHECK_AND_RETURN_RET_LOG(recorder != nullptr, AV_ERR_INVALID_VAL, "input recorder is nullptr!");
     CHECK_AND_RETURN_RET_LOG(*config == nullptr, AV_ERR_INVALID_VAL,
         "input OH_AVRecorder_Config *config should be nullptr!");
@@ -586,11 +596,14 @@ OH_AVErrCode OH_AVRecorder_GetAVRecorderConfig(OH_AVRecorder *recorder, OH_AVRec
     recorderObj->config_->metadata.location.longitude = location.longitude;
 
     *config = recorderObj->config_;
+
+    MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_GetAVRecorderConfig out.");
     return AV_ERR_OK;
 }
 
 OH_AVErrCode OH_AVRecorder_GetInputSurface(OH_AVRecorder *recorder, OHNativeWindow **window)
 {
+    MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_GetInputSurface in.");
     CHECK_AND_RETURN_RET_LOG(recorder != nullptr, AV_ERR_INVALID_VAL, "recorder is nullptr!");
     CHECK_AND_RETURN_RET_LOG(window != nullptr, AV_ERR_INVALID_VAL, "window pointer is nullptr!");
 
@@ -607,12 +620,14 @@ OH_AVErrCode OH_AVRecorder_GetInputSurface(OH_AVRecorder *recorder, OHNativeWind
 
     SurfaceError error = SurfaceUtils::GetInstance()->Add((*window)->surface->GetUniqueId(), (*window)->surface);
     CHECK_AND_RETURN_RET_LOG(error == SURFACE_ERROR_OK, AV_ERR_INVALID_VAL, "failed to AddSurface");
-
+    MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_GetInputSurface out.");
     return AV_ERR_OK;
 }
 
 OH_AVErrCode OH_AVRecorder_UpdateRotation(OH_AVRecorder *recorder, int32_t rotation)
 {
+    MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_UpdateRotation in.");
+
     CHECK_AND_RETURN_RET_LOG(recorder != nullptr, AV_ERR_INVALID_VAL, "input recorder is nullptr!");
     struct RecorderObject *recorderObj = reinterpret_cast<RecorderObject *>(recorder);
     CHECK_AND_RETURN_RET_LOG(recorderObj != nullptr, AV_ERR_INVALID_VAL, "recorderObj is nullptr");
@@ -620,11 +635,15 @@ OH_AVErrCode OH_AVRecorder_UpdateRotation(OH_AVRecorder *recorder, int32_t rotat
     CHECK_AND_RETURN_RET_LOG(rotation == ROTATION_0 || rotation == ROTATION_90 || rotation == ROTATION_180 ||
         rotation == ROTATION_270, AV_ERR_INVALID_VAL, "Invalid rotation value. Must be 0, 90, 180, or 270.");
     recorderObj->recorder_->SetOrientationHint(rotation);
+    
+    MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_UpdateRotation out.");
     return AV_ERR_OK;
 }
 
 OH_AVErrCode OH_AVRecorder_Start(OH_AVRecorder *recorder)
 {
+    MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_Start in.");
+
     CHECK_AND_RETURN_RET_LOG(recorder != nullptr, AV_ERR_INVALID_VAL, "input recorder is nullptr!");
     struct RecorderObject *recorderObj = reinterpret_cast<RecorderObject *>(recorder);
     CHECK_AND_RETURN_RET_LOG(recorderObj != nullptr, AV_ERR_INVALID_VAL, "recorderObj is nullptr");
@@ -644,11 +663,15 @@ OH_AVErrCode OH_AVRecorder_Start(OH_AVRecorder *recorder)
     MEDIA_LOGI("Change state to state code: %{public}d", OH_AVRecorder_State::AVRECORDER_STARTED);
     recorderObj->callback_->OnStateChange(OH_AVRecorder_State::AVRECORDER_STARTED,
         OH_AVRecorder_StateChangeReason::AVRECORDER_USER);
+    
+    MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_Start out.");
     return AV_ERR_OK;
 }
 
 OH_AVErrCode OH_AVRecorder_Pause(OH_AVRecorder *recorder)
 {
+    MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_Pause in.");
+
     CHECK_AND_RETURN_RET_LOG(recorder != nullptr, AV_ERR_INVALID_VAL, "input recorder is nullptr!");
     struct RecorderObject *recorderObj = reinterpret_cast<RecorderObject *>(recorder);
     CHECK_AND_RETURN_RET_LOG(recorderObj != nullptr, AV_ERR_INVALID_VAL, "recorderObj is nullptr");
@@ -662,11 +685,15 @@ OH_AVErrCode OH_AVRecorder_Pause(OH_AVRecorder *recorder)
     MEDIA_LOGI("Change state to state code: %{public}d", OH_AVRecorder_State::AVRECORDER_PAUSED);
     recorderObj->callback_->OnStateChange(OH_AVRecorder_State::AVRECORDER_PAUSED,
         OH_AVRecorder_StateChangeReason::AVRECORDER_USER);
+    
+    MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_Pause out.");
     return AV_ERR_OK;
 }
 
 OH_AVErrCode OH_AVRecorder_Resume(OH_AVRecorder *recorder)
 {
+    MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_Resume in.");
+
     CHECK_AND_RETURN_RET_LOG(recorder != nullptr, AV_ERR_INVALID_VAL, "input recorder is nullptr!");
     struct RecorderObject *recorderObj = reinterpret_cast<RecorderObject *>(recorder);
     CHECK_AND_RETURN_RET_LOG(recorderObj != nullptr, AV_ERR_INVALID_VAL, "recorderObj is nullptr");
@@ -680,11 +707,15 @@ OH_AVErrCode OH_AVRecorder_Resume(OH_AVRecorder *recorder)
     MEDIA_LOGI("Change state to state code: %{public}d", OH_AVRecorder_State::AVRECORDER_STARTED);
     recorderObj->callback_->OnStateChange(OH_AVRecorder_State::AVRECORDER_STARTED,
         OH_AVRecorder_StateChangeReason::AVRECORDER_USER);
+
+    MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_Resume out.");
     return AV_ERR_OK;
 }
 
 OH_AVErrCode OH_AVRecorder_Stop(OH_AVRecorder *recorder)
 {
+    MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_Stop in.");
+
     CHECK_AND_RETURN_RET_LOG(recorder != nullptr, AV_ERR_INVALID_VAL, "input recorder is nullptr!");
     struct RecorderObject *recorderObj = reinterpret_cast<RecorderObject *>(recorder);
     CHECK_AND_RETURN_RET_LOG(recorderObj != nullptr, AV_ERR_INVALID_VAL, "recorderObj is nullptr");
@@ -699,13 +730,16 @@ OH_AVErrCode OH_AVRecorder_Stop(OH_AVRecorder *recorder)
     MEDIA_LOGI("Change state to state code: %{public}d", OH_AVRecorder_State::AVRECORDER_STOPPED);
     recorderObj->callback_->OnStateChange(OH_AVRecorder_State::AVRECORDER_STOPPED,
         OH_AVRecorder_StateChangeReason::AVRECORDER_USER);
-
     recorderObj->hasConfigured_ = false;
+
+    MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_Stop out.");
     return AV_ERR_OK;
 }
 
 OH_AVErrCode OH_AVRecorder_Reset(OH_AVRecorder *recorder)
 {
+    MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_Reset in.");
+
     CHECK_AND_RETURN_RET_LOG(recorder != nullptr, AV_ERR_INVALID_VAL, "input recorder is nullptr!");
     struct RecorderObject *recorderObj = reinterpret_cast<RecorderObject *>(recorder);
     CHECK_AND_RETURN_RET_LOG(recorderObj != nullptr, AV_ERR_INVALID_VAL, "recorderObj is nullptr");
@@ -719,15 +753,17 @@ OH_AVErrCode OH_AVRecorder_Reset(OH_AVRecorder *recorder)
     MEDIA_LOGI("Change state to state code: %{public}d", OH_AVRecorder_State::AVRECORDER_IDLE);
     recorderObj->callback_->OnStateChange(OH_AVRecorder_State::AVRECORDER_IDLE,
         OH_AVRecorder_StateChangeReason::AVRECORDER_USER);
-
     recorderObj->hasConfigured_ = false;
+
+    MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_Reset out.");
     return AV_ERR_OK;
 }
 
 OH_AVErrCode OH_AVRecorder_Release(OH_AVRecorder *recorder)
 {
-    CHECK_AND_RETURN_RET_LOG(recorder != nullptr, AV_ERR_INVALID_VAL, "input recorder is nullptr!");
+    MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_Release in.");
 
+    CHECK_AND_RETURN_RET_LOG(recorder != nullptr, AV_ERR_INVALID_VAL, "input recorder is nullptr!");
     struct RecorderObject *recorderObj = reinterpret_cast<RecorderObject *>(recorder);
     CHECK_AND_RETURN_RET_LOG(recorderObj != nullptr, AV_ERR_INVALID_VAL, "recorderObj is nullptr");
     CHECK_AND_RETURN_RET_LOG(recorderObj->recorder_ != nullptr, AV_ERR_INVALID_VAL, "recorder_ is null");
@@ -749,12 +785,16 @@ OH_AVErrCode OH_AVRecorder_Release(OH_AVRecorder *recorder)
     delete recorderObj;
     recorderObj = nullptr;
     recorder = nullptr;
+
+    MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_Release out.");
     return AV_ERR_OK;
 }
 
 OH_AVErrCode OH_AVRecorder_GetAvailableEncoder(OH_AVRecorder *recorder,
     OH_AVRecorder_EncoderInfo **info, int32_t *length)
 {
+    MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_GetAvailableEncoder in.");
+
     CHECK_AND_RETURN_RET_LOG(recorder != nullptr, AV_ERR_INVALID_VAL, "input recorder is nullptr!");
     CHECK_AND_RETURN_RET_LOG(info != nullptr, AV_ERR_INVALID_VAL, "input info is nullptr!");
 
@@ -787,13 +827,15 @@ OH_AVErrCode OH_AVRecorder_GetAvailableEncoder(OH_AVRecorder *recorder,
     }
 
     *info = recorderObj->info_;
+    
+    MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_GetAvailableEncoder out.");
     return AV_ERR_OK;
 }
 
 OH_AVErrCode OH_AVRecorder_SetStateCallback(OH_AVRecorder *recorder,
     OH_AVRecorder_OnStateChange callback, void *userData)
 {
-    MEDIA_LOGD("OH_AVRecorder_SetStateCallback Start");
+    MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_SetStateCallback in.");
     
     CHECK_AND_RETURN_RET_LOG(recorder != nullptr, AV_ERR_INVALID_VAL, "input recorder is nullptr!");
     CHECK_AND_RETURN_RET_LOG(callback != nullptr, AV_ERR_INVALID_VAL, "input stateCallback is nullptr!");
@@ -814,14 +856,14 @@ OH_AVErrCode OH_AVRecorder_SetStateCallback(OH_AVRecorder *recorder,
         return AV_ERR_NO_MEMORY;
     }
 
-    MEDIA_LOGD("OH_AVRecorder_SetStateCallback End");
+    MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_SetStateCallback out.");
 
     return AV_ERR_OK;
 }
 
 OH_AVErrCode OH_AVRecorder_SetErrorCallback(OH_AVRecorder *recorder, OH_AVRecorder_OnError callback, void *userData)
 {
-    MEDIA_LOGD("OH_AVRecorder_SetErrorCallback Start");
+    MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_SetErrorCallback in.");
     
     CHECK_AND_RETURN_RET_LOG(recorder != nullptr, AV_ERR_INVALID_VAL, "input recorder is nullptr!");
     CHECK_AND_RETURN_RET_LOG(callback != nullptr, AV_ERR_INVALID_VAL, "input errorCallback is nullptr!");
@@ -842,7 +884,7 @@ OH_AVErrCode OH_AVRecorder_SetErrorCallback(OH_AVRecorder *recorder, OH_AVRecord
         return AV_ERR_NO_MEMORY;
     }
 
-    MEDIA_LOGD("OH_AVRecorder_SetErrorCallback End");
+    MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_SetErrorCallback out.");
 
     return AV_ERR_OK;
 }
@@ -850,7 +892,7 @@ OH_AVErrCode OH_AVRecorder_SetErrorCallback(OH_AVRecorder *recorder, OH_AVRecord
 #ifdef SUPPORT_RECORDER_CREATE_FILE
 OH_AVErrCode OH_AVRecorder_SetUriCallback(OH_AVRecorder *recorder, OH_AVRecorder_OnUri callback, void *userData)
 {
-    MEDIA_LOGD("OH_AVRecorder_SetUriCallback Start");
+    MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_SetUriCallback in.");
  
     CHECK_AND_RETURN_RET_LOG(recorder != nullptr, AV_ERR_INVALID_VAL, "input recorder is nullptr!");
     CHECK_AND_RETURN_RET_LOG(callback != nullptr, AV_ERR_INVALID_VAL, "input errorCallback is nullptr!");
@@ -871,7 +913,7 @@ OH_AVErrCode OH_AVRecorder_SetUriCallback(OH_AVRecorder *recorder, OH_AVRecorder
         return AV_ERR_NO_MEMORY;
     }
  
-    MEDIA_LOGD("OH_AVRecorder_SetUriCallback End");
+    MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_SetUriCallback out.");
  
     return AV_ERR_OK;
 }
