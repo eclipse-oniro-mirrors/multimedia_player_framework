@@ -169,29 +169,29 @@ OH_AVMetadataExtractor* OH_AVMetadataExtractor_Create(void)
 OH_AVErrCode OH_AVMetadataExtractor_SetFDSource(OH_AVMetadataExtractor* extractor,
     int32_t fd, int64_t offset, int64_t size)
 {
-    CHECK_AND_RETURN_RET_LOG(extractor != nullptr, AV_ERR_INPUT_DATA_ERROR, "input extractor is nullptr");
+    CHECK_AND_RETURN_RET_LOG(extractor != nullptr, AV_ERR_INVALID_VAL, "input extractor is nullptr");
     struct AVMetadataExtractorObject *extractorObj = reinterpret_cast<AVMetadataExtractorObject *>(extractor);
-    CHECK_AND_RETURN_RET_LOG(extractorObj->aVMetadataHelper_ != nullptr, AV_ERR_INPUT_DATA_ERROR,
+    CHECK_AND_RETURN_RET_LOG(extractorObj->aVMetadataHelper_ != nullptr, AV_ERR_INVALID_VAL,
                              "aVMetadataHelper_ is nullptr");
 
-    CHECK_AND_RETURN_RET_LOG(fd >= 0, AV_ERR_INPUT_DATA_ERROR, "fd is invalid");
+    CHECK_AND_RETURN_RET_LOG(fd >= 0, AV_ERR_INVALID_VAL, "fd is invalid");
 
     CHECK_AND_RETURN_RET_LOG(extractorObj->state_ == HelperState::HELPER_STATE_IDLE,
                              AV_ERR_OPERATE_NOT_PERMIT, "Has set source once, unsupport set again");
 
     int32_t ret = extractorObj->aVMetadataHelper_->SetSource(fd, offset, size);
     extractorObj->state_ = ret == MSERR_OK ? HelperState::HELPER_STATE_RUNNABLE : HelperState::HELPER_ERROR;
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret == MSERR_NO_MEMORY ? AV_ERR_NO_MEMORY : AV_ERR_INPUT_DATA_ERROR,
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret == MSERR_NO_MEMORY ? AV_ERR_NO_MEMORY : AV_ERR_INVALID_VAL,
                              "aVMetadataExtractor setFdSource failed");
     return AV_ERR_OK;
 }
 
 OH_AVErrCode OH_AVMetadataExtractor_FetchMetadata(OH_AVMetadataExtractor* extractor, OH_AVFormat* avMetadata)
 {
-    CHECK_AND_RETURN_RET_LOG(extractor != nullptr, AV_ERR_INPUT_DATA_ERROR, "input extractor is nullptr");
-    CHECK_AND_RETURN_RET_LOG(avMetadata != nullptr, AV_ERR_INPUT_DATA_ERROR, "input OH_AVFormat is nullptr");
+    CHECK_AND_RETURN_RET_LOG(extractor != nullptr, AV_ERR_INVALID_VAL, "input extractor is nullptr");
+    CHECK_AND_RETURN_RET_LOG(avMetadata != nullptr, AV_ERR_INVALID_VAL, "input OH_AVFormat is nullptr");
     struct AVMetadataExtractorObject *extractorObj = reinterpret_cast<AVMetadataExtractorObject *>(extractor);
-    CHECK_AND_RETURN_RET_LOG(extractorObj->aVMetadataHelper_ != nullptr, AV_ERR_INPUT_DATA_ERROR,
+    CHECK_AND_RETURN_RET_LOG(extractorObj->aVMetadataHelper_ != nullptr, AV_ERR_INVALID_VAL,
                              "aVMetadataHelper_ is nullptr");
     
     CHECK_AND_RETURN_RET_LOG(extractorObj->state_ == HelperState::HELPER_STATE_RUNNABLE,
@@ -212,10 +212,10 @@ OH_AVErrCode OH_AVMetadataExtractor_FetchMetadata(OH_AVMetadataExtractor* extrac
 
 OH_AVErrCode OH_AVMetadataExtractor_FetchAlbumCover(OH_AVMetadataExtractor* extractor, OH_PixelmapNative** pixelMap)
 {
-    CHECK_AND_RETURN_RET_LOG(extractor != nullptr, AV_ERR_INPUT_DATA_ERROR, "input extractor is nullptr");
-    CHECK_AND_RETURN_RET_LOG(pixelMap != nullptr, AV_ERR_INPUT_DATA_ERROR, "input pixelMap is nullptr");
+    CHECK_AND_RETURN_RET_LOG(extractor != nullptr, AV_ERR_INVALID_VAL, "input extractor is nullptr");
+    CHECK_AND_RETURN_RET_LOG(pixelMap != nullptr, AV_ERR_INVALID_VAL, "input pixelMap is nullptr");
     struct AVMetadataExtractorObject *extractorObj = reinterpret_cast<AVMetadataExtractorObject *>(extractor);
-    CHECK_AND_RETURN_RET_LOG(extractorObj->aVMetadataHelper_ != nullptr, AV_ERR_INPUT_DATA_ERROR,
+    CHECK_AND_RETURN_RET_LOG(extractorObj->aVMetadataHelper_ != nullptr, AV_ERR_INVALID_VAL,
                              "aVMetadataHelper_ is nullptr");
 
     CHECK_AND_RETURN_RET_LOG(extractorObj->state_ == HelperState::HELPER_STATE_RUNNABLE,
@@ -234,9 +234,9 @@ OH_AVErrCode OH_AVMetadataExtractor_FetchAlbumCover(OH_AVMetadataExtractor* extr
 
 OH_AVErrCode OH_AVMetadataExtractor_Release(OH_AVMetadataExtractor* extractor)
 {
-    CHECK_AND_RETURN_RET_LOG(extractor != nullptr, AV_ERR_INPUT_DATA_ERROR, "input extractor is nullptr");
+    CHECK_AND_RETURN_RET_LOG(extractor != nullptr, AV_ERR_INVALID_VAL, "input extractor is nullptr");
     struct AVMetadataExtractorObject *extractorObj = reinterpret_cast<AVMetadataExtractorObject *>(extractor);
-    CHECK_AND_RETURN_RET_LOG(extractorObj->aVMetadataHelper_ != nullptr, AV_ERR_INPUT_DATA_ERROR,
+    CHECK_AND_RETURN_RET_LOG(extractorObj->aVMetadataHelper_ != nullptr, AV_ERR_INVALID_VAL,
                              "aVMetadataHelper_ is nullptr");
     extractorObj->aVMetadataHelper_->Release();
     delete extractorObj;
