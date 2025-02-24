@@ -3861,7 +3861,7 @@ bool AudioDataSource::HasSpeakerStream(
         if (!changeInfo) {
             continue;
         }
-        MEDIA_LOGI("ChangeInfo Id: %{public}d, Client pid : %{public}d, State : %{public}d, DeviceType : %{public}d",
+        MEDIA_LOGD("ChangeInfo Id: %{public}d, Client pid : %{public}d, State : %{public}d, DeviceType : %{public}d",
             changeInfoIndex, changeInfo->clientPid, static_cast<int32_t>(changeInfo->rendererState),
             static_cast<int32_t>(changeInfo->outputDeviceInfo.deviceType_));
         if (changeInfo->outputDeviceInfo.deviceType_ == DEVICE_TYPE_WIRED_HEADSET ||
