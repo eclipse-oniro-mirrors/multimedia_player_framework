@@ -147,7 +147,6 @@ bool SetMetadata(std::shared_ptr<Meta>& meta, std::string key, CAVMetadata& resu
     }
     CHECK_AND_RETURN_RET_LOG(CreateCString(sValue, ptr), false,
         "Failed to set value, key %{public}s", key.c_str());
-    free(*ptr);
     return ret;
 }
 
