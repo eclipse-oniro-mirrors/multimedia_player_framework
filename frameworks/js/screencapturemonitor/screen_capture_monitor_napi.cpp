@@ -241,7 +241,8 @@ napi_value ScreenCaptureMonitorNapi::JsIsSystemScreenRecorderWorking(napi_env en
     bool isSystemScreenRecorderWorking = false;
     napi_status status = napi_get_boolean(env, isSystemScreenRecorderWorking, &result);
 
-    ScreenCaptureMonitorNapi *monitorNapi = ScreenCaptureMonitorNapi::GetJsInstanceAndArgs(env, info, argCount, nullptr);
+    ScreenCaptureMonitorNapi *monitorNapi = ScreenCaptureMonitorNapi::GetJsInstanceAndArgs(
+        env, info, argCount, nullptr);
     CHECK_AND_RETURN_RET_LOG(monitorNapi != nullptr, result, "Failed to GetJsInstanceAndArgs");
 
     isSystemScreenRecorderWorking = ScreenCaptureMonitor::GetInstance()->IsSystemScreenRecorderWorking();
