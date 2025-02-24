@@ -1013,13 +1013,13 @@ CArrCMediaKeySystemInfo FfiMediaAVPlayerGetMediaKeySystemInfos(int64_t id, int32
         return info;
     }
     auto localDrmInfos = avPlayerImpl->GetMediaKeySystemInfos();
-    if (!localDrmInfos.empty()) {
+    if (localDrmInfos.empty()) {
         MEDIA_LOGE("localDrmInfo is empty");
         return info;
     }
     int64_t index = 0;
     auto size = static_cast<int64_t>(localDrmInfos.size());
-    info.head = static_cast<CMediaKeySystemInfo *>(malloc(sizeof(CMediaKeySystemInfo) * info.size));
+    info.head = static_cast<CMediaKeySystemInfo *>(malloc(sizeof(CMediaKeySystemInfo) * size));
     if (info.head == nullptr) {
         return info;
     }
@@ -1075,7 +1075,7 @@ void FfiMediaAVPlayerSetBitrate(int64_t id, int32_t bitrate)
     avPlayerImpl->SetBitrate(bitrate);
 }
 
-void FfiMediaAVPlayerSetVolume(int64_t id, double volume)
+void FfiMediaAVPlayerSetVolume(int64_t id, float volume)
 {
     auto avPlayerImpl = FFIData::GetData<CJAVPlayer>(id);
     if (avPlayerImpl == nullptr) {

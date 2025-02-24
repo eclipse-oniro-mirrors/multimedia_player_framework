@@ -1739,7 +1739,7 @@ void CJAVPlayer::SetBitrate(int32_t bitrate)
     (void)player_->SelectBitRate(static_cast<uint32_t>(bitrate));
 }
 
-void CJAVPlayer::SetVolume(double volume)
+void CJAVPlayer::SetVolume(float volume)
 {
     if (playerCb_->isSetVolume_) {
         MEDIA_LOGI("SetVolume is processing, skip this task until onVolumeChangedCb");

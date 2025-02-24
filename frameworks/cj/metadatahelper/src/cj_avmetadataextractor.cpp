@@ -56,6 +56,10 @@ bool CreateCustomInfo(std::shared_ptr<Meta>& meta, CCustomInfo& info)
     int64_t index = 0;
     for (auto iter = meta->begin(); iter != meta->end(); iter++) { index++; }
     info.size = index;
+    if (index == 0) {
+        return false;
+    }
+    
     info.key = static_cast<char **>(malloc(index * sizeof(char*)));
     if (info.key == nullptr) {
         info.size = 0;
@@ -143,6 +147,7 @@ bool SetMetadata(std::shared_ptr<Meta>& meta, std::string key, CAVMetadata& resu
     }
     CHECK_AND_RETURN_RET_LOG(CreateCString(sValue, ptr), false,
         "Failed to set value, key %{public}s", key.c_str());
+    free(*ptr);
     return ret;
 }
 

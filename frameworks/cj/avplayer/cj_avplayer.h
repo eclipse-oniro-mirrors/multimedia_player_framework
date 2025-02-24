@@ -164,7 +164,7 @@ public:
     std::multimap<std::string, std::vector<uint8_t>> GetMediaKeySystemInfos();
     void SetSpeed(int32_t speed);
     void SetBitrate(int32_t bitrate);
-    void SetVolume(double volume);
+    void SetVolume(float volume);
     int32_t AddSubtitleFromFd(int32_t fd, int64_t offset, int64_t length);
     int32_t AddSubtitleFromUrl(std::string url);
     int32_t GetPlaybackInfo(Format &format);

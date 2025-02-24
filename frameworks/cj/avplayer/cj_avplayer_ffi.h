@@ -131,7 +131,7 @@ FFI_EXPORT int32_t FfiMediaAVPlayerDeselectTrack(int64_t id, int32_t index);
 FFI_EXPORT CArrCMediaKeySystemInfo FfiMediaAVPlayerGetMediaKeySystemInfos(int64_t id, int32_t *errCode);
 FFI_EXPORT void FfiMediaAVPlayerSetSpeed(int64_t id, int32_t speed);
 FFI_EXPORT void FfiMediaAVPlayerSetBitrate(int64_t id, int32_t bitrate);
-FFI_EXPORT void FfiMediaAVPlayerSetVolume(int64_t id, double volume);
+FFI_EXPORT void FfiMediaAVPlayerSetVolume(int64_t id, float volume);
 FFI_EXPORT int32_t FfiMediaAVPlayerAddSubtitleFromFd(int64_t id, int32_t fd, int64_t offset, int64_t length);
 FFI_EXPORT int32_t FfiMediaAVPlayerAddSubtitleFromUrl(int64_t id, char *url);
 FFI_EXPORT CArrCPlaybackInfo FfiMediaAVPlayerGetPlaybackInfo(int64_t id, int32_t *errCode);

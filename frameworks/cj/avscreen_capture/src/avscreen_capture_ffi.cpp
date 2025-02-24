@@ -95,10 +95,12 @@ extern "C" {
         auto cjAVScreenCapture = FFIData::GetData<CJAVScreenCapture>(id);
         if (!cjAVScreenCapture) {
             MEDIA_LOGE("[CJAVScreenCapture] instance is nullptr!");
+            return -1;
         }
         std::shared_ptr<ScreenCapture> screenCapture = cjAVScreenCapture->screenCapture_;
         if (!screenCapture) {
             MEDIA_LOGE("[CJAVScreenCapture] screenCapture_ is nullptr!");
+            return -1;
         }
         return cjAVScreenCapture->StopRecording(screenCapture);
     }
@@ -108,10 +110,12 @@ extern "C" {
         auto cjAVScreenCapture = FFIData::GetData<CJAVScreenCapture>(id);
         if (!cjAVScreenCapture) {
             MEDIA_LOGE("[CJAVScreenCapture] instance is nullptr!");
+            return -1;
         }
         std::shared_ptr<ScreenCapture> screenCapture = cjAVScreenCapture->screenCapture_;
         if (!screenCapture) {
             MEDIA_LOGE("[CJAVScreenCapture] screenCapture_ is nullptr!");
+            return -1;
         }
         std::vector<uint64_t> windowIDsVeclist;
         uint64_t *tagptr = static_cast<uint64_t *>(windowIDsVec.head);
@@ -127,10 +131,12 @@ extern "C" {
         auto cjAVScreenCapture = FFIData::GetData<CJAVScreenCapture>(id);
         if (!cjAVScreenCapture) {
             MEDIA_LOGE("[CJAVScreenCapture] instance is nullptr!");
+            return -1;
         }
         std::shared_ptr<ScreenCapture> screenCapture = cjAVScreenCapture->screenCapture_;
         if (!screenCapture) {
             MEDIA_LOGE("[CJAVScreenCapture] screenCapture_ is nullptr!");
+            return -1;
         }
         return cjAVScreenCapture->SetMicEnabled(screenCapture, enabled);
     }
@@ -140,10 +146,12 @@ extern "C" {
         auto cjAVScreenCapture = FFIData::GetData<CJAVScreenCapture>(id);
         if (!cjAVScreenCapture) {
             MEDIA_LOGE("[CJAVScreenCapture] instance is nullptr!");
+            return -1;
         }
         std::shared_ptr<ScreenCapture> screenCapture = cjAVScreenCapture->screenCapture_;
         if (!screenCapture) {
             MEDIA_LOGE("[CJAVScreenCapture] screenCapture_ is nullptr!");
+            return -1;
         }
         return cjAVScreenCapture->Release(screenCapture);
     }

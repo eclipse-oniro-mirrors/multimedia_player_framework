@@ -33,7 +33,7 @@ int64_t CJSoundPool::CreatSoundPool(int32_t maxStreams, AudioStandard::CAudioRen
 
     cjSoundPool->soundPool_ = SoundPoolFactory::CreateSoundPool(maxStreams, rendererInfo);
     if (cjSoundPool->soundPool_ == nullptr) {
-        delete cjSoundPool;
+        FFIData::Release(cjSoundPool->GetID());
         MEDIA_LOGE("failed to CreateSoundPool");
         return -1;
     }
