@@ -76,7 +76,7 @@ OH_AVImageGenerator* OH_AVImageGenerator_Create(void);
  * @param size Indicates the size of media source.
  * @return Function result code.
  *         {@link AV_ERR_OK} if the execution is successful.
- *         {@link AV_ERR_INPUT_DATA_ERROR} if input generator is nullptr or input param is invalid.
+ *         {@link AV_ERR_INVALID_VAL} if input generator is nullptr or input param is invalid.
  *         {@link AV_ERR_OPERATE_NOT_PERMIT} if operation not allowed.
  *         {@link AV_ERR_NO_MEMORY} if internal memory allocation failed.
  * @since 16
@@ -97,7 +97,7 @@ OH_AVErrCode OH_AVImageGenerator_SetFDSource(OH_AVImageGenerator* generator,
  * @param pixelMap The fetched output image from the video source. For details, see {@link OH_PixelmapNative}.
  * @return Function result code.
  *         {@link AV_ERR_OK} if the execution is successful.
- *         {@link AV_ERR_INPUT_DATA_ERROR} if input generator is nullptr or input param is invalid.
+ *         {@link AV_ERR_INVALID_VAL} if input generator is nullptr or input param is invalid.
  *         {@link AV_ERR_OPERATE_NOT_PERMIT} if operation not allowed.
  *         {@link AV_ERR_UNSUPPORTED_FORMAT} if format is unsupported.
  *         {@link AV_ERR_NO_MEMORY} if internal memory allocation failed.
@@ -113,7 +113,7 @@ OH_AVErrCode OH_AVImageGenerator_FetchFrameByTime(OH_AVImageGenerator* generator
  * @param extractor Pointer to an OH_AVImageGenerator instance.
  * @return Function result code.
  *         {@link AV_ERR_OK} if the execution is successful.
- *         {@link AV_ERR_INPUT_DATA_ERROR} if input generator is nullptr or input param is invalid.
+ *         {@link AV_ERR_INVALID_VAL} if input generator is nullptr or input param is invalid.
  * @since 16
  */
 OH_AVErrCode OH_AVImageGenerator_Release(OH_AVImageGenerator* generator);
