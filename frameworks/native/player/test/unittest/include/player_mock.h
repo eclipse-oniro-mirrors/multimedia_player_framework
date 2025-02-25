@@ -19,6 +19,7 @@
 #include "player.h"
 #include "media_data_source_test_noseek.h"
 #include "media_data_source_test_seekable.h"
+#include "loader_callbak_mock.h"
 #include "unittest_log.h"
 #include "window.h"
 
@@ -38,6 +39,7 @@ inline constexpr int32_t SEEK_CONTINUOUS_WAIT_US = 16666;
 const std::string MEDIA_ROOT = "file:///data/test/";
 const std::string VIDEO_FILE1 = MEDIA_ROOT + "H264_AAC.mp4";
 const std::string VIDEO_FILE2 = MEDIA_ROOT + "H264_AAC_multi_track.mp4";
+const std::string VIDEO_URL = "https://appimg.dbankcdn.com/appVideo/f59583660abd45bcb4fb9c3e3f1125a9.mp4";
 const std::string VIDEO_FILE3 = MEDIA_ROOT + "H264_AAC.mkv";
 const std::string SUBTITLE_SRT_FIELE = MEDIA_ROOT + "utf8.srt";
 const std::string SUBTITLE_SRT_FIELE1 = MEDIA_ROOT + "utf8_test1.srt";
@@ -55,6 +57,7 @@ const std::string HTTPS_PLAY = "HTTPS";
 const std::string HTTP_PLAY = "HTTP";
 const std::string LOCAL_PLAY = "LOCAL";
 const std::string HLS_PLAY = "HLS";
+const std::string PRE_DOWNLOAD = "pre_download";
 const std::string INVALID_FILE = MEDIA_ROOT + "invalid.mp4";
 } // namespace PlayerTestParam
 
