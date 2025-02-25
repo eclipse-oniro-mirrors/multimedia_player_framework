@@ -94,7 +94,7 @@ void MockLoaderCallback::Read(int64_t uuid, int64_t requestedOffset, int64_t req
             (void)fseek(file_, static_cast<long>(requestedOffset), SEEK_SET);
             size_t readRet = fread(buffer->GetBase(), static_cast<size_t>(requestedLength), 1, file_);
             if (ferror(file_) || readRet != 1) {
-                MEDIA_LOGE("IO error, offest %{public}ld length %{public}ld readRet %{public}d",
+                MEDIA_LOGE("IO error, offest %{public}" PRId64 " length %{public}" PRId64 "readRet %{public}d",
                     requestedOffset, requestedLength, static_cast<int32_t>(readRet));
                 (void)request->second->FinishLoading(uuid, LOADING_ERROR_NO_RESOURCE);
                 return;

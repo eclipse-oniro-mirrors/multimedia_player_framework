@@ -80,7 +80,7 @@ int32_t MediaSourceLoadingRequestStub::RespondData(int64_t uuid, int64_t offset,
 {
     MediaTrace trace("MediaSourceLoadingRequestStub::RespondData, uuid: " +
         std::to_string(uuid) + " offset: " + std::to_string(offset));
-    MEDIA_LOGI("RespondData enter uuid:%{public}ld", uuid);
+    MEDIA_LOGI("RespondData enter uuid:%{public}" PRId64, uuid);
     CHECK_AND_RETURN_RET_LOG(loadingRequest_ != nullptr, MEDIA_SOURCE_ERROR_IO, "loadingRequest_ is nullptr");
     return loadingRequest_->RespondData(uuid, offset, mem);
 }
@@ -89,7 +89,7 @@ int32_t MediaSourceLoadingRequestStub::RespondHeader(int64_t uuid, std::map<std:
     std::string redirctUrl)
 {
     MediaTrace trace("MediaSourceLoadingRequestStub::RespondHeader, uuid: " + std::to_string(uuid));
-    MEDIA_LOGI("RespondHeader enter uuid:%{public}ld", uuid);
+    MEDIA_LOGI("RespondHeader enter uuid:%{public}" PRId64, uuid);
     CHECK_AND_RETURN_RET_LOG(loadingRequest_ != nullptr, MSERR_UNKNOWN, "loadingRequest_ is nullptr");
     return loadingRequest_->RespondHeader(uuid, header, redirctUrl);
 }
@@ -97,7 +97,7 @@ int32_t MediaSourceLoadingRequestStub::RespondHeader(int64_t uuid, std::map<std:
 int32_t MediaSourceLoadingRequestStub::FinishLoading(int64_t uuid, LoadingRequestError requestedError)
 {
     MediaTrace trace("MediaSourceLoadingRequestStub::FinishLoading, uuid: " + std::to_string(uuid));
-    MEDIA_LOGI("FinishLoading enter uuid:%{public}ld", uuid);
+    MEDIA_LOGI("FinishLoading enter uuid:%{public}" PRId64, uuid);
     CHECK_AND_RETURN_RET_LOG(loadingRequest_ != nullptr, MSERR_UNKNOWN, "loadingRequest_ is nullptr");
     return loadingRequest_->FinishLoading(uuid, requestedError);
 }

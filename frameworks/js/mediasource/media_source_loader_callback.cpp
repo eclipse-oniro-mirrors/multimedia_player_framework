@@ -34,7 +34,7 @@ namespace OHOS {
 namespace Media {
 MediaDataSourceLoaderJsCallback::~MediaDataSourceLoaderJsCallback()
 {
-    isExit = true;
+    isExit_ = true;
     cond_.notify_all();
 }
 
@@ -223,7 +223,8 @@ void MediaSourceLoaderCallback::Close(int64_t uuid)
 
             napi_value result = nullptr;
             napiStatus = napi_call_function(ref->env_, nullptr, jsCallback, ARRAY_ARG_COUNTS_ONE, args, &result);
-            CHECK_AND_RETURN_LOG(napiStatus == napi_ok, "%{public}s failed to napi_call_function", jsCb->callbackName_.c_str());
+            CHECK_AND_RETURN_LOG(napiStatus == napi_ok,
+                "%{public}s failed to napi_call_function", jsCb->callbackName_.c_str());
         } while (0);
     }, napi_eprio_immediate);
     if (ret != napi_ok) {
@@ -246,7 +247,7 @@ void MediaSourceLoaderCallback::ClearCallbackReference()
     temp.swap(refMap_);
     MEDIA_LOGI("callback has been clear");
     if (jsCb_) {
-        jsCb_->isExit = true;
+        jsCb_->isExit_ = true;
         jsCb_->cond_.notify_all();
     }
 }

@@ -383,7 +383,7 @@ int32_t HiPlayerImpl::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
     }
     header_ = mediaSource->header;
     url_ = mediaSource->url;
-    sourceLoader_ = mediaSource->sourceLoader;
+    sourceLoader_ = mediaSource->sourceLoader_;
     preferedWidth_ = strategy.preferredWidth;
     preferedHeight_ = strategy.preferredHeight;
     bufferDuration_ = strategy.preferredBufferDuration;

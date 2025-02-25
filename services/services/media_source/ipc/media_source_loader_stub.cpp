@@ -114,7 +114,7 @@ int32_t MediaSourceLoaderStub::Read(int64_t uuid, int64_t requestedOffset, int64
 {
     MediaTrace trace("MediaSourceLoaderStub::read, uuid: " + std::to_string(uuid) +
         " offset: " + std::to_string(requestedOffset) + " Length:" + std::to_string(requestedLength));
-    MEDIA_LOGD("read enter uuid:+"+ PRId64 +", Offset:"+ PRId64 + ", Length:" + PRId64,
+    MEDIA_LOGD("read enter uuid: %{public}" PRId64 ", Offset:%{public}" PRId64 ", Length:%{public}" PRId64,
         uuid, requestedOffset, requestedLength);
     CHECK_AND_RETURN_RET_LOG(mediaSourceLoader_ != nullptr, MSERR_UNKNOWN, "mediaSourceLoader_ is nullptr");
     mediaSourceLoader_->Read(uuid, requestedOffset, requestedLength);
@@ -124,7 +124,7 @@ int32_t MediaSourceLoaderStub::Read(int64_t uuid, int64_t requestedOffset, int64
 int32_t MediaSourceLoaderStub::Close(int64_t uuid)
 {
     MediaTrace trace("MediaSourceLoaderStub::close, uuid: " + std::to_string(uuid));
-    MEDIA_LOGI("close enter uuid:%{public}ld", uuid);
+    MEDIA_LOGI("close enter uuid:%{public}" PRId64, uuid);
     CHECK_AND_RETURN_RET_LOG(mediaSourceLoader_ != nullptr, MSERR_UNKNOWN, "mediaSourceLoader_ is nullptr");
     mediaSourceLoader_->Close(uuid);
     return MSERR_OK;

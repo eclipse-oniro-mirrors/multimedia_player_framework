@@ -298,7 +298,8 @@ private:
     static bool JsHandleParameter(napi_env env, napi_value args, AVPlayerNapi *jsPlayer);
     static void SeekEnqueueTask(AVPlayerNapi *jsPlayer, int32_t time, int32_t mode);
     static bool VerifyExpectedType(const NapiTypeCheckUnit &unit, AVPlayerNapi *jsPlayer, const std::string &msg);
-
+    static std::shared_ptr<AVMediaSource> GetAVMediaSource(napi_env env, napi_value value,
+        std::shared_ptr<AVMediaSourceTmp> &srcTmp);
     AVPlayerNapi();
     ~AVPlayerNapi() override;
     void SaveCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref);
@@ -352,7 +353,6 @@ private:
     int32_t GetJsApiVersion() override;
     void GetAVPlayStrategyFromStrategyTmp(AVPlayStrategy &strategy, const AVPlayStrategyTmp &strategyTmp);
     bool IsPalyingDurationValid(const AVPlayStrategyTmp &strategyTmp);
-    std::shared_ptr<AVMediaSource> GetAVMediaSource(std::shared_ptr<AVMediaSourceTmp> &srcTmp);
     void EnqueueMediaSourceTask(AVPlayerNapi *jsPlayer, const std::shared_ptr<AVMediaSource> &mediaSource,
                                 const struct AVPlayStrategy &strategy);
 
