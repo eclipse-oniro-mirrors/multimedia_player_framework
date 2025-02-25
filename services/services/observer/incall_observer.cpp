@@ -90,7 +90,7 @@ void InCallObserver::UnregisterInCallObserverCallBack(std::weak_ptr<InCallObserv
         auto unregisterCallBack = callback.lock();
         for (auto iter = inCallObserverCallBacks_.begin(); iter != inCallObserverCallBacks_.end();) {
             auto iterCallback = (*iter).lock();
-            if (iterCallback == unregisterCallBack || unregisterCallBack == nullptr) {
+            if (iterCallback == unregisterCallBack || iterCallback == nullptr) {
                 MEDIA_LOGD("0x%{public}06" PRIXPTR "UnregisterInCallObserverCallBack",
                     FAKE_POINTER(iterCallback.get()));
                 iter = inCallObserverCallBacks_.erase(iter);

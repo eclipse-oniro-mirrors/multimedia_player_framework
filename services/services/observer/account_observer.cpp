@@ -76,7 +76,7 @@ void AccountObserver::UnregisterAccountObserverCallBack(std::weak_ptr<AccountObs
         auto unregisterCallBack = callback.lock();
         for (auto iter = accountObserverCallBacks_.begin(); iter != accountObserverCallBacks_.end();) {
             auto iterCallback = (*iter).lock();
-            if (iterCallback == unregisterCallBack || unregisterCallBack == nullptr) {
+            if (iterCallback == unregisterCallBack || iterCallback == nullptr) {
                 MEDIA_LOGD("0x%{public}06" PRIXPTR "UnregisterAccountObserverCallBack",
                     FAKE_POINTER(iterCallback.get()));
                 iter = accountObserverCallBacks_.erase(iter);
