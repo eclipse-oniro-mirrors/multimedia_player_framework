@@ -74,6 +74,7 @@ public:
     virtual int32_t GetDuration(int32_t &duration) = 0;
     virtual int32_t SetPlaybackSpeed(PlaybackRateMode mode) = 0;
     virtual int32_t GetPlaybackSpeed(PlaybackRateMode &mode) = 0;
+    virtual int32_t SetSourceLoader(const sptr<IRemoteObject> &object) = 0;
     virtual int32_t SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, AVPlayStrategy strategy) = 0;
 #ifdef SUPPORT_VIDEO
     virtual int32_t SetVideoSurface(sptr<Surface> surface) = 0;
@@ -197,6 +198,7 @@ public:
         SET_DEVICE_CHANGE_CB_STATUS,
         GET_API_VERSION,
         IS_SEEK_CONTINUOUS_SUPPORTED,
+        SET_SOURCE_LOADER,
         MAX_IPC_ID,                   // all IPC codes should be added before MAX_IPC_ID
     };
 
