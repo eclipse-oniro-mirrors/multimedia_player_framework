@@ -32,6 +32,7 @@
 #ifdef SUPPORT_AVSESSION
 #include "avsession_background.h"
 #endif
+#include "media_source_loader_proxy.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "PlayerServiceStub"};
@@ -192,6 +193,8 @@ void PlayerServiceStub::FillPlayerFuncPart3()
         [this](MessageParcel &data, MessageParcel &reply) { return GetPlaybackPosition(data, reply); } };
     playerFuncs_[SET_SEI_MESSAGE_CB_STATUS] = { "Player::SetSeiMessageCbStatus",
         [this](MessageParcel &data, MessageParcel &reply) { return SetSeiMessageCbStatus(data, reply); } };
+    playerFuncs_[SET_SOURCE_LOADER] = { "SetSourceLoader",
+        [this](MessageParcel &data, MessageParcel &reply) { return SetSourceLoader(data, reply); } };
 }
 
 int32_t PlayerServiceStub::Init()
@@ -293,6 +296,21 @@ int32_t PlayerServiceStub::SetSource(const sptr<IRemoteObject> &object)
     CHECK_AND_RETURN_RET_LOG(mediaDataSrc != nullptr, MSERR_NO_MEMORY, "failed to new PlayerListenerCallback");
 
     return playerServer_->SetSource(mediaDataSrc);
+}
+
+int32_t PlayerServiceStub::SetSourceLoader(const sptr<IRemoteObject> &object)
+{
+    MediaTrace trace("PlayerServiceStub::SetSourceLoader(sourceLoader)");
+    MEDIA_LOGI("SetSourceLoader in");
+    CHECK_AND_RETURN_RET_LOG(object != nullptr, MSERR_NO_MEMORY, "set sourceLoader object is nullptr");
+ 
+    sptr<IStandardMediaSourceLoader> proxy = iface_cast<IStandardMediaSourceLoader>(object);
+    CHECK_AND_RETURN_RET_LOG(proxy != nullptr, MSERR_NO_MEMORY, "failed to convert MediaSourceLoaderProxy");
+ 
+    sourceLoader_ = std::make_shared<MediaSourceLoaderCallback>(proxy);
+    CHECK_AND_RETURN_RET_LOG(sourceLoader_ != nullptr, MSERR_NO_MEMORY, "failed to new MediaSourceLoaderCallback");
+ 
+    return MSERR_OK;
 }
 
 int32_t PlayerServiceStub::SetSource(int32_t fd, int64_t offset, int64_t size)
@@ -653,6 +671,13 @@ int32_t PlayerServiceStub::SetSource(MessageParcel &data, MessageParcel &reply)
     return MSERR_OK;
 }
 
+int32_t PlayerServiceStub::SetSourceLoader(MessageParcel &data, MessageParcel &reply)
+{
+    sptr<IRemoteObject> object = data.ReadRemoteObject();
+    reply.WriteInt32(SetSourceLoader(object));
+    return MSERR_OK;    
+}
+
 int32_t PlayerServiceStub::SetMediaDataSource(MessageParcel &data, MessageParcel &reply)
 {
     sptr<IRemoteObject> object = data.ReadRemoteObject();
@@ -913,6 +938,9 @@ int32_t PlayerServiceStub::SetMediaSource(MessageParcel &data, MessageParcel &re
     std::shared_ptr<AVMediaSource> mediaSource = std::make_shared<AVMediaSource>(url, header);
     mediaSource->SetMimeType(mimeType);
 
+    if (sourceLoader_ != nullptr) {
+        mediaSource->sourceLoader_ = std::move(sourceLoader_);
+    }
     int32_t fd = -1;
     if (mimeType == AVMimeType::APPLICATION_M3U8) {
         fd = data.ReadFileDescriptor();
@@ -1087,12 +1115,12 @@ int32_t PlayerServiceStub::SetMediaMuted(MessageParcel &data, MessageParcel &rep
 {
     int32_t mediaType = data.ReadInt32();
     bool isMuted = data.ReadBool();
-    int32_t ret = SetMediaMuted(static_cast<MediaType>(mediaType), isMuted);
+    int32_t ret = SetMediaMuted(static_cast<OHOS::Media::MediaType>(mediaType), isMuted);
     reply.WriteInt32(ret);
     return MSERR_OK;
 }
 
-int32_t PlayerServiceStub::SetMediaMuted(MediaType mediaType, bool isMuted)
+int32_t PlayerServiceStub::SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted)
 {
     MediaTrace trace("PlayerServiceStub::SetMediaMuted");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
