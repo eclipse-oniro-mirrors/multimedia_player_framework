@@ -70,6 +70,8 @@ ohos_shared_library("media") {
   ]
 
   sources = [
+    "${multimedia_player_framework_path}/frameworks/js/mediasource/media_source_loader_callback.cpp",
+    "${multimedia_player_framework_path}/frameworks/js/mediasource/media_source_loading_request_napi.cpp",
     "${multimedia_player_framework_path}/frameworks/js/mediasource/media_source_napi.cpp",
     "//foundation/multimedia/player_framework/frameworks/js/common/common_napi.cpp",
     "//foundation/multimedia/player_framework/frameworks/js/media/media_enum_napi.cpp",
