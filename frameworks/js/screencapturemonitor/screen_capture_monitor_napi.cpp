@@ -17,6 +17,8 @@
 #include "media_dfx.h"
 #include "media_log.h"
 #include <refbase.h>
+#include "media_errors.h"
+#include "recorder_napi_utils.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_RECORDER, "ScreenCaptureMonitorNapi"};
@@ -26,6 +28,13 @@ namespace OHOS {
 namespace Media {
 thread_local napi_ref ScreenCaptureMonitorNapi::constructor_ = nullptr;
 const std::string CLASS_NAME = "ScreenCaptureMonitor";
+
+static void SignError(ScreenCaptureMonitorAsyncContext *asyncCtx, int32_t code,
+    const std::string &param1, const std::string &param2, const std::string &add = "")
+{
+    std::string message = MSExtErrorAPI9ToString(static_cast<MediaServiceExtErrCodeAPI9>(code), param1, param2) + add;
+    asyncCtx->SignError(code, message);
+}
 
 ScreenCaptureMonitorNapi::ScreenCaptureMonitorNapi()
 {
@@ -136,6 +145,11 @@ napi_value ScreenCaptureMonitorNapi::JsGetScreenCaptureMonitor(napi_env env, nap
         std::make_unique<ScreenCaptureMonitorAsyncContext>(env);
     CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, result, "failed to get AsyncContext");
 
+    if (!SystemPermission()) {
+        SignError(asyncCtx.get(),
+            MSERR_EXT_API9_PERMISSION_DENIED, "GetScreenCaptureMonitor", "system");
+    }
+
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
     asyncCtx->JsResult = std::make_unique<MediaJsResultInstance>(constructor_);
@@ -158,6 +172,15 @@ napi_value ScreenCaptureMonitorNapi::JsSetEventCallback(napi_env env, napi_callb
     MEDIA_LOGI("JsSetEventCallback Start");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
+
+    std::unique_ptr<ScreenCaptureMonitorAsyncContext> asyncCtx =
+        std::make_unique<ScreenCaptureMonitorAsyncContext>(env);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, result, "failed to get AsyncContext");
+
+    if (!SystemPermission()) {
+        SignError(asyncCtx.get(),
+            MSERR_EXT_API9_PERMISSION_DENIED, "On", "system");
+    }
     
     size_t argCount = 2;
     constexpr size_t requireArgc = 1;
@@ -205,6 +228,15 @@ napi_value ScreenCaptureMonitorNapi::JsCancelEventCallback(napi_env env, napi_ca
     constexpr size_t requireArgc = 1;
     size_t argCount = 1;
 
+    std::unique_ptr<ScreenCaptureMonitorAsyncContext> asyncCtx =
+        std::make_unique<ScreenCaptureMonitorAsyncContext>(env);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, result, "failed to get AsyncContext");
+
+    if (!SystemPermission()) {
+        SignError(asyncCtx.get(),
+            MSERR_EXT_API9_PERMISSION_DENIED, "Off", "system");
+    }
+
     napi_value args[1] = { nullptr };
     ScreenCaptureMonitorNapi *monitorNapi = ScreenCaptureMonitorNapi::GetJsInstanceAndArgs(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(monitorNapi != nullptr, result, "Failed to retrieve instance");
@@ -236,6 +268,15 @@ napi_value ScreenCaptureMonitorNapi::JsIsSystemScreenRecorderWorking(napi_env en
     MEDIA_LOGI("Js IsSystemScreenRecorderWorking Start");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
+
+    std::unique_ptr<ScreenCaptureMonitorAsyncContext> asyncCtx =
+        std::make_unique<ScreenCaptureMonitorAsyncContext>(env);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, result, "failed to get AsyncContext");
+
+    if (!SystemPermission()) {
+        SignError(asyncCtx.get(),
+            MSERR_EXT_API9_PERMISSION_DENIED, "IsSystemScreenRecorderWorking", "system");
+    }
 
     size_t argCount = 0;
     bool isSystemScreenRecorderWorking = false;
