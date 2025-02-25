@@ -120,7 +120,7 @@ int64_t MediaSourceLoaderProxy::Open(const std::string &url, const std::map<std:
     int error = Remote()->SendRequest(static_cast<uint32_t>(SourceLoaderMsg::OPEN), data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MEDIA_SOURCE_ERROR_IO, "open fail, error: %{public}d", error);
     int64_t uuid = reply.ReadInt64();
-    MEDIA_LOGI(">> open %{public}" PRId64 , uuid);
+    MEDIA_LOGI(">> open %{public}" PRId64, uuid);
     return uuid;
 }
 

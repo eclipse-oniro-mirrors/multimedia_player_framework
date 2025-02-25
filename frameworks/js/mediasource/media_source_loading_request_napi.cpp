@@ -190,7 +190,7 @@ napi_value MediaSourceLoadingRequestNapi::JsRespondHeader(napi_env env, napi_cal
     int64_t uuid = 0;
     std::map<std::string, std::string> header {};
     CHECK_AND_RETURN_RET_LOG(napi_get_value_int64(env, args[INDEX_A], &uuid) == napi_ok, result, "get uuid fail");
-    MEDIA_LOGI("JsRespondHeader uuid" PRId64, uuid);
+    MEDIA_LOGI("JsRespondHeader uuid %{public}" PRId64, uuid);
     CommonNapi::GetPropertyMap(env, args[INDEX_B], header);
     for (auto [x, y]: header) {
         MEDIA_LOGI("JsRespondHeader x %{private}s, y %{private}s", x.c_str(), y.c_str());
