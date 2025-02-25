@@ -120,7 +120,7 @@ int64_t MediaSourceLoaderProxy::Open(const std::string &url, const std::map<std:
     int error = Remote()->SendRequest(static_cast<uint32_t>(SourceLoaderMsg::OPEN), data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MEDIA_SOURCE_ERROR_IO, "open fail, error: %{public}d", error);
     int64_t uuid = reply.ReadInt64();
-    MEDIA_LOGI(">> open %{public}ld", uuid);
+    MEDIA_LOGI(">> open " + PRId64 , uuid);
     return uuid;
 }
 
@@ -132,7 +132,8 @@ int32_t MediaSourceLoaderProxy::Read(int64_t uuid, int64_t requestedOffset, int6
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
 
-    MEDIA_LOGD("<< read,uuid %{public}ld, offset %{public}ld, len %{public}ld", uuid, requestedOffset, requestedLength);
+    MEDIA_LOGD("<< read,uuid " + PRId64 + ", offset " + PRId64 +", len " + PRId64,
+        uuid, requestedOffset, requestedLength);
     bool token = data.WriteInterfaceToken(MediaSourceLoaderProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
@@ -151,7 +152,7 @@ int32_t MediaSourceLoaderProxy::Close(int64_t uuid)
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
 
-    MEDIA_LOGI("<< close,uuid %{public}ld", uuid);
+    MEDIA_LOGI("<< close,uuid " + PRId64, uuid);
     bool token = data.WriteInterfaceToken(MediaSourceLoaderProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 

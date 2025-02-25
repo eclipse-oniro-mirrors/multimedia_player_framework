@@ -352,6 +352,7 @@ private:
     int32_t GetJsApiVersion() override;
     void GetAVPlayStrategyFromStrategyTmp(AVPlayStrategy &strategy, const AVPlayStrategyTmp &strategyTmp);
     bool IsPalyingDurationValid(const AVPlayStrategyTmp &strategyTmp);
+    std::shared_ptr<AVMediaSource> GetAVMediaSource(std::shared_ptr<AVMediaSourceTmp> &srcTmp);
     void EnqueueMediaSourceTask(AVPlayerNapi *jsPlayer, const std::shared_ptr<AVMediaSource> &mediaSource,
                                 const struct AVPlayStrategy &strategy);
 

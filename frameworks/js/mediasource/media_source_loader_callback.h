@@ -35,12 +35,12 @@ const std::string SOURCE_CLOSE = "close";
 struct MediaDataSourceLoaderJsCallback {
     ~MediaDataSourceLoaderJsCallback();
     void WaitResult();
-    std::weak_ptr<AutoRef> autoRef;
-    std::string callbackName = "unknown";
-    std::shared_ptr<LoadingRequest> request;
-    int64_t uuid = 0; // The default value is 0, indicating retry upon failure.
-    int64_t requestedOffset = -1;
-    int64_t requestedLength = -1;
+    std::weak_ptr<AutoRef> autoRef_;
+    std::string callbackName_ = "unknown";
+    std::shared_ptr<LoadingRequest> request_;
+    int64_t uuid_ = 0; // The default value is 0, indicating retry upon failure.
+    int64_t requestedOffset_ = -1;
+    int64_t requestedLength_ = -1;
     std::mutex mutexCond_;
     std::condition_variable cond_;
     bool setResult_ = false;
@@ -53,7 +53,7 @@ struct MediaDataSourceLoaderJsCallbackWraper {
 
 class MediaSourceLoaderCallback : public LoaderCallback, public NoCopyable {
 public:
-    MediaSourceLoaderCallback(napi_env env);
+    explicit MediaSourceLoaderCallback(napi_env env);
     virtual ~MediaSourceLoaderCallback();
 
     int64_t Open(std::shared_ptr<LoadingRequest> &request) override;

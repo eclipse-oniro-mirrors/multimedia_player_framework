@@ -38,7 +38,7 @@ public:
         RESPOND_HEADER,
         FINISH_LOADING,
         MAX_IPC_ID,                   // all IPC codes should be added before MAX_IPC_ID
-    }; 
+    };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardMediaSourceLoadingRequest");
 };

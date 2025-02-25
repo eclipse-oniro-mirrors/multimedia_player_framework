@@ -34,7 +34,7 @@ namespace OHOS {
 namespace Media {
 MediaDataSourceLoaderJsCallback::~MediaDataSourceLoaderJsCallback()
 {
-    isExit_ = true;
+    isExit = true;
     cond_.notify_all();
 }
 
@@ -45,7 +45,7 @@ void MediaDataSourceLoaderJsCallback::WaitResult()
         static constexpr int32_t timeout = 200;
         cond_.wait_for(lock, std::chrono::milliseconds(timeout), [this]() { return setResult_ || isExit_; });
         if (!setResult_) {
-            uuid = 0;
+            uuid_ = 0;
             if (isExit_) {
                 MEDIA_LOGW("Reset, OPen has been cancel!");
             } else {
@@ -81,35 +81,35 @@ int64_t MediaSourceLoaderCallback::Open(std::shared_ptr<LoadingRequest> &request
 
     jsCb_ = std::make_shared<MediaDataSourceLoaderJsCallback>();
     CHECK_AND_RETURN_RET_LOG(jsCb_ != nullptr, 0, "cb is nullptr");
-    jsCb_->autoRef = refMap_.at(FunctionName::SOURCE_OPEN);
-    jsCb_->callbackName = FunctionName::SOURCE_OPEN;
-    jsCb_->request = request;
+    jsCb_->autoRef_ = refMap_.at(FunctionName::SOURCE_OPEN);
+    jsCb_->callbackName_ = FunctionName::SOURCE_OPEN;
+    jsCb_->request_ = request;
 
     napi_status ret = napi_send_event(env_, [jsCb = jsCb_] () {
         CHECK_AND_RETURN_LOG(jsCb != nullptr, "request is nullptr");
-        MEDIA_LOGD("CallBack %{public}s start", jsCb->callbackName.c_str());
+        MEDIA_LOGD("CallBack %{public}s start", jsCb->callbackName_.c_str());
         do {
-            std::shared_ptr<AutoRef> ref = jsCb->autoRef.lock();
-            CHECK_AND_RETURN_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", jsCb->callbackName.c_str());
+            std::shared_ptr<AutoRef> ref = jsCb->autoRef_.lock();
+            CHECK_AND_RETURN_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", jsCb->callbackName_.c_str());
             napi_handle_scope scope = nullptr;
             napi_open_handle_scope(ref->env_, &scope);
-            CHECK_AND_RETURN_LOG(scope != nullptr,  "%{public}s scope is nullptr", jsCb->callbackName.c_str());
+            CHECK_AND_RETURN_LOG(scope != nullptr,  "%{public}s scope is nullptr", jsCb->callbackName_.c_str());
             ON_SCOPE_EXIT(0) {
                 napi_close_handle_scope(ref->env_, scope);
             };
             napi_value jsCallback = nullptr;
             napi_status napiStatus = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
             CHECK_AND_RETURN_LOG(napiStatus == napi_ok && jsCallback != nullptr,
-                "%{public}s failed to napi_get_reference_value", jsCb->callbackName.c_str());
+                "%{public}s failed to napi_get_reference_value", jsCb->callbackName_.c_str());
 
             napi_value args[ARRAY_ARG_COUNTS_ONE] = { nullptr };
-            args[0] = MediaSourceLoadingRequestNapi::CreateLoadingRequest(ref->env_, jsCb->request);
+            args[0] = MediaSourceLoadingRequestNapi::CreateLoadingRequest(ref->env_, jsCb->request_);
 
             napi_value result = nullptr;
             napiStatus = napi_call_function(ref->env_, nullptr, jsCallback, ARRAY_ARG_COUNTS_ONE, args, &result);
             CHECK_AND_RETURN_LOG(napiStatus == napi_ok, "%{public}s failed to napi_call_function",
-                jsCb->callbackName.c_str());
-            napiStatus = napi_get_value_int64(ref->env_, result, &jsCb->uuid);
+                jsCb->callbackName_.c_str());
+            napiStatus = napi_get_value_int64(ref->env_, result, &jsCb->uuid_);
             CHECK_AND_BREAK_LOG(napiStatus == napi_ok, "get uuid failed");
             std::unique_lock<std::mutex> lock(jsCb->mutexCond_);
             jsCb->setResult_ = true;
@@ -118,11 +118,11 @@ int64_t MediaSourceLoaderCallback::Open(std::shared_ptr<LoadingRequest> &request
     }, napi_eprio_immediate);
     if (ret != napi_ok) {
         MEDIA_LOGE("Failed to execute libuv work queue");
-        return jsCb_->uuid;
+        return jsCb_->uuid_;
     }
     jsCb_->WaitResult();
     MEDIA_LOGI("MediaSourceLoaderCallback open out");
-    return jsCb_->uuid;
+    return jsCb_->uuid_;
 }
 
 void MediaSourceLoaderCallback::Read(int64_t uuid, int64_t requestedOffset, int64_t requestedLength)
@@ -140,40 +140,41 @@ void MediaSourceLoaderCallback::Read(int64_t uuid, int64_t requestedOffset, int6
     jsCb_ = std::make_shared<MediaDataSourceLoaderJsCallback>();
     CHECK_AND_RETURN_LOG(jsCb_ != nullptr, "cb is nullptr");
 
-    jsCb_->autoRef = refMap_.at(FunctionName::SOURCE_READ);
-    jsCb_->callbackName = FunctionName::SOURCE_READ;
-    jsCb_->uuid = uuid;
-    jsCb_->requestedOffset = requestedOffset;
-    jsCb_->requestedLength = requestedLength;
+    jsCb_->autoRef_ = refMap_.at(FunctionName::SOURCE_READ);
+    jsCb_->callbackName_ = FunctionName::SOURCE_READ;
+    jsCb_->uuid_ = uuid;
+    jsCb_->requestedOffset_ = requestedOffset;
+    jsCb_->requestedLength_ = requestedLength;
 
     napi_status ret = napi_send_event(env_, [jsCb = jsCb_] () {
         CHECK_AND_RETURN_LOG(jsCb != nullptr, "request is nullptr");
-        MEDIA_LOGD("CallBack %{public}s start", jsCb->callbackName.c_str());
+        MEDIA_LOGD("CallBack %{public}s start", jsCb->callbackName_.c_str());
         do {
-            std::shared_ptr<AutoRef> ref = jsCb->autoRef.lock();
-            CHECK_AND_RETURN_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", jsCb->callbackName.c_str());
+            std::shared_ptr<AutoRef> ref = jsCb->autoRef_.lock();
+            CHECK_AND_RETURN_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", jsCb->callbackName_.c_str());
             napi_handle_scope scope = nullptr;
             napi_open_handle_scope(ref->env_, &scope);
-            CHECK_AND_RETURN_LOG(scope != nullptr,  "%{public}s scope is nullptr", jsCb->callbackName.c_str());
+            CHECK_AND_RETURN_LOG(scope != nullptr,  "%{public}s scope is nullptr", jsCb->callbackName_.c_str());
             ON_SCOPE_EXIT(0) {
                 napi_close_handle_scope(ref->env_, scope);
             };
             napi_value jsCallback = nullptr;
             napi_status napiStatus = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
             CHECK_AND_RETURN_LOG(napiStatus == napi_ok && jsCallback != nullptr,
-                "%{public}s failed to napi_get_reference_value", jsCb->callbackName.c_str());
+                "%{public}s failed to napi_get_reference_value", jsCb->callbackName_.c_str());
 
             napi_value args[ARRAY_ARG_COUNTS_THREE] = { nullptr };
-            CHECK_AND_BREAK_LOG(napi_create_int64(ref->env_, jsCb->uuid, &args[INDEX_A]) == napi_ok,
+            CHECK_AND_BREAK_LOG(napi_create_int64(ref->env_, jsCb->uuid_, &args[INDEX_A]) == napi_ok,
                 "set uuid failed");
-            CHECK_AND_BREAK_LOG(napi_create_int64(ref->env_, jsCb->requestedOffset, &args[INDEX_B]) == napi_ok,
+            CHECK_AND_BREAK_LOG(napi_create_int64(ref->env_, jsCb->requestedOffset_, &args[INDEX_B]) == napi_ok,
                 "set requestedOffset failed");
-            CHECK_AND_BREAK_LOG(napi_create_int64(ref->env_, jsCb->requestedLength, &args[INDEX_C]) == napi_ok,
+            CHECK_AND_BREAK_LOG(napi_create_int64(ref->env_, jsCb->requestedLength_, &args[INDEX_C]) == napi_ok,
                 "set requestedLength failed");
 
             napi_value result = nullptr;
             napiStatus = napi_call_function(ref->env_, nullptr, jsCallback, ARRAY_ARG_COUNTS_THREE, args, &result);
-            CHECK_AND_RETURN_LOG(napiStatus == napi_ok, "%{public}s failed to napi_call_function", jsCb->callbackName.c_str());
+            CHECK_AND_RETURN_LOG(napiStatus == napi_ok,
+                "%{public}s failed to napi_call_function", jsCb->callbackName_.c_str());
         } while (0);
     }, napi_eprio_immediate);
     if (ret != napi_ok) {
@@ -195,34 +196,34 @@ void MediaSourceLoaderCallback::Close(int64_t uuid)
     jsCb_ = std::make_shared<MediaDataSourceLoaderJsCallback>();
     CHECK_AND_RETURN_LOG(jsCb_ != nullptr, "cb is nullptr");
 
-    jsCb_->autoRef = refMap_.at(FunctionName::SOURCE_CLOSE);
-    jsCb_->callbackName = FunctionName::SOURCE_CLOSE;
-    jsCb_->uuid = uuid;
+    jsCb_->autoRef_ = refMap_.at(FunctionName::SOURCE_CLOSE);
+    jsCb_->callbackName_ = FunctionName::SOURCE_CLOSE;
+    jsCb_->uuid_ = uuid;
 
     napi_status ret = napi_send_event(env_, [jsCb = jsCb_] () {
         CHECK_AND_RETURN_LOG(jsCb != nullptr, "request is nullptr");
-        MEDIA_LOGD("CallBack %{public}s start", jsCb->callbackName.c_str());
+        MEDIA_LOGD("CallBack %{public}s start", jsCb->callbackName_.c_str());
         do {
-            std::shared_ptr<AutoRef> ref = jsCb->autoRef.lock();
-            CHECK_AND_RETURN_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", jsCb->callbackName.c_str());
+            std::shared_ptr<AutoRef> ref = jsCb->autoRef_.lock();
+            CHECK_AND_RETURN_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", jsCb->callbackName_.c_str());
             napi_handle_scope scope = nullptr;
             napi_open_handle_scope(ref->env_, &scope);
-            CHECK_AND_RETURN_LOG(scope != nullptr,  "%{public}s scope is nullptr", jsCb->callbackName.c_str());
+            CHECK_AND_RETURN_LOG(scope != nullptr,  "%{public}s scope is nullptr", jsCb->callbackName_.c_str());
             ON_SCOPE_EXIT(0) {
                 napi_close_handle_scope(ref->env_, scope);
             };
             napi_value jsCallback = nullptr;
             napi_status napiStatus = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
             CHECK_AND_RETURN_LOG(napiStatus == napi_ok && jsCallback != nullptr,
-                "%{public}s failed to napi_get_reference_value", jsCb->callbackName.c_str());
+                "%{public}s failed to napi_get_reference_value", jsCb->callbackName_.c_str());
 
             napi_value args[ARRAY_ARG_COUNTS_ONE] = { nullptr };
-            CHECK_AND_BREAK_LOG(napi_create_int64(ref->env_, jsCb->uuid, &args[INDEX_A]) == napi_ok,
+            CHECK_AND_BREAK_LOG(napi_create_int64(ref->env_, jsCb->uuid_, &args[INDEX_A]) == napi_ok,
                 "set uuid failed");
 
             napi_value result = nullptr;
             napiStatus = napi_call_function(ref->env_, nullptr, jsCallback, ARRAY_ARG_COUNTS_ONE, args, &result);
-            CHECK_AND_RETURN_LOG(napiStatus == napi_ok, "%{public}s failed to napi_call_function", jsCb->callbackName.c_str());
+            CHECK_AND_RETURN_LOG(napiStatus == napi_ok, "%{public}s failed to napi_call_function", jsCb->callbackName_.c_str());
         } while (0);
     }, napi_eprio_immediate);
     if (ret != napi_ok) {
@@ -245,7 +246,7 @@ void MediaSourceLoaderCallback::ClearCallbackReference()
     temp.swap(refMap_);
     MEDIA_LOGI("callback has been clear");
     if (jsCb_) {
-        jsCb_->isExit_ = true;
+        jsCb_->isExit = true;
         jsCb_->cond_.notify_all();
     }
 }

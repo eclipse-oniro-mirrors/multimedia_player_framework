@@ -80,6 +80,11 @@ PlayerServiceProxy::PlayerServiceProxy(const sptr<IRemoteObject> &impl)
     playerFuncs_[GET_VIDEO_WIDTH] = "Player::GetVideoWidth";
     playerFuncs_[GET_VIDEO_HEIGHT] = "Player::GetVideoHeight";
     playerFuncs_[SELECT_BIT_RATE] = "Player::SelectBitRate";
+    FillPlayerFunc();
+}
+
+void PlayerServiceProxy::FillPlayerFunc()
+{
     playerFuncs_[SELECT_TRACK] = "Player::SelectTrack";
     playerFuncs_[DESELECT_TRACK] = "Player::DeslectTrack";
     playerFuncs_[GET_CURRENT_TRACK] = "Player::GetCurrentTrack";

@@ -28,8 +28,9 @@ constexpr uint32_t MAX_MAP_SIZE = 100;
 namespace OHOS {
 namespace Media {
 using namespace Plugins;
-MediaSourceLoadingRequestStub::MediaSourceLoadingRequestStub(std::shared_ptr<IMediaSourceLoadingRequest> &loadingRequest)
-    : taskQue_("LoadingRequest"), loadingRequest_(loadingRequest) 
+MediaSourceLoadingRequestStub::MediaSourceLoadingRequestStub(
+    std::shared_ptr<IMediaSourceLoadingRequest> &loadingRequest)
+    : taskQue_("LoadingRequest"), loadingRequest_(loadingRequest)
 {
     (void)taskQue_.Start();
     SetDumpBySysParam();
@@ -59,7 +60,6 @@ int MediaSourceLoadingRequestStub::OnRemoteRequest(uint32_t code, MessageParcel 
     if (itFunc != loadingRequestFuncs_.end()) {
         auto memberFunc = itFunc->second.second;
         auto funcName = itFunc->second.first;
-       
         if (memberFunc != nullptr) {
             auto task = std::make_shared<TaskHandler<int>>([&] {
                 return memberFunc(data, reply);
@@ -123,7 +123,8 @@ void MediaSourceLoadingRequestStub::SetDumpBySysParam()
     }
 }
 
-void MediaSourceLoadingRequestStub::DumpData(uint8_t* buffer, const size_t& bytesSingle) {
+void MediaSourceLoadingRequestStub::DumpData(uint8_t* buffer, const size_t& bytesSingle)
+{
     if (!enableEntireDump_) {
         return;
     }
@@ -159,7 +160,7 @@ int32_t MediaSourceLoadingRequestStub::FinishLoading(MessageParcel &data, Messag
 {
     int64_t uuid = data.ReadInt64();
     int32_t error = data.ReadInt32();
-    if (error > static_cast<int32_t>(LoadingRequestError::LOADING_ERROR_AUTHORIZE_FAILED) || 
+    if (error > static_cast<int32_t>(LoadingRequestError::LOADING_ERROR_AUTHORIZE_FAILED) ||
         error < static_cast<int32_t>(LoadingRequestError::LOADING_ERROR_SUCCESS)) {
         MEDIA_LOGI("error code");
         return MSERR_INVALID_VAL;

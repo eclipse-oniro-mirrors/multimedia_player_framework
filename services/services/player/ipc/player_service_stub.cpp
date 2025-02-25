@@ -675,7 +675,7 @@ int32_t PlayerServiceStub::SetSourceLoader(MessageParcel &data, MessageParcel &r
 {
     sptr<IRemoteObject> object = data.ReadRemoteObject();
     reply.WriteInt32(SetSourceLoader(object));
-    return MSERR_OK;    
+    return MSERR_OK;
 }
 
 int32_t PlayerServiceStub::SetMediaDataSource(MessageParcel &data, MessageParcel &reply)

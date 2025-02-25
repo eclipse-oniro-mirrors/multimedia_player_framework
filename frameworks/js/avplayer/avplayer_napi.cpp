@@ -1682,13 +1682,8 @@ napi_value AVPlayerNapi::JsSetMediaSource(napi_env env, napi_callback_info info)
     }
     std::shared_ptr<AVMediaSourceTmp> srcTmp = MediaSourceNapi::GetMediaSource(env, args[0]);
     CHECK_AND_RETURN_RET_LOG(srcTmp != nullptr, result, "get GetMediaSource argument failed!");
-
-    std::shared_ptr<AVMediaSource> mediaSource = std::make_shared<AVMediaSource>(srcTmp->url, srcTmp->header);
-    mediaSource->SetMimeType(srcTmp->GetMimeType());
-    mediaSource->mediaSourceLoaderCb_ = MediaSourceNapi::GetMediaSourceLoader(env, args[0]);
-    if (mediaSource->mediaSourceLoaderCb_ == nullptr) {
-        MEDIA_LOGI("mediaSourceLoaderCb_ nullptr");
-    }
+    std::shared_ptr<AVMediaSource> mediaSource = GetAVMediaSource(srcTmp);
+    CHECK_AND_RETURN_RET_LOG(mediaSource != nullptr, result, "create mediaSource failed!");
     struct AVPlayStrategyTmp strategyTmp;
     struct AVPlayStrategy strategy;
     if (!CommonNapi::GetPlayStrategy(env, args[1], strategyTmp)) {
@@ -1706,6 +1701,18 @@ napi_value AVPlayerNapi::JsSetMediaSource(napi_env env, napi_callback_info info)
     }
     jsPlayer->EnqueueMediaSourceTask(jsPlayer, mediaSource, strategy);
     return result;
+}
+
+std::shared_ptr<AVMediaSource> AVPlayerNapi::GetAVMediaSource(std::shared_ptr<AVMediaSourceTmp> &srcTmp)
+{
+    std::shared_ptr<AVMediaSource> mediaSource = std::make_shared<AVMediaSource>(srcTmp->url, srcTmp->header);
+    CHECK_AND_RETURN_RET_LOG(mediaSource != nullptr, nullptr, "create mediaSource failed!");
+    mediaSource->SetMimeType(srcTmp->GetMimeType());
+    mediaSource->mediaSourceLoaderCb_ = MediaSourceNapi::GetSourceLoader(env, args[0]);
+    if (mediaSource->mediaSourceLoaderCb_ == nullptr) {
+        MEDIA_LOGI("mediaSourceLoaderCb_ nullptr");
+    }
+    return mediaSource;
 }
 
 void AVPlayerNapi::EnqueueMediaSourceTask(AVPlayerNapi *jsPlayer, const std::shared_ptr<AVMediaSource> &mediaSource,

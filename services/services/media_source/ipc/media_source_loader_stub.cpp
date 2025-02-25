@@ -51,20 +51,16 @@ int MediaSourceLoaderStub::OnRemoteRequest(uint32_t code, MessageParcel &data, M
 
     switch (static_cast<SourceLoaderMsg>(code)) {
         case SourceLoaderMsg::INIT: {
-            MEDIA_LOGE("Init");
             sptr<IRemoteObject> object = data.ReadRemoteObject();
             CHECK_AND_RETURN_RET_LOG(object != nullptr, MSERR_NO_MEMORY, "object is nullptr");
             sptr<MediaSourceLoadingRequestProxy> requestProxy = iface_cast<MediaSourceLoadingRequestProxy>(object);
-            CHECK_AND_RETURN_RET_LOG(requestProxy != nullptr, MSERR_NO_MEMORY,
-                "failed to convert MediaSourceLoadingRequestProxy");
+            CHECK_AND_RETURN_RET_LOG(requestProxy != nullptr, MSERR_NO_MEMORY, "failed to convert");
             requestCallback_ =  std::make_shared<MediaSourceLoadingRequestCallback>(requestProxy);
-            CHECK_AND_RETURN_RET_LOG(requestCallback_ != nullptr, MSERR_NO_MEMORY,
-                "failed to create requestCallback_");
+            CHECK_AND_RETURN_RET_LOG(requestCallback_ != nullptr, MSERR_NO_MEMORY, "failed to create requestCallback_");
             reply.WriteInt32(Init(requestCallback_));
             return MSERR_OK;
         }
         case SourceLoaderMsg::OPEN: {
-            MEDIA_LOGE("MediaSourceLoaderStub open");
             std::string url = data.ReadString();
             uint32_t mapSize = data.ReadUint32();
             CHECK_AND_RETURN_RET_LOG(mapSize >= 0 && mapSize <= MAX_MAP_SIZE,
@@ -86,8 +82,7 @@ int MediaSourceLoaderStub::OnRemoteRequest(uint32_t code, MessageParcel &data, M
             return MSERR_OK;
         }
         case SourceLoaderMsg::CLOSE: {
-            int64_t uuid = data.ReadInt64();
-            Close(uuid);
+            Close(data.ReadInt64());
             return MSERR_OK;
         }
         default: {
@@ -119,7 +114,7 @@ int32_t MediaSourceLoaderStub::Read(int64_t uuid, int64_t requestedOffset, int64
 {
     MediaTrace trace("MediaSourceLoaderStub::read, uuid: " + std::to_string(uuid) +
         " offset: " + std::to_string(requestedOffset) + " Length:" + std::to_string(requestedLength));
-    MEDIA_LOGD("read enter uuid:%{public}ld, Offset:%{public}ld, Length:%{public}ld",
+    MEDIA_LOGD("read enter uuid:+"+ PRId64 +", Offset:"+ PRId64 + ", Length:" + PRId64,
         uuid, requestedOffset, requestedLength);
     CHECK_AND_RETURN_RET_LOG(mediaSourceLoader_ != nullptr, MSERR_UNKNOWN, "mediaSourceLoader_ is nullptr");
     mediaSourceLoader_->Read(uuid, requestedOffset, requestedLength);
