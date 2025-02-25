@@ -23,6 +23,7 @@ namespace Media {
         CJAVScreenCapture *cjAVScreenCapture = FFIData::Create<CJAVScreenCapture>();
         if (cjAVScreenCapture == nullptr) {
             MEDIA_LOGE("No memory!");
+            return -1;
         }
 
         cjAVScreenCapture->screenCapture_ = ScreenCaptureFactory::CreateScreenCapture();
@@ -45,6 +46,7 @@ namespace Media {
         if (ret != MSERR_OK) {
             ret = MSERR_EXT_API9_NO_PERMISSION;
             MEDIA_LOGE("failed to SetPrivacyAuthorityEnabled");
+            return ret;
         }
         ret = screenCapture->Init(config);
         if (ret != MSERR_OK) {
@@ -59,6 +61,7 @@ namespace Media {
         if (ret != MSERR_OK) {
             ret = MSERR_EXT_API9_NO_PERMISSION;
             MEDIA_LOGE("failed to SetPrivacyAuthorityEnabled");
+            return ret;
         }
         ret = screenCapture->StartScreenRecording();
         if (ret != MSERR_OK) {

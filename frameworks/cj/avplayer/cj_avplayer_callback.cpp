@@ -531,7 +531,15 @@ void CJAVPlayerCallback::OnDrmInfoUpdatedCb(const int32_t extra, const Format &i
     std::multimap<std::string, std::vector<uint8_t>> drmInfoMap;
     int32_t ret = SetDrmInfoData(drmInfoAddr, infoCount, drmInfoMap);
     CHECK_AND_RETURN_LOG(ret == MSERR_OK, "SetDrmInfoData err");
-    mediaKeySystemInfoUpdateCallback(Convert2CArrCMediaKeySystemInfo(drmInfoMap));
+    CArrCMediaKeySystemInfo cArrCMediaKeySystemInfo = Convert2CArrCMediaKeySystemInfo(drmInfoMap);
+    mediaKeySystemInfoUpdateCallback(cArrCMediaKeySystemInfo);
+    if (cArrCMediaKeySystemInfo.head != nullptr) {
+        for (int64_t i = 0; i < cArrCMediaKeySystemInfo.size; i++) {
+            free(cArrCMediaKeySystemInfo.head[i].uuid);
+            free(cArrCMediaKeySystemInfo.head[i].pssh.head);
+        }
+        free(cArrCMediaKeySystemInfo.head);
+    }
 }
 
 void CJAVPlayerCallback::OnSubtitleInfoCb(const int32_t extra, const Format &infoBody)

@@ -87,46 +87,46 @@ public:
     int32_t SetDrmInfoData(const uint8_t *drmInfoAddr, int32_t infoCount,
                            std::multimap<std::string, std::vector<uint8_t>> &drmInfoMap);
 
-    int64_t stateChangeCallbackId;
+    int64_t stateChangeCallbackId = -1;
     std::function<void(std::string &stateStr, int32_t reason)> stateChangeCallback = nullptr;
-    int64_t errorCallbackId;
+    int64_t errorCallbackId = -1;
     std::function<void(int32_t errorCode, const std::string &errorMsg)> errorCallback = nullptr;
-    int64_t seekDoneCallbackId;
+    int64_t seekDoneCallbackId = -1;
     std::function<void(int32_t currentPositon)> seekDoneCallback = nullptr;
-    int64_t speedDoneCallbackId;
+    int64_t speedDoneCallbackId = -1;
     std::function<void(int32_t speedMode)> speedDoneCallback = nullptr;
-    int64_t bitRateDoneCallbackId;
+    int64_t bitRateDoneCallbackId = -1;
     std::function<void(int32_t bitRate)> bitRateDoneCallback = nullptr;
-    int64_t mediaKeySystemInfoUpdateCallbackId;
+    int64_t mediaKeySystemInfoUpdateCallbackId = -1;
     std::function<void(CArrCMediaKeySystemInfo drmInfoMap)> mediaKeySystemInfoUpdateCallback = nullptr;
-    int64_t availableBitratesCallbackId;
+    int64_t availableBitratesCallbackId = -1;
     std::function<void(std::vector<int32_t> bitrateVec)> availableBitratesCallback = nullptr;
-    int64_t volumeChangeCallbackId;
+    int64_t volumeChangeCallbackId = -1;
     std::function<void(float volumeLevel)> volumeChangeCallback = nullptr;
-    int64_t endOfStreamCallbackId;
+    int64_t endOfStreamCallbackId = -1;
     std::function<void()> endOfStreamCallback = nullptr;
-    int64_t timeUpdateCallbackId;
+    int64_t timeUpdateCallbackId = -1;
     std::function<void(int32_t position)> timeUpdateCallback = nullptr;
-    int64_t durationUpdateCallbackId;
+    int64_t durationUpdateCallbackId = -1;
     std::function<void(int32_t duration)> durationUpdateCallback = nullptr;
-    int64_t bufferingUpdateCallbackId;
+    int64_t bufferingUpdateCallbackId = -1;
     std::function<void(int32_t bufferingType, int32_t val)> bufferingUpdateCallback = nullptr;
-    int64_t startRenderFrameCallbackId;
+    int64_t startRenderFrameCallbackId = -1;
     std::function<void()> startRenderFrameCallback = nullptr;
-    int64_t videoSizeChangeCallbackId;
+    int64_t videoSizeChangeCallbackId = -1;
     std::function<void(int32_t width, int32_t height)> videoSizeChangeCallback = nullptr;
-    int64_t audioInterruptCallbackId;
+    int64_t audioInterruptCallbackId = -1;
     std::function<void(int32_t eventType, int32_t forceType, int32_t hintType)> audioInterruptCallback = nullptr;
-    int64_t audioDeviceChangeCallbackId;
+    int64_t audioDeviceChangeCallbackId = -1;
     std::function<void(AudioStandard::AudioDeviceDescriptor deviceInfo, int32_t reason)> audioDeviceChangeCallback =
         nullptr;
-    int64_t subtitleUpdateCallbackId;
+    int64_t subtitleUpdateCallbackId = -1;
     std::function<void(std::string text, int32_t pts, int32_t duration)> subtitleUpdateCallback = nullptr;
-    int64_t trackChangeCallbackId;
+    int64_t trackChangeCallbackId = -1;
     std::function<void(int32_t index, int32_t isSelect)> trackChangeCallback = nullptr;
-    int64_t trackInfoUpdateCallbackId;
+    int64_t trackInfoUpdateCallbackId = -1;
     std::function<void(CArrCMediaDescription trackInfo)> trackInfoUpdateCallback = nullptr;
-    int64_t amplitudeUpdateCallbackId;
+    int64_t amplitudeUpdateCallbackId = -1;
     std::function<void(std::vector<float> MaxAmplitudeVec)> amplitudeUpdateCallback = nullptr;
 
 private:

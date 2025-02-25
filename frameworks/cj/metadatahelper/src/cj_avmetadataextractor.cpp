@@ -56,6 +56,10 @@ bool CreateCustomInfo(std::shared_ptr<Meta>& meta, CCustomInfo& info)
     int64_t index = 0;
     for (auto iter = meta->begin(); iter != meta->end(); iter++) { index++; }
     info.size = index;
+    if (index == 0) {
+        return false;
+    }
+    
     info.key = static_cast<char **>(malloc(index * sizeof(char*)));
     if (info.key == nullptr) {
         info.size = 0;
