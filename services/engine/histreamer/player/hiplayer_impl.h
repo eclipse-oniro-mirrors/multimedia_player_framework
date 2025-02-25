@@ -316,6 +316,7 @@ private:
     std::atomic<int32_t> durationMs_{-1};
     int64_t mediaStartPts_{0};
     std::shared_ptr<IMediaDataSource> dataSrc_{nullptr};
+    std::shared_ptr<IMediaSourceLoader> sourceLoader_{nullptr};
     std::atomic<int32_t> videoWidth_{0};
     std::atomic<int32_t> videoHeight_{0};
     std::atomic<bool> needSwapWH_{false};

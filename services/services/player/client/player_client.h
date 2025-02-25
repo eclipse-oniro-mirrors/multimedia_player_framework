@@ -20,6 +20,7 @@
 #include "i_standard_player_service.h"
 #include "player_listener_stub.h"
 #include "media_data_source_stub.h"
+#include "media_source_loader_stub.h"
 #include "monitor_client_object.h"
 
 namespace OHOS {
@@ -92,6 +93,7 @@ private:
     sptr<IStandardPlayerService> playerProxy_ = nullptr;
     sptr<PlayerListenerStub> listenerStub_ = nullptr;
     sptr<MediaDataSourceStub> dataSrcStub_ = nullptr;
+    sptr<MediaSourceLoaderStub> sourceLoaderStub_ = nullptr;
     std::shared_ptr<PlayerCallback> callback_ = nullptr;
     std::mutex mutex_;
 };
