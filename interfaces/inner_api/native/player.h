@@ -47,6 +47,7 @@ struct AVPlayStrategy {
     double preferredBufferDurationForPlaying = 0;
     bool preferredHdr = false;
     bool showFirstFrameOnPrepare = false;
+    bool enableSuperResolution = false;
     OHOS::Media::MediaType mutedMediaType = OHOS::Media::MediaType::MEDIA_TYPE_MAX_COUNT;
     std::string preferredAudioLanguage = "";
     std::string preferredSubtitleLanguage = "";
@@ -134,6 +135,7 @@ public:
     static constexpr std::string_view PLAYER_AVAILABLE_BITRATES = "available_bitRates";
     static constexpr std::string_view AUDIO_MAX_AMPLITUDE = "max_amplitude";
     static constexpr std::string_view SEI_PLAYBACK_POSITION = "sei_playbackPosition";
+    static constexpr std::string_view SUPER_RESOLUTION_ENABLED = "super_resolution_enabled";
 };
 
 class PlaybackInfoKey {
@@ -244,6 +246,8 @@ enum PlayerOnInfoType : int32_t {
     INFO_TYPE_MAX_AMPLITUDE_COLLECT,
     /* return the sei info */
     INFO_TYPE_SEI_UPDATE_INFO,
+    /* return the message when super resolution is changed*/
+    INFO_TYPE_SUPER_RESOLUTION_CHANGED
 };
 
 enum PlayerStates : int32_t {
@@ -614,6 +618,7 @@ public:
      * preferredBufferDuration: Preferred buffer duration, in seconds. The value ranges from 1 to 20.
      * preferredHdr: Whether HDR is preferred. The value true means that HDR is preferred, and false means the opposite.
      * mutedMediaType: The mediaType to be muted before play, which is of the MediaType type,
+     * enableSuperResolution: Whether super resolution is enabled. Must be set before prepare.
      * for example, MediaType::MEDIA_TYPE_AUD.
      * @param playbackStrategy the playback strategy.
      * @return Returns {@link MSERR_OK} if the playback strategy is set successfully; returns an error code defined
@@ -904,6 +909,35 @@ public:
     {
         (void)status;
         (void)payloadTypes;
+        return 0;
+    }
+
+    /**
+     * @brief Enable or disable super-resolution dynamically.
+     *
+     * @return Returns {@link MSERR_OK} if super resolution is set; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t SetSuperResolution(bool enabled)
+    {
+        (void)enabled;
+        return 0;
+    }
+
+    /**
+     * @brief Set video window size for super-resolution.
+     *
+     * @return Returns {@link MSERR_OK} if video window size is set; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t SetVideoWindowSize(int32_t width, int32_t height)
+    {
+        (void)width;
+        (void)height;
         return 0;
     }
 };

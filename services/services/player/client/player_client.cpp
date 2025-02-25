@@ -452,6 +452,20 @@ int32_t PlayerClient::SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMut
     return playerProxy_->SetMediaMuted(mediaType, isMuted);
 }
 
+int32_t PlayerClient::SetSuperResolution(bool enabled)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerProxy_->SetSuperResolution(enabled);
+}
+
+int32_t PlayerClient::SetVideoWindowSize(int32_t width, int32_t height)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerProxy_->SetVideoWindowSize(width, height);
+}
+
 int32_t PlayerClient::SetMaxAmplitudeCbStatus(bool status)
 {
     std::lock_guard<std::mutex> lock(mutex_);

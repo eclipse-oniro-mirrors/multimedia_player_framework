@@ -93,6 +93,8 @@ const std::map<MediaServiceErrCode, std::string> MSERRCODE_INFOS = {
     {MSERR_IO_SSL_CONNECT_FAIL, "IO SSL connect fail"},
     {MSERR_IO_SSL_SERVER_CERT_UNTRUSTED, "IO SSL server cert untrusted"},
     {MSERR_IO_UNSUPPORTTED_REQUEST, "IO unsupported request"},
+    {MSERR_SUPER_RESOLUTION_UNSUPPORTED, "super resolution not supported"},
+    {MSERR_SUPER_RESOLUTION_NOT_ENABLED, "super resolution not enabled"},
 };
 
 const std::map<MediaServiceErrCode, MediaServiceExtErrCode> MSERRCODE_TO_EXTERRORCODE = {
@@ -149,6 +151,8 @@ const std::map<MediaServiceErrCode, MediaServiceExtErrCode> MSERRCODE_TO_EXTERRO
     {MSERR_IO_SSL_CONNECT_FAIL,                 MSERR_EXT_IO},
     {MSERR_IO_SSL_SERVER_CERT_UNTRUSTED,        MSERR_EXT_IO},
     {MSERR_IO_UNSUPPORTTED_REQUEST,             MSERR_EXT_IO},
+    {MSERR_SUPER_RESOLUTION_UNSUPPORTED,        MSERR_EXT_UNSUPPORT},
+    {MSERR_SUPER_RESOLUTION_NOT_ENABLED,        MSERR_EXT_UNKNOWN},
 };
 
 const std::map<MediaServiceExtErrCode, std::string> MSEXTERRCODE_INFOS = {
@@ -227,6 +231,8 @@ const std::map<MediaServiceErrCode, MediaServiceExtErrCodeAPI9> MSERRCODE_TO_EXT
     {MSERR_IO_SSL_CONNECT_FAIL,                 MSERR_EXT_API14_IO_SSL_CONNECT_FAIL},
     {MSERR_IO_SSL_SERVER_CERT_UNTRUSTED,        MSERR_EXT_API14_IO_SSL_SERVER_CERT_UNTRUSTED},
     {MSERR_IO_UNSUPPORTTED_REQUEST,             MSERR_EXT_API14_IO_UNSUPPORTTED_REQUEST},
+    {MSERR_SUPER_RESOLUTION_UNSUPPORTED,        MSERR_EXT_API16_SUPER_RESOLUTION_UNSUPPORTED},
+    {MSERR_SUPER_RESOLUTION_NOT_ENABLED,        MSERR_EXT_API16_SUPER_RESOLUTION_NOT_ENABLED},
 };
 
 const std::map<MediaServiceExtErrCodeAPI9, std::string> MSEXTERRCODE_API9_INFOS = {

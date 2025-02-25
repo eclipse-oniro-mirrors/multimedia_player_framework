@@ -391,6 +391,11 @@ int32_t HiPlayerImpl::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
     mutedMediaType_ = strategy.mutedMediaType;
     audioLanguage_ = strategy.preferredAudioLanguage;
     subtitleLanguage_ = strategy.preferredSubtitleLanguage;
+    if (strategy.enableSuperResolution) {
+        videoPostProcessorType_ = VideoPostProcessorType::SUPER_RESOLUTION;
+        isPostProcessorOn_ = strategy.enableSuperResolution;
+    }
+
     mimeType_ = mediaSource->GetMimeType();
     bufferDurationForPlaying_ = strategy.preferredBufferDurationForPlaying;
     PlayerDfxSourceType sourceType = PlayerDfxSourceType::DFX_SOURCE_TYPE_MEDIASOURCE_LOCAL;
@@ -2262,6 +2267,10 @@ void HiPlayerImpl::OnEventSubTrackChange(const Event &event)
             HandleSubtitleTrackChangeEvent(event);
             break;
         }
+        case EventType::EVENT_SUPER_RESOLUTION_CHANGED: {
+            NotifySuperResolutionChanged(event);
+            break;
+        }
         default:
             break;
     }
@@ -2775,6 +2784,18 @@ void HiPlayerImpl::NotifyUpdateTrackInfo()
     callbackLooper_.OnInfo(INFO_TYPE_TRACK_INFO_UPDATE, 0, body);
 }
 
+void HiPlayerImpl::NotifySuperResolutionChanged(const Event& event)
+{
+#ifdef SUPPORT_VIDEO
+    int32_t enabled = AnyCast<bool>(event.param);
+
+    Format format;
+    format.PutIntValue(PlayerKeys::SUPER_RESOLUTION_ENABLED, static_cast<int32_t>(enabled));
+    callbackLooper_.OnInfo(INFO_TYPE_SUPER_RESOLUTION_CHANGED, 0, format);
+#endif
+    return;
+}
+
 void HiPlayerImpl::HandleAudioTrackChangeEvent(const Event& event)
 {
     int32_t trackId = AnyCast<int32_t>(event.param);
@@ -3060,6 +3081,11 @@ Status HiPlayerImpl::LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFi
             FilterType::FILTERTYPE_VDEC);
         FALSE_RETURN_V(videoDecoder_ != nullptr, Status::ERROR_NULL_POINTER);
         videoDecoder_->Init(playerEventReceiver_, playerFilterCallback_);
+        if (videoPostProcessorType_ != VideoPostProcessorType::NONE) {
+            videoDecoder_->SetPostProcessorType(videoPostProcessorType_);
+            videoDecoder_->SetPostProcessorOn(isPostProcessorOn_);
+            videoDecoder_->SetVideoWindowSize(postProcessorTargetWidth_, postProcessorTargetHeight_);
+        }
         interruptMonitor_->RegisterListener(videoDecoder_);
         videoDecoder_->SetSyncCenter(syncManager_);
         videoDecoder_->SetCallingInfo(appUid_, appPid_, bundleName_, instanceId_);
@@ -3089,13 +3115,7 @@ Status HiPlayerImpl::LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFi
             MEDIA_LOG_D("HiPlayerImpl::LinkVideoDecoderFilter, and it's not drm-protected.");
         }
     }
-    completeState_.emplace_back(std::make_pair("VideoSink", false));
-    initialAVStates_.emplace_back(std::make_pair(EventType::EVENT_VIDEO_RENDERING_START, false));
-#ifdef SUPPORT_START_STOP_ON_DEMAND
-    return pipeline_->LinkFilters(preFilter, {videoDecoder_}, type, true);
-#else
     return pipeline_->LinkFilters(preFilter, {videoDecoder_}, type);
-#endif
 }
 #endif
 
@@ -3138,7 +3158,36 @@ int32_t HiPlayerImpl::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
     audioLanguage_ = playbackStrategy.preferredAudioLanguage;
     subtitleLanguage_ = playbackStrategy.preferredSubtitleLanguage;
     bufferDurationForPlaying_ = playbackStrategy.preferredBufferDurationForPlaying;
+
+    if (playbackStrategy.enableSuperResolution) {
+        videoPostProcessorType_ = VideoPostProcessorType::SUPER_RESOLUTION;
+        isPostProcessorOn_ = playbackStrategy.enableSuperResolution;
+    }
     return MSERR_OK;
+}
+
+int32_t HiPlayerImpl::SetSuperResolution(bool enabled)
+{
+    FALSE_RETURN_V(videoPostProcessorType_ == VideoPostProcessorType::SUPER_RESOLUTION,
+        MSERR_SUPER_RESOLUTION_NOT_ENABLED);
+    isPostProcessorOn_ = enabled;
+    FALSE_RETURN_V_NOLOG(videoDecoder_ != nullptr, MSERR_OK);
+    auto ret = videoDecoder_->SetPostProcessorOn(enabled);
+    return ret == Status::ERROR_UNSUPPORTED_FORMAT ? MSERR_SUPER_RESOLUTION_UNSUPPORTED : TransStatus(ret);
+}
+
+int32_t HiPlayerImpl::SetVideoWindowSize(int32_t width, int32_t height)
+{
+    FALSE_RETURN_V(videoPostProcessorType_ == VideoPostProcessorType::SUPER_RESOLUTION,
+        MSERR_SUPER_RESOLUTION_NOT_ENABLED);
+    FALSE_RETURN_V(width >= MIN_TARGET_WIDTH && width <= MAX_TARGET_WIDTH &&
+        height >= MIN_TARGET_HEIGHT && height <= MAX_TARGET_HEIGHT,
+        TransStatus(Status::ERROR_INVALID_PARAMETER));
+    postProcessorTargetWidth_ = width;
+    postProcessorTargetHeight_ = height;
+    FALSE_RETURN_V_NOLOG(videoDecoder_ != nullptr, MSERR_OK);
+    auto ret = videoDecoder_->SetVideoWindowSize(width, height);
+    return ret == Status::ERROR_UNSUPPORTED_FORMAT ? MSERR_SUPER_RESOLUTION_UNSUPPORTED : TransStatus(ret);
 }
 
 int32_t HiPlayerImpl::SeekContinous(int32_t mSeconds, int64_t seekContinousBatchNo)

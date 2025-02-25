@@ -1837,6 +1837,32 @@ int32_t PlayerServer::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
     return playerEngine_->SetPlaybackStrategy(playbackStrategy);
 }
 
+int32_t PlayerServer::SetSuperResolution(bool enabled)
+{
+    MediaTrace::TraceBegin("PlayerServer::SetSuperResolution", FAKE_POINTER(this));
+    std::lock_guard<std::mutex> lock(mutex_);
+    bool isValidState = lastOpStatus_ == PLAYER_INITIALIZED || lastOpStatus_ == PLAYER_PREPARED ||
+                        lastOpStatus_ == PLAYER_STARTED || lastOpStatus_ == PLAYER_PAUSED ||
+                        lastOpStatus_ == PLAYER_STOPPED || lastOpStatus_ == PLAYER_PLAYBACK_COMPLETE;
+    CHECK_AND_RETURN_RET_LOG(isValidState, MSERR_INVALID_STATE,
+        "can not set super resolution, current state is %{public}d", static_cast<int32_t>(lastOpStatus_.load()));
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    return playerEngine_->SetSuperResolution(enabled);
+}
+
+int32_t PlayerServer::SetVideoWindowSize(int32_t width, int32_t height)
+{
+    MediaTrace::TraceBegin("PlayerServer::SetVideoWindowSize", FAKE_POINTER(this));
+    std::lock_guard<std::mutex> lock(mutex_);
+    bool isValidState = lastOpStatus_ == PLAYER_INITIALIZED || lastOpStatus_ == PLAYER_PREPARED ||
+                        lastOpStatus_ == PLAYER_STARTED || lastOpStatus_ == PLAYER_PAUSED ||
+                        lastOpStatus_ == PLAYER_STOPPED || lastOpStatus_ == PLAYER_PLAYBACK_COMPLETE;
+    CHECK_AND_RETURN_RET_LOG(isValidState, MSERR_INVALID_STATE,
+        "can not set video window size, current state is %{public}d", static_cast<int32_t>(lastOpStatus_.load()));
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    return playerEngine_->SetVideoWindowSize(width, height);
+}
+
 int32_t PlayerServer::CheckSeek(int32_t mSeconds, PlayerSeekMode mode)
 {
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
