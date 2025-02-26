@@ -30,7 +30,7 @@ class IStandardMediaSourceLoadingRequest : public IRemoteBroker {
 public:
     virtual ~IStandardMediaSourceLoadingRequest() = default;
     virtual int32_t RespondData(int64_t uuid, int64_t offset, const std::shared_ptr<AVSharedMemory> &mem) = 0;
-    virtual int32_t RespondHeader(int64_t uuid, std::map<std::string, std::string> header, std::string redirctUrl) = 0;
+    virtual int32_t RespondHeader(int64_t uuid, std::map<std::string, std::string> header, std::string redirectUrl) = 0;
     virtual int32_t FinishLoading(int64_t uuid, LoadingRequestError requestedError) = 0;
 
     enum LoadingRequestMsg {

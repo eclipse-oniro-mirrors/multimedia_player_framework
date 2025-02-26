@@ -45,11 +45,11 @@ int32_t LoadingRequestImpl::RespondData(int64_t uuid, int64_t offset, const std:
 }
 
 int32_t LoadingRequestImpl::RespondHeader(int64_t uuid,
-    std::map<std::string, std::string> header, std::string redirctUrl)
+    std::map<std::string, std::string> header, std::string redirectUrl)
 {
     CHECK_AND_RETURN_RET_LOG(loadingRequestCallback_ != nullptr, MSERR_INVALID_VAL,
         "loadingRequestCallback_ not exist");
-    return loadingRequestCallback_->RespondHeader(uuid, header, redirctUrl);
+    return loadingRequestCallback_->RespondHeader(uuid, header, redirectUrl);
 }
 
 int32_t LoadingRequestImpl::FinishLoading(int64_t uuid, int32_t requestedError)

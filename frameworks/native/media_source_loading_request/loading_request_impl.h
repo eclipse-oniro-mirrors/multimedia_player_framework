@@ -29,7 +29,7 @@ public:
         std::string url, std::map<std::string, std::string> header);
     ~LoadingRequestImpl();
     int32_t RespondData(int64_t uuid, int64_t offset, const std::shared_ptr<AVSharedMemory> &mem) override;
-    int32_t RespondHeader(int64_t uuid, std::map<std::string, std::string> header, std::string redirctUrl) override;
+    int32_t RespondHeader(int64_t uuid, std::map<std::string, std::string> header, std::string redirectUrl) override;
     int32_t FinishLoading(int64_t uuid, int32_t requestedError) override;
     uint64_t GetUniqueId() override;
     std::string GetUrl() override;

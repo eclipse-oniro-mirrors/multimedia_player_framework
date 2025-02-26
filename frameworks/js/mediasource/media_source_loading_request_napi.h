@@ -36,7 +36,7 @@ private:
      */
     static napi_value JsRespondData(napi_env env, napi_callback_info info);
     /**
-     * function RespondHeader(uuid:number, header?: Record<string,string>, redirctUrl?: string): void;
+     * function RespondHeader(uuid:number, header?: Record<string,string>, redirectUrl?: string): void;
      */
     static napi_value JsRespondHeader(napi_env env, napi_callback_info info);
     /**

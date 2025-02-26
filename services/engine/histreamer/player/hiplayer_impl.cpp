@@ -641,6 +641,11 @@ void HiPlayerImpl::DoSetMediaSource(Status& ret)
         ret = DoSetSource(std::make_shared<MediaSource>(dataSrc_));
     } else if (sourceLoader_ != nullptr) {
         auto mediaSource = std::make_shared<MediaSource>(url_, header_);
+        if (mediaSource == nullptr) {
+            MEDIA_LOG_I("mediaSource == nullptr");
+            ret = MSERR_INVALID_VAL;
+            return;
+        }
         mediaSource->SetSourceLoader(sourceLoader_);
         ret = DoSetSource(mediaSource);
     } else {

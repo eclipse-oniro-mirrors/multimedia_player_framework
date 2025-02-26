@@ -45,11 +45,11 @@ int32_t MediaSourceLoadingRequestCallback::RespondData(int64_t uuid, int64_t off
 }
 
 int32_t MediaSourceLoadingRequestCallback::RespondHeader(int64_t uuid, std::map<std::string, std::string> header,
-    std::string redirctUrl)
+    std::string redirectUrl)
 {
     MEDIA_LOGI("RespondHeader in");
     CHECK_AND_RETURN_RET_LOG(callbackProxy_ != nullptr, MSERR_INVALID_OPERATION, "callbackProxy_ is nullptr");
-    return callbackProxy_->RespondHeader(uuid, header, redirctUrl);
+    return callbackProxy_->RespondHeader(uuid, header, redirectUrl);
 }
 
 int32_t MediaSourceLoadingRequestCallback::FinishLoading(int64_t uuid, LoadingRequestError requestedError)
@@ -98,7 +98,7 @@ int32_t MediaSourceLoadingRequestProxy::RespondData(int64_t uuid, int64_t offset
 }
 
 int32_t MediaSourceLoadingRequestProxy::RespondHeader(int64_t uuid, std::map<std::string, std::string> header,
-    std::string redirctUrl)
+    std::string redirectUrl)
 {
     MediaTrace trace("MediaSourceLoadingRequestProxy::RespondHeader, uuid: " + std::to_string(uuid));
     MessageParcel data;
@@ -114,7 +114,7 @@ int32_t MediaSourceLoadingRequestProxy::RespondHeader(int64_t uuid, std::map<std
         data.WriteString(key);
         data.WriteString(value);
     }
-    data.WriteString(redirctUrl);
+    data.WriteString(redirectUrl);
     int error = Remote()->SendRequest(static_cast<uint32_t>(LoadingRequestMsg::RESPOND_HEADER), data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "RespondHeader fail, error: %{public}d", error);
