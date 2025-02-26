@@ -48,6 +48,7 @@ public:
     {
         return true;
     }
+    void Release() {}
 };
 
 class InCallObserverTestFalseCallBack : public InCallObserverCallBack {
@@ -70,6 +71,7 @@ public:
     {
         return false;
     }
+    void Release() {}
 };
 
 class InCallObserverInnerUnitTest : public testing::Test {

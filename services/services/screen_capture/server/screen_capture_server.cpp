@@ -665,8 +665,6 @@ ScreenCaptureServer::~ScreenCaptureServer()
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
     ReleaseInner();
-    screenCaptureObserverCb_ = nullptr;
-    screenConnectListener_ = nullptr;
     CloseFd();
 }
 
@@ -3377,7 +3375,6 @@ int32_t ScreenCaptureServer::StopScreenCaptureInner(AVScreenCaptureStateCode sta
         audioSource_->UnregisterAudioRendererEventListener(audioSource_->GetAppPid());
     }
     DisplayManager::GetInstance().UnregisterPrivateWindowListener(displayListener_);
-    displayListener_ = nullptr;
     if (captureState_ == AVScreenCaptureState::CREATED || captureState_ == AVScreenCaptureState::POPUP_WINDOW ||
         captureState_ == AVScreenCaptureState::STARTING) {
         captureState_ = AVScreenCaptureState::STOPPED;
@@ -3391,7 +3388,6 @@ int32_t ScreenCaptureServer::StopScreenCaptureInner(AVScreenCaptureStateCode sta
         return MSERR_OK;
     }
     CHECK_AND_RETURN_RET(captureState_ != AVScreenCaptureState::STOPPED, MSERR_OK);
-
     int32_t ret = MSERR_OK;
     if (captureConfig_.dataType == DataType::CAPTURE_FILE) {
         ret = StopScreenCaptureRecorder();
@@ -3406,11 +3402,13 @@ int32_t ScreenCaptureServer::StopScreenCaptureInner(AVScreenCaptureStateCode sta
     CHECK_AND_RETURN_RET_LOG(captureState_ == AVScreenCaptureState::STARTED, ret, "state:%{public}d", captureState_);
     SetErrorInfo(MSERR_OK, "normal stopped", StopReason::NORMAL_STOPPED, IsUserPrivacyAuthorityNeeded());
     PostStopScreenCapture(stateCode);
-    captureState_ = AVScreenCaptureState::STOPPED;
 #ifdef SUPPORT_CALL
     InCallObserver::GetInstance().UnregisterInCallObserverCallBack(screenCaptureObserverCb_);
 #endif
     AccountObserver::GetInstance().UnregisterAccountObserverCallBack(screenCaptureObserverCb_);
+    if (screenCaptureObserverCb_) {
+        screenCaptureObserverCb_->Release();
+    }
     ScreenManager::GetInstance().UnregisterScreenListener(screenConnectListener_);
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StopScreenCaptureInner end.", FAKE_POINTER(this));
     return ret;
@@ -3464,6 +3462,7 @@ void ScreenCaptureServer::PostStopScreenCapture(AVScreenCaptureStateCode stateCo
     RemoveStartedSessionIdList(this->sessionId_);
     MEDIA_LOGI("PostStopScreenCapture sessionId: %{public}d is removed from list, list_size is %{public}d.",
         this->sessionId_, static_cast<uint32_t>(ScreenCaptureServer::startedSessionIDList_.size()));
+    captureState_ = AVScreenCaptureState::STOPPED;
 }
 
 int32_t ScreenCaptureServer::StopScreenCapture()
@@ -3573,9 +3572,15 @@ bool ScreenCaptureObserverCallBack::NotifyTelCallStateUpdated(bool isInCall)
 }
 #endif
 
+void ScreenCaptureObserverCallBack::Release()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    taskQueObserverCb_.Stop();
+}
+
 ScreenCaptureObserverCallBack::~ScreenCaptureObserverCallBack()
 {
-    taskQueObserverCb_.Stop();
+    std::lock_guard<std::mutex> lock(mutex_);
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 

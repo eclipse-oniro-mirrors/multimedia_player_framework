@@ -40,6 +40,7 @@ public:
     {
         return true;
     }
+    void Release() {}
 };
 
 class AccountObserverTestFalseCallBack : public AccountObserverCallBack {
@@ -54,6 +55,7 @@ public:
     {
         return false;
     }
+    void Release() {}
 };
 
 class AccountObserverInnerUnitTest : public testing::Test {

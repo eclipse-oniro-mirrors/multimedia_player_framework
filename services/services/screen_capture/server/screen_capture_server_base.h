@@ -212,10 +212,11 @@ public:
     bool TelCallStateUpdated(bool isInCall) override;
     bool NotifyTelCallStateUpdated(bool isInCall) override;
 #endif
-
+    void Release() override;
 private:
     std::weak_ptr<ScreenCaptureServer> screenCaptureServer_;
     TaskQueue taskQueObserverCb_;
+    std::mutex mutex_;
 };
 
 class AudioDataSource : public IAudioDataSource {
