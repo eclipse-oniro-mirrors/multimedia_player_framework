@@ -26,6 +26,7 @@ ohos_unittest("player_unit_test") {
     "//foundation/window/window_manager/interfaces/innerkits/wm",
     "//foundation/multimedia/player_framework/test/unittest/common/include",
     "src/data_source",
+    "src/loader_callback",
   ]
 
   cflags = [
@@ -38,6 +39,7 @@ ohos_unittest("player_unit_test") {
     sources = [
       "src/data_source/media_data_source_test_noseek.cpp",
       "src/data_source/media_data_source_test_seekable.cpp",
+      "src/loader_callback/loader_callback_mock.cpp",
       "src/player_mock.cpp",
       "src/player_unit_test.cpp",
     ]
@@ -46,6 +48,7 @@ ohos_unittest("player_unit_test") {
   deps = [
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
     "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
+    "//foundation/multimedia/player_framework/services/utils:media_service_utils",
     "//foundation/window/window_manager/wm:libwm",
   ]
 
@@ -54,7 +57,9 @@ ohos_unittest("player_unit_test") {
     "c_utils:utils",
     "graphic_surface:surface",
     "hilog:libhilog",
+    "ipc:ipc_single",
     "media_foundation:media_foundation",
+    "qos_manager:concurrent_task_client",
   ]
 
   resource_config_file = "//foundation/multimedia/player_framework/test/unittest/resources/ohos_test.xml"
