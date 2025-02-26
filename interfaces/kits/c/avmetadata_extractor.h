@@ -78,7 +78,9 @@ OH_AVMetadataExtractor* OH_AVMetadataExtractor_Create(void);
  * @param size Indicates the size of media source.
  * @return Function result code.
  *         {@link AV_ERR_OK} if the execution is successful.
- *         {@link AV_ERR_INPUT_DATA_ERROR} if input extractor is nullptr or input param is invalid.
+ *         {@link AV_ERR_INVALID_VAL} if input extractor is nullptr or input param is invalid.
+ *         {@link AV_ERR_OPERATE_NOT_PERMIT} if operation not allowed.
+ *         {@link AV_ERR_NO_MEMORY} if internal memory allocation failed.
  * @since 16
  */
 OH_AVErrCode OH_AVMetadataExtractor_SetFDSource(OH_AVMetadataExtractor* extractor,
@@ -93,8 +95,10 @@ OH_AVErrCode OH_AVMetadataExtractor_SetFDSource(OH_AVMetadataExtractor* extracto
  * @param avMetadata Pointer to an {@link OH_AVFormat} instance, its content contains the fetched metadata info.
  * @return Function result code.
  *         {@link AV_ERR_OK} if the execution is successful.
- *         {@link AV_ERR_INPUT_DATA_ERROR} if input extractor is nullptr or input param is invalid.
+ *         {@link AV_ERR_INVALID_VAL} if input extractor is nullptr or input param is invalid.
  *         {@link AV_ERR_OPERATE_NOT_PERMIT} if operation not allowed.
+ *         {@link AV_ERR_UNSUPPORTED_FORMAT} if format is unsupported.
+ *         {@link AV_ERR_NO_MEMORY} if internal memory allocation failed.
  * @since 16
  */
 OH_AVErrCode OH_AVMetadataExtractor_FetchMetadata(OH_AVMetadataExtractor* extractor, OH_AVFormat* avMetadata);
@@ -108,8 +112,10 @@ OH_AVErrCode OH_AVMetadataExtractor_FetchMetadata(OH_AVMetadataExtractor* extrac
  * @param pixelMap The fetched album cover from the audio source. For details, see {@link OH_PixelmapNative}.
  * @return Function result code.
  *         {@link AV_ERR_OK} if the execution is successful.
- *         {@link AV_ERR_INPUT_DATA_ERROR} if input extractor is nullptr or input param is invalid.
+ *         {@link AV_ERR_INVALID_VAL} if input extractor is nullptr or input param is invalid.
  *         {@link AV_ERR_OPERATE_NOT_PERMIT} if operation not allowed.
+ *         {@link AV_ERR_UNSUPPORTED_FORMAT} if format is unsupported.
+ *         {@link AV_ERR_NO_MEMORY} if internal memory allocation failed.
  * @since 16
  */
 OH_AVErrCode OH_AVMetadataExtractor_FetchAlbumCover(OH_AVMetadataExtractor* extractor, OH_PixelmapNative** pixelMap);
@@ -121,8 +127,7 @@ OH_AVErrCode OH_AVMetadataExtractor_FetchAlbumCover(OH_AVMetadataExtractor* extr
  * @param extractor Pointer to an OH_AVMetadataExtractor instance.
  * @return Function result code.
  *         {@link AV_ERR_OK} if the execution is successful.
- *         {@link AV_ERR_INPUT_DATA_ERROR} if input extractor is nullptr or input param is invalid.
- *         {@link AV_ERR_OPERATE_NOT_PERMIT} if operation not allowed.
+ *         {@link AV_ERR_INVALID_VAL} if input extractor is nullptr or input param is invalid.
  * @since 16
  */
 OH_AVErrCode OH_AVMetadataExtractor_Release(OH_AVMetadataExtractor* extractor);

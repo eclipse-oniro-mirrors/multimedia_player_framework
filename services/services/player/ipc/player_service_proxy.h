@@ -59,6 +59,8 @@ public:
     int32_t GetDuration(int32_t &duration) override;
     int32_t SetPlaybackStrategy(AVPlayStrategy playbackStrategy) override;
     int32_t SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted) override;
+    int32_t SetSuperResolution(bool enabled) override;
+    int32_t SetVideoWindowSize(int32_t width, int32_t height) override;
 #ifdef SUPPORT_VIDEO
     int32_t SetVideoSurface(sptr<Surface> surface) override;
 #endif
@@ -81,7 +83,9 @@ public:
     int32_t SetSeiMessageCbStatus(bool status, const std::vector<int32_t> &payloadTypes) override;
 private:
     int32_t SendRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option);
-    void FillPlayerFunc();
+    void InitPlayerFuncsPart1();
+    void InitPlayerFuncsPart2();
+    void WritePlaybackStrategy(MessageParcel &data, const AVPlayStrategy &strategy);
     static inline BrokerDelegator<PlayerServiceProxy> delegator_;
     std::map<uint32_t, std::string> playerFuncs_;
 };

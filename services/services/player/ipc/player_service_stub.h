@@ -69,6 +69,8 @@ public:
     int32_t GetApiVersion(int32_t &apiVersion) override;
     int32_t SetPlaybackStrategy(AVPlayStrategy playbackStrategy) override;
     int32_t SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted) override;
+    int32_t SetSuperResolution(bool enabled) override;
+    int32_t SetVideoWindowSize(int32_t width, int32_t height) override;
 #ifdef SUPPORT_VIDEO
     int32_t SetVideoSurface(sptr<Surface> surface) override;
 #endif
@@ -156,6 +158,8 @@ private:
     int32_t SetMediaSource(MessageParcel &data, MessageParcel &reply);
     int32_t SetPlaybackStrategy(MessageParcel &data, MessageParcel &reply);
     int32_t SetMediaMuted(MessageParcel &data, MessageParcel &reply);
+    int32_t SetSuperResolution(MessageParcel &data, MessageParcel &reply);
+    int32_t SetVideoWindowSize(MessageParcel &data, MessageParcel &reply);
     int32_t SetDeviceChangeCbStatus(MessageParcel &data, MessageParcel &reply);
     int32_t SetMaxAmplitudeCbStatus(MessageParcel &data, MessageParcel &reply);
     int32_t IsSeekContinuousSupported(MessageParcel &data, MessageParcel &reply);

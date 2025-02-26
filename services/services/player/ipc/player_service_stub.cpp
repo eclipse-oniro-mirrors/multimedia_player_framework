@@ -195,6 +195,10 @@ void PlayerServiceStub::FillPlayerFuncPart3()
         [this](MessageParcel &data, MessageParcel &reply) { return SetSeiMessageCbStatus(data, reply); } };
     playerFuncs_[SET_SOURCE_LOADER] = { "SetSourceLoader",
         [this](MessageParcel &data, MessageParcel &reply) { return SetSourceLoader(data, reply); } };
+    playerFuncs_[SET_SUPER_RESOLUTION] = { "Player::SetSuperResolution",
+        [this](MessageParcel &data, MessageParcel &reply) { return SetSuperResolution(data, reply); } };
+    playerFuncs_[SET_VIDEO_WINDOW_SIZE] = { "Player::SetVideoWindowSize",
+        [this](MessageParcel &data, MessageParcel &reply) { return SetVideoWindowSize(data, reply); } };
 }
 
 int32_t PlayerServiceStub::Init()
@@ -963,6 +967,7 @@ int32_t PlayerServiceStub::SetMediaSource(MessageParcel &data, MessageParcel &re
     strategy.preferredBufferDurationForPlaying = data.ReadDouble();
     strategy.preferredHdr = data.ReadBool();
     strategy.showFirstFrameOnPrepare = data.ReadBool();
+    strategy.enableSuperResolution = data.ReadBool();
     strategy.mutedMediaType = static_cast<OHOS::Media::MediaType>(data.ReadInt32());
     strategy.preferredAudioLanguage = data.ReadString();
     strategy.preferredSubtitleLanguage = data.ReadString();
@@ -1136,6 +1141,7 @@ int32_t PlayerServiceStub::SetPlaybackStrategy(MessageParcel &data, MessageParce
         .preferredBufferDurationForPlaying = data.ReadDouble(),
         .preferredHdr = data.ReadBool(),
         .showFirstFrameOnPrepare = data.ReadBool(),
+        .enableSuperResolution = data.ReadBool(),
         .mutedMediaType = static_cast<OHOS::Media::MediaType>(data.ReadInt32()),
         .preferredAudioLanguage = data.ReadString(),
         .preferredSubtitleLanguage = data.ReadString()
@@ -1149,6 +1155,35 @@ int32_t PlayerServiceStub::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
     MediaTrace trace("PlayerServiceStub::SetPlaybackStrategy");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
     return playerServer_->SetPlaybackStrategy(playbackStrategy);
+}
+
+int32_t PlayerServiceStub::SetSuperResolution(MessageParcel &data, MessageParcel &reply)
+{
+    bool enabled = data.ReadBool();
+    reply.WriteInt32(SetSuperResolution(enabled));
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::SetSuperResolution(bool enabled)
+{
+    MediaTrace trace("Stub::SetSuperResolution");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->SetSuperResolution(enabled);
+}
+
+int32_t PlayerServiceStub::SetVideoWindowSize(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t width = data.ReadInt32();
+    int32_t height = data.ReadInt32();
+    reply.WriteInt32(SetVideoWindowSize(width, height));
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::SetVideoWindowSize(int32_t width, int32_t height)
+{
+    MediaTrace trace("Stub::SetVideoWindowSize");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->SetVideoWindowSize(width, height);
 }
 
 int32_t PlayerServiceStub::SetMaxAmplitudeCbStatus(bool status)

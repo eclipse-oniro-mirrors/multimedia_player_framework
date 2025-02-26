@@ -43,6 +43,17 @@ PlayerServiceProxy::PlayerServiceProxy(const sptr<IRemoteObject> &impl)
     : IRemoteProxy<IStandardPlayerService>(impl)
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    InitPlayerFuncsPart1();
+    InitPlayerFuncsPart2();
+}
+
+PlayerServiceProxy::~PlayerServiceProxy()
+{
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
+}
+
+void PlayerServiceProxy::InitPlayerFuncsPart1()
+{
     playerFuncs_[SET_LISTENER_OBJ] = "Player::SetListenerObject";
     playerFuncs_[SET_SOURCE] = "Player::SetSource";
     playerFuncs_[SET_MEDIA_DATA_SRC_OBJ] = "Player::SetMediaDataSource";
@@ -98,9 +109,10 @@ void PlayerServiceProxy::FillPlayerFunc()
     playerFuncs_[SET_SOURCE_LOADER] = "Player::SetSourceLoader";
 }
 
-PlayerServiceProxy::~PlayerServiceProxy()
+void PlayerServiceProxy::InitPlayerFuncsPart2()
 {
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
+    playerFuncs_[SET_SUPER_RESOLUTION] = "Player::SetSuperResolution";
+    playerFuncs_[SET_VIDEO_WINDOW_SIZE] = "Player::SetVideoWindowSize";
 }
 
 int32_t PlayerServiceProxy::SendRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -730,15 +742,7 @@ int32_t PlayerServiceProxy::SetMediaSource(const std::shared_ptr<AVMediaSource> 
         (void)data.WriteFileDescriptor(fd);
         MEDIA_LOGI("fd : %d", fd);
     }
-    (void)data.WriteUint32(strategy.preferredWidth);
-    (void)data.WriteUint32(strategy.preferredHeight);
-    (void)data.WriteUint32(strategy.preferredBufferDuration);
-    (void)data.WriteDouble(strategy.preferredBufferDurationForPlaying);
-    (void)data.WriteBool(strategy.preferredHdr);
-    (void)data.WriteBool(strategy.showFirstFrameOnPrepare);
-    (void)data.WriteInt32(static_cast<int32_t>(strategy.mutedMediaType));
-    (void)data.WriteString(strategy.preferredAudioLanguage);
-    (void)data.WriteString(strategy.preferredSubtitleLanguage);
+    WritePlaybackStrategy(data, strategy);
     int32_t error = SendRequest(SET_MEDIA_SOURCE, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetMediaSource failed, error: %{public}d", error);
@@ -1029,16 +1033,7 @@ int32_t PlayerServiceProxy::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
 
     bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
-
-    (void)data.WriteUint32(playbackStrategy.preferredWidth);
-    (void)data.WriteUint32(playbackStrategy.preferredHeight);
-    (void)data.WriteUint32(playbackStrategy.preferredBufferDuration);
-    (void)data.WriteDouble(playbackStrategy.preferredBufferDurationForPlaying);
-    (void)data.WriteBool(playbackStrategy.preferredHdr);
-    (void)data.WriteBool(playbackStrategy.showFirstFrameOnPrepare);
-    (void)data.WriteInt32(static_cast<int32_t>(playbackStrategy.mutedMediaType));
-    (void)data.WriteString(playbackStrategy.preferredAudioLanguage);
-    (void)data.WriteString(playbackStrategy.preferredSubtitleLanguage);
+    WritePlaybackStrategy(data, playbackStrategy);
     int32_t error = SendRequest(SET_PLAYBACK_STRATEGY, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetPlaybackStrategy failed, error: %{public}d", error);
@@ -1060,6 +1055,43 @@ int32_t PlayerServiceProxy::SetMediaMuted(OHOS::Media::MediaType mediaType, bool
     int32_t error = SendRequest(SET_MEDIA_MUTED, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetMediaMuted failed, error: %{public}d", error);
+    return reply.ReadInt32();
+}
+
+int32_t PlayerServiceProxy::SetSuperResolution(bool enabled)
+{
+    MediaTrace trace("Proxy::SetSuperResolution");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    data.WriteBool(enabled);
+    int32_t error = SendRequest(SET_SUPER_RESOLUTION, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetSuperResolution failed, error: %{public}d", error);
+
+    return reply.ReadInt32();
+}
+
+int32_t PlayerServiceProxy::SetVideoWindowSize(int32_t width, int32_t height)
+{
+    MediaTrace trace("Proxy::SetVideoWindowSize");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    data.WriteInt32(width);
+    data.WriteInt32(height);
+    int32_t error = SendRequest(SET_VIDEO_WINDOW_SIZE, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetVideoWindowSize failed, error: %{public}d", error);
+
     return reply.ReadInt32();
 }
 
@@ -1095,6 +1127,19 @@ bool PlayerServiceProxy::IsSeekContinuousSupported()
         "IsSeekContinuousSupported failed, error: %{public}d", error);
 
     return reply.ReadBool();
+}
+
+void PlayerServiceProxy::WritePlaybackStrategy(MessageParcel &data, const AVPlayStrategy &strategy)
+{
+    (void)data.WriteUint32(strategy.preferredWidth);
+    (void)data.WriteUint32(strategy.preferredHeight);
+    (void)data.WriteUint32(strategy.preferredBufferDuration);
+    (void)data.WriteBool(strategy.preferredHdr);
+    (void)data.WriteBool(strategy.showFirstFrameOnPrepare);
+    (void)data.WriteBool(strategy.enableSuperResolution);
+    (void)data.WriteInt32(static_cast<int32_t>(strategy.mutedMediaType));
+    (void)data.WriteString(strategy.preferredAudioLanguage);
+    (void)data.WriteString(strategy.preferredSubtitleLanguage);
 }
 } // namespace Media
 } // namespace OHOS

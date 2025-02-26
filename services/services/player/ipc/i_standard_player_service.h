@@ -53,6 +53,17 @@ public:
         (void)mode;
         return 0;
     }
+    virtual int32_t SetSuperResolution(bool enabled)
+    {
+        (void)enabled;
+        return 0;
+    }
+    virtual int32_t SetVideoWindowSize(int32_t width, int32_t height)
+    {
+        (void)width;
+        (void)height;
+        return 0;
+    }
     virtual int32_t PrepareAsync() = 0;
     virtual int32_t Pause() = 0;
     virtual int32_t Stop() = 0;
@@ -160,6 +171,8 @@ public:
         SET_RENDER_FIRST_FRAME,
         SET_PLAY_RANGE,
         SET_PLAY_RANGE_WITH_MODE,
+        SET_SUPER_RESOLUTION,
+        SET_VIDEO_WINDOW_SIZE,
         PREPAREASYNC,
         PAUSE,
         STOP,

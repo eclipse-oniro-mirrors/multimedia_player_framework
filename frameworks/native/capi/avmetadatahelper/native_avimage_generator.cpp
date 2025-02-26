@@ -61,11 +61,12 @@ OH_AVErrCode OH_AVImageGenerator_SetFDSource(OH_AVImageGenerator* generator, int
     CHECK_AND_RETURN_RET_LOG(fd >= 0, AV_ERR_INVALID_VAL, "fd is invalid");
 
     CHECK_AND_RETURN_RET_LOG(generatorObj->state_ == HelperState::HELPER_STATE_IDLE,
-                             AV_ERR_INVALID_STATE, "Has set source once, unsupport set again");
+                             AV_ERR_OPERATE_NOT_PERMIT, "Has set source once, unsupport set again");
     
     int32_t ret = generatorObj->aVMetadataHelper_->SetSource(fd, offset, size);
     generatorObj->state_ = ret == MSERR_OK ? HelperState::HELPER_STATE_RUNNABLE : HelperState::HELPER_ERROR;
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "aVImageGenerator setFdSource failed");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret == MSERR_NO_MEMORY ? AV_ERR_NO_MEMORY : AV_ERR_INVALID_VAL,
+                             "aVImageGenerator setFdSource failed");
     return AV_ERR_OK;
 }
 
@@ -79,7 +80,7 @@ OH_AVErrCode OH_AVImageGenerator_FetchFrameByTime(OH_AVImageGenerator* generator
                              "aVMetadataHelper_ is nullptr");
 
     CHECK_AND_RETURN_RET_LOG(generatorObj->state_ == HelperState::HELPER_STATE_RUNNABLE,
-                             AV_ERR_INVALID_STATE, "Current state is not runnable, can't fetchFrame.");
+                             AV_ERR_OPERATE_NOT_PERMIT, "Current state is not runnable, can't fetchFrame.");
     
     PixelMapParams param = {
         .dstWidth = DEFAULT_WIDTH,
@@ -87,7 +88,7 @@ OH_AVErrCode OH_AVImageGenerator_FetchFrameByTime(OH_AVImageGenerator* generator
         .colorFormat = PixelFormat::UNKNOWN,
     };
     auto pixelMapInner = generatorObj->aVMetadataHelper_->FetchFrameYuv(timeUs, static_cast<int32_t>(options), param);
-    CHECK_AND_RETURN_RET_LOG(pixelMapInner != nullptr, AV_ERR_UNKNOWN, "aVImageGenerator FetchFrame failed");
+    CHECK_AND_RETURN_RET_LOG(pixelMapInner != nullptr, AV_ERR_UNSUPPORTED_FORMAT, "aVImageGenerator FetchFrame failed");
 
     *pixelMap = new(std::nothrow) OH_PixelmapNative(pixelMapInner);
     CHECK_AND_RETURN_RET_LOG(*pixelMap != nullptr, AV_ERR_NO_MEMORY, "create OH_PixelmapNative failed");

@@ -300,6 +300,9 @@ bool CommonNapi::GetPlayStrategy(napi_env env, napi_value value, AVPlayStrategyT
     if (!GetPropertyBool(env, value, "showFirstFrameOnPrepare", playStrategy.showFirstFrameOnPrepare)) {
         playStrategy.showFirstFrameOnPrepare = false; // use default value
     }
+    if (!GetPropertyBool(env, value, "enableSuperResolution", playStrategy.enableSuperResolution)) {
+        playStrategy.enableSuperResolution = false; // use default value
+    }
     if (!GetPropertyInt32(env, value, "mutedMediaType", playStrategy.mutedMediaType)) {
         playStrategy.mutedMediaType = MediaType::MEDIA_TYPE_MAX_COUNT; // use default value
     }

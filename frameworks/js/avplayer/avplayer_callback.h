@@ -77,6 +77,7 @@ private:
     void OnSubtitleInfoCb(const int32_t extra, const Format &infoBody);
     void OnMaxAmplitudeCollectedCb(const int32_t extra, const Format &infoBody);
     void OnSeiInfoCb(const int32_t extra, const Format &infoBody);
+    void OnSuperResolutionChangedCb(const int32_t extra, const Format &infoBody);
 
     void OnEosCb(const int32_t extra, const Format &infoBody);
     void NotifyIsLiveStream(const int32_t extra, const Format &infoBody);
@@ -85,7 +86,8 @@ private:
     bool IsValidState(PlayerStates state, std::string &stateStr);
     int32_t SetDrmInfoData(const uint8_t *drmInfoAddr, int32_t infoCount,
         std::multimap<std::string, std::vector<uint8_t>> &drmInfoMap);
-    void InitInfoFuncs();
+    void InitInfoFuncsPart1();
+    void InitInfoFuncsPart2();
 
     std::mutex mutex_;
     napi_env env_ = nullptr;

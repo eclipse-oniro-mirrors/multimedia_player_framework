@@ -66,6 +66,7 @@ const std::string EVENT_SUBTITLE_UPDATE = "subtitleUpdate";
 const std::string EVENT_ERROR = "error";
 const std::string EVENT_AMPLITUDE_UPDATE = "amplitudeUpdate";
 const std::string EVENT_SEI_MESSAGE_INFO = "seiMessageReceived";
+const std::string EVENT_SUPER_RESOLUTION_CHANGED = "superResolutionChanged";
 }
 
 using TaskRet = std::pair<int32_t, std::string>;
@@ -249,6 +250,10 @@ private:
 
     static napi_value JsSetMediaMuted(napi_env env, napi_callback_info info);
 
+    static napi_value JsSetSuperResolution(napi_env env, napi_callback_info info);
+
+    static napi_value JsSetVideoWindowSize(napi_env env, napi_callback_info info);
+
     /**
      * getPlaybackInfo(): playbackInfo;
      */
@@ -322,11 +327,15 @@ private:
     std::shared_ptr<TaskHandler<TaskRet>> ReleaseTask();
     std::shared_ptr<TaskHandler<TaskRet>> SetPlaybackStrategyTask(AVPlayStrategy playStrategy);
     std::shared_ptr<TaskHandler<TaskRet>> SetMediaMutedTask(MediaType type, bool isMuted);
+    std::shared_ptr<TaskHandler<TaskRet>> SetSuperResolutionTask(bool enabled);
+    std::shared_ptr<TaskHandler<TaskRet>> SetVideoWindowSizeTask(int32_t width, int32_t height);
     std::shared_ptr<TaskHandler<TaskRet>> EqueueSetPlayRangeTask(int32_t start, int32_t end, int32_t mode);
 
     std::string GetCurrentState();
     bool IsControllable();
     bool CanSetPlayRange();
+    bool CanSetSuperResolution();
+    bool IsVideoWindowSizeValid(int32_t width, int32_t height);
     bool IsLiveSource() const;
     void EnqueueNetworkTask(const std::string url);
     void EnqueueFdTask(const int32_t fd);

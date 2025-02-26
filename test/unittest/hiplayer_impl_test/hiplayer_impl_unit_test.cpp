@@ -274,6 +274,29 @@ HWTEST_F(HiplayerImplUnitTest, SetMediaSource_004, TestSize.Level0)
 }
 
 /**
+* @tc.name    : Test SetMediaSource API
+* @tc.number  : SetMediaSource_005
+* @tc.desc    : Test SetMediaSource interface, enable super resolution
+* @tc.require : issueI5NZAQ
+*/
+HWTEST_F(HiplayerImplUnitTest, SetMediaSource_005, TestSize.Level0)
+{
+    // 1. Set up the test environment
+    std::map<std::string, std::string> sourceHeader;
+    std::shared_ptr<AVMediaSource> mediaSource = std::make_shared<AVMediaSource>("http://test.mp3", sourceHeader);
+    AVPlayStrategy strategy;
+    strategy.enableSuperResolution = true;
+
+    // 2. Call the function to be tested
+    int32_t ret = hiplayer_->SetMediaSource(mediaSource, strategy);
+
+    // 3. Verify the result
+    EXPECT_EQ(ret, MSERR_OK);
+    EXPECT_EQ(hiplayer_->videoPostProcessorType_, VideoPostProcessorType::SUPER_RESOLUTION);
+    EXPECT_EQ(hiplayer_->isPostProcessorOn_, true);
+}
+
+/**
 * @tc.name    : Test ResetIfSourceExisted API
 * @tc.number  : ResetIfSourceExisted_001
 * @tc.desc    : Test ResetIfSourceExisted interface, pipeline is not nullptr.
@@ -1129,6 +1152,85 @@ HWTEST_F(HiplayerImplUnitTest, TestIsSeekContinuousSupported_001, TestSize.Level
     player->videoDecoder_ = FilterFactory::Instance().CreateFilter<DecoderSurfaceFilter>("player.videodecoder",
         FilterType::FILTERTYPE_VDEC);
     EXPECT_EQ(player->IsSeekContinuousSupported(isSupported), 0);
+}
+
+HWTEST_F(HiplayerImplUnitTest, TestSetSuperResolution_001, TestSize.Level0)
+{
+    auto ret = hiplayer_->SetSuperResolution(true);
+    EXPECT_EQ(ret, MSERR_SUPER_RESOLUTION_NOT_ENABLED);
+    hiplayer_->videoPostProcessorType_ = VideoPostProcessorType::SUPER_RESOLUTION;
+    ret = hiplayer_->SetSuperResolution(true);
+    EXPECT_EQ(ret, MSERR_OK);
+}
+
+HWTEST_F(HiplayerImplUnitTest, TestSetSuperResolution_002, TestSize.Level0)
+{
+    std::unique_ptr<HiPlayerImpl> player = std::make_unique<HiPlayerImpl>(0, 0, 0, 0);
+    ASSERT_NE(player, nullptr);
+    player->videoDecoder_ = FilterFactory::Instance().CreateFilter<DecoderSurfaceFilter>("player.videodecoder",
+        FilterType::FILTERTYPE_VDEC);
+
+    player->videoPostProcessorType_ = VideoPostProcessorType::SUPER_RESOLUTION;
+    player->videoDecoder_->isPostProcessorSupported_ = false;
+    auto ret = player->SetSuperResolution(true);
+    EXPECT_EQ(ret, MSERR_SUPER_RESOLUTION_UNSUPPORTED);
+
+    player->videoDecoder_->isPostProcessorSupported_ = true;
+    ret = player->SetSuperResolution(true);
+    EXPECT_EQ(ret, TransStatus(Status::OK));
+}
+
+HWTEST_F(HiplayerImplUnitTest, TestSetVideoWindowSize_001, TestSize.Level0)
+{
+    int32_t width = 0;
+    int32_t height = 0;
+    auto ret = hiplayer_->SetVideoWindowSize(width, height);
+    EXPECT_EQ(ret, MSERR_SUPER_RESOLUTION_NOT_ENABLED);
+
+    hiplayer_->videoPostProcessorType_ = VideoPostProcessorType::SUPER_RESOLUTION;
+    ret = hiplayer_->SetVideoWindowSize(width, height);
+    EXPECT_EQ(ret, MSERR_INVALID_VAL);
+
+    width = 320;
+    height = 320;
+    ret = hiplayer_->SetVideoWindowSize(width, height);
+    EXPECT_EQ(ret, MSERR_OK);
+
+    width = 1920;
+    height = 1080;
+    ret = hiplayer_->SetVideoWindowSize(width, height);
+    EXPECT_EQ(ret, MSERR_OK);
+
+    width = 1080;
+    height = 720;
+    ret = hiplayer_->SetVideoWindowSize(width, height);
+    EXPECT_EQ(ret, MSERR_OK);
+
+    width = 1921;
+    height = 1080;
+    ret = hiplayer_->SetVideoWindowSize(width, height);
+    EXPECT_EQ(ret, MSERR_INVALID_VAL);
+
+    width = 1920;
+    height = 1081;
+    ret = hiplayer_->SetVideoWindowSize(width, height);
+    EXPECT_EQ(ret, MSERR_INVALID_VAL);
+}
+
+HWTEST_F(HiplayerImplUnitTest, TestSetPlaybackStrategy_001, TestSize.Level0)
+{
+    AVPlayStrategy strategy;
+    strategy.enableSuperResolution = false;
+    auto ret = hiplayer_->SetPlaybackStrategy(strategy);
+    EXPECT_EQ(ret, MSERR_OK);
+    EXPECT_EQ(hiplayer_->videoPostProcessorType_, VideoPostProcessorType::NONE);
+    EXPECT_EQ(hiplayer_->isPostProcessorOn_, false);
+
+    strategy.enableSuperResolution = true;
+    ret = hiplayer_->SetPlaybackStrategy(strategy);
+    EXPECT_EQ(ret, MSERR_OK);
+    EXPECT_EQ(hiplayer_->videoPostProcessorType_, VideoPostProcessorType::SUPER_RESOLUTION);
+    EXPECT_EQ(hiplayer_->isPostProcessorOn_, true);
 }
 } // namespace Media
 } // namespace OHOS
