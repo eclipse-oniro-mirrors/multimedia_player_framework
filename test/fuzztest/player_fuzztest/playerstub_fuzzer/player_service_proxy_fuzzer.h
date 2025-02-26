@@ -47,6 +47,10 @@ public:
     {
         return 0;
     }
+    int32_t SetSourceLoader(const sptr<IRemoteObject> &object) override
+    {
+        return 0;
+    }
     int32_t AddSubSource(const std::string &url) override
     {
         return 0;

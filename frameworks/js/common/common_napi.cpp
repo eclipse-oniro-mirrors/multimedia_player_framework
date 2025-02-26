@@ -179,6 +179,15 @@ std::string CommonNapi::GetPropertyString(napi_env env, napi_value configObj, co
     return GetStringArgument(env, item);
 }
 
+bool CommonNapi::GetPropertyArrayBuffer(napi_env env, napi_value configObj, void **data, size_t* length)
+{
+    if (napi_get_arraybuffer_info(env, configObj, data, length) != napi_ok) {
+        MEDIA_LOGE("get arraybuffer value fail");
+        return false;
+    }
+    return true;
+}
+
 napi_status CommonNapi::GetPropertyRecord(napi_env env, napi_value configObj, Meta &meta, std::string type)
 {
     bool exist = false;

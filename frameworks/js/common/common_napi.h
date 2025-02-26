@@ -58,6 +58,7 @@ public:
     static bool GetPropertyInt64(napi_env env, napi_value configObj, const std::string &type, int64_t &result);
     static bool GetPropertyDouble(napi_env env, napi_value configObj, const std::string &type, double &result);
     static std::string GetPropertyString(napi_env env, napi_value configObj, const std::string &type);
+    static bool GetPropertyArrayBuffer(napi_env env, napi_value configObj, void **data, size_t* length);
     // support Record<string, string>
     static napi_status GetPropertyRecord(napi_env env, napi_value in, Meta &meta, std::string type);
     static bool GetPropertyMap(napi_env env, napi_value value, std::map<std::string, std::string>& map);

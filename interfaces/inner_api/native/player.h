@@ -23,6 +23,8 @@
 #endif
 #include "meta/format.h"
 #include "media_data_source.h"
+#include "loading_request.h"
+#include "media_source.h"
 
 namespace OHOS {
 namespace DrmStandard {
@@ -81,6 +83,8 @@ public:
     std::string url {0};
     std::string mimeType_ {};
     std::map<std::string, std::string> header;
+    std::shared_ptr<LoaderCallback> mediaSourceLoaderCb_ {nullptr};
+    std::shared_ptr<Plugins::IMediaSourceLoader> sourceLoader_ {nullptr};
 };
 
 class PlayerKeys {

@@ -197,6 +197,7 @@ int32_t PlayerClient::Reset()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     dataSrcStub_ = nullptr;
+    sourceLoaderStub_ = nullptr;
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     return DisableWhenOK(playerProxy_->Reset());
 }
@@ -207,7 +208,7 @@ int32_t PlayerClient::Release()
     callback_ = nullptr;
     listenerStub_ = nullptr;
     dataSrcStub_ = nullptr;
-
+    sourceLoaderStub_ = nullptr;
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     return DisableWhenOK(playerProxy_->Release());
 }
@@ -218,7 +219,7 @@ int32_t PlayerClient::ReleaseSync()
     callback_ = nullptr;
     listenerStub_ = nullptr;
     dataSrcStub_ = nullptr;
-
+    sourceLoaderStub_ = nullptr;
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     return DisableWhenOK(playerProxy_->ReleaseSync());
 }
@@ -314,6 +315,18 @@ int32_t PlayerClient::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(mediaSource != nullptr, MSERR_INVALID_VAL, "mediaSource is nullptr!");
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+
+    if (mediaSource->mediaSourceLoaderCb_ != nullptr) {
+        MEDIA_LOGD("PlayerClient:0x%{public}06" PRIXPTR " mediaSource->mediaSourceLoaderCb_ in", FAKE_POINTER(this));
+        sourceLoaderStub_ = new(std::nothrow) MediaSourceLoaderStub(mediaSource->mediaSourceLoaderCb_);
+        CHECK_AND_RETURN_RET_LOG(sourceLoaderStub_ != nullptr, MSERR_NO_MEMORY, "failed to new LoaderStub object");
+ 
+        sptr<IRemoteObject> object = sourceLoaderStub_->AsObject();
+        CHECK_AND_RETURN_RET_LOG(object != nullptr, MSERR_NO_MEMORY, "listener object is nullptr..");
+ 
+        CHECK_AND_RETURN_RET_LOG(playerProxy_->SetSourceLoader(object) == MSERR_OK,
+            MSERR_UNKNOWN, "SetSourceLoader error");
+    }
     return playerProxy_->SetMediaSource(mediaSource, strategy);
 }
 

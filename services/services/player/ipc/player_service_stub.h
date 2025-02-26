@@ -22,6 +22,7 @@
 #include "media_death_recipient.h"
 #include "player_server.h"
 #include "monitor_server_object.h"
+#include "media_source.h"
 
 namespace OHOS {
 namespace Media {
@@ -67,7 +68,7 @@ public:
     int32_t GetDuration(int32_t &duration) override;
     int32_t GetApiVersion(int32_t &apiVersion) override;
     int32_t SetPlaybackStrategy(AVPlayStrategy playbackStrategy) override;
-    int32_t SetMediaMuted(MediaType mediaType, bool isMuted) override;
+    int32_t SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted) override;
     int32_t SetSuperResolution(bool enabled) override;
     int32_t SetVideoWindowSize(int32_t width, int32_t height) override;
 #ifdef SUPPORT_VIDEO
@@ -83,6 +84,7 @@ public:
     int32_t DumpInfo(int32_t fd);
     int32_t DeselectTrack(int32_t index) override;
     int32_t GetCurrentTrack(int32_t trackType, int32_t &index) override;
+    int32_t SetSourceLoader(const sptr<IRemoteObject> &object) override;
     int32_t SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, AVPlayStrategy strategy) override;
     bool IsPlaying() override;
     bool IsLooping() override;
@@ -103,6 +105,7 @@ protected:
     TaskQueue taskQue_;
     std::shared_ptr<IPlayerService> playerServer_ = nullptr;
     std::shared_ptr<PlayerCallback> playerCallback_ = nullptr;
+    std::shared_ptr<Plugins::IMediaSourceLoader> sourceLoader_ = nullptr;
     int32_t appUid_ = 0;
     int32_t appPid_ = 0;
 
@@ -110,6 +113,7 @@ private:
     int32_t SetListenerObject(MessageParcel &data, MessageParcel &reply);
     int32_t SetSource(MessageParcel &data, MessageParcel &reply);
     int32_t SetMediaDataSource(MessageParcel &data, MessageParcel &reply);
+    int32_t SetSourceLoader(MessageParcel &data, MessageParcel &reply);
     int32_t SetFdSource(MessageParcel &data, MessageParcel &reply);
     int32_t AddSubSource(MessageParcel &data, MessageParcel &reply);
     int32_t AddSubFdSource(MessageParcel &data, MessageParcel &reply);

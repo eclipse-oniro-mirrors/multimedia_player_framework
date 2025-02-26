@@ -98,6 +98,16 @@ static const std::vector<struct JsEnumInt> g_bufferingInfoType = {
     { "CACHED_DURATION", BufferingInfoType::CACHED_DURATION },
 };
 
+static const std::vector<struct JsEnumInt> g_loadingRequestError = {
+    { "LOADING_ERROR_SUCCESS", 0 },
+    { "LOADING_ERROR_NOT_READY", 1 },
+    { "LOADING_ERROR_NO_RESOURCE ", 2 },
+    { "LOADING_ERROR_INVAID_HANDLE", 3 },
+    { "LOADING_ERROR_ACCESS_DENIED", 4 },
+    { "LOADING_ERROR_ACCESS_TIMEOUT", 5 },
+    { "LOADING_ERROR_AUTHORIZE_FAILED", 6 },
+};
+
 static const std::vector<struct JsEnumInt> g_recorderAudioEncoder = {
     { "DEFAULT", AudioCodecFormat::AUDIO_DEFAULT },
     { "AMR_NB", 1 }, // Provides implementation only
@@ -409,6 +419,7 @@ static const std::map<std::string_view, const std::vector<struct JsEnumInt>&> g_
     { "MediaErrorCode", g_mediaErrorCode },
     { "AVDataSourceError", g_avDataSourceError },
     { "BufferingInfoType", g_bufferingInfoType },
+    { "LoadingRequestError", g_loadingRequestError},
     { "AudioEncoder", g_recorderAudioEncoder },
     { "AudioOutputFormat", g_recorderAudioOutputFormat },
     { "PlaybackSpeed", g_playbackSpeed },

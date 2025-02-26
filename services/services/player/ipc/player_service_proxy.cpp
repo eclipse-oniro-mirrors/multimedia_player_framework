@@ -91,6 +91,10 @@ void PlayerServiceProxy::InitPlayerFuncsPart1()
     playerFuncs_[GET_VIDEO_WIDTH] = "Player::GetVideoWidth";
     playerFuncs_[GET_VIDEO_HEIGHT] = "Player::GetVideoHeight";
     playerFuncs_[SELECT_BIT_RATE] = "Player::SelectBitRate";
+}
+
+void PlayerServiceProxy::InitPlayerFuncsPart2()
+{
     playerFuncs_[SELECT_TRACK] = "Player::SelectTrack";
     playerFuncs_[DESELECT_TRACK] = "Player::DeslectTrack";
     playerFuncs_[GET_CURRENT_TRACK] = "Player::GetCurrentTrack";
@@ -101,10 +105,7 @@ void PlayerServiceProxy::InitPlayerFuncsPart1()
     playerFuncs_[IS_SEEK_CONTINUOUS_SUPPORTED] = "Player::IsSeekContinuousSupported";
     playerFuncs_[GET_PLAY_BACK_POSITION] = "Player::GetPlaybackPosition";
     playerFuncs_[SET_SEI_MESSAGE_CB_STATUS] = "Player::SetSeiMessageCbStatus";
-}
-
-void PlayerServiceProxy::InitPlayerFuncsPart2()
-{
+    playerFuncs_[SET_SOURCE_LOADER] = "Player::SetSourceLoader";
     playerFuncs_[SET_SUPER_RESOLUTION] = "Player::SetSuperResolution";
     playerFuncs_[SET_VIDEO_WINDOW_SIZE] = "Player::SetVideoWindowSize";
 }
@@ -677,6 +678,24 @@ int32_t PlayerServiceProxy::SetPlaybackSpeed(PlaybackRateMode mode)
     int32_t error = SendRequest(SET_PLAYERBACK_SPEED, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetPlaybackSpeed failed, error: %{public}d", error);
+    return reply.ReadInt32();
+}
+
+int32_t PlayerServiceProxy::SetSourceLoader(const sptr<IRemoteObject> &object)
+{
+    MediaTrace trace("PlayerServiceProxy::SetSourceLoader");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    MEDIA_LOGI("SetSourceLoader in");
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+ 
+    (void)data.WriteRemoteObject(object);
+    int32_t error = SendRequest(SET_SOURCE_LOADER, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetSourceLoader failed, error: %{public}d", error);
+ 
     return reply.ReadInt32();
 }
 

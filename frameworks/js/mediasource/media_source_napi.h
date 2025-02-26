@@ -18,15 +18,16 @@
 
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
+#include "media_source_loader_callback.h"
 #include "common_napi.h"
 
 namespace OHOS {
 namespace Media {
-
 class MediaSourceNapi {
 public:
     __attribute__((visibility("default"))) static napi_value Init(napi_env env, napi_value exports);
     static std::shared_ptr<AVMediaSourceTmp> GetMediaSource(napi_env env, napi_value jsMediaSource);
+    static std::shared_ptr<MediaSourceLoaderCallback> GetSourceLoader(napi_env env, napi_value jsMediaSource);
 private:
     static napi_value Constructor(napi_env env, napi_callback_info info);
     static void Destructor(napi_env env, void *nativeObject, void *finalize);
@@ -38,16 +39,18 @@ private:
      * function setMimeType(mimeType: AVMimeType): MediaSource
      */
     static napi_value JsSetMimeType(napi_env env, napi_callback_info info);
- 
+    /**
+     * function SetMediaResourceLoaderDelegate(resourceLoader: MediaSourceLoader): void
+     */
+    static napi_value JsSetMediaResourceLoaderDelegate(napi_env env, napi_callback_info info);
     MediaSourceNapi() = default;
     virtual ~MediaSourceNapi() = default;
 
     static thread_local napi_ref constructor_;
     napi_env env_ = nullptr;
     std::shared_ptr<AVMediaSourceTmp> mediaSource_ {nullptr};
+    std::shared_ptr<MediaSourceLoaderCallback> mediaSourceLoaderCb_ {nullptr};
 };
-
 } // Media
 } // OHOS
-
 #endif // MEDIA_SOURCE_NAPI_H

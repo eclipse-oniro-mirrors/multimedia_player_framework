@@ -15,6 +15,7 @@
 
 #include "media_source_napi.h"
 #include "media_log.h"
+#include "media_dfx.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "MediaSourceNapi"};
@@ -22,6 +23,7 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "Med
 
 namespace OHOS {
 namespace Media {
+using namespace FunctionName;
 const std::string CLASS_NAME = "MediaSource";
 thread_local napi_ref MediaSourceNapi::constructor_ = nullptr;
 
@@ -33,6 +35,7 @@ napi_value MediaSourceNapi::Init(napi_env env, napi_value exports)
 
     napi_property_descriptor properties[] = {
         DECLARE_NAPI_FUNCTION("setMimeType", JsSetMimeType),
+        DECLARE_NAPI_FUNCTION("setMediaResourceLoaderDelegate", JsSetMediaResourceLoaderDelegate),
     };
 
     napi_value constructor = nullptr;
@@ -58,6 +61,15 @@ std::shared_ptr<AVMediaSourceTmp> MediaSourceNapi::GetMediaSource(napi_env env, 
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && mediaSource != nullptr, nullptr, "failed to napi_unwrap");
 
     return mediaSource->mediaSource_;
+}
+
+std::shared_ptr<MediaSourceLoaderCallback> MediaSourceNapi::GetSourceLoader(napi_env env, napi_value jsMediaSource)
+{
+    MediaSourceNapi *mediaSource = nullptr;
+    napi_status status = napi_unwrap(env, jsMediaSource, reinterpret_cast<void **>(&mediaSource));
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && mediaSource != nullptr, nullptr, "failed to napi_unwrap");
+
+    return mediaSource->mediaSourceLoaderCb_;
 }
 
 napi_value MediaSourceNapi::Constructor(napi_env env, napi_callback_info info)
@@ -107,7 +119,7 @@ void MediaSourceNapi::Destructor(napi_env env, void *nativeObject, void *finaliz
 
 napi_value MediaSourceNapi::JsCreateMediaSourceWithUrl(napi_env env, napi_callback_info info)
 {
-    MEDIA_LOGD("MediaSourceNapi::JsCreateMediaSourceWithUrl In");
+    MEDIA_LOGD("JsCreateMediaSourceWithUrl In");
     size_t argCount = 2;
     napi_value args[2] = { nullptr };
     napi_value jsMediaSource = nullptr;
@@ -169,6 +181,59 @@ napi_value MediaSourceNapi::JsSetMimeType(napi_env env, napi_callback_info info)
     mediaSource->SetMimeType(mimeType);
 
     return undefinedResult;
+}
+
+napi_value MediaSourceNapi::JsSetMediaResourceLoaderDelegate(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("MediaSourceNapi::SetMediaResourceLoaderDelegate");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    MEDIA_LOGI("JsSetMediaResourceLoaderDelegate In");
+
+    napi_value args[1] = { nullptr };
+    size_t argCount = 1;
+
+    napi_value jsThis = nullptr;
+    napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsThis != nullptr, nullptr, "failed to napi_get_cb_info");
+
+    MediaSourceNapi *mediaSource = nullptr;
+    status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&mediaSource));
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && mediaSource != nullptr, nullptr, "failed to napi_unwrap");
+
+    napi_valuetype valueType = napi_undefined;
+    if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object) {
+        MEDIA_LOGE("SetMediaResourceLoaderDelegate invalid parameters");
+        return result;
+    }
+
+    mediaSource->mediaSourceLoaderCb_ = std::make_shared<MediaSourceLoaderCallback>(env);
+    CHECK_AND_RETURN_RET_LOG(mediaSource->mediaSourceLoaderCb_ != nullptr, result, "Cb_ is nullptr");
+
+    napi_value callback = nullptr;
+    napi_ref ref = nullptr;
+    napi_get_named_property(env, args[0], SOURCE_OPEN.c_str(), &callback);
+    status = napi_create_reference(env, callback, 1, &ref);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && ref != nullptr, result, "failed to create open reference!");
+    std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, ref);
+    CHECK_AND_RETURN_RET_LOG(autoRef != nullptr, result, "open is nullptr");
+    mediaSource->mediaSourceLoaderCb_->SaveCallbackReference(SOURCE_OPEN, autoRef);
+
+    napi_get_named_property(env, args[0], SOURCE_READ.c_str(), &callback);
+    status = napi_create_reference(env, callback, 1, &ref);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && ref != nullptr, result, "failed to create read reference!");
+    autoRef = std::make_shared<AutoRef>(env, ref);
+    CHECK_AND_RETURN_RET_LOG(autoRef != nullptr, result, "read is nullptr");
+    mediaSource->mediaSourceLoaderCb_->SaveCallbackReference(SOURCE_READ, autoRef);
+
+    napi_get_named_property(env, args[0], SOURCE_CLOSE.c_str(), &callback);
+    status = napi_create_reference(env, callback, 1, &ref);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && ref != nullptr, result, "failed to create close reference!");
+    autoRef = std::make_shared<AutoRef>(env, ref);
+    CHECK_AND_RETURN_RET_LOG(autoRef != nullptr, result, "close is nullptr");
+    mediaSource->mediaSourceLoaderCb_->SaveCallbackReference(SOURCE_CLOSE, autoRef);
+    MEDIA_LOGI("JsSetMediaResourceLoaderDelegate Out");
+    return result;
 }
 } // Media
 } // OHOS

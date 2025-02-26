@@ -55,6 +55,8 @@ config("media_service_config") {
     "player/subscriber",
     "media_data_source/ipc",
     "media_data_source/server",
+    "media_source/ipc",
+    "media_source/server",
     "monitor/client",
     "monitor/ipc",
     "monitor/server",
@@ -133,6 +135,8 @@ ohos_shared_library("media_service") {
   if (player_framework_support_player) {
     sources += [
       "media_data_source/ipc/media_data_source_proxy.cpp",
+      "media_source/ipc/media_source_loader_proxy.cpp",
+      "media_source/ipc/media_source_loading_request_stub.cpp",
       "player/ipc/player_listener_proxy.cpp",
       "player/ipc/player_service_stub.cpp",
       "player/server/player_server.cpp",
