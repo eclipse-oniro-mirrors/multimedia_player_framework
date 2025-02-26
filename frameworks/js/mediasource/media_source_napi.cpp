@@ -216,18 +216,21 @@ napi_value MediaSourceNapi::JsSetMediaResourceLoaderDelegate(napi_env env, napi_
     status = napi_create_reference(env, callback, 1, &ref);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && ref != nullptr, result, "failed to create open reference!");
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, ref);
+    CHECK_AND_RETURN_RET_LOG(autoRef != nullptr, result, "open is nullptr");
     mediaSource->mediaSourceLoaderCb_->SaveCallbackReference(SOURCE_OPEN, autoRef);
 
     napi_get_named_property(env, args[0], SOURCE_READ.c_str(), &callback);
     status = napi_create_reference(env, callback, 1, &ref);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && ref != nullptr, result, "failed to create read reference!");
     autoRef = std::make_shared<AutoRef>(env, ref);
+    CHECK_AND_RETURN_RET_LOG(autoRef != nullptr, result, "read is nullptr");
     mediaSource->mediaSourceLoaderCb_->SaveCallbackReference(SOURCE_READ, autoRef);
 
     napi_get_named_property(env, args[0], SOURCE_CLOSE.c_str(), &callback);
     status = napi_create_reference(env, callback, 1, &ref);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok && ref != nullptr, result, "failed to create clsoe reference!");
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && ref != nullptr, result, "failed to create close reference!");
     autoRef = std::make_shared<AutoRef>(env, ref);
+    CHECK_AND_RETURN_RET_LOG(autoRef != nullptr, result, "close is nullptr");
     mediaSource->mediaSourceLoaderCb_->SaveCallbackReference(SOURCE_CLOSE, autoRef);
     MEDIA_LOGI("JsSetMediaResourceLoaderDelegate Out");
     return result;

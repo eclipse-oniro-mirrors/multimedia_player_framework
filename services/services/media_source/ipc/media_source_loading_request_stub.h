@@ -31,7 +31,7 @@ public:
 
     int OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
     int32_t RespondData(int64_t uuid, int64_t offset, const std::shared_ptr<AVSharedMemory> &mem) override;
-    int32_t RespondHeader(int64_t uuid, std::map<std::string, std::string> header, std::string redirctUrl) override;
+    int32_t RespondHeader(int64_t uuid, std::map<std::string, std::string> header, std::string redirectUrl) override;
     int32_t FinishLoading(int64_t uuid, LoadingRequestError requestedError) override;
 
 private:

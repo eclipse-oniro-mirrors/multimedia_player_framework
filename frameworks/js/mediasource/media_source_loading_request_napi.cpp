@@ -181,7 +181,7 @@ napi_value MediaSourceLoadingRequestNapi::JsRespondHeader(napi_env env, napi_cal
     napi_get_undefined(env, &result);
     MEDIA_LOGI("JsRespondHeader In");
 
-    size_t argCount = ARRAY_ARG_COUNTS_THREE; // args[0]:uuid, args[1]:header, args[2]:redirctUrl
+    size_t argCount = ARRAY_ARG_COUNTS_THREE; // args[0]:uuid, args[1]:header, args[2]:redirectUrl
     napi_value args[ARRAY_ARG_COUNTS_THREE] = { nullptr };
     MediaSourceLoadingRequestNapi* jsRequest =
         MediaSourceLoadingRequestNapi::GetJsInstanceWithParameter(env, info, argCount, args);
@@ -195,9 +195,9 @@ napi_value MediaSourceLoadingRequestNapi::JsRespondHeader(napi_env env, napi_cal
     for (auto [x, y]: header) {
         MEDIA_LOGI("JsRespondHeader x %{private}s, y %{private}s", x.c_str(), y.c_str());
     }
-    std::string redirctUrl = CommonNapi::GetStringArgument(env, args[INDEX_C]);
-    jsRequest->request_->RespondHeader(uuid, header, redirctUrl);
-    MEDIA_LOGI("JsRespondHeader redirctUrl %{private}s", redirctUrl.c_str());
+    std::string redirectUrl = CommonNapi::GetStringArgument(env, args[INDEX_C]);
+    jsRequest->request_->RespondHeader(uuid, header, redirectUrl);
+    MEDIA_LOGI("JsRespondHeader redirectUrl %{private}s", redirectUrl.c_str());
     return result;
 }
 

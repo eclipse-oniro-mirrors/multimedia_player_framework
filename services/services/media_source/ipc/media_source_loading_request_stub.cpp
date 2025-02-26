@@ -86,12 +86,12 @@ int32_t MediaSourceLoadingRequestStub::RespondData(int64_t uuid, int64_t offset,
 }
 
 int32_t MediaSourceLoadingRequestStub::RespondHeader(int64_t uuid, std::map<std::string, std::string> header,
-    std::string redirctUrl)
+    std::string redirectUrl)
 {
     MediaTrace trace("MediaSourceLoadingRequestStub::RespondHeader, uuid: " + std::to_string(uuid));
     MEDIA_LOGI("RespondHeader enter uuid:%{public}" PRId64, uuid);
     CHECK_AND_RETURN_RET_LOG(loadingRequest_ != nullptr, MSERR_UNKNOWN, "loadingRequest_ is nullptr");
-    return loadingRequest_->RespondHeader(uuid, header, redirctUrl);
+    return loadingRequest_->RespondHeader(uuid, header, redirectUrl);
 }
 
 int32_t MediaSourceLoadingRequestStub::FinishLoading(int64_t uuid, LoadingRequestError requestedError)
@@ -151,8 +151,8 @@ int32_t MediaSourceLoadingRequestStub::RespondHeader(MessageParcel &data, Messag
         auto vstr = data.ReadString();
         header.emplace(kstr, vstr);
     }
-    std::string redirctUrl = data.ReadString();
-    RespondHeader(uuid, header, redirctUrl);
+    std::string redirectUrl = data.ReadString();
+    RespondHeader(uuid, header, redirectUrl);
     return MSERR_OK;
 }
 
