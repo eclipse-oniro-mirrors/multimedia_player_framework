@@ -277,6 +277,37 @@ public:
         }
     };
 
+    struct Bool : public Base {
+        bool value = false;
+        void UvWork() override
+        {
+            std::shared_ptr<AutoRef> boolRef = callback.lock();
+            CHECK_AND_RETURN_LOG(boolRef != nullptr,
+                "%{public}s AutoRef is nullptr", callbackName.c_str());
+
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(boolRef->env_, &scope);
+            CHECK_AND_RETURN_LOG(scope != nullptr,
+                "%{public}s scope is nullptr", callbackName.c_str());
+            ON_SCOPE_EXIT(0) {
+                napi_close_handle_scope(boolRef->env_, scope);
+            };
+
+            napi_value jsCallback = nullptr;
+            napi_status status = napi_get_reference_value(boolRef->env_, boolRef->cb_, &jsCallback);
+            CHECK_AND_RETURN_LOG(status == napi_ok && jsCallback != nullptr,
+                "%{public}s failed to napi_get_reference_value", callbackName.c_str());
+
+            napi_value args[1] = {nullptr}; // callback: (boolean)
+            (void)napi_get_boolean(boolRef->env_, value, &args[0]);
+
+            napi_value result = nullptr;
+            status = napi_call_function(boolRef->env_, nullptr, jsCallback, 1, args, &result);
+            CHECK_AND_RETURN_LOG(status == napi_ok,
+                "%{public}s failed to napi_call_function", callbackName.c_str());
+        }
+    };
+
     struct SubtitleProperty : public Base {
         std::string text;
         void UvWork() override
@@ -635,10 +666,11 @@ AVPlayerCallback::AVPlayerCallback(napi_env env, AVPlayerNotify *listener)
     : env_(env), listener_(listener)
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
-    InitInfoFuncs();
+    InitInfoFuncsPart1();
+    InitInfoFuncsPart2();
 }
 
-void AVPlayerCallback::InitInfoFuncs()
+void AVPlayerCallback::InitInfoFuncsPart1()
 {
     onInfoFuncs_ = {
         { INFO_TYPE_STATE_CHANGE,
@@ -688,6 +720,12 @@ void AVPlayerCallback::InitInfoFuncs()
         { INFO_TYPE_SEI_UPDATE_INFO,
             [this](const int32_t extra, const Format &infoBody) { OnSeiInfoCb(extra, infoBody); } },
     };
+}
+
+void AVPlayerCallback::InitInfoFuncsPart2()
+{
+    onInfoFuncs_[INFO_TYPE_SUPER_RESOLUTION_CHANGED] =
+        [this](const int32_t extra, const Format &infoBody) { OnSuperResolutionChangedCb(extra, infoBody); };
 }
 
 void AVPlayerCallback::OnAudioDeviceChangeCb(const int32_t extra, const Format &infoBody)
@@ -1223,6 +1261,28 @@ void AVPlayerCallback::OnSeiInfoCb(const int32_t extra, const Format &infoBody)
     cb->callbackName = AVPlayerEvent::EVENT_SEI_MESSAGE_INFO;
     cb->playbackPosition = playbackPosition;
     cb->payloadGroup = formatVec;
+    NapiCallback::CompleteCallback(env_, cb);
+}
+
+void AVPlayerCallback::OnSuperResolutionChangedCb(const int32_t extra, const Format &infoBody)
+{
+    (void)extra;
+    CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
+    int32_t enabled = 0;
+    (void)infoBody.GetIntValue(PlayerKeys::SUPER_RESOLUTION_ENABLED, enabled);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " OnSuperResolutionChangedCb is called, enabled = %{public}d",
+        FAKE_POINTER(this), enabled);
+
+    if (refMap_.find(AVPlayerEvent::EVENT_SUPER_RESOLUTION_CHANGED) == refMap_.end()) {
+        MEDIA_LOGW("can not find super resolution changed callback!");
+        return;
+    }
+    NapiCallback::Bool *cb = new(std::nothrow) NapiCallback::Bool();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new Bool");
+
+    cb->callback = refMap_.at(AVPlayerEvent::EVENT_SUPER_RESOLUTION_CHANGED);
+    cb->callbackName = AVPlayerEvent::EVENT_SUPER_RESOLUTION_CHANGED;
+    cb->value = enabled ? true : false;
     NapiCallback::CompleteCallback(env_, cb);
 }
 

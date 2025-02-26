@@ -78,6 +78,8 @@ public:
     int32_t GetCurrentTrack(int32_t trackType, int32_t &index) override;
     int32_t SetPlaybackStrategy(AVPlayStrategy playbackStrategy) override;
     int32_t SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted) override;
+    int32_t SetSuperResolution(bool enabled) override;
+    int32_t SetVideoWindowSize(int32_t width, int32_t height) override;
     // PlayerClient
     void MediaServerDied();
     int32_t SetMaxAmplitudeCbStatus(bool status) override;
