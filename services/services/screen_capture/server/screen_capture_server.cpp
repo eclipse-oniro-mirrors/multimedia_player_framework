@@ -1630,7 +1630,7 @@ void ScreenCaptureServer::PostStartScreenCapture(bool isSuccess)
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
         if (isPrivacyAuthorityEnabled_ &&
             GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"]
-                .compare(appName_) != 0) {
+                .compare(appName_) != 0 && !isScreenCaptureAuthority_) {
             if (TryNotificationOnPostStartScreenCapture() == MSERR_UNKNOWN) {
                 return;
             }
@@ -1883,7 +1883,8 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
 
     isPrivacyAuthorityEnabled_ = isPrivacyAuthorityEnabled;
     captureState_ = AVScreenCaptureState::POPUP_WINDOW;
-    if (!CheckPrivacyWindowSkipPermission() && IsUserPrivacyAuthorityNeeded()) {
+    isScreenCaptureAuthority_ = CheckPrivacyWindowSkipPermission();
+    if (!isScreenCaptureAuthority_ && IsUserPrivacyAuthorityNeeded()) {
         ret = RequestUserPrivacyAuthority();
         if (ret != MSERR_OK) {
             captureState_ = AVScreenCaptureState::STOPPED;
@@ -3442,7 +3443,7 @@ void ScreenCaptureServer::PostStopScreenCapture(AVScreenCaptureStateCode stateCo
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
     if (isPrivacyAuthorityEnabled_ &&
         GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"]
-            .compare(appName_) != 0) {
+            .compare(appName_) != 0 && !isScreenCaptureAuthority_) {
         // Remove real time notification
         int32_t ret = NotificationHelper::CancelNotification(notificationId_);
         MEDIA_LOGI("StopScreenCaptureInner CancelNotification id:%{public}d, ret:%{public}d ", notificationId_, ret);
@@ -3482,6 +3483,7 @@ int32_t ScreenCaptureServer::StopScreenCapture()
     }
 
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances StopScreenCapture E", FAKE_POINTER(this));
+    isScreenCaptureAuthority_ = false;
     return ret;
 }
 
