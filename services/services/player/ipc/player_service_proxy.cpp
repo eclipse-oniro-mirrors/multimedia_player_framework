@@ -91,10 +91,9 @@ void PlayerServiceProxy::InitPlayerFuncsPart1()
     playerFuncs_[GET_VIDEO_WIDTH] = "Player::GetVideoWidth";
     playerFuncs_[GET_VIDEO_HEIGHT] = "Player::GetVideoHeight";
     playerFuncs_[SELECT_BIT_RATE] = "Player::SelectBitRate";
-    FillPlayerFunc();
 }
 
-void PlayerServiceProxy::FillPlayerFunc()
+void PlayerServiceProxy::InitPlayerFuncsPart2()
 {
     playerFuncs_[SELECT_TRACK] = "Player::SelectTrack";
     playerFuncs_[DESELECT_TRACK] = "Player::DeslectTrack";
@@ -107,10 +106,6 @@ void PlayerServiceProxy::FillPlayerFunc()
     playerFuncs_[GET_PLAY_BACK_POSITION] = "Player::GetPlaybackPosition";
     playerFuncs_[SET_SEI_MESSAGE_CB_STATUS] = "Player::SetSeiMessageCbStatus";
     playerFuncs_[SET_SOURCE_LOADER] = "Player::SetSourceLoader";
-}
-
-void PlayerServiceProxy::InitPlayerFuncsPart2()
-{
     playerFuncs_[SET_SUPER_RESOLUTION] = "Player::SetSuperResolution";
     playerFuncs_[SET_VIDEO_WINDOW_SIZE] = "Player::SetVideoWindowSize";
 }
