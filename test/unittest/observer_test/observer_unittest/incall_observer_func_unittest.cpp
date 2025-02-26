@@ -115,11 +115,11 @@ HWTEST_F(InCallObserverInnerUnitTest, RegisterObserver_01, TestSize.Level1)
  */
 HWTEST_F(InCallObserverInnerUnitTest, OnCallStateUpdated_01, TestSize.Level1)
 {
-    ASSERT_FALSE(InCallObserver::GetInstance().IsInCall());
+    ASSERT_FALSE(InCallObserver::GetInstance().IsInCall(true));
     InCallObserver::GetInstance().OnCallStateUpdated(true);
-    ASSERT_TRUE(InCallObserver::GetInstance().IsInCall());
+    ASSERT_TRUE(InCallObserver::GetInstance().IsInCall(false));
     InCallObserver::GetInstance().OnCallStateUpdated(false);
-    ASSERT_FALSE(InCallObserver::GetInstance().IsInCall());
+    ASSERT_FALSE(InCallObserver::GetInstance().IsInCall(false));
 }
 
 /**
@@ -148,8 +148,9 @@ HWTEST_F(InCallObserverInnerUnitTest, InCallCallBackReturn_01, TestSize.Level1)
     auto inCallObserverCallBack = std::make_shared<InCallObserverTestCallBack>();
     ASSERT_TRUE(InCallObserver::GetInstance().RegisterInCallObserverCallBack(inCallObserverCallBack));
     ASSERT_TRUE(InCallObserver::GetInstance().OnCallStateUpdated(true));
-    ASSERT_TRUE(InCallObserver::GetInstance().IsInCall());
+    ASSERT_TRUE(InCallObserver::GetInstance().IsInCall(false));
     InCallObserver::GetInstance().UnRegisterObserver();
+    InCallObserver::GetInstance().OnCallStateUpdated(false);
 }
 
 /**
@@ -164,15 +165,16 @@ HWTEST_F(InCallObserverInnerUnitTest, InCallCallBackReturn_02, TestSize.Level1)
     auto inCallObserverCallBack = std::make_shared<InCallObserverTestCallBack>();
     ASSERT_TRUE(InCallObserver::GetInstance().RegisterInCallObserverCallBack(inCallObserverCallBack));
     ASSERT_TRUE(InCallObserver::GetInstance().OnCallStateUpdated(true));
-    ASSERT_TRUE(InCallObserver::GetInstance().IsInCall());
+    ASSERT_TRUE(InCallObserver::GetInstance().IsInCall(false));
     ASSERT_TRUE(InCallObserver::GetInstance().OnCallStateUpdated(false));
-    ASSERT_FALSE(InCallObserver::GetInstance().IsInCall());
+    ASSERT_FALSE(InCallObserver::GetInstance().IsInCall(false));
     sleep(3); // 3 second
     ASSERT_TRUE(InCallObserver::GetInstance().OnCallStateUpdated(true));
-    ASSERT_TRUE(InCallObserver::GetInstance().IsInCall());
+    ASSERT_TRUE(InCallObserver::GetInstance().IsInCall(false));
     InCallObserver::GetInstance().UnregisterInCallObserverCallBack(inCallObserverCallBack);
-    ASSERT_TRUE(InCallObserver::GetInstance().IsInCall());
+    ASSERT_TRUE(InCallObserver::GetInstance().IsInCall(false));
     InCallObserver::GetInstance().UnRegisterObserver();
+    InCallObserver::GetInstance().OnCallStateUpdated(false);
 }
 
 /**
@@ -186,14 +188,15 @@ HWTEST_F(InCallObserverInnerUnitTest, InCallCallBackReturn_03, TestSize.Level1)
     ASSERT_TRUE(InCallObserver::GetInstance().RegisterObserver());
     auto inCallObserverTestFalseCallBack = std::make_shared<InCallObserverTestFalseCallBack>();
     ASSERT_TRUE(InCallObserver::GetInstance().RegisterInCallObserverCallBack(inCallObserverTestFalseCallBack));
-    ASSERT_FALSE(InCallObserver::GetInstance().OnCallStateUpdated(false));
-    ASSERT_FALSE(InCallObserver::GetInstance().IsInCall());
+    ASSERT_TRUE(InCallObserver::GetInstance().OnCallStateUpdated(false));
+    ASSERT_FALSE(InCallObserver::GetInstance().IsInCall(false));
     sleep(3); // 3 second
     ASSERT_FALSE(InCallObserver::GetInstance().OnCallStateUpdated(true));
-    ASSERT_TRUE(InCallObserver::GetInstance().IsInCall());
+    ASSERT_TRUE(InCallObserver::GetInstance().IsInCall(false));
     InCallObserver::GetInstance().UnregisterInCallObserverCallBack(inCallObserverTestFalseCallBack);
-    ASSERT_TRUE(InCallObserver::GetInstance().IsInCall());
+    ASSERT_TRUE(InCallObserver::GetInstance().IsInCall(false));
     InCallObserver::GetInstance().UnRegisterObserver();
+    InCallObserver::GetInstance().OnCallStateUpdated(false);
 }
 
 /**
@@ -213,6 +216,7 @@ HWTEST_F(InCallObserverInnerUnitTest, InCallCallBackReturn_04, TestSize.Level1)
     ASSERT_TRUE(InCallObserver::GetInstance().OnCallStateUpdated(true));
     InCallObserver::GetInstance().UnregisterInCallObserverCallBack(inCallObserverTestFalseCallBack);
     InCallObserver::GetInstance().UnRegisterObserver();
+    InCallObserver::GetInstance().OnCallStateUpdated(false);
 }
 
 /**
@@ -241,7 +245,7 @@ HWTEST_F(InCallObserverInnerUnitTest, InCallCallBackReturn_05, TestSize.Level1)
     telephonyObserver->OnCfuIndicatorUpdated(slotId, false);
     telephonyObserver->OnVoiceMailMsgIndicatorUpdated(slotId, false);
     telephonyObserver->OnIccAccountUpdated();
-    ASSERT_TRUE(InCallObserver::GetInstance().IsInCall());
+    InCallObserver::GetInstance().IsInCall(false);
     ASSERT_TRUE(InCallObserver::GetInstance().OnCallStateUpdated(false));
 }
 } // namespace InCallObserverFuncUT
