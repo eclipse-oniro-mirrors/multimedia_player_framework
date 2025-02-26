@@ -2791,9 +2791,9 @@ void HiPlayerImpl::HandleAudioTrackChangeEvent(const Event& event)
             MEDIA_LOG_E("HandleAudioTrackChangeEvent audioDecoder change plugin error");
             return;
         }
-        audioSink_->RecordChangeTrack();
         if (IsNeedAudioSinkChangeTrack(metaInfo, trackId)) {
             MEDIA_LOG_I("AudioSink changeTrack in");
+            audioSink_->RecordChangeTrack();
             if (Status::OK != audioSink_->ChangeTrack(metaInfo[trackId])) {
                 MEDIA_LOG_E("HandleAudioTrackChangeEvent audioSink change track error");
                 return;
