@@ -145,6 +145,10 @@ void ScreenCaptureMonitorServer::SetSystemScreenRecorderStatus(bool started)
 bool ScreenCaptureMonitorServer::IsSystemScreenRecorder(int32_t pid)
 {
     MEDIA_LOGI("ScreenCaptureMonitorServer::IsSystemScreenRecorder S");
+    if (pid < 0) {
+        MEDIA_LOGW("ScreenCaptureMonitorServer::IsSystemScreenRecorder invalid pid: %{public}d", pid);
+        return false;
+    }
     bool result = ScreenCaptureServer::CheckPidIsScreenRecorder(pid);
     MEDIA_LOGI("ScreenCaptureMonitorServer::IsSystemScreenRecorder result: %{public}d", result);
     return result;

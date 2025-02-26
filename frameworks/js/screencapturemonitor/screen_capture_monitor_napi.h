@@ -21,7 +21,6 @@
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
 #include "common_napi.h"
-#include "task_queue.h"
 
 namespace OHOS {
 namespace Media {
@@ -44,7 +43,7 @@ private:
      */
     static napi_value JsGetScreenCaptureMonitor(napi_env env, napi_callback_info info);
     /**
-     * on(type: 'systemScreenRecorder', callback: (state: AVPlayerState, reason: StateChangeReason) => void): void
+     * on(type: 'systemScreenRecorder', callback: (event: ScreenCaptureEvent) => void): void
      */
     static napi_value JsSetEventCallback(napi_env env, napi_callback_info info);
     /**
