@@ -35,6 +35,7 @@ public:
     virtual bool NotifyStopAndRelease(AVScreenCaptureStateCode state);
     virtual bool TelCallStateUpdated(bool isInCall);
     virtual bool NotifyTelCallStateUpdated(bool isInCall);
+    virtual void Release();
 };
 
 class InCallObserver {
