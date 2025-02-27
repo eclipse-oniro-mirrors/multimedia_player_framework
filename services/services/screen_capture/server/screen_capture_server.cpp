@@ -255,8 +255,9 @@ bool ScreenCaptureServer::CheckScreenCaptureSessionIdLimit(int32_t curAppUid)
         std::unique_lock<std::shared_mutex> lock(ScreenCaptureServer::mutexServerMapRWGlobal_);
         for (auto iter = ScreenCaptureServer::serverMap_.begin(); iter != ScreenCaptureServer::serverMap_.end();
             iter++) {
-                if ((iter->second).lock() != nullptr) {
-                    if (curAppUid == (iter->second).lock()->GetAppUid()) {
+                auto iterPtr = (iter->second).lock();
+                if (iterPtr != nullptr) {
+                    if (curAppUid == iterPtr->GetAppUid()) {
                         countForUid++;
                     }
                     CHECK_AND_RETURN_RET_LOG(countForUid <= ScreenCaptureServer::maxSessionPerUid_, false,
@@ -277,10 +278,10 @@ bool ScreenCaptureServer::CheckSCServerSpecifiedDataTypeNum(int32_t curAppUid, D
         std::unique_lock<std::shared_mutex> lock(ScreenCaptureServer::mutexServerMapRWGlobal_);
         for (auto iter = ScreenCaptureServer::serverMap_.begin(); iter != ScreenCaptureServer::serverMap_.end();
             iter++) {
-                if ((iter->second).lock() != nullptr) {
-                    if (curAppUid == (iter->second).lock()->GetAppUid() &&
-                        dataType == (iter->second).lock()->GetSCServerDataType()) {
-                            countForUidDataType++;
+                auto iterPtr = (iter->second).lock();
+                if (iterPtr != nullptr) {
+                    if (curAppUid == iterPtr->GetAppUid() && dataType == iterPtr->GetSCServerDataType()) {
+                        countForUidDataType++;
                     }
                     CHECK_AND_RETURN_RET_LOG(countForUidDataType <= ScreenCaptureServer::maxSCServerDataTypePerUid_,
                         false, "CheckSCServerSpecifiedDataTypeNum failed,"
@@ -296,8 +297,9 @@ void ScreenCaptureServer::CountScreenCaptureAppNum(std::set<int32_t>& appSet)
 {
     std::unique_lock<std::shared_mutex> lock(ScreenCaptureServer::mutexServerMapRWGlobal_);
     for (auto iter = ScreenCaptureServer::serverMap_.begin(); iter != ScreenCaptureServer::serverMap_.end(); iter++) {
-        if (iter->second.lock() != nullptr) {
-            appSet.insert(iter->second.lock()->GetAppUid());
+        auto iterPtr = iter->second.lock();
+        if (iterPtr != nullptr) {
+            appSet.insert(iterPtr->GetAppUid());
         }
     }
 }
