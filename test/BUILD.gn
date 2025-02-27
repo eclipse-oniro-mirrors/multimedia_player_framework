@@ -1,4 +1,4 @@
-# Copyright (C) 2022 Huawei Device Co., Ltd.
+# Copyright (C) 2022-2025 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -28,6 +28,7 @@ group("media_unit_test") {
       "../frameworks/native/system_sound_manager/unittest/tone_player_test:system_tone_player_unit_test",
       "../frameworks/native/transcoder/test/unittest:transcoder_unit_test",
       "../frameworks/native/video_editor/test/unittest:video_editor_unit_test",
+      "unittest/audio_haptic_test:audio_haptic_sound_normal_impl_unit_test",
       "unittest/audio_haptic_test:audio_haptic_unit_test",
       "unittest/avmetadata_helper_test:avmetadata_helper_unit_test",
       "unittest/avmetadatahelper_test:avmetadatahelper_unit_test",
