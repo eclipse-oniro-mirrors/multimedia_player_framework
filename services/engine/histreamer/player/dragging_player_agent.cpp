@@ -51,10 +51,8 @@ public:
     bool IsVideoStreamDiscardable(const std::shared_ptr<AVBuffer> buffer) override
     {
         auto draggingDelegator = draggingDelegator_.lock();
-        if (draggingDelegator != nullptr && buffer != nullptr) {
-            return draggingDelegator->IsVideoStreamDiscardable(buffer);
-        }
-        return false;
+        FALSE_RETURN_V_MSG(draggingDelegator != nullptr && buffer != nullptr, false, "invalid parameter");
+        return draggingDelegator->IsVideoStreamDiscardable(buffer);
     }
 private:
     std::weak_ptr<DraggingDelegator> draggingDelegator_;
@@ -67,9 +65,8 @@ public:
     void ConsumeVideoFrame(const std::shared_ptr<AVBuffer> buffer, uint32_t bufferIndex) override
     {
         auto draggingDelegator = draggingDelegator_.lock();
-        if (draggingDelegator != nullptr && buffer != nullptr) {
-            return draggingDelegator->ConsumeVideoFrame(buffer, bufferIndex);
-        }
+        FALSE_RETURN_MSG(draggingDelegator != nullptr && buffer != nullptr, "invalid parameter");
+        draggingDelegator->ConsumeVideoFrame(buffer, bufferIndex);
     }
 private:
     std::weak_ptr<DraggingDelegator> draggingDelegator_;
@@ -94,9 +91,7 @@ bool DraggingPlayerAgent::IsDraggingSupported(const shared_ptr<DemuxerFilter> de
 {
     FALSE_RETURN_V_MSG_E(demuxer != nullptr && decoder != nullptr, false, "demuxer or decoder is null");
     FALSE_RETURN_V_MSG_E(demuxer->IsLocalFd(), false, "source is not local fd");
-    if (!LoadSymbol() || checkSupportedFunc_ == nullptr) {
-        return false;
-    }
+    FALSE_RETURN_V_MSG_E(LoadSymbol() && checkSupportedFunc_ != nullptr, false, "no so");
     return checkSupportedFunc_(demuxer.get(), decoder.get());
 }
 
@@ -157,52 +152,40 @@ void *DraggingPlayerAgent::LoadLibrary()
         return nullptr;
     }
     auto ptr = ::dlopen(path, RTLD_NOW | RTLD_LOCAL);
-    if (ptr == nullptr) {
-        MEDIA_LOG_E("dlopen failed due to %{public}s", ::dlerror());
-    }
+    FALSE_RETURN_V_MSG_E(ptr != nullptr, nullptr, "dlopen failed due to %{public}s", ::dlerror());
     handler_ = ptr;
     return ptr;
 }
  
 bool DraggingPlayerAgent::CheckSymbol(void *handler)
 {
-    if (handler) {
-        std::string createFuncName = "CreateDraggingPlayer";
-        std::string destroyFuncName = "DestroyDraggingPlayer";
-        std::string checkSupportedFuncName = "IsDraggingSupported";
-        CreateFunc createFunc = nullptr;
-        DestroyFunc destroyFunc = nullptr;
-        CheckSupportedFunc checkSupportedFunc = nullptr;
-        createFunc = (CreateFunc)(::dlsym(handler, createFuncName.c_str()));
-        destroyFunc = (DestroyFunc)(::dlsym(handler, destroyFuncName.c_str()));
-        checkSupportedFunc = (CheckSupportedFunc)(::dlsym(handler, checkSupportedFuncName.c_str()));
-        if (checkSupportedFunc != nullptr) {
-            checkSupportedFunc_ = checkSupportedFunc;
-        }
-        if (createFunc && destroyFunc) {
-            MEDIA_LOG_D("CheckSymbol:  createFuncName %{public}s", createFuncName.c_str());
-            MEDIA_LOG_D("CheckSymbol:  destroyFuncName %{public}s", destroyFuncName.c_str());
-            createFunc_ = createFunc;
-            destroyFunc_ = destroyFunc;
-            return true;
-        }
-    }
-    return false;
+    FALSE_RETURN_V_MSG_E(handler != nullptr, false, "handler is nullptr");
+    std::string createFuncName = "CreateDraggingPlayer";
+    std::string destroyFuncName = "DestroyDraggingPlayer";
+    std::string checkSupportedFuncName = "IsDraggingSupported";
+    CreateFunc createFunc = nullptr;
+    DestroyFunc destroyFunc = nullptr;
+    CheckSupportedFunc checkSupportedFunc = nullptr;
+    createFunc = (CreateFunc)(::dlsym(handler, createFuncName.c_str()));
+    destroyFunc = (DestroyFunc)(::dlsym(handler, destroyFuncName.c_str()));
+    checkSupportedFunc = (CheckSupportedFunc)(::dlsym(handler, checkSupportedFuncName.c_str()));
+    FALSE_RETURN_V_MSG_E(checkSupportedFunc != nullptr, false, "check supported func is nullptr");
+    checkSupportedFunc_ = checkSupportedFunc;
+    FALSE_RETURN_V_MSG_E(createFunc != nullptr && destroyFunc != nullptr, false, "create or destroy func is nullptr");
+    MEDIA_LOG_I("CheckSymbol:  createFuncName %{public}s, destroyFuncName %{public}s", createFuncName.c_str(),
+        destroyFuncName.c_str());
+    createFunc_ = createFunc;
+    destroyFunc_ = destroyFunc;
+    return true;
 }
  
 bool DraggingPlayerAgent::LoadSymbol()
 {
     lock_guard<mutex> lock(mtx_);
-    if (loaded_ && handler_ == nullptr) {
-        return false;
-    }
-    if (handler_ == nullptr) {
-        loaded_ = true;
-        if (!CheckSymbol(LoadLibrary())) {
-            MEDIA_LOG_E("Load Reference parser so fail");
-            return false;
-        }
-    }
+    FALSE_RETURN_V_MSG_E(!loaded_ || handler_ != nullptr, false, "loaded but no handler");
+    FALSE_RETURN_V_NOLOG(handler_ == nullptr, true);
+    loaded_ = true;
+    FALSE_RETURN_V_MSG_E(CheckSymbol(LoadLibrary()), false, "Load Reference parser so fail");
     return true;
 }
 
@@ -267,14 +250,11 @@ SeekContinuousDelegator::~SeekContinuousDelegator()
 
 Status SeekContinuousDelegator::Init()
 {
+    MEDIA_LOG_I("SeekContinuousDelegator::Init");
     FALSE_RETURN_V_MSG_E(demuxer_ != nullptr && decoder_ != nullptr,
         Status::ERROR_INVALID_PARAMETER, "Invalid demuxer filter instance.");
     Status ret = draggingPlayer_->Init(demuxer_, decoder_);
-    if (ret != Status::OK) {
-        MEDIA_LOG_E("SeekContinuousDelegator::Init failed");
-        return ret;
-    }
-    MEDIA_LOG_I("SeekContinuousDelegator::Init register");
+    FALSE_RETURN_V_MSG_E(ret == Status::OK, ret, "SeekContinuousDelegator::Init failed");
     videoStreamReadyCb_ = std::make_shared<VideoStreamReadyCallbackImpl>(shared_from_this());
     demuxer_->RegisterVideoStreamReadyCallback(videoStreamReadyCb_);
     videoFrameReadyCb_ = std::make_shared<VideoFrameReadyCallbackImpl>(shared_from_this());
@@ -300,6 +280,7 @@ void SeekContinuousDelegator::UpdateSeekPos(int64_t seekMs)
 
 void SeekContinuousDelegator::Release()
 {
+    MEDIA_LOG_I("SeekContinuousDelegator::Release");
     if (monitorTask_) {
         monitorTask_->Stop();
     }
@@ -337,9 +318,7 @@ void SeekContinuousDelegator::StopDragging(int64_t seekCnt)
     std::unique_lock<std::mutex> lock(draggingMutex_);
     FALSE_RETURN(!isReleased_);
     FALSE_RETURN(draggingPlayer_ != nullptr);
-    if (seekCnt_.load() != seekCnt) {
-        return;
-    }
+    FALSE_RETURN_NOLOG(seekCnt_.load() == seekCnt);
     draggingPlayer_->StopDragging();
 }
 
@@ -378,6 +357,7 @@ SeekClosestDelegator::~SeekClosestDelegator()
 
 Status SeekClosestDelegator::Init()
 {
+    MEDIA_LOG_I("SeekClosestDelegator::Init");
     threadName_ = "SeekTask_" + playerId_;
     seekTask_ = std::make_unique<Task>("seekThread", threadName_, TaskType::GLOBAL, TaskPriority::NORMAL, false);
     seekTask_->Start();
@@ -395,6 +375,7 @@ void SeekClosestDelegator::UpdateSeekPos(int64_t seekMs)
 
 void SeekClosestDelegator::Release()
 {
+    MEDIA_LOG_I("SeekClosestDelegator::Release");
     if (seekTask_) {
         seekTask_->Stop();
     }
