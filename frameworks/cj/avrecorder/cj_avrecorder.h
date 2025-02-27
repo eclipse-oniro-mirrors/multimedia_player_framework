@@ -180,11 +180,8 @@ public:
     std::shared_ptr<RecorderCallback> recorderCb_ = nullptr;
 private:
     std::shared_ptr<Recorder> recorder_ = nullptr; //
-    std::map<MetaSourceType, int32_t> metaSourceIDMap_;
     sptr<Surface> surface_ = nullptr;
     uint64_t surfaceId_ = 0;
-    std::mutex mutex_;
-    std::string currentState_ = CjAVRecorderState::STATE_IDLE; // set callback
     std::shared_ptr<CjAVRecorderConfig> config_ = nullptr;
     bool hasConfiged_ = false;
     int32_t videoSourceID_ = -1;
