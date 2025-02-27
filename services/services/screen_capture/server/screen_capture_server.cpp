@@ -369,8 +369,8 @@ std::list<int32_t> ScreenCaptureServer::GetAllStartedSessionIdList()
 bool ScreenCaptureServer::CheckPidIsScreenRecorder(int32_t pid)
 {
     MEDIA_LOGI("CheckPidIsScreenRecorder ScreenRecorder pid(%{public}d), input pid(%{public}d)",
-        systemScreenRecorderPid_, pid);
-    return pid == systemScreenRecorderPid_;
+        ScreenCaptureServer::systemScreenRecorderPid_, pid);
+    return pid == ScreenCaptureServer::systemScreenRecorderPid_;
 }
 
 void ScreenCaptureServer::OnDMPrivateWindowChange(bool hasPrivate)
@@ -3377,7 +3377,7 @@ void ScreenCaptureServer::SetSystemScreenRecorderStatus(bool status)
         return;
     }
     if (status) {
-        systemScreenRecorderPid_ = appInfo_.appPid;
+        ScreenCaptureServer::systemScreenRecorderPid_ = appInfo_.appPid;
         ScreenCaptureMonitorServer::GetInstance()->SetSystemScreenRecorderStatus(true);
     } else {
         ScreenCaptureMonitorServer::GetInstance()->SetSystemScreenRecorderStatus(false);
