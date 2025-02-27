@@ -140,6 +140,11 @@ enum AVScreenCaptureParamValidationState : int32_t {
     VALIDATION_INVALID,
 };
 
+enum AVScreenCaptureFillMode {
+    PRESERVE_ASPECT_RATIO = 0,
+    SCALE_TO_FILL = 1,
+};
+
 struct ScreenCaptureContentFilter {
     std::set<AVScreenCaptureFilterableAudioContent> filteredAudioContents;
     std::vector<uint64_t> windowIDsVec;
@@ -150,6 +155,7 @@ struct AudioCaptureInfo {
     int32_t audioChannels = 0;
     AudioCaptureSourceType audioSource = AudioCaptureSourceType::SOURCE_DEFAULT;
     AVScreenCaptureParamValidationState state = AVScreenCaptureParamValidationState::VALIDATION_IGNORE;
+    AVScreenCaptureFillMode screenCaptureFillMode = AVScreenCaptureFillMode::PRESERVE_ASPECT_RATIO;
 };
 
 struct AudioEncInfo {
