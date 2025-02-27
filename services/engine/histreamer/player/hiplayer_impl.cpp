@@ -1732,7 +1732,8 @@ bool HiPlayerImpl::IsNeedAudioSinkChangeTrack(std::vector<std::shared_ptr<Meta>>
 
     FALSE_RETURN_V(metaInfo[trackId]->GetData(Tag::AUDIO_SAMPLE_FORMAT, sampleFormat), true);
     FALSE_RETURN_V(metaInfo[currentAudioTrackId_]->GetData(Tag::AUDIO_SAMPLE_FORMAT, currentSampleFormat), true);
-    MEDIA_LOG_I("sampleformat: CurTrackId" PUBLIC_LOG_D32 " trackId" PUBLIC_LOG_D32, currentSampleFormat, sampleFormat);
+    MEDIA_LOG_I("sampleformat: CurTrackId" PUBLIC_LOG_D32 " trackId" PUBLIC_LOG_D32, currentSampleFormat,
+        sampleFormat);
     FALSE_RETURN_V(sampleFormat == currentSampleFormat, true);
 
     std::string mimeType;
