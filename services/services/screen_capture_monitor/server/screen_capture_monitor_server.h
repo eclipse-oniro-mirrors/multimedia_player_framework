@@ -55,7 +55,7 @@ private:
     std::mutex mutex_;
     std::mutex mutexCb_;
     std::set<sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener>> screenCaptureMonitorCbSet_;
-    bool isSystemScreenRecorderWorking_;
+    bool isSystemScreenRecorderWorking_ = false;
 };
 } // namespace Media
 } // namespace OHOS
