@@ -3081,11 +3081,7 @@ Status HiPlayerImpl::LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFi
             FilterType::FILTERTYPE_VDEC);
         FALSE_RETURN_V(videoDecoder_ != nullptr, Status::ERROR_NULL_POINTER);
         videoDecoder_->Init(playerEventReceiver_, playerFilterCallback_);
-        if (videoPostProcessorType_ != VideoPostProcessorType::NONE) {
-            videoDecoder_->SetPostProcessorType(videoPostProcessorType_);
-            videoDecoder_->SetPostProcessorOn(isPostProcessorOn_);
-            videoDecoder_->SetVideoWindowSize(postProcessorTargetWidth_, postProcessorTargetHeight_);
-        }
+        SetPostProcessor();
         interruptMonitor_->RegisterListener(videoDecoder_);
         videoDecoder_->SetSyncCenter(syncManager_);
         videoDecoder_->SetCallingInfo(appUid_, appPid_, bundleName_, instanceId_);
@@ -3359,6 +3355,15 @@ void HiPlayerImpl::SetPerfRecEnabled(bool isPerfRecEnabled)
 {
     MEDIA_LOG_I("SetPerfRecEnabled %{public}d", isPerfRecEnabled);
     isPerfRecEnabled_ = isPerfRecEnabled;
+}
+
+void HiPlayerImpl::SetPostProcessor()
+{
+    if (videoPostProcessorType_ != VideoPostProcessorType::NONE) {
+        videoDecoder_->SetPostProcessorType(videoPostProcessorType_);
+        videoDecoder_->SetPostProcessorOn(isPostProcessorOn_);
+        videoDecoder_->SetVideoWindowSize(postProcessorTargetWidth_, postProcessorTargetHeight_);
+    }
 }
 }  // namespace Media
 }  // namespace OHOS

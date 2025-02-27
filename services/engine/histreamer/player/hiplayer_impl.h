@@ -278,6 +278,7 @@ private:
     inline bool IsStatisticalInfoValid();
     void ReportAudioInterruptEvent();
     int32_t AdjustCachedDuration(int32_t cachedDuration);
+    void SetPostProcessor();
 
     bool isNetWorkPlay_ = false;
     bool isDump_ = false;
