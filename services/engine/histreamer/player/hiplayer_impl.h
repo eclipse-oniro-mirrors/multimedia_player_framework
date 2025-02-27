@@ -406,9 +406,9 @@ private:
     std::atomic<bool> isSaveInterruptEventNeeded_ {true};
     OHOS::AudioStandard::InterruptEvent interruptEvent_ = {
         .eventType = OHOS::AudioStandard::INTERRUPT_TYPE_END,
-        .forceType == OHOS::AudioStandard::INTERRUPT_SHARE,
-        .hintType == OHOS::AudioStandard::INTERRUPT_HINT_RESUME
-    }
+        .forceType = OHOS::AudioStandard::INTERRUPT_SHARE,
+        .hintType = OHOS::AudioStandard::INTERRUPT_HINT_RESUME
+    };
     bool isCalledBySystemApp_ { false };
 
     // post processor
