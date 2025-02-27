@@ -74,6 +74,10 @@ private:
     bool InitDataShareHelper();
     void ReleaseDataShareHelper();
     int32_t RegisterSource(const std::string &audioUri, const std::string &hapticUri);
+    void CreateCallbackThread(int32_t delayTime);
+    void DeleteCallbackThreadId(int32_t streamId);
+    void DeleteAllCallbackThreadId();
+    bool IsExitCallbackThreadId(int32_t streamId);
 
     std::shared_ptr<AudioHapticManager> audioHapticManager_ = nullptr;
     std::unordered_map<int32_t, std::shared_ptr<AudioHapticPlayer>> playerMap_;
@@ -95,6 +99,7 @@ private:
     bool isNoneHaptics_ = false;
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper_ = nullptr;
     std::shared_ptr<SystemTonePlayerFinishedAndErrorCallback> finishedAndErrorCallback_ = nullptr;
+    std::unordered_map<int32_t, std::thread::id> callbackThreadIdMap_;
 
     std::mutex systemTonePlayerMutex_;
 };

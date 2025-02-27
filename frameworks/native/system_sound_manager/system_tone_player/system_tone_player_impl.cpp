@@ -50,6 +50,7 @@ const std::string RINGTONE_PATH = "/media/audio/";
 const std::string STANDARD_HAPTICS_PATH = "/media/haptics/standard/synchronized/";
 const std::string GENTLE_HAPTICS_PATH = "/media/haptics/gentle/synchronized/";
 const std::string NON_SYNC_HAPTICS_PATH = "resource/media/haptics/standard/non-synchronized/";
+const int32_t DEFAULT_DELAY = 100;
 
 static std::string FormateHapticUri(const std::string &audioUri, ToneHapticsFeature feature)
 {
@@ -102,6 +103,7 @@ SystemTonePlayerImpl::SystemTonePlayerImpl(const shared_ptr<Context> &context,
 SystemTonePlayerImpl::~SystemTonePlayerImpl()
 {
     DeleteAllPlayer();
+    DeleteAllCallbackThreadId();
     if (audioHapticManager_ != nullptr) {
         ReleaseHapticsSourceIds();
         audioHapticManager_ = nullptr;
@@ -220,6 +222,7 @@ void SystemTonePlayerImpl::UpdateStreamId()
     if (playerMap_.count(streamId_) > 0) {
         DeletePlayer(streamId_);
     }
+    DeleteCallbackThreadId(streamId_);
 }
 
 SystemToneOptions SystemTonePlayerImpl::GetOptionsFromRingerMode()
@@ -436,12 +439,19 @@ int32_t SystemTonePlayerImpl::Start(const SystemToneOptions &systemToneOptions)
     bool actualMuteHaptics = ringerModeOptions.muteHaptics || systemToneOptions.muteHaptics || isHapticUriEmpty_ ||
         isNoneHaptics_;
     if (actualMuteAudio) {
+        int32_t delayTime = DEFAULT_DELAY;
         // the audio of system tone player has been muted. Only start vibrator.
         if (!actualMuteHaptics) {
+            if (!InitDataShareHelper()) {
+                return ERRCODE_IOERROR;
+            }
             std::string hapticUri = (configuredUri_ == NO_SYSTEM_SOUND) ?
                 defaultNonSyncHapticUri_ : hapticUriMap_[hapticsFeature_];
             SystemSoundVibrator::StartVibratorForSystemTone(ChangeHapticsUri(hapticUri));
+            delayTime = SystemSoundVibrator::GetVibratorDuration(ChangeHapticsUri(hapticUri));
+            ReleaseDataShareHelper();
         }
+        CreateCallbackThread(delayTime);
         return streamId_;
     }
     result = CreatePlayerWithOptions({actualMuteAudio, actualMuteHaptics});
@@ -483,6 +493,7 @@ int32_t SystemTonePlayerImpl::Release()
         return MSERR_OK;
     }
     DeleteAllPlayer();
+    DeleteAllCallbackThreadId();
     streamId_ = 0;
     configuredUri_ = "";
 
@@ -536,6 +547,7 @@ void SystemTonePlayerImpl::NotifyEndofStreamEvent(const int32_t &streamId)
     std::lock_guard<std::mutex> lock(systemTonePlayerMutex_);
     // onPlayFinished for a stream.
     DeletePlayer(streamId);
+    DeleteCallbackThreadId(streamId);
     if (finishedAndErrorCallback_ != nullptr) {
         finishedAndErrorCallback_->OnEndOfStream(streamId);
         MEDIA_LOGI("SystemTonePlayerImpl::NotifyEndofStreamEvent sreamId %{public}d", streamId);
@@ -668,7 +680,8 @@ bool SystemTonePlayerImpl::IsStreamIdExist(int32_t streamId)
 {
     MEDIA_LOGI("Query streamId: %{public}d", streamId);
     std::lock_guard<std::mutex> lock(systemTonePlayerMutex_);
-    return playerMap_.count(streamId) != 0 && playerMap_[streamId] != nullptr;
+    return (playerMap_.count(streamId) != 0 && playerMap_[streamId] != nullptr) ||
+        callbackThreadIdMap_.count(streamId) != 0;
 }
 
 int32_t SystemTonePlayerImpl::SetSystemTonePlayerFinishedAndErrorCallback(
@@ -796,6 +809,49 @@ void SystemTonePlayerImpl::ReleaseHapticsSourceIds()
             it->second = -1;
         }
     }
+}
+
+void SystemTonePlayerImpl::CreateCallbackThread(int32_t delayTime)
+{
+    delayTime = std::max(delayTime, DEFAULT_DELAY);
+    std::weak_ptr<SystemTonePlayerImpl> systemTonePlayerImpl = shared_from_this();
+    std::thread t = std::thread([systemTonePlayerImpl, streamId = streamId_, delayTime]() {
+        MEDIA_LOGI("CreateCallbackThread: streamId %{public}d, delayTime %{public}d", streamId, delayTime);
+        this_thread::sleep_for(std::chrono::milliseconds(delayTime));
+        std::shared_ptr<SystemTonePlayerImpl> player = systemTonePlayerImpl.lock();
+        if (player == nullptr) {
+            MEDIA_LOGE("The audio haptic player has been released.");
+            return;
+        }
+        if (player->IsExitCallbackThreadId(streamId)) {
+            player->NotifyEndofStreamEvent(streamId);
+        } else {
+            MEDIA_LOGI("Thread is not the same as the current thread, streamId %{public}d", streamId);
+        }
+    });
+    callbackThreadIdMap_[streamId_] = t.get_id();
+    t.detach();
+}
+
+void SystemTonePlayerImpl::DeleteCallbackThreadId(int32_t streamId)
+{
+    MEDIA_LOGI("Delete callback thread id for streamId %{public}d", streamId);
+    if (callbackThreadIdMap_.find(streamId) != callbackThreadIdMap_.end()) {
+        callbackThreadIdMap_.erase(streamId);
+    }
+}
+
+void SystemTonePlayerImpl::DeleteAllCallbackThreadId()
+{
+    MEDIA_LOGI("Delete all callback thread id!");
+    callbackThreadIdMap_.clear();
+}
+
+bool SystemTonePlayerImpl::IsExitCallbackThreadId(int32_t streamId)
+{
+    MEDIA_LOGI("Query streamId: %{public}d", streamId);
+    std::lock_guard<std::mutex> lock(systemTonePlayerMutex_);
+    return callbackThreadIdMap_.count(streamId) != 0 && callbackThreadIdMap_[streamId] == std::this_thread::get_id();
 }
 } // namesapce AudioStandard
 } // namespace OHOS

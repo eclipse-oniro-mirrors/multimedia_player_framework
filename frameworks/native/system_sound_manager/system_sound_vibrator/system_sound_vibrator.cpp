@@ -253,5 +253,52 @@ int32_t SystemSoundVibrator::StopVibrator()
 #endif
     return result;
 }
+
+int32_t SystemSoundVibrator::GetVibratorDuration(const std::string &hapticUri)
+{
+    int32_t ret = -1;
+#ifdef SUPPORT_VIBRATOR
+    int32_t fd = ExtractFd(hapticUri);
+    if (fd == -1) {
+        MEDIA_LOGI("hapticUri is not fd. Try to open it");
+        char realPathRes[PATH_MAX + 1] = {'\0'};
+        CHECK_AND_RETURN_RET_LOG((strlen(hapticUri.c_str()) < PATH_MAX) &&
+            (realpath(hapticUri.c_str(), realPathRes) != nullptr), MSERR_OPEN_FILE_FAILED, "Invalid file path length");
+        std::string realPathStr(realPathRes);
+        fd = open(realPathStr.c_str(), O_RDONLY);
+        if (fd == -1) {
+            MEDIA_LOGE("Failed to open hapticUri!");
+            return ret;
+        }
+    }
+
+    VibratorFileDescription vibratorFD{};
+    VibratorPackage vibratorPkg{};
+    struct stat64 statbuf = { 0 };
+    if (fstat64(fd, &statbuf) == 0) {
+        vibratorFD.fd = fd;
+        vibratorFD.offset = 0;
+        vibratorFD.length = statbuf.st_size;
+    } else {
+        close(fd);
+        MEDIA_LOGE("Failed to get file size!");
+        return ret;
+    }
+
+    int32_t result = Sensors::PreProcess(vibratorFD, vibratorPkg);
+    if (result != 0) {
+        MEDIA_LOGE("Failed to pre-process hapticUri!");
+        return ret;
+    }
+    int32_t delayTime = 0;
+    (void)Sensors::GetDelayTime(delayTime);
+    int32_t patternMaxIndex = vibratorPkg.patternNum - 1;
+    int32_t eventMaxIndex = vibratorPkg.patterns[patternMaxIndex].eventNum - 1;
+    ret = delayTime + vibratorPkg.patterns[patternMaxIndex].time +
+        vibratorPkg.patterns[patternMaxIndex].events[eventMaxIndex].time +
+        vibratorPkg.patterns[patternMaxIndex].events[eventMaxIndex].duration;
+#endif
+    return ret;
+}
 } // namesapce AudioStandard
 } // namespace OHOS

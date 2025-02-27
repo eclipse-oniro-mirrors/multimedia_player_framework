@@ -20,6 +20,7 @@
 #include <mutex>
 #include <string>
 #include <thread>
+#include <condition_variable>
 
 namespace OHOS {
 namespace Media {
@@ -34,6 +35,7 @@ public:
     static int32_t StartVibratorForSystemTone(const std::string &hapticUri);
     static int32_t StartVibratorForRingtone(const std::string &hapticUri);
     static int32_t StopVibrator();
+    static int32_t GetVibratorDuration(const std::string &hapticUri);
 
 private:
     static int32_t ExtractFd(const std::string &hapticsUri);
