@@ -387,6 +387,8 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::CreatePixelMapYuv(const std::sha
     auto surfaceBuffer = frameBuffer->memory_->GetSurfaceBuffer();
     CHECK_AND_RETURN_RET_LOG(surfaceBuffer != nullptr, nullptr, "srcSurfaceBuffer is nullptr");
 
+    pixelMapInfo.width = width;
+    pixelMapInfo.height = height;
     int32_t outputHeight = height;
     bufferMeta->Get<Tag::VIDEO_SLICE_HEIGHT>(outputHeight);
     pixelMapInfo.outputHeight = outputHeight;
@@ -474,14 +476,14 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::CreatePixelMapFromSurfaceBuffer(
 {
     CHECK_AND_RETURN_RET_LOG(surfaceBuffer != nullptr, nullptr, "surfaceBuffer is nullptr");
     auto getColorSpaceInfoRes = GetColorSpace(surfaceBuffer, pixelMapInfo);
-    InitializationOptions options = { .size = { .width = surfaceBuffer->GetWidth(),
-                                                .height = surfaceBuffer->GetHeight() } };
+    InitializationOptions options = { .size = { .width = pixelMapInfo.width,
+                                                .height = pixelMapInfo.height } };
     bool isHdr = pixelMapInfo.isHdr;
     options.srcPixelFormat = isHdr ? PixelFormat::YCBCR_P010 : PixelFormat::NV12;
     options.pixelFormat = isHdr ? PixelFormat::YCBCR_P010 : PixelFormat::NV12;
     options.useDMA = isHdr ? true : false;
     options.convertColorSpace.srcRange = pixelMapInfo.srcRange;
-    int32_t colorLength = surfaceBuffer->GetWidth() * surfaceBuffer->GetHeight() * PIXEL_SIZE_HDR_YUV;
+    int32_t colorLength = pixelMapInfo.width * pixelMapInfo.height * PIXEL_SIZE_HDR_YUV;
     colorLength = isHdr ? colorLength : colorLength / HDR_PIXEL_SIZE;
     std::shared_ptr<PixelMap> pixelMap;
 

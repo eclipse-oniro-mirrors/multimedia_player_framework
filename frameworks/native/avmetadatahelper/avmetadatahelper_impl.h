@@ -59,6 +59,8 @@ private:
         int32_t rotation = 0;
         PixelFormat pixelFormat = PixelFormat::NV12;
         bool isHdr = false;
+        int32_t width = 0;
+        int32_t height = 0;
         int32_t outputHeight = 0;
         uint8_t srcRange = 0;
         ColorManager::ColorSpaceName colorSpaceName = ColorManager::ColorSpaceName::NONE;
