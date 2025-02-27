@@ -416,7 +416,7 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::CreatePixelMapFromAVShareMemory(
     pixelMap = PixelMap::Create(reinterpret_cast<const uint32_t *>(pixelMap->GetPixels()),
                                 pixelMap->GetByteCount(), opts);
     sptr<SurfaceBuffer> surfaceBuffer = nullptr;
-    SetPixelMapYuvInfo(surfaceBuffer, pixelMap, pixelMapInfo);
+    SetPixelMapYuvInfo(surfaceBuffer, pixelMap, pixelMapInfo, false);
     return pixelMap;
 }
 
@@ -479,7 +479,8 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::CreatePixelMapFromSurfaceBuffer(
     bool isHdr = pixelMapInfo.isHdr;
     options.srcPixelFormat = isHdr ? PixelFormat::YCBCR_P010 : PixelFormat::NV12;
     options.pixelFormat = isHdr ? PixelFormat::YCBCR_P010 : PixelFormat::NV12;
-    options.useDMA = isHdr ? true : false;
+    options.useDMA = isHdr;
+    bool needModifyStride = false;
     options.convertColorSpace.srcRange = pixelMapInfo.srcRange;
     int32_t colorLength = surfaceBuffer->GetWidth() * surfaceBuffer->GetHeight() * PIXEL_SIZE_HDR_YUV;
     colorLength = isHdr ? colorLength : colorLength / HDR_PIXEL_SIZE;
@@ -510,9 +511,10 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::CreatePixelMapFromSurfaceBuffer(
         }
         pixelMap->SetPixelsAddr(surfaceBuffer->GetVirAddr(), surfaceBuffer.GetRefPtr(), surfaceBuffer->GetSize(),
                                 AllocatorType::DMA_ALLOC, FreeSurfaceBuffer);
+        needModifyStride = true;
     }
     
-    SetPixelMapYuvInfo(surfaceBuffer, pixelMap, pixelMapInfo);
+    SetPixelMapYuvInfo(surfaceBuffer, pixelMap, pixelMapInfo, needModifyStride);
 
     return pixelMap;
 }
@@ -550,7 +552,7 @@ int32_t AVMetadataHelperImpl::CopySurfaceBufferToPixelMap(sptr<SurfaceBuffer> &s
 }
 
 void AVMetadataHelperImpl::SetPixelMapYuvInfo(sptr<SurfaceBuffer> &surfaceBuffer, std::shared_ptr<PixelMap> pixelMap,
-                                              PixelMapInfo &pixelMapInfo)
+                                              PixelMapInfo &pixelMapInfo, bool needModifyStride)
 {
     CHECK_AND_RETURN_LOG(pixelMap != nullptr, "invalid pixelMap");
     uint8_t ratio = pixelMapInfo.isHdr ? HDR_PIXEL_SIZE : SDR_PIXEL_SIZE;
@@ -564,7 +566,7 @@ void AVMetadataHelperImpl::SetPixelMapYuvInfo(sptr<SurfaceBuffer> &surfaceBuffer
                                 .uvStride = srcWidth,
                                 .uvOffset = srcWidth * srcHeight};
 
-    if (surfaceBuffer == nullptr) {
+    if (surfaceBuffer == nullptr || !needModifyStride) {
         pixelMap->SetImageYUVInfo(yuvDataInfo);
         return;
     }

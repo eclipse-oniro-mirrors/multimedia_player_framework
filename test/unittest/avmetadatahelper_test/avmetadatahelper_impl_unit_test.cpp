@@ -220,7 +220,7 @@ HWTEST_F(AVMetadtahelperImplUnitTest, SetPixelMapYuvInfo, TestSize.Level1)
 
     AVMetadataHelperImpl::PixelMapInfo pixelMapInfo = { .pixelFormat = PixelFormat::NV12 };
     sptr<SurfaceBuffer> buffer = nullptr;
-    helper_->SetPixelMapYuvInfo(buffer, pixelMap, pixelMapInfo);
+    helper_->SetPixelMapYuvInfo(buffer, pixelMap, pixelMapInfo, false);
     YUVDataInfo yuvInfo;
     pixelMap->GetImageYUVInfo(yuvInfo);
     ASSERT_EQ(yuvInfo.yWidth, 1);

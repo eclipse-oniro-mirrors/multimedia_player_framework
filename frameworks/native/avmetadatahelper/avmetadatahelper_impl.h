@@ -103,7 +103,7 @@ private:
     std::shared_ptr<PixelMap> CreatePixelMapFromSurfaceBuffer(sptr<SurfaceBuffer> &mySurfaceBuffer,
                                                               PixelMapInfo &pixelMapInfo);
     void SetPixelMapYuvInfo(sptr<SurfaceBuffer> &surfaceBuffer, std::shared_ptr<PixelMap> pixelMap,
-                            PixelMapInfo &pixelMapInfo);
+                            PixelMapInfo &pixelMapInfo, bool needModifyStride);
     std::string pixelFormatToString(PixelFormat pixelFormat);
     static void ScalePixelMap(std::shared_ptr<PixelMap> &pixelMap, PixelMapInfo &info, const PixelMapParams &param);
     int32_t CopySurfaceBufferToPixelMap(sptr<SurfaceBuffer> &SurfaceBuffer,
