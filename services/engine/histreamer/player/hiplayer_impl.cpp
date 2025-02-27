@@ -3091,11 +3091,7 @@ Status HiPlayerImpl::LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFi
             FilterType::FILTERTYPE_VDEC);
         FALSE_RETURN_V(videoDecoder_ != nullptr, Status::ERROR_NULL_POINTER);
         videoDecoder_->Init(playerEventReceiver_, playerFilterCallback_);
-        if (videoPostProcessorType_ != VideoPostProcessorType::NONE) {
-            videoDecoder_->SetPostProcessorType(videoPostProcessorType_);
-            videoDecoder_->SetPostProcessorOn(isPostProcessorOn_);
-            videoDecoder_->SetVideoWindowSize(postProcessorTargetWidth_, postProcessorTargetHeight_);
-        }
+        SetPostProcessor();
         interruptMonitor_->RegisterListener(videoDecoder_);
         videoDecoder_->SetSyncCenter(syncManager_);
         videoDecoder_->SetCallingInfo(appUid_, appPid_, bundleName_, instanceId_);
@@ -3125,7 +3121,13 @@ Status HiPlayerImpl::LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFi
             MEDIA_LOG_D("HiPlayerImpl::LinkVideoDecoderFilter, and it's not drm-protected.");
         }
     }
+    completeState_.emplace_back(std::make_pair("VideoSink", false));
+    initialAVStates_.emplace_back(std::make_pair(EventType::EVENT_VIDEO_RENDERING_START, false));
+#ifdef SUPPORT_START_STOP_ON_DEMAND
+    return pipeline_->LinkFilters(preFilter, {videoDecoder_}, type, true);
+#else
     return pipeline_->LinkFilters(preFilter, {videoDecoder_}, type);
+#endif
 }
 #endif
 
@@ -3363,6 +3365,15 @@ void HiPlayerImpl::SetPerfRecEnabled(bool isPerfRecEnabled)
 {
     MEDIA_LOG_I("SetPerfRecEnabled %{public}d", isPerfRecEnabled);
     isPerfRecEnabled_ = isPerfRecEnabled;
+}
+
+void HiPlayerImpl::SetPostProcessor()
+{
+    if (videoPostProcessorType_ != VideoPostProcessorType::NONE) {
+        videoDecoder_->SetPostProcessorType(videoPostProcessorType_);
+        videoDecoder_->SetPostProcessorOn(isPostProcessorOn_);
+        videoDecoder_->SetVideoWindowSize(postProcessorTargetWidth_, postProcessorTargetHeight_);
+    }
 }
 }  // namespace Media
 }  // namespace OHOS
