@@ -1732,6 +1732,7 @@ bool HiPlayerImpl::IsNeedAudioSinkChangeTrack(std::vector<std::shared_ptr<Meta>>
 
     FALSE_RETURN_V(metaInfo[trackId]->GetData(Tag::AUDIO_SAMPLE_FORMAT, sampleFormat), true);
     FALSE_RETURN_V(metaInfo[currentAudioTrackId_]->GetData(Tag::AUDIO_SAMPLE_FORMAT, currentSampleFormat), true);
+    MEDIA_LOG_I("sampleformat: CurTrackId" PUBLIC_LOG_D32 " trackId" PUBLIC_LOG_D32, currentSampleFormat, sampleFormat);
     FALSE_RETURN_V(sampleFormat == currentSampleFormat, true);
 
     std::string mimeType;
@@ -2791,7 +2792,9 @@ void HiPlayerImpl::HandleAudioTrackChangeEvent(const Event& event)
             MEDIA_LOG_E("HandleAudioTrackChangeEvent audioDecoder change plugin error");
             return;
         }
-        audioSink_->RecordChangeTrack();
+        audioDecoder_->DoFlush();
+        audioSink_->DoFlush();
+        audioDecoder_->Start();
         if (IsNeedAudioSinkChangeTrack(metaInfo, trackId)) {
             MEDIA_LOG_I("AudioSink changeTrack in");
             if (Status::OK != audioSink_->ChangeTrack(metaInfo[trackId])) {
@@ -3233,8 +3236,8 @@ int32_t HiPlayerImpl::ExitSeekContinous(bool align, int64_t seekContinousBatchNo
     syncManager_->Seek(seekTimeUs, true);
     FALSE_RETURN_V_MSG_E(align, TransStatus(Status::OK), "dont need align");
     if (align && audioDecoder_ != nullptr && audioSink_ != nullptr) {
-        audioSink_->DoFlush();
         audioDecoder_->DoFlush();
+        audioSink_->DoFlush();
         seekAgent_ = std::make_shared<SeekAgent>(demuxer_);
         interruptMonitor_->RegisterListener(seekAgent_);
         auto res = seekAgent_->AlignAudioPosition(lastSeekContinousPos_);
