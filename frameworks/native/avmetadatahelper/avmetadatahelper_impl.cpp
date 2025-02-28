@@ -799,14 +799,15 @@ void AVMetadataHelperImpl::ScalePixelMap(
 std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameYuv(int64_t timeUs, int32_t option,
                                                               const PixelMapParams &param)
 {
-    CHECK_AND_RETURN_RET_LOG(avMetadataHelperService_ != nullptr, nullptr, "avmetadatahelper service does not exist.");
+    std::shared_ptr<IAVMetadataHelperService> avMetadataHelperService = avMetadataHelperService_;
+    CHECK_AND_RETURN_RET_LOG(avMetadataHelperService != nullptr, nullptr, "avmetadatahelper service does not exist.");
 
     concurrentWorkCount_++;
     ReportSceneCode(AV_META_SCENE_BATCH_HANDLE);
     OutputConfiguration config = { .dstWidth = param.dstWidth,
                                    .dstHeight = param.dstHeight,
                                    .colorFormat = param.colorFormat };
-    auto frameBuffer = avMetadataHelperService_->FetchFrameYuv(timeUs, option, config);
+    auto frameBuffer = avMetadataHelperService->FetchFrameYuv(timeUs, option, config);
     CHECK_AND_RETURN_RET(frameBuffer != nullptr && frameBuffer->memory_ != nullptr, nullptr);
     concurrentWorkCount_--;
     
@@ -858,6 +859,7 @@ void AVMetadataHelperImpl::Release()
     avMetadataHelperService_->Release();
     (void)MediaServiceFactory::GetInstance().DestroyAVMetadataHelperService(avMetadataHelperService_);
     avMetadataHelperService_ = nullptr;
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Release out", FAKE_POINTER(this));
 }
 } // namespace Media
 } // namespace OHOS
