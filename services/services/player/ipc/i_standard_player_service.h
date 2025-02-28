@@ -74,6 +74,7 @@ public:
         return ERR_OK;
     }
     virtual int32_t SetVolume(float leftVolume, float rightVolume) = 0;
+    virtual int32_t SetVolumeMode(int32_t mode) = 0;
     virtual int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) = 0;
     virtual int32_t GetCurrentTime(int32_t &currentTime) = 0;
     virtual int32_t GetVideoTrackInfo(std::vector<Format> &videoTrack) = 0;
@@ -179,6 +180,7 @@ public:
         RESET,
         RELEASE,
         SET_VOLUME,
+        SET_VOLUME_MODE,
         SEEK,
         GET_CURRENT_TIME,
         GET_PLAY_BACK_POSITION,

@@ -199,6 +199,8 @@ void PlayerServiceStub::FillPlayerFuncPart3()
         [this](MessageParcel &data, MessageParcel &reply) { return SetSuperResolution(data, reply); } };
     playerFuncs_[SET_VIDEO_WINDOW_SIZE] = { "Player::SetVideoWindowSize",
         [this](MessageParcel &data, MessageParcel &reply) { return SetVideoWindowSize(data, reply); } };
+    playerFuncs_[SET_VOLUME_MODE] = { "Player::SetVolumeMode",
+        [this](MessageParcel &data, MessageParcel &reply) { return SetVolumeMode(data, reply); } };
 }
 
 int32_t PlayerServiceStub::Init()
@@ -416,6 +418,13 @@ int32_t PlayerServiceStub::SetVolume(float leftVolume, float rightVolume)
     MediaTrace trace("PlayerServiceStub::SetVolume");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
     return playerServer_->SetVolume(leftVolume, rightVolume);
+}
+
+int32_t PlayerServiceStub::SetVolumeMode(int32_t mode)
+{
+    MediaTrace trace("PlayerServiceStub::SetVolumeMode");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->SetVolumeMode(mode);
 }
 
 int32_t PlayerServiceStub::Seek(int32_t mSeconds, PlayerSeekMode mode)
@@ -786,6 +795,13 @@ int32_t PlayerServiceStub::Release(MessageParcel &data, MessageParcel &reply)
 {
     (void)data;
     reply.WriteInt32(Release());
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::SetVolumeMode(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t mode = data.ReadInt32();
+    reply.WriteInt32(SetVolumeMode(mode));
     return MSERR_OK;
 }
 

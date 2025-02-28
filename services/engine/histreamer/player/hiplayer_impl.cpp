@@ -1348,6 +1348,19 @@ Status HiPlayerImpl::HandleSeekClosest(int64_t seekPos, int64_t seekTimeUs)
     return res;
 }
 
+int32_t HiPlayerImpl::SetVolumeMode(int32_t mode)
+{
+    MEDIA_LOG_D("SetVolumeMode in");
+    Status ret = Status::OK;
+    if (audioSink_ != nullptr) {
+        ret = audioSink_->SetVolumeMode(mode);
+    }
+    if (ret != Status::OK) {
+        MEDIA_LOG_E("SetVolume failed with error " PUBLIC_LOG_D32, static_cast<int>(ret));
+    }
+    return TransStatus(ret);
+}
+
 int32_t HiPlayerImpl::SetVolume(float leftVolume, float rightVolume)
 {
     MEDIA_LOG_D("SetVolume in");

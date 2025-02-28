@@ -745,6 +745,18 @@ int32_t PlayerServer::Release()
     return MSERR_OK;
 }
 
+int32_t PlayerServer::SetVolumeMode(int32_t mode)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (lastOpStatus_ == PLAYER_STATE_ERROR) {
+        MEDIA_LOGE("Can not SetVolume, currentState is PLAYER_STATE_ERROR");
+        return MSERR_INVALID_OPERATION;
+    }
+    MEDIA_LOGD("PlayerServer SetVolumeMode in mode %{public}d", mode);
+    (void)playerEngine_->SetVolumeMode(mode);
+    return MSERR_OK;
+}
+
 int32_t PlayerServer::SetVolume(float leftVolume, float rightVolume)
 {
     std::lock_guard<std::mutex> lock(mutex_);
