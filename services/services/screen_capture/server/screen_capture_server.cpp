@@ -3254,7 +3254,7 @@ int32_t ScreenCaptureServer::SetMaxVideoFrameRate(int32_t frameRate)
 
 ScreenScaleMode ScreenCaptureServer::GetScreenScaleMode(const AVScreenCaptureFillMode &fillMode)
 {
-    MEDIA_LOGI("ScreenCaptureServer::GetScreenScaleMode in!");
+    MEDIA_LOGI("ScreenCaptureServer::GetScreenScaleMode in, fillMode: %{public}d", fillMode);
     static const std::map<AVScreenCaptureFillMode, ScreenScaleMode> modeMap = {
         {PRESERVE_ASPECT_RATIO, ScreenScaleMode::UNISCALE_MODE},
         {SCALE_TO_FILL, ScreenScaleMode::FILL_MODE}
