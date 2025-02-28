@@ -43,17 +43,17 @@ class FFI_EXPORT CJSoundPool : public OHOS::FFI::FFIData {
     DECL_TYPE(CJSoundPool, OHOS::FFI::FFIData)
 public:
     static int64_t CreatSoundPool(int32_t maxStreams, AudioStandard::CAudioRendererInfo info, int32_t &errorcode);
-    int32_t Load(std::shared_ptr<ISoundPool> soundPool, char *uri, int32_t &errorcode);
-    int32_t Load(std::shared_ptr<ISoundPool> soundPool, int32_t fd, int64_t offset, int64_t length, int32_t &errorcode);
-    int32_t Play(std::shared_ptr<ISoundPool> soundPool, int32_t soundID, int32_t &errorcode);
-    int32_t Play(std::shared_ptr<ISoundPool> soundPool, int32_t soundID, CPlayParameters cParams, int32_t &errorcode);
-    int32_t Stop(std::shared_ptr<ISoundPool> soundPool, int32_t streamID);
-    int32_t SetLoop(std::shared_ptr<ISoundPool> soundPool, int32_t streamID, int32_t loop);
-    int32_t SetPriority(std::shared_ptr<ISoundPool> soundPool, int32_t streamID, int32_t priority);
-    int32_t SetRate(std::shared_ptr<ISoundPool> soundPool, int32_t streamID, int32_t rate);
-    int32_t SetVolume(std::shared_ptr<ISoundPool> soundPool, int32_t streamID, float leftVolume, float rightVolume);
-    int32_t Unload(std::shared_ptr<ISoundPool> soundPool, int32_t soundID);
-    int32_t Release(std::shared_ptr<ISoundPool> soundPool);
+    int32_t Load(char *uri, int32_t &errorcode);
+    int32_t Load(int32_t fd, int64_t offset, int64_t length, int32_t &errorcode);
+    int32_t Play(int32_t soundID, int32_t &errorcode);
+    int32_t Play(int32_t soundID, CPlayParameters cParams, int32_t &errorcode);
+    int32_t Stop(int32_t streamID);
+    int32_t SetLoop(int32_t streamID, int32_t loop);
+    int32_t SetPriority(int32_t streamID, int32_t priority);
+    int32_t SetRate(int32_t streamID, int32_t rate);
+    int32_t SetVolume(int32_t streamID, float leftVolume, float rightVolume);
+    int32_t Unload(int32_t soundID);
+    int32_t Release();
     std::shared_ptr<ISoundPool> soundPool_;
     std::shared_ptr<ISoundPoolCallback> callbackCj_;
 };

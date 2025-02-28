@@ -34,14 +34,9 @@ extern "C"
         auto cjSoundPool = FFIData::GetData<CJSoundPool>(id);
         if (!cjSoundPool) {
             MEDIA_LOGE("[CJSoundPool] instance is nullptr!");
-            return -1;
+            return ERR_INVALID_INSTANCE_CODE;
         }
-        std::shared_ptr<ISoundPool> soundPool_ = cjSoundPool->soundPool_;
-        if (!soundPool_) {
-            MEDIA_LOGE("[CJSoundPool] soundPool_ is nullptr!");
-            return -1;
-        }
-        return cjSoundPool->Load(soundPool_, uri, *errorcode);
+        return cjSoundPool->Load(uri, *errorcode);
     }
 
     int32_t FfiSoundPoolLoad(int64_t id, int32_t fd, int64_t offset, int64_t length, int32_t *errorcode)
@@ -49,14 +44,9 @@ extern "C"
         auto cjSoundPool = FFIData::GetData<CJSoundPool>(id);
         if (!cjSoundPool) {
             MEDIA_LOGE("[CJSoundPool] instance is nullptr!");
-            return -1;
+            return ERR_INVALID_INSTANCE_CODE;
         }
-        std::shared_ptr<ISoundPool> soundPool_ = cjSoundPool->soundPool_;
-        if (!soundPool_) {
-            MEDIA_LOGE("[CJSoundPool] soundPool_ is nullptr!");
-            return -1;
-        }
-        return cjSoundPool->Load(soundPool_, fd, offset, length, *errorcode);
+        return cjSoundPool->Load(fd, offset, length, *errorcode);
     }
 
     int32_t FfiSoundPoolPlayParam(int64_t id, int32_t soundID, CPlayParameters params, int32_t *errorcode)
@@ -64,14 +54,9 @@ extern "C"
         auto cjSoundPool = FFIData::GetData<CJSoundPool>(id);
         if (!cjSoundPool) {
             MEDIA_LOGE("[CJSoundPool] instance is nullptr!");
-            return -1;
+            return ERR_INVALID_INSTANCE_CODE;
         }
-        std::shared_ptr<ISoundPool> soundPool_ = cjSoundPool->soundPool_;
-        if (!soundPool_) {
-            MEDIA_LOGE("[CJSoundPool] soundPool_ is nullptr!");
-            return -1;
-        }
-        return cjSoundPool->Play(soundPool_, soundID, params, *errorcode);
+        return cjSoundPool->Play(soundID, params, *errorcode);
     }
 
     int32_t FfiSoundPoolPlay(int64_t id, int32_t soundID, int32_t *errorcode)
@@ -79,14 +64,9 @@ extern "C"
         auto cjSoundPool = FFIData::GetData<CJSoundPool>(id);
         if (!cjSoundPool) {
             MEDIA_LOGE("[CJSoundPool] instance is nullptr!");
-            return -1;
+            return ERR_INVALID_INSTANCE_CODE;
         }
-        std::shared_ptr<ISoundPool> soundPool_ = cjSoundPool->soundPool_;
-        if (!soundPool_) {
-            MEDIA_LOGE("[CJSoundPool] soundPool_ is nullptr!");
-            return -1;
-        }
-        return cjSoundPool->Play(soundPool_, soundID, *errorcode);
+        return cjSoundPool->Play(soundID, *errorcode);
     }
 
     int32_t FfiSoundPoolStop(int64_t id, int32_t streamID)
@@ -96,12 +76,7 @@ extern "C"
             MEDIA_LOGE("[CJSoundPool] instance is nullptr!");
             return ERR_INVALID_INSTANCE_CODE;
         }
-        std::shared_ptr<ISoundPool> soundPool_ = cjSoundPool->soundPool_;
-        if (!soundPool_) {
-            MEDIA_LOGE("[CJSoundPool] soundPool_ is nullptr!");
-            return ERR_INVALID_INSTANCE_CODE;
-        }
-        return cjSoundPool->Stop(soundPool_, streamID);
+        return cjSoundPool->Stop(streamID);
     }
 
     int32_t FfiSoundPoolSetLoop(int64_t id, int32_t streamID, int32_t loop)
@@ -111,12 +86,7 @@ extern "C"
             MEDIA_LOGE("[CJSoundPool] instance is nullptr!");
             return ERR_INVALID_INSTANCE_CODE;
         }
-        std::shared_ptr<ISoundPool> soundPool_ = cjSoundPool->soundPool_;
-        if (!soundPool_) {
-            MEDIA_LOGE("[CJSoundPool] soundPool_ is nullptr!");
-            return ERR_INVALID_INSTANCE_CODE;
-        }
-        return cjSoundPool->SetLoop(soundPool_, streamID, loop);
+        return cjSoundPool->SetLoop(streamID, loop);
     }
 
     int32_t FfiSoundPoolSetPriority(int64_t id, int32_t streamID, int32_t priority)
@@ -126,12 +96,7 @@ extern "C"
             MEDIA_LOGE("[CJSoundPool] instance is nullptr!");
             return ERR_INVALID_INSTANCE_CODE;
         }
-        std::shared_ptr<ISoundPool> soundPool_ = cjSoundPool->soundPool_;
-        if (!soundPool_) {
-            MEDIA_LOGE("[CJSoundPool] soundPool_ is nullptr!");
-            return ERR_INVALID_INSTANCE_CODE;
-        }
-        return cjSoundPool->SetLoop(soundPool_, streamID, priority);
+        return cjSoundPool->SetLoop(streamID, priority);
     }
 
     int32_t FfiSoundPoolSetRate(int64_t id, int32_t streamID, int32_t rate)
@@ -141,12 +106,7 @@ extern "C"
             MEDIA_LOGE("[CJSoundPool] instance is nullptr!");
             return ERR_INVALID_INSTANCE_CODE;
         }
-        std::shared_ptr<ISoundPool> soundPool_ = cjSoundPool->soundPool_;
-        if (!soundPool_) {
-            MEDIA_LOGE("[CJSoundPool] soundPool_ is nullptr!");
-            return ERR_INVALID_INSTANCE_CODE;
-        }
-        return cjSoundPool->SetRate(soundPool_, streamID, rate);
+        return cjSoundPool->SetRate(streamID, rate);
     }
 
     int32_t FfiSoundPoolSetVolume(int64_t id, int32_t streamID, float leftVolume, float rightVolume)
@@ -156,12 +116,7 @@ extern "C"
             MEDIA_LOGE("[CJSoundPool] instance is nullptr!");
             return ERR_INVALID_INSTANCE_CODE;
         }
-        std::shared_ptr<ISoundPool> soundPool_ = cjSoundPool->soundPool_;
-        if (!soundPool_) {
-            MEDIA_LOGE("[CJSoundPool] soundPool_ is nullptr!");
-            return ERR_INVALID_INSTANCE_CODE;
-        }
-        return cjSoundPool->SetVolume(soundPool_, streamID, leftVolume, rightVolume);
+        return cjSoundPool->SetVolume(streamID, leftVolume, rightVolume);
     }
 
     int32_t FfiSoundPoolUnload(int64_t id, int32_t soundID)
@@ -171,12 +126,7 @@ extern "C"
             MEDIA_LOGE("[CJSoundPool] instance is nullptr!");
             return ERR_INVALID_INSTANCE_CODE;
         }
-        std::shared_ptr<ISoundPool> soundPool_ = cjSoundPool->soundPool_;
-        if (!soundPool_) {
-            MEDIA_LOGE("[CJSoundPool] soundPool_ is nullptr!");
-            return ERR_INVALID_INSTANCE_CODE;
-        }
-        return cjSoundPool->Unload(soundPool_, soundID);
+        return cjSoundPool->Unload(soundID);
     }
 
     int32_t FfiSoundPoolRelease(int64_t id)
@@ -186,12 +136,7 @@ extern "C"
             MEDIA_LOGE("[CJSoundPool] instance is nullptr!");
             return ERR_INVALID_INSTANCE_CODE;
         }
-        std::shared_ptr<ISoundPool> soundPool_ = cjSoundPool->soundPool_;
-        if (!soundPool_) {
-            MEDIA_LOGE("[CJSoundPool] soundPool_ is nullptr!");
-            return ERR_INVALID_INSTANCE_CODE;
-        }
-        return cjSoundPool->Release(soundPool_);
+        return cjSoundPool->Release();
     }
 
     void FfiSoundPoolOnLoadCompleted(int64_t id, int64_t callbackId)
