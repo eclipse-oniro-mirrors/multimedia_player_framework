@@ -673,8 +673,6 @@ ScreenCaptureServer::~ScreenCaptureServer()
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
     ReleaseInner();
-    screenCaptureObserverCb_ = nullptr;
-    screenConnectListener_ = nullptr;
     CloseFd();
 }
 
@@ -986,8 +984,9 @@ int32_t ScreenCaptureServer::CheckAudioCapInfo(AudioCaptureInfo &audioCapInfo)
 int32_t ScreenCaptureServer::CheckVideoCapInfo(VideoCaptureInfo &videoCapInfo)
 {
     MEDIA_LOGD("CheckVideoCapInfo start, videoFrameWidth:%{public}d, videoFrameHeight:%{public}d, "
-        "videoSource:%{public}d, state:%{public}d.", videoCapInfo.videoFrameWidth, videoCapInfo.videoFrameHeight,
-        videoCapInfo.videoSource, videoCapInfo.state);
+        "videoSource:%{public}d, state:%{public}d, screenCaptureFillMode:%{public}d.", videoCapInfo.videoFrameWidth,
+        videoCapInfo.videoFrameHeight, videoCapInfo.videoSource, videoCapInfo.state,
+        videoCapInfo.screenCaptureFillMode);
     if (videoCapInfo.videoFrameWidth == 0 && videoCapInfo.videoFrameHeight == 0) {
         MEDIA_LOGD("videoCap IGNORED width:%{public}d, height:%{public}d, source:%{public}d, state:%{public}d",
             videoCapInfo.videoFrameWidth, videoCapInfo.videoFrameHeight, videoCapInfo.videoSource, videoCapInfo.state);
@@ -1321,7 +1320,7 @@ int32_t ScreenCaptureServer::StartFileMicAudioCapture()
         "micCapInfo.state:%{public}d.",
         FAKE_POINTER(this), captureConfig_.dataType, captureConfig_.audioInfo.micCapInfo.state);
 #ifdef SUPPORT_CALL
-    if (InCallObserver::GetInstance().IsInCall() && !IsTelInCallSkipList()) {
+    if (InCallObserver::GetInstance().IsInCall(true) && !IsTelInCallSkipList()) {
         MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " skip creating micAudioCapture", FAKE_POINTER(this));
         return MSERR_OK;
     }
@@ -2384,12 +2383,9 @@ int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string &name, sptr<O
 int32_t ScreenCaptureServer::PrepareVirtualScreenMirror()
 {
     for (size_t i = 0; i < contentFilter_.windowIDsVec.size(); i++) {
-        MEDIA_LOGI("After CreateVirtualScreen windowIDsVec value :%{public}" PRIu64, contentFilter_.windowIDsVec[i]);
+        MEDIA_LOGD("After CreateVirtualScreen windowIDsVec value :%{public}" PRIu64, contentFilter_.windowIDsVec[i]);
     }
-    if (GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"]
-            .compare(appName_) == 0) {
-        SetScreenScaleMode();
-    }
+    SetScreenScaleMode();
     Rosen::DisplayManager::GetInstance().SetVirtualScreenBlackList(virtualScreenId_, contentFilter_.windowIDsVec,
         surfaceIdList_);
     MEDIA_LOGI("PrepareVirtualScreenMirror screenId: %{public}" PRIu64, virtualScreenId_);
@@ -2426,7 +2422,7 @@ uint64_t ScreenCaptureServer::GetDisplayIdOfWindows(uint64_t displayId)
         MEDIA_LOGI("MakeVirtualScreenMirror 0x%{public}06" PRIXPTR
             "GetWindowDisplayIds ret:%{public}d", FAKE_POINTER(this), ret);
         for (const auto& pair : windowDisplayIdMap) {
-            MEDIA_LOGI("MakeVirtualScreenMirror 0x%{public}06" PRIXPTR " WindowId:%{public}" PRIu64
+            MEDIA_LOGD("MakeVirtualScreenMirror 0x%{public}06" PRIXPTR " WindowId:%{public}" PRIu64
                 " in DisplayId:%{public}" PRIu64, FAKE_POINTER(this), pair.first, pair.second);
             defaultDisplayIdValue = pair.second;
         }
@@ -2631,7 +2627,7 @@ int32_t ScreenCaptureServer::GetMissionIds(std::vector<uint64_t> &missionIds)
     for (int32_t i = 0; i < size; i++) {
         int32_t taskId = taskIDListTemp.front();
         taskIDListTemp.pop_front();
-        MEDIA_LOGI("ScreenCaptureServer::GetMissionIds taskId : %{public}s", std::to_string(taskId).c_str());
+        MEDIA_LOGD("ScreenCaptureServer::GetMissionIds taskId : %{public}s", std::to_string(taskId).c_str());
         uint64_t uintNum = static_cast<uint64_t>(taskId);
         missionIds.push_back(uintNum);
     }
@@ -2891,7 +2887,8 @@ int32_t ScreenCaptureServer::SetMicrophoneEnabled(bool isMicrophone)
 int32_t ScreenCaptureServer::SetMicrophoneOn()
 {
 #ifdef SUPPORT_CALL
-    if (InCallObserver::GetInstance().IsInCall() && !IsTelInCallSkipList()) {
+    if (InCallObserver::GetInstance().IsInCall(true) && !IsTelInCallSkipList()) {
+        MEDIA_LOGE("Try SetMicrophoneOn But In Call");
         NotifyStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE);
         return MSERR_UNKNOWN;
     }
@@ -2916,11 +2913,11 @@ int32_t ScreenCaptureServer::SetMicrophoneOn()
         MEDIA_LOGE("AudioCapturerState invalid");
     }
     if (captureConfig_.dataType == DataType::CAPTURE_FILE) {
-        usleep(AUDIO_CHANGE_TIME);
         CHECK_AND_RETURN_RET_LOG(micAudioCapture_ && micAudioCapture_->GetAudioCapturerState() == CAPTURER_RECORDING,
-            MSERR_UNKNOWN, "micAudioCapture is not recording");
+            MSERR_OK, "micAudioCapture is not recording");
         if (innerAudioCapture_ && innerAudioCapture_->GetAudioCapturerState() == CAPTURER_RECORDING &&
             audioSource_ && audioSource_->GetSpeakerAliveStatus() && !audioSource_->GetIsInVoIPCall()) {
+            usleep(AUDIO_CHANGE_TIME);
             ret = innerAudioCapture_->Pause();
             CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "innerAudioCapture Pause failed");
         }
@@ -2935,8 +2932,8 @@ int32_t ScreenCaptureServer::SetMicrophoneOff()
         ret = innerAudioCapture_->Resume();
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "innerAudioCapture Resume failed");
     }
-    usleep(AUDIO_CHANGE_TIME);
     if (micAudioCapture_ && micAudioCapture_->GetAudioCapturerState() == CAPTURER_RECORDING) {
+        usleep(AUDIO_CHANGE_TIME);
         ret = micAudioCapture_->Pause();
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "micAudioCapture Pause failed");
     }
@@ -2965,7 +2962,8 @@ int32_t ScreenCaptureServer::ReStartMicForVoIPStatusSwitch()
     StopMicAudioCapture();
     if (isMicrophoneSwitchTurnOn_) {
 #ifdef SUPPORT_CALL
-        if (InCallObserver::GetInstance().IsInCall() && !IsTelInCallSkipList()) {
+        if (InCallObserver::GetInstance().IsInCall(true) && !IsTelInCallSkipList()) {
+            MEDIA_LOGE("Try ReStartMicForVoIPStatusSwitch But In Call");
             NotifyStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE);
             return MSERR_UNKNOWN;
         }
@@ -2992,11 +2990,11 @@ int32_t ScreenCaptureServer::OnVoIPStatusChanged(bool isInVoIPCall)
         ReStartMicForVoIPStatusSwitch();
     } else {
         ReStartMicForVoIPStatusSwitch();
-        usleep(AUDIO_CHANGE_TIME);
         CHECK_AND_RETURN_RET_LOG(innerAudioCapture_, MSERR_UNKNOWN, "innerAudioCapture is nullptr");
         if (innerAudioCapture_->GetAudioCapturerState() == CAPTURER_RECORDING &&
             micAudioCapture_ && micAudioCapture_->GetAudioCapturerState() == CAPTURER_RECORDING &&
             audioSource_ && audioSource_->GetSpeakerAliveStatus()) {
+            usleep(AUDIO_CHANGE_TIME);
             ret = innerAudioCapture_->Pause();
             CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "innerAudioCapture Pause failed");
         }
@@ -3007,7 +3005,7 @@ int32_t ScreenCaptureServer::OnVoIPStatusChanged(bool isInVoIPCall)
 #ifdef SUPPORT_CALL
 int32_t ScreenCaptureServer::TelCallStateUpdated(bool isInTelCall)
 {
-    if (isInTelCall_ == isInTelCall) {
+    if (isInTelCall_.load() == isInTelCall) {
         return MSERR_OK;
     }
     isInTelCall_.store(isInTelCall);
@@ -3019,7 +3017,7 @@ int32_t ScreenCaptureServer::TelCallStateUpdated(bool isInTelCall)
 
 int32_t ScreenCaptureServer::TelCallAudioStateUpdated(bool isInTelCallAudio)
 {
-    if (IsTelInCallSkipList() || isInTelCallAudio_ == isInTelCallAudio) {
+    if (IsTelInCallSkipList() || isInTelCallAudio_.load() == isInTelCallAudio) {
         return MSERR_OK;
     }
     isInTelCallAudio_.store(isInTelCallAudio);
@@ -3031,8 +3029,9 @@ int32_t ScreenCaptureServer::TelCallAudioStateUpdated(bool isInTelCallAudio)
 
 int32_t ScreenCaptureServer::OnTelCallStart()
 {
+    MEDIA_LOGI("OnTelCallStart InTelCall:%{public}d, Audio:%{public}d", isInTelCall_.load(), isInTelCallAudio_.load());
     int32_t ret = MSERR_OK;
-    if (!isInTelCall_ && !isInTelCallAudio_) {
+    if (!isInTelCall_.load() && !isInTelCallAudio_.load()) {
         return ret;
     }
     if (innerAudioCapture_ && innerAudioCapture_->GetAudioCapturerState() == CAPTURER_PAUSED) {
@@ -3052,8 +3051,9 @@ int32_t ScreenCaptureServer::OnTelCallStart()
 
 int32_t ScreenCaptureServer::OnTelCallStop()
 {
+    MEDIA_LOGI("OnTelCallStop InTelCall:%{public}d, Audio:%{public}d", isInTelCall_.load(), isInTelCallAudio_.load());
     int32_t ret = MSERR_OK;
-    if (isInTelCall_ || isInTelCallAudio_) {
+    if (isInTelCall_.load() || isInTelCallAudio_.load()) {
         return ret;
     }
     if (micAudioCapture_) {
@@ -3077,9 +3077,9 @@ int32_t ScreenCaptureServer::OnTelCallStop()
         }
     }
     if (captureConfig_.dataType == DataType::CAPTURE_FILE) {
-        usleep(AUDIO_CHANGE_TIME);
         CHECK_AND_RETURN_RET_LOG(micAudioCapture_ && micAudioCapture_->GetAudioCapturerState() == CAPTURER_RECORDING,
-            MSERR_UNKNOWN, "micAudioCapture is not recording");
+            MSERR_OK, "micAudioCapture is not recording");
+        usleep(AUDIO_CHANGE_TIME);
         if (innerAudioCapture_ && innerAudioCapture_->GetAudioCapturerState() == CAPTURER_RECORDING &&
             audioSource_ && audioSource_->GetSpeakerAliveStatus() && !audioSource_->GetIsInVoIPCall()) {
             ret = innerAudioCapture_->Pause();
@@ -3211,7 +3211,7 @@ int32_t ScreenCaptureServer::SkipPrivacyMode(std::vector<uint64_t> &windowIDsVec
     MEDIA_LOGI("ScreenCaptureServer::SkipPrivacyMode, windowIDsVec size:%{public}d",
         static_cast<int32_t>(windowIDsVec.size()));
     for (size_t i = 0; i < windowIDsVec.size(); i++) {
-        MEDIA_LOGI("SkipPrivacyMode windowIDsVec value :%{public}" PRIu64, windowIDsVec[i]);
+        MEDIA_LOGD("SkipPrivacyMode windowIDsVec value :%{public}" PRIu64, windowIDsVec[i]);
     }
     skipPrivacyWindowIDsVec_.assign(windowIDsVec.begin(), windowIDsVec.end());
     if (captureState_ != AVScreenCaptureState::STARTED) { // Before Start
@@ -3259,6 +3259,26 @@ int32_t ScreenCaptureServer::SetMaxVideoFrameRate(int32_t frameRate)
     return MSERR_OK;
 }
 
+ScreenScaleMode ScreenCaptureServer::GetScreenScaleMode(const AVScreenCaptureFillMode &fillMode)
+{
+    MEDIA_LOGI("ScreenCaptureServer::GetScreenScaleMode in, fillMode: %{public}d", fillMode);
+    static const std::map<AVScreenCaptureFillMode, ScreenScaleMode> modeMap = {
+        {PRESERVE_ASPECT_RATIO, ScreenScaleMode::UNISCALE_MODE},
+        {SCALE_TO_FILL, ScreenScaleMode::FILL_MODE}
+    };
+    ScreenScaleMode scaleMode = ScreenScaleMode::UNISCALE_MODE;
+    auto iter = modeMap.find(fillMode);
+    if (iter != modeMap.end()) {
+        scaleMode = iter->second;
+    }
+    if (GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"]
+            .compare(appName_) == 0) {
+        scaleMode = ScreenScaleMode::FILL_MODE;
+    }
+    MEDIA_LOGI("ScreenCaptureServer::GetScreenScaleMode succeed, scaleMode: %{public}d", scaleMode);
+    return scaleMode;
+}
+
 int32_t ScreenCaptureServer::SetScreenScaleMode()
 {
     MediaTrace trace("ScreenCaptureServer::SetScreenScaleMode");
@@ -3266,7 +3286,7 @@ int32_t ScreenCaptureServer::SetScreenScaleMode()
     CHECK_AND_RETURN_RET_LOG(virtualScreenId_ != SCREEN_ID_INVALID, MSERR_INVALID_VAL,
                              "SetScreenScaleMode failed virtual screen not init");
     auto ret = ScreenManager::GetInstance().SetVirtualMirrorScreenScaleMode(
-        virtualScreenId_, OHOS::Rosen::ScreenScaleMode::FILL_MODE);
+        virtualScreenId_, GetScreenScaleMode(captureConfig_.videoInfo.videoCapInfo.screenCaptureFillMode));
     if (ret != DMError::DM_OK) {
         MEDIA_LOGW("SetScreenScaleMode failed, ret: %{public}d", ret);
         return static_cast<int32_t>(ret);
@@ -3396,7 +3416,6 @@ int32_t ScreenCaptureServer::StopScreenCaptureInner(AVScreenCaptureStateCode sta
         audioSource_->UnregisterAudioRendererEventListener(audioSource_->GetAppPid());
     }
     DisplayManager::GetInstance().UnregisterPrivateWindowListener(displayListener_);
-    displayListener_ = nullptr;
     if (captureState_ == AVScreenCaptureState::CREATED || captureState_ == AVScreenCaptureState::POPUP_WINDOW ||
         captureState_ == AVScreenCaptureState::STARTING) {
         captureState_ = AVScreenCaptureState::STOPPED;
@@ -3411,7 +3430,6 @@ int32_t ScreenCaptureServer::StopScreenCaptureInner(AVScreenCaptureStateCode sta
         return MSERR_OK;
     }
     CHECK_AND_RETURN_RET(captureState_ != AVScreenCaptureState::STOPPED, MSERR_OK);
-
     int32_t ret = MSERR_OK;
     if (captureConfig_.dataType == DataType::CAPTURE_FILE) {
         ret = StopScreenCaptureRecorder();
@@ -3426,11 +3444,13 @@ int32_t ScreenCaptureServer::StopScreenCaptureInner(AVScreenCaptureStateCode sta
     CHECK_AND_RETURN_RET_LOG(captureState_ == AVScreenCaptureState::STARTED, ret, "state:%{public}d", captureState_);
     SetErrorInfo(MSERR_OK, "normal stopped", StopReason::NORMAL_STOPPED, IsUserPrivacyAuthorityNeeded());
     PostStopScreenCapture(stateCode);
-    captureState_ = AVScreenCaptureState::STOPPED;
 #ifdef SUPPORT_CALL
     InCallObserver::GetInstance().UnregisterInCallObserverCallBack(screenCaptureObserverCb_);
 #endif
     AccountObserver::GetInstance().UnregisterAccountObserverCallBack(screenCaptureObserverCb_);
+    if (screenCaptureObserverCb_) {
+        screenCaptureObserverCb_->Release();
+    }
     ScreenManager::GetInstance().UnregisterScreenListener(screenConnectListener_);
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StopScreenCaptureInner end.", FAKE_POINTER(this));
     return ret;
@@ -3485,6 +3505,7 @@ void ScreenCaptureServer::PostStopScreenCapture(AVScreenCaptureStateCode stateCo
     RemoveStartedSessionIdList(this->sessionId_);
     MEDIA_LOGI("PostStopScreenCapture sessionId: %{public}d is removed from list, list_size is %{public}d.",
         this->sessionId_, static_cast<uint32_t>(ScreenCaptureServer::startedSessionIDList_.size()));
+    captureState_ = AVScreenCaptureState::STOPPED;
 }
 
 int32_t ScreenCaptureServer::StopScreenCapture()
@@ -3572,7 +3593,7 @@ bool ScreenCaptureObserverCallBack::NotifyStopAndRelease(AVScreenCaptureStateCod
 #ifdef SUPPORT_CALL
 bool ScreenCaptureObserverCallBack::TelCallStateUpdated(bool isInCall)
 {
-    MEDIA_LOGI("ScreenCaptureObserverCallBack::TelCallStateUpdated");
+    MEDIA_LOGI("ScreenCaptureObserverCallBack::TelCallStateUpdated InCall:%{public}d", isInCall);
     auto scrServer = screenCaptureServer_.lock();
     if (scrServer && !scrServer->IsTelInCallSkipList()) {
         scrServer->TelCallStateUpdated(isInCall);
@@ -3582,7 +3603,7 @@ bool ScreenCaptureObserverCallBack::TelCallStateUpdated(bool isInCall)
 
 bool ScreenCaptureObserverCallBack::NotifyTelCallStateUpdated(bool isInCall)
 {
-    MEDIA_LOGI("ScreenCaptureObserverCallBack::NotifyTelCallStateUpdated START.");
+    MEDIA_LOGD("ScreenCaptureObserverCallBack::NotifyTelCallStateUpdated START InCall:%{public}d", isInCall);
     bool ret = true;
     auto task = std::make_shared<TaskHandler<void>>([&, this, isInCall] {
         ret = TelCallStateUpdated(isInCall);
@@ -3594,9 +3615,15 @@ bool ScreenCaptureObserverCallBack::NotifyTelCallStateUpdated(bool isInCall)
 }
 #endif
 
+void ScreenCaptureObserverCallBack::Release()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    taskQueObserverCb_.Stop();
+}
+
 ScreenCaptureObserverCallBack::~ScreenCaptureObserverCallBack()
 {
-    taskQueObserverCb_.Stop();
+    std::lock_guard<std::mutex> lock(mutex_);
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
@@ -3861,7 +3888,7 @@ void AudioDataSource::TelCallAudioStateUpdate(
         if (!changeInfo) {
             continue;
         }
-        MEDIA_LOGI("Client pid : %{public}d, State : %{public}d, usage : %{public}d",
+        MEDIA_LOGD("Client pid : %{public}d, State : %{public}d, usage : %{public}d",
             changeInfo->clientPid, static_cast<int32_t>(changeInfo->rendererState),
             static_cast<int32_t>(changeInfo->rendererInfo.streamUsage));
         if (changeInfo->rendererInfo.streamUsage ==
@@ -3886,7 +3913,7 @@ bool AudioDataSource::HasSpeakerStream(
         if (!changeInfo) {
             continue;
         }
-        MEDIA_LOGI("ChangeInfo Id: %{public}d, Client pid : %{public}d, State : %{public}d, DeviceType : %{public}d",
+        MEDIA_LOGD("ChangeInfo Id: %{public}d, Client pid : %{public}d, State : %{public}d, DeviceType : %{public}d",
             changeInfoIndex, changeInfo->clientPid, static_cast<int32_t>(changeInfo->rendererState),
             static_cast<int32_t>(changeInfo->outputDeviceInfo.deviceType_));
         if (changeInfo->outputDeviceInfo.deviceType_ == DEVICE_TYPE_WIRED_HEADSET ||
@@ -3928,7 +3955,7 @@ bool AudioDataSource::HasVoIPStream(
         if (!changeInfo) {
             continue;
         }
-        MEDIA_LOGI("Client pid : %{public}d, State : %{public}d, usage : %{public}d",
+        MEDIA_LOGD("Client pid : %{public}d, State : %{public}d, usage : %{public}d",
             changeInfo->clientPid, static_cast<int32_t>(changeInfo->rendererState),
             static_cast<int32_t>(changeInfo->rendererInfo.streamUsage));
         if (changeInfo->rendererState == RendererState::RENDERER_RUNNING &&

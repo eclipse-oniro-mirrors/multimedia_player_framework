@@ -53,6 +53,17 @@ public:
         (void)mode;
         return 0;
     }
+    virtual int32_t SetSuperResolution(bool enabled)
+    {
+        (void)enabled;
+        return 0;
+    }
+    virtual int32_t SetVideoWindowSize(int32_t width, int32_t height)
+    {
+        (void)width;
+        (void)height;
+        return 0;
+    }
     virtual int32_t PrepareAsync() = 0;
     virtual int32_t Pause() = 0;
     virtual int32_t Stop() = 0;
@@ -74,6 +85,7 @@ public:
     virtual int32_t GetDuration(int32_t &duration) = 0;
     virtual int32_t SetPlaybackSpeed(PlaybackRateMode mode) = 0;
     virtual int32_t GetPlaybackSpeed(PlaybackRateMode &mode) = 0;
+    virtual int32_t SetSourceLoader(const sptr<IRemoteObject> &object) = 0;
     virtual int32_t SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, AVPlayStrategy strategy) = 0;
 #ifdef SUPPORT_VIDEO
     virtual int32_t SetVideoSurface(sptr<Surface> surface) = 0;
@@ -159,6 +171,8 @@ public:
         SET_RENDER_FIRST_FRAME,
         SET_PLAY_RANGE,
         SET_PLAY_RANGE_WITH_MODE,
+        SET_SUPER_RESOLUTION,
+        SET_VIDEO_WINDOW_SIZE,
         PREPAREASYNC,
         PAUSE,
         STOP,
@@ -197,6 +211,7 @@ public:
         SET_DEVICE_CHANGE_CB_STATUS,
         GET_API_VERSION,
         IS_SEEK_CONTINUOUS_SUPPORTED,
+        SET_SOURCE_LOADER,
         MAX_IPC_ID,                   // all IPC codes should be added before MAX_IPC_ID
     };
 

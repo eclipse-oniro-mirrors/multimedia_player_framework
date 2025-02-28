@@ -20,6 +20,7 @@
 #include "i_standard_player_service.h"
 #include "player_listener_stub.h"
 #include "media_data_source_stub.h"
+#include "media_source_loader_stub.h"
 #include "monitor_client_object.h"
 
 namespace OHOS {
@@ -78,6 +79,8 @@ public:
     int32_t GetCurrentTrack(int32_t trackType, int32_t &index) override;
     int32_t SetPlaybackStrategy(AVPlayStrategy playbackStrategy) override;
     int32_t SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted) override;
+    int32_t SetSuperResolution(bool enabled) override;
+    int32_t SetVideoWindowSize(int32_t width, int32_t height) override;
     // PlayerClient
     void MediaServerDied();
     int32_t SetMaxAmplitudeCbStatus(bool status) override;
@@ -92,6 +95,7 @@ private:
     sptr<IStandardPlayerService> playerProxy_ = nullptr;
     sptr<PlayerListenerStub> listenerStub_ = nullptr;
     sptr<MediaDataSourceStub> dataSrcStub_ = nullptr;
+    sptr<MediaSourceLoaderStub> sourceLoaderStub_ = nullptr;
     std::shared_ptr<PlayerCallback> callback_ = nullptr;
     std::mutex mutex_;
 };

@@ -168,6 +168,8 @@ public:
     int32_t ResumeDemuxer() override;
     int32_t SetPlaybackStrategy(AVPlayStrategy playbackStrategy) override;
     int32_t SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted) override;
+    int32_t SetSuperResolution(bool enabled) override;
+    int32_t SetVideoWindowSize(int32_t width, int32_t height) override;
     float GetMaxAmplitude() override;
     int32_t SetMaxAmplitudeCbStatus(bool status) override;
     int32_t IsSeekContinuousSupported(bool &isSeekContinuousSupported) override;
@@ -209,6 +211,7 @@ private:
     void NotifyAudioFirstFrame(const Event& event);
     void NotifyResolutionChange();
     void NotifyPositionUpdate();
+    void NotifySuperResolutionChanged(const Event& event);
     Status LinkAudioDecoderFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
     Status LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
     Status LinkSubtitleSinkFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
@@ -275,6 +278,7 @@ private:
     inline bool IsStatisticalInfoValid();
     void ReportAudioInterruptEvent();
     int32_t AdjustCachedDuration(int32_t cachedDuration);
+    void SetPostProcessor();
 
     bool isNetWorkPlay_ = false;
     bool isDump_ = false;
@@ -316,6 +320,7 @@ private:
     std::atomic<int32_t> durationMs_{-1};
     int64_t mediaStartPts_{0};
     std::shared_ptr<IMediaDataSource> dataSrc_{nullptr};
+    std::shared_ptr<IMediaSourceLoader> sourceLoader_{nullptr};
     std::atomic<int32_t> videoWidth_{0};
     std::atomic<int32_t> videoHeight_{0};
     std::atomic<bool> needSwapWH_{false};
@@ -400,8 +405,22 @@ private:
     bool isHintPauseReceived_ { false };
     std::atomic<bool> interruptNotifyPlay_ {false};
     std::atomic<bool> isSaveInterruptEventNeeded_ {true};
-    OHOS::AudioStandard::InterruptEvent interruptEvent_;
+    OHOS::AudioStandard::InterruptEvent interruptEvent_ = {
+        .eventType = OHOS::AudioStandard::INTERRUPT_TYPE_END,
+        .forceType = OHOS::AudioStandard::INTERRUPT_SHARE,
+        .hintType = OHOS::AudioStandard::INTERRUPT_HINT_RESUME
+    };
     bool isCalledBySystemApp_ { false };
+
+    // post processor
+    static constexpr int32_t MAX_TARGET_WIDTH = 1920;
+    static constexpr int32_t MAX_TARGET_HEIGHT = 1080;
+    static constexpr int32_t MIN_TARGET_WIDTH = 320;
+    static constexpr int32_t MIN_TARGET_HEIGHT = 320;
+    int32_t postProcessorTargetWidth_ = MAX_TARGET_WIDTH;
+    int32_t postProcessorTargetHeight_ = MAX_TARGET_HEIGHT;
+    VideoPostProcessorType videoPostProcessorType_ {VideoPostProcessorType::NONE};
+    std::atomic<bool> isPostProcessorOn_ {false};
 };
 } // namespace Media
 } // namespace OHOS

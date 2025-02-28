@@ -35,6 +35,7 @@ public:
     virtual bool NotifyStopAndRelease(AVScreenCaptureStateCode state);
     virtual bool TelCallStateUpdated(bool isInCall);
     virtual bool NotifyTelCallStateUpdated(bool isInCall);
+    virtual void Release();
 };
 
 class InCallObserver {
@@ -43,7 +44,7 @@ public:
     bool RegisterObserver();
     void UnRegisterObserver();
     bool OnCallStateUpdated(bool inCall);
-    bool IsInCall();
+    bool IsInCall(bool refreshState);
     bool RegisterInCallObserverCallBack(std::weak_ptr<InCallObserverCallBack> registerInCallObserverCallBack);
     void UnregisterInCallObserverCallBack(std::weak_ptr<InCallObserverCallBack> unRegisterInCallObserverCallBack);
 private:

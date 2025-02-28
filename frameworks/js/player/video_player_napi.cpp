@@ -21,6 +21,7 @@
 #include "surface_utils.h"
 #include "string_ex.h"
 #include "meta/video_types.h"
+#include "js_common_utils.h"
 #ifdef SUPPORT_JSSTACK
 #include "xpower_event_js.h"
 #endif
@@ -406,7 +407,10 @@ void VideoPlayerNapi::AsyncSetDisplaySurface(napi_env env, void *data)
         asyncContext->SignError(MSERR_EXT_INVALID_VAL, "input surface id is invalid");
         return;
     }
-    surfaceId = std::stoull(asyncContext->surface);
+    if (!StrToULL(asyncContext->surface, surfaceId)) {
+        asyncContext->SignError(MSERR_EXT_INVALID_VAL, "invalid parameters, failed to obtain surfaceId");
+        return;
+    }
     MEDIA_LOGD("get surface, surfaceId = (%{public}" PRIu64 ")", surfaceId);
 
     auto surface = SurfaceUtils::GetInstance()->GetSurface(surfaceId);

@@ -502,8 +502,22 @@ int32_t PlayerImpl::SetDeviceChangeCbStatus(bool status)
 int32_t PlayerImpl::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
 {
     MEDIA_LOGD("Set playback strategy");
-    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
     return playerService_->SetPlaybackStrategy(playbackStrategy);
+}
+
+int32_t PlayerImpl::SetSuperResolution(bool enabled)
+{
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetSuperResolution in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
+    return playerService_->SetSuperResolution(enabled);
+}
+
+int32_t PlayerImpl::SetVideoWindowSize(int32_t width, int32_t height)
+{
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR "SetVideoWindowSize  in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
+    return playerService_->SetVideoWindowSize(width, height);
 }
 
 int32_t PlayerImpl::SetMaxAmplitudeCbStatus(bool status)

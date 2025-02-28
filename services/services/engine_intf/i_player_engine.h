@@ -230,6 +230,16 @@ public:
         return 0;
     }
 
+    virtual int32_t SetSuperResolution(bool enabled)
+    {
+        return 0;
+    }
+
+    virtual int32_t SetVideoWindowSize(int32_t width, int32_t height)
+    {
+        return 0;
+    }
+
     virtual int32_t SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
     {
         return 0;

@@ -914,13 +914,6 @@ int32_t CJAVPlayer::OnMediaKeySystemInfoUpdate(int64_t callbackId)
     playerCb_->mediaKeySystemInfoUpdateCallback =
         [lambda = CJLambda::Create(cFunc)](CArrCMediaKeySystemInfo drmInfoMap) -> void {
         lambda(drmInfoMap);
-        if (drmInfoMap.head != nullptr) {
-            for (int64_t i = 0; i < drmInfoMap.size; i++) {
-                free(drmInfoMap.head[i].uuid);
-                free(drmInfoMap.head[i].pssh.head);
-            }
-            free(drmInfoMap.head);
-        }
     };
     playerCb_->mediaKeySystemInfoUpdateCallbackId = callbackId;
     return MSERR_EXT_API9_OK;
@@ -1739,7 +1732,7 @@ void CJAVPlayer::SetBitrate(int32_t bitrate)
     (void)player_->SelectBitRate(static_cast<uint32_t>(bitrate));
 }
 
-void CJAVPlayer::SetVolume(double volume)
+void CJAVPlayer::SetVolume(float volume)
 {
     if (playerCb_->isSetVolume_) {
         MEDIA_LOGI("SetVolume is processing, skip this task until onVolumeChangedCb");

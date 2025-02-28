@@ -179,6 +179,15 @@ std::string CommonNapi::GetPropertyString(napi_env env, napi_value configObj, co
     return GetStringArgument(env, item);
 }
 
+bool CommonNapi::GetPropertyArrayBuffer(napi_env env, napi_value configObj, void **data, size_t* length)
+{
+    if (napi_get_arraybuffer_info(env, configObj, data, length) != napi_ok) {
+        MEDIA_LOGE("get arraybuffer value fail");
+        return false;
+    }
+    return true;
+}
+
 napi_status CommonNapi::GetPropertyRecord(napi_env env, napi_value configObj, Meta &meta, std::string type)
 {
     bool exist = false;
@@ -290,6 +299,9 @@ bool CommonNapi::GetPlayStrategy(napi_env env, napi_value value, AVPlayStrategyT
     }
     if (!GetPropertyBool(env, value, "showFirstFrameOnPrepare", playStrategy.showFirstFrameOnPrepare)) {
         playStrategy.showFirstFrameOnPrepare = false; // use default value
+    }
+    if (!GetPropertyBool(env, value, "enableSuperResolution", playStrategy.enableSuperResolution)) {
+        playStrategy.enableSuperResolution = false; // use default value
     }
     if (!GetPropertyInt32(env, value, "mutedMediaType", playStrategy.mutedMediaType)) {
         playStrategy.mutedMediaType = MediaType::MEDIA_TYPE_MAX_COUNT; // use default value

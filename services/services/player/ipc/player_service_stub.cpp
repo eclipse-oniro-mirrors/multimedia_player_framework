@@ -32,6 +32,7 @@
 #ifdef SUPPORT_AVSESSION
 #include "avsession_background.h"
 #endif
+#include "media_source_loader_proxy.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "PlayerServiceStub"};
@@ -192,6 +193,12 @@ void PlayerServiceStub::FillPlayerFuncPart3()
         [this](MessageParcel &data, MessageParcel &reply) { return GetPlaybackPosition(data, reply); } };
     playerFuncs_[SET_SEI_MESSAGE_CB_STATUS] = { "Player::SetSeiMessageCbStatus",
         [this](MessageParcel &data, MessageParcel &reply) { return SetSeiMessageCbStatus(data, reply); } };
+    playerFuncs_[SET_SOURCE_LOADER] = { "SetSourceLoader",
+        [this](MessageParcel &data, MessageParcel &reply) { return SetSourceLoader(data, reply); } };
+    playerFuncs_[SET_SUPER_RESOLUTION] = { "Player::SetSuperResolution",
+        [this](MessageParcel &data, MessageParcel &reply) { return SetSuperResolution(data, reply); } };
+    playerFuncs_[SET_VIDEO_WINDOW_SIZE] = { "Player::SetVideoWindowSize",
+        [this](MessageParcel &data, MessageParcel &reply) { return SetVideoWindowSize(data, reply); } };
 }
 
 int32_t PlayerServiceStub::Init()
@@ -293,6 +300,21 @@ int32_t PlayerServiceStub::SetSource(const sptr<IRemoteObject> &object)
     CHECK_AND_RETURN_RET_LOG(mediaDataSrc != nullptr, MSERR_NO_MEMORY, "failed to new PlayerListenerCallback");
 
     return playerServer_->SetSource(mediaDataSrc);
+}
+
+int32_t PlayerServiceStub::SetSourceLoader(const sptr<IRemoteObject> &object)
+{
+    MediaTrace trace("PlayerServiceStub::SetSourceLoader(sourceLoader)");
+    MEDIA_LOGI("SetSourceLoader in");
+    CHECK_AND_RETURN_RET_LOG(object != nullptr, MSERR_NO_MEMORY, "set sourceLoader object is nullptr");
+ 
+    sptr<IStandardMediaSourceLoader> proxy = iface_cast<IStandardMediaSourceLoader>(object);
+    CHECK_AND_RETURN_RET_LOG(proxy != nullptr, MSERR_NO_MEMORY, "failed to convert MediaSourceLoaderProxy");
+ 
+    sourceLoader_ = std::make_shared<MediaSourceLoaderCallback>(proxy);
+    CHECK_AND_RETURN_RET_LOG(sourceLoader_ != nullptr, MSERR_NO_MEMORY, "failed to new MediaSourceLoaderCallback");
+ 
+    return MSERR_OK;
 }
 
 int32_t PlayerServiceStub::SetSource(int32_t fd, int64_t offset, int64_t size)
@@ -653,6 +675,13 @@ int32_t PlayerServiceStub::SetSource(MessageParcel &data, MessageParcel &reply)
     return MSERR_OK;
 }
 
+int32_t PlayerServiceStub::SetSourceLoader(MessageParcel &data, MessageParcel &reply)
+{
+    sptr<IRemoteObject> object = data.ReadRemoteObject();
+    reply.WriteInt32(SetSourceLoader(object));
+    return MSERR_OK;
+}
+
 int32_t PlayerServiceStub::SetMediaDataSource(MessageParcel &data, MessageParcel &reply)
 {
     sptr<IRemoteObject> object = data.ReadRemoteObject();
@@ -913,6 +942,9 @@ int32_t PlayerServiceStub::SetMediaSource(MessageParcel &data, MessageParcel &re
     std::shared_ptr<AVMediaSource> mediaSource = std::make_shared<AVMediaSource>(url, header);
     mediaSource->SetMimeType(mimeType);
 
+    if (sourceLoader_ != nullptr) {
+        mediaSource->sourceLoader_ = std::move(sourceLoader_);
+    }
     int32_t fd = -1;
     if (mimeType == AVMimeType::APPLICATION_M3U8) {
         fd = data.ReadFileDescriptor();
@@ -935,6 +967,7 @@ int32_t PlayerServiceStub::SetMediaSource(MessageParcel &data, MessageParcel &re
     strategy.preferredBufferDurationForPlaying = data.ReadDouble();
     strategy.preferredHdr = data.ReadBool();
     strategy.showFirstFrameOnPrepare = data.ReadBool();
+    strategy.enableSuperResolution = data.ReadBool();
     strategy.mutedMediaType = static_cast<OHOS::Media::MediaType>(data.ReadInt32());
     strategy.preferredAudioLanguage = data.ReadString();
     strategy.preferredSubtitleLanguage = data.ReadString();
@@ -1087,12 +1120,12 @@ int32_t PlayerServiceStub::SetMediaMuted(MessageParcel &data, MessageParcel &rep
 {
     int32_t mediaType = data.ReadInt32();
     bool isMuted = data.ReadBool();
-    int32_t ret = SetMediaMuted(static_cast<MediaType>(mediaType), isMuted);
+    int32_t ret = SetMediaMuted(static_cast<OHOS::Media::MediaType>(mediaType), isMuted);
     reply.WriteInt32(ret);
     return MSERR_OK;
 }
 
-int32_t PlayerServiceStub::SetMediaMuted(MediaType mediaType, bool isMuted)
+int32_t PlayerServiceStub::SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted)
 {
     MediaTrace trace("PlayerServiceStub::SetMediaMuted");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
@@ -1108,6 +1141,7 @@ int32_t PlayerServiceStub::SetPlaybackStrategy(MessageParcel &data, MessageParce
         .preferredBufferDurationForPlaying = data.ReadDouble(),
         .preferredHdr = data.ReadBool(),
         .showFirstFrameOnPrepare = data.ReadBool(),
+        .enableSuperResolution = data.ReadBool(),
         .mutedMediaType = static_cast<OHOS::Media::MediaType>(data.ReadInt32()),
         .preferredAudioLanguage = data.ReadString(),
         .preferredSubtitleLanguage = data.ReadString()
@@ -1121,6 +1155,35 @@ int32_t PlayerServiceStub::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
     MediaTrace trace("PlayerServiceStub::SetPlaybackStrategy");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
     return playerServer_->SetPlaybackStrategy(playbackStrategy);
+}
+
+int32_t PlayerServiceStub::SetSuperResolution(MessageParcel &data, MessageParcel &reply)
+{
+    bool enabled = data.ReadBool();
+    reply.WriteInt32(SetSuperResolution(enabled));
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::SetSuperResolution(bool enabled)
+{
+    MediaTrace trace("Stub::SetSuperResolution");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->SetSuperResolution(enabled);
+}
+
+int32_t PlayerServiceStub::SetVideoWindowSize(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t width = data.ReadInt32();
+    int32_t height = data.ReadInt32();
+    reply.WriteInt32(SetVideoWindowSize(width, height));
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::SetVideoWindowSize(int32_t width, int32_t height)
+{
+    MediaTrace trace("Stub::SetVideoWindowSize");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->SetVideoWindowSize(width, height);
 }
 
 int32_t PlayerServiceStub::SetMaxAmplitudeCbStatus(bool status)

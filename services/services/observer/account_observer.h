@@ -29,6 +29,7 @@ public:
     virtual ~AccountObserverCallBack() = default;
     virtual bool StopAndRelease(AVScreenCaptureStateCode state);
     virtual bool NotifyStopAndRelease(AVScreenCaptureStateCode state);
+    virtual void Release();
 };
 
 class AccountObserver {

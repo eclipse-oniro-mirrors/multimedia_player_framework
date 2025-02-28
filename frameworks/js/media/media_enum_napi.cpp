@@ -83,6 +83,8 @@ static const std::vector<struct JsEnumInt> g_AVErrorCode = {
     { "AVERR_IO_SSL_SERVER_CERT_UNTRUSTED", MediaServiceExtErrCodeAPI9::MSERR_EXT_API14_IO_SSL_SERVER_CERT_UNTRUSTED },
     { "AVERR_IO_UNSUPPORTED_REQUEST", MediaServiceExtErrCodeAPI9::MSERR_EXT_API14_IO_UNSUPPORTTED_REQUEST },
     { "AVERR_SEEK_CONTINUOUS_UNSUPPORTED", MediaServiceExtErrCodeAPI9::MSERR_EXT_API16_SEEK_CONTINUOUS_UNSUPPORTED },
+    { "AVERR_SUPER_RESOLUTION_UNSUPPORTED", MediaServiceExtErrCodeAPI9::MSERR_EXT_API16_SUPER_RESOLUTION_UNSUPPORTED },
+    { "AVERR_SUPER_RESOLUTION_NOT_ENABLED", MediaServiceExtErrCodeAPI9::MSERR_EXT_API16_SUPER_RESOLUTION_NOT_ENABLED },
 };
 
 static const std::vector<struct JsEnumInt> g_avDataSourceError = {
@@ -95,6 +97,16 @@ static const std::vector<struct JsEnumInt> g_bufferingInfoType = {
     { "BUFFERING_END", BufferingInfoType::BUFFERING_END },
     { "BUFFERING_PERCENT", BufferingInfoType::BUFFERING_PERCENT },
     { "CACHED_DURATION", BufferingInfoType::CACHED_DURATION },
+};
+
+static const std::vector<struct JsEnumInt> g_loadingRequestError = {
+    { "LOADING_ERROR_SUCCESS", 0 },
+    { "LOADING_ERROR_NOT_READY", 1 },
+    { "LOADING_ERROR_NO_RESOURCE ", 2 },
+    { "LOADING_ERROR_INVAID_HANDLE", 3 },
+    { "LOADING_ERROR_ACCESS_DENIED", 4 },
+    { "LOADING_ERROR_ACCESS_TIMEOUT", 5 },
+    { "LOADING_ERROR_AUTHORIZE_FAILED", 6 },
 };
 
 static const std::vector<struct JsEnumInt> g_recorderAudioEncoder = {
@@ -160,6 +172,11 @@ static const std::vector<struct JsEnumInt> g_videoSourceType = {
 
 static const std::vector<struct JsEnumInt> g_metaSourceType = {
     { "VIDEO_MAKER_INFO", MetaSourceType::VIDEO_META_MAKER_INFO },
+};
+
+static const std::vector<struct JsEnumInt> g_screenCaptureFillMode = {
+    { "PRESERVE_ASPECT_RATIO", AVScreenCaptureFillMode::PRESERVE_ASPECT_RATIO },
+    { "SCALE_TO_FILL", AVScreenCaptureFillMode::SCALE_TO_FILL },
 };
 
 static const std::vector<struct JsEnumInt> g_fileGenerationMode = {
@@ -413,6 +430,7 @@ static const std::map<std::string_view, const std::vector<struct JsEnumInt>&> g_
     { "MediaErrorCode", g_mediaErrorCode },
     { "AVDataSourceError", g_avDataSourceError },
     { "BufferingInfoType", g_bufferingInfoType },
+    { "LoadingRequestError", g_loadingRequestError},
     { "AudioEncoder", g_recorderAudioEncoder },
     { "AudioOutputFormat", g_recorderAudioOutputFormat },
     { "PlaybackSpeed", g_playbackSpeed },
@@ -443,6 +461,7 @@ static const std::map<std::string_view, const std::vector<struct JsEnumInt>&> g_
     { "FileGenerationMode", g_fileGenerationMode},
     { "MetaSourceType", g_metaSourceType},
     { "ScreenCaptureEvent", g_screenCaptureMonitorEvent },
+    { "AVScreenCaptureFillMode", g_screenCaptureFillMode},
 };
 
 static const std::map<std::string_view, const std::vector<struct JsEnumString>&> g_stringEnumClassMap = {

@@ -383,6 +383,7 @@ int32_t HiPlayerImpl::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
     }
     header_ = mediaSource->header;
     url_ = mediaSource->url;
+    sourceLoader_ = mediaSource->sourceLoader_;
     preferedWidth_ = strategy.preferredWidth;
     preferedHeight_ = strategy.preferredHeight;
     bufferDuration_ = strategy.preferredBufferDuration;
@@ -391,6 +392,11 @@ int32_t HiPlayerImpl::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
     mutedMediaType_ = strategy.mutedMediaType;
     audioLanguage_ = strategy.preferredAudioLanguage;
     subtitleLanguage_ = strategy.preferredSubtitleLanguage;
+    if (strategy.enableSuperResolution) {
+        videoPostProcessorType_ = VideoPostProcessorType::SUPER_RESOLUTION;
+        isPostProcessorOn_ = strategy.enableSuperResolution;
+    }
+
     mimeType_ = mediaSource->GetMimeType();
     bufferDurationForPlaying_ = strategy.preferredBufferDurationForPlaying;
     PlayerDfxSourceType sourceType = PlayerDfxSourceType::DFX_SOURCE_TYPE_MEDIASOURCE_LOCAL;
@@ -638,6 +644,15 @@ void HiPlayerImpl::DoSetMediaSource(Status& ret)
 {
     if (dataSrc_ != nullptr) {
         ret = DoSetSource(std::make_shared<MediaSource>(dataSrc_));
+    } else if (sourceLoader_ != nullptr) {
+        auto mediaSource = std::make_shared<MediaSource>(url_, header_);
+        if (mediaSource == nullptr) {
+            MEDIA_LOG_I("mediaSource == nullptr");
+            ret = Status::ERROR_NO_MEMORY;
+            return;
+        }
+        mediaSource->SetSourceLoader(sourceLoader_);
+        ret = DoSetSource(mediaSource);
     } else {
         if (!header_.empty()) {
             MEDIA_LOG_I("DoSetSource header");
@@ -1732,6 +1747,8 @@ bool HiPlayerImpl::IsNeedAudioSinkChangeTrack(std::vector<std::shared_ptr<Meta>>
 
     FALSE_RETURN_V(metaInfo[trackId]->GetData(Tag::AUDIO_SAMPLE_FORMAT, sampleFormat), true);
     FALSE_RETURN_V(metaInfo[currentAudioTrackId_]->GetData(Tag::AUDIO_SAMPLE_FORMAT, currentSampleFormat), true);
+    MEDIA_LOG_I("sampleformat: CurTrackId" PUBLIC_LOG_D32 " trackId" PUBLIC_LOG_D32, currentSampleFormat,
+        sampleFormat);
     FALSE_RETURN_V(sampleFormat == currentSampleFormat, true);
 
     std::string mimeType;
@@ -2262,6 +2279,10 @@ void HiPlayerImpl::OnEventSubTrackChange(const Event &event)
             HandleSubtitleTrackChangeEvent(event);
             break;
         }
+        case EventType::EVENT_SUPER_RESOLUTION_CHANGED: {
+            NotifySuperResolutionChanged(event);
+            break;
+        }
         default:
             break;
     }
@@ -2775,6 +2796,18 @@ void HiPlayerImpl::NotifyUpdateTrackInfo()
     callbackLooper_.OnInfo(INFO_TYPE_TRACK_INFO_UPDATE, 0, body);
 }
 
+void HiPlayerImpl::NotifySuperResolutionChanged(const Event& event)
+{
+#ifdef SUPPORT_VIDEO
+    int32_t enabled = AnyCast<bool>(event.param);
+
+    Format format;
+    format.PutIntValue(PlayerKeys::SUPER_RESOLUTION_ENABLED, static_cast<int32_t>(enabled));
+    callbackLooper_.OnInfo(INFO_TYPE_SUPER_RESOLUTION_CHANGED, 0, format);
+#endif
+    return;
+}
+
 void HiPlayerImpl::HandleAudioTrackChangeEvent(const Event& event)
 {
     int32_t trackId = AnyCast<int32_t>(event.param);
@@ -2791,6 +2824,9 @@ void HiPlayerImpl::HandleAudioTrackChangeEvent(const Event& event)
             MEDIA_LOG_E("HandleAudioTrackChangeEvent audioDecoder change plugin error");
             return;
         }
+        audioDecoder_->DoFlush();
+        audioSink_->DoFlush();
+        audioDecoder_->Start();
         if (IsNeedAudioSinkChangeTrack(metaInfo, trackId)) {
             MEDIA_LOG_I("AudioSink changeTrack in");
             if (Status::OK != audioSink_->ChangeTrack(metaInfo[trackId])) {
@@ -3060,6 +3096,7 @@ Status HiPlayerImpl::LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFi
             FilterType::FILTERTYPE_VDEC);
         FALSE_RETURN_V(videoDecoder_ != nullptr, Status::ERROR_NULL_POINTER);
         videoDecoder_->Init(playerEventReceiver_, playerFilterCallback_);
+        SetPostProcessor();
         interruptMonitor_->RegisterListener(videoDecoder_);
         videoDecoder_->SetSyncCenter(syncManager_);
         videoDecoder_->SetCallingInfo(appUid_, appPid_, bundleName_, instanceId_);
@@ -3138,7 +3175,36 @@ int32_t HiPlayerImpl::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
     audioLanguage_ = playbackStrategy.preferredAudioLanguage;
     subtitleLanguage_ = playbackStrategy.preferredSubtitleLanguage;
     bufferDurationForPlaying_ = playbackStrategy.preferredBufferDurationForPlaying;
+
+    if (playbackStrategy.enableSuperResolution) {
+        videoPostProcessorType_ = VideoPostProcessorType::SUPER_RESOLUTION;
+        isPostProcessorOn_ = playbackStrategy.enableSuperResolution;
+    }
     return MSERR_OK;
+}
+
+int32_t HiPlayerImpl::SetSuperResolution(bool enabled)
+{
+    FALSE_RETURN_V(videoPostProcessorType_ == VideoPostProcessorType::SUPER_RESOLUTION,
+        MSERR_SUPER_RESOLUTION_NOT_ENABLED);
+    isPostProcessorOn_ = enabled;
+    FALSE_RETURN_V_NOLOG(videoDecoder_ != nullptr, MSERR_OK);
+    auto ret = videoDecoder_->SetPostProcessorOn(enabled);
+    return ret == Status::ERROR_UNSUPPORTED_FORMAT ? MSERR_SUPER_RESOLUTION_UNSUPPORTED : TransStatus(ret);
+}
+
+int32_t HiPlayerImpl::SetVideoWindowSize(int32_t width, int32_t height)
+{
+    FALSE_RETURN_V(videoPostProcessorType_ == VideoPostProcessorType::SUPER_RESOLUTION,
+        MSERR_SUPER_RESOLUTION_NOT_ENABLED);
+    FALSE_RETURN_V(width >= MIN_TARGET_WIDTH && width <= MAX_TARGET_WIDTH &&
+        height >= MIN_TARGET_HEIGHT && height <= MAX_TARGET_HEIGHT,
+        TransStatus(Status::ERROR_INVALID_PARAMETER));
+    postProcessorTargetWidth_ = width;
+    postProcessorTargetHeight_ = height;
+    FALSE_RETURN_V_NOLOG(videoDecoder_ != nullptr, MSERR_OK);
+    auto ret = videoDecoder_->SetVideoWindowSize(width, height);
+    return ret == Status::ERROR_UNSUPPORTED_FORMAT ? MSERR_SUPER_RESOLUTION_UNSUPPORTED : TransStatus(ret);
 }
 
 int32_t HiPlayerImpl::SeekContinous(int32_t mSeconds, int64_t seekContinousBatchNo)
@@ -3172,6 +3238,8 @@ Status HiPlayerImpl::StartSeekContinous()
             UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
         }
         syncManager_->Pause();
+        callbackLooper_.StopReportMediaProgress();
+        callbackLooper_.StopCollectMaxAmplitude();
     }
     FALSE_RETURN_V(!draggingPlayerAgent_, Status::OK);
     FALSE_RETURN_V(demuxer_ && videoDecoder_, Status::OK);
@@ -3232,6 +3300,8 @@ int32_t HiPlayerImpl::ExitSeekContinous(bool align, int64_t seekContinousBatchNo
     syncManager_->Seek(seekTimeUs, true);
     FALSE_RETURN_V_MSG_E(align, TransStatus(Status::OK), "dont need align");
     if (align && audioDecoder_ != nullptr && audioSink_ != nullptr) {
+        audioDecoder_->DoFlush();
+        audioSink_->DoFlush();
         seekAgent_ = std::make_shared<SeekAgent>(demuxer_);
         interruptMonitor_->RegisterListener(seekAgent_);
         auto res = seekAgent_->AlignAudioPosition(lastSeekContinousPos_);
@@ -3241,7 +3311,9 @@ int32_t HiPlayerImpl::ExitSeekContinous(bool align, int64_t seekContinousBatchNo
         seekAgent_.reset();
     }
     if (curState_ == PlayerStateId::PLAYING) {
-        // pause inner when start seek continuous in playing state
+        // resume inner when exit seek continuous in playing state
+        callbackLooper_.StartReportMediaProgress(REPORT_PROGRESS_INTERVAL);
+        callbackLooper_.StartCollectMaxAmplitude(SAMPLE_AMPLITUDE_INTERVAL);
         syncManager_->Resume();
         Status res = pipeline_->Resume();
         if (res != Status::OK) {
@@ -3300,6 +3372,15 @@ void HiPlayerImpl::SetPerfRecEnabled(bool isPerfRecEnabled)
 {
     MEDIA_LOG_I("SetPerfRecEnabled %{public}d", isPerfRecEnabled);
     isPerfRecEnabled_ = isPerfRecEnabled;
+}
+
+void HiPlayerImpl::SetPostProcessor()
+{
+    if (videoPostProcessorType_ != VideoPostProcessorType::NONE) {
+        videoDecoder_->SetPostProcessorType(videoPostProcessorType_);
+        videoDecoder_->SetPostProcessorOn(isPostProcessorOn_);
+        videoDecoder_->SetVideoWindowSize(postProcessorTargetWidth_, postProcessorTargetHeight_);
+    }
 }
 }  // namespace Media
 }  // namespace OHOS

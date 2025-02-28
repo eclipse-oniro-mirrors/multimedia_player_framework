@@ -16,6 +16,7 @@
 #include "incall_observer.h"
 #include <unistd.h>
 #include <functional>
+#include "call_manager_client.h"
 #include "media_log.h"
 #include "media_errors.h"
 #include "hisysevent.h"
@@ -52,10 +53,18 @@ InCallObserver::~InCallObserver()
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
-bool InCallObserver::IsInCall()
+bool InCallObserver::IsInCall(bool refreshState)
 {
-    UnRegisterObserver();
-    RegisterObserver();
+    if (refreshState) {
+        UnRegisterObserver();
+        RegisterObserver();
+        std::shared_ptr<OHOS::Telephony::CallManagerClient> callManagerClientPtr =
+            DelayedSingleton<OHOS::Telephony::CallManagerClient>::GetInstance();
+        if (inCall_.load() && !callManagerClientPtr->HasCall()) {
+            MEDIA_LOGI("0x%{public}06" PRIXPTR " not in call", FAKE_POINTER(this));
+            OnCallStateUpdated(false); // for call crash scene
+        }
+    }
     return inCall_.load();
 }
 
@@ -90,7 +99,7 @@ void InCallObserver::UnregisterInCallObserverCallBack(std::weak_ptr<InCallObserv
         auto unregisterCallBack = callback.lock();
         for (auto iter = inCallObserverCallBacks_.begin(); iter != inCallObserverCallBacks_.end();) {
             auto iterCallback = (*iter).lock();
-            if (iterCallback == unregisterCallBack || unregisterCallBack == nullptr) {
+            if (iterCallback == unregisterCallBack || iterCallback == nullptr) {
                 MEDIA_LOGD("0x%{public}06" PRIXPTR "UnregisterInCallObserverCallBack",
                     FAKE_POINTER(iterCallback.get()));
                 iter = inCallObserverCallBacks_.erase(iter);
@@ -107,19 +116,19 @@ void InCallObserver::UnregisterInCallObserverCallBack(std::weak_ptr<InCallObserv
 
 bool InCallObserver::OnCallStateUpdated(bool inCall)
 {
-    MEDIA_LOGI("InCallObserver::OnCallStateUpdated START.");
+    MEDIA_LOGD("InCallObserver::OnCallStateUpdated START.");
     std::unique_lock<std::mutex> lock(mutex_);
     if (inCall_.load() == inCall) {
         return true;
     }
-    MEDIA_LOGD("Update InCall Status %{public}d", static_cast<int32_t>(inCall));
+    MEDIA_LOGI("Update InCall Status %{public}d", static_cast<int32_t>(inCall));
     inCall_.store(inCall);
     bool ret = true;
     for (auto iter = inCallObserverCallBacks_.begin(); iter != inCallObserverCallBacks_.end(); iter++) {
         auto callbackPtr = (*iter).lock();
-        MEDIA_LOGI("0x%{public}06" PRIXPTR "OnCallStateUpdated", FAKE_POINTER(callbackPtr.get()));
+        MEDIA_LOGD("0x%{public}06" PRIXPTR "OnCallStateUpdated", FAKE_POINTER(callbackPtr.get()));
         if (callbackPtr) {
-            MEDIA_LOGI("0x%{public}06" PRIXPTR "OnCallStateUpdated NotifyTelCallStateUpdated start",
+            MEDIA_LOGD("0x%{public}06" PRIXPTR "OnCallStateUpdated NotifyTelCallStateUpdated start",
                 FAKE_POINTER(callbackPtr.get()));
             ret &= callbackPtr->NotifyTelCallStateUpdated(inCall);
             MEDIA_LOGD("OnCallStateUpdated NotifyTelCallStateUpdated ret: %{public}d.", ret);

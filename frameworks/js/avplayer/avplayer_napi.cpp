@@ -91,6 +91,8 @@ napi_value AVPlayerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("release", JsRelease),
         DECLARE_NAPI_FUNCTION("seek", JsSeek),
         DECLARE_NAPI_FUNCTION("setPlaybackRange", JsSetPlaybackRange),
+        DECLARE_NAPI_FUNCTION("setSuperResolution", JsSetSuperResolution),
+        DECLARE_NAPI_FUNCTION("setVideoWindowSize", JsSetVideoWindowSize),
         DECLARE_NAPI_FUNCTION("on", JsSetOnCallback),
         DECLARE_NAPI_FUNCTION("off", JsClearOnCallback),
         DECLARE_NAPI_FUNCTION("setVolume", JsSetVolume),
@@ -1409,6 +1411,7 @@ void AVPlayerNapi::GetAVPlayStrategyFromStrategyTmp(AVPlayStrategy &strategy, co
     strategy.preferredBufferDuration = strategyTmp.preferredBufferDuration;
     strategy.preferredHdr = strategyTmp.preferredHdr;
     strategy.showFirstFrameOnPrepare = strategyTmp.showFirstFrameOnPrepare;
+    strategy.enableSuperResolution = strategyTmp.enableSuperResolution;
     strategy.mutedMediaType = static_cast<MediaType>(strategyTmp.mutedMediaType);
     strategy.preferredAudioLanguage = strategyTmp.preferredAudioLanguage;
     strategy.preferredSubtitleLanguage = strategyTmp.preferredSubtitleLanguage;
@@ -1568,6 +1571,148 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::SetPlaybackStrategyTask(AVPl
     return task;
 }
 
+napi_value AVPlayerNapi::JsSetSuperResolution(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVPlayerNapi::setSuperResolution");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    MEDIA_LOGI("JsSetSuperResolution In");
+
+    napi_value args[PARAM_COUNT_SINGLE] = { nullptr };
+    size_t argCount = PARAM_COUNT_SINGLE; // setSuperResolution(enabled: boolean)
+    AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
+
+    auto promiseCtx = std::make_unique<AVPlayerContext>(env);
+    promiseCtx->deferred = CommonNapi::CreatePromise(env, nullptr, result);
+    napi_valuetype valueType = napi_undefined;
+
+    if (!jsPlayer->CanSetSuperResolution()) {
+        promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "current state is not initialized/prepared/playing/paused/completed/stopped, "
+            "unsupport set super resolution operation");
+    } else if (argCount < PARAM_COUNT_SINGLE
+        || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_boolean) {
+        promiseCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please check the input");
+    } else {
+        bool enabled = false;
+        napi_status status = napi_get_value_bool(env, args[0], &enabled);
+        if (status != napi_ok) {
+            promiseCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER,
+                "invalid parameters, please check the input");
+        } else {
+            promiseCtx->asyncTask = jsPlayer->SetSuperResolutionTask(enabled);
+        }
+    }
+
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, "JsSetSuperResolution", NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource,
+        [](napi_env env, void *data) {
+            auto promiseCtx = reinterpret_cast<AVPlayerContext *>(data);
+            CHECK_AND_RETURN_LOG(promiseCtx != nullptr, "promiseCtx is nullptr!");
+            promiseCtx->CheckTaskResult();
+        },
+        MediaAsyncContext::CompleteCallback, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
+    napi_queue_async_work_with_qos(env, promiseCtx->work, napi_qos_user_initiated);
+    promiseCtx.release();
+    return result;
+}
+
+std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::SetSuperResolutionTask(bool enable)
+{
+    auto task = std::make_shared<TaskHandler<TaskRet>>([this, enable]() {
+        std::unique_lock<std::mutex> lock(taskMutex_);
+        if (CanSetSuperResolution()) {
+            int32_t ret = player_->SetSuperResolution(enable);
+            if (ret != MSERR_OK) {
+                auto errCode = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret));
+                return TaskRet(errCode, "failed to set super resolution");
+            }
+        } else {
+            return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                "current state is not initialized/prepared/playing/paused/completed/stopped, "
+                "unsupport set super resolution operation");
+        }
+        return TaskRet(MSERR_EXT_API9_OK, "Success");
+    });
+    (void)taskQue_->EnqueueTask(task);
+    return task;
+}
+
+napi_value AVPlayerNapi::JsSetVideoWindowSize(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVPlayerNapi::setVideoWindowSize");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    MEDIA_LOGI("JsSetVideoWindowSize In");
+
+    napi_value args[ARRAY_ARG_COUNTS_TWO] = { nullptr };
+    size_t argCount = ARRAY_ARG_COUNTS_TWO; // setVideoWindowSize(width: number, height: number)
+    AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
+
+    auto promiseCtx = std::make_unique<AVPlayerContext>(env);
+    promiseCtx->deferred = CommonNapi::CreatePromise(env, nullptr, result);
+    napi_valuetype valueType = napi_undefined;
+
+    if (!jsPlayer->CanSetSuperResolution()) {
+        promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "current state is not initialized/prepared/playing/paused/completed/stopped, "
+            "unsupport set video window size");
+    } else if (argCount < ARRAY_ARG_COUNTS_TWO ||
+                napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number ||
+                napi_typeof(env, args[1], &valueType) != napi_ok || valueType != napi_number) {
+        promiseCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please check the input");
+    } else {
+        int32_t width = 0;
+        int32_t height = 0;
+        napi_status status1 = napi_get_value_int32(env, args[0], &width);
+        napi_status status2 = napi_get_value_int32(env, args[1], &height);
+        if (status1 != napi_ok || status2 != napi_ok) {
+            promiseCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER,
+                "invalid parameters, please check the input");
+        } else {
+            promiseCtx->asyncTask = jsPlayer->SetVideoWindowSizeTask(width, height);
+        }
+    }
+
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, "JsSetVideoWindowSize", NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource,
+        [](napi_env env, void *data) {
+            auto promiseCtx = reinterpret_cast<AVPlayerContext *>(data);
+            CHECK_AND_RETURN_LOG(promiseCtx != nullptr, "promiseCtx is nullptr!");
+            promiseCtx->CheckTaskResult();
+        },
+        MediaAsyncContext::CompleteCallback, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
+    napi_queue_async_work_with_qos(env, promiseCtx->work, napi_qos_user_initiated);
+    promiseCtx.release();
+    return result;
+}
+
+std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::SetVideoWindowSizeTask(int32_t width, int32_t height)
+{
+    auto task = std::make_shared<TaskHandler<TaskRet>>([this, width, height]() {
+        std::unique_lock<std::mutex> lock(taskMutex_);
+        auto state = GetCurrentState();
+        if (CanSetSuperResolution()) {
+            int32_t ret = player_->SetVideoWindowSize(width, height);
+            if (ret != MSERR_OK) {
+                auto errCode = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret));
+                return TaskRet(errCode, "failed to set super resolution");
+            }
+        } else {
+            return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                "current state is not initialized/prepared/playing/paused/completed/stopped, "
+                "unsupport set super resolution operation");
+        }
+        return TaskRet(MSERR_EXT_API9_OK, "Success");
+    });
+    (void)taskQue_->EnqueueTask(task);
+    return task;
+}
+
 napi_value AVPlayerNapi::JsGetUrl(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("AVPlayerNapi::get url");
@@ -1682,9 +1827,8 @@ napi_value AVPlayerNapi::JsSetMediaSource(napi_env env, napi_callback_info info)
     }
     std::shared_ptr<AVMediaSourceTmp> srcTmp = MediaSourceNapi::GetMediaSource(env, args[0]);
     CHECK_AND_RETURN_RET_LOG(srcTmp != nullptr, result, "get GetMediaSource argument failed!");
-
-    std::shared_ptr<AVMediaSource> mediaSource = std::make_shared<AVMediaSource>(srcTmp->url, srcTmp->header);
-    mediaSource->SetMimeType(srcTmp->GetMimeType());
+    std::shared_ptr<AVMediaSource> mediaSource = GetAVMediaSource(env, args[0], srcTmp);
+    CHECK_AND_RETURN_RET_LOG(mediaSource != nullptr, result, "create mediaSource failed!");
     struct AVPlayStrategyTmp strategyTmp;
     struct AVPlayStrategy strategy;
     if (!CommonNapi::GetPlayStrategy(env, args[1], strategyTmp)) {
@@ -1702,6 +1846,19 @@ napi_value AVPlayerNapi::JsSetMediaSource(napi_env env, napi_callback_info info)
     }
     jsPlayer->EnqueueMediaSourceTask(jsPlayer, mediaSource, strategy);
     return result;
+}
+
+std::shared_ptr<AVMediaSource> AVPlayerNapi::GetAVMediaSource(napi_env env, napi_value value,
+    std::shared_ptr<AVMediaSourceTmp> &srcTmp)
+{
+    std::shared_ptr<AVMediaSource> mediaSource = std::make_shared<AVMediaSource>(srcTmp->url, srcTmp->header);
+    CHECK_AND_RETURN_RET_LOG(mediaSource != nullptr, nullptr, "create mediaSource failed!");
+    mediaSource->SetMimeType(srcTmp->GetMimeType());
+    mediaSource->mediaSourceLoaderCb_ = MediaSourceNapi::GetSourceLoader(env, value);
+    if (mediaSource->mediaSourceLoaderCb_ == nullptr) {
+        MEDIA_LOGI("mediaSourceLoaderCb_ nullptr");
+    }
+    return mediaSource;
 }
 
 void AVPlayerNapi::EnqueueMediaSourceTask(AVPlayerNapi *jsPlayer, const std::shared_ptr<AVMediaSource> &mediaSource,
@@ -2384,6 +2541,17 @@ bool AVPlayerNapi::CanSetPlayRange()
     if (state == AVPlayerState::STATE_INITIALIZED || state == AVPlayerState::STATE_PREPARED ||
         state == AVPlayerState::STATE_PAUSED || state == AVPlayerState::STATE_STOPPED ||
         state == AVPlayerState::STATE_COMPLETED) {
+        return true;
+    }
+    return false;
+}
+
+bool AVPlayerNapi::CanSetSuperResolution()
+{
+    auto state = GetCurrentState();
+    if (state == AVPlayerState::STATE_INITIALIZED || state == AVPlayerState::STATE_PREPARED ||
+        state == AVPlayerState::STATE_PLAYING || state == AVPlayerState::STATE_PAUSED ||
+        state == AVPlayerState::STATE_STOPPED || state == AVPlayerState::STATE_COMPLETED) {
         return true;
     }
     return false;
