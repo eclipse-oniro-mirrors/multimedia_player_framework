@@ -3276,6 +3276,9 @@ void HiPlayerImpl::FlushVideoEOS()
     if (demuxerEOS || decoderEOS || playerEOS) {
         MEDIA_LOG_I("flush first when eos");
         pipeline_->Flush();
+        if (curState_ == PlayerStateId::PLAYING) {
+            inEosPlayingSeekContinuous_ = true;
+        }
         curState_ = PlayerStateId::PAUSE;
         pipelineStates_ = TransStateId2PlayerState(PlayerStateId::PAUSE);
         for (std::pair<std::string, bool>& item: completeState_) {
@@ -3309,6 +3312,11 @@ int32_t HiPlayerImpl::ExitSeekContinous(bool align, int64_t seekContinousBatchNo
         MEDIA_LOG_I_SHORT("seekAgent_ AlignAudioPosition end");
         interruptMonitor_->DeregisterListener(seekAgent_);
         seekAgent_.reset();
+    }
+    if (inEosPlayingSeekContinuous_) {
+        curState_ = PlayerStateId::PLAYING;
+        pipelineStates_ = TransStateId2PlayerState(PlayerStateId::PLAYING);
+        inEosPlayingSeekContinuous_ = false;
     }
     if (curState_ == PlayerStateId::PLAYING) {
         // resume inner when exit seek continuous in playing state

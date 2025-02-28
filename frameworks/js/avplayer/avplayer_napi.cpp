@@ -207,10 +207,13 @@ void AVPlayerNapi::Destructor(napi_env env, void *nativeObject, void *finalize)
 bool AVPlayerNapi::IsSystemApp()
 {
 #ifndef CROSS_PLATFORM
-    uint64_t tokenId = IPCSkeleton::GetSelfTokenID();
-    return Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(tokenId);
+    static std::once_flag once;
+    std::call_once(once, [this] {
+        uint64_t tokenId = IPCSkeleton::GetSelfTokenID();
+        isSystemApp_ = Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(tokenId);
+    });
 #endif
-    return false;
+    return isSystemApp_;
 }
 
 napi_value AVPlayerNapi::JsCreateAVPlayer(napi_env env, napi_callback_info info)
@@ -349,7 +352,9 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PlayTask()
                     "failed to play, avplayer enter error status, please check error callback messages!");
             }
         } else if (state == AVPlayerState::STATE_PLAYING) {
-            player_->Seek(-1, SEEK_CONTINOUS);
+            if (IsSystemApp()) {
+                player_->Seek(-1, SEEK_CONTINOUS);
+            }
             MEDIA_LOGI("current state is playing, invalid operation");
         } else {
             return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
