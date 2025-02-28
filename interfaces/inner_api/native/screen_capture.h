@@ -155,7 +155,6 @@ struct AudioCaptureInfo {
     int32_t audioChannels = 0;
     AudioCaptureSourceType audioSource = AudioCaptureSourceType::SOURCE_DEFAULT;
     AVScreenCaptureParamValidationState state = AVScreenCaptureParamValidationState::VALIDATION_IGNORE;
-    AVScreenCaptureFillMode screenCaptureFillMode = AVScreenCaptureFillMode::PRESERVE_ASPECT_RATIO;
 };
 
 struct AudioEncInfo {
@@ -177,6 +176,8 @@ struct VideoCaptureInfo {
     int32_t videoFrameHeight = 0;
     VideoSourceType videoSource = VideoSourceType::VIDEO_SOURCE_BUTT;
     AVScreenCaptureParamValidationState state = AVScreenCaptureParamValidationState::VALIDATION_IGNORE;
+    AVScreenCaptureFillMode screenCaptureFillMode = AVScreenCaptureFillMode::PRESERVE_ASPECT_RATIO;
+
 };
 
 struct VideoEncInfo {
