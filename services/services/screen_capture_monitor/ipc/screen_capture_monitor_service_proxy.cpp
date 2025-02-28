@@ -105,5 +105,39 @@ int32_t ScreenCaptureMonitorServiceProxy::DestroyStub()
 
     return reply.ReadInt32();
 }
+
+bool ScreenCaptureMonitorServiceProxy::IsSystemScreenRecorder(int32_t pid)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(ScreenCaptureMonitorServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, false, "Failed to write descriptor!");
+    token = data.WriteInt32(pid);
+    CHECK_AND_RETURN_RET_LOG(token, false, "Failed to write pid!");
+
+    int error = Remote()->SendRequest(IS_SYSTEM_SCREEN_RECORDER, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK,
+        false, "IsSystemScreenRecorder failed, error: %{public}d", error);
+
+    return reply.ReadBool();
+}
+
+bool ScreenCaptureMonitorServiceProxy::IsSystemScreenRecorderWorking()
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(ScreenCaptureMonitorServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, false, "Failed to write descriptor!");
+
+    int error = Remote()->SendRequest(IS_SYSTEM_SCREEN_RECORDER_WORKING, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK,
+        false, "IsSystemScreenRecorderWorking failed, error: %{public}d", error);
+
+    return reply.ReadBool();
+}
 } // namespace Media
 } // namespace OHOS

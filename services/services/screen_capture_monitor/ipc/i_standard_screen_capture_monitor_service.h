@@ -30,6 +30,8 @@ public:
     virtual int32_t CloseListenerObject() = 0;
     virtual std::list<int32_t> IsScreenCaptureWorking() = 0;
     virtual int32_t DestroyStub() = 0;
+    virtual bool IsSystemScreenRecorder(int32_t pid) = 0;
+    virtual bool IsSystemScreenRecorderWorking() = 0;
 
     /**
      * IPC code ID
@@ -39,6 +41,8 @@ public:
         IS_SCREEN_CAPTURE_WORKING = 1,
         DESTROY = 2,
         CLOSE_LISTENER_OBJ = 3,
+        IS_SYSTEM_SCREEN_RECORDER = 4,
+        IS_SYSTEM_SCREEN_RECORDER_WORKING = 5,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardScreenCaptureMonitorService");

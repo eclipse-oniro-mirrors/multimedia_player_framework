@@ -47,11 +47,15 @@ public:
     int32_t CallOnScreenCaptureStarted(int32_t pid);
     int32_t CallOnScreenCaptureFinished(int32_t pid);
     int32_t Release();
+    void SetSystemScreenRecorderStatus(bool started);
+    bool IsSystemScreenRecorder(int32_t pid) override;
+    bool IsSystemScreenRecorderWorking() override;
 private:
     int32_t Init();
     std::mutex mutex_;
     std::mutex mutexCb_;
     std::set<sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener>> screenCaptureMonitorCbSet_;
+    bool isSystemScreenRecorderWorking_ = false;
 };
 } // namespace Media
 } // namespace OHOS

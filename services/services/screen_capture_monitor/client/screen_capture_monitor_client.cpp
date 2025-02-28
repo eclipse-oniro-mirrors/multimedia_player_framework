@@ -118,5 +118,21 @@ void ScreenCaptureMonitorClient::UnregisterScreenCaptureMonitorListener(
         CloseListenerObject();
     }
 }
+
+bool ScreenCaptureMonitorClient::IsSystemScreenRecorder(int32_t pid)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorProxy_ != nullptr, false,
+        "ScreenCaptureMonitor service does not exist.");
+    return screenCaptureMonitorProxy_->IsSystemScreenRecorder(pid);
+}
+
+bool ScreenCaptureMonitorClient::IsSystemScreenRecorderWorking()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorProxy_ != nullptr, false,
+        "ScreenCaptureMonitor service does not exist.");
+    return screenCaptureMonitorProxy_->IsSystemScreenRecorderWorking();
+}
 } // namespace Media
 } // namespace OHOS
