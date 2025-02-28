@@ -25,15 +25,12 @@
 namespace OHOS {
 namespace Media {
 
-using RetInfo = std::pair<int32_t, std::string>;
-
 const std::string EVENT_SYSTEM_SCREEN_RECORD = "systemScreenRecorder";
 
 class ScreenCaptureMonitorNapi {
 public:
     __attribute__((visibility("default"))) static napi_value Init(napi_env env, napi_value exports);
 
-    using ScreenCaptureMonitorTaskqFunc = RetInfo (ScreenCaptureMonitorNapi::*)();
 private:
     static napi_value Constructor(napi_env env, napi_callback_info info);
     static void Destructor(napi_env env, void *nativeObject, void *finalize);
