@@ -119,9 +119,7 @@ void ScreenCaptureMonitorNapi::Destructor(napi_env env, void *nativeObject, void
     (void)finalize;
     if (nativeObject != nullptr) {
         ScreenCaptureMonitorNapi *napi = reinterpret_cast<ScreenCaptureMonitorNapi *>(nativeObject);
-
         napi->monitorCb_ = nullptr;
-
         delete napi;
     }
     MEDIA_LOGI("Js Destructor End");
@@ -146,8 +144,7 @@ napi_value ScreenCaptureMonitorNapi::JsGetScreenCaptureMonitor(napi_env env, nap
     CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, result, "failed to get AsyncContext");
 
     if (!SystemPermission()) {
-        SignError(asyncCtx.get(),
-            MSERR_EXT_API9_PERMISSION_DENIED, "GetScreenCaptureMonitor", "system");
+        SignError(asyncCtx.get(), MSERR_EXT_API9_PERMISSION_DENIED, "GetScreenCaptureMonitor", "system");
     }
 
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
@@ -178,8 +175,7 @@ napi_value ScreenCaptureMonitorNapi::JsSetEventCallback(napi_env env, napi_callb
     CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, result, "failed to get AsyncContext");
 
     if (!SystemPermission()) {
-        SignError(asyncCtx.get(),
-            MSERR_EXT_API9_PERMISSION_DENIED, "On", "system");
+        SignError(asyncCtx.get(), MSERR_EXT_API9_PERMISSION_DENIED, "On", "system");
     }
     
     size_t argCount = 2;
@@ -233,8 +229,7 @@ napi_value ScreenCaptureMonitorNapi::JsCancelEventCallback(napi_env env, napi_ca
     CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, result, "failed to get AsyncContext");
 
     if (!SystemPermission()) {
-        SignError(asyncCtx.get(),
-            MSERR_EXT_API9_PERMISSION_DENIED, "Off", "system");
+        SignError(asyncCtx.get(), MSERR_EXT_API9_PERMISSION_DENIED, "Off", "system");
     }
 
     napi_value args[1] = { nullptr };
@@ -274,8 +269,7 @@ napi_value ScreenCaptureMonitorNapi::JsIsSystemScreenRecorderWorking(napi_env en
     CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, result, "failed to get AsyncContext");
 
     if (!SystemPermission()) {
-        SignError(asyncCtx.get(),
-            MSERR_EXT_API9_PERMISSION_DENIED, "IsSystemScreenRecorderWorking", "system");
+        SignError(asyncCtx.get(), MSERR_EXT_API9_PERMISSION_DENIED, "IsSystemScreenRecorderWorking", "system");
     }
 
     size_t argCount = 0;
