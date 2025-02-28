@@ -115,6 +115,7 @@ public:
     int32_t Reset() override;
     int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override;
     int32_t SetVolume(float leftVolume, float rightVolume) override;
+    int32_t SetVolumeMode(int32_t mode) override;
     int32_t SetVideoSurface(sptr<Surface> surface) override;
     int32_t SetDecryptConfig(const sptr<OHOS::DrmStandard::IMediaKeySessionService> &keySessionProxy,
         bool svp) override;
