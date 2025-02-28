@@ -177,7 +177,6 @@ struct VideoCaptureInfo {
     VideoSourceType videoSource = VideoSourceType::VIDEO_SOURCE_BUTT;
     AVScreenCaptureParamValidationState state = AVScreenCaptureParamValidationState::VALIDATION_IGNORE;
     AVScreenCaptureFillMode screenCaptureFillMode = AVScreenCaptureFillMode::PRESERVE_ASPECT_RATIO;
-
 };
 
 struct VideoEncInfo {
