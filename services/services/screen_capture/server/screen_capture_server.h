@@ -35,7 +35,7 @@ public:
     static std::shared_mutex mutexServerMapRWGlobal_;
     static std::shared_mutex mutexListRWGlobal_;
     static std::shared_mutex mutexSaAppInfoMapGlobal_;
-    static int32_t systemScreenRecorderPid_;
+    static std::atomic<int32_t> systemScreenRecorderPid_;
 
     static std::shared_ptr<IScreenCaptureService> Create();
     static bool IsSAServiceCalling();

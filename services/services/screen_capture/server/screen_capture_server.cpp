@@ -93,7 +93,7 @@ UniqueIDGenerator ScreenCaptureServer::gIdGenerator_(ScreenCaptureServer::maxSes
 std::list<int32_t> ScreenCaptureServer::startedSessionIDList_;
 const int32_t ScreenCaptureServer::maxSessionPerUid_ = 4;
 const int32_t ScreenCaptureServer::maxSCServerDataTypePerUid_ = 2;
-int32_t ScreenCaptureServer::systemScreenRecorderPid_ = -1;
+std::atomic<int32_t> ScreenCaptureServer::systemScreenRecorderPid_ = -1;
 
 std::shared_mutex ScreenCaptureServer::mutexServerMapRWGlobal_;
 std::shared_mutex ScreenCaptureServer::mutexListRWGlobal_;
@@ -369,8 +369,8 @@ std::list<int32_t> ScreenCaptureServer::GetAllStartedSessionIdList()
 bool ScreenCaptureServer::CheckPidIsScreenRecorder(int32_t pid)
 {
     MEDIA_LOGI("CheckPidIsScreenRecorder ScreenRecorder pid(%{public}d), input pid(%{public}d)",
-        ScreenCaptureServer::systemScreenRecorderPid_, pid);
-    return pid == ScreenCaptureServer::systemScreenRecorderPid_;
+        (ScreenCaptureServer::systemScreenRecorderPid_).load(), pid);
+    return pid == (ScreenCaptureServer::systemScreenRecorderPid_).load();
 }
 
 void ScreenCaptureServer::OnDMPrivateWindowChange(bool hasPrivate)
@@ -3377,7 +3377,7 @@ void ScreenCaptureServer::SetSystemScreenRecorderStatus(bool status)
         return;
     }
     if (status) {
-        ScreenCaptureServer::systemScreenRecorderPid_ = appInfo_.appPid;
+        (ScreenCaptureServer::systemScreenRecorderPid_).store(appInfo_.appPid);
         ScreenCaptureMonitorServer::GetInstance()->SetSystemScreenRecorderStatus(true);
     } else {
         ScreenCaptureMonitorServer::GetInstance()->SetSystemScreenRecorderStatus(false);

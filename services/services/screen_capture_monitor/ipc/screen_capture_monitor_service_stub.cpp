@@ -136,13 +136,15 @@ std::list<int32_t> ScreenCaptureMonitorServiceStub::IsScreenCaptureWorking()
 
 bool ScreenCaptureMonitorServiceStub::IsSystemScreenRecorder(int32_t pid)
 {
-    CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorServer_ != nullptr, {}, "screen capture monitor server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorServer_ != nullptr,
+        false, "screen capture monitor server is nullptr");
     return screenCaptureMonitorServer_->IsSystemScreenRecorder(pid);
 }
 
 bool ScreenCaptureMonitorServiceStub::IsSystemScreenRecorderWorking()
 {
-    CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorServer_ != nullptr, {}, "screen capture monitor server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorServer_ != nullptr,
+        false, "screen capture monitor server is nullptr");
     return screenCaptureMonitorServer_->IsSystemScreenRecorderWorking();
 }
 

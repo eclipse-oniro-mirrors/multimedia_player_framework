@@ -113,13 +113,13 @@ bool ScreenCaptureMonitorServiceProxy::IsSystemScreenRecorder(int32_t pid)
     MessageOption option;
 
     bool token = data.WriteInterfaceToken(ScreenCaptureMonitorServiceProxy::GetDescriptor());
-    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+    CHECK_AND_RETURN_RET_LOG(token, false, "Failed to write descriptor!");
     token = data.WriteInt32(pid);
-    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write pid!");
+    CHECK_AND_RETURN_RET_LOG(token, false, "Failed to write pid!");
 
     int error = Remote()->SendRequest(IS_SYSTEM_SCREEN_RECORDER, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK,
-        MSERR_INVALID_OPERATION, "IsSystemScreenRecorder failed, error: %{public}d", error);
+        false, "IsSystemScreenRecorder failed, error: %{public}d", error);
 
     return reply.ReadBool();
 }
@@ -131,11 +131,11 @@ bool ScreenCaptureMonitorServiceProxy::IsSystemScreenRecorderWorking()
     MessageOption option;
 
     bool token = data.WriteInterfaceToken(ScreenCaptureMonitorServiceProxy::GetDescriptor());
-    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+    CHECK_AND_RETURN_RET_LOG(token, false, "Failed to write descriptor!");
 
     int error = Remote()->SendRequest(IS_SYSTEM_SCREEN_RECORDER_WORKING, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK,
-        MSERR_INVALID_OPERATION, "IsSystemScreenRecorderWorking failed, error: %{public}d", error);
+        false, "IsSystemScreenRecorderWorking failed, error: %{public}d", error);
 
     return reply.ReadBool();
 }
