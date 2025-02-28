@@ -37,24 +37,19 @@ CJMediaDataSourceCallback::~CJMediaDataSourceCallback()
 
 int32_t CJMediaDataSourceCallback::ReadAt(const std::shared_ptr<AVSharedMemory> &mem, uint32_t length, int64_t pos)
 {
-    if (cb_ == nullptr) {
+    if (cb_ == nullptr || mem == nullptr) {
         return SOURCE_ERROR_IO;
     }
     int32_t size = mem->GetSize();
     if (size <= 0) {
         return SOURCE_ERROR_IO;
     }
-    uint8_t *head = static_cast<uint8_t *>(malloc(sizeof(uint8_t) * size));
-    if (head == nullptr) {
-        return MSERR_EXT_API9_NO_MEMORY;
-    }
     uint8_t *raw = mem->GetBase();
-    for (int32_t i = 0; i < size; i++) {
-        head[i] = raw[i];
+    if (raw == nullptr) {
+        return SOURCE_ERROR_IO;
     }
-    CArrUI8 buffer = CArrUI8{.head = head, .size = size};
+    CArrUI8 buffer = CArrUI8{.head = raw, .size = size};
     auto res = cb_(buffer, length, pos);
-    free(head);
     return res;
 }
 
