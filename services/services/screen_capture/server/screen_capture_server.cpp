@@ -976,8 +976,9 @@ int32_t ScreenCaptureServer::CheckAudioCapInfo(AudioCaptureInfo &audioCapInfo)
 int32_t ScreenCaptureServer::CheckVideoCapInfo(VideoCaptureInfo &videoCapInfo)
 {
     MEDIA_LOGD("CheckVideoCapInfo start, videoFrameWidth:%{public}d, videoFrameHeight:%{public}d, "
-        "videoSource:%{public}d, state:%{public}d.", videoCapInfo.videoFrameWidth, videoCapInfo.videoFrameHeight,
-        videoCapInfo.videoSource, videoCapInfo.state);
+        "videoSource:%{public}d, state:%{public}d, screenCaptureFillMode:%{public}d.", videoCapInfo.videoFrameWidth,
+        videoCapInfo.videoFrameHeight, videoCapInfo.videoSource, videoCapInfo.state,
+        videoCapInfo.screenCaptureFillMode);
     if (videoCapInfo.videoFrameWidth == 0 && videoCapInfo.videoFrameHeight == 0) {
         MEDIA_LOGD("videoCap IGNORED width:%{public}d, height:%{public}d, source:%{public}d, state:%{public}d",
             videoCapInfo.videoFrameWidth, videoCapInfo.videoFrameHeight, videoCapInfo.videoSource, videoCapInfo.state);
@@ -2375,10 +2376,7 @@ int32_t ScreenCaptureServer::PrepareVirtualScreenMirror()
     for (size_t i = 0; i < contentFilter_.windowIDsVec.size(); i++) {
         MEDIA_LOGD("After CreateVirtualScreen windowIDsVec value :%{public}" PRIu64, contentFilter_.windowIDsVec[i]);
     }
-    if (GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"]
-            .compare(appName_) == 0) {
-        SetScreenScaleMode();
-    }
+    SetScreenScaleMode();
     Rosen::DisplayManager::GetInstance().SetVirtualScreenBlackList(virtualScreenId_, contentFilter_.windowIDsVec,
         surfaceIdList_);
     MEDIA_LOGI("PrepareVirtualScreenMirror screenId: %{public}" PRIu64, virtualScreenId_);
@@ -3252,6 +3250,26 @@ int32_t ScreenCaptureServer::SetMaxVideoFrameRate(int32_t frameRate)
     return MSERR_OK;
 }
 
+ScreenScaleMode ScreenCaptureServer::GetScreenScaleMode(const AVScreenCaptureFillMode &fillMode)
+{
+    MEDIA_LOGI("ScreenCaptureServer::GetScreenScaleMode in, fillMode: %{public}d", fillMode);
+    static const std::map<AVScreenCaptureFillMode, ScreenScaleMode> modeMap = {
+        {PRESERVE_ASPECT_RATIO, ScreenScaleMode::UNISCALE_MODE},
+        {SCALE_TO_FILL, ScreenScaleMode::FILL_MODE}
+    };
+    ScreenScaleMode scaleMode = ScreenScaleMode::UNISCALE_MODE;
+    auto iter = modeMap.find(fillMode);
+    if (iter != modeMap.end()) {
+        scaleMode = iter->second;
+    }
+    if (GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"]
+            .compare(appName_) == 0) {
+        scaleMode = ScreenScaleMode::FILL_MODE;
+    }
+    MEDIA_LOGI("ScreenCaptureServer::GetScreenScaleMode succeed, scaleMode: %{public}d", scaleMode);
+    return scaleMode;
+}
+
 int32_t ScreenCaptureServer::SetScreenScaleMode()
 {
     MediaTrace trace("ScreenCaptureServer::SetScreenScaleMode");
@@ -3259,7 +3277,7 @@ int32_t ScreenCaptureServer::SetScreenScaleMode()
     CHECK_AND_RETURN_RET_LOG(virtualScreenId_ != SCREEN_ID_INVALID, MSERR_INVALID_VAL,
                              "SetScreenScaleMode failed virtual screen not init");
     auto ret = ScreenManager::GetInstance().SetVirtualMirrorScreenScaleMode(
-        virtualScreenId_, OHOS::Rosen::ScreenScaleMode::FILL_MODE);
+        virtualScreenId_, GetScreenScaleMode(captureConfig_.videoInfo.videoCapInfo.screenCaptureFillMode));
     if (ret != DMError::DM_OK) {
         MEDIA_LOGW("SetScreenScaleMode failed, ret: %{public}d", ret);
         return static_cast<int32_t>(ret);

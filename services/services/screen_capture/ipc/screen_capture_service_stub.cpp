@@ -528,6 +528,7 @@ int32_t ScreenCaptureServiceStub::InitVideoCap(MessageParcel &data, MessageParce
     videoInfo.videoFrameWidth = data.ReadInt32();
     videoInfo.videoFrameHeight = data.ReadInt32();
     videoInfo.videoSource = static_cast<VideoSourceType>(data.ReadInt32());
+    videoInfo.screenCaptureFillMode = static_cast<AVScreenCaptureFillMode>(data.ReadInt32());
     int32_t ret = InitVideoCap(videoInfo);
     reply.WriteInt32(ret);
     return MSERR_OK;

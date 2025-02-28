@@ -688,6 +688,7 @@ int32_t AVScreenCaptureNapi::GetVideoInfo(std::unique_ptr<AVScreenCaptureAsyncCo
     int32_t frameWidth = AVSCREENCAPTURE_DEFAULT_FRAME_WIDTH;
     int32_t frameHeight = AVSCREENCAPTURE_DEFAULT_FRAME_HEIGHT;
     int32_t displayId = AVSCREENCAPTURE_DEFAULT_DISPLAY_ID;
+    int32_t fillMode = AVScreenCaptureFillMode::PRESERVE_ASPECT_RATIO;
     VideoEncInfo &encoderConfig = asyncCtx->config_.videoInfo.videoEncInfo;
     VideoCaptureInfo &videoConfig = asyncCtx->config_.videoInfo.videoCapInfo;
     int32_t ret = AVScreenCaptureNapi::GetPropertyInt32(env, args, "displayId", displayId);
@@ -724,6 +725,11 @@ int32_t AVScreenCaptureNapi::GetVideoInfo(std::unique_ptr<AVScreenCaptureAsyncCo
     MEDIA_LOGI("input formatted frameWidth %{public}d, frameHeight %{public}d",
         videoConfig.videoFrameWidth, videoConfig.videoFrameHeight);
     videoConfig.videoSource = VideoSourceType::VIDEO_SOURCE_SURFACE_RGBA;
+    ret = AVScreenCaptureNapi::GetPropertyInt32(env, args, "fillMode", fillMode);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, (asyncCtx->AVScreenCaptureSignError(
+        ret, "getScreenCaptureFillMode", "screenCaptureFillMode"), ret));
+    videoConfig.screenCaptureFillMode = GetScreenCaptureFillMode(fillMode);
+    MEDIA_LOGI("input screenCaptureFillMode %{public}d", videoConfig.screenCaptureFillMode);
     return MSERR_OK;
 }
 
@@ -813,6 +819,23 @@ VideoCodecFormat AVScreenCaptureNapi::GetVideoCodecFormat(const int32_t &preset)
         codecFormat = iter->second;
     }
     return codecFormat;
+}
+
+AVScreenCaptureFillMode AVScreenCaptureNapi::GetScreenCaptureFillMode(const int32_t &fillMode)
+{
+    MEDIA_LOGI("AVScreenCaptureNapi::GetScreenCaptureFillMode in!");
+    const std::map<int32_t, AVScreenCaptureFillMode> intToFillMode = {
+        { 0, AVScreenCaptureFillMode::PRESERVE_ASPECT_RATIO },
+        { 1, AVScreenCaptureFillMode::SCALE_TO_FILL }
+    };
+    AVScreenCaptureFillMode screenCaptureFillMode = AVScreenCaptureFillMode::PRESERVE_ASPECT_RATIO;
+    auto iter = intToFillMode.find(fillMode);
+    if (iter != intToFillMode.end()) {
+        screenCaptureFillMode = iter->second;
+    }
+    MEDIA_LOGI("AVScreenCaptureNapi::GetScreenCaptureFillMode succeed, screenCaptureFillMode: %{public}d",
+        screenCaptureFillMode);
+    return screenCaptureFillMode;
 }
 
 void AVScreenCaptureNapi::ErrorCallback(int32_t errCode, const std::string &operate, const std::string &add)
