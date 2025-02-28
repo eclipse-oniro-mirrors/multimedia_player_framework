@@ -101,7 +101,7 @@ std::list<int32_t> ScreenCaptureMonitorImpl::IsScreenCaptureWorking()
 bool ScreenCaptureMonitorImpl::IsSystemScreenRecorder(int32_t pid)
 {
     MEDIA_LOGD("ScreenCaptureMonitorImpl:0x%{public}06" PRIXPTR " IsSystemScreenRecorder in", FAKE_POINTER(this));
-    CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorService_ != nullptr, {},
+    CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorService_ != nullptr, false,
         "screen capture monitor service does not exist.");
     return screenCaptureMonitorService_->IsSystemScreenRecorder(pid);
 }
@@ -110,7 +110,7 @@ bool ScreenCaptureMonitorImpl::IsSystemScreenRecorderWorking()
 {
     MEDIA_LOGD("ScreenCaptureMonitorImpl:0x%{public}06" PRIXPTR " IsSystemScreenRecorderWorking in",
         FAKE_POINTER(this));
-    CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorService_ != nullptr, {},
+    CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorService_ != nullptr, false,
         "screen capture monitor service does not exist.");
     return screenCaptureMonitorService_->IsSystemScreenRecorderWorking();
 }
