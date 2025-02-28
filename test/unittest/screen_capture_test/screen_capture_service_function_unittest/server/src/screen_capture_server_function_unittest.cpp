@@ -1939,6 +1939,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetSystemScreenRecorderStatus_002, Tes
 
 HWTEST_F(ScreenCaptureServerFunctionTest, SetSystemScreenRecorderStatus_003, TestSize.Level2)
 {
+    ScreenCaptureServer::systemScreenRecorderPid_ = -1;
     screenCaptureServer_->appName_ =
         GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"];
     screenCaptureServer_->appInfo_.appPid = 15000;
