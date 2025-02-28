@@ -255,8 +255,9 @@ bool ScreenCaptureServer::CheckScreenCaptureSessionIdLimit(int32_t curAppUid)
         std::unique_lock<std::shared_mutex> lock(ScreenCaptureServer::mutexServerMapRWGlobal_);
         for (auto iter = ScreenCaptureServer::serverMap_.begin(); iter != ScreenCaptureServer::serverMap_.end();
             iter++) {
-                if ((iter->second).lock() != nullptr) {
-                    if (curAppUid == (iter->second).lock()->GetAppUid()) {
+                auto iterPtr = (iter->second).lock();
+                if (iterPtr != nullptr) {
+                    if (curAppUid == iterPtr->GetAppUid()) {
                         countForUid++;
                     }
                     CHECK_AND_RETURN_RET_LOG(countForUid <= ScreenCaptureServer::maxSessionPerUid_, false,
@@ -277,10 +278,10 @@ bool ScreenCaptureServer::CheckSCServerSpecifiedDataTypeNum(int32_t curAppUid, D
         std::unique_lock<std::shared_mutex> lock(ScreenCaptureServer::mutexServerMapRWGlobal_);
         for (auto iter = ScreenCaptureServer::serverMap_.begin(); iter != ScreenCaptureServer::serverMap_.end();
             iter++) {
-                if ((iter->second).lock() != nullptr) {
-                    if (curAppUid == (iter->second).lock()->GetAppUid() &&
-                        dataType == (iter->second).lock()->GetSCServerDataType()) {
-                            countForUidDataType++;
+                auto iterPtr = (iter->second).lock();
+                if (iterPtr != nullptr) {
+                    if (curAppUid == iterPtr->GetAppUid() && dataType == iterPtr->GetSCServerDataType()) {
+                        countForUidDataType++;
                     }
                     CHECK_AND_RETURN_RET_LOG(countForUidDataType <= ScreenCaptureServer::maxSCServerDataTypePerUid_,
                         false, "CheckSCServerSpecifiedDataTypeNum failed,"
@@ -296,8 +297,9 @@ void ScreenCaptureServer::CountScreenCaptureAppNum(std::set<int32_t>& appSet)
 {
     std::unique_lock<std::shared_mutex> lock(ScreenCaptureServer::mutexServerMapRWGlobal_);
     for (auto iter = ScreenCaptureServer::serverMap_.begin(); iter != ScreenCaptureServer::serverMap_.end(); iter++) {
-        if (iter->second.lock() != nullptr) {
-            appSet.insert(iter->second.lock()->GetAppUid());
+        auto iterPtr = iter->second.lock();
+        if (iterPtr != nullptr) {
+            appSet.insert(iterPtr->GetAppUid());
         }
     }
 }
@@ -313,9 +315,8 @@ bool ScreenCaptureServer::CheckScreenCaptureAppLimit(int32_t curAppUid)
     return true;
 }
 
-std::shared_ptr<ScreenCaptureServer> ScreenCaptureServer::GetScreenCaptureServerByIdWithLock(int32_t id)
+std::shared_ptr<ScreenCaptureServer> ScreenCaptureServer::GetScreenCaptureServerById(int32_t id)
 {
-    std::unique_lock<std::shared_mutex> lock(ScreenCaptureServer::mutexServerMapRWGlobal_);
     auto iter = ScreenCaptureServer::serverMap_.find(id);
     if (iter == ScreenCaptureServer::serverMap_.end()) {
         return nullptr;
@@ -323,11 +324,18 @@ std::shared_ptr<ScreenCaptureServer> ScreenCaptureServer::GetScreenCaptureServer
     return (iter->second).lock();
 }
 
+std::shared_ptr<ScreenCaptureServer> ScreenCaptureServer::GetScreenCaptureServerByIdWithLock(int32_t id)
+{
+    std::unique_lock<std::shared_mutex> lock(ScreenCaptureServer::mutexServerMapRWGlobal_);
+    return GetScreenCaptureServerById(id);
+}
+
 std::list<int32_t> ScreenCaptureServer::GetStartedScreenCaptureServerPidList()
 {
     std::list<int32_t> startedScreenCapturePidList{};
+    std::unique_lock<std::shared_mutex> lock(ScreenCaptureServer::mutexServerMapRWGlobal_);
     for (auto sessionId: ScreenCaptureServer::startedSessionIDList_) {
-        std::shared_ptr<ScreenCaptureServer> currentServer = GetScreenCaptureServerByIdWithLock(sessionId);
+        std::shared_ptr<ScreenCaptureServer> currentServer = GetScreenCaptureServerById(sessionId);
         if (currentServer != nullptr) {
             startedScreenCapturePidList.push_back(currentServer->GetAppPid() == 0 ? -1 : currentServer->GetAppPid());
         }
@@ -338,8 +346,9 @@ std::list<int32_t> ScreenCaptureServer::GetStartedScreenCaptureServerPidList()
 int32_t ScreenCaptureServer::CountStartedScreenCaptureServerNumByPid(int32_t pid)
 {
     int32_t count = 0;
+    std::unique_lock<std::shared_mutex> lock(ScreenCaptureServer::mutexServerMapRWGlobal_);
     for (auto sessionId: ScreenCaptureServer::startedSessionIDList_) {
-        std::shared_ptr<ScreenCaptureServer> currentServer = GetScreenCaptureServerByIdWithLock(sessionId);
+        std::shared_ptr<ScreenCaptureServer> currentServer = GetScreenCaptureServerById(sessionId);
         if (currentServer != nullptr && currentServer->GetAppPid() == pid) {
             count++;
         }

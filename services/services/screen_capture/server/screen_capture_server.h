@@ -50,6 +50,7 @@ public:
     static bool CheckSCServerSpecifiedDataTypeNum(int32_t curAppUid, DataType dataType);
     static void CountScreenCaptureAppNum(std::set<int32_t>& appSet);
     static bool CheckScreenCaptureAppLimit(int32_t curAppUid);
+    static std::shared_ptr<ScreenCaptureServer> GetScreenCaptureServerById(int32_t id);
     static std::shared_ptr<ScreenCaptureServer> GetScreenCaptureServerByIdWithLock(int32_t id);
     static std::list<int32_t> GetStartedScreenCaptureServerPidList();
     static int32_t CountStartedScreenCaptureServerNumByPid(int32_t pid);
