@@ -39,8 +39,10 @@ public:
 
     MOCK_METHOD(uint32_t, GetQueueSize, (), (override));
     MOCK_METHOD(Status, SetQueueSize, (uint32_t size), (override));
+    MOCK_METHOD(Status, SetLargerQueueSize, (uint32_t size), (override));
     MOCK_METHOD(bool, IsBufferInQueue, (const std::shared_ptr<AVBuffer>& buffer), (override));
     MOCK_METHOD(Status, Clear, (), (override));
+    MOCK_METHOD(Status, ClearBufferIf, (std::function<bool(const std::shared_ptr<AVBuffer> &)> pred), (override));
     MOCK_METHOD(Status, SetQueueSizeAndAttachBuffer,
                 (uint32_t size, std::shared_ptr<AVBuffer>& buffer, bool isFilled), (override));
 };

@@ -87,6 +87,8 @@ private:
     void InitPlayerFuncsPart1();
     void InitPlayerFuncsPart2();
     void WritePlaybackStrategy(MessageParcel &data, const AVPlayStrategy &strategy);
+    void WriteMediaStreamListToMessageParcel(const std::shared_ptr<AVMediaSource> &mediaSource, MessageParcel& data);
+
     static inline BrokerDelegator<PlayerServiceProxy> delegator_;
     std::map<uint32_t, std::string> playerFuncs_;
 };

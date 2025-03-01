@@ -277,6 +277,11 @@ bool HiPlayerImpl::IsFileUrl(const std::string &url) const
     return url.find("://") == std::string::npos || url.find("file://") == 0;
 }
 
+bool HiPlayerImpl::IsNetworkUrl(const std::string &url) const
+{
+    return url.find("http") == 0 || url.find("https") == 0;
+}
+
 bool HiPlayerImpl::IsValidPlayRange(int64_t start, int64_t end) const
 {
     if (start < PLAY_RANGE_DEFAULT_VALUE || end < PLAY_RANGE_DEFAULT_VALUE || end == 0) {
@@ -355,7 +360,7 @@ int32_t HiPlayerImpl::SetSource(const std::string& uri)
         sourceType = PlayerDfxSourceType::DFX_SOURCE_TYPE_URL_FILE;
         SetPerfRecEnabled(true);
     }
-    if (url_.find("http") == 0 || url_.find("https") == 0) {
+    if (IsNetworkUrl(uri)) {
         isNetWorkPlay_ = true;
         sourceType = PlayerDfxSourceType::DFX_SOURCE_TYPE_URL_NETWORK;
     }
@@ -382,8 +387,11 @@ int32_t HiPlayerImpl::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
         return MSERR_INVALID_VAL;
     }
     header_ = mediaSource->header;
-    url_ = mediaSource->url;
+
+    playMediaStreamVec_ = mediaSource->GetAVPlayMediaStreamList();
+    url_ = playMediaStreamVec_.empty() ? mediaSource->url : playMediaStreamVec_[0].url;
     sourceLoader_ = mediaSource->sourceLoader_;
+
     preferedWidth_ = strategy.preferredWidth;
     preferedHeight_ = strategy.preferredHeight;
     bufferDuration_ = strategy.preferredBufferDuration;
@@ -399,7 +407,6 @@ int32_t HiPlayerImpl::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
 
     mimeType_ = mediaSource->GetMimeType();
     bufferDurationForPlaying_ = strategy.preferredBufferDurationForPlaying;
-    PlayerDfxSourceType sourceType = PlayerDfxSourceType::DFX_SOURCE_TYPE_MEDIASOURCE_LOCAL;
     if (mimeType_ != AVMimeTypes::APPLICATION_M3U8 && IsFileUrl(url_)) {
         std::string realUriPath;
         int32_t result = GetRealPath(url_, realUriPath);
@@ -409,7 +416,9 @@ int32_t HiPlayerImpl::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
         }
         url_ = "file://" + realUriPath;
     }
-    if (url_.find("http") == 0 || url_.find("https") == 0) {
+
+    PlayerDfxSourceType sourceType = PlayerDfxSourceType::DFX_SOURCE_TYPE_MEDIASOURCE_LOCAL;
+    if (IsNetworkUrl(url_)) {
         isNetWorkPlay_ = true;
         sourceType = PlayerDfxSourceType::DFX_SOURCE_TYPE_MEDIASOURCE_NETWORK;
     }
@@ -2371,6 +2380,20 @@ void HiPlayerImpl::DoSetPlayStrategy(const std::shared_ptr<MediaSource> source)
     }
 }
 
+void HiPlayerImpl::DoSetPlayMediaStream(const std::shared_ptr<MediaSource>& source)
+{
+    FALSE_RETURN(source != nullptr);
+    for (auto& mediaStream : playMediaStreamVec_) {
+        std::shared_ptr<PlayMediaStream> playMediaStream = std::make_shared<PlayMediaStream>();
+        FALSE_RETURN(playMediaStream != nullptr);
+        playMediaStream->url = mediaStream.url;
+        playMediaStream->width = mediaStream.width;
+        playMediaStream->height = mediaStream.height;
+        playMediaStream->bitrate = mediaStream.bitrate;
+        source->AddMediaStream(playMediaStream);
+    }
+}
+
 Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
 {
     MediaTrace trace("HiPlayerImpl::DoSetSource");
@@ -2381,6 +2404,7 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
     FALSE_RETURN_V(demuxer_ != nullptr, Status::ERROR_NULL_POINTER);
     demuxer_->SetPerfRecEnabled(isPerfRecEnabled_);
     demuxer_->SetApiVersion(apiVersion_);
+    demuxer_->SetSyncCenter(syncManager_);
     pipeline_->AddHeadFilters({demuxer_});
     demuxer_->Init(playerEventReceiver_, playerFilterCallback_, interruptMonitor_);
     DoSetPlayStrategy(source);
@@ -2390,6 +2414,9 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
     if (!seiMessageCbStatus_ && surface_ == nullptr) {
         MEDIA_LOG_D("HiPlayerImpl::DisableMediaTrack");
         demuxer_->DisableMediaTrack(OHOS::Media::Plugins::MediaType::VIDEO);
+    }
+    if (!playMediaStreamVec_.empty()) {
+        DoSetPlayMediaStream(source);
     }
     FALSE_RETURN_V(!isInterruptNeeded_, Status::OK);
     demuxer_->SetIsEnableReselectVideoTrack(true);

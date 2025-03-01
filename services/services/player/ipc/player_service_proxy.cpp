@@ -756,11 +756,26 @@ int32_t PlayerServiceProxy::SetMediaSource(const std::shared_ptr<AVMediaSource> 
         (void)data.WriteFileDescriptor(fd);
         MEDIA_LOGI("fd : %d", fd);
     }
+    WriteMediaStreamListToMessageParcel(mediaSource, data);
     WritePlaybackStrategy(data, strategy);
     int32_t error = SendRequest(SET_MEDIA_SOURCE, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetMediaSource failed, error: %{public}d", error);
     return reply.ReadInt32();
+}
+
+void PlayerServiceProxy::WriteMediaStreamListToMessageParcel(
+    const std::shared_ptr<AVMediaSource> &mediaSource, MessageParcel &data)
+{
+    std::vector<AVPlayMediaStream> mediaStreams = mediaSource->GetAVPlayMediaStreamList();
+    uint32_t mediaStreamLength = static_cast<uint32_t>(mediaStreams.size());
+    (void)data.WriteUint32(mediaStreamLength);
+    for (auto const & stream : mediaStreams) {
+        (void)data.WriteString(stream.url);
+        (void)data.WriteUint32(stream.width);
+        (void)data.WriteUint32(stream.height);
+        (void)data.WriteUint32(stream.bitrate);
+    }
 }
 
 int32_t PlayerServiceProxy::GetPlaybackSpeed(PlaybackRateMode &mode)

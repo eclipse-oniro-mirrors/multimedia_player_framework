@@ -363,6 +363,8 @@ private:
     bool IsPalyingDurationValid(const AVPlayStrategyTmp &strategyTmp);
     void EnqueueMediaSourceTask(AVPlayerNapi *jsPlayer, const std::shared_ptr<AVMediaSource> &mediaSource,
                                 const struct AVPlayStrategy &strategy);
+    void AddMediaStreamToAVMediaSource(
+        const std::shared_ptr<AVMediaSourceTmp> &srcTmp, std::shared_ptr<AVMediaSource> &mediaSource);
     bool IsSystemApp();
 
     std::condition_variable stopTaskQueCond_;

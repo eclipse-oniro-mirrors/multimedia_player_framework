@@ -55,6 +55,13 @@ struct AVPlayStrategy {
     std::string preferredSubtitleLanguage = "";
 };
 
+struct AVPlayMediaStream {
+    std::string url = "";
+    uint32_t width = 0;
+    uint32_t height = 0;
+    uint32_t bitrate = 0;
+};
+
 struct DrmInfoItem {
     uint8_t uuid[DrmConstant::DRM_MAX_M3U8_DRM_UUID_LEN];
     uint8_t pssh[DrmConstant::DRM_MAX_M3U8_DRM_PSSH_LEN];
@@ -80,11 +87,22 @@ public:
         return mimeType_;
     }
 
-    std::string url {0};
+    const std::vector<AVPlayMediaStream>& GetAVPlayMediaStreamList()
+    {
+        return mediaStreamVec_;
+    }
+ 
+    void AddMediaStream(AVPlayMediaStream& mediaStream)
+    {
+        mediaStreamVec_.push_back(mediaStream);
+    }
+    std::string url {};
     std::string mimeType_ {};
     std::map<std::string, std::string> header;
     std::shared_ptr<LoaderCallback> mediaSourceLoaderCb_ {nullptr};
     std::shared_ptr<Plugins::IMediaSourceLoader> sourceLoader_ {nullptr};
+private:
+    std::vector<AVPlayMediaStream> mediaStreamVec_;
 };
 
 class PlayerKeys {

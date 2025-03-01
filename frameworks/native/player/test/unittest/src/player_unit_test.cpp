@@ -305,6 +305,27 @@ HWTEST_F(PlayerUnitTest, Player_SetMediaSource_006, TestSize.Level0)
 }
 
 /**
+ * @tc.name  : Test Player SetMediaSource API
+ * @tc.number: Player_SetMediaSource_007
+ * @tc.desc  : Test Player SetMediaSource with MediaStream
+ */
+HWTEST_F(PlayerUnitTest, Player_SetMediaSource_007, TestSize.Level0)
+{
+    std::map<std::string, std::string> header = {
+    };
+    struct AVPlayStrategy strategy = {720, 1280, 0, false};
+    std::shared_ptr<AVMediaSource> mediaSource = std::make_shared<AVMediaSource>("", header);
+    AVPlayMediaStream mediaStream;
+    mediaStream.url = "http://media.iyuns.top:1003/live/SEI-H264.flv";
+    mediaStream.width = 720;
+    mediaStream.height = 1280;
+    mediaStream.bitrate = 1024*1024;
+    mediaSource->AddMediaStream(mediaStream);
+    int32_t ret = player_->SetMediaSource(mediaSource, strategy);
+    EXPECT_EQ(MSERR_OK, ret);
+}
+
+/**
  * @tc.name  : Test Player SetSource API
  * @tc.number: Player_SetSource_001
  * @tc.desc  : Test Player SetSource interface

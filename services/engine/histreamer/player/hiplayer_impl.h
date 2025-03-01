@@ -161,8 +161,7 @@ public:
     void OnEventSubTrackChange(const Event &event);
     void HandleDfxEvent(const DfxEvent &event);
     void OnStateChanged(PlayerStateId state, bool isSystemOperation = false);
-    Status OnCallback(std::shared_ptr<Filter> filter, const FilterCallBackCommand cmd,
-                    StreamType outType);
+    Status OnCallback(std::shared_ptr<Filter> filter, const FilterCallBackCommand cmd, StreamType outType);
     int32_t SeekContinous(int32_t mSeconds, int64_t seekContinousBatchNo) override;
     int32_t ExitSeekContinous(bool align, int64_t seekContinousBatchNo) override;
     int32_t PauseDemuxer() override;
@@ -186,6 +185,7 @@ private:
 
     Status DoSetSource(const std::shared_ptr<MediaSource> source);
     void DoSetPlayStrategy(const std::shared_ptr<MediaSource> source);
+    void DoSetPlayMediaStream(const std::shared_ptr<MediaSource>& source);
     Status Resume();
     void GetDumpFlag();
     void HandleCompleteEvent(const Event& event);
@@ -220,6 +220,7 @@ private:
     void DoInitializeForHttp();
     bool EnableBufferingBySysParam() const;
     bool IsFileUrl(const std::string &url) const;
+    bool IsNetworkUrl(const std::string &url) const;
     bool IsValidPlayRange(int64_t start, int64_t end) const;
     int32_t GetRealPath(const std::string &url, std::string &realUrlPath) const;
     void SetDefaultAudioRenderInfo(const std::vector<std::shared_ptr<Meta>> &trackInfos);
@@ -362,6 +363,8 @@ private:
     OHOS::Media::MediaType mutedMediaType_ = OHOS::Media::MediaType::MEDIA_TYPE_MAX_COUNT;
     std::string audioLanguage_;
     std::string subtitleLanguage_;
+    std::vector<AVPlayMediaStream> playMediaStreamVec_;
+
     std::string playerId_;
     std::string mimeType_;
     int32_t currentAudioTrackId_ = -1;

@@ -334,6 +334,10 @@ int32_t PlayerClient::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
         CHECK_AND_RETURN_RET_LOG(playerProxy_->SetSourceLoader(object) == MSERR_OK,
             MSERR_UNKNOWN, "SetSourceLoader error");
     }
+    MEDIA_LOGD("url_=%{private}s playMediaStreamVec_size=%{public}lu mimeType_=%{public}s",
+        mediaSource->url.c_str(),
+        mediaSource->GetAVPlayMediaStreamList().size(),
+        mediaSource->GetMimeType().c_str());
     return playerProxy_->SetMediaSource(mediaSource, strategy);
 }
 

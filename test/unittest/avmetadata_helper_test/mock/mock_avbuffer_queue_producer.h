@@ -44,6 +44,7 @@ public:
     MOCK_METHOD(Status, RemoveBufferFilledListener, (sptr<IBrokerListener>& listener), (override));
     MOCK_METHOD(Status, SetBufferAvailableListener, (sptr<IProducerListener>& listener), (override));
     MOCK_METHOD(Status, Clear, (), (override));
+    MOCK_METHOD(Status, ClearBufferIf, (std::function<bool(const std::shared_ptr<AVBuffer> &)> pred), (override));
     MOCK_METHOD(sptr<IRemoteObject>, AsObject, (), (override));
 };
 
