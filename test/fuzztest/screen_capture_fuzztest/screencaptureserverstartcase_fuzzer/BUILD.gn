@@ -127,8 +127,6 @@ ohos_fuzztest("ScreenCaptureServerStartCaseFuzzTest") {
     "audio_framework:audio_client",
     "av_codec:av_codec_client",
     "c_utils:utils",
-    "call_manager:tel_call_manager_api",
-    "core_service:tel_core_service_api",
     "distributed_notification_service:ans_innerkits",
     "graphic_surface:surface",
     "graphic_surface:sync_fence",
@@ -140,9 +138,15 @@ ohos_fuzztest("ScreenCaptureServerStartCaseFuzzTest") {
     "qos_manager:qos",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "state_registry:tel_state_registry_api",
     "window_manager:libdm",
   ]
+  if (player_framework_support_screen_capture_stopbycall) {
+    external_deps += [
+      "call_manager:tel_call_manager_api",
+      "core_service:tel_core_service_api",
+      "state_registry:tel_state_registry_api",
+    ]
+  }
   if (player_framework_support_power_manager) {
     external_deps += [ "power_manager:powermgr_client" ]
   }

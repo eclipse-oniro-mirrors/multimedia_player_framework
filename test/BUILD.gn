@@ -36,22 +36,28 @@ group("media_unit_test") {
       "unittest/hitranscode:hitranscode_unit_test",
       "unittest/native_avimagegenerate:native_avimagegenerator_unit_test",
       "unittest/native_avmetadataextractor:native_avmetadataextractor_unit_test",
-      "unittest/observer_test:account_observer_unit_test",
-      "unittest/observer_test:incall_observer_unit_test",
       "unittest/player_server_mem_test:player_server_mem_test",
       "unittest/player_server_test:player_server_unit_test",
       "unittest/recorder_profiles_server_test:recorder_profiles_server_unit_test",
       "unittest/recorder_test:recorder_native_unit_test",
       "unittest/recorder_test:recorder_server_unit_test",
-      "unittest/screen_capture_test:screen_capture_capi_unit_test",
-      "unittest/screen_capture_test:screen_capture_native_unit_test",
-      "unittest/screen_capture_test:screen_capture_server_function_unit_test",
       "unittest/services/utils:utils_unit_test",
       "unittest/soundpool_test:soundpool_unit_test",
       "unittest/task_queue_test:task_queue_unit_test",
       "unittest/transcoder_server:transcoder_server_unit_test",
       "unittest/utils_test:player_framework_utils_test",
     ]
+    if (player_framework_support_screen_capture) {
+      deps += [
+        "unittest/observer_test:account_observer_unit_test",
+        "unittest/screen_capture_test:screen_capture_capi_unit_test",
+        "unittest/screen_capture_test:screen_capture_native_unit_test",
+        "unittest/screen_capture_test:screen_capture_server_function_unit_test",
+      ]
+      if (player_framework_support_screen_capture_stopbycall) {
+        deps += [ "unittest/observer_test:incall_observer_unit_test" ]
+      }
+    }
   }
 }
 

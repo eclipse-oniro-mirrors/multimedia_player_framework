@@ -39,7 +39,10 @@ ohos_unittest("incall_observer_unit_test") {
     "-Dprotected=public",
   ]
 
-  sources = [ "./observer_unittest/incall_observer_func_unittest.cpp" ]
+  if (player_framework_support_screen_capture &&
+      player_framework_support_screen_capture_stopbycall) {
+    sources = [ "./observer_unittest/incall_observer_func_unittest.cpp" ]
+  }
 
   public_deps = [ "$MEDIA_PLAYER_ROOT_DIR/services/services:media_service" ]
 
@@ -62,17 +65,21 @@ ohos_unittest("incall_observer_unit_test") {
     "audio_framework:audio_client",
     "av_codec:av_codec_client",
     "c_utils:utils",
-    "call_manager:tel_call_manager_api",
-    "core_service:tel_core_service_api",
     "graphic_surface:surface",
     "hilog:libhilog",
     "init:libbegetutil",
     "player_framework:media_client",
     "qos_manager:qos",
-    "state_registry:tel_state_registry_api",
     "window_manager:libdm",
   ]
-
+  if (player_framework_support_screen_capture &&
+      player_framework_support_screen_capture_stopbycall) {
+    external_deps += [
+      "call_manager:tel_call_manager_api",
+      "core_service:tel_core_service_api",
+      "state_registry:tel_state_registry_api",
+    ]
+  }
   defines = []
   defines += player_framework_defines
 
@@ -104,7 +111,9 @@ ohos_unittest("account_observer_unit_test") {
     "-Dprotected=public",
   ]
 
-  sources = [ "./observer_unittest/account_observer_func_unittest.cpp" ]
+  if (player_framework_support_screen_capture) {
+    sources = [ "./observer_unittest/account_observer_func_unittest.cpp" ]
+  }
 
   public_deps = [ "$MEDIA_PLAYER_ROOT_DIR/services/services:media_service" ]
 

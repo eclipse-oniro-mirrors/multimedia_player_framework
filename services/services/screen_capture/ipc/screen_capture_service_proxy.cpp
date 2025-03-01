@@ -463,17 +463,26 @@ int32_t ScreenCaptureServiceProxy::ExcludeContent(ScreenCaptureContentFilter &co
 
     token = data.WriteInt32(static_cast<int32_t>(contentFilter.filteredAudioContents.size()));
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write filteredAudioContents size!");
-
+    int count = 0;
     // The filteredAudioContents size is limited, no big data risk.
     for (const auto &element : contentFilter.filteredAudioContents) {
         token = data.WriteInt32(static_cast<int32_t>(element));
         CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write filteredAudioContents");
+        count++;
+        if (count >= MAX_WINDOWS_LEN) {
+            break;
+        }
     }
     token = data.WriteInt32(static_cast<int32_t>(contentFilter.windowIDsVec.size()));
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write windowCount size!");
+    count = 0;
     for (size_t i = 0; i < contentFilter.windowIDsVec.size(); i++) {
         token = data.WriteUint64(static_cast<uint64_t>(contentFilter.windowIDsVec[i]));
         CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write windowIDs");
+        count++;
+        if (count >= MAX_WINDOWS_LEN) {
+            break;
+        }
     }
     int error = Remote()->SendRequest(EXCLUDE_CONTENT, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
