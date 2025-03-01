@@ -23,7 +23,6 @@
 #include "telephony_observer_client.h"
 #include "telephony_types.h"
 #include "telephony_errors.h"
-#include "media_utils.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "InCallObserver"};

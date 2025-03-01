@@ -1952,6 +1952,8 @@ int32_t ScreenCaptureServer::RegisterServerCallbacks()
     isCalledBySystemApp_ = OHOS::Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(tokenId);
     MEDIA_LOGI("ScreenCaptureServer::RegisterServerCallbacks isCalledBySystemApp: %{public}d", isCalledBySystemApp_);
     apiVersion_ = GetAPIVersion();
+    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " API Version is %{public}d", FAKE_POINTER(this),
+        apiVersion_);
     MEDIA_LOGI("current API Version is %{public}d", apiVersion);
     if (apiVersion_ < STOPPED_BY_CALL_API_VERSION_ISOLATION && InCallObserver::GetInstance().IsInCall(true) &&
         !IsTelInCallSkipList()) {
@@ -3027,9 +3029,12 @@ int32_t ScreenCaptureServer::OnVoIPStatusChanged(bool isInVoIPCall)
 #ifdef SUPPORT_CALL
 int32_t ScreenCaptureServer::TelCallStateUpdated(bool isInTelCall)
 {
+    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " API Version is %{public}d", FAKE_POINTER(this),
+        apiVersion_);
     if (apiVersion_ < STOPPED_BY_CALL_API_VERSION_ISOLATION && isInTelCall) {
         StopScreenCaptureByEvent(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_CALL);
         Release();
+        return MSERR_OK;
     }
     if (isInTelCall_.load() == isInTelCall) {
         return MSERR_OK;
