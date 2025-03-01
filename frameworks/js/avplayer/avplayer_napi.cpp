@@ -3336,7 +3336,7 @@ int32_t AVPlayerNapi::GetJsApiVersion()
     return g_apiVersion;
 }
 
-void AddMediaStreamToAVMediaSource(
+void AVPlayerNapi::AddMediaStreamToAVMediaSource(
     const std::shared_ptr<AVMediaSourceTmp> &srcTmp, std::shared_ptr<AVMediaSource> &mediaSource)
 {
     for (const auto &mediaStreamTmp : srcTmp->getAVPlayMediaStreamTmpList()) {
