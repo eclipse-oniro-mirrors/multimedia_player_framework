@@ -588,6 +588,7 @@ int32_t PlayerServer::HandlePause(bool isSystemOperation)
 {
     MEDIA_LOGI("KPI-TRACE: PlayerServer HandlePause in");
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_INVALID_OPERATION, "playerEngine_ is nullptr");
+    ExitSeekContinous(true);
     int32_t ret = playerEngine_->Pause(isSystemOperation);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine Pause Failed!");
 
@@ -2022,8 +2023,7 @@ bool PlayerServer::IsSeekContinuousSupported()
     MediaTrace trace("PlayerServer::IsSeekContinuousSupported");
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET(lastOpStatus_ == PLAYER_PREPARED || lastOpStatus_ == PLAYER_STARTED ||
-        lastOpStatus_ == PLAYER_PLAYBACK_COMPLETE || lastOpStatus_ == PLAYER_PAUSED || lastOpStatus_ == PLAYER_STOPPED,
-        MSERR_INVALID_STATE);
+        lastOpStatus_ == PLAYER_PLAYBACK_COMPLETE || lastOpStatus_ == PLAYER_PAUSED, false);
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, false, "engine is nullptr");
     bool isSeekContinuousSupported = false;
     int32_t ret = playerEngine_->IsSeekContinuousSupported(isSeekContinuousSupported);
