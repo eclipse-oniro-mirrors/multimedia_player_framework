@@ -196,7 +196,7 @@ std::unordered_map<int32_t, std::string> AVMetaDataCollector::GetMetadata(
         }
         if (mime.find("video") == 0) {
             if (!isFirstVideoTrack) {
-	            continue;
+                continue;
             }
             isFirstVideoTrack = false;
         }
