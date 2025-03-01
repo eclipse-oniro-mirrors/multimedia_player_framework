@@ -1947,7 +1947,17 @@ int32_t ScreenCaptureServer::RegisterServerCallbacks()
 #ifdef SUPPORT_CALL
     uint64_t tokenId = IPCSkeleton::GetCallingFullTokenID();
     isCalledBySystemApp_ = OHOS::Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(tokenId);
-    MEDIA_LOGI("ScreenCaptureServer::RegisterServerCallbacks isCalledBySystemApp : %{public}d", isCalledBySystemApp_);
+    MEDIA_LOGI("ScreenCaptureServer::RegisterServerCallbacks isCalledBySystemApp: %{public}d", isCalledBySystemApp_);
+    int32_t apiVersion = GetAPIVersion();
+    MEDIA_LOGI("current API Version is %{public}d", apiVersion);
+    if (apiVersion < SCREENCAPTURE_STOPPED_BY_CALL_API_VERSION_ISOLATION &&
+        InCallObserver::GetInstance().IsInCall(true) && !IsTelInCallSkipList()) {
+        MEDIA_LOGI("ScreenCaptureServer Start InCall Abort");
+        NotifyStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_CALL);
+        FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_, SCREEN_CAPTURE_ERR_UNSUPPORT,
+            "ScreenCaptureServer Start InCall Abort");
+        return MSERR_UNSUPPORT;
+    }
     MEDIA_LOGI("ScreenCaptureServer Start RegisterScreenCaptureCallBack");
     InCallObserver::GetInstance().RegisterInCallObserverCallBack(screenCaptureObserverCb_);
 #endif
