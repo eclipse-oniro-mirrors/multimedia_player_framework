@@ -180,6 +180,7 @@ std::unordered_map<int32_t, std::string> AVMetaDataCollector::GetMetadata(
 
     int32_t imageTrackCount = 0;
     size_t trackCount = trackInfos.size();
+    bool isFirstVideoTrack = true;
     for (size_t index = 0; index < trackCount; index++) {
         std::shared_ptr<Meta> meta = trackInfos[index];
         CHECK_AND_RETURN_RET_LOG(meta != nullptr, metadata.tbl_, "meta is invalid, index: %zu", index);
@@ -193,7 +194,11 @@ std::unordered_map<int32_t, std::string> AVMetaDataCollector::GetMetadata(
             ++imageTrackCount;
             continue;
         }
-
+        if (mime.find("video") == 0 && !isFirstVideoTrack) {
+            continue;
+        } else if (mime.find("video") == 0 && isFirstVideoTrack) {
+            isFirstVideoTrack = false;
+        }
         Plugins::MediaType mediaType;
         CHECK_AND_CONTINUE(meta->GetData(Tag::MEDIA_TYPE, mediaType));
         ConvertToAVMeta(meta, metadata);
