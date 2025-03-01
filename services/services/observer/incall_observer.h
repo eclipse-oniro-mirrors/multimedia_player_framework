@@ -28,8 +28,6 @@
 namespace OHOS {
 namespace Media {
 
-static const int32_t SCREENCAPTURE_STOPPED_BY_CALL_API_VERSION_ISOLATION = 16;
-
 class InCallObserverCallBack {
 public:
     virtual ~InCallObserverCallBack() = default;

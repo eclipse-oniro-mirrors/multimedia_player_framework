@@ -122,33 +122,14 @@ bool InCallObserver::OnCallStateUpdated(bool inCall)
     if (inCall_.load() == inCall) {
         return true;
     }
-    int32_t apiVersion = GetAPIVersion();
-    MEDIA_LOGI("Update InCall Status %{public}d, current API Version is %{public}d", static_cast<int32_t>(inCall),
-        apiVersion);
+    MEDIA_LOGI("Update InCall Status %{public}d", static_cast<int32_t>(inCall));
     inCall_.store(inCall);
     bool ret = true;
-    if (apiVersion < SCREENCAPTURE_STOPPED_BY_CALL_API_VERSION_ISOLATION) {
-        if (!inCall) {
-            return true;
-        }
-        for (auto iter = inCallObserverCallBacks_.begin(); iter != inCallObserverCallBacks_.end(); iter++) {
-            auto callbackPtr = (*iter).lock();
-            MEDIA_LOGD("0x%{public}06" PRIXPTR "OnCallStateUpdated", FAKE_POINTER(callbackPtr.get()));
-            if (callbackPtr) {
-                MEDIA_LOGD("0x%{public}06" PRIXPTR "OnCallStateUpdated NotifyStopAndRelease start",
-                    FAKE_POINTER(callbackPtr.get()));
-                ret &= callbackPtr->NotifyStopAndRelease(AVScreenCaptureStateCode::
-                    SCREEN_CAPTURE_STATE_STOPPED_BY_CALL);
-                MEDIA_LOGD("OnCallStateUpdated NotifyStopAndRelease ret: %{public}d.", ret);
-            }
-        }
-        return ret;
-    }
     for (auto iter = inCallObserverCallBacks_.begin(); iter != inCallObserverCallBacks_.end(); iter++) {
         auto callbackPtr = (*iter).lock();
-        MEDIA_LOGI("0x%{public}06" PRIXPTR "OnCallStateUpdated", FAKE_POINTER(callbackPtr.get()));
+        MEDIA_LOGD("0x%{public}06" PRIXPTR "OnCallStateUpdated", FAKE_POINTER(callbackPtr.get()));
         if (callbackPtr) {
-            MEDIA_LOGI("0x%{public}06" PRIXPTR "OnCallStateUpdated NotifyTelCallStateUpdated start",
+            MEDIA_LOGD("0x%{public}06" PRIXPTR "OnCallStateUpdated NotifyTelCallStateUpdated start",
                 FAKE_POINTER(callbackPtr.get()));
             ret &= callbackPtr->NotifyTelCallStateUpdated(inCall);
             MEDIA_LOGD("OnCallStateUpdated NotifyTelCallStateUpdated ret: %{public}d.", ret);
