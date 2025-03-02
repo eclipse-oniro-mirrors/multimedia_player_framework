@@ -1954,7 +1954,6 @@ int32_t ScreenCaptureServer::RegisterServerCallbacks()
     apiVersion_ = GetAPIVersion();
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " API Version is %{public}d", FAKE_POINTER(this),
         apiVersion_);
-    MEDIA_LOGI("current API Version is %{public}d", apiVersion);
     if (apiVersion_ < STOPPED_BY_CALL_API_VERSION_ISOLATION && InCallObserver::GetInstance().IsInCall(true) &&
         !IsTelInCallSkipList()) {
         MEDIA_LOGI("ScreenCaptureServer Start InCall Abort");
