@@ -2864,6 +2864,7 @@ void HiPlayerImpl::HandleAudioTrackChangeEvent(const Event& event)
             MEDIA_LOG_E("HandleAudioTrackChangeEvent audioDecoder change plugin error");
             return;
         }
+        // Firstly, clear obsolete data first to avoid cacophony of noise. Then start audio decoder and audio sink.
         audioDecoder_->DoFlush();
         audioSink_->DoFlush();
         audioDecoder_->Start();
