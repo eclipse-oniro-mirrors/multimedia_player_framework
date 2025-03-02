@@ -19,6 +19,7 @@
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "MediaSourceNapi"};
+constexpr uint32_t MAX_MEDIA_STREAM_ARRAY_LENGTH = 10;
 }
 
 namespace OHOS {
@@ -170,7 +171,6 @@ napi_value MediaSourceNapi::JsCreateMediaSourceWithStreamData(napi_env env, napi
     if (napi_get_array_length(env, args[0], &length) != napi_ok || length == 0)  {
         return nullptr;
     }
-    static constexpr uint32_t MAX_MEDIA_STREAM_ARRAY_LENGTH = 10;
     CHECK_AND_RETURN_RET_LOG(length <= MAX_MEDIA_STREAM_ARRAY_LENGTH, nullptr, "length Array<MediaStream> is too long");
  
     napi_value constructor = nullptr;
