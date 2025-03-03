@@ -23,8 +23,6 @@
 namespace OHOS {
 namespace Media {
 
-const int32_t ERR_INVALID_INSTANCE_CODE = -1;
-
 extern "C"
 
 {

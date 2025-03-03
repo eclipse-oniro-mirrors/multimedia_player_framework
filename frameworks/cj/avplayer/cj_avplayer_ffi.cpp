@@ -85,6 +85,7 @@ int64_t FfiMediaCreateAVPlayer(int32_t *errCode)
     }
     if (!avPlayerImpl->Constructor()) {
         *errCode = MSERR_EXT_API9_NO_MEMORY;
+        FFI::FFIData::Release(avPlayerImpl->GetID());
         return INVALID_ID;
     }
     return avPlayerImpl->GetID();
@@ -1004,57 +1005,6 @@ void FreeCArrCMediaKeySystemInfo(CArrCMediaKeySystemInfo &info, int64_t index, b
     }
 }
 
-CArrCMediaKeySystemInfo FfiMediaAVPlayerGetMediaKeySystemInfos(int64_t id, int32_t *errCode)
-{
-    CArrCMediaKeySystemInfo info = {.head = nullptr, .size = 0};
-    *errCode = MSERR_EXT_API9_NO_MEMORY;
-    auto avPlayerImpl = FFIData::GetData<CJAVPlayer>(id);
-    if (avPlayerImpl == nullptr) {
-        return info;
-    }
-    auto localDrmInfos = avPlayerImpl->GetMediaKeySystemInfos();
-    if (localDrmInfos.empty()) {
-        MEDIA_LOGE("localDrmInfo is empty");
-        return info;
-    }
-    int64_t index = 0;
-    auto size = static_cast<int64_t>(localDrmInfos.size());
-    info.head = static_cast<CMediaKeySystemInfo *>(malloc(sizeof(CMediaKeySystemInfo) * size));
-    if (info.head == nullptr) {
-        return info;
-    }
-    for (auto item : localDrmInfos) {
-        auto currentInfo = info.head[index];
-        currentInfo.uuid = MallocCString(item.first.c_str());
-        if (currentInfo.uuid == nullptr) {
-            FreeCArrCMediaKeySystemInfo(info, index, false);
-            free(info.head);
-            info.head = nullptr;
-            return info;
-        }
-        auto arrPssh = currentInfo.pssh;
-        arrPssh.size = static_cast<int64_t>(item.second.size());
-        if (item.second.size() <= 0) {
-            MEDIA_LOGE("pssh is empty");
-            arrPssh.head = nullptr;
-            continue;
-        }
-        arrPssh.head = static_cast<uint8_t *>(malloc(sizeof(uint8_t) * arrPssh.size));
-        if (arrPssh.head == nullptr) {
-            FreeCArrCMediaKeySystemInfo(info, index, true);
-            free(info.head);
-            info.head = nullptr;
-            return info;
-        }
-        for (int64_t i = 0; i < arrPssh.size; i++) {
-            arrPssh.head[i] = item.second[i];
-        }
-        index++;
-    }
-    info.size = size;
-    return info;
-}
-
 void FfiMediaAVPlayerSetSpeed(int64_t id, int32_t speed)
 {
     auto avPlayerImpl = FFIData::GetData<CJAVPlayer>(id);
@@ -1111,6 +1061,7 @@ void FreeCPlaybackInfos(CPlaybackInfo *infos, int64_t index)
         free(infos[i].value);
         infos[i].value = nullptr;
     }
+    free(infos);
 }
 
 bool GetServerIpAddress(Format &format, CPlaybackInfo *infos, int64_t &index)
@@ -1119,6 +1070,7 @@ bool GetServerIpAddress(Format &format, CPlaybackInfo *infos, int64_t &index)
     if (format.GetStringValue(PlaybackInfoKey::SERVER_IP_ADDRESS, ip)) {
         char *data = MallocCString(ip);
         if (data == nullptr) {
+            free(infos);
             return false;
         }
         infos[index].value = static_cast<void *>(data);
