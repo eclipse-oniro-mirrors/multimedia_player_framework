@@ -25,7 +25,7 @@ namespace {
     static const int32_t MAX_THREADS_NUM = std::thread::hardware_concurrency() >= 4 ? 2 : 1;
     static constexpr size_t MAX_LOAD_NUM = 32;
     static constexpr size_t MAX_LOAD_NUM_API16 = 128;
-    static const int32_t SOUNDPOOL_API_VERSION_ISOLATION = 16;
+    static const int32_t SOUNDPOOL_API_VERSION_ISOLATION = 18;
     static const int32_t FAULT_API_VERSION = -1;
 }
 
