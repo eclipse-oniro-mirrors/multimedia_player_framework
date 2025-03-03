@@ -89,6 +89,8 @@ void CJAVRecorderCallback::ExecuteStateCallback(CStateChangeHandler &handler)
         return;
     }
     onStateChange(handler);
+    free(handler.state);
+    handler.state = nullptr;
 }
 
 void CJAVRecorderCallback::OnError(RecorderErrorType errorType, int32_t errCode)
@@ -119,6 +121,8 @@ void CJAVRecorderCallback::OnError(RecorderErrorType errorType, int32_t errCode)
         errorInfo.msg = MallocCString("IO error happened.");
     }
     onError(errorInfo);
+    free(errorInfo.msg);
+    errorInfo.msg = nullptr;
     CStateChangeHandler handler {};
     handler.state = MallocCString(CjAVRecorderState::STATE_ERROR);
     handler.reason = static_cast<int32_t>(StateChangeReason::BACKGROUND);
@@ -144,8 +148,12 @@ void CJAVRecorderCallback::OnAudioCaptureChange(const AudioRecorderChangeInfo &a
         return;
     }
     CAudioCapturerChangeInfo cInfo {};
-    ConvertToCAudioCapturerChangeInfo(cInfo, audioRecorderChangeInfo);
+    if (!ConvertToCAudioCapturerChangeInfo(cInfo, audioRecorderChangeInfo)) {
+        FreeCArrDeviceDescriptor(cInfo.deviceDescriptors);
+        return;
+    }
     onAudioCapturerChange(cInfo);
+    FreeCArrDeviceDescriptor(cInfo.deviceDescriptors);
 }
 
 void CJAVRecorderCallback::OnPhotoAssertAvailable(const std::string &uri)
@@ -197,78 +205,129 @@ void CJAVRecorderCallback::InitPhotoAssertAvailable(int64_t id)
     };
 }
 
-void InitDeviceRates(CDeviceDescriptor* device, const DeviceInfo& deviceInfo)
+bool InitDeviceRates(CDeviceDescriptor* device, const DeviceInfo& deviceInfo)
 {
     int32_t rateSize = deviceInfo.audioStreamInfo.samplingRate.size();
     if (rateSize <= 0) {
         MEDIA_LOGE("rateSize is illeagle");
-        return;
+        return false;
     }
 
     int32_t mallocSize = static_cast<int32_t>(sizeof(int32_t) * rateSize);
-    if (mallocSize <= 0) {
-        MEDIA_LOGE("mallocSize is illeagle");
-        return;
-    }
 
     auto rates = static_cast<int32_t*>(malloc(mallocSize));
     if (!rates) {
         MEDIA_LOGE("malloc is failed");
-        return;
+        return false;
+    }
+
+    if (memset_s(rates, mallocSize, 0, mallocSize) != EOK) {
+        MEDIA_LOGE("initial memory space failed");
+        free(rates);
+        return false;
     }
 
     device->sampleRates.size = static_cast<int64_t>(rateSize);
     device->sampleRates.head = rates;
-    if (memset_s(rates, mallocSize, 0, mallocSize) != EOK) {
-        MEDIA_LOGE("initial memory space failed");
-        free(rates);
-        return;
-    }
 
     int32_t iter = 0;
     for (auto rate: deviceInfo.audioStreamInfo.samplingRate) {
         rates[iter] = rate;
         iter++;
     }
+    return true;
 }
 
-void InitDeviceChannels(CDeviceDescriptor* device, const DeviceInfo& deviceInfo)
+bool InitDeviceChannels(CDeviceDescriptor* device, const DeviceInfo& deviceInfo)
 {
-    int32_t channelSize = deviceInfo.audioStreamInfo.channels.size();
+    int32_t channelSize = static_cast<int32_t>(deviceInfo.audioStreamInfo.channels.size());
     if (channelSize <= 0) {
         MEDIA_LOGE("channelSize is illeagle");
-        return;
+        return false;
     }
 
     int32_t mallocSize = static_cast<int32_t>(sizeof(int32_t) * channelSize);
-    if (mallocSize <= 0) {
-        MEDIA_LOGE("mallocSize is illeagle");
-        return;
-    }
 
     auto channels = static_cast<int32_t*>(malloc(mallocSize));
     if (!channels) {
         MEDIA_LOGE("malloc is failed");
-        return;
+        return false;
     }
-    device->channelCounts.size = static_cast<int64_t>(channelSize);
-    device->channelCounts.head = channels;
+
     if (memset_s(channels, mallocSize, 0, mallocSize) != EOK) {
         MEDIA_LOGE("initial memory space failed");
         free(channels);
-        return;
+        return false;
     }
+
+    device->channelCounts.size = static_cast<int64_t>(channelSize);
+    device->channelCounts.head = channels;
 
     int32_t iter = 0;
     for (auto channel: deviceInfo.audioStreamInfo.channels) {
         channels[iter] = channel;
         iter++;
     }
+    return true;
 }
 
-void ConvertToCDeviceInfo(CDeviceDescriptor* device, const DeviceInfo& deviceInfo)
+bool InitDeviceMasks(CDeviceDescriptor* device, const DeviceInfo& deviceInfo)
 {
     int32_t deviceSize = 1;
+    int32_t mallocSize = static_cast<int32_t>(sizeof(int32_t) * deviceSize);
+    if (mallocSize <= 0) {
+        MEDIA_LOGE("Masks size is illeagle");
+        return false;
+    }
+
+    auto masks = static_cast<int32_t*>(malloc(mallocSize));
+    if (!masks) {
+        MEDIA_LOGE("malloc is failed");
+        return false;
+    }
+
+    if (memset_s(masks, mallocSize, 0, mallocSize) != EOK) {
+        MEDIA_LOGE("initial memory space failed");
+        free(masks);
+        return false;
+    }
+
+    device->channelMasks.size = deviceSize;
+    device->channelMasks.head = masks;
+    masks[0] = deviceInfo.channelMasks;
+    return true;
+}
+
+bool InitDeviceEncodingTypes(CDeviceDescriptor* device, const DeviceInfo& deviceInfo)
+{
+    int32_t deviceSize = 1;
+    int32_t mallocSize = static_cast<int32_t>(sizeof(int32_t) * deviceSize);
+    if (mallocSize <= 0) {
+        MEDIA_LOGE("EncodingTypes size is illeagle");
+        return false;
+    }
+
+    auto encodings = static_cast<int32_t*>(malloc(mallocSize));
+    if (!encodings) {
+        MEDIA_LOGE("malloc is failed");
+        return false;
+    }
+
+    if (memset_s(encodings, mallocSize, 0, mallocSize) != EOK) {
+        MEDIA_LOGE("initial memory space failed");
+        free(encodings);
+        return false;
+    }
+
+    device->encodingTypes.hasValue = true;
+    device->encodingTypes.arr.size = deviceSize;
+    device->encodingTypes.arr.head = encodings;
+    encodings[0] = deviceInfo.audioStreamInfo.encoding;
+    return true;
+}
+
+bool ConvertToCDeviceInfo(CDeviceDescriptor* device, const DeviceInfo& deviceInfo)
+{
     device->deviceRole = deviceInfo.deviceRole;
     device->deviceType = deviceInfo.deviceType;
     device->id = deviceInfo.deviceId;
@@ -276,86 +335,58 @@ void ConvertToCDeviceInfo(CDeviceDescriptor* device, const DeviceInfo& deviceInf
     device->address = MallocCString(deviceInfo.macAddress);
     device->name = MallocCString(deviceInfo.deviceName);
 
-    InitDeviceRates(device, deviceInfo);
-    InitDeviceChannels(device, deviceInfo);
+    if (!InitDeviceRates(device, deviceInfo)) {
+        return false;
+    }
+
+    if (!InitDeviceChannels(device, deviceInfo)) {
+        return false;
+    }
     
-    int32_t mallocSize = static_cast<int32_t>(sizeof(int32_t) * deviceSize);
-    if (mallocSize <= 0) {
-        MEDIA_LOGE("mallocSize is illeagle");
-        return;
-    }
-    auto masks = static_cast<int32_t*>(malloc(mallocSize));
-    if (!masks) {
-        MEDIA_LOGE("malloc is failed");
-        return;
+    if (!InitDeviceMasks(device, deviceInfo)) {
+        return false;
     }
 
-    device->channelMasks.size = deviceSize;
-    device->channelMasks.head = masks;
-    if (memset_s(masks, mallocSize, 0, mallocSize) != EOK) {
-        MEDIA_LOGE("initial memory space failed");
-        free(masks);
-        return;
+    if (!InitDeviceEncodingTypes(device, deviceInfo)) {
+        return false;
     }
 
-    masks[0] = deviceInfo.channelMasks;
-
-    auto encodings = static_cast<int32_t*>(malloc(mallocSize));
-    if (!encodings) {
-        MEDIA_LOGE("malloc is failed");
-        free(masks);
-        return;
-    }
-
-    device->encodingTypes.hasValue = true;
-    device->encodingTypes.arr.size = deviceSize;
-    device->encodingTypes.arr.head = encodings;
-    if (memset_s(encodings, mallocSize, 0, mallocSize) != EOK) {
-        MEDIA_LOGE("initial memory space failed");
-        free(masks);
-        free(encodings);
-        return;
-    }
-
-    encodings[0] = deviceInfo.audioStreamInfo.encoding;
+    return true;
 }
 
-void ConvertToCArrDeviceDescriptor(CArrDeviceDescriptor& devices, const DeviceInfo& deviceInfo)
+bool ConvertToCArrDeviceDescriptor(CArrDeviceDescriptor& devices, const DeviceInfo& deviceInfo)
 {
     int32_t deviceSize = 1;
     int32_t mallocSize = static_cast<int32_t>(sizeof(CDeviceDescriptor) * deviceSize);
-    if (mallocSize <= 0) {
-        MEDIA_LOGE("mallocSize is illeagle");
-        return;
-    }
 
     CDeviceDescriptor* device = static_cast<CDeviceDescriptor*>(malloc(mallocSize));
     if (!device) {
         MEDIA_LOGE("malloc is failed");
-        return;
+        return false;
+    }
+
+    if (memset_s(device, mallocSize, 0, mallocSize) != EOK) {
+        MEDIA_LOGE("initial memory space failed");
+        free(device);
+        return false;
     }
 
     devices.head = device;
     devices.size = static_cast<int64_t>(deviceSize);
-    if (memset_s(device, mallocSize, 0, mallocSize) != EOK) {
-        MEDIA_LOGE("initial memory space failed");
-        free(device);
-        return;
-    }
 
-    ConvertToCDeviceInfo(&(device[0]), deviceInfo);
+    return ConvertToCDeviceInfo(&(device[0]), deviceInfo);
 }
 
-void ConvertToCAudioCapturerChangeInfo(CAudioCapturerChangeInfo& cInfo, const AudioRecorderChangeInfo& changeInfo)
+bool ConvertToCAudioCapturerChangeInfo(CAudioCapturerChangeInfo& cInfo, const AudioRecorderChangeInfo& changeInfo)
 {
     cInfo.muted = changeInfo.muted;
     cInfo.streamId = changeInfo.sessionId;
     cInfo.audioCapturerInfo.capturerFlags = changeInfo.capturerInfo.capturerFlags;
     cInfo.audioCapturerInfo.source = changeInfo.capturerInfo.sourceType;
-    ConvertToCArrDeviceDescriptor(cInfo.deviceDescriptors, changeInfo.inputDeviceInfo);
+    return ConvertToCArrDeviceDescriptor(cInfo.deviceDescriptors, changeInfo.inputDeviceInfo);
 }
 
-void ConvertToCEncoderInfo(CEncoderInfo* cInfo, EncoderCapabilityData& encoderInfo)
+bool ConvertToCEncoderInfo(CEncoderInfo* cInfo, EncoderCapabilityData& encoderInfo)
 {
     cInfo->mimeType = MallocCString(encoderInfo.mimeType);
     cInfo->type = MallocCString(encoderInfo.type);
@@ -370,65 +401,127 @@ void ConvertToCEncoderInfo(CEncoderInfo* cInfo, EncoderCapabilityData& encoderIn
     cInfo->channels.minVal = encoderInfo.channels.minVal;
     cInfo->channels.maxVal = encoderInfo.channels.maxVal;
 
-    int32_t rateSize = encoderInfo.sampleRate.size();
+    int32_t rateSize = static_cast<int32_t>(encoderInfo.sampleRate.size());
     if (rateSize <= 0) {
         MEDIA_LOGE("rateSize is illeagle");
-        return;
+        return false;
     }
 
     int32_t mallocSize = static_cast<int32_t>(sizeof(int32_t) * rateSize);
-    if (mallocSize <= 0) {
-        MEDIA_LOGE("mallocSize is illeagle");
-        return;
-    }
 
     auto rates = static_cast<int32_t*>(malloc(mallocSize));
     if (!rates) {
         MEDIA_LOGE("malloc is failed");
-        return;
+        return false;
+    }
+
+    if (memset_s(rates, mallocSize, 0, mallocSize) != EOK) {
+        MEDIA_LOGE("initial memory space failed");
+        free(rates);
+        return false;
     }
 
     cInfo->sampleRates.size = static_cast<int64_t>(rateSize);
     cInfo->sampleRates.head = rates;
-    if (memset_s(rates, mallocSize, 0, mallocSize) != EOK) {
-        MEDIA_LOGE("initial memory space failed");
-        free(rates);
-        return;
-    }
 
     int32_t iter = 0;
     for (auto rate: encoderInfo.sampleRate) {
         rates[iter] = rate;
         iter++;
     }
+    return true;
 }
 
-void ConvertToCArrEncoderInfo(CArrEncoderInfo& cInfo, std::vector<EncoderCapabilityData>& encoderInfo)
+bool ConvertToCArrEncoderInfo(CArrEncoderInfo& cInfo, std::vector<EncoderCapabilityData>& encoderInfo)
 {
-    int32_t encoderSize = encoderInfo.size();
-    int32_t mallocSize = static_cast<int32_t>(sizeof(CEncoderInfo) * encoderSize);
-    if (mallocSize <= 0) {
-        MEDIA_LOGE("mallocSize is illeagle");
-        return;
+    int32_t encoderSize = static_cast<int32_t>(encoderInfo.size());
+    if (encoderSize <= 0) {
+        MEDIA_LOGE("encoderSize is illeagle");
+        return false;
     }
+
+    int32_t mallocSize = static_cast<int32_t>(sizeof(CEncoderInfo) * encoderSize);
 
     CEncoderInfo* encoders = static_cast<CEncoderInfo*>(malloc(mallocSize));
     if (!encoders) {
         MEDIA_LOGE("malloc is failed");
-        return;
+        return false;
     }
 
-    cInfo.head = encoders;
-    cInfo.size = static_cast<int64_t>(encoderSize);
     if (memset_s(encoders, mallocSize, 0, mallocSize) != EOK) {
         MEDIA_LOGE("initial memory space failed");
         free(encoders);
-        return;
+        return false;
     }
+    cInfo.head = encoders;
+    cInfo.size = static_cast<int64_t>(encoderSize);
 
     for (int32_t i = 0; i < encoderSize; i++) {
-        ConvertToCEncoderInfo(&(encoders[i]), encoderInfo[i]);
+        if (!ConvertToCEncoderInfo(&(encoders[i]), encoderInfo[i])) {
+            return false;
+        }
     }
+    return true;
+}
+
+void FreeDescriptor(CDeviceDescriptor& device)
+{
+    free(device.address);
+    device.address = nullptr;
+    free(device.displayName);
+    device.displayName = nullptr;
+    free(device.name);
+    device.name = nullptr;
+    free(device.channelMasks.head);
+    device.channelMasks.head = nullptr;
+    device.channelMasks.size = 0;
+    free(device.channelCounts.head);
+    device.channelCounts.head = nullptr;
+    device.channelCounts.size = 0;
+    free(device.sampleRates.head);
+    device.sampleRates.head = nullptr;
+    device.sampleRates.size = 0;
+    if (device.encodingTypes.hasValue) {
+        free(device.encodingTypes.arr.head);
+        device.encodingTypes.hasValue = false;
+        device.encodingTypes.arr.head = nullptr;
+        device.encodingTypes.arr.size = 0;
+    }
+}
+void FreeCArrDeviceDescriptor(CArrDeviceDescriptor& devices)
+{
+    if (!devices.head) {
+        return;
+    }
+    for (int64_t i = 0; i < devices.size; i++) {
+        FreeDescriptor((devices.head)[i]);
+    }
+    free(devices.head);
+    devices.head = nullptr;
+    devices.size = 0;
+}
+
+void FreeEncoderInfo(CEncoderInfo& info)
+{
+    free(info.mimeType);
+    info.mimeType = nullptr;
+    free(info.type);
+    info.type = nullptr;
+    free(info.sampleRates.head);
+    info.sampleRates.head = nullptr;
+    info.sampleRates.size = 0;
+}
+void FreeCArrEncoderInfo(CArrEncoderInfo& cInfo)
+{
+    if (!cInfo.head) {
+        return;
+    }
+    for (int64_t i = 0; i < cInfo.size; i++) {
+        FreeEncoderInfo((cInfo.head)[i]);
+    }
+    free(cInfo.head);
+    cInfo.head = nullptr;
+    cInfo.size = 0;
 }
 } // namespace Media
 } // namespace OHOS

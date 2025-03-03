@@ -59,6 +59,7 @@ int64_t CjAVRecorder::CreateAVRecorder(int32_t *errCode)
     cjAVRecorder->recorder_ = RecorderFactory::CreateRecorder();
     if (!cjAVRecorder->recorder_) {
         MEDIA_LOGE("recorder_ is null");
+        FFIData::Release(cjAVRecorder->GetID());
         *errCode = MSERR_NO_MEMORY;
         return 0;
     }
@@ -66,6 +67,8 @@ int64_t CjAVRecorder::CreateAVRecorder(int32_t *errCode)
     cjAVRecorder->recorderCb_ = std::make_shared<CJAVRecorderCallback>();
     if (!cjAVRecorder->recorderCb_) {
         MEDIA_LOGE("recorderCb_ is null");
+        FFIData::Release(cjAVRecorder->GetID());
+        cjAVRecorder->recorder_->Release();
         *errCode = MSERR_NO_MEMORY;
         return 0;
     }
