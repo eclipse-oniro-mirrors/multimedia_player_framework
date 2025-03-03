@@ -35,6 +35,8 @@ public:
     void UnregisterScreenCaptureMonitorListener(
         sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> listener) override;
     void MediaServerDied();
+    bool IsSystemScreenRecorder(int32_t pid) override;
+    bool IsSystemScreenRecorderWorking() override;
 
 private:
     int32_t CreateListenerObject();

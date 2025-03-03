@@ -93,6 +93,7 @@ UniqueIDGenerator ScreenCaptureServer::gIdGenerator_(ScreenCaptureServer::maxSes
 std::list<int32_t> ScreenCaptureServer::startedSessionIDList_;
 const int32_t ScreenCaptureServer::maxSessionPerUid_ = 4;
 const int32_t ScreenCaptureServer::maxSCServerDataTypePerUid_ = 2;
+std::atomic<int32_t> ScreenCaptureServer::systemScreenRecorderPid_ = -1;
 
 std::shared_mutex ScreenCaptureServer::mutexServerMapRWGlobal_;
 std::shared_mutex ScreenCaptureServer::mutexListRWGlobal_;
@@ -255,8 +256,9 @@ bool ScreenCaptureServer::CheckScreenCaptureSessionIdLimit(int32_t curAppUid)
         std::unique_lock<std::shared_mutex> lock(ScreenCaptureServer::mutexServerMapRWGlobal_);
         for (auto iter = ScreenCaptureServer::serverMap_.begin(); iter != ScreenCaptureServer::serverMap_.end();
             iter++) {
-                if ((iter->second).lock() != nullptr) {
-                    if (curAppUid == (iter->second).lock()->GetAppUid()) {
+                auto iterPtr = (iter->second).lock();
+                if (iterPtr != nullptr) {
+                    if (curAppUid == iterPtr->GetAppUid()) {
                         countForUid++;
                     }
                     CHECK_AND_RETURN_RET_LOG(countForUid <= ScreenCaptureServer::maxSessionPerUid_, false,
@@ -277,10 +279,10 @@ bool ScreenCaptureServer::CheckSCServerSpecifiedDataTypeNum(int32_t curAppUid, D
         std::unique_lock<std::shared_mutex> lock(ScreenCaptureServer::mutexServerMapRWGlobal_);
         for (auto iter = ScreenCaptureServer::serverMap_.begin(); iter != ScreenCaptureServer::serverMap_.end();
             iter++) {
-                if ((iter->second).lock() != nullptr) {
-                    if (curAppUid == (iter->second).lock()->GetAppUid() &&
-                        dataType == (iter->second).lock()->GetSCServerDataType()) {
-                            countForUidDataType++;
+                auto iterPtr = (iter->second).lock();
+                if (iterPtr != nullptr) {
+                    if (curAppUid == iterPtr->GetAppUid() && dataType == iterPtr->GetSCServerDataType()) {
+                        countForUidDataType++;
                     }
                     CHECK_AND_RETURN_RET_LOG(countForUidDataType <= ScreenCaptureServer::maxSCServerDataTypePerUid_,
                         false, "CheckSCServerSpecifiedDataTypeNum failed,"
@@ -296,8 +298,9 @@ void ScreenCaptureServer::CountScreenCaptureAppNum(std::set<int32_t>& appSet)
 {
     std::unique_lock<std::shared_mutex> lock(ScreenCaptureServer::mutexServerMapRWGlobal_);
     for (auto iter = ScreenCaptureServer::serverMap_.begin(); iter != ScreenCaptureServer::serverMap_.end(); iter++) {
-        if (iter->second.lock() != nullptr) {
-            appSet.insert(iter->second.lock()->GetAppUid());
+        auto iterPtr = iter->second.lock();
+        if (iterPtr != nullptr) {
+            appSet.insert(iterPtr->GetAppUid());
         }
     }
 }
@@ -313,9 +316,8 @@ bool ScreenCaptureServer::CheckScreenCaptureAppLimit(int32_t curAppUid)
     return true;
 }
 
-std::shared_ptr<ScreenCaptureServer> ScreenCaptureServer::GetScreenCaptureServerByIdWithLock(int32_t id)
+std::shared_ptr<ScreenCaptureServer> ScreenCaptureServer::GetScreenCaptureServerById(int32_t id)
 {
-    std::unique_lock<std::shared_mutex> lock(ScreenCaptureServer::mutexServerMapRWGlobal_);
     auto iter = ScreenCaptureServer::serverMap_.find(id);
     if (iter == ScreenCaptureServer::serverMap_.end()) {
         return nullptr;
@@ -323,11 +325,18 @@ std::shared_ptr<ScreenCaptureServer> ScreenCaptureServer::GetScreenCaptureServer
     return (iter->second).lock();
 }
 
+std::shared_ptr<ScreenCaptureServer> ScreenCaptureServer::GetScreenCaptureServerByIdWithLock(int32_t id)
+{
+    std::unique_lock<std::shared_mutex> lock(ScreenCaptureServer::mutexServerMapRWGlobal_);
+    return GetScreenCaptureServerById(id);
+}
+
 std::list<int32_t> ScreenCaptureServer::GetStartedScreenCaptureServerPidList()
 {
     std::list<int32_t> startedScreenCapturePidList{};
+    std::unique_lock<std::shared_mutex> lock(ScreenCaptureServer::mutexServerMapRWGlobal_);
     for (auto sessionId: ScreenCaptureServer::startedSessionIDList_) {
-        std::shared_ptr<ScreenCaptureServer> currentServer = GetScreenCaptureServerByIdWithLock(sessionId);
+        std::shared_ptr<ScreenCaptureServer> currentServer = GetScreenCaptureServerById(sessionId);
         if (currentServer != nullptr) {
             startedScreenCapturePidList.push_back(currentServer->GetAppPid() == 0 ? -1 : currentServer->GetAppPid());
         }
@@ -338,8 +347,9 @@ std::list<int32_t> ScreenCaptureServer::GetStartedScreenCaptureServerPidList()
 int32_t ScreenCaptureServer::CountStartedScreenCaptureServerNumByPid(int32_t pid)
 {
     int32_t count = 0;
+    std::unique_lock<std::shared_mutex> lock(ScreenCaptureServer::mutexServerMapRWGlobal_);
     for (auto sessionId: ScreenCaptureServer::startedSessionIDList_) {
-        std::shared_ptr<ScreenCaptureServer> currentServer = GetScreenCaptureServerByIdWithLock(sessionId);
+        std::shared_ptr<ScreenCaptureServer> currentServer = GetScreenCaptureServerById(sessionId);
         if (currentServer != nullptr && currentServer->GetAppPid() == pid) {
             count++;
         }
@@ -363,6 +373,13 @@ std::list<int32_t> ScreenCaptureServer::GetAllStartedSessionIdList()
 {
     std::unique_lock<std::shared_mutex> lock(ScreenCaptureServer::mutexListRWGlobal_);
     return GetStartedScreenCaptureServerPidList();
+}
+
+bool ScreenCaptureServer::CheckPidIsScreenRecorder(int32_t pid)
+{
+    MEDIA_LOGI("CheckPidIsScreenRecorder ScreenRecorder pid(%{public}d), input pid(%{public}d)",
+        (ScreenCaptureServer::systemScreenRecorderPid_).load(), pid);
+    return pid == (ScreenCaptureServer::systemScreenRecorderPid_).load();
 }
 
 void ScreenCaptureServer::OnDMPrivateWindowChange(bool hasPrivate)
@@ -976,8 +993,9 @@ int32_t ScreenCaptureServer::CheckAudioCapInfo(AudioCaptureInfo &audioCapInfo)
 int32_t ScreenCaptureServer::CheckVideoCapInfo(VideoCaptureInfo &videoCapInfo)
 {
     MEDIA_LOGD("CheckVideoCapInfo start, videoFrameWidth:%{public}d, videoFrameHeight:%{public}d, "
-        "videoSource:%{public}d, state:%{public}d.", videoCapInfo.videoFrameWidth, videoCapInfo.videoFrameHeight,
-        videoCapInfo.videoSource, videoCapInfo.state);
+        "videoSource:%{public}d, state:%{public}d, screenCaptureFillMode:%{public}d.", videoCapInfo.videoFrameWidth,
+        videoCapInfo.videoFrameHeight, videoCapInfo.videoSource, videoCapInfo.state,
+        videoCapInfo.screenCaptureFillMode);
     if (videoCapInfo.videoFrameWidth == 0 && videoCapInfo.videoFrameHeight == 0) {
         MEDIA_LOGD("videoCap IGNORED width:%{public}d, height:%{public}d, source:%{public}d, state:%{public}d",
             videoCapInfo.videoFrameWidth, videoCapInfo.videoFrameHeight, videoCapInfo.videoSource, videoCapInfo.state);
@@ -1573,6 +1591,7 @@ void ScreenCaptureServer::PostStartScreenCaptureSuccessAction()
     AddStartedSessionIdList(this->sessionId_);
     MEDIA_LOGI("sessionId: %{public}d is pushed, now the size of startedSessionIDList_ is: %{public}d",
         this->sessionId_, static_cast<uint32_t>(ScreenCaptureServer::startedSessionIDList_.size()));
+    SetSystemScreenRecorderStatus(true);
     ScreenCaptureMonitorServer::GetInstance()->CallOnScreenCaptureStarted(appInfo_.appPid);
     NotifyStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STARTED);
     if (displayScreenId_ != SCREEN_ID_INVALID) {
@@ -2375,10 +2394,7 @@ int32_t ScreenCaptureServer::PrepareVirtualScreenMirror()
     for (size_t i = 0; i < contentFilter_.windowIDsVec.size(); i++) {
         MEDIA_LOGD("After CreateVirtualScreen windowIDsVec value :%{public}" PRIu64, contentFilter_.windowIDsVec[i]);
     }
-    if (GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"]
-            .compare(appName_) == 0) {
-        SetScreenScaleMode();
-    }
+    SetScreenScaleMode();
     Rosen::DisplayManager::GetInstance().SetVirtualScreenBlackList(virtualScreenId_, contentFilter_.windowIDsVec,
         surfaceIdList_);
     MEDIA_LOGI("PrepareVirtualScreenMirror screenId: %{public}" PRIu64, virtualScreenId_);
@@ -3252,6 +3268,26 @@ int32_t ScreenCaptureServer::SetMaxVideoFrameRate(int32_t frameRate)
     return MSERR_OK;
 }
 
+ScreenScaleMode ScreenCaptureServer::GetScreenScaleMode(const AVScreenCaptureFillMode &fillMode)
+{
+    MEDIA_LOGI("ScreenCaptureServer::GetScreenScaleMode in, fillMode: %{public}d", fillMode);
+    static const std::map<AVScreenCaptureFillMode, ScreenScaleMode> modeMap = {
+        {PRESERVE_ASPECT_RATIO, ScreenScaleMode::UNISCALE_MODE},
+        {SCALE_TO_FILL, ScreenScaleMode::FILL_MODE}
+    };
+    ScreenScaleMode scaleMode = ScreenScaleMode::UNISCALE_MODE;
+    auto iter = modeMap.find(fillMode);
+    if (iter != modeMap.end()) {
+        scaleMode = iter->second;
+    }
+    if (GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"]
+            .compare(appName_) == 0) {
+        scaleMode = ScreenScaleMode::FILL_MODE;
+    }
+    MEDIA_LOGI("ScreenCaptureServer::GetScreenScaleMode succeed, scaleMode: %{public}d", scaleMode);
+    return scaleMode;
+}
+
 int32_t ScreenCaptureServer::SetScreenScaleMode()
 {
     MediaTrace trace("ScreenCaptureServer::SetScreenScaleMode");
@@ -3259,7 +3295,7 @@ int32_t ScreenCaptureServer::SetScreenScaleMode()
     CHECK_AND_RETURN_RET_LOG(virtualScreenId_ != SCREEN_ID_INVALID, MSERR_INVALID_VAL,
                              "SetScreenScaleMode failed virtual screen not init");
     auto ret = ScreenManager::GetInstance().SetVirtualMirrorScreenScaleMode(
-        virtualScreenId_, OHOS::Rosen::ScreenScaleMode::FILL_MODE);
+        virtualScreenId_, GetScreenScaleMode(captureConfig_.videoInfo.videoCapInfo.screenCaptureFillMode));
     if (ret != DMError::DM_OK) {
         MEDIA_LOGW("SetScreenScaleMode failed, ret: %{public}d", ret);
         return static_cast<int32_t>(ret);
@@ -3363,6 +3399,20 @@ int32_t ScreenCaptureServer::StopScreenCaptureByEvent(AVScreenCaptureStateCode s
     return StopScreenCaptureInner(stateCode);
 }
 
+void ScreenCaptureServer::SetSystemScreenRecorderStatus(bool status)
+{
+    if (GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"]
+            .compare(appName_) != 0) {
+        return;
+    }
+    if (status) {
+        (ScreenCaptureServer::systemScreenRecorderPid_).store(appInfo_.appPid);
+        ScreenCaptureMonitorServer::GetInstance()->SetSystemScreenRecorderStatus(true);
+    } else {
+        ScreenCaptureMonitorServer::GetInstance()->SetSystemScreenRecorderStatus(false);
+    }
+}
+
 int32_t ScreenCaptureServer::StopScreenCaptureInner(AVScreenCaptureStateCode stateCode)
 {
     MediaTrace trace("ScreenCaptureServer::StopScreenCaptureInner");
@@ -3378,6 +3428,7 @@ int32_t ScreenCaptureServer::StopScreenCaptureInner(AVScreenCaptureStateCode sta
     if (captureState_ == AVScreenCaptureState::CREATED || captureState_ == AVScreenCaptureState::POPUP_WINDOW ||
         captureState_ == AVScreenCaptureState::STARTING) {
         captureState_ = AVScreenCaptureState::STOPPED;
+        SetSystemScreenRecorderStatus(false);
         ScreenCaptureMonitorServer::GetInstance()->CallOnScreenCaptureFinished(appInfo_.appPid);
         if (screenCaptureCb_ != nullptr && stateCode != AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID) {
             screenCaptureCb_->OnStateChange(stateCode);
@@ -3437,6 +3488,7 @@ void ScreenCaptureServer::PostStopScreenCapture(AVScreenCaptureStateCode stateCo
     MediaTrace trace("ScreenCaptureServer::PostStopScreenCapture");
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " PostStopScreenCapture start, stateCode:%{public}d.",
         FAKE_POINTER(this), stateCode);
+    SetSystemScreenRecorderStatus(false);
     ScreenCaptureMonitorServer::GetInstance()->CallOnScreenCaptureFinished(appInfo_.appPid);
     if (screenCaptureCb_ != nullptr && stateCode != AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID) {
         screenCaptureCb_->OnStateChange(stateCode);

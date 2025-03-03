@@ -240,6 +240,8 @@ public:
      */
     virtual int32_t SetVolume(float leftVolume, float rightVolume) = 0;
 
+    virtual int32_t SetVolumeMode(int32_t mode) = 0;
+
     /**
      * @brief Changes the playback position.
      *

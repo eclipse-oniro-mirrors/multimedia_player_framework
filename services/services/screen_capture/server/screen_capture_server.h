@@ -35,6 +35,7 @@ public:
     static std::shared_mutex mutexServerMapRWGlobal_;
     static std::shared_mutex mutexListRWGlobal_;
     static std::shared_mutex mutexSaAppInfoMapGlobal_;
+    static std::atomic<int32_t> systemScreenRecorderPid_;
 
     static std::shared_ptr<IScreenCaptureService> Create();
     static bool IsSAServiceCalling();
@@ -50,6 +51,7 @@ public:
     static bool CheckSCServerSpecifiedDataTypeNum(int32_t curAppUid, DataType dataType);
     static void CountScreenCaptureAppNum(std::set<int32_t>& appSet);
     static bool CheckScreenCaptureAppLimit(int32_t curAppUid);
+    static std::shared_ptr<ScreenCaptureServer> GetScreenCaptureServerById(int32_t id);
     static std::shared_ptr<ScreenCaptureServer> GetScreenCaptureServerByIdWithLock(int32_t id);
     static std::list<int32_t> GetStartedScreenCaptureServerPidList();
     static int32_t CountStartedScreenCaptureServerNumByPid(int32_t pid);
@@ -60,6 +62,7 @@ public:
     static void RemoveSaAppInfoMap(int32_t saUid);
     static bool CheckSaUid(int32_t saUid, int32_t appUid);
     static bool IsSaUidValid(int32_t saUid, int32_t appUid);
+    static bool CheckPidIsScreenRecorder(int32_t pid);
     ScreenCaptureServer();
     ~ScreenCaptureServer();
 
@@ -187,6 +190,7 @@ private:
     int32_t RequestUserPrivacyAuthority();
     int32_t StartPrivacyWindow();
     void SetCaptureConfig(CaptureMode captureMode, int32_t missionId = -1); // -1 invalid
+    ScreenScaleMode GetScreenScaleMode(const AVScreenCaptureFillMode &fillMode);
 #ifdef PC_STANDARD
     bool CheckCaptureSpecifiedWindowForSelectWindow();
     void SendConfigToUIParams(AAFwk::Want& want);
@@ -220,6 +224,7 @@ private:
     std::string GetStringByResourceName(const char* name);
     void RefreshResConfig();
     void InitResourceManager();
+    void SetSystemScreenRecorderStatus(bool status);
 #ifdef SUPPORT_CALL
     int32_t OnTelCallStart();
     int32_t OnTelCallStop();

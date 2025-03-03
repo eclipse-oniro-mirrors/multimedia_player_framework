@@ -28,6 +28,7 @@
 #include "mime_type.h"
 #include "screen_capture.h"
 #include "avscreen_capture_napi.h"
+#include "screen_capture_monitor.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "MediaEnumNapi"};
@@ -171,6 +172,11 @@ static const std::vector<struct JsEnumInt> g_videoSourceType = {
 
 static const std::vector<struct JsEnumInt> g_metaSourceType = {
     { "VIDEO_MAKER_INFO", MetaSourceType::VIDEO_META_MAKER_INFO },
+};
+
+static const std::vector<struct JsEnumInt> g_screenCaptureFillMode = {
+    { "PRESERVE_ASPECT_RATIO", AVScreenCaptureFillMode::PRESERVE_ASPECT_RATIO },
+    { "SCALE_TO_FILL", AVScreenCaptureFillMode::SCALE_TO_FILL },
 };
 
 static const std::vector<struct JsEnumInt> g_fileGenerationMode = {
@@ -414,6 +420,11 @@ static const std::vector<struct JsEnumInt> g_screenCaptureStateCode = {
         AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_USER_SWITCHES },
 };
 
+static const std::vector<struct JsEnumInt> g_screenCaptureMonitorEvent = {
+    { "SCREENCAPTURE_STARTED", ScreenCaptureMonitorEvent::SCREENCAPTURE_STARTED },
+    { "SCREENCAPTURE_STOPPED", ScreenCaptureMonitorEvent::SCREENCAPTURE_STOPPED }
+};
+
 static const std::map<std::string_view, const std::vector<struct JsEnumInt>&> g_intEnumClassMap = {
     { "AVErrorCode", g_AVErrorCode},
     { "MediaErrorCode", g_mediaErrorCode },
@@ -449,6 +460,8 @@ static const std::map<std::string_view, const std::vector<struct JsEnumInt>&> g_
     { "AVScreenCaptureStateCode", g_screenCaptureStateCode},
     { "FileGenerationMode", g_fileGenerationMode},
     { "MetaSourceType", g_metaSourceType},
+    { "ScreenCaptureEvent", g_screenCaptureMonitorEvent },
+    { "AVScreenCaptureFillMode", g_screenCaptureFillMode},
 };
 
 static const std::map<std::string_view, const std::vector<struct JsEnumString>&> g_stringEnumClassMap = {

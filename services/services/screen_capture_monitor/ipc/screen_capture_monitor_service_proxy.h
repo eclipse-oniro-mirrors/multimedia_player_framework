@@ -30,6 +30,8 @@ public:
     int32_t CloseListenerObject() override;
     std::list<int32_t> IsScreenCaptureWorking() override;
     int32_t DestroyStub() override;
+    bool IsSystemScreenRecorder(int32_t pid) override;
+    bool IsSystemScreenRecorderWorking() override;
 
 private:
     static inline BrokerDelegator<ScreenCaptureMonitorServiceProxy> delegator_;

@@ -26,6 +26,11 @@ enum ScreenCaptureMonitorErrorType : int32_t {
     SCREEN_CAPTURE_MONITOR_ERROR_INTERNAL,
 };
 
+enum ScreenCaptureMonitorEvent : int32_t {
+    SCREENCAPTURE_STARTED = 0,
+    SCREENCAPTURE_STOPPED = 1
+};
+
 class ScreenCaptureMonitor {
 public:
 #ifdef UNSUPPORT_SCREEN_CAPTURE
@@ -45,6 +50,14 @@ public:
     }
     void RegisterScreenCaptureMonitorListener(sptr<ScreenCaptureMonitorListener> listener) {}
     void UnregisterScreenCaptureMonitorListener(sptr<ScreenCaptureMonitorListener> listener) {}
+    bool IsSystemScreenRecorder(int32_t pid)
+    {
+        return false;
+    }
+    bool IsSystemScreenRecorderWorking()
+    {
+        return false;
+    }
 #else
     static ScreenCaptureMonitor *GetInstance();
     class ScreenCaptureMonitorListener : public virtual RefBase {
@@ -68,6 +81,8 @@ public:
     std::list<int32_t> IsScreenCaptureWorking();
     void RegisterScreenCaptureMonitorListener(sptr<ScreenCaptureMonitorListener> listener);
     void UnregisterScreenCaptureMonitorListener(sptr<ScreenCaptureMonitorListener> listener);
+    bool IsSystemScreenRecorder(int32_t pid);
+    bool IsSystemScreenRecorderWorking();
     virtual ~ScreenCaptureMonitor() = default;
 #endif
 };

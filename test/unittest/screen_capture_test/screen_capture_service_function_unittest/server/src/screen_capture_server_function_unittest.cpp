@@ -1919,5 +1919,53 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetMicrophoneEnabled_002, TestSize.Lev
     int ret = screenCaptureServer_->SetMicrophoneEnabled(false);
     ASSERT_EQ(ret, MSERR_OK);
 }
+
+HWTEST_F(ScreenCaptureServerFunctionTest, SetSystemScreenRecorderStatus_001, TestSize.Level2)
+{
+    screenCaptureServer_->appName_ =
+        GetScreenCaptureSystemParam()["const.multimedia.screencapture.dialogconnectionbundlename"];
+    screenCaptureServer_->SetSystemScreenRecorderStatus(false);
+    ASSERT_EQ(ScreenCaptureServer::systemScreenRecorderPid_, -1);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, SetSystemScreenRecorderStatus_002, TestSize.Level2)
+{
+    screenCaptureServer_->appName_ =
+        GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"];
+    screenCaptureServer_->appInfo_.appPid = 15000;
+    screenCaptureServer_->SetSystemScreenRecorderStatus(true);
+    ASSERT_EQ(ScreenCaptureServer::systemScreenRecorderPid_, 15000);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, SetSystemScreenRecorderStatus_003, TestSize.Level2)
+{
+    ScreenCaptureServer::systemScreenRecorderPid_ = -1;
+    screenCaptureServer_->appName_ =
+        GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"];
+    screenCaptureServer_->appInfo_.appPid = 15000;
+    screenCaptureServer_->SetSystemScreenRecorderStatus(false);
+    ASSERT_EQ(ScreenCaptureServer::systemScreenRecorderPid_, -1);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, IsSystemScreenRecorder_001, TestSize.Level2)
+{
+    ScreenCaptureServer::systemScreenRecorderPid_ = -1;
+    bool ret = ScreenCaptureMonitor::GetInstance()->IsSystemScreenRecorder(15000);
+    ASSERT_EQ(ret, false);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, IsSystemScreenRecorder_002, TestSize.Level2)
+{
+    ScreenCaptureServer::systemScreenRecorderPid_ = -1;
+    bool ret = ScreenCaptureMonitor::GetInstance()->IsSystemScreenRecorder(-1);
+    ASSERT_EQ(ret, false);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, IsSystemScreenRecorderWorking_001, TestSize.Level2)
+{
+    screenCaptureServer_->SetSystemScreenRecorderStatus(false);
+    bool ret = ScreenCaptureMonitor::GetInstance()->IsSystemScreenRecorderWorking();
+    ASSERT_EQ(ret, false);
+}
 } // Media
 } // OHOS

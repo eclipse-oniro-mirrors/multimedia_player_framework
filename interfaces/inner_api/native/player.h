@@ -121,6 +121,7 @@ public:
     static constexpr std::string_view PLAYER_ERROR_MSG = "error_msg";
     static constexpr std::string_view CONTENT_TYPE = "content_type";
     static constexpr std::string_view STREAM_USAGE = "stream_usage";
+    static constexpr std::string_view VOLUME_MODE = "volume_mode";
     static constexpr std::string_view RENDERER_FLAG = "renderer_flag";
     static constexpr std::string_view VIDEO_SCALE_TYPE = "video_scale_type";
     static constexpr std::string_view AUDIO_INTERRUPT_MODE = "audio_interrupt_mode";
@@ -485,6 +486,8 @@ public:
      * @version 1.0
      */
     virtual int32_t SetVolume(float leftVolume, float rightVolume) = 0;
+
+    virtual int32_t SetVolumeMode(int32_t mode);
 
     virtual int32_t SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, AVPlayStrategy strategy) = 0;
 

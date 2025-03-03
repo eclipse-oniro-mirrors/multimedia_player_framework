@@ -1348,6 +1348,19 @@ Status HiPlayerImpl::HandleSeekClosest(int64_t seekPos, int64_t seekTimeUs)
     return res;
 }
 
+int32_t HiPlayerImpl::SetVolumeMode(int32_t mode)
+{
+    MEDIA_LOG_D("SetVolumeMode in");
+    Status ret = Status::OK;
+    if (audioSink_ != nullptr) {
+        ret = audioSink_->SetVolumeMode(mode);
+    }
+    if (ret != Status::OK) {
+        MEDIA_LOG_E("SetVolume failed with error " PUBLIC_LOG_D32, static_cast<int>(ret));
+    }
+    return TransStatus(ret);
+}
+
 int32_t HiPlayerImpl::SetVolume(float leftVolume, float rightVolume)
 {
     MEDIA_LOG_D("SetVolume in");
@@ -2824,6 +2837,7 @@ void HiPlayerImpl::HandleAudioTrackChangeEvent(const Event& event)
             MEDIA_LOG_E("HandleAudioTrackChangeEvent audioDecoder change plugin error");
             return;
         }
+        // Firstly, clear obsolete data first to avoid cacophony of noise. Then start audio decoder and audio sink.
         audioDecoder_->DoFlush();
         audioSink_->DoFlush();
         audioDecoder_->Start();
@@ -3276,6 +3290,9 @@ void HiPlayerImpl::FlushVideoEOS()
     if (demuxerEOS || decoderEOS || playerEOS) {
         MEDIA_LOG_I("flush first when eos");
         pipeline_->Flush();
+        if (curState_ == PlayerStateId::PLAYING) {
+            inEosPlayingSeekContinuous_ = true;
+        }
         curState_ = PlayerStateId::PAUSE;
         pipelineStates_ = TransStateId2PlayerState(PlayerStateId::PAUSE);
         for (std::pair<std::string, bool>& item: completeState_) {
@@ -3309,6 +3326,11 @@ int32_t HiPlayerImpl::ExitSeekContinous(bool align, int64_t seekContinousBatchNo
         MEDIA_LOG_I_SHORT("seekAgent_ AlignAudioPosition end");
         interruptMonitor_->DeregisterListener(seekAgent_);
         seekAgent_.reset();
+    }
+    if (inEosPlayingSeekContinuous_) {
+        curState_ = PlayerStateId::PLAYING;
+        pipelineStates_ = TransStateId2PlayerState(PlayerStateId::PLAYING);
+        inEosPlayingSeekContinuous_ = false;
     }
     if (curState_ == PlayerStateId::PLAYING) {
         // resume inner when exit seek continuous in playing state

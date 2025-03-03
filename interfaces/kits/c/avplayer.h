@@ -296,6 +296,18 @@ OH_AVErrCode OH_AVPlayer_GetPlaybackSpeed(OH_AVPlayer *player, AVPlaybackSpeed *
 OH_AVErrCode OH_AVPlayer_SetAudioRendererInfo(OH_AVPlayer *player, OH_AudioStream_Usage streamUsage);
 
 /**
+ * @brief Set the volume mode of the player's audio renderer
+ * @param player Pointer to an OH_AVPlayer instance
+ * @param mode The value {@link OH_AudioStream_VolumeMode} used for the volume mode of the player audio render.
+ * @return Function result code.
+ *     {@link AV_ERR_OK} if the execution is successful.
+ *     {@link AV_ERR_INVALID_VAL} if input player is nullptr or streamUsage value is invalid.
+ * @since 16
+ * @version 1.0
+ */
+OH_AVErrCode OH_AVPlayer_SetVolumeMode(OH_AVPlayer *player, OH_AudioStream_VolumeMode mode);
+
+/**
  * @brief Set the interruption mode of the player's audio stream
  * @param player Pointer to an OH_AVPlayer instance
  * @param interruptMode The value {@link OH_AudioInterrupt_Mode} used for the interruption mode of

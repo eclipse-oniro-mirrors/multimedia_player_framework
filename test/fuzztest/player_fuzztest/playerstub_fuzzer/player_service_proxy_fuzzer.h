@@ -95,6 +95,10 @@ public:
     {
         return 0;
     }
+    int32_t SetVolumeMode(int32_t mode) override
+    {
+        return 0;
+    }
     int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override
     {
         return 0;

@@ -34,6 +34,8 @@
       *OHOS::Media::SoundPoolFactory::CreateSoundPool*;
       *OHOS::Media::ScreenCaptureMonitor::GetInstance*;
       *OHOS::Media::ScreenCaptureMonitor::IsScreenCaptureWorking*;
+      *OHOS::Media::ScreenCaptureMonitor::IsSystemScreenRecorder*;
+      *OHOS::Media::ScreenCaptureMonitor::IsSystemScreenRecorderWorking*;
       *OHOS::Media::ScreenCaptureMonitor::RegisterScreenCaptureMonitorListener*;
       *OHOS::Media::ScreenCaptureMonitor::UnregisterScreenCaptureMonitorListener*;
     };

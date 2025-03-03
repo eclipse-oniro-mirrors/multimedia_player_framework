@@ -55,6 +55,7 @@ public:
     int32_t Stop() override;
     int32_t Reset() override;
     int32_t SetVolume(float leftVolume, float rightVolume) override;
+    int32_t SetVolumeMode(int32_t mode) override;
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
     int32_t GetVideoWidth() override;
     int32_t GetAudioTrackInfo(std::vector<Format> &audioTrack) override;
@@ -128,6 +129,7 @@ private:
     int32_t Reset(MessageParcel &data, MessageParcel &reply);
     int32_t Release(MessageParcel &data, MessageParcel &reply);
     int32_t SetVolume(MessageParcel &data, MessageParcel &reply);
+    int32_t SetVolumeMode(MessageParcel &data, MessageParcel &reply);
     int32_t Seek(MessageParcel &data, MessageParcel &reply);
     int32_t GetCurrentTime(MessageParcel &data, MessageParcel &reply);
     int32_t GetPlaybackPosition(MessageParcel &data, MessageParcel &reply);

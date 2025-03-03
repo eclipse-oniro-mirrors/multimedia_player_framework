@@ -207,6 +207,13 @@ int32_t PlayerImpl::ReleaseSync()
     return MSERR_OK;
 }
 
+int32_t PlayerImpl::SetVolumeMode(int32_t mode)
+{
+    MEDIA_LOGD("PlayerImpl::SetVolumeMode mode = %{public}d", mode);
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerService_->SetVolumeMode(mode);
+}
+
 int32_t PlayerImpl::SetVolume(float leftVolume, float rightVolume)
 {
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetVolume(%{public}f, %{public}f) in",
@@ -531,7 +538,7 @@ int32_t PlayerImpl::SetMaxAmplitudeCbStatus(bool status)
 bool PlayerImpl::IsSeekContinuousSupported()
 {
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " IsSeekContinuousSupported in", FAKE_POINTER(this));
-    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, false, "player service does not exist.");
     return playerService_->IsSeekContinuousSupported();
 }
 

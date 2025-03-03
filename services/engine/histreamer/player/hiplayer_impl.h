@@ -115,6 +115,7 @@ public:
     int32_t Reset() override;
     int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override;
     int32_t SetVolume(float leftVolume, float rightVolume) override;
+    int32_t SetVolumeMode(int32_t mode) override;
     int32_t SetVideoSurface(sptr<Surface> surface) override;
     int32_t SetDecryptConfig(const sptr<OHOS::DrmStandard::IMediaKeySessionService> &keySessionProxy,
         bool svp) override;
@@ -391,6 +392,7 @@ private:
     std::atomic<int64_t> seekContinousBatchNo_ {-1};
     std::shared_ptr<DraggingPlayerAgent> draggingPlayerAgent_ {nullptr};
     int64_t lastSeekContinousPos_ {-1};
+    bool inEosPlayingSeekContinuous_ = false;
     std::atomic<bool> needUpdateSubtitle_ {true};
     std::shared_ptr<DfxAgent> dfxAgent_{};
     bool maxAmplitudeCbStatus_ {false};

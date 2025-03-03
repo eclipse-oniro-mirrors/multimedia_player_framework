@@ -30,6 +30,8 @@ public:
         sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> listener) = 0;
     virtual void UnregisterScreenCaptureMonitorListener(
         sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> listener) = 0;
+    virtual bool IsSystemScreenRecorder(int32_t pid) = 0;
+    virtual bool IsSystemScreenRecorderWorking() = 0;
 };
 } // namespace Media
 } // namespace OHOS

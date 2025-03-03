@@ -69,6 +69,7 @@ void PlayerServiceProxy::InitPlayerFuncsPart1()
     playerFuncs_[RESET] = "Player::Reset";
     playerFuncs_[RELEASE] = "Player::Release";
     playerFuncs_[SET_VOLUME] = "Player::SetVolume";
+    playerFuncs_[SET_VOLUME_MODE] = "Player::SetVolumeMode";
     playerFuncs_[SEEK] = "Player::Seek";
     playerFuncs_[GET_CURRENT_TIME] = "Player::GetCurrentTime";
     playerFuncs_[GET_DURATION] = "Player::GetDuration";
@@ -413,6 +414,24 @@ int32_t PlayerServiceProxy::ReleaseSync()
     int32_t error = SendRequest(RELEASE, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "Release failed, error: %{public}d", error);
+    return reply.ReadInt32();
+}
+
+int32_t PlayerServiceProxy::SetVolumeMode(int32_t mode)
+{
+    MediaTrace trace("PlayerServiceProxy::SetVolumeMode");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    data.WriteInt32(mode);
+
+    int32_t error = SendRequest(SET_VOLUME_MODE, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetVolumeMode failed, error: %{public}d", error);
     return reply.ReadInt32();
 }
 
