@@ -82,6 +82,9 @@ int32_t CJHelperDataSourceCallback::ReadAt(
             MEDIA_LOGE("Failed to get arraybuffer.");
         }
         ret = cb_->callback_(arraybuffer, length, pos);
+        std::unique_lock<std::mutex> lock(cb_->mutexCond_);
+        cb_->setResult_ = true;
+        cb_->cond_.notify_all();
     } while (0);
     cb_->WaitResult();
     return ret;
