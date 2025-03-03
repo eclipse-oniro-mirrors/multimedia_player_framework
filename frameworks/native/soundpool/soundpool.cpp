@@ -22,7 +22,7 @@
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SOUNDPOOL, "SoundPool"};
-    static const int32_t SOUNDPOOL_API_VERSION_ISOLATION = 16;
+    static const int32_t SOUNDPOOL_API_VERSION_ISOLATION = 18;
     static const int32_t FAULT_API_VERSION = -1;
 }
 
