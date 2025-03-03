@@ -1951,7 +1951,7 @@ int32_t ScreenCaptureServer::RegisterServerCallbacks()
     uint64_t tokenId = IPCSkeleton::GetCallingFullTokenID();
     isCalledBySystemApp_ = OHOS::Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(tokenId);
     MEDIA_LOGI("ScreenCaptureServer::RegisterServerCallbacks isCalledBySystemApp: %{public}d", isCalledBySystemApp_);
-    apiVersion_ = GetAPIVersion();
+    apiVersion_ = GetApiInfo(appInfo_.appUid);
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " API Version is %{public}d", FAKE_POINTER(this),
         apiVersion_);
     if (apiVersion_ < STOPPED_BY_CALL_API_VERSION_ISOLATION && InCallObserver::GetInstance().IsInCall(true) &&
