@@ -2807,6 +2807,9 @@ void __attribute__((no_sanitize("cfi"))) HiPlayerImpl::OnStateChanged(PlayerStat
         } else if ((curState_ == PlayerStateId::EOS) && (state == PlayerStateId::PAUSE)) {
             MEDIA_LOG_E("already at completed and not allow pause");
             return;
+        } else if ((curState_ == PlayerStateId::ERROR) && (state == PlayerStateId::READY)) {
+            MEDIA_LOG_E("already at error and not allow ready");
+            return;
         }
         curState_ = state;
     }
