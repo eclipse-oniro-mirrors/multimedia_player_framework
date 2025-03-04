@@ -564,6 +564,7 @@ void SystemTonePlayerImpl::NotifyInterruptEvent(const int32_t &streamId,
 
 void SystemTonePlayerImpl::NotifyErrorEvent(int32_t errCode)
 {
+    std::lock_guard<std::mutex> lock(systemTonePlayerMutex_);
     if (finishedAndErrorCallback_ != nullptr) {
         finishedAndErrorCallback_->OnError(errCode);
         MEDIA_LOGI("SystemTonePlayerImpl::NotifyErrorEvent errCode %{public}d", errCode);
