@@ -51,6 +51,10 @@ int64_t CJAVImageGeneratorImpl::FetchFrameAtTime(int64_t timeUs, int32_t option,
         MEDIA_LOGE("Current state is not runnable, can't fetchFrame.");
         return 0;
     }
+    if (helper_ == nullptr) {
+        MEDIA_LOGE("helper_ is nullptr!");
+        return -1;
+    }
     auto pixelMap = helper_->FetchFrameYuv(
         timeUs, option, PixelMapParams{param.width, param.height, PixelFormat::RGBA_8888});
     auto result = FFI::FFIData::Create<PixelMapImpl>(move(pixelMap));
@@ -67,6 +71,10 @@ int32_t CJAVImageGeneratorImpl::SetAVFileDescriptor(CAVFileDescriptor file)
     fileDescriptor_.length = file.length;
     MEDIA_LOGD("get fd argument, fd = %{public}d, offset = %{public}" PRIi64 ", size = %{public}" PRIi64 "",
         fileDescriptor_.fd, fileDescriptor_.offset, fileDescriptor_.length);
+    if (helper_ == nullptr) {
+        MEDIA_LOGE("helper_ is nullptr!");
+        return -1;
+    }
     auto res = helper_->SetSource(fileDescriptor_.fd, fileDescriptor_.offset, fileDescriptor_.length);
     state_ = res == MSERR_OK ? HelperState::HELPER_STATE_RUNNABLE : HelperState::HELPER_ERROR;
     return MSERR_OK;
@@ -87,6 +95,10 @@ void CJAVImageGeneratorImpl::Release()
 {
     if (state_ == HelperState::HELPER_STATE_RELEASED) {
         MEDIA_LOGE("Has released once, can't release again.");
+        return;
+    }
+    if (helper_ == nullptr) {
+        MEDIA_LOGE("helper_ is nullptr!");
         return;
     }
     helper_->Release();

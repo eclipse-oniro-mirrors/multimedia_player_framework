@@ -21,13 +21,18 @@
 
 namespace OHOS {
 namespace Media {
-void InitDeviceRates(CDeviceDescriptor* device, const DeviceInfo& deviceInfo);
-void InitDeviceChannels(CDeviceDescriptor* device, const DeviceInfo& deviceInfo);
-void ConvertToCDeviceInfo(CDeviceDescriptor* device, const DeviceInfo& deviceInfo);
-void ConvertToCArrDeviceDescriptor(CArrDeviceDescriptor& devices, const DeviceInfo& deviceInfo);
-void ConvertToCAudioCapturerChangeInfo(CAudioCapturerChangeInfo& cInfo, const AudioRecorderChangeInfo& changeInfo);
-void ConvertToCEncoderInfo(CEncoderInfo& cInfo, EncoderCapabilityData& encoderInfo);
-void ConvertToCArrEncoderInfo(CArrEncoderInfo& cInfo, std::vector<EncoderCapabilityData>& encoderInfo);
+bool InitDeviceRates(CDeviceDescriptor* device, const DeviceInfo& deviceInfo);
+bool InitDeviceChannels(CDeviceDescriptor* device, const DeviceInfo& deviceInfo);
+bool ConvertToCDeviceInfo(CDeviceDescriptor* device, const DeviceInfo& deviceInfo);
+bool ConvertToCArrDeviceDescriptor(CArrDeviceDescriptor& devices, const DeviceInfo& deviceInfo);
+bool ConvertToCAudioCapturerChangeInfo(CAudioCapturerChangeInfo& cInfo, const AudioRecorderChangeInfo& changeInfo);
+bool ConvertToCEncoderInfo(CEncoderInfo& cInfo, EncoderCapabilityData& encoderInfo);
+bool ConvertToCArrEncoderInfo(CArrEncoderInfo& cInfo, std::vector<EncoderCapabilityData>& encoderInfo);
+
+void FreeDescriptor(CDeviceDescriptor& device);
+void FreeCArrDeviceDescriptor(CArrDeviceDescriptor& devices);
+void FreeEncoderInfo(CEncoderInfo& cInfo);
+void FreeCArrEncoderInfo(CArrEncoderInfo& cInfo);
 
 namespace CJAVRecorderEvent {
 const int32_t EVENT_STATE_CHANGE = 1;

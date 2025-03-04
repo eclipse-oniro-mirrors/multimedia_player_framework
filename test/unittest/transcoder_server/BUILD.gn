@@ -76,7 +76,6 @@ ohos_unittest("transcoder_server_unit_test") {
     "resource_schedule_service:ressched_client",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "state_registry:tel_state_registry_api",
   ]
 
   resource_config_file =

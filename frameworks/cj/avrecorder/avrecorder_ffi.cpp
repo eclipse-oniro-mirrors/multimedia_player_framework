@@ -220,7 +220,14 @@ CAudioCapturerChangeInfo FfiOHOSMediaAVRecorderGetCurrentAudioCapturerInfo(int64
         }
         return cInfo;
     }
-    ConvertToCAudioCapturerChangeInfo(cInfo, changeInfo);
+    if (!ConvertToCAudioCapturerChangeInfo(cInfo, changeInfo)) {
+        if (errCode) {
+            MEDIA_LOGE("FfiOHOSMediaAVRecorderGetCurrentAudioCapturerInfo - convert failed!");
+            *errCode = -1;
+        }
+        FreeCArrDeviceDescriptor(cInfo.deviceDescriptors);
+        return CAudioCapturerChangeInfo();
+    }
     if (errCode) {
         *errCode = 0;
     }
@@ -246,7 +253,14 @@ CArrEncoderInfo FfiOHOSMediaAVRecorderGetEncoderInfo(int64_t id, int32_t *errCod
         }
         return cInfo;
     }
-    ConvertToCArrEncoderInfo(cInfo, encoderInfo);
+    if (!ConvertToCArrEncoderInfo(cInfo, encoderInfo)) {
+        if (errCode) {
+            MEDIA_LOGE("FfiOHOSMediaAVRecorderGetEncoderInfo - convert failed!");
+            *errCode = -1;
+        }
+        FreeCArrEncoderInfo(cInfo);
+        return CArrEncoderInfo();
+    }
     if (errCode) {
         *errCode = 0;
     }

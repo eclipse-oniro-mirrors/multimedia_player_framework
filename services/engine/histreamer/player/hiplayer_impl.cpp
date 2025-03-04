@@ -908,6 +908,7 @@ int32_t HiPlayerImpl::PauseDemuxer()
     MEDIA_LOG_I("PauseDemuxer in");
     callbackLooper_.StopReportMediaProgress();
     callbackLooper_.StopCollectMaxAmplitude();
+    syncManager_->Pause();
     Status ret = demuxer_->PauseDemuxerReadLoop();
     return TransStatus(ret);
 }
@@ -920,6 +921,7 @@ int32_t HiPlayerImpl::ResumeDemuxer()
         TransStatus(Status::OK), "PLAYER_STATE_ERROR not allow ResumeDemuxer");
     callbackLooper_.StartReportMediaProgress(REPORT_PROGRESS_INTERVAL);
     callbackLooper_.StartCollectMaxAmplitude(SAMPLE_AMPLITUDE_INTERVAL);
+    syncManager_->Resume();
     Status ret = demuxer_->ResumeDemuxerReadLoop();
     return TransStatus(ret);
 }
