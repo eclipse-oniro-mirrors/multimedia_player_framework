@@ -957,7 +957,7 @@ int32_t PlayerServiceStub::SetMediaSource(MessageParcel &data, MessageParcel &re
     std::string mimeType = data.ReadString();
 
     std::shared_ptr<AVMediaSource> mediaSource = std::make_shared<AVMediaSource>(url, header);
-    CHECK_AND_RETURN_RET_LOG(mediaSource != nullptr, ret, "mediaSource is nullptr");
+    CHECK_AND_RETURN_RET_LOG(mediaSource != nullptr, MSERR_INVALID_VAL, "mediaSource is nullptr");
     mediaSource->SetMimeType(mimeType);
 
     if (sourceLoader_ != nullptr) {
