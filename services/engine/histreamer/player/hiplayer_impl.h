@@ -387,7 +387,11 @@ private:
     bool isHintPauseReceived_ { false };
     std::atomic<bool> interruptNotifyPlay_ {false};
     std::atomic<bool> isSaveInterruptEventNeeded_ {true};
-    OHOS::AudioStandard::InterruptEvent interruptEvent_;
+    OHOS::AudioStandard::InterruptEvent interruptEvent_ = {
+        .eventType = OHOS::AudioStandard::INTERRUPT_TYPE_END,
+        .forceType = OHOS::AudioStandard::INTERRUPT_SHARE,
+        .hintType = OHOS::AudioStandard::INTERRUPT_HINT_RESUME
+    };
 };
 } // namespace Media
 } // namespace OHOS
