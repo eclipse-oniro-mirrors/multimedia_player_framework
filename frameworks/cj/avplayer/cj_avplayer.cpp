@@ -180,6 +180,9 @@ CAVDataSrcDescriptor CJAVPlayer::GetDataSrc()
     MEDIA_LOGI("GetDataSrc In");
 
     int64_t fileSize;
+    if (dataSrcCb_ == nullptr) {
+        return CAVDataSrcDescriptor{.fileSize = -1, .callback = -1};
+    }
     (void)dataSrcCb_->GetSize(fileSize);
     int32_t callbackId = dataSrcCb_->GetCallbackId();
 
