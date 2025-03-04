@@ -1763,6 +1763,7 @@ int32_t ScreenCaptureServer::InitVideoCap(VideoCaptureInfo videoInfo)
 
 int32_t ScreenCaptureServer::InitRecorderInfo(std::shared_ptr<IRecorderService> &recorder, AudioCaptureInfo audioInfo)
 {
+    CHECK_AND_RETURN_RET_LOG(recorder != nullptr, MSERR_UNKNOWN, "init InitRecorderInfo failed");
     int32_t ret = MSERR_OK;
     if (captureConfig_.videoInfo.videoCapInfo.state != AVScreenCaptureParamValidationState::VALIDATION_IGNORE) {
         ret = recorder_->SetVideoSource(captureConfig_.videoInfo.videoCapInfo.videoSource, videoSourceId_);
@@ -2684,7 +2685,7 @@ int32_t ScreenCaptureServer::AcquireAudioBufferMix(std::shared_ptr<AudioBuffer> 
     std::shared_ptr<AudioBuffer> &micAudioBuffer, AVScreenCaptureMixMode type)
 {
     if (captureState_ != AVScreenCaptureState::STARTED) {
-        return MSERR_INVALID_OPERATION;
+        return MSERR_INVALID_STATE;
     }
     if (type == AVScreenCaptureMixMode::MIX_MODE && micAudioCapture_ != nullptr &&
         micAudioCapture_->GetAudioCapturerState() == CAPTURER_RECORDING) {
@@ -4053,7 +4054,7 @@ int32_t AudioDataSource::ReadAt(std::shared_ptr<AVBuffer> buffer, uint32_t lengt
     }
     ret = screenCaptureServer_->AcquireAudioBufferMix(innerAudioBuffer, micAudioBuffer, type_);
     if (ret != MSERR_OK) {
-        return MSERR_INVALID_VAL;
+        return ret;
     }
     MEDIA_LOGD("AcquireAudioBufferMix sucess");
     std::shared_ptr<AVMemory> &bufferMem = buffer->memory_;

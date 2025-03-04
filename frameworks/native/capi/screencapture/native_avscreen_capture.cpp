@@ -225,13 +225,13 @@ private:
         CHECK_AND_RETURN_RET_LOG(screenCaptureObj->screenCapture_ != nullptr,
             AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "screenCapture is null");
 
-        OHOS::sptr<OH_AVBuffer> hoAvBuffer;
+        OHOS::sptr<OH_AVBuffer> ohAvBuffer;
         int64_t timestamp = 0;
         OH_AVSCREEN_CAPTURE_ErrCode errCode =
-            AcquireVideoBuffer(screenCaptureObj->screenCapture_, hoAvBuffer, timestamp);
+            AcquireVideoBuffer(screenCaptureObj->screenCapture_, ohAvBuffer, timestamp);
         if (errCode == AV_SCREEN_CAPTURE_ERR_OK) {
             MEDIA_LOGD("OnProcessVideoBuffer: 0x%{public}06" PRIXPTR " In", FAKE_POINTER(capture));
-            callback_(capture, reinterpret_cast<OH_AVBuffer *>(hoAvBuffer.GetRefPtr()),
+            callback_(capture, reinterpret_cast<OH_AVBuffer *>(ohAvBuffer.GetRefPtr()),
                 OH_AVScreenCaptureBufferType::OH_SCREEN_CAPTURE_BUFFERTYPE_VIDEO, timestamp, userData_);
             MEDIA_LOGD("OnProcessVideoBuffer: 0x%{public}06" PRIXPTR " Out", FAKE_POINTER(capture));
         }
