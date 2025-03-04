@@ -69,7 +69,7 @@ void SetConfig(AVScreenCaptureConfig &config)
 
 bool ScreenCaptureSaAppInfoFuzzer::FuzzScreenCaptureSaAppInfo(uint8_t *data, size_t size)
 {
-    if (data == nullptr || size < sizeof(OHOS::AudioStandard::AppInfo)) {
+    if (data == nullptr || size < sizeof(int32_t)) {
         return false;
     }
 
@@ -77,7 +77,7 @@ bool ScreenCaptureSaAppInfoFuzzer::FuzzScreenCaptureSaAppInfo(uint8_t *data, siz
     appInfo.appTokenId = IPCSkeleton::GetCallingTokenID();
     appInfo.appFullTokenId = IPCSkeleton::GetCallingFullTokenID();
     appInfo.appUid = IPCSkeleton::GetCallingUid();
-    appInfo.appPid = IPCSkeleton::GetCallingPid();
+    appInfo.appPid = *reinterpret_cast<int32_t *>(data);
 
     bool retFlags = TestScreenCapture::CreateScreenCapture(appInfo);
     RETURN_IF(retFlags, false);
@@ -98,7 +98,7 @@ bool FuzzTestScreenCaptureSaAppInfo(uint8_t *data, size_t size)
         return true;
     }
 
-    if (size < sizeof(OHOS::AudioStandard::AppInfo)) {
+    if (size < sizeof(int32_t)) {
         return true;
     }
 
