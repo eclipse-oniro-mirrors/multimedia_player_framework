@@ -206,14 +206,15 @@ void AVPlayerNapi::Destructor(napi_env env, void *nativeObject, void *finalize)
 
 bool AVPlayerNapi::IsSystemApp()
 {
+    static bool isSystemApp = false;
 #ifndef CROSS_PLATFORM
     static std::once_flag once;
-    std::call_once(once, [this] {
+    std::call_once(once, [] {
         uint64_t tokenId = IPCSkeleton::GetSelfTokenID();
-        isSystemApp_ = Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(tokenId);
+        isSystemApp = Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(tokenId);
     });
 #endif
-    return isSystemApp_;
+    return isSystemApp;
 }
 
 napi_value AVPlayerNapi::JsCreateAVPlayer(napi_env env, napi_callback_info info)

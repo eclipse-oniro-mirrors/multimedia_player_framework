@@ -304,6 +304,7 @@ private:
     static bool VerifyExpectedType(const NapiTypeCheckUnit &unit, AVPlayerNapi *jsPlayer, const std::string &msg);
     static std::shared_ptr<AVMediaSource> GetAVMediaSource(napi_env env, napi_value value,
         std::shared_ptr<AVMediaSourceTmp> &srcTmp);
+    static bool IsSystemApp();
     AVPlayerNapi();
     ~AVPlayerNapi() override;
     void SaveCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref);
@@ -363,7 +364,6 @@ private:
     bool IsPalyingDurationValid(const AVPlayStrategyTmp &strategyTmp);
     void EnqueueMediaSourceTask(AVPlayerNapi *jsPlayer, const std::shared_ptr<AVMediaSource> &mediaSource,
                                 const struct AVPlayStrategy &strategy);
-    bool IsSystemApp();
 
     std::condition_variable stopTaskQueCond_;
     bool taskQueStoped_ = false;
@@ -432,7 +432,6 @@ private:
     int32_t mode_ = SWITCH_SMOOTH;
     std::mutex syncMutex_;
     bool getApiVersionFlag_ = true;
-    bool isSystemApp_ = false;
 };
 } // namespace Media
 } // namespace OHOS
