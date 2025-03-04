@@ -167,6 +167,10 @@ private:
     int32_t IsSeekContinuousSupported(MessageParcel &data, MessageParcel &reply);
     int32_t SetSeiMessageCbStatus(MessageParcel &data, MessageParcel &reply);
 
+    int32_t ReadMediaStreamListFromMessageParcel(
+        MessageParcel &data, const std::shared_ptr<AVMediaSource> &mediaSource);
+    void ReadPlayStrategyFromMessageParcel(MessageParcel &data, AVPlayStrategy &strategy);
+
     std::map<uint32_t, std::pair<std::string, PlayerStubFunc>> playerFuncs_;
     void FillPlayerFuncPart1();
     void FillPlayerFuncPart2();

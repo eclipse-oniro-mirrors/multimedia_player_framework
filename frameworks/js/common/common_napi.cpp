@@ -315,6 +315,21 @@ bool CommonNapi::GetPlayStrategy(napi_env env, napi_value value, AVPlayStrategyT
     return true;
 }
 
+bool CommonNapi::GetPlayMediaStreamData(napi_env env, napi_value value, AVPlayMediaStreamTmp &mediaStream)
+{
+    bool existProperty = CommonNapi::CheckhasNamedProperty(env, value, "url");
+    existProperty &= CommonNapi::CheckhasNamedProperty(env, value, "width");
+    existProperty &= CommonNapi::CheckhasNamedProperty(env, value, "height");
+    existProperty &= CommonNapi::CheckhasNamedProperty(env, value, "bitrate");
+    CHECK_AND_RETURN_RET_LOG(existProperty, false, "property is not complete for AVPlayMediaStream");
+ 
+    mediaStream.url = GetPropertyString(env, value, "url");
+    GetPropertyUint32(env, value, "width", mediaStream.width);
+    GetPropertyUint32(env, value, "height", mediaStream.height);
+    GetPropertyUint32(env, value, "bitrate", mediaStream.bitrate);
+    return true;
+}
+
 napi_status CommonNapi::FillErrorArgs(napi_env env, int32_t errCode, const napi_value &args)
 {
     napi_value codeStr = nullptr;

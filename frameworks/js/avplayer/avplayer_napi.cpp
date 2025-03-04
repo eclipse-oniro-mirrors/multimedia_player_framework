@@ -1833,8 +1833,11 @@ napi_value AVPlayerNapi::JsSetMediaSource(napi_env env, napi_callback_info info)
     }
     std::shared_ptr<AVMediaSourceTmp> srcTmp = MediaSourceNapi::GetMediaSource(env, args[0]);
     CHECK_AND_RETURN_RET_LOG(srcTmp != nullptr, result, "get GetMediaSource argument failed!");
+
     std::shared_ptr<AVMediaSource> mediaSource = GetAVMediaSource(env, args[0], srcTmp);
     CHECK_AND_RETURN_RET_LOG(mediaSource != nullptr, result, "create mediaSource failed!");
+    jsPlayer->AddMediaStreamToAVMediaSource(srcTmp, mediaSource);
+
     struct AVPlayStrategyTmp strategyTmp;
     struct AVPlayStrategy strategy;
     if (!CommonNapi::GetPlayStrategy(env, args[1], strategyTmp)) {
@@ -3332,6 +3335,19 @@ int32_t AVPlayerNapi::GetJsApiVersion()
         MEDIA_LOGI("apiVersion is: %{public}d", g_apiVersion);
     }
     return g_apiVersion;
+}
+
+void AVPlayerNapi::AddMediaStreamToAVMediaSource(
+    const std::shared_ptr<AVMediaSourceTmp> &srcTmp, std::shared_ptr<AVMediaSource> &mediaSource)
+{
+    for (const auto &mediaStreamTmp : srcTmp->getAVPlayMediaStreamTmpList()) {
+        AVPlayMediaStream mediaStream;
+        mediaStream.url = mediaStreamTmp.url;
+        mediaStream.width = mediaStreamTmp.width;
+        mediaStream.height = mediaStreamTmp.height;
+        mediaStream.bitrate = mediaStreamTmp.bitrate;
+        mediaSource->AddMediaStream(mediaStream);
+    }
 }
 
 napi_value AVPlayerNapi::JsIsSeekContinuousSupported(napi_env env, napi_callback_info info)

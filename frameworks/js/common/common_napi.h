@@ -33,6 +33,7 @@ namespace OHOS {
 namespace Media {
 struct AVFileDescriptor;
 struct AVPlayStrategyTmp;
+struct AVPlayMediaStreamTmp;
 struct AVDataSrcDescriptor;
 class AVMediaSourceTmp;
 /**
@@ -64,6 +65,7 @@ public:
     static bool GetPropertyMap(napi_env env, napi_value value, std::map<std::string, std::string>& map);
     static bool GetFdArgument(napi_env env, napi_value value, AVFileDescriptor &rawFd);
     static bool GetPlayStrategy(napi_env env, napi_value value, AVPlayStrategyTmp &playStrategy);
+    static bool GetPlayMediaStreamData(napi_env env, napi_value value, AVPlayMediaStreamTmp &mediaStream);
     static napi_status FillErrorArgs(napi_env env, int32_t errCode, const napi_value &args);
     static napi_status CreateError(napi_env env, int32_t errCode, const std::string &errMsg, napi_value &errVal);
     static napi_ref CreateReference(napi_env env, napi_value arg);
@@ -362,9 +364,21 @@ public:
         return mimeType_;
     }
 
+    void AddAVPlayMediaStreamTmp(const AVPlayMediaStreamTmp& avPlayMediaStreamTmp)
+    {
+        mediaStreamVec_.push_back(avPlayMediaStreamTmp);
+    }
+ 
+    const std::vector<AVPlayMediaStreamTmp>& getAVPlayMediaStreamTmpList()
+    {
+        return mediaStreamVec_;
+    }
+
     std::map<std::string, std::string> header;
-    std::string url {0};
+    std::string url {};
     std::string mimeType_ {};
+private:
+    std::vector<AVPlayMediaStreamTmp> mediaStreamVec_;
 };
 
 struct AVPlayStrategyTmp {
@@ -378,6 +392,13 @@ struct AVPlayStrategyTmp {
     std::string preferredAudioLanguage;
     std::string preferredSubtitleLanguage;
     double preferredBufferDurationForPlaying;
+};
+
+struct AVPlayMediaStreamTmp {
+    std::string url;
+    uint32_t width;
+    uint32_t height;
+    uint32_t bitrate;
 };
 
 template<typename T>

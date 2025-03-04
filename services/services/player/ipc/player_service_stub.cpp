@@ -38,6 +38,7 @@ namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "PlayerServiceStub"};
     constexpr uint32_t MAX_MAP_SIZE = 100;
     constexpr size_t MAX_PAYLOAD_TYPES_SIZE = 100;
+    constexpr uint32_t MAX_MEDIA_STREAM_LIST_SIZE = 10;
 }
 
 namespace OHOS {
@@ -956,6 +957,7 @@ int32_t PlayerServiceStub::SetMediaSource(MessageParcel &data, MessageParcel &re
     std::string mimeType = data.ReadString();
 
     std::shared_ptr<AVMediaSource> mediaSource = std::make_shared<AVMediaSource>(url, header);
+    CHECK_AND_RETURN_RET_LOG(mediaSource != nullptr, MSERR_INVALID_VAL, "mediaSource is nullptr");
     mediaSource->SetMimeType(mimeType);
 
     if (sourceLoader_ != nullptr) {
@@ -976,7 +978,39 @@ int32_t PlayerServiceStub::SetMediaSource(MessageParcel &data, MessageParcel &re
         mediaSource->url = newUrl;
     }
 
+    int32_t ret = ReadMediaStreamListFromMessageParcel(data, mediaSource);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "ReadMediaStreamListFromMessageParcel failed");
+
     struct AVPlayStrategy strategy;
+    ReadPlayStrategyFromMessageParcel(data, strategy);
+    reply.WriteInt32(SetMediaSource(mediaSource, strategy));
+    if (mimeType == AVMimeType::APPLICATION_M3U8) {
+        (void)::close(fd);
+    }
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::ReadMediaStreamListFromMessageParcel(
+    MessageParcel &data, const std::shared_ptr<AVMediaSource> &mediaSource)
+{
+    uint32_t mediaStreamLength = data.ReadUint32();
+    if (mediaStreamLength > MAX_MEDIA_STREAM_LIST_SIZE) {
+        MEDIA_LOGW("Exceeded MAX_MEDIA_STREAM_LIST_SIZE limit");
+        return MSERR_INVALID_OPERATION;
+    }
+    for (uint32_t i = 0; i < mediaStreamLength; i++) {
+        struct AVPlayMediaStream mediaStream;
+        mediaStream.url = data.ReadString();
+        mediaStream.width = data.ReadUint32();
+        mediaStream.height = data.ReadUint32();
+        mediaStream.bitrate = data.ReadUint32();
+        mediaSource->AddMediaStream(mediaStream);
+    }
+    return MSERR_OK;
+}
+
+void PlayerServiceStub::ReadPlayStrategyFromMessageParcel(MessageParcel &data, AVPlayStrategy &strategy)
+{
     strategy.preferredWidth = data.ReadUint32();
     strategy.preferredHeight = data.ReadUint32();
     strategy.preferredBufferDuration = data.ReadUint32();
@@ -987,11 +1021,6 @@ int32_t PlayerServiceStub::SetMediaSource(MessageParcel &data, MessageParcel &re
     strategy.mutedMediaType = static_cast<OHOS::Media::MediaType>(data.ReadInt32());
     strategy.preferredAudioLanguage = data.ReadString();
     strategy.preferredSubtitleLanguage = data.ReadString();
-    reply.WriteInt32(SetMediaSource(mediaSource, strategy));
-    if (mimeType == AVMimeType::APPLICATION_M3U8) {
-        (void)::close(fd);
-    }
-    return MSERR_OK;
 }
 
 int32_t PlayerServiceStub::GetPlaybackSpeed(MessageParcel &data, MessageParcel &reply)

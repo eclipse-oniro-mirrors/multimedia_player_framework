@@ -19,6 +19,7 @@
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "MediaSourceNapi"};
+constexpr uint32_t MAX_MEDIA_STREAM_ARRAY_LENGTH = 10;
 }
 
 namespace OHOS {
@@ -31,6 +32,7 @@ napi_value MediaSourceNapi::Init(napi_env env, napi_value exports)
 {
     napi_property_descriptor staticProperty[] = {
         DECLARE_NAPI_STATIC_FUNCTION("createMediaSourceWithUrl", JsCreateMediaSourceWithUrl),
+        DECLARE_NAPI_STATIC_FUNCTION("createMediaSourceWithStreamData", JsCreateMediaSourceWithStreamData),
     };
 
     napi_property_descriptor properties[] = {
@@ -147,6 +149,61 @@ napi_value MediaSourceNapi::JsCreateMediaSourceWithUrl(napi_env env, napi_callba
     mediaSource->url = CommonNapi::GetStringArgument(env, args[0]);
     MEDIA_LOGE("JsCreateMediaSourceWithUrl get map");
     (void)CommonNapi::GetPropertyMap(env, args[1], mediaSource->header);
+    return jsMediaSource;
+}
+
+napi_value MediaSourceNapi::JsCreateMediaSourceWithStreamData(napi_env env, napi_callback_info info)
+{
+    MEDIA_LOGD("JsCreateMediaSourceWithStreamData In");
+    size_t argCount = 1;
+    napi_value args[1] = { nullptr };
+    napi_value jsMediaSource = nullptr;
+    napi_get_undefined(env, &jsMediaSource);
+    napi_status status = napi_get_cb_info(env, info, &argCount, args, nullptr, nullptr);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "failed to napi_get_cb_info");
+ 
+    bool isArray = false;
+    if (argCount < 1 || napi_is_array(env, args[0], &isArray) != napi_ok || !isArray) {
+        return nullptr;
+    }
+ 
+    uint32_t length = 0;
+    if (napi_get_array_length(env, args[0], &length) != napi_ok || length == 0)  {
+        return nullptr;
+    }
+    CHECK_AND_RETURN_RET_LOG(length <= MAX_MEDIA_STREAM_ARRAY_LENGTH, nullptr, "length Array<MediaStream> is too long");
+ 
+    napi_value constructor = nullptr;
+    napi_status ret = napi_get_reference_value(env, constructor_, &constructor);
+    if (ret != napi_ok || constructor == nullptr) {
+        return nullptr;
+    }
+    napi_new_instance(env, constructor, 0, nullptr, &jsMediaSource);
+ 
+    std::shared_ptr<AVMediaSourceTmp> mediaSource = GetMediaSource(env, jsMediaSource);
+    if (mediaSource == nullptr) {
+        MEDIA_LOGE("JsCreateMediaSourceWithStreamData GetMediaSource fail");
+        return nullptr;
+    }
+ 
+    for (uint32_t i = 0; i < length; i++) {
+        napi_value element;
+        AVPlayMediaStreamTmp mediaStream;
+        status = napi_get_element(env, args[0], i, &element);
+        if (status != napi_ok) {
+            return nullptr;
+        }
+        if (!CommonNapi::GetPlayMediaStreamData(env, element, mediaStream)) {
+            return nullptr;
+        }
+        MEDIA_LOGI("url=%{private}s width=%{public}d height=%{public}d bitrate=%{public}d",
+            mediaStream.url.c_str(),
+            mediaStream.width,
+            mediaStream.height,
+            mediaStream.bitrate);
+        mediaSource->AddAVPlayMediaStreamTmp(mediaStream);
+    }
+    MEDIA_LOGD("JsCreateMediaSourceWithStreamData get mediaStreamVec length=%{public}u", length);
     return jsMediaSource;
 }
 
