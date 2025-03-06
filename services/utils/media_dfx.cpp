@@ -316,12 +316,14 @@ void BehaviorEventWriteForScreenCapture(std::string status, std::string module, 
     }
 }
 
-void StatisticEventWriteBundleName(std::string status, std::string module)
+void StatisticEventWriteBundleName(std::string status, std::string module, std::string bundleName)
 {
     MediaEvent event;
     int32_t appUid = IPCSkeleton::GetCallingUid();
     int32_t appPid = IPCSkeleton::GetCallingPid();
-    std::string bundleName = GetClientBundleName(appUid);
+    if (bundleName == "") {
+        bundleName = GetClientBundleName(appUid);
+    }
     if (event.CreateMsg("%s is invoke %s", bundleName.c_str(), module.c_str())) {
         event.EventWriteBundleName("PLAYER_STATISTICS", OHOS::HiviewDFX::HiSysEvent::EventType::STATISTIC,
             module, status, appUid, appPid, bundleName);

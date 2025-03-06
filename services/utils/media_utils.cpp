@@ -101,7 +101,7 @@ std::string __attribute__((visibility("default"))) GetClientBundleName(int32_t u
     return bundleName;
 }
 
-int32_t __attribute__((visibility("default"))) GetApiInfo(int32_t uid)
+int32_t __attribute__((visibility("default"))) GetApiInfo(int32_t uid, std::string bundleName)
 {
     if (uid == 1003) { // 1003 is bootanimation uid
         return FAULT_API_VERSION;
@@ -127,10 +127,12 @@ int32_t __attribute__((visibility("default"))) GetApiInfo(int32_t uid)
         return FAULT_API_VERSION;
     }
 
-    auto result = bms->GetNameForUid(uid, bundleName);
-    if (result != ERR_OK) {
-        MEDIA_LOG_E("Error GetBundleNameForUid fail");
-        return FAULT_API_VERSION;
+    if (bundleName == "") {
+        auto result = bms->GetNameForUid(uid, bundleName);
+        if (result != ERR_OK) {
+            MEDIA_LOG_E("Error GetBundleNameForUid fail");
+            return FAULT_API_VERSION;
+        }
     }
 
     AccountSA::OsAccountManager::GetOsAccountLocalIdFromUid(uid, userId);
