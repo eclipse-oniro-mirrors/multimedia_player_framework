@@ -102,7 +102,8 @@ int32_t PlayerServer::Init()
     } else {
         MEDIA_LOGD("appUid: %{public}d, appPid: %{public}d, appName: %{public}s", appUid_, appPid_, appName_.c_str());
     }
-    apiVersion_ = GetApiInfo(appUid_);
+    StatisticEventWriteBundleName("create", "PlayerServer", appName_);
+    apiVersion_ = GetApiInfo(appUid_, appName_);
 
     PlayerServerStateMachine::Init(idleState_);
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances create 0x%{public}06" PRIXPTR,
