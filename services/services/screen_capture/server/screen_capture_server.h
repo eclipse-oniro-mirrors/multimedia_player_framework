@@ -391,6 +391,13 @@ private:
     bool CheckPrivacyWindowSkipPermission();
     int32_t RequestUserPrivacyAuthority();
     int32_t StartPrivacyWindow();
+#ifdef PC_STANDARD
+    bool IsHopper();
+    int32_t MakeVirtualScreenMirrorForHomeScreenForHopper(sptr<Rosen::Display> defaultDisplay,
+        std::vector<ScreenId> mirrorIds);
+    int32_t MakeVirtualScreenMirrorForSpecifiedScreenForHopper(sptr<Rosen::Display> defaultDisplay,
+        std::vector<ScreenId> mirrorIds);
+#endif
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
     int32_t TryStartNotification();
 #endif
