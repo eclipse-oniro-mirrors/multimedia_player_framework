@@ -28,8 +28,8 @@
 #if !defined(CROSS_PLATFORM)
 #include "ipc_skeleton.h"
 #include "tokenid_kit.h"
-#include "fd_utils.h"
 #endif
+#include "fd_utils.h"
 
 using namespace OHOS::AudioStandard;
 
@@ -364,7 +364,7 @@ napi_value AVImageGeneratorNapi::JsSetAVFileDescriptor(napi_env env, napi_callba
     CHECK_AND_RETURN_RET_LOG(generator->helper_, result, "Invalid AVImageGeneratorNapi.");
 
     auto fileDescriptor = generator->fileDescriptor_;
-#ifndef CROSS_PLATFORM
+#ifdef __linux__
     FILE *reopenFile = nullptr;
     auto res = FdUtils::ReOpenFd(fileDescriptor.fd, reopenFile);
     fileDescriptor.fd = res == MSERR_OK ? fileno(reopenFile) : fileDescriptor.fd;
