@@ -131,6 +131,7 @@ ohos_fuzztest("ScreenCaptureServerStartCaseFuzzTest") {
     "graphic_surface:surface",
     "graphic_surface:sync_fence",
     "hilog:libhilog",
+    "hisysevent:libhisysevent",
     "ipc:ipc_single",
     "media_foundation:media_foundation",
     "os_account:os_account_innerkits",
