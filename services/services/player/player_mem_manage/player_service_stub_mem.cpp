@@ -52,7 +52,6 @@ sptr<PlayerServiceStub> PlayerServiceStubMem::Create()
 
     int32_t ret = playerStubMem->Init();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed to player stubMem init");
-    StatisticEventWriteBundleName("create", "PlayerServiceStubMem");
     return playerStubMem;
 }
 
