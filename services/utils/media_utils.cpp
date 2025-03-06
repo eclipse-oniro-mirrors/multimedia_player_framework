@@ -106,7 +106,7 @@ int32_t __attribute__((visibility("default"))) GetApiInfo(int32_t uid, std::stri
     if (uid == 1003) { // 1003 is bootanimation uid
         return FAULT_API_VERSION;
     }
-    std::string bundleName = "";
+
     int32_t userId = 0;
     AppExecFwk::ApplicationInfo appInfo;
     auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
