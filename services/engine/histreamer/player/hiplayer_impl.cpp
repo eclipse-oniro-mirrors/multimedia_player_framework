@@ -1350,7 +1350,8 @@ Status HiPlayerImpl::HandleSeekClosest(int64_t seekPos, int64_t seekTimeUs)
 
 int32_t HiPlayerImpl::SetVolumeMode(int32_t mode)
 {
-    MEDIA_LOG_D("SetVolumeMode in");
+    MEDIA_LOG_D("SetVolumeMode in mode = %{public}d", mode);
+    volumeMode_ = mode;
     Status ret = Status::OK;
     if (audioSink_ != nullptr) {
         ret = audioSink_->SetVolumeMode(mode);
@@ -1452,10 +1453,15 @@ int32_t HiPlayerImpl::SetParameter(const Format& params)
         int32_t contentType;
         int32_t streamUsage;
         int32_t rendererFlag;
+        int32_t volumeMode = volumeMode_;
+        MEDIA_LOG_I("volumeMode_ = %{public}d");
         params.GetIntValue(PlayerKeys::CONTENT_TYPE, contentType);
         params.GetIntValue(PlayerKeys::STREAM_USAGE, streamUsage);
         params.GetIntValue(PlayerKeys::RENDERER_FLAG, rendererFlag);
-        return SetAudioRendererInfo(contentType, streamUsage, rendererFlag);
+        if (params.ContainKey(PlayerKeys::VOLUME_MODE)) {
+            params.GetIntValue(PlayerKeys::VOLUME_MODE, volumeMode);
+        }
+        return SetAudioRendererInfo(contentType, streamUsage, rendererFlag, volumeMode);
     }
     if (params.ContainKey(PlayerKeys::AUDIO_INTERRUPT_MODE)) {
         int32_t interruptMode = 0;
@@ -2119,11 +2125,11 @@ int32_t HiPlayerImpl::SetFrameRateForSeekPerformance(double frameRate)
 }
 
 int32_t HiPlayerImpl::SetAudioRendererInfo(const int32_t contentType, const int32_t streamUsage,
-                                           const int32_t rendererFlag)
+                                           const int32_t rendererFlag, const int32_t volumeMode)
 {
     MEDIA_LOG_I("SetAudioRendererInfo in, coutentType: " PUBLIC_LOG_D32 ", streamUsage: " PUBLIC_LOG_D32
         ", rendererFlag: " PUBLIC_LOG_D32, contentType, streamUsage, rendererFlag);
-    Plugins::AudioRenderInfo audioRenderInfo {contentType, streamUsage, rendererFlag};
+    Plugins::AudioRenderInfo audioRenderInfo {contentType, streamUsage, rendererFlag, volumeMode};
     if (audioRenderInfo_ == nullptr) {
         audioRenderInfo_ = std::make_shared<Meta>();
     }
@@ -3044,6 +3050,7 @@ Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilte
     if (audioInterruptMode_ != nullptr) {
         audioSink_->SetParameter(audioInterruptMode_);
     }
+    SetVolumeMode(volumeMode_);
     std::shared_ptr<Meta> globalMeta = std::make_shared<Meta>();
     if (demuxer_ != nullptr) {
         globalMeta = demuxer_->GetGlobalMetaInfo();

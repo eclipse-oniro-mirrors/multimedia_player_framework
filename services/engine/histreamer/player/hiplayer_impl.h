@@ -143,7 +143,7 @@ public:
     int32_t GetVideoHeight() override;
     int32_t SetVideoScaleType(VideoScaleType videoScaleType) override;
     int32_t SetAudioRendererInfo(const int32_t contentType, const int32_t streamUsage,
-                                 const int32_t rendererFlag) override;
+                                 const int32_t rendererFlag, const int32_t volumeMode) override;
     int32_t SetAudioInterruptMode(const int32_t interruptMode) override;
     int32_t SeekToCurrentTime(int32_t mSeconds, PlayerSeekMode mode) override;
     void SetInterruptState(bool isInterruptNeeded) override;
@@ -329,7 +329,7 @@ private:
 
     std::shared_ptr<Meta> audioRenderInfo_{nullptr};
     std::shared_ptr<Meta> audioInterruptMode_{nullptr};
-
+    int32_t volumeMode_ = 0;
     bool isStreaming_{false};
 
     int32_t rotation90 = 90;
