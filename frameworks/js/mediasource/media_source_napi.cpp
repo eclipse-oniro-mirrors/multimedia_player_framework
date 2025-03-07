@@ -114,8 +114,10 @@ void MediaSourceNapi::Destructor(napi_env env, void *nativeObject, void *finaliz
     if (nativeObject != nullptr) {
         MediaSourceNapi *jsMediaSource = reinterpret_cast<MediaSourceNapi *>(nativeObject);
         jsMediaSource->mediaSource_ = nullptr;
-        jsMediaSource->mediaSourceLoaderCb_->ClearCallbackReference();
-        jsMediaSource->mediaSourceLoaderCb_ = nullptr;
+        if (jsMediaSource->mediaSourceLoaderCb_) {
+            jsMediaSource->mediaSourceLoaderCb_->ClearCallbackReference();
+            jsMediaSource->mediaSourceLoaderCb_ = nullptr;
+        }
         delete jsMediaSource;
     }
     MEDIA_LOGI("Destructor success");
