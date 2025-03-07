@@ -2341,11 +2341,13 @@ bool AVPlayerNapi::JsHandleParameter(napi_env env, napi_value args, AVPlayerNapi
     int32_t content = CONTENT_TYPE_UNKNOWN;
     int32_t usage = -1;
     int32_t rendererFlags = -1;
+    int32_t volumeMode = -1;
     (void)CommonNapi::GetPropertyInt32(env, args, "content", content);
     (void)CommonNapi::GetPropertyInt32(env, args, "usage", usage);
     (void)CommonNapi::GetPropertyInt32(env, args, "rendererFlags", rendererFlags);
-    MEDIA_LOGI("content = %{public}d, usage = %{public}d, rendererFlags = %{public}d",
-        content, usage, rendererFlags);
+    (void)CommonNapi::GetPropertyInt32(env, args, "volumeMode", volumeMode);
+    MEDIA_LOGI("content = %{public}d, usage = %{public}d, rendererFlags = %{public}d, volumeMode = %{public}d",
+        content, usage, rendererFlags, volumeMode);
     std::vector<int32_t> contents = {
         CONTENT_TYPE_UNKNOWN, CONTENT_TYPE_SPEECH,
         CONTENT_TYPE_MUSIC, CONTENT_TYPE_MOVIE,
@@ -2379,6 +2381,7 @@ bool AVPlayerNapi::JsHandleParameter(napi_env env, napi_value args, AVPlayerNapi
         static_cast<AudioStandard::ContentType>(content),
         static_cast<AudioStandard::StreamUsage>(usage),
         rendererFlags,
+        static_cast<AudioStandard::AudioVolumeMode>(volumeMode)
     };
     return true;
 }
@@ -2430,6 +2433,7 @@ napi_value AVPlayerNapi::JsSetAudioRendererInfo(napi_env env, napi_callback_info
             (void)format.PutIntValue(PlayerKeys::CONTENT_TYPE, jsPlayer->audioRendererInfo_.contentType);
             (void)format.PutIntValue(PlayerKeys::STREAM_USAGE, jsPlayer->audioRendererInfo_.streamUsage);
             (void)format.PutIntValue(PlayerKeys::RENDERER_FLAG, jsPlayer->audioRendererInfo_.rendererFlags);
+            (void)format.PutIntValue(PlayerKeys::VOLUME_MODE, jsPlayer->audioRendererInfo_.volumeMode);
             (void)jsPlayer->player_->SetParameter(format);
         }
     });
@@ -2451,10 +2455,12 @@ napi_value AVPlayerNapi::JsGetAudioRendererInfo(napi_env env, napi_callback_info
     int32_t content = static_cast<int32_t>(jsPlayer->audioRendererInfo_.contentType);
     int32_t usage = static_cast<int32_t>(jsPlayer->audioRendererInfo_.streamUsage);
     int32_t rendererFlags = jsPlayer->audioRendererInfo_.rendererFlags;
+    int32_t volumeMode = static_cast<int32_t>(jsPlayer->audioRendererInfo_.volumeMode);
     (void)napi_create_object(env, &result);
     CommonNapi::SetPropertyInt32(env, result, "content", content);
     CommonNapi::SetPropertyInt32(env, result, "usage", usage);
     CommonNapi::SetPropertyInt32(env, result, "rendererFlags", rendererFlags);
+    CommonNapi::SetPropertyInt32(env, result, "volumeMode", volumeMode);
     MEDIA_LOGI("JsGetAudioRendererInfo Out");
     return result;
 }
