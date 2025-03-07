@@ -30,7 +30,7 @@
 #include "media_errors.h"
 #include "media_monitor_manager.h"
 #include "system_sound_log.h"
-#include "system_sound_manager_impl.h
+#include "system_sound_manager_impl.h"
 #include "system_sound_vibrator.h"
 
 using namespace std;
