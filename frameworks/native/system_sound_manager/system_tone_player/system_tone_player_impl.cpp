@@ -452,6 +452,8 @@ int32_t SystemTonePlayerImpl::Start(const SystemToneOptions &systemToneOptions)
             ReleaseDataShareHelper();
         }
         CreateCallbackThread(delayTime);
+        SendMessageZoneEvent(AudioStandard::ERR_INVALID_PARAM,
+            systemToneOptions.muteAudio, systemToneOptions.muteHaptics);
         return streamId_;
     }
     result = CreatePlayerWithOptions({actualMuteAudio, actualMuteHaptics});
@@ -462,6 +464,8 @@ int32_t SystemTonePlayerImpl::Start(const SystemToneOptions &systemToneOptions)
     result = playerMap_[streamId_]->Start();
     CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, -1,
         "Failed to start audio haptic player: %{public}d", result);
+    SendMessageZoneEvent(AudioStandard::ERR_INVALID_PARAM,
+        systemToneOptions.muteAudio, systemToneOptions.muteHaptics);
     return streamId_;
 }
 
@@ -853,6 +857,39 @@ bool SystemTonePlayerImpl::IsExitCallbackThreadId(int32_t streamId)
     MEDIA_LOGI("Query streamId: %{public}d", streamId);
     std::lock_guard<std::mutex> lock(systemTonePlayerMutex_);
     return callbackThreadIdMap_.count(streamId) != 0 && callbackThreadIdMap_[streamId] == std::this_thread::get_id();
+}
+
+void SystemTonePlayerImpl::SendMessageZoneEvent(const int32_t &errorCode, bool muteAudio, bool muteHaptics)
+{
+    AudioStandard::AudioRendererInfo rendererInfo = {};
+    std::vector<std::shared_ptr<AudioStandard::AudioDeviceDescriptor>> desc = {};
+
+    int32_t ret = AudioStandard::AudioRoutingManager::GetInstance()->
+        GetPreferredOutputDeviceForRendererInfo(rendererInfo, desc);
+    if (ret != AudioStandard::SUCCESS) {
+        MEDIA_LOGE("Get Output Device Failed");
+        return;
+    }
+
+    AudioStandard::AudioRingerMode ringerMode = systemSoundMgr_.GetRingerMode();
+    bool vibrateState = systemSoundMgr_.CheckVibrateSwitchStatus();
+    int32_t volumeLevel = AudioStandard::AudioSystemManager::GetInstance()->
+        GetVolume(AudioStandard::STREAM_NOTIFICATION);
+    
+    std::shared_ptr<Media::MediaMonitor::EventBean> bean = std::make_shared<Media::MediaMonitor::EventBean>(
+        Media::MediaMonitor::ModuleId::AUDIO, Media::MediaMonitor::EventId::MESSAGE_ZONE,
+        Media::MediaMonitor::EventType::MESSAGE_ZONE_EVENT);
+    bean->Add("IS_PLAYBACK", 0);
+    bean->Add("CLIENT_UID", static_cast<int32_t>(getuid()));
+    bean->Add("DEVICE_TYPE", desc[0]->deviceType_);
+    bean->Add("ERROR_CODE", errorCode);
+    bean->Add("MUTE_STATE", muteAudio);
+    bean->Add("MUTE_HAPTICS", muteHaptics);
+    bean->Add("RING_MODE", ringerMode);
+    bean->Add("STREAM_TYPE", AudioStandard::STREAM_NOTIFICATION);
+    bean->Add("VIBRATION_STATE", vibrateState);
+    bean->Add("VOLUME_LEVEL", volumeLevel);
+    Media::MediaMonitor::MediaMonitorManager::GetInstance().WriteLogMsg(bean);
 }
 } // namesapce AudioStandard
 } // namespace OHOS
