@@ -24,8 +24,13 @@
 #include "audio_info.h"
 #include "config_policy_utils.h"
 
+#include "audio_errors.h"
+#include "audio_routing_manager.h"
+#include "audio_system_manager.h"
 #include "media_errors.h"
+#include "media_monitor_manager.h"
 #include "system_sound_log.h"
+#include "system_sound_manager_impl.h
 #include "system_sound_vibrator.h"
 
 using namespace std;
