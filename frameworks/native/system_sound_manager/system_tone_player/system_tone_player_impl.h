@@ -78,6 +78,7 @@ private:
     void DeleteCallbackThreadId(int32_t streamId);
     void DeleteAllCallbackThreadId();
     bool IsExitCallbackThreadId(int32_t streamId);
+    void SendMessageZoneEvent(const int32_t &errorCode, bool muteAudio, bool muteHaptics);
 
     std::shared_ptr<AudioHapticManager> audioHapticManager_ = nullptr;
     std::unordered_map<int32_t, std::shared_ptr<AudioHapticPlayer>> playerMap_;
