@@ -58,6 +58,8 @@ ohos_shared_library("audio_haptic") {
     "graphic_surface:surface",
     "hilog:libhilog",
     "ipc:ipc_core",
+    "media_foundation:media_monitor_client",
+    "media_foundation:media_monitor_common",
   ]
 
   if (player_framework_support_vibrator) {
