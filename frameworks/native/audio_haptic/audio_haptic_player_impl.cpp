@@ -355,7 +355,9 @@ int32_t AudioHapticPlayerImpl::StartVibrate()
             return MSERR_OK;
         }
         MEDIA_LOGI("The first frame of audio is about to start. Triggering the vibration.");
+        isVibrationRunning_.store(true);
         audioHapticVibrator_->StartVibrate(latencyMode_);
+        isVibrationRunning_.store(false);
     } while (loop_ && !isVibrationStopped_);
 
     return MSERR_OK;
@@ -446,6 +448,10 @@ void AudioHapticPlayerImpl::NotifyErrorEvent(int32_t errCode)
 
 void AudioHapticPlayerImpl::NotifyStartVibrate(const uint64_t &latency)
 {
+    if (isVibrationRunning_.load() && hapticsMode_ == HapticsMode::HAPTICS_MODE_NON_SYNC) {
+        MEDIA_LOGI("The non sync vibration is already running.");
+        return;
+    }
     std::lock_guard<std::mutex> lock(this->waitStartVibrateMutex_);
     this->isAudioPlayFirstFrame_ = true;
     this->audioLatency_ = latency;
