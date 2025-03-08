@@ -19,8 +19,6 @@
 #include <sys/stat.h>
 #include <thread>
 
-#include "directory_ex.h"
-#include "ringtone_proxy_uri.h"
 #include "audio_info.h"
 #include "config_policy_utils.h"
 
@@ -315,19 +313,24 @@ void SystemTonePlayerImpl::GetHapticUriForAudioUri(const std::string &audioUri,
     }
 }
 
-static shared_ptr<DataShare::DataShareHelper> CreateDataShareHelperUri(int32_t systemAbilityId)
+static shared_ptr<DataShare::DataShareHelper> CreateDataShareHelper(int32_t systemAbilityId)
 {
-    MEDIA_LOGI("CreateDataShareHelperUri : Enter the CreateDataShareHelperUri interface");
-    DataShare::CreateOptions options;
-    options.enabled_ = true;
-    return DataShare::DataShareHelper::Creator(RINGTONE_LIBRARY_PROXY_URI, options);
+    auto saManager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (saManager == nullptr) {
+        return nullptr;
+    }
+    auto remoteObj = saManager->GetSystemAbility(systemAbilityId);
+    if (remoteObj == nullptr) {
+        return nullptr;
+    }
+    return DataShare::DataShareHelper::Creator(remoteObj, RINGTONE_URI);
 }
 
 bool SystemTonePlayerImpl::InitDataShareHelper()
 {
     MEDIA_LOGD("Enter InitDataShareHelper()");
     ReleaseDataShareHelper();
-    dataShareHelper_ = CreateDataShareHelperUri(STORAGE_MANAGER_MANAGER_ID);
+    dataShareHelper_ = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     CHECK_AND_RETURN_RET_LOG(dataShareHelper_ != nullptr, false, "Failed to create dataShareHelper.");
     return true;
 }
@@ -376,7 +379,7 @@ std::string SystemTonePlayerImpl::ChangeHapticsUri(const std::string &hapticsUri
 
     DataShare::DatashareBusinessError businessError;
     DataShare::DataSharePredicates queryPredicates;
-    Uri hapticsPathUri(RINGTONE_LIBRARY_PROXY_DATA_URI_VIBATE_FILES);
+    Uri hapticsPathUri(VIBRATE_PATH_URI);
     vector<string> columns = {{VIBRATE_COLUMN_VIBRATE_ID}, {VIBRATE_COLUMN_DATA}};
     queryPredicates.EqualTo(RINGTONE_COLUMN_DATA, hapticsUri);
     auto resultSet = dataShareHelper_->Query(hapticsPathUri, queryPredicates, columns, &businessError);
@@ -384,9 +387,10 @@ std::string SystemTonePlayerImpl::ChangeHapticsUri(const std::string &hapticsUri
 
     unique_ptr<VibrateAsset> vibrateAssetByUri = results->GetFirstObject();
     if (vibrateAssetByUri != nullptr) {
-        string absFilePath;
-        PathToRealPath(hapticsUri, absFilePath);
-        int32_t fd = open(absFilePath.c_str(), O_RDONLY);
+        string uriStr = VIBRATE_PATH_URI + RINGTONE_SLASH_CHAR + to_string(vibrateAssetByUri->GetId());
+        MEDIA_LOGD("ChangeHapticsUri::Open newHapticsUri is %{public}s", uriStr.c_str());
+        Uri ofUri(uriStr);
+        int32_t fd = dataShareHelper_->OpenFile(ofUri, "r");
         if (fd > 0) {
             newHapticsUri = FDHEAD + to_string(fd);
         }

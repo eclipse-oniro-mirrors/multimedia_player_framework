@@ -24,6 +24,8 @@
 #include "uri.h"
 #include "want.h"
 
+#include "audio_utils.h"
+#include "access_token.h"
 #include <iostream>
 #include "system_ability_definition.h"
 #include "ringtone_db_const.h"
