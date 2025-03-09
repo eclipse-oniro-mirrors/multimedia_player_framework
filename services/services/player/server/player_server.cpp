@@ -40,7 +40,6 @@ using namespace OHOS::QOS;
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "PlayerServer"};
     constexpr int32_t MAX_SUBTITLE_TRACK_NUN = 8;
-    constexpr double DEFAULT_LIVING_CACHED_DURATION = 2;
     static bool g_isFirstInit = true;
 }
 
@@ -1944,7 +1943,7 @@ int32_t PlayerServer::SetVideoWindowSize(int32_t width, int32_t height)
 
 bool PlayerServer::IsLivingMaxDelyTimeValid(AVPlayStrategy playbackStrategy)
 {
-    if (playbackStrategy.thresholdForAutoQuickPlay < DEFAULT_LIVING_CACHED_DURATION ||
+    if (playbackStrategy.thresholdForAutoQuickPlay < AVPlayStrategyConstant::DEFAULT_LIVING_CACHED_DURATION ||
         playbackStrategy.thresholdForAutoQuickPlay < playbackStrategy.preferredBufferDurationForPlaying) {
             return false;
         }
