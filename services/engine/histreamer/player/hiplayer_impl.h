@@ -155,7 +155,7 @@ public:
     int64_t GetPlayRangeStartTime() override;
     int64_t GetPlayRangeEndTime() override;
     int32_t GetPlayRangeSeekMode() override;
-    bool IsNeedChangePlaySpeed(PlaybackRateMode &mode, bool isXSpeedPlay) override;
+    bool IsNeedChangePlaySpeed(PlaybackRateMode &mode, bool &isXSpeedPlay) override;
     bool IsPauseForTooLong(int64_t pauseTime) override;
     bool IsLivingMaxDelayTimeValid() override;
     void DoRestartLiveLink() override;

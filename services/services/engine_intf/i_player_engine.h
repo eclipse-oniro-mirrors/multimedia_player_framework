@@ -286,7 +286,7 @@ public:
         return 0;
     }
 
-    virtual bool IsNeedChangePlaySpeed(PlaybackRateMode &mode, bool isXSpeedPlay)
+    virtual bool IsNeedChangePlaySpeed(PlaybackRateMode &mode, bool &isXSpeedPlay)
     {
         (void)mode;
         (void)isXSpeedPlay;
