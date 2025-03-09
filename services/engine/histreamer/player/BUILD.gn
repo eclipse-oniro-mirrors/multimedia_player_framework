@@ -64,8 +64,8 @@ ohos_static_library("media_engine_histreamer_player") {
     "dragging_player_agent.cpp",
     "hiplayer_callback_looper.cpp",
     "hiplayer_impl.cpp",
-    "seek_agent.cpp",
     "live_controller.cpp",
+    "seek_agent.cpp",
   ]
 
   configs = [
