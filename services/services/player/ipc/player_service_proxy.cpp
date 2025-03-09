@@ -1164,6 +1164,7 @@ void PlayerServiceProxy::WritePlaybackStrategy(MessageParcel &data, const AVPlay
     (void)data.WriteUint32(strategy.preferredHeight);
     (void)data.WriteUint32(strategy.preferredBufferDuration);
     (void)data.WriteDouble(strategy.preferredBufferDurationForPlaying);
+    (void)data.WriteDouble(strategy.thresholdForAutoQuickPlay);
     (void)data.WriteBool(strategy.preferredHdr);
     (void)data.WriteBool(strategy.showFirstFrameOnPrepare);
     (void)data.WriteBool(strategy.enableSuperResolution);

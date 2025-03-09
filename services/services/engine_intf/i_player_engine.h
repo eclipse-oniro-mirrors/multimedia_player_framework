@@ -286,9 +286,31 @@ public:
         return 0;
     }
 
+    virtual bool IsNeedChangePlaySpeed(PlaybackRateMode &mode, bool isXSpeedPlay)
+    {
+        (void)mode;
+        (void)isXSpeedPlay;
+        return false;
+    }
+
+    virtual bool IsPauseForTooLong(int64_t pauseTime)
+    {
+        (void)pauseTime;
+        return false;
+    }
+
+    virtual void DoRestartLiveLink()
+    {
+    }
+
     virtual void SetPerfRecEnabled(bool isPerfRecEnabled)
     {
         (void)isPerfRecEnabled;
+    }
+
+    virtual bool IsLivingMaxDelayTimeValid()
+    {
+        return false;
     }
 };
 } // namespace Media
