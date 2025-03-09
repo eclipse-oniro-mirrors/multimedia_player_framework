@@ -366,6 +366,7 @@ private:
                                 const struct AVPlayStrategy &strategy);
     void AddMediaStreamToAVMediaSource(
         const std::shared_ptr<AVMediaSourceTmp> &srcTmp, std::shared_ptr<AVMediaSource> &mediaSource);
+    bool IsLivingMaxDelayTimeValid(const AVPlayStrategyTmp &strategyTmp);
 
     std::condition_variable stopTaskQueCond_;
     bool taskQueStoped_ = false;
