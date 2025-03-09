@@ -152,7 +152,7 @@ HiPlayerImpl::HiPlayerImpl(int32_t appUid, int32_t appPid, uint32_t appTokenId, 
     pipeline_ = std::make_shared<OHOS::Media::Pipeline::Pipeline>();
     syncManager_ = std::make_shared<MediaSyncManager>();
     callbackLooper_.SetPlayEngine(this, playerId_);
-    liveControl_.SetPlayEngine(this, playerId_);
+    liveController_.SetPlayEngine(this, playerId_);
     bundleName_ = GetClientBundleName(appUid);
     dfxAgent_ = std::make_shared<DfxAgent>(playerId_, bundleName_);
 }
@@ -3511,7 +3511,7 @@ void HiPlayerImpl::SetFlvObs()
 {
     if (demuxer_ != nullptr && demuxer_->IsFlvLiveStream()) {
         MEDIA_LOG_I("SetFlvObs");
-        liveControl_.StartWithPlayerEngineObs(playerEngineObs_);
+        liveController_.StartWithPlayerEngineObs(playerEngineObs_);
     }
 }
 
@@ -3519,7 +3519,7 @@ void HiPlayerImpl::StartFlvCheckLiveDelayTime()
 {
     if (demuxer_ != nullptr && demuxer_->IsFlvLiveStream()) {
         MEDIA_LOG_I("StartFlvCheckLiveDelayTime");
-        liveControl_.StartCheckLiveDelayTime(CHECK_DELAY_INTERVAL);
+        liveController_.StartCheckLiveDelayTime(CHECK_DELAY_INTERVAL);
     }
 }
 
@@ -3527,7 +3527,7 @@ void HiPlayerImpl::StopFlvCheckLiveDelayTime()
 {
     if (demuxer_ != nullptr && demuxer_->IsFlvLiveStream()) {
         MEDIA_LOG_I("StopFlvCheckLiveDelayTime");
-        liveControl_.StopCheckLiveDelayTime();
+        liveController_.StopCheckLiveDelayTime();
     }
 }
 

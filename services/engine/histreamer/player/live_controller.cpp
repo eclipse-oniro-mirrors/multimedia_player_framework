@@ -13,14 +13,14 @@
  * limitations under the License.
  */
 
-#define HST_LOG_TAG "LiveControl"
+#define HST_LOG_TAG "LiveController"
 
-#include "live_control.h"
+#include "live_controller.h"
 #include "common/log.h"
 #include "osal/task/autolock.h"
 
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_PLAYER, "LiveControl" };
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_PLAYER, "LiveController" };
 }
 
 namespace OHOS {
@@ -29,16 +29,16 @@ namespace {
 constexpr int32_t WHAT_NONE = 0;
 constexpr int32_t WHAT_LIVE_DELAY_TIME = 1;
 }
-LiveControl::LiveControl()
+LiveController::LiveController()
 {
 }
 
-LiveControl::~LiveControl()
+LiveController::~LiveController()
 {
     Stop();
 }
 
-void LiveControl::Stop()
+void LiveController::Stop()
 {
     if (taskStarted_) {
         task_->Stop();
@@ -46,7 +46,7 @@ void LiveControl::Stop()
     }
 }
 
-void LiveControl::StartWithPlayerEngineObs(const std::weak_ptr<IPlayerEngineObs>& obs)
+void LiveController::StartWithPlayerEngineObs(const std::weak_ptr<IPlayerEngineObs>& obs)
 {
     OHOS::Media::AutoLock lock(loopMutex_);
     obs_ = obs;
@@ -57,16 +57,16 @@ void LiveControl::StartWithPlayerEngineObs(const std::weak_ptr<IPlayerEngineObs>
     }
 }
 
-void LiveControl::SetPlayEngine(IPlayerEngine* engine, std::string playerId)
+void LiveController::SetPlayEngine(IPlayerEngine* engine, std::string playerId)
 {
     OHOS::Media::AutoLock lock(loopMutex_);
     playerEngine_ = engine;
     task_ = std::make_unique<Task>("checkliveDelayThread", playerId, TaskType::GLOBAL, TaskPriority::NORMAL, false);
 }
 
-void LiveControl::StartCheckLiveDelayTime(int64_t updateIntervalMs)
+void LiveController::StartCheckLiveDelayTime(int64_t updateIntervalMs)
 {
-    MEDIA_LOG_I("LiveControl StartCheckLiveDalyTime");
+    MEDIA_LOG_I("LiveController StartCheckLiveDalyTime");
     checkLiveDelayTimeIntervalMs_ = updateIntervalMs;
     if (isCheckLiveDelayTimeSet_) { // already set
         return;
@@ -76,14 +76,14 @@ void LiveControl::StartCheckLiveDelayTime(int64_t updateIntervalMs)
             SteadyClock::GetCurrentTimeMs() + checkLiveDelayTimeIntervalMs_, Any()));
 }
 
-void LiveControl::StopCheckLiveDelayTime()
+void LiveController::StopCheckLiveDelayTime()
 {
-    MEDIA_LOG_I("LiveControl::StopCheckLiveDalyTime");
+    MEDIA_LOG_I("LiveController::StopCheckLiveDalyTime");
     OHOS::Media::AutoLock lock(loopMutex_);
     isCheckLiveDelayTimeSet_ = false;
 }
 
-void LiveControl::Enqueue(const std::shared_ptr<LiveControl::Event>& event)
+void LiveController::Enqueue(const std::shared_ptr<LiveController::Event>& event)
 {
     if (event->what == WHAT_NONE) {
         MEDIA_LOG_I("invalid event");
@@ -94,7 +94,7 @@ void LiveControl::Enqueue(const std::shared_ptr<LiveControl::Event>& event)
         }, delayUs);
 }
 
-void LiveControl::LoopOnce(const std::shared_ptr<Event>& item)
+void LiveController::LoopOnce(const std::shared_ptr<Event>& item)
 {
     switch (item->what) {
         case WHAT_LIVE_DELAY_TIME:
@@ -105,7 +105,7 @@ void LiveControl::LoopOnce(const std::shared_ptr<Event>& item)
     }
 }
 
-void LiveControl::DoCheckLiveDalyTime()
+void LiveController::DoCheckLiveDalyTime()
 {
     OHOS::Media::AutoLock lock(loopMutex_);
     if (!isCheckLiveDelayTimeSet_) {
@@ -121,20 +121,20 @@ void LiveControl::DoCheckLiveDalyTime()
     }
 }
 
-void LiveControl::OnError(PlayerErrorType errorType, int32_t errorCode)
+void LiveController::OnError(PlayerErrorType errorType, int32_t errorCode)
 {
     (void)errorType;
     (void)errorCode;
 }
 
-void LiveControl::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
+void LiveController::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
 {
     (void)type;
     (void)extra;
     (void)infoBody;
 }
 
-void LiveControl::OnSystemOperation(PlayerOnSystemOperationType type, PlayerOperationReason reason)
+void LiveController::OnSystemOperation(PlayerOnSystemOperationType type, PlayerOperationReason reason)
 {
     (void)type;
     (void)reason;

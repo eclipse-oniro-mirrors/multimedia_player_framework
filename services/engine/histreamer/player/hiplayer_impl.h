@@ -325,7 +325,7 @@ private:
     std::shared_ptr<MediaSyncManager> syncManager_;
     std::atomic<PlayerStateId> curState_;
     HiPlayerCallbackLooper callbackLooper_{};
-    LiveController liveControl_ {};
+    LiveController liveController_ {};
     std::weak_ptr<IPlayerEngineObs> playerEngineObs_{};
     sptr<Surface> surface_ {nullptr};
     std::string url_;
