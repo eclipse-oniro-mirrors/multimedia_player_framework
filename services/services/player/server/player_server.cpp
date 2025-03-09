@@ -1783,8 +1783,6 @@ void PlayerServer::TryFlvLiveRestartLink()
 int64_t PlayerServer::CalculatePauseTime()
 {
     int64_t curTime = SteadyClock::GetCurrentTimeMs();
-    // MEDIA_LOGI("lastPauseTiem is " PUBLIC_LOG_D64 " and the currentTime_ is " PUBLIC_LOG_D64,
-    //         pauseTimestamp_, curTime);
     return (curTime > pauseTimestamp_) ? (curTime - pauseTimestamp_) : 0;
 }
 

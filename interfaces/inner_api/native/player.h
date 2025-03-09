@@ -321,7 +321,7 @@ enum PlaybackRateMode : int32_t {
     /* Video playback at 0.125x normal speed */
     SPEED_FORWARD_0_125_X = 9,
     /* Video playback at 1.20x normal speed */
-    SPEED_FORWARD_1_20_X = 100,
+    SPEED_FORWARD_1_20_X = 100, // flv live quick play
 };
 
 class PlayerCallback {

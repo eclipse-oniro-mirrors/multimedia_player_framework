@@ -2893,7 +2893,7 @@ void HiPlayerImpl::NotifyUpdateTrackInfo()
     Format body;
     body.PutFormatVector(std::string(PlayerKeys::PLAYER_TRACK_INFO), trackInfo);
     MEDIA_LOG_I("NotifyUpdateTrackInfo");
- 
+
     callbackLooper_.OnInfo(INFO_TYPE_TRACK_INFO_UPDATE, 0, body);
 }
 
