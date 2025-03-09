@@ -146,7 +146,7 @@ HiPlayerImpl::HiPlayerImpl(int32_t appUid, int32_t appPid, uint32_t appTokenId, 
     : appUid_(appUid), appPid_(appPid), appTokenId_(appTokenId), appFullTokenId_(appFullTokenId)
 {
     MEDIA_LOG_D("hiPlayerImpl ctor appUid " PUBLIC_LOG_D32 " appPid " PUBLIC_LOG_D32
-	    " appTokenId %{private}" PRIu32 " appFullTokenId %{private}" PRIu64,
+        " appTokenId %{private}" PRIu32 " appFullTokenId %{private}" PRIu64,
         appUid_, appPid_, appTokenId_, appFullTokenId_);
     playerId_ = std::string("HiPlayer_") + std::to_string(OHOS::Media::Pipeline::Pipeline::GetNextPipelineId());
     pipeline_ = std::make_shared<OHOS::Media::Pipeline::Pipeline>();
@@ -419,7 +419,7 @@ int32_t HiPlayerImpl::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
         std::string realUriPath;
         int32_t result = GetRealPath(url_, realUriPath);
         if (result != MSERR_OK) {
-             CollectionErrorInfo(result, "SetSource error: GetRealPath error");
+            CollectionErrorInfo(result, "SetSource error: GetRealPath error");
             return result;
         }
         url_ = "file://" + realUriPath;
@@ -1220,7 +1220,7 @@ void HiPlayerImpl::NotifySeek(Status rtv, bool flag, int64_t seekPos)
         NotifySeekDone(seekPos);
     }
 }
- 
+
 int32_t HiPlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
 {
     MediaTrace trace("HiPlayerImpl::Seek.");
@@ -1329,7 +1329,7 @@ Status HiPlayerImpl::doSeek(int64_t seekPos, PlayerSeekMode mode)
     if (mode == PlayerSeekMode::SEEK_CLOSEST && NeedSeekClosest()) {
         return HandleSeekClosest(seekPos, seekTimeUs);
     }
-     if (mode == PlayerSeekMode::SEEK_CLOSEST) {   // reset mode
+    if (mode == PlayerSeekMode::SEEK_CLOSEST) {   // reset mode
         mode = PlayerSeekMode::SEEK_NEXT_SYNC;
         if (audioSink_) {
             audioSink_->SetSeekTime(seekTimeUs);
@@ -1858,7 +1858,7 @@ int32_t HiPlayerImpl::GetCurrentTrack(int32_t trackType, int32_t &index)
     } else {
         (void)index;
     }
- 
+
     return MSERR_OK;
 }
 
@@ -1925,7 +1925,7 @@ int32_t HiPlayerImpl::SelectTrack(int32_t trackId, PlayerSwitchMode mode)
     }
     return InnerSelectTrack(mime, trackId, mode);
 }
- 
+
 int32_t HiPlayerImpl::DeselectTrack(int32_t trackId)
 {
     MEDIA_LOG_I("DeselectTrack trackId is " PUBLIC_LOG_D32, trackId);
@@ -2271,7 +2271,7 @@ void HiPlayerImpl::HandleSeiInfoEvent(const Event &event)
     int32_t playbackPos = 0;
     format.GetIntValue(Tag::AV_PLAYER_SEI_PLAYBACK_POSITION, playbackPos);
     format.PutIntValue(Tag::AV_PLAYER_SEI_PLAYBACK_POSITION, playbackPos - Plugins::Us2Ms(mediaStartPts_));
- 
+
     callbackLooper_.OnInfo(INFO_TYPE_SEI_UPDATE_INFO, 0, format);
 }
 
@@ -2889,7 +2889,7 @@ void HiPlayerImpl::NotifyUpdateTrackInfo()
     GetVideoTrackInfo(trackInfo);
     GetAudioTrackInfo(trackInfo);
     GetSubtitleTrackInfo(trackInfo);
- 
+
     Format body;
     body.PutFormatVector(std::string(PlayerKeys::PLAYER_TRACK_INFO), trackInfo);
     MEDIA_LOG_I("NotifyUpdateTrackInfo");
@@ -2945,7 +2945,7 @@ void HiPlayerImpl::HandleAudioTrackChangeEvent(const Event& event)
         audioTrackInfo.PutIntValue("track_is_select", 1);
         callbackLooper_.OnInfo(INFO_TYPE_TRACKCHANGE, 0, audioTrackInfo);
         currentAudioTrackId_ = trackId;
- 
+
         NotifyUpdateTrackInfo();
     }
     return;
