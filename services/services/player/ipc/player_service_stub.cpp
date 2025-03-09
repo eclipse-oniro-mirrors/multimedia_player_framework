@@ -1014,6 +1014,7 @@ void PlayerServiceStub::ReadPlayStrategyFromMessageParcel(MessageParcel &data, A
     strategy.preferredHeight = data.ReadUint32();
     strategy.preferredBufferDuration = data.ReadUint32();
     strategy.preferredBufferDurationForPlaying = data.ReadDouble();
+    strategy.thresholdForAutoQuickPlay = data.ReadDouble();
     strategy.preferredHdr = data.ReadBool();
     strategy.showFirstFrameOnPrepare = data.ReadBool();
     strategy.enableSuperResolution = data.ReadBool();
@@ -1183,6 +1184,7 @@ int32_t PlayerServiceStub::SetPlaybackStrategy(MessageParcel &data, MessageParce
         .preferredHeight = data.ReadUint32(),
         .preferredBufferDuration = data.ReadUint32(),
         .preferredBufferDurationForPlaying = data.ReadDouble(),
+        .thresholdForAutoQuickPlay = data.ReadDouble(),
         .preferredHdr = data.ReadBool(),
         .showFirstFrameOnPrepare = data.ReadBool(),
         .enableSuperResolution = data.ReadBool(),
