@@ -76,7 +76,7 @@ void LiveControl::StartCheckLiveDelayTime(int64_t updateIntervalMs)
             SteadyClock::GetCurrentTimeMs() + checkLiveDelayTimeIntervalMs_, Any()));
 }
 
-void LiveControl::StopCheckLiveDalyTime()
+void LiveControl::StopCheckLiveDelayTime()
 {
     MEDIA_LOG_I("LiveControl::StopCheckLiveDalyTime");
     OHOS::Media::AutoLock lock(loopMutex_);

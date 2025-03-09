@@ -631,17 +631,13 @@ int32_t HiPlayerImpl::PrepareAsync()
         CollectionErrorInfo(errCode, "pipeline PrepareAsync failed");
         return errCode;
     }
-    if (demuxer_->IsFlvLiveStream()) {
-        MEDIA_LOG_I("IsFlvLiveStream: true");
-        liveControl_.StartWithPlayerEngineObs(playerEngineObs_);
-    }
+    SetFlvObs();
     InitDuration();
     SetSeiMessageListener();
     UpdateMediaFirstPts();
     ret = DoSetPlayRange();
     FALSE_RETURN_V_MSG_E(ret == Status::OK, TransStatus(ret), "DoSetPlayRange failed");
-    if (demuxer_ != nullptr && demuxer_->IsRenderNextVideoFrameSupported()
-        && IsAppEnableRenderFirstFrame(appUid_)) {
+    if (demuxer_ != nullptr && demuxer_->IsRenderNextVideoFrameSupported() && IsAppEnableRenderFirstFrame(appUid_)) {
         ret = pipeline_->Preroll(renderFirstFrame_);
         auto code = TransStatus(ret);
         if (ret != Status::OK) {
@@ -650,7 +646,6 @@ int32_t HiPlayerImpl::PrepareAsync()
         }
     }
     UpdatePlayerStateAndNotify();
-    MEDIA_LOG_D_SHORT("PrepareAsync End");
     return TransStatus(ret);
 }
 
@@ -857,10 +852,7 @@ int32_t HiPlayerImpl::Play()
             UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
         }
     }
-    if (demuxer_->IsFlvLiveStream()) {
-        MEDIA_LOG_I("play IsFlvLiveStream: true");
-        liveControl_.StartCheckLiveDelayTime(CHECK_DELAY_INTERVAL);
-    }
+    StartFlvCheckLiveDelayTime();
     if (ret == MSERR_OK) {
         if (!isInitialPlay_) {
             OnStateChanged(PlayerStateId::PLAYING);
@@ -886,10 +878,7 @@ int32_t HiPlayerImpl::Pause(bool isSystemOperation)
         UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
     }
     callbackLooper_.StopReportMediaProgress();
-    if (demuxer_->IsFlvLiveStream()) {
-        MEDIA_LOG_I("Pause IsFlvLiveStream: true");
-        liveControl_.StopCheckLiveDalyTime();
-    }
+    StopFlvCheckLiveDelayTime();
     callbackLooper_.StopCollectMaxAmplitude();
     callbackLooper_.ManualReportMediaProgressOnce();
     {
@@ -928,10 +917,7 @@ int32_t HiPlayerImpl::PauseDemuxer()
     MEDIA_LOG_I("PauseDemuxer in");
     callbackLooper_.StopReportMediaProgress();
     callbackLooper_.StopCollectMaxAmplitude();
-    if (demuxer_->IsFlvLiveStream()) {
-        MEDIA_LOG_I("PauseDemuxer IsFlvLiveStream: true");
-        liveControl_.StopCheckLiveDalyTime();
-    }
+    StopFlvCheckLiveDelayTime();
     syncManager_->Pause();
     Status ret = demuxer_->PauseDemuxerReadLoop();
     return TransStatus(ret);
@@ -944,10 +930,7 @@ int32_t HiPlayerImpl::ResumeDemuxer()
     FALSE_RETURN_V_MSG_E(pipelineStates_ != PlayerStates::PLAYER_STATE_ERROR,
         TransStatus(Status::OK), "PLAYER_STATE_ERROR not allow ResumeDemuxer");
     callbackLooper_.StartReportMediaProgress(REPORT_PROGRESS_INTERVAL);
-    if (demuxer_->IsFlvLiveStream()) {
-        MEDIA_LOG_I("ResumeDemuxer IsFlvLiveStream: true");
-        liveControl_.StartCheckLiveDelayTime(CHECK_DELAY_INTERVAL);
-    }
+    StartFlvCheckLiveDelayTime();
     callbackLooper_.StartCollectMaxAmplitude(SAMPLE_AMPLITUDE_INTERVAL);
     syncManager_->Resume();
     Status ret = demuxer_->ResumeDemuxerReadLoop();
@@ -968,10 +951,7 @@ int32_t HiPlayerImpl::Stop()
     AutoLock lock(handleCompleteMutex_);
     UpdatePlayStatistics();
     callbackLooper_.StopReportMediaProgress();
-    if (demuxer_->IsFlvLiveStream()) {
-        MEDIA_LOG_I("Stop IsFlvLiveStream: true");
-        liveControl_.StopCheckLiveDalyTime();
-    }
+    StopFlvCheckLiveDelayTime();
     callbackLooper_.StopCollectMaxAmplitude();
     // close demuxer first to avoid concurrent problem
     auto ret = Status::ERROR_UNKNOWN;
@@ -2588,7 +2568,7 @@ void HiPlayerImpl::HandleCompleteEvent(const Event& event)
     }
     if (!singleLoop_.load()) {
         callbackLooper_.StopReportMediaProgress();
-        liveControl_.StopCheckLiveDalyTime();
+        StopFlvCheckLiveDelayTime();
         callbackLooper_.StopCollectMaxAmplitude();
     } else {
         inEosSeek_ = true;
@@ -2803,7 +2783,7 @@ void HiPlayerImpl::NotifyAudioInterrupt(const Event& event)
                 UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
             }
             callbackLooper_.StopReportMediaProgress();
-            liveControl_.StopCheckLiveDalyTime();
+            StopFlvCheckLiveDelayTime();
             callbackLooper_.StopCollectMaxAmplitude();
         }
     }
@@ -3514,12 +3494,42 @@ void HiPlayerImpl::DoRestartLiveLink()
     FALSE_RETURN(demuxer_ != nullptr);
     // demuxer_->DoFlush();
     demuxer_->DoFlush();
-    audioDecoder_->Flush();
-    audioSink_->Flush();
-    videoDecoder_->Flush();
+    if (audioDecoder_ != nullptr) {
+        audioDecoder_->Flush();
+    }
+    if (audioSink_ != nullptr) {
+        audioSink_->Flush();
+    }
+    if (videoDecoder_ != nullptr) {
+        videoDecoder_->Flush();
+    }
     Status ret = demuxer_->RebootPlugin();
     MEDIA_LOG_I("restart live link ret is %{public}d", static_cast<int32_t>(ret));
     return;
+}
+
+void HiPlayerImpl::SetFlvObs()
+{
+    if (demuxer_ != nullptr && demuxer_->IsFlvLiveStream()) {
+        MEDIA_LOG_I("SetFlvObs");
+        liveControl_.StartWithPlayerEngineObs(playerEngineObs_);
+    }
+}
+
+void HiPlayerImpl::StartFlvCheckLiveDelayTime()
+{
+    if (demuxer_ != nullptr && demuxer_->IsFlvLiveStream()) {
+        MEDIA_LOG_I("StartFlvCheckLiveDelayTime");
+        liveControl_.StartCheckLiveDelayTime(CHECK_DELAY_INTERVAL);
+    }
+}
+
+void HiPlayerImpl::StopFlvCheckLiveDelayTime()
+{
+    if (demuxer_ != nullptr && demuxer_->IsFlvLiveStream()) {
+        MEDIA_LOG_I("StopFlvCheckLiveDelayTime");
+        liveControl_.StopCheckLiveDelayTime();
+    }
 }
 
 void HiPlayerImpl::SetPostProcessor()

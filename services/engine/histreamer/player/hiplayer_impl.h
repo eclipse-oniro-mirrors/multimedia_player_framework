@@ -287,6 +287,9 @@ private:
     void ReportAudioInterruptEvent();
     int32_t AdjustCachedDuration(int32_t cachedDuration);
     bool IsLivingMaxDelyTimeValid();
+    void SetFlvObs();
+    void StartFlvCheckLiveDelayTime();
+    void StopFlvCheckLiveDelayTime();
     void SetPostProcessor();
 
     bool isNetWorkPlay_ = false;

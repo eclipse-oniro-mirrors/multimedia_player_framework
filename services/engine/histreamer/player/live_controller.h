@@ -35,9 +35,9 @@ public:
 
     void SetPlayEngine(IPlayerEngine* engine, std::string playerId);
 
-    void  StartCheckLiveDelayTime(int64_t updateIntervalMs = 1000);
+    void StartCheckLiveDelayTime(int64_t updateIntervalMs = 1000);
 
-    void StopCheckLiveDalyTime();
+    void StopCheckLiveDelayTime();
 
     void OnError(PlayerErrorType errorType, int32_t errorCode) override;
 
