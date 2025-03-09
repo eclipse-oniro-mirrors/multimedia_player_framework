@@ -3492,7 +3492,6 @@ void HiPlayerImpl::DoRestartLiveLink()
 {
     MediaTrace trace("HiPlayerImpl::DoRestartLiveLink");
     FALSE_RETURN(demuxer_ != nullptr);
-    // demuxer_->DoFlush();
     demuxer_->DoFlush();
     if (audioDecoder_ != nullptr) {
         audioDecoder_->Flush();
