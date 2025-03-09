@@ -3466,7 +3466,7 @@ void HiPlayerImpl::SetPerfRecEnabled(bool isPerfRecEnabled)
     isPerfRecEnabled_ = isPerfRecEnabled;
 }
 
-bool HiPlayerImpl::IsNeedChangePlaySpeed(PlaybackRateMode &mode, bool isXSpeedPlay)
+bool HiPlayerImpl::IsNeedChangePlaySpeed(PlaybackRateMode &mode, bool &isXSpeedPlay)
 {
     FALSE_RETURN_V(demuxer_ != nullptr, false);
     uint64_t cacheDuration = demuxer_->GetCachedDuration();
