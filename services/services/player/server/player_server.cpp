@@ -1761,7 +1761,6 @@ void PlayerServer::UpdateFlvLivePauseTime()
             MEDIA_LOGI("get current time failed");
             pauseTimestamp_ = HST_TIME_NONE;
         }
-        MEDIA_LOGI("start pause, and sumPauseTime_ is %{public}ld", pauseTimestamp_);
     }
 }
 
@@ -1771,8 +1770,6 @@ void PlayerServer::TryFlvLiveRestartLink()
     if (pauseTimestamp_ != HST_TIME_NONE) {
         sumPauseTime_ += CalculatePauseTime();
         pauseTimestamp_ = HST_TIME_NONE;
-        MEDIA_LOGI("sumPauseTime_ is %{public}ld and the pauseTimestamp_ is %{public}ld",
-            sumPauseTime_, pauseTimestamp_);
         bool isNeededRestartLink = playerEngine_->IsPauseForTooLong(sumPauseTime_);
         if (isNeededRestartLink) {
             HandleFlvLiveRestartLink();
