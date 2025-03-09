@@ -3494,13 +3494,13 @@ void HiPlayerImpl::DoRestartLiveLink()
     FALSE_RETURN(demuxer_ != nullptr);
     demuxer_->DoFlush();
     if (audioDecoder_ != nullptr) {
-        audioDecoder_->Flush();
+        audioDecoder_->DoFlush();
     }
     if (audioSink_ != nullptr) {
-        audioSink_->Flush();
+        audioSink_->DoFlush();
     }
     if (videoDecoder_ != nullptr) {
-        videoDecoder_->Flush();
+        videoDecoder_->DoFlush();
     }
     Status ret = demuxer_->RebootPlugin();
     MEDIA_LOG_I("restart live link ret is %{public}d", static_cast<int32_t>(ret));
