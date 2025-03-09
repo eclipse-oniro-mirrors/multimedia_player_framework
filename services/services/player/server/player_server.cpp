@@ -33,12 +33,14 @@
 #include "player_server_event_receiver.h"
 #include "common/media_source.h"
 #include "audio_info.h"
+#include "osal/utils/steady_clock.h"
 
 using namespace OHOS::QOS;
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "PlayerServer"};
     constexpr int32_t MAX_SUBTITLE_TRACK_NUN = 8;
+    constexpr double DEFAULT_LIVING_CACHED_DURATION = 2;
     static bool g_isFirstInit = true;
 }
 
@@ -530,6 +532,7 @@ int32_t PlayerServer::OnPlay()
 int32_t PlayerServer::HandlePlay()
 {
     ExitSeekContinous(true);
+    TryFlvLiveRestartLink();
     int32_t ret = playerEngine_->Play();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine Play Failed!");
 
@@ -591,6 +594,7 @@ int32_t PlayerServer::HandlePause(bool isSystemOperation)
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_INVALID_OPERATION, "playerEngine_ is nullptr");
     ExitSeekContinous(true);
     int32_t ret = playerEngine_->Pause(isSystemOperation);
+    UpdateFlvLivePauseTime();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine Pause Failed!");
 
     return MSERR_OK;
@@ -612,6 +616,7 @@ int32_t PlayerServer::HandleResumeDemuxer()
     MEDIA_LOGI("KPI-TRACE: PlayerServer HandleResumeDemuxer in");
     MediaTrace::TraceBegin("PlayerServer::HandleResumeDemuxer", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_INVALID_OPERATION, "playerEngine_ is nullptr");
+    TryFlvLiveRestartLink();
     int32_t ret = playerEngine_->ResumeDemuxer();
     taskMgr_.MarkTaskDone("ResumeDemuxer done");
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine ResumeDemuxer Failed!");
@@ -1620,6 +1625,19 @@ void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &in
     InnerOnInfo(type, extra, infoBody, ret);
 }
 
+void PlayerServer::DoCheckLiveDalyTime()
+{
+    CHECK_AND_RETURN(playerEngine_ != nullptr);
+    MEDIA_LOGI("DoCheckLiveDalyTime");
+    PlaybackRateMode mode = PlaybackRateMode::SPEED_FORWARD_1_00_X;
+    bool isExceedMaxDelayTime = playerEngine_->IsNeedChangePlaySpeed(mode, isXSpeedPlay_);
+    if (isExceedMaxDelayTime) {
+        int32_t ret = playerEngine_->SetPlaybackSpeed(mode);
+        sumPauseTime_ = (ret == MSERR_OK && mode == PlaybackRateMode::SPEED_FORWARD_1_20_X) ? 0 : sumPauseTime_;
+    }
+    return;
+}
+
 void PlayerServer::InnerOnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody, const int32_t ret)
 {
     if (type == INFO_TYPE_IS_LIVE_STREAM) {
@@ -1678,6 +1696,9 @@ void PlayerServer::OnSystemOperation(PlayerOnSystemOperationType type, PlayerOpe
                 (void)OnPause(true);
             }
             break;
+        case OPERATION_TYPE_CHECK_LIVE_DELAY:
+            DoCheckLiveDalyTime();
+            break;
         default:
             MEDIA_LOGI("Can not OnSystemOperation, currentState is %{public}s",
                 GetStatusDescription(lastOpStatus_).c_str());
@@ -1713,6 +1734,7 @@ void PlayerServer::OnNotifyBufferingStart()
     });
     taskMgr_.LaunchTask(pauseTask, PlayerServerTaskType::LIGHT_TASK, "PauseDemuxer");
     MEDIA_LOGI("0x%{public}06" PRIXPTR " PlayerServer OnNotifyBufferingStart out", FAKE_POINTER(this));
+    UpdateFlvLivePauseTime();
     return;
 }
 
@@ -1731,6 +1753,51 @@ void PlayerServer::OnNotifyBufferingEnd()
     return;
 }
 
+void PlayerServer::UpdateFlvLivePauseTime()
+{
+    if (pauseTimestamp_ == HST_TIME_NONE) {
+        pauseTimestamp_ = SteadyClock::GetCurrentTimeMs();
+        if (pauseTimestamp_ < 0) {
+            MEDIA_LOGI("get current time failed");
+            pauseTimestamp_ = HST_TIME_NONE;
+        }
+        MEDIA_LOGI("start pause, and sumPauseTime_ is %{public}ld", pauseTimestamp_);
+    }
+}
+
+void PlayerServer::TryFlvLiveRestartLink()
+{
+    CHECK_AND_RETURN_LOG(playerEngine_ != nullptr, "playerEngine_ is nullptr");
+    if (pauseTimestamp_ != HST_TIME_NONE) {
+        sumPauseTime_ += CalculatePauseTime();
+        pauseTimestamp_ = HST_TIME_NONE;
+        MEDIA_LOGI("sumPauseTime_ is %{public}ld and the pauseTimestamp_ is %{public}ld",
+            sumPauseTime_, pauseTimestamp_);
+        bool isNeededRestartLink = playerEngine_->IsPauseForTooLong(sumPauseTime_);
+        if (isNeededRestartLink) {
+            HandleFlvLiveRestartLink();
+        }
+    }
+}
+
+int64_t PlayerServer::CalculatePauseTime()
+{
+    int64_t curTime = SteadyClock::GetCurrentTimeMs();
+    // MEDIA_LOGI("lastPauseTiem is " PUBLIC_LOG_D64 " and the currentTime_ is " PUBLIC_LOG_D64,
+    //         pauseTimestamp_, curTime);
+    return (curTime > pauseTimestamp_) ? (curTime - pauseTimestamp_) : 0;
+}
+
+void PlayerServer::HandleFlvLiveRestartLink()
+{
+    MEDIA_LOGI("HandleRestartLink");
+    std::lock_guard<std::mutex> lock(mutex_);
+    sumPauseTime_ = 0;
+    pauseTimestamp_ = HST_TIME_NONE;
+    playerEngine_->DoRestartLiveLink();
+    playerEngine_->SetPlaybackSpeed(PlaybackRateMode::SPEED_FORWARD_1_00_X);
+    isXSpeedPlay_ = false;
+}
 
 void PlayerServer::OnInfoNoChangeStatus(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
 {
@@ -1847,6 +1914,9 @@ int32_t PlayerServer::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
     bool isValidState = lastOpStatus_ == PLAYER_INITIALIZED || lastOpStatus_ == PLAYER_STOPPED;
     CHECK_AND_RETURN_RET_LOG(isValidState, MSERR_INVALID_STATE,
         "can not set playback strategy, current state is %{public}d", static_cast<int32_t>(lastOpStatus_.load()));
+    bool isLivingMaxDelyTimeValid = IsLivingMaxDelyTimeValid(playbackStrategy);
+    CHECK_AND_RETURN_RET_LOG(isLivingMaxDelyTimeValid, MSERR_INVALID_VAL,
+        "can not set playback strategy, living delay time params is vaild");
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     return playerEngine_->SetPlaybackStrategy(playbackStrategy);
 }
@@ -1875,6 +1945,15 @@ int32_t PlayerServer::SetVideoWindowSize(int32_t width, int32_t height)
         "can not set video window size, current state is %{public}d", static_cast<int32_t>(lastOpStatus_.load()));
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     return playerEngine_->SetVideoWindowSize(width, height);
+}
+
+bool PlayerServer::IsLivingMaxDelyTimeValid(AVPlayStrategy playbackStrategy)
+{
+    if (playbackStrategy.thresholdForAutoQuickPlay < DEFAULT_LIVING_CACHED_DURATION ||
+        playbackStrategy.thresholdForAutoQuickPlay < playbackStrategy.preferredBufferDurationForPlaying) {
+            return false;
+        }
+    return true;
 }
 
 int32_t PlayerServer::CheckSeek(int32_t mSeconds, PlayerSeekMode mode)

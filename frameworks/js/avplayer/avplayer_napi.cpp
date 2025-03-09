@@ -60,6 +60,7 @@ namespace {
     constexpr int32_t ARGS_TWO = 2;
     constexpr int32_t ARGS_THREE = 3;
     constexpr int32_t SEEK_CONTINUOUS_TS_ENUM_NUM = 3;
+    constexpr double DEFAULT_LIVING_CACHED_DURATION = 2;
 }
 
 namespace OHOS {
@@ -1423,6 +1424,7 @@ void AVPlayerNapi::GetAVPlayStrategyFromStrategyTmp(AVPlayStrategy &strategy, co
     strategy.preferredAudioLanguage = strategyTmp.preferredAudioLanguage;
     strategy.preferredSubtitleLanguage = strategyTmp.preferredSubtitleLanguage;
     strategy.preferredBufferDurationForPlaying = strategyTmp.preferredBufferDurationForPlaying;
+    strategy.thresholdForAutoQuickPlay = strategyTmp.thresholdForAutoQuickPlay;
 }
 
 bool AVPlayerNapi::IsPalyingDurationValid(const AVPlayStrategyTmp &strategyTmp)
@@ -1432,6 +1434,15 @@ bool AVPlayerNapi::IsPalyingDurationValid(const AVPlayStrategyTmp &strategyTmp)
                    strategyTmp.preferredBufferDurationForPlaying < 0) {
         return false;
     }
+    return true;
+}
+
+bool AVPlayerNapi::IsLivingMaxDelayTimeValid(const AVPlayStrategyTmp &strategyTmp)
+{
+    if (strategyTmp.thresholdForAutoQuickPlay < DEFAULT_LIVING_CACHED_DURATION ||
+        strategyTmp.thresholdForAutoQuickPlay < strategyTmp.preferredBufferDurationForPlaying) {
+            return false;
+        }
     return true;
 }
 
@@ -1465,6 +1476,9 @@ napi_value AVPlayerNapi::JsSetPlaybackStrategy(napi_env env, napi_callback_info 
         } else if (!jsPlayer->IsPalyingDurationValid(strategyTmp)) {
             promiseCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER,
                                   "playing duration is above buffer duration or below zero");
+        } else if (!jsPlayer->IsLivingMaxDelayTimeValid(strategyTmp)) {
+            promiseCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER,
+                                  "thresholdForAutoQuickPlay is invalid");
         } else {
             AVPlayStrategy strategy;
             jsPlayer->GetAVPlayStrategyFromStrategyTmp(strategy, strategyTmp);
@@ -1854,10 +1868,11 @@ napi_value AVPlayerNapi::JsSetMediaSource(napi_env env, napi_callback_info info)
     if (!CommonNapi::GetPlayStrategy(env, args[1], strategyTmp)) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "strategy type should be PlaybackStrategy.");
         return result;
-    }
-    if (!jsPlayer->IsPalyingDurationValid(strategyTmp)) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
-                            "playing duration is above buffer duration or below zero");
+    } else if (!jsPlayer->IsPalyingDurationValid(strategyTmp)) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "playing duration is invalid");
+        return result;
+    } else if (!jsPlayer->IsLivingMaxDelayTimeValid(strategyTmp)) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "thresholdForAutoQuickPlay is invalid");
         return result;
     }
     jsPlayer->GetAVPlayStrategyFromStrategyTmp(strategy, strategyTmp);

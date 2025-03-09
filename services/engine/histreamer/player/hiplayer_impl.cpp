@@ -36,6 +36,7 @@
 #include "meta_utils.h"
 #include "meta/media_types.h"
 #include "param_wrapper.h"
+#include "osal/utils/steady_clock.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_SYSTEM_PLAYER, "HiPlayer" };
@@ -48,9 +49,14 @@ const int64_t SAMPLE_AMPLITUDE_INTERVAL = 100;
 const int64_t REPORT_PROGRESS_INTERVAL = 100; // progress interval is 100ms
 const double FRAME_RATE_DEFAULT = -1.0;
 const double FRAME_RATE_FOR_SEEK_PERFORMANCE = 2000.0;
+const double TIME_CONVERSION_UNIT  = 1000;
+const double CHECK_DELAY_INTERVAL  = 1000;
 constexpr int32_t BUFFERING_LOG_FREQUENCY = 5;
 constexpr int32_t NOTIFY_BUFFERING_END_PARAM = 0;
 constexpr int64_t FIRST_FRAME_FRAME_REPORT_DELAY_MS = 50;
+constexpr double DEFAULT_LIVING_CACHED_DURATION = 2;
+constexpr double DEFAULT_MAX_DELAY_TIME_FOR_LIVING = 5;
+constexpr double PAUSE_LONG_TIME_FACTOR = 5;
 static const std::unordered_set<OHOS::AudioStandard::StreamUsage> FOCUS_EVENT_USAGE_SET = {
     OHOS::AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN,
     OHOS::AudioStandard::StreamUsage::STREAM_USAGE_MEDIA,
@@ -140,12 +146,13 @@ HiPlayerImpl::HiPlayerImpl(int32_t appUid, int32_t appPid, uint32_t appTokenId, 
     : appUid_(appUid), appPid_(appPid), appTokenId_(appTokenId), appFullTokenId_(appFullTokenId)
 {
     MEDIA_LOG_D("hiPlayerImpl ctor appUid " PUBLIC_LOG_D32 " appPid " PUBLIC_LOG_D32
-        " appTokenId %{private}" PRIu32 " appFullTokenId %{private}" PRIu64,
+	    " appTokenId %{private}" PRIu32 " appFullTokenId %{private}" PRIu64,
         appUid_, appPid_, appTokenId_, appFullTokenId_);
     playerId_ = std::string("HiPlayer_") + std::to_string(OHOS::Media::Pipeline::Pipeline::GetNextPipelineId());
     pipeline_ = std::make_shared<OHOS::Media::Pipeline::Pipeline>();
     syncManager_ = std::make_shared<MediaSyncManager>();
     callbackLooper_.SetPlayEngine(this, playerId_);
+    liveControl_.SetPlayEngine(this, playerId_);
     bundleName_ = GetClientBundleName(appUid);
     dfxAgent_ = std::make_shared<DfxAgent>(playerId_, bundleName_);
 }
@@ -407,11 +414,12 @@ int32_t HiPlayerImpl::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
 
     mimeType_ = mediaSource->GetMimeType();
     bufferDurationForPlaying_ = strategy.preferredBufferDurationForPlaying;
+    maxLivingDelayTime_ = strategy.thresholdForAutoQuickPlay;
     if (mimeType_ != AVMimeTypes::APPLICATION_M3U8 && IsFileUrl(url_)) {
         std::string realUriPath;
         int32_t result = GetRealPath(url_, realUriPath);
         if (result != MSERR_OK) {
-            CollectionErrorInfo(result, "SetSource error: GetRealPath error");
+             CollectionErrorInfo(result, "SetSource error: GetRealPath error");
             return result;
         }
         url_ = "file://" + realUriPath;
@@ -622,6 +630,10 @@ int32_t HiPlayerImpl::PrepareAsync()
         auto errCode = TransStatus(ret);
         CollectionErrorInfo(errCode, "pipeline PrepareAsync failed");
         return errCode;
+    }
+    if (demuxer_->IsFlvLiveStream()) {
+        MEDIA_LOG_I("IsFlvLiveStream: true");
+        liveControl_.StartWithPlayerEngineObs(playerEngineObs_);
     }
     InitDuration();
     SetSeiMessageListener();
@@ -845,6 +857,10 @@ int32_t HiPlayerImpl::Play()
             UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
         }
     }
+    if (demuxer_->IsFlvLiveStream()) {
+        MEDIA_LOG_I("play IsFlvLiveStream: true");
+        liveControl_.StartCheckLiveDelayTime(CHECK_DELAY_INTERVAL);
+    }
     if (ret == MSERR_OK) {
         if (!isInitialPlay_) {
             OnStateChanged(PlayerStateId::PLAYING);
@@ -870,6 +886,10 @@ int32_t HiPlayerImpl::Pause(bool isSystemOperation)
         UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
     }
     callbackLooper_.StopReportMediaProgress();
+    if (demuxer_->IsFlvLiveStream()) {
+        MEDIA_LOG_I("Pause IsFlvLiveStream: true");
+        liveControl_.StopCheckLiveDalyTime();
+    }
     callbackLooper_.StopCollectMaxAmplitude();
     callbackLooper_.ManualReportMediaProgressOnce();
     {
@@ -908,6 +928,10 @@ int32_t HiPlayerImpl::PauseDemuxer()
     MEDIA_LOG_I("PauseDemuxer in");
     callbackLooper_.StopReportMediaProgress();
     callbackLooper_.StopCollectMaxAmplitude();
+    if (demuxer_->IsFlvLiveStream()) {
+        MEDIA_LOG_I("PauseDemuxer IsFlvLiveStream: true");
+        liveControl_.StopCheckLiveDalyTime();
+    }
     syncManager_->Pause();
     Status ret = demuxer_->PauseDemuxerReadLoop();
     return TransStatus(ret);
@@ -920,6 +944,10 @@ int32_t HiPlayerImpl::ResumeDemuxer()
     FALSE_RETURN_V_MSG_E(pipelineStates_ != PlayerStates::PLAYER_STATE_ERROR,
         TransStatus(Status::OK), "PLAYER_STATE_ERROR not allow ResumeDemuxer");
     callbackLooper_.StartReportMediaProgress(REPORT_PROGRESS_INTERVAL);
+    if (demuxer_->IsFlvLiveStream()) {
+        MEDIA_LOG_I("ResumeDemuxer IsFlvLiveStream: true");
+        liveControl_.StartCheckLiveDelayTime(CHECK_DELAY_INTERVAL);
+    }
     callbackLooper_.StartCollectMaxAmplitude(SAMPLE_AMPLITUDE_INTERVAL);
     syncManager_->Resume();
     Status ret = demuxer_->ResumeDemuxerReadLoop();
@@ -940,6 +968,10 @@ int32_t HiPlayerImpl::Stop()
     AutoLock lock(handleCompleteMutex_);
     UpdatePlayStatistics();
     callbackLooper_.StopReportMediaProgress();
+    if (demuxer_->IsFlvLiveStream()) {
+        MEDIA_LOG_I("Stop IsFlvLiveStream: true");
+        liveControl_.StopCheckLiveDalyTime();
+    }
     callbackLooper_.StopCollectMaxAmplitude();
     // close demuxer first to avoid concurrent problem
     auto ret = Status::ERROR_UNKNOWN;
@@ -1188,7 +1220,7 @@ void HiPlayerImpl::NotifySeek(Status rtv, bool flag, int64_t seekPos)
         NotifySeekDone(seekPos);
     }
 }
-
+ 
 int32_t HiPlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
 {
     MediaTrace trace("HiPlayerImpl::Seek.");
@@ -1297,7 +1329,7 @@ Status HiPlayerImpl::doSeek(int64_t seekPos, PlayerSeekMode mode)
     if (mode == PlayerSeekMode::SEEK_CLOSEST && NeedSeekClosest()) {
         return HandleSeekClosest(seekPos, seekTimeUs);
     }
-    if (mode == PlayerSeekMode::SEEK_CLOSEST) {   // reset mode
+     if (mode == PlayerSeekMode::SEEK_CLOSEST) {   // reset mode
         mode = PlayerSeekMode::SEEK_NEXT_SYNC;
         if (audioSink_) {
             audioSink_->SetSeekTime(seekTimeUs);
@@ -1486,6 +1518,7 @@ int32_t HiPlayerImpl::SetObs(const std::weak_ptr<IPlayerEngineObs>& obs)
 {
     MEDIA_LOG_D_SHORT("SetObs");
     callbackLooper_.StartWithPlayerEngineObs(obs);
+    playerEngineObs_ = obs;
     return TransStatus(Status::OK);
 }
 
@@ -1825,7 +1858,7 @@ int32_t HiPlayerImpl::GetCurrentTrack(int32_t trackType, int32_t &index)
     } else {
         (void)index;
     }
-
+ 
     return MSERR_OK;
 }
 
@@ -1892,7 +1925,7 @@ int32_t HiPlayerImpl::SelectTrack(int32_t trackId, PlayerSwitchMode mode)
     }
     return InnerSelectTrack(mime, trackId, mode);
 }
-
+ 
 int32_t HiPlayerImpl::DeselectTrack(int32_t trackId)
 {
     MEDIA_LOG_I("DeselectTrack trackId is " PUBLIC_LOG_D32, trackId);
@@ -2238,7 +2271,7 @@ void HiPlayerImpl::HandleSeiInfoEvent(const Event &event)
     int32_t playbackPos = 0;
     format.GetIntValue(Tag::AV_PLAYER_SEI_PLAYBACK_POSITION, playbackPos);
     format.PutIntValue(Tag::AV_PLAYER_SEI_PLAYBACK_POSITION, playbackPos - Plugins::Us2Ms(mediaStartPts_));
-
+ 
     callbackLooper_.OnInfo(INFO_TYPE_SEI_UPDATE_INFO, 0, format);
 }
 
@@ -2382,6 +2415,7 @@ void HiPlayerImpl::DoSetPlayStrategy(const std::shared_ptr<MediaSource> source)
     playStrategy->audioLanguage = audioLanguage_;
     playStrategy->subtitleLanguage = subtitleLanguage_;
     playStrategy->bufferDurationForPlaying = bufferDurationForPlaying_;
+    playStrategy->thresholdForAutoQuickPlay = maxLivingDelayTime_;
     if (source) {
         source->SetPlayStrategy(playStrategy);
         source->SetAppUid(appUid_);
@@ -2402,6 +2436,20 @@ void HiPlayerImpl::DoSetPlayMediaStream(const std::shared_ptr<MediaSource>& sour
     }
 }
 
+bool HiPlayerImpl::IsLivingMaxDelayTimeValid()
+{
+    if (!isPlaybackStrategySet_) {
+        bufferDurationForPlaying_ = DEFAULT_LIVING_CACHED_DURATION;
+        maxLivingDelayTime_ = DEFAULT_MAX_DELAY_TIME_FOR_LIVING;
+        return true;
+    }
+    if (maxLivingDelayTime_ < DEFAULT_LIVING_CACHED_DURATION ||
+        maxLivingDelayTime_ < bufferDurationForPlaying_) {
+            return false;
+        }
+    return true;
+}
+
 Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
 {
     MediaTrace trace("HiPlayerImpl::DoSetSource");
@@ -2415,6 +2463,9 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
     demuxer_->SetSyncCenter(syncManager_);
     pipeline_->AddHeadFilters({demuxer_});
     demuxer_->Init(playerEventReceiver_, playerFilterCallback_, interruptMonitor_);
+    bool isLivingMaxDelyTimeValid = IsLivingMaxDelayTimeValid();
+    FALSE_RETURN_V_MSG(isLivingMaxDelyTimeValid, Status::ERROR_INVALID_PARAMETER,
+        "can not set playback strategy, living delay time params is vaild");
     DoSetPlayStrategy(source);
     if (!mimeType_.empty()) {
         source->SetMimeType(mimeType_);
@@ -2537,6 +2588,7 @@ void HiPlayerImpl::HandleCompleteEvent(const Event& event)
     }
     if (!singleLoop_.load()) {
         callbackLooper_.StopReportMediaProgress();
+        liveControl_.StopCheckLiveDalyTime();
         callbackLooper_.StopCollectMaxAmplitude();
     } else {
         inEosSeek_ = true;
@@ -2751,6 +2803,7 @@ void HiPlayerImpl::NotifyAudioInterrupt(const Event& event)
                 UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
             }
             callbackLooper_.StopReportMediaProgress();
+            liveControl_.StopCheckLiveDalyTime();
             callbackLooper_.StopCollectMaxAmplitude();
         }
     }
@@ -2836,11 +2889,11 @@ void HiPlayerImpl::NotifyUpdateTrackInfo()
     GetVideoTrackInfo(trackInfo);
     GetAudioTrackInfo(trackInfo);
     GetSubtitleTrackInfo(trackInfo);
-
+ 
     Format body;
     body.PutFormatVector(std::string(PlayerKeys::PLAYER_TRACK_INFO), trackInfo);
     MEDIA_LOG_I("NotifyUpdateTrackInfo");
-
+ 
     callbackLooper_.OnInfo(INFO_TYPE_TRACK_INFO_UPDATE, 0, body);
 }
 
@@ -2892,7 +2945,7 @@ void HiPlayerImpl::HandleAudioTrackChangeEvent(const Event& event)
         audioTrackInfo.PutIntValue("track_is_select", 1);
         callbackLooper_.OnInfo(INFO_TYPE_TRACKCHANGE, 0, audioTrackInfo);
         currentAudioTrackId_ = trackId;
-
+ 
         NotifyUpdateTrackInfo();
     }
     return;
@@ -3225,7 +3278,8 @@ int32_t HiPlayerImpl::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
     audioLanguage_ = playbackStrategy.preferredAudioLanguage;
     subtitleLanguage_ = playbackStrategy.preferredSubtitleLanguage;
     bufferDurationForPlaying_ = playbackStrategy.preferredBufferDurationForPlaying;
-
+    maxLivingDelayTime_ = playbackStrategy.thresholdForAutoQuickPlay;
+    isPlaybackStrategySet_ = true;
     if (playbackStrategy.enableSuperResolution) {
         videoPostProcessorType_ = VideoPostProcessorType::SUPER_RESOLUTION;
         isPostProcessorOn_ = playbackStrategy.enableSuperResolution;
@@ -3430,6 +3484,42 @@ void HiPlayerImpl::SetPerfRecEnabled(bool isPerfRecEnabled)
 {
     MEDIA_LOG_I("SetPerfRecEnabled %{public}d", isPerfRecEnabled);
     isPerfRecEnabled_ = isPerfRecEnabled;
+}
+
+bool HiPlayerImpl::IsNeedChangePlaySpeed(PlaybackRateMode &mode, bool isXSpeedPlay)
+{
+    FALSE_RETURN_V(demuxer_ != nullptr, false);
+    uint64_t cacheDuration = demuxer_->GetCachedDuration();
+    MEDIA_LOG_I("current cacheDuration is %{public}d", cacheDuration);
+    if ((cacheDuration < bufferDurationForPlaying_ * TIME_CONVERSION_UNIT) && isXSpeedPlay) {
+        mode = PlaybackRateMode::SPEED_FORWARD_1_00_X;
+        MEDIA_LOG_I("below the play waterline, recover to 1x speed play");
+        return true;
+    } else if ((cacheDuration > (maxLivingDelayTime_ * TIME_CONVERSION_UNIT)) && !isXSpeedPlay) {
+        mode = PlaybackRateMode::SPEED_FORWARD_1_20_X;
+        MEDIA_LOG_I("exceed the max delay time, start to 1.2x speed play");
+        return true;
+    }
+    return false;
+}
+
+bool HiPlayerImpl::IsPauseForTooLong(int64_t pauseTime)
+{
+    return pauseTime > (maxLivingDelayTime_ * TIME_CONVERSION_UNIT * PAUSE_LONG_TIME_FACTOR);
+}
+
+void HiPlayerImpl::DoRestartLiveLink()
+{
+    MediaTrace trace("HiPlayerImpl::DoRestartLiveLink");
+    FALSE_RETURN(demuxer_ != nullptr);
+    // demuxer_->DoFlush();
+    demuxer_->DoFlush();
+    audioDecoder_->Flush();
+    audioSink_->Flush();
+    videoDecoder_->Flush();
+    Status ret = demuxer_->RebootPlugin();
+    MEDIA_LOG_I("restart live link ret is %{public}d", static_cast<int32_t>(ret));
+    return;
 }
 
 void HiPlayerImpl::SetPostProcessor()
