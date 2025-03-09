@@ -753,6 +753,7 @@ int32_t PlayerServer::SetVolumeMode(int32_t mode)
         return MSERR_INVALID_OPERATION;
     }
     MEDIA_LOGD("PlayerServer SetVolumeMode in mode %{public}d", mode);
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
     (void)playerEngine_->SetVolumeMode(mode);
     return MSERR_OK;
 }
