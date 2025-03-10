@@ -158,6 +158,7 @@ public:
     bool IsNeedChangePlaySpeed(PlaybackRateMode &mode, bool &isXSpeedPlay) override;
     bool IsPauseForTooLong(int64_t pauseTime) override;
     bool IsLivingMaxDelayTimeValid() override;
+    bool IsFlvLive() override;
     void DoRestartLiveLink() override;
 
     // internal interfaces
@@ -373,6 +374,7 @@ private:
     double bufferDurationForPlaying_ = 0;
     double maxLivingDelayTime_ = 0;
     bool isPlaybackStrategySet_ {false};
+    bool isFlvLive_ {false};
     bool preferHDR_ = false;
     OHOS::Media::MediaType mutedMediaType_ = OHOS::Media::MediaType::MEDIA_TYPE_MAX_COUNT;
     std::string audioLanguage_;
