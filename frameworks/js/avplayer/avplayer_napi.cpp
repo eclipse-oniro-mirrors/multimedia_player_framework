@@ -2352,8 +2352,17 @@ bool AVPlayerNapi::JsHandleParameter(napi_env env, napi_value args, AVPlayerNapi
         STREAM_USAGE_DTMF, STREAM_USAGE_ENFORCED_TONE,
         STREAM_USAGE_ULTRASONIC,
         STREAM_USAGE_VIDEO_COMMUNICATION,
-        STREAM_USAGE_ULTRASONIC, STREAM_USAGE_VOICE_CALL_ASSISTANT
+        STREAM_USAGE_ULTRASONIC
     };
+    std::vector<int32_t> systemUsages = {
+        STREAM_USAGE_VOICE_CALL_ASSISTANT
+    };
+    usages.insert(usages.end(), systemUsages.begin(), systemUsages.end());
+    if (std::find(systemUsages.begin(), systemUsages.end(), usage) != systemUsages.end() && !IsSystemApp()) {
+        MEDIA_LOGI("The caller is not a system app, usage = %{public}d", usage);
+        return false;
+    }
+
     if (std::find(contents.begin(), contents.end(), content) == contents.end() ||
         std::find(usages.begin(), usages.end(), usage) == usages.end()) {
         return false;
