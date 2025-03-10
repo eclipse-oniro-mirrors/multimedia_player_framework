@@ -312,6 +312,11 @@ public:
     {
         return false;
     }
+
+    virtual bool IsFlvLive()
+    {
+        return false;
+    }
 };
 } // namespace Media
 } // namespace OHOS

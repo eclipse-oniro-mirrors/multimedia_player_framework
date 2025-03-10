@@ -3466,15 +3466,17 @@ void HiPlayerImpl::SetPerfRecEnabled(bool isPerfRecEnabled)
 
 bool HiPlayerImpl::IsNeedChangePlaySpeed(PlaybackRateMode &mode, bool &isXSpeedPlay)
 {
-    FALSE_RETURN_V(demuxer_ != nullptr, false);
+    FALSE_RETURN_V(demuxer_ != nullptr && isFlvLive_, false);
     uint64_t cacheDuration = demuxer_->GetCachedDuration();
     MEDIA_LOG_I("current cacheDuration is %{public}d", cacheDuration);
     if ((cacheDuration < bufferDurationForPlaying_ * TIME_CONVERSION_UNIT) && isXSpeedPlay) {
         mode = PlaybackRateMode::SPEED_FORWARD_1_00_X;
+        isXSpeedPlay = false;
         MEDIA_LOG_I("below the play waterline, recover to 1x speed play");
         return true;
     } else if ((cacheDuration > (maxLivingDelayTime_ * TIME_CONVERSION_UNIT)) && !isXSpeedPlay) {
         mode = PlaybackRateMode::SPEED_FORWARD_1_20_X;
+        isXSpeedPlay = true;
         MEDIA_LOG_I("exceed the max delay time, start to 1.2x speed play");
         return true;
     }
@@ -3489,7 +3491,7 @@ bool HiPlayerImpl::IsPauseForTooLong(int64_t pauseTime)
 void HiPlayerImpl::DoRestartLiveLink()
 {
     MediaTrace trace("HiPlayerImpl::DoRestartLiveLink");
-    FALSE_RETURN(demuxer_ != nullptr);
+    FALSE_RETURN(demuxer_ != nullptr && isFlvLive_);
     demuxer_->DoFlush();
     if (audioDecoder_ != nullptr) {
         audioDecoder_->DoFlush();
@@ -3505,28 +3507,32 @@ void HiPlayerImpl::DoRestartLiveLink()
     return;
 }
 
+bool HiPlayerImpl::IsFlvLive()
+{
+    return isFlvLive_;
+}
+
 void HiPlayerImpl::SetFlvObs()
 {
-    if (demuxer_ != nullptr && demuxer_->IsFlvLiveStream()) {
-        MEDIA_LOG_I("SetFlvObs");
-        liveController_.StartWithPlayerEngineObs(playerEngineObs_);
-    }
+    FALSE_RETURN(demuxer_ != nullptr);
+    isFlvLive_ = demuxer_->IsFlvLive();
+    FALSE_RETURN(isFlvLive_);
+    MEDIA_LOG_I("SetFlvObs");
+    liveController_.StartWithPlayerEngineObs(playerEngineObs_);
 }
 
 void HiPlayerImpl::StartFlvCheckLiveDelayTime()
 {
-    if (demuxer_ != nullptr && demuxer_->IsFlvLiveStream()) {
-        MEDIA_LOG_I("StartFlvCheckLiveDelayTime");
-        liveController_.StartCheckLiveDelayTime(CHECK_DELAY_INTERVAL);
-    }
+    FALSE_RETURN(demuxer_ != nullptr && isFlvLive_);
+    MEDIA_LOG_I("StartFlvCheckLiveDelayTime");
+    liveController_.StartCheckLiveDelayTime(CHECK_DELAY_INTERVAL);
 }
 
 void HiPlayerImpl::StopFlvCheckLiveDelayTime()
 {
-    if (demuxer_ != nullptr && demuxer_->IsFlvLiveStream()) {
-        MEDIA_LOG_I("StopFlvCheckLiveDelayTime");
-        liveController_.StopCheckLiveDelayTime();
-    }
+    FALSE_RETURN(demuxer_ != nullptr && isFlvLive_);
+    MEDIA_LOG_I("StopFlvCheckLiveDelayTime");
+    liveController_.StopCheckLiveDelayTime();
 }
 
 void HiPlayerImpl::SetPostProcessor()
