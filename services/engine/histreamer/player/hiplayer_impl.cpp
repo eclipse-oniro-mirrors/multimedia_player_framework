@@ -54,8 +54,6 @@ const double CHECK_DELAY_INTERVAL  = 1000;
 constexpr int32_t BUFFERING_LOG_FREQUENCY = 5;
 constexpr int32_t NOTIFY_BUFFERING_END_PARAM = 0;
 constexpr int64_t FIRST_FRAME_FRAME_REPORT_DELAY_MS = 50;
-constexpr double DEFAULT_LIVING_CACHED_DURATION = 2;
-constexpr double DEFAULT_MAX_DELAY_TIME_FOR_LIVING = 5;
 constexpr double PAUSE_LONG_TIME_FACTOR = 5;
 static const std::unordered_set<OHOS::AudioStandard::StreamUsage> FOCUS_EVENT_USAGE_SET = {
     OHOS::AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN,
@@ -2419,11 +2417,11 @@ void HiPlayerImpl::DoSetPlayMediaStream(const std::shared_ptr<MediaSource>& sour
 bool HiPlayerImpl::IsLivingMaxDelayTimeValid()
 {
     if (!isPlaybackStrategySet_) {
-        bufferDurationForPlaying_ = DEFAULT_LIVING_CACHED_DURATION;
-        maxLivingDelayTime_ = DEFAULT_MAX_DELAY_TIME_FOR_LIVING;
+        bufferDurationForPlaying_ = AVPlayStrategyConstant::DEFAULT_LIVING_CACHED_DURATION;
+        maxLivingDelayTime_ = AVPlayStrategyConstant::DEFAULT_MAX_DELAY_TIME_FOR_LIVING;
         return true;
     }
-    if (maxLivingDelayTime_ < DEFAULT_LIVING_CACHED_DURATION ||
+    if (maxLivingDelayTime_ < AVPlayStrategyConstant::DEFAULT_LIVING_CACHED_DURATION ||
         maxLivingDelayTime_ < bufferDurationForPlaying_) {
             return false;
         }

@@ -42,12 +42,17 @@ constexpr uint32_t DRM_MAX_M3U8_DRM_UUID_LEN = 16;
 constexpr uint32_t DRM_MAX_DRM_INFO_COUNT = 200;
 }
 
+namespace AVPlayStrategyConstant {
+constexpr double DEFAULT_LIVING_CACHED_DURATION = 2;
+constexpr double DEFAULT_MAX_DELAY_TIME_FOR_LIVING = 5;
+}
+
 struct AVPlayStrategy {
     uint32_t preferredWidth = 0;
     uint32_t preferredHeight = 0;
     uint32_t preferredBufferDuration = 0;
     double preferredBufferDurationForPlaying = 0;
-    double thresholdForAutoQuickPlay = 5;
+    double thresholdForAutoQuickPlay = AVPlayStrategyConstant::DEFAULT_MAX_DELAY_TIME_FOR_LIVING;
     bool preferredHdr = false;
     bool showFirstFrameOnPrepare = false;
     bool enableSuperResolution = false;

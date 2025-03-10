@@ -60,7 +60,6 @@ namespace {
     constexpr int32_t ARGS_TWO = 2;
     constexpr int32_t ARGS_THREE = 3;
     constexpr int32_t SEEK_CONTINUOUS_TS_ENUM_NUM = 3;
-    constexpr double DEFAULT_LIVING_CACHED_DURATION = 2;
 }
 
 namespace OHOS {
@@ -1439,7 +1438,7 @@ bool AVPlayerNapi::IsPalyingDurationValid(const AVPlayStrategyTmp &strategyTmp)
 
 bool AVPlayerNapi::IsLivingMaxDelayTimeValid(const AVPlayStrategyTmp &strategyTmp)
 {
-    if (strategyTmp.thresholdForAutoQuickPlay < DEFAULT_LIVING_CACHED_DURATION ||
+    if (strategyTmp.thresholdForAutoQuickPlay < AVPlayStrategyConstant::DEFAULT_LIVING_CACHED_DURATION ||
         strategyTmp.thresholdForAutoQuickPlay < strategyTmp.preferredBufferDurationForPlaying) {
             return false;
         }
