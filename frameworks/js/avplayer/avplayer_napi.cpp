@@ -2360,7 +2360,6 @@ bool AVPlayerNapi::JsHandleParameter(napi_env env, napi_value args, AVPlayerNapi
         MEDIA_LOGI("The caller is not a system app, usage = %{public}d", usage);
         return false;
     }
-
     if (std::find(contents.begin(), contents.end(), content) == contents.end() ||
         std::find(usages.begin(), usages.end(), usage) == usages.end()) {
         return false;
