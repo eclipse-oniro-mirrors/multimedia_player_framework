@@ -3097,7 +3097,6 @@ Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilte
     MediaTrace trace("HiPlayerImpl::LinkAudioSinkFilter");
     MEDIA_LOG_I("HiPlayerImpl::LinkAudioSinkFilter");
     FALSE_RETURN_V(audioSink_ == nullptr, Status::OK);
-
     audioSink_ = FilterFactory::Instance().CreateFilter<AudioSinkFilter>("player.audiosink",
         FilterType::FILTERTYPE_ASINK);
     FALSE_RETURN_V(audioSink_ != nullptr, Status::ERROR_NULL_POINTER);
@@ -3136,7 +3135,6 @@ Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilte
         audioSink_->SetParameter(globalMeta);
     }
     audioSink_->SetSyncCenter(syncManager_);
-
     completeState_.emplace_back(std::make_pair("AudioSink", false));
     initialAVStates_.emplace_back(std::make_pair(EventType::EVENT_AUDIO_FIRST_FRAME, false));
 #ifdef SUPPORT_START_STOP_ON_DEMAND
