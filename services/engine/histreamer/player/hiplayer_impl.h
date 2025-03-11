@@ -223,6 +223,7 @@ private:
     Status LinkAudioDecoderFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
     Status LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
     Status LinkSubtitleSinkFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
+    void SetAudioRendererParameter();
     void NotifySubtitleUpdate(const Event& event);
     void DoInitializeForHttp();
     bool EnableBufferingBySysParam() const;

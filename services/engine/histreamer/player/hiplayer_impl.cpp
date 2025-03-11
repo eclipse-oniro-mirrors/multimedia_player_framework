@@ -3097,6 +3097,7 @@ Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilte
     MediaTrace trace("HiPlayerImpl::LinkAudioSinkFilter");
     MEDIA_LOG_I("HiPlayerImpl::LinkAudioSinkFilter");
     FALSE_RETURN_V(audioSink_ == nullptr, Status::OK);
+
     audioSink_ = FilterFactory::Instance().CreateFilter<AudioSinkFilter>("player.audiosink",
         FilterType::FILTERTYPE_ASINK);
     FALSE_RETURN_V(audioSink_ != nullptr, Status::ERROR_NULL_POINTER);
@@ -3108,6 +3109,24 @@ Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilte
         std::vector<std::shared_ptr<Meta>> trackInfos = demuxer_->GetStreamMetaInfo();
         SetDefaultAudioRenderInfo(trackInfos);
     }
+    SetAudioRenderParameter();
+    audioSink_->SetSyncCenter(syncManager_);
+
+    completeState_.emplace_back(std::make_pair("AudioSink", false));
+    initialAVStates_.emplace_back(std::make_pair(EventType::EVENT_AUDIO_FIRST_FRAME, false));
+#ifdef SUPPORT_START_STOP_ON_DEMAND
+    auto res = pipeline_->LinkFilters(preFilter, {audioSink_}, type, true);
+#else
+    auto res = pipeline_->LinkFilters(preFilter, {audioSink_}, type);
+#endif
+    if (mutedMediaType_ == OHOS::Media::MediaType::MEDIA_TYPE_AUD) {
+        audioSink_->SetMuted(true);
+    }
+    return res;
+}
+
+void HiPlayerImpl::SetAudioRendererParameter()
+{
     if (audioRenderInfo_ != nullptr) {
         audioSink_->SetParameter(audioRenderInfo_);
     }
@@ -3134,18 +3153,6 @@ Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilte
         }
         audioSink_->SetParameter(globalMeta);
     }
-    audioSink_->SetSyncCenter(syncManager_);
-    completeState_.emplace_back(std::make_pair("AudioSink", false));
-    initialAVStates_.emplace_back(std::make_pair(EventType::EVENT_AUDIO_FIRST_FRAME, false));
-#ifdef SUPPORT_START_STOP_ON_DEMAND
-    auto res = pipeline_->LinkFilters(preFilter, {audioSink_}, type, true);
-#else
-    auto res = pipeline_->LinkFilters(preFilter, {audioSink_}, type);
-#endif
-    if (mutedMediaType_ == OHOS::Media::MediaType::MEDIA_TYPE_AUD) {
-        audioSink_->SetMuted(true);
-    }
-    return res;
 }
 
 bool HiPlayerImpl::IsLiveStream()
