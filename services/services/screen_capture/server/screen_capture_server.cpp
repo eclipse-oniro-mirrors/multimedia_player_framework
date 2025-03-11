@@ -1343,7 +1343,7 @@ void ScreenCaptureServer::PostStartScreenCapture(bool isSuccess)
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
         if (isPrivacyAuthorityEnabled_ &&
             GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"]
-                .compare(appName_) != 0) {
+                .compare(appName_) != 0 && !isScreenCaptureAuthority_) {
             int32_t tryTimes = TryStartNotification();
             if (tryTimes > NOTIFICATION_MAX_TRY_NUM) {
                 captureState_ = AVScreenCaptureState::STARTED;
@@ -2961,7 +2961,7 @@ void ScreenCaptureServer::PostStopScreenCapture(AVScreenCaptureStateCode stateCo
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
     if (isPrivacyAuthorityEnabled_ &&
         GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"]
-            .compare(appName_) != 0) {
+            .compare(appName_) != 0 && !isScreenCaptureAuthority_) {
         // Remove real time notification
         int32_t ret = NotificationHelper::CancelNotification(notificationId_);
         MEDIA_LOGI("StopScreenCaptureInner CancelNotification id:%{public}d, ret:%{public}d ", notificationId_, ret);
