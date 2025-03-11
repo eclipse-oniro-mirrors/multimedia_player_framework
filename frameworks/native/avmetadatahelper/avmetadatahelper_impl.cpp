@@ -496,9 +496,9 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::CreatePixelMapFromSurfaceBuffer(
         options.pixelFormat = pixelMapInfo.pixelFormat;
         pixelMap = PixelMap::Create(reinterpret_cast<const uint32_t *>(pixelMap->GetPixels()),
                                     pixelMap->GetByteCount(), options);
+        CHECK_AND_RETURN_RET_LOG(pixelMap != nullptr, nullptr, "Create non-DMA pixelMap failed");
         pixelMap->InnerSetColorSpace(OHOS::ColorManager::ColorSpace(
             getColorSpaceInfoRes == Status::OK ? pixelMapInfo.colorSpaceName : ColorManager::SRGB));
-        CHECK_AND_RETURN_RET_LOG(pixelMap != nullptr, nullptr, "Create non-DMA pixelMap failed");
     } else {
         pixelMap = PixelMap::Create(reinterpret_cast<const uint32_t *>(surfaceBuffer->GetVirAddr()),
                                     static_cast<uint32_t>(colorLength), options);
