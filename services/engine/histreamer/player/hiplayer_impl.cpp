@@ -3109,7 +3109,7 @@ Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilte
         std::vector<std::shared_ptr<Meta>> trackInfos = demuxer_->GetStreamMetaInfo();
         SetDefaultAudioRenderInfo(trackInfos);
     }
-    SetAudioRenderParameter();
+    SetAudioRendererParameter();
     audioSink_->SetSyncCenter(syncManager_);
 
     completeState_.emplace_back(std::make_pair("AudioSink", false));
