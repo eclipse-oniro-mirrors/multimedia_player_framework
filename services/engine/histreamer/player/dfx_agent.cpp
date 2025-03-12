@@ -25,7 +25,7 @@ namespace Media {
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_PLAYER, "DfxAgent" };
     constexpr int64_t LAG_EVENT_THRESHOLD_MS = 500; // Lag threshold is 500 ms
-    constexpr int64_t LAG_EVENT_UPPER_MS = 5000; // Lag threshold is 500 ms
+    constexpr int64_t LAG_EVENT_UPPER_MS = 5000; // Lag upper threshold is 5000 ms
     ConcurrentUidSet g_appUidSet{};
     const std::string SOURCE = "SRC";
     const std::string DEMUXER = "DEMUX";
