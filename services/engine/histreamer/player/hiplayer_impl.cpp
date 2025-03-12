@@ -768,8 +768,6 @@ void HiPlayerImpl::SetInterruptState(bool isInterruptNeeded)
         stopWaitingDrmConfig_ = true;
         drmConfigCond_.notify_all();
     }
-    std::unique_lock<std::mutex> lock(seekMutex_);
-    syncManager_->seekCond_.notify_all();
 }
 
 int32_t HiPlayerImpl::SelectBitRate(uint32_t bitRate)
@@ -2740,7 +2738,7 @@ void HiPlayerImpl::NotifySeekDone(int32_t seekPos)
             lock,
             std::chrono::milliseconds(PLAYING_SEEK_WAIT_TIME),
             [this]() {
-                return !syncManager_->InSeeking() || isInterruptNeeded_.load();
+                return !syncManager_->InSeeking();
             });
     }
     auto startTime = std::chrono::steady_clock::now();
