@@ -25,6 +25,7 @@ namespace Media {
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_PLAYER, "DfxAgent" };
     constexpr int64_t LAG_EVENT_THRESHOLD_MS = 500; // Lag threshold is 500 ms
+    constexpr int64_t LAG_EVENT_UPPER_MS = 5000; // Lag threshold is 500 ms
     ConcurrentUidSet g_appUidSet{};
     const std::string SOURCE = "SRC";
     const std::string DEMUXER = "DEMUX";
@@ -152,7 +153,7 @@ void DfxAgent::ProcessVideoLagEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent 
     MEDIA_LOG_W("%{public}s", perfStr.c_str());
     agent->needPrintPerfLog_ = true;
     int64_t lagDuration = AnyCast<int64_t>(event.param);
-    FALSE_RETURN(lagDuration >= LAG_EVENT_THRESHOLD_MS);
+    FALSE_RETURN(lagDuration >= LAG_EVENT_THRESHOLD_MS && lagDuration <= LAG_EVENT_UPPER_MS);
     std::string msg = "lagEvent=Video ";
     agent->ReportLagEvent(lagDuration, msg + perfStr);
 }
