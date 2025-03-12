@@ -19,6 +19,7 @@
 #include "audio_renderer.h"
 #include "stream_id_manager.h"
 #include "sound_id_manager.h"
+#include "parallel_stream_manager.h"
 #include "media_utils.h"
 #include "cpp/mutex.h"
 #include "media_dfx.h"
@@ -65,11 +66,13 @@ private:
     int32_t ReleaseInner();
     std::shared_ptr<SoundIDManager> soundIDManager_;
     std::shared_ptr<StreamIDManager> streamIdManager_;
+    std::shared_ptr<ParallelStreamManager> parallelStreamManager_;
     ffrt::mutex soundPoolLock_;
     std::shared_ptr<ISoundPoolCallback> callback_ = nullptr;
     std::shared_ptr<ISoundPoolFrameWriteCallback> frameWriteCallback_ = nullptr;
     static constexpr int32_t MIN_STREAM_PRIORITY = 0;
     int32_t apiVersion_ = 0;
+    bool parallelStreamFlag_ = false;
 };
 } // namespace Media
 } // namespace OHOS

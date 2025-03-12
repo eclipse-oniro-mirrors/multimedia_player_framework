@@ -25,13 +25,10 @@ namespace {
 
 namespace OHOS {
 namespace Media {
-CacheBuffer::CacheBuffer(const Format &trackFormat,
-    const std::deque<std::shared_ptr<AudioBufferEntry>> &cacheData,
-    const size_t &cacheDataTotalSize, const int32_t &soundID, const int32_t &streamID,
+CacheBuffer::CacheBuffer(const Format &trackFormat, const int32_t &soundID, const int32_t &streamID,
     std::shared_ptr<ThreadPool> cacheBufferStopThreadPool) : trackFormat_(trackFormat),
-    cacheData_(cacheData), cacheDataTotalSize_(cacheDataTotalSize), soundID_(soundID), streamID_(streamID),
-    cacheBufferStopThreadPool_(cacheBufferStopThreadPool), cacheDataFrameIndex_(0), havePlayedCount_(0)
-
+    soundID_(soundID), streamID_(streamID), cacheBufferStopThreadPool_(cacheBufferStopThreadPool),
+    cacheDataFrameIndex_(0), havePlayedCount_(0)
 {
     MEDIA_LOGI("Construction CacheBuffer soundID:%{public}d, streamID:%{public}d", soundID, streamID);
 }
@@ -40,6 +37,12 @@ CacheBuffer::~CacheBuffer()
 {
     MEDIA_LOGI("Destruction CacheBuffer soundID:%{public}d, streamID:%{public}d", soundID_, streamID_);
     Release();
+}
+
+void CacheBuffer::SetSoundData(const std::shared_ptr<AudioBufferEntry> &cacheData, const size_t &cacheDataTotalSize)
+{
+    fullCacheData_ = cacheData;
+    cacheDataTotalSize_ = cacheDataTotalSize;
 }
 
 bool CacheBuffer::IsAudioRendererCanMix(const AudioStandard::AudioRendererInfo &audioRendererInfo)
@@ -150,8 +153,6 @@ int32_t CacheBuffer::PreparePlay(const int32_t streamID, const AudioStandard::Au
         audioRenderer_ = CreateAudioRenderer(streamID, audioRendererInfo, playParams);
         MEDIA_LOGI("CacheBuffer::PreparePlay CreateAudioRenderer end streamID:%{public}d", streamID);
         CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr, MSERR_INVALID_VAL, "Invalid CreateAudioRenderer");
-        int32_t ret = ReCombineCacheData();
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_VAL, "Invalid ReCombineCacheData");
     } else {
         MEDIA_LOGI("CacheBuffer::PreparePlay audioRenderer inited, streamID:%{public}d", streamID);
     }
@@ -170,8 +171,8 @@ int32_t CacheBuffer::DoPlay(const int32_t streamID)
     CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr, MSERR_INVALID_VAL, "Invalid audioRenderer.");
     size_t bufferSize;
     audioRenderer_->GetBufferSize(bufferSize);
-    MEDIA_LOGI("CacheBuffer::DoPlay, streamID_:%{public}d, bufferSize:%{public}zu, cacheDataFrameIndex_:%{public}zu",
-        streamID_, bufferSize, cacheDataFrameIndex_);
+    MEDIA_LOGI("CacheBuffer::DoPlay, streamID_:%{public}d, bufferSize:%{public}zu, cacheDataFrameIndex_:%{public}zu,"
+        " cacheDataTotalSize_:%{public}zu", streamID_, bufferSize, cacheDataFrameIndex_, cacheDataTotalSize_);
     cacheDataFrameIndex_ = 0;
     havePlayedCount_ = 0;
     isRunning_.store(true);

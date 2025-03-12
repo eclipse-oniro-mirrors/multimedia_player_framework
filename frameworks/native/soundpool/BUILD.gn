@@ -27,13 +27,16 @@ ohos_shared_library("soundpool_client") {
     debug = false
   }
   sources = [
+    "audio_renderer_manager.cpp",
     "cache_buffer.cpp",
+    "parallel_stream_manager.cpp",
     "sound_id_manager.cpp",
     "sound_parser.cpp",
     "soundpool.cpp",
     "soundpool_manager.cpp",
     "soundpool_manager_multi.cpp",
     "soundpool_xcollie.cpp",
+    "stream.cpp",
     "stream_id_manager.cpp",
   ]
 

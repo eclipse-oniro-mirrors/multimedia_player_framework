@@ -54,8 +54,7 @@ public:
             (void)HILOG_IMPL(LOG_CORE, LOG_INFO, LOG_DOMAIN_SOUNDPOOL, "SoundDecodeListener",
                 "Destruction SoundDecodeListener");
         }
-        virtual void OnSoundDecodeCompleted(const std::deque<std::shared_ptr<AudioBufferEntry>>
-            &availableAudioBuffers) = 0;
+        virtual void OnSoundDecodeCompleted(const std::shared_ptr<AudioBufferEntry> &fullCacheData) = 0;
         virtual void SetSoundBufferTotalSize(const size_t soundBufferTotalSize) = 0;
     };
 
@@ -80,6 +79,7 @@ public:
         std::shared_ptr<AVSharedMemory> buffer) override;
 
     int32_t SetCallback(const std::shared_ptr<ISoundPoolCallback> &callback);
+    void ReCombineCacheData();
     int32_t Release();
 
 private:
@@ -94,6 +94,7 @@ private:
     bool isRawFile_ = false;
     bool eosFlag_;
     std::deque<std::shared_ptr<AudioBufferEntry>> availableAudioBuffers_;
+    std::shared_ptr<AudioBufferEntry> fullCacheData_;
     bool decodeShouldCompleted_;
     int32_t currentSoundBufferSize_;
     std::condition_variable bufferCond_;
@@ -111,7 +112,7 @@ public:
     {
         return soundID_;
     }
-    int32_t GetSoundData(std::deque<std::shared_ptr<AudioBufferEntry>> &soundData) const;
+    int32_t GetSoundData(std::shared_ptr<AudioBufferEntry> &soundData) const;
     size_t GetSoundDataTotalSize() const;
     MediaAVCodec::Format GetSoundTrackFormat() const
     {
@@ -127,15 +128,15 @@ private:
     public:
         explicit SoundParserListener(const std::weak_ptr<SoundParser> soundParser) : soundParserInner_(soundParser) {}
         void OnSoundDecodeCompleted(
-            const std::deque<std::shared_ptr<AudioBufferEntry>> &availableAudioBuffers) override;
+            const std::shared_ptr<AudioBufferEntry> &fullCacheData) override;
         void SetSoundBufferTotalSize(const size_t soundBufferTotalSize) override;
-        int32_t GetSoundData(std::deque<std::shared_ptr<AudioBufferEntry>> &soundData) const;
+        int32_t GetSoundData(std::shared_ptr<AudioBufferEntry> &soundData) const;
         size_t GetSoundDataTotalSize() const;
         bool IsSoundParserCompleted() const;
 
     private:
         std::weak_ptr<SoundParser> soundParserInner_;
-        std::deque<std::shared_ptr<AudioBufferEntry>> soundData_;
+        std::shared_ptr<AudioBufferEntry> soundData_;
         size_t soundBufferTotalSize_ = 0;
         std::atomic<bool> isSoundParserCompleted_ = false;
     };
