@@ -129,6 +129,11 @@ public:
     {
         return false;
     }
+
+    uint32_t GetCloudImageEnhanceFlag() override
+    {
+        return 0;
+    };
 private:
     void *fileDataAddr_ = nullptr;
     std::string displayName_;
