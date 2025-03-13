@@ -71,6 +71,8 @@ static const char PARAM_HAPTICS_SETTING_SHOT_CARD_ONE[] = "const.multimedia.hapt
 static const char PARAM_HAPTICS_SETTING_SHOT_CARD_TWO[] = "const.multimedia.haptics_system_tone_sim_card_1_haptics";
 static const char PARAM_HAPTICS_SETTING_NOTIFICATIONTONE[] = "const.multimedia.notification_tone_haptics";
 static const int32_t SYSPARA_SIZE = 128;
+constexpr int32_t RETRY_TIME_S = 5;
+constexpr int64_t SLEEP_TIME_S = 1;
 
 std::shared_ptr<SystemSoundManager> SystemSoundManagerFactory::systemSoundManager_ = nullptr;
 std::mutex SystemSoundManagerFactory::systemSoundManagerMutex_;
@@ -123,12 +125,38 @@ std::shared_ptr<SystemSoundManager> SystemSoundManagerFactory::CreateSystemSound
     return systemSoundManager_;
 }
 
+static int32_t GetCurrentUserId()
+{
+    std::vector<int32_t> ids;
+    int32_t currentuserId = -1;
+    ErrCode result;
+    int32_t retry = RETRY_TIME_S;
+    while (retry--) {
+        result = AccountSA::OsAccountManager::QueryActiveOsAccountIds(ids);
+        if (result == ERR_OK && !ids.empty()) {
+            currentuserId = ids[0];
+            MEDIA_LOGD("current userId is :%{public}d", currentuserId);
+            break;
+        }
+
+        // sleep and wait for 1 millisecond
+        sleep(SLEEP_TIME_S);
+    }
+    if (result != ERR_OK || ids.empty()) {
+        MEDIA_LOGW("current userId is empty");
+    }
+    return currentuserId;
+}
+
 static shared_ptr<DataShare::DataShareHelper> CreateDataShareHelperUri(int32_t systemAbilityId)
 {
     MEDIA_LOGI("CreateDataShareHelperUri : Enter CreateDataShareHelperUri()");
     CreateOptions options;
     options.enabled_ = true;
-    return DataShare::DataShareHelper::Creator(RINGTONE_LIBRARY_PROXY_URI, options);
+    int32_t useId = GetCurrentUserId();
+    std::string uri = RINGTONE_LIBRARY_PROXY_URI + "?Proxy=true" + "&user=" + std::to_string(useId);
+    MEDIA_LOGI("uri : %{public}s", uri.c_str());
+    return DataShare::DataShareHelper::Creator(uri, options);
 }
 
 static shared_ptr<DataShare::DataShareHelper> CreateDataShareHelper(int32_t systemAbilityId)
