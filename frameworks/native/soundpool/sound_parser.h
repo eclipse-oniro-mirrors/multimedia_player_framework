@@ -92,7 +92,7 @@ private:
     std::shared_ptr<SoundDecodeListener> listener_;
     std::string trackMimeTypeInfo_;
     bool isRawFile_ = false;
-    bool eosFlag_;
+    bool eosFlag_ = false;
     std::deque<std::shared_ptr<AudioBufferEntry>> availableAudioBuffers_;
     std::shared_ptr<AudioBufferEntry> fullCacheData_;
     bool decodeShouldCompleted_;
