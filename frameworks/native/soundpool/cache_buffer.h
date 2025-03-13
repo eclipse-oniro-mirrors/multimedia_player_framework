@@ -111,8 +111,8 @@ private:
     std::deque<std::shared_ptr<AudioBufferEntry>> cacheData_;
     std::shared_ptr<AudioBufferEntry> fullCacheData_;
     size_t cacheDataTotalSize_;
-    int32_t soundID_;
-    int32_t streamID_;
+    int32_t soundID_ = 0;
+    int32_t streamID_ = 0;
     AudioStandard::AudioSampleFormat sampleFormat_ = AudioStandard::AudioSampleFormat::INVALID_WIDTH;
 
     // use for save audiobuffer
@@ -128,8 +128,8 @@ private:
     int32_t priority_ = 0;
     int32_t rendererFlags_ = NORMAL_PLAY_RENDERER_FLAGS;
 
-    size_t cacheDataFrameIndex_;
-    int32_t havePlayedCount_;
+    size_t cacheDataFrameIndex_ = 0;
+    int32_t havePlayedCount_ = 0;
 };
 } // namespace Media
 } // namespace OHOS

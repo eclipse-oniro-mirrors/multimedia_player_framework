@@ -77,11 +77,11 @@ private:
     void AddStopTask();
 
     Format trackFormat_;
-    int32_t soundID_;
-    int32_t streamID_;
+    int32_t soundID_ = 0;
+    int32_t streamID_ = 0;
     PlayParams playParameters_;
     AudioStandard::AudioRendererInfo audioRendererInfo_;
-    size_t cacheDataTotalSize_;
+    size_t cacheDataTotalSize_ = 0;
     std::shared_ptr<AudioBufferEntry> fullCacheData_;
 
     std::unique_ptr<AudioStandard::AudioRenderer> audioRenderer_;
@@ -97,8 +97,8 @@ private:
     int32_t loop_ = 0;
     int32_t priority_ = 0;
     int32_t rendererFlags_ = 0;
-    size_t cacheDataFrameIndex_;
-    int32_t havePlayedCount_;
+    size_t cacheDataFrameIndex_ = 0;
+    int32_t havePlayedCount_ = 0;
 };
 } // namespace Media
 } // namespace OHOS
