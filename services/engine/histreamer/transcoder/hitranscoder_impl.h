@@ -105,7 +105,6 @@ private:
     std::shared_ptr<Pipeline::FilterCallback> transCoderFilterCallback_;
 
     std::shared_ptr<Task> cancelTask_{nullptr};
-    std::shared_ptr<Task> pauseTask_{nullptr};
 
     std::shared_ptr<Meta> audioEncFormat_ = std::make_shared<Meta>();
     std::shared_ptr<Meta> videoEncFormat_ = std::make_shared<Meta>();
