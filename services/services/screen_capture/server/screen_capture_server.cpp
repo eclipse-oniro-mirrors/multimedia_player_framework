@@ -3507,9 +3507,9 @@ bool ScreenCaptureServer::DestroyPopWindow()
     }
 #else
     if (connection_ != nullptr) {
-            MEDIA_LOGI("DestroyPopWindow close dialog, deviceType: Phone.");
-            return connection_->CloseDialog();
-        }
+        MEDIA_LOGI("DestroyPopWindow close dialog, deviceType: Phone.");
+        return connection_->CloseDialog();
+    }
 #endif
     return true;
 }
