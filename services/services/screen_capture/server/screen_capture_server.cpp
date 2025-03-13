@@ -2028,7 +2028,7 @@ int32_t ScreenCaptureServer::StartPrivacyWindow()
     } else {
         want.SetElementName(GetScreenCaptureSystemParam()["const.multimedia.screencapture.dialogconnectionbundlename"],
             GetScreenCaptureSystemParam()["const.multimedia.screencapture.dialogconnectionabilityname"]);
-        auto connection_ = sptr<UIExtensionAbilityConnection>(new (std::nothrow) UIExtensionAbilityConnection(comStr));
+        connection_ = sptr<UIExtensionAbilityConnection>(new (std::nothrow) UIExtensionAbilityConnection(comStr));
         ret = OHOS::AAFwk::ExtensionManagerClient::GetInstance().ConnectServiceExtensionAbility(want, connection_,
             nullptr, -1);
         MEDIA_LOGI("ConnectServiceExtensionAbility end %{public}d, DeviceType : PC", ret);
@@ -2036,7 +2036,7 @@ int32_t ScreenCaptureServer::StartPrivacyWindow()
 #else
     want.SetElementName(GetScreenCaptureSystemParam()["const.multimedia.screencapture.dialogconnectionbundlename"],
                         GetScreenCaptureSystemParam()["const.multimedia.screencapture.dialogconnectionabilityname"]);
-    auto connection_ = sptr<UIExtensionAbilityConnection>(new (std::nothrow) UIExtensionAbilityConnection(comStr));
+    connection_ = sptr<UIExtensionAbilityConnection>(new (std::nothrow) UIExtensionAbilityConnection(comStr));
     ret = OHOS::AAFwk::ExtensionManagerClient::GetInstance().ConnectServiceExtensionAbility(want, connection_,
         nullptr, -1);
     MEDIA_LOGI("ConnectServiceExtensionAbility end %{public}d, Device : Phone", ret);
@@ -3450,6 +3450,7 @@ int32_t ScreenCaptureServer::StopScreenCaptureInner(AVScreenCaptureStateCode sta
     DisplayManager::GetInstance().UnregisterPrivateWindowListener(displayListener_);
     if (captureState_ == AVScreenCaptureState::CREATED || captureState_ == AVScreenCaptureState::POPUP_WINDOW ||
         captureState_ == AVScreenCaptureState::STARTING) {
+        DestroyPopWindow();
         captureState_ = AVScreenCaptureState::STOPPED;
         SetSystemScreenRecorderStatus(false);
         ScreenCaptureMonitorServer::GetInstance()->CallOnScreenCaptureFinished(appInfo_.appPid);
@@ -3486,6 +3487,25 @@ int32_t ScreenCaptureServer::StopScreenCaptureInner(AVScreenCaptureStateCode sta
     ScreenManager::GetInstance().UnregisterScreenListener(screenConnectListener_);
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StopScreenCaptureInner end.", FAKE_POINTER(this));
     return ret;
+}
+
+bool ScreenCaptureServer::DestroyPopWindow()
+{
+    if (captureState_ != AVScreenCaptureState::POPUP_WINDOW) {
+        MEDIA_LOGI("window not pop up, no need to destroy.");
+        return;
+    }
+#ifdef PC_STANDARD
+    if (captureConfig_.captureMode == CAPTURE_SPECIFIED_SCREEN || CheckCaptureSpecifiedWindowForSelectWindow()) {
+        MEDIA_LOGI("DestroyPopWindow end, type: picker, deviceType: PC.");
+    } else {
+        MEDIA_LOGI("DestroyPopWindow close dialog, deviceType: PC.");
+        connection_->CloseDialog();
+    }
+#else
+    MEDIA_LOGI("DestroyPopWindow close dialog, deviceType: Phone.");
+    connection_->CloseDialog();
+#endif
 }
 
 bool ScreenCaptureServer::IsLastStartedPidInstance(int32_t pid)

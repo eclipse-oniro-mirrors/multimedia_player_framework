@@ -17,6 +17,7 @@
 #define SCREEN_CAPTURE_SERVICE_SERVER_H
 
 #include "screen_capture_server_base.h"
+#include "ui_extension_ability_connection.h"
 
 namespace OHOS {
 namespace Media {
@@ -229,6 +230,7 @@ private:
     int32_t OnTelCallStart();
     int32_t OnTelCallStop();
 #endif
+    void DestroyPopWindow();
 
 private:
     std::mutex mutex_;
@@ -271,6 +273,7 @@ private:
     int64_t startTime_ = 0;
     sptr<ISystemAbilityStatusChange> mmiListener_ = nullptr;
     std::shared_ptr<MouseChangeListener> mouseChangeListener_ = nullptr;
+    sptr<UIExtensionAbilityConnection> connection_;
 
     /* used for CAPTURE STREAM */
     sptr<IBufferConsumerListener> surfaceCb_ = nullptr;

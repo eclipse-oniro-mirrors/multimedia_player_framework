@@ -19,6 +19,7 @@
 #include "media_utils.h"
 
 constexpr int32_t SIGNAL_NUM = 3;
+constexpr int32_t CLOSE_CONNECTION = 3;
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "UIExtensionAbilityConnection"};
@@ -51,6 +52,16 @@ void UIExtensionAbilityConnection::OnAbilityDisconnectDone(const AppExecFwk::Ele
     int32_t resultCode)
 {
     MEDIA_LOGI("UIExtensionAbilityConnection::OnAbilityDisconnectDone start");
+}
+
+void UIExtensionAbilityConnection::CloseDialog()
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    MEDIA_LOGI("UIExtensionAbilityConnection::CloseDialog start");
+    remoteObject->SendRequest(CLOSE_CONNECTION, data, reply, option);
+    MEDIA_LOGI("UIExtensionAbilityConnection::CloseDialog end");
 }
 } // namespace Media
 } // namespace OHOS

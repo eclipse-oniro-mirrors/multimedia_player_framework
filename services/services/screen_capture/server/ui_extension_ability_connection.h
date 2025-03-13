@@ -34,9 +34,11 @@ public:
     void OnAbilityConnectDone(const AppExecFwk::ElementName &element,
         const sptr<IRemoteObject> &remoteObject, int32_t resultCode) override;
     void OnAbilityDisconnectDone(const AppExecFwk::ElementName &element, int32_t resultCode) override;
+    void CloseDialog();
 
 private:
     std::string commandStr_;
+    sptr<IRemoteObject> remoteObject_;
 };
 } // namespace Media
 } // namespace OHOS
