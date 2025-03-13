@@ -86,7 +86,7 @@ private:
     void DealBufferRawFile(MediaAVCodec::AVCodecBufferFlag bufferFlag, MediaAVCodec::AVCodecBufferInfo sampleInfo,
         uint32_t index, std::shared_ptr<AVSharedMemory> buffer);
 
-    const int32_t soundID_;
+    int32_t soundID_ = 0;
     std::shared_ptr<MediaAVCodec::AVCodecAudioDecoder> audioDec_;
     std::shared_ptr<MediaAVCodec::AVDemuxer> demuxer_;
     std::shared_ptr<SoundDecodeListener> listener_;
