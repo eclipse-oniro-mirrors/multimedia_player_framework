@@ -55,7 +55,7 @@ void UIExtensionAbilityConnection::OnAbilityDisconnectDone(const AppExecFwk::Ele
     MEDIA_LOGI("UIExtensionAbilityConnection::OnAbilityDisconnectDone start");
 }
 
-void UIExtensionAbilityConnection::CloseDialog()
+bool UIExtensionAbilityConnection::CloseDialog()
 {
     MessageParcel data;
     MessageParcel reply;
@@ -63,7 +63,9 @@ void UIExtensionAbilityConnection::CloseDialog()
     if (remoteObject_ != nullptr) {
         MEDIA_LOGI("UIExtensionAbilityConnection::CloseDialog send close request.");
         remoteObject_->SendRequest(CLOSE_CONNECTION, data, reply, option);
+        return reply.ReadInt32() == 0;
     }
+    return true;
 }
 } // namespace Media
 } // namespace OHOS

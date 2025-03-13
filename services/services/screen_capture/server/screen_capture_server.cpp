@@ -3489,27 +3489,29 @@ int32_t ScreenCaptureServer::StopScreenCaptureInner(AVScreenCaptureStateCode sta
     return ret;
 }
 
-void ScreenCaptureServer::DestroyPopWindow()
+bool ScreenCaptureServer::DestroyPopWindow()
 {
     if (captureState_ != AVScreenCaptureState::POPUP_WINDOW) {
         MEDIA_LOGI("window not pop up, no need to destroy.");
-        return;
+        return true;
     }
 #ifdef PC_STANDARD
     if (captureConfig_.captureMode == CAPTURE_SPECIFIED_SCREEN || CheckCaptureSpecifiedWindowForSelectWindow()) {
         MEDIA_LOGI("DestroyPopWindow end, type: picker, deviceType: PC.");
+        return true;
     } else {
         if (connection_ != nullptr) {
             MEDIA_LOGI("DestroyPopWindow close dialog, deviceType: PC.");
-            connection_->CloseDialog();
+            return connection_->CloseDialog();
         }
     }
 #else
     if (connection_ != nullptr) {
             MEDIA_LOGI("DestroyPopWindow close dialog, deviceType: Phone.");
-            connection_->CloseDialog();
+            return connection_->CloseDialog();
         }
 #endif
+    return true;
 }
 
 bool ScreenCaptureServer::IsLastStartedPidInstance(int32_t pid)

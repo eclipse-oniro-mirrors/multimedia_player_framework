@@ -230,7 +230,7 @@ private:
     int32_t OnTelCallStart();
     int32_t OnTelCallStop();
 #endif
-    void DestroyPopWindow();
+    bool DestroyPopWindow();
 
 private:
     std::mutex mutex_;
