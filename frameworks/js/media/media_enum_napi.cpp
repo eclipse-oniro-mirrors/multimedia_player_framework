@@ -102,7 +102,7 @@ static const std::vector<struct JsEnumInt> g_bufferingInfoType = {
 static const std::vector<struct JsEnumInt> g_loadingRequestError = {
     { "LOADING_ERROR_SUCCESS", 0 },
     { "LOADING_ERROR_NOT_READY", 1 },
-    { "LOADING_ERROR_NO_RESOURCE ", 2 },
+    { "LOADING_ERROR_NO_RESOURCE", 2 },
     { "LOADING_ERROR_INVAID_HANDLE", 3 },
     { "LOADING_ERROR_ACCESS_DENIED", 4 },
     { "LOADING_ERROR_ACCESS_TIMEOUT", 5 },
