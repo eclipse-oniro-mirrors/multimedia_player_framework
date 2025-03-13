@@ -34,6 +34,7 @@ void UIExtensionAbilityConnection::OnAbilityConnectDone(const AppExecFwk::Elemen
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
+    remoteObject_ = remoteObject;
     data.WriteInt32(SIGNAL_NUM);
     data.WriteString16(u"bundleName");
     data.WriteString16(Str8ToStr16(GetScreenCaptureSystemParam()
@@ -60,7 +61,7 @@ void UIExtensionAbilityConnection::CloseDialog()
     MessageParcel reply;
     MessageOption option;
     MEDIA_LOGI("UIExtensionAbilityConnection::CloseDialog start");
-    remoteObject->SendRequest(CLOSE_CONNECTION, data, reply, option);
+    remoteObject_->SendRequest(CLOSE_CONNECTION, data, reply, option);
     MEDIA_LOGI("UIExtensionAbilityConnection::CloseDialog end");
 }
 } // namespace Media

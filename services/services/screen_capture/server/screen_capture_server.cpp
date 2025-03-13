@@ -3489,7 +3489,7 @@ int32_t ScreenCaptureServer::StopScreenCaptureInner(AVScreenCaptureStateCode sta
     return ret;
 }
 
-bool ScreenCaptureServer::DestroyPopWindow()
+void ScreenCaptureServer::DestroyPopWindow()
 {
     if (captureState_ != AVScreenCaptureState::POPUP_WINDOW) {
         MEDIA_LOGI("window not pop up, no need to destroy.");
