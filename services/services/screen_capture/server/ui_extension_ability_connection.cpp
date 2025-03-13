@@ -60,9 +60,10 @@ void UIExtensionAbilityConnection::CloseDialog()
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    MEDIA_LOGI("UIExtensionAbilityConnection::CloseDialog start");
-    remoteObject_->SendRequest(CLOSE_CONNECTION, data, reply, option);
-    MEDIA_LOGI("UIExtensionAbilityConnection::CloseDialog end");
+    if (remoteObject_ != nullptr) {
+        MEDIA_LOGI("UIExtensionAbilityConnection::CloseDialog send close request.");
+        remoteObject_->SendRequest(CLOSE_CONNECTION, data, reply, option);
+    }
 }
 } // namespace Media
 } // namespace OHOS

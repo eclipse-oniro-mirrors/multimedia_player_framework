@@ -3499,12 +3499,16 @@ void ScreenCaptureServer::DestroyPopWindow()
     if (captureConfig_.captureMode == CAPTURE_SPECIFIED_SCREEN || CheckCaptureSpecifiedWindowForSelectWindow()) {
         MEDIA_LOGI("DestroyPopWindow end, type: picker, deviceType: PC.");
     } else {
-        MEDIA_LOGI("DestroyPopWindow close dialog, deviceType: PC.");
-        connection_->CloseDialog();
+        if (connection_ != nullptr) {
+            MEDIA_LOGI("DestroyPopWindow close dialog, deviceType: PC.");
+            connection_->CloseDialog();
+        }
     }
 #else
-    MEDIA_LOGI("DestroyPopWindow close dialog, deviceType: Phone.");
-    connection_->CloseDialog();
+    if (connection_ != nullptr) {
+            MEDIA_LOGI("DestroyPopWindow close dialog, deviceType: Phone.");
+            connection_->CloseDialog();
+        }
 #endif
 }
 

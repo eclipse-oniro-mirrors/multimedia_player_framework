@@ -38,7 +38,7 @@ public:
 
 private:
     std::string commandStr_;
-    sptr<IRemoteObject> remoteObject_;
+    sptr<IRemoteObject> remoteObject_ = nullptr;
 };
 } // namespace Media
 } // namespace OHOS

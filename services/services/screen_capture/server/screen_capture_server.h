@@ -273,7 +273,7 @@ private:
     int64_t startTime_ = 0;
     sptr<ISystemAbilityStatusChange> mmiListener_ = nullptr;
     std::shared_ptr<MouseChangeListener> mouseChangeListener_ = nullptr;
-    sptr<UIExtensionAbilityConnection> connection_;
+    sptr<UIExtensionAbilityConnection> connection_ = nullptr;
 
     /* used for CAPTURE STREAM */
     sptr<IBufferConsumerListener> surfaceCb_ = nullptr;
