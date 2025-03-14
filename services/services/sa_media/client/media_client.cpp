@@ -370,7 +370,8 @@ sptr<IStandardMediaService> MediaClient::GetMediaProxy()
     deathRecipient_ = new(std::nothrow) MediaDeathRecipient(pid);
     CHECK_AND_RETURN_RET_LOG(deathRecipient_ != nullptr, nullptr, "failed to new MediaDeathRecipient.");
 
-    deathRecipient_->SetNotifyCb(std::bind(&MediaClient::MediaServerDied, std::placeholders::_1, g_mediaClientInstance));
+    deathRecipient_->SetNotifyCb(std::bind(&MediaClient::MediaServerDied, std::placeholders::_1,
+        g_mediaClientInstance));
     bool result = object->AddDeathRecipient(deathRecipient_);
     if (!result) {
         MEDIA_LOGE("failed to add deathRecipient");
@@ -386,7 +387,7 @@ void MediaClient::MediaServerDied(pid_t pid, std::weak_ptr<MediaClient> client)
 {
     MEDIA_LOGE("media server is died, pid:%{public}d!", pid);
     auto instance = client.lock();
-    CHECK_AND_RETURN_RET_LOG(instance, "mediaClient instance has been released, maybe current process is exiting");
+    CHECK_AND_RETURN_LOG(instance, "mediaClient instance has been released, maybe current process is exiting");
     Instance->DoMediaServerDied();
 }
 
