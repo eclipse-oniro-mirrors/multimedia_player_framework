@@ -3477,7 +3477,7 @@ void HiPlayerImpl::SetPerfRecEnabled(bool isPerfRecEnabled)
 
 bool HiPlayerImpl::IsNeedChangePlaySpeed(PlaybackRateMode &mode, bool &isXSpeedPlay)
 {
-    FALSE_RETURN_V(demuxer_ != nullptr && isFlvLive_, false);
+    FALSE_RETURN_V(demuxer_ != nullptr && isFlvLive_ && playMediaStreamVec_.empty(), false);
     uint64_t cacheDuration = demuxer_->GetCachedDuration();
     MEDIA_LOG_I("current cacheDuration is %{public}d", cacheDuration);
     if ((cacheDuration < bufferDurationForPlaying_ * TIME_CONVERSION_UNIT) && isXSpeedPlay) {
