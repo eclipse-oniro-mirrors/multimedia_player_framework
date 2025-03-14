@@ -3489,6 +3489,20 @@ int32_t ScreenCaptureServer::StopScreenCaptureInner(AVScreenCaptureStateCode sta
     return ret;
 }
 
+void ScreenCaptureServer::StopNotStartedScreenCapture(AVScreenCaptureStateCode stateCode)
+{
+    DestroyPopWindow();
+    captureState_ = AVScreenCaptureState::STOPPED;
+    SetSystemScreenRecorderStatus(false);
+    ScreenCaptureMonitorServer::GetInstance()->CallOnScreenCaptureFinished(appInfo_.appPid);
+    if (screenCaptureCb_ != nullptr && stateCode != AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID) {
+        screenCaptureCb_->OnStateChange(stateCode);
+    }
+    isSurfaceMode_ = false;
+    surface_ = nullptr;
+    SetErrorInfo(MSERR_OK, "normal stopped", StopReason::NORMAL_STOPPED, IsUserPrivacyAuthorityNeeded());
+}
+
 bool ScreenCaptureServer::DestroyPopWindow()
 {
     if (captureState_ != AVScreenCaptureState::POPUP_WINDOW) {

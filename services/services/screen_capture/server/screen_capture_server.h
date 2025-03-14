@@ -231,6 +231,7 @@ private:
     int32_t OnTelCallStop();
 #endif
     bool DestroyPopWindow();
+    void StopNotStartedScreenCapture(AVScreenCaptureStateCode stateCode);
 
 private:
     std::mutex mutex_;
