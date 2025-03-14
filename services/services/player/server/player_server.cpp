@@ -1910,9 +1910,6 @@ int32_t PlayerServer::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
     bool isValidState = lastOpStatus_ == PLAYER_INITIALIZED || lastOpStatus_ == PLAYER_STOPPED;
     CHECK_AND_RETURN_RET_LOG(isValidState, MSERR_INVALID_STATE,
         "can not set playback strategy, current state is %{public}d", static_cast<int32_t>(lastOpStatus_.load()));
-    bool isLivingMaxDelyTimeValid = IsLivingMaxDelyTimeValid(playbackStrategy);
-    CHECK_AND_RETURN_RET_LOG(isLivingMaxDelyTimeValid, MSERR_INVALID_VAL,
-        "can not set playback strategy, living delay time params is vaild");
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     return playerEngine_->SetPlaybackStrategy(playbackStrategy);
 }
@@ -1941,15 +1938,6 @@ int32_t PlayerServer::SetVideoWindowSize(int32_t width, int32_t height)
         "can not set video window size, current state is %{public}d", static_cast<int32_t>(lastOpStatus_.load()));
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     return playerEngine_->SetVideoWindowSize(width, height);
-}
-
-bool PlayerServer::IsLivingMaxDelyTimeValid(AVPlayStrategy playbackStrategy)
-{
-    if (playbackStrategy.thresholdForAutoQuickPlay < AVPlayStrategyConstant::DEFAULT_LIVING_CACHED_DURATION ||
-        playbackStrategy.thresholdForAutoQuickPlay < playbackStrategy.preferredBufferDurationForPlaying) {
-            return false;
-        }
-    return true;
 }
 
 int32_t PlayerServer::CheckSeek(int32_t mSeconds, PlayerSeekMode mode)

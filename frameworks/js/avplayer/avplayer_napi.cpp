@@ -1422,8 +1422,10 @@ void AVPlayerNapi::GetAVPlayStrategyFromStrategyTmp(AVPlayStrategy &strategy, co
     strategy.mutedMediaType = static_cast<MediaType>(strategyTmp.mutedMediaType);
     strategy.preferredAudioLanguage = strategyTmp.preferredAudioLanguage;
     strategy.preferredSubtitleLanguage = strategyTmp.preferredSubtitleLanguage;
-    strategy.preferredBufferDurationForPlaying = strategyTmp.preferredBufferDurationForPlaying;
-    strategy.thresholdForAutoQuickPlay = strategyTmp.thresholdForAutoQuickPlay;
+    strategy.preferredBufferDurationForPlaying = strategy.isSetBufferDurationForPlaying ?
+        strategyTmp.preferredBufferDurationForPlaying : -1;
+    strategy.thresholdForAutoQuickPlay = strategy.isSetThresholdForAutoQuickPlay ?
+        strategyTmp.thresholdForAutoQuickPlay : -1;
 }
 
 bool AVPlayerNapi::IsPalyingDurationValid(const AVPlayStrategyTmp &strategyTmp)
@@ -1438,6 +1440,9 @@ bool AVPlayerNapi::IsPalyingDurationValid(const AVPlayStrategyTmp &strategyTmp)
 
 bool AVPlayerNapi::IsLivingMaxDelayTimeValid(const AVPlayStrategyTmp &strategyTmp)
 {
+    if (!strategyTmp.isSetThresholdForAutoQuickPlay) {
+        return true;
+    }
     if (strategyTmp.thresholdForAutoQuickPlay < AVPlayStrategyConstant::DEFAULT_LIVING_CACHED_DURATION ||
         strategyTmp.thresholdForAutoQuickPlay < strategyTmp.preferredBufferDurationForPlaying) {
             return false;

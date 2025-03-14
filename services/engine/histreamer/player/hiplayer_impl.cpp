@@ -411,7 +411,7 @@ int32_t HiPlayerImpl::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
     }
 
     mimeType_ = mediaSource->GetMimeType();
-    bufferDurationForPlaying_ = strategy.preferredBufferDurationForPlaying;
+    SetFlvLiveParams();
     maxLivingDelayTime_ = strategy.thresholdForAutoQuickPlay;
     if (mimeType_ != AVMimeTypes::APPLICATION_M3U8 && IsFileUrl(url_)) {
         std::string realUriPath;
@@ -630,6 +630,9 @@ int32_t HiPlayerImpl::PrepareAsync()
         return errCode;
     }
     SetFlvObs();
+    bool isLivingMaxDelyTimeValid = IsLivingMaxDelayTimeValid();
+    FALSE_RETURN_V_MSG(isLivingMaxDelyTimeValid, TransStatus(Status::ERROR_INVALID_PARAMETER),
+        "can not set playback strategy, living delay time params is invaild");
     InitDuration();
     SetSeiMessageListener();
     UpdateMediaFirstPts();
@@ -2414,9 +2417,7 @@ void HiPlayerImpl::DoSetPlayMediaStream(const std::shared_ptr<MediaSource>& sour
 
 bool HiPlayerImpl::IsLivingMaxDelayTimeValid()
 {
-    if (!isPlaybackStrategySet_) {
-        bufferDurationForPlaying_ = AVPlayStrategyConstant::DEFAULT_LIVING_CACHED_DURATION;
-        maxLivingDelayTime_ = AVPlayStrategyConstant::DEFAULT_MAX_DELAY_TIME_FOR_LIVING;
+    if (!isFlvLive_) {
         return true;
     }
     if (maxLivingDelayTime_ < AVPlayStrategyConstant::DEFAULT_LIVING_CACHED_DURATION ||
@@ -2439,9 +2440,6 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
     demuxer_->SetSyncCenter(syncManager_);
     pipeline_->AddHeadFilters({demuxer_});
     demuxer_->Init(playerEventReceiver_, playerFilterCallback_, interruptMonitor_);
-    bool isLivingMaxDelyTimeValid = IsLivingMaxDelayTimeValid();
-    FALSE_RETURN_V_MSG(isLivingMaxDelyTimeValid, Status::ERROR_INVALID_PARAMETER,
-        "can not set playback strategy, living delay time params is vaild");
     DoSetPlayStrategy(source);
     if (!mimeType_.empty()) {
         source->SetMimeType(mimeType_);
@@ -3266,9 +3264,7 @@ int32_t HiPlayerImpl::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
     renderFirstFrame_ = playbackStrategy.showFirstFrameOnPrepare;
     audioLanguage_ = playbackStrategy.preferredAudioLanguage;
     subtitleLanguage_ = playbackStrategy.preferredSubtitleLanguage;
-    bufferDurationForPlaying_ = playbackStrategy.preferredBufferDurationForPlaying;
-    maxLivingDelayTime_ = playbackStrategy.thresholdForAutoQuickPlay;
-    isPlaybackStrategySet_ = true;
+    SetFlvLiveParams();
     if (playbackStrategy.enableSuperResolution) {
         videoPostProcessorType_ = VideoPostProcessorType::SUPER_RESOLUTION;
         isPostProcessorOn_ = playbackStrategy.enableSuperResolution;
@@ -3523,12 +3519,34 @@ bool HiPlayerImpl::IsFlvLive()
     return isFlvLive_;
 }
 
+void HiPlayerImpl::SetFlvLiveParams()
+{
+    if (strategy.preferredBufferDurationForPlaying < 0) {
+        isSetBufferDurationForPlaying_ = false;
+        bufferDurationForPlaying_ = 0;
+    } else {
+        bufferDurationForPlaying_ = strategy.preferredBufferDurationForPlaying;
+    }
+    maxLivingDelayTime_ = strategy.thresholdForAutoQuickPlay;
+}
+
+void HiPlayerImpl::UpdateFlvLiveParams()
+{
+    maxLivingDelayTime_ = maxLivingDelayTime_ < 0 ? AVPlayStrategyConstant::DEFAULT_MAX_DELAY_TIME_FOR_LIVING :
+        maxLivingDelayTime_;
+    bufferDurationForPlaying_ = isSetBufferDurationForPlaying_ ? bufferDurationForPlaying_ :
+        AVPlayStrategyConstant::DEFAULT_LIVING_CACHED_DURATION;
+    MEDIA_LOG_I("maxLivingDelayTime_ is " PUBLIC_LOG_F " and  bufferDurationForPlaying_ is " PUBLIC_LOG_F,
+        maxLivingDelayTime_, bufferDurationForPlaying_);
+}
+
 void HiPlayerImpl::SetFlvObs()
 {
     FALSE_RETURN(demuxer_ != nullptr);
     isFlvLive_ = demuxer_->IsFlvLive();
     FALSE_RETURN(isFlvLive_);
     MEDIA_LOG_I("SetFlvObs");
+    UpdateFlvLiveParams();
     liveController_.StartWithPlayerEngineObs(playerEngineObs_);
 }
 
