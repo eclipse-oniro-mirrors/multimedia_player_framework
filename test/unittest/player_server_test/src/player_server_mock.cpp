@@ -623,6 +623,12 @@ int32_t PlayerServerMock::SetParameter(const Format &param)
     return player_->SetParameter(param);
 }
 
+int32_t PlayerServerMock::SetVolumeMode(int32_t mode)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
+    return player_->SetVolumeMode(mode);
+}
+
 int32_t PlayerServerMock::SetPlayerCallback(const std::shared_ptr<PlayerCallback> &callback)
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");

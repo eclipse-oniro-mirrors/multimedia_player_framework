@@ -145,6 +145,7 @@ public:
     bool IsPlaying();
     bool IsLooping();
     int32_t SetParameter(const Format &param);
+    int32_t SetVolumeMode(int32_t mode);
     int32_t SetPlayerCallback(const std::shared_ptr<PlayerCallback> &callback);
     int32_t SetVideoSurface(sptr<Surface> surface);
     sptr<Surface> GetVideoSurface();
