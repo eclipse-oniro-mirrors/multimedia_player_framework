@@ -631,6 +631,12 @@ bool PlayerMock::IsLooping()
     return player_->IsLooping();
 }
 
+int32_t PlayerMock::SetVolumeMode(int32_t mode)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
+    return player_->SetVolumeMode(mode);
+}
+
 int32_t PlayerMock::SetParameter(const Format &param)
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
