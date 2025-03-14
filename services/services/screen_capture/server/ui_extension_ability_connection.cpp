@@ -19,6 +19,7 @@
 #include "media_utils.h"
 
 constexpr int32_t SIGNAL_NUM = 3;
+constexpr int32_t CLOSE_CONNECTION = 3;
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "UIExtensionAbilityConnection"};
@@ -33,6 +34,7 @@ void UIExtensionAbilityConnection::OnAbilityConnectDone(const AppExecFwk::Elemen
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
+    remoteObject_ = remoteObject;
     data.WriteInt32(SIGNAL_NUM);
     data.WriteString16(u"bundleName");
     data.WriteString16(Str8ToStr16(GetScreenCaptureSystemParam()
@@ -51,6 +53,19 @@ void UIExtensionAbilityConnection::OnAbilityDisconnectDone(const AppExecFwk::Ele
     int32_t resultCode)
 {
     MEDIA_LOGI("UIExtensionAbilityConnection::OnAbilityDisconnectDone start");
+}
+
+bool UIExtensionAbilityConnection::CloseDialog()
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (remoteObject_ != nullptr) {
+        MEDIA_LOGI("UIExtensionAbilityConnection::CloseDialog send close request.");
+        remoteObject_->SendRequest(CLOSE_CONNECTION, data, reply, option);
+        return reply.ReadInt32() == 0;
+    }
+    return true;
 }
 } // namespace Media
 } // namespace OHOS
