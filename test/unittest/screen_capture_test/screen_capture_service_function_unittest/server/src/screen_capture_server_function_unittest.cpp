@@ -1986,7 +1986,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, DestroyPopWindow_003, TestSize.Level2)
 {
     screenCaptureServer_->connection_ =
         sptr<UIExtensionAbilityConnection>(new (std::nothrow) UIExtensionAbilityConnection(""));
-    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::POPUP_WINDOW;
     bool ret = screenCaptureServer_->DestroyPopWindow();
     ASSERT_EQ(ret, true);
 }
