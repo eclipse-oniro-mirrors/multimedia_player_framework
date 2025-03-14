@@ -388,7 +388,7 @@ void MediaClient::MediaServerDied(pid_t pid, std::weak_ptr<MediaClient> client)
     MEDIA_LOGE("media server is died, pid:%{public}d!", pid);
     auto instance = client.lock();
     CHECK_AND_RETURN_LOG(instance, "mediaClient instance has been released, maybe current process is exiting");
-    Instance->DoMediaServerDied();
+    instance->DoMediaServerDied();
 }
 
 void MediaClient::AVPlayerServerDied()
