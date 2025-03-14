@@ -293,7 +293,7 @@ private:
     void StartFlvCheckLiveDelayTime();
     void StopFlvCheckLiveDelayTime();
     void UpdateFlvLiveParams();
-    void SetFlvLiveParams();
+    void SetFlvLiveParams(AVPlayStrategy playbackStrategy);
     void SetPostProcessor();
 
     bool isNetWorkPlay_ = false;

@@ -411,8 +411,7 @@ int32_t HiPlayerImpl::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
     }
 
     mimeType_ = mediaSource->GetMimeType();
-    SetFlvLiveParams();
-    maxLivingDelayTime_ = strategy.thresholdForAutoQuickPlay;
+    SetFlvLiveParams(strategy);
     if (mimeType_ != AVMimeTypes::APPLICATION_M3U8 && IsFileUrl(url_)) {
         std::string realUriPath;
         int32_t result = GetRealPath(url_, realUriPath);
@@ -619,8 +618,7 @@ int32_t HiPlayerImpl::PrepareAsync()
     }
     FALSE_RETURN_V(!BreakIfInterruptted(), TransStatus(Status::OK));
     NotifyBufferingUpdate(PlayerKeys::PLAYER_BUFFERING_START, 0);
-    MEDIA_LOG_I("PrepareAsync in, current pipeline state: " PUBLIC_LOG_S,
-        StringnessPlayerState(pipelineStates_).c_str());
+    MEDIA_LOG_I("PrepareAsync:current pipeline state: " PUBLIC_LOG_S, StringnessPlayerState(pipelineStates_).c_str());
     OnStateChanged(PlayerStateId::PREPARING);
     ret = pipeline_->Prepare();
     if (ret != Status::OK) {
@@ -630,9 +628,7 @@ int32_t HiPlayerImpl::PrepareAsync()
         return errCode;
     }
     SetFlvObs();
-    bool isLivingMaxDelyTimeValid = IsLivingMaxDelayTimeValid();
-    FALSE_RETURN_V_MSG(isLivingMaxDelyTimeValid, TransStatus(Status::ERROR_INVALID_PARAMETER),
-        "can not set playback strategy, living delay time params is invaild");
+    FALSE_RETURN_V(IsLivingMaxDelayTimeValid(), TransStatus(Status::ERROR_INVALID_PARAMETER));
     InitDuration();
     SetSeiMessageListener();
     UpdateMediaFirstPts();
@@ -3264,7 +3260,7 @@ int32_t HiPlayerImpl::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
     renderFirstFrame_ = playbackStrategy.showFirstFrameOnPrepare;
     audioLanguage_ = playbackStrategy.preferredAudioLanguage;
     subtitleLanguage_ = playbackStrategy.preferredSubtitleLanguage;
-    SetFlvLiveParams();
+    SetFlvLiveParams(playbackStrategy);
     if (playbackStrategy.enableSuperResolution) {
         videoPostProcessorType_ = VideoPostProcessorType::SUPER_RESOLUTION;
         isPostProcessorOn_ = playbackStrategy.enableSuperResolution;
@@ -3519,15 +3515,15 @@ bool HiPlayerImpl::IsFlvLive()
     return isFlvLive_;
 }
 
-void HiPlayerImpl::SetFlvLiveParams()
+void HiPlayerImpl::SetFlvLiveParams(AVPlayStrategy playbackStrategy)
 {
-    if (strategy.preferredBufferDurationForPlaying < 0) {
+    if (playbackStrategy.preferredBufferDurationForPlaying < 0) {
         isSetBufferDurationForPlaying_ = false;
         bufferDurationForPlaying_ = 0;
     } else {
-        bufferDurationForPlaying_ = strategy.preferredBufferDurationForPlaying;
+        bufferDurationForPlaying_ = playbackStrategy.preferredBufferDurationForPlaying;
     }
-    maxLivingDelayTime_ = strategy.thresholdForAutoQuickPlay;
+    maxLivingDelayTime_ = playbackStrategy.thresholdForAutoQuickPlay;
 }
 
 void HiPlayerImpl::UpdateFlvLiveParams()

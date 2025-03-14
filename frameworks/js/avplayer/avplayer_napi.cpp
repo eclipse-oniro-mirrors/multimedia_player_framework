@@ -1422,9 +1422,9 @@ void AVPlayerNapi::GetAVPlayStrategyFromStrategyTmp(AVPlayStrategy &strategy, co
     strategy.mutedMediaType = static_cast<MediaType>(strategyTmp.mutedMediaType);
     strategy.preferredAudioLanguage = strategyTmp.preferredAudioLanguage;
     strategy.preferredSubtitleLanguage = strategyTmp.preferredSubtitleLanguage;
-    strategy.preferredBufferDurationForPlaying = strategy.isSetBufferDurationForPlaying ?
+    strategy.preferredBufferDurationForPlaying = strategyTmp.isSetBufferDurationForPlaying ?
         strategyTmp.preferredBufferDurationForPlaying : -1;
-    strategy.thresholdForAutoQuickPlay = strategy.isSetThresholdForAutoQuickPlay ?
+    strategy.thresholdForAutoQuickPlay = strategyTmp.isSetThresholdForAutoQuickPlay ?
         strategyTmp.thresholdForAutoQuickPlay : -1;
 }
 
