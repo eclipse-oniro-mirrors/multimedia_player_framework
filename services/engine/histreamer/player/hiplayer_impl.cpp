@@ -3526,7 +3526,7 @@ bool HiPlayerImpl::IsFlvLive()
 void HiPlayerImpl::SetFlvObs()
 {
     FALSE_RETURN(demuxer_ != nullptr);
-    isFlvLive_ = demuxer_->IsFlvLive();
+    isFlvLive_ = demuxer_->IsFlvLive() &&  !demuxer_->IsFlvLiveStream();
     FALSE_RETURN(isFlvLive_);
     MEDIA_LOG_I("SetFlvObs");
     liveController_.StartWithPlayerEngineObs(playerEngineObs_);
