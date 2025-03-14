@@ -465,7 +465,7 @@ void AudioHapticPlayerImpl::SendHapticPlayerEvent(const int32_t &errorCode, cons
         Media::MediaMonitor::ModuleId::AUDIO, Media::MediaMonitor::EventId::HAPTIC_PLAYER,
         Media::MediaMonitor::EventType::HAPTIC_PLAYER_EVENT);
     bean->Add("ERROR_CODE", errorCode);
-    bean->Add("ERROR_CODE", strEvent);
+    bean->Add("ERROR_REASON", strEvent);
     Media::MediaMonitor::MediaMonitorManager::GetInstance().WriteLogMsg(bean);
 }
 
