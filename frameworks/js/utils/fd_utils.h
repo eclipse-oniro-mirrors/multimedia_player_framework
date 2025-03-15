@@ -23,25 +23,45 @@ namespace OHOS {
 namespace Media {
 
 class FdUtils {
-private:
-    static constexpr unsigned int HMDFS_IOC = 0xf2;
-    static constexpr unsigned int HMDFS_IOC_GET_LOCATION = _IOR(HMDFS_IOC, 7, __u32);
-    static constexpr int IOCTL_CLOUD = 2;
-
 public:
-    static int32_t ReOpenFd(int32_t fd, FILE *&reopenFile)
+    // This method is prohibited from being used on the server side.
+    static int32_t ReOpenFd(int32_t fd)
     {
+#ifdef __linux__
         int loc;
         int ioResult = ioctl(fd, HMDFS_IOC_GET_LOCATION, &loc);
         if (ioResult != 0 || loc != IOCTL_CLOUD) {
             std::stringstream ss;
             ss << "/proc/self/fd/" << fd;
             std::string fdPathStr = ss.str();
-            reopenFile = fopen(fdPathStr.c_str(), "r");
-            return reopenFile ? MSERR_OK : MSERR_INVALID_VAL;
+            char realPath[PATH_MAX];
+            ssize_t result = readlink(fdPathStr.c_str(), realPath, sizeof(realPath));
+            if (result == RESULT_ERROR) {
+                MEDIA_LOGW("invailed fd: %{public}d, error: %{public}s", fd, std::strerror(errno));
+                return fd;
+            }
+            FILE *reopenFile = fopen(fdPathStr.c_str(), "r");
+            if (reopenFile == nullptr) {
+                MEDIA_LOGW("invailed fd: %{public}d, error: %{public}s", fd, std::strerror(errno));
+                return fd;
+            }
+            auto new_fd = dup(fileno(reopenFile));
+            fclose(reopenFile);
+            return new_fd > 0 ? new_fd : fd;
         }
-        return MSERR_INVALID_VAL;
+#endif
+        return fd;
     }
+
+private:
+    // The HMDFS I/O control code
+    static constexpr unsigned int HMDFS_IOC = 0xf2;
+    // The I/O control code for retrieving the HMDFS location
+    static constexpr unsigned int HMDFS_IOC_GET_LOCATION = _IOR(HMDFS_IOC, 7, __u32);
+    // The I/O control code for cloud operations
+    static constexpr int IOCTL_CLOUD = 2;
+    static constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "FdUtils"};
+    static constexpr ssize_t RESULT_ERROR = -1;
 };
 } // namespace media
 } // namespace OHOS

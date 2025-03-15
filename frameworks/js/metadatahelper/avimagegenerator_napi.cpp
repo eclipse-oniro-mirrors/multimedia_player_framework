@@ -364,17 +364,8 @@ napi_value AVImageGeneratorNapi::JsSetAVFileDescriptor(napi_env env, napi_callba
     CHECK_AND_RETURN_RET_LOG(generator->helper_, result, "Invalid AVImageGeneratorNapi.");
 
     auto fileDescriptor = generator->fileDescriptor_;
-#ifdef __linux__
-    FILE *reopenFile = nullptr;
-    auto res = FdUtils::ReOpenFd(fileDescriptor.fd, reopenFile);
-    fileDescriptor.fd = res == MSERR_OK ? fileno(reopenFile) : fileDescriptor.fd;
-    res = generator->helper_->SetSource(fileDescriptor.fd, fileDescriptor.offset, fileDescriptor.length);
-    if (reopenFile != nullptr) {
-        fclose(reopenFile);
-    }
-#else
+    fileDescriptor.fd = FdUtils::ReOpenFd(fileDescriptor.fd);
     auto res = generator->helper_->SetSource(fileDescriptor.fd, fileDescriptor.offset, fileDescriptor.length);
-#endif
     generator->state_ = res == MSERR_OK ? HelperState::HELPER_STATE_RUNNABLE : HelperState::HELPER_ERROR;
     return result;
 }
