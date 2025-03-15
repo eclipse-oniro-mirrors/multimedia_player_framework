@@ -271,6 +271,7 @@ int32_t HiRecorderImpl::Configure(int32_t sourceId, const RecorderParam &recPara
         case RecorderPublicParamType::VID_ENC_FMT:
         case RecorderPublicParamType::VID_IS_HDR:
         case RecorderPublicParamType::VID_ENABLE_TEMPORAL_SCALE:
+        case RecorderPublicParamType::VID_ENABLE_STABLE_QUALITY_MODE:
             ConfigureVideo(recParam);
             break;
         case RecorderPublicParamType::OUT_PATH:
@@ -366,7 +367,7 @@ int32_t HiRecorderImpl::Prepare()
         if (videoSourceIsRGBA_) {
             videoEncFormat_->Set<Tag::VIDEO_PIXEL_FORMAT>(Plugins::VideoPixelFormat::RGBA);
         }
-        videoEncFormat_->Set<Tag::VIDEO_ENCODE_BITRATE_MODE>(Plugins::VideoEncodeBitrateMode::VBR);
+        ConfigureVidEncBitrateMode();
         videoEncoderFilter_->SetCodecFormat(videoEncFormat_);
         videoEncoderFilter_->Init(recorderEventReceiver_, recorderCallback_);
         FALSE_RETURN_V_MSG_E(videoEncoderFilter_->Configure(videoEncFormat_) == Status::OK,
@@ -697,51 +698,41 @@ void HiRecorderImpl::ConfigureVideo(const RecorderParam &recParam)
     MEDIA_LOG_I("ConfigureVideo enter.");
     switch (recParam.type) {
         case RecorderPublicParamType::VID_RECTANGLE: {
-            VidRectangle vidRectangle = static_cast<const VidRectangle&>(recParam);
-            videoEncFormat_->Set<Tag::VIDEO_WIDTH>(vidRectangle.width);
-            videoEncFormat_->Set<Tag::VIDEO_HEIGHT>(vidRectangle.height);
+            ConfigureVidRectangle(recParam);
             break;
         }
         case RecorderPublicParamType::VID_CAPTURERATE: {
-            CaptureRate captureRate = static_cast<const CaptureRate&>(recParam);
-            videoEncFormat_->Set<Tag::VIDEO_CAPTURE_RATE>(captureRate.capRate);
+            ConfigureVidCaptureRate(recParam);
             break;
         }
         case RecorderPublicParamType::VID_BITRATE: {
-            VidBitRate vidBitRate = static_cast<const VidBitRate&>(recParam);
-            if (vidBitRate.bitRate <= 0) {
-                OnEvent({"videoBitRate", EventType::EVENT_ERROR, Status::ERROR_INVALID_PARAMETER});
-            }
-            videoEncFormat_->Set<Tag::MEDIA_BITRATE>(vidBitRate.bitRate);
+            ConfigureVidBitRate(recParam);
             break;
         }
         case RecorderPublicParamType::VID_FRAMERATE: {
-            VidFrameRate vidFrameRate = static_cast<const VidFrameRate&>(recParam);
-            videoEncFormat_->Set<Tag::VIDEO_FRAME_RATE>(vidFrameRate.frameRate);
+            ConfigureVidFrameRate(recParam);
             break;
         }
         case RecorderPublicParamType::VID_ENC_FMT: {
-            videoEncFormat_ = std::make_shared<Meta>();
-            userMeta_ = std::make_shared<Meta>();
-            ConfigureVideoEncoderFormat(recParam);
+            ConfigureVidEncFmt(recParam);
             break;
         }
         case RecorderPublicParamType::VID_IS_HDR: {
-            VidIsHdr vidIsHdr = static_cast<const VidIsHdr&>(recParam);
-            if (vidIsHdr.isHdr) {
-                videoEncFormat_->Set<Tag::VIDEO_H265_PROFILE>(Plugins::HEVCProfile::HEVC_PROFILE_MAIN_10);
-            }
+            ConfigureVidIsHdr(recParam);
             break;
         }
         case RecorderPublicParamType::VID_ENABLE_TEMPORAL_SCALE: {
             ConfigureVideoEnableTemporalScale(recParam);
             break;
         }
+        case RecorderPublicParamType::VID_ENABLE_STABLE_QUALITY_MODE: {
+            ConfigureVidEnableStableQualityMode(recParam);
+            break;
+        }
         default:
             break;
     }
 }
-
 
 void HiRecorderImpl::ConfigureMeta(int32_t sourceId, const RecorderParam &recParam)
 {
@@ -772,6 +763,60 @@ void HiRecorderImpl::ConfigureMeta(int32_t sourceId, const RecorderParam &recPar
     }
 }
 
+void HiRecorderImpl::ConfigureVidEncBitrateMode()
+{
+    if (enableStableQualityMode_) {
+        MEDIA_LOG_I("enableStableQualityMode: true, SQR mode in!");
+        videoEncFormat_->Set<Tag::VIDEO_ENCODE_BITRATE_MODE>(Plugins::VideoEncodeBitrateMode::SQR);
+    } else {
+        MEDIA_LOG_I("enableStableQualityMode: false, VBR mode in!");
+        videoEncFormat_->Set<Tag::VIDEO_ENCODE_BITRATE_MODE>(Plugins::VideoEncodeBitrateMode::VBR);
+    }
+}
+
+void HiRecorderImpl::ConfigureVidRectangle(const RecorderParam &recParam)
+{
+    VidRectangle vidRectangle = static_cast<const VidRectangle&>(recParam);
+    videoEncFormat_->Set<Tag::VIDEO_WIDTH>(vidRectangle.width);
+    videoEncFormat_->Set<Tag::VIDEO_HEIGHT>(vidRectangle.height);
+}
+
+void HiRecorderImpl::ConfigureVidCaptureRate(const RecorderParam &recParam)
+{
+    CaptureRate captureRate = static_cast<const CaptureRate&>(recParam);
+    videoEncFormat_->Set<Tag::VIDEO_CAPTURE_RATE>(captureRate.capRate);
+}
+
+void HiRecorderImpl::ConfigureVidBitRate(const RecorderParam &recParam)
+{
+    VidBitRate vidBitRate = static_cast<const VidBitRate&>(recParam);
+    if (vidBitRate.bitRate <= 0) {
+        OnEvent({"videoBitRate", EventType::EVENT_ERROR, Status::ERROR_INVALID_PARAMETER});
+    }
+    videoEncFormat_->Set<Tag::MEDIA_BITRATE>(vidBitRate.bitRate);
+}
+
+void HiRecorderImpl::ConfigureVidFrameRate(const RecorderParam &recParam)
+{
+    VidFrameRate vidFrameRate = static_cast<const VidFrameRate&>(recParam);
+    videoEncFormat_->Set<Tag::VIDEO_FRAME_RATE>(vidFrameRate.frameRate);
+}
+
+void HiRecorderImpl::ConfigureVidEncFmt(const RecorderParam &recParam)
+{
+    videoEncFormat_ = std::make_shared<Meta>();
+    userMeta_ = std::make_shared<Meta>();
+    ConfigureVideoEncoderFormat(recParam);
+}
+
+void HiRecorderImpl::ConfigureVidIsHdr(const RecorderParam &recParam)
+{
+    VidIsHdr vidIsHdr = static_cast<const VidIsHdr&>(recParam);
+    if (vidIsHdr.isHdr) {
+        videoEncFormat_->Set<Tag::VIDEO_H265_PROFILE>(Plugins::HEVCProfile::HEVC_PROFILE_MAIN_10);
+    }
+}
+
 void HiRecorderImpl::ConfigureVideoEnableTemporalScale(const RecorderParam &recParam)
 {
     VidEnableTemporalScale vidEnableTemporalScale = static_cast<const VidEnableTemporalScale&>(recParam);
@@ -781,6 +826,12 @@ void HiRecorderImpl::ConfigureVideoEnableTemporalScale(const RecorderParam &recP
     }
 }
 
+void HiRecorderImpl::ConfigureVidEnableStableQualityMode(const RecorderParam &recParam)
+{
+    VidEnableStableQualityMode vidEnableStableQualityMode =
+        static_cast<const VidEnableStableQualityMode&>(recParam);
+    enableStableQualityMode_ = vidEnableStableQualityMode.enableStableQualityMode;
+}
 
 void HiRecorderImpl::ConfigureVideoEncoderFormat(const RecorderParam &recParam)
 {
