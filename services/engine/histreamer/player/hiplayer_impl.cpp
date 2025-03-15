@@ -3523,6 +3523,7 @@ void HiPlayerImpl::SetFlvLiveParams(AVPlayStrategy playbackStrategy)
         bufferDurationForPlaying_ = 0;
     } else {
         bufferDurationForPlaying_ = playbackStrategy.preferredBufferDurationForPlaying;
+        isSetBufferDurationForPlaying_ = true;
     }
     maxLivingDelayTime_ = playbackStrategy.thresholdForAutoQuickPlay;
 }
