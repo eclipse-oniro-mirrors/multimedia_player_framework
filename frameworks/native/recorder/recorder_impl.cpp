@@ -128,6 +128,14 @@ int32_t RecorderImpl::RecorderImpl::SetVideoEnableTemporalScale(int32_t sourceId
     return recorderService_->SetVideoEnableTemporalScale(sourceId, enableTemporalScale);
 }
 
+int32_t RecorderImpl::RecorderImpl::SetVideoEnableStableQualityMode(int32_t sourceId, bool enableStableQualityMode)
+{
+    MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetVideoEnableStableQualityMode in, sourceId is %{public}d, "
+        "enableStableQualityMode is %{public}d", FAKE_POINTER(this), sourceId, enableStableQualityMode);
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist..");
+    return recorderService_->SetVideoEnableStableQualityMode(sourceId, enableStableQualityMode);
+}
+
 int32_t RecorderImpl::SetCaptureRate(int32_t sourceId, double fps)
 {
     MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetCaptureRate in, sourceId is %{public}d, "

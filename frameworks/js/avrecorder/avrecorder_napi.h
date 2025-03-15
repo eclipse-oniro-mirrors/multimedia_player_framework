@@ -160,6 +160,7 @@ struct AVRecorderProfile {
     int32_t videoFrameRate = AVRECORDER_DEFAULT_FRAME_RATE;
     bool isHdr = false;
     bool enableTemporalScale = false;
+    bool enableStableQualityMode = false;
     VideoCodecFormat videoCodecFormat = VideoCodecFormat::VIDEO_DEFAULT;
 
     OutputFormatType fileFormat = OutputFormatType::FORMAT_DEFAULT;
