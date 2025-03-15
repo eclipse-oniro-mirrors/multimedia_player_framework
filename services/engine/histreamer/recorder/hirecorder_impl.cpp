@@ -367,13 +367,7 @@ int32_t HiRecorderImpl::Prepare()
         if (videoSourceIsRGBA_) {
             videoEncFormat_->Set<Tag::VIDEO_PIXEL_FORMAT>(Plugins::VideoPixelFormat::RGBA);
         }
-        if (enableStableQualityMode_) {
-            MEDIA_LOG_I("enableStableQualityMode: true, SQR mode in!");
-            videoEncFormat_->Set<Tag::VIDEO_ENCODE_BITRATE_MODE>(Plugins::VideoEncodeBitrateMode::SQR);
-        } else {
-            MEDIA_LOG_I("enableStableQualityMode: false, VBR mode in!");
-            videoEncFormat_->Set<Tag::VIDEO_ENCODE_BITRATE_MODE>(Plugins::VideoEncodeBitrateMode::VBR);
-        }
+        ConfigureVidEncBitrateMode();
         videoEncoderFilter_->SetCodecFormat(videoEncFormat_);
         videoEncoderFilter_->Init(recorderEventReceiver_, recorderCallback_);
         FALSE_RETURN_V_MSG_E(videoEncoderFilter_->Configure(videoEncFormat_) == Status::OK,
@@ -698,38 +692,48 @@ void HiRecorderImpl::ConfigureAudioCodecFormat(const RecorderParam &recParam)
             break;
     }
 }
+
 void HiRecorderImpl::ConfigureVideo(const RecorderParam &recParam)
 {
     MEDIA_LOG_I("ConfigureVideo enter.");
     switch (recParam.type) {
-        case RecorderPublicParamType::VID_RECTANGLE:
+        case RecorderPublicParamType::VID_RECTANGLE: {
             ConfigureVidRectangle(recParam);
             break;
-        case RecorderPublicParamType::VID_CAPTURERATE:
+        }
+        case RecorderPublicParamType::VID_CAPTURERATE: {
             ConfigureVidCaptureRate(recParam);
             break;
-        case RecorderPublicParamType::VID_BITRATE:
+        }
+        case RecorderPublicParamType::VID_BITRATE: {
             ConfigureVidBitRate(recParam);
             break;
-        case RecorderPublicParamType::VID_FRAMERATE:
+        }
+        case RecorderPublicParamType::VID_FRAMERATE: {
             ConfigureVidFrameRate(recParam);
             break;
-        case RecorderPublicParamType::VID_ENC_FMT:
+        }
+        case RecorderPublicParamType::VID_ENC_FMT: {
             ConfigureVidEncFmt(recParam);
             break;
-        case RecorderPublicParamType::VID_IS_HDR:
+        }
+        case RecorderPublicParamType::VID_IS_HDR: {
             ConfigureVidIsHdr(recParam);
             break;
-        case RecorderPublicParamType::VID_ENABLE_TEMPORAL_SCALE:
+        }
+        case RecorderPublicParamType::VID_ENABLE_TEMPORAL_SCALE: {
             ConfigureVideoEnableTemporalScale(recParam);
             break;
-        case RecorderPublicParamType::VID_ENABLE_STABLE_QUALITY_MODE:
+        }
+        case RecorderPublicParamType::VID_ENABLE_STABLE_QUALITY_MODE: {
             ConfigureVidEnableStableQualityMode(recParam);
             break;
+        }
         default:
             break;
     }
 }
+
 void HiRecorderImpl::ConfigureMeta(int32_t sourceId, const RecorderParam &recParam)
 {
     MEDIA_LOG_I("HiRecorderImpl ConfigureMeta enter");
