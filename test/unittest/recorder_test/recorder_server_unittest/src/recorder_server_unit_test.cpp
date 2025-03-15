@@ -1892,7 +1892,7 @@ HWTEST_F(RecorderServerUnitTest, recorder_SetVideoEnableStableQualityMode_001, T
         "recorder_SetVideoEnableStableQualityMode_001.mp4").c_str(), O_RDWR);
     ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
 
-    EXPECT_EQ(MSERR_OK, recorderServer_->SetFormat(PURE_AUDIO, g_videoRecorderConfig));
+    EXPECT_EQ(MSERR_OK, recorderServer_->SetFormat(AUDIO_VIDEO, g_videoRecorderConfig));
     EXPECT_EQ(MSERR_OK, recorderServer_->Prepare());
     EXPECT_EQ(MSERR_OK, recorderServer_->Start());
     sleep(RECORDER_TIME);
@@ -1921,7 +1921,7 @@ HWTEST_F(RecorderServerUnitTest, recorder_SetVideoEnableStableQualityMode_002, T
         "recorder_SetVideoEnableStableQualityMode_002.mp4").c_str(), O_RDWR);
     ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
 
-    EXPECT_EQ(MSERR_OK, recorderServer_->SetFormat(PURE_AUDIO, g_videoRecorderConfig));
+    EXPECT_EQ(MSERR_OK, recorderServer_->SetFormat(AUDIO_VIDEO, g_videoRecorderConfig));
     EXPECT_EQ(MSERR_OK, recorderServer_->Prepare());
     EXPECT_EQ(MSERR_OK, recorderServer_->Start());
     sleep(RECORDER_TIME);
