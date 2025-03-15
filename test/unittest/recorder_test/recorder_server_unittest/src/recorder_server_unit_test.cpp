@@ -1885,7 +1885,6 @@ HWTEST_F(RecorderServerUnitTest, recorder_SetMaxDuration_007, TestSize.Level2)
  */
 HWTEST_F(RecorderServerUnitTest, recorder_SetVideoEnableStableQualityMode_001, TestSize.Level2)
 {
-    g_videoRecorderConfig.aSource = AUDIO_SOURCE_VOICE_MESSAGE;
     g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
     g_videoRecorderConfig.videoFormat = H264;
     g_videoRecorderConfig.outputFd = open((RECORDER_ROOT +
@@ -1894,12 +1893,15 @@ HWTEST_F(RecorderServerUnitTest, recorder_SetVideoEnableStableQualityMode_001, T
 
     EXPECT_EQ(MSERR_OK, recorderServer_->SetFormat(AUDIO_VIDEO, g_videoRecorderConfig));
     EXPECT_EQ(MSERR_OK, recorderServer_->Prepare());
+    EXPECT_EQ(MSERR_OK, recorderServer_->RequesetBuffer(AUDIO_VIDEO, g_videoRecorderConfig));
     EXPECT_EQ(MSERR_OK, recorderServer_->Start());
-    sleep(RECORDER_TIME);
+    sleep(RECORDER_TIME/2);
     EXPECT_EQ(MSERR_OK, recorderServer_->Pause());
-    sleep(RECORDER_TIME);
+    sleep(RECORDER_TIME/2);
     EXPECT_EQ(MSERR_OK, recorderServer_->Resume());
     EXPECT_EQ(MSERR_OK, recorderServer_->Stop(false));
+    recorderServer_->StopBuffer(PURE_VIDEO);
+    EXPECT_EQ(MSERR_OK, recorderServer_->Reset());
     EXPECT_EQ(MSERR_OK, recorderServer_->Release());
     close(g_videoRecorderConfig.outputFd);
 }
@@ -1912,7 +1914,6 @@ HWTEST_F(RecorderServerUnitTest, recorder_SetVideoEnableStableQualityMode_001, T
  */
 HWTEST_F(RecorderServerUnitTest, recorder_SetVideoEnableStableQualityMode_002, TestSize.Level2)
 {
-    g_videoRecorderConfig.aSource = AUDIO_SOURCE_VOICE_MESSAGE;
     g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
     g_videoRecorderConfig.videoFormat = H264;
     g_videoRecorderConfig.enableTemporalScale = true;
@@ -1923,12 +1924,15 @@ HWTEST_F(RecorderServerUnitTest, recorder_SetVideoEnableStableQualityMode_002, T
 
     EXPECT_EQ(MSERR_OK, recorderServer_->SetFormat(AUDIO_VIDEO, g_videoRecorderConfig));
     EXPECT_EQ(MSERR_OK, recorderServer_->Prepare());
+    EXPECT_EQ(MSERR_OK, recorderServer_->RequesetBuffer(AUDIO_VIDEO, g_videoRecorderConfig));
     EXPECT_EQ(MSERR_OK, recorderServer_->Start());
-    sleep(RECORDER_TIME);
+    sleep(RECORDER_TIME/2);
     EXPECT_EQ(MSERR_OK, recorderServer_->Pause());
-    sleep(RECORDER_TIME);
+    sleep(RECORDER_TIME/2);
     EXPECT_EQ(MSERR_OK, recorderServer_->Resume());
     EXPECT_EQ(MSERR_OK, recorderServer_->Stop(false));
+    recorderServer_->StopBuffer(PURE_VIDEO);
+    EXPECT_EQ(MSERR_OK, recorderServer_->Reset());
     EXPECT_EQ(MSERR_OK, recorderServer_->Release());
     close(g_videoRecorderConfig.outputFd);
 }
