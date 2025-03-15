@@ -393,6 +393,8 @@ struct AVPlayStrategyTmp {
     std::string preferredSubtitleLanguage;
     double preferredBufferDurationForPlaying;
     double thresholdForAutoQuickPlay;
+    bool isSetBufferDurationForPlaying {true};
+    bool isSetThresholdForAutoQuickPlay {true};
 };
 
 struct AVPlayMediaStreamTmp {

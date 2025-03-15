@@ -52,7 +52,7 @@ struct AVPlayStrategy {
     uint32_t preferredHeight = 0;
     uint32_t preferredBufferDuration = 0;
     double preferredBufferDurationForPlaying = 0;
-    double thresholdForAutoQuickPlay = AVPlayStrategyConstant::DEFAULT_MAX_DELAY_TIME_FOR_LIVING;
+    double thresholdForAutoQuickPlay = -1;
     bool preferredHdr = false;
     bool showFirstFrameOnPrepare = false;
     bool enableSuperResolution = false;
