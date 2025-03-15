@@ -412,6 +412,7 @@ int32_t HiPlayerImpl::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
 
     mimeType_ = mediaSource->GetMimeType();
     SetFlvLiveParams(strategy);
+    FALSE_RETURN_V(IsLivingMaxDelayTimeValid(), TransStatus(Status::ERROR_INVALID_PARAMETER));
     if (mimeType_ != AVMimeTypes::APPLICATION_M3U8 && IsFileUrl(url_)) {
         std::string realUriPath;
         int32_t result = GetRealPath(url_, realUriPath);
@@ -628,7 +629,6 @@ int32_t HiPlayerImpl::PrepareAsync()
         return errCode;
     }
     SetFlvObs();
-    FALSE_RETURN_V(IsLivingMaxDelayTimeValid(), TransStatus(Status::ERROR_INVALID_PARAMETER));
     InitDuration();
     SetSeiMessageListener();
     UpdateMediaFirstPts();
@@ -2413,7 +2413,7 @@ void HiPlayerImpl::DoSetPlayMediaStream(const std::shared_ptr<MediaSource>& sour
 
 bool HiPlayerImpl::IsLivingMaxDelayTimeValid()
 {
-    if (!isFlvLive_) {
+    if (maxLivingDelayTime_ < 0) {
         return true;
     }
     if (maxLivingDelayTime_ < AVPlayStrategyConstant::DEFAULT_LIVING_CACHED_DURATION ||
@@ -3261,6 +3261,7 @@ int32_t HiPlayerImpl::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
     audioLanguage_ = playbackStrategy.preferredAudioLanguage;
     subtitleLanguage_ = playbackStrategy.preferredSubtitleLanguage;
     SetFlvLiveParams(playbackStrategy);
+    FALSE_RETURN_V(IsLivingMaxDelayTimeValid(), TransStatus(Status::ERROR_INVALID_PARAMETER));
     if (playbackStrategy.enableSuperResolution) {
         videoPostProcessorType_ = VideoPostProcessorType::SUPER_RESOLUTION;
         isPostProcessorOn_ = playbackStrategy.enableSuperResolution;
