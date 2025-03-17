@@ -54,7 +54,7 @@ public:
     int32_t Resume();
     int32_t Cancel();
     void OnEvent(const Event &event);
-    void OnCallback(std::shared_ptr<Pipeline::Filter> filter, const Pipeline::FilterCallBackCommand cmd,
+    Status OnCallback(std::shared_ptr<Pipeline::Filter> filter, const Pipeline::FilterCallBackCommand cmd,
         Pipeline::StreamType outType);
     int32_t GetCurrentTime(int32_t& currentPositionMs);
     int32_t GetDuration(int32_t& durationMs);
