@@ -433,7 +433,7 @@ OH_AVErrCode Configure(OH_AVRecorder *recorder, OH_AVRecorder_Config *config)
     CHECK_AND_RETURN_RET_LOG(recorderObj->recorder_ != nullptr, AV_ERR_INVALID_VAL, "recorder_ is null");
 
     if (recorderObj->hasConfigured_) {
-        MEDIA_LOGI("OH_AVRecorder_Config has been configured and will not be configured again.");
+        MEDIA_LOGE("OH_AVRecorder_Config has been configured and will not be configured again.");
         return AV_ERR_OK;
     }
 
