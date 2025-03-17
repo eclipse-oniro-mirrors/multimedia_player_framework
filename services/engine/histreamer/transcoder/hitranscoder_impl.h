@@ -54,7 +54,7 @@ public:
     int32_t Resume();
     int32_t Cancel();
     void OnEvent(const Event &event);
-    void OnCallback(std::shared_ptr<Pipeline::Filter> filter, const Pipeline::FilterCallBackCommand cmd,
+    Status OnCallback(std::shared_ptr<Pipeline::Filter> filter, const Pipeline::FilterCallBackCommand cmd,
         Pipeline::StreamType outType);
     int32_t GetCurrentTime(int32_t& currentPositionMs);
     int32_t GetDuration(int32_t& durationMs);
@@ -71,6 +71,7 @@ private:
     Status LinkVideoEncoderFilter(const std::shared_ptr<Pipeline::Filter>& preFilter, Pipeline::StreamType type);
     Status LinkVideoResizeFilter(const std::shared_ptr<Pipeline::Filter>& preFilter, Pipeline::StreamType type);
     Status LinkMuxerFilter(const std::shared_ptr<Pipeline::Filter>& preFilter, Pipeline::StreamType type);
+    Status SetSurfacePipeline(int32_t outputVideoWidth, int32_t outputVideoHeight);
     void CancelTransCoder();
     void HandleErrorEvent(int32_t errorCode);
     Status ConfigureVideoAudioMetaData();
