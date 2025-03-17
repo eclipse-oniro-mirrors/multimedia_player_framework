@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include "audio_haptic_player_impl.h"
 #include "audio_haptic_vibrator_impl.h"
 
 #include <fcntl.h>
@@ -286,6 +287,7 @@ int32_t AudioHapticVibratorImpl::StartVibrateForSoundPool()
     std::unique_lock<std::mutex> lock(vibrateMutex_);
     if (isStopped_) {
         MEDIA_LOGW("Vibrator has been stopped. Return ok immediately");
+        AudioHapticPlayerImpl::SendHapticPlayerEvent(MSERR_OK, "VIBRATOR_STOP");
         return MSERR_OK;
     }
 
@@ -293,6 +295,7 @@ int32_t AudioHapticVibratorImpl::StartVibrateForSoundPool()
 #ifdef SUPPORT_VIBRATOR
     if (vibratorPkg_ == nullptr || vibratorFD_ == nullptr) {
         MEDIA_LOGE("Vibration source file is not prepared. Can not start vibrating");
+        AudioHapticPlayerImpl::SendHapticPlayerEvent(MSERR_INVALID_OPERATION, "VIBRATOR_NOT_PREPARE");
         return MSERR_INVALID_OPERATION;
     }
     int32_t vibrateTime = 0; // record the pattern time which has been played
@@ -396,6 +399,7 @@ int32_t AudioHapticVibratorImpl::StartVibrateForAVPlayer()
         (void)Sensors::SetUsage(vibratorUsage_);
         MEDIA_LOGI("PlayPattern for AVPlayer successfully!");
         result = Sensors::PlayPattern(vibratorPkg_->patterns[i]);
+        AudioHapticPlayerImpl::SendHapticPlayerEvent(result, "PLAY_PATTERN_AVPLAYER");
         CHECK_AND_RETURN_RET_LOG(result == 0, result,
             "Failed to PlayPattern for AVPlayer. Error %{public}d", result);
 

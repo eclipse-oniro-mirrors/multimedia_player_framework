@@ -70,6 +70,8 @@ ohos_unittest("ringtone_player_unit_test") {
     "graphic_surface:surface",
     "hilog:libhilog",
     "ipc:ipc_single",
+    "media_foundation:media_monitor_client",
+    "media_foundation:media_monitor_common",
     "miscdevice:vibrator_interface_native",
     "os_account:os_account_innerkits",
     "qos_manager:qos",

@@ -19,6 +19,7 @@
 
 #include "audio_haptic_log.h"
 #include "media_errors.h"
+#include "media_monitor_manager.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_AUDIO_NAPI, "AudioHapticPlayerImpl"};
@@ -161,6 +162,7 @@ int32_t AudioHapticPlayerImpl::Start()
     CHECK_AND_RETURN_RET_LOG(audioHapticSound_ != nullptr, MSERR_INVALID_OPERATION,
         "Audio haptic sound is nullptr");
     result = audioHapticSound_->StartSound();
+    SendHapticPlayerEvent(MSERR_OK, "START_HAPTIC_PLAYER");
     CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, result, "Failed to start sound.");
 
     playerState_ = AudioHapticPlayerState::STATE_RUNNING;
@@ -325,6 +327,7 @@ int32_t AudioHapticPlayerImpl::StartVibrate()
 {
     if (muteHaptic_) {
         MEDIA_LOGI("StartVibrate: muteHaptic is true. No need to vibrate");
+        SendHapticPlayerEvent(MSERR_OK, "NO_NEED_VIBRATE");
         return MSERR_OK;
     }
 
@@ -336,10 +339,12 @@ int32_t AudioHapticPlayerImpl::StartVibrate()
             [this]() { return isAudioPlayFirstFrame_ || isVibrationStopped_; });
         if (!waitResult) {
             MEDIA_LOGE("StartVibrate: Failed to start vibrate (time out).");
+            SendHapticPlayerEvent(MSERR_INVALID_OPERATION, "VIBRATE_TIME_OUT");
             return MSERR_INVALID_OPERATION;
         }
         if (isVibrationStopped_) {
             MEDIA_LOGI("StartVibrate: audio haptic player has been stopped.");
+            SendHapticPlayerEvent(MSERR_OK, "HAPTIC_PLAYER_STOP");
             return MSERR_OK;
         }
 
@@ -352,6 +357,7 @@ int32_t AudioHapticPlayerImpl::StartVibrate()
             [this]() { return isVibrationStopped_; });
         if (isVibrationStopped_) {
             MEDIA_LOGI("StartVibrate: audio haptic player has been stopped.");
+            SendHapticPlayerEvent(MSERR_OK, "HAPTIC_PLAYER_STOP");
             return MSERR_OK;
         }
         MEDIA_LOGI("The first frame of audio is about to start. Triggering the vibration.");
@@ -360,6 +366,7 @@ int32_t AudioHapticPlayerImpl::StartVibrate()
         isVibrationRunning_.store(false);
     } while (loop_ && !isVibrationStopped_);
 
+    SendHapticPlayerEvent(MSERR_OK, "START_VIBRATE");
     return MSERR_OK;
 }
 
@@ -456,6 +463,16 @@ void AudioHapticPlayerImpl::NotifyStartVibrate(const uint64_t &latency)
     this->isAudioPlayFirstFrame_ = true;
     this->audioLatency_ = latency;
     this->condStartVibrate_.notify_one();
+}
+
+void AudioHapticPlayerImpl::SendHapticPlayerEvent(const int32_t &errorCode, const std::string &strEvent)
+{
+    std::shared_ptr<Media::MediaMonitor::EventBean> bean = std::make_shared<Media::MediaMonitor::EventBean>(
+        Media::MediaMonitor::ModuleId::AUDIO, Media::MediaMonitor::EventId::HAPTIC_PLAYER,
+        Media::MediaMonitor::EventType::HAPTIC_PLAYER_EVENT);
+    bean->Add("ERROR_CODE", errorCode);
+    bean->Add("ERROR_REASON", strEvent);
+    Media::MediaMonitor::MediaMonitorManager::GetInstance().WriteLogMsg(bean);
 }
 
 // Callback class symbols

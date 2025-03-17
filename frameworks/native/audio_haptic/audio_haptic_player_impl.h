@@ -49,6 +49,7 @@ public:
     void NotifyInterruptEvent(const AudioStandard::InterruptEvent &interruptEvent);
     void NotifyEndOfStreamEvent();
     void NotifyErrorEvent(int32_t errCode);
+    static void SendHapticPlayerEvent(const int32_t &errorCode, const std::string &strEvent);
 
 private:
     // func for sound

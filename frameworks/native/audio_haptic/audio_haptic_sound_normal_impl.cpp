@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include "audio_haptic_player_impl.h"
 #include "audio_haptic_sound_normal_impl.h"
 
 #include <fcntl.h>
@@ -138,6 +139,7 @@ int32_t AudioHapticSoundNormalImpl::StartSound()
 
     if (playerState_ == AudioHapticPlayerState::STATE_RUNNING) {
         MEDIA_LOGE("The avplayer has been running. Cannot start again");
+        AudioHapticPlayerImpl::SendHapticPlayerEvent(MSERR_START_FAILED, "AVPLAYER_STATE_RUNNING");
         return MSERR_START_FAILED;
     }
 
@@ -146,6 +148,7 @@ int32_t AudioHapticSoundNormalImpl::StartSound()
         ResetAVPlayer();
     }
     auto ret = avPlayer_->Play();
+    AudioHapticPlayerImpl::SendHapticPlayerEvent(ret, "AVPLAYER_START_FAILED");
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_START_FAILED, "Start failed %{public}d", ret);
 
     playerState_ = AudioHapticPlayerState::STATE_RUNNING;
