@@ -575,10 +575,10 @@ int32_t HiTransCoderImpl::Prepare()
         OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, errCode});
         return static_cast<int32_t>(errCode);
     }
-    return static_cast<int32_t>(SetSurfacePipeline());
+    return static_cast<int32_t>(SetSurfacePipeline(width, height));
 }
 
-Status HiTransCoderImpl::SetSurfacePipeline()
+Status HiTransCoderImpl::SetSurfacePipeline(int32_t outputVideoWidth, int32_t outputVideoHeight)
 {
     FALSE_RETURN_V_MSG_E(videoEncoderFilter_ != nullptr && videoDecoderFilter_ != nullptr,
         Status::ERROR_NULL_POINTER, "VideoDecoder setOutputSurface failed");
@@ -591,7 +591,7 @@ Status HiTransCoderImpl::SetSurfacePipeline()
         sptr<Surface> encoderFilterSurface = videoEncoderFilter_->GetInputSurface();
         FALSE_RETURN_V_MSG_E(encoderFilterSurface != nullptr, Status::ERROR_NULL_POINTER,
             "encoderFilterSurface is nullptr");
-        return videoResizeFilter_->SetOutputSurface(encoderFilterSurface, width, height);
+        return videoResizeFilter_->SetOutputSurface(encoderFilterSurface, outputVideoWidth, outputVideoHeight);
     }
     sptr<Surface> encoderFilterSurface = videoEncoderFilter_->GetInputSurface();
     FALSE_RETURN_V_MSG_E(encoderFilterSurface != nullptr, Status::ERROR_NULL_POINTER,
