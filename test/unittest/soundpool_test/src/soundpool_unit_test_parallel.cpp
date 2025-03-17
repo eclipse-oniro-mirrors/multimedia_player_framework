@@ -1249,8 +1249,8 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_071, TestSize.Level2)
         streamIDs_[playNum_] = soundPoolParallel_->Play(soundIDs_[0], playParameters);
         EXPECT_GT(streamIDs_[playNum_], 0);
         sleep(waitTime1);
-        int32_t setRateResult = soundPoolParallel_->SetRate(streamIDs_[playNum_], AudioRendererRate::RENDER_RATE_DOUBLE);
-        EXPECT_EQ(MSERR_OK, setRateResult);
+        int32_t result = soundPoolParallel_->SetRate(streamIDs_[playNum_], AudioRendererRate::RENDER_RATE_DOUBLE);
+        EXPECT_EQ(MSERR_OK, result);
         sleep(waitTime3);
     }
     playNum_++;
@@ -1258,8 +1258,8 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_071, TestSize.Level2)
         streamIDs_[playNum_] = soundPoolParallel_->Play(soundIDs_[1], playParameters);
         EXPECT_GT(streamIDs_[playNum_], 0);
         sleep(waitTime1);
-        int32_t setRateResult = soundPoolParallel_->SetRate(streamIDs_[playNum_], AudioRendererRate::RENDER_RATE_HALF);
-        EXPECT_EQ(MSERR_OK, setRateResult);
+        int32_t result = soundPoolParallel_->SetRate(streamIDs_[playNum_], AudioRendererRate::RENDER_RATE_HALF);
+        EXPECT_EQ(MSERR_OK, result);
         sleep(waitTime3);
     }
     if (cb == nullptr) {
@@ -1304,8 +1304,8 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_072, TestSize.Level2)
         streamIDs_[playNum_] = soundPoolParallel_->Play(soundIDs_[0], playParameters);
         EXPECT_GT(streamIDs_[playNum_], 0);
         sleep(waitTime1);
-        int32_t setRateResult = soundPoolParallel_->SetRate(streamIDs_[playNum_], AudioRendererRate::RENDER_RATE_DOUBLE);
-        EXPECT_EQ(MSERR_OK, setRateResult);
+        int32_t result = soundPoolParallel_->SetRate(streamIDs_[playNum_], AudioRendererRate::RENDER_RATE_DOUBLE);
+        EXPECT_EQ(MSERR_OK, result);
         sleep(waitTime3);
     }
     playNum_++;
@@ -1313,8 +1313,8 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_072, TestSize.Level2)
         streamIDs_[playNum_] = soundPoolParallel_->Play(soundIDs_[1], playParameters);
         EXPECT_GT(streamIDs_[playNum_], 0);
         sleep(waitTime1);
-        int32_t setRateResult = soundPoolParallel_->SetRate(streamIDs_[playNum_], AudioRendererRate::RENDER_RATE_DOUBLE);
-        EXPECT_EQ(MSERR_OK, setRateResult);
+        int32_t result = soundPoolParallel_->SetRate(streamIDs_[playNum_], AudioRendererRate::RENDER_RATE_DOUBLE);
+        EXPECT_EQ(MSERR_OK, result);
         sleep(waitTime3);
     }
     if (cb == nullptr) {
