@@ -20,6 +20,7 @@
 #include "audio_renderer.h"
 #include "audio_info.h"
 #include "audio_stream_info.h"
+#include "audio_errors.h"
 #include "isoundpool.h"
 #include "media_description.h"
 #include "cpp/mutex.h"
@@ -113,6 +114,7 @@ private:
     size_t cacheDataTotalSize_;
     int32_t soundID_;
     int32_t streamID_;
+    AudioStandard::AudioSampleFormat sampleFormat_ = AudioStandard::AudioSampleFormat::INVALID_WIDTH;
 
     // use for save audiobuffer
     std::unique_ptr<AudioStandard::AudioRenderer> audioRenderer_;
