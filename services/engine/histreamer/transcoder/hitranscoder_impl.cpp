@@ -93,8 +93,7 @@ public:
         Pipeline::StreamType outType)
     {
         FALSE_RETURN_V(hiTransCoderImpl_ != nullptr, Status::OK);
-        hiTransCoderImpl_->OnCallback(filter, cmd, outType);
-        return Status::OK;
+        return hiTransCoderImpl_->OnCallback(filter, cmd, outType);
     }
 
 private:
