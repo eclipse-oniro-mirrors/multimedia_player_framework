@@ -62,7 +62,11 @@ ParallelStreamManager::~ParallelStreamManager()
         vector.push_back(it->second);
         it = playingStream_.erase(it);
     }
-
+    parallelStreamManagerLock_.unlock();
+    for (auto& item : vector) {
+        item->Stop();
+    }
+    vector.clear();
     if (streamPlayThreadPool_ != nullptr) {
         streamPlayThreadPool_->Stop();
     }
@@ -72,11 +76,6 @@ ParallelStreamManager::~ParallelStreamManager()
     if (streamStopThreadPool_ != nullptr) {
         streamStopThreadPool_->Stop();
     }
-    parallelStreamManagerLock_.unlock();
-    for (auto& item : vector) {
-        item->Stop();
-    }
-    vector.clear();
 }
 
 int32_t ParallelStreamManager::InitThreadPool()
@@ -282,7 +281,6 @@ int32_t ParallelStreamManager::DoPlay(int32_t streamID)
         CHECK_AND_RETURN_RET_LOG(stream != nullptr, MSERR_INVALID_VAL, "doplay stream invalid.");
     }
 
-    stream->PreparePlay();
     if (stream->DoPlay() == MSERR_OK) {
         MEDIA_LOGI("ParallelStreamManager::DoPlay success streamID:%{public}d", streamID);
         return MSERR_OK;

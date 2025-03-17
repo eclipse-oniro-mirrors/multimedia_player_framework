@@ -42,6 +42,10 @@ void SoundPoolCallbackTest::OnPlayFinished(int32_t streamID)
 
 bool SoundPoolMock::CreateSoundPool(int maxStreams, AudioStandard::AudioRendererInfo audioRenderInfo)
 {
+    if (soundPool_ != nullptr) {
+        soundPool_->Release();
+        soundPool_ = nullptr;
+    }
     soundPool_ = SoundPoolFactory::CreateSoundPool(maxStreams, audioRenderInfo);
     return soundPool_ != nullptr;
 }
@@ -129,3 +133,92 @@ size_t SoundPoolMock::GetFileSize(const std::string& fileName)
     }
     return fileSize;
 }
+
+bool SoundPoolParallelMock::CreateParallelSoundPool(int maxStreams, AudioStandard::AudioRendererInfo audioRenderInfo)
+{
+    if (soundPoolParallel_ != nullptr) {
+        soundPoolParallel_->Release();
+        soundPoolParallel_ = nullptr;
+    }
+    soundPoolParallel_ = SoundPoolFactory::CreateParallelSoundPool(maxStreams, audioRenderInfo);
+    return soundPoolParallel_ != nullptr;
+}
+
+int32_t SoundPoolParallelMock::Load(std::string url)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(soundPoolParallel_ != nullptr, MSERR_INVALID_OPERATION, "soundPool nullptr");
+    return soundPoolParallel_->Load(url);
+}
+
+int32_t SoundPoolParallelMock::Load(int32_t fd, int64_t offset, int64_t length)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(soundPoolParallel_ != nullptr, MSERR_INVALID_OPERATION, "soundPool nullptr");
+    return soundPoolParallel_->Load(fd, offset, length);
+}
+
+int32_t SoundPoolParallelMock::Play(int32_t soundID, PlayParams playParameters)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(soundPoolParallel_ != nullptr, MSERR_INVALID_OPERATION, "soundPool nullptr");
+    return soundPoolParallel_->Play(soundID, playParameters);
+}
+
+int32_t SoundPoolParallelMock::Stop(int32_t streamID)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(soundPoolParallel_ != nullptr, MSERR_INVALID_OPERATION, "soundPool nullptr");
+    return soundPoolParallel_->Stop(streamID);
+}
+
+int32_t SoundPoolParallelMock::SetLoop(int32_t streamID, int32_t loop)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(soundPoolParallel_ != nullptr, MSERR_INVALID_OPERATION, "soundPool nullptr");
+    return soundPoolParallel_->SetLoop(streamID, loop);
+}
+
+int32_t SoundPoolParallelMock::SetPriority(int32_t streamID, int32_t priority)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(soundPoolParallel_ != nullptr, MSERR_INVALID_OPERATION, "soundPool nullptr");
+    return soundPoolParallel_->SetPriority(streamID, priority);
+}
+
+int32_t SoundPoolParallelMock::SetRate(int32_t streamID, AudioStandard::AudioRendererRate renderRate)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(soundPoolParallel_ != nullptr, MSERR_INVALID_OPERATION, "soundPool nullptr");
+    return soundPoolParallel_->SetRate(streamID, renderRate);
+}
+
+int32_t SoundPoolParallelMock::SetVolume(int32_t streamID, float leftVolume, float rigthVolume)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(soundPoolParallel_ != nullptr, MSERR_INVALID_OPERATION, "soundPool nullptr");
+    return soundPoolParallel_->SetVolume(streamID, leftVolume, rigthVolume);
+}
+
+int32_t SoundPoolParallelMock::Unload(int32_t soundID)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(soundPoolParallel_ != nullptr, MSERR_INVALID_OPERATION, "soundPool nullptr");
+    return soundPoolParallel_->Unload(soundID);
+}
+
+int32_t SoundPoolParallelMock::Release()
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(soundPoolParallel_ != nullptr, MSERR_INVALID_OPERATION, "soundPool nullptr");
+    return soundPoolParallel_->Release();
+}
+
+int32_t SoundPoolParallelMock::SetSoundPoolCallback(const std::shared_ptr<ISoundPoolCallback> &soundPoolCallback)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(soundPoolParallel_ != nullptr, MSERR_INVALID_OPERATION, "soundPool nullptr");
+    return soundPoolParallel_->SetSoundPoolCallback(soundPoolCallback);
+}
+
+size_t SoundPoolParallelMock::GetFileSize(const std::string& fileName)
+{
+    size_t fileSize = 0;
+    if (!fileName.empty()) {
+        struct stat fileStatus {};
+        if (stat(fileName.c_str(), &fileStatus) == 0) {
+            fileSize = static_cast<size_t>(fileStatus.st_size);
+        }
+    }
+    return fileSize;
+}
+

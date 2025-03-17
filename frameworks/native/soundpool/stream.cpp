@@ -219,6 +219,7 @@ int32_t Stream::DoPlay()
 {
     MediaTrace trace("Stream::DoPlay");
     std::lock_guard lock(streamLock_);
+    PreparePlay();
     if (fullCacheData_ == nullptr || audioRenderer_ == nullptr) {
         MEDIA_LOGI("Stream::DoPlay failed, cacheData or audioRender nullptr, streamID:%{public}d", streamID_);
         if (callback_ != nullptr) {
@@ -335,6 +336,7 @@ void Stream::AddStopTask()
         ptr->AddTask(streamStopTask);
     } else {
         MEDIA_LOGI("streamStopThreadPool_ is not available.");
+        startStopFlag_.store(true);
     }
 }
 

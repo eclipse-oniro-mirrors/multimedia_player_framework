@@ -57,15 +57,41 @@ private:
     std::atomic<bool> isExit_ { false };
 };
 
+class SoundPoolParallelMock {
+public:
+    SoundPoolParallelMock() = default;
+    ~SoundPoolParallelMock() = default;
+    bool CreateParallelSoundPool(int maxStreams, AudioStandard::AudioRendererInfo audioRenderInfo);
+    int32_t Load(std::string url);
+    int32_t Load(int32_t fd, int64_t offset, int64_t length);
+    int32_t Play(int32_t soundID, PlayParams playParameters);
+    int32_t Stop(int32_t streamID);
+    int32_t SetLoop(int32_t streamID, int32_t loop);
+    int32_t SetPriority(int32_t streamID, int32_t priority);
+    int32_t SetRate(int32_t streamID, AudioStandard::AudioRendererRate renderRate);
+    int32_t SetVolume(int32_t streamID, float leftVolume, float rigthVolume);
+    int32_t Unload(int32_t soundID);
+    int32_t Release();
+    int32_t SetSoundPoolCallback(const std::shared_ptr<ISoundPoolCallback> &soundPoolCallback);
+    size_t GetFileSize(const std::string& fileName);
+private:
+    std::shared_ptr<ISoundPool> soundPoolParallel_ = nullptr;
+};
+
 class SoundPoolCallbackTest : public ISoundPoolCallback, public NoCopyable {
 public:
-    explicit SoundPoolCallbackTest(std::shared_ptr<SoundPoolMock> soundPool)
+    SoundPoolCallbackTest(std::shared_ptr<SoundPoolMock> soundPool)
     {
         soundPool_ = soundPool;
+    }
+    SoundPoolCallbackTest(std::shared_ptr<SoundPoolParallelMock> soundPoolParallel)
+    {
+        soundPoolParallel_ = soundPoolParallel;
     }
     ~SoundPoolCallbackTest()
     {
         soundPool_ = nullptr;
+        soundPoolParallel_ = nullptr;
     }
     int32_t GetHaveLoadedSoundNum()
     {
@@ -101,6 +127,7 @@ public:
         vector_.clear();
     }
     std::shared_ptr<SoundPoolMock> soundPool_ = nullptr;
+    std::shared_ptr<SoundPoolParallelMock> soundPoolParallel_ = nullptr;
     void OnLoadCompleted(int32_t soundId) override;
     void OnPlayFinished(int32_t streamID) override;
     void OnError(int32_t errorCode) override;

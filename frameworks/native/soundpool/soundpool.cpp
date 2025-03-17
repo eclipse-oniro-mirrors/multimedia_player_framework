@@ -62,6 +62,26 @@ std::shared_ptr<ISoundPool> SoundPoolFactory::CreateSoundPool(int maxStreams,
     }
 }
 
+std::shared_ptr<ISoundPool> SoundPoolFactory::CreateParallelSoundPool(int maxStreams,
+    AudioStandard::AudioRendererInfo audioRenderInfo)
+{
+    MEDIA_LOGI("SoundPoolFactory::CreateParallelSoundPool");
+    std::shared_ptr<SoundPool> impl;
+    if (!SoundPool::CheckInitParam(maxStreams, audioRenderInfo)) {
+        return nullptr;
+    }
+    int32_t apiVersion = GetAPIVersion();
+    CHECK_AND_RETURN_RET_LOG(apiVersion > 0 || apiVersion == FAULT_API_VERSION, nullptr, "invalid apiVersion");
+    int32_t ret = SoundPoolManagerMulti::GetInstance().GetSoundPoolInstance(impl);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK && impl != nullptr, nullptr, "failed to get SoundPoolMulti");
+
+    ret = impl->InitParallel(maxStreams, audioRenderInfo);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed to init SoundPoolMulti");
+    impl->SetApiVersion(apiVersion);
+
+    return impl;
+}
+
 SoundPool::SoundPool()
 {
     MEDIA_LOGI("Construction SoundPool.");
@@ -79,6 +99,17 @@ int32_t SoundPool::Init(int maxStreams, AudioStandard::AudioRendererInfo audioRe
     std::lock_guard lock(soundPoolLock_);
     streamIdManager_ = std::make_shared<StreamIDManager>(maxStreams, audioRenderInfo);
     soundIDManager_ = std::make_shared<SoundIDManager>();
+    return MSERR_OK;
+}
+
+int32_t SoundPool::InitParallel(int maxStreams, AudioStandard::AudioRendererInfo audioRenderInfo)
+{
+    std::lock_guard lock(soundPoolLock_);
+    soundIDManager_ = std::make_shared<SoundIDManager>();
+    parallelStreamManager_ = std::make_shared<ParallelStreamManager>(maxStreams, audioRenderInfo);
+    int ret = parallelStreamManager_->InitThreadPool();
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_VAL, "failed to init parallelStreamManager");
+    parallelStreamFlag_ = true;
     return MSERR_OK;
 }
 
@@ -161,6 +192,7 @@ int32_t SoundPool::Stop(int32_t streamID)
             return cacheBuffer->Stop(streamID);
         }
     }
+    MEDIA_LOGI("SoundPool::Stop can not find stream or cachebuffer streamID::%{public}d", streamID);
     return MSERR_INVALID_OPERATION;
 }
 
@@ -180,6 +212,7 @@ int32_t SoundPool::SetLoop(int32_t streamID, int32_t loop)
             return cacheBuffer->SetLoop(streamID, loop);
         }
     }
+    MEDIA_LOGI("SoundPool::SetLoop can not find stream or cachebuffer streamID::%{public}d", streamID);
     return MSERR_INVALID_OPERATION;
 }
 
@@ -207,7 +240,7 @@ int32_t SoundPool::SetPriority(int32_t streamID, int32_t priority)
             return ret;
         }
     }
-
+    MEDIA_LOGI("SoundPool::SetPriority can not find stream or cachebuffer streamID::%{public}d", streamID);
     return MSERR_INVALID_OPERATION;
 }
 
@@ -227,6 +260,7 @@ int32_t SoundPool::SetRate(int32_t streamID, AudioStandard::AudioRendererRate re
             return cacheBuffer->SetRate(streamID, renderRate);
         }
     }
+    MEDIA_LOGI("SoundPool::SetRate can not find stream or cachebuffer streamID::%{public}d", streamID);
     return MSERR_INVALID_OPERATION;
 }
 
@@ -250,6 +284,7 @@ int32_t SoundPool::SetVolume(int32_t streamID, float leftVolume, float rightVolu
             return cacheBuffer->SetVolume(streamID, leftVolume, rightVolume);
         }
     }
+    MEDIA_LOGI("SoundPool::SetVolume can not find stream or cachebuffer streamID::%{public}d", streamID);
     return MSERR_INVALID_OPERATION;
 }
 
@@ -272,6 +307,7 @@ int32_t SoundPool::Unload(int32_t soundID)
             streamIdManager_->ClearStreamIDInDeque(streamID);
         }
     }
+    MEDIA_LOGI("SoundPool::Unload can not find stream or cachebuffer streamID::%{public}d", streamID);
     return soundIDManager_->Unload(soundID);
 }
 
