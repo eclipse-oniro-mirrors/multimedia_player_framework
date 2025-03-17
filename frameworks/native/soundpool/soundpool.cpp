@@ -307,7 +307,6 @@ int32_t SoundPool::Unload(int32_t soundID)
             streamIdManager_->ClearStreamIDInDeque(streamID);
         }
     }
-    MEDIA_LOGI("SoundPool::Unload can not find stream or cachebuffer streamID::%{public}d", streamID);
     return soundIDManager_->Unload(soundID);
 }
 
