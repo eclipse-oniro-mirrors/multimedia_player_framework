@@ -29,6 +29,7 @@
 #include "filter/filter.h"
 #include "filter/filter_factory.h"
 #include "hiplayer_callback_looper.h"
+#include "live_controller.h"
 #include "media_utils.h"
 #include "i_player_engine.h"
 #include "media_sync_manager.h"
@@ -39,6 +40,7 @@
 #include "meta/meta.h"
 #include "dragging_player_agent.h"
 #include "interrupt_monitor.h"
+#include "plugin/plugin_time.h"
 #ifdef SUPPORT_VIDEO
 #include "decoder_surface_filter.h"
 #include "sei_parser_filter.h"
@@ -153,6 +155,11 @@ public:
     int64_t GetPlayRangeStartTime() override;
     int64_t GetPlayRangeEndTime() override;
     int32_t GetPlayRangeSeekMode() override;
+    bool IsNeedChangePlaySpeed(PlaybackRateMode &mode, bool &isXSpeedPlay) override;
+    bool IsPauseForTooLong(int64_t pauseTime) override;
+    bool IsLivingMaxDelayTimeValid() override;
+    bool IsFlvLive() override;
+    void DoRestartLiveLink() override;
 
     // internal interfaces
     void OnEvent(const Event &event);
@@ -216,6 +223,7 @@ private:
     Status LinkAudioDecoderFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
     Status LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
     Status LinkSubtitleSinkFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
+    void SetAudioRendererParameter();
     void NotifySubtitleUpdate(const Event& event);
     void DoInitializeForHttp();
     bool EnableBufferingBySysParam() const;
@@ -280,6 +288,12 @@ private:
     inline bool IsStatisticalInfoValid();
     void ReportAudioInterruptEvent();
     int32_t AdjustCachedDuration(int32_t cachedDuration);
+    bool IsLivingMaxDelyTimeValid();
+    void SetFlvObs();
+    void StartFlvCheckLiveDelayTime();
+    void StopFlvCheckLiveDelayTime();
+    void UpdateFlvLiveParams();
+    void SetFlvLiveParams(AVPlayStrategy playbackStrategy);
     void SetPostProcessor();
 
     bool isNetWorkPlay_ = false;
@@ -315,6 +329,8 @@ private:
     std::shared_ptr<MediaSyncManager> syncManager_;
     std::atomic<PlayerStateId> curState_;
     HiPlayerCallbackLooper callbackLooper_{};
+    LiveController liveController_ {};
+    std::weak_ptr<IPlayerEngineObs> playerEngineObs_{};
     sptr<Surface> surface_ {nullptr};
     std::string url_;
     std::string subUrl_;
@@ -359,6 +375,9 @@ private:
     uint32_t preferedHeight_ = 0;
     uint32_t bufferDuration_ = 0;
     double bufferDurationForPlaying_ = 0;
+    double maxLivingDelayTime_ = -1;
+    bool isSetBufferDurationForPlaying_ {false};
+    bool isFlvLive_ {false};
     bool preferHDR_ = false;
     OHOS::Media::MediaType mutedMediaType_ = OHOS::Media::MediaType::MEDIA_TYPE_MAX_COUNT;
     std::string audioLanguage_;

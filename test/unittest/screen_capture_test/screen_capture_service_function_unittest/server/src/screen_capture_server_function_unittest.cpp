@@ -1967,5 +1967,28 @@ HWTEST_F(ScreenCaptureServerFunctionTest, IsSystemScreenRecorderWorking_001, Tes
     bool ret = ScreenCaptureMonitor::GetInstance()->IsSystemScreenRecorderWorking();
     ASSERT_EQ(ret, false);
 }
+
+HWTEST_F(ScreenCaptureServerFunctionTest, DestroyPopWindow_001, TestSize.Level2)
+{
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
+    bool ret = screenCaptureServer_->DestroyPopWindow();
+    ASSERT_EQ(ret, true);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, DestroyPopWindow_002, TestSize.Level2)
+{
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::POPUP_WINDOW;
+    bool ret = screenCaptureServer_->DestroyPopWindow();
+    ASSERT_EQ(ret, true);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, DestroyPopWindow_003, TestSize.Level2)
+{
+    screenCaptureServer_->connection_ =
+        sptr<UIExtensionAbilityConnection>(new (std::nothrow) UIExtensionAbilityConnection(""));
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::POPUP_WINDOW;
+    bool ret = screenCaptureServer_->DestroyPopWindow();
+    ASSERT_EQ(ret, true);
+}
 } // Media
 } // OHOS

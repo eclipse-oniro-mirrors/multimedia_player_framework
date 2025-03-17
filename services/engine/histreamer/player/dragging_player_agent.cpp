@@ -120,9 +120,7 @@ Status DraggingPlayerAgent::Init()
         Status::ERROR_INVALID_PARAMETER, "Invalid demuxer filter instance.");
     delegator_ = DraggingDelegatorFactory::CreateDelegator(pipeline_, demuxer_, decoder_, playerId_, draggingMode_);
     FALSE_RETURN_V_MSG_E(delegator_ != nullptr, Status::ERROR_INVALID_DATA, "delegator_ is null");
-    Status ret = delegator_->Init();
-    FALSE_RETURN_V_MSG_E(ret == Status::OK, ret, "delegator_ init failed");
-    return ret;
+    return Status::OK;
 }
  
 void DraggingPlayerAgent::UpdateSeekPos(int64_t seekMs)

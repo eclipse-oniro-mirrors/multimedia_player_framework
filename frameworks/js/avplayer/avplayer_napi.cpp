@@ -1422,7 +1422,10 @@ void AVPlayerNapi::GetAVPlayStrategyFromStrategyTmp(AVPlayStrategy &strategy, co
     strategy.mutedMediaType = static_cast<MediaType>(strategyTmp.mutedMediaType);
     strategy.preferredAudioLanguage = strategyTmp.preferredAudioLanguage;
     strategy.preferredSubtitleLanguage = strategyTmp.preferredSubtitleLanguage;
-    strategy.preferredBufferDurationForPlaying = strategyTmp.preferredBufferDurationForPlaying;
+    strategy.preferredBufferDurationForPlaying = strategyTmp.isSetBufferDurationForPlaying ?
+        strategyTmp.preferredBufferDurationForPlaying : -1;
+    strategy.thresholdForAutoQuickPlay = strategyTmp.isSetThresholdForAutoQuickPlay ?
+        strategyTmp.thresholdForAutoQuickPlay : -1;
 }
 
 bool AVPlayerNapi::IsPalyingDurationValid(const AVPlayStrategyTmp &strategyTmp)
@@ -1432,6 +1435,18 @@ bool AVPlayerNapi::IsPalyingDurationValid(const AVPlayStrategyTmp &strategyTmp)
                    strategyTmp.preferredBufferDurationForPlaying < 0) {
         return false;
     }
+    return true;
+}
+
+bool AVPlayerNapi::IsLivingMaxDelayTimeValid(const AVPlayStrategyTmp &strategyTmp)
+{
+    if (!strategyTmp.isSetThresholdForAutoQuickPlay) {
+        return true;
+    }
+    if (strategyTmp.thresholdForAutoQuickPlay < AVPlayStrategyConstant::DEFAULT_LIVING_CACHED_DURATION ||
+        strategyTmp.thresholdForAutoQuickPlay < strategyTmp.preferredBufferDurationForPlaying) {
+            return false;
+        }
     return true;
 }
 
@@ -1465,6 +1480,9 @@ napi_value AVPlayerNapi::JsSetPlaybackStrategy(napi_env env, napi_callback_info 
         } else if (!jsPlayer->IsPalyingDurationValid(strategyTmp)) {
             promiseCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER,
                                   "playing duration is above buffer duration or below zero");
+        } else if (!jsPlayer->IsLivingMaxDelayTimeValid(strategyTmp)) {
+            promiseCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER,
+                                  "thresholdForAutoQuickPlay is invalid");
         } else {
             AVPlayStrategy strategy;
             jsPlayer->GetAVPlayStrategyFromStrategyTmp(strategy, strategyTmp);
@@ -1854,10 +1872,11 @@ napi_value AVPlayerNapi::JsSetMediaSource(napi_env env, napi_callback_info info)
     if (!CommonNapi::GetPlayStrategy(env, args[1], strategyTmp)) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "strategy type should be PlaybackStrategy.");
         return result;
-    }
-    if (!jsPlayer->IsPalyingDurationValid(strategyTmp)) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
-                            "playing duration is above buffer duration or below zero");
+    } else if (!jsPlayer->IsPalyingDurationValid(strategyTmp)) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "playing duration is invalid");
+        return result;
+    } else if (!jsPlayer->IsLivingMaxDelayTimeValid(strategyTmp)) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "thresholdForAutoQuickPlay is invalid");
         return result;
     }
     jsPlayer->GetAVPlayStrategyFromStrategyTmp(strategy, strategyTmp);
@@ -2363,10 +2382,14 @@ bool AVPlayerNapi::JsHandleParameter(napi_env env, napi_value args, AVPlayerNapi
         STREAM_USAGE_MOVIE, STREAM_USAGE_GAME,
         STREAM_USAGE_AUDIOBOOK, STREAM_USAGE_NAVIGATION,
         STREAM_USAGE_DTMF, STREAM_USAGE_ENFORCED_TONE,
-        STREAM_USAGE_ULTRASONIC,
-        STREAM_USAGE_VIDEO_COMMUNICATION,
-        STREAM_USAGE_ULTRASONIC
+        STREAM_USAGE_ULTRASONIC, STREAM_USAGE_VIDEO_COMMUNICATION
     };
+    std::vector<int32_t> systemUsages = { STREAM_USAGE_VOICE_CALL_ASSISTANT };
+    usages.insert(usages.end(), systemUsages.begin(), systemUsages.end());
+    if (std::find(systemUsages.begin(), systemUsages.end(), usage) != systemUsages.end() && !IsSystemApp()) {
+        MEDIA_LOGI("The caller is not a system app, usage = %{public}d", usage);
+        return false;
+    }
     if (std::find(contents.begin(), contents.end(), content) == contents.end() ||
         std::find(usages.begin(), usages.end(), usage) == usages.end()) {
         return false;

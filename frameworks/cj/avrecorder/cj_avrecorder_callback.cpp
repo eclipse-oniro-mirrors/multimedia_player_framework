@@ -207,7 +207,7 @@ void CJAVRecorderCallback::InitPhotoAssertAvailable(int64_t id)
 
 bool InitDeviceRates(CDeviceDescriptor* device, const DeviceInfo& deviceInfo)
 {
-    int32_t rateSize = deviceInfo.audioStreamInfo.samplingRate.size();
+    int32_t rateSize = static_cast<int32_t>(deviceInfo.audioStreamInfo.samplingRate.size());
     if (rateSize <= 0) {
         MEDIA_LOGE("rateSize is illeagle");
         return false;

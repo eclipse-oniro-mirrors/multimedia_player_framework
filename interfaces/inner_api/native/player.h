@@ -42,11 +42,17 @@ constexpr uint32_t DRM_MAX_M3U8_DRM_UUID_LEN = 16;
 constexpr uint32_t DRM_MAX_DRM_INFO_COUNT = 200;
 }
 
+namespace AVPlayStrategyConstant {
+constexpr double DEFAULT_LIVING_CACHED_DURATION = 2;
+constexpr double DEFAULT_MAX_DELAY_TIME_FOR_LIVING = 5;
+}
+
 struct AVPlayStrategy {
     uint32_t preferredWidth = 0;
     uint32_t preferredHeight = 0;
     uint32_t preferredBufferDuration = 0;
     double preferredBufferDurationForPlaying = 0;
+    double thresholdForAutoQuickPlay = -1;
     bool preferredHdr = false;
     bool showFirstFrameOnPrepare = false;
     bool enableSuperResolution = false;
@@ -197,11 +203,13 @@ enum PlayerMessageType : int32_t {
 enum PlayerOnSystemOperationType : int32_t {
     OPERATION_TYPE_PLAY = 1,
     OPERATION_TYPE_PAUSE,
+    OPERATION_TYPE_CHECK_LIVE_DELAY,
 };
 
 enum PlayerOperationReason : int32_t {
     OPERATION_REASON_AUDIO_INTERRUPT = 1,
     OPERATION_REASON_USER_BACKGROUND,
+    OPERATION_REASON_CHECK_LIVE_DELAY_TIME,
 };
 
 enum PlayerOnInfoType : int32_t {
@@ -317,6 +325,8 @@ enum PlaybackRateMode : int32_t {
     SPEED_FORWARD_0_25_X = 8,
     /* Video playback at 0.125x normal speed */
     SPEED_FORWARD_0_125_X = 9,
+    /* Video playback at 1.20x normal speed */
+    SPEED_FORWARD_1_20_X = 100, // flv live quick play
 };
 
 class PlayerCallback {

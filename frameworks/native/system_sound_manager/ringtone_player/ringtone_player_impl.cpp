@@ -16,12 +16,15 @@
 #include "ringtone_player_impl.h"
 
 #include <sys/stat.h>
+#include "accesstoken_kit.h"
+#include "ipc_skeleton.h"
+#include "directory_ex.h"
+#include "ringtone_proxy_uri.h"
 #include "config_policy_utils.h"
 
-#include "ringtone_proxy_uri.h"
-#include "directory_ex.h"
 #include "system_sound_log.h"
 #include "system_sound_vibrator.h"
+#include "os_account_manager.h"
 #include "media_errors.h"
 
 using namespace std;
@@ -41,6 +44,8 @@ const std::string HAPTIC_FORMAT_STR = ".json";
 const std::string RINGTONE_PATH = "/media/audio/";
 const std::string STANDARD_HAPTICS_PATH = "/media/haptics/standard/synchronized/";
 const std::string NON_SYNC_HAPTICS_PATH = "resource/media/haptics/standard/non-synchronized/";
+constexpr int32_t RETRY_TIME_S = 5;
+constexpr int64_t SLEEP_TIME_S = 1;
 
 RingtonePlayerImpl::RingtonePlayerImpl(const shared_ptr<Context> &context,
     SystemSoundManagerImpl &sysSoundMgr, RingtoneType type)
@@ -107,6 +112,20 @@ bool RingtonePlayerImpl::IsFileExisting(const std::string &fileUri)
     return (stat(fileUri.c_str(), &buffer) == 0);
 }
 
+static shared_ptr<DataShare::DataShareHelper> CreateDataShareHelper(int32_t systemAbilityId)
+{
+    MEDIA_LOGI("ringtoneplayer::CreateDataShareHelper : Enter the CreateDataShareHelper interface");
+    auto saManager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (saManager == nullptr) {
+        return nullptr;
+    }
+    auto remoteObj = saManager->GetSystemAbility(systemAbilityId);
+    if (remoteObj == nullptr) {
+        return nullptr;
+    }
+    return DataShare::DataShareHelper::Creator(remoteObj, RINGTONE_URI);
+}
+
 std::string RingtonePlayerImpl::GetNewHapticUriForAudioUri(const std::string &audioUri,
     const std::string &ringtonePath, const std::string& hapticsPath)
 {
@@ -163,12 +182,38 @@ std::string RingtonePlayerImpl::GetHapticUriForAudioUri(const std::string &audio
     return hapticUri;
 }
 
+static int32_t GetCurrentUserId()
+{
+    std::vector<int32_t> ids;
+    int32_t currentuserId = -1;
+    ErrCode result;
+    int32_t retry = RETRY_TIME_S;
+    while (retry--) {
+        result = AccountSA::OsAccountManager::QueryActiveOsAccountIds(ids);
+        if (result == ERR_OK && !ids.empty()) {
+            currentuserId = ids[0];
+            MEDIA_LOGD("current userId is :%{public}d", currentuserId);
+            break;
+        }
+
+        // sleep and wait for 1 millisecond
+        sleep(SLEEP_TIME_S);
+    }
+    if (result != ERR_OK || ids.empty()) {
+        MEDIA_LOGW("current userId is empty");
+    }
+    return currentuserId;
+}
+
 static shared_ptr<DataShare::DataShareHelper> CreateDataShareHelperUri(int32_t systemAbilityId)
 {
-    MEDIA_LOGI("CreateDataShareHelperUri : Enter the CreateDataShareHelperUri interface");
+    MEDIA_LOGI("CreateDataShareHelperUri : Enter CreateDataShareHelperUri()");
     DataShare::CreateOptions options;
     options.enabled_ = true;
-    return DataShare::DataShareHelper::Creator(RINGTONE_LIBRARY_PROXY_URI, options);
+    int32_t useId = GetCurrentUserId();
+    std::string uri = RINGTONE_LIBRARY_PROXY_URI + "?Proxy=true" + "&user=" + std::to_string(useId);
+    MEDIA_LOGI("uri : %{public}s", uri.c_str());
+    return DataShare::DataShareHelper::Creator(uri, options);
 }
 
 bool RingtonePlayerImpl::InitDataShareHelper()
@@ -193,21 +238,21 @@ std::string RingtonePlayerImpl::ChangeUri(const std::string &audioUri)
 {
     const std::string FDHEAD = "fd://";
     std::string ringtoneUri = audioUri;
-    CHECK_AND_RETURN_RET_LOG(dataShareHelper_ != nullptr, ringtoneUri, "Failed to init dataShareHelper_.");
+    CHECK_AND_RETURN_RET_LOG(dataShareHelper_ != nullptr, ringtoneUri, "Failed to init dataShareHelper.");
 
     DataShare::DatashareBusinessError businessError;
     DataShare::DataSharePredicates queryPredicates;
-    Uri ringtonePathUri(RINGTONE_PATH_URI);
+    Uri ringtonePathUri(RINGTONE_LIBRARY_PROXY_DATA_URI_TONE_FILES);
     vector<string> columns = {{RINGTONE_COLUMN_TONE_ID}, {RINGTONE_COLUMN_DATA}};
     queryPredicates.EqualTo(RINGTONE_COLUMN_DATA, audioUri);
     auto resultSet = dataShareHelper_->Query(ringtonePathUri, queryPredicates, columns, &businessError);
     auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
     unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
     if (ringtoneAsset != nullptr) {
-        string uriStr = RINGTONE_PATH_URI + RINGTONE_SLASH_CHAR + to_string(ringtoneAsset->GetId());
-        MEDIA_LOGD("ChangeUri::Open ringtoneUri is %{public}s", uriStr.c_str());
-        Uri ofUri(uriStr);
-        int32_t fd = dataShareHelper_->OpenFile(ofUri, "r");
+        std::string absFilePath;
+        PathToRealPath(audioUri, absFilePath);
+        int32_t fd = open(absFilePath.c_str(), O_RDONLY);
+        MEDIA_LOGI("open fd:%{public}d",  fd);
         if (fd > 0) {
             ringtoneUri = FDHEAD + to_string(fd);
         }
@@ -222,27 +267,31 @@ std::string RingtonePlayerImpl::ChangeHapticsUri(const std::string &hapticsUri)
 {
     const std::string FDHEAD = "fd://";
     std::string newHapticsUri = hapticsUri;
-    CHECK_AND_RETURN_RET_LOG(dataShareHelper_ != nullptr, newHapticsUri, "Failed to create dataShareHelper.");
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
+    CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, newHapticsUri, "Failed to create dataShareHelper.");
 
     DataShare::DatashareBusinessError businessError;
     DataShare::DataSharePredicates queryPredicates;
-    Uri hapticsPathUri(RINGTONE_LIBRARY_PROXY_DATA_URI_VIBATE_FILES);
+    Uri hapticsPathUri(VIBRATE_PATH_URI);
     vector<string> columns = {{VIBRATE_COLUMN_VIBRATE_ID}, {VIBRATE_COLUMN_DATA}};
     queryPredicates.EqualTo(RINGTONE_COLUMN_DATA, hapticsUri);
-    auto resultSet = dataShareHelper_->Query(hapticsPathUri, queryPredicates, columns, &businessError);
+    auto resultSet = dataShareHelper->Query(hapticsPathUri, queryPredicates, columns, &businessError);
     auto results = make_unique<RingtoneFetchResult<VibrateAsset>>(move(resultSet));
 
     unique_ptr<VibrateAsset> vibrateAssetByUri = results->GetFirstObject();
     if (vibrateAssetByUri != nullptr) {
-        string absFilePath;
-        PathToRealPath(hapticsUri, absFilePath);
-        int32_t fd = open(absFilePath.c_str(), O_RDONLY);
+        string uriStr = VIBRATE_PATH_URI + RINGTONE_SLASH_CHAR + to_string(vibrateAssetByUri->GetId());
+        MEDIA_LOGD("ChangeHapticsUri::Open newHapticsUri is %{public}s", uriStr.c_str());
+        Uri ofUri(uriStr);
+        int32_t fd = dataShareHelper->OpenFile(ofUri, "r");
         if (fd > 0) {
             newHapticsUri = FDHEAD + to_string(fd);
         }
     }
 
     resultSet == nullptr ? : resultSet->Close();
+    dataShareHelper->Release();
+    dataShareHelper = nullptr;
     MEDIA_LOGI("RingtonePlayerImpl::ChangeHapticsUri newHapticsUri is %{public}s", newHapticsUri.c_str());
     return newHapticsUri;
 }
@@ -276,7 +325,9 @@ HapticsMode RingtonePlayerImpl::ConvertToHapticsMode(ToneHapticsMode toneHaptics
 ToneHapticsSettings RingtonePlayerImpl::GetHapticSettings(std::string &audioUri, bool &muteHaptics)
 {
     ToneHapticsSettings settings;
-    int32_t result = systemSoundMgr_.GetToneHapticsSettings(dataShareHelper_, audioUri,
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
+    CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, settings, "Failed to create dataShareHelper.");
+    int32_t result = systemSoundMgr_.GetToneHapticsSettings(dataShareHelper, audioUri,
         ConvertToToneHapticsType(type_), settings);
     if (result == 0) {
         MEDIA_LOGI("GetHapticSettings: hapticsUri:%{public}s, mode:%{public}d.",
@@ -295,6 +346,8 @@ ToneHapticsSettings RingtonePlayerImpl::GetHapticSettings(std::string &audioUri,
     }
     MEDIA_LOGI("GetHapticSettings: hapticsUri:%{public}s, mode:%{public}d.",
         settings.hapticsUri.c_str(), settings.mode);
+    dataShareHelper->Release();
+    dataShareHelper = nullptr;
     return settings;
 }
 

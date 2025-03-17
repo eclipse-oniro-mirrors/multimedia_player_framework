@@ -36,6 +36,7 @@
 #include "meta_utils.h"
 #include "meta/media_types.h"
 #include "param_wrapper.h"
+#include "osal/utils/steady_clock.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_SYSTEM_PLAYER, "HiPlayer" };
@@ -48,9 +49,12 @@ const int64_t SAMPLE_AMPLITUDE_INTERVAL = 100;
 const int64_t REPORT_PROGRESS_INTERVAL = 100; // progress interval is 100ms
 const double FRAME_RATE_DEFAULT = -1.0;
 const double FRAME_RATE_FOR_SEEK_PERFORMANCE = 2000.0;
+const double TIME_CONVERSION_UNIT  = 1000;
+const double CHECK_DELAY_INTERVAL  = 1000;
 constexpr int32_t BUFFERING_LOG_FREQUENCY = 5;
 constexpr int32_t NOTIFY_BUFFERING_END_PARAM = 0;
 constexpr int64_t FIRST_FRAME_FRAME_REPORT_DELAY_MS = 50;
+constexpr double PAUSE_LONG_TIME_FACTOR = 5;
 static const std::unordered_set<OHOS::AudioStandard::StreamUsage> FOCUS_EVENT_USAGE_SET = {
     OHOS::AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN,
     OHOS::AudioStandard::StreamUsage::STREAM_USAGE_MEDIA,
@@ -146,6 +150,7 @@ HiPlayerImpl::HiPlayerImpl(int32_t appUid, int32_t appPid, uint32_t appTokenId, 
     pipeline_ = std::make_shared<OHOS::Media::Pipeline::Pipeline>();
     syncManager_ = std::make_shared<MediaSyncManager>();
     callbackLooper_.SetPlayEngine(this, playerId_);
+    liveController_.SetPlayEngine(this, playerId_);
     bundleName_ = GetClientBundleName(appUid);
     dfxAgent_ = std::make_shared<DfxAgent>(playerId_, bundleName_);
 }
@@ -406,7 +411,8 @@ int32_t HiPlayerImpl::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
     }
 
     mimeType_ = mediaSource->GetMimeType();
-    bufferDurationForPlaying_ = strategy.preferredBufferDurationForPlaying;
+    SetFlvLiveParams(strategy);
+    FALSE_RETURN_V(IsLivingMaxDelayTimeValid(), TransStatus(Status::ERROR_INVALID_PARAMETER));
     if (mimeType_ != AVMimeTypes::APPLICATION_M3U8 && IsFileUrl(url_)) {
         std::string realUriPath;
         int32_t result = GetRealPath(url_, realUriPath);
@@ -613,8 +619,7 @@ int32_t HiPlayerImpl::PrepareAsync()
     }
     FALSE_RETURN_V(!BreakIfInterruptted(), TransStatus(Status::OK));
     NotifyBufferingUpdate(PlayerKeys::PLAYER_BUFFERING_START, 0);
-    MEDIA_LOG_I("PrepareAsync in, current pipeline state: " PUBLIC_LOG_S,
-        StringnessPlayerState(pipelineStates_).c_str());
+    MEDIA_LOG_I("PrepareAsync:current pipeline state: " PUBLIC_LOG_S, StringnessPlayerState(pipelineStates_).c_str());
     OnStateChanged(PlayerStateId::PREPARING);
     ret = pipeline_->Prepare();
     if (ret != Status::OK) {
@@ -623,13 +628,13 @@ int32_t HiPlayerImpl::PrepareAsync()
         CollectionErrorInfo(errCode, "pipeline PrepareAsync failed");
         return errCode;
     }
+    SetFlvObs();
     InitDuration();
     SetSeiMessageListener();
     UpdateMediaFirstPts();
     ret = DoSetPlayRange();
     FALSE_RETURN_V_MSG_E(ret == Status::OK, TransStatus(ret), "DoSetPlayRange failed");
-    if (demuxer_ != nullptr && demuxer_->IsRenderNextVideoFrameSupported()
-        && IsAppEnableRenderFirstFrame(appUid_)) {
+    if (demuxer_ != nullptr && demuxer_->IsRenderNextVideoFrameSupported() && IsAppEnableRenderFirstFrame(appUid_)) {
         ret = pipeline_->Preroll(renderFirstFrame_);
         auto code = TransStatus(ret);
         if (ret != Status::OK) {
@@ -638,7 +643,6 @@ int32_t HiPlayerImpl::PrepareAsync()
         }
     }
     UpdatePlayerStateAndNotify();
-    MEDIA_LOG_D_SHORT("PrepareAsync End");
     return TransStatus(ret);
 }
 
@@ -763,8 +767,6 @@ void HiPlayerImpl::SetInterruptState(bool isInterruptNeeded)
         stopWaitingDrmConfig_ = true;
         drmConfigCond_.notify_all();
     }
-    std::unique_lock<std::mutex> lock(seekMutex_);
-    syncManager_->seekCond_.notify_all();
 }
 
 int32_t HiPlayerImpl::SelectBitRate(uint32_t bitRate)
@@ -845,6 +847,7 @@ int32_t HiPlayerImpl::Play()
             UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
         }
     }
+    StartFlvCheckLiveDelayTime();
     if (ret == MSERR_OK) {
         if (!isInitialPlay_) {
             OnStateChanged(PlayerStateId::PLAYING);
@@ -870,6 +873,7 @@ int32_t HiPlayerImpl::Pause(bool isSystemOperation)
         UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
     }
     callbackLooper_.StopReportMediaProgress();
+    StopFlvCheckLiveDelayTime();
     callbackLooper_.StopCollectMaxAmplitude();
     callbackLooper_.ManualReportMediaProgressOnce();
     {
@@ -908,6 +912,7 @@ int32_t HiPlayerImpl::PauseDemuxer()
     MEDIA_LOG_I("PauseDemuxer in");
     callbackLooper_.StopReportMediaProgress();
     callbackLooper_.StopCollectMaxAmplitude();
+    StopFlvCheckLiveDelayTime();
     syncManager_->Pause();
     Status ret = demuxer_->PauseDemuxerReadLoop();
     return TransStatus(ret);
@@ -920,6 +925,7 @@ int32_t HiPlayerImpl::ResumeDemuxer()
     FALSE_RETURN_V_MSG_E(pipelineStates_ != PlayerStates::PLAYER_STATE_ERROR,
         TransStatus(Status::OK), "PLAYER_STATE_ERROR not allow ResumeDemuxer");
     callbackLooper_.StartReportMediaProgress(REPORT_PROGRESS_INTERVAL);
+    StartFlvCheckLiveDelayTime();
     callbackLooper_.StartCollectMaxAmplitude(SAMPLE_AMPLITUDE_INTERVAL);
     syncManager_->Resume();
     Status ret = demuxer_->ResumeDemuxerReadLoop();
@@ -940,6 +946,7 @@ int32_t HiPlayerImpl::Stop()
     AutoLock lock(handleCompleteMutex_);
     UpdatePlayStatistics();
     callbackLooper_.StopReportMediaProgress();
+    StopFlvCheckLiveDelayTime();
     callbackLooper_.StopCollectMaxAmplitude();
     // close demuxer first to avoid concurrent problem
     auto ret = Status::ERROR_UNKNOWN;
@@ -1486,6 +1493,7 @@ int32_t HiPlayerImpl::SetObs(const std::weak_ptr<IPlayerEngineObs>& obs)
 {
     MEDIA_LOG_D_SHORT("SetObs");
     callbackLooper_.StartWithPlayerEngineObs(obs);
+    playerEngineObs_ = obs;
     return TransStatus(Status::OK);
 }
 
@@ -2382,6 +2390,7 @@ void HiPlayerImpl::DoSetPlayStrategy(const std::shared_ptr<MediaSource> source)
     playStrategy->audioLanguage = audioLanguage_;
     playStrategy->subtitleLanguage = subtitleLanguage_;
     playStrategy->bufferDurationForPlaying = bufferDurationForPlaying_;
+    playStrategy->thresholdForAutoQuickPlay = maxLivingDelayTime_;
     if (source) {
         source->SetPlayStrategy(playStrategy);
         source->SetAppUid(appUid_);
@@ -2400,6 +2409,18 @@ void HiPlayerImpl::DoSetPlayMediaStream(const std::shared_ptr<MediaSource>& sour
         playMediaStream->bitrate = mediaStream.bitrate;
         source->AddMediaStream(playMediaStream);
     }
+}
+
+bool HiPlayerImpl::IsLivingMaxDelayTimeValid()
+{
+    if (maxLivingDelayTime_ < 0) {
+        return true;
+    }
+    if (maxLivingDelayTime_ < AVPlayStrategyConstant::DEFAULT_LIVING_CACHED_DURATION ||
+        maxLivingDelayTime_ < bufferDurationForPlaying_) {
+            return false;
+        }
+    return true;
 }
 
 Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
@@ -2537,6 +2558,7 @@ void HiPlayerImpl::HandleCompleteEvent(const Event& event)
     }
     if (!singleLoop_.load()) {
         callbackLooper_.StopReportMediaProgress();
+        StopFlvCheckLiveDelayTime();
         callbackLooper_.StopCollectMaxAmplitude();
     } else {
         inEosSeek_ = true;
@@ -2710,7 +2732,7 @@ void HiPlayerImpl::NotifySeekDone(int32_t seekPos)
             lock,
             std::chrono::milliseconds(PLAYING_SEEK_WAIT_TIME),
             [this]() {
-                return !syncManager_->InSeeking() || isInterruptNeeded_.load();
+                return !syncManager_->InSeeking();
             });
     }
     auto startTime = std::chrono::steady_clock::now();
@@ -2751,6 +2773,7 @@ void HiPlayerImpl::NotifyAudioInterrupt(const Event& event)
                 UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
             }
             callbackLooper_.StopReportMediaProgress();
+            StopFlvCheckLiveDelayTime();
             callbackLooper_.StopCollectMaxAmplitude();
         }
     }
@@ -3054,7 +3077,11 @@ Status HiPlayerImpl::LinkAudioDecoderFilter(const std::shared_ptr<Filter>& preFi
     } else {
         MEDIA_LOG_D("HiPlayerImpl::LinkAudioDecoderFilter, and it's not drm-protected.");
     }
+#ifdef SUPPORT_START_STOP_ON_DEMAND
+    return pipeline_->LinkFilters(preFilter, {audioDecoder_}, type, true);
+#else
     return pipeline_->LinkFilters(preFilter, {audioDecoder_}, type);
+#endif
 }
 
 Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilter, StreamType type)
@@ -3074,6 +3101,24 @@ Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilte
         std::vector<std::shared_ptr<Meta>> trackInfos = demuxer_->GetStreamMetaInfo();
         SetDefaultAudioRenderInfo(trackInfos);
     }
+    SetAudioRendererParameter();
+    audioSink_->SetSyncCenter(syncManager_);
+
+    completeState_.emplace_back(std::make_pair("AudioSink", false));
+    initialAVStates_.emplace_back(std::make_pair(EventType::EVENT_AUDIO_FIRST_FRAME, false));
+#ifdef SUPPORT_START_STOP_ON_DEMAND
+    auto res = pipeline_->LinkFilters(preFilter, {audioSink_}, type, true);
+#else
+    auto res = pipeline_->LinkFilters(preFilter, {audioSink_}, type);
+#endif
+    if (mutedMediaType_ == OHOS::Media::MediaType::MEDIA_TYPE_AUD) {
+        audioSink_->SetMuted(true);
+    }
+    return res;
+}
+
+void HiPlayerImpl::SetAudioRendererParameter()
+{
     if (audioRenderInfo_ != nullptr) {
         audioSink_->SetParameter(audioRenderInfo_);
     }
@@ -3100,15 +3145,6 @@ Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilte
         }
         audioSink_->SetParameter(globalMeta);
     }
-    audioSink_->SetSyncCenter(syncManager_);
-
-    completeState_.emplace_back(std::make_pair("AudioSink", false));
-    initialAVStates_.emplace_back(std::make_pair(EventType::EVENT_AUDIO_FIRST_FRAME, false));
-    auto res = pipeline_->LinkFilters(preFilter, {audioSink_}, type);
-    if (mutedMediaType_ == OHOS::Media::MediaType::MEDIA_TYPE_AUD) {
-        audioSink_->SetMuted(true);
-    }
-    return res;
 }
 
 bool HiPlayerImpl::IsLiveStream()
@@ -3224,8 +3260,8 @@ int32_t HiPlayerImpl::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
     renderFirstFrame_ = playbackStrategy.showFirstFrameOnPrepare;
     audioLanguage_ = playbackStrategy.preferredAudioLanguage;
     subtitleLanguage_ = playbackStrategy.preferredSubtitleLanguage;
-    bufferDurationForPlaying_ = playbackStrategy.preferredBufferDurationForPlaying;
-
+    SetFlvLiveParams(playbackStrategy);
+    FALSE_RETURN_V(IsLivingMaxDelayTimeValid(), TransStatus(Status::ERROR_INVALID_PARAMETER));
     if (playbackStrategy.enableSuperResolution) {
         videoPostProcessorType_ = VideoPostProcessorType::SUPER_RESOLUTION;
         isPostProcessorOn_ = playbackStrategy.enableSuperResolution;
@@ -3430,6 +3466,100 @@ void HiPlayerImpl::SetPerfRecEnabled(bool isPerfRecEnabled)
 {
     MEDIA_LOG_I("SetPerfRecEnabled %{public}d", isPerfRecEnabled);
     isPerfRecEnabled_ = isPerfRecEnabled;
+}
+
+bool HiPlayerImpl::IsNeedChangePlaySpeed(PlaybackRateMode &mode, bool &isXSpeedPlay)
+{
+    FALSE_RETURN_V(demuxer_ != nullptr && isFlvLive_ && playMediaStreamVec_.empty(), false);
+    uint64_t cacheDuration = demuxer_->GetCachedDuration();
+    MEDIA_LOG_I("current cacheDuration is %{public}d", cacheDuration);
+    if ((cacheDuration < bufferDurationForPlaying_ * TIME_CONVERSION_UNIT) && isXSpeedPlay) {
+        mode = PlaybackRateMode::SPEED_FORWARD_1_00_X;
+        isXSpeedPlay = false;
+        MEDIA_LOG_I("below the play waterline, recover to 1x speed play");
+        return true;
+    } else if ((cacheDuration > (maxLivingDelayTime_ * TIME_CONVERSION_UNIT)) && !isXSpeedPlay) {
+        mode = PlaybackRateMode::SPEED_FORWARD_1_20_X;
+        isXSpeedPlay = true;
+        MEDIA_LOG_I("exceed the max delay time, start to 1.2x speed play");
+        return true;
+    }
+    return false;
+}
+
+bool HiPlayerImpl::IsPauseForTooLong(int64_t pauseTime)
+{
+    return pauseTime > (maxLivingDelayTime_ * TIME_CONVERSION_UNIT * PAUSE_LONG_TIME_FACTOR);
+}
+
+void HiPlayerImpl::DoRestartLiveLink()
+{
+    MediaTrace trace("HiPlayerImpl::DoRestartLiveLink");
+    FALSE_RETURN(demuxer_ != nullptr && isFlvLive_);
+    demuxer_->DoFlush();
+    if (audioDecoder_ != nullptr) {
+        audioDecoder_->DoFlush();
+    }
+    if (audioSink_ != nullptr) {
+        audioSink_->DoFlush();
+    }
+    if (videoDecoder_ != nullptr) {
+        videoDecoder_->DoFlush();
+    }
+    Status ret = demuxer_->RebootPlugin();
+    MEDIA_LOG_I("restart live link ret is %{public}d", static_cast<int32_t>(ret));
+    return;
+}
+
+bool HiPlayerImpl::IsFlvLive()
+{
+    return isFlvLive_;
+}
+
+void HiPlayerImpl::SetFlvLiveParams(AVPlayStrategy playbackStrategy)
+{
+    if (playbackStrategy.preferredBufferDurationForPlaying < 0) {
+        isSetBufferDurationForPlaying_ = false;
+        bufferDurationForPlaying_ = 0;
+    } else {
+        bufferDurationForPlaying_ = playbackStrategy.preferredBufferDurationForPlaying;
+        isSetBufferDurationForPlaying_ = true;
+    }
+    maxLivingDelayTime_ = playbackStrategy.thresholdForAutoQuickPlay;
+}
+
+void HiPlayerImpl::UpdateFlvLiveParams()
+{
+    maxLivingDelayTime_ = maxLivingDelayTime_ < 0 ? AVPlayStrategyConstant::DEFAULT_MAX_DELAY_TIME_FOR_LIVING :
+        maxLivingDelayTime_;
+    bufferDurationForPlaying_ = isSetBufferDurationForPlaying_ ? bufferDurationForPlaying_ :
+        AVPlayStrategyConstant::DEFAULT_LIVING_CACHED_DURATION;
+    MEDIA_LOG_I("maxLivingDelayTime_ is " PUBLIC_LOG_F " and  bufferDurationForPlaying_ is " PUBLIC_LOG_F,
+        maxLivingDelayTime_, bufferDurationForPlaying_);
+}
+
+void HiPlayerImpl::SetFlvObs()
+{
+    FALSE_RETURN(demuxer_ != nullptr);
+    isFlvLive_ = demuxer_->IsFlvLive() && !demuxer_->IsFlvLiveStream();
+    FALSE_RETURN(isFlvLive_);
+    MEDIA_LOG_I("SetFlvObs");
+    UpdateFlvLiveParams();
+    liveController_.StartWithPlayerEngineObs(playerEngineObs_);
+}
+
+void HiPlayerImpl::StartFlvCheckLiveDelayTime()
+{
+    FALSE_RETURN(demuxer_ != nullptr && isFlvLive_);
+    MEDIA_LOG_I("StartFlvCheckLiveDelayTime");
+    liveController_.StartCheckLiveDelayTime(CHECK_DELAY_INTERVAL);
+}
+
+void HiPlayerImpl::StopFlvCheckLiveDelayTime()
+{
+    FALSE_RETURN(demuxer_ != nullptr && isFlvLive_);
+    MEDIA_LOG_I("StopFlvCheckLiveDelayTime");
+    liveController_.StopCheckLiveDelayTime();
 }
 
 void HiPlayerImpl::SetPostProcessor()

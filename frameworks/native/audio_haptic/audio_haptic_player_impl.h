@@ -88,6 +88,7 @@ private:
     std::condition_variable condStartVibrate_;
     bool isAudioPlayFirstFrame_ = false;
     bool isVibrationStopped_ = false;
+    std::atomic_bool isVibrationRunning_{false};
 
     // var for audio
     std::shared_ptr<AudioHapticSound> audioHapticSound_ = nullptr;

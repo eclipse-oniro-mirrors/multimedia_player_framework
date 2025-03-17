@@ -65,6 +65,7 @@ ohos_unittest("hiplayer_impl_unit_test") {
     "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/player/dragging_player_agent.cpp",
     "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/player/hiplayer_callback_looper.cpp",
     "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/player/hiplayer_impl.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/player/live_controller.cpp",
     "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/player/seek_agent.cpp",
     "$MEDIA_PLAYER_ROOT_DIR/services/utils/media_dfx.cpp",
     "$MEDIA_PLAYER_ROOT_DIR/services/utils/media_utils.cpp",

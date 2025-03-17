@@ -2195,6 +2195,31 @@ HWTEST_F(PlayerServerUnitTest, Player_SetRendererInfo_001, TestSize.Level0)
 }
 
 /**
+ * @tc.name  : Test SetVolumeMode API
+ * @tc.number: Player_SetVolumeMode_001
+ * @tc.desc  : Test Player SetVolumeMode
+ */
+HWTEST_F(PlayerServerUnitTest, Player_SetVolumeMode_001, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    Format format;
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    int32_t contentType = 1;
+    int32_t streamUsage = 1;
+    int32_t rendererFlags = 0;
+    int32_t mode = 1;
+    (void)format.PutIntValue(PlayerKeys::CONTENT_TYPE, contentType);
+    (void)format.PutIntValue(PlayerKeys::STREAM_USAGE, streamUsage);
+    (void)format.PutIntValue(PlayerKeys::RENDERER_FLAG, rendererFlags);
+    EXPECT_EQ(MSERR_OK, player_->SetParameter(format));
+    EXPECT_EQ(MSERR_OK, player_->SetVolumeMode(mode));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+}
+
+/**
  * @tc.name  : Test SetInterrupt API
  * @tc.number: Player_SetInterrupt_001
  * @tc.desc  : Test Player SetInterrupt

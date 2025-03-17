@@ -40,7 +40,6 @@ sptr<ScreenCaptureMonitorServiceStub> ScreenCaptureMonitorServiceStub::Create()
 
     int32_t ret = screenCaptureMonitorStub->Init();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed to screen capture monitor stub init");
-    StatisticEventWriteBundleName("create", "ScreenCaptureMonitorServiceStub");
     return screenCaptureMonitorStub;
 }
 

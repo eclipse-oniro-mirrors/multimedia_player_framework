@@ -25,6 +25,7 @@
 #include "account_subscriber.h"
 #include "os_account_manager.h"
 #include "hitrace/tracechain.h"
+#include "plugin/plugin_time.h"
 
 namespace OHOS {
 namespace Media {
@@ -234,6 +235,11 @@ private:
     void UpdateContinousBatchNo();
 
     bool CheckState(PlayerOnInfoType type, int32_t extra);
+    void DoCheckLiveDalyTime();
+    int64_t CalculatePauseTime();
+    void HandleFlvLiveRestartLink();
+    void TryFlvLiveRestartLink();
+    void UpdateFlvLivePauseTime();
 
 #ifdef SUPPORT_VIDEO
     sptr<Surface> surface_ = nullptr;
@@ -269,6 +275,9 @@ private:
     std::vector<int32_t> payloadTypes_ {};
     bool isStreamUsagePauseRequired_ = true;
     std::mutex surfaceMutex_;
+    int64_t pauseTimestamp_ {Plugins::HST_TIME_NONE};
+    int64_t sumPauseTime_ {0};
+    bool isXSpeedPlay_ {false};
     bool isCalledBySystemApp_ = false;
 };
 } // namespace Media
