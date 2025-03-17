@@ -925,7 +925,10 @@ bool SystemTonePlayerImpl::IsExitCallbackThreadId(int32_t streamId)
 
 void SystemTonePlayerImpl::SendMessageZoneEvent(const int32_t &errorCode, bool muteAudio, bool muteHaptics)
 {
-    AudioStandard::AudioRendererInfo rendererInfo = {};
+    AudioStandard::AudioRendererInfo rendererInfo;
+    rendererInfo.contentType = AudioStandard::ContentType::CONTENT_TYPE_UNKNOWN;
+    rendererInfo.streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_NOTIFICATION;
+    rendererInfo.rendererFlags = 0;
     std::vector<std::shared_ptr<AudioStandard::AudioDeviceDescriptor>> desc = {};
 
     int32_t ret = AudioStandard::AudioRoutingManager::GetInstance()->
@@ -944,6 +947,7 @@ void SystemTonePlayerImpl::SendMessageZoneEvent(const int32_t &errorCode, bool m
         Media::MediaMonitor::ModuleId::AUDIO, Media::MediaMonitor::EventId::MESSAGE_ZONE,
         Media::MediaMonitor::EventType::MESSAGE_ZONE_EVENT);
     bean->Add("IS_PLAYBACK", 0);
+    bean->Add("CONFIGURED_URI", configuredUri_);
     bean->Add("CLIENT_UID", static_cast<int32_t>(getuid()));
     bean->Add("DEVICE_TYPE", desc[0]->deviceType_);
     bean->Add("ERROR_CODE", errorCode);
