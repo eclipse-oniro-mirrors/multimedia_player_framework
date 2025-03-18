@@ -50,7 +50,7 @@ const int64_t REPORT_PROGRESS_INTERVAL = 100; // progress interval is 100ms
 const double FRAME_RATE_DEFAULT = -1.0;
 const double FRAME_RATE_FOR_SEEK_PERFORMANCE = 2000.0;
 const double TIME_CONVERSION_UNIT  = 1000;
-const double CHECK_DELAY_INTERVAL  = 1000;
+const double CHECK_DELAY_INTERVAL  = 200;
 constexpr int32_t BUFFERING_LOG_FREQUENCY = 5;
 constexpr int32_t NOTIFY_BUFFERING_END_PARAM = 0;
 constexpr int64_t FIRST_FRAME_FRAME_REPORT_DELAY_MS = 50;
@@ -3470,7 +3470,7 @@ void HiPlayerImpl::SetPerfRecEnabled(bool isPerfRecEnabled)
 
 bool HiPlayerImpl::IsNeedChangePlaySpeed(PlaybackRateMode &mode, bool &isXSpeedPlay)
 {
-    FALSE_RETURN_V(demuxer_ != nullptr && isFlvLive_ && playMediaStreamVec_.empty(), false);
+    FALSE_RETURN_V(demuxer_ != nullptr && isFlvLive_, false);
     uint64_t cacheDuration = demuxer_->GetCachedDuration();
     MEDIA_LOG_I("current cacheDuration is %{public}d", cacheDuration);
     if ((cacheDuration < bufferDurationForPlaying_ * TIME_CONVERSION_UNIT) && isXSpeedPlay) {
@@ -3541,7 +3541,7 @@ void HiPlayerImpl::UpdateFlvLiveParams()
 void HiPlayerImpl::SetFlvObs()
 {
     FALSE_RETURN(demuxer_ != nullptr);
-    isFlvLive_ = demuxer_->IsFlvLive() && !demuxer_->IsFlvLiveStream();
+    isFlvLive_ = demuxer_->IsFlvLive();
     FALSE_RETURN(isFlvLive_);
     MEDIA_LOG_I("SetFlvObs");
     UpdateFlvLiveParams();
