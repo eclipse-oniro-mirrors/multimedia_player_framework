@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 #include "hitranscoder_impl.h"
-#include <shared_mutex>
 #include "sync_fence.h"
 #include <sys/syscall.h>
 #include "directory_ex.h"
@@ -73,7 +72,6 @@ public:
     explicit TransCoderEventReceiver(HiTransCoderImpl *hiTransCoderImpl, std::string transcoderId)
     {
         MEDIA_LOG_I("TransCoderEventReceiver ctor called.");
-        std::unique_lock<std::shared_mutex> lk(cbMutex_);
         hiTransCoderImpl_ = hiTransCoderImpl;
         task_ = std::make_unique<Task>("TransCoderEventReceiver", transcoderId, TaskType::GLOBAL,
             OHOS:Media::TaskPriority::HIGH, false);
@@ -83,14 +81,12 @@ public:
     {
         MEDIA_LOG_D("TransCoderEventReceiver OnEvent");
         task_->SubmitJobOnce([this, event] {
-            std::shared_lock<std::shared_mutex> lk(cbMutex_);
             FALSE_RETURN(hiTransCoderImpl_ != nullptr);
             hiTransCoderImpl_->OnEvent(event);
         });
     }
 
 private:
-    std::shared_mutex cbMutex_ {};
     HiTransCoderImpl *hiTransCoderImpl_;
     std::unique_ptr<Task> task_;
 };
@@ -100,21 +96,17 @@ public:
     explicit TransCoderFilterCallback(HiTransCoderImpl *hiTransCoderImpl)
     {
         MEDIA_LOG_I("TransCoderFilterCallback ctor called");
-        std::unique_lock<std::shared_mutex> lk(cbMutex_);
         hiTransCoderImpl_ = hiTransCoderImpl;
     }
 
     Status OnCallback(const std::shared_ptr<Pipeline::Filter>& filter, Pipeline::FilterCallBackCommand cmd,
         Pipeline::StreamType outType)
     {
-        MEDIA_LOG_I("TransCoderFilterCallback OnCallback.");
-        std::shared_lock<std::shared_mutex> lk(cbMutex_);
         FALSE_RETURN_V(hiTransCoderImpl_ != nullptr, Status::OK); //hiTransCoderImpl_ is destructed
         return hiTransCoderImpl_->OnCallback(filter, cmd, outType);
     }
 
 private:
-    std::shared_mutex cbMutex_ {};
     HiTransCoderImpl *hiTransCoderImpl_;
 };
 
@@ -782,13 +774,19 @@ void HiTransCoderImpl::OnEvent(const Event &event)
 
 void HiTransCoderImpl::HandleErrorEvent(int32_t errorCode)
 {
-    FALSE_RETURN_MSG(!ignoreError_.load(), "igore this error event!");
+    {
+        std::unique_lock<std::mutex> lock(ignoreErrorMutex_);
+        FALSE_RETURN_MSG(!ignoreError_, "igore this error event!");
+    }
     callbackLooper_->StopReportMediaProgress();
     if (pipeline_ != nullptr) {
         pipeline_->Pause;
     }
     callbackLooper_->OnError(TRANSCODER_ERROR_INTERNAL, errorCode);
-    ignoreError_.store(true);
+    {
+        std::unique_lock<std::mutex> lock(ignoreErrorMutex_);
+        ignoreError_ = true;
+    }
 }
 
 void HiTransCoderImpl::HandleCompleteEvent()
