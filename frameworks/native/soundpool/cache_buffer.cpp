@@ -68,7 +68,8 @@ void CacheBuffer::DealAudioRendererParams(AudioStandard::AudioRendererOptions &r
     // Get sample format from trackFormat and set it to audiorender.
     trackFormat_.GetIntValue(MediaAVCodec::MediaDescriptionKey::MD_KEY_AUDIO_SAMPLE_FORMAT, sampleFormat);
     // Align audiorender capability
-    rendererOptions.streamInfo.format = static_cast<AudioStandard::AudioSampleFormat>(sampleFormat);
+    sampleFormat_ = static_cast<AudioStandard::AudioSampleFormat>(sampleFormat);
+    rendererOptions.streamInfo.format = sampleFormat_;
     // Get channel count from trackFormat and set it to audiorender.
     trackFormat_.GetIntValue(MediaAVCodec::MediaDescriptionKey::MD_KEY_CHANNEL_COUNT, channelCount);
     rendererOptions.streamInfo.channels = static_cast<AudioStandard::AudioChannel>(channelCount);
@@ -310,8 +311,8 @@ void CacheBuffer::DealWriteData(size_t length)
             cacheDataFrameIndex_ += length;
         } else {
             size_t copyLength = static_cast<size_t>(fullCacheData_->size) - cacheDataFrameIndex_;
-            int32_t ret = memset_s(bufDesc.buffer, length, 0, length);
-            CHECK_AND_RETURN_LOG(ret == MSERR_OK, "memset failed.");
+            int32_t ret = AudioStandard::AudioRenderer::MuteAudioBuffer(bufDesc.buffer, 0, length, sampleFormat_);
+            CHECK_AND_RETURN_LOG(ret == AudioStandard::SUCCESS, "fill mute buffer failed.");
             ret = memcpy_s(bufDesc.buffer, length, fullCacheData_->buffer + cacheDataFrameIndex_,
                 copyLength);
             CHECK_AND_RETURN_LOG(ret == MSERR_OK, "memcpy failed not enough length.");
