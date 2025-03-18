@@ -42,6 +42,7 @@ private:
     SoundPoolNapi() {}
     ~SoundPoolNapi();
     static napi_value Constructor(napi_env env, napi_callback_info info);
+    static napi_value ConstructorParallel(napi_env env, napi_callback_info info);
     static void Destructor(napi_env env, void *nativeObject, void *finalize);
 
     /**
@@ -51,6 +52,11 @@ private:
      * createSoundPool(maxStreams: number, audioRenderInfo: audio.AudioRendererInfo): Promise<SoundPool>
      */
     static napi_value JsCreateSoundPool(napi_env env, napi_callback_info info);
+
+    /**
+     * createParallelSoundPool(maxStreams: number, audioRenderInfo: audio.AudioRendererInfo): Promise<SoundPool>
+     */
+    static napi_value JsCreateParallelSoundPool(napi_env env, napi_callback_info info);
 
     /**
      * load(uri: string, callback: AsyncCallback<number>): void
@@ -131,6 +137,7 @@ private:
         size_t &argCount, napi_value *args);
     static napi_status GetJsInstanceWithParameter(napi_env env, napi_value *argv);
     static void SendCompleteEvent(napi_env env, std::unique_ptr<SoundPoolAsyncContext> asyncCtx);
+    static bool IsSystemApp();
     int32_t ParserLoadOptionFromJs(std::unique_ptr<SoundPoolAsyncContext> &asyncCtx,
         napi_env env, napi_value *argv, size_t argCount);
     int32_t ParserPlayOptionFromJs(std::unique_ptr<SoundPoolAsyncContext> &asyncCtx,
@@ -147,6 +154,7 @@ private:
     void CancelCallback(std::shared_ptr<ISoundPoolCallback> callback);
 
     static thread_local napi_ref constructor_;
+    static thread_local napi_ref constructorParallel_;
     static int32_t maxStreams;
     static AudioStandard::AudioRendererInfo rendererInfo;
 

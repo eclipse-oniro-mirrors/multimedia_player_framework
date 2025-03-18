@@ -18,6 +18,10 @@
 #include "ability.h"
 #include "napi_base_context.h"
 #include "soundpool_napi.h"
+#ifndef CROSS_PLATFORM
+#include "ipc_skeleton.h"
+#include "tokenid_kit.h"
+#endif
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SOUNDPOOL, "SoundPoolNapi"};
@@ -28,7 +32,9 @@ namespace Media {
 int32_t SoundPoolNapi::maxStreams = 0;
 AudioStandard::AudioRendererInfo SoundPoolNapi::rendererInfo;
 thread_local napi_ref SoundPoolNapi::constructor_ = nullptr;
+thread_local napi_ref SoundPoolNapi::constructorParallel_ = nullptr;
 const std::string CLASS_NAME = "SoundPool";
+const std::string CLASS_NAME_PARALLE = "ParallelSoundPool";
 
 SoundPoolNapi::~SoundPoolNapi()
 {
@@ -39,6 +45,7 @@ napi_value SoundPoolNapi::Init(napi_env env, napi_value exports)
 {
     napi_property_descriptor staticProperty[] = {
         DECLARE_NAPI_STATIC_FUNCTION("createSoundPool", JsCreateSoundPool),
+        DECLARE_NAPI_STATIC_FUNCTION("createParallelSoundPool", JsCreateParallelSoundPool),
     };
 
     napi_property_descriptor properties[] = {
@@ -65,6 +72,17 @@ napi_value SoundPoolNapi::Init(napi_env env, napi_value exports)
 
     status = napi_set_named_property(env, exports, CLASS_NAME.c_str(), constructor);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to set constructor");
+
+    napi_value constructorParallel = nullptr;
+    status = napi_define_class(env, CLASS_NAME_PARALLE.c_str(), NAPI_AUTO_LENGTH, ConstructorParallel,
+        nullptr, sizeof(properties) / sizeof(properties[0]), properties, &constructorParallel);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to define ParallelSoundPool class");
+
+    status = napi_create_reference(env, constructorParallel, 1, &constructorParallel_);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to create reference of constructorParallel");
+
+    status = napi_set_named_property(env, exports, CLASS_NAME_PARALLE.c_str(), constructorParallel);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to set constructorParallel");
 
     status = napi_define_properties(env, exports, sizeof(staticProperty) / sizeof(staticProperty[0]), staticProperty);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to define static function");
@@ -111,6 +129,44 @@ napi_value SoundPoolNapi::Constructor(napi_env env, napi_callback_info info)
     return jsThis;
 }
 
+napi_value SoundPoolNapi::ConstructorParallel(napi_env env, napi_callback_info info)
+{
+    MEDIA_LOGI("ConstructorParallel enter");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    size_t argCount = 0;
+    napi_value jsThis = nullptr;
+    napi_status status = napi_get_cb_info(env, info, &argCount, nullptr, &jsThis, nullptr);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "failed to napi_get_cb_info");
+
+    SoundPoolNapi *soundPoolNapi = new(std::nothrow) SoundPoolNapi();
+    CHECK_AND_RETURN_RET_LOG(soundPoolNapi != nullptr, result, "No memory!");
+
+    soundPoolNapi->env_ = env;
+    soundPoolNapi->soundPool_ = SoundPoolFactory::CreateParallelSoundPool(maxStreams, rendererInfo);
+    if (soundPoolNapi->soundPool_ == nullptr) {
+        delete soundPoolNapi;
+        MEDIA_LOGE("failed to CreateParallelSoundPool");
+        return result;
+    }
+
+    if (soundPoolNapi->callbackNapi_ == nullptr && soundPoolNapi->soundPool_ != nullptr) {
+        soundPoolNapi->callbackNapi_ = std::make_shared<SoundPoolCallBackNapi>(env);
+        (void)soundPoolNapi->soundPool_->SetSoundPoolCallback(soundPoolNapi->callbackNapi_);
+    }
+
+    status = napi_wrap(env, jsThis, reinterpret_cast<void *>(soundPoolNapi),
+        SoundPoolNapi::Destructor, nullptr, nullptr);
+    if (status != napi_ok) {
+        delete soundPoolNapi;
+        MEDIA_LOGE("Failed to warp native instance!");
+        return result;
+    }
+    MEDIA_LOGI("ConstructorParallel success");
+    return jsThis;
+}
+
 void SoundPoolNapi::Destructor(napi_env env, void *nativeObject, void *finalize)
 {
     (void)env;
@@ -152,6 +208,37 @@ napi_value SoundPoolNapi::JsCreateSoundPool(napi_env env, napi_callback_info inf
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
     asyncCtx->JsResult = std::make_unique<MediaJsResultInstance>(constructor_);
     asyncCtx->ctorFlag = true;
+
+    SoundPoolNapi::SendCompleteEvent(env, std::move(asyncCtx));
+    return result;
+}
+
+napi_value SoundPoolNapi::JsCreateParallelSoundPool(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("SoundPool::JsCreateParallelSoundPool");
+    MEDIA_LOGI("SoundPoolNapi::JsCreateParallelSoundPool");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    // get args
+    napi_value jsThis = nullptr;
+    napi_value args[PARAM2] = { nullptr };
+    size_t argCount = PARAM2;
+    napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "failed to napi_get_cb_info");
+
+    // get create soundpool Parameter
+    status = GetJsInstanceWithParameter(env, args);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "failed to Get InstanceWithParameter");
+
+    std::unique_ptr<SoundPoolAsyncContext> asyncCtx = std::make_unique<SoundPoolAsyncContext>(env);
+
+    asyncCtx->deferred = CommonNapi::CreatePromise(env, nullptr, result);
+    asyncCtx->JsResult = std::make_unique<MediaJsResultInstance>(constructorParallel_);
+    asyncCtx->ctorFlag = true;
+    if (!IsSystemApp()) {
+        asyncCtx->SignError(MSERR_EXT_API9_PERMISSION_DENIED, "failed to get without permission");
+    }
 
     SoundPoolNapi::SendCompleteEvent(env, std::move(asyncCtx));
     return result;
@@ -847,6 +934,19 @@ bool SoundPoolNapi::GetPropertyBool(napi_env env, napi_value configObj, const st
         return false;
     }
     return true;
+}
+
+bool SoundPoolNapi::IsSystemApp()
+{
+    static bool isSystemApp = false;
+#ifndef CROSS_PLATFORM
+    static std::once_flag once;
+    std::call_once(once, [] {
+        uint64_t tokenId = IPCSkeleton::GetSelfTokenID();
+        isSystemApp = Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(tokenId);
+    });
+#endif
+    return isSystemApp;
 }
 
 RetInfo GetRetInfo(int32_t errCode, const std::string &operate, const std::string &param, const std::string &add = "")

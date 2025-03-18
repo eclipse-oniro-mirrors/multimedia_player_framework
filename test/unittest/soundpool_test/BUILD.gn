@@ -35,6 +35,7 @@ ohos_unittest("soundpool_unit_test") {
     sources = [
       "src/soundpool_mock.cpp",
       "src/soundpool_unit_test.cpp",
+      "src/soundpool_unit_test_parallel.cpp",
     ]
   }
 

@@ -167,7 +167,7 @@ int32_t SoundParser::DoDecode(MediaAVCodec::Format trackFormat)
     return MSERR_OK;
 }
 
-int32_t SoundParser::GetSoundData(std::deque<std::shared_ptr<AudioBufferEntry>> &soundData) const
+int32_t SoundParser::GetSoundData(std::shared_ptr<AudioBufferEntry> &soundData) const
 {
     CHECK_AND_RETURN_RET_LOG(soundParserListener_ != nullptr, MSERR_INVALID_VAL, "Invalid sound parser listener");
     return soundParserListener_->GetSoundData(soundData);
@@ -299,8 +299,9 @@ void SoundDecoderCallback::DealBufferRawFile(MediaAVCodec::AVCodecBufferFlag buf
     if (!decodeShouldCompleted_ && (currentSoundBufferSize_ > MAX_SOUND_BUFFER_SIZE ||
             bufferFlag == AVCODEC_BUFFER_FLAG_EOS)) {
         decodeShouldCompleted_ = true;
+        ReCombineCacheData();
         CHECK_AND_RETURN_LOG(listener_ != nullptr, "sound decode listener invalid.");
-        listener_->OnSoundDecodeCompleted(availableAudioBuffers_);
+        listener_->OnSoundDecodeCompleted(fullCacheData_);
         listener_->SetSoundBufferTotalSize(static_cast<size_t>(currentSoundBufferSize_));
         CHECK_AND_RETURN_LOG(callback_ != nullptr, "sound decode:soundpool callback invalid.");
         callback_->OnLoadCompleted(soundID_);
@@ -340,8 +341,9 @@ void SoundDecoderCallback::OnOutputBufferAvailable(uint32_t index, AVCodecBuffer
     if (buffer != nullptr && !decodeShouldCompleted_) {
         if (currentSoundBufferSize_ > MAX_SOUND_BUFFER_SIZE || flag == AVCODEC_BUFFER_FLAG_EOS) {
             decodeShouldCompleted_ = true;
+            ReCombineCacheData();
             if (listener_ != nullptr) {
-                listener_->OnSoundDecodeCompleted(availableAudioBuffers_);
+                listener_->OnSoundDecodeCompleted(fullCacheData_);
                 listener_->SetSoundBufferTotalSize(static_cast<size_t>(currentSoundBufferSize_));
             }
             if (callback_ != nullptr) {
@@ -365,6 +367,43 @@ void SoundDecoderCallback::OnOutputBufferAvailable(uint32_t index, AVCodecBuffer
     }
     audioDec_->ReleaseOutputBuffer(index);
     amutex_.unlock();
+}
+
+void SoundDecoderCallback::ReCombineCacheData()
+{
+    MEDIA_LOGI("ReCombine start currentSoundBufferSize_:%{public}d", currentSoundBufferSize_);
+    uint8_t *fullBuffer = new(std::nothrow) uint8_t[currentSoundBufferSize_];
+    CHECK_AND_RETURN_LOG(fullBuffer != nullptr, "Invalid fullBuffer");
+    int32_t copyIndex = 0;
+    int32_t remainBufferSize = static_cast<int32_t>(currentSoundBufferSize_);
+    MEDIA_LOGI("ReCombine start copyIndex:%{public}d, remainSize:%{public}d", copyIndex, remainBufferSize);
+    for (std::shared_ptr<AudioBufferEntry> bufferEntry : availableAudioBuffers_) {
+        if (bufferEntry != nullptr && bufferEntry->size > 0 && bufferEntry->buffer != nullptr) {
+            if (remainBufferSize < bufferEntry->size) {
+                delete[] fullBuffer;
+                MEDIA_LOGE("ReCombine not enough remainBufferSize:%{public}d, bufferEntry->size:%{public}d",
+                    remainBufferSize, bufferEntry->size);
+            }
+            int32_t ret = memcpy_s(fullBuffer + copyIndex, remainBufferSize,
+                bufferEntry->buffer, bufferEntry->size);
+            if (ret != MSERR_OK) {
+                delete[] fullBuffer;
+                MEDIA_LOGE("ReCombine memcpy failed");
+            }
+            copyIndex += bufferEntry->size;
+            remainBufferSize -= bufferEntry->size;
+        } else {
+            MEDIA_LOGE("ReCombineCacheData, bufferEntry size:%{public}d, buffer:%{public}d",
+                bufferEntry->size, bufferEntry->buffer != nullptr);
+        }
+    }
+    MEDIA_LOGI("ReCombine finish copyIndex:%{public}d, remainSize:%{public}d", copyIndex, remainBufferSize);
+
+    fullCacheData_ = std::make_shared<AudioBufferEntry>(fullBuffer, currentSoundBufferSize_);
+
+    if (!availableAudioBuffers_.empty()) {
+        availableAudioBuffers_.clear();
+    }
 }
 
 int32_t SoundDecoderCallback::SetCallback(const std::shared_ptr<ISoundPoolCallback> &callback)
@@ -396,15 +435,16 @@ int32_t SoundDecoderCallback::Release()
     if (listener_ != nullptr) listener_.reset();
     if (!availableAudioBuffers_.empty()) availableAudioBuffers_.clear();
     if (callback_ != nullptr) callback_.reset();
+    if (fullCacheData_ != nullptr) fullCacheData_.reset();
     return ret;
 }
 
 void SoundParser::SoundParserListener::OnSoundDecodeCompleted(
-    const std::deque<std::shared_ptr<AudioBufferEntry>> &availableAudioBuffers)
+    const std::shared_ptr<AudioBufferEntry> &fullCacheData)
 {
     if (std::shared_ptr<SoundParser> soundPaser = soundParserInner_.lock()) {
         std::unique_lock<ffrt::mutex> lock(soundPaser->soundParserLock_);
-        soundData_ = availableAudioBuffers;
+        soundData_ = fullCacheData;
         isSoundParserCompleted_.store(true);
     }
 }
@@ -418,7 +458,7 @@ void SoundParser::SoundParserListener::SetSoundBufferTotalSize(const size_t soun
 }
 
 int32_t SoundParser::SoundParserListener::GetSoundData(
-    std::deque<std::shared_ptr<AudioBufferEntry>> &soundData) const
+    std::shared_ptr<AudioBufferEntry> &soundData) const
 {
     if (std::shared_ptr<SoundParser> soundPaser = soundParserInner_.lock()) {
         std::unique_lock<ffrt::mutex> lock(soundPaser->soundParserLock_);

@@ -214,8 +214,15 @@ public:
     {
         return nullptr;
     }
+    static std::shared_ptr<ISoundPool> CreateParallelSoundPool(int maxStreams,
+        AudioStandard::AudioRendererInfo audioRenderInfo)
+    {
+        return nullptr;
+    }
 #else
     static std::shared_ptr<ISoundPool> CreateSoundPool(int maxStreams,
+        AudioStandard::AudioRendererInfo audioRenderInfo);
+    static std::shared_ptr<ISoundPool> CreateParallelSoundPool(int maxStreams,
         AudioStandard::AudioRendererInfo audioRenderInfo);
 #endif
 private:

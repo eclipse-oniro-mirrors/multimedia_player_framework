@@ -33,6 +33,7 @@ protected:
     static const int32_t waitTime2 = 2;
     static const int32_t waitTime3 = 3;
     static const int32_t waitTime10 = 10;
+    static const int32_t waitTime20 = 20;
     static const int32_t waitTime30 = 30;
     int32_t loadNum_ = 0;
     int32_t playNum_ = 0;
@@ -40,11 +41,17 @@ protected:
     int32_t streamIDs_[SOUND_NUM];
     int32_t fds_[SOUND_NUM];
     std::shared_ptr<SoundPoolMock> soundPool_ = nullptr;
+    std::shared_ptr<SoundPoolParallelMock> soundPoolParallel_ = nullptr;
     void create(int maxStreams);
     void loadUrl(std::string fileName, int32_t loadNum);
     void loadFd(std::string fileName, int32_t loadNum);
     void functionTest043(std::shared_ptr<SoundPoolMock> soundPool1, std::shared_ptr<SoundPoolMock> soundPool2,
         std::shared_ptr<SoundPoolCallbackTest> cb1, std::shared_ptr<SoundPoolCallbackTest> cb2);
+    void loadUrlParallel(std::string fileName, int32_t loadNum);
+    void loadFdParallel(std::string fileName, int32_t loadNum);
+    void functionTest086(std::shared_ptr<SoundPoolParallelMock> soundPool1,
+        std::shared_ptr<SoundPoolParallelMock> soundPool2, std::shared_ptr<SoundPoolCallbackTest> cb1,
+        std::shared_ptr<SoundPoolCallbackTest> cb2);
 };
 } // namespace Media
 } // namespace OHOS
