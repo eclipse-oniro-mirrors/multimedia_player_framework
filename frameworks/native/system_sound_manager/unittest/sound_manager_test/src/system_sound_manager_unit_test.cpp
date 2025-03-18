@@ -1190,6 +1190,25 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetDefaultSystemToneUri_00
 }
 
 /**
+ * @tc.name  : Test OpenToneUri API
+ * @tc.number: Media_SoundManager_OpenToneUri_001
+ * @tc.desc  : Test OpenToneUri interface. Returns attributes of the default system tone.
+ */
+HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_OpenToneUri_001, TestSize.Level2)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
+    int fd = systemSoundManager_->OpenToneUri(context_, "test", ToneType::TONE_TYPE_ALARM);
+    EXPECT_LT(fd, 0);
+    auto vec = systemSoundManager_->GetAlarmToneAttrList(context_);
+    if (vec.size() > 0) {
+        std::string uri = vec[0]->GetUri();
+        fd = systemSoundManager_->OpenToneUri(context_, uri, ToneType::TONE_TYPE_ALARM);
+    }
+    EXPECT_NE(systemSoundManager_, nullptr);
+}
+
+/**
  * @tc.name  : GetDefaultRingtoneUri_ShouldReturnUri_WhenTypeIsValid
  * @tc.number: GetDefaultRingtoneUri_ShouldReturnUri_WhenTypeIsValid_001
  * @tc.desc  : Test GetDefaultRingtoneUri method when ringtone type is valid.
