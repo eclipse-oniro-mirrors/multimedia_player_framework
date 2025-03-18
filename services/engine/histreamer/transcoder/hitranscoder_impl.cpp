@@ -13,10 +13,12 @@
  * limitations under the License.
  */
 #include "hitranscoder_impl.h"
+#include <shared_mutex>
 #include "sync_fence.h"
 #include <sys/syscall.h>
 #include "directory_ex.h"
 #include "osal/task/jobutils.h"
+#include "osal/task/task.h"
 #include "media_utils.h"
 #include "media_dfx.h"
 #include "meta/video_types.h"
@@ -68,35 +70,51 @@ static const std::unordered_set<std::string> AVMETA_KEY = {
 
 class TransCoderEventReceiver : public Pipeline::EventReceiver {
 public:
-    explicit TransCoderEventReceiver(HiTransCoderImpl *hiTransCoderImpl)
+    explicit TransCoderEventReceiver(HiTransCoderImpl *hiTransCoderImpl, std::string transcoderId)
     {
+        MEDIA_LOG_I("TransCoderEventReceiver ctor called.");
+        std::unique_lock<std::shared_mutex> lk(cbMutex_);
         hiTransCoderImpl_ = hiTransCoderImpl;
+        task_ = std::make_unique<Task>("TransCoderEventReceiver", transcoderId, TaskType::GLOBAL,
+            OHOS:Media::TaskPriority::HIGH, false);
     }
 
-    void OnEvent(const Event &event)
+    void OnEvent(const Event &event) override
     {
-        hiTransCoderImpl_->OnEvent(event);
+        MEDIA_LOG_D("TransCoderEventReceiver OnEvent");
+        task_->SubmitJobOnce([this, event] {
+            std::shared_lock<std::shared_mutex> lk(cbMutex_);
+            FALSE_RETURN(hiTransCoderImpl_ != nullptr);
+            hiTransCoderImpl_->OnEvent(event);
+        });
     }
 
 private:
+    std::shared_mutex cbMutex_ {};
     HiTransCoderImpl *hiTransCoderImpl_;
+    std::unique_ptr<Task> task_;
 };
 
 class TransCoderFilterCallback : public Pipeline::FilterCallback {
 public:
     explicit TransCoderFilterCallback(HiTransCoderImpl *hiTransCoderImpl)
     {
+        MEDIA_LOG_I("TransCoderFilterCallback ctor called");
+        std::unique_lock<std::shared_mutex> lk(cbMutex_);
         hiTransCoderImpl_ = hiTransCoderImpl;
     }
 
     Status OnCallback(const std::shared_ptr<Pipeline::Filter>& filter, Pipeline::FilterCallBackCommand cmd,
         Pipeline::StreamType outType)
     {
-        FALSE_RETURN_V(hiTransCoderImpl_ != nullptr, Status::OK);
+        MEDIA_LOG_I("TransCoderFilterCallback OnCallback.");
+        std::shared_lock<std::shared_mutex> lk(cbMutex_);
+        FALSE_RETURN_V(hiTransCoderImpl_ != nullptr, Status::OK); //hiTransCoderImpl_ is destructed
         return hiTransCoderImpl_->OnCallback(filter, cmd, outType);
     }
 
 private:
+    std::shared_mutex cbMutex_ {};
     HiTransCoderImpl *hiTransCoderImpl_;
 };
 
@@ -126,8 +144,10 @@ int32_t HiTransCoderImpl::Init()
 {
     MEDIA_LOG_I("HiTransCoderImpl::Init()");
     MediaTrace trace("HiTransCoderImpl::Init()");
-    transCoderEventReceiver_ = std::make_shared<TransCoderEventReceiver>(this);
+    transCoderEventReceiver_ = std::make_shared<TransCoderEventReceiver>(this, transCoderId_);
     transCoderFilterCallback_ = std::make_shared<TransCoderFilterCallback>(this);
+    FALSE_RETURN_V_MSG_E(transCoderEventReceiver_ != nullptr && transCoderFilterCallback_ != nullptr,
+        static_cast<int32_t>(Status::ERROR_NO_MEMORY), "fail to init hiTransCoderImpl");
     pipeline_->Init(transCoderEventReceiver_, transCoderFilterCallback_, transCoderId_);
     callbackLooper_ = std::make_shared<HiTransCoderCallbackLooper>();
     callbackLooper_->SetTransCoderEngine(this, transCoderId_);
@@ -747,23 +767,12 @@ void HiTransCoderImpl::OnEvent(const Event &event)
 {
     switch (event.type) {
         case EventType::EVENT_ERROR: {
-            FALSE_RETURN_MSG(!ignoreError_.load(), "igore this error event!");
             HandleErrorEvent(AnyCast<int32_t>(event.param));
-            ignoreError_.store(true);
             break;
         }
         case EventType::EVENT_COMPLETE: {
             MEDIA_LOG_I("HiTransCoderImpl EVENT_COMPLETE");
-            cancelTask_ = std::make_shared<Task>("CancelTransCoder", "",
-                TaskType::SINGLETON, TaskPriority::NORMAL, false);
-            cancelTask_->SubmitJobOnce([this]() {
-                Cancel();
-                auto ptr = obs_.lock();
-                if (ptr != nullptr) {
-                    ptr->OnInfo(TransCoderOnInfoType::INFO_TYPE_PROGRESS_UPDATE, TRANSCODER_COMPLETE_PROGRESS);
-                    ptr->OnInfo(TransCoderOnInfoType::INFO_TYPE_TRANSCODER_COMPLETED, 0);
-                }
-            });
+            HandleCompleteEvent();
             break;
         }
         default:
@@ -773,7 +782,25 @@ void HiTransCoderImpl::OnEvent(const Event &event)
 
 void HiTransCoderImpl::HandleErrorEvent(int32_t errorCode)
 {
+    FALSE_RETURN_MSG(!ignoreError_.load(), "igore this error event!");
+    callbackLooper_->StopReportMediaProgress();
+    if (pipeline_ != nullptr) {
+        pipeline_->Pause;
+    }
     callbackLooper_->OnError(TRANSCODER_ERROR_INTERNAL, errorCode);
+    ignoreError_.store(true);
+}
+
+void HiTransCoderImpl::HandleCompleteEvent()
+{
+    callbackLooper_->StopReportMediaProgress();
+    pipeline_->Stop();
+    callbackLooper_->Stop();
+    auto ptr = obs_.lock();
+    if (ptr != nullptr) {
+        ptr->OnInfo(TransCoderOnInfoType::INFO_TYPE_PROGRESS_UPDATE, TRANSCODER_COMPLETE_PROGRESS);
+        ptr->OnInfo(TransCoderOnInfoType::INFO_TYPE_TRANSCODER_COMPLETED, 0);
+    }
 }
 
 Status HiTransCoderImpl::LinkAudioDecoderFilter(const std::shared_ptr<Pipeline::Filter>& preFilter,
