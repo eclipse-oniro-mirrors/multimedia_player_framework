@@ -74,6 +74,7 @@ private:
     Status SetSurfacePipeline(int32_t outputVideoWidth, int32_t outputVideoHeight);
     void CancelTransCoder();
     void HandleErrorEvent(int32_t errorCode);
+    void HandleCompleteEvent();
     Status ConfigureVideoAudioMetaData();
     Status ConfigureMetaData(const std::vector<std::shared_ptr<Meta>> &trackInfos);
     Status SetTrackMime(const std::vector<std::shared_ptr<Meta>> &trackInfos);
