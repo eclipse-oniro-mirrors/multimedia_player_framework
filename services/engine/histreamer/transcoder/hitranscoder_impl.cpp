@@ -74,7 +74,7 @@ public:
         MEDIA_LOG_I("TransCoderEventReceiver ctor called.");
         hiTransCoderImpl_ = hiTransCoderImpl;
         task_ = std::make_unique<Task>("TransCoderEventReceiver", transcoderId, TaskType::GLOBAL,
-            OHOS:Media::TaskPriority::HIGH, false);
+            OHOS::Media::TaskPriority::HIGH, false);
     }
 
     void OnEvent(const Event &event) override
@@ -780,7 +780,7 @@ void HiTransCoderImpl::HandleErrorEvent(int32_t errorCode)
     }
     callbackLooper_->StopReportMediaProgress();
     if (pipeline_ != nullptr) {
-        pipeline_->Pause;
+        pipeline_->Pause();
     }
     callbackLooper_->OnError(TRANSCODER_ERROR_INTERNAL, errorCode);
     {
