@@ -91,6 +91,7 @@ void HiTransCoderCallbackLooper::ManualReportMediaProgressOnce()
 void HiTransCoderCallbackLooper::StopReportMediaProgress()
 {
     MEDIA_LOG_I("StopReportMediaProgress");
+    OHOS::Media::AutoLock lock(loopMutex_);
     reportMediaProgress_ = false;
 }
 

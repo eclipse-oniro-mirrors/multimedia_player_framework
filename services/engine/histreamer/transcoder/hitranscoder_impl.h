@@ -74,6 +74,7 @@ private:
     Status SetSurfacePipeline(int32_t outputVideoWidth, int32_t outputVideoHeight);
     void CancelTransCoder();
     void HandleErrorEvent(int32_t errorCode);
+    void HandleCompleteEvent();
     Status ConfigureVideoAudioMetaData();
     Status ConfigureMetaData(const std::vector<std::shared_ptr<Meta>> &trackInfos);
     Status SetTrackMime(const std::vector<std::shared_ptr<Meta>> &trackInfos);
@@ -131,8 +132,8 @@ private:
     int64_t transcoderTotalDuration_ = 0;
     int32_t errCode_ = 0;
     std::string errMsg_ = "success";
-
-    std::atomic<bool> ignoreError_ = false;
+    std::mutex ignoreErrorMutex_;
+    bool ignoreError_ = false;
 };
 } // namespace MEDIA
 } // namespace OHOS
