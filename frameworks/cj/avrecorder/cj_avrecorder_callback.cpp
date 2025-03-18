@@ -501,15 +501,15 @@ void FreeCArrDeviceDescriptor(CArrDeviceDescriptor& devices)
     devices.size = 0;
 }
 
-void FreeEncoderInfo(CEncoderInfo& cinfo)
+void FreeEncoderInfo(CEncoderInfo& cInfo)
 {
-    free(cinfo.mimeType);
-    cinfo.mimeType = nullptr;
-    free(cinfo.type);
-    cinfo.type = nullptr;
-    free(cinfo.sampleRates.head);
-    cinfo.sampleRates.head = nullptr;
-    cinfo.sampleRates.size = 0;
+    free(cInfo.mimeType);
+    cInfo.mimeType = nullptr;
+    free(cInfo.type);
+    cInfo.type = nullptr;
+    free(cInfo.sampleRates.head);
+    cInfo.sampleRates.head = nullptr;
+    cInfo.sampleRates.size = 0;
 }
 void FreeCArrEncoderInfo(CArrEncoderInfo& cInfo)
 {
