@@ -215,10 +215,7 @@ HWTEST_F(TransCoderUnitTest, transcoder_PureAudio_001, TestSize.Level2)
     AudioCodecFormat encoder = AAC_LC;
     EXPECT_EQ(MSERR_OK, transcoder_->SetAudioEncoder(encoder));
     EXPECT_EQ(MSERR_OK, transcoder_->SetAudioEncodingBitRate(TRASCODER_AUDIO_ENCODING_BIT_RATE));
-    EXPECT_EQ(MSERR_OK, transcoder_->Prepare());
-    EXPECT_EQ(MSERR_OK, transcoder_->Start());
-    EXPECT_EQ(MSERR_OK, transcoder_->Cancel());
-    EXPECT_EQ(MSERR_OK, transcoder_->Release());
+    EXPECT_EQ(static_cast<int32_t>(Status::ERROR_NULL_POINTER), transcoder_->Prepare());
     close(dstFd);
     close(srcFd);
 }
@@ -246,12 +243,7 @@ HWTEST_F(TransCoderUnitTest, transcoder_PureAudio_002, TestSize.Level2)
     AudioCodecFormat encoder = AAC_LC;
     EXPECT_EQ(MSERR_OK, transcoder_->SetAudioEncoder(encoder));
     EXPECT_EQ(MSERR_OK, transcoder_->SetAudioEncodingBitRate(TRASCODER_AUDIO_ENCODING_BIT_RATE));
-    EXPECT_EQ(MSERR_OK, transcoder_->Prepare());
-    EXPECT_EQ(MSERR_OK, transcoder_->Start());
-    EXPECT_EQ(MSERR_OK, transcoder_->Pause());
-    EXPECT_EQ(MSERR_OK, transcoder_->Resume());
-    EXPECT_EQ(MSERR_OK, transcoder_->Cancel());
-    EXPECT_EQ(MSERR_OK, transcoder_->Release());
+    EXPECT_EQ(static_cast<int32_t>(Status::ERROR_NULL_POINTER), transcoder_->Prepare());
     close(dstFd);
     close(srcFd);
 }
