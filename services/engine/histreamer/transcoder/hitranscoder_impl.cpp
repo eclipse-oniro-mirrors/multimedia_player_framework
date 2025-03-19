@@ -33,8 +33,6 @@ namespace OHOS {
 namespace Media {
 constexpr int32_t REPORT_PROGRESS_INTERVAL = 100;
 constexpr int32_t TRANSCODER_COMPLETE_PROGRESS = 100;
-constexpr int8_t VIDEO_HDR_TYPE_NONE = 0; // This option is used to mark none HDR type.
-constexpr int8_t VIDEO_HDR_TYPE_VIVID = 1; // This option is used to mark HDR Vivid type.
 constexpr int32_t MINIMUM_WIDTH_HEIGHT = 240;
 constexpr int32_t HEIGHT_480 = 480;
 constexpr int32_t HEIGHT_720 = 720;
@@ -64,6 +62,9 @@ static const std::unordered_set<std::string> AVMETA_KEY = {
     { Tag::VIDEO_IS_HDR_VIVID },
     { Tag::MEDIA_LONGITUDE },
     { Tag::MEDIA_LATITUDE },
+    { Tag::MEDIA_BITRATE },
+    { Tag::AUDIO_CHANNEL_COUNT },
+    { Tag::AUDIO_SAMPLE_FORMAT },
     { "customInfo" },
 };
 
@@ -211,7 +212,7 @@ void HiTransCoderImpl::ConfigureMetaDataToTrackFormat(const std::shared_ptr<Meta
    
     bool isInitializeVideoEncFormat = false;
     bool isInitializeAudioEncFormat = false;
-    bool hasVideoTrack = false;
+    isExistVideoTrack_ = false;
     (void)SetValueByType(globalInfo, muxerFormat_);
     for (size_t index = 0; index < trackInfos.size(); index++) {
         MEDIA_LOG_I("trackInfos index: %{public}zu", index);
@@ -223,19 +224,28 @@ void HiTransCoderImpl::ConfigureMetaDataToTrackFormat(const std::shared_ptr<Meta
             continue;
         }
         if (trackMime.find("video/") == 0) {
-            hasVideoTrack = true;
+            isExistVideoTrack_ = true;
         }
         if (!isInitializeVideoEncFormat && (trackMime.find("video/") == 0)) {
             (void)SetValueByType(meta, videoEncFormat_);
+            (void)SetValueByType(meta, srcVideoFormat_);
             (void)SetValueByType(meta, muxerFormat_);
+            meta->GetData(Tag::VIDEO_WIDTH, inputVideoWidth_);
+            meta->GetData(Tag::VIDEO_HEIGHT, inputVideoHeight_);
             isInitializeVideoEncFormat = true;
         } else if (!isInitializeAudioEncFormat && (trackMime.find("audio/") == 0)) {
             (void)SetValueByType(meta, audioEncFormat_);
+            (void)SetValueByType(meta, srcAudioFormat_);
             (void)SetValueByType(meta, muxerFormat_);
+            int32_t channels = 1;
+            meta->GetData(Tag::AUDIO_CHANNEL_COUNT, channels);
+            audioEncFormat_->Set<Tag::AUDIO_CHANNEL_COUNT>(channels);
+            audioEncFormat_->Set<Tag::AUDIO_SAMPLE_FORMAT>(Plugins::AudioSampleFormat::SAMPLE_S16LE);
+            srcAudioFormat_->Set<Tag::AUDIO_CHANNEL_COUNT>(channels);
             isInitializeAudioEncFormat = true;
         }
     }
-    if (!hasVideoTrack) {
+    if (!isExistVideoTrack_) {
         MEDIA_LOG_E("No video track found.");
         OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_UNSUPPORT_VID_SRC_TYPE});
     }
@@ -314,112 +324,7 @@ Status HiTransCoderImpl::ConfigureVideoAudioMetaData()
         return Status::ERROR_INVALID_PARAMETER;
     }
     ConfigureMetaDataToTrackFormat(globalInfo, trackInfos);
-    (void)ConfigureMetaData(trackInfos);
-    (void)SetTrackMime(trackInfos);
     ConfigureVideoBitrate();
-    return Status::OK;
-}
-
-Status HiTransCoderImpl::ConfigureInputVideoMetaData(const std::vector<std::shared_ptr<Meta>> &trackInfos,
-    const size_t &index)
-{
-    MEDIA_LOG_I("InputVideo contains videoTrack");
-    FALSE_RETURN_V_MSG_E(trackInfos.size() > 0 && trackInfos.size() >= index, Status::ERROR_INVALID_PARAMETER,
-        "trackInfos are invalid.");
-    FALSE_RETURN_V_MSG_E(trackInfos[index] != nullptr, Status::ERROR_INVALID_PARAMETER,
-        "trackInfos are invalid.");
-    isExistVideoTrack_ = true;
-    Plugins::VideoRotation rotation = Plugins::VideoRotation::VIDEO_ROTATION_0;
-    if (muxerFormat_ && trackInfos[index]->Get<Tag::VIDEO_ROTATION>(rotation)) {
-        muxerFormat_->Set<Tag::VIDEO_ROTATION>(rotation);
-    }
-    if (trackInfos[index]->GetData(Tag::VIDEO_WIDTH, inputVideoWidth_) &&
-        trackInfos[index]->GetData(Tag::VIDEO_HEIGHT, inputVideoHeight_)) {
-        MEDIA_LOG_D("inputVideoWidth_: %{public}d, inputVideoHeight_: %{public}d",
-            inputVideoWidth_, inputVideoHeight_);
-        videoEncFormat_->Set<Tag::VIDEO_WIDTH>(inputVideoWidth_);
-        videoEncFormat_->Set<Tag::VIDEO_HEIGHT>(inputVideoHeight_);
-        srcVideoFormat_->Set<Tag::VIDEO_WIDTH>(inputVideoWidth_);
-        srcVideoFormat_->Set<Tag::VIDEO_HEIGHT>(inputVideoHeight_);
-    } else {
-        MEDIA_LOG_W("Get input video width or height failed");
-    }
-    std::string videoMime;
-    trackInfos[index]->GetData(Tag::MIME_TYPE, videoMime);
-    srcVideoFormat_->SetData(Tag::MIME_TYPE, videoMime);
-    int64_t videoBitrate;
-    trackInfos[index]->Get<Tag::MEDIA_BITRATE>(videoBitrate);
-    srcVideoFormat_->SetData(Tag::MEDIA_BITRATE, videoBitrate);
-    bool isHdr = false;
-    trackInfos[index]->GetData(Tag::VIDEO_IS_HDR_VIVID, isHdr);
-    if (isHdr) {
-        videoEncFormat_->SetData(Tag::VIDEO_IS_HDR_VIVID, VIDEO_HDR_TYPE_VIVID);
-        srcVideoFormat_->SetData(Tag::VIDEO_IS_HDR_VIVID, VIDEO_HDR_TYPE_VIVID);
-    } else {
-        videoEncFormat_->SetData(Tag::VIDEO_IS_HDR_VIVID, VIDEO_HDR_TYPE_NONE);
-        srcVideoFormat_->SetData(Tag::VIDEO_IS_HDR_VIVID, VIDEO_HDR_TYPE_NONE);
-    }
-    return Status::OK;
-}
-
-Status HiTransCoderImpl::ConfigureMetaData(const std::vector<std::shared_ptr<Meta>> &trackInfos)
-{
-    FALSE_RETURN_V_MSG_E(trackInfos.size() > 0, Status::ERROR_INVALID_PARAMETER,
-        "trackInfos are invalid.");
-    for (size_t index = 0; index < trackInfos.size(); index++) {
-        std::shared_ptr<Meta> meta = trackInfos[index];
-        FALSE_RETURN_V_MSG_E(meta != nullptr, Status::ERROR_INVALID_PARAMETER,
-            "meta is invalid, index: %zu", index);
-        Plugins::MediaType mediaType = Plugins::MediaType::UNKNOWN;
-        if (!meta->GetData(Tag::MEDIA_TYPE, mediaType)) {
-            MEDIA_LOG_W("mediaType not found, index: %zu", index);
-            continue;
-        }
-        if (mediaType == Plugins::MediaType::VIDEO) {
-            (void)ConfigureInputVideoMetaData(trackInfos, index);
-        } else if (mediaType == Plugins::MediaType::AUDIO) {
-            int32_t channels = 0;
-            if (meta->GetData(Tag::AUDIO_CHANNEL_COUNT, channels)) {
-                MEDIA_LOG_D("Audio channel count: %{public}d", channels);
-            } else {
-                MEDIA_LOG_W("Get audio channel count failed");
-            }
-            audioEncFormat_->Set<Tag::AUDIO_CHANNEL_COUNT>(channels);
-            audioEncFormat_->Set<Tag::AUDIO_SAMPLE_FORMAT>(Plugins::AudioSampleFormat::SAMPLE_S16LE);
-            srcAudioFormat_->Set<Tag::AUDIO_CHANNEL_COUNT>(channels);
-            srcAudioFormat_->Set<Tag::AUDIO_SAMPLE_FORMAT>(Plugins::AudioSampleFormat::SAMPLE_S16LE);
-            int32_t sampleRate = 0;
-            if (meta->GetData(Tag::AUDIO_SAMPLE_RATE, sampleRate)) {
-                MEDIA_LOG_D("Audio sampleRate: %{public}d", sampleRate);
-            } else {
-                MEDIA_LOG_W("Get audio channel count failed");
-            }
-            audioEncFormat_->Set<Tag::AUDIO_SAMPLE_RATE>(sampleRate);
-            srcAudioFormat_->Set<Tag::AUDIO_SAMPLE_RATE>(sampleRate);
-
-            std::string audioMime;
-            meta->GetData(Tag::MIME_TYPE, audioMime);
-            srcAudioFormat_->SetData(Tag::MIME_TYPE, audioMime);
-        }
-    }
-    return Status::OK;
-}
-
-Status HiTransCoderImpl::SetTrackMime(const std::vector<std::shared_ptr<Meta>> &trackInfos)
-{
-    for (size_t index = 0; index < trackInfos.size(); index++) {
-        std::string trackMime;
-        if (!trackInfos[index]->GetData(Tag::MIME_TYPE, trackMime)) {
-            continue;
-        }
-        std::string videoMime;
-        std::string audioMime;
-        if (trackMime.find("video/") == 0 && !videoEncFormat_->GetData(Tag::MIME_TYPE, videoMime)) {
-            videoEncFormat_->Set<Tag::MIME_TYPE>(trackMime);
-        } else if (trackMime.find("audio/") == 0 && !audioEncFormat_->GetData(Tag::MIME_TYPE, audioMime)) {
-            audioEncFormat_->Set<Tag::MIME_TYPE>(trackMime);
-        }
-    }
     return Status::OK;
 }
 
@@ -921,25 +826,35 @@ Status HiTransCoderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, co
     Pipeline::StreamType outType)
 {
     MEDIA_LOG_I("HiPlayerImpl::OnCallback filter, outType: %{public}d", static_cast<int32_t>(outType));
+    FALSE_RETURN_V_MSG_E(filter != nullptr, Status::ERROR_NULL_POINTER, "filter is nullptr");
     if (cmd == Pipeline::FilterCallBackCommand::NEXT_FILTER_NEEDED) {
         switch (outType) {
             case Pipeline::StreamType::STREAMTYPE_RAW_AUDIO:
+                if (filter->GetFilterType() == Pipeline::FilterType::FILTERTYPE_DEMUXER) {
+                    FALSE_RETURN_V(!isAudioTrackLinked_, Status::OK);
+                    isAudioTrackLinked_ = true;
+                }
                 return LinkAudioEncoderFilter(filter, outType);
             case Pipeline::StreamType::STREAMTYPE_ENCODED_AUDIO:
-                if (audioDecoderFilter_) {
-                    return LinkMuxerFilter(filter, outType);
+                if (filter->GetFilterType() == Pipeline::FilterType::FILTERTYPE_DEMUXER) {
+                    FALSE_RETURN_V(!isAudioTrackLinked_, Status::OK);
+                    isAudioTrackLinked_ = true;
+                    return LinkAudioDecoderFilter(filter, outType);
                 }
-                return LinkAudioDecoderFilter(filter, outType);
+                return LinkMuxerFilter(filter, outType);
             case Pipeline::StreamType::STREAMTYPE_RAW_VIDEO:
-                if (!isNeedVideoResizeFilter_ || videoResizeFilter_) {
+                if (!isNeedVideoResizeFilter_ ||
+                    filter->GetFilterType() == Pipeline::FilterType::FILTERTYPE_VIDRESIZE) {
                     return LinkVideoEncoderFilter(filter, outType);
                 }
                 return LinkVideoResizeFilter(filter, outType);
             case Pipeline::StreamType::STREAMTYPE_ENCODED_VIDEO:
-                if (videoDecoderFilter_) {
-                    return LinkMuxerFilter(filter, outType);
+                if (filter->GetFilterType() == Pipeline::FilterType::FILTERTYPE_DEMUXER) {
+                    FALSE_RETURN_V(!isVideoTrackLinked_, Status::OK);
+                    isVideoTrackLinked_ = true;
+                    return LinkVideoDecoderFilter(filter, outType);
                 }
-                return LinkVideoDecoderFilter(filter, outType);
+                return LinkMuxerFilter(filter, outType);
             default:
                 break;
         }
@@ -949,6 +864,7 @@ Status HiTransCoderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, co
 
 int32_t HiTransCoderImpl::GetCurrentTime(int32_t& currentPositionMs)
 {
+    FALSE_RETURN_V(muxerFilter_ != nullptr, static_cast<int32_t>(Status::ERROR_UNKNOWN));
     int64_t currentPts = muxerFilter_->GetCurrentPtsMs();
     currentPositionMs = (int32_t)currentPts;
     return static_cast<int32_t>(Status::OK);
