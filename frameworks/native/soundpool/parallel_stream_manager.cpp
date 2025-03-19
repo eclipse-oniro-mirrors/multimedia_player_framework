@@ -25,11 +25,9 @@ namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SOUNDPOOL, "ParallelStreamManager"};
     static const std::string THREAD_POOL_NAME = "OS_PalStream";
     static const std::string THREAD_POOL_NAME_STREAM = "OS_Stream";
-    static const std::string THREAD_POOL_NAME_WAIT = "OS_WaiStream";
     static const int32_t MAX_PLAY_STREAMS_NUMBER = 32;
     static const int32_t MIN_PLAY_STREAMS_NUMBER = 1;
-    static const int32_t STREAM_THREAD_NUMBER = 5;
-    static const int32_t WAIT_THREAD_NUMBER = 5;
+    static const int32_t STREAM_THREAD_NUMBER = 1;
     static const int32_t ERROE_STREAM_ID = -1;
     static const int32_t ERROE_GLOBE_ID = -1;
 }
@@ -70,9 +68,6 @@ ParallelStreamManager::~ParallelStreamManager()
     if (streamPlayThreadPool_ != nullptr) {
         streamPlayThreadPool_->Stop();
     }
-    if (waitPlayThreadPool_ != nullptr) {
-        waitPlayThreadPool_->Stop();
-    }
     if (streamStopThreadPool_ != nullptr) {
         streamStopThreadPool_->Stop();
     }
@@ -97,9 +92,6 @@ int32_t ParallelStreamManager::InitThreadPool()
     CHECK_AND_RETURN_RET_LOG(streamStopThreadPool_ != nullptr, MSERR_INVALID_VAL, "Parallel stopThreadPool fail");
     streamStopThreadPool_->Start(STREAM_THREAD_NUMBER);
 
-    waitPlayThreadPool_ = std::make_shared<ThreadPool>(THREAD_POOL_NAME_WAIT);
-    CHECK_AND_RETURN_RET_LOG(waitPlayThreadPool_ != nullptr, MSERR_INVALID_VAL, "Parallel waitThreadPool fail");
-    waitPlayThreadPool_->Start(WAIT_THREAD_NUMBER);
     return MSERR_OK;
 }
 
@@ -404,7 +396,7 @@ void ParallelStreamManager::OnPlayFinished(int32_t streamID)
         ThreadPool::Task streamPlayTask = [this, waitFront, playFlag] {
             this->PreparePlay(waitFront, playFlag);
         };
-        waitPlayThreadPool_->AddTask(streamPlayTask);
+        streamPlayThreadPool_->AddTask(streamPlayTask);
     }
 }
 
