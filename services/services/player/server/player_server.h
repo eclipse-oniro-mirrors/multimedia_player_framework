@@ -223,6 +223,7 @@ private:
     void PreparedHandleEos();
     void HandleInterruptEvent(const Format &infoBody);
     void HandleAudioDeviceChangeEvent(const Format &infoBody);
+    void OnFlvAutoSelectBitRate(uint32_t bitRate);
     void FormatToString(std::string &dumpString, std::vector<Format> &videoTrack);
     void OnErrorCb(int32_t errorCode, const std::string &errorMsg);
     void InnerOnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody, const int32_t ret);

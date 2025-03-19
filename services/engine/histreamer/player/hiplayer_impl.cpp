@@ -769,12 +769,12 @@ void HiPlayerImpl::SetInterruptState(bool isInterruptNeeded)
     }
 }
 
-int32_t HiPlayerImpl::SelectBitRate(uint32_t bitRate)
+int32_t HiPlayerImpl::SelectBitRate(uint32_t bitRate, bool isAutoSelect)
 {
     MEDIA_LOG_D("HiPlayerImpl:: Select BitRate %{public}d", bitRate);
     FALSE_RETURN_V_MSG_E(demuxer_ != nullptr,
         MSERR_INVALID_OPERATION, "SelectBitRate failed, demuxer_ is null");
-    Status ret = demuxer_->SelectBitRate(bitRate);
+    Status ret = demuxer_->SelectBitRate(bitRate, isAutoSelect);
     if (ret == Status::OK) {
         Format bitRateFormat;
         callbackLooper_.OnInfo(INFO_TYPE_BITRATEDONE, bitRate, bitRateFormat);
@@ -2234,6 +2234,10 @@ void HiPlayerImpl::OnEventContinue(const Event &event)
             HandleSeiInfoEvent(event);
             break;
         }
+        case EventType::EVENT_FLV_AUTO_SELECT_BITRATE: {
+            HandleFlvAutoSelectBitRate(AnyCast<int32_t>(event.param));
+            break;
+        }
         default:
             break;
     }
@@ -2248,6 +2252,13 @@ void HiPlayerImpl::HandleSeiInfoEvent(const Event &event)
     format.PutIntValue(Tag::AV_PLAYER_SEI_PLAYBACK_POSITION, playbackPos - Plugins::Us2Ms(mediaStartPts_));
 
     callbackLooper_.OnInfo(INFO_TYPE_SEI_UPDATE_INFO, 0, format);
+}
+
+void HiPlayerImpl::HandleFlvAutoSelectBitRate(uint32_t bitRate)
+{
+    MEDIA_LOG_I("flv auto select bitrate");
+    Format selectBitRateFormat;
+    callbackLooper_.OnInfo(INFO_TYPE_FLV_AUTO_SELECT_BITRATE, bitRate, selectBitRateFormat);
 }
 
 void HiPlayerImpl::OnEventSub(const Event &event)

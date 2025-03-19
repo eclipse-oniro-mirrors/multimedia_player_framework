@@ -1246,7 +1246,7 @@ int32_t PlayerServer::SelectBitRate(uint32_t bitRate)
 {
     std::unique_lock<std::mutex> lock(mutex_);
     if (playerEngine_ != nullptr) {
-        int ret = playerEngine_->SelectBitRate(bitRate);
+        int ret = playerEngine_->SelectBitRate(bitRate, false);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine SelectBitRate Failed!");
     }
     return MSERR_OK;
@@ -1662,6 +1662,9 @@ void PlayerServer::InnerOnInfo(PlayerOnInfoType type, int32_t extra, const Forma
     if (type == INFO_TYPE_BUFFERING_UPDATE) {
         OnBufferingUpdate(type, extra, infoBody);
     }
+    if (type == INFO_TYPE_FLV_AUTO_SELECT_BITRATE) {
+        OnFlvAutoSelectBitRate(extra);
+    }
     if (playerCb_ != nullptr && ret == MSERR_OK) {
         bool isBackgroudPause = (extra == backgroundState_ || extra == interruptEventState_ ||
             extra == audioDeviceChangeState_);
@@ -1750,6 +1753,22 @@ void PlayerServer::OnNotifyBufferingEnd()
     });
     taskMgr_.LaunchTask(playingTask, PlayerServerTaskType::LIGHT_TASK, "ResumeDemuxer");
     MEDIA_LOGI("0x%{public}06" PRIXPTR " PlayerServer OnNotifyBufferingEnd out", FAKE_POINTER(this));
+    return;
+}
+
+void PlayerServer::OnFlvAutoSelectBitRate(uint32_t bitRate)
+{
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " PlayerServer OnFlvAutoSelectBitRate in", FAKE_POINTER(this));
+    CHECK_AND_RETURN(playerEngine_ != nullptr);
+    auto autoSelectBitRateTask = std::make_shared<TaskHandler<void>>([this, bitRate]() {
+        MediaTrace::TraceBegin("PlayerServer::OnFlvAutoSelectBitRate", FAKE_POINTER(this));
+        int32_t ret = playerEngine_->SelectBitRate(bitRate, true);
+        MEDIA_LOGI("OnFlvAutoSelectBitRate task end");
+        taskMgr_.MarkTaskDone("flv auto select bitrate done");
+        CHECK_AND_RETURN_LOG(ret == MSERR_OK, "flv auto select bit rate failed");
+    });
+    taskMgr_.LaunchTask(autoSelectBitRateTask, PlayerServerTaskType::LIGHT_TASK, "AutoSelectBitRateTask");
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " PlayerServer OnFlvAutoSelectBitRate out", FAKE_POINTER(this));
     return;
 }
 
