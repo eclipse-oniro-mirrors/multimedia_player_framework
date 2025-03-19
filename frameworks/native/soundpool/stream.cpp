@@ -33,6 +33,9 @@ Stream::Stream(const Format &trackFormat, const int32_t &soundID, const int32_t 
     cacheDataFrameIndex_(0), havePlayedCount_(0)
 {
     MEDIA_LOGI("Construction Stream soundID:%{public}d, streamID:%{public}d", soundID, streamID);
+    int32_t sampleFormat;
+    trackFormat_.GetIntValue(MediaAVCodec::MediaDescriptionKey::MD_KEY_AUDIO_SAMPLE_FORMAT, sampleFormat);
+    sampleFormat_ = static_cast<AudioStandard::AudioSampleFormat>(sampleFormat);
 }
 
 Stream::~Stream()
