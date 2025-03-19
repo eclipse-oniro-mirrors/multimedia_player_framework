@@ -76,11 +76,8 @@ private:
     void HandleErrorEvent(int32_t errorCode);
     void HandleCompleteEvent();
     Status ConfigureVideoAudioMetaData();
-    Status ConfigureMetaData(const std::vector<std::shared_ptr<Meta>> &trackInfos);
-    Status SetTrackMime(const std::vector<std::shared_ptr<Meta>> &trackInfos);
     Status ConfigureVideoWidthHeight(const TransCoderParam &transCoderParam);
     Status ConfigureVideoBitrate();
-    Status ConfigureInputVideoMetaData(const std::vector<std::shared_ptr<Meta>> &trackInfos, const size_t &index);
     bool SetValueByType(const std::shared_ptr<Meta> &innerMeta, std::shared_ptr<Meta> &outputMeta);
     bool ProcessMetaKey(
         const std::shared_ptr<Meta> &innerMeta, std::shared_ptr<Meta> &outputMeta, const std::string &metaKey);
@@ -121,6 +118,8 @@ private:
     std::string inputFile_;
 
     std::string transCoderId_;
+    bool isAudioTrackLinked_ = false;
+    bool isVideoTrackLinked_ = false;
     int32_t inputVideoWidth_ = 0;
     int32_t inputVideoHeight_ = 0;
     bool isExistVideoTrack_ = false;
