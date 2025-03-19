@@ -792,7 +792,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_Release(struct OH_AVScreenCapture
 
     if (screenCaptureObj != nullptr && screenCaptureObj->screenCapture_ != nullptr) {
         if (screenCaptureObj->callback_ != nullptr) {
-            if (screenCaptureObj->callback_->StopCallback()) {
+            if (!screenCaptureObj->callback_->StopCallback()) {
                 MEDIA_LOGI("OH_AVScreenCapture_Release StopCallback failed: 0x%{public}06" PRIXPTR,
                     FAKE_POINTER(capture));
                 return AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT;
