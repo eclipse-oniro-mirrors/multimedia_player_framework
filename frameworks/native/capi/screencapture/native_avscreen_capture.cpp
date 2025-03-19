@@ -274,7 +274,9 @@ public:
         CHECK_AND_RETURN(capture_ != nullptr);
 
         if (stateChangeCallback_ != nullptr) {
+            callbackInUse_.store(true);
             stateChangeCallback_->OnStateChange(capture_, stateCode);
+            callbackInUse_.store(false);
             return;
         }
     }
@@ -346,12 +348,16 @@ public:
         MEDIA_LOGD("OnVideoBufferAvailable finished");
     }
 
-    void StopCallback()
+    bool StopCallback()
     {
+        if (callbackInUse_.load()) {
+            return false;
+        }
         isBufferAvailableCallbackStop_.store(true);
         MEDIA_LOGD("StopCallback before lock"); // waiting for OnBufferAvailable
         std::unique_lock<std::shared_mutex> lock(mutex_);
         MEDIA_LOGD("StopCallback after lock");
+        return true;
     }
 
     void SetCallback(struct OH_AVScreenCaptureCallback callback)
@@ -410,6 +416,7 @@ private:
     std::shared_ptr<NativeScreenCaptureErrorCallback> errorCallback_ = nullptr;
     std::shared_ptr<NativeScreenCaptureDataCallback> dataCallback_ = nullptr;
     std::shared_ptr<NativeScreenCaptureDisplaySelectedCallback> displaySelectedCallback_ = nullptr;
+    std::atomic<bool> callbackInUse_ = false;
 };
 
 struct ScreenCaptureContentFilterObject : public OH_AVScreenCapture_ContentFilter {
@@ -785,7 +792,11 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_Release(struct OH_AVScreenCapture
 
     if (screenCaptureObj != nullptr && screenCaptureObj->screenCapture_ != nullptr) {
         if (screenCaptureObj->callback_ != nullptr) {
-            screenCaptureObj->callback_->StopCallback();
+            if (screenCaptureObj->callback_->StopCallback()) {
+                MEDIA_LOGI("OH_AVScreenCapture_Release StopCallback failed: 0x%{public}06" PRIXPTR,
+                    FAKE_POINTER(capture));
+                return AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT;
+            }
         }
         int32_t ret = screenCaptureObj->screenCapture_->Release();
         delete capture;
