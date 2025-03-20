@@ -2486,7 +2486,7 @@ int32_t ScreenCaptureServer::MakeVirtualScreenMirrorForWindowForHopper(sptr<Rose
                 defaultDisplayId = windowInfo->windowDisplayInfo.displayId;
             }
         }
-        MEDIA_LOGI("windowId:%{public}d, displayId:%{public}d" PRIu64, windowInfoOption.windowId, dafaultDisplayId);
+        MEDIA_LOGI("windowId:%{public}d, displayId:%{public}" PRIu64, windowInfoOption.windowId, defaultDisplayId);
     }
     DMError dRet = ScreenManager::GetInstance().MakeMirrorForRecord(defaultDisplayId, mirrorIds, mirrorGroup);
     CHECK_AND_RETURN_RET_LOG(dRet == DMError::DM_OK, MSERR_UNKNOWN,
