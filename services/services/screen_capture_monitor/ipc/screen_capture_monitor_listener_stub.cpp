@@ -63,6 +63,7 @@ void ScreenCaptureMonitorListenerStub::OnScreenCaptureStarted(int32_t pid)
 {
     MEDIA_LOGI("ScreenCaptureMonitorListenerStub:0x%{public}06" PRIXPTR " OnScreenCaptureStarted",
         FAKE_POINTER(this));
+    std::lock_guard<std::mutex> lock(mutex_);
     for (const auto& value : screenCaptureMonitorCallbacks_) {
         if (value != nullptr) {
             MEDIA_LOGD("ScreenCaptureMonitorListenerStub::OnScreenCaptureStarted traversal"
@@ -76,6 +77,7 @@ void ScreenCaptureMonitorListenerStub::OnScreenCaptureFinished(int32_t pid)
 {
     MEDIA_LOGI("ScreenCaptureMonitorListenerStub:0x%{public}06" PRIXPTR " OnScreenCaptureFinished",
         FAKE_POINTER(this));
+    std::lock_guard<std::mutex> lock(mutex_);
     for (const auto& value : screenCaptureMonitorCallbacks_) {
         if (value != nullptr) {
             MEDIA_LOGD("ScreenCaptureMonitorListenerStub::OnScreenCaptureFinished traversal"
@@ -90,13 +92,16 @@ void ScreenCaptureMonitorListenerStub::RegisterScreenCaptureMonitorListener(
 {
     MEDIA_LOGI("ScreenCaptureMonitorListenerStub:0x%{public}06" PRIXPTR " RegisterScreenCaptureMonitorListener",
         FAKE_POINTER(this));
+    std::lock_guard<std::mutex> lock(mutex_);
     screenCaptureMonitorCallbacks_.insert(listener);
 }
+
 void ScreenCaptureMonitorListenerStub::UnregisterScreenCaptureMonitorListener(
     sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> listener)
 {
     MEDIA_LOGI("ScreenCaptureMonitorListenerStub:0x%{public}06" PRIXPTR " UnregisterScreenCaptureMonitorListener",
         FAKE_POINTER(this));
+    std::lock_guard<std::mutex> lock(mutex_);
     auto it = screenCaptureMonitorCallbacks_.find(listener);
     if (it != screenCaptureMonitorCallbacks_.end()) {
         screenCaptureMonitorCallbacks_.erase(it);

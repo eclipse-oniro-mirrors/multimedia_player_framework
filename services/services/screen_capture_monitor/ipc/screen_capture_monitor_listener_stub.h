@@ -34,6 +34,7 @@ public:
 
 private:
     std::set<sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener>> screenCaptureMonitorCallbacks_;
+    std::mutex mutex_;
 };
 } // namespace Media
 } // namespace OHOS
