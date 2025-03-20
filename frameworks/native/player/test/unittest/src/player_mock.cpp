@@ -793,5 +793,17 @@ int32_t PlayerMock::SetDeviceChangeCbStatus(bool status)
     UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
     return player_->SetDeviceChangeCbStatus(status);
 }
+
+int32_t PlayerMock::SetSuperResolution(bool enabled)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
+    return player_->SetSuperResolution(enabled);
+}
+
+int32_t PlayerMock::SetVideoWindowSize(int32_t width, int32_t height)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
+    return player_->SetVideoWindowSize(width, height);
+}
 } // namespace Media
 } // namespace OHOS
