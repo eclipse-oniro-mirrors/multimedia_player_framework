@@ -2482,6 +2482,9 @@ int32_t ScreenCaptureServer::MakeVirtualScreenMirrorForWindowForHopper(sptr<Rose
         CHECK_AND_RETURN_RET_LOG(wRet == OHOS::Rosen::WMError::WM_OK, MSERR_UNKNOWN,
             "ListWindowInfo failed, captureMode:%{public}d, ret:%{public}d", captureConfig_.captureMode, wRet);
         for (const auto& windowInfo : windowInfos) {
+            if (!windowInfo) {
+                continue;
+            }
             if (windowInfo->windowMetaInfo.windowId == windowInfoOption.windowId) {
                 defaultDisplayId = windowInfo->windowDisplayInfo.displayId;
             }
