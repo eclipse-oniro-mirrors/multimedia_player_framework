@@ -196,6 +196,8 @@ private:
     bool CheckCaptureSpecifiedWindowForSelectWindow();
     void SendConfigToUIParams(AAFwk::Want& want);
     bool IsHopper();
+    int32_t MakeVirtualScreenMirrorForWindowForHopper(sptr<Rosen::Display> defaultDisplay,
+        std::vector<ScreenId> mirrorIds);
     int32_t MakeVirtualScreenMirrorForHomeScreenForHopper(sptr<Rosen::Display> defaultDisplay,
         std::vector<ScreenId> mirrorIds);
     int32_t MakeVirtualScreenMirrorForSpecifiedScreenForHopper(sptr<Rosen::Display> defaultDisplay,
