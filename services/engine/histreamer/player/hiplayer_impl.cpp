@@ -407,7 +407,10 @@ int32_t HiPlayerImpl::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
     subtitleLanguage_ = strategy.preferredSubtitleLanguage;
     if (strategy.enableSuperResolution) {
         videoPostProcessorType_ = VideoPostProcessorType::SUPER_RESOLUTION;
-        isPostProcessorOn_ = strategy.enableSuperResolution;
+        isPostProcessorOn_ = true;
+    } else {
+        videoPostProcessorType_ = VideoPostProcessorType::NONE;
+        isPostProcessorOn_ = false;
     }
 
     mimeType_ = mediaSource->GetMimeType();
@@ -3264,7 +3267,10 @@ int32_t HiPlayerImpl::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
     FALSE_RETURN_V(IsLivingMaxDelayTimeValid(), TransStatus(Status::ERROR_INVALID_PARAMETER));
     if (playbackStrategy.enableSuperResolution) {
         videoPostProcessorType_ = VideoPostProcessorType::SUPER_RESOLUTION;
-        isPostProcessorOn_ = playbackStrategy.enableSuperResolution;
+        isPostProcessorOn_ = true;
+    } else {
+        videoPostProcessorType_ = VideoPostProcessorType::NONE;
+        isPostProcessorOn_ = false;
     }
     return MSERR_OK;
 }
