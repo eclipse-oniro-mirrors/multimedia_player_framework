@@ -1664,6 +1664,7 @@ void PlayerServer::InnerOnInfo(PlayerOnInfoType type, int32_t extra, const Forma
     }
     if (type == INFO_TYPE_FLV_AUTO_SELECT_BITRATE) {
         OnFlvAutoSelectBitRate(extra);
+        return;
     }
     if (playerCb_ != nullptr && ret == MSERR_OK) {
         bool isBackgroudPause = (extra == backgroundState_ || extra == interruptEventState_ ||
@@ -1762,6 +1763,11 @@ void PlayerServer::OnFlvAutoSelectBitRate(uint32_t bitRate)
     CHECK_AND_RETURN(playerEngine_ != nullptr);
     auto autoSelectBitRateTask = std::make_shared<TaskHandler<void>>([this, bitRate]() {
         MediaTrace::TraceBegin("PlayerServer::OnFlvAutoSelectBitRate", FAKE_POINTER(this));
+        if (playerEngine_ == nullptr) {
+            MEDIA_LOGI("OnFlvAutoSelectBitRate task end, playerEngine_ is null");
+            taskMgr_.MarkTaskDone("flv auto select bitrate ignore");
+            return;
+        }
         int32_t ret = playerEngine_->SelectBitRate(bitRate, true);
         MEDIA_LOGI("OnFlvAutoSelectBitRate task end");
         taskMgr_.MarkTaskDone("flv auto select bitrate done");
