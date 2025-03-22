@@ -120,9 +120,10 @@ public:
 
     virtual int32_t SetLooping(bool loop) = 0;
     virtual int32_t SetParameter(const Format &param) = 0;
-    virtual int32_t SelectBitRate(uint32_t bitRate)
+    virtual int32_t SelectBitRate(uint32_t bitRate, bool isAutoSelect)
     {
         (void)bitRate;
+        (void)isAutoSelect;
         return 0;
     }
     virtual int32_t SetVideoScaleType(Plugins::VideoScaleType videoScaleType)

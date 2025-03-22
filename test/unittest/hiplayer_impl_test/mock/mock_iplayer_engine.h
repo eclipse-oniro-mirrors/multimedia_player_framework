@@ -69,7 +69,7 @@ public:
     MOCK_METHOD(int32_t, GetPlaybackSpeed, (PlaybackRateMode &mode), ());
     MOCK_METHOD(int32_t, SetMediaSource, (const std::shared_ptr<AVMediaSource> &mediaSource,
         AVPlayStrategy strategy), ());
-    MOCK_METHOD(int32_t, SelectBitRate, (uint32_t bitRate), ());
+    MOCK_METHOD(int32_t, SelectBitRate, (uint32_t bitRate, bool isAutoSelect), ());
     MOCK_METHOD(int32_t, SetDecryptConfig, (const sptr<DrmStandard::IMediaKeySessionService> &keySessionProxy,
         bool svp), ());
     MOCK_METHOD(int32_t, SetVideoSurface, (sptr<Surface> surface), ());

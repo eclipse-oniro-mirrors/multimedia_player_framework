@@ -130,7 +130,7 @@ public:
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
     int32_t SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, AVPlayStrategy strategy) override;
     int32_t GetPlaybackSpeed(PlaybackRateMode& mode) override;
-    int32_t SelectBitRate(uint32_t bitRate) override;
+    int32_t SelectBitRate(uint32_t bitRate, bool isAutoSelect) override;
     int32_t GetAudioEffectMode(int32_t &effectMode) override;
     int32_t SetAudioEffectMode(int32_t effectMode) override;
 
@@ -205,6 +205,7 @@ private:
     void HandleAudioTrackChangeEvent(const Event& event);
     void HandleVideoTrackChangeEvent(const Event& event);
     void HandleSubtitleTrackChangeEvent(const Event& event);
+    void HandleFlvAutoSelectBitRate(uint32_t bitRate);
     void HandleSeiInfoEvent(const Event &event);
     void NotifyBufferingStart(int32_t param);
     void NotifyBufferingEnd(int32_t param);

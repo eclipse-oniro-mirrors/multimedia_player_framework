@@ -278,7 +278,9 @@ enum PlayerOnInfoType : int32_t {
     /* return the sei info */
     INFO_TYPE_SEI_UPDATE_INFO,
     /* return the message when super resolution is changed*/
-    INFO_TYPE_SUPER_RESOLUTION_CHANGED
+    INFO_TYPE_SUPER_RESOLUTION_CHANGED,
+    /* return the auto select flv live bitrate. internal info type, not open to northbound interfaces. */
+    INFO_TYPE_FLV_AUTO_SELECT_BITRATE,
 };
 
 enum PlayerStates : int32_t {
