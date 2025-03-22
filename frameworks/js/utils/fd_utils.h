@@ -18,6 +18,7 @@
  
 #include <sstream>
 #include <sys/ioctl.h>
+#include "scoped_file_descriptor.h"
  
 namespace OHOS {
 namespace Media {
@@ -25,7 +26,7 @@ namespace Media {
 class FdUtils {
 public:
     // This method is prohibited from being used on the server side.
-    static int32_t ReOpenFd(int32_t fd)
+    static ScopedFileDescriptor ReOpenFd(int32_t fd)
     {
 #ifdef __linux__
         int loc;
@@ -34,23 +35,21 @@ public:
             std::stringstream ss;
             ss << "/proc/self/fd/" << fd;
             std::string fdPathStr = ss.str();
-            char realPath[PATH_MAX];
+            char realPath[PATH_MAX_REAL];
             ssize_t result = readlink(fdPathStr.c_str(), realPath, sizeof(realPath));
             if (result == RESULT_ERROR) {
                 MEDIA_LOGW("invailed fd: %{public}d, error: %{public}s", fd, std::strerror(errno));
-                return fd;
+                return ScopedFileDescriptor(dup(fd));
             }
-            FILE *reopenFile = fopen(fdPathStr.c_str(), "r");
-            if (reopenFile == nullptr) {
+            auto newFd = open(fdPathStr.c_str(), O_RDONLY);
+            if (newFd < 0) {
                 MEDIA_LOGW("invailed fd: %{public}d, error: %{public}s", fd, std::strerror(errno));
-                return fd;
+                return ScopedFileDescriptor(dup(fd));
             }
-            auto new_fd = dup(fileno(reopenFile));
-            fclose(reopenFile);
-            return new_fd > 0 ? new_fd : fd;
+            return ScopedFileDescriptor(newFd);
         }
 #endif
-        return fd;
+        return ScopedFileDescriptor(dup(fd));
     }
 
 private:
@@ -62,6 +61,7 @@ private:
     static constexpr int IOCTL_CLOUD = 2;
     static constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "FdUtils"};
     static constexpr ssize_t RESULT_ERROR = -1;
+    static constexpr int PATH_MAX_REAL = PATH_MAX + 1;
 };
 } // namespace media
 } // namespace OHOS
