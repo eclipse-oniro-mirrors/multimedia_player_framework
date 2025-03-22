@@ -247,5 +247,37 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetMicrophoneStream_002, TestSize.Leve
     sleep(RECORDER_TIME / 2);
     ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
 }
+
+HWTEST_F(ScreenCaptureServerFunctionTest, OnTellCallStart_001, TestSize.Level2)
+{
+    screenCaptureServer_->isInTelCall_.store(false);
+    screenCaptureServer_->isInTelCallAudio_.store(false);
+    ASSERT_EQ(screenCaptureServer_->OnTelCallStart(), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, OnTellCallStart_002, TestSize.Level2)
+{
+    screenCaptureServer_->isInTelCall_.store(false);
+    screenCaptureServer_->isInTelCallAudio_.store(true);
+    ASSERT_EQ(screenCaptureServer_->OnTelCallStart(), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, OnTellCallStop_001, TestSize.Level2)
+{
+    screenCaptureServer_->isInTelCall_.store(false);
+    screenCaptureServer_->isInTelCallAudio_.store(false);
+    screenCaptureServer_->isMicrophoneSwitchTurnOn_ = false;
+    ASSERT_EQ(screenCaptureServer_->OnTelCallStop(), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, OnTellCallStop_001, TestSize.Level2)
+{
+    SetValidConfig();
+    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
+    screenCaptureServer_->isInTelCall_.store(false);
+    screenCaptureServer_->isInTelCallAudio_.store(false);
+    screenCaptureServer_->isMicrophoneSwitchTurnOn_ = true;
+    ASSERT_EQ(screenCaptureServer_->OnTelCallStop(), MSERR_OK);
+}
 } // Media
 } // OHOS

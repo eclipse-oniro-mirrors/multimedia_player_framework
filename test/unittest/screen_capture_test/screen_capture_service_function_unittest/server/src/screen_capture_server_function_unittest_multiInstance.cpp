@@ -610,6 +610,62 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckIsSaUidValid_001, TestSize.Level2
 }
 
 /**
+* @tc.name: CheckIsSaUidValid_002
+* @tc.desc: saUid not in saUidAppUidMap_
+* @tc.type: FUNC
+*/
+HWTEST_F(ScreenCaptureServerFunctionTest, CheckIsSaUidValid_002, TestSize.Level2)
+{
+    int32_t appUid = ROOT_UID;
+    int32_t saUid = -1;
+    ScreenCaptureServer::saUidAppUidMap_ = {};
+    ScreenCaptureServer::saUidAppUidMap_[saUid + 1] = {appUid, 0};
+    ASSERT_EQ(ScreenCaptureServer::CheckSaUid(saUid, appUid), true);
+}
+
+/**
+* @tc.name: CheckIsSaUidValid_003
+* @tc.desc: saUid in saUidAppUidMap_ and saUid.first == appUid
+* @tc.type: FUNC
+*/
+HWTEST_F(ScreenCaptureServerFunctionTest, CheckIsSaUidValid_003, TestSize.Level2)
+{
+    int32_t appUid = ROOT_UID;
+    int32_t saUid = -1;
+    ScreenCaptureServer::saUidAppUidMap_ = {};
+    ScreenCaptureServer::saUidAppUidMap_[saUid] = {appUid, 0};
+    ASSERT_EQ(ScreenCaptureServer::CheckSaUid(saUid, appUid), true);
+}
+
+/**
+* @tc.name: CheckIsSaUidValid_004
+* @tc.desc: saUid in saUidAppUidMap_ and saUid.first != appUid
+* @tc.type: FUNC
+*/
+HWTEST_F(ScreenCaptureServerFunctionTest, CheckIsSaUidValid_004, TestSize.Level2)
+{
+    int32_t appUid = ROOT_UID;
+    int32_t saUid = -1;
+    ScreenCaptureServer::saUidAppUidMap_ = {};
+    ScreenCaptureServer::saUidAppUidMap_[saUid] = {appUid + 1, 0};
+    ASSERT_EQ(ScreenCaptureServer::CheckSaUid(saUid, appUid), false);
+}
+
+/**
+* @tc.name: CheckIsSaUidValid_005
+* @tc.desc: saUid in saUidAppUidMap_ and saUid.first != appUid
+* @tc.type: FUNC
+*/
+HWTEST_F(ScreenCaptureServerFunctionTest, CheckIsSaUidValid_005, TestSize.Level2)
+{
+    int32_t appUid = ROOT_UID;
+    int32_t saUid = -1;
+    ScreenCaptureServer::saUidAppUidMap_ = {};
+    ScreenCaptureServer::saUidAppUidMap_[saUid] = {appUid, ScreenCaptureServer::maxSessionPerUid_};
+    ASSERT_EQ(ScreenCaptureServer::CheckSaUid(saUid, appUid), false);
+}
+
+/**
 * @tc.name: SetAndCheckSaLimit_001
 * @tc.desc: SetAndCheckSaLimit_001
 * @tc.type: FUNC
