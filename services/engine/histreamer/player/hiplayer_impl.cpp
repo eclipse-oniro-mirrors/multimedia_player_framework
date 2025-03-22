@@ -489,6 +489,9 @@ void HiPlayerImpl::ResetIfSourceExisted()
     }
 
     pipeline_ = std::make_shared<OHOS::Media::Pipeline::Pipeline>();
+    if (pipeline_ != nullptr) {
+        pipeline_->Init(playerEventReceiver_, playerFilterCallback_, playerId_);
+    }
     syncManager_ = std::make_shared<MediaSyncManager>();
     MEDIA_LOG_I("Reset the relatived objects end");
 }
