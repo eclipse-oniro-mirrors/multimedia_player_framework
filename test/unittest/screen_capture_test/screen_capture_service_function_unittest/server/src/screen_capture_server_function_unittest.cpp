@@ -1072,6 +1072,14 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StartScreenCaptureInner_001, TestSize.
     ASSERT_EQ(screenCaptureServer_->StartScreenCaptureInner(false), MSERR_OK);
 }
 
+HWTEST_F(ScreenCaptureServerFunctionTest, StartScreenCaptureInner_002, TestSize.Level2)
+{
+    SetValidConfig();
+    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
+    screenCaptureServer_->appInfo_.appUid = ScreenCaptureServer::ROOT_UID + 1;
+    ASSERT_NE(screenCaptureServer_->StartScreenCaptureInner(true), MSERR_OK);
+}
+
 HWTEST_F(ScreenCaptureServerFunctionTest, IsTelInCallSkipList_001, TestSize.Level2)
 {
     screenCaptureServer_->isCalledBySystemApp_ = true;

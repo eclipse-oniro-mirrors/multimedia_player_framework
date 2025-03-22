@@ -247,7 +247,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PrepareSelectWindow_003, TestSize.Leve
 HWTEST_F(ScreenCaptureServerFunctionTest, PrepareSelectWindow_004, TestSize.Level2)
 {
     Json::Value root;
-    const std::string rawString = "\"missionId\" : 1}";
+    const std::string rawString = "{\"missionId\" : 1}";
     Json::Reader reader;
     reader.parse(rawString, root);
     screenCaptureServer_->PrepareSelectWindow(root, screenCaptureServer_);
@@ -277,7 +277,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PrepareSelectWindow_006, TestSize.Leve
 HWTEST_F(ScreenCaptureServerFunctionTest, PrepareSelectWindow_007, TestSize.Level2)
 {
     Json::Value root;
-    const std::string rawString = "{\"displayId\" : 1, \"missionId\" : 1}";
+    const std::string rawString = "{\"displayId\" : 1, \"missionId\" : \"hello\"}";
     Json::Reader reader;
     reader.parse(rawString, root);
     screenCaptureServer_->PrepareSelectWindow(root, screenCaptureServer_);
