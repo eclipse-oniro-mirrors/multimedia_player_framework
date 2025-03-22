@@ -323,20 +323,6 @@ sptr<Surface> HiRecorderImpl::GetMetaSurface(int32_t sourceId)
     return producerMetaSurface_;
 }
 
-int32_t HiRecorderImpl::PrepareMeta()
-{
-    MEDIA_LOG_I("HiRecorderImpl PrepareMeta enter.");
-    for (auto iter : metaDataFilters_) {
-        if (metaDataFormats_.find(iter.first) != metaDataFormats_.end()) {
-            FALSE_RETURN_V_MSG_E(iter.second->Configure(metaDataFormats_.at(iter.first)) == Status::OK,
-                ERR_UNKNOWN_REASON, "MetaDataFilter Configure fail MetaType(%{public}d)", iter.first);
-            iter.second->SetCodecFormat(metaDataFormats_.at(iter.first));
-        }
-        iter.second->Init(recorderEventReceiver_, recorderCallback_);
-    }
-    return (int32_t)Status::OK;
-}
-
 int32_t HiRecorderImpl::Prepare()
 {
     MediaTrace trace("HiRecorderImpl::Prepare");
@@ -344,6 +330,23 @@ int32_t HiRecorderImpl::Prepare()
     FALSE_RETURN_V_MSG_E(lseek(fd_, 0, SEEK_CUR) != -1,
         (int32_t)Status::ERROR_UNKNOWN, "The fd is invalid.");
 
+    int32_t result = ERR_NONE;
+    result = PrepareAudioCapture();
+    FALSE_RETURN_V_MSG_E(result == ERR_NONE, result, "PrepareAudioCapture fail");
+    result = PrepareAudioDataSource();
+    FALSE_RETURN_V_MSG_E(result == ERR_NONE, result, "PrepareAudioDataSource fail");
+    result = PrepareVideoEncoder();
+    FALSE_RETURN_V_MSG_E(result == ERR_NONE, result, "PrepareVideoEncoder fail");
+    result = PrepareMetaData();
+    FALSE_RETURN_V_MSG_E(result == ERR_NONE, result, "PrepareMetaData fail");
+    result = PrepareVideoCapture();
+    FALSE_RETURN_V_MSG_E(result == ERR_NONE, result, "PrepareVideoCapture fail");
+    Status ret = pipeline_->Prepare();
+    return (int32_t)ret;
+}
+
+int32_t HiRecorderImpl::PrepareAudioCapture()
+{
     if (audioCaptureFilter_) {
         audioEncFormat_->Set<Tag::APP_TOKEN_ID>(appTokenId_);
         audioEncFormat_->Set<Tag::APP_UID>(appUid_);
@@ -354,7 +357,17 @@ int32_t HiRecorderImpl::Prepare()
         audioCaptureFilter_->Init(recorderEventReceiver_, recorderCallback_);
         CapturerInfoChangeCallback_ = std::make_shared<CapturerInfoChangeCallback>(this);
         audioCaptureFilter_->SetAudioCaptureChangeCallback(CapturerInfoChangeCallback_);
+        if (videoEncoderFilter_) {
+            audioCaptureFilter_->SetWithVideo(true);
+        } else {
+            audioCaptureFilter_->SetWithVideo(false);
+        }
     }
+    return ERR_NONE;
+}
+
+int32_t HiRecorderImpl::PrepareAudioDataSource()
+{
     if (audioDataSourceFilter_) {
         audioEncFormat_->Set<Tag::APP_TOKEN_ID>(appTokenId_);
         audioEncFormat_->Set<Tag::APP_UID>(appUid_);
@@ -363,6 +376,11 @@ int32_t HiRecorderImpl::Prepare()
         audioEncFormat_->Set<Tag::AUDIO_SAMPLE_FORMAT>(Plugins::AudioSampleFormat::SAMPLE_S16LE);
         audioDataSourceFilter_->Init(recorderEventReceiver_, recorderCallback_);
     }
+    return ERR_NONE;
+}
+
+int32_t HiRecorderImpl::PrepareVideoEncoder()
+{
     if (videoEncoderFilter_) {
         if (videoSourceIsRGBA_) {
             videoEncFormat_->Set<Tag::VIDEO_PIXEL_FORMAT>(Plugins::VideoPixelFormat::RGBA);
@@ -373,22 +391,34 @@ int32_t HiRecorderImpl::Prepare()
         FALSE_RETURN_V_MSG_E(videoEncoderFilter_->Configure(videoEncFormat_) == Status::OK,
             ERR_UNKNOWN_REASON, "videoEncoderFilter Configure fail");
     }
+    return ERR_NONE;
+}
 
+int32_t HiRecorderImpl::PrepareMetaData()
+{
+    MEDIA_LOG_I("HiRecorderImpl PrepareMeta enter.");
     if (metaDataFilters_.size()) {
-        FALSE_RETURN_V_MSG_E(PrepareMeta() == (int32_t)Status::OK, ERR_UNKNOWN_REASON, "prepare MetadataFilter fail");
+        for (auto iter : metaDataFilters_) {
+            if (metaDataFormats_.find(iter.first) != metaDataFormats_.end()) {
+                FALSE_RETURN_V_MSG_E(iter.second->Configure(metaDataFormats_.at(iter.first)) == Status::OK,
+                    ERR_UNKNOWN_REASON, "MetaDataFilter Configure fail MetaType(%{public}d)", iter.first);
+                iter.second->SetCodecFormat(metaDataFormats_.at(iter.first));
+            }
+            iter.second->Init(recorderEventReceiver_, recorderCallback_);
+        }
     }
+    return ERR_NONE;
+}
 
+int32_t HiRecorderImpl::PrepareVideoCapture()
+{
     if (videoCaptureFilter_) {
         videoCaptureFilter_->SetCodecFormat(videoEncFormat_);
         videoCaptureFilter_->Init(recorderEventReceiver_, recorderCallback_);
         FALSE_RETURN_V_MSG_E(videoCaptureFilter_->Configure(videoEncFormat_) == Status::OK,
             ERR_UNKNOWN_REASON, "videoCaptureFilter Configure fail");
     }
-    Status ret = pipeline_->Prepare();
-    if (ret != Status::OK) {
-        return (int32_t)ret;
-    }
-    return (int32_t)ret;
+    return ERR_NONE;
 }
 
 int32_t HiRecorderImpl::Start()
@@ -531,6 +561,13 @@ void HiRecorderImpl::OnEvent(const Event &event)
             if (ptr != nullptr) {
                 MEDIA_LOG_I("EVENT_COMPLETE ptr->OnInfo MAX_DURATION_REACHED BACKGROUND");
                 ptr->OnInfo(IRecorderEngineObs::InfoType::MAX_DURATION_REACHED, BACKGROUND);
+            }
+            break;
+        }
+        case EventType::EVENT_VIDEO_FIRST_FRAME: {
+            if (audioCaptureFilter_) {
+                int64_t firstFramePts = AnyCast<int64_t>(event.param);
+                audioCaptureFilter_->SetVideoFirstFramePts(firstFramePts);
             }
             break;
         }
