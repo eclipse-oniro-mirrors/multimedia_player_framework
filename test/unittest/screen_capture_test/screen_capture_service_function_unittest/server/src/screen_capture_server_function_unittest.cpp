@@ -1767,5 +1767,12 @@ HWTEST_F(ScreenCaptureServerFunctionTest, IsSystemScreenRecorderWorking_001, Tes
     bool ret = ScreenCaptureMonitor::GetInstance()->IsSystemScreenRecorderWorking();
     ASSERT_EQ(ret, false);
 }
+
+HWTEST_F(ScreenCaptureServerFunctionTest, StartStreamHomeVideoCapture_001, TestSize.Level2)
+{
+    SetValidConfig();
+    screenCaptureServer_->isSurfaceMode_ = false;
+    ASSERT_EQ(screenCaptureServer_->StartStreamHomeVideoCapture(), MSERR_OK);
+}
 } // Media
 } // OHOS
