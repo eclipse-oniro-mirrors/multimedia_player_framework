@@ -365,8 +365,8 @@ napi_value AVImageGeneratorNapi::JsSetAVFileDescriptor(napi_env env, napi_callba
 
     auto fileDescriptor = generator->fileDescriptor_;
     ScopedFileDescriptor reopenFd = FdUtils::ReOpenFd(fileDescriptor.fd);
-    auto res = generator->helper_->SetSource(reopenFd.get(), fileDescriptor.offset, fileDescriptor.length);
-    reopenFd.reset();
+    auto res = generator->helper_->SetSource(reopenFd.Get(), fileDescriptor.offset, fileDescriptor.length);
+    reopenFd.Reset();
     generator->state_ = res == MSERR_OK ? HelperState::HELPER_STATE_RUNNABLE : HelperState::HELPER_ERROR;
     return result;
 }

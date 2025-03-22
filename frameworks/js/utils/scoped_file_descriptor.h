@@ -35,16 +35,16 @@ public:
     ScopedFileDescriptor &operator=(const ScopedFileDescriptor &copy) = delete;
     ScopedFileDescriptor &operator=(ScopedFileDescriptor &&move);
 
-    int32_t get() const;
-    void reset(int32_t newFd = INVALID_FD);
+    int32_t Get() const;
+    void Reset(int32_t newFd = INVALID_FD);
 
 private:
-    static void exchangeTag(int32_t fd, uint64_t oldTag, uint64_t newTag);
-    static int32_t close(int32_t fd, uint64_t tag);
+    static void ExchangeTag(int32_t fd, uint64_t oldTag, uint64_t newTag);
+    static int32_t Close(int32_t fd, uint64_t tag);
     // Use the address of object as the file tag
-    uint64_t tag();
+    uint64_t Tag();
     int32_t fd_ = INVALID_FD;
-    static constexpr int INVALID_FD = -1;
+    static constexpr int32_t INVALID_FD = -1;
 };
 }  // namespace Media
 }  // namespace OHOS

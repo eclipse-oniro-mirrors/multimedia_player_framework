@@ -20,12 +20,12 @@ namespace Media {
 
 ScopedFileDescriptor::ScopedFileDescriptor(int32_t fd)
 {
-    reset(fd);
+    Reset(fd);
 }
 
 ScopedFileDescriptor::~ScopedFileDescriptor()
 {
-    reset();
+    Reset();
 }
 
 ScopedFileDescriptor::ScopedFileDescriptor(ScopedFileDescriptor &&move)
@@ -37,48 +37,48 @@ ScopedFileDescriptor &ScopedFileDescriptor::operator=(ScopedFileDescriptor &&mov
     if (this == &move) {
         return *this;
     }
-    reset();
+    Reset();
     if (move.fd_ != INVALID_FD) {
         fd_ = move.fd_;
-        move.fd_ = -1;
+        move.fd_ = INVALID_FD;
         // Acquire ownership of the presumably unowned fd.
-        exchangeTag(fd_, move.tag(), tag());
+        ExchangeTag(fd_, move.Tag(), Tag());
     }
     return *this;
 }
 
-int32_t ScopedFileDescriptor::get() const
+int32_t ScopedFileDescriptor::Get() const
 {
     return fd_;
 }
 
-void ScopedFileDescriptor::reset(int32_t newFd)
+void ScopedFileDescriptor::Reset(int32_t newFd)
 {
     if (fd_ != INVALID_FD) {
-        close(fd_, tag());
+        Close(fd_, Tag());
         fd_ = INVALID_FD;
     }
     if (newFd != INVALID_FD) {
         fd_ = newFd;
         // Acquire ownership of the presumably unowned fd.
-        exchangeTag(fd_, 0, tag());
+        ExchangeTag(fd_, 0, Tag());
     }
 }
 
 // Use the address of object as the file tag
-uint64_t ScopedFileDescriptor::tag()
+uint64_t ScopedFileDescriptor::Tag()
 {
     return reinterpret_cast<uint64_t>(this);
 }
 
-void ScopedFileDescriptor::exchangeTag(int32_t fd, uint64_t oldTag, uint64_t newTag)
+void ScopedFileDescriptor::ExchangeTag(int32_t fd, uint64_t oldTag, uint64_t newTag)
 {
     if (&fdsan_exchange_owner_tag) {
         fdsan_exchange_owner_tag(fd, oldTag, newTag);
     }
 }
 
-int32_t ScopedFileDescriptor::close(int32_t fd, uint64_t tag)
+int32_t ScopedFileDescriptor::Close(int32_t fd, uint64_t tag)
 {
     if (&fdsan_close_with_tag) {
         return fdsan_close_with_tag(fd, tag);
