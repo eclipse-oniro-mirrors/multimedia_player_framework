@@ -59,7 +59,6 @@ TransCoderServer::TransCoderServer()
 TransCoderServer::~TransCoderServer()
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    ReleaseInner();
     taskQue_.Stop();
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
@@ -390,7 +389,9 @@ int32_t TransCoderServer::Cancel()
 int32_t TransCoderServer::Release()
 {
     std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(!isReleased_, MSERR_OK, "server has been released");
     ReleaseInner();
+    isReleased_ = true;
     return MSERR_OK;
 }
 
