@@ -3364,15 +3364,8 @@ int32_t ScreenCaptureServer::SetScreenScaleMode()
 int32_t ScreenCaptureServer::StopAudioCapture()
 {
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StopAudioCapture start.", FAKE_POINTER(this));
-    if (micAudioCapture_ != nullptr) {
-        MediaTrace trace("ScreenCaptureServer::StopAudioCaptureMic");
-        micAudioCapture_->Stop();
-    }
-
-    if (innerAudioCapture_ != nullptr) {
-        MediaTrace trace("ScreenCaptureServer::StopAudioCaptureInner");
-        innerAudioCapture_->Stop();
-    }
+    StopMicAudioCapture();
+    StopInnerAudioCapture();
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StopAudioCapture end.", FAKE_POINTER(this));
     return MSERR_OK;
 }
@@ -3401,6 +3394,17 @@ int32_t ScreenCaptureServer::StartMicAudioCapture()
         }
     }
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StartMicAudioCapture OK.", FAKE_POINTER(this));
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureServer::StopInnerAudioCapture()
+{
+    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StopInnerAudioCapture start.", FAKE_POINTER(this));
+    if (innerAudioCapture_ != nullptr) {
+        MediaTrace trace("ScreenCaptureServer::StopInnerAudioCapture");
+        innerAudioCapture_->Stop();
+    }
+    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StopInnerAudioCapture end.", FAKE_POINTER(this));
     return MSERR_OK;
 }
 

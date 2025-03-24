@@ -147,6 +147,7 @@ private:
     int32_t StartStreamInnerAudioCapture();
     int32_t StartStreamMicAudioCapture();
     int32_t StartFileInnerAudioCapture();
+    int32_t StopInnerAudioCapture();
     int32_t StartFileMicAudioCapture();
     int32_t StartMicAudioCapture();
     int32_t StopMicAudioCapture();
