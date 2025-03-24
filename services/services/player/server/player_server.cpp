@@ -1780,8 +1780,8 @@ void PlayerServer::OnFlvAutoSelectBitRate(uint32_t bitRate)
 
 void PlayerServer::UpdateFlvLivePauseTime()
 {
-    CHECK_AND_RETURN_NOLOG(playerEngine_->IsFlvLive());
     CHECK_AND_RETURN_LOG(playerEngine_ != nullptr, "playerEngine_ is nullptr");
+    CHECK_AND_RETURN_NOLOG(playerEngine_->IsFlvLive());
     if (pauseTimestamp_ == HST_TIME_NONE) {
         pauseTimestamp_ = SteadyClock::GetCurrentTimeMs();
         if (pauseTimestamp_ < 0) {
@@ -1793,8 +1793,8 @@ void PlayerServer::UpdateFlvLivePauseTime()
 
 void PlayerServer::TryFlvLiveRestartLink()
 {
-    CHECK_AND_RETURN_NOLOG(playerEngine_->IsFlvLive());
     CHECK_AND_RETURN_LOG(playerEngine_ != nullptr, "playerEngine_ is nullptr");
+    CHECK_AND_RETURN_NOLOG(playerEngine_->IsFlvLive());
     if (pauseTimestamp_ != HST_TIME_NONE) {
         sumPauseTime_ += CalculatePauseTime();
         pauseTimestamp_ = HST_TIME_NONE;
