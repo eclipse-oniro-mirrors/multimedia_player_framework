@@ -63,7 +63,7 @@ ohos_unittest("player_unit_test") {
   ]
 
   if (defined(global_parts_info) &&
-    defined(global_parts_info.multimedia_histreamer_ext)) {
+      defined(global_parts_info.multimedia_histreamer_ext)) {
     defines = [ "SUBSCRIBE_HISTREAMER_EXT" ]
   }
 
