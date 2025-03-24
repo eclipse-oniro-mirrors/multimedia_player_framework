@@ -41,6 +41,7 @@ ohos_shared_library("media_avplayer") {
     "$MEDIA_ROOT_DIR/frameworks/js/mediasource/media_source_loader_callback.cpp",
     "$MEDIA_ROOT_DIR/frameworks/js/mediasource/media_source_loading_request_napi.cpp",
     "$MEDIA_ROOT_DIR/frameworks/js/mediasource/media_source_napi.cpp",
+    "$MEDIA_ROOT_DIR/frameworks/js/utils/scoped_file_descriptor.cpp",
     "./media_data_source_callback.cpp",
     "//foundation/multimedia/player_framework/frameworks/js/avplayer/avplayer_callback.cpp",
     "//foundation/multimedia/player_framework/frameworks/js/avplayer/avplayer_napi.cpp",
