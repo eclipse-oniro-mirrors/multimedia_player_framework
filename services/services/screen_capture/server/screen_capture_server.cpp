@@ -1250,7 +1250,7 @@ int32_t ScreenCaptureServer::StartAudioCapture()
     ret = StartStreamInnerAudioCapture();
     if (ret != MSERR_OK) {
         MEDIA_LOGE("StartStreamInnerAudioCapture failed");
-        micAudioCapture_ = nullptr;
+        StopMicAudioCapture();
         return ret;
     }
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StartAudioCapture OK.", FAKE_POINTER(this));
@@ -3027,9 +3027,9 @@ int32_t ScreenCaptureServer::ReStartMicForVoIPStatusSwitch()
             return MSERR_UNKNOWN;
         }
 #endif
-        ret = StartFileMicAudioCapture();
+        ret = StartMicAudioCapture();
         if (ret != MSERR_OK) {
-            MEDIA_LOGE("OnVoIPStatusChanged StartFileMicAudioCapture failed, ret: %{public}d", ret);
+            MEDIA_LOGE("OnVoIPStatusChanged StartMicAudioCapture failed, ret: %{public}d", ret);
         }
     }
     return ret;
@@ -3367,15 +3367,40 @@ int32_t ScreenCaptureServer::StopAudioCapture()
     if (micAudioCapture_ != nullptr) {
         MediaTrace trace("ScreenCaptureServer::StopAudioCaptureMic");
         micAudioCapture_->Stop();
-        micAudioCapture_ = nullptr;
     }
 
     if (innerAudioCapture_ != nullptr) {
         MediaTrace trace("ScreenCaptureServer::StopAudioCaptureInner");
         innerAudioCapture_->Stop();
-        innerAudioCapture_ = nullptr;
     }
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StopAudioCapture end.", FAKE_POINTER(this));
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureServer::StartMicAudioCapture()
+{
+    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StartMicAudioCapture start, dataType:%{public}d, "
+        "micCapInfo.state:%{public}d.",
+        FAKE_POINTER(this), captureConfig_.dataType, captureConfig_.audioInfo.micCapInfo.state);
+#ifdef SUPPORT_CALL
+    if (InCallObserver::GetInstance().IsInCall(true) && !IsTelInCallSkipList()) {
+        MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " skip creating micAudioCapture", FAKE_POINTER(this));
+        return MSERR_OK;
+    }
+#endif
+    if (captureConfig_.audioInfo.micCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_VALID) {
+        MediaTrace trace("ScreenCaptureServer::StartMicAudioCapture");
+        if (audioSource_) {
+            micAudioCapture_->SetIsInVoIPCall(audioSource_->GetIsInVoIPCall());
+        }
+        int32_t ret = micAudioCapture_->Start(appInfo_);
+        if (ret != MSERR_OK) {
+            MEDIA_LOGE("StartMicAudioCapture failed");
+            NotifyStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE);
+            return ret;
+        }
+    }
+    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StartMicAudioCapture OK.", FAKE_POINTER(this));
     return MSERR_OK;
 }
 
@@ -3385,7 +3410,6 @@ int32_t ScreenCaptureServer::StopMicAudioCapture()
     if (micAudioCapture_ != nullptr) {
         MediaTrace trace("ScreenCaptureServer::StopAudioCaptureMic");
         micAudioCapture_->Stop();
-        micAudioCapture_ = nullptr;
     }
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StopMicAudioCapture end.", FAKE_POINTER(this));
     return MSERR_OK;
@@ -3640,9 +3664,11 @@ void ScreenCaptureServer::ReleaseInner()
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances ReleaseInner S", FAKE_POINTER(this));
     if (captureState_ != AVScreenCaptureState::STOPPED) {
         std::lock_guard<std::mutex> lock(mutex_);
-        StopScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID);
-        MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances ReleaseInner Stop done, sessionId:%{public}d",
-            FAKE_POINTER(this), sessionId_);
+        if (captureState_ != AVScreenCaptureState::STOPPED) {
+            StopScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID);
+            MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances ReleaseInner Stop done, sessionId:%{public}d",
+                FAKE_POINTER(this), sessionId_);
+        }
     }
     MEDIA_LOGI("ScreenCaptureServer::ReleaseInner before RemoveScreenCaptureServerMap");
 
