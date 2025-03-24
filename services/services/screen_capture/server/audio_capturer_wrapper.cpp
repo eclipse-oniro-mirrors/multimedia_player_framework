@@ -212,6 +212,7 @@ void AudioCapturerWrapper::SetInnerStreamUsage(std::vector<OHOS::AudioStandard::
     if (GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"]
             .compare(bundleName_) == 0 && region == "CN") {
         usages.push_back(AudioStandard::StreamUsage::STREAM_USAGE_VOICE_COMMUNICATION);
+        usages.push_back(AudioStandard::StreamUsage::STREAM_USAGE_VIDEO_COMMUNICATION);
     }
 }
 
