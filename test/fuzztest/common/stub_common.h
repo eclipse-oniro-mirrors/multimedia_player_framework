@@ -37,6 +37,7 @@ public:
         const sptr<IRemoteObject> &listener);
     sptr<IRemoteObject> GetSubSystemAbilityWithTimeOut(IStandardMediaService::MediaSystemAbility subSystemId,
         const sptr<IRemoteObject> &listener, uint32_t timeoutMs);
+    void ReleaseClientListener();
 private:
     static inline BrokerDelegator<MediaServiceProxyFuzzer> delegator_;
 };

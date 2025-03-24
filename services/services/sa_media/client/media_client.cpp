@@ -83,6 +83,16 @@ bool MediaClient::IsAlived()
     return (mediaProxy_ != nullptr) ? true : false;
 }
 
+void MediaClient::ReleaseClientListener()
+{
+    // there exist non-const methods of the sptr mediaProxy_, possible data-race.
+    if (mediaProxy_ == nullptr) {
+        return;
+    }
+    mediaProxy_->ReleaseClientListener();
+    DoMediaServerDied(); // remove death recipient as well. Otherwise getting proxy after re-dlopen causes mem leak.
+}
+
 void MediaClient::CreateMediaServiceInstance(IStandardMediaService::MediaSystemAbility subSystemId,
     sptr<IRemoteObject> &object, std::unique_lock<std::mutex> &lock)
 {

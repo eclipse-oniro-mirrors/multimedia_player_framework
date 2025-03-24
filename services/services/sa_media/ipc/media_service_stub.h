@@ -39,6 +39,8 @@ private:
     void Init();
     int32_t GetSystemAbility(MessageParcel &data, MessageParcel &reply);
     int32_t GetSystemAbilityAync(MessageParcel &data, MessageParcel &reply);
+    int32_t ReleaseClientListenerStub(MessageParcel &data, MessageParcel &reply);
+    void ReleaseClientListener() override;
     void ClientDied(pid_t pid);
     int32_t DestroyStubForPid(pid_t pid);
     std::map<uint32_t, MediaStubFunc> mediaFuncs_;

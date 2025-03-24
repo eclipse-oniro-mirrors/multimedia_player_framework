@@ -48,6 +48,7 @@ public:
     ~MediaClient();
 
     sptr<IStandardMonitorService> GetMonitorProxy() override;
+    void ReleaseClientListener() override;
 #ifdef SUPPORT_RECORDER
     std::shared_ptr<IRecorderService> CreateRecorderService() override;
     int32_t DestroyRecorderService(std::shared_ptr<IRecorderService> recorder) override;

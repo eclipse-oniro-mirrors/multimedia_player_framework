@@ -46,6 +46,8 @@ void MediaServiceStub::Init()
         [this](MessageParcel &data, MessageParcel &reply) { return GetSystemAbility(data, reply); };
     mediaFuncs_[GET_SUBSYSTEM_ASYNC] =
         [this](MessageParcel &data, MessageParcel &reply) { return GetSystemAbilityAync(data, reply); };
+    mediaFuncs_[RELEASE_CLIENT_LISTENER] =
+        [this] (MessageParcel &data, MessageParcel &reply) { return ReleaseClientListenerStub(data, reply); };
 }
 
 int32_t MediaServiceStub::DestroyStubForPid(pid_t pid)
@@ -145,6 +147,20 @@ int32_t MediaServiceStub::SetDeathListener(const sptr<IRemoteObject> &object)
     mediaListenerMap_[pid] = mediaListener;
     deathRecipientMap_[pid] = deathRecipient;
     return MSERR_OK;
+}
+
+int32_t MediaServiceStub::ReleaseClientListenerStub(MessageParcel &data, MessageParcel &reply)
+{
+    (void)data;
+    (void)reply;
+    ReleaseClientListener();
+    return MSERR_OK;
+}
+
+void MediaServiceStub::ReleaseClientListener()
+{
+    pid_t pid = IPCSkeleton::GetCallingPid();
+    (void)DestroyStubForPid(pid);
 }
 
 int32_t MediaServiceStub::GetSystemAbility(MessageParcel &data, MessageParcel &reply)

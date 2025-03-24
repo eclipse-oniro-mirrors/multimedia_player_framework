@@ -614,6 +614,11 @@ int32_t PlayerImpl::SetSeiMessageCbStatus(bool status, const std::vector<int32_t
         "SetSeiMessageCbStatus", false, TIME_OUT_SECOND);
 }
 
+void PlayerImpl::ReleaseClientListener()
+{
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " ReleaseClientListener in", FAKE_POINTER(this));
+}
+
 PlayerImplCallback::PlayerImplCallback(const std::shared_ptr<PlayerCallback> playerCb,
     std::shared_ptr<PlayerImpl> player)
 {

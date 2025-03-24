@@ -36,6 +36,22 @@ MediaServiceProxy::~MediaServiceProxy()
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
+void MediaServiceProxy::ReleaseClientListener()
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(MediaServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_LOG(token, "Failed to write descriptor!");
+
+    int32_t error = -1;
+    error = Remote()->SendRequest(MediaServiceMsg::RELEASE_CLIENT_LISTENER, data, reply, option);
+    if (error != MSERR_OK) {
+        MEDIA_LOGE("Send request failed, error: %{public}d", error);
+    }
+}
+
 sptr<IRemoteObject> MediaServiceProxy::GetSubSystemAbility(IStandardMediaService::MediaSystemAbility subSystemId,
     const sptr<IRemoteObject> &listener)
 {
