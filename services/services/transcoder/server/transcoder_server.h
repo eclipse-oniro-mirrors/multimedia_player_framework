@@ -100,6 +100,7 @@ private:
     std::atomic<bool> watchdogPause_ = false;
 
     uint64_t instanceId_ = 0;
+    bool isReleased_ = false;
 };
 } // namespace Media
 } // namespace OHOS
