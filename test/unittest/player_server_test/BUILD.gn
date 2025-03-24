@@ -88,7 +88,8 @@ ohos_unittest("player_server_unit_test") {
     "window_manager:libwm",
   ]
 
-  if (defined(global_parts_info) && defined(global_parts_info.multimedia_histreamer_ext)) {
+  if (defined(global_parts_info) &&
+    defined(global_parts_info.multimedia_histreamer_ext)) {
     defines = [ "SUBSCRIBE_HISTREAMER_EXT" ]
   }
 
