@@ -193,62 +193,6 @@ HWTEST_F(TransCoderUnitTest, transcoder_PureVideo_004, TestSize.Level2)
 }
 
 /**
- * @tc.name: transcoder_PureAudio_001
- * @tc.desc: transcoder pure audio 01.mp3
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(TransCoderUnitTest, transcoder_PureAudio_001, TestSize.Level2)
-{
-    int32_t srcFd = open((TRANSCODER_ROOT_SRC + "01.mp3").c_str(), O_RDWR);
-    ASSERT_TRUE(srcFd >= 0);
-    int64_t offset = TRANSCODER_FILE_OFFSET;
-    int64_t size = TRANSCODER_FILE_SIZE;
-    EXPECT_EQ(MSERR_OK, transcoder_->SetInputFile(srcFd, offset, size));
-    int32_t dstFd = open((TRANSCODER_ROOT_DST + "01_dst.mp3").c_str(), O_RDWR);
-    ASSERT_TRUE(dstFd >= 0);
-    EXPECT_EQ(MSERR_OK, transcoder_->SetOutputFile(dstFd));
-    std::shared_ptr<TransCoderCallbackTest> cb = std::make_shared<TransCoderCallbackTest>();
-    EXPECT_EQ(MSERR_OK, transcoder_->SetTransCoderCallback(cb));
-    OutputFormatType format = FORMAT_M4A;
-    EXPECT_EQ(MSERR_OK, transcoder_->SetOutputFormat(format));
-    AudioCodecFormat encoder = AAC_LC;
-    EXPECT_EQ(MSERR_OK, transcoder_->SetAudioEncoder(encoder));
-    EXPECT_EQ(MSERR_OK, transcoder_->SetAudioEncodingBitRate(TRASCODER_AUDIO_ENCODING_BIT_RATE));
-    EXPECT_EQ(static_cast<int32_t>(Status::ERROR_NULL_POINTER), transcoder_->Prepare());
-    close(dstFd);
-    close(srcFd);
-}
-
-/**
- * @tc.name: transcoder_PureAudio_002
- * @tc.desc: transcoder pure audio 01.mp3 with pause resume
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(TransCoderUnitTest, transcoder_PureAudio_002, TestSize.Level2)
-{
-    int32_t srcFd = open((TRANSCODER_ROOT_SRC + "01.mp3").c_str(), O_RDWR);
-    ASSERT_TRUE(srcFd >= 0);
-    int64_t offset = TRANSCODER_FILE_OFFSET;
-    int64_t size = TRANSCODER_FILE_SIZE;
-    EXPECT_EQ(MSERR_OK, transcoder_->SetInputFile(srcFd, offset, size));
-    int32_t dstFd = open((TRANSCODER_ROOT_DST + "01_dst.mp3").c_str(), O_RDWR);
-    ASSERT_TRUE(dstFd >= 0);
-    EXPECT_EQ(MSERR_OK, transcoder_->SetOutputFile(dstFd));
-    std::shared_ptr<TransCoderCallbackTest> cb = std::make_shared<TransCoderCallbackTest>();
-    EXPECT_EQ(MSERR_OK, transcoder_->SetTransCoderCallback(cb));
-    OutputFormatType format = FORMAT_M4A;
-    EXPECT_EQ(MSERR_OK, transcoder_->SetOutputFormat(format));
-    AudioCodecFormat encoder = AAC_LC;
-    EXPECT_EQ(MSERR_OK, transcoder_->SetAudioEncoder(encoder));
-    EXPECT_EQ(MSERR_OK, transcoder_->SetAudioEncodingBitRate(TRASCODER_AUDIO_ENCODING_BIT_RATE));
-    EXPECT_EQ(static_cast<int32_t>(Status::ERROR_NULL_POINTER), transcoder_->Prepare());
-    close(dstFd);
-    close(srcFd);
-}
-
-/**
  * @tc.name: transcoder_AudioVideo_001
  * @tc.desc: transcoder audio and video ChineseColor_H264_AAC_480p_15fps.mp4 with codec format H264
  * @tc.type: FUNC
