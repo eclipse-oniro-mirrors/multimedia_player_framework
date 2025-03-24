@@ -2430,7 +2430,7 @@ bool HiPlayerImpl::IsLivingMaxDelayTimeValid()
     if (maxLivingDelayTime_ < AVPlayStrategyConstant::DEFAULT_LIVING_CACHED_DURATION ||
         maxLivingDelayTime_ < bufferDurationForPlaying_) {
             return false;
-        }
+    }
     return true;
 }
 
@@ -3506,7 +3506,8 @@ bool HiPlayerImpl::IsPauseForTooLong(int64_t pauseTime)
 void HiPlayerImpl::DoRestartLiveLink()
 {
     MediaTrace trace("HiPlayerImpl::DoRestartLiveLink");
-    FALSE_RETURN(demuxer_ != nullptr && isFlvLive_);
+    FALSE_RETURN(demuxer_ != nullptr);
+    FALSE_RETURN_NOLOG(isFlvLive_);
     demuxer_->DoFlush();
     if (audioDecoder_ != nullptr) {
         audioDecoder_->DoFlush();
@@ -3561,14 +3562,16 @@ void HiPlayerImpl::SetFlvObs()
 
 void HiPlayerImpl::StartFlvCheckLiveDelayTime()
 {
-    FALSE_RETURN(demuxer_ != nullptr && isFlvLive_);
+    FALSE_RETURN(demuxer_ != nullptr);
+    FALSE_RETURN_NOLOG(isFlvLive_);
     MEDIA_LOG_I("StartFlvCheckLiveDelayTime");
     liveController_.StartCheckLiveDelayTime(CHECK_DELAY_INTERVAL);
 }
 
 void HiPlayerImpl::StopFlvCheckLiveDelayTime()
 {
-    FALSE_RETURN(demuxer_ != nullptr && isFlvLive_);
+    FALSE_RETURN(demuxer_ != nullptr);
+    FALSE_RETURN_NOLOG(isFlvLive_);
     MEDIA_LOG_I("StopFlvCheckLiveDelayTime");
     liveController_.StopCheckLiveDelayTime();
 }

@@ -134,6 +134,13 @@ namespace OHOS {
         }                                    \
     } while (0)
 
+#define CHECK_AND_RETURN_NOLOG(cond, ...) \
+    do {                                     \
+        if (!(cond)) {                       \
+            return;                          \
+        }                                    \
+    } while (0)
+
 #define CHECK_AND_BREAK_LOG(cond, fmt, ...) \
     if (1) {                                \
         if (!(cond)) {                      \
