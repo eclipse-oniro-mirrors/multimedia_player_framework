@@ -79,7 +79,7 @@ public:
 private:
     sptr<IStandardMediaService> GetMediaProxy();
     bool IsAlived();
-    static void MediaServerDied(pid_t pid);
+    static void MediaServerDied(pid_t pid, std::weak_ptr<MediaClient> client);
     void DoMediaServerDied();
     void AVPlayerServerDied();
     void AVCodecServerDied();
