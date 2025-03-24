@@ -202,7 +202,6 @@ private:
         const SystemToneType &systemToneType);
     bool IsToneHapticsTypeValid(ToneHapticsType toneHapticsType);
 
-    static int32_t GetCurrentUserId();
     static Uri AssembleUri(const std::string &key, std::string tableType = "");
     static std::shared_ptr<DataShare::DataShareHelper> CreateDataShareHelperProxy(std::string tableType = "");
     int32_t GetStringValue(const std::string &key, std::string &value, std::string tableType = "");

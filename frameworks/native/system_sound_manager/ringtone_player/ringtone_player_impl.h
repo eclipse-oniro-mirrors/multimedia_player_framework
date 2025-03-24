@@ -67,6 +67,7 @@ private:
     bool InitDataShareHelper();
     void ReleaseDataShareHelper();
     int32_t RegisterSource(const std::string &audioUri, const std::string &hapticUri);
+    bool VerifyPath(const std::string& audio);
 
     float volume_ = 1.0f;
     bool loop_ = false;
