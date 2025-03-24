@@ -405,10 +405,9 @@ int32_t HiPlayerImpl::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
     mutedMediaType_ = strategy.mutedMediaType;
     audioLanguage_ = strategy.preferredAudioLanguage;
     subtitleLanguage_ = strategy.preferredSubtitleLanguage;
-    if (strategy.enableSuperResolution) {
-        videoPostProcessorType_ = VideoPostProcessorType::SUPER_RESOLUTION;
-        isPostProcessorOn_ = strategy.enableSuperResolution;
-    }
+    videoPostProcessorType_ = strategy.enableSuperResolution ? VideoPostProcessorType::SUPER_RESOLUTION
+                                : VideoPostProcessorType::NONE;
+    isPostProcessorOn_ = strategy.enableSuperResolution;
 
     mimeType_ = mediaSource->GetMimeType();
     SetFlvLiveParams(strategy);
@@ -3274,12 +3273,12 @@ int32_t HiPlayerImpl::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
     renderFirstFrame_ = playbackStrategy.showFirstFrameOnPrepare;
     audioLanguage_ = playbackStrategy.preferredAudioLanguage;
     subtitleLanguage_ = playbackStrategy.preferredSubtitleLanguage;
+    videoPostProcessorType_ = playbackStrategy.enableSuperResolution ? VideoPostProcessorType::SUPER_RESOLUTION
+                                : VideoPostProcessorType::NONE;
+    isPostProcessorOn_ = playbackStrategy.enableSuperResolution;
+
     SetFlvLiveParams(playbackStrategy);
     FALSE_RETURN_V(IsLivingMaxDelayTimeValid(), TransStatus(Status::ERROR_INVALID_PARAMETER));
-    if (playbackStrategy.enableSuperResolution) {
-        videoPostProcessorType_ = VideoPostProcessorType::SUPER_RESOLUTION;
-        isPostProcessorOn_ = playbackStrategy.enableSuperResolution;
-    }
     return MSERR_OK;
 }
 
