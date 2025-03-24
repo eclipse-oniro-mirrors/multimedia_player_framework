@@ -73,16 +73,22 @@ uint64_t ScopedFileDescriptor::Tag()
 
 void ScopedFileDescriptor::ExchangeTag(int32_t fd, uint64_t oldTag, uint64_t newTag)
 {
+#if !defined(CROSS_PLATFORM)
     if (&fdsan_exchange_owner_tag) {
         fdsan_exchange_owner_tag(fd, oldTag, newTag);
     }
+#endif
 }
 
 int32_t ScopedFileDescriptor::Close(int32_t fd, uint64_t tag)
 {
+#if !defined(CROSS_PLATFORM)
     if (&fdsan_close_with_tag) {
         return fdsan_close_with_tag(fd, tag);
     }
+#else
+    close(fd);
+#endif
 }
 
 }  // namespace Media
