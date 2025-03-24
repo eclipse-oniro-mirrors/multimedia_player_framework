@@ -87,7 +87,7 @@ int32_t ScopedFileDescriptor::Close(int32_t fd, uint64_t tag)
         return fdsan_close_with_tag(fd, tag);
     }
 #else
-    close(fd);
+    return close(fd);
 #endif
 }
 
