@@ -23,10 +23,14 @@
 #include "meta/video_types.h"
 #include "meta/any.h"
 #include "common/log.h"
+#include "avcodec_info.h"
+#include "sink/audio_sampleformat.h"
 #include "osal/task/pipeline_threadpool.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_ONLY_PRERELEASE, LOG_DOMAIN_SYSTEM_PLAYER, "HiTransCoder" };
++constexpr int32_t SAMPLE_RATE_48K = 48000;
++constexpr int32_t SAMPLE_FORMAT_BIT_DEPTH_16 = 16;
 }
 
 namespace OHOS {
@@ -41,10 +45,6 @@ constexpr int32_t VIDEO_BITRATE_1M = 1024 * 1024;
 constexpr int32_t VIDEO_BITRATE_2M = 2 * VIDEO_BITRATE_1M;
 constexpr int32_t VIDEO_BITRATE_4M = 4 * VIDEO_BITRATE_1M;
 constexpr int32_t VIDEO_BITRATE_8M = 8 * VIDEO_BITRATE_1M;
-constexpr int32_t SAMPLE_DEPTH_8 = 8;
-constexpr int32_t SAMPLE_DEPTH_16 = 16;
-constexpr int32_t SAMPLE_DEPTH_24 = 24;
-constexpr int32_t SAMPLE_DEPTH_32 = 32;
 
 static const std::unordered_set<std::string> AVMETA_KEY = {
     { Tag::MEDIA_ALBUM },
@@ -72,13 +72,6 @@ static const std::unordered_set<std::string> AVMETA_KEY = {
     { Tag::AUDIO_BITS_PER_CODED_SAMPLE },
     { Tag::AUDIO_BITS_PER_RAW_SAMPLE },
     { "customInfo" },
-};
-
-static const std::unordered_map<int32_t, Plugins::AudioSampleFormat> sampleDepthFormatMap = {
-    { SAMPLE_DEPTH_8, Plugins::AudioSampleFormat::SAMPLE_U8 },
-    { SAMPLE_DEPTH_16, Plugins::AudioSampleFormat::SAMPLE_S16LE },
-    { SAMPLE_DEPTH_24, Plugins::AudioSampleFormat::SAMPLE_S24LE },
-    { SAMPLE_DEPTH_32, Plugins::AudioSampleFormat::SAMPLE_S32LE }
 };
 
 class TransCoderEventReceiver : public Pipeline::EventReceiver {
@@ -277,7 +270,7 @@ void HiTransCoderImpl::ConfigureMetaDataToTrackFormat(const std::shared_ptr<Meta
             (void)SetValueByType(meta, audioEncFormat_);
             (void)SetValueByType(meta, srcAudioFormat_);
             (void)SetValueByType(meta, muxerFormat_);
-            ConfigureAudioEncSampleFormat();
+            UpdateAudioSampleFormat(trackMime, meta);
             isInitializeAudioEncFormat = true;
         }
     }
@@ -287,33 +280,44 @@ void HiTransCoderImpl::ConfigureMetaDataToTrackFormat(const std::shared_ptr<Meta
     }
 }
 
-void HiTransCoderImpl::ConfigureAudioEncSampleFormat()
+void HiTransCoderImpl::UpdateAudioSampleFormat(const std::string& mime, const std::shared_ptr<Meta> &meta)
 {
-    FALSE_RETURN_MSG(audioEncFormat_ != nullptr, "audioEncFormat is invalid");
-    Plugins::AudioSampleFormat sampleFormat = Plugins::AudioSampleFormat::INVALID_WIDTH;
-    if (audioEncFormat_->GetData(Tag::AUDIO_SAMPLE_FORMAT, sampleFormat)) {
-        audioEncFormat_->Set<Tag::AUDIO_SAMPLE_FORMAT>(sampleFormat);
-        MEDIA_LOG_I("audioEnc sample format is: " PUBLIC_LOG_D32, sampleFormat);
+    // The update strategy of the sample format needs to be consistent with audio_decoder_filter.
+    MEDIA_LOG_I_SHORT("UpdateTrackInfoSampleFormat mime: " PUBLIC_LOG_S, mime.c_str());
+    FALSE_RETURN_NOLOG(mime.find(MediaAVCodec::CodecMimeType::AUDIO_RAW) != 0);
+    if (mime.find(MediaAVCodec::CodecMimeType::AUDIO_APE) != 0 &&
+        mime.find(MediaAVCodec::CodecMimeType::AUDIO_FLAC) != 0 &&
+        mime.find(MediaAVCodec::CodecMimeType::AUDIO_RAW) != 0) {
+        audioEncFormat_->SetData(Tag::AUDIO_SAMPLE_FORMAT, Plugins::SAMPLE_S16LE);
+        muxerFormat_->SetData(Tag::AUDIO_SAMPLE_FORMAT, Plugins::SAMPLE_S16LE);
         return;
     }
-    int32_t sampleDepth = 0;
-    if (audioEncFormat_->GetData(Tag::AUDIO_BITS_PER_CODED_SAMPLE, sampleDepth) && sampleDepth > 0) {
-        if (sampleDepthFormatMap.find(sampleDepth) != sampleDepthFormatMap.end()) {
-            sampleFormat = sampleDepthFormatMap.at(sampleDepth);
-            audioEncFormat_->Set<Tag::AUDIO_SAMPLE_FORMAT>(sampleFormat);
-            MEDIA_LOG_I("audioEnc sample format is: " PUBLIC_LOG_D32 " bits per code sample: " PUBLIC_LOG_D32,
-                sampleFormat, sampleDepth);
-            return;
-        }
+
+    int32_t sampleRate = 0;
+    if (!meta->GetData(Tag::AUDIO_SAMPLE_RATE, sampleRate) || sampleRate < SAMPLE_RATE_48K) {
+        audioEncFormat_->SetData(Tag::AUDIO_SAMPLE_FORMAT, Plugins::SAMPLE_S16LE);
+        muxerFormat_->SetData(Tag::AUDIO_SAMPLE_FORMAT, Plugins::SAMPLE_S16LE);
+        return;
     }
-    if (audioEncFormat_->GetData(Tag::AUDIO_BITS_PER_RAW_SAMPLE, sampleDepth) && sampleDepth > 0) {
-        if (sampleDepthFormatMap.find(sampleDepth) != sampleDepthFormatMap.end()) {
-            sampleFormat = sampleDepthFormatMap.at(sampleDepth);
-            audioEncFormat_->Set<Tag::AUDIO_SAMPLE_FORMAT>(sampleFormat);
-            MEDIA_LOG_I("audioEnc sample format is: " PUBLIC_LOG_D32 " bits per raw sample: " PUBLIC_LOG_D32,
-                sampleFormat, sampleDepth);
-        }
+
+    Plugins::AudioSampleFormat sampleFormat = Plugins::SAMPLE_U8;
+    int32_t codedSampleDepth = 0;
+    int32_t rawSampleDepth = 0;
+    if ((meta->GetData(Tag::AUDIO_SAMPLE_FORMAT, sampleFormat) &&
+        Pipeline::AudioSampleFormatToBitDepth(sampleFormat) > SAMPLE_FORMAT_BIT_DEPTH_16) ||
+        (meta->GetData(Tag::AUDIO_BITS_PER_CODED_SAMPLE, codedSampleDepth) &&
+        codedSampleDepth > SAMPLE_FORMAT_BIT_DEPTH_16) ||
+        (meta->GetData(Tag::AUDIO_BITS_PER_RAW_SAMPLE, rawSampleDepth) &&
+        rawSampleDepth > SAMPLE_FORMAT_BIT_DEPTH_16)) {
+        MEDIA_LOG_I_SHORT("sampleFormat after is: " PUBLIC_LOG_D32, Plugins::SAMPLE_S32LE);
+        audioEncFormat_->SetData(Tag::AUDIO_SAMPLE_FORMAT, Plugins::SAMPLE_S32LE);
+        muxerFormat_->SetData(Tag::AUDIO_SAMPLE_FORMAT, Plugins::SAMPLE_S32LE);
+        return;
     }
+
+    MEDIA_LOG_I_SHORT("sampleFormat after is: " PUBLIC_LOG_D32, Plugins::SAMPLE_S16LE);
+    audioEncFormat_->SetData(Tag::AUDIO_SAMPLE_FORMAT, Plugins::SAMPLE_S16LE);
+    muxerFormat_->SetData(Tag::AUDIO_SAMPLE_FORMAT, Plugins::SAMPLE_S16LE);
 }
 
 bool HiTransCoderImpl::SetValueByType(const std::shared_ptr<Meta> &innerMeta, std::shared_ptr<Meta> &outputMeta)
