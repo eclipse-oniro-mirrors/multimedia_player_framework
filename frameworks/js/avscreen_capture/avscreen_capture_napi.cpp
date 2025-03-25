@@ -18,6 +18,7 @@
 #include "common_napi.h"
 #include "media_dfx.h"
 #include "media_log.h"
+#include "scope_guard.h"
 #ifndef CROSS_PLATFORM
 #include "display_manager.h"
 #endif
