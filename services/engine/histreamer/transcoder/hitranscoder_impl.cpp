@@ -286,8 +286,8 @@ void HiTransCoderImpl::UpdateAudioSampleFormat(const std::string& mime, const st
     MEDIA_LOG_I_SHORT("UpdateTrackInfoSampleFormat mime: " PUBLIC_LOG_S, mime.c_str());
     FALSE_RETURN_NOLOG(mime.find(MediaAVCodec::CodecMimeType::AUDIO_RAW) != 0);
     if (mime.find(MediaAVCodec::CodecMimeType::AUDIO_APE) != 0 &&
-        mime.find(MediaAVCodec::CodecMimeType::AUDIO_FLAC) != 0 &&
-        mime.find(MediaAVCodec::CodecMimeType::AUDIO_RAW) != 0) {
+        mime.find(MediaAVCodec::CodecMimeType::AUDIO_FLAC) != 0) {
+        MEDIA_LOG_I_SHORT("non-ape and non-flac sampleFormat after is: " PUBLIC_LOG_D32, Plugins::SAMPLE_S16LE);
         audioEncFormat_->SetData(Tag::AUDIO_SAMPLE_FORMAT, Plugins::SAMPLE_S16LE);
         muxerFormat_->SetData(Tag::AUDIO_SAMPLE_FORMAT, Plugins::SAMPLE_S16LE);
         return;
@@ -295,6 +295,7 @@ void HiTransCoderImpl::UpdateAudioSampleFormat(const std::string& mime, const st
 
     int32_t sampleRate = 0;
     if (!meta->GetData(Tag::AUDIO_SAMPLE_RATE, sampleRate) || sampleRate < SAMPLE_RATE_48K) {
+        MEDIA_LOG_I_SHORT("less than 48K sampleFormat after is: " PUBLIC_LOG_D32, Plugins::SAMPLE_S16LE);
         audioEncFormat_->SetData(Tag::AUDIO_SAMPLE_FORMAT, Plugins::SAMPLE_S16LE);
         muxerFormat_->SetData(Tag::AUDIO_SAMPLE_FORMAT, Plugins::SAMPLE_S16LE);
         return;
@@ -315,7 +316,7 @@ void HiTransCoderImpl::UpdateAudioSampleFormat(const std::string& mime, const st
         return;
     }
 
-    MEDIA_LOG_I_SHORT("sampleFormat after is: " PUBLIC_LOG_D32, Plugins::SAMPLE_S16LE);
+    MEDIA_LOG_I_SHORT("default sampleFormat after is: " PUBLIC_LOG_D32, Plugins::SAMPLE_S16LE);
     audioEncFormat_->SetData(Tag::AUDIO_SAMPLE_FORMAT, Plugins::SAMPLE_S16LE);
     muxerFormat_->SetData(Tag::AUDIO_SAMPLE_FORMAT, Plugins::SAMPLE_S16LE);
 }
