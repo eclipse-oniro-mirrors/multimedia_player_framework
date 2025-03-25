@@ -59,15 +59,12 @@ private:
     std::string GetNewHapticUriForAudioUri(const std::string &audioUri);
     std::string GetHapticUriForAudioUri(const std::string &audioUri);
     bool IsFileExisting(const std::string &fileUri);
-    std::string ChangeUri(const std::string &audioUri);
     ToneHapticsType ConvertToToneHapticsType(RingtoneType type);
     HapticsMode ConvertToHapticsMode(ToneHapticsMode toneHapticsMode);
     ToneHapticsSettings GetHapticSettings(std::string &audioUri, bool &muteHaptics);
-    std::string ChangeHapticsUri(const std::string &hapticsUri);
-    bool InitDataShareHelper();
-    void ReleaseDataShareHelper();
     int32_t RegisterSource(const std::string &audioUri, const std::string &hapticUri);
-    bool VerifyPath(const std::string& audio);
+    bool InitDatabaseTool();
+    void ReleaseDatabaseTool();
 
     float volume_ = 1.0f;
     bool loop_ = false;
@@ -82,6 +79,7 @@ private:
     SystemSoundManagerImpl &systemSoundMgr_;
     RingtoneType type_ = RINGTONE_TYPE_SIM_CARD_0;
     RingtoneState ringtoneState_ = STATE_NEW;
+    DatabaseTool databaseTool_ = {false, false, nullptr};
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper_ = nullptr;
     std::string specifyRingtoneUri_ = "";
     std::unique_ptr<AudioStandard::AudioRenderer> audioRenderer_ {nullptr};

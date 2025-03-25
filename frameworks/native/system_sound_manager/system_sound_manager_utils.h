@@ -33,6 +33,7 @@ public:
     static int32_t GetCurrentUserId();
     static std::shared_ptr<DataShare::DataShareHelper> CreateDataShareHelperUri(int32_t systemAbilityId);
     static std::shared_ptr<DataShare::DataShareHelper> CreateDataShareHelper(int32_t systemAbilityId);
+    static bool VerifyCustomPath(const std::string &audioUri);
 };
 } // namespace Media
 } // namespace OHOS

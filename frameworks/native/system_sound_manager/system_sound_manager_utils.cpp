@@ -37,6 +37,7 @@ namespace Media {
 
 constexpr int32_t RETRY_TIME_S = 5;
 constexpr int64_t SLEEP_TIME_S = 1;
+const std::string SANDBOX_PREFIX = "/data/storage/el2/base/files/";
 
 int32_t SystemSoundManagerUtils::GetCurrentUserId()
 {
@@ -63,28 +64,29 @@ int32_t SystemSoundManagerUtils::GetCurrentUserId()
 
 shared_ptr<DataShare::DataShareHelper> SystemSoundManagerUtils::CreateDataShareHelperUri(int32_t systemAbilityId)
 {
-    MEDIA_LOGI("ringtoneplayer::CreateDataShareHelperUri : Enter the CreateDataShareHelperUri interface");
+    MEDIA_LOGI("Enter CreateDataShareHelperUri()");
     auto saManager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (saManager == nullptr) {
+        MEDIA_LOGE("Get system ability manager failed.");
         return nullptr;
     }
     auto remoteObj = saManager->GetSystemAbility(systemAbilityId);
     if (remoteObj == nullptr) {
+        MEDIA_LOGE("Get system ability:[%{public}d] failed.", systemAbilityId);
         return nullptr;
     }
-    MEDIA_LOGI("CreateDataShareHelperUri : Enter CreateDataShareHelperUri()");
+
     int32_t useId = SystemSoundManagerUtils::GetCurrentUserId();
     std::string uri = RINGTONE_LIBRARY_PROXY_URI + "?" + "user=" + std::to_string(useId);
-    MEDIA_LOGI("uri : %{public}s", uri.c_str());
     std::pair<int, std::shared_ptr<DataShare::DataShareHelper>> dataShare =
         DataShare::DataShareHelper::Create(remoteObj, uri, "");
-    MEDIA_LOGI("errcode : %{public}d", dataShare.first);
+    MEDIA_LOGI("CreateDataShareHelperUri with : %{public}s. errcode : %{public}d", uri.c_str(), dataShare.first);
     return dataShare.second;
 }
 
 shared_ptr<DataShare::DataShareHelper> SystemSoundManagerUtils::CreateDataShareHelper(int32_t systemAbilityId)
 {
-    MEDIA_LOGI("CreateDataShareHelper : Enter CreateDataShareHelper()");
+    MEDIA_LOGI("Enter CreateDataShareHelper()");
     auto saManager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (saManager == nullptr) {
         MEDIA_LOGE("Get system ability manager failed.");
@@ -96,6 +98,15 @@ shared_ptr<DataShare::DataShareHelper> SystemSoundManagerUtils::CreateDataShareH
         return nullptr;
     }
     return DataShare::DataShareHelper::Creator(remoteObj, RINGTONE_URI);
+}
+
+bool SystemSoundManagerUtils::VerifyCustomPath(const std::string &audioUri)
+{
+    bool flag = false;
+    if (audioUri.substr(0, SANDBOX_PREFIX.size()) == SANDBOX_PREFIX) {
+        flag = true;
+    }
+    return flag;
 }
 } // namesapce Media
 } // namespace OHOS
