@@ -98,7 +98,7 @@ napi_value AVScreenCaptureNapi::Constructor(napi_env env, napi_callback_info inf
     ON_SCOPE_EXIT(0) {
         delete jsScreenCapture;
         jsScreenCapture = nullptr;
-    }
+    };
     jsScreenCapture->env_ = env;
     jsScreenCapture->screenCapture_ = ScreenCaptureFactory::CreateScreenCapture();
     CHECK_AND_RETURN_RET_LOG(jsScreenCapture->screenCapture_ != nullptr, result, "failed to CreateScreenCapture");
