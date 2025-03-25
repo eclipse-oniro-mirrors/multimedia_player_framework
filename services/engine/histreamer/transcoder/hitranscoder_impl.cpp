@@ -29,8 +29,8 @@
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_ONLY_PRERELEASE, LOG_DOMAIN_SYSTEM_PLAYER, "HiTransCoder" };
-+constexpr int32_t SAMPLE_RATE_48K = 48000;
-+constexpr int32_t SAMPLE_FORMAT_BIT_DEPTH_16 = 16;
+constexpr int32_t SAMPLE_RATE_48K = 48000;
+constexpr int32_t SAMPLE_FORMAT_BIT_DEPTH_16 = 16;
 }
 
 namespace OHOS {
