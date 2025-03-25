@@ -2502,7 +2502,7 @@ napi_value AVPlayerNapi::JsGetCurrentTime(napi_env env, napi_callback_info info)
     (void)napi_create_int32(env, currentTime, &value);
     std::string curState = jsPlayer->GetCurrentState();
     if (currentTime != -1) {
-        MEDIA_LOGI("0x%{public}06" PRIXPTR " JsGetCurrenTime Out, state %{public}s, time: %{public}d",
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " JsGetCurrenTime Out, state %{public}s, time %{public}d",
             FAKE_POINTER(jsPlayer), curState.c_str(), currentTime);
     }
     return value;
