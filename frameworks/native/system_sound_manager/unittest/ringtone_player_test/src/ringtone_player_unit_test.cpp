@@ -166,38 +166,6 @@ HWTEST(RingtonePlayerUnitTest, Media_RingtonePlayer_007, TestSize.Level1)
 
 /**
  * @tc.name  : Test MediaRingtonePlayer
- * @tc.number: Media_RingtonePlayer_008
- * @tc.desc  : Test ChangeUri. Returns ringtoneUri.
- */
-HWTEST(RingtonePlayerUnitTest, Media_RingtonePlayer_008, TestSize.Level1)
-{
-    auto context_ = std::make_shared<ContextImpl>();
-    auto sysSoundMgr = std::make_shared<SystemSoundManagerImpl>();
-    RingtoneType type = RINGTONE_TYPE_SIM_CARD_0;
-    auto ringtonePlayerImpl_ = std::make_shared<RingtonePlayerImpl>(context_, *sysSoundMgr, type);
-    std::string audioUri = "/storage/media/local/files/test.ogg";
-    std::string result = ringtonePlayerImpl_->ChangeUri(audioUri);
-    EXPECT_EQ(result, "/storage/media/local/files/test.ogg");
-}
-
-/**
- * @tc.name  : Test MediaRingtonePlayer
- * @tc.number: Media_RingtonePlayer_009
- * @tc.desc  : Test ChangeHapticsUri. Returns newHapticsUri.
- */
-HWTEST(RingtonePlayerUnitTest, Media_RingtonePlayer_009, TestSize.Level1)
-{
-    auto context_ = std::make_shared<ContextImpl>();
-    auto sysSoundMgr = std::make_shared<SystemSoundManagerImpl>();
-    RingtoneType type = RINGTONE_TYPE_SIM_CARD_0;
-    auto ringtonePlayerImpl_ = std::make_shared<RingtonePlayerImpl>(context_, *sysSoundMgr, type);
-    std::string hapticsUri = "/storage/media/local/test.json";
-    std::string result = ringtonePlayerImpl_->ChangeHapticsUri(hapticsUri);
-    EXPECT_EQ(result, "/storage/media/local/test.json");
-}
-
-/**
- * @tc.name  : Test MediaRingtonePlayer
  * @tc.number: Media_RingtonePlayer_010
  * @tc.desc  : Test ConvertToToneHapticsType. Returns ToneHapticsType.
  */

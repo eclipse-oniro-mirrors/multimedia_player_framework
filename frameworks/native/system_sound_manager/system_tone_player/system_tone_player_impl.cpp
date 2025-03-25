@@ -33,9 +33,8 @@
 #include "media_monitor_manager.h"
 #include "system_sound_log.h"
 #include "system_sound_manager_impl.h"
-#include "os_account_manager.h"
-#include "system_sound_vibrator.h"
 #include "system_sound_manager_utils.h"
+#include "system_sound_vibrator.h"
 
 using namespace std;
 using namespace OHOS::AbilityRuntime;
@@ -363,17 +362,6 @@ void SystemTonePlayerImpl::ReleaseDatabaseTool()
     }
     databaseTool_.isProxy = false;
     databaseTool_.isInitialized = false;
-}
-
-bool SystemTonePlayerImpl::VerifyPath(const std::string& systemtoneUri)
-{
-    bool flag = false;
-    const std::string sandboxPrefix = "/data/storage/el2/base/files/";
-    if (systemtoneUri.substr(0, sandboxPrefix.size()) == sandboxPrefix) {
-        flag = true;
-        return flag;
-    }
-    return flag;
 }
 
 int32_t SystemTonePlayerImpl::Prepare()

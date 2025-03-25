@@ -24,7 +24,6 @@
 
 #include "system_sound_log.h"
 #include "system_sound_vibrator.h"
-#include "os_account_manager.h"
 #include "media_errors.h"
 #include "system_sound_manager_utils.h"
 
@@ -63,7 +62,7 @@ RingtonePlayerImpl::RingtonePlayerImpl(const shared_ptr<Context> &context,
     audioHapticManager_ = AudioHapticManagerFactory::CreateAudioHapticManager();
     CHECK_AND_RETURN_LOG(audioHapticManager_ != nullptr, "Failed to get audio haptic manager");
 
-    std::string ringtoneUri = systemSoundMgr_.GetRingtoneUri(context_, type_);
+    std::string ringtoneUri = systemSoundMgr_.GetRingtoneUri(databaseTool_, type_);
     AudioHapticPlayerOptions options = {false, false};
     ToneHapticsSettings settings = GetHapticSettings(ringtoneUri, options.muteHaptics);
     InitPlayer(ringtoneUri, settings, options);
@@ -536,5 +535,5 @@ void RingtonePlayerCallback::OnError(int32_t errorCode)
 {
     MEDIA_LOGI("OnError from audio haptic player. errorCode %{public}d", errorCode);
 }
-} // namesapce AudioStandard
+} // namesapce Media
 } // namespace OHOS
