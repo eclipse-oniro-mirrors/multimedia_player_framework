@@ -537,7 +537,7 @@ int32_t AVMetadataHelperImpl::CopySurfaceBufferToPixelMap(sptr<SurfaceBuffer> &s
         >= static_cast<int64_t>(stride) * height / uvDivBase, MSERR_INVALID_VAL);
     int64_t copySrcSize = std::max(static_cast<int64_t>(stride) * height,
         static_cast<int64_t>(stride) * pixelMapInfo.outputHeight + static_cast<int64_t>(stride) * height / uvDivBase);
-    CHECK_AND_RETURN_RET(surfaceBuffer->GetSize() >= copySrcSize, MSERR_INVALID_VAL);
+    CHECK_AND_RETURN_RET(static_cast<int64_t>(surfaceBuffer->GetSize()) >= copySrcSize, MSERR_INVALID_VAL);
  
     CHECK_AND_RETURN_RET(INT64_MAX - (static_cast<int64_t>(width) * height) >=
         static_cast<int64_t>(width) * height / uvDivBase, MSERR_INVALID_VAL);
