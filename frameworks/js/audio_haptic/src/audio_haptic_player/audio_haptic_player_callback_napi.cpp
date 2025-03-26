@@ -114,7 +114,7 @@ void AudioHapticPlayerCallbackNapi::OnInterruptJsCallback(std::unique_ptr<AudioH
         MEDIA_LOGE("AudioHapticPlayerJsCallback: jsCb.get() is null");
         return;
     }
-    AudioHapticPlayerJsCallback *event = jsCb.get();
+    AudioHapticPlayerJsCallback *event = jsCb.release();
     auto task = [event]() {
         std::shared_ptr<AudioHapticPlayerJsCallback> context(
             static_cast<AudioHapticPlayerJsCallback*>(event),
@@ -153,7 +153,7 @@ void AudioHapticPlayerCallbackNapi::OnInterruptJsCallback(std::unique_ptr<AudioH
     auto ret = napi_send_event(env_, task, napi_eprio_high);
     if (ret != napi_status::napi_ok) {
         MEDIA_LOGE("Failed to SendEvent, ret = %{public}d", ret);
-        jsCb.release();
+        delete event;
     }
 }
 
@@ -181,7 +181,7 @@ void AudioHapticPlayerCallbackNapi::OnEndOfStreamJsCallback(std::unique_ptr<Audi
         MEDIA_LOGE("AudioHapticPlayerJsCallback: jsCb.get() is null");
         return;
     }
-    AudioHapticPlayerJsCallback *event = jsCb.get();
+    AudioHapticPlayerJsCallback *event = jsCb.release();
     auto task = [event]() {
         std::shared_ptr<AudioHapticPlayerJsCallback> context(
             static_cast<AudioHapticPlayerJsCallback*>(event),
@@ -214,7 +214,7 @@ void AudioHapticPlayerCallbackNapi::OnEndOfStreamJsCallback(std::unique_ptr<Audi
     auto ret = napi_send_event(env_, task, napi_eprio_high);
     if (ret != napi_status::napi_ok) {
         MEDIA_LOGE("Failed to SendEvent, ret = %{public}d", ret);
-        jsCb.release();
+        delete event;
     }
 }
 }  // namespace Media
