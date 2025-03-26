@@ -37,7 +37,6 @@ sptr<RecorderServiceStub> RecorderServiceStub::Create()
 
     int32_t ret = recorderStub->Init();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed to recorder stub init");
-    StatisticEventWriteBundleName("create", "RecorderServiceStub");
     return recorderStub;
 }
 
