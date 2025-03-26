@@ -144,10 +144,6 @@ void RecorderServiceStub::FillRecFuncPart2()
         [this](MessageParcel &data, MessageParcel &reply) { return GetAvailableEncoder(data, reply); };
     recFuncs_[GET_MAX_AMPLITUDE] =
         [this](MessageParcel &data, MessageParcel &reply) { return GetMaxAmplitude(data, reply); };
-    recFuncs_[IS_WATERMARK_SUPPORTED] =
-        [this](MessageParcel &data, MessageParcel &reply) { return IsWatermarkSupported(data, reply); };
-    recFuncs_[SET_WATERMARK] =
-        [this](MessageParcel &data, MessageParcel &reply) { return SetWatermark(data, reply); };
     recFuncs_[SET_META_CONFIGS] =
         [this](MessageParcel &data, MessageParcel &reply) { return SetMetaConfigs(data, reply); };
     recFuncs_[SET_META_SOURCE] =
@@ -160,6 +156,10 @@ void RecorderServiceStub::FillRecFuncPart2()
         [this](MessageParcel &data, MessageParcel &reply) { return SetMetaSourceTrackMime(data, reply); };
     recFuncs_[GET_META_SURFACE] =
         [this](MessageParcel &data, MessageParcel &reply) { return GetMetaSurface(data, reply); };
+    recFuncs_[IS_WATERMARK_SUPPORTED] =
+        [this](MessageParcel &data, MessageParcel &reply) { return IsWatermarkSupported(data, reply); };
+    recFuncs_[SET_WATERMARK] =
+        [this](MessageParcel &data, MessageParcel &reply) { return SetWatermark(data, reply); };
 }
 
 int32_t RecorderServiceStub::DestroyStub()
