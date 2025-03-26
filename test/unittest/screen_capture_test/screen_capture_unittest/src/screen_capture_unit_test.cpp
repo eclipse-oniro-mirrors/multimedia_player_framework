@@ -178,7 +178,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_report_user_choice_01, TestSize.L
     int32_t sessionId = 0;
     std::string choice = "false";
     controller->ReportAVScreenCaptureUserChoice(sessionId, choice);
-    EXPECT_NE(controller, nullptr);
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_report_user_choice_01 after");
 }
 

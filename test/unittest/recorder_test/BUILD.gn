@@ -141,7 +141,6 @@ ohos_unittest("recorder_server_unit_test") {
     "graphic_2d:librender_service_base",
     "graphic_surface:surface",
     "hilog:libhilog",
-    "hisysevent:libhisysevent",
     "power_manager:powermgr_client",
     "qos_manager:qos",
   ]
