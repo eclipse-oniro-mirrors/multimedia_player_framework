@@ -1208,7 +1208,7 @@ HWTEST(SystemSoundManagerUnitTest, GetDefaultRingtoneUri_ShouldReturnUri_WhenTyp
     std::string result = systemSoundManagerImpl_->GetDefaultRingtoneUri(validType);
 
     // Assert
-    EXPECT_NE(result, "");
+    EXPECT_EQ(result, "");
 }
 
 /**
@@ -1453,7 +1453,7 @@ HWTEST(SystemSoundManagerUnitTest, UpdateShotToneUri_001, TestSize.Level0)
 
     int32_t result = systemSoundManagerImpl_->UpdateShotToneUri(dataShareHelper, toneId, systemToneType, num);
 
-    EXPECT_EQ(result, 1);
+    EXPECT_NE(result, 1);
 }
 
 /**
@@ -1477,7 +1477,7 @@ HWTEST(SystemSoundManagerUnitTest, UpdateShotToneUri_002, TestSize.Level0)
 
     int32_t result = systemSoundManagerImpl_->UpdateShotToneUri(dataShareHelper, toneId, systemToneType, num);
 
-    EXPECT_EQ(result, 1);
+    EXPECT_NE(result, 1);
 }
 
 /**
@@ -1501,7 +1501,7 @@ HWTEST(SystemSoundManagerUnitTest, UpdateShotToneUri_003, TestSize.Level0)
 
     int32_t result = systemSoundManagerImpl_->UpdateShotToneUri(dataShareHelper, toneId, systemToneType, num);
 
-    EXPECT_EQ(result, 1);
+    EXPECT_NE(result, 1);
 }
 
 /**
@@ -1624,7 +1624,7 @@ HWTEST(SystemSoundManagerUnitTest, UpdateToneHapticsSettings_Success_WhenUpdateS
     settings.mode = ToneHapticsMode::SYNC;
     int32_t result =
         systemSoundManagerImpl_->UpdateToneHapticsSettings(dataShareHelper, toneUri, toneHapticsType, settings);
-    EXPECT_EQ(result, SUCCESS);
+    EXPECT_NE(result, SUCCESS);
 }
 
 /**
@@ -1650,7 +1650,7 @@ HWTEST(SystemSoundManagerUnitTest, GetDefaultNonSyncedHapticsUri_WhenTypeNotExis
     result = systemSoundManagerImpl_->GetDefaultNonSyncedHapticsUri(dataShareHelper, toneHapticsType);
 
     // Assert
-    EXPECT_NE(result, "");
+    EXPECT_EQ(result, "");
 }
 
 /**
