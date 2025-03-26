@@ -449,7 +449,12 @@ Status AVMetadataHelperImpl::GetColorSpace(sptr<SurfaceBuffer> &surfaceBuffer, P
     }
     auto outColor = reinterpret_cast<CM_ColorSpaceInfo *>(colorSpaceInfoVec.data());
     CHECK_AND_RETURN_RET_LOG(outColor != nullptr, Status::ERROR_UNKNOWN, "colorSpaceInfoVec init failed");
-    auto colorSpaceInfo = outColor[0];
+    auto& colorSpaceInfo = outColor[0];
+    if (colorSpaceInfo.primaries == CM_ColorPrimaries::COLORPRIMARIES_BT2020 &&
+        colorSpaceInfo.transfunc == CM_TransFunc::TRANSFUNC_PRIV_LOG) {
+        colorSpaceInfo.transfunc = CM_TransFunc::TRANSFUNC_HLG;
+        surfaceBuffer->SetMetadata(ATTRKEY_COLORSPACE_INFO, colorSpaceInfoVec);
+    }
     FormatColorSpaceInfo(colorSpaceInfo);
     pixelMapInfo.srcRange = colorSpaceInfo.range == CM_Range::RANGE_FULL ? 1 : 0;
     auto type = ((static_cast<unsigned int>(colorSpaceInfo.primaries) << COLORPRIMARIES_OFFSET) +
