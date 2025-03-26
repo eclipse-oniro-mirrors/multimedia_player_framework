@@ -270,7 +270,7 @@ void HiTransCoderImpl::ConfigureMetaDataToTrackFormat(const std::shared_ptr<Meta
             (void)SetValueByType(meta, audioEncFormat_);
             (void)SetValueByType(meta, srcAudioFormat_);
             (void)SetValueByType(meta, muxerFormat_);
-            ConfigureAudioEncSampleFormat();
+            UpdateAudioSampleFormat(trackMime, meta);
             isInitializeAudioEncFormat = true;
         }
     }
