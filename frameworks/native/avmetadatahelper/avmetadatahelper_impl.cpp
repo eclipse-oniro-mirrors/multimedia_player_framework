@@ -54,6 +54,7 @@ constexpr uint8_t COLORPRIMARIES_OFFSET = 0;
 constexpr uint8_t TRANSFUNC_OFFSET = 8;
 constexpr uint8_t MATRIX_OFFSET = 16;
 constexpr uint8_t RANGE_OFFSET = 21;
+constexpr int CM_TRANSFUNC_PRIV_LOG = 9;
 }
 
 namespace OHOS {
@@ -451,7 +452,7 @@ Status AVMetadataHelperImpl::GetColorSpace(sptr<SurfaceBuffer> &surfaceBuffer, P
     CHECK_AND_RETURN_RET_LOG(outColor != nullptr, Status::ERROR_UNKNOWN, "colorSpaceInfoVec init failed");
     auto& colorSpaceInfo = outColor[0];
     if (colorSpaceInfo.primaries == CM_ColorPrimaries::COLORPRIMARIES_BT2020 &&
-        colorSpaceInfo.transfunc == 9) {
+        colorSpaceInfo.transfunc == CM_TRANSFUNC_PRIV_LOG) {
         colorSpaceInfo.transfunc = CM_TransFunc::TRANSFUNC_HLG;
         surfaceBuffer->SetMetadata(ATTRKEY_COLORSPACE_INFO, colorSpaceInfoVec);
     }
