@@ -103,7 +103,6 @@ int32_t PlayerServer::Init()
     } else {
         MEDIA_LOGD("appUid: %{public}d, appPid: %{public}d, appName: %{public}s", appUid_, appPid_, appName_.c_str());
     }
-    StatisticEventWriteBundleName("create", "PlayerServer", appName_);
     apiVersion_ = GetApiInfo(appUid_, appName_);
 
     PlayerServerStateMachine::Init(idleState_);
