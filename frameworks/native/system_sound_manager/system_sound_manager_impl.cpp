@@ -350,7 +350,7 @@ std::string SystemSoundManagerImpl::GetDefaultSystemToneUri(SystemToneType syste
 {
     std::lock_guard<std::mutex> lock(uriMutex_);
     if (defaultSystemToneUriMap_.count(systemToneType) == 0) {
-        MEDIA_LOGE("Failed to GetDefaultRingtoneUri: invalid system tone type %{public}d", systemToneType);
+        MEDIA_LOGE("Failed to GetDefaultSystemToneUri: invalid system tone type %{public}d", systemToneType);
         return "";
     }
     return defaultSystemToneUriMap_[systemToneType];
