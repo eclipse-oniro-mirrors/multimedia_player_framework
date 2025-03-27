@@ -363,6 +363,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Prepare_002, TestSize.Level2)
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_Prepare_002 out.");
 }
 
+#ifdef SUPPORT_CODEC_TYPE_HEVC
 /**
  * @tc.name: Recorder_Prepare_003
  * @tc.desc: Test recorder preparation process with max param
@@ -383,7 +384,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Prepare_003, TestSize.Level2)
     config.profile.audioSampleRate = 48000;
     config.profile.fileFormat = OH_AVRecorder_ContainerFormatType::AVRECORDER_CFT_MPEG_4;
     config.profile.videoBitrate = 70000000;
-    config.profile.videoCodec = OH_AVRecorder_CodecMimeType::AVRECORDER_VIDEO_AVC;
+    config.profile.videoCodec = OH_AVRecorder_CodecMimeType::AVRECORDER_VIDEO_HEVC;
     config.profile.videoFrameWidth = 3840;
     config.profile.videoFrameHeight = 2160;
     config.profile.videoFrameRate = 60;
@@ -408,6 +409,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Prepare_003, TestSize.Level2)
 
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_Prepare_003 out.");
 }
+#endif
 
 /**
  * @tc.name: Recorder_Prepare_004
