@@ -284,6 +284,14 @@ void HiTransCoderImpl::UpdateAudioSampleFormat(const std::string& mime, const st
 {
     // The update strategy of the sample format needs to be consistent with audio_decoder_filter.
     MEDIA_LOG_I_SHORT("UpdateTrackInfoSampleFormat mime: " PUBLIC_LOG_S, mime.c_str());
+    Plugins::AudioSampleFormat sampleFormat = Plugins::INVALID_WIDTH;
+    if (meta->GetData(Tag::AUDIO_SAMPLE_FORMAT, sampleFormat)) {
+        MEDIA_LOG_I("sampleFormat: " PUBLIC_LOG_D32, static_cast<int32_t>(sampleFormat));
+        audioEncFormat_->SetData(Tag::AUDIO_SAMPLE_FORMAT, sampleFormat);
+        muxerFormat_->SetData(Tag::AUDIO_SAMPLE_FORMAT, sampleFormat);
+    } else {
+        MEDIA_LOG_W("get sampleFormat failed");
+    }
     FALSE_RETURN_NOLOG(mime.find(MediaAVCodec::CodecMimeType::AUDIO_RAW) != 0);
     if (mime.find(MediaAVCodec::CodecMimeType::AUDIO_APE) != 0 &&
         mime.find(MediaAVCodec::CodecMimeType::AUDIO_FLAC) != 0) {
@@ -301,7 +309,6 @@ void HiTransCoderImpl::UpdateAudioSampleFormat(const std::string& mime, const st
         return;
     }
 
-    Plugins::AudioSampleFormat sampleFormat = Plugins::SAMPLE_U8;
     int32_t codedSampleDepth = 0;
     int32_t rawSampleDepth = 0;
     if ((meta->GetData(Tag::AUDIO_SAMPLE_FORMAT, sampleFormat) &&
