@@ -52,10 +52,15 @@ constexpr int32_t LOAD_TIME = 30;
 constexpr int32_t SLEEP_TIME = 100;
 constexpr int32_t RETRY_TIME = 3;
 #endif
-static MediaClient g_mediaClientInstance;
+std::shared_ptr<MediaClient> g_mediaClientInstance;
+std::once_flag onceFlag_;
+
 IMediaService &MediaServiceFactory::GetInstance()
 {
-    return g_mediaClientInstance;
+    std::call_once(onceFlag_, [] {
+        g_mediaClientInstance = std::make_shared<MediaClient>();
+    });
+    return *g_mediaClientInstance;
 }
 
 MediaClient::MediaClient() noexcept
@@ -365,7 +370,8 @@ sptr<IStandardMediaService> MediaClient::GetMediaProxy()
     deathRecipient_ = new(std::nothrow) MediaDeathRecipient(pid);
     CHECK_AND_RETURN_RET_LOG(deathRecipient_ != nullptr, nullptr, "failed to new MediaDeathRecipient.");
 
-    deathRecipient_->SetNotifyCb(std::bind(&MediaClient::MediaServerDied, std::placeholders::_1));
+    deathRecipient_->SetNotifyCb(std::bind(&MediaClient::MediaServerDied, std::placeholders::_1,
+        g_mediaClientInstance));
     bool result = object->AddDeathRecipient(deathRecipient_);
     if (!result) {
         MEDIA_LOGE("failed to add deathRecipient");
@@ -377,10 +383,12 @@ sptr<IStandardMediaService> MediaClient::GetMediaProxy()
     return mediaProxy_;
 }
 
-void MediaClient::MediaServerDied(pid_t pid)
+void MediaClient::MediaServerDied(pid_t pid, std::weak_ptr<MediaClient> client)
 {
     MEDIA_LOGE("media server is died, pid:%{public}d!", pid);
-    g_mediaClientInstance.DoMediaServerDied();
+    auto instance = client.lock();
+    CHECK_AND_RETURN_LOG(instance, "mediaClient instance has been released, maybe current process is exiting");
+    instance->DoMediaServerDied();
 }
 
 void MediaClient::AVPlayerServerDied()

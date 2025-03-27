@@ -41,6 +41,7 @@ LiveController::~LiveController()
 void LiveController::Stop()
 {
     if (taskStarted_) {
+        FALSE_RETURN(task_ != nullptr);
         task_->Stop();
         taskStarted_ = false;
     }
@@ -51,6 +52,7 @@ void LiveController::StartWithPlayerEngineObs(const std::weak_ptr<IPlayerEngineO
     OHOS::Media::AutoLock lock(loopMutex_);
     obs_ = obs;
     if (!taskStarted_) {
+        FALSE_RETURN(task_ != nullptr);
         task_->Start();
         taskStarted_ = true;
         MEDIA_LOG_I("start check live delay looper");
@@ -85,6 +87,7 @@ void LiveController::StopCheckLiveDelayTime()
 
 void LiveController::Enqueue(const std::shared_ptr<LiveController::Event>& event)
 {
+    FALSE_RETURN(event != nullptr && task_ != nullptr);
     if (event->what == WHAT_NONE) {
         MEDIA_LOG_I("invalid event");
     }
@@ -96,6 +99,7 @@ void LiveController::Enqueue(const std::shared_ptr<LiveController::Event>& event
 
 void LiveController::LoopOnce(const std::shared_ptr<Event>& item)
 {
+    FALSE_RETURN(item != nullptr);
     switch (item->what) {
         case WHAT_LIVE_DELAY_TIME:
             DoCheckLiveDalyTime();

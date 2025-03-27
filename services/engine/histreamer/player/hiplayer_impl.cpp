@@ -405,10 +405,9 @@ int32_t HiPlayerImpl::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
     mutedMediaType_ = strategy.mutedMediaType;
     audioLanguage_ = strategy.preferredAudioLanguage;
     subtitleLanguage_ = strategy.preferredSubtitleLanguage;
-    if (strategy.enableSuperResolution) {
-        videoPostProcessorType_ = VideoPostProcessorType::SUPER_RESOLUTION;
-        isPostProcessorOn_ = strategy.enableSuperResolution;
-    }
+    videoPostProcessorType_ = strategy.enableSuperResolution ? VideoPostProcessorType::SUPER_RESOLUTION
+                                : VideoPostProcessorType::NONE;
+    isPostProcessorOn_ = strategy.enableSuperResolution;
 
     mimeType_ = mediaSource->GetMimeType();
     SetFlvLiveParams(strategy);
@@ -489,6 +488,9 @@ void HiPlayerImpl::ResetIfSourceExisted()
     }
 
     pipeline_ = std::make_shared<OHOS::Media::Pipeline::Pipeline>();
+    if (pipeline_ != nullptr) {
+        pipeline_->Init(playerEventReceiver_, playerFilterCallback_, playerId_);
+    }
     syncManager_ = std::make_shared<MediaSyncManager>();
     MEDIA_LOG_I("Reset the relatived objects end");
 }
@@ -769,12 +771,12 @@ void HiPlayerImpl::SetInterruptState(bool isInterruptNeeded)
     }
 }
 
-int32_t HiPlayerImpl::SelectBitRate(uint32_t bitRate)
+int32_t HiPlayerImpl::SelectBitRate(uint32_t bitRate, bool isAutoSelect)
 {
     MEDIA_LOG_D("HiPlayerImpl:: Select BitRate %{public}d", bitRate);
     FALSE_RETURN_V_MSG_E(demuxer_ != nullptr,
         MSERR_INVALID_OPERATION, "SelectBitRate failed, demuxer_ is null");
-    Status ret = demuxer_->SelectBitRate(bitRate);
+    Status ret = demuxer_->SelectBitRate(bitRate, isAutoSelect);
     if (ret == Status::OK) {
         Format bitRateFormat;
         callbackLooper_.OnInfo(INFO_TYPE_BITRATEDONE, bitRate, bitRateFormat);
@@ -2234,6 +2236,10 @@ void HiPlayerImpl::OnEventContinue(const Event &event)
             HandleSeiInfoEvent(event);
             break;
         }
+        case EventType::EVENT_FLV_AUTO_SELECT_BITRATE: {
+            HandleFlvAutoSelectBitRate(AnyCast<int32_t>(event.param));
+            break;
+        }
         default:
             break;
     }
@@ -2248,6 +2254,13 @@ void HiPlayerImpl::HandleSeiInfoEvent(const Event &event)
     format.PutIntValue(Tag::AV_PLAYER_SEI_PLAYBACK_POSITION, playbackPos - Plugins::Us2Ms(mediaStartPts_));
 
     callbackLooper_.OnInfo(INFO_TYPE_SEI_UPDATE_INFO, 0, format);
+}
+
+void HiPlayerImpl::HandleFlvAutoSelectBitRate(uint32_t bitRate)
+{
+    MEDIA_LOG_I("flv auto select bitrate");
+    Format selectBitRateFormat;
+    callbackLooper_.OnInfo(INFO_TYPE_FLV_AUTO_SELECT_BITRATE, bitRate, selectBitRateFormat);
 }
 
 void HiPlayerImpl::OnEventSub(const Event &event)
@@ -2419,7 +2432,7 @@ bool HiPlayerImpl::IsLivingMaxDelayTimeValid()
     if (maxLivingDelayTime_ < AVPlayStrategyConstant::DEFAULT_LIVING_CACHED_DURATION ||
         maxLivingDelayTime_ < bufferDurationForPlaying_) {
             return false;
-        }
+    }
     return true;
 }
 
@@ -3260,12 +3273,12 @@ int32_t HiPlayerImpl::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
     renderFirstFrame_ = playbackStrategy.showFirstFrameOnPrepare;
     audioLanguage_ = playbackStrategy.preferredAudioLanguage;
     subtitleLanguage_ = playbackStrategy.preferredSubtitleLanguage;
+    videoPostProcessorType_ = playbackStrategy.enableSuperResolution ? VideoPostProcessorType::SUPER_RESOLUTION
+                                : VideoPostProcessorType::NONE;
+    isPostProcessorOn_ = playbackStrategy.enableSuperResolution;
+
     SetFlvLiveParams(playbackStrategy);
     FALSE_RETURN_V(IsLivingMaxDelayTimeValid(), TransStatus(Status::ERROR_INVALID_PARAMETER));
-    if (playbackStrategy.enableSuperResolution) {
-        videoPostProcessorType_ = VideoPostProcessorType::SUPER_RESOLUTION;
-        isPostProcessorOn_ = playbackStrategy.enableSuperResolution;
-    }
     return MSERR_OK;
 }
 
@@ -3495,7 +3508,8 @@ bool HiPlayerImpl::IsPauseForTooLong(int64_t pauseTime)
 void HiPlayerImpl::DoRestartLiveLink()
 {
     MediaTrace trace("HiPlayerImpl::DoRestartLiveLink");
-    FALSE_RETURN(demuxer_ != nullptr && isFlvLive_);
+    FALSE_RETURN_NOLOG(isFlvLive_);
+    FALSE_RETURN(demuxer_ != nullptr);
     demuxer_->DoFlush();
     if (audioDecoder_ != nullptr) {
         audioDecoder_->DoFlush();
@@ -3550,14 +3564,16 @@ void HiPlayerImpl::SetFlvObs()
 
 void HiPlayerImpl::StartFlvCheckLiveDelayTime()
 {
-    FALSE_RETURN(demuxer_ != nullptr && isFlvLive_);
+    FALSE_RETURN_NOLOG(isFlvLive_);
+    FALSE_RETURN(demuxer_ != nullptr);
     MEDIA_LOG_I("StartFlvCheckLiveDelayTime");
     liveController_.StartCheckLiveDelayTime(CHECK_DELAY_INTERVAL);
 }
 
 void HiPlayerImpl::StopFlvCheckLiveDelayTime()
 {
-    FALSE_RETURN(demuxer_ != nullptr && isFlvLive_);
+    FALSE_RETURN_NOLOG(isFlvLive_);
+    FALSE_RETURN(demuxer_ != nullptr);
     MEDIA_LOG_I("StopFlvCheckLiveDelayTime");
     liveController_.StopCheckLiveDelayTime();
 }

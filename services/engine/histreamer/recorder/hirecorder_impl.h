@@ -104,7 +104,11 @@ private:
     void ConfigureVidEnableStableQualityMode(const RecorderParam &recParam);
     bool CheckAudioSourceType(AudioSourceType sourceType);
     void ConfigureRotation(const RecorderParam &recParam);
-    int32_t PrepareMeta();
+    int32_t PrepareAudioCapture();
+    int32_t PrepareAudioDataSource();
+    int32_t PrepareVideoEncoder();
+    int32_t PrepareMetaData();
+    int32_t PrepareVideoCapture();
     EncoderCapabilityData ConvertAudioEncoderInfo(MediaAVCodec::CapabilityData *capabilityData);
     EncoderCapabilityData ConvertVideoEncoderInfo(MediaAVCodec::CapabilityData *capabilityData);
     std::vector<EncoderCapabilityData> ConvertEncoderInfo(std::vector<MediaAVCodec::CapabilityData*> &capData);

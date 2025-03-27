@@ -124,6 +124,7 @@ void HiTransCoderCallbackLooper::DoReportMediaProgress()
         int32_t durationMs;
         if (transCoderEngine_->GetCurrentTime(currentPositionMs) == 0 &&
             transCoderEngine_->GetDuration(durationMs) == 0) {
+            FALSE_RETURN(durationMs != 0);
             int32_t progress = currentPositionMs * 100 / durationMs;
             MEDIA_LOG_D("EVENT_AUDIO_PROGRESS position updated: " PUBLIC_LOG_D32, progress);
             obs->OnInfo(TransCoderOnInfoType::INFO_TYPE_PROGRESS_UPDATE, progress);
