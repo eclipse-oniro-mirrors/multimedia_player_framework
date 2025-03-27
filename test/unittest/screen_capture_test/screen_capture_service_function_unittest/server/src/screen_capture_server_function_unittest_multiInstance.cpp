@@ -812,5 +812,31 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckSpecifiedDataTypeNum_002, TestSiz
     ASSERT_EQ(ScreenCaptureServer::CheckSCServerSpecifiedDataTypeNum(server->appInfo_.appUid,
         server->captureConfig_.dataType), false);
 }
+
+/**
+* @tc.name: AddSaAppInfoMap_001
+* @tc.desc: AddSaAppInfoMap has sa uid info
+* @tc.type: FUNC
+*/
+HWTEST_F(ScreenCaptureServerFunctionTest, AddSaAppInfoMap_001, TestSize.Level2)
+{
+    int32_t saUid = 10086;
+    ScreenCaptureServer::saUidAppUidMap_[saUid] = {saUid, 0};
+    screenCaptureServer_->AddSaAppInfoMap(saUid, saUid);
+    ASSERT_EQ(ScreenCaptureServer::saUidAppUidMap_[saUid].second, 1);
+}
+
+/**
+* @tc.name: RemoveSaAppInfoMap_001
+* @tc.desc: RemoveSaAppInfoMap has sa uid info
+* @tc.type: FUNC
+*/
+HWTEST_F(ScreenCaptureServerFunctionTest, RemoveSaAppInfoMap_001, TestSize.Level2)
+{
+    int32_t saUid = 10086;
+    ScreenCaptureServer::saUidAppUidMap_[saUid] = {saUid, 1};
+    screenCaptureServer_->RemoveSaAppInfoMap(saUid);
+    ASSERT_EQ(ScreenCaptureServer::saUidAppUidMap_[saUid].second, 0);
+}
 } // Media
 } // OHOS

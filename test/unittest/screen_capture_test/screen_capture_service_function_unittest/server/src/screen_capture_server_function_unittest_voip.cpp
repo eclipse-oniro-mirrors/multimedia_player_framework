@@ -186,6 +186,23 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetMicrophoneFile_002, TestSize.Level2
     ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
 }
 
+HWTEST_F(ScreenCaptureServerFunctionTest, SetMicrophoneFile_002, TestSize.Level2)
+{
+    RecorderInfo recorderInfo;
+    SetRecorderInfo("set_microphone_file_002.mp4", recorderInfo);
+    SetValidConfigFile(recorderInfo);
+    ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
+    screenCaptureServer_->isMicrophoneSwitchTurnOn_ = false;
+    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIX_MODE,
+        screenCaptureServer_.get());
+    screenCaptureServer_->captureCallback_ = std::make_shared<ScreenRendererAudioStateChangeCallback>();
+    screenCaptureServer_->captureCallback_->SetAudioSource(screenCaptureServer_->audioSource_);
+    ASSERT_EQ(screenCaptureServer_->StartScreenCaptureFile(), MSERR_OK);
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
+    sleep(RECORDER_TIME / 2);
+    ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
+}
+
 HWTEST_F(ScreenCaptureServerFunctionTest, SetMicrophoneEnabledStream_001, TestSize.Level2)
 {
     SetValidConfig();
@@ -213,6 +230,21 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetMicrophoneEnabledStream_002, TestSi
     screenCaptureServer_->SetMicrophoneEnabled(true);
     sleep(RECORDER_TIME / 2);
     screenCaptureServer_->SetMicrophoneEnabled(false);
+    sleep(RECORDER_TIME / 2);
+    ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, SetMicrophoneEnabledStream_003, TestSize.Level2)
+{
+    SetValidConfig();
+    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
+    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
+        AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+    screenCaptureServer_->captureCallback_ = std::make_shared<ScreenRendererAudioStateChangeCallback>();
+    screenCaptureServer_->captureCallback_->SetAudioSource(screenCaptureServer_->audioSource_);
+    screenCaptureServer_->SetMicrophoneEnabled(false);
+    ASSERT_EQ(screenCaptureServer_->StartAudioCapture(), MSERR_OK);
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
     sleep(RECORDER_TIME / 2);
     ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
 }
