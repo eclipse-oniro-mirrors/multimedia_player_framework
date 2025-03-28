@@ -83,6 +83,11 @@ ohos_unittest("recorder_native_unit_test") {
     ]
   }
 
+  if (defined(global_parts_info) &&
+      defined(global_parts_info.multimedia_histreamer_ext)) {
+    defines = [ "SUPPORT_CODEC_TYPE_HEVC" ]
+  }
+
   resource_config_file = "../resources/ohos_test.xml"
 }
 
