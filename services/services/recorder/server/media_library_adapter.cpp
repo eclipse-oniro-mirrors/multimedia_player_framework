@@ -85,7 +85,6 @@ public:
     {
     }
 
-    // mp4
     PhotoFormat GetFormat() override
     {
         return photoFormat_;
@@ -143,8 +142,9 @@ private:
 struct tm *GetLocaltime(const time_t* clock, struct tm *result)
 {
     struct tm *ptr = localtime(clock);
-    if (!ptr)
-        return NULL;
+    if (!ptr) {
+        return nullptr;
+    }
     *result = *ptr;
     return result;
 }
@@ -201,7 +201,6 @@ bool CreateMediaLibrary(int32_t &fd, std::string &uri)
     sptr<RecorderPhotoProxy> recorderPhotoProxy = new(std::nothrow) RecorderPhotoProxy();
     CHECK_AND_RETURN_RET_LOG(recorderPhotoProxy != nullptr, false,
         "Error to create recorderPhotoProxy");
-    recorderPhotoProxy->SetFormat(PhotoFormat::MP4);
     recorderPhotoProxy->SetDisplayName(CreateDisplayName());
     photoAssetProxy->AddPhotoProxy((sptr<PhotoProxy>&)recorderPhotoProxy);
     uri = photoAssetProxy->GetPhotoAssetUri();
