@@ -1321,6 +1321,33 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StopAndRelease_002, TestSize.Level2)
     }
 }
 
+HWTEST_F(ScreenCaptureServerFunctionTest, TelCallStateUpdated_001, TestSize.Level2)
+{
+    ScreenCaptureObserverCallBack* obcb = new ScreenCaptureObserverCallBack(screenCaptureServer_);
+    if (obcb) {
+        ASSERT_EQ(obcb->TelCallStateUpdated(false), true);
+    }
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, TelCallStateUpdated_002, TestSize.Level2)
+{
+    screenCaptureServer_->appName_ = HiviewCareBundleName;
+    ScreenCaptureObserverCallBack* obcb = new ScreenCaptureObserverCallBack(screenCaptureServer_);
+    if (obcb) {
+        ASSERT_EQ(obcb->TelCallStateUpdated(false), true);
+    }
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, TelCallStateUpdated_003, TestSize.Level2)
+{
+    ScreenCaptureObserverCallBack* obcb = new ScreenCaptureObserverCallBack(screenCaptureServer_);
+    if (obcb) {
+        screenCaptureServer_->Release();
+        screenCaptureServer_ = nullptr;
+        ASSERT_EQ(obcb->TelCallStateUpdated(false), true);
+    }
+}
+
 /**
 * @tc.name: OnTelCallStateChanged_001
 * @tc.desc: in call with tel skip
@@ -1677,6 +1704,15 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ResizeCanvas_006, TestSize.Level2)
     ASSERT_EQ(ret, MSERR_INVALID_VAL);
 }
 
+HWTEST_F(ScreenCaptureServerFunctionTest, ResizeCanvas_007, TestSize.Level2)
+{
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
+    screenCaptureServer_->virtualScreenId_ = SCREEN_ID_INVALID;
+    screenCaptureServer_->captureConfig_.dataType = DataType::ORIGINAL_STREAM;
+    int ret = screenCaptureServer_->ResizeCanvas(580, 1280);
+    ASSERT_EQ(ret, MSERR_UNSUPPORT);
+}
+
 HWTEST_F(ScreenCaptureServerFunctionTest, StopScreenCaptureByEvent_002, TestSize.Level2)
 {
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
@@ -1712,6 +1748,13 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetMaxVideoFrameRate_002, TestSize.Lev
 {
     screenCaptureServer_->virtualScreenId_ = 0;
     screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
+    int ret = screenCaptureServer_->SetMaxVideoFrameRate(5);
+    ASSERT_NE(ret, MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, SetMaxVideoFrameRate_003, TestSize.Level2)
+{
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
     int ret = screenCaptureServer_->SetMaxVideoFrameRate(5);
     ASSERT_NE(ret, MSERR_OK);
 }
@@ -1886,13 +1929,20 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StopAudioCapture_001, TestSize.Level2)
     ASSERT_EQ(screenCaptureServer_->StopAudioCapture(), MSERR_OK);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, StartBufferThread_001, TestSize.Level2)
+HWTEST_F(ScreenCaptureServerFunctionTest, ExcludeContent_001, TestSize.Level2)
 {
-    ScreenCapBufferConsumerListener *surfaceCb = new ScreenCapBufferConsumerListener(nullptr, nullptr);
-    surfaceCb->isSurfaceCbInThreadStopped_ = false;
-    EXPECT_EQ(surfaceCb->StartBufferThread(), MSERR_OK);
-    delete surfaceCb;
-    surfaceCb = nullptr;
+    ScreenCaptureContentFilter contentFilter;
+    EXPECT_EQ(screenCaptureServer_->ExcludeContent(), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, StartMicAudioCapture_001, TestSize.Level2)
+{
+    EXPECT_EQ(screenCaptureServer_->StartMicAudioCapture(), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, StopInnerAudioCapture_001, TestSize.Level2)
+{
+    EXPECT_EQ(screenCaptureServer_->StopInnerAudioCapture(), MSERR_OK);
 }
 } // Media
 } // OHOS

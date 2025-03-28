@@ -115,5 +115,60 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AcquireVideoBuffer_002, TestSize.Level
     ASSERT_EQ(screenCaptureServer_->AcquireVideoBuffer(surfaceBuffer, fence, timestamp, damage), MSERR_OK);
     screenCaptureServer_->ReleaseVideoBuffer();
 }
+
+HWTEST_F(ScreenCaptureServerFunctionTest, StartBufferThread_001, TestSize.Level2)
+{
+    ScreenCapBufferConsumerListener *surfaceCb = new ScreenCapBufferConsumerListener(nullptr, nullptr);
+    surfaceCb->isSurfaceCbInThreadStopped_ = false;
+    EXPECT_EQ(surfaceCb->StartBufferThread(), MSERR_OK);
+    delete surfaceCb;
+    surfaceCb = nullptr;
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, StopVideoCapture_001, TestSize.Level2)
+{
+    screenCaptureServer_->virtualScreenId_ = -1;
+    ASSERT_EQ(screenCaptureServer_->StopVideoCapture(), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, StopVideoCapture_002, TestSize.Level2)
+{
+    screenCaptureServer_->virtualScreenId_ = 0;
+    screenCaptureServer_->consumer_ = OHOS::Surface::CreateSurfaceAsConsumer();
+    ASSERT_EQ(screenCaptureServer_->StopVideoCapture(), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, StopVideoCapture_003, TestSize.Level2)
+{
+    screenCaptureServer_->virtualScreenId_ = -1;
+    screenCaptureServer_->consumer_ = OHOS::Surface::CreateSurfaceAsConsumer();
+    ASSERT_EQ(screenCaptureServer_->StopVideoCapture(), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, StopVideoCapture_004, TestSize.Level2)
+{
+    screenCaptureServer_->virtualScreenId_ = 0;
+    screenCaptureServer_->consumer_ = nullptr;
+    screenCaptureServer_->isSurfaceMode_ = false;
+    ASSERT_EQ(screenCaptureServer_->StopVideoCapture(), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, StopVideoCapture_005, TestSize.Level2)
+{
+    screenCaptureServer_->virtualScreenId_ = 0;
+    screenCaptureServer_->consumer_ = nullptr;
+    screenCaptureServer_->isSurfaceMode_ = true;
+    screenCaptureServer_->isConsumerStart_ = false;
+    ASSERT_EQ(screenCaptureServer_->StopVideoCapture(), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, StopVideoCapture_006, TestSize.Level2)
+{
+    screenCaptureServer_->virtualScreenId_ = 0;
+    screenCaptureServer_->consumer_ = nullptr;
+    screenCaptureServer_->isSurfaceMode_ = true;
+    screenCaptureServer_->isConsumerStart_ = true;
+    ASSERT_EQ(screenCaptureServer_->StopVideoCapture(), MSERR_OK);
+}
 } // Media
 } // OHOS

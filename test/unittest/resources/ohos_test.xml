@@ -488,6 +488,8 @@
             <option name="shell" value="touch /data/test/media/screen_capture_tel_001.mp4"/>
             <option name="shell" value="touch /data/test/media/screen_capture_tel_002.mp4"/>
             <option name="shell" value="touch /data/test/media/screen_capture_tel_003.mp4"/>
+            <option name="shell" value="touch /data/test/media/on_tell_call_stop_008.mp4"/>
+            <option name="shell" value="touch /data/test/media/on_tell_call_stop_009.mp4"/>
             <option name="shell" value="restorecon /data/test/media"/>
         </preparer>
     </target>
