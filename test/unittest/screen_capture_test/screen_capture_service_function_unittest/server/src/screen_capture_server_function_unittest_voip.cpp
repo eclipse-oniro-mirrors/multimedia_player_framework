@@ -186,10 +186,10 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetMicrophoneFile_002, TestSize.Level2
     ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, SetMicrophoneFile_002, TestSize.Level2)
+HWTEST_F(ScreenCaptureServerFunctionTest, SetMicrophoneFile_003, TestSize.Level2)
 {
     RecorderInfo recorderInfo;
-    SetRecorderInfo("set_microphone_file_002.mp4", recorderInfo);
+    SetRecorderInfo("set_microphone_file_003.mp4", recorderInfo);
     SetValidConfigFile(recorderInfo);
     ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
     screenCaptureServer_->isMicrophoneSwitchTurnOn_ = false;

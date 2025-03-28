@@ -1876,9 +1876,9 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckAudioEncParam_001, TestSize.Level
 HWTEST_F(ScreenCaptureServerFunctionTest, RefreshResConfig_001, TestSize.Level2)
 {
     screenCaptureServer_->RefreshResConfig();
-    resConfig_ = Global::Resource::CreateResConfig();
+    screenCaptureServer_->resConfig_ = Global::Resource::CreateResConfig();
     screenCaptureServer_->RefreshResConfig();
-    ASSERT_NE(resConfig_, nullptr);
+    ASSERT_NE(screenCaptureServer_->resConfig_, nullptr);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, StopAudioCapture_001, TestSize.Level2)
@@ -1888,8 +1888,11 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StopAudioCapture_001, TestSize.Level2)
 
 HWTEST_F(ScreenCaptureServerFunctionTest, StartBufferThread_001, TestSize.Level2)
 {
-    isSurfaceCbInThreadStopped_ = false;
-    ASSERT_EQ(screenCaptureServer_->StartBufferThread(), MSERR_OK);
+    ScreenCapBufferConsumerListener *surfaceCb = new ScreenCapBufferConsumerListener(nullptr, nullptr);
+    surfaceCb->isSurfaceCbInThreadStopped_ = false;
+    EXPECT_EQ(surfaceCb->StartBufferThread(), MSERR_OK);
+    delete surfaceCb;
+    surfaceCb = nullptr;
 }
 } // Media
 } // OHOS

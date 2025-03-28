@@ -468,6 +468,7 @@
             <option name="shell" value="touch /data/test/media/set_microphone_enabled_file_002.mp4"/>
             <option name="shell" value="touch /data/test/media/set_microphone_file_001.mp4"/>
             <option name="shell" value="touch /data/test/media/set_microphone_file_002.mp4"/>
+            <option name="shell" value="touch /data/test/media/set_microphone_file_003.mp4"/>
             <option name="shell" value="touch /data/test/media/capture_file_params_invalid_001.mp4"/>
             <option name="shell" value="touch /data/test/media/capture_file_params_invalid_002.mp4"/>
             <option name="shell" value="touch /data/test/media/capture_file_params_invalid_003.mp4"/>

@@ -109,7 +109,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperStart_004, TestSiz
         ScreenCaptureErrorType::SCREEN_CAPTURE_ERROR_INTERNAL, SCREEN_CAPTURE_ERR_UNKNOWN);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperStart_002, TestSize.Level2)
+HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperStart_005, TestSize.Level2)
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
@@ -195,9 +195,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperPause_003, TestSiz
     ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Pause(), MSERR_OK);
     sleep(RECORDER_TIME);
     screenCaptureServer_->innerAudioCapture_->isRunning_.store(true);
-    screenCaptureServer_->innerAudioCapture_->audioCapturer_->Stop();
-    screenCaptureServer_->innerAudioCapture_->audioCapturer_->Release();
-    screenCaptureServer_->innerAudioCapture_->audioCapturer_ = nullptr;
     ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Pause(), MSERR_OK);
     sleep(RECORDER_TIME);
     ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Stop(), MSERR_OK);
@@ -333,7 +330,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperAcquireAudioBuffer
         screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo, screenCaptureServer_->screenCaptureCb_,
         std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
     screenCaptureServer_->innerAudioCapture_->isRunning_ = true;
-    ASSERT_NE(screenCaptureServer_->innerAudioCapture_->AcquireAudioBuffer(), MSERR_OK);
+    std::shared_ptr<AudioBuffer> audioBuffer;
+    ASSERT_NE(screenCaptureServer_->innerAudioCapture_->AcquireAudioBuffer(audioBuffer), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperAcquireAudioBuffer_002, TestSize.Level2)
@@ -349,7 +347,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperAcquireAudioBuffer
         std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
     screenCaptureServer_->innerAudioCapture_->isRunning_ = true;
     screenCaptureServer_->innerAudioCapture_->captureState_ = AudioCapturerWrapperState::CAPTURER_RELEASED;
-    ASSERT_NE(screenCaptureServer_->innerAudioCapture_->AcquireAudioBuffer(), MSERR_OK);
+    std::shared_ptr<AudioBuffer> audioBuffer;
+    ASSERT_NE(screenCaptureServer_->innerAudioCapture_->AcquireAudioBuffer(audioBuffer), MSERR_OK);
 }
 } // Media
 } // OHOS

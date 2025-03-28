@@ -77,5 +77,43 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AcquireAudioBuffer_002, TestSize.Level
     ASSERT_EQ(screenCaptureServer_->ReleaseAudioBuffer(AudioCaptureSourceType::APP_PLAYBACK), MSERR_OK);
     ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
 }
+
+/**
+* @tc.name: AcquireVideoBuffer_001
+* @tc.desc: isDump_ = false
+* @tc.type: FUNC
+*/
+HWTEST_F(ScreenCaptureServerFunctionTest, AcquireVideoBuffer_001, TestSize.Level2)
+{
+    screenCaptureServer_->captureState_ == AVScreenCaptureState::STARTED;
+    screenCaptureServer_->OHOS::consumer_ = Surface::CreateSurfaceAsConsumer();
+    screenCaptureServer_->surfaceCb_ = OHOS::sptr<ScreenCapBufferConsumerListener>::MakeSptr(consumer_, screenCaptureCb_);
+    sptr<OHOS::SurfaceBuffer> surfaceBuffer = nullptr;
+    int32_t fence = 0;
+    int64_t timestamp = 0;
+    OHOS::Rect damage;
+    screenCaptureServer_->isDump_ = false;
+    ASSERT_EQ(screenCaptureServer_->AcquireVideoBuffer(surfaceBuffer, fence, timestamp, damage), MSERR_OK);
+    screenCaptureServer_->ReleaseVideoBuffer();
+}
+
+/**
+* @tc.name: AcquireVideoBuffer_002
+* @tc.desc: isDump_ = true
+* @tc.type: FUNC
+*/
+HWTEST_F(ScreenCaptureServerFunctionTest, AcquireVideoBuffer_002, TestSize.Level2)
+{
+    screenCaptureServer_->captureState_ == AVScreenCaptureState::STARTED;
+    screenCaptureServer_->OHOS::consumer_ = Surface::CreateSurfaceAsConsumer();
+    screenCaptureServer_->surfaceCb_ = OHOS::sptr<ScreenCapBufferConsumerListener>::MakeSptr(consumer_, screenCaptureCb_);
+    sptr<OHOS::SurfaceBuffer> surfaceBuffer = nullptr;
+    int32_t fence = 0;
+    int64_t timestamp = 0;
+    OHOS::Rect damage;
+    screenCaptureServer_->isDump_ = true;
+    ASSERT_EQ(screenCaptureServer_->AcquireVideoBuffer(surfaceBuffer, fence, timestamp, damage), MSERR_OK);
+    screenCaptureServer_->ReleaseVideoBuffer();
+}
 } // Media
 } // OHOS
