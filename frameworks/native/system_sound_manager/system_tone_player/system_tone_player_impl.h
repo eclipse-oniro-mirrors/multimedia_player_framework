@@ -61,18 +61,16 @@ private:
     void GetHapticUriForAudioUri(const std::string &audioUri, std::map<ToneHapticsFeature, std::string> &hapticsUris);
     std::string GetDefaultNonSyncHapticsPath();
     SystemToneOptions GetOptionsFromRingerMode();
-    std::string ChangeUri(const std::string &uri);
     void InitHapticsSourceIds();
     void ReleaseHapticsSourceIds();
     ToneHapticsType ConvertToToneHapticsType(SystemToneType type);
     HapticsMode ConvertToHapticsMode(ToneHapticsMode toneHapticsMode);
     void GetNewHapticSettings(const std::string &audioUri, std::map<ToneHapticsFeature, std::string> &hapticsUris);
-    std::string ChangeHapticsUri(const std::string &hapticsUri);
     void GetCurrentHapticSettings(const std::string &audioUri, std::map<ToneHapticsFeature, std::string> &hapticUriMap);
     bool IsSameHapticMaps(const std::map<ToneHapticsFeature, std::string> &hapticUriMap);
     void UpdateStreamId();
-    bool InitDataShareHelper();
-    void ReleaseDataShareHelper();
+    bool InitDatabaseTool();
+    void ReleaseDatabaseTool();
     int32_t RegisterSource(const std::string &audioUri, const std::string &hapticUri);
     void CreateCallbackThread(int32_t delayTime);
     void DeleteCallbackThreadId(int32_t streamId);
@@ -98,7 +96,7 @@ private:
     std::map<ToneHapticsFeature, std::string> hapticUriMap_;
     bool isHapticUriEmpty_ = false;
     bool isNoneHaptics_ = false;
-    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper_ = nullptr;
+    DatabaseTool databaseTool_ = {false, false, nullptr};
     std::shared_ptr<SystemTonePlayerFinishedAndErrorCallback> finishedAndErrorCallback_ = nullptr;
     std::unordered_map<int32_t, std::thread::id> callbackThreadIdMap_;
 

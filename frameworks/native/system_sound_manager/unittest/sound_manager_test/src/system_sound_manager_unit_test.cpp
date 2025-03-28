@@ -508,14 +508,15 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetHapticsUriByStyle_001, 
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     EXPECT_NE(dataShareHelper, nullptr);
 
-    std::string hapticsUri = systemSoundManagerImpl_->GetHapticsUriByStyle(dataShareHelper, "test",
+    DatabaseTool databaseTool = {false, false, dataShareHelper};
+    std::string hapticsUri = systemSoundManagerImpl_->GetHapticsUriByStyle(databaseTool, "test",
         HapticsStyle::HAPTICS_STYLE_GENTLE);
     EXPECT_EQ(hapticsUri.empty(), true);
 
     std::vector<std::shared_ptr<ToneHapticsAttrs>> toneHapticsAttrsArray;
     int32_t result = systemSoundManagerImpl_->GetToneHapticsList(context_, false, toneHapticsAttrsArray);
     if (result == 0 && toneHapticsAttrsArray.size() > 0) {
-        hapticsUri = systemSoundManagerImpl_->GetHapticsUriByStyle(dataShareHelper, toneHapticsAttrsArray[0]->GetUri(),
+        hapticsUri = systemSoundManagerImpl_->GetHapticsUriByStyle(databaseTool, toneHapticsAttrsArray[0]->GetUri(),
             HapticsStyle::HAPTICS_STYLE_GENTLE);
         EXPECT_EQ(hapticsUri.empty(), false);
     }
