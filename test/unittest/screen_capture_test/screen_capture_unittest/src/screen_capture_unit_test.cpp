@@ -165,23 +165,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_mix_04, TestSize.Level2
 }
 
 /**
-* @tc.name: screen_capture_report_user_choice_01
-* @tc.desc: do screencapture
-* @tc.type: FUNC
-* @tc.require:
-*/
-HWTEST_F(ScreenCaptureUnitTest, screen_capture_report_user_choice_01, TestSize.Level2)
-{
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_report_user_choice_01 before");
-    std::shared_ptr<ScreenCaptureController> controller =
-        ScreenCaptureControllerFactory::CreateScreenCaptureController();
-    int32_t sessionId = 0;
-    std::string choice = "false";
-    controller->ReportAVScreenCaptureUserChoice(sessionId, choice);
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_report_user_choice_01 after");
-}
-
-/**
  * @tc.name: screen_capture_specified_window_file_01
  * @tc.desc: do screencapture
  * @tc.type: FUNC
@@ -190,6 +173,11 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_report_user_choice_01, TestSize.L
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_file_01, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_file_01 before");
+    std::shared_ptr<ScreenCaptureController> controller =
+        ScreenCaptureControllerFactory::CreateScreenCaptureController();
+    int32_t sessionId = 0;
+    std::string choice = "false";
+    controller->ReportAVScreenCaptureUserChoice(sessionId, choice);
     RecorderInfo recorderInfo;
     SetRecorderInfo("screen_capture_specified_window_file_01.mp4", recorderInfo);
     SetConfigFile(config_, recorderInfo);

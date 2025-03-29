@@ -156,6 +156,26 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ScreenCaptureRecorder_003, TestSize.Le
     close(outputFd);
 }
 
+HWTEST_F(ScreenCaptureServerFunctionTest, ScreenCaptureRecorder_004, TestSize.Level2)
+{
+    RecorderInfo recorderInfo;
+    int outputFd = open("/data/test/media/screen_capture_recorder_004.m4a", O_RDWR);
+    recorderInfo.url = "fd://" + std::to_string(outputFd);
+    recorderInfo.fileFormat = "m4a";
+    int32_t ret = screenCaptureServer_->SetRecorderInfo(recorderInfo);
+    ASSERT_EQ(ret, MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, ScreenCaptureRecorder_005, TestSize.Level2)
+{
+    RecorderInfo recorderInfo;
+    int outputFd = open("/data/test/media/screen_capture_recorder_004.abcdefg", O_RDWR);
+    recorderInfo.url = "fd://" + std::to_string(outputFd);
+    recorderInfo.fileFormat = "abcdefg";
+    int32_t ret = screenCaptureServer_->SetRecorderInfo(recorderInfo);
+    ASSERT_NE(ret, MSERR_OK);
+}
+
 HWTEST_F(ScreenCaptureServerFunctionTest, ScreenCaptureStream_001, TestSize.Level2)
 {
     std::shared_ptr<ScreenCaptureServer> screenCaptureServerInner;

@@ -186,6 +186,23 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetMicrophoneFile_002, TestSize.Level2
     ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
 }
 
+HWTEST_F(ScreenCaptureServerFunctionTest, SetMicrophoneFile_003, TestSize.Level2)
+{
+    RecorderInfo recorderInfo;
+    SetRecorderInfo("set_microphone_file_003.mp4", recorderInfo);
+    SetValidConfigFile(recorderInfo);
+    ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
+    screenCaptureServer_->isMicrophoneSwitchTurnOn_ = false;
+    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIX_MODE,
+        screenCaptureServer_.get());
+    screenCaptureServer_->captureCallback_ = std::make_shared<ScreenRendererAudioStateChangeCallback>();
+    screenCaptureServer_->captureCallback_->SetAudioSource(screenCaptureServer_->audioSource_);
+    ASSERT_EQ(screenCaptureServer_->StartScreenCaptureFile(), MSERR_OK);
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
+    sleep(RECORDER_TIME / 2);
+    ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
+}
+
 HWTEST_F(ScreenCaptureServerFunctionTest, SetMicrophoneEnabledStream_001, TestSize.Level2)
 {
     SetValidConfig();
@@ -213,6 +230,21 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetMicrophoneEnabledStream_002, TestSi
     screenCaptureServer_->SetMicrophoneEnabled(true);
     sleep(RECORDER_TIME / 2);
     screenCaptureServer_->SetMicrophoneEnabled(false);
+    sleep(RECORDER_TIME / 2);
+    ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, SetMicrophoneEnabledStream_003, TestSize.Level2)
+{
+    SetValidConfig();
+    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
+    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
+        AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+    screenCaptureServer_->captureCallback_ = std::make_shared<ScreenRendererAudioStateChangeCallback>();
+    screenCaptureServer_->captureCallback_->SetAudioSource(screenCaptureServer_->audioSource_);
+    screenCaptureServer_->SetMicrophoneEnabled(false);
+    ASSERT_EQ(screenCaptureServer_->StartAudioCapture(), MSERR_OK);
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
     sleep(RECORDER_TIME / 2);
     ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
 }
@@ -262,6 +294,19 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnTelCallStart_002, TestSize.Level2)
     ASSERT_EQ(screenCaptureServer_->OnTelCallStart(), MSERR_OK);
 }
 
+HWTEST_F(ScreenCaptureServerFunctionTest, OnTelCallStart_003, TestSize.Level2)
+{
+    SetValidConfig();
+    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
+    screenCaptureServer_->SetMicrophoneOn();
+    ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
+    screenCaptureServer_->innerAudioCapture_->Pause();
+    screenCaptureServer_->isInTelCall_.store(true);
+    screenCaptureServer_->isInTelCallAudio_.store(true);
+    ASSERT_EQ(screenCaptureServer_->OnTelCallStart(), MSERR_OK);
+}
+
 HWTEST_F(ScreenCaptureServerFunctionTest, OnTelCallStop_001, TestSize.Level2)
 {
     screenCaptureServer_->isInTelCall_.store(false);
@@ -277,6 +322,96 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnTelCallStop_002, TestSize.Level2)
     screenCaptureServer_->isInTelCall_.store(false);
     screenCaptureServer_->isInTelCallAudio_.store(false);
     screenCaptureServer_->isMicrophoneSwitchTurnOn_ = true;
+    ASSERT_EQ(screenCaptureServer_->OnTelCallStop(), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, OnTelCallStop_003, TestSize.Level2)
+{
+    screenCaptureServer_->isInTelCall_.store(false);
+    screenCaptureServer_->isInTelCallAudio_.store(true);
+    ASSERT_EQ(screenCaptureServer_->OnTelCallStop(), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, OnTelCallStop_004, TestSize.Level2)
+{
+    screenCaptureServer_->isInTelCall_.store(true);
+    screenCaptureServer_->isInTelCallAudio_.store(false);
+    ASSERT_EQ(screenCaptureServer_->OnTelCallStop(), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, OnTelCallStop_005, TestSize.Level2)
+{
+    SetValidConfig();
+    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
+    screenCaptureServer_->SetMicrophoneOn();
+    ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
+    screenCaptureServer_->isInTelCall_.store(false);
+    screenCaptureServer_->isInTelCallAudio_.store(false);
+    ASSERT_EQ(screenCaptureServer_->OnTelCallStop(), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, OnTelCallStop_006, TestSize.Level2)
+{
+    SetValidConfig();
+    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
+    screenCaptureServer_->SetMicrophoneOn();
+    ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
+    screenCaptureServer_->isInTelCall_.store(false);
+    screenCaptureServer_->isInTelCallAudio_.store(false);
+    screenCaptureServer_->SetMicrophoneEnabled(false);
+    ASSERT_EQ(screenCaptureServer_->OnTelCallStop(), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, OnTelCallStop_007, TestSize.Level2)
+{
+    SetValidConfig();
+    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
+    screenCaptureServer_->SetMicrophoneOn();
+    ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
+    screenCaptureServer_->isInTelCall_.store(false);
+    screenCaptureServer_->isInTelCallAudio_.store(false);
+    screenCaptureServer_->micAudioCapture_->Pause();
+    ASSERT_EQ(screenCaptureServer_->OnTelCallStop(), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, OnTelCallStop_008, TestSize.Level2)
+{
+    RecorderInfo recorderInfo;
+    SetRecorderInfo("on_tell_call_stop_008.mp4", recorderInfo);
+    SetValidConfigFile(recorderInfo);
+    ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
+    screenCaptureServer_->SetMicrophoneEnabled(true);
+    ASSERT_EQ(StartFileAudioCapture(AVScreenCaptureMixMode::MIX_MODE), MSERR_OK);
+    sleep(RECORDER_TIME / 2);
+    screenCaptureServer_->isInTelCall_.store(true);
+    screenCaptureServer_->isInTelCallAudio_.store(true);
+    ASSERT_EQ(screenCaptureServer_->OnTelCallStart(), MSERR_OK);
+    sleep(RECORDER_TIME / 2);
+    screenCaptureServer_->isInTelCall_.store(false);
+    screenCaptureServer_->isInTelCallAudio_.store(false);
+    ASSERT_EQ(screenCaptureServer_->OnTelCallStop(), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, OnTelCallStop_009, TestSize.Level2)
+{
+    RecorderInfo recorderInfo;
+    SetRecorderInfo("on_tell_call_stop_009.mp4", recorderInfo);
+    SetValidConfigFile(recorderInfo);
+    ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
+    screenCaptureServer_->SetMicrophoneEnabled(false);
+    ASSERT_EQ(StartFileAudioCapture(AVScreenCaptureMixMode::MIX_MODE), MSERR_OK);
+    sleep(RECORDER_TIME / 2);
+    screenCaptureServer_->SetMicrophoneEnabled(true);
+    sleep(RECORDER_TIME / 2);
+    screenCaptureServer_->isInTelCall_.store(true);
+    screenCaptureServer_->isInTelCallAudio_.store(true);
+    ASSERT_EQ(screenCaptureServer_->OnTelCallStart(), MSERR_OK);
+    sleep(RECORDER_TIME / 2);
+    screenCaptureServer_->isInTelCall_.store(false);
+    screenCaptureServer_->isInTelCallAudio_.store(false);
     ASSERT_EQ(screenCaptureServer_->OnTelCallStop(), MSERR_OK);
 }
 } // Media

@@ -808,6 +808,12 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnReceiveUserPrivacyAuthority_003, Tes
     ASSERT_NE(screenCaptureServer_->OnReceiveUserPrivacyAuthority(true), MSERR_OK);
 }
 
+HWTEST_F(ScreenCaptureServerFunctionTest, OnReceiveUserPrivacyAuthority_004, TestSize.Level2)
+{
+    screenCaptureServer_->screenCaptureCb_ = nullptr;
+    ASSERT_NE(screenCaptureServer_->OnReceiveUserPrivacyAuthority(false), MSERR_OK);
+}
+
 HWTEST_F(ScreenCaptureServerFunctionTest, RepeatStartAudioCapture_001, TestSize.Level2)
 {
     SetInvalidConfig();
@@ -1315,6 +1321,33 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StopAndRelease_002, TestSize.Level2)
     }
 }
 
+HWTEST_F(ScreenCaptureServerFunctionTest, TelCallStateUpdated_001, TestSize.Level2)
+{
+    ScreenCaptureObserverCallBack* obcb = new ScreenCaptureObserverCallBack(screenCaptureServer_);
+    if (obcb) {
+        ASSERT_EQ(obcb->TelCallStateUpdated(false), true);
+    }
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, TelCallStateUpdated_002, TestSize.Level2)
+{
+    screenCaptureServer_->appName_ = HiviewCareBundleName;
+    ScreenCaptureObserverCallBack* obcb = new ScreenCaptureObserverCallBack(screenCaptureServer_);
+    if (obcb) {
+        ASSERT_EQ(obcb->TelCallStateUpdated(false), true);
+    }
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, TelCallStateUpdated_003, TestSize.Level2)
+{
+    ScreenCaptureObserverCallBack* obcb = new ScreenCaptureObserverCallBack(screenCaptureServer_);
+    if (obcb) {
+        screenCaptureServer_->Release();
+        screenCaptureServer_ = nullptr;
+        ASSERT_EQ(obcb->TelCallStateUpdated(false), true);
+    }
+}
+
 /**
 * @tc.name: OnTelCallStateChanged_001
 * @tc.desc: in call with tel skip
@@ -1374,6 +1407,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnTelCallStateChanged_003, TestSize.Le
     ASSERT_EQ(screenCaptureServer_->TelCallAudioStateUpdated(true), MSERR_OK);
     sleep(RECORDER_TIME);
     ASSERT_EQ(screenCaptureServer_->TelCallStateUpdated(false), MSERR_OK);
+    // stop call and microphone not on
     ASSERT_EQ(screenCaptureServer_->TelCallAudioStateUpdated(false), MSERR_OK);
     sleep(RECORDER_TIME);
     ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
@@ -1509,9 +1543,25 @@ HWTEST_F(ScreenCaptureServerFunctionTest, RegisterMMISystemAbilityListener_001, 
     ASSERT_EQ(screenCaptureServer_->RegisterMMISystemAbilityListener(), true);
 }
 
+// regist two times
+HWTEST_F(ScreenCaptureServerFunctionTest, RegisterMMISystemAbilityListener_002, TestSize.Level2)
+{
+    sptr<ISystemAbilityStatusChange> listener(new (std::nothrow) MMISystemAbilityListener(screenCaptureServer_));
+    ASSERT_EQ(screenCaptureServer_->RegisterMMISystemAbilityListener(), true);
+    ASSERT_EQ(screenCaptureServer_->RegisterMMISystemAbilityListener(), true);
+}
+
 HWTEST_F(ScreenCaptureServerFunctionTest, UnRegisterMMISystemAbilityListener_001, TestSize.Level2)
 {
     sptr<ISystemAbilityStatusChange> listener(new (std::nothrow) MMISystemAbilityListener(screenCaptureServer_));
+    ASSERT_EQ(screenCaptureServer_->UnRegisterMMISystemAbilityListener(), true);
+}
+
+// unregist after regist
+HWTEST_F(ScreenCaptureServerFunctionTest, UnRegisterMMISystemAbilityListener_002, TestSize.Level2)
+{
+    sptr<ISystemAbilityStatusChange> listener(new (std::nothrow) MMISystemAbilityListener(screenCaptureServer_));
+    ASSERT_EQ(screenCaptureServer_->RegisterMMISystemAbilityListener(), true);
     ASSERT_EQ(screenCaptureServer_->UnRegisterMMISystemAbilityListener(), true);
 }
 
@@ -1571,6 +1621,14 @@ HWTEST_F(ScreenCaptureServerFunctionTest, UnRegisterMouseChangeListener_002, Tes
 {
     std::string type = "change";
     screenCaptureServer_->UnRegisterMouseChangeListener(type);
+    screenCaptureServer_->UnRegisterMouseChangeListener(type);
+    ASSERT_EQ(type == "change", true);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, UnRegisterMouseChangeListener_003, TestSize.Level2)
+{
+    std::string type = "change";
+    screenCaptureServer_->RegisterMouseChangeListener(type);
     screenCaptureServer_->UnRegisterMouseChangeListener(type);
     ASSERT_EQ(type == "change", true);
 }
@@ -1647,6 +1705,15 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ResizeCanvas_006, TestSize.Level2)
     ASSERT_EQ(ret, MSERR_INVALID_VAL);
 }
 
+HWTEST_F(ScreenCaptureServerFunctionTest, ResizeCanvas_007, TestSize.Level2)
+{
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
+    screenCaptureServer_->virtualScreenId_ = SCREEN_ID_INVALID;
+    screenCaptureServer_->captureConfig_.dataType = DataType::ORIGINAL_STREAM;
+    int ret = screenCaptureServer_->ResizeCanvas(580, 1280);
+    ASSERT_EQ(ret, MSERR_UNSUPPORT);
+}
+
 HWTEST_F(ScreenCaptureServerFunctionTest, StopScreenCaptureByEvent_002, TestSize.Level2)
 {
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
@@ -1682,6 +1749,13 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetMaxVideoFrameRate_002, TestSize.Lev
 {
     screenCaptureServer_->virtualScreenId_ = 0;
     screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
+    int ret = screenCaptureServer_->SetMaxVideoFrameRate(5);
+    ASSERT_NE(ret, MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, SetMaxVideoFrameRate_003, TestSize.Level2)
+{
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
     int ret = screenCaptureServer_->SetMaxVideoFrameRate(5);
     ASSERT_NE(ret, MSERR_OK);
 }
@@ -1773,6 +1847,103 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StartStreamHomeVideoCapture_001, TestS
     SetValidConfig();
     screenCaptureServer_->isSurfaceMode_ = false;
     ASSERT_EQ(screenCaptureServer_->StartStreamHomeVideoCapture(), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, CheckDataType_001, TestSize.Level2)
+{
+    ASSERT_NE(screenCaptureServer_->CheckDataType(DataType::ENCODED_STREAM), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, CheckAudioCapParam_001, TestSize.Level2)
+{
+    AudioCaptureInfo micCapinfo = {
+        .audioSampleRate = 16000,
+        .audioChannels = 2,
+        .audioSource = AudioCaptureSourceType::SOURCE_INVALID
+    };
+    ASSERT_NE(screenCaptureServer_->CheckAudioCapParam(micCapinfo), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, CheckVideoCapParam_001, TestSize.Level2)
+{
+    VideoCaptureInfo videoCapInfo_1 = {
+        .videoFrameWidth = -1,
+        .videoFrameHeight = 1080,
+        .videoSource = VideoSourceType::VIDEO_SOURCE_SURFACE_RGBA
+    };
+    ASSERT_NE(screenCaptureServer_->CheckVideoCapParam(videoCapInfo_1), MSERR_OK);
+    VideoCaptureInfo videoCapInfo_2 = {
+        .videoFrameWidth = 720,
+        .videoFrameHeight = -1,
+        .videoSource = VideoSourceType::VIDEO_SOURCE_SURFACE_RGBA
+    };
+    ASSERT_NE(screenCaptureServer_->CheckVideoCapParam(videoCapInfo_2), MSERR_OK);
+    VideoCaptureInfo videoCapInfo_3 = {
+        .videoFrameWidth = screenCaptureServer_->VIDEO_FRAME_WIDTH_MAX + 1,
+        .videoFrameHeight = 1080,
+        .videoSource = VideoSourceType::VIDEO_SOURCE_SURFACE_RGBA
+    };
+    ASSERT_NE(screenCaptureServer_->CheckVideoCapParam(videoCapInfo_3), MSERR_OK);
+    VideoCaptureInfo videoCapInfo_4 = {
+        .videoFrameWidth = 720,
+        .videoFrameHeight = screenCaptureServer_->VIDEO_FRAME_HEIGHT_MAX + 1,
+        .videoSource = VideoSourceType::VIDEO_SOURCE_SURFACE_RGBA
+    };
+    ASSERT_NE(screenCaptureServer_->CheckVideoCapParam(videoCapInfo_4), MSERR_OK);
+    VideoCaptureInfo videoCapInfo_5 = {
+        .videoFrameWidth = 720,
+        .videoFrameHeight = 1080,
+        .videoSource = VideoSourceType::VIDEO_SOURCE_SURFACE_YUV
+    };
+    ASSERT_NE(screenCaptureServer_->CheckVideoCapParam(videoCapInfo_5), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, CheckAudioEncParam_001, TestSize.Level2)
+{
+    AudioEncInfo audioEncInfo_1 = {
+        .audioBitrate = 48000,
+        .audioCodecformat = AudioCodecFormat::AUDIO_CODEC_FORMAT_BUTT
+    };
+    ASSERT_NE(screenCaptureServer_->CheckAudioEncParam(audioEncInfo_1), MSERR_OK);
+    AudioEncInfo audioEncInfo_2 = {
+        .audioBitrate = screenCaptureServer_->AUDIO_BITRATE_MIN - 1,
+        .audioCodecformat = AudioCodecFormat::AUDIO_CODEC_FORMAT_BUTT
+    };
+    ASSERT_NE(screenCaptureServer_->CheckAudioEncParam(audioEncInfo_2), MSERR_OK);
+    AudioEncInfo audioEncInfo_3 = {
+        .audioBitrate = screenCaptureServer_->AUDIO_BITRATE_MAX + 1,
+        .audioCodecformat = AudioCodecFormat::AUDIO_CODEC_FORMAT_BUTT
+    };
+    ASSERT_NE(screenCaptureServer_->CheckAudioEncParam(audioEncInfo_3), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, RefreshResConfig_001, TestSize.Level2)
+{
+    screenCaptureServer_->RefreshResConfig();
+    screenCaptureServer_->resConfig_ = Global::Resource::CreateResConfig();
+    screenCaptureServer_->RefreshResConfig();
+    ASSERT_NE(screenCaptureServer_->resConfig_, nullptr);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, StopAudioCapture_001, TestSize.Level2)
+{
+    ASSERT_EQ(screenCaptureServer_->StopAudioCapture(), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, ExcludeContent_001, TestSize.Level2)
+{
+    ScreenCaptureContentFilter contentFilter;
+    EXPECT_EQ(screenCaptureServer_->ExcludeContent(contentFilter), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, StartMicAudioCapture_001, TestSize.Level2)
+{
+    EXPECT_EQ(screenCaptureServer_->StartMicAudioCapture(), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, StopInnerAudioCapture_001, TestSize.Level2)
+{
+    EXPECT_EQ(screenCaptureServer_->StopInnerAudioCapture(), MSERR_OK);
 }
 } // Media
 } // OHOS

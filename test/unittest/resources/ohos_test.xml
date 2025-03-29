@@ -468,6 +468,7 @@
             <option name="shell" value="touch /data/test/media/set_microphone_enabled_file_002.mp4"/>
             <option name="shell" value="touch /data/test/media/set_microphone_file_001.mp4"/>
             <option name="shell" value="touch /data/test/media/set_microphone_file_002.mp4"/>
+            <option name="shell" value="touch /data/test/media/set_microphone_file_003.mp4"/>
             <option name="shell" value="touch /data/test/media/capture_file_params_invalid_001.mp4"/>
             <option name="shell" value="touch /data/test/media/capture_file_params_invalid_002.mp4"/>
             <option name="shell" value="touch /data/test/media/capture_file_params_invalid_003.mp4"/>
@@ -482,9 +483,13 @@
             <option name="shell" value="touch /data/test/media/screen_capture_recorder_001.mp4"/>
             <option name="shell" value="touch /data/test/media/screen_capture_recorder_002.mp4"/>
             <option name="shell" value="touch /data/test/media/screen_capture_recorder_003.mp4"/>
+            <option name="shell" value="touch /data/test/media/screen_capture_recorder_004.m4a"/>
+            <option name="shell" value="touch /data/test/media/screen_capture_recorder_005.abcdefg"/>
             <option name="shell" value="touch /data/test/media/screen_capture_tel_001.mp4"/>
             <option name="shell" value="touch /data/test/media/screen_capture_tel_002.mp4"/>
             <option name="shell" value="touch /data/test/media/screen_capture_tel_003.mp4"/>
+            <option name="shell" value="touch /data/test/media/on_tell_call_stop_008.mp4"/>
+            <option name="shell" value="touch /data/test/media/on_tell_call_stop_009.mp4"/>
             <option name="shell" value="restorecon /data/test/media"/>
         </preparer>
     </target>

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Huawei Device Co., Ltd.
+ * Copyright (C) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -319,6 +319,20 @@ HWTEST_F(ScreenCaptureServerFunctionTest, DestroyPopWindow_003, TestSize.Level2)
     screenCaptureServer_->captureState_ = AVScreenCaptureState::POPUP_WINDOW;
     bool ret = screenCaptureServer_->DestroyPopWindow();
     ASSERT_EQ(ret, true);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, GetDisplayIdOfWindows_001, TestSize.Level2)
+{
+    uint64_t defaultDisplayIdValue = 0;
+    screenCaptureServer_->missionIds_ = {};
+    ASSERT_EQ(screenCaptureServer_->GetDisplayIdOfWindows(defaultDisplayIdValue), defaultDisplayIdValue);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, GetDisplayIdOfWindows_002, TestSize.Level2)
+{
+    uint64_t defaultDisplayIdValue = 0;
+    screenCaptureServer_->missionIds_ = {0};
+    ASSERT_EQ(screenCaptureServer_->GetDisplayIdOfWindows(defaultDisplayIdValue), defaultDisplayIdValue);
 }
 } // Media
 } // OHOS
