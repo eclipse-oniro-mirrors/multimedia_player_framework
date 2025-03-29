@@ -869,9 +869,10 @@ HWTEST_F(RecorderUnitTest, recorder_configure_022, TestSize.Level2)
     close(videoRecorderConfig.outputFd);
 }
 
+#ifdef SUPPORT_CODEC_TYPE_HEVC
 /**
  * @tc.name: recorder_configure_023
- * @tc.desc: record audioFormat = AUDIO_AMR_NB, outPutFormat = FORMAT_AMR, audioEncodingBitRate = 4750
+ * @tc.desc: record audioFormat = AUDIO_AMR_NB, outPutFormat = FORMAT_AMR, audioEncodingBitRate = 4750; **not support rk3568**
  * @tc.type: FUNC
  * @tc.require:
  */
@@ -915,10 +916,12 @@ HWTEST_F(RecorderUnitTest, recorder_configure_023, TestSize.Level2)
     EXPECT_EQ(MSERR_OK, recorder_->Release());
     close(videoRecorderConfig.outputFd);
 }
+#endif
 
+#ifdef SUPPORT_CODEC_TYPE_HEVC
 /**
  * @tc.name: recorder_configure_024
- * @tc.desc: record audioFormat = AUDIO_AMR_WB, outPutFormat = FORMAT_AMR, audioEncodingBitRate = 6600
+ * @tc.desc: record audioFormat = AUDIO_AMR_WB, outPutFormat = FORMAT_AMR, audioEncodingBitRate = 6600; **not support rk3568**
  * @tc.type: FUNC
  * @tc.require:
  */
@@ -962,6 +965,7 @@ HWTEST_F(RecorderUnitTest, recorder_configure_024, TestSize.Level2)
     EXPECT_EQ(MSERR_OK, recorder_->Release());
     close(videoRecorderConfig.outputFd);
 }
+#endif
 
 /**
  * @tc.name: recorder_mp3_001
