@@ -223,6 +223,13 @@
             <option name="shell" value="touch /data/test/media/Recorder_Reset_002.mp4"/>
             <option name="shell" value="touch /data/test/media/Recorder_Reset_003.mp4"/>
             <option name="shell" value="touch /data/test/media/Recorder_Reset_004.mp4"/>
+            <option name="shell" value="touch /data/test/media/Recorder_SetMaxDuration_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/Recorder_SetMaxDuration_002.mp4"/>
+            <option name="shell" value="touch /data/test/media/Recorder_SetMaxDuration_003.mp4"/>
+            <option name="shell" value="touch /data/test/media/Recorder_SetMaxDuration_004.mp4"/>
+            <option name="shell" value="touch /data/test/media/Recorder_SetMaxDuration_005.mp4"/>
+            <option name="shell" value="touch /data/test/media/Recorder_SetMaxDuration_006.mp4"/>
+            <option name="shell" value="touch /data/test/media/Recorder_SetMaxDuration_007.mp4"/>
             <option name="shell" value="restorecon /data/test/media"/>
         </preparer>
     </target>
