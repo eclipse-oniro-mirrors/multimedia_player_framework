@@ -148,7 +148,6 @@ void AudioHapticPlayerCallbackNapi::OnInterruptJsCallback(std::unique_ptr<AudioH
             CHECK_AND_BREAK_LOG(napiStatus == napi_ok, "%{public}s fail to send interrupt callback", request.c_str());
         } while (0);
         napi_close_handle_scope(env, scope);
-        delete event;
     };
     auto ret = napi_send_event(env_, task, napi_eprio_high);
     if (ret != napi_status::napi_ok) {
@@ -209,7 +208,6 @@ void AudioHapticPlayerCallbackNapi::OnEndOfStreamJsCallback(std::unique_ptr<Audi
             CHECK_AND_BREAK_LOG(napiStatus == napi_ok, "%{public}s fail to send interrupt callback", request.c_str());
         } while (0);
         napi_close_handle_scope(env, scope);
-        delete event;
     };
     auto ret = napi_send_event(env_, task, napi_eprio_high);
     if (ret != napi_status::napi_ok) {

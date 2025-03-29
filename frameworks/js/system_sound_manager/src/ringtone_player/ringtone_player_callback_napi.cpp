@@ -109,7 +109,7 @@ void RingtonePlayerCallbackNapi::OnJsCallbackInterrupt(std::unique_ptr<RingtoneP
         MEDIA_LOGE("OnJsCallbackVolumeEvent: jsCb.get() is null");
         return;
     }
-    RingtonePlayerJsCallback *event = jsCb.get();
+    RingtonePlayerJsCallback *event = jsCb.release();
     auto task = [event]() {
         std::shared_ptr<RingtonePlayerJsCallback> context(
             static_cast<RingtonePlayerJsCallback*>(event),
@@ -140,12 +140,11 @@ void RingtonePlayerCallbackNapi::OnJsCallbackInterrupt(std::unique_ptr<RingtoneP
             CHECK_AND_BREAK_LOG(napiStatus == napi_ok, "%{public}s fail to send interrupt callback", request.c_str());
         } while (0);
         napi_close_handle_scope(env, scope);
-        delete event;
     };
     auto ret = napi_send_event(env_, task, napi_eprio_high);
     if (ret != napi_status::napi_ok) {
         MEDIA_LOGE("Failed to SendEvent, ret = %{public}d", ret);
-        jsCb.release();
+        delete event;
     }
 }
 }  // namespace Media
