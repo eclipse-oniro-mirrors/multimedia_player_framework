@@ -158,7 +158,7 @@ int32_t PlayerImpl::SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekM
     ScopedTimer timer("SetPlayRangeWithMode", OVERTIME_WARNING_MS);
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetPlayRangeWithMode in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
-    LISTENER(return playerService_->SetPlayRangeWithMode(start, end, mode), "SetPlayRange", false, TIME_OUT_SECOND);
+    LISTENER(return playerService_->SetPlayRangeWithMode(start, end, mode), "SetPlayRangeWithMode", false, TIME_OUT_SECOND);
 }
 
 int32_t PlayerImpl::Prepare()
@@ -209,7 +209,7 @@ int32_t PlayerImpl::Reset()
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Reset in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     ResetSeekVariables();
-    LISTENER(return playerService_->Reset(), "Stop", false, TIME_OUT_SECOND);
+    LISTENER(return playerService_->Reset(), "Reset", false, TIME_OUT_SECOND);
 }
 
 int32_t PlayerImpl::Release()
@@ -270,7 +270,7 @@ int32_t PlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
         isSeeking_ = true;
         mSeekPosition = mSeconds;
         mSeekMode = mode;
-        int32_t retCode;
+        int32_t retCode = MSERR_OK;
         LISTENER(retCode = playerService_->Seek(mSeconds, mode), "SetVolume", false, TIME_OUT_SECOND);
         if (retCode != MSERR_OK) {
             ResetSeekVariables();
@@ -481,7 +481,7 @@ int32_t PlayerImpl::SetLooping(bool loop)
     ScopedTimer timer("SetLooping", OVERTIME_WARNING_MS);
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetLooping in, loop %{public}d", FAKE_POINTER(this), loop);
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
-    LISTENER(return playerService_->SetLooping(loop), "SetVideoSurface", false, TIME_OUT_SECOND);
+    LISTENER(return playerService_->SetLooping(loop), "SetLooping", false, TIME_OUT_SECOND);
 }
 
 int32_t PlayerImpl::SetPlayerCallback(const std::shared_ptr<PlayerCallback> &callback)
@@ -504,7 +504,7 @@ int32_t PlayerImpl::SetParameter(const Format &param)
     ScopedTimer timer("SetParameter", OVERTIME_WARNING_MS);
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetParameter in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
-    LISTENER(return playerService_->SetParameter(param), "SetPlayerCallback", false, TIME_OUT_SECOND);
+    LISTENER(return playerService_->SetParameter(param), "SetParameter", false, TIME_OUT_SECOND);
 }
 
 int32_t PlayerImpl::SelectTrack(int32_t index, PlayerSwitchMode mode)
