@@ -773,13 +773,13 @@ void HiTransCoderImpl::HandleCompleteEvent()
 {
     FALSE_RETURN_MSG(callbackLooper_ != nullptr, "callbackLooper is nullptr");
     callbackLooper_->StopReportMediaProgress();
+    pipeline_->Stop();
+    callbackLooper_->Stop();
     auto ptr = obs_.lock();
     if (ptr != nullptr) {
         ptr->OnInfo(TransCoderOnInfoType::INFO_TYPE_PROGRESS_UPDATE, TRANSCODER_COMPLETE_PROGRESS);
         ptr->OnInfo(TransCoderOnInfoType::INFO_TYPE_TRANSCODER_COMPLETED, 0);
     }
-    pipeline_->Stop();
-    callbackLooper_->Stop();
 }
 
 Status HiTransCoderImpl::LinkAudioDecoderFilter(const std::shared_ptr<Pipeline::Filter>& preFilter,
