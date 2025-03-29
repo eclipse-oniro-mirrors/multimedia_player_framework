@@ -539,9 +539,9 @@ int32_t PlayerImpl::GetCurrentTrack(int32_t trackType, int32_t &index)
 
 int32_t PlayerImpl::SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionService> &keySessionProxy, bool svp)
 {
-    ScopedTimer timer("SetDecryptConfig", OVERTIME_WARNING_MS);
     MEDIA_LOGI("PlayerImpl DRM SetDecryptConfig");
 #ifdef SUPPORT_AVPLAYER_DRM
+    ScopedTimer timer("SetDecryptConfig", OVERTIME_WARNING_MS);
     CHECK_AND_RETURN_RET_LOG(keySessionProxy != nullptr, MSERR_INVALID_VAL, "keysessionproxy is nullptr");
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     MEDIA_LOGD("And it's count is: %{public}d in PlayerImpl", keySessionProxy->GetSptrRefCount());
