@@ -22,6 +22,7 @@
 #include "meta_utils.h"
 #include "uri_helper.h"
 #include "osal/task/pipeline_threadpool.h"
+#include "pipeline/pipeline.h"
 #include "pts_and_index_conversion.h"
 
 namespace {
@@ -39,7 +40,7 @@ void AVMetadataHelperImpl::OnError(MediaAVCodec::AVCodecErrorType errorType, int
 AVMetadataHelperImpl::AVMetadataHelperImpl()
 {
     MEDIA_LOGD("Constructor, instance: 0x%{public}06" PRIXPTR "", FAKE_POINTER(this));
-    groupId_ = std::string("AVMeta_") + std::to_string(OHOS::Media::Pipeline::Pipeline::GetNextPipelineId());
+    groupId_ = std::string("AVMeta_") + std::to_string(Pipeline::Pipeline::GetNextPipelineId());
     interruptMonitor_ = std::make_shared<InterruptMonitor>();
     if (interruptMonitor_ == nullptr) {
         MEDIA_LOGE("fail to allocate memory for InterruptMonitor");
@@ -121,7 +122,6 @@ Status AVMetadataHelperImpl::SetSourceInternel(const std::shared_ptr<IMediaDataS
 {
     Reset();
     mediaDemuxer_ = std::make_shared<MediaDemuxer>();
-    mediaDemuxer_->SetEnableOnlineFdCache(false);
     mediaDemuxer_->SetPlayerId(groupId_);
     CHECK_AND_RETURN_RET_LOG(
         mediaDemuxer_ != nullptr, Status::ERROR_INVALID_DATA, "SetSourceInternel demuxer is nullptr");
@@ -174,15 +174,6 @@ std::shared_ptr<AVSharedMemory> AVMetadataHelperImpl::FetchFrameAtTime(
     return thumbnailGenerator_->FetchFrameAtTime(timeUs, option, param);
 }
 
-std::shared_ptr<AVBuffer> AVMetadataHelperImpl::FetchFrameYuv(
-    int64_t timeUs, int32_t option, const OutputConfiguration &param)
-{
-    MEDIA_LOGD("enter FetchFrameAtTime");
-    auto res = InitThumbnailGenerator();
-    CHECK_AND_RETURN_RET(res == Status::OK, nullptr);
-    return thumbnailGenerator_->FetchFrameYuv(timeUs, option, param);
-}
-
 int32_t AVMetadataHelperImpl::GetTimeByFrameIndex(uint32_t index, uint64_t &time)
 {
     CHECK_AND_RETURN_RET(!isForFrameConvert_, GetTimeForFrameConvert(index, time));
@@ -223,6 +214,15 @@ int32_t AVMetadataHelperImpl::GetIndexForFrameConvert(uint64_t time, uint32_t &i
     return res == Status::OK ? MSERR_OK : MSERR_UNSUPPORT_FILE;
 }
 
+std::shared_ptr<AVBuffer> AVMetadataHelperImpl::FetchFrameYuv(
+    int64_t timeUs, int32_t option, const OutputConfiguration &param)
+{
+    MEDIA_LOGD("enter FetchFrameAtTime");
+    auto res = InitThumbnailGenerator();
+    CHECK_AND_RETURN_RET(res == Status::OK, nullptr);
+    return thumbnailGenerator_->FetchFrameYuv(timeUs, option, param);
+}
+
 void AVMetadataHelperImpl::Reset()
 {
     if (metadataCollector_ != nullptr) {
@@ -236,7 +236,7 @@ void AVMetadataHelperImpl::Reset()
     if (mediaDemuxer_ != nullptr) {
         mediaDemuxer_->Reset();
     }
-
+    
     isForFrameConvert_ = false;
 }
 

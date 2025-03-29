@@ -39,7 +39,7 @@ sptr<MonitorServiceStub> MonitorServiceStub::GetInstance()
 {
     static sptr<MonitorServiceStub> monitor = nullptr;
     if (monitor == nullptr) {
-        monitor = new MonitorServiceStub();
+        monitor = new(std::nothrow) MonitorServiceStub();
         (void)monitor->Init();
     }
     return monitor;

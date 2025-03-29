@@ -20,7 +20,7 @@
 #include "scope_guard.h"
 
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_ONLY_PRERELEASE, LOG_DOMAIN_PLAYER, "MonitorClient" };
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_PLAYER, "MonitorClient" };
 }
 
 namespace OHOS {
@@ -33,7 +33,7 @@ constexpr uint8_t TIME_INTERVAL = 1; // Heartbeat once per second
 
 MonitorClient::MonitorClient()
 {
-    MEDIA_LOGI("create");
+    MEDIA_LOGI("Instances create");
 }
 
 MonitorClient::~MonitorClient()
@@ -169,11 +169,12 @@ void MonitorClient::ClickThread()
 
 void MonitorClient::ClickThreadCtrl()
 {
-    MEDIA_LOGD("ClickThreadCtrl start");
     while (true) {
         ClickThread();
-        std::this_thread::sleep_for(std::chrono::seconds(TIME_INTERVAL));
         std::unique_lock<std::mutex> lock(mutex_);
+        clickCond_.wait_for(lock, std::chrono::seconds(TIME_INTERVAL), [this] {
+            return objSet_.empty() || clientDestroy_;
+        });
         if (objSet_.empty() || clientDestroy_) {
             threadRunning_ = false;
             MEDIA_LOGI("objSetsize %{public}zu, clientDestroy %{public}d.",

@@ -134,6 +134,7 @@ void AVTransCoderCallback::OnInfo(int32_t type, int32_t extra)
 void AVTransCoderCallback::OnJsCompleteCallBack(AVTransCoderJsCallback *jsCb) const
 {
     auto task = [event = jsCb]() {
+        // Js Thread
         CHECK_AND_RETURN_LOG(event != nullptr, "jsCb is nullptr");
         std::string request = event->callbackName;
         MEDIA_LOGI("uv_queue_work_with_qos start, state changes to %{public}s", event->state.c_str());

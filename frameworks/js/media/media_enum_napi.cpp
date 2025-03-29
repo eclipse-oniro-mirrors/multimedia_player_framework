@@ -204,7 +204,7 @@ static const std::vector<struct JsEnumInt> g_seekMode = {
 };
 
 static const std::vector<struct JsEnumInt> g_switchMode = {
-    { "SMOOTH", PlayerSwitchMode::SWITCH_SMOOTH },
+    { "SMOOTH", PlayerSwitchMode::SWITCH_SMOOTH  },
     { "SEGMENT", PlayerSwitchMode::SWITCH_SEGMENT },
     { "CLOSEST", PlayerSwitchMode::SWITCH_CLOSEST },
 };
