@@ -169,38 +169,6 @@ HWTEST(SystemTonePlayerUnitTest, Media_TonePlayer_Unit_Test_007, TestSize.Level1
 
 /**
  * @tc.name  : Test MediaTonePlayer
- * @tc.number: Media_TonePlayert_008
- * @tc.desc  : Test ChangeUri. Returns Uri
- */
-HWTEST(SystemTonePlayerUnitTest, Media_TonePlayer_Unit_Test_008, TestSize.Level1)
-{
-    auto context_ = std::make_shared<ContextImpl>();
-    auto systemSoundMgr_ = std::make_shared<SystemSoundManagerImpl>();
-    SystemToneType systemToneType = SYSTEM_TONE_TYPE_SIM_CARD_0;
-    auto systemTonePlayerImpl_ = std::make_shared<SystemTonePlayerImpl>(context_, *systemSoundMgr_, systemToneType);
-    std::string audioUri = "/storage/media/local/files/test.ogg";
-    std::string result = systemTonePlayerImpl_->ChangeUri(audioUri);
-    EXPECT_EQ(result, "/storage/media/local/files/test.ogg");
-}
-
-/**
- * @tc.name  : Test MediaTonePlayer
- * @tc.number: Media_TonePlayert_009
- * @tc.desc  : Test ChangeUri. Returns Uri
- */
-HWTEST(SystemTonePlayerUnitTest, Media_TonePlayer_Unit_Test_009, TestSize.Level1)
-{
-    auto context_ = std::make_shared<ContextImpl>();
-    auto systemSoundMgr_ = std::make_shared<SystemSoundManagerImpl>();
-    SystemToneType systemToneType = SYSTEM_TONE_TYPE_SIM_CARD_0;
-    auto systemTonePlayerImpl_ = std::make_shared<SystemTonePlayerImpl>(context_, *systemSoundMgr_, systemToneType);
-    std::string audioUri = "/storage/media/local/test.ogg";
-    std::string result = systemTonePlayerImpl_->ChangeUri(audioUri);
-    EXPECT_EQ(result, "/storage/media/local/test.ogg");
-}
-
-/**
- * @tc.name  : Test MediaTonePlayer
  * @tc.number: Media_TonePlayert_010
  * @tc.desc  : Test Prepare. Returns MSERR_OK
  */
@@ -399,22 +367,6 @@ HWTEST(SystemTonePlayerUnitTest, Media_TonePlayer_Unit_Test_019, TestSize.Level1
     std::string audioUri = "/storage/media/local/files/test.ogg";
     systemTonePlayerImpl_->InitHapticsSourceIds();
     EXPECT_EQ(audioUri, "/storage/media/local/files/test.ogg");
-}
-
-/**
- * @tc.name  : Test MediaTonePlayer
- * @tc.number: Media_TonePlayert_021
- * @tc.desc  : Test ChangeHapticsUri. Returns HapticsUri
- */
-HWTEST(SystemTonePlayerUnitTest, Media_TonePlayer_Unit_Test_021, TestSize.Level1)
-{
-    auto context_ = std::make_shared<ContextImpl>();
-    auto systemSoundMgr_ = std::make_shared<SystemSoundManagerImpl>();
-    SystemToneType systemToneType = SYSTEM_TONE_TYPE_SIM_CARD_0;
-    auto systemTonePlayerImpl_ = std::make_shared<SystemTonePlayerImpl>(context_, *systemSoundMgr_, systemToneType);
-    std::string hapticsUri = "/storage/media/local/test.ogg";
-    std::string result = systemTonePlayerImpl_->ChangeHapticsUri(hapticsUri);
-    EXPECT_EQ(result, "/storage/media/local/test.ogg");
 }
 
 /**

@@ -109,6 +109,8 @@ int32_t SoundParser::DoDemuxer(MediaAVCodec::Format *trackFormat)
     sourceFormat.GetIntValue(MediaAVCodec::MediaDescriptionKey::MD_KEY_TRACK_COUNT, sourceTrackCountInfo);
     sourceFormat.GetLongValue(MediaAVCodec::MediaDescriptionKey::MD_KEY_DURATION, sourceDurationInfo);
 
+    sourceDurationInfo_ = sourceDurationInfo;
+
     MEDIA_LOGI("SoundParser sourceTrackCountInfo:%{public}d", sourceTrackCountInfo);
     for (int32_t sourceTrackIndex = 0; sourceTrackIndex < sourceTrackCountInfo; sourceTrackIndex++) {
         int32_t trackType = 0;
@@ -189,6 +191,11 @@ int32_t SoundParser::SetCallback(const std::shared_ptr<ISoundPoolCallback> &call
 {
     callback_ = callback;
     return MSERR_OK;
+}
+
+int64_t SoundParser::GetSourceDuration()
+{
+    return sourceDurationInfo_;
 }
 
 int32_t SoundParser::Release()

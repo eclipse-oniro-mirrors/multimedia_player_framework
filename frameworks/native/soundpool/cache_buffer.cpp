@@ -173,6 +173,7 @@ int32_t CacheBuffer::DoPlay(const int32_t streamID)
     audioRenderer_->GetBufferSize(bufferSize);
     MEDIA_LOGI("CacheBuffer::DoPlay, streamID_:%{public}d, bufferSize:%{public}zu, cacheDataFrameIndex_:%{public}zu,"
         " cacheDataTotalSize_:%{public}zu", streamID_, bufferSize, cacheDataFrameIndex_, cacheDataTotalSize_);
+    audioRenderer_->SetSourceDuration(sourceDurationMs_);
     cacheDataFrameIndex_ = 0;
     havePlayedCount_ = 0;
     isRunning_.store(true);
@@ -531,5 +532,11 @@ int32_t CacheBuffer::SetFrameWriteCallback(const std::shared_ptr<ISoundPoolFrame
     frameWriteCallback_ = callback;
     return MSERR_OK;
 }
+
+void CacheBuffer::SetSourceDuration(int64_t durationMs)
+{
+    sourceDurationMs_ = durationMs;
+}
+
 } // namespace Media
 } // namespace OHOS

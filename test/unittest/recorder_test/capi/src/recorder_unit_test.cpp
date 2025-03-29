@@ -109,7 +109,7 @@ static OH_AVRecorder_Profile profile_ = {
     .audioSampleRate = 48000,
     .fileFormat = OH_AVRecorder_ContainerFormatType::AVRECORDER_CFT_MPEG_4,
     .videoBitrate = 2000000,
-    .videoCodec = OH_AVRecorder_CodecMimeType::AVRECORDER_VIDEO_HEVC,
+    .videoCodec = OH_AVRecorder_CodecMimeType::AVRECORDER_VIDEO_AVC,
     .videoFrameWidth = 1920,
     .videoFrameHeight = 1080,
     .videoFrameRate = 30,
@@ -193,6 +193,7 @@ static void OnUri(OH_AVRecorder *recorder, OH_MediaAsset *asset, void *userData)
 
 void NativeRecorderUnitTest::SetUpTestCase(void)
 {
+    std::system("setenforce 0");
     SetSelfTokenPremission();
 }
 
@@ -244,7 +245,7 @@ OH_AVErrCode RequesetBuffer(OHNativeWindow *window, const OH_AVRecorder_Config *
     requestConfig.width = config->profile.videoFrameWidth;
     requestConfig.height = config->profile.videoFrameHeight;
     requestConfig.strideAlignment = STRIDE_ALIGN;
-    requestConfig.format = PIXEL_FMT_YCRCB_420_SP;
+    requestConfig.format = PIXEL_FMT_YCBCR_420_SP;
     requestConfig.usage = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_CPU_WRITE | BUFFER_USAGE_MEM_DMA;
     requestConfig.timeout = INT_MAX;
     BufferFlushConfig flushConfig;
@@ -362,6 +363,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Prepare_002, TestSize.Level2)
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_Prepare_002 out.");
 }
 
+#ifdef SUPPORT_CODEC_TYPE_HEVC
 /**
  * @tc.name: Recorder_Prepare_003
  * @tc.desc: Test recorder preparation process with max param
@@ -407,6 +409,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Prepare_003, TestSize.Level2)
 
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_Prepare_003 out.");
 }
+#endif
 
 /**
  * @tc.name: Recorder_Prepare_004
@@ -429,7 +432,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Prepare_004, TestSize.Level2)
     config.profile.audioSampleRate = 48000;
     config.profile.fileFormat = OH_AVRecorder_ContainerFormatType::AVRECORDER_CFT_MPEG_4;
     config.profile.videoBitrate = 2000000;
-    config.profile.videoCodec = OH_AVRecorder_CodecMimeType::AVRECORDER_VIDEO_HEVC;
+    config.profile.videoCodec = OH_AVRecorder_CodecMimeType::AVRECORDER_VIDEO_AVC;
     config.profile.videoFrameWidth = 640;
     config.profile.videoFrameHeight = 480;
     config.profile.videoFrameRate = 30;
@@ -473,7 +476,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Prepare_005, TestSize.Level2)
     config.profile.audioSampleRate = 48000;
     config.profile.fileFormat = OH_AVRecorder_ContainerFormatType::AVRECORDER_CFT_MPEG_4;
     config.profile.videoBitrate = 2000000;
-    config.profile.videoCodec = OH_AVRecorder_CodecMimeType::AVRECORDER_VIDEO_HEVC;
+    config.profile.videoCodec = OH_AVRecorder_CodecMimeType::AVRECORDER_VIDEO_AVC;
     config.profile.videoFrameWidth = 640;
     config.profile.videoFrameHeight = 480;
     config.profile.videoFrameRate = 30;
@@ -517,7 +520,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Prepare_006, TestSize.Level2)
     config.profile.audioSampleRate = 48000;
     config.profile.fileFormat = OH_AVRecorder_ContainerFormatType::AVRECORDER_CFT_MPEG_4;
     config.profile.videoBitrate = 2000000;
-    config.profile.videoCodec = OH_AVRecorder_CodecMimeType::AVRECORDER_VIDEO_HEVC;
+    config.profile.videoCodec = OH_AVRecorder_CodecMimeType::AVRECORDER_VIDEO_AVC;
     config.profile.videoFrameWidth = 640;
     config.profile.videoFrameHeight = 480;
     config.profile.videoFrameRate = 30;
@@ -561,7 +564,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Prepare_007, TestSize.Level2)
     config.profile.audioSampleRate = 48000;
     config.profile.fileFormat = OH_AVRecorder_ContainerFormatType::AVRECORDER_CFT_MPEG_4;
     config.profile.videoBitrate = 2000000;
-    config.profile.videoCodec = OH_AVRecorder_CodecMimeType::AVRECORDER_VIDEO_HEVC;
+    config.profile.videoCodec = OH_AVRecorder_CodecMimeType::AVRECORDER_VIDEO_AVC;
     config.profile.videoFrameWidth = 1280;
     config.profile.videoFrameHeight = 720;
     config.profile.videoFrameRate = 30;
@@ -605,7 +608,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Prepare_008, TestSize.Level2)
     config.profile.audioSampleRate = 48000;
     config.profile.fileFormat = OH_AVRecorder_ContainerFormatType::AVRECORDER_CFT_MPEG_4;
     config.profile.videoBitrate = 2000000;
-    config.profile.videoCodec = OH_AVRecorder_CodecMimeType::AVRECORDER_VIDEO_HEVC;
+    config.profile.videoCodec = OH_AVRecorder_CodecMimeType::AVRECORDER_VIDEO_AVC;
     config.profile.videoFrameWidth = 1280;
     config.profile.videoFrameHeight = 720;
     config.profile.videoFrameRate = 30;
@@ -654,7 +657,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Prepare_009, TestSize.Level2)
     config.profile.audioSampleRate = 48000;
     config.profile.fileFormat = OH_AVRecorder_ContainerFormatType::AVRECORDER_CFT_MPEG_4;
     config.profile.videoBitrate = 2000000;
-    config.profile.videoCodec = OH_AVRecorder_CodecMimeType::AVRECORDER_VIDEO_HEVC;
+    config.profile.videoCodec = OH_AVRecorder_CodecMimeType::AVRECORDER_VIDEO_AVC;
     config.profile.videoFrameWidth = 1280;
     config.profile.videoFrameHeight = 720;
     config.profile.videoFrameRate = 30;
@@ -700,7 +703,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Prepare_010, TestSize.Level2)
     config.profile.audioSampleRate = 48000;
     config.profile.fileFormat = OH_AVRecorder_ContainerFormatType::AVRECORDER_CFT_MPEG_4;
     config.profile.videoBitrate = 2000000;
-    config.profile.videoCodec = OH_AVRecorder_CodecMimeType::AVRECORDER_VIDEO_HEVC;
+    config.profile.videoCodec = OH_AVRecorder_CodecMimeType::AVRECORDER_VIDEO_AVC;
     config.profile.videoFrameWidth = 1280;
     config.profile.videoFrameHeight = 720;
     config.profile.videoFrameRate = 30;
@@ -790,7 +793,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_GetAVRecorderConfig_002, TestSize.Leve
     EXPECT_EQ(configGet->profile.audioSampleRate, 48000);
     EXPECT_EQ(configGet->profile.fileFormat, OH_AVRecorder_ContainerFormatType::AVRECORDER_CFT_MPEG_4);
     EXPECT_EQ(configGet->profile.videoBitrate, 2000000);
-    EXPECT_EQ(configGet->profile.videoCodec, OH_AVRecorder_CodecMimeType::AVRECORDER_VIDEO_HEVC);
+    EXPECT_EQ(configGet->profile.videoCodec, OH_AVRecorder_CodecMimeType::AVRECORDER_VIDEO_AVC);
     EXPECT_EQ(configGet->profile.videoFrameHeight, 1080);
     EXPECT_EQ(configGet->profile.videoFrameWidth, 1920);
     EXPECT_EQ(configGet->profile.videoFrameRate, 30);

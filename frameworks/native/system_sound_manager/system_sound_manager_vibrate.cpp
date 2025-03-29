@@ -28,6 +28,7 @@
 #include "os_account_manager.h"
 #include "system_tone_player_impl.h"
 #include "parameter.h"
+#include "system_sound_manager_utils.h"
  
 using namespace std;
 using namespace nlohmann;
@@ -59,8 +60,6 @@ const std::string SETTING_USER_URI_PROXY = "datashare:///com.ohos.settingsdata/e
 const std::string SETTING_USER_SECURE_URI_PROXY =
     "datashare:///com.ohos.settingsdata/entry/settingsdata/USER_SETTINGSDATA_SECURE_";
 constexpr const char *SETTINGS_DATA_EXT_URI = "datashare:///com.ohos.settingsdata.DataAbility";
-constexpr int32_t RETRY_TIME_S = 5;
-constexpr int64_t SLEEP_TIME_S = 1;
  
 int32_t SystemSoundManagerImpl::GetStringValue(const std::string &key,
     std::string &value, std::string tableType)
@@ -114,7 +113,7 @@ bool SystemSoundManagerImpl::CheckVibrateSwitchStatus()
  
 Uri SystemSoundManagerImpl::AssembleUri(const std::string &key, std::string tableType)
 {
-    int32_t currentuserId = GetCurrentUserId();
+    int32_t currentuserId = SystemSoundManagerUtils::GetCurrentUserId();
     if (currentuserId < MIN_USER_ACCOUNT) {
         currentuserId = MIN_USER_ACCOUNT;
     }
@@ -133,34 +132,11 @@ Uri SystemSoundManagerImpl::AssembleUri(const std::string &key, std::string tabl
     Uri uri(SETTING_URI_PROXY + "&key=" + key);
     return uri;
 }
- 
-int32_t SystemSoundManagerImpl::GetCurrentUserId()
-{
-    std::vector<int32_t> ids;
-    int32_t currentuserId = -1;
-    ErrCode result;
-    int32_t retry = RETRY_TIME_S;
-    while (retry--) {
-        result = AccountSA::OsAccountManager::QueryActiveOsAccountIds(ids);
-        if (result == ERR_OK && !ids.empty()) {
-            currentuserId = ids[0];
-            MEDIA_LOGD("current userId is :%{public}d", currentuserId);
-            break;
-        }
- 
-        // sleep and wait for 1 millisecond
-        sleep(SLEEP_TIME_S);
-    }
-    if (result != ERR_OK || ids.empty()) {
-        MEDIA_LOGW("current userId is empty");
-    }
-    return currentuserId;
-}
- 
+
 std::shared_ptr<DataShare::DataShareHelper> SystemSoundManagerImpl::CreateDataShareHelperProxy(std::string
     tableType)
 {
-    int32_t currentuserId = GetCurrentUserId();
+    int32_t currentuserId = SystemSoundManagerUtils::GetCurrentUserId();
     if (currentuserId < MIN_USER_ACCOUNT) {
         currentuserId = MIN_USER_ACCOUNT;
     }

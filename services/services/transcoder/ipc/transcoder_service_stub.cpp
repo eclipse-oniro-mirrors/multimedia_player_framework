@@ -37,7 +37,6 @@ sptr<TransCoderServiceStub> TransCoderServiceStub::Create()
 
     int32_t ret = transCoderStub->Init();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed to transcoder stub init");
-    StatisticEventWriteBundleName("create", "TransCoderServiceStub");
     return transCoderStub;
 }
 
