@@ -86,6 +86,7 @@ static HapPolicyParams hapPolicy = {
 
 void RecorderUnitTest::SetUpTestCase(void)
 {
+    std::system("setenforce 0");
     SetSelfTokenPremission();
 }
 
