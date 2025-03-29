@@ -1407,6 +1407,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnTelCallStateChanged_003, TestSize.Le
     ASSERT_EQ(screenCaptureServer_->TelCallAudioStateUpdated(true), MSERR_OK);
     sleep(RECORDER_TIME);
     ASSERT_EQ(screenCaptureServer_->TelCallStateUpdated(false), MSERR_OK);
+    // stop call and microphone not on
     ASSERT_EQ(screenCaptureServer_->TelCallAudioStateUpdated(false), MSERR_OK);
     sleep(RECORDER_TIME);
     ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
@@ -1932,7 +1933,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StopAudioCapture_001, TestSize.Level2)
 HWTEST_F(ScreenCaptureServerFunctionTest, ExcludeContent_001, TestSize.Level2)
 {
     ScreenCaptureContentFilter contentFilter;
-    EXPECT_EQ(screenCaptureServer_->ExcludeContent(), MSERR_OK);
+    EXPECT_EQ(screenCaptureServer_->ExcludeContent(contentFilter), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, StartMicAudioCapture_001, TestSize.Level2)

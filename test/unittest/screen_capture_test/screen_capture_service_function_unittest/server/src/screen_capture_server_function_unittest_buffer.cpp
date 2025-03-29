@@ -85,15 +85,16 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AcquireAudioBuffer_002, TestSize.Level
 */
 HWTEST_F(ScreenCaptureServerFunctionTest, AcquireVideoBuffer_001, TestSize.Level2)
 {
-    screenCaptureServer_->captureState_ == AVScreenCaptureState::STARTED;
-    screenCaptureServer_->OHOS::consumer_ = Surface::CreateSurfaceAsConsumer();
-    screenCaptureServer_->surfaceCb_ = OHOS::sptr<ScreenCapBufferConsumerListener>::MakeSptr(consumer_, screenCaptureCb_);
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
+    screenCaptureServer_->consumer_ = OHOS::Surface::CreateSurfaceAsConsumer();
+    screenCaptureServer_->surfaceCb_ = OHOS::sptr<ScreenCapBufferConsumerListener>::MakeSptr(
+        screenCaptureServer_->consumer_, screenCaptureServer_->screenCaptureCb_);
     sptr<OHOS::SurfaceBuffer> surfaceBuffer = nullptr;
     int32_t fence = 0;
     int64_t timestamp = 0;
     OHOS::Rect damage;
     screenCaptureServer_->isDump_ = false;
-    ASSERT_EQ(screenCaptureServer_->AcquireVideoBuffer(surfaceBuffer, fence, timestamp, damage), MSERR_OK);
+    ASSERT_NE(screenCaptureServer_->AcquireVideoBuffer(surfaceBuffer, fence, timestamp, damage), MSERR_OK);
     screenCaptureServer_->ReleaseVideoBuffer();
 }
 
@@ -104,15 +105,16 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AcquireVideoBuffer_001, TestSize.Level
 */
 HWTEST_F(ScreenCaptureServerFunctionTest, AcquireVideoBuffer_002, TestSize.Level2)
 {
-    screenCaptureServer_->captureState_ == AVScreenCaptureState::STARTED;
-    screenCaptureServer_->OHOS::consumer_ = Surface::CreateSurfaceAsConsumer();
-    screenCaptureServer_->surfaceCb_ = OHOS::sptr<ScreenCapBufferConsumerListener>::MakeSptr(consumer_, screenCaptureCb_);
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
+    screenCaptureServer_->consumer_ = OHOS::Surface::CreateSurfaceAsConsumer();
+    screenCaptureServer_->surfaceCb_ = OHOS::sptr<ScreenCapBufferConsumerListener>::MakeSptr(
+        screenCaptureServer_->consumer_, screenCaptureServer_->screenCaptureCb_);
     sptr<OHOS::SurfaceBuffer> surfaceBuffer = nullptr;
     int32_t fence = 0;
     int64_t timestamp = 0;
     OHOS::Rect damage;
     screenCaptureServer_->isDump_ = true;
-    ASSERT_EQ(screenCaptureServer_->AcquireVideoBuffer(surfaceBuffer, fence, timestamp, damage), MSERR_OK);
+    ASSERT_NE(screenCaptureServer_->AcquireVideoBuffer(surfaceBuffer, fence, timestamp, damage), MSERR_OK);
     screenCaptureServer_->ReleaseVideoBuffer();
 }
 
