@@ -37,6 +37,7 @@
 #include "meta/media_types.h"
 #include "param_wrapper.h"
 #include "osal/utils/steady_clock.h"
+#include "scoped_timer.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_SYSTEM_PLAYER, "HiPlayer" };
@@ -55,6 +56,7 @@ constexpr int32_t BUFFERING_LOG_FREQUENCY = 5;
 constexpr int32_t NOTIFY_BUFFERING_END_PARAM = 0;
 constexpr int64_t FIRST_FRAME_FRAME_REPORT_DELAY_MS = 50;
 constexpr double PAUSE_LONG_TIME_FACTOR = 5;
+constexpr int64_t DEMUXER_INIT_WARNING_MS = 50;
 static const std::unordered_set<OHOS::AudioStandard::StreamUsage> FOCUS_EVENT_USAGE_SET = {
     OHOS::AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN,
     OHOS::AudioStandard::StreamUsage::STREAM_USAGE_MEDIA,
@@ -2453,7 +2455,10 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
     demuxer_->SetApiVersion(apiVersion_);
     demuxer_->SetSyncCenter(syncManager_);
     pipeline_->AddHeadFilters({demuxer_});
-    demuxer_->Init(playerEventReceiver_, playerFilterCallback_, interruptMonitor_);
+    {
+        ScopedTimer timer("Demuxer Init", DEMUXER_INIT_WARNING_MS);
+        demuxer_->Init(playerEventReceiver_, playerFilterCallback_, interruptMonitor_);
+    }
     DoSetPlayStrategy(source);
     if (!mimeType_.empty()) {
         source->SetMimeType(mimeType_);

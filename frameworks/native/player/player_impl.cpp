@@ -17,6 +17,8 @@
 #include "i_media_service.h"
 #include "media_log.h"
 #include "media_errors.h"
+#include "scoped_timer.h"
+#include "player_xcollie.h"
 #ifdef SUPPORT_AVPLAYER_DRM
 #include "i_keysession_service.h"
 #endif
@@ -25,17 +27,25 @@ namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "PlayerImpl"};
 constexpr int32_t API_VERSION_14 = 14;
 static int32_t apiVersion_ = -1;
+constexpr int64_t OVERTIME_WARNING_MS = 10;
+constexpr int64_t CREATE_AVPLAYER_WARNING_MS = 30;
+constexpr int64_t RESET_WARNING_MS = 30;
+constexpr int64_t RELEASE_WARNING_MS = 200;
+const int32_t TIME_OUT_SECOND = 6;
 }
 
 namespace OHOS {
 namespace Media {
+
 std::shared_ptr<Player> PlayerFactory::CreatePlayer()
 {
+    ScopedTimer timer("CreatePlayer", CREATE_AVPLAYER_WARNING_MS);
     MEDIA_LOGD("PlayerImpl: CreatePlayer in");
     std::shared_ptr<PlayerImpl> impl = std::make_shared<PlayerImpl>();
     CHECK_AND_RETURN_RET_LOG(impl != nullptr, nullptr, "failed to new PlayerImpl");
 
-    int32_t ret = impl->Init();
+    int32_t ret = MSERR_OK;
+    LISTENER(ret = impl->Init(), "CreatePlayer", false, TIME_OUT_SECOND);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed to init PlayerImpl");
 
     return impl;
@@ -79,119 +89,136 @@ void PlayerImpl::ResetSeekVariables()
 
 int32_t PlayerImpl::SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted)
 {
+    ScopedTimer timer("SetMediaMuted", OVERTIME_WARNING_MS);
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_INVALID_VAL, "playerService_ not exist");
-    return playerService_->SetMediaMuted(mediaType, isMuted);
+    LISTENER(return playerService_->SetMediaMuted(mediaType, isMuted), "SetMediaMuted", false, TIME_OUT_SECOND);
 }
 
 int32_t PlayerImpl::SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc)
 {
+    ScopedTimer timer("SetSource dataSrc", OVERTIME_WARNING_MS);
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetSource in(dataSrc)", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(dataSrc != nullptr, MSERR_INVALID_VAL, "failed to create data source");
-    return playerService_->SetSource(dataSrc);
+    LISTENER(return playerService_->SetSource(dataSrc), "SetSource dataSrc", false, TIME_OUT_SECOND);
 }
 
 int32_t PlayerImpl::SetSource(const std::string &url)
 {
+    ScopedTimer timer("SetSource url", OVERTIME_WARNING_MS);
     MEDIA_LOGD("PlayerImpl:0x%{private}06" PRIXPTR " SetSource in(url): %{private}s", FAKE_POINTER(this), url.c_str());
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     CHECK_AND_RETURN_RET_LOG(!url.empty(), MSERR_INVALID_VAL, "url is empty..");
-    return playerService_->SetSource(url);
+    LISTENER(return playerService_->SetSource(url), "SetSource url", false, TIME_OUT_SECOND);
 }
 
 int32_t PlayerImpl::SetSource(int32_t fd, int64_t offset, int64_t size)
 {
+    ScopedTimer timer("SetSource fd", OVERTIME_WARNING_MS);
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetSource in(fd)", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
-    return playerService_->SetSource(fd, offset, size);
+    LISTENER(return playerService_->SetSource(fd, offset, size), "SetSource fd", false, TIME_OUT_SECOND);
 }
 
 int32_t PlayerImpl::AddSubSource(const std::string &url)
 {
+    ScopedTimer timer("AddSubSource url", OVERTIME_WARNING_MS);
     MEDIA_LOGD("PlayerImpl:0x%{private}06" PRIXPTR " AddSubSource in(url): %{private}s",
         FAKE_POINTER(this), url.c_str());
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     CHECK_AND_RETURN_RET_LOG(!url.empty(), MSERR_INVALID_VAL, "url is empty..");
-    return playerService_->AddSubSource(url);
+    LISTENER(return playerService_->AddSubSource(url), "AddSubSource url", false, TIME_OUT_SECOND);
 }
 
 int32_t PlayerImpl::AddSubSource(int32_t fd, int64_t offset, int64_t size)
 {
+    ScopedTimer timer("AddSubSource fd", OVERTIME_WARNING_MS);
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " AddSubSource in(fd)", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
-    return playerService_->AddSubSource(fd, offset, size);
+    LISTENER(return playerService_->AddSubSource(fd, offset, size), "AddSubSource fd", false, TIME_OUT_SECOND);
 }
 
 int32_t PlayerImpl::Play()
 {
+    ScopedTimer timer("Play", OVERTIME_WARNING_MS);
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Play in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
-    return playerService_->Play();
+    LISTENER(return playerService_->Play(), "Play", false, TIME_OUT_SECOND);
 }
 
 int32_t PlayerImpl::SetPlayRange(int64_t start, int64_t end)
 {
+    ScopedTimer timer("SetPlayRange", OVERTIME_WARNING_MS);
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetPlayRange in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
-    return playerService_->SetPlayRange(start, end);
+    LISTENER(return playerService_->SetPlayRange(start, end), "SetPlayRange", false, TIME_OUT_SECOND);
 }
 
 int32_t PlayerImpl::SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode)
 {
+    ScopedTimer timer("SetPlayRangeWithMode", OVERTIME_WARNING_MS);
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetPlayRangeWithMode in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
-    return playerService_->SetPlayRangeWithMode(start, end, mode);
+    LISTENER(
+        return playerService_->SetPlayRangeWithMode(start, end, mode), "SetPlayRangeWithMode", false, TIME_OUT_SECOND);
 }
 
 int32_t PlayerImpl::Prepare()
 {
+    ScopedTimer timer("Prepare", OVERTIME_WARNING_MS);
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Prepare in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
-    return playerService_->Prepare();
+    LISTENER(return playerService_->Prepare(), "Prepare", false, TIME_OUT_SECOND);
 }
 
 int32_t PlayerImpl::SetRenderFirstFrame(bool display)
 {
+    ScopedTimer timer("SetRenderFirstFrame", OVERTIME_WARNING_MS);
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetRenderFirstFrame in, display %{public}d",
          FAKE_POINTER(this), display);
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
-    return playerService_->SetRenderFirstFrame(display);
+    LISTENER(return playerService_->SetRenderFirstFrame(display), "SetRenderFirstFrame", false, TIME_OUT_SECOND);
 }
 
 int32_t PlayerImpl::PrepareAsync()
 {
+    ScopedTimer timer("PrepareAsync", OVERTIME_WARNING_MS);
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " PrepareAsync in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
-    return playerService_->PrepareAsync();
+    LISTENER(return playerService_->PrepareAsync(), "PrepareAsync", false, TIME_OUT_SECOND);
 }
 
 int32_t PlayerImpl::Pause()
 {
+    ScopedTimer timer("Pause", OVERTIME_WARNING_MS);
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Pause in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
-    return playerService_->Pause();
+    LISTENER(return playerService_->Pause(), "Pause", false, TIME_OUT_SECOND);
 }
 
 int32_t PlayerImpl::Stop()
 {
+    ScopedTimer timer("Stop", OVERTIME_WARNING_MS);
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Stop in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     ResetSeekVariables();
-    return playerService_->Stop();
+    LISTENER(return playerService_->Stop(), "Stop", false, TIME_OUT_SECOND);
 }
 
 int32_t PlayerImpl::Reset()
 {
+    ScopedTimer timer("Reset", RESET_WARNING_MS);
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Reset in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     ResetSeekVariables();
-    return playerService_->Reset();
+    LISTENER(return playerService_->Reset(), "Reset", false, TIME_OUT_SECOND);
 }
 
 int32_t PlayerImpl::Release()
 {
+    ScopedTimer timer("Release", RELEASE_WARNING_MS);
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Release in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
-    (void)playerService_->Release();
+    LISTENER((void)playerService_->Release(), "Release", false, TIME_OUT_SECOND);
     (void)MediaServiceFactory::GetInstance().DestroyPlayerService(playerService_);
     playerService_ = nullptr;
     return MSERR_OK;
@@ -199,9 +226,10 @@ int32_t PlayerImpl::Release()
 
 int32_t PlayerImpl::ReleaseSync()
 {
+    ScopedTimer timer("ReleaseSync", RELEASE_WARNING_MS);
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " ReleaseSync in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
-    (void)playerService_->ReleaseSync();
+    LISTENER((void)playerService_->ReleaseSync(), "ReleaseSync", false, TIME_OUT_SECOND);
     (void)MediaServiceFactory::GetInstance().DestroyPlayerService(playerService_);
     playerService_ = nullptr;
     return MSERR_OK;
@@ -209,21 +237,24 @@ int32_t PlayerImpl::ReleaseSync()
 
 int32_t PlayerImpl::SetVolumeMode(int32_t mode)
 {
+    ScopedTimer timer("SetVolumeMode", OVERTIME_WARNING_MS);
     MEDIA_LOGD("PlayerImpl::SetVolumeMode mode = %{public}d", mode);
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
-    return playerService_->SetVolumeMode(mode);
+    LISTENER(return playerService_->SetVolumeMode(mode), "SetVolumeMode", false, TIME_OUT_SECOND);
 }
 
 int32_t PlayerImpl::SetVolume(float leftVolume, float rightVolume)
 {
+    ScopedTimer timer("SetVolume", OVERTIME_WARNING_MS);
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetVolume(%{public}f, %{public}f) in",
         FAKE_POINTER(this), leftVolume, rightVolume);
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
-    return playerService_->SetVolume(leftVolume, rightVolume);
+    LISTENER(return playerService_->SetVolume(leftVolume, rightVolume), "SetVolume", false, TIME_OUT_SECOND);
 }
 
 int32_t PlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
 {
+    ScopedTimer timer("Seek", OVERTIME_WARNING_MS);
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Seek in, seek to %{public}d ms, mode is %{public}d",
         FAKE_POINTER(this), mSeconds, mode);
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
@@ -240,7 +271,8 @@ int32_t PlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
         isSeeking_ = true;
         mSeekPosition = mSeconds;
         mSeekMode = mode;
-        auto retCode = playerService_->Seek(mSeconds, mode);
+        int32_t retCode = MSERR_OK;
+        LISTENER(retCode = playerService_->Seek(mSeconds, mode), "SetVolume", false, TIME_OUT_SECOND);
         if (retCode != MSERR_OK) {
             ResetSeekVariables();
         }
@@ -304,111 +336,128 @@ void PlayerImpl::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &info
 
 int32_t PlayerImpl::GetCurrentTime(int32_t &currentTime)
 {
+    ScopedTimer timer("GetCurrentTime", OVERTIME_WARNING_MS);
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " GetCurrentTime in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
-    return playerService_->GetCurrentTime(currentTime);
+    LISTENER(return playerService_->GetCurrentTime(currentTime), "GetCurrentTime", false, TIME_OUT_SECOND);
 }
 
 int32_t PlayerImpl::GetPlaybackPosition(int32_t &playbackPosition)
 {
+    ScopedTimer timer("GetPlaybackPosition", OVERTIME_WARNING_MS);
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " GetPlaybackPosition in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
-    return playerService_->GetPlaybackPosition(playbackPosition);
+    LISTENER(
+        return playerService_->GetPlaybackPosition(playbackPosition), "GetPlaybackPosition", false, TIME_OUT_SECOND);
 }
 
 int32_t PlayerImpl::GetVideoTrackInfo(std::vector<Format> &videoTrack)
 {
+    ScopedTimer timer("GetVideoTrackInfo", OVERTIME_WARNING_MS);
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " GetVideoTrackInfo in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
-    return playerService_->GetVideoTrackInfo(videoTrack);
+    LISTENER(return playerService_->GetVideoTrackInfo(videoTrack), "GetVideoTrackInfo", false, TIME_OUT_SECOND);
 }
 
 int32_t PlayerImpl::GetPlaybackInfo(Format &playbackInfo)
 {
+    ScopedTimer timer("GetPlaybackInfo", OVERTIME_WARNING_MS);
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " GetPlaybackInfo in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
-    return playerService_->GetPlaybackInfo(playbackInfo);
+    LISTENER(return playerService_->GetPlaybackInfo(playbackInfo), "GetPlaybackInfo", false, TIME_OUT_SECOND);
 }
 
 int32_t PlayerImpl::GetAudioTrackInfo(std::vector<Format> &audioTrack)
 {
+    ScopedTimer timer("GetAudioTrackInfo", OVERTIME_WARNING_MS);
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " GetAudioTrackInfo in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
-    return playerService_->GetAudioTrackInfo(audioTrack);
+    LISTENER(return playerService_->GetAudioTrackInfo(audioTrack), "GetAudioTrackInfo", false, TIME_OUT_SECOND);
 }
 
 int32_t PlayerImpl::GetSubtitleTrackInfo(std::vector<Format> &subtitleTrack)
 {
+    ScopedTimer timer("GetSubtitleTrackInfo", OVERTIME_WARNING_MS);
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " GetSubtitleTrackInfo in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
-    return playerService_->GetSubtitleTrackInfo(subtitleTrack);
+    LISTENER(
+        return playerService_->GetSubtitleTrackInfo(subtitleTrack), "GetSubtitleTrackInfo", false, TIME_OUT_SECOND);
 }
 
 int32_t PlayerImpl::GetVideoWidth()
 {
+    ScopedTimer timer("GetVideoWidth", OVERTIME_WARNING_MS);
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " GetVideoWidth in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
-    return playerService_->GetVideoWidth();
+    LISTENER(return playerService_->GetVideoWidth(), "GetVideoWidth", false, TIME_OUT_SECOND);
 }
 
 int32_t PlayerImpl::GetVideoHeight()
 {
+    ScopedTimer timer("GetVideoHeight", OVERTIME_WARNING_MS);
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " GetVideoHeight in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
-    return playerService_->GetVideoHeight();
+    LISTENER(return playerService_->GetVideoHeight(), "GetVideoHeight", false, TIME_OUT_SECOND);
 }
 
 int32_t PlayerImpl::SetPlaybackSpeed(PlaybackRateMode mode)
 {
+    ScopedTimer timer("SetPlaybackSpeed", OVERTIME_WARNING_MS);
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetPlaybackSpeed in, mode is %{public}d", FAKE_POINTER(this), mode);
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
-    return playerService_->SetPlaybackSpeed(mode);
+    LISTENER(return playerService_->SetPlaybackSpeed(mode), "SetPlaybackSpeed", false, TIME_OUT_SECOND);
 }
 
 int32_t PlayerImpl::SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, AVPlayStrategy strategy)
 {
+    ScopedTimer timer("SetMediaSource", OVERTIME_WARNING_MS);
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetMediaSource in(dataSrc)", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(mediaSource != nullptr, MSERR_INVALID_VAL, "mediaSource is nullptr!");
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
-    return playerService_->SetMediaSource(mediaSource, strategy);
+    LISTENER(return playerService_->SetMediaSource(mediaSource, strategy), "SetMediaSource", false, TIME_OUT_SECOND);
 }
 
 int32_t PlayerImpl::GetPlaybackSpeed(PlaybackRateMode &mode)
 {
+    ScopedTimer timer("GetPlaybackSpeed", OVERTIME_WARNING_MS);
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " GetPlaybackSpeed in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
-    return playerService_->GetPlaybackSpeed(mode);
+    LISTENER(return playerService_->GetPlaybackSpeed(mode), "GetPlaybackSpeed", false, TIME_OUT_SECOND);
 }
 
 int32_t PlayerImpl::SelectBitRate(uint32_t bitRate)
 {
+    ScopedTimer timer("SelectBitRate", OVERTIME_WARNING_MS);
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SelectBitRate(%{public}d) in", FAKE_POINTER(this), bitRate);
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
-    return playerService_->SelectBitRate(bitRate);
+    LISTENER(return playerService_->SelectBitRate(bitRate), "SelectBitRate", false, TIME_OUT_SECOND);
 }
 
 int32_t PlayerImpl::GetDuration(int32_t &duration)
 {
+    ScopedTimer timer("GetDuration", OVERTIME_WARNING_MS);
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " GetDuration in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
-    return playerService_->GetDuration(duration);
+    LISTENER(return playerService_->GetDuration(duration), "GetDuration", false, TIME_OUT_SECOND);
 }
 
 int32_t PlayerImpl::GetApiVersion(int32_t &apiVersion)
 {
+    ScopedTimer timer("GetApiVersion", OVERTIME_WARNING_MS);
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " GetApiVersion in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
-    return playerService_->GetApiVersion(apiVersion);
+    LISTENER(return playerService_->GetApiVersion(apiVersion), "GetApiVersion", false, TIME_OUT_SECOND);
 }
 
 #ifdef SUPPORT_VIDEO
 int32_t PlayerImpl::SetVideoSurface(sptr<Surface> surface)
 {
+    ScopedTimer timer("SetVideoSurface", OVERTIME_WARNING_MS);
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetVideoSurface in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     CHECK_AND_RETURN_RET_LOG(surface != nullptr, MSERR_INVALID_VAL, "surface is nullptr");
     surface_ = surface;
-    return playerService_->SetVideoSurface(surface);
+    LISTENER(return playerService_->SetVideoSurface(surface), "SetVideoSurface", false, TIME_OUT_SECOND);
 }
 #endif
 
@@ -430,13 +479,15 @@ bool PlayerImpl::IsLooping()
 
 int32_t PlayerImpl::SetLooping(bool loop)
 {
+    ScopedTimer timer("SetLooping", OVERTIME_WARNING_MS);
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetLooping in, loop %{public}d", FAKE_POINTER(this), loop);
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
-    return playerService_->SetLooping(loop);
+    LISTENER(return playerService_->SetLooping(loop), "SetLooping", false, TIME_OUT_SECOND);
 }
 
 int32_t PlayerImpl::SetPlayerCallback(const std::shared_ptr<PlayerCallback> &callback)
 {
+    ScopedTimer timer("SetPlayerCallback", OVERTIME_WARNING_MS);
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetPlayerCallback in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     CHECK_AND_RETURN_RET_LOG(callback != nullptr, MSERR_INVALID_VAL, "callback is nullptr");
@@ -446,18 +497,20 @@ int32_t PlayerImpl::SetPlayerCallback(const std::shared_ptr<PlayerCallback> &cal
     }
 
     std::shared_ptr<PlayerCallback> playerCb = std::make_shared<PlayerImplCallback>(callback, shared_from_this());
-    return playerService_->SetPlayerCallback(playerCb);
+    LISTENER(return playerService_->SetPlayerCallback(playerCb), "SetPlayerCallback", false, TIME_OUT_SECOND);
 }
 
 int32_t PlayerImpl::SetParameter(const Format &param)
 {
+    ScopedTimer timer("SetParameter", OVERTIME_WARNING_MS);
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetParameter in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
-    return playerService_->SetParameter(param);
+    LISTENER(return playerService_->SetParameter(param), "SetParameter", false, TIME_OUT_SECOND);
 }
 
 int32_t PlayerImpl::SelectTrack(int32_t index, PlayerSwitchMode mode)
 {
+    ScopedTimer timer("SelectTrack", OVERTIME_WARNING_MS);
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SelectTrack in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     if (index == prevTrackIndex_) {
@@ -465,21 +518,23 @@ int32_t PlayerImpl::SelectTrack(int32_t index, PlayerSwitchMode mode)
         return 0;
     }
     prevTrackIndex_ = index;
-    return playerService_->SelectTrack(index, mode);
+    LISTENER(return playerService_->SelectTrack(index, mode), "SelectTrack", false, TIME_OUT_SECOND);
 }
 
 int32_t PlayerImpl::DeselectTrack(int32_t index)
 {
+    ScopedTimer timer("DeselectTrack", OVERTIME_WARNING_MS);
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " DeselectTrack in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
-    return playerService_->DeselectTrack(index);
+    LISTENER(return playerService_->DeselectTrack(index), "DeselectTrack", false, TIME_OUT_SECOND);
 }
 
 int32_t PlayerImpl::GetCurrentTrack(int32_t trackType, int32_t &index)
 {
+    ScopedTimer timer("GetCurrentTrack", OVERTIME_WARNING_MS);
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " GetCurrentTrack in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
-    return playerService_->GetCurrentTrack(trackType, index);
+    LISTENER(return playerService_->GetCurrentTrack(trackType, index), "GetCurrentTrack", false, TIME_OUT_SECOND);
 }
 
 
@@ -487,10 +542,11 @@ int32_t PlayerImpl::SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionSer
 {
     MEDIA_LOGI("PlayerImpl DRM SetDecryptConfig");
 #ifdef SUPPORT_AVPLAYER_DRM
+    ScopedTimer timer("SetDecryptConfig", OVERTIME_WARNING_MS);
     CHECK_AND_RETURN_RET_LOG(keySessionProxy != nullptr, MSERR_INVALID_VAL, "keysessionproxy is nullptr");
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     MEDIA_LOGD("And it's count is: %{public}d in PlayerImpl", keySessionProxy->GetSptrRefCount());
-    return playerService_->SetDecryptConfig(keySessionProxy, svp);
+    LISTENER(return playerService_->SetDecryptConfig(keySessionProxy, svp), "SetDecryptConfig", false, TIME_OUT_SECOND);
 #else
     (void)keySessionProxy;
     (void)svp;
@@ -500,39 +556,45 @@ int32_t PlayerImpl::SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionSer
 
 int32_t PlayerImpl::SetDeviceChangeCbStatus(bool status)
 {
+    ScopedTimer timer("SetDeviceChangeCbStatus", OVERTIME_WARNING_MS);
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetDeviceChangeCbStatus in, status is %{public}d",
         FAKE_POINTER(this), status);
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
-    return playerService_->SetDeviceChangeCbStatus(status);
+    LISTENER(return playerService_->SetDeviceChangeCbStatus(status), "SetDeviceChangeCbStatus", false, TIME_OUT_SECOND);
 }
 
 int32_t PlayerImpl::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
 {
+    ScopedTimer timer("SetPlaybackStrategy", OVERTIME_WARNING_MS);
     MEDIA_LOGD("Set playback strategy");
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
-    return playerService_->SetPlaybackStrategy(playbackStrategy);
+    LISTENER(
+        return playerService_->SetPlaybackStrategy(playbackStrategy), "SetPlaybackStrategy", false, TIME_OUT_SECOND);
 }
 
 int32_t PlayerImpl::SetSuperResolution(bool enabled)
 {
+    ScopedTimer timer("SetSuperResolution", OVERTIME_WARNING_MS);
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetSuperResolution in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
-    return playerService_->SetSuperResolution(enabled);
+    LISTENER(return playerService_->SetSuperResolution(enabled), "SetSuperResolution", false, TIME_OUT_SECOND);
 }
 
 int32_t PlayerImpl::SetVideoWindowSize(int32_t width, int32_t height)
 {
+    ScopedTimer timer("SetVideoWindowSize", OVERTIME_WARNING_MS);
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR "SetVideoWindowSize  in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
-    return playerService_->SetVideoWindowSize(width, height);
+    LISTENER(return playerService_->SetVideoWindowSize(width, height), "SetVideoWindowSize", false, TIME_OUT_SECOND);
 }
 
 int32_t PlayerImpl::SetMaxAmplitudeCbStatus(bool status)
 {
+    ScopedTimer timer("SetMaxAmplitudeCbStatus", OVERTIME_WARNING_MS);
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetMaxAmplitudeCbStatus in, status is %{public}d",
         FAKE_POINTER(this), status);
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
-    return playerService_->SetMaxAmplitudeCbStatus(status);
+    LISTENER(return playerService_->SetMaxAmplitudeCbStatus(status), "SetMaxAmplitudeCbStatus", false, TIME_OUT_SECOND);
 }
 
 bool PlayerImpl::IsSeekContinuousSupported()
@@ -544,10 +606,12 @@ bool PlayerImpl::IsSeekContinuousSupported()
 
 int32_t PlayerImpl::SetSeiMessageCbStatus(bool status, const std::vector<int32_t> &payloadTypes)
 {
+    ScopedTimer timer("SetSeiMessageCbStatus", OVERTIME_WARNING_MS);
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetSeiMessageCbStatus in, status is %{public}d",
         FAKE_POINTER(this), status);
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
-    return playerService_->SetSeiMessageCbStatus(status, payloadTypes);
+    LISTENER(return playerService_->SetSeiMessageCbStatus(status, payloadTypes),
+        "SetSeiMessageCbStatus", false, TIME_OUT_SECOND);
 }
 
 PlayerImplCallback::PlayerImplCallback(const std::shared_ptr<PlayerCallback> playerCb,
