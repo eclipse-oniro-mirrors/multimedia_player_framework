@@ -155,6 +155,6 @@ ohos_unittest("recorder_server_unit_test") {
       defined(global_parts_info.multimedia_histreamer_ext)) {
     defines = [ "SUPPORT_CODEC_TYPE_HEVC" ]
   }
-  
+
   resource_config_file = "../resources/ohos_test.xml"
 }
