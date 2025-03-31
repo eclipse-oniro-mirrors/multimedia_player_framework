@@ -17,7 +17,7 @@
 #include "player_listener_stub.h"
 
 #ifdef SUPPORT_AVPLAYER_DRM
-#include "key_session_service_proxy.h"
+#include "media_key_session_service_proxy.h"
 #endif
 #include "media_log.h"
 #include "media_errors.h"

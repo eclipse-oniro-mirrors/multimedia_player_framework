@@ -16,7 +16,7 @@
 #include "media_errors.h"
 #include "hitranscode_unit_test.h"
 #ifdef SUPPORT_AVPLAYER_DRM
-#include "i_keysession_service.h"
+#include "imedia_key_session_service.h"
 #endif
 
 namespace OHOS {

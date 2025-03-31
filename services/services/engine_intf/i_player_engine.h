@@ -25,7 +25,7 @@
 #include "nocopyable.h"
 
 #ifdef SUPPORT_AVPLAYER_DRM
-#include "i_keysession_service.h"
+#include "imedia_key_session_service.h"
 #endif
 
 namespace OHOS {
