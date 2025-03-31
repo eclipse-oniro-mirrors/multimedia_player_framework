@@ -351,6 +351,17 @@ public:
      */
     virtual int32_t OpenToneHaptics(const std::shared_ptr<AbilityRuntime::Context> &context,
         const std::string &hapticsUri) = 0;
+
+    /**
+     * @brief Open the tone file.
+     *
+     * @param context Indicates the Context object on OHOS.
+     * @param uri Uri of tone to open.
+     * @return Returns the fd of tone.
+     * @since 17
+     */
+    virtual int32_t OpenToneUri(const std::shared_ptr<AbilityRuntime::Context> &context,
+        const std::string &uri, int32_t toneType) = 0;
 };
 
 class __attribute__((visibility("default"))) SystemSoundManagerFactory {
