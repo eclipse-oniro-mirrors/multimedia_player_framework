@@ -62,7 +62,7 @@ private:
 
     bool taskStarted_ {false};
 
-    bool isCheckLiveDelayTimeSet_ {false};
+    std::atomic<bool> isCheckLiveDelayTimeSet_ = false;
 
     OHOS::Media::Mutex loopMutex_ {};
 
