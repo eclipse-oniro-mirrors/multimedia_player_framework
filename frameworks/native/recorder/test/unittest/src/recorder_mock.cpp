@@ -468,6 +468,9 @@ void RecorderMock::HDICreateYUVBufferError()
             .usage = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_CPU_WRITE | BUFFER_USAGE_MEM_DMA,
             .timeout = INT_MAX
         };
+#ifndef SUPPORT_CODEC_TYPE_HEVC
+        yuvRequestConfig.format = PIXEL_FMT_YCBCR_420_SP;
+#endif
         OHOS::SurfaceError ret = producerSurface_->RequestBuffer(buffer, releaseFence, yuvRequestConfig);
         UNITTEST_CHECK_AND_BREAK_LOG(ret != OHOS::SURFACE_ERROR_NO_BUFFER, "surface loop full, no buffer now");
         UNITTEST_CHECK_AND_BREAK_LOG(ret == SURFACE_ERROR_OK && buffer != nullptr, "RequestBuffer failed");
