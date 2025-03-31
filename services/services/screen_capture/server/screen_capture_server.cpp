@@ -2096,9 +2096,9 @@ void ScreenCaptureServer::RefreshResConfig()
     }
     if (resConfig_) {
         resConfig_->SetLocaleInfo(locale.getLanguage(), locale.getScript(), locale.getCountry());
-    }
-    if (resourceManager_) {
-        resourceManager_->UpdateResConfig(*resConfig_);
+        if (resourceManager_) {
+            resourceManager_->UpdateResConfig(*resConfig_);
+        }
     }
 }
 
