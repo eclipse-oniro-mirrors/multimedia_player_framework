@@ -581,7 +581,7 @@ void ScreenCaptureServer::GetBoxSelectedFromJson(Json::Value &root,
     }
     const Json::Value keyJson = root[key];
     if (!keyJson.isNull() && keyJson.isBool()) {
-        value = keyJson.asBool();
+        checkBoxSelected = keyJson.asBool();
     }
 }
 
