@@ -193,7 +193,6 @@ static void OnUri(OH_AVRecorder *recorder, OH_MediaAsset *asset, void *userData)
 
 void NativeRecorderUnitTest::SetUpTestCase(void)
 {
-    std::system("setenforce 0");
     SetSelfTokenPremission();
 }
 
