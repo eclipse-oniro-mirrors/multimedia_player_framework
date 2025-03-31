@@ -1927,8 +1927,10 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
 
     if (GetSCServerDataType() == DataType::ORIGINAL_STREAM) {
         showSensitiveCheckBox_ = true;
+        checkBoxSelected_ = true;
     }
-    MEDIA_LOGI("StartScreenCaptureInner showSensitiveCheckBox: %{public}d", showSensitiveCheckBox_);
+    MEDIA_LOGI("StartScreenCaptureInner showSensitiveCheckBox: %{public}d, checkBoxSelected: %{public}d",
+        showSensitiveCheckBox_, checkBoxSelected_);
 
     if (!isScreenCaptureAuthority_ && IsUserPrivacyAuthorityNeeded()) {
         ret = RequestUserPrivacyAuthority();
@@ -2048,6 +2050,7 @@ int32_t ScreenCaptureServer::StartPrivacyWindow()
         want.SetParam("appLabel", callingLabel_);
         want.SetParam("sessionId", sessionId_);
         want.SetParam("showSensitiveCheckBox", showSensitiveCheckBox_);
+        want.SetParam("checkBoxSelected", checkBoxSelected_);
         SendConfigToUIParams(want);
         ret = AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want);
         MEDIA_LOGI("StartAbility end %{public}d, DeviceType : PC", ret);
@@ -2063,6 +2066,7 @@ int32_t ScreenCaptureServer::StartPrivacyWindow()
     want.SetElementName(GetScreenCaptureSystemParam()["const.multimedia.screencapture.dialogconnectionbundlename"],
                         GetScreenCaptureSystemParam()["const.multimedia.screencapture.dialogconnectionabilityname"]);
     want.SetParam("showSensitiveCheckBox", showSensitiveCheckBox_);
+    want.SetParam("checkBoxSelected", checkBoxSelected_);
     connection_ = sptr<UIExtensionAbilityConnection>(new (std::nothrow) UIExtensionAbilityConnection(comStr));
     ret = OHOS::AAFwk::ExtensionManagerClient::GetInstance().ConnectServiceExtensionAbility(want, connection_,
         nullptr, -1);
