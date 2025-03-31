@@ -64,8 +64,6 @@ private:
 
     std::atomic<bool> isCheckLiveDelayTimeSet_ = false;
 
-    OHOS::Media::Mutex loopMutex_ {};
-
     std::unique_ptr<OHOS::Media::Task> task_;
 
     IPlayerEngine* playerEngine_ {};
