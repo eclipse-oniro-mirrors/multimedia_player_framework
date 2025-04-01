@@ -4482,5 +4482,89 @@ HWTEST_F(PlayerUnitTest, Player_SeekContinuous_024, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->SeekContinuous(-1));
     EXPECT_EQ(MSERR_OK, player_->Stop());
 }
+
+/**
+ * @tc.name  : Test enable super resolution with SetPlaybackStrategy
+ * @tc.number: Player_SeekContinuous_001
+ * @tc.desc  : Test Player SuperResolution
+ */
+HWTEST_F(PlayerUnitTest, Player_SuperResolution_001, TestSize.Level0)
+{
+    AVPlayStrategy playbackStrategy = {
+        .enableSuperResolution = true
+    };
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    ASSERT_EQ(MSERR_OK, player_->SetPlaybackStrategy(playbackStrategy));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    sleep(PLAYING_TIME_2_SEC);
+    EXPECT_EQ(MSERR_OK, player_->Stop());
+}
+ 
+/**
+ * @tc.name  : Test SetSuperResolution(false) after enable super resolution
+ * @tc.number: Player_SeekContinuous_002
+ * @tc.desc  : Test Player SuperResolution
+ */
+HWTEST_F(PlayerUnitTest, Player_SuperResolution_002, TestSize.Level0)
+{
+    AVPlayStrategy playbackStrategy = {
+        .enableSuperResolution = true
+    };
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    ASSERT_EQ(MSERR_OK, player_->SetPlaybackStrategy(playbackStrategy));
+    ASSERT_EQ(MSERR_OK, player_->SetSuperResolution(false));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    sleep(PLAYING_TIME_2_SEC);
+    EXPECT_EQ(MSERR_OK, player_->Stop());
+}
+ 
+/**
+ * @tc.name  : Test SetVideoWindowSize after enable super resolution
+ * @tc.number: Player_SeekContinuous_003
+ * @tc.desc  : Test Player SuperResolution
+ */
+HWTEST_F(PlayerUnitTest, Player_SuperResolution_003, TestSize.Level0)
+{
+    AVPlayStrategy playbackStrategy = {
+        .enableSuperResolution = true
+    };
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    ASSERT_EQ(MSERR_OK, player_->SetPlaybackStrategy(playbackStrategy));
+    ASSERT_EQ(MSERR_OK, player_->SetVideoWindowSize(1080, 720));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    sleep(PLAYING_TIME_2_SEC);
+    EXPECT_EQ(MSERR_OK, player_->Stop());
+}
+ 
+/**
+ * @tc.name  : Test SetSuperResolution and SetVideoWindowSize without enable super resolution
+ * @tc.number: Player_SeekContinuous_004
+ * @tc.desc  : Test Player SuperResolution
+ */
+HWTEST_F(PlayerUnitTest, Player_SuperResolution_004, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    ASSERT_EQ(MSERR_SUPER_RESOLUTION_NOT_ENABLED, player_->SetSuperResolution(true));
+    ASSERT_EQ(MSERR_SUPER_RESOLUTION_NOT_ENABLED, player_->SetVideoWindowSize(1080, 720));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    sleep(PLAYING_TIME_2_SEC);
+    EXPECT_EQ(MSERR_OK, player_->Stop());
+}
 } // namespace Media
 } // namespace OHOS
