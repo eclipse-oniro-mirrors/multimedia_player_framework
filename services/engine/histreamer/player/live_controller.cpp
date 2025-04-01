@@ -49,7 +49,6 @@ void LiveController::Stop()
 
 void LiveController::StartWithPlayerEngineObs(const std::weak_ptr<IPlayerEngineObs>& obs)
 {
-    OHOS::Media::AutoLock lock(loopMutex_);
     obs_ = obs;
     if (!taskStarted_) {
         FALSE_RETURN(task_ != nullptr);
@@ -61,7 +60,6 @@ void LiveController::StartWithPlayerEngineObs(const std::weak_ptr<IPlayerEngineO
 
 void LiveController::SetPlayEngine(IPlayerEngine* engine, std::string playerId)
 {
-    OHOS::Media::AutoLock lock(loopMutex_);
     playerEngine_ = engine;
     task_ = std::make_unique<Task>("checkliveDelayThread", playerId, TaskType::GLOBAL, TaskPriority::NORMAL, false);
 }
@@ -70,10 +68,10 @@ void LiveController::StartCheckLiveDelayTime(int64_t updateIntervalMs)
 {
     MEDIA_LOG_I("LiveController StartCheckLiveDalyTime");
     checkLiveDelayTimeIntervalMs_ = updateIntervalMs;
-    if (isCheckLiveDelayTimeSet_) { // already set
+    if (isCheckLiveDelayTimeSet_.load()) { // already set
         return;
     }
-    isCheckLiveDelayTimeSet_ = true;
+    isCheckLiveDelayTimeSet_.store(true);
     Enqueue(std::make_shared<Event>(WHAT_LIVE_DELAY_TIME,
             SteadyClock::GetCurrentTimeMs() + checkLiveDelayTimeIntervalMs_, Any()));
 }
@@ -81,8 +79,7 @@ void LiveController::StartCheckLiveDelayTime(int64_t updateIntervalMs)
 void LiveController::StopCheckLiveDelayTime()
 {
     MEDIA_LOG_I("LiveController::StopCheckLiveDalyTime");
-    OHOS::Media::AutoLock lock(loopMutex_);
-    isCheckLiveDelayTimeSet_ = false;
+    isCheckLiveDelayTimeSet_.store(false);
 }
 
 void LiveController::Enqueue(const std::shared_ptr<LiveController::Event>& event)
@@ -111,15 +108,14 @@ void LiveController::LoopOnce(const std::shared_ptr<Event>& item)
 
 void LiveController::DoCheckLiveDalyTime()
 {
-    OHOS::Media::AutoLock lock(loopMutex_);
-    if (!isCheckLiveDelayTimeSet_) {
+    if (!isCheckLiveDelayTimeSet_.load()) {
         return;
     }
     auto obs = obs_.lock();
     if (obs) {
         obs->OnSystemOperation(OPERATION_TYPE_CHECK_LIVE_DELAY, OPERATION_REASON_CHECK_LIVE_DELAY_TIME);
     }
-    if (isCheckLiveDelayTimeSet_) {
+    if (isCheckLiveDelayTimeSet_.load()) {
         Enqueue(std::make_shared<Event>(WHAT_LIVE_DELAY_TIME,
             SteadyClock::GetCurrentTimeMs() + checkLiveDelayTimeIntervalMs_, Any()));
     }
