@@ -127,6 +127,8 @@ public:
     int32_t SetToneHapticsSettings(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
         const std::string &toneUri, ToneHapticsType toneHapticsType, const ToneHapticsSettings &settings);
     bool CheckVibrateSwitchStatus();
+    int32_t OpenToneUri(const std::shared_ptr<AbilityRuntime::Context> &context,
+        const std::string &uri, int32_t toneType) override;
 
 private:
     void InitDefaultUriMap();
@@ -204,6 +206,9 @@ private:
     static Uri AssembleUri(const std::string &key, std::string tableType = "");
     static std::shared_ptr<DataShare::DataShareHelper> CreateDataShareHelperProxy(std::string tableType = "");
     int32_t GetStringValue(const std::string &key, std::string &value, std::string tableType = "");
+    void SetExtRingtoneUri(const std::string &uri, const std::string &title,
+        int32_t ringType, int32_t toneType, int32_t changedRows);
+    int32_t SetExtRingToneUri(const std::string &uri, const std::string &title, int32_t toneType);
 
     std::string systemSoundPath_ = "";
     std::mutex uriMutex_;
