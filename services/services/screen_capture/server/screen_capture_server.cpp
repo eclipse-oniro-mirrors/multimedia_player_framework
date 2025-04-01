@@ -1739,6 +1739,7 @@ int32_t ScreenCaptureServer::StartNotification()
     request.SetCreatorUid(AV_SCREEN_CAPTURE_SESSION_UID);
     request.SetOwnerUid(AV_SCREEN_CAPTURE_SESSION_UID);
     request.SetUnremovable(true);
+    request.SetRemoveAllowed(false);
     request.SetInProgress(true);
 
     std::shared_ptr<PixelMap> pixelMapTotalSpr = GetPixelMap(ICON_PATH_NOTIFICATION);
