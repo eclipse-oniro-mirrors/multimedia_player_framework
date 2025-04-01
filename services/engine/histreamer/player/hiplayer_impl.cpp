@@ -630,6 +630,7 @@ int32_t HiPlayerImpl::PrepareAsync()
         MEDIA_LOG_E("PrepareAsync failed with error " PUBLIC_LOG_D32, ret);
         auto errCode = TransStatus(ret);
         CollectionErrorInfo(errCode, "pipeline PrepareAsync failed");
+        OnEvent({"engine", EventType::EVENT_ERROR, MSERR_UNKNOWN});
         return errCode;
     }
     SetFlvObs();
