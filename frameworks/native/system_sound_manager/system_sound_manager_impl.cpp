@@ -2560,7 +2560,7 @@ int32_t SystemSoundManagerImpl::SetExtRingToneUri(const std::string &uri, const 
 
     auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     CHECK_AND_RETURN_RET_LOG(samgr != nullptr, ERROR, "SystemAbilityManager init failed.");
-    sptr<IRemoteObject> object = samgr->GetSystemAbility(EXT_PROXY_SID);
+    sptr<IRemoteObject> object = samgr->CheckSystemAbility(EXT_PROXY_SID);
     CHECK_AND_RETURN_RET_LOG(object != nullptr, ERROR, "object is nullptr.");
 
     MessageParcel data;
@@ -2577,7 +2577,7 @@ int32_t SystemSoundManagerImpl::SetExtRingToneUri(const std::string &uri, const 
 
     ret = reply.ReadInt32();
     CHECK_AND_RETURN_RET_LOG(ret == SUCCESS, ERROR, "reply failed, error code:%{public}d", ret);
-
+    MEDIA_LOGI("SetExtRingToneUri Success.");
     return SUCCESS;
 }
 
