@@ -590,6 +590,14 @@ int32_t RecorderServiceStub::SetVideoEnableTemporalScale(MessageParcel &data, Me
     return MSERR_OK;
 }
 
+int32_t RecorderServiceStub::SetVideoEnableStableQualityMode(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t sourceId = data.ReadInt32();
+    bool enableStableQualityMode = data.ReadBool();
+    reply.WriteInt32(SetVideoEnableStableQualityMode(sourceId, enableStableQualityMode));
+    return MSERR_OK;
+}
+
 int32_t RecorderServiceStub::SetMetaConfigs(MessageParcel &data, MessageParcel &reply)
 {
     int32_t sourceId = data.ReadInt32();
