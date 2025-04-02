@@ -136,6 +136,8 @@ void RecorderServiceStub::FillRecFuncPart2()
         [this](MessageParcel &data, MessageParcel &reply) { return SetVideoIsHdr(data, reply); };
     recFuncs_[SET_VIDEO_ENABLE_TEMPORAL_SCALE] =
         [this](MessageParcel &data, MessageParcel &reply) { return SetVideoEnableTemporalScale(data, reply); };
+    recFuncs_[SET_VIDEO_ENABLE_STABLE_QUALITY_MODE] =
+        [this](MessageParcel &data, MessageParcel &reply) { return SetVideoEnableStableQualityMode(data, reply); };
     recFuncs_[GET_AUDIO_CAPTURER_CHANGE_INFO] =
         [this](MessageParcel &data, MessageParcel &reply) { return GetCurrentCapturerChangeInfo(data, reply); };
     recFuncs_[GET_AVAILABLE_ENCODER] =
