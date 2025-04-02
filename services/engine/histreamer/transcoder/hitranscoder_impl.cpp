@@ -422,7 +422,7 @@ int32_t HiTransCoderImpl::SetOutputFile(const int32_t fd)
 
 int32_t HiTransCoderImpl::SetOutputFormat(OutputFormatType format)
 {
-    MEDIA_LOG_I("HiTransCoderImpl::SetOutputFormat(), OutputFormatType is %{public}d", static_cast<int32_t>(format));
+    MEDIA_LOG_I("HiTransCoderImpl::SetOutputFormat()");
     outputFormatType_ = format;
     return static_cast<int32_t>(Status::OK);
 }
@@ -650,7 +650,6 @@ int32_t HiTransCoderImpl::Cancel()
     MEDIA_LOG_I("HiTransCoderImpl::Cancel enter");
     MediaTrace trace("HiTransCoderImpl::Cancel()");
     callbackLooper_->StopReportMediaProgress();
-    ignoreError_.store(true);
     Status ret = pipeline_->Stop();
     callbackLooper_->Stop();
     if (ret != Status::OK) {
@@ -744,8 +743,12 @@ void HiTransCoderImpl::OnEvent(const Event &event)
 {
     switch (event.type) {
         case EventType::EVENT_ERROR: {
-            FALSE_RETURN_MSG(!ignoreError_.load(), "igore this error event!");
             HandleErrorEvent(AnyCast<int32_t>(event.param));
+            pauseTask_ = std::make_shared<Task>("PauseTransCoder", "",
+                TaskType::SINGLETON, TaskPriority::NORMAL, false);
+            pauseTask_->SubmitJobOnce([this]() {
+                Pause();
+            });
             break;
         }
         case EventType::EVENT_COMPLETE: {
