@@ -157,6 +157,7 @@ private:
         int32_t bitRate = 0;
         bool isHdr = false;
         bool enableTemporalScale = false;
+        bool enableStableQualityMode = false;
         double captureRate = 0.0;
         int32_t audioSampleRate = 0;
         int32_t audioChannel = 0;
