@@ -2129,7 +2129,7 @@ bool AVPlayerNapi::JsHandleParameter(napi_env env, napi_value args, AVPlayerNapi
         STREAM_USAGE_MOVIE, STREAM_USAGE_GAME,
         STREAM_USAGE_AUDIOBOOK, STREAM_USAGE_NAVIGATION,
         STREAM_USAGE_DTMF, STREAM_USAGE_ENFORCED_TONE,
-        STREAM_USAGE_ULTRASONIC
+        STREAM_USAGE_ULTRASONIC, STREAM_USAGE_VIDEO_COMMUNICATION
     };
     std::vector<int32_t> systemUsages = { STREAM_USAGE_VOICE_CALL_ASSISTANT };
     usages.insert(usages.end(), systemUsages.begin(), systemUsages.end());
@@ -2267,7 +2267,7 @@ napi_value AVPlayerNapi::JsGetCurrentTime(napi_env env, napi_callback_info info)
     (void)napi_create_int32(env, currentTime, &value);
     std::string curState = jsPlayer->GetCurrentState();
     if (currentTime != -1) {
-        MEDIA_LOGI("0x%{public}06" PRIXPTR " JsGetCurrenTime Out, state %{public}s, time: %{public}d",
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " JsGetCurrenTime Out, state %{public}s, time %{public}d",
             FAKE_POINTER(jsPlayer), curState.c_str(), currentTime);
     }
     return value;
