@@ -275,7 +275,7 @@ int32_t ScreenCaptureServiceProxy::InitVideoCap(VideoCaptureInfo videoInfo)
         }
     }
     token = data.WriteInt32(videoInfo.videoFrameWidth) && data.WriteInt32(videoInfo.videoFrameHeight) &&
-            data.WirteBool() && data.WriteInt32(videoInfo.videoSource) &&
+            data.WriteBool(videoInfo.enableDeviceLevelCapture) && data.WriteInt32(videoInfo.videoSource) &&
             data.WriteInt32(videoInfo.screenCaptureFillMode);
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write videoinfo!");
 

@@ -703,7 +703,7 @@ int32_t AVScreenCaptureNapi::GetVideoInfo(std::unique_ptr<AVScreenCaptureAsyncCo
     CHECK_AND_RETURN_RET(ret == MSERR_OK, (asyncCtx->AVScreenCaptureSignError(MSERR_INVALID_VAL,
         "getEnableDeviceLevelCapture", "enableDeviceLevelCapture"), MSERR_INVALID_VAL));
     videoConfig.enableDeviceLevelCapture = enableDeviceLevelCapture;
-    MEDIA_LOGI("input displayId %{public}" PRIu64, videoConfig.displayId);
+    MEDIA_LOGI("enableDeviceLevelCapture %{public}d", videoConfig.enableDeviceLevelCapture);
     ret = AVScreenCaptureNapi::GetPropertyInt32(env, args, "videoBitrate", videoBitrate);
     CHECK_AND_RETURN_RET(ret == MSERR_OK,
         (asyncCtx->AVScreenCaptureSignError(ret, "getVideoBitrate", "videoBitrate"), ret));
