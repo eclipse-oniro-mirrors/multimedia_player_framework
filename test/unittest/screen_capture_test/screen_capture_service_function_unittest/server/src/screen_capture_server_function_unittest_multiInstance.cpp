@@ -838,5 +838,33 @@ HWTEST_F(ScreenCaptureServerFunctionTest, RemoveSaAppInfoMap_001, TestSize.Level
     screenCaptureServer_->RemoveSaAppInfoMap(saUid);
     ASSERT_EQ(ScreenCaptureServer::saUidAppUidMap_[saUid].second, 0);
 }
+
+/**
+* @tc.name: GetBoxSelectedFromJson_001
+* @tc.desc: content invalid
+* @tc.type: FUNC
+*/
+HWTEST_F(ScreenCaptureServerFunctionTest, GetBoxSelectedFromJson_001, TestSize.Level2)
+{
+    Json::Value root;
+    std::string content = "ghgh%^&%^$*^(}{^af&**)";
+    bool value;
+    screenCaptureServer_->GetBoxSelectedFromJson(root, content, "choice", value);
+    ASSERT_NE(screenCaptureServer_, nullptr);
+}
+
+/**
+* @tc.name: GetBoxSelectedFromJson_002
+* @tc.desc: content valid
+* @tc.type: FUNC
+*/
+HWTEST_F(ScreenCaptureServerFunctionTest, GetBoxSelectedFromJson_002, TestSize.Level2)
+{
+    Json::Value root;
+    std::string content = "{\"choice_\": \"true\"}";
+    bool value;
+    screenCaptureServer_->GetBoxSelectedFromJson(root, content, "choice", value);
+    ASSERT_NE(screenCaptureServer_, nullptr);
+}
 } // Media
 } // OHOS
