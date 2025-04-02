@@ -777,6 +777,7 @@ void AVTransCoderNapi::StateCallback(const std::string &state)
     auto napiCb = std::static_pointer_cast<AVTransCoderCallback>(transCoderCb_);
     std::string curState = napiCb->GetState();
     if (curState == AVTransCoderState::STATE_ERROR && state != AVTransCoderState::STATE_RELEASED) {
+        MEDIA_LOGI("current state is error, only can execute release");
         return;
     }
     napiCb->SendStateCallback(state, StateChangeReason::USER);
