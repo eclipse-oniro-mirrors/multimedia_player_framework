@@ -684,6 +684,7 @@ HWTEST_F(PlayerUnitTest, Player_Local_015, TestSize.Level2)
     }
 }
 
+#ifdef SUBSCRIBE_HISTREAMER_EXT
 /**
  * @tc.name  : Test Player Local
  * @tc.number: Player_Local_016
@@ -701,6 +702,7 @@ HWTEST_F(PlayerUnitTest, Player_Local_016, TestSize.Level2)
         PlayFunTest(LOCAL_PLAY);
     }
 }
+#endif
 
 /**
  * @tc.name  : Test Player Local
