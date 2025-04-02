@@ -54,7 +54,7 @@ public:
     int32_t Resume();
     int32_t Cancel();
     void OnEvent(const Event &event);
-    void OnCallback(std::shared_ptr<Pipeline::Filter> filter, const Pipeline::FilterCallBackCommand cmd,
+    Status OnCallback(std::shared_ptr<Pipeline::Filter> filter, const Pipeline::FilterCallBackCommand cmd,
         Pipeline::StreamType outType);
     int32_t GetCurrentTime(int32_t& currentPositionMs);
     int32_t GetDuration(int32_t& durationMs);
@@ -71,8 +71,10 @@ private:
     Status LinkVideoEncoderFilter(const std::shared_ptr<Pipeline::Filter>& preFilter, Pipeline::StreamType type);
     Status LinkVideoResizeFilter(const std::shared_ptr<Pipeline::Filter>& preFilter, Pipeline::StreamType type);
     Status LinkMuxerFilter(const std::shared_ptr<Pipeline::Filter>& preFilter, Pipeline::StreamType type);
+    Status SetSurfacePipeline(int32_t outputVideoWidth, int32_t outputVideoHeight);
     void CancelTransCoder();
     void HandleErrorEvent(int32_t errorCode);
+    void HandleCompleteEvent();
     Status ConfigureVideoAudioMetaData();
     Status ConfigureMetaData(const std::vector<std::shared_ptr<Meta>> &trackInfos);
     Status SetTrackMime(const std::vector<std::shared_ptr<Meta>> &trackInfos);
@@ -86,6 +88,7 @@ private:
         const std::vector<std::shared_ptr<Meta>> &trackInfos);
     int64_t GetCurrentMillisecond();
     void CollectionErrorInfo(int32_t errCode, const std::string& errMsg);
+    void UpdateAudioSampleFormat(const std::string& mime, const std::shared_ptr<Meta> &meta);
 
     int32_t appUid_{0};
     int32_t appPid_{0};
@@ -104,8 +107,6 @@ private:
     std::shared_ptr<Pipeline::EventReceiver> transCoderEventReceiver_;
     std::shared_ptr<Pipeline::FilterCallback> transCoderFilterCallback_;
 
-    std::shared_ptr<Task> cancelTask_{nullptr};
-
     std::shared_ptr<Meta> audioEncFormat_ = std::make_shared<Meta>();
     std::shared_ptr<Meta> videoEncFormat_ = std::make_shared<Meta>();
     std::shared_ptr<Meta> muxerFormat_ = std::make_shared<Meta>();
@@ -119,6 +120,8 @@ private:
     std::string inputFile_;
 
     std::string transCoderId_;
+    bool isAudioTrackLinked_ = false;
+    bool isVideoTrackLinked_ = false;
     int32_t inputVideoWidth_ = 0;
     int32_t inputVideoHeight_ = 0;
     bool isExistVideoTrack_ = false;
@@ -130,7 +133,7 @@ private:
     int64_t transcoderTotalDuration_ = 0;
     int32_t errCode_ = 0;
     std::string errMsg_ = "success";
-
+    std::mutex ignoreErrorMutex_;
     std::atomic<bool> ignoreError_ = false;
 };
 } // namespace MEDIA

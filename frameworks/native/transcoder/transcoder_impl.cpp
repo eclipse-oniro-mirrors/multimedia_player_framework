@@ -107,6 +107,7 @@ int32_t TransCoderImpl::SetOutputFormat(OutputFormatType format)
 {
     MEDIA_LOGI("TransCoderImpl:0x%{public}06" PRIXPTR " SetOutputFormat in, format is %{public}d",
         FAKE_POINTER(this), format);
+    CHECK_AND_RETURN_RET_LOG(format != FORMAT_DEFAULT, MSERR_INVALID_VAL, "format is invalid");
     CHECK_AND_RETURN_RET_LOG(transCoderService_ != nullptr, MSERR_INVALID_OPERATION,
         "transcoder service does not exist..");
     return transCoderService_->SetOutputFormat(format);

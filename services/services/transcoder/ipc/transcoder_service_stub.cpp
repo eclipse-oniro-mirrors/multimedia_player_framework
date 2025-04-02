@@ -49,6 +49,10 @@ TransCoderServiceStub::TransCoderServiceStub()
 TransCoderServiceStub::~TransCoderServiceStub()
 {
     (void)CancellationMonitor(pid_);
+    if (transCoderServer_ != nullptr) {
+        (void)transCoderServer_->Release();
+        transCoderServer_ = nullptr;
+    }
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
@@ -87,6 +91,10 @@ int32_t TransCoderServiceStub::DumpInfo(int32_t fd)
 
 int32_t TransCoderServiceStub::DestroyStub()
 {
+    if (transCoderServer_ != nullptr) {
+        (void)transCoderServer_->Release();
+        transCoderServer_ = nullptr;
+    }
     transCoderServer_ = nullptr;
     MediaServerManager::GetInstance().DestroyStubObject(MediaServerManager::TRANSCODER, AsObject());
     return MSERR_OK;
