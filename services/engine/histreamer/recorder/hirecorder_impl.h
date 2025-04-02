@@ -93,7 +93,15 @@ private:
     bool CheckParamType(int32_t sourceId, const RecorderParam &recParam);
     void OnStateChanged(StateId state);
     void ConfigureVideoEncoderFormat(const RecorderParam &recParam);
+    void ConfigureVidEncBitrateMode();
+    void ConfigureVidRectangle(const RecorderParam &recParam);
+    void ConfigureVidCaptureRate(const RecorderParam &recParam);
+    void ConfigureVidBitRate(const RecorderParam &recParam);
+    void ConfigureVidFrameRate(const RecorderParam &recParam);
+    void ConfigureVidEncFmt(const RecorderParam &recParam);
+    void ConfigureVidIsHdr(const RecorderParam &recParam);
     void ConfigureVideoEnableTemporalScale(const RecorderParam &recParam);
+    void ConfigureVidEnableStableQualityMode(const RecorderParam &recParam);
     bool CheckAudioSourceType(AudioSourceType sourceType);
     void ConfigureRotation(const RecorderParam &recParam);
     int32_t PrepareMeta();
