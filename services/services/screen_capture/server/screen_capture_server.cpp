@@ -2036,6 +2036,10 @@ int32_t ScreenCaptureServer::StartPrivacyWindow()
     comStr += std::to_string(appInfo_.appUid);
     comStr += "\",\"appLabel\":\"";
     comStr += callingLabel_;
+    comStr += "\",\"showSensitiveCheckBox\":\"";
+    comStr += showSensitiveCheckBox_;
+    comStr += "\",\"checkBoxSelected\":\"";
+    comStr += checkBoxSelected_;
     comStr += "\"}";
 
     AAFwk::Want want;
@@ -2065,8 +2069,6 @@ int32_t ScreenCaptureServer::StartPrivacyWindow()
 #else
     want.SetElementName(GetScreenCaptureSystemParam()["const.multimedia.screencapture.dialogconnectionbundlename"],
                         GetScreenCaptureSystemParam()["const.multimedia.screencapture.dialogconnectionabilityname"]);
-    want.SetParam("showSensitiveCheckBox", showSensitiveCheckBox_);
-    want.SetParam("checkBoxSelected", checkBoxSelected_);
     connection_ = sptr<UIExtensionAbilityConnection>(new (std::nothrow) UIExtensionAbilityConnection(comStr));
     ret = OHOS::AAFwk::ExtensionManagerClient::GetInstance().ConnectServiceExtensionAbility(want, connection_,
         nullptr, -1);
