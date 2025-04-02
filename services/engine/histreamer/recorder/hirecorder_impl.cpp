@@ -272,6 +272,7 @@ int32_t HiRecorderImpl::Configure(int32_t sourceId, const RecorderParam &recPara
         case RecorderPublicParamType::VID_ENC_FMT:
         case RecorderPublicParamType::VID_IS_HDR:
         case RecorderPublicParamType::VID_ENABLE_TEMPORAL_SCALE:
+        case RecorderPublicParamType::VID_ENABLE_STABLE_QUALITY_MODE:
             ConfigureVideo(recParam);
             break;
         case RecorderPublicParamType::OUT_PATH:
