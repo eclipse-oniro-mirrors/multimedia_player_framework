@@ -405,10 +405,9 @@ int32_t HiPlayerImpl::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
     mutedMediaType_ = strategy.mutedMediaType;
     audioLanguage_ = strategy.preferredAudioLanguage;
     subtitleLanguage_ = strategy.preferredSubtitleLanguage;
-    if (strategy.enableSuperResolution) {
-        videoPostProcessorType_ = VideoPostProcessorType::SUPER_RESOLUTION;
-        isPostProcessorOn_ = strategy.enableSuperResolution;
-    }
+    videoPostProcessorType_ = strategy.enableSuperResolution ? VideoPostProcessorType::SUPER_RESOLUTION
+                                : VideoPostProcessorType::NONE;
+    isPostProcessorOn_ = strategy.enableSuperResolution;
 
     mimeType_ = mediaSource->GetMimeType();
     bufferDurationForPlaying_ = strategy.preferredBufferDurationForPlaying;
@@ -3272,10 +3271,9 @@ int32_t HiPlayerImpl::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
     bufferDurationForPlaying_ = playbackStrategy.preferredBufferDurationForPlaying;
     maxLivingDelayTime_ = playbackStrategy.thresholdForAutoQuickPlay;
     isPlaybackStrategySet_ = true;
-    if (playbackStrategy.enableSuperResolution) {
-        videoPostProcessorType_ = VideoPostProcessorType::SUPER_RESOLUTION;
-        isPostProcessorOn_ = playbackStrategy.enableSuperResolution;
-    }
+    videoPostProcessorType_ = playbackStrategy.enableSuperResolution ? VideoPostProcessorType::SUPER_RESOLUTION
+                                : VideoPostProcessorType::NONE;
+    isPostProcessorOn_ = playbackStrategy.enableSuperResolution;
     return MSERR_OK;
 }
 
