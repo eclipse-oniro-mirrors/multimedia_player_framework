@@ -1928,7 +1928,7 @@ int32_t PlayerServer::SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMut
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     auto mediaMuteTask = std::make_shared<TaskHandler<int32_t>>([this, mediaType, isMuted]() {
         MediaTrace trace("PlayerServer::SetMediaMuted");
-        CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, static_cast<int32_t>(MSERR_NO_MEMORY),
+        CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, taskMgr_.MarkTaskDone("SetMediaMuted done"),
             "SetMediaMuted failed, playerEngine is nullptr");
         auto res = playerEngine_->SetMediaMuted(mediaType, isMuted);
         MEDIA_LOGI("SetMediaMuted %{public}u %{public}u", mediaType, isMuted);
