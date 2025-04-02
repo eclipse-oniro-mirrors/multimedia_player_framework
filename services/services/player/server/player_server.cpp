@@ -1919,14 +1919,23 @@ bool PlayerServer::IsBootCompleted()
 
 int32_t PlayerServer::SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted)
 {
-    MediaTrace::TraceBegin("PlayerServer::SetMediaMuted", FAKE_POINTER(this));
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET(lastOpStatus_ == PLAYER_INITIALIZED || lastOpStatus_ == PLAYER_PREPARED ||
                              lastOpStatus_ == PLAYER_STARTED || lastOpStatus_ == PLAYER_PLAYBACK_COMPLETE ||
                              lastOpStatus_ == PLAYER_PAUSED || lastOpStatus_ == PLAYER_STOPPED,
                          MSERR_INVALID_STATE);
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
-    return playerEngine_->SetMediaMuted(mediaType, isMuted);
+    auto mediaMuteTask = std::make_shared<TaskHandler<int32_t>>([this, mediaType, isMuted]() {
+        MediaTrace trace("PlayerServer::SetMediaMuted");
+        CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, taskMgr_.MarkTaskDone("SetMediaMuted done"),
+            "SetMediaMuted failed, playerEngine is nullptr");
+        auto res = playerEngine_->SetMediaMuted(mediaType, isMuted);
+        MEDIA_LOGI("SetMediaMuted %{public}u %{public}u", mediaType, isMuted);
+        taskMgr_.MarkTaskDone("SetMediaMuted done");
+        return res;
+    });
+    taskMgr_.LaunchTask(mediaMuteTask, PlayerServerTaskType::LIGHT_TASK, "SetMediaMuted");
+    return MSERR_OK;
 }
 
 int32_t PlayerServer::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
