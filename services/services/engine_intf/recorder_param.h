@@ -43,6 +43,7 @@ enum RecorderPublicParamType : uint32_t {
     VID_IS_HDR,
     VID_CAPTURERATE,
     VID_ENABLE_TEMPORAL_SCALE,
+    VID_ENABLE_STABLE_QUALITY_MODE,
     VID_PUBLIC_PARAM_END,
     VID_ORIENTATION_HINT,
     // audio begin
@@ -126,6 +127,12 @@ struct VidEnableTemporalScale : public RecorderParam {
     explicit VidEnableTemporalScale(bool r)
         : RecorderParam(RecorderPublicParamType::VID_ENABLE_TEMPORAL_SCALE), enableTemporalScale(r) {}
     bool enableTemporalScale;
+};
+
+struct VidEnableStableQualityMode : public RecorderParam {
+    explicit VidEnableStableQualityMode(bool r)
+        : RecorderParam(RecorderPublicParamType::VID_ENABLE_STABLE_QUALITY_MODE), enableStableQualityMode(r) {}
+    bool enableStableQualityMode;
 };
 
 struct CaptureRate : public RecorderParam {
