@@ -151,6 +151,7 @@ private:
     bool videoSourceIsYuv_ = false;
     bool videoSourceIsRGBA_ = false;
     bool isWatermarkSupported_ = false;
+    bool enableStableQualityMode_ = false;
 
     Mutex stateMutex_ {};
     ConditionVariable cond_ {};
