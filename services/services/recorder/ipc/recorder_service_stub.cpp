@@ -284,6 +284,12 @@ int32_t RecorderServiceStub::SetVideoEnableTemporalScale(int32_t sourceId, bool 
     return recorderServer_->SetVideoEnableTemporalScale(sourceId, enableTemporalScale);
 }
 
+int32_t RecorderServiceStub::SetVideoEnableStableQualityMode(int32_t sourceId, bool enableStableQualityMode)
+{
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    return recorderServer_->SetVideoEnableStableQualityMode(sourceId, enableStableQualityMode);
+}
+
 int32_t RecorderServiceStub::SetMetaConfigs(int32_t sourceId)
 {
     CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
