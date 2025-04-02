@@ -71,6 +71,7 @@ public:
 
 private:
     int32_t Init();
+    void ChangeStatus(RecStatus status);
     const std::string &GetStatusDescription(OHOS::Media::TransCoderServer::RecStatus status);
 
     std::unique_ptr<ITransCoderEngine> transCoderEngine_ = nullptr;

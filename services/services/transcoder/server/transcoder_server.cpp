@@ -107,6 +107,8 @@ void TransCoderServer::OnError(TransCoderErrorType errorType, int32_t errorCode)
     std::lock_guard<std::mutex> lock(cbMutex_);
     lastErrMsg_ = MSErrorToExtErrorString(static_cast<MediaServiceErrCode>(errorCode));
     CHECK_AND_RETURN(transCoderCb_ != nullptr);
+    status_ = REC_ERROR;
+    MEDIA_LOGI("receive an error event, the status changes to error");
     transCoderCb_->OnError(errorCode, lastErrMsg_);
 }
 
@@ -225,7 +227,7 @@ int32_t TransCoderServer::SetOutputFormat(OutputFormatType format)
 
     auto result = task->GetResult();
     ret = result.Value();
-    status_ = (ret == MSERR_OK ? REC_CONFIGURED : REC_INITIALIZED);
+    ChangeStatus((ret == MSERR_OK ? REC_CONFIGURED : REC_INITIALIZED));
     return ret;
 }
 
@@ -306,7 +308,7 @@ int32_t TransCoderServer::Prepare()
 
     auto result = task->GetResult();
     ret = result.Value();
-    status_ = (ret == MSERR_OK ? REC_PREPARED : REC_ERROR);
+    ChangeStatus((ret == MSERR_OK ? REC_PREPARED : REC_ERROR));
     return ret;
 }
 
@@ -326,7 +328,7 @@ int32_t TransCoderServer::Start()
 
     auto result = task->GetResult();
     ret = result.Value();
-    status_ = (ret == MSERR_OK ? REC_TRANSCODERING : REC_ERROR);
+    ChangeStatus((ret == MSERR_OK ? REC_TRANSCODERING : REC_ERROR));
     return ret;
 }
 
@@ -346,7 +348,7 @@ int32_t TransCoderServer::Pause()
 
     auto result = task->GetResult();
     ret = result.Value();
-    status_ = (ret == MSERR_OK ? REC_PAUSED : REC_ERROR);
+    ChangeStatus((ret == MSERR_OK ? REC_PAUSED : REC_ERROR));
     return ret;
 }
 
@@ -366,7 +368,7 @@ int32_t TransCoderServer::Resume()
 
     auto result = task->GetResult();
     ret = result.Value();
-    status_ = (ret == MSERR_OK ? REC_TRANSCODERING : REC_ERROR);
+    ChangeStatus((ret == MSERR_OK ? REC_TRANSCODERING : REC_ERROR));
     return ret;
 }
 
@@ -375,6 +377,7 @@ int32_t TransCoderServer::Cancel()
     std::lock_guard<std::mutex> lock(mutex_);
     MediaTrace trace("TransCoderServer::Cancel");
     CHECK_AND_RETURN_RET_LOG(transCoderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    CHECK_AND_RETURN_RET_LOG(status_ != REC_ERROR, MSERR_INVALID_OPERATION, "current status is error");
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return transCoderEngine_->Cancel();
     });
@@ -383,7 +386,7 @@ int32_t TransCoderServer::Cancel()
 
     auto result = task->GetResult();
     ret = result.Value();
-    status_ = (ret == MSERR_OK ? REC_INITIALIZED : REC_ERROR);
+    ChangeStatus((ret == MSERR_OK ? REC_INITIALIZED : REC_ERROR));
     return ret;
 }
 
@@ -409,6 +412,17 @@ void TransCoderServer::ReleaseInner()
     });
     (void)taskQue_.EnqueueTask(task);
     (void)task->GetResult();
+}
+
+void TransCoderServer::ChangeStatus(RecStatus status)
+{
+    CHECK_AND_RETURN_LOG(status_ != REC_ERROR, "status is error");
+    {
+        std::lock_guard<std::mutex> cbLock(cbMutex_);
+        status_ = status;
+        MEDIA_LOGI("current status is %{public}s", GetStatusDescription(status_).c_str());
+    }
+    return;
 }
 
 int32_t TransCoderServer::DumpInfo(int32_t fd)
