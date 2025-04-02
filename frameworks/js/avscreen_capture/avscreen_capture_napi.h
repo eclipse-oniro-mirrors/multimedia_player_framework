@@ -121,6 +121,7 @@ private:
     static std::shared_ptr<TaskHandler<RetInfo>> GetSkipPrivacyModeTask(
         const std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, const std::vector<uint64_t> windowIDsVec);
     static int32_t GetPropertyInt32(napi_env env, napi_value configObj, const std::string &type, int32_t &result);
+    static int32_t GetPropertyBool(napi_env env, napi_value configObj, const std::string &type, bool &result);
     static int32_t CheckVideoCodecFormat(const int32_t &preset);
     static int32_t CheckVideoFrameFormat(const int32_t &frameWidth, const int32_t &frameHeight,
         int32_t &videoFrameWidth, int32_t &videoFrameHeight);

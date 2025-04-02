@@ -688,6 +688,7 @@ int32_t AVScreenCaptureNapi::GetVideoInfo(std::unique_ptr<AVScreenCaptureAsyncCo
     int32_t frameHeight = AVSCREENCAPTURE_DEFAULT_FRAME_HEIGHT;
     int32_t displayId = AVSCREENCAPTURE_DEFAULT_DISPLAY_ID;
     int32_t fillMode = AVScreenCaptureFillMode::PRESERVE_ASPECT_RATIO;
+    bool enableDeviceLevelCapture = false;
     VideoEncInfo &encoderConfig = asyncCtx->config_.videoInfo.videoEncInfo;
     VideoCaptureInfo &videoConfig = asyncCtx->config_.videoInfo.videoCapInfo;
     int32_t ret = AVScreenCaptureNapi::GetPropertyInt32(env, args, "displayId", displayId);
@@ -697,6 +698,11 @@ int32_t AVScreenCaptureNapi::GetVideoInfo(std::unique_ptr<AVScreenCaptureAsyncCo
     if (videoConfig.displayId > 0) {
         asyncCtx->config_.captureMode = CaptureMode::CAPTURE_SPECIFIED_SCREEN;
     }
+    MEDIA_LOGI("input displayId %{public}" PRIu64, videoConfig.displayId);
+    ret = AVScreenCaptureNapi::GetPropertyBool(env, args, "enableDeviceLevelCapture", enableDeviceLevelCapture);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, (asyncCtx->AVScreenCaptureSignError(MSERR_INVALID_VAL,
+        "getEnableDeviceLevelCapture", "enableDeviceLevelCapture"), MSERR_INVALID_VAL));
+    videoConfig.enableDeviceLevelCapture = enableDeviceLevelCapture;
     MEDIA_LOGI("input displayId %{public}" PRIu64, videoConfig.displayId);
     ret = AVScreenCaptureNapi::GetPropertyInt32(env, args, "videoBitrate", videoBitrate);
     CHECK_AND_RETURN_RET(ret == MSERR_OK,
@@ -962,6 +968,37 @@ int32_t AVScreenCaptureNapi::GetPropertyInt32(napi_env env, napi_value configObj
     }
 
     if (napi_get_value_int32(env, item, &result) != napi_ok) {
+        std::string string = CommonNapi::GetStringArgument(env, item);
+        if (string == "") {
+            // This attribute has not been assigned
+            return MSERR_OK;
+        } else {
+            MEDIA_LOGE("get %{public}s property value fail", type.c_str());
+            return MSERR_INVALID_VAL;
+        }
+    }
+
+    MEDIA_LOGI("get %{public}s : %{public}d!", type.c_str(), result);
+    return MSERR_OK;
+}
+
+int32_t AVScreenCaptureNapi::GetPropertyBool(napi_env env, napi_value configObj, const std::string &type,
+    bool &result)
+{
+    napi_value item = nullptr;
+    bool exist = false;
+    napi_status status = napi_has_named_property(env, configObj, type.c_str(), &exist);
+    if (status != napi_ok || !exist) {
+        MEDIA_LOGI("can not find %{public}s property", type.c_str());
+        return MSERR_OK;
+    }
+
+    if (napi_get_named_property(env, configObj, type.c_str(), &item) != napi_ok) {
+        MEDIA_LOGI("get %{public}s property fail", type.c_str());
+        return MSERR_UNKNOWN;
+    }
+
+    if (napi_get_value_bool(env, item, &result) != napi_ok) {
         std::string string = CommonNapi::GetStringArgument(env, item);
         if (string == "") {
             // This attribute has not been assigned
