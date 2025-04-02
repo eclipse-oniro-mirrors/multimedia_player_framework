@@ -188,6 +188,25 @@ int32_t RecorderServiceProxy::SetVideoEnableTemporalScale(int32_t sourceId, bool
     return reply.ReadInt32();
 }
 
+int32_t RecorderServiceProxy::SetVideoEnableStableQualityMode(int32_t sourceId, bool enableStableQualityMode)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+ 
+    bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+ 
+    token = data.WriteInt32(sourceId) && data.WriteBool(enableStableQualityMode);
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "write data failed");
+ 
+    int error = Remote()->SendRequest(SET_VIDEO_ENABLE_STABLE_QUALITY_MODE, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetVideoEnableStableQualityMode failed, error: %{public}d", error);
+ 
+    return reply.ReadInt32();
+}
+
 int32_t RecorderServiceProxy::SetMetaConfigs(int32_t sourceId)
 {
     MessageParcel data;
