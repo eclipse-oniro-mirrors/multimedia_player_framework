@@ -1779,6 +1779,10 @@ int32_t AVRecorderNapi::GetVideoProfile(std::unique_ptr<AVRecorderAsyncContext> 
         MEDIA_LOGI("avRecorderProfile enableTemporalScale is not set.");
         profile.enableTemporalScale = false;
     }
+    if (!CommonNapi::GetPropertyBool(env, item, "enableStableQualityMode", profile.enableStableQualityMode)) {
+        MEDIA_LOGI("avRecorderProfile enableStableQualityMode is not set.");
+        profile.enableStableQualityMode = false;
+    }
 
     MediaProfileLog(true, profile);
     return ret;
@@ -2100,6 +2104,10 @@ RetInfo AVRecorderNapi::SetProfile(std::shared_ptr<AVRecorderConfig> config)
 
         ret = recorder_->SetVideoEnableTemporalScale(videoSourceID_, profile.enableTemporalScale);
         CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetVideoEnableTemporalScale", "enableTemporalScale"));
+        
+        ret = recorder_->SetVideoEnableStableQualityMode(videoSourceID_, profile.enableStableQualityMode);
+        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetVideoEnableStableQualityMode",
+            "enableStableQualityMode"));
     }
 
     if (config->metaSourceTypeVec.size() != 0 &&
