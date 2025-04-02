@@ -416,7 +416,7 @@ int32_t HiTransCoderImpl::SetOutputFile(const int32_t fd)
 
 int32_t HiTransCoderImpl::SetOutputFormat(OutputFormatType format)
 {
-    MEDIA_LOG_I("HiTransCoderImpl::SetOutputFormat()");
+    MEDIA_LOG_I("HiTransCoderImpl::SetOutputFormat(), OutputFormatType is %{public}d", static_cast<int32_t>(format));
     outputFormatType_ = format;
     return static_cast<int32_t>(Status::OK);
 }
