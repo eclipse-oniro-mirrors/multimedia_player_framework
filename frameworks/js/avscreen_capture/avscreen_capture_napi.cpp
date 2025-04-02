@@ -761,6 +761,22 @@ int32_t AVScreenCaptureNapi::GetVideoCaptureInfo(std::unique_ptr<AVScreenCapture
     return MSERR_OK;
 }
 
+int32_t AVScreenCaptureNapi::GetRecorderInfo(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx,
+    napi_env env, napi_value args)
+{
+    RecorderInfo &recorderConfig = asyncCtx->config_.recorderInfo;
+    recorderConfig.fileFormat = AVSCREENCAPTURE_DEFAULT_FILE_FORMAT;
+    int32_t fd = -1;
+    (void)CommonNapi::GetPropertyInt32(env, args, "fd", fd);
+    CHECK_AND_RETURN_RET(fd > 0, // 0 to 2 for system std log
+        (asyncCtx->AVScreenCaptureSignError(MSERR_INVALID_VAL, "GetRecorderInfo", "url"), MSERR_INVALID_VAL));
+    recorderConfig.url = "fd://" + std::to_string(fd);
+    CHECK_AND_RETURN_RET(recorderConfig.url != "",
+        (asyncCtx->AVScreenCaptureSignError(MSERR_INVALID_VAL, "GetRecorderInfo", "url"), MSERR_INVALID_VAL));
+    MEDIA_LOGI("input url %{public}s", recorderConfig.url.c_str());
+    return MSERR_OK;
+}
+
 int32_t AVScreenCaptureNapi::CheckAudioSampleRate(const int32_t &audioSampleRate)
 {
     if (audioSampleRate == 48000 || audioSampleRate == 16000) { // 16000 48000 AudioSampleRate options
