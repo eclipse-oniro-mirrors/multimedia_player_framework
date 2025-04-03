@@ -2453,16 +2453,17 @@ int32_t ScreenCaptureServer::StartMicAudioCapture()
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StartMicAudioCapture start, dataType:%{public}d, "
         "micCapInfo.state:%{public}d.",
         FAKE_POINTER(this), captureConfig_.dataType, captureConfig_.audioInfo.micCapInfo.state);
-
+    std::shared_ptr<AudioCapturerWrapper> micCapture;
     if (captureConfig_.audioInfo.micCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_VALID) {
-        MediaTrace trace("ScreenCaptureServer::StartMicAudioCapture");
+        MediaTrace trace("ScreenCaptureServer::StartMicAudioCaptureInner");
         if (audioSource_) {
-            micAudioCapture_->SetIsInVoIPCall(audioSource_->GetIsInVoIPCall());
+            micCapture->SetIsInVoIPCall(audioSource_->GetIsInVoIPCall());
         }
         int32_t ret = micAudioCapture_->Start(appInfo_);
         if (ret != MSERR_OK) {
-            MEDIA_LOGE("StartMicAudioCapture failed");
-            NotifyStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE);
+            MEDIA_LOGE("StartMicAudioCapture micCapture failed");
+            isMicrophoneOn_ = false;
+            screenCaptureCb_->OnStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE);
             return ret;
         }
     }
