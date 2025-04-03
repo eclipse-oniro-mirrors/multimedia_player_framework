@@ -1332,7 +1332,7 @@ HWTEST_F(HiplayerImplUnitTest, TestHandleMemoryUsageEvent_006, TestSize.Level0)
     event.param = std::unordered_map<uint32_t, uint32_t>{{1, 1024}, {2, 1024}};
     hiplayer_->HandleMemoryUsageEvent(event);
     EXPECT_EQ(hiplayer_->memoryUsageInfo_["DEMUXER_PLUGIN"], 2); // parm
-    EXPECT_EQ(hiplayer_->memoryUsageInfo_[TOTAL_MEMORY_SIZE], 2); // parm 
+    EXPECT_EQ(hiplayer_->memoryUsageInfo_[TOTAL_MEMORY_SIZE], 2); // parm
 }
 } // namespace Media
 } // namespace OHOS
