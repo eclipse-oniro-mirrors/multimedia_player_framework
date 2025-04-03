@@ -22,6 +22,7 @@
 #include "ringtone_proxy_uri.h"
 #include "config_policy_utils.h"
 
+#include "parameter.h"
 #include "system_sound_log.h"
 #include "system_sound_vibrator.h"
 #include "media_errors.h"
@@ -45,6 +46,9 @@ const std::string RINGTONE_PATH = "/media/audio/";
 const std::string STANDARD_HAPTICS_PATH = "/media/haptics/standard/synchronized/";
 const std::string NON_SYNC_HAPTICS_PATH = "resource/media/haptics/standard/non-synchronized/";
 const std::string FDHEAD = "fd://";
+const char RINGTONE_PARAMETER_SCANNER_FIRST_KEY[] = "ringtone.scanner.first";
+const char RINGTONE_PARAMETER_SCANNER_FIRST_TRUE[] = "true";
+const int32_t RINGTONEPARA_SIZE = 64;
 
 RingtonePlayerImpl::RingtonePlayerImpl(const shared_ptr<Context> &context,
     SystemSoundManagerImpl &sysSoundMgr, RingtoneType type)
@@ -180,10 +184,15 @@ bool RingtonePlayerImpl::InitDatabaseTool()
         return true;
     }
 
+    char paramValue[RINGTONEPARA_SIZE] = {0};
+    GetParameter(RINGTONE_PARAMETER_SCANNER_FIRST_KEY, "", paramValue, RINGTONEPARA_SIZE);
+    std::string parameter(paramValue);
+    MEDIA_LOGI("GetParameter end paramValue:%{public}s .", parameter.c_str());
     Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
     int32_t result =  Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
         "ohos.permission.ACCESS_CUSTOM_RINGTONE");
-    databaseTool_.isProxy = (result == Security::AccessToken::PermissionState::PERMISSION_GRANTED) ? true : false;
+    databaseTool_.isProxy = (result == Security::AccessToken::PermissionState::PERMISSION_GRANTED &&
+        strcmp(paramValue, RINGTONE_PARAMETER_SCANNER_FIRST_TRUE) == 0) ? true : false;
     databaseTool_.dataShareHelper = databaseTool_.isProxy ?
         SystemSoundManagerUtils::CreateDataShareHelperUri(STORAGE_MANAGER_MANAGER_ID) :
         SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);

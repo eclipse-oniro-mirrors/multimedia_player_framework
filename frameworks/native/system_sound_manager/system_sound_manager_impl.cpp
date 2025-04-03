@@ -90,6 +90,10 @@ static const char PARAM_HAPTICS_SETTING_SHOT_CARD_TWO[] = "const.multimedia.hapt
 static const char PARAM_HAPTICS_SETTING_NOTIFICATIONTONE[] = "const.multimedia.notification_tone_haptics";
 static const int32_t SYSPARA_SIZE = 128;
 
+const char RINGTONE_PARAMETER_SCANNER_FIRST_KEY[] = "ringtone.scanner.first";
+const char RINGTONE_PARAMETER_SCANNER_FIRST_TRUE[] = "true";
+const int32_t RINGTONEPARA_SIZE = 64;
+
 std::shared_ptr<SystemSoundManager> SystemSoundManagerFactory::systemSoundManager_ = nullptr;
 std::mutex SystemSoundManagerFactory::systemSoundManagerMutex_;
 std::unordered_map<RingtoneType, RingToneType> ringtoneTypeMap_;
@@ -682,10 +686,15 @@ std::string SystemSoundManagerImpl::GetRingtoneUri(const shared_ptr<Context> &co
     CHECK_AND_RETURN_RET_LOG(IsRingtoneTypeValid(ringtoneType), "", "Invalid ringtone type");
     std::string ringtoneUri = "";
 
+    char paramValue[RINGTONEPARA_SIZE] = {0};
+    GetParameter(RINGTONE_PARAMETER_SCANNER_FIRST_KEY, "", paramValue, RINGTONEPARA_SIZE);
+    std::string parameter(paramValue);
+    MEDIA_LOGI("GetParameter end paramValue:%{public}s .", parameter.c_str());
     Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
     int32_t result =  Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
         "ohos.permission.ACCESS_CUSTOM_RINGTONE");
-    bool isProxy = (result == Security::AccessToken::PermissionState::PERMISSION_GRANTED) ? true : false;
+    bool isProxy = (result == Security::AccessToken::PermissionState::PERMISSION_GRANTED &&
+        strcmp(paramValue, RINGTONE_PARAMETER_SCANNER_FIRST_TRUE) == 0) ? true : false;
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = isProxy ?
         SystemSoundManagerUtils::CreateDataShareHelperUri(STORAGE_MANAGER_MANAGER_ID) :
         SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
@@ -1124,10 +1133,15 @@ std::string SystemSoundManagerImpl::GetSystemToneUri(const std::shared_ptr<Abili
     CHECK_AND_RETURN_RET_LOG(IsSystemToneTypeValid(systemToneType), "", "Invalid system tone type");
     std::string systemToneUri = "";
 
+    char paramValue[RINGTONEPARA_SIZE] = {0};
+    GetParameter(RINGTONE_PARAMETER_SCANNER_FIRST_KEY, "", paramValue, RINGTONEPARA_SIZE);
+    std::string parameter(paramValue);
+    MEDIA_LOGI("GetParameter end paramValue:%{public}s .", parameter.c_str());
     Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
     int32_t result =  Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
         "ohos.permission.ACCESS_CUSTOM_RINGTONE");
-    bool isProxy = (result == Security::AccessToken::PermissionState::PERMISSION_GRANTED) ? true : false;
+    bool isProxy = (result == Security::AccessToken::PermissionState::PERMISSION_GRANTED &&
+        strcmp(paramValue, RINGTONE_PARAMETER_SCANNER_FIRST_TRUE) == 0) ? true : false;
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = isProxy ?
         SystemSoundManagerUtils::CreateDataShareHelperUri(STORAGE_MANAGER_MANAGER_ID) :
         SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
