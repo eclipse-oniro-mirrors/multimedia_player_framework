@@ -313,7 +313,7 @@ VEFError GraphicsRenderEngineImpl::Render(uint64_t index, const std::shared_ptr<
 RenderTexturePtr GraphicsRenderEngineImpl::RenderFrame(const std::shared_ptr<GraphicsRenderInfo>& graphicsRenderInfo)
 {
     surfaceTexture_->AwaitNativeImage();
-    GLUtils.checkError(_FILE_NAME_, _LINE_);
+    GLUtils::CheckError(__FILE_NAME__, __LINE__);
     if (auto ret = OH_NativeImage_UpdateSurfaceImage(surfaceTexture_->nativeImage_.get()); ret != 0) {
         MEDIA_LOGE("RenderFrame OH_NativeImage_UpdateSurfaceImage failed with error:%{public}d.", ret);
     }
