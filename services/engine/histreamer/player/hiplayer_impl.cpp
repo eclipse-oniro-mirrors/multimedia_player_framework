@@ -63,6 +63,14 @@ static const std::unordered_set<OHOS::AudioStandard::StreamUsage> FOCUS_EVENT_US
     OHOS::AudioStandard::StreamUsage::STREAM_USAGE_GAME,
     OHOS::AudioStandard::StreamUsage::STREAM_USAGE_AUDIOBOOK,
 };
+const std::string TOTAL_MEMORY_SIZE = "TOTAL_MEMORY_SIZE";
+const std::string DEMUXER_PLUGIN = "DEMUXER_PLUGIN";
+constexpr uint32_t MEMORY_REPORT_LIMITE = 100 * 1024; // 100MB
+constexpr uint32_t MAX_DEMUXER_MEMORY_USAGE = 50 * 1024; // 50MB
+constexpr uint32_t MEMORY_B_TO_KB = 1024;
+static const std::unordered_map<std::string, uint32_t> MEMORY_USAGE_REPORT_LIMITS = {
+    { DEMUXER_PLUGIN, MAX_DEMUXER_MEMORY_USAGE }
+};
 }
 
 namespace OHOS {
@@ -103,6 +111,16 @@ public:
         MEDIA_LOG_D("PlayerEventReceiver NotifyRelease.");
         std::unique_lock<std::shared_mutex> lk(cbMutex_);
         hiPlayerImpl_ = nullptr;
+    }
+
+    void OnMemoryUsageEvent(const DfxEvent& event) override
+    {
+        MEDIA_LOG_D("PlayerEventReceiver OnMemoryUsageEvent.");
+        task_->SubmitJobOnce([this, event] {
+            std::shared_lock<std::shared_mutex> lk(cbMutex_);
+            FALSE_RETURN(hiPlayerImpl_ != nullptr);
+            hiPlayerImpl_->HandleMemoryUsageEvent(event);
+        });
     }
 
 private:
@@ -3585,6 +3603,47 @@ void HiPlayerImpl::SetPostProcessor()
         videoDecoder_->SetPostProcessorOn(isPostProcessorOn_);
         videoDecoder_->SetVideoWindowSize(postProcessorTargetWidth_, postProcessorTargetHeight_);
     }
+}
+
+void HiPlayerImpl::HandleMemoryUsageEvent(const DfxEvent &event)
+{
+    lock_guard<std::mutex> lock(memoryReportMutex_);
+    std::string callerName = event.callerName;
+    uint32_t currentUsage = 0;
+    if (callerName == DEMUXER_PLUGIN) {
+        auto memoryUsages = AnyCast<std::unordered_map<uint32_t, uint32_t>>(event.param);
+        for (const auto &[trackId, usage] : memoryUsages) {
+        currentUsage += usage;
+        }
+    } else {
+        currentUsage = AnyCast<uint32_t>(event.param);
+    }
+    currentUsage /= MEMORY_B_TO_KB;
+
+    auto limit = MEMORY_USAGE_REPORT_LIMITS.count(callerName)
+        ? MEMORY_USAGE_REPORT_LIMITS.at(callerName) : MEMORY_REPORT_LIMITE;
+    MEDIA_LOG_I("caller:%{public}s,currentUsage:%{public}u", callerName.c_str(), currentUsage);
+
+    auto oldIter = memoryUsageInfo_.find(callerName);
+    uint32_t oldUsage  = (oldIter != memoryUsageInfo_.end()) ? std::min(oldIter->second, limit) : 0;
+    uint32_t totalMemory = memoryUsageInfo_[TOTAL_MEMORY_SIZE];
+    FALSE_RETURN_MSG(totalMemory >= oldUsage, "totalMemory:%{public}u oldUsage:%{public}u", totalMemory, oldUsage);
+    totalMemory = totalMemory + std::min(currentUsage, limit) - oldUsage;
+    FALSE_RETURN_MSG(totalMemory >= 0 && totalMemory < UINT32_MAX, "error totalMemory:%{public}u", totalMemory);
+    memoryUsageInfo_[TOTAL_MEMORY_SIZE] = totalMemory;
+    memoryUsageInfo_[callerName] = currentUsage;
+
+    MEDIA_LOG_I("totalMemory:%{public}u", totalMemory);
+    callbackLooper_.OnDfxInfo({
+        .type = DfxEventType::DFX_INFO_MEMORY_USAGE,
+        .param = memoryUsageInfo_[TOTAL_MEMORY_SIZE]
+    });
+    FALSE_RETURN_NOLOG(currentUsage >= limit);
+    std::string msg = "";
+    for (auto &[key, value] : memoryUsageInfo_) {
+        msg += key + ":" + std::to_string(value) + ";";
+    }
+    MEDIA_LOG_I("memusage event reported, appName:%{public}s msg:%{public}s", bundleName_.c_str(), msg.c_str());
 }
 }  // namespace Media
 }  // namespace OHOS

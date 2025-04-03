@@ -52,6 +52,8 @@ public:
 
     void OnSystemOperation(PlayerOnSystemOperationType type, PlayerOperationReason reason) override;
 
+    void OnDfxInfo(const DfxEvent &event) override;
+
     void DoReportCompletedTime();
     void StartCollectMaxAmplitude(int64_t updateIntervalMs);
     void StopCollectMaxAmplitude();
@@ -60,6 +62,7 @@ public:
 
 private:
     void DoReportMediaProgress();
+    void DoReportDfxInfo(const Any& info);
     void DoReportInfo(const Any& info);
     void DoReportError(const Any& error);
     void DoCollectAmplitude();

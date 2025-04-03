@@ -34,6 +34,7 @@ constexpr int32_t WHAT_INFO = 2;
 constexpr int32_t WHAT_ERROR = 3;
 constexpr int32_t WHAT_COLLECT_AMPLITUDE = 4;
 constexpr int32_t WHAT_SYSTEM_OPERATION = 5;
+constexpr int32_t WHAT_DFX_INFO = 6;
 
 constexpr int32_t TUPLE_POS_0 = 0;
 constexpr int32_t TUPLE_POS_1 = 1;
@@ -266,6 +267,26 @@ void HiPlayerCallbackLooper::OnInfo(PlayerOnInfoType type, int32_t extra, const 
         std::make_tuple(type, extra, infoBody)));
 }
 
+void HiPlayerCallbackLooper::OnDfxInfo(const DfxEvent &event)
+{
+    Enqueue(std::make_shared<HiPlayerCallbackLooper::Event>(WHAT_DFX_INFO, SteadyClock::GetCurrentTimeMs(), event));
+}
+
+void HiPlayerCallbackLooper::DoReportDfxInfo(const Any& info)
+{
+    auto obs = obs_.lock();
+    if (obs != nullptr) {
+        auto ptr = AnyCast<DfxEvent>(&info);
+        if (ptr == nullptr) {
+            MEDIA_LOG_E_SHORT("DoReportDfxInfo error, ptr is nullptr");
+            return;
+        }
+        MEDIA_LOG_D("Report Dfx, callerName: " PUBLIC_LOG_S " type: " PUBLIC_LOG_D32,
+            ptr->callerName.c_str(), static_cast<int32_t>(ptr->type));
+        obs->OnDfxInfo(*ptr);
+    }
+}
+
 void HiPlayerCallbackLooper::DoReportInfo(const Any& info)
 {
     auto obs = obs_.lock();
@@ -298,6 +319,9 @@ void HiPlayerCallbackLooper::LoopOnce(const std::shared_ptr<HiPlayerCallbackLoop
             break;
         case WHAT_SYSTEM_OPERATION:
             DoReportSystemOperation(item->detail);
+            break;
+        case WHAT_DFX_INFO:
+            DoReportDfxInfo(item->detail);
             break;
         default:
             break;
