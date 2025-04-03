@@ -61,6 +61,7 @@ static const std::string M4A = "m4a";
 
 static const std::string USER_CHOICE_ALLOW = "true";
 static const std::string USER_CHOICE_DENY = "false";
+static const std::string CHECK_BOX_SELECTED = "true";
 static const std::string BUTTON_NAME_MIC = "mic";
 static const std::string BUTTON_NAME_STOP = "stop";
 static const std::string ICON_PATH_CAPSULE_STOP = "/etc/screencapture/capsule_stop.svg";
@@ -580,9 +581,13 @@ void ScreenCaptureServer::GetBoxSelectedFromJson(Json::Value &root,
         return;
     }
     const Json::Value keyJson = root[key];
-    if (!keyJson.isNull() && keyJson.isBool()) {
-        checkBoxSelected = keyJson.asBool();
+    checkBoxSelected = false;
+    if (!keyJson.isNull() && keyJson.isString()) {
+        if (CHECK_BOX_SELECTED.compare(keyJson.asString()) == 0) {
+            checkBoxSelected = true;
+        }
     }
+    MEDIA_LOGI("GetBoxSelectedFromJson checkBoxSelected: %{public}d", checkBoxSelected);
 }
 
 void ScreenCaptureServer::SetCaptureConfig(CaptureMode captureMode, int32_t missionId)
