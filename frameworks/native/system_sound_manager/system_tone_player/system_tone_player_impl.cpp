@@ -416,9 +416,10 @@ int32_t SystemTonePlayerImpl::Start(const SystemToneOptions &systemToneOptions)
             }
             std::string hapticUri = (configuredUri_ == NO_SYSTEM_SOUND) ?
                 defaultNonSyncHapticUri_ : hapticUriMap_[hapticsFeature_];
-            std::string newHapticUri = systemSoundMgr_.OpenAudioUri(databaseTool_, hapticUri);
-            SystemSoundVibrator::StartVibratorForSystemTone(newHapticUri);
-            delayTime = SystemSoundVibrator::GetVibratorDuration(newHapticUri);
+            (void)SystemSoundVibrator::StartVibratorForSystemTone(
+                systemSoundMgr_.OpenHapticsUri(databaseTool_, hapticUri));
+            delayTime = SystemSoundVibrator::GetVibratorDuration(
+                systemSoundMgr_.OpenHapticsUri(databaseTool_, hapticUri));
             ReleaseDatabaseTool();
         }
         CreateCallbackThread(delayTime);
