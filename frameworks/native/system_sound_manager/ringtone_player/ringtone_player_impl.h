@@ -80,7 +80,6 @@ private:
     RingtoneType type_ = RINGTONE_TYPE_SIM_CARD_0;
     RingtoneState ringtoneState_ = STATE_NEW;
     DatabaseTool databaseTool_ = {false, false, nullptr};
-    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper_ = nullptr;
     std::string specifyRingtoneUri_ = "";
     std::unique_ptr<AudioStandard::AudioRenderer> audioRenderer_ {nullptr};
     AudioStandard::AudioRendererParams rendererParams_ {};
