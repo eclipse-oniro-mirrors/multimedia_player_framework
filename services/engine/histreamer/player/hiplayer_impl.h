@@ -449,6 +449,7 @@ private:
     std::atomic<bool> isPostProcessorOn_ {false};
     // memory usage
     std::unordered_map<std::string, uint32_t> memoryUsageInfo_ {};
+    std::mutex memoryReportMutex_;
 };
 } // namespace Media
 } // namespace OHOS

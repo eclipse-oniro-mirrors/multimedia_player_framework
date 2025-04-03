@@ -119,7 +119,7 @@ public:
     {
         MEDIA_LOG_D("PlayerEventReceiver OnMemoryUsageEvent.");
         task_->SubmitJobOnce([this, event] {
-            std::unique_lock<std::shared_mutex> lk(cbMutex_);
+            std::shared_lock<std::shared_mutex> lk(cbMutex_);
             FALSE_RETURN(hiPlayerImpl_ != nullptr);
             hiPlayerImpl_->HandleMemoryUsageEvent(event);
         });
@@ -3618,6 +3618,7 @@ void HiPlayerImpl::SetPostProcessor()
 
 void HiPlayerImpl::HandleMemoryUsageEvent(const DfxEvent &event)
 {
+    lock_guard<std::mutex> lock(memoryReportMutex_);
     std::string callerName = event.callerName;
     uint32_t currentUsage = 0;
     if (callerName == DEMUXER_PLUGIN) {
@@ -3632,18 +3633,18 @@ void HiPlayerImpl::HandleMemoryUsageEvent(const DfxEvent &event)
 
     auto limit = MEMORY_USAGE_REPORT_LIMITS.count(callerName)
         ? MEMORY_USAGE_REPORT_LIMITS.at(callerName) : MEMORY_REPORT_LIMITE;
-    MEDIA_LOG_I("caller:%{public}s,currentUsage:%{public}d", callerName.c_str(), currentUsage);
+    MEDIA_LOG_I("caller:%{public}s,currentUsage:%{public}u", callerName.c_str(), currentUsage);
 
     auto oldIter = memoryUsageInfo_.find(callerName);
     uint32_t oldUsage  = (oldIter != memoryUsageInfo_.end()) ? std::min(oldIter->second, limit) : 0;
     uint32_t totalMemory = memoryUsageInfo_[TOTAL_MEMORY_SIZE];
-    FALSE_RETURN_MSG(totalMemory >= oldUsage, "totalMemory:%{public}d oldUsage:%{public}d", totalMemory, oldUsage);
+    FALSE_RETURN_MSG(totalMemory >= oldUsage, "totalMemory:%{public}u oldUsage:%{public}u", totalMemory, oldUsage);
     totalMemory = totalMemory + std::min(currentUsage, limit) - oldUsage;
-    FALSE_RETURN_MSG(totalMemory >= 0 && totalMemory < UINT32_MAX, "error totalMemory:%{public}d", totalMemory);
+    FALSE_RETURN_MSG(totalMemory >= 0 && totalMemory < UINT32_MAX, "error totalMemory:%{public}u", totalMemory);
     memoryUsageInfo_[TOTAL_MEMORY_SIZE] = totalMemory;
     memoryUsageInfo_[callerName] = currentUsage;
 
-    MEDIA_LOG_I("totalMemory:%{public}d", totalMemory);
+    MEDIA_LOG_I("totalMemory:%{public}u", totalMemory);
     callbackLooper_.OnDfxInfo({
         .type = DfxEventType::DFX_INFO_MEMORY_USAGE,
         .param = memoryUsageInfo_[TOTAL_MEMORY_SIZE]

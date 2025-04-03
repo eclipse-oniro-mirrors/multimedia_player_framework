@@ -808,6 +808,7 @@ void MediaServerManager::DestroyDumperForPid(pid_t pid)
 
 void MediaServerManager::StartMemoryReportTask()
 {
+    MediaTrace trace("MediaServerManager::StartMemoryReport");
     if (memoryReportTask_ == nullptr) {
         memoryReportTask_ = std::make_unique<Task>("playerMemReport", "",
             TaskType::SINGLETON, TaskPriority::NORMAL, true);
@@ -833,7 +834,6 @@ void MediaServerManager::ReleaseMemoryReportTask()
 
 void MediaServerManager::GetMemUsageForPlayer()
 {
-    MEDIA_LOGI("in");
     std::lock_guard<std::mutex> lock(mutex_);
     std::unordered_map<pid_t, uint32_t> memoryList;
     for (const auto& [object, pid] : playerStubMap_) {
@@ -864,10 +864,7 @@ void MediaServerManager::ReportAppMemoryUsage()
         return;
     }
     auto memoryCollector = HiviewDFX::UCollectClient::MemoryCollector::Create();
-    if (memoryCollector == nullptr) {
-        MEDIA_LOGI("Create Hiview DFX memory collector failed");
-        return;
-    }
+    CHECK_AND_RETURN_LOG(memoryCollector != nullptr, "Create Hiview DFX memory collector failed");
 
     std::vector<HiviewDFX::UCollectClient::MemoryCaller> memList;
     memList.reserve(playerPidMem_.size());
