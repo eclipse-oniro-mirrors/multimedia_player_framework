@@ -240,6 +240,7 @@ ohos_shared_library("media_service") {
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
     "hitrace:libhitracechain",
+    "hiview:libucollection_client",
     "i18n:intl_util",
     "image_framework:image_native",
     "init:libbegetutil",

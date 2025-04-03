@@ -21,6 +21,7 @@
 #include <string>
 #include <refbase.h>
 #include "player.h"
+#include "common/event.h"
 #include "meta/video_types.h"
 #include "nocopyable.h"
 
@@ -43,6 +44,10 @@ public:
     }
     virtual void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody) = 0;
     virtual void OnSystemOperation(PlayerOnSystemOperationType type, PlayerOperationReason reason) = 0;
+    virtual void OnDfxInfo(const DfxEvent &event)
+    {
+        (void)event;
+    }
 };
 
 class IPlayerEngine {

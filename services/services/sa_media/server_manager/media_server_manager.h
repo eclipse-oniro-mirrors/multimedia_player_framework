@@ -23,6 +23,7 @@
 #include "iremote_object.h"
 #include "ipc_skeleton.h"
 #include "nocopyable.h"
+#include "osal/task/task.h"
 
 namespace OHOS {
 namespace Media {
@@ -102,6 +103,11 @@ private:
     void DestroyAVTranscoderStubForPid(pid_t pid);
     void DestroyAVScreenCaptureStubForPid(pid_t pid);
 
+    void StartMemoryReportTask();
+    void ReleaseMemoryReportTask();
+    void GetMemUsageForPlayer();
+    void ReportAppMemoryUsage();
+
     std::atomic<bool> isMemMgrLoaded_ {false};
 
     class AsyncExecutor {
@@ -128,7 +134,10 @@ private:
     std::map<StubType, std::vector<Dumper>> dumperTbl_;
     AsyncExecutor executor_;
 
+    bool isTaskRunning = false;
     std::mutex mutex_;
+    std::unique_ptr<Task> memoryReportTask_{nullptr};
+    std::unordered_map<pid_t, uint32_t> playerPidMem_{};
 #ifdef SUPPORT_START_STOP_ON_DEMAND
     int64_t allInstancesReleasedTime_ {0};
 #endif

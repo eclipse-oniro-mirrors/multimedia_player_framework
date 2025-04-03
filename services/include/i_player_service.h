@@ -623,6 +623,17 @@ public:
         (void)payloadTypes;
         return 0;
     }
+    /**
+     * @brief Get memory usage.
+     *
+     * @return Returns memory usage KB.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual uint32_t GetMemoryUsage()
+    {
+        return 0;
+    }
 };
 } // namespace Media
 } // namespace OHOS

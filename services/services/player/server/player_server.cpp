@@ -34,6 +34,7 @@
 #include "common/media_source.h"
 #include "audio_info.h"
 #include "osal/utils/steady_clock.h"
+#include "common/event.h"
 
 using namespace OHOS::QOS;
 
@@ -724,6 +725,7 @@ int32_t PlayerServer::HandleReset()
     lastErrMsg_.clear();
     errorCbOnce_ = false;
     disableNextSeekDone_ = false;
+    totalMemoryUage_ = 0;
     Format format;
     OnInfo(INFO_TYPE_STATE_CHANGE, PLAYER_IDLE, format);
     return MSERR_OK;
@@ -1688,6 +1690,15 @@ void PlayerServer::InnerOnInfo(PlayerOnInfoType type, int32_t extra, const Forma
     }
 }
 
+void PlayerServer::OnDfxInfo(const DfxEvent &event)
+{
+    MEDIA_LOGD("OnDfxInfo, type: %{public}d", static_cast<int32_t>(event.type));
+    if (event.type == DfxEventType::DFX_INFO_MEMORY_USAGE) {
+        totalMemoryUage_ = AnyCast<uint32_t>(event.param);
+        MEDIA_LOGD("OnDfxInfo %{public}d", static_cast<int32_t>(totalMemoryUage_.load()));
+    }
+}
+
 void PlayerServer::OnSystemOperation(PlayerOnSystemOperationType type, PlayerOperationReason reason)
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -2136,6 +2147,11 @@ int32_t PlayerServer::SetSeiMessageCbStatus(bool status, const std::vector<int32
     CHECK_AND_RETURN_RET_NOLOG(
         playerEngine_ == nullptr, playerEngine_->SetSeiMessageCbStatus(status, payloadTypes));
     return MSERR_OK;
+}
+
+uint32_t PlayerServer::GetMemoryUsage()
+{
+    return totalMemoryUage_.load();
 }
 } // namespace Media
 } // namespace OHOS

@@ -135,10 +135,12 @@ public:
     void OnErrorMessage(int32_t errorCode, const std::string &errorMsg) override;
     void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody = {}) override;
     void OnSystemOperation(PlayerOnSystemOperationType type, PlayerOperationReason reason) override;
+    void OnDfxInfo(const DfxEvent &event) override;
     void OnBufferingUpdate(PlayerOnInfoType type, int32_t extra, const Format &infoBody);
     void OnNotifyBufferingStart();
     void OnNotifyBufferingEnd();
 
+    uint32_t GetMemoryUsage() override;
     void OnCommonEventReceived(const std::string &event);
     int32_t GetUserId();
     std::shared_ptr<CommonEventReceiver> GetCommonEventReceiver();
@@ -280,6 +282,7 @@ private:
     int64_t sumPauseTime_ {0};
     bool isXSpeedPlay_ {false};
     bool isCalledBySystemApp_ = false;
+    std::atomic<uint32_t> totalMemoryUage_ {0};
 };
 } // namespace Media
 } // namespace OHOS

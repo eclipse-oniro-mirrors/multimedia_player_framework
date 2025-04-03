@@ -98,6 +98,7 @@ public:
     int32_t SetMaxAmplitudeCbStatus(bool status) override;
     bool IsSeekContinuousSupported() override;
     int32_t SetSeiMessageCbStatus(bool status, const std::vector<int32_t> &payloadTypes) override;
+    uint32_t GetMemoryUsage();
 protected:
     PlayerServiceStub();
     virtual int32_t Init();
