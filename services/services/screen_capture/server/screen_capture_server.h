@@ -45,6 +45,8 @@ public:
     static int32_t ReportAVScreenCaptureUserChoice(int32_t sessionId, const std::string &content);
     static int32_t GetRunningScreenCaptureInstancePid(std::list<int32_t> &pidList);
     static void GetChoiceFromJson(Json::Value &root, const std::string &content, std::string key, std::string &value);
+    static void GetBoxSelectedFromJson(Json::Value &root, const std::string &content, std::string key,
+        bool &checkBoxSelected);
     static void PrepareSelectWindow(Json::Value &root, std::shared_ptr<ScreenCaptureServer> &server);
     static void AddScreenCaptureServerMap(int32_t sessionId, std::weak_ptr<ScreenCaptureServer> server);
     static void RemoveScreenCaptureServerMap(int32_t sessionId);
@@ -246,6 +248,8 @@ private:
     bool showCursor_ = true;
     bool isMicrophoneSwitchTurnOn_ = true;
     bool isPrivacyAuthorityEnabled_ = false;
+    bool showSensitiveCheckBox_ = false;
+    bool checkBoxSelected_ = false;
     std::vector<uint64_t> surfaceIdList_ = {};
 
     int32_t sessionId_ = 0;

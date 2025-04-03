@@ -61,6 +61,7 @@ static const std::string M4A = "m4a";
 
 static const std::string USER_CHOICE_ALLOW = "true";
 static const std::string USER_CHOICE_DENY = "false";
+static const std::string CHECK_BOX_SELECTED = "true";
 static const std::string BUTTON_NAME_MIC = "mic";
 static const std::string BUTTON_NAME_STOP = "stop";
 static const std::string ICON_PATH_CAPSULE_STOP = "/etc/screencapture/capsule_stop.svg";
@@ -570,6 +571,25 @@ void ScreenCaptureServer::GetChoiceFromJson(Json::Value &root,
     }
 }
 
+void ScreenCaptureServer::GetBoxSelectedFromJson(Json::Value &root,
+    const std::string &content, std::string key, bool &checkBoxSelected)
+{
+    Json::Reader reader;
+    bool parsingSuccessful = reader.parse(content, root);
+    if (!parsingSuccessful || root.type() != Json::objectValue) {
+        MEDIA_LOGE("Error parsing the string");
+        return;
+    }
+    const Json::Value keyJson = root[key];
+    checkBoxSelected = false;
+    if (!keyJson.isNull() && keyJson.isString()) {
+        if (CHECK_BOX_SELECTED.compare(keyJson.asString()) == 0) {
+            checkBoxSelected = true;
+        }
+    }
+    MEDIA_LOGI("GetBoxSelectedFromJson checkBoxSelected: %{public}d", checkBoxSelected);
+}
+
 void ScreenCaptureServer::SetCaptureConfig(CaptureMode captureMode, int32_t missionId)
 {
     captureConfig_.captureMode = captureMode;
@@ -614,6 +634,10 @@ int32_t ScreenCaptureServer::ReportAVScreenCaptureUserChoice(int32_t sessionId, 
         Json::Value root;
         std::string choice = "false";
         GetChoiceFromJson(root, content, std::string("choice"), choice);
+
+        GetBoxSelectedFromJson(root, content, std::string("checkBoxSelected"), server->checkBoxSelected_);
+        MEDIA_LOGI("ReportAVScreenCaptureUserChoice checkBoxSelected: %{public}d", server->checkBoxSelected_);
+
         if (USER_CHOICE_ALLOW.compare(choice) == 0) {
             PrepareSelectWindow(root, server);
             int32_t ret = server->OnReceiveUserPrivacyAuthority(true);
@@ -1905,6 +1929,14 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
     isPrivacyAuthorityEnabled_ = isPrivacyAuthorityEnabled;
     captureState_ = AVScreenCaptureState::POPUP_WINDOW;
     isScreenCaptureAuthority_ = CheckPrivacyWindowSkipPermission();
+
+    if (GetSCServerDataType() == DataType::ORIGINAL_STREAM) {
+        showSensitiveCheckBox_ = true;
+        checkBoxSelected_ = true;
+    }
+    MEDIA_LOGI("StartScreenCaptureInner showSensitiveCheckBox: %{public}d, checkBoxSelected: %{public}d",
+        showSensitiveCheckBox_, checkBoxSelected_);
+
     if (!isScreenCaptureAuthority_ && IsUserPrivacyAuthorityNeeded()) {
         ret = RequestUserPrivacyAuthority();
         if (ret != MSERR_OK) {
@@ -2009,6 +2041,10 @@ int32_t ScreenCaptureServer::StartPrivacyWindow()
     comStr += std::to_string(appInfo_.appUid);
     comStr += "\",\"appLabel\":\"";
     comStr += callingLabel_;
+    comStr += "\",\"showSensitiveCheckBox\":\"";
+    comStr += std::to_string(showSensitiveCheckBox_);
+    comStr += "\",\"checkBoxSelected\":\"";
+    comStr += std::to_string(checkBoxSelected_);
     comStr += "\"}";
 
     AAFwk::Want want;
@@ -2022,6 +2058,8 @@ int32_t ScreenCaptureServer::StartPrivacyWindow()
         want.SetParam("params", comStr);
         want.SetParam("appLabel", callingLabel_);
         want.SetParam("sessionId", sessionId_);
+        want.SetParam("showSensitiveCheckBox", showSensitiveCheckBox_);
+        want.SetParam("checkBoxSelected", checkBoxSelected_);
         SendConfigToUIParams(want);
         ret = AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want);
         MEDIA_LOGI("StartAbility end %{public}d, DeviceType : PC", ret);
@@ -2376,7 +2414,7 @@ int32_t ScreenCaptureServer::StartStreamHomeVideoCapture()
 int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string &name, sptr<OHOS::Surface> consumer)
 {
     MediaTrace trace("ScreenCaptureServer::CreateVirtualScreen");
-    MEDIA_LOGI("CreateVirtualScreen Start");
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " CreateVirtualScreen Start", FAKE_POINTER(this));
     isConsumerStart_ = false;
     VirtualScreenOption virScrOption = InitVirtualScreenOption(name, consumer);
     sptr<Rosen::Display> display = Rosen::DisplayManager::GetInstance().GetDefaultDisplaySync();
@@ -2394,6 +2432,16 @@ int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string &name, sptr<O
     }
     virtualScreenId_ = ScreenManager::GetInstance().CreateVirtualScreen(virScrOption);
     CHECK_AND_RETURN_RET_LOG(virtualScreenId_ >= 0, MSERR_UNKNOWN, "CreateVirtualScreen failed, invalid screenId");
+
+    if (captureConfig_.dataType == DataType::ORIGINAL_STREAM && checkBoxSelected_) {
+        MEDIA_LOGI("CreateVirtualScreen checkBoxSelected: %{public}d", checkBoxSelected_);
+        std::vector<ScreenId> screenIds;
+        screenIds.push_back(virtualScreenId_);
+        auto ret = ScreenManager::GetInstance().SetScreenSkipProtectedWindow(screenIds, true);
+        CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK || ret == DMError::DM_ERROR_DEVICE_NOT_SUPPORT, MSERR_UNKNOWN,
+            "0x%{public}06" PRIXPTR " SetScreenSkipProtectedWindow failed, ret: %{public}d", FAKE_POINTER(this), ret);
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " SetScreenSkipProtectedWindow success", FAKE_POINTER(this));
+    }
 
     if (!showCursor_) {
         MEDIA_LOGI("CreateVirtualScreen without cursor");
