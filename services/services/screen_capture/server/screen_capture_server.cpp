@@ -3381,7 +3381,8 @@ int32_t ScreenCaptureServer::StartMicAudioCapture()
         return MSERR_OK;
     }
 #endif
-    if (captureConfig_.audioInfo.micCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_VALID) {
+    if (captureConfig_.audioInfo.micCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_VALID &&
+        micAudioCapture_ != nullptr) {
         MediaTrace trace("ScreenCaptureServer::StartMicAudioCapture");
         if (audioSource_) {
             micAudioCapture_->SetIsInVoIPCall(audioSource_->GetIsInVoIPCall());
