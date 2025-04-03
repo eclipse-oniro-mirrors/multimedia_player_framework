@@ -683,9 +683,9 @@ int32_t AVScreenCaptureNapi::GetVideoInfo(std::unique_ptr<AVScreenCaptureAsyncCo
     napi_env env, napi_value args)
 {
     int32_t ret = GetVideoEncInfo(asyncCtx, env, args);
-    CHECK_AND_RETURN_RET(ret == MSERR_OK, "GetVideoEncInfo failed", ret);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "GetVideoEncInfo failed");
     ret = GetVideoCaptureInfo(asyncCtx, env, args);
-    CHECK_AND_RETURN_RET(ret == MSERR_OK, "GetVideoEncInfo failed", ret);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "GetVideoCaptureInfo failed");
     return MSERR_OK;
 }
 
