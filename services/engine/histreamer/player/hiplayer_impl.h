@@ -167,6 +167,7 @@ public:
     void OnEventSub(const Event &event);
     void OnEventSubTrackChange(const Event &event);
     void HandleDfxEvent(const DfxEvent &event);
+    void HandleMemoryUsageEvent(const DfxEvent &event);
     void OnStateChanged(PlayerStateId state, bool isSystemOperation = false);
     Status OnCallback(std::shared_ptr<Filter> filter, const FilterCallBackCommand cmd, StreamType outType);
     int32_t SeekContinous(int32_t mSeconds, int64_t seekContinousBatchNo) override;
@@ -446,6 +447,8 @@ private:
     int32_t postProcessorTargetHeight_ = MAX_TARGET_HEIGHT;
     VideoPostProcessorType videoPostProcessorType_ {VideoPostProcessorType::NONE};
     std::atomic<bool> isPostProcessorOn_ {false};
+    // memory usage
+    std::unordered_map<std::string, uint32_t> memoryUsageInfo_ {};
 };
 } // namespace Media
 } // namespace OHOS
