@@ -866,5 +866,19 @@ HWTEST_F(ScreenCaptureServerFunctionTest, GetBoxSelectedFromJson_002, TestSize.L
     screenCaptureServer_->GetBoxSelectedFromJson(root, content, "choice", value);
     ASSERT_NE(screenCaptureServer_, nullptr);
 }
+
+/**
+* @tc.name: GetBoxSelectedFromJson_003
+* @tc.desc: content valid
+* @tc.type: FUNC
+*/
+HWTEST_F(ScreenCaptureServerFunctionTest, GetBoxSelectedFromJson_003, TestSize.Level2)
+{
+    Json::Value root;
+    std::string content = "{\"choice_\": \"abcd\"}";
+    bool value;
+    screenCaptureServer_->GetBoxSelectedFromJson(root, content, "choice", value);
+    ASSERT_NE(screenCaptureServer_, nullptr);
+}
 } // Media
 } // OHOS

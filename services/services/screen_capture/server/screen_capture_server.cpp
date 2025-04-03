@@ -2037,9 +2037,9 @@ int32_t ScreenCaptureServer::StartPrivacyWindow()
     comStr += "\",\"appLabel\":\"";
     comStr += callingLabel_;
     comStr += "\",\"showSensitiveCheckBox\":\"";
-    comStr += showSensitiveCheckBox_;
+    comStr += std::to_string(showSensitiveCheckBox_);
     comStr += "\",\"checkBoxSelected\":\"";
-    comStr += checkBoxSelected_;
+    comStr += std::to_string(checkBoxSelected_);
     comStr += "\"}";
 
     AAFwk::Want want;
