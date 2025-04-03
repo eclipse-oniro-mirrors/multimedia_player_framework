@@ -313,7 +313,10 @@ VEFError GraphicsRenderEngineImpl::Render(uint64_t index, const std::shared_ptr<
 RenderTexturePtr GraphicsRenderEngineImpl::RenderFrame(const std::shared_ptr<GraphicsRenderInfo>& graphicsRenderInfo)
 {
     surfaceTexture_->AwaitNativeImage();
-    OH_NativeImage_UpdateSurfaceImage(surfaceTexture_->nativeImage_.get());
+	GLUtils.checkError(_FILE_NAME_, _LINE_);
+    if(auto ret = OH_NativeImage_UpdateSurfaceImage(surfaceTexture_->nativeImage_.get()); ret != 0){
+		MEDIA_LOGE("RenderFrame OH_NativeImage_UpdateSurfaceImage failed with error:%{public}d.", ret);
+	}
     GLint bufferW = -1;
     GLint bufferH = -1;
     glBindTexture(GL_TEXTURE_EXTERNAL_OES, surfaceTexture_->nativeTexId_);
