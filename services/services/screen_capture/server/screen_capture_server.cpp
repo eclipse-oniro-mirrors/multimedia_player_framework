@@ -576,12 +576,12 @@ void ScreenCaptureServer::GetBoxSelectedFromJson(Json::Value &root,
 {
     Json::Reader reader;
     bool parsingSuccessful = reader.parse(content, root);
+    checkBoxSelected = false;
     if (!parsingSuccessful || root.type() != Json::objectValue) {
         MEDIA_LOGE("Error parsing the string");
         return;
     }
     const Json::Value keyJson = root[key];
-    checkBoxSelected = false;
     if (!keyJson.isNull() && keyJson.isString()) {
         if (CHECK_BOX_SELECTED.compare(keyJson.asString()) == 0) {
             checkBoxSelected = true;

@@ -848,37 +848,40 @@ HWTEST_F(ScreenCaptureServerFunctionTest, GetBoxSelectedFromJson_001, TestSize.L
 {
     Json::Value root;
     std::string content = "ghgh%^&%^$*^(}{^af&**)";
-    bool value;
+    bool value = false;
     screenCaptureServer_->GetBoxSelectedFromJson(root, content, "choice", value);
     ASSERT_NE(screenCaptureServer_, nullptr);
+    ASSERT_EQ(value, false);
 }
 
 /**
 * @tc.name: GetBoxSelectedFromJson_002
-* @tc.desc: content valid
+* @tc.desc: choice valid
 * @tc.type: FUNC
 */
 HWTEST_F(ScreenCaptureServerFunctionTest, GetBoxSelectedFromJson_002, TestSize.Level2)
 {
     Json::Value root;
-    std::string content = "{\"choice_\": \"true\"}";
-    bool value;
+    std::string content = "{\"choice\": \"true\"}";
+    bool value = false;
     screenCaptureServer_->GetBoxSelectedFromJson(root, content, "choice", value);
     ASSERT_NE(screenCaptureServer_, nullptr);
+    ASSERT_EQ(value, true);
 }
 
 /**
 * @tc.name: GetBoxSelectedFromJson_003
-* @tc.desc: content valid
+* @tc.desc: choice invalid
 * @tc.type: FUNC
 */
 HWTEST_F(ScreenCaptureServerFunctionTest, GetBoxSelectedFromJson_003, TestSize.Level2)
 {
     Json::Value root;
-    std::string content = "{\"choice_\": \"abcd\"}";
-    bool value;
+    std::string content = "{\"choice\": \"abcd\"}";
+    bool value = false;
     screenCaptureServer_->GetBoxSelectedFromJson(root, content, "choice", value);
     ASSERT_NE(screenCaptureServer_, nullptr);
+    ASSERT_EQ(value, false);
 }
 } // Media
 } // OHOS
