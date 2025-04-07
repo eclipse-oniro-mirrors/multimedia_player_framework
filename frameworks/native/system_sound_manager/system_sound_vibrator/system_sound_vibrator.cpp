@@ -297,6 +297,7 @@ int32_t SystemSoundVibrator::GetVibratorDuration(const std::string &hapticUri)
     ret = delayTime + vibratorPkg.patterns[patternMaxIndex].time +
         vibratorPkg.patterns[patternMaxIndex].events[eventMaxIndex].time +
         vibratorPkg.patterns[patternMaxIndex].events[eventMaxIndex].duration;
+    Sensors::FreeVibratorPackage(vibratorPkg);
 #endif
     return ret;
 }
