@@ -1603,23 +1603,10 @@ int32_t AVRecorderNapi::SetWatermark(std::shared_ptr<PixelMap> &pixelMap,
 
 int32_t AVRecorderNapi::SetMetadata(std::map<std::string, std::string> &recordMeta)
 {
-    MEDIA_LOGI("recordMeta size %{public}d", static_cast<int32_t>(recordMeta.size()));
-
     std::shared_ptr<Meta> userMeta = std::make_shared<Meta>();
     for (auto &meta : recordMeta) {
         MEDIA_LOGI("recordMeta tag: %{public}s, value: %{public}s", meta.first.c_str(), meta.second.c_str());
         userMeta->SetData(meta.first, meta.second);
-    }
-    userMeta->SetData("com.openharmony.deferredvideoenhanceflag", "10");
-    userMeta->SetData("com.openharmony.videoId", "10");
-    {
-        std::vector<std::string> keys;
-        userMeta->GetKeys(keys);
-        for (auto& k: keys) {
-            std::string dataStr = "";
-            userMeta->GetData(k, dataStr);
-            MEDIA_LOGI("recordMeta key: %{public}s, value: %{public}s", k.c_str(), dataStr.c_str());
-        }
     }
     return recorder_->SetUserMeta(userMeta);
 }
