@@ -26,6 +26,7 @@ namespace {
     const int64_t PLAY_RANGE_DEFAULT_VALUE = -1; // play range default value.
     const std::string MEDIA_ROOT = "file:///data/test/";
     const std::string VIDEO_FILE1 = MEDIA_ROOT + "H264_AAC.mp4";
+    const std::string TOTAL_MEMORY_SIZE = "TOTAL_MEMORY_SIZE";
 }
 
 void HiplayerImplUnitTest::SetUpTestCase(void)
@@ -1231,6 +1232,107 @@ HWTEST_F(HiplayerImplUnitTest, TestSetPlaybackStrategy_001, TestSize.Level0)
     EXPECT_EQ(ret, MSERR_OK);
     EXPECT_EQ(hiplayer_->videoPostProcessorType_, VideoPostProcessorType::SUPER_RESOLUTION);
     EXPECT_EQ(hiplayer_->isPostProcessorOn_, true);
+}
+/**
+* @tc.name  : TestHandleMemoryUsageEvent_001
+* @tc.number: TestHandleMemoryUsageEvent_001
+* @tc.desc  : Test the scenario where the caller is not DEMUXER_PLUGIN
+*/
+HWTEST_F(HiplayerImplUnitTest, TestHandleMemoryUsageEvent_001, TestSize.Level0)
+{
+    DfxEvent event;
+    event.callerName = "TEST";
+    event.param = static_cast<uint32_t>(1024);
+    hiplayer_->HandleMemoryUsageEvent(event);
+    std::cout<<hiplayer_->memoryUsageInfo_[TOTAL_MEMORY_SIZE]<<std::endl;
+    EXPECT_EQ(hiplayer_->memoryUsageInfo_[TOTAL_MEMORY_SIZE], 1); // parm
+}
+
+/**
+* @tc.name  : TestHandleMemoryUsageEvent_002
+* @tc.number: TestHandleMemoryUsageEvent_002
+* @tc.desc  : Test the scenario where the caller is not DEMUXER_PLUGIN, report coverage
+*/
+HWTEST_F(HiplayerImplUnitTest, TestHandleMemoryUsageEvent_002, TestSize.Level0)
+{
+    DfxEvent event;
+    event.callerName = "TEST";
+    event.param = static_cast<uint32_t>(1024);
+    hiplayer_->HandleMemoryUsageEvent(event);
+    event.param = static_cast<uint32_t>(2048);
+    hiplayer_->HandleMemoryUsageEvent(event);
+    EXPECT_EQ(hiplayer_->memoryUsageInfo_[TOTAL_MEMORY_SIZE], 2); // parm
+}
+
+/**
+* @tc.name  : TestHandleMemoryUsageEvent_003
+* @tc.number: TestHandleMemoryUsageEvent_003
+* @tc.desc  : Test the scenario where the caller is not DEMUXER_PLUGIN, report coverage
+*/
+HWTEST_F(HiplayerImplUnitTest, TestHandleMemoryUsageEvent_003, TestSize.Level0)
+{
+    DfxEvent event;
+    event.callerName = "TEST";
+    event.param = static_cast<uint32_t>(2048);
+    hiplayer_->HandleMemoryUsageEvent(event);
+    EXPECT_EQ(hiplayer_->memoryUsageInfo_[TOTAL_MEMORY_SIZE], 2); // parm
+    event.param = static_cast<uint32_t>(1024);
+    hiplayer_->HandleMemoryUsageEvent(event);
+    EXPECT_EQ(hiplayer_->memoryUsageInfo_[TOTAL_MEMORY_SIZE], 1); // parm
+}
+
+/**
+* @tc.name  : TestHandleMemoryUsageEvent_004
+* @tc.number: TestHandleMemoryUsageEvent_004
+* @tc.desc  : Test the scenario where the caller is DEMUXER_PLUGIN
+*/
+HWTEST_F(HiplayerImplUnitTest, TestHandleMemoryUsageEvent_004, TestSize.Level0)
+{
+    DfxEvent event;
+    event.callerName = "DEMUXER_PLUGIN";
+    event.param = std::unordered_map<uint32_t, uint32_t>{{1, 1024}, {2, 1024}};
+
+    hiplayer_->HandleMemoryUsageEvent(event);
+    EXPECT_EQ(hiplayer_->memoryUsageInfo_[TOTAL_MEMORY_SIZE], 2); // parm
+}
+
+/**
+* @tc.name  : TestHandleMemoryUsageEvent_005
+* @tc.number: TestHandleMemoryUsageEvent_005
+* @tc.desc  : Test the scenario where the caller is DEMUXER_PLUGIN, Exceeding the limit
+*/
+HWTEST_F(HiplayerImplUnitTest, TestHandleMemoryUsageEvent_005, TestSize.Level0)
+{
+    uint32_t reportMemory = 50 * 1024 * 1024;
+    DfxEvent event;
+    event.callerName = "DEMUXER_PLUGIN";
+    event.param = std::unordered_map<uint32_t, uint32_t>{{1, reportMemory}, {2, reportMemory}};
+
+    hiplayer_->HandleMemoryUsageEvent(event);
+    EXPECT_EQ(hiplayer_->memoryUsageInfo_["DEMUXER_PLUGIN"], 102400); // 102400 means 100MB
+    EXPECT_EQ(hiplayer_->memoryUsageInfo_[TOTAL_MEMORY_SIZE], 51200); // 51200 meads 50MB
+}
+
+/**
+* @tc.name  : TestHandleMemoryUsageEvent_006
+* @tc.number: TestHandleMemoryUsageEvent_006
+* @tc.desc  : Test the scenario where the caller is DEMUXER_PLUGIN, Exceeding the limit
+*/
+HWTEST_F(HiplayerImplUnitTest, TestHandleMemoryUsageEvent_006, TestSize.Level0)
+{
+    uint32_t reportMemory = 50 * 1024 * 1024;
+    DfxEvent event;
+    event.callerName = "DEMUXER_PLUGIN";
+    event.param = std::unordered_map<uint32_t, uint32_t>{{1, reportMemory}, {2, reportMemory}};
+
+    hiplayer_->HandleMemoryUsageEvent(event);
+    EXPECT_EQ(hiplayer_->memoryUsageInfo_["DEMUXER_PLUGIN"], 102400); // 102400 means 100MB
+    EXPECT_EQ(hiplayer_->memoryUsageInfo_[TOTAL_MEMORY_SIZE], 51200); // 51200 meads 50MB
+    
+    event.param = std::unordered_map<uint32_t, uint32_t>{{1, 1024}, {2, 1024}};
+    hiplayer_->HandleMemoryUsageEvent(event);
+    EXPECT_EQ(hiplayer_->memoryUsageInfo_["DEMUXER_PLUGIN"], 2); // parm
+    EXPECT_EQ(hiplayer_->memoryUsageInfo_[TOTAL_MEMORY_SIZE], 2); // parm
 }
 } // namespace Media
 } // namespace OHOS

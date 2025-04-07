@@ -670,6 +670,13 @@ int32_t PlayerServiceStub::GetCurrentTrack(int32_t trackType, int32_t &index)
     return playerServer_->GetCurrentTrack(trackType, index);
 }
 
+uint32_t PlayerServiceStub::GetMemoryUsage()
+{
+    MediaTrace trace("PlayerServiceStub::GetMemoryUsage");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, 0, "player server is nullptr");
+    return playerServer_->GetMemoryUsage();
+}
+
 int32_t PlayerServiceStub::SetListenerObject(MessageParcel &data, MessageParcel &reply)
 {
     sptr<IRemoteObject> object = data.ReadRemoteObject();
