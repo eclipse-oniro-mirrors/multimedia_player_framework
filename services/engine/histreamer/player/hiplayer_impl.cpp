@@ -1495,7 +1495,7 @@ int32_t HiPlayerImpl::SetParameter(const Format& params)
         int32_t streamUsage;
         int32_t rendererFlag;
         int32_t volumeMode = volumeMode_;
-        MEDIA_LOG_I("volumeMode_ = %{public}d");
+        MEDIA_LOG_I("volumeMode_ = %{public}d", volumeMode_);
         params.GetIntValue(PlayerKeys::CONTENT_TYPE, contentType);
         params.GetIntValue(PlayerKeys::STREAM_USAGE, streamUsage);
         params.GetIntValue(PlayerKeys::RENDERER_FLAG, rendererFlag);
