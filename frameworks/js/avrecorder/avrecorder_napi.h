@@ -222,7 +222,7 @@ private:
     */
     static napi_value JsSetWatermark(napi_env env, napi_callback_info info);
     /**
-     * setMetadata(metadata: Record<string, string>): promise<void>;
+     * setMetadata(metadata: Record<string, string>): void;
     */
     static napi_value JsSetMetadata(napi_env env, napi_callback_info info);
     /**
@@ -344,8 +344,6 @@ private:
         const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
     static std::shared_ptr<TaskHandler<RetInfo>> SetWatermarkTask(
         const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
-    static std::shared_ptr<TaskHandler<RetInfo>> SetMetadataTask(
-        const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
     static int32_t GetAudioCodecFormat(const std::string &mime, AudioCodecFormat &codecFormat);
     static int32_t GetVideoCodecFormat(const std::string &mime, VideoCodecFormat &codecFormat);
     static int32_t GetOutputFormat(const std::string &extension, OutputFormatType &type);
@@ -377,7 +375,7 @@ private:
     int32_t GetEncoderInfo(std::vector<EncoderCapabilityData> &encoderInfo);
     int32_t IsWatermarkSupported(bool &isWatermarkSupported);
     int32_t SetWatermark(std::shared_ptr<PixelMap> &pixelMap, std::shared_ptr<WatermarkConfig> &watermarkConfig);
-    int32_t SetMetadata(std::map<std::string, std::string> &recordMeta);
+    int32_t SetMetadata(const std::map<std::string, std::string> &recordMeta);
 
     void ErrorCallback(int32_t errCode, const std::string &operate, const std::string &add = "");
     void StateCallback(const std::string &state);
@@ -403,7 +401,6 @@ private:
         napi_value watermark, napi_value watermarkConfig);
     int32_t GetWatermark(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
     int32_t GetWatermarkConfig(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
-    int32_t GetRecordMeta(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
 
     bool GetLocation(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
     int32_t GetSourceIdAndQuality(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env,
@@ -457,7 +454,6 @@ struct AVRecorderAsyncContext : public MediaAsyncContext {
     std::shared_ptr<PixelMap> pixelMap_ = nullptr;
     std::shared_ptr<WatermarkConfig> watermarkConfig_ = nullptr;
     bool isWatermarkSupported_ = false;
-    std::map<std::string, std::string> recordMeta_;
 };
 
 class MediaJsResultExtensionMethod {
