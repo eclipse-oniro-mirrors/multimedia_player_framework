@@ -85,6 +85,7 @@ private:
         const std::vector<std::shared_ptr<Meta>> &trackInfos);
     int64_t GetCurrentMillisecond();
     void CollectionErrorInfo(int32_t errCode, const std::string& errMsg);
+    void UpdateVideoEncFormat(const std::shared_ptr<Meta> &meta);
     void UpdateAudioSampleFormat(const std::string& mime, const std::shared_ptr<Meta> &meta);
 
     int32_t appUid_{0};
