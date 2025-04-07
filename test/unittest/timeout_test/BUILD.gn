@@ -1,0 +1,88 @@
+# Copyright (c) 2022 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/test.gni")
+import("//foundation/multimedia/player_framework/config.gni")
+
+module_output_path = "player_framework/player"
+
+ohos_unittest("player_timeout_unit_test") {
+  module_out_path = module_output_path
+  include_dirs = [
+    "../../../common",
+    "./include",
+    "//foundation/multimedia/player_framework/interfaces/inner_api/native",
+    "//foundation/multimedia/player_framework/frameworks/native/player",
+    "//foundation/multimedia/player_framework/test/unittest/common/include",
+    "//foundation/multimedia/player_framework/services/include",
+    "//foundation/multimedia/player_framework/services/services/monitor/ipc",
+    "//foundation/multimedia/player_framework/services/services/sa_media/ipc",
+    "//foundation/multimedia/player_framework/services/include",
+    "src/data_source",
+    "src/loader_callback",
+  ]
+
+  cflags = [
+    "-std=c++17",
+    "-fno-rtti",
+    "-fno-exceptions",
+    "-Wall",
+    "-fno-common",
+    "-fstack-protector-all",
+    "-Wshadow",
+    "-FPIC",
+    "-FS",
+    "-O2",
+    "-D_FORTIFY_SOURCE=2",
+    "-Wformat=2",
+    "-Wdate-time",
+    "-Dprivate=public",
+    "-Dprotected=public",
+  ]
+
+  if (player_framework_support_player) {
+    sources = [
+      "player_timeout_unit_test.cpp",
+    ]
+  }
+
+  deps = [
+    "//foundation/multimedia/player_framework/services/utils:media_service_utils",
+    "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
+    "//foundation/multimedia/player_framework/services/services:media_service",
+  ]
+
+  external_deps = [
+    "audio_framework:audio_client",
+    "c_utils:utils",
+    "graphic_surface:surface",
+    "hilog:libhilog",
+    "ipc:ipc_single",
+    "media_foundation:media_foundation",
+    "qos_manager:concurrent_task_client",
+    "googletest:gmock_main",
+    "hitrace:libhitracechain",
+    "graphic_2d:librender_service_client",
+    "window_manager:libwm",
+    "av_codec:av_codec_client",
+    "drm_framework:drm_framework",
+  ]
+
+  if (defined(global_parts_info) &&
+      defined(global_parts_info.multimedia_histreamer_ext)) {
+    defines = [ "SUBSCRIBE_HISTREAMER_EXT" ]
+  }
+
+  resource_config_file = "//foundation/multimedia/player_framework/test/unittest/resources/ohos_test.xml"
+
+}
