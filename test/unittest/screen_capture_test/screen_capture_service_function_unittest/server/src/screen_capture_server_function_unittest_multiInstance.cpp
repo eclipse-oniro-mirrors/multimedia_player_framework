@@ -856,7 +856,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, GetBoxSelectedFromJson_001, TestSize.L
 
 /**
 * @tc.name: GetBoxSelectedFromJson_002
-* @tc.desc: content valid
+* @tc.desc: choice valid
 * @tc.type: FUNC
 */
 HWTEST_F(ScreenCaptureServerFunctionTest, GetBoxSelectedFromJson_002, TestSize.Level2)
@@ -871,7 +871,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, GetBoxSelectedFromJson_002, TestSize.L
 
 /**
 * @tc.name: GetBoxSelectedFromJson_003
-* @tc.desc: content valid
+* @tc.desc: choice invalid
 * @tc.type: FUNC
 */
 HWTEST_F(ScreenCaptureServerFunctionTest, GetBoxSelectedFromJson_003, TestSize.Level2)
