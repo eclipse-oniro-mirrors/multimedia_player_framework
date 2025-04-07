@@ -1559,7 +1559,7 @@ int32_t AVRecorderNapi::SetWatermark(std::shared_ptr<PixelMap> &pixelMap,
     return MSERR_OK;
 }
 
-int32_t AVRecorderNapi::SetMetadata(std::map<std::string, std::string> &recordMeta)
+int32_t AVRecorderNapi::SetMetadata(const std::map<std::string, std::string> &recordMeta)
 {
     std::shared_ptr<Meta> userMeta = std::make_shared<Meta>();
     for (auto &meta : recordMeta) {
