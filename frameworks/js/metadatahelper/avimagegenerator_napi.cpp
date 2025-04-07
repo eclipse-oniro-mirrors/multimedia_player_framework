@@ -126,6 +126,7 @@ void AVImageGeneratorNapi::Destructor(napi_env env, void *nativeObject, void *fi
     CHECK_AND_RETURN(nativeObject != nullptr);
     AVImageGeneratorNapi *napi = reinterpret_cast<AVImageGeneratorNapi *>(nativeObject);
     std::thread([napi]() -> void {
+        MEDIA_LOGD("Destructor Release enter");
         if (napi != nullptr && napi->helper_ != nullptr) {
             napi->helper_->Release();
         }
