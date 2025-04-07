@@ -731,9 +731,7 @@ int32_t AVScreenCaptureNapi::GetVideoCaptureInfo(std::unique_ptr<AVScreenCapture
     }
     MEDIA_LOGI("input displayId %{public}" PRIu64, videoConfig.displayId);
     // get enableDeviceLevelCapture
-    ret = AVScreenCaptureNapi::GetPropertyBool(env, args, "enableDeviceLevelCapture", enableDeviceLevelCapture);
-    CHECK_AND_RETURN_RET(ret == MSERR_OK, (asyncCtx->AVScreenCaptureSignError(MSERR_INVALID_VAL,
-        "getEnableDeviceLevelCapture", "enableDeviceLevelCapture"), MSERR_INVALID_VAL));
+    CommonNapi::GetPropertyBool(env, args, "enableDeviceLevelCapture", enableDeviceLevelCapture);
     videoConfig.enableDeviceLevelCapture = enableDeviceLevelCapture;
     MEDIA_LOGI("enableDeviceLevelCapture %{public}d", videoConfig.enableDeviceLevelCapture);
     // get video frame info (frameWidth and frameHeight)
@@ -991,37 +989,6 @@ int32_t AVScreenCaptureNapi::GetPropertyInt32(napi_env env, napi_value configObj
     }
 
     if (napi_get_value_int32(env, item, &result) != napi_ok) {
-        std::string string = CommonNapi::GetStringArgument(env, item);
-        if (string == "") {
-            // This attribute has not been assigned
-            return MSERR_OK;
-        } else {
-            MEDIA_LOGE("get %{public}s property value fail", type.c_str());
-            return MSERR_INVALID_VAL;
-        }
-    }
-
-    MEDIA_LOGI("get %{public}s : %{public}d!", type.c_str(), result);
-    return MSERR_OK;
-}
-
-int32_t AVScreenCaptureNapi::GetPropertyBool(napi_env env, napi_value configObj, const std::string &type,
-    bool &result)
-{
-    napi_value item = nullptr;
-    bool exist = false;
-    napi_status status = napi_has_named_property(env, configObj, type.c_str(), &exist);
-    if (status != napi_ok || !exist) {
-        MEDIA_LOGI("can not find %{public}s property", type.c_str());
-        return MSERR_OK;
-    }
-
-    if (napi_get_named_property(env, configObj, type.c_str(), &item) != napi_ok) {
-        MEDIA_LOGI("get %{public}s property fail", type.c_str());
-        return MSERR_UNKNOWN;
-    }
-
-    if (napi_get_value_bool(env, item, &result) != napi_ok) {
         std::string string = CommonNapi::GetStringArgument(env, item);
         if (string == "") {
             // This attribute has not been assigned
