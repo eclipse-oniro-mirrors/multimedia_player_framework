@@ -537,5 +537,14 @@ int32_t RecorderClient::SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer)
     MEDIA_LOGD("SetWatermark");
     return recorderProxy_->SetWatermark(waterMarkBuffer);
 }
+
+int32_t RecorderClient::SetUserMeta(const std::shared_ptr<Meta> &userMeta)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(recorderProxy_ != nullptr, MSERR_NO_MEMORY, "recorder service does not exist.");
+
+    MEDIA_LOGD("SetUserMeta");
+    return recorderProxy_->SetUserMeta(userMeta);
+}
 } // namespace Media
 } // namespace OHOS

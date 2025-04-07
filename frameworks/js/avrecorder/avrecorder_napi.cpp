@@ -87,6 +87,7 @@ napi_value AVRecorderNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getAudioCapturerMaxAmplitude", JsGetAudioCapturerMaxAmplitude),
         DECLARE_NAPI_FUNCTION("getAvailableEncoder", JsGetAvailableEncoder),
         DECLARE_NAPI_FUNCTION("setWatermark", JsSetWatermark),
+        DECLARE_NAPI_FUNCTION("setMetadata", JsSetMetadata),
         DECLARE_NAPI_FUNCTION("isWatermarkSupported", JsIsWatermarkSupported),
 
         DECLARE_NAPI_GETTER("state", JsGetState),
@@ -375,6 +376,57 @@ napi_value AVRecorderNapi::JsSetWatermark(napi_env env, napi_callback_info info)
             }
         }
         MEDIA_LOGI("The js thread of setWatermark finishes execution and returns");
+    }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+    NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
+    asyncCtx.release();
+
+    MEDIA_LOGI("Js %{public}s End", opt.c_str());
+    return result;
+}
+
+napi_value AVRecorderNapi::JsSetMetadata(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVRecorder::JsSetMetadata");
+    const std::string &opt = AVRecordergOpt::SET_METADATA;
+    MEDIA_LOGI("Js %{public}s Start", opt.c_str());
+
+    const int32_t maxParam = 1; // metadata: Record<string, string>
+    size_t argCount = maxParam;
+    napi_value args[maxParam] = { nullptr };
+
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    auto asyncCtx = std::make_unique<AVRecorderAsyncContext>(env);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, result, "failed to get AsyncContext");
+    asyncCtx->napi = AVRecorderNapi::GetJsInstanceAndArgs(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx->napi != nullptr, result, "failed to GetJsInstanceAndArgs");
+    CHECK_AND_RETURN_RET_LOG(asyncCtx->napi->taskQue_ != nullptr, result, "taskQue is nullptr!");
+
+    asyncCtx->deferred = CommonNapi::CreatePromise(env, nullptr, result);
+
+    if (asyncCtx->napi->CheckStateMachine(opt) == MSERR_OK) {
+        if (asyncCtx->napi->GetRecordMeta(asyncCtx, env, args[0]) == MSERR_OK) {
+            asyncCtx->task_ = AVRecorderNapi::SetMetadataTask(asyncCtx);
+            (void)asyncCtx->napi->taskQue_->EnqueueTask(asyncCtx->task_);
+        }
+    } else {
+        asyncCtx->AVRecorderSignError(MSERR_INVALID_OPERATION, opt, "");
+    }
+
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, opt.c_str(), NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
+        AVRecorderAsyncContext* asyncCtx = reinterpret_cast<AVRecorderAsyncContext *>(data);
+        CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "asyncCtx is nullptr!");
+
+        if (asyncCtx->task_) {
+            auto result = asyncCtx->task_->GetResult();
+            if (result.Value().first != MSERR_EXT_API9_OK) {
+                asyncCtx->SignError(result.Value().first, result.Value().second);
+            }
+        }
+        MEDIA_LOGI("The js thread of setMetadata finishes execution and returns");
     }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
     NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
     asyncCtx.release();
@@ -1312,6 +1364,31 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderNapi::SetWatermarkTask(
     });
 }
 
+std::shared_ptr<TaskHandler<RetInfo>> AVRecorderNapi::SetMetadataTask(
+    const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx)
+{
+    return std::make_shared<TaskHandler<RetInfo>>([napi = asyncCtx->napi, &recordMeta = asyncCtx->recordMeta_]() {
+        const std::string &option = AVRecordergOpt::SET_METADATA;
+        MEDIA_LOGI("%{public}s Start", option.c_str());
+
+        CHECK_AND_RETURN_RET(napi != nullptr,
+            GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
+
+        CHECK_AND_RETURN_RET(napi->CheckStateMachine(option) == MSERR_OK,
+            GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
+
+        CHECK_AND_RETURN_RET(napi->CheckRepeatOperation(option) == MSERR_OK,
+            RetInfo(MSERR_EXT_API9_OK, ""));
+
+        int32_t ret = napi->SetMetadata(recordMeta);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, GetRetInfo(ret, "SetMetadataTask", ""),
+            "SetMetadataTask failed");
+
+        MEDIA_LOGI("%{public}s End", option.c_str());
+        return RetInfo(MSERR_EXT_API9_OK, "");
+    });
+}
+
 RetInfo AVRecorderNapi::GetInputSurface()
 {
     CHECK_AND_RETURN_RET_LOG(withVideo_, GetRetInfo(MSERR_INVALID_OPERATION, "GetInputSurface", "",
@@ -1522,6 +1599,29 @@ int32_t AVRecorderNapi::SetWatermark(std::shared_ptr<PixelMap> &pixelMap,
     return recorder_->SetWatermark(waterMarkBuffer);
 #endif
     return MSERR_OK;
+}
+
+int32_t AVRecorderNapi::SetMetadata(std::map<std::string, std::string> &recordMeta)
+{
+    MEDIA_LOGI("recordMeta size %{public}d", static_cast<int32_t>(recordMeta.size()));
+
+    std::shared_ptr<Meta> userMeta = std::make_shared<Meta>();
+    for (auto &meta : recordMeta) {
+        MEDIA_LOGI("recordMeta tag: %{public}s, value: %{public}s", meta.first.c_str(), meta.second.c_str());
+        userMeta->SetData(meta.first, meta.second);
+    }
+    userMeta->SetData("com.openharmony.deferredvideoenhanceflag", "10");
+    userMeta->SetData("com.openharmony.videoId", "10");
+    {
+        std::vector<std::string> keys;
+        userMeta->GetKeys(keys);
+        for (auto& k: keys) {
+            std::string dataStr = "";
+            userMeta->GetData(k, dataStr);
+            MEDIA_LOGI("recordMeta key: %{public}s, value: %{public}s", k.c_str(), dataStr.c_str());
+        }
+    }
+    return recorder_->SetUserMeta(userMeta);
 }
 
 int32_t AVRecorderNapi::ConfigAVBufferMeta(std::shared_ptr<PixelMap> &pixelMap,
@@ -2041,6 +2141,20 @@ int32_t AVRecorderNapi::GetWatermarkConfig(std::unique_ptr<AVRecorderAsyncContex
     CHECK_AND_RETURN_RET(ret && asyncCtx->watermarkConfig_->left >= 0,
         (asyncCtx->AVRecorderSignError(MSERR_PARAMETER_VERIFICATION_FAILED, "GetWatermarkConfig", "left",
             "config left cannot be null or less than zero"), MSERR_PARAMETER_VERIFICATION_FAILED));
+    return MSERR_OK;
+}
+
+int32_t AVRecorderNapi::GetRecordMeta(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx,
+    napi_env env, napi_value args)
+{
+    CHECK_AND_RETURN_RET(CommonNapi::CheckValueType(env, args, napi_object),
+        (asyncCtx->AVRecorderSignError(MSERR_INVALID_VAL, "GetRecordMeta", "RecordMeta"), MSERR_INVALID_VAL));
+
+    CommonNapi::GetPropertyMap(env, args, asyncCtx->recordMeta_);
+
+    CHECK_AND_RETURN_RET(asyncCtx->recordMeta_.size() != 0,
+        (asyncCtx->AVRecorderSignError(MSERR_PARAMETER_VERIFICATION_FAILED, "GetRecordMeta", "tag",
+            "recordMeta has no data"), MSERR_PARAMETER_VERIFICATION_FAILED));
     return MSERR_OK;
 }
 

@@ -1027,6 +1027,16 @@ public:
      * @version 1.0
     */
     virtual int32_t SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer) = 0;
+
+    /**
+     * @brief Set UserMeta to avrecorder.
+     *
+     * @param userMeta metadata
+     * @return Returns {@link MSERR_OK} If the SetUserMeta succeeds; returns an error code otherwise.
+     * @since 1.0
+     * @version 1.0
+    */
+    virtual int32_t SetUserMeta(const std::shared_ptr<Meta> &userMeta) = 0;
 };
 
 class __attribute__((visibility("default"))) RecorderFactory {
