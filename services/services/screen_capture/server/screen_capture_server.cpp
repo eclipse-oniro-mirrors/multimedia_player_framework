@@ -3429,6 +3429,7 @@ int32_t ScreenCaptureServer::StartMicAudioCapture()
         return MSERR_OK;
     }
 #endif
+    CHECK_AND_RETURN_RET_NOLOG(micAudioCapture_ != nullptr, MSERR_OK);
     if (captureConfig_.audioInfo.micCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_VALID) {
         MediaTrace trace("ScreenCaptureServer::StartMicAudioCapture");
         if (audioSource_) {
