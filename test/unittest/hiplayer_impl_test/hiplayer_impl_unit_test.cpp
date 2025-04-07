@@ -1303,7 +1303,7 @@ HWTEST_F(HiplayerImplUnitTest, TestHandleMemoryUsageEvent_004, TestSize.Level0)
 */
 HWTEST_F(HiplayerImplUnitTest, TestHandleMemoryUsageEvent_005, TestSize.Level0)
 {
-    uint32_t reportMemory = 50 * 1024;
+    uint32_t reportMemory = 50 * 1024 * 1024;
     DfxEvent event;
     event.callerName = "DEMUXER_PLUGIN";
     event.param = std::unordered_map<uint32_t, uint32_t>{{1, reportMemory}, {2, reportMemory}};
@@ -1320,7 +1320,7 @@ HWTEST_F(HiplayerImplUnitTest, TestHandleMemoryUsageEvent_005, TestSize.Level0)
 */
 HWTEST_F(HiplayerImplUnitTest, TestHandleMemoryUsageEvent_006, TestSize.Level0)
 {
-    uint32_t reportMemory = 50 * 1024;
+    uint32_t reportMemory = 50 * 1024 * 1024;
     DfxEvent event;
     event.callerName = "DEMUXER_PLUGIN";
     event.param = std::unordered_map<uint32_t, uint32_t>{{1, reportMemory}, {2, reportMemory}};
