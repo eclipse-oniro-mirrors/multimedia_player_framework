@@ -2841,7 +2841,7 @@ int32_t ScreenCaptureServer::StartMicAudioCapture()
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StartMicAudioCapture start, dataType:%{public}d, "
         "micCapInfo.state:%{public}d.",
         FAKE_POINTER(this), captureConfig_.dataType, captureConfig_.audioInfo.micCapInfo.state);
-
+    CHECK_AND_RETURN_RET(micAudioCapture_ != nullptr, MSERR_OK);
     if (captureConfig_.audioInfo.micCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_VALID) {
         MediaTrace trace("ScreenCaptureServer::StartMicAudioCapture");
         if (audioSource_) {
