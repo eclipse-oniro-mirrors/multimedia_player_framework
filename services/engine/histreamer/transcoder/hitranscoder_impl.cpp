@@ -264,6 +264,7 @@ void HiTransCoderImpl::ConfigureMetaDataToTrackFormat(const std::shared_ptr<Meta
             (void)SetValueByType(meta, muxerFormat_);
             meta->GetData(Tag::VIDEO_WIDTH, inputVideoWidth_);
             meta->GetData(Tag::VIDEO_HEIGHT, inputVideoHeight_);
+            UpdateVideoEncFormat(meta);
             isExistVideoTrack_ = true;
             isInitializeVideoEncFormat = true;
         } else if (!isInitializeAudioEncFormat && (trackMime.find("audio/") == 0)) {
@@ -278,6 +279,18 @@ void HiTransCoderImpl::ConfigureMetaDataToTrackFormat(const std::shared_ptr<Meta
         MEDIA_LOG_E("No video track found.");
         OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_UNSUPPORT_VID_SRC_TYPE});
     }
+}
+
+void HiTransCoderImpl::UpdateVideoEncFormat(const std::shared_ptr<Meta> &meta)
+{
+    std::string videoMime;
+    meta->GetData(Tag::MIME_TYPE, videoMime);
+    MEDIA_LOG_I("videoMime is: " PUBLIC_LOG_S, videoMime.c_str());
+    FALSE_RETURN_NOLOG(videoMime != Plugins::MimeType::VIDEO_HEVC);
+    MEDIA_LOG_I("set the default videoEnc format to AVC");
+    videoEncFormat_->Set<Tag::MIME_TYPE>(Plugins::MimeType::VIDEO_AVC);
+    videoEncFormat_->Set<Tag::VIDEO_H264_PROFILE>(Plugins::VideoH264Profile::BASELINE);
+    videoEncFormat_->Set<Tag::VIDEO_H264_LEVEL>(32); // 32: LEVEL 3.2
 }
 
 void HiTransCoderImpl::UpdateAudioSampleFormat(const std::string& mime, const std::shared_ptr<Meta> &meta)
