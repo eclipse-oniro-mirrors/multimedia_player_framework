@@ -586,7 +586,7 @@ HWTEST_F(PlayerTimeoutUnitTest, Player_SetPlaybackSpeed_Timeout_001, TestSize.Le
             return MSERR_OK;
         });
     
-    EXPECT_EQ(MSERR_OK, 
+    EXPECT_EQ(MSERR_OK,
         playerImpl_->SetPlaybackSpeed(PlaybackRateMode::SPEED_FORWARD_2_00_X));
 }
 
@@ -771,7 +771,7 @@ HWTEST_F(PlayerTimeoutUnitTest, Player_GetCurrentTrack_Timeout_001, TestSize.Lev
             return MSERR_OK;
         });
     
-    EXPECT_EQ(MSERR_OK, 
+    EXPECT_EQ(MSERR_OK,
         playerImpl_->GetCurrentTrack(MediaType::MEDIA_TYPE_AUD, trackIndex));
 }
 
