@@ -286,7 +286,7 @@ void HiTransCoderImpl::UpdateVideoEncFormat(const std::shared_ptr<Meta> &meta)
     std::string videoMime;
     meta->GetData(Tag::MIME_TYPE, videoMime);
     MEDIA_LOG_I("videoMime is: " PUBLIC_LOG_S, videoMime.c_str());
-    FALSE_RETURN_NOLOG(dstVideoMime != Plugins::MimeType::VIDEO_HEVC);
+    FALSE_RETURN_NOLOG(videoMime != Plugins::MimeType::VIDEO_HEVC);
     MEDIA_LOG_I("set the default videoEnc format to AVC");
     videoEncFormat_->Set<Tag::MIME_TYPE>(Plugins::MimeType::VIDEO_AVC);
     videoEncFormat_->Set<Tag::VIDEO_H264_PROFILE>(Plugins::VideoH264Profile::BASELINE);
