@@ -25,9 +25,11 @@ class MockIMediaDataSource : public IMediaDataSource {
 public:
     MockIMediaDataSource() = default;
     ~MockIMediaDataSource() override {};
-    MOCK_METHOD(int32_t, ReadAt, (const std::shared_ptr<AVSharedMemory> &mem, uint32_t length, int64_t pos), (override));
+    MOCK_METHOD(
+        int32_t, ReadAt, (const std::shared_ptr<AVSharedMemory> &mem, uint32_t length, int64_t pos), (override));
     MOCK_METHOD(int32_t, GetSize, (int64_t &size), (override));
-    MOCK_METHOD(int32_t, ReadAt, (int64_t pos, uint32_t length, const std::shared_ptr<AVSharedMemory> &mem), (override));
+    MOCK_METHOD(
+        int32_t, ReadAt, (int64_t pos, uint32_t length, const std::shared_ptr<AVSharedMemory> &mem), (override));
     MOCK_METHOD(int32_t, ReadAt, (uint32_t length, const std::shared_ptr<AVSharedMemory> &mem), (override));
 };
 } // namespace Media

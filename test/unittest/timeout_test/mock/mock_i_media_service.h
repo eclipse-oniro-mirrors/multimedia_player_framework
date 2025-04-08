@@ -32,7 +32,8 @@ public:
     MOCK_METHOD(std::shared_ptr<IRecorderService>, CreateRecorderService, (), (override));
     MOCK_METHOD(int32_t, DestroyRecorderService, (std::shared_ptr<IRecorderService> recorder), (override));
     MOCK_METHOD(std::shared_ptr<IRecorderProfilesService>, CreateRecorderProfilesService, (), (override));
-    MOCK_METHOD(int32_t, DestroyMediaProfileService, (std::shared_ptr<IRecorderProfilesService> recorderProfiles), (override));
+    MOCK_METHOD(int32_t,
+        DestroyMediaProfileService, (std::shared_ptr<IRecorderProfilesService> recorderProfiles), (override));
 #endif
 
 #ifdef SUPPORT_TRANSCODER
@@ -42,18 +43,22 @@ public:
 
 #ifdef SUPPORT_METADATA
     MOCK_METHOD(std::shared_ptr<IAVMetadataHelperService>, CreateAVMetadataHelperService, (), (override));
-    MOCK_METHOD(int32_t, DestroyAVMetadataHelperService, (std::shared_ptr<IAVMetadataHelperService> avMetadataHelper), (override));
+    MOCK_METHOD(int32_t,
+        DestroyAVMetadataHelperService, (std::shared_ptr<IAVMetadataHelperService> avMetadataHelper), (override));
 #endif
 
 #ifdef SUPPORT_SCREEN_CAPTURE
     MOCK_METHOD(std::shared_ptr<IScreenCaptureService>, CreateScreenCaptureService, (), (override));
-    MOCK_METHOD(int32_t, DestroyScreenCaptureService, (std::shared_ptr<IScreenCaptureService> screenCaptureHelper), (override));
+    MOCK_METHOD(int32_t,
+        DestroyScreenCaptureService, (std::shared_ptr<IScreenCaptureService> screenCaptureHelper), (override));
     
     MOCK_METHOD(std::shared_ptr<IScreenCaptureMonitorService>, CreateScreenCaptureMonitorService, (), (override));
-    MOCK_METHOD(int32_t, DestroyScreenCaptureMonitorService, (std::shared_ptr<IScreenCaptureMonitorService> screenCaptureMonitor), (override));
+    MOCK_METHOD(int32_t, DestroyScreenCaptureMonitorService,
+        (std::shared_ptr<IScreenCaptureMonitorService> screenCaptureMonitor), (override));
     
     MOCK_METHOD(std::shared_ptr<IScreenCaptureController>, CreateScreenCaptureControllerClient, (), (override));
-    MOCK_METHOD(int32_t, DestroyScreenCaptureControllerClient, (std::shared_ptr<IScreenCaptureController> controller), (override));
+    MOCK_METHOD(int32_t,
+        DestroyScreenCaptureControllerClient, (std::shared_ptr<IScreenCaptureController> controller), (override));
 #endif
 
     MOCK_METHOD(sptr<IStandardMonitorService>, GetMonitorProxy, (), (override));

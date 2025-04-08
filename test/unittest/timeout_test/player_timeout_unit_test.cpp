@@ -730,7 +730,7 @@ HWTEST_F(PlayerTimeoutUnitTest, Player_SelectTrack_Timeout_001, TestSize.Level0)
             return MSERR_OK;
         });
     
-    EXPECT_EQ(MSERR_OK, 
+    EXPECT_EQ(MSERR_OK,
         playerImpl_->SelectTrack(testIndex, PlayerSwitchMode::SWITCH_SMOOTH));
 }
 
