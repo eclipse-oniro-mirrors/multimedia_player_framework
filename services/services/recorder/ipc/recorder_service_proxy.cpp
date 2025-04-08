@@ -967,5 +967,24 @@ int32_t RecorderServiceProxy::SetWatermark(std::shared_ptr<AVBuffer> &waterMarkB
 
     return reply.ReadInt32();
 }
+
+int32_t RecorderServiceProxy::SetUserMeta(const std::shared_ptr<Meta> &userMeta)
+{
+    (void)userMeta;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+    
+    CHECK_AND_RETURN_RET_LOG(userMeta->ToParcel(data), MSERR_INVALID_OPERATION, "write data failed");
+
+    int error = Remote()->SendRequest(SET_USERMETA, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetUserMeta failed, error: %{public}d", error);
+
+    return reply.ReadInt32();
+}
 } // namespace Media
 } // namespace OHOS

@@ -87,6 +87,7 @@ napi_value AVRecorderNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getAudioCapturerMaxAmplitude", JsGetAudioCapturerMaxAmplitude),
         DECLARE_NAPI_FUNCTION("getAvailableEncoder", JsGetAvailableEncoder),
         DECLARE_NAPI_FUNCTION("setWatermark", JsSetWatermark),
+        DECLARE_NAPI_FUNCTION("setMetadata", JsSetMetadata),
         DECLARE_NAPI_FUNCTION("isWatermarkSupported", JsIsWatermarkSupported),
 
         DECLARE_NAPI_GETTER("state", JsGetState),
@@ -378,6 +379,40 @@ napi_value AVRecorderNapi::JsSetWatermark(napi_env env, napi_callback_info info)
     }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
     NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
     asyncCtx.release();
+
+    MEDIA_LOGI("Js %{public}s End", opt.c_str());
+    return result;
+}
+
+napi_value AVRecorderNapi::JsSetMetadata(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVRecorder::JsSetMetadata");
+    const std::string &opt = AVRecordergOpt::SET_METADATA;
+    MEDIA_LOGI("Js %{public}s Start", opt.c_str());
+
+    const int32_t maxParam = 1; // metadata: Record<string, string>
+    size_t argCount = maxParam;
+    napi_value args[maxParam] = { nullptr };
+
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    AVRecorderNapi *jsRecorder = AVRecorderNapi::GetJsInstanceAndArgs(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(jsRecorder != nullptr, result, "failed to GetJsInstanceAndArgs");
+    CHECK_AND_RETURN_RET_LOG(jsRecorder->taskQue_ != nullptr, result, "taskQue is nullptr!");
+    CHECK_AND_RETURN_RET_LOG(jsRecorder->CheckStateMachine(opt) == MSERR_OK, result, "on error state");
+    CHECK_AND_RETURN_RET_LOG(jsRecorder->CheckRepeatOperation(opt) == MSERR_OK, result, "on error Operation");
+
+    std::map<std::string, std::string> recordMeta;
+    CommonNapi::GetPropertyMap(env, args[0], recordMeta);
+    CHECK_AND_RETURN_RET_LOG(recordMeta.size() != 0, result, "recordMeta has no data");
+
+    auto task = std::make_shared<TaskHandler<void>>([jsRecorder, recordMeta]() {
+        if (jsRecorder != nullptr) {
+            (void)jsRecorder->SetMetadata(recordMeta);
+        }
+    });
+    (void)jsRecorder->taskQue_->EnqueueTask(task);
 
     MEDIA_LOGI("Js %{public}s End", opt.c_str());
     return result;
@@ -1522,6 +1557,16 @@ int32_t AVRecorderNapi::SetWatermark(std::shared_ptr<PixelMap> &pixelMap,
     return recorder_->SetWatermark(waterMarkBuffer);
 #endif
     return MSERR_OK;
+}
+
+int32_t AVRecorderNapi::SetMetadata(const std::map<std::string, std::string> &recordMeta)
+{
+    std::shared_ptr<Meta> userMeta = std::make_shared<Meta>();
+    for (auto &meta : recordMeta) {
+        MEDIA_LOGI("recordMeta tag: %{public}s, value: %{public}s", meta.first.c_str(), meta.second.c_str());
+        userMeta->SetData(meta.first, meta.second);
+    }
+    return recorder_->SetUserMeta(userMeta);
 }
 
 int32_t AVRecorderNapi::ConfigAVBufferMeta(std::shared_ptr<PixelMap> &pixelMap,

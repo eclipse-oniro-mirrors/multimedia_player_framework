@@ -59,6 +59,7 @@ const std::string GET_MAX_AMPLITUDE = "GetMaxAmplitude";
 const std::string GET_ENCODER_INFO = "GetEncoderInfo";
 const std::string IS_WATERMARK_SUPPORTED = "IsWatermarkSupported";
 const std::string SET_WATERMARK = "SetWatermark";
+const std::string SET_METADATA = "SetMetadata";
 }
 
 constexpr int32_t AVRECORDER_DEFAULT_AUDIO_BIT_RATE = 48000;
@@ -90,7 +91,8 @@ const std::map<std::string, std::vector<std::string>> stateCtrlList = {
         AVRecordergOpt::GET_ENCODER_INFO,
         AVRecordergOpt::GET_AV_RECORDER_CONFIG,
         AVRecordergOpt::IS_WATERMARK_SUPPORTED,
-        AVRecordergOpt::SET_WATERMARK
+        AVRecordergOpt::SET_WATERMARK,
+        AVRecordergOpt::SET_METADATA
     }},
     {AVRecorderState::STATE_STARTED, {
         AVRecordergOpt::START,
@@ -103,7 +105,8 @@ const std::map<std::string, std::vector<std::string>> stateCtrlList = {
         AVRecordergOpt::GET_MAX_AMPLITUDE,
         AVRecordergOpt::GET_ENCODER_INFO,
         AVRecordergOpt::GET_AV_RECORDER_CONFIG,
-        AVRecordergOpt::IS_WATERMARK_SUPPORTED
+        AVRecordergOpt::IS_WATERMARK_SUPPORTED,
+        AVRecordergOpt::SET_METADATA
     }},
     {AVRecorderState::STATE_PAUSED, {
         AVRecordergOpt::PAUSE,
@@ -115,7 +118,8 @@ const std::map<std::string, std::vector<std::string>> stateCtrlList = {
         AVRecordergOpt::GET_MAX_AMPLITUDE,
         AVRecordergOpt::GET_ENCODER_INFO,
         AVRecordergOpt::GET_AV_RECORDER_CONFIG,
-        AVRecordergOpt::IS_WATERMARK_SUPPORTED
+        AVRecordergOpt::IS_WATERMARK_SUPPORTED,
+        AVRecordergOpt::SET_METADATA
     }},
     {AVRecorderState::STATE_STOPPED, {
         AVRecordergOpt::STOP,
@@ -217,6 +221,10 @@ private:
      * setWatermark(watermark: image.PixelMap, config: WatermarkConfig): promise<void>;
     */
     static napi_value JsSetWatermark(napi_env env, napi_callback_info info);
+    /**
+     * setMetadata(metadata: Record<string, string>): void;
+    */
+    static napi_value JsSetMetadata(napi_env env, napi_callback_info info);
     /**
      * getInputSurface(callback: AsyncCallback<string>): void
      * getInputSurface(): Promise<string>
@@ -367,6 +375,7 @@ private:
     int32_t GetEncoderInfo(std::vector<EncoderCapabilityData> &encoderInfo);
     int32_t IsWatermarkSupported(bool &isWatermarkSupported);
     int32_t SetWatermark(std::shared_ptr<PixelMap> &pixelMap, std::shared_ptr<WatermarkConfig> &watermarkConfig);
+    int32_t SetMetadata(const std::map<std::string, std::string> &recordMeta);
 
     void ErrorCallback(int32_t errCode, const std::string &operate, const std::string &add = "");
     void StateCallback(const std::string &state);
