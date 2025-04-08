@@ -915,7 +915,7 @@ int32_t ScreenCaptureServer::StartAudioCapture()
     ret = StartStreamInnerAudioCapture();
     if (ret != MSERR_OK) {
         MEDIA_LOGE("StartStreamInnerAudioCapture failed");
-        micAudioCapture_ = nullptr;
+        StopMicAudioCapture();
         return ret;
     }
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StartAudioCapture OK.", FAKE_POINTER(this));
@@ -2269,9 +2269,9 @@ int32_t ScreenCaptureServer::ReStartMicForVoIPStatusSwitch()
     int32_t ret = MSERR_OK;
     StopMicAudioCapture();
     if (isMicrophoneOn_) {
-        ret = StartFileMicAudioCapture();
+        ret = StartMicAudioCapture();
         if (ret != MSERR_OK) {
-            MEDIA_LOGE("OnVoIPStatusChanged StartFileMicAudioCapture failed, ret: %{public}d", ret);
+            MEDIA_LOGE("OnVoIPStatusChanged StartMicAudioCapture failed, ret: %{public}d", ret);
         }
     }
     return ret;
@@ -2417,18 +2417,43 @@ int32_t ScreenCaptureServer::SetScreenScaleMode()
 int32_t ScreenCaptureServer::StopAudioCapture()
 {
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StopAudioCapture start.", FAKE_POINTER(this));
-    if (micAudioCapture_ != nullptr) {
-        MediaTrace trace("ScreenCaptureServer::StopAudioCaptureMic");
-        micAudioCapture_->Stop();
-        micAudioCapture_ = nullptr;
-    }
-
-    if (innerAudioCapture_ != nullptr) {
-        MediaTrace trace("ScreenCaptureServer::StopAudioCaptureInner");
-        innerAudioCapture_->Stop();
-        innerAudioCapture_ = nullptr;
-    }
+    StopMicAudioCapture();
+    StopInnerAudioCapture();
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StopAudioCapture end.", FAKE_POINTER(this));
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureServer::StartMicAudioCapture()
+{
+    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StartMicAudioCapture start, dataType:%{public}d, "
+        "micCapInfo.state:%{public}d.",
+        FAKE_POINTER(this), captureConfig_.dataType, captureConfig_.audioInfo.micCapInfo.state);
+    CHECK_AND_RETURN_RET(micAudioCapture_ != nullptr, MSERR_OK);
+    if (captureConfig_.audioInfo.micCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_VALID) {
+        MediaTrace trace("ScreenCaptureServer::StartMicAudioCaptureInner");
+        if (audioSource_) {
+            micAudioCapture_->SetIsInVoIPCall(audioSource_->GetIsInVoIPCall());
+        }
+        int32_t ret = micAudioCapture_->Start(appInfo_);
+        if (ret != MSERR_OK) {
+            MEDIA_LOGE("StartMicAudioCapture micCapture failed");
+            isMicrophoneOn_ = false;
+            screenCaptureCb_->OnStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE);
+            return ret;
+        }
+    }
+    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StartMicAudioCapture OK.", FAKE_POINTER(this));
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureServer::StopInnerAudioCapture()
+{
+    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StopInnerAudioCapture start.", FAKE_POINTER(this));
+    if (innerAudioCapture_ != nullptr) {
+        MediaTrace trace("ScreenCaptureServer::StopInnerAudioCapture");
+        innerAudioCapture_->Stop();
+    }
+    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StopInnerAudioCapture end.", FAKE_POINTER(this));
     return MSERR_OK;
 }
 
@@ -2438,7 +2463,6 @@ int32_t ScreenCaptureServer::StopMicAudioCapture()
     if (micAudioCapture_ != nullptr) {
         MediaTrace trace("ScreenCaptureServer::StopAudioCaptureMic");
         micAudioCapture_->Stop();
-        micAudioCapture_ = nullptr;
     }
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StopMicAudioCapture end.", FAKE_POINTER(this));
     return MSERR_OK;
@@ -2609,11 +2633,13 @@ void ScreenCaptureServer::ReleaseInner()
     int32_t sessionId;
     {
         std::lock_guard<std::mutex> lock(mutex_);
-        StopScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID);
-        sessionId = sessionId_;
-        sessionId_ = SESSION_ID_INVALID;
-        MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances ReleaseInner Stop done, sessionId:%{public}d",
-            FAKE_POINTER(this), sessionId);
+        if (captureState_ != AVScreenCaptureState::STOPPED) {
+            StopScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID);
+            sessionId = sessionId_;
+            sessionId_ = SESSION_ID_INVALID;
+            MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances ReleaseInner Stop done, sessionId:%{public}d",
+                FAKE_POINTER(this), sessionId);
+        }
     }
     {
         std::lock_guard<std::mutex> lock(mutexGlobal_);
