@@ -55,7 +55,7 @@ namespace {
     constexpr int32_t INDEX_C = 2;
     constexpr uint32_t TASK_TIME_LIMIT_MS = 2000; // ms
     constexpr size_t PARAM_COUNT_SINGLE = 1;
-    constexpr int32_t API_VERSION_18 = 18;
+    constexpr int32_t API_VERSION_17 = 17;
     static int32_t g_apiVersion = -1;
     constexpr int32_t ARGS_TWO = 2;
     constexpr int32_t ARGS_THREE = 3;
@@ -1469,7 +1469,7 @@ napi_value AVPlayerNapi::JsSetPlaybackStrategy(napi_env env, napi_callback_info 
     } else {
         AVPlayStrategyTmp strategyTmp;
         (void)CommonNapi::GetPlayStrategy(env, args[0], strategyTmp);
-        if ((jsPlayer->GetJsApiVersion() < API_VERSION_18) &&
+        if ((jsPlayer->GetJsApiVersion() < API_VERSION_17) &&
             (strategyTmp.mutedMediaType != MediaType::MEDIA_TYPE_AUD)) {
             promiseCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "only support mute media type audio now");
         } else if (!jsPlayer->IsPalyingDurationValid(strategyTmp)) {
@@ -1875,7 +1875,7 @@ napi_value AVPlayerNapi::JsSetMediaSource(napi_env env, napi_callback_info info)
         return result;
     }
     jsPlayer->GetAVPlayStrategyFromStrategyTmp(strategy, strategyTmp);
-    if (jsPlayer->GetJsApiVersion() < API_VERSION_18) {
+    if (jsPlayer->GetJsApiVersion() < API_VERSION_17) {
         strategy.mutedMediaType = MediaType::MEDIA_TYPE_MAX_COUNT;
     }
     jsPlayer->EnqueueMediaSourceTask(jsPlayer, mediaSource, strategy);
