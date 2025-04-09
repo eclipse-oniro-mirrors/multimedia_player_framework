@@ -14,7 +14,7 @@
 import("//build/test.gni")
 import("//foundation/multimedia/player_framework/config.gni")
 
-module_output_path = "player_framework/transcode"
+module_output_path = "player_framework/player_framework/transcode"
 
 config("transcode_unit_test_config") {
   visibility = [ ":*" ]

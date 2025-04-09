@@ -15,7 +15,7 @@ import("//build/test.gni")
 import("//foundation/multimedia/player_framework/config.gni")
 
 ohos_unittest("avmetadata_helper_unit_test") {
-  module_out_path = "player_framework/avmetadatahelper"
+  module_out_path = "player_framework/player_framework/avmetadatahelper"
 
   cflags = [
     "-O2",
