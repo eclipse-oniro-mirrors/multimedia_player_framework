@@ -1873,7 +1873,11 @@ void CJAVPlayer::SetSurface(const std::string &surfaceStr)
                   "Please obtain the surface from XComponentController.getXComponentSurfaceId");
         return;
     }
-    surfaceId = std::stoull(surfaceStr);
+    if (!StrToULL(surfaceStr, surfaceId)) {
+        OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
+            "invalid parameters, failed to obtain surfaceId");
+        return;
+    }
     MEDIA_LOGI("get surface, surfaceId = (%{public}" PRIu64 ")", surfaceId);
 
     auto surface = SurfaceUtils::GetInstance()->GetSurface(surfaceId);
