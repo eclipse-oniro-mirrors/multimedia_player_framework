@@ -537,7 +537,7 @@ int32_t HiTransCoderImpl::Configure(const TransCoderParam &transCoderParam)
             AudioBitRate audioBitrate = static_cast<const AudioBitRate&>(transCoderParam);
             if (audioBitrate.bitRate <= 0) {
                 MEDIA_LOG_E("Invalid audioBitrate.bitRate %{public}d", audioBitrate.bitRate);
-                OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_INVALID_VAL});
+                OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_PARAMETER_VERIFICATION_FAILED});
                 return static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER);
             }
             MEDIA_LOG_I("HiTransCoderImpl::Configure audioBitrate %{public}d", audioBitrate.bitRate);
@@ -569,7 +569,7 @@ int32_t HiTransCoderImpl::Prepare()
         if (width > inputVideoWidth_ || height > inputVideoHeight_ || std::min(width, height) < MINIMUM_WIDTH_HEIGHT) {
             MEDIA_LOG_E("Output video width or height is invalid");
             CollectionErrorInfo(static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER), "Prepare error");
-            OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_INVALID_VAL});
+            OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_PARAMETER_VERIFICATION_FAILED});
             return static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER);
         }
         isNeedVideoResizeFilter_ = width != inputVideoWidth_ || height != inputVideoHeight_;
