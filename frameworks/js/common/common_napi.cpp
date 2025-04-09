@@ -21,8 +21,6 @@
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "CommonNapi"};
-    constexpr double DEFAULT_LIVING_CACHED_DURATION = 2;
-    constexpr double DEFAULT_MAX_DELAY_TIME_FOR_LIVING = 5;
 }
 
 namespace OHOS {
@@ -312,10 +310,12 @@ bool CommonNapi::GetPlayStrategy(napi_env env, napi_value value, AVPlayStrategyT
     playStrategy.preferredSubtitleLanguage = GetPropertyString(env, value, "preferredSubtitleLanguage");
     if (!GetPropertyDouble(env, value, "preferredBufferDurationForPlaying",
         playStrategy.preferredBufferDurationForPlaying)) {
-        playStrategy.preferredBufferDurationForPlaying = DEFAULT_LIVING_CACHED_DURATION; // use default value
+        playStrategy.preferredBufferDurationForPlaying = 0; // use default value
+        playStrategy.isSetBufferDurationForPlaying = false;
     }
     if (!GetPropertyDouble(env, value, "thresholdForAutoQuickPlay", playStrategy.thresholdForAutoQuickPlay)) {
-        playStrategy.thresholdForAutoQuickPlay = DEFAULT_MAX_DELAY_TIME_FOR_LIVING;
+        playStrategy.thresholdForAutoQuickPlay = -1;
+        playStrategy.isSetThresholdForAutoQuickPlay = false;
     }
     return true;
 }

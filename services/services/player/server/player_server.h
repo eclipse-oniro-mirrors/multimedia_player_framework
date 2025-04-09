@@ -235,7 +235,6 @@ private:
     void UpdateContinousBatchNo();
 
     bool CheckState(PlayerOnInfoType type, int32_t extra);
-    bool IsLivingMaxDelyTimeValid(AVPlayStrategy playbackStrategy);
     void DoCheckLiveDalyTime();
     int64_t CalculatePauseTime();
     void HandleFlvLiveRestartLink();
