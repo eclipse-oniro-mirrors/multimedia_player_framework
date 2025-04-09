@@ -292,6 +292,8 @@ private:
     void SetFlvObs();
     void StartFlvCheckLiveDelayTime();
     void StopFlvCheckLiveDelayTime();
+    void UpdateFlvLiveParams();
+    void SetFlvLiveParams(AVPlayStrategy playbackStrategy);
     void SetPostProcessor();
 
     bool isNetWorkPlay_ = false;
@@ -373,8 +375,8 @@ private:
     uint32_t preferedHeight_ = 0;
     uint32_t bufferDuration_ = 0;
     double bufferDurationForPlaying_ = 0;
-    double maxLivingDelayTime_ = 0;
-    bool isPlaybackStrategySet_ {false};
+    double maxLivingDelayTime_ = -1;
+    bool isSetBufferDurationForPlaying_ {false};
     bool isFlvLive_ {false};
     bool preferHDR_ = false;
     OHOS::Media::MediaType mutedMediaType_ = OHOS::Media::MediaType::MEDIA_TYPE_MAX_COUNT;
