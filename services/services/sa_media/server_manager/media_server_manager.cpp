@@ -47,7 +47,7 @@
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "MediaServerManager"};
 constexpr uint32_t REPORT_TIME = 100000000; // us
-constexpr int32_t RELEASE_THRESHOLD = 2;  // relese task
+constexpr int32_t RELEASE_THRESHOLD = 3;  // relese task
 }
 
 namespace OHOS {
