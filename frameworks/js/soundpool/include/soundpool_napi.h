@@ -130,7 +130,6 @@ private:
     static SoundPoolNapi* GetJsInstanceAndArgs(napi_env env, napi_callback_info info,
         size_t &argCount, napi_value *args);
     static napi_status GetJsInstanceWithParameter(napi_env env, napi_value *argv);
-    static void SendCompleteEvent(napi_env env, std::unique_ptr<SoundPoolAsyncContext> asyncCtx);
     int32_t ParserLoadOptionFromJs(std::unique_ptr<SoundPoolAsyncContext> &asyncCtx,
         napi_env env, napi_value *argv, size_t argCount);
     int32_t ParserPlayOptionFromJs(std::unique_ptr<SoundPoolAsyncContext> &asyncCtx,
