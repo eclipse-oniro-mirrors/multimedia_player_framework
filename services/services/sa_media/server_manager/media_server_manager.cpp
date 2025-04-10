@@ -842,6 +842,11 @@ void MediaServerManager::GetMemUsageForPlayer()
     playerPidMem_.swap(memoryList);
     if (playerPidMem_.empty()) {
         needReleaseTaskCount_.fetch_add(1, std::memory_order_relaxed);
+        if (needReleaseTaskCount_ >= RELEASE_THRESHOLD) {
+            std::thread([memoryReportTask = std::move(memoryReportTask_)]() mutable -> void {
+                MEDIA_LOGI("memoryReportTask: release");
+            }).detach();
+        }
         return;
     }
     needReleaseTaskCount_ = 0;
@@ -850,12 +855,6 @@ void MediaServerManager::GetMemUsageForPlayer()
 void MediaServerManager::ReportAppMemoryUsage()
 {
     GetMemUsageForPlayer();
-    if (needReleaseTaskCount_ >= RELEASE_THRESHOLD) {
-        std::thread([memoryReportTask = std::move(memoryReportTask_)]() mutable -> void {
-            MEDIA_LOGI("memoryReportTask: release");
-        }).detach();
-        return;
-    }
     if (playerPidMem_.empty()) {
         return;
     }
