@@ -146,6 +146,16 @@ int32_t RecorderClient::SetVideoEnableTemporalScale(int32_t sourceId, bool enabl
     return recorderProxy_->SetVideoEnableTemporalScale(sourceId, enableTemporalScale);
 }
 
+int32_t RecorderClient::SetVideoEnableStableQualityMode(int32_t sourceId, bool enableStableQualityMode)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(recorderProxy_ != nullptr, MSERR_NO_MEMORY, "recorder service does not exist.");
+ 
+    MEDIA_LOGD("SetVideoEnableStableQualityMode sourceId(%{public}d), enableStableQualityMode(%{public}d)",
+        sourceId, enableStableQualityMode);
+    return recorderProxy_->SetVideoEnableStableQualityMode(sourceId, enableStableQualityMode);
+}
+
 int32_t RecorderClient::SetMetaSource(MetaSourceType source, int32_t &sourceId)
 {
     std::lock_guard<std::mutex> lock(mutex_);

@@ -136,6 +136,8 @@ void RecorderServiceStub::FillRecFuncPart2()
         [this](MessageParcel &data, MessageParcel &reply) { return SetVideoIsHdr(data, reply); };
     recFuncs_[SET_VIDEO_ENABLE_TEMPORAL_SCALE] =
         [this](MessageParcel &data, MessageParcel &reply) { return SetVideoEnableTemporalScale(data, reply); };
+    recFuncs_[SET_VIDEO_ENABLE_STABLE_QUALITY_MODE] =
+        [this](MessageParcel &data, MessageParcel &reply) { return SetVideoEnableStableQualityMode(data, reply); };
     recFuncs_[GET_AUDIO_CAPTURER_CHANGE_INFO] =
         [this](MessageParcel &data, MessageParcel &reply) { return GetCurrentCapturerChangeInfo(data, reply); };
     recFuncs_[GET_AVAILABLE_ENCODER] =
@@ -280,6 +282,12 @@ int32_t RecorderServiceStub::SetVideoEnableTemporalScale(int32_t sourceId, bool 
 {
     CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
     return recorderServer_->SetVideoEnableTemporalScale(sourceId, enableTemporalScale);
+}
+
+int32_t RecorderServiceStub::SetVideoEnableStableQualityMode(int32_t sourceId, bool enableStableQualityMode)
+{
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    return recorderServer_->SetVideoEnableStableQualityMode(sourceId, enableStableQualityMode);
 }
 
 int32_t RecorderServiceStub::SetMetaConfigs(int32_t sourceId)
@@ -579,6 +587,14 @@ int32_t RecorderServiceStub::SetVideoEnableTemporalScale(MessageParcel &data, Me
     int32_t sourceId = data.ReadInt32();
     bool enableTemporalScale = data.ReadBool();
     reply.WriteInt32(SetVideoEnableTemporalScale(sourceId, enableTemporalScale));
+    return MSERR_OK;
+}
+
+int32_t RecorderServiceStub::SetVideoEnableStableQualityMode(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t sourceId = data.ReadInt32();
+    bool enableStableQualityMode = data.ReadBool();
+    reply.WriteInt32(SetVideoEnableStableQualityMode(sourceId, enableStableQualityMode));
     return MSERR_OK;
 }
 

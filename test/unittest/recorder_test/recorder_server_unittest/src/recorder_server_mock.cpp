@@ -578,6 +578,10 @@ int32_t RecorderServerMock::SetAudVidFormat(const std::string &recorderType, Vid
     ret = recorder_->SetVideoEnableTemporalScale(recorderConfig.videoSourceId, recorderConfig.enableTemporalScale);
     UNITTEST_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetVideoEnableTemporalScale failed ");
+    ret = recorder_->SetVideoEnableStableQualityMode(recorderConfig.videoSourceId,
+        recorderConfig.enableStableQualityMode);
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetVideoEnableStableQualityMode failed ");
     ret = CameraServicesForVideo(recorderConfig);
     UNITTEST_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "CameraServicesForVideo failed ");
     ret = CameraServicesForAudio(recorderConfig);
@@ -601,6 +605,10 @@ int32_t RecorderServerMock::SetFormat(const std::string &recorderType, VideoReco
         ret = recorder_->SetVideoEnableTemporalScale(recorderConfig.videoSourceId, recorderConfig.enableTemporalScale);
         UNITTEST_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION,
             "SetVideoEnableTemporalScale failed ");
+        ret = recorder_->SetVideoEnableStableQualityMode(recorderConfig.videoSourceId,
+            recorderConfig.enableStableQualityMode);
+        UNITTEST_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION,
+            "SetVideoEnableStableQualityMode failed ");
         ret = CameraServicesForVideo(recorderConfig);
         UNITTEST_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "CameraServices failed ");
     } else if (recorderType == PURE_AUDIO) {
