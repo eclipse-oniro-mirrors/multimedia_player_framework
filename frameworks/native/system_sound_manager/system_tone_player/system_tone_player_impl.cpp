@@ -343,7 +343,8 @@ bool SystemTonePlayerImpl::InitDatabaseTool()
     int32_t result =  Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
         "ohos.permission.ACCESS_CUSTOM_RINGTONE");
     databaseTool_.isProxy = (result == Security::AccessToken::PermissionState::PERMISSION_GRANTED &&
-        strcmp(paramValue, RINGTONE_PARAMETER_SCANNER_FIRST_TRUE) == 0) ? true : false;
+        strcmp(paramValue, RINGTONE_PARAMETER_SCANNER_FIRST_TRUE) == 0 &&
+        SystemSoundManagerUtils::CheckCurrentUser()) ? true : false;
     databaseTool_.dataShareHelper = databaseTool_.isProxy ?
         SystemSoundManagerUtils::CreateDataShareHelperUri(STORAGE_MANAGER_MANAGER_ID) :
         SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);

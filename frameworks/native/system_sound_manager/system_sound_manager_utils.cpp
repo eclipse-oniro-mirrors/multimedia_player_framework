@@ -39,6 +39,8 @@ namespace Media {
 constexpr int32_t RETRY_TIME_S = 5;
 constexpr int64_t SLEEP_TIME_S = 1;
 const std::string SANDBOX_PREFIX = "/data/storage/el2/base/files/";
+const char RINGTONE_PARAMETER_SCANNER_USERID_KEY[] = "ringtone.scanner.userId";
+const int32_t RINGTONEPARA_SIZE = 64;
 
 int32_t SystemSoundManagerUtils::GetCurrentUserId()
 {
@@ -108,6 +110,49 @@ bool SystemSoundManagerUtils::VerifyCustomPath(const std::string &audioUri)
         flag = true;
     }
     return flag;
+}
+
+bool SystemSoundManagerUtils::IdExists(const std::string &ids, int32_t id)
+{
+    MEDIA_LOGI("IdExists Start.");
+    if (ids.empty()) {
+        return false;
+    }
+
+    size_t pos = 0;
+    std::string idStr = std::to_string(id);
+
+    while ((pos = ids.find(idStr, pos)) != std::string::npos) {
+        bool startPos = (pos == 0) || (ids[pos - 1] == ' ');
+        bool endPos = (pos + idStr.length() == ids.length()) || (ids[pos + idStr.length()] == ' ');
+        if (startPos && endPos) {
+            return true;
+        }
+        pos += idStr.length();
+    }
+    MEDIA_LOGI("IdExists End.");
+    return false;
+}
+
+bool SystemSoundManagerUtils::CheckCurrentUser()
+{
+    MEDIA_LOGI("CheckCurrentUser Start.");
+    char paramValue[RINGTONEPARA_SIZE] = {0};
+    GetParameter(RINGTONE_PARAMETER_SCANNER_USERID_KEY, "", paramValue, RINGTONEPARA_SIZE);
+    std::string ids(paramValue);
+    MEDIA_LOGI("GetParameter end, paramValue: %{private}s .", ids.c_str());
+    int32_t currentUserId = GetCurrentUserId();
+    if (IdExists(ids, currentUserId)) {
+        return true;
+    }
+    if (!ids.empty() && ids.back() != ' ') {
+        ids += " ";
+    }
+    ids += std::to_string(currentUserId);
+    int result = SetParameter(RINGTONE_PARAMETER_SCANNER_USERID_KEY, ids.c_str());
+    MEDIA_LOGI("CheckCurrentUser End. SetParameter result: %{public}d ,CurrentUserIds: %{private}s .",
+        result, ids.c_str());
+    return false;
 }
 } // namesapce Media
 } // namespace OHOS

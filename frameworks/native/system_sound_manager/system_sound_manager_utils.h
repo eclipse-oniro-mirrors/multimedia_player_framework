@@ -34,6 +34,8 @@ public:
     static std::shared_ptr<DataShare::DataShareHelper> CreateDataShareHelperUri(int32_t systemAbilityId);
     static std::shared_ptr<DataShare::DataShareHelper> CreateDataShareHelper(int32_t systemAbilityId);
     static bool VerifyCustomPath(const std::string &audioUri);
+    static bool IdExists(const std::string &ids, int32_t id);
+    static bool CheckCurrentUser();
 };
 } // namespace Media
 } // namespace OHOS
