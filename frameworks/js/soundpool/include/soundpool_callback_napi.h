@@ -50,9 +50,9 @@ protected:
 
 private:
     struct SoundPoolJsCallBack {
-        void RunJsErrorCallBackTask(SoundPoolJsCallBack *event);
-        void RunJsloadCompletedCallBackTask(SoundPoolJsCallBack *event);
-        void RunJsplayCompletedCallBackTask(SoundPoolJsCallBack *event);
+        void RunJsErrorCallBackTask(int status, SoundPoolJsCallBack *event);
+        void RunJsloadCompletedCallBackTask(int status, SoundPoolJsCallBack *event);
+        void RunJsplayCompletedCallBackTask(int status, SoundPoolJsCallBack *event);
         
         std::weak_ptr<AutoRef> autoRef;
         std::string callbackName = "unknown";
