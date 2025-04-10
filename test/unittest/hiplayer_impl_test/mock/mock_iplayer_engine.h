@@ -30,7 +30,7 @@ public:
     MOCK_METHOD(void, OnErrorMessage, (int32_t errorCode, const std::string &errorMsg), ());
     void OnSystemOperation(PlayerOnSystemOperationType type, PlayerOperationReason reason) override
     {
-        OnSystemOperationFlag = true;
+        onSystemOperationFlag = true;
     }
     void OnInfo(PlayerOnInfoType type, int32_t extra, const Format& infoBody) override
     {
@@ -38,7 +38,7 @@ public:
     }
 private:
     bool onInfoFlag = false;
-    bool OnSystemOperationFlag = false;
+    bool onSystemOperationFlag = false;
 };
 
 class MockIPlayerEngine : public IPlayerEngine {
