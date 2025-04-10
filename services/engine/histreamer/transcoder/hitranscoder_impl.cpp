@@ -774,6 +774,7 @@ void HiTransCoderImpl::HandleErrorEvent(int32_t errorCode)
         FALSE_RETURN_MSG(!ignoreError_, "igore this error event!");
         ignoreError_ = true;
     }
+    MEDIA_LOG_W("OnError, errorCode: " PUBLIC_LOG_D32, errorCode);
     FALSE_RETURN_MSG(callbackLooper_ != nullptr, "callbackLooper is nullptr");
     callbackLooper_->StopReportMediaProgress();
     if (pipeline_ != nullptr) {
