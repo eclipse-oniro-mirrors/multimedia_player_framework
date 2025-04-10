@@ -108,7 +108,8 @@ void TransCoderServer::OnError(TransCoderErrorType errorType, int32_t errorCode)
     lastErrMsg_ = MSErrorToString(static_cast<MediaServiceErrCode>(errorCode));
     CHECK_AND_RETURN(transCoderCb_ != nullptr);
     status_ = REC_ERROR;
-    MEDIA_LOGI("receive an error event, the status changes to error");
+    MEDIA_LOGI("receive an error event, errorCode: %{public}d, errorMsg: %{public}s",
+        errorCode, lastErrMsg_.c_str());
     transCoderCb_->OnError(errorCode, lastErrMsg_);
 }
 
