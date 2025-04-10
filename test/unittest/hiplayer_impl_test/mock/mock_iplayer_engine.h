@@ -28,14 +28,17 @@ public:
     ~MockIPlayerEngineObs() override = default;
     MOCK_METHOD(void, OnError, (PlayerErrorType errorType, int32_t errorCode), ());
     MOCK_METHOD(void, OnErrorMessage, (int32_t errorCode, const std::string &errorMsg), ());
-    MOCK_METHOD(void, OnSystemOperation, (PlayerOnSystemOperationType type,
-        PlayerOperationReason reason), ());
+    void OnSystemOperation(PlayerOnSystemOperationType type, PlayerOperationReason reason) override
+    {
+        onSystemOperationFlag = true;
+    }
     void OnInfo(PlayerOnInfoType type, int32_t extra, const Format& infoBody) override
     {
         onInfoFlag = true;
     }
 private:
     bool onInfoFlag = false;
+    bool onSystemOperationFlag = false;
 };
 
 class MockIPlayerEngine : public IPlayerEngine {
