@@ -2522,27 +2522,10 @@ int32_t ScreenCaptureServer::MakeVirtualScreenMirrorForWindowForHopper(sptr<Rose
     std::vector<ScreenId> mirrorIds)
 {
     ScreenId mirrorGroup = defaultDisplay->GetScreenId();
-    ScreenId defaultDisplayId = mirrorGroup;
-    if (missionIds_.size() > 0) {
-        WindowInfoOption windowInfoOption;
-        windowInfoOption.windowId = missionIds_.back();
-        std::vector<sptr<Rosen::WindowInfo>> windowInfos;
-        OHOS::Rosen::WMError wRet = WindowManager::GetInstance().ListWindowInfo(windowInfoOption, windowInfos);
-        CHECK_AND_RETURN_RET_LOG(wRet == OHOS::Rosen::WMError::WM_OK, MSERR_UNKNOWN,
-            "ListWindowInfo failed, captureMode:%{public}d, ret:%{public}d", captureConfig_.captureMode, wRet);
-        for (const auto& windowInfo : windowInfos) {
-            if (!windowInfo) {
-                continue;
-            }
-            if (windowInfo->windowMetaInfo.windowId == windowInfoOption.windowId) {
-                defaultDisplayId = windowInfo->windowDisplayInfo.displayId;
-            }
-        }
-        MEDIA_LOGI("windowId:%{public}d, displayId:%{public}" PRIu64, windowInfoOption.windowId, defaultDisplayId);
-    }
-    DMError dRet = ScreenManager::GetInstance().MakeMirrorForRecord(defaultDisplayId, mirrorIds, mirrorGroup);
-    CHECK_AND_RETURN_RET_LOG(dRet == DMError::DM_OK, MSERR_UNKNOWN,
-        "MakeVirtualScreenMirror failed, captureMode:%{public}d, ret:%{public}d", captureConfig_.captureMode, dRet);
+    uint64_t defaultDisplayId = GetDisplayIdOfWindows(defaultDisplay->GetScreenId());
+    DMError ret = ScreenManager::GetInstance().MakeMirrorForRecord(defaultDisplayId, mirrorIds, mirrorGroup);
+    CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK, MSERR_UNKNOWN,
+        "MakeVirtualScreenMirror failed, captureMode:%{public}d, ret:%{public}d", captureConfig_.captureMode, ret);
     MEDIA_LOGI("MakeVirtualScreenMirror window screen success, screenId:%{public}" PRIu64, defaultDisplayId);
     displayScreenId_ = defaultDisplayId;
     return MSERR_OK;
