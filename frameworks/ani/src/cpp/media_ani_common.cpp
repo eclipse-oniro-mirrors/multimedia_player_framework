@@ -15,13 +15,17 @@
 #include "media_ani_common.h"
 #include "media_ani_utils.h"
 
+namespace {
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "CommonAni"};
+}
+
 namespace OHOS {
 namespace Media {
 
 bool CommonAni::SetPropertyInt32(ani_env *env, ani_object &recordObject, ani_method setMethod,
     const std::string &key, int32_t value)
 {
-    CHECK_COND_RET(recordObject != nullptr, false, "recordObject is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recordObject != nullptr, false, "recordObject is nullptr");
 
     ani_string inputKey{};
     MediaAniUtils::ToAniString(env, key, inputKey);
@@ -35,7 +39,7 @@ bool CommonAni::SetPropertyInt32(ani_env *env, ani_object &recordObject, ani_met
 bool CommonAni::SetPropertyString(ani_env *env, ani_object &recordObject, ani_method setMethod,
     const std::string &key, const std::string &value)
 {
-    CHECK_COND_RET(recordObject != nullptr, false, "recordObject is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recordObject != nullptr, false, "recordObject is nullptr");
 
     ani_string inputKey{};
     MediaAniUtils::ToAniString(env, key, inputKey);
@@ -53,23 +57,23 @@ ani_object CommonAni::CreateFormatBuffer(ani_env *env, Format &format)
     std::string strValue;
 
     ani_class cls {};
-    ani_method recordConstructor {};
-    ani_object recordObject {};
-    CHECK_COND_RET(env->FindClass("Lescompat/Record;", &cls) == ANI_OK, nullptr, "Can't find Lescompat/Record");
-    CHECK_COND_RET(env->Class_FindMethod(cls, "<ctor>", "Lstd/core/Object;:V", &recordConstructor) == ANI_OK,
+    ani_method mapCtor {};
+    ani_object mapObject {};
+    CHECK_AND_RETURN_RET_LOG(env->FindClass("Lescompat/Record;", &cls) == ANI_OK, nullptr,
+        "Can't find Lescompat/Record");
+    CHECK_AND_RETURN_RET_LOG(env->Class_FindMethod(cls, "<ctor>", "Lstd/core/Object;:V", &mapCtor) == ANI_OK,
         nullptr, "Can't find method <ctor> in Lescompat/Record");
-    CHECK_COND_RET(env->Object_New(cls, recordConstructor, &recordObject, nullptr) == ANI_OK,
-        nullptr, "New subUriArray failed");
+    CHECK_AND_RETURN_RET_LOG(env->Object_New(cls, mapCtor, &mapObject, nullptr) == ANI_OK, nullptr, "New Map failed");
 
     ani_method setMethod {};
     if (env->Class_FindMethod(cls, "$_set", "Lstd/core/Object;Lstd/core/Object;:V", &setMethod) != ANI_OK) {
-        return recordObject;
+        return mapObject;
     }
     for (auto &iter : format.GetFormatMap()) {
         switch (format.GetValueType(std::string_view(iter.first))) {
             case FORMAT_TYPE_INT32:
                 if (format.GetIntValue(iter.first, intValue)) {
-                    ANI_CHECK_RETURN_RET(SetPropertyInt32(env, recordObject, setMethod, iter.first, intValue), nullptr);
+                    CHECK_AND_RETURN_RET(SetPropertyInt32(env, mapObject, setMethod, iter.first, intValue), nullptr);
                 }
                 break;
             case FORMAT_TYPE_INT64:
@@ -77,7 +81,7 @@ ani_object CommonAni::CreateFormatBuffer(ani_env *env, Format &format)
                 if (format.GetLongValue(iter.first, longValue) &&
                     longValue >= INT32_MIN && longValue <= INT32_MAX) {
                     intValue = static_cast<int32_t>(longValue);
-                    ANI_CHECK_RETURN_RET(SetPropertyInt32(env, recordObject, setMethod, iter.first, intValue), nullptr);
+                    CHECK_AND_RETURN_RET(SetPropertyInt32(env, mapObject, setMethod, iter.first, intValue), nullptr);
                 }
                 break;
             case FORMAT_TYPE_DOUBLE:
@@ -85,22 +89,20 @@ ani_object CommonAni::CreateFormatBuffer(ani_env *env, Format &format)
                 if (format.GetDoubleValue(iter.first, doubleValue) &&
                     doubleValue >= INT32_MIN && doubleValue <= INT32_MAX) {
                     intValue = static_cast<int32_t>(doubleValue);
-                    ANI_CHECK_RETURN_RET(SetPropertyInt32(env, recordObject,
-                        setMethod, iter.first, intValue), nullptr);
+                    CHECK_AND_RETURN_RET(SetPropertyInt32(env, mapObject, setMethod, iter.first, intValue), nullptr);
                 }
                 break;
             case FORMAT_TYPE_STRING:
                 if (format.GetStringValue(iter.first, strValue)) {
-                    ANI_CHECK_RETURN_RET(SetPropertyString(env, recordObject,
-                        setMethod, iter.first, strValue), nullptr);
+                    CHECK_AND_RETURN_RET(SetPropertyString(env, mapObject, setMethod, iter.first, strValue), nullptr);
                 }
                 break;
             default:
-                ANI_ERR_LOG("format key: %{public}s", iter.first.c_str());
+                MEDIA_LOGE("format key: %{public}s", iter.first.c_str());
                 break;
         }
     }
-    return recordObject;
+    return mapObject;
 }
 }
 }

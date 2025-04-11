@@ -35,13 +35,14 @@ public:
     virtual void NotifyVideoSize(int32_t width, int32_t height) = 0;
     virtual void NotifyIsLiveStream() = 0;
     virtual void NotifyDrmInfoUpdated(const std::multimap<std::string, std::vector<uint8_t>> &infos) = 0;
+    virtual int32_t GetJsApiVersion();
 };
 
 using OnInfoFunc = std::function<void(const int32_t, const Format &)>;
 class AniAVPlayerCallback : public PlayerCallback {
 public:
     AniAVPlayerCallback(ani_env *env, ANIAVPlayerNotify *listener);
-    virtual ~AniAVPlayerCallback() = default;
+    virtual ~AniAVPlayerCallback();
     void OnError(int32_t errorCode, const std::string &errorMsg) override;
     void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody) override;
     bool IsValidState(PlayerStates state, std::string &stateStr);
@@ -69,7 +70,7 @@ public:
     void Start();
     void Pause();
     std::atomic<bool> isSetVolume_ = false;
-	
+
 private:
     std::mutex mutex_;
     ani_env *env_ = nullptr;

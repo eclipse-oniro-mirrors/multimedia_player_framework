@@ -13,8 +13,8 @@
 * limitations under the License.
 */
 
-#ifndef FRAMEWORKS_ANI_INCLUDE_MEDIA_AVIMAGEGENERATOR_ANI_H
-#define FRAMEWORKS_ANI_INCLUDE_MEDIA_AVIMAGEGENERATOR_ANI_H
+#ifndef FRAMEWORKS_ANI_INCLUDE_MEDIA_AV_IMAGE_GENERATOR_ANI_H
+#define FRAMEWORKS_ANI_INCLUDE_MEDIA_AV_IMAGE_GENERATOR_ANI_H
 
 #include <ani.h>
 #include "avmetadatahelper.h"
@@ -46,11 +46,12 @@ private:
     std::shared_ptr<AVMetadataHelper> helperPtr = nullptr;
     struct AVFileDescriptor fileDescriptor_ ;
 };
-struct AVImageGeneratorAsyncContext  {
+
+struct AVImageGeneratorAsyncContext {
     AVImageGeneratorAni *ani = nullptr;
 };
 
 } // namespace Media
 } // namespace OHOS
 
-#endif //FRAMEWORKS_ANI_INCLUDE_MEDIA_AVIMAGEGENERATOR_ANI_H
+#endif //FRAMEWORKS_ANI_INCLUDE_MEDIA_AV_IMAGE_GENERATOR_ANI_H

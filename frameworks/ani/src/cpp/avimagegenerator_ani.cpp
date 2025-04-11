@@ -15,11 +15,15 @@
 #include <array>
 #include <iostream>
 #include <memory>
-#include "AVImageGenerator_ani.h"
-#include "AVImageGenerator_enum.h"
+#include "avimagegenerator_ani.h"
+#include "avimagegenerator_enum.h"
 #include "image_type.h"
-#include "media_ani_log.h"
+#include "media_log.h"
 #include "media_ani_utils.h"
+
+namespace {
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_METADATA, "AVImageGeneratorAni" };
+}
 
 namespace OHOS {
 namespace Media {
@@ -33,7 +37,7 @@ ani_status AVImageGeneratorAni::AVImageGeneratorInit(ani_env *env)
     static const char *className = "L@ohos/multimedia/media/media/AVImageGeneratorHandle;";
     ani_class cls;
     if (ANI_OK != env->FindClass(className, &cls)) {
-        ANI_ERR_LOG("Failed to find class: %{public}s", className);
+        MEDIA_LOGE("Failed to find class: %{public}s", className);
         return (ani_status)ANI_ERROR;
     }
 
@@ -46,7 +50,7 @@ ani_status AVImageGeneratorAni::AVImageGeneratorInit(ani_env *env)
     };
 
     if (ANI_OK != env->Class_BindNativeMethods(cls, methods.data(), methods.size())) {
-        ANI_ERR_LOG("Failed to bind native methods to: %{public}s", className);
+        MEDIA_LOGE("Failed to bind native methods to: %{public}s", className);
         return (ani_status)ANI_ERROR;
     };
     return ANI_OK;
@@ -59,24 +63,23 @@ ani_object AVImageGeneratorAni::Constructor([[maybe_unused]] ani_env *env)
     static const char *className = "L@ohos/multimedia/media/media/AVImageGeneratorHandle;";
     ani_class cls;
     if (ANI_OK != env->FindClass(className, &cls)) {
-        ANI_ERR_LOG("Failed to find class: %{public}s", className);
+        MEDIA_LOGE("Failed to find class: %{public}s", className);
         ani_object nullobj = nullptr;
         return nullobj;
     }
 
     ani_method ctor;
     if (ANI_OK != env->Class_FindMethod(cls, "<ctor>", "J:V", &ctor)) {
-        ANI_ERR_LOG("Failed to find method: %{public}s", "ctor");
+        MEDIA_LOGE("Failed to find method: %{public}s", "ctor");
         ani_object nullobj = nullptr;
         return nullobj;
     }
 
-    ani_object AVImageGenerator_object;
-    if (ANI_OK != env->Object_New(cls, ctor, &AVImageGenerator_object,
-        reinterpret_cast<ani_long>(nativeAVImageGenerator.release()))) {
-        ANI_ERR_LOG("New Media Fail");
+    ani_object object;
+    if (ANI_OK != env->Object_New(cls, ctor, &object, reinterpret_cast<ani_long>(nativeAVImageGenerator.release()))) {
+        MEDIA_LOGE("New Media Fail");
     }
-    return AVImageGenerator_object;
+    return object;
 }
 
 AVImageGeneratorAni* AVImageGeneratorAni::Unwrapp(ani_env *env, ani_object object)
@@ -93,13 +96,13 @@ ani_object AVImageGeneratorAni::FetchFrameByTime(ani_env *env, ani_object object
 {
     auto AVImageGeneratorAni = Unwrapp(env, object);
     if (AVImageGeneratorAni == nullptr || AVImageGeneratorAni->helperPtr == nullptr) {
-        ANI_ERR_LOG("AVImageGeneratorAni is nullptr");
+        MEDIA_LOGE("AVImageGeneratorAni is nullptr");
         return {};
     }
     auto asyncCtx = std::make_unique<AVImageGeneratorAsyncContext>();
     asyncCtx->ani = AVImageGeneratorAni;
     if (asyncCtx->ani->helperPtr == nullptr) {
-        ANI_ERR_LOG("Invalid AVImageGenerator.");
+        MEDIA_LOGE("Invalid AVImageGenerator.");
     };
     int32_t value = static_cast<int32_t>(timeUs);
 
@@ -133,39 +136,39 @@ void AVImageGeneratorAni::ParseParamsInner(ani_env *env, ani_object param, int32
     static const char *className = "L@ohos/multimedia/media/media/ParamsInner;";
     ani_class cls;
     if (ANI_OK != env->FindClass(className, &cls)) {
-        ANI_ERR_LOG("Failed to find class: %{public}s", className);
+        MEDIA_LOGE("Failed to find class: %{public}s", className);
     }
     ani_method widthGetter;
     if (ANI_OK != env->Class_FindMethod(cls, "<get>width", nullptr, &widthGetter)) {
-        ANI_ERR_LOG("Class_FindMethod Fail");
+        MEDIA_LOGE("Class_FindMethod Fail");
     }
     ani_double Paramswidth;
     if (ANI_OK != env->Object_CallMethod_Double(param, widthGetter, &Paramswidth)) {
-        ANI_ERR_LOG("Object_CallMethod_double Fail");
+        MEDIA_LOGE("Object_CallMethod_double Fail");
     }
     width = static_cast<int32_t>(Paramswidth);
 
     ani_method heightGetter;
     if (ANI_OK != env->Class_FindMethod(cls, "<get>height", nullptr, &heightGetter)) {
-        ANI_ERR_LOG("Class_FindMethod Fail");
+        MEDIA_LOGE("Class_FindMethod Fail");
     }
 
     ani_double Paramsheight;
     if (ANI_OK != env->Object_CallMethod_Double(param, heightGetter, &Paramsheight)) {
-        ANI_ERR_LOG("Object_CallMethod_double Fail");
+        MEDIA_LOGE("Object_CallMethod_double Fail");
     }
     height = static_cast<int32_t>(Paramsheight);
 
     ani_ref ParamscolorFormat;
     ani_status statusParamscolorFormat = env->Object_GetPropertyByName_Ref(param, "colorFormat", &ParamscolorFormat);
     if (statusParamscolorFormat != ANI_OK) {
-        ANI_ERR_LOG("Failed to get 'ParamscolorFormat'");
+        MEDIA_LOGE("Failed to get 'ParamscolorFormat'");
     }
 
     ani_status statuscolorFormat = AVImageGeneratorEnumAni::EnumGetValueInt32(env,
         static_cast<ani_enum_item>(ParamscolorFormat), colorFormat);
     if (statuscolorFormat != ANI_OK) {
-        ANI_ERR_LOG("Failed to get 'colorFormat'");
+        MEDIA_LOGE("Failed to get 'colorFormat'");
     }
 }
 
@@ -173,17 +176,17 @@ void AVImageGeneratorAni::Release(ani_env *env, ani_object object)
 {
     auto AVImageGeneratorAni = Unwrapp(env, object);
     if (AVImageGeneratorAni == nullptr || AVImageGeneratorAni->helperPtr == nullptr) {
-        ANI_ERR_LOG("AVImageGeneratorAni is nullptr");
+        MEDIA_LOGE("AVImageGeneratorAni is nullptr");
         return;
     }
     auto promiseCtx = std::make_unique<AVImageGeneratorAsyncContext>();
     promiseCtx->ani = AVImageGeneratorAni;
     if (promiseCtx->ani->state_ != HelperState::HELPER_STATE_RUNNABLE) {
-        ANI_ERR_LOG("Current state is not runnable, can't fetchFrame.");
+        MEDIA_LOGE("Current state is not runnable, can't fetchFrame.");
         return;
     }
     if (promiseCtx->ani->helperPtr == nullptr) {
-        ANI_ERR_LOG("Invalid AVImageGenerator.");
+        MEDIA_LOGE("Invalid AVImageGenerator.");
         return;
     };
     promiseCtx->ani->helperPtr->Release();
@@ -193,28 +196,28 @@ void AVImageGeneratorAni::SetFdSrc(ani_env *env, ani_object object, ani_int fd, 
 {
     auto AVImageGeneratorAni = Unwrapp(env, object);
     if (AVImageGeneratorAni == nullptr || AVImageGeneratorAni->helperPtr == nullptr) {
-        ANI_ERR_LOG("AVImageGeneratorAni is nullptr");
+        MEDIA_LOGE("AVImageGeneratorAni is nullptr");
         return;
     }
     auto aVImageGeneratorAni = std::make_unique<AVImageGeneratorAsyncContext>();
-    ANI_CHECK_RETURN_LOG(aVImageGeneratorAni->ani->helperPtr != nullptr, "failed to GetJsInstanceWithParameter");
+    CHECK_AND_RETURN_LOG(aVImageGeneratorAni->ani->helperPtr != nullptr, "failed to GetJsInstanceWithParameter");
 
-    ANI_CHECK_RETURN_LOG(aVImageGeneratorAni->ani->state_ == HelperState::HELPER_STATE_IDLE,
+    CHECK_AND_RETURN_LOG(aVImageGeneratorAni->ani->state_ == HelperState::HELPER_STATE_IDLE,
         "Has set source once, unsupport set again");
     int32_t curFd;
     ani_status statusCurFd = env->Object_GetPropertyByName_Int(object, "fd", &curFd);
     if (statusCurFd != ANI_OK) {
-        ANI_ERR_LOG("Failed to get 'curFd'");
+        MEDIA_LOGE("Failed to get 'curFd'");
     }
     int32_t curOffset;
     ani_status statuscurOffset = env->Object_GetPropertyByName_Int(object, "offset", &curOffset);
     if (statuscurOffset != ANI_OK) {
-        ANI_ERR_LOG("Failed to get 'curFd'");
+        MEDIA_LOGE("Failed to get 'curFd'");
     }
     int32_t curSize;
     ani_status statusCurSize = env->Object_GetPropertyByName_Int(object, "length", &curSize);
     if (statusCurSize != ANI_OK) {
-        ANI_ERR_LOG("Failed to get 'curFd'");
+        MEDIA_LOGE("Failed to get 'curFd'");
     }
     AVImageGeneratorAni->fileDescriptor_.fd = curFd;
     AVImageGeneratorAni->fileDescriptor_.offset = curOffset;
@@ -232,7 +235,7 @@ ani_object AVImageGeneratorAni::GetFdSrc(ani_env *env, ani_object object)
     ani_object result = {};
     auto AVImageGeneratorAni = Unwrapp(env, object);
     if (AVImageGeneratorAni == nullptr || AVImageGeneratorAni->helperPtr == nullptr) {
-        ANI_ERR_LOG("AVImageGeneratorAni is nullptr");
+        MEDIA_LOGE("AVImageGeneratorAni is nullptr");
         return result;
     }
 

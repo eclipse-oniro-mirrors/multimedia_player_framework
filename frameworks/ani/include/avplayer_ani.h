@@ -13,8 +13,8 @@
 * limitations under the License.
 */
 
-#ifndef FRAMEWORKS_ANI_INCLUDE_MEDIA_AVPLAYER_ANI_H
-#define FRAMEWORKS_ANI_INCLUDE_MEDIA_AVPLAYER_ANI_H
+#ifndef FRAMEWORKS_ANI_INCLUDE_MEDIA_AV_PLAYER_ANI_H
+#define FRAMEWORKS_ANI_INCLUDE_MEDIA_AV_PLAYER_ANI_H
 
 #include <ani.h>
 #include "avmetadatahelper.h"
@@ -29,6 +29,13 @@ namespace OHOS {
 namespace Media {
 
 using TaskRet = std::pair<int32_t, std::string>;
+
+enum SeekMode {
+    SEEK_MODE_ZERO = 0,
+    SEEK_MODE_ONE = 1,
+    SEEK_MODE_TWO = 2,
+    SEEK_MODE_THREE = 3
+};
 
 class MediaAniResult {
 public:
@@ -153,6 +160,7 @@ public:
     static PlayerSeekMode TransferSeekMode(int32_t mode);
     bool IsLiveSource();
     bool IsControllable();
+    bool IsSystemApp();
     void NotifyDuration(int32_t duration) override;
     void NotifyPosition(int32_t position) override;
     void NotifyState(PlayerStates state) override;
@@ -169,7 +177,7 @@ private:
     void PauseListenCurrentResource();
     void ResetUserParameters();
 
-    std::shared_ptr<TaskHandler<TaskRet>> GetTrackDescriptionTask(const std::unique_ptr<AVPlayerContext> &Ctx);
+    std::shared_ptr<TaskHandler<TaskRet>> GetTrackDescriptionTask(const std::shared_ptr<AVPlayerContext> &Ctx);
     std::shared_ptr<TaskHandler<TaskRet>> PrepareTask();
     std::shared_ptr<TaskHandler<TaskRet>> PlayTask();
     std::shared_ptr<TaskHandler<TaskRet>> PauseTask();
@@ -212,9 +220,10 @@ private:
         0
     };
     OHOS::AudioStandard::InterruptMode interruptMode_ = AudioStandard::InterruptMode::SHARE_MODE;
+    bool getApiVersionFlag_ = true;
 };
 
 } // namespace Media
 } // namespace OHOS
 
-#endif //FRAMEWORKS_ANI_INCLUDE_MEDIA_AVPLAYER_ANI_H
+#endif //FRAMEWORKS_ANI_INCLUDE_MEDIA_AV_PLAYER_ANI_H

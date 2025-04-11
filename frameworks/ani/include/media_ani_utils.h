@@ -15,7 +15,7 @@
 #ifndef FRAMEWORKS_ANI_INCLUDE_MEDIA_ANI_UTILS_H
 #define FRAMEWORKS_ANI_INCLUDE_MEDIA_ANI_UTILS_H
 
-#include "media_ani_log.h"
+#include "media_log.h"
 #include "ani.h"
 #include "audio_info.h"
 #include "string"

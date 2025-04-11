@@ -140,6 +140,7 @@
             "//foundation/multimedia/player_framework/interfaces/kits/js:napi_packages",
             "//foundation/multimedia/player_framework/interfaces/kits/c:capi_packages",
             "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
+            "//foundation/multimedia/player_framework/frameworks/ani:player_framework_ani",
             "//foundation/multimedia/player_framework/frameworks/cj:ffi_packages"
           ],
           "service_group": [
@@ -147,9 +148,6 @@
             "//foundation/multimedia/player_framework/services/etc:media_service_etc"
           ]
         },
-        "sub_component": [
-          "//foundation/multimedia/player_framework/frameworks/ANI:player_framework_ani"
-        ],
         "inner_kits": [
           {
             "type": "so",

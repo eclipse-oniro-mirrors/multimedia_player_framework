@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 2022 Huawei Device Co., Ltd.
+* Copyright (C) 2025 Huawei Device Co., Ltd.
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
@@ -14,19 +14,23 @@
 */
 #include <map>
 #include <ani.h>
-#include "media_ani_log.h"
+#include "media_log.h"
 #include <thread>
 #include "ani_avplayer_callback.h"
 #include "media_ani_utils.h"
 #include "media_errors.h"
-#include "AVPlayer_ani.h"
+#include "avplayer_ani.h"
+
+namespace {
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_PLAYER, "AVPlayerCallback" };
+}
 
 namespace OHOS {
 namespace Media {
 
 static const std::map<StateChangeReason, int32_t> ANI_STATECHANGEREASON_INDEX_MAP = {
     { StateChangeReason::USER, 0 },
-    { StateChangeReason::BACKGROUND, 1},
+    { StateChangeReason::BACKGROUND, 1 },
 };
 
 class AniCallback {
@@ -41,7 +45,7 @@ public:
             ani_vm *etsVm;
             ani_env *etsEnv;
             std::shared_ptr<AutoRef> baseRef = callback.lock();
-            [[maybe_unused]] int res = baseRef->env_->GetVM(&etsVm);
+            int res = baseRef->env_->GetVM(&etsVm);
             if (res != ANI_OK) {
                 return;
             }
@@ -80,10 +84,10 @@ public:
             ani_vm *etsVm;
             ani_env *etsEnv;
             std::shared_ptr<AutoRef> errorRef = callback.lock();
-            ANI_CHECK_AND_RETURN_LOG(errorRef != nullptr,
+            CHECK_AND_RETURN_LOG(errorRef != nullptr,
                 "%{public}s AutoRef is nullptr", callbackName.c_str());
 
-            [[maybe_unused]] int res = errorRef->env_->GetVM(&etsVm);
+            int res = errorRef->env_->GetVM(&etsVm);
             if (res != ANI_OK) {
                 return;
             }
@@ -116,7 +120,7 @@ public:
             ani_vm *etsVm;
             ani_env *etsEnv;
             std::shared_ptr<AutoRef> intRef = callback.lock();
-            [[maybe_unused]] int res = intRef->env_->GetVM(&etsVm);
+            int res = intRef->env_->GetVM(&etsVm);
             if (res != ANI_OK) {
                 return;
             }
@@ -132,7 +136,7 @@ public:
             std::vector<ani_ref> args = {reinterpret_cast<ani_ref>(&arg1)};
 
             ani_ref result;
-            if (ANI_OK != etsEnv->FunctionalObject_Call(fnObject,args.size(), args.data(), &result)) {
+            if (ANI_OK != etsEnv->FunctionalObject_Call(fnObject, args.size(), args.data(), &result)) {
                 return;
             }
 
@@ -149,7 +153,7 @@ public:
             ani_vm *etsVm;
             ani_env *etsEnv;
             std::shared_ptr<AutoRef> intVecRef = callback.lock();
-            [[maybe_unused]] int res = intVecRef->env_->GetVM(&etsVm);
+            int res = intVecRef->env_->GetVM(&etsVm);
             if (res != ANI_OK) {
                 return;
             }
@@ -169,7 +173,7 @@ public:
             std::vector<ani_ref> args = {reinterpret_cast<ani_ref>(arg1), reinterpret_cast<ani_ref>(arg2)};
 
             ani_ref result;
-            if (ANI_OK != etsEnv->FunctionalObject_Call(fnObject,args.size(), args.data(), &result)) {
+            if (ANI_OK != etsEnv->FunctionalObject_Call(fnObject, args.size(), args.data(), &result)) {
                 return;
             }
 
@@ -186,7 +190,7 @@ public:
             ani_vm *etsVm;
             ani_env *etsEnv;
             std::shared_ptr<AutoRef> intVecRef = callback.lock();
-            [[maybe_unused]] int res = intVecRef->env_->GetVM(&etsVm);
+            int res = intVecRef->env_->GetVM(&etsVm);
             if (res != ANI_OK) {
                 return;
             }
@@ -219,7 +223,7 @@ public:
             ani_vm *etsVm;
             ani_env *etsEnv;
             std::shared_ptr<AutoRef> stateChangeRef = callback.lock();
-            [[maybe_unused]] int res = stateChangeRef->env_->GetVM(&etsVm);
+            int res = stateChangeRef->env_->GetVM(&etsVm);
             if (res != ANI_OK) {
                 return;
             }
@@ -252,7 +256,7 @@ public:
             ani_vm *etsVm;
             ani_env *etsEnv;
             std::shared_ptr<AutoRef> floatArrayRef = callback.lock();
-            [[maybe_unused]] int res = floatArrayRef->env_->GetVM(&etsVm);
+            int res = floatArrayRef->env_->GetVM(&etsVm);
             if (res != ANI_OK) {
                 return;
             }
@@ -285,7 +289,7 @@ public:
             ani_vm *etsVm;
             ani_env *etsEnv;
             std::shared_ptr<AutoRef> floatArrayRef = callback.lock();
-            [[maybe_unused]] int res = floatArrayRef->env_->GetVM(&etsVm);
+            int res = floatArrayRef->env_->GetVM(&etsVm);
             if (res != ANI_OK) {
                 return;
             }
@@ -327,7 +331,7 @@ public:
             ani_vm *etsVm;
             ani_env *etsEnv;
             std::shared_ptr<AutoRef> intVecRef = callback.lock();
-            [[maybe_unused]] int res = intVecRef->env_->GetVM(&etsVm);
+            int res = intVecRef->env_->GetVM(&etsVm);
             if (res != ANI_OK) {
                 return;
             }
@@ -363,7 +367,7 @@ public:
             ani_vm *etsVm;
             ani_env *etsEnv;
             std::shared_ptr<AutoRef> stateChangeRef = callback.lock();
-            [[maybe_unused]] int res = stateChangeRef->env_->GetVM(&etsVm);
+            int res = stateChangeRef->env_->GetVM(&etsVm);
             if (res != ANI_OK) {
                 return;
             }
@@ -380,12 +384,12 @@ public:
             ani_enum_item aniEnumItem;
             ani_enum aniEnum {};
             if (ANI_OK != etsEnv->FindEnum(className, &aniEnum)) {
-                ANI_INFO_LOG("sunyu  FindEnum");
+                MEDIA_LOGI("sunyu  FindEnum");
             }
             auto it = ANI_STATECHANGEREASON_INDEX_MAP.find(static_cast<StateChangeReason>(reason));
             auto errorcode = etsEnv->Enum_GetEnumItemByIndex(aniEnum, (ani_int)it->second, &aniEnumItem);
             if (ANI_OK != errorcode) {
-                ANI_INFO_LOG("sunyu  Enum_GetEnumItemByIndex: %{public}d, %{public}d", errorcode, reason);
+                MEDIA_LOGI("sunyu  Enum_GetEnumItemByIndex: %{public}d, %{public}d", errorcode, reason);
             }
             std::vector<ani_ref> args = {reinterpret_cast<ani_ref>(arg1), reinterpret_cast<ani_ref>(aniEnumItem)};
 
@@ -498,6 +502,8 @@ void AniAVPlayerCallback::NotifyIsLiveStream(const int32_t extra, const Format &
 void AniAVPlayerCallback::OnStateChangeCb(const int32_t extra, const Format &infoBody)
 {
     PlayerStates state = static_cast<PlayerStates>(extra);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instance OnStateChanged is called, current state: %{public}d",
+        FAKE_POINTER(this), state);
 
     if (listener_ != nullptr) {
         listener_->NotifyState(state);
@@ -508,11 +514,11 @@ void AniAVPlayerCallback::OnStateChangeCb(const int32_t extra, const Format &inf
         std::string stateStr;
         if (IsValidState(state, stateStr)) {
             if (refMap_.find(AVPlayerEvent::EVENT_STATE_CHANGE) == refMap_.end()) {
-                ANI_WARN_LOG("no stateChange cb");
+                MEDIA_LOGW("no stateChange cb");
                 return;
             }
             AniCallback::StateChange *cb = new(std::nothrow) AniCallback::StateChange();
-            ANI_CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new StateChange");
+            CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new StateChange");
 
             int32_t reason = StateChangeReason::USER;
             if (infoBody.ContainKey(PlayerKeys::PLAYER_STATE_CHANGED_REASON)) {
@@ -530,15 +536,15 @@ void AniAVPlayerCallback::OnStateChangeCb(const int32_t extra, const Format &inf
 void AniAVPlayerCallback::OnSeekDoneCb(const int32_t extra, const Format &infoBody)
 {
     (void)infoBody;
-    ANI_CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
+    CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
     int32_t currentPositon = extra;
-    ANI_INFO_LOG("seekDone %{public}d", currentPositon);
+    MEDIA_LOGI("seekDone %{public}d", currentPositon);
     if (refMap_.find(AVPlayerEvent::EVENT_SEEK_DONE) == refMap_.end()) {
-        ANI_WARN_LOG(" can not find seekdone callback!");
+        MEDIA_LOGW(" can not find seekdone callback!");
         return;
     }
     AniCallback::Int *cb = new(std::nothrow) AniCallback::Int();
-    ANI_CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new Int");
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new Int");
 
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_SEEK_DONE);
     cb->callbackName = AVPlayerEvent::EVENT_SEEK_DONE;
@@ -549,16 +555,16 @@ void AniAVPlayerCallback::OnSeekDoneCb(const int32_t extra, const Format &infoBo
 void AniAVPlayerCallback::OnSpeedDoneCb(const int32_t extra, const Format &infoBody)
 {
     (void)infoBody;
-    ANI_CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
+    CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
     int32_t speedMode = extra;
-    ANI_INFO_LOG("SpeedDone %{public}d", speedMode);
+    MEDIA_LOGI("SpeedDone %{public}d", speedMode);
     if (refMap_.find(AVPlayerEvent::EVENT_SPEED_DONE) == refMap_.end()) {
-        ANI_WARN_LOG(" can not find speeddone callback!");
+        MEDIA_LOGW(" can not find speeddone callback!");
         return;
     }
 
     AniCallback::Int *cb = new(std::nothrow) AniCallback::Int();
-    ANI_CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new Int");
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new Int");
 
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_SPEED_DONE);
     cb->callbackName = AVPlayerEvent::EVENT_SPEED_DONE;
@@ -569,16 +575,16 @@ void AniAVPlayerCallback::OnSpeedDoneCb(const int32_t extra, const Format &infoB
 void AniAVPlayerCallback::OnBitRateDoneCb(const int32_t extra, const Format &infoBody)
 {
     (void)infoBody;
-    ANI_CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
+    CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
     int32_t bitRate = extra;
-    ANI_INFO_LOG("Bitrate %{public}d", bitRate);
+    MEDIA_LOGI("Bitrate %{public}d", bitRate);
     if (refMap_.find(AVPlayerEvent::EVENT_BITRATE_DONE) == refMap_.end()) {
-        ANI_WARN_LOG(" can not find bitrate callback!");
+        MEDIA_LOGW(" can not find bitrate callback!");
         return;
     }
 
     AniCallback::Int *cb = new(std::nothrow) AniCallback::Int();
-    ANI_CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new Int");
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new Int");
 
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_BITRATE_DONE);
     cb->callbackName = AVPlayerEvent::EVENT_BITRATE_DONE;
@@ -589,21 +595,21 @@ void AniAVPlayerCallback::OnBitRateDoneCb(const int32_t extra, const Format &inf
 void AniAVPlayerCallback::OnPositionUpdateCb(const int32_t extra, const Format &infoBody)
 {
     (void)infoBody;
-    ANI_CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
+    CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
     int32_t position = extra;
-    ANI_INFO_LOG("OnPositionUpdate %{public}d", position);
+    MEDIA_LOGI("OnPositionUpdate %{public}d", position);
 
     if (listener_ != nullptr) {
         listener_->NotifyPosition(position);
     }
 
     if (refMap_.find(AVPlayerEvent::EVENT_TIME_UPDATE) == refMap_.end()) {
-        ANI_WARN_LOG(" can not find timeupdate callback!");
+        MEDIA_LOGW(" can not find timeupdate callback!");
         return;
     }
 
     AniCallback::Int *cb = new(std::nothrow) AniCallback::Int();
-    ANI_CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new Int");
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new Int");
 
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_TIME_UPDATE);
     cb->callbackName = AVPlayerEvent::EVENT_TIME_UPDATE;
@@ -614,21 +620,21 @@ void AniAVPlayerCallback::OnPositionUpdateCb(const int32_t extra, const Format &
 void AniAVPlayerCallback::OnDurationUpdateCb(const int32_t extra, const Format &infoBody)
 {
     (void)infoBody;
-    ANI_CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
+    CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
     int32_t duration = extra;
-    ANI_INFO_LOG("OnPositionUpdate %{public}d", duration);
+    MEDIA_LOGI("OnPositionUpdate %{public}d", duration);
 
     if (listener_ != nullptr) {
         listener_->NotifyDuration(duration);
     }
 
     if (refMap_.find(AVPlayerEvent::EVENT_DURATION_UPDATE) == refMap_.end()) {
-        ANI_WARN_LOG(" can not find timeupdate callback!");
+        MEDIA_LOGW(" can not find timeupdate callback!");
         return;
     }
 
     AniCallback::Int *cb = new(std::nothrow) AniCallback::Int();
-    ANI_CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new Int");
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new Int");
 
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_DURATION_UPDATE);
     cb->callbackName = AVPlayerEvent::EVENT_DURATION_UPDATE;
@@ -639,19 +645,19 @@ void AniAVPlayerCallback::OnDurationUpdateCb(const int32_t extra, const Format &
 void AniAVPlayerCallback::OnVolumeChangeCb(const int32_t extra, const Format &infoBody)
 {
     (void)extra;
-    ANI_CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
+    CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
     float volumeLevel = 0.0;
     (void)infoBody.GetFloatValue(PlayerKeys::PLAYER_VOLUME_LEVEL, volumeLevel);
 
     isSetVolume_ = false;
-    ANI_INFO_LOG("OnVolumeChangeCb in volume=%{public}f", volumeLevel);
+    MEDIA_LOGI("OnVolumeChangeCb in volume=%{public}f", volumeLevel);
     if (refMap_.find(AVPlayerEvent::EVENT_VOLUME_CHANGE) == refMap_.end()) {
-        ANI_INFO_LOG("can not find vol change callback!");
+        MEDIA_LOGI("can not find vol change callback!");
         return;
     }
 
     AniCallback::Double *cb = new(std::nothrow) AniCallback::Double();
-    ANI_CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new Double");
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new Double");
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_VOLUME_CHANGE);
     cb->callbackName = AVPlayerEvent::EVENT_VOLUME_CHANGE;
     cb->value = static_cast<double>(volumeLevel);
@@ -661,9 +667,9 @@ void AniAVPlayerCallback::OnVolumeChangeCb(const int32_t extra, const Format &in
 void AniAVPlayerCallback::OnBufferingUpdateCb(const int32_t extra, const Format &infoBody)
 {
     (void)extra;
-    ANI_CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
+    CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
     if (refMap_.find(AVPlayerEvent::EVENT_BUFFERING_UPDATE) == refMap_.end()) {
-        ANI_INFO_LOG("can not find buffering update callback!");
+        MEDIA_LOGI("can not find buffering update callback!");
         return;
     }
 
@@ -685,9 +691,9 @@ void AniAVPlayerCallback::OnBufferingUpdateCb(const int32_t extra, const Format 
         return;
     }
 
-    ANI_DEBUG_LOG("OnBufferingUpdateCb is called, buffering type: %{public}d value: %{public}d", bufferingType, val);
+    MEDIA_LOGD("OnBufferingUpdateCb is called, buffering type: %{public}d value: %{public}d", bufferingType, val);
     AniCallback::IntVec *cb = new(std::nothrow) AniCallback::IntVec();
-    ANI_CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new IntVec");
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new IntVec");
 
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_BUFFERING_UPDATE);
     cb->callbackName = AVPlayerEvent::EVENT_BUFFERING_UPDATE;
@@ -699,8 +705,8 @@ void AniAVPlayerCallback::OnBufferingUpdateCb(const int32_t extra, const Format 
 void AniAVPlayerCallback::OnMessageCb(const int32_t extra, const Format &infoBody)
 {
     (void)infoBody;
-    ANI_CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
-    ANI_INFO_LOG("OnMessageCb is called, extra: %{public}d", extra);
+    CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
+    MEDIA_LOGI("OnMessageCb is called, extra: %{public}d", extra);
     if (extra == PlayerMessageType::PLAYER_INFO_VIDEO_RENDERING_START) {
         AniAVPlayerCallback::OnStartRenderFrameCb();
     }
@@ -708,15 +714,15 @@ void AniAVPlayerCallback::OnMessageCb(const int32_t extra, const Format &infoBod
 
 void AniAVPlayerCallback::OnStartRenderFrameCb() const
 {
-    ANI_INFO_LOG("OnStartRenderFrameCb is called");
-    ANI_CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
+    MEDIA_LOGI("OnStartRenderFrameCb is called");
+    CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
     if (refMap_.find(AVPlayerEvent::EVENT_START_RENDER_FRAME) == refMap_.end()) {
-        ANI_WARN_LOG("can not find start render callback!");
+        MEDIA_LOGW("can not find start render callback!");
         return;
     }
 
     AniCallback::Base *cb = new(std::nothrow) AniCallback::Base();
-    ANI_CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new Base");
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new Base");
 
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_START_RENDER_FRAME);
     cb->callbackName = AVPlayerEvent::EVENT_START_RENDER_FRAME;
@@ -726,23 +732,23 @@ void AniAVPlayerCallback::OnStartRenderFrameCb() const
 void AniAVPlayerCallback::OnVideoSizeChangedCb(const int32_t extra, const Format &infoBody)
 {
     (void)extra;
-    ANI_CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
+    CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
     int32_t width = 0;
     int32_t height = 0;
     (void)infoBody.GetIntValue(PlayerKeys::PLAYER_WIDTH, width);
     (void)infoBody.GetIntValue(PlayerKeys::PLAYER_HEIGHT, height);
-    ANI_INFO_LOG("sizeChange w %{public}d h %{public}d", width, height);
+    MEDIA_LOGI("sizeChange w %{public}d h %{public}d", width, height);
 
     if (listener_ != nullptr) {
         listener_->NotifyVideoSize(width, height);
     }
 
     if (refMap_.find(AVPlayerEvent::EVENT_VIDEO_SIZE_CHANGE) == refMap_.end()) {
-        ANI_WARN_LOG("can not find video size changed callback!");
+        MEDIA_LOGW("can not find video size changed callback!");
         return;
     }
     AniCallback::IntVec *cb = new(std::nothrow) AniCallback::IntVec();
-    ANI_CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new IntVec");
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new IntVec");
 
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_VIDEO_SIZE_CHANGE);
     cb->callbackName = AVPlayerEvent::EVENT_VIDEO_SIZE_CHANGE;
@@ -754,9 +760,9 @@ void AniAVPlayerCallback::OnVideoSizeChangedCb(const int32_t extra, const Format
 void AniAVPlayerCallback::OnBitRateCollectedCb(const int32_t extra, const Format &infoBody)
 {
     (void)extra;
-    ANI_CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
+    CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
     if (refMap_.find(AVPlayerEvent::EVENT_AVAILABLE_BITRATES) == refMap_.end()) {
-        ANI_WARN_LOG("can not find bitrate collected callback!");
+        MEDIA_LOGW("can not find bitrate collected callback!");
         return;
     }
 
@@ -765,16 +771,16 @@ void AniAVPlayerCallback::OnBitRateCollectedCb(const int32_t extra, const Format
         uint8_t *addr = nullptr;
         size_t size  = 0;
         infoBody.GetBuffer(std::string(PlayerKeys::PLAYER_AVAILABLE_BITRATES), &addr, size);
-        ANI_CHECK_AND_RETURN_LOG(addr != nullptr, "bitrate addr is nullptr");
+        CHECK_AND_RETURN_LOG(addr != nullptr, "bitrate addr is nullptr");
 
-        ANI_INFO_LOG("bitrate size = %{public}zu", size / sizeof(uint32_t));
+        MEDIA_LOGI("bitrate size = %{public}zu", size / sizeof(uint32_t));
         while (size > 0) {
             if (size < sizeof(uint32_t)) {
                 break;
             }
 
             uint32_t bitrate = *(static_cast<uint32_t *>(static_cast<void *>(addr)));
-            ANI_INFO_LOG("bitrate = %{public}u", bitrate);
+            MEDIA_LOGI("bitrate = %{public}u", bitrate);
             addr += sizeof(uint32_t);
             size -= sizeof(uint32_t);
             bitrateVec.push_back(static_cast<int32_t>(bitrate));
@@ -782,7 +788,7 @@ void AniAVPlayerCallback::OnBitRateCollectedCb(const int32_t extra, const Format
     }
 
     AniCallback::IntArray *cb = new(std::nothrow) AniCallback::IntArray();
-    ANI_CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new IntArray");
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new IntArray");
 
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_AVAILABLE_BITRATES);
     cb->callbackName = AVPlayerEvent::EVENT_AVAILABLE_BITRATES;
@@ -795,13 +801,13 @@ void AniAVPlayerCallback::OnTrackInfoUpdate(const int32_t extra, const Format &i
     (void)extra;
     std::vector<Format> trackInfo;
     (void)infoBody.GetFormatVector(std::string(PlayerKeys::PLAYER_TRACK_INFO), trackInfo);
-    ANI_INFO_LOG("OnTrackInfoUpdate callback");
+    MEDIA_LOGI("OnTrackInfoUpdate callback");
 
-    ANI_CHECK_AND_RETURN_LOG(refMap_.find(AVPlayerEvent::EVENT_TRACK_INFO_UPDATE) != refMap_.end(),
+    CHECK_AND_RETURN_LOG(refMap_.find(AVPlayerEvent::EVENT_TRACK_INFO_UPDATE) != refMap_.end(),
         "can not find trackInfoUpdate callback!");
 
     AniCallback::TrackInfoUpdate *cb = new(std::nothrow) AniCallback::TrackInfoUpdate();
-    ANI_CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new TrackInfoUpdate");
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new TrackInfoUpdate");
 
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_TRACK_INFO_UPDATE);
     cb->callbackName = AVPlayerEvent::EVENT_TRACK_INFO_UPDATE;
@@ -816,13 +822,13 @@ void AniAVPlayerCallback::OnTrackChangedCb(const int32_t extra, const Format &in
     int32_t isSelect = -1;
     infoBody.GetIntValue(std::string(PlayerKeys::PLAYER_TRACK_INDEX), index);
     infoBody.GetIntValue(std::string(PlayerKeys::PLAYER_IS_SELECT), isSelect);
-    ANI_INFO_LOG("OnTrackChangedCb index %{public}d, isSelect = %{public}d", index, isSelect);
+    MEDIA_LOGI("OnTrackChangedCb index %{public}d, isSelect = %{public}d", index, isSelect);
 
-    ANI_CHECK_AND_RETURN_LOG(refMap_.find(AVPlayerEvent::EVENT_TRACKCHANGE) != refMap_.end(),
+    CHECK_AND_RETURN_LOG(refMap_.find(AVPlayerEvent::EVENT_TRACKCHANGE) != refMap_.end(),
         "can not find trackChange callback!");
 
     AniCallback::TrackChange *cb = new(std::nothrow) AniCallback::TrackChange();
-    ANI_CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new TrackChange");
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new TrackChange");
 
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_TRACKCHANGE);
     cb->callbackName = AVPlayerEvent::EVENT_TRACKCHANGE;
@@ -834,16 +840,16 @@ void AniAVPlayerCallback::OnTrackChangedCb(const int32_t extra, const Format &in
 void AniAVPlayerCallback::OnEosCb(const int32_t extra, const Format &infoBody)
 {
     (void)infoBody;
-    ANI_CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
+    CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
     int32_t isLooping = extra;
-    ANI_INFO_LOG("OnEndOfStream is called, isloop: %{public}d", isLooping);
+    MEDIA_LOGI("OnEndOfStream is called, isloop: %{public}d", isLooping);
     if (refMap_.find(AVPlayerEvent::EVENT_END_OF_STREAM) == refMap_.end()) {
-        ANI_WARN_LOG("can not find EndOfStream callback!");
+        MEDIA_LOGW("can not find EndOfStream callback!");
         return;
     }
 
     AniCallback::Base *cb = new(std::nothrow) AniCallback::Base();
-    ANI_CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new Base");
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new Base");
 
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_END_OF_STREAM);
     cb->callbackName = AVPlayerEvent::EVENT_END_OF_STREAM;
@@ -853,12 +859,17 @@ void AniAVPlayerCallback::OnEosCb(const int32_t extra, const Format &infoBody)
 void AniAVPlayerCallback::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    ANI_DEBUG_LOG("OnInfo %{public}d", type);
+    MEDIA_LOGD("OnInfo %{public}d", type);
     if (onInfoFuncs_.count(type) > 0) {
         onInfoFuncs_[type](extra, infoBody);
     } else {
-        ANI_DEBUG_LOG(" OnInfo: %{public}d no member func supporting", type);
+        MEDIA_LOGD(" OnInfo: %{public}d no member func supporting", type);
     }
+}
+
+AniAVPlayerCallback::~AniAVPlayerCallback()
+{
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instance destroy", FAKE_POINTER(this));
 }
 
 void AniAVPlayerCallback::OnError(int32_t errorCode, const std::string &errorMsg)
@@ -878,15 +889,15 @@ void AniAVPlayerCallback::OnError(int32_t errorCode, const std::string &errorMsg
 void AniAVPlayerCallback::OnErrorCb(MediaServiceExtErrCodeAPI9 errorCode, const std::string &errorMsg)
 {
     std::string message = MSExtAVErrorToString(errorCode) + errorMsg;
-    ANI_ERR_LOG("OnErrorCb:errorCode %{public}d, errorMsg %{public}s", errorCode, message.c_str());
+    MEDIA_LOGE("OnErrorCb:errorCode %{public}d, errorMsg %{public}s", errorCode, message.c_str());
     std::lock_guard<std::mutex> lock(mutex_);
     if (refMap_.find(AVPlayerEvent::EVENT_ERROR) == refMap_.end()) {
-        ANI_WARN_LOG("0x%{public}06" PRIXPTR " can not find error callback!", FAKE_POINTER(this));
+        MEDIA_LOGW("0x%{public}06" PRIXPTR " can not find error callback!", FAKE_POINTER(this));
         return;
     }
 
     AniCallback::Error *cb = new(std::nothrow) AniCallback::Error();
-    ANI_CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new Error");
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new Error");
 
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_ERROR);
     cb->callbackName = AVPlayerEvent::EVENT_ERROR;
@@ -898,14 +909,14 @@ void AniAVPlayerCallback::OnErrorCb(MediaServiceExtErrCodeAPI9 errorCode, const 
 void AniAVPlayerCallback::OnSetDecryptConfigDoneCb(const int32_t extra, const Format &infoBody)
 {
     (void)extra;
-    ANI_INFO_LOG("AVPlayerCallback OnSetDecryptConfigDoneCb is called");
+    MEDIA_LOGI("AVPlayerCallback OnSetDecryptConfigDoneCb is called");
     if (refMap_.find(AVPlayerEvent::EVENT_SET_DECRYPT_CONFIG_DONE) == refMap_.end()) {
-        ANI_WARN_LOG("can not find SetDecryptConfig Done callback!");
+        MEDIA_LOGW("can not find SetDecryptConfig Done callback!");
         return;
     }
 
     AniCallback::Base *cb = new(std::nothrow) AniCallback::Base();
-    ANI_CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new Base");
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new Base");
 
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_SET_DECRYPT_CONFIG_DONE);
     cb->callbackName = AVPlayerEvent::EVENT_SET_DECRYPT_CONFIG_DONE;
@@ -915,9 +926,9 @@ void AniAVPlayerCallback::OnSetDecryptConfigDoneCb(const int32_t extra, const Fo
 void AniAVPlayerCallback::OnMaxAmplitudeCollectedCb(const int32_t extra, const Format &infoBody)
 {
     (void)extra;
-    ANI_CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
+    CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
     if (refMap_.find(AVPlayerEvent::EVENT_AMPLITUDE_UPDATE) == refMap_.end()) {
-        ANI_DEBUG_LOG("can not find max amplitude collected callback!");
+        MEDIA_LOGD("can not find max amplitude collected callback!");
         return;
     }
 
@@ -926,16 +937,16 @@ void AniAVPlayerCallback::OnMaxAmplitudeCollectedCb(const int32_t extra, const F
         uint8_t *addr = nullptr;
         size_t size  = 0;
         infoBody.GetBuffer(std::string(PlayerKeys::AUDIO_MAX_AMPLITUDE), &addr, size);
-        ANI_CHECK_AND_RETURN_LOG(addr != nullptr, "max amplitude addr is nullptr");
+        CHECK_AND_RETURN_LOG(addr != nullptr, "max amplitude addr is nullptr");
 
-        ANI_DEBUG_LOG("max amplitude size = %{public}zu", size / sizeof(float));
+        MEDIA_LOGD("max amplitude size = %{public}zu", size / sizeof(float));
         while (size > 0) {
             if (size < sizeof(float)) {
                 break;
             }
 
             float maxAmplitude = *(static_cast<float *>(static_cast<void *>(addr)));
-            ANI_DEBUG_LOG("maxAmplitude = %{public}f", maxAmplitude);
+            MEDIA_LOGD("maxAmplitude = %{public}f", maxAmplitude);
             addr += sizeof(float);
             size -= sizeof(float);
             MaxAmplitudeVec.push_back(static_cast<float>(maxAmplitude));
@@ -943,7 +954,7 @@ void AniAVPlayerCallback::OnMaxAmplitudeCollectedCb(const int32_t extra, const F
     }
 
     AniCallback::FloatArray *cb = new(std::nothrow) AniCallback::FloatArray();
-    ANI_CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new IntArray");
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new IntArray");
 
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_AMPLITUDE_UPDATE);
     cb->callbackName = AVPlayerEvent::EVENT_AMPLITUDE_UPDATE;

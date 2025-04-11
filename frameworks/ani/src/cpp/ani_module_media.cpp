@@ -12,11 +12,15 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-#include "AVImageGenerator_ani.h"
-#include "AVPlayer_ani.h"
+#include "avimagegenerator_ani.h"
+#include "avplayer_ani.h"
 #include "media_ani_utils.h"
 
 using namespace OHOS::Media;
+
+namespace {
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_METADATA, "AVImageGeneratorAni" };
+}
 
 ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
 {
@@ -28,7 +32,7 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
     static const char *staticClassName = "L@ohos/multimedia/media/media;";
     ani_namespace staticNs;
     if (ANI_OK != env->FindNamespace(staticClassName, &staticNs)) {
-        ANI_ERR_LOG("Not found %{public}s", staticClassName);
+        MEDIA_LOGE("Not found %{public}s", staticClassName);
         return ANI_ERROR;
     }
 
@@ -40,12 +44,20 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
     };
 
     if (ANI_OK != env->Namespace_BindNativeFunctions(staticNs, staticMethods.data(), staticMethods.size())) {
-        ANI_ERR_LOG("Cannot bind native methods to %{public}s", staticClassName);
+        MEDIA_LOGE("Cannot bind native methods to %{public}s", staticClassName);
         return ANI_ERROR;
     };
 
-    CHECK_STATUS_RET(AVImageGeneratorAni::AVImageGeneratorInit(env), "AVImageGenerator Init Failed");
-    CHECK_STATUS_RET(AVPlayerAni::AVPlayerAniInit(env), "AVPlayer Init Failed");
+    ani_status status = AVImageGeneratorAni::AVImageGeneratorInit(env);
+    if (status != ANI_OK) {
+        MEDIA_LOGE("AVImageGenerator Init Failed");
+        return status;
+    }
+    status = AVPlayerAni::AVPlayerAniInit(env);
+    if (status != ANI_OK) {
+        MEDIA_LOGE("AVPlayer Init Failed");
+        return status;
+    }
 
     *result = ANI_VERSION_1;
     return ANI_OK;

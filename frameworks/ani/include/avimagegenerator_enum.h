@@ -13,29 +13,20 @@
 * limitations under the License.
 */
 
-#ifndef FRAMEWORKS_ANI_INCLUDE_MEDIA_AVIMAGEGENERATOR_ENUM_ANI_H
-#define FRAMEWORKS_ANI_INCLUDE_MEDIA_AVIMAGEGENERATOR_ENUM_ANI_H
+#ifndef FRAMEWORKS_ANI_INCLUDE_MEDIA_AV_IMAGE_GENERATOR_ENUM_ANI_H
+#define FRAMEWORKS_ANI_INCLUDE_MEDIA_AV_IMAGE_GENERATOR_ENUM_ANI_H
 
 #include <string>
 #include "ani.h"
 
-
 namespace OHOS {
 namespace Media {
-
-enum AVEnumTypeInt32 {
-    AVImageQueryOptions,
-    PixelFormat,
-    PlaybackSpeed,
-    SeekMode,
-};
 
 class AVImageGeneratorEnumAni {
 public:
     static ani_status EnumGetValueInt32(ani_env *env, ani_enum_item enumItem, int32_t &value);
-    static ani_status GetInt32(ani_env *env, ani_int arg, int32_t &value);
 };
 }
 }
 
-#endif //FRAMEWORKS_ANI_INCLUDE_MEDIA_AVIMAGEGENERATOR_ENUM_ANI_H
+#endif //FRAMEWORKS_ANI_INCLUDE_MEDIA_AV_IMAGE_GENERATOR_ENUM_ANI_H

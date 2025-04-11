@@ -16,7 +16,7 @@
 #define FRAMEWORKS_ANI_INCLUDE_MEDIA_ANI_COMMON_H
 
 #include "ani.h"
-#include "media_ani_log.h"
+#include "media_log.h"
 #include "meta/format.h"
 
 namespace OHOS {
