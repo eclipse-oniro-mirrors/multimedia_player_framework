@@ -105,6 +105,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckCaptureStreamParams_001, TestSize
     SetValidConfig();
     config_.videoInfo.videoCapInfo.videoFrameWidth = 0;
     config_.videoInfo.videoCapInfo.videoFrameHeight = 0;
+    config_.audioInfo.innerCapInfo.audioChannels = 0;
+    config_.audioInfo.innerCapInfo.audioSampleRate = 0;
     screenCaptureServer_->captureConfig_ = config_;
     ASSERT_NE(screenCaptureServer_->CheckCaptureStreamParams(), MSERR_OK);
 }
