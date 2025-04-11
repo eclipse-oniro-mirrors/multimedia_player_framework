@@ -62,14 +62,14 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckCaptureMode_002, TestSize.Level2)
 * @tc.desc: audioSource > APP_PLAYBACK
 * @tc.type: FUNC
 */
-HWTEST_F(ScreenCaptureServerFunctionTest, CheckCaptureMode_002, TestSize.Level2)
+HWTEST_F(ScreenCaptureServerFunctionTest, CheckAudioCapParam_002, TestSize.Level2)
 {
     AudioCaptureInfo micCapInfo = {
         .audioSampleRate = 16000,
         .audioChannels = 2,
-        .audioSource = static_cast<AudioCaptureSourceType>(AudioCaptureSourceType::APP_PLAYBACK + 1);
+        .audioSource = static_cast<AudioCaptureSourceType>(AudioCaptureSourceType::APP_PLAYBACK + 1)
     }
-    ASSERT_NE(screenCaptureServer_->CheckCaptureMode(micCapInfo), MSERR_OK);
+    ASSERT_NE(screenCaptureServer_->CheckAudioCapParam(micCapInfo), MSERR_OK);
 }
 
 /**
@@ -95,9 +95,9 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckAudioCapInfo_001, TestSize.Level2
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckVideoCapInfo_001, TestSize.Level2)
 {
     SetValidConfig();
-    config_.videoInfo.videoCapInfo.audioChannels = 0;
-    config_.videoInfo.videoCapInfo.audioSampleRate = 16000;
-    ASSERT_NE(screenCaptureServer_->CheckAudioCapInfo(config_.audioInfo.micCapInfo), MSERR_OK);
+    config_.videoInfo.videoCapInfo.videoFrameWidth = 0;
+    config_.videoInfo.videoCapInfo.videoFrameHeight = 1080;
+    ASSERT_NE(screenCaptureServer_->CheckAudioCapInfo(config_.videoInfo.videoCapInfo), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckCaptureStreamParams_001, TestSize.Level2)

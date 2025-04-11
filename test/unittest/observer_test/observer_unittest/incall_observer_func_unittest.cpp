@@ -41,6 +41,7 @@ public:
     {
         return true;
     }
+    void Release() {}
     bool TelCallStateUpdated(bool isInCall)
     {
         return true;
@@ -49,7 +50,6 @@ public:
     {
         return true;
     }
-    void Release() {}
 };
 
 class InCallObserverTestFalseCallBack : public InCallObserverCallBack {
@@ -64,6 +64,7 @@ public:
     {
         return false;
     }
+    void Release() {}
     bool TelCallStateUpdated(bool isInCall)
     {
         return false;
@@ -72,7 +73,6 @@ public:
     {
         return false;
     }
-    void Release() {}
 };
 
 class InCallObserverInnerUnitTest : public testing::Test {

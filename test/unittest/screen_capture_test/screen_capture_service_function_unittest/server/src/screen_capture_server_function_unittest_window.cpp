@@ -183,8 +183,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ReportAVScreenCaptureUserChoice_009, T
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     int32_t sessionId = screenCaptureServer_->sessionId_;
     ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
-    screenCaptureServer_->captureState_ = AVScreenCaptureState::POPUP_WINDOW;
-    ASSERT_EQ(screenCaptureServer_->ReportAVScreenCaptureUserChoice(sessionId, ""), MSERR_OK);
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
+    ASSERT_NE(screenCaptureServer_->ReportAVScreenCaptureUserChoice(sessionId, ""), MSERR_OK);
 }
 
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
