@@ -52,6 +52,7 @@ constexpr int32_t LOAD_TIME = 30;
 constexpr int32_t SLEEP_TIME = 100;
 constexpr int32_t RETRY_TIME = 3;
 #endif
+constexpr uint32_t MAX_WAIT_TIME = 5000;
 std::shared_ptr<MediaClient> g_mediaClientInstance;
 std::once_flag onceFlag_;
 
@@ -88,7 +89,6 @@ void MediaClient::CreateMediaServiceInstance(IStandardMediaService::MediaSystemA
     (void)(lock);
 #ifdef SUPPORT_START_STOP_ON_DEMAND
     int32_t tryTimes = RETRY_TIME;
-    constexpr uint32_t MAX_WAIT_TIME = 5000;
     while (tryTimes-- > 0) {
         if (!IsAlived()) {
             MEDIA_LOGI("media service does not exist, sleep and retry");
@@ -198,7 +198,6 @@ std::shared_ptr<IPlayerService> MediaClient::CreatePlayerService()
     CreateMediaServiceInstance(IStandardMediaService::MediaSystemAbility::MEDIA_PLAYER, object, lock);
 #else
     CHECK_AND_RETURN_RET_LOG(IsAlived(), nullptr, "media service does not exist.");
-    constexpr uint32_t MAX_WAIT_TIME = 5000;
     object = mediaProxy_->GetSubSystemAbilityWithTimeOut(
         IStandardMediaService::MediaSystemAbility::MEDIA_PLAYER, listenerStub_->AsObject(), MAX_WAIT_TIME);
 #endif
