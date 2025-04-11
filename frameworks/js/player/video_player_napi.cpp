@@ -296,6 +296,216 @@ napi_value VideoPlayerNapi::SetDisplaySurface(napi_env env, napi_callback_info i
     return result;
 }
 
+
+napi_value VideoPlayerNapi::Prepare(napi_env env, napi_callback_info info)
+{
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    MEDIA_LOGD("Prepare In");
+
+    std::unique_ptr<VideoPlayerAsyncContext> asyncContext = std::make_unique<VideoPlayerAsyncContext>(env);
+    asyncContext->asyncWorkType = AsyncWorkType::ASYNC_WORK_PREPARE;
+
+    // get args
+    napi_value jsThis = nullptr;
+    napi_value args[1] = { nullptr };
+    size_t argCount = 1;
+    napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
+    if (status != napi_ok || jsThis == nullptr) {
+        asyncContext->SignError(MSERR_EXT_INVALID_VAL, "failed to napi_get_cb_info");
+    }
+
+    asyncContext->callbackRef = CommonNapi::CreateReference(env, args[0]);
+    asyncContext->deferred = CommonNapi::CreatePromise(env, asyncContext->callbackRef, result);
+
+    // get jsPlayer
+    (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncContext->jsPlayer));
+    // async work
+    auto ret = CompleteAsyncWork(env, static_cast<void *>(asyncContext.get()), napi_eprio_high);
+    if (ret != napi_status::napi_ok) {
+        MEDIA_LOGE("failed to SendEvent, ret = %{public}d", ret);
+    } else {
+        asyncContext.release();
+    }
+    return result;
+}
+
+napi_value VideoPlayerNapi::Play(napi_env env, napi_callback_info info)
+{
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    MEDIA_LOGD("Play In");
+
+    std::unique_ptr<VideoPlayerAsyncContext> asyncContext = std::make_unique<VideoPlayerAsyncContext>(env);
+    asyncContext->asyncWorkType = AsyncWorkType::ASYNC_WORK_PLAY;
+    // get args
+    napi_value jsThis = nullptr;
+    napi_value args[1] = { nullptr };
+    size_t argCount = 1;
+    napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
+    if (status != napi_ok || jsThis == nullptr) {
+        asyncContext->SignError(MSERR_EXT_INVALID_VAL, "failed to napi_get_cb_info");
+    }
+
+    asyncContext->callbackRef = CommonNapi::CreateReference(env, args[0]);
+    asyncContext->deferred = CommonNapi::CreatePromise(env, asyncContext->callbackRef, result);
+    // get jsPlayer
+    (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncContext->jsPlayer));
+#ifdef SUPPORT_JSSTACK
+    HiviewDFX::ReportXPowerJsStackSysEvent(env, "STREAM_CHANGE", "SRC=Media");
+#endif
+    // async work
+    auto ret = CompleteAsyncWork(env, static_cast<void *>(asyncContext.get()), napi_eprio_high);
+    if (ret != napi_status::napi_ok) {
+        MEDIA_LOGE("failed to SendEvent, ret = %{public}d", ret);
+    } else {
+        asyncContext.release();
+    }
+    return result;
+}
+
+napi_value VideoPlayerNapi::Pause(napi_env env, napi_callback_info info)
+{
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    MEDIA_LOGD("Pause In");
+    std::unique_ptr<VideoPlayerAsyncContext> asyncContext = std::make_unique<VideoPlayerAsyncContext>(env);
+    asyncContext->asyncWorkType = AsyncWorkType::ASYNC_WORK_PAUSE;
+
+    // get args
+    napi_value jsThis = nullptr;
+    napi_value args[1] = { nullptr };
+    size_t argCount = 1;
+    napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
+    if (status != napi_ok || jsThis == nullptr) {
+        asyncContext->SignError(MSERR_EXT_INVALID_VAL, "failed to napi_get_cb_info");
+    }
+
+    asyncContext->callbackRef = CommonNapi::CreateReference(env, args[0]);
+    asyncContext->deferred = CommonNapi::CreatePromise(env, asyncContext->callbackRef, result);
+
+    // get jsPlayer
+    (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncContext->jsPlayer));
+    // async work
+    auto ret = CompleteAsyncWork(env, static_cast<void *>(asyncContext.get()), napi_eprio_high);
+    if (ret != napi_status::napi_ok) {
+        MEDIA_LOGE("failed to SendEvent, ret = %{public}d", ret);
+    } else {
+        asyncContext.release();
+    }
+    return result;
+}
+
+napi_value VideoPlayerNapi::Stop(napi_env env, napi_callback_info info)
+{
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    MEDIA_LOGD("Stop In");
+    std::unique_ptr<VideoPlayerAsyncContext> asyncContext = std::make_unique<VideoPlayerAsyncContext>(env);
+    asyncContext->asyncWorkType = AsyncWorkType::ASYNC_WORK_STOP;
+
+    // get args
+    napi_value jsThis = nullptr;
+    napi_value args[1] = { nullptr };
+    size_t argCount = 1;
+    napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
+    if (status != napi_ok || jsThis == nullptr) {
+        asyncContext->SignError(MSERR_EXT_INVALID_VAL, "failed to napi_get_cb_info");
+    }
+
+    asyncContext->callbackRef = CommonNapi::CreateReference(env, args[0]);
+    asyncContext->deferred = CommonNapi::CreatePromise(env, asyncContext->callbackRef, result);
+    // get jsPlayer
+    (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncContext->jsPlayer));
+    // async work
+    auto ret = CompleteAsyncWork(env, static_cast<void *>(asyncContext.get()), napi_eprio_high);
+    if (ret != napi_status::napi_ok) {
+        MEDIA_LOGE("failed to SendEvent, ret = %{public}d", ret);
+    } else {
+        asyncContext.release();
+    }
+    return result;
+}
+
+napi_value VideoPlayerNapi::Reset(napi_env env, napi_callback_info info)
+{
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    MEDIA_LOGD("Reset In");
+    std::unique_ptr<VideoPlayerAsyncContext> asyncContext = std::make_unique<VideoPlayerAsyncContext>(env);
+    asyncContext->asyncWorkType = AsyncWorkType::ASYNC_WORK_RESET;
+
+    // get args
+    napi_value jsThis = nullptr;
+    napi_value args[1] = { nullptr };
+    size_t argCount = 1;
+    napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
+    if (status != napi_ok || jsThis == nullptr) {
+        asyncContext->SignError(MSERR_EXT_INVALID_VAL, "failed to napi_get_cb_info");
+    }
+
+    asyncContext->callbackRef = CommonNapi::CreateReference(env, args[0]);
+    asyncContext->deferred = CommonNapi::CreatePromise(env, asyncContext->callbackRef, result);
+
+    // get jsPlayer
+    (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncContext->jsPlayer));
+    // async work
+    auto ret = CompleteAsyncWork(env, static_cast<void *>(asyncContext.get()), napi_eprio_high);
+    if (ret != napi_status::napi_ok) {
+        MEDIA_LOGE("failed to SendEvent, ret = %{public}d", ret);
+    } else {
+        asyncContext.release();
+    }
+    return result;
+}
+
+napi_value VideoPlayerNapi::Release(napi_env env, napi_callback_info info)
+{
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    MEDIA_LOGD("Release In");
+    std::unique_ptr<VideoPlayerAsyncContext> asyncContext = std::make_unique<VideoPlayerAsyncContext>(env);
+
+    // get args
+    napi_value jsThis = nullptr;
+    napi_value args[1] = { nullptr };
+    size_t argCount = 1;
+    napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
+    if (status != napi_ok || jsThis == nullptr) {
+        asyncContext->SignError(MSERR_EXT_INVALID_VAL, "failed to napi_get_cb_info");
+    }
+
+    asyncContext->callbackRef = CommonNapi::CreateReference(env, args[0]);
+    asyncContext->deferred = CommonNapi::CreatePromise(env, asyncContext->callbackRef, result);
+
+    // get jsPlayer
+    (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncContext->jsPlayer));
+    if (asyncContext->jsPlayer == nullptr) {
+        asyncContext->SignError(MSERR_EXT_NO_MEMORY, "jsPlayer is destroyed(null), please check js_runtime");
+    } else if (asyncContext->jsPlayer->nativePlayer_ == nullptr) {
+        asyncContext->SignError(MSERR_EXT_NO_MEMORY, "nativePlayer is released(null), please create player again");
+    } else {
+        (void)asyncContext->jsPlayer->nativePlayer_->Release();
+        asyncContext->jsPlayer->CancelCallback();
+        asyncContext->jsPlayer->jsCallback_ = nullptr;
+        asyncContext->jsPlayer->nativePlayer_ = nullptr;
+        asyncContext->jsPlayer->url_.clear();
+    }
+
+    // async work
+    auto ret = MediaAsyncContext::SendCompleteEvent(env, asyncContext.get(), napi_eprio_high);
+    if (ret != napi_status::napi_ok) {
+        MEDIA_LOGE("failed to SendEvent, ret = %{public}d", ret);
+    } else {
+        asyncContext.release();
+    }
+    return result;
+}
+
 napi_value VideoPlayerNapi::SetUrl(napi_env env, napi_callback_info info)
 {
     napi_value undefinedResult = nullptr;
@@ -539,215 +749,6 @@ napi_status VideoPlayerNapi::CompleteAsyncWork(napi_env env, void *data, napi_ev
         }
     };
     return napi_send_event(env, task, prio);
-}
-
-napi_value VideoPlayerNapi::Prepare(napi_env env, napi_callback_info info)
-{
-    napi_value result = nullptr;
-    napi_get_undefined(env, &result);
-    MEDIA_LOGD("Prepare In");
-
-    std::unique_ptr<VideoPlayerAsyncContext> asyncContext = std::make_unique<VideoPlayerAsyncContext>(env);
-    asyncContext->asyncWorkType = AsyncWorkType::ASYNC_WORK_PREPARE;
-
-    // get args
-    napi_value jsThis = nullptr;
-    napi_value args[1] = { nullptr };
-    size_t argCount = 1;
-    napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
-    if (status != napi_ok || jsThis == nullptr) {
-        asyncContext->SignError(MSERR_EXT_INVALID_VAL, "failed to napi_get_cb_info");
-    }
-
-    asyncContext->callbackRef = CommonNapi::CreateReference(env, args[0]);
-    asyncContext->deferred = CommonNapi::CreatePromise(env, asyncContext->callbackRef, result);
-
-    // get jsPlayer
-    (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncContext->jsPlayer));
-    // async work
-    auto ret = CompleteAsyncWork(env, static_cast<void *>(asyncContext.get()), napi_eprio_high);
-    if (ret != napi_status::napi_ok) {
-        MEDIA_LOGE("failed to SendEvent, ret = %{public}d", ret);
-    } else {
-        asyncContext.release();
-    }
-    return result;
-}
-
-napi_value VideoPlayerNapi::Play(napi_env env, napi_callback_info info)
-{
-    napi_value result = nullptr;
-    napi_get_undefined(env, &result);
-    MEDIA_LOGD("Play In");
-
-    std::unique_ptr<VideoPlayerAsyncContext> asyncContext = std::make_unique<VideoPlayerAsyncContext>(env);
-    asyncContext->asyncWorkType = AsyncWorkType::ASYNC_WORK_PLAY;
-    // get args
-    napi_value jsThis = nullptr;
-    napi_value args[1] = { nullptr };
-    size_t argCount = 1;
-    napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
-    if (status != napi_ok || jsThis == nullptr) {
-        asyncContext->SignError(MSERR_EXT_INVALID_VAL, "failed to napi_get_cb_info");
-    }
-
-    asyncContext->callbackRef = CommonNapi::CreateReference(env, args[0]);
-    asyncContext->deferred = CommonNapi::CreatePromise(env, asyncContext->callbackRef, result);
-    // get jsPlayer
-    (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncContext->jsPlayer));
-#ifdef SUPPORT_JSSTACK
-    HiviewDFX::ReportXPowerJsStackSysEvent(env, "STREAM_CHANGE", "SRC=Media");
-#endif
-    // async work
-    auto ret = CompleteAsyncWork(env, static_cast<void *>(asyncContext.get()), napi_eprio_high);
-    if (ret != napi_status::napi_ok) {
-        MEDIA_LOGE("failed to SendEvent, ret = %{public}d", ret);
-    } else {
-        asyncContext.release();
-    }
-    return result;
-}
-
-napi_value VideoPlayerNapi::Pause(napi_env env, napi_callback_info info)
-{
-    napi_value result = nullptr;
-    napi_get_undefined(env, &result);
-
-    MEDIA_LOGD("Pause In");
-    std::unique_ptr<VideoPlayerAsyncContext> asyncContext = std::make_unique<VideoPlayerAsyncContext>(env);
-    asyncContext->asyncWorkType = AsyncWorkType::ASYNC_WORK_PAUSE;
-
-    // get args
-    napi_value jsThis = nullptr;
-    napi_value args[1] = { nullptr };
-    size_t argCount = 1;
-    napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
-    if (status != napi_ok || jsThis == nullptr) {
-        asyncContext->SignError(MSERR_EXT_INVALID_VAL, "failed to napi_get_cb_info");
-    }
-
-    asyncContext->callbackRef = CommonNapi::CreateReference(env, args[0]);
-    asyncContext->deferred = CommonNapi::CreatePromise(env, asyncContext->callbackRef, result);
-
-    // get jsPlayer
-    (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncContext->jsPlayer));
-    // async work
-    auto ret = CompleteAsyncWork(env, static_cast<void *>(asyncContext.get()), napi_eprio_high);
-    if (ret != napi_status::napi_ok) {
-        MEDIA_LOGE("failed to SendEvent, ret = %{public}d", ret);
-    } else {
-        asyncContext.release();
-    }
-    return result;
-}
-
-napi_value VideoPlayerNapi::Stop(napi_env env, napi_callback_info info)
-{
-    napi_value result = nullptr;
-    napi_get_undefined(env, &result);
-
-    MEDIA_LOGD("Stop In");
-    std::unique_ptr<VideoPlayerAsyncContext> asyncContext = std::make_unique<VideoPlayerAsyncContext>(env);
-    asyncContext->asyncWorkType = AsyncWorkType::ASYNC_WORK_STOP;
-
-    // get args
-    napi_value jsThis = nullptr;
-    napi_value args[1] = { nullptr };
-    size_t argCount = 1;
-    napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
-    if (status != napi_ok || jsThis == nullptr) {
-        asyncContext->SignError(MSERR_EXT_INVALID_VAL, "failed to napi_get_cb_info");
-    }
-
-    asyncContext->callbackRef = CommonNapi::CreateReference(env, args[0]);
-    asyncContext->deferred = CommonNapi::CreatePromise(env, asyncContext->callbackRef, result);
-    // get jsPlayer
-    (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncContext->jsPlayer));
-    // async work
-    auto ret = CompleteAsyncWork(env, static_cast<void *>(asyncContext.get()), napi_eprio_high);
-    if (ret != napi_status::napi_ok) {
-        MEDIA_LOGE("failed to SendEvent, ret = %{public}d", ret);
-    } else {
-        asyncContext.release();
-    }
-    return result;
-}
-
-napi_value VideoPlayerNapi::Reset(napi_env env, napi_callback_info info)
-{
-    napi_value result = nullptr;
-    napi_get_undefined(env, &result);
-
-    MEDIA_LOGD("Reset In");
-    std::unique_ptr<VideoPlayerAsyncContext> asyncContext = std::make_unique<VideoPlayerAsyncContext>(env);
-    asyncContext->asyncWorkType = AsyncWorkType::ASYNC_WORK_RESET;
-
-    // get args
-    napi_value jsThis = nullptr;
-    napi_value args[1] = { nullptr };
-    size_t argCount = 1;
-    napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
-    if (status != napi_ok || jsThis == nullptr) {
-        asyncContext->SignError(MSERR_EXT_INVALID_VAL, "failed to napi_get_cb_info");
-    }
-
-    asyncContext->callbackRef = CommonNapi::CreateReference(env, args[0]);
-    asyncContext->deferred = CommonNapi::CreatePromise(env, asyncContext->callbackRef, result);
-
-    // get jsPlayer
-    (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncContext->jsPlayer));
-    // async work
-    auto ret = CompleteAsyncWork(env, static_cast<void *>(asyncContext.get()), napi_eprio_high);
-    if (ret != napi_status::napi_ok) {
-        MEDIA_LOGE("failed to SendEvent, ret = %{public}d", ret);
-    } else {
-        asyncContext.release();
-    }
-    return result;
-}
-
-napi_value VideoPlayerNapi::Release(napi_env env, napi_callback_info info)
-{
-    napi_value result = nullptr;
-    napi_get_undefined(env, &result);
-
-    MEDIA_LOGD("Release In");
-    std::unique_ptr<VideoPlayerAsyncContext> asyncContext = std::make_unique<VideoPlayerAsyncContext>(env);
-
-    // get args
-    napi_value jsThis = nullptr;
-    napi_value args[1] = { nullptr };
-    size_t argCount = 1;
-    napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
-    if (status != napi_ok || jsThis == nullptr) {
-        asyncContext->SignError(MSERR_EXT_INVALID_VAL, "failed to napi_get_cb_info");
-    }
-
-    asyncContext->callbackRef = CommonNapi::CreateReference(env, args[0]);
-    asyncContext->deferred = CommonNapi::CreatePromise(env, asyncContext->callbackRef, result);
-
-    // get jsPlayer
-    (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncContext->jsPlayer));
-    if (asyncContext->jsPlayer == nullptr) {
-        asyncContext->SignError(MSERR_EXT_NO_MEMORY, "jsPlayer is destroyed(null), please check js_runtime");
-    } else if (asyncContext->jsPlayer->nativePlayer_ == nullptr) {
-        asyncContext->SignError(MSERR_EXT_NO_MEMORY, "nativePlayer is released(null), please create player again");
-    } else {
-        (void)asyncContext->jsPlayer->nativePlayer_->Release();
-        asyncContext->jsPlayer->CancelCallback();
-        asyncContext->jsPlayer->jsCallback_ = nullptr;
-        asyncContext->jsPlayer->nativePlayer_ = nullptr;
-        asyncContext->jsPlayer->url_.clear();
-    }
-
-    // async work
-    auto ret = MediaAsyncContext::SendCompleteEvent(env, asyncContext.get(), napi_eprio_high);
-    if (ret != napi_status::napi_ok) {
-        MEDIA_LOGE("failed to SendEvent, ret = %{public}d", ret);
-    } else {
-        asyncContext.release();
-    }
-    return result;
 }
 
 napi_value VideoPlayerNapi::Seek(napi_env env, napi_callback_info info)
