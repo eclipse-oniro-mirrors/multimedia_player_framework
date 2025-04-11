@@ -2564,31 +2564,29 @@ void HiPlayerImpl::NotifyCachedDuration(int32_t param)
     callbackLooper_.OnInfo(INFO_TYPE_BUFFERING_UPDATE, param, format);
 }
 
-void HiPlayerImpl::HandleEosFlagState(const Event& event)
+bool HiPlayerImpl::HandleEosFlagState(const Event& event)
 {
+    bool isAllEos = true;
     for (std::pair<std::string, bool>& item: completeState_) {
         if (item.first == event.srcFilter) {
             MEDIA_LOG_I("one eos event received " PUBLIC_LOG_S, item.first.c_str());
             item.second = true;
+            if (item.first == "AudioSink" && videoDecoder_) {
+                videoDecoder_->NotifyAudioComplete();
+            }
+        } else if (!item.second) {
+            MEDIA_LOG_I("expect receive eos event " PUBLIC_LOG_S, item.first.c_str());
+            isAllEos = false;
         }
     }
+    return isAllEos;
 }
 
 void HiPlayerImpl::HandleCompleteEvent(const Event& event)
 {
     MEDIA_LOG_D_SHORT("HandleCompleteEvent");
     AutoLock lock(handleCompleteMutex_);
-    if (curState_ == PlayerStateId::STOPPED) {
-        MEDIA_LOG_I("The Complete Task don't run, current status is Stopped.");
-        return;
-    }
-    HandleEosFlagState(event);
-    for (auto item : completeState_) {
-        if (item.second == false) {
-            MEDIA_LOG_I("expect receive eos event " PUBLIC_LOG_S, item.first.c_str());
-            return;
-        }
-    }
+    FALSE_RETURN_NOLOG(curState_ != PlayerStateId::STOPPED && HandleEosFlagState(event));
     MEDIA_LOG_I("OnComplete looping: " PUBLIC_LOG_D32 ".", singleLoop_.load());
     isStreaming_ = false;
     Format format;

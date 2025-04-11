@@ -264,6 +264,7 @@ void HiTransCoderImpl::ConfigureMetaDataToTrackFormat(const std::shared_ptr<Meta
             (void)SetValueByType(meta, muxerFormat_);
             meta->GetData(Tag::VIDEO_WIDTH, inputVideoWidth_);
             meta->GetData(Tag::VIDEO_HEIGHT, inputVideoHeight_);
+            UpdateVideoEncFormat(meta);
             isExistVideoTrack_ = true;
             isInitializeVideoEncFormat = true;
         } else if (!isInitializeAudioEncFormat && (trackMime.find("audio/") == 0)) {
@@ -278,6 +279,18 @@ void HiTransCoderImpl::ConfigureMetaDataToTrackFormat(const std::shared_ptr<Meta
         MEDIA_LOG_E("No video track found.");
         OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_UNSUPPORT_VID_SRC_TYPE});
     }
+}
+
+void HiTransCoderImpl::UpdateVideoEncFormat(const std::shared_ptr<Meta> &meta)
+{
+    std::string videoMime;
+    meta->GetData(Tag::MIME_TYPE, videoMime);
+    MEDIA_LOG_I("videoMime is: " PUBLIC_LOG_S, videoMime.c_str());
+    FALSE_RETURN_NOLOG(videoMime != Plugins::MimeType::VIDEO_HEVC);
+    MEDIA_LOG_I("set the default videoEnc format to AVC");
+    videoEncFormat_->Set<Tag::MIME_TYPE>(Plugins::MimeType::VIDEO_AVC);
+    videoEncFormat_->Set<Tag::VIDEO_H264_PROFILE>(Plugins::VideoH264Profile::BASELINE);
+    videoEncFormat_->Set<Tag::VIDEO_H264_LEVEL>(32); // 32: LEVEL 3.2
 }
 
 void HiTransCoderImpl::UpdateAudioSampleFormat(const std::string& mime, const std::shared_ptr<Meta> &meta)
@@ -524,7 +537,7 @@ int32_t HiTransCoderImpl::Configure(const TransCoderParam &transCoderParam)
             AudioBitRate audioBitrate = static_cast<const AudioBitRate&>(transCoderParam);
             if (audioBitrate.bitRate <= 0) {
                 MEDIA_LOG_E("Invalid audioBitrate.bitRate %{public}d", audioBitrate.bitRate);
-                OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_INVALID_VAL});
+                OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_PARAMETER_VERIFICATION_FAILED});
                 return static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER);
             }
             MEDIA_LOG_I("HiTransCoderImpl::Configure audioBitrate %{public}d", audioBitrate.bitRate);
@@ -556,7 +569,7 @@ int32_t HiTransCoderImpl::Prepare()
         if (width > inputVideoWidth_ || height > inputVideoHeight_ || std::min(width, height) < MINIMUM_WIDTH_HEIGHT) {
             MEDIA_LOG_E("Output video width or height is invalid");
             CollectionErrorInfo(static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER), "Prepare error");
-            OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_INVALID_VAL});
+            OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_PARAMETER_VERIFICATION_FAILED});
             return static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER);
         }
         isNeedVideoResizeFilter_ = width != inputVideoWidth_ || height != inputVideoHeight_;
@@ -761,6 +774,7 @@ void HiTransCoderImpl::HandleErrorEvent(int32_t errorCode)
         FALSE_RETURN_MSG(!ignoreError_, "igore this error event!");
         ignoreError_ = true;
     }
+    MEDIA_LOG_W("OnError, errorCode: " PUBLIC_LOG_D32, errorCode);
     FALSE_RETURN_MSG(callbackLooper_ != nullptr, "callbackLooper is nullptr");
     callbackLooper_->StopReportMediaProgress();
     if (pipeline_ != nullptr) {

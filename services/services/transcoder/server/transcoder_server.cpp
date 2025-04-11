@@ -105,10 +105,10 @@ void TransCoderServer::OnError(TransCoderErrorType errorType, int32_t errorCode)
 {
     (void)errorType;
     std::lock_guard<std::mutex> lock(cbMutex_);
-    lastErrMsg_ = MSErrorToExtErrorString(static_cast<MediaServiceErrCode>(errorCode));
+    lastErrMsg_ = MSErrorToString(static_cast<MediaServiceErrCode>(errorCode));
     CHECK_AND_RETURN(transCoderCb_ != nullptr);
     status_ = REC_ERROR;
-    MEDIA_LOGI("receive an error event, the status changes to error");
+    MEDIA_LOGI("receive an error event, errorCode: %{public}d, errorMsg: %{public}s", errorCode, lastErrMsg_.c_str());
     transCoderCb_->OnError(errorCode, lastErrMsg_);
 }
 

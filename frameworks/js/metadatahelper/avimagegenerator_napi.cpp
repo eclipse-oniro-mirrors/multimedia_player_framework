@@ -125,10 +125,14 @@ void AVImageGeneratorNapi::Destructor(napi_env env, void *nativeObject, void *fi
     (void)finalize;
     CHECK_AND_RETURN(nativeObject != nullptr);
     AVImageGeneratorNapi *napi = reinterpret_cast<AVImageGeneratorNapi *>(nativeObject);
-    if (napi != nullptr && napi->helper_ != nullptr) {
-        napi->helper_->Release();
-    }
-    delete napi;
+    std::thread([napi]() -> void {
+        MEDIA_LOGD("Destructor Release enter");
+        if (napi != nullptr && napi->helper_ != nullptr) {
+            napi->helper_->Release();
+        }
+        delete napi;
+    }).detach();
+    MEDIA_LOGD("Destructor success");
 }
 
 napi_value AVImageGeneratorNapi::JsCreateAVImageGenerator(napi_env env, napi_callback_info info)

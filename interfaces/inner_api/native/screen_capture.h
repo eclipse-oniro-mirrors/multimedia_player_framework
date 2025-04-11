@@ -174,6 +174,7 @@ struct VideoCaptureInfo {
     std::list<int32_t> taskIDs;
     int32_t videoFrameWidth = 0;
     int32_t videoFrameHeight = 0;
+    bool enableDeviceLevelCapture = false;
     VideoSourceType videoSource = VideoSourceType::VIDEO_SOURCE_BUTT;
     AVScreenCaptureParamValidationState state = AVScreenCaptureParamValidationState::VALIDATION_IGNORE;
     AVScreenCaptureFillMode screenCaptureFillMode = AVScreenCaptureFillMode::PRESERVE_ASPECT_RATIO;

@@ -682,14 +682,46 @@ int32_t AVScreenCaptureNapi::GetAudioInfo(std::unique_ptr<AVScreenCaptureAsyncCo
 int32_t AVScreenCaptureNapi::GetVideoInfo(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx,
     napi_env env, napi_value args)
 {
+    int32_t ret = GetVideoEncInfo(asyncCtx, env, args);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "GetVideoEncInfo failed");
+    ret = GetVideoCaptureInfo(asyncCtx, env, args);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "GetVideoCaptureInfo failed");
+    return MSERR_OK;
+}
+
+int32_t AVScreenCaptureNapi::GetVideoEncInfo(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx,
+    napi_env env, napi_value args)
+{
     int32_t videoBitrate = AVSCREENCAPTURE_DEFAULT_VIDEO_BIT_RATE;
     int32_t preset = AVScreenCaptureRecorderPreset::SCREEN_RECORD_PRESET_H264_AAC_MP4;
+    VideoEncInfo &encoderConfig = asyncCtx->config_.videoInfo.videoEncInfo;
+    // get videoBitrate
+    int32_t ret = AVScreenCaptureNapi::GetPropertyInt32(env, args, "videoBitrate", videoBitrate);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK,
+        (asyncCtx->AVScreenCaptureSignError(ret, "getVideoBitrate", "videoBitrate"), ret));
+    encoderConfig.videoBitrate = videoBitrate;
+    encoderConfig.videoFrameRate = AVSCREENCAPTURE_DEFAULT_VIDEO_FRAME_RATE;
+    MEDIA_LOGI("input videoBitrate %{public}d", encoderConfig.videoBitrate);
+    // get preset
+    ret = AVScreenCaptureNapi::GetPropertyInt32(env, args, "preset", preset);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, (asyncCtx->AVScreenCaptureSignError(ret, "getPreset", "preset"), ret));
+    ret = AVScreenCaptureNapi::CheckVideoCodecFormat(preset);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, (asyncCtx->AVScreenCaptureSignError(ret, "getPreset", "preset"), ret));
+    encoderConfig.videoCodec = AVScreenCaptureNapi::GetVideoCodecFormat(preset);
+    MEDIA_LOGI("input videoCodec %{public}d", encoderConfig.videoCodec);
+    return MSERR_OK;
+}
+
+int32_t AVScreenCaptureNapi::GetVideoCaptureInfo(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx,
+    napi_env env, napi_value args)
+{
     int32_t frameWidth = AVSCREENCAPTURE_DEFAULT_FRAME_WIDTH;
     int32_t frameHeight = AVSCREENCAPTURE_DEFAULT_FRAME_HEIGHT;
     int32_t displayId = AVSCREENCAPTURE_DEFAULT_DISPLAY_ID;
     int32_t fillMode = AVScreenCaptureFillMode::PRESERVE_ASPECT_RATIO;
-    VideoEncInfo &encoderConfig = asyncCtx->config_.videoInfo.videoEncInfo;
+    bool enableDeviceLevelCapture = false;
     VideoCaptureInfo &videoConfig = asyncCtx->config_.videoInfo.videoCapInfo;
+    // get displayId
     int32_t ret = AVScreenCaptureNapi::GetPropertyInt32(env, args, "displayId", displayId);
     CHECK_AND_RETURN_RET(ret == MSERR_OK && displayId >= 0,
         (asyncCtx->AVScreenCaptureSignError(MSERR_INVALID_VAL, "getDisplayId", "displayId"), MSERR_INVALID_VAL));
@@ -698,18 +730,11 @@ int32_t AVScreenCaptureNapi::GetVideoInfo(std::unique_ptr<AVScreenCaptureAsyncCo
         asyncCtx->config_.captureMode = CaptureMode::CAPTURE_SPECIFIED_SCREEN;
     }
     MEDIA_LOGI("input displayId %{public}" PRIu64, videoConfig.displayId);
-    ret = AVScreenCaptureNapi::GetPropertyInt32(env, args, "videoBitrate", videoBitrate);
-    CHECK_AND_RETURN_RET(ret == MSERR_OK,
-        (asyncCtx->AVScreenCaptureSignError(ret, "getVideoBitrate", "videoBitrate"), ret));
-    encoderConfig.videoBitrate = videoBitrate;
-    encoderConfig.videoFrameRate = AVSCREENCAPTURE_DEFAULT_VIDEO_FRAME_RATE;
-    MEDIA_LOGI("input videoBitrate %{public}d", encoderConfig.videoBitrate);
-    ret = AVScreenCaptureNapi::GetPropertyInt32(env, args, "preset", preset);
-    CHECK_AND_RETURN_RET(ret == MSERR_OK, (asyncCtx->AVScreenCaptureSignError(ret, "getPreset", "preset"), ret));
-    ret = AVScreenCaptureNapi::CheckVideoCodecFormat(preset);
-    CHECK_AND_RETURN_RET(ret == MSERR_OK, (asyncCtx->AVScreenCaptureSignError(ret, "getPreset", "preset"), ret));
-    encoderConfig.videoCodec = AVScreenCaptureNapi::GetVideoCodecFormat(preset);
-    MEDIA_LOGI("input videoCodec %{public}d", encoderConfig.videoCodec);
+    // get enableDeviceLevelCapture
+    CommonNapi::GetPropertyBool(env, args, "enableDeviceLevelCapture", enableDeviceLevelCapture);
+    videoConfig.enableDeviceLevelCapture = enableDeviceLevelCapture;
+    MEDIA_LOGI("enableDeviceLevelCapture %{public}d", videoConfig.enableDeviceLevelCapture);
+    // get video frame info (frameWidth and frameHeight)
     ret = AVScreenCaptureNapi::GetPropertyInt32(env, args, "frameWidth", frameWidth);
     CHECK_AND_RETURN_RET(ret == MSERR_OK,
         (asyncCtx->AVScreenCaptureSignError(ret, "getFrameWidth", "frameWidth"), ret));
@@ -723,7 +748,9 @@ int32_t AVScreenCaptureNapi::GetVideoInfo(std::unique_ptr<AVScreenCaptureAsyncCo
         (asyncCtx->AVScreenCaptureSignError(ret, "getVideoFrame", "VideoFrame"), ret));
     MEDIA_LOGI("input formatted frameWidth %{public}d, frameHeight %{public}d",
         videoConfig.videoFrameWidth, videoConfig.videoFrameHeight);
+    // get videoSource
     videoConfig.videoSource = VideoSourceType::VIDEO_SOURCE_SURFACE_RGBA;
+    // get fillMode
     ret = AVScreenCaptureNapi::GetPropertyInt32(env, args, "fillMode", fillMode);
     CHECK_AND_RETURN_RET(ret == MSERR_OK, (asyncCtx->AVScreenCaptureSignError(
         ret, "getScreenCaptureFillMode", "screenCaptureFillMode"), ret));

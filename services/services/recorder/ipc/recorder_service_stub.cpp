@@ -159,6 +159,8 @@ void RecorderServiceStub::FillRecFuncPart2()
         [this](MessageParcel &data, MessageParcel &reply) { return IsWatermarkSupported(data, reply); };
     recFuncs_[SET_WATERMARK] =
         [this](MessageParcel &data, MessageParcel &reply) { return SetWatermark(data, reply); };
+    recFuncs_[SET_USERMETA] =
+        [this](MessageParcel &data, MessageParcel &reply) { return SetUserMeta(data, reply); };
 }
 
 int32_t RecorderServiceStub::DestroyStub()
@@ -505,6 +507,12 @@ int32_t RecorderServiceStub::SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBu
 {
     CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
     return recorderServer_->SetWatermark(waterMarkBuffer);
+}
+
+int32_t RecorderServiceStub::SetUserMeta(const std::shared_ptr<Meta> &userMeta)
+{
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    return recorderServer_->SetUserMeta(userMeta);
 }
 
 int32_t RecorderServiceStub::DoIpcAbnormality()
@@ -959,6 +967,16 @@ int32_t RecorderServiceStub::SetWatermark(MessageParcel &data, MessageParcel &re
     CHECK_AND_RETURN_RET_LOG(buffer != nullptr, MSERR_NO_MEMORY, "create AVBuffer failed");
     CHECK_AND_RETURN_RET_LOG(buffer->ReadFromMessageParcel(data), MSERR_INVALID_OPERATION, "read buffer failed");
     CHECK_AND_RETURN_RET_LOG(reply.WriteInt32(SetWatermark(buffer)), MSERR_INVALID_OPERATION, "reply write failed");
+    return MSERR_OK;
+}
+
+int32_t RecorderServiceStub::SetUserMeta(MessageParcel &data, MessageParcel &reply)
+{
+    std::shared_ptr<Meta> userMeta = std::make_shared<Meta>();
+    CHECK_AND_RETURN_RET_LOG(userMeta->FromParcel(data), MSERR_INVALID_OPERATION,
+        "read metadata failed");
+    CHECK_AND_RETURN_RET_LOG(reply.WriteInt32(SetUserMeta(userMeta)), MSERR_INVALID_OPERATION,
+        "SetUserMeta reply write failed");
     return MSERR_OK;
 }
 } // namespace Media

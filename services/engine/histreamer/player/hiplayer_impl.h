@@ -280,7 +280,7 @@ private:
     void FlushVideoEOS();
     int32_t InnerSelectTrack(std::string mime, int32_t trackId, PlayerSwitchMode mode);
     bool NeedSeekClosest();
-    void HandleEosFlagState(const Event& event);
+    bool HandleEosFlagState(const Event& event);
     int32_t GetSarVideoWidth(std::shared_ptr<Meta> trackInfo);
     int32_t GetSarVideoHeight(std::shared_ptr<Meta> trackInfo);
     int32_t HandleEosPlay() override;

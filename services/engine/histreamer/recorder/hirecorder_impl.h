@@ -82,6 +82,7 @@ public:
     void SetCallingInfo(const std::string &bundleName, uint64_t instanceId);
     int32_t IsWatermarkSupported(bool &isWatermarkSupported);
     int32_t SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer);
+    int32_t SetUserMeta(const std::shared_ptr<Meta> &userMeta);
 
 private:
     void ConfigureAudioCapture();

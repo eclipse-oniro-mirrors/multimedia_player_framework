@@ -616,6 +616,8 @@ public:
     virtual int32_t IsWatermarkSupported(bool &isWatermarkSupported) = 0;
 
     virtual int32_t SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer) = 0;
+
+    virtual int32_t SetUserMeta(const std::shared_ptr<Meta> &userMeta) = 0;
 };
 } // namespace Media
 } // namespace OHOS
