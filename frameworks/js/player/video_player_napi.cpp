@@ -219,6 +219,83 @@ napi_value VideoPlayerNapi::CreateVideoPlayer(napi_env env, napi_callback_info i
     return result;
 }
 
+void VideoPlayerNapi::AsyncSetDisplaySurface(napi_env env, void *data)
+{
+    MEDIA_LOGD("AsyncSetDisplaySurface In");
+    auto asyncContext = reinterpret_cast<VideoPlayerAsyncContext *>(data);
+    CHECK_AND_RETURN_LOG(asyncContext != nullptr, "VideoPlayerAsyncContext is nullptr!");
+
+    if (asyncContext->jsPlayer == nullptr) {
+        asyncContext->SignError(MSERR_EXT_NO_MEMORY, "jsPlayer is destroyed(null), please check js_runtime");
+        return;
+    }
+
+    if (asyncContext->jsPlayer->nativePlayer_ == nullptr) {
+        asyncContext->SignError(MSERR_EXT_NO_MEMORY, "nativePlayer is released(null), please create player again");
+        return;
+    }
+
+    uint64_t surfaceId = 0;
+    MEDIA_LOGD("get surface, surfaceStr = %{public}s", asyncContext->surface.c_str());
+    if (asyncContext->surface.empty() || asyncContext->surface[0] < '0' || asyncContext->surface[0] > '9') {
+        asyncContext->SignError(MSERR_EXT_INVALID_VAL, "input surface id is invalid");
+        return;
+    }
+    if (!StrToULL(asyncContext->surface, surfaceId)) {
+        asyncContext->SignError(MSERR_EXT_INVALID_VAL, "invalid parameters, failed to obtain surfaceId");
+        return;
+    }
+    MEDIA_LOGD("get surface, surfaceId = (%{public}" PRIu64 ")", surfaceId);
+
+    auto surface = SurfaceUtils::GetInstance()->GetSurface(surfaceId);
+    if (surface != nullptr) {
+        int32_t ret = asyncContext->jsPlayer->nativePlayer_->SetVideoSurface(surface);
+        if (ret != MSERR_OK) {
+            asyncContext->SignError(MSERR_EXT_OPERATE_NOT_PERMIT, "failed to SetVideoSurface");
+        }
+    } else {
+        asyncContext->SignError(MSERR_EXT_NO_MEMORY, "failed to get surface from SurfaceUtils");
+    }
+    MEDIA_LOGD("AsyncSetDisplaySurface Out");
+}
+
+napi_value VideoPlayerNapi::SetDisplaySurface(napi_env env, napi_callback_info info)
+{
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    MEDIA_LOGD("SetDisplaySurface In");
+    std::unique_ptr<VideoPlayerAsyncContext> asyncContext = std::make_unique<VideoPlayerAsyncContext>(env);
+
+    // get args
+    napi_value jsThis = nullptr;
+    napi_value args[2] = { nullptr };
+    size_t argCount = 2;
+    napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
+    if (status != napi_ok || jsThis == nullptr) {
+        asyncContext->SignError(MSERR_EXT_NO_MEMORY, "failed to napi_get_cb_info");
+    }
+
+    // get surface id from js
+    napi_valuetype valueType = napi_undefined;
+    if (argCount > 0 && napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_string) {
+        asyncContext->surface = CommonNapi::GetStringArgument(env, args[0]);
+    }
+    asyncContext->callbackRef = CommonNapi::CreateReference(env, args[1]);
+    asyncContext->deferred = CommonNapi::CreatePromise(env, asyncContext->callbackRef, result);
+    // get jsPlayer
+    (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncContext->jsPlayer));
+
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, "SetDisplaySurface", NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, VideoPlayerNapi::AsyncSetDisplaySurface,
+        MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncContext.get()), &asyncContext->work));
+    NAPI_CALL(env, napi_queue_async_work(env, asyncContext->work));
+    asyncContext.release();
+
+    return result;
+}
+
 napi_value VideoPlayerNapi::SetUrl(napi_env env, napi_callback_info info)
 {
     napi_value undefinedResult = nullptr;
@@ -383,83 +460,6 @@ napi_value VideoPlayerNapi::GetFdSrc(napi_env env, napi_callback_info info)
 
     MEDIA_LOGD("GetFdSrc success");
     return jsResult;
-}
-
-void VideoPlayerNapi::AsyncSetDisplaySurface(napi_env env, void *data)
-{
-    MEDIA_LOGD("AsyncSetDisplaySurface In");
-    auto asyncContext = reinterpret_cast<VideoPlayerAsyncContext *>(data);
-    CHECK_AND_RETURN_LOG(asyncContext != nullptr, "VideoPlayerAsyncContext is nullptr!");
-
-    if (asyncContext->jsPlayer == nullptr) {
-        asyncContext->SignError(MSERR_EXT_NO_MEMORY, "jsPlayer is destroyed(null), please check js_runtime");
-        return;
-    }
-
-    if (asyncContext->jsPlayer->nativePlayer_ == nullptr) {
-        asyncContext->SignError(MSERR_EXT_NO_MEMORY, "nativePlayer is released(null), please create player again");
-        return;
-    }
-
-    uint64_t surfaceId = 0;
-    MEDIA_LOGD("get surface, surfaceStr = %{public}s", asyncContext->surface.c_str());
-    if (asyncContext->surface.empty() || asyncContext->surface[0] < '0' || asyncContext->surface[0] > '9') {
-        asyncContext->SignError(MSERR_EXT_INVALID_VAL, "input surface id is invalid");
-        return;
-    }
-    if (!StrToULL(asyncContext->surface, surfaceId)) {
-        asyncContext->SignError(MSERR_EXT_INVALID_VAL, "invalid parameters, failed to obtain surfaceId");
-        return;
-    }
-    MEDIA_LOGD("get surface, surfaceId = (%{public}" PRIu64 ")", surfaceId);
-
-    auto surface = SurfaceUtils::GetInstance()->GetSurface(surfaceId);
-    if (surface != nullptr) {
-        int32_t ret = asyncContext->jsPlayer->nativePlayer_->SetVideoSurface(surface);
-        if (ret != MSERR_OK) {
-            asyncContext->SignError(MSERR_EXT_OPERATE_NOT_PERMIT, "failed to SetVideoSurface");
-        }
-    } else {
-        asyncContext->SignError(MSERR_EXT_NO_MEMORY, "failed to get surface from SurfaceUtils");
-    }
-    MEDIA_LOGD("AsyncSetDisplaySurface Out");
-}
-
-napi_value VideoPlayerNapi::SetDisplaySurface(napi_env env, napi_callback_info info)
-{
-    napi_value result = nullptr;
-    napi_get_undefined(env, &result);
-
-    MEDIA_LOGD("SetDisplaySurface In");
-    std::unique_ptr<VideoPlayerAsyncContext> asyncContext = std::make_unique<VideoPlayerAsyncContext>(env);
-
-    // get args
-    napi_value jsThis = nullptr;
-    napi_value args[2] = { nullptr };
-    size_t argCount = 2;
-    napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
-    if (status != napi_ok || jsThis == nullptr) {
-        asyncContext->SignError(MSERR_EXT_NO_MEMORY, "failed to napi_get_cb_info");
-    }
-
-    // get surface id from js
-    napi_valuetype valueType = napi_undefined;
-    if (argCount > 0 && napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_string) {
-        asyncContext->surface = CommonNapi::GetStringArgument(env, args[0]);
-    }
-    asyncContext->callbackRef = CommonNapi::CreateReference(env, args[1]);
-    asyncContext->deferred = CommonNapi::CreatePromise(env, asyncContext->callbackRef, result);
-    // get jsPlayer
-    (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncContext->jsPlayer));
-
-    napi_value resource = nullptr;
-    napi_create_string_utf8(env, "SetDisplaySurface", NAPI_AUTO_LENGTH, &resource);
-    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, VideoPlayerNapi::AsyncSetDisplaySurface,
-        MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncContext.get()), &asyncContext->work));
-    NAPI_CALL(env, napi_queue_async_work(env, asyncContext->work));
-    asyncContext.release();
-
-    return result;
 }
 
 int32_t VideoPlayerNapi::ProcessWork(napi_env env, napi_status status, void *data)
