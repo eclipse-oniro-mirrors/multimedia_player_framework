@@ -97,7 +97,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckVideoCapInfo_001, TestSize.Level2
     SetValidConfig();
     config_.videoInfo.videoCapInfo.videoFrameWidth = 0;
     config_.videoInfo.videoCapInfo.videoFrameHeight = 1080;
-    ASSERT_NE(screenCaptureServer_->CheckAudioCapInfo(config_.videoInfo.videoCapInfo), MSERR_OK);
+    ASSERT_NE(screenCaptureServer_->CheckVideoCapInfo(config_.videoInfo.videoCapInfo), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckCaptureStreamParams_001, TestSize.Level2)
