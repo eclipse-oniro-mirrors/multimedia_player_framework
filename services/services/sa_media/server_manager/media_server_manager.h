@@ -105,7 +105,7 @@ private:
 
     void StartMemoryReportTask();
     void ReleaseMemoryReportTask();
-    void GetMemUsageForPlayer();
+    bool GetMemUsageForPlayer();
     void ReportAppMemoryUsage();
 
     std::atomic<bool> isMemMgrLoaded_ {false};
@@ -134,7 +134,7 @@ private:
     std::map<StubType, std::vector<Dumper>> dumperTbl_;
     AsyncExecutor executor_;
 
-    bool isTaskRunning = false;
+    std::atomic<int32_t> needReleaseTaskCount_ = 0;
     std::mutex mutex_;
     std::unique_ptr<Task> memoryReportTask_{nullptr};
     std::unordered_map<pid_t, uint32_t> playerPidMem_{};

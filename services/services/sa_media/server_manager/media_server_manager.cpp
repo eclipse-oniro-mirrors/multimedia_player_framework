@@ -47,6 +47,7 @@
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "MediaServerManager"};
 constexpr uint32_t REPORT_TIME = 100000000; // us
+constexpr int32_t RELEASE_THRESHOLD = 3;  // relese task
 }
 
 namespace OHOS {
@@ -174,7 +175,6 @@ MediaServerManager::~MediaServerManager()
     screenCaptureStubMap_.clear();
     screenCaptureMonitorStubMap_.clear();
     screenCaptureControllerStubMap_.clear();
-    ReleaseMemoryReportTask();
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
@@ -502,7 +502,6 @@ void MediaServerManager::DestroyAVPlayerStub(StubType type, sptr<IRemoteObject> 
                 }
             }
             MEDIA_LOGE("find player object failed, pid(%{public}d).", pid);
-            ReleaseMemoryReportTask();
             break;
         }
         case AVMETADATAHELPER: {
@@ -724,7 +723,6 @@ void MediaServerManager::DestroyAVPlayerStubForPid(pid_t pid)
         }
     }
     MEDIA_LOGD("player stub services(%{public}zu).", playerStubMap_.size());
-    ReleaseMemoryReportTask();
 
     MEDIA_LOGD("avmetadatahelper stub services(%{public}zu) pid(%{public}d).", avMetadataHelperStubMap_.size(), pid);
     for (auto itAvMetadata = avMetadataHelperStubMap_.begin(); itAvMetadata != avMetadataHelperStubMap_.end();) {
@@ -816,23 +814,14 @@ void MediaServerManager::StartMemoryReportTask()
             this->ReportAppMemoryUsage();
             return REPORT_TIME;
         });
+        needReleaseTaskCount_ = 0;
     }
-    if (memoryReportTask_ && !isTaskRunning) {
+    if (memoryReportTask_ && !memoryReportTask_->IsTaskRunning()) {
         memoryReportTask_->Start();
-        isTaskRunning = true;
     }
 }
 
-void MediaServerManager::ReleaseMemoryReportTask()
-{
-    if (playerStubMap_.empty() && memoryReportTask_) {
-        memoryReportTask_->Stop();
-        isTaskRunning = false;
-        memoryReportTask_ = nullptr;
-    }
-}
-
-void MediaServerManager::GetMemUsageForPlayer()
+bool MediaServerManager::GetMemUsageForPlayer()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     std::unordered_map<pid_t, uint32_t> memoryList;
@@ -851,18 +840,22 @@ void MediaServerManager::GetMemUsageForPlayer()
         }
     }
     playerPidMem_.swap(memoryList);
-    if (playerPidMem_.empty() && memoryReportTask_) {
-        memoryReportTask_->Stop();
-        isTaskRunning = false;
+    if (playerPidMem_.empty()) {
+        needReleaseTaskCount_.fetch_add(1, std::memory_order_relaxed);
+        if (needReleaseTaskCount_ >= RELEASE_THRESHOLD) {
+            std::thread([memoryReportTask = std::move(memoryReportTask_)]() mutable -> void {
+                MEDIA_LOGI("memoryReportTask: release");
+            }).detach();
+        }
+        return false;
     }
+    needReleaseTaskCount_ = 0;
+    return true;
 }
 
 void MediaServerManager::ReportAppMemoryUsage()
 {
-    GetMemUsageForPlayer();
-    if (playerPidMem_.empty()) {
-        return;
-    }
+    CHECK_AND_RETURN_LOG(GetMemUsageForPlayer(), "no need report");
     auto memoryCollector = HiviewDFX::UCollectClient::MemoryCollector::Create();
     CHECK_AND_RETURN_LOG(memoryCollector != nullptr, "Create Hiview DFX memory collector failed");
 
