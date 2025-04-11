@@ -126,7 +126,8 @@
           "jsoncpp",
           "memmgr",
           "memmgr_override",
-          "efficiency_manager"
+          "efficiency_manager",
+          "runtime_core"
         ],
         "third_party": [
           "bounds_checking_function"
@@ -146,6 +147,9 @@
             "//foundation/multimedia/player_framework/services/etc:media_service_etc"
           ]
         },
+        "sub_component": [
+          "//foundation/multimedia/player_framework/frameworks/ANI:player_framework_ani"
+        ],
         "inner_kits": [
           {
             "type": "so",
