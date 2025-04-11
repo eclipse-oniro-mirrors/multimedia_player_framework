@@ -821,7 +821,7 @@ void MediaServerManager::StartMemoryReportTask()
     }
 }
 
-void MediaServerManager::GetMemUsageForPlayer()
+bool MediaServerManager::GetMemUsageForPlayer()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     std::unordered_map<pid_t, uint32_t> memoryList;
@@ -847,17 +847,15 @@ void MediaServerManager::GetMemUsageForPlayer()
                 MEDIA_LOGI("memoryReportTask: release");
             }).detach();
         }
-        return;
+        return false;
     }
     needReleaseTaskCount_ = 0;
+    return true;
 }
 
 void MediaServerManager::ReportAppMemoryUsage()
 {
-    GetMemUsageForPlayer();
-    if (playerPidMem_.empty()) {
-        return;
-    }
+    CHECK_AND_RETURN_LOG(GetMemUsageForPlayer(), "no need report");
     auto memoryCollector = HiviewDFX::UCollectClient::MemoryCollector::Create();
     CHECK_AND_RETURN_LOG(memoryCollector != nullptr, "Create Hiview DFX memory collector failed");
 

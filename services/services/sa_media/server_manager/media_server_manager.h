@@ -105,7 +105,7 @@ private:
 
     void StartMemoryReportTask();
     void ReleaseMemoryReportTask();
-    void GetMemUsageForPlayer();
+    bool GetMemUsageForPlayer();
     void ReportAppMemoryUsage();
 
     std::atomic<bool> isMemMgrLoaded_ {false};
