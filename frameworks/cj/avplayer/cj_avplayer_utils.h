@@ -97,6 +97,7 @@ struct CPlayStrategy {
     char *preferredSubtitleLanguage;
 };
 
+bool __attribute__((visibility("default"))) StrToULL(const std::string &str, uint64_t &value);
 char *MallocCString(const std::string &origin);
 CArrI32 Convert2CArrI32(const std::vector<int32_t> &arr);
 CArrFloat Convert2CArrFloat(const std::vector<float> &arr);
