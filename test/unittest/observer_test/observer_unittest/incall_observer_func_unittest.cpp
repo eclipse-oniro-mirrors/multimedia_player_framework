@@ -18,6 +18,7 @@
 #include "incall_observer.h"
 #include <cstdlib>
 #include "media_telephony_listener.h"
+#include "call_manager_base.h"
 
 using namespace std;
 using namespace testing::ext;
@@ -233,8 +234,9 @@ HWTEST_F(InCallObserverInnerUnitTest, InCallCallBackReturn_05, TestSize.Level1)
     telephonyObserver->OnCallStateUpdated(-1, 1, phoneNumber); // -1 invalid slot id
     int32_t slotId = 1; // 1 normal slot id
     for (int i = -1; i <= 9; i++) { // -1 9 foreach all state
-        telephonyObserver->OnCallStateUpdated(-1, i, phoneNumber);
+        telephonyObserver->OnCallStateUpdated(slotId, i, phoneNumber);
     }
+    telephonyObserver->OnCallStateUpdated(slotId, 6, phoneNumber); // CALL_STATUS_DISCONNECTED
     const std::vector<sptr<OHOS::Telephony::SignalInformation>> vecSigInfo{};
     telephonyObserver->OnSignalInfoUpdated(slotId, vecSigInfo);
     telephonyObserver->OnNetworkStateUpdated(slotId, nullptr);
