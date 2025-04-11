@@ -88,17 +88,18 @@ void MediaClient::CreateMediaServiceInstance(IStandardMediaService::MediaSystemA
     (void)(lock);
 #ifdef SUPPORT_START_STOP_ON_DEMAND
     int32_t tryTimes = RETRY_TIME;
+    constexpr uint32_t MAX_WAIT_TIME = 5000;
     while (tryTimes-- > 0) {
         if (!IsAlived()) {
             MEDIA_LOGI("media service does not exist, sleep and retry");
             mediaProxyUpdatedCondition_.wait_for(lock, std::chrono::milliseconds(SLEEP_TIME));
             continue;
         }
-        object = mediaProxy_->GetSubSystemAbility(subSystemId, listenerStub_->AsObject());
+        object = mediaProxy_->GetSubSystemAbilityWithTimeOut(subSystemId, listenerStub_->AsObject(), MAX_WAIT_TIME);
         if (object != nullptr) {
             return;
         }
-        MEDIA_LOGI("GetSubSystemAbility failed, sleep and retry");
+        MEDIA_LOGI("GetSubSystemAbilityWithTimeOut failed, sleep and retry");
         mediaProxyUpdatedCondition_.wait_for(lock, std::chrono::milliseconds(SLEEP_TIME));
         continue;
     }
