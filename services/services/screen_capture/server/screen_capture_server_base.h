@@ -264,37 +264,6 @@ private:
     static constexpr int32_t ADS_LOG_SKIP_NUM = 1000;
 };
 
-class InputDeviceInfo : public MMI::InputDevice {
-public:
-    InputDeviceInfo() = default;
-
-    virtual ~InputDeviceInfo() = default;
-};
-
-class MouseChangeListener : public MMI::IInputDeviceListener {
-public:
-    explicit MouseChangeListener(std::weak_ptr<ScreenCaptureServer> screenCaptureServer);
-    ~MouseChangeListener() = default;
-    int32_t GetDeviceInfo(int32_t deviceId, std::shared_ptr<InputDeviceInfo> deviceInfo);
-
-    void OnDeviceAdded(int32_t deviceId, const std::string &type) override;
-    void OnDeviceRemoved(int32_t deviceId, const std::string &type) override;
-
-private:
-    std::weak_ptr<ScreenCaptureServer> screenCaptureServer_;
-};
-
-class MMISystemAbilityListener : public SystemAbilityStatusChangeStub {
-public:
-    explicit MMISystemAbilityListener(std::weak_ptr<ScreenCaptureServer> screenCaptureServer);
-    ~MMISystemAbilityListener() = default;
-    void OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId) override;
-    void OnRemoveSystemAbility(int32_t systemAbilityId, const std::string &deviceId) override;
-
-private:
-    std::weak_ptr<ScreenCaptureServer> screenCaptureServer_;
-};
-
 class PrivateWindowListenerInScreenCapture : public DisplayManager::IPrivateWindowListener {
 public:
     explicit PrivateWindowListenerInScreenCapture(std::weak_ptr<ScreenCaptureServer> screenCaptureServer);

@@ -125,8 +125,6 @@ public:
     int32_t GetAppUid();
     void NotifyStateChange(AVScreenCaptureStateCode stateCode);
     void NotifyDisplaySelected(uint64_t displayId);
-    void SetMouseChangeListener(std::shared_ptr<MouseChangeListener> listener);
-    std::shared_ptr<MouseChangeListener> GetMouseChangeListener();
     int32_t SetAndCheckAppInfo(OHOS::AudioStandard::AppInfo &appInfo);
     void SetSCServerSaUid(int32_t saUid);
     int32_t GetSCServerSaUid();
@@ -223,10 +221,6 @@ private:
     int32_t ReStartMicForVoIPStatusSwitch();
     void RegisterPrivateWindowListener();
     void RegisterScreenConnectListener();
-    bool RegisterMMISystemAbilityListener();
-    bool UnRegisterMMISystemAbilityListener();
-    int32_t RegisterMouseChangeListener(std::string type);
-    int32_t UnRegisterMouseChangeListener(std::string type);
     uint64_t GetDisplayIdOfWindows(uint64_t displayId);
     std::string GetStringByResourceName(const char* name);
     void RefreshResConfig();
@@ -251,6 +245,7 @@ private:
     bool showSensitiveCheckBox_ = false;
     bool checkBoxSelected_ = false;
     std::vector<uint64_t> surfaceIdList_ = {};
+    std::vector<uint8_t> surfaceTypeList_ = {};
 
     int32_t sessionId_ = 0;
     int32_t notificationId_ = 0;
@@ -280,8 +275,6 @@ private:
     AVScreenCaptureState captureState_ = AVScreenCaptureState::CREATED;
     std::shared_ptr<NotificationLocalLiveViewContent> localLiveViewContent_;
     int64_t startTime_ = 0;
-    sptr<ISystemAbilityStatusChange> mmiListener_ = nullptr;
-    std::shared_ptr<MouseChangeListener> mouseChangeListener_ = nullptr;
     sptr<UIExtensionAbilityConnection> connection_ = nullptr;
 
     /* used for CAPTURE STREAM */
