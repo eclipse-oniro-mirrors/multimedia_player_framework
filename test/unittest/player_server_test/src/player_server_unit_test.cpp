@@ -2051,7 +2051,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetLooping_001, TestSize.Level1)
  * @tc.number: Player_SetLooping_002
  * @tc.desc  : Test Player SetLooping liveStream
  */
-HWTEST_F(PlayerServerUnitTest, Player_SetLooping_002, TestSize.Level1)
+HWTEST_F(PlayerServerUnitTest, Player_SetLooping_002, TestSize.Level0)
 {
     std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
     server->isLiveStream_ = true;
@@ -2063,7 +2063,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetLooping_002, TestSize.Level1)
  * @tc.number: Player_SetLooping_003
  * @tc.desc  : Test Player SetLooping invalid playerEngine
  */
-HWTEST_F(PlayerServerUnitTest, Player_SetLooping_003, TestSize.Level1)
+HWTEST_F(PlayerServerUnitTest, Player_SetLooping_003, TestSize.Level0)
 {
     std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
     server->lastOpStatus_ = PLAYER_STARTED;
@@ -3044,7 +3044,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetEffect_002, TestSize.Level1)
  * @tc.number: Player_Media_Error
  * @tc.desc  : Test Player Media Error
  */
-HWTEST_F(PlayerServerUnitTest, Player_Media_Error, TestSize.Level1)
+HWTEST_F(PlayerServerUnitTest, Player_Media_Error, TestSize.Level0)
 {
     std::array<MediaServiceErrCode, 5> errCodes = {MSERR_OK, MSERR_NO_MEMORY, MSERR_INVALID_OPERATION,
         MSERR_INVALID_VAL, MSERR_UNKNOWN};
@@ -3947,7 +3947,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetPlayRange_011, TestSize.Level1)
  * @tc.number: Player_SetPlayRange_012
  * @tc.desc  : Test Player SetPlayRange invalid state
  */
-HWTEST_F(PlayerServerUnitTest, Player_SetPlayRange_012, TestSize.Level1)
+HWTEST_F(PlayerServerUnitTest, Player_SetPlayRange_012, TestSize.Level0)
 {
     EXPECT_NE(MSERR_OK, player_->SetPlayRange(100, 10037));
 }
@@ -3957,7 +3957,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetPlayRange_012, TestSize.Level1)
  * @tc.number: Player_SetPlayRange_013
  * @tc.desc  : Test Player SetPlayRange invalid playerEngine
  */
-HWTEST_F(PlayerServerUnitTest, Player_SetPlayRange_013, TestSize.Level1)
+HWTEST_F(PlayerServerUnitTest, Player_SetPlayRange_013, TestSize.Level0)
 {
     std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
     server->lastOpStatus_ = PLAYER_INITIALIZED;
@@ -4305,7 +4305,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetMediaMuted_002, TestSize.Level1)
  * @tc.number: Player_GetCurrentTime_001
  * @tc.desc  : Test GetCurrentTime interface with invalid parameters
  */
-HWTEST_F(PlayerServerUnitTest, Player_GetCurrentTime_001, TestSize.Level1)
+HWTEST_F(PlayerServerUnitTest, Player_GetCurrentTime_001, TestSize.Level0)
 {
     int32_t time = 0;
     int32_t duration = 0;
@@ -4337,7 +4337,7 @@ HWTEST_F(PlayerServerUnitTest, Player_GetCurrentTime_001, TestSize.Level1)
  * @tc.number: Player_GetCurrentTime_002
  * @tc.desc  : Test GetCurrentTime interface with invalid parameters
  */
-HWTEST_F(PlayerServerUnitTest, Player_GetCurrentTime_002, TestSize.Level1)
+HWTEST_F(PlayerServerUnitTest, Player_GetCurrentTime_002, TestSize.Level0)
 {
     std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
     int32_t time = 0;
@@ -4351,7 +4351,7 @@ HWTEST_F(PlayerServerUnitTest, Player_GetCurrentTime_002, TestSize.Level1)
  * @tc.number: Player_GetPlaybackInfo_001
  * @tc.desc  : Test Player GetPlaybackInfo
  */
-HWTEST_F(PlayerServerUnitTest, Player_GetPlaybackInfo_001, TestSize.Level1)
+HWTEST_F(PlayerServerUnitTest, Player_GetPlaybackInfo_001, TestSize.Level0)
 {
     Format playbackInfo;
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
@@ -4400,7 +4400,7 @@ HWTEST_F(PlayerServerUnitTest, Player_GetPlaybackInfo_002, TestSize.Level2)
  * @tc.number: Player_GetSubtitleTrackInfo_001
  * @tc.desc  : Test Player GetSubtitleTrackInfo
  */
-HWTEST_F(PlayerServerUnitTest, Player_GetSubtitleTrackInfo_001, TestSize.Level1)
+HWTEST_F(PlayerServerUnitTest, Player_GetSubtitleTrackInfo_001, TestSize.Level0)
 {
     std::vector<Format> subtitleTrackInfo;
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
@@ -4449,7 +4449,7 @@ HWTEST_F(PlayerServerUnitTest, Player_GetSubtitleTrackInfo_002, TestSize.Level2)
  * @tc.number: Player_SetRenderFirstFrame_001
  * @tc.desc  : Test Player SetRenderFirstFrame
  */
-HWTEST_F(PlayerServerUnitTest, Player_SetRenderFirstFrame_001, TestSize.Level1)
+HWTEST_F(PlayerServerUnitTest, Player_SetRenderFirstFrame_001, TestSize.Level0)
 {
     bool display = false;
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE2));
@@ -4473,7 +4473,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetRenderFirstFrame_001, TestSize.Level1)
  * @tc.number: Player_SetRenderFirstFrame_002
  * @tc.desc  : Test Player SetRenderFirstFrame invalid playerEngine
  */
-HWTEST_F(PlayerServerUnitTest, Player_SetRenderFirstFrame_002, TestSize.Level1)
+HWTEST_F(PlayerServerUnitTest, Player_SetRenderFirstFrame_002, TestSize.Level0)
 {
     bool display = false;
     std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
@@ -4486,7 +4486,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetRenderFirstFrame_002, TestSize.Level1)
  * @tc.number: Player_PreparedHandleEos_001
  * @tc.desc  : Test Player PreparedHandleEos
  */
-HWTEST_F(PlayerServerUnitTest, Player_PreparedHandleEos_001, TestSize.Level1)
+HWTEST_F(PlayerServerUnitTest, Player_PreparedHandleEos_001, TestSize.Level0)
 {
     std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
     (void)server->Init();
@@ -4509,7 +4509,7 @@ HWTEST_F(PlayerServerUnitTest, Player_PreparedHandleEos_001, TestSize.Level1)
  * @tc.number: Player_HandleEos_001
  * @tc.desc  : Test Player HandleEos
  */
-HWTEST_F(PlayerServerUnitTest, Player_HandleEos_001, TestSize.Level1)
+HWTEST_F(PlayerServerUnitTest, Player_HandleEos_001, TestSize.Level0)
 {
     std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
     server->HandleEos();
@@ -4521,7 +4521,7 @@ HWTEST_F(PlayerServerUnitTest, Player_HandleEos_001, TestSize.Level1)
  * @tc.number: Player_HandleInterruptEvent_001
  * @tc.desc  : Test Player HandleInterruptEvent
  */
-HWTEST_F(PlayerServerUnitTest, Player_HandleInterruptEvent_001, TestSize.Level1)
+HWTEST_F(PlayerServerUnitTest, Player_HandleInterruptEvent_001, TestSize.Level0)
 {
     std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
     server->interruptEventState_ = PLAYER_PREPARING;
@@ -4542,7 +4542,7 @@ HWTEST_F(PlayerServerUnitTest, Player_HandleInterruptEvent_001, TestSize.Level1)
  * @tc.number: Player_BackGroundChangeState_001
  * @tc.desc  : Test Player BackGroundChangeState
  */
-HWTEST_F(PlayerServerUnitTest, Player_BackGroundChangeState_001, TestSize.Level1)
+HWTEST_F(PlayerServerUnitTest, Player_BackGroundChangeState_001, TestSize.Level0)
 {
     std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
     (void)server->Init();
@@ -4560,7 +4560,7 @@ HWTEST_F(PlayerServerUnitTest, Player_BackGroundChangeState_001, TestSize.Level1
  * @tc.number: Player_PlayerState_001
  * @tc.desc  : Test Player PlayerState
  */
-HWTEST_F(PlayerServerUnitTest, Player_PlayerState_001, TestSize.Level1)
+HWTEST_F(PlayerServerUnitTest, Player_PlayerState_001, TestSize.Level0)
 {
     std::shared_ptr<PlayerServer> server_ = std::make_shared<PlayerServer>();
     (void)server_->Init();
@@ -4585,7 +4585,7 @@ HWTEST_F(PlayerServerUnitTest, Player_PlayerState_001, TestSize.Level1)
  * @tc.number: Player_AddSubSource_003
  * @tc.desc  : Test Player AddSubSource
  */
-HWTEST_F(PlayerServerUnitTest, Player_AddSubSource_003, TestSize.Level1)
+HWTEST_F(PlayerServerUnitTest, Player_AddSubSource_003, TestSize.Level0)
 {
     std::shared_ptr<PlayerServer> server_ = std::make_shared<PlayerServer>();
     (void)server_->Init();
@@ -4599,7 +4599,7 @@ HWTEST_F(PlayerServerUnitTest, Player_AddSubSource_003, TestSize.Level1)
  * @tc.number: Player_AddSubSource_004
  * @tc.desc  : Test Player AddSubSource invalid subtitleTrackNum
  */
-HWTEST_F(PlayerServerUnitTest, Player_AddSubSource_004, TestSize.Level1)
+HWTEST_F(PlayerServerUnitTest, Player_AddSubSource_004, TestSize.Level0)
 {
     std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
     ASSERT_EQ(MSERR_OK, server->SetSource(VIDEO_FILE1));
@@ -4613,7 +4613,7 @@ HWTEST_F(PlayerServerUnitTest, Player_AddSubSource_004, TestSize.Level1)
  * @tc.number: Player_PrepareInReleasing_001
  * @tc.desc  : Test Player PrepareInReleasing
  */
-HWTEST_F(PlayerServerUnitTest, Player_PrepareInReleasing_001, TestSize.Level1)
+HWTEST_F(PlayerServerUnitTest, Player_PrepareInReleasing_001, TestSize.Level0)
 {
     std::shared_ptr<PlayerServer> server_ = std::make_shared<PlayerServer>();
     (void)server_->Init();
@@ -4651,7 +4651,7 @@ HWTEST_F(PlayerServerUnitTest, Player_Media_Error_002, TestSize.Level1)
  * @tc.number: Player_SetPlayRangeWithMode_001
  * @tc.desc  : Test Player SetPlayRangeWithMode interface
  */
-HWTEST_F(PlayerServerUnitTest, Player_SetPlayRangeWithMode_001, TestSize.Level1)
+HWTEST_F(PlayerServerUnitTest, Player_SetPlayRangeWithMode_001, TestSize.Level0)
 {
     int32_t duration = 0;
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
@@ -4674,7 +4674,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetPlayRangeWithMode_001, TestSize.Level1)
  * @tc.number: Player_SetPlayRangeWithMode_002
  * @tc.desc  : Test Player SetPlayRangeWithMode interface
  */
-HWTEST_F(PlayerServerUnitTest, Player_SetPlayRangeWithMode_002, TestSize.Level1)
+HWTEST_F(PlayerServerUnitTest, Player_SetPlayRangeWithMode_002, TestSize.Level0)
 {
     int32_t duration = 0;
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
@@ -4696,7 +4696,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetPlayRangeWithMode_002, TestSize.Level1)
  * @tc.number: Player_SetPlayRangeWithMode_003
  * @tc.desc  : Test Player SetPlayRangeWithMode interface
  */
-HWTEST_F(PlayerServerUnitTest, Player_SetPlayRangeWithMode_003, TestSize.Level1)
+HWTEST_F(PlayerServerUnitTest, Player_SetPlayRangeWithMode_003, TestSize.Level0)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -4714,7 +4714,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetPlayRangeWithMode_003, TestSize.Level1)
  * @tc.number: Player_SetPlayRangeWithMode_004
  * @tc.desc  : Test Player SetPlayRangeWithMode interface
  */
-HWTEST_F(PlayerServerUnitTest, Player_SetPlayRangeWithMode_004, TestSize.Level1)
+HWTEST_F(PlayerServerUnitTest, Player_SetPlayRangeWithMode_004, TestSize.Level0)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -4729,7 +4729,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetPlayRangeWithMode_004, TestSize.Level1)
  * @tc.number: Player_InnerOnInfo_001
  * @tc.desc  : Test Player InnerOnInfo interface
  */
-HWTEST_F(PlayerServerUnitTest, Player_InnerOnInfo_001, TestSize.Level1)
+HWTEST_F(PlayerServerUnitTest, Player_InnerOnInfo_001, TestSize.Level0)
 {
     std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
     Format infoBody;
@@ -4743,7 +4743,7 @@ HWTEST_F(PlayerServerUnitTest, Player_InnerOnInfo_001, TestSize.Level1)
  * @tc.number: Player_InnerOnInfo_002
  * @tc.desc  : Test Player InnerOnInfo interface
  */
-HWTEST_F(PlayerServerUnitTest, Player_InnerOnInfo_002, TestSize.Level1)
+HWTEST_F(PlayerServerUnitTest, Player_InnerOnInfo_002, TestSize.Level0)
 {
     std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
     Format infoBody;
@@ -4763,7 +4763,7 @@ HWTEST_F(PlayerServerUnitTest, Player_InnerOnInfo_002, TestSize.Level1)
  * @tc.number: Player_InnerOnInfo_003
  * @tc.desc  : Test Player InnerOnInfo interface
  */
-HWTEST_F(PlayerServerUnitTest, Player_InnerOnInfo_003, TestSize.Level1)
+HWTEST_F(PlayerServerUnitTest, Player_InnerOnInfo_003, TestSize.Level0)
 {
     std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
     std::shared_ptr<PlayerCallbackTest> callback = std::make_shared<PlayerCallbackTest>();
@@ -4793,7 +4793,7 @@ HWTEST_F(PlayerServerUnitTest, Player_InnerOnInfo_003, TestSize.Level1)
  * @tc.number: Player_GetStatusDescription_001
  * @tc.desc  : Test Player GetStatusDescription interface
  */
-HWTEST_F(PlayerServerUnitTest, Player_GetStatusDescription_001, TestSize.Level1)
+HWTEST_F(PlayerServerUnitTest, Player_GetStatusDescription_001, TestSize.Level0)
 {
     std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
     EXPECT_EQ(server->GetStatusDescription(-1), "PLAYER_STATUS_ILLEGAL");
@@ -4805,7 +4805,7 @@ HWTEST_F(PlayerServerUnitTest, Player_GetStatusDescription_001, TestSize.Level1)
  * @tc.number: Player_ChangeState_001
  * @tc.desc  : Test Player ChangeState interface
  */
-HWTEST_F(PlayerServerUnitTest, Player_ChangeState_001, TestSize.Level1)
+HWTEST_F(PlayerServerUnitTest, Player_ChangeState_001, TestSize.Level0)
 {
     std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
     std::shared_ptr<PlayerServerState> state = nullptr;
@@ -4818,7 +4818,7 @@ HWTEST_F(PlayerServerUnitTest, Player_ChangeState_001, TestSize.Level1)
  * @tc.number: Player_CheckSeek_001
  * @tc.desc  : Test Player CheckSeek interface
  */
-HWTEST_F(PlayerServerUnitTest, Player_CheckSeek_001, TestSize.Level1)
+HWTEST_F(PlayerServerUnitTest, Player_CheckSeek_001, TestSize.Level0)
 {
     std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
     server->SetSource(VIDEO_FILE1);
