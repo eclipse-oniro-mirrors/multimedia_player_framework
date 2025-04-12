@@ -16,6 +16,7 @@
 #include "media_errors.h"
 #include "hiplayer_impl_unit_test.h"
 #include "pipeline/pipeline.h"
+#include "player.h"
 
 namespace OHOS {
 namespace Media {
@@ -1231,6 +1232,137 @@ HWTEST_F(HiplayerImplUnitTest, TestSetPlaybackStrategy_001, TestSize.Level0)
     EXPECT_EQ(ret, MSERR_OK);
     EXPECT_EQ(hiplayer_->videoPostProcessorType_, VideoPostProcessorType::SUPER_RESOLUTION);
     EXPECT_EQ(hiplayer_->isPostProcessorOn_, true);
+}
+
+/**
+* @tc.name    : Test flv smart play
+* @tc.number  : IsLivingMaxDelayTimeValid_001
+* @tc.desc    : Test flv live Max Delay Time isValid
+* @tc.require :
+*/
+HWTEST_F(HiplayerImplUnitTest, IsLivingMaxDelayTimeValid_001, TestSize.Level0)
+{
+    hiplayer_->maxLivingDelayTime_ = -1;
+    EXPECT_TRUE(hiplayer_->IsLivingMaxDelayTimeValid());
+    hiplayer_->maxLivingDelayTime_ = 0;
+    EXPECT_FALSE(hiplayer_->IsLivingMaxDelayTimeValid());
+    hiplayer_->maxLivingDelayTime_ = AVPlayStrategyConstant::DEFAULT_LIVING_CACHED_DURATION;
+    hiplayer_->bufferDurationForPlaying_ = 0;
+    EXPECT_TRUE(hiplayer_->IsLivingMaxDelayTimeValid());
+    hiplayer_->bufferDurationForPlaying_ = AVPlayStrategyConstant::DEFAULT_MAX_DELAY_TIME_FOR_LIVING;
+    EXPECT_FALSE(hiplayer_->IsLivingMaxDelayTimeValid());
+}
+
+/**
+* @tc.name    : Test flv smart play
+* @tc.number  : IsNeedChangePlaySpeed_001
+* @tc.desc    : Test resume normal speed play
+* @tc.require :
+*/
+HWTEST_F(HiplayerImplUnitTest, IsNeedChangePlaySpeed_001, TestSize.Level0)
+{
+    hiplayer_->demuxer_ = FilterFactory::Instance().CreateFilter<DemuxerFilter>("builtin.player.demuxer",
+        FilterType::FILTERTYPE_DEMUXER);
+    PlaybackRateMode mode = PlaybackRateMode::SPEED_FORWARD_1_20_X;
+    bool isXSpeedPlay = true;
+    hiplayer_->isFlvLive_ = true;
+    hiplayer_->bufferDurationForPlaying_ = AVPlayStrategyConstant::DEFAULT_LIVING_CACHED_DURATION;
+    EXPECT_TRUE(hiplayer_->IsNeedChangePlaySpeed(mode, isXSpeedPlay));
+    EXPECT_EQ(mode, PlaybackRateMode::SPEED_FORWARD_1_00_X);
+    EXPECT_EQ(isXSpeedPlay, false);
+}
+
+/**
+* @tc.name    : Test flv smart play
+* @tc.number  : IsNeedChangePlaySpeed_002
+* @tc.desc    : Test 1.2X speed play
+* @tc.require :
+*/
+HWTEST_F(HiplayerImplUnitTest, IsNeedChangePlaySpeed_002, TestSize.Level0)
+{
+    hiplayer_->demuxer_ = FilterFactory::Instance().CreateFilter<DemuxerFilter>("builtin.player.demuxer",
+        FilterType::FILTERTYPE_DEMUXER);
+    PlaybackRateMode mode = PlaybackRateMode::SPEED_FORWARD_1_00_X;
+    bool isXSpeedPlay = false;
+    hiplayer_->isFlvLive_ = true;
+    hiplayer_->maxLivingDelayTime_ = -1;
+    EXPECT_TRUE(hiplayer_->IsNeedChangePlaySpeed(mode, isXSpeedPlay));
+    EXPECT_EQ(mode, PlaybackRateMode::SPEED_FORWARD_1_20_X);
+    EXPECT_EQ(isXSpeedPlay, true);
+}
+
+/**
+* @tc.name    : Test flv smart play
+* @tc.number  : IsNeedChangePlaySpeed_003
+* @tc.desc    : Test already 1.2X speed play, do nothing
+* @tc.require :
+*/
+HWTEST_F(HiplayerImplUnitTest, IsNeedChangePlaySpeed_003, TestSize.Level0)
+{
+    hiplayer_->demuxer_ = FilterFactory::Instance().CreateFilter<DemuxerFilter>("builtin.player.demuxer",
+        FilterType::FILTERTYPE_DEMUXER);
+    PlaybackRateMode mode = PlaybackRateMode::SPEED_FORWARD_1_20_X;
+    bool isXSpeedPlay = true;
+    hiplayer_->isFlvLive_ = true;
+    hiplayer_->maxLivingDelayTime_ = -1;
+    EXPECT_FALSE(hiplayer_->IsNeedChangePlaySpeed(mode, isXSpeedPlay));
+    EXPECT_EQ(mode, PlaybackRateMode::SPEED_FORWARD_1_20_X);
+    EXPECT_EQ(isXSpeedPlay, true);
+}
+
+/**
+* @tc.name    : Test flv smart play
+* @tc.number  : IsPauseForTooLong_001
+* @tc.desc    : Test is pause for too long time
+* @tc.require :
+*/
+HWTEST_F(HiplayerImplUnitTest, IsPauseForTooLong_001, TestSize.Level0)
+{
+    hiplayer_->isFlvLive_ = false;
+    EXPECT_FALSE(hiplayer_->IsFlvLive());
+    int64_t pauseTime = 1;
+    hiplayer_->maxLivingDelayTime_ = -1;
+    EXPECT_TRUE(hiplayer_->IsPauseForTooLong(pauseTime));
+ 
+    hiplayer_->maxLivingDelayTime_ = AVPlayStrategyConstant::DEFAULT_MAX_DELAY_TIME_FOR_LIVING;
+    EXPECT_FALSE(hiplayer_->IsPauseForTooLong(pauseTime));
+}
+
+/**
+* @tc.name    : Test flv smart play
+* @tc.number  : SetFlvLiveParams_001
+* @tc.desc    : Test set flv live params value
+* @tc.require :
+*/
+HWTEST_F(HiplayerImplUnitTest, SetFlvLiveParams_001, TestSize.Level0)
+{
+    AVPlayStrategy playbackStrategy;
+    playbackStrategy.preferredBufferDurationForPlaying = -1;
+    hiplayer_->isSetBufferDurationForPlaying_ = true;
+    hiplayer_->SetFlvLiveParams(playbackStrategy);
+    EXPECT_FALSE(hiplayer_->isSetBufferDurationForPlaying_);
+    EXPECT_EQ(hiplayer_->bufferDurationForPlaying_, 0);
+    EXPECT_EQ(hiplayer_->maxLivingDelayTime_, -1);
+    
+    playbackStrategy.preferredBufferDurationForPlaying = AVPlayStrategyConstant::DEFAULT_LIVING_CACHED_DURATION;
+    playbackStrategy.thresholdForAutoQuickPlay = AVPlayStrategyConstant::DEFAULT_MAX_DELAY_TIME_FOR_LIVING;
+    hiplayer_->SetFlvLiveParams(playbackStrategy);
+    EXPECT_TRUE(hiplayer_->isSetBufferDurationForPlaying_);
+    EXPECT_EQ(hiplayer_->bufferDurationForPlaying_, AVPlayStrategyConstant::DEFAULT_LIVING_CACHED_DURATION);
+    EXPECT_EQ(hiplayer_->maxLivingDelayTime_, AVPlayStrategyConstant::DEFAULT_MAX_DELAY_TIME_FOR_LIVING);
+}
+
+/**
+* @tc.name    : Test flv smart play
+* @tc.number  : UpdateFlvLiveParams_001
+* @tc.desc    : Test update flv live params value
+* @tc.require :
+*/
+HWTEST_F(HiplayerImplUnitTest, UpdateFlvLiveParams_001, TestSize.Level0)
+{
+    hiplayer_->UpdateFlvLiveParams();
+    EXPECT_EQ(hiplayer_->maxLivingDelayTime_, AVPlayStrategyConstant::DEFAULT_MAX_DELAY_TIME_FOR_LIVING);
+    EXPECT_EQ(hiplayer_->bufferDurationForPlaying_, AVPlayStrategyConstant::DEFAULT_LIVING_CACHED_DURATION);
 }
 } // namespace Media
 } // namespace OHOS
