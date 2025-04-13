@@ -62,18 +62,24 @@ class CapturerInfoChangeCallback : public AudioStandard::AudioCapturerInfoChange
 public:
     explicit CapturerInfoChangeCallback(HiRecorderImpl *hiRecorderImpl)
     {
-        hiRecorderImpl_ = hiRecorderImpl;
+        hiRecorderImpl_.store(hiRecorderImpl);
     }
 
     void OnStateChange(const AudioStandard::AudioCapturerChangeInfo &capturerChangeInfo)
     {
-        FALSE_RETURN_MSG(hiRecorderImpl_ != nullptr, "hiRecorderImpl_ is nullptr");
+        HiRecorderImpl* recorder = hiRecorderImpl_.load();
+        FALSE_RETURN_MSG(recorder != nullptr, "hiRecorderImpl_ is nullptr");
         MEDIA_LOG_I("CapturerInfoChangeCallback hiRecorderImpl_->OnAudioCaptureChange start.");
-        hiRecorderImpl_->OnAudioCaptureChange(capturerChangeInfo);
+        recorder->OnAudioCaptureChange(capturerChangeInfo);
+    }
+    
+    void Disconnect()
+    {
+        hiRecorderImpl_.store(nullptr);
     }
 
 private:
-    HiRecorderImpl *hiRecorderImpl_;
+    std::atomic<HiRecorderImpl*> hiRecorderImpl_;
 };
 
 static inline MetaSourceType GetMetaSourceType(int32_t sourceId)
@@ -90,6 +96,12 @@ HiRecorderImpl::HiRecorderImpl(int32_t appUid, int32_t appPid, uint32_t appToken
 
 HiRecorderImpl::~HiRecorderImpl()
 {
+    if (CapturerInfoChangeCallback_) {
+        CapturerInfoChangeCallback_.Disconnect();   
+    }
+    // wait for all callback finish
+    std::unique_lock<std::mutex> lock(captureInfoChangeMutex_);
+    destructorCV_.wait(lock, [this]() { return activeCallbacks_.load() == 0});
     Stop(false);
     PipeLineThreadPool::GetInstance().DestroyThread(recorderId_);
 }
@@ -632,11 +644,17 @@ Status HiRecorderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, cons
 void HiRecorderImpl::OnAudioCaptureChange(const AudioStandard::AudioCapturerChangeInfo &capturerChangeInfo)
 {
     MEDIA_LOG_I("HiRecorderImpl OnAudioCaptureChange enter.");
+    activeCallbacks_++;
     auto ptr = obs_.lock();
     FALSE_RETURN_MSG(ptr != nullptr, "HiRecorderImpl OnAudioCaptureChange obs_ is null");
     
     MEDIA_LOG_I("HiRecorderImpl OnAudioCaptureChange start.");
     ptr->OnAudioCaptureChange(ConvertCapturerChangeInfo(capturerChangeInfo));
+    activeCallbacks_--;
+    if (activeCallbacks_.load() == 0) {
+        MEDIA_LOG_I("HiRecorderImpl OnAudioCaptureChange all callback done");
+        destructorCV_.notify_one();
+    } 
 }
 
 int32_t HiRecorderImpl::GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &changeInfo)

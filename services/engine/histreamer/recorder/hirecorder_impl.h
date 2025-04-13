@@ -51,6 +51,7 @@ enum class StateId {
 const std::string AUIDO_TYPE = "audio";
 const std::string VIDEO_TYPE = "video";
 
+class CapturerInfoChangeCallback;
 class HiRecorderImpl : public IRecorderEngine {
 public:
     HiRecorderImpl(int32_t appUid, int32_t appPid, uint32_t appTokenId, uint64_t appFullTokenId);
@@ -146,7 +147,7 @@ private:
     std::map<int32_t, std::shared_ptr<Pipeline::MetaDataFilter>> metaDataFilters_;
     std::map<int32_t, std::shared_ptr<Meta>> metaDataFormats_;
 
-    std::shared_ptr<AudioStandard::AudioCapturerInfoChangeCallback> CapturerInfoChangeCallback_;
+    std::shared_ptr<CapturerInfoChangeCallback> CapturerInfoChangeCallback_;
     std::weak_ptr<IRecorderEngineObs> obs_{};
     OutputFormatType outputFormatType_{OutputFormatType::FORMAT_BUTT};
     int32_t fd_ = -1;
@@ -172,6 +173,9 @@ private:
     std::string bundleName_;
     std::string codecMimeType_ = "";
     uint64_t instanceId_ = 0;
+    std::mutex captureInfoChangeMutex_;
+    std::atomic<int> activeCallbacks_{0};
+    std::condition_variable destructorCV_;
 };
 } // namespace MEDIA
 } // namespace OHOS
