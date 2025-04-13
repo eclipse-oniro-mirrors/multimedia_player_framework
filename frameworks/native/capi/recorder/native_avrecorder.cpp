@@ -658,7 +658,7 @@ OH_AVErrCode OH_AVRecorder_Start(OH_AVRecorder *recorder)
         recorderObj->callback_->OnStateChange(OH_AVRecorder_State::AVRECORDER_ERROR,
             OH_AVRecorder_StateChangeReason::AVRECORDER_USER);
     }
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_OPERATE_NOT_PERMIT, "StartRecorder failed!");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "StartRecorder failed!");
 
     MEDIA_LOGI("Change state to state code: %{public}d", OH_AVRecorder_State::AVRECORDER_STARTED);
     recorderObj->callback_->OnStateChange(OH_AVRecorder_State::AVRECORDER_STARTED,
