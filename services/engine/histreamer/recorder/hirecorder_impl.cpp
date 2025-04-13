@@ -97,11 +97,11 @@ HiRecorderImpl::HiRecorderImpl(int32_t appUid, int32_t appPid, uint32_t appToken
 HiRecorderImpl::~HiRecorderImpl()
 {
     if (CapturerInfoChangeCallback_) {
-        CapturerInfoChangeCallback_.Disconnect();   
+        CapturerInfoChangeCallback_->Disconnect();   
     }
     // wait for all callback finish
     std::unique_lock<std::mutex> lock(captureInfoChangeMutex_);
-    destructorCV_.wait(lock, [this]() { return activeCallbacks_.load() == 0});
+    destructorCV_.wait(lock, [this]() { return activeCallbacks_.load() == 0; });
     Stop(false);
     PipeLineThreadPool::GetInstance().DestroyThread(recorderId_);
 }
