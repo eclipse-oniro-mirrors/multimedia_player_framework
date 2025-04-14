@@ -52,6 +52,7 @@ constexpr int32_t LOAD_TIME = 30;
 constexpr int32_t SLEEP_TIME = 100;
 constexpr int32_t RETRY_TIME = 3;
 #endif
+constexpr uint32_t MAX_WAIT_TIME = 5000;
 std::shared_ptr<MediaClient> g_mediaClientInstance;
 std::once_flag onceFlag_;
 
@@ -94,11 +95,11 @@ void MediaClient::CreateMediaServiceInstance(IStandardMediaService::MediaSystemA
             mediaProxyUpdatedCondition_.wait_for(lock, std::chrono::milliseconds(SLEEP_TIME));
             continue;
         }
-        object = mediaProxy_->GetSubSystemAbility(subSystemId, listenerStub_->AsObject());
+        object = mediaProxy_->GetSubSystemAbilityWithTimeOut(subSystemId, listenerStub_->AsObject(), MAX_WAIT_TIME);
         if (object != nullptr) {
             return;
         }
-        MEDIA_LOGI("GetSubSystemAbility failed, sleep and retry");
+        MEDIA_LOGI("GetSubSystemAbilityWithTimeOut failed, sleep and retry");
         mediaProxyUpdatedCondition_.wait_for(lock, std::chrono::milliseconds(SLEEP_TIME));
         continue;
     }
@@ -197,7 +198,6 @@ std::shared_ptr<IPlayerService> MediaClient::CreatePlayerService()
     CreateMediaServiceInstance(IStandardMediaService::MediaSystemAbility::MEDIA_PLAYER, object, lock);
 #else
     CHECK_AND_RETURN_RET_LOG(IsAlived(), nullptr, "media service does not exist.");
-    constexpr uint32_t MAX_WAIT_TIME = 5000;
     object = mediaProxy_->GetSubSystemAbilityWithTimeOut(
         IStandardMediaService::MediaSystemAbility::MEDIA_PLAYER, listenerStub_->AsObject(), MAX_WAIT_TIME);
 #endif
