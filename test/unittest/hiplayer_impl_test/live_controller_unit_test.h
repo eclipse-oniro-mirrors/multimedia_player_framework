@@ -36,7 +36,6 @@ public:
     void TearDown(void);
 protected:
     std::unique_ptr<LiveController> liveController_{nullptr};
-    MockIPlayerEngine* mockIPlayerEngine_{nullptr};
     std::shared_ptr<MockIPlayerEngineObs> testObs_{nullptr};
 };
 } // namespace Media

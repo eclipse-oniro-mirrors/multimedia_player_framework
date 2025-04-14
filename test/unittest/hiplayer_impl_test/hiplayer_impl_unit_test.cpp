@@ -1354,7 +1354,7 @@ HWTEST_F(HiplayerImplUnitTest, IsLivingMaxDelayTimeValid_001, TestSize.Level0)
     hiplayer_->bufferDurationForPlaying_ = AVPlayStrategyConstant::DEFAULT_MAX_DELAY_TIME_FOR_LIVING;
     EXPECT_FALSE(hiplayer_->IsLivingMaxDelayTimeValid());
 }
- 
+
 /**
 * @tc.name    : Test flv smart play
 * @tc.number  : IsNeedChangePlaySpeed_001
@@ -1373,7 +1373,7 @@ HWTEST_F(HiplayerImplUnitTest, IsNeedChangePlaySpeed_001, TestSize.Level0)
     EXPECT_EQ(mode, PlaybackRateMode::SPEED_FORWARD_1_00_X);
     EXPECT_EQ(isXSpeedPlay, false);
 }
- 
+
 /**
 * @tc.name    : Test flv smart play
 * @tc.number  : IsNeedChangePlaySpeed_002
@@ -1392,7 +1392,7 @@ HWTEST_F(HiplayerImplUnitTest, IsNeedChangePlaySpeed_002, TestSize.Level0)
     EXPECT_EQ(mode, PlaybackRateMode::SPEED_FORWARD_1_20_X);
     EXPECT_EQ(isXSpeedPlay, true);
 }
- 
+
 /**
 * @tc.name    : Test flv smart play
 * @tc.number  : IsNeedChangePlaySpeed_003
@@ -1411,7 +1411,7 @@ HWTEST_F(HiplayerImplUnitTest, IsNeedChangePlaySpeed_003, TestSize.Level0)
     EXPECT_EQ(mode, PlaybackRateMode::SPEED_FORWARD_1_20_X);
     EXPECT_EQ(isXSpeedPlay, true);
 }
- 
+
 /**
 * @tc.name    : Test flv smart play
 * @tc.number  : IsPauseForTooLong_001
@@ -1429,7 +1429,7 @@ HWTEST_F(HiplayerImplUnitTest, IsPauseForTooLong_001, TestSize.Level0)
     hiplayer_->maxLivingDelayTime_ = AVPlayStrategyConstant::DEFAULT_MAX_DELAY_TIME_FOR_LIVING;
     EXPECT_FALSE(hiplayer_->IsPauseForTooLong(pauseTime));
 }
- 
+
 /**
 * @tc.name    : Test flv smart play
 * @tc.number  : SetFlvLiveParams_001
@@ -1453,7 +1453,7 @@ HWTEST_F(HiplayerImplUnitTest, SetFlvLiveParams_001, TestSize.Level0)
     EXPECT_EQ(hiplayer_->bufferDurationForPlaying_, AVPlayStrategyConstant::DEFAULT_LIVING_CACHED_DURATION);
     EXPECT_EQ(hiplayer_->maxLivingDelayTime_, AVPlayStrategyConstant::DEFAULT_MAX_DELAY_TIME_FOR_LIVING);
 }
- 
+
 /**
 * @tc.name    : Test flv smart play
 * @tc.number  : UpdateFlvLiveParams_001

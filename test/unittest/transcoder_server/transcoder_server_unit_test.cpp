@@ -22,6 +22,8 @@
 #include "meta/video_types.h"
 #include "media_errors.h"
 #include "media_log.h"
+#include <thread>
+#include <chrono>
 
 using namespace OHOS;
 using namespace OHOS::Media;
@@ -41,6 +43,8 @@ namespace TranscoderTestParam {
     constexpr uint64_t TRANSCODER_FILE_SIZE = 2735029;
     const std::string TRANSCODER_ROOT_SRC = "/data/test/media/transcoder_src/";
     const std::string TRANSCODER_ROOT_DST = "/data/test/media/transcoder_dst/";
+    constexpr int32_t RETRY_TIMES = 5;
+    constexpr int32_t CHECK_INTERVAL_MS = 100;
 } // namespace TranscoderTestParam
 using namespace TranscoderTestParam;
 const std::string HEVC_LIB_PATH = std::string(AV_CODEC_PATH) + "/libav_codec_hevc_parser.z.so";
@@ -65,12 +69,25 @@ void TransCoderUnitTest::TearDown(void)
 
 void TransCoderCallbackTest::OnError(int32_t errorCode, const std::string &errorMsg)
 {
+    status_ = TransCoderServer::REC_ERROR;
     cout << "Error received, errorType:" << errorCode << " errorCode:" << errorMsg << endl;
 }
 
 void TransCoderCallbackTest::OnInfo(int32_t type, int32_t extra)
 {
     cout << "Info received, Infotype:" << type << " Infocode:" << extra << endl;
+}
+
+bool TransCoderCallbackTest::CheckStateChange()
+{
+    int retryTimes = RETRY_TIMES;
+    while (retryTimes--) {
+        if (status_ == TransCoderServer::REC_ERROR) {
+            return true;
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(CHECK_INTERVAL_MS));
+    }
+    return false;
 }
 
 /**
@@ -406,6 +423,8 @@ HWTEST_F(TransCoderUnitTest, transcoder_AudioVideo_004, TestSize.Level2)
  */
 HWTEST_F(TransCoderUnitTest, transcoder_PureAudioAbnormal_case_001, TestSize.Level2)
 {
+    std::shared_ptr<TransCoderCallbackTest> cb = std::make_shared<TransCoderCallbackTest>();
+    EXPECT_EQ(MSERR_OK, transcoder_->SetTransCoderCallback(cb));
     int32_t srcFd = open((TRANSCODER_ROOT_SRC + "01.mp3").c_str(), O_RDWR);
     ASSERT_TRUE(srcFd >= 0);
     int64_t offset = TRANSCODER_FILE_OFFSET;
@@ -413,11 +432,9 @@ HWTEST_F(TransCoderUnitTest, transcoder_PureAudioAbnormal_case_001, TestSize.Lev
     EXPECT_EQ(MSERR_OK, transcoder_->SetInputFile(srcFd, offset, size));
     int32_t dstFd = open((TRANSCODER_ROOT_DST + "01_dst.mp3").c_str(), O_RDWR);
     ASSERT_TRUE(dstFd >= 0);
-    EXPECT_EQ(MSERR_OK, transcoder_->SetOutputFile(dstFd));
-    std::shared_ptr<TransCoderCallbackTest> cb = std::make_shared<TransCoderCallbackTest>();
-    EXPECT_EQ(MSERR_OK, transcoder_->SetTransCoderCallback(cb));
+    EXPECT_TRUE(cb->CheckStateChange());
+    EXPECT_EQ(MSERR_INVALID_OPERATION, transcoder_->SetOutputFile(dstFd));
     OutputFormatType format = FORMAT_M4A;
-    sleep(1);
     EXPECT_EQ(MSERR_INVALID_OPERATION, transcoder_->SetOutputFormat(format));
     AudioCodecFormat encoder = AAC_LC;
     EXPECT_EQ(MSERR_INVALID_OPERATION, transcoder_->SetAudioEncoder(encoder));
@@ -436,6 +453,8 @@ HWTEST_F(TransCoderUnitTest, transcoder_PureAudioAbnormal_case_001, TestSize.Lev
  */
 HWTEST_F(TransCoderUnitTest, transcoder_PureAudioAbnormal_case_002, TestSize.Level2)
 {
+    std::shared_ptr<TransCoderCallbackTest> cb = std::make_shared<TransCoderCallbackTest>();
+    EXPECT_EQ(MSERR_OK, transcoder_->SetTransCoderCallback(cb));
     int32_t srcFd = open((TRANSCODER_ROOT_SRC + "01.mp3").c_str(), O_RDWR);
     ASSERT_TRUE(srcFd >= 0);
     int64_t offset = TRANSCODER_FILE_OFFSET;
@@ -443,11 +462,9 @@ HWTEST_F(TransCoderUnitTest, transcoder_PureAudioAbnormal_case_002, TestSize.Lev
     EXPECT_EQ(MSERR_OK, transcoder_->SetInputFile(srcFd, offset, size));
     int32_t dstFd = open((TRANSCODER_ROOT_DST + "01_dst.mp3").c_str(), O_RDWR);
     ASSERT_TRUE(dstFd >= 0);
-    EXPECT_EQ(MSERR_OK, transcoder_->SetOutputFile(dstFd));
-    std::shared_ptr<TransCoderCallbackTest> cb = std::make_shared<TransCoderCallbackTest>();
-    EXPECT_EQ(MSERR_OK, transcoder_->SetTransCoderCallback(cb));
+    EXPECT_TRUE(cb->CheckStateChange());
+    EXPECT_EQ(MSERR_INVALID_OPERATION, transcoder_->SetOutputFile(dstFd));
     OutputFormatType format = FORMAT_M4A;
-    sleep(1);
     EXPECT_EQ(MSERR_INVALID_OPERATION, transcoder_->SetOutputFormat(format));
     AudioCodecFormat encoder = AAC_LC;
     EXPECT_EQ(MSERR_INVALID_OPERATION, transcoder_->SetAudioEncoder(encoder));
@@ -466,6 +483,8 @@ HWTEST_F(TransCoderUnitTest, transcoder_PureAudioAbnormal_case_002, TestSize.Lev
  */
 HWTEST_F(TransCoderUnitTest, transcoder_PureAudioAbnormal_case_003, TestSize.Level2)
 {
+    std::shared_ptr<TransCoderCallbackTest> cb = std::make_shared<TransCoderCallbackTest>();
+    EXPECT_EQ(MSERR_OK, transcoder_->SetTransCoderCallback(cb));
     int32_t srcFd = open((TRANSCODER_ROOT_SRC + "01.mp3").c_str(), O_RDWR);
     ASSERT_TRUE(srcFd >= 0);
     int64_t offset = TRANSCODER_FILE_OFFSET;
@@ -473,11 +492,9 @@ HWTEST_F(TransCoderUnitTest, transcoder_PureAudioAbnormal_case_003, TestSize.Lev
     EXPECT_EQ(MSERR_OK, transcoder_->SetInputFile(srcFd, offset, size));
     int32_t dstFd = open((TRANSCODER_ROOT_DST + "01_dst.mp3").c_str(), O_RDWR);
     ASSERT_TRUE(dstFd >= 0);
-    EXPECT_EQ(MSERR_OK, transcoder_->SetOutputFile(dstFd));
-    std::shared_ptr<TransCoderCallbackTest> cb = std::make_shared<TransCoderCallbackTest>();
-    EXPECT_EQ(MSERR_OK, transcoder_->SetTransCoderCallback(cb));
+    EXPECT_TRUE(cb->CheckStateChange());
+    EXPECT_EQ(MSERR_INVALID_OPERATION, transcoder_->SetOutputFile(dstFd));
     OutputFormatType format = FORMAT_M4A;
-    sleep(1);
     EXPECT_EQ(MSERR_INVALID_OPERATION, transcoder_->SetOutputFormat(format));
     AudioCodecFormat encoder = AAC_LC;
     EXPECT_EQ(MSERR_INVALID_OPERATION, transcoder_->SetAudioEncoder(encoder));
