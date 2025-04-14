@@ -36,6 +36,7 @@ public:
     static bool VerifyCustomPath(const std::string &audioUri);
     static bool IdExists(const std::string &ids, int32_t id);
     static bool CheckCurrentUser();
+    static bool GetScannerFirstParameter(const char* key, int32_t maxSize);
 };
 } // namespace Media
 } // namespace OHOS

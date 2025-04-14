@@ -91,7 +91,6 @@ static const char PARAM_HAPTICS_SETTING_NOTIFICATIONTONE[] = "const.multimedia.n
 static const int32_t SYSPARA_SIZE = 128;
 
 const char RINGTONE_PARAMETER_SCANNER_FIRST_KEY[] = "ringtone.scanner.first";
-const char RINGTONE_PARAMETER_SCANNER_FIRST_TRUE[] = "true";
 const int32_t RINGTONEPARA_SIZE = 64;
 
 std::shared_ptr<SystemSoundManager> SystemSoundManagerFactory::systemSoundManager_ = nullptr;
@@ -686,15 +685,11 @@ std::string SystemSoundManagerImpl::GetRingtoneUri(const shared_ptr<Context> &co
     CHECK_AND_RETURN_RET_LOG(IsRingtoneTypeValid(ringtoneType), "", "Invalid ringtone type");
     std::string ringtoneUri = "";
 
-    char paramValue[RINGTONEPARA_SIZE] = {0};
-    GetParameter(RINGTONE_PARAMETER_SCANNER_FIRST_KEY, "", paramValue, RINGTONEPARA_SIZE);
-    std::string parameter(paramValue);
-    MEDIA_LOGI("GetParameter end paramValue:%{public}s .", parameter.c_str());
     Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
     int32_t result =  Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
         "ohos.permission.ACCESS_CUSTOM_RINGTONE");
     bool isProxy = (result == Security::AccessToken::PermissionState::PERMISSION_GRANTED &&
-        strcmp(paramValue, RINGTONE_PARAMETER_SCANNER_FIRST_TRUE) == 0 &&
+        SystemSoundManagerUtils::GetScannerFirstParameter(RINGTONE_PARAMETER_SCANNER_FIRST_KEY, RINGTONEPARA_SIZE) &&
         SystemSoundManagerUtils::CheckCurrentUser()) ? true : false;
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = isProxy ?
         SystemSoundManagerUtils::CreateDataShareHelperUri(STORAGE_MANAGER_MANAGER_ID) :
@@ -1134,15 +1129,11 @@ std::string SystemSoundManagerImpl::GetSystemToneUri(const std::shared_ptr<Abili
     CHECK_AND_RETURN_RET_LOG(IsSystemToneTypeValid(systemToneType), "", "Invalid system tone type");
     std::string systemToneUri = "";
 
-    char paramValue[RINGTONEPARA_SIZE] = {0};
-    GetParameter(RINGTONE_PARAMETER_SCANNER_FIRST_KEY, "", paramValue, RINGTONEPARA_SIZE);
-    std::string parameter(paramValue);
-    MEDIA_LOGI("GetParameter end paramValue:%{public}s .", parameter.c_str());
     Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
     int32_t result =  Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
         "ohos.permission.ACCESS_CUSTOM_RINGTONE");
     bool isProxy = (result == Security::AccessToken::PermissionState::PERMISSION_GRANTED &&
-        strcmp(paramValue, RINGTONE_PARAMETER_SCANNER_FIRST_TRUE) == 0 &&
+        SystemSoundManagerUtils::GetScannerFirstParameter(RINGTONE_PARAMETER_SCANNER_FIRST_KEY, RINGTONEPARA_SIZE) &&
         SystemSoundManagerUtils::CheckCurrentUser()) ? true : false;
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = isProxy ?
         SystemSoundManagerUtils::CreateDataShareHelperUri(STORAGE_MANAGER_MANAGER_ID) :
@@ -1218,8 +1209,9 @@ std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultRingtoneAttrs(
     Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
     int32_t result =  Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
         "ohos.permission.ACCESS_CUSTOM_RINGTONE");
-    MEDIA_LOGI("systemsoundmanagerimpl errCode:%{public}d, result :%{public}d ", errCode, result);
+    MEDIA_LOGI("GetDefaultRingtoneAttrs: errCode:%{public}d, result :%{public}d ", errCode, result);
     if (errCode != 0 || result != Security::AccessToken::PermissionState::PERMISSION_GRANTED ||
+        !SystemSoundManagerUtils::GetScannerFirstParameter(RINGTONE_PARAMETER_SCANNER_FIRST_KEY, RINGTONEPARA_SIZE) ||
         !SystemSoundManagerUtils::CheckCurrentUser()) {
         dataShareHelper = SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
         CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, nullptr, "Invalid dataShare.");
@@ -1234,9 +1226,7 @@ std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultRingtoneAttrs(
     if (ringtoneAsset != nullptr) {
         ringtoneAttrs_ = std::make_shared<ToneAttrs>(ringtoneAsset->GetTitle(), ringtoneAsset->GetDisplayName(),
             ringtoneAsset->GetPath(), sourceTypeMap_[ringtoneAsset->GetSourceType()], TONE_CATEGORY_RINGTONE);
-        MEDIA_LOGI("RingtoneAttrs_ : DisplayName = %{public}s, Path = %{public}s , Title = %{public}s",
-            ringtoneAsset->GetDisplayName().c_str(), ringtoneAsset->GetPath().c_str(),
-            ringtoneAsset->GetTitle().c_str());
+        MEDIA_LOGI("RingtoneAttrs_ :  Title = %{public}s", ringtoneAsset->GetTitle().c_str());
     } else {
         MEDIA_LOGE("GetDefaultRingtoneAttrs: no single card default ringtone in the ringtone library!");
     }
@@ -1248,8 +1238,6 @@ std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultRingtoneAttrs(
 std::vector<std::shared_ptr<ToneAttrs>> SystemSoundManagerImpl::GetRingtoneAttrList(
     const std::shared_ptr<AbilityRuntime::Context> &context, RingtoneType ringtoneType)
 {
-    int32_t errCode = 0;
-    int32_t result = 0;
     MEDIA_LOGI("GetRingtoneAttrList : Enter the getRingtoneAttrList interface");
     std::lock_guard<std::mutex> lock(uriMutex_);
     ringtoneAttrsArray_.clear();
@@ -1264,12 +1252,13 @@ std::vector<std::shared_ptr<ToneAttrs>> SystemSoundManagerImpl::GetRingtoneAttrL
     Uri RINGTONEURI_PROXY(RINGTONE_LIBRARY_PROXY_DATA_URI_TONE_FILES + "&user=" +
         std::to_string(SystemSoundManagerUtils::GetCurrentUserId()));
     auto resultSet = dataShareHelper->Query(RINGTONEURI_PROXY, queryPredicates, COLUMNS, &businessError);
-    errCode = businessError.GetCode();
+    int32_t errCode = businessError.GetCode();
     Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
-    result =  Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
+    int32_t result = Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
         "ohos.permission.ACCESS_CUSTOM_RINGTONE");
-    MEDIA_LOGI("systemsoundmanagerimpl errCode:%{public}d, result :%{public}d ", errCode, result);
+    MEDIA_LOGI("GetRingtoneAttrList:errCode:%{public}d, result :%{public}d ", errCode, result);
     if (errCode != 0 || result != Security::AccessToken::PermissionState::PERMISSION_GRANTED  ||
+        !SystemSoundManagerUtils::GetScannerFirstParameter(RINGTONE_PARAMETER_SCANNER_FIRST_KEY, RINGTONEPARA_SIZE) ||
         !SystemSoundManagerUtils::CheckCurrentUser()) {
         dataShareHelper = SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
         CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, ringtoneAttrsArray_,
@@ -1323,6 +1312,7 @@ std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultSystemToneAttrs(
     int32_t result =  Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
         "ohos.permission.ACCESS_CUSTOM_RINGTONE");
     if (errCode != 0 || result != Security::AccessToken::PermissionState::PERMISSION_GRANTED ||
+        !SystemSoundManagerUtils::GetScannerFirstParameter(RINGTONE_PARAMETER_SCANNER_FIRST_KEY, RINGTONEPARA_SIZE) ||
         !SystemSoundManagerUtils::CheckCurrentUser()) {
         dataShareHelper = SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
         CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, nullptr, "Invalid dataShare.");
@@ -1335,9 +1325,8 @@ std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultSystemToneAttrs(
         ringtoneAsset = results->GetNextObject();
     }
     if (ringtoneAsset != nullptr) {
-        systemtoneAttrs_ = std::make_shared<ToneAttrs>(ringtoneAsset->GetTitle(),
-            ringtoneAsset->GetDisplayName(), ringtoneAsset->GetPath(),
-            sourceTypeMap_[ringtoneAsset->GetSourceType()], category);
+        systemtoneAttrs_ = std::make_shared<ToneAttrs>(ringtoneAsset->GetTitle(), ringtoneAsset->GetDisplayName(),
+        ringtoneAsset->GetPath(), sourceTypeMap_[ringtoneAsset->GetSourceType()], category);
     } else {
         MEDIA_LOGE("GetDefaultSystemToneAttrs: no single default systemtone in the ringtone library!");
     }
@@ -1368,8 +1357,9 @@ std::vector<std::shared_ptr<ToneAttrs>> SystemSoundManagerImpl::GetSystemToneAtt
     Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
     int32_t result = Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
         "ohos.permission.ACCESS_CUSTOM_RINGTONE");
-    MEDIA_LOGI("systemsoundmanagerimpl errCode:%{public}d, result :%{public}d ", errCode, result);
+    MEDIA_LOGI("GetSystemToneAttrList: errCode:%{public}d, result :%{public}d ", errCode, result);
     if (errCode != 0 || result != Security::AccessToken::PermissionState::PERMISSION_GRANTED ||
+        !SystemSoundManagerUtils::GetScannerFirstParameter(RINGTONE_PARAMETER_SCANNER_FIRST_KEY, RINGTONEPARA_SIZE) ||
         !SystemSoundManagerUtils::CheckCurrentUser()) {
         dataShareHelper = SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
         CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, systemtoneAttrsArray_,
@@ -1466,12 +1456,12 @@ std::string SystemSoundManagerImpl::GetAlarmToneUri(const std::shared_ptr<Abilit
     Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
     int32_t result =  Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
         "ohos.permission.ACCESS_CUSTOM_RINGTONE");
-    MEDIA_LOGI("systemsoundmanagerimpl errCode:%{public}d, result :%{public}d ", errCode, result);
+    MEDIA_LOGI("GetAlarmToneUri:errCode:%{public}d, result :%{public}d ", errCode, result);
     if (errCode != 0 || result != Security::AccessToken::PermissionState::PERMISSION_GRANTED ||
+        !SystemSoundManagerUtils::GetScannerFirstParameter(RINGTONE_PARAMETER_SCANNER_FIRST_KEY, RINGTONEPARA_SIZE) ||
         !SystemSoundManagerUtils::CheckCurrentUser()) {
         dataShareHelper = SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
-        CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, alarmToneUri,
-            "Invalid dataShare, datashare or ringtone library error.");
+        CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, alarmToneUri, "Invalid dataShare.");
         resultSet = dataShareHelper->Query(RINGTONEURI, queryPredicates, COLUMNS, &businessError);
     }
     auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
@@ -1514,12 +1504,12 @@ std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultAlarmToneAttrs(
     Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
     int32_t result = Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
         "ohos.permission.ACCESS_CUSTOM_RINGTONE");
-    MEDIA_LOGI("systemsoundmanagerimpl errCode:%{public}d, result :%{public}d ", errCode, result);
+    MEDIA_LOGI("GetDefaultAlarmToneAttrs:errCode:%{public}d, result :%{public}d ",  errCode, result);
     if (errCode != 0 || result != Security::AccessToken::PermissionState::PERMISSION_GRANTED ||
+        !SystemSoundManagerUtils::GetScannerFirstParameter(RINGTONE_PARAMETER_SCANNER_FIRST_KEY, RINGTONEPARA_SIZE) ||
         !SystemSoundManagerUtils::CheckCurrentUser()) {
         dataShareHelper = SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
-        CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, nullptr,
-            "Invalid dataShare, datashare or ringtone library error.");
+        CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, nullptr, "Invalid dataShare,");
         resultSet = dataShareHelper->Query(RINGTONEURI, queryPredicates, JOIN_COLUMNS, &businessError);
     }
     auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
@@ -1531,9 +1521,7 @@ std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultAlarmToneAttrs(
     if (ringtoneAsset != nullptr) {
         alarmtoneAttrs_ = std::make_shared<ToneAttrs>(ringtoneAsset->GetTitle(), ringtoneAsset->GetDisplayName(),
             ringtoneAsset->GetPath(), sourceTypeMap_[ringtoneAsset->GetSourceType()], TONE_CATEGORY_ALARM);
-        MEDIA_LOGI("AlarmtoneAttrs_ : DisplayName = %{public}s, Path = %{public}s , Title = %{public}s",
-            ringtoneAsset->GetDisplayName().c_str(), ringtoneAsset->GetPath().c_str(),
-            ringtoneAsset->GetTitle().c_str());
+        MEDIA_LOGI("AlarmtoneAttrs_ :Title = %{public}s", ringtoneAsset->GetTitle().c_str());
     } else {
         MEDIA_LOGE("GetDefaultAlarmToneAttrs: no default alarmtone in the ringtone library!");
     }
@@ -1562,8 +1550,9 @@ std::vector<std::shared_ptr<ToneAttrs>> SystemSoundManagerImpl::GetAlarmToneAttr
     Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
     int32_t result =  Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
         "ohos.permission.ACCESS_CUSTOM_RINGTONE");
-    MEDIA_LOGI("systemsoundmanagerimpl errCode:%{public}d, result :%{public}d ", errCode, result);
+    MEDIA_LOGI("GetAlarmToneAttrList: errCode:%{public}d, result :%{public}d ",  errCode, result);
     if (errCode != 0 || result != Security::AccessToken::PermissionState::PERMISSION_GRANTED ||
+        !SystemSoundManagerUtils::GetScannerFirstParameter(RINGTONE_PARAMETER_SCANNER_FIRST_KEY, RINGTONEPARA_SIZE) ||
         !SystemSoundManagerUtils::CheckCurrentUser()) {
         dataShareHelper = SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
         CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, alarmtoneAttrsArray_,
