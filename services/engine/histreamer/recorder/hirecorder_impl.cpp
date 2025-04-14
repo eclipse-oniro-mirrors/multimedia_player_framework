@@ -62,24 +62,27 @@ class CapturerInfoChangeCallback : public AudioStandard::AudioCapturerInfoChange
 public:
     explicit CapturerInfoChangeCallback(HiRecorderImpl *hiRecorderImpl)
     {
-        hiRecorderImpl_.store(hiRecorderImpl);
+        hiRecorderImpl_ = hiRecorderImpl;
     }
 
     void OnStateChange(const AudioStandard::AudioCapturerChangeInfo &capturerChangeInfo)
     {
-        HiRecorderImpl* recorder = hiRecorderImpl_.load();
-        FALSE_RETURN_MSG(recorder != nullptr, "hiRecorderImpl_ is nullptr");
+        FALSE_RETURN_MSG(hiRecorderImpl_ != nullptr, "hiRecorderImpl_ is nullptr");
         MEDIA_LOG_I("CapturerInfoChangeCallback hiRecorderImpl_->OnAudioCaptureChange start.");
-        recorder->OnAudioCaptureChange(capturerChangeInfo);
+        std::unique_lock<std::mutex> lock(captureInfoChangeMutex_);
+        FALSE_RETURN_MSG(hiRecorderImpl_ != nullptr, "hiRecorderImpl_ is nullptr");
+        hiRecorderImpl_->OnAudioCaptureChange(capturerChangeInfo);
     }
     
-    void Disconnect()
+    void NotifyRelease()
     {
-        hiRecorderImpl_.store(nullptr);
+        std::unique_lock<std::mutex> lock(captureInfoChangeMutex_);
+        hiRecorderImpl_ = nullptr;
     }
 
 private:
-    std::atomic<HiRecorderImpl*> hiRecorderImpl_;
+    HiRecorderImpl *hiRecorderImpl_;
+    std::mutex captureInfoChangeMutex_;
 };
 
 static inline MetaSourceType GetMetaSourceType(int32_t sourceId)
@@ -96,12 +99,9 @@ HiRecorderImpl::HiRecorderImpl(int32_t appUid, int32_t appPid, uint32_t appToken
 
 HiRecorderImpl::~HiRecorderImpl()
 {
-    if (CapturerInfoChangeCallback_) {
-        CapturerInfoChangeCallback_->Disconnect();   
+    if (CapturerInfoChangeCallback_ != nullptr) {
+        CapturerInfoChangeCallback_->NotifyRelease();   
     }
-    // wait for all callback finish
-    std::unique_lock<std::mutex> lock(captureInfoChangeMutex_);
-    destructorCV_.wait(lock, [this]() { return activeCallbacks_.load() == 0; });
     Stop(false);
     PipeLineThreadPool::GetInstance().DestroyThread(recorderId_);
 }
@@ -644,17 +644,11 @@ Status HiRecorderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, cons
 void HiRecorderImpl::OnAudioCaptureChange(const AudioStandard::AudioCapturerChangeInfo &capturerChangeInfo)
 {
     MEDIA_LOG_I("HiRecorderImpl OnAudioCaptureChange enter.");
-    activeCallbacks_++;
     auto ptr = obs_.lock();
     FALSE_RETURN_MSG(ptr != nullptr, "HiRecorderImpl OnAudioCaptureChange obs_ is null");
     
     MEDIA_LOG_I("HiRecorderImpl OnAudioCaptureChange start.");
     ptr->OnAudioCaptureChange(ConvertCapturerChangeInfo(capturerChangeInfo));
-    activeCallbacks_--;
-    if (activeCallbacks_.load() == 0) {
-        MEDIA_LOG_I("HiRecorderImpl OnAudioCaptureChange all callback done");
-        destructorCV_.notify_one();
-    } 
 }
 
 int32_t HiRecorderImpl::GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &changeInfo)

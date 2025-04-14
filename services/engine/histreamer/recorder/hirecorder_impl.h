@@ -173,9 +173,6 @@ private:
     std::string bundleName_;
     std::string codecMimeType_ = "";
     uint64_t instanceId_ = 0;
-    std::mutex captureInfoChangeMutex_;
-    std::atomic<int> activeCallbacks_{0};
-    std::condition_variable destructorCV_;
 };
 } // namespace MEDIA
 } // namespace OHOS
