@@ -68,7 +68,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckAudioCapParam_002, TestSize.Level
         .audioSampleRate = 16000,
         .audioChannels = 2,
         .audioSource = static_cast<AudioCaptureSourceType>(AudioCaptureSourceType::APP_PLAYBACK + 1)
-    }
+    };
     ASSERT_NE(screenCaptureServer_->CheckAudioCapParam(micCapInfo), MSERR_OK);
 }
 
