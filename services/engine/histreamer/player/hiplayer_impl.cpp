@@ -1871,9 +1871,7 @@ int32_t HiPlayerImpl::InnerSelectTrack(std::string mime, int32_t trackId, Player
         MEDIA_LOG_E_SHORT("SelectTrack error. trackId is " PUBLIC_LOG_D32, trackId);
         return MSERR_UNKNOWN;
     }
-    if (IsAudioMime(mime)) {
-        currentAudioTrackId_ = trackId;
-    } else if (IsSubtitleMime(mime)) {
+    if (IsSubtitleMime(mime)) {
         currentSubtitleTrackId_ = trackId;
     } else if (IsVideoMime(mime)) {
         currentVideoTrackId_ = trackId;
