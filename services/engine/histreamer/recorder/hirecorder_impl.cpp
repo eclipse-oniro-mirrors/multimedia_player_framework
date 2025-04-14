@@ -100,7 +100,7 @@ HiRecorderImpl::HiRecorderImpl(int32_t appUid, int32_t appPid, uint32_t appToken
 HiRecorderImpl::~HiRecorderImpl()
 {
     if (CapturerInfoChangeCallback_ != nullptr) {
-        CapturerInfoChangeCallback_->NotifyRelease();   
+        CapturerInfoChangeCallback_->NotifyRelease();
     }
     Stop(false);
     PipeLineThreadPool::GetInstance().DestroyThread(recorderId_);
