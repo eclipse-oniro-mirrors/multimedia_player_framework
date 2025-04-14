@@ -91,7 +91,7 @@ public:
     }
 
 private:
-std::weak_ptr<AVThumbnailGenerator> generator_;
+    std::weak_ptr<AVThumbnailGenerator> generator_;
 };
 
 class ThumbnailGeneratorAVBufferAvailableListener : public OHOS::Media::IConsumerListener {
