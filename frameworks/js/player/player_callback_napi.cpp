@@ -157,6 +157,7 @@ void PlayerCallbackNapi::OnBufferingUpdateCb(const Format &infoBody) const
         bufferingType = CACHED_DURATION;
         (void)infoBody.GetIntValue(std::string(PlayerKeys::PLAYER_CACHED_DURATION), value);
     } else {
+        delete cb;
         return;
     }
 
