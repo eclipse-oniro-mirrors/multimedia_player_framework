@@ -395,6 +395,8 @@ private:
     int32_t StartPrivacyWindow();
 #ifdef PC_STANDARD
     bool IsHopper();
+    int32_t MakeVirtualScreenMirrorForWindowForHopper(sptr<Rosen::Display> defaultDisplay,
+        std::vector<ScreenId> mirrorIds);
     int32_t MakeVirtualScreenMirrorForHomeScreenForHopper(sptr<Rosen::Display> defaultDisplay,
         std::vector<ScreenId> mirrorIds);
     int32_t MakeVirtualScreenMirrorForSpecifiedScreenForHopper(sptr<Rosen::Display> defaultDisplay,
