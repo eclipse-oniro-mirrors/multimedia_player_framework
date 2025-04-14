@@ -69,11 +69,20 @@ public:
     {
         FALSE_RETURN_MSG(hiRecorderImpl_ != nullptr, "hiRecorderImpl_ is nullptr");
         MEDIA_LOG_I("CapturerInfoChangeCallback hiRecorderImpl_->OnAudioCaptureChange start.");
+        std::unique_lock<std::mutex> lock(captureInfoChangeMutex_);
+        FALSE_RETURN_MSG(hiRecorderImpl_ != nullptr, "hiRecorderImpl_ is nullptr");
         hiRecorderImpl_->OnAudioCaptureChange(capturerChangeInfo);
+    }
+    
+    void NotifyRelease()
+    {
+        std::unique_lock<std::mutex> lock(captureInfoChangeMutex_);
+        hiRecorderImpl_ = nullptr;
     }
 
 private:
     HiRecorderImpl *hiRecorderImpl_;
+    std::mutex captureInfoChangeMutex_;
 };
 
 static inline MetaSourceType GetMetaSourceType(int32_t sourceId)
@@ -90,6 +99,9 @@ HiRecorderImpl::HiRecorderImpl(int32_t appUid, int32_t appPid, uint32_t appToken
 
 HiRecorderImpl::~HiRecorderImpl()
 {
+    if (CapturerInfoChangeCallback_ != nullptr) {
+        CapturerInfoChangeCallback_->NotifyRelease();
+    }
     Stop(false);
     PipeLineThreadPool::GetInstance().DestroyThread(recorderId_);
 }
