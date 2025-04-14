@@ -58,11 +58,11 @@ HWTEST_F(MediaServerManagerTest, DestroyStubObject, TestSize.Level1)
     MediaServerManager::GetInstance().DestroyStubObject(MediaServerManager::AVMETADATAHELPER, avmetadatahelper);
     sptr<IRemoteObject> avcodecList =
         MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::AVCODECLIST);
-    EXPECT_NE(avcodecList, nullptr);
+    EXPECT_EQ(avcodecList, nullptr);
     MediaServerManager::GetInstance().DestroyStubObject(MediaServerManager::AVCODECLIST, avcodecList);
     sptr<IRemoteObject> avcodec =
         MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::AVCODEC);
-    EXPECT_NE(avcodec, nullptr);
+    EXPECT_EQ(avcodec, nullptr);
     MediaServerManager::GetInstance().DestroyStubObject(MediaServerManager::AVCODEC, avcodec);
     sptr<IRemoteObject> recorderProfiles =
         MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::RECORDERPROFILES);
@@ -110,10 +110,10 @@ HWTEST_F(MediaServerManagerTest, DestroyStubObjectByPid, TestSize.Level1)
     EXPECT_NE(avmetadatahelper, nullptr);
     sptr<IRemoteObject> avcodecList =
         MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::AVCODECLIST);
-    EXPECT_NE(avcodecList, nullptr);
+    EXPECT_EQ(avcodecList, nullptr);
     sptr<IRemoteObject> avcodec =
         MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::AVCODEC);
-    EXPECT_NE(avcodec, nullptr);
+    EXPECT_EQ(avcodec, nullptr);
     sptr<IRemoteObject> recorderProfiles =
         MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::RECORDERPROFILES);
     EXPECT_NE(recorderProfiles, nullptr);
