@@ -40,6 +40,8 @@ public:
     ~TransCoderCallbackTest() {}
     void OnError(int32_t errorCode, const std::string &errorMsg) override;
     void OnInfo(int32_t type, int32_t extra) override;
+    TransCoderServer::RecStatus status_ = TransCoderServer::REC_INITIALIZED;
+    bool CheckStateChange();
 };
 } // namespace Media
 } // namespace OHOS
