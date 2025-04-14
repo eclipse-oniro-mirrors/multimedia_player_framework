@@ -50,32 +50,48 @@ const std::string AV_THUMBNAIL_GENERATOR_INPUT_BUFFER_QUEUE_NAME = "AVThumbnailG
 
 class ThumnGeneratorCodecCallback : public OHOS::MediaAVCodec::MediaCodecCallback {
 public:
-    explicit ThumnGeneratorCodecCallback(AVThumbnailGenerator *generator) : generator_(generator) {}
+    explicit ThumnGeneratorCodecCallback(std::shared_ptr<AVThumbnailGenerator> generator) : generator_(generator) {}
 
     ~ThumnGeneratorCodecCallback() = default;
 
     void OnError(MediaAVCodec::AVCodecErrorType errorType, int32_t errorCode) override
     {
-        generator_->OnError(errorType, errorCode);
+        if (auto generator = generator_.lock()) {
+            generator->OnError(errorType, errorCode);
+        } else {
+            MEDIA_LOGE("invalid AVThumbnailGenerator");
+        }
     }
 
     void OnOutputFormatChanged(const MediaAVCodec::Format &format) override
     {
-        generator_->OnOutputFormatChanged(format);
+        if (auto generator = generator_.lock()) {
+            generator->OnOutputFormatChanged(format);
+        } else {
+            MEDIA_LOGE("invalid AVThumbnailGenerator");
+        }
     }
 
     void OnInputBufferAvailable(uint32_t index, std::shared_ptr<AVBuffer> buffer) override
     {
-        generator_->OnInputBufferAvailable(index, buffer);
+        if (auto generator = generator_.lock()) {
+            generator->OnInputBufferAvailable(index, buffer);
+        } else {
+            MEDIA_LOGE("invalid AVThumbnailGenerator");
+        }
     }
 
     void OnOutputBufferAvailable(uint32_t index, std::shared_ptr<AVBuffer> buffer) override
     {
-        generator_->OnOutputBufferAvailable(index, buffer);
+        if (auto generator = generator_.lock()) {
+            generator->OnOutputBufferAvailable(index, buffer);
+        } else {
+            MEDIA_LOGE("invalid AVThumbnailGenerator");
+        }
     }
 
 private:
-    AVThumbnailGenerator *generator_;
+std::weak_ptr<AVThumbnailGenerator> generator_;
 };
 
 class ThumbnailGeneratorAVBufferAvailableListener : public OHOS::Media::IConsumerListener {
@@ -143,7 +159,7 @@ Status AVThumbnailGenerator::InitDecoder()
     trackFormat.PutDoubleValue(MediaDescriptionKey::MD_KEY_FRAME_RATE, VIDEO_FRAME_RATE);
     videoDecoder_->Configure(trackFormat);
     std::shared_ptr<MediaAVCodec::MediaCodecCallback> mediaCodecCallback =
-        std::make_shared<ThumnGeneratorCodecCallback>(this);
+        std::make_shared<ThumnGeneratorCodecCallback>(shared_from_this());
     videoDecoder_->SetCallback(mediaCodecCallback);
     videoDecoder_->Prepare();
     auto res = videoDecoder_->Start();
