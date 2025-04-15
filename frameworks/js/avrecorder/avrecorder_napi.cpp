@@ -142,7 +142,7 @@ napi_value AVRecorderNapi::Constructor(napi_env env, napi_callback_info info)
         delete jsRecorder;
         MEDIA_LOGE("failed to CreateRecorderCb");
         return result;
-    } 
+    }
     (void)jsRecorder->recorder_->SetRecorderCallback(jsRecorder->recorderCb_);
 
     status = napi_wrap(env, jsThis, reinterpret_cast<void *>(jsRecorder),
