@@ -1626,10 +1626,10 @@ void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &in
     InnerOnInfo(type, extra, infoBody, ret);
 }
 
-void PlayerServer::DoCheckLiveDalyTime()
+void PlayerServer::DoCheckLiveDelayTime()
 {
     CHECK_AND_RETURN(playerEngine_ != nullptr);
-    MEDIA_LOGI("DoCheckLiveDalyTime");
+    MEDIA_LOGI("DoCheckLiveDelayTime");
     PlaybackRateMode mode = PlaybackRateMode::SPEED_FORWARD_1_00_X;
     bool isExceedMaxDelayTime = playerEngine_->IsNeedChangePlaySpeed(mode, isXSpeedPlay_);
     if (isExceedMaxDelayTime) {
@@ -1711,7 +1711,7 @@ void PlayerServer::OnSystemOperation(PlayerOnSystemOperationType type, PlayerOpe
             }
             break;
         case OPERATION_TYPE_CHECK_LIVE_DELAY:
-            DoCheckLiveDalyTime();
+            DoCheckLiveDelayTime();
             break;
         default:
             MEDIA_LOGI("Can not OnSystemOperation, currentState is %{public}s",

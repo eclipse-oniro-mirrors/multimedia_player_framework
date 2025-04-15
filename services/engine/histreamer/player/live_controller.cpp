@@ -58,15 +58,14 @@ void LiveController::StartWithPlayerEngineObs(const std::weak_ptr<IPlayerEngineO
     }
 }
 
-void LiveController::SetPlayEngine(IPlayerEngine* engine, std::string playerId)
+void LiveController::CreateTask(std::string playerId)
 {
-    playerEngine_ = engine;
     task_ = std::make_unique<Task>("checkliveDelayThread", playerId, TaskType::GLOBAL, TaskPriority::NORMAL, false);
 }
 
 void LiveController::StartCheckLiveDelayTime(int64_t updateIntervalMs)
 {
-    MEDIA_LOG_I("LiveController StartCheckLiveDalyTime");
+    MEDIA_LOG_I("LiveController StartCheckLiveDelayTime");
     checkLiveDelayTimeIntervalMs_ = updateIntervalMs;
     if (isCheckLiveDelayTimeSet_.load()) { // already set
         return;
@@ -78,7 +77,7 @@ void LiveController::StartCheckLiveDelayTime(int64_t updateIntervalMs)
 
 void LiveController::StopCheckLiveDelayTime()
 {
-    MEDIA_LOG_I("LiveController::StopCheckLiveDalyTime");
+    MEDIA_LOG_I("LiveController::StopCheckLiveDelayTime");
     isCheckLiveDelayTimeSet_.store(false);
 }
 
@@ -99,14 +98,14 @@ void LiveController::LoopOnce(const std::shared_ptr<Event>& item)
     FALSE_RETURN(item != nullptr);
     switch (item->what) {
         case WHAT_LIVE_DELAY_TIME:
-            DoCheckLiveDalyTime();
+            DoCheckLiveDelayTime();
             break;
         default:
             break;
     }
 }
 
-void LiveController::DoCheckLiveDalyTime()
+void LiveController::DoCheckLiveDelayTime()
 {
     if (!isCheckLiveDelayTimeSet_.load()) {
         return;

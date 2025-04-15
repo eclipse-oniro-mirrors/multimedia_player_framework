@@ -238,7 +238,7 @@ private:
     void UpdateContinousBatchNo();
 
     bool CheckState(PlayerOnInfoType type, int32_t extra);
-    void DoCheckLiveDalyTime();
+    void DoCheckLiveDelayTime();
     int64_t CalculatePauseTime();
     void HandleFlvLiveRestartLink();
     void TryFlvLiveRestartLink();

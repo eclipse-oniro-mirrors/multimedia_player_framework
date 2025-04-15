@@ -1447,10 +1447,10 @@ bool AVPlayerNapi::IsLivingMaxDelayTimeValid(const AVPlayStrategyTmp &strategyTm
     if (!strategyTmp.isSetThresholdForAutoQuickPlay) {
         return true;
     }
-    if (strategyTmp.thresholdForAutoQuickPlay < AVPlayStrategyConstant::DEFAULT_LIVING_CACHED_DURATION ||
+    if (strategyTmp.thresholdForAutoQuickPlay < AVPlayStrategyConstant::BUFFER_DURATION_FOR_PLAYING_SECONDS ||
         strategyTmp.thresholdForAutoQuickPlay < strategyTmp.preferredBufferDurationForPlaying) {
-            return false;
-        }
+        return false;
+    }
     return true;
 }
 

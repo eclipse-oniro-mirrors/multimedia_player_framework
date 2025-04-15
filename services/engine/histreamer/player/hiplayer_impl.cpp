@@ -170,7 +170,7 @@ HiPlayerImpl::HiPlayerImpl(int32_t appUid, int32_t appPid, uint32_t appTokenId, 
     pipeline_ = std::make_shared<OHOS::Media::Pipeline::Pipeline>();
     syncManager_ = std::make_shared<MediaSyncManager>();
     callbackLooper_.SetPlayEngine(this, playerId_);
-    liveController_.SetPlayEngine(this, playerId_);
+    liveController_.CreateTask(playerId_);
     bundleName_ = GetClientBundleName(appUid);
     dfxAgent_ = std::make_shared<DfxAgent>(playerId_, bundleName_);
 }
@@ -2453,9 +2453,9 @@ bool HiPlayerImpl::IsLivingMaxDelayTimeValid()
     if (maxLivingDelayTime_ < 0) {
         return true;
     }
-    if (maxLivingDelayTime_ < AVPlayStrategyConstant::DEFAULT_LIVING_CACHED_DURATION ||
+    if (maxLivingDelayTime_ < AVPlayStrategyConstant::BUFFER_DURATION_FOR_PLAYING_SECONDS ||
         maxLivingDelayTime_ < bufferDurationForPlaying_) {
-            return false;
+        return false;
     }
     return true;
 }
@@ -3569,10 +3569,10 @@ void HiPlayerImpl::SetFlvLiveParams(AVPlayStrategy playbackStrategy)
 
 void HiPlayerImpl::UpdateFlvLiveParams()
 {
-    maxLivingDelayTime_ = maxLivingDelayTime_ < 0 ? AVPlayStrategyConstant::DEFAULT_MAX_DELAY_TIME_FOR_LIVING :
+    maxLivingDelayTime_ = maxLivingDelayTime_ < 0 ? AVPlayStrategyConstant::START_QUICK_PLAY_THRESHOLD_SECONDS :
         maxLivingDelayTime_;
     bufferDurationForPlaying_ = isSetBufferDurationForPlaying_ ? bufferDurationForPlaying_ :
-        AVPlayStrategyConstant::DEFAULT_LIVING_CACHED_DURATION;
+        AVPlayStrategyConstant::BUFFER_DURATION_FOR_PLAYING_SECONDS;
     MEDIA_LOG_I("maxLivingDelayTime_ is " PUBLIC_LOG_F " and  bufferDurationForPlaying_ is " PUBLIC_LOG_F,
         maxLivingDelayTime_, bufferDurationForPlaying_);
 }

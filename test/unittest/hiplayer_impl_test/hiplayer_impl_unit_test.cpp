@@ -1348,10 +1348,10 @@ HWTEST_F(HiplayerImplUnitTest, IsLivingMaxDelayTimeValid_001, TestSize.Level0)
     EXPECT_TRUE(hiplayer_->IsLivingMaxDelayTimeValid());
     hiplayer_->maxLivingDelayTime_ = 0;
     EXPECT_FALSE(hiplayer_->IsLivingMaxDelayTimeValid());
-    hiplayer_->maxLivingDelayTime_ = AVPlayStrategyConstant::DEFAULT_LIVING_CACHED_DURATION;
+    hiplayer_->maxLivingDelayTime_ = AVPlayStrategyConstant::BUFFER_DURATION_FOR_PLAYING_SECONDS;
     hiplayer_->bufferDurationForPlaying_ = 0;
     EXPECT_TRUE(hiplayer_->IsLivingMaxDelayTimeValid());
-    hiplayer_->bufferDurationForPlaying_ = AVPlayStrategyConstant::DEFAULT_MAX_DELAY_TIME_FOR_LIVING;
+    hiplayer_->bufferDurationForPlaying_ = AVPlayStrategyConstant::START_QUICK_PLAY_THRESHOLD_SECONDS;
     EXPECT_FALSE(hiplayer_->IsLivingMaxDelayTimeValid());
 }
 
@@ -1368,7 +1368,7 @@ HWTEST_F(HiplayerImplUnitTest, IsNeedChangePlaySpeed_001, TestSize.Level0)
     PlaybackRateMode mode = PlaybackRateMode::SPEED_FORWARD_1_20_X;
     bool isXSpeedPlay = true;
     hiplayer_->isFlvLive_ = true;
-    hiplayer_->bufferDurationForPlaying_ = AVPlayStrategyConstant::DEFAULT_LIVING_CACHED_DURATION;
+    hiplayer_->bufferDurationForPlaying_ = AVPlayStrategyConstant::BUFFER_DURATION_FOR_PLAYING_SECONDS;
     EXPECT_TRUE(hiplayer_->IsNeedChangePlaySpeed(mode, isXSpeedPlay));
     EXPECT_EQ(mode, PlaybackRateMode::SPEED_FORWARD_1_00_X);
     EXPECT_EQ(isXSpeedPlay, false);
@@ -1426,7 +1426,7 @@ HWTEST_F(HiplayerImplUnitTest, IsPauseForTooLong_001, TestSize.Level0)
     hiplayer_->maxLivingDelayTime_ = -1;
     EXPECT_TRUE(hiplayer_->IsPauseForTooLong(pauseTime));
  
-    hiplayer_->maxLivingDelayTime_ = AVPlayStrategyConstant::DEFAULT_MAX_DELAY_TIME_FOR_LIVING;
+    hiplayer_->maxLivingDelayTime_ = AVPlayStrategyConstant::START_QUICK_PLAY_THRESHOLD_SECONDS;
     EXPECT_FALSE(hiplayer_->IsPauseForTooLong(pauseTime));
 }
 
@@ -1446,12 +1446,12 @@ HWTEST_F(HiplayerImplUnitTest, SetFlvLiveParams_001, TestSize.Level0)
     EXPECT_EQ(hiplayer_->bufferDurationForPlaying_, 0);
     EXPECT_EQ(hiplayer_->maxLivingDelayTime_, -1);
     
-    playbackStrategy.preferredBufferDurationForPlaying = AVPlayStrategyConstant::DEFAULT_LIVING_CACHED_DURATION;
-    playbackStrategy.thresholdForAutoQuickPlay = AVPlayStrategyConstant::DEFAULT_MAX_DELAY_TIME_FOR_LIVING;
+    playbackStrategy.preferredBufferDurationForPlaying = AVPlayStrategyConstant::BUFFER_DURATION_FOR_PLAYING_SECONDS;
+    playbackStrategy.thresholdForAutoQuickPlay = AVPlayStrategyConstant::START_QUICK_PLAY_THRESHOLD_SECONDS;
     hiplayer_->SetFlvLiveParams(playbackStrategy);
     EXPECT_TRUE(hiplayer_->isSetBufferDurationForPlaying_);
-    EXPECT_EQ(hiplayer_->bufferDurationForPlaying_, AVPlayStrategyConstant::DEFAULT_LIVING_CACHED_DURATION);
-    EXPECT_EQ(hiplayer_->maxLivingDelayTime_, AVPlayStrategyConstant::DEFAULT_MAX_DELAY_TIME_FOR_LIVING);
+    EXPECT_EQ(hiplayer_->bufferDurationForPlaying_, AVPlayStrategyConstant::BUFFER_DURATION_FOR_PLAYING_SECONDS);
+    EXPECT_EQ(hiplayer_->maxLivingDelayTime_, AVPlayStrategyConstant::START_QUICK_PLAY_THRESHOLD_SECONDS);
 }
 
 /**
@@ -1463,8 +1463,8 @@ HWTEST_F(HiplayerImplUnitTest, SetFlvLiveParams_001, TestSize.Level0)
 HWTEST_F(HiplayerImplUnitTest, UpdateFlvLiveParams_001, TestSize.Level0)
 {
     hiplayer_->UpdateFlvLiveParams();
-    EXPECT_EQ(hiplayer_->maxLivingDelayTime_, AVPlayStrategyConstant::DEFAULT_MAX_DELAY_TIME_FOR_LIVING);
-    EXPECT_EQ(hiplayer_->bufferDurationForPlaying_, AVPlayStrategyConstant::DEFAULT_LIVING_CACHED_DURATION);
+    EXPECT_EQ(hiplayer_->maxLivingDelayTime_, AVPlayStrategyConstant::START_QUICK_PLAY_THRESHOLD_SECONDS);
+    EXPECT_EQ(hiplayer_->bufferDurationForPlaying_, AVPlayStrategyConstant::BUFFER_DURATION_FOR_PLAYING_SECONDS);
 }
 } // namespace Media
 } // namespace OHOS
