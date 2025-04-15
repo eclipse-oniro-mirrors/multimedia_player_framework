@@ -110,7 +110,8 @@ napi_value AVScreenCaptureNapi::Constructor(napi_env env, napi_callback_info inf
         delete jsScreenCapture;
         MEDIA_LOGE("failed to CreateScreenCaptureCb");
         return result;
-    }  
+    }
+      
     (void)jsScreenCapture->screenCapture_->SetScreenCaptureCallback(jsScreenCapture->screenCaptureCb_);
 
     status = napi_wrap(env, jsThis, reinterpret_cast<void *>(jsScreenCapture),
