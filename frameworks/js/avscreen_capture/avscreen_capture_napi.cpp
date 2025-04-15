@@ -117,7 +117,6 @@ napi_value AVScreenCaptureNapi::Constructor(napi_env env, napi_callback_info inf
     status = napi_wrap(env, jsThis, reinterpret_cast<void *>(jsScreenCapture),
                        AVScreenCaptureNapi::Destructor, nullptr, nullptr);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "Failed to wrap native instance");
-    CANCEL_SCOPE_EXIT_GUARD(0);
     MEDIA_LOGI("Constructor success");
     return jsThis;
 }
