@@ -2096,6 +2096,19 @@ bool ScreenCaptureServer::IsHopper()
     MEDIA_LOGI("foldscreen type is %{public}s", foldScreenFlag.c_str());
     return foldScreenFlag[0] == '5';
 }
+
+int32_t ScreenCaptureServer::MakeVirtualScreenMirrorForWindowForHopper(sptr<Rosen::Display> defaultDisplay,
+    std::vector<ScreenId> mirrorIds)
+{
+    ScreenId mirrorGroup = defaultDisplay->GetScreenId();
+    uint64_t defaultDisplayId = GetDisplayIdOfWindows(defaultDisplay->GetScreenId());
+    DMError ret = ScreenManager::GetInstance().MakeMirrorForRecord(defaultDisplayId, mirrorIds, mirrorGroup);
+    CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK, MSERR_UNKNOWN,
+        "MakeVirtualScreenMirror failed, captureMode:%{public}d, ret:%{public}d", captureConfig_.captureMode, ret);
+    MEDIA_LOGI("MakeVirtualScreenMirror window screen success, screenId:%{public}" PRIu64, defaultDisplayId);
+    displayScreenId_ = defaultDisplayId;
+    return MSERR_OK;
+}
 #endif
 
 int32_t ScreenCaptureServer::MakeVirtualScreenMirrorForWindow(sptr<Rosen::Display> defaultDisplay,
@@ -2207,17 +2220,20 @@ int32_t ScreenCaptureServer::MakeVirtualScreenMirror()
     sptr<Rosen::Display> defaultDisplay = Rosen::DisplayManager::GetInstance().GetDefaultDisplaySync();
     CHECK_AND_RETURN_RET_LOG(defaultDisplay != nullptr, MSERR_UNKNOWN,
         "MakeVirtualScreenMirror GetDefaultDisplaySync failed");
-    if (captureConfig_.captureMode == CAPTURE_SPECIFIED_WINDOW) {
-        return MakeVirtualScreenMirrorForWindow(defaultDisplay, mirrorIds);
-    }
 #ifdef PC_STANDARD
     if (IsHopper()) {
+        if (captureConfig_.captureMode == CAPTURE_SPECIFIED_WINDOW) {
+            return MakeVirtualScreenMirrorForWindowForHopper(defaultDisplay, mirrorIds);
+        }
         if (captureConfig_.captureMode != CAPTURE_SPECIFIED_SCREEN) {
             return MakeVirtualScreenMirrorForHomeScreenForHopper(defaultDisplay, mirrorIds);
         }
         return MakeVirtualScreenMirrorForSpecifiedScreenForHopper(defaultDisplay, mirrorIds);
     }
 #endif
+    if (captureConfig_.captureMode == CAPTURE_SPECIFIED_WINDOW) {
+        return MakeVirtualScreenMirrorForWindow(defaultDisplay, mirrorIds);
+    }
     if (captureConfig_.captureMode != CAPTURE_SPECIFIED_SCREEN) {
         return MakeVirtualScreenMirrorForHomeScreen(defaultDisplay, mirrorIds);
     }
