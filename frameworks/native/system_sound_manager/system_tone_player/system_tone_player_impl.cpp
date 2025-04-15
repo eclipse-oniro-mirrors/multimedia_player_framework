@@ -60,7 +60,6 @@ const std::string STANDARD_HAPTICS_PATH = "/media/haptics/standard/synchronized/
 const std::string GENTLE_HAPTICS_PATH = "/media/haptics/gentle/synchronized/";
 const std::string NON_SYNC_HAPTICS_PATH = "resource/media/haptics/standard/non-synchronized/";
 const char RINGTONE_PARAMETER_SCANNER_FIRST_KEY[] = "ringtone.scanner.first";
-const char RINGTONE_PARAMETER_SCANNER_FIRST_TRUE[] = "true";
 const int32_t RINGTONEPARA_SIZE = 64;
 const int32_t DEFAULT_DELAY = 100;
 
@@ -335,15 +334,11 @@ bool SystemTonePlayerImpl::InitDatabaseTool()
         MEDIA_LOGE("The database tool has been initialized. No need to reload.");
         return true;
     }
-    char paramValue[RINGTONEPARA_SIZE] = {0};
-    GetParameter(RINGTONE_PARAMETER_SCANNER_FIRST_KEY, "", paramValue, RINGTONEPARA_SIZE);
-    std::string parameter(paramValue);
-    MEDIA_LOGI("GetParameter end paramValue:%{public}s .", parameter.c_str());
     Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
     int32_t result =  Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
         "ohos.permission.ACCESS_CUSTOM_RINGTONE");
     databaseTool_.isProxy = (result == Security::AccessToken::PermissionState::PERMISSION_GRANTED &&
-        strcmp(paramValue, RINGTONE_PARAMETER_SCANNER_FIRST_TRUE) == 0 &&
+        SystemSoundManagerUtils::GetScannerFirstParameter(RINGTONE_PARAMETER_SCANNER_FIRST_KEY, RINGTONEPARA_SIZE) &&
         SystemSoundManagerUtils::CheckCurrentUser()) ? true : false;
     databaseTool_.dataShareHelper = databaseTool_.isProxy ?
         SystemSoundManagerUtils::CreateDataShareHelperUri(STORAGE_MANAGER_MANAGER_ID) :

@@ -40,6 +40,8 @@ constexpr int32_t RETRY_TIME_S = 5;
 constexpr int64_t SLEEP_TIME_S = 1;
 const std::string SANDBOX_PREFIX = "/data/storage/el2/base/files/";
 const char RINGTONE_PARAMETER_SCANNER_USERID_KEY[] = "ringtone.scanner.userId";
+const char RINGTONE_PARAMETER_SCANNER_FIRST_FALSE[] = "false";
+const char RINGTONE_PARAMETER_SCANNER_FIRST_TRUE[] = "true";
 const int32_t RINGTONEPARA_SIZE = 64;
 
 int32_t SystemSoundManagerUtils::GetCurrentUserId()
@@ -152,6 +154,22 @@ bool SystemSoundManagerUtils::CheckCurrentUser()
     int result = SetParameter(RINGTONE_PARAMETER_SCANNER_USERID_KEY, ids.c_str());
     MEDIA_LOGI("CheckCurrentUser End. SetParameter result: %{public}d ,CurrentUserIds: %{private}s .",
         result, ids.c_str());
+    return false;
+}
+
+bool SystemSoundManagerUtils::GetScannerFirstParameter(const char* key, int32_t maxSize)
+{
+    char paramValue[RINGTONEPARA_SIZE] = {0};
+    maxSize = RINGTONEPARA_SIZE;
+    GetParameter(key, "", paramValue, maxSize);
+    std::string parameter(paramValue);
+    MEDIA_LOGI("GetParameter end paramValue:%{public}s .", parameter.c_str());
+    if (strcmp(paramValue, RINGTONE_PARAMETER_SCANNER_FIRST_TRUE) == 0) {
+        return true;
+    }
+    if (strcmp(paramValue, RINGTONE_PARAMETER_SCANNER_FIRST_FALSE) == 0) {
+        return false;
+    }
     return false;
 }
 } // namesapce Media
