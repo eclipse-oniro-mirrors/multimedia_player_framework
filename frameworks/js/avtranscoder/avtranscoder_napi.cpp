@@ -131,13 +131,21 @@ napi_value AVTransCoderNapi::Constructor(napi_env env, napi_callback_info info)
 
     jsTransCoder->env_ = env;
     jsTransCoder->transCoder_ = TransCoderFactory::CreateTransCoder();
-    CHECK_AND_RETURN_RET_LOG(jsTransCoder->transCoder_ != nullptr, result, "failed to CreateTransCoder");
+    if (jsTransCoder->transCoder_ == nullptr) {
+        delete jsTransCoder;
+        MEDIA_LOGE("failed to CreateTransCoder");
+        return result;
+    }
 
     jsTransCoder->taskQue_ = std::make_unique<TaskQueue>("OS_AVTransCoderNapi");
     (void)jsTransCoder->taskQue_->Start();
 
     jsTransCoder->transCoderCb_ = std::make_shared<AVTransCoderCallback>(env);
-    CHECK_AND_RETURN_RET_LOG(jsTransCoder->transCoderCb_ != nullptr, result, "failed to CreateTransCoderCb");
+    if (jsTransCoder->transCoderCb_ == nullptr) {
+        delete jsTransCoder;
+        MEDIA_LOGE("failed to CreateTransCoderCb");
+        return result;
+    }
     (void)jsTransCoder->transCoder_->SetTransCoderCallback(jsTransCoder->transCoderCb_);
 
     status = napi_wrap(env, jsThis, reinterpret_cast<void *>(jsTransCoder),
