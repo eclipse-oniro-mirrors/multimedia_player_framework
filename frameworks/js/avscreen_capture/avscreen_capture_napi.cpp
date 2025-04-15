@@ -18,7 +18,6 @@
 #include "common_napi.h"
 #include "media_dfx.h"
 #include "media_log.h"
-#include "scope_guard.h"
 #ifndef CROSS_PLATFORM
 #include "display_manager.h"
 #endif
@@ -95,9 +94,6 @@ napi_value AVScreenCaptureNapi::Constructor(napi_env env, napi_callback_info inf
 
     AVScreenCaptureNapi *jsScreenCapture = new(std::nothrow) AVScreenCaptureNapi();
     CHECK_AND_RETURN_RET_LOG(jsScreenCapture != nullptr, result, "failed to new AVScreenCaptureNapi");
-    ON_SCOPE_EXIT(0) {
-        delete jsScreenCapture;
-    };
     jsScreenCapture->env_ = env;
     jsScreenCapture->screenCapture_ = ScreenCaptureFactory::CreateScreenCapture();
     if (jsScreenCapture->screenCapture_ == nullptr) {
