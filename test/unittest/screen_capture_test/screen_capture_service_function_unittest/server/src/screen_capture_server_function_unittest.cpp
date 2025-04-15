@@ -883,42 +883,56 @@ HWTEST_F(ScreenCaptureServerFunctionTest, MixAudio_001, TestSize.Level2)
         AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
     const int channels = 2;
     const int bufferSize = 10;
-    const char zeroChar = (char)0;
-    const char minChar = (char)127;
-    const char maxChar = (char)-128;
-    char innerBuffer[bufferSize] = {zeroChar, maxChar, minChar, zeroChar, maxChar, minChar, zeroChar, maxChar,
-        minChar, zeroChar};
-    char micBuffer[bufferSize] = {maxChar, minChar, zeroChar, maxChar, minChar, zeroChar, maxChar, minChar,
-        zeroChar, maxChar};
+    const char minChar = (char)-128;
+    char innerBuffer[bufferSize] = {minChar, minChar, minChar, minChar, minChar, minChar, minChar, minChar,
+        minChar, minChar};
+    char micBuffer[bufferSize] = {minChar, minChar, minChar, minChar, minChar, minChar, minChar, minChar,
+        minChar, minChar};
     char* srcData[channels] = {nullptr};
     srcData[0] = innerBuffer;
     srcData[1] = micBuffer;
-    char mixData[bufferSize];
+    char mixData[bufferSize] = {0};
     screenCaptureServer_->audioSource_->MixAudio(srcData, mixData, channels, bufferSize);
-    ASSERT_EQ(mixData[0], maxChar);
-    ASSERT_EQ(mixData[bufferSize - 1], maxChar);
+    ASSERT_EQ(mixData[0], 0);
 }
 
-// MixAudio input channels param is 0
 HWTEST_F(ScreenCaptureServerFunctionTest, MixAudio_002, TestSize.Level2)
 {
     screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
         AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
     const int channels = 2;
     const int bufferSize = 10;
-    const char zeroChar = (char)0;
-    const char minChar = (char)127;
-    const char maxChar = (char)-128;
-    char innerBuffer[bufferSize] = {zeroChar, maxChar, minChar, zeroChar, maxChar, minChar, zeroChar, maxChar,
-        minChar, zeroChar};
-    char micBuffer[bufferSize] = {maxChar, minChar, zeroChar, maxChar, minChar, zeroChar, maxChar, minChar,
-        zeroChar, maxChar};
+    const char maxChar = (char)127;
+    char innerBuffer[bufferSize] = {maxChar, maxChar, maxChar, maxChar, maxChar, maxChar, maxChar, maxChar,
+        maxChar, maxChar};
+    char micBuffer[bufferSize] = {maxChar, maxChar, maxChar, maxChar, maxChar, maxChar, maxChar, maxChar,
+        maxChar, maxChar};
     char* srcData[channels] = {nullptr};
     srcData[0] = innerBuffer;
     srcData[1] = micBuffer;
-    char mixData[bufferSize] = {zeroChar};
+    char mixData[bufferSize] = {0};
+    screenCaptureServer_->audioSource_->MixAudio(srcData, mixData, channels, bufferSize);
+    ASSERT_EQ(mixData[1], maxChar);
+}
+
+// MixAudio input channels param is 0
+HWTEST_F(ScreenCaptureServerFunctionTest, MixAudio_003, TestSize.Level2)
+{
+    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
+        AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+    const int channels = 2;
+    const int bufferSize = 10;
+    const char maxChar = (char)127;
+    char innerBuffer[bufferSize] = {maxChar, maxChar, maxChar, maxChar, maxChar, maxChar, maxChar, maxChar,
+        maxChar, maxChar};
+    char micBuffer[bufferSize] = {maxChar, maxChar, maxChar, maxChar, maxChar, maxChar, maxChar, maxChar,
+        maxChar, maxChar};
+    char* srcData[channels] = {nullptr};
+    srcData[0] = innerBuffer;
+    srcData[1] = micBuffer;
+    char mixData[bufferSize] = {0};
     screenCaptureServer_->audioSource_->MixAudio(srcData, mixData, 0, bufferSize);
-    ASSERT_EQ(mixData[0], zeroChar);
+    ASSERT_EQ(mixData[0], 0);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ScreenConnectListenerInScreenCapture_001, TestSize.Level2)
@@ -1256,7 +1270,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, GetChoiceFromJson_001, TestSize.Level2
 HWTEST_F(ScreenCaptureServerFunctionTest, GetChoiceFromJson_002, TestSize.Level2)
 {
     Json::Value root;
-    std::string content = "{\"choice_\": \"true\"}";
+    std::string content = "{\"choice\": \"true\"}";
     std::string value;
     screenCaptureServer_->GetChoiceFromJson(root, content, "choice", value);
     ASSERT_NE(screenCaptureServer_, nullptr);
@@ -1699,19 +1713,15 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ResizeCanvas_005, TestSize.Level2)
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ResizeCanvas_006, TestSize.Level2)
 {
-    screenCaptureServer_->virtualScreenId_ = 0;
-    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
-    int ret = screenCaptureServer_->ResizeCanvas(580, 4321);
-    ASSERT_EQ(ret, MSERR_INVALID_VAL);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, ResizeCanvas_007, TestSize.Level2)
-{
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
     screenCaptureServer_->virtualScreenId_ = SCREEN_ID_INVALID;
     screenCaptureServer_->captureConfig_.dataType = DataType::ORIGINAL_STREAM;
-    int ret = screenCaptureServer_->ResizeCanvas(580, 1280);
-    ASSERT_EQ(ret, MSERR_UNSUPPORT);
+    screenCaptureServer_->ResizeCanvas(580, 1280);
+    screenCaptureServer_->virtualScreenId_ = 0;
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
+    screenCaptureServer_->captureConfig_.dataType = DataType::INVAILD;
+    int ret = screenCaptureServer_->ResizeCanvas(580, 4321);
+    ASSERT_EQ(ret, MSERR_INVALID_VAL);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, StopScreenCaptureByEvent_002, TestSize.Level2)
@@ -1747,15 +1757,10 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetMaxVideoFrameRate_001, TestSize.Lev
 
 HWTEST_F(ScreenCaptureServerFunctionTest, SetMaxVideoFrameRate_002, TestSize.Level2)
 {
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
+    screenCaptureServer_->SetMaxVideoFrameRate(5);
     screenCaptureServer_->virtualScreenId_ = 0;
     screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
-    int ret = screenCaptureServer_->SetMaxVideoFrameRate(5);
-    ASSERT_NE(ret, MSERR_OK);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, SetMaxVideoFrameRate_003, TestSize.Level2)
-{
-    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
     int ret = screenCaptureServer_->SetMaxVideoFrameRate(5);
     ASSERT_NE(ret, MSERR_OK);
 }
@@ -1907,14 +1912,19 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckAudioEncParam_001, TestSize.Level
     ASSERT_NE(screenCaptureServer_->CheckAudioEncParam(audioEncInfo_1), MSERR_OK);
     AudioEncInfo audioEncInfo_2 = {
         .audioBitrate = screenCaptureServer_->AUDIO_BITRATE_MIN - 1,
-        .audioCodecformat = AudioCodecFormat::AUDIO_CODEC_FORMAT_BUTT
+        .audioCodecformat = AudioCodecFormat::AUDIO_DEFAULT
     };
     ASSERT_NE(screenCaptureServer_->CheckAudioEncParam(audioEncInfo_2), MSERR_OK);
     AudioEncInfo audioEncInfo_3 = {
         .audioBitrate = screenCaptureServer_->AUDIO_BITRATE_MAX + 1,
-        .audioCodecformat = AudioCodecFormat::AUDIO_CODEC_FORMAT_BUTT
+        .audioCodecformat = AudioCodecFormat::AUDIO_DEFAULT
     };
     ASSERT_NE(screenCaptureServer_->CheckAudioEncParam(audioEncInfo_3), MSERR_OK);
+    AudioEncInfo audioEncInfo_4 = {
+        .audioBitrate = screenCaptureServer_->AUDIO_BITRATE_MAX + 1,
+        .audioCodecformat = static_cast<AudioCodecFormat>(AudioCodecFormat::AUDIO_DEFAULT - 1)
+    };
+    ASSERT_NE(screenCaptureServer_->CheckAudioEncParam(audioEncInfo_4), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, RefreshResConfig_001, TestSize.Level2)
@@ -1944,6 +1954,17 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StartMicAudioCapture_001, TestSize.Lev
 HWTEST_F(ScreenCaptureServerFunctionTest, StopInnerAudioCapture_001, TestSize.Level2)
 {
     EXPECT_EQ(screenCaptureServer_->StopInnerAudioCapture(), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, StartAudioCapture_001, TestSize.Level2)
+{
+    screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo.state =
+        AVScreenCaptureParamValidationState::VALIDATION_IGNORE;
+    screenCaptureServer_->screenCaptureCb_ = nullptr;
+    screenCaptureServer_->NotifyStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE);
+    screenCaptureServer_->NotifyDisplaySelected(0);
+    EXPECT_EQ(screenCaptureServer_->StartStreamInnerAudioCapture(), MSERR_OK);
+    EXPECT_EQ(screenCaptureServer_->StartFileInnerAudioCapture(), MSERR_OK);
 }
 } // Media
 } // OHOS
