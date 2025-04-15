@@ -20,7 +20,7 @@
  * @brief Provides APIs of request capability for Recorder.
  *
  * @Syscap systemcapability.multimedia.media.avrecorder
- * @since 14
+ * @since 18
  * @version 1.0
  * @}
  */
@@ -34,7 +34,7 @@
  * @kit MediaKit
  * @library libavrecorder.so
  * @Syscap SystemCapability.Multimedia.Media.AVRecorder
- * @since 14
+ * @since 18
  * @version 1.0
  */
 
@@ -56,7 +56,7 @@ extern "C" {
  * @brief Create a recorder
  * @syscap SystemCapability.Multimedia.Media.AVRecorder
  * @return Returns a pointer to an OH_AVRecorder instance for success, nullptr for failure
- * @since 14
+ * @since 18
  * @version 1.0
 */
 OH_AVRecorder *OH_AVRecorder_Create(void);
@@ -69,7 +69,7 @@ OH_AVRecorder *OH_AVRecorder_Create(void);
  * @return Function result code.
  *         {@link AV_ERR_OK} if the execution is successful.
  *         {@link AV_ERR_INVALID_VAL} if input recorder is nullptr or recorder Prepare failed.
- * @since 14
+ * @since 18
  * @version 1.0
  */
 OH_AVErrCode OH_AVRecorder_Prepare(OH_AVRecorder *recorder, OH_AVRecorder_Config *config);
@@ -83,7 +83,7 @@ OH_AVErrCode OH_AVRecorder_Prepare(OH_AVRecorder *recorder, OH_AVRecorder_Config
  *         {@link AV_ERR_OK} if the execution is successful.
  *         {@link AV_ERR_INVALID_VAL} if input recorder is nullptr or config is null.
  *         {@link AV_ERR_NO_MEMORY} failed to malloc memory.
- * @since 14
+ * @since 18
  * @version 1.0
  */
 OH_AVErrCode OH_AVRecorder_GetAVRecorderConfig(OH_AVRecorder *recorder, OH_AVRecorder_Config **config);
@@ -96,7 +96,7 @@ OH_AVErrCode OH_AVRecorder_GetAVRecorderConfig(OH_AVRecorder *recorder, OH_AVRec
  * @return Function result code.
  *         {@link AV_ERR_OK} if the execution is successful.
  *         {@link AV_ERR_INVALID_VAL} if input recorder is nullptr.
- * @since 14
+ * @since 18
  * @version 1.0
  */
 OH_AVErrCode OH_AVRecorder_GetInputSurface(OH_AVRecorder *recorder, OHNativeWindow **window);
@@ -109,7 +109,7 @@ OH_AVErrCode OH_AVRecorder_GetInputSurface(OH_AVRecorder *recorder, OHNativeWind
  * @return Function result code.
  *         {@link AV_ERR_OK} if the execution is successful.
  *         {@link AV_ERR_INVALID_VAL} if input recorder is nullptr or update rotation failed.
- * @since 14
+ * @since 18
  * @version 1.0
  */
 OH_AVErrCode OH_AVRecorder_UpdateRotation(OH_AVRecorder *recorder, int32_t rotation);
@@ -121,7 +121,7 @@ OH_AVErrCode OH_AVRecorder_UpdateRotation(OH_AVRecorder *recorder, int32_t rotat
  * @return Function result code.
  *         {@link AV_ERR_OK} if the execution is successful.
  *         {@link AV_ERR_INVALID_VAL} if input recorder is nullptr or recorder start failed.
- * @since 14
+ * @since 18
  * @version 1.0
  */
 OH_AVErrCode OH_AVRecorder_Start(OH_AVRecorder *recorder);
@@ -133,7 +133,7 @@ OH_AVErrCode OH_AVRecorder_Start(OH_AVRecorder *recorder);
  * @return Function result code.
  *         {@link AV_ERR_OK} if the execution is successful.
  *         {@link AV_ERR_INVALID_VAL} if input recorder is nullptr or recorder pause failed.
- * @since 14
+ * @since 18
  * @version 1.0
  */
 OH_AVErrCode OH_AVRecorder_Pause(OH_AVRecorder *recorder);
@@ -145,7 +145,7 @@ OH_AVErrCode OH_AVRecorder_Pause(OH_AVRecorder *recorder);
  * @return Function result code.
  *         {@link AV_ERR_OK} if the execution is successful.
  *         {@link AV_ERR_INVALID_VAL} if input recorder is nullptr or recorder resume failed.
- * @since 14
+ * @since 18
  * @version 1.0
  */
 OH_AVErrCode OH_AVRecorder_Resume(OH_AVRecorder *recorder);
@@ -157,7 +157,7 @@ OH_AVErrCode OH_AVRecorder_Resume(OH_AVRecorder *recorder);
  * @return Function result code.
  *         {@link AV_ERR_OK} if the execution is successful.
  *         {@link AV_ERR_INVALID_VAL} if input recorder is nullptr or recorder stop failed.
- * @since 14
+ * @since 18
  * @version 1.0
  */
 OH_AVErrCode OH_AVRecorder_Stop(OH_AVRecorder *recorder);
@@ -169,7 +169,7 @@ OH_AVErrCode OH_AVRecorder_Stop(OH_AVRecorder *recorder);
  * @return Function result code.
  *         {@link AV_ERR_OK} if the execution is successful.
  *         {@link AV_ERR_INVALID_VAL} if input recorder is nullptr or recorder reset failed.
- * @since 14
+ * @since 18
  * @version 1.0
  */
 OH_AVErrCode OH_AVRecorder_Reset(OH_AVRecorder *recorder);
@@ -181,7 +181,7 @@ OH_AVErrCode OH_AVRecorder_Reset(OH_AVRecorder *recorder);
  * @return Function result code.
  *         {@link AV_ERR_OK} if the execution is successful.
  *         {@link AV_ERR_INVALID_VAL} if input recorder is nullptr or recorder release failed.
- * @since 14
+ * @since 18
  * @version 1.0
  */
 OH_AVErrCode OH_AVRecorder_Release(OH_AVRecorder *recorder);
@@ -196,7 +196,7 @@ OH_AVErrCode OH_AVRecorder_Release(OH_AVRecorder *recorder);
  *         {@link AV_ERR_OK} if the execution is successful.
  *         {@link AV_ERR_INVALID_VAL} if input recorder is nullptr or recorder release failed.
  *         {@link AV_ERR_NO_MEMORY} failed to malloc memory.
- * @since 14
+ * @since 18
  * @version 1.0
  */
 OH_AVErrCode OH_AVRecorder_GetAvailableEncoder(OH_AVRecorder *recorder, OH_AVRecorder_EncoderInfo **info,
@@ -212,7 +212,7 @@ OH_AVErrCode OH_AVRecorder_GetAvailableEncoder(OH_AVRecorder *recorder, OH_AVRec
  * @return Function result code.
  *         {@link AV_ERR_OK} if the execution is successful.
  *         {@link AV_ERR_INVALID_VAL} if input recorder is nullptr or input callback is nullptr.
- * @since 14
+ * @since 18
  * @version 1.0
  */
 OH_AVErrCode OH_AVRecorder_SetStateCallback(
@@ -228,7 +228,7 @@ OH_AVErrCode OH_AVRecorder_SetStateCallback(
  * @return Function result code.
  *         {@link AV_ERR_OK} if the execution is successful.
  *         {@link AV_ERR_INVALID_VAL} if input recorder is nullptr or input callback is nullptr.
- * @since 14
+ * @since 18
  * @version 1.0
  */
 OH_AVErrCode OH_AVRecorder_SetErrorCallback(OH_AVRecorder *recorder, OH_AVRecorder_OnError callback, void *userData);
@@ -244,7 +244,7 @@ OH_AVErrCode OH_AVRecorder_SetErrorCallback(OH_AVRecorder *recorder, OH_AVRecord
  * @return Function result code.
  *         {@link AV_ERR_OK} if the execution is successful.
  *         {@link AV_ERR_INVALID_VAL} if input recorder is nullptr or input callback is nullptr.
- * @since 14
+ * @since 18
  * @version 1.0
  */
 OH_AVErrCode OH_AVRecorder_SetUriCallback(OH_AVRecorder *recorder, OH_AVRecorder_OnUri callback, void *userData);

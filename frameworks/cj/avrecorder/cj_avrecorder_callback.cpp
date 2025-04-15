@@ -208,11 +208,9 @@ void CJAVRecorderCallback::InitPhotoAssertAvailable(int64_t id)
 bool InitDeviceRates(CDeviceDescriptor* device, const DeviceInfo& deviceInfo)
 {
     int32_t rateSize = static_cast<int32_t>(deviceInfo.audioStreamInfo.samplingRate.size());
-    if (rateSize <= 0) {
-        MEDIA_LOGE("rateSize is illeagle");
-        return false;
+    if (rateSize == 0) {
+        return true;
     }
-
     int32_t mallocSize = static_cast<int32_t>(sizeof(int32_t) * rateSize);
 
     auto rates = static_cast<int32_t*>(malloc(mallocSize));
@@ -241,11 +239,9 @@ bool InitDeviceRates(CDeviceDescriptor* device, const DeviceInfo& deviceInfo)
 bool InitDeviceChannels(CDeviceDescriptor* device, const DeviceInfo& deviceInfo)
 {
     int32_t channelSize = static_cast<int32_t>(deviceInfo.audioStreamInfo.channels.size());
-    if (channelSize <= 0) {
-        MEDIA_LOGE("channelSize is illeagle");
-        return false;
+    if (channelSize == 0) {
+        return true;
     }
-
     int32_t mallocSize = static_cast<int32_t>(sizeof(int32_t) * channelSize);
 
     auto channels = static_cast<int32_t*>(malloc(mallocSize));
@@ -275,10 +271,6 @@ bool InitDeviceMasks(CDeviceDescriptor* device, const DeviceInfo& deviceInfo)
 {
     int32_t deviceSize = 1;
     int32_t mallocSize = static_cast<int32_t>(sizeof(int32_t) * deviceSize);
-    if (mallocSize <= 0) {
-        MEDIA_LOGE("Masks size is illeagle");
-        return false;
-    }
 
     auto masks = static_cast<int32_t*>(malloc(mallocSize));
     if (!masks) {
@@ -302,10 +294,6 @@ bool InitDeviceEncodingTypes(CDeviceDescriptor* device, const DeviceInfo& device
 {
     int32_t deviceSize = 1;
     int32_t mallocSize = static_cast<int32_t>(sizeof(int32_t) * deviceSize);
-    if (mallocSize <= 0) {
-        MEDIA_LOGE("EncodingTypes size is illeagle");
-        return false;
-    }
 
     auto encodings = static_cast<int32_t*>(malloc(mallocSize));
     if (!encodings) {
@@ -402,11 +390,9 @@ bool ConvertToCEncoderInfo(CEncoderInfo* cInfo, EncoderCapabilityData& encoderIn
     cInfo->channels.maxVal = encoderInfo.channels.maxVal;
 
     int32_t rateSize = static_cast<int32_t>(encoderInfo.sampleRate.size());
-    if (rateSize <= 0) {
-        MEDIA_LOGE("rateSize is illeagle");
-        return false;
+    if (rateSize == 0) {
+        return true;
     }
-
     int32_t mallocSize = static_cast<int32_t>(sizeof(int32_t) * rateSize);
 
     auto rates = static_cast<int32_t*>(malloc(mallocSize));
@@ -435,11 +421,9 @@ bool ConvertToCEncoderInfo(CEncoderInfo* cInfo, EncoderCapabilityData& encoderIn
 bool ConvertToCArrEncoderInfo(CArrEncoderInfo& cInfo, std::vector<EncoderCapabilityData>& encoderInfo)
 {
     int32_t encoderSize = static_cast<int32_t>(encoderInfo.size());
-    if (encoderSize <= 0) {
-        MEDIA_LOGE("encoderSize is illeagle");
-        return false;
+    if (encoderSize == 0) {
+        return true;
     }
-
     int32_t mallocSize = static_cast<int32_t>(sizeof(CEncoderInfo) * encoderSize);
 
     CEncoderInfo* encoders = static_cast<CEncoderInfo*>(malloc(mallocSize));
