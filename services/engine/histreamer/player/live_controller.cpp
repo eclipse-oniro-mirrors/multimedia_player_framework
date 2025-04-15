@@ -65,7 +65,7 @@ void LiveController::CreateTask(std::string playerId)
 
 void LiveController::StartCheckLiveDelayTime(int64_t updateIntervalMs)
 {
-    MEDIA_LOG_I("LiveController StartCheckLiveDelayTime");
+    MEDIA_LOG_I("LiveController StartCheckLiveDelayTime, check interval is " PUBLIC_LOG_D64 " ms", updateIntervalMs);
     checkLiveDelayTimeIntervalMs_ = updateIntervalMs;
     if (isCheckLiveDelayTimeSet_.load()) { // already set
         return;

@@ -628,16 +628,12 @@ int32_t HiPlayerImpl::PrepareAsync()
     }
     auto ret = Init();
     if (ret != Status::OK || isInterruptNeeded_.load()) {
-        auto errCode = TransStatus(Status::ERROR_UNSUPPORTED_FORMAT);
-        CollectionErrorInfo(errCode, "PrepareAsync error: init error");
-        return errCode;
+        return HandleErrorRet(Status::ERROR_UNSUPPORTED_FORMAT, "PrepareAsync error: init error");
     }
     DoSetMediaSource(ret);
     if (ret != Status::OK && !isInterruptNeeded_.load()) {
-        auto errCode = TransStatus(Status::ERROR_UNSUPPORTED_FORMAT);
-        CollectionErrorInfo(errCode, "PrepareAsync error: DoSetSource error");
         OnEvent({"engine", EventType::EVENT_ERROR, MSERR_UNSUPPORT_CONTAINER_TYPE});
-        return errCode;
+        return HandleErrorRet(Status::ERROR_UNSUPPORTED_FORMAT, "PrepareAsync error: DoSetSource error");
     }
     FALSE_RETURN_V(!BreakIfInterruptted(), TransStatus(Status::OK));
     NotifyBufferingUpdate(PlayerKeys::PLAYER_BUFFERING_START, 0);
@@ -646,10 +642,8 @@ int32_t HiPlayerImpl::PrepareAsync()
     ret = pipeline_->Prepare();
     if (ret != Status::OK) {
         MEDIA_LOG_E("PrepareAsync failed with error " PUBLIC_LOG_D32, ret);
-        auto errCode = TransStatus(ret);
-        CollectionErrorInfo(errCode, "pipeline PrepareAsync failed");
         OnEvent({"engine", EventType::EVENT_ERROR, MSERR_UNKNOWN});
-        return errCode;
+        return HandleErrorRet(ret, "pipeline PrepareAsync failed");
     }
     SetFlvObs();
     InitDuration();
@@ -659,13 +653,12 @@ int32_t HiPlayerImpl::PrepareAsync()
     FALSE_RETURN_V_MSG_E(ret == Status::OK, TransStatus(ret), "DoSetPlayRange failed");
     if (demuxer_ != nullptr && demuxer_->IsRenderNextVideoFrameSupported() && IsAppEnableRenderFirstFrame(appUid_)) {
         ret = pipeline_->Preroll(renderFirstFrame_);
-        auto code = TransStatus(ret);
         if (ret != Status::OK) {
-            CollectionErrorInfo(code, "PrepareFrame failed.");
-            return code;
+            return HandleErrorRet(ret, "PrepareFrame failed.");
         }
     }
     UpdatePlayerStateAndNotify();
+    MEDIA_LOG_I("PrepareAsync End");
     return TransStatus(ret);
 }
 
@@ -674,6 +667,13 @@ void HiPlayerImpl::CollectionErrorInfo(int32_t errCode, const std::string& errMs
     MEDIA_LOG_E("Error: " PUBLIC_LOG_S, errMsg.c_str());
     playStatisticalInfo_.errCode = errCode;
     playStatisticalInfo_.errMsg = errMsg;
+}
+
+int32_t HiPlayerImpl::HandleErrorRet(Status ret, const std::string& errMsg)
+{
+    auto errCode = TransStatus(ret);
+    CollectionErrorInfo(errCode, errMsg);
+    return errCode;
 }
 
 void HiPlayerImpl::DoSetMediaSource(Status& ret)
@@ -3510,7 +3510,7 @@ bool HiPlayerImpl::IsNeedChangePlaySpeed(PlaybackRateMode &mode, bool &isXSpeedP
 {
     FALSE_RETURN_V(demuxer_ != nullptr && isFlvLive_, false);
     uint64_t cacheDuration = demuxer_->GetCachedDuration();
-    MEDIA_LOG_I("current cacheDuration is %{public}d", cacheDuration);
+    MEDIA_LOG_I("current cacheDuration is " PUBLIC_LOG_U64, cacheDuration);
     if ((cacheDuration < bufferDurationForPlaying_ * TIME_CONVERSION_UNIT) && isXSpeedPlay) {
         mode = PlaybackRateMode::SPEED_FORWARD_1_00_X;
         isXSpeedPlay = false;

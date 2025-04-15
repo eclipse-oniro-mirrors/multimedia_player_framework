@@ -94,7 +94,7 @@ HWTEST_F(LiveControllerUnitTest, Enqueue_001, TestSize.Level0)
     liveController_->isCheckLiveDelayTimeSet_.store(true);
     std::shared_ptr<LiveController::Event> event =
         std::make_shared<LiveController::Event>(WHAT_LIVE_DELAY_TIME,
-        SteadyClock::GetCurrentTimeMs() + UPDATE_INTERVAL_MS, Any());
+        SteadyClock::GetCurrentTimeMs(), Any());
     liveController_->LoopOnce(event);
     EXPECT_TRUE(testObs_->onSystemOperationFlag);
     liveController_->StopCheckLiveDelayTime();

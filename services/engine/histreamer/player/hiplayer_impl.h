@@ -233,6 +233,7 @@ private:
     bool IsNetworkUrl(const std::string &url) const;
     bool IsValidPlayRange(int64_t start, int64_t end) const;
     int32_t GetRealPath(const std::string &url, std::string &realUrlPath) const;
+    int32_t HandleErrorRet(Status ret, const std::string& errMsg);
     void SetDefaultAudioRenderInfo(const std::vector<std::shared_ptr<Meta>> &trackInfos);
     void AppendPlayerMediaInfo();
     int64_t GetCurrentMillisecond();
