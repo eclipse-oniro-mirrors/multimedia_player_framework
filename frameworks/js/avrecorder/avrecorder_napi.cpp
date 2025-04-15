@@ -128,8 +128,8 @@ napi_value AVRecorderNapi::Constructor(napi_env env, napi_callback_info info)
 
     jsRecorder->env_ = env;
     jsRecorder->recorder_ = RecorderFactory::CreateRecorder();
-    if (jsPlayer->player_ == nullptr) {
-        delete jsPlayer;
+    if (jsPlayer->recorder_ == nullptr) {
+        delete jsRecorder;
         MEDIA_LOGE("failed to CreateRecorder");
         return result;
     }
