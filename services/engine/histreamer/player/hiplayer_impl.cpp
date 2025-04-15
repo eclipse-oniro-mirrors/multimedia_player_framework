@@ -1364,8 +1364,8 @@ Status HiPlayerImpl::HandleSeekClosest(int64_t seekPos, int64_t seekTimeUs)
         audioSink_->SetIsCancelStart(true);
     }
     seekAgent_ = std::make_shared<SeekAgent>(demuxer_, mediaStartPts_);
-    FALSE_RETURN(!isInterruptNeeded_, Status::OK);
     interruptMonitor_->RegisterListener(seekAgent_);
+    FALSE_RETURN(!isInterruptNeeded_, Status::OK);
     SetFrameRateForSeekPerformance(FRAME_RATE_FOR_SEEK_PERFORMANCE);
     bool timeout = false;
     auto res = seekAgent_->Seek(seekPos, timeout);
