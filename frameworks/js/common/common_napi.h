@@ -391,7 +391,7 @@ struct AVPlayStrategyTmp {
     int32_t mutedMediaType = static_cast<int32_t>(MediaType::MEDIA_TYPE_MAX_COUNT);
     std::string preferredAudioLanguage;
     std::string preferredSubtitleLanguage;
-    double preferredBufferDurationForPlaying;
+    double preferredBufferDurationForPlaying {0};
     double thresholdForAutoQuickPlay {-1};
     bool isSetBufferDurationForPlaying {false};
     bool isSetThresholdForAutoQuickPlay {false};
