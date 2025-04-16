@@ -42,6 +42,7 @@
 #include <unordered_map>
 #include <algorithm>
 #include <set>
+#include <common/rs_common_def.h>
 #ifdef PC_STANDARD
 #include <parameters.h>
 #endif
@@ -81,7 +82,6 @@ static const int32_t MICROPHONE_STATE_COUNT = 2;
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
     static const int32_t NOTIFICATION_MAX_TRY_NUM = 3;
 #endif
-static const int32_t MOUSE_DEVICE = 5;
 #ifdef SUPPORT_CALL
 static const int32_t STOPPED_BY_CALL_API_VERSION_ISOLATION = 16;
 #endif
@@ -140,59 +140,6 @@ void NotificationSubscriber::OnResponse(int32_t notificationId,
 void NotificationSubscriber::OnDied()
 {
     MEDIA_LOGI("NotificationSubscriber OnDied");
-}
-
-MouseChangeListener::MouseChangeListener(std::weak_ptr<ScreenCaptureServer> screenCaptureServer)
-{
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
-    screenCaptureServer_ = screenCaptureServer;
-}
-
-int32_t MouseChangeListener::GetDeviceInfo(int32_t deviceId, std::shared_ptr<InputDeviceInfo> deviceInfo)
-{
-    MEDIA_LOGI("Get device info by deviceId %{public}d", deviceId);
-    CHECK_AND_RETURN_RET_LOG(deviceInfo != nullptr, MSERR_INVALID_VAL, "Input deviceInfo is nullptr");
-
-    std::function<void(std::shared_ptr<MMI::InputDevice>)> callback =
-        [&deviceInfo](std::shared_ptr<MMI::InputDevice> device) {
-            if (device) {
-                deviceInfo->SetType(device->GetType());
-                deviceInfo->SetName(device->GetName());
-            }
-        };
-    int32_t ret = MMI::InputManager::GetInstance()->GetDevice(
-        deviceId, [&callback](std::shared_ptr<MMI::InputDevice> device) {callback(device);});
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret,
-        "Calling method GetDevice failed. Device ID: %{public}d", deviceId);
-    return ret;
-}
-
-void MouseChangeListener::OnDeviceAdded(int32_t deviceId, const std::string &type)
-{
-    MEDIA_LOGI("OnDeviceAdded start.");
-    std::shared_ptr<InputDeviceInfo> deviceInfo = std::make_shared<InputDeviceInfo>();
-    int32_t ret = GetDeviceInfo(deviceId, deviceInfo);
-    CHECK_AND_RETURN_LOG(ret == MSERR_OK, "Get deviceInfo(%{public}d) failed", deviceId);
-    MEDIA_LOGI("Add device type: %{public}d, name:%{public}s", deviceInfo->GetType(), deviceInfo->GetName().c_str());
-
-    if (deviceInfo->GetType() == MOUSE_DEVICE) {
-        MEDIA_LOGI("Add device is mouse, type (%{public}d)", deviceInfo->GetType());
-        auto scrServer = screenCaptureServer_.lock();
-        CHECK_AND_RETURN_LOG(scrServer != nullptr, "screenCaptureServer is nullptr");
-        ret = scrServer->ShowCursorInner();
-        CHECK_AND_RETURN_LOG(ret == MSERR_OK, "OnDeviceAdded, showCursorInner failed");
-    }
-    MEDIA_LOGI("OnDeviceAdded end.");
-}
-
-void MouseChangeListener::OnDeviceRemoved(int32_t deviceId, const std::string &type)
-{
-    MEDIA_LOGI("OnDeviceRemoved start, deviceId: %{public}d, type:%{public}s", deviceId, type.c_str());
-    auto scrServer = screenCaptureServer_.lock();
-    CHECK_AND_RETURN_LOG(scrServer != nullptr, "screenCaptureServer is nullptr");
-    int32_t ret = scrServer->ShowCursorInner();
-    CHECK_AND_RETURN_LOG(ret == MSERR_OK, "OnDeviceRemoved ShowCursorInner failed");
-    MEDIA_LOGI("OnDeviceRemoved end.");
 }
 
 PrivateWindowListenerInScreenCapture::PrivateWindowListenerInScreenCapture(
@@ -1497,118 +1444,6 @@ void ScreenCaptureServer::RegisterScreenConnectListener()
     ScreenManager::GetInstance().RegisterScreenListener(screenConnectListener_);
 }
 
-void ScreenCaptureServer::SetMouseChangeListener(std::shared_ptr<MouseChangeListener> listener)
-{
-    mouseChangeListener_ = listener;
-}
-
-std::shared_ptr<MouseChangeListener> ScreenCaptureServer::GetMouseChangeListener()
-{
-    return mouseChangeListener_;
-}
-
-bool ScreenCaptureServer::RegisterMMISystemAbilityListener()
-{
-    MEDIA_LOGI("RegisterMMISystemAbilityListener start.");
-    if (mmiListener_ != nullptr) {
-        MEDIA_LOGI("RegisterMMISystemAbilityListener already registered");
-        return true;
-    }
-    
-    auto abilityManager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    CHECK_AND_RETURN_RET_LOG(abilityManager != nullptr, false,
-        "RegisterMMISystemAbilityListener abilityManager is nullptr.");
-    std::weak_ptr<ScreenCaptureServer> screenCaptureServer(shared_from_this());
-    sptr<ISystemAbilityStatusChange> listener(new (std::nothrow) MMISystemAbilityListener(screenCaptureServer));
-    CHECK_AND_RETURN_RET_LOG(listener != nullptr, false, "create listener failed.");
-    int32_t ret = abilityManager->SubscribeSystemAbility(MULTIMODAL_INPUT_SERVICE_ID, listener);
-    CHECK_AND_RETURN_RET_LOG(ret == ERR_OK, false, "failed to subscribe systemAbility, ret:%{public}d", ret);
-
-    mmiListener_ = listener;
-    MEDIA_LOGI("RegisterMMISystemAbilityListener end.");
-    return true;
-}
-
-bool ScreenCaptureServer::UnRegisterMMISystemAbilityListener()
-{
-    MEDIA_LOGI("UnRegisterMMISystemAbilityListener start.");
-    if (mmiListener_ == nullptr) {
-        MEDIA_LOGI("mmiListener already unregistered.");
-        return true;
-    }
-
-    auto abilityManager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    CHECK_AND_RETURN_RET_LOG(abilityManager != nullptr, false,
-        "UnRegisterMMISystemAbilityListener abilityManager is nullptr.");
-    int32_t ret = abilityManager->UnSubscribeSystemAbility(MULTIMODAL_INPUT_SERVICE_ID, mmiListener_);
-    mmiListener_ = nullptr;
-    CHECK_AND_RETURN_RET_LOG(ret == ERR_OK, false, "failed to unsubscribe systemAbility, ret:%{public}d", ret);
-    MEDIA_LOGI("UnRegisterMMISystemAbilityListener end.");
-    return true;
-}
-
-MMISystemAbilityListener::MMISystemAbilityListener(std::weak_ptr<ScreenCaptureServer> screenCaptureServer)
-{
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
-    screenCaptureServer_ = screenCaptureServer;
-}
-
-void MMISystemAbilityListener::OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId)
-{
-    MEDIA_LOGI("OnAddSystemAbility start.");
-    auto scrServer = screenCaptureServer_.lock();
-    CHECK_AND_RETURN_LOG(scrServer != nullptr, "screenCaptureServer is nullptr");
-
-    int32_t ret = MMI::InputManager::GetInstance()->UnregisterDevListener("change",
-        scrServer->GetMouseChangeListener());
-    scrServer->SetMouseChangeListener(nullptr);
-    CHECK_AND_RETURN_LOG(ret == MSERR_OK, "OnAddSystemAbility UnRegisterMMISystemAbilityListener failed");
-
-    std::shared_ptr<MouseChangeListener> listener = std::make_shared<MouseChangeListener>(scrServer);
-    ret = MMI::InputManager::GetInstance()->RegisterDevListener("change", listener);
-    CHECK_AND_RETURN_LOG(ret == MSERR_OK, "OnAddSystemAbility RegisterDevListener failed");
-    scrServer->SetMouseChangeListener(listener);
-
-    scrServer->ShowCursorInner();
-    MEDIA_LOGI("OnAddSystemAbility end.");
-}
-
-void MMISystemAbilityListener::OnRemoveSystemAbility(int32_t systemAbilityId, const std::string &deviceId)
-{
-    MEDIA_LOGI("OnRemoveSystemAbility success.");
-}
-
-int32_t ScreenCaptureServer::RegisterMouseChangeListener(std::string type)
-{
-    MEDIA_LOGI("RegisterMouseChangeListener start.");
-    if (mouseChangeListener_ != nullptr) {
-        MEDIA_LOGI("RegisterMouseChangeListener mouseChangeListener already registered");
-        return MSERR_OK;
-    }
-
-    std::weak_ptr<ScreenCaptureServer> screenCaptureServer(shared_from_this());
-    mouseChangeListener_ = std::make_shared<MouseChangeListener>(screenCaptureServer);
-    int32_t ret = MMI::InputManager::GetInstance()->RegisterDevListener(type, mouseChangeListener_);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "RegisterMouseChangeListener failed");
-    MEDIA_LOGI("RegisterMouseChangeListener end.");
-    return ret;
-}
-
-int32_t ScreenCaptureServer::UnRegisterMouseChangeListener(std::string type)
-{
-    MEDIA_LOGI("UnRegisterMouseChangeListener start.");
-    if (mouseChangeListener_ == nullptr) {
-        MEDIA_LOGI("RegisterMouseChangeListener mouseChangeListener already unregistered");
-        return MSERR_OK;
-    }
-
-    int32_t ret = MMI::InputManager::GetInstance()->UnregisterDevListener(type, mouseChangeListener_);
-    mouseChangeListener_ = nullptr;
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "UnRegisterMouseChangeListener failed");
-    MEDIA_LOGI("UnRegisterMouseChangeListener end.");
-    return ret;
-}
-
 void ScreenCaptureServer::PostStartScreenCaptureSuccessAction()
 {
     std::unordered_map<std::string, std::string> payload;
@@ -2461,7 +2296,7 @@ int32_t ScreenCaptureServer::PrepareVirtualScreenMirror()
     }
     SetScreenScaleMode();
     Rosen::DisplayManager::GetInstance().SetVirtualScreenBlackList(virtualScreenId_, contentFilter_.windowIDsVec,
-        surfaceIdList_);
+        surfaceIdList_, surfaceTypeList_);
     MEDIA_LOGI("PrepareVirtualScreenMirror screenId: %{public}" PRIu64, virtualScreenId_);
     auto screen = ScreenManager::GetInstance().GetScreenById(virtualScreenId_);
     if (screen == nullptr) {
@@ -2928,7 +2763,7 @@ int32_t ScreenCaptureServer::ExcludeContent(ScreenCaptureContentFilter &contentF
     contentFilter_ = contentFilter;
     if (captureState_ == AVScreenCaptureState::STARTED) {
         Rosen::DisplayManager::GetInstance().SetVirtualScreenBlackList(virtualScreenId_, contentFilter_.windowIDsVec,
-            surfaceIdList_);
+            surfaceIdList_, surfaceTypeList_);
     }
     int32_t ret = MSERR_OK;
     if (innerAudioCapture_ != nullptr) {
@@ -3231,16 +3066,6 @@ int32_t ScreenCaptureServer::ShowCursor(bool showCursor)
     }
     showCursor_ = showCursor;
     MEDIA_LOGI("ScreenCaptureServer::ShowCursor, showCursor:%{public}d", showCursor_);
-    if (!showCursor_) {
-        bool isRegsterMMI = RegisterMMISystemAbilityListener();
-        if (!isRegsterMMI) {
-            MEDIA_LOGE("Resiter MMI failed");
-        }
-        RegisterMouseChangeListener("change");
-    } else {
-        UnRegisterMMISystemAbilityListener();
-        UnRegisterMouseChangeListener("change");
-    }
     if (captureState_ != AVScreenCaptureState::STARTED) {
         MEDIA_LOGI("ScreenCaptureServer::ShowCursor, virtual screen not created, return ok.");
         return MSERR_OK;
@@ -3254,20 +3079,18 @@ int32_t ScreenCaptureServer::ShowCursorInner()
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " ShowCursorInner start.", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(virtualScreenId_ != SCREEN_ID_INVALID, MSERR_INVALID_VAL,
         "ShowCursorInner failed, virtual screen not init");
+    surfaceIdList_ = {};
     if (!showCursor_) {
         MEDIA_LOGI("ScreenCaptureServer 0x%{public}06" PRIXPTR " ShowCursorInner not show cursor", FAKE_POINTER(this));
-        uint64_t surfaceId = {};
-        int32_t ret = MMI::InputManager::GetInstance()->GetCursorSurfaceId(surfaceId);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "GetCursorSurfaceId failed");
-        MEDIA_LOGI("GetCursorSurfaceId success, surfaceId: %{public}" PRIu64, surfaceId);
-        surfaceIdList_ = {};
-        surfaceIdList_.push_back(surfaceId);
+        surfaceTypeList_ = {};
+        Rosen::RSSurfaceNodeType surfaceNodeType = OHOS::Rosen::RSSurfaceNodeType::CURSOR_NODE;
+        surfaceTypeList_.push_back(static_cast<uint8_t>(surfaceNodeType));
     } else {
         MEDIA_LOGI("ScreenCaptureServer 0x%{public}06" PRIXPTR " ShowCursorInner, show cursor", FAKE_POINTER(this));
-        surfaceIdList_ = {};
+        surfaceTypeList_ = {};
     }
     Rosen::DisplayManager::GetInstance().SetVirtualScreenBlackList(virtualScreenId_, contentFilter_.windowIDsVec,
-        surfaceIdList_);
+        surfaceIdList_, surfaceTypeList_);
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " ShowCursorInner OK.", FAKE_POINTER(this));
     return MSERR_OK;
 }
@@ -3495,10 +3318,9 @@ int32_t ScreenCaptureServer::StopScreenCaptureRecorder()
         recorder_ = nullptr;
         StopAudioCapture();
     }
-    UnRegisterMouseChangeListener("change");
-    UnRegisterMMISystemAbilityListener();
     showCursor_ = true;
     surfaceIdList_ = {};
+    surfaceTypeList_ = {};
     captureCallback_ = nullptr;
     isConsumerStart_ = false;
     return ret;
