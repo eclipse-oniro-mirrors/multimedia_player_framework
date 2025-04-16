@@ -43,8 +43,8 @@ constexpr uint32_t DRM_MAX_DRM_INFO_COUNT = 200;
 }
 
 namespace AVPlayStrategyConstant {
-constexpr double DEFAULT_LIVING_CACHED_DURATION = 2;
-constexpr double DEFAULT_MAX_DELAY_TIME_FOR_LIVING = 5;
+constexpr double BUFFER_DURATION_FOR_PLAYING_SECONDS = 2; // flv live set default BufferDurationForPlaying 2s
+constexpr double START_QUICK_PLAY_THRESHOLD_SECONDS = 5; // flv live set default thresholdForAutoQuickPlay 5s
 }
 
 struct AVPlayStrategy {
@@ -328,7 +328,7 @@ enum PlaybackRateMode : int32_t {
     /* Video playback at 0.125x normal speed */
     SPEED_FORWARD_0_125_X = 9,
     /* Video playback at 1.20x normal speed */
-    SPEED_FORWARD_1_20_X = 100, // flv live quick play
+    SPEED_FORWARD_1_20_X = 100, // flv live quick play, internal value, not open to northbound
 };
 
 class PlayerCallback {

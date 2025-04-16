@@ -170,7 +170,7 @@ HiPlayerImpl::HiPlayerImpl(int32_t appUid, int32_t appPid, uint32_t appTokenId, 
     pipeline_ = std::make_shared<OHOS::Media::Pipeline::Pipeline>();
     syncManager_ = std::make_shared<MediaSyncManager>();
     callbackLooper_.SetPlayEngine(this, playerId_);
-    liveController_.SetPlayEngine(this, playerId_);
+    liveController_.CreateTask(playerId_);
     bundleName_ = GetClientBundleName(appUid);
     dfxAgent_ = std::make_shared<DfxAgent>(playerId_, bundleName_);
 }
@@ -628,16 +628,12 @@ int32_t HiPlayerImpl::PrepareAsync()
     }
     auto ret = Init();
     if (ret != Status::OK || isInterruptNeeded_.load()) {
-        auto errCode = TransStatus(Status::ERROR_UNSUPPORTED_FORMAT);
-        CollectionErrorInfo(errCode, "PrepareAsync error: init error");
-        return errCode;
+        return HandleErrorRet(Status::ERROR_UNSUPPORTED_FORMAT, "PrepareAsync error: init error");
     }
     DoSetMediaSource(ret);
     if (ret != Status::OK && !isInterruptNeeded_.load()) {
-        auto errCode = TransStatus(Status::ERROR_UNSUPPORTED_FORMAT);
-        CollectionErrorInfo(errCode, "PrepareAsync error: DoSetSource error");
         OnEvent({"engine", EventType::EVENT_ERROR, MSERR_UNSUPPORT_CONTAINER_TYPE});
-        return errCode;
+        return HandleErrorRet(Status::ERROR_UNSUPPORTED_FORMAT, "PrepareAsync error: DoSetSource error");
     }
     FALSE_RETURN_V(!BreakIfInterruptted(), TransStatus(Status::OK));
     NotifyBufferingUpdate(PlayerKeys::PLAYER_BUFFERING_START, 0);
@@ -646,10 +642,8 @@ int32_t HiPlayerImpl::PrepareAsync()
     ret = pipeline_->Prepare();
     if (ret != Status::OK) {
         MEDIA_LOG_E("PrepareAsync failed with error " PUBLIC_LOG_D32, ret);
-        auto errCode = TransStatus(ret);
-        CollectionErrorInfo(errCode, "pipeline PrepareAsync failed");
         OnEvent({"engine", EventType::EVENT_ERROR, MSERR_UNKNOWN});
-        return errCode;
+        return HandleErrorRet(ret, "pipeline PrepareAsync failed");
     }
     SetFlvObs();
     InitDuration();
@@ -659,13 +653,12 @@ int32_t HiPlayerImpl::PrepareAsync()
     FALSE_RETURN_V_MSG_E(ret == Status::OK, TransStatus(ret), "DoSetPlayRange failed");
     if (demuxer_ != nullptr && demuxer_->IsRenderNextVideoFrameSupported() && IsAppEnableRenderFirstFrame(appUid_)) {
         ret = pipeline_->Preroll(renderFirstFrame_);
-        auto code = TransStatus(ret);
         if (ret != Status::OK) {
-            CollectionErrorInfo(code, "PrepareFrame failed.");
-            return code;
+            return HandleErrorRet(ret, "PrepareFrame failed.");
         }
     }
     UpdatePlayerStateAndNotify();
+    MEDIA_LOG_I("PrepareAsync End");
     return TransStatus(ret);
 }
 
@@ -674,6 +667,13 @@ void HiPlayerImpl::CollectionErrorInfo(int32_t errCode, const std::string& errMs
     MEDIA_LOG_E("Error: " PUBLIC_LOG_S, errMsg.c_str());
     playStatisticalInfo_.errCode = errCode;
     playStatisticalInfo_.errMsg = errMsg;
+}
+
+int32_t HiPlayerImpl::HandleErrorRet(Status ret, const std::string& errMsg)
+{
+    auto errCode = TransStatus(ret);
+    CollectionErrorInfo(errCode, errMsg);
+    return errCode;
 }
 
 void HiPlayerImpl::DoSetMediaSource(Status& ret)
@@ -2454,9 +2454,9 @@ bool HiPlayerImpl::IsLivingMaxDelayTimeValid()
     if (maxLivingDelayTime_ < 0) {
         return true;
     }
-    if (maxLivingDelayTime_ < AVPlayStrategyConstant::DEFAULT_LIVING_CACHED_DURATION ||
+    if (maxLivingDelayTime_ < AVPlayStrategyConstant::BUFFER_DURATION_FOR_PLAYING_SECONDS ||
         maxLivingDelayTime_ < bufferDurationForPlaying_) {
-            return false;
+        return false;
     }
     return true;
 }
@@ -3511,7 +3511,7 @@ bool HiPlayerImpl::IsNeedChangePlaySpeed(PlaybackRateMode &mode, bool &isXSpeedP
 {
     FALSE_RETURN_V(demuxer_ != nullptr && isFlvLive_, false);
     uint64_t cacheDuration = demuxer_->GetCachedDuration();
-    MEDIA_LOG_I("current cacheDuration is %{public}d", cacheDuration);
+    MEDIA_LOG_I("current cacheDuration is " PUBLIC_LOG_U64, cacheDuration);
     if ((cacheDuration < bufferDurationForPlaying_ * TIME_CONVERSION_UNIT) && isXSpeedPlay) {
         mode = PlaybackRateMode::SPEED_FORWARD_1_00_X;
         isXSpeedPlay = false;
@@ -3570,10 +3570,10 @@ void HiPlayerImpl::SetFlvLiveParams(AVPlayStrategy playbackStrategy)
 
 void HiPlayerImpl::UpdateFlvLiveParams()
 {
-    maxLivingDelayTime_ = maxLivingDelayTime_ < 0 ? AVPlayStrategyConstant::DEFAULT_MAX_DELAY_TIME_FOR_LIVING :
+    maxLivingDelayTime_ = maxLivingDelayTime_ < 0 ? AVPlayStrategyConstant::START_QUICK_PLAY_THRESHOLD_SECONDS :
         maxLivingDelayTime_;
     bufferDurationForPlaying_ = isSetBufferDurationForPlaying_ ? bufferDurationForPlaying_ :
-        AVPlayStrategyConstant::DEFAULT_LIVING_CACHED_DURATION;
+        AVPlayStrategyConstant::BUFFER_DURATION_FOR_PLAYING_SECONDS;
     MEDIA_LOG_I("maxLivingDelayTime_ is " PUBLIC_LOG_F " and  bufferDurationForPlaying_ is " PUBLIC_LOG_F,
         maxLivingDelayTime_, bufferDurationForPlaying_);
 }

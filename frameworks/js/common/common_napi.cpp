@@ -312,10 +312,14 @@ bool CommonNapi::GetPlayStrategy(napi_env env, napi_value value, AVPlayStrategyT
         playStrategy.preferredBufferDurationForPlaying)) {
         playStrategy.preferredBufferDurationForPlaying = 0; // use default value
         playStrategy.isSetBufferDurationForPlaying = false;
+    } else {
+        playStrategy.isSetBufferDurationForPlaying = true;
     }
     if (!GetPropertyDouble(env, value, "thresholdForAutoQuickPlay", playStrategy.thresholdForAutoQuickPlay)) {
         playStrategy.thresholdForAutoQuickPlay = -1;
         playStrategy.isSetThresholdForAutoQuickPlay = false;
+    } else {
+        playStrategy.isSetThresholdForAutoQuickPlay = true;
     }
     return true;
 }

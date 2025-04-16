@@ -33,7 +33,7 @@ public:
 
     void StartWithPlayerEngineObs(const std::weak_ptr<IPlayerEngineObs>& obs);
 
-    void SetPlayEngine(IPlayerEngine* engine, std::string playerId);
+    void CreateTask(std::string playerId);
 
     void StartCheckLiveDelayTime(int64_t updateIntervalMs = 1000);
 
@@ -58,15 +58,13 @@ private:
 
     void LoopOnce(const std::shared_ptr<Event>& item);
 
-    void DoCheckLiveDalyTime();
+    void DoCheckLiveDelayTime();
 
     bool taskStarted_ {false};
 
     std::atomic<bool> isCheckLiveDelayTimeSet_ = false;
 
     std::unique_ptr<OHOS::Media::Task> task_;
-
-    IPlayerEngine* playerEngine_ {};
 
     std::weak_ptr<IPlayerEngineObs> obs_ {};
 
