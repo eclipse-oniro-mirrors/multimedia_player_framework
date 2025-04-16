@@ -506,7 +506,7 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::CreatePixelMapFromSurfaceBuffer(
             YuvConversion::BT709 : YuvConversion::BT601;
         options.convertColorSpace.dstYuvConversion = primaries == CM_ColorPrimaries::COLORPRIMARIES_BT709 ?
             YuvConversion::BT709 : YuvConversion::BT601;
-        MEDIA_LOGD("primaries is : %{public}d, yuv conversion is: %{public}d", primaries, options.convertColorSpace.srcYuvConversion);
+        MEDIA_LOGD("primaries: %{public}d, conversion: %{public}d", primaries, options.convertColorSpace.srcYuvConversion);
         pixelMap = PixelMap::Create(reinterpret_cast<const uint32_t *>(pixelMap->GetPixels()),
                                     pixelMap->GetByteCount(), options);
         CHECK_AND_RETURN_RET_LOG(pixelMap != nullptr, nullptr, "Create non-DMA pixelMap failed");
