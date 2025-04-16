@@ -2039,7 +2039,7 @@ void SoundPoolUnitTest::functionTest086(std::shared_ptr<SoundPoolParallelMock> s
  */
 HWTEST_F(SoundPoolUnitTest, soundpool_function_087, TestSize.Level2)
 {
-    MEDIA_LOGI("soundpool_unit_test soundpool_function_084 before");
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_087 before");
 
     int maxStreams = 1;
     create(maxStreams);
@@ -2079,7 +2079,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_087, TestSize.Level2)
     playNum_++;
     sleep(waitTime20);
 
-    MEDIA_LOGI("soundpool_unit_test soundpool_function_084 after");
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_087 after");
 }
 
 
@@ -2091,7 +2091,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_087, TestSize.Level2)
  */
 HWTEST_F(SoundPoolUnitTest, soundpool_function_088, TestSize.Level2)
 {
-    MEDIA_LOGI("soundpool_unit_test soundpool_function_084 before");
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_088 before");
 
     int maxStreams = 1;
     create(maxStreams);
@@ -2124,7 +2124,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_088, TestSize.Level2)
     playNum_++;
     sleep(waitTime20);
 
-    MEDIA_LOGI("soundpool_unit_test soundpool_function_084 after");
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_088 after");
 }
 
 /**
@@ -2135,7 +2135,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_088, TestSize.Level2)
  */
 HWTEST_F(SoundPoolUnitTest, soundpool_function_089, TestSize.Level2)
 {
-    MEDIA_LOGI("soundpool_unit_test soundpool_function_076 before");
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_089 before");
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPoolParallel_);
@@ -2173,18 +2173,18 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_089, TestSize.Level2)
         return;
     }
     cb->ResetHavePlayedSoundNum();
-    MEDIA_LOGI("soundpool_unit_test soundpool_function_076 after");
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_089 after");
 }
 
 /**
- * @tc.name: soundpool_function_089
+ * @tc.name: soundpool_function_090
  * @tc.desc: function test SetVolume leftVolume 3.0 use soundPoolParallel
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(SoundPoolUnitTest, soundpool_function_089, TestSize.Level2)
+HWTEST_F(SoundPoolUnitTest, soundpool_function_090, TestSize.Level2)
 {
-    MEDIA_LOGI("soundpool_unit_test soundpool_function_076 before");
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_090 before");
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPoolParallel_);
@@ -2222,18 +2222,18 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_089, TestSize.Level2)
         return;
     }
     cb->ResetHavePlayedSoundNum();
-    MEDIA_LOGI("soundpool_unit_test soundpool_function_076 after");
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_090 after");
 }
 
 /**
- * @tc.name: soundpool_function_073
+ * @tc.name: soundpool_function_091
  * @tc.desc: function test SetVolume 2.0 use soundPoolParallel
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(SoundPoolUnitTest, soundpool_function_073, TestSize.Level2)
+HWTEST_F(SoundPoolUnitTest, soundpool_function_091, TestSize.Level2)
 {
-    MEDIA_LOGI("soundpool_unit_test soundpool_function_073 before");
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_091 before");
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPoolParallel_);
@@ -2272,18 +2272,18 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_073, TestSize.Level2)
         return;
     }
     cb->ResetHavePlayedSoundNum();
-    MEDIA_LOGI("soundpool_unit_test soundpool_function_073 after");
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_091 after");
 }
 
 /**
- * @tc.name: soundpool_function_073
+ * @tc.name: soundpool_function_092
  * @tc.desc: function test SetVolume 1.0, 2.0 use soundPoolParallel
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(SoundPoolUnitTest, soundpool_function_073, TestSize.Level2)
+HWTEST_F(SoundPoolUnitTest, soundpool_function_092, TestSize.Level2)
 {
-    MEDIA_LOGI("soundpool_unit_test soundpool_function_073 before");
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_092 before");
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPoolParallel_);
@@ -2322,18 +2322,18 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_073, TestSize.Level2)
         return;
     }
     cb->ResetHavePlayedSoundNum();
-    MEDIA_LOGI("soundpool_unit_test soundpool_function_073 after");
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_092 after");
 }
 
 /**
- * @tc.name: soundpool_function_073
+ * @tc.name: soundpool_function_093
  * @tc.desc: function test SetVolume 2.0, 1.0 use soundPoolParallel
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(SoundPoolUnitTest, soundpool_function_073, TestSize.Level2)
+HWTEST_F(SoundPoolUnitTest, soundpool_function_093, TestSize.Level2)
 {
-    MEDIA_LOGI("soundpool_unit_test soundpool_function_073 before");
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_093 before");
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPoolParallel_);
@@ -2372,7 +2372,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_073, TestSize.Level2)
         return;
     }
     cb->ResetHavePlayedSoundNum();
-    MEDIA_LOGI("soundpool_unit_test soundpool_function_073 after");
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_093 after");
 }
 } // namespace Media
 } // namespace OHOS
