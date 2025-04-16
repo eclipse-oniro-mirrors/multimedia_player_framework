@@ -2586,6 +2586,7 @@ void HiPlayerImpl::HandleCompleteEvent(const Event& event)
     MEDIA_LOG_D_SHORT("HandleCompleteEvent");
     AutoLock lock(handleCompleteMutex_);
     FALSE_RETURN_NOLOG(curState_ != PlayerStateId::STOPPED && HandleEosFlagState(event));
+    FALSE_RETURN_MSG(!inEosPlayingSeekContinuous_, "Skip complete event in seek continous!");
     MEDIA_LOG_I("OnComplete looping: " PUBLIC_LOG_D32 ".", singleLoop_.load());
     isStreaming_ = false;
     Format format;
@@ -3389,6 +3390,7 @@ Status HiPlayerImpl::StartSeekContinous()
 
 void HiPlayerImpl::FlushVideoEOS()
 {
+    AutoLock lock(handleCompleteMutex_);
     bool demuxerEOS = demuxer_->HasEosTrack();
     bool decoderEOS = false;
     for (std::pair<std::string, bool>& item: completeState_) {
