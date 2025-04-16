@@ -616,7 +616,9 @@ int32_t PlayerImpl::SetSeiMessageCbStatus(bool status, const std::vector<int32_t
 
 void PlayerImpl::ReleaseClientListener()
 {
+    ScopedTimer timer("ReleaseClientListener", OVERTIME_WARNING_MS);
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " ReleaseClientListener in", FAKE_POINTER(this));
+    MediaServiceFactory::GetInstance().ReleaseClientListener(); // not related to playerService_ thus no XCollie
 }
 
 PlayerImplCallback::PlayerImplCallback(const std::shared_ptr<PlayerCallback> playerCb,
