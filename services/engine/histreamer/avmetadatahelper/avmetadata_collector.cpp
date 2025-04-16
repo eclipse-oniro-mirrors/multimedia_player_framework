@@ -44,7 +44,10 @@ static const std::unordered_map<Plugins::FileType, std::string> fileTypeMap = {
     { Plugins::FileType::FLAC, "flac" },
     { Plugins::FileType::OGG, "ogg" },
     { Plugins::FileType::M4A, "mp4" },
-    { Plugins::FileType::WAV, "wav" }
+    { Plugins::FileType::WAV, "wav" },
+    { Plugins::FileType::MOV, "mov" },
+    { Plugins::FileType::AVI, "avi" },
+    { Plugins::FileType::MPEGPS, "mpg" }
 };
 
 static const std::unordered_map<int32_t, std::string> AVMETA_KEY_TO_X_MAP = {
