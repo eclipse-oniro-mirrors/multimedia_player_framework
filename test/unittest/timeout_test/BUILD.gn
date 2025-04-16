@@ -55,9 +55,9 @@ ohos_unittest("player_timeout_unit_test") {
   }
 
   deps = [
-    "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
-    "//foundation/multimedia/player_framework/services/services:media_service",
-    "//foundation/multimedia/player_framework/services/utils:media_service_utils",
+    "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native:media_client",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services:media_service",
+    "$MEDIA_PLAYER_ROOT_DIR/services/utils:media_service_utils",
   ]
 
   external_deps = [
