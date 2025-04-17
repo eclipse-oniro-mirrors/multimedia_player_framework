@@ -61,7 +61,7 @@ ohos_unittest("recorder_unit_test") {
     "access_token:libnativetoken_shared",
     "access_token:libtokensetproc_shared",
     "c_utils:utils",
-    "drivers_peripheral_display:hdi_gralloc_client",
+    "drivers_interface_display:libdisplay_composer_hdi_impl",
     "graphic_surface:surface",
     "graphic_surface:sync_fence",
     "hilog:libhilog",
