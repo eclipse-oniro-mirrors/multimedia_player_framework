@@ -93,7 +93,7 @@ config("screen_capture_test_config") {
   }
 }
 
-module_output_path = "player_framework/player_framework"
+module_output_path = "player_framework/player_framework_ScreenCapture"
 
 ohos_unittest("screen_capture_native_unit_test") {
   module_out_path = module_output_path
