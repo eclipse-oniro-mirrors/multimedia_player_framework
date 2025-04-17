@@ -2151,14 +2151,14 @@ void SoundPoolUnitTest::functionTest043(std::shared_ptr<SoundPoolMock> soundPool
 }
 
 /**
- * @tc.name: soundpool_function_044
+ * @tc.name: soundpool_function_094
  * @tc.desc: function test soundpool multi instance
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(SoundPoolUnitTest, soundpool_function_044, TestSize.Level2)
+HWTEST_F(SoundPoolUnitTest, soundpool_function_094, TestSize.Level2)
 {
-    MEDIA_LOGI("soundpool_unit_test soundpool_function_044 before");
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_094 before");
     int maxStreams = 3;
     create(maxStreams);
     AudioStandard::AudioRendererInfo audioRenderInfo;
@@ -2175,12 +2175,12 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_044, TestSize.Level2)
     std::shared_ptr<SoundPoolCallbackTest> cb2 = std::make_shared<SoundPoolCallbackTest>(soundPool2);
     soundPool2->SetSoundPoolCallback(cb2);
 
-    functionTest044(soundPool1, soundPool2, cb1, cb2);
+    functionTest094(soundPool1, soundPool2, cb1, cb2);
 
-    MEDIA_LOGI("soundpool_unit_test soundpool_function_044 after");
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_094 after");
 }
 
-void SoundPoolUnitTest::functionTest044(std::shared_ptr<SoundPoolMock> soundPool1,
+void SoundPoolUnitTest::functionTest094(std::shared_ptr<SoundPoolMock> soundPool1,
     std::shared_ptr<SoundPoolMock> soundPool2, std::shared_ptr<SoundPoolCallbackTest> cb1,
     std::shared_ptr<SoundPoolCallbackTest> cb2)
 {
@@ -2239,14 +2239,14 @@ void SoundPoolUnitTest::functionTest044(std::shared_ptr<SoundPoolMock> soundPool
 }
 
 /**
- * @tc.name: soundpool_function_045
+ * @tc.name: soundpool_function_095
  * @tc.desc: function test soundpool multi instance
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(SoundPoolUnitTest, soundpool_function_045, TestSize.Level2)
+HWTEST_F(SoundPoolUnitTest, soundpool_function_095, TestSize.Level2)
 {
-    MEDIA_LOGI("soundpool_unit_test soundpool_function_045 before");
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_095 before");
     int maxStreams = 3;
     create(maxStreams);
     AudioStandard::AudioRendererInfo audioRenderInfo;
@@ -2262,12 +2262,12 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_045, TestSize.Level2)
     std::shared_ptr<SoundPoolCallbackTest> cb2 = std::make_shared<SoundPoolCallbackTest>(soundPool2);
     soundPool2->SetSoundPoolCallback(cb2);
 
-    functionTest045(soundPool1, soundPool2, cb1, cb2);
+    functionTest095(soundPool1, soundPool2, cb1, cb2);
 
-    MEDIA_LOGI("soundpool_unit_test soundpool_function_045 after");
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_095 after");
 }
 
-void SoundPoolUnitTest::functionTest045(std::shared_ptr<SoundPoolMock> soundPool1,
+void SoundPoolUnitTest::functionTest095(std::shared_ptr<SoundPoolMock> soundPool1,
     std::shared_ptr<SoundPoolMock> soundPool2, std::shared_ptr<SoundPoolCallbackTest> cb1,
     std::shared_ptr<SoundPoolCallbackTest> cb2)
 {
