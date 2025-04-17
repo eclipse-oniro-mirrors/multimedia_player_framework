@@ -112,8 +112,12 @@ napi_value VideoRecorderNapi::Constructor(napi_env env, napi_callback_info info)
 
     recorderNapi->env_ = env;
     recorderNapi->recorder_ = RecorderFactory::CreateRecorder();
-    CHECK_AND_RETURN_RET_LOG(recorderNapi->recorder_ != nullptr, result, "failed to CreateRecorder");
-
+    if (recorderNapi->recorder_ == nullptr) {
+        delete recorderNapi;
+        MEDIA_LOGE("failed to CreateRecorder");
+        return result;
+    }
+    
     if (recorderNapi->callbackNapi_ == nullptr && recorderNapi->recorder_ != nullptr) {
         recorderNapi->callbackNapi_ = std::make_shared<RecorderCallbackNapi>(env, true);
         (void)recorderNapi->recorder_->SetRecorderCallback(recorderNapi->callbackNapi_);

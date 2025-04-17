@@ -128,13 +128,21 @@ napi_value AVRecorderNapi::Constructor(napi_env env, napi_callback_info info)
 
     jsRecorder->env_ = env;
     jsRecorder->recorder_ = RecorderFactory::CreateRecorder();
-    CHECK_AND_RETURN_RET_LOG(jsRecorder->recorder_ != nullptr, result, "failed to CreateRecorder");
+    if (jsRecorder->recorder_ == nullptr) {
+        delete jsRecorder;
+        MEDIA_LOGE("failed to CreateRecorder");
+        return result;
+    }
 
     jsRecorder->taskQue_ = std::make_unique<TaskQueue>("OS_AVRecordNapi");
     (void)jsRecorder->taskQue_->Start();
 
     jsRecorder->recorderCb_ = std::make_shared<AVRecorderCallback>(env);
-    CHECK_AND_RETURN_RET_LOG(jsRecorder->recorderCb_ != nullptr, result, "failed to CreateRecorderCb");
+    if (jsRecorder->recorderCb_ == nullptr) {
+        delete jsRecorder;
+        MEDIA_LOGE("failed to CreateRecorderCb");
+        return result;
+    }
     (void)jsRecorder->recorder_->SetRecorderCallback(jsRecorder->recorderCb_);
 
     status = napi_wrap(env, jsThis, reinterpret_cast<void *>(jsRecorder),

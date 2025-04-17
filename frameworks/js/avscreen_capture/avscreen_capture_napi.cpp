@@ -18,7 +18,6 @@
 #include "common_napi.h"
 #include "media_dfx.h"
 #include "media_log.h"
-#include "scope_guard.h"
 #ifndef CROSS_PLATFORM
 #include "display_manager.h"
 #endif
@@ -95,24 +94,29 @@ napi_value AVScreenCaptureNapi::Constructor(napi_env env, napi_callback_info inf
 
     AVScreenCaptureNapi *jsScreenCapture = new(std::nothrow) AVScreenCaptureNapi();
     CHECK_AND_RETURN_RET_LOG(jsScreenCapture != nullptr, result, "failed to new AVScreenCaptureNapi");
-    ON_SCOPE_EXIT(0) {
-        delete jsScreenCapture;
-    };
     jsScreenCapture->env_ = env;
     jsScreenCapture->screenCapture_ = ScreenCaptureFactory::CreateScreenCapture();
-    CHECK_AND_RETURN_RET_LOG(jsScreenCapture->screenCapture_ != nullptr, result, "failed to CreateScreenCapture");
+    if (jsScreenCapture->screenCapture_ == nullptr) {
+        delete jsScreenCapture;
+        MEDIA_LOGE("failed to CreateScreenCapture");
+        return result;
+    }
 
     jsScreenCapture->taskQue_ = std::make_unique<TaskQueue>("OS_AVScreenCaptureNapi");
     (void)jsScreenCapture->taskQue_->Start();
 
     jsScreenCapture->screenCaptureCb_ = std::make_shared<AVScreenCaptureCallback>(env);
-    CHECK_AND_RETURN_RET_LOG(jsScreenCapture->screenCaptureCb_ != nullptr, result, "failed to CreateScreenCaptureCb");
+    if (jsScreenCapture->screenCaptureCb_ == nullptr) {
+        delete jsScreenCapture;
+        MEDIA_LOGE("failed to CreateScreenCaptureCb");
+        return result;
+    }
+      
     (void)jsScreenCapture->screenCapture_->SetScreenCaptureCallback(jsScreenCapture->screenCaptureCb_);
 
     status = napi_wrap(env, jsThis, reinterpret_cast<void *>(jsScreenCapture),
                        AVScreenCaptureNapi::Destructor, nullptr, nullptr);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "Failed to wrap native instance");
-    CANCEL_SCOPE_EXIT_GUARD(0);
     MEDIA_LOGI("Constructor success");
     return jsThis;
 }
