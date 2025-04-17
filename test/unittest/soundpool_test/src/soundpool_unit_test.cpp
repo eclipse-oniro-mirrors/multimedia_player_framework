@@ -2150,5 +2150,179 @@ void SoundPoolUnitTest::functionTest043(std::shared_ptr<SoundPoolMock> soundPool
     EXPECT_EQ(MSERR_OK, soundPool2->Release());
 }
 
+/**
+ * @tc.name: soundpool_function_094
+ * @tc.desc: function test soundpool multi instance
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(SoundPoolUnitTest, soundpool_function_094, TestSize.Level2)
+{
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_094 before");
+    int maxStreams = 3;
+    create(maxStreams);
+    AudioStandard::AudioRendererInfo audioRenderInfo;
+    audioRenderInfo.contentType = CONTENT_TYPE_MUSIC;
+    audioRenderInfo.streamUsage = STREAM_USAGE_MEDIA;
+    audioRenderInfo.rendererFlags = 0;
+
+    std::shared_ptr<SoundPoolMock> soundPool1 = std::make_shared<SoundPoolMock>();
+    std::shared_ptr<SoundPoolMock> soundPool2 = std::make_shared<SoundPoolMock>();
+    EXPECT_TRUE(soundPool1->CreateSoundPool(maxStreams, audioRenderInfo));
+    EXPECT_TRUE(soundPool2->CreateSoundPool(maxStreams, audioRenderInfo));
+    std::shared_ptr<SoundPoolCallbackTest> cb1 = std::make_shared<SoundPoolCallbackTest>(soundPool1);
+    soundPool1->SetSoundPoolCallback(cb1);
+    std::shared_ptr<SoundPoolCallbackTest> cb2 = std::make_shared<SoundPoolCallbackTest>(soundPool2);
+    soundPool2->SetSoundPoolCallback(cb2);
+
+    functionTest094(soundPool1, soundPool2, cb1, cb2);
+
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_094 after");
+}
+
+void SoundPoolUnitTest::functionTest094(std::shared_ptr<SoundPoolMock> soundPool1,
+    std::shared_ptr<SoundPoolMock> soundPool2, std::shared_ptr<SoundPoolCallbackTest> cb1,
+    std::shared_ptr<SoundPoolCallbackTest> cb2)
+{
+    int32_t soundNum = 2;
+    int32_t num0 = 0;
+    int32_t num1 = 1;
+    int32_t num2 = 2;
+    int32_t num3 = 3;
+    fds_[num0] = open(g_fileName[num0].c_str(), O_RDWR);
+    fds_[num1] = open(g_fileName[num1].c_str(), O_RDWR);
+    std::string url0 = "fd://" + std::to_string(fds_[num0]);
+    std::string url1 = "fd://" + std::to_string(fds_[num1]);
+    soundIDs_[num0] = soundPool1->Load(url0);
+    soundIDs_[num1] = soundPool1->Load(url1);
+    EXPECT_GT(soundIDs_[num0], 0);
+    EXPECT_GT(soundIDs_[num1], 0);
+    
+    fds_[num2] = open(g_fileName[num2].c_str(), O_RDWR);
+    fds_[num3] = open(g_fileName[num3].c_str(), O_RDWR);
+    std::string url2 = "fd://" + std::to_string(fds_[num2]);
+    std::string url3 = "fd://" + std::to_string(fds_[num3]);
+    soundIDs_[num2] = soundPool2->Load(url2);
+    soundIDs_[num3] = soundPool2->Load(url3);
+    EXPECT_GT(soundIDs_[num2], 0);
+    EXPECT_GT(soundIDs_[num3], 0);
+    sleep(waitTime3);
+
+    struct PlayParams playParameters;
+    streamIDs_[num0] = soundPool1->Play(soundIDs_[num0], playParameters);
+    streamIDs_[num1] = soundPool1->Play(soundIDs_[num1], playParameters);
+    EXPECT_GT(streamIDs_[num0], 0);
+    EXPECT_GT(streamIDs_[num1], 0);
+    streamIDs_[num2] = soundPool2->Play(soundIDs_[num2], playParameters);
+    streamIDs_[num3] = soundPool2->Play(soundIDs_[num3], playParameters);
+    EXPECT_GT(streamIDs_[num2], 0);
+    EXPECT_GT(streamIDs_[num3], 0);
+    sleep(waitTime3);
+
+    EXPECT_EQ(MSERR_OK, soundPool1->Stop(streamIDs_[num0]));
+    EXPECT_EQ(MSERR_OK, soundPool1->Stop(streamIDs_[num1]));
+    EXPECT_EQ(MSERR_OK, soundPool2->Stop(streamIDs_[num2]));
+    EXPECT_EQ(MSERR_OK, soundPool2->Stop(streamIDs_[num3]));
+
+    EXPECT_EQ(soundNum, cb1->GetHaveLoadedSoundNum());
+    EXPECT_EQ(soundNum, cb1->GetHavePlayedSoundNum());
+    EXPECT_EQ(soundNum, cb2->GetHaveLoadedSoundNum());
+    EXPECT_EQ(soundNum, cb2->GetHavePlayedSoundNum());
+
+    EXPECT_EQ(MSERR_OK, soundPool1->Unload(soundIDs_[num0]));
+    EXPECT_EQ(MSERR_OK, soundPool1->Unload(soundIDs_[num1]));
+    EXPECT_EQ(MSERR_OK, soundPool2->Unload(soundIDs_[num2]));
+    EXPECT_EQ(MSERR_OK, soundPool2->Unload(soundIDs_[num3]));
+
+    EXPECT_EQ(MSERR_OK, soundPool1->Release());
+    EXPECT_EQ(MSERR_OK, soundPool2->Release());
+}
+
+/**
+ * @tc.name: soundpool_function_095
+ * @tc.desc: function test soundpool multi instance
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(SoundPoolUnitTest, soundpool_function_095, TestSize.Level2)
+{
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_095 before");
+    int maxStreams = 3;
+    create(maxStreams);
+    AudioStandard::AudioRendererInfo audioRenderInfo;
+    audioRenderInfo.streamUsage = STREAM_USAGE_MOVIE;
+    audioRenderInfo.rendererFlags = 0;
+
+    std::shared_ptr<SoundPoolMock> soundPool1 = std::make_shared<SoundPoolMock>();
+    std::shared_ptr<SoundPoolMock> soundPool2 = std::make_shared<SoundPoolMock>();
+    EXPECT_TRUE(soundPool1->CreateSoundPool(maxStreams, audioRenderInfo));
+    EXPECT_TRUE(soundPool2->CreateSoundPool(maxStreams, audioRenderInfo));
+    std::shared_ptr<SoundPoolCallbackTest> cb1 = std::make_shared<SoundPoolCallbackTest>(soundPool1);
+    soundPool1->SetSoundPoolCallback(cb1);
+    std::shared_ptr<SoundPoolCallbackTest> cb2 = std::make_shared<SoundPoolCallbackTest>(soundPool2);
+    soundPool2->SetSoundPoolCallback(cb2);
+
+    functionTest095(soundPool1, soundPool2, cb1, cb2);
+
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_095 after");
+}
+
+void SoundPoolUnitTest::functionTest095(std::shared_ptr<SoundPoolMock> soundPool1,
+    std::shared_ptr<SoundPoolMock> soundPool2, std::shared_ptr<SoundPoolCallbackTest> cb1,
+    std::shared_ptr<SoundPoolCallbackTest> cb2)
+{
+    int32_t soundNum = 2;
+    int32_t num0 = 0;
+    int32_t num1 = 1;
+    int32_t num2 = 2;
+    int32_t num3 = 3;
+    fds_[num0] = open(g_fileName[num0].c_str(), O_RDWR);
+    fds_[num1] = open(g_fileName[num1].c_str(), O_RDWR);
+    std::string url0 = "fd://" + std::to_string(fds_[num0]);
+    std::string url1 = "fd://" + std::to_string(fds_[num1]);
+    soundIDs_[num0] = soundPool1->Load(url0);
+    soundIDs_[num1] = soundPool1->Load(url1);
+    EXPECT_GT(soundIDs_[num0], 0);
+    EXPECT_GT(soundIDs_[num1], 0);
+    
+    fds_[num2] = open(g_fileName[num2].c_str(), O_RDWR);
+    fds_[num3] = open(g_fileName[num3].c_str(), O_RDWR);
+    std::string url2 = "fd://" + std::to_string(fds_[num2]);
+    std::string url3 = "fd://" + std::to_string(fds_[num3]);
+    soundIDs_[num2] = soundPool2->Load(url2);
+    soundIDs_[num3] = soundPool2->Load(url3);
+    EXPECT_GT(soundIDs_[num2], 0);
+    EXPECT_GT(soundIDs_[num3], 0);
+    sleep(waitTime3);
+
+    struct PlayParams playParameters;
+    streamIDs_[num0] = soundPool1->Play(soundIDs_[num0], playParameters);
+    streamIDs_[num1] = soundPool1->Play(soundIDs_[num1], playParameters);
+    EXPECT_GT(streamIDs_[num0], 0);
+    EXPECT_GT(streamIDs_[num1], 0);
+    streamIDs_[num2] = soundPool2->Play(soundIDs_[num2], playParameters);
+    streamIDs_[num3] = soundPool2->Play(soundIDs_[num3], playParameters);
+    EXPECT_GT(streamIDs_[num2], 0);
+    EXPECT_GT(streamIDs_[num3], 0);
+    sleep(waitTime3);
+
+    EXPECT_EQ(MSERR_OK, soundPool1->Stop(streamIDs_[num0]));
+    EXPECT_EQ(MSERR_OK, soundPool1->Stop(streamIDs_[num1]));
+    EXPECT_EQ(MSERR_OK, soundPool2->Stop(streamIDs_[num2]));
+    EXPECT_EQ(MSERR_OK, soundPool2->Stop(streamIDs_[num3]));
+
+    EXPECT_EQ(soundNum, cb1->GetHaveLoadedSoundNum());
+    EXPECT_EQ(soundNum, cb1->GetHavePlayedSoundNum());
+    EXPECT_EQ(soundNum, cb2->GetHaveLoadedSoundNum());
+    EXPECT_EQ(soundNum, cb2->GetHavePlayedSoundNum());
+
+    EXPECT_EQ(MSERR_OK, soundPool1->Unload(soundIDs_[num0]));
+    EXPECT_EQ(MSERR_OK, soundPool1->Unload(soundIDs_[num1]));
+    EXPECT_EQ(MSERR_OK, soundPool2->Unload(soundIDs_[num2]));
+    EXPECT_EQ(MSERR_OK, soundPool2->Unload(soundIDs_[num3]));
+
+    EXPECT_EQ(MSERR_OK, soundPool1->Release());
+    EXPECT_EQ(MSERR_OK, soundPool2->Release());
+}
 } // namespace Media
 } // namespace OHOS
