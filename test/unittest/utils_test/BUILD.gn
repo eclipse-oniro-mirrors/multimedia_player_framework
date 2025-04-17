@@ -15,7 +15,7 @@ import("//build/test.gni")
 import("//foundation/multimedia/player_framework/config.gni")
 
 ohos_unittest("player_framework_utils_test") {
-  module_out_path = "player_framework/media_utils"
+  module_out_path = "player_framework/player_framework/media_utils"
 
   cflags = [
     "-std=c++17",

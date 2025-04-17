@@ -15,7 +15,7 @@ import("//build/test.gni")
 import("//foundation/multimedia/player_framework/config.gni")
 import("./../../../multimedia_player_framework_aafwk.gni")
 
-module_output_path = "player_framework/soundpool"
+module_output_path = "player_framework/player_framework/soundpool"
 
 ohos_unittest("soundpool_unit_test") {
   module_out_path = module_output_path

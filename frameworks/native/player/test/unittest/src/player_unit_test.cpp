@@ -236,7 +236,7 @@ HWTEST_F(PlayerUnitTest, Player_SetMediaSource_002, TestSize.Level0)
  * @tc.number: Player_SetMediaSource_003
  * @tc.desc  : Test Player SetMediaSource interface
  */
-HWTEST_F(PlayerUnitTest, Player_SetMediaSource_003, TestSize.Level0)
+HWTEST_F(PlayerUnitTest, Player_SetMediaSource_003, TestSize.Level1)
 {
     std::map<std::string, std::string> header = {
         {"key1", "value1"},
@@ -3118,7 +3118,7 @@ HWTEST_F(PlayerUnitTest, Player_AddSubSource_001, TestSize.Level0)
  * @tc.number: Player_AddSubSource_002
  * @tc.desc  : Test Player AddSubSource behavior
  */
-HWTEST_F(PlayerUnitTest, Player_AddSubSource_002, TestSize.Level0)
+HWTEST_F(PlayerUnitTest, Player_AddSubSource_002, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "H264_AAC.mp4", 0, 0));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -3689,7 +3689,7 @@ HWTEST_F(PlayerUnitTest, Player_SetPlayRange_009, TestSize.Level0)
  * @tc.number: Player_SetPlayRange_010
  * @tc.desc  : Test Player SetPlayRange interface, duration 10034
  */
-HWTEST_F(PlayerUnitTest, Player_SetPlayRange_010, TestSize.Level0)
+HWTEST_F(PlayerUnitTest, Player_SetPlayRange_010, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -3704,7 +3704,7 @@ HWTEST_F(PlayerUnitTest, Player_SetPlayRange_010, TestSize.Level0)
  * @tc.number: Player_SetPlayRange_011
  * @tc.desc  : Test Player SetPlayRange interface, duration 10034
  */
-HWTEST_F(PlayerUnitTest, Player_SetPlayRange_011, TestSize.Level0)
+HWTEST_F(PlayerUnitTest, Player_SetPlayRange_011, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();

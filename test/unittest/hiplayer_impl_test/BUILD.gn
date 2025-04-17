@@ -14,7 +14,7 @@
 import("//build/test.gni")
 import("//foundation/multimedia/player_framework/config.gni")
 
-module_output_path = "player_framework/player"
+module_output_path = "player_framework/player_framework/player"
 
 config("hiplayer_impl_unit_test_config") {
   visibility = [ ":*" ]

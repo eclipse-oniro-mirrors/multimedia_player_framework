@@ -501,7 +501,7 @@ void PlayerServerUnitTest::MediaServiceExtErrCodeAPI9Test(MediaServiceExtErrCode
  * @tc.number: Player_SetMediaSource_001
  * @tc.desc  : Test Player SetMediaSource interface
  */
-HWTEST_F(PlayerServerUnitTest, Player_SetMediaSource_001, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SetMediaSource_001, TestSize.Level1)
 {
     std::map<std::string, std::string> header = {
         {"key1", "value1"},
@@ -518,7 +518,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetMediaSource_001, TestSize.Level0)
  * @tc.number: Player_SetMediaSource_002
  * @tc.desc  : Test Player SetMediaSource interface
  */
-HWTEST_F(PlayerServerUnitTest, Player_SetMediaSource_002, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SetMediaSource_002, TestSize.Level1)
 {
     struct AVPlayStrategy strategy = {1080, 920, 10000, false};
     int32_t ret = player_->SetMediaSource(nullptr, strategy);
@@ -530,7 +530,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetMediaSource_002, TestSize.Level0)
  * @tc.number: Player_SetMediaSource_003
  * @tc.desc  : Test Player SetMediaSource interface
  */
-HWTEST_F(PlayerServerUnitTest, Player_SetMediaSource_003, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SetMediaSource_003, TestSize.Level1)
 {
     std::map<std::string, std::string> header = {
         {"key1", "value1"},
@@ -548,7 +548,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetMediaSource_003, TestSize.Level0)
  * @tc.number: Player_SetMediaSource_004
  * @tc.desc  : Test Player SetMediaSource interface
  */
-HWTEST_F(PlayerServerUnitTest, Player_SetMediaSource_004, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SetMediaSource_004, TestSize.Level1)
 {
     std::map<std::string, std::string> header = {
         {"key1", "value1"},
@@ -567,7 +567,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetMediaSource_004, TestSize.Level0)
  * @tc.number: Player_SetMediaSource_005
  * @tc.desc  : Test Player SetMediaSource interface
  */
-HWTEST_F(PlayerServerUnitTest, Player_SetMediaSource_005, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SetMediaSource_005, TestSize.Level1)
 {
     std::map<std::string, std::string> header = {
         {"key1", "value1"},
@@ -586,7 +586,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetMediaSource_005, TestSize.Level0)
  * @tc.number: Player_SetMediaSource_006
  * @tc.desc  : Test Player SetMediaSource interface
  */
-HWTEST_F(PlayerServerUnitTest, Player_SetMediaSource_006, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SetMediaSource_006, TestSize.Level1)
 {
     std::map<std::string, std::string> header = {
     };
@@ -603,7 +603,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetMediaSource_006, TestSize.Level0)
  * @tc.number: Player_StrToInt_001
  * @tc.desc  : Test Player StrToInt interface
  */
-HWTEST_F(PlayerServerUnitTest, Player_StrToInt_001, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_StrToInt_001, TestSize.Level1)
 {
     std::string str = "123";
     int32_t fd = -1;
@@ -618,7 +618,7 @@ HWTEST_F(PlayerServerUnitTest, Player_StrToInt_001, TestSize.Level0)
  * @tc.number: Player_StrToInt_002
  * @tc.desc  : Test Player StrToInt interface
  */
-HWTEST_F(PlayerServerUnitTest, Player_StrToInt_002, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_StrToInt_002, TestSize.Level1)
 {
     std::string str = "12a3";
     int32_t fd = -1;
@@ -631,7 +631,7 @@ HWTEST_F(PlayerServerUnitTest, Player_StrToInt_002, TestSize.Level0)
  * @tc.number: Player_StrToInt_003
  * @tc.desc  : Test Player StrToInt interface
  */
-HWTEST_F(PlayerServerUnitTest, Player_StrToInt_003, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_StrToInt_003, TestSize.Level1)
 {
     std::string str = "9223372036854775809";
     int32_t fd = -1;
@@ -644,7 +644,7 @@ HWTEST_F(PlayerServerUnitTest, Player_StrToInt_003, TestSize.Level0)
  * @tc.number: Player_SetSource_001
  * @tc.desc  : Test Player SetSource interface
  */
-HWTEST_F(PlayerServerUnitTest, Player_SetSource_001, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SetSource_001, TestSize.Level1)
 {
     int32_t ret = player_->SetSource(VIDEO_FILE1);
     EXPECT_EQ(MSERR_OK, ret);
@@ -1015,7 +1015,7 @@ HWTEST_F(PlayerServerUnitTest, Player_Local_017, TestSize.Level2)
  * @tc.number: Player_SetPlayerCallback_001
  * @tc.desc  : Test Player SetPlayerCallback interface
  */
-HWTEST_F(PlayerServerUnitTest, Player_SetPlayerCallback_001, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SetPlayerCallback_001, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -1034,7 +1034,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetPlayerCallback_001, TestSize.Level0)
  * @tc.number: Player_Prepare_001
  * @tc.desc  : Test Player Prepare interface
  */
-HWTEST_F(PlayerServerUnitTest, Player_Prepare_001, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_Prepare_001, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -1129,7 +1129,7 @@ HWTEST_F(PlayerServerUnitTest, Player_Prepare_005, TestSize.Level2)
  * @tc.number: Player_PrepareAsync_001
  * @tc.desc  : Test Player PrepareAsync interface
  */
-HWTEST_F(PlayerServerUnitTest, Player_PrepareAsync_001, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_PrepareAsync_001, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -1228,7 +1228,7 @@ HWTEST_F(PlayerServerUnitTest, Player_PrepareAsync_006, TestSize.Level2)
  * @tc.number: Player_SetVideoSurface_001
  * @tc.desc  : Test Player SetVideoSurface interface
  */
-HWTEST_F(PlayerServerUnitTest, Player_SetVideoSurface_001, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SetVideoSurface_001, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(player_->GetVideoSurface()));
@@ -1253,7 +1253,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetVideoSurface_002, TestSize.Level2)
  * @tc.number: Player_SetVideoSurface_003
  * @tc.desc  : Test Player SetVideoSurface interface
  */
-HWTEST_F(PlayerServerUnitTest, Player_SetVideoSurface_003, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SetVideoSurface_003, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     EXPECT_EQ(MSERR_OK, player_->Prepare());
@@ -1267,7 +1267,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetVideoSurface_003, TestSize.Level0)
  * @tc.number: Player_Play_001
  * @tc.desc  : Test Player Play interface
  */
-HWTEST_F(PlayerServerUnitTest, Player_Play_001, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_Play_001, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -1341,7 +1341,7 @@ HWTEST_F(PlayerServerUnitTest, Player_Play_004, TestSize.Level2)
  * @tc.number: Player_Stop_001
  * @tc.desc  : Test Player Stop Play->Stop
  */
-HWTEST_F(PlayerServerUnitTest, Player_Stop_001, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_Stop_001, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1, 0, 0));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -1428,7 +1428,7 @@ HWTEST_F(PlayerServerUnitTest, Player_Stop_005, TestSize.Level2)
  * @tc.number: Player_Pause_001
  * @tc.desc  : Test Player Pause interface
  */
-HWTEST_F(PlayerServerUnitTest, Player_Pause_001, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_Pause_001, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -1478,7 +1478,7 @@ HWTEST_F(PlayerServerUnitTest, Player_Pause_003, TestSize.Level2)
  * @tc.number: Player_Reset_001
  * @tc.desc  : Test Player Reset interface
  */
-HWTEST_F(PlayerServerUnitTest, Player_Reset_001, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_Reset_001, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -1494,7 +1494,7 @@ HWTEST_F(PlayerServerUnitTest, Player_Reset_001, TestSize.Level0)
  * @tc.number: Player_Seek_001
  * @tc.desc  : Test Player Seek interface with valid parameters
  */
-HWTEST_F(PlayerServerUnitTest, Player_Seek_001, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_Seek_001, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -1588,7 +1588,7 @@ HWTEST_F(PlayerServerUnitTest, Player_Seek_004, TestSize.Level2)
  * @tc.number: Player_Seek_005
  * @tc.desc  : Test Player Seek interface
  */
-HWTEST_F(PlayerServerUnitTest, Player_Seek_005, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_Seek_005, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     EXPECT_NE(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_PREVIOUS_SYNC));
@@ -1605,7 +1605,7 @@ HWTEST_F(PlayerServerUnitTest, Player_Seek_005, TestSize.Level0)
  * @tc.number: Player_Seek_006
  * @tc.desc  : Test Player Seek interface
  */
-HWTEST_F(PlayerServerUnitTest, Player_Seek_006, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_Seek_006, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     EXPECT_NE(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_CLOSEST));
@@ -1622,7 +1622,7 @@ HWTEST_F(PlayerServerUnitTest, Player_Seek_006, TestSize.Level0)
  * @tc.number: Player_Seek_007
  * @tc.desc  : Test Player Seek interface
  */
-HWTEST_F(PlayerServerUnitTest, Player_Seek_007, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_Seek_007, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     EXPECT_NE(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_NEXT_SYNC));
@@ -1639,7 +1639,7 @@ HWTEST_F(PlayerServerUnitTest, Player_Seek_007, TestSize.Level0)
  * @tc.number: Player_Seek_008
  * @tc.desc  : Test Player Seek interface
  */
-HWTEST_F(PlayerServerUnitTest, Player_Seek_008, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_Seek_008, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -1661,7 +1661,7 @@ HWTEST_F(PlayerServerUnitTest, Player_Seek_008, TestSize.Level0)
  * @tc.number: Player_Seek_009
  * @tc.desc  : Test Player Seek interface
  */
-HWTEST_F(PlayerServerUnitTest, Player_Seek_009, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_Seek_009, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -1683,7 +1683,7 @@ HWTEST_F(PlayerServerUnitTest, Player_Seek_009, TestSize.Level0)
  * @tc.number: Player_Seek_010
  * @tc.desc  : Test Player Seek interface
  */
-HWTEST_F(PlayerServerUnitTest, Player_Seek_010, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_Seek_010, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -1705,7 +1705,7 @@ HWTEST_F(PlayerServerUnitTest, Player_Seek_010, TestSize.Level0)
  * @tc.number: Player_GetVideoTrackInfo_001
  * @tc.desc  : Test Player GetVideoTrackInfo
  */
-HWTEST_F(PlayerServerUnitTest, Player_GetVideoTrackInfo_001, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_GetVideoTrackInfo_001, TestSize.Level1)
 {
     std::vector<Format> videoTrack;
     std::vector<Format> audioTrack;
@@ -1785,7 +1785,7 @@ HWTEST_F(PlayerServerUnitTest, Player_GetAudioTrackInfo_001, TestSize.Level2)
  * @tc.number: Player_SelectTrack_001
  * @tc.desc  : Test Player SelectTrack and DeselectTrack
  */
-HWTEST_F(PlayerServerUnitTest, Player_SelectTrack_001, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SelectTrack_001, TestSize.Level1)
 {
     bool trackChange = false;
     std::vector<Format> audioTrack;
@@ -1825,7 +1825,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SelectTrack_001, TestSize.Level0)
  * @tc.number: Player_SelectTrack_002
  * @tc.desc  : Test Player SelectTrack invalid trackId
  */
-HWTEST_F(PlayerServerUnitTest, Player_SelectTrack_002, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SelectTrack_002, TestSize.Level1)
 {
     bool trackChange = false;
     int32_t currentAudioTrackIndex = -1;
@@ -1846,7 +1846,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SelectTrack_002, TestSize.Level0)
  * @tc.number: Player_DeselectTrack_001
  * @tc.desc  : Test Player DeselectTrack invalid trackId
  */
-HWTEST_F(PlayerServerUnitTest, Player_DeselectTrack_001, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_DeselectTrack_001, TestSize.Level1)
 {
     std::vector<Format> audioTrack;
     std::vector<int32_t> audioTrackIds;
@@ -1872,7 +1872,7 @@ HWTEST_F(PlayerServerUnitTest, Player_DeselectTrack_001, TestSize.Level0)
  * @tc.number: Player_GetVideoHeight_001
  * @tc.desc  : Test Player GetVideoHeight
  */
-HWTEST_F(PlayerServerUnitTest, Player_GetVideoHeight_001, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_GetVideoHeight_001, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -1928,7 +1928,7 @@ HWTEST_F(PlayerServerUnitTest, Player_GetVideoHeight_002, TestSize.Level2)
  * @tc.number: Player_GetDuration_001
  * @tc.desc  : Test Player GetDuration
  */
-HWTEST_F(PlayerServerUnitTest, Player_GetDuration_001, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_GetDuration_001, TestSize.Level1)
 {
     int32_t duration = 0;
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
@@ -1976,7 +1976,7 @@ HWTEST_F(PlayerServerUnitTest, Player_GetDuration_002, TestSize.Level2)
  * @tc.number: Player_SetPlaybackSpeed_001
  * @tc.desc  : Test Player SetPlaybackSpeed
  */
-HWTEST_F(PlayerServerUnitTest, Player_SetPlaybackSpeed_001, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SetPlaybackSpeed_001, TestSize.Level1)
 {
     PlaybackRateMode mode;
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
@@ -2035,7 +2035,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetPlaybackSpeed_002, TestSize.Level2)
  * @tc.number: Player_SetLooping_001
  * @tc.desc  : Test Player SetLooping
  */
-HWTEST_F(PlayerServerUnitTest, Player_SetLooping_001, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SetLooping_001, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -2078,7 +2078,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetLooping_003, TestSize.Level0)
  * @tc.number: Player_SetVolume_001
  * @tc.desc  : Test Player SetVolume
  */
-HWTEST_F(PlayerServerUnitTest, Player_SetVolume_001, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SetVolume_001, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -2094,7 +2094,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetVolume_001, TestSize.Level0)
  * @tc.number: Player_SetVolume_002
  * @tc.desc  : Test Player SetVolume
  */
-HWTEST_F(PlayerServerUnitTest, Player_SetVolume_002, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SetVolume_002, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -2159,7 +2159,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetVolume_004, TestSize.Level2)
  * @tc.number: Player_SetVideoScaleType_001
  * @tc.desc  : Test Player SetVideoScaleType
  */
-HWTEST_F(PlayerServerUnitTest, Player_SetVideoScaleType_001, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SetVideoScaleType_001, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -2181,7 +2181,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetVideoScaleType_001, TestSize.Level0)
  * @tc.number: Player_SetRendererInfo_001
  * @tc.desc  : Test Player SetRendererInfo
  */
-HWTEST_F(PlayerServerUnitTest, Player_SetRendererInfo_001, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SetRendererInfo_001, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     Format format;
@@ -2204,7 +2204,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetRendererInfo_001, TestSize.Level0)
  * @tc.number: Player_SetVolumeMode_001
  * @tc.desc  : Test Player SetVolumeMode
  */
-HWTEST_F(PlayerServerUnitTest, Player_SetVolumeMode_001, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SetVolumeMode_001, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     Format format;
@@ -2229,7 +2229,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetVolumeMode_001, TestSize.Level0)
  * @tc.number: Player_SetInterrupt_001
  * @tc.desc  : Test Player SetInterrupt
  */
-HWTEST_F(PlayerServerUnitTest, Player_SetInterrupt_001, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SetInterrupt_001, TestSize.Level1)
 {
     Format format;
     int32_t mode = 1;
@@ -2262,7 +2262,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetInterrupt_001, TestSize.Level0)
  * @tc.number: Player_SelectBitRate_001
  * @tc.desc  : Test Player SelectBitRate interface
  */
-HWTEST_F(PlayerServerUnitTest, Player_SelectBitRate_001, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SelectBitRate_001, TestSize.Level1)
 {
     EXPECT_EQ(MSERR_OK, player_->SelectBitRate(0));
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
@@ -2280,7 +2280,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SelectBitRate_001, TestSize.Level0)
  * @tc.type: PERFORMANCE
  * @tc.require: issueI5NYBJ
  */
-HWTEST_F(PlayerServerUnitTest, Player_Performance_Prepared_001, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_Performance_Prepared_001, TestSize.Level1)
 {
     struct timeval startTime = {};
     struct timeval finishTime = {};
@@ -2308,7 +2308,7 @@ HWTEST_F(PlayerServerUnitTest, Player_Performance_Prepared_001, TestSize.Level0)
  * @tc.number: Player_Rotate_001
  * @tc.desc  : Test Player Play interface
  */
-HWTEST_F(PlayerServerUnitTest, Player_Rotate_001, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_Rotate_001, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "MP4_ROTATE_90.mp4"));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -2324,7 +2324,7 @@ HWTEST_F(PlayerServerUnitTest, Player_Rotate_001, TestSize.Level0)
  * @tc.number: Player_Dump_Dot_001
  * @tc.desc  : Test Player Dump Dot
  */
-HWTEST_F(PlayerServerUnitTest, Player_Dump_Dot_001, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_Dump_Dot_001, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "MP4_ROTATE_90.mp4"));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -2343,7 +2343,7 @@ HWTEST_F(PlayerServerUnitTest, Player_Dump_Dot_001, TestSize.Level0)
  * @tc.number: Player_Dump_Dot_002
  * @tc.desc  : Test Player Dump Dot
  */
-HWTEST_F(PlayerServerUnitTest, Player_Dump_Dot_002, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_Dump_Dot_002, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "MP4_ROTATE_90.mp4"));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -2362,7 +2362,7 @@ HWTEST_F(PlayerServerUnitTest, Player_Dump_Dot_002, TestSize.Level0)
  * @tc.number: Player_Dump_GlibMem_001
  * @tc.desc  : Test Player Dump GlibMem
  */
-HWTEST_F(PlayerServerUnitTest, Player_Dump_GlibMem_001, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_Dump_GlibMem_001, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "MP4_ROTATE_90.mp4"));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -2381,7 +2381,7 @@ HWTEST_F(PlayerServerUnitTest, Player_Dump_GlibMem_001, TestSize.Level0)
  * @tc.number: Player_Dump_GlibPool_001
  * @tc.desc  : Test Player Dump GlibPool
  */
-HWTEST_F(PlayerServerUnitTest, Player_Dump_GlibPool_001, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_Dump_GlibPool_001, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "MP4_ROTATE_90.mp4"));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -2404,7 +2404,7 @@ HWTEST_F(PlayerServerUnitTest, Player_Dump_GlibPool_001, TestSize.Level0)
  * @tc.number: Player_Dump_Log_001
  * @tc.desc  : Test Player Dump Log
  */
-HWTEST_F(PlayerServerUnitTest, Player_Dump_Log_001, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_Dump_Log_001, TestSize.Level1)
 {
     system("mkdir /data/media/log");
     system("chmod 777 -R /data/media");
@@ -2432,7 +2432,7 @@ HWTEST_F(PlayerServerUnitTest, Player_Dump_Log_001, TestSize.Level0)
  * @tc.number: Player_Dump_GstBuffer_001
  * @tc.desc  : Test Player Dump gstbuffer
  */
-HWTEST_F(PlayerServerUnitTest, Player_Dump_GstBuffer_001, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_Dump_GstBuffer_001, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -2468,7 +2468,7 @@ HWTEST_F(PlayerServerUnitTest, Player_Not_Performance_001, TestSize.Level2)
  * @tc.number: Player_Mem_Recycle_001
  * @tc.desc  : Test Player Mem Recycle
  */
-HWTEST_F(PlayerServerUnitTest, Player_Mem_Recycle_001, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_Mem_Recycle_001, TestSize.Level1)
 {
     sptr<Surface> renderSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, renderSurface);
@@ -2498,7 +2498,7 @@ HWTEST_F(PlayerServerUnitTest, Player_Mem_Recycle_001, TestSize.Level0)
  * @tc.number: Player_Mem_Recycle_002
  * @tc.desc  : Test Player Mem Recycle
  */
-HWTEST_F(PlayerServerUnitTest, Player_Mem_Recycle_002, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_Mem_Recycle_002, TestSize.Level1)
 {
     sptr<Surface> vSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, vSurface);
@@ -2525,7 +2525,7 @@ HWTEST_F(PlayerServerUnitTest, Player_Mem_Recycle_002, TestSize.Level0)
  * @tc.number: Player_Mem_Recycle_003
  * @tc.desc  : Test Player Mem Recycle
  */
-HWTEST_F(PlayerServerUnitTest, Player_Mem_Recycle_003, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_Mem_Recycle_003, TestSize.Level1)
 {
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
@@ -2554,7 +2554,7 @@ HWTEST_F(PlayerServerUnitTest, Player_Mem_Recycle_003, TestSize.Level0)
  * @tc.number: Player_Mem_Recycle_004
  * @tc.desc  : Test Player Mem Recycle
  */
-HWTEST_F(PlayerServerUnitTest, Player_Mem_Recycle_004, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_Mem_Recycle_004, TestSize.Level1)
 {
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
@@ -2603,7 +2603,7 @@ HWTEST_F(PlayerServerUnitTest, Player_Mem_Recycle_004, TestSize.Level0)
  * @tc.number: Player_Mem_Recycle_005
  * @tc.desc  : Test Player Mem Recycle
  */
-HWTEST_F(PlayerServerUnitTest, Player_Mem_Recycle_005, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_Mem_Recycle_005, TestSize.Level1)
 {
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
@@ -2632,7 +2632,7 @@ HWTEST_F(PlayerServerUnitTest, Player_Mem_Recycle_005, TestSize.Level0)
  * @tc.number: Player_Mem_Recycle_006
  * @tc.desc  : Test Player Mem Recycle
  */
-HWTEST_F(PlayerServerUnitTest, Player_Mem_Recycle_006, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_Mem_Recycle_006, TestSize.Level1)
 {
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
@@ -2660,7 +2660,7 @@ HWTEST_F(PlayerServerUnitTest, Player_Mem_Recycle_006, TestSize.Level0)
  * @tc.number: Player_Mem_Recycle_007
  * @tc.desc  : Test Player Mem Recycle
  */
-HWTEST_F(PlayerServerUnitTest, Player_Mem_Recycle_007, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_Mem_Recycle_007, TestSize.Level1)
 {
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
@@ -2690,7 +2690,7 @@ HWTEST_F(PlayerServerUnitTest, Player_Mem_Recycle_007, TestSize.Level0)
  * @tc.number: Player_Mem_Recycle_008
  * @tc.desc  : Test Player Mem Recycle
  */
-HWTEST_F(PlayerServerUnitTest, Player_Mem_Recycle_008, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_Mem_Recycle_008, TestSize.Level1)
 {
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
@@ -2722,7 +2722,7 @@ HWTEST_F(PlayerServerUnitTest, Player_Mem_Recycle_008, TestSize.Level0)
  * @tc.number: Player_Mem_Recycle_009
  * @tc.desc  : Test Player Mem Recycle
  */
-HWTEST_F(PlayerServerUnitTest, Player_Mem_Recycle_009, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_Mem_Recycle_009, TestSize.Level1)
 {
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
@@ -2751,7 +2751,7 @@ HWTEST_F(PlayerServerUnitTest, Player_Mem_Recycle_009, TestSize.Level0)
  * @tc.number: Player_Mem_Recycle_010
  * @tc.desc  : Test Player Mem Recycle
  */
-HWTEST_F(PlayerServerUnitTest, Player_Mem_Recycle_010, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_Mem_Recycle_010, TestSize.Level1)
 {
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
@@ -2779,7 +2779,7 @@ HWTEST_F(PlayerServerUnitTest, Player_Mem_Recycle_010, TestSize.Level0)
  * @tc.number: Player_Mem_Recycle_011
  * @tc.desc  : Test Player Mem Recycle
  */
-HWTEST_F(PlayerServerUnitTest, Player_Mem_Recycle_011, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_Mem_Recycle_011, TestSize.Level1)
 {
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
@@ -2807,7 +2807,7 @@ HWTEST_F(PlayerServerUnitTest, Player_Mem_Recycle_011, TestSize.Level0)
  * @tc.number: Player_Mem_Recycle_012
  * @tc.desc  : Test Player Mem Recycle
  */
-HWTEST_F(PlayerServerUnitTest, Player_Mem_Recycle_012, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_Mem_Recycle_012, TestSize.Level1)
 {
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
@@ -2835,7 +2835,7 @@ HWTEST_F(PlayerServerUnitTest, Player_Mem_Recycle_012, TestSize.Level0)
  * @tc.number: Player_Mem_Recycle_013
  * @tc.desc  : Test Player Mem Recycle
  */
-HWTEST_F(PlayerServerUnitTest, Player_Mem_Recycle_013, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_Mem_Recycle_013, TestSize.Level1)
 {
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
@@ -2865,7 +2865,7 @@ HWTEST_F(PlayerServerUnitTest, Player_Mem_Recycle_013, TestSize.Level0)
  * @tc.number: Player_Mem_Recycle_014
  * @tc.desc  : Test Player Mem Recycle
  */
-HWTEST_F(PlayerServerUnitTest, Player_Mem_Recycle_014, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_Mem_Recycle_014, TestSize.Level1)
 {
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
@@ -2894,7 +2894,7 @@ HWTEST_F(PlayerServerUnitTest, Player_Mem_Recycle_014, TestSize.Level0)
  * @tc.number: Player_Mem_Recycle_015
  * @tc.desc  : Test Player Mem Recycle
  */
-HWTEST_F(PlayerServerUnitTest, Player_Mem_Recycle_015, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_Mem_Recycle_015, TestSize.Level1)
 {
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
@@ -2924,7 +2924,7 @@ HWTEST_F(PlayerServerUnitTest, Player_Mem_Recycle_015, TestSize.Level0)
  * @tc.number: Player_Mem_Recycle_016
  * @tc.desc  : Test Player Mem Recycle
  */
-HWTEST_F(PlayerServerUnitTest, Player_Mem_Recycle_016, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_Mem_Recycle_016, TestSize.Level1)
 {
     int32_t duration = 0;
     std::vector<Format> videoTrack;
@@ -2976,7 +2976,7 @@ HWTEST_F(PlayerServerUnitTest, Player_Mem_Recycle_016, TestSize.Level0)
  * @tc.number: Player_SetEffect_001
  * @tc.desc  : Test Player SetEffect state machine
  */
-HWTEST_F(PlayerServerUnitTest, Player_SetEffect_001, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SetEffect_001, TestSize.Level1)
 {
     Format format;
     const float FLOAT_VALUE = 1.0;
@@ -3021,7 +3021,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetEffect_001, TestSize.Level0)
  * @tc.number: Player_SetEffect_002
  * @tc.desc  : Test Player SetEffect param
  */
-HWTEST_F(PlayerServerUnitTest, Player_SetEffect_002, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SetEffect_002, TestSize.Level1)
 {
     Format format;
     ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "01.mp3"));
@@ -3081,7 +3081,7 @@ HWTEST_F(PlayerServerUnitTest, Player_Media_Error, TestSize.Level0)
  * @tc.number: Player_ChangeSurface_001
  * @tc.desc  : Test video player change surface in idle state
  */
-HWTEST_F(PlayerServerUnitTest, Player_ChangeSurface_001, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_ChangeSurface_001, TestSize.Level1)
 {
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
@@ -3093,7 +3093,7 @@ HWTEST_F(PlayerServerUnitTest, Player_ChangeSurface_001, TestSize.Level0)
  * @tc.number: Player_ChangeSurface_002
  * @tc.desc  : Test video player change surface in released state
  */
-HWTEST_F(PlayerServerUnitTest, Player_ChangeSurface_002, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_ChangeSurface_002, TestSize.Level1)
 {
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
@@ -3106,7 +3106,7 @@ HWTEST_F(PlayerServerUnitTest, Player_ChangeSurface_002, TestSize.Level0)
  * @tc.number: Player_ChangeSurface_003
  * @tc.desc  : Test video player change surface in error state
  */
-HWTEST_F(PlayerServerUnitTest, Player_ChangeSurface_003, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_ChangeSurface_003, TestSize.Level1)
 {
     int32_t ret = player_->SetSource(MEDIA_ROOT + "error.mp4");
     EXPECT_EQ(MSERR_OK, ret);
@@ -3125,7 +3125,7 @@ HWTEST_F(PlayerServerUnitTest, Player_ChangeSurface_003, TestSize.Level0)
  * @tc.number: Player_ChangeSurface_004
  * @tc.desc  : Test video player change surface in initialized state
  */
-HWTEST_F(PlayerServerUnitTest, Player_ChangeSurface_004, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_ChangeSurface_004, TestSize.Level1)
 {
     int32_t ret = player_->SetSource(VIDEO_FILE1);
     EXPECT_EQ(MSERR_OK, ret);
@@ -3142,7 +3142,7 @@ HWTEST_F(PlayerServerUnitTest, Player_ChangeSurface_004, TestSize.Level0)
  * @tc.number: Player_ChangeSurface_005
  * @tc.desc  : Test video player change surface in prepared state
  */
-HWTEST_F(PlayerServerUnitTest, Player_ChangeSurface_005, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_ChangeSurface_005, TestSize.Level1)
 {
     int32_t ret = player_->SetSource(VIDEO_FILE1);
     EXPECT_EQ(MSERR_OK, ret);
@@ -3161,7 +3161,7 @@ HWTEST_F(PlayerServerUnitTest, Player_ChangeSurface_005, TestSize.Level0)
  * @tc.number: Player_ChangeSurface_006
  * @tc.desc  : Test video player change surface in playing state
  */
-HWTEST_F(PlayerServerUnitTest, Player_ChangeSurface_006, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_ChangeSurface_006, TestSize.Level1)
 {
     int32_t ret = player_->SetSource(VIDEO_FILE1);
     EXPECT_EQ(MSERR_OK, ret);
@@ -3182,7 +3182,7 @@ HWTEST_F(PlayerServerUnitTest, Player_ChangeSurface_006, TestSize.Level0)
  * @tc.number: Player_ChangeSurface_007
  * @tc.desc  : Test video player change surface in paused state
  */
-HWTEST_F(PlayerServerUnitTest, Player_ChangeSurface_007, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_ChangeSurface_007, TestSize.Level1)
 {
     int32_t ret = player_->SetSource(VIDEO_FILE1);
     EXPECT_EQ(MSERR_OK, ret);
@@ -3205,7 +3205,7 @@ HWTEST_F(PlayerServerUnitTest, Player_ChangeSurface_007, TestSize.Level0)
  * @tc.number: Player_ChangeSurface_008
  * @tc.desc  : Test video player change surface in stopped state
  */
-HWTEST_F(PlayerServerUnitTest, Player_ChangeSurface_008, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_ChangeSurface_008, TestSize.Level1)
 {
     int32_t ret = player_->SetSource(VIDEO_FILE1);
     EXPECT_EQ(MSERR_OK, ret);
@@ -3228,7 +3228,7 @@ HWTEST_F(PlayerServerUnitTest, Player_ChangeSurface_008, TestSize.Level0)
  * @tc.number: Player_ChangeSurface_009
  * @tc.desc  : Test video player change surface in completed state
  */
-HWTEST_F(PlayerServerUnitTest, Player_ChangeSurface_009, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_ChangeSurface_009, TestSize.Level1)
 {
     int32_t ret = player_->SetSource(VIDEO_FILE1);
     EXPECT_EQ(MSERR_OK, ret);
@@ -3251,7 +3251,7 @@ HWTEST_F(PlayerServerUnitTest, Player_ChangeSurface_009, TestSize.Level0)
  * @tc.number: Player_SetPlaybackSpeed_003
  * @tc.desc  : Test Player SetPlaybackSpeed SPEED_FORWARD_0_50_X
  */
-HWTEST_F(PlayerServerUnitTest, Player_SetPlaybackSpeed_003, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SetPlaybackSpeed_003, TestSize.Level1)
 {
     PlaybackRateMode mode;
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
@@ -3270,7 +3270,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetPlaybackSpeed_003, TestSize.Level0)
  * @tc.number: Player_SetPlaybackSpeed_004
  * @tc.desc  : Test Player SetPlaybackSpeed SPEED_FORWARD_1_50_X
  */
-HWTEST_F(PlayerServerUnitTest, Player_SetPlaybackSpeed_004, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SetPlaybackSpeed_004, TestSize.Level1)
 {
     PlaybackRateMode mode;
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
@@ -3289,7 +3289,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetPlaybackSpeed_004, TestSize.Level0)
  * @tc.number: Player_SetPlaybackSpeed_005
  * @tc.desc  : Test Player SetPlaybackSpeed SPEED_FORWARD_1_50_X
  */
-HWTEST_F(PlayerServerUnitTest, Player_SetPlaybackSpeed_005, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SetPlaybackSpeed_005, TestSize.Level1)
 {
     PlaybackRateMode mode;
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
@@ -3309,7 +3309,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetPlaybackSpeed_005, TestSize.Level0)
  * @tc.number: Player_SetSurface_001
  * @tc.desc  : Test Player SetSurface->SetSurface
  */
-HWTEST_F(PlayerServerUnitTest, Player_SetSurface_001, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SetSurface_001, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -3327,7 +3327,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetSurface_001, TestSize.Level0)
  * @tc.number: Player_AddSubSource_001
  * @tc.desc  : Test Player AddSubSource state machine
  */
-HWTEST_F(PlayerServerUnitTest, Player_AddSubSource_001, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_AddSubSource_001, TestSize.Level1)
 {
     ASSERT_NE(MSERR_OK, player_->AddSubSource(SUBTITLE_SRT_FIELE, 0, 0));
     ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "AVC_Baseline@L1.2_81.0Kbps_320x240.mp4", 0, 0));
@@ -3349,7 +3349,7 @@ HWTEST_F(PlayerServerUnitTest, Player_AddSubSource_001, TestSize.Level0)
  * @tc.number: Player_AddSubSource_002
  * @tc.desc  : Test Player AddSubSource behavior
  */
-HWTEST_F(PlayerServerUnitTest, Player_AddSubSource_002, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_AddSubSource_002, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "H264_AAC.mp4", 0, 0));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -3378,7 +3378,7 @@ HWTEST_F(PlayerServerUnitTest, Player_AddSubSource_002, TestSize.Level0)
  * @tc.number: PlayerServer_Stop_001
  * @tc.desc  : Test PlayerServer Stop on different status
  */
-HWTEST_F(PlayerServerUnitTest, PlayerServer_Stop_001, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, PlayerServer_Stop_001, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "H264_AAC.mp4", 0, 0));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -3393,7 +3393,7 @@ HWTEST_F(PlayerServerUnitTest, PlayerServer_Stop_001, TestSize.Level0)
  * @tc.number: PlayerServer_Stop_002
  * @tc.desc  : Test PlayerServer Stop on different status
  */
-HWTEST_F(PlayerServerUnitTest, PlayerServer_Stop_002, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, PlayerServer_Stop_002, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "H264_AAC.mp4", 0, 0));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -3410,7 +3410,7 @@ HWTEST_F(PlayerServerUnitTest, PlayerServer_Stop_002, TestSize.Level0)
  * @tc.number: PlayerServer_Stop_003
  * @tc.desc  : Test PlayerServer Stop on different status
  */
-HWTEST_F(PlayerServerUnitTest, PlayerServer_Stop_003, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, PlayerServer_Stop_003, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "H264_AAC.mp4", 0, 0));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -3431,7 +3431,7 @@ HWTEST_F(PlayerServerUnitTest, PlayerServer_Stop_003, TestSize.Level0)
  * @tc.number: PlayerServer_Stop_004
  * @tc.desc  : Test PlayerServer Stop on different status
  */
-HWTEST_F(PlayerServerUnitTest, PlayerServer_Stop_004, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, PlayerServer_Stop_004, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "H264_AAC.mp4", 0, 0));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -3449,7 +3449,7 @@ HWTEST_F(PlayerServerUnitTest, PlayerServer_Stop_004, TestSize.Level0)
  * @tc.number: PlayerServer_Stop_005
  * @tc.desc  : Test PlayerServer Stop on different status
  */
-HWTEST_F(PlayerServerUnitTest, PlayerServer_Stop_005, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, PlayerServer_Stop_005, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "H264_AAC.mp4", 0, 0));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -3463,7 +3463,7 @@ HWTEST_F(PlayerServerUnitTest, PlayerServer_Stop_005, TestSize.Level0)
  * @tc.number: Player_SetParameter_001
  * @tc.desc  : Test Player SetParameter
  */
-HWTEST_F(PlayerServerUnitTest, Player_SetParameter_001, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SetParameter_001, TestSize.Level1)
 {
     std::vector<Format> videoTrack;
     std::vector<Format> audioTrack;
@@ -3484,7 +3484,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetParameter_001, TestSize.Level0)
  * @tc.number: Player_SetParameter_002
  * @tc.desc  : Test Player SetParameter
  */
-HWTEST_F(PlayerServerUnitTest, Player_SetParameter_002, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SetParameter_002, TestSize.Level1)
 {
     std::vector<Format> videoTrack;
     std::vector<Format> audioTrack;
@@ -3515,7 +3515,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetParameter_002, TestSize.Level0)
  * @tc.number: Player_SetParameter_003
  * @tc.desc  : Test Player SetParameter
  */
-HWTEST_F(PlayerServerUnitTest, Player_SetParameter_003, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SetParameter_003, TestSize.Level1)
 {
     Format formatScaleType;
     Format formatContentType;
@@ -3560,7 +3560,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetParameter_003, TestSize.Level0)
  * @tc.number: Player_State_Machine_001
  * @tc.desc  : Test Player state machine, invalid operation on stopped
  */
-HWTEST_F(PlayerServerUnitTest, Player_State_Machine_001, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_State_Machine_001, TestSize.Level1)
 {
     ASSERT_EQ(PlayerStates::PLAYER_IDLE, player_->GetState());
     ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "mp3_48000Hz_64kbs_mono.mp3"));
@@ -3586,7 +3586,7 @@ HWTEST_F(PlayerServerUnitTest, Player_State_Machine_001, TestSize.Level0)
  * @tc.number: Player_State_Machine_002
  * @tc.desc  : Test Player state machine, invalid operation on error
  */
-HWTEST_F(PlayerServerUnitTest, Player_State_Machine_002, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_State_Machine_002, TestSize.Level1)
 {
     ASSERT_EQ(PlayerStates::PLAYER_IDLE, player_->GetState());
     ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "1kb.mp3"));
@@ -3614,7 +3614,7 @@ HWTEST_F(PlayerServerUnitTest, Player_State_Machine_002, TestSize.Level0)
  * @tc.number: Player_State_Machine_003
  * @tc.desc  : Test Player state machine, invalid operation on idle
  */
-HWTEST_F(PlayerServerUnitTest, Player_State_Machine_003, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_State_Machine_003, TestSize.Level1)
 {
     ASSERT_EQ(PlayerStates::PLAYER_IDLE, player_->GetState());
     ASSERT_EQ(MSERR_INVALID_OPERATION, player_->PrepareAsync());
@@ -3637,7 +3637,7 @@ HWTEST_F(PlayerServerUnitTest, Player_State_Machine_003, TestSize.Level0)
  * @tc.number: Player_State_Machine_004
  * @tc.desc  : Test Player state machine, invalid operation on initialized
  */
-HWTEST_F(PlayerServerUnitTest, Player_State_Machine_004, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_State_Machine_004, TestSize.Level1)
 {
     ASSERT_EQ(PlayerStates::PLAYER_IDLE, player_->GetState());
     ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "mp3_48000Hz_64kbs_mono.mp3"));
@@ -3659,7 +3659,7 @@ HWTEST_F(PlayerServerUnitTest, Player_State_Machine_004, TestSize.Level0)
  * @tc.number: Player_State_Machine_005
  * @tc.desc  : Test Player state machine, invalid operation on prepared
  */
-HWTEST_F(PlayerServerUnitTest, Player_State_Machine_005, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_State_Machine_005, TestSize.Level1)
 {
     ASSERT_EQ(PlayerStates::PLAYER_IDLE, player_->GetState());
     ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "mp3_48000Hz_64kbs_mono.mp3"));
@@ -3681,7 +3681,7 @@ HWTEST_F(PlayerServerUnitTest, Player_State_Machine_005, TestSize.Level0)
  * @tc.number: Player_State_Machine_006
  * @tc.desc  : Test Player state machine, invalid operation on playing
  */
-HWTEST_F(PlayerServerUnitTest, Player_State_Machine_006, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_State_Machine_006, TestSize.Level1)
 {
     ASSERT_EQ(PlayerStates::PLAYER_IDLE, player_->GetState());
     ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "mp3_48000Hz_64kbs_mono.mp3"));
@@ -3703,7 +3703,7 @@ HWTEST_F(PlayerServerUnitTest, Player_State_Machine_006, TestSize.Level0)
  * @tc.number: Player_State_Machine_007
  * @tc.desc  : Test Player state machine, invalid operation on completed
  */
-HWTEST_F(PlayerServerUnitTest, Player_State_Machine_007, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_State_Machine_007, TestSize.Level1)
 {
     ASSERT_EQ(PlayerStates::PLAYER_IDLE, player_->GetState());
     ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "mp3_48000Hz_64kbs_mono.mp3"));
@@ -3726,7 +3726,7 @@ HWTEST_F(PlayerServerUnitTest, Player_State_Machine_007, TestSize.Level0)
  * @tc.number: Player_State_Machine_008
  * @tc.desc  : Test Player state machine, invalid operation on paused
  */
-HWTEST_F(PlayerServerUnitTest, Player_State_Machine_008, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_State_Machine_008, TestSize.Level1)
 {
     ASSERT_EQ(PlayerStates::PLAYER_IDLE, player_->GetState());
     ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "mp3_48000Hz_64kbs_mono.mp3"));
@@ -3747,7 +3747,7 @@ HWTEST_F(PlayerServerUnitTest, Player_State_Machine_008, TestSize.Level0)
  * @tc.number: Player_SetPlayRange_001
  * @tc.desc  : Test Player SetPlayRange interface
  */
-HWTEST_F(PlayerServerUnitTest, Player_SetPlayRange_001, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SetPlayRange_001, TestSize.Level1)
 {
     int32_t duration = 0;
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
@@ -3770,7 +3770,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetPlayRange_001, TestSize.Level0)
  * @tc.number: Player_SetPlayRange_002
  * @tc.desc  : Test Player SetPlayRange interface
  */
-HWTEST_F(PlayerServerUnitTest, Player_SetPlayRange_002, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SetPlayRange_002, TestSize.Level1)
 {
     int32_t duration = 0;
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
@@ -3792,7 +3792,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetPlayRange_002, TestSize.Level0)
  * @tc.number: Player_SetPlayRange_003
  * @tc.desc  : Test Player SetPlayRange interface
  */
-HWTEST_F(PlayerServerUnitTest, Player_SetPlayRange_003, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SetPlayRange_003, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -3806,7 +3806,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetPlayRange_003, TestSize.Level0)
  * @tc.number: Player_SetPlayRange_004
  * @tc.desc  : Test Player SetPlayRange interface
  */
-HWTEST_F(PlayerServerUnitTest, Player_SetPlayRange_004, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SetPlayRange_004, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -3820,7 +3820,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetPlayRange_004, TestSize.Level0)
  * @tc.number: Player_SetPlayRange_005
  * @tc.desc  : Test Player SetPlayRange interface
  */
-HWTEST_F(PlayerServerUnitTest, Player_SetPlayRange_005, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SetPlayRange_005, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -3834,7 +3834,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetPlayRange_005, TestSize.Level0)
  * @tc.number: Player_SetPlayRange_006
  * @tc.desc  : Test Player SetPlayRange interface
  */
-HWTEST_F(PlayerServerUnitTest, Player_SetPlayRange_006, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SetPlayRange_006, TestSize.Level1)
 {
     int32_t duration = 0;
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
@@ -3857,7 +3857,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetPlayRange_006, TestSize.Level0)
  * @tc.number: Player_SetPlayRange_007
  * @tc.desc  : Test Player SetPlayRange interface
  */
-HWTEST_F(PlayerServerUnitTest, Player_SetPlayRange_007, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SetPlayRange_007, TestSize.Level1)
 {
     int32_t duration = 0;
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
@@ -3877,7 +3877,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetPlayRange_007, TestSize.Level0)
  * @tc.number: Player_SetPlayRange_008
  * @tc.desc  : Test Player SetPlayRange interface
  */
-HWTEST_F(PlayerServerUnitTest, Player_SetPlayRange_008, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SetPlayRange_008, TestSize.Level1)
 {
     int32_t duration = 0;
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
@@ -3899,7 +3899,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetPlayRange_008, TestSize.Level0)
  * @tc.number: Player_SetPlayRange_009
  * @tc.desc  : Test Player SetPlayRange interface
  */
-HWTEST_F(PlayerServerUnitTest, Player_SetPlayRange_009, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SetPlayRange_009, TestSize.Level1)
 {
     int32_t duration = 0;
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
@@ -3920,7 +3920,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetPlayRange_009, TestSize.Level0)
  * @tc.number: Player_SetPlayRange_010
  * @tc.desc  : Test Player SetPlayRange interface, duration 10034
  */
-HWTEST_F(PlayerServerUnitTest, Player_SetPlayRange_010, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SetPlayRange_010, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -3935,7 +3935,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetPlayRange_010, TestSize.Level0)
  * @tc.number: Player_SetPlayRange_011
  * @tc.desc  : Test Player SetPlayRange interface, duration 10034
  */
-HWTEST_F(PlayerServerUnitTest, Player_SetPlayRange_011, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SetPlayRange_011, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -3972,7 +3972,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetPlayRange_013, TestSize.Level0)
  * @tc.number: Player_SeekContinuous_001
  * @tc.desc  : Test Player SeekContinuous
  */
-HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_001, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_001, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -3991,7 +3991,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_001, TestSize.Level0)
  * @tc.number: Player_SeekContinuous_002
  * @tc.desc  : Test Player SeekContinuous
  */
-HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_002, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_002, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -4013,7 +4013,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_002, TestSize.Level0)
  * @tc.number: Player_SeekContinuous_003
  * @tc.desc  : Test Player SeekContinuous
  */
-HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_003, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_003, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -4036,7 +4036,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_003, TestSize.Level0)
  * @tc.number: Player_SeekContinuous_004
  * @tc.desc  : Test Player SeekContinuous
  */
-HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_004, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_004, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -4060,7 +4060,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_004, TestSize.Level0)
  * @tc.number: Player_SeekContinuous_005
  * @tc.desc  : Test Player SeekContinuous
  */
-HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_005, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_005, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -4082,7 +4082,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_005, TestSize.Level0)
  * @tc.number: Player_SeekContinuous_006
  * @tc.desc  : Test Player SeekContinuous
  */
-HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_006, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_006, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -4108,7 +4108,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_006, TestSize.Level0)
  * @tc.number: Player_SetPlaybackSpeed_006
  * @tc.desc  : Test Player SetPlaybackSpeed SPEED_FORWARD_3_00_X
  */
-HWTEST_F(PlayerServerUnitTest, Player_SetPlaybackSpeed_006, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SetPlaybackSpeed_006, TestSize.Level1)
 {
     PlaybackRateMode mode;
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
@@ -4127,7 +4127,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetPlaybackSpeed_006, TestSize.Level0)
  * @tc.number: Player_SetMaxAmplitudeCbStatus_001
  * @tc.desc  : Test Player SetMaxAmplitudeCbStatus status on before prepare
  */
-HWTEST_F(PlayerServerUnitTest, Player_SetMaxAmplitudeCbStatus_001, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SetMaxAmplitudeCbStatus_001, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -4143,7 +4143,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetMaxAmplitudeCbStatus_001, TestSize.Leve
  * @tc.number: Player_SetMaxAmplitudeCbStatus_002
  * @tc.desc  : Test Player SetMaxAmplitudeCbStatus status on after prepare
  */
-HWTEST_F(PlayerServerUnitTest, Player_SetMaxAmplitudeCbStatus_002, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SetMaxAmplitudeCbStatus_002, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -4159,7 +4159,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetMaxAmplitudeCbStatus_002, TestSize.Leve
  * @tc.number: Player_SetMaxAmplitudeCbStatus_003
  * @tc.desc  : Test Player SetMaxAmplitudeCbStatus status off before prepare
  */
-HWTEST_F(PlayerServerUnitTest, Player_SetMaxAmplitudeCbStatus_003, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SetMaxAmplitudeCbStatus_003, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -4175,7 +4175,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetMaxAmplitudeCbStatus_003, TestSize.Leve
  * @tc.number: Player_SetMaxAmplitudeCbStatus_004
  * @tc.desc  : Test Player SetMaxAmplitudeCbStatus status off after prepare
  */
-HWTEST_F(PlayerServerUnitTest, Player_SetMaxAmplitudeCbStatus_004, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SetMaxAmplitudeCbStatus_004, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -4191,7 +4191,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetMaxAmplitudeCbStatus_004, TestSize.Leve
  * @tc.number: Player_SetDeviceChangeCbStatus_001
  * @tc.desc  : Test Player SetDeviceChangeCbStatus status on before prepare
  */
-HWTEST_F(PlayerServerUnitTest, Player_SetDeviceChangeCbStatus_001, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SetDeviceChangeCbStatus_001, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -4207,7 +4207,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetDeviceChangeCbStatus_001, TestSize.Leve
  * @tc.number: Player_SetDeviceChangeCbStatus_002
  * @tc.desc  : Test Player SetDeviceChangeCbStatus status on after prepare
  */
-HWTEST_F(PlayerServerUnitTest, Player_SetDeviceChangeCbStatus_002, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SetDeviceChangeCbStatus_002, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -4223,7 +4223,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetDeviceChangeCbStatus_002, TestSize.Leve
  * @tc.number: Player_SetDeviceChangeCbStatus_003
  * @tc.desc  : Test Player SetDeviceChangeCbStatus status off before prepare
  */
-HWTEST_F(PlayerServerUnitTest, Player_SetDeviceChangeCbStatus_003, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SetDeviceChangeCbStatus_003, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -4239,7 +4239,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetDeviceChangeCbStatus_003, TestSize.Leve
  * @tc.number: Player_SetDeviceChangeCbStatus_004
  * @tc.desc  : Test Player SetDeviceChangeCbStatus status off after prepare
  */
-HWTEST_F(PlayerServerUnitTest, Player_SetDeviceChangeCbStatus_004, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SetDeviceChangeCbStatus_004, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -4255,7 +4255,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetDeviceChangeCbStatus_004, TestSize.Leve
  * @tc.number: Player_SetPlaybackStrategy_001
  * @tc.desc  : Test Player SetPlaybackStrategy
  */
-HWTEST_F(PlayerServerUnitTest, Player_SetPlaybackStrategy_001, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SetPlaybackStrategy_001, TestSize.Level1)
 {
     AVPlayStrategy playbackStrategy = {
         .mutedMediaType = OHOS::Media::MediaType::MEDIA_TYPE_AUD
@@ -4270,7 +4270,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetPlaybackStrategy_001, TestSize.Level0)
  * @tc.number: Player_SetMediaMuted_001
  * @tc.desc  : Test Player SetMediaMuted
  */
-HWTEST_F(PlayerServerUnitTest, Player_SetMediaMuted_001, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SetMediaMuted_001, TestSize.Level1)
 {
     ASSERT_NE(MSERR_OK, player_->SetMediaMuted(OHOS::Media::MediaType::MEDIA_TYPE_AUD, true));
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
@@ -4290,7 +4290,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetMediaMuted_001, TestSize.Level0)
  * @tc.number: Player_SetMediaMuted_002
  * @tc.desc  : Test Player SetMediaMuted
  */
-HWTEST_F(PlayerServerUnitTest, Player_SetMediaMuted_002, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SetMediaMuted_002, TestSize.Level1)
 {
     ASSERT_NE(MSERR_OK, player_->SetMediaMuted(OHOS::Media::MediaType::MEDIA_TYPE_VID, true));
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
@@ -4634,7 +4634,7 @@ HWTEST_F(PlayerServerUnitTest, Player_PrepareInReleasing_001, TestSize.Level0)
  * @tc.number: Player_Media_Error_002
  * @tc.desc  : Test Player Media Error
  */
-HWTEST_F(PlayerServerUnitTest, Player_Media_Error_002, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_Media_Error_002, TestSize.Level1)
 {
     for (MediaServiceErrCode code = MSERR_IO_CANNOT_FIND_HOST; code <= MSERR_IO_UNSUPPORTTED_REQUEST;
         code = (MediaServiceErrCode)(code + 1)) {
@@ -4837,7 +4837,7 @@ HWTEST_F(PlayerServerUnitTest, Player_CheckSeek_001, TestSize.Level0)
  * @tc.number: Player_SeekContinuous_007
  * @tc.desc  : Test Player SeekContinuous
  */
-HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_007, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_007, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -4857,7 +4857,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_007, TestSize.Level0)
  * @tc.number: Player_SeekContinuous_008
  * @tc.desc  : Test Player SeekContinuous
  */
-HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_008, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_008, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -4879,7 +4879,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_008, TestSize.Level0)
  * @tc.number: Player_SeekContinuous_009
  * @tc.desc  : Test Player SeekContinuous
  */
-HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_009, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_009, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -4903,7 +4903,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_009, TestSize.Level0)
  * @tc.number: Player_SeekContinuous_010
  * @tc.desc  : Test Player SeekContinuous
  */
-HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_010, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_010, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -4928,7 +4928,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_010, TestSize.Level0)
  * @tc.number: Player_SeekContinuous_011
  * @tc.desc  : Test Player SeekContinuous
  */
-HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_011, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_011, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -4950,7 +4950,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_011, TestSize.Level0)
  * @tc.number: Player_SeekContinuous_012
  * @tc.desc  : Test Player SeekContinuous
  */
-HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_012, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_012, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -4976,7 +4976,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_012, TestSize.Level0)
  * @tc.number: Player_SeekContinuous_013
  * @tc.desc  : Test Player SeekContinuous
  */
-HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_013, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_013, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE3));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -4995,7 +4995,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_013, TestSize.Level0)
  * @tc.number: Player_SeekContinuous_014
  * @tc.desc  : Test Player SeekContinuous
  */
-HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_014, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_014, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE3));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -5017,7 +5017,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_014, TestSize.Level0)
  * @tc.number: Player_SeekContinuous_015
  * @tc.desc  : Test Player SeekContinuous
  */
-HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_015, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_015, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE3));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -5040,7 +5040,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_015, TestSize.Level0)
  * @tc.number: Player_SeekContinuous_016
  * @tc.desc  : Test Player SeekContinuous
  */
-HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_016, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_016, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE3));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -5064,7 +5064,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_016, TestSize.Level0)
  * @tc.number: Player_SeekContinuous_017 mkv
  * @tc.desc  : Test Player SeekContinuous
  */
-HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_017, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_017, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE3));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -5086,7 +5086,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_017, TestSize.Level0)
  * @tc.number: Player_SeekContinuous_018
  * @tc.desc  : Test Player SeekContinuous
  */
-HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_018, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_018, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE3));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -5112,7 +5112,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_018, TestSize.Level0)
  * @tc.number: Player_SeekContinuous_019
  * @tc.desc  : Test Player SeekContinuous
  */
-HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_019, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_019, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE3));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -5132,7 +5132,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_019, TestSize.Level0)
  * @tc.number: Player_SeekContinuous_020
  * @tc.desc  : Test Player SeekContinuous
  */
-HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_020, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_020, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE3));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -5154,7 +5154,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_020, TestSize.Level0)
  * @tc.number: Player_SeekContinuous_021
  * @tc.desc  : Test Player SeekContinuous
  */
-HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_021, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_021, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE3));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -5178,7 +5178,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_021, TestSize.Level0)
  * @tc.number: Player_SeekContinuous_022
  * @tc.desc  : Test Player SeekContinuous
  */
-HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_022, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_022, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE3));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -5203,7 +5203,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_022, TestSize.Level0)
  * @tc.number: Player_SeekContinuous_023
  * @tc.desc  : Test Player SeekContinuous
  */
-HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_023, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_023, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE3));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -5225,7 +5225,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_023, TestSize.Level0)
  * @tc.number: Player_SeekContinuous_024
  * @tc.desc  : Test Player SeekContinuous
  */
-HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_024, TestSize.Level0)
+HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_024, TestSize.Level1)
 {
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE3));
     sptr<Surface> videoSurface = player_->GetVideoSurface();

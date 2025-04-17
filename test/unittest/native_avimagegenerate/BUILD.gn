@@ -14,7 +14,7 @@
 import("//build/test.gni")
 import("//foundation/multimedia/player_framework/config.gni")
 
-module_output_path = "player_framework/native_avmetadata"
+module_output_path = "player_framework/player_framework/native_avmetadata"
 
 ohos_unittest("native_avimagegenerator_unit_test") {
   module_out_path = module_output_path
