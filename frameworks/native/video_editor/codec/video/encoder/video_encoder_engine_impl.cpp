@@ -97,7 +97,7 @@ VEFError VideoEncoderEngineImpl::InitAudioStreamEncoder(OH_AVFormat* audioFormat
         OH_AVFormat_Destroy(format);
         return error;
     }
-
+	OH_AVFormat_Destroy(format);
     MEDIA_LOGI("[%{public}s] init audio success.", logTag_.c_str());
     return VEFError::ERR_OK;
 }
