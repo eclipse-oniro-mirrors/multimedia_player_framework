@@ -364,6 +364,26 @@ int32_t ScreenCaptureServerFunctionTest::StartStreamAudioCapture()
     return ret;
 }
 
+void ScreenCaptureServerFunctionTest::SetSCInnerAudioCaptureAndPushData(std::shared_ptr<AudioBuffer> innerAudioBuffer)
+{
+    screenCaptureServer_->innerAudioCapture_ = std::make_shared<AudioCapturerWrapper>(
+        screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo, screenCaptureServer_->screenCaptureCb_,
+        std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
+    screenCaptureServer_->innerAudioCapture_->captureState_ = AudioCapturerWrapperState::CAPTURER_RECORDING;
+    screenCaptureServer_->innerAudioCapture_->isRunning_.store(true);
+    screenCaptureServer_->innerAudioCapture_->availBuffers_.push_back(innerAudioBuffer);
+}
+
+void ScreenCaptureServerFunctionTest::SetSCMicAudioCaptureAndPushData(std::shared_ptr<AudioBuffer> micAudioBuffer)
+{
+    screenCaptureServer_->micAudioCapture_ = std::make_shared<AudioCapturerWrapper>(
+        screenCaptureServer_->captureConfig_.audioInfo.micCapInfo, screenCaptureServer_->screenCaptureCb_,
+        std::string("OS_MicAudioCapture"), screenCaptureServer_->contentFilter_);
+    screenCaptureServer_->micAudioCapture_->captureState_ = AudioCapturerWrapperState::CAPTURER_RECORDING;
+    screenCaptureServer_->micAudioCapture_->isRunning_.store(true);
+    screenCaptureServer_->micAudioCapture_->availBuffers_.push_back(micAudioBuffer);
+}
+
 // videoCapInfo and innerCapInfo IGNORE
 HWTEST_F(ScreenCaptureServerFunctionTest, CaptureStreamParamsInvalid_001, TestSize.Level2)
 {
@@ -839,7 +859,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, RepeatResumeAudioCapture_001, TestSize
     config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
-    ASSERT_NE(screenCaptureServer_->innerAudioCapture_->Resume(), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, RepeatPauseAudioCapture_001, TestSize.Level2)
@@ -853,8 +872,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, RepeatPauseAudioCapture_001, TestSize.
     config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Pause(), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Pause(), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, UpdatePrivacyUsingPermissionState_001, TestSize.Level2)
@@ -1151,29 +1168,794 @@ HWTEST_F(ScreenCaptureServerFunctionTest, TryNotificationOnPostStartScreenCaptur
 }
 #endif
 
-HWTEST_F(ScreenCaptureServerFunctionTest, ReleaseAudioBufferMix_001, TestSize.Level2)
+HWTEST_F(ScreenCaptureServerFunctionTest, ReadAtMix_001, TestSize.Level2)
 {
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
+    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIX_MODE;
+    screenCaptureServer_->GetSCServerCaptureState();
+    screenCaptureServer_->IsMicrophoneSwitchTurnOn();
+    screenCaptureServer_->IsSCRecorderFileWithVideo();
+    screenCaptureServer_->GetInnerAudioCapture();
+    screenCaptureServer_->GetMicAudioCapture();
+    screenCaptureServer_->IsStopAcquireAudioBufferFlag();
+    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
+        AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+    screenCaptureServer_->audioSource_->IsInWaitMicSyncState();
+    screenCaptureServer_->audioSource_->SetVideoFirstFramePts(0);
+    screenCaptureServer_->audioSource_->SetAudioFirstFramePts(0);
+    const int bufferSize = 10;
+    uint8_t *innerBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
+    uint8_t *micBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
+    std::shared_ptr<AudioBuffer> innerAudioBuffer = std::make_shared<AudioBuffer>(innerBuffer, bufferSize, 0,
+        SOURCE_DEFAULT);
+    std::shared_ptr<AudioBuffer> micAudioBuffer = std::make_shared<AudioBuffer>(micBuffer, bufferSize, 0,
+        SOURCE_DEFAULT);
+    std::shared_ptr<AVBuffer> buffer;
+    AudioDataSourceReadAtActionState ret = screenCaptureServer_->audioSource_->ReadAt(buffer, bufferSize);
+    ASSERT_EQ(ret, AudioDataSourceReadAtActionState::SKIP_WITHOUT_LOG);
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
-    int32_t ret = screenCaptureServer_->ReleaseAudioBufferMix(AVScreenCaptureMixMode::MIX_MODE);
-    ASSERT_EQ(ret, MSERR_OK);
-    ret = screenCaptureServer_->ReleaseAudioBufferMix(AVScreenCaptureMixMode::MIC_MODE);
-    ASSERT_EQ(ret, MSERR_OK);
-    ret = screenCaptureServer_->ReleaseAudioBufferMix(AVScreenCaptureMixMode::INNER_MODE);
-    ASSERT_EQ(ret, MSERR_OK);
+    screenCaptureServer_->audioSource_->type_ = AVScreenCaptureMixMode::INVALID_MODE;
+    ret = screenCaptureServer_->audioSource_->ReadAt(buffer, bufferSize);
+    ASSERT_EQ(ret, AudioDataSourceReadAtActionState::RETRY_SKIP);
+    screenCaptureServer_->audioSource_->screenCaptureServer_ = nullptr;
+    ret = screenCaptureServer_->audioSource_->ReadAt(buffer, bufferSize);
+    ASSERT_EQ(ret, AudioDataSourceReadAtActionState::RETRY_SKIP);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, ReleaseAudioBufferMix_002, TestSize.Level2)
+HWTEST_F(ScreenCaptureServerFunctionTest, ReadAtMix_002, TestSize.Level2)
 {
-    SetValidConfig();
-    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
+    RecorderInfo recorderInfo;
+    SetRecorderInfo("start_file_inner_audio_capture_001.mp4", recorderInfo);
+    SetValidConfigFile(recorderInfo);
+    ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
+    screenCaptureServer_->SetMicrophoneEnabled(true);
+    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
+        AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+    screenCaptureServer_->captureCallback_ = std::make_shared<ScreenRendererAudioStateChangeCallback>();
+    screenCaptureServer_->captureCallback_->SetAudioSource(screenCaptureServer_->audioSource_);
+    screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo.state =
+        AVScreenCaptureParamValidationState::VALIDATION_VALID;
+    screenCaptureServer_->audioSource_->speakerAliveStatus_ = false;
+    screenCaptureServer_->StartFileInnerAudioCapture();
+    screenCaptureServer_->StartFileMicAudioCapture();
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
-    int32_t ret = screenCaptureServer_->ReleaseAudioBufferMix(AVScreenCaptureMixMode::MIX_MODE);
-    ASSERT_EQ(ret, MSERR_OK);
-    ret = screenCaptureServer_->ReleaseAudioBufferMix(AVScreenCaptureMixMode::MIC_MODE);
-    ASSERT_EQ(ret, MSERR_OK);
-    ret = screenCaptureServer_->ReleaseAudioBufferMix(AVScreenCaptureMixMode::INNER_MODE);
-    ASSERT_EQ(ret, MSERR_OK);
+    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIX_MODE;
+    int64_t size = 0;
+    screenCaptureServer_->audioSource_->GetSize(size);
+    screenCaptureServer_->SetInnerAudioCapture(nullptr);
+    screenCaptureServer_->audioSource_->GetSize(size);
+    const int bufferSize = 10;
+    uint8_t *innerBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
+    uint8_t *micBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
+    std::shared_ptr<AudioBuffer> innerAudioBuffer = std::make_shared<AudioBuffer>(innerBuffer, bufferSize, 0,
+        SOURCE_DEFAULT);
+    std::shared_ptr<AudioBuffer> micAudioBuffer = std::make_shared<AudioBuffer>(micBuffer, bufferSize, 0,
+        SOURCE_DEFAULT);
+    std::shared_ptr<AVBuffer> buffer = AVBuffer::CreateAVBuffer();
+    screenCaptureServer_->audioSource_->ReadAt(buffer, bufferSize);
+    ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, ReadAtMicMode_001, TestSize.Level2)
+{
+    RecorderInfo recorderInfo;
+    SetRecorderInfo("start_file_inner_audio_capture_001.mp4", recorderInfo);
+    SetValidConfigFile(recorderInfo);
+    ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
+    screenCaptureServer_->SetMicrophoneEnabled(true);
+    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
+        AVScreenCaptureMixMode::MIC_MODE, screenCaptureServer_.get());
+    screenCaptureServer_->captureCallback_ = std::make_shared<ScreenRendererAudioStateChangeCallback>();
+    screenCaptureServer_->captureCallback_->SetAudioSource(screenCaptureServer_->audioSource_);
+    screenCaptureServer_->captureConfig_.audioInfo.micCapInfo.state =
+        AVScreenCaptureParamValidationState::VALIDATION_VALID;
+    screenCaptureServer_->audioSource_->speakerAliveStatus_ = false;
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
+    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIC_MODE;
+    const int bufferSize = 10;
+    std::shared_ptr<AVBuffer> buffer = AVBuffer::CreateAVBuffer();
+    screenCaptureServer_->micAudioCapture_ = std::make_shared<MicAudioCapturerWrapper>(
+        screenCaptureServer_->captureConfig_.audioInfo.micCapInfo, screenCaptureServer_->screenCaptureCb_,
+        std::string("OS_MicAudioCapture"), screenCaptureServer_->contentFilter_);
+    screenCaptureServer_->micAudioCapture_->captureState_ = AudioCapturerWrapperState::CAPTURER_RECORDING;
+    AudioDataSourceReadAtActionState ret = screenCaptureServer_->audioSource_->ReadAtMicMode(buffer, bufferSize);
+    ASSERT_EQ(ret, AudioDataSourceReadAtActionState::RETRY_SKIP); // AcquireAudioBuffer failed
+    MEDIA_LOGI("ReadAtMicMode ret: %{public}d", static_cast<int32_t>(ret));
+    screenCaptureServer_->micAudioCapture_->captureState_ = AudioCapturerWrapperState::CAPTURER_UNKNOWN;
+    ret = screenCaptureServer_->audioSource_->ReadAtMicMode(buffer, bufferSize);
+    ASSERT_EQ(ret, AudioDataSourceReadAtActionState::RETRY_SKIP);
+    screenCaptureServer_->micAudioCapture_ = nullptr;
+    ret = screenCaptureServer_->audioSource_->ReadAtMicMode(buffer, bufferSize);
+    ASSERT_EQ(ret, AudioDataSourceReadAtActionState::INVALID);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, ReadAtMicMode_002, TestSize.Level2)
+{
+    RecorderInfo recorderInfo;
+    SetRecorderInfo("start_file_inner_audio_capture_001.mp4", recorderInfo);
+    SetValidConfigFile(recorderInfo);
+    ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
+    screenCaptureServer_->SetMicrophoneEnabled(true);
+    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
+        AVScreenCaptureMixMode::MIC_MODE, screenCaptureServer_.get());
+    screenCaptureServer_->captureCallback_ = std::make_shared<ScreenRendererAudioStateChangeCallback>();
+    screenCaptureServer_->captureCallback_->SetAudioSource(screenCaptureServer_->audioSource_);
+    screenCaptureServer_->captureConfig_.audioInfo.micCapInfo.state =
+        AVScreenCaptureParamValidationState::VALIDATION_VALID;
+    screenCaptureServer_->audioSource_->speakerAliveStatus_ = false;
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
+    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIC_MODE;
+    const int bufferSize = 10;
+    uint8_t *micBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
+    std::shared_ptr<AudioBuffer> micAudioBuffer = std::make_shared<AudioBuffer>(micBuffer, bufferSize, 0,
+        SOURCE_DEFAULT);
+    std::shared_ptr<AVBuffer> buffer = AVBuffer::CreateAVBuffer();
+    screenCaptureServer_->micAudioCapture_ = std::make_shared<MicAudioCapturerWrapper>(
+        screenCaptureServer_->captureConfig_.audioInfo.micCapInfo, screenCaptureServer_->screenCaptureCb_,
+        std::string("OS_MicAudioCapture"), screenCaptureServer_->contentFilter_);
+    screenCaptureServer_->micAudioCapture_->captureState_ = AudioCapturerWrapperState::CAPTURER_RECORDING;
+    screenCaptureServer_->micAudioCapture_->isRunning_.store(true);
+    screenCaptureServer_->micAudioCapture_->availBuffers_.push_back(micAudioBuffer);
+    AudioDataSourceReadAtActionState ret = screenCaptureServer_->audioSource_->ReadAtMicMode(buffer, bufferSize);
+    MEDIA_LOGI("ReadAtMicMode ret: %{public}d", static_cast<int32_t>(ret));
+    ASSERT_EQ(ret, AudioDataSourceReadAtActionState::RETRY_SKIP);
+    uint8_t data[bufferSize];
+    std::shared_ptr<AVMemory> bufferMem = AVMemory::CreateAVMemory(data, bufferSize, bufferSize);
+    buffer->memory_ = bufferMem;
+    ret = screenCaptureServer_->audioSource_->ReadAtMicMode(buffer, bufferSize);
+    MEDIA_LOGI("ReadAtMicMode 2 ret: %{public}d", static_cast<int32_t>(ret));
+    ASSERT_EQ(ret, AudioDataSourceReadAtActionState::OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, ReadAtInnerMode_001, TestSize.Level2)
+{
+    RecorderInfo recorderInfo;
+    SetRecorderInfo("start_file_inner_audio_capture_001.mp4", recorderInfo);
+    SetValidConfigFile(recorderInfo);
+    ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
+    screenCaptureServer_->SetMicrophoneEnabled(false);
+    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
+        AVScreenCaptureMixMode::INNER_MODE, screenCaptureServer_.get());
+    screenCaptureServer_->captureCallback_ = std::make_shared<ScreenRendererAudioStateChangeCallback>();
+    screenCaptureServer_->captureCallback_->SetAudioSource(screenCaptureServer_->audioSource_);
+    screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo.state =
+        AVScreenCaptureParamValidationState::VALIDATION_VALID;
+    screenCaptureServer_->audioSource_->speakerAliveStatus_ = false;
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
+    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::INNER_MODE;
+    const int bufferSize = 10;
+    std::shared_ptr<AVBuffer> buffer = AVBuffer::CreateAVBuffer();
+    screenCaptureServer_->innerAudioCapture_ = std::make_shared<AudioCapturerWrapper>(
+        screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo, screenCaptureServer_->screenCaptureCb_,
+        std::string("OS_innerAudioCapture"), screenCaptureServer_->contentFilter_);
+    screenCaptureServer_->innerAudioCapture_->captureState_ = AudioCapturerWrapperState::CAPTURER_RECORDING;
+    AudioDataSourceReadAtActionState ret = screenCaptureServer_->audioSource_->ReadAtInnerMode(buffer, bufferSize);
+    ASSERT_EQ(ret, AudioDataSourceReadAtActionState::RETRY_SKIP);
+    MEDIA_LOGI("ReadAtInnerMode ret: %{public}d", static_cast<int32_t>(ret));
+    screenCaptureServer_->innerAudioCapture_->captureState_ = AudioCapturerWrapperState::CAPTURER_UNKNOWN;
+    ret = screenCaptureServer_->audioSource_->ReadAtInnerMode(buffer, bufferSize);
+    ASSERT_EQ(ret, AudioDataSourceReadAtActionState::RETRY_SKIP);
+    screenCaptureServer_->innerAudioCapture_ = nullptr;
+    ret = screenCaptureServer_->audioSource_->ReadAtInnerMode(buffer, bufferSize);
+    ASSERT_EQ(ret, AudioDataSourceReadAtActionState::INVALID);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, ReadAtInnerMode_002, TestSize.Level2)
+{
+    RecorderInfo recorderInfo;
+    SetRecorderInfo("start_file_inner_audio_capture_001.mp4", recorderInfo);
+    SetValidConfigFile(recorderInfo);
+    ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
+    screenCaptureServer_->SetMicrophoneEnabled(false);
+    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
+        AVScreenCaptureMixMode::INNER_MODE, screenCaptureServer_.get());
+    screenCaptureServer_->captureCallback_ = std::make_shared<ScreenRendererAudioStateChangeCallback>();
+    screenCaptureServer_->captureCallback_->SetAudioSource(screenCaptureServer_->audioSource_);
+    screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo.state =
+        AVScreenCaptureParamValidationState::VALIDATION_VALID;
+    screenCaptureServer_->audioSource_->speakerAliveStatus_ = false;
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
+    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::INNER_MODE;
+    const int bufferSize = 10;
+    uint8_t *innerBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
+    std::shared_ptr<AudioBuffer> innerAudioBuffer = std::make_shared<AudioBuffer>(innerBuffer, bufferSize, 0,
+        SOURCE_DEFAULT);
+    std::shared_ptr<AVBuffer> buffer = AVBuffer::CreateAVBuffer();
+    SetSCInnerAudioCaptureAndPushData(innerAudioBuffer);
+    AudioDataSourceReadAtActionState ret = screenCaptureServer_->audioSource_->ReadAtInnerMode(buffer, bufferSize);
+    MEDIA_LOGI("ReadAtInnerMode ret: %{public}d", static_cast<int32_t>(ret));
+    ASSERT_EQ(ret, AudioDataSourceReadAtActionState::RETRY_SKIP);
+    uint8_t data[bufferSize];
+    std::shared_ptr<AVMemory> bufferMem = AVMemory::CreateAVMemory(data, bufferSize, bufferSize);
+    buffer->memory_ = bufferMem;
+    ret = screenCaptureServer_->audioSource_->ReadAtInnerMode(buffer, bufferSize);
+    MEDIA_LOGI("ReadAtInnerMode 2 ret: %{public}d", static_cast<int32_t>(ret));
+    ASSERT_EQ(ret, AudioDataSourceReadAtActionState::OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, ReadAtMixMode_001, TestSize.Level2)
+{
+    RecorderInfo recorderInfo;
+    SetRecorderInfo("start_file_inner_audio_capture_001.mp4", recorderInfo);
+    SetValidConfigFile(recorderInfo);
+    ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
+    screenCaptureServer_->SetMicrophoneEnabled(true);
+    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
+        AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+    screenCaptureServer_->captureCallback_ = std::make_shared<ScreenRendererAudioStateChangeCallback>();
+    screenCaptureServer_->captureCallback_->SetAudioSource(screenCaptureServer_->audioSource_);
+    screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo.state =
+        AVScreenCaptureParamValidationState::VALIDATION_VALID;
+    screenCaptureServer_->audioSource_->speakerAliveStatus_ = false;
+    screenCaptureServer_->StartFileInnerAudioCapture();
+    screenCaptureServer_->StartFileMicAudioCapture();
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
+    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIX_MODE;
+    const int bufferSize = 10;
+    uint8_t *innerBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
+    uint8_t *micBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
+    std::shared_ptr<AudioBuffer> innerAudioBuffer = std::make_shared<AudioBuffer>(innerBuffer, bufferSize, 0,
+        SOURCE_DEFAULT);
+    std::shared_ptr<AudioBuffer> micAudioBuffer = std::make_shared<AudioBuffer>(micBuffer, bufferSize, 0,
+        SOURCE_DEFAULT);
+    std::shared_ptr<AVBuffer> buffer = AVBuffer::CreateAVBuffer();
+    screenCaptureServer_->audioSource_->ReadAtMixMode(buffer, bufferSize);
+    ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, ReadWriteAudioBufferMix_001, TestSize.Level2)
+{
+    RecorderInfo recorderInfo;
+    SetRecorderInfo("start_file_inner_audio_capture_001.mp4", recorderInfo);
+    SetValidConfigFile(recorderInfo);
+    ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
+    screenCaptureServer_->SetMicrophoneEnabled(true);
+    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
+        AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+    screenCaptureServer_->captureCallback_ = std::make_shared<ScreenRendererAudioStateChangeCallback>();
+    screenCaptureServer_->captureCallback_->SetAudioSource(screenCaptureServer_->audioSource_);
+    screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo.state =
+        AVScreenCaptureParamValidationState::VALIDATION_VALID;
+    screenCaptureServer_->audioSource_->speakerAliveStatus_ = false;
+    screenCaptureServer_->StartFileInnerAudioCapture();
+    screenCaptureServer_->StartFileMicAudioCapture();
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
+    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIX_MODE;
+    const int bufferSize = 10;
+    uint8_t *innerBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
+    uint8_t *micBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
+    std::shared_ptr<AudioBuffer> innerAudioBuffer = std::make_shared<AudioBuffer>(innerBuffer, bufferSize, 0,
+        SOURCE_DEFAULT);
+    std::shared_ptr<AudioBuffer> micAudioBuffer = std::make_shared<AudioBuffer>(micBuffer, bufferSize, 0,
+        SOURCE_DEFAULT);
+    std::shared_ptr<AVBuffer> buffer = AVBuffer::CreateAVBuffer();
+    screenCaptureServer_->audioSource_->ReadWriteAudioBufferMix(buffer, bufferSize, innerAudioBuffer, micAudioBuffer);
+    ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, ReadWriteAudioBufferMix_002, TestSize.Level2)
+{
+    RecorderInfo recorderInfo;
+    SetRecorderInfo("start_file_inner_audio_capture_001.mp4", recorderInfo);
+    SetValidConfigFile(recorderInfo);
+    ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
+    screenCaptureServer_->SetMicrophoneEnabled(true);
+    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
+        AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+    screenCaptureServer_->captureCallback_ = std::make_shared<ScreenRendererAudioStateChangeCallback>();
+    screenCaptureServer_->captureCallback_->SetAudioSource(screenCaptureServer_->audioSource_);
+    screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo.state =
+        AVScreenCaptureParamValidationState::VALIDATION_VALID;
+    screenCaptureServer_->audioSource_->speakerAliveStatus_ = false;
+    screenCaptureServer_->StartFileInnerAudioCapture();
+    screenCaptureServer_->StartFileMicAudioCapture();
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
+    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIX_MODE;
+    screenCaptureServer_->recorderFileWithVideo_ = true;
+    const int bufferSize = 10;
+    uint8_t *innerBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
+    uint8_t *micBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
+    std::shared_ptr<AudioBuffer> innerAudioBuffer = std::make_shared<AudioBuffer>(innerBuffer, bufferSize, 0,
+        SOURCE_DEFAULT);
+    std::shared_ptr<AudioBuffer> micAudioBuffer = std::make_shared<AudioBuffer>(micBuffer, bufferSize, 0,
+        SOURCE_DEFAULT);
+    std::shared_ptr<AVBuffer> buffer = AVBuffer::CreateAVBuffer();
+    screenCaptureServer_->audioSource_->ReadWriteAudioBufferMix(buffer, bufferSize, innerAudioBuffer, micAudioBuffer);
+    ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, ReadWriteAudioBufferMixCore_001, TestSize.Level2)
+{
+    RecorderInfo recorderInfo;
+    SetRecorderInfo("start_file_inner_audio_capture_001.mp4", recorderInfo);
+    SetValidConfigFile(recorderInfo);
+    ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
+    screenCaptureServer_->SetMicrophoneEnabled(true);
+    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
+        AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+    screenCaptureServer_->captureCallback_ = std::make_shared<ScreenRendererAudioStateChangeCallback>();
+    screenCaptureServer_->captureCallback_->SetAudioSource(screenCaptureServer_->audioSource_);
+    screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo.state =
+        AVScreenCaptureParamValidationState::VALIDATION_VALID;
+    screenCaptureServer_->audioSource_->speakerAliveStatus_ = false;
+    screenCaptureServer_->StartFileInnerAudioCapture();
+    screenCaptureServer_->StartFileMicAudioCapture();
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
+    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIX_MODE;
+    const int bufferSize = 10;
+    uint8_t *innerBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
+    uint8_t *micBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
+    std::shared_ptr<AudioBuffer> innerAudioBuffer = std::make_shared<AudioBuffer>(innerBuffer, bufferSize, 0,
+        SOURCE_DEFAULT);
+    std::shared_ptr<AudioBuffer> micAudioBuffer = std::make_shared<AudioBuffer>(micBuffer, bufferSize, 0,
+        SOURCE_DEFAULT);
+    std::shared_ptr<AVBuffer> buffer = AVBuffer::CreateAVBuffer();
+    screenCaptureServer_->audioSource_->ReadWriteAudioBufferMixCore(buffer, bufferSize, innerAudioBuffer,
+        micAudioBuffer);
+    ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, GetFirstAudioTime_001, TestSize.Level2)
+{
+    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
+        AVScreenCaptureMixMode::MIC_MODE, screenCaptureServer_.get());
+    screenCaptureServer_->captureCallback_ = std::make_shared<ScreenRendererAudioStateChangeCallback>();
+    screenCaptureServer_->captureCallback_->SetAudioSource(screenCaptureServer_->audioSource_);
+    screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo.state =
+        AVScreenCaptureParamValidationState::VALIDATION_VALID;
+    const int bufferSize = 10;
+    uint8_t *innerBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
+    uint8_t *micBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
+    std::shared_ptr<AudioBuffer> innerAudioBuffer = std::make_shared<AudioBuffer>(innerBuffer, bufferSize, 0,
+        SOURCE_DEFAULT);
+    std::shared_ptr<AudioBuffer> micAudioBuffer = std::make_shared<AudioBuffer>(micBuffer, bufferSize, 0,
+        SOURCE_DEFAULT);
+    innerAudioBuffer->timestamp = 2;
+    micAudioBuffer->timestamp = 1;
+    int64_t resTime = screenCaptureServer_->audioSource_->GetFirstAudioTime(innerAudioBuffer, micAudioBuffer);
+    ASSERT_EQ(resTime, micAudioBuffer->timestamp);
+    innerAudioBuffer->timestamp = 1;
+    micAudioBuffer->timestamp = 2;
+    resTime = screenCaptureServer_->audioSource_->GetFirstAudioTime(innerAudioBuffer, micAudioBuffer);
+    ASSERT_EQ(resTime, innerAudioBuffer->timestamp);
+    innerAudioBuffer = nullptr;
+    resTime = screenCaptureServer_->audioSource_->GetFirstAudioTime(innerAudioBuffer, micAudioBuffer);
+    ASSERT_EQ(resTime, micAudioBuffer->timestamp);
+    uint8_t *innerBufferNew = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
+    innerAudioBuffer = std::make_shared<AudioBuffer>(innerBufferNew, bufferSize, 0,
+        SOURCE_DEFAULT);
+    innerAudioBuffer->timestamp = 1;
+    micAudioBuffer = nullptr;
+    resTime = screenCaptureServer_->audioSource_->GetFirstAudioTime(innerAudioBuffer, micAudioBuffer);
+    ASSERT_EQ(resTime, innerAudioBuffer->timestamp);
+    innerAudioBuffer = nullptr;
+    micAudioBuffer = nullptr;
+    resTime = screenCaptureServer_->audioSource_->GetFirstAudioTime(innerAudioBuffer, micAudioBuffer);
+    ASSERT_EQ(resTime, -1);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, WriteInnerAudio_001, TestSize.Level2)
+{
+    RecorderInfo recorderInfo;
+    SetRecorderInfo("start_file_inner_audio_capture_001.mp4", recorderInfo);
+    SetValidConfigFile(recorderInfo);
+    ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
+    screenCaptureServer_->SetMicrophoneEnabled(true);
+    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
+        AVScreenCaptureMixMode::INNER_MODE, screenCaptureServer_.get());
+    screenCaptureServer_->captureCallback_ = std::make_shared<ScreenRendererAudioStateChangeCallback>();
+    screenCaptureServer_->captureCallback_->SetAudioSource(screenCaptureServer_->audioSource_);
+    screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo.state =
+        AVScreenCaptureParamValidationState::VALIDATION_VALID;
+    screenCaptureServer_->audioSource_->speakerAliveStatus_ = false;
+    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::INNER_MODE;
+    const int bufferSize = 10;
+    uint8_t *innerBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
+    std::shared_ptr<AudioBuffer> innerAudioBuffer = std::make_shared<AudioBuffer>(innerBuffer, bufferSize, 0,
+        SOURCE_DEFAULT);
+    std::shared_ptr<AVBuffer> buffer = AVBuffer::CreateAVBuffer();
+    SetSCInnerAudioCaptureAndPushData(innerAudioBuffer);
+    AudioDataSourceReadAtActionState ret = screenCaptureServer_->audioSource_->WriteInnerAudio(buffer, bufferSize,
+        innerAudioBuffer);
+    MEDIA_LOGI("WriteInnerAudio_001 ret: %{public}d", static_cast<int32_t>(ret));
+    ASSERT_EQ(ret, AudioDataSourceReadAtActionState::RETRY_SKIP);
+    uint8_t data[bufferSize];
+    std::shared_ptr<AVMemory> bufferMem = AVMemory::CreateAVMemory(data, bufferSize, bufferSize);
+    buffer->memory_ = bufferMem;
+    screenCaptureServer_->audioSource_->firstAudioFramePts_.store(-1);
+    ret = screenCaptureServer_->audioSource_->WriteInnerAudio(buffer, bufferSize, innerAudioBuffer);
+    MEDIA_LOGI("WriteInnerAudio_001 1 ret: %{public}d", static_cast<int32_t>(ret));
+    screenCaptureServer_->audioSource_->firstAudioFramePts_.store(10);
+    ret = screenCaptureServer_->audioSource_->WriteInnerAudio(buffer, bufferSize, innerAudioBuffer);
+    MEDIA_LOGI("WriteInnerAudio_001 2 ret: %{public}d", static_cast<int32_t>(ret));
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, WriteMicAudio_001, TestSize.Level2)
+{
+    RecorderInfo recorderInfo;
+    SetRecorderInfo("start_file_inner_audio_capture_001.mp4", recorderInfo);
+    SetValidConfigFile(recorderInfo);
+    ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
+    screenCaptureServer_->SetMicrophoneEnabled(true);
+    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
+        AVScreenCaptureMixMode::MIC_MODE, screenCaptureServer_.get());
+    screenCaptureServer_->captureCallback_ = std::make_shared<ScreenRendererAudioStateChangeCallback>();
+    screenCaptureServer_->captureCallback_->SetAudioSource(screenCaptureServer_->audioSource_);
+    screenCaptureServer_->captureConfig_.audioInfo.micCapInfo.state =
+        AVScreenCaptureParamValidationState::VALIDATION_VALID;
+    screenCaptureServer_->audioSource_->speakerAliveStatus_ = false;
+    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIC_MODE;
+    const int bufferSize = 10;
+    uint8_t *micBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
+    std::shared_ptr<AudioBuffer> micAudioBuffer = std::make_shared<AudioBuffer>(micBuffer, bufferSize, 0,
+        SOURCE_DEFAULT);
+    std::shared_ptr<AVBuffer> buffer = AVBuffer::CreateAVBuffer();
+    SetSCMicAudioCaptureAndPushData(micAudioBuffer);
+    AudioDataSourceReadAtActionState ret = screenCaptureServer_->audioSource_->WriteMicAudio(buffer, bufferSize,
+        micAudioBuffer);
+    MEDIA_LOGI("WriteMicAudio_001 ret: %{public}d", static_cast<int32_t>(ret));
+    ASSERT_EQ(ret, AudioDataSourceReadAtActionState::RETRY_SKIP);
+    uint8_t data[bufferSize];
+    std::shared_ptr<AVMemory> bufferMem = AVMemory::CreateAVMemory(data, bufferSize, bufferSize);
+    buffer->memory_ = bufferMem;
+    screenCaptureServer_->audioSource_->firstAudioFramePts_.store(-1);
+    ret = screenCaptureServer_->audioSource_->WriteMicAudio(buffer, bufferSize, micAudioBuffer);
+    MEDIA_LOGI("WriteMicAudio_001 1 ret: %{public}d", static_cast<int32_t>(ret));
+    screenCaptureServer_->audioSource_->firstAudioFramePts_.store(10);
+    ret = screenCaptureServer_->audioSource_->WriteMicAudio(buffer, bufferSize, micAudioBuffer);
+    MEDIA_LOGI("WriteMicAudio_001 2 ret: %{public}d", static_cast<int32_t>(ret));
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, WriteMixAudio_001, TestSize.Level2)
+{
+    RecorderInfo recorderInfo;
+    SetRecorderInfo("start_file_inner_audio_capture_001.mp4", recorderInfo);
+    SetValidConfigFile(recorderInfo);
+    ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
+    screenCaptureServer_->SetMicrophoneEnabled(true);
+    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
+        AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+    screenCaptureServer_->captureCallback_ = std::make_shared<ScreenRendererAudioStateChangeCallback>();
+    screenCaptureServer_->captureCallback_->SetAudioSource(screenCaptureServer_->audioSource_);
+    screenCaptureServer_->captureConfig_.audioInfo.micCapInfo.state =
+        AVScreenCaptureParamValidationState::VALIDATION_VALID;
+    screenCaptureServer_->audioSource_->speakerAliveStatus_ = false;
+    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIX_MODE;
+    const int bufferSize = 10;
+    uint8_t *micBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
+    uint8_t *innerBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
+    std::shared_ptr<AudioBuffer> innerAudioBuffer = std::make_shared<AudioBuffer>(innerBuffer, bufferSize, 0,
+        SOURCE_DEFAULT);
+    std::shared_ptr<AudioBuffer> micAudioBuffer = std::make_shared<AudioBuffer>(micBuffer, bufferSize, 0,
+        SOURCE_DEFAULT);
+    SetSCMicAudioCaptureAndPushData(micAudioBuffer);
+    SetSCInnerAudioCaptureAndPushData(innerAudioBuffer);
+    std::shared_ptr<AVBuffer> buffer = AVBuffer::CreateAVBuffer();
+    AudioDataSourceReadAtActionState ret = screenCaptureServer_->audioSource_->WriteMixAudio(buffer, bufferSize,
+        innerAudioBuffer, micAudioBuffer);
+    MEDIA_LOGI("WriteMixAudio_001 ret: %{public}d", static_cast<int32_t>(ret));
+    ASSERT_EQ(ret, AudioDataSourceReadAtActionState::RETRY_SKIP);
+    uint8_t data[bufferSize];
+    std::shared_ptr<AVMemory> bufferMem = AVMemory::CreateAVMemory(data, bufferSize, bufferSize);
+    buffer->memory_ = bufferMem;
+    screenCaptureServer_->audioSource_->firstAudioFramePts_.store(-1);
+    ret = screenCaptureServer_->audioSource_->WriteMixAudio(buffer, bufferSize, innerAudioBuffer, micAudioBuffer);
+    MEDIA_LOGI("WriteMixAudio_001 1 ret: %{public}d", static_cast<int32_t>(ret));
+    screenCaptureServer_->audioSource_->firstAudioFramePts_.store(10);
+    ret = screenCaptureServer_->audioSource_->WriteMixAudio(buffer, bufferSize, innerAudioBuffer, micAudioBuffer);
+    MEDIA_LOGI("WriteMixAudio_001 2 ret: %{public}d", static_cast<int32_t>(ret));
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, InnerMicAudioSync_001, TestSize.Level2)
+{
+    RecorderInfo recorderInfo;
+    SetRecorderInfo("start_file_inner_audio_capture_001.mp4", recorderInfo);
+    SetValidConfigFile(recorderInfo);
+    ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
+    screenCaptureServer_->SetMicrophoneEnabled(true);
+    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
+        AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+    screenCaptureServer_->captureCallback_ = std::make_shared<ScreenRendererAudioStateChangeCallback>();
+    screenCaptureServer_->captureCallback_->SetAudioSource(screenCaptureServer_->audioSource_);
+    screenCaptureServer_->captureConfig_.audioInfo.micCapInfo.state =
+        AVScreenCaptureParamValidationState::VALIDATION_VALID;
+    screenCaptureServer_->audioSource_->speakerAliveStatus_ = false;
+    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIX_MODE;
+    screenCaptureServer_->StartFileInnerAudioCapture();
+    screenCaptureServer_->StartFileMicAudioCapture();
+    const int bufferSize = 10;
+    uint8_t *micBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
+    uint8_t *innerBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
+    std::shared_ptr<AudioBuffer> innerAudioBuffer = std::make_shared<AudioBuffer>(innerBuffer, bufferSize, 0,
+        SOURCE_DEFAULT);
+    std::shared_ptr<AudioBuffer> micAudioBuffer = std::make_shared<AudioBuffer>(micBuffer, bufferSize, 0,
+        SOURCE_DEFAULT);
+    micAudioBuffer->timestamp = 1;
+    innerAudioBuffer->timestamp = 31333334;
+    SetSCMicAudioCaptureAndPushData(micAudioBuffer);
+    SetSCInnerAudioCaptureAndPushData(innerAudioBuffer);
+    std::shared_ptr<AVBuffer> buffer = AVBuffer::CreateAVBuffer();
+    AudioDataSourceReadAtActionState ret = screenCaptureServer_->audioSource_->InnerMicAudioSync(buffer, bufferSize,
+        innerAudioBuffer, micAudioBuffer);
+    MEDIA_LOGI("InnerMicAudioSync_001 ret: %{public}d", static_cast<int32_t>(ret));
+    ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, InnerMicAudioSync_002, TestSize.Level2)
+{
+    RecorderInfo recorderInfo;
+    SetRecorderInfo("start_file_inner_audio_capture_001.mp4", recorderInfo);
+    SetValidConfigFile(recorderInfo);
+    ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
+    screenCaptureServer_->SetMicrophoneEnabled(true);
+    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
+        AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+    screenCaptureServer_->captureCallback_ = std::make_shared<ScreenRendererAudioStateChangeCallback>();
+    screenCaptureServer_->captureCallback_->SetAudioSource(screenCaptureServer_->audioSource_);
+    screenCaptureServer_->captureConfig_.audioInfo.micCapInfo.state =
+        AVScreenCaptureParamValidationState::VALIDATION_VALID;
+    screenCaptureServer_->audioSource_->speakerAliveStatus_ = false;
+    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIX_MODE;
+    screenCaptureServer_->StartFileInnerAudioCapture();
+    screenCaptureServer_->StartFileMicAudioCapture();
+    const int bufferSize = 10;
+    uint8_t *micBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
+    uint8_t *innerBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
+    std::shared_ptr<AudioBuffer> innerAudioBuffer = std::make_shared<AudioBuffer>(innerBuffer, bufferSize, 0,
+        SOURCE_DEFAULT);
+    std::shared_ptr<AudioBuffer> micAudioBuffer = std::make_shared<AudioBuffer>(micBuffer, bufferSize, 0,
+        SOURCE_DEFAULT);
+    micAudioBuffer->timestamp = 21333334;
+    innerAudioBuffer->timestamp = 31333334;
+    SetSCMicAudioCaptureAndPushData(micAudioBuffer);
+    SetSCInnerAudioCaptureAndPushData(innerAudioBuffer);
+    std::shared_ptr<AVBuffer> buffer = AVBuffer::CreateAVBuffer();
+    AudioDataSourceReadAtActionState ret = screenCaptureServer_->audioSource_->InnerMicAudioSync(buffer, bufferSize,
+        innerAudioBuffer, micAudioBuffer);
+    MEDIA_LOGI("InnerMicAudioSync_001 ret: %{public}d", static_cast<int32_t>(ret));
+    ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, InnerMicAudioSync_003, TestSize.Level2)
+{
+    RecorderInfo recorderInfo;
+    SetRecorderInfo("start_file_inner_audio_capture_001.mp4", recorderInfo);
+    SetValidConfigFile(recorderInfo);
+    ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
+    screenCaptureServer_->SetMicrophoneEnabled(true);
+    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
+        AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+    screenCaptureServer_->captureCallback_ = std::make_shared<ScreenRendererAudioStateChangeCallback>();
+    screenCaptureServer_->captureCallback_->SetAudioSource(screenCaptureServer_->audioSource_);
+    screenCaptureServer_->captureConfig_.audioInfo.micCapInfo.state =
+        AVScreenCaptureParamValidationState::VALIDATION_VALID;
+    screenCaptureServer_->audioSource_->speakerAliveStatus_ = false;
+    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIX_MODE;
+    screenCaptureServer_->StartFileInnerAudioCapture();
+    screenCaptureServer_->StartFileMicAudioCapture();
+    const int bufferSize = 10;
+    uint8_t *micBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
+    uint8_t *innerBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
+    std::shared_ptr<AudioBuffer> innerAudioBuffer = std::make_shared<AudioBuffer>(innerBuffer, bufferSize, 0,
+        SOURCE_DEFAULT);
+    std::shared_ptr<AudioBuffer> micAudioBuffer = std::make_shared<AudioBuffer>(micBuffer, bufferSize, 0,
+        SOURCE_DEFAULT);
+    micAudioBuffer->timestamp = 31333334;
+    innerAudioBuffer->timestamp = 1;
+    SetSCMicAudioCaptureAndPushData(micAudioBuffer);
+    SetSCInnerAudioCaptureAndPushData(innerAudioBuffer);
+    std::shared_ptr<AVBuffer> buffer = AVBuffer::CreateAVBuffer();
+    AudioDataSourceReadAtActionState ret = screenCaptureServer_->audioSource_->InnerMicAudioSync(buffer, bufferSize,
+        innerAudioBuffer, micAudioBuffer);
+    MEDIA_LOGI("InnerMicAudioSync_001 ret: %{public}d", static_cast<int32_t>(ret));
+    ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, HandleMicBeforeInnerSync_001, TestSize.Level2)
+{
+    RecorderInfo recorderInfo;
+    SetRecorderInfo("start_file_inner_audio_capture_001.mp4", recorderInfo);
+    SetValidConfigFile(recorderInfo);
+    ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
+    screenCaptureServer_->SetMicrophoneEnabled(true);
+    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
+        AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+    screenCaptureServer_->captureCallback_ = std::make_shared<ScreenRendererAudioStateChangeCallback>();
+    screenCaptureServer_->captureCallback_->SetAudioSource(screenCaptureServer_->audioSource_);
+    screenCaptureServer_->captureConfig_.audioInfo.micCapInfo.state =
+        AVScreenCaptureParamValidationState::VALIDATION_VALID;
+    screenCaptureServer_->audioSource_->speakerAliveStatus_ = false;
+    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIX_MODE;
+    screenCaptureServer_->StartFileInnerAudioCapture();
+    screenCaptureServer_->StartFileMicAudioCapture();
+    const int bufferSize = 10;
+    uint8_t *micBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
+    uint8_t *innerBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
+    std::shared_ptr<AudioBuffer> innerAudioBuffer = std::make_shared<AudioBuffer>(innerBuffer, bufferSize, 0,
+        SOURCE_DEFAULT);
+    std::shared_ptr<AudioBuffer> micAudioBuffer = std::make_shared<AudioBuffer>(micBuffer, bufferSize, 0,
+        SOURCE_DEFAULT);
+    micAudioBuffer->timestamp = 1;
+    innerAudioBuffer->timestamp = 3000000000;
+    SetSCMicAudioCaptureAndPushData(micAudioBuffer);
+    SetSCInnerAudioCaptureAndPushData(innerAudioBuffer);
+    std::shared_ptr<AVBuffer> buffer = AVBuffer::CreateAVBuffer();
+    AudioDataSourceReadAtActionState ret = screenCaptureServer_->audioSource_->HandleMicBeforeInnerSync(buffer,
+        bufferSize, innerAudioBuffer, micAudioBuffer);
+    MEDIA_LOGI("HandleMicBeforeInnerSync_001 ret: %{public}d", static_cast<int32_t>(ret));
+    ASSERT_EQ(ret, AudioDataSourceReadAtActionState::RETRY_SKIP);
+    ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, HandleMicBeforeInnerSync_002, TestSize.Level2)
+{
+    RecorderInfo recorderInfo;
+    SetRecorderInfo("start_file_inner_audio_capture_001.mp4", recorderInfo);
+    SetValidConfigFile(recorderInfo);
+    ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
+    screenCaptureServer_->SetMicrophoneEnabled(true);
+    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
+        AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+    screenCaptureServer_->captureCallback_ = std::make_shared<ScreenRendererAudioStateChangeCallback>();
+    screenCaptureServer_->captureCallback_->SetAudioSource(screenCaptureServer_->audioSource_);
+    screenCaptureServer_->captureConfig_.audioInfo.micCapInfo.state =
+        AVScreenCaptureParamValidationState::VALIDATION_VALID;
+    screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo.state =
+        AVScreenCaptureParamValidationState::VALIDATION_VALID;
+    screenCaptureServer_->audioSource_->speakerAliveStatus_ = false;
+    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIX_MODE;
+    screenCaptureServer_->StartFileInnerAudioCapture();
+    screenCaptureServer_->StartFileMicAudioCapture();
+    const int bufferSize = 10;
+    uint8_t *micBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
+    uint8_t *innerBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
+    std::shared_ptr<AudioBuffer> innerAudioBuffer = std::make_shared<AudioBuffer>(innerBuffer, bufferSize, 0,
+        SOURCE_DEFAULT);
+    std::shared_ptr<AudioBuffer> micAudioBuffer = std::make_shared<AudioBuffer>(micBuffer, bufferSize, 0,
+        SOURCE_DEFAULT);
+    micAudioBuffer->timestamp = 1;
+    innerAudioBuffer->timestamp = 3000000000;
+    SetSCMicAudioCaptureAndPushData(micAudioBuffer);
+    SetSCInnerAudioCaptureAndPushData(innerAudioBuffer);
+    std::shared_ptr<AVBuffer> buffer = AVBuffer::CreateAVBuffer();
+    screenCaptureServer_->micAudioCapture_ = nullptr;
+    AudioDataSourceReadAtActionState ret = screenCaptureServer_->audioSource_->HandleMicBeforeInnerSync(buffer,
+        bufferSize, innerAudioBuffer, micAudioBuffer);
+    MEDIA_LOGI("HandleMicBeforeInnerSync_002 ret: %{public}d", static_cast<int32_t>(ret));
+    ASSERT_EQ(ret, AudioDataSourceReadAtActionState::RETRY_SKIP);
+    ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, HandleMicBeforeInnerSync_003, TestSize.Level2)
+{
+    RecorderInfo recorderInfo;
+    SetRecorderInfo("start_file_inner_audio_capture_001.mp4", recorderInfo);
+    SetValidConfigFile(recorderInfo);
+    ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
+    screenCaptureServer_->SetMicrophoneEnabled(true);
+    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
+        AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+    screenCaptureServer_->captureCallback_ = std::make_shared<ScreenRendererAudioStateChangeCallback>();
+    screenCaptureServer_->captureCallback_->SetAudioSource(screenCaptureServer_->audioSource_);
+    screenCaptureServer_->captureConfig_.audioInfo.micCapInfo.state =
+        AVScreenCaptureParamValidationState::VALIDATION_VALID;
+    screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo.state =
+        AVScreenCaptureParamValidationState::VALIDATION_VALID;
+    screenCaptureServer_->audioSource_->speakerAliveStatus_ = false;
+    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIX_MODE;
+    screenCaptureServer_->StartFileInnerAudioCapture();
+    screenCaptureServer_->StartFileMicAudioCapture();
+    const int bufferSize = 10;
+    uint8_t *micBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
+    uint8_t *innerBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
+    std::shared_ptr<AudioBuffer> innerAudioBuffer = std::make_shared<AudioBuffer>(innerBuffer, bufferSize, 0,
+        SOURCE_DEFAULT);
+    std::shared_ptr<AudioBuffer> micAudioBuffer = std::make_shared<AudioBuffer>(micBuffer, bufferSize, 0,
+        SOURCE_DEFAULT);
+    micAudioBuffer->timestamp = 2;
+    innerAudioBuffer->timestamp = 3;
+    SetSCMicAudioCaptureAndPushData(micAudioBuffer);
+    SetSCInnerAudioCaptureAndPushData(innerAudioBuffer);
+    std::shared_ptr<AVBuffer> buffer = AVBuffer::CreateAVBuffer();
+    uint8_t data[bufferSize];
+    std::shared_ptr<AVMemory> bufferMem = AVMemory::CreateAVMemory(data, bufferSize, bufferSize);
+    buffer->memory_ = bufferMem;
+    AudioDataSourceReadAtActionState ret = screenCaptureServer_->audioSource_->HandleMicBeforeInnerSync(buffer,
+        bufferSize, innerAudioBuffer, micAudioBuffer);
+    MEDIA_LOGI("HandleMicBeforeInnerSync_003 ret: %{public}d", static_cast<int32_t>(ret));
+    ASSERT_EQ(ret, AudioDataSourceReadAtActionState::OK);
+    ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, VideoAudioSyncMixMode_001, TestSize.Level2)
+{
+    RecorderInfo recorderInfo;
+    SetRecorderInfo("start_file_inner_audio_capture_001.mp4", recorderInfo);
+    SetValidConfigFile(recorderInfo);
+    ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
+    screenCaptureServer_->SetMicrophoneEnabled(true);
+    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
+        AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+    screenCaptureServer_->captureCallback_ = std::make_shared<ScreenRendererAudioStateChangeCallback>();
+    screenCaptureServer_->captureCallback_->SetAudioSource(screenCaptureServer_->audioSource_);
+    screenCaptureServer_->captureConfig_.audioInfo.micCapInfo.state =
+        AVScreenCaptureParamValidationState::VALIDATION_VALID;
+    screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo.state =
+        AVScreenCaptureParamValidationState::VALIDATION_VALID;
+    screenCaptureServer_->audioSource_->speakerAliveStatus_ = false;
+    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIX_MODE;
+    screenCaptureServer_->StartFileInnerAudioCapture();
+    screenCaptureServer_->StartFileMicAudioCapture();
+    const int bufferSize = 10;
+    uint8_t *micBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
+    uint8_t *innerBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
+    std::shared_ptr<AudioBuffer> innerAudioBuffer = std::make_shared<AudioBuffer>(innerBuffer, bufferSize, 0,
+        SOURCE_DEFAULT);
+    std::shared_ptr<AudioBuffer> micAudioBuffer = std::make_shared<AudioBuffer>(micBuffer, bufferSize, 0,
+        SOURCE_DEFAULT);
+    SetSCMicAudioCaptureAndPushData(micAudioBuffer);
+    SetSCInnerAudioCaptureAndPushData(innerAudioBuffer);
+    std::shared_ptr<AVBuffer> buffer = AVBuffer::CreateAVBuffer();
+    uint8_t data[bufferSize];
+    std::shared_ptr<AVMemory> bufferMem = AVMemory::CreateAVMemory(data, bufferSize, bufferSize);
+    buffer->memory_ = bufferMem;
+    int64_t timeWindow = -31333334;
+    AudioDataSourceReadAtActionState ret = screenCaptureServer_->audioSource_->VideoAudioSyncMixMode(buffer,
+        bufferSize, timeWindow, innerAudioBuffer, micAudioBuffer);
+    MEDIA_LOGI("VideoAudioSyncMixMode_001 ret: %{public}d", static_cast<int32_t>(ret));
+    ASSERT_EQ(ret, AudioDataSourceReadAtActionState::SKIP_WITHOUT_LOG);
+    timeWindow = 31333334;
+    ret = screenCaptureServer_->audioSource_->VideoAudioSyncMixMode(buffer,
+        bufferSize, timeWindow, innerAudioBuffer, micAudioBuffer);
+    ASSERT_EQ(ret, AudioDataSourceReadAtActionState::SKIP_WITHOUT_LOG);
+    timeWindow = 1;
+    ret = screenCaptureServer_->audioSource_->VideoAudioSyncMixMode(buffer,
+        bufferSize, timeWindow, innerAudioBuffer, micAudioBuffer);
+    MEDIA_LOGI("VideoAudioSyncMixMode_001 ret: %{public}d", static_cast<int32_t>(ret));
+    ASSERT_EQ(ret, AudioDataSourceReadAtActionState::OK);
+    ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, VideoAudioSyncInnerMode_001, TestSize.Level2)
+{
+    RecorderInfo recorderInfo;
+    SetRecorderInfo("start_file_inner_audio_capture_001.mp4", recorderInfo);
+    SetValidConfigFile(recorderInfo);
+    ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
+    screenCaptureServer_->SetMicrophoneEnabled(false);
+    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
+        AVScreenCaptureMixMode::INNER_MODE, screenCaptureServer_.get());
+    screenCaptureServer_->captureCallback_ = std::make_shared<ScreenRendererAudioStateChangeCallback>();
+    screenCaptureServer_->captureCallback_->SetAudioSource(screenCaptureServer_->audioSource_);
+    screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo.state =
+        AVScreenCaptureParamValidationState::VALIDATION_VALID;
+    screenCaptureServer_->audioSource_->speakerAliveStatus_ = false;
+    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::INNER_MODE;
+    screenCaptureServer_->StartFileInnerAudioCapture();
+    const int bufferSize = 10;
+    uint8_t *innerBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
+    std::shared_ptr<AudioBuffer> innerAudioBuffer = std::make_shared<AudioBuffer>(innerBuffer, bufferSize, 0,
+        SOURCE_DEFAULT);
+    SetSCInnerAudioCaptureAndPushData(innerAudioBuffer);
+    std::shared_ptr<AVBuffer> buffer = AVBuffer::CreateAVBuffer();
+    uint8_t data[bufferSize];
+    std::shared_ptr<AVMemory> bufferMem = AVMemory::CreateAVMemory(data, bufferSize, bufferSize);
+    buffer->memory_ = bufferMem;
+    int64_t timeWindow = -31333334;
+    AudioDataSourceReadAtActionState ret = screenCaptureServer_->audioSource_->VideoAudioSyncInnerMode(buffer,
+        bufferSize, timeWindow, innerAudioBuffer);
+    MEDIA_LOGI("VideoAudioSyncInnerMode_001 ret: %{public}d", static_cast<int32_t>(ret));
+    ASSERT_EQ(ret, AudioDataSourceReadAtActionState::SKIP_WITHOUT_LOG);
+    timeWindow = 31333334;
+    ret = screenCaptureServer_->audioSource_->VideoAudioSyncInnerMode(buffer,
+        bufferSize, timeWindow, innerAudioBuffer);
+    ASSERT_EQ(ret, AudioDataSourceReadAtActionState::SKIP_WITHOUT_LOG);
+    timeWindow = 1;
+    ret = screenCaptureServer_->audioSource_->VideoAudioSyncInnerMode(buffer,
+        bufferSize, timeWindow, innerAudioBuffer);
+    MEDIA_LOGI("VideoAudioSyncInnerMode_001 ret: %{public}d", static_cast<int32_t>(ret));
+    ASSERT_EQ(ret, AudioDataSourceReadAtActionState::OK);
+    ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, MixModeBufferWrite_001, TestSize.Level2)
@@ -1189,8 +1971,9 @@ HWTEST_F(ScreenCaptureServerFunctionTest, MixModeBufferWrite_001, TestSize.Level
         SOURCE_DEFAULT);
     uint8_t data[bufferSize];
     std::shared_ptr<AVMemory> bufferMem = AVMemory::CreateAVMemory(data, bufferSize, bufferSize);
-    int32_t ret = screenCaptureServer_->audioSource_->MixModeBufferWrite(innerAudioBuffer, micAudioBuffer, bufferMem);
-    ASSERT_EQ(ret, MSERR_OK);
+    AudioDataSourceReadAtActionState ret = screenCaptureServer_->audioSource_->MixModeBufferWrite(
+        innerAudioBuffer, micAudioBuffer, bufferMem);
+    ASSERT_EQ(ret, AudioDataSourceReadAtActionState::OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, MixModeBufferWrite_002, TestSize.Level2)
@@ -1204,8 +1987,9 @@ HWTEST_F(ScreenCaptureServerFunctionTest, MixModeBufferWrite_002, TestSize.Level
     std::shared_ptr<AudioBuffer> micAudioBuffer;
     uint8_t data[bufferSize];
     std::shared_ptr<AVMemory> bufferMem = AVMemory::CreateAVMemory(data, bufferSize, bufferSize);
-    int32_t ret = screenCaptureServer_->audioSource_->MixModeBufferWrite(innerAudioBuffer, micAudioBuffer, bufferMem);
-    ASSERT_EQ(ret, MSERR_OK);
+    AudioDataSourceReadAtActionState ret = screenCaptureServer_->audioSource_->MixModeBufferWrite(innerAudioBuffer,
+        micAudioBuffer, bufferMem);
+    ASSERT_EQ(ret, AudioDataSourceReadAtActionState::OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, MixModeBufferWrite_003, TestSize.Level2)
@@ -1219,43 +2003,23 @@ HWTEST_F(ScreenCaptureServerFunctionTest, MixModeBufferWrite_003, TestSize.Level
         SOURCE_DEFAULT);
     uint8_t data[bufferSize];
     std::shared_ptr<AVMemory> bufferMem = AVMemory::CreateAVMemory(data, bufferSize, bufferSize);
-    int32_t ret = screenCaptureServer_->audioSource_->MixModeBufferWrite(innerAudioBuffer, micAudioBuffer, bufferMem);
-    ASSERT_EQ(ret, MSERR_OK);
+    AudioDataSourceReadAtActionState ret = screenCaptureServer_->audioSource_->MixModeBufferWrite(innerAudioBuffer,
+        micAudioBuffer, bufferMem);
+    ASSERT_EQ(ret, AudioDataSourceReadAtActionState::OK);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, AcquireAudioBufferMix_001, TestSize.Level2)
+HWTEST_F(ScreenCaptureServerFunctionTest, MixModeBufferWrite_004, TestSize.Level2)
 {
-    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
+    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
+        AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+    const int bufferSize = 10;
     std::shared_ptr<AudioBuffer> innerAudioBuffer;
     std::shared_ptr<AudioBuffer> micAudioBuffer;
-    int32_t ret = screenCaptureServer_->AcquireAudioBufferMix(innerAudioBuffer, micAudioBuffer,
-        AVScreenCaptureMixMode::MIX_MODE);
-    ASSERT_EQ(ret, MSERR_OK);
-    ret = screenCaptureServer_->AcquireAudioBufferMix(innerAudioBuffer, micAudioBuffer,
-        AVScreenCaptureMixMode::MIC_MODE);
-    ASSERT_EQ(ret, MSERR_OK);
-    ret = screenCaptureServer_->AcquireAudioBufferMix(innerAudioBuffer, micAudioBuffer,
-        AVScreenCaptureMixMode::INNER_MODE);
-    ASSERT_EQ(ret, MSERR_OK);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, AcquireAudioBufferMix_002, TestSize.Level2)
-{
-    SetValidConfig();
-    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
-    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
-    std::shared_ptr<AudioBuffer> innerAudioBuffer;
-    std::shared_ptr<AudioBuffer> micAudioBuffer;
-    int32_t ret = screenCaptureServer_->AcquireAudioBufferMix(innerAudioBuffer, micAudioBuffer,
-        AVScreenCaptureMixMode::MIX_MODE);
-    ASSERT_EQ(ret, MSERR_OK);
-    ret = screenCaptureServer_->AcquireAudioBufferMix(innerAudioBuffer, micAudioBuffer,
-        AVScreenCaptureMixMode::MIC_MODE);
-    ASSERT_EQ(ret, MSERR_OK);
-    ret = screenCaptureServer_->AcquireAudioBufferMix(innerAudioBuffer, micAudioBuffer,
-        AVScreenCaptureMixMode::INNER_MODE);
-    ASSERT_EQ(ret, MSERR_OK);
+    uint8_t data[bufferSize];
+    std::shared_ptr<AVMemory> bufferMem = AVMemory::CreateAVMemory(data, bufferSize, bufferSize);
+    AudioDataSourceReadAtActionState ret = screenCaptureServer_->audioSource_->MixModeBufferWrite(innerAudioBuffer,
+        micAudioBuffer, bufferMem);
+    ASSERT_EQ(ret, AudioDataSourceReadAtActionState::RETRY_SKIP);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, GetChoiceFromJson_001, TestSize.Level2)

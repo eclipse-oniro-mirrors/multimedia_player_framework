@@ -108,10 +108,6 @@ public:
     int32_t TelCallAudioStateUpdated(bool isInTelCallAudio);
 #endif
     void UpdateMicrophoneEnabled();
-
-    int32_t AcquireAudioBufferMix(std::shared_ptr<AudioBuffer> &innerAudioBuffer,
-        std::shared_ptr<AudioBuffer> &micAudioBuffer, AVScreenCaptureMixMode type);
-    int32_t ReleaseAudioBufferMix(AVScreenCaptureMixMode type);
     int32_t ReleaseMicAudioBuffer();
     int32_t ReleaseInnerAudioBuffer();
     int32_t GetInnerAudioCaptureBufferSize(size_t &size);
@@ -133,6 +129,13 @@ public:
     int32_t GetSCServerSaUid();
     DataType GetSCServerDataType();
     AVScreenCaptureState GetSCServerCaptureState();
+    bool IsSCRecorderFileWithVideo();
+    std::shared_ptr<AudioCapturerWrapper> GetInnerAudioCapture();
+    std::shared_ptr<AudioCapturerWrapper> GetMicAudioCapture();
+    bool IsStopAcquireAudioBufferFlag();
+    bool IsMicrophoneSwitchTurnOn();
+    void SetInnerAudioCapture(std::shared_ptr<AudioCapturerWrapper> innerAudioCapture);
+    int32_t StopInnerAudioCapture();
     void SetWindowIdList(uint64_t windowId);
     std::vector<int32_t> GetWindowIdList();
     void OnSceneSessionManagerDied(const wptr<IRemoteObject>& remote);
@@ -140,7 +143,6 @@ public:
     uint64_t GetDefaultDisplayId();
     void SetCurDisplayId(uint64_t displayId);
     uint64_t GetCurDisplayId();
-
 private:
     int32_t StartScreenCaptureInner(bool isPrivacyAuthorityEnabled);
     int32_t RegisterServerCallbacks();
@@ -150,6 +152,8 @@ private:
     void PostStartScreenCapture(bool isSuccess);
     void PostStartScreenCaptureSuccessAction();
     int32_t InitRecorderInfo(std::shared_ptr<IRecorderService> &recorder, AudioCaptureInfo audioInfo);
+    int32_t InitRecorderMix();
+    int32_t InitRecorderInner();
     int32_t InitRecorder();
     int32_t StartScreenCaptureFile();
     int32_t StartScreenCaptureStream();
@@ -158,7 +162,6 @@ private:
     int32_t StartStreamInnerAudioCapture();
     int32_t StartStreamMicAudioCapture();
     int32_t StartFileInnerAudioCapture();
-    int32_t StopInnerAudioCapture();
     int32_t StartFileMicAudioCapture();
     int32_t StartMicAudioCapture();
     int32_t StopMicAudioCapture();
@@ -262,6 +265,8 @@ private:
     bool checkBoxSelected_ = false;
     std::vector<uint64_t> surfaceIdList_ = {};
     std::vector<uint8_t> surfaceTypeList_ = {};
+    bool stopAcquireAudioBufferFromAudio_ = false;
+    AVScreenCaptureMixMode recorderFileAudioType_ = AVScreenCaptureMixMode::INVALID_MODE;
 
     int32_t sessionId_ = 0;
     int32_t notificationId_ = 0;
@@ -325,8 +330,9 @@ private:
 #ifdef SUPPORT_CALL
     std::atomic<bool> isInTelCall_ = false;
     std::atomic<bool> isInTelCallAudio_ = false;
+    int32_t apiVersion_ = -1;
 #endif
-
+    std::atomic<bool> recorderFileWithVideo_{false};
 private:
     static int32_t CheckAudioCapParam(const AudioCaptureInfo &audioCapInfo);
     static int32_t CheckVideoCapParam(const VideoCaptureInfo &videoCapInfo);
@@ -353,6 +359,9 @@ private:
     static constexpr int32_t AV_SCREEN_CAPTURE_SESSION_UID = 1013;
     static constexpr const char* NOTIFICATION_SCREEN_RECORDING_TITLE_ID = "notification_screen_recording_title";
     static constexpr const char* QUOTATION_MARKS_STRING = "\"";
+    static constexpr int64_t MAX_INNER_AUDIO_TIMEOUT_IN_NS = 2000000000; // 2s
+    static constexpr int64_t AUDIO_INTERVAL_IN_NS = 20000000; // 20ms
+    static constexpr int64_t NEG_AUDIO_INTERVAL_IN_NS = -20000000; // 20ms
 };
 } // namespace Media
 } // namespace OHOS

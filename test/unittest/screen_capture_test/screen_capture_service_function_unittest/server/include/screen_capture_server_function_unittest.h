@@ -48,6 +48,8 @@ public:
     int32_t SetScreenCaptureObserver();
     int32_t StartFileAudioCapture(AVScreenCaptureMixMode mixMode);
     int32_t StartStreamAudioCapture();
+    void SetSCInnerAudioCaptureAndPushData(std::shared_ptr<AudioBuffer> innerAudioBuffer);
+    void SetSCMicAudioCaptureAndPushData(std::shared_ptr<AudioBuffer> micAudioBuffer);
 
 protected:
     std::shared_ptr<ScreenCaptureServer> screenCaptureServer_;

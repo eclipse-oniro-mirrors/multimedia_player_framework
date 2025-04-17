@@ -32,6 +32,11 @@ using namespace testing::ext;
 using namespace OHOS::Media::ScreenCaptureTestParam;
 using namespace OHOS::Media;
 
+namespace {
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "ScreenCaptureServerFunctionTest"};
+static constexpr int64_t AUDIO_CAPTURE_READ_FRAME_TIME = 21333333; // 21333333 ns 21ms
+}
+
 namespace OHOS {
 namespace Media {
 HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperStart_001, TestSize.Level2)
@@ -143,10 +148,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperPause_001, TestSiz
     screenCaptureServer_->innerAudioCapture_->bundleName_ = ScreenRecorderBundleName;
     ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Start(screenCaptureServer_->appInfo_), MSERR_OK);
     sleep(RECORDER_TIME);
-    ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Pause(), MSERR_OK);
-    sleep(RECORDER_TIME);
-    ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Resume(), MSERR_OK);
-    sleep(RECORDER_TIME);
     ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Stop(), MSERR_OK);
 }
 
@@ -164,14 +165,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperPause_002, TestSiz
     screenCaptureServer_->innerAudioCapture_->bundleName_ = ScreenRecorderBundleName;
     ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Start(screenCaptureServer_->appInfo_), MSERR_OK);
     sleep(RECORDER_TIME);
-    ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Pause(), MSERR_OK);
-    sleep(RECORDER_TIME);
-    ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Pause(), MSERR_OK);
-    sleep(RECORDER_TIME);
-    ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Resume(), MSERR_OK);
-    sleep(RECORDER_TIME);
-    ASSERT_NE(screenCaptureServer_->innerAudioCapture_->Resume(), MSERR_OK);
-    sleep(RECORDER_TIME);
     ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Stop(), MSERR_OK);
 }
 
@@ -188,14 +181,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperPause_003, TestSiz
         std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
     screenCaptureServer_->innerAudioCapture_->bundleName_ = ScreenRecorderBundleName;
     ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Start(screenCaptureServer_->appInfo_), MSERR_OK);
-    sleep(RECORDER_TIME);
-    ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Pause(), MSERR_OK);
-    sleep(RECORDER_TIME);
     screenCaptureServer_->innerAudioCapture_->isRunning_.store(true);
-    ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Pause(), MSERR_OK);
-    sleep(RECORDER_TIME);
-    screenCaptureServer_->innerAudioCapture_->isRunning_.store(true);
-    ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Pause(), MSERR_OK);
     sleep(RECORDER_TIME);
     ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Stop(), MSERR_OK);
 }
@@ -270,6 +256,52 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperUpdateAudioCapture
     ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Stop(), MSERR_OK);
 }
 
+HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperUseUpBuffer_001, TestSize.Level2)
+{
+    SetValidConfig();
+    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
+    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
+        AVScreenCaptureMixMode::INNER_MODE, screenCaptureServer_.get());
+    screenCaptureServer_->captureCallback_ = std::make_shared<ScreenRendererAudioStateChangeCallback>();
+    screenCaptureServer_->captureCallback_->SetAudioSource(screenCaptureServer_->audioSource_);
+    screenCaptureServer_->innerAudioCapture_ = std::make_shared<AudioCapturerWrapper>(
+        screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo, screenCaptureServer_->screenCaptureCb_,
+        std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
+    screenCaptureServer_->innerAudioCapture_->bundleName_ = ScreenRecorderBundleName;
+    ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Start(screenCaptureServer_->appInfo_), MSERR_OK);
+    sleep(RECORDER_TIME);
+    int64_t currentAudioTime = 0;
+    screenCaptureServer_->innerAudioCapture_->GetCurrentAudioTime(currentAudioTime);
+    size_t size = 0;
+    screenCaptureServer_->innerAudioCapture_->GetBufferSize(size);
+    ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->AddBufferFrom(0, static_cast<int64_t>(size), currentAudioTime),
+        MSERR_OK);
+    MEDIA_LOGI("UseUpBuffer time: %{public}" PRId64, static_cast<int64_t>(currentAudioTime));
+    MEDIA_LOGI("UseUpBuffer size: %{public}" PRId64, static_cast<int64_t>(size));
+    if (screenCaptureServer_->innerAudioCapture_->availBuffers_.front()) {
+        MEDIA_LOGI("UseUpBuffer ftime: %{public}" PRId64, static_cast<int64_t>(
+            screenCaptureServer_->innerAudioCapture_->availBuffers_.front()->timestamp));
+    }
+    int32_t ret = screenCaptureServer_->innerAudioCapture_->UseUpAllLeftBufferUntil(currentAudioTime);
+    MEDIA_LOGI("UseUpBuffer ret: %{public}d", ret);
+    int64_t currentAudioTime1 = 0;
+    screenCaptureServer_->innerAudioCapture_->GetCurrentAudioTime(currentAudioTime1);
+    int64_t currentAudioTime2 = currentAudioTime1 - AUDIO_CAPTURE_READ_FRAME_TIME * 3;
+    screenCaptureServer_->innerAudioCapture_->AddBufferFrom(AUDIO_CAPTURE_READ_FRAME_TIME * 3,
+        static_cast<int64_t>(size), currentAudioTime2);
+    screenCaptureServer_->innerAudioCapture_->DropBufferUntil(currentAudioTime1);
+    MEDIA_LOGI("UseUpBuffer time: %{public}" PRId64, static_cast<int64_t>(currentAudioTime1));
+    MEDIA_LOGI("UseUpBuffer before time: %{public}" PRId64, static_cast<int64_t>(currentAudioTime2));
+    if (screenCaptureServer_->innerAudioCapture_->availBuffers_.front()) {
+        MEDIA_LOGI("UseUpBuffer ftime: %{public}" PRId64, static_cast<int64_t>(
+            screenCaptureServer_->innerAudioCapture_->availBuffers_.front()->timestamp));
+    }
+    ret = screenCaptureServer_->innerAudioCapture_->UseUpAllLeftBufferUntil(currentAudioTime);
+    MEDIA_LOGI("UseUpBuffer 2 ret: %{public}d", ret);
+    sleep(RECORDER_TIME);
+    ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Stop(), MSERR_OK);
+}
+
 #ifdef SUPPORT_CALL
 /**
 * @tc.name: AudioCapturerWrapperInTelCall_001
@@ -310,11 +342,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperInTelCall_002, Tes
         std::string("OS_MicAudioCapture"), screenCaptureServer_->contentFilter_);
     ASSERT_EQ(screenCaptureServer_->micAudioCapture_->Start(screenCaptureServer_->appInfo_), MSERR_OK);
     sleep(RECORDER_TIME);
-    ASSERT_EQ(screenCaptureServer_->micAudioCapture_->Pause(), MSERR_OK);
-    sleep(RECORDER_TIME);
     screenCaptureServer_->micAudioCapture_->SetIsInTelCall(true);
-    sleep(RECORDER_TIME);
-    ASSERT_NE(screenCaptureServer_->micAudioCapture_->Resume(), MSERR_OK);
 }
 #endif
 

@@ -60,8 +60,6 @@ public:
         contentFilter_(filter) {}
     virtual ~AudioCapturerWrapper();
     int32_t Start(const OHOS::AudioStandard::AppInfo &appInfo);
-    int32_t Pause();
-    int32_t Resume();
     int32_t Stop();
     int32_t UpdateAudioCapturerConfig(ScreenCaptureContentFilter &filter);
     int32_t CaptureAudio();
@@ -73,6 +71,10 @@ public:
     void SetIsInTelCall(bool isInTelCall);
 #endif
     AudioCapturerWrapperState GetAudioCapturerState();
+    int32_t UseUpAllLeftBufferUntil(int64_t audioTime);
+    int32_t GetCurrentAudioTime(int64_t &currentAudioTime);
+    int32_t DropBufferUntil(int64_t audioTime);
+    int32_t AddBufferFrom(int64_t timeWindow, int64_t bufferSize, int64_t fromTime);
 
 protected:
     virtual void OnStartFailed(ScreenCaptureErrorType errorType, int32_t errorCode);
@@ -83,6 +85,7 @@ private:
     void SetInnerStreamUsage(std::vector<OHOS::AudioStandard::StreamUsage> &usages);
     void PartiallyPrintLog(int32_t lineNumber, std::string str);
     int32_t RelativeSleep(int64_t nanoTime);
+    int32_t GetCaptureAudioBuffer(std::shared_ptr<AudioBuffer> audioBuffer, size_t bufferLen);
 
 protected:
     std::shared_ptr<ScreenCaptureCallBack> screenCaptureCb_;
@@ -100,7 +103,7 @@ private:
 
     std::mutex bufferMutex_;
     std::condition_variable bufferCond_;
-    std::queue<std::shared_ptr<AudioBuffer>> availBuffers_;
+    std::deque<std::shared_ptr<AudioBuffer>> availBuffers_;
     std::string bundleName_;
     std::atomic<bool> isInVoIPCall_ = false;
 #ifdef SUPPORT_CALL
@@ -111,11 +114,16 @@ private:
     /* used for hilog output */
     std::map<int32_t, int32_t> captureAudioLogCountMap_;
 
+    static constexpr int64_t INNER_AUDIO_READ_TO_HEAR_TIME = 240000000; // 240ms
+    static constexpr uint32_t WRAPPER_PUSH_AUDIO_SAMPLE_INTERVAL_IN_US = 5000; // 5ms
     static constexpr uint32_t MAX_THREAD_NAME_LENGTH = 15;
     static constexpr uint32_t MAX_AUDIO_BUFFER_SIZE = 128;
     static constexpr uint32_t SEC_TO_NANOSECOND = 1000000000; // 10^9ns
-    static constexpr uint32_t OPERATION_TIMEOUT_IN_MS = 200; // 200ms
+    static constexpr uint32_t OPERATION_TIMEOUT_IN_MS = 5; // 5ms
     static constexpr int32_t AC_LOG_SKIP_NUM = 1000;
+    static constexpr uint32_t STOP_WAIT_TIMEOUT_IN_MS = 500; // 500ms
+    static constexpr int64_t AUDIO_CAPTURE_READ_FRAME_TIME = 21333333; // 21333333 ns 21ms
+    static constexpr int32_t MAX_AUDIO_BUFFER_LEN = 10 * 1024 * 1024; // 10M
 };
 
 class MicAudioCapturerWrapper : public AudioCapturerWrapper {
