@@ -772,6 +772,7 @@ void HiTransCoderImpl::HandleErrorEvent(int32_t errorCode)
 void HiTransCoderImpl::HandleCompleteEvent()
 {
     FALSE_RETURN_MSG(callbackLooper_ != nullptr, "callbackLooper is nullptr");
+    MEDIA_LOG_W("HandleCompleteEvent");
     callbackLooper_->StopReportMediaProgress();
     auto ptr = obs_.lock();
     if (ptr != nullptr) {
@@ -783,6 +784,7 @@ void HiTransCoderImpl::HandleCompleteEvent()
     MEDIA_LOG_I("complete event pipeline stop end");
     callbackLooper_->Stop();
 }
+
 Status HiTransCoderImpl::LinkAudioDecoderFilter(const std::shared_ptr<Pipeline::Filter>& preFilter,
     Pipeline::StreamType type)
 {
