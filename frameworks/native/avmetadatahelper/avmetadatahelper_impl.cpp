@@ -462,6 +462,7 @@ Status AVMetadataHelperImpl::GetColorSpace(sptr<SurfaceBuffer> &surfaceBuffer, P
                  (static_cast<unsigned int>(colorSpaceInfo.transfunc) << TRANSFUNC_OFFSET) +
                  (static_cast<unsigned int>(colorSpaceInfo.matrix) << MATRIX_OFFSET) +
                  (static_cast<unsigned int>(colorSpaceInfo.range) << RANGE_OFFSET));
+    pixelMapInfo.primaries = colorSpaceInfo.primaries;
     MEDIA_LOGI("colorSpaceType is %{public}u", type);
     if (pixelMapInfo.isHdr) {
         auto it = HDR_COLORSPACE_MAP.find(type);
@@ -500,6 +501,12 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::CreatePixelMapFromSurfaceBuffer(
         auto ret = CopySurfaceBufferToPixelMap(surfaceBuffer, pixelMap, pixelMapInfo);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "CopySurfaceBufferToPixelMap failed");
         options.pixelFormat = pixelMapInfo.pixelFormat;
+        int32_t primaries = pixelMapInfo.primaries;
+        options.convertColorSpace.srcYuvConversion = primaries == CM_ColorPrimaries::COLORPRIMARIES_BT709 ?
+            YuvConversion::BT709 : YuvConversion::BT601;
+        options.convertColorSpace.dstYuvConversion = primaries == CM_ColorPrimaries::COLORPRIMARIES_BT709 ?
+            YuvConversion::BT709 : YuvConversion::BT601;
+        MEDIA_LOGD("conversion: %{public}d", options.convertColorSpace.srcYuvConversion);
         pixelMap = PixelMap::Create(reinterpret_cast<const uint32_t *>(pixelMap->GetPixels()),
                                     pixelMap->GetByteCount(), options);
         CHECK_AND_RETURN_RET_LOG(pixelMap != nullptr, nullptr, "Create non-DMA pixelMap failed");
