@@ -194,7 +194,7 @@ VEFError VideoDecoderEngineImpl::InitDecoder()
     if (videoFormat == nullptr) {
         MEDIA_LOGE("[%{public}s] init decoder failed, get video format from deMuxer failed.", logTag_.c_str());
         videoDecoder_ = nullptr;
-		return VEFError::ERR_OOM;
+        return VEFError::ERR_OOM;
     }
     VEFError error = videoDecoder_->Init(videoFormat);
     if (error != VEFError::ERR_OK) {
@@ -249,7 +249,7 @@ VEFError VideoDecoderEngineImpl::InitAudioDecoder()
         OH_AVFormat_Destroy(format);
         return error;
     }
-	OH_AVFormat_Destroy(format);
+    OH_AVFormat_Destroy(format);
     return VEFError::ERR_OK;
 }
 
