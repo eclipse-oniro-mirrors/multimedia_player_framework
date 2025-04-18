@@ -60,6 +60,7 @@ ohos_shared_library("audio_haptic") {
     "ipc:ipc_core",
     "media_foundation:media_monitor_client",
     "media_foundation:media_monitor_common",
+    "samgr:samgr_proxy",
   ]
 
   if (player_framework_support_vibrator) {
