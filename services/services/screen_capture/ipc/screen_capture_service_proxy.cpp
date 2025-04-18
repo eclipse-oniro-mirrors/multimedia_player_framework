@@ -274,9 +274,8 @@ int32_t ScreenCaptureServiceProxy::InitVideoCap(VideoCaptureInfo videoInfo)
             break;
         }
     }
-    token = data.WriteInt32(videoInfo.videoFrameWidth) && data.WriteInt32(videoInfo.videoFrameHeight) &&
-            data.WriteBool(videoInfo.enableDeviceLevelCapture) && data.WriteInt32(videoInfo.videoSource) &&
-            data.WriteInt32(videoInfo.screenCaptureFillMode);
+    token = data.WriteInt32(videoInfo.videoFrameWidth) && data.WriteInt32(videoInfo.videoFrameHeight) && 
+            data.WriteInt32(videoInfo.videoSource) && data.WriteInt32(videoInfo.screenCaptureFillMode);
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write videoinfo!");
 
     int error = Remote()->SendRequest(INIT_VIDEO_CAP, data, reply, option);
@@ -598,6 +597,24 @@ int32_t ScreenCaptureServiceProxy::SetMaxVideoFrameRate(int32_t frameRate)
     int error = Remote()->SendRequest(SET_MAX_FRAME_RATE, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
                              "SetMaxVideoFrameRate failed, error: %{public}d", error);
+    return reply.ReadInt32();
+}
+
+int32_t ScreenCaptureServiceProxy::InitStrategy(Strategy strategy)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(ScreenCaptureServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    token = data.WriteBool(strategy.enableDeviceLevelCapture) && data.WriteBool(strategy.keepCaptureDuringCall);
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write strategy!");
+
+    int error = Remote()->SendRequest(INIT_STRATEGY, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+                             "InitStrategy failed, error: %{public}d", error);
     return reply.ReadInt32();
 }
 

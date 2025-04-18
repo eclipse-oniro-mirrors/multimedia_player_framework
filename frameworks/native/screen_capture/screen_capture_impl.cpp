@@ -136,6 +136,11 @@ bool ScreenCaptureImpl::IsVideoCapInfoIgnored(const VideoCaptureInfo &videoCapIn
     return videoCapInfo.videoFrameWidth == 0 && videoCapInfo.videoFrameHeight == 0;
 }
 
+bool ScreenCaptureImpl::IsStrategyIgnored(const Strategy &strategy)
+{
+    return strategy.enableDeviceLevelCapture == false && strategy.keepCaptureDuringCall == false;
+}
+
 int32_t ScreenCaptureImpl::SetMicrophoneEnabled(bool isMicrophone)
 {
     MEDIA_LOGD("SetMicrophoneEnabled:0x%{public}06" PRIXPTR " init in", FAKE_POINTER(this));
@@ -249,6 +254,10 @@ int32_t ScreenCaptureImpl::InitOriginalStream(AVScreenCaptureConfig config)
         ret = screenCaptureService_->InitAudioCap(config.audioInfo.micCapInfo);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "init micAudioCap failed");
     }
+    if (!IsStrategyIgnored(config.strategy)) {
+        ret = screenCaptureService_->InitStrategy(config.strategy);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "init strategy failed");
+    }
     MEDIA_LOGI("ScreenCaptureImpl: 0x%{public}06" PRIXPTR "InitOriginalStream end.", FAKE_POINTER(this));
     return ret;
 }
@@ -299,13 +308,16 @@ int32_t ScreenCaptureImpl::InitCaptureFile(AVScreenCaptureConfig config)
     }
     ret = screenCaptureService_->InitAudioCap(config.audioInfo.innerCapInfo);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "init innerCapInfo failed, innerCapInfo should be valid");
-    if (IsVideoCapInfoIgnored(config.videoInfo.videoCapInfo)) { //M4a
-        return ret;
+    if (!IsVideoCapInfoIgnored(config.videoInfo.videoCapInfo)) { //M4a
+        ret = screenCaptureService_->InitVideoEncInfo(config.videoInfo.videoEncInfo);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "InitVideoEncInfo failed");
+        ret = screenCaptureService_->InitVideoCap(config.videoInfo.videoCapInfo);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "InitVideoCap failed");
     }
-    ret = screenCaptureService_->InitVideoEncInfo(config.videoInfo.videoEncInfo);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "InitVideoEncInfo failed");
-    ret = screenCaptureService_->InitVideoCap(config.videoInfo.videoCapInfo);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "InitVideoCap failed");
+    if (!IsStrategyIgnored(config.strategy)) {
+        ret = screenCaptureService_->InitStrategy(config.strategy);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "init strategy failed");
+    }
     return ret;
 }
 
