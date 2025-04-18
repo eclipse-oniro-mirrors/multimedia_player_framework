@@ -38,7 +38,6 @@
 #include "ipc_skeleton.h"
 #include "tokenid_kit.h"
 #endif
-#include "fd_utils.h"
 
 using namespace OHOS::AudioStandard;
 
@@ -1794,13 +1793,11 @@ napi_value AVPlayerNapi::JsSetAVFileDescriptor(napi_env env, napi_callback_info 
         MEDIA_LOGI("SetAVFileDescriptor Task");
         if (jsPlayer->player_ != nullptr) {
             auto playerFd = jsPlayer->fileDescriptor_;
-            ScopedFileDescriptor reopenFd = FdUtils::ReOpenFd(playerFd.fd);
             MEDIA_LOGI("JsSetAVFileDescriptor fd: %{public}d, offset: %{public}"
-                PRId64 ", size: %{public}" PRId64, reopenFd.Get(), playerFd.offset, playerFd.length);
-            if (jsPlayer->player_->SetSource(reopenFd.Get(), playerFd.offset, playerFd.length) != MSERR_OK) {
+                PRId64 ", size: %{public}" PRId64, playerFd.fd, playerFd.offset, playerFd.length);
+            if (jsPlayer->player_->SetSource(playerFd.fd, playerFd.offset, playerFd.length) != MSERR_OK) {
                 jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "player SetSource FileDescriptor failed");
             }
-            reopenFd.Reset();
         }
     });
     (void)jsPlayer->taskQue_->EnqueueTask(task);

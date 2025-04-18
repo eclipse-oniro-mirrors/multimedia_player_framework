@@ -29,7 +29,6 @@
 #include "ipc_skeleton.h"
 #include "tokenid_kit.h"
 #endif
-#include "fd_utils.h"
 
 using namespace OHOS::AudioStandard;
 
@@ -372,9 +371,7 @@ napi_value AVImageGeneratorNapi::JsSetAVFileDescriptor(napi_env env, napi_callba
     CHECK_AND_RETURN_RET_LOG(generator->helper_, result, "Invalid AVImageGeneratorNapi.");
 
     auto fileDescriptor = generator->fileDescriptor_;
-    ScopedFileDescriptor reopenFd = FdUtils::ReOpenFd(fileDescriptor.fd);
-    auto res = generator->helper_->SetSource(reopenFd.Get(), fileDescriptor.offset, fileDescriptor.length);
-    reopenFd.Reset();
+    auto res = generator->helper_->SetSource(fileDescriptor.fd, fileDescriptor.offset, fileDescriptor.length);
     generator->state_ = res == MSERR_OK ? HelperState::HELPER_STATE_RUNNABLE : HelperState::HELPER_ERROR;
     return result;
 }
