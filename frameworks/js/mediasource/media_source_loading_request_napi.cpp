@@ -88,7 +88,11 @@ napi_value MediaSourceLoadingRequestNapi::Constructor(napi_env env, napi_callbac
 
     jsRequest->env_ = env;
     jsRequest->request_ = RequestContainer::GetInstance().Find(requestId);
-    CHECK_AND_RETURN_RET_LOG(jsRequest->request_ != nullptr, result, "failed to getRequest");
+    if (jsRequest->request_ == nullptr) {
+        delete jsRequest;
+        MEDIA_LOGE("failed to getRequest");
+        return result;
+    }
 
     status = napi_wrap(env, jsThis, reinterpret_cast<void *>(jsRequest),
         MediaSourceLoadingRequestNapi::Destructor, nullptr, nullptr);
