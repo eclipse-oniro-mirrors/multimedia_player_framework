@@ -1930,6 +1930,7 @@ bool PlayerServer::IsBootCompleted()
 
 int32_t PlayerServer::SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted)
 {
+    CHECK_AND_RETURN_RET(mediaType == OHOS::Media::MediaType::MEDIA_TYPE_AUD, MSERR_INVALID_VAL);
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET(lastOpStatus_ == PLAYER_INITIALIZED || lastOpStatus_ == PLAYER_PREPARED ||
                              lastOpStatus_ == PLAYER_STARTED || lastOpStatus_ == PLAYER_PLAYBACK_COMPLETE ||
