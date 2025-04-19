@@ -278,8 +278,7 @@ int32_t ScreenCaptureImpl::InitCaptureFile(AVScreenCaptureConfig config)
         config.audioInfo.micCapInfo.audioSampleRate, config.audioInfo.micCapInfo.audioChannels,
         config.videoInfo.videoCapInfo.displayId, config.videoInfo.videoCapInfo.taskIDs.size(),
         config.videoInfo.videoCapInfo.videoSource);
-    int32_t ret = MSERR_OK;
-    ret = screenCaptureService_->SetRecorderInfo(config.recorderInfo);
+    int32_t ret = screenCaptureService_->SetRecorderInfo(config.recorderInfo);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetRecorderInfo failed");
     const std::string fdHead = "fd://";
     CHECK_AND_RETURN_RET_LOG(config.recorderInfo.url.find(fdHead) != std::string::npos, MSERR_INVALID_VAL,
@@ -292,12 +291,9 @@ int32_t ScreenCaptureImpl::InitCaptureFile(AVScreenCaptureConfig config)
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetOutputFile failed");
     ret = screenCaptureService_->InitAudioEncInfo(config.audioInfo.audioEncInfo);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "InitAudioEncInfo failed");
-
-    bool isInnerAudioCapInfoIgnored = IsAudioCapInfoIgnored(config.audioInfo.innerCapInfo);
-    CHECK_AND_RETURN_RET_LOG(!isInnerAudioCapInfoIgnored, MSERR_INVALID_VAL,
+    CHECK_AND_RETURN_RET_LOG(!IsAudioCapInfoIgnored(config.audioInfo.innerCapInfo), MSERR_INVALID_VAL,
         "init innerCapInfo failed, innerCapInfo ignored is not allowed");
-    bool isMicAudioCapInfoIgnored = IsAudioCapInfoIgnored(config.audioInfo.micCapInfo);
-    if (!isMicAudioCapInfoIgnored) {
+    if (!IsAudioCapInfoIgnored(config.audioInfo.micCapInfo)) {
         if ((config.audioInfo.micCapInfo.audioChannels != config.audioInfo.innerCapInfo.audioChannels) ||
             (config.audioInfo.micCapInfo.audioSampleRate != config.audioInfo.innerCapInfo.audioSampleRate)) {
             MEDIA_LOGE("InitCaptureFile error, inner and mic param not consistent");
