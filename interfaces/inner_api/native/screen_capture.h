@@ -169,12 +169,16 @@ struct AudioInfo {
     AudioEncInfo audioEncInfo;
 };
 
+struct Strategy {
+    bool enableDeviceLevelCapture = false;
+    bool keepCaptureDuringCall = false;
+};
+
 struct VideoCaptureInfo {
     uint64_t displayId = 0;
     std::list<int32_t> taskIDs;
     int32_t videoFrameWidth = 0;
     int32_t videoFrameHeight = 0;
-    bool enableDeviceLevelCapture = false;
     VideoSourceType videoSource = VideoSourceType::VIDEO_SOURCE_BUTT;
     AVScreenCaptureParamValidationState state = AVScreenCaptureParamValidationState::VALIDATION_IGNORE;
     AVScreenCaptureFillMode screenCaptureFillMode = AVScreenCaptureFillMode::PRESERVE_ASPECT_RATIO;
@@ -203,6 +207,7 @@ struct AVScreenCaptureConfig {
     AudioInfo audioInfo;
     VideoInfo videoInfo;
     RecorderInfo recorderInfo;
+    Strategy strategy;
 };
 
 struct AudioBuffer {

@@ -632,12 +632,13 @@ int32_t AVScreenCaptureNapi::GetConfig(std::unique_ptr<AVScreenCaptureAsyncConte
     asyncCtx->config_.captureMode = CaptureMode::CAPTURE_HOME_SCREEN;
     asyncCtx->config_.dataType = DataType::CAPTURE_FILE;
 
-    int32_t ret =  GetAudioInfo(asyncCtx, env, args);
+    int32_t ret = GetAudioInfo(asyncCtx, env, args);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "failed to GetAudioInfo");
-    ret =  GetVideoInfo(asyncCtx, env, args);
+    ret = GetVideoInfo(asyncCtx, env, args);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "failed to GetVideoInfo");
-    ret =  GetRecorderInfo(asyncCtx, env, args);
+    ret = GetRecorderInfo(asyncCtx, env, args);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "failed to GetRecorderInfo");
+    (void)GetStrategy(asyncCtx, env, args); // optional parameter
     return MSERR_OK;
 }
 
@@ -723,7 +724,6 @@ int32_t AVScreenCaptureNapi::GetVideoCaptureInfo(std::unique_ptr<AVScreenCapture
     int32_t frameHeight = AVSCREENCAPTURE_DEFAULT_FRAME_HEIGHT;
     int32_t displayId = AVSCREENCAPTURE_DEFAULT_DISPLAY_ID;
     int32_t fillMode = AVScreenCaptureFillMode::PRESERVE_ASPECT_RATIO;
-    bool enableDeviceLevelCapture = false;
     VideoCaptureInfo &videoConfig = asyncCtx->config_.videoInfo.videoCapInfo;
     // get displayId
     int32_t ret = AVScreenCaptureNapi::GetPropertyInt32(env, args, "displayId", displayId);
@@ -734,10 +734,6 @@ int32_t AVScreenCaptureNapi::GetVideoCaptureInfo(std::unique_ptr<AVScreenCapture
         asyncCtx->config_.captureMode = CaptureMode::CAPTURE_SPECIFIED_SCREEN;
     }
     MEDIA_LOGI("input displayId %{public}" PRIu64, videoConfig.displayId);
-    // get enableDeviceLevelCapture
-    CommonNapi::GetPropertyBool(env, args, "enableDeviceLevelCapture", enableDeviceLevelCapture);
-    videoConfig.enableDeviceLevelCapture = enableDeviceLevelCapture;
-    MEDIA_LOGI("enableDeviceLevelCapture %{public}d", videoConfig.enableDeviceLevelCapture);
     // get video frame info (frameWidth and frameHeight)
     ret = AVScreenCaptureNapi::GetPropertyInt32(env, args, "frameWidth", frameWidth);
     CHECK_AND_RETURN_RET(ret == MSERR_OK,
@@ -776,6 +772,26 @@ int32_t AVScreenCaptureNapi::GetRecorderInfo(std::unique_ptr<AVScreenCaptureAsyn
     CHECK_AND_RETURN_RET(recorderConfig.url != "",
         (asyncCtx->AVScreenCaptureSignError(MSERR_INVALID_VAL, "GetRecorderInfo", "url"), MSERR_INVALID_VAL));
     MEDIA_LOGI("input url %{public}s", recorderConfig.url.c_str());
+    return MSERR_OK;
+}
+
+int32_t AVScreenCaptureNapi::GetStrategy(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx,
+    napi_env env, napi_value args)
+{
+    Strategy &strategy = asyncCtx->config_.strategy;
+    napi_value strategyVal = nullptr;
+    CHECK_AND_RETURN_RET_LOG(napi_get_named_property(env, args, "strategy", &strategyVal) == napi_ok, MSERR_OK,
+        "get strategy property failed"); // if failed, log and return MSERR_OK, because strategy can be null.
+    napi_valuetype valueType = napi_undefined;
+    napi_status status = napi_typeof(env, strategyVal, &valueType);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, MSERR_OK, "get valueType failed");
+    CHECK_AND_RETURN_RET_LOG(valueType != napi_undefined, MSERR_OK, "strategy undefined");
+    // get enableDeviceLevelCapture
+    CommonNapi::GetPropertyBool(env, strategyVal, "enableDeviceLevelCapture", strategy.enableDeviceLevelCapture);
+    MEDIA_LOGI("enableDeviceLevelCapture %{public}d", strategy.enableDeviceLevelCapture);
+    // get keepCaptureDuringCall
+    CommonNapi::GetPropertyBool(env, strategyVal, "keepCaptureDuringCall", strategy.keepCaptureDuringCall);
+    MEDIA_LOGI("keepCaptureDuringCall %{public}d", strategy.keepCaptureDuringCall);
     return MSERR_OK;
 }
 

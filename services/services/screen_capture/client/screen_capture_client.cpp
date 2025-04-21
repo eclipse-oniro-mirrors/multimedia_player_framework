@@ -264,5 +264,12 @@ int32_t ScreenCaptureClient::ReleaseVideoBuffer()
     CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
     return screenCaptureProxy_->ReleaseVideoBuffer();
 }
+
+int32_t ScreenCaptureClient::InitStrategy(Strategy strategy)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
+    return screenCaptureProxy_->InitStrategy(strategy);
+}
 } // namespace Media
 } // namespace OHOS

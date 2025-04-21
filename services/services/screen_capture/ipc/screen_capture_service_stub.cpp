@@ -81,6 +81,7 @@ int32_t ScreenCaptureServiceStub::Init()
     screenCaptureStubFuncs_[SHOW_CURSOR] = &ScreenCaptureServiceStub::ShowCursor;
     screenCaptureStubFuncs_[SET_CHECK_SA_LIMIT] = &ScreenCaptureServiceStub::SetAndCheckSaLimit;
     screenCaptureStubFuncs_[SET_CHECK_LIMIT] = &ScreenCaptureServiceStub::SetAndCheckLimit;
+    screenCaptureStubFuncs_[INIT_STRATEGY] = &ScreenCaptureServiceStub::InitStrategy;
 
     return MSERR_OK;
 }
@@ -306,6 +307,13 @@ int32_t ScreenCaptureServiceStub::ReleaseVideoBuffer()
     return screenCaptureServer_->ReleaseVideoBuffer();
 }
 
+int32_t ScreenCaptureServiceStub::InitStrategy(Strategy strategy)
+{
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
+        "screen capture server is nullptr");
+    return screenCaptureServer_->InitStrategy(strategy);
+}
+
 int32_t ScreenCaptureServiceStub::ExcludeContent(MessageParcel &data, MessageParcel &reply)
 {
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
@@ -527,7 +535,6 @@ int32_t ScreenCaptureServiceStub::InitVideoCap(MessageParcel &data, MessageParce
     }
     videoInfo.videoFrameWidth = data.ReadInt32();
     videoInfo.videoFrameHeight = data.ReadInt32();
-    videoInfo.enableDeviceLevelCapture = data.ReadBool();
     videoInfo.videoSource = static_cast<VideoSourceType>(data.ReadInt32());
     videoInfo.screenCaptureFillMode = static_cast<AVScreenCaptureFillMode>(data.ReadInt32());
     int32_t ret = InitVideoCap(videoInfo);
@@ -664,6 +671,18 @@ int32_t ScreenCaptureServiceStub::DestroyStub(MessageParcel &data, MessageParcel
 {
     (void)data;
     reply.WriteInt32(DestroyStub());
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureServiceStub::InitStrategy(MessageParcel &data, MessageParcel &reply)
+{
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
+        "screen capture server is nullptr");
+    Strategy strategy;
+    strategy.enableDeviceLevelCapture = data.ReadBool();
+    strategy.keepCaptureDuringCall = data.ReadBool();
+    int32_t ret = InitStrategy(strategy);
+    reply.WriteInt32(ret);
     return MSERR_OK;
 }
 } // namespace Media
