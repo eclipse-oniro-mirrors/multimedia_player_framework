@@ -332,7 +332,7 @@ void Stream::OnWriteData(size_t length)
     CHECK_AND_RETURN_LOG(audioRenderer_ != nullptr, "audioRenderer is nullptr");
     CHECK_AND_RETURN_LOG(isRunning_.load() == true, "audioRenderer is stop");
     CHECK_AND_RETURN_LOG(startStopFlag_.load() == false,
-            "Stream::OnWriteData has start stop, streamID:%{public}d", streamID_);
+        "Stream::OnWriteData has start stop, streamID:%{public}d", streamID_);
     if (cacheDataFrameIndex_ >= static_cast<size_t>(fullCacheData_->size)) {
         streamLock_.lock();
         if (loop_ >= 0 && havePlayedCount_ >= loop_) {
