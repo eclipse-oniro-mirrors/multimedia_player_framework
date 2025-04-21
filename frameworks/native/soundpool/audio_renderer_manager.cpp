@@ -54,6 +54,8 @@ std::unique_ptr<AudioStandard::AudioRenderer> AudioRendererManager::GetAudioRend
             ++it;
         }
     }
+    MEDIA_LOGI("AudioRendererManager::GetAudioRendererInstance audioRendererVector_ size:%{public}zu",
+        audioRendererVector_.size());
     return findInstance;
 }
 
@@ -61,19 +63,67 @@ void AudioRendererManager::SetAudioRendererInstance(int32_t globeId,
     std::unique_ptr<AudioStandard::AudioRenderer> audioRenderer)
 {
     MediaTrace trace("AudioRendererManager::SetAudioRendererInstance");
-    std::lock_guard<std::mutex> lock(renderMgrMutex_);
+    renderMgrMutex_.lock();
     audioRendererVector_.push_back(std::make_pair(globeId, std::move(audioRenderer)));
+    int32_t removeGlobeId = -1;
+    MEDIA_LOGI("AudioRendererManager::SetAudioRendererInstance audioRendererVector_ size:%{public}zu",
+        audioRendererVector_.size());
     int32_t excessNum =  static_cast<int32_t>(audioRendererVector_.size()) - AUDIO_RENDERER_MAX_NUM;
     if (excessNum > 0) {
         MEDIA_LOGI("AudioRendererManager::SetAudioRendererInstance release audioRenderer");
-        for (int32_t i = 0; i < excessNum; i++) {
-            SoundPoolXCollie soundPoolXCollie("AudioRenderer::Release time out",
-                [](void *) {
-                    MEDIA_LOGI("AudioRenderer::Release time out");
-                });
-            (audioRendererVector_.front().second)->Release();
-            soundPoolXCollie.CancelXCollieTimer();
-            audioRendererVector_.pop_front();
+        SoundPoolXCollie soundPoolXCollie("AudioRenderer::Release time out",
+            [](void *) {
+                MEDIA_LOGI("AudioRenderer::Release time out");
+            });
+        removeGlobeId = audioRendererVector_.front().first;
+        (audioRendererVector_.front().second)->Release();
+        soundPoolXCollie.CancelXCollieTimer();
+        audioRendererVector_.pop_front();
+    }
+    renderMgrMutex_.unlock();
+    if (removeGlobeId > 0) {
+        UpdateManager(removeGlobeId);
+    }
+}
+
+void AudioRendererManager::RemoveOldAudioRenderer()
+{
+    MediaTrace trace("AudioRendererManager::RemoveOldAudioRenderer");
+    renderMgrMutex_.lock();
+    int32_t removeGlobeId = -1;
+    if (audioRendererVector_.size() > 0) {
+        SoundPoolXCollie soundPoolXCollie("AudioRenderer::RemoveOld time out",
+            [](void *) {
+                MEDIA_LOGI("AudioRenderer::RemoveOld time out");
+            });
+        removeGlobeId = audioRendererVector_.front().first;
+        (audioRendererVector_.front().second)->Release();
+        soundPoolXCollie.CancelXCollieTimer();
+        audioRendererVector_.pop_front();
+    }
+    renderMgrMutex_.unlock();
+    if (removeGlobeId > 0) {
+        UpdateManager(removeGlobeId);
+    }
+}
+
+void AudioRendererManager::SetParallelManager(std::weak_ptr<ParallelStreamManager> parallelManager)
+{
+    std::lock_guard<std::mutex> lock(renderMgrMutex_);
+    parallelManagerList_.push_back(parallelManager);
+}
+
+void AudioRendererManager::SetStreamIDManager(std::weak_ptr<StreamIDManager> streamIDManager)
+{
+    std::lock_guard<std::mutex> lock(renderMgrMutex_);
+    streamIDManagerList_.push_back(streamIDManager);
+}
+
+void AudioRendererManager::UpdateManager(int32_t globeId)
+{
+    for (const auto& weakManager : parallelManagerList_) {
+        if (auto sharedManager = weakManager.lock()) {
+            sharedManager->DelGlobeId(globeId);
         }
     }
 }

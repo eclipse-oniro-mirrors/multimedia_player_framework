@@ -34,9 +34,6 @@ namespace {
 
 namespace OHOS {
 namespace Media {
-std::mutex ParallelStreamManager::globeIdMutex_;
-std::vector<std::pair<int32_t, int32_t>> ParallelStreamManager::globeIdVector_;
-
 ParallelStreamManager::ParallelStreamManager(int32_t maxStreams,
     AudioStandard::AudioRendererInfo audioRenderInfo) : audioRendererInfo_(audioRenderInfo), maxStreams_(maxStreams)
 {
@@ -46,7 +43,7 @@ ParallelStreamManager::ParallelStreamManager(int32_t maxStreams,
 ParallelStreamManager::~ParallelStreamManager()
 {
     parallelStreamManagerLock_.lock();
-    MEDIA_LOGI("ParallelStreamManager::~ParallelStreamManager");
+    MEDIA_LOGI("ParallelStreamManager::~ParallelStreamManager start");
     if (callback_ != nullptr) {
         callback_.reset();
     }
@@ -71,6 +68,7 @@ ParallelStreamManager::~ParallelStreamManager()
     if (streamStopThreadPool_ != nullptr) {
         streamStopThreadPool_->Stop();
     }
+    MEDIA_LOGI("ParallelStreamManager::~ParallelStreamManager end");
 }
 
 int32_t ParallelStreamManager::InitThreadPool()
@@ -92,6 +90,7 @@ int32_t ParallelStreamManager::InitThreadPool()
     CHECK_AND_RETURN_RET_LOG(streamStopThreadPool_ != nullptr, MSERR_INVALID_VAL, "Parallel stopThreadPool fail");
     streamStopThreadPool_->Start(STREAM_THREAD_NUMBER);
 
+    AudioRendererManager::GetInstance().SetParallelManager(weak_from_this());
     return MSERR_OK;
 }
 
@@ -127,6 +126,18 @@ void ParallelStreamManager::SetGlobeId(int32_t soundId, int32_t globeId)
     globeIdVector_.push_back(std::make_pair(soundId, globeId));
 }
 
+void ParallelStreamManager::DelSoundId(int32_t soundId)
+{
+    std::lock_guard lock(globeIdMutex_);
+    for (auto it = globeIdVector_.begin(); it !=  globeIdVector_.end();) {
+        if (it->first == soundId) {
+            globeIdVector_.erase(it);
+        } else {
+            ++it;
+        }
+    }
+}
+
 int32_t ParallelStreamManager::Play(std::shared_ptr<SoundParser> soundParser, PlayParams playParameters)
 {
     MediaTrace trace("ParallelStreamManager::Play");
@@ -146,9 +157,10 @@ int32_t ParallelStreamManager::Play(std::shared_ptr<SoundParser> soundParser, Pl
     size_t cacheDataTotalSize = soundParser->GetSoundDataTotalSize();
     MEDIA_LOGI("ParallelStreamManager::Play cacheDataTotalSize:%{public}zu", cacheDataTotalSize);
     stream = std::make_shared<Stream>(soundParser->GetSoundTrackFormat(), soundId, streamId, streamStopThreadPool_);
+    CHECK_AND_RETURN_RET_LOG(stream != nullptr, MSERR_INVALID_VAL, "failed to create stream");
     stream->SetSoundData(cacheData, cacheDataTotalSize);
     stream->SetPlayParamAndRendererInfo(playParameters, audioRendererInfo_);
-    CHECK_AND_RETURN_RET_LOG(stream != nullptr, MSERR_INVALID_VAL, "failed to create stream");
+    stream->SetManager(weak_from_this());
     CHECK_AND_RETURN_RET_LOG(callback_ != nullptr, MSERR_INVALID_VAL, "Invalid callback");
     stream->SetCallback(callback_);
     std::shared_ptr<ISoundPoolCallback> streamCallback_ = std::make_shared<StreamCallBack>(weak_from_this());
@@ -176,7 +188,8 @@ int32_t ParallelStreamManager::PreparePlay(std::shared_ptr<Stream> stream, bool 
             MEDIA_LOGI("PreparePlay start from waitqueue streamID:%{public}d", stream->GetStreamID());
         }
         int32_t streamId = stream->GetStreamID();
-        MEDIA_LOGI("ParallelStreamManager playingDeque size:%{public}d.", static_cast<int32_t>(playingStream_.size()));
+        MEDIA_LOGI("ParallelStreamManager playingDeque size:%{public}d, maxStreams_:%{public}d",
+            static_cast<int32_t>(playingStream_.size()), maxStreams_);
         if (playingStream_.size() < static_cast<size_t>(maxStreams_)) {
             DealQueueAndAddTask(streamId, stream, waitQueueFlag);
         } else {
@@ -195,7 +208,14 @@ int32_t ParallelStreamManager::PreparePlay(std::shared_ptr<Stream> stream, bool 
         }
     }
     if (lastPlayStopFlag && lastPlay != nullptr) {
-        lastPlay->Stop();
+        ThreadPool::Task streamStopTask = [weakThis = std::weak_ptr<Stream>(lastPlay)] {
+            if (auto thisPtr = weakThis.lock()) {
+                thisPtr->Stop();
+            } else {
+                MEDIA_LOGI("PreparePlay Stream object has been destroyed, skipping Stop");
+            }
+        };
+        streamStopThreadPool_->AddTask(streamStopTask);
     }
     return MSERR_OK;
 }
@@ -278,7 +298,7 @@ int32_t ParallelStreamManager::DoPlay(int32_t streamID)
         return MSERR_OK;
     }
     
-    MEDIA_LOGI("ParallelStreamManager::DoPlay failed streamID:%{public}d", streamID);
+    MEDIA_LOGE("ParallelStreamManager::DoPlay failed streamID:%{public}d", streamID);
     {
         std::lock_guard lock(parallelStreamManagerLock_);
         for (auto it = playingStream_.begin(); it != playingStream_.end();) {
@@ -343,6 +363,7 @@ int32_t ParallelStreamManager::UnloadStream(int32_t soundId)
     for (auto& item : vector) {
         item->Stop();
     }
+    DelSoundId(soundId);
     return MSERR_OK;
 }
 
