@@ -3942,7 +3942,8 @@ bool AudioDataSource::HasVoIPStream(
             changeInfo->clientPid, static_cast<int32_t>(changeInfo->rendererState),
             static_cast<int32_t>(changeInfo->rendererInfo.streamUsage));
         if (changeInfo->rendererState == RendererState::RENDERER_RUNNING &&
-            changeInfo->rendererInfo.streamUsage == AudioStandard::StreamUsage::STREAM_USAGE_VOICE_COMMUNICATION) {
+		    (changeInfo->rendererInfo.streamUsage == AudioStandard::StreamUsage::STREAM_USAGE_VOICE_COMMUNICATION ||
+		    changeInfo->rendererInfo.streamUsage == AudioStandard::StreamUsage::STREAM_USAGE_VIDEO_COMMUNICATION)) {
             return true;
         }
     }
