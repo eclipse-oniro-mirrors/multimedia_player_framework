@@ -56,7 +56,6 @@ public:
 private:
     bool IsAudioCapInfoIgnored(const AudioCaptureInfo &audioCapInfo);
     bool IsVideoCapInfoIgnored(const VideoCaptureInfo &videoCapInfo);
-    bool IsStrategyIgnored(const Strategy &strategy);
     int32_t InitOriginalStream(AVScreenCaptureConfig config);
     int32_t InitCaptureFile(AVScreenCaptureConfig config);
     std::shared_ptr<IScreenCaptureService> screenCaptureService_ = nullptr;

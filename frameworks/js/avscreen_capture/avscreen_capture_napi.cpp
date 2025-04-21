@@ -779,9 +779,6 @@ int32_t AVScreenCaptureNapi::GetStrategy(std::unique_ptr<AVScreenCaptureAsyncCon
     napi_env env, napi_value args)
 {
     Strategy &strategy = asyncCtx->config_.strategy;
-    strategy.enableDeviceLevelCapture = false;
-    strategy.keepCaptureDuringCall = false;
-
     napi_value strategyVal = nullptr;
     CHECK_AND_RETURN_RET_LOG(napi_get_named_property(env, args, "strategy", &strategyVal) == napi_ok, MSERR_OK,
         "get strategy property failed"); // if failed, log and return MSERR_OK, because strategy can be null.
