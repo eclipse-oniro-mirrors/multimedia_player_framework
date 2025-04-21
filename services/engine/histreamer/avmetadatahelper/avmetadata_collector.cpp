@@ -281,12 +281,6 @@ int32_t AVMetaDataCollector::GetFrameIndexByTime(uint64_t timeUs, uint32_t &inde
 void AVMetaDataCollector::ConvertToAVMeta(const std::shared_ptr<Meta> &innerMeta, Metadata &avmeta) const
 {
     for (const auto &[avKey, innerKey] : AVMETA_KEY_TO_X_MAP) {
-        if (innerKey.compare("") == 0) {
-            std::string strVal;
-            if (innerMeta->GetData(innerKey, strVal) && !strVal.empty()) {
-                avmeta.SetMeta(avKey, TimeFormatUtils::ConvertTimestampToDatetime(strVal));
-            }
-        }
         if (innerKey.compare("customInfo") == 0) {
             continue;
         }
