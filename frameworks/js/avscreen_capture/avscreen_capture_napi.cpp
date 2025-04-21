@@ -782,21 +782,22 @@ int32_t AVScreenCaptureNapi::GetStrategy(std::unique_ptr<AVScreenCaptureAsyncCon
     bool enableDeviceLevelCapture = false;
     bool keepCaptureDuringCall = false;
     Strategy &strategy = asyncCtx->config_.strategy;
+    strategy.enableDeviceLevelCapture = false;
+    strategy.keepCaptureDuringCall = false;
 
     napi_value strategyVal = nullptr;
+    CHECK_AND_RETURN_RET_LOG(napi_get_named_property(env, args, "strategy", &strategyVal) == napi_ok, MSERR_OK,
+        "get strategy property failed"); // if failed, log and return MSERR_OK, because strategy can be null.
     napi_valuetype valueType = napi_undefined;
-    CHECK_AND_RETURN_RET(napi_get_named_property(env, args, "strategy", &strategyVal) == napi_ok, false);
     napi_status status = napi_typeof(env, strategyVal, &valueType);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, MSERR_OK, "get valueType failed");
     CHECK_AND_RETURN_RET_LOG(valueType != napi_undefined, MSERR_OK, "strategy undefined");
     // get enableDeviceLevelCapture
-    strategy.enableDeviceLevelCapture = false;
     if (CommonNapi::GetPropertyBool(env, strategyVal, "enableDeviceLevelCapture", enableDeviceLevelCapture)) {
         strategy.enableDeviceLevelCapture = enableDeviceLevelCapture;
     }
     MEDIA_LOGI("enableDeviceLevelCapture %{public}d", strategy.enableDeviceLevelCapture);
     // get keepCaptureDuringCall
-    strategy.keepCaptureDuringCall = false;
     if (CommonNapi::GetPropertyBool(env, strategyVal, "keepCaptureDuringCall", keepCaptureDuringCall)) {
         strategy.keepCaptureDuringCall = keepCaptureDuringCall;
     }
