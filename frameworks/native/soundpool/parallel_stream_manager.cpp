@@ -131,7 +131,7 @@ void ParallelStreamManager::DelSoundId(int32_t soundId)
     std::lock_guard lock(globeIdMutex_);
     for (auto it = globeIdVector_.begin(); it !=  globeIdVector_.end();) {
         if (it->first == soundId) {
-            globeIdVector_.erase(it);
+            it = globeIdVector_.erase(it);
         } else {
             ++it;
         }

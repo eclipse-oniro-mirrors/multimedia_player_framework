@@ -45,7 +45,7 @@ public:
 
 private:
     AudioRendererManager() {}
-    void UpdateManager(int32_t globeId);
+    void DeleteManager(int32_t globeId);
     std::mutex renderMgrMutex_;
     int32_t globeIdNext_ = 0;
     std::list<std::pair<int32_t, std::unique_ptr<AudioStandard::AudioRenderer>>> audioRendererVector_;

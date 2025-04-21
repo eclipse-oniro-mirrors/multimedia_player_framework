@@ -82,7 +82,7 @@ void AudioRendererManager::SetAudioRendererInstance(int32_t globeId,
     }
     renderMgrMutex_.unlock();
     if (removeGlobeId > 0) {
-        UpdateManager(removeGlobeId);
+        DeleteManager(removeGlobeId);
     }
 }
 
@@ -103,7 +103,7 @@ void AudioRendererManager::RemoveOldAudioRenderer()
     }
     renderMgrMutex_.unlock();
     if (removeGlobeId > 0) {
-        UpdateManager(removeGlobeId);
+        DeleteManager(removeGlobeId);
     }
 }
 
@@ -119,7 +119,7 @@ void AudioRendererManager::SetStreamIDManager(std::weak_ptr<StreamIDManager> str
     streamIDManagerList_.push_back(streamIDManager);
 }
 
-void AudioRendererManager::UpdateManager(int32_t globeId)
+void AudioRendererManager::DeleteManager(int32_t globeId)
 {
     for (const auto& weakManager : parallelManagerList_) {
         if (auto sharedManager = weakManager.lock()) {
