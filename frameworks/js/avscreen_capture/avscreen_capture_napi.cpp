@@ -632,14 +632,13 @@ int32_t AVScreenCaptureNapi::GetConfig(std::unique_ptr<AVScreenCaptureAsyncConte
     asyncCtx->config_.captureMode = CaptureMode::CAPTURE_HOME_SCREEN;
     asyncCtx->config_.dataType = DataType::CAPTURE_FILE;
 
-    int32_t ret =  GetAudioInfo(asyncCtx, env, args);
+    int32_t ret = GetAudioInfo(asyncCtx, env, args);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "failed to GetAudioInfo");
-    ret =  GetVideoInfo(asyncCtx, env, args);
+    ret = GetVideoInfo(asyncCtx, env, args);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "failed to GetVideoInfo");
-    ret =  GetRecorderInfo(asyncCtx, env, args);
+    ret = GetRecorderInfo(asyncCtx, env, args);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "failed to GetRecorderInfo");
-    ret = GetStrategy(asyncCtx, env, args);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "failed to GetStrategy");
+    (void)GetStrategy(asyncCtx, env, args); // optional parameter
     return MSERR_OK;
 }
 
