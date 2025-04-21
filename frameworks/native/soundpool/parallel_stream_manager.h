@@ -28,14 +28,17 @@
 
 namespace OHOS {
 namespace Media {
+class Stream;
+
 class ParallelStreamManager : public std::enable_shared_from_this<ParallelStreamManager> {
 public:
     ParallelStreamManager(int32_t maxStreams, AudioStandard::AudioRendererInfo audioRenderInfo);
     ~ParallelStreamManager();
 
-    static int32_t GetGlobeId(int32_t soundId);
-    static void DelGlobeId(int32_t globeId);
-    static void SetGlobeId(int32_t soundId, int32_t globeId);
+    int32_t GetGlobeId(int32_t soundId);
+    void DelGlobeId(int32_t globeId);
+    void SetGlobeId(int32_t soundId, int32_t globeId);
+    void DelSoundId(int32_t soundId);
     int32_t InitThreadPool();
     int32_t Play(std::shared_ptr<SoundParser> soundParser, PlayParams playParameters);
     int32_t UnloadStream(int32_t soundId);
@@ -50,8 +53,8 @@ private:
         explicit StreamCallBack(const std::weak_ptr<ParallelStreamManager> parallelStreamManager)
             : parallelStreamManagerInner_(parallelStreamManager) {}
         virtual ~StreamCallBack() = default;
-        void OnLoadCompleted(int32_t soundID);
-        void OnPlayFinished(int32_t streamID);
+        void OnLoadCompleted(int32_t soundId);
+        void OnPlayFinished(int32_t streamId);
         void OnError(int32_t errorCode);
 
     private:
@@ -59,16 +62,16 @@ private:
     };
 
     int32_t PreparePlay(std::shared_ptr<Stream> stream, bool waitQueueFlag);
-    int32_t DoPlay(int32_t streamId);
+    int32_t DoPlay(int32_t streamID);
     void DealQueueAndAddTask(int32_t streamId, std::shared_ptr<Stream> stream, bool waitQueueFlag);
-    void AddToPlayingDeque(int32_t streamId, std::shared_ptr<Stream> stream);
-    void AddToWaitingDeque(int32_t streamId, std::shared_ptr<Stream> stream);
+    void AddToPlayingDeque(int32_t streamID, std::shared_ptr<Stream> stream);
+    void AddToWaitingDeque(int32_t streamID, std::shared_ptr<Stream> stream);
     void RemoveFromWaitingDeque(int32_t streamId);
-    void OnPlayFinished(int32_t streamId);
+    void OnPlayFinished(int32_t streamID);
     std::shared_ptr<Stream> FindStream(const int32_t streamId);
 
-    static std::vector<std::pair<int32_t, int32_t>> globeIdVector_;
-    static std::mutex globeIdMutex_;
+    std::vector<std::pair<int32_t, int32_t>> globeIdVector_;
+    std::mutex globeIdMutex_;
     AudioStandard::AudioRendererInfo audioRendererInfo_;
     int32_t maxStreams_ = 1;
     std::shared_ptr<ISoundPoolCallback> callback_ = nullptr;

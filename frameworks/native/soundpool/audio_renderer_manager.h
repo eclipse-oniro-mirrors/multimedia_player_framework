@@ -23,6 +23,8 @@
 #include "media_dfx.h"
 #include "audio_renderer.h"
 #include "soundpool_xcollie.h"
+#include "parallel_stream_manager.h"
+#include "stream_id_manager.h"
 
 namespace OHOS {
 namespace Media {
@@ -37,12 +39,18 @@ public:
     int32_t GetGlobeId();
     std::unique_ptr<AudioStandard::AudioRenderer> GetAudioRendererInstance(int32_t globeId);
     void SetAudioRendererInstance(int32_t globeId, std::unique_ptr<AudioStandard::AudioRenderer> audioRenderer);
+    void RemoveOldAudioRenderer();
+    void SetParallelManager(std::weak_ptr<ParallelStreamManager> parallelManager);
+    void SetStreamIDManager(std::weak_ptr<StreamIDManager> streamIDManager);
 
 private:
     AudioRendererManager() {}
+    void DeleteManager(int32_t globeId);
     std::mutex renderMgrMutex_;
     int32_t globeIdNext_ = 0;
     std::list<std::pair<int32_t, std::unique_ptr<AudioStandard::AudioRenderer>>> audioRendererVector_;
+    std::list<std::weak_ptr<ParallelStreamManager>> parallelManagerList_;
+    std::list<std::weak_ptr<StreamIDManager>> streamIDManagerList_;
 };
 } // namespace Media
 } // namespace OHOS
