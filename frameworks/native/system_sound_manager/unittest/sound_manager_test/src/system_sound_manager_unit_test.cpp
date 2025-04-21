@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -1468,7 +1468,7 @@ HWTEST(SystemSoundManagerUnitTest, UpdateShotToneUri_001, TestSize.Level0)
 
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     EXPECT_NE(dataShareHelper, nullptr);
-	
+
     int32_t toneId = 1;
     SystemToneType systemToneType = SystemToneType::SYSTEM_TONE_TYPE_SIM_CARD_0;
     int32_t num = SHOT_TONE_TYPE_SIM_CARD_1;
@@ -1492,7 +1492,7 @@ HWTEST(SystemSoundManagerUnitTest, UpdateShotToneUri_002, TestSize.Level0)
 
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     EXPECT_NE(dataShareHelper, nullptr);
-	
+
     int32_t toneId = 2;
     SystemToneType systemToneType = SystemToneType::SYSTEM_TONE_TYPE_SIM_CARD_1;
     int32_t num = SHOT_TONE_TYPE_SIM_CARD_2;
@@ -1516,7 +1516,7 @@ HWTEST(SystemSoundManagerUnitTest, UpdateShotToneUri_003, TestSize.Level0)
 
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     EXPECT_NE(dataShareHelper, nullptr);
-	
+
     int32_t toneId = 3;
     SystemToneType systemToneType = SystemToneType::SYSTEM_TONE_TYPE_NOTIFICATION;
     int32_t num = SHOT_TONE_TYPE_SIM_CARD_BOTH;
@@ -1540,7 +1540,7 @@ HWTEST(SystemSoundManagerUnitTest, RemoveSourceTypeForSystemTone_001, TestSize.L
 
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     EXPECT_NE(dataShareHelper, nullptr);
-	
+
     SystemToneType systemToneType = SystemToneType::SYSTEM_TONE_TYPE_SIM_CARD_0;
     SourceType sourceType = SourceType::SOURCE_TYPE_CUSTOMISED;
     int32_t result =
