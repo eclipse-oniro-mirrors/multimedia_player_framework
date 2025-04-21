@@ -18,11 +18,11 @@
 #include "media_errors.h"
 #include "securec.h"
 #include "audio_renderer_manager.h"
-#include "parallel_stream_manager.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SOUNDPOOL, "Stream"};
     static const int32_t NORMAL_PLAY_RENDERER_FLAGS = 0;
+    static const int32_t ERROE_GLOBE_ID = -1;
 }
 
 namespace OHOS {
@@ -56,32 +56,63 @@ void Stream::SetPlayParamAndRendererInfo(PlayParams playParameters, AudioStandar
     audioRendererInfo_ = audioRenderInfo;
 }
 
+void Stream::SetManager(std::weak_ptr<ParallelStreamManager> parallelStreamManager)
+{
+    manager_ = parallelStreamManager;
+}
+
+int32_t Stream::GetGlobeId(int32_t soundID)
+{
+    if (auto sharedManager = manager_.lock()) {
+        return sharedManager->GetGlobeId(soundID);
+    } else {
+        return ERROE_GLOBE_ID;
+    }
+}
+
+void Stream::DelGlobeId(int32_t globeId)
+{
+    if (auto sharedManager = manager_.lock()) {
+        sharedManager->DelGlobeId(globeId);
+    }
+}
+
+void Stream::SetGlobeId(int32_t soundID, int32_t globeId)
+{
+    if (auto sharedManager = manager_.lock()) {
+        sharedManager->SetGlobeId(soundID, globeId);
+    }
+}
+
 void Stream::PreparePlay()
 {
     MediaTrace trace("Stream::PreparePlay");
     bool result = true;
     while (result) {
-        int32_t globeId = ParallelStreamManager::GetGlobeId(soundID_);
+        int32_t globeId = GetGlobeId(soundID_);
         if (globeId > 0) {
             audioRenderer_ = AudioRendererManager::GetInstance().GetAudioRendererInstance(globeId);
             if (audioRenderer_ != nullptr) {
                 MEDIA_LOGI("Stream::PreparePlay useOld audiorenderer");
                 break;
             } else {
-                ParallelStreamManager::DelGlobeId(globeId);
+                DelGlobeId(globeId);
             }
         } else {
             result = false;
         }
     }
     if (audioRenderer_ == nullptr) {
-        MEDIA_LOGI("Stream::PreparePlay CreateAudioRenderer New");
-        audioRenderer_ = CreateAudioRenderer(streamID_, audioRendererInfo_, playParameters_);
+        MEDIA_LOGI("Stream::PreparePlay CreateAudioRenderer New start");
+        audioRenderer_ = CreateAudioRenderer(audioRendererInfo_, playParameters_);
+        if (audioRenderer_ == nullptr) {
+            AudioRendererManager::GetInstance().RemoveOldAudioRenderer();
+            MEDIA_LOGE("Stream::PreparePlay CreateAudioRenderer fail, release old auidoRenderer");
+            audioRenderer_ = CreateAudioRenderer(audioRendererInfo_, playParameters_);
+        }
+        MEDIA_LOGI("Stream::PreparePlay CreateAudioRenderer New end");
     }
-    if (audioRenderer_ == nullptr) {
-        MEDIA_LOGI("Stream::PreparePlay create or get audioRenderer fail");
-        return;
-    }
+    CHECK_AND_RETURN_LOG(audioRenderer_ != nullptr, "Stream::PreparePlay create or get audioRenderer fail");
     PrepareAudioRenderer(audioRenderer_);
     DealPlayParamsBeforePlay(playParameters_);
 }
@@ -130,12 +161,10 @@ void Stream::DealAudioRendererParams(AudioStandard::AudioRendererOptions &render
     rendererOptions.rendererInfo.expectedPlaybackDurationBytes = static_cast<uint64_t>(cacheDataTotalSize_);
 }
 
-std::unique_ptr<AudioStandard::AudioRenderer> Stream::CreateAudioRenderer(const int32_t streamID,
+std::unique_ptr<AudioStandard::AudioRenderer> Stream::CreateAudioRenderer(
     const AudioStandard::AudioRendererInfo audioRendererInfo, const PlayParams playParams)
 {
     MediaTrace trace("Stream::CreateAudioRenderer");
-    CHECK_AND_RETURN_RET_LOG(streamID == streamID_, nullptr,
-        "Invalid streamID, failed to create normal audioRenderer.");
     AudioStandard::AudioRendererOptions rendererOptions = {};
     DealAudioRendererParams(rendererOptions, audioRendererInfo);
     std::string cacheDir = "/data/storage/el2/base/temp";
@@ -205,17 +234,15 @@ AudioStandard::AudioRendererRate Stream::CheckAndAlignRendererRate(const int32_t
     return renderRate;
 }
 
-int32_t Stream::DealPlayParamsBeforePlay(const PlayParams playParams)
+void Stream::DealPlayParamsBeforePlay(const PlayParams playParams)
 {
     MediaTrace trace("Stream::DealPlayParamsBeforePlay");
-    CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr, MSERR_INVALID_VAL, "Invalid audioRenderer.");
     audioRenderer_->SetOffloadAllowed(false);
     loop_ = playParams.loop;
     audioRenderer_->SetRenderRate(CheckAndAlignRendererRate(playParams.rate));
     audioRenderer_->SetVolume(playParams.leftVolume);
     priority_ = playParams.priority;
     audioRenderer_->SetParallelPlayFlag(playParams.parallelPlayFlag);
-    return MSERR_OK;
 }
 
 int32_t Stream::DoPlay()
@@ -224,7 +251,7 @@ int32_t Stream::DoPlay()
     std::lock_guard lock(streamLock_);
     PreparePlay();
     if (fullCacheData_ == nullptr || audioRenderer_ == nullptr) {
-        MEDIA_LOGI("Stream::DoPlay failed, cacheData or audioRender nullptr, streamID:%{public}d", streamID_);
+        MEDIA_LOGE("Stream::DoPlay failed, cacheData or audioRender nullptr, streamID:%{public}d", streamID_);
         if (callback_ != nullptr) {
             callback_->OnError(MSERR_INVALID_VAL);
         }
@@ -249,7 +276,7 @@ int32_t Stream::DoPlay()
         MEDIA_LOGE("Stream::DoPlay audioRenderer start failed, streamID:%{public}d", streamID_);
         isRunning_.store(false);
         if (callback_ != nullptr) {
-            MEDIA_LOGI("Stream::DoPlay failed, call callback, streamID:%{public}d", streamID_);
+            MEDIA_LOGE("Stream::DoPlay failed, call callback, streamID:%{public}d", streamID_);
             callback_->OnError(MSERR_INVALID_VAL);
         }
         if (streamCallback_ != nullptr) {
@@ -282,15 +309,13 @@ int32_t Stream::Stop()
             audioRenderer_->Stop();
         }
         soundPoolXCollie.CancelXCollieTimer();
-        cacheDataFrameIndex_ = 0;
-        havePlayedCount_ = 0;
         if (callback_ != nullptr) {
             MEDIA_LOGI("Stream callback_ OnPlayFinished.");
             callback_->OnPlayFinished(streamID_);
         }
         int32_t globeId = AudioRendererManager::GetInstance().GetGlobeId();
         AudioRendererManager::GetInstance().SetAudioRendererInstance(globeId, std::move(audioRenderer_));
-        ParallelStreamManager::SetGlobeId(soundID_, globeId);
+        SetGlobeId(soundID_, globeId);
         audioRenderer_ = nullptr;
         fullCacheData_ = nullptr;
         if (streamCallback_ != nullptr) {
@@ -306,6 +331,8 @@ void Stream::OnWriteData(size_t length)
 {
     CHECK_AND_RETURN_LOG(audioRenderer_ != nullptr, "audioRenderer is nullptr");
     CHECK_AND_RETURN_LOG(isRunning_.load() == true, "audioRenderer is stop");
+    CHECK_AND_RETURN_LOG(startStopFlag_.load() == false,
+        "Stream::OnWriteData has start stop, streamID:%{public}d", streamID_);
     if (cacheDataFrameIndex_ >= static_cast<size_t>(fullCacheData_->size)) {
         streamLock_.lock();
         if (loop_ >= 0 && havePlayedCount_ >= loop_) {
@@ -313,8 +340,6 @@ void Stream::OnWriteData(size_t length)
                 " havePlayedCount_:%{public}d, loop:%{public}d, streamID_:%{public}d, length: %{public}zu",
                 cacheDataFrameIndex_, havePlayedCount_, loop_, streamID_, length);
             streamLock_.unlock();
-            CHECK_AND_RETURN_LOG(startStopFlag_.load() == false,
-                "Stream::OnWriteData has start stop, streamID:%{public}d", streamID_);
             AddStopTask();
             return;
         }
@@ -335,8 +360,8 @@ void Stream::AddStopTask()
                 MEDIA_LOGI("Stream object has been destroyed, skipping Stop.");
             }
         };
-        startStopFlag_.store(true);
         ptr->AddTask(streamStopTask);
+        startStopFlag_.store(true);
     } else {
         MEDIA_LOGI("streamStopThreadPool_ is not available.");
         startStopFlag_.store(true);

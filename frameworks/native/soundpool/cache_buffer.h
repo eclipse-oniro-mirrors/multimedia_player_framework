@@ -73,6 +73,7 @@ public:
     int32_t SetCallback(const std::shared_ptr<ISoundPoolCallback> &callback);
     int32_t SetCacheBufferCallback(const std::shared_ptr<ISoundPoolCallback> &callback);
     int32_t SetFrameWriteCallback(const std::shared_ptr<ISoundPoolFrameWriteCallback> &callback);
+    void SetSourceDuration(int64_t durationMs);
 
     bool IsRunning() const
     {
@@ -129,6 +130,7 @@ private:
 
     size_t cacheDataFrameIndex_ = 0;
     int32_t havePlayedCount_ = 0;
+    int64_t sourceDurationMs_ {};
 };
 } // namespace Media
 } // namespace OHOS
