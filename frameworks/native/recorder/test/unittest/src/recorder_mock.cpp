@@ -24,7 +24,7 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/types.h>
-#include "display_type.h"
+#include "display/composer/v1_2/display_composer_type.h"
 
 using namespace std;
 using namespace OHOS;
@@ -48,7 +48,7 @@ static OHOS::BufferRequestConfig g_esRequestConfig = {
     .width = CODEC_BUFFER_WIDTH,
     .height = CODEC_BUFFER_HEIGHT,
     .strideAlignment = STRIDE_ALIGN,
-    .format = PIXEL_FMT_RGBA_8888,
+    .format = OHOS::HDI::Display::Composer::V1_2::PixelFormat::PIXEL_FMT_RGBA_8888,
     .usage = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_CPU_WRITE | BUFFER_USAGE_MEM_DMA,
     .timeout = INT_MAX
 };
@@ -69,7 +69,7 @@ static OHOS::BufferRequestConfig g_yuvRequestConfig = {
     .width = YUV_BUFFER_WIDTH,
     .height = YUV_BUFFER_HEIGHT,
     .strideAlignment = STRIDE_ALIGN,
-    .format = PIXEL_FMT_YCRCB_420_SP,
+    .format = OHOS::HDI::Display::Composer::V1_2::PixelFormat::PIXEL_FMT_YCRCB_420_SP,
     .usage = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_CPU_WRITE | BUFFER_USAGE_MEM_DMA,
     .timeout = INT_MAX
 };
@@ -345,9 +345,9 @@ int32_t RecorderMock::RequesetBuffer(const std::string &recorderType, VideoRecor
             camereHDIThread_.reset(new(std::nothrow) std::thread(&RecorderMock::HDICreateESBuffer, this));
         } else {
             if (recorderConfig.videoFormat == H264) {
-                g_yuvRequestConfig.format = PIXEL_FMT_YCBCR_420_SP;
+                g_yuvRequestConfig.format = OHOS::HDI::Display::Composer::V1_2::PixelFormat::PIXEL_FMT_YCBCR_420_SP;
             } else {
-                g_yuvRequestConfig.format = PIXEL_FMT_YCRCB_420_SP;
+                g_yuvRequestConfig.format = OHOS::HDI::Display::Composer::V1_2::PixelFormat::PIXEL_FMT_YCRCB_420_SP;
             }
             if (recorderType == PURE_ERROR) {
                 camereHDIThread_.reset(new(std::nothrow) std::thread(&RecorderMock::HDICreateYUVBufferError, this));
@@ -464,12 +464,12 @@ void RecorderMock::HDICreateYUVBufferError()
             .width = YUV_BUFFER_WIDTH,
             .height = 100,
             .strideAlignment = STRIDE_ALIGN,
-            .format = PIXEL_FMT_YCRCB_420_SP,
+            .format = OHOS::HDI::Display::Composer::V1_2::PixelFormat::PIXEL_FMT_YCRCB_420_SP,
             .usage = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_CPU_WRITE | BUFFER_USAGE_MEM_DMA,
             .timeout = INT_MAX
         };
 #ifndef SUPPORT_CODEC_TYPE_HEVC
-        yuvRequestConfig.format = PIXEL_FMT_YCBCR_420_SP;
+        yuvRequestConfig.format = OHOS::HDI::Display::Composer::V1_2::PixelFormat::PIXEL_FMT_YCBCR_420_SP;
 #endif
         OHOS::SurfaceError ret = producerSurface_->RequestBuffer(buffer, releaseFence, yuvRequestConfig);
         UNITTEST_CHECK_AND_BREAK_LOG(ret != OHOS::SURFACE_ERROR_NO_BUFFER, "surface loop full, no buffer now");
