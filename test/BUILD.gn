@@ -45,6 +45,7 @@ group("media_unit_test") {
       "unittest/player_server_mem_test:player_server_mem_test",
       "unittest/player_server_test:player_server_unit_test",
       "unittest/player_service_stub_test:player_service_stub_test",
+      "unittest/recorder_profiles_server_test:recorder_profiles_server_mock_unit_test",
       "unittest/recorder_profiles_server_test:recorder_profiles_server_unit_test",
       "unittest/recorder_test:recorder_native_unit_test",
       "unittest/recorder_test:recorder_server_unit_test",
