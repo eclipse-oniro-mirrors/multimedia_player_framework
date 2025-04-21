@@ -779,8 +779,6 @@ int32_t AVScreenCaptureNapi::GetRecorderInfo(std::unique_ptr<AVScreenCaptureAsyn
 int32_t AVScreenCaptureNapi::GetStrategy(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx,
     napi_env env, napi_value args)
 {
-    bool enableDeviceLevelCapture = false;
-    bool keepCaptureDuringCall = false;
     Strategy &strategy = asyncCtx->config_.strategy;
     strategy.enableDeviceLevelCapture = false;
     strategy.keepCaptureDuringCall = false;
@@ -793,14 +791,10 @@ int32_t AVScreenCaptureNapi::GetStrategy(std::unique_ptr<AVScreenCaptureAsyncCon
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, MSERR_OK, "get valueType failed");
     CHECK_AND_RETURN_RET_LOG(valueType != napi_undefined, MSERR_OK, "strategy undefined");
     // get enableDeviceLevelCapture
-    if (CommonNapi::GetPropertyBool(env, strategyVal, "enableDeviceLevelCapture", enableDeviceLevelCapture)) {
-        strategy.enableDeviceLevelCapture = enableDeviceLevelCapture;
-    }
+    CommonNapi::GetPropertyBool(env, strategyVal, "enableDeviceLevelCapture", strategy.enableDeviceLevelCapture);
     MEDIA_LOGI("enableDeviceLevelCapture %{public}d", strategy.enableDeviceLevelCapture);
     // get keepCaptureDuringCall
-    if (CommonNapi::GetPropertyBool(env, strategyVal, "keepCaptureDuringCall", keepCaptureDuringCall)) {
-        strategy.keepCaptureDuringCall = keepCaptureDuringCall;
-    }
+    CommonNapi::GetPropertyBool(env, strategyVal, "keepCaptureDuringCall", strategy.keepCaptureDuringCall);
     MEDIA_LOGI("keepCaptureDuringCall %{public}d", strategy.keepCaptureDuringCall);
     return MSERR_OK;
 }
