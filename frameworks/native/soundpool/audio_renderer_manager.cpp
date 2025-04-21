@@ -121,12 +121,12 @@ void AudioRendererManager::SetStreamIDManager(std::weak_ptr<StreamIDManager> str
 
 void AudioRendererManager::DeleteManager(int32_t globeId)
 {
-    std::list<std::weak_ptr<ParallelStreamManager>> palList_;
+    std::list<std::weak_ptr<ParallelStreamManager>> palList;
     {
         std::lock_guard<std::mutex> lock(renderMgrMutex_);
-        palList_ = parallelManagerList_;
+        palList = parallelManagerList_;
     }
-    for (const auto& weakManager : palList_) {
+    for (const auto& weakManager : palList) {
         if (auto sharedManager = weakManager.lock()) {
             sharedManager->DelGlobeId(globeId);
         }
