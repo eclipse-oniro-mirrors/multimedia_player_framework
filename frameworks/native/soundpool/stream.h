@@ -27,12 +27,14 @@
 #include "thread_pool.h"
 #include "audio_system_manager.h"
 #include "soundpool_xcollie.h"
+#include "parallel_stream_manager.h"
 #include "cache_buffer.h"
 
 namespace OHOS {
 namespace Media {
 using namespace MediaAVCodec;
 struct AudioBufferEntry;
+class ParallelStreamManager;
 
 class Stream :
     public AudioStandard::AudioRendererWriteCallback,
@@ -45,6 +47,7 @@ public:
     ~Stream();
     void SetSoundData(const std::shared_ptr<AudioBufferEntry> &cacheData, const size_t &cacheDataTotalSize);
     void SetPlayParamAndRendererInfo(PlayParams playParameters, AudioStandard::AudioRendererInfo audioRenderInfo);
+    void SetManager(std::weak_ptr<OHOS::Media::ParallelStreamManager> parallelStreamManager);
     void PreparePlay();
     int32_t DoPlay();
     int32_t Stop();
@@ -65,16 +68,19 @@ public:
     int32_t GetPriority();
 
 private:
-    std::unique_ptr<AudioStandard::AudioRenderer> CreateAudioRenderer(const int32_t streamID,
+    std::unique_ptr<AudioStandard::AudioRenderer> CreateAudioRenderer(
         const AudioStandard::AudioRendererInfo audioRendererInfo, const PlayParams playParams);
     void DealAudioRendererParams(AudioStandard::AudioRendererOptions &rendererOptions,
         const AudioStandard::AudioRendererInfo &audioRendererInfo);
     bool IsAudioRendererCanMix(const AudioStandard::AudioRendererInfo &audioRendererInfo);
     void PrepareAudioRenderer(std::unique_ptr<AudioStandard::AudioRenderer> &audioRenderer);
-    int32_t DealPlayParamsBeforePlay(const PlayParams playParams);
+    void DealPlayParamsBeforePlay(const PlayParams playParams);
     static AudioStandard::AudioRendererRate CheckAndAlignRendererRate(const int32_t rate);
     void DealWriteData(size_t length);
     void AddStopTask();
+    int32_t GetGlobeId(int32_t soundID);
+    void DelGlobeId(int32_t globeId);
+    void SetGlobeId(int32_t soundID, int32_t globeId);
 
     Format trackFormat_;
     int32_t soundID_ = 0;
@@ -93,6 +99,7 @@ private:
     std::shared_ptr<ISoundPoolCallback> streamCallback_ = nullptr;
     ffrt::mutex streamLock_;
     std::weak_ptr<ThreadPool> streamStopThreadPool_;
+    std::weak_ptr<OHOS::Media::ParallelStreamManager> manager_;
 
     int32_t loop_ = 0;
     int32_t priority_ = 0;

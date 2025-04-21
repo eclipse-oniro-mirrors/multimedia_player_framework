@@ -121,6 +121,7 @@ public:
 
     int32_t SetCallback(const std::shared_ptr<ISoundPoolCallback> &callback);
     int32_t Release();
+    int64_t GetSourceDuration();
 
 private:
     class SoundParserListener : public SoundDecoderCallback::SoundDecodeListener {
@@ -154,6 +155,7 @@ private:
     int32_t fdSource_ = -1;
 
     MediaAVCodec::Format trackFormat_;
+    int64_t sourceDurationInfo_{};
 
     static constexpr int32_t AUDIO_SOURCE_TRACK_COUNT = 1;
     static constexpr int32_t AUDIO_SOURCE_TRACK_INDEX = 0;
