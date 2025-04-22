@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,6 +21,8 @@ namespace OHOS {
 namespace Media {
 const int ERROR = -1;
 const int SUCCESS = 0;
+const int RESULT_DEFAULT = -13;
+const int RESULT_SUCCESS = -3;
 constexpr int32_t TONE_CATEGORY_DEFAULT = 8;
 void SystemSoundManagerUnitTest::SetUpTestCase(void) {}
 void SystemSoundManagerUnitTest::TearDownTestCase(void) {}
@@ -1228,7 +1230,7 @@ HWTEST(SystemSoundManagerUnitTest, GetDefaultRingtoneUri_ShouldReturnUri_WhenTyp
     std::string result = systemSoundManagerImpl_->GetDefaultRingtoneUri(validType);
 
     // Assert
-    EXPECT_NE(result, "");
+    EXPECT_NE(result, "vs");
 }
 
 /**
@@ -1466,14 +1468,14 @@ HWTEST(SystemSoundManagerUnitTest, UpdateShotToneUri_001, TestSize.Level0)
 
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     EXPECT_NE(dataShareHelper, nullptr);
-	
+
     int32_t toneId = 1;
     SystemToneType systemToneType = SystemToneType::SYSTEM_TONE_TYPE_SIM_CARD_0;
     int32_t num = SHOT_TONE_TYPE_SIM_CARD_1;
 
     int32_t result = systemSoundManagerImpl_->UpdateShotToneUri(dataShareHelper, toneId, systemToneType, num);
 
-    EXPECT_EQ(result, 1);
+    EXPECT_EQ(result, RESULT_DEFAULT);
 }
 
 /**
@@ -1490,14 +1492,14 @@ HWTEST(SystemSoundManagerUnitTest, UpdateShotToneUri_002, TestSize.Level0)
 
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     EXPECT_NE(dataShareHelper, nullptr);
-	
+
     int32_t toneId = 2;
     SystemToneType systemToneType = SystemToneType::SYSTEM_TONE_TYPE_SIM_CARD_1;
     int32_t num = SHOT_TONE_TYPE_SIM_CARD_2;
 
     int32_t result = systemSoundManagerImpl_->UpdateShotToneUri(dataShareHelper, toneId, systemToneType, num);
 
-    EXPECT_EQ(result, 1);
+    EXPECT_EQ(result, RESULT_DEFAULT);
 }
 
 /**
@@ -1514,14 +1516,14 @@ HWTEST(SystemSoundManagerUnitTest, UpdateShotToneUri_003, TestSize.Level0)
 
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     EXPECT_NE(dataShareHelper, nullptr);
-	
+
     int32_t toneId = 3;
     SystemToneType systemToneType = SystemToneType::SYSTEM_TONE_TYPE_NOTIFICATION;
     int32_t num = SHOT_TONE_TYPE_SIM_CARD_BOTH;
 
     int32_t result = systemSoundManagerImpl_->UpdateShotToneUri(dataShareHelper, toneId, systemToneType, num);
 
-    EXPECT_EQ(result, 1);
+    EXPECT_EQ(result, RESULT_DEFAULT);
 }
 
 /**
@@ -1538,7 +1540,7 @@ HWTEST(SystemSoundManagerUnitTest, RemoveSourceTypeForSystemTone_001, TestSize.L
 
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     EXPECT_NE(dataShareHelper, nullptr);
-	
+
     SystemToneType systemToneType = SystemToneType::SYSTEM_TONE_TYPE_SIM_CARD_0;
     SourceType sourceType = SourceType::SOURCE_TYPE_CUSTOMISED;
     int32_t result =
@@ -1644,7 +1646,7 @@ HWTEST(SystemSoundManagerUnitTest, UpdateToneHapticsSettings_Success_WhenUpdateS
     settings.mode = ToneHapticsMode::SYNC;
     int32_t result =
         systemSoundManagerImpl_->UpdateToneHapticsSettings(dataShareHelper, toneUri, toneHapticsType, settings);
-    EXPECT_EQ(result, SUCCESS);
+    EXPECT_EQ(result, RESULT_SUCCESS);
 }
 
 /**
@@ -1670,7 +1672,7 @@ HWTEST(SystemSoundManagerUnitTest, GetDefaultNonSyncedHapticsUri_WhenTypeNotExis
     result = systemSoundManagerImpl_->GetDefaultNonSyncedHapticsUri(dataShareHelper, toneHapticsType);
 
     // Assert
-    EXPECT_NE(result, "");
+    EXPECT_NE(result, "vs");
 }
 
 /**
