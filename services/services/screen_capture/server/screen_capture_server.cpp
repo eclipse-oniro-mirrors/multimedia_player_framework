@@ -623,6 +623,11 @@ void ScreenCaptureServer::SetMissionId(uint64_t missionId)
     missionIds_.emplace_back(missionId);
 }
 
+AVScreenCaptureState ScreenCaptureServer::GetSCServerCaptureState()
+{
+    return captureState_;
+}
+
 void ScreenCaptureServer::SetMetaDataReport()
 {
     std::shared_ptr<Media::Meta> meta = std::make_shared<Media::Meta>();
@@ -3554,7 +3559,7 @@ bool ScreenCaptureObserverCallBack::StopAndRelease(AVScreenCaptureStateCode stat
     MEDIA_LOGI("ScreenCaptureObserverCallBack::StopAndRelease");
     auto scrServer = screenCaptureServer_.lock();
     if (scrServer && !scrServer->IsTelInCallSkipList()) {
-        if (captureState_ == AVScreenCaptureState::STOPPED) {
+        if (scrServer->GetSCServerCaptureState() == AVScreenCaptureState::STOPPED) {
             MEDIA_LOGI("StopAndRelease repeat, capture is STOPPED.");
             return true;
         }
@@ -3581,6 +3586,10 @@ bool ScreenCaptureObserverCallBack::TelCallStateUpdated(bool isInCall)
     MEDIA_LOGI("ScreenCaptureObserverCallBack::TelCallStateUpdated InCall:%{public}d", isInCall);
     auto scrServer = screenCaptureServer_.lock();
     if (scrServer && !scrServer->IsTelInCallSkipList()) {
+        if (scrServer->GetSCServerCaptureState() == AVScreenCaptureState::STOPPED) {
+            MEDIA_LOGI("TelCallStateUpdated: capture is STOPPED.");
+            return true;
+        }
         scrServer->TelCallStateUpdated(isInCall);
     }
     return true;
