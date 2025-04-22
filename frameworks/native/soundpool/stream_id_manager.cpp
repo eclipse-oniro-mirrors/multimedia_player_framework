@@ -27,7 +27,7 @@ namespace {
     static const std::string THREAD_POOL_NAME = "OS_StreamMgr";
     static const std::string THREAD_POOL_NAME_CACHE_BUFFER = "OS_CacheBuf";
     static const int32_t MAX_THREADS_NUM = std::thread::hardware_concurrency() >= 4 ? 2 : 1;
-    static const int32_t ERROE_GLOBE_ID = -1;
+    static const int32_t ERROE_GLOBAL_ID = -1;
 }
 
 namespace OHOS {
@@ -103,25 +103,25 @@ int32_t StreamIDManager::InitThreadPool()
     return MSERR_OK;
 }
 
-int32_t StreamIDManager::GetGlobeId(int32_t soundId)
+int32_t StreamIDManager::GetGlobalId(int32_t soundId)
 {
-    std::lock_guard lock(globeIdMutex_);
-    for (auto it = globeIdVector_.begin(); it !=  globeIdVector_.end();) {
+    std::lock_guard lock(globalIdMutex_);
+    for (auto it = globalIdVector_.begin(); it !=  globalIdVector_.end();) {
         if (it->first == soundId) {
             return it->second;
         } else {
             ++it;
         }
     }
-    return ERROE_GLOBE_ID;
+    return ERROE_GLOBAL_ID;
 }
 
-void StreamIDManager::DelGlobeId(int32_t globeId)
+void StreamIDManager::DelGlobalId(int32_t globalId)
 {
-    std::lock_guard lock(globeIdMutex_);
-    for (auto it = globeIdVector_.begin(); it !=  globeIdVector_.end();) {
-        if (it->second == globeId) {
-            globeIdVector_.erase(it);
+    std::lock_guard lock(globalIdMutex_);
+    for (auto it = globalIdVector_.begin(); it !=  globalIdVector_.end();) {
+        if (it->second == globalId) {
+            globalIdVector_.erase(it);
             break;
         } else {
             ++it;
@@ -129,25 +129,25 @@ void StreamIDManager::DelGlobeId(int32_t globeId)
     }
 }
 
-void StreamIDManager::SetGlobeId(int32_t soundId, int32_t globeId)
+void StreamIDManager::SetGlobalId(int32_t soundId, int32_t globalId)
 {
-    std::lock_guard lock(globeIdMutex_);
-    globeIdVector_.push_back(std::make_pair(soundId, globeId));
+    std::lock_guard lock(globalIdMutex_);
+    globalIdVector_.push_back(std::make_pair(soundId, globalId));
 }
 
 void StreamIDManager::DelSoundId(int32_t soundId)
 {
-    std::lock_guard lock(globeIdMutex_);
-    for (auto it = globeIdVector_.begin(); it !=  globeIdVector_.end();) {
+    std::lock_guard lock(globalIdMutex_);
+    for (auto it = globalIdVector_.begin(); it !=  globalIdVector_.end();) {
         if (it->first == soundId) {
-            it = globeIdVector_.erase(it);
+            it = globalIdVector_.erase(it);
         } else {
             ++it;
         }
     }
 }
 
-int32_t StreamIDManager::Play(std::shared_ptr<SoundParser> soundParser, PlayParams playParameters)
+int32_t StreamIDManager::Play(std::shared_ptr<SoundParser> &soundParser, PlayParams &playParameters)
 {
     MediaTrace trace("StreamIDManager::Play");
     CHECK_AND_RETURN_RET_LOG(soundParser != nullptr, -1, "Invalid soundParser.");

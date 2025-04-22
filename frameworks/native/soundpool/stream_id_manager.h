@@ -35,12 +35,12 @@ public:
     StreamIDManager(int32_t maxStreams, AudioStandard::AudioRendererInfo audioRenderInfo);
     ~StreamIDManager();
 
-    int32_t GetGlobeId(int32_t soundId);
-    void DelGlobeId(int32_t globeId);
-    void SetGlobeId(int32_t soundId, int32_t globeId);
+    int32_t GetGlobalId(int32_t soundId);
+    void DelGlobalId(int32_t globalId);
+    void SetGlobalId(int32_t soundId, int32_t globalId);
     void DelSoundId(int32_t soundId);
     int32_t InitThreadPool();
-    int32_t Play(std::shared_ptr<OHOS::Media::SoundParser> soundParser, PlayParams playParameters);
+    int32_t Play(std::shared_ptr<OHOS::Media::SoundParser> &soundParser, PlayParams &playParameters);
 
     std::shared_ptr<CacheBuffer> FindCacheBuffer(const int32_t streamID);
 
@@ -57,7 +57,7 @@ public:
 private:
     class CacheBufferCallBack : public ISoundPoolCallback {
     public:
-        explicit CacheBufferCallBack(const std::weak_ptr<OHOS::Media::StreamIDManager> streamIDManager)
+        explicit CacheBufferCallBack(const std::weak_ptr<OHOS::Media::StreamIDManager> &streamIDManager)
             : streamIDManagerInner_(streamIDManager) {}
         virtual ~CacheBufferCallBack() = default;
         void OnLoadCompleted(int32_t soundID);
@@ -86,8 +86,9 @@ private:
     void QueueAndSortPlayingStreamID(int32_t streamID);
     void QueueAndSortWillPlayStreamID(StreamIDAndPlayParamsInfo freshStreamIDAndPlayParamsInfo);
 
-    std::vector<std::pair<int32_t, int32_t>> globeIdVector_;
-    std::mutex globeIdMutex_;
+    // pair<int32_t, int32_t> is mapping between SoundId and GlobalId
+    std::vector<std::pair<int32_t, int32_t>> globalIdVector_;
+    std::mutex globalIdMutex_;
     std::shared_ptr<ISoundPoolCallback> cacheBufferCallback_ = nullptr;
     AudioStandard::AudioRendererInfo audioRendererInfo_;
     ffrt::mutex streamIDManagerLock_;

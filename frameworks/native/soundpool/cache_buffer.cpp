@@ -22,7 +22,7 @@
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SOUNDPOOL, "CacheBuffer"};
-    static const int32_t ERROE_GLOBE_ID = -1;
+    static const int32_t ERROE_GLOBAL_ID = -1;
 }
 
 namespace OHOS {
@@ -52,26 +52,26 @@ void CacheBuffer::SetManager(std::weak_ptr<StreamIDManager> streamIDManager)
     manager_ = streamIDManager;
 }
 
-int32_t CacheBuffer::GetGlobeId(int32_t soundID)
+int32_t CacheBuffer::GetGlobalId(int32_t soundID)
 {
     if (auto sharedManager = manager_.lock()) {
-        return sharedManager->GetGlobeId(soundID);
+        return sharedManager->GetGlobalId(soundID);
     } else {
-        return ERROE_GLOBE_ID;
+        return ERROE_GLOBAL_ID;
     }
 }
 
-void CacheBuffer::DelGlobeId(int32_t globeId)
+void CacheBuffer::DelGlobalId(int32_t globalId)
 {
     if (auto sharedManager = manager_.lock()) {
-        sharedManager->DelGlobeId(globeId);
+        sharedManager->DelGlobalId(globalId);
     }
 }
 
-void CacheBuffer::SetGlobeId(int32_t soundID, int32_t globeId)
+void CacheBuffer::SetGlobalId(int32_t soundID, int32_t globalId)
 {
     if (auto sharedManager = manager_.lock()) {
-        sharedManager->SetGlobeId(soundID, globeId);
+        sharedManager->SetGlobalId(soundID, globalId);
     }
 }
 
@@ -120,7 +120,7 @@ void CacheBuffer::DealAudioRendererParams(AudioStandard::AudioRendererOptions &r
 }
 
 std::unique_ptr<AudioStandard::AudioRenderer> CacheBuffer::CreateAudioRenderer(
-    const AudioStandard::AudioRendererInfo audioRendererInfo, const PlayParams playParams)
+    const AudioStandard::AudioRendererInfo &audioRendererInfo, const PlayParams &playParams)
 {
     MediaTrace trace("CacheBuffer::CreateAudioRenderer");
     AudioStandard::AudioRendererOptions rendererOptions = {};
@@ -171,21 +171,22 @@ void CacheBuffer::PrepareAudioRenderer(std::unique_ptr<AudioStandard::AudioRende
         " retRenderCallback:%{public}d", retCallback, retFirstCallback, retRenderCallback);
 }
 
-void CacheBuffer::GetAvailableAudioRenderer(AudioStandard::AudioRendererInfo audioRendererInfo, PlayParams playParams)
+void CacheBuffer::GetAvailableAudioRenderer(const AudioStandard::AudioRendererInfo &audioRendererInfo,
+    const PlayParams &playParams)
 {
     MediaTrace trace("CacheBuffer::GetAvailableAudioRenderer");
     MEDIA_LOGI("CacheBuffer::GetAvailableAudioRenderer start");
     bool result = true;
     while (result) {
-        int32_t globeId = GetGlobeId(soundID_);
-        if (globeId > 0) {
-            audioRenderer_ = AudioRendererManager::GetInstance().GetAudioRendererInstance(globeId);
+        int32_t globalId = GetGlobalId(soundID_);
+        if (globalId > 0) {
+            audioRenderer_ = AudioRendererManager::GetInstance().GetAudioRendererInstance(globalId);
             if (audioRenderer_ != nullptr) {
                 MEDIA_LOGI("CacheBuffer::GetAvailableAudioRenderer useOld audiorenderer,"
-                    "globeId:%{public}d, soundID:%{public}d", globeId, soundID_);
+                    "globalId:%{public}d, soundID:%{public}d", globalId, soundID_);
                 break;
             } else {
-                DelGlobeId(globeId);
+                DelGlobalId(globalId);
             }
         } else {
             result = false;
@@ -204,8 +205,8 @@ void CacheBuffer::GetAvailableAudioRenderer(AudioStandard::AudioRendererInfo aud
     MEDIA_LOGI("CacheBuffer::GetAvailableAudioRenderer end");
 }
 
-int32_t CacheBuffer::PreparePlayInner(const AudioStandard::AudioRendererInfo audioRendererInfo,
-    const PlayParams playParams)
+int32_t CacheBuffer::PreparePlayInner(const AudioStandard::AudioRendererInfo &audioRendererInfo,
+    const PlayParams &playParams)
 {
     if (audioRenderer_ != nullptr) {
         MEDIA_LOGI("CacheBuffer::PreparePlayInner has audiorenderer available");
@@ -219,8 +220,8 @@ int32_t CacheBuffer::PreparePlayInner(const AudioStandard::AudioRendererInfo aud
     return MSERR_OK;
 }
 
-int32_t CacheBuffer::PreparePlay(const AudioStandard::AudioRendererInfo audioRendererInfo,
-    const PlayParams playParams)
+int32_t CacheBuffer::PreparePlay(const AudioStandard::AudioRendererInfo &audioRendererInfo,
+    const PlayParams &playParams)
 {
     std::lock_guard lock(cacheBufferLock_);
     playParameters_ = playParams;
@@ -279,7 +280,7 @@ int32_t CacheBuffer::DoPlay(const int32_t streamID)
     return MSERR_OK;
 }
 
-void CacheBuffer::DealPlayParamsBeforePlay(const PlayParams playParams)
+void CacheBuffer::DealPlayParamsBeforePlay(const PlayParams &playParams)
 {
     audioRenderer_->SetOffloadAllowed(false);
     loop_ = playParams.loop;
@@ -431,10 +432,9 @@ int32_t CacheBuffer::Stop(const int32_t streamID)
             MEDIA_LOGI("cachebuffer callback_ OnPlayFinished.");
             callback_->OnPlayFinished(streamID_);
         }
-        int32_t globeId = AudioRendererManager::GetInstance().GetGlobeId();
-        AudioRendererManager::GetInstance().SetAudioRendererInstance(globeId, std::move(audioRenderer_));
-        SetGlobeId(soundID_, globeId);
-        audioRenderer_ = nullptr;
+        int32_t globalId = AudioRendererManager::GetInstance().GetGlobalId();
+        AudioRendererManager::GetInstance().SetAudioRendererInstance(globalId, std::move(audioRenderer_));
+        SetGlobalId(soundID_, globalId);
         if (cacheBufferCallback_ != nullptr) {
             MEDIA_LOGI("cachebuffer cacheBufferCallback_ OnPlayFinished.");
             cacheBufferCallback_->OnPlayFinished(streamID_);

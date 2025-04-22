@@ -63,8 +63,9 @@ public:
     void OnInterrupt(const AudioStandard::InterruptEvent &interruptEvent) override;
     void OnStateChange(const AudioStandard::RendererState state,
         const AudioStandard::StateChangeCmdType cmdType) override;
-    int32_t PreparePlay(const AudioStandard::AudioRendererInfo audioRendererInfo, const PlayParams playParams);
-    void GetAvailableAudioRenderer(AudioStandard::AudioRendererInfo audioRendererInfo, PlayParams playParams);
+    int32_t PreparePlay(const AudioStandard::AudioRendererInfo &audioRendererInfo, const PlayParams &playParams);
+    void GetAvailableAudioRenderer(const AudioStandard::AudioRendererInfo &audioRendererInfo,
+        const PlayParams &playParams);
     int32_t DoPlay(const int32_t streamID);
     int32_t Release();
     int32_t Stop(const int32_t streamID);
@@ -100,19 +101,19 @@ private:
     static constexpr int32_t LOW_LATENCY_PLAY_RENDERER_FLAGS = 1;
 
     std::unique_ptr<AudioStandard::AudioRenderer> CreateAudioRenderer(
-        const AudioStandard::AudioRendererInfo audioRendererInfo, const PlayParams playParams);
+        const AudioStandard::AudioRendererInfo &audioRendererInfo, const PlayParams &playParams);
     void PrepareAudioRenderer(std::unique_ptr<AudioStandard::AudioRenderer> &audioRenderer);
     void DealAudioRendererParams(AudioStandard::AudioRendererOptions &rendererOptions,
         const AudioStandard::AudioRendererInfo &audioRendererInfo);
-    void DealPlayParamsBeforePlay(const PlayParams playParams);
+    void DealPlayParamsBeforePlay(const PlayParams &playParams);
     static AudioStandard::AudioRendererRate CheckAndAlignRendererRate(const int32_t rate);
     void DealWriteData(size_t length);
     bool IsAudioRendererCanMix(const AudioStandard::AudioRendererInfo &audioRendererInfo);
-    int32_t PreparePlayInner(const AudioStandard::AudioRendererInfo audioRendererInfo,
-        const PlayParams playParams);
-    int32_t GetGlobeId(int32_t soundID);
-    void DelGlobeId(int32_t globeId);
-    void SetGlobeId(int32_t soundID, int32_t globeId);
+    int32_t PreparePlayInner(const AudioStandard::AudioRendererInfo &audioRendererInfo,
+        const PlayParams &playParams);
+    int32_t GetGlobalId(int32_t soundID);
+    void DelGlobalId(int32_t globalId);
+    void SetGlobalId(int32_t soundID, int32_t globalId);
 
     Format trackFormat_;
     std::deque<std::shared_ptr<AudioBufferEntry>> cacheData_;
