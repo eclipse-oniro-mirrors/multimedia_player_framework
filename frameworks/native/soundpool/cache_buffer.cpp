@@ -181,8 +181,8 @@ void CacheBuffer::GetAvailableAudioRenderer(AudioStandard::AudioRendererInfo aud
         if (globeId > 0) {
             audioRenderer_ = AudioRendererManager::GetInstance().GetAudioRendererInstance(globeId);
             if (audioRenderer_ != nullptr) {
-                MEDIA_LOGI("CacheBuffer::GetAvailableAudioRenderer useOld audiorenderer,
-                    globeId:%{public}d, soundID:%{public}d", globeId, soundID_);
+                MEDIA_LOGI("CacheBuffer::GetAvailableAudioRenderer useOld audiorenderer,"
+                    "globeId:%{public}d, soundID:%{public}d", globeId, soundID_);
                 break;
             } else {
                 DelGlobeId(globeId);
