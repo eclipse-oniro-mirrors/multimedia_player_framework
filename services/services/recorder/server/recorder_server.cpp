@@ -1154,6 +1154,23 @@ int32_t RecorderServer::SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer)
     return result.Value();
 }
 
+int32_t RecorderServer::SetWillMuteWhenInterrupted(bool muteWhenInterrupted)
+{
+    MEDIA_LOGI("SetWillMuteWhenInterrupted in");
+    std::lock_guard<std::mutex> lock(mutex_);
+    MediaTrace trace("RecorderServer::SetWillMuteWhenInterrupted");
+    CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_INITIALIZED && status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        return recorderEngine_->SetWillMuteWhenInterrupted(muteWhenInterrupted);
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+
+    auto result = task->GetResult();
+    return result.Value();
+}
+
 void RecorderServer::SetMetaDataReport()
 {
     std::shared_ptr<Media::Meta> meta = std::make_shared<Media::Meta>();

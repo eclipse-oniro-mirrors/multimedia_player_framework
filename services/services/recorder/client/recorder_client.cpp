@@ -537,5 +537,14 @@ int32_t RecorderClient::SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer)
     MEDIA_LOGD("SetWatermark");
     return recorderProxy_->SetWatermark(waterMarkBuffer);
 }
+
+int32_t RecorderClient::SetWillMuteWhenInterrupted(bool muteWhenInterrupted)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(recorderProxy_ != nullptr, MSERR_NO_MEMORY, "recorder service does not exist.");
+
+    MEDIA_LOGD("SetWillMuteWhenInterrupted");
+    return recorderProxy_->SetWillMuteWhenInterrupted(muteWhenInterrupted);
+}
 } // namespace Media
 } // namespace OHOS

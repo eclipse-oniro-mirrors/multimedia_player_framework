@@ -59,6 +59,7 @@ int32_t RecorderServiceStub::Init()
     CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "failed to create RecorderServer");
     FillRecFuncPart1();
     FillRecFuncPart2();
+    FillRecFuncPart3();
     pid_ = IPCSkeleton::GetCallingPid();
     (void)RegisterMonitor(pid_);
     return MSERR_OK;
@@ -160,6 +161,12 @@ void RecorderServiceStub::FillRecFuncPart2()
         [this](MessageParcel &data, MessageParcel &reply) { return SetMetaSourceTrackMime(data, reply); };
     recFuncs_[GET_META_SURFACE] =
         [this](MessageParcel &data, MessageParcel &reply) { return GetMetaSurface(data, reply); };
+}
+
+void RecorderServiceStub::FillRecFuncPart3()
+{
+    recFuncs_[SET_INTERRUPT_STRATEGY] =
+        [this](MessageParcel &data, MessageParcel &reply) { return SetWillMuteWhenInterrupted(data, reply); };
 }
 
 int32_t RecorderServiceStub::DestroyStub()
@@ -506,6 +513,12 @@ int32_t RecorderServiceStub::SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBu
 {
     CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
     return recorderServer_->SetWatermark(waterMarkBuffer);
+}
+
+int32_t RecorderServiceStub::SetWillMuteWhenInterrupted(bool muteWhenInterrupted)
+{
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    return recorderServer_->SetWillMuteWhenInterrupted(muteWhenInterrupted);
 }
 
 int32_t RecorderServiceStub::DoIpcAbnormality()
@@ -960,6 +973,13 @@ int32_t RecorderServiceStub::SetWatermark(MessageParcel &data, MessageParcel &re
     CHECK_AND_RETURN_RET_LOG(buffer != nullptr, MSERR_NO_MEMORY, "create AVBuffer failed");
     CHECK_AND_RETURN_RET_LOG(buffer->ReadFromMessageParcel(data), MSERR_INVALID_OPERATION, "read buffer failed");
     CHECK_AND_RETURN_RET_LOG(reply.WriteInt32(SetWatermark(buffer)), MSERR_INVALID_OPERATION, "reply write failed");
+    return MSERR_OK;
+}
+
+int32_t RecorderServiceStub::SetWillMuteWhenInterrupted(MessageParcel &data, MessageParcel &reply)
+{
+    bool muteWhenInterrupted = data.ReadBool();
+    reply.WriteInt32(SetWillMuteWhenInterrupted(muteWhenInterrupted));
     return MSERR_OK;
 }
 } // namespace Media

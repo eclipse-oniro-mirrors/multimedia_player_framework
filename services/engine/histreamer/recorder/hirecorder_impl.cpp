@@ -362,6 +362,9 @@ int32_t HiRecorderImpl::PrepareAudioCapture()
         } else {
             audioCaptureFilter_->SetWithVideo(false);
         }
+        if (muteWhenInterrupted_) {
+            audioCaptureFilter_->SetWillMuteWhenInterrupted(muteWhenInterrupted_);
+        }
     }
     return ERR_NONE;
 }
@@ -1116,6 +1119,12 @@ int32_t HiRecorderImpl::SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer)
     FALSE_RETURN_V_MSG_E(videoEncoderFilter_ != nullptr, static_cast<int32_t>(Status::ERROR_NULL_POINTER),
         "videoEncoderFilter is nullptr, cannot set watermark");
     return static_cast<int32_t>(videoEncoderFilter_->SetWatermark(waterMarkBuffer));
+}
+
+int32_t HiRecorderImpl::SetWillMuteWhenInterrupted(bool muteWhenInterrupted)
+{
+    muteWhenInterrupted_ = muteWhenInterrupted;
+    return static_cast<int32_t>(Status::OK);
 }
 } // namespace MEDIA
 } // namespace OHOS
