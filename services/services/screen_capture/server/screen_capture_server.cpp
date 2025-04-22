@@ -3411,7 +3411,19 @@ bool ScreenCaptureServer::DestroyPopWindow()
 #ifdef PC_STANDARD
     if (captureConfig_.captureMode == CAPTURE_SPECIFIED_SCREEN || CheckCaptureSpecifiedWindowForSelectWindow()) {
         MEDIA_LOGI("DestroyPopWindow end, type: picker, deviceType: PC.");
-        return true;
+        ErrCode ret = ERR_INVALID_VALUE;
+        AAFwk::Want want;
+        AppExecFwk::ElementName element("",
+            GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"],
+            SELECT_ABILITY_NAME); // DeviceID
+        want.SetElement(element);
+        want.SetParam("appLabel", callingLabel_);
+        want.SetParam("sessionId", sessionId_);
+        want.SetParam("terminateSelf", true); // inform picker to terminateSelf
+        SendConfigToUIParams(want);
+        ret = AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want);
+        MEDIA_LOGI("Destroy picker end %{public}d, DeviceType: PC", ret);
+        return ret == ERR_OK;
     } else {
         if (connection_ != nullptr) {
             MEDIA_LOGI("DestroyPopWindow close dialog, deviceType: PC.");
