@@ -1190,7 +1190,7 @@ void AVPlayerNapi::EnqueueNetworkTask(const std::string url)
         std::unique_lock<std::mutex> lock(taskMutex_);
         auto state = GetCurrentState();
         if (state != AVPlayerState::STATE_IDLE) {
-            OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is not idle, unsupport set url");
+            QueueOnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is not idle, unsupport set url");
             return;
         }
         if (player_ != nullptr) {
@@ -1212,7 +1212,7 @@ void AVPlayerNapi::EnqueueFdTask(const int32_t fd)
         std::unique_lock<std::mutex> lock(taskMutex_);
         auto state = GetCurrentState();
         if (state != AVPlayerState::STATE_IDLE) {
-            OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is not idle, unsupport set source fd");
+            QueueOnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is not idle, unsupport set source fd");
             return;
         }
         if (player_ != nullptr) {
