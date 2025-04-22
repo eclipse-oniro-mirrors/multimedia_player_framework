@@ -38,6 +38,7 @@
 namespace OHOS {
 namespace Media {
 using namespace MediaAVCodec;
+struct AudioBufferEntry;
 
 class SoundDecoderCallback : public AVCodecCallback, public NoCopyable {
 public:
