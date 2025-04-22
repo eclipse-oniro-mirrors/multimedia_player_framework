@@ -354,7 +354,7 @@ int32_t AudioHapticPlayerImpl::StartVibrate()
         int32_t delay = (static_cast<int32_t>(this->audioLatency_) - hapticDelay) > 0 ?
             static_cast<int32_t>(this->audioLatency_) - hapticDelay : 0;
         waitResult = condStartVibrate_.wait_for(lockWait, std::chrono::milliseconds(delay),
-            [this]() { return isVibrationStopped_; });
+            [this]() { return isVibrationStopped_.load(); });
         if (isVibrationStopped_) {
             MEDIA_LOGI("StartVibrate: audio haptic player has been stopped.");
             SendHapticPlayerEvent(MSERR_OK, "HAPTIC_PLAYER_STOP");

@@ -55,7 +55,7 @@ private:
     float volume_ = 1.0f;
     bool loop_ = false;
     std::string configuredAudioUri_ = "";
-    AudioHapticPlayerState playerState_ = AudioHapticPlayerState::STATE_NEW;
+    std::atomic<AudioHapticPlayerState> playerState_ = AudioHapticPlayerState::STATE_NEW;
 
     std::weak_ptr<AudioHapticSoundCallback> audioHapticPlayerCallback_;
 
