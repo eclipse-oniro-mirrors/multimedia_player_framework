@@ -43,6 +43,7 @@ const int32_t STUB_STREAM_COUNT = 602;
 const int32_t STRIDE_ALIGN = 8;
 const int32_t FRAME_DURATION = 30000;
 const int32_t SEC_TO_NS = 1000000000;
+const int32_t RECORDING_TIME = 3;
 
 static HapInfoParams hapInfo = {
     .userID = 100, // 100 user ID
@@ -117,6 +118,14 @@ static OH_AVRecorder_Profile profile_ = {
     .enableTemporalScale = false,
 };
 
+static OH_AVRecorder_Profile audioProfile_ = {
+    .audioBitrate = 96000,
+    .audioSampleRate = 48000,
+    .audioChannels = 2,
+    .audioCodec = OH_AVRecorder_CodecMimeType::AVRECORDER_AUDIO_AAC,
+    .fileFormat = OH_AVRecorder_ContainerFormatType::AVRECORDER_CFT_MPEG_4,
+};
+
 static OH_AVRecorder_Location location_ = {
     .latitude = 31.123456,
     .longitude = 121.123456,
@@ -138,6 +147,14 @@ static OH_AVRecorder_Config config_ = {
     .audioSourceType = OH_AVRecorder_AudioSourceType::AVRECORDER_MIC,
     .videoSourceType = OH_AVRecorder_VideoSourceType::AVRECORDER_SURFACE_YUV,
     .profile = profile_,
+    .url = nullptr,
+    .fileGenerationMode = OH_AVRecorder_FileGenerationMode::AVRECORDER_APP_CREATE,
+    .metadata = metadata_,
+};
+
+static OH_AVRecorder_Config audioConfig_ = {
+    .audioSourceType = OH_AVRecorder_AudioSourceType::AVRECORDER_MIC,
+    .profile = audioProfile_,
     .url = nullptr,
     .fileGenerationMode = OH_AVRecorder_FileGenerationMode::AVRECORDER_APP_CREATE,
     .metadata = metadata_,
@@ -1932,3 +1949,460 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_SetUriCallback_004, TestSize.Level2)
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_SetUriCallback_004 out.");
 }
 #endif
+
+/**
+ * @tc.name: Recorder_SetMaxDuration_001
+ * @tc.desc: Test recorder setmaxduration undefined
+ * @tc.type: FUNC
+ */
+HWTEST_F(NativeRecorderUnitTest, Recorder_SetMaxDuration_001, TestSize.Level2)
+{
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_SetMaxDuration_001 in.");
+
+    OH_AVRecorder_Config config = config_;
+    config.metadata.genre = strdup("");
+    config.metadata.videoOrientation = strdup("0");
+    config.metadata.customInfo.key = strdup("");
+    config.metadata.customInfo.value = strdup("");
+
+    int32_t outputFd = open((RECORDER_ROOT + "Recorder_SetMaxDuration_001.mp4").c_str(), O_RDWR);
+    const std::string fdHead = "fd://";
+    config.url = strdup((fdHead + std::to_string(outputFd)).c_str());
+    OHNativeWindow *windowGet = nullptr;
+
+    int32_t ret = AV_ERR_OK;
+    ret = OH_AVRecorder_Prepare(recorder_, &config);
+    EXPECT_EQ(ret, AV_ERR_OK);
+    ret = OH_AVRecorder_GetInputSurface(recorder_, &windowGet);
+    EXPECT_EQ(ret, AV_ERR_OK);
+    ret = OH_AVRecorder_Start(recorder_);
+    EXPECT_EQ(ret, AV_ERR_OK);
+    isExit_.store(false);
+    std::unique_ptr<std::thread> requesetBufferThread_;
+    requesetBufferThread_.reset(new(std::nothrow) std::thread(RequesetBuffer, windowGet, &config));
+    sleep(3);
+    if (requesetBufferThread_ != nullptr) {
+        isExit_.store(true);
+        requesetBufferThread_->join();
+        requesetBufferThread_ = nullptr;
+    }
+    ret = OH_AVRecorder_Stop(recorder_);
+
+    free(config.url);
+    free(config.metadata.genre);
+    free(config.metadata.videoOrientation);
+    free(config.metadata.customInfo.key);
+    free(config.metadata.customInfo.value);
+
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_SetMaxDuration_001 out.");
+}
+
+/**
+ * @tc.name: Recorder_SetMaxDuration_002
+ * @tc.desc: Test recorder setmaxduration -1
+ * @tc.type: FUNC
+ */
+HWTEST_F(NativeRecorderUnitTest, Recorder_SetMaxDuration_002, TestSize.Level2)
+{
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_SetMaxDuration_002 in.");
+
+    OH_AVRecorder_Config config = config_;
+    config.maxDuration = -1;
+    config.metadata.genre = strdup("");
+    config.metadata.videoOrientation = strdup("0");
+    config.metadata.customInfo.key = strdup("");
+    config.metadata.customInfo.value = strdup("");
+
+    int32_t outputFd = open((RECORDER_ROOT + "Recorder_SetMaxDuration_002.mp4").c_str(), O_RDWR);
+    const std::string fdHead = "fd://";
+    config.url = strdup((fdHead + std::to_string(outputFd)).c_str());
+    OHNativeWindow *windowGet = nullptr;
+
+    int32_t ret = AV_ERR_OK;
+    ret = OH_AVRecorder_Prepare(recorder_, &config);
+    EXPECT_EQ(ret, AV_ERR_OK);
+    ret = OH_AVRecorder_GetInputSurface(recorder_, &windowGet);
+    EXPECT_EQ(ret, AV_ERR_OK);
+    ret = OH_AVRecorder_Start(recorder_);
+    EXPECT_EQ(ret, AV_ERR_OK);
+    isExit_.store(false);
+    std::unique_ptr<std::thread> requesetBufferThread_;
+    requesetBufferThread_.reset(new(std::nothrow) std::thread(RequesetBuffer, windowGet, &config));
+    sleep(3);
+    if (requesetBufferThread_ != nullptr) {
+        isExit_.store(true);
+        requesetBufferThread_->join();
+        requesetBufferThread_ = nullptr;
+    }
+    ret = OH_AVRecorder_Stop(recorder_);
+
+    free(config.url);
+    free(config.metadata.genre);
+    free(config.metadata.videoOrientation);
+    free(config.metadata.customInfo.key);
+    free(config.metadata.customInfo.value);
+
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_SetMaxDuration_002 out.");
+}
+
+/**
+ * @tc.name: Recorder_SetMaxDuration_003
+ * @tc.desc: Test recorder setmaxduration 0
+ * @tc.type: FUNC
+ */
+HWTEST_F(NativeRecorderUnitTest, Recorder_SetMaxDuration_003, TestSize.Level2)
+{
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_SetMaxDuration_003 in.");
+
+    OH_AVRecorder_Config config = config_;
+    config.maxDuration = 0;
+    config.metadata.genre = strdup("");
+    config.metadata.videoOrientation = strdup("0");
+    config.metadata.customInfo.key = strdup("");
+    config.metadata.customInfo.value = strdup("");
+
+    int32_t outputFd = open((RECORDER_ROOT + "Recorder_SetMaxDuration_003.mp4").c_str(), O_RDWR);
+    const std::string fdHead = "fd://";
+    config.url = strdup((fdHead + std::to_string(outputFd)).c_str());
+    OHNativeWindow *windowGet = nullptr;
+
+    int32_t ret = AV_ERR_OK;
+    ret = OH_AVRecorder_Prepare(recorder_, &config);
+    EXPECT_EQ(ret, AV_ERR_OK);
+    ret = OH_AVRecorder_GetInputSurface(recorder_, &windowGet);
+    EXPECT_EQ(ret, AV_ERR_OK);
+    ret = OH_AVRecorder_Start(recorder_);
+    EXPECT_EQ(ret, AV_ERR_OK);
+    isExit_.store(false);
+    std::unique_ptr<std::thread> requesetBufferThread_;
+    requesetBufferThread_.reset(new(std::nothrow) std::thread(RequesetBuffer, windowGet, &config));
+    sleep(3);
+    if (requesetBufferThread_ != nullptr) {
+        isExit_.store(true);
+        requesetBufferThread_->join();
+        requesetBufferThread_ = nullptr;
+    }
+    ret = OH_AVRecorder_Stop(recorder_);
+
+    free(config.url);
+    free(config.metadata.genre);
+    free(config.metadata.videoOrientation);
+    free(config.metadata.customInfo.key);
+    free(config.metadata.customInfo.value);
+
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_SetMaxDuration_003 out.");
+}
+
+/**
+ * @tc.name: Recorder_SetMaxDuration_004
+ * @tc.desc: Test recorder setmaxduration 1
+ * @tc.type: FUNC
+ */
+HWTEST_F(NativeRecorderUnitTest, Recorder_SetMaxDuration_004, TestSize.Level2)
+{
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_SetMaxDuration_004 in.");
+
+    OH_AVRecorder_Config config = config_;
+    config.maxDuration = 1;
+    config.metadata.genre = strdup("");
+    config.metadata.videoOrientation = strdup("0");
+    config.metadata.customInfo.key = strdup("");
+    config.metadata.customInfo.value = strdup("");
+
+    int32_t outputFd = open((RECORDER_ROOT + "Recorder_SetMaxDuration_004.mp4").c_str(), O_RDWR);
+    const std::string fdHead = "fd://";
+    config.url = strdup((fdHead + std::to_string(outputFd)).c_str());
+    OHNativeWindow *windowGet = nullptr;
+
+    int32_t ret = AV_ERR_OK;
+    ret = OH_AVRecorder_Prepare(recorder_, &config);
+    EXPECT_EQ(ret, AV_ERR_OK);
+    ret = OH_AVRecorder_GetInputSurface(recorder_, &windowGet);
+    EXPECT_EQ(ret, AV_ERR_OK);
+    ret = OH_AVRecorder_Start(recorder_);
+    EXPECT_EQ(ret, AV_ERR_OK);
+    isExit_.store(false);
+    std::unique_ptr<std::thread> requesetBufferThread_;
+    requesetBufferThread_.reset(new(std::nothrow) std::thread(RequesetBuffer, windowGet, &config));
+    sleep(5);
+    if (requesetBufferThread_ != nullptr) {
+        isExit_.store(true);
+        requesetBufferThread_->join();
+        requesetBufferThread_ = nullptr;
+    }
+    ret = OH_AVRecorder_Stop(recorder_);
+
+    free(config.url);
+    free(config.metadata.genre);
+    free(config.metadata.videoOrientation);
+    free(config.metadata.customInfo.key);
+    free(config.metadata.customInfo.value);
+
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_SetMaxDuration_004 out.");
+}
+
+/**
+ * @tc.name: Recorder_SetMaxDuration_005
+ * @tc.desc: Test recorder setmaxduration 5
+ * @tc.type: FUNC
+ */
+HWTEST_F(NativeRecorderUnitTest, Recorder_SetMaxDuration_005, TestSize.Level2)
+{
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_SetMaxDuration_005 in.");
+
+    OH_AVRecorder_Config config = config_;
+    config.maxDuration = 5;
+    config.metadata.genre = strdup("");
+    config.metadata.videoOrientation = strdup("0");
+    config.metadata.customInfo.key = strdup("");
+    config.metadata.customInfo.value = strdup("");
+
+    int32_t outputFd = open((RECORDER_ROOT + "Recorder_SetMaxDuration_005.mp4").c_str(), O_RDWR);
+    const std::string fdHead = "fd://";
+    config.url = strdup((fdHead + std::to_string(outputFd)).c_str());
+    OHNativeWindow *windowGet = nullptr;
+
+    int32_t ret = AV_ERR_OK;
+    ret = OH_AVRecorder_Prepare(recorder_, &config);
+    EXPECT_EQ(ret, AV_ERR_OK);
+    ret = OH_AVRecorder_GetInputSurface(recorder_, &windowGet);
+    EXPECT_EQ(ret, AV_ERR_OK);
+    ret = OH_AVRecorder_Start(recorder_);
+    EXPECT_EQ(ret, AV_ERR_OK);
+    isExit_.store(false);
+    std::unique_ptr<std::thread> requesetBufferThread_;
+    requesetBufferThread_.reset(new(std::nothrow) std::thread(RequesetBuffer, windowGet, &config));
+    sleep(10);
+    if (requesetBufferThread_ != nullptr) {
+        isExit_.store(true);
+        requesetBufferThread_->join();
+        requesetBufferThread_ = nullptr;
+    }
+    ret = OH_AVRecorder_Stop(recorder_);
+
+    free(config.url);
+    free(config.metadata.genre);
+    free(config.metadata.videoOrientation);
+    free(config.metadata.customInfo.key);
+    free(config.metadata.customInfo.value);
+
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_SetMaxDuration_005 out.");
+}
+
+/**
+ * @tc.name: Recorder_SetMaxDuration_006
+ * @tc.desc: Test recorder setmaxduration int max but stop first
+ * @tc.type: FUNC
+ */
+HWTEST_F(NativeRecorderUnitTest, Recorder_SetMaxDuration_006, TestSize.Level2)
+{
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_SetMaxDuration_006 in.");
+
+    OH_AVRecorder_Config config = config_;
+    config.maxDuration = INT32_MAX;
+    config.metadata.genre = strdup("");
+    config.metadata.videoOrientation = strdup("0");
+    config.metadata.customInfo.key = strdup("");
+    config.metadata.customInfo.value = strdup("");
+
+    int32_t outputFd = open((RECORDER_ROOT + "Recorder_SetMaxDuration_006.mp4").c_str(), O_RDWR);
+    const std::string fdHead = "fd://";
+    config.url = strdup((fdHead + std::to_string(outputFd)).c_str());
+    OHNativeWindow *windowGet = nullptr;
+
+    int32_t ret = AV_ERR_OK;
+    ret = OH_AVRecorder_Prepare(recorder_, &config);
+    EXPECT_EQ(ret, AV_ERR_OK);
+    ret = OH_AVRecorder_GetInputSurface(recorder_, &windowGet);
+    EXPECT_EQ(ret, AV_ERR_OK);
+    ret = OH_AVRecorder_Start(recorder_);
+    EXPECT_EQ(ret, AV_ERR_OK);
+    isExit_.store(false);
+    std::unique_ptr<std::thread> requesetBufferThread_;
+    requesetBufferThread_.reset(new(std::nothrow) std::thread(RequesetBuffer, windowGet, &config));
+    sleep(3);
+    if (requesetBufferThread_ != nullptr) {
+        isExit_.store(true);
+        requesetBufferThread_->join();
+        requesetBufferThread_ = nullptr;
+    }
+    ret = OH_AVRecorder_Stop(recorder_);
+
+    free(config.url);
+    free(config.metadata.genre);
+    free(config.metadata.videoOrientation);
+    free(config.metadata.customInfo.key);
+    free(config.metadata.customInfo.value);
+
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_SetMaxDuration_006 out.");
+}
+
+/**
+ * @tc.name: Recorder_SetMaxDuration_007
+ * @tc.desc: Test recorder setmaxduration int max with pause and resume
+ * @tc.type: FUNC
+ */
+HWTEST_F(NativeRecorderUnitTest, Recorder_SetMaxDuration_007, TestSize.Level2)
+{
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_SetMaxDuration_007 in.");
+
+    OH_AVRecorder_Config config = config_;
+    config.maxDuration = INT32_MAX;
+    config.metadata.genre = strdup("");
+    config.metadata.videoOrientation = strdup("0");
+    config.metadata.customInfo.key = strdup("");
+    config.metadata.customInfo.value = strdup("");
+
+    int32_t outputFd = open((RECORDER_ROOT + "Recorder_SetMaxDuration_007.mp4").c_str(), O_RDWR);
+    const std::string fdHead = "fd://";
+    config.url = strdup((fdHead + std::to_string(outputFd)).c_str());
+    OHNativeWindow *windowGet = nullptr;
+
+    int32_t ret = AV_ERR_OK;
+    ret = OH_AVRecorder_Prepare(recorder_, &config);
+    EXPECT_EQ(ret, AV_ERR_OK);
+    ret = OH_AVRecorder_GetInputSurface(recorder_, &windowGet);
+    EXPECT_EQ(ret, AV_ERR_OK);
+    ret = OH_AVRecorder_Start(recorder_);
+    EXPECT_EQ(ret, AV_ERR_OK);
+    isExit_.store(false);
+    std::unique_ptr<std::thread> requesetBufferThread_;
+    requesetBufferThread_.reset(new(std::nothrow) std::thread(RequesetBuffer, windowGet, &config));
+    sleep(3);
+    ret = OH_AVRecorder_Pause(recorder_);
+    EXPECT_EQ(ret, AV_ERR_OK);
+    sleep(1);
+    ret = OH_AVRecorder_Resume(recorder_);
+    EXPECT_EQ(ret, AV_ERR_OK);
+    sleep(3);
+    if (requesetBufferThread_ != nullptr) {
+        isExit_.store(true);
+        requesetBufferThread_->join();
+        requesetBufferThread_ = nullptr;
+    }
+    ret = OH_AVRecorder_Stop(recorder_);
+
+    free(config.url);
+    free(config.metadata.genre);
+    free(config.metadata.videoOrientation);
+    free(config.metadata.customInfo.key);
+    free(config.metadata.customInfo.value);
+
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_SetMaxDuration_007 out.");
+}
+
+/**
+ * @tc.name: Recorder_AAC_001
+ * @tc.desc: Test AAC container format
+ * @tc.type: FUNC
+ */
+HWTEST_F(NativeRecorderUnitTest, Recorder_AAC_001, TestSize.Level2)
+{
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_AAC_001 in.");
+
+    OH_AVRecorder_Config config = audioConfig_;
+    int32_t outputFd = open((RECORDER_ROOT + "Recorder_AAC_001.aac").c_str(), O_RDWR);
+    const std::string fdHead = "fd://";
+    config.url = strdup((fdHead + std::to_string(outputFd)).c_str());
+
+    config.metadata.genre = strdup("");
+    config.metadata.customInfo.key = strdup("abc");
+    config.metadata.customInfo.value = strdup("123");
+    config.metadata.location.latitude = 31.791863;
+    config.metadata.location.longitude = 64.574687;
+
+    config.profile.audioBitrate = 32000;
+    config.profile.audioChannels = 2;
+    config.profile.audioSampleRate = 8000;
+    config.audioSourceType = OH_AVRecorder_AudioSourceType::AVRECORDER_MIC;
+    config.profile.audioCodec = OH_AVRecorder_CodecMimeType::AVRECORDER_AUDIO_AAC;
+    config.profile.fileFormat = OH_AVRecorder_ContainerFormatType::AVRECORDER_CFT_AAC;
+    config.fileGenerationMode = OH_AVRecorder_FileGenerationMode::AVRECORDER_APP_CREATE;
+
+    int32_t ret = AV_ERR_OK;
+    ret = OH_AVRecorder_Prepare(recorder_, &config);
+    EXPECT_EQ(ret, AV_ERR_OK);
+
+    ret = OH_AVRecorder_Start(recorder_);
+    EXPECT_EQ(ret, AV_ERR_OK);
+    sleep(RECORDING_TIME);
+    
+    ret = OH_AVRecorder_Pause(recorder_);
+    EXPECT_EQ(ret, AV_ERR_OK);
+    sleep(RECORDING_TIME/2);
+
+    ret = OH_AVRecorder_Resume(recorder_);
+    EXPECT_EQ(ret, AV_ERR_OK);
+    sleep(RECORDING_TIME);
+
+    ret = OH_AVRecorder_Stop(recorder_);
+    EXPECT_EQ(ret, AV_ERR_OK);
+
+    ret = OH_AVRecorder_Reset(recorder_);
+    EXPECT_EQ(ret, AV_ERR_OK);
+
+    free(config.url);
+    free(config.metadata.genre);
+    free(config.metadata.customInfo.key);
+    free(config.metadata.customInfo.value);
+
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_AAC_001 out.");
+}
+
+/**
+ * @tc.name: Recorder_AAC_002
+ * @tc.desc: Test AAC container format
+ * @tc.type: FUNC
+ */
+HWTEST_F(NativeRecorderUnitTest, Recorder_AAC_002, TestSize.Level2)
+{
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_AAC_002 in.");
+
+    OH_AVRecorder_Config config = audioConfig_;
+    int32_t outputFd = open((RECORDER_ROOT + "Recorder_AAC_002.aac").c_str(), O_RDWR);
+    const std::string fdHead = "fd://";
+    config.url = strdup((fdHead + std::to_string(outputFd)).c_str());
+
+    config.metadata.genre = strdup("");
+    config.metadata.customInfo.key = strdup("abc");
+    config.metadata.customInfo.value = strdup("123");
+    config.metadata.location.latitude = 31.791863;
+    config.metadata.location.longitude = 64.574687;
+
+    config.profile.audioBitrate = 32000;
+    config.profile.audioChannels = 2;
+    config.profile.audioSampleRate = 96000;
+    config.audioSourceType = OH_AVRecorder_AudioSourceType::AVRECORDER_MIC;
+    config.profile.audioCodec = OH_AVRecorder_CodecMimeType::AVRECORDER_AUDIO_AAC;
+    config.profile.fileFormat = OH_AVRecorder_ContainerFormatType::AVRECORDER_CFT_AAC;
+    config.fileGenerationMode = OH_AVRecorder_FileGenerationMode::AVRECORDER_APP_CREATE;
+
+    int32_t ret = AV_ERR_OK;
+    ret = OH_AVRecorder_Prepare(recorder_, &config);
+    EXPECT_EQ(ret, AV_ERR_OK);
+
+    ret = OH_AVRecorder_Start(recorder_);
+    EXPECT_EQ(ret, AV_ERR_OK);
+    sleep(RECORDING_TIME);
+    
+    ret = OH_AVRecorder_Pause(recorder_);
+    EXPECT_EQ(ret, AV_ERR_OK);
+    sleep(RECORDING_TIME/2);
+
+    ret = OH_AVRecorder_Resume(recorder_);
+    EXPECT_EQ(ret, AV_ERR_OK);
+    sleep(RECORDING_TIME);
+
+    ret = OH_AVRecorder_Stop(recorder_);
+    EXPECT_EQ(ret, AV_ERR_OK);
+
+    ret = OH_AVRecorder_Reset(recorder_);
+    EXPECT_EQ(ret, AV_ERR_OK);
+
+    free(config.url);
+    free(config.metadata.genre);
+    free(config.metadata.customInfo.key);
+    free(config.metadata.customInfo.value);
+
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_AAC_002 out.");
+}
