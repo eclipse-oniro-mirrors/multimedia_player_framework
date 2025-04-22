@@ -104,7 +104,11 @@ napi_value AVImageGeneratorNapi::Constructor(napi_env env, napi_callback_info in
 
     generator->env_ = env;
     generator->helper_ = AVMetadataHelperFactory::CreateAVMetadataHelper();
-    CHECK_AND_RETURN_RET_LOG(generator->helper_ != nullptr, result, "failed to CreateMetadataHelper");
+    if (generator->helper_ == nullptr) {
+        delete generator;
+        MEDIA_LOGE("failed to CreateMetadataHelper");
+        return result;
+    }
 
     status = napi_wrap(env, jsThis, reinterpret_cast<void *>(generator),
         AVImageGeneratorNapi::Destructor, nullptr, nullptr);

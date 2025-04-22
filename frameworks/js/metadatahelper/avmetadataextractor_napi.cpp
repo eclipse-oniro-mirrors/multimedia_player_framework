@@ -100,7 +100,11 @@ napi_value AVMetadataExtractorNapi::Constructor(napi_env env, napi_callback_info
 
     extractor->env_ = env;
     extractor->helper_ = AVMetadataHelperFactory::CreateAVMetadataHelper();
-    CHECK_AND_RETURN_RET_LOG(extractor->helper_ != nullptr, result, "failed to CreateMetadataHelper");
+    if (extractor->helper_ == nullptr) {
+        delete extractor;
+        MEDIA_LOGE("failed to CreateMetadataHelper");
+        return result;
+    }
 
     status = napi_wrap(env, jsThis, reinterpret_cast<void *>(extractor),
         AVMetadataExtractorNapi::Destructor, nullptr, nullptr);
