@@ -19,6 +19,7 @@
 #include "media_log.h"
 #include "media_errors.h"
 #include "stream_id_manager.h"
+#include "audio_renderer_manager.h"
 
 namespace {
     // audiorender max concurrency.
@@ -26,6 +27,7 @@ namespace {
     static const std::string THREAD_POOL_NAME = "OS_StreamMgr";
     static const std::string THREAD_POOL_NAME_CACHE_BUFFER = "OS_CacheBuf";
     static const int32_t MAX_THREADS_NUM = std::thread::hardware_concurrency() >= 4 ? 2 : 1;
+    static const int32_t ERROE_GLOBE_ID = -1;
 }
 
 namespace OHOS {
@@ -35,7 +37,6 @@ StreamIDManager::StreamIDManager(int32_t maxStreams,
 {
     MEDIA_LOGI("Construction StreamIDManager.");
     audioRendererInfo_.playerType = AudioStandard::PlayerType::PLAYER_TYPE_SOUND_POOL;
-    InitThreadPool();
 }
 
 StreamIDManager::~StreamIDManager()
@@ -92,11 +93,58 @@ int32_t StreamIDManager::InitThreadPool()
     isStreamPlayingThreadPoolStarted_.store(true);
 
     cacheBufferStopThreadPool_ = std::make_shared<ThreadPool>(THREAD_POOL_NAME_CACHE_BUFFER);
+    CHECK_AND_RETURN_RET_LOG(cacheBufferStopThreadPool_ != nullptr, MSERR_INVALID_VAL,
+        "Failed to obtain stop ThreadPool");
     cacheBufferStopThreadPool_->Start(CACHE_BUFFER_THREAD_NUMBER);
     cacheBufferStopThreadPool_->SetMaxTaskNum(CACHE_BUFFER_THREAD_NUMBER);
     isCacheBufferStopThreadPoolStarted_.store(true);
 
+    OHOS::Media::AudioRendererManager::GetInstance().SetStreamIDManager(weak_from_this());
     return MSERR_OK;
+}
+
+int32_t StreamIDManager::GetGlobeId(int32_t soundId)
+{
+    std::lock_guard lock(globeIdMutex_);
+    for (auto it = globeIdVector_.begin(); it !=  globeIdVector_.end();) {
+        if (it->first == soundId) {
+            return it->second;
+        } else {
+            ++it;
+        }
+    }
+    return ERROE_GLOBE_ID;
+}
+
+void StreamIDManager::DelGlobeId(int32_t globeId)
+{
+    std::lock_guard lock(globeIdMutex_);
+    for (auto it = globeIdVector_.begin(); it !=  globeIdVector_.end();) {
+        if (it->second == globeId) {
+            globeIdVector_.erase(it);
+            break;
+        } else {
+            ++it;
+        }
+    }
+}
+
+void StreamIDManager::SetGlobeId(int32_t soundId, int32_t globeId)
+{
+    std::lock_guard lock(globeIdMutex_);
+    globeIdVector_.push_back(std::make_pair(soundId, globeId));
+}
+
+void StreamIDManager::DelSoundId(int32_t soundId)
+{
+    std::lock_guard lock(globeIdMutex_);
+    for (auto it = globeIdVector_.begin(); it !=  globeIdVector_.end();) {
+        if (it->first == soundId) {
+            it = globeIdVector_.erase(it);
+        } else {
+            ++it;
+        }
+    }
 }
 
 int32_t StreamIDManager::Play(std::shared_ptr<SoundParser> soundParser, PlayParams playParameters)
@@ -115,10 +163,11 @@ int32_t StreamIDManager::Play(std::shared_ptr<SoundParser> soundParser, PlayPara
             std::shared_ptr<AudioBufferEntry> cacheData;
             soundParser->GetSoundData(cacheData);
             size_t cacheDataTotalSize = soundParser->GetSoundDataTotalSize();
-            auto cacheBuffer = std::make_shared<CacheBuffer>(soundParser->GetSoundTrackFormat(),
+            auto cacheBuffer = std::make_shared<OHOS::Media::CacheBuffer>(soundParser->GetSoundTrackFormat(),
                      soundID, streamID, cacheBufferStopThreadPool_);
-            cacheBuffer->SetSoundData(cacheData, cacheDataTotalSize);
             CHECK_AND_RETURN_RET_LOG(cacheBuffer != nullptr, -1, "failed to create cache buffer");
+            cacheBuffer->SetSoundData(cacheData, cacheDataTotalSize);
+            cacheBuffer->SetManager(weak_from_this());
             CHECK_AND_RETURN_RET_LOG(callback_ != nullptr, MSERR_INVALID_VAL, "Invalid callback.");
             cacheBuffer->SetCallback(callback_);
             cacheBufferCallback_ = std::make_shared<CacheBufferCallBack>(weak_from_this());
@@ -152,7 +201,7 @@ int32_t StreamIDManager::SetPlay(const int32_t soundID, const int32_t streamID, 
     // CacheBuffer must prepare before play.
     std::shared_ptr<CacheBuffer> freshCacheBuffer = FindCacheBuffer(streamID);
     CHECK_AND_RETURN_RET_LOG(freshCacheBuffer != nullptr, MSERR_INVALID_VAL, "Invalid fresh cache buffer");
-    int32_t result = freshCacheBuffer->PreparePlay(streamID, audioRendererInfo_, playParameters);
+    int32_t result = freshCacheBuffer->PreparePlay(audioRendererInfo_, playParameters);
     CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, MSERR_INVALID_VAL, "Invalid PreparePlay");
     int32_t tempMaxStream = maxStreams_;
     MEDIA_LOGI("StreamIDManager cur task num:%{public}zu, maxStreams_:%{public}d",
@@ -351,25 +400,29 @@ int32_t StreamIDManager::ReorderStream(int32_t streamID, int32_t priority)
     return MSERR_OK;
 }
 
-int32_t StreamIDManager::ClearStreamIDInDeque(int32_t streamID)
+int32_t StreamIDManager::ClearStreamIDInDeque(int32_t streamID, int32_t soundID)
 {
-    std::lock_guard lock(streamIDManagerLock_);
-    for (auto it = playingStreamIDs_.begin(); it != playingStreamIDs_.end();) {
-        if (*it == streamID) {
-            MEDIA_LOGI("StreamIDManager::ClearStreamIDInDeque playingDel streamID:%{public}d", streamID);
-            it = playingStreamIDs_.erase(it);
-        } else {
-            ++it;
+    {
+        std::lock_guard lock(streamIDManagerLock_);
+        for (auto it = playingStreamIDs_.begin(); it != playingStreamIDs_.end();) {
+            if (*it == streamID) {
+                MEDIA_LOGI("StreamIDManager::ClearStreamIDInDeque playingDel streamID:%{public}d", streamID);
+                it = playingStreamIDs_.erase(it);
+            } else {
+                ++it;
+            }
         }
-    }
-    for (auto it = willPlayStreamInfos_.begin(); it != willPlayStreamInfos_.end();) {
-        if (it->streamID == streamID) {
-            MEDIA_LOGI("StreamIDManager::ClearStreamIDInDeque willPlayDel streamID:%{public}d", streamID);
-            it = willPlayStreamInfos_.erase(it);
-        } else {
-            ++it;
+        for (auto it = willPlayStreamInfos_.begin(); it != willPlayStreamInfos_.end();) {
+            if (it->streamID == streamID) {
+                MEDIA_LOGI("StreamIDManager::ClearStreamIDInDeque willPlayDel streamID:%{public}d", streamID);
+                it = willPlayStreamInfos_.erase(it);
+            } else {
+                ++it;
+            }
         }
+        cacheBuffers_.erase(streamID);
     }
+    DelSoundId(soundID);
     return MSERR_OK;
 }
 

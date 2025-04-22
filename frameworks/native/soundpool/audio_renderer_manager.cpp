@@ -70,12 +70,12 @@ void AudioRendererManager::SetAudioRendererInstance(int32_t globeId,
         audioRendererVector_.size());
     int32_t excessNum =  static_cast<int32_t>(audioRendererVector_.size()) - AUDIO_RENDERER_MAX_NUM;
     if (excessNum > 0) {
-        MEDIA_LOGI("AudioRendererManager::SetAudioRendererInstance release audioRenderer");
         SoundPoolXCollie soundPoolXCollie("AudioRenderer::Release time out",
             [](void *) {
                 MEDIA_LOGI("AudioRenderer::Release time out");
             });
         removeGlobeId = audioRendererVector_.front().first;
+        MEDIA_LOGI("AudioRendererManager release audioRenderer removeGlobeId:%{public}d", removeGlobeId);
         (audioRendererVector_.front().second)->Release();
         soundPoolXCollie.CancelXCollieTimer();
         audioRendererVector_.pop_front();
@@ -97,6 +97,7 @@ void AudioRendererManager::RemoveOldAudioRenderer()
                 MEDIA_LOGI("AudioRenderer::RemoveOld time out");
             });
         removeGlobeId = audioRendererVector_.front().first;
+        MEDIA_LOGI("AudioRendererManager remove old removeGlobeId:%{public}d", removeGlobeId);
         (audioRendererVector_.front().second)->Release();
         soundPoolXCollie.CancelXCollieTimer();
         audioRendererVector_.pop_front();
@@ -122,11 +123,18 @@ void AudioRendererManager::SetStreamIDManager(std::weak_ptr<StreamIDManager> str
 void AudioRendererManager::DeleteManager(int32_t globeId)
 {
     std::list<std::weak_ptr<ParallelStreamManager>> palList;
+    std::list<std::weak_ptr<StreamIDManager>> mgrList;
     {
         std::lock_guard<std::mutex> lock(renderMgrMutex_);
         palList = parallelManagerList_;
+        mgrList = streamIDManagerList_;
     }
     for (const auto& weakManager : palList) {
+        if (auto sharedManager = weakManager.lock()) {
+            sharedManager->DelGlobeId(globeId);
+        }
+    }
+    for (const auto& weakManager : mgrList) {
         if (auto sharedManager = weakManager.lock()) {
             sharedManager->DelGlobeId(globeId);
         }

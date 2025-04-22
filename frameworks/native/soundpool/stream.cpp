@@ -93,7 +93,8 @@ void Stream::PreparePlay()
         if (globeId > 0) {
             audioRenderer_ = AudioRendererManager::GetInstance().GetAudioRendererInstance(globeId);
             if (audioRenderer_ != nullptr) {
-                MEDIA_LOGI("Stream::PreparePlay useOld audiorenderer");
+                MEDIA_LOGI("Stream::PreparePlay useOld audiorenderer globeId:%{public}d, soundID:%{public}d",
+                    globeId, soundID_);
                 break;
             } else {
                 DelGlobeId(globeId);

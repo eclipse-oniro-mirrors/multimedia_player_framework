@@ -98,6 +98,8 @@ int32_t SoundPool::Init(int maxStreams, AudioStandard::AudioRendererInfo audioRe
     // start contruct stream manager
     std::lock_guard lock(soundPoolLock_);
     streamIdManager_ = std::make_shared<StreamIDManager>(maxStreams, audioRenderInfo);
+    int ret = streamIdManager_->InitThreadPool();
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_VAL, "failed to init streamIdManager");
     soundIDManager_ = std::make_shared<SoundIDManager>();
     return MSERR_OK;
 }
@@ -304,7 +306,7 @@ int32_t SoundPool::Unload(int32_t soundID)
         if (std::shared_ptr<CacheBuffer> cacheBuffer = streamIdManager_->FindCacheBuffer(streamID)) {
             cacheBuffer->Stop(streamID);
             cacheBuffer->Release();
-            streamIdManager_->ClearStreamIDInDeque(streamID);
+            streamIdManager_->ClearStreamIDInDeque(streamID, soundID);
         }
     }
     return soundIDManager_->Unload(soundID);
@@ -339,8 +341,8 @@ int32_t SoundPool::ReleaseInner()
     
     if (apiVersion_ > 0 && apiVersion_ < SOUNDPOOL_API_VERSION_ISOLATION && !parallelStreamFlag_) {
         SoundPoolManager::GetInstance().Release(getpid());
-    } else if (apiVersion_ == FAULT_API_VERSION || apiVersion_ >= SOUNDPOOL_API_VERSION_ISOLATION ||
-        parallelStreamFlag_) {
+    } else if (apiVersion_ == FAULT_API_VERSION || apiVersion_ >= SOUNDPOOL_API_VERSION_ISOLATION
+        || parallelStreamFlag_) {
         std::shared_ptr<SoundPool> sharedPtr(this, [](SoundPool*) {
         });
         SoundPoolManagerMulti::GetInstance().ReleaseInstance(sharedPtr);
