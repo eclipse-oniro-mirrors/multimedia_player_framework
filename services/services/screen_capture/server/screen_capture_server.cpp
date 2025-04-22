@@ -3554,6 +3554,10 @@ bool ScreenCaptureObserverCallBack::StopAndRelease(AVScreenCaptureStateCode stat
     MEDIA_LOGI("ScreenCaptureObserverCallBack::StopAndRelease");
     auto scrServer = screenCaptureServer_.lock();
     if (scrServer && !scrServer->IsTelInCallSkipList()) {
+        if (captureState_ == AVScreenCaptureState::STOPPED) {
+            MEDIA_LOGI("StopAndRelease repeat, capture is STOPPED.");
+            return true;
+        }
         scrServer->StopScreenCaptureByEvent(state);
         scrServer->Release();
     }
