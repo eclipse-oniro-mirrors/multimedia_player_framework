@@ -623,6 +623,11 @@ void ScreenCaptureServer::SetMissionId(uint64_t missionId)
     missionIds_.emplace_back(missionId);
 }
 
+AVScreenCaptureState ScreenCaptureServer::GetSCServerCaptureState()
+{
+    return captureState_;
+}
+
 void ScreenCaptureServer::SetMetaDataReport()
 {
     std::shared_ptr<Media::Meta> meta = std::make_shared<Media::Meta>();
@@ -3566,6 +3571,10 @@ bool ScreenCaptureObserverCallBack::StopAndRelease(AVScreenCaptureStateCode stat
     MEDIA_LOGI("ScreenCaptureObserverCallBack::StopAndRelease");
     auto scrServer = screenCaptureServer_.lock();
     if (scrServer && !scrServer->IsTelInCallSkipList()) {
+        if (scrServer->GetSCServerCaptureState() == AVScreenCaptureState::STOPPED) {
+            MEDIA_LOGI("StopAndRelease repeat, capture is STOPPED.");
+            return true;
+        }
         scrServer->StopScreenCaptureByEvent(state);
         scrServer->Release();
     }
@@ -3575,10 +3584,8 @@ bool ScreenCaptureObserverCallBack::StopAndRelease(AVScreenCaptureStateCode stat
 bool ScreenCaptureObserverCallBack::NotifyStopAndRelease(AVScreenCaptureStateCode state)
 {
     MEDIA_LOGI("ScreenCaptureObserverCallBack::NotifyStopAndRelease START.");
-    bool ret = true;
     auto task = std::make_shared<TaskHandler<void>>([&, this, state] {
-        ret = StopAndRelease(state);
-        return ret;
+        StopAndRelease(state);
     });
     int32_t res = taskQueObserverCb_.EnqueueTask(task);
     CHECK_AND_RETURN_RET_LOG(res == MSERR_OK, false, "NotifyStopAndRelease EnqueueTask failed.");
@@ -3591,6 +3598,10 @@ bool ScreenCaptureObserverCallBack::TelCallStateUpdated(bool isInCall)
     MEDIA_LOGI("ScreenCaptureObserverCallBack::TelCallStateUpdated InCall:%{public}d", isInCall);
     auto scrServer = screenCaptureServer_.lock();
     if (scrServer && !scrServer->IsTelInCallSkipList()) {
+        if (scrServer->GetSCServerCaptureState() == AVScreenCaptureState::STOPPED) {
+            MEDIA_LOGI("TelCallStateUpdated: capture is STOPPED.");
+            return true;
+        }
         scrServer->TelCallStateUpdated(isInCall);
     }
     return true;
@@ -3599,10 +3610,8 @@ bool ScreenCaptureObserverCallBack::TelCallStateUpdated(bool isInCall)
 bool ScreenCaptureObserverCallBack::NotifyTelCallStateUpdated(bool isInCall)
 {
     MEDIA_LOGD("ScreenCaptureObserverCallBack::NotifyTelCallStateUpdated START InCall:%{public}d", isInCall);
-    bool ret = true;
     auto task = std::make_shared<TaskHandler<void>>([&, this, isInCall] {
-        ret = TelCallStateUpdated(isInCall);
-        return ret;
+        TelCallStateUpdated(isInCall);
     });
     int32_t res = taskQueObserverCb_.EnqueueTask(task);
     CHECK_AND_RETURN_RET_LOG(res == MSERR_OK, false, "NotifyTelCallStateUpdated EnqueueTask failed.");
