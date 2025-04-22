@@ -12,43 +12,43 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- #ifndef CACHEBUFFER_MOCK_H
- #define CACHEBUFFER_MOCK_H
+#ifndef CACHEBUFFER_MOCK_H
+#define CACHEBUFFER_MOCK_H
  
- #include <fcntl.h>
- #include <cstdio>
- #include <mutex>
- #include <cstdlib>
- #include <thread>
- #include <string>
- #include <vector>
- #include <memory>
- #include <atomic>
- #include <iostream>
- #include "gtest/gtest.h"
- #include "unittest_log.h"
- #include "media_errors.h"
- #include "nocopyable.h"
- #include "cache_buffer.h"
- #include "thread_pool.h"
- 
- namespace OHOS {
- namespace Media {
- using namespace std;
- using namespace AudioStandard;
- using namespace MediaAVCodec;
- class CacheBufferMock {
- public:
-     CacheBufferMock() = default;
-     ~CacheBufferMock() = default;
-     bool CreateCacheBuffer(const Format &trackFormat, const int32_t &soundID, const int32_t &streamID,
-         std::shared_ptr<ThreadPool> cacheBufferStopThreadPool);
-     bool IsAudioRendererCanMix(const AudioStandard::AudioRendererInfo &audioRendererInfo);
-     int32_t CreateAudioRenderer(const int32_t streamID,
-         const AudioStandard::AudioRendererInfo audioRendererInfo, const PlayParams playParams);
- private:
-     std::shared_ptr<CacheBuffer> cacheBuffer_ = nullptr;
- };
- } // namespace Media
- } // namespace OHOS
- #endif
+#include <fcntl.h>
+#include <cstdio>
+#include <mutex>
+#include <cstdlib>
+#include <thread>
+#include <string>
+#include <vector>
+#include <memory>
+#include <atomic>
+#include <iostream>
+#include "gtest/gtest.h"
+#include "unittest_log.h"
+#include "media_errors.h"
+#include "nocopyable.h"
+#include "cache_buffer.h"
+#include "thread_pool.h"
+
+namespace OHOS {
+namespace Media {
+using namespace std;
+using namespace AudioStandard;
+using namespace MediaAVCodec;
+class CacheBufferMock {
+public:
+    CacheBufferMock() = default;
+    ~CacheBufferMock() = default;
+    bool CreateCacheBuffer(const Format &trackFormat, const int32_t &soundID, const int32_t &streamID,
+        std::shared_ptr<ThreadPool> cacheBufferStopThreadPool);
+    bool IsAudioRendererCanMix(const AudioStandard::AudioRendererInfo &audioRendererInfo);
+    int32_t CreateAudioRenderer(const int32_t streamID,
+        const AudioStandard::AudioRendererInfo audioRendererInfo, const PlayParams playParams);
+private:
+    std::shared_ptr<CacheBuffer> cacheBuffer_ = nullptr;
+};
+} // namespace Media
+} // namespace OHOS
+#endif

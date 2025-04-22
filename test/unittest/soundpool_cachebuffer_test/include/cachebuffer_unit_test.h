@@ -12,40 +12,40 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- #ifndef CACHEBUFFER_UNIT_TEST_H
- #define CACHEBUFFER_UNIT_TEST_H
- 
- #include "gtest/gtest.h"
- #include "cachebuffer_mock.h"
- #include "soundpool.h"
- #include "soundpool_manager.h"
- #include "sound_parser.h"
- #include "thread_pool.h"
- 
- namespace OHOS {
- namespace Media {
- using namespace AudioStandard;
- using namespace MediaAVCodec;
- class CacheBufferUnitTest : public testing::Test {
- public:
-     static void SetUpTestCase(void);
-     static void TearDownTestCase(void);
-     void SetUp(void);
-     void TearDown(void);
- 
- protected:
-     static const int32_t waitTime1 = 1;
-     static const int32_t waitTime2 = 2;
-     static const int32_t waitTime3 = 3;
-     static const int32_t waitTime10 = 10;
-     static const int32_t waitTime20 = 20;
-     static const int32_t waitTime30 = 30;
-     int32_t loadNum_ = 0;
-     void CreateCacheBuffer(const Format &trackFormat, const int32_t &soundID, const int32_t &streamID);
-     std::shared_ptr<CacheBufferMock> cacheBuffer_ = nullptr;
-     std::shared_ptr<ThreadPool> cacheBufferStopThreadPool_;
-     std::atomic<bool> isCacheBufferStopThreadPoolStarted_ = false;
- };
- } // namespace Media
- } // namespace OHOS
- #endif
+#ifndef CACHEBUFFER_UNIT_TEST_H
+#define CACHEBUFFER_UNIT_TEST_H
+
+#include "gtest/gtest.h"
+#include "cachebuffer_mock.h"
+#include "soundpool.h"
+#include "soundpool_manager.h"
+#include "sound_parser.h"
+#include "thread_pool.h"
+
+namespace OHOS {
+namespace Media {
+using namespace AudioStandard;
+using namespace MediaAVCodec;
+class CacheBufferUnitTest : public testing::Test {
+public:
+    static void SetUpTestCase(void);
+    static void TearDownTestCase(void);
+    void SetUp(void);
+    void TearDown(void);
+
+protected:
+    static const int32_t waitTime1 = 1;
+    static const int32_t waitTime2 = 2;
+    static const int32_t waitTime3 = 3;
+    static const int32_t waitTime10 = 10;
+    static const int32_t waitTime20 = 20;
+    static const int32_t waitTime30 = 30;
+    int32_t loadNum_ = 0;
+    void CreateCacheBuffer(const Format &trackFormat, const int32_t &soundID, const int32_t &streamID);
+    std::shared_ptr<CacheBufferMock> cacheBuffer_ = nullptr;
+    std::shared_ptr<ThreadPool> cacheBufferStopThreadPool_;
+    std::atomic<bool> isCacheBufferStopThreadPoolStarted_ = false;
+};
+} // namespace Media
+} // namespace OHOS
+#endif
