@@ -1756,10 +1756,10 @@ std::string SystemSoundManagerImpl::AddCustomizedToneByFdAndOffset(
     while ((bytesRead = read(srcFd, buffer, sizeof(buffer))) > 0 && len > 0) {
         int32_t bytesWritten = write(dstFd, buffer, (bytesRead < len) ? bytesRead : len);
         memset_s(buffer, sizeof(buffer), 0, sizeof(buffer));
-        len -= bytesWritten;
         if (bytesWritten == -1) {
             break;
         }
+        len -= bytesWritten;
     }
     close(srcFd);
     close(dstFd);
