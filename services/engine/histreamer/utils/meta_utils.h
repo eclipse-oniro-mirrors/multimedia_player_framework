@@ -31,6 +31,26 @@ inline bool CheckFileType(const std::shared_ptr<Meta> meta)
     FileType fileType = FileType::UNKNOW;
     return meta->Get<Tag::MEDIA_FILE_TYPE>(fileType) && fileType != FileType::UNKNOW;
 }
+
+inline bool CheckHasAudio(const std::shared_ptr<Meta> meta)
+{
+    if (meta == nullptr) {
+        return false;
+    }
+    bool hasAudio = false;
+    meta->Get<Tag::MEDIA_HAS_AUDIO>(hasAudio);
+    return hasAudio;
+}
+
+inline bool CheckHasVideo(const std::shared_ptr<Meta> meta)
+{
+    if (meta == nullptr) {
+        return false;
+    }
+    bool hasVideo = false;
+    meta->Get<Tag::MEDIA_HAS_VIDEO>(hasVideo);
+    return hasVideo;
+}
 } // namespace MetaUtils
 }  // namespace Media
 }  // namespace OHOS
