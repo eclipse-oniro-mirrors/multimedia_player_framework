@@ -31,7 +31,6 @@ public:
 
     static std::string __attribute__((visibility("default"))) FormatDateTimeByTimeZone(const std::string &iso8601Str);
     static std::string __attribute__((visibility("default"))) FormatDataTimeByString(const std::string &dataTime);
-    static std::string __attribute__((visibility("default"))) ConvertTimestampToDatetime(const std::string &timestamp);
 };
 }  // namespace Media
 }  // namespace OHOS
