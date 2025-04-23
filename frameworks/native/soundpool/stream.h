@@ -46,7 +46,7 @@ public:
         std::shared_ptr<ThreadPool> streamStopThreadPool);
     ~Stream();
     void SetSoundData(const std::shared_ptr<AudioBufferEntry> &cacheData, const size_t &cacheDataTotalSize);
-    void SetPlayParamAndRendererInfo(PlayParams playParameters, AudioStandard::AudioRendererInfo audioRenderInfo);
+    void SetPlayParamAndRendererInfo(PlayParams &playParameters, AudioStandard::AudioRendererInfo &audioRenderInfo);
     void SetManager(std::weak_ptr<OHOS::Media::ParallelStreamManager> parallelStreamManager);
     void PreparePlay();
     int32_t DoPlay();
@@ -69,18 +69,18 @@ public:
 
 private:
     std::unique_ptr<AudioStandard::AudioRenderer> CreateAudioRenderer(
-        const AudioStandard::AudioRendererInfo audioRendererInfo, const PlayParams playParams);
+        const AudioStandard::AudioRendererInfo &audioRendererInfo, const PlayParams &playParams);
     void DealAudioRendererParams(AudioStandard::AudioRendererOptions &rendererOptions,
         const AudioStandard::AudioRendererInfo &audioRendererInfo);
     bool IsAudioRendererCanMix(const AudioStandard::AudioRendererInfo &audioRendererInfo);
     void PrepareAudioRenderer(std::unique_ptr<AudioStandard::AudioRenderer> &audioRenderer);
-    void DealPlayParamsBeforePlay(const PlayParams playParams);
+    void DealPlayParamsBeforePlay(const PlayParams &playParams);
     static AudioStandard::AudioRendererRate CheckAndAlignRendererRate(const int32_t rate);
     void DealWriteData(size_t length);
     void AddStopTask();
-    int32_t GetGlobeId(int32_t soundID);
-    void DelGlobeId(int32_t globeId);
-    void SetGlobeId(int32_t soundID, int32_t globeId);
+    int32_t GetGlobalId(int32_t soundID);
+    void DelGlobalId(int32_t globalId);
+    void SetGlobalId(int32_t soundID, int32_t globalId);
 
     Format trackFormat_;
     int32_t soundID_ = 0;
