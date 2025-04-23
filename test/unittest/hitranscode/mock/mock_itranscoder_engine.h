@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Huawei Device Co., Ltd.
+ * Copyright (C) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,13 +25,17 @@ class MockITransCoderEngineObs : public ITransCoderEngineObs {
 public:
     MockITransCoderEngineObs() = default;
     ~MockITransCoderEngineObs() override = default;
-    MOCK_METHOD(void, OnError, (TransCoderErrorType errorType, int32_t errorCode), ());
+    void OnError(TransCoderErrorType errorType, int32_t errorCode) override
+    {
+        onErrorFlag = true;
+    }
     void OnInfo(TransCoderOnInfoType type, int32_t extra) override
     {
         onInfoFlag = true;
     }
 private:
     bool onInfoFlag = false;
+    bool onErrorFlag = false;
 };
 
 class MockITransCoderEngine : public ITransCoderEngine {
