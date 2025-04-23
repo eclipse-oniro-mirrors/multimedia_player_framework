@@ -221,6 +221,7 @@ int32_t HiTransCoderImpl::SetInputFile(const std::string &url)
     }
     pipeline_->AddHeadFilters({demuxerFilter_});
     demuxerFilter_->Init(transCoderEventReceiver_, transCoderFilterCallback_);
+    (void)demuxerFilter_->SetTranscoderMode();
     Status ret = demuxerFilter_->SetDataSource(mediaSource);
     if (ret != Status::OK) {
         MEDIA_LOG_E("SetInputFile error: demuxerFilter_->SetDataSource error");
