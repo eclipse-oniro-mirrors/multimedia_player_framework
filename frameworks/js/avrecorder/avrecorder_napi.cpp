@@ -24,6 +24,8 @@
 #include "string_ex.h"
 #include "avcodec_info.h"
 #include "av_common.h"
+#include "tokenid_kit.h"
+#include "ipc_skeleton.h"
 #ifdef SUPPORT_JSSTACK
 #include "xpower_event_js.h"
 #endif
@@ -407,6 +409,12 @@ napi_value AVRecorderNapi::JsSetMetadata(napi_env env, napi_callback_info info)
 
     AVRecorderNapi *jsRecorder = AVRecorderNapi::GetJsInstanceAndArgs(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(jsRecorder != nullptr, result, "failed to GetJsInstanceAndArgs");
+    uint64_t accessTokenIDEx = IPCSkeleton::GetCallingFullTokenID();
+    bool isSystemApp = Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(accessTokenIDEx);
+    if (!isSystemApp) {
+        jsRecorder->ErrorCallback(MSERR_EXT_API9_PERMISSION_DENIED, "JsSetMetadata", "not system app");
+        return result;
+    }
     CHECK_AND_RETURN_RET_LOG(jsRecorder->taskQue_ != nullptr, result, "taskQue is nullptr!");
     CHECK_AND_RETURN_RET_LOG(jsRecorder->CheckStateMachine(opt) == MSERR_OK, result, "on error state");
     CHECK_AND_RETURN_RET_LOG(jsRecorder->CheckRepeatOperation(opt) == MSERR_OK, result, "on error Operation");
