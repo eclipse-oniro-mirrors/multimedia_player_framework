@@ -2493,11 +2493,13 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
     MEDIA_LOG_I("SetDataSource cost ms %{public}" PRId64, CALC_EXPR_TIME_MS(ret = demuxer_->SetDataSource(source)));
     demuxer_->SetCallerInfo(instanceId_, bundleName_);
     demuxer_->SetDumpFlag(isDump_);
-    if (ret == Status::OK && !MetaUtils::CheckFileType(demuxer_->GetGlobalMetaInfo())) {
+    std::shared_ptr<Meta> globalMeta = demuxer_->GetGlobalMetaInfo();
+    if (ret == Status::OK && !MetaUtils::CheckFileType(globalMeta)) {
         MEDIA_LOG_W("0x%{public}06" PRIXPTR " SetSource unsupport", FAKE_POINTER(this));
         ret = Status::ERROR_INVALID_DATA;
     }
     FALSE_RETURN_V_NOLOG(ret == Status::OK, ret);
+    isOnlyAudio_ = !MetaUtils::CheckHasVideo(globalMeta) && MetaUtils::CheckHasAudio(globalMeta);
     std::unique_lock<std::mutex> lock(drmMutex_);
     isDrmProtected_ = demuxer_->IsDrmProtected();
     MEDIA_LOG_I("Is the source drm-protected : %{public}d", isDrmProtected_);
@@ -3119,7 +3121,7 @@ Status HiPlayerImpl::LinkAudioDecoderFilter(const std::shared_ptr<Filter>& preFi
 #ifdef SUPPORT_START_STOP_ON_DEMAND
     return pipeline_->LinkFilters(preFilter, {audioDecoder_}, type, true);
 #else
-    return pipeline_->LinkFilters(preFilter, {audioDecoder_}, type);
+    return pipeline_->LinkFilters(preFilter, {audioDecoder_}, type, isOnlyAudio_);
 #endif
 }
 
@@ -3148,7 +3150,7 @@ Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilte
 #ifdef SUPPORT_START_STOP_ON_DEMAND
     auto res = pipeline_->LinkFilters(preFilter, {audioSink_}, type, true);
 #else
-    auto res = pipeline_->LinkFilters(preFilter, {audioSink_}, type);
+    auto res = pipeline_->LinkFilters(preFilter, {audioSink_}, type, isOnlyAudio_);
 #endif
     if (mutedMediaType_ == OHOS::Media::MediaType::MEDIA_TYPE_AUD) {
         audioSink_->SetMuted(true);
