@@ -123,30 +123,5 @@ std::string TimeFormatUtils::FormatDataTimeByString(const std::string &dataTime)
     MEDIA_LOGD("FormatDataTimeByString is: %{public}s%{public}s", data.c_str(), time.c_str());
     return data + time;
 }
-
-std::string TimeFormatUtils::ConvertTimestampToDatetime(const std::string &timestamp)
-{
-    if (timestamp.empty()) {
-        MEDIA_LOGE("datetime is empty, format failed");
-        return "";
-    }
-
-    time_t ts = stoi(timestamp);
-    tm *pTime;
-    char date[maxDateTimeSize];
-    char time[maxDateTimeSize];
-    pTime = localtime(&ts);
-    if (pTime == nullptr) {
-        return "";
-    }
-    size_t sizeDateStr = strftime(date, maxDateTimeSize, "%Y-%m-%d", pTime);
-    size_t sizeTimeStr = strftime(time, maxDateTimeSize, "%H:%M:%S", pTime);
-    if (sizeDateStr != standardDateStrSize || sizeTimeStr != standardTimeStrSize) {
-        MEDIA_LOGE("datetime is invalid, format failed");
-        return "";
-    }
-
-    return std::string(date) + " " + std::string(time);
-}
 }  // namespace Media
 }  // namespace OHOS

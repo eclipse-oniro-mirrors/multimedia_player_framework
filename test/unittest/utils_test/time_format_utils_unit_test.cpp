@@ -171,23 +171,5 @@ HWTEST_F(TimeFormatUtilsUnitTest, FormatDataTimeByString_008, TestSize.Level0)
     std::string expected = "2022-12-01 12:00:00";
     EXPECT_EQ(TimeFormatUtils::FormatDataTimeByString(dataTime), expected);
 }
-
-// Scenario1: Test empty timestamp
-HWTEST_F(TimeFormatUtilsUnitTest,
-    ConvertTimestampToDatetime_ShouldReturnEmptyString_WhenTimestampIsEmpty, TestSize.Level0)
-{
-    std::string timestamp = "";
-    std::string expected = "";
-    EXPECT_EQ(TimeFormatUtils::ConvertTimestampToDatetime(timestamp), expected);
-}
-
-// Scenario3: Test valid timestamp
-HWTEST_F(TimeFormatUtilsUnitTest,
-    ConvertTimestampToDatetime_ShouldReturnDatetimeString_WhenTimestampIsValid, TestSize.Level0)
-{
-    std::string timestamp = "1609459200"; // 2021-01-01 00:00:00
-    std::string expected = "2021-01";
-    EXPECT_EQ(TimeFormatUtils::ConvertTimestampToDatetime(timestamp).substr(0, 7), expected);
-}
 } // namespace Media
 } // namespace OHOS
