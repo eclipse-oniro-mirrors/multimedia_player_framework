@@ -84,7 +84,7 @@ private:
     void DoMediaServerDied();
     void AVPlayerServerDied();
     void AVTranscoderServerDied();
-    void AVRecoderServerDied();
+    void AVRecorderServerDied();
     void AVScreenCaptureServerDied();
     void AVCodecServerDied();
     void CreateMediaServiceInstance(IStandardMediaService::MediaSystemAbility subSystemId,
