@@ -404,7 +404,6 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ShowCursor(struct OH_AVScreenCapt
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetDisplayCallback(struct OH_AVScreenCapture *capture,
     OH_AVScreenCapture_OnDisplaySelected callback, void *userData);
 
-
 /**
  * @brief Create a screen capture Strategy object
  * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
