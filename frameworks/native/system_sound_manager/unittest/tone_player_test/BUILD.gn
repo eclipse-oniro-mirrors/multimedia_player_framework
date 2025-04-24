@@ -13,7 +13,7 @@
 
 import("//build/test.gni")
 
-module_output_path = "multimedia_player_framework/system_sound_manager"
+module_output_path = "player_framework/player_framework"
 
 ohos_unittest("system_tone_player_unit_test") {
   module_out_path = module_output_path
