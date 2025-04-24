@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,6 +15,7 @@
 
 #include "media_errors.h"
 #include "hitranscode_unit_test.h"
+#include "avcodec_info.h"
 #ifdef SUPPORT_AVPLAYER_DRM
 #include "imedia_key_session_service.h"
 #endif
@@ -23,6 +24,9 @@ namespace OHOS {
 namespace Media {
 using namespace std;
 using namespace testing::ext;
+
+constexpr int32_t SAMPLE_RATE_32K = 32000;
+constexpr int32_t SAMPLE_RATE_96K = 96000;
 
 void HitranscodeUnitTest::SetUpTestCase(void)
 {
@@ -998,6 +1002,95 @@ HWTEST_F(HitranscodeUnitTest, ConfigureVideoWidthHeight_004, TestSize.Level0)
     VideoRectangle videoRectangle(-1, 1080);
     Status ret = transcoder_->ConfigureVideoWidthHeight(videoRectangle);
     EXPECT_EQ(ret, Status::OK);
+}
+
+/**
+* @tc.name    : Test ConfigureMetaDataToTrackFormat
+* @tc.number  : ConfigureMetaDataToTrackFormat_001
+* @tc.desc    : Test ConfigureMetaDataToTrackFormat
+* @tc.require :
+*/
+HWTEST_F(HitranscodeUnitTest, ConfigureMetaDataToTrackFormat_001, TestSize.Level0)
+{
+    std::shared_ptr<Meta> globalInfo = std::make_shared<Meta>();
+    std::vector<std::shared_ptr<Meta>> trackInfos;
+    trackInfos.push_back(std::make_shared<Meta>());
+    transcoder_->ConfigureMetaDataToTrackFormat(globalInfo, trackInfos);
+
+    trackInfos.clear();
+    std::shared_ptr<Meta> audioFirstTrack = std::make_shared<Meta>();
+    audioFirstTrack->Set<Tag::MIME_TYPE>(Plugins::MimeType::AUDIO_AAC);
+    trackInfos.push_back(audioFirstTrack);
+    transcoder_->ConfigureMetaDataToTrackFormat(globalInfo, trackInfos);
+    std::string audioMime;
+    transcoder_->audioEncFormat_->GetData(Tag::MIME_TYPE, audioMime);
+    EXPECT_EQ(audioMime, Plugins::MimeType::AUDIO_AAC);
+
+    std::shared_ptr<Meta> audioSecondTrack = std::make_shared<Meta>();
+    audioSecondTrack->Set<Tag::MIME_TYPE>(Plugins::MimeType::AUDIO_RAW);
+    trackInfos.push_back(audioSecondTrack);
+    transcoder_->ConfigureMetaDataToTrackFormat(globalInfo, trackInfos);
+    transcoder_->audioEncFormat_->GetData(Tag::MIME_TYPE, audioMime);
+    EXPECT_EQ(audioMime, Plugins::MimeType::AUDIO_AAC);
+    trackInfos.clear();
+}
+
+/**
+* @tc.name    : Test UpdateAudioSampleFormat
+* @tc.number  : UpdateAudioSampleFormat_001
+* @tc.desc    : Test UpdateAudioSampleFormat
+* @tc.require :
+*/
+HWTEST_F(HitranscodeUnitTest, UpdateAudioSampleFormat_001, TestSize.Level0)
+{
+    std::string mime;
+    Plugins::AudioSampleFormat sampleFormat;
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    transcoder_->UpdateAudioSampleFormat(mime, meta);
+
+    meta->Set<Tag::AUDIO_SAMPLE_FORMAT>(Plugins::AudioSampleFormat::SAMPLE_F32LE);
+
+    mime = MediaAVCodec::CodecMimeType::AUDIO_APE;
+    transcoder_->UpdateAudioSampleFormat(mime, meta);
+    transcoder_->audioEncFormat_->GetData(Tag::AUDIO_SAMPLE_FORMAT, sampleFormat);
+    EXPECT_EQ(sampleFormat, Plugins::SAMPLE_S16LE);
+
+    meta->Set<Tag::AUDIO_SAMPLE_RATE>(SAMPLE_RATE_32K);
+    transcoder_->UpdateAudioSampleFormat(mime, meta);
+    transcoder_->audioEncFormat_->GetData(Tag::AUDIO_SAMPLE_FORMAT, sampleFormat);
+    EXPECT_EQ(sampleFormat, Plugins::SAMPLE_S16LE);
+
+    meta->Set<Tag::AUDIO_SAMPLE_RATE>(SAMPLE_RATE_96K);
+    transcoder_->UpdateAudioSampleFormat(mime, meta);
+    transcoder_->audioEncFormat_->GetData(Tag::AUDIO_SAMPLE_FORMAT, sampleFormat);
+    EXPECT_EQ(sampleFormat, Plugins::SAMPLE_S32LE);
+
+    meta->Set<Tag::AUDIO_SAMPLE_FORMAT>(Plugins::AudioSampleFormat::SAMPLE_U8);
+    transcoder_->UpdateAudioSampleFormat(mime, meta);
+    transcoder_->audioEncFormat_->GetData(Tag::AUDIO_SAMPLE_FORMAT, sampleFormat);
+    EXPECT_EQ(sampleFormat, Plugins::SAMPLE_S16LE);
+}
+
+/**
+* @tc.name    : Test Configure
+* @tc.number  : Configure_001
+* @tc.desc    : Test Configure
+* @tc.require :
+*/
+HWTEST_F(HitranscodeUnitTest, Configure_001, TestSize.Level0)
+{
+    VideoBitRate videoBitRate(0);
+    int32_t ret = transcoder_->Configure(videoBitRate);
+    EXPECT_EQ(ret, static_cast<int32_t>(Status::OK));
+
+    AudioBitRate audioBitRate(0);
+    ret = transcoder_->Configure(audioBitRate);
+    EXPECT_EQ(ret, static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER));
+
+    std::string url;
+    InputUrl inputUrl(url);
+    ret = transcoder_->Configure(inputUrl);
+    EXPECT_EQ(ret, static_cast<int32_t>(Status::OK));
 }
 } // namespace Media
 } // namespace OHOS

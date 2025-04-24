@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -31,6 +31,7 @@ namespace Media {
 namespace {
     constexpr int32_t WHAT_NONE = 0;
     constexpr int32_t WHAT_INFO = 2;
+    constexpr int32_t DEFAULT_EVENT = -1;
 }
 void TranscoderCallbackUnitTest::SetUpTestCase(void) {}
 
@@ -113,10 +114,33 @@ HWTEST_F(TranscoderCallbackUnitTest, Enqueue, TestSize.Level0)
 HWTEST_F(TranscoderCallbackUnitTest, LoopOnce, TestSize.Level0)
 {
     std::shared_ptr<HiTransCoderCallbackLooper::Event> event =
-        std::make_shared<HiTransCoderCallbackLooper::Event>(WHAT_INFO,
+        std::make_shared<HiTransCoderCallbackLooper::Event>(DEFAULT_EVENT,
+        SteadyClock::GetCurrentTimeMs(), Any());
+    callback_->LoopOnce(event);
+    event = std::make_shared<HiTransCoderCallbackLooper::Event>(WHAT_INFO,
         SteadyClock::GetCurrentTimeMs() + 100, Any());
     callback_->LoopOnce(event);
     EXPECT_FALSE(testObs_->onInfoFlag);
+}
+
+/**
+ * @tc.name: DoReportErrorAndInfo_001
+ * @tc.desc: DoReportErrorAndInfo_001
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(TranscoderCallbackUnitTest, DoReportErrorAndInfo_001, TestSize.Level0)
+{
+    Any error = nullptr;
+    callback_->DoReportError(error);
+    EXPECT_FALSE(testObs_->onErrorFlag);
+
+    TransCoderOnInfoType infoType = TransCoderOnInfoType::INFO_TYPE_TRANSCODER_COMPLETED;
+    int32_t infoCode = 0;
+    std::shared_ptr<HiTransCoderCallbackLooper::Event> event = std::make_shared<HiTransCoderCallbackLooper::Event>(
+        WHAT_INFO, SteadyClock::GetCurrentTimeMs(), std::make_tuple(infoType, infoCode));
+    callback_->DoReportInfo(event->detail);
+    EXPECT_TRUE(testObs_->onInfoFlag);
 }
 } // namespace Media
 } // namespace OHOS
