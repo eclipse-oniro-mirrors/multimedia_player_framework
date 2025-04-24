@@ -426,7 +426,7 @@ void MediaClient::AVTranscoderServerDied()
 {
 #ifdef SUPPORT_TRANSCODER
     for (auto &it : transCoderClientList_) {
-        auto transcoder = std::static_pointer_cast<TranscoderClient>(it);
+        auto transcoder = std::static_pointer_cast<TransCoderClient>(it);
         if (transcoder != nullptr) {
             transcoder->MediaServerDied();
         }
@@ -491,7 +491,7 @@ void MediaClient::DoMediaServerDied()
     monitor->MediaServerDied();
     AVPlayerServerDied();
     AVTranscoderServerDied();
-    AVRecoderServerDied();
+    AVRecorderServerDied();
     AVScreenCaptureServerDied();
     mediaProxyUpdatedCondition_.notify_all();
 }
