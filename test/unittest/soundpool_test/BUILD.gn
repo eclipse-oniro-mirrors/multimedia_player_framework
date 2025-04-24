@@ -49,10 +49,26 @@ ohos_unittest("soundpool_unit_test") {
   ]
 
   external_deps = [
+    "ability_base:want",
+    "ability_base:zuri",
+    "ability_runtime:ability_manager",
+    "ability_runtime:abilitykit_native",
+    "audio_framework:audio_client",
     "audio_framework:audio_client",
     "audio_framework:audio_renderer",
+    "audio_framework:audio_renderer",
+    "bundle_framework:appexecfwk_base",
+    "c_utils:utils",
     "ffrt:libffrt",
+    "ffrt:libffrt",
+    "graphic_surface:surface",
+    "hicollie:libhicollie",
     "hilog:libhilog",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "init:libbegetutil",
+    "ipc:ipc_core",
+    "qos_manager:qos",
   ]
 
   resource_config_file = "${multimedia_player_framework_path}/test/unittest/resources/ohos_test.xml"
