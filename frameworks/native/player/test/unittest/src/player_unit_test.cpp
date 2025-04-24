@@ -4568,5 +4568,35 @@ HWTEST_F(PlayerUnitTest, Player_SuperResolution_004, TestSize.Level0)
     sleep(PLAYING_TIME_2_SEC);
     EXPECT_EQ(MSERR_OK, player_->Stop());
 }
+
+/**
+ * @tc.name  : Test ReleaseClientListener API
+ * @tc.number: Player_ReleaseClientListener_001
+ * @tc.desc  : Test Player ReleaseClientListener API
+ */
+HWTEST_F(PlayerUnitTest, Player_ReleaseClientListener_001, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+
+    player_->ReleaseClientListener();
+    EXPECT_EQ(MSERR_SERVICE_DIED, player_->SetSource(VIDEO_FILE1));
+
+    // re-create player
+    player_ = std::make_shared<PlayerMock>(callback_);
+    ASSERT_NE(nullptr, player_);
+    EXPECT_TRUE(player_->CreatePlayer());
+    EXPECT_EQ(MSERR_OK, player_->SetPlayerCallback(callback_));
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+}
 } // namespace Media
 } // namespace OHOS

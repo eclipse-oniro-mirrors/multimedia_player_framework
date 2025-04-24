@@ -61,6 +61,14 @@ public:
         return GetSubSystemAbility(subSystemId, listener);
     }
 
+    void ReleaseClientListener()
+    {
+        MessageParcel data;
+        MessageParcel reply;
+        MessageOption option;
+        (void)Remote()->SendRequest(MediaServiceMsg::RELEASE_CLIENT_LISTENER, data, reply, option);
+    }
+
 private:
     static inline BrokerDelegator<MediaServiceProxyFuzzer> delegator_;
 };

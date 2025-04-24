@@ -45,5 +45,13 @@ sptr<IRemoteObject> MediaServiceProxyFuzzer::GetSubSystemAbilityWithTimeOut(
     (void) timeoutMs;
     return GetSubSystemAbility(subSystemId, listener);
 }
+
+void MediaServiceProxyFuzzer::ReleaseClientListener()
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    (void)Remote()->SendRequest(MediaServiceMsg::RELEASE_CLIENT_LISTENER, data, reply, option);
+}
 }
 }

@@ -31,6 +31,7 @@ public:
     
     sptr<IRemoteObject> GetSubSystemAbilityWithTimeOut(IStandardMediaService::MediaSystemAbility subSystemId,
         const sptr<IRemoteObject> &listener, uint32_t timeoutMs) override;
+    void ReleaseClientListener() override;
 
 private:
     bool IsGetSubSystemAbilityASync() const;

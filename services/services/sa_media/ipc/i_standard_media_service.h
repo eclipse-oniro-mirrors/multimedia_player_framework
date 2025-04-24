@@ -60,11 +60,16 @@ public:
         const sptr<IRemoteObject> &listener, uint32_t timeoutMs) = 0;
 
     /**
+     * Release the proxy object monitoring client process.
+     */
+    virtual void ReleaseClientListener() = 0;
+    /**
      * IPC code ID
      */
     enum MediaServiceMsg : int32_t {
         GET_SUBSYSTEM = 0,
         GET_SUBSYSTEM_ASYNC = 1,
+        RELEASE_CLIENT_LISTENER = 2,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardMediaService");

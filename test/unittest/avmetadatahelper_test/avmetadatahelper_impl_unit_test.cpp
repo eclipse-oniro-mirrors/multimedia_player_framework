@@ -66,6 +66,8 @@ sptr<IStandardMonitorService> MediaClient::GetMonitorProxy()
     return nullptr;
 }
 
+void MediaClient::ReleaseClientListener() {}
+
 namespace Test {
 void AVMetadtahelperImplUnitTest::SetUpTestCase(void) {}
 
