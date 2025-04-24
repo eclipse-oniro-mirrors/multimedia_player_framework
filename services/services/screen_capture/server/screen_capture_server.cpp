@@ -2634,12 +2634,13 @@ void ScreenCaptureServer::ReleaseInner()
     {
         std::lock_guard<std::mutex> lock(mutex_);
         if (captureState_ != AVScreenCaptureState::STOPPED) {
+            MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances ReleaseInner Stop in", FAKE_POINTER(this));
             StopScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID);
-            sessionId = sessionId_;
-            sessionId_ = SESSION_ID_INVALID;
-            MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances ReleaseInner Stop done, sessionId:%{public}d",
-                FAKE_POINTER(this), sessionId);
         }
+        sessionId = sessionId_;
+        sessionId_ = SESSION_ID_INVALID;
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances ReleaseInner Stop done, sessionId:%{public}d",
+            FAKE_POINTER(this), sessionId);
     }
     {
         std::lock_guard<std::mutex> lock(mutexGlobal_);
@@ -2889,7 +2890,8 @@ void AudioDataSource::VoIPStateUpdate(
             changeInfo->clientPid, static_cast<int32_t>(changeInfo->rendererState),
             static_cast<int32_t>(changeInfo->outputDeviceInfo.deviceType));
         if (changeInfo->rendererState == RendererState::RENDERER_RUNNING &&
-            changeInfo->rendererInfo.streamUsage == AudioStandard::StreamUsage::STREAM_USAGE_VOICE_COMMUNICATION) {
+            (changeInfo->rendererInfo.streamUsage == AudioStandard::StreamUsage::STREAM_USAGE_VOICE_COMMUNICATION ||
+            changeInfo->rendererInfo.streamUsage == AudioStandard::StreamUsage::STREAM_USAGE_VIDEO_COMMUNICATION)) {
             isInVoIPCall = true;
             break;
         }
