@@ -2301,9 +2301,7 @@ std::unique_ptr<RingtoneAsset> SystemSoundManagerImpl::IsPresetRingtone(
     if (result != Security::AccessToken::PermissionState::PERMISSION_GRANTED) {
         dataShareHelper = SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
         CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, nullptr, "Invalid dataShare.");
-        Uri RINGTONEURI_PROXY(RINGTONE_LIBRARY_PROXY_DATA_URI_TONE_FILES + "&user=" +
-            std::to_string(SystemSoundManagerUtils::GetCurrentUserId()));
-        auto resultSet = dataShareHelper->Query(RINGTONEURI_PROXY, queryPredicates, COLUMNS, &businessError);
+        auto resultSet = dataShareHelper->Query(RINGTONEURI, queryPredicates, COLUMNS, &businessError);
         auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
         unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
         if (ringtoneAsset == nullptr) {
@@ -2318,7 +2316,9 @@ std::unique_ptr<RingtoneAsset> SystemSoundManagerImpl::IsPresetRingtone(
         dataShareHelper->Release();
         return ringtoneAsset;
     } else {
-        auto resultSet = dataShareHelper->Query(RINGTONEURI, queryPredicates, COLUMNS, &businessError);
+        Uri RINGTONEURI_PROXY(RINGTONE_LIBRARY_PROXY_DATA_URI_TONE_FILES + "&user=" +
+            std::to_string(SystemSoundManagerUtils::GetCurrentUserId()));
+        auto resultSet = dataShareHelper->Query(RINGTONEURI_PROXY, queryPredicates, COLUMNS, &businessError);
         auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
         unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
         if (ringtoneAsset == nullptr) {
