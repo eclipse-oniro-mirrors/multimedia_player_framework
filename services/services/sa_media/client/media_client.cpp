@@ -434,7 +434,7 @@ void MediaClient::AVTranscoderServerDied()
 #endif
 }
 
-void MediaClient::AVRecoderServerDied()
+void MediaClient::AVRecorderServerDied()
 {
 #ifdef SUPPORT_RECORDER
     for (auto &it : recorderClientList_) {
