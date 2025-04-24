@@ -422,20 +422,20 @@ void MediaClient::AVPlayerServerDied()
 #endif
 }
 
-void MediaClient::DoMediaServerDied()
+void MediaClient::AVTranscoderServerDied()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    MEDIA_LOGI("DoMediaServerDied");
-    if (mediaProxy_ != nullptr) {
-        (void)mediaProxy_->AsObject()->RemoveDeathRecipient(deathRecipient_);
-        mediaProxy_ = nullptr;
+#ifdef SUPPORT_TRANSCODER
+    for (auto &it : transCoderClientList_) {
+        auto transcoder = std::static_pointer_cast<TranscoderClient>(it);
+        if (transcoder != nullptr) {
+            transcoder->MediaServerDied();
+        }
     }
-    listenerStub_ = nullptr;
-    deathRecipient_ = nullptr;
-    std::shared_ptr<MonitorClient> monitor = MonitorClient::GetInstance();
-    CHECK_AND_RETURN_LOG(monitor != nullptr, "Failed to get monitor Instance!");
-    monitor->MediaServerDied();
-    AVPlayerServerDied();
+#endif
+}
+
+void MediaClient::AVRecoderServerDied()
+{
 #ifdef SUPPORT_RECORDER
     for (auto &it : recorderClientList_) {
         auto recorder = std::static_pointer_cast<RecorderClient>(it);
@@ -450,6 +450,10 @@ void MediaClient::DoMediaServerDied()
         }
     }
 #endif
+}
+
+void MediaClient::AVScreenCaptureServerDied()
+{
 #ifdef SUPPORT_SCREEN_CAPTURE
     for (auto &it : screenCaptureClientList_) {
         auto screenCaptureClient = std::static_pointer_cast<ScreenCaptureClient>(it);
@@ -470,6 +474,25 @@ void MediaClient::DoMediaServerDied()
         }
     }
 #endif
+}
+
+void MediaClient::DoMediaServerDied()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    MEDIA_LOGI("DoMediaServerDied");
+    if (mediaProxy_ != nullptr) {
+        (void)mediaProxy_->AsObject()->RemoveDeathRecipient(deathRecipient_);
+        mediaProxy_ = nullptr;
+    }
+    listenerStub_ = nullptr;
+    deathRecipient_ = nullptr;
+    std::shared_ptr<MonitorClient> monitor = MonitorClient::GetInstance();
+    CHECK_AND_RETURN_LOG(monitor != nullptr, "Failed to get monitor Instance!");
+    monitor->MediaServerDied();
+    AVPlayerServerDied();
+    AVTranscoderServerDied();
+    AVRecoderServerDied();
+    AVScreenCaptureServerDied();
     mediaProxyUpdatedCondition_.notify_all();
 }
 } // namespace Media
