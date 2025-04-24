@@ -532,12 +532,12 @@ typedef void (*OH_AVScreenCapture_OnBufferAvailable)(OH_AVScreenCapture *capture
  */
 typedef void (*OH_AVScreenCapture_OnDisplaySelected)(OH_AVScreenCapture *capture, uint64_t displayId, void *userData);
 
-/** 
+/**
  * @brief Initialization of OH_AVScreenCapture_CaptureStrategy
  * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
  *
  * @since 20
-*/
+ */
 typedef struct OH_AVScreenCapture_CaptureStrategy OH_AVScreenCapture_CaptureStrategy;
 #ifdef __cplusplus
 }

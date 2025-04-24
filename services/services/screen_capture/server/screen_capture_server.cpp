@@ -3552,7 +3552,7 @@ void ScreenCaptureServer::ReleaseInner()
 int32_t ScreenCaptureServer::SetScreenCaptureStrategy(ScreenCaptureStrategy strategy)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    MEDIA_LOGI("strategy enableDeviceLevelCapture: %{public}d, keepCaptureDuringCall: %{public}d",
+    MEDIA_LOGI("SetScreenCaptureStrategy enableDeviceLevelCapture: %{public}d, keepCaptureDuringCall: %{public}d",
         strategy.enableDeviceLevelCapture, strategy.keepCaptureDuringCall);
     captureConfig_.strategy = strategy;
     return MSERR_OK;

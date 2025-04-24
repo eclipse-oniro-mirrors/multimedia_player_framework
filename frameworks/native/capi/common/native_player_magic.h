@@ -34,7 +34,7 @@ struct OH_AVScreenCapture_ContentFilter : public OHOS::RefBase {
 
 struct OH_AVScreenCapture_CaptureStrategy : public OHOS::RefBase {
     OH_AVScreenCapture_CaptureStrategy() = default;
-    virtual ~OH_AVScreenCapture_ContentFilter() = default;
+    virtual ~OH_AVScreenCapture_CaptureStrategy() = default;
 };
 
 struct OH_AVPlayer : public OHOS::RefBase {
