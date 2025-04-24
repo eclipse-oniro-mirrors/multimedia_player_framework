@@ -29,13 +29,17 @@ ohos_unittest("soundpool_unit_test") {
   cflags = [
     "-Wall",
     "-Werror",
+    "-Dprivate=public",
+    "-Dprotected=public",
   ]
 
   if (player_framework_support_jssoundpool) {
     sources = [
+      "src/sound_id_manager_unit_test.cpp",
       "src/soundpool_mock.cpp",
       "src/soundpool_unit_test.cpp",
       "src/soundpool_unit_test_parallel.cpp",
+      "src/stream_id_manager_unit_test.cpp",
     ]
   }
 
@@ -47,6 +51,7 @@ ohos_unittest("soundpool_unit_test") {
   external_deps = [
     "audio_framework:audio_client",
     "audio_framework:audio_renderer",
+    "ffrt:libffrt",
     "hilog:libhilog",
   ]
 
