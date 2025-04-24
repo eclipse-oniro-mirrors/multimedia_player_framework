@@ -791,7 +791,7 @@ int32_t AVScreenCaptureNapi::GetStrategy(std::unique_ptr<AVScreenCaptureAsyncCon
         CommonNapi::GetPropertyBool(env, strategyVal, "keepCaptureDuringCall", strategy.keepCaptureDuringCall)) {
         strategy.setByUser = true;
     }
-    MEDIA_LOGI("strategy enableDeviceLevelCapture: %{public}d, keepCaptureDuringCall: %{public}d",
+    MEDIA_LOGI("GetStrategy enableDeviceLevelCapture: %{public}d, keepCaptureDuringCall: %{public}d",
         strategy.enableDeviceLevelCapture, strategy.keepCaptureDuringCall);
     return MSERR_OK;
 }
