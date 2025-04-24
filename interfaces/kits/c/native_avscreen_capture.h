@@ -403,6 +403,8 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ShowCursor(struct OH_AVScreenCapt
  */
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetDisplayCallback(struct OH_AVScreenCapture *capture,
     OH_AVScreenCapture_OnDisplaySelected callback, void *userData);
+
+// TODO
 #ifdef __cplusplus
 }
 #endif

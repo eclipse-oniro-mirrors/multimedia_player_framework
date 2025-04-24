@@ -58,7 +58,7 @@ public:
     int32_t SetScreenCaptureCallback(const std::shared_ptr<ScreenCaptureCallBack> &callback) override;
     void Release() override;
     int32_t ExcludeContent(ScreenCaptureContentFilter &contentFilter) override;
-    int32_t InitStrategy(Strategy strategy) override;
+    int32_t SetScreenCaptureStrategy(ScreenCaptureStrategy strategy) override;
 
 private:
     sptr<IStandardScreenCaptureService> screenCaptureProxy_ = nullptr;

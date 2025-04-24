@@ -97,7 +97,7 @@ public:
     int32_t SetMaxVideoFrameRate(int32_t frameRate) override;
     void Release() override;
     int32_t ExcludeContent(ScreenCaptureContentFilter &contentFilter) override;
-    int32_t InitStrategy(Strategy strategy) override;
+    int32_t SetScreenCaptureStrategy(ScreenCaptureStrategy strategy) override;
 
     void SetSessionId(int32_t sessionId);
     int32_t OnReceiveUserPrivacyAuthority(bool isAllowed);

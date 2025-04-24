@@ -1040,3 +1040,53 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetDisplayCallback(struct OH_AVSc
     MEDIA_LOGD("OH_AVScreenCapture_SetDisplayCallback E");
     return AV_SCREEN_CAPTURE_ERR_OK;
 }
+
+struct ScreenCaptureStrategyObject : public OH_AVScreenCapture_CaptureStrategy {
+    ScreenCaptureStrategyObject() = default;
+    ~ScreenCaptureStrategyObject() = default;
+
+    ScreenCaptureStrategy strategy;
+};
+
+OH_AVScreenCapture_CaptureStrategy* OH_AVScreenCapture_CreateCaptureStrategy(void)
+{
+    struct ScreenCaptureStrategyObject *object = new(std::nothrow) ScreenCaptureStrategyObject();
+    CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "failed to new ScreenCaptureStrategyObject");
+    return object;
+}
+
+OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ReleaseCaptureStrategy(OH_AVScreenCapture_CreateCaptureStrategy* strategy)
+{
+    CHECK_AND_RETURN_RET_LOG(strategy != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input strategy is nullptr!");
+    struct ScreenCaptureStrategyObject *strategyObj = reinterpret_cast<ScreenCaptureStrategyObject *>(strategy);
+    delete strategyObj;
+    return AV_SCREEN_CAPTURE_ERR_OK;
+}
+
+OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetCaptureStrategy(struct OH_AVScreenCapture *capture,
+    OH_AVScreenCapture_CreateCaptureStrategy *strategy)
+{
+    CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr");
+    CHECK_AND_RETURN_RET_LOG(strategy != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input strategy is nullptr");
+
+    struct ScreenCaptureObject *screenCaptureObj = reinterpret_cast<ScreenCaptureObject *>(capture);
+    CHECK_AND_RETURN_RET_LOG(screenCaptureObj->screenCapture_ != nullptr,
+        AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "screenCapture_ is nullptr");
+
+    struct ScreenCaptureStrategyObject *strategyObj = reinterpret_cast<ScreenCaptureStrategyObject *>(strategy);
+    CHECK_AND_RETURN_RET_LOG(strategyObj != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "strategyObj is nullptr");
+
+    int32_t ret = screenCaptureObj->screenCapture_->SetScreenCaptureStrategy(strategyObj->strategy);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_SCREEN_CAPTURE_ERR_UNSUPPORT, "SetScreenCaptureStrategy failed");
+    return AV_SCREEN_CAPTURE_ERR_OK;
+}
+
+OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StrategyForKeepCaptureDuringCall(
+    OH_AVScreenCapture_CreateCaptureStrategy *strategy, bool value)
+{
+    CHECK_AND_RETURN_RET_LOG(strategy != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input strategy is nullptr");
+    struct ScreenCaptureStrategyObject *strategyObj = reinterpret_cast<ScreenCaptureStrategyObject *>(strategy);
+    CHECK_AND_RETURN_RET_LOG(strategyObj != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "strategyObj is nullptr");
+    strategyObj->strategy.keepCaptureDuringCall = value;
+    return AV_SCREEN_CAPTURE_ERR_OK;
+}

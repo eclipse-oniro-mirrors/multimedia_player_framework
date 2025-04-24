@@ -249,8 +249,10 @@ int32_t ScreenCaptureImpl::InitOriginalStream(AVScreenCaptureConfig config)
         ret = screenCaptureService_->InitAudioCap(config.audioInfo.micCapInfo);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "init micAudioCap failed");
     }
-    ret = screenCaptureService_->InitStrategy(config.strategy);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "init strategy failed");
+    if (config.strategy.setByUser) {
+        ret = screenCaptureService_->SetScreenCaptureStrategy(config.strategy);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "init strategy failed");
+    }
     MEDIA_LOGI("ScreenCaptureImpl: 0x%{public}06" PRIXPTR "InitOriginalStream end.", FAKE_POINTER(this));
     return ret;
 }
@@ -303,8 +305,10 @@ int32_t ScreenCaptureImpl::InitCaptureFile(AVScreenCaptureConfig config)
         ret = screenCaptureService_->InitVideoCap(config.videoInfo.videoCapInfo);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "InitVideoCap failed");
     }
-    ret = screenCaptureService_->InitStrategy(config.strategy);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "init strategy failed");
+    if (config.strategy.setByUser) {
+        ret = screenCaptureService_->SetScreenCaptureStrategy(config.strategy);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "init strategy failed");
+    }
     return ret;
 }
 
@@ -416,6 +420,14 @@ int32_t ScreenCaptureImpl::ReleaseVideoBuffer()
     CHECK_AND_RETURN_RET_LOG(screenCaptureService_ != nullptr, MSERR_NO_MEMORY,
         "screen capture service does not exist..");
     return screenCaptureService_->ReleaseVideoBuffer();
+}
+
+int32_t ScreenCaptureImpl::SetScreenCaptureStrategy(ScreenCaptureStrategy strategy)
+{
+    MEDIA_LOGD("ScreenCaptureImpl:0x%{public}06" PRIXPTR " SetScreenCaptureStrategy in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(screenCaptureService_ != nullptr, MSERR_NO_MEMORY,
+        "screen capture service does not exist..");
+    return screenCaptureService_->SetScreenCaptureStrategy(strategy);
 }
 } // namespace Media
 } // namespace OHOS
