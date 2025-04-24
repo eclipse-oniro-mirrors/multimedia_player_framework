@@ -114,7 +114,6 @@ HWTEST_F(TranscoderCallbackUnitTest, Enqueue, TestSize.Level0)
 HWTEST_F(TranscoderCallbackUnitTest, LoopOnce, TestSize.Level0)
 {
     std::shared_ptr<HiTransCoderCallbackLooper::Event> event =
-        std::make_shared<HiTransCoderCallbackLooper::Event>(WHAT_INFO,
         std::make_shared<HiTransCoderCallbackLooper::Event>(DEFAULT_EVENT,
         SteadyClock::GetCurrentTimeMs(), Any());
     callback_->LoopOnce(event);
