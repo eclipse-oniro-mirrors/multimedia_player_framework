@@ -83,6 +83,9 @@ private:
     static void MediaServerDied(pid_t pid, std::weak_ptr<MediaClient> client);
     void DoMediaServerDied();
     void AVPlayerServerDied();
+    void AVTranscoderServerDied();
+    void AVRecoderServerDied();
+    void AVScreenCaptureServerDied();
     void AVCodecServerDied();
     void CreateMediaServiceInstance(IStandardMediaService::MediaSystemAbility subSystemId,
                                     sptr<IRemoteObject> &object, std::unique_lock<std::mutex> &lock);
