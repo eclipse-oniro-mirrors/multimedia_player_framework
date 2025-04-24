@@ -87,7 +87,7 @@ private:
     std::mutex waitStartVibrateMutex_;
     std::condition_variable condStartVibrate_;
     bool isAudioPlayFirstFrame_ = false;
-    bool isVibrationStopped_ = false;
+    std::atomic<bool> isVibrationStopped_ = false;
     std::atomic_bool isVibrationRunning_{false};
 
     // var for audio
