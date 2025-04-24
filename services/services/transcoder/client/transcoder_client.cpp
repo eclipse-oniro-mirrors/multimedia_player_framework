@@ -62,7 +62,7 @@ void TransCoderClient::MediaServerDied()
         transCoderProxy_ = nullptr;
         listenerStub_ = nullptr;
         CHECK_AND_RETURN(callback_ != nullptr);
-        callback_->OnError(MSERR_SERVICE_DIED, "mediaserver died, pls create a new transcodercallback instance again");
+        callback_->OnError(MSERR_SERVICE_DIED, "mediaserver died, please create a new avtranscoder instance again");
     }
 }
 
