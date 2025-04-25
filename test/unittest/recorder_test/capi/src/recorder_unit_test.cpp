@@ -2406,4 +2406,3 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_AAC_002, TestSize.Level2)
 
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_AAC_002 out.");
 }
-}
