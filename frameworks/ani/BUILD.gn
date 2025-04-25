@@ -1,0 +1,102 @@
+# Copyright (c) 2025 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/config/components/ets_frontend/ets2abc_config.gni")
+import("//build/ohos.gni")
+import("//build/ohos/ace/ace.gni")
+import("//foundation/multimedia/player_framework/config.gni")
+
+group("player_framework_ani") {
+  deps = [
+    ":media_ani",
+    ":media_ani_etc",
+  ]
+}
+
+ohos_shared_library("media_ani") {
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  include_dirs = [
+    "//foundation/multimedia/player_framework/interfaces/inner_api/native/",
+    "//foundation/multimedia/player_framework/frameworks/ani/include",
+    "//foundation/multimedia/player_framework/",
+    "//foundation/multimedia/player_framework/services/include/",
+    "//foundation/multimedia/player_framework/services/services/engine_intf/",
+    "//foundation/multimedia/player_framework/services/engine/histreamer/utils/",
+    "//foundation/multimedia/player_framework/services/utils/include/",
+  ]
+
+  sources = [
+    "./src/cpp/ani_avplayer_callback.cpp",
+    "./src/cpp/ani_module_media.cpp",
+    "./src/cpp/avimagegenerator_ani.cpp",
+    "./src/cpp/avimagegenerator_enum.cpp",
+    "./src/cpp/avplayer_ani.cpp",
+    "./src/cpp/media_ani_common.cpp",
+    "./src/cpp/media_ani_utils.cpp",
+    "./src/cpp/media_data_source_callback_ani.cpp",
+  ]
+
+  deps = [
+    "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
+    "//foundation/multimedia/player_framework/services/utils:media_service_utils",
+  ]
+
+  external_deps = [
+    "access_token:libaccesstoken_sdk",
+    "access_token:libtokenid_sdk",
+    "audio_framework:audio_client",
+    "audio_framework:audio_renderer",
+    "av_codec:av_codec_client",
+    "c_utils:utils",
+    "ets_runtime:libark_jsruntime",
+    "eventhandler:libeventhandler",
+    "graphic_2d:2d_graphics",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "image_framework:image",
+    "image_framework:image_ani",
+    "image_framework:image_native",
+    "ipc:ipc_core",
+    "ipc:ipc_single",
+    "media_foundation:media_foundation",
+    "runtime_core:ani",
+    "window_manager:libdm",
+  ]
+
+  subsystem_name = "multimedia"
+  part_name = "player_framework"
+  output_extension = "so"
+}
+
+generate_static_abc("media") {
+  base_url = "./ets"
+  files = [ "./ets/@ohos.multimedia.media.ets" ]
+  is_boot_abc = "True"
+  device_dst_file = "/system/framework/media.abc"
+}
+
+ohos_prebuilt_etc("media_ani_etc") {
+  source = "$target_out_dir/media.abc"
+  module_install_dir = "framework"
+  subsystem_name = "multimedia"
+  part_name = "player_framework"
+  deps = [ ":media" ]
+}
