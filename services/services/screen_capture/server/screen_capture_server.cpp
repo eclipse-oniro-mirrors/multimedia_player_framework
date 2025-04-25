@@ -3686,6 +3686,15 @@ void ScreenCaptureServer::ReleaseInner()
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances ReleaseInner E", FAKE_POINTER(this));
 }
 
+int32_t ScreenCaptureServer::SetScreenCaptureStrategy(ScreenCaptureStrategy strategy)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    MEDIA_LOGI("SetScreenCaptureStrategy enableDeviceLevelCapture: %{public}d, keepCaptureDuringCall: %{public}d",
+        strategy.enableDeviceLevelCapture, strategy.keepCaptureDuringCall);
+    captureConfig_.strategy = strategy;
+    return MSERR_OK;
+}
+
 ScreenCaptureObserverCallBack::ScreenCaptureObserverCallBack(
     std::weak_ptr<ScreenCaptureServer> screenCaptureServer): taskQueObserverCb_("NotifyStopSc")
 {
