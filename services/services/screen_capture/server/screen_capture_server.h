@@ -129,6 +129,7 @@ public:
     void SetSCServerSaUid(int32_t saUid);
     int32_t GetSCServerSaUid();
     DataType GetSCServerDataType();
+    AVScreenCaptureState GetSCServerCaptureState();
 
 private:
     int32_t StartScreenCaptureInner(bool isPrivacyAuthorityEnabled);
