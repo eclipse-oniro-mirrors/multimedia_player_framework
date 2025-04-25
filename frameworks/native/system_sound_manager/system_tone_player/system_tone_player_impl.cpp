@@ -859,7 +859,7 @@ void SystemTonePlayerImpl::SendMessageZoneEvent(const int32_t &errorCode, bool m
     bean->Add("IS_PLAYBACK", 0);
     bean->Add("CONFIGURED_URI", configuredUri_);
     bean->Add("CLIENT_UID", static_cast<int32_t>(getuid()));
-    bean->Add("DEVICE_TYPE", desc[0]->deviceType_);
+    bean->Add("DEVICE_TYPE", (desc.size() > 0 ? desc[0]->deviceType_ : AudioStandard::DEVICE_TYPE_NONE));
     bean->Add("ERROR_CODE", errorCode);
     bean->Add("MUTE_STATE", muteAudio);
     bean->Add("MUTE_HAPTICS", muteHaptics);
