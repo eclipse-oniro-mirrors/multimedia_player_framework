@@ -78,8 +78,46 @@ private:
     std::shared_ptr<ISoundPool> soundPoolParallel_ = nullptr;
 };
 
+class NumberCounter {
+public:
+    void Increment()
+    {
+        std::unique_lock<mutex> lock(numberMtx_);
+        number_++;
+        if (number_ >= targetNumber_) {
+            isNumReached_ = true;
+            numberCv_.notify_all();
+        }
+    }
+    void Reset()
+    {
+        std::unique_lock<mutex> lock(numberMtx_);
+        number_ = 0;
+    }
+    int32_t GetNumber()
+    {
+        std::unique_lock<mutex> lock(numberMtx_);
+        return number_;
+    }
+    bool WaitForCounter(int32_t target, std::chrono::seconds timeoutSec)
+    {
+        targetNumber_ = target;
+        std::unique_lock<mutex> lock(numberMtx_);
+        return numberCv_.wait_for(lock, timeoutSec, [this, target] {
+            return isNumReached_ || number_ >= target;
+        });
+    }
+private:
+    std::mutex numberMtx_;
+    std::condition_variable numberCv_;
+    int32_t number_ = 0;
+    int32_t targetNumber_ = INT32_MAX;
+    bool isNumReached_ = false;
+};
+
 class SoundPoolCallbackTest : public ISoundPoolCallback, public NoCopyable {
 public:
+    static const int32_t DEFAULT_MAX_WAIT_SECONDS = 20;
     SoundPoolCallbackTest(std::shared_ptr<SoundPoolMock> soundPool)
     {
         soundPool_ = soundPool;
@@ -93,16 +131,18 @@ public:
         soundPool_ = nullptr;
         soundPoolParallel_ = nullptr;
     }
+    bool WaitLoadedSoundNum(int32_t target, int32_t seconds = DEFAULT_MAX_WAIT_SECONDS)
+    {
+        return soundCounter_.WaitForCounter(target, std::chrono::seconds(seconds));
+    }
     int32_t GetHaveLoadedSoundNum()
     {
-        cout << "GetHaveLoadedSoundNum haveLoadedSoundNumInner_:" << haveLoadedSoundNumInner_ << endl;
-        return haveLoadedSoundNumInner_;
+        return soundCounter_.GetNumber();
     }
     void ResetHaveLoadedSoundNum()
     {
-        cout << "Before ResetHaveLoadedSoundNum haveLoadedSoundNumInner_:" << haveLoadedSoundNumInner_ << endl;
-        haveLoadedSoundNumInner_ = 0;
-        cout << "After ResetHaveLoadedSoundNum haveLoadedSoundNumInner_:" << haveLoadedSoundNumInner_ << endl;
+        cout << "Before ResetHaveLoadedSoundNum :" << GetHaveLoadedSoundNum() << endl;
+        soundCounter_.Reset();
     }
 
     int32_t GetHavePlayedSoundNum()
@@ -128,12 +168,12 @@ public:
     }
     std::shared_ptr<SoundPoolMock> soundPool_ = nullptr;
     std::shared_ptr<SoundPoolParallelMock> soundPoolParallel_ = nullptr;
+    NumberCounter soundCounter_;
     void OnLoadCompleted(int32_t soundId) override;
     void OnPlayFinished(int32_t streamID) override;
     void OnError(int32_t errorCode) override;
 
 private:
-    int32_t haveLoadedSoundNumInner_ = 0;
     int32_t havePlayedSoundNumInner_ = 0;
     std::vector<int32_t> vector_;
 };
