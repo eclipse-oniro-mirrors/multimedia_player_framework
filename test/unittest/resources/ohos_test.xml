@@ -229,7 +229,7 @@
             <option name="shell" value="touch /data/test/media/Recorder_SetMaxDuration_004.mp4"/>
             <option name="shell" value="touch /data/test/media/Recorder_SetMaxDuration_005.mp4"/>
             <option name="shell" value="touch /data/test/media/Recorder_SetMaxDuration_006.mp4"/>
-            <option name="shell" value="touch /data/test/media/Recorder_SetMaxDuration_007.mp4"/>
+            <option name="shell" value="touch /data/test/media/Recorder_SetMaxDuration_007.mp4"/>            
             <option name="shell" value="touch /data/test/media/Recorder_AAC_001.aac"/>
             <option name="shell" value="touch /data/test/media/Recorder_AAC_002.aac"/>
             <option name="shell" value="restorecon /data/test/media"/>
