@@ -44,6 +44,7 @@ ohos_shared_library("soundpool_client") {
     "${multimedia_player_framework_path}/interfaces/inner_api/native/soundpool/include",
     "${multimedia_player_framework_path}/services/services/engine_intf",
     "${multimedia_player_framework_path}/services/utils/include",
+    "${multimedia_player_framework_path}/frameworks/native/soundpool",
   ]
 
   deps = [

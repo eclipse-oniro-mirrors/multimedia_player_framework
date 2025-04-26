@@ -177,6 +177,12 @@ private:
     int32_t havePlayedSoundNumInner_ = 0;
     std::vector<int32_t> vector_;
 };
+
+class SoundPoolFrameWriteCallbackTest : public ISoundPoolFrameWriteCallback {
+    void OnFirstAudioFrameWritingCallback(uint64_t &latency) override
+    {}
+};
+
 } // namespace Media
 } // namespace OHOS
 #endif

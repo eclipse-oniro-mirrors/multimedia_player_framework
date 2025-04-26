@@ -15,6 +15,7 @@
 
 #include "soundpool_unit_test.h"
 #include "media_errors.h"
+#include "stream_id_manager.h"
 
 using namespace OHOS;
 using namespace OHOS::Media;
@@ -29,6 +30,8 @@ static const std::string g_fileName[6] = {
     {"/data/test/test_03.mp3"},
     {"/data/test/test_04.mp3"},
 };
+
+const int32_t MAX_STREAMS = 3;
 
 namespace OHOS {
 namespace Media {
@@ -2157,5 +2160,22 @@ void SoundPoolUnitTest::functionTest095(std::shared_ptr<SoundPoolMock> soundPool
     EXPECT_EQ(MSERR_OK, soundPool1->Release());
     EXPECT_EQ(MSERR_OK, soundPool2->Release());
 }
+
+/**
+ * @tc.name: soundpool_function_96
+ * @tc.desc: function test SetSoundPoolFrameWriteCallback
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(SoundPoolUnitTest, soundpool_function_096, TestSize.Level2)
+{
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_044 before");
+    create(MAX_STREAMS);
+    std::shared_ptr<SoundPoolFrameWriteCallbackTest> cb = std::make_shared<SoundPoolFrameWriteCallbackTest>();
+    int32_t ret = soundPool_->soundPool_->SetSoundPoolFrameWriteCallback(cb);
+    EXPECT_EQ(MSERR_OK, ret);
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_044 after");
+}
+
 } // namespace Media
 } // namespace OHOS
