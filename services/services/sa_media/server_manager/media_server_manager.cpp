@@ -164,6 +164,14 @@ MediaServerManager::MediaServerManager()
 
 MediaServerManager::~MediaServerManager()
 {
+    std::unique_ptr<Task> memoryReportTask;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        memoryReportTask = std::move(memoryReportTask_);
+    }
+    if (memoryReportTask) {
+        memoryReportTask->Stop();
+    }
     playerPidMem_.clear();
     dumperTbl_.clear();
     recorderStubMap_.clear();
