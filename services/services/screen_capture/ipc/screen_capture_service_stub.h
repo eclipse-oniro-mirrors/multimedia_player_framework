@@ -55,6 +55,7 @@ public:
     int32_t SetMaxVideoFrameRate(int32_t frameRate) override;
     int32_t SetListenerObject(const sptr<IRemoteObject> &object) override;
     int OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
+    int32_t ExcludeContent(ScreenCaptureContentFilter &contentFilter) override;
     int32_t SetScreenCaptureStrategy(ScreenCaptureStrategy strategy) override;
 
 private:
