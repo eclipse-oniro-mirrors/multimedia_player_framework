@@ -97,13 +97,21 @@ napi_value AVScreenCaptureNapi::Constructor(napi_env env, napi_callback_info inf
 
     jsScreenCapture->env_ = env;
     jsScreenCapture->screenCapture_ = ScreenCaptureFactory::CreateScreenCapture();
-    CHECK_AND_RETURN_RET_LOG(jsScreenCapture->screenCapture_ != nullptr, result, "failed to CreateScreenCapture");
+    if (jsScreenCapture->screenCapture_ == nullptr) {
+        delete jsScreenCapture;
+        MEDIA_LOGE("failed to CreateScreenCapture");
+        return result;
+    }
 
     jsScreenCapture->taskQue_ = std::make_unique<TaskQueue>("OS_AVScreenCaptureNapi");
     (void)jsScreenCapture->taskQue_->Start();
 
     jsScreenCapture->screenCaptureCb_ = std::make_shared<AVScreenCaptureCallback>(env);
-    CHECK_AND_RETURN_RET_LOG(jsScreenCapture->screenCaptureCb_ != nullptr, result, "failed to CreateScreenCaptureCb");
+    if (jsScreenCapture->screenCaptureCb_ == nullptr) {
+        delete jsScreenCapture;
+        MEDIA_LOGE("failed to CreateScreenCaptureCb");
+        return result;
+    }
     (void)jsScreenCapture->screenCapture_->SetScreenCaptureCallback(jsScreenCapture->screenCaptureCb_);
 
     status = napi_wrap(env, jsThis, reinterpret_cast<void *>(jsScreenCapture),
