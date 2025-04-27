@@ -25,9 +25,6 @@ namespace Media {
 using namespace std;
 using namespace testing::ext;
 
-constexpr int32_t SAMPLE_RATE_32K = 32000;
-constexpr int32_t SAMPLE_RATE_96K = 96000;
-
 void HitranscodeUnitTest::SetUpTestCase(void)
 {
 }
@@ -1033,42 +1030,6 @@ HWTEST_F(HitranscodeUnitTest, ConfigureMetaDataToTrackFormat_001, TestSize.Level
     transcoder_->audioEncFormat_->GetData(Tag::MIME_TYPE, audioMime);
     EXPECT_EQ(audioMime, Plugins::MimeType::AUDIO_AAC);
     trackInfos.clear();
-}
-
-/**
-* @tc.name    : Test UpdateAudioSampleFormat
-* @tc.number  : UpdateAudioSampleFormat_001
-* @tc.desc    : Test UpdateAudioSampleFormat
-* @tc.require :
-*/
-HWTEST_F(HitranscodeUnitTest, UpdateAudioSampleFormat_001, TestSize.Level0)
-{
-    std::string mime;
-    Plugins::AudioSampleFormat sampleFormat;
-    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
-    transcoder_->UpdateAudioSampleFormat(mime, meta);
-
-    meta->Set<Tag::AUDIO_SAMPLE_FORMAT>(Plugins::AudioSampleFormat::SAMPLE_F32LE);
-
-    mime = MediaAVCodec::CodecMimeType::AUDIO_APE;
-    transcoder_->UpdateAudioSampleFormat(mime, meta);
-    transcoder_->audioEncFormat_->GetData(Tag::AUDIO_SAMPLE_FORMAT, sampleFormat);
-    EXPECT_EQ(sampleFormat, Plugins::SAMPLE_S16LE);
-
-    meta->Set<Tag::AUDIO_SAMPLE_RATE>(SAMPLE_RATE_32K);
-    transcoder_->UpdateAudioSampleFormat(mime, meta);
-    transcoder_->audioEncFormat_->GetData(Tag::AUDIO_SAMPLE_FORMAT, sampleFormat);
-    EXPECT_EQ(sampleFormat, Plugins::SAMPLE_S16LE);
-
-    meta->Set<Tag::AUDIO_SAMPLE_RATE>(SAMPLE_RATE_96K);
-    transcoder_->UpdateAudioSampleFormat(mime, meta);
-    transcoder_->audioEncFormat_->GetData(Tag::AUDIO_SAMPLE_FORMAT, sampleFormat);
-    EXPECT_EQ(sampleFormat, Plugins::SAMPLE_S32LE);
-
-    meta->Set<Tag::AUDIO_SAMPLE_FORMAT>(Plugins::AudioSampleFormat::SAMPLE_U8);
-    transcoder_->UpdateAudioSampleFormat(mime, meta);
-    transcoder_->audioEncFormat_->GetData(Tag::AUDIO_SAMPLE_FORMAT, sampleFormat);
-    EXPECT_EQ(sampleFormat, Plugins::SAMPLE_S16LE);
 }
 
 /**

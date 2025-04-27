@@ -29,8 +29,6 @@
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_ONLY_PRERELEASE, LOG_DOMAIN_SYSTEM_PLAYER, "HiTransCoder" };
-constexpr int32_t SAMPLE_RATE_48K = 48000;
-constexpr int32_t SAMPLE_FORMAT_BIT_DEPTH_16 = 16;
 }
 
 namespace OHOS {
@@ -272,7 +270,6 @@ void HiTransCoderImpl::ConfigureMetaDataToTrackFormat(const std::shared_ptr<Meta
             (void)SetValueByType(meta, audioEncFormat_);
             (void)SetValueByType(meta, srcAudioFormat_);
             (void)SetValueByType(meta, muxerFormat_);
-            UpdateAudioSampleFormat(trackMime, meta);
             isInitializeAudioEncFormat = true;
         }
     }
@@ -292,54 +289,6 @@ void HiTransCoderImpl::UpdateVideoEncFormat(const std::shared_ptr<Meta> &meta)
     videoEncFormat_->Set<Tag::MIME_TYPE>(Plugins::MimeType::VIDEO_AVC);
     videoEncFormat_->Set<Tag::VIDEO_H264_PROFILE>(Plugins::VideoH264Profile::BASELINE);
     videoEncFormat_->Set<Tag::VIDEO_H264_LEVEL>(32); // 32: LEVEL 3.2
-}
-
-void HiTransCoderImpl::UpdateAudioSampleFormat(const std::string& mime, const std::shared_ptr<Meta> &meta)
-{
-    // The update strategy of the sample format needs to be consistent with audio_decoder_filter.
-    MEDIA_LOG_I_SHORT("UpdateTrackInfoSampleFormat mime: " PUBLIC_LOG_S, mime.c_str());
-    Plugins::AudioSampleFormat sampleFormat = Plugins::INVALID_WIDTH;
-    if (meta->GetData(Tag::AUDIO_SAMPLE_FORMAT, sampleFormat)) {
-        MEDIA_LOG_I("sampleFormat: " PUBLIC_LOG_D32, static_cast<int32_t>(sampleFormat));
-        audioEncFormat_->SetData(Tag::AUDIO_SAMPLE_FORMAT, sampleFormat);
-        muxerFormat_->SetData(Tag::AUDIO_SAMPLE_FORMAT, sampleFormat);
-    } else {
-        MEDIA_LOG_W("get sampleFormat failed");
-    }
-    FALSE_RETURN_NOLOG(mime.find(MediaAVCodec::CodecMimeType::AUDIO_RAW) != 0);
-    if (mime.find(MediaAVCodec::CodecMimeType::AUDIO_APE) != 0 &&
-        mime.find(MediaAVCodec::CodecMimeType::AUDIO_FLAC) != 0) {
-        MEDIA_LOG_I_SHORT("non-ape and non-flac sampleFormat after is: " PUBLIC_LOG_D32, Plugins::SAMPLE_S16LE);
-        audioEncFormat_->SetData(Tag::AUDIO_SAMPLE_FORMAT, Plugins::SAMPLE_S16LE);
-        muxerFormat_->SetData(Tag::AUDIO_SAMPLE_FORMAT, Plugins::SAMPLE_S16LE);
-        return;
-    }
-
-    int32_t sampleRate = 0;
-    if (!meta->GetData(Tag::AUDIO_SAMPLE_RATE, sampleRate) || sampleRate < SAMPLE_RATE_48K) {
-        MEDIA_LOG_I_SHORT("less than 48K sampleFormat after is: " PUBLIC_LOG_D32, Plugins::SAMPLE_S16LE);
-        audioEncFormat_->SetData(Tag::AUDIO_SAMPLE_FORMAT, Plugins::SAMPLE_S16LE);
-        muxerFormat_->SetData(Tag::AUDIO_SAMPLE_FORMAT, Plugins::SAMPLE_S16LE);
-        return;
-    }
-
-    int32_t codedSampleDepth = 0;
-    int32_t rawSampleDepth = 0;
-    if ((meta->GetData(Tag::AUDIO_SAMPLE_FORMAT, sampleFormat) &&
-        Pipeline::AudioSampleFormatToBitDepth(sampleFormat) > SAMPLE_FORMAT_BIT_DEPTH_16) ||
-        (meta->GetData(Tag::AUDIO_BITS_PER_CODED_SAMPLE, codedSampleDepth) &&
-        codedSampleDepth > SAMPLE_FORMAT_BIT_DEPTH_16) ||
-        (meta->GetData(Tag::AUDIO_BITS_PER_RAW_SAMPLE, rawSampleDepth) &&
-        rawSampleDepth > SAMPLE_FORMAT_BIT_DEPTH_16)) {
-        MEDIA_LOG_I_SHORT("sampleFormat after is: " PUBLIC_LOG_D32, Plugins::SAMPLE_S32LE);
-        audioEncFormat_->SetData(Tag::AUDIO_SAMPLE_FORMAT, Plugins::SAMPLE_S32LE);
-        muxerFormat_->SetData(Tag::AUDIO_SAMPLE_FORMAT, Plugins::SAMPLE_S32LE);
-        return;
-    }
-
-    MEDIA_LOG_I_SHORT("default sampleFormat after is: " PUBLIC_LOG_D32, Plugins::SAMPLE_S16LE);
-    audioEncFormat_->SetData(Tag::AUDIO_SAMPLE_FORMAT, Plugins::SAMPLE_S16LE);
-    muxerFormat_->SetData(Tag::AUDIO_SAMPLE_FORMAT, Plugins::SAMPLE_S16LE);
 }
 
 bool HiTransCoderImpl::SetValueByType(const std::shared_ptr<Meta> &innerMeta, std::shared_ptr<Meta> &outputMeta)
@@ -390,6 +339,11 @@ bool HiTransCoderImpl::ProcessMetaKey(
         }
     } else if (Any::IsSameTypeWith<double>(type)) {
         double value;
+        if (innerMeta->GetData(metaKey, value)) {
+            outputMeta->SetData(metaKey, value);
+        }
+    } else if (Any::IsSameTypeWith<Plugins::AudioSampleFormat>(type)) {
+        Plugins::AudioSampleFormat value = Plugins::AudioSampleFormat::INVALID_WIDTH;
         if (innerMeta->GetData(metaKey, value)) {
             outputMeta->SetData(metaKey, value);
         }
