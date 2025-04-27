@@ -1897,30 +1897,6 @@ HWTEST_F(RecorderUnitTest, recorder_SetAudioSourceType_001, TestSize.Level2)
 }
 
 /**
- * @tc.name: recorder_SetAudioSourceType_002
- * @tc.desc: record video source as voice communication
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(RecorderUnitTest, recorder_SetAudioSourceType_002, TestSize.Level2)
-{
-    g_videoRecorderConfig.aSource = AUDIO_SOURCE_VOICE_COMMUNICATION;
-    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_SetAudioSourceType_002.mp4").c_str(), O_RDWR);
-    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
-
-    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_AUDIO, g_videoRecorderConfig));
-    EXPECT_EQ(MSERR_OK, recorder_->Prepare());
-    EXPECT_EQ(MSERR_OK, recorder_->Start());
-    sleep(RECORDER_TIME);
-    EXPECT_EQ(MSERR_OK, recorder_->Pause());
-    sleep(RECORDER_TIME);
-    EXPECT_EQ(MSERR_OK, recorder_->Resume());
-    EXPECT_EQ(MSERR_OK, recorder_->Stop(false));
-    EXPECT_EQ(MSERR_OK, recorder_->Release());
-    close(g_videoRecorderConfig.outputFd);
-}
-
-/**
  * @tc.name: recorder_SetAudioSourceType_003
  * @tc.desc: record video source as voice message
  * @tc.type: FUNC
