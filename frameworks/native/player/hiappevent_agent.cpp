@@ -22,7 +22,7 @@
 
 namespace {
 constexpr auto KNAME = "ha_app_event";
-constexpr auto KAPPID = "com_huawei_hmos_avplayer";
+constexpr auto KAPPID = "com_hw_hmos_avplayer";
 constexpr auto SDKNAME = "MediaKit";
 constexpr auto APINAME = "HMOS_MEDIA_SERVICE";
 constexpr int32_t KTIMEOUT = 90;
@@ -35,9 +35,10 @@ namespace Media {
 using namespace OHOS::HiviewDFX;
 using namespace OHOS::HiviewDFX::HiAppEvent;
 
-void HiAppEventAgent::WriteEndEvent(const std::string &transId, const int result, const int errCode,
-    const std::string& message, time_t startTime, HiviewDFX::HiTraceId traceId)
+void HiAppEventAgent::WriteEndEvent(const std::string &transId,
+    const int errCode, const std::string& message, time_t startTime, HiviewDFX::HiTraceId traceId)
 {
+    int result = errCode == MSERR_OK ? API_RESULT_SUCCESS : API_RESULT_FAILED;
     Event event("api_diagnostic", "api_exec_end", OHOS::HiviewDFX::HiAppEvent::BEHAVIOR);
     event.AddParam("trans_id", transId);
     event.AddParam("api_name", std::string(APINAME));
@@ -101,7 +102,7 @@ void HiAppEventAgent::TraceApiEvent(
     }
 
     std::string transId = GenerateTransId();
-    WriteEndEvent(transId, API_RESULT_FAILED, errCode, message, startTime, traceId);
+    WriteEndEvent(transId, errCode, message, startTime, traceId);
 }
 
 std::string HiAppEventAgent::GenerateTransId()

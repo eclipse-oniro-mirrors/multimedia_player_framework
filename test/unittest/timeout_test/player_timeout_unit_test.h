@@ -20,6 +20,7 @@
 #include "mock/mock_i_media_service.h"
 #include "mock/mock_i_media_data_source.h"
 #include "player_impl.cpp"
+#include "hiappevent_agent.cpp"
 
 
 namespace OHOS {
