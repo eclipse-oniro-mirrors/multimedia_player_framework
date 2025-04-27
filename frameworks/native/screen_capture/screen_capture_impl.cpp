@@ -251,7 +251,7 @@ int32_t ScreenCaptureImpl::InitOriginalStream(AVScreenCaptureConfig config)
     }
     if (config.strategy.setByUser) {
         ret = screenCaptureService_->SetScreenCaptureStrategy(config.strategy);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "init strategy failed");
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "set strategy failed");
     }
     MEDIA_LOGI("ScreenCaptureImpl: 0x%{public}06" PRIXPTR "InitOriginalStream end.", FAKE_POINTER(this));
     return ret;
@@ -307,7 +307,7 @@ int32_t ScreenCaptureImpl::InitCaptureFile(AVScreenCaptureConfig config)
     }
     if (config.strategy.setByUser) {
         ret = screenCaptureService_->SetScreenCaptureStrategy(config.strategy);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "init strategy failed");
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "set strategy failed");
     }
     return ret;
 }
