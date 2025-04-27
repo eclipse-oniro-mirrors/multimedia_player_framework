@@ -1576,7 +1576,7 @@ int32_t PlayerServer::DumpInfo(int32_t fd)
 void PlayerServer::OnError(PlayerErrorType errorType, int32_t errorCode)
 {
     (void)errorType;
-    auto errorMsg = MSErrorToExtErrorString(static_cast<MediaServiceErrCode>(errorCode));
+    auto errorMsg = MSErrorToString(static_cast<MediaServiceErrCode>(errorCode));
     return OnErrorMessage(errorCode, errorMsg);
 }
 
