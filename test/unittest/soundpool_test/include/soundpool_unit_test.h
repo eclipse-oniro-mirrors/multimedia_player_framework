@@ -47,6 +47,11 @@ protected:
     void loadFd(std::string fileName, int32_t loadNum);
     void functionTest043(std::shared_ptr<SoundPoolMock> soundPool1, std::shared_ptr<SoundPoolMock> soundPool2,
         std::shared_ptr<SoundPoolCallbackTest> cb1, std::shared_ptr<SoundPoolCallbackTest> cb2);
+    void functionTest094(std::shared_ptr<SoundPoolMock> soundPool1, std::shared_ptr<SoundPoolMock> soundPool2,
+        std::shared_ptr<SoundPoolCallbackTest> cb1, std::shared_ptr<SoundPoolCallbackTest> cb2);
+    void functionTest095(std::shared_ptr<SoundPoolMock> soundPool1, std::shared_ptr<SoundPoolMock> soundPool2,
+        std::shared_ptr<SoundPoolCallbackTest> cb1, std::shared_ptr<SoundPoolCallbackTest> cb2);
+
     void loadUrlParallel(std::string fileName, int32_t loadNum);
     void loadFdParallel(std::string fileName, int32_t loadNum);
     void functionTest086(std::shared_ptr<SoundPoolParallelMock> soundPool1,

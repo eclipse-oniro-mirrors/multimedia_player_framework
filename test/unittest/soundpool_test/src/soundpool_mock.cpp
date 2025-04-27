@@ -27,13 +27,12 @@ void SoundPoolCallbackTest::OnError(int32_t errorCode)
 
 void SoundPoolCallbackTest::OnLoadCompleted(int32_t soundId)
 {
-    cout << "OnLoadCompleted soundId:" << soundId << ", haveLoadedSoundNumInner_: "<< haveLoadedSoundNumInner_ << endl;
-    haveLoadedSoundNumInner_++;
+    soundCounter_.Increment();
 }
 
 void SoundPoolCallbackTest::OnPlayFinished(int32_t streamID)
 {
-    cout << "OnPlayFinished haveLoadedSoundNumInner_: "<< havePlayedSoundNumInner_ << endl;
+    cout << "OnPlayFinished havePlayedSoundNumInner_: "<< havePlayedSoundNumInner_ << endl;
     havePlayedSoundNumInner_++;
     if (streamID > 0) {
         vector_.push_back(streamID);
