@@ -46,7 +46,7 @@ public:
     {
         MEDIA_LOG_D("RecorderEventReceiver NotifyRelease.");
         std::unique_lock<std::shared_mutex> lk(cbMutex_);
-        hiPlayerImpl_ = nullptr;
+        hiRecorderImpl_ = nullptr;
     } 
 
 private:
@@ -76,7 +76,7 @@ public:
     {
         MEDIA_LOG_D("RecorderFilterCallback NotifyRelease.");
         std::unique_lock<std::shared_mutex> lk(cbMutex_);
-        hiPlayerImpl_ = nullptr;
+        hiRecorderImpl_ = nullptr;
     }
 
 private:
@@ -106,7 +106,7 @@ public:
     {
         MEDIA_LOG_D("CapturerInfoChangeCallback NotifyRelease.");
         std::unique_lock<std::shared_mutex> lk(cbMutex_);
-        hiPlayerImpl_ = nullptr;
+        hiRecorderImpl_ = nullptr;
     }
 
 private:
