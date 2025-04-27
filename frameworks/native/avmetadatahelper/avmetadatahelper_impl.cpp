@@ -537,6 +537,20 @@ int32_t AVMetadataHelperImpl::CopySurfaceBufferToPixelMap(sptr<SurfaceBuffer> &s
     int32_t height = surfaceBuffer->GetHeight();
     int32_t stride = surfaceBuffer->GetStride();
 
+    CHECK_AND_RETURN_RET(width > 0 && height > 0 && stride > 0, MSERR_INVALID_VAL);
+
+    static int32_t uvDivBase = 2;
+    CHECK_AND_RETURN_RET(INT64_MAX - (static_cast<int64_t>(stride) * pixelMapInfo.outputHeight)
+        >= static_cast<int64_t>(stride) * height / uvDivBase, MSERR_INVALID_VAL);
+    int64_t copySrcSize = std::max(static_cast<int64_t>(stride) * height,
+        static_cast<int64_t>(stride) * pixelMapInfo.outputHeight + static_cast<int64_t>(stride) * height / uvDivBase);
+    CHECK_AND_RETURN_RET(static_cast<int64_t>(surfaceBuffer->GetSize()) >= copySrcSize, MSERR_INVALID_VAL);
+ 
+    CHECK_AND_RETURN_RET(INT64_MAX - (static_cast<int64_t>(width) * height) >=
+        static_cast<int64_t>(width) * height / uvDivBase, MSERR_INVALID_VAL);
+    int64_t copyDstSize = static_cast<int64_t>(width) * height + static_cast<int64_t>(width) * height / uvDivBase;
+    CHECK_AND_RETURN_RET(static_cast<int64_t>(pixelMap->GetCapacity()) >= copyDstSize, MSERR_INVALID_VAL);
+
     uint8_t *srcPtr = static_cast<uint8_t *>(surfaceBuffer->GetVirAddr());
     uint8_t *dstPtr = const_cast<uint8_t *>(pixelMap->GetPixels());
         // copy src Y component to dst
