@@ -34,7 +34,7 @@ public:
         hiRecorderImpl_ = hiRecorderImpl;
     }
 
-    void OnEvent(const Event &event)
+    void OnEvent(const Event &event) override
     {
         MEDIA_LOG_D("RecorderEventReceiver OnEvent.");
         std::shared_lock<std::shared_mutex> lk(cbMutex_);
@@ -47,7 +47,7 @@ public:
         MEDIA_LOG_D("RecorderEventReceiver NotifyRelease.");
         std::unique_lock<std::shared_mutex> lk(cbMutex_);
         hiRecorderImpl_ = nullptr;
-    } 
+    }
 
 private:
     std::shared_mutex cbMutex_ {};
@@ -64,7 +64,7 @@ public:
     }
 
     Status OnCallback(const std::shared_ptr<Pipeline::Filter>& filter, Pipeline::FilterCallBackCommand cmd,
-        Pipeline::StreamType outType)
+        Pipeline::StreamType outType) override
     {
         MEDIA_LOG_D("RecorderFilterCallback OnCallBack.");
         std::shared_lock<std::shared_mutex> lk(cbMutex_);
