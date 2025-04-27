@@ -25,9 +25,6 @@ namespace Media {
 using namespace std;
 using namespace testing::ext;
 
-constexpr int32_t SAMPLE_RATE_32K = 32000;
-constexpr int32_t SAMPLE_RATE_96K = 96000;
-
 void HitranscodeUnitTest::SetUpTestCase(void)
 {
 }
