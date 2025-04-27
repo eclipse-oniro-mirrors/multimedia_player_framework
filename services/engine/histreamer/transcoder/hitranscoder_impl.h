@@ -72,7 +72,6 @@ private:
     Status LinkVideoResizeFilter(const std::shared_ptr<Pipeline::Filter>& preFilter, Pipeline::StreamType type);
     Status LinkMuxerFilter(const std::shared_ptr<Pipeline::Filter>& preFilter, Pipeline::StreamType type);
     Status SetSurfacePipeline(int32_t outputVideoWidth, int32_t outputVideoHeight);
-    void CancelTransCoder();
     void HandleErrorEvent(int32_t errorCode);
     void HandleCompleteEvent();
     Status ConfigureVideoAudioMetaData();
