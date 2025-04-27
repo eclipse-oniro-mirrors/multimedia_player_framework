@@ -11,45 +11,39 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import("//build/ohos.gni")
+import("//build/test.gni")
 import("//foundation/multimedia/player_framework/config.gni")
 import("./../../../multimedia_player_framework_aafwk.gni")
 
-ohos_shared_library("soundpool_client") {
-  stack_protector_ret = true
-  install_enable = true
-  sanitize = {
-    integer_overflow = true
-    ubsan = true
-    boundary_sanitize = true
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
-  }
-  sources = [
-    "audio_renderer_manager.cpp",
-    "cache_buffer.cpp",
-    "parallel_stream_manager.cpp",
-    "sound_id_manager.cpp",
-    "sound_parser.cpp",
-    "soundpool.cpp",
-    "soundpool_manager.cpp",
-    "soundpool_manager_multi.cpp",
-    "soundpool_xcollie.cpp",
-    "stream.cpp",
-    "stream_id_manager.cpp",
+module_output_path = "player_framework/player_framework/soundpool"
+
+ohos_unittest("soundpool_cachebuffer_unit_test") {
+  module_out_path = module_output_path
+  include_dirs = [
+    "./include",
+    "${multimedia_player_framework_path}/frameworks/native/soundpool",
+    "${multimedia_player_framework_path}/services/services/engine_intf",
+    "${multimedia_player_framework_path}/test/unittest/common/include",
+    "${multimedia_player_framework_path}/interfaces/inner_api/native/soundpool/include",
   ]
 
-  include_dirs = [
-    "${multimedia_player_framework_path}/interfaces/inner_api/native/soundpool/include",
-    "${multimedia_player_framework_path}/services/services/engine_intf",
-    "${multimedia_player_framework_path}/services/utils/include",
-    "${multimedia_player_framework_path}/frameworks/native/soundpool",
+  cflags = [
+    "-Wall",
+    "-Werror",
+    "-Dprivate=public",
+    "-Dprotected=public",
   ]
+
+  if (player_framework_support_jssoundpool) {
+    sources = [
+      "src/cachebuffer_mock.cpp",
+      "src/cachebuffer_unit_test.cpp",
+    ]
+  }
 
   deps = [
+    "${multimedia_player_framework_path}/frameworks/native/soundpool:soundpool_client",
     "${multimedia_player_framework_path}/interfaces/inner_api/native:media_client",
-    "${multimedia_player_framework_path}/services/utils:media_service_utils",
   ]
 
   external_deps = [
@@ -75,18 +69,5 @@ ohos_shared_library("soundpool_client") {
     external_deps += [ "drm_framework:drm_framework" ]
   }
 
-  public_external_deps = [ "av_codec:av_codec_client" ]
-
-  cflags = [
-    "-Wall",
-    "-Werror",
-  ]
-
-  defines = []
-
-  defines += player_framework_defines
-
-  innerapi_tags = [ "platformsdk" ]
-  subsystem_name = "multimedia"
-  part_name = "player_framework"
+  resource_config_file = "${multimedia_player_framework_path}/test/unittest/resources/ohos_test.xml"
 }
