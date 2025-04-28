@@ -29,15 +29,28 @@ class RecorderEventReceiver : public Pipeline::EventReceiver {
 public:
     explicit RecorderEventReceiver(HiRecorderImpl *hiRecorderImpl)
     {
+        MEDIA_LOG_I("RecorderEventReceiver ctor called.");
+        std::unique_lock<std::shared_mutex> lk(cbMutex_);
         hiRecorderImpl_ = hiRecorderImpl;
     }
 
-    void OnEvent(const Event &event)
+    void OnEvent(const Event &event) override
     {
+        MEDIA_LOG_D("RecorderEventReceiver OnEvent.");
+        std::shared_lock<std::shared_mutex> lk(cbMutex_);
+        FALSE_RETURN_MSG(hiRecorderImpl_ != nullptr, "hiRecorderImpl_ is nullptr");
         hiRecorderImpl_->OnEvent(event);
+    }
+    
+    void NotifyRelease() override
+    {
+        MEDIA_LOG_D("RecorderEventReceiver NotifyRelease.");
+        std::unique_lock<std::shared_mutex> lk(cbMutex_);
+        hiRecorderImpl_ = nullptr;
     }
 
 private:
+    std::shared_mutex cbMutex_ {};
     HiRecorderImpl *hiRecorderImpl_;
 };
 
@@ -45,16 +58,29 @@ class RecorderFilterCallback : public Pipeline::FilterCallback {
 public:
     explicit RecorderFilterCallback(HiRecorderImpl *hiRecorderImpl)
     {
+        MEDIA_LOG_I("RecorderFilterCallback ctor called.");
+        std::unique_lock<std::shared_mutex> lk(cbMutex_);
         hiRecorderImpl_ = hiRecorderImpl;
     }
 
     Status OnCallback(const std::shared_ptr<Pipeline::Filter>& filter, Pipeline::FilterCallBackCommand cmd,
-        Pipeline::StreamType outType)
+        Pipeline::StreamType outType) override
     {
+        MEDIA_LOG_D("RecorderFilterCallback OnCallBack.");
+        std::shared_lock<std::shared_mutex> lk(cbMutex_);
+        FALSE_RETURN_V_MSG(hiRecorderImpl_ != nullptr, Status::OK, "hiRecorderImpl_ is nullptr");
         return hiRecorderImpl_->OnCallback(filter, cmd, outType);
+    }
+    
+    void NotifyRelease() override
+    {
+        MEDIA_LOG_D("RecorderFilterCallback NotifyRelease.");
+        std::unique_lock<std::shared_mutex> lk(cbMutex_);
+        hiRecorderImpl_ = nullptr;
     }
 
 private:
+    std::shared_mutex cbMutex_ {};
     HiRecorderImpl *hiRecorderImpl_;
 };
 
@@ -62,6 +88,8 @@ class CapturerInfoChangeCallback : public AudioStandard::AudioCapturerInfoChange
 public:
     explicit CapturerInfoChangeCallback(HiRecorderImpl *hiRecorderImpl)
     {
+        MEDIA_LOG_I("CapturerInfoChangeCallback ctor called.");
+        std::unique_lock<std::shared_mutex> lk(cbMutex_);
         hiRecorderImpl_ = hiRecorderImpl;
     }
 
@@ -69,20 +97,21 @@ public:
     {
         FALSE_RETURN_MSG(hiRecorderImpl_ != nullptr, "hiRecorderImpl_ is nullptr");
         MEDIA_LOG_I("CapturerInfoChangeCallback hiRecorderImpl_->OnAudioCaptureChange start.");
-        std::unique_lock<std::mutex> lock(captureInfoChangeMutex_);
+        std::shared_lock<std::shared_mutex> lk(cbMutex_);
         FALSE_RETURN_MSG(hiRecorderImpl_ != nullptr, "hiRecorderImpl_ is nullptr");
         hiRecorderImpl_->OnAudioCaptureChange(capturerChangeInfo);
     }
     
     void NotifyRelease()
     {
-        std::unique_lock<std::mutex> lock(captureInfoChangeMutex_);
+        MEDIA_LOG_D("CapturerInfoChangeCallback NotifyRelease.");
+        std::unique_lock<std::shared_mutex> lk(cbMutex_);
         hiRecorderImpl_ = nullptr;
     }
 
 private:
     HiRecorderImpl *hiRecorderImpl_;
-    std::mutex captureInfoChangeMutex_;
+    std::shared_mutex cbMutex_ {};
 };
 
 static inline MetaSourceType GetMetaSourceType(int32_t sourceId)
@@ -99,6 +128,12 @@ HiRecorderImpl::HiRecorderImpl(int32_t appUid, int32_t appPid, uint32_t appToken
 
 HiRecorderImpl::~HiRecorderImpl()
 {
+    if (recorderCallback_ != nullptr) {
+        recorderCallback_->NotifyRelease();
+    }
+    if (recorderEventReceiver_ != nullptr) {
+        recorderEventReceiver_->NotifyRelease();
+    }
     if (CapturerInfoChangeCallback_ != nullptr) {
         CapturerInfoChangeCallback_->NotifyRelease();
     }
