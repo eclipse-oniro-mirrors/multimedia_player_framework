@@ -1609,7 +1609,7 @@ int32_t HiPlayerImpl::InitVideoWidthAndHeight()
             continue;
         }
         double frameRate = 1;
-        if (videoTrack.GetDoubleValue("frameRate", frameRate) && syncManager_ != nullptr) {
+        if (videoTrack.GetDoubleValue("frame_rate", frameRate) && syncManager_ != nullptr) {
             frameRate /= FRAME_RATE_UNIT_MULTIPLE;
             syncManager_->SetInitialVideoFrameRate(frameRate);
             MEDIA_LOG_I("VideoSink initial frameRate is " PUBLIC_LOG_D64, static_cast<int64_t>(frameRate));
