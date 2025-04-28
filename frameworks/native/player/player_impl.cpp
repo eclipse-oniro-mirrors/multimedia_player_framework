@@ -49,8 +49,9 @@ std::shared_ptr<Player> PlayerFactory::CreatePlayer()
 
     int32_t ret = MSERR_OK;
     LISTENER(ret = impl->Init(), "CreatePlayer", false, TIME_OUT_SECOND);
-    CHECK_AND_RETURN_RET_LOG(hiAppEventAgent != nullptr, nullptr, "failed to new HiAppEventAgent");
-    hiAppEventAgent->TraceApiEvent(ret, "CreatePlayer", startTime, impl->GetTraceId());
+    if (hiAppEventAgent != nullptr) {
+        hiAppEventAgent->TraceApiEvent(ret, "CreatePlayer", startTime, impl->GetTraceId());
+    }
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed to init PlayerImpl");
 
     return impl;
@@ -356,13 +357,13 @@ int32_t PlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Seek in, seek to %{public}d ms, mode is %{public}d",
         FAKE_POINTER(this), mSeconds, mode);
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
-    CHECK_AND_RETURN_RET_NOLOG(hiAppEventAgent_ != nullptr, MSERR_UNKNOWN);
 
     std::unique_lock<std::recursive_mutex> lock(recMutex_);
     // SEEK_CONTINOUS is usually called in batches, and will not report seek done event.
     if (mode == PlayerSeekMode::SEEK_CONTINOUS) {
         int32_t ret = MSERR_OK;
         ret = playerService_->Seek(mSeconds, mode);
+        CHECK_AND_RETURN_RET_NOLOG(hiAppEventAgent_ != nullptr, ret);
         hiAppEventAgent_->TraceApiEvent(ret, "SEEK_CONTINOUS", startTime, traceId_);
         return ret;
     }
@@ -377,9 +378,10 @@ int32_t PlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
         LISTENER(retCode = playerService_->Seek(mSeconds, mode), "SetVolume", false, TIME_OUT_SECOND);
         if (retCode != MSERR_OK) {
             ResetSeekVariables();
-            hiAppEventAgent_->TraceApiEvent(retCode, "seek", startTime, traceId_);
         }
         MEDIA_LOGI("Start seek once end");
+        CHECK_AND_RETURN_RET_NOLOG(hiAppEventAgent_ != nullptr, retCode);
+        hiAppEventAgent_->TraceApiEvent(retCode, "seek", startTime, traceId_);
         return retCode;
     } else {
         MEDIA_LOGE("Seeking not completed, need wait the lastest seek end, then seek again.");
@@ -884,8 +886,9 @@ void PlayerImplCallback::OnError(int32_t errorCode, const std::string &errorMsg)
         }
     }
     auto hiAppEventAgent = std::make_shared<HiAppEventAgent>();
-    CHECK_AND_RETURN_NOLOG(hiAppEventAgent != nullptr);
-    hiAppEventAgent->TraceApiEvent(errorCode, errorMsg, startTime);
+    if (hiAppEventAgent != nullptr) {
+        hiAppEventAgent->TraceApiEvent(errorCode, errorMsg, startTime);
+    }
     CHECK_AND_RETURN_LOG(playerCb != nullptr, "playerCb does not exist..");
     playerCb->OnError(errorCode, errorMsg);
 }

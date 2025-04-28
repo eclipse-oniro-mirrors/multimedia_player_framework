@@ -82,5 +82,9 @@ ohos_unittest("player_timeout_unit_test") {
     defines = [ "SUBSCRIBE_HISTREAMER_EXT" ]
   }
 
+  if (player_framework_support_hiappevent) {
+    external_deps += [ "hiappevent:hiappevent_innerapi" ]
+  }
+
   resource_config_file = "//foundation/multimedia/player_framework/test/unittest/resources/ohos_test.xml"
 }

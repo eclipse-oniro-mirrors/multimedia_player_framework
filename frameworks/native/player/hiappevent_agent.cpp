@@ -15,29 +15,36 @@
 
 #include <random>
 #include "hiappevent_agent.h"
-#include "app_event.h"
-#include "app_event_processor_mgr.h"
 #include "media_log.h"
 #include "media_errors.h"
+#ifdef SUPPORT_HIAPPEVENT
+#include "app_event.h"
+#include "app_event_processor_mgr.h"
+#endif
 
 namespace {
+#ifdef SUPPORT_HIAPPEVENT
 constexpr auto KNAME = "ha_app_event";
 constexpr auto KAPPID = "com_hw_hmos_avplayer";
 constexpr auto SDKNAME = "MediaKit";
 constexpr auto APINAME = "HMOS_MEDIA_SERVICE";
-constexpr int32_t KTIMEOUT = 90;
-constexpr int32_t KCONDROW = 30;
+constexpr int32_t KTIMEOUT = 90; // timeout in seconds before triggering batch forwarding
+constexpr int32_t KCONDROW = 30; // maximum number of events before triggering batch forwarding
+#endif
 }
 
 namespace OHOS {
 namespace Media {
 
 using namespace OHOS::HiviewDFX;
+#ifdef SUPPORT_HIAPPEVENT
 using namespace OHOS::HiviewDFX::HiAppEvent;
+#endif
 
 void HiAppEventAgent::WriteEndEvent(const std::string &transId,
     const int errCode, const std::string& message, time_t startTime, HiviewDFX::HiTraceId traceId)
 {
+#ifdef SUPPORT_HIAPPEVENT
     int result = errCode == MSERR_OK ? API_RESULT_SUCCESS : API_RESULT_FAILED;
     Event event("api_diagnostic", "api_exec_end", OHOS::HiviewDFX::HiAppEvent::BEHAVIOR);
     event.AddParam("trans_id", transId);
@@ -52,10 +59,18 @@ void HiAppEventAgent::WriteEndEvent(const std::string &transId,
         event.AddParam("traceId", static_cast<int64_t>(traceId.GetChainId()));
     }
     Write(event);
+#else
+    (void)transId;
+    (void)errCode;
+    (void)message;
+    (void)startTime;
+    (void)traceId;
+#endif
 }
 
 int64_t HiAppEventAgent::AddProcessor()
 {
+#ifdef SUPPORT_HIAPPEVENT
     ReportConfig config;
     config.name = KNAME;
     config.appId = KAPPID;
@@ -85,6 +100,9 @@ int64_t HiAppEventAgent::AddProcessor()
         config.eventConfigs.push_back(event3);
     }
     return AppEventProcessorMgr::AddProcessor(config);
+#else
+    return -1;
+#endif
 }
 
 void HiAppEventAgent::TraceApiEvent(

@@ -88,6 +88,11 @@ declare_args() {
       defined(global_parts_info.resourceschedule_efficiency_manager)) {
     player_framework_support_efficiency_manager = true
   }
+  player_framework_support_hiappevent = false
+  if (defined(global_parts_info) &&
+      defined(global_parts_info.hiviewdfx_hiappevent)) {
+    player_framework_support_hiappevent = true
+  }
 }
 
 player_framework_defines = []
@@ -204,6 +209,10 @@ if (player_framework_enable_start_stop_on_demand) {
 
 if (player_framework_support_screen_capture_stopbycall) {
   player_framework_defines += [ "SUPPORT_CALL" ]
+}
+
+if (player_framework_support_hiappevent) {
+  player_framework_defines += [ "SUPPORT_HIAPPEVENT" ]
 }
 
 # Config path

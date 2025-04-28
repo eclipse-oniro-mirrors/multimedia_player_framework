@@ -186,7 +186,6 @@ ohos_shared_library("media_client") {
     "c_utils:utils",
     "drivers_interface_display:display_commontype_idl_headers",
     "graphic_surface:surface",
-    "hiappevent:hiappevent_innerapi",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
@@ -209,6 +208,10 @@ ohos_shared_library("media_client") {
 
   if (player_framework_support_drm) {
     external_deps += [ "drm_framework:drm_framework" ]
+  }
+
+  if (player_framework_support_hiappevent) {
+    external_deps += [ "hiappevent:hiappevent_innerapi" ]
   }
 
   innerapi_tags = [ "platformsdk" ]
