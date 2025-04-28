@@ -8,9 +8,10 @@
             "auto-restart": true,
             "distributed": false,
             "start-on-demand": {
-                "commonevent": [
+                "param": [
                     {
-                        "name": "usual.event.BOOT_COMPLETED"
+                        "name": "bootevent.samgr.ready",
+                        "value": "true"
                     }
                 ]
             },
