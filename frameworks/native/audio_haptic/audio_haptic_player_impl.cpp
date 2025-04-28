@@ -164,7 +164,7 @@ int32_t AudioHapticPlayerImpl::Start()
     result = audioHapticSound_->StartSound();
     SendHapticPlayerEvent(MSERR_OK, "START_HAPTIC_PLAYER");
     CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, result, "Failed to start sound.");
-
+    MEDIA_LOGW("StartSound() has been executed successfully!");
     playerState_ = AudioHapticPlayerState::STATE_RUNNING;
     return result;
 }

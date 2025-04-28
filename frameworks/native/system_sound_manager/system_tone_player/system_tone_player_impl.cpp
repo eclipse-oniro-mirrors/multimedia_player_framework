@@ -157,7 +157,8 @@ bool SystemTonePlayerImpl::IsSameHapticMaps(const std::map<ToneHapticsFeature, s
 
 int32_t SystemTonePlayerImpl::InitPlayer(const std::string &audioUri)
 {
-    MEDIA_LOGI("Enter InitPlayer() with audio uri %{public}s", audioUri.c_str());
+    MEDIA_LOGW("Enter InitPlayer() with audio type: %{public}s",
+        SystemSoundManagerUtils::GetTypeForSystemSoundUri(audioUri).c_str());
     if (audioUri == NO_SYSTEM_SOUND) {
         ToneHapticsSettings settings;
         int32_t result = systemSoundMgr_.GetToneHapticsSettings(databaseTool_, audioUri,
@@ -397,7 +398,7 @@ int32_t SystemTonePlayerImpl::Start()
 
 int32_t SystemTonePlayerImpl::Start(const SystemToneOptions &systemToneOptions)
 {
-    MEDIA_LOGI("Enter Start() with systemToneOptions: muteAudio %{public}d, muteHaptics %{public}d",
+    MEDIA_LOGW("Enter Start() with systemToneOptions: muteAudio %{public}d, muteHaptics %{public}d",
         systemToneOptions.muteAudio, systemToneOptions.muteHaptics);
     std::lock_guard<std::mutex> lock(systemTonePlayerMutex_);
     CHECK_AND_RETURN_RET_LOG(systemToneState_ != SystemToneState::STATE_RELEASED, MSERR_INVALID_STATE,
@@ -411,6 +412,7 @@ int32_t SystemTonePlayerImpl::Start(const SystemToneOptions &systemToneOptions)
     bool actualMuteHaptics = ringerModeOptions.muteHaptics || systemToneOptions.muteHaptics || isHapticUriEmpty_ ||
         isNoneHaptics_;
     if (actualMuteAudio) {
+        MEDIA_LOGW("The audio of system tone player is muted!");
         int32_t delayTime = DEFAULT_DELAY;
         // the audio of system tone player has been muted. Only start vibrator.
         if (!actualMuteHaptics) {
@@ -446,7 +448,7 @@ int32_t SystemTonePlayerImpl::Start(const SystemToneOptions &systemToneOptions)
 
 int32_t SystemTonePlayerImpl::Stop(const int32_t &streamId)
 {
-    MEDIA_LOGI("Enter Stop() with streamId %{public}d", streamId);
+    MEDIA_LOGW("Enter Stop() with streamId %{public}d", streamId);
     std::lock_guard<std::mutex> lock(systemTonePlayerMutex_);
     CHECK_AND_RETURN_RET_LOG(systemToneState_ != SystemToneState::STATE_RELEASED, MSERR_INVALID_STATE,
         "System tone player has been released!");
