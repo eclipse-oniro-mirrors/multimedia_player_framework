@@ -105,7 +105,7 @@ private:
     sptr<Surface> surface_ = nullptr;
     HiviewDFX::HiTraceId traceId_;
     std::mutex cbMutex_;
-    std::shared_ptr<HiAppEventAgent> hiAppEventAgent_{};
+    std::shared_ptr<HiAppEventAgent> hiAppEventAgent_ = nullptr;
 };
 
 class PlayerImplCallback : public PlayerCallback {
