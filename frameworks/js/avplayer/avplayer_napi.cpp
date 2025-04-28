@@ -3395,12 +3395,30 @@ napi_value AVPlayerNapi::JsIsSeekContinuousSupported(napi_env env, napi_callback
     size_t argCount = 0;
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, nullptr);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstance");
-    if (jsPlayer->player_ != nullptr) {
-        isSeekContinuousSupported = jsPlayer->player_->IsSeekContinuousSupported();
-        status = napi_get_boolean(env, isSeekContinuousSupported, &result);
-        CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "napi_get_boolean failed");
+    auto task = jsPlayer->IsSeekContinuousSupportedTask();
+    auto taskResult = task->GetResult();
+    if (taskResult.HasResult()) {
+        isSeekContinuousSupported = taskResult.Value();
     }
+    status = napi_get_boolean(env, isSeekContinuousSupported, &result);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "napi_get_boolean failed");
     return result;
+}
+ 
+std::shared_ptr<TaskHandler<bool>> AVPlayerNapi::IsSeekContinuousSupportedTask()
+{
+    auto task = std::make_shared<TaskHandler<bool>>([this]() {
+        std::unique_lock<std::mutex> lock(taskMutex_);
+        MEDIA_LOGI("IsSeekContinuousSupported Task In");
+        bool isSupported = false;
+        if (player_ != nullptr) {
+            isSupported = player_->IsSeekContinuousSupported();
+        }
+        MEDIA_LOGI("IsSeekContinuousSupported Task Out");
+        return isSupported;
+    });
+    (void)taskQue_->EnqueueTask(task);
+    return task;
 }
 } // namespace Media
 } // namespace OHOS
