@@ -68,7 +68,6 @@ ohos_unittest("player_timeout_unit_test") {
     "googletest:gmock_main",
     "graphic_2d:librender_service_client",
     "graphic_surface:surface",
-    "hiappevent:hiappevent_innerapi",
     "hilog:libhilog",
     "hitrace:libhitracechain",
     "ipc:ipc_single",
