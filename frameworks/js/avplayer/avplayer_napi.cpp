@@ -3389,13 +3389,14 @@ void AVPlayerNapi::AddMediaStreamToAVMediaSource(
 napi_value AVPlayerNapi::JsIsSeekContinuousSupported(napi_env env, napi_callback_info info)
 {
     std::unique_lock<std::mutex> lock(readyReleaseMutex_);
+    napi_value result = nullptr;
     if (isReadyReleased_) {
-        napi_get_boolean(env, false, &result);
+        napi_status status = napi_get_boolean(env, false, &result);
+        CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "napi_get_boolean failed");
         return result;
     }
     MediaTrace trace("AVPlayerNapi::isSeekContinuousSupported");
     MEDIA_LOGI("JsIsSeekContinuousSupported In");
-    napi_value result = nullptr;
     bool isSeekContinuousSupported = false;
     napi_status status = napi_get_boolean(env, isSeekContinuousSupported, &result);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "napi_get_boolean failed");
