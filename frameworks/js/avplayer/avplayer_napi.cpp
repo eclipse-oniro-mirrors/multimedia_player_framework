@@ -3399,7 +3399,7 @@ napi_value AVPlayerNapi::JsIsSeekContinuousSupported(napi_env env, napi_callback
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstance");
     std::unique_lock<std::mutex> lock(jsPlayer->readyReleaseMutex_);
     if (jsPlayer->isReadyReleased_.load()) {
-        napi_status status = napi_get_boolean(env, false, &result);
+        status = napi_get_boolean(env, false, &result);
         CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "napi_get_boolean failed");
         return result;
     }
