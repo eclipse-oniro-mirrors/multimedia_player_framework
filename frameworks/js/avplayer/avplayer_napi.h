@@ -437,7 +437,6 @@ private:
     bool getApiVersionFlag_ = true;
 
     std::atomic<bool> isReadyReleased_ = false;
-    std::mutex readyReleaseMutex_;
 };
 } // namespace Media
 } // namespace OHOS
