@@ -53,4 +53,4 @@ size_t CacheBufferMock::GetFileSize(const std::string& fileName)
         }
     }
     return fileSize;
- }
+}
