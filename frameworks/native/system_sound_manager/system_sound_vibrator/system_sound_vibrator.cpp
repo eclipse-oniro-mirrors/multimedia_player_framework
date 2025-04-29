@@ -131,6 +131,19 @@ int32_t SystemSoundVibrator::ExtractFd(const std::string &hapticsUri)
     return std::stoi(numberPart);
 }
 
+int32_t SystemSoundVibrator::StartVibratorForFastMode()
+{
+    std::lock_guard<std::mutex> lock(g_vibrateMutex);
+    int32_t result = MSERR_OK;
+#ifdef SUPPORT_VIBRATOR
+    const int32_t DURATION = 2000; // ms. The duration of vibration for fast mode.
+    bool setUsageRet = Sensors::SetUsage(USAGE_RING);
+    result = Sensors::StartVibratorOnce(DURATION);
+    MEDIA_LOGI("StartVibrator for fast mode: setUsageRet %{public}d, startRet %{public}d", setUsageRet, result);
+#endif
+    return result;
+}
+
 int32_t SystemSoundVibrator::StartVibratorForRingtone(const std::string &hapticUri)
 {
     if (hapticUri == "") {

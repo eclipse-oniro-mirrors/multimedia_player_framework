@@ -41,6 +41,13 @@ enum RingtoneState {
 
 class RingtonePlayerInterruptCallback;
 
+enum class HapticStartupMode {
+    // Default mode. The audio and vibration will start at the same time.
+    DEFAULT = 0,
+    // Fast mode. The vibration will start quickly.
+    FAST = 1,
+};
+
 class RingtonePlayer {
 public:
     virtual ~RingtonePlayer() = default;
@@ -74,7 +81,7 @@ public:
      * @since 1.0
      * @version 1.0
      */
-    virtual int32_t Start() = 0;
+    virtual int32_t Start(const HapticStartupMode startupMode = HapticStartupMode::DEFAULT) = 0;
 
     /**
      * @brief Stop playing ringtone
