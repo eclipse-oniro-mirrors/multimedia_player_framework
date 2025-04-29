@@ -706,8 +706,6 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::ReleaseTask()
 
 napi_value AVPlayerNapi::JsRelease(napi_env env, napi_callback_info info)
 {
-    std::unique_lock<std::mutex> lock(readyReleaseMutex_);
-    isReadyReleased_ = true;
     MediaTrace trace("AVPlayerNapi::release");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
@@ -718,6 +716,8 @@ napi_value AVPlayerNapi::JsRelease(napi_env env, napi_callback_info info)
     size_t argCount = 1;
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstance");
+    std::unique_lock<std::mutex> lock(jsPlayer->readyReleaseMutex_);
+    jsPlayer->isReadyReleased_.store(true);
     promiseCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
     promiseCtx->deferred = CommonNapi::CreatePromise(env, promiseCtx->callbackRef, result);
     MEDIA_LOGI("0x%{public}06" PRIXPTR " JsRelease EnqueueTask In", FAKE_POINTER(jsPlayer));
@@ -3388,21 +3388,21 @@ void AVPlayerNapi::AddMediaStreamToAVMediaSource(
 
 napi_value AVPlayerNapi::JsIsSeekContinuousSupported(napi_env env, napi_callback_info info)
 {
-    std::unique_lock<std::mutex> lock(readyReleaseMutex_);
-    napi_value result = nullptr;
-    if (isReadyReleased_) {
-        napi_status status = napi_get_boolean(env, false, &result);
-        CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "napi_get_boolean failed");
-        return result;
-    }
     MediaTrace trace("AVPlayerNapi::isSeekContinuousSupported");
     MEDIA_LOGI("JsIsSeekContinuousSupported In");
+    napi_value result = nullptr;
     bool isSeekContinuousSupported = false;
     napi_status status = napi_get_boolean(env, isSeekContinuousSupported, &result);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "napi_get_boolean failed");
     size_t argCount = 0;
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, nullptr);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstance");
+    std::unique_lock<std::mutex> lock(jsPlayer->readyReleaseMutex_);
+    if (jsPlayer->isReadyReleased_.load()) {
+        napi_status status = napi_get_boolean(env, false, &result);
+        CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "napi_get_boolean failed");
+        return result;
+    }
     if (jsPlayer->player_ != nullptr) {
         isSeekContinuousSupported = jsPlayer->player_->IsSeekContinuousSupported();
         status = napi_get_boolean(env, isSeekContinuousSupported, &result);
