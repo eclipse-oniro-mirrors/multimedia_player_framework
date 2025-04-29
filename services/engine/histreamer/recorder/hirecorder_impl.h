@@ -147,7 +147,7 @@ private:
     std::map<int32_t, std::shared_ptr<Pipeline::MetaDataFilter>> metaDataFilters_;
     std::map<int32_t, std::shared_ptr<Meta>> metaDataFormats_;
 
-    std::shared_ptr<CapturerInfoChangeCallback> CapturerInfoChangeCallback_;
+    std::shared_ptr<CapturerInfoChangeCallback> capturerInfoChangeCallback_;
     std::weak_ptr<IRecorderEngineObs> obs_{};
     OutputFormatType outputFormatType_{OutputFormatType::FORMAT_BUTT};
     int32_t fd_ = -1;

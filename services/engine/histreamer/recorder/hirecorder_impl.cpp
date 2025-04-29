@@ -134,8 +134,8 @@ HiRecorderImpl::~HiRecorderImpl()
     if (recorderEventReceiver_ != nullptr) {
         recorderEventReceiver_->NotifyRelease();
     }
-    if (CapturerInfoChangeCallback_ != nullptr) {
-        CapturerInfoChangeCallback_->NotifyRelease();
+    if (capturerInfoChangeCallback_ != nullptr) {
+        capturerInfoChangeCallback_->NotifyRelease();
     }
     Stop(false);
     PipeLineThreadPool::GetInstance().DestroyThread(recorderId_);
@@ -403,8 +403,8 @@ int32_t HiRecorderImpl::PrepareAudioCapture()
         audioEncFormat_->Set<Tag::AUDIO_SAMPLE_FORMAT>(Plugins::AudioSampleFormat::SAMPLE_S16LE);
         audioCaptureFilter_->SetParameter(audioEncFormat_);
         audioCaptureFilter_->Init(recorderEventReceiver_, recorderCallback_);
-        CapturerInfoChangeCallback_ = std::make_shared<CapturerInfoChangeCallback>(this);
-        audioCaptureFilter_->SetAudioCaptureChangeCallback(CapturerInfoChangeCallback_);
+        capturerInfoChangeCallback_ = std::make_shared<CapturerInfoChangeCallback>(this);
+        audioCaptureFilter_->SetAudioCaptureChangeCallback(capturerInfoChangeCallback_);
         if (videoEncoderFilter_) {
             audioCaptureFilter_->SetWithVideo(true);
         } else {
