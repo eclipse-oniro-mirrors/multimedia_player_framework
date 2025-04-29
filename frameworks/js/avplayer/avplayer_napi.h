@@ -330,7 +330,6 @@ private:
     std::shared_ptr<TaskHandler<TaskRet>> SetSuperResolutionTask(bool enabled);
     std::shared_ptr<TaskHandler<TaskRet>> SetVideoWindowSizeTask(int32_t width, int32_t height);
     std::shared_ptr<TaskHandler<TaskRet>> EqueueSetPlayRangeTask(int32_t start, int32_t end, int32_t mode);
-    std::shared_ptr<TaskHandler<bool>> IsSeekContinuousSupportedTask();
 
     std::string GetCurrentState();
     bool IsControllable();
