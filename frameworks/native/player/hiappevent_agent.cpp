@@ -24,9 +24,8 @@
 
 #ifdef SUPPORT_HIAPPEVENT
 namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_PLAYER, "HiAppEventAgent" };
     constexpr auto KNAME = "ha_app_event";
-    constexpr auto KAPPID = "com_huawei_hmos_avplayer";
+    constexpr auto KAPPID = "com_hw_hmos_avplayer";
     constexpr auto SDKNAME = "MediaKit";
     constexpr auto APINAME = "HMOS_MEDIA_SERVICE";
     constexpr int32_t KTIMEOUT = 90;
@@ -123,7 +122,7 @@ void HiAppEventAgent::TraceApiEvent(
     std::weak_ptr<HiAppEventAgent> agent = shared_from_this();
     hiAppEventTask_->SubmitJobOnce([agent, errCode, message, startTime, traceId]() {
         auto ptr = agent.lock();
-        CHECK_AND_RETURN_LOG(ptr != nullptr, "HiAppEventAgent is released");
+        CHECK_AND_RETURN_NOLOG(ptr != nullptr);
         ptr->TraceApiEventAsync(errCode, message, startTime, traceId);
     });
 #else
