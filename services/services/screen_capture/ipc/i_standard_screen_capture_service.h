@@ -58,7 +58,7 @@ public:
     virtual int32_t ReleaseAudioBuffer(AudioCaptureSourceType type) = 0;
     virtual int32_t ReleaseVideoBuffer() = 0;
     virtual int32_t ExcludeContent(ScreenCaptureContentFilter &contentFilter) = 0;
-    virtual int32_t InitStrategy(Strategy strategy) = 0;
+    virtual int32_t SetScreenCaptureStrategy(ScreenCaptureStrategy strategy) = 0;
 
     /**
      * IPC code ID
@@ -91,7 +91,7 @@ public:
         SHOW_CURSOR = 24,
         SET_CHECK_SA_LIMIT = 25,
         SET_CHECK_LIMIT = 26,
-        INIT_STRATEGY = 27,
+        SET_STRATEGY = 27,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardScreenCaptureService");
