@@ -72,6 +72,15 @@ void CacheBufferUnitTest::CreateCacheBuffer(const Format &trackFormat,
     }
 }
 
+int32_t CacheBufferUnitTest::GetFdByFileName(std::string fileName)
+{
+    int32_t loadFd = open(fileName.c_str(), O_RDWR);
+    if (loadFd <= 0) {
+        cout << "Url open failed, g_fileName " << fileName.c_str() << ", fd: " << loadFd << endl;
+    }
+    return loadFd;
+}
+
 /**
 * @tc.name: soundpool_cacheBuffer_001
 * @tc.desc: function test soundpool singleton
@@ -214,6 +223,71 @@ HWTEST_F(CacheBufferUnitTest, soundpool_OnInterrupt_001, TestSize.Level2)
     cacheBuffer_->cacheBuffer_->OnInterrupt(interruptEvent2);
     EXPECT_EQ(streamID, cacheBuffer_->cacheBuffer_->streamID_);
     MEDIA_LOGI("CacheBufferUnitTest soundpool_OnInterrupt_001 after");
+}
+
+/**
+* @tc.name: soundpool_SetParallelPlayFlag_001
+* @tc.desc: function test SetParallelPlayFlag result
+* @tc.type: FUNC
+* @tc.require:
+*/
+HWTEST_F(CacheBufferUnitTest, soundpool_SetParallelPlayFlag_001, TestSize.Level2)
+{
+    MEDIA_LOGI("CacheBufferUnitTest soundpool_SetParallelPlayFlag_001 before");
+    int32_t soundID = 1;
+    int32_t streamID = 1;
+    Format format;
+    CreateCacheBuffer(format, soundID, streamID);
+    cacheBuffer_->cacheBuffer_->streamID_ = streamID;
+    EXPECT_EQ(MSERR_OK, cacheBuffer_->cacheBuffer_->SetParallelPlayFlag(streamID, true));
+    MEDIA_LOGI("CacheBufferUnitTest soundpool_SetParallelPlayFlag_001 after");
+}
+
+/**
+* @tc.name: soundpool_SoundParseOnError_001
+* @tc.desc: function test SoundParse OnError result
+* @tc.type: FUNC
+* @tc.require:
+*/
+HWTEST_F(CacheBufferUnitTest, soundpool_SoundParseOnError_001, TestSize.Level2)
+{
+    MEDIA_LOGI("CacheBufferUnitTest soundpool_SoundParseOnError_001 before");
+    int32_t soundID = 1;
+    int32_t streamID = 1;
+    bool isRawFile = true;
+    Format format;
+    CreateCacheBuffer(format, soundID, streamID);
+    cacheBuffer_->cacheBuffer_->streamID_ = streamID;
+    int32_t fd = GetFdByFileName(g_fileName[soundID]);
+    EXPECT_GT(fd, 0);
+    size_t filesize = cacheBuffer_->GetFileSize(g_fileName[soundID]);
+    int64_t length = static_cast<int64_t>(filesize);
+    std::shared_ptr<MediaAVCodec::AVSource> source =
+        MediaAVCodec::AVSourceFactory::CreateWithFD(fd, 0, length);
+    ASSERT_NE(nullptr, source);
+    std::shared_ptr<MediaAVCodec::AVDemuxer> demuxer = MediaAVCodec::AVDemuxerFactory::CreateWithSource(source);
+    ASSERT_NE(nullptr, demuxer);
+    std::shared_ptr<MediaAVCodec::AVCodecAudioDecoder> audioDec =
+        MediaAVCodec::AudioDecoderFactory::CreateByMime("audio/mpeg");
+    std::shared_ptr<SoundDecoderCallback> audioDecCb_ =
+        std::make_shared<SoundDecoderCallback>(soundID, audioDec, demuxer, isRawFile);
+    audioDecCb_->OnError(AVCodecErrorType::AVCODEC_ERROR_INTERNAL, MSERR_INVALID_OPERATION);
+    audioDecCb_->OnOutputFormatChanged(format);
+    audioDecCb_->demuxer_ = nullptr;
+    audioDecCb_->OnInputBufferAvailable(0, nullptr);
+    audioDecCb_->demuxer_ = demuxer;
+    std::shared_ptr<AVSharedMemory> buffer = std::make_shared<AVSharedMemoryBase>(1,
+        AVSharedMemory::Flags::FLAGS_READ_WRITE, "testBufferMemory");
+    audioDecCb_->decodeShouldCompleted_ = false;
+    audioDecCb_->OnInputBufferAvailable(0, buffer);
+    audioDecCb_->isRawFile_ = false;
+    audioDecCb_->eosFlag_  = false;
+    audioDecCb_->OnInputBufferAvailable(0, buffer);
+    if (fd > 0) {
+        (void)::close(fd);
+    }
+    EXPECT_EQ(streamID, cacheBuffer_->cacheBuffer_->streamID_);
+    MEDIA_LOGI("CacheBufferUnitTest soundpool_SoundParseOnError_001 after");
 }
 } // namespace Media
 } // namespace OHOS

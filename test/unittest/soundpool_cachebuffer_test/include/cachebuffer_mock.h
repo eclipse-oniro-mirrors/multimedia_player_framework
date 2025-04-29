@@ -46,6 +46,7 @@ public:
     bool IsAudioRendererCanMix(const AudioStandard::AudioRendererInfo &audioRendererInfo);
     int32_t CreateAudioRenderer(const int32_t streamID,
         const AudioStandard::AudioRendererInfo audioRendererInfo, const PlayParams playParams);
+    size_t GetFileSize(const std::string& fileName);
 private:
     std::shared_ptr<CacheBuffer> cacheBuffer_ = nullptr;
 };

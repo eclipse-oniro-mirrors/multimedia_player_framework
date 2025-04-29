@@ -21,6 +21,10 @@
 #include "soundpool_manager.h"
 #include "sound_parser.h"
 #include "thread_pool.h"
+#include "avcodec_audio_decoder.h"
+#include "avcodec_errors.h"
+#include "avdemuxer.h"
+#include "avsource.h"
 
 namespace OHOS {
 namespace Media {
@@ -42,6 +46,7 @@ protected:
     static const int32_t waitTime30 = 30;
     int32_t loadNum_ = 0;
     void CreateCacheBuffer(const Format &trackFormat, const int32_t &soundID, const int32_t &streamID);
+    int32_t GetFdByFileName(std::string fileName);
     std::shared_ptr<CacheBufferMock> cacheBuffer_ = nullptr;
     std::shared_ptr<ThreadPool> cacheBufferStopThreadPool_;
     std::atomic<bool> isCacheBufferStopThreadPoolStarted_ = false;
