@@ -95,7 +95,6 @@ public:
 
     void OnStateChange(const AudioStandard::AudioCapturerChangeInfo &capturerChangeInfo)
     {
-        FALSE_RETURN_MSG(hiRecorderImpl_ != nullptr, "hiRecorderImpl_ is nullptr");
         MEDIA_LOG_I("CapturerInfoChangeCallback hiRecorderImpl_->OnAudioCaptureChange start.");
         std::shared_lock<std::shared_mutex> lk(cbMutex_);
         FALSE_RETURN_MSG(hiRecorderImpl_ != nullptr, "hiRecorderImpl_ is nullptr");
