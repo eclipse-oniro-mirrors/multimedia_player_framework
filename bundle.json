@@ -125,7 +125,8 @@
           "jsoncpp",
           "memmgr",
           "memmgr_override",
-          "efficiency_manager"
+          "efficiency_manager",
+          "hiappevent"
         ],
         "third_party": [
           "bounds_checking_function"

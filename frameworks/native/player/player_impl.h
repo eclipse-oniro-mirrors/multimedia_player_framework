@@ -21,6 +21,7 @@
 #include "osal/task/autolock.h"
 #include "i_player_service.h"
 #include "hitrace/tracechain.h"
+#include "hiappevent_agent.h"
 
 namespace OHOS {
 namespace Media {
@@ -87,6 +88,7 @@ public:
     bool IsSeekContinuousSupported() override;
     int32_t SetSeiMessageCbStatus(bool status, const std::vector<int32_t> &payloadTypes) override;
     void ReleaseClientListener() override;
+    HiviewDFX::HiTraceId GetTraceId();
 private:
     void ResetSeekVariables();
     void HandleSeekDoneInfo(PlayerOnInfoType type, int32_t extra);
@@ -103,6 +105,7 @@ private:
     sptr<Surface> surface_ = nullptr;
     HiviewDFX::HiTraceId traceId_;
     std::mutex cbMutex_;
+    std::shared_ptr<HiAppEventAgent> hiAppEventAgent_ = nullptr;
 };
 
 class PlayerImplCallback : public PlayerCallback {
