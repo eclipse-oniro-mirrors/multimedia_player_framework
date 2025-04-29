@@ -318,6 +318,7 @@ static const std::vector<struct JsEnumInt> g_VP8Profile = {
 static const std::vector<struct JsEnumInt> g_VideoScaleType = {
     { "VIDEO_SCALE_TYPE_FIT", static_cast<int32_t>(Plugins::VideoScaleType::VIDEO_SCALE_TYPE_FIT) },
     { "VIDEO_SCALE_TYPE_FIT_CROP", static_cast<int32_t>(Plugins::VideoScaleType::VIDEO_SCALE_TYPE_FIT_CROP) },
+    { "VIDEO_SCALE_TYPE_FIT_ASPECT", static_cast<int32_t>(Plugins::VideoScaleType::VIDEO_SCALE_TYPE_FIT_ASPECT) },
 };
 
 static const std::vector<struct JsEnumInt> g_stateChangeReason = {
