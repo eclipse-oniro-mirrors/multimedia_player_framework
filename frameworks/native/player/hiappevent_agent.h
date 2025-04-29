@@ -19,6 +19,7 @@
 #include <string>
 #include <mutex>
 #include "hitrace/tracechain.h"
+#include "osal/task/task.h"
 
 #define API_RESULT_SUCCESS 0
 #define API_RESULT_FAILED 1
@@ -26,18 +27,26 @@
 namespace OHOS {
 namespace Media {
 
-class HiAppEventAgent {
+class HiAppEventAgent : public std::enable_shared_from_this<HiAppEventAgent> {
 public:
+    HiAppEventAgent();
+    ~HiAppEventAgent();
     void TraceApiEvent(int errCode,
         const std::string& message, time_t startTime, HiviewDFX::HiTraceId traceId = HiviewDFX::HiTraceId());
 
 private:
-    int64_t AddProcessor();
     std::string GenerateTransId();
+#ifdef SUPPORT_HIAPPEVENT
+    void TraceApiEventAsync(int errCode,
+        const std::string& message, time_t startTime, HiviewDFX::HiTraceId traceId);
+    int64_t AddProcessor();
     void WriteEndEvent(const std::string& transId,
         const int errCode, const std::string& message, time_t startTime, HiviewDFX::HiTraceId traceId);
+    
     int64_t processorId_ = -1;
     std::mutex processorMutex;
+    std::unique_ptr<Task> hiAppEventTask_;
+#endif
 };
 
 } // namespace Media

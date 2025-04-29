@@ -31,7 +31,7 @@ constexpr int64_t OVERTIME_WARNING_MS = 10;
 constexpr int64_t CREATE_AVPLAYER_WARNING_MS = 30;
 constexpr int64_t RESET_WARNING_MS = 30;
 constexpr int64_t RELEASE_WARNING_MS = 200;
-const int32_t TIME_OUT_SECOND = 6;
+const int32_t TIME_OUT_SECOND = 15;
 }
 
 namespace OHOS {
@@ -40,8 +40,6 @@ namespace Media {
 std::shared_ptr<Player> PlayerFactory::CreatePlayer()
 {
     time_t startTime = time(nullptr);
-    auto hiAppEventAgent = std::make_shared<HiAppEventAgent>();
-
     ScopedTimer timer("CreatePlayer", CREATE_AVPLAYER_WARNING_MS);
     MEDIA_LOGD("PlayerImpl: CreatePlayer in");
     std::shared_ptr<PlayerImpl> impl = std::make_shared<PlayerImpl>();
@@ -49,6 +47,7 @@ std::shared_ptr<Player> PlayerFactory::CreatePlayer()
 
     int32_t ret = MSERR_OK;
     LISTENER(ret = impl->Init(), "CreatePlayer", false, TIME_OUT_SECOND);
+    auto hiAppEventAgent = std::make_shared<HiAppEventAgent>();
     if (hiAppEventAgent != nullptr) {
         hiAppEventAgent->TraceApiEvent(ret, "CreatePlayer", startTime, impl->GetTraceId());
     }

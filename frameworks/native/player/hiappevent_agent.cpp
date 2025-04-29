@@ -22,17 +22,18 @@
 #include "app_event_processor_mgr.h"
 #endif
 
-namespace {
 #ifdef SUPPORT_HIAPPEVENT
-constexpr auto KNAME = "ha_app_event";
-constexpr auto KAPPID = "com_hw_hmos_avplayer";
-constexpr auto SDKNAME = "MediaKit";
-constexpr auto APINAME = "HMOS_MEDIA_SERVICE";
-constexpr int32_t KTIMEOUT = 90; // timeout in seconds before triggering batch forwarding
-constexpr int32_t KCONDROW = 30; // maximum number of events before triggering batch forwarding
-#endif
+namespace {
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_PLAYER, "HiAppEventAgent" };
+    constexpr auto KNAME = "ha_app_event";
+    constexpr auto KAPPID = "com_huawei_hmos_avplayer";
+    constexpr auto SDKNAME = "MediaKit";
+    constexpr auto APINAME = "HMOS_MEDIA_SERVICE";
+    constexpr int32_t KTIMEOUT = 90;
+    constexpr int32_t KCONDROW = 30;
 }
-
+#endif
+ 
 namespace OHOS {
 namespace Media {
 
@@ -41,10 +42,25 @@ using namespace OHOS::HiviewDFX;
 using namespace OHOS::HiviewDFX::HiAppEvent;
 #endif
 
+HiAppEventAgent::HiAppEventAgent()
+{
+#ifdef SUPPORT_HIAPPEVENT
+    hiAppEventTask_ = std::make_unique<Task>(
+        "OS_Ply_HiAppEvent", "HiAppEventGroup", TaskType::GLOBAL, TaskPriority::NORMAL, false);
+#endif
+}
+ 
+HiAppEventAgent::~HiAppEventAgent()
+{
+#ifdef SUPPORT_HIAPPEVENT
+    hiAppEventTask_.reset();
+#endif
+}
+ 
+#ifdef SUPPORT_HIAPPEVENT
 void HiAppEventAgent::WriteEndEvent(const std::string &transId,
     const int errCode, const std::string& message, time_t startTime, HiviewDFX::HiTraceId traceId)
 {
-#ifdef SUPPORT_HIAPPEVENT
     int result = errCode == MSERR_OK ? API_RESULT_SUCCESS : API_RESULT_FAILED;
     Event event("api_diagnostic", "api_exec_end", OHOS::HiviewDFX::HiAppEvent::BEHAVIOR);
     event.AddParam("trans_id", transId);
@@ -59,18 +75,12 @@ void HiAppEventAgent::WriteEndEvent(const std::string &transId,
         event.AddParam("traceId", static_cast<int64_t>(traceId.GetChainId()));
     }
     Write(event);
-#else
-    (void)transId;
-    (void)errCode;
-    (void)message;
-    (void)startTime;
-    (void)traceId;
-#endif
 }
+#endif
 
+#ifdef SUPPORT_HIAPPEVENT
 int64_t HiAppEventAgent::AddProcessor()
 {
-#ifdef SUPPORT_HIAPPEVENT
     ReportConfig config;
     config.name = KNAME;
     config.appId = KAPPID;
@@ -100,12 +110,32 @@ int64_t HiAppEventAgent::AddProcessor()
         config.eventConfigs.push_back(event3);
     }
     return AppEventProcessorMgr::AddProcessor(config);
+}
+#endif
+ 
+void HiAppEventAgent::TraceApiEvent(
+    int errCode, const std::string& message, time_t startTime, HiviewDFX::HiTraceId traceId)
+{
+#ifdef SUPPORT_HIAPPEVENT
+    if (hiAppEventTask_ == nullptr) {
+        return;
+    }
+    std::weak_ptr<HiAppEventAgent> agent = shared_from_this();
+    hiAppEventTask_->SubmitJobOnce([agent, errCode, message, startTime, traceId]() {
+        auto ptr = agent.lock();
+        CHECK_AND_RETURN_LOG(ptr != nullptr, "HiAppEventAgent is released");
+        ptr->TraceApiEventAsync(errCode, message, startTime, traceId);
+    });
 #else
-    return -1;
+    (void)errCode;
+    (void)message;
+    (void)startTime;
+    (void)traceId;
 #endif
 }
 
-void HiAppEventAgent::TraceApiEvent(
+#ifdef SUPPORT_HIAPPEVENT
+void HiAppEventAgent::TraceApiEventAsync(
     int errCode, const std::string& message, time_t startTime, HiviewDFX::HiTraceId traceId)
 {
     CHECK_AND_RETURN_NOLOG(errCode != MSERR_OK);
@@ -122,13 +152,14 @@ void HiAppEventAgent::TraceApiEvent(
     std::string transId = GenerateTransId();
     WriteEndEvent(transId, errCode, message, startTime, traceId);
 }
+#endif
 
 std::string HiAppEventAgent::GenerateTransId()
 {
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<int64_t> dist(0, 1e12);
- 
+
     return "transId_" + std::to_string(dist(gen));
 }
 
