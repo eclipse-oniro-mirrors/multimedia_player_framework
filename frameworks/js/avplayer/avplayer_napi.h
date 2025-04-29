@@ -330,7 +330,6 @@ private:
     std::shared_ptr<TaskHandler<TaskRet>> SetSuperResolutionTask(bool enabled);
     std::shared_ptr<TaskHandler<TaskRet>> SetVideoWindowSizeTask(int32_t width, int32_t height);
     std::shared_ptr<TaskHandler<TaskRet>> EqueueSetPlayRangeTask(int32_t start, int32_t end, int32_t mode);
-    std::shared_ptr<TaskHandler<bool>> IsSeekContinuousSupportedTask();
 
     std::string GetCurrentState();
     bool IsControllable();
@@ -436,6 +435,8 @@ private:
     int32_t mode_ = SWITCH_SMOOTH;
     std::mutex syncMutex_;
     bool getApiVersionFlag_ = true;
+
+    std::atomic<bool> isReadyReleased_ = false;
 };
 } // namespace Media
 } // namespace OHOS
