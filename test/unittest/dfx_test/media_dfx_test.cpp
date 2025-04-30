@@ -219,6 +219,90 @@ HWTEST_F(MediaDfxTest, ParseOneEvent_ShouldParseBool_WhenBoolType, TestSize.Leve
 
     EXPECT_EQ(metaInfoJson[Tag::MEDIA_HAS_VIDEO], "true");
 }
+
+// Scenario7: Test case for float type
+HWTEST_F(MediaDfxTest, ParseOneEvent_ShouldParseFloat_WhenFloatType, TestSize.Level0) {
+    std::pair<uint64_t, std::shared_ptr<Meta>> listPair;
+    listPair.first = 1;
+    listPair.second = std::make_shared<Meta>();
+    float value = 0.5f;
+    listPair.second->SetData(Tag::MEDIA_LATITUDE, value);
+    json metaInfoJson;
+
+    mediaEvent_->ParseOneEvent(listPair, metaInfoJson);
+    Any valueType = OHOS::Media::GetDefaultAnyValue(Tag::MEDIA_LATITUDE);
+    EXPECT_EQ(Any::IsSameTypeWith<float>(valueType), true);
+    EXPECT_EQ(metaInfoJson[Tag::MEDIA_LATITUDE], "0.50");
+}
+
+// Scenario8: Test case for default type
+HWTEST_F(MediaDfxTest, ParseOneEvent_ShouldParsedefault_WhendefaultType, TestSize.Level0) {
+    std::pair<uint64_t, std::shared_ptr<Meta>> listPair;
+    listPair.first = 1;
+    listPair.second = std::make_shared<Meta>();
+    float value = 0.5f;
+    listPair.second->SetData(Tag::VIDEO_BIT_STREAM_FORMAT, value);
+    json metaInfoJson;
+
+    mediaEvent_->ParseOneEvent(listPair, metaInfoJson);
+    Any valueType = OHOS::Media::GetDefaultAnyValue(Tag::VIDEO_BIT_STREAM_FORMAT);
+    EXPECT_EQ(Any::IsSameTypeWith<float>(valueType), false);
+}
+
+// Scenario9: Test case for uint64_t type repeat
+HWTEST_F(MediaDfxTest, ParseOneEvent_ShouldParseUint64_WhenUint64Type_002, TestSize.Level0) {
+    std::pair<uint64_t, std::shared_ptr<Meta>> listPair;
+    listPair.first = 1;
+    listPair.second = std::make_shared<Meta>();
+    listPair.second->SetData(Tag::MEDIA_FILE_SIZE, 123u);
+    listPair.second->SetData(Tag::MEDIA_POSITION, 123u);
+    listPair.second->SetData(Tag::AV_PLAYER_DOWNLOAD_TOTAL_BITS, 123u);
+    json metaInfoJson;
+
+    mediaEvent_->ParseOneEvent(listPair, metaInfoJson);
+    Any valueType = OHOS::Media::GetDefaultAnyValue(Tag::MEDIA_FILE_SIZE);
+    EXPECT_EQ(Any::IsSameTypeWith<uint64_t>(valueType), true);
+    valueType = OHOS::Media::GetDefaultAnyValue(Tag::AV_PLAYER_DOWNLOAD_TOTAL_BITS);
+    EXPECT_EQ(Any::IsSameTypeWith<uint64_t>(valueType), true);
+    valueType = OHOS::Media::GetDefaultAnyValue(Tag::MEDIA_POSITION);
+    EXPECT_EQ(Any::IsSameTypeWith<uint64_t>(valueType), true);
+}
 #endif
+
+// Scenario10: Test case for BehaviorEventWrite
+HWTEST_F(MediaDfxTest, ParseOneEvent_BehaviorEventWrite, TestSize.Level0) {
+    std::string status = "testMeg1";
+    std::string module = "testmodule";
+    BehaviorEventWrite(status, module);
+    std::string testvalue = "state change, current state is: testMeg1";
+    bool ret = mediaEvent_->CreateMsg("state change, current state is: testMeg1");
+    EXPECT_NE(ret, false);
+    EXPECT_EQ(mediaEvent_->msg_, testvalue);
+}
+
+// Scenario11: Test case for BehaviorEventWriteForScreenCapture
+HWTEST_F(MediaDfxTest, ParseOneEvent_BehaviorEventWriteForScreenCapture, TestSize.Level0) {
+    std::string status = "testMeg2";
+    std::string module = "testmodule";
+    int32_t appUid = 10;
+    int32_t appPid = 11;
+    BehaviorEventWriteForScreenCapture(status, module, appUid, appPid);
+    std::string testvalue = "state change, current state is: testMeg2";
+    bool ret = mediaEvent_->CreateMsg("state change, current state is: testMeg2");
+    EXPECT_NE(ret, false);
+    EXPECT_EQ(mediaEvent_->msg_, testvalue);
+}
+
+// Scenario12: Test case for StatisticEventWriteBundleName
+HWTEST_F(MediaDfxTest, ParseOneEvent_StatisticEventWriteBundleName, TestSize.Level0) {
+    std::string status = "testMeg3";
+    std::string module = "testmodule";
+    std::string bundleName = "";
+    StatisticEventWriteBundleName(status, module, bundleName);
+    std::string testvalue = "state change, current state is: testMeg3";
+    bool ret = mediaEvent_->CreateMsg("state change, current state is: testMeg3");
+    EXPECT_NE(ret, false);
+    EXPECT_EQ(mediaEvent_->msg_, testvalue);
+}
 }
 }
