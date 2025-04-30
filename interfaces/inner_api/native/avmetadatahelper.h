@@ -311,6 +311,23 @@ enum AVMetadataQueryOption : int32_t {
 };
 
 /**
+ * @brief Enumeration for frame scaling modes.
+ *
+ * This enum defines the different ways in which a frame can be scaled.
+ */
+enum FrameScaleMode : int32_t {
+    /**
+     * This mode is used to shrink a frame based on user-defined width and height settings.
+     */
+    NORMAL_RATIO,
+    /**
+     * This mode is used to scale a frame based on user-defined width and height settings,
+     * while also supporting aspect ratio scaling.
+     */
+    ASPECT_RATIO,
+};
+
+/**
  * @brief Provides the definition of the returned pixelmap's configuration
  */
 struct PixelMapParams {
@@ -454,6 +471,24 @@ public:
      * frame cannot be fetched.
      */
     virtual std::shared_ptr<PixelMap> FetchFrameYuv(int64_t timeUs, int32_t option, const PixelMapParams &param) = 0;
+
+    /**
+     * Fetch a representative video frame near a given timestamp by considering the given
+     * option if possible, and return a pixelmap with given parameters. This method must be
+     * called after the SetSource. Additionally, this method supports maintaining aspect ratio
+     * scaling when resizing the pixelmap.
+     * @param timeUs The time position in microseconds where the frame will be fetched.
+     * When fetching the frame at the given time position, there is no guarantee that
+     * the video source has a frame located at the position. When this happens, a frame
+     * nearby will be returned. If timeUs is negative, time position and option will ignored,
+     * and any frame that the implementation considers as representative may be returned.
+     * @param option the hint about how to fetch a frame, see {@link AVMetadataQueryOption}
+     * @param param the desired configuration of returned pixelmap, see {@link PixelMapParams}.
+     * @return Returns a pixelmap containing a scaled video frame, which can be null, if such a
+     * frame cannot be fetched.
+     */
+    virtual std::shared_ptr<PixelMap> FetchScaledFrameYuv(int64_t timeUs, int32_t option,
+                                                          const PixelMapParams &param) = 0;
 
     /**
      * all meta data.
