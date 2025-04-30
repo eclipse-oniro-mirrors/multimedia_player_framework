@@ -316,6 +316,13 @@ int32_t PlayerClient::SetPlaybackSpeed(PlaybackRateMode mode)
     return playerProxy_->SetPlaybackSpeed(mode);
 }
 
+int32_t PlayerClient::SetPlaybackRate(float rate)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerProxy_->SetPlaybackRate(rate);
+}
+
 int32_t PlayerClient::SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, AVPlayStrategy strategy)
 {
     MEDIA_LOGD("PlayerClient:0x%{public}06" PRIXPTR " SetMediaSource in", FAKE_POINTER(this));

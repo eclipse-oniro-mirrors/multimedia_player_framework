@@ -57,6 +57,7 @@ void PlayerUnitTest::TearDown(void)
 void PlayerUnitTest::PlayFunTest(const std::string &protocol)
 {
     int32_t duration = 0;
+    float playbackRate = 2.5f;
     if (player_ != nullptr) {
         EXPECT_EQ(MSERR_OK, player_->GetDuration(duration));
         EXPECT_EQ(MSERR_OK, player_->Play());
@@ -71,6 +72,7 @@ void PlayerUnitTest::PlayFunTest(const std::string &protocol)
         EXPECT_EQ(MSERR_OK, player_->GetAudioTrackInfo(audioTrack));
         PlaybackRateMode mode;
         player_->SetPlaybackSpeed(SPEED_FORWARD_2_00_X);
+        player_->SetPlaybackRate(playbackRate);
         player_->GetPlaybackSpeed(mode);
         EXPECT_EQ(MSERR_OK, player_->SetLooping(true));
         EXPECT_EQ(true, player_->IsLooping());
@@ -93,6 +95,7 @@ void PlayerUnitTest::PlayFunTest(const std::string &protocol)
 void PlayerUnitTest::NoRunPlayFunTest(const std::string &protocol)
 {
     int32_t duration = 0;
+    float playbackRate = 2.5f;
     if (player_ != nullptr) {
         EXPECT_NE(MSERR_OK, player_->GetDuration(duration));
         EXPECT_NE(MSERR_OK, player_->Play());
@@ -107,6 +110,7 @@ void PlayerUnitTest::NoRunPlayFunTest(const std::string &protocol)
         EXPECT_NE(MSERR_OK, player_->GetAudioTrackInfo(audioTrack));
         PlaybackRateMode mode;
         player_->SetPlaybackSpeed(SPEED_FORWARD_2_00_X);
+        player_->SetPlaybackRate(playbackRate);
         player_->GetPlaybackSpeed(mode);
         EXPECT_NE(MSERR_OK, player_->SetLooping(true));
         EXPECT_NE(true, player_->IsLooping());
@@ -132,6 +136,7 @@ void PlayerUnitTest::GetSetParaFunTest()
     if (player_ != nullptr) {
         int32_t duration = 0;
         int32_t time = 0;
+        float playbackRate = 2.5f;
         PlaybackRateMode mode;
         std::vector<Format> videoTrack;
         std::vector<Format> audioTrack;
@@ -140,6 +145,7 @@ void PlayerUnitTest::GetSetParaFunTest()
         player_->GetCurrentTime(time);
         player_->GetDuration(duration);
         player_->SetPlaybackSpeed(SPEED_FORWARD_2_00_X);
+        player_->SetPlaybackRate(playbackRate);
         player_->GetPlaybackSpeed(mode);
         player_->SetLooping(true);
         player_->IsLooping();
@@ -384,6 +390,7 @@ HWTEST_F(PlayerUnitTest, Player_SetSource_003, TestSize.Level2)
     PlaybackRateMode mode;
     int32_t time = 0;
     int32_t duration = 0;
+    float playbackRate = 2.5f;
     std::vector<Format> videoTrack;
     std::vector<Format> audioTrack;
     int32_t ret = player_->SetSource(MEDIA_ROOT + "1kb.mp3");
@@ -406,6 +413,7 @@ HWTEST_F(PlayerUnitTest, Player_SetSource_003, TestSize.Level2)
     EXPECT_EQ(false, player_->IsLooping());
     EXPECT_NE(MSERR_OK, player_->SetVolume(1, 1));
     EXPECT_NE(MSERR_OK, player_->SetPlaybackSpeed(SPEED_FORWARD_2_00_X));
+    EXPECT_NE(MSERR_OK, player_->SetPlaybackRate(playbackRate));
     EXPECT_NE(MSERR_OK, player_->GetPlaybackSpeed(mode));
     EXPECT_NE(MSERR_OK, player_->GetCurrentTime(time));
     EXPECT_NE(MSERR_OK, player_->GetDuration(duration));
@@ -439,6 +447,7 @@ HWTEST_F(PlayerUnitTest, Player_SetSource_005, TestSize.Level3)
 {
     PlaybackRateMode mode;
     int32_t duration = 0;
+    float playbackRate = 2.5f;
     std::vector<Format> videoTrack;
     std::vector<Format> audioTrack;
     Format format;
@@ -459,6 +468,7 @@ HWTEST_F(PlayerUnitTest, Player_SetSource_005, TestSize.Level3)
     EXPECT_EQ(true, player_->IsLooping());
     EXPECT_EQ(MSERR_OK, player_->SetVolume(1, 1));
     EXPECT_NE(MSERR_OK, player_->SetPlaybackSpeed(SPEED_FORWARD_2_00_X));
+    EXPECT_NE(MSERR_OK, player_->SetPlaybackRate(playbackRate));
     EXPECT_EQ(MSERR_OK, player_->GetPlaybackSpeed(mode));
     EXPECT_EQ(SPEED_FORWARD_1_00_X, mode);
     EXPECT_NE(MSERR_OK, player_->GetDuration(duration));
@@ -778,6 +788,7 @@ HWTEST_F(PlayerUnitTest, Player_Prepare_002, TestSize.Level2)
 HWTEST_F(PlayerUnitTest, Player_Prepare_003, TestSize.Level2)
 {
     PlaybackRateMode rateMode;
+    float playbackRate = 2.5f;
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> renderSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, renderSurface);
@@ -787,6 +798,7 @@ HWTEST_F(PlayerUnitTest, Player_Prepare_003, TestSize.Level2)
     EXPECT_EQ(true, ret);
     EXPECT_EQ(MSERR_OK, player_->SetVolume(1, 1));
     EXPECT_NE(MSERR_OK, player_->SetPlaybackSpeed(SPEED_FORWARD_2_00_X));
+    EXPECT_NE(MSERR_OK, player_->SetPlaybackRate(playbackRate));
     EXPECT_EQ(MSERR_OK, player_->GetPlaybackSpeed(rateMode));
     EXPECT_NE(SPEED_FORWARD_2_00_X, rateMode);
     EXPECT_EQ(MSERR_OK, player_->Prepare());
@@ -803,6 +815,7 @@ HWTEST_F(PlayerUnitTest, Player_Prepare_003, TestSize.Level2)
 HWTEST_F(PlayerUnitTest, Player_Prepare_004, TestSize.Level2)
 {
     PlaybackRateMode mode;
+    float playbackRate = 2.5f;
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
@@ -811,6 +824,7 @@ HWTEST_F(PlayerUnitTest, Player_Prepare_004, TestSize.Level2)
     EXPECT_EQ(MSERR_OK, player_->SetLooping(true));
     EXPECT_EQ(MSERR_OK, player_->SetVolume(1, 1));
     EXPECT_EQ(MSERR_OK, player_->SetPlaybackSpeed(SPEED_FORWARD_2_00_X));
+    EXPECT_EQ(MSERR_OK, player_->SetPlaybackRate(playbackRate));
     EXPECT_EQ(MSERR_OK, player_->GetPlaybackSpeed(mode));
     EXPECT_EQ(mode, SPEED_FORWARD_2_00_X);
     EXPECT_EQ(MSERR_OK, player_->Stop());
@@ -887,6 +901,7 @@ HWTEST_F(PlayerUnitTest, Player_PrepareAsync_002, TestSize.Level2)
 HWTEST_F(PlayerUnitTest, Player_PrepareAsync_003, TestSize.Level2)
 {
     PlaybackRateMode mode;
+    float playbackRate = 2.5f;
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
@@ -895,6 +910,7 @@ HWTEST_F(PlayerUnitTest, Player_PrepareAsync_003, TestSize.Level2)
     EXPECT_EQ(true, player_->IsLooping());
     EXPECT_EQ(MSERR_OK, player_->SetVolume(1, 1));
     EXPECT_NE(MSERR_OK, player_->SetPlaybackSpeed(SPEED_FORWARD_2_00_X));
+    EXPECT_NE(MSERR_OK, player_->SetPlaybackRate(playbackRate));
     EXPECT_EQ(MSERR_OK, player_->GetPlaybackSpeed(mode));
     EXPECT_NE(SPEED_FORWARD_2_00_X, mode);
     EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
@@ -1775,6 +1791,57 @@ HWTEST_F(PlayerUnitTest, Player_SetPlaybackSpeed_002, TestSize.Level2)
 }
 
 /**
+ * @tc.name  : Test SetPlaybackRate API
+ * @tc.number: Player_SetPlaybackRate_001
+ * @tc.desc  : Test Player SetPlaybackRate
+ */
+HWTEST_F(PlayerUnitTest, Player_SetPlaybackRate_001, TestSize.Level0)
+{
+    float playbackRate = 2.5f;
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->SetPlaybackRate(playbackRate));
+}
+
+/**
+ * @tc.name  : Test SetPlaybackRate API
+ * @tc.number: Player_SetPlaybackRate_002
+ * @tc.desc  : Test Player SetPlaybackRate
+ */
+HWTEST_F(PlayerUnitTest, Player_SetPlaybackRate_002, TestSize.Level2)
+{
+    int32_t duration = 0;
+    float playbackRate1 = 2.5f;
+    float playbackRate2 = 1.25f;
+    float playbackRate3 = 1.0f;
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    EXPECT_NE(MSERR_OK, player_->SetPlaybackRate(playbackRate1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_NE(MSERR_OK, player_->SetPlaybackRate(playbackRate1));
+    EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
+    EXPECT_EQ(MSERR_OK, player_->SetPlaybackRate(playbackRate1));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->SetPlaybackRate(playbackRate1));
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+    EXPECT_EQ(MSERR_OK, player_->SetPlaybackRate(playbackRate2));
+    EXPECT_EQ(MSERR_OK, player_->GetDuration(duration));
+    EXPECT_EQ(MSERR_OK, player_->Seek(duration, SEEK_CLOSEST));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    sleep(PLAYING_TIME_2_SEC);
+    EXPECT_EQ(MSERR_OK, player_->SetPlaybackRate(playbackRate2));
+    EXPECT_EQ(MSERR_OK, player_->Stop());
+    EXPECT_NE(MSERR_OK, player_->SetPlaybackRate(playbackRate3));
+    EXPECT_EQ(MSERR_OK, player_->Reset());
+    EXPECT_NE(MSERR_OK, player_->SetPlaybackRate(playbackRate1));
+}
+
+/**
  * @tc.name  : Test SetLooping API
  * @tc.number: Player_SetLooping_001
  * @tc.desc  : Test Player SetLooping
@@ -2415,6 +2482,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_007, TestSize.Level0)
     ASSERT_NE(nullptr, videoSurface);
     std::vector<std::string> srcVec = {MEDIA_ROOT + "H264_MP3.mp4"};
     std::vector<PlaybackRateMode> speedMode = {SPEED_FORWARD_2_00_X, SPEED_FORWARD_1_25_X};
+    std::vector<float> speedRate = {2.0f, 1.5f};
     for (uint32_t i = 0; i < srcVec.size(); i++) {
         if (srcVec[i] == MEDIA_ROOT + "H264_MP3.mp4") {
             system("param set sys.media.player.resource.type NetWork");
@@ -2429,6 +2497,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_007, TestSize.Level0)
         system(str);
         system("hidumper -s 1909 -a \"-t 3\"");
         EXPECT_EQ(MSERR_OK, player_->SetPlaybackSpeed(speedMode[i]));
+        EXPECT_EQ(MSERR_OK, player_->SetPlaybackRate(speedRate[i]));
         EXPECT_EQ(MSERR_OK, player_->Reset());
         system("param set sys.media.player.resource.type Local");
     }
@@ -2443,6 +2512,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_008, TestSize.Level0)
 {
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
+    float playbackRate = 2.5f;
     std::vector<std::string> srcVec = {MEDIA_ROOT + "H264_MP3.mp4"};
     for (uint32_t i = 0; i < srcVec.size(); i++) {
         if (srcVec[i] == MEDIA_ROOT + "H264_MP3.mp4") {
@@ -2454,6 +2524,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_008, TestSize.Level0)
         EXPECT_EQ(MSERR_OK, player_->Play());
         EXPECT_EQ(MSERR_OK, player_->Pause());
         EXPECT_EQ(MSERR_OK, player_->SetPlaybackSpeed(SPEED_FORWARD_2_00_X));
+        EXPECT_EQ(MSERR_OK, player_->SetPlaybackRate(playbackRate));
         EXPECT_EQ(MSERR_OK, player_->SetLooping(true));
         EXPECT_EQ(MSERR_OK, player_->SetVolume(0.5, 0.5));
         char str[100]; // 100: str len

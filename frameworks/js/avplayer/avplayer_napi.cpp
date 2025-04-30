@@ -98,6 +98,7 @@ napi_value AVPlayerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("off", JsClearOnCallback),
         DECLARE_NAPI_FUNCTION("setVolume", JsSetVolume),
         DECLARE_NAPI_FUNCTION("setSpeed", JsSetSpeed),
+        DECLARE_NAPI_FUNCTION("setPlaybackRate", JsSetPlaybackRate),
         DECLARE_NAPI_FUNCTION("setMediaSource", JsSetMediaSource),
         DECLARE_NAPI_FUNCTION("setBitrate", JsSelectBitrate),
         DECLARE_NAPI_FUNCTION("getTrackDescription", JsGetTrackDescription),
@@ -957,6 +958,56 @@ napi_value AVPlayerNapi::JsSetSpeed(napi_env env, napi_callback_info info)
     return result;
 }
 
+napi_value AVPlayerNapi::JsSetPlaybackRate(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVPlayerNapi::setRate");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    MEDIA_LOGI("JsSetRate In");
+
+    napi_value args[1] = { nullptr };
+    size_t argCount = 1;
+    AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
+
+    if (jsPlayer->IsLiveSource()) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "The stream is live stream, not support rate");
+        return result;
+    }
+
+    napi_valuetype valueType = napi_undefined;
+    if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE, "rate is not number");
+        return result;
+    }
+
+    double rate = 1.0f;
+    napi_status status = napi_get_value_double(env, args[0], &rate);
+    if (status != napi_ok || !jsPlayer->IsRateValid(rate)) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE,
+            "invalid parameters, please check the rate");
+        return result;
+    }
+
+    if (!jsPlayer->IsControllable()) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "current state is not prepared/playing/paused/completed, unsupport rate operation");
+        return result;
+    }
+
+    auto task = std::make_shared<TaskHandler<void>>([jsPlayer, rate]() {
+        if (jsPlayer->player_ != nullptr) {
+            (void)jsPlayer->player_->SetPlaybackRate(static_cast<float>(rate));
+        }
+    });
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " JsSetRate EnqueueTask In", FAKE_POINTER(jsPlayer));
+    if (jsPlayer->player_ != nullptr) {
+        (void)jsPlayer->taskQue_->EnqueueTask(task);
+    }
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " JsSetRate Out", FAKE_POINTER(jsPlayer));
+    return result;
+}
+
 napi_value AVPlayerNapi::JsSetVolume(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("AVPlayerNapi::setVolume");
@@ -1447,6 +1498,17 @@ bool AVPlayerNapi::IsLivingMaxDelayTimeValid(const AVPlayStrategyTmp &strategyTm
         strategyTmp.thresholdForAutoQuickPlay < strategyTmp.preferredBufferDurationForPlaying) {
             return false;
         }
+    return true;
+}
+
+bool AVPlayerNapi::IsRateValid(float rate)
+{
+    const double minRate = 0.125f;
+    const double maxRate = 4.0f;
+    const double eps = 1e-15;
+    if ((rate < minRate - eps) || (rate > maxRate + eps)) {
+        return false;
+    }
     return true;
 }
 

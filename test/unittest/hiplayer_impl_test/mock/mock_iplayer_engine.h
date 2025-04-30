@@ -66,6 +66,7 @@ public:
     MOCK_METHOD(int32_t, GetVideoHeight, (), ());
     MOCK_METHOD(int32_t, GetDuration, (int32_t &duration), ());
     MOCK_METHOD(int32_t, SetPlaybackSpeed, (PlaybackRateMode mode), ());
+    MOCK_METHOD(int32_t, SetPlaybackRate, (float rate), ());
     MOCK_METHOD(int32_t, GetPlaybackSpeed, (PlaybackRateMode &mode), ());
     MOCK_METHOD(int32_t, SetMediaSource, (const std::shared_ptr<AVMediaSource> &mediaSource,
         AVPlayStrategy strategy), ());

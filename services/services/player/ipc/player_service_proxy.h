@@ -40,6 +40,7 @@ public:
     int32_t GetAudioTrackInfo(std::vector<Format> &audioTrack) override;
     int32_t AddSubSource(const std::string &url) override;
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
+    int32_t SetPlaybackRate(float rate) override;
     int32_t SetSourceLoader(const sptr<IRemoteObject> &object) override;
     int32_t SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, AVPlayStrategy strategy) override;
     int32_t AddSubSource(int32_t fd, int64_t offset, int64_t size) override;
