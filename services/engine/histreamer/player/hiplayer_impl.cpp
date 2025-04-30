@@ -45,6 +45,7 @@ const float MAX_MEDIA_VOLUME = 1.0f; // standard interface volume is between 0 t
 const int32_t AUDIO_SINK_MAX_LATENCY = 400; // audio sink write latency ms
 const int32_t FRAME_RATE_UNIT_MULTIPLE = 100; // the unit of frame rate is frames per 100s
 const int32_t PLAYING_SEEK_WAIT_TIME = 200; // wait up to 200 ms for new frame after seek in playing.
+const int32_t FLV_LIVE_PREPARE_WAIT_TIME = 30000; // wait max 30s for flv live stream with play water line.
 const int64_t PLAY_RANGE_DEFAULT_VALUE = -1; // play range default value.
 const int64_t SAMPLE_AMPLITUDE_INTERVAL = 100;
 const int64_t REPORT_PROGRESS_INTERVAL = 100; // progress interval is 100ms
@@ -790,7 +791,7 @@ void HiPlayerImpl::SetInterruptState(bool isInterruptNeeded)
         stopWaitingDrmConfig_ = true;
         drmConfigCond_.notify_all();
     }
-    if (isFlvLive_ && bufferDurationForPlaying_) {
+    if (isFlvLive_ && bufferDurationForPlaying_ > 0) {
         flvLiveCond_.notify_all();
     }
 }
@@ -2311,24 +2312,6 @@ void HiPlayerImpl::OnEventSub(const Event &event)
             NotifyAudioServiceDied();
             break;
         }
-        case EventType::BUFFERING_END : {
-            if (!isBufferingStartNotified_.load() || isSeekClosest_.load()) {
-                MEDIA_LOGI_LIMIT(BUFFERING_LOG_FREQUENCY, "BUFFERING_END BLOCKED");
-                break;
-            }
-            MEDIA_LOG_I_SHORT("BUFFERING_END PLAYING");
-            NotifyBufferingEnd(AnyCast<int32_t>(event.param));
-            break;
-        }
-        case EventType::BUFFERING_START : {
-            if (isBufferingStartNotified_.load()) {
-                MEDIA_LOGI_LIMIT(BUFFERING_LOG_FREQUENCY, "BUFFERING_START BLOCKED");
-                break;
-            }
-            MEDIA_LOG_I_SHORT("BUFFERING_START PAUSE");
-            NotifyBufferingStart(AnyCast<int32_t>(event.param));
-            break;
-        }
         case EventType::EVENT_SOURCE_BITRATE_START: {
             HandleBitrateStartEvent(event);
             break;
@@ -2369,6 +2352,29 @@ void HiPlayerImpl::OnEventSubTrackChange(const Event &event)
         }
         case EventType::EVENT_SUPER_RESOLUTION_CHANGED: {
             NotifySuperResolutionChanged(event);
+            break;
+        }
+        case EventType::BUFFERING_END : {
+            if (isFlvLive_) {
+                std::unique_lock<std::mutex> lock(flvLiveMutex_);
+                isBufferingEnd_ = true;
+                flvLiveCond_notify_all();
+            }
+            if (!isBufferingStartNotified_.load() || isSeekClosest_.load()) {
+                MEDIA_LOGI_LIMIT(BUFFERING_LOG_FREQUENCY, "BUFFERING_END BLOCKED");
+                break;
+            }
+            MEDIA_LOG_I_SHORT("BUFFERING_END PLAYING");
+            NotifyBufferingEnd(AnyCast<int32_t>(event.param));
+            break;
+        }
+        case EventType::BUFFERING_START : {
+            if (isBufferingStartNotified_.load()) {
+                MEDIA_LOGI_LIMIT(BUFFERING_LOG_FREQUENCY, "BUFFERING_START BLOCKED");
+                break;
+            }
+            MEDIA_LOG_I_SHORT("BUFFERING_START PAUSE");
+            NotifyBufferingStart(AnyCast<int32_t>(event.param));
             break;
         }
         default:
@@ -2567,11 +2573,6 @@ void HiPlayerImpl::NotifyBufferingEnd(int32_t param)
     isBufferingStartNotified_.store(false);
     (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_BUFFERING_END), 1);
     callbackLooper_.OnInfo(INFO_TYPE_BUFFERING_UPDATE, param, format);
-    {
-        std::unique_lock<std::mutex> lock(flvLiveMutex_);
-        isBufferingEnd_ = true;
-    }
-    flvLiveCond_.notify_all();
 }
 
 void HiPlayerImpl::NotifyCachedDuration(int32_t param)
@@ -3616,9 +3617,12 @@ void HiPlayerImpl::SetFlvObs()
     MEDIA_LOG_I("SetFlvObs");
     UpdateFlvLiveParams();
     liveController_.StartWithPlayerEngineObs(playerEngineObs_);
+
+    // flv live with play water line max wait 30s.
     FALSE_RETURN_MSG(bufferDurationForPlaying_ > 0, "Flv live stream and no duration water line");
     std::unique_lock<std::mutex> lock(flvLiveMutex_);
-    flvLiveCond_.wait(lock, [this] { return isBufferingEnd_.load() || isInterruptNeeded_.load(); });
+    flvLiveCond_.wait_for(lock, std::chrono::milliseconds(FLV_LIVE_PREPARE_WAIT_TIME),
+        [this] { return isBufferingEnd_.load() || isInterruptNeeded_.load(); });
 }
 
 void HiPlayerImpl::StartFlvCheckLiveDelayTime()
