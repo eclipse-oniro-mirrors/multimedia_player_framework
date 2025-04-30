@@ -2358,7 +2358,7 @@ void HiPlayerImpl::OnEventSubTrackChange(const Event &event)
             if (isFlvLive_) {
                 std::unique_lock<std::mutex> lock(flvLiveMutex_);
                 isBufferingEnd_ = true;
-                flvLiveCond_notify_all();
+                flvLiveCond.notify_all();
             }
             if (!isBufferingStartNotified_.load() || isSeekClosest_.load()) {
                 MEDIA_LOGI_LIMIT(BUFFERING_LOG_FREQUENCY, "BUFFERING_END BLOCKED");
