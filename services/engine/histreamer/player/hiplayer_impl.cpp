@@ -630,6 +630,7 @@ int32_t HiPlayerImpl::PrepareAsync()
     if (ret != Status::OK || isInterruptNeeded_.load()) {
         return HandleErrorRet(Status::ERROR_UNSUPPORTED_FORMAT, "PrepareAsync error: init error");
     }
+    isBufferingEnd_ = false;
     DoSetMediaSource(ret);
     if (ret != Status::OK && !isInterruptNeeded_.load()) {
         OnEvent({"engine", EventType::EVENT_ERROR, MSERR_UNSUPPORT_CONTAINER_TYPE});
@@ -2563,6 +2564,11 @@ void HiPlayerImpl::NotifyBufferingEnd(int32_t param)
     isBufferingStartNotified_.store(false);
     (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_BUFFERING_END), 1);
     callbackLooper_.OnInfo(INFO_TYPE_BUFFERING_UPDATE, param, format);
+    {
+        std::unique_lock<std::mutex> lock(flvLiveMutex_);
+        isBufferingEnd_ = true;
+    }
+    flvLiveCond_.notify_all();
 }
 
 void HiPlayerImpl::NotifyCachedDuration(int32_t param)
@@ -3607,6 +3613,9 @@ void HiPlayerImpl::SetFlvObs()
     MEDIA_LOG_I("SetFlvObs");
     UpdateFlvLiveParams();
     liveController_.StartWithPlayerEngineObs(playerEngineObs_);
+    FALSE_RETURN_MSG(bufferDurationForPlaying_ > 0, "Flv live stream and no duration water line");
+    std::unique_lock<std::mutex> lock(flvLiveMutex_);
+    flvLiveCond_.wait(lock, [this] { return isBufferingEnd_.load() || isInterruptNeeded_.load(); });
 }
 
 void HiPlayerImpl::StartFlvCheckLiveDelayTime()
