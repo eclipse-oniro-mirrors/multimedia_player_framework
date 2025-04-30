@@ -1737,6 +1737,9 @@ int32_t HiPlayerImpl::SetPlaybackSpeed(PlaybackRateMode mode)
         MEDIA_LOG_E("SetPlaybackSpeed audioSink set speed  error");
         return MSERR_UNKNOWN;
     }
+    if (videoDecoder_ != nullptr) {
+        res = videoDecoder_->SetSpeed(speed);
+    }
     if (syncManager_ != nullptr) {
         res = syncManager_->SetPlaybackRate(speed);
     }
