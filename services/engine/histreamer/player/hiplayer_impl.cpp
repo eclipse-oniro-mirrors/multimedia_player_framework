@@ -790,6 +790,9 @@ void HiPlayerImpl::SetInterruptState(bool isInterruptNeeded)
         stopWaitingDrmConfig_ = true;
         drmConfigCond_.notify_all();
     }
+    if (isFlvLive_ && bufferDurationForPlaying_) {
+        flvLiveCond_.notify_all();
+    }
 }
 
 int32_t HiPlayerImpl::SelectBitRate(uint32_t bitRate, bool isAutoSelect)
