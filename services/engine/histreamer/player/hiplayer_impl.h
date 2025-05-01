@@ -343,6 +343,7 @@ private:
     std::atomic<int32_t> videoHeight_{0};
     std::atomic<bool> needSwapWH_{false};
     std::atomic<bool> isInterruptNeeded_{false};
+    std::atomic<bool> isBufferingEnd_{false};
 
     std::shared_ptr<Meta> audioRenderInfo_{nullptr};
     std::shared_ptr<Meta> audioInterruptMode_{nullptr};
@@ -355,7 +356,9 @@ private:
     std::shared_ptr<SeekAgent> seekAgent_;
 
     std::mutex drmMutex_;
+    std::mutex flvLiveMutex_;
     std::condition_variable drmConfigCond_;
+    std::condition_variable flvLiveCond_;
     bool isDrmProtected_ = false;
     bool isDrmPrepared_ = false;
     bool stopWaitingDrmConfig_ = false;
