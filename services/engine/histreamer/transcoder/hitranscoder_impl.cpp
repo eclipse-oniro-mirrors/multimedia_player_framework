@@ -24,7 +24,6 @@
 #include "meta/any.h"
 #include "common/log.h"
 #include "avcodec_info.h"
-#include "sink/audio_sampleformat.h"
 #include "osal/task/pipeline_threadpool.h"
 
 namespace {
