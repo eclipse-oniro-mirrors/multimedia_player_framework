@@ -81,9 +81,6 @@ static const int32_t MICROPHONE_STATE_COUNT = 2;
     static const int32_t NOTIFICATION_MAX_TRY_NUM = 3;
 #endif
 static const int32_t MOUSE_DEVICE = 5;
-#ifdef SUPPORT_CALL
-static const int32_t STOPPED_BY_CALL_API_VERSION_ISOLATION = 16;
-#endif
 
 static const auto NOTIFICATION_SUBSCRIBER = NotificationSubscriber();
 static constexpr int32_t AUDIO_CHANGE_TIME = 200000; // 200 ms
@@ -1953,10 +1950,7 @@ int32_t ScreenCaptureServer::RegisterServerCallbacks()
     uint64_t tokenId = IPCSkeleton::GetCallingFullTokenID();
     isCalledBySystemApp_ = OHOS::Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(tokenId);
     MEDIA_LOGI("ScreenCaptureServer::RegisterServerCallbacks isCalledBySystemApp: %{public}d", isCalledBySystemApp_);
-    apiVersion_ = GetApiInfo(appInfo_.appUid);
-    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " API Version is %{public}d", FAKE_POINTER(this),
-        apiVersion_);
-    if (apiVersion_ < STOPPED_BY_CALL_API_VERSION_ISOLATION && InCallObserver::GetInstance().IsInCall(true) &&
+    if (!captureConfig_.strategy.keepCaptureDuringCall && InCallObserver::GetInstance().IsInCall(true) &&
         !IsTelInCallSkipList()) {
         MEDIA_LOGI("ScreenCaptureServer Start InCall Abort");
         NotifyStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_CALL);
@@ -2611,7 +2605,7 @@ int32_t ScreenCaptureServer::MakeVirtualScreenMirror()
     CHECK_AND_RETURN_RET_LOG(defaultDisplay != nullptr, MSERR_UNKNOWN,
         "MakeVirtualScreenMirror GetDefaultDisplaySync failed");
 #ifdef PC_STANDARD
-    if (IsHopper()) {
+if (IsHopper() && captureConfig_.strategy.enableDeviceLevelCapture == false) {
         if (captureConfig_.captureMode == CAPTURE_SPECIFIED_WINDOW) {
             return MakeVirtualScreenMirrorForWindowForHopper(defaultDisplay, mirrorIds);
         }
@@ -3064,9 +3058,7 @@ int32_t ScreenCaptureServer::OnVoIPStatusChanged(bool isInVoIPCall)
 #ifdef SUPPORT_CALL
 int32_t ScreenCaptureServer::TelCallStateUpdated(bool isInTelCall)
 {
-    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " API Version is %{public}d", FAKE_POINTER(this),
-        apiVersion_);
-    if (apiVersion_ < STOPPED_BY_CALL_API_VERSION_ISOLATION && isInTelCall) {
+    if (!captureConfig_.strategy.keepCaptureDuringCall && isInTelCall) {
         StopScreenCaptureByEvent(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_CALL);
         Release();
         return MSERR_OK;

@@ -5,6 +5,7 @@
         "format": "cpp",
         "regex": "cpp",
         "thread": "cpp",
-        "vector": "cpp"
+        "vector": "cpp",
+        "memory": "cpp"
     }
 }
