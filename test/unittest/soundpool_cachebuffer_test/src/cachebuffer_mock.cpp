@@ -42,3 +42,15 @@ int32_t CacheBufferMock::CreateAudioRenderer(const int32_t streamID,
     UNITTEST_CHECK_AND_RETURN_RET_LOG(cacheBuffer_ != nullptr, MSERR_INVALID_OPERATION, "cacheBuffer_ == nullptr");
     return cacheBuffer_->CreateAudioRenderer(streamID, audioRendererInfo, playParams) == nullptr;
 }
+
+size_t CacheBufferMock::GetFileSize(const std::string& fileName)
+{
+    size_t fileSize = 0;
+    if (!fileName.empty()) {
+        struct stat fileStatus {};
+        if (stat(fileName.c_str(), &fileStatus) == 0) {
+            fileSize = static_cast<size_t>(fileStatus.st_size);
+        }
+    }
+    return fileSize;
+}

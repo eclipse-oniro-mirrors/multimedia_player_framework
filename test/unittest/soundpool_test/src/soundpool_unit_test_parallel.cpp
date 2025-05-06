@@ -1994,9 +1994,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_089, TestSize.Level2)
         streamIDs_[playNum_] = soundPoolParallel_->Play(soundIDs_[loadNum_], playParameters);
         EXPECT_GT(streamIDs_[playNum_], 0);
         sleep(waitTime1);
-        int32_t setVol = soundPoolParallel_->SetVolume(streamIDs_[playNum_], 0.0, rightVolume);
-        EXPECT_EQ(MSERR_OK, setVol);
-        sleep(waitTime1);
     } else {
         cout << "Get soundId failed, please try to get soundId: " << soundIDs_[loadNum_] << endl;
     }

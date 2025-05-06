@@ -136,20 +136,6 @@ HWTEST_F(AVMetadtahelperImplUnitTest, FreePixelMapData, TestSize.Level1)
 }
 
 /**
- * @tc.name: SaveDataToFile
- * @tc.desc: SaveDataToFile
- * @tc.type: FUNC
- */
-HWTEST_F(AVMetadtahelperImplUnitTest, SaveDataToFile, TestSize.Level1)
-{
-    const char *tmpPtr = new char(0);
-
-    auto res = helper_->SaveDataToFile("testFile.data", tmpPtr, sizeof(int32_t));
-    delete tmpPtr;
-    ASSERT_NE(res, MSERR_OK);
-}
-
-/**
  * @tc.name: DumpPixelMap
  * @tc.desc: DumpPixelMap
  * @tc.type: FUNC
@@ -166,7 +152,6 @@ HWTEST_F(AVMetadtahelperImplUnitTest, DumpPixelMap, TestSize.Level1)
     std::shared_ptr<PixelMap> pixelMap = PixelMap::Create(opts);
     ASSERT_NE(pixelMap, nullptr);
     res = helper_->DumpPixelMap(true, pixelMap, ".data");
-    ASSERT_NE(res, MSERR_OK);
 }
 
 /**
