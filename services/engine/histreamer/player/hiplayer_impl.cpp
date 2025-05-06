@@ -2311,11 +2311,11 @@ void HiPlayerImpl::OnEventSubTrackChange(const Event &event)
             break;
         }
         case EventType::BUFFERING_END : {
-            if (isFlvLive_) {
+            {
                 std::unique_lock<std::mutex> lock(flvLiveMutex_);
                 isBufferingEnd_ = true;
-                flvLiveCond_.notify_all();
             }
+            flvLiveCond_.notify_all();
             if (!isBufferingStartNotified_.load() || isSeekClosest_.load()) {
                 MEDIA_LOGI_LIMIT(BUFFERING_LOG_FREQUENCY, "BUFFERING_END BLOCKED");
                 break;
@@ -3562,10 +3562,12 @@ void HiPlayerImpl::SetFlvObs()
     liveController_.StartWithPlayerEngineObs(playerEngineObs_);
 
     // flv live with play water line max wait 30s.
-    FALSE_RETURN_MSG(bufferDurationForPlaying_ > 0, "Flv live stream and no duration water line");
+    FALSE_RETURN_MSG(isSetBufferDurationForPlaying_, "Flv live stream and no duration water line");
+    MEDIA_LOG_I("Wait max 30s for flv live, bufferDurationForPlaying_ %{public}f", bufferDurationForPlaying_);
     std::unique_lock<std::mutex> lock(flvLiveMutex_);
     flvLiveCond_.wait_for(lock, std::chrono::milliseconds(FLV_LIVE_PREPARE_WAIT_TIME),
         [this] { return isBufferingEnd_.load() || isInterruptNeeded_.load(); });
+    MEDIA_LOG_I("Wait for flv live end");
 }
 
 void HiPlayerImpl::StartFlvCheckLiveDelayTime()
