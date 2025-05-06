@@ -319,7 +319,7 @@ void RingtonePlayerImpl::InitPlayer(std::string &audioUri, ToneHapticsSettings &
     int32_t result = player_->Prepare();
     if (audioUri == NO_RING_SOUND) {
         if (!configuredUri_.empty() && configuredUri_ == audioUri) {
-            MEDIA_LOGI("The right ring tone uri has been registered. Return directly.");
+            MEDIA_LOGI("The right ringtone uri has been registered. Return directly.");
             ringtoneState_ = RingtoneState::STATE_PREPARED;
         }
         configuredUri_ = NO_RING_SOUND;
@@ -364,9 +364,9 @@ int32_t RingtonePlayerImpl::Configure(const float &volume, const bool &loop)
     return MSERR_OK;
 }
 
-int32_t RingtonePlayerImpl::Start()
+int32_t RingtonePlayerImpl::Start(const HapticStartupMode startupMode)
 {
-    MEDIA_LOGI("RingtonePlayerImpl::Start");
+    MEDIA_LOGI("RingtonePlayerImpl::Start with startupMode %{public}d", static_cast<int32_t>(startupMode));
     std::lock_guard<std::mutex> lock(playerMutex_);
     CHECK_AND_RETURN_RET_LOG(ringtoneState_ != STATE_RUNNING, MSERR_INVALID_OPERATION, "ringtone player is running");
     CHECK_AND_RETURN_RET_LOG(player_ != nullptr && ringtoneState_ != STATE_INVALID, MSERR_INVALID_VAL, "no player_");
@@ -376,35 +376,26 @@ int32_t RingtonePlayerImpl::Start()
         return ERRCODE_IOERROR;
     }
 
-    MEDIA_LOGI("RingtonePlayerImpl::specifyRingtoneUri_  %{public}s", specifyRingtoneUri_.c_str());
+    MEDIA_LOGI("RingtonePlayerImpl::specifyRingtoneUri_ %{public}s", specifyRingtoneUri_.c_str());
     std::string ringtoneUri = "";
     if (specifyRingtoneUri_ == "") {
         ringtoneUri = systemSoundMgr_.GetRingtoneUri(databaseTool_, type_);
         MEDIA_LOGI("RingtonePlayerImpl::ringtoneUri: %{public}s", ringtoneUri.c_str());
-    //The current ringtone is no ringtone
     } else if (specifyRingtoneUri_ == "-1") {
+        // The current ringtone is no ringtone.
         ringtoneUri = NO_RING_SOUND;
         MEDIA_LOGI("RingtonePlayerImpl::ringtoneUri: %{public}s", ringtoneUri.c_str());
     } else {
         ringtoneUri = specifyRingtoneUri_;
     }
     if (ringtoneUri == NO_RING_SOUND) {
-        AudioHapticPlayerOptions options = {true, true};
-        ToneHapticsSettings settings = GetHapticSettings(ringtoneUri, options.muteHaptics);
-        InitPlayer(ringtoneUri, settings, options);
-        std::string hapticUri = systemSoundMgr_.OpenHapticsUri(databaseTool_, settings.hapticsUri);
-        rendererParams_.sampleFormat = AudioStandard::SAMPLE_S24LE;
-        rendererParams_.channelCount = AudioStandard::STEREO;
-        audioRenderer_ = AudioStandard::AudioRenderer::Create(AudioStandard::AudioStreamType::STREAM_VOICE_RING);
-        CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr, MSERR_INVALID_VAL, "no audioRenderer");
-        int32_t ret = audioRenderer_->SetParams(rendererParams_);
-        bool isStarted = audioRenderer_->Start();
-        ringtoneState_ = isStarted ? STATE_RUNNING : ringtoneState_;
-        MEDIA_LOGI("isStarted : %{public}d, ret: %{public}d, ", isStarted, ret);
-        return SystemSoundVibrator::StartVibratorForRingtone(hapticUri);
+        return StartForNoRing(startupMode);
     }
     AudioHapticPlayerOptions options = {false, false};
     ToneHapticsSettings settings = GetHapticSettings(ringtoneUri, options.muteHaptics);
+    if (startupMode == HapticStartupMode::FAST && NeedToVibrate(settings)) {
+        (void)SystemSoundVibrator::StartVibratorForFastMode();
+    }
     if (ringtoneUri != configuredUri_ || settings.hapticsUri != configuredHaptcisSettings_.hapticsUri ||
         settings.mode != configuredHaptcisSettings_.mode) {
         MEDIA_LOGI("Ringtone uri changed. Reload player");
@@ -416,6 +407,58 @@ int32_t RingtonePlayerImpl::Start()
     ringtoneState_ = STATE_RUNNING;
 
     return MSERR_OK;
+}
+
+int32_t RingtonePlayerImpl::StartForNoRing(const HapticStartupMode startupMode)
+{
+    AudioHapticPlayerOptions options = {true, true};
+    std::string ringtoneUri = NO_RING_SOUND;
+    ToneHapticsSettings settings = GetHapticSettings(ringtoneUri, options.muteHaptics);
+    if (startupMode == HapticStartupMode::FAST && NeedToVibrate(settings)) {
+        (void)SystemSoundVibrator::StartVibratorForFastMode();
+    }
+    InitPlayer(ringtoneUri, settings, options);
+    std::string hapticUri = systemSoundMgr_.OpenHapticsUri(databaseTool_, settings.hapticsUri);
+    int32_t result = MSERR_OK; // if no need to start vibrator, return MSERR_OK.
+    if (NeedToVibrate(settings)) {
+        result = SystemSoundVibrator::StartVibratorForRingtone(hapticUri);
+    }
+
+    // Start an empty audio stream for NoRing.
+    rendererParams_.sampleFormat = AudioStandard::SAMPLE_S24LE;
+    rendererParams_.channelCount = AudioStandard::STEREO;
+    audioRenderer_ = AudioStandard::AudioRenderer::Create(AudioStandard::AudioStreamType::STREAM_VOICE_RING);
+    CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr, MSERR_INVALID_VAL, "no audioRenderer");
+    int32_t audioRet = audioRenderer_->SetParams(rendererParams_);
+    bool isStarted = audioRenderer_->Start();
+    ringtoneState_ = isStarted ? STATE_RUNNING : ringtoneState_;
+    MEDIA_LOGI("isStarted : %{public}d, ret: %{public}d, ", isStarted, audioRet);
+
+    return result;
+}
+
+bool RingtonePlayerImpl::NeedToVibrate(const ToneHapticsSettings &settings)
+{
+    if (settings.mode == NONE || settings.hapticsUri.empty()) {
+        MEDIA_LOGI("settings.mode is NONE or hapticsUri is empty!");
+        return false;
+    }
+
+    AudioStandard::AudioRingerMode ringerMode = systemSoundMgr_.GetRingerMode();
+    if (ringerMode == AudioStandard::AudioRingerMode::RINGER_MODE_SILENT) {
+        MEDIA_LOGI("The ringer mode is silent!");
+        return false;
+    }
+    if (ringerMode == AudioStandard::AudioRingerMode::RINGER_MODE_NORMAL) {
+        bool hapticsSwitchStatus = systemSoundMgr_.CheckVibrateSwitchStatus();
+        if (!hapticsSwitchStatus) {
+            MEDIA_LOGI("The hapticsSwitchStatus is false!");
+            return false;
+        }
+        return true;
+    }
+
+    return true;
 }
 
 int32_t RingtonePlayerImpl::Stop()

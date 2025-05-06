@@ -34,6 +34,7 @@ public:
     static int32_t StartVibrator(VibrationType type);
     static int32_t StartVibratorForSystemTone(const std::string &hapticUri);
     static int32_t StartVibratorForRingtone(const std::string &hapticUri);
+    static int32_t StartVibratorForFastMode();
     static int32_t StopVibrator();
     static int32_t GetVibratorDuration(const std::string &hapticUri);
 

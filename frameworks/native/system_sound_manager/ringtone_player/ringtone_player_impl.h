@@ -44,7 +44,7 @@ public:
     // RingtonePlayer override
     RingtoneState GetRingtoneState() override;
     int32_t Configure(const float &volume, const bool &loop) override;
-    int32_t Start() override;
+    int32_t Start(const HapticStartupMode startupMode = HapticStartupMode::DEFAULT) override;
     int32_t Stop() override;
     int32_t Release() override;
     int32_t GetAudioRendererInfo(AudioStandard::AudioRendererInfo &rendererInfo) const override;
@@ -54,6 +54,8 @@ public:
 
 private:
     void InitPlayer(std::string &audioUri, ToneHapticsSettings &settings, AudioHapticPlayerOptions options);
+    bool NeedToVibrate(const ToneHapticsSettings &settings);
+    int32_t StartForNoRing(const HapticStartupMode startupMode = HapticStartupMode::DEFAULT);
     std::string GetNewHapticUriForAudioUri(const std::string &audioUri, const std::string &ringtonePath,
         const std::string& hapticsPath);
     std::string GetNewHapticUriForAudioUri(const std::string &audioUri);
