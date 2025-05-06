@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Huawei Device Co., Ltd.
+ * Copyright (C) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -242,7 +242,7 @@ int32_t TransCoderServer::SetInputFile(int32_t fd, int64_t offset, int64_t size)
     config_.srcFdSize = size;
     uriHelper_ = std::make_unique<UriHelper>(fd, offset, size);
     CHECK_AND_RETURN_RET_LOG(uriHelper_->AccessCheck(UriHelper::URI_READ),
-        MSERR_INVALID_VAL, "Failed to read the fd");
+        MSERR_FILE_ACCESS_FAILED, "Failed to read the fd");
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return transCoderEngine_->SetInputFile(uriHelper_->FormattedUri());
     });

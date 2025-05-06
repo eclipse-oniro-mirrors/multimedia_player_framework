@@ -89,6 +89,8 @@ const std::map<MediaServiceErrCode, std::string> MSERRCODE_INFOS = {
     {MSERR_SEEK_CONTINUOUS_UNSUPPORTED, "seek continonous is unsupported for this source"},
     {MSERR_SUPER_RESOLUTION_UNSUPPORTED, "super resolution not supported"},
     {MSERR_SUPER_RESOLUTION_NOT_ENABLED, "super resolution not enabled"},
+    {MSERR_GET_INPUT_SURFACE_FAILED, "video encoder or resize get input surface failed"},
+    {MSERR_SET_OUTPUT_SURFACE_FAILED, "video decoder or resize set output surface failed"},
 };
 
 const std::map<MediaServiceErrCode, MediaServiceExtErrCode> MSERRCODE_TO_EXTERRORCODE = {
@@ -148,6 +150,8 @@ const std::map<MediaServiceErrCode, MediaServiceExtErrCode> MSERRCODE_TO_EXTERRO
     {MSERR_IO_UNSUPPORTTED_REQUEST,             MSERR_EXT_IO},
     {MSERR_SUPER_RESOLUTION_UNSUPPORTED,        MSERR_EXT_UNSUPPORT},
     {MSERR_SUPER_RESOLUTION_NOT_ENABLED,        MSERR_EXT_UNKNOWN},
+    {MSERR_GET_INPUT_SURFACE_FAILED,            MSERR_EXT_UNKNOWN},
+    {MSERR_SET_OUTPUT_SURFACE_FAILED,           MSERR_EXT_UNKNOWN},
 };
 
 const std::map<MediaServiceExtErrCode, std::string> MSEXTERRCODE_INFOS = {
@@ -230,6 +234,8 @@ const std::map<MediaServiceErrCode, MediaServiceExtErrCodeAPI9> MSERRCODE_TO_EXT
     {MSERR_SEEK_CONTINUOUS_UNSUPPORTED,         MSERR_EXT_API16_SEEK_CONTINUOUS_UNSUPPORTED},
     {MSERR_SUPER_RESOLUTION_UNSUPPORTED,        MSERR_EXT_API16_SUPER_RESOLUTION_UNSUPPORTED},
     {MSERR_SUPER_RESOLUTION_NOT_ENABLED,        MSERR_EXT_API16_SUPER_RESOLUTION_NOT_ENABLED},
+    {MSERR_GET_INPUT_SURFACE_FAILED,            MSERR_EXT_API9_IO},
+    {MSERR_SET_OUTPUT_SURFACE_FAILED,           MSERR_EXT_API9_IO},
 };
 
 const std::map<MediaServiceExtErrCodeAPI9, std::string> MSEXTERRCODE_API9_INFOS = {
