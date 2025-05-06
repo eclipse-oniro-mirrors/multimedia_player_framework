@@ -2605,7 +2605,7 @@ int32_t ScreenCaptureServer::MakeVirtualScreenMirror()
     CHECK_AND_RETURN_RET_LOG(defaultDisplay != nullptr, MSERR_UNKNOWN,
         "MakeVirtualScreenMirror GetDefaultDisplaySync failed");
 #ifdef PC_STANDARD
-if (IsHopper() && captureConfig_.strategy.enableDeviceLevelCapture == false) {
+    if (IsHopper() && captureConfig_.strategy.enableDeviceLevelCapture == false) {
         if (captureConfig_.captureMode == CAPTURE_SPECIFIED_WINDOW) {
             return MakeVirtualScreenMirrorForWindowForHopper(defaultDisplay, mirrorIds);
         }
