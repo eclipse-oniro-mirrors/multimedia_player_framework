@@ -37,6 +37,7 @@ private:
     static void Destructor(napi_env env, void *nativeObject, void *finalize);
     static napi_value JsCreateAVImageGenerator(napi_env env, napi_callback_info info);
     static napi_value JsFetchFrameAtTime(napi_env env, napi_callback_info info);
+    static napi_value JsFetchScaledFrameAtTime(napi_env env, napi_callback_info info);
     static napi_value JsRelease(napi_env env, napi_callback_info info);
     /**
      * url: string
@@ -55,6 +56,8 @@ private:
     static void CreatePixelMapComplete(napi_env env, napi_status status, void *data);
     static void CommonCallbackRoutine(napi_env env, AVImageGeneratorAsyncContext* &asyncContext,
                                       const napi_value &valueParam);
+    static napi_value VerifyTheParameters(napi_env env, napi_callback_info info,
+                                          std::unique_ptr<AVImageGeneratorAsyncContext> &promiseCtx);
 
     static bool CheckSystemApp(napi_env env);
 
@@ -71,6 +74,8 @@ private:
 
     int32_t GetFetchFrameArgs(std::unique_ptr<AVImageGeneratorAsyncContext> &asyncCtx, napi_env env, napi_value timeUs,
         napi_value option, napi_value params);
+    int32_t GetFetchScaledFrameArgs(std::unique_ptr<AVImageGeneratorAsyncContext> &asyncCtx, napi_env env,
+        napi_value timeUs, napi_value option, napi_value outputSize);
     void SetAVFileDescriptorTask(std::shared_ptr<AVMetadataHelper>& avHelper, AVFileDescriptor& fileDescriptor);
 
     std::string GetCurrentState();

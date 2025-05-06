@@ -804,6 +804,34 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameAtTime(
     return pixelMap;
 }
 
+void AVMetadataHelperImpl::ScalePixelMapWithEqualRatio(
+    std::shared_ptr<PixelMap> &pixelMap, PixelMapInfo &info, const PixelMapParams &param)
+{
+    CHECK_AND_RETURN_LOG(pixelMap != nullptr, "pixelMap is nullptr");
+    int32_t srcWidth = pixelMap->GetWidth();
+    int32_t srcHeight = pixelMap->GetHeight();
+    int32_t dstWidth = info.rotation % NUM_180 == 0 ? param.dstWidth : param.dstHeight;
+    int32_t dstHeight = info.rotation % NUM_180 == 0 ? param.dstHeight : param.dstWidth;
+
+    bool needScale = (dstWidth > 0 || dstHeight > 0) && (srcWidth > 0 && srcHeight > 0) &&
+        (dstWidth <= srcWidth && dstHeight <= srcHeight) && (dstWidth < srcWidth || dstHeight < srcHeight);
+    CHECK_AND_RETURN(needScale);
+
+    float widthFactor = dstWidth > 0 ? (1.0f * dstWidth) / srcWidth : 1.0f;
+    float heightFactor = dstHeight > 0 ? (1.0f * dstHeight) / srcHeight : 1.0f;
+
+    if (dstWidth == 0) {
+        widthFactor = heightFactor;
+    } else if (dstHeight == 0) {
+        heightFactor = widthFactor;
+    }
+    pixelMap->scale(widthFactor, heightFactor, AntiAliasingOption::LOW);
+    MEDIA_LOGI("srcWidth: %{public}d, srcHeight : %{public}d, dstWidth: %{public}d, dstHeight: %{public}d,"
+        "widthFactor: %{public}f, HeightFactor: %{public}f, finalWidth: %{public}d, finalHeight : %{public}d",
+        srcWidth, srcHeight, dstWidth, dstHeight, widthFactor, heightFactor,
+        pixelMap->GetWidth(), pixelMap->GetHeight());
+}
+
 void AVMetadataHelperImpl::ScalePixelMap(
     std::shared_ptr<PixelMap> &pixelMap, PixelMapInfo &info, const PixelMapParams &param)
 {
@@ -820,6 +848,18 @@ void AVMetadataHelperImpl::ScalePixelMap(
 
 std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameYuv(int64_t timeUs, int32_t option,
                                                               const PixelMapParams &param)
+{
+    return FetchFrameBase(timeUs, option, param, FrameScaleMode::NORMAL_RATIO);
+}
+
+std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchScaledFrameYuv(int64_t timeUs, int32_t option,
+                                                                    const PixelMapParams &param)
+{
+    return FetchFrameBase(timeUs, option, param, FrameScaleMode::ASPECT_RATIO);
+}
+
+std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameBase(int64_t timeUs, int32_t option,
+                                                               const PixelMapParams &param, int32_t scaleMode)
 {
     std::shared_ptr<IAVMetadataHelperService> avMetadataHelperService = avMetadataHelperService_;
     CHECK_AND_RETURN_RET_LOG(avMetadataHelperService != nullptr, nullptr, "avmetadatahelper service does not exist.");
@@ -841,7 +881,7 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameYuv(int64_t timeUs, in
 
     DumpPixelMap(isDump_, pixelMap, DUMP_FILE_NAME_PIXEMAP);
 
-    ScalePixelMap(pixelMap, pixelMapInfo, param);
+    ScalePixelMapByMode(pixelMap, pixelMapInfo, param, scaleMode);
 
     DumpPixelMap(isDump_, pixelMap, DUMP_FILE_NAME_AFTER_SCLAE);
 
@@ -853,6 +893,22 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameYuv(int64_t timeUs, in
 
     DumpPixelMap(isDump_, pixelMap, DUMP_FILE_NAME_AFTER_ROTATE);
     return pixelMap;
+}
+
+void AVMetadataHelperImpl::ScalePixelMapByMode(std::shared_ptr<PixelMap> &pixelMap, PixelMapInfo &info,
+                                               const PixelMapParams &param, int32_t scaleMode)
+{
+    CHECK_AND_RETURN_LOG(pixelMap != nullptr, "pixelMap is nullptr");
+    switch (scaleMode) {
+        case FrameScaleMode::NORMAL_RATIO:
+            ScalePixelMap(pixelMap, info, param);
+            break;
+        case FrameScaleMode::ASPECT_RATIO:
+            ScalePixelMapWithEqualRatio(pixelMap, info, param);
+            break;
+        default:
+            break;
+    }
 }
 
 int32_t AVMetadataHelperImpl::GetTimeByFrameIndex(uint32_t index, uint64_t &time)
