@@ -221,6 +221,7 @@ int32_t HiTransCoderImpl::SetInputFile(const std::string &url)
     }
     pipeline_->AddHeadFilters({demuxerFilter_});
     demuxerFilter_->Init(transCoderEventReceiver_, transCoderFilterCallback_);
+    (void)demuxerFilter_->SetTranscoderMode();
     Status ret = demuxerFilter_->SetDataSource(mediaSource);
     if (ret != Status::OK) {
         MEDIA_LOG_E("SetInputFile error: demuxerFilter_->SetDataSource error");
@@ -811,6 +812,7 @@ Status HiTransCoderImpl::LinkAudioEncoderFilter(const std::shared_ptr<Pipeline::
     audioEncFormat_->Set<Tag::APP_UID>(appUid_);
     audioEncFormat_->Set<Tag::APP_PID>(appPid_);
     audioEncFormat_->Set<Tag::APP_FULL_TOKEN_ID>(appFullTokenId_);
+    audioEncFormat_->Set<Tag::AUDIO_ENCODE_PTS_MODE>(GENERATE_ENCODE_PTS_BY_INPUT_MODE);
     FALSE_RETURN_V_MSG_E(audioEncoderFilter_->SetCodecFormat(audioEncFormat_) == Status::OK,
         Status::ERROR_UNKNOWN, "audioEncoderFilter SetCodecFormat fail");
     FALSE_RETURN_V_MSG_E(audioEncoderFilter_->SetTranscoderMode() == Status::OK,
