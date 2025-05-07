@@ -577,7 +577,7 @@ int32_t HiTransCoderImpl::Start()
         return ret;
     }
     callbackLooper_->StartReportMediaProgress(REPORT_PROGRESS_INTERVAL);
-    return ret;
+    return MSERR_OK;
 }
 
 int32_t HiTransCoderImpl::Pause()
@@ -611,7 +611,7 @@ int32_t HiTransCoderImpl::Resume()
     }
     callbackLooper_->StartReportMediaProgress(REPORT_PROGRESS_INTERVAL);
     startTime_ = GetCurrentMillisecond();
-    return ret;
+    return MSERR_OK;
 }
 
 int32_t HiTransCoderImpl::Cancel()
@@ -634,7 +634,7 @@ int32_t HiTransCoderImpl::Cancel()
     startTime_ = -1;
     AppendTranscoderMediaInfo();
     ReportMediaInfo(instanceId_);
-    return ret;
+    return MSERR_OK;
 }
 
 void HiTransCoderImpl::AppendTranscoderMediaInfo()
@@ -751,9 +751,9 @@ void HiTransCoderImpl::HandleCompleteEvent()
         ptr->OnInfo(TransCoderOnInfoType::INFO_TYPE_TRANSCODER_COMPLETED, 0);
     }
     if (pipeline_ != nullptr) {
-        MEDIA_LOG_I("complete event pipeline stop begin");
+        MEDIA_LOG_I("complete, stop in");
         int32_t ret = TransTranscoderStatus(pipeline_->Stop());
-        MEDIA_LOG_I("complete event pipeline stop end, ret is " PUBLIC_LOG_D32, ret);
+        MEDIA_LOG_I("complete, stop out, ret: " PUBLIC_LOG_D32, ret);
     }
     callbackLooper_->Stop();
 }

@@ -214,7 +214,7 @@ int __attribute__((visibility("default"))) TransStatus(Status status)
     return MSERR_UNKNOWN;
 }
 
-int __attribute__((visibility("default"))) TransTranscoderStatus(Status status)
+int32_t __attribute__((visibility("default"))) TransTranscoderStatus(Status status)
 {
     auto errCodeIter = transcoder_statusPair.find(status);
     if (errCodeIter != transcoder_statusPair.end()) {
