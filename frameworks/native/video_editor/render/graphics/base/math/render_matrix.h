@@ -16,9 +16,9 @@
 #ifndef OH_VEF_GRAPHICS_RENDER_MATRIX_H
 #define OH_VEF_GRAPHICS_RENDER_MATRIX_H
 
-#include "third_party/externals/oboe/samples/RhythmGame/third_party/glm/mat2x2.hpp"
-#include "third_party/externals/oboe/samples/RhythmGame/third_party/glm/mat3x3.hpp"
-#include "third_party/externals/oboe/samples/RhythmGame/third_party/glm/mat4x4.hpp"
+#include "third_party/skia/third_party/externals/oboe/samples/RhythmGame/third_party/glm/mat2x2.hpp"
+#include "third_party/skia/third_party/externals/oboe/samples/RhythmGame/third_party/glm/mat3x3.hpp"
+#include "third_party/skia/third_party/externals/oboe/samples/RhythmGame/third_party/glm/mat4x4.hpp"
 
 namespace OHOS {
 namespace Media {
