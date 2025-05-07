@@ -48,6 +48,7 @@ const std::string EVENT_VOLUME_CHANGE = "volumeChange";
 const std::string EVENT_END_OF_STREAM = "endOfStream";
 const std::string EVENT_SEEK_DONE = "seekDone";
 const std::string EVENT_SPEED_DONE = "speedDone";
+const std::string EVENT_RATE_DONE = "playbackRateDone";
 const std::string EVENT_BITRATE_DONE = "bitrateDone";
 const std::string EVENT_TIME_UPDATE = "timeUpdate";
 const std::string EVENT_DURATION_UPDATE = "durationUpdate";
@@ -125,6 +126,10 @@ private:
      * setSpeed(speed: number): void
      */
     static napi_value JsSetSpeed(napi_env env, napi_callback_info info);
+    /**
+     * setPlaybackRate(rate: float): void
+     */
+    static napi_value JsSetPlaybackRate(napi_env env, napi_callback_info info);
     /**
      * setVolume(vol: number): void
      */
@@ -367,6 +372,7 @@ private:
     void AddMediaStreamToAVMediaSource(
         const std::shared_ptr<AVMediaSourceTmp> &srcTmp, std::shared_ptr<AVMediaSource> &mediaSource);
     bool IsLivingMaxDelayTimeValid(const AVPlayStrategyTmp &strategyTmp);
+    bool IsRateValid(float rate);
 
     std::condition_variable stopTaskQueCond_;
     bool taskQueStoped_ = false;

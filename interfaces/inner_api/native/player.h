@@ -117,6 +117,7 @@ public:
     static constexpr std::string_view PLAYER_IS_LIVE_STREAM = "is_live_stream";
     static constexpr std::string_view PLAYER_SEEK_POSITION = "seek_done";
     static constexpr std::string_view PLAYER_PLAYBACK_SPEED = "speed_done";
+    static constexpr std::string_view PLAYER_PLAYBACK_RATE = "rate_done";
     static constexpr std::string_view PLAYER_BITRATE_DONE = "bitrate_done";
     static constexpr std::string_view PLAYER_CURRENT_POSITION = "current_position";
     static constexpr std::string_view PLAYER_DURATION = "duration";
@@ -217,6 +218,8 @@ enum PlayerOnInfoType : int32_t {
     INFO_TYPE_SEEKDONE = 1,
     /* return the message when speeding done. */
     INFO_TYPE_SPEEDDONE,
+    /* return the message when speeding done. */
+    INFO_TYPE_RATEDONE,
     /* return the message when select bitrate done */
     INFO_TYPE_BITRATEDONE,
     /* return the message when playback is end of steam. */
@@ -619,6 +622,15 @@ public:
      * @version 1.0
      */
     virtual int32_t SetPlaybackSpeed(PlaybackRateMode mode) = 0;
+
+    /**
+     * @brief set the player playback rate
+     *
+     * @param rate the rate which can set.
+     * @return Returns {@link MSERR_OK} if the playback rate is set successful; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     */
+    virtual int32_t SetPlaybackRate(float rate) = 0;
 
     /**
      * @brief get the current player playback rate

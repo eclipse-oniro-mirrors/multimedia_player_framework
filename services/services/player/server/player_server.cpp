@@ -1098,6 +1098,42 @@ int32_t PlayerServer::SetPlaybackSpeed(PlaybackRateMode mode)
     return MSERR_OK;
 }
 
+int32_t PlayerServer::SetPlaybackRate(float rate)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    if ((lastOpStatus_ != PLAYER_STARTED) && (lastOpStatus_ != PLAYER_PREPARED) &&
+        (lastOpStatus_ != PLAYER_PAUSED) && (lastOpStatus_ != PLAYER_PLAYBACK_COMPLETE)) {
+        MEDIA_LOGE("Can not SetPlaybackRate, currentState is %{public}s",
+            GetStatusDescription(lastOpStatus_).c_str());
+        return MSERR_INVALID_OPERATION;
+    }
+    MEDIA_LOGD("PlayerServer SetPlaybackRate in, rate %{public}f", rate);
+    if (isLiveStream_) {
+        MEDIA_LOGE("Can not SetPlaybackRate, it is live-stream");
+        OnErrorMessage(MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "Can not SetPlaybackRate, it is live-stream");
+        return MSERR_INVALID_OPERATION;
+    }
+
+    auto rateTask = std::make_shared<TaskHandler<void>>([this, rate]() {
+        MediaTrace::TraceBegin("PlayerServer::SetPlaybackRate", FAKE_POINTER(this));
+        auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
+        (void)currState->SetPlaybackRate(rate);
+    });
+
+    auto cancelTask = std::make_shared<TaskHandler<void>>([this, rate]() {
+        MEDIA_LOGI("Interrupted rate action");
+        Format format;
+        OnInfoNoChangeStatus(INFO_TYPE_RATEDONE, rate, format);
+        taskMgr_.MarkTaskDone("interrupted rate done");
+    });
+
+    int32_t ret = taskMgr_.SpeedTask(rateTask, cancelTask, "rate", config_.speedRate);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetPlaybackRate failed");
+
+    return MSERR_OK;
+}
+
 int32_t PlayerServer::HandleSetPlaybackSpeed(PlaybackRateMode mode)
 {
     if (config_.speedMode == mode) {
@@ -1114,6 +1150,26 @@ int32_t PlayerServer::HandleSetPlaybackSpeed(PlaybackRateMode mode)
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine SetPlaybackSpeed Failed!");
     }
     config_.speedMode = mode;
+    return MSERR_OK;
+}
+
+int32_t PlayerServer::HandleSetPlaybackRate(float rate)
+{
+    if (config_.speedRate == rate) {
+        MEDIA_LOGD("The speed rate is same, rate = %{public}f", rate);
+        Format format;
+        (void)format.PutFloatValue(PlayerKeys::PLAYER_PLAYBACK_RATE, rate);
+        OnInfoNoChangeStatus(INFO_TYPE_RATEDONE, rate, format);
+        taskMgr_.MarkTaskDone("set speed rate is same");
+        MediaTrace::TraceEnd("PlayerServer::SetPlaybackRate", FAKE_POINTER(this));
+        return MSERR_OK;
+    }
+
+    if (playerEngine_ != nullptr) {
+        int32_t ret = playerEngine_->SetPlaybackRate(rate);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine SetPlaybackRate Failed!");
+    }
+    config_.speedRate = rate;
     return MSERR_OK;
 }
 

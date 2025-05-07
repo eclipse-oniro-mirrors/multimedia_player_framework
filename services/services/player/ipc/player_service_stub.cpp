@@ -201,6 +201,8 @@ void PlayerServiceStub::FillPlayerFuncPart3()
         [this](MessageParcel &data, MessageParcel &reply) { return SetVideoWindowSize(data, reply); } };
     playerFuncs_[SET_VOLUME_MODE] = { "Player::SetVolumeMode",
         [this](MessageParcel &data, MessageParcel &reply) { return SetVolumeMode(data, reply); } };
+    playerFuncs_[SET_PLAYERBACK_RATE] = { "Player::SetPlaybackRate",
+        [this](MessageParcel &data, MessageParcel &reply) { return SetPlaybackRate(data, reply); } };
 }
 
 int32_t PlayerServiceStub::Init()
@@ -509,6 +511,13 @@ int32_t PlayerServiceStub::SetPlaybackSpeed(PlaybackRateMode mode)
     MediaTrace trace("PlayerServiceStub::SetPlaybackSpeed");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
     return playerServer_->SetPlaybackSpeed(mode);
+}
+
+int32_t PlayerServiceStub::SetPlaybackRate(float rate)
+{
+    MediaTrace trace("PlayerServiceStub::SetPlaybackRate");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->SetPlaybackRate(rate);
 }
 
 int32_t PlayerServiceStub::SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, AVPlayStrategy strategy)
@@ -943,6 +952,13 @@ int32_t PlayerServiceStub::SetPlaybackSpeed(MessageParcel &data, MessageParcel &
 {
     int32_t mode = data.ReadInt32();
     reply.WriteInt32(SetPlaybackSpeed(static_cast<PlaybackRateMode>(mode)));
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::SetPlaybackRate(MessageParcel &data, MessageParcel &reply)
+{
+    float rate = data.ReadFloat();
+    reply.WriteInt32(SetPlaybackRate(rate));
     return MSERR_OK;
 }
 

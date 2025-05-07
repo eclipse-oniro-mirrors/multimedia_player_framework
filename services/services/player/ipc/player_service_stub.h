@@ -57,6 +57,7 @@ public:
     int32_t SetVolume(float leftVolume, float rightVolume) override;
     int32_t SetVolumeMode(int32_t mode) override;
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
+    int32_t SetPlaybackRate(float rate) override;
     int32_t GetVideoWidth() override;
     int32_t GetAudioTrackInfo(std::vector<Format> &audioTrack) override;
     int32_t GetCurrentTime(int32_t &currentTime) override;
@@ -143,6 +144,7 @@ private:
     int32_t GetDuration(MessageParcel &data, MessageParcel &reply);
     int32_t GetApiVersion(MessageParcel &data, MessageParcel &reply);
     int32_t SetPlaybackSpeed(MessageParcel &data, MessageParcel &reply);
+    int32_t SetPlaybackRate(MessageParcel &data, MessageParcel &reply);
     int32_t GetPlaybackSpeed(MessageParcel &data, MessageParcel &reply);
 #ifdef SUPPORT_VIDEO
     int32_t SetVideoSurface(MessageParcel &data, MessageParcel &reply);
