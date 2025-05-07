@@ -754,14 +754,14 @@ int32_t RecorderServer::SetMaxFileSize(int64_t size)
     return result.Value();
 }
 
-void RecorderServer::SetLocation(float latitude, float longitude)
+int32_t RecorderServer::SetLocation(float latitude, float longitude)
 {
     MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " SetLocation in", FAKE_POINTER(this));
     std::lock_guard<std::mutex> lock(mutex_);
     if (status_ != REC_CONFIGURED) {
-        return;
+        return MSERR_INVALID_OPERATION;
     }
-    CHECK_AND_RETURN_LOG(recorderEngine_ != nullptr, "engine is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     config_.latitude = latitude;
     config_.longitude = longitude;
     config_.withLocation = true;
@@ -770,28 +770,28 @@ void RecorderServer::SetLocation(float latitude, float longitude)
         return recorderEngine_->Configure(DUMMY_SOURCE_ID, geoLocation);
     });
     int32_t ret = taskQue_.EnqueueTask(task);
-    CHECK_AND_RETURN_LOG(ret == MSERR_OK, "EnqueueTask failed");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
 
-    (void)task->GetResult();
-    return;
+    auto result = task->GetResult();
+    return result.Value();
 }
 
-void RecorderServer::SetOrientationHint(int32_t rotation)
+int32_t RecorderServer::SetOrientationHint(int32_t rotation)
 {
     MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " SetOrientationHint in, rotation: %{public}d",
         FAKE_POINTER(this), rotation);
     std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_LOG(recorderEngine_ != nullptr, "engine is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     config_.rotation = rotation;
     RotationAngle rotationAngle(rotation);
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->Configure(DUMMY_SOURCE_ID, rotationAngle);
     });
     int32_t ret = taskQue_.EnqueueTask(task);
-    CHECK_AND_RETURN_LOG(ret == MSERR_OK, "EnqueueTask failed");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
 
-    (void)task->GetResult();
-    return;
+    auto result = task->GetResult();
+    return result.Value();
 }
 
 int32_t RecorderServer::SetRecorderCallback(const std::shared_ptr<RecorderCallback> &callback)

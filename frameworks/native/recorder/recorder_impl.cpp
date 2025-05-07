@@ -282,21 +282,19 @@ int32_t RecorderImpl::SetMaxFileSize(int64_t size)
     return recorderService_->SetMaxFileSize(size);
 }
 
-void RecorderImpl::SetLocation(float latitude, float longitude)
+int32_t RecorderImpl::SetLocation(float latitude, float longitude)
 {
     MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetLocation in", FAKE_POINTER(this));
-    CHECK_AND_RETURN_LOG(recorderService_ != nullptr, "recorder service does not exist..");
-    recorderService_->SetLocation(latitude, longitude);
-    return;
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist..");
+    return recorderService_->SetLocation(latitude, longitude);
 }
 
-void RecorderImpl::SetOrientationHint(int32_t rotation)
+int32_t RecorderImpl::SetOrientationHint(int32_t rotation)
 {
     MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetOrientationHint in, rotation is %{public}d",
         FAKE_POINTER(this), rotation);
-    CHECK_AND_RETURN_LOG(recorderService_ != nullptr, "recorder service does not exist..");
-    recorderService_->SetOrientationHint(rotation);
-    return;
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist..");
+    return recorderService_->SetOrientationHint(rotation);
 }
 
 int32_t RecorderImpl::SetRecorderCallback(const std::shared_ptr<RecorderCallback> &callback)
