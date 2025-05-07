@@ -40,13 +40,16 @@ ohos_unittest("recorder_native_unit_test") {
     "-Werror",
   ]
 
+  external_deps = []
+
   if (player_framework_support_recorder) {
     sources = [ "capi/src/recorder_unit_test.cpp" ]
+    external_deps += [ "drivers_interface_display:libdisplay_composer_proxy_1.2" ]
   }
 
   public_deps = [ "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c:avrecorder" ]
 
-  external_deps = [
+  external_deps += [
     "ability_base:base",
     "ability_base:want",
     "ability_base:zuri",
@@ -117,11 +120,14 @@ ohos_unittest("recorder_server_unit_test") {
     "-Werror",
   ]
 
+  external_deps = []
+
   if (player_framework_support_recorder) {
     sources = [
       "./recorder_server_unittest/src/recorder_server_mock.cpp",
       "./recorder_server_unittest/src/recorder_server_unit_test.cpp",
     ]
+    external_deps += [ "drivers_interface_display:libdisplay_composer_proxy_1.2" ]
   }
 
   public_deps = [
@@ -130,7 +136,7 @@ ohos_unittest("recorder_server_unit_test") {
     "$MEDIA_PLAYER_ROOT_DIR/services/utils:media_service_utils",
   ]
 
-  external_deps = [
+  external_deps += [
     "ability_base:base",
     "ability_base:want",
     "ability_base:zuri",

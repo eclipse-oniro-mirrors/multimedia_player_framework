@@ -14,6 +14,7 @@
  */
 
 #include "test_player.h"
+#include <fcntl.h>
 #include <iostream>
 #include "string_ex.h"
 #include "media_errors.h"

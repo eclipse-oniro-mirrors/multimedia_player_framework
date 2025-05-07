@@ -25,7 +25,7 @@
 #include "native_window.h"
 #include "media_log.h"
 #include "media_errors.h"
-#include "display_type.h"
+#include "display/composer/v1_2/display_composer_type.h"
 
 using namespace std;
 using namespace OHOS;
@@ -244,7 +244,7 @@ OH_AVErrCode RequesetBuffer(OHNativeWindow *window, const OH_AVRecorder_Config *
     requestConfig.width = config->profile.videoFrameWidth;
     requestConfig.height = config->profile.videoFrameHeight;
     requestConfig.strideAlignment = STRIDE_ALIGN;
-    requestConfig.format = PIXEL_FMT_YCBCR_420_SP;
+    requestConfig.format = OHOS::HDI::Display::Composer::V1_2::PixelFormat::PIXEL_FMT_YCBCR_420_SP;
     requestConfig.usage = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_CPU_WRITE | BUFFER_USAGE_MEM_DMA;
     requestConfig.timeout = INT_MAX;
     BufferFlushConfig flushConfig;
