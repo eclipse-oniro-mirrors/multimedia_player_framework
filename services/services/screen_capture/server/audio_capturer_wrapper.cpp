@@ -85,8 +85,8 @@ int32_t AudioCapturerWrapper::Start(const OHOS::AudioStandard::AppInfo &appInfo)
     MEDIA_LOGI("0x%{public}06" PRIXPTR "Start success, threadName:%{public}s", FAKE_POINTER(this), threadName_.c_str());
 
     isRunning_.store(true);
-    readAudioLoop_ = std::make_unique<std::thread>([this] { this->CaptureAudio(); });
     audioCapturer_ = audioCapturer;
+    readAudioLoop_ = std::make_unique<std::thread>([this] { this->CaptureAudio(); });
     captureState_.store(CAPTURER_RECORDING);
     return MSERR_OK;
 }
@@ -374,7 +374,7 @@ int32_t AudioCapturerWrapper::GetBufferSize(size_t &size)
         MEDIA_LOGD("GetBufferSize failed, not running, name:%{public}s", threadName_.c_str());
         return MSERR_UNKNOWN;
     }
-    CHECK_AND_RETURN_RET_LOG(audioCapturer_ != nullptr && audioCapturer_->GetBufferSize(size) >= 0,
+    CHECK_AND_RETURN_RET_LOG(audioCapturer_ != nullptr && audioCapturer_->GetBufferSize(size) == MSERR_OK,
         MSERR_NO_MEMORY, "CaptureAudio GetBufferSize failed");
     MEDIA_LOGD("0x%{public}06" PRIXPTR " GetBufferSize Buffer E, name:%{public}s",
         FAKE_POINTER(this), threadName_.c_str());
