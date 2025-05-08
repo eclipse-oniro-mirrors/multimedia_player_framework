@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <fcntl.h>
 #include <iostream>
 #include "aw_common.h"
 #include "string_ex.h"

@@ -14,6 +14,7 @@
  */
 
 #include "test_metadata.h"
+#include <fcntl.h>
 #include <iostream>
 #include "directory_ex.h"
 

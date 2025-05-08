@@ -19,7 +19,6 @@
 #include "player.h"
 #include "window.h"
 #include "surface.h"
-#include "display_type.h"
 
 namespace OHOS {
 namespace Media {
