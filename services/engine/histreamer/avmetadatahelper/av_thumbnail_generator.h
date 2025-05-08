@@ -31,7 +31,7 @@
 
 namespace OHOS {
 namespace Media {
-class AVThumbnailGenerator : public NoCopyable {
+class AVThumbnailGenerator : public NoCopyable, public std::enable_shared_from_this<AVThumbnailGenerator> {
 public:
     explicit AVThumbnailGenerator(std::shared_ptr<MediaDemuxer> &mediaDemuxer);
     ~AVThumbnailGenerator();
