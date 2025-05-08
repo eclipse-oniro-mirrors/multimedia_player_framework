@@ -272,6 +272,16 @@ int32_t RingtonePlayerImpl::RegisterSource(const std::string &audioUri, const st
     string newAudioUri = systemSoundMgr_.OpenAudioUri(databaseTool_, audioUri);
     string newHapticUri = systemSoundMgr_.OpenHapticsUri(databaseTool_, hapticUri);
 
+    if (newAudioUri.find(FDHEAD) == std::string::npos) {
+        MEDIA_LOGI("Failed to open ringtone file, select to open default ringtone and play.");
+        std::string uri = "";
+        std::shared_ptr<ToneAttrs> ringtoneAttrs = systemSoundMgr_.GetDefaultRingtoneAttrs(context_, type_);
+        if (ringtoneAttrs != nullptr) {
+            uri = ringtoneAttrs->GetUri();
+        }
+        newAudioUri = systemSoundMgr_.OpenAudioUri(databaseTool_, uri);
+    }
+
     int32_t sourceId = audioHapticManager_->RegisterSource(newAudioUri, newHapticUri);
 
     if (newAudioUri.find(FDHEAD) != std::string::npos) {
