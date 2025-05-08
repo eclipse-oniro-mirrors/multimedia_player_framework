@@ -53,8 +53,7 @@ explicit ThumnGeneratorCodecCallback(std::shared_ptr<AVThumbnailGenerator> gener
 
     void OnError(MediaAVCodec::AVCodecErrorType errorType, int32_t errorCode) override
     {
-        if (auto generator = generator_.lock())
-        {
+        if (auto generator = generator_.lock()) {
             generator->OnError(errorType, errorCode);
         } else {
             MEDIA_LOGE("invalid AVThumbnailGenerator");
@@ -63,8 +62,7 @@ explicit ThumnGeneratorCodecCallback(std::shared_ptr<AVThumbnailGenerator> gener
 
     void OnOutputFormatChanged(const MediaAVCodec::Format &format) override
     {
-        if (auto generator = generator_.lock())
-        {
+        if (auto generator = generator_.lock()) {
             generator->OnOutputFormatChanged(format);
         } else {
             MEDIA_LOGE("invalid AVThumbnailGenerator");
@@ -73,8 +71,7 @@ explicit ThumnGeneratorCodecCallback(std::shared_ptr<AVThumbnailGenerator> gener
 
     void OnInputBufferAvailable(uint32_t index, std::shared_ptr<AVBuffer> buffer) override
     {
-        if (auto generator = generator_.lock())
-        {
+        if (auto generator = generator_.lock()) {
             generator->OnInputBufferAvailable(index, buffer);
         } else {
             MEDIA_LOGE("invalid AVThumbnailGenerator");
@@ -83,8 +80,7 @@ explicit ThumnGeneratorCodecCallback(std::shared_ptr<AVThumbnailGenerator> gener
 
     void OnOutputBufferAvailable(uint32_t index, std::shared_ptr<AVBuffer> buffer) override
     {
-        if (auto generator = generator_.lock())
-        {
+        if (auto generator = generator_.lock()) {
             generator->OnOutputBufferAvailable(index, buffer);
         } else {
             MEDIA_LOGE("invalid AVThumbnailGenerator");
