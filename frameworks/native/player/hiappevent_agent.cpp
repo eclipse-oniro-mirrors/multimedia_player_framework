@@ -28,11 +28,13 @@ namespace {
     constexpr auto KAPPID = "com_hw_hmos_avplayer";
     constexpr auto SDKNAME = "MediaKit";
     constexpr auto APINAME = "HMOS_MEDIA_SERVICE";
-    constexpr int32_t KTIMEOUT = 90;
-    constexpr int32_t KCONDROW = 30;
+    constexpr int32_t KTIMEOUT = 90;  // trigger interval in seconds
+    constexpr int32_t KCONDROW = 30;  // trigger batch size
+    static int64_t g_processorId = -1;
+    static std::mutex g_processorMutex;
 }
 #endif
- 
+
 namespace OHOS {
 namespace Media {
 
@@ -45,17 +47,17 @@ HiAppEventAgent::HiAppEventAgent()
 {
 #ifdef SUPPORT_HIAPPEVENT
     hiAppEventTask_ = std::make_unique<Task>(
-        "OS_Ply_HiAppEvent", "HiAppEventGroup", TaskType::GLOBAL, TaskPriority::NORMAL, false);
+        "OS_Ply_HiAppEvent", "HiAppEventGroup", TaskType::SINGLETON, TaskPriority::NORMAL, false);
 #endif
 }
- 
+
 HiAppEventAgent::~HiAppEventAgent()
 {
 #ifdef SUPPORT_HIAPPEVENT
     hiAppEventTask_.reset();
 #endif
 }
- 
+
 #ifdef SUPPORT_HIAPPEVENT
 void HiAppEventAgent::WriteEndEvent(const std::string &transId,
     const int errCode, const std::string& message, time_t startTime, HiviewDFX::HiTraceId traceId)
@@ -111,11 +113,22 @@ int64_t HiAppEventAgent::AddProcessor()
     return AppEventProcessorMgr::AddProcessor(config);
 }
 #endif
- 
+
 void HiAppEventAgent::TraceApiEvent(
     int errCode, const std::string& message, time_t startTime, HiviewDFX::HiTraceId traceId)
 {
 #ifdef SUPPORT_HIAPPEVENT
+    CHECK_AND_RETURN_NOLOG(errCode != MSERR_OK);
+    {
+        std::lock_guard<std::mutex> lock(processorMutex);
+        if (processorId_ == -1) {
+            processorId_ = AddProcessor();
+        }
+        if (processorId_ < 0) {
+            return;
+        }
+    }
+
     if (hiAppEventTask_ == nullptr) {
         return;
     }
@@ -137,17 +150,6 @@ void HiAppEventAgent::TraceApiEvent(
 void HiAppEventAgent::TraceApiEventAsync(
     int errCode, const std::string& message, time_t startTime, HiviewDFX::HiTraceId traceId)
 {
-    CHECK_AND_RETURN_NOLOG(errCode != MSERR_OK);
-    {
-        std::lock_guard<std::mutex> lock(processorMutex);
-        if (processorId_ == -1) {
-            processorId_ = AddProcessor();
-        }
-        if (processorId_ < 0) {
-            return;
-        }
-    }
-
     std::string transId = GenerateTransId();
     WriteEndEvent(transId, errCode, message, startTime, traceId);
 }
