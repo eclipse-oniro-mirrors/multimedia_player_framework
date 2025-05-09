@@ -120,11 +120,11 @@ void HiAppEventAgent::TraceApiEvent(
 #ifdef SUPPORT_HIAPPEVENT
     CHECK_AND_RETURN_NOLOG(errCode != MSERR_OK);
     {
-        std::lock_guard<std::mutex> lock(processorMutex);
-        if (processorId_ == -1) {
-            processorId_ = AddProcessor();
+        std::lock_guard<std::mutex> lock(g_processorMutex);
+        if (g_processorId == -1) {
+            g_processorId = AddProcessor();
         }
-        if (processorId_ < 0) {
+        if (g_processorId < 0) {
             return;
         }
     }
