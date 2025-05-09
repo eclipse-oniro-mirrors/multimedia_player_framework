@@ -54,6 +54,7 @@ public:
 
     void OnDfxInfo(const DfxEvent &event) override;
 
+    void SetMaxAmplitudeCbStatus(bool status);
     void DoReportCompletedTime();
     void StartCollectMaxAmplitude(int64_t updateIntervalMs);
     void StopCollectMaxAmplitude();
@@ -99,6 +100,7 @@ private:
     bool reportMediaProgress_ {false};
     bool collectMaxAmplitude_ {false};
     bool isDropMediaProgress_ {false};
+    bool reportUV_ {false};
     int64_t reportProgressIntervalMs_ {100}; // default interval is 100 ms
     int64_t collectMaxAmplitudeIntervalMs_ {100}; // default interval is 100 ms
     std::vector<float> vMaxAmplitudeArray_ {};

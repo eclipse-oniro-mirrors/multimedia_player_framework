@@ -63,6 +63,12 @@ void HiPlayerCallbackLooper::Stop()
     }
 }
 
+void HiPlayerCallbackLooper::SetMaxAmplitudeCbStatus(bool status)
+{
+    MEDIA_LOG_I("HiPlayerCallbackLooper SetMaxAmplitudeCbStatus");
+    reportUV_ = status;
+}
+
 void HiPlayerCallbackLooper::StartWithPlayerEngineObs(const std::weak_ptr<IPlayerEngineObs>& obs)
 {
     OHOS::Media::AutoLock lock(loopMutex_);
@@ -187,7 +193,9 @@ void HiPlayerCallbackLooper::DoCollectAmplitude()
             Format amplitudeFormat;
             (void)amplitudeFormat.PutBuffer(std::string(PlayerKeys::AUDIO_MAX_AMPLITUDE),
                 static_cast<uint8_t *>(static_cast<void *>(maxAmplitudeArray)), size * sizeof(float));
-            obs->OnInfo(INFO_TYPE_MAX_AMPLITUDE_COLLECT, 0, amplitudeFormat);
+            if (reportUV_) {
+                obs->OnInfo(INFO_TYPE_MAX_AMPLITUDE_COLLECT, 0, amplitudeFormat);
+            }
             vMaxAmplitudeArray_.clear();
         }
     }

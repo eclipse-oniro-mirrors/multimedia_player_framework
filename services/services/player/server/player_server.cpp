@@ -2127,7 +2127,9 @@ bool PlayerServer::CheckState(PlayerOnInfoType type, int32_t extra)
 int32_t PlayerServer::SetMaxAmplitudeCbStatus(bool status)
 {
     maxAmplitudeCbStatus_ = status;
-    return MSERR_OK;
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
+    return playerEngine_->SetMaxAmplitudeCbStatus(maxAmplitudeCbStatus_);
 }
 
 bool PlayerServer::IsSeekContinuousSupported()
