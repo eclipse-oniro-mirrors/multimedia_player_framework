@@ -31,6 +31,7 @@ public:
     void OnVideoBufferAvailable(bool isReady) override;
     void OnStateChange(AVScreenCaptureStateCode stateCode) override;
     void OnDisplaySelected(uint64_t displayId) override;
+    void OnCaptureContentChanged(AVScreenCaptureContentChangedEvent event) override;
     void SetScreenCaptureCallback(const std::shared_ptr<ScreenCaptureCallBack> &callback);
 
 private:

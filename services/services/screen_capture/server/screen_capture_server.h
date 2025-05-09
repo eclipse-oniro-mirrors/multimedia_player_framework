@@ -126,11 +126,15 @@ public:
     int32_t GetAppUid();
     void NotifyStateChange(AVScreenCaptureStateCode stateCode);
     void NotifyDisplaySelected(uint64_t displayId);
+    void NotifyCaptureContentChanged(AVScreenCaptureContentChangedEvent event);
     int32_t SetAndCheckAppInfo(OHOS::AudioStandard::AppInfo &appInfo);
     void SetSCServerSaUid(int32_t saUid);
     int32_t GetSCServerSaUid();
     DataType GetSCServerDataType();
     AVScreenCaptureState GetSCServerCaptureState();
+    void SetWindowIdList(int32_t windowId);
+    std::vector<int32_t> GetWindowIdList();
+    void OnSceneSessionManagerDied(const wptr<IRemoteObject>& remote);
 
 private:
     int32_t StartScreenCaptureInner(bool isPrivacyAuthorityEnabled);
@@ -234,6 +238,8 @@ private:
 #endif
     bool DestroyPopWindow();
     void StopNotStartedScreenCapture(AVScreenCaptureStateCode stateCode);
+    int32_t RegisterWindowLifecycleListener(std::vector<int32_t> windowIdList);
+    int32_t UnRegisterWindowLifecycleListener();
 
 private:
     std::mutex mutex_;
@@ -273,11 +279,14 @@ private:
     ScreenId virtualScreenId_ = SCREEN_ID_INVALID;
     ScreenId displayScreenId_ = SCREEN_ID_INVALID;
     std::vector<uint64_t> missionIds_;
+    std::vector<int32_t> windowIdList_ = {};
     ScreenCaptureContentFilter contentFilter_;
     AVScreenCaptureState captureState_ = AVScreenCaptureState::CREATED;
     std::shared_ptr<NotificationLocalLiveViewContent> localLiveViewContent_;
     int64_t startTime_ = 0;
     sptr<UIExtensionAbilityConnection> connection_ = nullptr;
+    sptr<SCWindowLifecycleListener> windowLifecycleListener_ = nullptr;
+    sptr<SCDeathRecipientListener> lifecycleListenerDeathRecipient_ = nullptr;
 
     /* used for CAPTURE STREAM */
     sptr<IBufferConsumerListener> surfaceCb_ = nullptr;

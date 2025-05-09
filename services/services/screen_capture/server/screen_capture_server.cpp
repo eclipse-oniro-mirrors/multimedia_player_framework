@@ -43,6 +43,8 @@
 #include <algorithm>
 #include <set>
 #include <common/rs_common_def.h>
+#include "session_manager_lite.h"
+#include "window_manager_lite.h"
 #ifdef PC_STANDARD
 #include <parameters.h>
 #endif
@@ -166,7 +168,9 @@ void ScreenConnectListenerForSC::OnDisconnect(Rosen::ScreenId screenId)
     MEDIA_LOGI("ScreenConnectListenerForSC OnDisconnect screenId: %{public}" PRIu64, screenId);
     auto callbackPtr = screenCaptureServer_.lock();
     if (callbackPtr && screenId == screenId_) {
-        MEDIA_LOGI("ScreenConnectListenerForSC OnDisconnect NotifyStateChange: %{public}" PRIu64, screenId_);
+        MEDIA_LOGI("ScreenConnectListenerForSC OnDisconnect NotifyCaptureContentChanged: %{public}" PRIu64, screenId_);
+        callbackPtr->NotifyCaptureContentChanged(
+            AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_UNAVAILABLE);
     }
 }
 
@@ -336,6 +340,154 @@ void ScreenCaptureServer::OnDMPrivateWindowChange(bool hasPrivate)
     NotifyStateChange(hasPrivate ?
         AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_ENTER_PRIVATE_SCENE :
         AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_EXIT_PRIVATE_SCENE);
+}
+
+void ScreenCaptureServer::SetWindowIdList(int32_t windowId)
+{
+    windowIdList_.push_back(windowId);
+}
+
+std::vector<int32_t> ScreenCaptureServer::GetWindowIdList()
+{
+    return windowIdList_;
+}
+
+void ScreenCaptureServer::OnSceneSessionManagerDied(const wptr<IRemoteObject>& remote)
+{
+    MEDIA_LOGI("OnSceneSessionManagerDied Start");
+    windowLifecycleListener_ = nullptr;
+
+    auto remoteObj = remote.promote();
+    if (!remoteObj) {
+        MEDIA_LOGD("invalid remote object");
+        return;
+    }
+    remoteObj->RemoveDeathRecipient(lifecycleListenerDeathRecipient_);
+    lifecycleListenerDeathRecipient_ = nullptr;
+    MEDIA_LOGI("SCB Crash! Please Check!");
+
+    int32_t ret = RegisterWindowLifecycleListener(GetWindowIdList());
+    CHECK_AND_RETURN_LOG(ret == MSERR_OK, "OnSceneSessionManagerDied: RegisterWindowLifecycleListener failed.");
+    MEDIA_LOGI("OnSceneSessionManagerDied End");
+}
+
+int32_t ScreenCaptureServer::RegisterWindowLifecycleListener(std::vector<int32_t> windowIdList)
+{
+    MEDIA_LOGI("RegisterWindowLifecycleListener start, windowIdListSize: %{public}d",
+        static_cast<int32_t>(windowIdList.size()));
+    
+    auto sceneSessionManager = SessionManagerLite::GetInstance().GetSceneSessionManagerLiteProxy();
+    CHECK_AND_RETURN_RET_LOG(sceneSessionManager != nullptr, MSERR_INVALID_OPERATION,
+        "sceneSessionManager is nullptr, RegisterWindowLifecycleListener failed.");
+
+    if (!lifecycleListenerDeathRecipient_) {
+        MEDIA_LOGD("RegisterWindowLifecycleListener lifecycleListenerDeathRecipient_ is nullptr");
+        auto task = [weakThis = weak_from_this()] (const wptr<IRemoteObject>& remote) {
+            if (weakThis.lock()) {
+                auto SCServer = weakThis.lock();
+                SCServer->OnSceneSessionManagerDied(remote);
+            }
+        };
+        lifecycleListenerDeathRecipient_ = sptr<SCDeathRecipientListener>::MakeSptr(task);
+
+        auto listenerObject = sceneSessionManager->AsObject();
+        if (listenerObject) {
+            listenerObject->AddDeathRecipient(lifecycleListenerDeathRecipient_);
+            MEDIA_LOGD("RegisterWindowLifecycleListener AddDeathRecipient success.");
+        }
+    }
+    
+    if (windowLifecycleListener_ != nullptr) {
+        MEDIA_LOGI("RegisterWindowLifecycleListener windowLifecycleListener already registered");
+        return MSERR_OK;
+    }
+    std::weak_ptr<ScreenCaptureServer> screenCaptureServer(shared_from_this());
+    sptr<SCWindowLifecycleListener> listener(new (std::nothrow) SCWindowLifecycleListener(screenCaptureServer));
+    CHECK_AND_RETURN_RET_LOG(listener != nullptr, MSERR_INVALID_OPERATION,
+        "create new windowLifecycleListener failed.");
+    windowLifecycleListener_ = listener;
+    
+    Rosen::WMError ret = sceneSessionManager->RegisterSessionLifecycleListenerByIds(windowLifecycleListener_,
+        windowIdList);
+    CHECK_AND_RETURN_RET_LOG(ret == Rosen::WMError::WM_OK, MSERR_INVALID_OPERATION,
+        "RegisterSessionLifecycleListenerByIds failed.");
+
+    MEDIA_LOGI("RegisterWindowLifecycleListener end.");
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureServer::UnRegisterWindowLifecycleListener()
+{
+    MEDIA_LOGI("UnRegisterWindowLifecycleListener start.");
+    auto sceneSessionManager = SessionManagerLite::GetInstance().GetSceneSessionManagerLiteProxy();
+    CHECK_AND_RETURN_RET_LOG(sceneSessionManager != nullptr, MSERR_INVALID_OPERATION,
+        "sceneSessionManager is nullptr, UnRegisterWindowLifecycleListener failed.");
+
+    if (lifecycleListenerDeathRecipient_) {
+        MEDIA_LOGD("UnRegisterWindowLifecycleListener lifecycleListenerDeathRecipient_ != nullptr");
+        auto listenerObject = sceneSessionManager->AsObject();
+        if (listenerObject) {
+            listenerObject->RemoveDeathRecipient(lifecycleListenerDeathRecipient_);
+            MEDIA_LOGD("UnRegisterWindowLifecycleListener RemoveDeathRecipient success.");
+        }
+        lifecycleListenerDeathRecipient_ = nullptr;
+    }
+
+    if (!windowLifecycleListener_) {
+        MEDIA_LOGI("windowLifecycleListener already unregistered");
+        return MSERR_OK;
+    }
+    Rosen::WMError ret = sceneSessionManager->UnregisterSessionLifecycleListener(windowLifecycleListener_);
+    CHECK_AND_RETURN_RET_LOG(ret == Rosen::WMError::WM_OK, MSERR_INVALID_OPERATION,
+        "UnRegisterWindowLifecycleListener failed.");
+    windowLifecycleListener_ = nullptr;
+
+    MEDIA_LOGI("UnRegisterWindowLifecycleListener end.");
+    return MSERR_OK;
+}
+
+void ScreenCaptureServer::NotifyCaptureContentChanged(AVScreenCaptureContentChangedEvent event)
+{
+    if (screenCaptureCb_ != nullptr) {
+        MEDIA_LOGI("NotifyCaptureContentChanged event: %{public}d", event);
+        screenCaptureCb_->OnCaptureContentChanged(event);
+    }
+}
+
+SCWindowLifecycleListener::SCWindowLifecycleListener(std::weak_ptr<ScreenCaptureServer> screenCaptureServer)
+{
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    screenCaptureServer_ = screenCaptureServer;
+}
+
+void SCWindowLifecycleListener::OnLifecycleEvent(SessionLifecycleEvent event, const LifecycleEventPayload& payload)
+{
+    MEDIA_LOGD("SCWindowLifecycleListener::OnLifecycleEvent Start.");
+    auto SCServer = screenCaptureServer_.lock();
+    CHECK_AND_RETURN_LOG(SCServer != nullptr, "screenCaptureServer is nullptr");
+    switch (event) {
+        case SessionLifecycleEvent::FOREGROUND: {
+            MEDIA_LOGI("OnLifecycleEvent: SessionLifecycleEvent::FOREGROUND");
+            SCServer->NotifyCaptureContentChanged(AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_VISIBLE);
+            break;
+        }
+        case SessionLifecycleEvent::BACKGROUND: {
+            MEDIA_LOGI("OnLifecycleEvent: SessionLifecycleEvent::BACKGROUND");
+            SCServer->NotifyCaptureContentChanged(AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_HIDE);
+            break;
+        }
+        case SessionLifecycleEvent::DESTROYED: {
+            MEDIA_LOGI("OnLifecycleEvent: SessionLifecycleEvent::DESTROYED");
+            SCServer->NotifyCaptureContentChanged(
+                AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_UNAVAILABLE);
+            break;
+        }
+        default: {
+            MEDIA_LOGD("OnLifecycleEvent: other event");
+            break;
+        }
+    }
+    MEDIA_LOGD("SCWindowLifecycleListener::OnLifecycleEvent End.");
 }
 
 bool ScreenCaptureServer::CanScreenCaptureInstanceBeCreate(int32_t appUid)
@@ -538,7 +690,7 @@ void ScreenCaptureServer::SetCaptureConfig(CaptureMode captureMode, int32_t miss
 {
     captureConfig_.captureMode = captureMode;
     if (missionId != -1) { // -1 无效值
-        captureConfig_.videoInfo.videoCapInfo.taskIDs.push_back(missionId);
+        captureConfig_.videoInfo.videoCapInfo.taskIDs = { missionId };
     } else {
         captureConfig_.videoInfo.videoCapInfo.taskIDs = {};
     }
@@ -1543,6 +1695,10 @@ void ScreenCaptureServer::PostStartScreenCapture(bool isSuccess)
     }
     RegisterPrivateWindowListener();
     RegisterScreenConnectListener();
+    if (captureConfig_.captureMode == CAPTURE_SPECIFIED_WINDOW && missionIds_.size() == 1) {
+        SetWindowIdList(missionIds_[0]);
+        RegisterWindowLifecycleListener(GetWindowIdList());
+    }
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " PostStartScreenCapture end.", FAKE_POINTER(this));
 }
 
@@ -3389,6 +3545,7 @@ int32_t ScreenCaptureServer::StopScreenCaptureInner(AVScreenCaptureStateCode sta
         screenCaptureObserverCb_->Release();
     }
     ScreenManager::GetInstance().UnregisterScreenListener(screenConnectListener_);
+    UnRegisterWindowLifecycleListener();
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StopScreenCaptureInner end.", FAKE_POINTER(this));
     return ret;
 }
