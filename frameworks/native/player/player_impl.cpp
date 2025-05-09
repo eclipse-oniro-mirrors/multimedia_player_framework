@@ -381,7 +381,7 @@ int32_t PlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
             ResetSeekVariables();
         }
         MEDIA_LOGI("Start seek once end");
-        CHECK_AND_RETURN_RET_NOLOG(ret != MSERR_OK && hiAppEventAgent_ != nullptr, retCode);
+        CHECK_AND_RETURN_RET_NOLOG(retCode != MSERR_OK && hiAppEventAgent_ != nullptr, retCode);
         hiAppEventAgent_->TraceApiEvent(retCode, "seek", startTime, traceId_);
         return retCode;
     } else {
