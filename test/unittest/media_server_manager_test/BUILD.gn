@@ -144,6 +144,9 @@ ohos_unittest("media_server_manager_test") {
       "graphic_surface:sync_fence",
       "relational_store:native_rdb",
       "window_manager:libdm",
+      "window_manager:scene_session",
+      "window_manager:scene_session_manager",
+      "window_manager:session_manager_lite",
     ]
   }
 
