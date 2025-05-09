@@ -299,7 +299,7 @@ int32_t ScreenCaptureImpl::InitCaptureFile(AVScreenCaptureConfig config)
     }
     ret = screenCaptureService_->InitAudioCap(config.audioInfo.innerCapInfo);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "init innerCapInfo failed, innerCapInfo should be valid");
-    if (!IsVideoCapInfoIgnored(config.videoInfo.videoCapInfo)) { //M4a
+    if (!IsVideoCapInfoIgnored(config.videoInfo.videoCapInfo)) {
         ret = screenCaptureService_->InitVideoEncInfo(config.videoInfo.videoEncInfo);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "InitVideoEncInfo failed");
         ret = screenCaptureService_->InitVideoCap(config.videoInfo.videoCapInfo);
