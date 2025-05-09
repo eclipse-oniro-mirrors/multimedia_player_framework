@@ -209,7 +209,7 @@ int32_t ScreenCaptureServiceStub::StartScreenCaptureWithSurface(sptr<Surface> su
  
 int32_t ScreenCaptureServiceStub::UpdateSurface(sptr<Surface> surface)
 {
-    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, false, "screen capture server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE, "screen capture server is nullptr");
  
     return screenCaptureServer_->UpdateSurface(surface);
 }

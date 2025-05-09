@@ -2392,9 +2392,9 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_with_surface_update_surface, Test
  
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCaptureWithSurface(producerSurface));
     sleep(RECORDER_TIME);
-    cout << "screenCapture_->UpdateSurface start 1" << endl;
+    MEDIA_LOGI("screenCapture_->UpdateSurface start 1");
     EXPECT_EQ(MSERR_OK, screenCapture_->UpdateSurface(producerSurface));
-    cout << "screenCapture_->UpdateSurface end 1" << endl;
+    MEDIA_LOGI("screenCapture_->UpdateSurface end 1");
     sleep(RECORDER_TIME);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
