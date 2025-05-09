@@ -57,6 +57,7 @@ public:
     int OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
     int32_t ExcludeContent(ScreenCaptureContentFilter &contentFilter) override;
     int32_t SetScreenCaptureStrategy(ScreenCaptureStrategy strategy) override;
+    int32_t UpdateSurface(sptr<Surface> surface) override;
 
 private:
     ScreenCaptureServiceStub();
@@ -87,6 +88,7 @@ private:
     int32_t SetMaxVideoFrameRate(MessageParcel &data, MessageParcel &reply);
     int32_t ExcludeContent(MessageParcel &data, MessageParcel &reply);
     int32_t SetScreenCaptureStrategy(MessageParcel &data, MessageParcel &reply);
+    int32_t UpdateSurface(MessageParcel &data, MessageParcel &reply);
 
     int32_t Release(MessageParcel &data, MessageParcel &reply);
     int32_t DestroyStub(MessageParcel &data, MessageParcel &reply);

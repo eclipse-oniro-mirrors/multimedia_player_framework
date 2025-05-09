@@ -82,6 +82,7 @@ int32_t ScreenCaptureServiceStub::Init()
     screenCaptureStubFuncs_[SET_CHECK_SA_LIMIT] = &ScreenCaptureServiceStub::SetAndCheckSaLimit;
     screenCaptureStubFuncs_[SET_CHECK_LIMIT] = &ScreenCaptureServiceStub::SetAndCheckLimit;
     screenCaptureStubFuncs_[SET_STRATEGY] = &ScreenCaptureServiceStub::SetScreenCaptureStrategy;
+    screenCaptureStubFuncs_[UPDATE_SURFACE] = &ScreenCaptureServiceStub::UpdateSurface;
 
     return MSERR_OK;
 }
@@ -204,6 +205,13 @@ int32_t ScreenCaptureServiceStub::StartScreenCaptureWithSurface(sptr<Surface> su
         "screen capture server is nullptr");
 
     return screenCaptureServer_->StartScreenCaptureWithSurface(surface, isPrivacyAuthorityEnabled);
+}
+ 
+int32_t ScreenCaptureServiceStub::UpdateSurface(sptr<Surface> surface)
+{
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, false, "screen capture server is nullptr");
+ 
+    return screenCaptureServer_->UpdateSurface(surface);
 }
 
 int32_t ScreenCaptureServiceStub::StopScreenCapture()
@@ -569,6 +577,25 @@ int32_t ScreenCaptureServiceStub::StartScreenCaptureWithSurface(MessageParcel &d
 
     bool isPrivacyAuthorityEnabled = data.ReadBool();
     int32_t ret = StartScreenCaptureWithSurface(surface, isPrivacyAuthorityEnabled);
+    reply.WriteInt32(ret);
+    return MSERR_OK;
+}
+ 
+int32_t ScreenCaptureServiceStub::UpdateSurface(MessageParcel &data, MessageParcel &reply)
+{
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE, "screen capture server is nullptr");
+ 
+    sptr<IRemoteObject> object = data.ReadRemoteObject();
+    CHECK_AND_RETURN_RET_LOG(
+        object != nullptr, MSERR_NO_MEMORY, "ScreenCaptureServiceProxy UpdateSurface object is nullptr");
+ 
+    sptr<IBufferProducer> producer = iface_cast<IBufferProducer>(object);
+    CHECK_AND_RETURN_RET_LOG(producer != nullptr, MSERR_NO_MEMORY, "failed to convert object to producer");
+ 
+    sptr<Surface> surface = Surface::CreateSurfaceAsProducer(producer);
+    CHECK_AND_RETURN_RET_LOG(surface != nullptr, MSERR_NO_MEMORY, "failed to create surface");
+ 
+    int32_t ret = UpdateSurface(surface);
     reply.WriteInt32(ret);
     return MSERR_OK;
 }

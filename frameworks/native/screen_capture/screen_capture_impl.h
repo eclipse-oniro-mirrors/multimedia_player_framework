@@ -53,6 +53,7 @@ public:
     int32_t ExcludeContent(ScreenCaptureContentFilter &contentFilter) override;
     int32_t SetPrivacyAuthorityEnabled() override;
     int32_t SetScreenCaptureStrategy(ScreenCaptureStrategy strategy) override;
+    int32_t UpdateSurface(sptr<Surface> surface) override;
 
 private:
     bool IsAudioCapInfoIgnored(const AudioCaptureInfo &audioCapInfo);

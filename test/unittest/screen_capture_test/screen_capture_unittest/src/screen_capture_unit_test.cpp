@@ -2364,6 +2364,43 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_buffertest_max_frame_rate_02, Tes
         << " averageFrameRate_05: " << averageFrameRate_05 << endl;
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_buffertest_max_frame_rate_02 after");
 }
+ 
+/**
+ * @tc.name: screen_capture_with_surface_update_surface
+ * @tc.desc: do screencapture
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_with_surface_update_surface, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_with_surface_update_surface before");
+    SetConfig(config_);
+    config_.videoInfo.videoCapInfo.videoFrameWidth = 720;
+    config_.videoInfo.videoCapInfo.videoFrameHeight = 1280;
+    config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
+    bool isMicrophone = false;
+    screenCapture_->SetMicrophoneEnabled(isMicrophone);
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+ 
+    sptr<OHOS::Surface> consumer = OHOS::Surface::CreateSurfaceAsConsumer();
+    consumer->SetDefaultUsage(BUFFER_USAGE_CPU_READ | BUFFER_USAGE_MEM_MMZ_CACHE);
+    auto producer = consumer->GetProducer();
+    auto producerSurface = OHOS::Surface::CreateSurfaceAsProducer(producer);
+ 
+    sptr<IBufferConsumerListener> surfaceCb = OHOS::sptr<ScreenCapBufferDemoConsumerListener>::MakeSptr(consumer);
+    consumer->RegisterConsumerListener(surfaceCb);
+ 
+    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCaptureWithSurface(producerSurface));
+    sleep(RECORDER_TIME);
+    cout << "screenCapture_->UpdateSurface start 1" << endl;
+    EXPECT_EQ(MSERR_OK, screenCapture_->UpdateSurface(producerSurface));
+    cout << "screenCapture_->UpdateSurface end 1" << endl;
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
+    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+    CloseFile();
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_with_surface_update_surface after");
+}
 
 } // namespace Media
 } // namespace OHOS

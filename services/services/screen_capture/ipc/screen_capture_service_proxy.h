@@ -54,6 +54,7 @@ public:
     int32_t SetListenerObject(const sptr<IRemoteObject> &object) override;
     int32_t ExcludeContent(ScreenCaptureContentFilter &contentFilter) override;
     int32_t SetScreenCaptureStrategy(ScreenCaptureStrategy strategy) override;
+    int32_t UpdateSurface(sptr<Surface> surface) override;
 
 private:
     static inline BrokerDelegator<ScreenCaptureServiceProxy> delegator_;
