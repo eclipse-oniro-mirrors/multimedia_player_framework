@@ -52,6 +52,7 @@ public:
     int32_t SetScreenCaptureCallback(const std::shared_ptr<ScreenCaptureCallBack> &callback) override;
     int32_t ExcludeContent(ScreenCaptureContentFilter &contentFilter) override;
     int32_t SetPrivacyAuthorityEnabled() override;
+    int32_t SetScreenCaptureStrategy(ScreenCaptureStrategy strategy) override;
 
 private:
     bool IsAudioCapInfoIgnored(const AudioCaptureInfo &audioCapInfo);

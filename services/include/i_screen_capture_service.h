@@ -56,6 +56,7 @@ public:
     virtual int32_t SetScreenCaptureCallback(const std::shared_ptr<ScreenCaptureCallBack> &callback) = 0;
     virtual void Release() = 0;
     virtual int32_t ExcludeContent(ScreenCaptureContentFilter &contentFilter) = 0;
+    virtual int32_t SetScreenCaptureStrategy(ScreenCaptureStrategy strategy) = 0;
 };
 } // namespace Media
 } // namespace OHOS

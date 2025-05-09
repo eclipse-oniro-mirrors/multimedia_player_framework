@@ -127,6 +127,10 @@ private:
     static VideoCodecFormat GetVideoCodecFormat(const int32_t &preset);
     static int32_t GetAudioInfo(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, napi_env env, napi_value args);
     static int32_t GetVideoInfo(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, napi_env env, napi_value args);
+    static int32_t GetVideoEncInfo(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, napi_env env,
+        napi_value args);
+    static int32_t GetVideoCaptureInfo(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, napi_env env,
+        napi_value args);
     static void AsyncJsReportAVScreenCaptureUserChoice(napi_env env, void *data);
     static int32_t CheckAudioSampleRate(const int32_t &audioSampleRate);
     static int32_t CheckAudioChannelCount(const int32_t &audioChannelCount);
@@ -148,6 +152,8 @@ private:
 
     int32_t GetConfig(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, napi_env env, napi_value args);
     int32_t GetRecorderInfo(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, napi_env env, napi_value args);
+    int32_t GetStrategy(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, napi_env env, napi_value args);
+    bool GetOptionalPropertyBool(napi_env env, napi_value configObj, const std::string &type, bool &result);
 
     static thread_local napi_ref constructor_;
     napi_env env_ = nullptr;

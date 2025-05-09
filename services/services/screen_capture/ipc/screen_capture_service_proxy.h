@@ -53,6 +53,7 @@ public:
     int32_t SetMaxVideoFrameRate(int32_t frameRate) override;
     int32_t SetListenerObject(const sptr<IRemoteObject> &object) override;
     int32_t ExcludeContent(ScreenCaptureContentFilter &contentFilter) override;
+    int32_t SetScreenCaptureStrategy(ScreenCaptureStrategy strategy) override;
 
 private:
     static inline BrokerDelegator<ScreenCaptureServiceProxy> delegator_;

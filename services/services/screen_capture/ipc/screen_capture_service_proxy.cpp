@@ -600,5 +600,22 @@ int32_t ScreenCaptureServiceProxy::SetMaxVideoFrameRate(int32_t frameRate)
     return reply.ReadInt32();
 }
 
+int32_t ScreenCaptureServiceProxy::SetScreenCaptureStrategy(ScreenCaptureStrategy strategy)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(ScreenCaptureServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+ 
+    token = data.WriteBool(strategy.enableDeviceLevelCapture) && data.WriteBool(strategy.keepCaptureDuringCall);
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write strategy!");
+
+    int error = Remote()->SendRequest(SET_STRATEGY, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+                             "SetScreenCaptureStrategy failed, error: %{public}d", error);
+    return reply.ReadInt32();
+}
 } // namespace Media
 } // namespace OHOS

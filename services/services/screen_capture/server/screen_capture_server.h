@@ -95,6 +95,7 @@ public:
     int32_t SetMaxVideoFrameRate(int32_t frameRate) override;
     void Release() override;
     int32_t ExcludeContent(ScreenCaptureContentFilter &contentFilter) override;
+    int32_t SetScreenCaptureStrategy(ScreenCaptureStrategy strategy) override;
 
     void SetSessionId(int32_t sessionId);
     int32_t OnReceiveUserPrivacyAuthority(bool isAllowed);
@@ -304,7 +305,6 @@ private:
     Global::Resource::ResourceManager *resourceManager_ = nullptr;
     Global::Resource::ResConfig *resConfig_ = nullptr;
     OHOS::sptr<Rosen::ScreenManager::IScreenListener> screenConnectListener_ = nullptr;
-    int32_t apiVersion_ = -1;
 #ifdef SUPPORT_CALL
     std::atomic<bool> isInTelCall_ = false;
     std::atomic<bool> isInTelCallAudio_ = false;

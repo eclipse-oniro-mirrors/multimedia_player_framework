@@ -169,6 +169,12 @@ struct AudioInfo {
     AudioEncInfo audioEncInfo;
 };
 
+struct ScreenCaptureStrategy {
+    bool enableDeviceLevelCapture = false;
+    bool keepCaptureDuringCall = false;
+    bool setByUser = false;
+};
+
 struct VideoCaptureInfo {
     uint64_t displayId = 0;
     std::list<int32_t> taskIDs;
@@ -202,6 +208,7 @@ struct AVScreenCaptureConfig {
     AudioInfo audioInfo;
     VideoInfo videoInfo;
     RecorderInfo recorderInfo;
+    ScreenCaptureStrategy strategy;
 };
 
 struct AudioBuffer {
@@ -279,6 +286,7 @@ public:
     virtual int32_t SetScreenCaptureCallback(const std::shared_ptr<ScreenCaptureCallBack> &callback) = 0;
     virtual int32_t ExcludeContent(ScreenCaptureContentFilter &contentFilter) = 0;
     virtual int32_t SetPrivacyAuthorityEnabled() = 0;
+    virtual int32_t SetScreenCaptureStrategy(ScreenCaptureStrategy strategy) = 0;
 };
 
 class __attribute__((visibility("default"))) ScreenCaptureFactory {
