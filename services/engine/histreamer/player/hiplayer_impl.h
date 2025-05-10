@@ -348,7 +348,7 @@ private:
     std::atomic<int32_t> videoHeight_{0};
     std::atomic<bool> needSwapWH_{false};
     std::atomic<bool> isInterruptNeeded_{false};
-    bool isEnableStartFrameRateOpt_ {false};
+    bool isEnableStartFrameRateOpt_ {true};
     std::atomic<bool> isBufferingEnd_{false};
 
     std::shared_ptr<Meta> audioRenderInfo_{nullptr};
