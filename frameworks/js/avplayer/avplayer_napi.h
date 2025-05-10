@@ -435,6 +435,8 @@ private:
     int32_t mode_ = SWITCH_SMOOTH;
     std::mutex syncMutex_;
     bool getApiVersionFlag_ = true;
+
+    std::atomic<bool> isReadyReleased_ = false;
 };
 } // namespace Media
 } // namespace OHOS
