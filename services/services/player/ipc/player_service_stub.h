@@ -168,7 +168,7 @@ private:
     int32_t SetMaxAmplitudeCbStatus(MessageParcel &data, MessageParcel &reply);
     int32_t IsSeekContinuousSupported(MessageParcel &data, MessageParcel &reply);
     int32_t SetSeiMessageCbStatus(MessageParcel &data, MessageParcel &reply);
-    int32_t SetStartFrameRateOptEnabled(MessageParcel &data, MessageParcel &reply)
+    int32_t SetStartFrameRateOptEnabled(MessageParcel &data, MessageParcel &reply);
 
     int32_t ReadMediaStreamListFromMessageParcel(
         MessageParcel &data, const std::shared_ptr<AVMediaSource> &mediaSource);
