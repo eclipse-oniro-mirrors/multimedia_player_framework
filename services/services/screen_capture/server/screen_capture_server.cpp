@@ -3120,6 +3120,28 @@ int32_t ScreenCaptureServer::ResizeCanvas(int32_t width, int32_t height)
 
     return MSERR_OK;
 }
+ 
+int32_t ScreenCaptureServer::UpdateSurface(sptr<Surface> surface)
+{
+    if (!isSurfaceMode_) {
+        return MSERR_INVALID_OPERATION;
+    }
+    MediaTrace trace("ScreenCaptureServer::UpdateSurface");
+    std::lock_guard<std::mutex> lock(mutex_);
+    MEDIA_LOGI("ScreenCaptureServer::UpdateSurface start");
+    if (captureState_ != AVScreenCaptureState::STARTED) {
+        MEDIA_LOGE("UpdateSurface captureState_ invalid, captureState_:%{public}d", captureState_);
+        return MSERR_INVALID_OPERATION;
+    }
+    CHECK_AND_RETURN_RET_LOG(surface != nullptr, MSERR_INVALID_OPERATION, "UpdateSurface failed, invalid param");
+ 
+    auto res = ScreenManager::GetInstance().SetVirtualScreenSurface(virtualScreenId_, surface);
+    MEDIA_LOGI("UpdateSurface, ret: %{public}d ", res);
+    CHECK_AND_RETURN_RET_LOG(res == DMError::DM_OK, MSERR_UNSUPPORT, "UpdateSurface failed");
+    surface_ = surface;
+ 
+    return MSERR_OK;
+}
 
 int32_t ScreenCaptureServer::SkipPrivacyMode(std::vector<uint64_t> &windowIDsVec)
 {

@@ -167,6 +167,14 @@ int32_t ScreenCaptureImpl::ResizeCanvas(int32_t width, int32_t height)
                              "screen capture service does not exist..");
     return screenCaptureService_->ResizeCanvas(width, height);
 }
+ 
+int32_t ScreenCaptureImpl::UpdateSurface(sptr<Surface> surface)
+{
+    MEDIA_LOGD("UpdateSurface:0x%{public}06" PRIXPTR " init in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(screenCaptureService_ != nullptr, MSERR_NO_MEMORY,
+                             "screen capture service does not exist.");
+    return screenCaptureService_->UpdateSurface(surface);
+}
 
 int32_t ScreenCaptureImpl::SkipPrivacyMode(std::vector<uint64_t> &windowIDsVec)
 {

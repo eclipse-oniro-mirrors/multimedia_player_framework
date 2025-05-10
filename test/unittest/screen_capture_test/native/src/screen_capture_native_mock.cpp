@@ -167,6 +167,12 @@ int32_t ScreenCaptureNativeMock::ResizeCanvas(int32_t width, int32_t height)
     UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
     return screenCapture_->ResizeCanvas(width, height);
 }
+ 
+int32_t ScreenCaptureNativeMock::UpdateSurface(const std::any& surface)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
+    return screenCapture_->UpdateSurface(std::any_cast<sptr<Surface>>(surface));
+}
 
 int32_t ScreenCaptureNativeMock::SkipPrivacyMode(int32_t *windowIDs, int32_t windowCount)
 {
