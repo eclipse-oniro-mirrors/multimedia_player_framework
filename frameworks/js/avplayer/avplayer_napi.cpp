@@ -126,6 +126,7 @@ napi_value AVPlayerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_GETTER_SETTER("audioRendererInfo", JsGetAudioRendererInfo, JsSetAudioRendererInfo),
         DECLARE_NAPI_GETTER_SETTER("audioEffectMode", JsGetAudioEffectMode, JsSetAudioEffectMode),
 
+        DECLARE_NAPI_SETTER("enableStartFrameRateOpt", JsSetStartFrameRateOptEnabled),
         DECLARE_NAPI_GETTER("state", JsGetState),
         DECLARE_NAPI_GETTER("currentTime", JsGetCurrentTime),
         DECLARE_NAPI_GETTER("duration", JsGetDuration),
@@ -1269,6 +1270,44 @@ napi_value AVPlayerNapi::JsSetUrl(napi_env env, napi_callback_info info)
     jsPlayer->SetSource(jsPlayer->url_);
 
     MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSetUrl Out", FAKE_POINTER(jsPlayer));
+    return result;
+}
+
+
+
+napi_value AVPlayerNapi::JsSetStartFrameRateOptEnabled(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVPlayerNapi::SetStartFrameRateOptEnabled");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    MEDIA_LOGD("JsSetStartFrameRateOptEnabled");
+
+    napi_value args[1] = { nullptr };
+    size_t argCount = 1; // enable: bool
+    AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
+
+    napi_valuetype valueType = napi_undefined;
+    if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_boolean) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "enableStartFrameRateOpt is not napi_boolean");
+        return result;
+    }
+
+    napi_status status = napi_get_value_bool(env, args[0], &jsPlayer->enabled_);
+    if (status != napi_ok) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
+            "invalid parameters, please check the input enableStartFrameRateOpt");
+        return result;
+    }
+
+    auto task = std::make_shared<TaskHandler<void>>([jsPlayer]() {
+        MEDIA_LOGD("SetStartFrameRateOptEnabled Task");
+        if (jsPlayer->player_ != nullptr) {
+            (void)jsPlayer->player_->SetStartFrameRateOptEnabled(jsPlayer->enabled_);
+        }
+    });
+    (void)jsPlayer->taskQue_->EnqueueTask(task);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " SetStartFrameRateOptEnabled Out", FAKE_POINTER(jsPlayer));
     return result;
 }
 

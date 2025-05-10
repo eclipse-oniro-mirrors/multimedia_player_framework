@@ -550,6 +550,14 @@ int32_t PlayerImpl::SetSeiMessageCbStatus(bool status, const std::vector<int32_t
     return playerService_->SetSeiMessageCbStatus(status, payloadTypes);
 }
 
+int32_t PlayerImpl::SetStartFrameRateOptEnabled(bool enabled)
+{
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetStartFrameRateOptEnabled in, enabled is %{public}d",
+        FAKE_POINTER(this), enabled);
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
+    return playerService_->SetStartFrameRateOptEnabled(enabled);
+}
+
 PlayerImplCallback::PlayerImplCallback(const std::shared_ptr<PlayerCallback> playerCb,
     std::shared_ptr<PlayerImpl> player)
 {

@@ -254,6 +254,8 @@ private:
 
     static napi_value JsSetVideoWindowSize(napi_env env, napi_callback_info info);
 
+    static napi_value JsSetStartFrameRateOptEnabled(napi_env env, napi_callback_info info);
+
     /**
      * getPlaybackInfo(): playbackInfo;
      */
@@ -402,6 +404,7 @@ private:
     std::atomic<bool> isReleased_ = false;
     std::atomic<bool> isInterrupted_ = false;
     std::string url_ = "";
+    bool enabled_ = false;
     struct AVFileDescriptor fileDescriptor_;
     struct AVDataSrcDescriptor dataSrcDescriptor_;
     std::string surface_ = "";

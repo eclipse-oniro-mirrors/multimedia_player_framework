@@ -98,6 +98,7 @@ public:
     int32_t SetMaxAmplitudeCbStatus(bool status) override;
     bool IsSeekContinuousSupported() override;
     int32_t SetSeiMessageCbStatus(bool status, const std::vector<int32_t> &payloadTypes) override;
+    int32_t SetStartFrameRateOptEnabled(bool enabled) override;
 protected:
     PlayerServiceStub();
     virtual int32_t Init();
@@ -166,6 +167,7 @@ private:
     int32_t SetMaxAmplitudeCbStatus(MessageParcel &data, MessageParcel &reply);
     int32_t IsSeekContinuousSupported(MessageParcel &data, MessageParcel &reply);
     int32_t SetSeiMessageCbStatus(MessageParcel &data, MessageParcel &reply);
+    int32_t SetStartFrameRateOptEnabled(MessageParcel &data, MessageParcel &reply);
 
     int32_t ReadMediaStreamListFromMessageParcel(
         MessageParcel &data, const std::shared_ptr<AVMediaSource> &mediaSource);
