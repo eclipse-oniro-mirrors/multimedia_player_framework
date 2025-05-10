@@ -299,6 +299,22 @@ int32_t PlayerServer::AddSubSource(int32_t fd, int64_t offset, int64_t size)
     return MSERR_OK;
 }
 
+int32_t PlayerServer::SetStartFrameRateOptEnabled(bool enabled)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
+    auto startFrameRateOptTask = std::make_shared<TaskHandler<int32_t>>([this, enabled]() {
+        MediaTrace trace("PlayerServer::SetStartFrameRateOptEnabled");
+        CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, taskMgr_.MarkTaskDone("SetStartFrameRateOptEnabled done"),
+            "SetStartFrameRateOptEnabled failed, playerEngine is nullptr");
+        auto res = playerEngine_->SetStartFrameRateOptEnabled(enabled);
+        taskMgr_.MarkTaskDone("SetStartFrameRateOptEnabled done");
+        return res;
+    });
+    taskMgr_.LaunchTask(startFrameRateOptTask, PlayerServerTaskType::LIGHT_TASK, "SetStartFrameRateOptEnabled");
+    return MSERR_OK;
+}
+
 int32_t PlayerServer::Prepare()
 {
     if (inReleasing_.load()) {

@@ -82,6 +82,7 @@ public:
     MOCK_METHOD(int32_t, GetApiVersion, (int32_t &apiVersion), (override));
     MOCK_METHOD(bool, IsSeekContinuousSupported, (), (override));
     MOCK_METHOD(int32_t, SetSeiMessageCbStatus, (bool status, const std::vector<int32_t> &payloadTypes), (override));
+    MOCK_METHOD(int32_t, SetStartFrameRateOptEnabled, (bool enabled), (override));
 };
 } // namespace Media
 } // namespace OHOS

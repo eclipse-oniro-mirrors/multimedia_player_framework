@@ -87,6 +87,7 @@ public:
     int32_t SetDeviceChangeCbStatus(bool status) override;
     bool IsSeekContinuousSupported() override;
     int32_t SetSeiMessageCbStatus(bool status, const std::vector<int32_t> &payloadTypes) override;
+    int32_t SetStartFrameRateOptEnabled(bool enabled) override;
     void ReleaseClientListener() override;
     HiviewDFX::HiTraceId GetTraceId();
 private:

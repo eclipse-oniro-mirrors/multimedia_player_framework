@@ -323,6 +323,12 @@ public:
     {
         return false;
     }
+
+    virtual int32_t SetStartFrameRateOptEnabled(bool enabled)
+    {
+        (void)enabled;
+        return 0;
+    }
 };
 } // namespace Media
 } // namespace OHOS

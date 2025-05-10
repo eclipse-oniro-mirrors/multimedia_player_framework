@@ -157,6 +157,12 @@ public:
         return 0;
     }
 
+    virtual int32_t SetStartFrameRateOptEnabled(bool enabled)
+    {
+        (void)enabled;
+        return 0;
+    }
+
     /**
      * IPC code ID
      */
@@ -214,6 +220,7 @@ public:
         GET_API_VERSION,
         IS_SEEK_CONTINUOUS_SUPPORTED,
         SET_SOURCE_LOADER,
+        SET_START_FRAME_RATE_OPT_ENABLED,
         MAX_IPC_ID,                   // all IPC codes should be added before MAX_IPC_ID
     };
 
