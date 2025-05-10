@@ -201,6 +201,8 @@ void PlayerServiceStub::FillPlayerFuncPart3()
         [this](MessageParcel &data, MessageParcel &reply) { return SetVideoWindowSize(data, reply); } };
     playerFuncs_[SET_VOLUME_MODE] = { "Player::SetVolumeMode",
         [this](MessageParcel &data, MessageParcel &reply) { return SetVolumeMode(data, reply); } };
+    playerFuncs_[SET_START_FRAME_RATE_OPT_ENABLED] = { "Player::SetStartFrameRateOptEnabled",
+        [this](MessageParcel &data, MessageParcel &reply) { return SetStartFrameRateOptEnabled(data, reply); } };
 }
 
 int32_t PlayerServiceStub::Init()
@@ -425,6 +427,13 @@ int32_t PlayerServiceStub::SetVolumeMode(int32_t mode)
     MediaTrace trace("PlayerServiceStub::SetVolumeMode");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
     return playerServer_->SetVolumeMode(mode);
+}
+
+int32_t PlayerServiceStub::SetStartFrameRateOptEnabled(bool enabled)
+{
+    MediaTrace trace("PlayerServiceStub::SetStartFrameRateOptEnabled");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->SetStartFrameRateOptEnabled(enabled);
 }
 
 int32_t PlayerServiceStub::Seek(int32_t mSeconds, PlayerSeekMode mode)
@@ -817,6 +826,13 @@ int32_t PlayerServiceStub::SetVolume(MessageParcel &data, MessageParcel &reply)
     float leftVolume = data.ReadFloat();
     float rightVolume = data.ReadFloat();
     reply.WriteInt32(SetVolume(leftVolume, rightVolume));
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::SetStartFrameRateOptEnabled(MessageParcel &data, MessageParcel &reply)
+{
+    bool enabled = data.ReadBool();
+    reply.WriteInt32(SetStartFrameRateOptEnabled(enabled));
     return MSERR_OK;
 }
 

@@ -981,6 +981,20 @@ public:
         (void)height;
         return 0;
     }
+
+    /**
+     * @brief Set Start Frame Rate Opt Enabled.
+     *
+     * @return Returns {@link MSERR_OK} if enabled is set; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t SetStartFrameRateOptEnabled(bool enabled)
+    {
+        (void)enabled;
+        return 0;
+    }
 };
 
 class __attribute__((visibility("default"))) PlayerFactory {

@@ -109,6 +109,7 @@ void PlayerServiceProxy::InitPlayerFuncsPart2()
     playerFuncs_[SET_SOURCE_LOADER] = "Player::SetSourceLoader";
     playerFuncs_[SET_SUPER_RESOLUTION] = "Player::SetSuperResolution";
     playerFuncs_[SET_VIDEO_WINDOW_SIZE] = "Player::SetVideoWindowSize";
+    playerFuncs_[SET_START_FRAME_RATE_OPT_ENABLED] = "Player::SetStartFrameRateOptEnabled";
 }
 
 int32_t PlayerServiceProxy::SendRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -1138,6 +1139,23 @@ int32_t PlayerServiceProxy::SetMaxAmplitudeCbStatus(bool status)
     int32_t error = SendRequest(SET_MAX_AMPLITUDE_CB_STATUS, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetMaxAmplitudeCbStatus failed, error: %{public}d", error);
+    return reply.ReadInt32();
+}
+
+int32_t PlayerServiceProxy::SetStartFrameRateOptEnabled(bool enabled)
+{
+    MediaTrace trace("PlayerServiceProxy::SetStartFrameRateOptEnabled");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    data.WriteBool(enabled);
+    int32_t error = SendRequest(SET_START_FRAME_RATE_OPT_ENABLED, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetStartFrameRateOptEnabled failed, error: %{public}d", error);
     return reply.ReadInt32();
 }
 

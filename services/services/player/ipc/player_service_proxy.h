@@ -82,6 +82,7 @@ public:
     int32_t GetApiVersion(int32_t &apiVersion) override;
     bool IsSeekContinuousSupported() override;
     int32_t SetSeiMessageCbStatus(bool status, const std::vector<int32_t> &payloadTypes) override;
+    int32_t SetStartFrameRateOptEnabled(bool enabled) override;
 private:
     int32_t SendRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option);
     void InitPlayerFuncsPart1();

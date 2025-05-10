@@ -619,6 +619,13 @@ int32_t HiPlayerImpl::SetIsCalledBySystemApp(bool isCalledBySystemApp)
     return TransStatus(Status::OK);
 }
 
+int32_t HiPlayerImpl::SetStartFrameRateOptEnabled(bool enabled)
+{
+    MEDIA_LOG_I("enabled: " PUBLIC_LOG_D32, enabled);
+    isEnableStartFrameRateOpt_ = enabled;
+    return TransStatus(Status::OK);
+}
+
 int32_t HiPlayerImpl::PrepareAsync()
 {
     MediaTrace trace("HiPlayerImpl::PrepareAsync");
@@ -1595,6 +1602,16 @@ void HiPlayerImpl::SetBundleName(std::string bundleName)
     }
 }
 
+void HiPlayerImpl::EnableStartFrameRateOpt(Format &videoTrack)
+{
+    double frameRate = 1;
+    if (videoTrack.GetDoubleValue("frame_rate", frameRate) && syncManager_ != nullptr) {
+        frameRate /= FRAME_RATE_UNIT_MULTIPLE;
+        syncManager_->SetInitialVideoFrameRate(frameRate);
+        MEDIA_LOG_I("VideoSink initial frameRate is " PUBLIC_LOG_D64, static_cast<int64_t>(frameRate));
+    }
+}
+
 int32_t HiPlayerImpl::InitVideoWidthAndHeight()
 {
 #ifdef SUPPORT_VIDEO
@@ -1613,11 +1630,8 @@ int32_t HiPlayerImpl::InitVideoWidthAndHeight()
         if (videoTrackId != currentVideoTrackId) {
             continue;
         }
-        double frameRate = 1;
-        if (videoTrack.GetDoubleValue("frame_rate", frameRate) && syncManager_ != nullptr) {
-            frameRate /= FRAME_RATE_UNIT_MULTIPLE;
-            syncManager_->SetInitialVideoFrameRate(frameRate);
-            MEDIA_LOG_I("VideoSink initial frameRate is " PUBLIC_LOG_D64, static_cast<int64_t>(frameRate));
+        if (isEnableStartFrameRateOpt_) {
+            EnableStartFrameRateOpt(videoTrack);
         }
         int32_t height;
         videoTrack.GetIntValue("height", height);

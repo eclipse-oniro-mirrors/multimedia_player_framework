@@ -156,6 +156,13 @@ int32_t PlayerClient::SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSee
     return playerProxy_->SetPlayRangeWithMode(start, end, mode);
 }
 
+int32_t PlayerClient::SetStartFrameRateOptEnabled(bool enabled)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerProxy_->SetStartFrameRateOptEnabled(enabled);
+}
+
 int32_t PlayerClient::Prepare()
 {
     std::lock_guard<std::mutex> lock(mutex_);

@@ -148,6 +148,7 @@ public:
                                  const int32_t rendererFlag, const int32_t volumeMode) override;
     int32_t SetAudioInterruptMode(const int32_t interruptMode) override;
     int32_t SeekToCurrentTime(int32_t mSeconds, PlayerSeekMode mode) override;
+    int32_t SetStartFrameRateOptEnabled(bool enabled) override;
     void SetInterruptState(bool isInterruptNeeded) override;
     void OnDumpInfo(int32_t fd) override;
     void SetInstancdId(uint64_t instanceId) override;
@@ -162,6 +163,7 @@ public:
     void DoRestartLiveLink() override;
 
     // internal interfaces
+    void EnableStartFrameRateOpt(Format &videoTrack);
     void OnEvent(const Event &event);
     void OnEventContinue(const Event &event);
     void OnEventSub(const Event &event);
@@ -346,6 +348,7 @@ private:
     std::atomic<int32_t> videoHeight_{0};
     std::atomic<bool> needSwapWH_{false};
     std::atomic<bool> isInterruptNeeded_{false};
+    bool isEnableStartFrameRateOpt_ {false};
     std::atomic<bool> isBufferingEnd_{false};
 
     std::shared_ptr<Meta> audioRenderInfo_{nullptr};

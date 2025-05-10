@@ -88,6 +88,7 @@ public:
     int32_t SetDeviceChangeCbStatus(bool status) override;
     bool IsSeekContinuousSupported() override;
     int32_t SetSeiMessageCbStatus(bool status, const std::vector<int32_t> &payloadTypes) override;
+    int32_t SetStartFrameRateOptEnabled(bool enabled) override;
 
 private:
     int32_t CreateListenerObject();
