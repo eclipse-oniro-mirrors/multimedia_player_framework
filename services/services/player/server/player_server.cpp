@@ -1189,8 +1189,6 @@ void PlayerServer::HandleEos()
                 PlayerSeekMode seekMode = static_cast<PlayerSeekMode>(playerEngine_->GetPlayRangeSeekMode());
                 int32_t seekTime = (startTime != -1 && endTime != -1) ? startTime : 0;
                 (void)currState->Seek(seekTime, seekMode);
-            } else {
-                (void)currState->Seek(0, SEEK_PREVIOUS_SYNC);
             }
         });
 
