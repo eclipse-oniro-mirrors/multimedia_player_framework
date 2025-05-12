@@ -1885,7 +1885,6 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
         ", isSurfaceMode:%{public}d, dataType:%{public}d", appInfo_.appUid, appInfo_.appPid, isPrivacyAuthorityEnabled,
         isSurfaceMode_, captureConfig_.dataType);
     MediaTrace trace("ScreenCaptureServer::StartScreenCaptureInner");
-    isStrategyCanBeModified_.store(false);
     int32_t ret = RegisterServerCallbacks();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "RegisterServerCallbacks failed");
 
@@ -3682,7 +3681,7 @@ void ScreenCaptureServer::ReleaseInner()
 int32_t ScreenCaptureServer::SetScreenCaptureStrategy(ScreenCaptureStrategy strategy)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(isStrategyCanBeModified_.load(), MSERR_UNSUPPORT,
+    CHECK_AND_RETURN_RET_LOG(captureState_ < AVScreenCaptureState::POPUP_WINDOW, MSERR_UNSUPPORT,
         "strategy can not be modified after screencapture started");
     MEDIA_LOGI("SetScreenCaptureStrategy enableDeviceLevelCapture: %{public}d, keepCaptureDuringCall: %{public}d",
         strategy.enableDeviceLevelCapture, strategy.keepCaptureDuringCall);
