@@ -1950,7 +1950,7 @@ int32_t ScreenCaptureServer::RegisterServerCallbacks()
     uint64_t tokenId = IPCSkeleton::GetCallingFullTokenID();
     isCalledBySystemApp_ = OHOS::Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(tokenId);
     MEDIA_LOGI("ScreenCaptureServer::RegisterServerCallbacks isCalledBySystemApp: %{public}d", isCalledBySystemApp_);
-    isStrategyCanBeModefied_.store(false);
+    isStrategyCanBeModified_.store(false);
     if (!captureConfig_.strategy.keepCaptureDuringCall && InCallObserver::GetInstance().IsInCall(true) &&
         !IsTelInCallSkipList()) {
         MEDIA_LOGI("ScreenCaptureServer Start InCall Abort");
@@ -2606,7 +2606,7 @@ int32_t ScreenCaptureServer::MakeVirtualScreenMirror()
     CHECK_AND_RETURN_RET_LOG(defaultDisplay != nullptr, MSERR_UNKNOWN,
         "MakeVirtualScreenMirror GetDefaultDisplaySync failed");
 #ifdef PC_STANDARD
-    isStrategyCanBeModefied_.store(false);
+    isStrategyCanBeModified_.store(false);
     if (IsHopper() && captureConfig_.strategy.enableDeviceLevelCapture == false) {
         if (captureConfig_.captureMode == CAPTURE_SPECIFIED_WINDOW) {
             return MakeVirtualScreenMirrorForWindowForHopper(defaultDisplay, mirrorIds);
@@ -3683,7 +3683,7 @@ void ScreenCaptureServer::ReleaseInner()
 int32_t ScreenCaptureServer::SetScreenCaptureStrategy(ScreenCaptureStrategy strategy)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(isStrategyCanBeModefied_.load(), MSERR_UNSUPPORT,
+    CHECK_AND_RETURN_RET_LOG(isStrategyCanBeModified_.load(), MSERR_UNSUPPORT,
         "strategy can not be modified once it takes effect");
     MEDIA_LOGI("SetScreenCaptureStrategy enableDeviceLevelCapture: %{public}d, keepCaptureDuringCall: %{public}d",
         strategy.enableDeviceLevelCapture, strategy.keepCaptureDuringCall);
