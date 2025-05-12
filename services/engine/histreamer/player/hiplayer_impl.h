@@ -439,6 +439,8 @@ private:
     };
     bool isCalledBySystemApp_ { false };
 
+    std::atomic<bool> isOnlyAudio_ {false};
+
     // post processor
     static constexpr int32_t MAX_TARGET_WIDTH = 1920;
     static constexpr int32_t MAX_TARGET_HEIGHT = 1080;
