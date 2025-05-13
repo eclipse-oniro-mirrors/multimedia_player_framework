@@ -1743,6 +1743,7 @@ int32_t AVRecorderNapi::GetOutputFormat(const std::string &extension, OutputForm
         { "mp3", OutputFormatType::FORMAT_MP3 },
         { "wav", OutputFormatType::FORMAT_WAV },
         { "amr", OutputFormatType::FORMAT_AMR },
+        { "aac", OutputFormatType::FORMAT_AAC },
         { "", OutputFormatType::FORMAT_DEFAULT },
     };
 
@@ -2540,6 +2541,7 @@ int32_t MediaJsResultExtensionMethod::SetFileFormat(OutputFormatType &type, std:
         { OutputFormatType::FORMAT_MP3, "mp3" },
         { OutputFormatType::FORMAT_WAV, "wav" },
         { OutputFormatType::FORMAT_AMR, "amr" },
+        { OutputFormatType::FORMAT_AAC, "aac" },
         { OutputFormatType::FORMAT_DEFAULT, "" },
     };
 
