@@ -130,6 +130,8 @@ enum OutputFormatType : int32_t {
     FORMAT_MP3 = 9,
     /** WAV format */
     FORMAT_WAV = 10,
+    /** AAC format */
+    FORMAT_AAC = 11,
     /** BUTT */
     FORMAT_BUTT,
 };
