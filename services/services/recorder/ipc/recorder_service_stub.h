@@ -82,6 +82,7 @@ public:
     int32_t IsWatermarkSupported(bool &isWatermarkSupported) override;
     int32_t SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer) override;
     int32_t SetUserMeta(const std::shared_ptr<Meta> &userMeta) override;
+    int32_t SetWillMuteWhenInterrupted(bool muteWhenInterrupted) override;
     // MonitorServerObject override
     int32_t DoIpcAbnormality() override;
     int32_t DoIpcRecovery(bool fromMonitor) override;
@@ -135,9 +136,11 @@ private:
     int32_t IsWatermarkSupported(MessageParcel &data, MessageParcel &reply);
     int32_t SetWatermark(MessageParcel &data, MessageParcel &reply);
     int32_t SetUserMeta(MessageParcel &data, MessageParcel &reply);
+    int32_t SetWillMuteWhenInterrupted(MessageParcel &data, MessageParcel &reply);
     int32_t CheckPermission();
     void FillRecFuncPart1();
     void FillRecFuncPart2();
+    void FillRecFuncPart3();
 
     std::shared_ptr<IRecorderService> recorderServer_ = nullptr;
     std::map<uint32_t, RecorderStubFunc> recFuncs_;

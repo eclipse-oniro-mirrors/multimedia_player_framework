@@ -1037,6 +1037,15 @@ public:
      * @version 1.0
     */
     virtual int32_t SetUserMeta(const std::shared_ptr<Meta> &userMeta) = 0;
+
+    /** @brief set interrupt mode to avrecorder.
+     *
+     * @param muteWhenInterrupted muteWhenInterrupted true or false.
+     * @return Returns {@link MSERR_OK} If the set succeeds; returns an error code otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t SetWillMuteWhenInterrupted(bool muteWhenInterrupted) = 0;
 };
 
 class __attribute__((visibility("default"))) RecorderFactory {
