@@ -40,7 +40,7 @@ int32_t CacheBufferMock::CreateAudioRenderer(const int32_t streamID,
     const AudioStandard::AudioRendererInfo audioRendererInfo, const PlayParams playParams)
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(cacheBuffer_ != nullptr, MSERR_INVALID_OPERATION, "cacheBuffer_ == nullptr");
-    return cacheBuffer_->CreateAudioRenderer(streamID, audioRendererInfo, playParams) == nullptr;
+    return cacheBuffer_->CreateAudioRenderer(audioRendererInfo, playParams) == nullptr;
 }
 
 size_t CacheBufferMock::GetFileSize(const std::string& fileName)

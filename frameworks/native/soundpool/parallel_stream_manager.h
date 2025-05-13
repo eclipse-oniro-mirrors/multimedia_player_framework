@@ -35,12 +35,12 @@ public:
     ParallelStreamManager(int32_t maxStreams, AudioStandard::AudioRendererInfo audioRenderInfo);
     ~ParallelStreamManager();
 
-    int32_t GetGlobeId(int32_t soundId);
-    void DelGlobeId(int32_t globeId);
-    void SetGlobeId(int32_t soundId, int32_t globeId);
+    int32_t GetGlobalId(int32_t soundId);
+    void DelGlobalId(int32_t globalId);
+    void SetGlobalId(int32_t soundId, int32_t globalId);
     void DelSoundId(int32_t soundId);
     int32_t InitThreadPool();
-    int32_t Play(std::shared_ptr<SoundParser> soundParser, PlayParams playParameters);
+    int32_t Play(std::shared_ptr<SoundParser> soundParser, PlayParams &playParameters);
     int32_t UnloadStream(int32_t soundId);
     void ReorderStream();
     std::shared_ptr<Stream> FindStreamLock(const int32_t streamId);
@@ -50,7 +50,7 @@ public:
 private:
     class StreamCallBack : public ISoundPoolCallback {
     public:
-        explicit StreamCallBack(const std::weak_ptr<ParallelStreamManager> parallelStreamManager)
+        explicit StreamCallBack(const std::weak_ptr<ParallelStreamManager> &parallelStreamManager)
             : parallelStreamManagerInner_(parallelStreamManager) {}
         virtual ~StreamCallBack() = default;
         void OnLoadCompleted(int32_t soundId);
@@ -70,8 +70,9 @@ private:
     void OnPlayFinished(int32_t streamID);
     std::shared_ptr<Stream> FindStream(const int32_t streamId);
 
-    std::vector<std::pair<int32_t, int32_t>> globeIdVector_;
-    std::mutex globeIdMutex_;
+    // pair<int32_t, int32_t> is mapping between SoundId and GlobalId
+    std::vector<std::pair<int32_t, int32_t>> globalIdVector_;
+    std::mutex globalIdMutex_;
     AudioStandard::AudioRendererInfo audioRendererInfo_;
     int32_t maxStreams_ = 1;
     std::shared_ptr<ISoundPoolCallback> callback_ = nullptr;
