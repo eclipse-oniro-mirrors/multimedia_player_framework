@@ -648,3 +648,9 @@ int32_t RecorderMock::SetFormat(const std::string &recorderType, VideoRecorderCo
     cout << "set format finished" << endl;
     return ret;
 }
+
+int32_t RecorderMock::SetWillMuteWhenInterrupted(bool enable)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
+    return recorder_->SetWillMuteWhenInterrupted(enable);
+}

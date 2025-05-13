@@ -119,6 +119,7 @@ public:
     int32_t GetMaxAmplitude() override;
     int32_t IsWatermarkSupported(bool &isWatermarkSupported) override;
     int32_t SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer) override;
+    int32_t SetWillMuteWhenInterrupted(bool muteWhenInterrupted) override;
 
     // IRecorderEngineObs override
     void OnError(ErrorType errorType, int32_t errorCode) override;

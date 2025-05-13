@@ -221,6 +221,11 @@ public:
      * Set watermark config
     */
     virtual int32_t SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer) = 0;
+
+    /**
+     * Set Interrupt strategy
+     */
+    virtual int32_t SetWillMuteWhenInterrupted(bool muteWhenInterrupted) = 0;
 };
 } // namespace Media
 } // namespace OHOS

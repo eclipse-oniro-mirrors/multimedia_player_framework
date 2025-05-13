@@ -918,3 +918,19 @@ OH_AVErrCode OH_AVRecorder_SetUriCallback(OH_AVRecorder *recorder, OH_AVRecorder
     return AV_ERR_OK;
 }
 #endif
+
+OH_AVErrCode OH_AVRecorder_SetWillMuteWhenInterrupted(OH_AVRecorder *recorder, bool muteWhenInterrupted)
+{
+    MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_SetWillMuteWhenInterrupted in.");
+
+    CHECK_AND_RETURN_RET_LOG(recorder != nullptr, AV_ERR_INVALID_STATE, "input recorder is nullptr!");
+
+    RecorderObject *recorderObj = reinterpret_cast<RecorderObject *>(recorder);
+    CHECK_AND_RETURN_RET_LOG(recorderObj != nullptr, AV_ERR_INVALID_VAL, "recorderObj is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderObj->recorder_ != nullptr, AV_ERR_INVALID_VAL, "recorder_ is null");
+    int32_t ret = recorderObj->recorder_->SetWillMuteWhenInterrupted(muteWhenInterrupted);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_STATE, "SetWillMuteWhenInterrupted failed!");
+
+    MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_SetWillMuteWhenInterrupted out.");
+    return AV_ERR_OK;
+}

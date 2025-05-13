@@ -2189,5 +2189,30 @@ HWTEST_F(RecorderUnitTest, recorder_SetVideoEnableStableQualityMode_002, TestSiz
     EXPECT_EQ(MSERR_OK, recorder_->Release());
     close(g_videoRecorderConfig.outputFd);
 }
+
+/**
+ * @tc.name: recorder_video_SetWillMuteWhenInterrupted_001
+ * @tc.desc: set mute when interrupted before prepare
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderUnitTest, recorder_video_SetWillMuteWhenInterrupted_001, TestSize.Level0)
+{
+    VideoRecorderConfig videoRecorderConfig;
+    videoRecorderConfig.outPutFormat = FORMAT_M4A;
+    videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_video_SetGenre_002.m4a").c_str(), O_RDWR);
+    ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
+    ASSERT_NE(recorder_, nullptr);
+
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_AUDIO, videoRecorderConfig));
+    int32_t ret = recorder_->SetWillMuteWhenInterrupted(true);
+    EXPECT_EQ(MSERR_OK, ret);
+    EXPECT_EQ(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_OK, recorder_->Start());
+    ret = recorder_->SetWillMuteWhenInterrupted(true);
+    EXPECT_EQ(MSERR_INVALID_OPERATION, ret);
+    EXPECT_EQ(MSERR_OK, recorder_->Release());
+    close(videoRecorderConfig.outputFd);
+}
 } // namespace Media
 } // namespace OHOS

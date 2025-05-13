@@ -171,6 +171,7 @@ public:
     void GetFileFd();
     uint64_t GetPts();
     int32_t GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &changeInfo);
+    int32_t SetWillMuteWhenInterrupted(bool enable);
 
 private:
     int32_t SetAudVidFormat(
