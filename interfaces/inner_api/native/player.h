@@ -280,6 +280,8 @@ enum PlaybackRateMode : int32_t {
     SPEED_FORWARD_0_25_X = 8,
     /* Video playback at 0.125x normal speed */
     SPEED_FORWARD_0_125_X = 9,
+    /* Video playback at 4.00x normal speed */
+    SPEED_FORWARD_4_00_X = 10,
 };
 
 class PlayerCallback {
