@@ -322,6 +322,16 @@ public:
 private:
     ListenerDiedHandler diedHandler_;
 };
+
+class SCWindowInfoChangedListener : public Rosen::IWindowInfoChangedListener {
+public:
+    explicit SCWindowInfoChangedListener(std::weak_ptr<ScreenCaptureServer> screenCaptureServer);
+    ~SCWindowInfoChangedListener() override = default;
+    void OnWindowInfoChanged(const std::vector<std::unordered_map<WindowInfoKey, std::any>>& windowInfoList) override;
+
+private:
+    std::weak_ptr<ScreenCaptureServer> screenCaptureServer_;
+};
 } // namespace Media
 } // namespace OHOS
 #endif // SCREEN_CAPTURE_SERVICE_SERVER_BASE_H

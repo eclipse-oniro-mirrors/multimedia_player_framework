@@ -135,6 +135,8 @@ public:
     void SetWindowIdList(int32_t windowId);
     std::vector<int32_t> GetWindowIdList();
     void OnSceneSessionManagerDied(const wptr<IRemoteObject>& remote);
+    void SetDefaultDisplayIdOfWindows();
+    uint64_t GetDefaultDisplayId();
 
 private:
     int32_t StartScreenCaptureInner(bool isPrivacyAuthorityEnabled);
@@ -240,6 +242,8 @@ private:
     void StopNotStartedScreenCapture(AVScreenCaptureStateCode stateCode);
     int32_t RegisterWindowLifecycleListener(std::vector<int32_t> windowIdList);
     int32_t UnRegisterWindowLifecycleListener();
+    int32_t RegisterWindowInfoChangedListener();
+    int32_t UnRegisterWindowInfoChangedListener();
 
 private:
     std::mutex mutex_;
@@ -280,6 +284,7 @@ private:
     ScreenId displayScreenId_ = SCREEN_ID_INVALID;
     std::vector<uint64_t> missionIds_;
     std::vector<int32_t> windowIdList_ = {};
+    uint64_t defaultDisplayId_ = 0;
     ScreenCaptureContentFilter contentFilter_;
     AVScreenCaptureState captureState_ = AVScreenCaptureState::CREATED;
     std::shared_ptr<NotificationLocalLiveViewContent> localLiveViewContent_;
@@ -287,6 +292,7 @@ private:
     sptr<UIExtensionAbilityConnection> connection_ = nullptr;
     sptr<SCWindowLifecycleListener> windowLifecycleListener_ = nullptr;
     sptr<SCDeathRecipientListener> lifecycleListenerDeathRecipient_ = nullptr;
+    sptr<SCWindowInfoChangedListener> windowInfoChangedListener_ = nullptr;
 
     /* used for CAPTURE STREAM */
     sptr<IBufferConsumerListener> surfaceCb_ = nullptr;
