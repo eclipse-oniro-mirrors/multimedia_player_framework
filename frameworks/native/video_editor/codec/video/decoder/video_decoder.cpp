@@ -52,12 +52,7 @@ VEFError VideoDecoder::Init(OH_AVFormat* videoFormat)
     }
     std::string dumpInfo = OH_AVFormat_DumpInfo(videoFormat);
     MEDIA_LOGI("[%{public}s] initializing decoder, format: %{public}s.", logTag_.c_str(), dumpInfo.c_str());
-    const char* mime = nullptr;
-    if (!OH_AVFormat_GetStringValue(videoFormat, OH_MD_KEY_CODEC_MIME, &mime)) {
-        MEDIA_LOGE("[%{public}s] get [%{public}s] from video format failed.", logTag_.c_str(), OH_MD_KEY_CODEC_MIME);
-        return VEFError::ERR_INTERNAL_ERROR;
-    }
-	std::regex re("codec_profile = (\\d+)");
+    std::regex re("codec_profile = (\\d+)");
 	std::smatch match;
 	if (std::regex_search(dumpInfo, match, re)) {
 		std::string bitType = match[1].str();
@@ -66,6 +61,11 @@ VEFError VideoDecoder::Init(OH_AVFormat* videoFormat)
 			return VEFError::ERR_INTERNAL_ERROR;
 		}
 	}
+    const char* mime = nullptr;
+    if (!OH_AVFormat_GetStringValue(videoFormat, OH_MD_KEY_CODEC_MIME, &mime)) {
+        MEDIA_LOGE("[%{public}s] get [%{public}s] from video format failed.", logTag_.c_str(), OH_MD_KEY_CODEC_MIME);
+        return VEFError::ERR_INTERNAL_ERROR;
+    }
 
     codecMime_ = mime;
     MEDIA_LOGI("[%{public}s] initializing decoder, video mime = %{public}s.", logTag_.c_str(), mime);
