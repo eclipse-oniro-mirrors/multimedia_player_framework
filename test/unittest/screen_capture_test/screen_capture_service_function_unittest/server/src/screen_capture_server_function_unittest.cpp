@@ -1716,9 +1716,9 @@ HWTEST_F(ScreenCaptureServerFunctionTest, IsSystemScreenRecorder_001, TestSize.L
 
 HWTEST_F(ScreenCaptureServerFunctionTest, IsSystemScreenRecorder_002, TestSize.Level2)
 {
-    ScreenCaptureServer::systemScreenRecorderPid_ = -1;
     screenCaptureServer_->SetSystemScreenRecorderStatus(false);
     ScreenCaptureMonitor::GetInstance()->IsSystemScreenRecorderWorking();
+    ScreenCaptureServer::systemScreenRecorderPid_ = -1;
     bool ret = ScreenCaptureMonitor::GetInstance()->IsSystemScreenRecorder(-1);
     ASSERT_EQ(ret, false);
 }
