@@ -132,7 +132,6 @@ public:
     int32_t GetSCServerSaUid();
     DataType GetSCServerDataType();
     AVScreenCaptureState GetSCServerCaptureState();
-    void SetWindowIdList(int32_t windowId);
     std::vector<int32_t> GetWindowIdList();
     void OnSceneSessionManagerDied(const wptr<IRemoteObject>& remote);
     void SetDefaultDisplayIdOfWindows();
@@ -284,7 +283,7 @@ private:
     ScreenId displayScreenId_ = SCREEN_ID_INVALID;
     std::vector<uint64_t> missionIds_;
     std::vector<int32_t> windowIdList_ = {};
-    uint64_t defaultDisplayId_ = 0;
+    // uint64_t defaultDisplayId_ = 0;
     ScreenCaptureContentFilter contentFilter_;
     AVScreenCaptureState captureState_ = AVScreenCaptureState::CREATED;
     std::shared_ptr<NotificationLocalLiveViewContent> localLiveViewContent_;

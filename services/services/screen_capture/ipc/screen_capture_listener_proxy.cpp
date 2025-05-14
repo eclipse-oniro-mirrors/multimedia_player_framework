@@ -177,6 +177,7 @@ void ScreenCaptureListenerCallback::OnDisplaySelected(uint64_t displayId)
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances isStopped:%{public}d, displayId:%{public}" PRIu64 ")",
         FAKE_POINTER(this), isStopped_.load(), displayId);
+    CHECK_AND_RETURN(isStopped_ == false);
     if (listener_ != nullptr) {
         listener_->OnDisplaySelected(displayId);
     }
@@ -186,6 +187,7 @@ void ScreenCaptureListenerCallback::OnCaptureContentChanged(AVScreenCaptureConte
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances isStopped:%{public}d, event: %{public}d",
         FAKE_POINTER(this), isStopped_.load(), event);
+    CHECK_AND_RETURN(isStopped_ == false);
     if (listener_ != nullptr) {
         listener_->OnCaptureContentChanged(event);
     }
