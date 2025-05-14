@@ -95,8 +95,10 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ProcessScreenCaptureServerMap_002, Tes
     server->SetSessionId(sessionId);
     int32_t sizeBefore = ScreenCaptureServer::serverMap_.size();
     ScreenCaptureServer::AddScreenCaptureServerMap(sessionId, server);
+    int32_t sizeAfter = ScreenCaptureServer::serverMap_.size();
+    ASSERT_EQ(ScreenCaptureServer::serverMap_.size(), sizeBefore + 1);
     ScreenCaptureServer::RemoveScreenCaptureServerMap(sessionId);
-    ASSERT_EQ(ScreenCaptureServer::serverMap_.size(), sizeBefore);
+    ASSERT_EQ(ScreenCaptureServer::serverMap_.size(), sizeAfter - 1);
 }
 
 /**
@@ -267,8 +269,10 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ProcessStartedSessionIdList_002, TestS
     UniqueIDGenerator gIdGenerator(20);
     int32_t sessionId = gIdGenerator.GetNewID();
     ScreenCaptureServer::AddStartedSessionIdList(sessionId);
+    int32_t afterSize = ScreenCaptureServer::startedSessionIDList_.size();
+    ASSERT_EQ(ScreenCaptureServer::startedSessionIDList_.size(), beforeSize + 1);
     ScreenCaptureServer::RemoveStartedSessionIdList(sessionId);
-    ASSERT_EQ(ScreenCaptureServer::startedSessionIDList_.size(), beforeSize);
+    ASSERT_EQ(ScreenCaptureServer::startedSessionIDList_.size(), afterSize - 1);
     ScreenCaptureServer::gIdGenerator_.ReturnID(sessionId);
 }
 
@@ -848,7 +852,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, GetBoxSelectedFromJson_001, TestSize.L
 {
     Json::Value root;
     std::string content = "ghgh%^&%^$*^(}{^af&**)";
-    bool value = false;
+    bool value = true;
     screenCaptureServer_->GetBoxSelectedFromJson(root, content, "choice", value);
     ASSERT_NE(screenCaptureServer_, nullptr);
     ASSERT_EQ(value, false);
@@ -878,7 +882,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, GetBoxSelectedFromJson_003, TestSize.L
 {
     Json::Value root;
     std::string content = "{\"choice\": \"abcd\"}";
-    bool value = false;
+    bool value = true;
     screenCaptureServer_->GetBoxSelectedFromJson(root, content, "choice", value);
     ASSERT_NE(screenCaptureServer_, nullptr);
     ASSERT_EQ(value, false);
