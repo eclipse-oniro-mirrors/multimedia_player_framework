@@ -51,6 +51,7 @@ group("media_unit_test") {
       "unittest/recorder_profiles_server_test:recorder_profiles_server_mock_unit_test",
       "unittest/recorder_profiles_server_test:recorder_profiles_server_unit_test",
       "unittest/recorder_test:recorder_native_unit_test",
+      "unittest/recorder_test:recorder_function_unit_test",
       "unittest/recorder_test:recorder_server_unit_test",
       "unittest/sa_media_client_unit_test:sa_media_client_unit_test",
       "unittest/services/utils:utils_unit_test",
