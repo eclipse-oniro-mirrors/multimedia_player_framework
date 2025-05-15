@@ -892,5 +892,143 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameYuv_API_0200, Level2)
     ASSERT_EQ(pixelMap->GetWidth(), 1080);
     ASSERT_EQ(pixelMap->GetHeight(), 2336);
 }
+
+/**
+    * @tc.number    : FetchScaledFrameYuv_API_0100
+    * @tc.name      : FetchScaledFrameYuv H264_AAC.mp4 custom scaling
+    * @tc.desc      : FetchScaledFrameYuv API
+*/
+HWTEST_F(AVMetadataUnitTest, FetchScaledFrameYuv_API_0100, Level2)
+{
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+        std::string("H264_AAC.mp4");
+    std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
+    ASSERT_NE(nullptr, helper);
+    ASSERT_EQ(true, helper->CreateAVMetadataHelper());
+    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, 0, 0, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
+    int64_t time = 0;
+    PixelMapParams param;
+    param.dstWidth = 300;
+    param.dstHeight = 200;
+    auto pixelMap = helper->FetchScaledFrameYuv(time, 0, param);
+    ASSERT_EQ(pixelMap->GetWidth(), 300);
+    ASSERT_EQ(pixelMap->GetHeight(), 200);
+}
+
+/**
+    * @tc.number    : FetchScaledFrameYuv_API_0200
+    * @tc.name      : FetchScaledFrameYuv H264_AAC.mp4 side scaling
+    * @tc.desc      : FetchScaledFrameYuv API
+*/
+HWTEST_F(AVMetadataUnitTest, FetchScaledFrameYuv_API_0200, Level2)
+{
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+        std::string("H264_AAC.mp4");
+    std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
+    ASSERT_NE(nullptr, helper);
+    ASSERT_EQ(true, helper->CreateAVMetadataHelper());
+    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, 0, 0, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
+    int64_t time = 0;
+    PixelMapParams param;
+    param.dstWidth = 300;
+    param.dstHeight = -1;
+    auto pixelMap = helper->FetchScaledFrameYuv(time, 0, param);
+    ASSERT_EQ(pixelMap->GetWidth(), 300);
+    ASSERT_EQ(pixelMap->GetHeight(), 480);
+
+    param.dstWidth = -1;
+    param.dstHeight = 200;
+    pixelMap = helper->FetchScaledFrameYuv(time, 0, param);
+    ASSERT_EQ(pixelMap->GetWidth(), 720);
+    ASSERT_EQ(pixelMap->GetHeight(), 200);
+}
+
+/**
+    * @tc.number    : FetchScaledFrameYuv_API_0300
+    * @tc.name      : FetchScaledFrameYuv H264_AAC.mp4 no scaling
+    * @tc.desc      : FetchScaledFrameYuv API
+*/
+HWTEST_F(AVMetadataUnitTest, FetchScaledFrameYuv_API_0300, Level2)
+{
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+        std::string("H264_AAC.mp4");
+    std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
+    ASSERT_NE(nullptr, helper);
+    ASSERT_EQ(true, helper->CreateAVMetadataHelper());
+    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, 0, 0, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
+    int64_t time = 0;
+    PixelMapParams param;
+    auto pixelMap = helper->FetchScaledFrameYuv(time, 0, param);
+    ASSERT_EQ(pixelMap->GetWidth(), 720);
+    ASSERT_EQ(pixelMap->GetHeight(), 480);
+
+    param.dstWidth = -1;
+    param.dstHeight = -1;
+    pixelMap = helper->FetchScaledFrameYuv(time, 0, param);
+    ASSERT_EQ(pixelMap->GetWidth(), 720);
+    ASSERT_EQ(pixelMap->GetHeight(), 480);
+
+    param.dstWidth = 0;
+    param.dstHeight = 0;
+    pixelMap = helper->FetchScaledFrameYuv(time, 0, param);
+    ASSERT_EQ(pixelMap->GetWidth(), 720);
+    ASSERT_EQ(pixelMap->GetHeight(), 480);
+}
+
+/**
+    * @tc.number    : FetchScaledFrameYuv_API_0400
+    * @tc.name      : FetchScaledFrameYuv H264_AAC.mp4 proportional scaling
+    * @tc.desc      : FetchScaledFrameYuv API
+*/
+HWTEST_F(AVMetadataUnitTest, FetchScaledFrameYuv_API_0400, Level2)
+{
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+        std::string("H264_AAC.mp4");
+    std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
+    ASSERT_NE(nullptr, helper);
+    ASSERT_EQ(true, helper->CreateAVMetadataHelper());
+    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, 0, 0, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
+    int64_t time = 0;
+    PixelMapParams param;
+    param.dstWidth = 360;
+    param.dstHeight = 0;
+    auto pixelMap = helper->FetchScaledFrameYuv(time, 0, param);
+    ASSERT_EQ(pixelMap->GetWidth(), 360);
+    ASSERT_EQ(pixelMap->GetHeight(), 240);
+
+    param.dstWidth = 0;
+    param.dstHeight = 240;
+    pixelMap = helper->FetchScaledFrameYuv(time, 0, param);
+    ASSERT_EQ(pixelMap->GetWidth(), 360);
+    ASSERT_EQ(pixelMap->GetHeight(), 240);
+}
+
+/**
+    * @tc.number    : FetchScaledFrameYuv_API_0500
+    * @tc.name      : FetchScaledFrameYuv H264_AAC.mp4 abnormal
+    * @tc.desc      : FetchScaledFrameYuv API
+*/
+HWTEST_F(AVMetadataUnitTest, FetchScaledFrameYuv_API_0500, Level2)
+{
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+        std::string("H264_AAC.mp4");
+    std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
+    ASSERT_NE(nullptr, helper);
+    ASSERT_EQ(true, helper->CreateAVMetadataHelper());
+    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, 0, 0, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
+    int64_t time = 0;
+    PixelMapParams param;
+    param.dstWidth = 1000;
+    param.dstHeight = 200;
+    auto pixelMap = helper->FetchScaledFrameYuv(time, 0, param);
+    ASSERT_EQ(pixelMap->GetWidth(), 720);
+    ASSERT_EQ(pixelMap->GetHeight(), 480);
+
+    param.dstWidth = 500;
+    param.dstHeight = 1000;
+    pixelMap = helper->FetchScaledFrameYuv(time, 0, param);
+    ASSERT_EQ(pixelMap->GetWidth(), 720);
+    ASSERT_EQ(pixelMap->GetHeight(), 480);
+}
 } // namespace Media
 } // namespace OHOS

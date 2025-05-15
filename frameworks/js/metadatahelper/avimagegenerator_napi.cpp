@@ -64,6 +64,7 @@ napi_value AVImageGeneratorNapi::Init(napi_env env, napi_value exports)
 
     napi_property_descriptor properties[] = {
         DECLARE_NAPI_FUNCTION("fetchFrameByTime", JsFetchFrameAtTime),
+        DECLARE_NAPI_FUNCTION("fetchScaledFrameByTime", JsFetchScaledFrameAtTime),
         DECLARE_NAPI_FUNCTION("release", JsRelease),
 
         DECLARE_NAPI_GETTER_SETTER("fdSrc", JsGetAVFileDescriptor, JsSetAVFileDescriptor),
@@ -220,7 +221,7 @@ napi_value AVImageGeneratorNapi::JsFetchFrameAtTime(napi_env env, napi_callback_
     napi_value args[maxArgs] = { nullptr };
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
-    
+
     AVImageGeneratorNapi *napi = AVImageGeneratorNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(napi != nullptr, result, "failed to GetJsInstance");
 
@@ -254,6 +255,116 @@ napi_value AVImageGeneratorNapi::JsFetchFrameAtTime(napi_env env, napi_callback_
     NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
     asyncCtx.release();
     MEDIA_LOGI("JsFetchFrameAtTime Out");
+    return result;
+}
+
+int32_t AVImageGeneratorNapi::GetFetchScaledFrameArgs(std::unique_ptr<AVImageGeneratorAsyncContext> &asyncCtx,
+                                                      napi_env env, napi_value timeUs, napi_value option,
+                                                      napi_value outputSize)
+{
+    napi_status ret = napi_get_value_int64(env, timeUs, &asyncCtx->timeUs_);
+    if (ret != napi_ok) {
+        asyncCtx->SignError(MSERR_INVALID_VAL, "failed to get timeUs");
+        return MSERR_INVALID_VAL;
+    }
+    ret = napi_get_value_int32(env, option, &asyncCtx->option_);
+    if (ret != napi_ok) {
+        asyncCtx->SignError(MSERR_INVALID_VAL, "failed to get option");
+        return MSERR_INVALID_VAL;
+    }
+
+    int32_t width = 0;
+    int32_t height = 0;
+    if (outputSize == nullptr) {
+        MEDIA_LOGI("User has not set outputSize");
+    } else {
+        if (!CommonNapi::GetPropertyInt32(env, outputSize, "width", width)) {
+            MEDIA_LOGW("User has not set width");
+        }
+        if (!CommonNapi::GetPropertyInt32(env, outputSize, "height", height)) {
+            MEDIA_LOGW("User has not set height");
+        }
+    }
+
+    asyncCtx->param_.dstWidth = width;
+    asyncCtx->param_.dstHeight = height;
+    asyncCtx->param_.colorFormat = PixelFormat::UNKNOWN;
+    MEDIA_LOGI("searchMode=%{public}d width=%{public}d height=%{public}d GetFetchScaledFrameArgs",
+        asyncCtx->option_, width, height);
+    return MSERR_OK;
+}
+
+napi_value AVImageGeneratorNapi::VerifyTheParameters(napi_env env, napi_callback_info info,
+                                                     std::unique_ptr<AVImageGeneratorAsyncContext> &promiseCtx)
+{
+    size_t argCount = ARG_THREE;
+    const int32_t maxArgs = ARG_THREE;  // timeUs: number, options: AVImageQueryOptions, param: PixelMapParams
+    const int32_t argOutputSizeIndex = ARG_TWO;
+    napi_value args[maxArgs] = { nullptr };
+    napi_value result = nullptr;
+    CHECK_AND_RETURN_RET_LOG(env != nullptr, result, "env is null");
+    napi_get_undefined(env, &result);
+
+    AVImageGeneratorNapi *napi = AVImageGeneratorNapi::GetJsInstanceWithParameter(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(napi != nullptr, result, "failed to GetJsInstance");
+
+    promiseCtx = std::make_unique<AVImageGeneratorAsyncContext>(env);
+    CHECK_AND_RETURN_RET_LOG(promiseCtx != nullptr, nullptr, "promiseCtx is null");
+    promiseCtx->napi = napi;
+    promiseCtx->deferred = CommonNapi::CreatePromise(env, promiseCtx->callbackRef, result);
+
+    napi_valuetype valueType = napi_undefined;
+    bool notParamValid = argCount < argOutputSizeIndex;
+    if (notParamValid) {
+        promiseCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "JsFetchScaledFrameAtTime");
+        return nullptr;
+    }
+    if (argCount == maxArgs) {
+        notParamValid = napi_typeof(env, args[argOutputSizeIndex], &valueType) != napi_ok ||
+            valueType != napi_object || promiseCtx->napi->GetFetchScaledFrameArgs(promiseCtx, env, args[ARG_ZERO],
+            args[ARG_ONE], args[ARG_TWO]) != MSERR_OK;
+    } else {
+        notParamValid = promiseCtx->napi->GetFetchScaledFrameArgs(
+            promiseCtx, env, args[ARG_ZERO], args[ARG_ONE], nullptr) != MSERR_OK;
+    }
+    if (notParamValid) {
+        promiseCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "JsFetchScaledFrameAtTime");
+        return nullptr;
+    }
+
+    if (napi->state_ != HelperState::HELPER_STATE_RUNNABLE) {
+        promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "Current state is not runnable, can't fetchScaledFrame.");
+        return nullptr;
+    }
+
+    return result;
+}
+
+napi_value AVImageGeneratorNapi::JsFetchScaledFrameAtTime(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVImageGeneratorNapi::JsFetchScaledFrameAtTime");
+    MEDIA_LOGI("JsFetchScaledFrameAtTime in");
+    std::unique_ptr<AVImageGeneratorAsyncContext> promiseCtx = nullptr;
+    napi_value result = VerifyTheParameters(env, info, promiseCtx);
+    CHECK_AND_RETURN_RET_LOG(result != nullptr, result, "failed to VerifyTheParameters");
+
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, "JsFetchScaledFrameAtTime", NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void *data) {
+        auto asyncCtx = reinterpret_cast<AVImageGeneratorAsyncContext *>(data);
+        CHECK_AND_RETURN_LOG(asyncCtx && asyncCtx->napi && !asyncCtx->errFlag,
+            "Invalid AVImageGeneratorAsyncContext.");
+        CHECK_AND_RETURN_LOG(asyncCtx->napi->helper_ != nullptr, "Invalid AVImageGeneratorNapi.");
+        auto pixelMap = asyncCtx->napi->helper_->
+            FetchScaledFrameYuv(asyncCtx->timeUs_, asyncCtx->option_, asyncCtx->param_);
+        asyncCtx->pixel_ = pixelMap;
+        if (asyncCtx->pixel_ == nullptr) {
+            asyncCtx->SignError(MSERR_EXT_API9_UNSUPPORT_FORMAT, "JsFetchScaledFrameAtTime failed.");
+        }
+    }, CreatePixelMapComplete, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
+    NAPI_CALL(env, napi_queue_async_work(env, promiseCtx->work));
+    promiseCtx.release();
     return result;
 }
 
