@@ -22,10 +22,6 @@ using namespace OHOS::Media;
 using namespace testing::ext;
 using namespace std;
 
-const int32_t MAX_STREAMS = 3;
-const int32_t BEGIN_NUM = 0;
-const int32_t STREAM_ID_BEGIN = 1;
-
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SOUNDPOOL, "SoundParseUnitTest"};
 }
@@ -71,4 +67,4 @@ HWTEST_F(SoundParseUnitTest, doParser_function_001, TestSize.Level2)
 }
 
 }  // namespace Media
-}  // namespace OHOS
+}  // namespace OHOS
