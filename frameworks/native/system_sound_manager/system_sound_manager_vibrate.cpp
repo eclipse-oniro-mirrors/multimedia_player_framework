@@ -97,6 +97,30 @@ int32_t SystemSoundManagerImpl::GetStringValue(const std::string &key,
     resultSet->Close();
     return MSERR_OK;
 }
+
+int32_t SystemSoundManagerImpl::UpdateStringValue(const std::string &key,
+    std::string &value, std::string tableType)
+{
+    auto helper = CreateDataShareHelperProxy(tableType);
+    if (helper == nullptr) {
+        MEDIA_LOGE("helper return nullptr");
+        return MSERR_INVALID_VAL;
+    }
+    DataShare::DataShareValueObject valueObj(value);
+    DataShare::DataShareValuesBucket valueBucket;
+    valueBucket.Put(SETTINGS_COLUMN_VALUE, valueObj);
+    DataShare::DataSharePredicates predicates;
+    predicates.EqualTo(SETTINGS_COLUMN_KEYWORD, key);
+    int32_t ret = helper->Update(uri, predicates, valueBucket);
+    if (ret <= 0) {
+        TELEPHONY_LOGE("DataShareHelper update failed, retCode:%{public}d", ret);
+        helper->Release();
+        return TELEPHONY_ERROR;
+    }
+    helper->NotifyChange(uri);
+    resultSet->Close();
+    return MSERR_OK;
+}
  
 bool SystemSoundManagerImpl::CheckVibrateSwitchStatus()
 {
