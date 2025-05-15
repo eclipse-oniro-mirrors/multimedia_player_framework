@@ -537,6 +537,10 @@ int32_t HiRecorderImpl::Stop(bool isDrainAll)
     muxerFilter_ = nullptr;
     isWatermarkSupported_ = false;
     codecMimeType_ = "";
+    audioEncFormat_->Clear();
+    videoEncFormat_->Clear();
+    muxerFormat_->Clear();
+    
     if (audioDataSourceFilter_) {
         pipeline_->RemoveHeadFilter(audioDataSourceFilter_);
     }
