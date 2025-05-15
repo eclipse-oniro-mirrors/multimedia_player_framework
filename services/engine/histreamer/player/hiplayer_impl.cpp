@@ -3677,12 +3677,15 @@ void HiPlayerImpl::SetPostProcessor()
         videoDecoder_->SetPostProcessorOn(isPostProcessorOn_);
         videoDecoder_->SetVideoWindowSize(postProcessorTargetWidth_, postProcessorTargetHeight_);
     }
+    videoDecoder_->EnableCameraPostprocessing(enableCameraPostprocessing_.load());
     videoDecoder_->SetPostProcessorFd(postProcessorFd_);
-    if (postProcessorFd_ > 0) {
+    if (enableCameraPostprocessing_.load()) {
+        videoDecoder_->SetPostProcessorFd(postProcessorFd_);
+    }
+    if (postProcessorFd_ >= 0) {
         close(postProcessorFd_);
         postProcessorFd_ = -1;
     }
-    videoDecoder_->EnableCameraPostprocessing(enableCameraPostprocessing_.load());
 }
 
 int32_t HiPlayerImpl::SetReopenFd(int32_t fd)

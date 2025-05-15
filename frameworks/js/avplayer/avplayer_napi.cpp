@@ -1815,7 +1815,7 @@ napi_value AVPlayerNapi::JsEnableCameraPostprocessing(napi_env env, napi_callbac
     }
     if (!jsPlayer->CanCameraPostprocessing()) {
         promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-            "current state is not initialized/prepared/playing/paused/completed/stopped, "
+            "current state is not initialized, "
             "unsupport enable cameraPostProcessor");
     } else {
         promiseCtx->asyncTask = jsPlayer->EnableCameraPostprocessingTask();
@@ -1839,7 +1839,6 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::EnableCameraPostprocessingTa
 {
     auto task = std::make_shared<TaskHandler<TaskRet>>([this]() {
         std::unique_lock<std::mutex> lock(taskMutex_);
-        auto state = GetCurrentState();
         if (CanCameraPostprocessing()) {
             int32_t ret = player_->EnableCameraPostprocessing();
             if (ret != MSERR_OK) {
