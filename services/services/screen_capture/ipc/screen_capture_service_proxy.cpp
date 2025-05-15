@@ -641,6 +641,5 @@ int32_t ScreenCaptureServiceProxy::SetScreenCaptureStrategy(ScreenCaptureStrateg
                              "SetScreenCaptureStrategy failed, error: %{public}d", error);
     return reply.ReadInt32();
 }
-
 } // namespace Media
 } // namespace OHOS
