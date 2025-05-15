@@ -259,7 +259,7 @@ int32_t ScreenCaptureImpl::InitOriginalStream(AVScreenCaptureConfig config)
     }
     if (config.strategy.setByUser) {
         ret = screenCaptureService_->SetScreenCaptureStrategy(config.strategy);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "init strategy failed");
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "set strategy failed");
     }
     MEDIA_LOGI("ScreenCaptureImpl: 0x%{public}06" PRIXPTR "InitOriginalStream end.", FAKE_POINTER(this));
     return ret;
@@ -307,7 +307,7 @@ int32_t ScreenCaptureImpl::InitCaptureFile(AVScreenCaptureConfig config)
     }
     ret = screenCaptureService_->InitAudioCap(config.audioInfo.innerCapInfo);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "init innerCapInfo failed, innerCapInfo should be valid");
-    if (!IsVideoCapInfoIgnored(config.videoInfo.videoCapInfo)) { //M4a
+    if (!IsVideoCapInfoIgnored(config.videoInfo.videoCapInfo)) {
         ret = screenCaptureService_->InitVideoEncInfo(config.videoInfo.videoEncInfo);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "InitVideoEncInfo failed");
         ret = screenCaptureService_->InitVideoCap(config.videoInfo.videoCapInfo);
