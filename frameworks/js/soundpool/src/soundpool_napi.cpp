@@ -697,7 +697,7 @@ napi_value SoundPoolNapi::JsSetOnCallback(napi_env env, napi_callback_info info)
     MEDIA_LOGI("set callbackName: %{public}s", callbackName.c_str());
     if (callbackName != SoundPoolEvent::EVENT_LOAD_COMPLETED && callbackName != SoundPoolEvent::EVENT_PLAY_FINISHED &&
         callbackName != SoundPoolEvent::EVENT_PLAY_FINISHED_WITH_STREAM_ID &&
-        callbackName != SoundPoolEvent::EVENT_ERROR) {
+        callbackName != SoundPoolEvent::EVENT_ERROR && callbackName != SoundPoolEvent::EVENT_ERROR_INFO) {
         soundPoolNapi->ErrorCallback(MSERR_INVALID_VAL, "SetEventCallback");
         return result;
     }
@@ -734,7 +734,7 @@ napi_value SoundPoolNapi::JsClearOnCallback(napi_env env, napi_callback_info inf
     std::string callbackName = CommonNapi::GetStringArgument(env, args[0]);
     if (callbackName != SoundPoolEvent::EVENT_LOAD_COMPLETED && callbackName != SoundPoolEvent::EVENT_PLAY_FINISHED &&
         callbackName != SoundPoolEvent::EVENT_PLAY_FINISHED_WITH_STREAM_ID &&
-        callbackName != SoundPoolEvent::EVENT_ERROR) {
+        callbackName != SoundPoolEvent::EVENT_ERROR && callbackName != SoundPoolEvent::EVENT_ERROR_INFO) {
         soundPoolNapi->ErrorCallback(MSERR_INVALID_VAL, "CancelEventCallback");
         return result;
     }

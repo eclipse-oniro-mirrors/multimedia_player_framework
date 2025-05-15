@@ -255,30 +255,38 @@ int32_t CacheBuffer::DoPlay(const int32_t streamID)
         });
     if (!audioRenderer_->Start()) {
         soundPoolXCollie.CancelXCollieTimer();
-        OHOS::AudioStandard::RendererState state = audioRenderer_->GetStatus();
-        if (state == OHOS::AudioStandard::RendererState::RENDERER_RUNNING) {
-            MEDIA_LOGI("CacheBuffer::DoPlay audioRenderer has started, streamID:%{public}d", streamID);
-            isRunning_.store(true);
-            if (callback_ != nullptr) {
-                MEDIA_LOGI("CacheBuffer::DoPlay callback_ OnPlayFinished, streamID:%{public}d", streamID);
-                callback_->OnPlayFinished(streamID_);
-            }
-            return MSERR_OK;
-        } else {
-            MEDIA_LOGE("CacheBuffer::DoPlay audioRenderer start failed, streamID:%{public}d", streamID);
-            isRunning_.store(false);
-            if (callback_ != nullptr) {
-                MEDIA_LOGI("CacheBuffer::DoPlay failed, call callback, streamID:%{public}d", streamID);
-                callback_->OnError(MSERR_INVALID_VAL);
-            }
-            if (cacheBufferCallback_ != nullptr) cacheBufferCallback_->OnError(MSERR_INVALID_VAL);
-            return MSERR_INVALID_VAL;
-        }
+        return DoPlayHelper(streamID);
     } else {
         soundPoolXCollie.CancelXCollieTimer();
     }
     MEDIA_LOGI("CacheBuffer::DoPlay success, streamID:%{public}d", streamID);
     return MSERR_OK;
+}
+
+int32_t CacheBuffer::DoPlayHelper(const int32_t streamID)
+{
+    OHOS::AudioStandard::RendererState state = audioRenderer_->GetStatus();
+    if (state == OHOS::AudioStandard::RendererState::RENDERER_RUNNING) {
+        MEDIA_LOGI("CacheBuffer::DoPlay audioRenderer has started, streamID:%{public}d", streamID);
+        isRunning_.store(true);
+        if (callback_ != nullptr) {
+            MEDIA_LOGI("CacheBuffer::DoPlay callback_ OnPlayFinished, streamID:%{public}d", streamID);
+            callback_->OnPlayFinished(streamID_);
+        }
+        return MSERR_OK;
+    } else {
+        MEDIA_LOGE("CacheBuffer::DoPlay audioRenderer start failed, streamID:%{public}d", streamID);
+        isRunning_.store(false);
+        if (callback_ != nullptr) {
+            MEDIA_LOGI("CacheBuffer::DoPlay failed, call callback, streamID:%{public}d", streamID);
+            callback_->OnError(MSERR_INVALID_VAL);
+            SoundPoolUtils::ErrorInfo errorInfo{MSERR_INVALID_VAL, soundID_,
+                streamID_, ERROR_TYPE::PLAY_ERROR, callback_};
+            SoundPoolUtils::SendErrorInfo(errorInfo);
+        }
+        if (cacheBufferCallback_ != nullptr) cacheBufferCallback_->OnError(MSERR_INVALID_VAL);
+        return MSERR_INVALID_VAL;
+    }
 }
 
 void CacheBuffer::DealPlayParamsBeforePlay(const PlayParams &playParams)

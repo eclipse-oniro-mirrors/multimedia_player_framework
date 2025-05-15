@@ -58,6 +58,33 @@ void SoundPoolCallBackNapi::OnError(int32_t errorCode)
     }
 }
 
+void SoundPoolCallBackNapi::OnErrorInfo(Format &errorInfo)
+{
+    MEDIA_LOGI("OnErrorInfo recived");
+    int32_t errorCode;
+    errorInfo.GetIntValue(SoundPoolKeys::ERROR_CODE, errorCode);
+    switch (errorCode) {
+        case MSERR_INVALID_OPERATION:
+            errorInfo.PutIntValue(SoundPoolKeys::ERROR_CODE, MSERR_EXT_API9_OPERATE_NOT_PERMIT);
+            errorInfo.PutStringValue(SoundPoolKeys::ERROR_MESSAGE,
+                "The soundpool timed out. Please confirm that the input stream is normal.");
+            break;
+        case MSERR_NO_MEMORY:
+            errorInfo.PutIntValue(SoundPoolKeys::ERROR_CODE, MSERR_EXT_API9_NO_MEMORY);
+            errorInfo.PutStringValue(SoundPoolKeys::ERROR_MESSAGE, "soundpool memery error.");
+            break;
+        case MSERR_SERVICE_DIED:
+            errorInfo.PutIntValue(SoundPoolKeys::ERROR_CODE, MSERR_EXT_API9_SERVICE_DIED);
+            errorInfo.PutStringValue(SoundPoolKeys::ERROR_MESSAGE, "releated server died");
+            break;
+        default:
+            errorInfo.PutIntValue(SoundPoolKeys::ERROR_CODE, MSERR_EXT_API9_IO);
+            errorInfo.PutStringValue(SoundPoolKeys::ERROR_MESSAGE, "IO error happened.");
+            break;
+    }
+    SendErrorInfoCallback(errorInfo);
+}
+
 void SoundPoolCallBackNapi::SaveCallbackReference(const std::string &name, std::weak_ptr<AutoRef> ref)
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -97,6 +124,41 @@ void SoundPoolCallBackNapi::SendErrorCallback(int32_t errCode, const std::string
     cb->errorCode = errCode;
     cb->errorMsg = msg;
     return OnJsErrorCallBack(cb);
+}
+
+void SoundPoolCallBackNapi::SendErrorInfoCallback(const Format &errorInfo)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (refMap_.find(SoundPoolEvent::EVENT_ERROR_INFO) == refMap_.end()) {
+        MEDIA_LOGW("can not find errorInfo callback!");
+        return;
+    }
+    SoundPoolJsCallBack *cb = new(std::nothrow) SoundPoolJsCallBack();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
+    int32_t errorCode;
+    std::string msg;
+    errorInfo.GetIntValue(SoundPoolKeys::ERROR_CODE, errorCode);
+    errorInfo.GetStringValue(SoundPoolKeys::ERROR_MESSAGE, msg);
+    if (errorInfo.ContainKey(SoundPoolKeys::STREAM_ID)) {
+        int32_t streamId;
+        errorInfo.GetIntValue(SoundPoolKeys::STREAM_ID, streamId);
+        cb->playFinishedStreamID = streamId;
+    }
+    if (errorInfo.ContainKey(SoundPoolKeys::ERROR_TYPE_FLAG)) {
+        int32_t errorType;
+        errorInfo.GetIntValue(SoundPoolKeys::ERROR_TYPE_FLAG, errorType);
+        cb->errorType = static_cast<ERROR_TYPE>(errorType);
+    }
+    if (errorInfo.ContainKey(SoundPoolKeys::SOUND_ID)) {
+        int32_t soundId;
+        errorInfo.GetIntValue(SoundPoolKeys::SOUND_ID, soundId);
+        cb->loadSoundId = soundId;
+    }
+    cb->autoRef = refMap_.at(SoundPoolEvent::EVENT_ERROR_INFO);
+    cb->callbackName = SoundPoolEvent::EVENT_ERROR_INFO;
+    cb->errorCode = errorCode;
+    cb->errorMsg = msg;
+    return OnJsErrorInfoCallBack(cb);
 }
 
 void SoundPoolCallBackNapi::SendLoadCompletedCallback(int32_t soundId)
@@ -181,6 +243,39 @@ void SoundPoolCallBackNapi::OnJsErrorCallBack(SoundPoolJsCallBack *jsCb) const
     CANCEL_SCOPE_EXIT_GUARD(1);
 }
 
+void SoundPoolCallBackNapi::OnJsErrorInfoCallBack(SoundPoolJsCallBack *jsCb) const
+{
+    ON_SCOPE_EXIT(0) {
+        delete jsCb;
+    };
+    uv_loop_s *loop = nullptr;
+    napi_get_uv_event_loop(env_, &loop);
+    CHECK_AND_RETURN_LOG(loop != nullptr, "Fail to get uv event loop");
+
+    uv_work_t *work = new(std::nothrow) uv_work_t;
+    CHECK_AND_RETURN_LOG(work != nullptr, "fail to new uv_work_t");
+    ON_SCOPE_EXIT(1) {
+        delete work;
+    };
+    work->data = reinterpret_cast<void *>(jsCb);
+    // async callback, jsWork and jsWork->data should be heap object.
+    int ret = uv_queue_work_with_qos(loop, work, [] (uv_work_t *work) {
+        MEDIA_LOGD("OnJsErrorInfoCallBack uv_queue_work_with_qos");
+    }, [] (uv_work_t *work, int status) {
+        // Js Thread
+        CHECK_AND_RETURN_LOG(work != nullptr, "work is nullptr");
+        SoundPoolJsCallBack *event = reinterpret_cast<SoundPoolJsCallBack *>(work->data);
+        event->RunJsErrorInfoCallBackTask(status, event);
+        delete event;
+        delete work;
+    }, uv_qos_user_initiated);
+    if (ret != 0) {
+        MEDIA_LOGI("fail to uv_queue_work_with_qos task");
+    }
+    CANCEL_SCOPE_EXIT_GUARD(0);
+    CANCEL_SCOPE_EXIT_GUARD(1);
+}
+
 void SoundPoolCallBackNapi::SoundPoolJsCallBack::RunJsErrorCallBackTask(int status, SoundPoolJsCallBack *event)
 {
     std::string request = event->callbackName;
@@ -214,6 +309,50 @@ void SoundPoolCallBackNapi::SoundPoolJsCallBack::RunJsErrorCallBackTask(int stat
         // Call back function
         napi_value result = nullptr;
         nstatus = napi_call_function(ref->env_, nullptr, jsCallback, 1, args, &result);
+        CHECK_AND_BREAK_LOG(nstatus == napi_ok, "%{public}s fail to napi call function", request.c_str());
+    } while (0);
+}
+
+void SoundPoolCallBackNapi::SoundPoolJsCallBack::RunJsErrorInfoCallBackTask(int status, SoundPoolJsCallBack *event)
+{
+    std::string request = event->callbackName;
+    do {
+        MEDIA_LOGI("errorInfoCallback event: errorMsg %{public}s, errorCode %{public}d, soundId %{public}d,"
+            "streamId %{public}d", event->errorMsg.c_str(), event->errorCode, event->loadSoundId,
+            event->playFinishedStreamID);
+        CHECK_AND_BREAK_LOG(status != UV_ECANCELED, "%{public}s canceled", request.c_str());
+        std::shared_ptr<AutoRef> ref = event->autoRef.lock();
+        CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
+        napi_handle_scope scope = nullptr;
+        napi_open_handle_scope(ref->env_, &scope);
+        CHECK_AND_BREAK_LOG(scope != nullptr, "%{public}s scope is nullptr", request.c_str());
+        ON_SCOPE_EXIT(0) {
+            napi_close_handle_scope(ref->env_, scope);
+        };
+        napi_value jsCallback = nullptr;
+        napi_status nstatus = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
+        CHECK_AND_BREAK_LOG(nstatus == napi_ok && jsCallback != nullptr, "%{public}s get reference value fail",
+            request.c_str());
+        constexpr size_t argCount = 1;
+        napi_value args[argCount] = {};
+        napi_create_object(ref->env_, &args[0]);
+
+        napi_value errCode = nullptr;
+        status = CommonNapi::CreateError(ref->env_, event->errorCode, event->errorMsg, errCode);
+        CHECK_AND_RETURN_LOG(status == napi_ok && errCode != nullptr,
+            " fail to convert to errorCode");
+        napi_set_named_property(ref->env_, args[0], "errorCode", errCode);
+        bool res = CommonNapi::SetPropertyInt32(ref->env_, args[0], "errorType", event->errorType);
+        CHECK_AND_RETURN_LOG(res, " fail to convert to errorType");
+        res = CommonNapi::SetPropertyInt32(ref->env_, args[0], "soundId", event->loadSoundId);
+        CHECK_AND_RETURN_LOG(res, " fail to convert to soundId");
+        if (event->playFinishedStreamID > 0) {
+            res = CommonNapi::SetPropertyInt32(ref->env_, args[0], "streamId", event->playFinishedStreamID);
+            CHECK_AND_RETURN_LOG(res, " fail to convert to streamId");
+        }
+
+        napi_value result = nullptr;
+        nstatus = napi_call_function(ref->env_, nullptr, jsCallback, argCount, args, &result);
         CHECK_AND_BREAK_LOG(nstatus == napi_ok, "%{public}s fail to napi call function", request.c_str());
     } while (0);
 }
