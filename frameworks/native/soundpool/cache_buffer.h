@@ -118,7 +118,7 @@ private:
     Format trackFormat_;
     std::deque<std::shared_ptr<AudioBufferEntry>> cacheData_;
     std::shared_ptr<AudioBufferEntry> fullCacheData_;
-    size_t cacheDataTotalSize_;
+    size_t cacheDataTotalSize_ = 0;
     int32_t soundID_ = 0;
     int32_t streamID_ = 0;
     AudioStandard::AudioSampleFormat sampleFormat_ = AudioStandard::AudioSampleFormat::INVALID_WIDTH;

@@ -376,11 +376,11 @@ void SoundDecoderCallback::OnOutputBufferAvailable(uint32_t index, AVCodecBuffer
     amutex_.unlock();
 }
 
-void SoundDecoderCallback::ReCombineCacheData()
+int32_t SoundDecoderCallback::ReCombineCacheData()
 {
     MEDIA_LOGI("ReCombine start currentSoundBufferSize_:%{public}d", currentSoundBufferSize_);
     uint8_t *fullBuffer = new(std::nothrow) uint8_t[currentSoundBufferSize_];
-    CHECK_AND_RETURN_LOG(fullBuffer != nullptr, "Invalid fullBuffer");
+    CHECK_AND_RETURN_RET_LOG(fullBuffer != nullptr, MSERR_INVALID_VAL, "Invalid fullBuffer");
     int32_t copyIndex = 0;
     int32_t remainBufferSize = static_cast<int32_t>(currentSoundBufferSize_);
     MEDIA_LOGI("ReCombine start copyIndex:%{public}d, remainSize:%{public}d", copyIndex, remainBufferSize);
@@ -390,12 +390,14 @@ void SoundDecoderCallback::ReCombineCacheData()
                 delete[] fullBuffer;
                 MEDIA_LOGE("ReCombine not enough remainBufferSize:%{public}d, bufferEntry->size:%{public}d",
                     remainBufferSize, bufferEntry->size);
+                return MSERR_INVALID_VAL;
             }
             int32_t ret = memcpy_s(fullBuffer + copyIndex, remainBufferSize,
                 bufferEntry->buffer, bufferEntry->size);
             if (ret != MSERR_OK) {
                 delete[] fullBuffer;
                 MEDIA_LOGE("ReCombine memcpy failed");
+                return MSERR_INVALID_VAL;
             }
             copyIndex += bufferEntry->size;
             remainBufferSize -= bufferEntry->size;
@@ -411,6 +413,7 @@ void SoundDecoderCallback::ReCombineCacheData()
     if (!availableAudioBuffers_.empty()) {
         availableAudioBuffers_.clear();
     }
+    return MSERR_OK;
 }
 
 int32_t SoundDecoderCallback::SetCallback(const std::shared_ptr<ISoundPoolCallback> &callback)
