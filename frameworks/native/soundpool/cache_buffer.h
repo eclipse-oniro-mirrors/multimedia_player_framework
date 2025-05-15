@@ -114,7 +114,7 @@ private:
     int32_t GetGlobalId(int32_t soundID);
     void DelGlobalId(int32_t globalId);
     void SetGlobalId(int32_t soundID, int32_t globalId);
-    int32_t DoPlayHelper(const int32_t streamID);
+    int32_t HandleRendererNotStart(const int32_t streamID);
 
     Format trackFormat_;
     std::deque<std::shared_ptr<AudioBufferEntry>> cacheData_;
