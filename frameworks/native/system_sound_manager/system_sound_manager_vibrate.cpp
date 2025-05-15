@@ -108,17 +108,18 @@ int32_t SystemSoundManagerImpl::UpdateStringValue(const std::string &key,
     }
     DataShare::DataShareValueObject valueObj(value);
     DataShare::DataShareValuesBucket valueBucket;
-    valueBucket.Put(SETTINGS_COLUMN_VALUE, valueObj);
+    valueBucket.Put(SETTING_COLUMN_VALUE, valueObj);
     DataShare::DataSharePredicates predicates;
-    predicates.EqualTo(SETTINGS_COLUMN_KEYWORD, key);
+    predicates.EqualTo(SETTING_COLUMN_KEYWORD, key);
+    Uri uri(AssembleUri(key, tableType));
     int32_t ret = helper->Update(uri, predicates, valueBucket);
     if (ret <= 0) {
-        TELEPHONY_LOGE("DataShareHelper update failed, retCode:%{public}d", ret);
+        MEDIA_LOGE("DataShareHelper update failed, retCode:%{public}d", ret);
         helper->Release();
-        return TELEPHONY_ERROR;
+        return MSERR_INVALID_VAL;
     }
     helper->NotifyChange(uri);
-    resultSet->Close();
+    helper->Release();
     return MSERR_OK;
 }
  

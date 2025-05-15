@@ -619,7 +619,6 @@ int32_t SystemSoundManagerImpl::CheckToneTypeAndUpdate(std::shared_ptr<DataShare
         } else {
             return ERROR;
         }
-        return changedRows > 0 ? SUCCESS : ERROR;
     }
     resultSet == nullptr ? : resultSet->Close();
     dataShareHelper->Release();
@@ -640,9 +639,9 @@ void SystemSoundManagerImpl::ClearSystemVideoRingConfig(RingtoneType ringtoneTyp
         videoRingtoneNameCardKey = "videoRingtoneNameCard2";
     }
     int32_t result = UpdateStringValue(ringtoneFlagCardKey, defaultValue, tableType);
-    MEDIA_LOGI("result: %{public}d", result);
+    MEDIA_LOGI("result: %{public}d.", result);
     result = UpdateStringValue(videoRingtoneNameCardKey, defaultValue, tableType);
-    MEDIA_LOGI("result: %{public}d", result);
+    MEDIA_LOGI("result: %{public}d.", result);
 }
 
 std::string SystemSoundManagerImpl::GetRingtoneUriByType(const DatabaseTool &databaseTool, const std::string &type)
