@@ -38,6 +38,8 @@
 #include "ipc_skeleton.h"
 #include "tokenid_kit.h"
 #endif
+#include "access_token.h"
+#include "accesstoken_kit.h"
 
 using namespace OHOS::AudioStandard;
 
@@ -93,6 +95,7 @@ napi_value AVPlayerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("setPlaybackRange", JsSetPlaybackRange),
         DECLARE_NAPI_FUNCTION("setSuperResolution", JsSetSuperResolution),
         DECLARE_NAPI_FUNCTION("setVideoWindowSize", JsSetVideoWindowSize),
+        DECLARE_NAPI_FUNCTION("enableCameraPostprocessing", JsEnableCameraPostprocessing),
         DECLARE_NAPI_FUNCTION("on", JsSetOnCallback),
         DECLARE_NAPI_FUNCTION("off", JsClearOnCallback),
         DECLARE_NAPI_FUNCTION("setVolume", JsSetVolume),
@@ -220,6 +223,16 @@ bool AVPlayerNapi::IsSystemApp()
     });
 #endif
     return isSystemApp;
+}
+
+bool AVPlayerNapi::SystemPermission()
+{
+    auto tokenId = IPCSkeleton::GetCallingTokenID();
+    auto tokenType = Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(tokenId);
+    if (tokenType == Security::AccessToken::TOKEN_NATIVE || tokenType == Security::AccessToken::TOKEN_SHELL) {
+        return true;
+    }
+    return IsSystemApp();
 }
 
 napi_value AVPlayerNapi::JsCreateAVPlayer(napi_env env, napi_callback_info info)
@@ -1782,6 +1795,68 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::SetVideoWindowSizeTask(int32
     return task;
 }
 
+napi_value AVPlayerNapi::JsEnableCameraPostprocessing(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVPlayerNapi::enableCameraPostprocessing");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    MEDIA_LOGD("JsEnableCameraPostprocessing In");
+ 
+    napi_value args[PARAM_COUNT_SINGLE] = { nullptr };
+    size_t argCount = PARAM_COUNT_SINGLE; // enableCameraPostprocessing(enabled: boolean)
+    AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
+ 
+    auto promiseCtx = std::make_unique<AVPlayerContext>(env);
+    promiseCtx->deferred = CommonNapi::CreatePromise(env, nullptr, result);
+ 
+    if (!SystemPermission()) {
+        promiseCtx->SignError(MSERR_EXT_API9_PERMISSION_DENIED, "systemapi permission denied");
+    }
+    if (!jsPlayer->CanCameraPostprocessing()) {
+        promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "current state is not initialized/prepared/playing/paused/completed/stopped, "
+            "unsupport enable cameraPostProcessor");
+    } else {
+        promiseCtx->asyncTask = jsPlayer->EnableCameraPostprocessingTask();
+    }
+ 
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, "JsEnableCameraPostprocessing", NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource,
+        [](napi_env env, void *data) {
+            auto promiseCtx = reinterpret_cast<AVPlayerContext *>(data);
+            CHECK_AND_RETURN_LOG(promiseCtx != nullptr, "promiseCtx is nullptr!");
+            promiseCtx->CheckTaskResult();
+        },
+        MediaAsyncContext::CompleteCallback, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
+    napi_queue_async_work_with_qos(env, promiseCtx->work, napi_qos_user_initiated);
+    promiseCtx.release();
+    return result;
+}
+ 
+std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::EnableCameraPostprocessingTask()
+{
+    auto task = std::make_shared<TaskHandler<TaskRet>>([this]() {
+        std::unique_lock<std::mutex> lock(taskMutex_);
+        auto state = GetCurrentState();
+        if (CanCameraPostprocessing()) {
+            int32_t ret = player_->EnableCameraPostprocessing();
+            if (ret != MSERR_OK) {
+                auto errCode = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret));
+                return TaskRet(errCode, "failed to enable cameraPostProcessor");
+            }
+        } else {
+            return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                "current state is not initialized, "
+                "unsupport enable cameraPostProcessor");
+        }
+        return TaskRet(MSERR_EXT_API9_OK, "Success");
+    });
+    (void)taskQue_->EnqueueTask(task);
+    return task;
+}
+
 napi_value AVPlayerNapi::JsGetUrl(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("AVPlayerNapi::get url");
@@ -2635,6 +2710,15 @@ bool AVPlayerNapi::CanSetSuperResolution()
     if (state == AVPlayerState::STATE_INITIALIZED || state == AVPlayerState::STATE_PREPARED ||
         state == AVPlayerState::STATE_PLAYING || state == AVPlayerState::STATE_PAUSED ||
         state == AVPlayerState::STATE_STOPPED || state == AVPlayerState::STATE_COMPLETED) {
+        return true;
+    }
+    return false;
+}
+
+bool AVPlayerNapi::CanCameraPostprocessing()
+{
+    auto state = GetCurrentState();
+    if (state == AVPlayerState::STATE_INITIALIZED) {
         return true;
     }
     return false;

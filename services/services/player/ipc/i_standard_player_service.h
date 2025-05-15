@@ -163,6 +163,17 @@ public:
         return 0;
     }
 
+    virtual int32_t SetReopenFd(int32_t fd)
+    {
+        (void)fd;
+        return 0;
+    }
+ 
+    virtual int32_t EnableCameraPostprocessing()
+    {
+        return 0;
+    }
+
     /**
      * IPC code ID
      */
@@ -221,6 +232,8 @@ public:
         IS_SEEK_CONTINUOUS_SUPPORTED,
         SET_SOURCE_LOADER,
         SET_START_FRAME_RATE_OPT_ENABLED,
+        SET_REOPEN_FD,
+        ENABLE_CAMERA_POSTPROCESSING,
         MAX_IPC_ID,                   // all IPC codes should be added before MAX_IPC_ID
     };
 

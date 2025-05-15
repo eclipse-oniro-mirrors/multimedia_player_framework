@@ -256,6 +256,8 @@ private:
 
     static napi_value JsSetStartFrameRateOptEnabled(napi_env env, napi_callback_info info);
 
+    static napi_value JsEnableCameraPostprocessing(napi_env env, napi_callback_info info);
+
     /**
      * getPlaybackInfo(): playbackInfo;
      */
@@ -307,6 +309,7 @@ private:
     static std::shared_ptr<AVMediaSource> GetAVMediaSource(napi_env env, napi_value value,
         std::shared_ptr<AVMediaSourceTmp> &srcTmp);
     static bool IsSystemApp();
+    static bool SystemPermission();
     AVPlayerNapi();
     ~AVPlayerNapi() override;
     void SaveCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref);
@@ -331,6 +334,7 @@ private:
     std::shared_ptr<TaskHandler<TaskRet>> SetMediaMutedTask(MediaType type, bool isMuted);
     std::shared_ptr<TaskHandler<TaskRet>> SetSuperResolutionTask(bool enabled);
     std::shared_ptr<TaskHandler<TaskRet>> SetVideoWindowSizeTask(int32_t width, int32_t height);
+    std::shared_ptr<TaskHandler<TaskRet>> EnableCameraPostprocessingTask();
     std::shared_ptr<TaskHandler<TaskRet>> EqueueSetPlayRangeTask(int32_t start, int32_t end, int32_t mode);
 
     std::string GetCurrentState();
@@ -338,6 +342,7 @@ private:
     bool CanSetPlayRange();
     bool CanSetSuperResolution();
     bool IsVideoWindowSizeValid(int32_t width, int32_t height);
+    bool CanCameraPostprocessing();
     bool IsLiveSource() const;
     void EnqueueNetworkTask(const std::string url);
     void EnqueueFdTask(const int32_t fd);

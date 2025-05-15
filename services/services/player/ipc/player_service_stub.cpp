@@ -203,6 +203,10 @@ void PlayerServiceStub::FillPlayerFuncPart3()
         [this](MessageParcel &data, MessageParcel &reply) { return SetVolumeMode(data, reply); } };
     playerFuncs_[SET_START_FRAME_RATE_OPT_ENABLED] = { "Player::SetStartFrameRateOptEnabled",
         [this](MessageParcel &data, MessageParcel &reply) { return SetStartFrameRateOptEnabled(data, reply); } };
+    playerFuncs_[SET_REOPEN_FD] = { "Player::SetReopenFd",
+        [this](MessageParcel &data, MessageParcel &reply) { return SetReopenFd(data, reply); } };
+    playerFuncs_[ENABLE_CAMERA_POSTPROCESSING] = { "Player::EnableCameraPostprocessing",
+        [this](MessageParcel &data, MessageParcel &reply) { return EnableCameraPostprocessing(data, reply); } };
 }
 
 int32_t PlayerServiceStub::Init()
@@ -684,6 +688,13 @@ uint32_t PlayerServiceStub::GetMemoryUsage()
     MediaTrace trace("PlayerServiceStub::GetMemoryUsage");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, 0, "player server is nullptr");
     return playerServer_->GetMemoryUsage();
+}
+
+int32_t PlayerServiceStub::SetReopenFd(int32_t fd)
+{
+    MediaTrace trace("PlayerServiceStub::SetReopenFd");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->SetReopenFd(fd);
 }
 
 int32_t PlayerServiceStub::SetListenerObject(MessageParcel &data, MessageParcel &reply)
@@ -1302,6 +1313,27 @@ int32_t PlayerServiceStub::SetSeiMessageCbStatus(MessageParcel &data, MessagePar
     }
     reply.WriteInt32(SetSeiMessageCbStatus(status, payloadTypes));
     return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::SetReopenFd(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t fd = data.ReadFileDescriptor();
+    reply.WriteInt32(SetReopenFd(fd));
+    (void)::close(fd);
+    return MSERR_OK;
+}
+ 
+int32_t PlayerServiceStub::EnableCameraPostprocessing(MessageParcel &data, MessageParcel &reply)
+{
+    reply.WriteInt32(EnableCameraPostprocessing());
+    return MSERR_OK;
+}
+ 
+int32_t PlayerServiceStub::EnableCameraPostprocessing()
+{
+    MediaTrace trace("Stub::EnableCameraPostprocessing");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->EnableCameraPostprocessing();
 }
 } // namespace Media
 } // namespace OHOS

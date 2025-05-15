@@ -185,6 +185,8 @@ public:
     int32_t IsSeekContinuousSupported(bool &isSeekContinuousSupported) override;
     int32_t SetSeiMessageCbStatus(bool status, const std::vector<int32_t> &payloadTypes) override;
     void SetPerfRecEnabled(bool isPerfRecEnabled) override;
+    int32_t SetReopenFd(int32_t fd) override;
+    int32_t EnableCameraPostprocessing() override;
 
 private:
     enum HiplayerSvpMode : int32_t {
@@ -459,6 +461,8 @@ private:
     // memory usage
     std::unordered_map<std::string, uint32_t> memoryUsageInfo_ {};
     std::mutex memoryReportMutex_;
+    int32_t postProcessorFd_ {-1};
+    std::atomic<bool> enableCameraPostprocessing_ {false};
 };
 } // namespace Media
 } // namespace OHOS

@@ -22,6 +22,7 @@
 #include "i_player_service.h"
 #include "hitrace/tracechain.h"
 #include "hiappevent_agent.h"
+#include "scoped_file_descriptor.h"
 
 namespace OHOS {
 namespace Media {
@@ -90,9 +91,12 @@ public:
     int32_t SetStartFrameRateOptEnabled(bool enabled) override;
     void ReleaseClientListener() override;
     HiviewDFX::HiTraceId GetTraceId();
+    int32_t SetReopenFd(int32_t fd) override;
+    int32_t EnableCameraPostprocessing() override;
 private:
     void ResetSeekVariables();
     void HandleSeekDoneInfo(PlayerOnInfoType type, int32_t extra);
+    int32_t SetSourceTask(int32_t fd, int64_t offset, int64_t size);
     std::recursive_mutex recMutex_;
     int32_t mCurrentPosition = INT32_MIN;
     PlayerSeekMode mCurrentSeekMode = PlayerSeekMode::SEEK_PREVIOUS_SYNC;
@@ -101,6 +105,7 @@ private:
     std::atomic<bool> isSeeking_{false};
     int32_t prevTrackIndex_ = INT32_MIN;
     std::shared_ptr<PlayerCallback> callback_;
+    std::unique_ptr<ScopedFileDescriptor> ScopedFileDescriptor_ = nullptr;
 
     std::shared_ptr<IPlayerService> playerService_ = nullptr;
     sptr<Surface> surface_ = nullptr;

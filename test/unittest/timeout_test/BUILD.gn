@@ -28,6 +28,7 @@ ohos_unittest("player_timeout_unit_test") {
     "//foundation/multimedia/player_framework/services/services/monitor/ipc",
     "//foundation/multimedia/player_framework/services/services/sa_media/ipc",
     "//foundation/multimedia/player_framework/services/include",
+    "//foundation/multimedia/player_framework/services/utils/include",
     "src/data_source",
     "src/loader_callback",
   ]

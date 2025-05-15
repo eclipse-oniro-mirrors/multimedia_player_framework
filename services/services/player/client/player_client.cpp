@@ -510,5 +510,19 @@ bool PlayerClient::IsSeekContinuousSupported()
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, false, "player service does not exist.");
     return playerProxy_->IsSeekContinuousSupported();
 }
+
+int32_t PlayerClient::SetReopenFd(int32_t fd)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
+    return playerProxy_->SetReopenFd(fd);
+}
+ 
+int32_t PlayerClient::EnableCameraPostprocessing()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerProxy_->EnableCameraPostprocessing();
+}
 } // namespace Media
 } // namespace OHOS

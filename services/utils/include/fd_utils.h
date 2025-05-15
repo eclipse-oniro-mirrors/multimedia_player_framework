@@ -39,17 +39,17 @@ public:
             ssize_t result = readlink(fdPathStr.c_str(), realPath, sizeof(realPath));
             if (result == RESULT_ERROR) {
                 MEDIA_LOGW("invailed fd: %{public}d, error: %{public}s", fd, std::strerror(errno));
-                return ScopedFileDescriptor(dup(fd));
+                return ScopedFileDescriptor();
             }
             auto newFd = open(fdPathStr.c_str(), O_RDONLY);
             if (newFd < 0) {
                 MEDIA_LOGW("invailed fd: %{public}d, error: %{public}s", fd, std::strerror(errno));
-                return ScopedFileDescriptor(dup(fd));
+                return ScopedFileDescriptor();
             }
             return ScopedFileDescriptor(newFd);
         }
 #endif
-        return ScopedFileDescriptor(dup(fd));
+        return ScopedFileDescriptor();
     }
 
 private:
