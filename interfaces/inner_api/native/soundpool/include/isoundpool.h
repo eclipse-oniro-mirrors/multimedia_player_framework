@@ -18,6 +18,8 @@
 
 #include <string>
 #include "audio_info.h"
+#include "meta/format.h"
+#include "media_errors.h"
 
 namespace OHOS {
 namespace Media {
