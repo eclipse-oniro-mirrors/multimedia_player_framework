@@ -250,6 +250,8 @@ int32_t AudioHapticVibratorImpl::StartVibrate(const AudioLatencyMode &latencyMod
         return result;
     } else if (audioHapticPlayer_.GetHapticsMode() == HapticsMode::HAPTICS_MODE_NON_SYNC) {
         return StartNonSyncVibration();
+    } else if (audioHapticPlayer_.GetHapticsMode() == HapticsMode::HAPTICS_MODE_NON_SYNC_ONCE) {
+        return StartNonSyncOnceVibration();
     }
     if (latencyMode == AUDIO_LATENCY_MODE_NORMAL) {
         return StartVibrateForAVPlayer();
@@ -369,6 +371,29 @@ int32_t AudioHapticVibratorImpl::StartNonSyncVibration()
             MEDIA_LOGI("StartNonSyncVibration: RunVibrationPatterns fail.");
             return result;
         }
+    }
+#endif
+    return result;
+}
+
+int32_t AudioHapticVibratorImpl::StartNonSyncOnceVibration()
+{
+    std::unique_lock<std::mutex> lock(vibrateMutex_);
+    if (isStopped_) {
+        MEDIA_LOGW("Vibrator has been stopped. Return ok immediately");
+        return MSERR_OK;
+    }
+
+    int32_t result = MSERR_OK;
+#ifdef SUPPORT_VIBRATOR
+    if (vibratorPkg_ == nullptr || vibratorFD_ == nullptr) {
+        MEDIA_LOGE("Vibration source file is not prepared. Can not start vibrating");
+        return MSERR_INVALID_OPERATION;
+    }
+    result = RunVibrationPatterns(lock);
+    if (result != MSERR_OK) {
+        MEDIA_LOGI("StartNonSyncOnceVibration: RunVibrationPatterns fail.");
+        return result;
     }
 #endif
     return result;
