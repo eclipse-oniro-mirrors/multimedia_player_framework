@@ -96,6 +96,88 @@ ohos_unittest("recorder_native_unit_test") {
 
 #######################################################################
 
+ohos_unittest("recorder_function_unit_test") {
+  module_out_path = module_output_path
+  include_dirs = [
+    "./capi/include",
+    "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c",
+    "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",
+    "$MEDIA_PLAYER_ROOT_DIR/frameworks/native/recorder",
+    "$MEDIA_PLAYER_ROOT_DIR/test/unittest/common/include",
+    "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",
+    "$MEDIA_PLAYER_ROOT_DIR/frameworks/native/capi/common",
+    "$MEDIA_PLAYER_ROOT_DIR/services/utils/include",
+  ]
+
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  cflags = [
+    "-Wall",
+    "-Werror",
+  ]
+
+  external_deps = []
+
+  if (player_framework_support_recorder) {
+    sources = [
+      "capi/src/recorder_function_unit_test.cpp",
+    ]
+    external_deps += [ "drivers_interface_display:libdisplay_composer_proxy_1.2" ]
+  }
+
+  public_deps = [ "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c:avrecorder" ]
+
+  external_deps += [
+    "ability_base:base",
+    "ability_base:want",
+    "ability_base:zuri",
+    "ability_runtime:ability_context_native",
+    "ability_runtime:ability_manager",
+    "ability_runtime:abilitykit_native",
+    "ability_runtime:app_context",
+    "ability_runtime:app_manager",
+    "ability_runtime:data_ability_helper",
+    "ability_runtime:mission_info",
+    "access_token:libaccesstoken_sdk",
+    "access_token:libnativetoken_shared",
+    "access_token:libtokensetproc_shared",
+    "av_codec:av_codec_client",
+    "c_utils:utils",
+    "graphic_2d:librender_service_base",
+    "graphic_surface:surface",
+    "hilog:libhilog",
+    "image_framework:image",
+    "image_framework:image_native",
+    "image_framework:image_source",
+    "image_framework:ohimage",
+    "napi:ace_napi",
+    "player_framework:media_client",
+    "resource_management:librawfile",
+    "window_manager:libdm",
+  ]
+
+  if (player_framework_support_auto_create_file) {
+    external_deps += [
+      "media_library:media_library",
+      "media_library:media_library_asset_manager",
+      "media_library:native_media_asset_manager",
+    ]
+  }
+
+  if (defined(global_parts_info) &&
+      defined(global_parts_info.multimedia_histreamer_ext)) {
+    defines = [ "SUPPORT_CODEC_TYPE_HEVC" ]
+  }
+
+  resource_config_file = "../resources/ohos_test.xml"
+}
+
+#######################################################################
+
 ohos_unittest("recorder_server_unit_test") {
   module_out_path = module_output_path
   include_dirs = [

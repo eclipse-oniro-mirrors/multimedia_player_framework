@@ -121,6 +121,12 @@ std::shared_ptr<PixelMap> AVMetadataMock::FetchFrameYuv(int64_t timeUs, int32_t 
     return avMetadataHelper_->FetchFrameYuv(timeUs, option, param);
 }
 
+std::shared_ptr<PixelMap> AVMetadataMock::FetchScaledFrameYuv(int64_t timeUs, int32_t option, PixelMapParams param)
+{
+    UNITTEST_INFO_LOG("%s", __FUNCTION__);
+    return avMetadataHelper_->FetchScaledFrameYuv(timeUs, option, param);
+}
+
 std::shared_ptr<AVSharedMemory> AVMetadataMock::FetchArtPicture()
 {
     UNITTEST_INFO_LOG("%s", __FUNCTION__);

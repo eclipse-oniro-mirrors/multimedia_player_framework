@@ -256,6 +256,9 @@ int32_t Stream::DoPlay()
         MEDIA_LOGE("Stream::DoPlay failed, cacheData or audioRender nullptr, streamID:%{public}d", streamID_);
         if (callback_ != nullptr) {
             callback_->OnError(MSERR_INVALID_VAL);
+            SoundPoolUtils::ErrorInfo errorInfo{MSERR_INVALID_VAL, soundID_,
+                streamID_, ERROR_TYPE::PLAY_ERROR, callback_};
+            SoundPoolUtils::SendErrorInfo(errorInfo);
         }
         if (streamCallback_ != nullptr) {
             streamCallback_->OnError(MSERR_INVALID_VAL);
@@ -280,6 +283,9 @@ int32_t Stream::DoPlay()
         if (callback_ != nullptr) {
             MEDIA_LOGE("Stream::DoPlay failed, call callback, streamID:%{public}d", streamID_);
             callback_->OnError(MSERR_INVALID_VAL);
+            SoundPoolUtils::ErrorInfo errorInfo{MSERR_INVALID_VAL, soundID_,
+                streamID_, ERROR_TYPE::PLAY_ERROR, callback_};
+            SoundPoolUtils::SendErrorInfo(errorInfo);
         }
         if (streamCallback_ != nullptr) {
             streamCallback_->OnError(MSERR_INVALID_VAL);

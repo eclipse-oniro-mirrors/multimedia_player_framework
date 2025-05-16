@@ -135,7 +135,7 @@ private:
     // Use to get soundpool instance.
     static SoundPoolNapi* GetJsInstanceAndArgs(napi_env env, napi_callback_info info,
         size_t &argCount, napi_value *args);
-    static napi_status GetJsInstanceWithParameter(napi_env env, napi_value *argv);
+    static napi_status GetJsInstanceWithParameter(napi_env env, napi_value *argv, int32_t argvLength);
     static bool IsSystemApp();
     int32_t ParserLoadOptionFromJs(std::unique_ptr<SoundPoolAsyncContext> &asyncCtx,
         napi_env env, napi_value *argv, size_t argCount);
