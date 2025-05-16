@@ -57,7 +57,7 @@ class MockContext : public AbilityRuntime::Context {
         std::string GetCacheDir() override { return ""; }
         std::string GetTempDir() override { return ""; }
         std::string GetFilesDir() override { return ""; }
-        std::string GetResourceDir() override { return ""; }
+        std::string GetResourceDir(const std::string &moduleName) override { return ""; }
         bool IsUpdatingConfigurations() override { return false; }
         bool PrintDrawnCompleted() override { return false; }
         std::string GetDatabaseDir() override { return ""; }
