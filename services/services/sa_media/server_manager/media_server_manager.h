@@ -62,6 +62,7 @@ public:
     void DestroyDumper(StubType type, sptr<IRemoteObject> object);
     void DestroyDumperForPid(pid_t pid);
     void NotifyMemMgrLoaded();
+    void DestoryMemoryReportTask();
 #ifdef SUPPORT_START_STOP_ON_DEMAND
     int32_t GetInstanceCount();
     int32_t GetInstanceCountLocked();

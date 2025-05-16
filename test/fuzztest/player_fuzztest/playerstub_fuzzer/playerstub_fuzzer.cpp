@@ -73,7 +73,7 @@ bool FuzzPlayerStubLocal(uint8_t *data, size_t size)
         MessageOption option;
         playerStub->OnRemoteRequest(code, msg, reply, option);
     }
-
+    MediaServerManager::GetInstance().DestoryMemoryReportTask();
     return true;
 }
 }

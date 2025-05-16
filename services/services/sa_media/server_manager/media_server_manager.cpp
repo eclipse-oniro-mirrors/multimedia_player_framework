@@ -887,6 +887,20 @@ void MediaServerManager::NotifyMemMgrLoaded()
     isMemMgrLoaded_.store(true);
 }
 
+void MediaServerManager::DestoryMemoryReportTask()
+{
+    MediaTrace trace("MediaServerManager::DestoryMemoryReportTask");
+    MEDIA_LOGI("DestoryMemoryReportTask");
+    std::unique_ptr<Task> memoryReportTask{nullptr};
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        memoryReportTask = std::move(memoryReportTask_);
+        if (memoryReportTask && memoryReportTask->IsTaskRunning()) {
+            memoryReportTask->StopAsync();
+        }
+    }
+}
+
 void MediaServerManager::AsyncExecutor::Commit(sptr<IRemoteObject> obj)
 {
     std::lock_guard<std::mutex> lock(listMutex_);
