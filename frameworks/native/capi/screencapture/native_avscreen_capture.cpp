@@ -73,10 +73,13 @@ public:
         : callback_(callback), userData_(userData) {}
     virtual ~NativeScreenCaptureContentChangedCallback() = default;
     
-    void OnCaptureContentChanged(struct OH_AVScreenCapture *capture, AVScreenCaptureContentChangedEvent event)
+    void OnCaptureContentChanged(struct OH_AVScreenCapture *capture, AVScreenCaptureContentChangedEvent event,
+        ScreenCaptureRect* area)
     {
+        MEDIA_LOGD("NativeScreenCaptureContentChangedCallback OnCaptureContentChanged");
         CHECK_AND_RETURN(capture != nullptr && callback_ != nullptr);
-        callback_(capture, static_cast<OH_AVScreenCaptureContentChangedEvent>(event), nullptr, userData_);
+        callback_(capture, static_cast<OH_AVScreenCaptureContentChangedEvent>(event),
+            area == nullptr ? nullptr : reinterpret_cast<OH_Rect*>(area), userData_);
     }
     
 private:
@@ -296,14 +299,14 @@ public:
         }
     }
 
-    void OnCaptureContentChanged(AVScreenCaptureContentChangedEvent event) override
+    void OnCaptureContentChanged(AVScreenCaptureContentChangedEvent event, ScreenCapture* area) override
     {
-        MEDIA_LOGI("OnCaptureContentChanged() is called, event: %{public}d", event);
+        MEDIA_LOGD("OnCaptureContentChanged() is called, event: %{public}d", event);
         std::shared_lock<std::shared_mutex> lock(mutex_);
         CHECK_AND_RETURN(capture_ != nullptr);
 
         if (contentChangedCallback_ != nullptr) {
-            contentChangedCallback_->OnCaptureContentChanged(capture_, event);
+            contentChangedCallback_->OnCaptureContentChanged(capture_, event, area);
             return;
         }
     }

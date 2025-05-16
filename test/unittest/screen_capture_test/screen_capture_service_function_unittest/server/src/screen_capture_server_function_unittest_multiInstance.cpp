@@ -894,11 +894,13 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ProcessWindowIdList_001, TestSize.Leve
 
 HWTEST_F(ScreenCaptureServerFunctionTest, NotifyCaptureContentChanged_001, TestSize.Level2)
 {
-    screenCaptureServer_->NotifyCaptureContentChanged(AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_HIDE);
+    screenCaptureServer_->NotifyCaptureContentChanged(AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_HIDE,
+        nullptr);
     screenCaptureServer_->NotifyCaptureContentChanged(
-        AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_VISIBLE);
+        AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_VISIBLE, nullptr);
     screenCaptureServer_->NotifyCaptureContentChanged(
-        AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_UNAVAILABLE);
+        AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_UNAVAILABLE, nullptr);
+    ASSERT_NE(screenCaptureServer_, nullptr);
 }
 
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION

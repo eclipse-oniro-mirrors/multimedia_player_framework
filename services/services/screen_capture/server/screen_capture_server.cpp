@@ -171,7 +171,7 @@ void ScreenConnectListenerForSC::OnDisconnect(Rosen::ScreenId screenId)
     if (callbackPtr && screenId == screenId_) {
         MEDIA_LOGI("ScreenConnectListenerForSC OnDisconnect NotifyCaptureContentChanged: %{public}" PRIu64, screenId_);
         callbackPtr->NotifyCaptureContentChanged(
-            AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_UNAVAILABLE);
+            AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_UNAVAILABLE, nullptr);
     }
 }
 
@@ -343,6 +343,11 @@ void ScreenCaptureServer::OnDMPrivateWindowChange(bool hasPrivate)
         AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_EXIT_PRIVATE_SCENE);
 }
 
+void ScreenCaptureServer::SetWindowIdList(uint64_t windowId)
+{
+    windowIdList_.push_back(static_cast<int32_t>(windowId));
+}
+
 std::vector<int32_t> ScreenCaptureServer::GetWindowIdList()
 {
     return windowIdList_;
@@ -351,6 +356,16 @@ std::vector<int32_t> ScreenCaptureServer::GetWindowIdList()
 uint64_t ScreenCaptureServer::GetDefaultDisplayId()
 {
     return displayScreenId_;
+}
+
+void ScreenCaptureServer::SetCurDisplayId(uint64_t displayId)
+{
+    curDisplayId_ = displayId;
+}
+
+uint64_t ScreenCaptureServer::GetCurDisplayId()
+{
+    return curDisplayId_;
 }
 
 void ScreenCaptureServer::SetDefaultDisplayIdOfWindows()
@@ -369,6 +384,7 @@ void ScreenCaptureServer::SetDefaultDisplayIdOfWindows()
             defaultDisplayId = pair.second;
     }
     displayScreenId_ = defaultDisplayId;
+    SetCurDisplayId(displayScreenId_);
     MEDIA_LOGI("SetDefaultDisplayIdOfWindows End. defaultDisplayId: %{public}" PRIu64, displayScreenId_);
 }
 
@@ -476,6 +492,10 @@ int32_t ScreenCaptureServer::RegisterWindowInfoChangedListener()
     }
 
     std::weak_ptr<ScreenCaptureServer> screenCaptureServer(shared_from_this());
+    if (screenCaptureServer.lock()) {
+        MEDIA_LOGD("0x%{public}06" PRIXPTR "RegisterWindowInfoChangedListener",
+            FAKE_POINTER(screenCaptureServer.lock().get()));
+    }
     sptr<SCWindowInfoChangedListener> listener(new (std::nothrow) SCWindowInfoChangedListener(screenCaptureServer));
     CHECK_AND_RETURN_RET_LOG(listener != nullptr, MSERR_INVALID_OPERATION,
         "create new windowInfoChangedListener failed.");
@@ -523,30 +543,43 @@ void ScreenCaptureServer::NotifyCaptureContentChanged(AVScreenCaptureContentChan
 
 SCWindowLifecycleListener::SCWindowLifecycleListener(std::weak_ptr<ScreenCaptureServer> screenCaptureServer)
 {
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    MEDIA_LOGD("0x%{public}06" PRIXPTR "SCWindowLifecycleListener Instances create", FAKE_POINTER(this));
     screenCaptureServer_ = screenCaptureServer;
 }
 
 void SCWindowLifecycleListener::OnLifecycleEvent(SessionLifecycleEvent event, const LifecycleEventPayload& payload)
 {
-    MEDIA_LOGD("SCWindowLifecycleListener::OnLifecycleEvent Start.");
+    MEDIA_LOGI("SCWindowLifecycleListener::OnLifecycleEvent Start.");
     auto SCServer = screenCaptureServer_.lock();
     CHECK_AND_RETURN_LOG(SCServer != nullptr, "screenCaptureServer is nullptr");
     switch (event) {
         case SessionLifecycleEvent::FOREGROUND: {
             MEDIA_LOGI("OnLifecycleEvent: SessionLifecycleEvent::FOREGROUND");
-            SCServer->NotifyCaptureContentChanged(AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_VISIBLE);
+            if (SCServer->GetCurDisplayId() == SCServer->GetDefaultDisplayId() &&
+                (SCServer->GetWindowIdList()).size() > 0) {
+                WindowInfoOption windowInfoOption;
+                std::vector<sptr<WindowInfo>> infos;
+                windowInfoOption.windowId = SCServer->GetWindowIdList()[0];
+                Rosen::WMError ret = Rosen::WindowManager::GetInstance().ListWindowInfo(windowInfoOption, infos);
+                CHECK_AND_RETURN_LOG(ret == Rosen::WMError::WM_OK && infos.size() > 0, "ListWindowInfo failed.");
+                SCServer->NotifyCaptureContentChanged(
+                    AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_VISIBLE,
+                    reinterpret_cast<ScreenCaptureRect*>(&(infos[0]->windowLayoutInfo.rect)));
+            }
             break;
         }
         case SessionLifecycleEvent::BACKGROUND: {
             MEDIA_LOGI("OnLifecycleEvent: SessionLifecycleEvent::BACKGROUND");
-            SCServer->NotifyCaptureContentChanged(AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_HIDE);
+            if (SCServer->GetCurDisplayId() == SCServer->GetDefaultDisplayId()) {
+                SCServer->NotifyCaptureContentChanged(AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_HIDE,
+                    nullptr);
+            }
             break;
         }
         case SessionLifecycleEvent::DESTROYED: {
             MEDIA_LOGI("OnLifecycleEvent: SessionLifecycleEvent::DESTROYED");
             SCServer->NotifyCaptureContentChanged(
-                AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_UNAVAILABLE);
+                AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_UNAVAILABLE, nullptr);
             break;
         }
         default: {
@@ -554,51 +587,61 @@ void SCWindowLifecycleListener::OnLifecycleEvent(SessionLifecycleEvent event, co
             break;
         }
     }
-    MEDIA_LOGD("SCWindowLifecycleListener::OnLifecycleEvent End.");
+    MEDIA_LOGI("SCWindowLifecycleListener::OnLifecycleEvent End.");
 }
 
 SCWindowInfoChangedListener::SCWindowInfoChangedListener(std::weak_ptr<ScreenCaptureServer> screenCaptureServer)
 {
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    MEDIA_LOGD("0x%{public}06" PRIXPTR "SCWindowInfoChangedListener Instances create", FAKE_POINTER(this));
     screenCaptureServer_ = screenCaptureServer;
 }
 
 void SCWindowInfoChangedListener::OnWindowInfoChanged(
     const std::vector<std::unordered_map<WindowInfoKey, std::any>>& windowInfoList)
 {
-    MEDIA_LOGD("SCWindowInfoChangedListener::OnWindowInfoChanged start.");
+    MEDIA_LOGI("SCWindowInfoChangedListener::OnWindowInfoChanged start.");
     auto SCServer = screenCaptureServer_.lock();
     CHECK_AND_RETURN_LOG(SCServer != nullptr, "screenCaptureServer is nullptr");
 
-    if (windowInfoList.size() < WINDOW_INFO_LIST_SIZE ||
+    std::vector<std::unordered_map<WindowInfoKey, std::any>> myWindowInfoList = windowInfoList;
+    if (myWindowInfoList.size() < WINDOW_INFO_LIST_SIZE ||
         (SCServer->GetWindowIdList()).size() < WINDOW_INFO_LIST_SIZE) {
-        MEDIA_LOGE("windowInfoList or windowIdList is invalid.");
+        MEDIA_LOGI("myWindowInfoList or windowIdList is invalid.");
         return;
     }
 
-    auto iter = windowInfoList[0].find(WindowInfoKey::WINDOW_ID);
-    if (!(iter != windowInfoList[0].end() &&
+    auto iter = myWindowInfoList[0].find(WindowInfoKey::WINDOW_ID);
+    if (!(iter != myWindowInfoList[0].end() &&
         std::any_cast<uint32_t>(iter->second) == static_cast<uint32_t>(SCServer->GetWindowIdList()[0]))) {
-        MEDIA_LOGI("OnWindowInfoChanged windowInfoList cannot find WINDOW_ID_KEY or windowId not match!");
+        MEDIA_LOGI("OnWindowInfoChanged myWindowInfoList cannot find WINDOW_ID_KEY or windowId not match!");
         return;
     }
 
     MEDIA_LOGI("OnWindowInfoChanged: find changed windowId: %{public}d", SCServer->GetWindowIdList()[0]);
-    auto iter1 = windowInfoList[0].find(WindowInfoKey::DISPLAY_ID);
-    if (iter1 != windowInfoList[0].end()) {
+    auto iter1 = myWindowInfoList[0].find(WindowInfoKey::DISPLAY_ID);
+    if (iter1 != myWindowInfoList[0].end()) {
         uint64_t displayId = std::any_cast<uint64_t>(iter1->second);
         MEDIA_LOGI("OnWindowInfoChanged: the curDisplayId: %{public}" PRIu64, displayId);
+        SCServer->SetCurDisplayId(displayId);
         if (displayId == SCServer->GetDefaultDisplayId()) {
-            MEDIA_LOGD("OnWindowInfoChanged: window back to initial display!");
-            SCServer->NotifyCaptureContentChanged(
-                AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_VISIBLE);
+            MEDIA_LOGI("OnWindowInfoChanged: window back to initial display!");
+            if ((SCServer->GetWindowIdList()).size() > 0) {
+                WindowInfoOption windowInfoOption;
+                std::vector<sptr<WindowInfo>> infos;
+                windowInfoOption.windowId = SCServer->GetWindowIdList()[0];
+                Rosen::WMError ret = Rosen::WindowManager::GetInstance().ListWindowInfo(windowInfoOption, infos);
+                CHECK_AND_RETURN_LOG(ret == Rosen::WMError::WM_OK && infos.size() > 0, "ListWindowInfo failed.");
+                SCServer->NotifyCaptureContentChanged(
+                    AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_VISIBLE,
+                    reinterpret_cast<ScreenCaptureRect*>(&(infos[0]->windowLayoutInfo.rect)));
+            }
         } else {
-            MEDIA_LOGD("OnWindowInfoChanged: window switched to new display!");
+            MEDIA_LOGI("OnWindowInfoChanged: window switched to new display!");
             SCServer->NotifyCaptureContentChanged(
-                AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_HIDE);
+                AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_HIDE, nullptr);
         }
     } else {
-        MEDIA_LOGI("OnWindowInfoChanged windowInfoList cannot find DISPLAY_ID_KEY");
+        MEDIA_LOGI("OnWindowInfoChanged myWindowInfoList cannot find DISPLAY_ID_KEY");
     }
 }
 
@@ -1808,7 +1851,7 @@ void ScreenCaptureServer::PostStartScreenCapture(bool isSuccess)
     RegisterPrivateWindowListener();
     RegisterScreenConnectListener();
     if (captureConfig_.captureMode == CAPTURE_SPECIFIED_WINDOW && missionIds_.size() == 1) {
-        windowIdList_.push_back(static_cast<int32_t>(missionIds_[0]));
+        SetWindowIdList(missionIds_[0]);
         SetDefaultDisplayIdOfWindows();
         RegisterWindowLifecycleListener(GetWindowIdList());
         RegisterWindowInfoChangedListener();

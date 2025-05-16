@@ -118,7 +118,7 @@ public:
     void OnVideoBufferAvailable(bool isReady) {};
     void OnStateChange(AVScreenCaptureStateCode stateCode) {};
     void OnDisplaySelected(uint64_t displayId) {};
-    void OnCaptureContentChanged(AVScreenCaptureContentChangedEvent event) {};
+    void OnCaptureContentChanged(AVScreenCaptureContentChangedEvent event, ScreenCaptureRect* area) {};
 };
 
 class ScreenCaptureServerUnittestCallbackMock : public ScreenCaptureListenerCallback {
@@ -131,7 +131,7 @@ public:
     void OnVideoBufferAvailable(bool isReady);
     void OnStateChange(AVScreenCaptureStateCode stateCode);
     void OnDisplaySelected(uint64_t displayId);
-    void OnCaptureContentChanged(AVScreenCaptureContentChangedEvent event);
+    void OnCaptureContentChanged(AVScreenCaptureContentChangedEvent event, ScreenCaptureRect* area);
     void Stop();
 };
 } // Media

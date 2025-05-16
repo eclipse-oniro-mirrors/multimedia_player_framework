@@ -32,7 +32,7 @@ public:
     virtual void OnVideoBufferAvailable(bool isReady) = 0;
     virtual void OnStateChange(AVScreenCaptureStateCode stateCode) = 0;
     virtual void OnDisplaySelected(uint64_t displayId) = 0;
-    virtual void OnCaptureContentChanged(AVScreenCaptureContentChangedEvent event) = 0;
+    virtual void OnCaptureContentChanged(AVScreenCaptureContentChangedEvent event, ScreenCaptureRect* area) = 0;
     /**
      * IPC code ID
      */

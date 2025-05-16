@@ -33,6 +33,27 @@ ScreenCaptureListenerStub::~ScreenCaptureListenerStub()
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
+int32_t ScreenCaptureListenerStub::OnCaptureContentChangedStub(MessageParcel &data, MessageParcel &reply)
+{
+    (void) reply;
+    AVScreenCaptureContentChangedEvent event =
+        static_cast<AVScreenCaptureContentChangedEvent>(data.ReadInt32());
+    bool isAreaExist = data.ReadBool();
+    if (isAreaExist) {
+        ScreenCaptureRect area = { 0, 0, 0, 0 };
+        MEDIA_LOGD("ScreenCaptureListenerStub::OnCaptureContentChangedStub area exist");
+        area.x = data.ReadInt32();
+        area.y = data.ReadInt32();
+        area.width = data.ReadInt32();
+        area.height = data.ReadInt32();
+        OnCaptureContentChanged(event, &area);
+    } else {
+        MEDIA_LOGD("ScreenCaptureListenerStub::OnCaptureContentChangedStub area not exist");
+        OnCaptureContentChanged(event, nullptr);
+    }
+    return MSERR_OK;
+}
+
 int ScreenCaptureListenerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply,
     MessageOption &option)
 {
@@ -71,10 +92,8 @@ int ScreenCaptureListenerStub::OnRemoteRequest(uint32_t code, MessageParcel &dat
             return MSERR_OK;
         }
         case ScreenCaptureListenerMsg::ON_CONTENT_CHANGED: {
-            AVScreenCaptureContentChangedEvent event =
-                static_cast<AVScreenCaptureContentChangedEvent>(data.ReadInt32());
-            OnCaptureContentChanged(event);
-            return MSERR_OK;
+            MEDIA_LOGD("ScreenCaptureListenerMsg::ON_CONTENT_CHANGED");
+            return OnCaptureContentChangedStub(data, reply);
         }
         default: {
             MEDIA_LOGE("default case, need check ScreenCaptureListenerStub");
@@ -123,10 +142,11 @@ void ScreenCaptureListenerStub::OnDisplaySelected(uint64_t displayId)
     }
 }
 
-void ScreenCaptureListenerStub::OnCaptureContentChanged(AVScreenCaptureContentChangedEvent event)
+void ScreenCaptureListenerStub::OnCaptureContentChanged(AVScreenCaptureContentChangedEvent event,
+    ScreenCaptureRect* area)
 {
     if (callback_ != nullptr) {
-        callback_->OnCaptureContentChanged(event);
+        callback_->OnCaptureContentChanged(event, area);
     }
 }
 } // namespace Media

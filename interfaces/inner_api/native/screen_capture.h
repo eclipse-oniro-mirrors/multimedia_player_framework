@@ -240,6 +240,17 @@ struct AudioBuffer {
     AudioCaptureSourceType sourcetype;
 };
 
+typedef struct ScreenCaptureRect {
+    /* X-coordinate of screen recording */
+    int32_t x;
+    /* y-coordinate of screen recording */
+    int32_t y;
+    /* Width of screen recording */
+    int32_t width;
+    /* Height of screen recording */
+    int32_t height;
+} ScreenCaptureRect;
+
 class ScreenCaptureCallBack {
 public:
     virtual ~ScreenCaptureCallBack() = default;
@@ -270,9 +281,10 @@ public:
         return;
     }
 
-    virtual void OnCaptureContentChanged(AVScreenCaptureContentChangedEvent event)
+    virtual void OnCaptureContentChanged(AVScreenCaptureContentChangedEvent event, ScreenCaptureRect* area)
     {
         (void)event;
+        (void)area;
         return;
     }
 };
