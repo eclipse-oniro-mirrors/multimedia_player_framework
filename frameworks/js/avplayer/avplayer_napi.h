@@ -309,7 +309,6 @@ private:
     static std::shared_ptr<AVMediaSource> GetAVMediaSource(napi_env env, napi_value value,
         std::shared_ptr<AVMediaSourceTmp> &srcTmp);
     static bool IsSystemApp();
-    static bool SystemPermission();
     AVPlayerNapi();
     ~AVPlayerNapi() override;
     void SaveCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref);

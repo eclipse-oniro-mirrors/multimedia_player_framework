@@ -45,6 +45,7 @@
 #include "decoder_surface_filter.h"
 #include "sei_parser_filter.h"
 #endif
+#include "common/fdsan_fd.h"
 
 namespace OHOS {
 namespace Media {
@@ -302,6 +303,7 @@ private:
     void UpdateFlvLiveParams();
     void SetFlvLiveParams(AVPlayStrategy playbackStrategy);
     void SetPostProcessor();
+    void ResetEnableCameraPostProcess();
 
     bool isNetWorkPlay_ = false;
     bool isDump_ = false;
@@ -461,7 +463,8 @@ private:
     // memory usage
     std::unordered_map<std::string, uint32_t> memoryUsageInfo_ {};
     std::mutex memoryReportMutex_;
-    int32_t postProcessorFd_ {-1};
+    std::mutex fdMutex_ {};
+    std::unique_ptr<FdsanFd> fdsanFd_ = nullptr;
     std::atomic<bool> enableCameraPostprocessing_ {false};
 };
 } // namespace Media

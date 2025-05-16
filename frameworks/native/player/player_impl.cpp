@@ -156,18 +156,16 @@ int32_t PlayerImpl::SetSource(int32_t fd, int64_t offset, int64_t size)
 
 int32_t PlayerImpl::SetSourceTask(int32_t fd, int64_t offset, int64_t size)
 {
-    auto res = playerService_->SetSource(fd, offset, size);
+    auto ret = playerService_->SetSource(fd, offset, size);
+    CHECK_AND_RETURN_RET_NOLOG(ret != MSERR_OK, ret);
     int32_t dupFd = dup(fd);
-    if (dupFd < 0) {
-        MEDIA_LOGE("Dup failed with errno: %{public}s", std::strerror(errno));
-        return res;
-    }
-    if (!ScopedFileDescriptor_) {
-        ScopedFileDescriptor_ = std::make_unique<ScopedFileDescriptor>(dupFd);
+    CHECK_AND_RETURN_RET_LOG(dupFd >= 0, ret, "Dup failed with err.");
+    if (!fdsanFd_) {
+        fdsanFd_ = std::make_unique<FdsanFd>(dupFd);
     } else {
-        ScopedFileDescriptor_->Reset(dupFd);
+        fdsanFd_->Reset(dupFd);
     }
-    return res;
+    return ret;
 }
 
 int32_t PlayerImpl::AddSubSource(const std::string &url)
@@ -849,25 +847,23 @@ bool PlayerImpl::IsSeekContinuousSupported()
 
 int32_t PlayerImpl::SetReopenFd(int32_t fd)
 {
-    MEDIA_LOGI("PlayerImpl:0x%{public}06" PRIXPTR "SetReopenFd  in", FAKE_POINTER(this));
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR "SetReopenFd  in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
-    MEDIA_LOGI("=== set reopen fd: %{public}d", fd);
-    return playerService_->SetReopenFd(fd);
+    MEDIA_LOGD("set reopen fd: %{public}d", fd);
+    LISTENER(return playerService_->SetReopenFd(fd), "SetReopenFd", false, TIME_OUT_SECOND);
 }
  
 int32_t PlayerImpl::EnableCameraPostprocessing()
 {
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " EnableCameraPostprocessing  in", FAKE_POINTER(this));
     ScopedTimer timer("EnableCameraPostprocessing", OVERTIME_WARNING_MS);
-    if (ScopedFileDescriptor_ != nullptr) {
-        int fd = ScopedFileDescriptor_->Get();
-        MEDIA_LOGD("PlayerImpl EnableCameraPostprocessing reopen fd: %{public}d ", fd);
-        ScopedFileDescriptor reopenFd = FdUtils::ReOpenFd(fd);
-        if (SetReopenFd(reopenFd.Get()) != MSERR_OK) {
-            MEDIA_LOGW("SetReopenFd failed, fd: %{public}d", reopenFd.Get());
-        }
-        reopenFd.Reset();
-    }
+    CHECK_AND_RETURN_RET_LOG(fdsanFd_ != nullptr, MSERR_OK, "source fd does not exist.");
+    int fd = fdsanFd_->Get();
+    MEDIA_LOGD("PlayerImpl EnableCameraPostprocessing reopen fd: %{public}d ", fd);
+    FdsanFd reopenFd = FdUtils::ReOpenFd(fd);
+    auto ret = SetReopenFd(reopenFd.Get());
+    reopenFd.Reset();
+    CHECK_AND_RETURN_RET_LOG(ret != MSERR_OK, MSERR_OK, "SetReopenFd failed.");
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
     LISTENER(return playerService_->EnableCameraPostprocessing(), "EnableCameraPostprocessing", false, TIME_OUT_SECOND);
 }

@@ -38,8 +38,6 @@
 #include "ipc_skeleton.h"
 #include "tokenid_kit.h"
 #endif
-#include "access_token.h"
-#include "accesstoken_kit.h"
 
 using namespace OHOS::AudioStandard;
 
@@ -223,16 +221,6 @@ bool AVPlayerNapi::IsSystemApp()
     });
 #endif
     return isSystemApp;
-}
-
-bool AVPlayerNapi::SystemPermission()
-{
-    auto tokenId = IPCSkeleton::GetCallingTokenID();
-    auto tokenType = Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(tokenId);
-    if (tokenType == Security::AccessToken::TOKEN_NATIVE || tokenType == Security::AccessToken::TOKEN_SHELL) {
-        return true;
-    }
-    return IsSystemApp();
 }
 
 napi_value AVPlayerNapi::JsCreateAVPlayer(napi_env env, napi_callback_info info)
@@ -1810,13 +1798,12 @@ napi_value AVPlayerNapi::JsEnableCameraPostprocessing(napi_env env, napi_callbac
     auto promiseCtx = std::make_unique<AVPlayerContext>(env);
     promiseCtx->deferred = CommonNapi::CreatePromise(env, nullptr, result);
  
-    if (!SystemPermission()) {
+    if (!IsSystemApp()) {
         promiseCtx->SignError(MSERR_EXT_API9_PERMISSION_DENIED, "systemapi permission denied");
     }
     if (!jsPlayer->CanCameraPostprocessing()) {
         promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-            "current state is not initialized, "
-            "unsupport enable cameraPostProcessor");
+            "current state is not initialized, unsupport enable cameraPostProcessor");
     } else {
         promiseCtx->asyncTask = jsPlayer->EnableCameraPostprocessingTask();
     }
@@ -1847,8 +1834,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::EnableCameraPostprocessingTa
             }
         } else {
             return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-                "current state is not initialized, "
-                "unsupport enable cameraPostProcessor");
+                "current state is not initialized, unsupport enable cameraPostProcessor");
         }
         return TaskRet(MSERR_EXT_API9_OK, "Success");
     });

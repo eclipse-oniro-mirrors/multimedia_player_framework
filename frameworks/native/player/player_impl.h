@@ -22,7 +22,7 @@
 #include "i_player_service.h"
 #include "hitrace/tracechain.h"
 #include "hiappevent_agent.h"
-#include "scoped_file_descriptor.h"
+#include "common/fdsan_fd.h"
 
 namespace OHOS {
 namespace Media {
@@ -105,7 +105,7 @@ private:
     std::atomic<bool> isSeeking_{false};
     int32_t prevTrackIndex_ = INT32_MIN;
     std::shared_ptr<PlayerCallback> callback_;
-    std::unique_ptr<ScopedFileDescriptor> ScopedFileDescriptor_ = nullptr;
+    std::unique_ptr<FdsanFd> fdsanFd_ = nullptr;
 
     std::shared_ptr<IPlayerService> playerService_ = nullptr;
     sptr<Surface> surface_ = nullptr;
