@@ -3675,6 +3675,7 @@ void HiPlayerImpl::SetPostProcessor()
     }
     videoDecoder_->SetCameraPostprocessing(enableCameraPostprocessing_.load());
     FALSE_RETURN_NOLOG(enableCameraPostprocessing_.load() && fdsanFd_ && fdsanFd_->Get() >= 0);
+    std::lock_guard<std::mutex> lock(fdMutex_);
     videoDecoder_->SetPostProcessorFd(fdsanFd_->Get());
     fdsanFd_->Reset();
 }
@@ -3685,11 +3686,7 @@ int32_t HiPlayerImpl::SetReopenFd(int32_t fd)
     int32_t dupFd = dup(fd);
     FALSE_RETURN_V_MSG_E(dupFd >= 0, MSERR_INVALID_VAL, "Dup fd failed.");
     std::lock_guard<std::mutex> lock(fdMutex_);
-    if (!fdsanFd_) {
-        fdsanFd_ = std::make_unique<FdsanFd>(dupFd);
-    } else {
-        fdsanFd_->Reset(dupFd);
-    }
+    fdsanFd_ = std::make_unique<FdsanFd>(dupFd);
     FALSE_RETURN_V(fdsanFd_ && (fdsanFd_->Get() >= 0), MSERR_INVALID_VAL);
     return TransStatus(Status::OK);
 }
