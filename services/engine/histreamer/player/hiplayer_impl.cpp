@@ -401,6 +401,7 @@ int32_t HiPlayerImpl::SetSource(const std::string& uri)
     pipelineStates_ = PlayerStates::PLAYER_INITIALIZED;
     int ret = TransStatus(Status::OK);
     playStatisticalInfo_.errCode = ret;
+    ResetEnableCameraPostProcess();
     return ret;
 }
 
@@ -474,6 +475,7 @@ int32_t HiPlayerImpl::SetSource(const std::shared_ptr<IMediaDataSource>& dataSrc
     pipelineStates_ = PlayerStates::PLAYER_INITIALIZED;
     int ret = TransStatus(Status::OK);
     playStatisticalInfo_.errCode = ret;
+    ResetEnableCameraPostProcess();
     return ret;
 }
 
@@ -905,6 +907,9 @@ int32_t HiPlayerImpl::Pause(bool isSystemOperation)
     syncManager_->Pause();
     if (ret != Status::OK) {
         UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
+    }
+    if (videoDecoder_ != nullptr) {
+        videoDecoder_->NotifyPause();
     }
     callbackLooper_.StopReportMediaProgress();
     StopFlvCheckLiveDelayTime();
@@ -1345,6 +1350,7 @@ Status HiPlayerImpl::doSeek(int64_t seekPos, PlayerSeekMode mode)
         }
     }
     if (videoDecoder_ != nullptr) {
+        videoDecoder_->SetSeekTime(seekTimeUs + mediaStartPts_, mode);
         videoDecoder_->ResetSeekInfo();
     }
     int64_t realSeekTime = seekPos;
@@ -1369,7 +1375,7 @@ Status HiPlayerImpl::HandleSeekClosest(int64_t seekPos, int64_t seekTimeUs)
     MEDIA_LOG_I_SHORT("doSeek SEEK_CLOSEST");
     isSeekClosest_.store(true);
     if (videoDecoder_ != nullptr) {
-        videoDecoder_->SetSeekTime(seekTimeUs + mediaStartPts_);
+        videoDecoder_->SetSeekTime(seekTimeUs + mediaStartPts_, PlayerSeekMode::SEEK_CLOSEST);
     }
     if (audioSink_ != nullptr) {
         audioSink_->SetIsCancelStart(true);
@@ -3462,6 +3468,9 @@ int32_t HiPlayerImpl::ExitSeekContinous(bool align, int64_t seekContinousBatchNo
     FALSE_RETURN_V_MSG_E(Plugins::Us2HstTime(lastSeekContinousPos_, seekTimeUs),
         TransStatus(Status::OK), "Invalid lastSeekContinousPos_: %{public}" PRId64, lastSeekContinousPos_);
     syncManager_->Seek(seekTimeUs, true);
+    if (videoDecoder_ != nullptr) {
+        videoDecoder_->SetSeekTime(seekTimeUs, PlayerSeekMode::SEEK_CONTINOUS);
+    }
     FALSE_RETURN_V_MSG_E(align, TransStatus(Status::OK), "dont need align");
     if (align && audioDecoder_ != nullptr && audioSink_ != nullptr) {
         audioDecoder_->DoFlush();
@@ -3664,6 +3673,36 @@ void HiPlayerImpl::SetPostProcessor()
         videoDecoder_->SetPostProcessorOn(isPostProcessorOn_);
         videoDecoder_->SetVideoWindowSize(postProcessorTargetWidth_, postProcessorTargetHeight_);
     }
+    videoDecoder_->SetCameraPostprocessing(enableCameraPostprocessing_.load());
+    FALSE_RETURN_NOLOG(enableCameraPostprocessing_.load() && fdsanFd_ && fdsanFd_->Get() >= 0);
+    std::lock_guard<std::mutex> lock(fdMutex_);
+    videoDecoder_->SetPostProcessorFd(fdsanFd_->Get());
+    fdsanFd_->Reset();
+}
+
+int32_t HiPlayerImpl::SetReopenFd(int32_t fd)
+{
+    FALSE_RETURN_V_MSG_E(fd >= 0, MSERR_INVALID_VAL, "Invalid input fd.");
+    int32_t dupFd = dup(fd);
+    FALSE_RETURN_V_MSG_E(dupFd >= 0, MSERR_INVALID_VAL, "Dup fd failed.");
+    std::lock_guard<std::mutex> lock(fdMutex_);
+    fdsanFd_ = std::make_unique<FdsanFd>(dupFd);
+    FALSE_RETURN_V(fdsanFd_ && (fdsanFd_->Get() >= 0), MSERR_INVALID_VAL);
+    return TransStatus(Status::OK);
+}
+ 
+int32_t HiPlayerImpl::EnableCameraPostprocessing()
+{
+    MEDIA_LOG_D("EnableCameraPostprocessing enter.");
+    enableCameraPostprocessing_.store(true);
+    return TransStatus(Status::OK);
+}
+
+void HiPlayerImpl::ResetEnableCameraPostProcess()
+{
+    enableCameraPostprocessing_.store(false);
+    FALSE_RETURN_NOLOG(fdsanFd_ != nullptr);
+    fdsanFd_->Reset();
 }
 
 void HiPlayerImpl::HandleMemoryUsageEvent(const DfxEvent &event)

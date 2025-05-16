@@ -22,6 +22,7 @@
 #ifdef SUPPORT_AVPLAYER_DRM
 #include "imedia_key_session_service.h"
 #endif
+#include "fd_utils.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "PlayerImpl"};
@@ -147,9 +148,23 @@ int32_t PlayerImpl::SetSource(int32_t fd, int64_t offset, int64_t size)
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetSource in(fd)", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     int32_t ret = MSERR_OK;
-    LISTENER(ret = playerService_->SetSource(fd, offset, size), "SetSource fd", false, TIME_OUT_SECOND);
+    LISTENER(ret = SetSourceTask(fd, offset, size), "SetSource fd", false, TIME_OUT_SECOND);
     CHECK_AND_RETURN_RET_NOLOG(ret != MSERR_OK && hiAppEventAgent_ != nullptr, ret);
     hiAppEventAgent_->TraceApiEvent(ret, "SetSource in(fd)", startTime, traceId_);
+    return ret;
+}
+
+int32_t PlayerImpl::SetSourceTask(int32_t fd, int64_t offset, int64_t size)
+{
+    auto ret = playerService_->SetSource(fd, offset, size);
+    CHECK_AND_RETURN_RET_NOLOG(ret != MSERR_OK, ret);
+    int32_t dupFd = dup(fd);
+    CHECK_AND_RETURN_RET_LOG(dupFd >= 0, ret, "Dup failed with err.");
+    if (!fdsanFd_) {
+        fdsanFd_ = std::make_unique<FdsanFd>(dupFd);
+    } else {
+        fdsanFd_->Reset(dupFd);
+    }
     return ret;
 }
 
@@ -828,6 +843,29 @@ bool PlayerImpl::IsSeekContinuousSupported()
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " IsSeekContinuousSupported in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, false, "player service does not exist.");
     return playerService_->IsSeekContinuousSupported();
+}
+
+int32_t PlayerImpl::SetReopenFd(int32_t fd)
+{
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR "SetReopenFd  in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
+    MEDIA_LOGD("set reopen fd: %{public}d", fd);
+    LISTENER(return playerService_->SetReopenFd(fd), "SetReopenFd", false, TIME_OUT_SECOND);
+}
+ 
+int32_t PlayerImpl::EnableCameraPostprocessing()
+{
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " EnableCameraPostprocessing  in", FAKE_POINTER(this));
+    ScopedTimer timer("EnableCameraPostprocessing", OVERTIME_WARNING_MS);
+    CHECK_AND_RETURN_RET_LOG(fdsanFd_ != nullptr, MSERR_OK, "source fd does not exist.");
+    int fd = fdsanFd_->Get();
+    MEDIA_LOGD("PlayerImpl EnableCameraPostprocessing reopen fd: %{public}d ", fd);
+    FdsanFd reopenFd = FdUtils::ReOpenFd(fd);
+    auto ret = SetReopenFd(reopenFd.Get());
+    reopenFd.Reset();
+    CHECK_AND_RETURN_RET_LOG(ret != MSERR_OK, MSERR_OK, "SetReopenFd failed.");
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
+    LISTENER(return playerService_->EnableCameraPostprocessing(), "EnableCameraPostprocessing", false, TIME_OUT_SECOND);
 }
 
 int32_t PlayerImpl::SetSeiMessageCbStatus(bool status, const std::vector<int32_t> &payloadTypes)

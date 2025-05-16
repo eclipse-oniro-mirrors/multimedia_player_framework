@@ -45,6 +45,7 @@
 #include "decoder_surface_filter.h"
 #include "sei_parser_filter.h"
 #endif
+#include "common/fdsan_fd.h"
 
 namespace OHOS {
 namespace Media {
@@ -185,6 +186,8 @@ public:
     int32_t IsSeekContinuousSupported(bool &isSeekContinuousSupported) override;
     int32_t SetSeiMessageCbStatus(bool status, const std::vector<int32_t> &payloadTypes) override;
     void SetPerfRecEnabled(bool isPerfRecEnabled) override;
+    int32_t SetReopenFd(int32_t fd) override;
+    int32_t EnableCameraPostprocessing() override;
 
 private:
     enum HiplayerSvpMode : int32_t {
@@ -300,6 +303,7 @@ private:
     void UpdateFlvLiveParams();
     void SetFlvLiveParams(AVPlayStrategy playbackStrategy);
     void SetPostProcessor();
+    void ResetEnableCameraPostProcess();
 
     bool isNetWorkPlay_ = false;
     bool isDump_ = false;
@@ -459,6 +463,9 @@ private:
     // memory usage
     std::unordered_map<std::string, uint32_t> memoryUsageInfo_ {};
     std::mutex memoryReportMutex_;
+    std::mutex fdMutex_ {};
+    std::unique_ptr<FdsanFd> fdsanFd_ = nullptr;
+    std::atomic<bool> enableCameraPostprocessing_ {false};
 };
 } // namespace Media
 } // namespace OHOS

@@ -110,6 +110,8 @@ void PlayerServiceProxy::InitPlayerFuncsPart2()
     playerFuncs_[SET_SUPER_RESOLUTION] = "Player::SetSuperResolution";
     playerFuncs_[SET_VIDEO_WINDOW_SIZE] = "Player::SetVideoWindowSize";
     playerFuncs_[SET_START_FRAME_RATE_OPT_ENABLED] = "Player::SetStartFrameRateOptEnabled";
+    playerFuncs_[SET_REOPEN_FD] = "Player::SetReopenFd";
+    playerFuncs_[ENABLE_CAMERA_POSTPROCESSING] = "Player::EnableCameraPostprocessing";
 }
 
 int32_t PlayerServiceProxy::SendRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -1189,6 +1191,41 @@ void PlayerServiceProxy::WritePlaybackStrategy(MessageParcel &data, const AVPlay
     (void)data.WriteInt32(static_cast<int32_t>(strategy.mutedMediaType));
     (void)data.WriteString(strategy.preferredAudioLanguage);
     (void)data.WriteString(strategy.preferredSubtitleLanguage);
+}
+
+int32_t PlayerServiceProxy::SetReopenFd(int32_t fd)
+{
+    MediaTrace trace("PlayerServiceProxy::SetReopenFd");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+ 
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+ 
+    MEDIA_LOGI("SetReopenFd in fd: %{public}d", fd);
+    (void)data.WriteFileDescriptor(fd);
+    int32_t error = SendRequest(SET_REOPEN_FD, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetReopenFd failed, error: %{public}d", error);
+    return reply.ReadInt32();
+}
+ 
+int32_t PlayerServiceProxy::EnableCameraPostprocessing()
+{
+    MediaTrace trace("Proxy::EnableCameraPostprocessing");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+ 
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+ 
+    int32_t error = SendRequest(ENABLE_CAMERA_POSTPROCESSING, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "EnableCameraPostprocessing failed, error: %{public}d", error);
+ 
+    return reply.ReadInt32();
 }
 } // namespace Media
 } // namespace OHOS

@@ -18,7 +18,7 @@
  
 #include <sstream>
 #include <sys/ioctl.h>
-#include "scoped_file_descriptor.h"
+#include "common/fdsan_fd.h"
  
 namespace OHOS {
 namespace Media {
@@ -26,12 +26,12 @@ namespace Media {
 class FdUtils {
 public:
     // This method is prohibited from being used on the server side.
-    static ScopedFileDescriptor ReOpenFd(int32_t fd)
+    static FdsanFd ReOpenFd(int32_t fd)
     {
 #ifdef __linux__
         int loc;
         int ioResult = ioctl(fd, HMDFS_IOC_GET_LOCATION, &loc);
-        if (ioResult != 0 || loc != IOCTL_CLOUD) {
+        if (ioResult != 0 && loc != IOCTL_CLOUD) {
             std::stringstream ss;
             ss << "/proc/self/fd/" << fd;
             std::string fdPathStr = ss.str();
@@ -39,17 +39,17 @@ public:
             ssize_t result = readlink(fdPathStr.c_str(), realPath, sizeof(realPath));
             if (result == RESULT_ERROR) {
                 MEDIA_LOGW("invailed fd: %{public}d, error: %{public}s", fd, std::strerror(errno));
-                return ScopedFileDescriptor(dup(fd));
+                return FdsanFd();
             }
             auto newFd = open(fdPathStr.c_str(), O_RDONLY);
             if (newFd < 0) {
                 MEDIA_LOGW("invailed fd: %{public}d, error: %{public}s", fd, std::strerror(errno));
-                return ScopedFileDescriptor(dup(fd));
+                return FdsanFd();
             }
-            return ScopedFileDescriptor(newFd);
+            return FdsanFd(newFd);
         }
 #endif
-        return ScopedFileDescriptor(dup(fd));
+        return FdsanFd();
     }
 
 private:

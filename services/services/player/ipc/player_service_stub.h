@@ -100,6 +100,8 @@ public:
     int32_t SetSeiMessageCbStatus(bool status, const std::vector<int32_t> &payloadTypes) override;
     int32_t SetStartFrameRateOptEnabled(bool enabled) override;
     uint32_t GetMemoryUsage();
+    int32_t SetReopenFd(int32_t fd) override;
+    int32_t EnableCameraPostprocessing() override;
 protected:
     PlayerServiceStub();
     virtual int32_t Init();
@@ -169,6 +171,8 @@ private:
     int32_t IsSeekContinuousSupported(MessageParcel &data, MessageParcel &reply);
     int32_t SetSeiMessageCbStatus(MessageParcel &data, MessageParcel &reply);
     int32_t SetStartFrameRateOptEnabled(MessageParcel &data, MessageParcel &reply);
+    int32_t SetReopenFd(MessageParcel &data, MessageParcel &reply);
+    int32_t EnableCameraPostprocessing(MessageParcel &data, MessageParcel &reply);
 
     int32_t ReadMediaStreamListFromMessageParcel(
         MessageParcel &data, const std::shared_ptr<AVMediaSource> &mediaSource);

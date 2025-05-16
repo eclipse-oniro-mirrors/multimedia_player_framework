@@ -995,6 +995,33 @@ public:
         (void)enabled;
         return 0;
     }
+
+    /**
+     * @brief Set video reopen fd.
+     *
+     * @return Returns {@link MSERR_OK} if video reopen fd is set; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t SetReopenFd(int32_t fd)
+    {
+        (void)fd;
+        return 0;
+    }
+ 
+    /**
+     * @brief Enable or disable camera post processor.
+     *
+     * @return Returns {@link MSERR_OK} if enable camera post processor is set; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t EnableCameraPostprocessing()
+    {
+        return 0;
+    }
 };
 
 class __attribute__((visibility("default"))) PlayerFactory {

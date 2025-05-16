@@ -2171,5 +2171,23 @@ uint32_t PlayerServer::GetMemoryUsage()
 {
     return totalMemoryUage_.load();
 }
+
+int32_t PlayerServer::SetReopenFd(int32_t fd)
+{
+    MEDIA_LOGD("Set reopenFd success, fd = %{public}d", fd);
+    CHECK_AND_RETURN_RET_NOLOG(playerEngine_ == nullptr, playerEngine_->SetReopenFd(fd));
+    return MSERR_OK;
+}
+ 
+int32_t PlayerServer::EnableCameraPostprocessing()
+{
+    MediaTrace::TraceBegin("PlayerServer::EnableCameraPostprocessing", FAKE_POINTER(this));
+    std::lock_guard<std::mutex> lock(mutex_);
+    bool isValidState = lastOpStatus_ == PLAYER_INITIALIZED;
+    CHECK_AND_RETURN_RET_LOG(isValidState, MSERR_INVALID_STATE,
+        "can not enable camera postProcessor, current state is %{public}d", static_cast<int32_t>(lastOpStatus_.load()));
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    return playerEngine_->EnableCameraPostprocessing();
+}
 } // namespace Media
 } // namespace OHOS
