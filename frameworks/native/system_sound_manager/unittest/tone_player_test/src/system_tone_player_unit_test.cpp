@@ -331,7 +331,7 @@ HWTEST(SystemTonePlayerUnitTest, Media_TonePlayer_Unit_Test_017, TestSize.Level1
     result = systemTonePlayerImpl_->ConvertToHapticsMode(ToneHapticsMode::SYNC);
     EXPECT_EQ(result, HapticsMode::HAPTICS_MODE_SYNC);
     result = systemTonePlayerImpl_->ConvertToHapticsMode(ToneHapticsMode::NON_SYNC);
-    EXPECT_EQ(result, HapticsMode::HAPTICS_MODE_NON_SYNC);
+    EXPECT_EQ(result, HapticsMode::HAPTICS_MODE_NON_SYNC_ONCE);
     ToneHapticsMode temp = static_cast<ToneHapticsMode>(99);
     result = systemTonePlayerImpl_->ConvertToHapticsMode(temp);
     EXPECT_EQ(result, HapticsMode::HAPTICS_MODE_INVALID);
