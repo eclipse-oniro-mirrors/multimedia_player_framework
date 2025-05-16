@@ -597,6 +597,10 @@ int32_t SystemSoundManagerImpl::SetRingtoneUri(const shared_ptr<Context> &contex
 int32_t SystemSoundManagerImpl::CheckToneTypeAndUpdate(std::shared_ptr<DataShare::DataShareHelper> &dataShareHelper,
     const std::string &uri, RingtoneType ringtoneType)
 {
+    if (dataShareHelper == nullptr) {
+        MEDIA_LOGE("dataShareHelper is nullptr!");
+        return ERROR;
+    }
     DataShare::DatashareBusinessError businessError;
     DataShare::DataSharePredicates queryPredicates;
     queryPredicates.EqualTo(RINGTONE_COLUMN_TONE_TYPE, TONE_TYPE_RINGTONE);
@@ -639,9 +643,9 @@ void SystemSoundManagerImpl::ClearSystemVideoRingConfig(RingtoneType ringtoneTyp
         videoRingtoneNameCardKey = "videoRingtoneNameCard2";
     }
     int32_t result = UpdateStringValue(ringtoneFlagCardKey, defaultValue, tableType);
-    MEDIA_LOGI("result: %{public}d.", result);
+    MEDIA_LOGI("ringtoneFlagCardKey update result: %{public}d.", result);
     result = UpdateStringValue(videoRingtoneNameCardKey, defaultValue, tableType);
-    MEDIA_LOGI("result: %{public}d.", result);
+    MEDIA_LOGI("videoRingtoneNameCardKey update result: %{public}d.", result);
 }
 
 std::string SystemSoundManagerImpl::GetRingtoneUriByType(const DatabaseTool &databaseTool, const std::string &type)
