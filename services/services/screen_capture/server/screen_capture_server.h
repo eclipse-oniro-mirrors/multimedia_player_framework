@@ -246,6 +246,7 @@ private:
     int32_t UnRegisterWindowLifecycleListener();
     int32_t RegisterWindowInfoChangedListener();
     int32_t UnRegisterWindowInfoChangedListener();
+    int32_t RegisterWindowRelatedListener();
 
 private:
     std::mutex mutex_;
@@ -286,7 +287,7 @@ private:
     ScreenId displayScreenId_ = SCREEN_ID_INVALID;
     std::vector<uint64_t> missionIds_;
     std::vector<int32_t> windowIdList_ = {};
-    ScreenId curDisplayId_ = SCREEN_ID_INVALID;
+    ScreenId curWindowInDisplayId_ = SCREEN_ID_INVALID;
     ScreenCaptureContentFilter contentFilter_;
     AVScreenCaptureState captureState_ = AVScreenCaptureState::CREATED;
     std::shared_ptr<NotificationLocalLiveViewContent> localLiveViewContent_;

@@ -303,12 +303,8 @@ public:
     {
         MEDIA_LOGD("OnCaptureContentChanged() is called, event: %{public}d", event);
         std::shared_lock<std::shared_mutex> lock(mutex_);
-        CHECK_AND_RETURN(capture_ != nullptr);
-
-        if (contentChangedCallback_ != nullptr) {
-            contentChangedCallback_->OnCaptureContentChanged(capture_, event, area);
-            return;
-        }
+        CHECK_AND_RETURN(capture_ != nullptr && contentChangedCallback_ != nullptr);
+        contentChangedCallback_->OnCaptureContentChanged(capture_, event, area);
     }
 
     void OnDisplaySelected(uint64_t displayId) override
