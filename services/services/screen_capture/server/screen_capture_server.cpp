@@ -166,7 +166,8 @@ void ScreenConnectListenerForSC::OnConnect(Rosen::ScreenId screenId)
 
 void ScreenConnectListenerForSC::OnDisconnect(Rosen::ScreenId screenId)
 {
-    MEDIA_LOGI("ScreenConnectListenerForSC OnDisconnect screenId: %{public}" PRIu64, screenId);
+    MEDIA_LOGI("ScreenConnectListenerForSC OnDisconnect screenId: %{public}" PRIu64 "screenId_: %{public}" PRIu64,
+        screenId, screenId_);
     auto callbackPtr = screenCaptureServer_.lock();
     if (callbackPtr && screenId == screenId_) {
         MEDIA_LOGI("ScreenConnectListenerForSC OnDisconnect NotifyCaptureContentChanged: %{public}" PRIu64, screenId_);
