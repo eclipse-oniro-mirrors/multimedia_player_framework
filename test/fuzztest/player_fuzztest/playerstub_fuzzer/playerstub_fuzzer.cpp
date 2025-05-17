@@ -19,6 +19,7 @@
 #include "media_server.h"
 #include "media_parcel.h"
 #include "i_standard_player_service.h"
+#include "media_server_manager.h"
 
 namespace OHOS {
 namespace Media {
@@ -73,7 +74,7 @@ bool FuzzPlayerStubLocal(uint8_t *data, size_t size)
         MessageOption option;
         playerStub->OnRemoteRequest(code, msg, reply, option);
     }
-
+    MediaServerManager::GetInstance().DestoryMemoryReportTask();
     return true;
 }
 }
