@@ -31,7 +31,7 @@ public:
 #ifdef __linux__
         int loc;
         int ioResult = ioctl(fd, HMDFS_IOC_GET_LOCATION, &loc);
-        if (ioResult != 0 && loc != IOCTL_CLOUD) {
+        if (ioResult == 0 && loc != IOCTL_CLOUD) {
             std::stringstream ss;
             ss << "/proc/self/fd/" << fd;
             std::string fdPathStr = ss.str();
