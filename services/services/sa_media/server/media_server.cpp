@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,6 +21,7 @@
 #include "media_server_manager.h"
 #include "mem_mgr_client.h"
 #include "mem_mgr_proxy.h"
+#include "audio_background_adapter.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "MediaServer"};
@@ -69,6 +70,7 @@ void MediaServer::OnStart()
     bool res = Publish(this);
     MEDIA_LOGD("MediaServer OnStart res=%{public}d", res);
     AddSystemAbilityListener(MEMORY_MANAGER_SA_ID);
+    AddSystemAbilityListener(AUDIO_POLICY_SERVICE_ID);
 }
 
 void MediaServer::OnStop()
@@ -127,6 +129,8 @@ void MediaServer::OnAddSystemAbility(int32_t systemAbilityId, const std::string 
         Memory::MemMgrClient::GetInstance().NotifyProcessStatus(getpid(),
             SYSTEM_PROCESS_TYPE, SYSTEM_STATUS_START, OHOS::PLAYER_DISTRIBUTED_SERVICE_ID);
         MediaServerManager::GetInstance().NotifyMemMgrLoaded();
+    } else if (systemAbilityId == AUDIO_POLICY_SERVICE_ID) {
+        AudioBackgroundAdapter::Instance().OnAudioRestart();
     }
 }
 

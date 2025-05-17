@@ -28,6 +28,7 @@ group("media_unit_test") {
       "../frameworks/native/system_sound_manager/unittest/tone_player_test:system_tone_player_unit_test",
       "../frameworks/native/transcoder/test/unittest:transcoder_unit_test",
       "../frameworks/native/video_editor/test/unittest:video_editor_unit_test",
+      "unittest/audio_background_adapter_test:audio_background_adapter_unit_test",
       "unittest/audio_haptic_test:audio_haptic_player_impl_unit_test",
       "unittest/audio_haptic_test:audio_haptic_sound_low_latency_impl_unit_test",
       "unittest/audio_haptic_test:audio_haptic_sound_normal_impl_unit_test",

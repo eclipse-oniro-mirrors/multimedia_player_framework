@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -33,6 +33,7 @@
 #include "avsession_background.h"
 #endif
 #include "media_source_loader_proxy.h"
+#include "audio_background_adapter.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "PlayerServiceStub"};
@@ -353,6 +354,7 @@ int32_t PlayerServiceStub::Play()
 #ifdef SUPPORT_AVSESSION
     AVsessionBackground::Instance().AddListener(playerServer_, appUid_);
 #endif
+    AudioBackgroundAdapter::Instance().AddListener(playerServer_, appUid_);
     return playerServer_->Play();
 }
 

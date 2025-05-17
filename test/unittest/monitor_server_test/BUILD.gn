@@ -24,6 +24,7 @@ ohos_unittest("monitor_server_test") {
     "$MEDIA_PLAYER_ROOT_DIR/services/services/sa_media/server",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/sa_media/server_manager",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/common",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/player/audio_background_adapter",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/player/ipc",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/player/player_mem_manage",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/player/server",
