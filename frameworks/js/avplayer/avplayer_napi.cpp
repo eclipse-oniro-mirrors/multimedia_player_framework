@@ -1796,6 +1796,7 @@ napi_value AVPlayerNapi::JsEnableCameraPostprocessing(napi_env env, napi_callbac
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
  
     auto promiseCtx = std::make_unique<AVPlayerContext>(env);
+    CHECK_AND_RETURN_RET_LOG(promiseCtx != nullptr, result, "promiseCtx is null");
     promiseCtx->deferred = CommonNapi::CreatePromise(env, nullptr, result);
  
     if (!IsSystemApp()) {
@@ -1807,7 +1808,7 @@ napi_value AVPlayerNapi::JsEnableCameraPostprocessing(napi_env env, napi_callbac
     } else {
         promiseCtx->asyncTask = jsPlayer->EnableCameraPostprocessingTask();
     }
- 
+
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "JsEnableCameraPostprocessing", NAPI_AUTO_LENGTH, &resource);
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource,

@@ -3673,9 +3673,9 @@ void HiPlayerImpl::SetPostProcessor()
         videoDecoder_->SetPostProcessorOn(isPostProcessorOn_);
         videoDecoder_->SetVideoWindowSize(postProcessorTargetWidth_, postProcessorTargetHeight_);
     }
-    videoDecoder_->SetCameraPostprocessing(enableCameraPostprocessing_.load());
-    FALSE_RETURN_NOLOG(enableCameraPostprocessing_.load() && fdsanFd_ && fdsanFd_->Get() >= 0);
     std::lock_guard<std::mutex> lock(fdMutex_);
+    FALSE_RETURN_NOLOG(enableCameraPostprocessing_.load() && fdsanFd_ && fdsanFd_->Get() >= 0);
+    videoDecoder_->SetCameraPostprocessing(enableCameraPostprocessing_.load());
     videoDecoder_->SetPostProcessorFd(fdsanFd_->Get());
     fdsanFd_->Reset();
 }
