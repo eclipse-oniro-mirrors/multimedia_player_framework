@@ -533,11 +533,12 @@ int32_t ScreenCaptureServer::UnRegisterWindowInfoChangedListener()
     return MSERR_OK;
 }
 
-void ScreenCaptureServer::NotifyCaptureContentChanged(AVScreenCaptureContentChangedEvent event)
+void ScreenCaptureServer::NotifyCaptureContentChanged(AVScreenCaptureContentChangedEvent event,
+    ScreenCaptureRect* area)
 {
     if (screenCaptureCb_ != nullptr && captureState_ != AVScreenCaptureState::STOPPED) {
         MEDIA_LOGI("NotifyCaptureContentChanged event: %{public}d", event);
-        screenCaptureCb_->OnCaptureContentChanged(event);
+        screenCaptureCb_->OnCaptureContentChanged(event, area);
     }
 }
 

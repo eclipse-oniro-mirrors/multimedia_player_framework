@@ -299,7 +299,7 @@ public:
         }
     }
 
-    void OnCaptureContentChanged(AVScreenCaptureContentChangedEvent event, ScreenCapture* area) override
+    void OnCaptureContentChanged(AVScreenCaptureContentChangedEvent event, ScreenCaptureRect* area) override
     {
         MEDIA_LOGD("OnCaptureContentChanged() is called, event: %{public}d", event);
         std::shared_lock<std::shared_mutex> lock(mutex_);
