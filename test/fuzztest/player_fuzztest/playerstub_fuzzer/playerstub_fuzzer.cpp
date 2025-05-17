@@ -19,6 +19,7 @@
 #include "media_server.h"
 #include "media_parcel.h"
 #include "i_standard_player_service.h"
+#include "media_server_manager.h"
 
 namespace OHOS {
 namespace Media {
