@@ -299,6 +299,9 @@ ohos_unittest("screen_capture_server_function_unit_test") {
     "resource_management:global_resmgr",
     "state_registry:tel_state_registry_api",
     "window_manager:libdm",
+    "window_manager:scene_session",
+    "window_manager:scene_session_manager",
+    "window_manager:session_manager_lite",
   ]
 
   if (player_framework_support_power_manager) {
