@@ -62,6 +62,7 @@ ohos_unittest("recorder_unit_test") {
     "access_token:libtokensetproc_shared",
     "c_utils:utils",
     "drivers_interface_display:libdisplay_composer_proxy_1.2",
+    "drivers_interface_display:libhdifd_parcelable",
     "graphic_surface:surface",
     "graphic_surface:sync_fence",
     "hilog:libhilog",
