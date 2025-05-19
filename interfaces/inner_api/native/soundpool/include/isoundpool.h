@@ -207,7 +207,7 @@ public:
      * @since 1.0
      * @version 1.0
      */
-    virtual void OnErrorInfo(Format &errorInfo)
+    virtual void OnErrorOccurred(Format &errorInfo)
     {
         (void)errorInfo;
     }
@@ -277,7 +277,7 @@ public:
             format.PutIntValue(SoundPoolKeys::STREAM_ID, errorInfo.streamId);
         }
         if (errorInfo.callback != nullptr) {
-            errorInfo.callback->OnErrorInfo(format);
+            errorInfo.callback->OnErrorOccurred(format);
         }
     }
 };

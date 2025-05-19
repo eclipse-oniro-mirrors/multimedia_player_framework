@@ -58,9 +58,9 @@ void SoundPoolCallBackNapi::OnError(int32_t errorCode)
     }
 }
 
-void SoundPoolCallBackNapi::OnErrorInfo(Format &errorInfo)
+void SoundPoolCallBackNapi::OnErrorOccurred(Format &errorInfo)
 {
-    MEDIA_LOGI("OnErrorInfo recived");
+    MEDIA_LOGI("OnErrorOccurred recived");
     int32_t errorCode;
     errorInfo.GetIntValue(SoundPoolKeys::ERROR_CODE, errorCode);
     switch (errorCode) {
@@ -82,7 +82,7 @@ void SoundPoolCallBackNapi::OnErrorInfo(Format &errorInfo)
             errorInfo.PutStringValue(SoundPoolKeys::ERROR_MESSAGE, "IO error happened.");
             break;
     }
-    SendErrorInfoCallback(errorInfo);
+    SendErrorOccurredCallback(errorInfo);
 }
 
 void SoundPoolCallBackNapi::SaveCallbackReference(const std::string &name, std::weak_ptr<AutoRef> ref)
@@ -126,11 +126,11 @@ void SoundPoolCallBackNapi::SendErrorCallback(int32_t errCode, const std::string
     return OnJsErrorCallBack(cb);
 }
 
-void SoundPoolCallBackNapi::SendErrorInfoCallback(const Format &errorInfo)
+void SoundPoolCallBackNapi::SendErrorOccurredCallback(const Format &errorInfo)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (refMap_.find(SoundPoolEvent::EVENT_ERROR_INFO) == refMap_.end()) {
-        MEDIA_LOGW("can not find errorInfo callback!");
+    if (refMap_.find(SoundPoolEvent::EVENT_ERROR_OCCURRED) == refMap_.end()) {
+        MEDIA_LOGW("can not find errorOccurred callback!");
         return;
     }
     SoundPoolJsCallBack *cb = new(std::nothrow) SoundPoolJsCallBack();
@@ -154,11 +154,11 @@ void SoundPoolCallBackNapi::SendErrorInfoCallback(const Format &errorInfo)
         errorInfo.GetIntValue(SoundPoolKeys::SOUND_ID, soundId);
         cb->loadSoundId = soundId;
     }
-    cb->autoRef = refMap_.at(SoundPoolEvent::EVENT_ERROR_INFO);
-    cb->callbackName = SoundPoolEvent::EVENT_ERROR_INFO;
+    cb->autoRef = refMap_.at(SoundPoolEvent::EVENT_ERROR_OCCURRED);
+    cb->callbackName = SoundPoolEvent::EVENT_ERROR_OCCURRED;
     cb->errorCode = errorCode;
     cb->errorMsg = msg;
-    return OnJsErrorInfoCallBack(cb);
+    return OnJsErrorOccurredCallBack(cb);
 }
 
 void SoundPoolCallBackNapi::SendLoadCompletedCallback(int32_t soundId)
@@ -243,7 +243,7 @@ void SoundPoolCallBackNapi::OnJsErrorCallBack(SoundPoolJsCallBack *jsCb) const
     CANCEL_SCOPE_EXIT_GUARD(1);
 }
 
-void SoundPoolCallBackNapi::OnJsErrorInfoCallBack(SoundPoolJsCallBack *jsCb) const
+void SoundPoolCallBackNapi::OnJsErrorOccurredCallBack(SoundPoolJsCallBack *jsCb) const
 {
     ON_SCOPE_EXIT(0) {
         delete jsCb;
@@ -260,12 +260,12 @@ void SoundPoolCallBackNapi::OnJsErrorInfoCallBack(SoundPoolJsCallBack *jsCb) con
     work->data = reinterpret_cast<void *>(jsCb);
     // async callback, jsWork and jsWork->data should be heap object.
     int ret = uv_queue_work_with_qos(loop, work, [] (uv_work_t *work) {
-        MEDIA_LOGD("OnJsErrorInfoCallBack uv_queue_work_with_qos");
+        MEDIA_LOGD("OnJsErrorOccurredCallBack uv_queue_work_with_qos");
     }, [] (uv_work_t *work, int status) {
         // Js Thread
         CHECK_AND_RETURN_LOG(work != nullptr, "work is nullptr");
         SoundPoolJsCallBack *event = reinterpret_cast<SoundPoolJsCallBack *>(work->data);
-        event->RunJsErrorInfoCallBackTask(status, event);
+        event->RunJsErrorOccurredCallBackTask(status, event);
         delete event;
         delete work;
     }, uv_qos_user_initiated);
@@ -313,10 +313,10 @@ void SoundPoolCallBackNapi::SoundPoolJsCallBack::RunJsErrorCallBackTask(int stat
     } while (0);
 }
 
-void SoundPoolCallBackNapi::SoundPoolJsCallBack::RunJsErrorInfoCallBackTask(int status, SoundPoolJsCallBack *event)
+void SoundPoolCallBackNapi::SoundPoolJsCallBack::RunJsErrorOccurredCallBackTask(int status, SoundPoolJsCallBack *event)
 {
     std::string request = event->callbackName;
-    MEDIA_LOGI("errorInfoCallback event: errorMsg %{public}s, errorCode %{public}d, soundId %{public}d,"
+    MEDIA_LOGI("errorOccurredCallback event: errorMsg %{public}s, errorCode %{public}d, soundId %{public}d,"
         "streamId %{public}d", event->errorMsg.c_str(), event->errorCode, event->loadSoundId,
         event->playFinishedStreamID);
     CHECK_AND_RETURN_LOG(status != UV_ECANCELED, "%{public}s canceled", request.c_str());
