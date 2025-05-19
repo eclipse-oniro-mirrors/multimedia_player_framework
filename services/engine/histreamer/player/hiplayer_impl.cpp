@@ -1322,6 +1322,9 @@ Status HiPlayerImpl::doSetPlaybackSpeed(float speed)
         MEDIA_LOG_E("doSetPlaybackSpeed audioSink set speed  error");
         return res;
     }
+    if (videoDecoder_ != nullptr) {
+        res = videoDecoder_->SetSpeed(speed);
+    }
     if (syncManager_ != nullptr) {
         res = syncManager_->SetPlaybackRate(speed);
     }
