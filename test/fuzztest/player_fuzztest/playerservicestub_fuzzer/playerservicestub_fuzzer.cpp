@@ -69,7 +69,7 @@ public:
         (void)Remote()->SendRequest(MediaServiceMsg::RELEASE_CLIENT_LISTENER, data, reply, option);
     }
 
-    bool MediaServiceProxyFuzzer::CanKillMediaService()
+    bool CanKillMediaService()
     {
         MessageParcel data;
         MessageParcel reply;
