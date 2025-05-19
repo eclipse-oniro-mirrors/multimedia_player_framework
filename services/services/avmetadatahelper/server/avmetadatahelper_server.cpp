@@ -105,8 +105,8 @@ int32_t AVMetadataHelperServer::SetSource(const std::string &uri, int32_t usage)
 
 int32_t AVMetadataHelperServer::SetAVMetadataCaller(AVMetadataCaller caller)
 {
-    MediaTrace trace("AVMetadataHelperServer::SetAVMetadataCaller");
     std::unique_lock<std::mutex> lock(mutex_);
+    MediaTrace trace("AVMetadataHelperServer::SetAVMetadataCaller");
     CHECK_AND_RETURN_RET_LOG(avMetadataHelperEngine_ != nullptr, static_cast<int32_t>(MSERR_INVALID_OPERATION),
         "avMetadataHelperEngine_ is nullptr");
     return avMetadataHelperEngine_->SetAVMetadataCaller(caller);

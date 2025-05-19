@@ -395,6 +395,7 @@ napi_value AVMetadataExtractorNapi::JsFetchFrameAtTime(napi_env env, napi_callba
     CHECK_AND_RETURN_RET_LOG(extractor != nullptr, result, "failed to GetJsInstance");
 
     auto asyncCtx = std::make_unique<AVMetadataExtractorAsyncContext>(env);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx, result, "failed to GetAsyncContext");
     asyncCtx->innerHelper_ = extractor->helper_;
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[argCallback]);
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
@@ -434,6 +435,7 @@ void AVMetadataExtractorNapi::CreatePixelMapComplete(napi_env env, napi_status s
 
     MEDIA_LOGI("CreatePixelMapComplete In");
     auto context = static_cast<AVMetadataExtractorAsyncContext*>(data);
+    CHECK_AND_RETURN_LOG(context != nullptr, "Invalid context.");
 
     if (status == napi_ok && context->errCode == napi_ok) {
         MEDIA_LOGI("set pixel map success");
@@ -494,8 +496,9 @@ napi_value AVMetadataExtractorNapi::JsSetUrlSource(napi_env env, napi_callback_i
     napi_get_undefined(env, &result);
     MEDIA_LOGI("JsSetUrlSource In");
 
-    napi_value args[2] = { nullptr };
+    const int32_t maxArgs = ARG_TWO;
     size_t argCount = ARG_TWO;
+    napi_value args[maxArgs] = { nullptr };
     AVMetadataExtractorNapi *extractor
         = AVMetadataExtractorNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(extractor != nullptr, result, "failed to GetJsInstanceWithParameter");
@@ -504,11 +507,11 @@ napi_value AVMetadataExtractorNapi::JsSetUrlSource(napi_env env, napi_callback_i
         extractor->state_ == HelperState::HELPER_STATE_IDLE, result, "Has set source once, unsupport set again");
 
     napi_valuetype valueType = napi_undefined;
-    if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_string) {
+    if (argCount < ARG_ONE || napi_typeof(env, args[ARG_ZERO], &valueType) != napi_ok || valueType != napi_string) {
         return result;
     }
 
-    extractor->url_ = CommonNapi::GetStringArgument(env, args[0]);
+    extractor->url_ = CommonNapi::GetStringArgument(env, args[ARG_ZERO]);
     (void)CommonNapi::GetPropertyMap(env, args[1], extractor->header_);
     auto res = extractor->helper_->SetUrlSource(extractor->url_, extractor->header_);
     extractor->state_ = res == MSERR_OK ? HelperState::HELPER_STATE_RUNNABLE : HelperState::HELPER_ERROR;
