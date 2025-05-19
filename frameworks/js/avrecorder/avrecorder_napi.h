@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Huawei Device Co., Ltd.
+ * Copyright (C) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -60,6 +60,7 @@ const std::string GET_ENCODER_INFO = "GetEncoderInfo";
 const std::string IS_WATERMARK_SUPPORTED = "IsWatermarkSupported";
 const std::string SET_WATERMARK = "SetWatermark";
 const std::string SET_METADATA = "SetMetadata";
+const std::string SET_WILL_MUTE_WHEN_INTERRUPTED = "SetWillMuteWhenInterrupted";
 }
 
 constexpr int32_t AVRECORDER_DEFAULT_AUDIO_BIT_RATE = 48000;
@@ -77,7 +78,8 @@ const std::map<std::string, std::vector<std::string>> stateCtrlList = {
         AVRecordergOpt::RELEASE,
         AVRecordergOpt::GET_AV_RECORDER_PROFILE,
         AVRecordergOpt::SET_AV_RECORDER_CONFIG,
-        AVRecordergOpt::GET_ENCODER_INFO
+        AVRecordergOpt::GET_ENCODER_INFO,
+        AVRecordergOpt::SET_WILL_MUTE_WHEN_INTERRUPTED,
     }},
     {AVRecorderState::STATE_PREPARED, {
         AVRecordergOpt::SET_ORIENTATION_HINT,
@@ -319,6 +321,8 @@ private:
     */
     static napi_value JsIsWatermarkSupported(napi_env env, napi_callback_info info);
 
+    static napi_value JsSetWillMuteWhenInterrupted(napi_env env, napi_callback_info info);
+
     static AVRecorderNapi* GetJsInstanceAndArgs(napi_env env, napi_callback_info info,
         size_t &argCount, napi_value *args);
     static std::shared_ptr<TaskHandler<RetInfo>> GetPrepareTask(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
@@ -344,6 +348,8 @@ private:
         const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
     static std::shared_ptr<TaskHandler<RetInfo>> SetWatermarkTask(
         const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
+    static std::shared_ptr<TaskHandler<RetInfo>> SetWillMuteWhenInterruptedTask(
+        const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, bool enable);
     static int32_t GetAudioCodecFormat(const std::string &mime, AudioCodecFormat &codecFormat);
     static int32_t GetVideoCodecFormat(const std::string &mime, VideoCodecFormat &codecFormat);
     static int32_t GetOutputFormat(const std::string &extension, OutputFormatType &type);
@@ -374,6 +380,7 @@ private:
     int32_t GetMaxAmplitude(int32_t &maxAmplitude);
     int32_t GetEncoderInfo(std::vector<EncoderCapabilityData> &encoderInfo);
     int32_t IsWatermarkSupported(bool &isWatermarkSupported);
+    int32_t SetWillMuteWhenInterrupted(bool muteWhenInterrupted);
     int32_t SetWatermark(std::shared_ptr<PixelMap> &pixelMap, std::shared_ptr<WatermarkConfig> &watermarkConfig);
     int32_t SetMetadata(const std::map<std::string, std::string> &recordMeta);
 
