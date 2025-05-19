@@ -105,8 +105,8 @@ int32_t AVMetadataHelperServer::SetSource(const std::string &uri, int32_t usage)
 
 int32_t AVMetadataHelperServer::SetAVMetadataCaller(AVMetadataCaller caller)
 {
-    std::unique_lock<std::mutex> lock(mutex_);
     MediaTrace trace("AVMetadataHelperServer::SetAVMetadataCaller");
+    std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(avMetadataHelperEngine_ != nullptr, static_cast<int32_t>(MSERR_INVALID_OPERATION),
         "avMetadataHelperEngine_ is nullptr");
     return avMetadataHelperEngine_->SetAVMetadataCaller(caller);
@@ -114,8 +114,8 @@ int32_t AVMetadataHelperServer::SetAVMetadataCaller(AVMetadataCaller caller)
 
 int32_t AVMetadataHelperServer::SetUrlSource(const std::string &uri, const std::map<std::string, std::string> &header)
 {
-    std::unique_lock<std::mutex> lock(mutex_);
     MediaTrace trace("AVMetadataHelperServer::SetUrlSource");
+    std::unique_lock<std::mutex> lock(mutex_);
     MEDIA_LOGD("Current uri is : %{private}s", uri.c_str());
     CHECK_AND_RETURN_RET_LOG(!uri.empty(), MSERR_INVALID_VAL, "uri is empty");
     int32_t setSourceRes = MSERR_OK;
