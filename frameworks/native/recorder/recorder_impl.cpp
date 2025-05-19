@@ -322,7 +322,7 @@ int32_t RecorderImpl::Start()
                 MEDIA_LOGI("RecorderImpl auto set orientation is %{public}d", rotation);
                 SetOrientationHint(rotation);
             }
-        }   
+        }
     }
     return recorderService_->Start();
 }
