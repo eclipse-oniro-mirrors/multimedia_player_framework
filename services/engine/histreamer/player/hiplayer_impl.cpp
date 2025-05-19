@@ -1796,6 +1796,43 @@ int32_t HiPlayerImpl::SetPlaybackSpeed(PlaybackRateMode mode)
     return MSERR_OK;
 }
 
+int32_t HiPlayerImpl::SetPlaybackRate(float rate)
+{
+    MEDIA_LOG_I("SetPlaybackRate %{public}f", rate);
+    Status res = Status::OK;
+    if (audioSink_ != nullptr) {
+        res = audioSink_->SetSpeed(rate);
+    }
+    if (res != Status::OK) {
+        MEDIA_LOG_E("SetPlaybackRate audioSink_ set speed error");
+        return MSERR_UNKNOWN;
+    }
+    if (subtitleSink_ != nullptr) {
+        res = subtitleSink_->SetSpeed(rate);
+    }
+    if (res != Status::OK) {
+        MEDIA_LOG_E("SetPlaybackRate subtitleSink_ set speed error");
+        return MSERR_UNKNOWN;
+    }
+    if (syncManager_ != nullptr) {
+        res = syncManager_->SetPlaybackRate(rate);
+    }
+    if (res != Status::OK) {
+        MEDIA_LOG_E("SetPlaybackRate syncManager set audio speed error");
+        return MSERR_UNKNOWN;
+    }
+    if (demuxer_ != nullptr) {
+        demuxer_->SetSpeed(rate);
+    }
+    int32_t extra = 0;
+    playbackRate_ = rate;
+    Format format;
+    (void)format.PutFloatValue(PlayerKeys::PLAYER_PLAYBACK_RATE, rate);
+    callbackLooper_.OnInfo(INFO_TYPE_RATEDONE, extra, format);
+    MEDIA_LOG_I("SetPlaybackRate end");
+    return MSERR_OK;
+}
+
 int32_t HiPlayerImpl::GetPlaybackSpeed(PlaybackRateMode& mode)
 {
     MEDIA_LOG_I("GetPlaybackSpeed in");

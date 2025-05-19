@@ -85,6 +85,7 @@ public:
     virtual int32_t GetVideoHeight() = 0;
     virtual int32_t GetDuration(int32_t &duration) = 0;
     virtual int32_t SetPlaybackSpeed(PlaybackRateMode mode) = 0;
+    virtual int32_t SetPlaybackRate(float rate) = 0;
     virtual int32_t GetPlaybackSpeed(PlaybackRateMode &mode) = 0;
     virtual int32_t SetSourceLoader(const sptr<IRemoteObject> &object) = 0;
     virtual int32_t SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, AVPlayStrategy strategy) = 0;
@@ -203,6 +204,7 @@ public:
         GET_PLAY_BACK_POSITION,
         GET_DURATION,
         SET_PLAYERBACK_SPEED,
+        SET_PLAYERBACK_RATE,
         GET_PLAYERBACK_SPEED,
         SET_MEDIA_SOURCE,
         SET_VIDEO_SURFACE,

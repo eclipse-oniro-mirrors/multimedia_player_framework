@@ -75,6 +75,7 @@ void PlayerServiceProxy::InitPlayerFuncsPart1()
     playerFuncs_[GET_DURATION] = "Player::GetDuration";
     playerFuncs_[GET_API_VERSION] = "Player::GetApiVersion";
     playerFuncs_[SET_PLAYERBACK_SPEED] = "Player::SetPlaybackSpeed";
+    playerFuncs_[SET_PLAYERBACK_RATE] = "Player::SetPlaybackRate";
     playerFuncs_[GET_PLAYERBACK_SPEED] = "Player::GetPlaybackSpeed";
 #ifdef SUPPORT_VIDEO
     playerFuncs_[SET_VIDEO_SURFACE] = "Player::SetVideoSurface";
@@ -700,6 +701,23 @@ int32_t PlayerServiceProxy::SetPlaybackSpeed(PlaybackRateMode mode)
     int32_t error = SendRequest(SET_PLAYERBACK_SPEED, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetPlaybackSpeed failed, error: %{public}d", error);
+    return reply.ReadInt32();
+}
+
+int32_t PlayerServiceProxy::SetPlaybackRate(float rate)
+{
+    MediaTrace trace("PlayerServiceProxy::SetPlaybackRate");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    data.WriteFloat(rate);
+    int32_t error = SendRequest(SET_PLAYERBACK_RATE, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetPlaybackRate failed, error: %{public}d", error);
     return reply.ReadInt32();
 }
 
