@@ -33,6 +33,8 @@ public:
 
     int OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
     int32_t SetSource(const std::string &uri, int32_t usage) override;
+    int32_t SetAVMetadataCaller(AVMetadataCaller caller) override;
+    int32_t SetUrlSource(const std::string &uri, const std::map<std::string, std::string> &header) override;
     int32_t SetSource(int32_t fd, int64_t offset, int64_t size, int32_t usage) override;
     int32_t SetSource(const sptr<IRemoteObject> &object) override;
     std::string ResolveMetadata(int32_t key) override;
@@ -53,6 +55,8 @@ private:
     AVMetadataHelperServiceStub();
     int32_t Init();
     int32_t SetUriSource(MessageParcel &data, MessageParcel &reply);
+    int32_t SetAVMetadataCaller(MessageParcel &data, MessageParcel &reply);
+    int32_t SetUrlSource(MessageParcel &data, MessageParcel &reply);
     int32_t SetFdSource(MessageParcel &data, MessageParcel &reply);
     int32_t SetMediaDataSource(MessageParcel &data, MessageParcel &reply);
     int32_t ResolveMetadata(MessageParcel &data, MessageParcel &reply);

@@ -701,6 +701,27 @@ int32_t AVMetadataHelperImpl::SetSource(const std::string &uri, int32_t usage)
     return res;
 }
 
+int32_t AVMetadataHelperImpl::SetAVMetadataCaller(AVMetadataCaller caller)
+{
+    CHECK_AND_RETURN_RET_LOG(avMetadataHelperService_ != nullptr, MSERR_NO_MEMORY,
+        "avmetadatahelper service does not exist..");
+    return avMetadataHelperService_->SetAVMetadataCaller(caller);
+}
+
+int32_t AVMetadataHelperImpl::SetUrlSource(const std::string &uri, const std::map<std::string, std::string> &header)
+{
+    CHECK_AND_RETURN_RET_LOG(avMetadataHelperService_ != nullptr, MSERR_NO_MEMORY,
+        "avmetadatahelper service does not exist..");
+    CHECK_AND_RETURN_RET_LOG(!uri.empty(), MSERR_INVALID_VAL, "uri is empty.");
+    CHECK_AND_RETURN_RET_LOG((uri.find("http://") == 0 || uri.find("https://") == 0),
+        MSERR_INVALID_VAL, "uri is error.");
+    concurrentWorkCount_++;
+    ReportSceneCode(AV_META_SCENE_BATCH_HANDLE);
+    auto res = avMetadataHelperService_->SetUrlSource(uri, header);
+    concurrentWorkCount_--;
+    return res;
+}
+
 int32_t AVMetadataHelperImpl::SetSource(int32_t fd, int64_t offset, int64_t size, int32_t usage)
 {
     CHECK_AND_RETURN_RET_LOG(avMetadataHelperService_ != nullptr, MSERR_NO_MEMORY,

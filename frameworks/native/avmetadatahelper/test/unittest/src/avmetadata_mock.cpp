@@ -48,6 +48,18 @@ int32_t AVMetadataMock::SetSource(const std::string &uri, int32_t usage)
     return avMetadataHelper_->SetSource(uri, usage);
 }
 
+int32_t AVMetadataMock::SetAVMetadataCaller(AVMetadataCaller caller)
+{
+    UNITTEST_INFO_LOG("%s", __FUNCTION__);
+    return avMetadataHelper_->SetAVMetadataCaller(caller);
+}
+
+int32_t AVMetadataMock::SetUrlSource(const std::string &uri, const std::map<std::string, std::string> &header)
+{
+    UNITTEST_INFO_LOG("%s %s", __FUNCTION__, uri.c_str());
+    return avMetadataHelper_->SetUrlSource(uri, header);
+}
+
 int32_t AVMetadataMock::SetSource(const std::string &path, int64_t offset, int64_t size, int32_t usage)
 {
     UNITTEST_INFO_LOG("%s %s", __FUNCTION__, path.c_str());

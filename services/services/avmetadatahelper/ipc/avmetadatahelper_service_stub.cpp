@@ -24,6 +24,7 @@
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_METADATA, "AVMetadataHelperServiceStub"};
+constexpr uint32_t MAX_MAP_SIZE = 100;
 }
 
 namespace OHOS {
@@ -86,6 +87,10 @@ int32_t AVMetadataHelperServiceStub::Init()
             [this](MessageParcel &data, MessageParcel &reply) { return GetTimeByFrameIndex(data, reply); } },
         { GET_FRAME_INDEX_BY_TIME,
             [this](MessageParcel &data, MessageParcel &reply) { return GetFrameIndexByTime(data, reply); } },
+        { SET_METADATA_CALLER,
+            [this](MessageParcel &data, MessageParcel &reply) { return SetAVMetadataCaller(data, reply); } },
+        { SET_HTTP_URI_SOURCE,
+            [this](MessageParcel &data, MessageParcel &reply) { return SetUrlSource(data, reply); } },
     };
     return MSERR_OK;
 }
@@ -131,6 +136,21 @@ int32_t AVMetadataHelperServiceStub::SetSource(const std::string &uri, int32_t u
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(avMetadateHelperServer_ != nullptr, MSERR_NO_MEMORY, "avmetadatahelper server is nullptr");
     return avMetadateHelperServer_->SetSource(uri, usage);
+}
+
+int32_t AVMetadataHelperServiceStub::SetAVMetadataCaller(AVMetadataCaller caller)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(avMetadateHelperServer_ != nullptr, MSERR_NO_MEMORY, "avmetadatahelper server is nullptr");
+    return avMetadateHelperServer_->SetAVMetadataCaller(caller);
+}
+
+int32_t AVMetadataHelperServiceStub::SetUrlSource(const std::string &uri,
+    const std::map<std::string, std::string> &header)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(avMetadateHelperServer_ != nullptr, MSERR_NO_MEMORY, "avmetadatahelper server is nullptr");
+    return avMetadateHelperServer_->SetUrlSource(uri, header);
 }
 
 int32_t AVMetadataHelperServiceStub::SetSource(int32_t fd, int64_t offset, int64_t size, int32_t usage)
@@ -249,6 +269,31 @@ int32_t AVMetadataHelperServiceStub::SetUriSource(MessageParcel &data, MessagePa
     return MSERR_OK;
 }
 
+int32_t AVMetadataHelperServiceStub::SetAVMetadataCaller(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t caller = data.ReadInt32();
+    reply.WriteInt32(SetAVMetadataCaller(static_cast<AVMetadataCaller>(caller)));
+    return MSERR_OK;
+}
+
+int32_t AVMetadataHelperServiceStub::SetUrlSource(MessageParcel &data, MessageParcel &reply)
+{
+    std::string url = data.ReadString();
+    auto mapSize = data.ReadUint32();
+    std::map<std::string, std::string> header;
+    if (mapSize >= MAX_MAP_SIZE) {
+        MEDIA_LOGI("Exceeded maximum table size limit");
+        return MSERR_INVALID_OPERATION;
+    }
+    for (size_t i = 0; i < mapSize; i++) {
+        auto kstr = data.ReadString();
+        auto vstr = data.ReadString();
+        header.emplace(kstr, vstr);
+    }
+    reply.WriteInt32(SetUrlSource(url, header));
+    return MSERR_OK;
+}
+
 int32_t AVMetadataHelperServiceStub::SetFdSource(MessageParcel &data, MessageParcel &reply)
 {
     int32_t fd = data.ReadFileDescriptor();
@@ -306,15 +351,16 @@ int32_t AVMetadataHelperServiceStub::GetAVMetadata(MessageParcel &data, MessageP
     auto iter = metadata->Find("customInfo");
     if (iter != metadata->end()) {
         ret &= metadata->GetData("customInfo", customInfo);
-        ret &= reply.WriteString("customInfo");
-        ret &= customInfo->ToParcel(reply);
     }
+    ret &= reply.WriteString("customInfo");
+    ret &= customInfo->ToParcel(reply);
     metadata->Remove("customInfo");
     ret &= reply.WriteString("AVMetadata");
     ret &= metadata->ToParcel(reply);
     if (!ret) {
         MEDIA_LOGE("GetAVMetadata ToParcel error");
     }
+    metadata->SetData("customInfo", customInfo);
     return MSERR_OK;
 }
 

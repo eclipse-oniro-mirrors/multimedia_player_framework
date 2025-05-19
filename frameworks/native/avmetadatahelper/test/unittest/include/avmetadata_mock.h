@@ -90,6 +90,8 @@ public:
     DISALLOW_COPY_AND_MOVE(AVMetadataMock);
     bool CreateAVMetadataHelper();
     int32_t SetSource(const std::string &uri, int32_t usage);
+    int32_t SetAVMetadataCaller(AVMetadataCaller caller);
+    int32_t SetUrlSource(const std::string &uri, const std::map<std::string, std::string> &header);
     int32_t SetSource(const std::string &path, int64_t offset, int64_t size, int32_t usage);
     void PrintMetadata();
     std::string ResolveMetadata(int32_t key);

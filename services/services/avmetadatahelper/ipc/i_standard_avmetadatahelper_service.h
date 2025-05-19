@@ -29,6 +29,17 @@ class IStandardAVMetadataHelperService : public IRemoteBroker {
 public:
     virtual ~IStandardAVMetadataHelperService() = default;
     virtual int32_t SetSource(const std::string &uri, int32_t usage) = 0;
+    virtual int32_t SetAVMetadataCaller(AVMetadataCaller caller)
+    {
+        (void)caller;
+        return 0;
+    }
+    virtual int32_t SetUrlSource(const std::string &uri, const std::map<std::string, std::string> &header)
+    {
+        (void)uri;
+        (void)header;
+        return 0;
+    }
     virtual int32_t SetSource(int32_t fd, int64_t offset, int64_t size, int32_t usage) = 0;
     virtual int32_t SetSource(const sptr<IRemoteObject> &object) = 0;
     virtual std::string ResolveMetadata(int32_t key) = 0;
@@ -65,6 +76,8 @@ public:
         GET_AVMETADATA,
         GET_TIME_BY_FRAME_INDEX,
         GET_FRAME_INDEX_BY_TIME,
+        SET_METADATA_CALLER,
+        SET_HTTP_URI_SOURCE,
         MAX_IPC_ID,
     };
 

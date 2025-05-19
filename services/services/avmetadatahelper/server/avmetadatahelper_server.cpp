@@ -103,6 +103,55 @@ int32_t AVMetadataHelperServer::SetSource(const std::string &uri, int32_t usage)
     return setSourceRes;
 }
 
+int32_t AVMetadataHelperServer::SetAVMetadataCaller(AVMetadataCaller caller)
+{
+    MediaTrace trace("AVMetadataHelperServer::SetAVMetadataCaller");
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(avMetadataHelperEngine_ != nullptr, static_cast<int32_t>(MSERR_INVALID_OPERATION),
+        "avMetadataHelperEngine_ is nullptr");
+    return avMetadataHelperEngine_->SetAVMetadataCaller(caller);
+}
+
+int32_t AVMetadataHelperServer::SetUrlSource(const std::string &uri, const std::map<std::string, std::string> &header)
+{
+    MediaTrace trace("AVMetadataHelperServer::SetUrlSource");
+    std::unique_lock<std::mutex> lock(mutex_);
+    MEDIA_LOGD("Current uri is : %{private}s", uri.c_str());
+    CHECK_AND_RETURN_RET_LOG(!uri.empty(), MSERR_INVALID_VAL, "uri is empty");
+    int32_t setSourceRes = MSERR_OK;
+    std::atomic<bool> isInitEngineEnd = false;
+
+    auto task = std::make_shared<TaskHandler<int32_t>>([this, header, uri, &isInitEngineEnd, &setSourceRes] {
+        MediaTrace trace("AVMetadataHelperServer::SetUrlSource_task");
+        {
+            std::unique_lock<std::mutex> lock(mutex_);
+            int32_t res = InitEngine(uri);
+            isInitEngineEnd = true;
+            if (res != MSERR_OK) {
+                setSourceRes = res;
+                ipcReturnCond_.notify_all();
+                return res;
+            }
+            ipcReturnCond_.notify_all();
+        }
+        CHECK_AND_RETURN_RET_LOG(avMetadataHelperEngine_ != nullptr,
+            static_cast<int32_t>(MSERR_CREATE_AVMETADATAHELPER_ENGINE_FAILED),
+            "Failed to create avmetadatahelper engine");
+        int32_t ret = avMetadataHelperEngine_->SetUrlSource(uri, header);
+        currState_ = ret == MSERR_OK ? HELPER_PREPARED : HELPER_STATE_ERROR;
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "0x%{public}06" PRIXPTR " SetUrlSource failed",
+            FAKE_POINTER(this));
+        return ret;
+    });
+    CHECK_AND_RETURN_RET_LOG(task != nullptr, MSERR_NO_MEMORY, "Failed to create task");
+    taskQue_.EnqueueTask(task);
+    ipcReturnCond_.wait(lock, [this, &isInitEngineEnd] {
+        return isInitEngineEnd.load() || isInterrupted_.load();
+    });
+    CHECK_AND_RETURN_RET_LOG(isInterrupted_.load() == false, MSERR_INVALID_OPERATION, "SetUrlSource interrupted");
+    return setSourceRes;
+}
+
 int32_t AVMetadataHelperServer::CheckSourceByUriHelper()
 {
     CHECK_AND_RETURN_RET_LOG(uriHelper_ != nullptr, MSERR_NO_MEMORY, "Failed to create UriHelper");
