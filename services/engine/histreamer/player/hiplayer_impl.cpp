@@ -1308,6 +1308,33 @@ Status HiPlayerImpl::doCompletedSeek(int64_t seekPos, PlayerSeekMode mode)
     return rtv;
 }
 
+Status HiPlayerImpl::doSetPlaybackSpeed(float speed)
+{
+    MEDIA_LOG_I("doSetPlaybackSpeed %{public}f", speed);
+    Status res = Status::OK;
+    if (audioSink_ != nullptr) {
+        res = audioSink_->SetSpeed(speed);
+    }
+    if (subtitleSink_ != nullptr) {
+        res = subtitleSink_->SetSpeed(speed);
+    }
+    if (res != Status::OK) {
+        MEDIA_LOG_E("doSetPlaybackSpeed audioSink set speed  error");
+        return res;
+    }
+    if (syncManager_ != nullptr) {
+        res = syncManager_->SetPlaybackRate(speed);
+    }
+    if (res != Status::OK) {
+        MEDIA_LOG_E("doSetPlaybackSpeed syncManager set audio speed error");
+        return res;
+    }
+    if (demuxer_ != nullptr) {
+        demuxer_->SetSpeed(speed);
+    }
+    return Status::OK;
+}
+
 bool HiPlayerImpl::NeedSeekClosest()
 {
     MEDIA_LOG_D("NeedSeekClosest begin");
@@ -1764,30 +1791,10 @@ float HiPlayerImpl::GetMaxAmplitude()
 int32_t HiPlayerImpl::SetPlaybackSpeed(PlaybackRateMode mode)
 {
     MEDIA_LOG_I("SetPlaybackSpeed %{public}d", mode);
-    Status res = Status::OK;
     float speed = TransformPlayRate2Float(mode);
-    if (audioSink_ != nullptr) {
-        res = audioSink_->SetSpeed(speed);
-    }
-    if (subtitleSink_ != nullptr) {
-        res = subtitleSink_->SetSpeed(speed);
-    }
-    if (res != Status::OK) {
-        MEDIA_LOG_E("SetPlaybackSpeed audioSink set speed  error");
+    if (doSetPlaybackSpeed(speed) != Status::OK) {
+        MEDIA_LOG_E("SetPlaybackSpeed audioSink set speed error");
         return MSERR_UNKNOWN;
-    }
-    if (videoDecoder_ != nullptr) {
-        res = videoDecoder_->SetSpeed(speed);
-    }
-    if (syncManager_ != nullptr) {
-        res = syncManager_->SetPlaybackRate(speed);
-    }
-    if (res != Status::OK) {
-        MEDIA_LOG_E("SetPlaybackSpeed syncManager set audio speed error");
-        return MSERR_UNKNOWN;
-    }
-    if (demuxer_ != nullptr) {
-        demuxer_->SetSpeed(speed);
     }
     playbackRateMode_ = mode;
     Format format;
@@ -1799,30 +1806,9 @@ int32_t HiPlayerImpl::SetPlaybackSpeed(PlaybackRateMode mode)
 int32_t HiPlayerImpl::SetPlaybackRate(float rate)
 {
     MEDIA_LOG_I("SetPlaybackRate %{public}f", rate);
-    Status res = Status::OK;
-    if (audioSink_ != nullptr) {
-        res = audioSink_->SetSpeed(rate);
-    }
-    if (res != Status::OK) {
-        MEDIA_LOG_E("SetPlaybackRate audioSink_ set speed error");
+    if (doSetPlaybackSpeed(rate) != Status::OK) {
+        MEDIA_LOG_E("SetPlaybackRate audioSink set speed error");
         return MSERR_UNKNOWN;
-    }
-    if (subtitleSink_ != nullptr) {
-        res = subtitleSink_->SetSpeed(rate);
-    }
-    if (res != Status::OK) {
-        MEDIA_LOG_E("SetPlaybackRate subtitleSink_ set speed error");
-        return MSERR_UNKNOWN;
-    }
-    if (syncManager_ != nullptr) {
-        res = syncManager_->SetPlaybackRate(rate);
-    }
-    if (res != Status::OK) {
-        MEDIA_LOG_E("SetPlaybackRate syncManager set audio speed error");
-        return MSERR_UNKNOWN;
-    }
-    if (demuxer_ != nullptr) {
-        demuxer_->SetSpeed(rate);
     }
     int32_t extra = 0;
     playbackRate_ = rate;
