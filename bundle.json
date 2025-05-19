@@ -171,6 +171,16 @@
           },
           {
             "type": "so",
+            "name": "//foundation/multimedia/player_framework/frameworks/native/media_service_helper:media_helper_client",
+            "header": {
+              "header_files": [
+                "media_service_helper.h"
+              ],
+              "header_base": "//foundation/multimedia/player_framework/interfaces/inner_api/native/media_service_helper"
+            }
+          },
+          {
+            "type": "so",
             "name": "//foundation/multimedia/player_framework/frameworks/native/video_editor:video_editor",
             "header": {
               "header_files": [

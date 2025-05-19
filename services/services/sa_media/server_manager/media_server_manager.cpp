@@ -962,5 +962,17 @@ void MediaServerManager::UpdateAllInstancesReleasedTime()
     }
 }
 #endif
+
+bool MediaServerManager::HasOthersStub()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    bool hasOthers = !recorderStubMap_.empty() ||
+                     !avMetadataHelperStubMap_.empty() ||
+                     !screenCaptureStubMap_.empty() ||
+                     !recorderProfilesStubMap_.empty() ||
+                     !screenCaptureControllerStubMap_.empty() ||
+                     !transCoderStubMap_.empty();
+    return !hasOthers;
+}
 } // namespace Media
 } // namespace OHOS

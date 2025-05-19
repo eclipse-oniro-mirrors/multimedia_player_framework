@@ -495,5 +495,11 @@ void MediaClient::DoMediaServerDied()
     AVScreenCaptureServerDied();
     mediaProxyUpdatedCondition_.notify_all();
 }
+
+bool MediaClient::CanKillMediaService()
+{
+    CHECK_AND_RETURN_RET_LOG(IsAlived(), false, "media service does not exist.");
+    return mediaProxy_->CanKillMediaService();
+}
 } // namespace Media
 } // namespace OHOS
