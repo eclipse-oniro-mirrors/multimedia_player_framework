@@ -63,6 +63,7 @@ public:
 
     MOCK_METHOD(sptr<IStandardMonitorService>, GetMonitorProxy, (), (override));
     MOCK_METHOD(void, ReleaseClientListener, (), (override));
+    MOCK_METHOD(void, ReleaseClientListener, (), (override));
 };
 } // namespace Media
 } // namespace OHOS
