@@ -175,6 +175,24 @@ enum AVMetadataUsage : int32_t {
 };
 
 /**
+ * @brief Enumerates avmetadata caller.
+ */
+enum AVMetadataCaller : int32_t {
+    /**
+     * Indicates that the avmetadahelper's instance called by AVMetadataExtractor.
+     */
+    AV_METADATA_EXTRACTOR,
+    /**
+     * Indicates that the avmetadahelper's instance called by AVImageGenerator.
+     */
+    AV_IMAGE_GENERATOR,
+    /**
+     * Indicates that the avmetadahelper's instance called by except AVMetadataExtractor and AVImageGenerator.
+     */
+    AV_META_DATA_DEFAULT,
+};
+
+/**
  * @brief Enumerates avmetadata's metadata key.
  */
 enum AVMetadataCode : int32_t {
@@ -391,6 +409,36 @@ public:
      * an error code otherwise.
      */
     virtual int32_t SetSource(const std::string &uri, int32_t usage = AVMetadataUsage::AV_META_USAGE_PIXEL_MAP) = 0;
+
+    /**
+     * Set the caller. Calling this method before the reset
+     * of the methods in this class. This method maybe time consuming.
+     * @param caller indicates which scene the avmedatahelper's instance will
+     * be used to, see {@link AVMetadataCaller}. If the caller need to be changed,
+     * this method must be called again.
+     * @return Returns {@link MSERR_OK} if the setting is successful; returns
+     * an error code otherwise.
+     */
+    virtual int32_t SetAVMetadataCaller(AVMetadataCaller caller)
+    {
+        (void)caller;
+        return 0;
+    }
+
+    /**
+     * Set the media source online uri with header params to resolve. Calling this method before the reset
+     * of the methods in this class. This method maybe time consuming.
+     * @param uri the URI of input http/https on demand media source.
+     * @param header the request parameters of input media source.
+     * @return Returns {@link MSERR_OK} if the setting is successful; returns
+     * an error code otherwise.
+     */
+    virtual int32_t SetUrlSource(const std::string &uri, const std::map<std::string, std::string> &header)
+    {
+        (void)uri;
+        (void)header;
+        return 0;
+    }
 
     /**
      * @brief Sets the media file descriptor source to resolve. Calling this method

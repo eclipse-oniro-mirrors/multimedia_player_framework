@@ -81,6 +81,22 @@ int32_t AVMetadataHelperClient::SetSource(const std::string &uri, int32_t usage)
     return avMetadataHelperProxy_->SetSource(uri, usage);
 }
 
+int32_t AVMetadataHelperClient::SetAVMetadataCaller(AVMetadataCaller caller)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(avMetadataHelperProxy_ != nullptr, MSERR_NO_MEMORY,
+        "avmetadatahelper service does not exist.");
+    return avMetadataHelperProxy_->SetAVMetadataCaller(caller);
+}
+
+int32_t AVMetadataHelperClient::SetUrlSource(const std::string &uri, const std::map<std::string, std::string> &header)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(avMetadataHelperProxy_ != nullptr, MSERR_NO_MEMORY,
+        "avmetadatahelper service does not exist.");
+    return avMetadataHelperProxy_->SetUrlSource(uri, header);
+}
+
 int32_t AVMetadataHelperClient::SetSource(int32_t fd, int64_t offset, int64_t size, int32_t usage)
 {
     std::lock_guard<std::mutex> lock(mutex_);

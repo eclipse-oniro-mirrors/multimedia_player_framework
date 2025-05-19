@@ -37,6 +37,34 @@ public:
      */
     virtual int32_t SetSource(const std::string &uri, int32_t usage) = 0;
     virtual int32_t SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc) = 0;
+    /**
+     * Set the caller. Calling this method before the reset
+     * of the methods in this class. This method maybe time consuming.
+     * @param caller indicates which scene the avmedatahelper's instance will
+     * be used to, see {@link AVMetadataCaller}. If the caller need to be changed,
+     * this method must be called again.
+     * @return Returns {@link MSERR_OK} if the setting is successful; returns
+     * an error code otherwise.
+     */
+    virtual int32_t SetAVMetadataCaller(AVMetadataCaller caller)
+    {
+        (void)caller;
+        return 0;
+    }
+    /**
+     * Set the media source online uri with header params to resolve. Calling this method before the reset
+     * of the methods in this class. This method maybe time consuming.
+     * @param uri the URI of input http/https on demand media source.
+     * @param header the request parameters of input media source.
+     * @return Returns {@link MSERR_OK} if the setting is successful; returns
+     * an error code otherwise.
+     */
+    virtual int32_t SetUrlSource(const std::string &uri, const std::map<std::string, std::string> &header)
+    {
+        (void)uri;
+        (void)header;
+        return 0;
+    }
 
     /**
      * Retrieve the meta data associated with the specified key. This method must be

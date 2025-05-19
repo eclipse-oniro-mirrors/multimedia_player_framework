@@ -32,8 +32,11 @@ using namespace OHOS::AudioStandard;
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_METADATA, "AVMetadataExtractorNapi"};
+constexpr uint8_t ARG_ZERO = 0;
 constexpr uint8_t ARG_ONE = 1;
 constexpr uint8_t ARG_TWO = 2;
+constexpr uint8_t ARG_THREE = 3;
+constexpr uint8_t ARG_FOUR = 4;
 }
 
 namespace OHOS {
@@ -58,8 +61,10 @@ napi_value AVMetadataExtractorNapi::Init(napi_env env, napi_value exports)
     };
 
     napi_property_descriptor properties[] = {
+        DECLARE_NAPI_FUNCTION("setUrlSource", JsSetUrlSource),
         DECLARE_NAPI_FUNCTION("fetchMetadata", JsResolveMetadata),
         DECLARE_NAPI_FUNCTION("fetchAlbumCover", JsFetchArtPicture),
+        DECLARE_NAPI_FUNCTION("fetchFrameByTime", JsFetchFrameAtTime),
         DECLARE_NAPI_FUNCTION("release", JsRelease),
         DECLARE_NAPI_FUNCTION("getTimeByFrameIndex", JSGetTimeByFrameIndex),
         DECLARE_NAPI_FUNCTION("getFrameIndexByTime", JSGetFrameIndexByTime),
@@ -124,10 +129,14 @@ void AVMetadataExtractorNapi::Destructor(napi_env env, void *nativeObject, void 
     (void)finalize;
     CHECK_AND_RETURN(nativeObject != nullptr);
     AVMetadataExtractorNapi *napi = reinterpret_cast<AVMetadataExtractorNapi *>(nativeObject);
-    if (napi != nullptr && napi->helper_ != nullptr) {
-        napi->helper_->Release();
-    }
-    delete napi;
+    std::thread([napi]() -> void {
+        MEDIA_LOGD("Destructor Release enter");
+        if (napi != nullptr && napi->helper_ != nullptr) {
+            napi->helper_->Release();
+        }
+        delete napi;
+    }).detach();
+    MEDIA_LOGD("Destructor success");
 }
 
 napi_value AVMetadataExtractorNapi::JsCreateAVMetadataExtractor(napi_env env, napi_callback_info info)
@@ -369,6 +378,76 @@ void AVMetadataExtractorNapi::CommonCallbackRoutine(napi_env env, AVMetadataExtr
     asyncContext = nullptr;
 }
 
+napi_value AVMetadataExtractorNapi::JsFetchFrameAtTime(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVMetadataExtractorNapi::JsFetchFrameAtTime");
+    MEDIA_LOGI("JsFetchFrameAtTime  in");
+    const int32_t maxArgs = ARG_FOUR;  // args + callback
+    const int32_t argCallback = ARG_THREE;  // index three, the 4th param if exist
+    const int32_t argPixelParam = ARG_TWO;  // index 2, the 3rd param
+    size_t argCount = maxArgs;
+    napi_value args[maxArgs] = { nullptr };
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    AVMetadataExtractorNapi* extractor
+        = AVMetadataExtractorNapi::GetJsInstanceWithParameter(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(extractor != nullptr, result, "failed to GetJsInstance");
+
+    auto asyncCtx = std::make_unique<AVMetadataExtractorAsyncContext>(env);
+    asyncCtx->innerHelper_ = extractor->helper_;
+    asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[argCallback]);
+    asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
+    napi_valuetype valueType = napi_undefined;
+    bool notParamValid = argCount < argCallback || napi_typeof(env, args[argPixelParam], &valueType) != napi_ok ||
+        valueType != napi_object ||
+        extractor->GetFetchFrameArgs(asyncCtx, env, args[ARG_ZERO], args[ARG_ONE], args[ARG_TWO]) != MSERR_OK;
+    if (notParamValid) {
+        asyncCtx->SignError(MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE, "Parameter check failed");
+    }
+
+    if (extractor->state_ != HelperState::HELPER_STATE_RUNNABLE && !asyncCtx->errFlag) {
+        asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Current state is not runnable, can't fetchFrame.");
+    }
+
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, "JsFetchFrameAtTime", NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void *data) {
+        auto asyncCtx = reinterpret_cast<AVMetadataExtractorAsyncContext *>(data);
+        CHECK_AND_RETURN_LOG(asyncCtx && !asyncCtx->errFlag && asyncCtx->innerHelper_, "Invalid context.");
+        auto pixelMap = asyncCtx->innerHelper_->
+            FetchScaledFrameYuv(asyncCtx->timeUs, asyncCtx->option, asyncCtx->param_);
+        asyncCtx->pixel_ = pixelMap;
+        if (asyncCtx->pixel_ == nullptr) {
+            asyncCtx->SignError(MSERR_EXT_API9_UNSUPPORT_FORMAT, "FetchFrameByTime failed.");
+        }
+    }, CreatePixelMapComplete, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+    NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
+    asyncCtx.release();
+    MEDIA_LOGI("JsFetchFrameAtTime Out");
+    return result;
+}
+
+void AVMetadataExtractorNapi::CreatePixelMapComplete(napi_env env, napi_status status, void *data)
+{
+    napi_value result = nullptr;
+
+    MEDIA_LOGI("CreatePixelMapComplete In");
+    auto context = static_cast<AVMetadataExtractorAsyncContext*>(data);
+
+    if (status == napi_ok && context->errCode == napi_ok) {
+        MEDIA_LOGI("set pixel map success");
+        context->status = ERR_OK;
+        result = Media::PixelMapNapi::CreatePixelMap(env, context->pixel_);
+    } else {
+        context->status = context->errCode == napi_ok ? MSERR_INVALID_VAL : context->errCode;
+        MEDIA_LOGW("set pixel map failed");
+        napi_get_undefined(env, &result);
+    }
+
+    CommonCallbackRoutine(env, context, result);
+}
+
 napi_value AVMetadataExtractorNapi::JsRelease(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("AVMetadataExtractorNapi::release");
@@ -408,6 +487,36 @@ napi_value AVMetadataExtractorNapi::JsRelease(napi_env env, napi_callback_info i
     return result;
 }
 
+napi_value AVMetadataExtractorNapi::JsSetUrlSource(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVMetadataExtractorNapi::setUrlSource");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    MEDIA_LOGI("JsSetUrlSource In");
+
+    napi_value args[2] = { nullptr };
+    size_t argCount = ARG_TWO;
+    AVMetadataExtractorNapi *extractor
+        = AVMetadataExtractorNapi::GetJsInstanceWithParameter(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(extractor != nullptr, result, "failed to GetJsInstanceWithParameter");
+
+    CHECK_AND_RETURN_RET_LOG(
+        extractor->state_ == HelperState::HELPER_STATE_IDLE, result, "Has set source once, unsupport set again");
+
+    napi_valuetype valueType = napi_undefined;
+    if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_string) {
+        return result;
+    }
+
+    extractor->url_ = CommonNapi::GetStringArgument(env, args[0]);
+    (void)CommonNapi::GetPropertyMap(env, args[1], extractor->header_);
+    auto res = extractor->helper_->SetUrlSource(extractor->url_, extractor->header_);
+    extractor->state_ = res == MSERR_OK ? HelperState::HELPER_STATE_RUNNABLE : HelperState::HELPER_ERROR;
+    extractor->helper_->SetAVMetadataCaller(AVMetadataCaller::AV_METADATA_EXTRACTOR);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSetUrlSource Out", FAKE_POINTER(extractor));
+    return result;
+}
+
 napi_value AVMetadataExtractorNapi::JsSetAVFileDescriptor(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("AVMetadataExtractorNapi::set fd");
@@ -434,6 +543,7 @@ napi_value AVMetadataExtractorNapi::JsSetAVFileDescriptor(napi_env env, napi_cal
     auto fileDescriptor = extractor->fileDescriptor_;
     auto res = extractor->helper_->SetSource(fileDescriptor.fd, fileDescriptor.offset, fileDescriptor.length);
     extractor->state_ = res == MSERR_OK ? HelperState::HELPER_STATE_RUNNABLE : HelperState::HELPER_ERROR;
+    extractor->helper_->SetAVMetadataCaller(AVMetadataCaller::AV_METADATA_EXTRACTOR);
     return result;
 }
 
@@ -523,6 +633,41 @@ napi_value AVMetadataExtractorNapi::JsGetDataSrc(napi_env env, napi_callback_inf
 
     MEDIA_LOGI("JsGetDataSrc Out");
     return value;
+}
+
+int32_t AVMetadataExtractorNapi::GetFetchFrameArgs(std::unique_ptr<AVMetadataExtractorAsyncContext> &asyncCtx,
+    napi_env env, napi_value timeUs, napi_value option, napi_value params)
+{
+    napi_status ret = napi_get_value_int64(env, timeUs, &asyncCtx->timeUs);
+    CHECK_AND_RETURN_RET_LOG(ret == napi_ok, MSERR_INVALID_VAL, "failed to get timeUs");
+
+    ret = napi_get_value_int32(env, option, &asyncCtx->option);
+    CHECK_AND_RETURN_RET_LOG(ret == napi_ok, MSERR_INVALID_VAL, "failed to get option");
+
+    int32_t width = 0;
+    if (!CommonNapi::GetPropertyInt32(env, params, "width", width)) {
+        MEDIA_LOGW("failed to get width");
+    }
+
+    int32_t height = 0;
+    if (!CommonNapi::GetPropertyInt32(env, params, "height", height)) {
+        MEDIA_LOGW("failed to get height");
+    }
+
+    PixelFormat colorFormat = PixelFormat::RGBA_8888;
+    int32_t formatVal = 3;
+    CommonNapi::GetPropertyInt32(env, params, "colorFormat", formatVal);
+    colorFormat = static_cast<PixelFormat>(formatVal);
+    if (colorFormat != PixelFormat::RGB_565 && colorFormat != PixelFormat::RGB_888 &&
+        colorFormat != PixelFormat::RGBA_8888) {
+        MEDIA_LOGE("formatVal is invalid");
+        return MSERR_INVALID_VAL;
+    }
+
+    asyncCtx->param_.dstWidth = width;
+    asyncCtx->param_.dstHeight = height;
+    asyncCtx->param_.colorFormat = colorFormat;
+    return MSERR_OK;
 }
 
 AVMetadataExtractorNapi* AVMetadataExtractorNapi::GetJsInstance(napi_env env, napi_callback_info info)

@@ -1030,5 +1030,256 @@ HWTEST_F(AVMetadataUnitTest, FetchScaledFrameYuv_API_0500, Level2)
     ASSERT_EQ(pixelMap->GetWidth(), 720);
     ASSERT_EQ(pixelMap->GetHeight(), 480);
 }
+
+/**
+    * @tc.number    : SetUrlSource_API_0100
+    * @tc.name      : SetUrlSource test url
+    * @tc.desc      : SetUrlSource API
+*/
+HWTEST_F(AVMetadataUnitTest, SetUrlSource_API_0100, Level2)
+{
+    std::string uri = "";
+    std::map<std::string, std::string> header;
+    std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
+    ASSERT_NE(nullptr, helper);
+    ASSERT_EQ(true, helper->CreateAVMetadataHelper());
+    ASSERT_NE(MSERR_OK, helper->SetUrlSource(uri, header));
+    uri = AVMetadataTestBase::GetInstance().GetMountPath() + std::string("HDR.mp4");
+    ASSERT_NE(MSERR_OK, helper->SetUrlSource(uri, header));
+    uri = "http://XXX";
+    ASSERT_EQ(MSERR_OK, helper->SetUrlSource(uri, header));
+    helper->Release();
+}
+
+/**
+    * @tc.number    : SetUrlSource_API_0200
+    * @tc.name      : SetUrlSource test url
+    * @tc.desc      : SetUrlSource API
+*/
+HWTEST_F(AVMetadataUnitTest, SetUrlSource_API_0200, Level2)
+{
+    std::string uri = "";
+    std::map<std::string, std::string> header;
+    header.emplace("User-Agent", "User-Agent-Value");
+    header.emplace("Date", "2025 08:20:45");
+    std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
+    ASSERT_NE(nullptr, helper);
+    ASSERT_EQ(true, helper->CreateAVMetadataHelper());
+    ASSERT_NE(MSERR_OK, helper->SetUrlSource(uri, header));
+    uri = AVMetadataTestBase::GetInstance().GetMountPath() + std::string("HDR.mp4");
+    ASSERT_NE(MSERR_OK, helper->SetUrlSource(uri, header));
+    uri = "https://XXX";
+    ASSERT_EQ(MSERR_OK, helper->SetUrlSource(uri, header));
+    helper->Release();
+}
+
+/**
+    * @tc.number    : SetAVMetadataCaller_API_0100
+    * @tc.name      : SetAVMetadataCaller test url
+    * @tc.desc      : SetAVMetadataCaller API
+*/
+HWTEST_F(AVMetadataUnitTest, SetAVMetadataCaller_API_0100, Level2)
+{
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+        std::string("SDR.mp4");
+    std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
+    ASSERT_NE(nullptr, helper);
+    ASSERT_EQ(true, helper->CreateAVMetadataHelper());
+    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, 0, 0, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
+    ASSERT_EQ(MSERR_OK, helper->SetAVMetadataCaller(AVMetadataCaller::AV_METADATA_EXTRACTOR));
+    int64_t time = 0;
+    PixelMapParams param;
+    auto pixelMap = helper->FetchFrameYuv(time, 0, param);
+    ASSERT_EQ(pixelMap->GetWidth(), 1920);
+    ASSERT_EQ(pixelMap->GetHeight(), 1080);
+    helper->Release();
+}
+
+/**
+    * @tc.number    : SetAVMetadataCaller_API_0200
+    * @tc.name      : SetAVMetadataCaller test url
+    * @tc.desc      : SetAVMetadataCaller API
+*/
+HWTEST_F(AVMetadataUnitTest, SetAVMetadataCaller_API_0200, Level2)
+{
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+        std::string("SDR.mp4");
+    std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
+    ASSERT_NE(nullptr, helper);
+    ASSERT_EQ(true, helper->CreateAVMetadataHelper());
+    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, 0, 0, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
+    ASSERT_EQ(MSERR_OK, helper->SetAVMetadataCaller(AVMetadataCaller::AV_IMAGE_GENERATOR));
+    int64_t time = 0;
+    PixelMapParams param;
+    auto pixelMap = helper->FetchFrameYuv(time, 0, param);
+    ASSERT_EQ(pixelMap->GetWidth(), 1920);
+    ASSERT_EQ(pixelMap->GetHeight(), 1080);
+    helper->Release();
+}
+
+/**
+    * @tc.number    : SetAVMetadataCaller_API_0300
+    * @tc.name      : SetAVMetadataCaller test url
+    * @tc.desc      : SetAVMetadataCaller API
+*/
+HWTEST_F(AVMetadataUnitTest, SetAVMetadataCaller_API_0300, Level2)
+{
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+        std::string("SDR.mp4");
+    std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
+    ASSERT_NE(nullptr, helper);
+    ASSERT_EQ(true, helper->CreateAVMetadataHelper());
+    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, 0, 0, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
+    ASSERT_EQ(MSERR_OK, helper->SetAVMetadataCaller(AVMetadataCaller::AV_META_DATA_DEFAULT));
+    int64_t time = 0;
+    PixelMapParams param;
+    auto pixelMap = helper->FetchFrameYuv(time, 0, param);
+    ASSERT_EQ(pixelMap->GetWidth(), 1920);
+    ASSERT_EQ(pixelMap->GetHeight(), 1080);
+    helper->Release();
+}
+
+/**
+    * @tc.number    : SetAVMetadataCaller_API_0400
+    * @tc.name      : SetAVMetadataCaller H264_AAC.mp4 custom scaling
+    * @tc.desc      : SetAVMetadataCaller API
+*/
+HWTEST_F(AVMetadataUnitTest, SetAVMetadataCaller_API_0400, Level2)
+{
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+        std::string("H264_AAC.mp4");
+    std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
+    ASSERT_NE(nullptr, helper);
+    ASSERT_EQ(true, helper->CreateAVMetadataHelper());
+    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, 0, 0, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
+    ASSERT_EQ(MSERR_OK, helper->SetAVMetadataCaller(AVMetadataCaller::AV_METADATA_EXTRACTOR));
+    int64_t time = 0;
+    PixelMapParams param;
+    param.dstWidth = 300;
+    param.dstHeight = 200;
+    auto pixelMap = helper->FetchScaledFrameYuv(time, 0, param);
+    ASSERT_EQ(pixelMap->GetWidth(), 300);
+    ASSERT_EQ(pixelMap->GetHeight(), 200);
+}
+
+/**
+    * @tc.number    : SetAVMetadataCaller_API_0500
+    * @tc.name      : SetAVMetadataCaller H264_AAC.mp4 side scaling
+    * @tc.desc      : SetAVMetadataCaller API
+*/
+HWTEST_F(AVMetadataUnitTest, SetAVMetadataCaller_API_0500, Level2)
+{
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+        std::string("H264_AAC.mp4");
+    std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
+    ASSERT_NE(nullptr, helper);
+    ASSERT_EQ(true, helper->CreateAVMetadataHelper());
+    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, 0, 0, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
+    ASSERT_EQ(MSERR_OK, helper->SetAVMetadataCaller(AVMetadataCaller::AV_METADATA_EXTRACTOR));
+    int64_t time = 0;
+    PixelMapParams param;
+    param.dstWidth = 300;
+    param.dstHeight = -1;
+    auto pixelMap = helper->FetchScaledFrameYuv(time, 0, param);
+    ASSERT_EQ(pixelMap->GetWidth(), 300);
+    ASSERT_EQ(pixelMap->GetHeight(), 480);
+
+    param.dstWidth = -1;
+    param.dstHeight = 200;
+    pixelMap = helper->FetchScaledFrameYuv(time, 0, param);
+    ASSERT_EQ(pixelMap->GetWidth(), 720);
+    ASSERT_EQ(pixelMap->GetHeight(), 200);
+}
+
+/**
+    * @tc.number    : SetAVMetadataCaller_API_0600
+    * @tc.name      : SetAVMetadataCaller test url
+    * @tc.desc      : SetAVMetadataCaller API
+*/
+HWTEST_F(AVMetadataUnitTest, SetAVMetadataCaller_API_0600, Level2)
+{
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+        std::string("H264_AAC.mp4");
+    std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
+    ASSERT_NE(nullptr, helper);
+    ASSERT_EQ(true, helper->CreateAVMetadataHelper());
+    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, 0, 0, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
+    ASSERT_EQ(MSERR_OK, helper->SetAVMetadataCaller(AVMetadataCaller::AV_METADATA_EXTRACTOR));
+    int64_t time = 0;
+    PixelMapParams param;
+    auto pixelMap = helper->FetchScaledFrameYuv(time, 0, param);
+    ASSERT_EQ(pixelMap->GetWidth(), 720);
+    ASSERT_EQ(pixelMap->GetHeight(), 480);
+
+    param.dstWidth = -1;
+    param.dstHeight = -1;
+    pixelMap = helper->FetchScaledFrameYuv(time, 0, param);
+    ASSERT_EQ(pixelMap->GetWidth(), 720);
+    ASSERT_EQ(pixelMap->GetHeight(), 480);
+
+    param.dstWidth = 0;
+    param.dstHeight = 0;
+    pixelMap = helper->FetchScaledFrameYuv(time, 0, param);
+    ASSERT_EQ(pixelMap->GetWidth(), 720);
+    ASSERT_EQ(pixelMap->GetHeight(), 480);
+}
+
+/**
+    * @tc.number    : SetAVMetadataCaller_API_0700
+    * @tc.name      : SetAVMetadataCaller test url
+    * @tc.desc      : SetAVMetadataCaller API
+*/
+HWTEST_F(AVMetadataUnitTest, SetAVMetadataCaller_API_0700, Level2)
+{
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+        std::string("H264_AAC.mp4");
+    std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
+    ASSERT_NE(nullptr, helper);
+    ASSERT_EQ(true, helper->CreateAVMetadataHelper());
+    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, 0, 0, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
+    ASSERT_EQ(MSERR_OK, helper->SetAVMetadataCaller(AVMetadataCaller::AV_METADATA_EXTRACTOR));
+    int64_t time = 0;
+    PixelMapParams param;
+    param.dstWidth = 360;
+    param.dstHeight = 0;
+    auto pixelMap = helper->FetchScaledFrameYuv(time, 0, param);
+    ASSERT_EQ(pixelMap->GetWidth(), 360);
+    ASSERT_EQ(pixelMap->GetHeight(), 240);
+
+    param.dstWidth = 0;
+    param.dstHeight = 240;
+    pixelMap = helper->FetchScaledFrameYuv(time, 0, param);
+    ASSERT_EQ(pixelMap->GetWidth(), 360);
+    ASSERT_EQ(pixelMap->GetHeight(), 240);
+}
+
+/**
+    * @tc.number    : SetAVMetadataCaller_API_0800
+    * @tc.name      : SetAVMetadataCaller test url
+    * @tc.desc      : SetAVMetadataCaller API
+*/
+HWTEST_F(AVMetadataUnitTest, SetAVMetadataCaller_API_0800, Level2)
+{
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+        std::string("H264_AAC.mp4");
+    std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
+    ASSERT_NE(nullptr, helper);
+    ASSERT_EQ(true, helper->CreateAVMetadataHelper());
+    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, 0, 0, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
+    ASSERT_EQ(MSERR_OK, helper->SetAVMetadataCaller(AVMetadataCaller::AV_METADATA_EXTRACTOR));
+    int64_t time = 0;
+    PixelMapParams param;
+    param.dstWidth = 1000;
+    param.dstHeight = 200;
+    auto pixelMap = helper->FetchScaledFrameYuv(time, 0, param);
+    ASSERT_EQ(pixelMap->GetWidth(), 720);
+    ASSERT_EQ(pixelMap->GetHeight(), 480);
+
+    param.dstWidth = 500;
+    param.dstHeight = 1000;
+    pixelMap = helper->FetchScaledFrameYuv(time, 0, param);
+    ASSERT_EQ(pixelMap->GetWidth(), 720);
+    ASSERT_EQ(pixelMap->GetHeight(), 480);
+}
 } // namespace Media
 } // namespace OHOS

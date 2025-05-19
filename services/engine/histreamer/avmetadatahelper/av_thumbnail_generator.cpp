@@ -657,6 +657,7 @@ std::shared_ptr<AVBuffer> AVThumbnailGenerator::GenerateAlignmentAvBuffer()
     CHECK_AND_RETURN_RET_LOG(ret, nullptr, "create avBuffer failed");
     targetAvBuffer->meta_->Set<Tag::VIDEO_IS_HDR_VIVID>(isHdr);
     targetAvBuffer->meta_->Set<Tag::VIDEO_SLICE_HEIGHT>(outputHeight);
+    targetAvBuffer->flag_ = avBuffer_->flag_;
     return targetAvBuffer;
 }
 
