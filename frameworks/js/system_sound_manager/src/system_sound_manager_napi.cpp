@@ -583,7 +583,7 @@ void SystemSoundManagerNapi::AsyncSetRingtoneUri(napi_env env, void *data)
     }
     if (context->status) {
         context->errCode = NAPI_ERR_IO_ERROR;
-        context->errMessage = NAPI_ERR_IO_ERROR_INFO;
+        context->errMessage = "I/O error. Uri is empty, can not found.";
     }
 }
 
@@ -826,7 +826,7 @@ void SystemSoundManagerNapi::AsyncSetSystemToneUri(napi_env env, void *data)
     }
     if (context->status) {
         context->errCode = NAPI_ERR_IO_ERROR;
-        context->errMessage = NAPI_ERR_IO_ERROR_INFO;
+        context->errMessage = "I/O error. Uri is empty, can not found.";
     }
 }
 
@@ -1077,7 +1077,7 @@ void SystemSoundManagerNapi::AsyncGetDefaultRingtoneAttrs(napi_env env, void *da
     if (context->toneAttrs == nullptr) {
         context->status = ERROR;
         context->errCode = NAPI_ERR_IO_ERROR;
-        context->errMessage = NAPI_ERR_IO_ERROR_INFO;
+        context->errMessage = "I/O error. Can not get default ring tone.";
     }
 }
 
@@ -1163,7 +1163,7 @@ void SystemSoundManagerNapi::AsyncGetRingtoneAttrList(napi_env env, void *data)
     if (context->toneAttrsArray.empty()) {
         context->status = ERROR;
         context->errCode = NAPI_ERR_IO_ERROR;
-        context->errMessage = NAPI_ERR_IO_ERROR_INFO;
+        context->errMessage = "I/O error. Can not get default ring tone.";
     }
 }
 
@@ -1254,7 +1254,7 @@ void SystemSoundManagerNapi::AsyncGetDefaultSystemToneAttrs(napi_env env, void *
     if (context->toneAttrs == nullptr) {
         context->status = ERROR;
         context->errCode = NAPI_ERR_IO_ERROR;
-        context->errMessage = NAPI_ERR_IO_ERROR_INFO;
+        context->errMessage = "I/O error. Can not get default system tone.";
     }
 }
 
@@ -1314,7 +1314,7 @@ void SystemSoundManagerNapi::AsyncGetSystemToneAttrList(napi_env env, void *data
     if (context->toneAttrsArray.empty()) {
         context->status = ERROR;
         context->errCode = NAPI_ERR_IO_ERROR;
-        context->errMessage = NAPI_ERR_IO_ERROR_INFO;
+        context->errMessage = "I/O error. Can not get default system tone.";
     }
 }
 
@@ -1379,11 +1379,11 @@ void SystemSoundManagerNapi::AsyncSetAlarmToneUri(napi_env env, void *data)
     if (result == TYPEERROR) {
         context->status = ERROR;
         context->errCode = NAPI_ERR_URI_ERROR;
-        context->errMessage = NAPI_ERR_URI_ERROR_INFO;
+        context->errMessage = "Tone type mismatch. Uri of tone is not alarm.";
     } else if (result == ERROR) {
         context->status = ERROR;
         context->errCode = NAPI_ERR_IO_ERROR;
-        context->errMessage = NAPI_ERR_IO_ERROR_INFO;
+        context->errMessage = "I/O error. Uri is empty, can not found.";
     }
 }
 
@@ -1434,7 +1434,7 @@ void SystemSoundManagerNapi::AsyncGetAlarmToneUri(napi_env env, void *data)
     if (context->uri.empty()) {
         context->status = ERROR;
         context->errCode = NAPI_ERR_IO_ERROR;
-        context->errMessage = NAPI_ERR_IO_ERROR_INFO;
+        context->errMessage = "I/O error. Uri is empty, can not found.";
     } else {
         context->status = SUCCESS;
     }
@@ -1487,7 +1487,7 @@ void SystemSoundManagerNapi::AsyncGetDefaultAlarmToneAttrs(napi_env env, void *d
     if (context->toneAttrs == nullptr) {
         context->status = ERROR;
         context->errCode = NAPI_ERR_IO_ERROR;
-        context->errMessage = NAPI_ERR_IO_ERROR_INFO;
+        context->errMessage = "I/O error. Can not get default alarm tone.";
     }
 }
 
@@ -1537,7 +1537,7 @@ void SystemSoundManagerNapi::AsyncGetAlarmToneAttrList(napi_env env, void *data)
     if (context->toneAttrsArray.empty()) {
         context->status = ERROR;
         context->errCode = NAPI_ERR_IO_ERROR;
-        context->errMessage = NAPI_ERR_IO_ERROR_INFO;
+        context->errMessage = "I/O error. Can not get alarm tone.";
     }
 }
 
@@ -1601,11 +1601,11 @@ void SystemSoundManagerNapi::AsyncOpenAlarmTone(napi_env env, void *data)
     if (context->fd == TYPEERROR) {
         context->status = ERROR;
         context->errCode = NAPI_ERR_URI_ERROR;
-        context->errMessage = NAPI_ERR_URI_ERROR_INFO;
+        context->errMessage = "Tone type mismatch. Uri of tone is not alarm.";
     } else if (context->fd == ERROR) {
         context->status = ERROR;
         context->errCode = NAPI_ERR_IO_ERROR;
-        context->errMessage = NAPI_ERR_IO_ERROR_INFO;
+        context->errMessage = "I/O error. Uri is empty, can not found.";
     }
 }
 
@@ -1681,7 +1681,7 @@ void SystemSoundManagerNapi::AsyncClose(napi_env env, void *data)
     }
     if (context->status) {
         context->errCode = NAPI_ERR_IO_ERROR;
-        context->errMessage = NAPI_ERR_IO_ERROR_INFO;
+        context->errMessage = "I/O error. Uri is empty, can not found.";
     }
 }
 
@@ -1767,7 +1767,7 @@ void SystemSoundManagerNapi::AsyncAddCustomizedTone(napi_env env, void *data)
     if (context->objectInfo->sysSoundMgrClient_ == nullptr) {
         context->status = ERROR;
         context->errCode = NAPI_ERR_IO_ERROR;
-        context->errMessage = NAPI_ERR_IO_ERROR_INFO;
+        context->errMessage = "I/O error. System sound manager is empty.";
     } else if (!context->externalUri.empty()) {
         context->uri = context->objectInfo->sysSoundMgrClient_->AddCustomizedToneByExternalUri(
             context->abilityContext_, context->toneAttrsNapi->GetToneAttrs(), context->externalUri);
@@ -1795,7 +1795,7 @@ void SystemSoundManagerNapi::AsyncAddCustomizedTone(napi_env env, void *data)
     } else if (context->uri.empty()) {
         context->status = ERROR;
         context->errCode = NAPI_ERR_IO_ERROR;
-        context->errMessage = NAPI_ERR_IO_ERROR_INFO;
+        context->errMessage = "I/O error. Uri is empty, can not found.";
     }
 }
 
@@ -1889,7 +1889,7 @@ void SystemSoundManagerNapi::AsyncRemoveCustomizedTone(napi_env env, void *data)
     } else if (result == ERROR) {
         context->status = ERROR;
         context->errCode = NAPI_ERR_IO_ERROR;
-        context->errMessage = NAPI_ERR_IO_ERROR_INFO;
+        context->errMessage = "I/O error. The current ring tone does not exist.";
     }
 }
 
