@@ -45,6 +45,7 @@ using namespace std;
 using namespace nlohmann;
 using namespace OHOS::AbilityRuntime;
 using namespace OHOS::DataShare;
+using namespace OHOS::EventFwk;
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_AUDIO_NAPI, "SystemSoundManagerImpl"};
@@ -639,7 +640,7 @@ void SystemSoundManagerImpl::NotifyCallManager(RingtoneType ringtoneType)
     EventFwk::CommonEventData eventData;
     eventData.SetWant(want);
     EventFwk::CommonEventPublishInfo publishInfo;
-    bool result = EventFwk::CommonEventManager::PublishCommonEvent(data, publishInfo, nullptr);
+    bool result = EventFwk::CommonEventManager::PublishCommonEvent(eventData, publishInfo, nullptr);
     TELEPHONY_LOGI("publish event result : %{public}d", result);
 }
 
