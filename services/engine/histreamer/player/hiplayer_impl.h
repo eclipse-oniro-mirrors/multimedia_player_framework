@@ -264,7 +264,7 @@ private:
     Status doPausedSeek(int64_t seekPos, PlayerSeekMode mode);
     Status doCompletedSeek(int64_t seekPos, PlayerSeekMode mode);
     Status doSeek(int64_t seekPos, PlayerSeekMode mode);
-    Status doSetplaybackSpeed(float speed);
+    Status doSetPlaybackSpeed(float speed);
     Status HandleSeekClosest(int64_t seekPos, int64_t seekTimeUs);
     void NotifySeek(Status rtv, bool flag, int64_t seekPos);
     void ResetIfSourceExisted();
