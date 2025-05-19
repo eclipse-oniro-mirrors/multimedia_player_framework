@@ -101,6 +101,7 @@ public:
     int32_t GetDuration(int32_t &duration) override;
     int32_t GetApiVersion(int32_t &apiVersion) override;
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
+    int32_t SetPlaybackRate(float rate) override;
     int32_t SetSource(const std::string &url) override;
     int32_t SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc) override;
     int32_t SetSource(int32_t fd, int64_t offset, int64_t size) override;
@@ -197,6 +198,7 @@ protected:
         float leftVolume = INVALID_VALUE;
         float rightVolume = INVALID_VALUE;
         PlaybackRateMode speedMode = SPEED_FORWARD_1_00_X;
+        float speedRate = 1.0f;
         std::string url;
         int32_t effectMode = OHOS::AudioStandard::AudioEffectMode::EFFECT_DEFAULT;
         std::map<std::string, std::string> header;
@@ -222,6 +224,7 @@ private:
     int32_t HandleEosPlay();
     int32_t HandleSetPlayRange(int64_t start, int64_t end, PlayerSeekMode mode);
     int32_t HandleSetPlaybackSpeed(PlaybackRateMode mode);
+    int32_t HandleSetPlaybackRate(float rate);
     int32_t SetAudioEffectMode(const int32_t effectMode);
 
     void HandleEos();

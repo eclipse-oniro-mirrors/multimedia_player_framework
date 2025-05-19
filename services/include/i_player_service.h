@@ -352,6 +352,15 @@ public:
      */
     virtual int32_t SetPlaybackSpeed(PlaybackRateMode mode) = 0;
 
+    /**
+     * @brief set the player playback rate
+     *
+     * @param rate the rate which can set.
+     * @return Returns {@link MSERR_OK} if the playback rate is set successfully; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     */
+    virtual int32_t SetPlaybackRate(float rate) = 0;
+
     virtual int32_t SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, AVPlayStrategy strategy) = 0;
     /**
      * @brief set the bit rate use for hls player

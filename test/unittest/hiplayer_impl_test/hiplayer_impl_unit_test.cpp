@@ -1026,6 +1026,15 @@ HWTEST_F(HiplayerImplUnitTest, SetPlaybackSpeed_001, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, hiplayer_->SetPlaybackSpeed(PlaybackRateMode::SPEED_FORWARD_2_00_X));
 }
 
+HWTEST_F(HiplayerImplUnitTest, SetPlaybackRate_001, TestSize.Level0)
+{
+    float rate = 2.0f;
+    hiplayer_->subtitleSink_ = FilterFactory::Instance().CreateFilter<SubtitleSinkFilter>("player.subtitlesink",
+        FilterType::FILTERTYPE_SSINK);
+    hiplayer_->syncManager_ = nullptr;
+    EXPECT_EQ(MSERR_OK, hiplayer_->SetPlaybackRate(rate));
+}
+
 HWTEST_F(HiplayerImplUnitTest, SetPlaybackSpeed_002, TestSize.Level0)
 {
     PlaybackRateMode mode = PlaybackRateMode::SPEED_FORWARD_2_00_X;
@@ -1033,6 +1042,15 @@ HWTEST_F(HiplayerImplUnitTest, SetPlaybackSpeed_002, TestSize.Level0)
         FilterType::FILTERTYPE_ASINK);
     hiplayer_->subtitleSink_ = nullptr;
     EXPECT_EQ(MSERR_UNKNOWN, hiplayer_->SetPlaybackSpeed(mode));
+}
+
+HWTEST_F(HiplayerImplUnitTest, SetPlaybackRate_002, TestSize.Level0)
+{
+    float rate = 2.0f;
+    hiplayer_->audioSink_  = FilterFactory::Instance().CreateFilter<AudioSinkFilter>("player.audiosink",
+        FilterType::FILTERTYPE_ASINK);
+    hiplayer_->subtitleSink_ = nullptr;
+    EXPECT_EQ(MSERR_UNKNOWN, hiplayer_->SetPlaybackRate(rate));
 }
 
 HWTEST_F(HiplayerImplUnitTest, IsNeedAudioSinkChangeTrack_001, TestSize.Level0)

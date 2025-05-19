@@ -272,6 +272,20 @@ OH_AVErrCode OH_AVPlayer_GetVideoHeight(OH_AVPlayer *player, int32_t *videoHeigh
 OH_AVErrCode OH_AVPlayer_SetPlaybackSpeed(OH_AVPlayer *player, AVPlaybackSpeed speed);
 
 /**
+ * @brief Sets playback parameters.
+ * Supported states: prepared/playing/paused/completed.
+ * @syscap SystemCapability.Multimedia.Media.AVPlayer
+ * @param player Pointer to OH_AVPlayer instance
+ * @param rate Playback rate
+ * @return OH_AVErrCode Operation result code
+ *         {@link AV_ERR_OK} if the execution is successful.
+ *         {@link AV_ERR_OPERATE_NOT_PERMIT} if called in unsupported state or during live streaming.
+ *         {@link AV_ERR_INVALID_VAL} if input player or params is nullptr, or parameter is out of range.
+ * @since 20
+ */
+OH_AVErrCode OH_AVPlayer_SetPlaybackRate(OH_AVPlayer *player, float rate);
+
+/**
  * @brief get the current player playback rate
  * @syscap SystemCapability.Multimedia.Media.AVPlayer
  * @param player Pointer to an OH_AVPlayer instance

@@ -41,6 +41,7 @@ const char* OH_PLAYER_MESSAGE_TYPE = PlayerKeys::PLAYER_MESSAGE_TYPE.data();
 const char* OH_PLAYER_IS_LIVE_STREAM = PlayerKeys::PLAYER_IS_LIVE_STREAM.data();
 const char* OH_PLAYER_SEEK_POSITION = PlayerKeys::PLAYER_SEEK_POSITION.data();
 const char* OH_PLAYER_PLAYBACK_SPEED = PlayerKeys::PLAYER_PLAYBACK_SPEED.data();
+const char* OH_PLAYER_PLAYBACK_RATE = PlayerKeys::PLAYER_PLAYBACK_RATE.data();
 const char* OH_PLAYER_BITRATE = PlayerKeys::PLAYER_BITRATE_DONE.data();
 const char* OH_PLAYER_CURRENT_POSITION = PlayerKeys::PLAYER_CURRENT_POSITION.data();
 const char* OH_PLAYER_DURATION = PlayerKeys::PLAYER_DURATION.data();
@@ -118,6 +119,7 @@ static const StateConvert STATE_MAP[STATE_MAP_LENGTH] = {
 static const PlayerOnInfoTypeConvert ON_INFO_TYPE[INFO_TYPE_LENGTH] = {
     { INFO_TYPE_SEEKDONE, AV_INFO_TYPE_SEEKDONE },
     { INFO_TYPE_SPEEDDONE, AV_INFO_TYPE_SPEEDDONE },
+    { INFO_TYPE_RATEDONE, AV_INFO_TYPE_PLAYBACK_RATE_DONE },
     { INFO_TYPE_BITRATEDONE, AV_INFO_TYPE_BITRATEDONE },
     { INFO_TYPE_EOS, AV_INFO_TYPE_EOS },
     { INFO_TYPE_STATE_CHANGE, AV_INFO_TYPE_STATE_CHANGE },
@@ -235,6 +237,7 @@ public:
 private:
     void OnSeekDoneCb(const int32_t extra, const Format &infoBody);
     void OnSpeedDoneCb(const int32_t extra, const Format &infoBody);
+    void OnPlaybackRateDoneCb(const int32_t extra, const Format &infoBody);
     void OnBitRateDoneCb(const int32_t extra, const Format &infoBody);
     void OnEosCb(const int32_t extra, const Format &infoBody);
     void OnStateChangeCb(const int32_t extra, const Format &infoBody);
@@ -288,6 +291,8 @@ NativeAVPlayerCallback::NativeAVPlayerCallback(OH_AVPlayer *player, AVPlayerCall
             [this](const int32_t extra, const Format &infoBody) { OnSeekDoneCb(extra, infoBody); } },
         { INFO_TYPE_SPEEDDONE,
             [this](const int32_t extra, const Format &infoBody) { OnSpeedDoneCb(extra, infoBody); } },
+        { INFO_TYPE_RATEDONE,
+            [this](const int32_t extra, const Format &infoBody) { OnPlaybackRateDoneCb(extra, infoBody); } },
         { INFO_TYPE_BITRATEDONE,
             [this](const int32_t extra, const Format &infoBody) { OnBitRateDoneCb(extra, infoBody); } },
         { INFO_TYPE_EOS,
@@ -523,6 +528,21 @@ void NativeAVPlayerCallback::OnSpeedDoneCb(const int32_t extra, const Format &in
     CHECK_AND_RETURN_LOG(avFormat != nullptr, "OnSpeedDoneCb OH_AVFormat create failed");
     avFormat->format_.PutIntValue(OH_PLAYER_PLAYBACK_SPEED, speedMode);
     infoCallback_->OnInfo(player_, AV_INFO_TYPE_SPEEDDONE, reinterpret_cast<OH_AVFormat *>(avFormat.GetRefPtr()));
+}
+
+void NativeAVPlayerCallback::OnPlaybackRateDoneCb(const int32_t extra, const Format &infoBody)
+{
+    (void)infoBody;
+    CHECK_AND_RETURN_LOG(isSourceLoaded_.load(), "OnPlaybackRateDoneCb current source is unready");
+    float rate = 0.0f;
+    (void)infoBody.GetFloatValue(PlayerKeys::PLAYER_PLAYBACK_RATE, rate);
+    MEDIA_LOGI("RateDone %{public}f", rate);
+
+    OHOS::sptr<OH_AVFormat> avFormat = new (std::nothrow) OH_AVFormat();
+    CHECK_AND_RETURN_LOG(avFormat != nullptr, "OnPlaybackRateDoneCb OH_AVFormat create failed");
+    avFormat->format_.PutFloatValue(OH_PLAYER_PLAYBACK_RATE, rate);
+    infoCallback_->OnInfo(player_, AV_INFO_TYPE_PLAYBACK_RATE_DONE,
+        reinterpret_cast<OH_AVFormat *>(avFormat.GetRefPtr()));
 }
 
 void NativeAVPlayerCallback::OnBitRateDoneCb(const int32_t extra, const Format &infoBody)
@@ -1039,6 +1059,20 @@ OH_AVErrCode OH_AVPlayer_SetPlaybackSpeed(OH_AVPlayer *player, AVPlaybackSpeed s
     int32_t ret = playerObj->player_->SetPlaybackSpeed(static_cast<PlaybackRateMode>(speed));
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "player SetPlaybackSpeed failed");
     return AV_ERR_OK;
+}
+
+OH_AVErrCode OH_AVPlayer_SetPlaybackRate(OH_AVPlayer *player, float rate)
+{
+    CHECK_AND_RETURN_RET_LOG(player != nullptr, AV_ERR_INVALID_VAL, "input player is nullptr!");
+    struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
+    CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, AV_ERR_INVALID_VAL, "player_ is null");
+    int32_t ret = playerObj->player_->SetPlaybackRate(rate);
+    if (ret == MSERR_OK) {
+        return AV_ERR_OK;
+    } else if (ret == MSERR_INVALID_OPERATION || ret == MSERR_SERVICE_DIED) {
+        return AV_ERR_OPERATE_NOT_PERMIT;
+    }
+    return AV_ERR_INVALID_VAL;
 }
 
 OH_AVErrCode OH_AVPlayer_GetPlaybackSpeed(OH_AVPlayer *player, AVPlaybackSpeed *speed)
