@@ -93,7 +93,6 @@ int32_t SystemSoundManagerImpl::GetStringValue(const std::string &key,
         MEDIA_LOGW("resultSet->GetString return not ok, ret=%{public}d", ret);
         resultSet->Close();
         return MSERR_INVALID_VAL;
-        
     }
     resultSet->Close();
     return MSERR_OK;
