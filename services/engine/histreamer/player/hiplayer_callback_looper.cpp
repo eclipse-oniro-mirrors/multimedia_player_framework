@@ -66,6 +66,7 @@ void HiPlayerCallbackLooper::Stop()
 void HiPlayerCallbackLooper::SetMaxAmplitudeCbStatus(bool status)
 {
     MEDIA_LOG_I("HiPlayerCallbackLooper SetMaxAmplitudeCbStatus");
+    OHOS::Media::AutoLock lock(loopMutex_);
     reportUV_ = status;
 }
 
