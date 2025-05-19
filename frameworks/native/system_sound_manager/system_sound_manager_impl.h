@@ -152,7 +152,7 @@ private:
     std::string OpenCustomAudioUri(const std::string &customAudioUri);
     int32_t CheckToneTypeAndUpdate(std::shared_ptr<DataShare::DataShareHelper> &dataShareHelper,
         const std::string &uri, RingtoneType ringtoneType);
-    void ClearSystemVideoRingConfig(RingtoneType ringtoneType);
+    void NotifyCallManager(RingtoneType ringtoneType);
 
     int32_t AddCustomizedTone(const std::shared_ptr<DataShare::DataShareHelper> &dataShareHelper,
         const std::shared_ptr<ToneAttrs> &toneAttrs);

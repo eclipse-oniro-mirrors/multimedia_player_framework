@@ -39,6 +39,7 @@
 #include "string_ex.h"
 #include "parameters.h"
 #include "system_sound_manager_utils.h"
+#include "common_event_manager.h"
 
 using namespace std;
 using namespace nlohmann;
@@ -572,7 +573,7 @@ int32_t SystemSoundManagerImpl::SetRingtoneUri(const shared_ptr<Context> &contex
     if (uri == NO_RING_SOUND) {
         int32_t changedRows = SetNoRingToneUri(dataShareHelper, ringtoneType);
         MEDIA_LOGI("SetNoRingToneUri result: changedRows %{public}d", changedRows);
-        ClearSystemVideoRingConfig(ringtoneType);
+        NotifyCallManager(ringtoneType);
         dataShareHelper->Release();
         return SUCCESS;
     }
@@ -618,7 +619,7 @@ int32_t SystemSoundManagerImpl::CheckToneTypeAndUpdate(std::shared_ptr<DataShare
         dataShareHelper->Release();
         SetExtRingtoneUri(uri, ringtoneAsset->GetTitle(), ringtoneType, TONE_TYPE_RINGTONE, changedRows);
         if (changedRows > 0) {
-            ClearSystemVideoRingConfig(ringtoneType);
+            NotifyCallManager(ringtoneType);
             return SUCCESS;
         } else {
             return ERROR;
@@ -629,23 +630,17 @@ int32_t SystemSoundManagerImpl::CheckToneTypeAndUpdate(std::shared_ptr<DataShare
     return TYPEERROR;
 }
 
-void SystemSoundManagerImpl::ClearSystemVideoRingConfig(RingtoneType ringtoneType)
+void SystemSoundManagerImpl::NotifyCallManager(RingtoneType ringtoneType)
 {
-    std::string tableType = "secure";
-    std::string ringtoneFlagCardKey;
-    std::string videoRingtoneNameCardKey;
-    std::string defaultValue = "";
-    if (ringtoneType == RINGTONE_TYPE_SIM_CARD_0) {
-        ringtoneFlagCardKey = "ringtoneFlagCard1";
-        videoRingtoneNameCardKey = "videoRingtoneNameCard1";
-    } else {
-        ringtoneFlagCardKey = "ringtoneFlagCard2";
-        videoRingtoneNameCardKey = "videoRingtoneNameCard2";
-    }
-    int32_t result = UpdateStringValue(ringtoneFlagCardKey, defaultValue, tableType);
-    MEDIA_LOGI("ringtoneFlagCardKey update result: %{public}d.", result);
-    result = UpdateStringValue(videoRingtoneNameCardKey, defaultValue, tableType);
-    MEDIA_LOGI("videoRingtoneNameCardKey update result: %{public}d.", result);
+    MEDIA_LOGI("notify callManager to clear system video ring config, ringtoneType: %{public}d.", ringtoneType);
+    AAFwk::Want want;
+    want.SetAction("usual.event.AMEND_RING_EVENT");
+    want.SetParam("slotId", ringtoneType);
+    EventFwk::CommonEventData eventData;
+    eventData.SetWant(want);
+    EventFwk::CommonEventPublishInfo publishInfo;
+    bool result = EventFwk::CommonEventManager::PublishCommonEvent(data, publishInfo, nullptr);
+    TELEPHONY_LOGI("publish event result : %{public}d", result);
 }
 
 std::string SystemSoundManagerImpl::GetRingtoneUriByType(const DatabaseTool &databaseTool, const std::string &type)
