@@ -157,8 +157,9 @@ int32_t PlayerImpl::SetSource(int32_t fd, int64_t offset, int64_t size)
 int32_t PlayerImpl::SetSourceTask(int32_t fd, int64_t offset, int64_t size)
 {
     auto ret = playerService_->SetSource(fd, offset, size);
-    CHECK_AND_RETURN_RET_NOLOG(ret != MSERR_OK, ret);
+    CHECK_AND_RETURN_RET_NOLOG(ret == MSERR_OK, ret);
     int32_t dupFd = dup(fd);
+    MEDIA_LOGI("PlayerImpl:0x%{public}06" PRIXPTR " SetSourceTask dupFd", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(dupFd >= 0, ret, "Dup failed with err.");
     if (!fdsanFd_) {
         fdsanFd_ = std::make_unique<FdsanFd>(dupFd);
@@ -863,7 +864,7 @@ int32_t PlayerImpl::EnableCameraPostprocessing()
     FdsanFd reopenFd = FdUtils::ReOpenFd(fd);
     auto ret = SetReopenFd(reopenFd.Get());
     reopenFd.Reset();
-    CHECK_AND_RETURN_RET_LOG(ret != MSERR_OK, MSERR_OK, "SetReopenFd failed.");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_OK, "SetReopenFd failed.");
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
     LISTENER(return playerService_->EnableCameraPostprocessing(), "EnableCameraPostprocessing", false, TIME_OUT_SECOND);
 }
