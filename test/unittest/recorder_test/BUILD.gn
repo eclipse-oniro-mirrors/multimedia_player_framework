@@ -44,7 +44,10 @@ ohos_unittest("recorder_native_unit_test") {
 
   if (player_framework_support_recorder) {
     sources = [ "capi/src/recorder_unit_test.cpp" ]
-    external_deps += [ "drivers_interface_display:libdisplay_composer_proxy_1.2" ]
+    external_deps += [
+      "drivers_interface_display:libdisplay_composer_proxy_1.2",
+      "drivers_interface_display:libhdifd_parcelable",
+    ]
   }
 
   public_deps = [ "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c:avrecorder" ]
@@ -123,10 +126,11 @@ ohos_unittest("recorder_function_unit_test") {
   external_deps = []
 
   if (player_framework_support_recorder) {
-    sources = [
-      "capi/src/recorder_function_unit_test.cpp",
+    sources = [ "capi/src/recorder_function_unit_test.cpp" ]
+    external_deps += [
+      "drivers_interface_display:libdisplay_composer_proxy_1.2",
+      "drivers_interface_display:libhdifd_parcelable",
     ]
-    external_deps += [ "drivers_interface_display:libdisplay_composer_proxy_1.2" ]
   }
 
   public_deps = [ "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c:avrecorder" ]
@@ -209,7 +213,10 @@ ohos_unittest("recorder_server_unit_test") {
       "./recorder_server_unittest/src/recorder_server_mock.cpp",
       "./recorder_server_unittest/src/recorder_server_unit_test.cpp",
     ]
-    external_deps += [ "drivers_interface_display:libdisplay_composer_proxy_1.2" ]
+    external_deps += [
+      "drivers_interface_display:libdisplay_composer_proxy_1.2",
+      "drivers_interface_display:libhdifd_parcelable",
+    ]
   }
 
   public_deps = [
