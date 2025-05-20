@@ -46,6 +46,8 @@ public:
     {
         return nullptr;
     }
+    MOCK_METHOD(void, ReleaseClientListener, (), (override));
+    MOCK_METHOD(bool, CanKillMediaService, (), (override));
     MOCK_METHOD(int32_t, SetDeathListener, (const sptr<IRemoteObject> &object), ());
 };
 class MockMediaServerManager : public MediaServerManager {
