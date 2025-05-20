@@ -17,8 +17,7 @@
 #define MEDIA_SERVICE_HELPER_H
 
 #include <cstdint>
-#include "media_core.h"
-#include "meta/format.h"
+#include <memory>
 
 namespace OHOS {
 namespace Media {

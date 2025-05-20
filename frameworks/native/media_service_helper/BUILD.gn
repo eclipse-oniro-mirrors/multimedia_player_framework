@@ -80,8 +80,7 @@ ohos_shared_library("media_helper_client") {
   }
 
   sources = [
-    "$MEDIA_ROOT_DIR/frameworks/native/media_service_helper/media_service_helper_impl.cpp",
-    "$MEDIA_ROOT_DIR/services/services/common/avsharedmemory_ipc.cpp",
+    "$MEDIA_ROOT_DIR/frameworks/native/media_service_helper/media_service_helper_impl.cpp"
   ]
 
   configs = [
@@ -101,11 +100,6 @@ ohos_shared_library("media_helper_client") {
     "hilog:libhilog",
     "image_framework:image_native",
     "ipc:ipc_single",
-  ]
-
-  public_external_deps = [
-    "graphic_2d:color_manager",
-    "media_foundation:media_foundation",
   ]
 
   subsystem_name = "multimedia"

@@ -16,7 +16,7 @@
 #ifndef MEDIA_SERVICE_HELPER_IMPL_H
 #define MEDIA_SERVICE_HELPER_IMPL_H
 
-#include "media_service_helper/media_service_helper.h"
+#include "media_service_helper.h"
 #include "nocopyable.h"
 #include "osal/task/autolock.h"
 

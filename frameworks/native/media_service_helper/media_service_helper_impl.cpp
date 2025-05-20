@@ -15,7 +15,6 @@
 
 #include "media_service_helper_impl.h"
 #include "media_log.h"
-#include "media_errors.h"
 #include "i_media_service.h"
 
 namespace {
