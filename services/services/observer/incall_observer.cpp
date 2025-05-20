@@ -58,13 +58,8 @@ bool InCallObserver::IsInCall(bool refreshState)
     if (refreshState) {
         UnRegisterObserver();
         RegisterObserver();
-        std::shared_ptr<OHOS::Telephony::CallManagerClient> callManagerClientPtr =
-            DelayedSingleton<OHOS::Telephony::CallManagerClient>::GetInstance();
-        if (inCall_.load() && !callManagerClientPtr->HasCall()) {
-            MEDIA_LOGI("0x%{public}06" PRIXPTR " not in call", FAKE_POINTER(this));
-            OnCallStateUpdated(false); // for call crash scene
-        }
     }
+    MEDIA_LOGI("InCallObserver is inCall: %{public}d", inCall_.load());
     return inCall_.load();
 }
 
