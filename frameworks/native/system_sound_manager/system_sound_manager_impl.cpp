@@ -658,7 +658,6 @@ void SystemSoundManagerImpl::NotifyCallManager(RingtoneType ringtoneType)
         MEDIA_LOGE("get bundle name error.");
         return;
     }
-    MEDIA_LOGI("bundle name is %{public}s/", bundleName.c_str());
     AppExecFwk::ElementName element("", bundleName, "");
     want.SetElement(element);
     EventFwk::CommonEventData eventData;
