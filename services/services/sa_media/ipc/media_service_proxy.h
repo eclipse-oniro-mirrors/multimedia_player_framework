@@ -33,6 +33,8 @@ public:
         const sptr<IRemoteObject> &listener, uint32_t timeoutMs) override;
     void ReleaseClientListener() override;
 
+    bool CanKillMediaService() override;
+
 private:
     bool IsGetSubSystemAbilityASync() const;
     static inline BrokerDelegator<MediaServiceProxy> delegator_;

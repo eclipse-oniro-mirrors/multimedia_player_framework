@@ -204,5 +204,10 @@ int32_t MediaServer::Dump(int32_t fd, const std::vector<std::u16string> &args)
         OHOS::INVALID_OPERATION, "Failed to call MediaServerManager::Dump.");
     return OHOS::NO_ERROR;
 }
+
+bool MediaServer::CanKillMediaService()
+{
+    return MediaServerManager::GetInstance().CanKillMediaService();
+}
 } // namespace Media
 } // namespace OHOS

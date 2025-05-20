@@ -38,6 +38,8 @@
       *OHOS::Media::ScreenCaptureMonitor::IsSystemScreenRecorderWorking*;
       *OHOS::Media::ScreenCaptureMonitor::RegisterScreenCaptureMonitorListener*;
       *OHOS::Media::ScreenCaptureMonitor::UnregisterScreenCaptureMonitorListener*;
+      *OHOS::Media::MediaServiceHelperFactory::CreateMediaServiceHelper*;
+      *OHOS::Media::MediaServiceFactory::GetInstance*;
     };
     "*MSErrorToString*";
     "*MSExtErrorToString*";

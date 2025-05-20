@@ -63,6 +63,12 @@ public:
      * Release the proxy object monitoring client process.
      */
     virtual void ReleaseClientListener() = 0;
+
+    /**
+     * Release the proxy object monitoring client process.
+     */
+    virtual bool CanKillMediaService() = 0;
+
     /**
      * IPC code ID
      */
@@ -70,6 +76,7 @@ public:
         GET_SUBSYSTEM = 0,
         GET_SUBSYSTEM_ASYNC = 1,
         RELEASE_CLIENT_LISTENER = 2,
+        CAN_KILL_MEDIA_SERVICE = 3,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardMediaService");

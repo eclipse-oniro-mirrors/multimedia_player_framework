@@ -69,6 +69,15 @@ public:
         (void)Remote()->SendRequest(MediaServiceMsg::RELEASE_CLIENT_LISTENER, data, reply, option);
     }
 
+    bool CanKillMediaService()
+    {
+        MessageParcel data;
+        MessageParcel reply;
+        MessageOption option;
+        (void)Remote()->SendRequest(MediaServiceMsg::CAN_KILL_MEDIA_SERVICE, data, reply, option);
+        return reply.ReadBool();
+    }
+
 private:
     static inline BrokerDelegator<MediaServiceProxyFuzzer> delegator_;
 };
