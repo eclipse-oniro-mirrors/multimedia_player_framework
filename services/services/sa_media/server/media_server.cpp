@@ -207,7 +207,7 @@ int32_t MediaServer::Dump(int32_t fd, const std::vector<std::u16string> &args)
 
 bool MediaServer::CanKillMediaService()
 {
-    return MediaServerManager::GetInstance().HasOthersStub();
+    return MediaServerManager::GetInstance().CanKillMediaService();
 }
 } // namespace Media
 } // namespace OHOS

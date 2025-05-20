@@ -71,7 +71,7 @@ public:
     void ResetAllInstancesReleasedTime();
     void UpdateAllInstancesReleasedTime();
 #endif
-    bool HasOthersStub();
+    bool CanKillMediaService();
 private:
     MediaServerManager();
 #ifdef SUPPORT_PLAYER

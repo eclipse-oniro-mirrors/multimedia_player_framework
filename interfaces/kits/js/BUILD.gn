@@ -159,7 +159,6 @@ ohos_shared_library("media") {
   deps = [
     "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
     "//foundation/multimedia/player_framework/services/utils:media_service_utils",
-    "//foundation/multimedia/player_framework/frameworks/native/media_service_helper:media_helper_client",
   ]
 
   if (player_framework_support_jssoundpool) {

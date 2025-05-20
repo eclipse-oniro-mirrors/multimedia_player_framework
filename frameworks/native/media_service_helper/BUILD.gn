@@ -80,7 +80,6 @@ ohos_shared_library("media_helper_client") {
   }
 
   sources = [
-    "$MEDIA_ROOT_DIR/frameworks/native/common/media_errors.cpp",
     "$MEDIA_ROOT_DIR/frameworks/native/media_service_helper/media_service_helper_impl.cpp",
     "$MEDIA_ROOT_DIR/services/services/common/avsharedmemory_ipc.cpp",
   ]
@@ -99,17 +98,9 @@ ohos_shared_library("media_helper_client") {
     "audio_framework:audio_client",
     "av_codec:av_codec_client",
     "c_utils:utils",
-    "drivers_interface_display:display_commontype_idl_headers",
-    "graphic_surface:surface",
     "hilog:libhilog",
-    "hisysevent:libhisysevent",
-    "hitrace:hitrace_meter",
-    "hitrace:libhitracechain",
     "image_framework:image_native",
-    "init:libbegetutil",
     "ipc:ipc_single",
-    "qos_manager:qos",
-    "samgr:samgr_proxy",
   ]
 
   public_external_deps = [
