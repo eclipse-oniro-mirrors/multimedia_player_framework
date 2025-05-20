@@ -107,6 +107,8 @@ private:
     void ConfigureVidEnableStableQualityMode(const RecorderParam &recParam);
     bool CheckAudioSourceType(AudioSourceType sourceType);
     void ConfigureRotation(const RecorderParam &recParam);
+    Status HandleStopOperation();
+    void ClearAllConfiguration();
     int32_t PrepareAudioCapture();
     int32_t PrepareAudioDataSource();
     int32_t PrepareVideoEncoder();
