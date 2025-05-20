@@ -639,32 +639,33 @@ void SystemSoundManagerImpl::NotifyCallManager(RingtoneType ringtoneType)
     want.SetParam("slotId", ringtoneType);
     auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (samgr == nullptr) {
-        TELEPHONY_LOGE("Get ability manager failed.");
+        MEDIA_LOGE("Get ability manager failed.");
         return;
     }
     sptr<IRemoteObject> object = samgr->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
     if (object == nullptr) {
-        TELEPHONY_LOGE("object is null.");
+        MEDIA_LOGE("object is null.");
         return;
     }
     sptr<AppExecFwk::IBundleMgr> bms = iface_cast<OHOS::AppExecFwk::IBundleMgr>(object);
     if (bms == nullptr) {
-        TELEPHONY_LOGE("bundle manager service is null.");
+        MEDIA_LOGE("bundle manager service is null.");
         return;
     }
     std::string bundleName;
     auto result = bms->GetNameForUid(getuid(), bundleName);
     if (result != ERR_OK) {
-        TELEPHONY_LOGE("get bundle name error.");
+        MEDIA_LOGE("get bundle name error.");
         return;
     }
+    MEDIA_LOGI("bundle name is %{public}s/", bundleName.c_str());
     AppExecFwk::ElementName element("", bundleName, "");
     want.SetElement(element);
     EventFwk::CommonEventData eventData;
     eventData.SetWant(want);
     EventFwk::CommonEventPublishInfo publishInfo;
     result = EventFwk::CommonEventManager::PublishCommonEvent(eventData, publishInfo, nullptr);
-    TELEPHONY_LOGI("publish event result : %{public}d", result);
+    MEDIA_LOGI("bundle name: %{public}s, publish event result: %{public}d", bundleName.c_str(), result);
 }
 
 std::string SystemSoundManagerImpl::GetRingtoneUriByType(const DatabaseTool &databaseTool, const std::string &type)
