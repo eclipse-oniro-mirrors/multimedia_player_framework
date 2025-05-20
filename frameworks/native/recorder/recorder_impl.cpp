@@ -21,6 +21,8 @@
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_RECORDER, "RecorderImpl"};
+const std::string APP_USE_COMPATIBLE_MODE = "app_use_compatible_mode";
+constexpr int32_t ROTATION_BASE = 90;
 }
 
 namespace OHOS {
@@ -309,6 +311,19 @@ int32_t RecorderImpl::Start()
 {
     MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " Start in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist..");
+    if (surface_) {
+        MEDIA_LOGI("surface not nullptr");
+        std::string surfaceAppFwkType = surface_->GetSurfaceAppFrameworkType();
+        if (APP_USE_COMPATIBLE_MODE == surfaceAppFwkType) {
+            GraphicTransformType type = surface_->GetTransform();
+            if (type >= GraphicTransformType::GRAPHIC_ROTATE_NONE
+                && type <= GraphicTransformType::GRAPHIC_ROTATE_270) {
+                int32_t rotation = static_cast<int32_t>(type) * ROTATION_BASE;
+                MEDIA_LOGI("RecorderImpl auto set orientation is %{public}d", rotation);
+                SetOrientationHint(rotation);
+            }
+        }
+    }
     return recorderService_->Start();
 }
 
