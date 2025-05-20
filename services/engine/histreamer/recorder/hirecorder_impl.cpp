@@ -543,7 +543,7 @@ void HiRecorderImpl::ClearAllConfiguration()
     muxerFormat_->Clear();
     
     auto RemoveFilterAction = [this](auto& filter) {
-        if (filter) {
+        if (filter && pipeline_) {
             pipeline_->RemoveHeadFilter(filter);
         }
     };
@@ -551,13 +551,13 @@ void HiRecorderImpl::ClearAllConfiguration()
     RemoveFilterAction(audioDataSourceFilter_);
     RemoveFilterAction(audioCaptureFilter_);
     RemoveFilterAction(videoEncoderFilter_);
-    RemoveHeadFilter(videoCaptureFilter_);
+    RemoveFilterAction(videoCaptureFilter_);
     
     for (auto iter : metaDataFilters_) {
         if (metaDataFormats_.find(iter.first) != metaDataFormats_.end()) {
             metaDataFormats_.at(iter.first)->Clear();
         }
-        RemoveHeadFilter(iter.second);
+        RemoveFilterAction(iter.second);
     }
 }
 
