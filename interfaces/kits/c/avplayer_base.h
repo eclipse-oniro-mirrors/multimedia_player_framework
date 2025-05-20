@@ -209,6 +209,8 @@ typedef enum AVPlayerOnInfoType {
      * {@link OH_AVPlayerOnInfo} is the same as {@OH_AudioStream_DeviceChangeReason} in audio framework.
      */
     AV_INFO_TYPE_AUDIO_OUTPUT_DEVICE_CHANGE = 17,
+    /* Event type indicating playback rate configuration completed. */
+    AV_INFO_TYPE_PLAYBACK_RATE_DONE = 18,
 } AVPlayerOnInfoType;
 
 /**

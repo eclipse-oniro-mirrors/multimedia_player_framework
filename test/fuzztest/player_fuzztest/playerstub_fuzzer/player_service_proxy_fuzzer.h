@@ -139,6 +139,10 @@ public:
     {
         return 0;
     }
+    int32_t SetPlaybackRate(float rate) override
+    {
+        return 0;
+    }
     int32_t GetPlaybackSpeed(PlaybackRateMode &mode) override
     {
         return 0;

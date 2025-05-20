@@ -129,6 +129,7 @@ public:
     int32_t GetPlaybackPosition(int32_t& playbackPositionMs) override;
     int32_t GetDuration(int32_t& durationMs) override;
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
+    int32_t SetPlaybackRate(float rate) override;
     int32_t SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, AVPlayStrategy strategy) override;
     int32_t GetPlaybackSpeed(PlaybackRateMode& mode) override;
     int32_t SelectBitRate(uint32_t bitRate, bool isAutoSelect) override;
@@ -263,6 +264,7 @@ private:
     Status doPausedSeek(int64_t seekPos, PlayerSeekMode mode);
     Status doCompletedSeek(int64_t seekPos, PlayerSeekMode mode);
     Status doSeek(int64_t seekPos, PlayerSeekMode mode);
+    Status doSetPlaybackSpeed(float speed);
     Status HandleSeekClosest(int64_t seekPos, int64_t seekTimeUs);
     void NotifySeek(Status rtv, bool flag, int64_t seekPos);
     void ResetIfSourceExisted();
@@ -319,6 +321,7 @@ private:
     std::atomic<bool> isSeek_ {false};
     std::atomic<bool> isSeekClosest_ {false};
     std::atomic<PlaybackRateMode> playbackRateMode_ {PlaybackRateMode::SPEED_FORWARD_1_00_X};
+    std::atomic<float> playbackRate_ {1.0f};
 
     std::shared_ptr<EventReceiver> playerEventReceiver_;
     std::shared_ptr<FilterCallback> playerFilterCallback_;
