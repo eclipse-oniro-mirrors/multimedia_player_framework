@@ -333,6 +333,12 @@ enum PlaybackRateMode : int32_t {
     SPEED_FORWARD_1_20_X = 100, // flv live quick play, internal value, not open to northbound
 };
 
+enum PlayerProducer : uint32_t {
+    INNER = 0,
+    CAPI,
+    NAPI
+};
+
 class PlayerCallback {
 public:
     virtual ~PlayerCallback() = default;
@@ -990,8 +996,15 @@ public:
     {
         return nullptr;
     }
+
+    static std::shared_ptr<Player> CreatePlayer(const PlayerProducer producer)
+    {
+        return nullptr;
+    }
 #else
     static std::shared_ptr<Player> CreatePlayer();
+    
+    static std::shared_ptr<Player> CreatePlayer(const PlayerProducer producer);
 #endif
 private:
     PlayerFactory() = default;

@@ -101,6 +101,7 @@ public:
     int32_t GetDuration(int32_t &duration) override;
     int32_t GetApiVersion(int32_t &apiVersion) override;
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
+    int32_t SetPlayerProducer(const PlayerProducer producer) override;
     int32_t SetSource(const std::string &url) override;
     int32_t SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc) override;
     int32_t SetSource(int32_t fd, int64_t offset, int64_t size) override;
@@ -283,6 +284,7 @@ private:
     bool isXSpeedPlay_ {false};
     bool isCalledBySystemApp_ = false;
     std::atomic<uint32_t> totalMemoryUage_ {0};
+    PlayerProducer playerProducer_ = PlayerProducer::INNER;
 };
 } // namespace Media
 } // namespace OHOS

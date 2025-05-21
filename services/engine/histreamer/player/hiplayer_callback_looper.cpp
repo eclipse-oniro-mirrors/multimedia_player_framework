@@ -67,7 +67,14 @@ void HiPlayerCallbackLooper::SetMaxAmplitudeCbStatus(bool status)
 {
     MEDIA_LOG_I("HiPlayerCallbackLooper SetMaxAmplitudeCbStatus");
     OHOS::Media::AutoLock lock(loopMutex_);
+    if (reportUV_ == status) {
+        return;
+    }
     reportUV_ = status;
+    if (reportUV_ && collectMaxAmplitude_) {
+        Enqueue(std::make_shared<Event>(WHAT_COLLECT_AMPLITUDE,
+            SteadyClock::GetCurrentTimeMs() + collectMaxAmplitudeIntervalMs_, Any()));
+    }
 }
 
 void HiPlayerCallbackLooper::StartWithPlayerEngineObs(const std::weak_ptr<IPlayerEngineObs>& obs)
@@ -102,11 +109,15 @@ void HiPlayerCallbackLooper::StartReportMediaProgress(int64_t updateIntervalMs)
 void HiPlayerCallbackLooper::StartCollectMaxAmplitude(int64_t updateIntervalMs)
 {
     MEDIA_LOG_I("HiPlayerCallbackLooper StartCollectMaxAmplitude");
+    OHOS::Media::AutoLock lock(loopMutex_);
     collectMaxAmplitudeIntervalMs_ = updateIntervalMs;
     if (collectMaxAmplitude_) { // already set
         return;
     }
     collectMaxAmplitude_ = true;
+    if (!reportUV_) {
+        return;
+    }
     Enqueue(std::make_shared<Event>(WHAT_COLLECT_AMPLITUDE,
             SteadyClock::GetCurrentTimeMs() + collectMaxAmplitudeIntervalMs_, Any()));
 }
@@ -179,7 +190,7 @@ void HiPlayerCallbackLooper::DoReportMediaProgress()
 void HiPlayerCallbackLooper::DoCollectAmplitude()
 {
     OHOS::Media::AutoLock lock(loopMutex_);
-    if (!collectMaxAmplitude_) {
+    if (!collectMaxAmplitude_ || !reportUV_) {
         return;
     }
     auto obs = obs_.lock();
@@ -194,9 +205,7 @@ void HiPlayerCallbackLooper::DoCollectAmplitude()
             Format amplitudeFormat;
             (void)amplitudeFormat.PutBuffer(std::string(PlayerKeys::AUDIO_MAX_AMPLITUDE),
                 static_cast<uint8_t *>(static_cast<void *>(maxAmplitudeArray)), size * sizeof(float));
-            if (reportUV_) {
-                obs->OnInfo(INFO_TYPE_MAX_AMPLITUDE_COLLECT, 0, amplitudeFormat);
-            }
+            obs->OnInfo(INFO_TYPE_MAX_AMPLITUDE_COLLECT, 0, amplitudeFormat);
             vMaxAmplitudeArray_.clear();
         }
     }

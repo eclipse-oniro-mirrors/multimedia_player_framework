@@ -162,7 +162,7 @@ napi_value AVPlayerNapi::Constructor(napi_env env, napi_callback_info info)
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to new AVPlayerNapi");
 
     jsPlayer->env_ = env;
-    jsPlayer->player_ = PlayerFactory::CreatePlayer();
+    jsPlayer->player_ = PlayerFactory::CreatePlayer(PlayerProducer::NAPI);
     if (jsPlayer->player_ == nullptr) {
         delete jsPlayer;
         MEDIA_LOGE("failed to CreatePlayer");

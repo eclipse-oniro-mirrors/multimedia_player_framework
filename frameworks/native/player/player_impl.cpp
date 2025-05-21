@@ -39,6 +39,11 @@ namespace Media {
 
 std::shared_ptr<Player> PlayerFactory::CreatePlayer()
 {
+    return CreatePlayer(PlayerProducer::INNER);
+}
+
+std::shared_ptr<Player> PlayerFactory::CreatePlayer(const PlayerProducer producer)
+{
     time_t startTime = time(nullptr);
     ScopedTimer timer("CreatePlayer", CREATE_AVPLAYER_WARNING_MS);
     MEDIA_LOGD("PlayerImpl: CreatePlayer in");
@@ -46,7 +51,7 @@ std::shared_ptr<Player> PlayerFactory::CreatePlayer()
     CHECK_AND_RETURN_RET_LOG(impl != nullptr, nullptr, "failed to new PlayerImpl");
 
     int32_t ret = MSERR_OK;
-    LISTENER(ret = impl->Init(), "CreatePlayer", false, TIME_OUT_SECOND);
+    LISTENER(ret = impl->Init(producer), "CreatePlayer", false, TIME_OUT_SECOND);
     auto hiAppEventAgent = std::make_shared<HiAppEventAgent>();
     if (hiAppEventAgent != nullptr) {
         hiAppEventAgent->TraceApiEvent(ret, "CreatePlayer", startTime, impl->GetTraceId());
@@ -56,12 +61,13 @@ std::shared_ptr<Player> PlayerFactory::CreatePlayer()
     return impl;
 }
 
-int32_t PlayerImpl::Init()
+int32_t PlayerImpl::Init(const PlayerProducer producer)
 {
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Init in", FAKE_POINTER(this));
     HiviewDFX::HiTraceChain::SetId(traceId_);
     playerService_ = MediaServiceFactory::GetInstance().CreatePlayerService();
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_UNKNOWN, "failed to create player service");
+    playerService_->SetPlayerProducer(producer);
     hiAppEventAgent_ = std::make_shared<HiAppEventAgent>();
     return MSERR_OK;
 }

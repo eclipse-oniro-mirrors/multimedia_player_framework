@@ -834,7 +834,7 @@ void NativeAVPlayerCallback::OnDrmInfoUpdatedCb(const int32_t extra, const Forma
 
 OH_AVPlayer *OH_AVPlayer_Create(void)
 {
-    std::shared_ptr<Player> player = PlayerFactory::CreatePlayer();
+    std::shared_ptr<Player> player = PlayerFactory::CreatePlayer(OHOS::Media::PlayerProducer::CAPI);
     CHECK_AND_RETURN_RET_LOG(player != nullptr, nullptr, "failed to PlayerFactory::CreatePlayer");
 
     PlayerObject *object = new(std::nothrow) PlayerObject(player);

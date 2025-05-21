@@ -32,6 +32,7 @@ public:
     ~PlayerClient();
 
     // IPlayerService override
+    int32_t SetPlayerProducer(const PlayerProducer producer) override;
     int32_t SetSource(const std::string &url) override;
     int32_t Play() override;
     int32_t Reset() override;

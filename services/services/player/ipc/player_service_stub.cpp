@@ -87,6 +87,8 @@ void PlayerServiceStub::FillPlayerFuncPart1()
 {
     playerFuncs_[SET_LISTENER_OBJ] = { "Player::SetListenerObject",
         [this](MessageParcel &data, MessageParcel &reply) { return SetListenerObject(data, reply); } };
+    playerFuncs_[SET_PLAYER_PRODUCER] = { "Player::SetPlayerProducer",
+        [this](MessageParcel &data, MessageParcel &reply) { return SetPlayerProducer(data, reply); } };
     playerFuncs_[SET_SOURCE] = { "Player::SetSource",
         [this](MessageParcel &data, MessageParcel &reply) { return SetSource(data, reply); } };
     playerFuncs_[SET_MEDIA_DATA_SRC_OBJ] = { "Player::SetMediaDataSource",
@@ -280,6 +282,13 @@ int32_t PlayerServiceStub::SetListenerObject(const sptr<IRemoteObject> &object)
 
     playerCallback_ = callback;
     return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::SetPlayerProducer(const PlayerProducer producer)
+{
+    MediaTrace trace("PlayerServiceStub::SetPlayerProducer");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->SetPlayerProducer(producer);
 }
 
 int32_t PlayerServiceStub::SetSource(const std::string &url)
@@ -681,6 +690,13 @@ int32_t PlayerServiceStub::SetListenerObject(MessageParcel &data, MessageParcel 
 {
     sptr<IRemoteObject> object = data.ReadRemoteObject();
     reply.WriteInt32(SetListenerObject(object));
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::SetPlayerProducer(MessageParcel &data, MessageParcel &reply)
+{
+    uint32_t producer = data.ReadUint32();
+    reply.WriteInt32(SetPlayerProducer(static_cast<PlayerProducer>(producer)));
     return MSERR_OK;
 }
 

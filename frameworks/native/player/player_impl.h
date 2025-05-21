@@ -77,7 +77,7 @@ public:
     int32_t SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionService> &keySessionProxy,
         bool svp) override;
     int32_t SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, AVPlayStrategy strategy) override;
-    int32_t Init();
+    int32_t Init(const PlayerProducer producer = PlayerProducer::INNER);
     void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody);
     int32_t SetPlaybackStrategy(AVPlayStrategy playbackStrategy) override;
     int32_t SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted) override;

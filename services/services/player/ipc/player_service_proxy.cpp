@@ -55,6 +55,7 @@ PlayerServiceProxy::~PlayerServiceProxy()
 void PlayerServiceProxy::InitPlayerFuncsPart1()
 {
     playerFuncs_[SET_LISTENER_OBJ] = "Player::SetListenerObject";
+    playerFuncs_[SET_PLAYER_PRODUCER] = "Player::SetPlayerProducer";
     playerFuncs_[SET_SOURCE] = "Player::SetSource";
     playerFuncs_[SET_MEDIA_DATA_SRC_OBJ] = "Player::SetMediaDataSource";
     playerFuncs_[SET_FD_SOURCE] = "Player::SetFdSource";
@@ -138,6 +139,24 @@ int32_t PlayerServiceProxy::SetListenerObject(const sptr<IRemoteObject> &object)
     int32_t error = SendRequest(SET_LISTENER_OBJ, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetListenerObject failed, error: %{public}d", error);
+
+    return reply.ReadInt32();
+}
+
+int32_t PlayerServiceProxy::SetPlayerProducer(const PlayerProducer producer)
+{
+    MediaTrace trace("PlayerServiceProxy::SetPlayerProducer");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    (void)data.WriteUint32(producer);
+    int32_t error = SendRequest(SET_PLAYER_PRODUCER, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetPlayerProducer failed, error: %{public}d", error);
 
     return reply.ReadInt32();
 }

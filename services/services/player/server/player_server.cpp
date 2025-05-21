@@ -127,6 +127,14 @@ int32_t PlayerServer::Init()
     return MSERR_OK;
 }
 
+int32_t PlayerServer::SetPlayerProducer(const PlayerProducer producer)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    MediaTrace trace("PlayerServer::SetPlayerProducer " + std::to_string(producer));
+    playerProducer_ = producer;
+    return MSERR_OK;
+}
+
 int32_t PlayerServer::SetSource(const std::string &url)
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -249,9 +257,11 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
     std::shared_ptr<IPlayerEngineObs> obs = shared_from_this();
     ret = playerEngine_->SetObs(obs);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetObs Failed!");
-    ret = playerEngine_->SetMaxAmplitudeCbStatus(maxAmplitudeCbStatus_);
+    ret = playerEngine_->SetMaxAmplitudeCbStatus(playerProducer_ == PlayerProducer::NAPI ? maxAmplitudeCbStatus_ : true);
     ret = playerEngine_->SetSeiMessageCbStatus(seiMessageCbStatus_, payloadTypes_);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetMaxAmplitudeCbStatus Failed!");
+
+    TRUE_LOG(ret != MSERR_OK, MEDIA_LOGW, "PlayerEngine enable report media progress failed, ret %{public}d", ret);
 
     lastOpStatus_ = PLAYER_INITIALIZED;
     ChangeState(initializedState_);

@@ -80,6 +80,14 @@ void PlayerClient::MediaServerDied()
     }
 }
 
+int32_t PlayerClient::SetPlayerProducer(const PlayerProducer producer)
+{
+    MEDIA_LOGD("PlayerClient:0x%{public}06" PRIXPTR " SetPlayerProducer %{public}u", FAKE_POINTER(this), producer);
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerProxy_->SetPlayerProducer(producer);
+}
+
 int32_t PlayerClient::SetSource(const std::string &url)
 {
     MEDIA_LOGD("PlayerClient:0x%{public}06" PRIXPTR " SetSource url in", FAKE_POINTER(this));
