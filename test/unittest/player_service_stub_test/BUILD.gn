@@ -88,7 +88,6 @@ ohos_unittest("player_service_stub_test") {
     "av_codec:av_codec_client",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
-    "drivers_interface_camera:metadata",
     "graphic_2d:librender_service_base",
     "hdf_core:libhdi",
     "hicollie:libhicollie",
