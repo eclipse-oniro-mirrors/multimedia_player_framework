@@ -265,7 +265,7 @@ private:
     int32_t appUid_ = 0;
     int32_t appPid_ = 0;
     std::string appName_;
-    int32_t apiVersion_ = -1;
+    std::atomic<int32_t> apiVersion_ = -1;
     std::atomic<bool> inReleasing_ = false;
     std::atomic<int32_t> userId_ = -1;
     std::atomic<bool> isBootCompleted_ = false;
