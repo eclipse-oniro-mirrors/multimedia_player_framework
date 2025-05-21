@@ -271,11 +271,6 @@ public:
         return 0;
     }
 
-    virtual int32_t HandleEosPlay()
-    {
-        return 0;
-    }
-
     virtual int32_t IsSeekContinuousSupported(bool &IsSeekContinuousSupported)
     {
         (void)IsSeekContinuousSupported;

@@ -221,7 +221,6 @@ private:
     int32_t HandleStop();
     int32_t HandleReset();
     int32_t HandleSeek(int32_t mSeconds, PlayerSeekMode mode);
-    int32_t HandleEosPlay();
     int32_t HandleSetPlayRange(int64_t start, int64_t end, PlayerSeekMode mode);
     int32_t HandleSetPlaybackSpeed(PlaybackRateMode mode);
     int32_t HandleSetPlaybackRate(float rate);
