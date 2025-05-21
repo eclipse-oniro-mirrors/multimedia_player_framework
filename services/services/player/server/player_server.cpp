@@ -41,6 +41,7 @@ using namespace OHOS::QOS;
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "PlayerServer"};
     constexpr int32_t MAX_SUBTITLE_TRACK_NUN = 8;
+    constexpr int32_t MEMORY_USAGE_VERSION_ISOLATION = 20;
     static bool g_isFirstInit = true;
 }
 
@@ -234,7 +235,7 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_CREATE_PLAYER_ENGINE_FAILED,
         "failed to create player engine");
     playerEngine_->SetInstancdId(instanceId_);
-    playerEngine_->SetApiVersion(apiVersion_);
+    playerEngine_->SetApiVersion(apiVersion_.load());
     playerEngine_->SetIsCalledBySystemApp(isCalledBySystemApp_);
     MEDIA_LOGI("Setted InstanceId %{public}" PRIu64, instanceId_);
     if (dataSrc_ != nullptr) {
@@ -1053,7 +1054,7 @@ int32_t PlayerServer::GetDuration(int32_t &duration)
 
 int32_t PlayerServer::GetApiVersion(int32_t &apiVersion)
 {
-    apiVersion = apiVersion_;
+    apiVersion = apiVersion_.load();
     MEDIA_LOGD("PlayerServer GetApiVersion %{public}d", apiVersion);
     return MSERR_OK;
 }
@@ -2217,6 +2218,8 @@ int32_t PlayerServer::SetSeiMessageCbStatus(bool status, const std::vector<int32
 
 uint32_t PlayerServer::GetMemoryUsage()
 {
+    int32_t version = apiVersion_.load();
+    CHECK_AND_RETURN_RET_LOG(version >= MEMORY_USAGE_VERSION_ISOLATION, 0,"api version is low %{public}d", version);
     return totalMemoryUage_.load();
 }
 
