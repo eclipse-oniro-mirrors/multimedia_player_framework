@@ -178,6 +178,8 @@ private:
         SystemToneType systemToneType, const int32_t &num);
     int32_t UpdateNotificatioToneUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
         const int32_t &toneId);
+    int32_t UpdataeAlarmToneUri(const std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
+        const int32_t ringtoneAssetId);
     int32_t SetNoSystemToneUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
         SystemToneType systemToneType);
     int32_t RemoveSourceTypeForSystemTone(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,

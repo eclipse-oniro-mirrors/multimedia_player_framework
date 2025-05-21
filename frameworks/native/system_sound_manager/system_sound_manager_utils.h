@@ -37,6 +37,7 @@ public:
     static bool IdExists(const std::string &ids, int32_t id);
     static bool CheckCurrentUser();
     static bool GetScannerFirstParameter(const char* key, int32_t maxSize);
+    static std::string GetTypeForSystemSoundUri(const std::string &uri);
 };
 } // namespace Media
 } // namespace OHOS

@@ -172,5 +172,28 @@ bool SystemSoundManagerUtils::GetScannerFirstParameter(const char* key, int32_t 
     }
     return false;
 }
+
+std::string SystemSoundManagerUtils::GetTypeForSystemSoundUri(const std::string &uri)
+{
+    if (uri == NO_SYSTEM_SOUND) {
+        return NO_SYSTEM_SOUND;
+    }
+    if (uri == NO_RING_SOUND) {
+        return NO_RING_SOUND;
+    }
+
+    size_t pos = uri.find_first_of("sys_prod");
+    if (pos == 0 || pos == 1) {
+        // The uri of a preset ringtone starts with "sys_prod" or "/sys_prod".
+        return "pre_installed";
+    }
+    pos = uri.find_first_of("data");
+    if (pos == 0 || pos == 1) {
+        // The uri of a custom ringtone starts with "data" or "/data".
+        return "customised";
+    }
+
+    return "unknown";
+}
 } // namesapce Media
 } // namespace OHOS

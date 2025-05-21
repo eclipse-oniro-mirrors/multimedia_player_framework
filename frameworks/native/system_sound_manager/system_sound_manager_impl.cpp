@@ -1425,6 +1425,8 @@ int32_t SystemSoundManagerImpl::SetAlarmToneUri(const std::shared_ptr<AbilityRun
     const std::string &uri)
 {
     std::lock_guard<std::mutex> lock(uriMutex_);
+    MEDIA_LOGI("SetAlarmToneUri: alarm type %{public}s",
+        SystemSoundManagerUtils::GetTypeForSystemSoundUri(uri).c_str());
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
         SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, ERROR, "Create dataShare failed.");
@@ -1436,6 +1438,7 @@ int32_t SystemSoundManagerImpl::SetAlarmToneUri(const std::shared_ptr<AbilityRun
     auto resultsByUri = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSetByUri));
     unique_ptr<RingtoneAsset> ringtoneAssetByUri = resultsByUri->GetFirstObject();
     if (ringtoneAssetByUri == nullptr) {
+        MEDIA_LOGE("Failed to find uri in ringtone library. The input uri is invalid!");
         resultSetByUri == nullptr ? : resultSetByUri->Close();
         dataShareHelper->Release();
         return ERROR;
@@ -1450,28 +1453,37 @@ int32_t SystemSoundManagerImpl::SetAlarmToneUri(const std::shared_ptr<AbilityRun
         ringtoneAsset = results->GetNextObject();
     }
     if (ringtoneAsset != nullptr) {
-        DataSharePredicates updateOldPredicates;
-        DataShareValuesBucket updateOldValuesBucket;
-        updateOldPredicates.SetWhereClause(RINGTONE_COLUMN_ALARM_TONE_SOURCE_TYPE + " = ? ");
-        updateOldPredicates.SetWhereArgs({to_string(SOURCE_TYPE_CUSTOMISED)});
-        updateOldValuesBucket.Put(RINGTONE_COLUMN_ALARM_TONE_TYPE, ALARM_TONE_TYPE_NOT);
-        updateOldValuesBucket.Put(RINGTONE_COLUMN_ALARM_TONE_SOURCE_TYPE, SOURCE_TYPE_INVALID);
-        dataShareHelper->Update(RINGTONEURI, updateOldPredicates, updateOldValuesBucket);
-        DataSharePredicates updatePredicates;
-        DataShareValuesBucket updateValuesBucket;
-        updatePredicates.SetWhereClause(RINGTONE_COLUMN_TONE_ID + " = ? ");
-        updatePredicates.SetWhereArgs({to_string(ringtoneAsset->GetId())});
-        updateValuesBucket.Put(RINGTONE_COLUMN_ALARM_TONE_TYPE, ALARM_TONE_TYPE);
-        updateValuesBucket.Put(RINGTONE_COLUMN_ALARM_TONE_SOURCE_TYPE, SOURCE_TYPE_CUSTOMISED);
-        int32_t changedRows = dataShareHelper->Update(RINGTONEURI, updatePredicates, updateValuesBucket);
+        int32_t changedRows = UpdataeAlarmToneUri(dataShareHelper, ringtoneAsset->GetId());
         resultSet == nullptr ? : resultSet->Close();
         dataShareHelper->Release();
         SetExtRingtoneUri(uri, ringtoneAsset->GetTitle(), TONE_TYPE_ALARM, TONE_TYPE_ALARM, changedRows);
         return changedRows > 0 ? SUCCESS : ERROR;
     }
+    MEDIA_LOGE("Failed to find uri in ringtone library!");
     resultSet == nullptr ? : resultSet->Close();
     dataShareHelper->Release();
     return TYPEERROR;
+}
+
+int32_t SystemSoundManagerImpl::UpdataeAlarmToneUri(
+    const std::shared_ptr<DataShare::DataShareHelper> dataShareHelper, const int32_t ringtoneAssetId)
+{
+    DataSharePredicates updateOldPredicates;
+    DataShareValuesBucket updateOldValuesBucket;
+    updateOldPredicates.SetWhereClause(RINGTONE_COLUMN_ALARM_TONE_SOURCE_TYPE + " = ? ");
+    updateOldPredicates.SetWhereArgs({to_string(SOURCE_TYPE_CUSTOMISED)});
+    updateOldValuesBucket.Put(RINGTONE_COLUMN_ALARM_TONE_TYPE, ALARM_TONE_TYPE_NOT);
+    updateOldValuesBucket.Put(RINGTONE_COLUMN_ALARM_TONE_SOURCE_TYPE, SOURCE_TYPE_INVALID);
+    dataShareHelper->Update(RINGTONEURI, updateOldPredicates, updateOldValuesBucket);
+    DataSharePredicates updatePredicates;
+    DataShareValuesBucket updateValuesBucket;
+    updatePredicates.SetWhereClause(RINGTONE_COLUMN_TONE_ID + " = ? ");
+    updatePredicates.SetWhereArgs({to_string(ringtoneAssetId)});
+    updateValuesBucket.Put(RINGTONE_COLUMN_ALARM_TONE_TYPE, ALARM_TONE_TYPE);
+    updateValuesBucket.Put(RINGTONE_COLUMN_ALARM_TONE_SOURCE_TYPE, SOURCE_TYPE_CUSTOMISED);
+    int32_t changedRows = dataShareHelper->Update(RINGTONEURI, updatePredicates, updateValuesBucket);
+    MEDIA_LOGI("UpdataeAlarmToneUri: result(changedRows) %{public}d", changedRows);
+    return changedRows;
 }
 
 std::string SystemSoundManagerImpl::GetAlarmToneUri(const std::shared_ptr<AbilityRuntime::Context> &context)
@@ -1493,7 +1505,7 @@ std::string SystemSoundManagerImpl::GetAlarmToneUri(const std::shared_ptr<Abilit
     Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
     int32_t result =  Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
         "ohos.permission.ACCESS_CUSTOM_RINGTONE");
-    MEDIA_LOGI("GetAlarmToneUri:errCode:%{public}d, result :%{public}d ", errCode, result);
+    MEDIA_LOGI("GetAlarmToneUri:errCode:%{public}d, result :%{public}d", errCode, result);
     if (errCode != 0 || result != Security::AccessToken::PermissionState::PERMISSION_GRANTED ||
         !SystemSoundManagerUtils::GetScannerFirstParameter(RINGTONE_PARAMETER_SCANNER_FIRST_KEY, RINGTONEPARA_SIZE) ||
         !SystemSoundManagerUtils::CheckCurrentUser()) {
@@ -1510,6 +1522,8 @@ std::string SystemSoundManagerImpl::GetAlarmToneUri(const std::shared_ptr<Abilit
     }
     if (ringtoneAsset != nullptr) {
         alarmToneUri = ringtoneAsset->GetPath();
+        MEDIA_LOGI("GetAlarmToneUri: alarm type %{public}s",
+            SystemSoundManagerUtils::GetTypeForSystemSoundUri(alarmToneUri).c_str());
     } else {
         MEDIA_LOGE("GetAlarmToneUri: no alarmtone in the ringtone library!");
     }
