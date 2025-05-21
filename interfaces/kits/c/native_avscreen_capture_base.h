@@ -488,7 +488,7 @@ typedef enum OH_AVScreenCaptureFilterableAudioContent {
  * @since 20
  */
 typedef enum OH_AVScreenCaptureContentChangedEvent {
-    /* Content is hiden */
+    /* Content is hidden */
     OH_SCREEN_CAPTURE_CONTENT_HIDE = 0,
     /* Content is visible */
     OH_SCREEN_CAPTURE_CONTENT_VISIBLE = 1,
