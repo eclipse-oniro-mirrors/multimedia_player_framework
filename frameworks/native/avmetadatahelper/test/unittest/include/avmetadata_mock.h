@@ -90,12 +90,15 @@ public:
     DISALLOW_COPY_AND_MOVE(AVMetadataMock);
     bool CreateAVMetadataHelper();
     int32_t SetSource(const std::string &uri, int32_t usage);
+    int32_t SetAVMetadataCaller(AVMetadataCaller caller);
+    int32_t SetUrlSource(const std::string &uri, const std::map<std::string, std::string> &header);
     int32_t SetSource(const std::string &path, int64_t offset, int64_t size, int32_t usage);
     void PrintMetadata();
     std::string ResolveMetadata(int32_t key);
     std::unordered_map<int32_t, std::string> ResolveMetadata();
     std::shared_ptr<PixelMap> FetchFrameAtTime(int64_t timeUs, int32_t option, PixelMapParams param);
     std::shared_ptr<PixelMap> FetchFrameYuv(int64_t timeUs, int32_t option, PixelMapParams param);
+    std::shared_ptr<PixelMap> FetchScaledFrameYuv(int64_t timeUs, int32_t option, PixelMapParams param);
     std::shared_ptr<AVSharedMemory> FetchArtPicture();
     void Release();
     void FrameToFile(std::shared_ptr<PixelMap> frame, const char *fileName, int64_t timeUs, int32_t queryOption);

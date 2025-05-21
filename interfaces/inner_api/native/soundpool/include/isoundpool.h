@@ -18,6 +18,8 @@
 
 #include <string>
 #include "audio_info.h"
+#include "meta/format.h"
+#include "media_errors.h"
 
 namespace OHOS {
 namespace Media {
@@ -197,6 +199,18 @@ public:
      * @version 1.0
      */
     virtual void OnError(int32_t errorCode) = 0;
+
+    /**
+     * @brief Register listens for sound play error events.
+     *
+     * @param errorInfo errorInfo
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual void OnErrorOccurred(Format &errorInfo)
+    {
+        (void)errorInfo;
+    }
 };
 
 class ISoundPoolFrameWriteCallback {
@@ -228,6 +242,44 @@ public:
 private:
     SoundPoolFactory() = default;
     ~SoundPoolFactory() = default;
+};
+
+class SoundPoolKeys {
+public:
+    static constexpr std::string_view ERROR_CODE = "error_code";
+    static constexpr std::string_view ERROR_MESSAGE = "error_message";
+    static constexpr std::string_view ERROR_TYPE_FLAG = "error_type_flag";
+    static constexpr std::string_view SOUND_ID = "sound_id";
+    static constexpr std::string_view STREAM_ID = "stream_id";
+};
+
+enum ERROR_TYPE : int32_t {
+    LOAD_ERROR = 1,
+    PLAY_ERROR = 2
+};
+
+class SoundPoolUtils {
+public:
+    struct ErrorInfo {
+        int32_t errorCode = MSERR_INVALID_VAL;
+        int32_t soundId = 0;
+        int32_t streamId = 0;
+        ERROR_TYPE errorType = ERROR_TYPE::LOAD_ERROR;
+        std::shared_ptr<ISoundPoolCallback> callback = nullptr;
+    };
+    static void SendErrorInfo(const ErrorInfo& errorInfo)
+    {
+        Format format;
+        format.PutIntValue(SoundPoolKeys::ERROR_CODE, errorInfo.errorCode);
+        format.PutIntValue(SoundPoolKeys::ERROR_TYPE_FLAG, errorInfo.errorType);
+        format.PutIntValue(SoundPoolKeys::SOUND_ID, errorInfo.soundId);
+        if (errorInfo.streamId > 0) {
+            format.PutIntValue(SoundPoolKeys::STREAM_ID, errorInfo.streamId);
+        }
+        if (errorInfo.callback != nullptr) {
+            errorInfo.callback->OnErrorOccurred(format);
+        }
+    }
 };
 } // namespace Media
 } // namespace OHOS

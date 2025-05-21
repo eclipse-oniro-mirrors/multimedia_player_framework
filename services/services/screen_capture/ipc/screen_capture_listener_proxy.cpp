@@ -93,6 +93,34 @@ void ScreenCaptureListenerProxy::OnStateChange(AVScreenCaptureStateCode stateCod
         error, stateCode);
 }
 
+void ScreenCaptureListenerProxy::OnCaptureContentChanged(AVScreenCaptureContentChangedEvent event,
+    ScreenCaptureRect* area)
+{
+    MEDIA_LOGD("ScreenCaptureListenerProxy::OnCaptureContentChanged");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_ASYNC);
+
+    bool token = data.WriteInterfaceToken(ScreenCaptureListenerProxy::GetDescriptor());
+    CHECK_AND_RETURN_LOG(token, "Failed to write descriptor!");
+
+    bool isAreaExist = false;
+    data.WriteInt32(event);
+    if (area != nullptr) {
+        isAreaExist = true;
+        data.WriteBool(isAreaExist);
+        data.WriteInt32(area->x);
+        data.WriteInt32(area->y);
+        data.WriteInt32(area->width);
+        data.WriteInt32(area->height);
+    } else {
+        data.WriteBool(isAreaExist);
+    }
+    int error = Remote()->SendRequest(ScreenCaptureListenerMsg::ON_CONTENT_CHANGED, data, reply, option);
+    CHECK_AND_RETURN_LOG(error == MSERR_OK, "OnCaptureContentChanged failed, error: %{public}d, event: %{public}d",
+        error, event);
+}
+
 void ScreenCaptureListenerProxy::OnDisplaySelected(uint64_t displayId)
 {
     MessageParcel data;
@@ -162,8 +190,20 @@ void ScreenCaptureListenerCallback::OnDisplaySelected(uint64_t displayId)
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances isStopped:%{public}d, displayId:%{public}" PRIu64 ")",
         FAKE_POINTER(this), isStopped_.load(), displayId);
+    CHECK_AND_RETURN(isStopped_ == false);
     if (listener_ != nullptr) {
         listener_->OnDisplaySelected(displayId);
+    }
+}
+
+void ScreenCaptureListenerCallback::OnCaptureContentChanged(AVScreenCaptureContentChangedEvent event,
+    ScreenCaptureRect* area)
+{
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances isStopped:%{public}d, event: %{public}d",
+        FAKE_POINTER(this), isStopped_.load(), event);
+    CHECK_AND_RETURN(isStopped_ == false);
+    if (listener_ != nullptr) {
+        listener_->OnCaptureContentChanged(event, area);
     }
 }
 } // namespace Media

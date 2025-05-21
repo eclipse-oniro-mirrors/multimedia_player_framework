@@ -64,6 +64,7 @@
 #include "system_ability_status_change_stub.h"
 #include "i_input_device_listener.h"
 #include "input_manager.h"
+#include "session_lifecycle_listener_stub.h"
 
 namespace OHOS {
 namespace Media {
@@ -293,6 +294,42 @@ public:
     void OnChange(Rosen::ScreenId screenId);
 private:
     uint64_t screenId_ = SCREEN_ID_INVALID;
+    std::weak_ptr<ScreenCaptureServer> screenCaptureServer_;
+};
+
+class SCWindowLifecycleListener : public Rosen::SessionLifecycleListenerStub {
+public:
+    explicit SCWindowLifecycleListener(std::weak_ptr<ScreenCaptureServer> screenCaptureServer);
+    ~SCWindowLifecycleListener() override = default;
+    void OnLifecycleEvent(SessionLifecycleEvent event, const LifecycleEventPayload& payload) override;
+        
+private:
+    std::weak_ptr<ScreenCaptureServer> screenCaptureServer_;
+};
+    
+class SCDeathRecipientListener : public IRemoteObject::DeathRecipient {
+public:
+    using ListenerDiedHandler = std::function<void(const wptr<IRemoteObject>&)>;
+    explicit SCDeathRecipientListener(ListenerDiedHandler handler) : diedHandler_(std::move(handler)) {}
+    ~SCDeathRecipientListener() override = default;
+    void OnRemoteDied(const wptr<IRemoteObject>& remote) final
+    {
+        if (diedHandler_) {
+            diedHandler_(remote);
+        }
+    }
+    
+private:
+    ListenerDiedHandler diedHandler_;
+};
+
+class SCWindowInfoChangedListener : public Rosen::IWindowInfoChangedListener {
+public:
+    explicit SCWindowInfoChangedListener(std::weak_ptr<ScreenCaptureServer> screenCaptureServer);
+    ~SCWindowInfoChangedListener() override = default;
+    void OnWindowInfoChanged(const std::vector<std::unordered_map<WindowInfoKey, std::any>>& windowInfoList) override;
+
+private:
     std::weak_ptr<ScreenCaptureServer> screenCaptureServer_;
 };
 } // namespace Media

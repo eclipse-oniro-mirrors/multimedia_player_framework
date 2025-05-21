@@ -48,6 +48,8 @@ void MediaServiceStub::Init()
         [this](MessageParcel &data, MessageParcel &reply) { return GetSystemAbilityAync(data, reply); };
     mediaFuncs_[RELEASE_CLIENT_LISTENER] =
         [this] (MessageParcel &data, MessageParcel &reply) { return ReleaseClientListenerStub(data, reply); };
+    mediaFuncs_[CAN_KILL_MEDIA_SERVICE] =
+        [this] (MessageParcel &data, MessageParcel &reply) { return HandleKillMediaService(data, reply); };
 }
 
 int32_t MediaServiceStub::DestroyStubForPid(pid_t pid)
@@ -186,6 +188,13 @@ int32_t MediaServiceStub::GetSystemAbilityAync(MessageParcel &data, MessageParce
     sptr<IRemoteObject> subSystemAbility = GetSubSystemAbilityWithTimeOut(id, listenerObj, timeOutMs);
     LISTENER(mediaReplyProxy->SendSubSystemAbilityAync(subSystemAbility),
         TASK_NAME + ":" + std::to_string(mediaSystemAbility), false, TIME_OUT_SECOND);
+    return MSERR_OK;
+}
+
+int32_t MediaServiceStub::HandleKillMediaService(MessageParcel &data, MessageParcel &reply)
+{
+    (void)data;
+    reply.WriteBool(CanKillMediaService());
     return MSERR_OK;
 }
 } // namespace Media

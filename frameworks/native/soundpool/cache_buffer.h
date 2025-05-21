@@ -27,10 +27,12 @@
 #include "thread_pool.h"
 #include "audio_system_manager.h"
 #include "soundpool_xcollie.h"
+#include "stream_id_manager.h"
 
 namespace OHOS {
 namespace Media {
 using namespace MediaAVCodec;
+class StreamIDManager;
 
 struct AudioBufferEntry {
     AudioBufferEntry(uint8_t *buf, int32_t length) : buffer(std::move(buf)), size(length) {}
@@ -55,13 +57,15 @@ public:
         std::shared_ptr<ThreadPool> cacheBufferStopThreadPool);
     ~CacheBuffer();
     void SetSoundData(const std::shared_ptr<AudioBufferEntry> &cacheData, const size_t &cacheDataTotalSize);
+    void SetManager(std::weak_ptr<OHOS::Media::StreamIDManager> streamIDManager);
     void OnWriteData(size_t length) override;
     void OnFirstFrameWriting(uint64_t latency) override;
     void OnInterrupt(const AudioStandard::InterruptEvent &interruptEvent) override;
     void OnStateChange(const AudioStandard::RendererState state,
         const AudioStandard::StateChangeCmdType cmdType) override;
-    int32_t PreparePlay(const int32_t streamID, const AudioStandard::AudioRendererInfo audioRendererInfo,
-        const PlayParams playParams);
+    int32_t PreparePlay(const AudioStandard::AudioRendererInfo &audioRendererInfo, const PlayParams &playParams);
+    void GetAvailableAudioRenderer(const AudioStandard::AudioRendererInfo &audioRendererInfo,
+        const PlayParams &playParams);
     int32_t DoPlay(const int32_t streamID);
     int32_t Release();
     int32_t Stop(const int32_t streamID);
@@ -96,24 +100,31 @@ private:
     static constexpr int32_t NORMAL_PLAY_RENDERER_FLAGS = 0;
     static constexpr int32_t LOW_LATENCY_PLAY_RENDERER_FLAGS = 1;
 
-    std::unique_ptr<AudioStandard::AudioRenderer> CreateAudioRenderer(const int32_t streamID,
-        const AudioStandard::AudioRendererInfo audioRendererInfo, const PlayParams playParams);
+    std::unique_ptr<AudioStandard::AudioRenderer> CreateAudioRenderer(
+        const AudioStandard::AudioRendererInfo &audioRendererInfo, const PlayParams &playParams);
     void PrepareAudioRenderer(std::unique_ptr<AudioStandard::AudioRenderer> &audioRenderer);
     void DealAudioRendererParams(AudioStandard::AudioRendererOptions &rendererOptions,
         const AudioStandard::AudioRendererInfo &audioRendererInfo);
-    int32_t ReCombineCacheData();
-    int32_t DealPlayParamsBeforePlay(const int32_t streamID, const PlayParams playParams);
+    void DealPlayParamsBeforePlay(const PlayParams &playParams);
     static AudioStandard::AudioRendererRate CheckAndAlignRendererRate(const int32_t rate);
     void DealWriteData(size_t length);
     bool IsAudioRendererCanMix(const AudioStandard::AudioRendererInfo &audioRendererInfo);
+    int32_t PreparePlayInner(const AudioStandard::AudioRendererInfo &audioRendererInfo,
+        const PlayParams &playParams);
+    int32_t GetGlobalId(int32_t soundID);
+    void DelGlobalId(int32_t globalId);
+    void SetGlobalId(int32_t soundID, int32_t globalId);
+    int32_t HandleRendererNotStart(const int32_t streamID);
 
     Format trackFormat_;
     std::deque<std::shared_ptr<AudioBufferEntry>> cacheData_;
     std::shared_ptr<AudioBufferEntry> fullCacheData_;
-    size_t cacheDataTotalSize_;
+    size_t cacheDataTotalSize_ = 0;
     int32_t soundID_ = 0;
     int32_t streamID_ = 0;
     AudioStandard::AudioSampleFormat sampleFormat_ = AudioStandard::AudioSampleFormat::INVALID_WIDTH;
+    PlayParams playParameters_;
+    AudioStandard::AudioRendererInfo audioRendererInfo_;
 
     // use for save audiobuffer
     std::unique_ptr<AudioStandard::AudioRenderer> audioRenderer_;
@@ -123,6 +134,7 @@ private:
     std::shared_ptr<ISoundPoolFrameWriteCallback> frameWriteCallback_ = nullptr;
     ffrt::mutex cacheBufferLock_;
     std::weak_ptr<ThreadPool> cacheBufferStopThreadPool_;
+    std::weak_ptr<OHOS::Media::StreamIDManager> manager_;
 
     int32_t loop_ = 0;
     int32_t priority_ = 0;
@@ -130,7 +142,7 @@ private:
 
     size_t cacheDataFrameIndex_ = 0;
     int32_t havePlayedCount_ = 0;
-    int64_t sourceDurationMs_ {};
+    int64_t sourceDurationMs_{};
 };
 } // namespace Media
 } // namespace OHOS

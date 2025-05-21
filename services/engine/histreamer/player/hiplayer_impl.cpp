@@ -401,6 +401,7 @@ int32_t HiPlayerImpl::SetSource(const std::string& uri)
     pipelineStates_ = PlayerStates::PLAYER_INITIALIZED;
     int ret = TransStatus(Status::OK);
     playStatisticalInfo_.errCode = ret;
+    ResetEnableCameraPostProcess();
     return ret;
 }
 
@@ -474,6 +475,7 @@ int32_t HiPlayerImpl::SetSource(const std::shared_ptr<IMediaDataSource>& dataSrc
     pipelineStates_ = PlayerStates::PLAYER_INITIALIZED;
     int ret = TransStatus(Status::OK);
     playStatisticalInfo_.errCode = ret;
+    ResetEnableCameraPostProcess();
     return ret;
 }
 
@@ -616,6 +618,13 @@ int32_t HiPlayerImpl::SetIsCalledBySystemApp(bool isCalledBySystemApp)
 {
     MEDIA_LOG_I("SetIsCalledBySystemApp in, isCalledBySystemApp: " PUBLIC_LOG_D32, isCalledBySystemApp);
     isCalledBySystemApp_ = isCalledBySystemApp;
+    return TransStatus(Status::OK);
+}
+
+int32_t HiPlayerImpl::SetStartFrameRateOptEnabled(bool enabled)
+{
+    MEDIA_LOG_I("enabled: " PUBLIC_LOG_D32, enabled);
+    isEnableStartFrameRateOpt_ = enabled;
     return TransStatus(Status::OK);
 }
 
@@ -898,6 +907,9 @@ int32_t HiPlayerImpl::Pause(bool isSystemOperation)
     syncManager_->Pause();
     if (ret != Status::OK) {
         UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
+    }
+    if (videoDecoder_ != nullptr) {
+        videoDecoder_->NotifyPause();
     }
     callbackLooper_.StopReportMediaProgress();
     StopFlvCheckLiveDelayTime();
@@ -1296,6 +1308,36 @@ Status HiPlayerImpl::doCompletedSeek(int64_t seekPos, PlayerSeekMode mode)
     return rtv;
 }
 
+Status HiPlayerImpl::doSetPlaybackSpeed(float speed)
+{
+    MEDIA_LOG_I("doSetPlaybackSpeed %{public}f", speed);
+    Status res = Status::OK;
+    if (audioSink_ != nullptr) {
+        res = audioSink_->SetSpeed(speed);
+    }
+    if (subtitleSink_ != nullptr) {
+        res = subtitleSink_->SetSpeed(speed);
+    }
+    if (res != Status::OK) {
+        MEDIA_LOG_E("doSetPlaybackSpeed audioSink set speed  error");
+        return res;
+    }
+    if (videoDecoder_ != nullptr) {
+        res = videoDecoder_->SetSpeed(speed);
+    }
+    if (syncManager_ != nullptr) {
+        res = syncManager_->SetPlaybackRate(speed);
+    }
+    if (res != Status::OK) {
+        MEDIA_LOG_E("doSetPlaybackSpeed syncManager set audio speed error");
+        return res;
+    }
+    if (demuxer_ != nullptr) {
+        demuxer_->SetSpeed(speed);
+    }
+    return Status::OK;
+}
+
 bool HiPlayerImpl::NeedSeekClosest()
 {
     MEDIA_LOG_D("NeedSeekClosest begin");
@@ -1338,6 +1380,7 @@ Status HiPlayerImpl::doSeek(int64_t seekPos, PlayerSeekMode mode)
         }
     }
     if (videoDecoder_ != nullptr) {
+        videoDecoder_->SetSeekTime(seekTimeUs + mediaStartPts_, mode);
         videoDecoder_->ResetSeekInfo();
     }
     int64_t realSeekTime = seekPos;
@@ -1362,7 +1405,7 @@ Status HiPlayerImpl::HandleSeekClosest(int64_t seekPos, int64_t seekTimeUs)
     MEDIA_LOG_I_SHORT("doSeek SEEK_CLOSEST");
     isSeekClosest_.store(true);
     if (videoDecoder_ != nullptr) {
-        videoDecoder_->SetSeekTime(seekTimeUs + mediaStartPts_);
+        videoDecoder_->SetSeekTime(seekTimeUs + mediaStartPts_, PlayerSeekMode::SEEK_CLOSEST);
     }
     if (audioSink_ != nullptr) {
         audioSink_->SetIsCancelStart(true);
@@ -1595,6 +1638,16 @@ void HiPlayerImpl::SetBundleName(std::string bundleName)
     }
 }
 
+void HiPlayerImpl::EnableStartFrameRateOpt(Format &videoTrack)
+{
+    double frameRate = 1;
+    if (videoTrack.GetDoubleValue("frame_rate", frameRate) && syncManager_ != nullptr) {
+        frameRate /= FRAME_RATE_UNIT_MULTIPLE;
+        syncManager_->SetInitialVideoFrameRate(frameRate);
+        MEDIA_LOG_I("VideoSink initial frameRate is " PUBLIC_LOG_D64, static_cast<int64_t>(frameRate));
+    }
+}
+
 int32_t HiPlayerImpl::InitVideoWidthAndHeight()
 {
 #ifdef SUPPORT_VIDEO
@@ -1613,11 +1666,8 @@ int32_t HiPlayerImpl::InitVideoWidthAndHeight()
         if (videoTrackId != currentVideoTrackId) {
             continue;
         }
-        double frameRate = 1;
-        if (videoTrack.GetDoubleValue("frame_rate", frameRate) && syncManager_ != nullptr) {
-            frameRate /= FRAME_RATE_UNIT_MULTIPLE;
-            syncManager_->SetInitialVideoFrameRate(frameRate);
-            MEDIA_LOG_I("VideoSink initial frameRate is " PUBLIC_LOG_D64, static_cast<int64_t>(frameRate));
+        if (isEnableStartFrameRateOpt_) {
+            EnableStartFrameRateOpt(videoTrack);
         }
         int32_t height;
         videoTrack.GetIntValue("height", height);
@@ -1744,35 +1794,31 @@ float HiPlayerImpl::GetMaxAmplitude()
 int32_t HiPlayerImpl::SetPlaybackSpeed(PlaybackRateMode mode)
 {
     MEDIA_LOG_I("SetPlaybackSpeed %{public}d", mode);
-    Status res = Status::OK;
     float speed = TransformPlayRate2Float(mode);
-    if (audioSink_ != nullptr) {
-        res = audioSink_->SetSpeed(speed);
-    }
-    if (subtitleSink_ != nullptr) {
-        res = subtitleSink_->SetSpeed(speed);
-    }
-    if (res != Status::OK) {
-        MEDIA_LOG_E("SetPlaybackSpeed audioSink set speed  error");
+    if (doSetPlaybackSpeed(speed) != Status::OK) {
+        MEDIA_LOG_E("SetPlaybackSpeed audioSink set speed error");
         return MSERR_UNKNOWN;
-    }
-    if (videoDecoder_ != nullptr) {
-        res = videoDecoder_->SetSpeed(speed);
-    }
-    if (syncManager_ != nullptr) {
-        res = syncManager_->SetPlaybackRate(speed);
-    }
-    if (res != Status::OK) {
-        MEDIA_LOG_E("SetPlaybackSpeed syncManager set audio speed error");
-        return MSERR_UNKNOWN;
-    }
-    if (demuxer_ != nullptr) {
-        demuxer_->SetSpeed(speed);
     }
     playbackRateMode_ = mode;
     Format format;
     callbackLooper_.OnInfo(INFO_TYPE_SPEEDDONE, mode, format);
     MEDIA_LOG_I("SetPlaybackSpeed end");
+    return MSERR_OK;
+}
+
+int32_t HiPlayerImpl::SetPlaybackRate(float rate)
+{
+    MEDIA_LOG_I("SetPlaybackRate %{public}f", rate);
+    if (doSetPlaybackSpeed(rate) != Status::OK) {
+        MEDIA_LOG_E("SetPlaybackRate audioSink set speed error");
+        return MSERR_UNKNOWN;
+    }
+    int32_t extra = 0;
+    playbackRate_ = rate;
+    Format format;
+    (void)format.PutFloatValue(PlayerKeys::PLAYER_PLAYBACK_RATE, rate);
+    callbackLooper_.OnInfo(INFO_TYPE_RATEDONE, extra, format);
+    MEDIA_LOG_I("SetPlaybackRate end");
     return MSERR_OK;
 }
 
@@ -3448,6 +3494,9 @@ int32_t HiPlayerImpl::ExitSeekContinous(bool align, int64_t seekContinousBatchNo
     FALSE_RETURN_V_MSG_E(Plugins::Us2HstTime(lastSeekContinousPos_, seekTimeUs),
         TransStatus(Status::OK), "Invalid lastSeekContinousPos_: %{public}" PRId64, lastSeekContinousPos_);
     syncManager_->Seek(seekTimeUs, true);
+    if (videoDecoder_ != nullptr) {
+        videoDecoder_->SetSeekTime(seekTimeUs, PlayerSeekMode::SEEK_CONTINOUS);
+    }
     FALSE_RETURN_V_MSG_E(align, TransStatus(Status::OK), "dont need align");
     if (align && audioDecoder_ != nullptr && audioSink_ != nullptr) {
         audioDecoder_->DoFlush();
@@ -3651,6 +3700,36 @@ void HiPlayerImpl::SetPostProcessor()
         videoDecoder_->SetPostProcessorOn(isPostProcessorOn_);
         videoDecoder_->SetVideoWindowSize(postProcessorTargetWidth_, postProcessorTargetHeight_);
     }
+    std::lock_guard<std::mutex> lock(fdMutex_);
+    FALSE_RETURN_NOLOG(enableCameraPostprocessing_.load() && fdsanFd_ && fdsanFd_->Get() >= 0);
+    videoDecoder_->SetCameraPostprocessing(enableCameraPostprocessing_.load());
+    videoDecoder_->SetPostProcessorFd(fdsanFd_->Get());
+    fdsanFd_->Reset();
+}
+
+int32_t HiPlayerImpl::SetReopenFd(int32_t fd)
+{
+    FALSE_RETURN_V_MSG_E(fd >= 0, MSERR_INVALID_VAL, "Invalid input fd.");
+    int32_t dupFd = dup(fd);
+    FALSE_RETURN_V_MSG_E(dupFd >= 0, MSERR_INVALID_VAL, "Dup fd failed.");
+    std::lock_guard<std::mutex> lock(fdMutex_);
+    fdsanFd_ = std::make_unique<FdsanFd>(dupFd);
+    FALSE_RETURN_V(fdsanFd_ && (fdsanFd_->Get() >= 0), MSERR_INVALID_VAL);
+    return TransStatus(Status::OK);
+}
+ 
+int32_t HiPlayerImpl::EnableCameraPostprocessing()
+{
+    MEDIA_LOG_D("EnableCameraPostprocessing enter.");
+    enableCameraPostprocessing_.store(true);
+    return TransStatus(Status::OK);
+}
+
+void HiPlayerImpl::ResetEnableCameraPostProcess()
+{
+    enableCameraPostprocessing_.store(false);
+    FALSE_RETURN_NOLOG(fdsanFd_ != nullptr);
+    fdsanFd_->Reset();
 }
 
 void HiPlayerImpl::HandleMemoryUsageEvent(const DfxEvent &event)

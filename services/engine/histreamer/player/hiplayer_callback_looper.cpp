@@ -67,14 +67,13 @@ void HiPlayerCallbackLooper::SetMaxAmplitudeCbStatus(bool status)
 {
     MEDIA_LOG_I("HiPlayerCallbackLooper SetMaxAmplitudeCbStatus");
     OHOS::Media::AutoLock lock(loopMutex_);
-    if (reportUV_ == status) {
-        return;
-    }
+    FALSE_RETURN(reportUV_ != status);
+
     reportUV_ = status;
-    if (reportUV_ && collectMaxAmplitude_) {
-        Enqueue(std::make_shared<Event>(WHAT_COLLECT_AMPLITUDE,
-            SteadyClock::GetCurrentTimeMs() + collectMaxAmplitudeIntervalMs_, Any()));
-    }
+    FALSE_RETURN(reportUV_ && collectMaxAmplitude_ && !reportUVProgressLoopRunning_);
+    reportUVProgressLoopRunning_ = true;
+    Enqueue(std::make_shared<Event>(WHAT_COLLECT_AMPLITUDE,
+        SteadyClock::GetCurrentTimeMs() + collectMaxAmplitudeIntervalMs_, Any()));
 }
 
 void HiPlayerCallbackLooper::StartWithPlayerEngineObs(const std::weak_ptr<IPlayerEngineObs>& obs)
@@ -115,11 +114,10 @@ void HiPlayerCallbackLooper::StartCollectMaxAmplitude(int64_t updateIntervalMs)
         return;
     }
     collectMaxAmplitude_ = true;
-    if (!reportUV_) {
-        return;
-    }
+    FALSE_RETURN(reportUV_);
+    reportUVProgressLoopRunning_ = true;
     Enqueue(std::make_shared<Event>(WHAT_COLLECT_AMPLITUDE,
-            SteadyClock::GetCurrentTimeMs() + collectMaxAmplitudeIntervalMs_, Any()));
+        SteadyClock::GetCurrentTimeMs() + collectMaxAmplitudeIntervalMs_, Any()));
 }
 
 void HiPlayerCallbackLooper::ManualReportMediaProgressOnce()
@@ -191,6 +189,7 @@ void HiPlayerCallbackLooper::DoCollectAmplitude()
 {
     OHOS::Media::AutoLock lock(loopMutex_);
     if (!collectMaxAmplitude_ || !reportUV_) {
+        reportUVProgressLoopRunning_ = false;
         return;
     }
     auto obs = obs_.lock();
@@ -209,10 +208,9 @@ void HiPlayerCallbackLooper::DoCollectAmplitude()
             vMaxAmplitudeArray_.clear();
         }
     }
-    if (collectMaxAmplitude_) {
-        Enqueue(std::make_shared<Event>(WHAT_COLLECT_AMPLITUDE,
-            SteadyClock::GetCurrentTimeMs() + collectMaxAmplitudeIntervalMs_, Any()));
-    }
+
+    Enqueue(std::make_shared<Event>(WHAT_COLLECT_AMPLITUDE,
+        SteadyClock::GetCurrentTimeMs() + collectMaxAmplitudeIntervalMs_, Any()));
 }
 
 void HiPlayerCallbackLooper::ReportRemainedMaxAmplitude()

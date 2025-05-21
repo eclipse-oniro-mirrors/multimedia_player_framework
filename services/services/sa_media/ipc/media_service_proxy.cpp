@@ -100,5 +100,22 @@ sptr<IRemoteObject> MediaServiceProxy::GetSubSystemAbilityWithTimeOut(
     
     return mediaReplyStub->WaitForAsyncSubSystemAbility(timeoutMs);
 }
+
+bool MediaServiceProxy::CanKillMediaService()
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+ 
+    bool token = data.WriteInterfaceToken(MediaServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, false, "Failed to write descriptor!");
+ 
+    int32_t error = -1;
+    error = Remote()->SendRequest(MediaServiceMsg::CAN_KILL_MEDIA_SERVICE, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, false,
+        "CanKillMediaService failed, error: %{public}d", error);
+    
+    return reply.ReadBool();
+}
 } // namespace Media
 } // namespace OHOS

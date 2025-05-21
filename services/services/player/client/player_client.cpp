@@ -82,7 +82,7 @@ void PlayerClient::MediaServerDied()
 
 int32_t PlayerClient::SetPlayerProducer(const PlayerProducer producer)
 {
-    MEDIA_LOGD("PlayerClient:0x%{public}06" PRIXPTR " SetPlayerProducer %{public}u", FAKE_POINTER(this), producer);
+    MEDIA_LOGD("PlayerClient:0x%{public}06" PRIXPTR " SetPlayerProducer %{public}d", FAKE_POINTER(this), producer);
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     return playerProxy_->SetPlayerProducer(producer);
@@ -162,6 +162,13 @@ int32_t PlayerClient::SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSee
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     return playerProxy_->SetPlayRangeWithMode(start, end, mode);
+}
+
+int32_t PlayerClient::SetStartFrameRateOptEnabled(bool enabled)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerProxy_->SetStartFrameRateOptEnabled(enabled);
 }
 
 int32_t PlayerClient::Prepare()
@@ -322,6 +329,13 @@ int32_t PlayerClient::SetPlaybackSpeed(PlaybackRateMode mode)
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     return playerProxy_->SetPlaybackSpeed(mode);
+}
+
+int32_t PlayerClient::SetPlaybackRate(float rate)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerProxy_->SetPlaybackRate(rate);
 }
 
 int32_t PlayerClient::SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, AVPlayStrategy strategy)
@@ -510,6 +524,20 @@ bool PlayerClient::IsSeekContinuousSupported()
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, false, "player service does not exist.");
     return playerProxy_->IsSeekContinuousSupported();
+}
+
+int32_t PlayerClient::SetReopenFd(int32_t fd)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
+    return playerProxy_->SetReopenFd(fd);
+}
+ 
+int32_t PlayerClient::EnableCameraPostprocessing()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerProxy_->EnableCameraPostprocessing();
 }
 } // namespace Media
 } // namespace OHOS

@@ -58,6 +58,7 @@ public:
     int32_t SetVolume(float leftVolume, float rightVolume) override;
     int32_t SetVolumeMode(int32_t mode) override;
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
+    int32_t SetPlaybackRate(float rate) override;
     int32_t GetVideoWidth() override;
     int32_t GetAudioTrackInfo(std::vector<Format> &audioTrack) override;
     int32_t GetCurrentTime(int32_t &currentTime) override;
@@ -99,7 +100,10 @@ public:
     int32_t SetMaxAmplitudeCbStatus(bool status) override;
     bool IsSeekContinuousSupported() override;
     int32_t SetSeiMessageCbStatus(bool status, const std::vector<int32_t> &payloadTypes) override;
+    int32_t SetStartFrameRateOptEnabled(bool enabled) override;
     uint32_t GetMemoryUsage();
+    int32_t SetReopenFd(int32_t fd) override;
+    int32_t EnableCameraPostprocessing() override;
 protected:
     PlayerServiceStub();
     virtual int32_t Init();
@@ -145,6 +149,7 @@ private:
     int32_t GetDuration(MessageParcel &data, MessageParcel &reply);
     int32_t GetApiVersion(MessageParcel &data, MessageParcel &reply);
     int32_t SetPlaybackSpeed(MessageParcel &data, MessageParcel &reply);
+    int32_t SetPlaybackRate(MessageParcel &data, MessageParcel &reply);
     int32_t GetPlaybackSpeed(MessageParcel &data, MessageParcel &reply);
 #ifdef SUPPORT_VIDEO
     int32_t SetVideoSurface(MessageParcel &data, MessageParcel &reply);
@@ -169,6 +174,9 @@ private:
     int32_t SetMaxAmplitudeCbStatus(MessageParcel &data, MessageParcel &reply);
     int32_t IsSeekContinuousSupported(MessageParcel &data, MessageParcel &reply);
     int32_t SetSeiMessageCbStatus(MessageParcel &data, MessageParcel &reply);
+    int32_t SetStartFrameRateOptEnabled(MessageParcel &data, MessageParcel &reply);
+    int32_t SetReopenFd(MessageParcel &data, MessageParcel &reply);
+    int32_t EnableCameraPostprocessing(MessageParcel &data, MessageParcel &reply);
 
     int32_t ReadMediaStreamListFromMessageParcel(
         MessageParcel &data, const std::shared_ptr<AVMediaSource> &mediaSource);

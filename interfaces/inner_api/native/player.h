@@ -117,6 +117,7 @@ public:
     static constexpr std::string_view PLAYER_IS_LIVE_STREAM = "is_live_stream";
     static constexpr std::string_view PLAYER_SEEK_POSITION = "seek_done";
     static constexpr std::string_view PLAYER_PLAYBACK_SPEED = "speed_done";
+    static constexpr std::string_view PLAYER_PLAYBACK_RATE = "rate_done";
     static constexpr std::string_view PLAYER_BITRATE_DONE = "bitrate_done";
     static constexpr std::string_view PLAYER_CURRENT_POSITION = "current_position";
     static constexpr std::string_view PLAYER_DURATION = "duration";
@@ -217,6 +218,8 @@ enum PlayerOnInfoType : int32_t {
     INFO_TYPE_SEEKDONE = 1,
     /* return the message when speeding done. */
     INFO_TYPE_SPEEDDONE,
+    /* return the message when speeding done. */
+    INFO_TYPE_RATEDONE,
     /* return the message when select bitrate done */
     INFO_TYPE_BITRATEDONE,
     /* return the message when playback is end of steam. */
@@ -333,7 +336,7 @@ enum PlaybackRateMode : int32_t {
     SPEED_FORWARD_1_20_X = 100, // flv live quick play, internal value, not open to northbound
 };
 
-enum PlayerProducer : uint32_t {
+enum PlayerProducer : int32_t {
     INNER = 0,
     CAPI,
     NAPI
@@ -627,6 +630,15 @@ public:
      * @version 1.0
      */
     virtual int32_t SetPlaybackSpeed(PlaybackRateMode mode) = 0;
+
+    /**
+     * @brief set the player playback rate
+     *
+     * @param rate the rate which can set.
+     * @return Returns {@link MSERR_OK} if the playback rate is set successful; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     */
+    virtual int32_t SetPlaybackRate(float rate) = 0;
 
     /**
      * @brief get the current player playback rate
@@ -985,6 +997,47 @@ public:
     {
         (void)width;
         (void)height;
+        return 0;
+    }
+
+    /**
+     * @brief Set Start Frame Rate Opt Enabled.
+     *
+     * @return Returns {@link MSERR_OK} if enabled is set; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t SetStartFrameRateOptEnabled(bool enabled)
+    {
+        (void)enabled;
+        return 0;
+    }
+
+    /**
+     * @brief Set video reopen fd.
+     *
+     * @return Returns {@link MSERR_OK} if video reopen fd is set; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t SetReopenFd(int32_t fd)
+    {
+        (void)fd;
+        return 0;
+    }
+ 
+    /**
+     * @brief Enable or disable camera post processor.
+     *
+     * @return Returns {@link MSERR_OK} if enable camera post processor is set; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t EnableCameraPostprocessing()
+    {
         return 0;
     }
 };

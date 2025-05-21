@@ -25,6 +25,7 @@ using namespace std;
 const int32_t MAX_STREAMS = 3;
 const int32_t BEGIN_NUM = 0;
 const int32_t STREAM_ID_BEGIN = 1;
+const int32_t SOUND_ID_BEGIN = 1;
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SOUNDPOOL, "StreamIdManagerUnitTest"};
@@ -188,14 +189,14 @@ HWTEST_F(StreamIDManagerUnitTest, streamId_function_007, TestSize.Level2)
     MEDIA_LOGI("streamId_function_007 before");
     streamIDManager_->playingStreamIDs_.emplace_back(BEGIN_NUM);
     streamIDManager_->playingStreamIDs_.emplace_back(STREAM_ID_BEGIN);
-    streamIDManager_->ClearStreamIDInDeque(STREAM_ID_BEGIN);
-    EXPECT_EQ(MSERR_OK, streamIDManager_->ClearStreamIDInDeque(STREAM_ID_BEGIN));
+    streamIDManager_->ClearStreamIDInDeque(STREAM_ID_BEGIN, SOUND_ID_BEGIN);
+    EXPECT_EQ(MSERR_OK, streamIDManager_->ClearStreamIDInDeque(STREAM_ID_BEGIN, SOUND_ID_BEGIN));
 
     StreamIDManager::StreamIDAndPlayParamsInfo streamIDAndPlayParamsInfo;
     streamIDManager_->willPlayStreamInfos_.emplace_back(streamIDAndPlayParamsInfo);
     StreamIDManager::StreamIDAndPlayParamsInfo streamIDAndPlayParamsInfo1;
     streamIDManager_->willPlayStreamInfos_.emplace_back(streamIDAndPlayParamsInfo1);
-    EXPECT_EQ(MSERR_OK, streamIDManager_->ClearStreamIDInDeque(STREAM_ID_BEGIN));
+    EXPECT_EQ(MSERR_OK, streamIDManager_->ClearStreamIDInDeque(STREAM_ID_BEGIN, SOUND_ID_BEGIN));
     MEDIA_LOGI("streamId_function_007 after");
 }
 

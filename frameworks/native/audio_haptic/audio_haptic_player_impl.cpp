@@ -455,7 +455,9 @@ void AudioHapticPlayerImpl::NotifyErrorEvent(int32_t errCode)
 
 void AudioHapticPlayerImpl::NotifyStartVibrate(const uint64_t &latency)
 {
-    if (isVibrationRunning_.load() && hapticsMode_ == HapticsMode::HAPTICS_MODE_NON_SYNC) {
+    if (isVibrationRunning_.load() &&
+        (hapticsMode_ == HapticsMode::HAPTICS_MODE_NON_SYNC_ONCE ||
+        hapticsMode_ == HapticsMode::HAPTICS_MODE_NON_SYNC)) {
         MEDIA_LOGI("The non sync vibration is already running.");
         return;
     }

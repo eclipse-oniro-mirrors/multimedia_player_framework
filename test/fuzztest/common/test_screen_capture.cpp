@@ -119,6 +119,14 @@ int32_t TestScreenCapture::ResizeCanvas(int32_t width, int32_t height)
     }
     return screenCapture->ResizeCanvas(width, height);
 }
+ 
+int32_t TestScreenCapture::UpdateSurface(sptr<Surface> surface)
+{
+    if (screenCapture == nullptr) {
+        return MSERR_INVALID_OPERATION;
+    }
+    return screenCapture->UpdateSurface(surface);
+}
 
 int32_t TestScreenCapture::SkipPrivacyMode(std::vector<uint64_t> &windowIDsVec)
 {

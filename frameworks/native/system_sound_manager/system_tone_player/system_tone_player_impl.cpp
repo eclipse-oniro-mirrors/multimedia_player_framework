@@ -695,7 +695,7 @@ HapticsMode SystemTonePlayerImpl::ConvertToHapticsMode(ToneHapticsMode toneHapti
         case ToneHapticsMode::SYNC:
             return HapticsMode::HAPTICS_MODE_SYNC;
         case ToneHapticsMode::NON_SYNC:
-            return HapticsMode::HAPTICS_MODE_NON_SYNC;
+            return HapticsMode::HAPTICS_MODE_NON_SYNC_ONCE;
         default:
             return HapticsMode::HAPTICS_MODE_INVALID;
     }

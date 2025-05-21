@@ -60,6 +60,7 @@ enum HapticsMode {
     HAPTICS_MODE_NONE = 0,
     HAPTICS_MODE_SYNC = 1,
     HAPTICS_MODE_NON_SYNC = 2,
+    HAPTICS_MODE_NON_SYNC_ONCE = 3,
 };
 
 struct HapticSource {

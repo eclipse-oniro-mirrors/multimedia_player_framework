@@ -59,6 +59,7 @@ public:
     virtual int32_t ReleaseVideoBuffer() = 0;
     virtual int32_t ExcludeContent(ScreenCaptureContentFilter &contentFilter) = 0;
     virtual int32_t SetScreenCaptureStrategy(ScreenCaptureStrategy strategy) = 0;
+    virtual int32_t UpdateSurface(sptr<Surface> surface) = 0;
 
     /**
      * IPC code ID
@@ -92,6 +93,7 @@ public:
         SET_CHECK_SA_LIMIT = 25,
         SET_CHECK_LIMIT = 26,
         SET_STRATEGY = 27,
+        UPDATE_SURFACE = 28,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardScreenCaptureService");

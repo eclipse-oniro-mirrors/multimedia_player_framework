@@ -95,8 +95,10 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ProcessScreenCaptureServerMap_002, Tes
     server->SetSessionId(sessionId);
     int32_t sizeBefore = ScreenCaptureServer::serverMap_.size();
     ScreenCaptureServer::AddScreenCaptureServerMap(sessionId, server);
+    int32_t sizeAfter = ScreenCaptureServer::serverMap_.size();
+    ASSERT_EQ(ScreenCaptureServer::serverMap_.size(), sizeBefore + 1);
     ScreenCaptureServer::RemoveScreenCaptureServerMap(sessionId);
-    ASSERT_EQ(ScreenCaptureServer::serverMap_.size(), sizeBefore);
+    ASSERT_EQ(ScreenCaptureServer::serverMap_.size(), sizeAfter - 1);
 }
 
 /**
@@ -267,8 +269,10 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ProcessStartedSessionIdList_002, TestS
     UniqueIDGenerator gIdGenerator(20);
     int32_t sessionId = gIdGenerator.GetNewID();
     ScreenCaptureServer::AddStartedSessionIdList(sessionId);
+    int32_t afterSize = ScreenCaptureServer::startedSessionIDList_.size();
+    ASSERT_EQ(ScreenCaptureServer::startedSessionIDList_.size(), beforeSize + 1);
     ScreenCaptureServer::RemoveStartedSessionIdList(sessionId);
-    ASSERT_EQ(ScreenCaptureServer::startedSessionIDList_.size(), beforeSize);
+    ASSERT_EQ(ScreenCaptureServer::startedSessionIDList_.size(), afterSize - 1);
     ScreenCaptureServer::gIdGenerator_.ReturnID(sessionId);
 }
 
@@ -848,7 +852,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, GetBoxSelectedFromJson_001, TestSize.L
 {
     Json::Value root;
     std::string content = "ghgh%^&%^$*^(}{^af&**)";
-    bool value = false;
+    bool value = true;
     screenCaptureServer_->GetBoxSelectedFromJson(root, content, "choice", value);
     ASSERT_NE(screenCaptureServer_, nullptr);
     ASSERT_EQ(value, false);
@@ -878,10 +882,95 @@ HWTEST_F(ScreenCaptureServerFunctionTest, GetBoxSelectedFromJson_003, TestSize.L
 {
     Json::Value root;
     std::string content = "{\"choice\": \"abcd\"}";
-    bool value = false;
+    bool value = true;
     screenCaptureServer_->GetBoxSelectedFromJson(root, content, "choice", value);
     ASSERT_NE(screenCaptureServer_, nullptr);
     ASSERT_EQ(value, false);
 }
+
+HWTEST_F(ScreenCaptureServerFunctionTest, ProcessWindowIdList_001, TestSize.Level2)
+{
+    screenCaptureServer_->windowIdList_ = {};
+    int32_t windowId = 0;
+    screenCaptureServer_->SetWindowIdList(windowId);
+    ASSERT_EQ((screenCaptureServer_->GetWindowIdList()).size(), 1);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, NotifyCaptureContentChanged_001, TestSize.Level2)
+{
+    screenCaptureServer_->NotifyCaptureContentChanged(AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_HIDE,
+        nullptr);
+    screenCaptureServer_->NotifyCaptureContentChanged(
+        AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_VISIBLE, nullptr);
+    screenCaptureServer_->NotifyCaptureContentChanged(
+        AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_UNAVAILABLE, nullptr);
+    ASSERT_NE(screenCaptureServer_, nullptr);
+}
+
+#ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
+HWTEST_F(ScreenCaptureServerFunctionTest, WindowLifecycleListener_001, TestSize.Level2)
+{
+    screenCaptureServer_->windowIdList_ = {};
+    int32_t windowId = 70;
+    screenCaptureServer_->SetWindowIdList(windowId);
+    screenCaptureServer_->windowLifecycleListener_ = nullptr;
+    screenCaptureServer_->lifecycleListenerDeathRecipient_ = nullptr;
+    screenCaptureServer_->RegisterWindowLifecycleListener(screenCaptureServer_->GetWindowIdList());
+    ASSERT_NE(screenCaptureServer_->lifecycleListenerDeathRecipient_, nullptr);
+    ASSERT_NE(screenCaptureServer_->windowLifecycleListener_, nullptr);
+    screenCaptureServer_->UnRegisterWindowLifecycleListener();
+    ASSERT_EQ(screenCaptureServer_->lifecycleListenerDeathRecipient_, nullptr);
+    ASSERT_EQ(screenCaptureServer_->windowLifecycleListener_, nullptr);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, WindowInfoChangedListener_001, TestSize.Level2)
+{
+    screenCaptureServer_->windowInfoChangedListener_ = nullptr;
+    screenCaptureServer_->RegisterWindowInfoChangedListener();
+    ASSERT_NE(screenCaptureServer_->windowInfoChangedListener_, nullptr);
+    screenCaptureServer_->UnRegisterWindowInfoChangedListener();
+    ASSERT_EQ(screenCaptureServer_->windowInfoChangedListener_, nullptr);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, StartScreenCaptureRegisterListener_001, TestSize.Level2)
+{
+    screenCaptureServer_->isPrivacyAuthorityEnabled_ = true;
+    screenCaptureServer_->isScreenCaptureAuthority_ = true;
+    screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_SPECIFIED_WINDOW;
+    screenCaptureServer_->windowLifecycleListener_ = nullptr;
+    screenCaptureServer_->lifecycleListenerDeathRecipient_ = nullptr;
+    screenCaptureServer_->windowInfoChangedListener_ = nullptr;
+
+    screenCaptureServer_->missionIds_ = {};
+    screenCaptureServer_->missionIds_.push_back(70);
+    ASSERT_EQ(screenCaptureServer_->missionIds_.size(), 1);
+    screenCaptureServer_->PostStartScreenCapture(true);
+
+    ASSERT_EQ((screenCaptureServer_->GetWindowIdList()).size(), 1);
+    ASSERT_NE(screenCaptureServer_->lifecycleListenerDeathRecipient_, nullptr);
+    ASSERT_NE(screenCaptureServer_->windowLifecycleListener_, nullptr);
+    ASSERT_NE(screenCaptureServer_->windowInfoChangedListener_, nullptr);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, StartScreenCaptureRegisterListener_002, TestSize.Level2)
+{
+    screenCaptureServer_->isPrivacyAuthorityEnabled_ = true;
+    screenCaptureServer_->isScreenCaptureAuthority_ = true;
+    screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_SPECIFIED_SCREEN;
+    screenCaptureServer_->windowLifecycleListener_ = nullptr;
+    screenCaptureServer_->lifecycleListenerDeathRecipient_ = nullptr;
+    screenCaptureServer_->windowInfoChangedListener_ = nullptr;
+
+    screenCaptureServer_->missionIds_ = {};
+    screenCaptureServer_->missionIds_.push_back(70);
+    ASSERT_EQ(screenCaptureServer_->missionIds_.size(), 1);
+    screenCaptureServer_->PostStartScreenCapture(true);
+
+    ASSERT_EQ((screenCaptureServer_->GetWindowIdList()).size(), 0);
+    ASSERT_EQ(screenCaptureServer_->lifecycleListenerDeathRecipient_, nullptr);
+    ASSERT_EQ(screenCaptureServer_->windowLifecycleListener_, nullptr);
+    ASSERT_EQ(screenCaptureServer_->windowInfoChangedListener_, nullptr);
+}
+#endif
 } // Media
 } // OHOS

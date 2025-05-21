@@ -29,6 +29,7 @@
 #include "screen_capture.h"
 #include "avscreen_capture_napi.h"
 #include "screen_capture_monitor.h"
+#include "isoundpool.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "MediaEnumNapi"};
@@ -318,6 +319,7 @@ static const std::vector<struct JsEnumInt> g_VP8Profile = {
 static const std::vector<struct JsEnumInt> g_VideoScaleType = {
     { "VIDEO_SCALE_TYPE_FIT", static_cast<int32_t>(Plugins::VideoScaleType::VIDEO_SCALE_TYPE_FIT) },
     { "VIDEO_SCALE_TYPE_FIT_CROP", static_cast<int32_t>(Plugins::VideoScaleType::VIDEO_SCALE_TYPE_FIT_CROP) },
+    { "VIDEO_SCALE_TYPE_FIT_ASPECT", static_cast<int32_t>(Plugins::VideoScaleType::VIDEO_SCALE_TYPE_FIT_ASPECT) },
 };
 
 static const std::vector<struct JsEnumInt> g_stateChangeReason = {
@@ -331,6 +333,7 @@ static const std::vector<struct JsEnumString> g_containerFormatType = {
     { "CFT_MP3", "mp3" },
     { "CFT_WAV", "wav" },
     { "CFT_AMR", "amr" },
+    { "CFT_AAC", "aac" },
 };
 
 static const std::vector<struct JsEnumString> g_avMimeTypes = {
@@ -425,6 +428,11 @@ static const std::vector<struct JsEnumInt> g_screenCaptureMonitorEvent = {
     { "SCREENCAPTURE_STOPPED", ScreenCaptureMonitorEvent::SCREENCAPTURE_STOPPED }
 };
 
+static const std::vector<struct JsEnumInt> g_soundpoolErrorType = {
+    { "LOAD_ERROR", ERROR_TYPE::LOAD_ERROR },
+    { "PLAY_ERROR", ERROR_TYPE::PLAY_ERROR }
+};
+
 static const std::map<std::string_view, const std::vector<struct JsEnumInt>&> g_intEnumClassMap = {
     { "AVErrorCode", g_AVErrorCode},
     { "MediaErrorCode", g_mediaErrorCode },
@@ -462,6 +470,7 @@ static const std::map<std::string_view, const std::vector<struct JsEnumInt>&> g_
     { "MetaSourceType", g_metaSourceType},
     { "ScreenCaptureEvent", g_screenCaptureMonitorEvent },
     { "AVScreenCaptureFillMode", g_screenCaptureFillMode},
+    { "ErrorType", g_soundpoolErrorType },
 };
 
 static const std::map<std::string_view, const std::vector<struct JsEnumString>&> g_stringEnumClassMap = {

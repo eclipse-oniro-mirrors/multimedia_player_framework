@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Huawei Device Co., Ltd.
+ * Copyright (C) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -93,6 +93,7 @@ napi_value AVRecorderNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("setWatermark", JsSetWatermark),
         DECLARE_NAPI_FUNCTION("setMetadata", JsSetMetadata),
         DECLARE_NAPI_FUNCTION("isWatermarkSupported", JsIsWatermarkSupported),
+        DECLARE_NAPI_FUNCTION("setWillMuteWhenInterrupted", JsSetWillMuteWhenInterrupted),
 
         DECLARE_NAPI_GETTER("state", JsGetState),
     };
@@ -1118,6 +1119,58 @@ napi_value AVRecorderNapi::JsIsWatermarkSupported(napi_env env, napi_callback_in
     return result;
 }
 
+napi_value AVRecorderNapi::JsSetWillMuteWhenInterrupted(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVRecorder::JsSetWillMuteWhenInterrupted");
+    const std::string &opt = AVRecordergOpt::SET_WILL_MUTE_WHEN_INTERRUPTED;
+    MEDIA_LOGI("Js %{public}s Start", opt.c_str());
+
+    const int32_t maxParam = 1;
+    size_t argCount = maxParam;
+    napi_value args[maxParam] = { nullptr };
+
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    auto asyncCtx = std::make_unique<AVRecorderAsyncContext>(env);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, result, "failed to get AsyncContext");
+    asyncCtx->napi = AVRecorderNapi::GetJsInstanceAndArgs(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx->napi != nullptr, result, "failed to GetJsInstanceAndArgs");
+    CHECK_AND_RETURN_RET_LOG(asyncCtx->napi->taskQue_ != nullptr, result, "taskQue is nullptr!");
+    asyncCtx->deferred = CommonNapi::CreatePromise(env, nullptr, result);
+
+    bool enabled = false;
+    napi_status status = napi_get_value_bool(env, args[0], &enabled);
+    if (status != napi_ok) {
+        asyncCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER,
+            "invalid parameters, please check the input");
+    } else {
+        asyncCtx->task_ = AVRecorderNapi::SetWillMuteWhenInterruptedTask(asyncCtx, enabled);
+        (void)asyncCtx->napi->taskQue_->EnqueueTask(asyncCtx->task_);
+        asyncCtx->opt_ = opt;
+    }
+
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, opt.c_str(), NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
+        AVRecorderAsyncContext* asyncCtx = reinterpret_cast<AVRecorderAsyncContext *>(data);
+        CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "asyncCtx is nullptr!");
+
+        if (asyncCtx->task_) {
+            auto result = asyncCtx->task_->GetResult();
+            if (result.Value().first != MSERR_EXT_API9_OK) {
+                asyncCtx->SignError(result.Value().first, result.Value().second);
+            }
+        }
+        MEDIA_LOGI("The js thread of setWillMuteWhenInterrupted finishes execution and returns");
+    }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+    NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
+    asyncCtx.release();
+
+    MEDIA_LOGI("Js %{public}s End", opt.c_str());
+    return result;
+}
+
 AVRecorderNapi *AVRecorderNapi::GetJsInstanceAndArgs(
     napi_env env, napi_callback_info info, size_t &argCount, napi_value *args)
 {
@@ -1335,6 +1388,29 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderNapi::IsWatermarkSupportedTask(
     });
 }
 
+std::shared_ptr<TaskHandler<RetInfo>> AVRecorderNapi::SetWillMuteWhenInterruptedTask(
+    const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, bool enable)
+{
+    return std::make_shared<TaskHandler<RetInfo>>([napi = asyncCtx->napi, enable]() {
+        const std::string &option = AVRecordergOpt::SET_WILL_MUTE_WHEN_INTERRUPTED;
+        MEDIA_LOGI("%{public}s Start", option.c_str());
+
+        CHECK_AND_RETURN_RET(napi != nullptr,
+            GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
+
+        CHECK_AND_RETURN_RET(napi->CheckStateMachine(option) == MSERR_OK,
+            GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
+
+        CHECK_AND_RETURN_RET(napi->CheckRepeatOperation(option) == MSERR_OK,
+            RetInfo(MSERR_EXT_API9_OK, ""));
+        int32_t ret = napi->SetWillMuteWhenInterrupted(enable);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, GetRetInfo(MSERR_UNKNOWN, "SetWillMuteWhenInterruptedTask", ""),
+            "SetWillMuteWhenInterruptedTask fail");
+        MEDIA_LOGI("%{public}s End", option.c_str());
+        return RetInfo(MSERR_EXT_API9_OK, "");
+    });
+}
+
 std::shared_ptr<TaskHandler<RetInfo>> AVRecorderNapi::SetWatermarkTask(
     const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx)
 {
@@ -1541,6 +1617,12 @@ int32_t AVRecorderNapi::IsWatermarkSupported(bool &isWatermarkSupported)
     return recorder_->IsWatermarkSupported(isWatermarkSupported);
 }
 
+int32_t AVRecorderNapi::SetWillMuteWhenInterrupted(bool muteWhenInterrupted)
+{
+    CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ is nullptr!");
+    return recorder_->SetWillMuteWhenInterrupted(muteWhenInterrupted);
+}
+
 int32_t AVRecorderNapi::SetWatermark(std::shared_ptr<PixelMap> &pixelMap,
     std::shared_ptr<WatermarkConfig> &watermarkConfig)
 {
@@ -1743,6 +1825,7 @@ int32_t AVRecorderNapi::GetOutputFormat(const std::string &extension, OutputForm
         { "mp3", OutputFormatType::FORMAT_MP3 },
         { "wav", OutputFormatType::FORMAT_WAV },
         { "amr", OutputFormatType::FORMAT_AMR },
+        { "aac", OutputFormatType::FORMAT_AAC },
         { "", OutputFormatType::FORMAT_DEFAULT },
     };
 
@@ -2540,6 +2623,7 @@ int32_t MediaJsResultExtensionMethod::SetFileFormat(OutputFormatType &type, std:
         { OutputFormatType::FORMAT_MP3, "mp3" },
         { OutputFormatType::FORMAT_WAV, "wav" },
         { OutputFormatType::FORMAT_AMR, "amr" },
+        { OutputFormatType::FORMAT_AAC, "aac" },
         { OutputFormatType::FORMAT_DEFAULT, "" },
     };
 

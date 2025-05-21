@@ -199,7 +199,7 @@ napi_value SoundPoolNapi::JsCreateSoundPool(napi_env env, napi_callback_info inf
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "failed to napi_get_cb_info");
 
     // get create soundpool Parameter
-    status = GetJsInstanceWithParameter(env, args);
+    status = GetJsInstanceWithParameter(env, args, PARAM3);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "failed to Get InstanceWithParameter");
 
     std::unique_ptr<SoundPoolAsyncContext> asyncCtx = std::make_unique<SoundPoolAsyncContext>(env);
@@ -235,7 +235,7 @@ napi_value SoundPoolNapi::JsCreateParallelSoundPool(napi_env env, napi_callback_
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "failed to napi_get_cb_info");
 
     // get create soundpool Parameter
-    status = GetJsInstanceWithParameter(env, args);
+    status = GetJsInstanceWithParameter(env, args, PARAM2);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "failed to Get InstanceWithParameter");
 
     std::unique_ptr<SoundPoolAsyncContext> asyncCtx = std::make_unique<SoundPoolAsyncContext>(env);
@@ -697,7 +697,7 @@ napi_value SoundPoolNapi::JsSetOnCallback(napi_env env, napi_callback_info info)
     MEDIA_LOGI("set callbackName: %{public}s", callbackName.c_str());
     if (callbackName != SoundPoolEvent::EVENT_LOAD_COMPLETED && callbackName != SoundPoolEvent::EVENT_PLAY_FINISHED &&
         callbackName != SoundPoolEvent::EVENT_PLAY_FINISHED_WITH_STREAM_ID &&
-        callbackName != SoundPoolEvent::EVENT_ERROR) {
+        callbackName != SoundPoolEvent::EVENT_ERROR && callbackName != SoundPoolEvent::EVENT_ERROR_OCCURRED) {
         soundPoolNapi->ErrorCallback(MSERR_INVALID_VAL, "SetEventCallback");
         return result;
     }
@@ -734,7 +734,7 @@ napi_value SoundPoolNapi::JsClearOnCallback(napi_env env, napi_callback_info inf
     std::string callbackName = CommonNapi::GetStringArgument(env, args[0]);
     if (callbackName != SoundPoolEvent::EVENT_LOAD_COMPLETED && callbackName != SoundPoolEvent::EVENT_PLAY_FINISHED &&
         callbackName != SoundPoolEvent::EVENT_PLAY_FINISHED_WITH_STREAM_ID &&
-        callbackName != SoundPoolEvent::EVENT_ERROR) {
+        callbackName != SoundPoolEvent::EVENT_ERROR && callbackName != SoundPoolEvent::EVENT_ERROR_OCCURRED) {
         soundPoolNapi->ErrorCallback(MSERR_INVALID_VAL, "CancelEventCallback");
         return result;
     }
@@ -761,8 +761,10 @@ SoundPoolNapi* SoundPoolNapi::GetJsInstanceAndArgs(napi_env env, napi_callback_i
     return soundPoolNapi;
 }
 
-napi_status SoundPoolNapi::GetJsInstanceWithParameter(napi_env env, napi_value *argv)
+napi_status SoundPoolNapi::GetJsInstanceWithParameter(napi_env env, napi_value *argv, int32_t argvLength)
 {
+    CHECK_AND_RETURN_RET_LOG(argvLength >= PARAM2, napi_invalid_arg, "invalid argvLength");
+    
     napi_status status = napi_get_value_int32(env, argv[PARAM0], &maxStreams); // get maxStreams
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, status, "failed to get napi maxStreams");
 

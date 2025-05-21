@@ -140,6 +140,9 @@ ohos_fuzztest("ScreenCaptureServerStartCaseFuzzTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "window_manager:libdm",
+    "window_manager:scene_session",
+    "window_manager:scene_session_manager",
+    "window_manager:session_manager_lite",
   ]
   if (player_framework_support_screen_capture_stopbycall) {
     external_deps += [

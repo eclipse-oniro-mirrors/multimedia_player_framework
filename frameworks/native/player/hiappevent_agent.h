@@ -42,9 +42,7 @@ private:
     int64_t AddProcessor();
     void WriteEndEvent(const std::string& transId,
         const int errCode, const std::string& message, time_t startTime, HiviewDFX::HiTraceId traceId);
-    
-    int64_t processorId_ = -1;
-    std::mutex processorMutex;
+
     std::unique_ptr<Task> hiAppEventTask_;
 #endif
 };

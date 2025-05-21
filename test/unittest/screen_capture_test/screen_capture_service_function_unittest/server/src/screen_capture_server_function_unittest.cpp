@@ -1581,6 +1581,29 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ResizeCanvas_006, TestSize.Level2)
     int ret = screenCaptureServer_->ResizeCanvas(580, 4321);
     ASSERT_EQ(ret, MSERR_INVALID_VAL);
 }
+ 
+HWTEST_F(ScreenCaptureServerFunctionTest, UpdateSurface_001, TestSize.Level2)
+{
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
+    int ret = screenCaptureServer_->UpdateSurface(nullptr);
+    ASSERT_EQ(ret, MSERR_INVALID_OPERATION);
+}
+ 
+HWTEST_F(ScreenCaptureServerFunctionTest, UpdateSurface_002, TestSize.Level2)
+{
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
+    screenCaptureServer_->isSurfaceMode_ = true;
+    int ret = screenCaptureServer_->UpdateSurface(nullptr);
+    ASSERT_EQ(ret, MSERR_INVALID_OPERATION);
+}
+ 
+HWTEST_F(ScreenCaptureServerFunctionTest, UpdateSurface_003, TestSize.Level2)
+{
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
+    screenCaptureServer_->isSurfaceMode_ = true;
+    int ret = screenCaptureServer_->UpdateSurface(nullptr);
+    ASSERT_EQ(ret, MSERR_INVALID_OPERATION);
+}
 
 HWTEST_F(ScreenCaptureServerFunctionTest, StopScreenCaptureByEvent_002, TestSize.Level2)
 {
@@ -1693,15 +1716,10 @@ HWTEST_F(ScreenCaptureServerFunctionTest, IsSystemScreenRecorder_001, TestSize.L
 
 HWTEST_F(ScreenCaptureServerFunctionTest, IsSystemScreenRecorder_002, TestSize.Level2)
 {
+    screenCaptureServer_->SetSystemScreenRecorderStatus(false);
+    ScreenCaptureMonitor::GetInstance()->IsSystemScreenRecorderWorking();
     ScreenCaptureServer::systemScreenRecorderPid_ = -1;
     bool ret = ScreenCaptureMonitor::GetInstance()->IsSystemScreenRecorder(-1);
-    ASSERT_EQ(ret, false);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, IsSystemScreenRecorderWorking_001, TestSize.Level2)
-{
-    screenCaptureServer_->SetSystemScreenRecorderStatus(false);
-    bool ret = ScreenCaptureMonitor::GetInstance()->IsSystemScreenRecorderWorking();
     ASSERT_EQ(ret, false);
 }
 

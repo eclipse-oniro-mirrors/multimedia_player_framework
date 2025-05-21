@@ -66,6 +66,11 @@ sptr<IStandardMonitorService> MediaClient::GetMonitorProxy()
     return nullptr;
 }
 
+bool MediaClient::CanKillMediaService()
+{
+    return false;
+}
+
 void MediaClient::ReleaseClientListener() {}
 
 namespace Test {

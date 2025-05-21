@@ -572,6 +572,7 @@ int32_t SystemSoundManagerImpl::SetRingtoneUri(const shared_ptr<Context> &contex
     if (uri == NO_RING_SOUND) {
         int32_t changedRows = SetNoRingToneUri(dataShareHelper, ringtoneType);
         MEDIA_LOGI("SetNoRingToneUri result: changedRows %{public}d", changedRows);
+        ClearSystemVideoRingConfig(ringtoneType);
         dataShareHelper->Release();
         return SUCCESS;
     }
@@ -590,6 +591,18 @@ int32_t SystemSoundManagerImpl::SetRingtoneUri(const shared_ptr<Context> &contex
         return ERROR;
     }
     resultSetByUri == nullptr ? : resultSetByUri->Close();
+    return CheckToneTypeAndUpdate(dataShareHelper, uri, ringtoneType);
+}
+
+int32_t SystemSoundManagerImpl::CheckToneTypeAndUpdate(std::shared_ptr<DataShare::DataShareHelper> &dataShareHelper,
+    const std::string &uri, RingtoneType ringtoneType)
+{
+    if (dataShareHelper == nullptr) {
+        MEDIA_LOGE("dataShareHelper is nullptr!");
+        return ERROR;
+    }
+    DataShare::DatashareBusinessError businessError;
+    DataShare::DataSharePredicates queryPredicates;
     queryPredicates.EqualTo(RINGTONE_COLUMN_TONE_TYPE, TONE_TYPE_RINGTONE);
     auto resultSet = dataShareHelper->Query(RINGTONEURI, queryPredicates, COLUMNS, &businessError);
     auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
@@ -604,11 +617,35 @@ int32_t SystemSoundManagerImpl::SetRingtoneUri(const shared_ptr<Context> &contex
         resultSet == nullptr ? : resultSet->Close();
         dataShareHelper->Release();
         SetExtRingtoneUri(uri, ringtoneAsset->GetTitle(), ringtoneType, TONE_TYPE_RINGTONE, changedRows);
-        return changedRows > 0 ? SUCCESS : ERROR;
+        if (changedRows > 0) {
+            ClearSystemVideoRingConfig(ringtoneType);
+            return SUCCESS;
+        } else {
+            return ERROR;
+        }
     }
     resultSet == nullptr ? : resultSet->Close();
     dataShareHelper->Release();
     return TYPEERROR;
+}
+
+void SystemSoundManagerImpl::ClearSystemVideoRingConfig(RingtoneType ringtoneType)
+{
+    std::string tableType = "secure";
+    std::string ringtoneFlagCardKey;
+    std::string videoRingtoneNameCardKey;
+    std::string defaultValue = "";
+    if (ringtoneType == RINGTONE_TYPE_SIM_CARD_0) {
+        ringtoneFlagCardKey = "ringtoneFlagCard1";
+        videoRingtoneNameCardKey = "videoRingtoneNameCard1";
+    } else {
+        ringtoneFlagCardKey = "ringtoneFlagCard2";
+        videoRingtoneNameCardKey = "videoRingtoneNameCard2";
+    }
+    int32_t result = UpdateStringValue(ringtoneFlagCardKey, defaultValue, tableType);
+    MEDIA_LOGI("ringtoneFlagCardKey update result: %{public}d.", result);
+    result = UpdateStringValue(videoRingtoneNameCardKey, defaultValue, tableType);
+    MEDIA_LOGI("videoRingtoneNameCardKey update result: %{public}d.", result);
 }
 
 std::string SystemSoundManagerImpl::GetRingtoneUriByType(const DatabaseTool &databaseTool, const std::string &type)

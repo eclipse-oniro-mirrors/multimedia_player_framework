@@ -73,6 +73,41 @@ int32_t AVMetadataHelperImpl::SetSource(const std::string &uri, int32_t usage)
     return MSERR_OK;
 }
 
+int32_t AVMetadataHelperImpl::SetAVMetadataCaller(AVMetadataCaller caller)
+{
+    metadataCaller_ = caller;
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " SetAVMetadataCaller caller: %{public}d", FAKE_POINTER(this),
+        static_cast<int32_t>(metadataCaller_));
+    return MSERR_OK;
+}
+
+int32_t AVMetadataHelperImpl::SetUrlSource(const std::string &uri, const std::map<std::string, std::string> &header)
+{
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " SetUrlSource uri: %{private}s", FAKE_POINTER(this), uri.c_str());
+
+    auto ret = SetSourceInternel(uri, header);
+    CHECK_AND_RETURN_RET_LOG(ret == Status::OK, MSERR_INVALID_VAL,
+        "0x%{public}06" PRIXPTR " Failed to call SetSourceInternel", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(MetaUtils::CheckFileType(mediaDemuxer_->GetGlobalMetaInfo()),
+        MSERR_UNSUPPORT, "0x%{public}06" PRIXPTR "SetSource unsupport", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(!mediaDemuxer_->IsSeekToTimeSupported(),
+        MSERR_UNSUPPORT, "0x%{public}06" PRIXPTR " hls/dash unsupport", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(GetDurationMs() > 0,
+        MSERR_UNSUPPORT, "0x%{public}06" PRIXPTR " live stream unsupport", FAKE_POINTER(this));
+    return MSERR_OK;
+}
+
+int64_t AVMetadataHelperImpl::GetDurationMs()
+{
+    CHECK_AND_RETURN_RET_LOG(mediaDemuxer_ != nullptr,
+        Plugins::HST_TIME_NONE, "Get media duration failed, demuxer is not ready");
+    int64_t duration = 0;
+    CHECK_AND_RETURN_RET_LOG(mediaDemuxer_->GetDuration(duration),
+        Plugins::HST_TIME_NONE, "Get media duration failed");
+    CHECK_AND_RETURN_RET_NOLOG(duration > 0, Plugins::HST_TIME_NONE);
+    return Plugins::HstTime2Us(duration);
+}
+
 int32_t AVMetadataHelperImpl::SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc)
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR "SetSource dataSrc", FAKE_POINTER(this));
@@ -133,6 +168,31 @@ Status AVMetadataHelperImpl::SetSourceInternel(const std::shared_ptr<IMediaDataS
     return Status::OK;
 }
 
+Status AVMetadataHelperImpl::SetSourceInternel(const std::string &uri,
+    const std::map<std::string, std::string> &header)
+{
+    Reset();
+    mediaDemuxer_ = std::make_shared<MediaDemuxer>();
+    CHECK_AND_RETURN_RET_LOG(
+        mediaDemuxer_ != nullptr, Status::ERROR_INVALID_DATA, "SetSourceInternel demuxer is nullptr");
+    mediaDemuxer_->SetPlayerId(groupId_);
+    if (interruptMonitor_) {
+        interruptMonitor_->RegisterListener(mediaDemuxer_);
+        interruptMonitor_->SetInterruptState(isInterruptNeeded_.load());
+    }
+    Status ret = Status::OK;
+    if (!header.empty()) {
+        MEDIA_LOGI("DoSetSource header");
+        ret = mediaDemuxer_->SetDataSource(std::make_shared<MediaSource>(uri, header));
+    } else {
+        MEDIA_LOGI("DoSetSource url");
+        ret = mediaDemuxer_->SetDataSource(std::make_shared<MediaSource>(uri));
+    }
+    CHECK_AND_RETURN_RET_LOG(ret == Status::OK, ret,
+        "0x%{public}06" PRIXPTR " SetSourceInternel demuxer failed to call SetDataSource", FAKE_POINTER(this));
+    return Status::OK;
+}
+
 std::string AVMetadataHelperImpl::ResolveMetadata(int32_t key)
 {
     MEDIA_LOGI("enter ResolveMetadata with key: %{public}d", key);
@@ -179,8 +239,11 @@ std::shared_ptr<AVBuffer> AVMetadataHelperImpl::FetchFrameYuv(
 {
     MEDIA_LOGD("enter FetchFrameAtTime");
     auto res = InitThumbnailGenerator();
-    CHECK_AND_RETURN_RET(res == Status::OK, nullptr);
-    return thumbnailGenerator_->FetchFrameYuv(timeUs, option, param);
+    CHECK_AND_RETURN_RET_NOLOG(res == Status::OK, nullptr);
+    std::shared_ptr<AVBuffer> avBuffer = thumbnailGenerator_->FetchFrameYuv(timeUs, option, param);
+    CHECK_AND_RETURN_RET_NOLOG(metadataCaller_ != AVMetadataCaller::AV_METADATA_EXTRACTOR || avBuffer == nullptr ||
+        !(avBuffer->flag_ & (uint32_t)(AVBufferFlag::EOS)), nullptr);
+    return avBuffer;
 }
 
 int32_t AVMetadataHelperImpl::GetTimeByFrameIndex(uint32_t index, uint64_t &time)

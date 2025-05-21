@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -33,6 +33,7 @@
 #include "avsession_background.h"
 #endif
 #include "media_source_loader_proxy.h"
+#include "audio_background_adapter.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "PlayerServiceStub"};
@@ -203,6 +204,14 @@ void PlayerServiceStub::FillPlayerFuncPart3()
         [this](MessageParcel &data, MessageParcel &reply) { return SetVideoWindowSize(data, reply); } };
     playerFuncs_[SET_VOLUME_MODE] = { "Player::SetVolumeMode",
         [this](MessageParcel &data, MessageParcel &reply) { return SetVolumeMode(data, reply); } };
+    playerFuncs_[SET_START_FRAME_RATE_OPT_ENABLED] = { "Player::SetStartFrameRateOptEnabled",
+        [this](MessageParcel &data, MessageParcel &reply) { return SetStartFrameRateOptEnabled(data, reply); } };
+    playerFuncs_[SET_REOPEN_FD] = { "Player::SetReopenFd",
+        [this](MessageParcel &data, MessageParcel &reply) { return SetReopenFd(data, reply); } };
+    playerFuncs_[ENABLE_CAMERA_POSTPROCESSING] = { "Player::EnableCameraPostprocessing",
+        [this](MessageParcel &data, MessageParcel &reply) { return EnableCameraPostprocessing(data, reply); } };
+    playerFuncs_[SET_PLAYERBACK_RATE] = { "Player::SetPlaybackRate",
+        [this](MessageParcel &data, MessageParcel &reply) { return SetPlaybackRate(data, reply); } };
 }
 
 int32_t PlayerServiceStub::Init()
@@ -356,6 +365,7 @@ int32_t PlayerServiceStub::Play()
 #ifdef SUPPORT_AVSESSION
     AVsessionBackground::Instance().AddListener(playerServer_, appUid_);
 #endif
+    AudioBackgroundAdapter::Instance().AddListener(playerServer_, appUid_);
     return playerServer_->Play();
 }
 
@@ -434,6 +444,13 @@ int32_t PlayerServiceStub::SetVolumeMode(int32_t mode)
     MediaTrace trace("PlayerServiceStub::SetVolumeMode");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
     return playerServer_->SetVolumeMode(mode);
+}
+
+int32_t PlayerServiceStub::SetStartFrameRateOptEnabled(bool enabled)
+{
+    MediaTrace trace("PlayerServiceStub::SetStartFrameRateOptEnabled");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->SetStartFrameRateOptEnabled(enabled);
 }
 
 int32_t PlayerServiceStub::Seek(int32_t mSeconds, PlayerSeekMode mode)
@@ -518,6 +535,13 @@ int32_t PlayerServiceStub::SetPlaybackSpeed(PlaybackRateMode mode)
     MediaTrace trace("PlayerServiceStub::SetPlaybackSpeed");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
     return playerServer_->SetPlaybackSpeed(mode);
+}
+
+int32_t PlayerServiceStub::SetPlaybackRate(float rate)
+{
+    MediaTrace trace("PlayerServiceStub::SetPlaybackRate");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->SetPlaybackRate(rate);
 }
 
 int32_t PlayerServiceStub::SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, AVPlayStrategy strategy)
@@ -686,6 +710,13 @@ uint32_t PlayerServiceStub::GetMemoryUsage()
     return playerServer_->GetMemoryUsage();
 }
 
+int32_t PlayerServiceStub::SetReopenFd(int32_t fd)
+{
+    MediaTrace trace("PlayerServiceStub::SetReopenFd");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->SetReopenFd(fd);
+}
+
 int32_t PlayerServiceStub::SetListenerObject(MessageParcel &data, MessageParcel &reply)
 {
     sptr<IRemoteObject> object = data.ReadRemoteObject();
@@ -695,7 +726,7 @@ int32_t PlayerServiceStub::SetListenerObject(MessageParcel &data, MessageParcel 
 
 int32_t PlayerServiceStub::SetPlayerProducer(MessageParcel &data, MessageParcel &reply)
 {
-    uint32_t producer = data.ReadUint32();
+    uint32_t producer = data.ReadInt32();
     reply.WriteInt32(SetPlayerProducer(static_cast<PlayerProducer>(producer)));
     return MSERR_OK;
 }
@@ -836,6 +867,13 @@ int32_t PlayerServiceStub::SetVolume(MessageParcel &data, MessageParcel &reply)
     return MSERR_OK;
 }
 
+int32_t PlayerServiceStub::SetStartFrameRateOptEnabled(MessageParcel &data, MessageParcel &reply)
+{
+    bool enabled = data.ReadBool();
+    reply.WriteInt32(SetStartFrameRateOptEnabled(enabled));
+    return MSERR_OK;
+}
+
 int32_t PlayerServiceStub::Seek(MessageParcel &data, MessageParcel &reply)
 {
     int32_t mSeconds = data.ReadInt32();
@@ -959,6 +997,13 @@ int32_t PlayerServiceStub::SetPlaybackSpeed(MessageParcel &data, MessageParcel &
 {
     int32_t mode = data.ReadInt32();
     reply.WriteInt32(SetPlaybackSpeed(static_cast<PlaybackRateMode>(mode)));
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::SetPlaybackRate(MessageParcel &data, MessageParcel &reply)
+{
+    float rate = data.ReadFloat();
+    reply.WriteInt32(SetPlaybackRate(rate));
     return MSERR_OK;
 }
 
@@ -1302,6 +1347,27 @@ int32_t PlayerServiceStub::SetSeiMessageCbStatus(MessageParcel &data, MessagePar
     }
     reply.WriteInt32(SetSeiMessageCbStatus(status, payloadTypes));
     return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::SetReopenFd(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t fd = data.ReadFileDescriptor();
+    reply.WriteInt32(SetReopenFd(fd));
+    (void)::close(fd);
+    return MSERR_OK;
+}
+ 
+int32_t PlayerServiceStub::EnableCameraPostprocessing(MessageParcel &data, MessageParcel &reply)
+{
+    reply.WriteInt32(EnableCameraPostprocessing());
+    return MSERR_OK;
+}
+ 
+int32_t PlayerServiceStub::EnableCameraPostprocessing()
+{
+    MediaTrace trace("Stub::EnableCameraPostprocessing");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->EnableCameraPostprocessing();
 }
 } // namespace Media
 } // namespace OHOS

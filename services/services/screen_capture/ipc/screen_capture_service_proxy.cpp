@@ -543,6 +543,30 @@ int32_t ScreenCaptureServiceProxy::ShowCursor(bool showCursor)
                              "ShowCursor failed, error: %{public}d", error);
     return reply.ReadInt32();
 }
+ 
+int32_t ScreenCaptureServiceProxy::UpdateSurface(sptr<Surface> surface)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+ 
+    bool token = data.WriteInterfaceToken(ScreenCaptureServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+ 
+    CHECK_AND_RETURN_RET_LOG(surface != nullptr, MSERR_INVALID_VAL, "surface is nullptr");
+    sptr<IBufferProducer> producer = surface->GetProducer();
+    CHECK_AND_RETURN_RET_LOG(producer != nullptr, MSERR_INVALID_VAL, "producer is nullptr");
+ 
+    sptr<IRemoteObject> object = producer->AsObject();
+    bool res = data.WriteRemoteObject(object);
+    CHECK_AND_RETURN_RET_LOG(res, MSERR_INVALID_OPERATION, "UpdateSurface failed to write remote object!");
+ 
+    int error = Remote()->SendRequest(UPDATE_SURFACE, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(
+        error == MSERR_OK, MSERR_INVALID_OPERATION, "UpdateSurface failed, error: %{public}d", error);
+ 
+    return reply.ReadInt32();
+}
 
 int32_t ScreenCaptureServiceProxy::ResizeCanvas(int32_t width, int32_t height)
 {
@@ -617,6 +641,5 @@ int32_t ScreenCaptureServiceProxy::SetScreenCaptureStrategy(ScreenCaptureStrateg
                              "SetScreenCaptureStrategy failed, error: %{public}d", error);
     return reply.ReadInt32();
 }
-
 } // namespace Media
 } // namespace OHOS

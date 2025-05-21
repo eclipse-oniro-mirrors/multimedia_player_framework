@@ -88,6 +88,14 @@ int32_t PlayerServer::BaseState::SetPlaybackSpeed(PlaybackRateMode mode)
     return MSERR_INVALID_STATE;
 }
 
+int32_t PlayerServer::BaseState::SetPlaybackRate(float rate)
+{
+    (void)rate;
+
+    ReportInvalidOperation();
+    return MSERR_INVALID_STATE;
+}
+
 int32_t PlayerServer::BaseState::SeekContinous(int32_t mSeconds, int64_t batchNo)
 {
     (void)mSeconds;
@@ -142,6 +150,13 @@ int32_t PlayerServer::BaseState::MessageSpeedDone()
     return MSERR_OK;
 }
 
+int32_t PlayerServer::BaseState::MessageRateDone()
+{
+    (void)server_.taskMgr_.MarkTaskDone("rate done");
+    MediaTrace::TraceEnd("PlayerServer::SetPlaybackRate", FAKE_POINTER(&server_));
+    return MSERR_OK;
+}
+
 int32_t PlayerServer::BaseState::MessageStateChange(int32_t extra)
 {
     if (extra == PLAYER_PLAYBACK_COMPLETE) {
@@ -173,6 +188,10 @@ int32_t PlayerServer::BaseState::OnMessageReceived(PlayerOnInfoType type, int32_
 
         case INFO_TYPE_SPEEDDONE:
             ret = MessageSpeedDone();
+            break;
+
+        case INFO_TYPE_RATEDONE:
+            ret = MessageRateDone();
             break;
 
         case INFO_TYPE_EOS:
@@ -278,6 +297,11 @@ int32_t PlayerServer::PreparedState::SetPlaybackSpeed(PlaybackRateMode mode)
     return server_.HandleSetPlaybackSpeed(mode);
 }
 
+int32_t PlayerServer::PreparedState::SetPlaybackRate(float rate)
+{
+    return server_.HandleSetPlaybackRate(rate);
+}
+
 int32_t PlayerServer::PreparedState::SeekContinous(int32_t mSeconds, int64_t batchNo)
 {
     return server_.HandleSeekContinous(mSeconds, batchNo);
@@ -344,6 +368,11 @@ int32_t PlayerServer::PlayingState::Stop()
 int32_t PlayerServer::PlayingState::SetPlaybackSpeed(PlaybackRateMode mode)
 {
     return server_.HandleSetPlaybackSpeed(mode);
+}
+
+int32_t PlayerServer::PlayingState::SetPlaybackRate(float rate)
+{
+    return server_.HandleSetPlaybackRate(rate);
 }
 
 int32_t PlayerServer::PlayingState::SeekContinous(int32_t mSeconds, int64_t batchNo)
@@ -440,6 +469,11 @@ int32_t PlayerServer::PausedState::Stop()
 int32_t PlayerServer::PausedState::SetPlaybackSpeed(PlaybackRateMode mode)
 {
     return server_.HandleSetPlaybackSpeed(mode);
+}
+
+int32_t PlayerServer::PausedState::SetPlaybackRate(float rate)
+{
+    return server_.HandleSetPlaybackRate(rate);
 }
 
 int32_t PlayerServer::PausedState::SeekContinous(int32_t mSeconds, int64_t batchNo)
@@ -551,6 +585,11 @@ void PlayerServer::PlaybackCompletedState::HandleStateChange(int32_t newState)
 int32_t PlayerServer::PlaybackCompletedState::SetPlaybackSpeed(PlaybackRateMode mode)
 {
     return server_.HandleSetPlaybackSpeed(mode);
+}
+
+int32_t PlayerServer::PlaybackCompletedState::SetPlaybackRate(float rate)
+{
+    return server_.HandleSetPlaybackRate(rate);
 }
 }
 }

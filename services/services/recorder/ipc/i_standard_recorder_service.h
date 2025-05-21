@@ -96,6 +96,7 @@ public:
     virtual int32_t IsWatermarkSupported(bool &isWatermarkSupported) = 0;
     virtual int32_t SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer) = 0;
     virtual int32_t SetUserMeta(const std::shared_ptr<Meta> &userMeta) = 0;
+    virtual int32_t SetWillMuteWhenInterrupted(bool muteWhenInterrupted) = 0;
     /**
      * IPC code ID
      */
@@ -150,6 +151,7 @@ public:
         IS_WATERMARK_SUPPORTED,
         SET_WATERMARK,
         SET_USERMETA,
+        SET_INTERRUPT_STRATEGY,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardRecorderService");

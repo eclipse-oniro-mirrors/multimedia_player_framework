@@ -37,8 +37,10 @@ private:
     static napi_value Constructor(napi_env env, napi_callback_info info);
     static void Destructor(napi_env env, void *nativeObject, void *finalize);
     static napi_value JsCreateAVMetadataExtractor(napi_env env, napi_callback_info info);
+    static napi_value JsSetUrlSource(napi_env env, napi_callback_info info);
     static napi_value JsResolveMetadata(napi_env env, napi_callback_info info);
     static napi_value JsFetchArtPicture(napi_env env, napi_callback_info info);
+    static napi_value JsFetchFrameAtTime(napi_env env, napi_callback_info info);
     static napi_value JsRelease(napi_env env, napi_callback_info info);
     /**
      * fdSrc: AVFileDescriptor
@@ -55,6 +57,7 @@ private:
     static AVMetadataExtractorNapi *GetJsInstanceWithParameter(
         napi_env env, napi_callback_info info, size_t &argc, napi_value *argv);
     static void FetchArtPictureComplete(napi_env env, napi_status status, void *data);
+    static void CreatePixelMapComplete(napi_env env, napi_status status, void *data);
     static void CommonCallbackRoutine(
         napi_env env, AVMetadataExtractorAsyncContext *&asyncContext, const napi_value &valueParam);
     static void ResolveMetadataComplete(napi_env env, napi_status status, void *data);
@@ -65,6 +68,8 @@ private:
     
     AVMetadataExtractorNapi();
     ~AVMetadataExtractorNapi();
+    int32_t GetFetchFrameArgs(std::unique_ptr<AVMetadataExtractorAsyncContext> &asyncCtx,
+        napi_env env, napi_value timeUs, napi_value option, napi_value params);
 
 private:
     static thread_local napi_ref constructor_;
@@ -76,6 +81,8 @@ private:
     std::mutex mutex_;
     PixelMapParams param_;
     HelperState state_ { HelperState::HELPER_STATE_IDLE };
+    std::string url_ = "";
+    std::map<std::string, std::string> header_;
 };
 
 struct AVMetadataExtractorAsyncContext : public MediaAsyncContext {
@@ -86,10 +93,14 @@ struct AVMetadataExtractorAsyncContext : public MediaAsyncContext {
     std::string opt_ = "";
     std::shared_ptr<Meta> metadata_ = nullptr;
     std::shared_ptr<PixelMap> artPicture_ = nullptr;
+    std::shared_ptr<PixelMap> pixel_ = nullptr;
     std::shared_ptr<AVMetadataHelper> innerHelper_ = nullptr;
-    int32_t status;
+    int32_t status = 0;
+    int32_t option = 0;
+    int64_t timeUs = 0;
     uint64_t timeStamp_;
     uint32_t index_;
+    PixelMapParams param_;
 };
 }  // namespace Media
 }  // namespace OHOS

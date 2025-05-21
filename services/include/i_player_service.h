@@ -363,6 +363,15 @@ public:
      */
     virtual int32_t SetPlaybackSpeed(PlaybackRateMode mode) = 0;
 
+    /**
+     * @brief set the player playback rate
+     *
+     * @param rate the rate which can set.
+     * @return Returns {@link MSERR_OK} if the playback rate is set successfully; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     */
+    virtual int32_t SetPlaybackRate(float rate) = 0;
+
     virtual int32_t SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, AVPlayStrategy strategy) = 0;
     /**
      * @brief set the bit rate use for hls player
@@ -642,6 +651,39 @@ public:
      * @version 1.0
      */
     virtual uint32_t GetMemoryUsage()
+    {
+        return 0;
+    }
+
+    virtual int32_t SetStartFrameRateOptEnabled(bool enabled)
+    {
+        (void)enabled;
+        return 0;
+    }
+
+    /**
+     * @brief Set video reopen fd.
+     *
+     * @return Returns {@link MSERR_OK} if video reopen fd is set; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t SetReopenFd(int32_t fd)
+    {
+        (void)fd;
+        return 0;
+    }
+ 
+    /**
+     * @brief Enable or disable camera post process.
+     *
+     * @return Returns {@link MSERR_OK} if enable camera post process is set; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t EnableCameraPostprocessing()
     {
         return 0;
     }

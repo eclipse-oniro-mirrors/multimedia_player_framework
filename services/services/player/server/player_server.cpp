@@ -261,8 +261,6 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
     ret = playerEngine_->SetSeiMessageCbStatus(seiMessageCbStatus_, payloadTypes_);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetMaxAmplitudeCbStatus Failed!");
 
-    TRUE_LOG(ret != MSERR_OK, MEDIA_LOGW, "PlayerEngine enable report media progress failed, ret %{public}d", ret);
-
     lastOpStatus_ = PLAYER_INITIALIZED;
     ChangeState(initializedState_);
 
@@ -306,6 +304,22 @@ int32_t PlayerServer::AddSubSource(int32_t fd, int64_t offset, int64_t size)
     (void)playerEngine_->AddSubSource(uriHelper->FormattedUri());
     subUriHelpers_.emplace_back(uriHelper);
 
+    return MSERR_OK;
+}
+
+int32_t PlayerServer::SetStartFrameRateOptEnabled(bool enabled)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
+    auto startFrameRateOptTask = std::make_shared<TaskHandler<int32_t>>([this, enabled]() {
+        MediaTrace trace("PlayerServer::SetStartFrameRateOptEnabled");
+        CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, taskMgr_.MarkTaskDone("SetStartFrameRateOptEnabled done"),
+            "SetStartFrameRateOptEnabled failed, playerEngine is nullptr");
+        auto res = playerEngine_->SetStartFrameRateOptEnabled(enabled);
+        taskMgr_.MarkTaskDone("SetStartFrameRateOptEnabled done");
+        return res;
+    });
+    taskMgr_.LaunchTask(startFrameRateOptTask, PlayerServerTaskType::LIGHT_TASK, "SetStartFrameRateOptEnabled");
     return MSERR_OK;
 }
 
@@ -1107,6 +1121,42 @@ int32_t PlayerServer::SetPlaybackSpeed(PlaybackRateMode mode)
     return MSERR_OK;
 }
 
+int32_t PlayerServer::SetPlaybackRate(float rate)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    if ((lastOpStatus_ != PLAYER_STARTED) && (lastOpStatus_ != PLAYER_PREPARED) &&
+        (lastOpStatus_ != PLAYER_PAUSED) && (lastOpStatus_ != PLAYER_PLAYBACK_COMPLETE)) {
+        MEDIA_LOGE("Can not SetPlaybackRate, currentState is %{public}s",
+            GetStatusDescription(lastOpStatus_).c_str());
+        return MSERR_INVALID_OPERATION;
+    }
+    MEDIA_LOGD("PlayerServer SetPlaybackRate in, rate %{public}f", rate);
+    if (isLiveStream_) {
+        MEDIA_LOGE("Can not SetPlaybackRate, it is live-stream");
+        OnErrorMessage(MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "Can not SetPlaybackRate, it is live-stream");
+        return MSERR_INVALID_OPERATION;
+    }
+
+    auto rateTask = std::make_shared<TaskHandler<void>>([this, rate]() {
+        MediaTrace::TraceBegin("PlayerServer::SetPlaybackRate", FAKE_POINTER(this));
+        auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
+        (void)currState->SetPlaybackRate(rate);
+    });
+
+    auto cancelTask = std::make_shared<TaskHandler<void>>([this, rate]() {
+        MEDIA_LOGI("Interrupted rate action");
+        Format format;
+        OnInfoNoChangeStatus(INFO_TYPE_RATEDONE, rate, format);
+        taskMgr_.MarkTaskDone("interrupted rate done");
+    });
+
+    int32_t ret = taskMgr_.SpeedTask(rateTask, cancelTask, "rate", config_.speedRate);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetPlaybackRate failed");
+
+    return MSERR_OK;
+}
+
 int32_t PlayerServer::HandleSetPlaybackSpeed(PlaybackRateMode mode)
 {
     if (config_.speedMode == mode) {
@@ -1123,6 +1173,26 @@ int32_t PlayerServer::HandleSetPlaybackSpeed(PlaybackRateMode mode)
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine SetPlaybackSpeed Failed!");
     }
     config_.speedMode = mode;
+    return MSERR_OK;
+}
+
+int32_t PlayerServer::HandleSetPlaybackRate(float rate)
+{
+    if (config_.speedRate == rate) {
+        MEDIA_LOGD("The speed rate is same, rate = %{public}f", rate);
+        Format format;
+        (void)format.PutFloatValue(PlayerKeys::PLAYER_PLAYBACK_RATE, rate);
+        OnInfoNoChangeStatus(INFO_TYPE_RATEDONE, rate, format);
+        taskMgr_.MarkTaskDone("set speed rate is same");
+        MediaTrace::TraceEnd("PlayerServer::SetPlaybackRate", FAKE_POINTER(this));
+        return MSERR_OK;
+    }
+
+    if (playerEngine_ != nullptr) {
+        int32_t ret = playerEngine_->SetPlaybackRate(rate);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine SetPlaybackRate Failed!");
+    }
+    config_.speedRate = rate;
     return MSERR_OK;
 }
 
@@ -2166,6 +2236,24 @@ int32_t PlayerServer::SetSeiMessageCbStatus(bool status, const std::vector<int32
 uint32_t PlayerServer::GetMemoryUsage()
 {
     return totalMemoryUage_.load();
+}
+
+int32_t PlayerServer::SetReopenFd(int32_t fd)
+{
+    MEDIA_LOGD("Set reopenFd success, fd = %{public}d", fd);
+    CHECK_AND_RETURN_RET_NOLOG(playerEngine_ == nullptr, playerEngine_->SetReopenFd(fd));
+    return MSERR_OK;
+}
+ 
+int32_t PlayerServer::EnableCameraPostprocessing()
+{
+    MediaTrace::TraceBegin("PlayerServer::EnableCameraPostprocessing", FAKE_POINTER(this));
+    std::lock_guard<std::mutex> lock(mutex_);
+    bool isValidState = lastOpStatus_ == PLAYER_INITIALIZED;
+    CHECK_AND_RETURN_RET_LOG(isValidState, MSERR_INVALID_STATE,
+        "can not enable camera postProcessor, current state is %{public}d", static_cast<int32_t>(lastOpStatus_.load()));
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    return playerEngine_->EnableCameraPostprocessing();
 }
 } // namespace Media
 } // namespace OHOS

@@ -72,6 +72,57 @@ int32_t AVMetadataHelperServiceProxy::SetSource(const std::string &uri, int32_t 
     return reply.ReadInt32();
 }
 
+int32_t AVMetadataHelperServiceProxy::SetAVMetadataCaller(AVMetadataCaller caller)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(AVMetadataHelperServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    (void)data.WriteInt32(static_cast<int32_t>(caller));
+
+    int error = Remote()->SendRequest(SET_METADATA_CALLER, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetAVMetadataCaller failed, error: %{public}d", error);
+
+    return reply.ReadInt32();
+}
+
+int32_t AVMetadataHelperServiceProxy::SetUrlSource(const std::string &uri,
+    const std::map<std::string, std::string> &header)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(AVMetadataHelperServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    (void)data.WriteString(uri);
+    auto headerSize = static_cast<uint32_t>(header.size());
+    if (!data.WriteUint32(headerSize)) {
+        MEDIA_LOGI("Write mapSize failed");
+        return MSERR_INVALID_OPERATION;
+    }
+    for (auto [kstr, vstr] : header) {
+        if (!data.WriteString(kstr)) {
+            MEDIA_LOGI("Write kstr failed");
+            return MSERR_INVALID_OPERATION;
+        }
+        if (!data.WriteString(vstr)) {
+            MEDIA_LOGI("Write vstr failed");
+            return MSERR_INVALID_OPERATION;
+        }
+    }
+
+    int error = Remote()->SendRequest(SET_HTTP_URI_SOURCE, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetUrlSource failed, error: %{public}d", error);
+    return reply.ReadInt32();
+}
+
 int32_t AVMetadataHelperServiceProxy::SetSource(int32_t fd, int64_t offset, int64_t size, int32_t usage)
 {
     MessageParcel data;

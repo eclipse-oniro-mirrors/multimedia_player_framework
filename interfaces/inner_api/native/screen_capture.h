@@ -127,6 +127,15 @@ enum AVScreenCaptureBufferType {
     SCREEN_CAPTURE_BUFFERTYPE_AUDIO_MIC = 2,
 };
 
+enum AVScreenCaptureContentChangedEvent {
+    /* Content is hiden */
+    SCREEN_CAPTURE_CONTENT_HIDE = 0,
+    /* Content is visible */
+    SCREEN_CAPTURE_CONTENT_VISIBLE = 1,
+    /* ScreenCapture stopped by user */
+    SCREEN_CAPTURE_CONTENT_UNAVAILABLE = 2,
+};
+
 enum AVScreenCaptureFilterableAudioContent {
     /* Audio content of notification sound */
     SCREEN_CAPTURE_NOTIFICATION_AUDIO = 0,
@@ -231,6 +240,17 @@ struct AudioBuffer {
     AudioCaptureSourceType sourcetype;
 };
 
+typedef struct ScreenCaptureRect {
+    /* X-coordinate of screen recording */
+    int32_t x;
+    /* y-coordinate of screen recording */
+    int32_t y;
+    /* Width of screen recording */
+    int32_t width;
+    /* Height of screen recording */
+    int32_t height;
+} ScreenCaptureRect;
+
 class ScreenCaptureCallBack {
 public:
     virtual ~ScreenCaptureCallBack() = default;
@@ -260,6 +280,13 @@ public:
         (void)displayId;
         return;
     }
+
+    virtual void OnCaptureContentChanged(AVScreenCaptureContentChangedEvent event, ScreenCaptureRect* area)
+    {
+        (void)event;
+        (void)area;
+        return;
+    }
 };
 
 class ScreenCapture {
@@ -287,6 +314,7 @@ public:
     virtual int32_t ExcludeContent(ScreenCaptureContentFilter &contentFilter) = 0;
     virtual int32_t SetPrivacyAuthorityEnabled() = 0;
     virtual int32_t SetScreenCaptureStrategy(ScreenCaptureStrategy strategy) = 0;
+    virtual int32_t UpdateSurface(sptr<Surface> surface) = 0;
 };
 
 class __attribute__((visibility("default"))) ScreenCaptureFactory {

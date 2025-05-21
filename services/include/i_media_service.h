@@ -231,6 +231,8 @@ public:
      * @brief Release the (service-side) proxy object monitoring client aliveness
      */
     virtual void ReleaseClientListener() = 0;
+
+    virtual bool CanKillMediaService() = 0;
 };
 
 class __attribute__((visibility("default"))) MediaServiceFactory {

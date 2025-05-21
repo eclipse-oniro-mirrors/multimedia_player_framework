@@ -175,6 +175,24 @@ enum AVMetadataUsage : int32_t {
 };
 
 /**
+ * @brief Enumerates avmetadata caller.
+ */
+enum AVMetadataCaller : int32_t {
+    /**
+     * Indicates that the avmetadahelper's instance called by AVMetadataExtractor.
+     */
+    AV_METADATA_EXTRACTOR,
+    /**
+     * Indicates that the avmetadahelper's instance called by AVImageGenerator.
+     */
+    AV_IMAGE_GENERATOR,
+    /**
+     * Indicates that the avmetadahelper's instance called by except AVMetadataExtractor and AVImageGenerator.
+     */
+    AV_META_DATA_DEFAULT,
+};
+
+/**
  * @brief Enumerates avmetadata's metadata key.
  */
 enum AVMetadataCode : int32_t {
@@ -311,6 +329,23 @@ enum AVMetadataQueryOption : int32_t {
 };
 
 /**
+ * @brief Enumeration for frame scaling modes.
+ *
+ * This enum defines the different ways in which a frame can be scaled.
+ */
+enum FrameScaleMode : int32_t {
+    /**
+     * This mode is used to shrink a frame based on user-defined width and height settings.
+     */
+    NORMAL_RATIO,
+    /**
+     * This mode is used to scale a frame based on user-defined width and height settings,
+     * while also supporting aspect ratio scaling.
+     */
+    ASPECT_RATIO,
+};
+
+/**
  * @brief Provides the definition of the returned pixelmap's configuration
  */
 struct PixelMapParams {
@@ -374,6 +409,36 @@ public:
      * an error code otherwise.
      */
     virtual int32_t SetSource(const std::string &uri, int32_t usage = AVMetadataUsage::AV_META_USAGE_PIXEL_MAP) = 0;
+
+    /**
+     * Set the caller. Calling this method before the reset
+     * of the methods in this class. This method maybe time consuming.
+     * @param caller indicates which scene the avmedatahelper's instance will
+     * be used to, see {@link AVMetadataCaller}. If the caller need to be changed,
+     * this method must be called again.
+     * @return Returns {@link MSERR_OK} if the setting is successful; returns
+     * an error code otherwise.
+     */
+    virtual int32_t SetAVMetadataCaller(AVMetadataCaller caller)
+    {
+        (void)caller;
+        return 0;
+    }
+
+    /**
+     * Set the media source online uri with header params to resolve. Calling this method before the reset
+     * of the methods in this class. This method maybe time consuming.
+     * @param uri the URI of input http/https on demand media source.
+     * @param header the request parameters of input media source.
+     * @return Returns {@link MSERR_OK} if the setting is successful; returns
+     * an error code otherwise.
+     */
+    virtual int32_t SetUrlSource(const std::string &uri, const std::map<std::string, std::string> &header)
+    {
+        (void)uri;
+        (void)header;
+        return 0;
+    }
 
     /**
      * @brief Sets the media file descriptor source to resolve. Calling this method
@@ -454,6 +519,24 @@ public:
      * frame cannot be fetched.
      */
     virtual std::shared_ptr<PixelMap> FetchFrameYuv(int64_t timeUs, int32_t option, const PixelMapParams &param) = 0;
+
+    /**
+     * Fetch a representative video frame near a given timestamp by considering the given
+     * option if possible, and return a pixelmap with given parameters. This method must be
+     * called after the SetSource. Additionally, this method supports maintaining aspect ratio
+     * scaling when resizing the pixelmap.
+     * @param timeUs The time position in microseconds where the frame will be fetched.
+     * When fetching the frame at the given time position, there is no guarantee that
+     * the video source has a frame located at the position. When this happens, a frame
+     * nearby will be returned. If timeUs is negative, time position and option will ignored,
+     * and any frame that the implementation considers as representative may be returned.
+     * @param option the hint about how to fetch a frame, see {@link AVMetadataQueryOption}
+     * @param param the desired configuration of returned pixelmap, see {@link PixelMapParams}.
+     * @return Returns a pixelmap containing a scaled video frame, which can be null, if such a
+     * frame cannot be fetched.
+     */
+    virtual std::shared_ptr<PixelMap> FetchScaledFrameYuv(int64_t timeUs, int32_t option,
+                                                          const PixelMapParams &param) = 0;
 
     /**
      * all meta data.

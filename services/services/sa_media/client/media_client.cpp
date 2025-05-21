@@ -495,5 +495,14 @@ void MediaClient::DoMediaServerDied()
     AVScreenCaptureServerDied();
     mediaProxyUpdatedCondition_.notify_all();
 }
+
+bool MediaClient::CanKillMediaService()
+{
+    std::unique_lock<std::mutex> lock(mutex_, std::try_to_lock);
+    CHECK_AND_RETURN_RET_LOG(lock.owns_lock(), false, "MediaClient mutex_ try_lock false, please try again later.");
+    CHECK_AND_RETURN_RET_LOG(IsAlived(), false, "media service does not exist.");
+
+    return mediaProxy_->CanKillMediaService();
+}
 } // namespace Media
 } // namespace OHOS

@@ -887,6 +887,20 @@ void MediaServerManager::NotifyMemMgrLoaded()
     isMemMgrLoaded_.store(true);
 }
 
+void MediaServerManager::DestoryMemoryReportTask()
+{
+    MediaTrace trace("MediaServerManager::DestoryMemoryReportTask");
+    MEDIA_LOGI("DestoryMemoryReportTask");
+    std::unique_ptr<Task> memoryReportTask{nullptr};
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        memoryReportTask = std::move(memoryReportTask_);
+        if (memoryReportTask && memoryReportTask->IsTaskRunning()) {
+            memoryReportTask->StopAsync();
+        }
+    }
+}
+
 void MediaServerManager::AsyncExecutor::Commit(sptr<IRemoteObject> obj)
 {
     std::lock_guard<std::mutex> lock(listMutex_);
@@ -948,5 +962,17 @@ void MediaServerManager::UpdateAllInstancesReleasedTime()
     }
 }
 #endif
+
+bool MediaServerManager::CanKillMediaService()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    bool canKillMediaService = !recorderStubMap_.empty() ||
+                     !avMetadataHelperStubMap_.empty() ||
+                     !screenCaptureStubMap_.empty() ||
+                     !recorderProfilesStubMap_.empty() ||
+                     !screenCaptureControllerStubMap_.empty() ||
+                     !transCoderStubMap_.empty();
+    return !canKillMediaService;
+}
 } // namespace Media
 } // namespace OHOS

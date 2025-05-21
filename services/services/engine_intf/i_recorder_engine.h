@@ -225,6 +225,11 @@ public:
      * Set user meta
     */
     virtual int32_t SetUserMeta(const std::shared_ptr<Meta> &userMeta) = 0;
+
+    /**
+     * Set Interrupt strategy
+     */
+    virtual int32_t SetWillMuteWhenInterrupted(bool muteWhenInterrupted) = 0;
 };
 } // namespace Media
 } // namespace OHOS

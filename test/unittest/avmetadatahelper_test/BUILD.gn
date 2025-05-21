@@ -34,6 +34,7 @@ ohos_unittest("avmetadatahelper_unit_test") {
     "sa_media/server",
     "sa_media/server_manager",
     "common",
+    "player/audio_background_adapter",
     "player/ipc",
     "player/player_mem_manage",
     "player/server",

@@ -409,6 +409,9 @@ int32_t HiRecorderImpl::PrepareAudioCapture()
         } else {
             audioCaptureFilter_->SetWithVideo(false);
         }
+        if (muteWhenInterrupted_) {
+            audioCaptureFilter_->SetWillMuteWhenInterrupted(muteWhenInterrupted_);
+        }
     }
     return ERR_NONE;
 }
@@ -507,14 +510,8 @@ int32_t HiRecorderImpl::Resume()
     return (int32_t)ret;
 }
 
-int32_t HiRecorderImpl::Stop(bool isDrainAll)
+Status HiRecorderImpl::HandleStopOperation()
 {
-    MediaTrace trace("HiRecorderImpl::Stop");
-    MEDIA_LOG_I("Stop enter.");
-    if (curState_ == StateId::INIT) {
-        MEDIA_LOG_I("Stop exit.the reason is state = INIT");
-        return static_cast<int32_t>(Status::OK);
-    }
     Status ret = Status::OK;
     outputFormatType_ = OutputFormatType::FORMAT_BUTT;
     if (videoEncoderFilter_) {
@@ -529,7 +526,14 @@ int32_t HiRecorderImpl::Stop(bool isDrainAll)
     ret = pipeline_->Stop();
     if (ret == Status::OK) {
         OnStateChanged(StateId::INIT);
+        MEDIA_LOG_I("HiRecorderImpl HandleStopOperation done.");
     }
+    return ret;
+}
+
+void HiRecorderImpl::ClearAllConfiguration()
+{
+    MEDIA_LOG_I("HiRecorderImpl ClearAllConfiguration remove filter enter.");
     audioCount_ = 0;
     videoCount_ = 0;
     audioSourceId_ = 0;
@@ -537,24 +541,41 @@ int32_t HiRecorderImpl::Stop(bool isDrainAll)
     muxerFilter_ = nullptr;
     isWatermarkSupported_ = false;
     codecMimeType_ = "";
-    if (audioDataSourceFilter_) {
-        pipeline_->RemoveHeadFilter(audioDataSourceFilter_);
-    }
-    if (audioCaptureFilter_) {
-        pipeline_->RemoveHeadFilter(audioCaptureFilter_);
-    }
-    if (videoEncoderFilter_) {
-        pipeline_->RemoveHeadFilter(videoEncoderFilter_);
-    }
+    audioEncFormat_->Clear();
+    videoEncFormat_->Clear();
+    muxerFormat_->Clear();
+    
+    auto RemoveFilterAction = [this](auto& filter) {
+        if (filter && pipeline_) {
+            pipeline_->RemoveHeadFilter(filter);
+        }
+    };
+
+    RemoveFilterAction(audioDataSourceFilter_);
+    RemoveFilterAction(audioCaptureFilter_);
+    RemoveFilterAction(videoEncoderFilter_);
+    RemoveFilterAction(videoCaptureFilter_);
+    
     for (auto iter : metaDataFilters_) {
         if (metaDataFormats_.find(iter.first) != metaDataFormats_.end()) {
             metaDataFormats_.at(iter.first)->Clear();
         }
-        pipeline_->RemoveHeadFilter(iter.second);
+        RemoveFilterAction(iter.second);
     }
-    if (videoCaptureFilter_) {
-        pipeline_->RemoveHeadFilter(videoCaptureFilter_);
+}
+
+int32_t HiRecorderImpl::Stop(bool isDrainAll)
+{
+    MediaTrace trace("HiRecorderImpl::Stop");
+    MEDIA_LOG_I("Stop enter.");
+    if (curState_ == StateId::INIT) {
+        MEDIA_LOG_I("Stop exit.the reason is state = INIT");
+        return static_cast<int32_t>(Status::OK);
     }
+    // real stop operations
+    Status ret = HandleStopOperation();
+    // clear all configurations and remove all filters
+    ClearAllConfiguration();
     FALSE_RETURN_V_MSG_E(curState_ == StateId::INIT, ERR_UNKNOWN_REASON, "stop fail");
     return (int32_t)ret;
 }
@@ -1170,6 +1191,12 @@ int32_t HiRecorderImpl::SetUserMeta(const std::shared_ptr<Meta> &userMeta)
     FALSE_RETURN_V_MSG_E(muxerFilter_ != nullptr, static_cast<int32_t>(Status::ERROR_NULL_POINTER),
         "muxerFilter is nullptr, cannot set usermeta");
     muxerFilter_->SetUserMeta(userMeta);
+    return static_cast<int32_t>(Status::OK);
+}
+
+int32_t HiRecorderImpl::SetWillMuteWhenInterrupted(bool muteWhenInterrupted)
+{
+    muteWhenInterrupted_ = muteWhenInterrupted;
     return static_cast<int32_t>(Status::OK);
 }
 } // namespace MEDIA
