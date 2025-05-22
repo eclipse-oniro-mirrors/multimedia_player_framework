@@ -302,11 +302,11 @@ napi_value AVImageGeneratorNapi::VerifyTheParameters(napi_env env, napi_callback
     const int32_t argOutputSizeIndex = ARG_TWO;
     napi_value args[maxArgs] = { nullptr };
     napi_value result = nullptr;
-    CHECK_AND_RETURN_RET_LOG(env != nullptr, result, "env is null");
+    CHECK_AND_RETURN_RET_LOG(env != nullptr, nullptr, "env is null");
     napi_get_undefined(env, &result);
 
     AVImageGeneratorNapi *napi = AVImageGeneratorNapi::GetJsInstanceWithParameter(env, info, argCount, args);
-    CHECK_AND_RETURN_RET_LOG(napi != nullptr, result, "failed to GetJsInstance");
+    CHECK_AND_RETURN_RET_LOG(napi != nullptr, nullptr, "failed to GetJsInstance");
 
     promiseCtx = std::make_unique<AVImageGeneratorAsyncContext>(env);
     CHECK_AND_RETURN_RET_LOG(promiseCtx != nullptr, nullptr, "promiseCtx is null");
