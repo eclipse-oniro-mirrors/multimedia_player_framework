@@ -88,8 +88,6 @@ void PlayerServiceStub::FillPlayerFuncPart1()
 {
     playerFuncs_[SET_LISTENER_OBJ] = { "Player::SetListenerObject",
         [this](MessageParcel &data, MessageParcel &reply) { return SetListenerObject(data, reply); } };
-    playerFuncs_[SET_PLAYER_PRODUCER] = { "Player::SetPlayerProducer",
-        [this](MessageParcel &data, MessageParcel &reply) { return SetPlayerProducer(data, reply); } };
     playerFuncs_[SET_SOURCE] = { "Player::SetSource",
         [this](MessageParcel &data, MessageParcel &reply) { return SetSource(data, reply); } };
     playerFuncs_[SET_MEDIA_DATA_SRC_OBJ] = { "Player::SetMediaDataSource",
