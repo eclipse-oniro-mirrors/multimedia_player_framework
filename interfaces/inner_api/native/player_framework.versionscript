@@ -39,6 +39,7 @@
       *OHOS::Media::ScreenCaptureMonitor::RegisterScreenCaptureMonitorListener*;
       *OHOS::Media::ScreenCaptureMonitor::UnregisterScreenCaptureMonitorListener*;
       *OHOS::Media::MediaServiceFactory::GetInstance*;
+      *OHOS::Media::MediaServiceHelper::CanKillMediaService*;
     };
     "*MSErrorToString*";
     "*MSExtErrorToString*";
