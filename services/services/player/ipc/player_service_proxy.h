@@ -26,6 +26,7 @@ public:
     explicit PlayerServiceProxy(const sptr<IRemoteObject> &impl);
     virtual ~PlayerServiceProxy();
     int32_t SetListenerObject(const sptr<IRemoteObject> &object) override;
+    int32_t SetPlayerProducer(const PlayerProducer producer) override;
     int32_t SetSource(const std::string &url) override;
     int32_t Reset() override;
     int32_t Prepare() override;
@@ -86,6 +87,7 @@ public:
     int32_t SetStartFrameRateOptEnabled(bool enabled) override;
     int32_t SetReopenFd(int32_t fd) override;
     int32_t EnableCameraPostprocessing() override;
+    int32_t EnableReportMediaProgress(bool enable) override;
 private:
     int32_t SendRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option);
     void InitPlayerFuncsPart1();

@@ -40,6 +40,8 @@ public:
 
     void SetPlayEngine(IPlayerEngine* engine, std::string playerId);
 
+    void EnableReportMediaProgress(bool enable);
+    
     void StartReportMediaProgress(int64_t updateIntervalMs = 1000);
 
     void StopReportMediaProgress();
@@ -99,6 +101,8 @@ private:
     bool reportMediaProgress_ {false};
     bool collectMaxAmplitude_ {false};
     bool isDropMediaProgress_ {false};
+    bool enableReportMediaProgress_ {true};
+    bool isReportMediaProgressLoopRunning_ {false};
     int64_t reportProgressIntervalMs_ {100}; // default interval is 100 ms
     int64_t collectMaxAmplitudeIntervalMs_ {100}; // default interval is 100 ms
     std::vector<float> vMaxAmplitudeArray_ {};

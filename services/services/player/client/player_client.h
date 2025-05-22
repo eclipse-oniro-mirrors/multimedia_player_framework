@@ -32,6 +32,7 @@ public:
     ~PlayerClient();
 
     // IPlayerService override
+    int32_t SetPlayerProducer(const PlayerProducer producer) override;
     int32_t SetSource(const std::string &url) override;
     int32_t Play() override;
     int32_t Reset() override;
@@ -92,6 +93,7 @@ public:
     int32_t SetStartFrameRateOptEnabled(bool enabled) override;
     int32_t SetReopenFd(int32_t fd) override;
     int32_t EnableCameraPostprocessing() override;
+    int32_t EnableReportMediaProgress(bool enable) override;
 
 private:
     int32_t CreateListenerObject();

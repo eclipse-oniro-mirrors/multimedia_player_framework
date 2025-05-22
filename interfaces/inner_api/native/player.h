@@ -336,6 +336,12 @@ enum PlaybackRateMode : int32_t {
     SPEED_FORWARD_1_20_X = 100, // flv live quick play, internal value, not open to northbound
 };
 
+enum PlayerProducer : uint32_t {
+    INNER = 0,
+    CAPI,
+    NAPI
+};
+
 class PlayerCallback {
 public:
     virtual ~PlayerCallback() = default;
@@ -995,6 +1001,21 @@ public:
     }
 
     /**
+     * @brief Enables or disables the report of media progress.
+     *
+     * @param enable Indicates whether to enable the report of media progress.
+     * @return Returns {@link MSERR_OK} if the report of media progress is enabled or disabled; returns an error code
+     * defined in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t EnableReportMediaProgress(bool enable)
+    {
+        (void)enable;
+        return 0;
+    }
+
+    /**
      * @brief Set Start Frame Rate Opt Enabled.
      *
      * @return Returns {@link MSERR_OK} if enabled is set; returns an error code defined
@@ -1043,8 +1064,15 @@ public:
     {
         return nullptr;
     }
+
+    static std::shared_ptr<Player> CreatePlayer(const PlayerProducer producer)
+    {
+        return nullptr;
+    }
 #else
     static std::shared_ptr<Player> CreatePlayer();
+
+    static std::shared_ptr<Player> CreatePlayer(const PlayerProducer producer);
 #endif
 private:
     PlayerFactory() = default;

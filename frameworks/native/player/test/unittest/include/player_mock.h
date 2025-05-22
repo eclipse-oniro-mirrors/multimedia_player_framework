@@ -176,6 +176,7 @@ public:
     int32_t SetVolumeMode(int32_t mode);
     int32_t SetSuperResolution(bool enabled);
     int32_t SetVideoWindowSize(int32_t width, int32_t height);
+    int32_t EnableReportMediaProgress(bool enable);
     void ReleaseClientListener();
 private:
     void SeekPrepare(int32_t &mseconds, PlayerSeekMode &mode);

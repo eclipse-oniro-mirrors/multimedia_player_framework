@@ -189,6 +189,7 @@ public:
     void SetPerfRecEnabled(bool isPerfRecEnabled) override;
     int32_t SetReopenFd(int32_t fd) override;
     int32_t EnableCameraPostprocessing() override;
+    int32_t EnableReportMediaProgress(bool enable) override;
 
 private:
     enum HiplayerSvpMode : int32_t {

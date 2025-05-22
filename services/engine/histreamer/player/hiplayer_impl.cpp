@@ -3563,6 +3563,13 @@ void HiPlayerImpl::SetPerfRecEnabled(bool isPerfRecEnabled)
     isPerfRecEnabled_ = isPerfRecEnabled;
 }
 
+int32_t HiPlayerImpl::EnableReportMediaProgress(bool enable)
+{
+    MEDIA_LOG_I("EnableReportMediaProgress %{public}d", enable);
+    callbackLooper_.EnableReportMediaProgress(enable);
+    return MSERR_OK;
+}
+
 bool HiPlayerImpl::IsNeedChangePlaySpeed(PlaybackRateMode &mode, bool &isXSpeedPlay)
 {
     FALSE_RETURN_V(demuxer_ != nullptr && isFlvLive_, false);

@@ -210,6 +210,10 @@ void PlayerServiceStub::FillPlayerFuncPart3()
         [this](MessageParcel &data, MessageParcel &reply) { return EnableCameraPostprocessing(data, reply); } };
     playerFuncs_[SET_PLAYERBACK_RATE] = { "Player::SetPlaybackRate",
         [this](MessageParcel &data, MessageParcel &reply) { return SetPlaybackRate(data, reply); } };
+    playerFuncs_[ENABLE_REPORT_MEDIA_PROGRESS] = { "Player::EnableReportMediaProgress",
+        [this](MessageParcel &data, MessageParcel &reply) { return EnableReportMediaProgress(data, reply); } };
+    playerFuncs_[SET_PLAYER_PRODUCER] = { "Player::SetPlayerProducer",
+        [this](MessageParcel &data, MessageParcel &reply) { return SetPlayerProducer(data, reply); } };
 }
 
 int32_t PlayerServiceStub::Init()
@@ -289,6 +293,13 @@ int32_t PlayerServiceStub::SetListenerObject(const sptr<IRemoteObject> &object)
 
     playerCallback_ = callback;
     return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::SetPlayerProducer(const PlayerProducer producer)
+{
+    MediaTrace trace("PlayerServiceStub::SetPlayerProducer");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->SetPlayerProducer(producer);
 }
 
 int32_t PlayerServiceStub::SetSource(const std::string &url)
@@ -712,6 +723,13 @@ int32_t PlayerServiceStub::SetListenerObject(MessageParcel &data, MessageParcel 
 {
     sptr<IRemoteObject> object = data.ReadRemoteObject();
     reply.WriteInt32(SetListenerObject(object));
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::SetPlayerProducer(MessageParcel &data, MessageParcel &reply)
+{
+    uint32_t producer = data.ReadUint32();
+    reply.WriteInt32(SetPlayerProducer(static_cast<PlayerProducer>(producer)));
     return MSERR_OK;
 }
 
@@ -1352,6 +1370,20 @@ int32_t PlayerServiceStub::EnableCameraPostprocessing()
     MediaTrace trace("Stub::EnableCameraPostprocessing");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
     return playerServer_->EnableCameraPostprocessing();
+}
+
+int32_t PlayerServiceStub::EnableReportMediaProgress(bool enable)
+{
+    MediaTrace trace("PlayerServiceStub::EnableReportMediaProgress");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->EnableReportMediaProgress(enable);
+}
+
+int32_t PlayerServiceStub::EnableReportMediaProgress(MessageParcel &data, MessageParcel &reply)
+{
+    bool enable = data.ReadBool();
+    reply.WriteInt32(EnableReportMediaProgress(enable));
+    return MSERR_OK;
 }
 } // namespace Media
 } // namespace OHOS

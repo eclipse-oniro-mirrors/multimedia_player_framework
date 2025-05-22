@@ -5387,5 +5387,79 @@ HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_024, TestSize.Level1)
     EXPECT_EQ(MSERR_OK, player_->SeekContinuous(-1));
     EXPECT_EQ(MSERR_OK, player_->Stop());
 }
+
+/**
+ * @tc.name  : Test EnableReportMediaProgress API
+ * @tc.number: Player_EnableReportMediaProgress_001
+ * @tc.desc  : Test Player EnableReportMediaProgress on before playing
+ */
+HWTEST_F(PlayerServerUnitTest, Player_EnableReportMediaProgress_001, TestSize.Level1)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->EnableReportMediaProgress(true));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+}
+
+/**
+ * @tc.name  : Test EnableReportMediaProgress API
+ * @tc.number: Player_EnableReportMediaProgress_002
+ * @tc.desc  : Test Player EnableReportMediaProgress during playing
+ */
+HWTEST_F(PlayerServerUnitTest, Player_EnableReportMediaProgress_002, TestSize.Level1)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->EnableReportMediaProgress(true));
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    ASSERT_EQ(MSERR_OK, player_->EnableReportMediaProgress(false));
+}
+
+/**
+ * @tc.name  : Test EnableReportMediaProgress API
+ * @tc.number: Player_EnableReportMediaProgress_003
+ * @tc.desc  : Test Player EnableReportMediaProgress when seek in playing
+ */
+HWTEST_F(PlayerServerUnitTest, Player_EnableReportMediaProgress_003, TestSize.Level1)
+{
+    int32_t duration = 0;
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->GetDuration(duration));
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+    EXPECT_EQ(MSERR_OK, player_->Seek(duration, SEEK_NEXT_SYNC));
+    ASSERT_EQ(MSERR_OK, player_->EnableReportMediaProgress(true));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+}
+
+/**
+ * @tc.name  : Test EnableReportMediaProgress API
+ * @tc.number: Player_EnableReportMediaProgress_004
+ * @tc.desc  : Test Player EnableReportMediaProgress when playing is looping
+ */
+HWTEST_F(PlayerServerUnitTest, Player_EnableReportMediaProgress_004, TestSize.Level1)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->SetLooping(true));
+    EXPECT_EQ(true, player_->IsLooping());
+    ASSERT_EQ(MSERR_OK, player_->EnableReportMediaProgress(true));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+}
 } // namespace Media
 } // namespace OHOS

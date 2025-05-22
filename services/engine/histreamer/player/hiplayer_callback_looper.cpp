@@ -80,14 +80,29 @@ void HiPlayerCallbackLooper::SetPlayEngine(IPlayerEngine* engine, std::string pl
     task_ = std::make_unique<Task>("callbackThread", playerId, TaskType::GLOBAL, TaskPriority::NORMAL, false);
 }
 
+void HiPlayerCallbackLooper::EnableReportMediaProgress(bool enable)
+{
+    MEDIA_LOG_D("EnableReportMediaProgress, enable: " PUBLIC_LOG_D32, static_cast<int32_t>(enable));
+    OHOS::Media::AutoLock lock(loopMutex_);
+    FALSE_RETURN(enableReportMediaProgress_ != enable);
+    enableReportMediaProgress_ = enable;
+    FALSE_RETURN(reportMediaProgress_ && enableReportMediaProgress_ && !isReportMediaProgressLoopRunning_);
+    isReportMediaProgressLoopRunning_ = true;
+    Enqueue(std::make_shared<Event>(WHAT_MEDIA_PROGRESS,
+            SteadyClock::GetCurrentTimeMs() + reportProgressIntervalMs_, Any()));
+}
+
 void HiPlayerCallbackLooper::StartReportMediaProgress(int64_t updateIntervalMs)
 {
     MEDIA_LOG_I("HiPlayerCallbackLooper StartReportMediaProgress");
+    OHOS::Media::AutoLock lock(loopMutex_);
     reportProgressIntervalMs_ = updateIntervalMs;
     if (reportMediaProgress_) { // already set
         return;
     }
     reportMediaProgress_ = true;
+    FALSE_RETURN(enableReportMediaProgress_);
+    isReportMediaProgressLoopRunning_ = true;
     Enqueue(std::make_shared<Event>(WHAT_MEDIA_PROGRESS,
             SteadyClock::GetCurrentTimeMs() + reportProgressIntervalMs_, Any()));
 }
@@ -148,7 +163,8 @@ void HiPlayerCallbackLooper::DoReportCompletedTime()
 void HiPlayerCallbackLooper::DoReportMediaProgress()
 {
     OHOS::Media::AutoLock lock(loopMutex_);
-    if (!reportMediaProgress_) {
+    if (!reportMediaProgress_ || !enableReportMediaProgress_) {
+        isReportMediaProgressLoopRunning_ = false;
         return;
     }
     auto obs = obs_.lock();
@@ -163,10 +179,8 @@ void HiPlayerCallbackLooper::DoReportMediaProgress()
         }
     }
     isDropMediaProgress_ = false;
-    if (reportMediaProgress_) {
-        Enqueue(std::make_shared<Event>(WHAT_MEDIA_PROGRESS,
-            SteadyClock::GetCurrentTimeMs() + reportProgressIntervalMs_, Any()));
-    }
+    Enqueue(std::make_shared<Event>(WHAT_MEDIA_PROGRESS,
+        SteadyClock::GetCurrentTimeMs() + reportProgressIntervalMs_, Any()));
 }
 
 void HiPlayerCallbackLooper::DoCollectAmplitude()

@@ -320,6 +320,12 @@ public:
         return false;
     }
 
+    virtual int32_t EnableReportMediaProgress(bool enable)
+    {
+        (void)enable;
+        return 0;
+    }
+
     virtual int32_t SetStartFrameRateOptEnabled(bool enabled)
     {
         (void)enabled;
