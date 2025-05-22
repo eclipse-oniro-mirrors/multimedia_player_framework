@@ -336,7 +336,7 @@ enum PlaybackRateMode : int32_t {
     SPEED_FORWARD_1_20_X = 100, // flv live quick play, internal value, not open to northbound
 };
 
-enum PlayerProducer : uint32_t {
+enum PlayerProducer : int32_t {
     INNER = 0,
     CAPI,
     NAPI

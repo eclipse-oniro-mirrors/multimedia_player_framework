@@ -3521,6 +3521,7 @@ void HiPlayerImpl::HandleDfxEvent(const DfxEvent &event)
 int32_t HiPlayerImpl::SetMaxAmplitudeCbStatus(bool status)
 {
     maxAmplitudeCbStatus_ = status;
+    callbackLooper_.SetMaxAmplitudeCbStatus(status);
     if (audioSink_ != nullptr) {
         return audioSink_->SetMaxAmplitudeCbStatus(maxAmplitudeCbStatus_);
     }

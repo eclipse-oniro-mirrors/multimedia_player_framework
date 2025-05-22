@@ -728,7 +728,7 @@ int32_t PlayerServiceStub::SetListenerObject(MessageParcel &data, MessageParcel 
 
 int32_t PlayerServiceStub::SetPlayerProducer(MessageParcel &data, MessageParcel &reply)
 {
-    uint32_t producer = data.ReadUint32();
+    uint32_t producer = data.ReadInt32();
     reply.WriteInt32(SetPlayerProducer(static_cast<PlayerProducer>(producer)));
     return MSERR_OK;
 }

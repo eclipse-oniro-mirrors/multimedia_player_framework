@@ -258,7 +258,7 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
     std::shared_ptr<IPlayerEngineObs> obs = shared_from_this();
     ret = playerEngine_->SetObs(obs);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetObs Failed!");
-    ret = playerEngine_->SetMaxAmplitudeCbStatus(maxAmplitudeCbStatus_);
+    ret = playerEngine_->SetMaxAmplitudeCbStatus(playerProducer_ == PlayerProducer::NAPI ? maxAmplitudeCbStatus_ : true);
     ret = playerEngine_->SetSeiMessageCbStatus(seiMessageCbStatus_, payloadTypes_);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetMaxAmplitudeCbStatus Failed!");
 
@@ -2202,7 +2202,9 @@ bool PlayerServer::CheckState(PlayerOnInfoType type, int32_t extra)
 int32_t PlayerServer::SetMaxAmplitudeCbStatus(bool status)
 {
     maxAmplitudeCbStatus_ = status;
-    return MSERR_OK;
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
+    return playerEngine_->SetMaxAmplitudeCbStatus(maxAmplitudeCbStatus_);
 }
 
 bool PlayerServer::IsSeekContinuousSupported()

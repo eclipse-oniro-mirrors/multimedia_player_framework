@@ -158,7 +158,7 @@ int32_t PlayerServiceProxy::SetPlayerProducer(const PlayerProducer producer)
     bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
-    (void)data.WriteUint32(producer);
+    (void)data.WriteInt32(producer);
     int32_t error = SendRequest(SET_PLAYER_PRODUCER, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetPlayerProducer failed, error: %{public}d", error);
