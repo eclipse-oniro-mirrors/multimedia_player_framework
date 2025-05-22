@@ -333,6 +333,8 @@ void CacheBuffer::OnWriteData(size_t length)
         MEDIA_LOGE("audioRenderer is stop.");
         return;
     }
+    CHECK_AND_RETURN_LOG(isReadyToStopAudioRenderer_.load() == false,
+        "CacheBuffer::OnWriteData is ready To stop AudioRenderer, streamID:%{public}d", streamID_);
     std::lock_guard lock(cacheBufferLock_);
     CHECK_AND_RETURN_LOG(fullCacheData_ != nullptr, "fullCacheData_ is nullptr");
     if (cacheDataFrameIndex_ >= static_cast<size_t>(fullCacheData_->size)) {
@@ -344,6 +346,7 @@ void CacheBuffer::OnWriteData(size_t length)
             ThreadPool::Task cacheBufferStopTask = [this, streamIDStop] { this->Stop(streamIDStop); };
             if (auto ptr = cacheBufferStopThreadPool_.lock()) {
                 ptr->AddTask(cacheBufferStopTask);
+                isReadyToStopAudioRenderer_.store(true);
             }
             return;
         }
@@ -451,6 +454,7 @@ int32_t CacheBuffer::Stop(const int32_t streamID)
             cacheBufferCallback_->OnPlayFinished(streamID_);
         }
     }
+    isReadyToStopAudioRenderer_.store(false);
     return MSERR_OK;
 }
 
