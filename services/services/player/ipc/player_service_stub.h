@@ -42,7 +42,6 @@ public:
     int32_t Play() override;
     int32_t SetSource(const sptr<IRemoteObject> &object) override;
     int32_t SetListenerObject(const sptr<IRemoteObject> &object) override;
-    int32_t SetPlayerProducer(const PlayerProducer producer) override;
     int32_t SetSource(int32_t fd, int64_t offset, int64_t size) override;
     int32_t Release() override;
     int32_t SetSource(const std::string &url) override;
