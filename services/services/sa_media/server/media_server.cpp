@@ -22,6 +22,9 @@
 #include "mem_mgr_client.h"
 #include "mem_mgr_proxy.h"
 #include "audio_background_adapter.h"
+#ifdef SUPPORT_CALL
+#include "incall_observer.h"
+#endif
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "MediaServer"};
@@ -71,6 +74,10 @@ void MediaServer::OnStart()
     MEDIA_LOGD("MediaServer OnStart res=%{public}d", res);
     AddSystemAbilityListener(MEMORY_MANAGER_SA_ID);
     AddSystemAbilityListener(AUDIO_POLICY_SERVICE_ID);
+#ifdef SUPPORT_CALL
+    MEDIA_LOGD("InCallObserver OnStart");
+    InCallObserver::GetInstance();
+#endif
 }
 
 void MediaServer::OnStop()
