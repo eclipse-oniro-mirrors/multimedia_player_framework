@@ -128,7 +128,7 @@ enum AVScreenCaptureBufferType {
 };
 
 enum AVScreenCaptureContentChangedEvent {
-    /* Content is hiden */
+    /* Content is hidden */
     SCREEN_CAPTURE_CONTENT_HIDE = 0,
     /* Content is visible */
     SCREEN_CAPTURE_CONTENT_VISIBLE = 1,
