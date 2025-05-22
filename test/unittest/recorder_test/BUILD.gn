@@ -45,6 +45,8 @@ ohos_unittest("recorder_native_unit_test") {
   if (player_framework_support_recorder) {
     sources = [ "capi/src/recorder_unit_test.cpp" ]
     external_deps += [
+      "drivers_interface_display:libdisplay_composer_proxy_1.0",
+      "drivers_interface_display:libdisplay_composer_proxy_1.1",
       "drivers_interface_display:libdisplay_composer_proxy_1.2",
       "drivers_interface_display:libhdifd_parcelable",
     ]
