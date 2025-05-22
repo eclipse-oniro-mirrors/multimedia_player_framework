@@ -25,6 +25,7 @@ class MockIPlayerService : public IPlayerService {
 public:
     MockIPlayerService() = default;
     ~MockIPlayerService() override {};
+    MOCK_METHOD(int32_t, SetPlayerProducer, (const PlayerProducer producer), (override));
     MOCK_METHOD(int32_t, SetSource, (const std::string &url), (override));
     MOCK_METHOD(int32_t, SetSource, (const std::shared_ptr<IMediaDataSource> &dataSrc), (override));
     MOCK_METHOD(int32_t, SetSource, (int32_t fd, int64_t offset, int64_t size), (override));

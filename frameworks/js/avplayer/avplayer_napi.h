@@ -366,6 +366,8 @@ private:
     void MaxAmplitudeCallbackOff(AVPlayerNapi *jsPlayer, std::string callbackName);
     void DeviceChangeCallbackOn(AVPlayerNapi *jsPlayer, std::string callbackName);
     void DeviceChangeCallbackOff(AVPlayerNapi *jsPlayer, std::string callbackName);
+    void ReportMediaProgressCallbackOn(AVPlayerNapi *jsPlayer, std::string callbackName);
+    void ReportMediaProgressCallbackOff(AVPlayerNapi *jsPlayer, std::string callbackName);
     void SeiMessageCallbackOn(
         AVPlayerNapi *jsPlayer, std::string callbackName, const std::vector<int32_t> &payloadTypes);
     void SeiMessageCallbackOff(
@@ -385,6 +387,7 @@ private:
     bool calMaxAmplitude_ = false;
     bool deviceChangeCallbackflag_ = false;
     bool seiMessageCallbackflag_ = false;
+    bool reportMediaProgressCallbackflag_ = false;
 
     struct AVPlayerContext : public MediaAsyncContext {
         explicit AVPlayerContext(napi_env env) : MediaAsyncContext(env) {}

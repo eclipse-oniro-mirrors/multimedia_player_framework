@@ -31,6 +31,10 @@ public:
     {
         return 0;
     }
+    int32_t SetPlayerProducer(const PlayerProducer producer) override
+    {
+        return 0;
+    }
     int32_t SetSource(const std::string &url) override
     {
         return 0;

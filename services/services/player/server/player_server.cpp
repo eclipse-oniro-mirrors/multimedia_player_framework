@@ -128,6 +128,14 @@ int32_t PlayerServer::Init()
     return MSERR_OK;
 }
 
+int32_t PlayerServer::SetPlayerProducer(const PlayerProducer producer)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    MediaTrace trace("PlayerServer::SetPlayerProducer " + std::to_string(producer));
+    playerProducer_ = producer;
+    return MSERR_OK;
+}
+
 int32_t PlayerServer::SetSource(const std::string &url)
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -253,6 +261,10 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
     ret = playerEngine_->SetMaxAmplitudeCbStatus(maxAmplitudeCbStatus_);
     ret = playerEngine_->SetSeiMessageCbStatus(seiMessageCbStatus_, payloadTypes_);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetMaxAmplitudeCbStatus Failed!");
+
+    ret = playerEngine_->EnableReportMediaProgress(
+        playerProducer_ == PlayerProducer::NAPI ? enableReportMediaProgress_ : true);
+    TRUE_LOG(ret != MSERR_OK, MEDIA_LOGW, "PlayerEngine enable report media progress failed, ret %{public}d", ret);
 
     lastOpStatus_ = PLAYER_INITIALIZED;
     ChangeState(initializedState_);
@@ -2237,6 +2249,14 @@ int32_t PlayerServer::EnableCameraPostprocessing()
         "can not enable camera postProcessor, current state is %{public}d", static_cast<int32_t>(lastOpStatus_.load()));
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     return playerEngine_->EnableCameraPostprocessing();
+}
+
+int32_t PlayerServer::EnableReportMediaProgress(bool enable)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    enableReportMediaProgress_ = enable;
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
+    return playerEngine_->EnableReportMediaProgress(enableReportMediaProgress_);
 }
 } // namespace Media
 } // namespace OHOS

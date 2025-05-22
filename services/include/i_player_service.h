@@ -26,6 +26,17 @@ public:
     virtual ~IPlayerService() = default;
 
     /**
+     * @brief Sets the player producer type.
+     *
+     * @param producer Indicates the player producer type.
+     * @return Returns {@link MSERR_OK} if the producer is set successfully; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t SetPlayerProducer(const PlayerProducer producer) = 0;
+
+    /**
      * @brief Sets the playback source for the player. The corresponding source can be local file url.
      *
      * @param url Indicates the playback source.
@@ -641,6 +652,21 @@ public:
      */
     virtual uint32_t GetMemoryUsage()
     {
+        return 0;
+    }
+
+    /**
+     * @brief Enables or disables the report of media progress.
+     *
+     * @param enable Indicates whether to enable the report of media progress.
+     * @return Returns {@link MSERR_OK} if the report of media progress is enabled or disabled; returns an error code
+     * defined in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t EnableReportMediaProgress(bool enable)
+    {
+        (void)enable;
         return 0;
     }
 

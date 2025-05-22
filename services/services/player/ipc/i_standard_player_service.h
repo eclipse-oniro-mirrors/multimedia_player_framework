@@ -28,6 +28,7 @@ class IStandardPlayerService : public IRemoteBroker {
 public:
     virtual ~IStandardPlayerService() = default;
     virtual int32_t SetListenerObject(const sptr<IRemoteObject> &object) = 0;
+    virtual int32_t SetPlayerProducer(const PlayerProducer producer) = 0;
     virtual int32_t SetSource(const std::string &url) = 0;
     virtual int32_t SetSource(const sptr<IRemoteObject> &object) = 0;
     virtual int32_t SetSource(int32_t fd, int64_t offset, int64_t size) = 0;
@@ -175,11 +176,18 @@ public:
         return 0;
     }
 
+    virtual int32_t EnableReportMediaProgress(bool enable)
+    {
+        (void)enable;
+        return 0;
+    }
+
     /**
      * IPC code ID
      */
     enum PlayerServiceMsg {
         SET_LISTENER_OBJ = 0,
+        SET_PLAYER_PRODUCER,
         SET_SOURCE,
         SET_MEDIA_DATA_SRC_OBJ,
         SET_FD_SOURCE,
@@ -236,6 +244,7 @@ public:
         SET_START_FRAME_RATE_OPT_ENABLED,
         SET_REOPEN_FD,
         ENABLE_CAMERA_POSTPROCESSING,
+        ENABLE_REPORT_MEDIA_PROGRESS,
         MAX_IPC_ID,                   // all IPC codes should be added before MAX_IPC_ID
     };
 

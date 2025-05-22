@@ -838,6 +838,12 @@ int32_t PlayerMock::SetVideoWindowSize(int32_t width, int32_t height)
     return player_->SetVideoWindowSize(width, height);
 }
 
+int32_t PlayerMock::EnableReportMediaProgress(bool enable)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
+    return player_->EnableReportMediaProgress(enable);
+}
+
 void PlayerMock::ReleaseClientListener()
 {
     UNITTEST_CHECK_AND_RETURN_LOG(player_ != nullptr, "player_ == nullptr");
