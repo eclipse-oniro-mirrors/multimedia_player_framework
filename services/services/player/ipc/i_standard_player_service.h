@@ -176,11 +176,18 @@ public:
         return 0;
     }
 
+    virtual int32_t EnableReportMediaProgress(bool enable)
+    {
+        (void)enable;
+        return 0;
+    }
+
     /**
      * IPC code ID
      */
     enum PlayerServiceMsg {
         SET_LISTENER_OBJ = 0,
+        SET_PLAYER_PRODUCER,
         SET_SOURCE,
         SET_MEDIA_DATA_SRC_OBJ,
         SET_FD_SOURCE,
@@ -237,7 +244,7 @@ public:
         SET_START_FRAME_RATE_OPT_ENABLED,
         SET_REOPEN_FD,
         ENABLE_CAMERA_POSTPROCESSING,
-        SET_PLAYER_PRODUCER,
+        ENABLE_REPORT_MEDIA_PROGRESS,
         MAX_IPC_ID,                   // all IPC codes should be added before MAX_IPC_ID
     };
 

@@ -896,6 +896,13 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ProcessWindowIdList_001, TestSize.Leve
     ASSERT_EQ((screenCaptureServer_->GetWindowIdList()).size(), 1);
 }
 
+HWTEST_F(ScreenCaptureServerFunctionTest, ProcessCurDisplayId_001, TestSize.Level2)
+{
+    uint64_t curWindowInDisplayId = 0;
+    screenCaptureServer_->SetCurDisplayId(curWindowInDisplayId);
+    ASSERT_EQ(screenCaptureServer_->GetCurDisplayId(), curWindowInDisplayId);
+}
+
 HWTEST_F(ScreenCaptureServerFunctionTest, NotifyCaptureContentChanged_001, TestSize.Level2)
 {
     screenCaptureServer_->NotifyCaptureContentChanged(AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_HIDE,
@@ -905,6 +912,30 @@ HWTEST_F(ScreenCaptureServerFunctionTest, NotifyCaptureContentChanged_001, TestS
     screenCaptureServer_->NotifyCaptureContentChanged(
         AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_UNAVAILABLE, nullptr);
     ASSERT_NE(screenCaptureServer_, nullptr);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, NotifyCaptureContentChanged_002, TestSize.Level2)
+{
+    ScreenCaptureRect* area = nullptr;
+    area->x = 0;
+    area->y = 0;
+    area->width = 1;
+    area->height = 1;
+    screenCaptureServer_->NotifyCaptureContentChanged(AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_HIDE,
+        area);
+    screenCaptureServer_->NotifyCaptureContentChanged(
+        AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_VISIBLE, nullptr);
+    screenCaptureServer_->NotifyCaptureContentChanged(
+        AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_UNAVAILABLE, nullptr);
+    ASSERT_NE(screenCaptureServer_, nullptr);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, SetDefaultDisplayIdOfWindows_001, TestSize.Level2)
+{
+    screenCaptureServer_->missionIds_ = { 80 };
+    screenCaptureServer_->curWindowInDisplayId_ = SCREEN_ID_INVALID;
+    screenCaptureServer_->SetDefaultDisplayIdOfWindows();
+    ASSERT_NE(screenCaptureServer_->GetCurDisplayId(), SCREEN_ID_INVALID);
 }
 
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
@@ -923,6 +954,40 @@ HWTEST_F(ScreenCaptureServerFunctionTest, WindowLifecycleListener_001, TestSize.
     ASSERT_EQ(screenCaptureServer_->windowLifecycleListener_, nullptr);
 }
 
+HWTEST_F(ScreenCaptureServerFunctionTest, WindowLifecycleListener_002, TestSize.Level2)
+{
+    screenCaptureServer_->windowIdList_ = {};
+    int32_t windowId = 70;
+    screenCaptureServer_->SetWindowIdList(windowId);
+    screenCaptureServer_->lifecycleListenerDeathRecipient_ = nullptr;
+
+    std::weak_ptr<ScreenCaptureServer> screenCaptureServer(screenCaptureServer_);
+    sptr<SCWindowLifecycleListener> listener(new (std::nothrow) SCWindowLifecycleListener(screenCaptureServer));
+    screenCaptureServer_->windowLifecycleListener_ = listener;
+    screenCaptureServer_->RegisterWindowLifecycleListener(screenCaptureServer_->GetWindowIdList());
+
+    ASSERT_NE(screenCaptureServer_->lifecycleListenerDeathRecipient_, nullptr);
+    ASSERT_NE(screenCaptureServer_->windowLifecycleListener_, nullptr);
+    screenCaptureServer_->UnRegisterWindowLifecycleListener();
+    ASSERT_EQ(screenCaptureServer_->lifecycleListenerDeathRecipient_, nullptr);
+    ASSERT_EQ(screenCaptureServer_->windowLifecycleListener_, nullptr);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, WindowLifecycleListener_003, TestSize.Level2)
+{
+    screenCaptureServer_->windowIdList_ = {};
+    int32_t windowId = 70;
+    screenCaptureServer_->SetWindowIdList(windowId);
+    screenCaptureServer_->windowLifecycleListener_ = nullptr;
+    screenCaptureServer_->lifecycleListenerDeathRecipient_ = nullptr;
+    screenCaptureServer_->RegisterWindowLifecycleListener(screenCaptureServer_->GetWindowIdList());
+    ASSERT_NE(screenCaptureServer_->lifecycleListenerDeathRecipient_, nullptr);
+    ASSERT_NE(screenCaptureServer_->windowLifecycleListener_, nullptr);
+    screenCaptureServer_->windowLifecycleListener_ = nullptr;
+    ASSERT_EQ(screenCaptureServer_->UnRegisterWindowLifecycleListener(), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->lifecycleListenerDeathRecipient_, nullptr);
+}
+
 HWTEST_F(ScreenCaptureServerFunctionTest, WindowInfoChangedListener_001, TestSize.Level2)
 {
     screenCaptureServer_->windowInfoChangedListener_ = nullptr;
@@ -930,6 +995,70 @@ HWTEST_F(ScreenCaptureServerFunctionTest, WindowInfoChangedListener_001, TestSiz
     ASSERT_NE(screenCaptureServer_->windowInfoChangedListener_, nullptr);
     screenCaptureServer_->UnRegisterWindowInfoChangedListener();
     ASSERT_EQ(screenCaptureServer_->windowInfoChangedListener_, nullptr);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, WindowInfoChangedListener_002, TestSize.Level2)
+{
+    std::weak_ptr<ScreenCaptureServer> screenCaptureServer(screenCaptureServer_);
+    sptr<SCWindowInfoChangedListener> listener(new (std::nothrow) SCWindowInfoChangedListener(screenCaptureServer));
+    screenCaptureServer_->windowInfoChangedListener_ = listener;
+    ASSERT_EQ(screenCaptureServer_->RegisterWindowInfoChangedListener(), MSERR_OK);
+    screenCaptureServer_->UnRegisterWindowInfoChangedListener();
+    ASSERT_EQ(screenCaptureServer_->windowInfoChangedListener_, nullptr);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, WindowInfoChangedListener_003, TestSize.Level2)
+{
+    screenCaptureServer_->windowInfoChangedListener_ = nullptr;
+    ASSERT_EQ(screenCaptureServer_->UnRegisterWindowInfoChangedListener(), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, RegisterWindowRelatedListener_001, TestSize.Level2)
+{
+    screenCaptureServer_->windowIdList_ = {};
+    int32_t windowId = 70;
+    screenCaptureServer_->SetWindowIdList(windowId);
+    screenCaptureServer_->windowLifecycleListener_ = nullptr;
+    screenCaptureServer_->lifecycleListenerDeathRecipient_ = nullptr;
+    screenCaptureServer_->windowInfoChangedListener_ = nullptr;
+    screenCaptureServer_->RegisterWindowRelatedListener();
+    ASSERT_NE(screenCaptureServer_->lifecycleListenerDeathRecipient_, nullptr);
+    ASSERT_NE(screenCaptureServer_->windowLifecycleListener_, nullptr);
+    ASSERT_NE(screenCaptureServer_->windowInfoChangedListener_, nullptr);
+    screenCaptureServer_->UnRegisterWindowLifecycleListener();
+    screenCaptureServer_->UnRegisterWindowInfoChangedListener();
+    ASSERT_EQ(screenCaptureServer_->lifecycleListenerDeathRecipient_, nullptr);
+    ASSERT_EQ(screenCaptureServer_->windowLifecycleListener_, nullptr);
+    ASSERT_EQ(screenCaptureServer_->windowInfoChangedListener_, nullptr);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, OnLifecycleEvent_001, TestSize.Level2)
+{
+    std::weak_ptr<ScreenCaptureServer> screenCaptureServer(screenCaptureServer_);
+    sptr<SCWindowLifecycleListener> listener(new (std::nothrow) SCWindowLifecycleListener(screenCaptureServer));
+    screenCaptureServer_->windowLifecycleListener_ = listener;
+    screenCaptureServer_->displayScreenId_ = 0;
+    screenCaptureServer_->curWindowInDisplayId_ = 0;
+    screenCaptureServer_->SetWindowIdList(80);
+    SCWindowLifecycleListener::LifecycleEventPayload payload;
+    screenCaptureServer_->windowLifecycleListener_->OnLifecycleEvent(
+        SCWindowLifecycleListener::SessionLifecycleEvent::FOREGROUND, payload);
+    screenCaptureServer_->windowLifecycleListener_->OnLifecycleEvent(
+        SCWindowLifecycleListener::SessionLifecycleEvent::BACKGROUND, payload);
+    screenCaptureServer_->windowLifecycleListener_->OnLifecycleEvent(
+        SCWindowLifecycleListener::SessionLifecycleEvent::DESTROYED, payload);
+    ASSERT_NE(screenCaptureServer_, nullptr);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, OnWindowInfoChanged_001, TestSize.Level2)
+{
+    std::weak_ptr<ScreenCaptureServer> screenCaptureServer(screenCaptureServer_);
+    sptr<SCWindowInfoChangedListener> listener(new (std::nothrow) SCWindowInfoChangedListener(screenCaptureServer));
+    screenCaptureServer_->windowInfoChangedListener_ = listener;
+    std::vector<std::unordered_map<WindowInfoKey, std::any>> myWindowInfoList;
+    screenCaptureServer_->windowIdList_ = {};
+    screenCaptureServer_->windowInfoChangedListener_->OnWindowInfoChanged(myWindowInfoList);
+    ASSERT_NE(screenCaptureServer_, nullptr);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, StartScreenCaptureRegisterListener_001, TestSize.Level2)
@@ -946,7 +1075,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StartScreenCaptureRegisterListener_001
     ASSERT_EQ(screenCaptureServer_->missionIds_.size(), 1);
     screenCaptureServer_->PostStartScreenCapture(true);
 
-    ASSERT_EQ((screenCaptureServer_->GetWindowIdList()).size(), 1);
+    ASSERT_EQ(screenCaptureServer_->GetWindowIdList().size(), 1);
     ASSERT_NE(screenCaptureServer_->lifecycleListenerDeathRecipient_, nullptr);
     ASSERT_NE(screenCaptureServer_->windowLifecycleListener_, nullptr);
     ASSERT_NE(screenCaptureServer_->windowInfoChangedListener_, nullptr);
@@ -966,7 +1095,27 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StartScreenCaptureRegisterListener_002
     ASSERT_EQ(screenCaptureServer_->missionIds_.size(), 1);
     screenCaptureServer_->PostStartScreenCapture(true);
 
-    ASSERT_EQ((screenCaptureServer_->GetWindowIdList()).size(), 0);
+    ASSERT_EQ(screenCaptureServer_->GetWindowIdList().size(), 0);
+    ASSERT_EQ(screenCaptureServer_->lifecycleListenerDeathRecipient_, nullptr);
+    ASSERT_EQ(screenCaptureServer_->windowLifecycleListener_, nullptr);
+    ASSERT_EQ(screenCaptureServer_->windowInfoChangedListener_, nullptr);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, StartScreenCaptureRegisterListener_003, TestSize.Level2)
+{
+    screenCaptureServer_->isPrivacyAuthorityEnabled_ = true;
+    screenCaptureServer_->isScreenCaptureAuthority_ = true;
+    screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_SPECIFIED_WINDOW;
+    screenCaptureServer_->windowLifecycleListener_ = nullptr;
+    screenCaptureServer_->lifecycleListenerDeathRecipient_ = nullptr;
+    screenCaptureServer_->windowInfoChangedListener_ = nullptr;
+
+    screenCaptureServer_->missionIds_ = {};
+    screenCaptureServer_->missionIds_.push_back(70);
+    ASSERT_EQ(screenCaptureServer_->missionIds_.size(), 1);
+    screenCaptureServer_->PostStartScreenCapture(false);
+
+    ASSERT_EQ(screenCaptureServer_->GetWindowIdList().size(), 0);
     ASSERT_EQ(screenCaptureServer_->lifecycleListenerDeathRecipient_, nullptr);
     ASSERT_EQ(screenCaptureServer_->windowLifecycleListener_, nullptr);
     ASSERT_EQ(screenCaptureServer_->windowInfoChangedListener_, nullptr);

@@ -154,6 +154,7 @@ public:
     int32_t SetStartFrameRateOptEnabled(bool enabled) override;
     int32_t SetReopenFd(int32_t fd) override;
     int32_t EnableCameraPostprocessing() override;
+    int32_t EnableReportMediaProgress(bool enable) override;
 
 protected:
     class BaseState;
@@ -222,7 +223,6 @@ private:
     int32_t HandleStop();
     int32_t HandleReset();
     int32_t HandleSeek(int32_t mSeconds, PlayerSeekMode mode);
-    int32_t HandleEosPlay();
     int32_t HandleSetPlayRange(int64_t start, int64_t end, PlayerSeekMode mode);
     int32_t HandleSetPlaybackSpeed(PlaybackRateMode mode);
     int32_t HandleSetPlaybackRate(float rate);
@@ -267,7 +267,7 @@ private:
     int32_t appUid_ = 0;
     int32_t appPid_ = 0;
     std::string appName_;
-    int32_t apiVersion_ = -1;
+    std::atomic<int32_t> apiVersion_ = -1;
     std::atomic<bool> inReleasing_ = false;
     std::atomic<int32_t> userId_ = -1;
     std::atomic<bool> isBootCompleted_ = false;
@@ -282,6 +282,7 @@ private:
     bool deviceChangeCallbackflag_ = false;
     bool maxAmplitudeCbStatus_ = false;
     bool seiMessageCbStatus_ = false;
+    bool enableReportMediaProgress_ = false;
     std::vector<int32_t> payloadTypes_ {};
     bool isStreamUsagePauseRequired_ = true;
     std::mutex surfaceMutex_;

@@ -3215,6 +3215,31 @@ void AVPlayerNapi::DeviceChangeCallbackOff(AVPlayerNapi *jsPlayer, std::string c
     }
 }
 
+void AVPlayerNapi::ReportMediaProgressCallbackOn(AVPlayerNapi *jsPlayer, std::string callbackName)
+{
+    if (jsPlayer == nullptr) {
+        reportMediaProgressCallbackflag_ = false;
+        return;
+    }
+    if (callbackName == "timeUpdate") {
+        reportMediaProgressCallbackflag_ = true;
+    }
+    CHECK_AND_RETURN_LOG(jsPlayer->player_ != nullptr, "player_ is nullptr");
+    if (reportMediaProgressCallbackflag_) {
+        (void)jsPlayer->player_->EnableReportMediaProgress(reportMediaProgressCallbackflag_);
+    }
+}
+
+void AVPlayerNapi::ReportMediaProgressCallbackOff(AVPlayerNapi *jsPlayer, std::string callbackName)
+{
+    CHECK_AND_RETURN_LOG(jsPlayer != nullptr, "jsPlayer is nullptr");
+    if (reportMediaProgressCallbackflag_ && callbackName == "timeUpdate") {
+        reportMediaProgressCallbackflag_ = false;
+        CHECK_AND_RETURN_LOG(jsPlayer->player_ != nullptr, "player_ is nullptr");
+        (void)jsPlayer->player_->EnableReportMediaProgress(reportMediaProgressCallbackflag_);
+    }
+}
+
 void AVPlayerNapi::MaxAmplitudeCallbackOn(AVPlayerNapi *jsPlayer, std::string callbackName)
 {
     if (jsPlayer == nullptr) {
@@ -3282,6 +3307,7 @@ napi_value AVPlayerNapi::JsSetOnCallback(napi_env env, napi_callback_info info)
         CHECK_AND_RETURN_RET_NOLOG(
             VerifyExpectedType({env, args[1], napi_function}, jsPlayer, "param should be function."), result);
         jsPlayer->MaxAmplitudeCallbackOn(jsPlayer, callbackName);
+        jsPlayer->ReportMediaProgressCallbackOn(jsPlayer, callbackName);
         napi_status status = napi_create_reference(env, args[1], 1, &ref);
         CHECK_AND_RETURN_RET_LOG(status == napi_ok && ref != nullptr, result, "failed to create reference!");
     }
@@ -3355,6 +3381,7 @@ napi_value AVPlayerNapi::JsClearOnCallback(napi_env env, napi_callback_info info
     MEDIA_LOGI("0x%{public}06" PRIXPTR " set callbackName: %{public}s", FAKE_POINTER(jsPlayer), callbackName.c_str());
     if (callbackName != "seiMessageReceived") {
         jsPlayer->MaxAmplitudeCallbackOff(jsPlayer, callbackName);
+        jsPlayer->ReportMediaProgressCallbackOff(jsPlayer, callbackName);
         jsPlayer->ClearCallbackReference(callbackName);
         MEDIA_LOGI("0x%{public}06" PRIXPTR " JsClearOnCallback success", FAKE_POINTER(jsPlayer));
         return result;

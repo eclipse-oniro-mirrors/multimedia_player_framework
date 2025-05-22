@@ -138,8 +138,7 @@
           "fwk_group": [
             "//foundation/multimedia/player_framework/interfaces/kits/js:napi_packages",
             "//foundation/multimedia/player_framework/interfaces/kits/c:capi_packages",
-            "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
-            "//foundation/multimedia/player_framework/frameworks/cj:ffi_packages"
+            "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client"
           ],
           "service_group": [
             "//foundation/multimedia/player_framework/services:media_services_package",
@@ -284,6 +283,18 @@
                 "cj_avscreen_capture.h"
               ],
               "header_base": "//foundation/multimedia/player_framework/frameworks/cj/avscreen_capture/include"
+            }
+          },
+          {
+            "type": "so",
+            "name": "//foundation/multimedia/player_framework/frameworks/cj/avtranscoder:cj_avtranscoder_ffi",
+            "header": {
+              "header_files": [
+                "avtranscoder_ffi.h",
+                "cj_avtranscoder_callback.h",
+                "cj_avtranscoder.h"
+              ],
+              "header_base": "//foundation/multimedia/player_framework/frameworks/cj/avtranscoder/include"
             }
           },
           {

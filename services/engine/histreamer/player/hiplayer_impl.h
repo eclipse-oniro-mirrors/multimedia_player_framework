@@ -189,6 +189,7 @@ public:
     void SetPerfRecEnabled(bool isPerfRecEnabled) override;
     int32_t SetReopenFd(int32_t fd) override;
     int32_t EnableCameraPostprocessing() override;
+    int32_t EnableReportMediaProgress(bool enable) override;
 
 private:
     enum HiplayerSvpMode : int32_t {
@@ -291,7 +292,6 @@ private:
     bool HandleEosFlagState(const Event& event);
     int32_t GetSarVideoWidth(std::shared_ptr<Meta> trackInfo);
     int32_t GetSarVideoHeight(std::shared_ptr<Meta> trackInfo);
-    int32_t HandleEosPlay() override;
     bool IsLiveStream();
     Status SetSeiMessageListener();
     void UpdatePlayTotalDuration();

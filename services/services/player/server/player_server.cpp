@@ -41,6 +41,7 @@ using namespace OHOS::QOS;
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "PlayerServer"};
     constexpr int32_t MAX_SUBTITLE_TRACK_NUN = 8;
+    constexpr int32_t MEMORY_USAGE_VERSION_ISOLATION = 20;
     static bool g_isFirstInit = true;
 }
 
@@ -242,7 +243,7 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_CREATE_PLAYER_ENGINE_FAILED,
         "failed to create player engine");
     playerEngine_->SetInstancdId(instanceId_);
-    playerEngine_->SetApiVersion(apiVersion_);
+    playerEngine_->SetApiVersion(apiVersion_.load());
     playerEngine_->SetIsCalledBySystemApp(isCalledBySystemApp_);
     MEDIA_LOGI("Setted InstanceId %{public}" PRIu64, instanceId_);
     if (dataSrc_ != nullptr) {
@@ -260,6 +261,10 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
     ret = playerEngine_->SetMaxAmplitudeCbStatus(playerProducer_ == PlayerProducer::NAPI ? maxAmplitudeCbStatus_ : true);
     ret = playerEngine_->SetSeiMessageCbStatus(seiMessageCbStatus_, payloadTypes_);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetMaxAmplitudeCbStatus Failed!");
+
+    ret = playerEngine_->EnableReportMediaProgress(
+        playerProducer_ == PlayerProducer::NAPI ? enableReportMediaProgress_ : true);
+    TRUE_LOG(ret != MSERR_OK, MEDIA_LOGW, "PlayerEngine enable report media progress failed, ret %{public}d", ret);
 
     lastOpStatus_ = PLAYER_INITIALIZED;
     ChangeState(initializedState_);
@@ -882,14 +887,6 @@ int32_t PlayerServer::Seek(int32_t mSeconds, PlayerSeekMode mode)
     return MSERR_OK;
 }
 
-int32_t PlayerServer::HandleEosPlay()
-{
-    MEDIA_LOGI("PlayerServer HandleEosPlay");
-    int32_t ret = playerEngine_->HandleEosPlay();
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine Seek Failed!");
-    return MSERR_OK;
-}
-
 int32_t PlayerServer::HandleSeek(int32_t mSeconds, PlayerSeekMode mode)
 {
     MEDIA_LOGI("KPI-TRACE: PlayerServer HandleSeek in, mSeconds: %{public}d, mSeconds: %{public}d, "
@@ -1069,7 +1066,7 @@ int32_t PlayerServer::GetDuration(int32_t &duration)
 
 int32_t PlayerServer::GetApiVersion(int32_t &apiVersion)
 {
-    apiVersion = apiVersion_;
+    apiVersion = apiVersion_.load();
     MEDIA_LOGD("PlayerServer GetApiVersion %{public}d", apiVersion);
     return MSERR_OK;
 }
@@ -1253,8 +1250,6 @@ void PlayerServer::HandleEos()
                 PlayerSeekMode seekMode = static_cast<PlayerSeekMode>(playerEngine_->GetPlayRangeSeekMode());
                 int32_t seekTime = (startTime != -1 && endTime != -1) ? startTime : 0;
                 (void)currState->Seek(seekTime, seekMode);
-            } else {
-                (void)currState->Seek(0, SEEK_PREVIOUS_SYNC);
             }
         });
 
@@ -2235,6 +2230,8 @@ int32_t PlayerServer::SetSeiMessageCbStatus(bool status, const std::vector<int32
 
 uint32_t PlayerServer::GetMemoryUsage()
 {
+    int32_t version = apiVersion_.load();
+    CHECK_AND_RETURN_RET_LOG(version >= MEMORY_USAGE_VERSION_ISOLATION, 0,"api version is low %{public}d", version);
     return totalMemoryUage_.load();
 }
 
@@ -2254,6 +2251,14 @@ int32_t PlayerServer::EnableCameraPostprocessing()
         "can not enable camera postProcessor, current state is %{public}d", static_cast<int32_t>(lastOpStatus_.load()));
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     return playerEngine_->EnableCameraPostprocessing();
+}
+
+int32_t PlayerServer::EnableReportMediaProgress(bool enable)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    enableReportMediaProgress_ = enable;
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
+    return playerEngine_->EnableReportMediaProgress(enableReportMediaProgress_);
 }
 } // namespace Media
 } // namespace OHOS

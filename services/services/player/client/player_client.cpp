@@ -539,5 +539,13 @@ int32_t PlayerClient::EnableCameraPostprocessing()
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     return playerProxy_->EnableCameraPostprocessing();
 }
+
+int32_t PlayerClient::EnableReportMediaProgress(bool enable)
+{
+    MEDIA_LOGD("PlayerClient:0x%{public}06" PRIXPTR " EnableReportMediaProgress in", FAKE_POINTER(this));
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerProxy_->EnableReportMediaProgress(enable);
+}
 } // namespace Media
 } // namespace OHOS

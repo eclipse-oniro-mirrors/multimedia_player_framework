@@ -544,7 +544,6 @@ int32_t PlayerServer::PlaybackCompletedState::Play()
     MEDIA_LOGD("timeNow %{public}" PRId64 " timeStart %{public}" PRId64 " timeDiff %{public}" PRId64,
         timeNow, stateEnterTimeMs_, timeDiff);
     CHECK_AND_RETURN_RET(timeDiff < COMPLETED_PLAY_REPORT_MS, res);
-    server_.HandleEosPlay();
     return res;
 }
 

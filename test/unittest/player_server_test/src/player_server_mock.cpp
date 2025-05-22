@@ -825,5 +825,10 @@ int32_t PlayerServerMock::SetRenderFirstFrame(bool display)
     return player_->SetRenderFirstFrame(display);
 }
 
+int32_t PlayerServerMock::EnableReportMediaProgress(bool enable)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
+    return player_->EnableReportMediaProgress(enable);
+}
 } // namespace Media
 } // namespace OHOS

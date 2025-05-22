@@ -37,6 +37,7 @@ public:
 
     int OnRemoteRequest(uint32_t code, MessageParcel &data,
         MessageParcel &reply, MessageOption &option) override;
+    int32_t SetPlayerProducer(const PlayerProducer producer) override;
     int32_t AddSubSource(const std::string &url) override;
     int32_t Play() override;
     int32_t SetSource(const sptr<IRemoteObject> &object) override;
@@ -104,6 +105,7 @@ public:
     uint32_t GetMemoryUsage();
     int32_t SetReopenFd(int32_t fd) override;
     int32_t EnableCameraPostprocessing() override;
+    int32_t EnableReportMediaProgress(bool enable) override;
 protected:
     PlayerServiceStub();
     virtual int32_t Init();
@@ -177,6 +179,7 @@ private:
     int32_t SetStartFrameRateOptEnabled(MessageParcel &data, MessageParcel &reply);
     int32_t SetReopenFd(MessageParcel &data, MessageParcel &reply);
     int32_t EnableCameraPostprocessing(MessageParcel &data, MessageParcel &reply);
+    int32_t EnableReportMediaProgress(MessageParcel &data, MessageParcel &reply);
 
     int32_t ReadMediaStreamListFromMessageParcel(
         MessageParcel &data, const std::shared_ptr<AVMediaSource> &mediaSource);

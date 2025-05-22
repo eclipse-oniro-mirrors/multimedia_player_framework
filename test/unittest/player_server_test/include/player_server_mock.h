@@ -170,6 +170,7 @@ public:
     int32_t SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMuted);
     int32_t SetDeviceChangeCbStatus(bool status);
     int32_t SetRenderFirstFrame(bool display);
+    int32_t EnableReportMediaProgress(bool enable);
 private:
     void SeekPrepare(int32_t &mseconds, PlayerSeekMode &mode);
     std::shared_ptr<IPlayerService> player_ = nullptr;

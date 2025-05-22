@@ -1146,21 +1146,6 @@ int32_t HiPlayerImpl::SeekToCurrentTime(int32_t mSeconds, PlayerSeekMode mode)
     return Seek(mSeconds, mode);
 }
 
-int32_t HiPlayerImpl::HandleEosPlay()
-{
-    Plugins::AudioRenderInfo audioRenderInfo;
-    FALSE_RETURN_V(
-        audioRenderInfo_ && audioRenderInfo_->GetData(Tag::AUDIO_RENDER_INFO, audioRenderInfo), MSERR_INVALID_VAL);
-    FALSE_RETURN_V(audioRenderInfo.streamUsage > AudioStandard::StreamUsage::STREAM_USAGE_INVALID &&
-        audioRenderInfo.streamUsage < AudioStandard::StreamUsage::STREAM_USAGE_MAX, MSERR_INVALID_VAL);
-    auto it = FOCUS_EVENT_USAGE_SET.find(static_cast<AudioStandard::StreamUsage>(audioRenderInfo.streamUsage));
-    FALSE_RETURN_V(it == FOCUS_EVENT_USAGE_SET.end(), MSERR_INVALID_VAL);
-    FALSE_RETURN_V(dfxAgent_ != nullptr, MSERR_INVALID_STATE);
-    DfxEvent event = { .type = DfxEventType::DFX_INFO_PLAYER_EOS_SEEK, .param = appUid_ };
-    dfxAgent_->OnDfxEvent(event);
-    return MSERR_OK;
-}
-
 Status HiPlayerImpl::Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeekDone)
 {
     MediaTrace trace("HiPlayerImpl::Seek");
@@ -3579,6 +3564,13 @@ void HiPlayerImpl::SetPerfRecEnabled(bool isPerfRecEnabled)
     isPerfRecEnabled_ = isPerfRecEnabled;
 }
 
+int32_t HiPlayerImpl::EnableReportMediaProgress(bool enable)
+{
+    MEDIA_LOG_I("EnableReportMediaProgress %{public}d", enable);
+    callbackLooper_.EnableReportMediaProgress(enable);
+    return MSERR_OK;
+}
+
 bool HiPlayerImpl::IsNeedChangePlaySpeed(PlaybackRateMode &mode, bool &isXSpeedPlay)
 {
     FALSE_RETURN_V(demuxer_ != nullptr && isFlvLive_, false);
@@ -3669,8 +3661,9 @@ void HiPlayerImpl::SetFlvObs()
     liveController_.StartWithPlayerEngineObs(playerEngineObs_);
 
     // flv live with play water line max wait 30s.
-    FALSE_RETURN_MSG(isSetBufferDurationForPlaying_, "Flv live stream and no duration water line");
-    MEDIA_LOG_I("Wait flv live play water line for max 30s");
+    FALSE_RETURN_MSG(isSetBufferDurationForPlaying_ && bufferDurationForPlaying_ > 0,
+            "Flv live stream and no duration water line");
+    MEDIA_LOG_I("Wait flv live play water line for max 30s bufferDuration %{public}.2f", bufferDurationForPlaying_);
     std::unique_lock<std::mutex> lock(flvLiveMutex_);
     flvLiveCond_.wait_for(lock, std::chrono::milliseconds(FLV_LIVE_PREPARE_WAIT_TIME),
         [this] { return isBufferingEnd_.load() || isInterruptNeeded_.load(); });

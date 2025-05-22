@@ -271,11 +271,6 @@ public:
         return 0;
     }
 
-    virtual int32_t HandleEosPlay()
-    {
-        return 0;
-    }
-
     virtual int32_t IsSeekContinuousSupported(bool &IsSeekContinuousSupported)
     {
         (void)IsSeekContinuousSupported;
@@ -323,6 +318,12 @@ public:
     virtual bool IsFlvLive()
     {
         return false;
+    }
+
+    virtual int32_t EnableReportMediaProgress(bool enable)
+    {
+        (void)enable;
+        return 0;
     }
 
     virtual int32_t SetStartFrameRateOptEnabled(bool enabled)

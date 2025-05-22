@@ -146,7 +146,6 @@ ohos_unittest("avmetadatahelper_unit_test") {
     "call_manager:tel_call_manager_api",
     "common_event_service:cesfwk_innerkits",
     "core_service:tel_core_service_api",
-    "drivers_interface_camera:metadata",
     "drivers_interface_display:display_commontype_idl_headers",
     "graphic_2d:librender_service_base",
     "graphic_surface:surface",
