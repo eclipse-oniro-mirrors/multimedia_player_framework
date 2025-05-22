@@ -13,36 +13,20 @@
  * limitations under the License.
  */
 
-#include "media_service_helper_impl.h"
+#include "media_service_helper.h"
 #include "media_log.h"
 #include "i_media_service.h"
 
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "MediaServiceHelperImpl"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "MediaServiceHelper"};
 }
+
 namespace OHOS {
 namespace Media {
-std::shared_ptr<MediaServiceHelper> MediaServiceHelperFactory::CreateMediaServiceHelper()
-{
-    std::shared_ptr<MediaServiceHelperImpl> impl = std::make_shared<MediaServiceHelperImpl>();
-    CHECK_AND_RETURN_RET_LOG(impl != nullptr, nullptr, "failed to new MediaServiceHelperImpl");
-    return impl;
-}
-
-MediaServiceHelperImpl::MediaServiceHelperImpl()
-{
-    MEDIA_LOGD("MediaServiceHelperImpl:0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
-}
-
-MediaServiceHelperImpl::~MediaServiceHelperImpl()
-{
-    MEDIA_LOGD("MediaServiceHelperImpl:0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
-}
-
 bool MediaServiceHelperImpl::CanKillMediaService()
 {
     bool canKill = MediaServiceFactory::GetInstance().CanKillMediaService();
-    MEDIA_LOGD("isOnlyAVPlayerStub = %{public}s", canKill ? "true" : "false");
+    MEDIA_LOGW("media service can be killed = %{public}d", canKill);
     return canKill;
 }
 

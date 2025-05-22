@@ -16,19 +16,12 @@
 #ifndef MEDIA_SERVICE_HELPER_IMPL_H
 #define MEDIA_SERVICE_HELPER_IMPL_H
 
-#include "media_service_helper.h"
-#include "nocopyable.h"
-#include "osal/task/autolock.h"
-
 namespace OHOS {
 namespace Media {
-class MediaServiceHelperImpl : public MediaServiceHelper, public NoCopyable {
+class MediaServiceHelper {
 public:
-    MediaServiceHelperImpl();
-    ~MediaServiceHelperImpl();
-
-    bool CanKillMediaService() override;
+    static bool CanKillMediaService();
 };
 } // namespace Media
 } // namespace OHOS
-#endif // PLAYER_IMPL_H
+#endif // MEDIA_SERVICE_HELPER_IMPL_H

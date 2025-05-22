@@ -175,7 +175,7 @@
               "header_files": [
                 "media_service_helper.h"
               ],
-              "header_base": "//foundation/multimedia/player_framework/interfaces/inner_api/native/media_service_helper"
+              "header_base": "//foundation/multimedia/player_framework/frameworks/native/media_service_helper"
             }
           },
           {

@@ -16,12 +16,6 @@ import("//foundation/multimedia/player_framework/config.gni")
 
 MEDIA_ROOT_DIR = "//foundation/multimedia/player_framework"
 
-config("media_public_config") {
-  include_dirs = [
-    "$MEDIA_ROOT_DIR/interfaces/inner_api/native/media_service_helper",
-  ]
-}
-
 config("media_client_ipc_config") {
   include_dirs = [
     "$MEDIA_ROOT_DIR/services/services/common",
@@ -80,7 +74,7 @@ ohos_shared_library("media_helper_client") {
   }
 
   sources = [
-    "$MEDIA_ROOT_DIR/frameworks/native/media_service_helper/media_service_helper_impl.cpp"
+    "$MEDIA_ROOT_DIR/frameworks/native/media_service_helper/media_service_helper.cpp"
   ]
 
   configs = [
@@ -88,7 +82,6 @@ ohos_shared_library("media_helper_client") {
     ":media_client_ipc_config",
   ]
 
-  public_configs = [ ":media_public_config" ]
   deps = [
     "$MEDIA_ROOT_DIR/interfaces/inner_api/native:media_client",
     "$MEDIA_ROOT_DIR/services/utils:media_service_utils" ]
