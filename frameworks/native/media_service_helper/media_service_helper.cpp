@@ -23,7 +23,7 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTUR
 
 namespace OHOS {
 namespace Media {
-bool MediaServiceHelperImpl::CanKillMediaService()
+bool MediaServiceHelper::CanKillMediaService()
 {
     bool canKill = MediaServiceFactory::GetInstance().CanKillMediaService();
     MEDIA_LOGW("media service can be killed = %{public}d", canKill);
