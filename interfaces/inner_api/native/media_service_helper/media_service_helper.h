@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef MEDIA_SERVICE_HELPER_IMPL_H
-#define MEDIA_SERVICE_HELPER_IMPL_H
+#ifndef MEDIA_SERVICE_HELPER_H
+#define MEDIA_SERVICE_HELPER_H
 
 namespace OHOS {
 namespace Media {
@@ -24,4 +24,4 @@ public:
 };
 } // namespace Media
 } // namespace OHOS
-#endif // MEDIA_SERVICE_HELPER_IMPL_H
+#endif // MEDIA_SERVICE_HELPER_H
