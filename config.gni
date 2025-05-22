@@ -93,6 +93,11 @@ declare_args() {
       defined(global_parts_info.hiviewdfx_hiappevent)) {
     player_framework_support_hiappevent = true
   }
+  player_framework_support_drivers_interface_camera = false
+  if (defined(global_parts_info) &&
+      defined(global_parts_info.drivers_interface_camera)) {
+    player_framework_support_drivers_interface_camera = true
+  }
 }
 
 player_framework_defines = []
@@ -213,6 +218,10 @@ if (player_framework_support_screen_capture_stopbycall) {
 
 if (player_framework_support_hiappevent) {
   player_framework_defines += [ "SUPPORT_HIAPPEVENT" ]
+}
+
+if (player_framework_support_drivers_interface_camera) {
+  player_framework_defines += [ "SUPPORT_DRIVER_INTERFACE_CAMERA" ]
 }
 
 # Config path
