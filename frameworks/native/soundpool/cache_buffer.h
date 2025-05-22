@@ -129,6 +129,7 @@ private:
     // use for save audiobuffer
     std::unique_ptr<AudioStandard::AudioRenderer> audioRenderer_;
     std::atomic<bool> isRunning_ = false;
+    std::atomic<bool> isReadyToStopAudioRenderer_ = false;
     std::shared_ptr<ISoundPoolCallback> callback_ = nullptr;
     std::shared_ptr<ISoundPoolCallback> cacheBufferCallback_ = nullptr;
     std::shared_ptr<ISoundPoolFrameWriteCallback> frameWriteCallback_ = nullptr;
