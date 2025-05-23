@@ -1159,8 +1159,11 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetCaptureArea(struct OH_AVScreen
     CHECK_AND_RETURN_RET_LOG(screenCaptureObj->screenCapture_ != nullptr,
         AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "screenCapture_ is null");
     
-    CHECK_AND_RETURN_RET_LOG(displayId >= 0, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input displayId invalid");
-    CHECK_AND_RETURN_RET_LOG(area != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input area invalid");
+    CHECK_AND_RETURN_RET_LOG(displayId >= 0 && displayId < 1000, AV_SCREEN_CAPTURE_ERR_INVALID_VAL,
+        "input displayId invalid");
+    CHECK_AND_RETURN_RET_LOG(area != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input area is nullptr");
+    CHECK_AND_RETURN_RET_LOG(area->x > 0 && area->y > 0 && area->width > 0 && area->height > 0,
+        AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input area invalid");
     OHOS::Rect region;
     region.x = area->x;
     region.y = area->y;
