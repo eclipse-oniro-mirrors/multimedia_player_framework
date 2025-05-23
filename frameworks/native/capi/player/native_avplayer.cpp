@@ -532,7 +532,7 @@ void NativeAVPlayerCallback::OnSpeedDoneCb(const int32_t extra, const Format &in
 
 void NativeAVPlayerCallback::OnPlaybackRateDoneCb(const int32_t extra, const Format &infoBody)
 {
-    (void)infoBody;
+    (void)extra;
     CHECK_AND_RETURN_LOG(isSourceLoaded_.load(), "OnPlaybackRateDoneCb current source is unready");
     float rate = 0.0f;
     (void)infoBody.GetFloatValue(PlayerKeys::PLAYER_PLAYBACK_RATE, rate);
