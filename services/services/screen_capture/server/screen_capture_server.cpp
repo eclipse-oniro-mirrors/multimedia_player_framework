@@ -499,6 +499,8 @@ int32_t ScreenCaptureServer::RegisterWindowInfoChangedListener()
     CHECK_AND_RETURN_RET_LOG(listener != nullptr, MSERR_INVALID_OPERATION,
         "create new windowInfoChangedListener failed.");
     windowInfoChangedListener_ = listener;
+    windowInfoChangedListener_->AddInterestInfo(Rosen::WindowInfoKey::WINDOW_ID);
+    windowInfoChangedListener_->AddInterestWindowId(windowIdList_.front());
 
     std::unordered_set<Rosen::WindowInfoKey> observedInfo;
     observedInfo.insert(Rosen::WindowInfoKey::DISPLAY_ID);
@@ -621,17 +623,10 @@ void SCWindowInfoChangedListener::OnWindowInfoChanged(
         return;
     }
 
-    auto iter = myWindowInfoList.front().find(WindowInfoKey::WINDOW_ID);
-    if (!(iter != myWindowInfoList.front().end() &&
-        std::any_cast<uint32_t>(iter->second) == static_cast<uint32_t>(SCServer->GetWindowIdList().front()))) {
-        MEDIA_LOGI("OnWindowInfoChanged myWindowInfoList cannot find WINDOW_ID_KEY or windowId not match!");
-        return;
-    }
-
-    MEDIA_LOGI("OnWindowInfoChanged: find changed windowId: %{public}d", SCServer->GetWindowIdList().front());
-    auto iter1 = myWindowInfoList.front().find(WindowInfoKey::DISPLAY_ID);
-    if (iter1 != myWindowInfoList.front().end()) {
-        uint64_t displayId = std::any_cast<uint64_t>(iter1->second);
+    MEDIA_LOGI("OnWindowInfoChanged: the displayId of interestWindowId changed!");
+    auto iter = myWindowInfoList.front().find(WindowInfoKey::DISPLAY_ID);
+    if (iter != myWindowInfoList.front().end()) {
+        uint64_t displayId = std::any_cast<uint64_t>(iter->second);
         MEDIA_LOGI("OnWindowInfoChanged: the curDisplayId: %{public}" PRIu64, displayId);
         SCServer->SetCurDisplayId(displayId);
         if (displayId == SCServer->GetDefaultDisplayId()) {
