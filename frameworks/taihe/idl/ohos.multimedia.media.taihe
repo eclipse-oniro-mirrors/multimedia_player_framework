@@ -44,12 +44,20 @@ function CreateAVImageGeneratorSync(): AVImageGenerator;
 @gen_promise("createAVPlayer")
 function CreateAVPlayerSync(): AVPlayer;
 
+@gen_async("createAVRecorder")
+@gen_promise("createAVRecorder")
+function CreateAVRecorderSync(): AVRecorder;
+
 @gen_promise("getScreenCaptureMonitor")
 function GetScreenCaptureMonitorSync(): ScreenCaptureMonitor;
 
 @gen_async("createSoundPool")
 @gen_promise("createSoundPool")
 function CreateSoundPoolSync(maxStreams: i32, audioRendererInfo: @sts_type("audio.AudioRendererInfo") Opaque): SoundPool;
+
+@gen_async("createVideoRecorder")
+@gen_promise("createVideoRecorder")
+function CreateVideoRecorderSync(): VideoRecorder;
 
 @gen_async("createAVMetadataExtractor")
 @gen_promise("createAVMetadataExtractor")
@@ -394,6 +402,45 @@ struct SubtitleInfo {
     text: Optional<String>;
 }
 
+interface VideoRecorder {
+    @gen_async("prepare")
+    @gen_promise("prepare")
+    PrepareSync(config: VideoRecorderConfig): void;
+
+    @gen_async("getInputSurface")
+    @gen_promise("getInputSurface")
+    GetInputSurfaceSync(): String;
+
+    @gen_async("pause")
+    @gen_promise("pause")
+    PauseSync(): void;
+
+    @gen_async("stop")
+    @gen_promise("stop")
+    StopSync(): void;
+
+    @gen_async("release")
+    @gen_promise("release")
+    ReleaseSync(): void;
+
+    @gen_async("reset")
+    @gen_promise("reset")
+    ResetSync(): void;
+
+    @get GetState(): String;
+
+    @!sts_inject_into_interface("on(type: string, callback: (err: BusinessError<void>)=> void): void;")
+    @!sts_inject_into_class("""on(type: string, callback: object): void {
+        if (type === "error") {
+            this.OnError_inner(callback as (err: BusinessError<void>)=> void);
+        } else {
+            throw new Error(`Unknown type: ${type}`);
+        }
+    }""")
+    OnError(callback: (err: @sts_type("BusinessError<void>") Opaque)=> void): void;
+
+}
+
 enum AudioSourceType: i32 {
     AUDIO_SOURCE_TYPE_DEFAULT = 0,
     AUDIO_SOURCE_TYPE_MIC = 1,
@@ -453,6 +500,72 @@ interface AVImageGenerator {
     @gen_async("release")
     @gen_promise("release")
     ReleaseSync(): void;
+}
+
+interface AVRecorder {
+    @get GetState(): String;
+
+    @gen_async("prepare")
+    @gen_promise("prepare")
+    PrepareSync(config: AVRecorderConfig): void;
+
+    @gen_async("start")
+    @gen_promise("start")
+    StartSync(): void;
+
+    @gen_async("getInputSurface")
+    @gen_promise("getInputSurface")
+    GetInputSurfaceSync(): String;
+
+    @gen_async("pause")
+    @gen_promise("pause")
+    PauseSync(): void;
+
+    @gen_async("stop")
+    @gen_promise("stop")
+    StopSync(): void;
+
+    @gen_async("release")
+    @gen_promise("release")
+    ReleaseSync(): void;
+
+    @gen_async("reset")
+    @gen_promise("reset")
+    ResetSync(): void;
+
+    @!sts_inject_into_interface("on(type: string, callback: (state: String, reason: StateChangeReason)=> void): void;")
+    @!sts_inject_into_interface("on(type: string, callback: (data: object)=> void): void;")
+    @!sts_inject_into_class("""on(type: string, callback: object): void {
+        if (type === "stateChange") {
+            this.OnStateChange_inner(callback as (state: String, reason: StateChangeReason)=> void);
+        } else if (type === "error") {
+            this.OnError_inner(callback as (err: BusinessError<void>)=> void);
+        } else if (type === "photoAssetAvailable") {
+            this.OnPhotoAssetAvailable_inner(callback as (photoAsset: photoAccessHelper.PhotoAsset)=> void);
+        } else {
+            throw new Error(`Unknown type: ${type}`);
+        }
+    }""")
+    OnError(callback: (err: @sts_type("BusinessError<void>") Opaque )=> void): void;
+    OnStateChange(callback: (state: String, reason: StateChangeReason)=> void): void;
+    OnPhotoAssetAvailable(callback: (data: @sts_type("photoAccessHelper.PhotoAsset") Opaque) => void): void;
+
+    @!sts_inject_into_interface("off(type: string, callback?: (state: string, reason: StateChangeReason)=> void): void;")
+    @!sts_inject_into_interface("off(type: string, callback?: (data: object)=> void): void;")
+    @!sts_inject_into_class("""off(type: string, callback?: object): void {
+        if (type === "error") {
+            this.OffError_inner(callback as (((err: BusinessError<void>)=> void) | undefined));
+        } else if (type === "stateChange"){
+            this.OffStateChange_inner(callback as (((state: String, reason: StateChangeReason)=> void)) | undefined);
+        } else if (type === "photoAssetAvailable"){
+            this.OffPhotoAssetAvailable_inner(callback as (((photoAsset: photoAccessHelper.PhotoAsset)=> void)) | undefined);
+        } else {
+            throw new Error(`Unknown type: ${type}`);
+        }
+    }""")
+    OffError(callback: Optional<(err: @sts_type("BusinessError<void>") Opaque)=> void>): void;
+    OffStateChange(callback: Optional<(state: String, reason: StateChangeReason)=> void>): void;
+    OffPhotoAssetAvailable(callback: Optional<(data: @sts_type("photoAccessHelper.PhotoAsset") Opaque) => void>): void;
 }
 
 enum PlaybackSpeed: i32 {
