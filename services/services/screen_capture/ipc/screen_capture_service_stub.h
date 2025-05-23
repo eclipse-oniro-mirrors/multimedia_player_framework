@@ -92,7 +92,6 @@ private:
     int32_t UpdateSurface(MessageParcel &data, MessageParcel &reply);
     int32_t SetCaptureArea(MessageParcel &data, MessageParcel &reply);
 
-
     int32_t Release(MessageParcel &data, MessageParcel &reply);
     int32_t DestroyStub(MessageParcel &data, MessageParcel &reply);
 
