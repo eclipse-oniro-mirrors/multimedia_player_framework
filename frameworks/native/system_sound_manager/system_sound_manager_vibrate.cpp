@@ -97,31 +97,6 @@ int32_t SystemSoundManagerImpl::GetStringValue(const std::string &key,
     resultSet->Close();
     return MSERR_OK;
 }
-
-int32_t SystemSoundManagerImpl::UpdateStringValue(const std::string &key,
-    std::string &value, std::string tableType)
-{
-    auto helper = CreateDataShareHelperProxy(tableType);
-    if (helper == nullptr) {
-        MEDIA_LOGE("helper return nullptr");
-        return MSERR_INVALID_VAL;
-    }
-    DataShare::DataShareValueObject valueObj(value);
-    DataShare::DataShareValuesBucket valueBucket;
-    valueBucket.Put(SETTING_COLUMN_VALUE, valueObj);
-    DataShare::DataSharePredicates predicates;
-    predicates.EqualTo(SETTING_COLUMN_KEYWORD, key);
-    Uri uri(AssembleUri(key, tableType));
-    int32_t ret = helper->Update(uri, predicates, valueBucket);
-    if (ret <= 0) {
-        MEDIA_LOGE("DataShareHelper update failed, retCode:%{public}d", ret);
-        helper->Release();
-        return MSERR_INVALID_VAL;
-    }
-    helper->NotifyChange(uri);
-    helper->Release();
-    return MSERR_OK;
-}
  
 bool SystemSoundManagerImpl::CheckVibrateSwitchStatus()
 {
