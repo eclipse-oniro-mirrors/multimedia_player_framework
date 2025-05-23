@@ -39,13 +39,11 @@
 #include "string_ex.h"
 #include "parameters.h"
 #include "system_sound_manager_utils.h"
-#include "common_event_manager.h"
 
 using namespace std;
 using namespace nlohmann;
 using namespace OHOS::AbilityRuntime;
 using namespace OHOS::DataShare;
-using namespace OHOS::EventFwk;
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_AUDIO_NAPI, "SystemSoundManagerImpl"};
@@ -574,7 +572,7 @@ int32_t SystemSoundManagerImpl::SetRingtoneUri(const shared_ptr<Context> &contex
     if (uri == NO_RING_SOUND) {
         int32_t changedRows = SetNoRingToneUri(dataShareHelper, ringtoneType);
         MEDIA_LOGI("SetNoRingToneUri result: changedRows %{public}d", changedRows);
-        NotifyCallManager(ringtoneType);
+        ClearSystemVideoRingConfig(ringtoneType);
         dataShareHelper->Release();
         return SUCCESS;
     }
@@ -620,7 +618,7 @@ int32_t SystemSoundManagerImpl::CheckToneTypeAndUpdate(std::shared_ptr<DataShare
         dataShareHelper->Release();
         SetExtRingtoneUri(uri, ringtoneAsset->GetTitle(), ringtoneType, TONE_TYPE_RINGTONE, changedRows);
         if (changedRows > 0) {
-            NotifyCallManager(ringtoneType);
+            ClearSystemVideoRingConfig(ringtoneType);
             return SUCCESS;
         } else {
             return ERROR;
@@ -631,40 +629,23 @@ int32_t SystemSoundManagerImpl::CheckToneTypeAndUpdate(std::shared_ptr<DataShare
     return TYPEERROR;
 }
 
-void SystemSoundManagerImpl::NotifyCallManager(RingtoneType ringtoneType)
+void SystemSoundManagerImpl::ClearSystemVideoRingConfig(RingtoneType ringtoneType)
 {
-    MEDIA_LOGI("notify callManager to clear system video ring config, ringtoneType: %{public}d.", ringtoneType);
-    AAFwk::Want want;
-    want.SetAction("usual.event.AMEND_RING_EVENT");
-    want.SetParam("slotId", ringtoneType);
-    auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    if (samgr == nullptr) {
-        MEDIA_LOGE("Get ability manager failed.");
-        return;
+    std::string tableType = "secure";
+    std::string ringtoneFlagCardKey;
+    std::string videoRingtoneNameCardKey;
+    std::string defaultValue = "";
+    if (ringtoneType == RINGTONE_TYPE_SIM_CARD_0) {
+        ringtoneFlagCardKey = "ringtoneFlagCard1";
+        videoRingtoneNameCardKey = "videoRingtoneNameCard1";
+    } else {
+        ringtoneFlagCardKey = "ringtoneFlagCard2";
+        videoRingtoneNameCardKey = "videoRingtoneNameCard2";
     }
-    sptr<IRemoteObject> object = samgr->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
-    if (object == nullptr) {
-        MEDIA_LOGE("object is null.");
-        return;
-    }
-    sptr<AppExecFwk::IBundleMgr> bms = iface_cast<OHOS::AppExecFwk::IBundleMgr>(object);
-    if (bms == nullptr) {
-        MEDIA_LOGE("bundle manager service is null.");
-        return;
-    }
-    std::string bundleName;
-    auto result = bms->GetNameForUid(getuid(), bundleName);
-    if (result != ERR_OK) {
-        MEDIA_LOGE("get bundle name error.");
-        return;
-    }
-    AppExecFwk::ElementName element("", bundleName, "");
-    want.SetElement(element);
-    EventFwk::CommonEventData eventData;
-    eventData.SetWant(want);
-    EventFwk::CommonEventPublishInfo publishInfo;
-    result = EventFwk::CommonEventManager::PublishCommonEvent(eventData, publishInfo, nullptr);
-    MEDIA_LOGI("bundle name: %{public}s, publish event result: %{public}d", bundleName.c_str(), result);
+    int32_t result = UpdateStringValue(ringtoneFlagCardKey, defaultValue, tableType);
+    MEDIA_LOGI("ringtoneFlagCardKey update result: %{public}d.", result);
+    result = UpdateStringValue(videoRingtoneNameCardKey, defaultValue, tableType);
+    MEDIA_LOGI("videoRingtoneNameCardKey update result: %{public}d.", result);
 }
 
 std::string SystemSoundManagerImpl::GetRingtoneUriByType(const DatabaseTool &databaseTool, const std::string &type)

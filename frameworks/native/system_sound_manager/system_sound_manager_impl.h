@@ -152,7 +152,7 @@ private:
     std::string OpenCustomAudioUri(const std::string &customAudioUri);
     int32_t CheckToneTypeAndUpdate(std::shared_ptr<DataShare::DataShareHelper> &dataShareHelper,
         const std::string &uri, RingtoneType ringtoneType);
-    void NotifyCallManager(RingtoneType ringtoneType);
+    void ClearSystemVideoRingConfig(RingtoneType ringtoneType);
 
     int32_t AddCustomizedTone(const std::shared_ptr<DataShare::DataShareHelper> &dataShareHelper,
         const std::shared_ptr<ToneAttrs> &toneAttrs);
@@ -217,6 +217,7 @@ private:
     static Uri AssembleUri(const std::string &key, std::string tableType = "");
     static std::shared_ptr<DataShare::DataShareHelper> CreateDataShareHelperProxy(std::string tableType = "");
     int32_t GetStringValue(const std::string &key, std::string &value, std::string tableType = "");
+    int32_t UpdateStringValue(const std::string &key, std::string &value, std::string tableType);
     void SetExtRingtoneUri(const std::string &uri, const std::string &title,
         int32_t ringType, int32_t toneType, int32_t changedRows);
     int32_t SetExtRingToneUri(const std::string &uri, const std::string &title, int32_t toneType);
