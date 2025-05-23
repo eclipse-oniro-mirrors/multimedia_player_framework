@@ -100,6 +100,7 @@ ohos_shared_library("media_helper_client") {
     "hilog:libhilog",
     "image_framework:image_native",
     "ipc:ipc_single",
+    "media_foundation:media_foundation"
   ]
 
   subsystem_name = "multimedia"
