@@ -32,31 +32,28 @@ void MediaServiceHelperUnitTest::TearDownTestCase(void)
 
 void MediaServiceHelperUnitTest::SetUp(void)
 {
-    helper_ = MediaServiceHelperFactory::CreateMediaServiceHelper();
-    ASSERT_NE(nullptr, helper_);
 }
 
 void MediaServiceHelperUnitTest::TearDown(void)
 {
-    helper_ = nullptr;
 }
 
 HWTEST_F(MediaServiceHelperUnitTest, CanKillMediaService_001, TestSize.Level0)
 {
-    EXPECT_TRUE(helper_->CanKillMediaService());
+    EXPECT_TRUE(MediaServiceHelper::CanKillMediaService());
 }
 
 HWTEST_F(MediaServiceHelperUnitTest, CanKillMediaService_002, TestSize.Level0)
 {
     std::shared_ptr<Player> player = PlayerFactory::CreatePlayer();
-    EXPECT_TRUE(helper_->CanKillMediaService());
+    EXPECT_TRUE(MediaServiceHelper::CanKillMediaService());
 }
 
 HWTEST_F(MediaServiceHelperUnitTest, CanKillMediaService_003, TestSize.Level0)
 {
     std::shared_ptr<Player> player = PlayerFactory::CreatePlayer();
     std::shared_ptr<Recorder> recoder = RecorderFactory::CreateRecorder();
-    EXPECT_FALSE(helper_->CanKillMediaService());
+    EXPECT_FALSE(MediaServiceHelper::CanKillMediaService());
 }
 
 HWTEST_F(MediaServiceHelperUnitTest, CanKillMediaService_004, TestSize.Level0)
@@ -64,14 +61,14 @@ HWTEST_F(MediaServiceHelperUnitTest, CanKillMediaService_004, TestSize.Level0)
     std::shared_ptr<Player> player = PlayerFactory::CreatePlayer();
     std::shared_ptr<IRecorderProfilesService> recorderProfilesService =
         MediaServiceFactory::GetInstance().CreateRecorderProfilesService();
-    EXPECT_FALSE(helper_->CanKillMediaService());
+    EXPECT_FALSE(MediaServiceHelper::CanKillMediaService());
 }
 
 HWTEST_F(MediaServiceHelperUnitTest, CanKillMediaService_005, TestSize.Level0)
 {
     std::shared_ptr<Player> player = PlayerFactory::CreatePlayer();
     std::shared_ptr<ScreenCapture> screenCapture = ScreenCaptureFactory::CreateScreenCapture();
-    EXPECT_FALSE(helper_->CanKillMediaService());
+    EXPECT_FALSE(MediaServiceHelper::CanKillMediaService());
 }
 
 HWTEST_F(MediaServiceHelperUnitTest, CanKillMediaService_006, TestSize.Level0)
@@ -81,21 +78,21 @@ HWTEST_F(MediaServiceHelperUnitTest, CanKillMediaService_006, TestSize.Level0)
         ScreenCaptureControllerFactory::CreateScreenCaptureController();
     std::shared_ptr<IScreenCaptureController> controllerClient =
         MediaServiceFactory::GetInstance().CreateScreenCaptureControllerClient();
-    EXPECT_FALSE(helper_->CanKillMediaService());
+    EXPECT_FALSE(MediaServiceHelper::CanKillMediaService());
 }
 
 HWTEST_F(MediaServiceHelperUnitTest, CanKillMediaService_007, TestSize.Level0)
 {
     std::shared_ptr<Player> player = PlayerFactory::CreatePlayer();
     std::shared_ptr<TransCoder> transCoder = TransCoderFactory::CreateTransCoder();
-    EXPECT_FALSE(helper_->CanKillMediaService());
+    EXPECT_FALSE(MediaServiceHelper::CanKillMediaService());
 }
 
 HWTEST_F(MediaServiceHelperUnitTest, CanKillMediaService_008, TestSize.Level0)
 {
     std::shared_ptr<Player> player = PlayerFactory::CreatePlayer();
     std::shared_ptr<AVMetadataHelper> avMetadata = AVMetadataHelperFactory::CreateAVMetadataHelper();
-    EXPECT_FALSE(helper_->CanKillMediaService());
+    EXPECT_FALSE(MediaServiceHelper::CanKillMediaService());
 }
 
 } // namespace Media

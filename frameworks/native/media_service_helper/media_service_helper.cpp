@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,22 +13,23 @@
  * limitations under the License.
  */
 
-#ifndef MEDIA_SERVICE_HELPER_IMPL_H
-#define MEDIA_SERVICE_HELPER_IMPL_H
-
 #include "media_service_helper.h"
-#include "nocopyable.h"
-#include "osal/task/autolock.h"
+#include "media_log.h"
+#include "common/log.h"
+#include "i_media_service.h"
+
+namespace {
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SYSTEM_PLAYER, "MediaServiceHelper"};
+}
 
 namespace OHOS {
 namespace Media {
-class MediaServiceHelperImpl : public MediaServiceHelper, public NoCopyable {
-public:
-    MediaServiceHelperImpl();
-    ~MediaServiceHelperImpl();
+bool MediaServiceHelper::CanKillMediaService()
+{
+    bool canKill = MediaServiceFactory::GetInstance().CanKillMediaService();
+    MEDIA_LOGW("media service can be killed = %{public}d", canKill);
+    return canKill;
+}
 
-    bool CanKillMediaService() override;
-};
 } // namespace Media
 } // namespace OHOS
-#endif // PLAYER_IMPL_H

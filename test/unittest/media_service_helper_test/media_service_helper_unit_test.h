@@ -41,8 +41,6 @@ public:
     void SetUp(void);
     // TearDown: Called after each test cases
     void TearDown(void);
-protected:
-    std::shared_ptr<MediaServiceHelper> helper_ = nullptr;
 };
 } // namespace Media
 } // namespace OHOS
