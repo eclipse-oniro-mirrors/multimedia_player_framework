@@ -1842,5 +1842,41 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StartAudioCapture_001, TestSize.Level2
     EXPECT_EQ(screenCaptureServer_->StartStreamInnerAudioCapture(), MSERR_OK);
     EXPECT_EQ(screenCaptureServer_->StartFileInnerAudioCapture(), MSERR_OK);
 }
+
+HWTEST_F(ScreenCaptureServerFunctionTest, SetCaptureArea_001, TestSize.Level2)
+{
+    OHOS::Rect area;
+    area.x = 0;
+    area.y = 0;
+    area.w = 5000;
+    area.h = 5000;
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
+    int32_t ret = screenCaptureServer_->SetCaptureArea(0, area);
+    EXPECT_NE(ret, MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, SetCaptureArea_002, TestSize.Level2)
+{
+    OHOS::Rect area;
+    area.x = 0;
+    area.y = 0;
+    area.w = 5000;
+    area.h = 5000;
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
+    int32_t ret = screenCaptureServer_->SetCaptureArea(0, area);
+    EXPECT_EQ(ret, MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, SetCaptureAreaInner_001, TestSize.Level2)
+{
+    OHOS::Rect area;
+    area.x = 0;
+    area.y = 0;
+    area.w = 5000;
+    area.h = 5000;
+    screenCaptureServer_->virtualScreenId_ = SCREEN_ID_INVALID;
+    int32_t ret = screenCaptureServer_->SetCaptureAreaInner(0, area);
+    EXPECT_NE(ret, MSERR_OK);
+}
 } // Media
 } // OHOS

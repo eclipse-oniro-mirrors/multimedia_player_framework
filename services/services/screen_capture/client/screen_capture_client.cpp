@@ -279,5 +279,12 @@ int32_t ScreenCaptureClient::UpdateSurface(sptr<Surface> surface)
     CHECK_AND_RETURN_RET_LOG(surface != nullptr, MSERR_INVALID_VAL, "UpdateSurface fail, invalid param");
     return screenCaptureProxy_->UpdateSurface(surface);
 }
+
+int32_t ScreenCaptureClient::SetCaptureArea(uint64_t displayId, OHOS::Rect area)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
+    return screenCaptureProxy_->SetCaptureArea(displayId, area);
+}
 } // namespace Media
 } // namespace OHOS

@@ -60,6 +60,7 @@ public:
     virtual int32_t ExcludeContent(ScreenCaptureContentFilter &contentFilter) = 0;
     virtual int32_t SetScreenCaptureStrategy(ScreenCaptureStrategy strategy) = 0;
     virtual int32_t UpdateSurface(sptr<Surface> surface) = 0;
+    virtual int32_t SetCaptureArea(uint64_t displayId, OHOS::Rect area) = 0;
 
     /**
      * IPC code ID
@@ -94,6 +95,7 @@ public:
         SET_CHECK_LIMIT = 26,
         SET_STRATEGY = 27,
         UPDATE_SURFACE = 28,
+        SET_CAPTURE_AREA = 29,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardScreenCaptureService");

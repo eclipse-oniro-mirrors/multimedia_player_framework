@@ -437,5 +437,13 @@ int32_t ScreenCaptureImpl::SetScreenCaptureStrategy(ScreenCaptureStrategy strate
         "screen capture service does not exist..");
     return screenCaptureService_->SetScreenCaptureStrategy(strategy);
 }
+
+int32_t ScreenCaptureImpl::SetCaptureArea(uint64_t displayId, OHOS::Rect area)
+{
+    MEDIA_LOGD("ScreenCaptureImpl:0x%{public}06" PRIXPTR " SetCaptureArea in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(screenCaptureService_ != nullptr, MSERR_NO_MEMORY,
+        "screen capture service does not exist..");
+    return screenCaptureService_->SetCaptureArea(displayId, area);
+}
 } // namespace Media
 } // namespace OHOS

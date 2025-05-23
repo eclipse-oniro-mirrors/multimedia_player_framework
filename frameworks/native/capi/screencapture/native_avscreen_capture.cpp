@@ -1149,3 +1149,27 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StrategyForKeepCaptureDuringCall(
     strategyObj->strategy.keepCaptureDuringCall = value;
     return AV_SCREEN_CAPTURE_ERR_OK;
 }
+
+OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetCaptureArea(struct OH_AVScreenCapture *capture,
+    uint64_t displayId, OH_Rect* area)
+{
+    MEDIA_LOGD("OH_AVScreenCapture_SetCaptureArea S");
+    CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr!");
+    struct ScreenCaptureObject *screenCaptureObj = reinterpret_cast<ScreenCaptureObject *>(capture);
+    CHECK_AND_RETURN_RET_LOG(screenCaptureObj->screenCapture_ != nullptr,
+        AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "screenCapture_ is null");
+    
+    CHECK_AND_RETURN_RET_LOG(displayId >= 0, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input displayId invalid");
+    CHECK_AND_RETURN_RET_LOG(area != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input area invalid");
+    OHOS::Rect region;
+    region.x = area->x;
+    region.y = area->y;
+    region.w = area->width;
+    region.h = area->height;
+    
+    int32_t ret = screenCaptureObj->screenCapture_->SetCaptureArea(displayId, region);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT,
+        "SetCaptureArea failed!");
+    MEDIA_LOGD("OH_AVScreenCapture_SetCaptureArea E");
+    return AV_SCREEN_CAPTURE_ERR_OK;
+}

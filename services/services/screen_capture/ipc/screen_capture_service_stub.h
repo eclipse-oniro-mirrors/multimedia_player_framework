@@ -58,6 +58,7 @@ public:
     int32_t ExcludeContent(ScreenCaptureContentFilter &contentFilter) override;
     int32_t SetScreenCaptureStrategy(ScreenCaptureStrategy strategy) override;
     int32_t UpdateSurface(sptr<Surface> surface) override;
+    int32_t SetCaptureArea(uint64_t displayId, OHOS::Rect area) override;
 
 private:
     ScreenCaptureServiceStub();
@@ -89,6 +90,8 @@ private:
     int32_t ExcludeContent(MessageParcel &data, MessageParcel &reply);
     int32_t SetScreenCaptureStrategy(MessageParcel &data, MessageParcel &reply);
     int32_t UpdateSurface(MessageParcel &data, MessageParcel &reply);
+    int32_t SetCaptureArea(MessageParcel &data, MessageParcel &reply);
+
 
     int32_t Release(MessageParcel &data, MessageParcel &reply);
     int32_t DestroyStub(MessageParcel &data, MessageParcel &reply);

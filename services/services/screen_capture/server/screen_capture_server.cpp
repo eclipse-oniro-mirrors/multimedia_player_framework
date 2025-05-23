@@ -2207,7 +2207,8 @@ int32_t ScreenCaptureServer::StartPrivacyWindow()
     AAFwk::Want want;
     ErrCode ret = ERR_INVALID_VALUE;
 #ifdef PC_STANDARD
-    if (captureConfig_.captureMode == CAPTURE_SPECIFIED_SCREEN || CheckCaptureSpecifiedWindowForSelectWindow()) {
+    if (!isRegionCapture_ &&
+        (captureConfig_.captureMode == CAPTURE_SPECIFIED_SCREEN || CheckCaptureSpecifiedWindowForSelectWindow())) {
         AppExecFwk::ElementName element("",
             GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"],
             SELECT_ABILITY_NAME); // DeviceID
@@ -2798,6 +2799,9 @@ int32_t ScreenCaptureServer::MakeVirtualScreenMirror()
     sptr<Rosen::Display> defaultDisplay = Rosen::DisplayManager::GetInstance().GetDefaultDisplaySync();
     CHECK_AND_RETURN_RET_LOG(defaultDisplay != nullptr, MSERR_UNKNOWN,
         "MakeVirtualScreenMirror GetDefaultDisplaySync failed");
+    if (isRegionCapture_) {
+        return SetCaptureAreaInner(regionDisplayId_, regionArea_);
+    }
 #ifdef PC_STANDARD
     if (IsHopper() && captureConfig_.strategy.enableDeviceLevelCapture == false) {
         if (captureConfig_.captureMode == CAPTURE_SPECIFIED_WINDOW) {
@@ -3101,6 +3105,72 @@ int32_t ScreenCaptureServer::ExcludeContent(ScreenCaptureContentFilter &contentF
             "ExcludeContent failed, UpdateAudioCapturerConfig failed");
     }
     return ret;
+}
+
+int32_t ScreenCaptureServer::SetCaptureArea(uint64_t displayId, OHOS::Rect area)
+{
+    MediaTrace trace("ScreenCaptureServer::SetCaptureArea");
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(CheckDisplayArea(displayId, area), MSERR_INVALID_VAL,
+        "Check region area failed, invalid input area.");
+    isRegionCapture_ = true;
+    regionDisplayId_ = displayId;
+    regionArea_ = area;
+    if (captureState_ != AVScreenCaptureState::STARTED) {
+        MEDIA_LOGI("ScreenCaptureServer::SetCaptureArea, virtual screen not created, return ok");
+        return MSERR_OK;
+    }
+    return SetCaptureAreaInner(regionDisplayId_, regionArea_);
+}
+
+int32_t ScreenCaptureServer::SetCaptureAreaInner(uint64_t displayId, OHOS::Rect area)
+{
+    MediaTrace trace("ScreenCaptureServer::SetCaptureAreaInner");
+    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " SetCaptureAreaInner start, state:%{public}d.",
+        FAKE_POINTER(this), captureState_);
+    CHECK_AND_RETURN_RET_LOG(virtualScreenId_ != SCREEN_ID_INVALID, MSERR_INVALID_VAL,
+        "SetCaptureAreaInner failed virtual screen not init");
+    ScreenId regionScreenId;
+    DMRect regionAreaIn;
+    DMRect regionAreaOut;
+    regionAreaIn.posX_ = area.x;
+    regionAreaIn.posY_ = area.y;
+    regionAreaIn.width_ = area.w;
+    regionAreaIn.height_ = area.h;
+    auto ret = Rosen::DisplayManager::GetInstance().GetScreenAreaOfDisplayArea(
+        displayId, regionAreaIn, regionScreenId, regionAreaOut);
+    CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK, MSERR_INVALID_OPERATION,
+        "GetScreenAreaOfDisplayArea error: %{public}d", ret);
+    MEDIA_LOGI("SetCaptureAreaInner after, displayId: %{public}" PRIu64, regionScreenId);
+    MEDIA_LOGI("SetCaptureAreaInner after, x:%{public}d, y:%{public}d, w:%{public}d, h:%{public}d",
+        regionAreaOut.posX_, regionAreaOut,posY_, regionAreaOut.width_, regionAreaOut.height_);
+
+    std::vector<ScreenId> mirrorIds;
+    mirrorIds.push_back(virtualScreenId_);
+    ret = ScreenManager::GetInstance().MakeMirror(regionScreenId, mirrorIds, regionAreaOut, regionScreenId);
+    CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK, MSERR_UNKNOWN,
+        "MakeMirror with region error: %{public}d", ret);
+    displayScreenId_ = displayId;
+    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " SetCaptureAreaInner end, state:%{public}d.",
+        FAKE_POINTER(this), captureState_);
+    return MSERR_OK;
+}
+
+bool ScreenCaptureServer::CheckDisplayArea(uint64_t displayId, OHOS::Rect area)
+{
+    MEDIA_LOGI("CheckDisplayArea input displayId: %{public}" PRIu64, displayId);
+    sptr<Display> targetDisplay = Rosen::DisplayManager::GetInstance().GetDisplayById(displayId);
+    CHECK_AND_RETURN_RET_LOG(targetDisplay != nullptr, false,
+        "CheckDisplayArea failed to get target display, no displayId: %{public}" PRIu64, displayId);
+    auto screenWidth = targetDisplay->GetWidth();
+    auto screenHeight = targetDisplay->GetHeight();
+    MEDIA_LOGI("CheckDisplayArea display with width: %{public}d, height:%{public}d", screenWidth, screenHeight);
+    if (area.x + area.w > screenWidth || area.y + area.h > screenHeight) {
+        MEDIA_LOGE("CheckDisplayArea input area out of range");
+        return false;
+    }
+    MEDIA_LOGI("CheckDisplayArea success");
+    return true;
 }
 
 int32_t ScreenCaptureServer::SetMicrophoneEnabled(bool isMicrophone)
@@ -3761,7 +3831,8 @@ bool ScreenCaptureServer::DestroyPopWindow()
         return true;
     }
 #ifdef PC_STANDARD
-    if (captureConfig_.captureMode == CAPTURE_SPECIFIED_SCREEN || CheckCaptureSpecifiedWindowForSelectWindow()) {
+    if (!isRegionCapture_ &&
+        (captureConfig_.captureMode == CAPTURE_SPECIFIED_SCREEN || CheckCaptureSpecifiedWindowForSelectWindow())) {
         MEDIA_LOGI("DestroyPopWindow end, type: picker, deviceType: PC.");
         ErrCode ret = ERR_INVALID_VALUE;
         AAFwk::Want want;
@@ -3830,6 +3901,7 @@ void ScreenCaptureServer::PostStopScreenCapture(AVScreenCaptureStateCode stateCo
     }
 #endif
     isPrivacyAuthorityEnabled_ = false;
+    isRegionCapture_ = false;
 
     if (!LastPidUpdatePrivacyUsingPermissionState(appInfo_.appPid)) {
         MEDIA_LOGE("UpdatePrivacyUsingPermissionState STOP failed, dataType:%{public}d", captureConfig_.dataType);
