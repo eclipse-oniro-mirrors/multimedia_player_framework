@@ -3143,7 +3143,7 @@ int32_t ScreenCaptureServer::SetCaptureAreaInner(uint64_t displayId, OHOS::Rect 
         "GetScreenAreaOfDisplayArea error: %{public}d", ret);
     MEDIA_LOGI("SetCaptureAreaInner after, displayId: %{public}" PRIu64, regionScreenId);
     MEDIA_LOGI("SetCaptureAreaInner after, x:%{public}d, y:%{public}d, w:%{public}d, h:%{public}d",
-        regionAreaOut.posX_, regionAreaOut,posY_, regionAreaOut.width_, regionAreaOut.height_);
+        regionAreaOut.posX_, regionAreaOut.posY_, regionAreaOut.width_, regionAreaOut.height_);
 
     std::vector<ScreenId> mirrorIds;
     mirrorIds.push_back(virtualScreenId_);
