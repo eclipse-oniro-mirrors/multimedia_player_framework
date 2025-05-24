@@ -1625,6 +1625,7 @@ int32_t ScreenCaptureServer::StartFileMicAudioCapture()
 #ifdef SUPPORT_CALL
     if (InCallObserver::GetInstance().IsInCall(true) && !IsTelInCallSkipList()) {
         MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " skip creating micAudioCapture", FAKE_POINTER(this));
+        NotifyStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE);
         return MSERR_OK;
     }
 #endif
@@ -3110,11 +3111,11 @@ int32_t ScreenCaptureServer::SetMicrophoneEnabled(bool isMicrophone)
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " SetMicrophoneEnabled isMicrophoneSwitchTurnOn_:"
         "%{public}d, new isMicrophone:%{public}d", FAKE_POINTER(this), isMicrophoneSwitchTurnOn_, isMicrophone);
     int32_t ret = MSERR_UNKNOWN;
-    isMicrophoneSwitchTurnOn_ = isMicrophone;
     if (isMicrophone) {
         statisticalEventInfo_.enableMic = true;
     }
     if (captureState_ != AVScreenCaptureState::STARTED) {
+        isMicrophoneSwitchTurnOn_ = isMicrophone;
         return MSERR_OK;
     }
     if (isMicrophone) {
@@ -3126,6 +3127,7 @@ int32_t ScreenCaptureServer::SetMicrophoneEnabled(bool isMicrophone)
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetMicrophoneOff failed");
         NotifyStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_MUTED_BY_USER);
     }
+    isMicrophoneSwitchTurnOn_ = isMicrophone;
     // For CAPTURE FILE, should call Recorder interface to make effect
     MEDIA_LOGI("SetMicrophoneEnabled OK.");
     return MSERR_OK;
@@ -3296,6 +3298,7 @@ int32_t ScreenCaptureServer::OnTelCallStart()
         if (micAudioCapture_->GetAudioCapturerState() == CAPTURER_RECORDING) {
             ret = micAudioCapture_->Pause();
             CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "micAudioCapture Pause failed");
+            NotifyStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE);
         }
     }
     return MSERR_OK;
@@ -3574,6 +3577,7 @@ int32_t ScreenCaptureServer::StartMicAudioCapture()
 #ifdef SUPPORT_CALL
     if (InCallObserver::GetInstance().IsInCall(true) && !IsTelInCallSkipList()) {
         MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " skip creating micAudioCapture", FAKE_POINTER(this));
+        NotifyStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE);
         return MSERR_OK;
     }
 #endif
