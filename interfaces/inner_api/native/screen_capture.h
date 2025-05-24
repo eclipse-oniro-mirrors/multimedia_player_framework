@@ -324,6 +324,10 @@ public:
     {
         return nullptr;
     }
+    static std::shared_ptr<ScreenCapture> CreateScreenCapture(OHOS::AudioStandard::AppInfo &appInfo)
+    {
+        return nullptr;
+    }
 #else
     static std::shared_ptr<ScreenCapture> CreateScreenCapture();
     static std::shared_ptr<ScreenCapture> CreateScreenCapture(OHOS::AudioStandard::AppInfo &appInfo);
