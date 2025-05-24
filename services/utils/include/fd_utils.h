@@ -19,9 +19,25 @@
 #include <sstream>
 #include <sys/ioctl.h>
 #include "common/fdsan_fd.h"
- 
+#ifdef __linux__
+#include <sys/xattr.h>
+#endif
+
 namespace OHOS {
 namespace Media {
+
+#ifdef __linux__
+const size_t MAX_ATTR_NAME = 64;
+const std::string CLOUD_LOCATION_ATTR = "user.cloud.location";
+#endif
+
+template <typename T, typename... Args>
+std::unique_ptr<T> CreateUniquePtr(Args &&...args)
+{
+    std::unique_ptr<T> uPtr = nullptr;
+    uPtr = std::make_unique<T>(std::forward<Args>(args)...);
+    return uPtr;
+}
 
 class FdUtils {
 public:
@@ -29,9 +45,7 @@ public:
     static FdsanFd ReOpenFd(int32_t fd)
     {
 #ifdef __linux__
-        int loc;
-        int ioResult = ioctl(fd, HMDFS_IOC_GET_LOCATION, &loc);
-        if (ioResult == 0 && loc != IOCTL_CLOUD) {
+        if (LocalFd(fd)) {
             std::stringstream ss;
             ss << "/proc/self/fd/" << fd;
             std::string fdPathStr = ss.str();
@@ -49,8 +63,47 @@ public:
             return FdsanFd(newFd);
         }
 #endif
+        MEDIA_LOGW("=== fd is cloud");
         return FdsanFd();
     }
+
+#if __linux__
+    static bool LocalFd(int32_t fd)
+    {
+        std::unique_ptr<char[]> value = CreateUniquePtr<char[]>(MAX_ATTR_NAME);
+        if (value == nullptr) {
+            MEDIA_LOGW("Getxattr memory out, errno is %{public}s", std::strerror(errno));
+            return false;
+        }
+        ssize_t size = 0;
+        size = fgetxattr(fd, CLOUD_LOCATION_ATTR.c_str(), value.get(), MAX_ATTR_NAME);
+        int32_t defaultLocation = INVALID;
+        if (size <= 0) {
+            MEDIA_LOGW("Getxattr value failed, errno is %{public}s", std::strerror(errno));
+            return false;
+        }
+        std::string location = std::string(value.get(), static_cast<size_t>(size));
+        MEDIA_LOGD("Getxattr value, location is %{public}s", location.c_str());
+        if (!CheckLocation(location)) {
+            MEDIA_LOGW("Invalid location from getxattr, location: %{public}s", location.c_str());
+            return false;
+        }
+        defaultLocation = static_cast<int32_t>(atoi(location.c_str()));
+        return defaultLocation == LOCAL;
+    }
+
+    static bool CheckLocation(const std::string &location)
+    {
+        if (!std::all_of(location.begin(), location.end(), ::isdigit)) {
+            return false;
+        }
+        int fileLocation = atoi(location.c_str());
+        if (fileLocation < LOCAL || fileLocation > LOCAL_AND_CLOUD) {
+            return false;
+        }
+        return true;
+    }
+#endif
 
 private:
     // The HMDFS I/O control code
@@ -62,7 +115,10 @@ private:
     static constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "FdUtils"};
     static constexpr ssize_t RESULT_ERROR = -1;
     static constexpr int PATH_MAX_REAL = PATH_MAX + 1;
+    static constexpr int32_t LOCAL = 1;
+    static constexpr int32_t LOCAL_AND_CLOUD = 3;
+    static constexpr int32_t INVALID = 0;
 };
-} // namespace media
+} // namespace Media
 } // namespace OHOS
 #endif // FD_UTILS_H
