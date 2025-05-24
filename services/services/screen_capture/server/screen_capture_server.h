@@ -99,6 +99,7 @@ public:
     int32_t ExcludeContent(ScreenCaptureContentFilter &contentFilter) override;
     int32_t SetScreenCaptureStrategy(ScreenCaptureStrategy strategy) override;
     int32_t UpdateSurface(sptr<Surface> surface) override;
+    int32_t SetCaptureArea(uint64_t displayId, OHOS::Rect area) override;
 
     void SetSessionId(int32_t sessionId);
     int32_t OnReceiveUserPrivacyAuthority(bool isAllowed);
@@ -248,6 +249,8 @@ private:
     int32_t RegisterWindowInfoChangedListener();
     int32_t UnRegisterWindowInfoChangedListener();
     int32_t RegisterWindowRelatedListener();
+    int32_t SetCaptureAreaInner(uint64_t displayId, OHOS::Rect area);
+    bool CheckDisplayArea(uint64_t displayId, OHOS::Rect area);
 
 private:
     std::mutex mutex_;
@@ -297,6 +300,9 @@ private:
     sptr<SCWindowLifecycleListener> windowLifecycleListener_ = nullptr;
     sptr<SCDeathRecipientListener> lifecycleListenerDeathRecipient_ = nullptr;
     sptr<SCWindowInfoChangedListener> windowInfoChangedListener_ = nullptr;
+    bool isRegionCapture_ = false;
+    uint64_t regionDisplayId_;
+    OHOS::Rect regionArea_;
 
     /* used for CAPTURE STREAM */
     sptr<IBufferConsumerListener> surfaceCb_ = nullptr;

@@ -641,5 +641,26 @@ int32_t ScreenCaptureServiceProxy::SetScreenCaptureStrategy(ScreenCaptureStrateg
                              "SetScreenCaptureStrategy failed, error: %{public}d", error);
     return reply.ReadInt32();
 }
+
+int32_t ScreenCaptureServiceProxy::SetCaptureArea(uint64_t displayId, OHOS::Rect area)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(ScreenCaptureServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    token = data.WriteUint64(displayId);
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write displayId!");
+    token = data.WriteInt32(area.x) && data.WriteInt32(area.y) &&
+        data.WriteInt32(area.w) && data.WriteInt32(area.h);
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write area!");
+
+    int error = Remote()->SendRequest(SET_CAPTURE_AREA, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+                             "SetCaptureArea failed, error: %{public}d", error);
+    return reply.ReadInt32();
+}
 } // namespace Media
 } // namespace OHOS

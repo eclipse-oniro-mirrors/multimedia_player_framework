@@ -83,6 +83,7 @@ int32_t ScreenCaptureServiceStub::Init()
     screenCaptureStubFuncs_[SET_CHECK_LIMIT] = &ScreenCaptureServiceStub::SetAndCheckLimit;
     screenCaptureStubFuncs_[SET_STRATEGY] = &ScreenCaptureServiceStub::SetScreenCaptureStrategy;
     screenCaptureStubFuncs_[UPDATE_SURFACE] = &ScreenCaptureServiceStub::UpdateSurface;
+    screenCaptureStubFuncs_[SET_CAPTURE_AREA] = &ScreenCaptureServiceStub::SetCaptureArea;
 
     return MSERR_OK;
 }
@@ -320,6 +321,13 @@ int32_t ScreenCaptureServiceStub::SetScreenCaptureStrategy(ScreenCaptureStrategy
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
         "screen capture server is nullptr");
     return screenCaptureServer_->SetScreenCaptureStrategy(strategy);
+}
+
+int32_t ScreenCaptureServiceStub::SetCaptureArea(uint64_t displayId, OHOS::Rect area)
+{
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
+        "screen capture server is nullptr");
+    return screenCaptureServer_->SetCaptureArea(displayId, area);
 }
 
 int32_t ScreenCaptureServiceStub::ExcludeContent(MessageParcel &data, MessageParcel &reply)
@@ -709,6 +717,22 @@ int32_t ScreenCaptureServiceStub::SetScreenCaptureStrategy(MessageParcel &data, 
     strategy.enableDeviceLevelCapture = data.ReadBool();
     strategy.keepCaptureDuringCall = data.ReadBool();
     int32_t ret = SetScreenCaptureStrategy(strategy);
+    reply.WriteInt32(ret);
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureServiceStub::SetCaptureArea(MessageParcel &data, MessageParcel &reply)
+{
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
+        "screen capture server is nullptr");
+    uint64_t displayId = data.ReadUint64();
+    OHOS::Rect area;
+    area.x = data.ReadInt32();
+    area.y = data.ReadInt32();
+    area.w = data.ReadInt32();
+    area.h = data.ReadInt32();
+
+    int32_t ret = SetCaptureArea(displayId, area);
     reply.WriteInt32(ret);
     return MSERR_OK;
 }

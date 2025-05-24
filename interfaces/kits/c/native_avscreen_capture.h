@@ -466,6 +466,20 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StrategyForKeepCaptureDuringCall(
  */
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetCaptureContentChangedCallback(struct OH_AVScreenCapture *capture,
     OH_AVScreenCapture_OnCaptureContentChanged callback, void *userData);
+
+/**
+ * @brief Set or update the captureArea
+ * @param {struct OH_AVScreenCapture*} capture capture Pointer to an OH_AVScreenCapture instance
+ * @param {uint64_t} displayId Indicates the screen index for setting area recording
+ * @param {OH_Rect*} area Pointer to an object describing the location and size of the region
+ * @return Function result code.
+ *          {@link AV_SCREEN_CAPTURE_ERR_OK} if the execution is successful.
+ *          {@link AV_SCREEN_CAPTURE_ERR_INVALID_VAL} input capture is nullptr or displayid not exist or area is
+            invalid.
+ * @since 20
+ */
+OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetCaptureArea(struct OH_AVScreenCapture *capture,
+    uint64_t displayId, OH_Rect* area);
 #ifdef __cplusplus
 }
 #endif

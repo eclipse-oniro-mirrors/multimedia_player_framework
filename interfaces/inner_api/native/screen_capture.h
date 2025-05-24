@@ -315,6 +315,7 @@ public:
     virtual int32_t SetPrivacyAuthorityEnabled() = 0;
     virtual int32_t SetScreenCaptureStrategy(ScreenCaptureStrategy strategy) = 0;
     virtual int32_t UpdateSurface(sptr<Surface> surface) = 0;
+    virtual int32_t SetCaptureArea(uint64_t displayId, Rect area) = 0;
 };
 
 class __attribute__((visibility("default"))) ScreenCaptureFactory {
