@@ -55,6 +55,7 @@ ohos_unittest("player_unit_test") {
   external_deps = [
     "audio_framework:audio_client",
     "c_utils:utils",
+    "graphic_2d:librender_service_base",
     "graphic_surface:surface",
     "hilog:libhilog",
     "ipc:ipc_single",
