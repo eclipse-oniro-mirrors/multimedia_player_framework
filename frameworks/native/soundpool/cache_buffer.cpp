@@ -105,7 +105,8 @@ void CacheBuffer::DealAudioRendererParams(AudioStandard::AudioRendererOptions &r
     rendererOptions.streamInfo.format = sampleFormat_;
     // Get channel count from trackFormat and set it to audiorender.
     trackFormat_.GetIntValue(MediaAVCodec::MediaDescriptionKey::MD_KEY_CHANNEL_COUNT, channelCount);
-    rendererOptions.streamInfo.channels = static_cast<AudioStandard::AudioChannel>(channelCount);
+    audioChannel_ = static_cast<AudioStandard::AudioChannel>(channelCount);
+    rendererOptions.streamInfo.channels = audioChannel_;
     // contentType streamUsage rendererFlags come from user.
     if (IsAudioRendererCanMix(audioRendererInfo)) {
         rendererOptions.strategy.concurrencyMode = AudioStandard::AudioConcurrencyMode::MIX_WITH_OTHERS;
@@ -275,6 +276,7 @@ int32_t CacheBuffer::HandleRendererNotStart(const int32_t streamID)
                 "streamID:%{public}d", streamID);
             callback_->OnPlayFinished(streamID_);
         }
+        isNeedFadeIn_ = true;
         return MSERR_OK;
     } else {
         MEDIA_LOGE("CacheBuffer::HandleRendererNotStart audioRenderer start failed,"
@@ -380,6 +382,7 @@ void CacheBuffer::DealWriteData(size_t length)
             bufDesc.dataLength = length;
             cacheDataFrameIndex_ += copyLength;
         }
+        FadeInAudioBuffer(bufDesc);
         audioRenderer_->Enqueue(bufDesc);
     } else {
         MEDIA_LOGE("OnWriteData, cacheDataFrameIndex_: %{public}zu, length: %{public}zu,"
@@ -580,5 +583,16 @@ void CacheBuffer::SetSourceDuration(int64_t durationMs)
     sourceDurationMs_ = durationMs;
 }
 
+void CacheBuffer::FadeInAudioBuffer(const AudioStandard::BufferDesc &bufDesc)
+{
+    if (isNeedFadeIn_) {
+        isNeedFadeIn_ = false;
+        MEDIA_LOGI("CacheBuffer::FadeInAudioBuffer, streamID:%{public}d", streamID_);
+        int32_t ret = AudioStandard::AudioRenderer::FadeInAudioBuffer(bufDesc, sampleFormat_, audioChannel_);
+        if (ret != AudioStandard::SUCCESS) {
+            MEDIA_LOGW("CacheBuffer::FadeInAudioBuffer failed ret: %{public}d, streamID:%{public}d", ret, streamID_);
+        }
+    }
+}
 } // namespace Media
 } // namespace OHOS
