@@ -30,6 +30,7 @@ namespace Media {
 namespace {
 constexpr size_t MAX_ATTR_NAME = 64;
 const std::string CLOUD_LOCATION_ATTR = "user.cloud.location";
+static const std::string LOCAL = "1";
 }
 #endif
 
@@ -39,7 +40,8 @@ public:
     static FdsanFd ReOpenFd(int32_t fd)
     {
 #ifdef __linux__
-        if (LocalFd(fd)) {
+        if (fd > 0 && LocalFd(fd)) {
+            MEDIA_LOGI("ReOpenFd In");
             std::stringstream ss;
             ss << "/proc/self/fd/" << fd;
             std::string fdPathStr = ss.str();
@@ -61,6 +63,7 @@ public:
         return FdsanFd();
     }
 
+private:
 #if __linux__
     static bool LocalFd(int32_t fd)
     {
@@ -70,19 +73,13 @@ public:
             MEDIA_LOGW("Getxattr value failed, errno is %{public}s", std::strerror(errno));
             return false;
         }
-        value[size] = '\0';
-        std::string location(value);
+        std::string location(value, static_cast<size_t>(size));
         MEDIA_LOGD("Getxattr value, location is %{public}s", location.c_str());
 
-        if (!std::all_of(location.begin(), location.end(), ::isdigit)) {
-            return false;
-        }
-        int fileLocation = atoi(location.c_str());
-        return static_cast<int32_t>(fileLocation) == LOCAL;
+        return location == LOCAL;
     }
 #endif
 
-private:
     // The HMDFS I/O control code
     static constexpr unsigned int HMDFS_IOC = 0xf2;
     // The I/O control code for retrieving the HMDFS location
@@ -92,7 +89,6 @@ private:
     static constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "FdUtils"};
     static constexpr ssize_t RESULT_ERROR = -1;
     static constexpr int PATH_MAX_REAL = PATH_MAX + 1;
-    static constexpr int32_t LOCAL = 1;
 };
 } // namespace Media
 } // namespace OHOS
