@@ -990,6 +990,9 @@ HWTEST_F(ScreenCaptureServerFunctionTest, WindowLifecycleListener_003, TestSize.
 
 HWTEST_F(ScreenCaptureServerFunctionTest, WindowInfoChangedListener_001, TestSize.Level2)
 {
+    screenCaptureServer_->windowIdList_ = {};
+    int32_t windowId = 70;
+    screenCaptureServer_->SetWindowIdList(windowId);
     screenCaptureServer_->windowInfoChangedListener_ = nullptr;
     screenCaptureServer_->RegisterWindowInfoChangedListener();
     ASSERT_NE(screenCaptureServer_->windowInfoChangedListener_, nullptr);
