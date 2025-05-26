@@ -130,12 +130,14 @@ taihe_shared_library("media_taihe") {
   sources += [
     "media/src/ani_constructor.cpp",
     "media/src/avmetadataextractor_taihe.cpp",
+    "media/src/video_recorder_taihe.cpp",
     "media/src/media_taihe_utils.cpp",
     "media/src/recoder_callback_taihe.cpp",
     "media/src/helper_data_source_callback_taihe.cpp",
     "media/src/media_data_source_callback_taihe.cpp",
     "media/src/avimagegenerator_taihe.cpp",
     "media/src/screen_capture_monitor_taihe.cpp",
+    "media/src/avrecorder_taihe.cpp",
     "media/src/avtranscoder_taihe.cpp",
     "media/src/avtranscoder_callback_taihe.cpp",
     "media/src/avplayer_callback_taihe.cpp",
@@ -143,6 +145,7 @@ taihe_shared_library("media_taihe") {
     "media/src/screen_capture_monitor_callback_taihe.cpp",
     "media/src/avscreen_capture_taihe.cpp",
     "media/src/avscreen_capture_callback_taihe.cpp",
+    "media/src/avrecorder_callback_taihe.cpp",
   ]
 
   deps = [
