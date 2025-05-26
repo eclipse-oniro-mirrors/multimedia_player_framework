@@ -35,6 +35,7 @@ group("media_unit_test") {
       "unittest/audio_haptic_test:audio_haptic_unit_test",
       "unittest/audio_haptic_test:audio_haptic_vibrator_impl_unit_test",
       "unittest/avmetadata_helper_test:avmetadata_helper_unit_test",
+      "unittest/avmetadata_helper_unittest:avmetadata_helper_unittest",
       "unittest/avmetadatahelper_test:avmetadatahelper_unit_test",
       "unittest/dfx_test:player_framework_dfx_test",
       "unittest/hiplayer_impl_test:hiplayer_impl_unit_test",

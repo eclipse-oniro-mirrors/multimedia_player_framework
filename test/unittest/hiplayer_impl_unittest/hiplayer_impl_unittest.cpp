@@ -445,5 +445,269 @@ HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_SetSeiMessageListener_001, TestSize.Lev
     Status ret = hiplayer_->SetSeiMessageListener();
     EXPECT_NE(ret, Status::OK);
 }
+
+// @tc.name     Test IsInValidSeekTime API
+// @tc.number   PHIUT_IsInValidSeekTime_001
+// @tc.desc     Test if (seekTime > endTimeWithMode_) 
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_IsInValidSeekTime_001, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    hiplayer_->endTimeWithMode_ = 0;
+    hiplayer_->startTimeWithMode_ = -1;
+    int32_t seekPos = 1;
+    auto mockPipeline = std::make_shared<MockPipeline>();
+    EXPECT_CALL(*mockPipeline, SetPlayRange(_,_)).WillRepeatedly(Return(Status::OK));
+    hiplayer_->pipeline_ = mockPipeline;
+    auto ret = hiplayer_->IsInValidSeekTime(seekPos);
+    EXPECT_EQ(ret, false);
+}
+
+// @tc.name     Test AddSubSource API
+// @tc.number   PHIUT_AddSubSource_001
+// @tc.desc     Test if (result != MSERR_OK)
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_AddSubSource_001, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    std::string uriTest = "file:///path/../testfile.txt";
+    auto ret = hiplayer_->AddSubSource(uriTest);
+    EXPECT_NE(ret, 0);
+}
+
+// @tc.name     Test SetStartFrameRateOptEnabled API
+// @tc.number   PHIUT_SetStartFrameRateOptEnabled_001
+// @tc.desc     Test all
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_SetStartFrameRateOptEnabled_001, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    bool enabled = true;
+    auto ret = hiplayer_->SetStartFrameRateOptEnabled(enabled);
+    EXPECT_EQ(ret, 0);
+    EXPECT_EQ(hiplayer_->isEnableStartFrameRateOpt_, true);
+}
+
+// @tc.name     Test SetInterruptState API
+// @tc.number   PHIUT_SetInterruptState_001
+// @tc.desc     Test if (isFlvLive_ && bufferDurationForPlaying_ > 0)
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_SetInterruptState_001, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    bool isInterruptNeeded = false;
+    hiplayer_->interruptMonitor_ = nullptr;
+    hiplayer_->isDrmProtected_ = false;
+    hiplayer_->isFlvLive_ = true;
+    hiplayer_->bufferDurationForPlaying_ = 1;
+    hiplayer_->SetInterruptState(isInterruptNeeded);
+    EXPECT_EQ(hiplayer_->isInterruptNeeded_, false);
+}
+
+// @tc.name     Test SelectBitRate API
+// @tc.number   PHIUT_SelectBitRate_002
+// @tc.desc     Test return MSERR_INVALID_OPERATION;
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_SelectBitRate_002, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    std::string name = "testname";
+    FilterType type = FilterType::VIDEO_CAPTURE;
+    auto mockDemuxer = std::make_shared<MockDemuxerFilter>(name, type);
+    EXPECT_CALL(*mockDemuxer, SelectBitRate(_,_)).WillRepeatedly(Return(Status::ERROR_INVALID_OPERATION));
+    hiplayer_->demuxer_ = mockDemuxer;
+    uint32_t bitRate = 0;
+    bool isAutoSelect = false;
+    auto ret = hiplayer_->SelectBitRate(bitRate, isAutoSelect);
+    EXPECT_NE(ret, 0);
+}
+
+// @tc.name     Test DoInitializeForHttp API
+// @tc.number   PHIUT_DoInitializeForHttp_002
+// @tc.desc     Test if (ret == Status::OK && vBitRates.size() > 0)
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_DoInitializeForHttp_002, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    std::string name = "testname";
+    FilterType type = FilterType::VIDEO_CAPTURE;
+    auto mockDemuxer = std::make_shared<MockDemuxerFilter>(name, type);
+    EXPECT_CALL(*mockDemuxer, GetBitRates(_)).WillRepeatedly(Invoke([](std::vector<uint32_t> vBitRates) {
+        vBitRates.push_back(1);
+        return Status::OK;
+    }));
+    hiplayer_->demuxer_ = mockDemuxer;
+    hiplayer_->isNetWorkPlay_ = false;
+    hiplayer_->DoInitializeForHttp();
+    EXPECT_EQ(hiplayer_->isInterruptNeeded_, false);
+}
+
+// @tc.name     Test SetVolumeMode API
+// @tc.number   PHIUT_SetVolumeMode_002
+// @tc.desc     Test if (ret != Status::OK)
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_SetVolumeMode_002, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    int32_t mode = 10;
+    std::string name = "testname";
+    auto mockAudioSink = std::make_shared<MockAudioSinkFilter>(name, FilterType::VIDEO_CAPTURE);
+    EXPECT_CALL(*mockAudioSink, SetVolumeMode(_)).WillRepeatedly(Return(Status::ERROR_NULL_POINTER));
+    hiplayer_->audioSink_ = mockAudioSink;
+    auto ret = hiplayer_->SetVolumeMode(mode);
+    EXPECT_EQ(ret, 0);
+}
+
+// @tc.name     Test InnerSelectTrack API
+// @tc.number   PHIUT_InnerSelectTrack_001
+// @tc.desc     Test if (IsSubtitleMime(mime))else if (IsVideoMime(mime)) 
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_InnerSelectTrack_001, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    std::string name = "testname";
+    FilterType type = FilterType::VIDEO_CAPTURE;
+    auto mockDemuxer = std::make_shared<MockDemuxerFilter>(name, type);
+    EXPECT_CALL(*mockDemuxer, SelectTrack(_)).WillRepeatedly(Return(Status::OK));
+    hiplayer_->demuxer_ = mockDemuxer;
+    std::string mime = "text/vtt";
+    int32_t trackId = 1;
+    PlayerSwitchMode mode = PlayerSwitchMode::SWITCH_SEGMENT;
+    hiplayer_->InnerSelectTrack(mime, trackId, mode);
+}
+
+// @tc.name     Test InnerSelectTrack API
+// @tc.number   PHIUT_InnerSelectTrack_002
+// @tc.desc     Test mode == PlayerSwitchMode::SWITCH_SEGMENT & mode == PlayerSwitchMode::SWITCH_CLOSEST
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_InnerSelectTrack_002, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    std::string name = "testname";
+    FilterType type = FilterType::VIDEO_CAPTURE;
+    auto mockDemuxer = std::make_shared<MockDemuxerFilter>(name, type);
+    EXPECT_CALL(*mockDemuxer, SelectTrack(_)).WillRepeatedly(Return(Status::OK));
+    hiplayer_->demuxer_ = mockDemuxer;
+    std::string mime = "video/test";
+    int32_t trackId = 1;
+    PlayerSwitchMode mode = PlayerSwitchMode::SWITCH_SEGMENT;
+    hiplayer_->curState_ = PlayerStateId::EOS;
+    auto ret = hiplayer_->InnerSelectTrack(mime, trackId, mode);
+    EXPECT_NE(ret, MSERR_OK);
+    mode = PlayerSwitchMode::SWITCH_CLOSEST;
+    ret = hiplayer_->InnerSelectTrack(mime, trackId, mode);
+    EXPECT_NE(ret, MSERR_OK);
+}
+
+// @tc.name     Test SelectTrack API
+// @tc.number   PHIUT_SelectTrack_001
+// @tc.desc     Test return MSERR_UNKNOWN;
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_SelectTrack_001, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    std::shared_ptr<Meta> meta1 = std::make_shared<Meta>();
+    meta1->SetData(Tag::MIME_TYPE, "test/invailed");
+    std::vector<std::shared_ptr<Meta>> metaInfo;
+    metaInfo.push_back(meta1);
+    std::string name = "testname";
+    FilterType type = FilterType::VIDEO_CAPTURE;
+    auto mockDemuxer = std::make_shared<MockDemuxerFilter>(name, type);
+    EXPECT_CALL(*mockDemuxer, GetStreamMetaInfo()).WillRepeatedly(Return(metaInfo));
+    hiplayer_->demuxer_ = mockDemuxer;
+    int32_t trackId = 0;
+    PlayerSwitchMode mode = PlayerSwitchMode::SWITCH_SEGMENT;
+    auto ret = hiplayer_->SelectTrack(trackId, mode);
+    EXPECT_NE(ret, MSERR_OK);
+}
+
+// @tc.name     Test GetSubtitleTrackInfo API
+// @tc.number   PHIUT_GetSubtitleTrackInfo_001
+// @tc.desc     Test !(trackInfo->GetData(Tag::MIME_TYPE, mime))||mime.find("invalid") == 0)if(IsSubtitleMime(mime))
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_GetSubtitleTrackInfo_001, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    std::shared_ptr<Meta> meta1 = std::make_shared<Meta>();
+    meta1->SetData(Tag::MIME_TYPE, "test/invailed");
+    std::shared_ptr<Meta> meta2 = std::make_shared<Meta>();
+    meta2->SetData(Tag::MIME_TYPE, "text/vtt");
+    std::vector<std::shared_ptr<Meta>> metaInfo;
+    metaInfo.push_back(meta2);
+    metaInfo.push_back(meta1);
+    std::string name = "testname";
+    FilterType type = FilterType::VIDEO_CAPTURE;
+    auto mockDemuxer = std::make_shared<MockDemuxerFilter>(name, type);
+    EXPECT_CALL(*mockDemuxer, GetStreamMetaInfo()).WillRepeatedly(Return(metaInfo));
+    hiplayer_->demuxer_ = mockDemuxer;
+    std::vector<Format> subtitleTrack;
+    auto ret = hiplayer_->GetSubtitleTrackInfo(subtitleTrack);
+    EXPECT_EQ(ret, MSERR_OK);
+}
+
+// @tc.name     Test HandleAudioTrackChangeEvent API
+// @tc.number   PHIUT_HandleAudioTrackChangeEvent_001
+// @tc.desc     Test if (!(metaInfo[trackId]->GetData(Tag::MIME_TYPE, mime)))
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_HandleAudioTrackChangeEvent_001, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    std::shared_ptr<Meta> meta1 = std::make_shared<Meta>();
+    std::vector<std::shared_ptr<Meta>> metaInfo;
+    metaInfo.push_back(meta1);
+    Event event;
+    event.param = 0;
+    std::string name = "testname";
+    FilterType type = FilterType::VIDEO_CAPTURE;
+    auto mockDemuxer = std::make_shared<MockDemuxerFilter>(name, type);
+    EXPECT_CALL(*mockDemuxer, GetStreamMetaInfo()).WillRepeatedly(Return(metaInfo));
+    hiplayer_->demuxer_ = mockDemuxer;
+    hiplayer_->HandleAudioTrackChangeEvent(event);
+    EXPECT_NE(metaInfo.size(), 0);
+}
+
+// @tc.name     Test HandleVideoTrackChangeEvent API
+// @tc.number   PHIUT_HandleAudioTrackChangeEvent_002
+// @tc.desc     Test if (Status::OK != demuxer_->StartTask(trackId))
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_HandleAudioTrackChangeEvent_002, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    std::shared_ptr<Meta> meta1 = std::make_shared<Meta>();
+    meta1->SetData(Tag::MIME_TYPE, "video/test");
+    std::vector<std::shared_ptr<Meta>> metaInfo;
+    metaInfo.push_back(meta1);
+    Event event;
+    event.param = 0;
+    std::string name = "testname";
+    FilterType type = FilterType::VIDEO_CAPTURE;
+    auto mockDemuxer = std::make_shared<MockDemuxerFilter>(name, type);
+    EXPECT_CALL(*mockDemuxer, GetStreamMetaInfo()).WillRepeatedly(Return(metaInfo));
+    EXPECT_CALL(*mockDemuxer, StartTask(_)).WillRepeatedly(Return(Status::ERROR_INVALID_OPERATION));
+    hiplayer_->demuxer_ = mockDemuxer;
+    hiplayer_->HandleVideoTrackChangeEvent(event);
+}
+
+// @tc.name     Test HandleSubtitleTrackChangeEvent API
+// @tc.number   PHIUT_HandleSubtitleTrackChangeEvent_001
+// @tc.desc     Test if (!(metaInfo[trackId]->GetData(Tag::MIME_TYPE, mime)))
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_HandleSubtitleTrackChangeEvent_001, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    std::shared_ptr<Meta> meta1 = std::make_shared<Meta>();
+    std::vector<std::shared_ptr<Meta>> metaInfo;
+    metaInfo.push_back(meta1);
+    Event event;
+    event.param = 0;
+    std::string name = "testname";
+    FilterType type = FilterType::VIDEO_CAPTURE;
+    auto mockDemuxer = std::make_shared<MockDemuxerFilter>(name, type);
+    EXPECT_CALL(*mockDemuxer, GetStreamMetaInfo()).WillRepeatedly(Return(metaInfo));
+    EXPECT_CALL(*mockDemuxer, StartTask(_)).WillRepeatedly(Return(Status::ERROR_INVALID_OPERATION));
+    hiplayer_->demuxer_ = mockDemuxer;
+    hiplayer_->HandleSubtitleTrackChangeEvent(event);
+}
+
+// @tc.name     Test OnCallback API
+// @tc.number   PHIUT_OnCallback_002
+// @tc.desc     Test default
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_OnCallback_002, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    std::string name = "testname";
+    auto mockFilter = std::make_shared<MockFilter>();
+    std::shared_ptr<Filter> filter = mockFilter;
+    FilterCallBackCommand cmd = FilterCallBackCommand::NEXT_FILTER_NEEDED;
+    StreamType outType = StreamType::STREAMTYPE_MAX;
+    auto ret = hiplayer_->OnCallback(filter, cmd, outType);
+    EXPECT_EQ(ret, Status::OK);
+}
 } // namespace Media
 } // namespace OHOS
