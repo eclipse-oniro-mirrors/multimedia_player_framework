@@ -66,7 +66,7 @@ public:
     {
         char value[MAX_ATTR_NAME + 1] = {0};
         ssize_t size = fgetxattr(fd, CLOUD_LOCATION_ATTR.c_str(), value, MAX_ATTR_NAME);
-        if (size <= 0) {
+        if (size <= 0 || size > MAX_ATTR_NAME) {
             MEDIA_LOGW("Getxattr value failed, errno is %{public}s", std::strerror(errno));
             return false;
         }
