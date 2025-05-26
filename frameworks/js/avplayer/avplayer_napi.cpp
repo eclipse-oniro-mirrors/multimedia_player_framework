@@ -686,6 +686,7 @@ napi_value AVPlayerNapi::JsRelease(napi_env env, napi_callback_info info)
     size_t argCount = 1;
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstance");
+    jsPlayer->isReadyReleased_.store(true);
     promiseCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
     promiseCtx->deferred = CommonNapi::CreatePromise(env, promiseCtx->callbackRef, result);
     MEDIA_LOGI("0x%{public}06" PRIXPTR " JsRelease EnqueueTask In", FAKE_POINTER(jsPlayer));
@@ -2998,6 +2999,11 @@ napi_value AVPlayerNapi::JsIsSeekContinuousSupported(napi_env env, napi_callback
     size_t argCount = 0;
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, nullptr);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstance");
+    if (jsPlayer->isReadyReleased_.load()) {
+        status = napi_get_boolean(env, false, &result);
+        CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "napi_get_boolean failed");
+        return result;
+    }
     if (jsPlayer->player_ != nullptr) {
         isSeekContinuousSupported = jsPlayer->player_->IsSeekContinuousSupported();
         status = napi_get_boolean(env, isSeekContinuousSupported, &result);

@@ -400,6 +400,8 @@ private:
     std::shared_mutex drmMutex_{};
     std::multimap<std::string, std::vector<uint8_t>> localDrmInfos_;
     Format playbackInfo_;
+
+    std::atomic<bool> isReadyReleased_ = false;
 };
 } // namespace Media
 } // namespace OHOS
