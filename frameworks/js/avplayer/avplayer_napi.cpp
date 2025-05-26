@@ -1352,6 +1352,12 @@ napi_value AVPlayerNapi::JsSetStartFrameRateOptEnabled(napi_env env, napi_callba
         return result;
     }
 
+    if (!IsSystemApp()) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
+            "invalid parameters, please dont't set");
+        return result;
+    }
+
     auto task = std::make_shared<TaskHandler<void>>([jsPlayer]() {
         MEDIA_LOGD("SetStartFrameRateOptEnabled Task");
         if (jsPlayer->player_ != nullptr) {
