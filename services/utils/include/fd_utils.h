@@ -78,7 +78,7 @@ public:
             return false;
         }
         int fileLocation = atoi(location.c_str());
-        return fileLocation == LOCAL;
+        return static_cast<int32_t>(fileLocation) == LOCAL;
     }
 #endif
 
