@@ -44,6 +44,7 @@ ohos_fuzztest("AVmetadataHelperFuzzTest") {
 
   external_deps = [
     "c_utils:utils",
+    "graphic_2d:librender_service_base",
     "hilog:libhilog",
     "image_framework:image_native",
     "ipc:ipc_single",
