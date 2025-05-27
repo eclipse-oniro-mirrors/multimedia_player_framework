@@ -75,7 +75,7 @@ void MediaServer::OnStart()
     AddSystemAbilityListener(MEMORY_MANAGER_SA_ID);
     AddSystemAbilityListener(AUDIO_POLICY_SERVICE_ID);
 #ifdef SUPPORT_CALL
-    MEDIA_LOGD("InCallObserver OnStart");
+    MEDIA_LOGD("InCallObserver init OnStart");
     InCallObserver::GetInstance();
 #endif
 }
