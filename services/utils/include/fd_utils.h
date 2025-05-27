@@ -19,9 +19,20 @@
 #include <sstream>
 #include <sys/ioctl.h>
 #include "common/fdsan_fd.h"
- 
+#ifdef __linux__
+#include <sys/xattr.h>
+#endif
+
 namespace OHOS {
 namespace Media {
+
+#ifdef __linux__
+namespace {
+constexpr size_t MAX_ATTR_NAME = 64;
+const std::string CLOUD_LOCATION_ATTR = "user.cloud.location";
+static const std::string LOCAL = "1";
+}
+#endif
 
 class FdUtils {
 public:
@@ -29,9 +40,8 @@ public:
     static FdsanFd ReOpenFd(int32_t fd)
     {
 #ifdef __linux__
-        int loc;
-        int ioResult = ioctl(fd, HMDFS_IOC_GET_LOCATION, &loc);
-        if (ioResult == 0 && loc != IOCTL_CLOUD) {
+        if (fd > 0 && LocalFd(fd)) {
+            MEDIA_LOGI("ReOpenFd In");
             std::stringstream ss;
             ss << "/proc/self/fd/" << fd;
             std::string fdPathStr = ss.str();
@@ -49,10 +59,27 @@ public:
             return FdsanFd(newFd);
         }
 #endif
+        MEDIA_LOGW("=== fd is cloud");
         return FdsanFd();
     }
 
 private:
+#if __linux__
+    static bool LocalFd(int32_t fd)
+    {
+        char value[MAX_ATTR_NAME + 1] = {0};
+        ssize_t size = fgetxattr(fd, CLOUD_LOCATION_ATTR.c_str(), value, MAX_ATTR_NAME);
+        if (size <= 0 || size > MAX_ATTR_NAME) {
+            MEDIA_LOGW("Getxattr value failed, errno is %{public}s", std::strerror(errno));
+            return false;
+        }
+        std::string location(value, static_cast<size_t>(size));
+        MEDIA_LOGD("Getxattr value, location is %{public}s", location.c_str());
+
+        return location == LOCAL;
+    }
+#endif
+
     // The HMDFS I/O control code
     static constexpr unsigned int HMDFS_IOC = 0xf2;
     // The I/O control code for retrieving the HMDFS location
@@ -63,6 +90,6 @@ private:
     static constexpr ssize_t RESULT_ERROR = -1;
     static constexpr int PATH_MAX_REAL = PATH_MAX + 1;
 };
-} // namespace media
+} // namespace Media
 } // namespace OHOS
 #endif // FD_UTILS_H
