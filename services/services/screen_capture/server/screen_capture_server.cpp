@@ -500,6 +500,8 @@ int32_t ScreenCaptureServer::RegisterWindowInfoChangedListener()
         "create new windowInfoChangedListener failed.");
     windowInfoChangedListener_ = listener;
     windowInfoChangedListener_->AddInterestInfo(Rosen::WindowInfoKey::WINDOW_ID);
+    CHECK_AND_RETURN_RET_LOG(!windowIdList_.empty(), MSERR_INVALID_OPERATION,
+        "windowIdList is empty, AddInterestWindowId failed.");
     windowInfoChangedListener_->AddInterestWindowId(windowIdList_.front());
 
     std::unordered_set<Rosen::WindowInfoKey> observedInfo;
