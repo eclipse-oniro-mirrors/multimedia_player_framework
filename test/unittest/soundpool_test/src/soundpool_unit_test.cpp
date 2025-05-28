@@ -160,10 +160,9 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_001, TestSize.Level2)
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
+    ASSERT_TRUE(cb != nullptr);
     int32_t ret = soundPool_->SetSoundPoolCallback(cb);
-    if (ret != 0) {
-        cout << "set callback failed" << endl;
-    }
+    ASSERT_TRUE(ret == 0);
     loadUrl(g_fileName[loadNum_], loadNum_);
     loadNum_++;
     loadUrl(g_fileName[loadNum_], loadNum_);
@@ -172,10 +171,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_001, TestSize.Level2)
     loadNum_++;
     loadUrl(g_fileName[1], loadNum_);
     sleep(waitTime3);
-    if (cb == nullptr) {
-        cout << "Invalid cb to get loaded sound num." << endl;
-        return;
-    }
     ASSERT_TRUE(cb->WaitLoadedSoundNum(4));
     cb->ResetHaveLoadedSoundNum();
     MEDIA_LOGI("soundpool_unit_test soundpool_function_001 after");
@@ -193,10 +188,9 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_002, TestSize.Level2)
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
+    ASSERT_TRUE(cb != nullptr);
     int32_t ret = soundPool_->SetSoundPoolCallback(cb);
-    if (ret != 0) {
-        cout << "set callback failed" << endl;
-    }
+    ASSERT_TRUE(ret == 0);
     // test invalid path
     std::string fileName = "/data/test/test_05.mp3";
     fds_[loadNum_] = open(fileName.c_str(), O_RDWR);
@@ -207,10 +201,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_002, TestSize.Level2)
         cout << "Url open a invalid path: " << fileName.c_str() << endl;
     }
     EXPECT_EQ(soundIDs_[loadNum_], -1);
-    if (cb == nullptr) {
-        cout << "Invalid cb to get loaded sound num." << endl;
-        return;
-    }
     MEDIA_LOGI("soundpool_unit_test soundpool_function_002 after");
 }
 
@@ -243,16 +233,11 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_004, TestSize.Level2)
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
+    ASSERT_TRUE(cb != nullptr);
     int32_t ret = soundPool_->SetSoundPoolCallback(cb);
-    if (ret != 0) {
-        cout << "set callback failed" << endl;
-    }
+    ASSERT_TRUE(ret == 0);
     loadUrl(g_fileName[loadNum_], loadNum_);
     sleep(waitTime3);
-    if (cb == nullptr) {
-        cout << "Invalid cb to get loaded sound num." << endl;
-        return;
-    }
     ASSERT_TRUE(cb->WaitLoadedSoundNum(1));
     cb->ResetHaveLoadedSoundNum();
     struct PlayParams playParameters;
@@ -264,10 +249,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_004, TestSize.Level2)
         sleep(waitTime3);
     } else {
         cout << "Get soundId failed, please try to get soundId: " << soundIDs_[loadNum_] << endl;
-    }
-    if (cb == nullptr) {
-        cout << "Invalid cb to get played sound num." << endl;
-        return;
     }
     cb->ResetHavePlayedSoundNum();
     MEDIA_LOGI("soundpool_unit_test soundpool_function_004 after");
@@ -285,10 +266,9 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_005, TestSize.Level2)
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
+    ASSERT_TRUE(cb != nullptr);
     int32_t ret = soundPool_->SetSoundPoolCallback(cb);
-    if (ret != 0) {
-        cout << "set callback failed" << endl;
-    }
+    ASSERT_TRUE(ret == 0);
     loadFd(g_fileName[loadNum_], loadNum_);
     loadNum_++;
     loadFd(g_fileName[loadNum_], loadNum_);
@@ -297,10 +277,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_005, TestSize.Level2)
     loadNum_++;
     loadFd(g_fileName[1], loadNum_);
     sleep(waitTime3);
-    if (cb == nullptr) {
-        cout << "Invalid cb to get loaded sound num." << endl;
-        return;
-    }
     ASSERT_TRUE(cb->WaitLoadedSoundNum(4));
     cb->ResetHaveLoadedSoundNum();
     MEDIA_LOGI("soundpool_unit_test soundpool_function_005 after");
@@ -318,10 +294,9 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_006, TestSize.Level2)
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
+    ASSERT_TRUE(cb != nullptr);
     int32_t ret = soundPool_->SetSoundPoolCallback(cb);
-    if (ret != 0) {
-        cout << "set callback failed" << endl;
-    }
+    ASSERT_TRUE(ret == 0);
     std::string fileName = "/data/test/test_05.mp3";
     fds_[loadNum_] = open(fileName.c_str(), O_RDONLY);
     size_t filesize = soundPool_->GetFileSize(fileName);
@@ -332,10 +307,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_006, TestSize.Level2)
         cout << "Fd open a invalid path: " << fileName.c_str() << endl;
     }
     EXPECT_EQ(soundIDs_[loadNum_], -1);
-    if (cb == nullptr) {
-        cout << "Invalid cb to get loaded sound num." << endl;
-        return;
-    }
     MEDIA_LOGI("soundpool_unit_test soundpool_function_006 after");
 }
 
@@ -368,16 +339,11 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_008, TestSize.Level2)
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
+    ASSERT_TRUE(cb != nullptr);
     int32_t ret = soundPool_->SetSoundPoolCallback(cb);
-    if (ret != 0) {
-        cout << "set callback failed" << endl;
-    }
+    ASSERT_TRUE(ret == 0);
     loadFd(g_fileName[loadNum_], loadNum_);
     sleep(waitTime3);
-    if (cb == nullptr) {
-        cout << "Invalid cb to get loaded sound num." << endl;
-        return;
-    }
     ASSERT_TRUE(cb->WaitLoadedSoundNum(1));
     cb->ResetHaveLoadedSoundNum();
     struct PlayParams playParameters;
@@ -389,10 +355,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_008, TestSize.Level2)
         sleep(waitTime3);
     } else {
         cout << "Get soundId failed, please try to get soundId: " << soundIDs_[loadNum_] << endl;
-    }
-    if (cb == nullptr) {
-        cout << "Invalid cb to get played sound num." << endl;
-        return;
     }
     cb->ResetHavePlayedSoundNum();
     MEDIA_LOGI("soundpool_unit_test soundpool_function_008 after");
@@ -410,10 +372,9 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_009, TestSize.Level2)
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
+    ASSERT_TRUE(cb != nullptr);
     int32_t ret = soundPool_->SetSoundPoolCallback(cb);
-    if (ret != 0) {
-        cout << "set callback failed" << endl;
-    }
+    ASSERT_TRUE(ret == 0);
     loadUrl(g_fileName[loadNum_], loadNum_);
     loadNum_++;
     loadUrl(g_fileName[loadNum_], loadNum_);
@@ -422,10 +383,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_009, TestSize.Level2)
     loadNum_++;
     loadFd(g_fileName[loadNum_], loadNum_);
     sleep(waitTime3);
-    if (cb == nullptr) {
-        cout << "Invalid cb to get loaded sound num." << endl;
-        return;
-    }
 
     ASSERT_TRUE(cb->WaitLoadedSoundNum(4));
     cb->ResetHaveLoadedSoundNum();
@@ -448,10 +405,9 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_010, TestSize.Level2)
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
+    ASSERT_TRUE(cb != nullptr);
     int32_t ret = soundPool_->SetSoundPoolCallback(cb);
-    if (ret != 0) {
-        cout << "set callback failed" << endl;
-    }
+    ASSERT_TRUE(ret == 0);
     std::string fileName = "/data/test/test_05.mp3";
     fds_[loadNum_] = open(fileName.c_str(), O_RDWR);
     std::string url = "fd://" + std::to_string(fds_[loadNum_]);
@@ -470,10 +426,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_010, TestSize.Level2)
         cout << "Fd open a invalid path: " << fileName.c_str() << endl;
     }
     EXPECT_EQ(soundIDs_[loadNum_], -1);
-    if (cb == nullptr) {
-        cout << "Invalid cb to get loaded sound num." << endl;
-        return;
-    }
     // test UnLoad a invalid-path return soundId
     int32_t unload = soundPool_->Unload(soundIDs_[0]);
     EXPECT_EQ(MSERR_NO_MEMORY, unload);
@@ -519,17 +471,12 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_012, TestSize.Level2)
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
+    ASSERT_TRUE(cb != nullptr);
     int32_t ret = soundPool_->SetSoundPoolCallback(cb);
-    if (ret != 0) {
-        cout << "set callback failed" << endl;
-    }
+    ASSERT_TRUE(ret == 0);
 
     loadUrl(g_fileName[loadNum_], loadNum_);
     sleep(waitTime3);
-    if (cb == nullptr) {
-        cout << "Invalid cb to get loaded sound num." << endl;
-        return;
-    }
     ASSERT_TRUE(cb->WaitLoadedSoundNum(1));
     cb->ResetHaveLoadedSoundNum();
     struct PlayParams playParameters;
@@ -543,10 +490,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_012, TestSize.Level2)
         streamIDs_[playNum_] = soundPool_->Play(soundIDs_[loadNum_], playParameters);
         EXPECT_GT(streamIDs_[playNum_], 0);
         sleep(waitTime3);
-    }
-    if (cb == nullptr) {
-        cout << "Invalid cb to get played sound num." << endl;
-        return;
     }
     cb->ResetHavePlayedSoundNum();
     MEDIA_LOGI("soundpool_unit_test soundpool_function_012 after");
@@ -564,13 +507,10 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_013, TestSize.Level2)
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
+    ASSERT_TRUE(cb != nullptr);
     soundPool_->SetSoundPoolCallback(cb);
     loadUrl(g_fileName[loadNum_], loadNum_);
     sleep(waitTime3);
-    if (cb == nullptr) {
-        cout << "Invalid cb to get loaded sound num." << endl;
-        return;
-    }
     ASSERT_TRUE(cb->WaitLoadedSoundNum(1));
     cb->ResetHaveLoadedSoundNum();
     struct PlayParams playParameters;
@@ -593,10 +533,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_013, TestSize.Level2)
     } else {
         cout << "Get soundId failed, please try to get soundId: " << soundIDs_[loadNum_] << endl;
     }
-    if (cb == nullptr) {
-        cout << "Invalid cb to get played sound num." << endl;
-        return;
-    }
     cb->ResetHavePlayedSoundNum();
     MEDIA_LOGI("soundpool_unit_test soundpool_function_013 after");
 }
@@ -613,19 +549,14 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_014, TestSize.Level2)
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
+    ASSERT_TRUE(cb != nullptr);
     int32_t ret = soundPool_->SetSoundPoolCallback(cb);
-    if (ret != 0) {
-        cout << "set callback failed" << endl;
-    }
+    ASSERT_TRUE(ret == 0);
     struct PlayParams playParameters;
     streamIDs_[playNum_] = soundPool_->Play(5, playParameters);
     cout << "soundId 5 play, result: " << streamIDs_[playNum_] << endl;
     EXPECT_EQ(streamIDs_[playNum_], -1);
     sleep(waitTime1);
-    if (cb == nullptr) {
-        cout << "Invalid cb to get played sound num." << endl;
-        return;
-    }
     cb->ResetHavePlayedSoundNum();
     MEDIA_LOGI("soundpool_unit_test soundpool_function_014 after");
 }
@@ -642,19 +573,14 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_015, TestSize.Level2)
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
+    ASSERT_TRUE(cb != nullptr);
     int32_t ret = soundPool_->SetSoundPoolCallback(cb);
-    if (ret != 0) {
-        cout << "set callback failed" << endl;
-    }
+    ASSERT_TRUE(ret == 0);
     struct PlayParams playParameters;
     streamIDs_[playNum_] = soundPool_->Play(-1, playParameters);
     cout << "soundId -1 play, result: " << streamIDs_[playNum_] << endl;
     EXPECT_EQ(streamIDs_[playNum_], -1);
     sleep(waitTime1);
-    if (cb == nullptr) {
-        cout << "Invalid cb to get played sound num." << endl;
-        return;
-    }
     cb->ResetHavePlayedSoundNum();
     MEDIA_LOGI("soundpool_unit_test soundpool_function_015 after");
 }
@@ -671,18 +597,13 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_016, TestSize.Level2)
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
+    ASSERT_TRUE(cb != nullptr);
     int32_t ret = soundPool_->SetSoundPoolCallback(cb);
-    if (ret != 0) {
-        cout << "set callback failed" << endl;
-    }
+    ASSERT_TRUE(ret == 0);
     loadUrl(g_fileName[loadNum_], loadNum_);
     loadNum_++;
     loadUrl(g_fileName[loadNum_], loadNum_);
     sleep(waitTime3);
-    if (cb == nullptr) {
-        cout << "Invalid cb to get loaded sound num." << endl;
-        return;
-    }
     ASSERT_TRUE(cb->WaitLoadedSoundNum(2));
     cb->ResetHaveLoadedSoundNum();
     struct PlayParams playParameters;
@@ -692,10 +613,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_016, TestSize.Level2)
     playNum_++;
     streamIDs_[playNum_] = soundPool_->Play(soundIDs_[1], playParameters);
     EXPECT_GT(streamIDs_[playNum_], 0);
-    if (cb == nullptr) {
-        cout << "Invalid cb to get played sound num." << endl;
-        return;
-    }
     cb->ResetHavePlayedSoundNum();
     MEDIA_LOGI("soundpool_unit_test soundpool_function_016 after");
 }
@@ -712,16 +629,11 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_017, TestSize.Level2)
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
+    ASSERT_TRUE(cb != nullptr);
     int32_t ret = soundPool_->SetSoundPoolCallback(cb);
-    if (ret != 0) {
-        cout << "set callback failed" << endl;
-    }
+    ASSERT_TRUE(ret == 0);
     loadUrl(g_fileName[loadNum_], loadNum_);
     sleep(waitTime3);
-    if (cb == nullptr) {
-        cout << "Invalid cb to get loaded sound num." << endl;
-        return;
-    }
     ASSERT_TRUE(cb->WaitLoadedSoundNum(1));
     cb->ResetHaveLoadedSoundNum();
     struct PlayParams playParameters;
@@ -729,10 +641,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_017, TestSize.Level2)
         streamIDs_[playNum_] = soundPool_->Play(soundIDs_[loadNum_], playParameters);
         EXPECT_GT(streamIDs_[playNum_], 0);
         sleep(waitTime1);
-    }
-    if (cb == nullptr) {
-        cout << "Invalid cb to get played sound num." << endl;
-        return;
     }
     cb->ResetHavePlayedSoundNum();
     if (streamIDs_[playNum_] > 0) {
@@ -757,15 +665,12 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_018, TestSize.Level2)
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
+    ASSERT_TRUE(cb != nullptr);
     soundPool_->SetSoundPoolCallback(cb);
     loadUrl(g_fileName[loadNum_], loadNum_);
     loadNum_++;
     loadFd(g_fileName[loadNum_], loadNum_);
     sleep(waitTime3);
-    if (cb == nullptr) {
-        cout << "Invalid cb to get loaded sound num." << endl;
-        return;
-    }
     ASSERT_TRUE(cb->WaitLoadedSoundNum(2));
     cb->ResetHaveLoadedSoundNum();
     struct PlayParams playParameters;
@@ -779,10 +684,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_018, TestSize.Level2)
         streamIDs_[playNum_] = soundPool_->Play(soundIDs_[1], playParameters);
         EXPECT_GT(streamIDs_[playNum_], 0);
         sleep(waitTime1);
-    }
-    if (cb == nullptr) {
-        cout << "Invalid cb to get played sound num." << endl;
-        return;
     }
     cb->ResetHavePlayedSoundNum();
     if (streamIDs_[0] > 0) {
@@ -806,6 +707,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_019, TestSize.Level2)
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
+    ASSERT_TRUE(cb != nullptr);
     soundPool_->SetSoundPoolCallback(cb);
     loadUrl(g_fileName[loadNum_], loadNum_);
     loadNum_++;
@@ -813,10 +715,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_019, TestSize.Level2)
     loadNum_++;
     loadUrl(g_fileName[loadNum_], loadNum_);
     sleep(waitTime3);
-    if (cb == nullptr) {
-        cout << "Invalid cb to get loaded sound num." << endl;
-        return;
-    }
     ASSERT_TRUE(cb->WaitLoadedSoundNum(3));
     cb->ResetHaveLoadedSoundNum();
     struct PlayParams playParameters;
@@ -836,10 +734,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_019, TestSize.Level2)
         EXPECT_GT(streamIDs_[playNum_], 0);
         sleep(waitTime1);
     }
-    if (cb == nullptr) {
-        cout << "Invalid cb to get played sound num." << endl;
-        return;
-    }
     cb->ResetHavePlayedSoundNum();
     EXPECT_EQ(MSERR_OK, soundPool_->Stop(streamIDs_[0]));
     EXPECT_EQ(MSERR_OK, soundPool_->Stop(streamIDs_[2]));
@@ -858,16 +752,11 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_020, TestSize.Level2)
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
+    ASSERT_TRUE(cb != nullptr);
     int32_t ret = soundPool_->SetSoundPoolCallback(cb);
-    if (ret != 0) {
-        cout << "set callback failed" << endl;
-    }
+    ASSERT_TRUE(ret == 0);
     loadUrl(g_fileName[loadNum_], loadNum_);
     sleep(waitTime3);
-    if (cb == nullptr) {
-        cout << "Invalid cb to get loaded sound num." << endl;
-        return;
-    }
     ASSERT_TRUE(cb->WaitLoadedSoundNum(1));
     cb->ResetHaveLoadedSoundNum();
     int32_t stopResult = soundPool_->Stop(-1);
@@ -887,16 +776,11 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_021, TestSize.Level2)
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
+    ASSERT_TRUE(cb != nullptr);
     int32_t ret = soundPool_->SetSoundPoolCallback(cb);
-    if (ret != 0) {
-        cout << "set callback failed" << endl;
-    }
+    ASSERT_TRUE(ret == 0);
     loadUrl(g_fileName[loadNum_], loadNum_);
     sleep(waitTime3);
-    if (cb == nullptr) {
-        cout << "Invalid cb to get loaded sound num." << endl;
-        return;
-    }
     ASSERT_TRUE(cb->WaitLoadedSoundNum(1));
     cb->ResetHaveLoadedSoundNum();
     struct PlayParams playParameters;
@@ -911,10 +795,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_021, TestSize.Level2)
         sleep(waitTime1);
     } else {
         cout << "Get soundId failed, please try to get soundId: " << soundIDs_[loadNum_] << endl;
-    }
-    if (cb == nullptr) {
-        cout << "Invalid cb to get played sound num." << endl;
-        return;
     }
     cb->ResetHavePlayedSoundNum();
     EXPECT_EQ(MSERR_OK, soundPool_->Unload(soundIDs_[loadNum_]));
@@ -933,16 +813,11 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_022, TestSize.Level2)
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
+    ASSERT_TRUE(cb != nullptr);
     int32_t ret = soundPool_->SetSoundPoolCallback(cb);
-    if (ret != 0) {
-        cout << "set callback failed" << endl;
-    }
+    ASSERT_TRUE(ret == 0);
     loadUrl(g_fileName[loadNum_], loadNum_);
     sleep(waitTime3);
-    if (cb == nullptr) {
-        cout << "Invalid cb to get loaded sound num." << endl;
-        return;
-    }
     ASSERT_TRUE(cb->WaitLoadedSoundNum(1));
     cb->ResetHaveLoadedSoundNum();
     struct PlayParams playParameters;
@@ -957,10 +832,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_022, TestSize.Level2)
         sleep(waitTime1);
     } else {
         cout << "Get soundId failed, please try to get soundId: " << soundIDs_[loadNum_] << endl;
-    }
-    if (cb == nullptr) {
-        cout << "Invalid cb to get played sound num." << endl;
-        return;
     }
     cb->ResetHavePlayedSoundNum();
     MEDIA_LOGI("soundpool_unit_test soundpool_function_022 after");
@@ -978,16 +849,11 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_023, TestSize.Level2)
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
+    ASSERT_TRUE(cb != nullptr);
     int32_t ret = soundPool_->SetSoundPoolCallback(cb);
-    if (ret != 0) {
-        cout << "set callback failed" << endl;
-    }
+    ASSERT_TRUE(ret == 0);
     loadUrl(g_fileName[loadNum_], loadNum_);
     sleep(waitTime3);
-    if (cb == nullptr) {
-        cout << "Invalid cb to get loaded sound num." << endl;
-        return;
-    }
     ASSERT_TRUE(cb->WaitLoadedSoundNum(1));
     cb->ResetHaveLoadedSoundNum();
     struct PlayParams playParameters;
@@ -1002,10 +868,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_023, TestSize.Level2)
         sleep(waitTime1);
     } else {
         cout << "Get soundId failed, please try to get soundId: " << soundIDs_[loadNum_] << endl;
-    }
-    if (cb == nullptr) {
-        cout << "Invalid cb to get played sound num." << endl;
-        return;
     }
     cb->ResetHavePlayedSoundNum();
     MEDIA_LOGI("soundpool_unit_test soundpool_function_023 after");
@@ -1023,16 +885,11 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_024, TestSize.Level2)
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
+    ASSERT_TRUE(cb != nullptr);
     int32_t ret = soundPool_->SetSoundPoolCallback(cb);
-    if (ret != 0) {
-        cout << "set callback failed" << endl;
-    }
+    ASSERT_TRUE(ret == 0);
     loadUrl(g_fileName[loadNum_], loadNum_);
     sleep(waitTime3);
-    if (cb == nullptr) {
-        cout << "Invalid cb to get loaded sound num." << endl;
-        return;
-    }
     ASSERT_TRUE(cb->WaitLoadedSoundNum(1));
     cb->ResetHaveLoadedSoundNum();
     struct PlayParams playParameters;
@@ -1047,10 +904,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_024, TestSize.Level2)
         sleep(waitTime1);
     } else {
         cout << "Get soundId failed, please try to get soundId: " << soundIDs_[loadNum_] << endl;
-    }
-    if (cb == nullptr) {
-        cout << "Invalid cb to get played sound num." << endl;
-        return;
     }
     cb->ResetHavePlayedSoundNum();
     MEDIA_LOGI("soundpool_unit_test soundpool_function_024 after");
@@ -1068,15 +921,12 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_025, TestSize.Level2)
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
+    ASSERT_TRUE(cb != nullptr);
     soundPool_->SetSoundPoolCallback(cb);
     loadUrl(g_fileName[loadNum_], loadNum_);
     loadNum_++;
     loadUrl(g_fileName[loadNum_], loadNum_);
     sleep(waitTime3);
-    if (cb == nullptr) {
-        cout << "Invalid cb to get loaded sound num." << endl;
-        return;
-    }
     ASSERT_TRUE(cb->WaitLoadedSoundNum(2));
     cb->ResetHaveLoadedSoundNum();
     struct PlayParams playParameters;
@@ -1098,10 +948,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_025, TestSize.Level2)
     } else {
         cout << "Get soundId failed, please try to get soundId: " << soundIDs_[loadNum_] << endl;
     }
-    if (cb == nullptr) {
-        cout << "Invalid cb to get played sound num." << endl;
-        return;
-    }
     cb->ResetHavePlayedSoundNum();
     MEDIA_LOGI("soundpool_unit_test soundpool_function_025 after");
 }
@@ -1118,15 +964,12 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_026, TestSize.Level2)
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
+    ASSERT_TRUE(cb != nullptr);
     soundPool_->SetSoundPoolCallback(cb);
     loadUrl(g_fileName[loadNum_], loadNum_);
     loadNum_++;
     loadUrl(g_fileName[loadNum_], loadNum_);
     sleep(waitTime3);
-    if (cb == nullptr) {
-        cout << "Invalid cb to get loaded sound num." << endl;
-        return;
-    }
     ASSERT_TRUE(cb->WaitLoadedSoundNum(2));
     cb->ResetHaveLoadedSoundNum();
     struct PlayParams playParameters;
@@ -1148,10 +991,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_026, TestSize.Level2)
     } else {
         cout << "Get soundId failed, please try to get soundId: " << soundIDs_[loadNum_] << endl;
     }
-    if (cb == nullptr) {
-        cout << "Invalid cb to get played sound num." << endl;
-        return;
-    }
     cb->ResetHavePlayedSoundNum();
     MEDIA_LOGI("soundpool_unit_test soundpool_function_026 after");
 }
@@ -1168,16 +1007,11 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_027, TestSize.Level2)
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
+    ASSERT_TRUE(cb != nullptr);
     int32_t ret = soundPool_->SetSoundPoolCallback(cb);
-    if (ret != 0) {
-        cout << "set callback failed" << endl;
-    }
+    ASSERT_TRUE(ret == 0);
     loadUrl(g_fileName[loadNum_], loadNum_);
     sleep(waitTime3);
-    if (cb == nullptr) {
-        cout << "Invalid cb to get loaded sound num." << endl;
-        return;
-    }
     ASSERT_TRUE(cb->WaitLoadedSoundNum(1));
     cb->ResetHaveLoadedSoundNum();
     struct PlayParams playParameters;
@@ -1196,10 +1030,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_027, TestSize.Level2)
         cout << "Get soundId failed, please try to get soundId: " << soundIDs_[loadNum_] << endl;
     }
 
-    if (cb == nullptr) {
-        cout << "Invalid cb to get played sound num." << endl;
-        return;
-    }
     cb->ResetHavePlayedSoundNum();
     MEDIA_LOGI("soundpool_unit_test soundpool_function_027 after");
 }
@@ -1216,15 +1046,12 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_028, TestSize.Level2)
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
+    ASSERT_TRUE(cb != nullptr);
     soundPool_->SetSoundPoolCallback(cb);
     loadUrl(g_fileName[loadNum_], loadNum_);
     loadNum_++;
     loadUrl(g_fileName[loadNum_], loadNum_);
     sleep(waitTime3);
-    if (cb == nullptr) {
-        cout << "Invalid cb to get loaded sound num." << endl;
-        return;
-    }
     ASSERT_TRUE(cb->WaitLoadedSoundNum(2));
     cb->ResetHaveLoadedSoundNum();
     struct PlayParams playParameters;
@@ -1245,10 +1072,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_028, TestSize.Level2)
         EXPECT_EQ(MSERR_OK, setRateResult);
         sleep(waitTime3);
     }
-    if (cb == nullptr) {
-        cout << "Invalid cb to get played sound num." << endl;
-        return;
-    }
     cb->ResetHavePlayedSoundNum();
     MEDIA_LOGI("soundpool_unit_test soundpool_function_028 after");
 }
@@ -1265,15 +1088,12 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_029, TestSize.Level2)
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
+    ASSERT_TRUE(cb != nullptr);
     soundPool_->SetSoundPoolCallback(cb);
     loadUrl(g_fileName[loadNum_], loadNum_);
     loadNum_++;
     loadUrl(g_fileName[loadNum_], loadNum_);
     sleep(waitTime3);
-    if (cb == nullptr) {
-        cout << "Invalid cb to get loaded sound num." << endl;
-        return;
-    }
     ASSERT_TRUE(cb->WaitLoadedSoundNum(2));
     cb->ResetHaveLoadedSoundNum();
     struct PlayParams playParameters;
@@ -1295,10 +1115,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_029, TestSize.Level2)
         EXPECT_EQ(MSERR_OK, setRateResult);
         sleep(waitTime3);
     }
-    if (cb == nullptr) {
-        cout << "Invalid cb to get played sound num." << endl;
-        return;
-    }
     cb->ResetHavePlayedSoundNum();
     MEDIA_LOGI("soundpool_unit_test soundpool_function_029 after");
 }
@@ -1315,16 +1131,11 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_030, TestSize.Level2)
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
+    ASSERT_TRUE(cb != nullptr);
     int32_t ret = soundPool_->SetSoundPoolCallback(cb);
-    if (ret != 0) {
-        cout << "set callback failed" << endl;
-    }
+    ASSERT_TRUE(ret == 0);
     loadUrl(g_fileName[loadNum_], loadNum_);
     sleep(waitTime3);
-    if (cb == nullptr) {
-        cout << "Invalid cb to get loaded sound num." << endl;
-        return;
-    }
     ASSERT_TRUE(cb->WaitLoadedSoundNum(1));
     cb->ResetHaveLoadedSoundNum();
     struct PlayParams playParameters;
@@ -1339,10 +1150,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_030, TestSize.Level2)
         sleep(waitTime1);
     } else {
         cout << "Get soundId failed, please try to get soundId: " << soundIDs_[loadNum_] << endl;
-    }
-    if (cb == nullptr) {
-        cout << "Invalid cb to get played sound num." << endl;
-        return;
     }
     cb->ResetHavePlayedSoundNum();
     MEDIA_LOGI("soundpool_unit_test soundpool_function_030 after");
@@ -1360,16 +1167,11 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_031, TestSize.Level2)
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
+    ASSERT_TRUE(cb != nullptr);
     int32_t ret = soundPool_->SetSoundPoolCallback(cb);
-    if (ret != 0) {
-        cout << "set callback failed" << endl;
-    }
+    ASSERT_TRUE(ret == 0);
     loadUrl(g_fileName[loadNum_], loadNum_);
     sleep(waitTime3);
-    if (cb == nullptr) {
-        cout << "Invalid cb to get loaded sound num." << endl;
-        return;
-    }
     ASSERT_TRUE(cb->WaitLoadedSoundNum(1));
     cb->ResetHaveLoadedSoundNum();
     struct PlayParams playParameters;
@@ -1387,10 +1189,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_031, TestSize.Level2)
     } else {
         cout << "Get soundId failed, please try to get soundId: " << soundIDs_[loadNum_] << endl;
     }
-    if (cb == nullptr) {
-        cout << "Invalid cb to get played sound num." << endl;
-        return;
-    }
     cb->ResetHavePlayedSoundNum();
     MEDIA_LOGI("soundpool_unit_test soundpool_function_031 after");
 }
@@ -1407,16 +1205,11 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_032, TestSize.Level2)
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
+    ASSERT_TRUE(cb != nullptr);
     int32_t ret = soundPool_->SetSoundPoolCallback(cb);
-    if (ret != 0) {
-        cout << "set callback failed" << endl;
-    }
+    ASSERT_TRUE(ret == 0);
     loadUrl(g_fileName[loadNum_], loadNum_);
     sleep(waitTime3);
-    if (cb == nullptr) {
-        cout << "Invalid cb to get loaded sound num." << endl;
-        return;
-    }
     ASSERT_TRUE(cb->WaitLoadedSoundNum(1));
     cb->ResetHaveLoadedSoundNum();
     struct PlayParams playParameters;
@@ -1430,10 +1223,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_032, TestSize.Level2)
         sleep(waitTime1);
     } else {
         cout << "Get soundId failed, please try to get soundId: " << soundIDs_[loadNum_] << endl;
-    }
-    if (cb == nullptr) {
-        cout << "Invalid cb to get played sound num." << endl;
-        return;
     }
     cb->ResetHavePlayedSoundNum();
     MEDIA_LOGI("soundpool_unit_test soundpool_function_032 after");
@@ -1451,16 +1240,11 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_033, TestSize.Level2)
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
+    ASSERT_TRUE(cb != nullptr);
     int32_t ret = soundPool_->SetSoundPoolCallback(cb);
-    if (ret != 0) {
-        cout << "set callback failed" << endl;
-    }
+    ASSERT_TRUE(ret == 0);
     loadUrl(g_fileName[loadNum_], loadNum_);
     sleep(waitTime3);
-    if (cb == nullptr) {
-        cout << "Invalid cb to get loaded sound num." << endl;
-        return;
-    }
     ASSERT_TRUE(cb->WaitLoadedSoundNum(1));
     cb->ResetHaveLoadedSoundNum();
     struct PlayParams playParameters;
@@ -1474,10 +1258,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_033, TestSize.Level2)
         sleep(waitTime1);
     } else {
         cout << "Get soundId failed, please try to get soundId: " << soundIDs_[loadNum_] << endl;
-    }
-    if (cb == nullptr) {
-        cout << "Invalid cb to get played sound num." << endl;
-        return;
     }
     cb->ResetHavePlayedSoundNum();
     MEDIA_LOGI("soundpool_unit_test soundpool_function_033 after");
@@ -1495,18 +1275,13 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_034, TestSize.Level2)
     int maxStreams = 1;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
+    ASSERT_TRUE(cb != nullptr);
     int32_t ret = soundPool_->SetSoundPoolCallback(cb);
-    if (ret != 0) {
-        cout << "set callback failed" << endl;
-    }
+    ASSERT_TRUE(ret == 0);
     loadUrl(g_fileName[loadNum_], loadNum_);
     loadNum_++;
     loadUrl(g_fileName[loadNum_], loadNum_);
     sleep(waitTime3);
-    if (cb == nullptr) {
-        cout << "Invalid cb to get loaded sound num." << endl;
-        return;
-    }
     ASSERT_TRUE(cb->WaitLoadedSoundNum(2));
     cb->ResetHaveLoadedSoundNum();
     struct PlayParams playParameters;
@@ -1526,10 +1301,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_034, TestSize.Level2)
         EXPECT_EQ(MSERR_OK, setPriority);
         sleep(waitTime1);
     }
-    if (cb == nullptr) {
-        cout << "Invalid cb to get played sound num." << endl;
-        return;
-    }
     cb->ResetHavePlayedSoundNum();
     MEDIA_LOGI("soundpool_unit_test soundpool_function_034 after");
 }
@@ -1547,15 +1318,12 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_035, TestSize.Level2)
     int maxStreams = 1;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
+    ASSERT_TRUE(cb != nullptr);
     soundPool_->SetSoundPoolCallback(cb);
     loadUrl(g_fileName[loadNum_], loadNum_);
     loadNum_++;
     loadUrl(g_fileName[loadNum_], loadNum_);
     sleep(waitTime3);
-    if (cb == nullptr) {
-        cout << "Invalid cb to get loaded sound num." << endl;
-        return;
-    }
     ASSERT_TRUE(cb->WaitLoadedSoundNum(2));
     cb->ResetHaveLoadedSoundNum();
     struct PlayParams playParameters;
@@ -1576,10 +1344,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_035, TestSize.Level2)
     int32_t setPriority = soundPool_->SetPriority(streamIDs_[0], priority);
     sleep(waitTime1);
     EXPECT_EQ(MSERR_OK, setPriority);
-    if (cb == nullptr) {
-        cout << "Invalid cb to get played sound num." << endl;
-        return;
-    }
     cb->ResetHavePlayedSoundNum();
     MEDIA_LOGI("soundpool_unit_test soundpool_function_035 after");
 }
