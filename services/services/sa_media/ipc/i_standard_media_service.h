@@ -70,6 +70,11 @@ public:
     virtual bool CanKillMediaService() = 0;
 
     /**
+     * Get pid vector of players.
+     */
+    virtual std::vector<pid_t> GetPlayerPids() = 0;
+
+    /**
      * IPC code ID
      */
     enum MediaServiceMsg : int32_t {
@@ -77,6 +82,7 @@ public:
         GET_SUBSYSTEM_ASYNC = 1,
         RELEASE_CLIENT_LISTENER = 2,
         CAN_KILL_MEDIA_SERVICE = 3,
+        GET_PLAYER_PIDS = 4,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardMediaService");

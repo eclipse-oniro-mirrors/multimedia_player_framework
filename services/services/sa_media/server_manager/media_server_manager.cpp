@@ -785,6 +785,21 @@ void MediaServerManager::DestroyStubObjectForPid(pid_t pid)
 #endif
 }
 
+std::vector<pid_t> MediaServerManager::GetPlayerPids()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    std::vector<pid_t> res;
+    CHECK_AND_RETURN_RET_NOLOG(!playerStubMap_.empty(), res);
+    std::unordered_set<pid_t> tmpRes;
+    for (const auto& [object, pid] : playerStubMap_) {
+        (void)tmpRes.insert(pid);
+    }
+    for (auto &uniqPid : tmpRes) {
+        res.emplace_back(uniqPid);
+    }
+    return res;
+}
+
 void MediaServerManager::DestroyDumper(StubType type, sptr<IRemoteObject> object)
 {
     for (auto it = dumperTbl_[type].begin(); it != dumperTbl_[type].end(); it++) {

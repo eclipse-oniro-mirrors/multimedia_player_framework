@@ -346,6 +346,13 @@ int32_t MediaClient::DestroyScreenCaptureControllerClient(std::shared_ptr<IScree
 }
 #endif
 
+std::vector<pid_t> MediaClient::GetPlayerPids()
+{
+    std::vector<pid_t> res;
+    CHECK_AND_RETURN_RET_LOG(IsAlived(), res, "MediaServer Is Not Alived");
+    return mediaProxy_->GetPlayerPids();
+}
+
 sptr<IStandardMonitorService> MediaClient::GetMonitorProxy()
 {
     std::unique_lock<std::mutex> lock(mutex_);

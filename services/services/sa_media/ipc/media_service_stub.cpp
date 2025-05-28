@@ -50,6 +50,8 @@ void MediaServiceStub::Init()
         [this] (MessageParcel &data, MessageParcel &reply) { return ReleaseClientListenerStub(data, reply); };
     mediaFuncs_[CAN_KILL_MEDIA_SERVICE] =
         [this] (MessageParcel &data, MessageParcel &reply) { return HandleKillMediaService(data, reply); };
+    mediaFuncs_[GET_PLAYER_PIDS] =
+        [this] (MessageParcel &data, MessageParcel &reply) { return GetPlayerPidsStub(data, reply); };
 }
 
 int32_t MediaServiceStub::DestroyStubForPid(pid_t pid)
@@ -159,10 +161,27 @@ int32_t MediaServiceStub::ReleaseClientListenerStub(MessageParcel &data, Message
     return MSERR_OK;
 }
 
+int32_t MediaServiceStub::GetPlayerPidsStub(MessageParcel &data, MessageParcel &reply)
+{
+    (void)data;
+    std::vector<pid_t> res = GetPlayerPids();
+    int64_t vectorSize = static_cast<int64_t>(res.size());
+    reply.WriteInt64(vectorSize);
+    for (auto &pid : res) {
+        reply.WriteInt64(static_cast<int64_t>(pid));
+    }
+    return MSERR_OK;
+}
+
 void MediaServiceStub::ReleaseClientListener()
 {
     pid_t pid = IPCSkeleton::GetCallingPid();
     (void)DestroyStubForPid(pid);
+}
+
+std::vector<pid_t> MediaServiceStub::GetPlayerPids()
+{
+    return MediaServerManager::GetInstance().GetPlayerPids();
 }
 
 int32_t MediaServiceStub::GetSystemAbility(MessageParcel &data, MessageParcel &reply)

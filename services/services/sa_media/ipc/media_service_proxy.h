@@ -35,6 +35,7 @@ public:
 
     bool CanKillMediaService() override;
 
+    std::vector<pid_t> GetPlayerPids() override;
 private:
     bool IsGetSubSystemAbilityASync() const;
     static inline BrokerDelegator<MediaServiceProxy> delegator_;

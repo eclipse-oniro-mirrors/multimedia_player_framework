@@ -64,6 +64,7 @@ public:
     MOCK_METHOD(sptr<IStandardMonitorService>, GetMonitorProxy, (), (override));
     MOCK_METHOD(void, ReleaseClientListener, (), (override));
     MOCK_METHOD(bool, CanKillMediaService, (), (override));
+    MOCK_METHOD(std::vector<pid_t>, GetPlayerPids, (), (override));
 };
 } // namespace Media
 } // namespace OHOS

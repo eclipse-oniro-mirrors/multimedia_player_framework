@@ -52,6 +52,30 @@ void MediaServiceProxy::ReleaseClientListener()
     }
 }
 
+std::vector<pid_t> MediaServiceProxy::GetPlayerPids()
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    
+    std::vector<pid_t> res;
+
+    bool token = data.WriteInterfaceToken(MediaServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, res, "Failed to write descriptor!");
+    int32_t error = -1;
+    error = Remote()->SendRequest(MediaServiceMsg::GET_PLAYER_PIDS, data, reply, option);
+    if (error != MSERR_OK) {
+        MEDIA_LOGE("Send request failed, error: %{public}d", error);
+        return res;
+    }
+    int64_t vecSize = reply.ReadInt64();
+    CHECK_AND_RETURN_RET_LOG(vecSize >= 0, res, "Fail to read vecSize");
+    for (int64_t i = 0; i < vecSize; i++) {
+        res.emplace_back(static_cast<pid_t>(reply.ReadInt64()));
+    }
+    return res;
+}
+
 sptr<IRemoteObject> MediaServiceProxy::GetSubSystemAbility(IStandardMediaService::MediaSystemAbility subSystemId,
     const sptr<IRemoteObject> &listener)
 {
