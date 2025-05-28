@@ -23,7 +23,6 @@
 #include <parcel.h>
 #include "meta/format.h"
 #include "surface.h"
-#include "recorder.h"
 #include "av_common.h"
 #include "codec_capability.h"
 #include "media_core.h"
