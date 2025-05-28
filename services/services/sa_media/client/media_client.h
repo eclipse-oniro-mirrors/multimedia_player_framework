@@ -77,6 +77,7 @@ public:
     std::shared_ptr<IScreenCaptureController> CreateScreenCaptureControllerClient() override;
     int32_t DestroyScreenCaptureControllerClient(std::shared_ptr<IScreenCaptureController> controller) override;
 #endif
+    std::vector<pid_t> GetPlayerPids() override;
 
 private:
     sptr<IStandardMediaService> GetMediaProxy();

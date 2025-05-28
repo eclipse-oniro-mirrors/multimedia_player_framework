@@ -39,6 +39,7 @@ public:
         const sptr<IRemoteObject> &listener, uint32_t timeoutMs);
     void ReleaseClientListener();
     bool CanKillMediaService();
+    std::vector<pid_t> GetPlayerPids();
 private:
     static inline BrokerDelegator<MediaServiceProxyFuzzer> delegator_;
 };

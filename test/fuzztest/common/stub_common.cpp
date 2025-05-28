@@ -62,5 +62,15 @@ bool MediaServiceProxyFuzzer::CanKillMediaService()
     (void)Remote()->SendRequest(MediaServiceMsg::CAN_KILL_MEDIA_SERVICE, data, reply, option);
     return reply.ReadBool();
 }
+
+std::vector<pid_t> MediaServiceProxyFuzzer::GetPlayerPids()
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    (void)Remote()->SendRequest(MediaServiceMsg::GET_PLAYER_PIDS, data, reply, option);
+    std::vector<pid_t> res;
+    return res;
+}
 }
 }

@@ -64,6 +64,20 @@ std::shared_ptr<Player> PlayerFactory::CreatePlayer(const PlayerProducer produce
     return impl;
 }
 
+std::vector<pid_t> PlayerFactory::GetPlayerPids()
+{
+    std::vector<pid_t> pids = MediaServiceFactory::GetInstance().GetPlayerPids();
+    std::string pidLog = "GetPlayerPids size=" + std::to_string(pids.size());
+    if (pids.size() > 0) {
+        pidLog += ", contents:";
+        for (auto pid : pids) {
+            pidLog += std::to_string(pid) + ", ";
+        }
+    }
+    MEDIA_LOGI("%{public}s", pidLog.c_str());
+    return pids;
+}
+
 int32_t PlayerImpl::Init(const PlayerProducer producer)
 {
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Init in", FAKE_POINTER(this));

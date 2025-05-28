@@ -78,6 +78,15 @@ public:
         return reply.ReadBool();
     }
 
+    std::vector<pid_t> GetPlayerPids()
+    {
+        MessageParcel data;
+        MessageParcel reply;
+        MessageOption option;
+        (void)Remote()->SendRequest(MediaServiceMsg::GET_PLAYER_PIDS, data, reply, option);
+        std::vector<pid_t> res;
+        return res;
+    }
 private:
     static inline BrokerDelegator<MediaServiceProxyFuzzer> delegator_;
 };

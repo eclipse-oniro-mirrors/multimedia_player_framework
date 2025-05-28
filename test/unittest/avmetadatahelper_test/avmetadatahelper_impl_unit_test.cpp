@@ -73,6 +73,12 @@ bool MediaClient::CanKillMediaService()
 
 void MediaClient::ReleaseClientListener() {}
 
+std::vector<pid_t> MediaClient::GetPlayerPids()
+{
+    std::vector<pid_t> ret;
+    return ret;
+}
+
 namespace Test {
 void AVMetadtahelperImplUnitTest::SetUpTestCase(void) {}
 

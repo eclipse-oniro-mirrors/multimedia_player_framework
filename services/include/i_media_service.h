@@ -233,6 +233,8 @@ public:
     virtual void ReleaseClientListener() = 0;
 
     virtual bool CanKillMediaService() = 0;
+
+    virtual std::vector<pid_t> GetPlayerPids() = 0;
 };
 
 class __attribute__((visibility("default"))) MediaServiceFactory {

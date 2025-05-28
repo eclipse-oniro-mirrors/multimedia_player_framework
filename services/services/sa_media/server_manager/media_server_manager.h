@@ -72,6 +72,7 @@ public:
     void UpdateAllInstancesReleasedTime();
 #endif
     bool CanKillMediaService();
+    std::vector<pid_t> GetPlayerPids();
 private:
     MediaServerManager();
 #ifdef SUPPORT_PLAYER

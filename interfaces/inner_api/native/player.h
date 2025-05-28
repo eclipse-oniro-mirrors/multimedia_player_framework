@@ -1074,6 +1074,7 @@ public:
 
     static std::shared_ptr<Player> CreatePlayer(const PlayerProducer producer);
 #endif
+    static std::vector<pid_t> GetPlayerPids();
 private:
     PlayerFactory() = default;
     ~PlayerFactory() = default;
