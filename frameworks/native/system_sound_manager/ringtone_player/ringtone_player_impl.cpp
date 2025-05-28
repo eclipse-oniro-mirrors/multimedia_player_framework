@@ -272,7 +272,7 @@ int32_t RingtonePlayerImpl::RegisterSource(const std::string &audioUri, const st
     string newAudioUri = systemSoundMgr_.OpenAudioUri(databaseTool_, audioUri);
     string newHapticUri = systemSoundMgr_.OpenHapticsUri(databaseTool_, hapticUri);
 
-    if (newAudioUri.find(FDHEAD) == std::string::npos) {
+    if (newAudioUri.find(FDHEAD) == std::string::npos && newAudioUri != NO_RING_SOUND) {
         MEDIA_LOGI("Failed to open ringtone file, select to open default ringtone and play.");
         std::string uri = "";
         std::shared_ptr<ToneAttrs> ringtoneAttrs = systemSoundMgr_.GetDefaultRingtoneAttrs(context_, type_);
@@ -437,7 +437,9 @@ int32_t RingtonePlayerImpl::StartForNoRing(const HapticStartupMode startupMode)
     // Start an empty audio stream for NoRing.
     rendererParams_.sampleFormat = AudioStandard::SAMPLE_S24LE;
     rendererParams_.channelCount = AudioStandard::STEREO;
-    audioRenderer_ = AudioStandard::AudioRenderer::Create(AudioStandard::AudioStreamType::STREAM_VOICE_RING);
+    if (audioRenderer_ == nullptr) {
+        audioRenderer_ = AudioStandard::AudioRenderer::Create(AudioStandard::AudioStreamType::STREAM_VOICE_RING);
+    }
     CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr, MSERR_INVALID_VAL, "no audioRenderer");
     int32_t audioRet = audioRenderer_->SetParams(rendererParams_);
     bool isStarted = audioRenderer_->Start();
