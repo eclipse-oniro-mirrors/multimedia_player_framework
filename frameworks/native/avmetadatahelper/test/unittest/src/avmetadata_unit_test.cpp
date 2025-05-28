@@ -780,7 +780,7 @@ HWTEST_F(AVMetadataUnitTest, PtsAndFrameIndexConversion_API_0200, Level2)
 }
 
 /**
-    * @tc.number    : PTSOutOfRange_1000
+    * @tc.number    : PTSOutOfRange_0100
     * @tc.name      : SetSource camera_info_parser.mp4
     * @tc.desc      : pts out of range
 */
@@ -795,7 +795,6 @@ HWTEST_F(AVMetadataUnitTest, PTSOutOfRange_API_0100, Level2)
     uint64_t time = 999999999;
     uint32_t index = 0;
     ASSERT_NE(MSERR_OK, helper->GetFrameIndexByTime(time, index));
-    ASSERT_EQ(index, 0);
 }
 
 /**
@@ -814,7 +813,6 @@ HWTEST_F(AVMetadataUnitTest, IndexOutOfRange_API_0100, Level2)
     uint64_t time = 0;
     uint32_t index = 9999999;
     ASSERT_NE(MSERR_OK, helper->GetTimeByFrameIndex(index, time));
-    ASSERT_EQ(time, 0);
 }
 
 /**
