@@ -492,6 +492,10 @@ int32_t HiTransCoderImpl::Configure(const TransCoderParam &transCoderParam)
             videoEncFormat_->Set<Tag::MEDIA_BITRATE>(videoBitrate.bitRate);
             break;
         }
+        case TransCoderPublicParamType::COLOR_SPACE_FMT: {
+            ret = ConfigureColorSpace(transCoderParam);
+            break;
+        }
         case TransCoderPublicParamType::AUDIO_ENC_FMT: {
             AudioEnc audioEnc = static_cast<const AudioEnc&>(transCoderParam);
             MEDIA_LOG_I("HiTransCoderImpl::Configure audioEnc %{public}d", audioEnc.encFmt);
@@ -708,6 +712,9 @@ void HiTransCoderImpl::AppendDstMediaInfo(std::shared_ptr<Meta> meta)
     videoEncFormat_->Get<Tag::MEDIA_BITRATE>(dstVideoBitrate);
     meta->SetData(Tag::AV_TRANSCODER_DST_VIDEO_BITRATE, static_cast<int32_t>(dstVideoBitrate));
     meta->SetData(Tag::AV_TRANSCODER_DST_HDR_TYPE, 0);
+    int32_t colorSpaceFormat = 0;
+    videoEncFormat_->Get<Tag::AV_TRANSCODER_DST_COLOR_SPACE>(colorSpaceFormat);
+    meta->SetData(Tag::AV_TRANSCODER_DST_COLOR_SPACE, colorSpaceFormat);
     int32_t dstAudioSampleRate;
     audioEncFormat_->Get<Tag::AUDIO_SAMPLE_RATE>(dstAudioSampleRate);
     meta->SetData(Tag::AV_TRANSCODER_DST_AUDIO_SAMPLE_RATE, dstAudioSampleRate);
@@ -819,9 +826,10 @@ Status HiTransCoderImpl::LinkVideoDecoderFilter(const std::shared_ptr<Pipeline::
         "surfacedecoder", Pipeline::FilterType::FILTERTYPE_VIDEODEC);
     FALSE_RETURN_V_MSG_E(videoDecoderFilter_ != nullptr, Status::ERROR_NULL_POINTER,
         "videoDecoderFilter is nullptr");
+    videoDecoderFilter_->SetCodecFormat(videoEncFormat_);
     videoDecoderFilter_->Init(transCoderEventReceiver_, transCoderFilterCallback_);
     Status ret = pipeline_->LinkFilters(preFilter, {videoDecoderFilter_}, type);
-    FALSE_RETURN_V_MSG_E(ret == Status::OK, ret, "Add videoDecoderFilter_ to pipeline fail");
+    FALSE_RETURN_V_MSG_E(ret == Status::OK, ret, "Add videoDecoderFilter to pipeline failed");
     return Status::OK;
 }
 
