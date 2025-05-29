@@ -15,6 +15,7 @@
   global:
     extern "C++" {
       *OHOS::Media::PlayerFactory::CreatePlayer*;
+      *OHOS::Media::PlayerFactory::GetPlayerPids*;
       *OHOS::Media::RecorderFactory::CreateRecorder*;
       *OHOS::Media::TransCoderFactory::CreateTransCoder*;
       *OHOS::Media::VideoEncoderFactory::CreateBy*;
