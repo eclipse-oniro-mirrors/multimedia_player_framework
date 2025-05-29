@@ -23,6 +23,7 @@
 #include <parcel.h>
 #include "meta/format.h"
 #include "surface.h"
+#include "surface/native_buffer.h"
 #include "av_common.h"
 #include "codec_capability.h"
 #include "media_core.h"
@@ -47,6 +48,16 @@ enum TransCoderOnInfoType : int32_t {
     /* return the current progress of transcoder automatically. */
     INFO_TYPE_PROGRESS_UPDATE = 1,
 };
+
+/**
+ * @brief Enumerates transcodering color space.
+ *
+ * @since 6.0
+ * @version 6.0
+ */
+enum TranscoderColorSpace : int32_t {
+    
+}
 
 /**
  * @brief Provides listeners for transcodering errors and information events.
