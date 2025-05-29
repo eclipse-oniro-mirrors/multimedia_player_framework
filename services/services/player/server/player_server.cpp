@@ -17,6 +17,7 @@
 #include <map>
 #include <unistd.h>
 #include <unordered_set>
+#include <cmath>
 #include "media_log.h"
 #include "media_errors.h"
 #include "engine_factory_repo.h"
@@ -1175,7 +1176,8 @@ int32_t PlayerServer::HandleSetPlaybackSpeed(PlaybackRateMode mode)
 
 int32_t PlayerServer::HandleSetPlaybackRate(float rate)
 {
-    if (config_.speedRate == rate) {
+    constexpr float EPSILON = 1e-6;
+    if (std::fabs(config_.speedRate - rate) < EPSILON) {
         MEDIA_LOGD("The speed rate is same, rate = %{public}f", rate);
         Format format;
         (void)format.PutFloatValue(PlayerKeys::PLAYER_PLAYBACK_RATE, rate);
