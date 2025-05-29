@@ -423,10 +423,21 @@ Status HiTransCoderImpl::ConfigureVideoWidthHeight(const TransCoderParam &transC
     VideoRectangle videoRectangle = static_cast<const VideoRectangle&>(transCoderParam);
     if (videoRectangle.width != -1) {
         videoEncFormat_->Set<Tag::VIDEO_WIDTH>(videoRectangle.width);
-        }
+    }
     if (videoRectangle.height != -1) {
         videoEncFormat_->Set<Tag::VIDEO_HEIGHT>(videoRectangle.height);
-        }
+    }
+    return Status::OK;
+}
+
+Status HiTransCoderImpl::ConfigureColorSpace(const TransCoderParam &transCoderParam)
+{
+    VideoColorSpace colSpa = static_cast<const VideoColorSpace&>(transCoderParam);
+    MEDIA_LOG_I("HiTranscoderImpl::ConfigureColorSpace %{public}d", static_cast<int32_t>(colSpa.colorSpaceFmt));
+    if (static_cast<int32_t>(colSpa.colorSpaceFmt) <= 0) {
+        return Status::ERROR_INVALID_PARAMETER;
+    }
+    videoEncFormat_->Set<Tag::AV_TRANSCODER_DST_COLOR_SPACE>(static_cast<int32_t>(colSpa.colorSpaceFmt));\
     return Status::OK;
 }
 
