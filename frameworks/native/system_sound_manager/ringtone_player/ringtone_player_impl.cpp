@@ -428,11 +428,6 @@ int32_t RingtonePlayerImpl::StartForNoRing(const HapticStartupMode startupMode)
         (void)SystemSoundVibrator::StartVibratorForFastMode();
     }
     InitPlayer(ringtoneUri, settings, options);
-    std::string hapticUri = systemSoundMgr_.OpenHapticsUri(databaseTool_, settings.hapticsUri);
-    int32_t result = MSERR_OK; // if no need to start vibrator, return MSERR_OK.
-    if (NeedToVibrate(settings)) {
-        result = SystemSoundVibrator::StartVibratorForRingtone(hapticUri);
-    }
 
     // Start an empty audio stream for NoRing.
     rendererParams_.sampleFormat = AudioStandard::SAMPLE_S24LE;
@@ -443,9 +438,15 @@ int32_t RingtonePlayerImpl::StartForNoRing(const HapticStartupMode startupMode)
     CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr, MSERR_INVALID_VAL, "no audioRenderer");
     int32_t audioRet = audioRenderer_->SetParams(rendererParams_);
     bool isStarted = audioRenderer_->Start();
-    ringtoneState_ = isStarted ? STATE_RUNNING : ringtoneState_;
-    MEDIA_LOGI("isStarted : %{public}d, ret: %{public}d, ", isStarted, audioRet);
+    MEDIA_LOGI("isStarted : %{public}d, audioRet: %{public}d, ", isStarted, audioRet);
 
+    int32_t result = MSERR_OK; // if no need to start vibrator, return MSERR_OK.
+    if (NeedToVibrate(settings)) {
+        std::string hapticUri = systemSoundMgr_.OpenHapticsUri(databaseTool_, settings.hapticsUri);
+        result = SystemSoundVibrator::StartVibratorForRingtone(hapticUri);
+    }
+    ringtoneState_ = STATE_RUNNING;
+    ReleaseDatabaseTool();
     return result;
 }
 
