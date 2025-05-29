@@ -437,7 +437,7 @@ Status HiTransCoderImpl::ConfigureColorSpace(const TransCoderParam &transCoderPa
     if (static_cast<int32_t>(colSpa.colorSpaceFmt) <= 0) {
         return Status::ERROR_INVALID_PARAMETER;
     }
-    videoEncFormat_->Set<Tag::AV_TRANSCODER_DST_COLOR_SPACE>(static_cast<int32_t>(colSpa.colorSpaceFmt));\
+    videoEncFormat_->Set<Tag::AV_TRANSCODER_DST_COLOR_SPACE>(static_cast<int32_t>(colSpa.colorSpaceFmt));
     return Status::OK;
 }
 
