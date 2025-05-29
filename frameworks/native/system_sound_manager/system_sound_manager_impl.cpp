@@ -1388,8 +1388,8 @@ int32_t SystemSoundManagerImpl::SetAlarmToneUri(const std::shared_ptr<AbilityRun
     const std::string &uri)
 {
     std::lock_guard<std::mutex> lock(uriMutex_);
-    MEDIA_LOGI("SetAlarmToneUri: alarm type %{public}s",
-        SystemSoundManagerUtils::GetTypeForSystemSoundUri(uri).c_str());
+    MEDIA_LOGI("SetAlarmToneUri: alarm type %{public}d",
+        SystemSoundManagerUtils::GetTypeForSystemSoundUri(uri));
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
         SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, ERROR, "Create dataShare failed.");
@@ -1485,8 +1485,8 @@ std::string SystemSoundManagerImpl::GetAlarmToneUri(const std::shared_ptr<Abilit
     }
     if (ringtoneAsset != nullptr) {
         alarmToneUri = ringtoneAsset->GetPath();
-        MEDIA_LOGI("GetAlarmToneUri: alarm type %{public}s",
-            SystemSoundManagerUtils::GetTypeForSystemSoundUri(alarmToneUri).c_str());
+        MEDIA_LOGI("GetAlarmToneUri: alarm type %{public}d",
+            SystemSoundManagerUtils::GetTypeForSystemSoundUri(alarmToneUri));
     } else {
         MEDIA_LOGE("GetAlarmToneUri: no alarmtone in the ringtone library!");
     }
