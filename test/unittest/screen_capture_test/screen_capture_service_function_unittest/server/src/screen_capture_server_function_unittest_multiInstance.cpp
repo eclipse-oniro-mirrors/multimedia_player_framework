@@ -905,10 +905,12 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ProcessCurDisplayId_001, TestSize.Leve
 
 HWTEST_F(ScreenCaptureServerFunctionTest, NotifyCaptureContentChanged_001, TestSize.Level2)
 {
+    ScreenCaptureRect* area = nullptr;
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
     screenCaptureServer_->NotifyCaptureContentChanged(AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_HIDE,
         nullptr);
     screenCaptureServer_->NotifyCaptureContentChanged(
-        AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_VISIBLE, nullptr);
+        AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_VISIBLE, area);
     screenCaptureServer_->NotifyCaptureContentChanged(
         AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_UNAVAILABLE, nullptr);
     ASSERT_NE(screenCaptureServer_, nullptr);
@@ -917,6 +919,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, NotifyCaptureContentChanged_001, TestS
 HWTEST_F(ScreenCaptureServerFunctionTest, NotifyCaptureContentChanged_002, TestSize.Level2)
 {
     ScreenCaptureRect* area = nullptr;
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
     area->x = 0;
     area->y = 0;
     area->width = 1;
@@ -1043,6 +1046,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnLifecycleEvent_001, TestSize.Level2)
     screenCaptureServer_->displayScreenId_ = 0;
     screenCaptureServer_->curWindowInDisplayId_ = 0;
     screenCaptureServer_->SetWindowIdList(80);
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
     SCWindowLifecycleListener::LifecycleEventPayload payload;
     screenCaptureServer_->windowLifecycleListener_->OnLifecycleEvent(
         SCWindowLifecycleListener::SessionLifecycleEvent::FOREGROUND, payload);
@@ -1050,6 +1054,37 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnLifecycleEvent_001, TestSize.Level2)
         SCWindowLifecycleListener::SessionLifecycleEvent::BACKGROUND, payload);
     screenCaptureServer_->windowLifecycleListener_->OnLifecycleEvent(
         SCWindowLifecycleListener::SessionLifecycleEvent::DESTROYED, payload);
+    ASSERT_NE(screenCaptureServer_, nullptr);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, OnLifecycleEvent_002, TestSize.Level2)
+{
+    std::weak_ptr<ScreenCaptureServer> screenCaptureServer(screenCaptureServer_);
+    sptr<SCWindowLifecycleListener> listener(new (std::nothrow) SCWindowLifecycleListener(screenCaptureServer));
+    screenCaptureServer_->windowLifecycleListener_ = listener;
+    screenCaptureServer_->displayScreenId_ = 0;
+    screenCaptureServer_->curWindowInDisplayId_ = 1;
+    screenCaptureServer_->SetWindowIdList(80);
+    SCWindowLifecycleListener::LifecycleEventPayload payload;
+    screenCaptureServer_->windowLifecycleListener_->OnLifecycleEvent(
+        SCWindowLifecycleListener::SessionLifecycleEvent::FOREGROUND, payload);
+    screenCaptureServer_->windowLifecycleListener_->OnLifecycleEvent(
+        SCWindowLifecycleListener::SessionLifecycleEvent::BACKGROUND, payload);
+    ASSERT_NE(screenCaptureServer_, nullptr);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, OnLifecycleEvent_003, TestSize.Level2)
+{
+    std::weak_ptr<ScreenCaptureServer> screenCaptureServer(screenCaptureServer_);
+    sptr<SCWindowLifecycleListener> listener(new (std::nothrow) SCWindowLifecycleListener(screenCaptureServer));
+    screenCaptureServer_->windowLifecycleListener_ = listener;
+    screenCaptureServer_->displayScreenId_ = 0;
+    screenCaptureServer_->curWindowInDisplayId_ = 0;
+    screenCaptureServer_->SetWindowIdList(80);
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STOPPED;
+    SCWindowLifecycleListener::LifecycleEventPayload payload;
+    screenCaptureServer_->windowLifecycleListener_->OnLifecycleEvent(
+        SCWindowLifecycleListener::SessionLifecycleEvent::FOREGROUND, payload);
     ASSERT_NE(screenCaptureServer_, nullptr);
 }
 
@@ -1061,6 +1096,57 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnWindowInfoChanged_001, TestSize.Leve
     std::vector<std::unordered_map<WindowInfoKey, std::any>> myWindowInfoList;
     screenCaptureServer_->windowIdList_ = {};
     screenCaptureServer_->windowInfoChangedListener_->OnWindowInfoChanged(myWindowInfoList);
+    ASSERT_NE(screenCaptureServer_, nullptr);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, OnWindowInfoChanged_002, TestSize.Level2)
+{
+    std::weak_ptr<ScreenCaptureServer> screenCaptureServer(screenCaptureServer_);
+    sptr<SCWindowInfoChangedListener> listener(new (std::nothrow) SCWindowInfoChangedListener(screenCaptureServer));
+    screenCaptureServer_->windowInfoChangedListener_ = listener;
+    screenCaptureServer_->SetWindowIdList(80);
+    screenCaptureServer_->curWindowInDisplayId_ = 0;
+    screenCaptureServer_->displayScreenId_ = 1;
+    screenCaptureServer_->windowInfoChangedListener_->AddInterestInfo(Rosen::WindowInfoKey::DISPLAY_ID);
+    std::vector<std::unordered_map<WindowInfoKey, std::any>> myWindowInfoList;
+    std::unordered_map<WindowInfoKey, std::any> myWindowInfo;
+    myWindowInfo[WindowInfoKey::DISPLAY_ID] = static_cast<uint64_t>(1);
+    myWindowInfoList.push_back(myWindowInfo);
+    screenCaptureServer_->windowInfoChangedListener_->OnWindowInfoChanged(myWindowInfoList);
+    ASSERT_EQ(screenCaptureServer_->curWindowInDisplayId_, 1);
+    ASSERT_NE(screenCaptureServer_, nullptr);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, OnWindowInfoChanged_003, TestSize.Level2)
+{
+    std::weak_ptr<ScreenCaptureServer> screenCaptureServer(screenCaptureServer_);
+    sptr<SCWindowInfoChangedListener> listener(new (std::nothrow) SCWindowInfoChangedListener(screenCaptureServer));
+    screenCaptureServer_->windowInfoChangedListener_ = listener;
+    screenCaptureServer_->SetWindowIdList(80);
+    screenCaptureServer_->curWindowInDisplayId_ = 0;
+    screenCaptureServer_->displayScreenId_ = 999;
+    screenCaptureServer_->windowInfoChangedListener_->AddInterestInfo(Rosen::WindowInfoKey::DISPLAY_ID);
+    std::vector<std::unordered_map<WindowInfoKey, std::any>> myWindowInfoList;
+    std::unordered_map<WindowInfoKey, std::any> myWindowInfo;
+    myWindowInfo[WindowInfoKey::DISPLAY_ID] = static_cast<uint64_t>(1);
+    myWindowInfoList.push_back(myWindowInfo);
+    screenCaptureServer_->windowInfoChangedListener_->OnWindowInfoChanged(myWindowInfoList);
+    ASSERT_EQ(screenCaptureServer_->curWindowInDisplayId_, 1);
+    ASSERT_NE(screenCaptureServer_, nullptr);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, OnWindowInfoChanged_004, TestSize.Level2)
+{
+    std::weak_ptr<ScreenCaptureServer> screenCaptureServer(screenCaptureServer_);
+    sptr<SCWindowInfoChangedListener> listener(new (std::nothrow) SCWindowInfoChangedListener(screenCaptureServer));
+    screenCaptureServer_->windowInfoChangedListener_ = listener;
+    screenCaptureServer_->SetWindowIdList(80);
+    screenCaptureServer_->curWindowInDisplayId_ = 0;
+    std::vector<std::unordered_map<WindowInfoKey, std::any>> myWindowInfoList;
+    std::unordered_map<WindowInfoKey, std::any> myWindowInfo;
+    myWindowInfoList.push_back(myWindowInfo);
+    screenCaptureServer_->windowInfoChangedListener_->OnWindowInfoChanged(myWindowInfoList);
+    ASSERT_EQ(screenCaptureServer_->curWindowInDisplayId_, 0);
     ASSERT_NE(screenCaptureServer_, nullptr);
 }
 
@@ -1122,6 +1208,30 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StartScreenCaptureRegisterListener_003
     ASSERT_EQ(screenCaptureServer_->lifecycleListenerDeathRecipient_, nullptr);
     ASSERT_EQ(screenCaptureServer_->windowLifecycleListener_, nullptr);
     ASSERT_EQ(screenCaptureServer_->windowInfoChangedListener_, nullptr);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, OnDisconnect_001, TestSize.Level2)
+{
+    Rosen::ScreenId screenId = 1;
+    screenCaptureServer_->displayScreenId_ = screenId;
+    std::weak_ptr<ScreenCaptureServer> screenCaptureServer(screenCaptureServer_);
+    screenCaptureServer_->screenConnectListener_ = sptr<ScreenConnectListenerForSC>::MakeSptr(
+        screenCaptureServer_->displayScreenId_, screenCaptureServer);
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
+    screenCaptureServer_->screenConnectListener_->OnDisconnect(screenId);
+    ASSERT_NE(screenCaptureServer_, nullptr);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, OnDisconnect_002, TestSize.Level2)
+{
+    Rosen::ScreenId screenId = 1;
+    screenCaptureServer_->displayScreenId_ = 2;
+    std::weak_ptr<ScreenCaptureServer> screenCaptureServer(screenCaptureServer_);
+    screenCaptureServer_->screenConnectListener_ = sptr<ScreenConnectListenerForSC>::MakeSptr(
+        screenCaptureServer_->displayScreenId_, screenCaptureServer);
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
+    screenCaptureServer_->screenConnectListener_->OnDisconnect(screenId);
+    ASSERT_NE(screenCaptureServer_, nullptr);
 }
 #endif
 } // Media
