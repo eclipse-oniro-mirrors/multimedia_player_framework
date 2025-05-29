@@ -157,7 +157,7 @@ bool InCallObserver::RegisterObserver()
         ret = true;
         mediaTelephonyListeners_.push_back(telephonyObserver_);
     } else {
-        MEDIA_LOGI("InCallObserver Register  Listener observer ret:%{public}d", observerRes);
+        MEDIA_LOGI("InCallObserver Register Listener observer ret:%{public}d", observerRes);
     }
     return ret;
 }
