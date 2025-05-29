@@ -66,6 +66,7 @@ int32_t TransCoderServiceStub::Init()
     recFuncs_[SET_VIDEO_ENCODING_BIT_RATE] = &TransCoderServiceStub::SetVideoEncodingBitRate;
     recFuncs_[SET_AUDIO_ENCODER] = &TransCoderServiceStub::SetAudioEncoder;
     recFuncs_[SET_AUDIO_ENCODING_BIT_RATE] = &TransCoderServiceStub::SetAudioEncodingBitRate;
+    recFuncs_[SET_COLOR_SPACE] = &TransCoderServiceStub::SetColorSpace;
     recFuncs_[SET_OUTPUT_FORMAT] = &TransCoderServiceStub::SetOutputFormat;
     recFuncs_[SET_INPUT_FILE_FD] = &TransCoderServiceStub::SetInputFileFd;
     recFuncs_[SET_OUTPUT_FILE] = &TransCoderServiceStub::SetOutputFile;
@@ -154,6 +155,12 @@ int32_t TransCoderServiceStub::SetVideoEncodingBitRate(int32_t rate)
 {
     CHECK_AND_RETURN_RET_LOG(transCoderServer_ != nullptr, MSERR_NO_MEMORY, "transcoder server is nullptr");
     return transCoderServer_->SetVideoEncodingBitRate(rate);
+}
+
+int32_t TransCoderServiceStub::SetColorSpace(TranscoderColorSpace colorSpaceFormat)
+{
+    CHECK_AND_RETURN_RET_LOG(transCoderServer_ != nullptr, MSERR_NO_MEMORY, "transcoder server is nullptr");
+    return transCoderServer_->SetColorSpace(colorSpaceFormat);
 }
 
 int32_t TransCoderServiceStub::SetAudioEncoder(AudioCodecFormat encoder)
@@ -263,6 +270,14 @@ int32_t TransCoderServiceStub::SetVideoEncodingBitRate(MessageParcel &data, Mess
 {
     int32_t rate = data.ReadInt32();
     reply.WriteInt32(SetVideoEncodingBitRate(rate));
+    return MSERR_OK;
+}
+
+int32_t TransCoderServiceStub::SetColorSpace(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t format = data.ReadInt32();
+    TranscoderColorSpace colorSpaceFormat = static_cast<TranscoderColorSpace>(format);
+    reply.WriteInt32(SetColorSpace(colorSpaceFormat));
     return MSERR_OK;
 }
 
