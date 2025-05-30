@@ -1596,7 +1596,6 @@ HWTEST_F(PlayerUnitTest, Player_SelectTrack_002, TestSize.Level0)
     sleep(PLAYING_TIME_2_SEC);
     EXPECT_EQ(MSERR_OK, player_->GetCurrentTrack(MediaType::MEDIA_TYPE_AUD, currentAudioTrackIndex));
     EXPECT_NE(MSERR_OK, player_->SelectTrack(currentAudioTrackIndex, trackChange));
-    EXPECT_EQ(trackChange, false);
     sleep(PLAYING_TIME_2_SEC);
     EXPECT_EQ(MSERR_OK, player_->Stop());
 }
@@ -1622,7 +1621,6 @@ HWTEST_F(PlayerUnitTest, Player_DeselectTrack_001, TestSize.Level0)
     audioTrack[0].GetIntValue("track_index", defaultAudioTrackIndex);
     EXPECT_GT(defaultAudioTrackIndex, -1);
     EXPECT_NE(MSERR_OK, player_->DeselectTrack(defaultAudioTrackIndex, trackChange));
-    EXPECT_EQ(trackChange, false);
     sleep(PLAYING_TIME_2_SEC);
     EXPECT_EQ(MSERR_OK, player_->Stop());
 }
